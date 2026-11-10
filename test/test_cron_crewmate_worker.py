@@ -5,7 +5,7 @@ selection chats on the conductor, which mounts none of the crewmate's own
 servers. The fire runs the turn on the crewmate's worker instead
 (``mate_worker.cron_worker_execution``): the same record shape a hand-off gives
 the worker, under the job's own ``cron:`` key, so the worker projection reads
-that crewmate's kit. A job captured under 1.0 (``template_id`` ``kirocrew`` with
+that crewmate's kit. A job captured under 1.0 (``template_id`` ``ajcrew`` with
 a member id) takes the same path. A non-crewmate job is unchanged.
 """
 
@@ -15,18 +15,18 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from member_memory_helpers import write_member_home
 
-from kiro_crew import mate_worker
-from kiro_crew.config import loader
-from kiro_crew.config import paths as paths_mod
-from kiro_crew.config.loader import KiroCrewConfig, config_dir
-from kiro_crew.cron import CronJob
-from kiro_crew.execution_context import (
+from aj_crew import mate_worker
+from aj_crew.config import loader
+from aj_crew.config import paths as paths_mod
+from aj_crew.config.loader import AjCrewConfig, config_dir
+from aj_crew.cron import CronJob
+from aj_crew.execution_context import (
     ExecutionContext,
     MemoryStoreRef,
     bind_session_execution,
     read_session_execution,
 )
-from kiro_crew.mate_worker import MATE_WORKER_AGENT
+from aj_crew.mate_worker import MATE_WORKER_AGENT
 
 SLACK = {
     "name": "alpha",
@@ -37,7 +37,7 @@ SLACK = {
 
 
 async def _cron_callback(monkeypatch, cfg):
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     monkeypatch.setattr(gateway.live, "snapshot", lambda: cfg)
     gw = gateway.GatewayOrchestrator.__new__(gateway.GatewayOrchestrator)
@@ -85,14 +85,14 @@ async def _fire(
         doc["agents"]["alpha"]["kiro_agent"] = "alpha"
         path.write_text(json.dumps(doc), encoding="utf-8")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     mates = paths_mod.mate_agents_dir()
     mates.mkdir(parents=True, exist_ok=True)
     if file_present:
         (mates / "alpha.json").write_text(json.dumps(SLACK), encoding="utf-8")
     if owns_file and on_record:
         # What every crewmate file write leaves behind, kept after a delete.
-        from kiro_crew import mate_config
+        from aj_crew import mate_config
 
         mate_config._owners_path().write_text(
             json.dumps({"alpha": mate_config._this_home()}), encoding="utf-8"
@@ -106,7 +106,7 @@ async def _fire(
     gw, callback = await _cron_callback(monkeypatch, cfg)
     # The 1.0 capture: a member selection on the shared template.
     captured = ExecutionContext(
-        "alpha", MemoryStoreRef("member-alpha", "alpha"), "member", "kirocrew"
+        "alpha", MemoryStoreRef("member-alpha", "alpha"), "member", "ajcrew"
     )
     job = CronJob(
         id="hourly", name="hourly", message="read slack", execution_context=captured.to_record()
@@ -201,7 +201,7 @@ async def test_another_instances_deleted_crewmate_does_not_refuse_this_ones_cron
 ):
     """Two gateways share one Kiro home with separate data homes. The other one
     owned a crewmate ``alpha``; this one binds ``alpha`` to an installed agent."""
-    from kiro_crew import mate_config
+    from aj_crew import mate_config
 
     path = mate_config._owners_path()
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -214,7 +214,7 @@ async def test_another_instances_deleted_crewmate_does_not_refuse_this_ones_cron
 
 @pytest.mark.asyncio
 async def test_an_unreadable_owner_record_keeps_a_self_named_binding_refused(monkeypatch):
-    from kiro_crew import mate_config
+    from aj_crew import mate_config
 
     path = mate_config._owners_path()
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -238,11 +238,11 @@ async def test_a_record_a_1_0_run_left_moves_onto_the_worker_once(monkeypatch):
 async def test_a_crewmate_cron_on_kiro_with_kas_members_runs_on_the_member_backend(monkeypatch):
     """``acp_backend`` kiro with ``member_acp_backend`` kas (the shipped member default):
     kiro-cli cannot find the worker spec, so the cron key takes the worker's member route."""
-    from kiro_crew import members
-    from kiro_crew.members_parts import member_sessions
+    from aj_crew import members
+    from aj_crew.members_parts import member_sessions
 
     monkeypatch.setattr(member_sessions, "_CREWMATE_WORKER_SLOTS", set())
-    assert KiroCrewConfig().agent.member_acp_backend == "kas"
+    assert AjCrewConfig().agent.member_acp_backend == "kas"
 
     await _fire(monkeypatch, owns_file=True)
 
@@ -252,8 +252,8 @@ async def test_a_crewmate_cron_on_kiro_with_kas_members_runs_on_the_member_backe
 
 @pytest.mark.asyncio
 async def test_a_non_crewmate_cron_keeps_the_configured_backend(monkeypatch):
-    from kiro_crew import members
-    from kiro_crew.members_parts import member_sessions
+    from aj_crew import members
+    from aj_crew.members_parts import member_sessions
 
     monkeypatch.setattr(member_sessions, "_CREWMATE_WORKER_SLOTS", set())
     await _fire(monkeypatch, owns_file=False)

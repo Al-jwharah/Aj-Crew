@@ -1015,12 +1015,12 @@ describe('AppDetailPage — uncovered surfaces', () => {
     await loaded()
 
     expect(screen.getByText('Built-in')).toBeInTheDocument()
-    expect(screen.getByText('Built-in · kirocrew')).toBeInTheDocument()
+    expect(screen.getByText('Built-in · ajcrew')).toBeInTheDocument()
     expect(screen.getByText('Disabled')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /enable/i })).toBeInTheDocument()
     // Stated in text, not only in a hover title: a tooltip is unreachable by
     // touch or keyboard, and this page is where the decision happens.
-    expect(screen.getByText(/the app's own window needs the Kiro Crew desktop app/i)).toBeInTheDocument()
+    expect(screen.getByText(/the app's own window needs the Aj Crew desktop app/i)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /uninstall/i })).not.toBeInTheDocument()
   })
 
@@ -1144,7 +1144,7 @@ describe('AppDetailPage — uncovered surfaces', () => {
         displayName: 'Ledger Lens',
         description: 'Reads your books and explains them.',
         author: 'zezhexu',
-        minKiroCrewVersion: '0.2.0',
+        minAjCrewVersion: '0.2.0',
         highlights: ['Explains a balance sheet', 'Flags odd entries'],
         tags: ['finance', 'reporting'],
         agents: ['agents/auditor.json', 'agents/scribe.json'],
@@ -1221,7 +1221,7 @@ describe('AppDetailPage — uncovered surfaces', () => {
     expect(screen.getByText(/https:\/\/example\.invalid\/ledger-lens/)).toBeInTheDocument()
     expect(screen.getByText(/2026/)).toBeInTheDocument()
     expect(screen.getByText(/Origin:/)).toBeInTheDocument()
-    expect(screen.getByText(/Min Kiro Crew: v0\.2\.0/)).toBeInTheDocument()
+    expect(screen.getByText(/Min Aj Crew: v0\.2\.0/)).toBeInTheDocument()
   })
 
   it('shows the platform list for a registry app and no resources card', async () => {

@@ -21,30 +21,30 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.config.paths import config_dir
-from kiro_crew.config.sections_session import STAR_ORDER_MAX
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.config.paths import config_dir
+from aj_crew.config.sections_session import STAR_ORDER_MAX
 
 
 @pytest.fixture(autouse=True)
 def _owner_caller(_floor_monkeypatch):
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
 
 class TestConfigField:
     def test_defaults_to_not_placed(self):
-        assert KiroCrewAgentConfig(kiro_agent="x").star_order == 0
+        assert AjCrewAgentConfig(kiro_agent="x").star_order == 0
 
     def test_round_trips_through_save_and_load(self):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["placed"] = KiroCrewAgentConfig(
-            kiro_agent="kirocrew", starred=True, star_order=3
+        cfg = AjCrewConfig.load()
+        cfg.agents["placed"] = AjCrewAgentConfig(
+            kiro_agent="ajcrew", starred=True, star_order=3
         )
         cfg.save()
-        assert KiroCrewConfig.load().agents["placed"].star_order == 3
+        assert AjCrewConfig.load().agents["placed"].star_order == 3
 
     @pytest.mark.parametrize(
         "junk, expected",
@@ -60,29 +60,29 @@ class TestConfigField:
     )
     def test_junk_in_config_is_bounded(self, junk, expected):
         """config.json is hand-editable: a bad value only moves the row."""
-        cfg = KiroCrewConfig.load()
-        cfg.agents["weird"] = KiroCrewAgentConfig(kiro_agent="kirocrew", starred=True)
+        cfg = AjCrewConfig.load()
+        cfg.agents["weird"] = AjCrewAgentConfig(kiro_agent="ajcrew", starred=True)
         cfg.save()
         path = config_dir() / "config.json"
         data = json.loads(path.read_text(encoding="utf-8"))
         data["agents"]["weird"]["star_order"] = junk
         path.write_text(json.dumps(data), encoding="utf-8")
-        assert KiroCrewConfig.load().agents["weird"].star_order == expected
+        assert AjCrewConfig.load().agents["weird"].star_order == expected
 
 
 def _crud_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import api_kirocrew_agent_update
+    from aj_crew.dashboard.handlers import api_ajcrew_agent_update
 
     app = web.Application()
-    app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+    app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
     return app
 
 
 @pytest.fixture()
 def starred_agent():
-    cfg = KiroCrewConfig.load()
-    cfg.agents["fav"] = KiroCrewAgentConfig(
-        kiro_agent="kirocrew", workspace="default", memory_store="default", starred=True
+    cfg = AjCrewConfig.load()
+    cfg.agents["fav"] = AjCrewAgentConfig(
+        kiro_agent="ajcrew", workspace="default", memory_store="default", starred=True
     )
     cfg.save()
     return "fav"
@@ -94,7 +94,7 @@ class TestUpdateEndpoint:
         async with TestClient(TestServer(_crud_app())) as client:
             resp = await client.put(f"/api/agents/{starred_agent}", json={"star_order": 2})
             assert resp.status == 200
-        assert KiroCrewConfig.load().agents[starred_agent].star_order == 2
+        assert AjCrewConfig.load().agents[starred_agent].star_order == 2
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("junk", ["1", True, 1.0, None, -1, STAR_ORDER_MAX + 1])
@@ -105,7 +105,7 @@ class TestUpdateEndpoint:
             )
             assert resp.status == 400
             assert (await resp.json())["code"] == "invalid_star_order"
-        stored = KiroCrewConfig.load().agents[starred_agent]
+        stored = AjCrewConfig.load().agents[starred_agent]
         assert stored.star_order == 0
         assert stored.workspace == "default"
 
@@ -116,7 +116,7 @@ class TestUpdateEndpoint:
             assert (
                 await client.put(f"/api/agents/{starred_agent}", json={"starred": False})
             ).status == 200
-        stored = KiroCrewConfig.load().agents[starred_agent]
+        stored = AjCrewConfig.load().agents[starred_agent]
         assert stored.starred is False
         assert stored.star_order == 0
 
@@ -125,11 +125,11 @@ class TestUpdateEndpoint:
         async with TestClient(TestServer(_crud_app())) as client:
             await client.put(f"/api/agents/{starred_agent}", json={"starred": False})
             await client.put(f"/api/agents/{starred_agent}", json={"star_order": 5})
-        assert KiroCrewConfig.load().agents[starred_agent].star_order == 0
+        assert AjCrewConfig.load().agents[starred_agent].star_order == 0
 
 
 def _members_app(state) -> web.Application:
-    from kiro_crew.dashboard.handlers.members import api_members
+    from aj_crew.dashboard.handlers.members import api_members
 
     @web.middleware
     async def _auth(request: web.Request, handler):
@@ -147,15 +147,15 @@ def _members_app(state) -> web.Application:
 async def test_roster_rows_carry_star_order(tmp_path):
     fake = SimpleNamespace(
         agents={
-            "top": KiroCrewAgentConfig(kiro_agent="top", starred=True, star_order=1),
-            "plain": KiroCrewAgentConfig(kiro_agent="plain"),
+            "top": AjCrewAgentConfig(kiro_agent="top", starred=True, star_order=1),
+            "plain": AjCrewAgentConfig(kiro_agent="plain"),
         },
         default_agent="top",
         memory_stores={},
         degraded_sections=frozenset(),
     )
     state = _make_state(tmp_path)
-    with patch("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", return_value=fake):
+    with patch("aj_crew.dashboard.handlers.members.AjCrewConfig.load", return_value=fake):
         async with TestClient(TestServer(_members_app(state))) as client:
             body = await (await client.get("/api/members")).json()
     rows = {r["name"]: r for r in body["members"]}

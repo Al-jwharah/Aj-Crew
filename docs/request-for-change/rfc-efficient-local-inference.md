@@ -37,7 +37,7 @@ superseded-by: []
 
 ## 1. Summary
 
-Kiro Crew runs more and more inference on the user's own machine. Each workload
+Aj Crew runs more and more inference on the user's own machine. Each workload
 picks its own thread count and its own cadence. None of them knows whether the
 machine is on battery, and on Linux and Windows none can use the GPU or NPU that
 most laptops sold since 2023 carry. On a laptop, a single 40-minute meeting
@@ -58,7 +58,7 @@ help:
    OS speech engine where the platform offers one. A build that fails the
    existing preflight probe lands on layer 1. This layer is a packaging and
    loader change, not a config key.
-3. **A local endpoint for vendor stacks, NPUs included.** Kiro Crew does not
+3. **A local endpoint for vendor stacks, NPUs included.** Aj Crew does not
    bundle vendor SDKs. It speaks the OpenAI-compatible API to a server on the
    same machine (Lemonade on AMD, an OpenVINO server on Intel, and so on). A
    workload with an in-process engine falls back to it when that server is
@@ -77,7 +77,7 @@ help:
   process may run on, at most `THREAD_CEILING` (16), a choice its docstring
   records as measured on a 32-core Graviton3 host. On a 16-core / 32-thread
   laptop that is 16 threads for the 148 MB `base` model.
-- **Encoder window.** `audio_ctx` is set nowhere under `src/kiro_crew/stt/`, so
+- **Encoder window.** `audio_ctx` is set nowhere under `src/aj_crew/stt/`, so
   whisper.cpp encodes the full 1500-frame (30 s) window for every decode. That
   includes a live partial over 1-8 s of speech (`MAX_PHRASE_SECS` in
   `stt/session.py`). stt-streaming's "Decode cost is a fixed floor plus a small
@@ -316,7 +316,7 @@ Caveats, which Phase 0 (§5) turns into tested numbers:
 2. A machine with a usable accelerator build uses it. A build that fails, at
    load or in the probe, lands back on the efficient CPU path without user
    action.
-3. NPUs and vendor runtimes are reachable without Kiro Crew bundling or tracking
+3. NPUs and vendor runtimes are reachable without Aj Crew bundling or tracking
    any vendor SDK.
 4. One battery signal and one setting cover every local workload. Each workload
    decides what "reduced" means for itself.
@@ -407,7 +407,7 @@ What this layer adds:
 - **A loader that can fall back.** When the accelerated build is present, it is
   the first choice. If it fails `probe_native`, fails to load, or decodes slower
   than the CPU build, the loader uses the CPU build, and status and
-  `kirocrew doctor` show the reason. Both builds are installed side by side;
+  `ajcrew doctor` show the reason. Both builds are installed side by side;
   nothing is selected by a key.
 - **The OS speech engine.** On macOS it already exists as the `apple` STT
   provider (`_VALID_STT_PROVIDERS` in `config/sections_stt.py`). Whether the battery
@@ -421,7 +421,7 @@ On-device NPU support is fragmented. Each vendor has its own SDK and operating
 system coverage, and it changes from release to release. For example, on the
 reference machine Lemonade reports the XDNA2 NPU as available, but its
 whisper.cpp NPU backend as "Requires Windows". Vendor stacks increasingly ship a
-local server that speaks the OpenAI-compatible API, so Kiro Crew should be a
+local server that speaks the OpenAI-compatible API, so Aj Crew should be a
 client of that API and not an integrator of the SDKs.
 
 - **Provider.** `openai_compat` for each workload that has a standard route:
@@ -490,8 +490,8 @@ client of that API and not an integrator of the SDKs.
 
 Each phase is independently shippable and independently abandonable.
 
-**Phase 0 -- measure (`kirocrew bench local-inference`).** Extend the existing
-`kirocrew bench` command (`cli_bench.py`, today a memory benchmark).
+**Phase 0 -- measure (`ajcrew bench local-inference`).** Extend the existing
+`ajcrew bench` command (`cli_bench.py`, today a memory benchmark).
 
 - For STT, embeddings and, if configured, the Jev endpoint, it reports: the
   backend linked, threads, wall time and CPU-seconds per unit, and, where the
@@ -542,7 +542,7 @@ a Metal build, and the fallback loader of §4.2.
 - On a machine with the accelerated build, Phase 0 shows it selected and
   faster.
 - A build made to fail `probe_native` falls back to the CPU build, with the
-  reason shown in status and in `kirocrew doctor`.
+  reason shown in status and in `ajcrew doctor`.
 
 *Blocked on* open question 3 (distribution).
 
@@ -638,7 +638,7 @@ returns to zero after the idle timeout with no decision in flight.
 2. **Reduced `audio_ctx` on finals.** Should finals also use a sized window,
    behind a measured word-error-rate gate on real multilingual speech? Phase 1
    keeps finals unchanged until this is answered.
-3. **Who builds and hosts accelerated builds?** Options: Kiro Crew's model CDN
+3. **Who builds and hosts accelerated builds?** Options: Aj Crew's model CDN
    (already sha256-pinned), upstream `pywhispercpp` release assets, or
    user-built only, with the loader simply detecting them. (Phase 3 is blocked
    on this.)

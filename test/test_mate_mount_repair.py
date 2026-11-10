@@ -14,17 +14,17 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-from kiro_crew import mate_worker
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.mate_config_migration import migrate_existing_crewmates
+import aj_crew.config.paths as paths_mod
+from aj_crew import mate_worker
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.mate_config_migration import migrate_existing_crewmates
 
 BASE = {
-    "name": "kirocrew-mate-worker",
+    "name": "ajcrew-mate-worker",
     "prompt": "worker base prompt",
-    "tools": ["fs_read", "@kirocrew-core"],
+    "tools": ["fs_read", "@ajcrew-core"],
     "allowedTools": ["fs_read"],
-    "mcpServers": {"kirocrew-core": {"command": "kc", "args": ["core"]}},
+    "mcpServers": {"ajcrew-core": {"command": "kc", "args": ["core"]}},
 }
 
 JIRA = {"command": "jira-mcp", "args": ["--stdio"], "autoApprove": ["get_issue"]}
@@ -40,7 +40,7 @@ def layout(monkeypatch, tmp_path):
     mates.mkdir(parents=True)
     monkeypatch.setattr(paths_mod, "kiro_agents_dir", lambda: user)
     monkeypatch.setattr(paths_mod, "kiro_home", lambda: kiro)
-    _write(mates, "kirocrew-mate-worker", BASE)
+    _write(mates, "ajcrew-mate-worker", BASE)
     return user, mates
 
 
@@ -49,16 +49,16 @@ def persisted(monkeypatch):
     """Config writes recorded instead of persisted; the shim serves *cfg* back."""
     saved: dict[str, dict] = {}
 
-    def install(cfg: KiroCrewConfig) -> dict[str, dict]:
+    def install(cfg: AjCrewConfig) -> dict[str, dict]:
         monkeypatch.setattr(
-            "kiro_crew.mate_config_migration.KiroCrewConfig",
+            "aj_crew.mate_config_migration.AjCrewConfig",
             type("Shim", (), {"load": staticmethod(lambda: cfg)}),
         )
 
         def persist(c, name, **kw):
             saved[name] = kw
 
-        monkeypatch.setattr("kiro_crew.memory_stores.persist_member_config", persist)
+        monkeypatch.setattr("aj_crew.memory_stores.persist_member_config", persist)
         return saved
 
     return install
@@ -68,8 +68,8 @@ def _write(directory: Path, name: str, spec: dict) -> None:
     (directory / f"{name}.json").write_text(json.dumps(spec), encoding="utf-8")
 
 
-def _cfg(**agents: KiroCrewAgentConfig) -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
+def _cfg(**agents: AjCrewAgentConfig) -> AjCrewConfig:
+    cfg = AjCrewConfig()
     cfg.agents = dict(agents)
     return cfg
 
@@ -82,7 +82,7 @@ def _ledger(mates: Path) -> dict:
     return json.loads((mates.parent / "migrated.json").read_text(encoding="utf-8"))
 
 
-def _moved_before(user: Path, mates: Path, old: dict, mate_file: dict) -> KiroCrewConfig:
+def _moved_before(user: Path, mates: Path, old: dict, mate_file: dict) -> AjCrewConfig:
     """Bot ``zxc`` as an earlier start moved it off agent ``builder`` (*old*) onto *mate_file*."""
     _write(user, "builder", old)
     _write(mates, "zxc", mate_file)
@@ -92,7 +92,7 @@ def _moved_before(user: Path, mates: Path, old: dict, mate_file: dict) -> KiroCr
         "threads": {"zxc": {"from": "builder", "repointed": [], "done": True, "member_id": "zxc"}},
     }
     (mates.parent / "migrated.json").write_text(json.dumps(ledger), encoding="utf-8")
-    return _cfg(zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="zxc"))
+    return _cfg(zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="zxc"))
 
 
 _UNMOUNTED = {"name": "zxc", "mcpServers": {"jira": JIRA}, "tools": [], "allowedTools": []}
@@ -100,7 +100,7 @@ _UNMOUNTED = {"name": "zxc", "mcpServers": {"jira": JIRA}, "tools": [], "allowed
 
 def test_a_moved_bot_gets_back_the_server_its_old_agent_mounted(layout, persisted):
     """Its file declares jira with no selector; the old agent's ``*`` mounted it: ``@jira`` is back."""
-    from kiro_crew.mate_mount_repair import CHECKED_KEY
+    from aj_crew.mate_mount_repair import CHECKED_KEY
 
     user, mates = layout
     old = {"name": "builder", "tools": ["*"], "mcpServers": {"jira": JIRA}}
@@ -123,7 +123,7 @@ def test_a_moved_bot_gets_back_the_server_its_old_agent_mounted(layout, persiste
 @pytest.mark.parametrize("selector", ["@jira", "@jira/search"])
 def test_a_literal_selector_the_user_took_out_stays_out(layout, persisted, selector):
     """The move kept the old agent's own ``@jira`` (or ``@jira/tool``); its absence is the user's."""
-    from kiro_crew.mate_mount_repair import CHECKED_KEY, restore_withheld_mounts
+    from aj_crew.mate_mount_repair import CHECKED_KEY, restore_withheld_mounts
 
     user, mates = layout
     old = {"name": "builder", "tools": [selector], "mcpServers": {"jira": JIRA}}
@@ -138,7 +138,7 @@ def test_a_literal_selector_the_user_took_out_stays_out(layout, persisted, selec
 
 def test_a_star_beside_a_literal_tool_selector_restores_the_whole_server(layout, persisted):
     """``*`` spells ``@jira``, which no entry of the old agent matched, so the move withheld it."""
-    from kiro_crew.mate_mount_repair import restore_withheld_mounts
+    from aj_crew.mate_mount_repair import restore_withheld_mounts
 
     user, mates = layout
     old = {"name": "builder", "tools": ["*", "@jira/search"], "mcpServers": {"jira": JIRA}}
@@ -151,7 +151,7 @@ def test_a_star_beside_a_literal_tool_selector_restores_the_whole_server(layout,
 
 
 def test_a_server_the_old_agent_never_mounted_stays_unmounted(layout, persisted):
-    from kiro_crew.mate_mount_repair import CHECKED_KEY, restore_withheld_mounts
+    from aj_crew.mate_mount_repair import CHECKED_KEY, restore_withheld_mounts
 
     user, mates = layout
     old = {"name": "builder", "tools": ["fs_read"], "mcpServers": {"jira": JIRA}}
@@ -166,7 +166,7 @@ def test_a_server_the_old_agent_never_mounted_stays_unmounted(layout, persisted)
 
 def test_a_server_the_file_defines_unlike_the_old_agent_stays_unmounted(layout, persisted):
     """Same name, another command: not the old agent's server, so not its selector either."""
-    from kiro_crew.mate_mount_repair import restore_withheld_mounts
+    from aj_crew.mate_mount_repair import restore_withheld_mounts
 
     user, mates = layout
     old = {"name": "builder", "tools": ["*"], "mcpServers": {"jira": JIRA}}
@@ -179,7 +179,7 @@ def test_a_server_the_file_defines_unlike_the_old_agent_stays_unmounted(layout, 
 
 
 def test_a_bot_pointed_back_at_its_old_agent_is_not_repaired(layout, persisted):
-    from kiro_crew.mate_mount_repair import restore_withheld_mounts
+    from aj_crew.mate_mount_repair import restore_withheld_mounts
 
     user, mates = layout
     old = {"name": "builder", "tools": ["*"], "mcpServers": {"jira": JIRA}}
@@ -213,7 +213,7 @@ def test_a_bot_moved_off_a_retired_private_copy_gets_its_server_back(
     An earlier move's copy keeps ``<source>.json``, so the next one is ``<source>.1.json``.
     A Bot that ran on another Bot's copy names that copy as its old agent too.
     """
-    from kiro_crew.mate_mount_repair import CHECKED_KEY, restore_withheld_mounts
+    from aj_crew.mate_mount_repair import CHECKED_KEY, restore_withheld_mounts
 
     user, mates = layout
     cfg = _moved_before(user, mates, {}, _UNMOUNTED)

@@ -26,7 +26,7 @@ from native_skill_projection_helpers import (
 )
 
 from conftest import requires_symlinks
-from kiro_crew.acp import skill_projection as projection
+from aj_crew.acp import skill_projection as projection
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _no_eager_prune = native_skill_projection_helpers._no_eager_prune
@@ -46,26 +46,26 @@ def test_lease_scan_reclaims_valid_unlocked_crash_residue(native_tree):
     holder = lease_dir / "crashed.hold"
     projection.atomic_write(
         stale,
-        json.dumps({"aliases": ["kirocrew-skill-view-stale"]}),
+        json.dumps({"aliases": ["ajcrew-skill-view-stale"]}),
         restrict_to_owner=True,
     )
     projection.atomic_write(holder, "", restrict_to_owner=True)
 
-    assert not _alias_is_live(agents, "kirocrew-skill-view-stale")
+    assert not _alias_is_live(agents, "ajcrew-skill-view-stale")
     assert not stale.exists()
     assert not holder.exists()
 
 
 def test_lease_scan_does_not_mutate_before_finding_later_held_match(native_tree, monkeypatch):
     _home, agents, _project = native_tree
-    alias = "kirocrew-skill-view-held"
+    alias = "ajcrew-skill-view-held"
     lease_dir = projection._projection_lease_dir()
     lease_dir.mkdir(parents=True)
     stale = lease_dir / "stale-first.json"
     stale_holder = lease_dir / "stale-first.hold"
     projection.atomic_write(
         stale,
-        json.dumps({"aliases": ["kirocrew-skill-view-stale"]}),
+        json.dumps({"aliases": ["ajcrew-skill-view-stale"]}),
         restrict_to_owner=True,
     )
     projection.atomic_write(stale_holder, "", restrict_to_owner=True)
@@ -138,7 +138,7 @@ def test_lease_scan_error_defers_unlocked_residue_cleanup(native_tree, monkeypat
     holder = lease_dir / "stale-before-error.hold"
     projection.atomic_write(
         stale,
-        json.dumps({"aliases": ["kirocrew-skill-view-stale"]}),
+        json.dumps({"aliases": ["ajcrew-skill-view-stale"]}),
         restrict_to_owner=True,
     )
     projection.atomic_write(holder, "", restrict_to_owner=True)
@@ -176,7 +176,7 @@ def test_lease_scan_error_defers_unlocked_residue_cleanup(native_tree, monkeypat
 
     with monkeypatch.context() as scan_patch:
         scan_patch.setattr(projection.os, "scandir", error_after_first_entry_scandir)
-        assert _alias_is_live(agents, "kirocrew-skill-view-other") is True
+        assert _alias_is_live(agents, "ajcrew-skill-view-other") is True
 
     assert stale.exists() and holder.exists()
 
@@ -200,7 +200,7 @@ def test_lease_scan_cap_drains_validated_residue_before_answering_live(native_tr
     stale_holder = lease_dir / "stale-before-cap.hold"
     projection.atomic_write(
         stale,
-        json.dumps({"aliases": ["kirocrew-skill-view-stale"]}),
+        json.dumps({"aliases": ["ajcrew-skill-view-stale"]}),
         restrict_to_owner=True,
     )
     projection.atomic_write(stale_holder, "", restrict_to_owner=True)
@@ -208,7 +208,7 @@ def test_lease_scan_cap_drains_validated_residue_before_answering_live(native_tr
     beyond_holder = lease_dir / "beyond-cap.hold"
     projection.atomic_write(
         beyond,
-        json.dumps({"aliases": ["kirocrew-skill-view-beyond"]}),
+        json.dumps({"aliases": ["ajcrew-skill-view-beyond"]}),
         restrict_to_owner=True,
     )
     projection.atomic_write(beyond_holder, "", restrict_to_owner=True)
@@ -259,7 +259,7 @@ def test_lease_scan_cap_drains_validated_residue_before_answering_live(native_tr
     with monkeypatch.context() as scan_patch:
         scan_patch.setattr(projection.os, "scandir", ordered_scandir)
         scan_patch.setattr(projection, "_unlink_projection_lease_if_unchanged", record_unlink)
-        assert _alias_is_live(agents, "kirocrew-skill-view-query") is True
+        assert _alias_is_live(agents, "ajcrew-skill-view-query") is True
 
     # The residue validated before the cap is reclaimed only after iterator
     # closure; the record past the cap was never scanned and remains on disk.
@@ -386,7 +386,7 @@ def test_prune_work_cap_counts_retained_candidates_before_reclaims(native_tree, 
     3 all three stale candidates are still examined and reclaimed, and the lease
     directory is scanned exactly once.
     """
-    live_stems = {f"kirocrew-skill-view-{0xA00 + index:024x}" for index in range(3)}
+    live_stems = {f"ajcrew-skill-view-{0xA00 + index:024x}" for index in range(3)}
     _home, agents, _project = native_tree
     stale = [_legacy_alias(agents, f"{index:024x}") for index in range(3)]
 
@@ -450,7 +450,7 @@ def test_windows_alias_unlink_rechecks_identity_under_publication_lock(tmp_path,
 
 
 def test_projection_and_provider_serialize_workspace_settings_writes(native_tree, monkeypatch):
-    from kiro_crew.providers import acp as provider_acp
+    from aj_crew.providers import acp as provider_acp
 
     _home, agents, project = native_tree
     (agents / "custom.json").write_text('{"name":"custom"}', encoding="utf-8")
@@ -509,7 +509,7 @@ def test_projection_and_provider_serialize_workspace_settings_writes(native_tree
 
 @requires_symlinks
 def test_workspace_settings_lock_refuses_a_planted_symlink(tmp_path):
-    from kiro_crew.workspace_cli_settings import (
+    from aj_crew.workspace_cli_settings import (
         CLI_SETTINGS_LOCK_NAME,
         workspace_cli_settings_lock,
     )
@@ -630,7 +630,7 @@ def test_boot_drain_pause_outlasts_the_lock_poll_cap():
     lock's poll cap. A between-batch gap shorter than that cap can open and
     close while the waiter sleeps, so it never takes the lock and runs into
     the 2s acquisition ceiling instead."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     assert projection._DRAIN_BATCH_PAUSE_SECS > platform_compat._LOCK_POLL_MAX_SECS
     assert projection._DRAIN_BATCH_PAUSE_SECS < projection._PROJECTION_LOCK_TIMEOUT_SECS
@@ -886,9 +886,9 @@ def test_lease_scan_unions_aliases_from_every_held_lease(native_tree):
     """Finding 3: one scan unions the aliases named by every held lease."""
     _home, agents, _project = native_tree
     a = projection._acquire_projection_lease(
-        agents, {"kirocrew-skill-view-aaa", "kirocrew-skill-view-bbb"}
+        agents, {"ajcrew-skill-view-aaa", "ajcrew-skill-view-bbb"}
     )
-    b = projection._acquire_projection_lease(agents, {"kirocrew-skill-view-ccc"})
+    b = projection._acquire_projection_lease(agents, {"ajcrew-skill-view-ccc"})
     try:
         live, uncertain = projection._scan_projection_leases(agents)
     finally:
@@ -896,9 +896,9 @@ def test_lease_scan_unions_aliases_from_every_held_lease(native_tree):
         b.close()
     assert uncertain is False
     assert live == {
-        "kirocrew-skill-view-aaa",
-        "kirocrew-skill-view-bbb",
-        "kirocrew-skill-view-ccc",
+        "ajcrew-skill-view-aaa",
+        "ajcrew-skill-view-bbb",
+        "ajcrew-skill-view-ccc",
     }
 
 

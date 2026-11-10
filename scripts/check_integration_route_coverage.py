@@ -11,7 +11,7 @@ conftest refuses anything else, because pytest's CWD is the repository root
 and a relative value would leave the dumps in it)::
 
     HITS="$(mktemp -d)"
-    KIROCREW_INTEGRATION=1 KIROCREW_INTEGRATION_HITS_DIR="$HITS" \\
+    AJCREW_INTEGRATION=1 AJCREW_INTEGRATION_HITS_DIR="$HITS" \\
         python -m pytest test/integration -n 2
     python3 scripts/check_integration_route_coverage.py "$HITS" --min 80
 
@@ -23,7 +23,7 @@ write is obvious.
 Why routes and not lines: a route answered by the real app on a real boot
 proves the wiring between config, auth, store and handler; a line reached
 through a mock proves only that the line exists. Line coverage of the layer
-is still worth READING (``--cov=kiro_crew`` works as usual) -- it is just not
+is still worth READING (``--cov=aj_crew`` works as usual) -- it is just not
 the number this layer is gated on.
 """
 
@@ -59,7 +59,7 @@ def main(argv: list[str] | None = None) -> int:
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
-        "hits_dir", type=Path, help="directory KIROCREW_INTEGRATION_HITS_DIR pointed at"
+        "hits_dir", type=Path, help="directory AJCREW_INTEGRATION_HITS_DIR pointed at"
     )
     parser.add_argument(
         "--min", type=float, default=0.0, help="fail below this percent (default: report only)"

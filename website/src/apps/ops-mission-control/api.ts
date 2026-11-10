@@ -635,7 +635,7 @@ export interface RotationInfo {
    * The rotation-check SOP is told to pause exactly `tier_crons.on_shift` and never this
    * union — off shift the union still contains the `always`-tier `rotation-check` cron, and
    * pausing that one strands the instance unable to re-arm. Showing either list to an
-   * operator would be showing them Kiro Crew's cron plumbing on an ops board, and the
+   * operator would be showing them Aj Crew's cron plumbing on an ops board, and the
    * actionable half of it (is this instance picking up work) is the shift badge.
    */
   armed_crons: string[]
@@ -819,12 +819,12 @@ export interface LedgerStats {
 /**
  * Slack output-channel state. `ready` is the only field the UI should gate on;
  * the three booleans exist so Settings can name WHICH half is missing, since the
- * fixes differ (flip a toggle / enter a channel / configure Kiro Crew's Slack).
+ * fixes differ (flip a toggle / enter a channel / configure Aj Crew's Slack).
  */
 export interface SlackOutStatus {
   enabled: boolean
   channel: string
-  /** Whether Kiro Crew's OWN Slack client exists — this app stores no token. */
+  /** Whether Aj Crew's OWN Slack client exists — this app stores no token. */
   slack_available: boolean
   ready: boolean
   detail: string
@@ -1160,7 +1160,7 @@ export const opsApi = {
    * `log` is the Markdown artifact the backend writes when the incident reaches a terminal
    * status, redacted at the write (both the core credential/exfil pass and the app's
    * provider-token pass). It is the only thing this app produces that a reader who does
-   * not run Kiro Crew can be handed, which is why it is worth a round trip.
+   * not run Aj Crew can be handed, which is why it is worth a round trip.
    *
    * It is EMPTY in two different situations and the UI must not render them the same way:
    * an incident that is still open has no artifact yet, and one that closed before this
@@ -1169,7 +1169,7 @@ export const opsApi = {
    *
    * `log_path` is where that file lives on disk, because handing a colleague an artifact
    * usually means handing over a FILE and not a clipboard. It is empty whenever no file
-   * exists, and the UI must never synthesize it: `KIROCREW_HOME` moves the data directory,
+   * exists, and the UI must never synthesize it: `AJCREW_HOME` moves the data directory,
    * so a guessed path would be this app asserting a file the backend does not have.
    */
   incident: (id: string) =>
@@ -1407,7 +1407,7 @@ export const opsApi = {
    *
    * `notify_enabled` turns local desktop notifications on. There is nothing else to set
    * for that channel — no destination and no credential — which is the whole reason it
-   * exists beside the Slack one. Per-channel muting is NOT here: Kiro Crew owns that
+   * exists beside the Slack one. Per-channel muting is NOT here: Aj Crew owns that
    * centrally at Settings → Notifications, and duplicating it would give an operator two
    * controls that can disagree.
    *

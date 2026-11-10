@@ -1,7 +1,7 @@
 ---
 title: App contribution points on one sandboxed frame model
 status: draft
-author: buluoray, with kirocrew-worker
+author: buluoray, with ajcrew-worker
 created: 2026-10-30
 last-audited: 2026-10-31
 audited-at: 4537582b9b
@@ -68,7 +68,7 @@ or automation; those run in the app's backend under host grants (§7, §8).
 
 ## 1. Problem
 
-Main has five points (`src/kiro_crew/apps/manifest_contributes.py`):
+Main has five points (`src/aj_crew/apps/manifest_contributes.py`):
 `commands`, `panelTabs`, `fileMenuItems`, `sessionControls` and, since #26479,
 `linkPreviews`. The first four let an app add a launcher row, a side-panel tab, a
 file-menu row or a composer chip. Only `linkPreviews` lets an app see anything in
@@ -108,7 +108,7 @@ network as the user. A frame does not make that app safe; it makes sure the
 ### 2.2 The frame
 
 **Shipped in #26479** (`website/src/linkPreview/linkPreviewFrames.ts`,
-`src/kiro_crew/apps/link_preview_frame.py`):
+`src/aj_crew/apps/link_preview_frame.py`):
 
 - **Element.** `sandbox="allow-scripts"` and nothing else, so the origin is
   opaque; `credentialless`, `referrerpolicy="no-referrer"`, and an empty `allow`
@@ -168,7 +168,7 @@ network as the user. A frame does not make that app safe; it makes sure the
   the dashboard mints again. The dashboard renews it with a `capability` message;
   a frame whose capability was refused sends `capabilityExpired`.
 - **Header only.** The frame's `ctx.fetch` sends the capability in the
-  `X-KiroCrew-Capability` header with `credentials: 'omit'`. No other route, and
+  `X-AjCrew-Capability` header with `credentials: 'omit'`. No other route, and
   not the auth middleware, accepts it.
 - **Own backend only.** Frame requests go to `/link-preview-fetch/<app>/<path>`,
   which reaches exactly the app's own backend: the process backend through the
@@ -187,8 +187,8 @@ network as the user. A frame does not make that app safe; it makes sure the
 
 - **Method and resource authorization.** The capability also names the point,
   the point id and the current invocation. The fetch route passes them to the app
-  as headers it writes itself (`X-KiroCrew-Frame-Point`,
-  `X-KiroCrew-Frame-Invocation`), stripping any the frame sent. The frame SDK's
+  as headers it writes itself (`X-AjCrew-Frame-Point`,
+  `X-AjCrew-Frame-Invocation`), stripping any the frame sent. The frame SDK's
   route helper refuses a write method unless the route declares the point it
   serves, so reaching the app's prefix is never the whole authorization.
 - **Revocation.** Revoking a point's grant makes its live capability fail on its
@@ -220,7 +220,7 @@ registry review checks for it.
 **Shipped in #26479** (`website/src/linkPreview/linkPreviewProtocol.ts`):
 
 Dashboard and frame talk over `postMessage`. Every message is
-`{ "kirocrew-link-preview": 1, type, ...fields }`; the frame-side reader
+`{ "ajcrew-link-preview": 1, type, ...fields }`; the frame-side reader
 (`readFrameMessage`) drops anything else.
 
 | Direction | `type` | Fields |
@@ -258,8 +258,8 @@ Dashboard and frame talk over `postMessage`. Every message is
 **Proposed for v1.** The envelope is generalized and extended, keeping every
 shipped message:
 
-- **Envelope.** `{ "kirocrew-app-frame": 1, type, ...fields }` for every point.
-  The dashboard keeps accepting and sending `kirocrew-link-preview` to link-preview
+- **Envelope.** `{ "ajcrew-app-frame": 1, type, ...fields }` for every point.
+  The dashboard keeps accepting and sending `ajcrew-link-preview` to link-preview
   frames for the support window in §2.10.
 - **Handshake.** `init` gains `point`, `pointId`, `versions` (protocol majors the
   host speaks, newest first), `features` (for example `message.v1`, `offer.v1`),
@@ -313,7 +313,7 @@ blocking does not apply and a frame cannot overwrite the clipboard in a loop.
 
 ### 2.7 Grants and consent
 
-**Shipped in #26479** (`src/kiro_crew/apps/link_preview_grants.py`, the
+**Shipped in #26479** (`src/aj_crew/apps/link_preview_grants.py`, the
 `approved-grants.json` flow in `docs/system-specs/modules/app-kit-platform.md`):
 
 - A link-preview provider's authority is three grant families stored per app in
@@ -408,7 +408,7 @@ Proposed. The shipped protocol has no version field; it is treated as major 1.
   version it needs.
 - **Major bumps.** Removing, renaming or changing the meaning of a field bumps the
   major. The host offers every supported major in `init.versions`. A superseded
-  major, and the `kirocrew-link-preview` envelope, stay supported for **12
+  major, and the `ajcrew-link-preview` envelope, stay supported for **12
   months** after the release that superseded them. The end date is published in
   `docs/app-kit/` at that release, and the manifest linter warns on frames that
   only speak a major within 3 months of its end. A migration guide and a codemod
@@ -670,14 +670,14 @@ field and its reader together. It must:
    deadline and data rate.
 6. Use host-owned effects (§2.6) for anything that leaves the frame.
 7. Document it in `docs/app-kit/manifest-reference.md` and the app-kit-platform
-   spec, with an example app outside `src/kiro_crew/apps/builtins/`.
+   spec, with an example app outside `src/aj_crew/apps/builtins/`.
 
 A proposed point that cannot say what it never gives is not ready.
 
 ## 10. Rollout
 
 1. **Generalize the shipped frame.** Point-aware mint and frame routes, the
-   `kirocrew-app-frame` envelope beside the shipped one, the handshake fields,
+   `ajcrew-app-frame` envelope beside the shipped one, the handshake fields,
    `invoke`, `offer`, `offerAck` and `offerRefused`, the point and invocation
    headers on the fetch route, immediate revocation, IP-literal refusal and the
    full Public Suffix List. Gate: sandbox integration tests in real Chromium,
@@ -700,13 +700,13 @@ Read at `4537582b9b`, which carries #26479 (`04f118c525`): the message types in
 attributes, `READY_TIMEOUT_MS` and `MAX_PINNED` in `linkPreviewFrames.ts`;
 `RETRY_AFTER_MS` in `LinkPreviewLayer.tsx`; `frame_csp`, `CAPABILITY_HEADER`,
 `_CAPABILITY_TTL_SECS`, `_FETCH_METHODS` and the CORS hook in
-`src/kiro_crew/apps/link_preview_frame.py`; the grant families,
-`normalize_host` and `host_refusal` in `src/kiro_crew/apps/link_preview_grants.py`;
+`src/aj_crew/apps/link_preview_frame.py`; the grant families,
+`normalize_host` and `host_refusal` in `src/aj_crew/apps/link_preview_grants.py`;
 `SCAN_BUDGET_MS` and the overrun handling in
 `website/src/linkPreview/textPatterns.ts`; `fullUrl` and the provider caps in
-`src/kiro_crew/apps/manifest_contributes.py`; `mcpServers` and `crons` on
-`AppManifest` in `src/kiro_crew/apps/manifest.py`; `apps_allow_third_party` in
-`src/kiro_crew/config/sections_agent.py`. No entry under `docs/decisions/`
+`src/aj_crew/apps/manifest_contributes.py`; `mcpServers` and `crons` on
+`AppManifest` in `src/aj_crew/apps/manifest.py`; `apps_allow_third_party` in
+`src/aj_crew/config/sections_agent.py`. No entry under `docs/decisions/`
 covers app contribution points.
 
 ## 12. Scope decision

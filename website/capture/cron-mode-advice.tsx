@@ -31,12 +31,12 @@ import { i18nT } from '../src/i18n/t'
 import '../src/index.css'
 
 const params = new URLSearchParams(location.search)
-const theme = params.get('theme') === 'light' ? 'kiro-light' : 'kiro-dark'
+const theme = params.get('theme') === 'light' ? 'aj-light' : 'aj-dark'
 document.documentElement.setAttribute('data-theme', theme)
 
 /** A one-crew roster: the agent row is not the subject, and a picker offering
  *  several names would only add noise to the frame. */
-const AGENTS = [{ name: 'kirocrew', description: 'Default crew' }] as never[]
+const AGENTS = [{ name: 'ajcrew', description: 'Default crew' }] as never[]
 
 initI18n('en')
 
@@ -58,7 +58,7 @@ function Scene() {
             </div>
             <JobForm
               agents={AGENTS}
-              defaultAgent="kirocrew"
+              defaultAgent="ajcrew"
               onSaved={() => {}}
               layout="vertical"
               externalSubmit

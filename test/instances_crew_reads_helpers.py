@@ -38,7 +38,7 @@ class CrewReadsCase:
     """Per-test builders for the crew-scoped session read handlers."""
 
     def _reg(self, tmp_path):
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         return InstancesRegistry(path=tmp_path / "instances.json")
 
@@ -98,7 +98,7 @@ class CrewReadsCase:
         """
         import contextlib
 
-        from kiro_crew.history import INCOGNITO_EXCLUDED_HEADER
+        from aj_crew.history import INCOGNITO_EXCLUDED_HEADER
 
         confirm = {INCOGNITO_EXCLUDED_HEADER: "1"} if peer_confirms_exclusion else {}
         if isinstance(search, tuple):

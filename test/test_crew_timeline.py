@@ -16,7 +16,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import crew_mode, crew_timeline
+from aj_crew import crew_mode, crew_timeline
 
 T0 = datetime(2026, 10, 21, 3, 0, 0, tzinfo=timezone.utc)
 
@@ -33,11 +33,11 @@ def _row(role: str, seconds: float, content: str = "", **meta: Any) -> dict[str,
 
 
 def _send(seconds: float, target: str, tcid: str) -> dict[str, Any]:
-    payload = {"tool_id": "kirocrew-dashboard::session_send", "arguments": {"target": target}}
+    payload = {"tool_id": "ajcrew-dashboard::session_send", "arguments": {"target": target}}
     return _row(
         "tool",
         seconds,
-        "🔧 @kirocrew-dashboard/session_send",
+        "🔧 @ajcrew-dashboard/session_send",
         tool_call_id=tcid,
         input=json.dumps(payload),
     )
@@ -135,14 +135,14 @@ def test_an_idle_session_has_no_open_bar():
 def test_a_tool_ends_at_the_next_row_because_its_finish_is_not_stamped():
     lane = _lane(
         [
-            _row("tool", 1, "🔧 @kirocrew-work/work_brief", tool_call_id="a", done=True),
+            _row("tool", 1, "🔧 @ajcrew-work/work_brief", tool_call_id="a", done=True),
             _row("assistant", 4, "next"),
         ]
     )
     (tool,) = lane["segments"]
     assert tool["kind"] == "tool"
     assert (tool["start"], tool["end"], tool["end_bound"]) == (_at(1), _at(4), "next_row")
-    assert tool["label"] == "@kirocrew-work/work_brief"
+    assert tool["label"] == "@ajcrew-work/work_brief"
 
 
 def test_a_tool_with_no_later_row_in_an_idle_session_is_a_point_not_a_guess():
@@ -154,8 +154,8 @@ def test_a_tool_with_no_later_row_in_an_idle_session_is_a_point_not_a_guess():
 def test_an_approval_wait_is_the_recorded_gap_between_the_call_and_its_approval():
     lane = _lane(
         [
-            _row("tool", 2, "🔧 @kirocrew-dashboard/session_send", tool_call_id="s"),
-            _row("tool", 12, "✅ @kirocrew-dashboard/session_send", tool_call_id="s"),
+            _row("tool", 2, "🔧 @ajcrew-dashboard/session_send", tool_call_id="s"),
+            _row("tool", 12, "✅ @ajcrew-dashboard/session_send", tool_call_id="s"),
             _row("tool", 13, "🔧 @x/other", tool_call_id="o"),
         ]
     )
@@ -170,7 +170,7 @@ def test_an_approval_wait_is_the_recorded_gap_between_the_call_and_its_approval(
 
 def test_a_pending_question_is_waiting_until_now():
     lane = _lane(
-        [_row("tool", 5, "🔧 @kirocrew-core/ask_question", tool_call_id="q")],
+        [_row("tool", 5, "🔧 @ajcrew-core/ask_question", tool_call_id="q")],
         now=30,
         running=True,
         waiting=True,
@@ -212,7 +212,7 @@ def test_a_handoff_joins_the_senders_call_to_the_workers_seed_row():
         "key": "root",
         **_lane(
             [
-                _row("tool", 2, "🔧 @kirocrew-dashboard/session_create", tool_call_id="c"),
+                _row("tool", 2, "🔧 @ajcrew-dashboard/session_create", tool_call_id="c"),
                 _send(5, "w1", "s"),
                 _send(5.5, "w2", "u"),
                 _send(9, "w1", "t"),
@@ -241,7 +241,7 @@ def test_a_handoff_joins_the_senders_call_to_the_workers_seed_row():
 
 def test_only_the_genuine_envelope_on_an_unmarked_row_is_a_seed():
     """G3: the quoted (defanged) form and a person typing the envelope are no hand-off."""
-    from kiro_crew.history import HUMAN_TURN_META_KEY
+    from aj_crew.history import HUMAN_TURN_META_KEY
 
     assert crew_timeline._HUMAN_TURN_KEY == HUMAN_TURN_META_KEY
     genuine = "[sent by session root via session_send]\n\nWrite it"
@@ -343,12 +343,12 @@ def test_every_gap_is_named():
 
 
 def _slot_row(key: str, **extra: Any) -> dict[str, Any]:
-    return {"key": key, "title": key, "agent": "kirocrew", "messages": 1, **extra}
+    return {"key": key, "title": key, "agent": "ajcrew", "messages": 1, **extra}
 
 
 @pytest.fixture
 def _route(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     async def _allow(*_a: Any, **_k: Any) -> None:
         return None
@@ -406,7 +406,7 @@ def _get(state: Any, slot: str) -> Any:
 @pytest.mark.asyncio
 async def test_the_route_draws_the_root_then_its_workers_then_closed_ones(_route):
     rows = [
-        _slot_row("root", agent="kirocrew-conductor", model="claude-x"),
+        _slot_row("root", agent="ajcrew-conductor", model="claude-x"),
         _slot_row("w1", created_by="root", served_model="claude-y"),
         _slot_row("other"),
     ]
@@ -444,10 +444,10 @@ async def test_the_route_draws_the_root_then_its_workers_then_closed_ones(_route
 
 @pytest.mark.asyncio
 async def test_a_closed_worker_is_drawn_from_its_saved_transcript_under_its_saved_title(_route):
-    rows = [_slot_row("root", agent="kirocrew-conductor")]
+    rows = [_slot_row("root", agent="ajcrew-conductor")]
     windows = {"root": [_row("user", 0, "go"), _send(1, "gone", "s")]}
     log = _SavedLog(
-        {"title": "Write the welcome note", "agent": "kirocrew-worker"},
+        {"title": "Write the welcome note", "agent": "ajcrew-worker"},
         [
             _row("user", 2, "[sent by session root via session_send]\n\nhi"),
             _row("assistant", 6, "ok", turn_stats={"elapsed_ms": 4000, "credits": 0.3}),
@@ -457,7 +457,7 @@ async def test_a_closed_worker_is_drawn_from_its_saved_transcript_under_its_save
     body = json.loads(resp.text)
     gone = body["lanes"][-1]
     assert (gone["key"], gone["status"], gone["record"]) == ("gone", "closed", True)
-    assert (gone["title"], gone["agent"]) == ("Write the welcome note", "kirocrew-worker")
+    assert (gone["title"], gone["agent"]) == ("Write the welcome note", "ajcrew-worker")
     assert [bar["kind"] for bar in gone["segments"]] == ["turn"]
     assert gone["credits"] == 0.3
     assert body["handoffs"] == [{"from": "root", "to": "gone", "start": _at(1), "end": _at(2)}]
@@ -468,7 +468,7 @@ async def test_a_closed_worker_is_drawn_from_its_saved_transcript_under_its_save
 @pytest.mark.asyncio
 @pytest.mark.parametrize("saved", [[], OSError("gone")], ids=["no rows", "unreadable"])
 async def test_a_closed_worker_with_no_record_says_so_in_the_gaps(_route, saved):
-    rows = [_slot_row("root", agent="kirocrew-conductor")]
+    rows = [_slot_row("root", agent="ajcrew-conductor")]
     windows = {"root": [_row("user", 0, "go")]}
     log = _SavedLog({"title": "Pick a lunch place"}, saved)
     resp = await _route.api_crew_timeline(_get(_state(rows, windows, log), "root"))
@@ -479,7 +479,7 @@ async def test_a_closed_worker_with_no_record_says_so_in_the_gaps(_route, saved)
 
 
 def crew_workers_module() -> Any:
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     return crew_workers
 
@@ -489,7 +489,7 @@ async def test_the_route_pairs_hand_offs_off_the_event_loop(_route, monkeypatch)
     """Pairing grows with a crew's seeds and sends, so it runs in a worker thread."""
     import threading
 
-    from kiro_crew import crew_timeline as timeline_module
+    from aj_crew import crew_timeline as timeline_module
 
     loop_thread = threading.get_ident()
     seen: list[int] = []
@@ -500,7 +500,7 @@ async def test_the_route_pairs_hand_offs_off_the_event_loop(_route, monkeypatch)
         return real(lanes)
 
     monkeypatch.setattr(timeline_module, "handoffs", spy)
-    rows = [_slot_row("root", agent="kirocrew-conductor"), _slot_row("w1", created_by="root")]
+    rows = [_slot_row("root", agent="ajcrew-conductor"), _slot_row("w1", created_by="root")]
     windows = {
         "root": [_row("user", 0, "go"), _send(1, "w1", "s")],
         "w1": [_row("user", 2, "[sent by session root via session_send]\n\nhi")],
@@ -514,7 +514,7 @@ async def test_the_route_pairs_hand_offs_off_the_event_loop(_route, monkeypatch)
 async def test_the_route_redacts_what_the_rows_carry(_route):
     """G4: a permission row with a key in it reaches the browser redacted."""
     key = "AKIA" + "ABCDEFGHIJKLMNOP"
-    rows = [_slot_row("root", agent="kirocrew-conductor")]
+    rows = [_slot_row("root", agent="ajcrew-conductor")]
     windows = {
         "root": [
             _row("user", 0, "go"),
@@ -528,8 +528,8 @@ async def test_the_route_redacts_what_the_rows_carry(_route):
 
 
 def test_a_lane_with_no_model_names_the_gateway_default(monkeypatch):
-    from kiro_crew.config import live
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.config import live
+    from aj_crew.dashboard.handlers import crew_workers
 
     monkeypatch.setattr(
         live, "snapshot", lambda: SimpleNamespace(agent=SimpleNamespace(model="auto"))
@@ -555,7 +555,7 @@ async def test_a_closed_root_is_drawn_from_saved_data_like_the_list_is(_route, m
     class _Log(_SavedLog):
         def get_metadata(self, key: str) -> dict[str, Any]:
             return (
-                {"title": "Toy Flag Review", "agent": "kirocrew-conductor"}
+                {"title": "Toy Flag Review", "agent": "ajcrew-conductor"}
                 if key == "dashboard:root"
                 else {}
             )
@@ -598,7 +598,7 @@ async def test_the_route_refuses_a_session_that_is_not_a_crew_mode_root(_route):
 
 @pytest.mark.asyncio
 async def test_the_timeline_is_owner_only(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     async def _allow(*_a: Any, **_k: Any) -> None:
         return None
@@ -667,11 +667,11 @@ def test_an_impossible_elapsed_draws_no_turn_and_does_not_crash(elapsed):
 
 
 def _create(seconds: float, title: str, tcid: str) -> dict[str, Any]:
-    payload = {"tool_id": "kirocrew-dashboard::session_create", "arguments": {"title": title}}
+    payload = {"tool_id": "ajcrew-dashboard::session_create", "arguments": {"title": title}}
     return _row(
         "tool",
         seconds,
-        "🔧 @kirocrew-dashboard/session_create",
+        "🔧 @ajcrew-dashboard/session_create",
         tool_call_id=tcid,
         input=json.dumps(payload),
     )
@@ -698,11 +698,11 @@ def test_a_create_call_never_pairs_with_a_send_seed():
 
 
 def _dispatch(seconds: float, tcid: str, **args: str) -> dict[str, Any]:
-    payload = {"tool_id": "kirocrew-dashboard::work_dispatch", "arguments": args}
+    payload = {"tool_id": "ajcrew-dashboard::work_dispatch", "arguments": args}
     return _row(
         "tool",
         seconds,
-        "🔧 @kirocrew-dashboard/work_dispatch",
+        "🔧 @ajcrew-dashboard/work_dispatch",
         tool_call_id=tcid,
         input=json.dumps(payload),
     )

@@ -38,9 +38,9 @@ class _Reset:
 async def _first_turn_build_kwargs(tmp_path, monkeypatch, *, suppressed: bool) -> dict:
     from recovery_l1_chat_runner_helpers import _l1_state, _RecordingSlot
 
-    from kiro_crew.acp.types import EVENT_COMPLETE, STOP_REASON_END_TURN
-    from kiro_crew.dashboard.chat import _run_chat
-    from kiro_crew.providers.base import LLMEvent
+    from aj_crew.acp.types import EVENT_COMPLETE, STOP_REASON_END_TURN
+    from aj_crew.dashboard.chat import _run_chat
+    from aj_crew.providers.base import LLMEvent
 
     state, client = _l1_state(tmp_path)
     client.last_infra_error = None
@@ -53,7 +53,7 @@ async def _first_turn_build_kwargs(tmp_path, monkeypatch, *, suppressed: bool) -
         "consume_replay_suppression",
     ):
         setattr(state.sessions, name, getattr(reset, name))
-    monkeypatch.setattr("kiro_crew.context.build_session_replay", lambda *a, **k: "")
+    monkeypatch.setattr("aj_crew.context.build_session_replay", lambda *a, **k: "")
 
     def _stream(*_a, **_kw):
         async def _gen():
@@ -63,7 +63,7 @@ async def _first_turn_build_kwargs(tmp_path, monkeypatch, *, suppressed: bool) -
 
     client.stream = MagicMock(side_effect=_stream)
     slot = _RecordingSlot("chat-after-clear")
-    with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+    with patch("aj_crew.dashboard.chat.sel") as mock_sel:
         mock_sel.return_value = MagicMock()
         await _run_chat(state, slot, "What code word did I ask you to remember?")
         if slot.task:

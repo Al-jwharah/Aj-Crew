@@ -1,4 +1,4 @@
-"""``kiro_crew._facade_bindings.own_methods``: the one qualname-restore every split class uses.
+"""``aj_crew._facade_bindings.own_methods``: the one qualname-restore every split class uses.
 
 The rule is pinned on synthetic owner functions (which members it renames, which it leaves
 alone, how it treats ``staticmethod``/``classmethod`` and ``__wrapped__`` chains, and the
@@ -18,7 +18,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew._facade_bindings import own_methods
+from aj_crew._facade_bindings import own_methods
 
 _OWNER = "pkg.thing_owner"
 _SIBLING = "pkg.thing_owner_models"  # shares the owner's prefix but is not an owner
@@ -139,13 +139,13 @@ def test_rehoming_names_the_class_module_on_every_object_including_the_wrapper()
 
 #: Every class that restores its members' qualnames with the shared helper.
 _SPLIT_CLASSES = (
-    ("kiro_crew.acp.runtime", "AcpRuntime"),
-    ("kiro_crew.acp.session_handle", "AcpSessionHandle"),
-    ("kiro_crew.dashboard.state", "_ChatSlot"),
-    ("kiro_crew.dashboard.state", "DashboardState"),
-    ("kiro_crew.history_consolidation", "HistoryConsolidator"),
-    ("kiro_crew.kiro_prerequisite", "KiroPrerequisiteService"),
-    ("kiro_crew.session_map", "SessionMap"),
+    ("aj_crew.acp.runtime", "AcpRuntime"),
+    ("aj_crew.acp.session_handle", "AcpSessionHandle"),
+    ("aj_crew.dashboard.state", "_ChatSlot"),
+    ("aj_crew.dashboard.state", "DashboardState"),
+    ("aj_crew.history_consolidation", "HistoryConsolidator"),
+    ("aj_crew.kiro_prerequisite", "KiroPrerequisiteService"),
+    ("aj_crew.session_map", "SessionMap"),
 )
 
 
@@ -157,7 +157,7 @@ def _reachable(member: Any) -> Iterator[types.FunctionType]:
 
 
 @pytest.mark.parametrize(("module", "name"), _SPLIT_CLASSES)
-def test_every_kiro_crew_function_a_split_class_binds_reads_as_its_method(
+def test_every_aj_crew_function_a_split_class_binds_reads_as_its_method(
     module: str, name: str
 ) -> None:
     cls = getattr(importlib.import_module(module), name)
@@ -165,7 +165,7 @@ def test_every_kiro_crew_function_a_split_class_binds_reads_as_its_method(
         f"{attr}: {fn.__qualname__} ({fn.__module__})"
         for attr, member in vars(cls).items()
         for fn in _reachable(member)
-        if fn.__module__.startswith("kiro_crew.")
+        if fn.__module__.startswith("aj_crew.")
         and fn.__qualname__ != f"{cls.__qualname__}.{attr}"
     )
     assert not wrong

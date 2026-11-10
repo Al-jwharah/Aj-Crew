@@ -24,9 +24,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import executors
-from kiro_crew import vector_memory_lifecycle as lifecycle
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import executors
+from aj_crew import vector_memory_lifecycle as lifecycle
+from aj_crew.vector_memory import VectorMemoryStore
 
 pytestmark = pytest.mark.xdist_group(name="vector_memory_read_pool")
 
@@ -279,7 +279,7 @@ class TestNoLockOnTheLoopThread:
                 with store._db_lock:
                     pass
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.vector_memory"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.vector_memory"):
             asyncio.run(inline_writes())
         hits = [r for r in caplog.records if "event loop thread" in r.getMessage()]
         assert len(hits) == 1
@@ -392,8 +392,8 @@ class TestBackgroundPool:
     def test_consolidation_and_backfill_never_use_the_turn_pool(self) -> None:
         """Every store pass of a consolidation, and the gateway's backfill and
         repair loops, are offloaded to the background pool."""
-        from kiro_crew import history_consolidation_pass
-        from kiro_crew.slack.gateway_runtime import memory_lifecycle
+        from aj_crew import history_consolidation_pass
+        from aj_crew.slack.gateway_runtime import memory_lifecycle
 
         def called(module) -> set[str]:
             tree = ast.parse(inspect.getsource(module))

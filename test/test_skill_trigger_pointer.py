@@ -12,11 +12,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
-from kiro_crew.context import ContextBuilder
-from kiro_crew.context_blocks import split_blocks
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import _SHORT_DESC_CHARS, SkillsLoader
+from aj_crew.config.loader import AjCrewConfig, SkillsConfig
+from aj_crew.context import ContextBuilder
+from aj_crew.context_blocks import split_blocks
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import _SHORT_DESC_CHARS, SkillsLoader
 
 BODY_SENTINEL = "STEP ONE: pour the concrete before the rebar."
 HINT_HEADER = "[Relevant skills for this message]"
@@ -59,7 +59,7 @@ def _loader(skills_path: Path, *, cap: int = 3) -> SkillsLoader:
     return SkillsLoader(
         skills_path=skills_path,
         install_builtins=False,
-        config=KiroCrewConfig(skills=SkillsConfig(max_triggered=cap)),
+        config=AjCrewConfig(skills=SkillsConfig(max_triggered=cap)),
     )
 
 
@@ -334,7 +334,7 @@ class TestDeliveryIsAuditable:
                 if isinstance(meta, dict):
                     captured.update(meta)
 
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: _Sel())
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: _Sel())
 
         loader.get_triggered_skills("zebra quokka")
 

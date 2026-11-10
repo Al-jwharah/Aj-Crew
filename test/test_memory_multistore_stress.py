@@ -17,14 +17,14 @@ from types import SimpleNamespace
 import pytest
 from member_memory_helpers import write_member_home
 
-from kiro_crew import context
-from kiro_crew import embeddings as emb
-from kiro_crew import vector_memory
-from kiro_crew.config import loader
-from kiro_crew.executors import run_in_embed_pool, run_with_recall_deadline
-from kiro_crew.slack.gateway import GatewayOrchestrator
-from kiro_crew.testing.wait import async_wait_until, finished
-from kiro_crew.vector_memory import VectorMemoryStore, open_member_database
+from aj_crew import context
+from aj_crew import embeddings as emb
+from aj_crew import vector_memory
+from aj_crew.config import loader
+from aj_crew.executors import run_in_embed_pool, run_with_recall_deadline
+from aj_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.testing.wait import async_wait_until, finished
+from aj_crew.vector_memory import VectorMemoryStore, open_member_database
 
 
 def deterministic_vector(text):
@@ -53,7 +53,7 @@ def seed_known_records(store, marker):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("concurrency", [8, 32, 64])
 async def test_private_store_mixed_load(tmp_path, monkeypatch, concurrency):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     config = write_member_home(tmp_path, *(f"store{i}" for i in range(16)))
     config["memory"] = {"embedding_dim": 8, "embedding_bulk_duty": 1}
     (tmp_path / "config.json").write_text(json.dumps(config), encoding="utf-8")
@@ -318,7 +318,7 @@ def test_seeded_store_is_recall_visible_before_any_load_write(tmp_path, monkeypa
     The seeded state is the worst case for ``test_private_store_mixed_load``'s 34 recalls.
     The reason is pinned as arithmetic, so it holds if the ranking policy changes.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     config = write_member_home(tmp_path, "store0")
     config["memory"] = {"embedding_dim": 8, "embedding_bulk_duty": 1}
     (tmp_path / "config.json").write_text(json.dumps(config), encoding="utf-8")

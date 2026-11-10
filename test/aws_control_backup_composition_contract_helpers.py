@@ -12,7 +12,7 @@ from __future__ import annotations
 from pathlib import Path
 from types import ModuleType
 
-from kiro_crew.apps.builtins.aws_control.backend.backup_parts import (
+from aj_crew.apps.builtins.aws_control.backend.backup_parts import (
     archive_inputs,
     catalog,
     conversations,
@@ -32,7 +32,7 @@ from kiro_crew.apps.builtins.aws_control.backend.backup_parts import (
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
-_PARTS_PACKAGE = "kiro_crew.apps.builtins.aws_control.backend.backup_parts"
+_PARTS_PACKAGE = "aj_crew.apps.builtins.aws_control.backend.backup_parts"
 
 #: The owners in the facade's declared layer order, lowest first.
 PARTS: tuple[ModuleType, ...] = (

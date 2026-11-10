@@ -12,7 +12,7 @@ const mockApi = vi.hoisted(() => ({
   mcpApply: vi.fn(),
   mcpGlobalScopes: vi.fn(),
   mcpResetProbeFailures: vi.fn(),
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
 }))
 vi.mock('../api/client', () => ({ api: mockApi }))
 vi.mock('../providers', () => ({
@@ -54,7 +54,7 @@ function rowOf(name: string): HTMLElement {
 beforeEach(() => {
   Object.values(mockApi).forEach(m => m.mockReset())
   mockApi.mcpGlobalScopes.mockResolvedValue({ scopes: [] })
-  mockApi.kirocrewConfig.mockResolvedValue({})
+  mockApi.ajcrewConfig.mockResolvedValue({})
 })
 
 describe('McpTab: a server the agent rebuild dropped', () => {

@@ -16,14 +16,14 @@ from pathlib import Path
 import work_ledger_helpers
 from work_ledger_helpers import CONDUCTOR, _new_item
 
-from kiro_crew import agent
-from kiro_crew import work_ledger as wl
+from aj_crew import agent
+from aj_crew import work_ledger as wl
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _isolated_home = work_ledger_helpers._isolated_home
 
 ROOT = Path(__file__).resolve().parents[1]
-GOAL_CONDUCTOR_SKILL = ROOT / "src" / "kiro_crew" / "builtin_skills" / "goal-conductor" / "SKILL.md"
+GOAL_CONDUCTOR_SKILL = ROOT / "src" / "aj_crew" / "builtin_skills" / "goal-conductor" / "SKILL.md"
 
 
 def _flat(text: str) -> str:

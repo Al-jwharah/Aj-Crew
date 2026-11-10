@@ -1,4 +1,4 @@
-"""Interface tests for :class:`kiro_crew.crew_log.turn_tracker.TurnTracker`.
+"""Interface tests for :class:`aj_crew.crew_log.turn_tracker.TurnTracker`.
 
 The tracker is in-process state with no I/O, so every test builds its own instance --
 no data home, no writer, no emitter -- and asserts what the interface answers: the
@@ -15,7 +15,7 @@ from collections import OrderedDict
 
 import pytest
 
-from kiro_crew.crew_log.turn_tracker import (
+from aj_crew.crew_log.turn_tracker import (
     MAX_LIVE_TURNS,
     MAX_OPEN_CALLS,
     MAX_SESSIONS,
@@ -157,7 +157,7 @@ def test_the_ceiling_sheds_closer_owed_records_oldest_first(caplog):
     for n in range(3):
         tracker.begin(f"{OTHER}-{n}", 1)
         tracker.closing(f"{OTHER}-{n}", 1)  # terminals handed over, never released
-    with caplog.at_level(logging.ERROR, logger="kiro_crew.crew_log.turn_tracker"):
+    with caplog.at_level(logging.ERROR, logger="aj_crew.crew_log.turn_tracker"):
         tracker.begin(SID, 1)
     assert tracker.live_turn(f"{OTHER}-0") == 0, "the oldest closed-but-undrained record stayed"
     assert tracker.live_turn(f"{OTHER}-1") == 1
@@ -167,7 +167,7 @@ def test_the_ceiling_sheds_closer_owed_records_oldest_first(caplog):
 
 def test_an_accepted_overage_is_reported_once_and_again_after_it_clears(caplog):
     tracker = _tracker(max_live_turns=2)
-    with caplog.at_level(logging.ERROR, logger="kiro_crew.crew_log.turn_tracker"):
+    with caplog.at_level(logging.ERROR, logger="aj_crew.crew_log.turn_tracker"):
         for n in range(6):
             tracker.begin(f"{OTHER}-{n}", 1)
             tracker.next_call_index(f"{OTHER}-{n}", 1)
@@ -182,12 +182,12 @@ def test_an_accepted_overage_is_reported_once_and_again_after_it_clears(caplog):
 
 
 def test_the_tracker_reports_through_the_logger_it_is_given(caplog):
-    named = logging.getLogger("kiro_crew.crew_log.emit")
+    named = logging.getLogger("aj_crew.crew_log.emit")
     tracker = _tracker(max_live_turns=1, logger=named)
-    with caplog.at_level(logging.ERROR, logger="kiro_crew.crew_log.emit"):
+    with caplog.at_level(logging.ERROR, logger="aj_crew.crew_log.emit"):
         tracker.begin(SID, 1)
         tracker.begin(OTHER, 1)
-    assert [r.name for r in caplog.records] == ["kiro_crew.crew_log.emit"]
+    assert [r.name for r in caplog.records] == ["aj_crew.crew_log.emit"]
 
 
 # tool calls

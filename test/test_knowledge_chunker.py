@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.knowledge import chunker as chunker_mod
-from kiro_crew.knowledge.chunker import HeadingAwareChunker
+from aj_crew.knowledge import chunker as chunker_mod
+from aj_crew.knowledge.chunker import HeadingAwareChunker
 
 
 def _source_line_of(text: str, needle: str) -> int:

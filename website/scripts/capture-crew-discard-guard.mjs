@@ -23,9 +23,9 @@ const OUT = process.argv[2] || '../temp-screenshots/crew-discard-guard'
 mkdirSync(OUT, { recursive: true })
 
 const CREWS = [
-  { name: 'kirocrew', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default' },
+  { name: 'ajcrew', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default' },
   {
-    name: 'oncall', kiro_agent: 'kirocrew', workspace: 'oncall',
+    name: 'oncall', kiro_agent: 'ajcrew', workspace: 'oncall',
     memory_store: 'oncall-mem', triggers: 'incidents',
   },
 ]
@@ -68,7 +68,7 @@ async function main() {
       await stubDashboardApi(page, {
         theme,
         extra: async (path, route) => (await editorApi(path, route))
-          || (await crewsApi({ crews: CREWS, defaultAgent: 'kirocrew' })(path, route)),
+          || (await crewsApi({ crews: CREWS, defaultAgent: 'ajcrew' })(path, route)),
       })
 
       await page.goto(base + '/capabilities', { waitUntil: 'domcontentloaded' })

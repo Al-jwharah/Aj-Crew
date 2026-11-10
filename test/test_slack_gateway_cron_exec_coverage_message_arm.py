@@ -1,4 +1,4 @@
-"""Coverage for the ``message`` (LLM) arm of the Kiro Crew gateway's cron callback.
+"""Coverage for the ``message`` (LLM) arm of the Aj Crew gateway's cron callback.
 
 Fire-time governance denial, a goal check-in through the same gate, the ``_init_cron``
 wiring, and agent-alias resolution.
@@ -22,7 +22,7 @@ from slack_gateway_cron_exec_coverage_helpers import (
     _mock_dashboard_state,
 )
 
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config.loader import AjCrewConfig
 
 # ═══════════════════════════════════════════════════════════════════════════
 # message-mode denial + _init_cron wiring
@@ -45,7 +45,7 @@ class TestCronMessageDenialAndWiring:
     @pytest.mark.asyncio
     async def test_goal_checkin_denied_at_fire_time_never_fires(self):
         """A crewmate's goal check-in passes the same gate as a message job."""
-        from kiro_crew.dashboard import goal_reminder
+        from aj_crew.dashboard import goal_reminder
 
         orch = _make_orchestrator()
         job = _job(managed_by=goal_reminder.managed_key("ava", "daily"))
@@ -60,7 +60,7 @@ class TestCronMessageDenialAndWiring:
 
     @pytest.mark.asyncio
     async def test_goal_checkin_allowed_by_the_gate_fires(self):
-        from kiro_crew.dashboard import goal_reminder
+        from aj_crew.dashboard import goal_reminder
 
         orch = _make_orchestrator()
         job = _job(managed_by=goal_reminder.managed_key("ava", "daily"))
@@ -74,7 +74,7 @@ class TestCronMessageDenialAndWiring:
     @pytest.mark.asyncio
     async def test_a_silent_goal_checkin_skip_is_the_runs_result(self):
         """A skip reaches the run's history summary even when the job is silent."""
-        from kiro_crew.dashboard import goal_reminder
+        from aj_crew.dashboard import goal_reminder
 
         orch = _make_orchestrator()
         job = _job(managed_by=goal_reminder.managed_key("ava", "heartbeat"), silent=True)
@@ -106,15 +106,15 @@ class TestCronResolvesAgentAlias:
 
     @staticmethod
     def _cfg_with_alias(ws_dir: str) -> Any:
-        from kiro_crew.config.loader import (
-            KiroCrewAgentConfig,
+        from aj_crew.config.loader import (
+            AjCrewAgentConfig,
             WorkspaceConfig,
         )
 
-        return KiroCrewConfig(
+        return AjCrewConfig(
             agents={
-                "in-3d": KiroCrewAgentConfig(
-                    kiro_agent="kirocrew",
+                "in-3d": AjCrewAgentConfig(
+                    kiro_agent="ajcrew",
                     workspace="in-3d",
                     memory_store="default",
                 ),
@@ -126,7 +126,7 @@ class TestCronResolvesAgentAlias:
     async def test_alias_agent_id_dispatches_resolved_kiro_agent_and_cwd(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.slack import gateway as _gw
+        from aj_crew.slack import gateway as _gw
 
         monkeypatch.setattr(_gw.live, "snapshot", lambda: None)
         ws_dir = str(tmp_path / "in-3d-ws")
@@ -134,7 +134,7 @@ class TestCronResolvesAgentAlias:
         orch._cfg = self._cfg_with_alias(ws_dir)
         orch.sessions = _message_arm_sessions()
         orch.dashboard_state = _mock_dashboard_state()
-        # agent_id is the channel alias; the fix must resolve it to kirocrew.
+        # agent_id is the channel alias; the fix must resolve it to ajcrew.
         job = _job(id="ja1", name="alias probe", agent_id="in-3d")
 
         async with _cron_message_cb(orch, result_text="ok") as callback:
@@ -143,7 +143,7 @@ class TestCronResolvesAgentAlias:
         orch.sessions.get_or_create.assert_awaited()
         kw = orch.sessions.get_or_create.await_args.kwargs
         # Dispatched the alias's kiro_agent, NOT the raw alias 'in-3d'.
-        assert kw.get("agent") == "kirocrew"
+        assert kw.get("agent") == "ajcrew"
         # Ran in the alias's workspace, not the default cwd.
         assert kw.get("cwd") == ws_dir
         # Carried the alias as crew_agent so prepare_runtime still resolves the
@@ -155,8 +155,8 @@ class TestCronResolvesAgentAlias:
         """A RELATIVE workspace dir must be anchored by the placement rule
         (config_dir()/dirname), not handed to the provider as a bare relative
         string that would resolve against the gateway process directory."""
-        from kiro_crew.config import loader as _loader
-        from kiro_crew.slack import gateway as _gw
+        from aj_crew.config import loader as _loader
+        from aj_crew.slack import gateway as _gw
 
         monkeypatch.setattr(_gw.live, "snapshot", lambda: None)
 
@@ -183,12 +183,12 @@ class TestCronResolvesAgentAlias:
         snapshot but not in the boot self._cfg. Resolution must consult
         live.snapshot() so a hot-added alias resolves instead of being
         dispatched raw and failing closed on every fire."""
-        from kiro_crew.slack import gateway as _gw
+        from aj_crew.slack import gateway as _gw
 
         ws_dir = str(tmp_path / "in-3d-ws")
         orch = _make_orchestrator()
         # Boot config knows NO agents — the alias only exists in the live snapshot.
-        orch._cfg = KiroCrewConfig()
+        orch._cfg = AjCrewConfig()
         live_cfg = self._cfg_with_alias(ws_dir)
         monkeypatch.setattr(_gw.live, "snapshot", lambda: live_cfg)
         orch.sessions = _message_arm_sessions()
@@ -200,7 +200,7 @@ class TestCronResolvesAgentAlias:
 
         kw = orch.sessions.get_or_create.await_args.kwargs
         # Resolved from the live snapshot, not left as the raw alias.
-        assert kw.get("agent") == "kirocrew"
+        assert kw.get("agent") == "ajcrew"
         assert kw.get("crew_agent") == "in-3d"
 
     @pytest.mark.asyncio
@@ -212,17 +212,17 @@ class TestCronResolvesAgentAlias:
         must pin to the captured identity (member_config_for_id), never bind the
         same-name-but-different-identity record — which would run the new member
         while writing into the retired member's memory silo."""
-        from kiro_crew.config.loader import KiroCrewAgentConfig, WorkspaceConfig
-        from kiro_crew.slack import gateway as _gw
+        from aj_crew.config.loader import AjCrewAgentConfig, WorkspaceConfig
+        from aj_crew.slack import gateway as _gw
 
         monkeypatch.setattr(_gw.live, "snapshot", lambda: None)
         orch = _make_orchestrator()
         # Live cfg: alias 'in-3d' now belongs to a DIFFERENT member than the one
         # the cron captured.
-        orch._cfg = KiroCrewConfig(
+        orch._cfg = AjCrewConfig(
             agents={
-                "in-3d": KiroCrewAgentConfig(
-                    kiro_agent="kirocrew",
+                "in-3d": AjCrewAgentConfig(
+                    kiro_agent="ajcrew",
                     workspace="in-3d",
                     memory_store="default",
                     member_id="mid-recreated",
@@ -260,17 +260,17 @@ class TestCronResolvesAgentAlias:
         anchors to the BASE workspace directory (workspace_dir_from_entry(None)),
         never to cfg.default_workspace's dir and never to a bare cwd=None that
         would resolve against the gateway process directory."""
-        from kiro_crew.config import loader as _loader
-        from kiro_crew.config.loader import KiroCrewAgentConfig
-        from kiro_crew.slack import gateway as _gw
+        from aj_crew.config import loader as _loader
+        from aj_crew.config.loader import AjCrewAgentConfig
+        from aj_crew.slack import gateway as _gw
 
         monkeypatch.setattr(_gw.live, "snapshot", lambda: None)
         # Alias present, but its workspace name 'ghost' is NOT in cfg.workspaces.
         orch = _make_orchestrator()
-        orch._cfg = KiroCrewConfig(
+        orch._cfg = AjCrewConfig(
             agents={
-                "in-3d": KiroCrewAgentConfig(
-                    kiro_agent="kirocrew", workspace="ghost", memory_store="default"
+                "in-3d": AjCrewAgentConfig(
+                    kiro_agent="ajcrew", workspace="ghost", memory_store="default"
                 )
             },
             workspaces={},
@@ -284,7 +284,7 @@ class TestCronResolvesAgentAlias:
 
         kw = orch.sessions.get_or_create.await_args.kwargs
         base = str(_loader.workspace_dir_from_entry(None))
-        assert kw.get("agent") == "kirocrew"
+        assert kw.get("agent") == "ajcrew"
         assert kw.get("crew_agent") == "in-3d"
         # Anchored to the base workspace dir, not left None.
         assert kw.get("cwd") == base
@@ -294,8 +294,8 @@ class TestCronResolvesAgentAlias:
     async def test_unknown_agent_is_passed_through_unchanged(self, tmp_path, monkeypatch):
         """A non-alias agent (already a real mode, or unmapped) is unchanged:
         the resolver misses and the raw value is dispatched with cwd=None."""
-        from kiro_crew.cron_service import agent_presence
-        from kiro_crew.slack import gateway as _gw
+        from aj_crew.cron_service import agent_presence
+        from aj_crew.slack import gateway as _gw
 
         monkeypatch.setattr(_gw.live, "snapshot", lambda: None)
         # The test home holds no spec for the real mode named below.
@@ -305,14 +305,14 @@ class TestCronResolvesAgentAlias:
         orch._cfg = self._cfg_with_alias(ws_dir)
         orch.sessions = _message_arm_sessions()
         orch.dashboard_state = _mock_dashboard_state()
-        job = _job(id="ja2", name="passthrough probe", agent_id="kirocrew-lite")
+        job = _job(id="ja2", name="passthrough probe", agent_id="ajcrew-lite")
 
         async with _cron_message_cb(orch, result_text="ok") as callback:
             await callback(job)
 
         kw = orch.sessions.get_or_create.await_args.kwargs
         # Not an alias in config.agents → dispatched verbatim, no workspace cwd.
-        assert kw.get("agent") == "kirocrew-lite"
+        assert kw.get("agent") == "ajcrew-lite"
         assert kw.get("cwd") is None
         # No alias to collapse → no crew identity is asserted.
         assert kw.get("crew_agent") is None

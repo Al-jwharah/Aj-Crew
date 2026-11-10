@@ -1,4 +1,4 @@
-"""Coverage tests for ``kiro_crew.dashboard.chat_runner``: the pure trust checks.
+"""Coverage tests for ``aj_crew.dashboard.chat_runner``: the pure trust checks.
 
 Covers the PreToolUse hook verdicts, the trust and auto-approve predicates (scoped
 grants, reason precedence, what a session policy may persist, native crew) and the
@@ -15,7 +15,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from chat_runner_coverage_helpers import _slot, _state
 
-from kiro_crew.dashboard import chat_runner
+from aj_crew.dashboard import chat_runner
 
 # ── PreToolUse hook verdicts ──────────────────────────────────────────────
 

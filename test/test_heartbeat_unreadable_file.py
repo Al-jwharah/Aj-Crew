@@ -13,9 +13,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew.heartbeat as hb_mod
-from kiro_crew.heartbeat import _HEADER, HeartbeatService
-from kiro_crew.testing.wait import await_until
+import aj_crew.heartbeat as hb_mod
+from aj_crew.heartbeat import _HEADER, HeartbeatService
+from aj_crew.testing.wait import await_until
 
 # "café" in latin-1: byte 0xe9 is not valid UTF-8.
 _LATIN1_TASKS = b"# Heartbeat\n- [ ] caf\xe9 check\n"

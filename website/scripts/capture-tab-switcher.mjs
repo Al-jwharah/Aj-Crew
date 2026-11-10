@@ -40,8 +40,8 @@ const WEBHOOKS_VIEW = {
     body_max_bytes: 262144, signature_window_seconds: 300,
   },
   tokens: [
-    { id: 'tok-a', label: 'ci-pipeline', agent: 'kirocrew', created: 1756600000, last_used: 1756680000 },
-    { id: 'tok-b', label: 'release-bot', agent: 'kirocrew-autofix', created: 1756500000, last_used: null },
+    { id: 'tok-a', label: 'ci-pipeline', agent: 'ajcrew', created: 1756600000, last_used: 1756680000 },
+    { id: 'tok-b', label: 'release-bot', agent: 'ajcrew-autofix', created: 1756500000, last_used: null },
   ],
   contexts: [],
   runs: [
@@ -61,13 +61,13 @@ const SESSIONS_MEMORY = {
   sessions: [
     {
       key: 'chat-1-alpha', title: 'Placeholder session', slot_key: 'chat-1-alpha',
-      untitled: false, agent: 'kirocrew', pid: 4001, owns_runtime: true, prompts: 12,
+      untitled: false, agent: 'ajcrew', pid: 4001, owns_runtime: true, prompts: 12,
       channel: 'dashboard', rss_mb: 512, procs: 3, mcp: 2, cpu_cores: 0.4,
       uptime_s: 3600, credits: null, turns: 12,
     },
     {
       key: 'chat-1-beta', title: 'Placeholder session', slot_key: 'chat-1-beta',
-      untitled: false, agent: 'kirocrew-autofix', pid: 4002, owns_runtime: false, prompts: 3,
+      untitled: false, agent: 'ajcrew-autofix', pid: 4002, owns_runtime: false, prompts: 3,
       channel: 'slack', rss_mb: 288, procs: 2, mcp: 1, cpu_cores: 0.1,
       uptime_s: 900, credits: null, turns: 3,
     },

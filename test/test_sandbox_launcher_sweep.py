@@ -1,7 +1,7 @@
 """Regression tests for namespace launcher file placement and cleanup sweep.
 
 Verifies:
-  (a) namespace_argv() writes the launcher to ~/.kirocrew/run/ with PID in name
+  (a) namespace_argv() writes the launcher to ~/.ajcrew/run/ with PID in name
   (b) cleanup_stale_sandbox_profiles() removes dead-PID files (.py and .sb)
   (c) cleanup_stale_sandbox_profiles() removes old-mtime live-PID files (age-based)
   (d) cleanup_stale_sandbox_profiles() sweeps legacy /tmp files (age threshold only)
@@ -20,8 +20,8 @@ from unittest.mock import patch
 
 import pytest
 
-import kiro_crew.sandbox as sandbox_mod
-from kiro_crew.sandbox import (
+import aj_crew.sandbox as sandbox_mod
+from aj_crew.sandbox import (
     _LAUNCHER_MAX_AGE_SECONDS,
     _ensure_run_dir,
     cleanup_stale_sandbox_profiles,
@@ -31,19 +31,19 @@ from kiro_crew.sandbox import (
 
 @pytest.fixture()
 def fake_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    """Redirect HOME so the sandbox run dir resolves under ``tmp_path/.kirocrew``.
+    """Redirect HOME so the sandbox run dir resolves under ``tmp_path/.ajcrew``.
 
-    The run dir moved from ``os.path.expanduser("~")/".kirocrew"/"run"`` to
+    The run dir moved from ``os.path.expanduser("~")/".ajcrew"/"run"`` to
     ``config_dir()/run`` (data home now ``~/.kiro/crew``). ``config_dir()`` reads
-    ``KIROCREW_HOME`` (pinned to a different tmp dir by conftest), so also
-    redirect ``sandbox.config_dir`` to ``tmp_path/".kirocrew"`` — keeping the
-    ``.kirocrew/run`` layout these tests assert. ``expanduser``/``HOME`` are still
+    ``AJCREW_HOME`` (pinned to a different tmp dir by conftest), so also
+    redirect ``sandbox.config_dir`` to ``tmp_path/".ajcrew"`` — keeping the
+    ``.ajcrew/run`` layout these tests assert. ``expanduser``/``HOME`` are still
     patched for the non-run-dir ``~`` lookups in this module.
     """
     monkeypatch.setenv("HOME", str(tmp_path))
-    (tmp_path / ".kirocrew").mkdir()
+    (tmp_path / ".ajcrew").mkdir()
     monkeypatch.setattr("os.path.expanduser", lambda p: str(tmp_path) + p[1:] if p.startswith("~") else p)
-    monkeypatch.setattr("kiro_crew.sandbox.config_dir", lambda: tmp_path / ".kirocrew")
+    monkeypatch.setattr("aj_crew.sandbox.config_dir", lambda: tmp_path / ".ajcrew")
     return tmp_path
 
 
@@ -57,7 +57,7 @@ def _pin_ssh_accept_new(monkeypatch: pytest.MonkeyPatch) -> None:
     launcher suites on a five-run hygiene sweep, a host program none of them is about
     (test-hygiene class 7). ``True`` is what a modern host answers.
     """
-    monkeypatch.setattr("kiro_crew.sandbox._ssh_supports_accept_new", lambda: True)
+    monkeypatch.setattr("aj_crew.sandbox._ssh_supports_accept_new", lambda: True)
 
 
 @pytest.fixture(autouse=True)
@@ -65,17 +65,17 @@ def _isolated_legacy_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     """Point the legacy /tmp sweep at an empty per-test dir.
 
     Without this, cleanup_stale_sandbox_profiles() sweeps the REAL /tmp and
-    any stale kirocrew_sandbox_*.py files on the host inflate removal counts.
+    any stale ajcrew_sandbox_*.py files on the host inflate removal counts.
     Tests that exercise the legacy sweep pass legacy_dir= explicitly.
     """
     empty = tmp_path / "isolated_legacy"
     empty.mkdir(exist_ok=True)
-    monkeypatch.setattr("kiro_crew.sandbox._LEGACY_LAUNCHER_DIR", str(empty))
+    monkeypatch.setattr("aj_crew.sandbox._LEGACY_LAUNCHER_DIR", str(empty))
     return empty
 
 
 class TestNamespaceArgvPlacement:
-    """namespace_argv() launcher lands in ~/.kirocrew/run/ with PID."""
+    """namespace_argv() launcher lands in ~/.ajcrew/run/ with PID."""
 
     @staticmethod
     def _launcher_of(argv: list[str]) -> str:
@@ -89,24 +89,24 @@ class TestNamespaceArgvPlacement:
         """
         return next(a for a in argv if a.endswith(".py"))
 
-    @patch("kiro_crew.sandbox.detect_backend", return_value="namespace")
+    @patch("aj_crew.sandbox.detect_backend", return_value="namespace")
     def test_launcher_in_run_dir(self, _mock_detect, fake_home: Path):
-        run_dir = fake_home / ".kirocrew" / "run"
+        run_dir = fake_home / ".ajcrew" / "run"
         result = namespace_argv(["kiro-cli", "--version"])
 
         assert len(result) >= 2
         launcher = self._launcher_of(result)
         assert launcher.startswith(str(run_dir)), f"launcher {launcher} not under {run_dir}"
 
-    @patch("kiro_crew.sandbox.detect_backend", return_value="namespace")
+    @patch("aj_crew.sandbox.detect_backend", return_value="namespace")
     def test_launcher_has_pid_in_name(self, _mock_detect, fake_home: Path):
         result = namespace_argv(["kiro-cli", "--version"])
         launcher = Path(self._launcher_of(result))
-        # Filename pattern: kirocrew_sandbox_{pid}_{random}.py
-        assert launcher.name.startswith(f"kirocrew_sandbox_{os.getpid()}_")
+        # Filename pattern: ajcrew_sandbox_{pid}_{random}.py
+        assert launcher.name.startswith(f"ajcrew_sandbox_{os.getpid()}_")
         assert launcher.suffix == ".py"
 
-    @patch("kiro_crew.sandbox.detect_backend", return_value="namespace")
+    @patch("aj_crew.sandbox.detect_backend", return_value="namespace")
     def test_launcher_is_executable(self, _mock_detect, fake_home: Path):
         result = namespace_argv(["kiro-cli", "--version"])
         launcher = self._launcher_of(result)
@@ -124,7 +124,7 @@ class TestRunDirMode:
 
     def test_run_dir_mode_enforced_on_existing(self, fake_home: Path):
         """Even if the dir already exists with wrong perms, chmod fixes it."""
-        run_dir = fake_home / ".kirocrew" / "run"
+        run_dir = fake_home / ".ajcrew" / "run"
         run_dir.mkdir(parents=True, mode=0o755)
         result = _ensure_run_dir()
         stat = os.stat(result)
@@ -133,10 +133,10 @@ class TestRunDirMode:
     def test_makedirs_failure_falls_back(self, fake_home: Path, monkeypatch: pytest.MonkeyPatch):
         """If makedirs raises, fall back to system tmpdir."""
         # Create a regular file at the expected dir path to cause makedirs failure
-        kirocrew_dir = fake_home / ".kirocrew"
-        kirocrew_dir.mkdir(parents=True, exist_ok=True)
+        ajcrew_dir = fake_home / ".ajcrew"
+        ajcrew_dir.mkdir(parents=True, exist_ok=True)
         # Put a regular file where "run" dir should be
-        (kirocrew_dir / "run").write_text("blocker")
+        (ajcrew_dir / "run").write_text("blocker")
 
         run_dir = _ensure_run_dir()
         import tempfile
@@ -147,10 +147,10 @@ class TestCleanupSweep:
     """cleanup_stale_sandbox_profiles() sweeps both .py and .sb dead-PID files."""
 
     def test_removes_dead_pid_py(self, fake_home: Path):
-        run_dir = fake_home / ".kirocrew" / "run"
+        run_dir = fake_home / ".ajcrew" / "run"
         run_dir.mkdir(parents=True)
         # PID 99999999 is almost certainly dead
-        dead_file = run_dir / "kirocrew_sandbox_99999999_abc123.py"
+        dead_file = run_dir / "ajcrew_sandbox_99999999_abc123.py"
         dead_file.write_text("# dead launcher")
 
         removed = cleanup_stale_sandbox_profiles(data_home=sandbox_mod.config_dir())
@@ -158,9 +158,9 @@ class TestCleanupSweep:
         assert removed == 1
 
     def test_removes_dead_pid_sb(self, fake_home: Path):
-        run_dir = fake_home / ".kirocrew" / "run"
+        run_dir = fake_home / ".ajcrew" / "run"
         run_dir.mkdir(parents=True)
-        dead_file = run_dir / "kirocrew_sandbox_99999999_xyz789.sb"
+        dead_file = run_dir / "ajcrew_sandbox_99999999_xyz789.sb"
         dead_file.write_text("(version 1)")
 
         removed = cleanup_stale_sandbox_profiles(data_home=sandbox_mod.config_dir())
@@ -169,10 +169,10 @@ class TestCleanupSweep:
 
     def test_removes_old_mtime_live_pid(self, fake_home: Path):
         """Age-based reaping: old file removed even if tagged PID is alive."""
-        run_dir = fake_home / ".kirocrew" / "run"
+        run_dir = fake_home / ".ajcrew" / "run"
         run_dir.mkdir(parents=True)
         # Use our own PID — definitely alive
-        live_file = run_dir / f"kirocrew_sandbox_{os.getpid()}_old123.py"
+        live_file = run_dir / f"ajcrew_sandbox_{os.getpid()}_old123.py"
         live_file.write_text("# old launcher")
         # Set mtime to 2 hours ago (well past threshold)
         old_time = time.time() - _LAUNCHER_MAX_AGE_SECONDS - 100
@@ -184,9 +184,9 @@ class TestCleanupSweep:
 
     def test_keeps_fresh_live_pid(self, fake_home: Path):
         """Fresh file with live PID is kept."""
-        run_dir = fake_home / ".kirocrew" / "run"
+        run_dir = fake_home / ".ajcrew" / "run"
         run_dir.mkdir(parents=True)
-        live_file = run_dir / f"kirocrew_sandbox_{os.getpid()}_fresh123.py"
+        live_file = run_dir / f"ajcrew_sandbox_{os.getpid()}_fresh123.py"
         live_file.write_text("# fresh launcher")
 
         removed = cleanup_stale_sandbox_profiles(data_home=sandbox_mod.config_dir())
@@ -194,9 +194,9 @@ class TestCleanupSweep:
         assert removed == 0
 
     def test_keeps_live_pid_sb(self, fake_home: Path):
-        run_dir = fake_home / ".kirocrew" / "run"
+        run_dir = fake_home / ".ajcrew" / "run"
         run_dir.mkdir(parents=True)
-        live_file = run_dir / f"kirocrew_sandbox_{os.getpid()}_live456.sb"
+        live_file = run_dir / f"ajcrew_sandbox_{os.getpid()}_live456.sb"
         live_file.write_text("(version 1)")
 
         removed = cleanup_stale_sandbox_profiles(data_home=sandbox_mod.config_dir())
@@ -205,14 +205,14 @@ class TestCleanupSweep:
 
     def test_overflow_error_resilience(self, fake_home: Path):
         """Absurdly long digit string doesn't crash the sweep."""
-        run_dir = fake_home / ".kirocrew" / "run"
+        run_dir = fake_home / ".ajcrew" / "run"
         run_dir.mkdir(parents=True)
         # PID that exceeds sys.maxsize causing OverflowError in os.kill
         huge_pid = "9" * 30  # 30 digits > sys.maxsize on 64-bit
-        bad_file = run_dir / f"kirocrew_sandbox_{huge_pid}_x.py"
+        bad_file = run_dir / f"ajcrew_sandbox_{huge_pid}_x.py"
         bad_file.write_text("# overflow")
         # Also add a normal dead-PID file to confirm sweep continues
-        normal_dead = run_dir / "kirocrew_sandbox_99999999_y.py"
+        normal_dead = run_dir / "ajcrew_sandbox_99999999_y.py"
         normal_dead.write_text("# dead")
 
         removed = cleanup_stale_sandbox_profiles(data_home=sandbox_mod.config_dir())
@@ -225,12 +225,12 @@ class TestCleanupSweep:
         legacy_dir = tmp_path / "legacy_tmp"
         legacy_dir.mkdir()
         # Old legacy file
-        old_legacy = legacy_dir / "kirocrew_sandbox_abc123.py"
+        old_legacy = legacy_dir / "ajcrew_sandbox_abc123.py"
         old_legacy.write_text("# old legacy")
         old_time = time.time() - _LAUNCHER_MAX_AGE_SECONDS - 100
         os.utime(old_legacy, (old_time, old_time))
         # Fresh legacy file (should be kept)
-        fresh_legacy = legacy_dir / "kirocrew_sandbox_fresh.py"
+        fresh_legacy = legacy_dir / "ajcrew_sandbox_fresh.py"
         fresh_legacy.write_text("# fresh legacy")
 
         removed = cleanup_stale_sandbox_profiles(legacy_dir=str(legacy_dir), data_home=sandbox_mod.config_dir())
@@ -242,7 +242,7 @@ class TestCleanupSweep:
         """Legacy sweep only touches .py files."""
         legacy_dir = tmp_path / "legacy_tmp2"
         legacy_dir.mkdir()
-        non_py = legacy_dir / "kirocrew_sandbox_abc.txt"
+        non_py = legacy_dir / "ajcrew_sandbox_abc.txt"
         non_py.write_text("not a launcher")
         old_time = time.time() - _LAUNCHER_MAX_AGE_SECONDS - 100
         os.utime(non_py, (old_time, old_time))
@@ -252,19 +252,19 @@ class TestCleanupSweep:
         assert removed == 0
 
     def test_ignores_nonconforming_filenames(self, fake_home: Path):
-        run_dir = fake_home / ".kirocrew" / "run"
+        run_dir = fake_home / ".ajcrew" / "run"
         run_dir.mkdir(parents=True)
         # Wrong prefix
         f1 = run_dir / "other_file_99999999_abc.py"
         f1.write_text("# unrelated")
         # Wrong suffix
-        f2 = run_dir / "kirocrew_sandbox_99999999_abc.txt"
+        f2 = run_dir / "ajcrew_sandbox_99999999_abc.txt"
         f2.write_text("# unrelated")
         # No PID (no underscore separator)
-        f3 = run_dir / "kirocrew_sandbox_nopid.py"
+        f3 = run_dir / "ajcrew_sandbox_nopid.py"
         f3.write_text("# unrelated")
         # Right prefix, right suffix, but non-digit PID
-        f4 = run_dir / "kirocrew_sandbox_notapid_abc.py"
+        f4 = run_dir / "ajcrew_sandbox_notapid_abc.py"
         f4.write_text("# unrelated")
 
         removed = cleanup_stale_sandbox_profiles(data_home=sandbox_mod.config_dir())
@@ -275,7 +275,7 @@ class TestCleanupSweep:
         assert removed == 0
 
     def test_no_run_dir_is_noop(self, fake_home: Path):
-        """If ~/.kirocrew/run/ doesn't exist, no crash."""
+        """If ~/.ajcrew/run/ doesn't exist, no crash."""
         removed = cleanup_stale_sandbox_profiles(data_home=sandbox_mod.config_dir())  # should not raise
         assert removed == 0
 
@@ -285,7 +285,7 @@ class TestTheSweepIsRootedAtTheHomeItIsHanded:
 
     The sweep runs on the maintenance pool. A pool thread that resolves the data
     home for itself resolves it whenever it is scheduled: under the suite, that
-    was routinely after the queuing test had dropped its ``KIROCREW_HOME`` pin,
+    was routinely after the queuing test had dropped its ``AJCREW_HOME`` pin,
     and the third full-run audit counted 60+ ``mkdir`` calls on the operator's
     real ``~/.kiro/crew`` from ``mc-maint`` threads, plus the retired-snapshot
     ``rmtree`` and the legacy-residue marker aimed at the same tree. The caller
@@ -295,7 +295,7 @@ class TestTheSweepIsRootedAtTheHomeItIsHanded:
     def test_an_explicit_home_is_used_and_config_dir_is_never_consulted(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.sandbox as sandbox
+        import aj_crew.sandbox as sandbox
 
         def _forbidden():
             raise AssertionError("the sweep resolved the data home on the pool thread")
@@ -317,7 +317,7 @@ class TestTheSweepIsRootedAtTheHomeItIsHanded:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The deps lambda carries a home resolved at construction, not at run time."""
-        import kiro_crew.session as session_mod
+        import aj_crew.session as session_mod
 
         pinned = tmp_path / "pinned-home"
         pinned.mkdir()

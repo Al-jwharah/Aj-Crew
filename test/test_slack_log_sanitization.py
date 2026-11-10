@@ -5,12 +5,12 @@ credentials written verbatim to logs) for the Slack slash-command text
 (``slack/events_slash.py``) and inbound message body (``slack/events.py``) log sites.
 """
 
-from kiro_crew.slack.events import _safe_log
+from aj_crew.slack.events import _safe_log
 
 
 def test_safe_log_strips_crlf_and_tab():
     # A forged log line embedded via newlines must be flattened to one line.
-    injected = "hello\n2024-01-01 INFO kiro_crew: FORGED ENTRY\r\tmore"
+    injected = "hello\n2024-01-01 INFO aj_crew: FORGED ENTRY\r\tmore"
     out = _safe_log(injected)
     assert "\n" not in out
     assert "\r" not in out

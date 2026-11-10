@@ -30,10 +30,10 @@ import os
 
 import pytest
 
-import kiro_crew.sandbox as sb
+import aj_crew.sandbox as sb
 
 _MODES = ("standard", "cc", "strict")
-_CREW_PREFIXES = (".kiro/crew", ".kirocrew")
+_CREW_PREFIXES = (".kiro/crew", ".ajcrew")
 
 
 @pytest.fixture(autouse=True)
@@ -45,7 +45,7 @@ def _pin_ssh_accept_new(monkeypatch: pytest.MonkeyPatch) -> None:
     plan-building test in the process a real spawn -- a host program none of these
     tests is about (test-hygiene class 7). ``True`` is what a modern host answers.
     """
-    monkeypatch.setattr("kiro_crew.sandbox._ssh_supports_accept_new", lambda: True)
+    monkeypatch.setattr("aj_crew.sandbox._ssh_supports_accept_new", lambda: True)
 
 
 def _crew_path(prefix: str, leaf: str) -> str:
@@ -72,7 +72,7 @@ def crew_home(tmp_path, monkeypatch):
     home.mkdir(parents=True)
     monkeypatch.setattr(sb, "config_dir", lambda: home)
     # The sweep resolves the LEGACY home spelling from ``Path.home()`` as well, which no
-    # ``KIROCREW_HOME`` pin covers.
+    # ``AJCREW_HOME`` pin covers.
     monkeypatch.setattr(sb.Path, "home", staticmethod(lambda: tmp_path))
     return home
 
@@ -284,7 +284,7 @@ class TestAbsentStateFilesAreMaterializedSoTheMaskCanMount:
         """The writer spells the leaf itself rather than importing the sandbox module into
         the app backend's process, so the two spellings are pinned here: a mismatch would
         stage PAT bytes at a name nothing masks."""
-        from kiro_crew.apps.builtins.md_notebook import server
+        from aj_crew.apps.builtins.md_notebook import server
 
         assert server._STAGING_LEAF == sb._MD_NOTEBOOK_STAGING_LEAF
 
@@ -305,7 +305,7 @@ class TestAbsentStateFilesAreMaterializedSoTheMaskCanMount:
         """The whole materialisation argument: an empty document must mean what
         an absent file means TO THE READER. Pin it against the backend's own
         read functions rather than restating their behavior here."""
-        from kiro_crew.apps.builtins.md_notebook import server
+        from aj_crew.apps.builtins.md_notebook import server
 
         sb._materialize_md_notebook_mask_targets()
         # The hook puts the state directory beside it, so this one resolves to the very
@@ -368,11 +368,11 @@ class TestAbsentStateFilesAreMaterializedSoTheMaskCanMount:
 
     def test_a_legacy_home_orphan_is_swept_too(self, crew_home, tmp_path):
         """The mask covers BOTH crew-home spellings, so an orphan under an un-migrated or
-        rolled-back ``~/.kirocrew`` is exposed exactly like one under the live home. This
+        rolled-back ``~/.ajcrew`` is exposed exactly like one under the live home. This
         is the opposite requirement from materialising, which is live-home-only because a
         stub in a home nothing reads would be a file nobody opens — a token already written
         to the legacy home stays readable whichever home is live now."""
-        legacy = tmp_path / ".kirocrew" / "workspace" / "md-notebook"
+        legacy = tmp_path / ".ajcrew" / "workspace" / "md-notebook"
         legacy.mkdir(parents=True)
         orphan = legacy / "tmplegacy1.tmp"
         orphan.write_text("ghp_leaked_token")
@@ -382,7 +382,7 @@ class TestAbsentStateFilesAreMaterializedSoTheMaskCanMount:
         assert not orphan.exists(), "a legacy-home PAT temp survived the sweep"
 
     def test_a_relocated_home_orphan_is_swept_too(self, tmp_path, monkeypatch):
-        """The live home is resolved through ``config_dir()``, which ``KIROCREW_HOME`` can
+        """The live home is resolved through ``config_dir()``, which ``AJCREW_HOME`` can
         move OUT from under ``$HOME`` entirely — so the two roots are not interchangeable
         and neither alone is sufficient. Pins the live-home root independently of the
         ``$HOME``-prefix roots, which the other sweep tests happen to share."""
@@ -573,7 +573,7 @@ class TestAbsentStateFilesAreMaterializedSoTheMaskCanMount:
         all of it would vanish on restart. ``apps/backend.py`` must not start it."""
         import inspect
 
-        from kiro_crew.apps import backend as backend_mod
+        from aj_crew.apps import backend as backend_mod
 
         source = inspect.getsource(backend_mod._start_app_backend_body)
         guard = source.index("for d in _md_notebook_degraded_mask_dirs())")
@@ -651,7 +651,7 @@ class TestStateWritersStageInsideTheMask:
 
     @pytest.fixture()
     def server(self, tmp_path, monkeypatch):
-        from kiro_crew.apps.builtins.md_notebook import server
+        from aj_crew.apps.builtins.md_notebook import server
 
         monkeypatch.setattr(server, "_HOME", tmp_path / "state")
         return server

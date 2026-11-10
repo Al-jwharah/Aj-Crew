@@ -14,7 +14,7 @@ from typing import TypeVar
 
 import pytest
 
-from kiro_crew.cloud import launch_job as lj
+from aj_crew.cloud import launch_job as lj
 
 # Not UTF-8: 0xff never starts a UTF-8 sequence.
 _UNDECODABLE = b'\xff\xfe{"id": "x"}'

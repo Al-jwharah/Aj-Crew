@@ -19,7 +19,7 @@ import MarkdownRenderer, { fixUnencodedLinkDestinations } from '../components/Ma
 
 // >200 chars, many &-separated params — the shape the issue names.
 const LONG_URL =
-  'https://github.com/kirodotdev/KiroCrew/issues/new?title=Bug%3A+dashboard+chat+fails&body=%23%23+What%0A%0AURLs+are+not+clickable%0A%0A%23%23+Why%0A%0AThe+agent+generated+a+link&labels=bug%2Carea%3A+dashboard&assignees=someone&template=bug_report.md&milestone=v2.0'
+  'https://github.com/Al-jwharah/Aj-Crew/issues/new?title=Bug%3A+dashboard+chat+fails&body=%23%23+What%0A%0AURLs+are+not+clickable%0A%0A%23%23+Why%0A%0AThe+agent+generated+a+link&labels=bug%2Carea%3A+dashboard&assignees=someone&template=bug_report.md&milestone=v2.0'
 
 describe('long URLs with & query params linkify with the full href (#5729)', () => {
   it('a bare long URL renders as ONE anchor carrying every query param', () => {

@@ -22,17 +22,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-import kiro_crew.subagent as sa
-from kiro_crew import subagent_persistence as sp
-from kiro_crew.subagent import SubagentManager
-from kiro_crew.testing.wait import async_wait_until, await_until, finished
+import aj_crew.subagent as sa
+from aj_crew import subagent_persistence as sp
+from aj_crew.subagent import SubagentManager
+from aj_crew.testing.wait import async_wait_until, await_until, finished
 
 PARENT = "dashboard:chat-7"
 
 
 @pytest.fixture(autouse=True)
 def _pinned_paths(tmp_path, _floor_monkeypatch):
-    for var, sub in (("KIROCREW_HOME", "home"), ("KIROCREW_WORKSPACE", "workspace")):
+    for var, sub in (("AJCREW_HOME", "home"), ("AJCREW_WORKSPACE", "workspace")):
         path = tmp_path / sub
         path.mkdir()
         _floor_monkeypatch.setenv(var, str(path))

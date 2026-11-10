@@ -14,15 +14,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import sandbox
+from aj_crew import sandbox
 
 
 @pytest.fixture
 def audit(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
-    # Patched through the ``kiro_crew.sandbox`` facade, which mirrors each name onto
+    # Patched through the ``aj_crew.sandbox`` facade, which mirrors each name onto
     # every owner module that binds it.
     log = MagicMock()
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: log)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: log)
     monkeypatch.setattr(sandbox, "_kiro_delegation_warned", True)
     monkeypatch.setattr(sandbox, "_sandbox_env_unset_args", lambda *args: [])
     return log

@@ -1,0 +1,35 @@
+{
+ "base_public_names": [
+  "ConfigHookScanError",
+  "LoopBoundLock",
+  "dep_sync",
+  "fleet_state",
+  "frontend",
+  "hooks",
+  "live",
+  "npm_preflight",
+  "platform_compat",
+  "repository",
+  "runtime",
+  "sandboxed_spawn_argv",
+  "shielded_prepare_off_loop",
+  "subprocess_executor"
+ ],
+ "note": "A aj_crew._facade_mirror facade over the worktree_ops_sync, worktree_ops_pods and worktree_ops_removal owners beside it; it keeps rebase, prune and the background tasks, and its BASE __all__ (server.py's re-export table).",
+ "rebound": {
+  "ConfigHookScanError": "aj_crew.git_config_hooks",
+  "LoopBoundLock": "aj_crew.loop_lock",
+  "dep_sync": "aj_crew",
+  "fleet_state": "aj_crew.apps.builtins.dev_fleet",
+  "frontend": "aj_crew",
+  "hooks": "aj_crew",
+  "live": "aj_crew.apps.builtins.dev_fleet",
+  "npm_preflight": "aj_crew.apps.builtins.dev_fleet",
+  "platform_compat": "aj_crew",
+  "repository": "aj_crew.apps.builtins.dev_fleet",
+  "runtime": "aj_crew.apps.builtins.dev_fleet",
+  "sandboxed_spawn_argv": "aj_crew.sandbox",
+  "shielded_prepare_off_loop": "aj_crew.sandbox",
+  "subprocess_executor": "aj_crew.executors"
+ }
+}

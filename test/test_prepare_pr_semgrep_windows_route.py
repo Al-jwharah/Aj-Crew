@@ -8,8 +8,8 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILLS = ROOT / "src" / "kiro_crew" / "builtin_skills" / "kirocrew-dev"
-PREPARE = SKILLS / "kirocrew-prepare-pr" / "SKILL.md"
+SKILLS = ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev"
+PREPARE = SKILLS / "ajcrew-prepare-pr" / "SKILL.md"
 WORKFLOW = ROOT / ".github" / "workflows" / "code-review.yml"
 
 

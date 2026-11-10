@@ -20,13 +20,13 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from guide_route_helpers import in_dashboard_turn
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew import pinned_fs
-from kiro_crew.dashboard import change_cards as cards
-from kiro_crew.dashboard.change_cards import CardStore
-from kiro_crew.dashboard.chat_folders import api_chat_folder_update
-from kiro_crew.dashboard.handlers import change_cards as routes
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew import change_card_catalog as catalog
+from aj_crew import pinned_fs
+from aj_crew.dashboard import change_cards as cards
+from aj_crew.dashboard.change_cards import CardStore
+from aj_crew.dashboard.chat_folders import api_chat_folder_update
+from aj_crew.dashboard.handlers import change_cards as routes
+from aj_crew.dashboard.state import _ChatSlot
 
 KIND = "folder.steering"
 SLOT = "chat-1"
@@ -416,7 +416,7 @@ def test_a_dir_the_route_would_refuse_is_refused_at_proposal(tmp_path):
 
 
 def test_agent_create_with_steering_is_refused(tmp_path):
-    from kiro_crew.dashboard.chat_folders import api_chat_folder_create
+    from aj_crew.dashboard.chat_folders import api_chat_folder_create
 
     state = _State([])
 
@@ -441,7 +441,7 @@ def test_agent_create_with_steering_is_refused(tmp_path):
 
 
 def test_a_long_canonical_dir_the_route_accepts_survives_a_rebuild():
-    from kiro_crew.dashboard.chat_folders import MAX_FOLDER_STEERING_DIR_LEN
+    from aj_crew.dashboard.chat_folders import MAX_FOLDER_STEERING_DIR_LEN
 
     assert catalog.FOLDER_STEERING_DIR_MAX == MAX_FOLDER_STEERING_DIR_LEN
     long_dir = "/" + "d" * 600

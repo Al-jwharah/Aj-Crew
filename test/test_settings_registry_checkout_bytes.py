@@ -1,7 +1,7 @@
 """The committed generated files ``gen-ui-index --check`` reads keep LF bytes on every checkout.
 
 ``website/scripts/lib/ui-index.mjs`` (``checkSettingsExtraction``) compares the
-committed ``src/kiro_crew/docs/settings-registry.generated.json`` with the live
+committed ``src/aj_crew/docs/settings-registry.generated.json`` with the live
 extraction byte for byte, and the extraction writes LF. Under
 ``core.autocrlf=true`` (the Git-for-Windows default, and the Windows runners')
 an unpinned JSON file is checked out with CRLF, so every Windows build that runs
@@ -25,8 +25,8 @@ from git_maintenance_helpers import git_maintenance_off_entries
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _PINNED = (
-    "src/kiro_crew/docs/settings-registry.generated.json",
-    "src/kiro_crew/docs/ui-index.generated.json",
+    "src/aj_crew/docs/settings-registry.generated.json",
+    "src/aj_crew/docs/ui-index.generated.json",
 )
 
 

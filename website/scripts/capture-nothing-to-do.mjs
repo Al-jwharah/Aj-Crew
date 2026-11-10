@@ -5,7 +5,7 @@
  * Runs the REAL built SPA (website/dist) with every /api/** call answered from
  * fixtures — no gateway, no token, no agent. The fixture rows are the rows the
  * backend persists for such a turn: a shell tool row, then the
- * `@kirocrew-core/nothing_to_do` tool row whose `meta.output` is the applier's
+ * `@ajcrew-core/nothing_to_do` tool row whose `meta.output` is the applier's
  * quiet line (`QUIET_END_OUTCOME_PREFIX` + the model's note). The "before" rows
  * are what main writes for the same turn with no directive: the two
  * empty-response notice cards (`chat_runner` continue + give-up rungs).
@@ -23,10 +23,10 @@ import { stubDashboardApi, logPageProblems } from './lib/stub-dashboard-api.mjs'
 
 delete process.env.LD_LIBRARY_PATH
 
-const OUT = process.argv[2] || join(process.env.KIROCREW_SCRATCH || '/tmp', 'nothing-to-do-shots')
+const OUT = process.argv[2] || join(process.env.AJCREW_SCRATCH || '/tmp', 'nothing-to-do-shots')
 mkdirSync(OUT, { recursive: true })
 
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 const QUIET_LINE = 'Nothing new to report. patrol: no new activity on the watched PRs'
 const NOTICE_CONTINUE = 'ℹ️ The turn ended without a closing reply — continuing once from what already ran.'
 const NOTICE_GIVE_UP =
@@ -61,13 +61,13 @@ function afterRows(ts, opener) {
     {
       role: 'tool',
       ts: ts + 9,
-      content: '🔧 @kirocrew-core/nothing_to_do',
+      content: '🔧 @ajcrew-core/nothing_to_do',
       cls: 'msg msg-tool',
       meta: {
         tool_call_id: 'tc-quiet',
         kind: 'other',
         tool_name: 'nothing_to_do',
-        mcp_server: 'kirocrew-core',
+        mcp_server: 'ajcrew-core',
         purpose: 'Nothing to report this cycle',
         input: '{"note": "patrol: no new activity on the watched PRs"}',
         output: QUIET_LINE,
@@ -109,13 +109,13 @@ function refusedRows(ts, opener) {
     {
       role: 'tool',
       ts: ts + 4,
-      content: '🔧 @kirocrew-core/nothing_to_do',
+      content: '🔧 @ajcrew-core/nothing_to_do',
       cls: 'msg msg-tool',
       meta: {
         tool_call_id: 'tc-quiet',
         kind: 'other',
         tool_name: 'nothing_to_do',
-        mcp_server: 'kirocrew-core',
+        mcp_server: 'ajcrew-core',
         input: '{"note": "nothing to add"}',
         output: REFUSED_LINE,
       },
@@ -133,7 +133,7 @@ async function sessionsShot(name, rows, { title, lastMessage }) {
   const SLOT = `chat-${name}`
   const slots = [{
     key: SLOT, title, running: false, last_message: lastMessage, messages: rows.length,
-    agent: 'kirocrew', memory_mode: 'persistent', project: PROJECT,
+    agent: 'ajcrew', memory_mode: 'persistent', project: PROJECT,
     modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0,
   }]
   const detail = { running: false, has_more: false, total: rows.length, queue: [], project: PROJECT, messages: rows }
@@ -182,7 +182,7 @@ if (!process.env.SKIP_SESSIONS) await sessionsShot('refused-person-turn', refuse
 
 const member = (name, extra = {}) => ({
   name, slug: name, bound: true, slot_key: `member-${name}`, running: false,
-  kiro_agent: 'kirocrew', workspace: 'default', memory_store: `member-${name}`, model: '', ...extra,
+  kiro_agent: 'ajcrew', workspace: 'default', memory_store: `member-${name}`, model: '', ...extra,
 })
 const MEMBERS = [
   member('radar', { last_active_ts: t0 + 9, last_message: 'Both PRs are green; #16351 is waiting on your review.' }),
@@ -213,10 +213,10 @@ async function crewmateShot(name, rows) {
     // The first-run Meet CrewMates dialog gates on this flag; a patrol frame is
     // about an existing crew, so the workspace has already met them.
     if (path === '/api/theme/boot') { await json(route, { mode: 'dark', theme: '', crewmates_onboarded: true, onboarded: true }); return true }
-    if (path === '/api/members') { await json(route, { members: MEMBERS, default_agent: 'kirocrew' }); return true }
+    if (path === '/api/members') { await json(route, { members: MEMBERS, default_agent: 'ajcrew' }); return true }
     if (path === '/api/crons') { await json(route, { jobs: [] }); return true }
     if (path === '/api/cron-folders') { await json(route, []); return true }
-    if (path === '/api/default-agent') { await json(route, { default_agent: 'kirocrew' }); return true }
+    if (path === '/api/default-agent') { await json(route, { default_agent: 'ajcrew' }); return true }
     const thread = path.match(/^\/api\/members\/([^/]+)\/thread$/)
     if (thread) {
       const slug = decodeURIComponent(thread[1])

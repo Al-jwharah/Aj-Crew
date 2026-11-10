@@ -26,17 +26,17 @@ from pod_helpers import (  # noqa: F401 -- the fixtures register by import
     requires_posix_pod_lifecycle,
 )
 
-from kiro_crew import gateway_lock
-from kiro_crew.pod import cli as pod_cli
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod import runtime_lifecycle
-from kiro_crew.pod.config import PodConfig
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import gateway_lock
+from aj_crew.pod import cli as pod_cli
+from aj_crew.pod import runtime as rt
+from aj_crew.pod import runtime_lifecycle
+from aj_crew.pod.config import PodConfig
+from aj_crew.testing.clock import ManualClock
 
 
 class TestCleanupHome:
     def test_removes_pod_dir(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         c = PodConfig.load()
         victim = c.home_dir("demo")
         victim.mkdir(parents=True)
@@ -47,7 +47,7 @@ class TestCleanupHome:
 
     def test_refuses_dotdot_escape(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         pods = tmp_path / "pods"
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(pods))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(pods))
         c = PodConfig.load()
         pods.mkdir(parents=True)
         sentinel = tmp_path / "DO_NOT_DELETE"  # lives in pod_root's PARENT
@@ -63,7 +63,7 @@ class TestCleanupHomeVerifies:
     "zero residue" over a directory still on disk."""
 
     def _held_home(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[PodConfig, Path]:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         c = PodConfig.load()
         home = c.home_dir("demo")
         home.mkdir(parents=True)
@@ -130,7 +130,7 @@ class _DrainClock(ManualClock):
     """The drain's poll clock: ``on_sleep(seconds)`` runs after each poll sleep.
 
     The hook shrinks the process tree between reads of ``cgroup.procs``. Installed on
-    :mod:`kiro_crew.pod.runtime_lifecycle` alone: ``rt.time`` is the stdlib module.
+    :mod:`aj_crew.pod.runtime_lifecycle` alone: ``rt.time`` is the stdlib module.
     """
 
     def __init__(self, on_sleep=lambda _s: None) -> None:
@@ -251,7 +251,7 @@ class TestLinuxTeardownOrdering:
         unit_file = tmp_path / "pod@.service"
         unit_file.write_text("[Service]\nExecStart=/x\nExecStopPost=/y pod _cleanup %i\n")
         monkeypatch.setattr(rt.unit_mod, "unit_path", lambda c: unit_file)
-        monkeypatch.setattr(rt.unit_mod, "_kirocrew_argv", lambda: (sys.executable,))
+        monkeypatch.setattr(rt.unit_mod, "_ajcrew_argv", lambda: (sys.executable,))
         issued: list[str] = []
 
         def _systemctl(*args: str, **kwargs: object) -> subprocess.CompletedProcess:
@@ -278,7 +278,7 @@ class TestLinuxTeardownOrdering:
             order.append(args[0])
             if args[0] == "show":
                 # systemd still has the destructive hook loaded.
-                return _cp(stdout="{ path=/usr/bin/kirocrew ; argv[]=pod _cleanup x }\n")
+                return _cp(stdout="{ path=/usr/bin/ajcrew ; argv[]=pod _cleanup x }\n")
             return _cp()
 
         # The unit file on disk looks perfectly current — the old gate's signal.
@@ -395,7 +395,7 @@ class TestLinuxTeardownOrdering:
         real.mkdir()
         link = tmp_path / "linked-pods"
         link.symlink_to(real)
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(link))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(link))
         c = PodConfig.load()
         (c.home_dir("demo")).mkdir(parents=True)
         monkeypatch.setattr(rt, "systemctl", lambda *a, **k: _cp())
@@ -411,15 +411,15 @@ class TestLinuxTeardownOrdering:
     def test_a_failed_stop_leaves_a_possibly_live_pods_state_alone(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         c = PodConfig.load()
         home = c.home_dir("demo")
         home.mkdir(parents=True)
-        (home / "kirocrew.db").write_text("live")
+        (home / "ajcrew.db").write_text("live")
         monkeypatch.setattr(rt, "systemctl", lambda *a, **k: _cp(returncode=1, stderr="job failed"))
         cp = rt.stop_pod(c, "demo")
         assert cp.returncode != 0
-        assert (home / "kirocrew.db").read_text() == "live"
+        assert (home / "ajcrew.db").read_text() == "live"
 
     def test_a_process_outliving_the_drain_blocks_the_delete_entirely(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -428,11 +428,11 @@ class TestLinuxTeardownOrdering:
         verification: the live writer recreates the directory in append mode right
         behind the delete, which lands after the check, so `down` reports zero
         residue over a HOME that comes back. Refuse to delete instead."""
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         c = PodConfig.load()
         home = c.home_dir("demo")
         home.mkdir(parents=True)
-        (home / "kirocrew.db").write_text("a writer still has this")
+        (home / "ajcrew.db").write_text("a writer still has this")
         deleted: list[str] = []
         monkeypatch.setattr(rt, "systemctl", lambda *a, **k: _cp())
         monkeypatch.setattr(rt, "cgroup_procs_file", lambda cc, n: tmp_path / "cgroup.procs")
@@ -441,7 +441,7 @@ class TestLinuxTeardownOrdering:
         cp = rt.stop_pod(c, "demo")
         assert cp.returncode != 0
         assert deleted == [], "must not delete a HOME a live process is still in"
-        assert (home / "kirocrew.db").read_text() == "a writer still has this"
+        assert (home / "ajcrew.db").read_text() == "a writer still has this"
         assert str(home) in cp.stderr
         assert "NOT zero-residue" in cp.stderr
         # The pids that would not exit are the actionable part of the report.
@@ -452,7 +452,7 @@ class TestLinuxTeardownOrdering:
     ) -> None:
         """Drained cleanly, but the delete still did not take (permissions, or a
         writer outside the cgroup). The verification is what catches this."""
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         c = PodConfig.load()
         home = c.home_dir("demo")
         home.mkdir(parents=True)
@@ -585,8 +585,8 @@ class TestDownSamplesStateUnderTheLock:
     ) -> None:
         import contextlib as _ctx
 
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
         c = PodConfig.load()
         rt.pin_checkout(c, "demo", tmp_path / "co")
         order: list[str] = []
@@ -620,8 +620,8 @@ class TestDownReclaimsResidue:
     to work on a pod that is not running."""
 
     def _orphan(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[PodConfig, Path]:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
         c = PodConfig.load()
         home = c.home_dir("demo")
         home.mkdir(parents=True)
@@ -650,14 +650,14 @@ class TestDownReclaimsResidue:
         reports "unit not loaded" (rc 5). With no HOME to reclaim and the pod not
         running there is nothing at stake, so `pod down <name>` must stay the
         documented no-op rather than exiting 1."""
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
         c = PodConfig.load()
         monkeypatch.setattr(rt, "is_active", lambda cc, n: False)
         monkeypatch.setattr(
             rt,
             "systemctl",
-            lambda *a, **k: _cp(returncode=5, stderr="Unit kirocrew-pod@demo.service not loaded."),
+            lambda *a, **k: _cp(returncode=5, stderr="Unit ajcrew-pod@demo.service not loaded."),
         )
         monkeypatch.setattr(pod_cli, "_audit", lambda *a, **k: None)
         pod_cli._down(c, argparse.Namespace(name="demo"))  # must not SystemExit
@@ -695,15 +695,15 @@ class TestUnitLessReclaim:
     evidence decides: a dead one is reclaimed, and one a gateway still serves is
     neither listed as an orphan nor deleted."""
 
-    _UNIT = "kirocrew-pod@demo.service"
+    _UNIT = "ajcrew-pod@demo.service"
 
     def _orphan(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, stop_rc: int = 5
     ) -> tuple[PodConfig, Path]:
         """*stop_rc* 5 is a unit systemd cannot load; 0 is an inactive instance of
         an installed template, which `stop` accepts as a no-op."""
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
         c = PodConfig.load()
         home = c.home_dir("demo")
         home.mkdir(parents=True)
@@ -756,11 +756,11 @@ class TestUnitLessReclaim:
         c, home = self._orphan(tmp_path, monkeypatch)
         root = os.path.realpath(home)
         links = [
-            (41, [os.path.dirname(root), f"{root}-2/kirocrew.db"]),  # beside it, not under it
-            (42, [f"{root}/kirocrew.db"]),
+            (41, [os.path.dirname(root), f"{root}-2/ajcrew.db"]),  # beside it, not under it
+            (42, [f"{root}/ajcrew.db"]),
             (43, [root]),
         ]
-        monkeypatch.setattr("kiro_crew.pod.home_liveness.proc_links", lambda: links)
+        monkeypatch.setattr("aj_crew.pod.home_liveness.proc_links", lambda: links)
         assert rt.orphan_homes(c) == []
         with pytest.raises(SystemExit):
             pod_cli._down(c, argparse.Namespace(name="demo"))

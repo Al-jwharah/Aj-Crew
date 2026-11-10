@@ -14,13 +14,13 @@ import pytest
 from chat_test_helpers import _make_state
 from shared_crew_host_isolation import host_isolation  # noqa: F401
 
-from kiro_crew.dashboard import state as state_module
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.shared_crew import attribution as attr
-from kiro_crew.shared_crew import people
-from kiro_crew.shared_crew.contracts import SessionQuery
-from kiro_crew.shared_crew.owner import owner_principal, viewer_ids
-from kiro_crew.shared_crew.session_query import query_sessions
+from aj_crew.dashboard import state as state_module
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.shared_crew import attribution as attr
+from aj_crew.shared_crew import people
+from aj_crew.shared_crew.contracts import SessionQuery
+from aj_crew.shared_crew.owner import owner_principal, viewer_ids
+from aj_crew.shared_crew.session_query import query_sessions
 
 pytestmark = pytest.mark.usefixtures("host_isolation")
 
@@ -99,7 +99,7 @@ def test_a_persisted_channel_session_is_unattributed(meta, key):
 
 @pytest.fixture
 def catalog(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(state_module, "_ChatSlot", _AttrSlot)
     st = _make_state(tmp_path)
     lines = {

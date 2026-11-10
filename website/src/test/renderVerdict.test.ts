@@ -51,7 +51,7 @@ describe('tally', () => {
       { surface: 'chat', locale: 'en-XA', finding: { kind: 'text', signature: 'untranslated-text' } },
       { surface: 'chat', locale: 'de', finding: { kind: 'layout', signature: 'clipped-without-title' } },
       { surface: 'projects', locale: 'de', finding: { kind: 'layout', signature: 'ellipsis-with-flex-parent' } },
-      { surface: 'chat', locale: 'zh-CN', finding: { kind: 'dnt', detail: 'KiroCrew -> 基罗组' } },
+      { surface: 'chat', locale: 'zh-CN', finding: { kind: 'dnt', detail: 'AjCrew -> 基罗组' } },
     ], SURFACES)
 
     expect(counts.chat).toEqual({ text: 1, layout: 1, latent: 0 })
@@ -125,7 +125,7 @@ describe('decide — a total is a report, never a failure', () => {
       baseCounts: at('chat', 'text', 0),
       ledger: null,
       surfaceIds: SURFACES,
-      dnt: [{ surface: 'chat', locale: 'zh-CN', finding: { kind: 'dnt', detail: 'KiroCrew' } }],
+      dnt: [{ surface: 'chat', locale: 'zh-CN', finding: { kind: 'dnt', detail: 'AjCrew' } }],
     })
 
     expect(verdict.failed).toBe(true)
@@ -272,7 +272,7 @@ describe('the base render is forced by anything that can move a number', () => {
     'AGENTS.md',
     'website/AGENTS.md',
     '.github/workflows/ci.yml',
-    'src/kiro_crew/server.py',
+    'src/aj_crew/server.py',
   ])('does not force one for %s', file => {
     expect(renderable!.test(file)).toBe(false)
   })

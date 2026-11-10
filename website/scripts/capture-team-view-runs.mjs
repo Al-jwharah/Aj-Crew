@@ -36,7 +36,7 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 820 }, dev
 const json = (route, body) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
 await page.route(u => new URL(u).pathname.startsWith('/api/'), route => {
   const path = new URL(route.request().url()).pathname
-  if (path === '/api/members') return json(route, { members: MEMBERS, default_agent: 'kirocrew' })
+  if (path === '/api/members') return json(route, { members: MEMBERS, default_agent: 'ajcrew' })
   if (path === '/api/teams') return json(route, { teams: [{ id: 'abc123abc123', name: 'Triage', members: ['radar', 'fixer'] }] })
   const activity = path.match(/^\/api\/members\/([^/]+)\/activity$/)
   if (activity) {

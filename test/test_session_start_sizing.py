@@ -13,8 +13,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import session_start_sizing as sss
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew import session_start_sizing as sss
+from aj_crew.config.loader import AjCrewConfig
 
 
 @pytest.fixture(autouse=True)
@@ -76,11 +76,11 @@ def test_cgroup_quota_takes_tightest_ancestor(tmp_path: Path):
         tmp_path,
         {
             "system.slice": "800000 100000",
-            "system.slice/kirocrew.service": "max 100000",
-            "system.slice/kirocrew.service/inner": "max 100000",
+            "system.slice/ajcrew.service": "max 100000",
+            "system.slice/ajcrew.service/inner": "max 100000",
         },
     )
-    leaf = tmp_path / "system.slice/kirocrew.service/inner"
+    leaf = tmp_path / "system.slice/ajcrew.service/inner"
     quota = sss.cgroup_cpu_quota([(leaf, tmp_path)])
     assert quota == 8.0
 
@@ -105,7 +105,7 @@ def test_cgroup_quota_stops_at_the_mount_boundary(tmp_path: Path):
 
 def test_cgroup_quota_reads_the_shared_cgroup_walk(monkeypatch, tmp_path: Path):
     """The cpu probe takes its directories from the memory probe's mountinfo walk."""
-    from kiro_crew import subagent
+    from aj_crew import subagent
 
     _cgroup_tree(tmp_path, {"svc": "200000 100000"})
     monkeypatch.setattr(
@@ -170,15 +170,15 @@ def test_explicit_integer_wins(monkeypatch):
 # ── config loading ───────────────────────────────────────────────────────────
 
 
-def _load_with(tmp_path: Path, monkeypatch, agent: dict | None) -> KiroCrewConfig:
+def _load_with(tmp_path: Path, monkeypatch, agent: dict | None) -> AjCrewConfig:
     cfg_file = tmp_path / "config.json"
     cfg_file.write_text(json.dumps({} if agent is None else {"agent": agent}))
-    monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: cfg_file)
-    return KiroCrewConfig.load()
+    monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: cfg_file)
+    return AjCrewConfig.load()
 
 
 def test_default_is_auto():
-    assert KiroCrewConfig().agent.session_start_concurrency == "auto"
+    assert AjCrewConfig().agent.session_start_concurrency == "auto"
 
 
 @pytest.mark.parametrize(
@@ -202,9 +202,9 @@ def test_loader_accepts_auto_or_int(tmp_path, monkeypatch, raw, expected):
 
 
 def test_schema_accepts_integer_and_string():
-    from kiro_crew.config.schema import build_json_schema
+    from aj_crew.config.schema import build_json_schema
 
-    node = build_json_schema(KiroCrewConfig)["properties"]["agent"]["properties"][
+    node = build_json_schema(AjCrewConfig)["properties"]["agent"]["properties"][
         "session_start_concurrency"
     ]
     assert node["type"] == ["integer", "string"]
@@ -215,10 +215,10 @@ def test_schema_accepts_integer_and_string():
 
 
 def test_runtime_resolver_resolves_auto(monkeypatch):
-    from kiro_crew.acp import runtime as acp_runtime
+    from aj_crew.acp import runtime as acp_runtime
 
     monkeypatch.setattr(
-        KiroCrewConfig,
+        AjCrewConfig,
         "load",
         classmethod(
             lambda cls, *a, **k: SimpleNamespace(
@@ -237,8 +237,8 @@ def test_runtime_resolver_resolves_auto(monkeypatch):
 @pytest.mark.asyncio
 async def test_gate_snapshot_auto_is_resolved_off_loop(monkeypatch):
     """An ``auto`` live snapshot sizes the gate from the host, not as int("auto")."""
-    from kiro_crew.acp import runtime as acp_runtime
-    from kiro_crew.acp import runtime_start
+    from aj_crew.acp import runtime as acp_runtime
+    from aj_crew.acp import runtime_start
 
     monkeypatch.setattr(
         runtime_start.live,
@@ -255,12 +255,12 @@ async def test_gate_snapshot_auto_is_resolved_off_loop(monkeypatch):
 
 
 def test_doctor_shows_resolved_auto_value_and_inputs(monkeypatch, capsys):
-    from kiro_crew import cli_doctor
+    from aj_crew import cli_doctor
 
     monkeypatch.setattr(sss, "affinity_cpu_count", lambda: 64)
     monkeypatch.setattr(sss, "cgroup_cpu_quota", lambda: None)
     monkeypatch.setattr(sss, "_read_available_gb", lambda: 200.0)
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cli_doctor._doctor_overload_resilience(cfg)
     out = capsys.readouterr().out
     assert "session_start_concurrency=16 (auto: cpus=64" in out
@@ -269,9 +269,9 @@ def test_doctor_shows_resolved_auto_value_and_inputs(monkeypatch, capsys):
 
 
 def test_doctor_explicit_value_is_not_labelled_as_a_probe(capsys):
-    from kiro_crew import cli_doctor
+    from aj_crew import cli_doctor
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.session_start_concurrency = 3
     cli_doctor._doctor_overload_resilience(cfg)
     out = capsys.readouterr().out
@@ -286,7 +286,7 @@ async def test_gateway_boot_sizes_auto_off_the_event_loop(monkeypatch, caplog):
     import logging
     import threading
 
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     loop_thread = threading.get_ident()
     probed_on: list[int] = []
@@ -296,8 +296,8 @@ async def test_gateway_boot_sizes_auto_off_the_event_loop(monkeypatch, caplog):
         return sss.HostCapacity(affinity_cpus=64, quota_cpus=None, cpus=64, available_gb=200.0)
 
     monkeypatch.setattr(sss, "probe_host_capacity", _probe)
-    orch = SimpleNamespace(_cfg=KiroCrewConfig())
-    with caplog.at_level(logging.INFO, logger="kiro_crew.slack.gateway"):
+    orch = SimpleNamespace(_cfg=AjCrewConfig())
+    with caplog.at_level(logging.INFO, logger="aj_crew.slack.gateway"):
         await GatewayOrchestrator._log_session_start_sizing(orch)  # type: ignore[arg-type]
     await asyncio.sleep(0)
     assert probed_on and probed_on[0] != loop_thread
@@ -315,7 +315,7 @@ def test_gateway_boot_sizes_only_after_the_socket_binds():
     """
     import inspect
 
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     src = inspect.getsource(GatewayOrchestrator.run)
     assert "await self._log_session_start_sizing()" not in src
@@ -334,7 +334,7 @@ def test_subagent_manager_never_probes_the_host(monkeypatch):
     """
     from overload_fakes import mock_ctx, mock_sessions
 
-    from kiro_crew.subagent import _STARTUP_CAP_GATE_ROUNDS, SubagentManager
+    from aj_crew.subagent import _STARTUP_CAP_GATE_ROUNDS, SubagentManager
 
     probes: list[int] = []
 
@@ -343,7 +343,7 @@ def test_subagent_manager_never_probes_the_host(monkeypatch):
         return sss.HostCapacity(affinity_cpus=32, quota_cpus=None, cpus=32, available_gb=200.0)
 
     monkeypatch.setattr(sss, "probe_host_capacity", _probe)
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: KiroCrewConfig()))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls, *a, **k: AjCrewConfig()))
     mgr = SubagentManager(sessions=mock_sessions(), ctx_builder=mock_ctx(), max_concurrent=64)
     assert probes == []
     real_lock = sss._host_lock

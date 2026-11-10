@@ -80,7 +80,7 @@
 ## Tests
 
 <!-- Automated tests added/updated and the behavior each one locks in.
-     fix PRs: add one line under this heading, pasted from the kirocrew-prepare-pr
+     fix PRs: add one line under this heading, pasted from the ajcrew-prepare-pr
      skill's prove.py (it reverts your production hunks and re-runs the changed tests):
        Proof: PROVEN <the tests that fail without the fix> (head <sha12>)
      or, when it cannot run:

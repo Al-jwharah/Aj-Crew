@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.dashboard import member_waiting, warm_task_brief
+from aj_crew.dashboard import member_waiting, warm_task_brief
 
 
 def _row(role, content, **meta):
@@ -76,7 +76,7 @@ def test_pending_options_copies_only_the_chip_bar_source(rows, expected):
 
 
 def test_brief_row_carries_the_copied_marker_as_its_last_line(monkeypatch):
-    from kiro_crew.dashboard import state as state_mod
+    from aj_crew.dashboard import state as state_mod
 
     posted: list[str] = []
     monkeypatch.setattr(
@@ -94,7 +94,7 @@ def test_brief_row_carries_the_copied_marker_as_its_last_line(monkeypatch):
 
 
 def test_waiting_item_keeps_the_ask_as_its_source_under_a_brief_with_copied_buttons():
-    from kiro_crew.dashboard import member_waiting
+    from aj_crew.dashboard import member_waiting
 
     rows = [
         {"role": "assistant", "content": _ASK, "ts": "2026-11-02T10:00:00Z", "meta": {}},

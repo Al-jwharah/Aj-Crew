@@ -1,6 +1,6 @@
-# Installing and Running Kiro Crew
+# Installing and Running Aj Crew
 
-This guide covers every way to install Kiro Crew, the first-run setup, how to
+This guide covers every way to install Aj Crew, the first-run setup, how to
 verify the install, and how to troubleshoot the failures that actually happen.
 
 Builds use plain `pip` + `npm`/Vite + `pytest`, driven by the repo-root
@@ -9,8 +9,8 @@ Builds use plain `pip` + `npm`/Vite + `pytest`, driven by the repo-root
 > **Platforms: macOS, Linux, and Windows.** macOS and Linux use the `Makefile` /
 > `setup.sh` paths below. Windows supports both the signed desktop installer and
 > a native Python source install (`.\make.ps1 build`, launched via
-> `.\.venv\Scripts\python.exe -m kiro_crew gateway`); all POSIX-only process,
-> signal, file-lock and metrics calls route through `kiro_crew.platform_compat`.
+> `.\.venv\Scripts\python.exe -m aj_crew gateway`); all POSIX-only process,
+> signal, file-lock and metrics calls route through `aj_crew.platform_compat`.
 > See [windows-install.md](windows-install.md) for the Windows walkthrough.
 
 ---
@@ -46,13 +46,13 @@ bundled, so end users of those artifacts need neither Node nor a compiler.
 
 ### Default agent backend: `kiro-cli`
 
-Kiro Crew drives the default agent through **`kiro-cli`** over the
+Aj Crew drives the default agent through **`kiro-cli`** over the
 [Agent Client Protocol](https://github.com/zed-industries/agent-client-protocol)
 (ACP). Other ACP backends can be selected with `agent.acp_backend`. A fresh
 configuration uses the KAS harness: it runs through `kiro-cli`'s own ACP relay
 (`kiro-cli acp --agent-engine v3`) when `kiro-cli` is installed and can sign in,
-and through Kiro Crew's own bundled KAS engine otherwise. The `route:` line in
-the KAS backend section of `kirocrew doctor` names the one this host uses. Setting `agent.acp_backend` to `kiro` keeps
+and through Aj Crew's own bundled KAS engine otherwise. The `route:` line in
+the KAS backend section of `ajcrew doctor` names the one this host uses. Setting `agent.acp_backend` to `kiro` keeps
 `kiro-cli`: it still uses the relay when `kiro-cli` offers v3, and
 `kiro-cli acp --agent <name>` when it does not.
 
@@ -64,13 +64,13 @@ kiro-cli login
 
 With `agent.acp_backend` set to `kiro`, a missing `kiro-cli` makes spawning a
 session fail with `kiro-cli not found (<searched directories>)`, followed by the
-install link and the `KIROCREW_KIRO_BIN` override for a binary outside those
+install link and the `AJCREW_KIRO_BIN` override for a binary outside those
 directories; the default backend runs the bundled engine instead. On the first
 dashboard launch the **Set up Kiro** page detects the missing prerequisite,
 shows copyable installer commands for the host's platform and the login commands
 to run yourself, and offers a **Use other coding agents** picker so another
-configured harness can finish setup instead. Kiro Crew does not run the install
-or the login itself. `kirocrew doctor` reports both the binary and the login
+configured harness can finish setup instead. Aj Crew does not run the install
+or the login itself. `ajcrew doctor` reports both the binary and the login
 state.
 
 ### Embeddings: nothing to install
@@ -86,9 +86,9 @@ download), memory search degrades to keyword/FTS search and picks embeddings up
 automatically once the model lands, with no gateway restart. Two escape
 hatches exist for mirrored or airgapped installs:
 
-- `KIROCREW_EMBED_MODEL_URL` (or `memory.embed_model_url`) points the download
+- `AJCREW_EMBED_MODEL_URL` (or `memory.embed_model_url`) points the download
   at a mirror. The sha256 pin still verifies whatever it fetches.
-- `KIROCREW_EMBED_MODEL_PATH` (or `memory.embed_model_path`) runs a local GGUF
+- `AJCREW_EMBED_MODEL_PATH` (or `memory.embed_model_path`) runs a local GGUF
   of your own instead. In that mode the default model is never downloaded.
 
 `memory.embedding_provider` accepts only `llama_cpp`; any other value in an old
@@ -127,8 +127,8 @@ failure.
 ### Which path on Linux
 
 **Start with the one-line install below.** It is the smoothest Linux path and
-the one that needs the fewest decisions: it puts `kirocrew` on your `PATH` at a
-stable location, which is what makes `kirocrew service install` — and therefore
+the one that needs the fewest decisions: it puts `ajcrew` on your `PATH` at a
+stable location, which is what makes `ajcrew service install` — and therefore
 the [AppArmor profile](#linux-the-agent-sandbox-and-unprivileged-user-namespaces)
 the agent sandbox needs on Ubuntu 23.10+ — reachable in the first place. You
 work in the dashboard through your browser at `localhost:5476`.
@@ -143,7 +143,7 @@ too.
 
 The **AppImage** stays available for hosts where you cannot install a system
 package (no root, an unsupported distro). It needs FUSE present, and it provides
-no `kirocrew` launcher on `PATH`. On a distro that restricts unprivileged user
+no `ajcrew` launcher on `PATH`. On a distro that restricts unprivileged user
 namespaces, keep the AppImage at a durable path and attach the manual AppArmor
 profile described in the sandbox section; moving or renaming the AppImage breaks
 that path binding. Prefer a package where you can.
@@ -155,7 +155,7 @@ that path binding. Prefer a package where you can.
 | A desktop app on Fedora / RHEL / CentOS Stream / Amazon Linux 2023 | **`.rpm`** (d) |
 | A desktop app with no root and no package manager | **AppImage** (d) |
 | A container host | **Docker** ([guide](docker.md)) |
-| To work on Kiro Crew itself (follows a branch; `main` is Nightly) | **From source** (b) |
+| To work on Aj Crew itself (follows a branch; `main` is Nightly) | **From source** (b) |
 
 ### a. One-line install (fastest)
 
@@ -166,11 +166,11 @@ npm, no local build:
 curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
 ```
 
-Once the wheel is in, the installer runs the new `kirocrew kas install` to
+Once the wheel is in, the installer runs the new `ajcrew kas install` to
 download the [built-in KAS engine](#first-run) this release pins (about 55-70 MB
 for your platform). If that download fails, for example on a host with no
 access to the CDN, the install still succeeds and the installer prints the
-command to retry. Pass `--no-kas` (or set `KIROCREW_INSTALL_KAS=0`) to skip it:
+command to retry. Pass `--no-kas` (or set `AJCREW_INSTALL_KAS=0`) to skip it:
 
 ```bash
 curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --no-kas
@@ -217,33 +217,33 @@ was never published at all.
 The installer verifies the wheel's digest against the signed manifest and
 refuses to install on a mismatch; there is no checksum-only fallback. It uses
 `pipx` when available, otherwise it creates a managed venv **beside** the data
-home (`~/.kiro/crew-venv`, override with `KIROCREW_VENV`) and symlinks
-`~/.local/bin/kirocrew` at it. The venv is deliberately not nested inside the
+home (`~/.kiro/crew-venv`, override with `AJCREW_VENV`) and symlinks
+`~/.local/bin/ajcrew` at it. The venv is deliberately not nested inside the
 data home, so no whole-home operation can ever delete the live interpreter. The
 selected channel is recorded to `~/.kiro/crew/channel`.
 
-Updates to a managed venv (`kirocrew update`, an approved in-app update, and the
+Updates to a managed venv (`ajcrew update`, an approved in-app update, and the
 gateway's automatic update) build each new version as its own tree beside it,
 `crew-venv-<version>` (about 350 MiB with its dependencies), and switch the
 `crew-venv-current` link to it. After each update the engine keeps the current
-tree, the previous one (a recovery target), and any tree a running `kirocrew`
+tree, the previous one (a recovery target), and any tree a running `ajcrew`
 process still uses; older ones are removed. A direct installer run still
 rebuilds the fixed `crew-venv` in place (and a pipx install reinstalls into its
 own venv), so a gateway that is running during the re-run keeps the old version
 loaded while it reads the new files. The installer never restarts it: when it
-finds one running (an active `kirocrew` systemd unit, the
-`dev.kirocrew.gateway` launchd agent, or a `kirocrew gateway` process holding
+finds one running (an active `ajcrew` systemd unit, the
+`dev.ajcrew.gateway` launchd agent, or a `ajcrew gateway` process holding
 the data home's `gateway.lock`), it ends with a warning that names the restart
-command for that setup, such as `systemctl --user restart kirocrew`. Run it
+command for that setup, such as `systemctl --user restart ajcrew`. Run it
 straight away. On a host that restricts unprivileged user
-namespaces and uses the `kirocrew-userns` AppArmor profile, the profile is
+namespaces and uses the `ajcrew-userns` AppArmor profile, the profile is
 attached to the launcher of every `crew-venv-<version>` tree, so it keeps
 applying after an update. A profile attached to one tree's exact path (one an
-earlier Kiro Crew wrote, or one written where the directory holding the install
+earlier Aj Crew wrote, or one written where the directory holding the install
 is not owned by the service's account alone) does not: run
-`kirocrew service install` again after the update so the profile follows the
+`ajcrew service install` again after the update so the profile follows the
 new launcher. The gateway's automatic update waits for you instead of applying
-there, and `kirocrew doctor` reports the attachment under Sandbox.
+there, and `ajcrew doctor` reports the attachment under Sandbox.
 
 The installer provisions its own Python by default instead of depending on the
 system one: it downloads a SHA-256-pinned [uv](https://docs.astral.sh/uv/)
@@ -251,10 +251,10 @@ binary (an installed `uv` on `PATH` is deliberately never executed -- `PATH`
 commonly leads with agent-writable directories), then installs a
 [python-build-standalone](https://github.com/astral-sh/python-build-standalone)
 CPython 3.12 into a user-owned directory beside the data home
-(`~/.kiro/crew-python`, override with `KIROCREW_PYTHON_DIR`). No package
+(`~/.kiro/crew-python`, override with `AJCREW_PYTHON_DIR`). No package
 manager, no sudo, and the prebuilt interpreter runs on old-glibc distros
 (CentOS 7) whose base repos never reach 3.10. Pass `--system-python` (or set
-`KIROCREW_MANAGED_PYTHON=0`) to run on a system Python 3.12+ instead — the
+`AJCREW_MANAGED_PYTHON=0`) to run on a system Python 3.12+ instead — the
 choice is sticky: it is recorded in the data home (`python-mode`, next to
 `channel`), so later installer runs keep it without the flag; opt back in
 with `--managed-python`.
@@ -268,17 +268,17 @@ is reused rather than re-downloaded.
 If the managed
 interpreter cannot be downloaded and a usable system Python 3.12+ exists, the
 run falls back to it with a warning (and retries the managed default next
-time); air-gapped hosts can point `KIROCREW_UV_URL` at a mirror of the uv
+time); air-gapped hosts can point `AJCREW_UV_URL` at a mirror of the uv
 release tree and `UV_PYTHON_INSTALL_MIRROR` at a mirror of the interpreter
 archives — the pinned SHA-256 digests are enforced either way. The signed
 installer never pipes an unsigned third-party script into a shell: uv is
 fetched as a tarball and verified against pinned digests, exactly like the
 wheel itself. On a terminal the wheel download draws curl's progress bar and
 the slow steps (venv creation, pip) draw a single live progress line.
-`KIROCREW_INSTALL_PLAIN=1` turns that off, which is also what a piped or logged
+`AJCREW_INSTALL_PLAIN=1` turns that off, which is also what a piped or logged
 run gets: the download is silent, a slow step prints a `still running` line
-every 30 seconds, and each step ends with one `done` line. When it finishes it prints the next step: `kirocrew gateway` to
-start now, or `kirocrew service install` to run it as a service.
+every 30 seconds, and each step ends with one `done` line. When it finishes it prints the next step: `ajcrew gateway` to
+start now, or `ajcrew service install` to run it as a service.
 
 Dependencies are installed from **prebuilt wheels only** (`pip
 --only-binary=:all:`), so the install never needs a C compiler or `-dev`
@@ -288,11 +288,11 @@ is older than every candidate's manylinux floor, or the architecture has no
 wheel), the installer stops before any build starts and names the platform and
 the packages, instead of failing deep inside a compiler run. Use a newer host,
 or — on a host that does have a toolchain and the headers — opt back into
-compiling with `KIROCREW_ALLOW_SOURCE_BUILDS=1`. The same policy applies to
-`install.sh`'s editable install (the dependency set only; the local kirocrew
+compiling with `AJCREW_ALLOW_SOURCE_BUILDS=1`. The same policy applies to
+`install.sh`'s editable install (the dependency set only; the local ajcrew
 tree is still built) and to the update engine that builds the shadow venv on a
 managed-venv install. The opt-in is not remembered. To compile a dependency
-during an update, run `KIROCREW_ALLOW_SOURCE_BUILDS=1 kirocrew update` from a
+during an update, run `AJCREW_ALLOW_SOURCE_BUILDS=1 ajcrew update` from a
 shell where the toolchain is on `PATH`: that command builds with the shell's own
 environment, while the gateway's automatic and approved updates run their build
 steps on the trusted system `PATH` only.
@@ -304,7 +304,7 @@ run the gateway straight out of `src/`:
 
 ```bash
 make build                                   # npm build + editable backend install into .venv
-PYTHONPATH=src python -m kiro_crew gateway   # -> http://localhost:5476
+PYTHONPATH=src python -m aj_crew gateway   # -> http://localhost:5476
 ```
 
 **This is the contributor layout, not an end-user install.** `make build` and
@@ -315,13 +315,13 @@ release the desktop app and the [one-line install](#a-one-line-install-fastest)
 follow. `install.sh` says which lane it is building, at its start and at its
 end.
 
-Updating follows the same branch. `kirocrew update` (and the dashboard
+Updating follows the same branch. `ajcrew update` (and the dashboard
 **Update** button) fetches `origin/<branch>` and hard-resets the clone to it
 when the clone is only behind. A clone that is both ahead and behind — local
 commits `origin/<branch>` lacks, plus new ones from it — is refused, because the
-reset would discard the local commits; `kirocrew update --force` discards them
+reset would discard the local commits; `ajcrew update --force` discards them
 deliberately. A clone that is only ahead is reported up to date. A detached
-checkout, such as a release tag, is on no branch: `kirocrew update` moves it to
+checkout, such as a release tag, is on no branch: `ajcrew update` moves it to
 the first of `main`, `mainline` and `master` that `origin` has, and refuses <!-- wokeignore:rule=master -->
 when `origin` has none of them. After the reset the update rebuilds the
 dashboard (`npm ci` + `npm run build` in `website/`) and writes that output to
@@ -341,14 +341,14 @@ of a Windows install and the Makefile's recipes are POSIX-shaped
 
 ```powershell
 .\make.ps1 build                             # same steps, same artifacts
-$env:PYTHONPATH="src"; .\.venv\Scripts\python.exe -m kiro_crew gateway
+$env:PYTHONPATH="src"; .\.venv\Scripts\python.exe -m aj_crew gateway
 ```
 
 The venv interpreter is named explicitly rather than a bare `python`: the
 dependencies live only in `.venv`, and on Windows a bare `python` resolves to the
 system interpreter (or the Microsoft Store alias stub), which would fail at
 import. `.\.venv\Scripts\Activate.ps1` first is the other way, after which
-`python` and `kirocrew` both resolve inside the venv.
+`python` and `ajcrew` both resolve inside the venv.
 
 The two drivers expose the same target set, and
 `test/test_build_target_parity.py` fails the build if one gains a target the
@@ -364,10 +364,10 @@ venv puts its executables in `.venv\Scripts\`, and the macOS-only
    needs it.
 2. **`backend`**: creates `.venv` and runs an editable install with the `dev`
    extra (`pip install -e ".[dev]"`).
-3. **stage**: `.venv/bin/python -m kiro_crew.frontend stage .` makes
-   `website/dist` the served `src/kiro_crew/static/dist`: a link to
+3. **stage**: `.venv/bin/python -m aj_crew.frontend stage .` makes
+   `website/dist` the served `src/aj_crew/static/dist`: a link to
    `website/dist`, or for an edition a link to a fresh private copy. It waits at
-   most 30 s for the staging lock a Kiro Crew build holds. `make wheel` stages
+   most 30 s for the staging lock a Aj Crew build holds. `make wheel` stages
    the same way; `make backend-bin` does not, since its bundle copies
    `website/dist` itself, so it needs no Python for this. `make frontend` alone
    does not stage either: a checkout whose `static/dist` is still a real
@@ -381,7 +381,7 @@ backend target refuses to build a venv from an interpreter older than 3.12,
 matching `pyproject.toml`'s `requires-python`, rather than letting dependency
 resolution backtrack or the package fail at import. `ensure-python.sh` also
 skips any interpreter whose throwaway `--without-pip` venv cannot run python,
-such as a shared-libpython build behind a launcher wrapper (Toolbox's kirocrew
+such as a shared-libpython build behind a launcher wrapper (Toolbox's ajcrew
 Python), and moves on to the next candidate or mise.
 
 `make.ps1` resolves the same toolchain but installs none of it: the bootstrap
@@ -393,20 +393,20 @@ the `winget` command to run if nothing usable is found. It honors the same
 `packaging/build-desktop.sh`, which provisions its own `uv` and
 python-build-standalone interpreter on every platform.
 
-After the backend target runs, `bin/kirocrew` resolves its real install root,
-sets `KIROCREW_PROJECT_DIR`, and delegates to `.venv/bin/kirocrew`. That console
-script comes from the editable package metadata (`kiro_crew._bootstrap:main`),
-so the virtual environment makes `src/kiro_crew` importable without the wrapper
+After the backend target runs, `bin/ajcrew` resolves its real install root,
+sets `AJCREW_PROJECT_DIR`, and delegates to `.venv/bin/ajcrew`. That console
+script comes from the editable package metadata (`aj_crew._bootstrap:main`),
+so the virtual environment makes `src/aj_crew` importable without the wrapper
 modifying `PYTHONPATH`; caller-provided entries pass through unchanged.
 
 Any CLI subcommand works the same way, for example
-`PYTHONPATH=src python -m kiro_crew setup` or `... doctor`.
+`PYTHONPATH=src python -m aj_crew setup` or `... doctor`.
 
 The equivalent by hand:
 
 ```bash
-git clone https://github.com/kirodotdev/KiroCrew.git
-cd KiroCrew
+git clone https://github.com/Al-jwharah/Aj-Crew.git
+cd AjCrew
 cd website && npm install && npm run build && cd ..
 pip install -e ".[dev]"      # contributor tooling, matching `make backend`
 ```
@@ -419,23 +419,23 @@ with a suitable Python:
 ```bash
 make wheel                # builds the frontend, then python -m build --wheel -> dist/
 pip install dist/*.whl
-kirocrew gateway          # -> http://localhost:5476
+ajcrew gateway          # -> http://localhost:5476
 ```
 
 The published wheel is tagged `py3-none-any` and carries the supported
 platforms' vendored llama.cpp libraries in its package data, so one wheel serves
 every supported OS and architecture:
-`dist/kirocrew-<version>-py3-none-any.whl` (for example
-`kirocrew-0.1.2-py3-none-any.whl`). The dashboard is folded in by the custom
+`dist/ajcrew-<version>-py3-none-any.whl` (for example
+`ajcrew-0.1.2-py3-none-any.whl`). The dashboard is folded in by the custom
 `BuildWithFrontend` build step in [`setup.py`](../../setup.py), which also
 bundles `CHANGELOG.md` so the dashboard's changelog view works on a wheel install
 with no source tree.
 
-The pip install name is **`kirocrew`**; the import package is `kiro_crew`.
+The pip install name is **`ajcrew`**; the import package is `aj_crew`.
 
 #### Installing a PUBLISHED wheel with pip
 
-Kiro Crew is not on PyPI, so `pip` reaches it through the release CDN. Two forms
+Aj Crew is not on PyPI, so `pip` reaches it through the release CDN. Two forms
 are published, and they serve different needs:
 
 ```bash
@@ -444,21 +444,21 @@ are published, and they serve different needs:
 #    stable line needs no --pre. Every insider and nightly version does carry
 #    one, so those channels need it — and --pre then applies to every package
 #    pip resolves, third-party dependencies included:
-#      pip install --pre kirocrew --extra-index-url https://updates.crew.kiro.dev/feed/insider/simple/
+#      pip install --pre ajcrew --extra-index-url https://updates.crew.kiro.dev/feed/insider/simple/
 #    NOTE: --extra-index-url ADDS the channel index beside default PyPI, so pip
-#    pools `kirocrew` candidates across both and a higher-versioned public-PyPI
+#    pools `ajcrew` candidates across both and a higher-versioned public-PyPI
 #    package of the name would win. Prefer form 2 (or verify the installed
 #    artifact) where that exposure matters.
-pip install kirocrew --extra-index-url https://updates.crew.kiro.dev/feed/stable/simple/
+pip install ajcrew --extra-index-url https://updates.crew.kiro.dev/feed/stable/simple/
 
 # 2. Pin one exact wheel by hash. Every version directory publishes a SHA256SUMS
 #    file beside the wheel; take your wheel's hash from there. pip verifies it and
-#    consults no index for Kiro Crew itself — so there is no name to squat.
-pip install "https://download.crew.kiro.dev/cli/stable/<version>/kirocrew-<version>-py3-none-any.whl#sha256=<sha256>"
+#    consults no index for Aj Crew itself — so there is no name to squat.
+pip install "https://download.crew.kiro.dev/cli/stable/<version>/ajcrew-<version>-py3-none-any.whl#sha256=<sha256>"
 ```
 
 Create the venv and run either form under `umask 022`. Under umask `002`,
-`python -m venv` and pip leave the venv group-writable, and `kirocrew service
+`python -m venv` and pip leave the venv group-writable, and `ajcrew service
 install` then refuses to attach the
 [AppArmor profile](#linux-the-agent-sandbox-and-unprivileged-user-namespaces);
 `chmod -R g-w <venv>` repairs an existing install.
@@ -466,15 +466,15 @@ install` then refuses to attach the
 Swap `stable` for `insider` or `nightly` in either URL. The two names split by
 class as a convention — `updates.crew.kiro.dev` for mutable pointers and indexes,
 `download.crew.kiro.dev` for the bytes — and today both alias the same
-distribution, which is why `KIROCREW_CDN_BASE` (or `cli.sh --cdn`) overrides both
+distribution, which is why `AJCREW_CDN_BASE` (or `cli.sh --cdn`) overrides both
 at once. Use the documented name for each class rather than relying on the
 aliasing.
 
-Form 2 pins a byte-exact artifact and consults no index for the `kirocrew` name,
+Form 2 pins a byte-exact artifact and consults no index for the `ajcrew` name,
 so it is the one to use where a public-PyPI squat of the name is a concern, or
 when a deployment must pin a byte-exact artifact anyway — a locked requirements
 file, an airgapped mirror, or a reproducible image build. The in-place upgrade
-command Kiro Crew emits for a plain-pip install uses the form-2 pinned wheel for
+command Aj Crew emits for a plain-pip install uses the form-2 pinned wheel for
 exactly this reason, and when it cannot fetch or verify the signed wheel it
 reports that and points at the channel's artifact directory rather than fall
 back to the form-1 name-resolving command. Form 1 tracks a channel hands-free
@@ -484,14 +484,14 @@ Installed console script:
 
 | Command | Entry point |
 |---------|-------------|
-| `kirocrew` | `kiro_crew._bootstrap:main` |
+| `ajcrew` | `aj_crew._bootstrap:main` |
 
-`pyproject.toml`'s `[project.scripts]` declares `kirocrew` and nothing else.
+`pyproject.toml`'s `[project.scripts]` declares `ajcrew` and nothing else.
 Because a `[project]` table exists, setuptools reads the entry points from
-there and ignores `setup.cfg`'s `console_scripts`, so `kirocrew` is the only
+there and ignores `setup.cfg`'s `console_scripts`, so `ajcrew` is the only
 command installed on `PATH`.
 
-Optional extras. Kiro Crew is not on PyPI, so `pip install "kirocrew[voice]"`
+Optional extras. Aj Crew is not on PyPI, so `pip install "ajcrew[voice]"`
 cannot resolve — install an extra's own distributions into the environment that
 runs the gateway instead (e.g. `pip install 'boto3>=1.34,<2'
 'amazon-transcribe>=0.6.3,<1' 'pywhispercpp>=1.5,<2'` for `voice`). The dashboard
@@ -502,7 +502,7 @@ prints the exact command, already pointed at the right interpreter.
 | `voice-aws` | `boto3`, `amazon-transcribe` | AWS Transcribe provider without the local recognizer |
 | `voice` | `voice-aws`, `pywhispercpp` | Full speech-to-text transcription |
 | `otlp` | `opentelemetry-exporter-otlp-proto-http` | OTLP/HTTP metrics export. Installing it does not enable egress; that still needs an explicit `telemetry.otlp_endpoint` |
-| `perf` | `py-spy` | Out-of-process profiling (`kirocrew perf sample --pid`). The in-process sampler needs nothing extra |
+| `perf` | `py-spy` | Out-of-process profiling (`ajcrew perf sample --pid`). The in-process sampler needs nothing extra |
 | `teams` | `PyJWT[crypto]` | Microsoft Teams channel (validates the inbound Bot Framework RS256 JWT) |
 | `whatsapp` | `neonize` | QR-linked WhatsApp channel |
 | `feishu` | `lark-oapi` | Feishu/Lark long-connection channel |
@@ -528,9 +528,9 @@ on Linux, and an assisted NSIS Setup.exe on Windows, under
 `website/electron/dist/`. The macOS DMG opens to a branded
 drag-to-Applications layout carrying the opening animation's artwork. The
 Windows wizard keeps native controls and its
-per-user default while carrying matching Kiro Crew artwork through its sidebar
+per-user default while carrying matching Aj Crew artwork through its sidebar
 and header. Its Finish page links to the external Kiro CLI setup guide and names
-the login command required by the default agent before offering to launch Kiro
+the login command required by the default agent before offering to launch Aj
 Crew. On macOS the default is ONE universal DMG: the Electron shell is
 lipo-merged, and the backend, which cannot be lipo-merged, ships as two complete
 PBS trees selected at launch by `process.arch`. The x86_64 backend is built
@@ -555,17 +555,17 @@ package format, under a bare `EXTERNALLY-MANAGED` marker, or as an unpackaged
 build; About then says automatic updates are unavailable, or managed elsewhere,
 instead of showing the switch. Details:
 [release.md → Client auto-update](../build/release.md#client-auto-update) and
-[Updates](../../src/kiro_crew/docs/configuration.md#updates).
+[Updates](../../src/aj_crew/docs/configuration.md#updates).
 
 #### Installing a Linux desktop package
 
 ```bash
-sudo apt install ./KiroCrew-x86_64.deb     # Debian, Ubuntu
-sudo dnf install ./KiroCrew-x86_64.rpm     # Fedora, RHEL, CentOS Stream, AL2023
+sudo apt install ./AjCrew-x86_64.deb     # Debian, Ubuntu
+sudo dnf install ./AjCrew-x86_64.rpm     # Fedora, RHEL, CentOS Stream, AL2023
 ```
 
-Either one installs to `/opt/KiroCrew`, registers the application-menu entry and
-MIME database, refreshes the icon cache, links `/usr/bin/kirocrew-desktop`, and —
+Either one installs to `/opt/AjCrew`, registers the application-menu entry and
+MIME database, refreshes the icon cache, links `/usr/bin/ajcrew-desktop`, and —
 on a host whose AppArmor supports the bundled profile — installs and loads the
 `userns` profile the agent sandbox needs, so no manual `sandbox install-profile`
 step is required. The fixed install path is what makes all of that durable.
@@ -573,8 +573,8 @@ step is required. The fixed install path is what makes all of that durable.
 Updates arrive through the app's updater described above (or **Check for
 updates** on the About page), which hands the package to `dpkg` / `rpm`. That needs root, so expect one
 elevation prompt (`pkexec` or `sudo`) at install time — it is the package
-manager doing the write, not the app. `sudo apt remove kirocrew` /
-`sudo dnf remove kirocrew` uninstalls; see
+manager doing the write, not the app. `sudo apt remove ajcrew` /
+`sudo dnf remove ajcrew` uninstalls; see
 [Uninstalling](#uninstalling) for what happens to your data.
 
 The AppImage needs no root and no package manager, which is the reason to pick
@@ -585,10 +585,10 @@ sandbox-profile step and the move-breaks-it caveat documented in the
 [sandbox section](#linux-the-agent-sandbox-and-unprivileged-user-namespaces).
 
 On first launch, the AppImage installs its freedesktop launcher and hicolor
-icons under your XDG data directory. Later launches repair Kiro Crew-managed
+icons under your XDG data directory. Later launches repair Aj Crew-managed
 files after an update or AppImage move. Repair requires a filesystem that
 supports Linux write leases. If your XDG data directory is on NFS, FUSE, or
-another filesystem that rejects leases, Kiro Crew leaves managed files
+another filesystem that rejects leases, Aj Crew leaves managed files
 untouched and defers repair. Keep the AppImage at its prior path or use a desktop
 package on that host.
 
@@ -596,7 +596,7 @@ A launcher or icon that existed before this feature, or whose contents or
 metadata you changed, remains user-owned and is not replaced. Deleting a managed
 launcher causes the next AppImage launch to restore it. To keep launching the
 AppImage without desktop integration, set
-`KIROCREW_DISABLE_DESKTOP_INTEGRATION=1` in its launch environment.
+`AJCREW_DISABLE_DESKTOP_INTEGRATION=1` in its launch environment.
 
 All three Linux formats are built from the same glibc floor as the build runner.
 Verified requirement at the time of writing is **glibc 2.34**, which covers
@@ -628,8 +628,8 @@ Linux, `.\make.ps1 <target>` on Windows.
 
 | Target | What it does |
 |--------|--------------|
-| `make build` | Frontend (npm/Vite) + backend into `.venv`, then stage `website/dist` as `src/kiro_crew/static/dist` |
-| `make frontend` | Frontend only: npm build into `website/dist`, plus `website/electron` deps. It does not stage; run `python -m kiro_crew.frontend stage .` (or `make build`) for that |
+| `make build` | Frontend (npm/Vite) + backend into `.venv`, then stage `website/dist` as `src/aj_crew/static/dist` |
+| `make frontend` | Frontend only: npm build into `website/dist`, plus `website/electron` deps. It does not stage; run `python -m aj_crew.frontend stage .` (or `make build`) for that |
 | `make backend` | Backend only: `.venv` + editable install with the `dev` extra |
 | `make wheel` | Self-contained pip wheel with the dashboard bundled, into `dist/` |
 | `make backend-bin` | Frozen standalone backend binary (host arch only) |
@@ -642,7 +642,7 @@ Override the Python interpreter with `make PY=python3.12 build`, or
 the `<data-home>/python-bin` marker `ensure-python.sh` records; a `PY` exported
 in the environment does not, so the marker still wins over it.
 
-`make wheel`, `make backend-bin` and `make desktop` take `EDITION=oss` or `EDITION=lts`, stamped into the built package's `kiro_crew/edition.py`. Only `EDITION=` on the `make` command line counts; an exported shell `EDITION` is ignored, even under `make -e`. Without it, the value comes from the `KIROCREW_BUILD_EDITION` environment variable, and then defaults to `oss`. Both set to different values, or any other value (wildcards such as `%` included), fails the build before it starts. On Windows, set `KIROCREW_BUILD_EDITION` before `.\make.ps1`. See [platform-context](../system-specs/modules/platform-context.md#build-time-edition-constant).
+`make wheel`, `make backend-bin` and `make desktop` take `EDITION=oss` or `EDITION=lts`, stamped into the built package's `aj_crew/edition.py`. Only `EDITION=` on the `make` command line counts; an exported shell `EDITION` is ignored, even under `make -e`. Without it, the value comes from the `AJCREW_BUILD_EDITION` environment variable, and then defaults to `oss`. Both set to different values, or any other value (wildcards such as `%` included), fails the build before it starts. On Windows, set `AJCREW_BUILD_EDITION` before `.\make.ps1`. See [platform-context](../system-specs/modules/platform-context.md#build-time-edition-constant).
 
 Both desktop targets run `packaging/build-desktop.sh` on every platform,
 including Windows, where `make.ps1` invokes it through the Git for Windows bash:
@@ -673,28 +673,28 @@ same account store.
 The built-in KAS engine is an alternative that needs no Kiro CLI. It is in
 shadow testing: the switch is off by default on every platform and nothing turns
 it on for you. The one-line install (`cli.sh`) and `bash install.sh` download
-the engine version this release pins by default, by running `kirocrew kas
-install` once Kiro Crew is installed; `--no-kas` skips that, and a failed
-download only warns. After any other install, or to retry, run `kirocrew kas
+the engine version this release pins by default, by running `ajcrew kas
+install` once Aj Crew is installed; `--no-kas` skips that, and a failed
+download only warns. After any other install, or to retry, run `ajcrew kas
 install` yourself. The desktop app ships that engine inside the app
 (`BUNDLE_KAS=1` at build time), so there is nothing to download. To try the
-route, turn on **Run KAS on Kiro Crew's own engine** under Settings → Developer →
-Feature Previews (or `kirocrew config set agent.kas_bundle true`) and restart; you
+route, turn on **Run KAS on Aj Crew's own engine** under Settings → Developer →
+Feature Previews (or `ajcrew config set agent.kas_bundle true`) and restart; you
 then sign in from the **Kiro sign-in** card on Settings → Agent Harness → KAS, and
 `kiro-cli login` is not used.
 
-Then start Kiro Crew:
+Then start Aj Crew:
 
 ```bash
-kirocrew setup            # interactive wizard
-kirocrew doctor           # verify everything is wired up
-kirocrew gateway          # start the server, then open http://localhost:5476
+ajcrew setup            # interactive wizard
+ajcrew doctor           # verify everything is wired up
+ajcrew gateway          # start the server, then open http://localhost:5476
 ```
 
-From a source checkout, use `PYTHONPATH=src python -m kiro_crew <subcommand>`
-in place of `kirocrew`.
+From a source checkout, use `PYTHONPATH=src python -m aj_crew <subcommand>`
+in place of `ajcrew`.
 
-### What `kirocrew setup` asks
+### What `ajcrew setup` asks
 
 The wizard installs the agent config, then walks through the workspace
 directory, timezone, dashboard URL, and (on macOS) the desktop app. Messaging
@@ -705,17 +705,17 @@ browser engine is installed from **Settings → Browser** (see [Browser](#browse
 
 **Messaging channels are optional.** The default wizard configures none, and the
 web dashboard is fully functional without any messaging credentials. Connect a
-channel later -- Slack (`kirocrew setup --slack` or
+channel later -- Slack (`ajcrew setup --slack` or
 [slack-setup.md](slack-setup.md)),
-[Discord](../../src/kiro_crew/docs/discord-integration.md),
-[Telegram](../../src/kiro_crew/docs/telegram-integration.md),
-[Teams](../../src/kiro_crew/docs/teams-integration.md),
-[Webex](../../src/kiro_crew/docs/webex-integration.md),
-[WeCom](../../src/kiro_crew/docs/wecom-integration.md),
-[Weixin](../../src/kiro_crew/docs/weixin-integration.md),
-[Feishu](../../src/kiro_crew/docs/feishu-integration.md),
-[iMessage](../../src/kiro_crew/docs/imessage-integration.md), or
-[WhatsApp](../../src/kiro_crew/docs/whatsapp-integration.md) --
+[Discord](../../src/aj_crew/docs/discord-integration.md),
+[Telegram](../../src/aj_crew/docs/telegram-integration.md),
+[Teams](../../src/aj_crew/docs/teams-integration.md),
+[Webex](../../src/aj_crew/docs/webex-integration.md),
+[WeCom](../../src/aj_crew/docs/wecom-integration.md),
+[Weixin](../../src/aj_crew/docs/weixin-integration.md),
+[Feishu](../../src/aj_crew/docs/feishu-integration.md),
+[iMessage](../../src/aj_crew/docs/imessage-integration.md), or
+[WhatsApp](../../src/aj_crew/docs/whatsapp-integration.md) --
 when you want to reach the same agent away from your desk.
 
 These flags narrow the wizard:
@@ -725,22 +725,22 @@ These flags narrow the wizard:
 | `--agent-only` | Install the agent config and stop, skipping the workspace and every credential prompt |
 | `--slack` | Run the guided Slack credential + slash-command setup (opt-in) |
 | `--whatsapp` | Check the optional WhatsApp dependency and pairing state, then enable the channel (opt-in) |
-| `--clean` | Fresh agent config: ignore the existing `kirocrew.json` and regenerate from defaults instead of merging your MCP servers and tools forward |
+| `--clean` | Fresh agent config: ignore the existing `ajcrew.json` and regenerate from defaults instead of merging your MCP servers and tools forward |
 | `--electron-only` | Install only the macOS desktop app |
 
-The two combine: `kirocrew setup --agent-only --clean` rebuilds the agent config
+The two combine: `ajcrew setup --agent-only --clean` rebuilds the agent config
 from scratch and touches nothing else. That is the fix for a broken or stale MCP
 configuration, because without `--clean` the existing file is used as the base
 so all user customizations survive.
 
 ## Browser
 
-Kiro Crew's `browser` tool drives one browser through
+Aj Crew's `browser` tool drives one browser through
 [Browser Harness](https://github.com/browser-use/browser-harness), run locally by
 the gateway with its telemetry and cloud path switched off. **Settings → Browser**
 shows one card for it, whose single button follows the state:
 
-1. **The engine.** The pinned driver lives in Kiro Crew's own data home
+1. **The engine.** The pinned driver lives in Aj Crew's own data home
    (`<data-home>/browser-harness`). No `npm`, no Node.js, no `sudo`. While it
    installs the card says so; if it is not installed the card offers Install,
    and a failed install offers Retry with the reason.
@@ -749,7 +749,7 @@ shows one card for it, whose single button follows the state:
    first time the agent connects, Chrome asks **Allow remote debugging?** and
    you click Allow (the card turns yellow until you do). Your logins are used
    where they exist; the agent never types a password. On Windows without Chrome
-   the agent uses Edge the same way. Or set **Which browser** to Kiro's Chromium,
+   the agent uses Edge the same way. Or set **Which browser** to Aj's Chromium,
    and under **More** turn on **Run with no window** for a server or a remote
    gateway with no display.
 3. **Try it.** Ask the agent to open a page. The page appears in the chat as a
@@ -758,15 +758,15 @@ shows one card for it, whose single button follows the state:
 
 The side panel keeps a **Preview** tab for your own local dev server; the agent
 does not drive it. A browser CLI directory left under the data home by an
-earlier version is no longer used; `kirocrew doctor` names it and you can delete
+earlier version is no longer used; `ajcrew doctor` names it and you can delete
 it. Details: [browser module spec](../system-specs/modules/browser.md).
 
 ## Configuration
 
 - Config file: `~/.kiro/crew/config.json`, managed with
-  `kirocrew config get/set/edit`.
+  `ajcrew config get/set/edit`.
 - Credentials: `~/.kiro/crew/.env` holding messaging-channel tokens (for Slack:
-  `SLACK_APP_TOKEN`, `SLACK_BOT_TOKEN`, `KIROCREW_OWNER_ID`; other channels use
+  `SLACK_APP_TOKEN`, `SLACK_BOT_TOKEN`, `AJCREW_OWNER_ID`; other channels use
   their own keys). See [slack-setup.md](slack-setup.md) for creating the Slack
   app.
 
@@ -774,12 +774,12 @@ it. Details: [browser module spec](../system-specs/modules/browser.md).
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `KIROCREW_HOME` | `~/.kiro/crew` | Data directory (config, credentials, databases) |
-| `KIROCREW_PORT` | `5476` | Port the gateway / dashboard listens on |
-| `KIROCREW_EMBED_MODEL_URL` | CDN default | Mirror for the embedding model download |
-| `KIROCREW_EMBED_MODEL_PATH` | unset | Run a local GGUF instead of the bundled model |
+| `AJCREW_HOME` | `~/.kiro/crew` | Data directory (config, credentials, databases) |
+| `AJCREW_PORT` | `5476` | Port the gateway / dashboard listens on |
+| `AJCREW_EMBED_MODEL_URL` | CDN default | Mirror for the embedding model download |
+| `AJCREW_EMBED_MODEL_PATH` | unset | Run a local GGUF instead of the bundled model |
 
-`KIROCREW_PORT` is an environment variable validated at CLI entry, not a config
+`AJCREW_PORT` is an environment variable validated at CLI entry, not a config
 key. `--port` on the CLI overrides it (`--port auto` binds an OS-assigned
 ephemeral port). Without either, the port in the `dashboard.url` config key is
 used, and 5476 when that URL names none.
@@ -789,8 +789,8 @@ it.
 
 ### The data home lives under `~/.kiro/`
 
-Kiro Crew stores its data in `~/.kiro/crew`, sharing the `~/.kiro/` base with
-other Kiro-family apps. An existing top-level `~/.kirocrew` install migrates
+Aj Crew stores its data in `~/.kiro/crew`, sharing the `~/.kiro/` base with
+other Kiro-family apps. An existing top-level `~/.ajcrew` install migrates
 automatically on first launch: its data (config, credentials, session history,
 databases) is copied into `~/.kiro/crew`, **overwriting** any file already at
 the same relative path, then verified, then the legacy data is deleted. There is
@@ -805,22 +805,22 @@ Details worth knowing before you upgrade:
   interpreter running the migration. The legacy root survives to hold them.
 - If a live gateway holds either home's `gateway.lock`, the move is skipped for
   that run and completes on the next clean cold start.
-- The migration only runs on the default path. Setting `KIROCREW_HOME` skips it
+- The migration only runs on the default path. Setting `AJCREW_HOME` skips it
   entirely, so set it **before** upgrading if you want the two homes to stay
   separate.
 
-**There is no rollback.** Once the move completes, `~/.kirocrew` is gone, and an
+**There is no rollback.** Once the move completes, `~/.ajcrew` is gone, and an
 older release knows nothing of `~/.kiro/crew`, so it would start empty. Back up
 first if you need to be able to go back:
 
 ```bash
-cp -a ~/.kirocrew ~/.kirocrew.manual-backup
+cp -a ~/.ajcrew ~/.ajcrew.manual-backup
 ```
 
 ## Verify the install
 
 ```bash
-kirocrew doctor
+ajcrew doctor
 ```
 
 `doctor` reports, section by section: the composed platform edition, the data
@@ -836,12 +836,12 @@ loop-stall crash dumps, and connectivity.
 For always-on operation (channel bots, cron jobs, background tasks):
 
 ```bash
-kirocrew service install    # systemd on Linux, launchd on macOS
-kirocrew service status
-kirocrew service uninstall
+ajcrew service install    # systemd on Linux, launchd on macOS
+ajcrew service status
+ajcrew service uninstall
 ```
 
-On Linux this writes `/etc/systemd/system/kirocrew.service` (sudo is prompted
+On Linux this writes `/etc/systemd/system/ajcrew.service` (sudo is prompted
 for the unit file and the `systemctl` calls; the gateway itself runs as your own
 user, never under sudo). When you are already root — a minimal container or
 `root` login — no `sudo` binary is required. On macOS it writes a launchd plist
@@ -852,7 +852,7 @@ starts when you log in, not at boot; see
 On a Linux host that systemd did not boot (no `/run/systemd/system`, as in a
 container whose PID 1 is something else, or WSL without systemd),
 `service install` refuses before anything is written, because no system unit
-could start there. Run `kirocrew gateway` under that host's own supervisor or
+could start there. Run `ajcrew gateway` under that host's own supervisor or
 boot script instead.
 
 The gateway runs untrusted agent tools, so it must run as a **non-root** user:
@@ -861,8 +861,8 @@ the installer sets `User=` to the account behind `sudo` (`$SUDO_USER`, else
 non-interactive `ssh` session with neither variable set still resolves it),
 and **refuses to install a `User=root` service**. From a bare `root`
 login (or `sudo` with no `$SUDO_USER`), first create or pick a normal account and
-install as it, e.g. `sudo -u <user> KIROCREW_KIRO_BIN=... kirocrew service
-install` (the official Docker image already runs as the `kirocrew` user).
+install as it, e.g. `sudo -u <user> AJCREW_KIRO_BIN=... ajcrew service
+install` (the official Docker image already runs as the `ajcrew` user).
 
 On Linux the agent runtimes run under the service account's own user manager,
 so enable linger for that account:
@@ -873,19 +873,19 @@ sudo loginctl enable-linger <user>
 
 Without linger, systemd stops that manager at the account's last logout: running
 agent runtimes die, and later spawns start without their memory and fork-count
-ceilings. `kirocrew service install` prints a non-fatal warning naming this
+ceilings. `ajcrew service install` prints a non-fatal warning naming this
 command when linger is off.
 
 When another gateway already serves the same data home, the unit exits 78 and
 goes `failed` once instead of restarting, because the unit's
 `RestartPreventExitStatus=` names that code. A unit file without that directive
-keeps relaunching against the refusal; re-run `kirocrew service install` to
+keeps relaunching against the refusal; re-run `ajcrew service install` to
 rewrite it. See [Service Management](../system-specs/modules/cli.md#service-management)
 in the CLI spec for the details.
 
-### SELinux-enforcing hosts with kirocrew under `$HOME`
+### SELinux-enforcing hosts with ajcrew under `$HOME`
 
-On an SELinux-enforcing host whose kirocrew lives under `$HOME` — the default on
+On an SELinux-enforcing host whose ajcrew lives under `$HOME` — the default on
 Bazzite, Fedora Silverblue/Kinoite and other atomic desktops — a **system**
 service cannot start at all. systemd (PID 1) runs in the `init_t` domain, the
 policy does not allow that domain to `execute` a file carrying a home label
@@ -895,35 +895,35 @@ exhausts its restart limit.
 The binary is fine. `test -x` on it succeeds, the shebang is correct, and the
 permissions are right — the policy's execute check is the only thing that fails,
 which is why `203/EXEC` here looks identical to a genuinely missing or
-non-executable path. `kirocrew service install` therefore asks the loaded policy
+non-executable path. `ajcrew service install` therefore asks the loaded policy
 before writing anything, and if the unit provably cannot start it **refuses up
 front** and prints a ready-to-paste per-user unit instead of leaving a
 crash-looping service enabled at every boot.
 
 A per-user unit is not affected, because the per-user systemd manager does not
 run in PID 1's domain. Follow the commands the refusal prints, then manage the
-service with `systemctl --user status|restart kirocrew` and `journalctl --user -u
-kirocrew -f`. `kirocrew service status` reports it as the **user scope** (the
+service with `systemctl --user status|restart ajcrew` and `journalctl --user -u
+ajcrew -f`. `ajcrew service status` reports it as the **user scope** (the
 output names both scopes: `system scope: not installed`, then `user scope: active
 (running)` with the `systemctl --user status` block; it exits 0 only while the
 unit is `active`, so a unit stuck in `activating (auto-restart)` exits 1 with
-that state in the headline), `kirocrew stop` /
-`kirocrew restart` act on it through your own manager (`restart` confirms the
+that state in the headline), `ajcrew stop` /
+`ajcrew restart` act on it through your own manager (`restart` confirms the
 unit stays up and, if it lands in `activating (auto-restart)` instead, says so and
-prints that unit's own journal read, `journalctl --user -u kirocrew.service -n 50
+prints that unit's own journal read, `journalctl --user -u ajcrew.service -n 50
 --no-pager`, rather than a `sudo systemctl` command that
-would not find the unit), `kirocrew logs` tails its
-user journal, `kirocrew doctor`'s service checks read its unit file, and
-`kirocrew service uninstall` removes it and says which scope it
+would not find the unit), `ajcrew logs` tails its
+user journal, `ajcrew doctor`'s service checks read its unit file, and
+`ajcrew service uninstall` removes it and says which scope it
 removed. It only ever removes what it installed: the unit file it wrote, or
-one carrying its `Environment="KIROCREW_SERVICE_MANAGED=1"` line (a copy of
+one carrying its `Environment="AJCREW_SERVICE_MANAGED=1"` line (a copy of
 ours you `systemctl --user link`ed loses the link and keeps the file); a unit
 of your own, or a distribution's, that holds the name is left untouched and is
 not stopped. Run these as your own
 account, not under `sudo`: a root shell cannot reach your user manager, and the
 commands then report `user scope: not reachable from this shell` rather than
 guessing. `service install` itself still writes a system unit — [#10813] tracks
-preferring user units at install time. Installing kirocrew onto a system-labelled
+preferring user units at install time. Installing ajcrew onto a system-labelled
 path such as `/usr/local/bin` also avoids the problem.
 
 [#10813]: https://github.com/kirodotdev/KiroCrew/issues/10813
@@ -932,7 +932,7 @@ path such as `/usr/local/bin` also avoids the problem.
 
 On an SELinux host (enforcing or permissive) the system unit can carry a
 `SELinuxContext=` line set to the context of the shell that ran
-`kirocrew service install`, for example
+`ajcrew service install`, for example
 `unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023`. A new file takes its
 SELinux user from the process that creates it, so without that line the gateway
 runs as `system_u` and every cache it writes under your home (`~/.npm/_cacache`,
@@ -941,55 +941,55 @@ refused hardlinks inside it, which npm reports as `EPERM` / `syscall link` and
 "root-owned files" even though ownership is correct.
 
 The line is written only when the loaded policy says the unit still starts with
-it: PID 1 may switch into that context, and the context may start the kirocrew
+it: PID 1 may switch into that context, and the context may start the ajcrew
 binary (and the interpreter its shebang names). Otherwise it is left out and the
 unit runs exactly as before (the reason is logged at INFO). On
-AL2023's targeted policy, for example, a kirocrew under
+AL2023's targeted policy, for example, a ajcrew under
 `/usr/local/bin` (`bin_t`) gets the line, while one under `~/.local/bin`
 (`home_bin_t`) does not and keeps the `system_u` caches; the per-user unit above
 avoids them there. The line is also left out when SELinux is off, when the
 context cannot be read, and when the installing shell is itself `system_u`.
 
 A unit installed by an earlier build has no such line: re-run
-`kirocrew service install`, then fix an already-poisoned cache with
+`ajcrew service install`, then fix an already-poisoned cache with
 `restorecon -RF ~/.npm` (or delete it).
 
 ### Setting the service port
 
 A system service inherits none of your shell environment, so `export
-KIROCREW_PORT=…` in your shell does **not** reach it. Set the port when you
+AJCREW_PORT=…` in your shell does **not** reach it. Set the port when you
 install so it is baked into the unit:
 
 ```bash
-KIROCREW_PORT=5477 kirocrew service install
+AJCREW_PORT=5477 ajcrew service install
 ```
 
 To change it later without reinstalling, edit the overrides file the installer
 creates and restart:
 
 ```bash
-sudo sed -i 's/^#\?KIROCREW_PORT=.*/KIROCREW_PORT=5477/' /etc/kirocrew/kirocrew.env
-sudo systemctl restart kirocrew
+sudo sed -i 's/^#\?AJCREW_PORT=.*/AJCREW_PORT=5477/' /etc/ajcrew/ajcrew.env
+sudo systemctl restart ajcrew
 ```
 
-`/etc/kirocrew/kirocrew.env` is read by the unit via `EnvironmentFile=`, so its
+`/etc/ajcrew/ajcrew.env` is read by the unit via `EnvironmentFile=`, so its
 values override the install-time snapshot and survive a reinstall. Use this to
 move the service off the default `5476` when that port is already taken (for
 example by a local crew you also run on this host — there is one
-`kirocrew.service` unit, so re-running `service install` updates it in place
+`ajcrew.service` unit, so re-running `service install` updates it in place
 rather than creating a second service).
 
 **The `EnvironmentFile=` directive only exists in units written by v0.2.0 or
 later.** Upgrading the package never rewrites an already-installed unit, so a
 unit installed by an older release (v0.1.3 and earlier) silently ignores
-`/etc/kirocrew/kirocrew.env` — editing it changes nothing. Check which kind you
+`/etc/ajcrew/ajcrew.env` — editing it changes nothing. Check which kind you
 have:
 
 ```bash
-grep EnvironmentFile /etc/systemd/system/kirocrew.service
+grep EnvironmentFile /etc/systemd/system/ajcrew.service
 ```
 
-No output means the directive is missing. Either re-run `kirocrew service
+No output means the directive is missing. Either re-run `ajcrew service
 install` (it rewrites the unit in place, keeping the same service), or set
 variables with a [systemd drop-in](#setting-other-environment-variables-systemd-drop-in),
 which works on any unit version.
@@ -1000,35 +1000,35 @@ For variables the seeded overrides file does not cover — proxy settings are th
 common case — use a systemd drop-in. Drop-ins are systemd's own override
 mechanism: they apply to the unit no matter which release wrote it, and they
 survive reinstalls, `service install` re-runs, and even
-`kirocrew service uninstall` (which removes the unit but never touches
-`/etc/systemd/system/kirocrew.service.d/`).
+`ajcrew service uninstall` (which removes the unit but never touches
+`/etc/systemd/system/ajcrew.service.d/`).
 
 ```bash
-sudo mkdir -p /etc/systemd/system/kirocrew.service.d
-sudo tee /etc/systemd/system/kirocrew.service.d/proxy.conf > /dev/null <<'EOF'
+sudo mkdir -p /etc/systemd/system/ajcrew.service.d
+sudo tee /etc/systemd/system/ajcrew.service.d/proxy.conf > /dev/null <<'EOF'
 [Service]
 Environment="HTTPS_PROXY=http://proxy.example.com:3128"
 Environment="HTTP_PROXY=http://proxy.example.com:3128"
 Environment="NO_PROXY=localhost,127.0.0.1"
 EOF
 sudo systemctl daemon-reload
-sudo systemctl restart kirocrew
+sudo systemctl restart ajcrew
 ```
 
 A new or edited drop-in is not picked up until `systemctl daemon-reload` runs —
 restarting alone is not enough. Verify what the unit resolved to with
-`systemctl cat kirocrew` (drop-ins are printed below the unit) or
-`systemctl show kirocrew --property=Environment`.
+`systemctl cat ajcrew` (drop-ins are printed below the unit) or
+`systemctl show ajcrew --property=Environment`.
 
 For remote hosts, see [remote-and-mobile.md](remote-and-mobile.md).
 
 ## Linux: the agent sandbox and unprivileged user namespaces
 
-On Linux, Kiro Crew isolates the agent by entering a **user namespace** and then
+On Linux, Aj Crew isolates the agent by entering a **user namespace** and then
 a **mount namespace**, over-mounting credential paths with empty directories so
 the agent cannot read them. Which paths depends on the tier: the default
 `agent.sandbox: "auto"` runs the **standard** tier, which hides `~/.gnupg`,
-`~/.docker`, `~/.azure`, `~/.config/gcloud` and Kiro Crew's own secret vault but
+`~/.docker`, `~/.azure`, `~/.config/gcloud` and Aj Crew's own secret vault but
 deliberately leaves `~/.aws`, `~/.ssh` and `~/.kube` visible so the `aws` CLI,
 `credential_process`, git-over-SSH and `kubectl` keep working inside the agent.
 `agent.sandbox: "strict"` additionally hides `~/.aws` (including the
@@ -1037,9 +1037,9 @@ deliberately leaves `~/.aws`, `~/.ssh` and `~/.kube` visible so the `aws` CLI,
 `~/.pypirc`, `~/.netrc` and `~/.git-credentials`, and the tools that read them
 stop working inside the agent as a result; it applies to sessions started after
 the change. See the
-[Sandbox section of the configuration guide](../../src/kiro_crew/docs/configuration.md#sandbox).
+[Sandbox section of the configuration guide](../../src/aj_crew/docs/configuration.md#sandbox).
 If the sandbox cannot be built,
-Kiro Crew **refuses to run the agent** rather than run it unisolated: spawns fail
+Aj Crew **refuses to run the agent** rather than run it unisolated: spawns fail
 closed. This is deliberate and is not something to work around casually.
 
 **Ubuntu 23.10 and newer ship `kernel.apparmor_restrict_unprivileged_userns=1`**,
@@ -1054,15 +1054,15 @@ sandbox: unshare(NEWNS) failed: errno 1
 ### The remedy: let `service install` add an AppArmor profile
 
 ```bash
-kirocrew service install
+ajcrew service install
 ```
 
 Where, and only where, this mechanism is the one in play, the installer also
-writes `/etc/apparmor.d/kirocrew-userns` and loads it. The profile grants
-exactly one permission (`userns`) and is **attached** to the kirocrew launcher
+writes `/etc/apparmor.d/ajcrew-userns` and loads it. The profile grants
+exactly one permission (`userns`) and is **attached** to the ajcrew launcher
 script the unit's `ExecStart` resolves to, the same approach stock Ubuntu
 already uses for `chrome` and `brave`. For the managed install the attachment
-is `~/.kiro/crew-venv-*/bin/kirocrew`: an update installs each version as its
+is `~/.kiro/crew-venv-*/bin/ajcrew`: an update installs each version as its
 own `crew-venv-<version>` tree, and the `*`, which never matches a `/`, covers
 each tree's launcher, so the profile keeps applying after an update. That form
 is used only when the directory holding those trees is owned by the service's
@@ -1075,7 +1075,7 @@ through a fork the directive's labelling never reaches.
 This uses the sudo prompt `service install` already needs for the unit file, so
 it costs no additional privilege, and it **cannot fail your install**: if the
 profile cannot be written, loaded, or verified, you get a warning and the
-install continues. `kirocrew service uninstall` unloads and removes it, so a
+install continues. `ajcrew service uninstall` unloads and removes it, so a
 host is left as it was found rather than carrying an orphaned userns permission.
 
 The installer skips the profile silently, with a reason it can print, when
@@ -1084,14 +1084,14 @@ AppArmor is not an active LSM, when the sysctl is not `1`, when
 rule needs 4.x or newer). So on Debian, Arch, RHEL and Amazon Linux nothing
 changes.
 
-**Running the gateway outside systemd** (for example `kirocrew gateway` in a
+**Running the gateway outside systemd** (for example `ajcrew gateway` in a
 terminal) is covered *only when the launch goes through the attached launcher
 path*: the kernel applies a path-attached profile at every `execve()` of that
 exact file, unit or no unit, so once `service install` has attached the profile,
-a foreground `kirocrew gateway` typed at a shell that resolves to the same
+a foreground `ajcrew gateway` typed at a shell that resolves to the same
 launcher script runs confined too. A launch that does **not** go through that
-path — `python -m kiro_crew`, a different venv's entry point, a re-created venv
-the profile has not been re-pointed at — stays unconfined, and `kirocrew doctor`
+path — `python -m aj_crew`, a different venv's entry point, a re-created venv
+the profile has not been re-pointed at — stays unconfined, and `ajcrew doctor`
 reports the attachment as stale in the re-created-venv case. Prefer running the
 gateway as the service: it pins `ExecStart` to the attached path and restarts on
 boot.
@@ -1104,25 +1104,25 @@ path under `/opt`, so the sandbox works on a stock Ubuntu 23.10+ host with no
 manual step and nothing to re-point later. That fixed path is the whole
 difference — everything below exists because an AppImage does not have one.
 
-The service-installed profile is attached to the resolved `kirocrew` launcher
+The service-installed profile is attached to the resolved `ajcrew` launcher
 path. An AppImage launch does not execute that path: the app starts its bundled
 backend from a randomized temporary mount, so the service profile cannot match
 it and agent spawns fail closed. Attach a profile to the durable AppImage path
 instead:
 
 ```bash
-kirocrew sandbox install-profile --path ~/Applications/kirocrew.AppImage
+ajcrew sandbox install-profile --path ~/Applications/ajcrew.AppImage
 ```
 
-**If you only ever downloaded the AppImage, you have no `kirocrew` on your
+**If you only ever downloaded the AppImage, you have no `ajcrew` on your
 PATH** — the CLI is bundled inside the app, which is the whole point of that
 download. Use the bundled copy instead. The sandbox error message in the app
 prints the exact absolute path for you; it looks like this, and it is valid while
 the app is running:
 
 ```bash
-'/tmp/.mount_XXXXXX/resources/backend-dist/kirocrew-backend/bin/kirocrew' \
-  sandbox install-profile --path ~/Applications/kirocrew.AppImage
+'/tmp/.mount_XXXXXX/resources/backend-dist/ajcrew-backend/bin/ajcrew' \
+  sandbox install-profile --path ~/Applications/ajcrew.AppImage
 ```
 
 Do **not** prefix that with `sudo`. The command elevates only the three steps
@@ -1133,15 +1133,15 @@ code with privilege for no reason.
 Then restart the app. To check whether the launch you are looking at is covered:
 
 ```bash
-kirocrew sandbox status
+ajcrew sandbox status
 ```
 
-This writes `/etc/apparmor.d/kirocrew-launcher`, granting the same single
+This writes `/etc/apparmor.d/ajcrew-launcher`, granting the same single
 `userns` permission — but **attached** to that executable path, which is how the
 kernel can apply it at exec time with no cooperation from the process. The
 backend the app spawns inherits it. It is the same mechanism stock Ubuntu uses
 for `/etc/apparmor.d/chrome`, `brave`, `1password` and `Discord`.
-`kirocrew sandbox remove-profile` unloads and removes it.
+`ajcrew sandbox remove-profile` unloads and removes it.
 
 Three things the command refuses to do, because an attachment is a permission
 grant keyed on a path:
@@ -1164,19 +1164,19 @@ grant keyed on a path:
 
 Because the profile is attached to a path, **moving or renaming the AppImage
 silently stops it applying** — the kernel reports no error, the profile just
-never matches. `kirocrew sandbox status` detects that and names the stale path;
+never matches. `ajcrew sandbox status` detects that and names the stale path;
 re-running `install-profile` re-points it. Replacing the file in place (an
 in-place update) keeps working, since the path is unchanged.
 
-**Running the gateway in a terminal** (`kirocrew gateway`) is covered only when
+**Running the gateway in a terminal** (`ajcrew gateway`) is covered only when
 the shell resolves the exact launcher path to which `service install` attached
-its profile. `python -m kiro_crew`, another venv's entry point, or a recreated
-launcher at a different path is not covered; `kirocrew doctor` reports a stale
+its profile. `python -m aj_crew`, another venv's entry point, or a recreated
+launcher at a different path is not covered; `ajcrew doctor` reports a stale
 attachment. Do not attach the profile to a shared interpreter such as
 `/usr/bin/python3`, because that would grant unprivileged user namespaces to
 every program on the host that runs it.
 
-> Do not run `aa-exec -p kirocrew-userns -- kirocrew gateway`: it does not
+> Do not run `aa-exec -p ajcrew-userns -- ajcrew gateway`: it does not
 > apply the profile. Entering a **named** profile
 > requires `aa_change_onexec`, which an unprivileged unconfined process is not
 > permitted to do, and `aa-exec` does not fail loudly when it cannot transition —
@@ -1197,7 +1197,7 @@ sandbox probe names the failing step so you can tell them apart:
 
 | Symptom | Mechanism | Remedy |
 |---|---|---|
-| `unshare(CLONE_NEWNS)` fails `EPERM`, sysctl is `1` | Ubuntu >= 23.10 AppArmor userns restriction | `kirocrew service install`, or `kirocrew sandbox install-profile` for the AppImage (this page) |
+| `unshare(CLONE_NEWNS)` fails `EPERM`, sysctl is `1` | Ubuntu >= 23.10 AppArmor userns restriction | `ajcrew service install`, or `ajcrew sandbox install-profile` for the AppImage (this page) |
 | `unshare(CLONE_NEWUSER)` fails `ENOSPC` / `EUSERS` | `user.max_user_namespaces=0` (CIS-hardened host) | Raise that sysctl |
 | `unshare` fails and `kernel.unprivileged_userns_clone=0` | Debian-family legacy knob (defaults to 1 since Debian 11) | Set it to 1 |
 | `unshare` fails `EINVAL` / `ENOSYS` | Kernel built without `CONFIG_USER_NS` | None short of a different kernel |
@@ -1209,11 +1209,11 @@ To see which step is failing on your host:
 
 ```bash
 python3 -c "
-import kiro_crew.sandbox as sb
+import aj_crew.sandbox as sb
 sb.reset_backend(); print(sb.detect_backend(), sb._last_unshare_failure)"
 ```
 
-`kirocrew doctor` reports the same verdict without the one-liner, and the
+`ajcrew doctor` reports the same verdict without the one-liner, and the
 dashboard's **Sandbox unavailable** screen names the mechanism and the command
 for it directly — the probe classifies the failing step into one of
 `apparmor_userns`, `max_user_namespaces`, `userns_denied`, `no_user_ns` or
@@ -1221,7 +1221,7 @@ for it directly — the probe classifies the failing step into one of
 
 ## Troubleshooting
 
-Always start with `kirocrew doctor`.
+Always start with `ajcrew doctor`.
 
 ### `AcpTimeoutError: ACP prompt timed out`
 
@@ -1229,13 +1229,13 @@ The `kiro-cli` backend did not answer in time. Five common causes:
 
 1. **`kiro-cli` is not installed.** With `agent.acp_backend` set to `kiro`,
    the gateway raises `kiro-cli not found (<searched directories>)`. Install
-   it, point `KIROCREW_KIRO_BIN` at the binary, or use the dashboard's
+   it, point `AJCREW_KIRO_BIN` at the binary, or use the dashboard's
    **Set up Kiro** page.
 2. **Not logged in.** Run `kiro-cli login`. An expired session normally
    surfaces as the distinct, non-retryable "kiro-cli is not logged in" error
    rather than a timeout, so check this even when the message differs.
 3. **A broken or stale MCP config.** Rebuild it with
-   `kirocrew setup --agent-only --clean`. A single unreachable MCP server can
+   `ajcrew setup --agent-only --clean`. A single unreachable MCP server can
    consume the whole initialization window.
 4. **First launch is genuinely slow.** MCP servers can be slow to initialize,
    so the handshake allows up to 4 minutes before giving up. Later timeouts have
@@ -1249,7 +1249,7 @@ The `kiro-cli` backend did not answer in time. Five common causes:
    exports, so a gateway that works when run from your terminal can still time
    out as a service. Set the proxy variables on the unit with a
    [systemd drop-in](#setting-other-environment-variables-systemd-drop-in),
-   then `sudo systemctl daemon-reload && sudo systemctl restart kirocrew`.
+   then `sudo systemctl daemon-reload && sudo systemctl restart ajcrew`.
    Agent sessions inherit the service environment, so this fixes them. One
    known gap: the first-run setup gate's login probe currently filters proxy
    variables out even when the unit carries them, so it can stay stuck on
@@ -1259,22 +1259,22 @@ The `kiro-cli` backend did not answer in time. Five common causes:
 ### Memory or knowledge search returns nothing
 
 The embedding model is probably still downloading. Check the **Vector Memory**
-section of `kirocrew doctor`, which reports the model state and whether the
+section of `ajcrew doctor`, which reports the model state and whether the
 model URL is reachable, and look for the GGUF under `~/.kiro/crew/models/`.
 Search falls back to keyword matching until the model lands, then switches over
 on its own with no restart. For an airgapped or firewalled host, point
-`KIROCREW_EMBED_MODEL_URL` at a mirror; the sha256 pin still verifies the file.
+`AJCREW_EMBED_MODEL_URL` at a mirror; the sha256 pin still verifies the file.
 
 ### The gateway will not start
 
 ```bash
-kirocrew doctor
-kirocrew gateway --port auto   # bind an OS-assigned port if 5476 is taken
+ajcrew doctor
+ajcrew gateway --port auto   # bind an OS-assigned port if 5476 is taken
 ```
 
 ## Uninstalling
 
-Uninstalling removes the Kiro Crew binary and its runtime but **preserves your
+Uninstalling removes the Aj Crew binary and its runtime but **preserves your
 data home** (`~/.kiro/crew`) — configuration, credentials, memory, sessions,
 apps, and the audit chain remain intact. This is intentional: reinstalling picks
 up where you left off without re-running setup or losing history.
@@ -1283,8 +1283,8 @@ Before uninstalling, stop any running gateway and remove the system service if
 one is installed:
 
 ```bash
-kirocrew stop                # stop a running foreground gateway
-kirocrew service uninstall   # removes the systemd unit / launchd plist
+ajcrew stop                # stop a running foreground gateway
+ajcrew service uninstall   # removes the systemd unit / launchd plist
 ```
 
 Then follow the section matching your install method.
@@ -1294,7 +1294,7 @@ Then follow the section matching your install method.
 If `cli.sh` used `pipx` (the default when pipx is on `PATH`):
 
 ```bash
-pipx uninstall kirocrew
+pipx uninstall ajcrew
 ```
 
 ### One-line install via `cli.sh` (managed venv)
@@ -1308,18 +1308,18 @@ link. Remove them (this works the same in `sh`, `bash` and `zsh`, and removes
 nothing when a pattern matches nothing):
 
 ```bash
-VENV="${KIROCREW_VENV:-${KIROCREW_HOME:-$HOME/.kiro/crew}-venv}"
+VENV="${AJCREW_VENV:-${AJCREW_HOME:-$HOME/.kiro/crew}-venv}"
 VENV="${VENV%/}"
 PARENT="$(cd "$(dirname "$VENV")" && pwd -P)"
 NAME="$(basename "$VENV")"
-rm -f ~/.local/bin/kirocrew "$VENV-current" "$VENV.update.lock"
+rm -f ~/.local/bin/ajcrew "$VENV-current" "$VENV.update.lock"
 rm -rf "$VENV"
 find "$PARENT" -maxdepth 1 -type l -name "$NAME-current.*.new" -exec rm -f {} +
 find "$PARENT" -maxdepth 1 -type d \( -name "$NAME-[0-9]*" -o -name ".$NAME-*.deleting-*" \) \
   -exec sh -c '
     venv=$1 real=$2; shift 2
     for tree; do
-      owner="$(cat "$tree/.kirocrew-tree" 2>/dev/null)"
+      owner="$(cat "$tree/.ajcrew-tree" 2>/dev/null)"
       if [ -n "$owner" ] && { [ "$owner" = "$venv" ] || [ "$owner" = "$real" ]; }; then
         rm -rf "$tree"
       else
@@ -1328,11 +1328,11 @@ find "$PARENT" -maxdepth 1 -type d \( -name "$NAME-[0-9]*" -o -name ".$NAME-*.de
     done' sh "$VENV" "$PARENT/$NAME" {} +
 ```
 
-A versioned tree is removed only when its `.kirocrew-tree` marker names this
+A versioned tree is removed only when its `.ajcrew-tree` marker names this
 install's venv. Any other match is listed instead: a neighbouring directory that
 merely shares the name prefix (a backup, another install's trees), or a tree an
 earlier release built before it wrote the marker. Remove the ones that are this
-install's by hand. If you set `KIROCREW_VENV` to a custom path, verify its
+install's by hand. If you set `AJCREW_VENV` to a custom path, verify its
 contents before removing it — `cli.sh` overlays that directory with venv files,
 and an `rm -rf` on a path you already used for something else will take that
 too.
@@ -1340,7 +1340,7 @@ too.
 ### pip / pip wheel install
 
 ```bash
-pip uninstall kirocrew
+pip uninstall ajcrew
 ```
 
 If installed in a dedicated virtualenv:
@@ -1355,15 +1355,15 @@ Remove the editable install and the build artifacts:
 
 ```bash
 # Chained so a failed `cd` (wrong path) can never run `rm -rf` in your current directory:
-cd /path/to/KiroCrew \
-  && pip uninstall kirocrew \
+cd /path/to/AjCrew \
+  && pip uninstall ajcrew \
   && rm -rf .venv build dist   # editable install, local venv, and build outputs
 ```
 
 ### macOS desktop app (DMG / zip)
 
-1. Quit Kiro Crew from the menu bar or Dock.
-2. Drag **KiroCrew.app** from `/Applications` to the Trash (or `rm -rf`).
+1. Quit Aj Crew from the menu bar or Dock.
+2. Drag **AjCrew.app** from `/Applications` to the Trash (or `rm -rf`).
 
 There is no installer package or receipt to clean — the DMG is a drag-install.
 
@@ -1372,19 +1372,19 @@ There is no installer package or receipt to clean — the DMG is a drag-install.
 Delete the AppImage file wherever you placed it:
 
 ```bash
-rm -f ~/Applications/KiroCrew-x86_64.AppImage   # or wherever you saved it
+rm -f ~/Applications/AjCrew-x86_64.AppImage   # or wherever you saved it
 ```
 
 The launcher the AppImage installed carries a `TryExec` key, so desktop menus
 hide it once the AppImage is gone. To remove the launcher and icons as well,
 run the script below. It reads the integration's manifest and deletes only the
-files Kiro Crew created: a launcher or icon is removed only while its content
-still matches what Kiro Crew wrote, so a file you replaced or edited is kept.
+files Aj Crew created: a launcher or icon is removed only while its content
+still matches what Aj Crew wrote, so a file you replaced or edited is kept.
 It then removes the manifest directory. For the nightly build, set
-`APP=kirocrew-desktop-nightly`.
+`APP=ajcrew-desktop-nightly`.
 
 ```bash
-APP=kirocrew-desktop
+APP=ajcrew-desktop
 STATE="${XDG_CONFIG_HOME:-$HOME/.config}/$APP/linux-desktop-integration"
 python3 - "$STATE/state.json" <<'EOF'
 import hashlib, json, os, sys
@@ -1395,7 +1395,7 @@ for path, rec in json.load(open(sys.argv[1]))["artifacts"].items():
             os.unlink(path)
             print("removed", path)
         else:
-            print("kept (not Kiro Crew's)", path)
+            print("kept (not Aj Crew's)", path)
     except FileNotFoundError:
         pass
     pending = rec.get("pending") or {}
@@ -1407,7 +1407,7 @@ for path, rec in json.load(open(sys.argv[1]))["artifacts"].items():
                   for p in group.get("paths", [])]
     for side, hashes, ino in sides:
         if not side or not side.startswith(
-                (path + ".tmp-", path + ".kirocrew-displaced-")):
+                (path + ".tmp-", path + ".ajcrew-displaced-")):
             continue
         try:
             same_inode = ino is None or os.lstat(side).st_ino == ino
@@ -1415,30 +1415,30 @@ for path, rec in json.load(open(sys.argv[1]))["artifacts"].items():
             if same_inode and digest in hashes:
                 os.unlink(side)
             else:
-                print("kept (changed since Kiro Crew wrote it)", side)
+                print("kept (changed since Aj Crew wrote it)", side)
         except FileNotFoundError:
             pass
 EOF
 rm -rf "$STATE"
 ```
 
-The side files the script removes are the `.tmp-` and `.kirocrew-displaced-`
+The side files the script removes are the `.tmp-` and `.ajcrew-displaced-`
 copies the repair logic keeps next to a managed file. Each one is removed only
 while its content, and its inode where the manifest records one, still match
-what Kiro Crew wrote. Setting
-`KIROCREW_DISABLE_DESKTOP_INTEGRATION=1` stops future repairs without removing
+what Aj Crew wrote. Setting
+`AJCREW_DISABLE_DESKTOP_INTEGRATION=1` stops future repairs without removing
 anything.
 
 ### Windows (NSIS installer)
 
-Use **Settings → Apps → Installed apps**, find "Kiro Crew", and click
+Use **Settings → Apps → Installed apps**, find "Aj Crew", and click
 **Uninstall**. The NSIS uninstaller removes the application directory and
 shortcuts but does not touch `~/.kiro/crew`.
 
 ### Docker
 
 ```bash
-docker stop kirocrew && docker rm kirocrew   # graceful stop, then remove
+docker stop ajcrew && docker rm ajcrew   # graceful stop, then remove
 docker rmi ghcr.io/kirodotdev/kirocrew:stable # remove the image (match the tag you pulled)
 ```
 
@@ -1453,10 +1453,10 @@ The commands above remove none of them:
 
 | Folder | What it is | After uninstalling |
 | --- | --- | --- |
-| `~/.kiro/crew-python` | The Python runtime `cli.sh` downloads when the host has no suitable Python (moved by `KIROCREW_PYTHON_DIR`; it sits beside a custom `KIROCREW_HOME` as `<home>-python`). | Kiro Crew's. Safe to delete once the venv or pipx install that used it is gone. |
-| `~/.kiro/crew-auth-staging` | The staged copy of your Kiro sign-in that agent sessions read. The gateway rebuilds it at start. | Kiro Crew's. Safe to delete; it holds sign-in material, so deleting it is the tidy choice. |
-| `~/.kiro/mates` | Your crewmates' agent files (under `$KIRO_HOME` when you set it). | Kiro Crew's user data. Keep it if you plan to reinstall; remove it with the data home (see [Removing user data](#removing-user-data)). |
-| `~/.kiro/agents`, `~/.kiro/settings` | Agent and MCP settings shared with Kiro CLI and other Kiro tools. | Not Kiro Crew's alone. Leave them unless you are removing every Kiro tool. |
+| `~/.kiro/crew-python` | The Python runtime `cli.sh` downloads when the host has no suitable Python (moved by `AJCREW_PYTHON_DIR`; it sits beside a custom `AJCREW_HOME` as `<home>-python`). | Aj Crew's. Safe to delete once the venv or pipx install that used it is gone. |
+| `~/.kiro/crew-auth-staging` | The staged copy of your Kiro sign-in that agent sessions read. The gateway rebuilds it at start. | Aj Crew's. Safe to delete; it holds sign-in material, so deleting it is the tidy choice. |
+| `~/.kiro/mates` | Your crewmates' agent files (under `$KIRO_HOME` when you set it). | Aj Crew's user data. Keep it if you plan to reinstall; remove it with the data home (see [Removing user data](#removing-user-data)). |
+| `~/.kiro/agents`, `~/.kiro/settings` | Agent and MCP settings shared with Kiro CLI and other Kiro tools. | Not Aj Crew's alone. Leave them unless you are removing every Kiro tool. |
 
 To remove the two folders that are safe to delete after any uninstall:
 
@@ -1464,7 +1464,7 @@ To remove the two folders that are safe to delete after any uninstall:
 rm -rf ~/.kiro/crew-python ~/.kiro/crew-auth-staging
 ```
 
-If you set `KIROCREW_PYTHON_DIR` or `KIROCREW_HOME`, remove the matching
+If you set `AJCREW_PYTHON_DIR` or `AJCREW_HOME`, remove the matching
 `-python` folder at that location instead.
 
 ## Removing user data
@@ -1473,14 +1473,14 @@ Uninstalling via any method above leaves your data home intact. To also remove
 all user data:
 
 ```bash
-# Back up first — this is irreversible. `kirocrew snapshot` captures memory,
+# Back up first — this is irreversible. `ajcrew snapshot` captures memory,
 # crons, config, notifications, security, workspace, skills, crew-teams,
 # artifacts and uploads, but not `.env`, credentials, or installed apps,
 # so a full copy of the data home is the only complete backup. Chained with
 # `&&` so a failed copy (e.g. disk full) blocks the delete rather than racing
 # ahead of it. Point the copy at a location you control OUTSIDE the data home:
-cp -a "${KIROCREW_HOME:-$HOME/.kiro/crew}" ~/kirocrew-backup \
-  && rm -rf "${KIROCREW_HOME:-$HOME/.kiro/crew}"
+cp -a "${AJCREW_HOME:-$HOME/.kiro/crew}" ~/ajcrew-backup \
+  && rm -rf "${AJCREW_HOME:-$HOME/.kiro/crew}"
 ```
 
 The backup is a full copy of your credentials (`.env`), signing keys, and
@@ -1496,51 +1496,51 @@ Your crewmates' agent files live outside the data home, in `~/.kiro/mates`
 first (see [Folders beside the data home](#folders-beside-the-data-home)):
 
 ```bash
-cp -a "${KIRO_HOME:-$HOME/.kiro}/mates" ~/kirocrew-backup-mates \
+cp -a "${KIRO_HOME:-$HOME/.kiro}/mates" ~/ajcrew-backup-mates \
   && rm -rf "${KIRO_HOME:-$HOME/.kiro}/mates"
 ```
 
 > **Docker:** the commands above target a host data home. A Docker install keeps
-> everything in the `kirocrew-home` named volume instead, so remove that rather
-> than `~/.kiro/crew`: `docker volume rm kirocrew-home` (or `docker compose down -v`).
+> everything in the `ajcrew-home` named volume instead, so remove that rather
+> than `~/.kiro/crew`: `docker volume rm ajcrew-home` (or `docker compose down -v`).
 
 > **Note:** App Kit data is preserved per-app by default. To remove an
 > individual app's data before or instead of purging the whole home:
-> `kirocrew app uninstall NAME --purge-data`
+> `ajcrew app uninstall NAME --purge-data`
 
 ## Clean reinstall
 
 A clean reinstall removes both the binary and the data home, then installs
-fresh. Use this when `kirocrew doctor` reports issues that setup cannot fix,
+fresh. Use this when `ajcrew doctor` reports issues that setup cannot fix,
 or when you want a completely fresh start.
 
 ```bash
 # 1. Stop any running gateway, then remove the service
-kirocrew stop                        # stop a foreground gateway (service uninstall won't)
-kirocrew service uninstall 2>/dev/null
+ajcrew stop                        # stop a foreground gateway (service uninstall won't)
+ajcrew service uninstall 2>/dev/null
 
 # 2. Uninstall the binary: run the block for your install method from
 #    "Uninstalling" above. A one-line install on a host without pipx (the usual
 #    fresh machine) is the "managed venv" block; with pipx it is
-#    `pipx uninstall kirocrew`; otherwise `pip uninstall kirocrew`, delete the
+#    `pipx uninstall ajcrew`; otherwise `pip uninstall ajcrew`, delete the
 #    AppImage, and so on.
 
 # 3. Back up and remove the data home (chained so a failed copy blocks the delete)
-cp -a "${KIROCREW_HOME:-$HOME/.kiro/crew}" ~/kirocrew-backup \
-  && rm -rf "${KIROCREW_HOME:-$HOME/.kiro/crew}"
+cp -a "${AJCREW_HOME:-$HOME/.kiro/crew}" ~/ajcrew-backup \
+  && rm -rf "${AJCREW_HOME:-$HOME/.kiro/crew}"
 
-# 3b. Remove the folders Kiro Crew keeps beside the data home (see "Folders
+# 3b. Remove the folders Aj Crew keeps beside the data home (see "Folders
 #     beside the data home"); crewmate files are backed up first, chained the same way
 rm -rf ~/.kiro/crew-python ~/.kiro/crew-auth-staging
-cp -a "${KIRO_HOME:-$HOME/.kiro}/mates" ~/kirocrew-backup-mates \
+cp -a "${KIRO_HOME:-$HOME/.kiro}/mates" ~/ajcrew-backup-mates \
   && rm -rf "${KIRO_HOME:-$HOME/.kiro}/mates"
 
 # 4. Reinstall
 curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
 
 # 5. Run first-time setup
-kirocrew setup
-kirocrew doctor
+ajcrew setup
+ajcrew doctor
 ```
 
 Replace step 4 with your preferred install method (pip wheel, source build,
@@ -1550,7 +1550,7 @@ desktop app) as described in the [Install paths](#install-paths) section above.
 
 For reference, the data home structure and what each uninstall path touches:
 
-- `kirocrew service uninstall` removes only the systemd unit — the system unit
+- `ajcrew service uninstall` removes only the systemd unit — the system unit
   and, when your own user manager has one loaded, the per-user unit, naming each
   scope it touched — (plus the AppArmor profile it installed) or the launchd plist.
 - Python and npm package removal has no `preuninstall` or `postuninstall`
@@ -1561,19 +1561,19 @@ For reference, the data home structure and what each uninstall path touches:
 - The macOS DMG/zip and the Linux AppImage have no cleanup hook, so removing the
   application bundle or image leaves the data home intact.
 - A Linux `.deb` / `.rpm` removal DOES run the package's own post-remove step,
-  which drops `/usr/bin/kirocrew-desktop` and the installed AppArmor profile. It
+  which drops `/usr/bin/ajcrew-desktop` and the installed AppArmor profile. It
   deliberately leaves the data home alone: `~/.kiro/crew` holds your sessions,
   memory and credentials, so it is yours to remove (see
   [Removing user data](#removing-user-data)), not the package manager's.
 - App Kit uninstall preserves `apps/<name>/data/` by default. Deleting that app
   data is a separate, explicit action:
-  `kirocrew app uninstall NAME --purge-data`, or unchecking **Keep app data** in
+  `ajcrew app uninstall NAME --purge-data`, or unchecking **Keep app data** in
   the confirmation dialog.
 
 **Windows NSIS uninstaller behavior.** `nsis.oneClick` is false and
 `nsis.deleteAppDataOnUninstall` is left false, so the uninstaller removes only
 the application install directory and its shortcuts; it never resolves or removes
-the Kiro Crew home, which lives outside the install directory. Each signed Windows
+the Aj Crew home, which lives outside the install directory. Each signed Windows
 installer must pass an install, create-sentinel-under-`~/.kiro/crew`,
 uninstall, verify-sentinel smoke test before release. A separate Kiro-family
 uninstaller could remove the parent `~/.kiro/` directory; it must exclude
@@ -1584,15 +1584,15 @@ sign-off is tracked in
 ## Next steps
 
 - [Slack setup](slack-setup.md): create and configure the Slack app.
-- Other channels: [Discord](../../src/kiro_crew/docs/discord-integration.md),
-  [Telegram](../../src/kiro_crew/docs/telegram-integration.md),
-  [Teams](../../src/kiro_crew/docs/teams-integration.md),
-  [Webex](../../src/kiro_crew/docs/webex-integration.md),
-  [WeCom](../../src/kiro_crew/docs/wecom-integration.md),
-  [Weixin](../../src/kiro_crew/docs/weixin-integration.md),
-  [Feishu](../../src/kiro_crew/docs/feishu-integration.md),
-  [iMessage](../../src/kiro_crew/docs/imessage-integration.md), and
-  [WhatsApp](../../src/kiro_crew/docs/whatsapp-integration.md).
+- Other channels: [Discord](../../src/aj_crew/docs/discord-integration.md),
+  [Telegram](../../src/aj_crew/docs/telegram-integration.md),
+  [Teams](../../src/aj_crew/docs/teams-integration.md),
+  [Webex](../../src/aj_crew/docs/webex-integration.md),
+  [WeCom](../../src/aj_crew/docs/wecom-integration.md),
+  [Weixin](../../src/aj_crew/docs/weixin-integration.md),
+  [Feishu](../../src/aj_crew/docs/feishu-integration.md),
+  [iMessage](../../src/aj_crew/docs/imessage-integration.md), and
+  [WhatsApp](../../src/aj_crew/docs/whatsapp-integration.md).
 - [Remote and mobile access](remote-and-mobile.md): 24/7 operation on a remote
   host, and reaching the dashboard from a phone.
 - [Architecture overview](../architecture/overview.md): system diagrams and the
@@ -1600,6 +1600,6 @@ sign-off is tracked in
 - [Security deep dive](../architecture/security-deep-dive.md): sandbox,
   governance, and denied commands.
 - [App Kit guide](../app-kit/getting-started.md): build apps that extend
-  Kiro Crew.
+  Aj Crew.
 - [CONTRIBUTING.md](../../CONTRIBUTING.md): development setup and the PR
   workflow.

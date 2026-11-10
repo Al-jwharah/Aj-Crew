@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.auth.provider import BUILDER_ID_PROFILE_ARN, KasAuthProvider, kas_profile_arn
-from kiro_crew.auth.store import KasToken, TokenStore
+from aj_crew.auth.provider import BUILDER_ID_PROFILE_ARN, KasAuthProvider, kas_profile_arn
+from aj_crew.auth.store import KasToken, TokenStore
 
 pytestmark = pytest.mark.asyncio
 

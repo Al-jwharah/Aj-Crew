@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.security: ``redact_credentials`` patterns, base64 detection and bare keys.
+"""Tests for aj_crew.security: ``redact_credentials`` patterns, base64 detection and bare keys.
 
 The rest of the family lives beside it: ``test_security_token_params.py``,
 ``test_security_bare_secrets.py``, ``test_security_denied_commands.py``,
@@ -17,7 +17,7 @@ import json
 import pytest
 import security_helpers
 
-from kiro_crew.security import (
+from aj_crew.security import (
     redact_credentials,
 )
 
@@ -304,7 +304,7 @@ class TestRedactCredentials:
         to be missed. This ratchet makes that omission fail here instead of
         silently degrading a user-facing warning.
         """
-        from kiro_crew.security import redaction
+        from aj_crew.security import redaction
 
         declared = {
             name: value
@@ -329,7 +329,7 @@ class TestRedactCredentials:
         """The base64 pass must substitute a tag consumers actually look for."""
         import base64
 
-        from kiro_crew.security import (
+        from aj_crew.security import (
             _REDACTED_ENCODED_CREDENTIAL_TAG,
             CREDENTIAL_REDACTION_TAGS,
         )
@@ -407,7 +407,7 @@ class TestRedactCredentials:
         assert len(warnings) == 0
 
     def test_preserves_git_output(self) -> None:
-        text = "Cloning into 'KiroCrew'...\nremote: Enumerating objects: 1234"
+        text = "Cloning into 'AjCrew'...\nremote: Enumerating objects: 1234"
         result, warnings = redact_credentials(text)
         assert result == text
 
@@ -597,7 +597,7 @@ class TestRedactCredentials:
 
     def test_hostname_containing_eyj_not_redacted(self) -> None:
         """A dotted name with `eyJ` inside has JWT shape but no JSON-object header."""
-        from kiro_crew.security import _contains_fixed_credential, _decode_b64_safe
+        from aj_crew.security import _contains_fixed_credential, _decode_b64_safe
 
         for text in ("ssh honeyJar.example.com", "https://api.honeyJar.co.uk/v1/x"):
             assert redact_credentials(text) == (text, []), text
@@ -605,7 +605,7 @@ class TestRedactCredentials:
             assert _decode_b64_safe(base64.b64encode(text.encode()).decode()) == "", text
 
     def test_jose_validated_jwt_redacted_on_every_batch_path(self) -> None:
-        from kiro_crew.security import (
+        from aj_crew.security import (
             _contains_fixed_credential,
             _decode_b64_chunk,
             _decode_b64_safe,
@@ -642,7 +642,7 @@ class TestRedactCredentials:
 
     def test_dense_eyj_header_fails_closed(self) -> None:
         """A header holding a second `eyJ` is redacted whole instead of rescanned per `eyJ`."""
-        from kiro_crew.security import _partial_jwt_tail
+        from aj_crew.security import _partial_jwt_tail
 
         dense = "eyJ" * 30000 + ".x.y"
         assert redact_credentials(dense)[0] == "[REDACTED: credential]"
@@ -757,7 +757,7 @@ class TestRedactCredentials:
         digest ever changes, this fails loudly here rather than silently disabling
         redaction of the link token in production.
         """
-        from kiro_crew.dashboard.token_auth import _sign
+        from aj_crew.dashboard.token_auth import _sign
 
         for payload in (b'{"sub":"x"}', b"", b"a" * 4096):
             assert len(_sign(payload)) == 43, payload[:16]
@@ -775,8 +775,8 @@ class TestRedactCredentials:
         """
         import re
 
-        from kiro_crew.dashboard.token_auth import generate_token
-        from kiro_crew.security import _CREDENTIAL_PATTERNS
+        from aj_crew.dashboard.token_auth import generate_token
+        from aj_crew.security import _CREDENTIAL_PATTERNS
 
         floors = re.findall(r"eyJ\[A-Za-z0-9_-\]\{(\d+),\}", _CREDENTIAL_PATTERNS.pattern)
         assert len(floors) == 1, f"expected one bounded eyJ floor, got {floors}"

@@ -20,7 +20,7 @@ from token_auth_helpers import (  # noqa: F401 -- the autouse fixture registers 
     clear_nonces,
 )
 
-from kiro_crew.dashboard.token_auth import (
+from aj_crew.dashboard.token_auth import (
     _api_pattern_matches,
     _app_owns_path,
     app_token_path_allowed,
@@ -56,7 +56,7 @@ def test_app_owns_path_boundaries() -> None:
     assert not _app_owns_path("foo", "/api/apps/foo-bar/config")
     # Unrelated dashboard endpoints are never owned.
     assert not _app_owns_path("foo", "/api/sessions")
-    assert not _app_owns_path("foo", "/api/config/kirocrew")
+    assert not _app_owns_path("foo", "/api/config/ajcrew")
     # An app named `registry` cannot claim the store's manual refresh, and TWO
     # independent controls now say so. Route placement: the endpoint lives at
     # /api/app-store/refresh, a namespace no app name can collide with. The
@@ -106,8 +106,8 @@ def test_reserved_app_path_segments_stay_in_sync() -> None:
     authorization bypass this fix closes). This asserts the two module sets are
     identical so a future edit to one without the other fails loudly here.
     """
-    from kiro_crew.apps.manifest import RESERVED_APP_PATH_SEGMENTS as manifest_segments
-    from kiro_crew.dashboard.token_auth import RESERVED_APP_PATH_SEGMENTS as token_auth_segments
+    from aj_crew.apps.manifest import RESERVED_APP_PATH_SEGMENTS as manifest_segments
+    from aj_crew.dashboard.token_auth import RESERVED_APP_PATH_SEGMENTS as token_auth_segments
 
     assert token_auth_segments == manifest_segments
 
@@ -120,7 +120,7 @@ def test_app_token_path_allowed_empty_name_denies() -> None:
 @pytest.mark.asyncio
 async def test_app_token_denied_on_unscoped_endpoint(monkeypatch) -> None:
     """The pentest scenario: an app token hitting /api/sessions must be 403."""
-    import kiro_crew.dashboard.token_auth as _ta
+    import aj_crew.dashboard.token_auth as _ta
 
     monkeypatch.setattr(_ta, "_app_api_allowlist", lambda name: ())
     mw = token_auth_middleware()
@@ -138,7 +138,7 @@ async def test_app_token_named_registries_denied_on_refresh(monkeypatch) -> None
     way a grant could happen is the _app_owns_path carve-out failing — so a 403
     here proves the deny is attributable to the carve-out, not a missing perm.
     """
-    import kiro_crew.dashboard.token_auth as _ta
+    import aj_crew.dashboard.token_auth as _ta
 
     monkeypatch.setattr(_ta, "_app_api_allowlist", lambda name: ())
     mw = token_auth_middleware()
@@ -150,7 +150,7 @@ async def test_app_token_named_registries_denied_on_refresh(monkeypatch) -> None
 
 @pytest.mark.asyncio
 async def test_app_token_allowed_on_own_namespace(monkeypatch) -> None:
-    import kiro_crew.dashboard.token_auth as _ta
+    import aj_crew.dashboard.token_auth as _ta
 
     monkeypatch.setattr(_ta, "_app_api_allowlist", lambda name: ())
     mw = token_auth_middleware()
@@ -162,7 +162,7 @@ async def test_app_token_allowed_on_own_namespace(monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_app_token_allowed_on_declared_api(monkeypatch) -> None:
-    import kiro_crew.dashboard.token_auth as _ta
+    import aj_crew.dashboard.token_auth as _ta
 
     monkeypatch.setattr(_ta, "_app_api_allowlist", lambda name: ("/api/widgets/*",))
     mw = token_auth_middleware()
@@ -187,7 +187,7 @@ async def test_app_token_denied_on_mixed_internal_path(monkeypatch) -> None:
     """Escalation guard: an app token on a mixed_internal path (e.g. /api/chat)
     over loopback must NOT be silently treated as the dashboard user. Before the
     fix this branch never set request['app'] and granted unconditionally."""
-    import kiro_crew.dashboard.token_auth as _ta
+    import aj_crew.dashboard.token_auth as _ta
 
     monkeypatch.setattr(_ta, "_app_api_allowlist", lambda name: ())
     mw = token_auth_middleware(mixed_internal_paths=frozenset({"/api/chat"}))
@@ -208,7 +208,7 @@ async def test_app_token_denied_on_strict_internal_path(monkeypatch) -> None:
     /api/send-message over loopback (no secret header) must be scope-denied —
     otherwise a compromised app could send notifications impersonating the
     system (app-sandbox-roadmap threat)."""
-    import kiro_crew.dashboard.token_auth as _ta
+    import aj_crew.dashboard.token_auth as _ta
 
     monkeypatch.setattr(_ta, "_app_api_allowlist", lambda name: ())
     mw = token_auth_middleware(internal_paths=frozenset({"/api/send-message"}))
@@ -267,7 +267,7 @@ def test_app_token_path_allowed_implicit_ws():
     Functional paths must still be declared, so the negative case is asserted
     alongside.
     """
-    from kiro_crew.dashboard.token_auth import app_token_path_allowed
+    from aj_crew.dashboard.token_auth import app_token_path_allowed
 
     assert app_token_path_allowed("some-app", "/api/ws") is True
     assert app_token_path_allowed("some-app", "/api/status") is False
@@ -333,7 +333,7 @@ async def test_non_ascii_internal_secret_denied_non_loopback_mixed(bad: str) -> 
 
 @pytest.mark.parametrize("bad", _NON_ASCII)
 def test_non_ascii_app_secret_is_rejected(bad: str, tmp_path) -> None:
-    from kiro_crew.dashboard.token_auth import validate_app_secret
+    from aj_crew.dashboard.token_auth import validate_app_secret
 
     app_dir = tmp_path / "apps" / "demo"
     app_dir.mkdir(parents=True)

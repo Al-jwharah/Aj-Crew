@@ -11,18 +11,18 @@ import json
 import tarfile
 
 import pytest
-from test_snapshot import _setup_fake_kirocrew, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
 from conftest import requires_symlinks
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
     d = tmp_path / "home"
     d.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(d))
-    _setup_fake_kirocrew(d)
+    monkeypatch.setenv("AJCREW_HOME", str(d))
+    _setup_fake_ajcrew(d)
     return d
 
 
@@ -150,7 +150,7 @@ class TestARootResolvingToTheHomeItselfIsRefused:
 class TestASelectiveBundleIsRefusedByOlderRestores:
     """A released restore never reads the manifest's component map and moves each live
     core file out before checking the archive has a replacement. It DOES require the
-    extracted root to start with `kirocrew-snapshot-`, so a different name turns silent
+    extracted root to start with `ajcrew-snapshot-`, so a different name turns silent
     data relocation into a clean refusal on versions already in the wild."""
 
     def _root_of(self, bundle, tmp_path, tag):
@@ -165,22 +165,22 @@ class TestASelectiveBundleIsRefusedByOlderRestores:
         assert snap.snapshot_main([str(out), "--components", "memory"] + unpinnable_argv()) == 0
         bundle = next(out.glob("*.tar.gz"))
         root = self._root_of(bundle, tmp_path, "sel")
-        assert root.startswith("kirocrew-partial-"), root
-        assert not root.startswith("kirocrew-snapshot-")
+        assert root.startswith("ajcrew-partial-"), root
+        assert not root.startswith("ajcrew-snapshot-")
 
     def test_a_complete_bundle_keeps_the_original_root(self, home, tmp_path):
         out = tmp_path / "out"
         assert snap.snapshot_main([str(out)] + unpinnable_argv()) == 0
         bundle = next(out.glob("*.tar.gz"))
         root = self._root_of(bundle, tmp_path, "full")
-        assert root.startswith("kirocrew-snapshot-"), root
+        assert root.startswith("ajcrew-snapshot-"), root
 
     def test_the_tarball_name_is_unchanged_so_listing_and_pruning_still_work(self, home, tmp_path):
         """Only the inner root carries the marker; rotation globs the tarball name."""
         out = tmp_path / "out"
         assert snap.snapshot_main([str(out), "--components", "memory"] + unpinnable_argv()) == 0
         assert list(
-            out.glob("kirocrew-snapshot-*.tar.gz")
+            out.glob("ajcrew-snapshot-*.tar.gz")
         ), "a partial bundle became invisible to --list and pruning"
 
     def test_this_version_still_restores_a_partial_bundle(self, home, tmp_path):

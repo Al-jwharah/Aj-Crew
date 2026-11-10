@@ -19,11 +19,11 @@ from typing import Any
 import native_skill_projection_helpers
 import pytest
 
-from kiro_crew import agent, agent_state
-from kiro_crew.acp import skill_projection as projection
-from kiro_crew.acp_backends import ACP_BACKEND_KIRO
-from kiro_crew.agent_materialization import auto_approve, fork_refresh, shared_template_view
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew import agent, agent_state
+from aj_crew.acp import skill_projection as projection
+from aj_crew.acp_backends import ACP_BACKEND_KIRO
+from aj_crew.agent_materialization import auto_approve, fork_refresh, shared_template_view
+from aj_crew.config.loader import AjCrewConfig
 
 native_tree = native_skill_projection_helpers.native_tree
 _no_eager_prune = native_skill_projection_helpers._no_eager_prune
@@ -54,7 +54,7 @@ def _fresh_reports(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture
 def bound(native_tree, monkeypatch: pytest.MonkeyPatch):
     """``pkg-reviewer`` installed in the agents directory and bound to a crew."""
-    from kiro_crew import mate_config_migration
+    from aj_crew import mate_config_migration
 
     _home, agents, project = native_tree
     monkeypatch.setattr(agent_state, "all_fork_info", lambda: {})
@@ -92,7 +92,7 @@ def _bind(monkeypatch: pytest.MonkeyPatch, bound: dict[str, str], **flags: bool)
     cfg = SimpleNamespace(
         agents=agents, agent=SimpleNamespace(native_skill_projection=True), **flags
     )
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
 
 
 def _view_file(agents: Path, prepared: Any, name: str = "pkg-reviewer") -> Path:
@@ -117,7 +117,7 @@ def test_an_over_ceiling_spec_starts_on_kiro_cli_through_its_governed_view(bound
     spec, agents, project = bound
     prepared = projection.prepare_native_skill_projection(project)
     launch = prepared.spawn_agent("pkg-reviewer")
-    assert launch.startswith("kirocrew-skill-view-")
+    assert launch.startswith("ajcrew-skill-view-")
     fork_refresh.require_shared_template_within_ceiling(
         "pkg-reviewer", ACP_BACKEND_KIRO, launch_name=launch
     )
@@ -204,7 +204,7 @@ def test_a_compliant_source_and_governed_launch_view_are_allowed(bound) -> None:
 @pytest.mark.parametrize("content", [None, "{not json", "[]"])
 def test_a_missing_or_unparseable_view_is_refused(bound, content: str | None) -> None:
     _spec, agents, _project = bound
-    name = "kirocrew-skill-view-" + "0" * 24
+    name = "ajcrew-skill-view-" + "0" * 24
     if content is not None:
         (agents / f"{name}.json").write_text(content, encoding="utf-8")
     with pytest.raises(fork_refresh.SharedTemplateOverCeiling, match="skill view"):
@@ -249,7 +249,7 @@ def test_a_bound_spec_s_view_grants_the_auto_approve_governance_keeps(
     """kiro-cli has no ``autoApprove`` field, so after the governance pass the view
     carries each kept verb as an ``allowedTools`` entry, and a verb on a server the
     ceiling governs gets none. The start check accepts the view it is handed."""
-    from kiro_crew.platform import governance
+    from aj_crew.platform import governance
 
     spec, agents, project = bound
     spec.write_text(
@@ -300,7 +300,7 @@ def test_bindings_that_cannot_be_read_whole_govern_every_view(bound, monkeypatch
 
 
 def test_a_binding_on_the_file_stem_governs_the_declared_name(bound, monkeypatch) -> None:
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     _bind(monkeypatch, {"reviewer-crew": "KiroPkg-reviewer"})
     monkeypatch.setattr(
@@ -314,7 +314,7 @@ def test_a_binding_on_the_file_stem_governs_the_declared_name(bound, monkeypatch
 
 
 def test_a_moved_crewmate_s_agent_is_governed(bound, monkeypatch) -> None:
-    from kiro_crew import mate_config_migration
+    from aj_crew import mate_config_migration
 
     _bind(monkeypatch, {})
     monkeypatch.setattr(mate_config_migration, "moved_from_agents", lambda: {"old-agent"})
@@ -322,7 +322,7 @@ def test_a_moved_crewmate_s_agent_is_governed(bound, monkeypatch) -> None:
 
 
 def test_an_unreadable_ledger_governs_every_view(bound, monkeypatch) -> None:
-    from kiro_crew import mate_config_migration
+    from aj_crew import mate_config_migration
 
     def unreadable() -> frozenset[str]:
         raise mate_config_migration.LedgerUnreadable("unreadable")
@@ -335,7 +335,7 @@ def test_a_config_that_will_not_load_governs_every_view(monkeypatch) -> None:
     def boom(cls: object) -> None:
         raise OSError("config.json unreadable")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(boom))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(boom))
     assert shared_template_view.governed_view_names() is None
 
 
@@ -458,7 +458,7 @@ def test_unknown_bindings_govern_every_injected_entry(bound, monkeypatch) -> Non
 
 
 def test_pooled_session_servers_governs_entries_once(bound, monkeypatch) -> None:
-    from kiro_crew.mcp_gateway import session_servers
+    from aj_crew.mcp_gateway import session_servers
 
     monkeypatch.setattr(
         session_servers,
@@ -484,7 +484,7 @@ def test_pooled_session_servers_governs_entries_once(bound, monkeypatch) -> None
 
 
 def test_runtime_pooled_entries_are_returned(bound, monkeypatch) -> None:
-    from kiro_crew.acp import runtime, runtime_session_setup
+    from aj_crew.acp import runtime, runtime_session_setup
 
     expected = [_broker_entry()]
     expected[0].pop("autoApprove")
@@ -503,7 +503,7 @@ def test_runtime_pooled_entries_are_returned(bound, monkeypatch) -> None:
 
 
 def test_direct_client_pooled_entries_are_attached(bound, monkeypatch) -> None:
-    from kiro_crew.acp import client, client_mcp_array
+    from aj_crew.acp import client, client_mcp_array
 
     expected = _broker_entry()
     expected.pop("autoApprove")
@@ -529,8 +529,8 @@ def test_direct_client_pooled_entries_are_attached(bound, monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_the_spawn_launch_check_judges_the_agent_argument(monkeypatch) -> None:
-    from kiro_crew.acp import runtime_spawn_launch
-    from kiro_crew.acp.session_handle import AcpRuntimeError
+    from aj_crew.acp import runtime_spawn_launch
+    from aj_crew.acp.session_handle import AcpRuntimeError
 
     asked: list[tuple[str, str, str | None]] = []
 
@@ -543,7 +543,7 @@ async def test_the_spawn_launch_check_judges_the_agent_argument(monkeypatch) -> 
 
     monkeypatch.setattr(agent, "require_shared_template_within_ceiling", gate)
     rt = SimpleNamespace(_agent="pkg-reviewer", _work_dir=None)
-    view = "kirocrew-skill-view-" + "1" * 24
+    view = "ajcrew-skill-view-" + "1" * 24
     await runtime_spawn_launch._refuse_over_ceiling_launch(rt, view)
     with pytest.raises(AcpRuntimeError, match="over the ceiling"):
         await runtime_spawn_launch._refuse_over_ceiling_launch(rt, "pkg-reviewer")
@@ -556,29 +556,29 @@ async def test_the_spawn_launch_check_judges_the_agent_argument(monkeypatch) -> 
 
 
 def _projection(aliases: dict[str, str]) -> Any:
-    from kiro_crew.acp.skill_projection_parts.native_projection import NativeSkillProjection
+    from aj_crew.acp.skill_projection_parts.native_projection import NativeSkillProjection
 
     return NativeSkillProjection(dict(aliases))
 
 
 def test_a_session_start_names_the_view_its_agent_runs_under() -> None:
-    from kiro_crew.acp.runtime_session_setup import _start_launch_name
+    from aj_crew.acp.runtime_session_setup import _start_launch_name
 
-    spawn = _projection({"pkg-reviewer": "kirocrew-skill-view-" + "a" * 24})
-    current = _projection({"other": "kirocrew-skill-view-" + "b" * 24})
+    spawn = _projection({"pkg-reviewer": "ajcrew-skill-view-" + "a" * 24})
+    current = _projection({"other": "ajcrew-skill-view-" + "b" * 24})
     rt = SimpleNamespace(
         _agent="pkg-reviewer",
         _launch_agent="",
         _spawn_skill_projection=spawn,
         _native_skill_projection=current,
     )
-    assert _start_launch_name(rt, "pkg-reviewer") == "kirocrew-skill-view-" + "a" * 24
-    assert _start_launch_name(rt, "other") == "kirocrew-skill-view-" + "b" * 24
+    assert _start_launch_name(rt, "pkg-reviewer") == "ajcrew-skill-view-" + "a" * 24
+    assert _start_launch_name(rt, "other") == "ajcrew-skill-view-" + "b" * 24
     # No view for the agent: the authored name, whose claimants are checked.
     assert _start_launch_name(rt, "unknown") == "unknown"
     assert _start_launch_name(rt, None) is None
-    rt._launch_agent = "kirocrew-app-launch-x"
-    assert _start_launch_name(rt, "pkg-reviewer") == "kirocrew-app-launch-x"
+    rt._launch_agent = "ajcrew-app-launch-x"
+    assert _start_launch_name(rt, "pkg-reviewer") == "ajcrew-app-launch-x"
     bare = SimpleNamespace(_agent="pkg-reviewer", _launch_agent="")
     assert _start_launch_name(bare, "pkg-reviewer") == "pkg-reviewer"
 
@@ -587,8 +587,8 @@ def test_a_session_start_names_the_view_its_agent_runs_under() -> None:
 async def test_a_mode_switch_refusal_ends_the_session(monkeypatch) -> None:
     from unittest.mock import AsyncMock
 
-    from kiro_crew.acp.runtime_mode_activation import _refuse_over_ceiling_mode
-    from kiro_crew.acp.session_handle import AcpRuntimeError
+    from aj_crew.acp.runtime_mode_activation import _refuse_over_ceiling_mode
+    from aj_crew.acp.session_handle import AcpRuntimeError
 
     asked: list[str | None] = []
 
@@ -601,7 +601,7 @@ async def test_a_mode_switch_refusal_ends_the_session(monkeypatch) -> None:
 
     monkeypatch.setattr(agent, "require_shared_template_within_ceiling", gate)
     rt = SimpleNamespace(_acp_backend=ACP_BACKEND_KIRO, terminate_session=AsyncMock())
-    view = "kirocrew-skill-view-" + "c" * 24
+    view = "ajcrew-skill-view-" + "c" * 24
     await _refuse_over_ceiling_mode(rt, "s1", "pkg-reviewer", view)
     rt.terminate_session.assert_not_awaited()
     with pytest.raises(AcpRuntimeError, match="over the ceiling"):

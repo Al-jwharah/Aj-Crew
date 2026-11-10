@@ -19,12 +19,12 @@ import pytest
 from body_stream_helpers import attach_body
 from named_cases_helpers import named_cases
 
-from kiro_crew import model_registry
-from kiro_crew.acp_backends import model_registry_namespace
-from kiro_crew.cron import CronService
-from kiro_crew.dashboard.handlers import api_cron_update, api_crons_create
-from kiro_crew.dashboard.handlers.core import _MODEL_PIN_PATTERN
-from kiro_crew.validation import (
+from aj_crew import model_registry
+from aj_crew.acp_backends import model_registry_namespace
+from aj_crew.cron import CronService
+from aj_crew.dashboard.handlers import api_cron_update, api_crons_create
+from aj_crew.dashboard.handlers.core import _MODEL_PIN_PATTERN
+from aj_crew.validation import (
     _MODEL_NAME_RE,
     CRON_ADD_SCHEMA,
     MCP_CRON_SCHEMAS,
@@ -180,9 +180,9 @@ class TestSettingsPinsShareTheQualifiedBranch:
         assert re.fullmatch(_MODEL_PIN_PATTERN, value)
 
     def test_every_boundary_uses_the_one_grammar_object(self):
-        from kiro_crew import cli_commands, validation
-        from kiro_crew.dashboard import session_control
-        from kiro_crew.dashboard.handlers import cron as cron_handlers
+        from aj_crew import cli_commands, validation
+        from aj_crew.dashboard import session_control
+        from aj_crew.dashboard.handlers import cron as cron_handlers
 
         for module in (cli_commands, cron_handlers, session_control):
             assert module._MODEL_NAME_RE is validation._MODEL_NAME_RE
@@ -273,7 +273,7 @@ class TestSchemas:
 
 
 def _run_tool(args: dict[str, Any]) -> list[dict]:
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     bodies: list[dict] = []
 
@@ -314,9 +314,9 @@ class TestTaskBatchWire:
 @pytest.fixture
 def backends(monkeypatch):
     """Kiro, Claude, OpenCode and Pi selectable and installed; no model list advertised."""
-    from kiro_crew import acp_backends
-    from kiro_crew.agent_sdk import backend_install
-    from kiro_crew.agent_sdk.backend_install import INSTALLED, BackendInstallState
+    from aj_crew import acp_backends
+    from aj_crew.agent_sdk import backend_install
+    from aj_crew.agent_sdk.backend_install import INSTALLED, BackendInstallState
 
     values = ["", "claude", "opencode", "pi"]
     monkeypatch.setattr(acp_backends, "selectable_backend_values", lambda: sorted(values))
@@ -358,7 +358,7 @@ def _request(body: dict) -> tuple[Any, MagicMock]:
 @pytest.mark.usefixtures("healthy_host_memory", "backends")
 class TestSpawnEndpoint:
     async def _spawn(self, **body):
-        from kiro_crew.dashboard.handlers.messaging import api_spawn
+        from aj_crew.dashboard.handlers.messaging import api_spawn
 
         request, mgr = _request({"task": "x", **body})
         return await api_spawn(request), mgr
@@ -449,7 +449,7 @@ def _update_request(body: dict, crons: CronService, job_id: str) -> MagicMock:
 class TestCronEndpoints:
     @pytest.fixture(autouse=True)
     def _isolate_cron_store(self, _floor_monkeypatch, tmp_path):
-        _floor_monkeypatch.setattr("kiro_crew.cron._DEFAULT_DIR", tmp_path)
+        _floor_monkeypatch.setattr("aj_crew.cron._DEFAULT_DIR", tmp_path)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("name", QUALIFIED)

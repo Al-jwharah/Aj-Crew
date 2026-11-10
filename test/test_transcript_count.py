@@ -17,8 +17,8 @@ import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-from kiro_crew import history_projection, transcript_count
-from kiro_crew.history import ConversationLog
+from aj_crew import history_projection, transcript_count
+from aj_crew.history import ConversationLog
 
 _EDGE_LINES: list[bytes] = [
     b'{"role": "user", "content": "hi"}',
@@ -197,11 +197,11 @@ def test_random_rows_match_full_read(tmp_path: Path, rows: list[bytes]) -> None:
 
 
 @pytest.mark.skipif(
-    not os.environ.get("KIROCREW_TRANSCRIPT_CORPUS"),
-    reason="set KIROCREW_TRANSCRIPT_CORPUS to a directory of transcript COPIES",
+    not os.environ.get("AJCREW_TRANSCRIPT_CORPUS"),
+    reason="set AJCREW_TRANSCRIPT_CORPUS to a directory of transcript COPIES",
 )
 def test_real_corpus_matches_full_read() -> None:
-    corpus = Path(os.environ["KIROCREW_TRANSCRIPT_CORPUS"])
+    corpus = Path(os.environ["AJCREW_TRANSCRIPT_CORPUS"])
     files = sorted(corpus.glob("*.jsonl"))
     assert files
     for path in files:

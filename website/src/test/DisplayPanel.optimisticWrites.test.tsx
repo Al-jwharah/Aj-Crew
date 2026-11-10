@@ -4,7 +4,7 @@ import { renderWithProviders } from './helpers'
 
 /**
  * Settings → Display: concurrent optimistic saves on the shared
- * ['kirocrewConfig'] key (#6890).
+ * ['ajcrewConfig'] key (#6890).
  *
  * The recency-tint stepper and the Default-shell field PATCH sibling paths of
  * one cached object. With a whole-object onMutate snapshot, a tint save that
@@ -14,9 +14,9 @@ import { renderWithProviders } from './helpers'
  * stops masking its own path.
  */
 
-const { patchConfigMock, kirocrewConfigMock } = vi.hoisted(() => ({
+const { patchConfigMock, ajcrewConfigMock } = vi.hoisted(() => ({
   patchConfigMock: vi.fn((_path: string, _value: unknown) => Promise.resolve({})),
-  kirocrewConfigMock: vi.fn(() => Promise.resolve({})),
+  ajcrewConfigMock: vi.fn(() => Promise.resolve({})),
 }))
 
 vi.mock('../api/client', () => {
@@ -33,7 +33,7 @@ vi.mock('../api/client', () => {
   }
   return {
     api: {
-      kirocrewConfig: kirocrewConfigMock,
+      ajcrewConfig: ajcrewConfigMock,
       patchConfig: patchConfigMock,
       installTheme: vi.fn(() => Promise.resolve({ ok: true })),
     },
@@ -117,7 +117,7 @@ const renderAt = (sub: string) =>
   renderWithProviders(<DisplayPanel />, { route: `/settings?tab=display&sub=${sub}` })
 
 function seed(shell: string, tint: number) {
-  kirocrewConfigMock.mockImplementation(() =>
+  ajcrewConfigMock.mockImplementation(() =>
     Promise.resolve({ dashboard: { terminal: { shell }, recent_tint_count: tint } }),
   )
 }
@@ -168,7 +168,7 @@ describe('DisplayPanel — concurrent tint/shell optimistic saves', () => {
     // (draft already cleared) blinked back to /bin/bash.
     seed('/usr/bin/fish', 3)
     let releaseRefetch!: (v: unknown) => void
-    kirocrewConfigMock.mockImplementationOnce(
+    ajcrewConfigMock.mockImplementationOnce(
       () => new Promise(res => { releaseRefetch = res }) as never,
     )
     held[SHELL_PATH].resolve({})

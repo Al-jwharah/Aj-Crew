@@ -1,6 +1,6 @@
 """The SEL patch and the mid-turn slot shared by the ``test_steer_requeue*.py`` suites.
 
-``_patch_sel`` swaps ``kiro_crew.dashboard.chat_handlers.sel`` for a mock for the
+``_patch_sel`` swaps ``aj_crew.dashboard.chat_handlers.sel`` for a mock for the
 test's duration and yields the mock its calls return; each suite binds it by name so
 pytest registers it for that module. ``_running_slot`` makes a slot that reads as
 mid-turn.
@@ -16,7 +16,7 @@ import pytest
 @pytest.fixture
 def _patch_sel():
     mock_sel = MagicMock()
-    with patch("kiro_crew.dashboard.chat_handlers.sel", return_value=mock_sel):
+    with patch("aj_crew.dashboard.chat_handlers.sel", return_value=mock_sel):
         yield mock_sel
 
 

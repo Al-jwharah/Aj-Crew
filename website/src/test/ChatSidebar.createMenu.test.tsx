@@ -312,7 +312,7 @@ describe('create-button caret menu', () => {
     await waitFor(() =>
       expect(mocks.crewPeerPost).toHaveBeenCalledWith('i-nobita', 'api/chat/slots', { memory_mode: 'persistent' }))
     await waitFor(() =>
-      expect(JSON.parse(sessionStorage.getItem('kirocrew.crewWindow') || 'null')).toEqual({ instanceId: 'i-nobita', key: 'peer-new-1' }))
+      expect(JSON.parse(sessionStorage.getItem('ajcrew.crewWindow') || 'null')).toEqual({ instanceId: 'i-nobita', key: 'peer-new-1' }))
     expect(mocks.createChatSlot).not.toHaveBeenCalled()
   })
 
@@ -324,7 +324,7 @@ describe('create-button caret menu', () => {
     fireEvent.keyDown(await screen.findByTestId('new-chat-on-crew'), { key: 'ArrowRight' })
     fireEvent.click(await screen.findByTestId('new-chat-on-crew-i-nobita'))
     await waitFor(() => expect(onOpenPeerSession).toHaveBeenCalledWith('i-nobita', 'peer-new-1'))
-    expect(sessionStorage.getItem('kirocrew.crewWindow') || null).toBeNull()
+    expect(sessionStorage.getItem('ajcrew.crewWindow') || null).toBeNull()
   })
 
   it('does not yank the view onto the new crew session when the user moved meanwhile', async () => {
@@ -339,7 +339,7 @@ describe('create-button caret menu', () => {
     // The user opens another crew session while the create is in flight.
     act(() => { openCrewWindow({ instanceId: 'i-other', key: 'elsewhere' }) })
     await act(async () => { finish({ key: 'peer-new-1' }) })
-    expect(JSON.parse(sessionStorage.getItem('kirocrew.crewWindow') || 'null')).toEqual({ instanceId: 'i-other', key: 'elsewhere' })
+    expect(JSON.parse(sessionStorage.getItem('ajcrew.crewWindow') || 'null')).toEqual({ instanceId: 'i-other', key: 'elsewhere' })
     act(() => { closeCrewWindow() })
   })
 

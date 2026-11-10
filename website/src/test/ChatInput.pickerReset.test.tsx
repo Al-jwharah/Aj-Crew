@@ -17,8 +17,8 @@ vi.mock('../api/client', () => ({ api: mockApi }))
 import ChatInput from '../components/ChatInput'
 
 const SKILLS = [
-  { key: 'peer-review-walk', name: 'peer-review-walk', description: 'Walk peer CRs', source: 'kirocrew' },
-  { key: 'grill', name: 'grill', description: 'Questioning', source: 'kirocrew' },
+  { key: 'peer-review-walk', name: 'peer-review-walk', description: 'Walk peer CRs', source: 'ajcrew' },
+  { key: 'grill', name: 'grill', description: 'Questioning', source: 'ajcrew' },
 ]
 
 beforeEach(() => {

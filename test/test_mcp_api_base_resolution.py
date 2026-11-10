@@ -21,7 +21,7 @@ import pytest
 
 @pytest.fixture
 def mcp(monkeypatch: pytest.MonkeyPatch) -> Any:
-    module = importlib.import_module("kiro_crew.mcp_core")
+    module = importlib.import_module("aj_crew.mcp_core")
     monkeypatch.setattr(module, "_API_PORT", None)
     monkeypatch.setattr(module, "_API", None)
     monkeypatch.setattr(module, "_API_UNIX_SOCKET", None)
@@ -48,9 +48,9 @@ def _sock_for(port: int) -> str:
     """The socket path the product derives for *port*, derived the same way.
 
     Compare against this, never a port substring: the data home is named
-    ``<counter>-kirocrew-home``, so the counter can equal a port and fool the check.
+    ``<counter>-ajcrew-home``, so the counter can equal a port and fool the check.
     """
-    from kiro_crew.dashboard.origin import dashboard_socket_path
+    from aj_crew.dashboard.origin import dashboard_socket_path
 
     return str(dashboard_socket_path(port))
 
@@ -285,7 +285,7 @@ class TestMcpComputerReplay:
 
     @pytest.fixture
     def computer(self, mcp: Any, monkeypatch) -> Any:
-        module = importlib.import_module("kiro_crew.mcp_computer")
+        module = importlib.import_module("aj_crew.mcp_computer")
         monkeypatch.setattr(module, "_internal_secret", lambda: "s")
         return module
 
@@ -597,7 +597,7 @@ class TestSameBaseRefusalRetry:
     def test_an_unproven_port_is_never_re_dialled(self, mcp: Any, monkeypatch) -> None:
         """``bound`` is the NORMAL source, and it carries no ownership evidence.
 
-        ``KIROCREW_BOUND_PORT`` is inherited and ranks above the marker, so it says
+        ``AJCREW_BOUND_PORT`` is inherited and ranks above the marker, so it says
         the value is unchanged, not that the gateway still holds the port.
         """
         base = "http://127.0.0.1:7788"

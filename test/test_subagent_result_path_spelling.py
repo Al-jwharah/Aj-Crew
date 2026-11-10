@@ -24,8 +24,8 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import subagent_persistence
-from kiro_crew.subagent_persistence import (
+from aj_crew import subagent_persistence
+from aj_crew.subagent_persistence import (
     _agent_dir,
     agent_dir_for_display,
     create_agent_folder,
@@ -99,8 +99,8 @@ class TestDisplayPathsUseTheDeclaredHome:
                 agent_dir_for_display(bad)
 
 
-class TestSymlinkedKirocrewHomeOverride:
-    """``data_home()`` resolves a ``KIROCREW_HOME`` override; the shown path must not."""
+class TestSymlinkedAjcrewHomeOverride:
+    """``data_home()`` resolves a ``AJCREW_HOME`` override; the shown path must not."""
 
     @pytest.fixture
     def override(self, tmp_path, monkeypatch):
@@ -111,7 +111,7 @@ class TestSymlinkedKirocrewHomeOverride:
             link.symlink_to(real, target_is_directory=True)
         except (OSError, NotImplementedError):  # pragma: no cover - platform guard
             pytest.skip("symlinks unavailable on this platform")
-        monkeypatch.setenv("KIROCREW_HOME", str(link))
+        monkeypatch.setenv("AJCREW_HOME", str(link))
         monkeypatch.setattr(subagent_persistence, "_SUBAGENTS_DIR", None)
         return link, real
 
@@ -141,7 +141,7 @@ class TestEmittedResultPointersAreReadable:
     def _notice(self, agent_id: str) -> str:
         import asyncio
 
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         stub = object.__new__(SubagentManager)  # never touched on this branch
         msg = asyncio.run(
@@ -183,7 +183,7 @@ class TestNoEmissionSiteStillUsesTheResolvedHelper:
     stringifies it into a message would otherwise pass unnoticed.
     """
 
-    _SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+    _SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
     def test_agent_dir_is_never_stringified_into_text(self):
         offenders = []

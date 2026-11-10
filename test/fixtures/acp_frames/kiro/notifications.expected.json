@@ -19,7 +19,7 @@
     "action": "agent_switched",
     "frame": "_kiro.dev/agent/switched",
     "params": {
-      "agentName": "kirocrew",
+      "agentName": "ajcrew",
       "sessionId": "kiro-session-0001"
     }
   },
@@ -27,7 +27,7 @@
     "action": "mcp_server_initialized",
     "frame": "_kiro.dev/mcp/server_initialized",
     "params": {
-      "serverName": "kirocrew-core",
+      "serverName": "ajcrew-core",
       "sessionId": "kiro-session-0001"
     }
   },
@@ -36,7 +36,7 @@
     "frame": "_kiro.dev/mcp/server_init_failure",
     "params": {
       "error": "spawn failed",
-      "serverName": "kirocrew-cron",
+      "serverName": "ajcrew-cron",
       "sessionId": "kiro-session-0001"
     }
   },

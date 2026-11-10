@@ -47,7 +47,7 @@ const SCENES = [
 
 const now = Math.floor(Date.now() / 1000)
 const SLOTS = [{
-  key: ACTIVE, title: 'Gateway restart question', running: false, messages: 2, agent: 'kirocrew',
+  key: ACTIVE, title: 'Gateway restart question', running: false, messages: 2, agent: 'ajcrew',
   memory_mode: 'persistent', modified: now, last_ts: '2026-10-24T04:00:00Z', folder_id: '',
   last_message: 'Skip step 3.', source_links: [], source_links_total: 0,
 }]

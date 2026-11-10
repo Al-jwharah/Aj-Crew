@@ -18,8 +18,8 @@ vi.mock('../api/client', () => ({
   api: {
     dashboardConfig: dashboardConfigMock,
     updateDashboardConfig: updateDashboardConfigMock,
-    kirocrewConfig: () => Promise.resolve({ agent: { model: 'auto', reasoning_effort: '' } }),
-    kirocrewAgents: () => Promise.resolve({ agents: [], default_agent: 'default' }),
+    ajcrewConfig: () => Promise.resolve({ agent: { model: 'auto', reasoning_effort: '' } }),
+    ajcrewAgents: () => Promise.resolve({ agents: [], default_agent: 'default' }),
     agentResolvedModel: () => Promise.resolve({ model: '', pinned: false }),
     models: modelsMock,
     patchConfig: () => Promise.resolve({}),

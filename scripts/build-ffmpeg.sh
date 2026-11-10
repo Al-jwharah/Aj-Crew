@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build a minimal ffmpeg from source: just the audio inputs Kiro Crew decodes
+# Build a minimal ffmpeg from source: just the audio inputs Aj Crew decodes
 # for speech-to-text, nothing else (~2.5 MB vs ~50-80 MB kitchen-sink builds).
 #
 # Two uses:

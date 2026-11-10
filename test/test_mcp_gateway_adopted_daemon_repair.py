@@ -8,7 +8,7 @@ that could steal a live incumbent's socket. Also pinned: the wait is on the sing
 LOCK, not the endpoint (they differ through a Windows drain); a daemon still draining
 is never adopted; an incumbent that REFUSES is still adopted, since it still serves.
 
-Tests that start a real daemon isolate KIROCREW_HOME and the CWD (see ``_isolate``).
+Tests that start a real daemon isolate AJCREW_HOME and the CWD (see ``_isolate``).
 """
 
 from __future__ import annotations
@@ -25,12 +25,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.code_fingerprint import code_fingerprint as _real_code_fingerprint
-from kiro_crew.mcp_gateway import gatewayd as gw
-from kiro_crew.mcp_gateway import manager as mgr
-from kiro_crew.mcp_gateway import transport
-from kiro_crew.mcp_gateway.gatewayd import resolvable_target_stems
-from kiro_crew.testing.wait import async_wait_until, await_until, finished
+from aj_crew.code_fingerprint import code_fingerprint as _real_code_fingerprint
+from aj_crew.mcp_gateway import gatewayd as gw
+from aj_crew.mcp_gateway import manager as mgr
+from aj_crew.mcp_gateway import transport
+from aj_crew.mcp_gateway.gatewayd import resolvable_target_stems
+from aj_crew.testing.wait import async_wait_until, await_until, finished
 
 #: The fingerprint every fake pong in this module carries. The REAL one, because
 #: the end-to-end test spawns a real daemon from this same checkout and the
@@ -43,7 +43,7 @@ _POSIX_ONLY = pytest.mark.skipif(
     sys.platform == "win32", reason="observes a socket file and lock being released"
 )
 
-_TARGET_PREFIXES = ("KIROCREW_MCP_TARGET_", "MC_MCP_TARGET_")
+_TARGET_PREFIXES = ("AJCREW_MCP_TARGET_", "MC_MCP_TARGET_")
 
 
 def _only_targets(monkeypatch: pytest.MonkeyPatch, mapping: dict[str, str]) -> None:
@@ -51,7 +51,7 @@ def _only_targets(monkeypatch: pytest.MonkeyPatch, mapping: dict[str, str]) -> N
 
     Never ``setattr(os, "environ", {...})``: ``gatewayd.os`` is the shared stdlib
     module, so replacing its ``environ`` replaces the process-wide mapping and
-    drops every variable the suite set for isolation -- including KIROCREW_HOME,
+    drops every variable the suite set for isolation -- including AJCREW_HOME,
     which sends a spawned daemon's log into the operator's real data home.
     """
     for key in [k for k in os.environ if any(k.startswith(p) for p in _TARGET_PREFIXES)]:
@@ -73,18 +73,18 @@ class TestApplyStandDown:
     def test_stands_down_when_it_cannot_resolve_a_needed_stem(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        _only_targets(monkeypatch, {"KIROCREW_MCP_TARGET_PDF": "npx -y server-pdf"})
+        _only_targets(monkeypatch, {"AJCREW_MCP_TARGET_PDF": "npx -y server-pdf"})
         stop = asyncio.Event()
-        reply = gw._apply_stand_down({"type": "stand-down", "need": ["KIROCREW_CORE", "PDF"]}, stop)
+        reply = gw._apply_stand_down({"type": "stand-down", "need": ["AJCREW_CORE", "PDF"]}, stop)
         assert reply["type"] == "standing-down"
-        assert reply["missing"] == ["KIROCREW_CORE"]
+        assert reply["missing"] == ["AJCREW_CORE"]
         assert stop.is_set(), "the daemon must take the graceful SIGTERM path"
 
     def test_refuses_when_it_already_covers_everything_needed(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Not a bare kill switch: nothing to gain means nothing to do."""
-        _only_targets(monkeypatch, {"KIROCREW_MCP_TARGET_PDF": "npx -y server-pdf"})
+        _only_targets(monkeypatch, {"AJCREW_MCP_TARGET_PDF": "npx -y server-pdf"})
         stop = asyncio.Event()
         reply = gw._apply_stand_down({"type": "stand-down", "need": ["PDF"]}, stop)
         assert reply["type"] == "stand-down-rejected"
@@ -100,8 +100,8 @@ class TestApplyStandDown:
         _only_targets(
             monkeypatch,
             {
-                "KIROCREW_MCP_TARGET_PDF": "npx -y server-pdf",
-                "KIROCREW_MCP_TARGET_EXCALIDRAW": "node x.js",
+                "AJCREW_MCP_TARGET_PDF": "npx -y server-pdf",
+                "AJCREW_MCP_TARGET_EXCALIDRAW": "node x.js",
             },
         )
         stop = asyncio.Event()
@@ -111,7 +111,7 @@ class TestApplyStandDown:
 
     @pytest.mark.parametrize("need", [None, [], "PDF", ["", "PDF"], [17]])
     def test_refuses_a_malformed_need(self, need: Any, monkeypatch: pytest.MonkeyPatch) -> None:
-        _only_targets(monkeypatch, {"KIROCREW_MCP_TARGET_PDF": "npx -y server-pdf"})
+        _only_targets(monkeypatch, {"AJCREW_MCP_TARGET_PDF": "npx -y server-pdf"})
         stop = asyncio.Event()
         frame: dict[str, Any] = {"type": "stand-down"}
         if need is not None:
@@ -122,7 +122,7 @@ class TestApplyStandDown:
     def test_refuses_when_shutdown_is_not_wired(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """An accepted-but-inert frame would leave the caller waiting on a lock
         that is never released."""
-        _only_targets(monkeypatch, {"KIROCREW_MCP_TARGET_PDF": "npx -y server-pdf"})
+        _only_targets(monkeypatch, {"AJCREW_MCP_TARGET_PDF": "npx -y server-pdf"})
         reply = gw._apply_stand_down({"type": "stand-down", "need": ["CORE"]}, None)
         assert reply["type"] == "stand-down-rejected"
 
@@ -374,7 +374,7 @@ class TestOscillationCap:
         message = next(r.getMessage() for r in caplog.records if "already issued" in r.getMessage())
         assert "still runs different code than this gateway" in message
         assert "cannot resolve ," not in message
-        assert "kirocrew restart" in message, "stale-code settle names the remedy"
+        assert "ajcrew restart" in message, "stale-code settle names the remedy"
 
         caplog.clear()
         fresh = _manager(tmp_path, {})
@@ -420,7 +420,7 @@ class TestAdoptedDriftRecheck:
     async def test_a_fit_adopted_daemon_is_left_alone(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        manager = _manager(tmp_path, {"KIROCREW_MCP_TARGET_CORE": "run core"})
+        manager = _manager(tmp_path, {"AJCREW_MCP_TARGET_CORE": "run core"})
         asked = AsyncMock(return_value=mgr._SPAWN)
         monkeypatch.setattr(manager, "_repair_or_adopt", asked)
         assert (
@@ -445,7 +445,7 @@ class TestAdoptedDriftRecheck:
         # monotonic timestamp, so the first assessment must not depend on host
         # uptime.
         monkeypatch.setattr(mgr.time, "monotonic", lambda: 60.0)
-        manager = _manager(tmp_path, {"KIROCREW_MCP_TARGET_CORE": "run core"})
+        manager = _manager(tmp_path, {"AJCREW_MCP_TARGET_CORE": "run core"})
         asked = AsyncMock(return_value=mgr._ADOPT)
         monkeypatch.setattr(manager, "_repair_or_adopt", asked)
         pong = {"type": "pong", "targets": [], "fingerprint": _FP}
@@ -464,7 +464,7 @@ class TestAdoptedDriftRecheck:
     async def test_a_drifted_adopted_daemon_is_repaired_and_replaced(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        manager = _manager(tmp_path, {"KIROCREW_MCP_TARGET_CORE": "run core"})
+        manager = _manager(tmp_path, {"AJCREW_MCP_TARGET_CORE": "run core"})
         # _reconcile_adopted is only ever reached from the watchdog's adopted
         # branch, so anything asserting on _adopted must start there.
         manager._adopted = True
@@ -496,7 +496,7 @@ class TestAdoptedDriftRecheck:
         daemon finish. Unlike ``start()``, which FAILS on _ABORT, the watchdog just keeps
         supervising.
         """
-        manager = _manager(tmp_path, {"KIROCREW_MCP_TARGET_CORE": "run core"})
+        manager = _manager(tmp_path, {"AJCREW_MCP_TARGET_CORE": "run core"})
         # _reconcile_adopted is only ever reached from the watchdog's adopted
         # branch, so anything asserting on _adopted must start there.
         manager._adopted = True
@@ -521,7 +521,7 @@ class TestAdoptedDriftRecheck:
         return to the adopted branch, or _adopted False with _process None idles forever.
         Recovery skips _adopt_incumbent(), which would start a second watchdog.
         """
-        manager = _manager(tmp_path, {"KIROCREW_MCP_TARGET_CORE": "run core"})
+        manager = _manager(tmp_path, {"AJCREW_MCP_TARGET_CORE": "run core"})
         # _reconcile_adopted is only ever reached from the watchdog's adopted
         # branch, so anything asserting on _adopted must start there.
         manager._adopted = True
@@ -557,7 +557,7 @@ class TestAdoptedDriftRecheck:
         the adoption gate had just made, and against a refusing incumbent that
         spends a stand-down from the cap for no new information.
         """
-        manager = _manager(tmp_path, {"KIROCREW_MCP_TARGET_CORE": "run core"})
+        manager = _manager(tmp_path, {"AJCREW_MCP_TARGET_CORE": "run core"})
         monkeypatch.setattr(manager, "_run_watchdog", AsyncMock())
         assert manager._last_drift_check == 0.0
         assert manager._adopt_incumbent() is True
@@ -584,7 +584,7 @@ class TestAdoptedDriftRecheck:
         An OSError from _clear_stale_socket or prepare_dir (outside _spawn_once's guard)
         must not kill the watchdog task. Asserted on the loop, not just the helper.
         """
-        manager = _manager(tmp_path, {"KIROCREW_MCP_TARGET_CORE": "run core"})
+        manager = _manager(tmp_path, {"AJCREW_MCP_TARGET_CORE": "run core"})
         manager._adopted = True
         manager._process = None
         pong = {"type": "pong", "targets": [], "fingerprint": _FP}
@@ -631,7 +631,7 @@ class TestAdoptedDriftRecheck:
         adopted iteration would re-assess at once and spend a stand-down from the cap.
         """
         monkeypatch.setattr(mgr, "_RESPAWN_BACKOFF_START_SECS", 0.0)
-        manager = _manager(tmp_path, {"KIROCREW_MCP_TARGET_CORE": "run core"})
+        manager = _manager(tmp_path, {"AJCREW_MCP_TARGET_CORE": "run core"})
         manager._adopted = False
 
         exited = MagicMock()
@@ -674,7 +674,7 @@ class TestAdoptedDriftRecheck:
         Via `_start_locked`, the same OSError would escape `start()` ("Never raises") and
         fail gateway startup instead of degrading to per-session MCP.
         """
-        manager = _manager(tmp_path, {"KIROCREW_MCP_TARGET_CORE": "run core"})
+        manager = _manager(tmp_path, {"AJCREW_MCP_TARGET_CORE": "run core"})
         # Nobody holds the socket, so the election goes straight to spawning.
         monkeypatch.setattr(manager, "_ping_payload", AsyncMock(return_value=None))
         monkeypatch.setattr(
@@ -704,7 +704,7 @@ class TestAdoptedDriftRecheck:
         never see coverage. This pins that the branch reads _ping_payload and
         hands the frame to the reconciler.
         """
-        manager = _manager(tmp_path, {"KIROCREW_MCP_TARGET_CORE": "run core"})
+        manager = _manager(tmp_path, {"AJCREW_MCP_TARGET_CORE": "run core"})
         manager._adopted = True
         manager._process = None
         pong = {"type": "pong", "targets": [], "fingerprint": _FP}
@@ -743,7 +743,7 @@ class TestElection:
     async def test_a_fit_incumbent_is_adopted_with_no_stand_down(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        manager = _manager(tmp_path, {"KIROCREW_MCP_TARGET_PDF": "npx -y server-pdf"})
+        manager = _manager(tmp_path, {"AJCREW_MCP_TARGET_PDF": "npx -y server-pdf"})
         monkeypatch.setattr(
             manager,
             "_ping_payload",
@@ -766,7 +766,7 @@ class TestElection:
     async def test_a_stale_incumbent_that_yields_is_replaced(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        manager = _manager(tmp_path, {"KIROCREW_MCP_TARGET_CORE": "kirocrew mcp-core"})
+        manager = _manager(tmp_path, {"AJCREW_MCP_TARGET_CORE": "ajcrew mcp-core"})
         monkeypatch.setattr(
             manager,
             "_ping_payload",
@@ -795,7 +795,7 @@ class TestElection:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Round two assesses whoever won the freed lock; here it yields."""
-        manager = _manager(tmp_path, {"KIROCREW_MCP_TARGET_CORE": "kirocrew mcp-core"})
+        manager = _manager(tmp_path, {"AJCREW_MCP_TARGET_CORE": "ajcrew mcp-core"})
         monkeypatch.setattr(
             manager,
             "_ping_payload",
@@ -829,7 +829,7 @@ class TestElection:
     async def test_rounds_are_bounded_and_exhaustion_is_loud(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
     ) -> None:
-        manager = _manager(tmp_path, {"KIROCREW_MCP_TARGET_CORE": "kirocrew mcp-core"})
+        manager = _manager(tmp_path, {"AJCREW_MCP_TARGET_CORE": "ajcrew mcp-core"})
         monkeypatch.setattr(
             manager,
             "_ping_payload",
@@ -853,7 +853,7 @@ class TestElection:
     async def test_start_fails_rather_than_claiming_ready_on_a_draining_incumbent(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        manager = _manager(tmp_path, {"KIROCREW_MCP_TARGET_CORE": "kirocrew mcp-core"})
+        manager = _manager(tmp_path, {"AJCREW_MCP_TARGET_CORE": "ajcrew mcp-core"})
         monkeypatch.setattr(
             manager,
             "_ping_payload",
@@ -908,7 +908,7 @@ def _isolate(monkeypatch: pytest.MonkeyPatch, home: Path) -> Path:
     passes no ``cwd``, so a daemon inherits pytest's CWD (the checkout).
     """
     home.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.chdir(home)
     return home
 
@@ -928,7 +928,7 @@ async def test_a_real_daemon_leaves_nothing_in_the_repository(
     before = _snapshot()
     run_dir = _isolate(monkeypatch, tmp_path / "home")
     assert Path.cwd() == run_dir.resolve(), "the test must not run in the checkout"
-    _only_targets(monkeypatch, {"KIROCREW_MCP_TARGET_PDF": "npx -y server-pdf"})
+    _only_targets(monkeypatch, {"AJCREW_MCP_TARGET_PDF": "npx -y server-pdf"})
 
     sock = short_sock_dir / "gw.sock"
     stop = asyncio.Event()
@@ -958,7 +958,7 @@ async def test_the_stand_down_frame_is_wired_into_the_serving_daemon(
     ``stand-down-rejected`` and the socket would stay bound.
     """
     _isolate(monkeypatch, tmp_path / "home")
-    _only_targets(monkeypatch, {"KIROCREW_MCP_TARGET_PDF": "npx -y server-pdf"})
+    _only_targets(monkeypatch, {"AJCREW_MCP_TARGET_PDF": "npx -y server-pdf"})
     sock = short_sock_dir / "gw.sock"
     stop = asyncio.Event()
     daemon = asyncio.create_task(
@@ -966,7 +966,7 @@ async def test_the_stand_down_frame_is_wired_into_the_serving_daemon(
     )
     try:
         await _await_endpoint(sock)
-        reply = await _round_trip(sock, {"type": "stand-down", "need": ["KIROCREW_CORE"]})
+        reply = await _round_trip(sock, {"type": "stand-down", "need": ["AJCREW_CORE"]})
         assert reply["type"] == "standing-down"
         await asyncio.wait_for(daemon, timeout=60)
         assert not await asyncio.to_thread(transport.endpoint_exists, sock)
@@ -1002,13 +1002,13 @@ async def test_a_stale_survivor_is_repaired_end_to_end(
             for k, v in os.environ.items()
             if not any(k.startswith(p) for p in _TARGET_PREFIXES)
         },
-        "KIROCREW_MCP_TARGET_PDF": "npx -y server-pdf --stdio",
-        "KIROCREW_HOME": str(home),
+        "AJCREW_MCP_TARGET_PDF": "npx -y server-pdf --stdio",
+        "AJCREW_HOME": str(home),
     }
     survivor = await asyncio.create_subprocess_exec(
         sys.executable,
         "-m",
-        "kiro_crew.mcp_gateway.gatewayd",
+        "aj_crew.mcp_gateway.gatewayd",
         "--socket",
         str(sock),
         "--idle-timeout-secs",
@@ -1027,10 +1027,10 @@ async def test_a_stale_survivor_is_repaired_end_to_end(
         await _await_endpoint(sock)
         assert (await _round_trip(sock, {"type": "ping"}))["targets"] == ["PDF"]
 
-        # The starting gateway's config now wants kirocrew-core stubbed too.
+        # The starting gateway's config now wants ajcrew-core stubbed too.
         wanted = {
-            "KIROCREW_MCP_TARGET_KIROCREW_CORE": "kirocrew mcp-core",
-            "KIROCREW_MCP_TARGET_PDF": "npx -y server-pdf --stdio",
+            "AJCREW_MCP_TARGET_AJCREW_CORE": "ajcrew mcp-core",
+            "AJCREW_MCP_TARGET_PDF": "npx -y server-pdf --stdio",
         }
         _only_targets(monkeypatch, wanted)
         # Wait for the replacement's ping, then run the real readiness
@@ -1062,7 +1062,7 @@ async def test_a_stale_survivor_is_repaired_end_to_end(
         assert manager._process.pid != survivor.pid, "two distinct real processes"
 
         pong = await _round_trip(sock, {"type": "ping"})
-        assert "KIROCREW_CORE" in pong["targets"], "the new daemon covers the new stem"
+        assert "AJCREW_CORE" in pong["targets"], "the new daemon covers the new stem"
     finally:
         if manager is not None:
             await manager.shutdown()
@@ -1084,7 +1084,7 @@ async def test_a_covering_survivor_is_still_adopted_end_to_end(
     """
     _isolate(monkeypatch, tmp_path / "home")
     sock = short_sock_dir / "gw.sock"
-    targets = {"KIROCREW_MCP_TARGET_PDF": "npx -y server-pdf --stdio"}
+    targets = {"AJCREW_MCP_TARGET_PDF": "npx -y server-pdf --stdio"}
     _only_targets(monkeypatch, targets)
     manager = mgr.GatewayManager(
         mgr.GatewaySpec(
@@ -1120,7 +1120,7 @@ async def test_stand_down_is_recorded_in_the_security_event_log(
     beside the claim/abort/peer decisions.
     """
     _isolate(monkeypatch, tmp_path / "home")
-    _only_targets(monkeypatch, {"KIROCREW_MCP_TARGET_PDF": "npx -y server-pdf"})
+    _only_targets(monkeypatch, {"AJCREW_MCP_TARGET_PDF": "npx -y server-pdf"})
     recorded: list[dict[str, Any]] = []
 
     class _Spy:
@@ -1130,7 +1130,7 @@ async def test_stand_down_is_recorded_in_the_security_event_log(
     monkeypatch.setattr(gw, "SecurityEventLog", _Spy)
 
     gw._apply_stand_down({"type": "stand-down", "need": ["PDF"]}, asyncio.Event())
-    gw._apply_stand_down({"type": "stand-down", "need": ["KIROCREW_CORE"]}, asyncio.Event())
+    gw._apply_stand_down({"type": "stand-down", "need": ["AJCREW_CORE"]}, asyncio.Event())
 
     ops = [r for r in recorded if r.get("operation") == "mcp-gateway.stand_down"]
     assert len(ops) == 2, f"both outcomes must be audited, got {recorded}"

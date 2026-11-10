@@ -200,7 +200,7 @@ describe('TipCard (pill that opens into a card)', () => {
     )
     const link = screen.getByRole('link', { name: /learn more/i }) as HTMLAnchorElement
     expect(link.href).toBe(
-      'https://github.com/kirodotdev/KiroCrew/blob/main/src/kiro_crew/docs/cron-and-scheduling.md',
+      'https://github.com/Al-jwharah/Aj-Crew/blob/main/src/aj_crew/docs/cron-and-scheduling.md',
     )
     expect(link.target).toBe('_blank')
     expect(link.rel).toContain('noopener')
@@ -229,7 +229,7 @@ describe('TipCard (pill that opens into a card)', () => {
     )
     const link = screen.getByRole('link', { name: /learn more/i }) as HTMLAnchorElement
     expect(link.href).toBe(
-      'https://github.com/kirodotdev/KiroCrew/blob/main/src/kiro_crew/docs/dynamic-subagent-sizing.md',
+      'https://github.com/Al-jwharah/Aj-Crew/blob/main/src/aj_crew/docs/dynamic-subagent-sizing.md',
     )
   })
 
@@ -243,7 +243,7 @@ describe('TipCard (pill that opens into a card)', () => {
     )
     const preferred = screen.getByRole('link', { name: /learn more/i }) as HTMLAnchorElement
     expect(preferred.href).toBe(
-      'https://github.com/kirodotdev/KiroCrew/blob/main/src/kiro_crew/docs/skills.md',
+      'https://github.com/Al-jwharah/Aj-Crew/blob/main/src/aj_crew/docs/skills.md',
     )
   })
 
@@ -403,7 +403,7 @@ describe('useTipTrigger', () => {
     })
     expect(mockApi.tipsNext).not.toHaveBeenCalled()
     expect(screen.getByTestId('tip-out').textContent).toBe('none')
-    expect(localStorage.getItem('kirocrew.tips.lastShownAt')).toBeNull()
+    expect(localStorage.getItem('ajcrew.tips.lastShownAt')).toBeNull()
   })
 
   it('10s running gate before fetching', async () => {
@@ -435,7 +435,7 @@ describe('useTipTrigger', () => {
     const { api: mockApi } = await import('../api/client')
     ;(mockApi.tipsNext as ReturnType<typeof vi.fn>).mockResolvedValue({ tip: mockTip, glow: true })
     // Set lastShownAt to 5 minutes ago (within 20-min window)
-    localStorage.setItem('kirocrew.tips.lastShownAt', String(Date.now() - 5 * 60 * 1000))
+    localStorage.setItem('ajcrew.tips.lastShownAt', String(Date.now() - 5 * 60 * 1000))
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
       <QueryClientProvider client={qc}>
@@ -456,7 +456,7 @@ describe('useTipTrigger', () => {
     // Server cadence configured to 1 minute — client gate becomes min(20min, 1min)
     ;(mockApi.tipsStatus as ReturnType<typeof vi.fn>).mockResolvedValue({ enabled_config: true, opted_out: false, cadence_hours: 1 / 60 })
     // Last shown 5 minutes ago: blocked by the 20-min floor, allowed by 1-min cadence
-    localStorage.setItem('kirocrew.tips.lastShownAt', String(Date.now() - 5 * 60 * 1000))
+    localStorage.setItem('ajcrew.tips.lastShownAt', String(Date.now() - 5 * 60 * 1000))
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
       <QueryClientProvider client={qc}>

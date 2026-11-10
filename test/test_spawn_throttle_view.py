@@ -14,8 +14,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.dashboard.handlers import spawn_resume
-from kiro_crew.dashboard.handlers.spawn_resume import throttle_view
+from aj_crew.dashboard.handlers import spawn_resume
+from aj_crew.dashboard.handlers.spawn_resume import throttle_view
 
 
 def _state(**overrides: object) -> dict:
@@ -103,25 +103,25 @@ def test_malformed_numbers_never_read_as_a_cut() -> None:
 def test_start_caps_read_the_live_policy_parameters() -> None:
     params = SimpleNamespace(exec_start=16, gate_start=6)
     ctl = SimpleNamespace(policy=SimpleNamespace(params=params))
-    with patch("kiro_crew.adaptive.controller.current", return_value=ctl):
+    with patch("aj_crew.adaptive.controller.current", return_value=ctl):
         assert spawn_resume._start_caps() == (16, 6)
-    with patch("kiro_crew.adaptive.controller.current", return_value=None):
+    with patch("aj_crew.adaptive.controller.current", return_value=None):
         assert spawn_resume._start_caps() == (None, None)
 
 
 def test_start_caps_survive_a_controller_that_cannot_answer() -> None:
     broken = SimpleNamespace(policy=None)
-    with patch("kiro_crew.adaptive.controller.current", return_value=broken):
+    with patch("aj_crew.adaptive.controller.current", return_value=broken):
         assert spawn_resume._start_caps() == (None, None)
 
 
 def test_start_caps_match_a_real_policy_and_its_fresh_caps() -> None:
     """The attribute names are the real policy's, and a fresh policy is not cut."""
-    from kiro_crew.adaptive.policy import AdaptivePolicy, PolicyParams
+    from aj_crew.adaptive.policy import AdaptivePolicy, PolicyParams
 
     policy = AdaptivePolicy(PolicyParams(exec_ceiling=8, gate_initial=4, gate_ceiling=32))
     with patch(
-        "kiro_crew.adaptive.controller.current", return_value=SimpleNamespace(policy=policy)
+        "aj_crew.adaptive.controller.current", return_value=SimpleNamespace(policy=policy)
     ):
         exec_start, gate_start = spawn_resume._start_caps()
     assert (exec_start, gate_start) == (8, 4)
@@ -135,8 +135,8 @@ async def test_route_carries_the_snapshot_and_its_throttle_reading() -> None:
     params = SimpleNamespace(exec_start=8, gate_start=4)
     ctl = SimpleNamespace(policy=SimpleNamespace(params=params))
     with (
-        patch("kiro_crew.resource_status.adaptive_state", return_value=live),
-        patch("kiro_crew.adaptive.controller.current", return_value=ctl),
+        patch("aj_crew.resource_status.adaptive_state", return_value=live),
+        patch("aj_crew.adaptive.controller.current", return_value=ctl),
     ):
         body = json.loads((await spawn_resume.api_spawn_adaptive(None)).text)  # type: ignore[arg-type]
     assert body["adaptive"] == live
@@ -151,8 +151,8 @@ async def test_route_carries_the_snapshot_and_its_throttle_reading() -> None:
 @pytest.mark.asyncio
 async def test_route_without_a_controller_answers_no_cut() -> None:
     with (
-        patch("kiro_crew.resource_status.adaptive_state", return_value=None),
-        patch("kiro_crew.adaptive.controller.current", return_value=None),
+        patch("aj_crew.resource_status.adaptive_state", return_value=None),
+        patch("aj_crew.adaptive.controller.current", return_value=None),
     ):
         body = json.loads((await spawn_resume.api_spawn_adaptive(None)).text)  # type: ignore[arg-type]
     assert body == {"adaptive": {}, "throttle": {"cut": False}}

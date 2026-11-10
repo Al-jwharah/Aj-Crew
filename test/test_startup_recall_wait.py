@@ -17,14 +17,14 @@ from collections import OrderedDict
 
 import pytest
 
-from kiro_crew import context as ctx
-from kiro_crew import embeddings
-from kiro_crew.config.loader import KiroCrewConfig, config_path
-from kiro_crew.config.memory_sections import STARTUP_RECALL_TIMEOUT_MAX_SECS
-from kiro_crew.config.section_builders import _build_memory_config
-from kiro_crew.context_assembly import budget as budget_mod
-from kiro_crew.embeddings import PRIORITY_INTERACTIVE, embedding_work
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import context as ctx
+from aj_crew import embeddings
+from aj_crew.config.loader import AjCrewConfig, config_path
+from aj_crew.config.memory_sections import STARTUP_RECALL_TIMEOUT_MAX_SECS
+from aj_crew.config.section_builders import _build_memory_config
+from aj_crew.context_assembly import budget as budget_mod
+from aj_crew.embeddings import PRIORITY_INTERACTIVE, embedding_work
+from aj_crew.testing.clock import ManualClock
 
 QUERY = "summarize the deploy checklist"
 
@@ -52,7 +52,7 @@ def _write_memory_config(**memory: object) -> None:
     path = config_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps({"memory": memory}), encoding="utf-8")
-    loaded = KiroCrewConfig.load().memory.startup_recall_timeout_secs
+    loaded = AjCrewConfig.load().memory.startup_recall_timeout_secs
     assert loaded == memory.get("startup_recall_timeout_secs", 1.0)
 
 
@@ -115,7 +115,7 @@ class _HeldBackend(embeddings.EmbeddingBackend):
 
     @property
     def model_id(self) -> str:
-        return "kirocrew-test-held-v1"
+        return "ajcrew-test-held-v1"
 
     @property
     def dim(self) -> int:

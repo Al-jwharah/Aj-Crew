@@ -20,12 +20,12 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import sessions as sessions_mod
-from kiro_crew.dashboard.handlers.sessions import (
+from aj_crew.dashboard.handlers import sessions as sessions_mod
+from aj_crew.dashboard.handlers.sessions import (
     _service_wait_ping,
     api_session_keepalive,
 )
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 SLOT = "test"
 
@@ -69,7 +69,7 @@ def _ping(
     reply: dict = {"ok": True}
     wait_id = str(body.get("wait_id") or "").strip()[:64]
     with patch(
-        "kiro_crew.dashboard.chat_utils.dashboard_slot_key", return_value=tab
+        "aj_crew.dashboard.chat_utils.dashboard_slot_key", return_value=tab
     ) as slot_key:
         _service_wait_ping(state, session_key, wait_id, body, reply, provider)
     slot_key.assert_called_once_with(session_key)
@@ -469,7 +469,7 @@ class TestNoDashboardTab:
         reply: dict = {"ok": True}
 
         with patch(
-            "kiro_crew.dashboard.chat_utils.dashboard_slot_key", return_value=""
+            "aj_crew.dashboard.chat_utils.dashboard_slot_key", return_value=""
         ):
             _service_wait_ping(
                 state,

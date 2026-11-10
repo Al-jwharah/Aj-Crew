@@ -1,7 +1,7 @@
 # UX evidence — opt-in "Open session" deep-link button (PR #16114)
 
 `open-session-button-slack.png` renders the EXACT Block Kit payload that
-`src/kiro_crew/dashboard/handlers/messaging.py::_session_link_blocks` emits
+`src/aj_crew/dashboard/handlers/messaging.py::_session_link_blocks` emits
 (captured verbatim from the function), on a Slack-faithful message surface:
 
 - **Form A** — the "Open session" button riding the primary owner-DM message

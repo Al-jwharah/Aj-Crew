@@ -15,8 +15,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import guide_catalog, mcp_guide, ui_index
-from kiro_crew.dashboard.guide_runs import REASON_NOT_FOUND, GuideError, GuideStore
+from aj_crew import guide_catalog, mcp_guide, ui_index
+from aj_crew.dashboard.guide_runs import REASON_NOT_FOUND, GuideError, GuideStore
 
 
 @pytest.fixture(autouse=True)

@@ -15,21 +15,21 @@ import json
 
 import pytest
 
-from kiro_crew.dashboard import chat_persistence
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard import chat_persistence
+from aj_crew.dashboard.chat_utils import (
     _prepare_messages,
     _redact_meta_for_role,
     adopt_variant_text,
     variant_from_row,
 )
-from kiro_crew.security import (
+from aj_crew.security import (
     bounded_blocked_links,
     exfil,
     redact_credentials,
     redact_exfiltration_urls,
     redact_exfiltration_urls_with_records,
 )
-from kiro_crew.security.exfil import _exfil_url_warning, revalidate_blocked_link
+from aj_crew.security.exfil import _exfil_url_warning, revalidate_blocked_link
 
 _DOMAIN = "collect.example.com"
 _LONG_QUERY_TAIL = "A" * 250
@@ -42,7 +42,7 @@ _SECRET_LABEL = "ghp_" + "k7qmz2x9wv4tb8ncr6yd3fj5hs1gpl0aeuo2"
 
 
 def _placeholder_count(text: str) -> int:
-    from kiro_crew.security import EXFILTRATION_REDACTION_TAG_PREFIX
+    from aj_crew.security import EXFILTRATION_REDACTION_TAG_PREFIX
 
     return text.count(EXFILTRATION_REDACTION_TAG_PREFIX)
 
@@ -277,7 +277,7 @@ class TestExistingCallersUnaffected:
         assert result == (text, [])
 
     def test_blocked_url_two_tuple_matches_collector(self) -> None:
-        from kiro_crew.security import EXFILTRATION_REDACTION_TAG_PREFIX
+        from aj_crew.security import EXFILTRATION_REDACTION_TAG_PREFIX
 
         url = f"https://{_DOMAIN}/x?token={_LONG_QUERY_TAIL}"
         text = f"see {url}"
@@ -473,7 +473,7 @@ class TestRecordsReachTheDisplayPath:
     """
 
     def test_segment_meta_carries_the_records(self, monkeypatch) -> None:
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         monkeypatch.setattr(chat_runner, "_decisions_strip_meta", lambda _slot: None)
         records = [
@@ -490,14 +490,14 @@ class TestRecordsReachTheDisplayPath:
         assert chat_runner._segment_row_meta(object(), records) == {"blocked_links": records}
 
     def test_segment_meta_is_none_when_there_is_nothing_to_carry(self, monkeypatch) -> None:
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         monkeypatch.setattr(chat_runner, "_decisions_strip_meta", lambda _slot: None)
 
         assert chat_runner._segment_row_meta(object(), []) is None
 
     def test_segment_meta_keeps_the_decision_strip_beside_them(self, monkeypatch) -> None:
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         monkeypatch.setattr(
             chat_runner, "_decisions_strip_meta", lambda _slot: {"decisions_strip": ["x"]}
@@ -523,7 +523,7 @@ class TestRecordsReachTheDisplayPath:
         # and no unit on the persistence layer can see that.
         import inspect
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         src = inspect.getsource(chat_runner._flush_segment)
         assert "_redact_segment( slot, assistant_text," in " ".join(src.split())
@@ -539,7 +539,7 @@ class TestRecordsReachTheDisplayPath:
         # would store only the placeholder, losing a wrongly blocked link for good.
         from pathlib import Path
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         lines = "\n".join(
             turn_file.read_text(encoding="utf-8")
@@ -857,7 +857,7 @@ class TestOneBoundedConstructor:
         # escapes the cap.
         import inspect
 
-        from kiro_crew.dashboard import chat_persistence, chat_utils
+        from aj_crew.dashboard import chat_persistence, chat_utils
 
         for mod in (
             chat_utils._redact_meta_for_role,
@@ -942,7 +942,7 @@ class TestAVariantCarriesItsOwnRecords:
         # The variant list outlives the render that would otherwise bound it, so
         # each move applies the one bounded constructor: count capped, forged
         # records dropped, in both directions.
-        from kiro_crew.dashboard.chat_utils import variant_from_row
+        from aj_crew.dashboard.chat_utils import variant_from_row
 
         cap = exfil.MAX_BLOCKED_LINKS_PER_MESSAGE
         many = [self._record(f"h{i}.example.com") for i in range(cap + 8)]
@@ -1002,7 +1002,7 @@ class TestAVariantCarriesItsOwnRecords:
     def test_the_stash_site_moves_the_pair_through_one_function(self) -> None:
         import inspect
 
-        from kiro_crew.dashboard import chat_regenerate
+        from aj_crew.dashboard import chat_regenerate
 
         src = inspect.getsource(chat_regenerate.api_chat_slot_regenerate)
         assert "variant_from_row(ai_msg)" in src
@@ -1013,7 +1013,7 @@ class TestAVariantCarriesItsOwnRecords:
         # nothing; a source guard keeps the records variant out of this site.
         import inspect
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         src = inspect.getsource(chat_runner._flush_segment)
         stash = src[src.index("_pending_variants") :]
@@ -1024,7 +1024,7 @@ class TestAVariantCarriesItsOwnRecords:
         # leave the records behind, and no unit on this row can see that.
         import inspect
 
-        from kiro_crew.dashboard import chat_regenerate
+        from aj_crew.dashboard import chat_regenerate
 
         src = inspect.getsource(chat_regenerate.api_chat_slot_switch_variant)
         assert "adopt_variant_text(target_dict, chosen)" in src
@@ -1157,7 +1157,7 @@ class TestEveryRetentionPointIsBounded:
         ]
 
     def test_the_helper_bounds_and_drops_and_leaves_other_keys(self) -> None:
-        from kiro_crew.dashboard.chat_utils import with_bounded_redaction_records
+        from aj_crew.dashboard.chat_utils import with_bounded_redaction_records
 
         bounded = with_bounded_redaction_records({"mid": "m1", "blocked_links": self._many()})
         assert bounded["mid"] == "m1"
@@ -1188,7 +1188,7 @@ class TestEveryRetentionPointIsBounded:
         import inspect
         import pkgutil
 
-        from kiro_crew.dashboard import chat_persistence_parts, chat_runner
+        from aj_crew.dashboard import chat_persistence_parts, chat_runner
 
         # The two rehydrate appends run on the facade from its composed parts.
         parts = [
@@ -1264,7 +1264,7 @@ class TestARawCopyNeverOutlivesTheTextItMirrors:
     _HOST = "h.example-sink.net"
 
     def _events(self, boundary: object) -> list[object]:
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             STOP_REASON_END_TURN,
@@ -1292,7 +1292,7 @@ class TestARawCopyNeverOutlivesTheTextItMirrors:
     async def test_a_compaction_boundary_clears_the_raw_copy(self) -> None:
         from turn_harness import TurnScript, run_turn
 
-        from kiro_crew.acp.types import EVENT_COMPACTION_STATUS, AcpEvent
+        from aj_crew.acp.types import EVENT_COMPACTION_STATUS, AcpEvent
 
         boundary = AcpEvent(kind=EVENT_COMPACTION_STATUS, text="completed", context_usage_pct=40.0)
         record = await run_turn(TurnScript(events=self._events(boundary)))
@@ -1303,7 +1303,7 @@ class TestARawCopyNeverOutlivesTheTextItMirrors:
     async def test_a_mid_turn_clear_clears_the_raw_copy(self) -> None:
         from turn_harness import SlotSpec, TurnScript, run_turn
 
-        from kiro_crew.acp.types import EVENT_CLEAR_STATUS, AcpEvent
+        from aj_crew.acp.types import EVENT_CLEAR_STATUS, AcpEvent
 
         record = await run_turn(
             TurnScript(events=self._events(AcpEvent(kind=EVENT_CLEAR_STATUS))),

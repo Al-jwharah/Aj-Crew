@@ -26,9 +26,9 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from kiro_crew import irq
-from kiro_crew.monitoring import models
-from kiro_crew.probes import gh_pr
+from aj_crew import irq
+from aj_crew.monitoring import models
+from aj_crew.probes import gh_pr
 
 
 def _iso(age_secs: float) -> str:
@@ -372,7 +372,7 @@ class TestTheTransport:
         beside one caller drifts from the shared one in both directions -- the reader
         holding the shorter list retries where the other waits.
         """
-        from kiro_crew.monitoring.pull_request import (
+        from aj_crew.monitoring.pull_request import (
             ProviderErrorKind,
             classify_provider_error_text,
         )

@@ -12,11 +12,11 @@ from unittest.mock import patch
 
 import pytest
 
-import kiro_crew.learn as learn_mod
-from kiro_crew.atomic_write import replace_with_retry
-from kiro_crew.learn import Lesson, LessonStore
+import aj_crew.learn as learn_mod
+from aj_crew.atomic_write import replace_with_retry
+from aj_crew.learn import Lesson, LessonStore
 
-# Read through the MODULE, never `from kiro_crew.learn import _DEFAULT_DIR`.
+# Read through the MODULE, never `from aj_crew.learn import _DEFAULT_DIR`.
 # ``_DEFAULT_DIR`` is a ``Path.home()``-derived literal, so the isolation floor in the
 # rootdir conftest redirects it per test to keep the fallback from writing the
 # operator's real data home. A by-value capture at import time would freeze the
@@ -101,7 +101,7 @@ class TestUnreadableRows:
     def test_a_row_that_is_not_an_object_is_skipped_and_counted(
         self, tmp_path: Path, bad_line: str, caplog: pytest.LogCaptureFixture
     ) -> None:
-        caplog.set_level("WARNING", logger="kiro_crew.learn")
+        caplog.set_level("WARNING", logger="aj_crew.learn")
         store = self._store_with(tmp_path, bad_line)
         assert [le.rule for le in store.load_all()] == ["Run the linter first", "Write tests first"]
         context = store.get_context()
@@ -112,7 +112,7 @@ class TestUnreadableRows:
         self, tmp_path: Path, caplog: pytest.LogCaptureFixture
     ) -> None:
         """A row nested past the recursion limit costs only itself, like any bad row."""
-        caplog.set_level("WARNING", logger="kiro_crew.learn")
+        caplog.set_level("WARNING", logger="aj_crew.learn")
         store = self._store_with(tmp_path, "[" * 15000)
         # Keep a cyclic-GC pass (and any finalizer it runs) out of the deep parse.
         gc.collect()
@@ -145,7 +145,7 @@ class TestUnreadableRows:
                 break
         if bad is None:
             pytest.skip(f"{encoding} decodes every byte")
-        caplog.set_level("WARNING", logger="kiro_crew.learn")
+        caplog.set_level("WARNING", logger="aj_crew.learn")
         bad_row = b'{"ts": "t", "rule": "bad %s byte", "category": "tool"}\n' % bad
         (tmp_path / "lessons.jsonl").write_bytes(
             (_RULE_A + "\n").encode() + bad_row + (_RULE_B + "\n").encode()
@@ -170,7 +170,7 @@ class TestUnreadableRows:
         # The cron store's per-entry rule: a skipped record is dropped by the first
         # write that follows, and the load warning, which names it, is the window
         # to recover it.
-        caplog.set_level("WARNING", logger="kiro_crew.learn")
+        caplog.set_level("WARNING", logger="aj_crew.learn")
         bad = [
             '"Always use tabs"',
             '{"ts": "t", "rule": 5, "category": "tool"}',
@@ -189,7 +189,7 @@ class TestUnreadableRows:
         ]
 
     def test_the_migration_reader_skips_the_same_rows(self, tmp_path: Path) -> None:
-        from kiro_crew.vector_memory_runtime import migration
+        from aj_crew.vector_memory_runtime import migration
 
         store = self._store_with(tmp_path, "null", '{"ts": "t", "rule": 5, "category": "tool"}')
         rows = list(migration.legacy_lessons(store.path))
@@ -383,7 +383,7 @@ class TestLessonStoreSecurity:
     def test_sensitive_base_dir_falls_back_to_default(self, tmp_path: Path) -> None:
         sensitive = tmp_path / ".ssh"
         sensitive.mkdir()
-        with patch("kiro_crew.security.is_sensitive_path", return_value=True):
+        with patch("aj_crew.security.is_sensitive_path", return_value=True):
             store = LessonStore(base_dir=sensitive)
         assert store._dir == _default_dir()
 
@@ -391,8 +391,8 @@ class TestLessonStoreSecurity:
         sensitive = tmp_path / ".aws"
         sensitive.mkdir()
         with (
-            patch("kiro_crew.security.is_sensitive_path", return_value=True),
-            patch("kiro_crew.sel.SecurityEventLog.log_tool_invocation") as mock_log,
+            patch("aj_crew.security.is_sensitive_path", return_value=True),
+            patch("aj_crew.sel.SecurityEventLog.log_tool_invocation") as mock_log,
         ):
             LessonStore(base_dir=sensitive)
         mock_log.assert_called_once()
@@ -404,9 +404,9 @@ class TestLessonStoreSecurity:
         sensitive = tmp_path / ".secret"
         sensitive.mkdir()
         with (
-            patch("kiro_crew.security.is_sensitive_path", return_value=True),
+            patch("aj_crew.security.is_sensitive_path", return_value=True),
             patch(
-                "kiro_crew.sel.SecurityEventLog.log_tool_invocation",
+                "aj_crew.sel.SecurityEventLog.log_tool_invocation",
                 side_effect=RuntimeError("SEL broken"),
             ),
         ):
@@ -414,27 +414,27 @@ class TestLessonStoreSecurity:
         assert store._dir == _default_dir()
 
     def test_sensitive_config_dir_falls_back_to_default(self, tmp_path: Path) -> None:
-        sensitive = tmp_path / ".kirocrew-sensitive"
+        sensitive = tmp_path / ".ajcrew-sensitive"
         sensitive.mkdir()
         with (
-            patch("kiro_crew.learn._config_dir", return_value=sensitive),
-            patch("kiro_crew.security.is_sensitive_path", return_value=True),
+            patch("aj_crew.learn._config_dir", return_value=sensitive),
+            patch("aj_crew.security.is_sensitive_path", return_value=True),
         ):
             store = LessonStore()
         assert store._dir == _default_dir()
 
     def test_config_dir_exception_falls_back_to_default(self) -> None:
-        with patch("kiro_crew.learn._config_dir", side_effect=OSError("broken loader")):
+        with patch("aj_crew.learn._config_dir", side_effect=OSError("broken loader")):
             store = LessonStore()
         assert store._dir == _default_dir()
 
     def test_config_dir_none_falls_back_to_default(self) -> None:
-        with patch("kiro_crew.learn._config_dir", None):
+        with patch("aj_crew.learn._config_dir", None):
             store = LessonStore()
         assert store._dir == _default_dir()
 
     def test_non_sensitive_base_dir_used_directly(self, tmp_path: Path) -> None:
-        with patch("kiro_crew.security.is_sensitive_path", return_value=False):
+        with patch("aj_crew.security.is_sensitive_path", return_value=False):
             store = LessonStore(base_dir=tmp_path)
         assert store._dir == tmp_path
 
@@ -450,14 +450,14 @@ class TestImportPurity:
         # be a pure literal; config_dir() is resolved lazily in
         # LessonStore.__init__.
         #
-        # Probed on a PRIVATE copy of learn.py, never by reloading kiro_crew.learn: a
+        # Probed on a PRIVATE copy of learn.py, never by reloading aj_crew.learn: a
         # reload rebinds Lesson, LessonStore and _PATH_LOCKS inside the shared module
         # while every by-value importer (onboarding_import, context, taskrunner,
         # cli_server, slack.gateway) keeps the old objects, so a later identity
         # contract in the same worker goes red.
         import importlib.util
 
-        import kiro_crew.config.loader as config_loader
+        import aj_crew.config.loader as config_loader
 
         inherited = dict(vars(learn_mod))
         real_config_dir = config_loader.config_dir
@@ -469,7 +469,7 @@ class TestImportPurity:
                 return real_config_dir()
             raise AssertionError("config_dir() called at learn import scope")
 
-        name = "_kiro_crew_learn_import_purity_probe"
+        name = "_aj_crew_learn_import_purity_probe"
         spec = importlib.util.spec_from_file_location(name, learn_mod.__file__)
         assert spec is not None and spec.loader is not None
         probe = importlib.util.module_from_spec(spec)
@@ -478,14 +478,14 @@ class TestImportPurity:
         # @dataclass resolves through sys.modules[cls.__module__].
         sys.modules[name] = probe
         try:
-            with patch("kiro_crew.config.loader.config_dir", _tripwire):
+            with patch("aj_crew.config.loader.config_dir", _tripwire):
                 spec.loader.exec_module(probe)
         finally:
             sys.modules.pop(name, None)
         assert probe._config_dir is _tripwire, "the probe never bound the seam it trips"
         assert probe._DEFAULT_DIR == Path.home() / ".kiro" / "crew"
         rebound = sorted(k for k, v in inherited.items() if vars(learn_mod).get(k) is not v)
-        assert rebound == [], f"the shared kiro_crew.learn was re-executed: {rebound}"
+        assert rebound == [], f"the shared aj_crew.learn was re-executed: {rebound}"
 
 
 class TestSaveOrEnrich:
@@ -684,7 +684,7 @@ class TestSaveOrEnrich:
         the store's write routes through it rather than hand-rolling the rename."""
         store = LessonStore(base_dir=tmp_path)
         with patch(
-            "kiro_crew.atomic_write.replace_with_retry", wraps=replace_with_retry
+            "aj_crew.atomic_write.replace_with_retry", wraps=replace_with_retry
         ) as spy:
             store.save(_make_lesson("Pin the port", "tool"))
         assert spy.called, "the write bypassed replace_with_retry"
@@ -814,7 +814,7 @@ class TestAtomicWrite:
         # Patched inside atomic_write, which is where the rename now happens. This is
         # the real seam: learn.py does not touch os itself.
         with patch(
-            "kiro_crew.atomic_write.replace_with_retry", side_effect=OSError("disk full")
+            "aj_crew.atomic_write.replace_with_retry", side_effect=OSError("disk full")
         ):
             with pytest.raises(OSError):
                 store.save_or_enrich(_make_lesson("Pin the port", "tool", "Do not autopick"))

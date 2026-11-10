@@ -19,18 +19,18 @@ from acp_client_more_coverage_helpers import (  # noqa: F401 -- the autouse fixt
     _pinned_kiro_cli_version,
 )
 
-import kiro_crew.acp.client as acp_client
-import kiro_crew.acp.skill_reads as skill_reads
-from kiro_crew import model_registry as mr
-from kiro_crew.acp.skill_reads import _MAX_NOTED_SKILL_READS, _call_key
-from kiro_crew.acp.types import (
+import aj_crew.acp.client as acp_client
+import aj_crew.acp.skill_reads as skill_reads
+from aj_crew import model_registry as mr
+from aj_crew.acp.skill_reads import _MAX_NOTED_SKILL_READS, _call_key
+from aj_crew.acp.types import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     EVENT_TOOL_CALL,
     EVENT_TOOL_RESULT,
     AcpEvent,
 )
-from kiro_crew.hooks import HOOK_EVENT_POST_TOOL_USE
+from aj_crew.hooks import HOOK_EVENT_POST_TOOL_USE
 
 # ── Skill-read telemetry ──
 
@@ -192,7 +192,7 @@ class TestToolInterruptedAudit:
         def _boom():
             raise RuntimeError("SEL backend unavailable")
 
-        monkeypatch.setattr("kiro_crew.sel.sel", _boom)
+        monkeypatch.setattr("aj_crew.sel.sel", _boom)
 
         with caplog.at_level(logging.WARNING, logger=acp_client.logger.name):
             client._emit_tool_interrupted_sel("unit-test")
@@ -217,7 +217,7 @@ class TestAdvertisedModelCacheWiring:
     def test_seed_availableModels_from_advertised_cache(self, tmp_path, monkeypatch):
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         served = [
@@ -279,7 +279,7 @@ class TestAdvertisedModelCacheWiring:
     async def test_set_model_reseeds_settings_on_claude(self, tmp_path, monkeypatch):
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         # The re-seed half: set_model refreshes settings.local.json so a pooled

@@ -107,7 +107,7 @@ Object.defineProperty(window, 'matchMedia', {
 
 import ChatSidebar from '../pages/ChatSidebar'
 
-const DEFAULT_AGENT = 'kirocrew'
+const DEFAULT_AGENT = 'ajcrew'
 // api.createChatSlot(name, agent, model, mode, memory_mode, title, artifact, folder_id)
 const ARG_AGENT = 1
 const ARG_MODE = 3

@@ -15,10 +15,10 @@ import json
 
 import pytest
 
-from kiro_crew.dashboard.handlers import feedback as feedback_mod
-from kiro_crew.dashboard.handlers import source_providers as source_mod
-from kiro_crew.dashboard.handlers import updates as updates_mod
-from kiro_crew.dashboard.handlers._shared import read_capped_response
+from aj_crew.dashboard.handlers import feedback as feedback_mod
+from aj_crew.dashboard.handlers import source_providers as source_mod
+from aj_crew.dashboard.handlers import updates as updates_mod
+from aj_crew.dashboard.handlers._shared import read_capped_response
 
 # Bind the real coroutine at import time: an autouse conftest guard replaces
 # the ``updates._fetch_feed_bytes`` module attribute with a refuser for every

@@ -18,23 +18,23 @@ import stat
 
 import pytest
 
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.harness import pi as pi_mod
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.acp import client as acp_client
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.harness import pi as pi_mod
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_PI,
     ACP_BACKENDS_SESSION_MCP_ARRAY,
 )
-from kiro_crew.platform_compat import IS_WINDOWS
+from aj_crew.platform_compat import IS_WINDOWS
 
 NONCE = "0123456789abcdef" * 2
 KEY = bytes(range(32))
 
 STDIO = {
-    "name": "kirocrew-core",
+    "name": "ajcrew-core",
     "command": "/opt/bin/python",
-    "args": ["-m", "kiro_crew.mcp_gateway.stub", 7],
-    "env": [{"name": "KIROCREW_STUB", "value": "1"}],
+    "args": ["-m", "aj_crew.mcp_gateway.stub", 7],
+    "env": [{"name": "AJCREW_STUB", "value": "1"}],
     "type": "stdio",
 }
 
@@ -44,7 +44,7 @@ def _open(payload: bytes, nonce: str = NONCE, key: bytes = KEY) -> dict:
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
     body = json.loads(payload)
-    assert body["kiro-crew-mcp"] == 1 and body["nonce"] == nonce
+    assert body["aj-crew-mcp"] == 1 and body["nonce"] == nonce
     plain = AESGCM(key).decrypt(
         base64.b64decode(body["iv"]), base64.b64decode(body["sealed"]), nonce.encode()
     )
@@ -59,10 +59,10 @@ def _servers(elements, nonce=NONCE) -> dict:
 class TestTheHandoffPayload:
     def test_a_stdio_element_becomes_a_direct_pi_entry(self) -> None:
         assert _servers([STDIO]) == {
-            "kirocrew-core": {
+            "ajcrew-core": {
                 "command": "/opt/bin/python",
-                "args": ["-m", "kiro_crew.mcp_gateway.stub"],
-                "env": {"KIROCREW_STUB": "1"},
+                "args": ["-m", "aj_crew.mcp_gateway.stub"],
+                "env": {"AJCREW_STUB": "1"},
                 "exposure": "direct",
             }
         }
@@ -98,7 +98,7 @@ class TestTheHandoffPayload:
 
     def test_the_first_element_of_a_name_wins(self) -> None:
         second = {**STDIO, "command": "/opt/bin/other"}
-        assert _servers([STDIO, second])["kirocrew-core"]["command"] == "/opt/bin/python"
+        assert _servers([STDIO, second])["ajcrew-core"]["command"] == "/opt/bin/python"
 
     def test_the_file_is_bound_to_the_nonce(self) -> None:
         payload, _ = pi_mod.pi_mcp_handoff_payload([STDIO], "a" * 32, KEY)
@@ -115,7 +115,7 @@ class TestTheHandoffPayload:
     def test_the_servers_are_not_readable_without_the_key(self) -> None:
         """The file sits in a leaf every pi and DeepSeek child can read."""
         payload, _ = pi_mod.pi_mcp_handoff_payload([STDIO], NONCE, KEY)
-        assert b"KIROCREW_STUB" not in payload
+        assert b"AJCREW_STUB" not in payload
         assert b"/opt/bin/python" not in payload
         from cryptography.exceptions import InvalidTag
 
@@ -133,7 +133,7 @@ class TestTheHandoffFile:
         payload, _ = pi_mod.pi_mcp_handoff_payload([STDIO], NONCE, KEY)
         path = pi_mod.publish_pi_mcp_handoff(NONCE, payload)
         assert os.path.dirname(path) == str(tmp_path)
-        assert os.path.basename(path) == f"kirocrew_pi_gate_{os.getpid()}_mcp_{NONCE}.json"
+        assert os.path.basename(path) == f"ajcrew_pi_gate_{os.getpid()}_mcp_{NONCE}.json"
         with open(path, "rb") as fh:
             assert fh.read() == payload
         if not IS_WINDOWS:
@@ -144,7 +144,7 @@ class TestTheHandoffFile:
         pi_mod.discard_pi_mcp_handoff(path)
 
     def test_the_sweep_reclaims_its_family(self) -> None:
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert ".json" in sandbox._PI_GATE_DIR_ARTIFACTS[sandbox._PI_GATE_ARTIFACT_PREFIX]
 
@@ -153,7 +153,7 @@ class TestTheClientLifecycle:
     def _client(self, tmp_path, monkeypatch, calls):
         client = AcpClient(work_dir=tmp_path, acp_backend=ACP_BACKEND_PI)
         client._pi_gate_nonce = NONCE
-        path = str(tmp_path / f"kirocrew_pi_gate_1_mcp_{NONCE}.json")
+        path = str(tmp_path / f"ajcrew_pi_gate_1_mcp_{NONCE}.json")
         client._pi_mcp_handoff = (path, b"{}")
         monkeypatch.setattr(
             pi_mod,
@@ -199,35 +199,35 @@ class TestThePiToolTitle:
     """pi spells a server's tools ``mcp__<server with - as _>__<tool>``."""
 
     def test_a_handed_off_servers_tool_is_put_back_in_its_own_spelling(self) -> None:
-        from kiro_crew.acp._dispatch import pi_mcp_title
+        from aj_crew.acp._dispatch import pi_mcp_title
 
-        servers = ["kirocrew", "kirocrew-core"]
-        assert pi_mcp_title("mcp__kirocrew_core__send_message", servers) == (
-            "mcp__kirocrew-core__send_message"
+        servers = ["ajcrew", "ajcrew-core"]
+        assert pi_mcp_title("mcp__ajcrew_core__send_message", servers) == (
+            "mcp__ajcrew-core__send_message"
         )
-        assert pi_mcp_title("mcp__kirocrew__x", servers) == "mcp__kirocrew__x"
+        assert pi_mcp_title("mcp__ajcrew__x", servers) == "mcp__ajcrew__x"
         assert pi_mcp_title("mcp__other__x", servers) == "mcp__other__x"
         assert pi_mcp_title("read", servers) == "read"
 
     def test_the_client_names_every_handed_off_server(self, tmp_path) -> None:
         """The pooled stubs are not in the placed array on pi; the handoff names them."""
         client = AcpClient(work_dir=tmp_path, acp_backend=ACP_BACKEND_PI)
-        client._pi_mcp_server_names = ("kirocrew-core",)
-        assert "kirocrew-core" in client._harness_mcp_server_names()
+        client._pi_mcp_server_names = ("ajcrew-core",)
+        assert "ajcrew-core" in client._harness_mcp_server_names()
         client._reset_state()
         assert client._pi_mcp_server_names == ()
 
     def test_a_governance_rule_on_the_server_binds_to_the_pi_call(self) -> None:
-        """The permission event's title is the server's spelling, so ``@kirocrew-core`` binds."""
-        from kiro_crew.acp._dispatch import GATE_ENVELOPE_MARKER, build_permission_event
-        from kiro_crew.acp.types import JsonRpcMessage
+        """The permission event's title is the server's spelling, so ``@ajcrew-core`` binds."""
+        from aj_crew.acp._dispatch import GATE_ENVELOPE_MARKER, build_permission_event
+        from aj_crew.acp.types import JsonRpcMessage
 
         message = json.dumps(
             {
                 GATE_ENVELOPE_MARKER: 1,
                 "nonce": NONCE,
                 "toolCallId": "call_1",
-                "tool": "mcp__kirocrew_core__send_message",
+                "tool": "mcp__ajcrew_core__send_message",
                 "kind": "other",
                 "input": {"text": "hi"},
             }
@@ -239,12 +239,12 @@ class TestThePiToolTitle:
                 "sessionId": "s",
                 "toolCall": {
                     "toolCallId": "pi-ui-1",
-                    "title": "mcp__kirocrew_core__send_message",
+                    "title": "mcp__ajcrew_core__send_message",
                     "kind": "other",
                     "status": "pending",
                     "rawInput": {
                         "method": "confirm",
-                        "title": "mcp__kirocrew_core__send_message",
+                        "title": "mcp__ajcrew_core__send_message",
                         "message": message,
                     },
                 },
@@ -258,13 +258,13 @@ class TestThePiToolTitle:
             frame,
             gate_envelope_nonce=NONCE,
             harness_backend=ACP_BACKEND_PI,
-            harness_mcp_servers=("kirocrew-core",),
+            harness_mcp_servers=("ajcrew-core",),
         )
         assert event is not None
-        assert event.title == "mcp__kirocrew-core__send_message"
-        from kiro_crew.platform.governance import mcp_title_to_ref
+        assert event.title == "mcp__ajcrew-core__send_message"
+        from aj_crew.platform.governance import mcp_title_to_ref
 
-        assert mcp_title_to_ref(event.title).startswith("@kirocrew-core/")
+        assert mcp_title_to_ref(event.title).startswith("@ajcrew-core/")
 
 
 def test_the_floor_is_the_release_with_built_in_mcp() -> None:

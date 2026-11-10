@@ -13,7 +13,7 @@ import sys
 
 import pytest
 
-from kiro_crew.security import redaction as R
+from aj_crew.security import redaction as R
 
 kc_native = pytest.importorskip("kc_native")
 
@@ -23,7 +23,7 @@ _CODEPOINTS = [c for c in range(0x110000) if not 0xD800 <= c <= 0xDFFF]
 
 
 @pytest.mark.skipif(
-    os.environ.get("KIROCREW_NATIVE_REDACTION") == "0", reason="native gate switched off"
+    os.environ.get("AJCREW_NATIVE_REDACTION") == "0", reason="native gate switched off"
 )
 def test_fingerprint_matches_so_the_native_gate_is_live():
     assert kc_native.GATE_FINGERPRINT == R._native_gate_fingerprint()

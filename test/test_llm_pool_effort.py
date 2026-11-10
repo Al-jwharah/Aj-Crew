@@ -20,13 +20,13 @@ from llm_pool_helpers import (  # noqa: F401 -- the autouse fixture registers by
     _zero_tool_client,
 )
 
-from kiro_crew.acp_backends import (
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_KIRO,
     ACP_BACKEND_OPENCODE,
 )
-from kiro_crew.knowledge.llm_pool import (
+from aj_crew.knowledge.llm_pool import (
     DEFAULT_EXTRACTION_EFFORT,
     AcpWorker,
     LLMPool,
@@ -72,7 +72,7 @@ class TestAcpWorkerEffort:
         client.send_command.side_effect = lambda *_args, **_kwargs: events.append("set")
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client),
         ):
             worker = AcpWorker(effort="high")
             await worker.start()
@@ -87,7 +87,7 @@ class TestAcpWorkerEffort:
         client = _mock_effort_client(["low", "medium", "high"], claude=True)
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client),
         ):
             worker = AcpWorker(effort="high")
             await worker.start()
@@ -102,12 +102,12 @@ class TestAcpWorkerEffort:
         ``effort`` there draws "unknown config option", which the except below the
         push turns into "using provider default" -- so the pool silently runs at
         whatever effort the adapter chose."""
-        from kiro_crew.acp.types import ACP_BACKEND_CODEX, effort_config_option_id
+        from aj_crew.acp.types import ACP_BACKEND_CODEX, effort_config_option_id
 
         client = _mock_effort_client(["low", "medium", "high"], backend=ACP_BACKEND_CODEX)
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client),
         ):
             worker = AcpWorker(effort="high")
             await worker.start()
@@ -121,7 +121,7 @@ class TestAcpWorkerEffort:
     async def test_codex_support_precheck_asks_about_the_codex_option(self, tmp_path):
         """The precheck must ask about the id it is about to write; asking about
         ``effort`` on codex answers False and skips a push that would land."""
-        from kiro_crew.acp.types import ACP_BACKEND_CODEX, effort_config_option_id
+        from aj_crew.acp.types import ACP_BACKEND_CODEX, effort_config_option_id
 
         client = _mock_effort_client(["low", "medium", "high"], backend=ACP_BACKEND_CODEX)
         # Only the codex spelling is offered, so the push lands only when the
@@ -131,7 +131,7 @@ class TestAcpWorkerEffort:
         )
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client),
         ):
             worker = AcpWorker(effort="high")
             await worker.start()
@@ -145,7 +145,7 @@ class TestAcpWorkerEffort:
         second = _mock_effort_client(["low", "medium", "high"])
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", side_effect=[first, second]),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", side_effect=[first, second]),
         ):
             worker = AcpWorker(effort="high")
             await worker.start()
@@ -161,7 +161,7 @@ class TestAcpWorkerEffort:
         client = _mock_effort_client(["low", "medium"])
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client),
         ):
             worker = AcpWorker(effort="high")
             await worker.start()
@@ -175,7 +175,7 @@ class TestAcpWorkerEffort:
         client = _mock_effort_client([], supports=False, claude=True)
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client),
         ):
             worker = AcpWorker(effort="high")
             await worker.start()
@@ -197,8 +197,8 @@ class TestAcpWorkerEffort:
         client.spec_zero_tools = True
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client),
-            caplog.at_level("WARNING", logger="kiro_crew.knowledge.llm_pool"),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client),
+            caplog.at_level("WARNING", logger="aj_crew.knowledge.llm_pool"),
         ):
             worker = AcpWorker(effort="high", acp_backend=backend)
             await worker.start()
@@ -228,7 +228,7 @@ class TestAcpWorkerEffort:
         client.spec_zero_tools = True
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client),
         ):
             worker = AcpWorker(effort="high", acp_backend=ACP_BACKEND_OPENCODE)
             await worker.start()
@@ -255,7 +255,7 @@ class TestAcpWorkerEffort:
         client.spec_zero_tools = True
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client),
         ):
             worker = AcpWorker(effort="high", acp_backend=ACP_BACKEND_GOOSE)
             await worker.start()
@@ -273,7 +273,7 @@ class TestAcpWorkerEffort:
         client.send_command.side_effect = RuntimeError("effort command rejected")
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client),
         ):
             worker = AcpWorker(effort="high")
             await worker.start()
@@ -293,11 +293,11 @@ class TestLLMPoolEffort:
         # rather than depending on whatever this host has configured.
         with (
             patch(
-                "kiro_crew.knowledge.llm_pool.AcpWorker", return_value=fake_worker
+                "aj_crew.knowledge.llm_pool.AcpWorker", return_value=fake_worker
             ) as worker_type,
-            patch("kiro_crew.knowledge.llm_pool._get_sandbox_mode", return_value="auto"),
+            patch("aj_crew.knowledge.llm_pool._get_sandbox_mode", return_value="auto"),
             patch(
-                "kiro_crew.knowledge.llm_pool._get_acp_backend",
+                "aj_crew.knowledge.llm_pool._get_acp_backend",
                 return_value=ACP_BACKEND_KIRO,
             ),
         ):
@@ -316,9 +316,9 @@ class TestLLMPoolEffort:
         # The worker is real; only its process start is stubbed.
         with (
             patch.object(AcpWorker, "start", AsyncMock()),
-            patch("kiro_crew.knowledge.llm_pool._get_sandbox_mode", return_value="auto"),
+            patch("aj_crew.knowledge.llm_pool._get_sandbox_mode", return_value="auto"),
             patch(
-                "kiro_crew.knowledge.llm_pool._get_acp_backend",
+                "aj_crew.knowledge.llm_pool._get_acp_backend",
                 return_value=ACP_BACKEND_KIRO,
             ),
         ):
@@ -343,7 +343,7 @@ class TestLLMPoolEffort:
 
         pool._create_worker = _mock_create  # type: ignore[assignment]
         with patch(
-            "kiro_crew.knowledge.llm_pool._read_config",
+            "aj_crew.knowledge.llm_pool._read_config",
             return_value={"knowledge": {"extraction_pool_size": 3}},
         ):
             await pool.start()
@@ -363,7 +363,7 @@ class TestLLMPoolEffort:
 
         pool._create_worker = _mock_create  # type: ignore[assignment]
         with patch(
-            "kiro_crew.knowledge.llm_pool._read_config",
+            "aj_crew.knowledge.llm_pool._read_config",
             return_value={"knowledge": {"extraction_pool_size": 5}},
         ):
             await pool.start()
@@ -386,7 +386,7 @@ class TestLLMPoolEffort:
 
         pool._create_worker = _mock_create  # type: ignore[assignment]
         with patch(
-            "kiro_crew.knowledge.llm_pool._read_config",
+            "aj_crew.knowledge.llm_pool._read_config",
             return_value={"knowledge": {"extraction_pool_size": 4}},
         ):
             await pool.start()
@@ -448,7 +448,7 @@ class TestLLMPoolEffortResolution:
         )
         pool._create_worker = _mock_fake_create()  # type: ignore[assignment]
         with patch(
-            "kiro_crew.knowledge.llm_pool._read_config",
+            "aj_crew.knowledge.llm_pool._read_config",
             return_value={"knowledge": {"extraction_effort": "low"}},
         ):
             await pool.start()
@@ -460,7 +460,7 @@ class TestLLMPoolEffortResolution:
         pool = LLMPool(pool_size=1, effort="medium")
         pool._create_worker = _mock_fake_create()  # type: ignore[assignment]
         with patch(
-            "kiro_crew.knowledge.llm_pool._read_config",
+            "aj_crew.knowledge.llm_pool._read_config",
             return_value={"knowledge": {"extraction_effort": "low"}},
         ):
             await pool.start()
@@ -492,7 +492,7 @@ class TestAcpWorkerEffortModelGate:
         client._model = "auto"
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client),
         ):
             worker = AcpWorker(effort="high")
             await worker.start()

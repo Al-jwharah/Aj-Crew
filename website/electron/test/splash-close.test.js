@@ -47,7 +47,7 @@ const WINDOW_LIFECYCLE_JS = fs.readFileSync(path.join(__dirname, "..", "window-l
 // hint to learn that the click gives up on the reconnect.
 const CONNECTION_WINDOW_LABEL = "Close window and stop reconnecting";
 const CONNECTION_WINDOW_HINT =
-  "This connection window closes and stops trying to connect. Kiro Crew itself keeps running; to connect again, pick New Connection Window… from the Kiro Crew icon's menu.";
+  "This connection window closes and stops trying to connect. Aj Crew itself keeps running; to connect again, pick New Connection Window… from the Aj Crew icon's menu.";
 
 // The main window as handleWindowControl sees it: a BaseWindow whose _mcView
 // hosts the sender webContents. Records the caption actions applied to it.
@@ -90,8 +90,8 @@ function lifecycleFor({ platform, sender, frameless = false }) {
   return { win, lifecycle };
 }
 
-const SPLASH = "file:///Applications/Kiro%20Crew.app/Contents/Resources/loading.html?accent=%23a259ff";
-const TOKEN_PROMPT = "file:///Applications/Kiro%20Crew.app/Contents/Resources/token-prompt.html?port=5476";
+const SPLASH = "file:///Applications/Aj%20Crew.app/Contents/Resources/loading.html?accent=%23a259ff";
+const TOKEN_PROMPT = "file:///Applications/Aj%20Crew.app/Contents/Resources/token-prompt.html?port=5476";
 const DASHBOARD = "http://localhost:5476/chat";
 
 describe("window-control admission for the splash", () => {
@@ -127,7 +127,7 @@ describe("window-control admission for the splash", () => {
     assert.doesNotMatch(WINDOW_LIFECYCLE_JS, /CLOSE_ADMITTED|isCloseAdmittedShellPage/);
     // The helper, on the URL shapes the admission must tell apart.
     assert.equal(fileShellPageBasename(SPLASH), "loading.html", "the splash with its query string");
-    assert.equal(fileShellPageBasename("file:///opt/kirocrew/loading.html"), "loading.html");
+    assert.equal(fileShellPageBasename("file:///opt/ajcrew/loading.html"), "loading.html");
     assert.equal(fileShellPageBasename(TOKEN_PROMPT), "token-prompt.html");
     assert.equal(fileShellPageBasename(DASHBOARD), "");
     assert.equal(fileShellPageBasename("http://localhost:5476/loading.html"), "");
@@ -478,12 +478,12 @@ describe("loading.html words the close hint for the window and platform it is in
   // Finding: the old main-window sentence spent two sentences before the
   // payoff. It now leads with what the click does and puts the reassurance
   // in the first clause, then names the way back.
-  const MAIN_PREFIX = "This window closes; Kiro Crew keeps running and keeps trying to connect in the background. Bring the window back from ";
+  const MAIN_PREFIX = "This window closes; Aj Crew keeps running and keeps trying to connect in the background. Bring the window back from ";
 
   it("main window: leads with what happens and the reassurance in the first clause", () => {
     for (const platform of ["darwin", "win32", "linux"]) {
       const hint = closeHintFor(true, platform);
-      assert.match(hint, /^This window closes; Kiro Crew keeps running/);
+      assert.match(hint, /^This window closes; Aj Crew keeps running/);
       // The way back comes after the reassurance, never before it.
       assert.ok(hint.indexOf("keeps running") < hint.indexOf("Bring the window back"));
     }
@@ -497,20 +497,20 @@ describe("loading.html words the close hint for the window and platform it is in
   // tray menu's "Show …" label, which follows app.name (nightly differs).
   it("main window on macOS: names the menu bar at the top-right", () => {
     const hint = closeHintFor(true, "darwin");
-    assert.equal(hint, `${MAIN_PREFIX}the Kiro Crew icon in the menu bar, at the top-right of the screen.`);
+    assert.equal(hint, `${MAIN_PREFIX}the Aj Crew icon in the menu bar, at the top-right of the screen.`);
   });
 
   it("main window on Windows: names the notification area by the clock and the overflow chevron", () => {
     const hint = closeHintFor(true, "win32");
     assert.equal(
       hint,
-      `${MAIN_PREFIX}the Kiro Crew icon in the notification area next to the clock (it may sit behind the ^ chevron).`,
+      `${MAIN_PREFIX}the Aj Crew icon in the notification area next to the clock (it may sit behind the ^ chevron).`,
     );
   });
 
   it("main window on Linux (native frame) and on an unknown platform: names the system tray", () => {
-    assert.equal(closeHintFor(true, "linux"), `${MAIN_PREFIX}the Kiro Crew icon in the system tray.`);
-    assert.equal(closeHintFor(true, undefined), `${MAIN_PREFIX}the Kiro Crew icon in the system tray.`);
+    assert.equal(closeHintFor(true, "linux"), `${MAIN_PREFIX}the Aj Crew icon in the system tray.`);
+    assert.equal(closeHintFor(true, undefined), `${MAIN_PREFIX}the Aj Crew icon in the system tray.`);
   });
 
   it("does not quote a tray menu label, which follows app.name", () => {

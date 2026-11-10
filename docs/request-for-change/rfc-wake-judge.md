@@ -34,8 +34,8 @@ that author a brief, the `work-ledger` and `self` evidence collectors (§3.2), a
 the UI controls §3.6 lists beyond the provider and LLM-model keys. The calibration
 corrections §8's PR H entry records — the narrowed action override §3 states and
 the mutating-only `owner_acted` §3.1a states — are on main
-([#14663](https://github.com/kirodotdev/KiroCrew/pull/14663)). No `kirocrew-judge` agent
-template is coming: the landed lane runs on the bundled `kirocrew-lite`
+([#14663](https://github.com/kirodotdev/KiroCrew/pull/14663)). No `ajcrew-judge` agent
+template is coming: the landed lane runs on the bundled `ajcrew-lite`
 (`JUDGE_AGENT_NAME`), because a judge template would differ from it only in the
 model, which the runner passes per call, and a standing prompt the call already
 states. Code references below were re-read at `9348a25a34`.
@@ -69,7 +69,7 @@ Keep the loop. Keep the poll. On each tick, do not wake the main session; wake
 a **judge** — a fast, cheap, typed decision — that reads the new evidence and
 answers one question: does the owner need to act now? Only a yes fires the
 main session. The judge is a decision point on the shipped `decisions` seam
-(`src/kiro_crew/decisions/`, PR #11490 and successors), the same seam Joe used
+(`src/aj_crew/decisions/`, PR #11490 and successors), the same seam Joe used
 for sampled skill selection (`skills.select`), risky-tool flags and model-tier
 routing. Jev (TypeSafe's System One model: state + typed questions in,
 calibrated probabilities out, ~100 ms, no strings, no hallucinated shapes) is
@@ -88,7 +88,7 @@ autonudge tick ─▶ evidence collectors ─▶ state (bounded, scrubbed)
                                              │
                                              ▼
                               decide("nudge.wake", state, questions)
-                              Jev (consented)  |  LLM lane (kirocrew-lite)
+                              Jev (consented)  |  LLM lane (ajcrew-lite)
                                              │
                      ┌───────────────────────┴──────────────────────┐
                      ▼                                              ▼
@@ -223,7 +223,7 @@ same as a write makes the label constant, and a label with no variance cannot tu
 the thresholds above. So the TOOL-CALL limb alone is "at least one dispatch that
 could have CHANGED something", where a dispatch is read-only only when its name is
 positively known to be a host-known read-only built-in with trusted provenance
-(`READ_ONLY_BUILTIN_TOOLS`); every MCP call, from any server including Kiro Crew's
+(`READ_ONLY_BUILTIN_TOOLS`); every MCP call, from any server including Aj Crew's
 own, counts as having changed something (`autonudge_judge.tool_changed_something`). The reply-length and link limbs are unchanged
 and still answer `true` on their own, so a turn that dispatched only reads but answered
 at length or with a link stays `owner_acted: true` — which is what §3.1a's note about
@@ -453,7 +453,7 @@ brief is what carries the screening and the lane is what authorizes it.
   `secret://TYPESAFE_API_KEY`, bounded wait, strict `_from_wire`. No change to
   the seam's trust model; `nudge.wake` is one more entry in `gate.POINTS`.
 - **LLM lane** (`impl_llm.py`): the same `Answers` shape produced by a
-  text-only, tool-less run of the bundled `kirocrew-lite` agent (`JUDGE_AGENT_NAME`)
+  text-only, tool-less run of the bundled `ajcrew-lite` agent (`JUDGE_AGENT_NAME`)
   on whatever model that agent already resolves: `JUDGE_MODEL_DEFAULT` is `auto`,
   so the default inherits the session's own background-role model and pins no
   model class, and an operator who wants a specific one picks it on the card.
@@ -465,7 +465,7 @@ brief is what carries the screening and the lane is what authorizes it.
   asked once more inside the same budget before that FALLBACK. The LLM lane is
   what makes the interface real for people without a Jev key; it is slower
   (seconds) and costs a small model call, still far below a main-session turn.
-  No judge-specific agent template ships: it would differ from `kirocrew-lite`
+  No judge-specific agent template ships: it would differ from `ajcrew-lite`
   only in the model, which the runner passes per call, and in a standing prompt
   that `render_prompt` already states more completely on every call.
 - **Provider selection** is a per-point setting, `decisions.nudge_wake.provider
@@ -662,7 +662,7 @@ answer on the cheapest lane, where a main turn carries the loop's whole context.
    a pinned `jev` without the scope stores the brief and runs the plain timer.
    Revisit if the lane ever sends more than the session itself would.
 3. Name. Mechanism: wake judge (decision point `nudge.wake`). The fallback lane
-   runs the bundled `kirocrew-lite` agent rather than a judge-specific template.
+   runs the bundled `ajcrew-lite` agent rather than a judge-specific template.
    User-facing metaphor in the toggle copy: "a secretary who
    screens the interruptions".
 4. Which switch authorizes the built-in brief on each lane. **Ruled: the
@@ -715,7 +715,7 @@ answer on the cheapest lane, where a main turn carries the loop's whole context.
    have their gated loops screened with the built-in brief, with a `judge` spec
    stating criteria of a loop's own. An install with no key pins `provider = llm`
    and gets the same screening for the loops that state criteria.
-2. PR E — LLM lane: `decisions/impl_llm.py` running the bundled `kirocrew-lite`
+2. PR E — LLM lane: `decisions/impl_llm.py` running the bundled `ajcrew-lite`
    agent, the provider setting, and on the Decisions card (after #12598) the
    row label for `nudge.wake` plus the provider and LLM-model pickers in its
    detail panel. Depends on D's point name and on #12598's card shape.

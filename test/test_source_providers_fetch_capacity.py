@@ -12,10 +12,10 @@ from source_providers_helpers import _mock_source_sel_fixture  # noqa: F401
 from source_providers_helpers import _no_visibility_refresh_side_task  # noqa: F401
 from source_providers_helpers import _ISSUE_URL, _app, _rollup_reply
 
-from kiro_crew.dashboard.handlers import source_providers as source
-from kiro_crew.dashboard.source_providers import cache as cache_source
-from kiro_crew.dashboard.source_providers import github as github_source
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.dashboard.handlers import source_providers as source
+from aj_crew.dashboard.source_providers import cache as cache_source
+from aj_crew.dashboard.source_providers import github as github_source
+from aj_crew.testing.wait import await_until, finished
 
 
 @pytest.mark.asyncio

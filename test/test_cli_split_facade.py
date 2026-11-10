@@ -1,9 +1,9 @@
-"""``kiro_crew.cli`` keeps the patch seams and the surface the one module had.
+"""``aj_crew.cli`` keeps the patch seams and the surface the one module had.
 
-``kiro_crew.cli`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the owners in
+``aj_crew.cli`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the owners in
 its ``_OWNERS``: ``cli_logging``, ``cli_jail``, ``cli_gateway_boot`` and ``cli_knowledge``.
 ``main`` reads the moved helpers as plain module globals, and callers, tests and documents
-reach every name as ``kiro_crew.cli.<name>``. The command line's arguments come from the
+reach every name as ``aj_crew.cli.<name>``. The command line's arguments come from the
 ``cli_parser_*`` registrar modules, which are not owners: they build parsers and read no
 name a test patches through the facade.
 
@@ -12,7 +12,7 @@ These tests pin what is particular to this one: every name the test trees patch 
 reaches every module holding it; the owner list, with no exclusion and no forwarded table;
 the names an owner serves from outside the family stay visible to type checkers, and every
 public name the module held before the split still type-checks through it; the owners log
-as ``kiro_crew.cli``; a facade write of the log-queue slot lands in the module that rebinds
+as ``aj_crew.cli``; a facade write of the log-queue slot lands in the module that rebinds
 it; and the registrars read no patched name, each called exactly once by ``main`` before
 ``cli_help.hide_internal_commands``.
 """
@@ -34,7 +34,7 @@ import pytest
 import source_corpus
 import test_campaign_facades_base_public_names as base_names
 
-from kiro_crew import _facade_mirror, cli, cli_parser_admin, cli_parser_agent, cli_parser_gateway
+from aj_crew import _facade_mirror, cli, cli_parser_admin, cli_parser_agent, cli_parser_gateway
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_cli_split_facade")
 
@@ -49,12 +49,12 @@ SHARED_FACADE_CHECKS = (
     "home_manifest",
 )
 
-FACADE = "kiro_crew.cli"
+FACADE = "aj_crew.cli"
 OWNERS = (
-    "kiro_crew.cli_logging",
-    "kiro_crew.cli_jail",
-    "kiro_crew.cli_gateway_boot",
-    "kiro_crew.cli_knowledge",
+    "aj_crew.cli_logging",
+    "aj_crew.cli_jail",
+    "aj_crew.cli_gateway_boot",
+    "aj_crew.cli_knowledge",
 )
 REGISTRARS: tuple[ModuleType, ...] = (cli_parser_gateway, cli_parser_agent, cli_parser_admin)
 
@@ -75,7 +75,7 @@ _KNOWN_SEAMS = frozenset(
         "_ensure_node",
         "_node_ok",
         "boot_platform",
-        "KiroCrewConfig",
+        "AjCrewConfig",
         "SessionManager",
         "sel",
         "sys",
@@ -84,8 +84,8 @@ _KNOWN_SEAMS = frozenset(
 
 #: A test file worth parsing spells the facade itself, never only a ``cli_*`` sibling.
 _SPELLS_THE_FACADE = re.compile(
-    r"kiro_crew\.cli(?![\w])"
-    r"|from\s+kiro_crew\s+import\s+(?:\([^)]*?\bcli\b(?!_)|[^\n]*?\bcli\b(?!_))"
+    r"aj_crew\.cli(?![\w])"
+    r"|from\s+aj_crew\s+import\s+(?:\([^)]*?\bcli\b(?!_)|[^\n]*?\bcli\b(?!_))"
 )
 
 
@@ -115,45 +115,45 @@ def patched_names(source: str) -> set[str]:
 #: Each spelling the patch scan must read, and each it must skip, keyed by case id.
 _SPELLING_CASES = {
     "monkeypatch-from-import": (
-        "from kiro_crew import cli\n" "def t(monkeypatch):\n    monkeypatch.setattr(cli, 'A', 1)\n",
+        "from aj_crew import cli\n" "def t(monkeypatch):\n    monkeypatch.setattr(cli, 'A', 1)\n",
         {"A"},
     ),
     "patch-object-import-as": (
-        "import kiro_crew.cli as kc_cli\n"
+        "import aj_crew.cli as kc_cli\n"
         "from unittest import mock\n"
         "def t():\n    with mock.patch.object(kc_cli, 'B'):\n        pass\n",
         {"B"},
     ),
     "mock-patch-string": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.cli.C'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.cli.C'):\n        pass\n",
         {"C"},
     ),
     "dotted-setattr": (
-        "def t(monkeypatch):\n    monkeypatch.setattr('kiro_crew.cli.D', 1)\n",
+        "def t(monkeypatch):\n    monkeypatch.setattr('aj_crew.cli.D', 1)\n",
         {"D"},
     ),
     "sys-modules-assignment": (
-        "import sys\n" "def t():\n    cli = sys.modules.get('kiro_crew.cli')\n    cli.E = 1\n",
+        "import sys\n" "def t():\n    cli = sys.modules.get('aj_crew.cli')\n    cli.E = 1\n",
         {"E"},
     ),
     "assignment-and-del": (
-        "from kiro_crew import cli as m\ndef t():\n    m.F = 1\n    del m.G\n",
+        "from aj_crew import cli as m\ndef t():\n    m.F = 1\n    del m.G\n",
         {"F", "G"},
     ),
     # A sibling module is not the facade, even bound under a name that looks like it.
     "sibling-named-cli": (
-        "from kiro_crew import cli_server as cli\n"
+        "from aj_crew import cli_server as cli\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(cli, 'X', 1)\n",
         set(),
     ),
     "owner-string": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.cli_logging.Y'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.cli_logging.Y'):\n        pass\n",
         set(),
     ),
     "name-chosen-at-run-time": (
-        "from kiro_crew import cli\n"
+        "from aj_crew import cli\n"
         "def t(monkeypatch, name):\n    monkeypatch.setattr(cli, name, 1)\n",
         set(),
     ),
@@ -217,17 +217,17 @@ def test_a_facade_patch_of_every_scanned_name_reaches_every_module_holding_it() 
 
 
 def test_the_facade_installs_when_it_runs_as_main(tmp_path: Path) -> None:
-    """``python -m kiro_crew.cli`` runs this file as ``__main__``. The mirror's one object
+    """``python -m aj_crew.cli`` runs this file as ``__main__``. The mirror's one object
     per name must hold under that name too, or the install refuses the module and the
     run dies on import; the logger the owners share is bound by name for that reason."""
     result = subprocess.run(
-        [sys.executable, "-m", "kiro_crew.cli", "status"],
+        [sys.executable, "-m", "aj_crew.cli", "status"],
         capture_output=True,
         text=True,
         encoding="utf-8",
         timeout=120,
         cwd=tmp_path,
-        env={**os.environ, "KIROCREW_HOME": str(tmp_path / "home")},
+        env={**os.environ, "AJCREW_HOME": str(tmp_path / "home")},
     )
     assert result.returncode == 0, result.stderr
 
@@ -276,7 +276,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for owner in OWNERS:
         for node in _tree(sys.modules[owner]).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     if f"{node.module}.{alias.name}" not in family:
@@ -334,7 +334,7 @@ def test_a_facade_write_of_the_log_queue_slot_reaches_its_writers() -> None:
     ``_stop_log_queue_listener`` rebind with ``global``: it lives in the one module holding
     both, the facade never binds it, and a write through the facade lands there."""
     home = [m for m in _family() if "_LOG_QUEUE_LISTENER" in vars(m)]
-    assert [m.__name__ for m in home] == ["kiro_crew.cli_logging"]
+    assert [m.__name__ for m in home] == ["aj_crew.cli_logging"]
     sentinel = object()
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(cli, "_LOG_QUEUE_LISTENER", sentinel)

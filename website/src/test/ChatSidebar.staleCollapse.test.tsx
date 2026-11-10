@@ -57,7 +57,7 @@ vi.mock('../api/client', () => ({
   api: new Proxy({} as Record<string, unknown>, {
     get: (_t, prop: string) => {
       if (prop === 'chatFolders') return chatFoldersMock
-      if (prop === 'kirocrewConfig') return vi.fn().mockImplementation(() => Promise.resolve(mocks.config ?? []))
+      if (prop === 'ajcrewConfig') return vi.fn().mockImplementation(() => Promise.resolve(mocks.config ?? []))
       return vi.fn().mockResolvedValue([])
     },
   }),
@@ -94,7 +94,7 @@ function renderSidebar(slots: FixtureSlot[], { folders = [] as FixtureSlot[], ac
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   if (seedFolders) qc.setQueryData(['chat-folders'], folders)
   // The session sort is read from the gateway config (dashboard.session_sort).
-  if (mocks.config !== undefined) qc.setQueryData(['kirocrewConfig'], mocks.config)
+  if (mocks.config !== undefined) qc.setQueryData(['ajcrewConfig'], mocks.config)
   const view = render(
     <QueryClientProvider client={qc}>
       <Provider store={store}>

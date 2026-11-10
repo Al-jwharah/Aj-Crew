@@ -1,4 +1,4 @@
-"""Branch coverage for the :mod:`kiro_crew.onboarding_import` writers.
+"""Branch coverage for the :mod:`aj_crew.onboarding_import` writers.
 
 Every writer's conflict / rollback branch (skills, MCP servers, workspace mappings,
 instructions, memory, schedules), the JSON loader and replace-preserving helpers
@@ -19,7 +19,7 @@ from typing import Any
 import pytest
 from onboarding_import_coverage_helpers import _POSIX_FS_ONLY
 
-from kiro_crew import onboarding_apply, onboarding_scan
+from aj_crew import onboarding_apply, onboarding_scan
 
 # Keep apply_import's MCP sidecar lock off the real ~/.kiro/settings (see the
 # shared fixture in test/conftest.py).
@@ -27,7 +27,7 @@ pytestmark = pytest.mark.usefixtures("isolate_mcp_host_paths")
 
 
 def _api() -> ModuleType:
-    return importlib.import_module("kiro_crew.onboarding_import")
+    return importlib.import_module("aj_crew.onboarding_import")
 
 
 class _StubVectorStore:
@@ -556,7 +556,7 @@ class TestMcpWriter:
         def reserved(**_kwargs: Any) -> set[str]:
             return {"srv"}
 
-        module = importlib.import_module("kiro_crew.mcp_discovery")
+        module = importlib.import_module("aj_crew.mcp_discovery")
         monkeypatch.setattr(module, "configured_mcp_aliases", reserved)
 
         outcome = onboarding_apply._write_mcp(

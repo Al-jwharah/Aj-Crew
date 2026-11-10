@@ -1,4 +1,4 @@
-"""``kirocrew.tool.call.duration``.
+"""``ajcrew.tool.call.duration``.
 
 Drives the REAL production helpers in ``metrics/tool_calls.py`` plus the two
 parser layers that call them, so the kind normalisation, the terminal-status
@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.metrics import tool_calls as tc
+from aj_crew.metrics import tool_calls as tc
 
 
 class _CapturingRecorder:
@@ -30,12 +30,12 @@ def clean_registry():
 @pytest.fixture
 def rec():
     r = _CapturingRecorder()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=r):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=r):
         yield r
 
 
 def _calls(rec):
-    return [c for c in rec.hist if c["name"] == "kirocrew.tool.call.duration"]
+    return [c for c in rec.hist if c["name"] == "ajcrew.tool.call.duration"]
 
 
 class TestKindClassification:
@@ -125,7 +125,7 @@ class TestParserWiring:
     """The production parsers must be the ones driving the registry."""
 
     def test_the_shared_dispatch_parser_opens_and_closes_a_call(self, rec):
-        from kiro_crew.acp import _dispatch
+        from aj_crew.acp import _dispatch
 
         _dispatch._build_tool_call_event(
             {"sessionUpdate": "tool_call", "toolCallId": "tc-1", "kind": "execute", "title": "sh"},
@@ -141,7 +141,7 @@ class TestParserWiring:
 
     def test_an_mcp_served_call_is_labelled_mcp_by_the_parser(self, rec):
         """The trusted ``_meta.kiro.mcpServerName``, not the reported kind."""
-        from kiro_crew.acp import _dispatch
+        from aj_crew.acp import _dispatch
 
         _dispatch._build_tool_call_event(
             {
@@ -158,7 +158,7 @@ class TestParserWiring:
 
     def test_an_output_less_completion_is_still_measured(self, rec):
         """An output-less terminal frame emits its status and one sample."""
-        from kiro_crew.acp import _dispatch
+        from aj_crew.acp import _dispatch
 
         _dispatch._build_tool_call_event(
             {"sessionUpdate": "tool_call", "toolCallId": "tc-2", "kind": "read", "title": "r"},
@@ -173,7 +173,7 @@ class TestParserWiring:
 
     def test_both_layers_together_still_yield_one_sample(self, rec):
         """A frame seen by AcpClient and by the shared parser is not doubled."""
-        from kiro_crew.acp import _dispatch
+        from aj_crew.acp import _dispatch
 
         _dispatch._build_tool_call_event(
             {"sessionUpdate": "tool_call", "toolCallId": "tc-3", "kind": "read", "title": "r"},
@@ -223,8 +223,8 @@ class TestScopeIsolation:
         """
         import inspect
 
-        from kiro_crew.acp import _dispatch
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp import _dispatch
+        from aj_crew.acp.client import AcpClient
 
         # Source: neither layer may invent a scope of its own.
         layer_two = inspect.getsource(AcpClient._extract_tool_call_update)
@@ -244,7 +244,7 @@ class TestScopeIsolation:
         assert tc.open_call_count() == 0, "the cross-layer pop must consume the entry"
 
     def test_the_dispatch_parser_threads_its_cache_scope_through(self, rec):
-        from kiro_crew.acp import _dispatch
+        from aj_crew.acp import _dispatch
 
         for scope in ("sessA", "sessB"):
             _dispatch._build_tool_call_event(
@@ -265,7 +265,7 @@ class TestScopeIsolation:
 
 class TestContract:
     def test_the_histogram_has_registered_bounds(self):
-        from kiro_crew.metrics.provider import _HISTOGRAM_BUCKETS_MS
+        from aj_crew.metrics.provider import _HISTOGRAM_BUCKETS_MS
 
         bounds = _HISTOGRAM_BUCKETS_MS[tc.TOOL_CALL_METRIC]
         # Sub-ms reads keep resolution; a multi-minute build stays off +Inf.

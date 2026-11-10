@@ -22,8 +22,8 @@ from meetings_helpers import (  # noqa: F401
     root_fixture,
 )
 
-from kiro_crew.apps.builtins.meetings.backend import constants as k
-from kiro_crew.apps.builtins.meetings.backend.routes import _common
+from aj_crew.apps.builtins.meetings.backend import constants as k
+from aj_crew.apps.builtins.meetings.backend.routes import _common
 
 BASE = k.API_BASE
 OWNER = "owner-sub"

@@ -1,4 +1,4 @@
-"""The four ``kirocrew.work.*`` counters: one per successful ledger write, never more.
+"""The four ``ajcrew.work.*`` counters: one per successful ledger write, never more.
 
 Two halves. The bucket and enum functions are exercised directly, on their own
 edges and on every shape a stored record can hold that is not a value at all. The
@@ -29,11 +29,11 @@ from work_ledger_projection_helpers import (
     _Slot,
 )
 
-from kiro_crew import work_ledger as wl
-from kiro_crew.crew_log.entry_types import CREW_REPORT_STATUSES, CREW_TARGET_KINDS
-from kiro_crew.dashboard.handlers import work_ledger as routes
-from kiro_crew.metrics import work as work_metrics
-from kiro_crew.work_vocab import WORK_BLOCKED_REASONS, WORK_ITEM_STATES, WORK_WORKER_STATUSES
+from aj_crew import work_ledger as wl
+from aj_crew.crew_log.entry_types import CREW_REPORT_STATUSES, CREW_TARGET_KINDS
+from aj_crew.dashboard.handlers import work_ledger as routes
+from aj_crew.metrics import work as work_metrics
+from aj_crew.work_vocab import WORK_BLOCKED_REASONS, WORK_ITEM_STATES, WORK_WORKER_STATUSES
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _isolated = work_ledger_projection_helpers._isolated
@@ -668,8 +668,8 @@ async def test_nothing_is_recorded_when_telemetry_is_off(monkeypatch, tmp_path, 
     """Not patched at this module's seam: the real ``emit_counter`` runs, and the
     recorder the provider hands it is what decides. With consent the five writes
     below create their instruments; without it the meter is never touched."""
-    from kiro_crew.metrics import provider
-    from kiro_crew.metrics.recorder import MetricsRecorder
+    from aj_crew.metrics import provider
+    from aj_crew.metrics.recorder import MetricsRecorder
 
     seen: list[str] = []
 
@@ -699,6 +699,6 @@ async def test_nothing_is_recorded_when_telemetry_is_off(monkeypatch, tmp_path, 
     seen.clear()
     _SLOTS.clear()
     monkeypatch.setattr(provider, "get_recorder", lambda: MetricsRecorder(None))
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home-telemetry-off"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home-telemetry-off"))
     await _drive()
     assert seen == []

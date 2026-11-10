@@ -12,12 +12,12 @@ For each launcher whose ``#!`` names an absolute path, this helper writes the
 zip's ``__main__.py`` out as ``<name>-script.py`` and a relocatable
 ``<name>.cmd`` that runs it under ``%~dp0..\\python.exe`` (``Scripts\\`` sits
 one level below the bundle root, as ``bin\\`` does), then deletes the ``.exe``.
-The ``.cmd`` carries the same environment scrub as ``bin\\kirocrew.cmd``.
+The ``.cmd`` carries the same environment scrub as ``bin\\ajcrew.cmd``.
 Native executables such as ``uv.exe`` carry no launcher zip and are left alone.
 A launcher with a frozen ``#!`` but no ``__main__.py`` fails the build rather
 than shipping a command that cannot start.
 
-Both bundle writers run it after their own ``kirocrew`` shim:
+Both bundle writers run it after their own ``ajcrew`` shim:
 ``packaging/build-desktop.sh`` (``build_backend_windows``) and the Windows
 installer job in ``.github/workflows/build.yml``.
 """

@@ -39,9 +39,9 @@ const slots = [{
   running: true,
   last_message: 'Reading ChatFooter.tsx…',
   messages: 1,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
-  project: '/home/user/workspace/kirocrew',
+  project: '/home/user/workspace/ajcrew',
   folder_id: '',
   modified: Math.floor(Date.now() / 1000),
   source_links: [],
@@ -53,7 +53,7 @@ const detail = {
   has_more: false,
   total: 1,
   queue: [],
-  project: '/home/user/workspace/kirocrew',
+  project: '/home/user/workspace/ajcrew',
   messages: [
     {
       role: 'user',
@@ -67,7 +67,7 @@ const detail = {
 const CASES = [
   { name: 'emerald-dark', colorTheme: 'emerald', mode: 'dark' },
   { name: 'solarized-light', colorTheme: 'solarized', mode: 'light' },
-  { name: 'kiro-dark', colorTheme: 'kiro', mode: 'dark' },
+  { name: 'aj-dark', colorTheme: 'kiro', mode: 'dark' },
 ]
 
 async function main() {

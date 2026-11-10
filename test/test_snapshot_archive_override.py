@@ -17,9 +17,9 @@ from pathlib import Path
 import pytest
 import snapshot_helpers
 from snapshot_helpers import unpinnable_argv
-from test_snapshot import _setup_fake_kirocrew
+from test_snapshot import _setup_fake_ajcrew
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 _no_gateway = snapshot_helpers._no_gateway
 
@@ -30,18 +30,18 @@ _TINY_BOUND = 1024
 @pytest.fixture
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     src = tmp_path / "src"
-    _setup_fake_kirocrew(src)
-    monkeypatch.setenv("KIROCREW_HOME", str(src))
+    _setup_fake_ajcrew(src)
+    monkeypatch.setenv("AJCREW_HOME", str(src))
     return src
 
 
 def _bundles(out: Path) -> list[Path]:
-    return sorted(out.glob("kirocrew-*.tar.gz*")) if out.is_dir() else []
+    return sorted(out.glob("ajcrew-*.tar.gz*")) if out.is_dir() else []
 
 
 def _forged_archive(path: Path, declared: int) -> None:
     """A gzip tarball whose one header declares *declared* bytes it does not carry."""
-    info = tarfile.TarInfo("kirocrew-snapshot-20260101T000000Z/bomb.bin")
+    info = tarfile.TarInfo("ajcrew-snapshot-20260101T000000Z/bomb.bin")
     info.size = declared
     path.write_bytes(gzip.compress(info.tobuf(format=tarfile.GNU_FORMAT) + b"\0" * 1024))
 
@@ -52,7 +52,7 @@ class TestTheWriterRefusesWhatRestoreWouldRefuse:
     ):
         out = tmp_path / "out"
         out.mkdir()
-        older = out / "kirocrew-snapshot-20250101T000000Z.tar.gz"
+        older = out / "ajcrew-snapshot-20250101T000000Z.tar.gz"
         older.write_bytes(b"older bundle that restores")
         monkeypatch.setattr(snap, "_MAX_ARCHIVE_BYTES", _TINY_BOUND)
         opened: list[str] = []
@@ -103,7 +103,7 @@ class TestTheWriterRefusesWhatRestoreWouldRefuse:
 
         fresh = tmp_path / "fresh"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         argv = [str(tarball), "--mode", "replace", "--force"] + unpinnable_argv()
 
         capsys.readouterr()
@@ -128,7 +128,7 @@ class TestAValidBundleStillRoundTripsWithoutTheFlag:
         (tarball,) = _bundles(out)
         fresh = tmp_path / "fresh"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         rc = snap.restore_main([str(tarball), "--mode", "replace", "--force"] + unpinnable_argv())
         assert rc == 0, capsys.readouterr().out
         assert (fresh / "workspace/doc.md").read_text() == "doc content"
@@ -143,7 +143,7 @@ class TestTheDecompressionGuardStillHolds:
         _forged_archive(bomb, 5 * 1024**3)  # over both the default and the raised bound
         fresh = tmp_path / "fresh"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         rc = snap.restore_main([str(bomb), "--force"] + extra + unpinnable_argv())
         printed = capsys.readouterr().out
         assert rc == 1, printed
@@ -151,19 +151,19 @@ class TestTheDecompressionGuardStillHolds:
         # A full snapshot of a large home trips this too, so the refusal must not speak
         # as if only memory bundles reached it.
         assert "memory bundle" not in printed, printed
-        assert "over the bound `kirocrew restore` holds it to" in printed, printed
+        assert "over the bound `ajcrew restore` holds it to" in printed, printed
         assert list(fresh.iterdir()) == []
 
     def test_a_raised_bound_is_still_held_to_the_free_space(self, tmp_path, monkeypatch, capsys):
         bomb = tmp_path / "big.tar.gz"
         payload = b"\0" * (2 * 1024**2)  # honest 2 MiB member, under the 1 GiB override
-        info = tarfile.TarInfo("kirocrew-snapshot-20260101T000000Z/big.bin")
+        info = tarfile.TarInfo("ajcrew-snapshot-20260101T000000Z/big.bin")
         info.size = len(payload)
         with tarfile.open(bomb, "w:gz") as tf:
             tf.addfile(info, io.BytesIO(payload))
         fresh = tmp_path / "fresh"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         real_usage = snap.shutil.disk_usage
 
         def _nearly_full(path):
@@ -199,7 +199,7 @@ class TestTheOverrideIsBounded:
 def test_the_tree_bound_counts_what_the_archive_bound_counts(tmp_path, monkeypatch):
     """Writer and reader agree at the boundary: a staged tree the writer passes, archived,
     passes the reader at the same bound, and one byte less refuses both."""
-    stage = tmp_path / "kirocrew-snapshot-x"
+    stage = tmp_path / "ajcrew-snapshot-x"
     (stage / "d").mkdir(parents=True)
     (stage / "a.bin").write_bytes(b"a" * 300)
     (stage / "d" / "b.bin").write_bytes(b"b" * 200)

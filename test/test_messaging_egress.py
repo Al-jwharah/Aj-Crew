@@ -23,13 +23,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard import chat_compaction_notice, chat_runner
-from kiro_crew.messaging import egress
-from kiro_crew.messaging.egress import channel_egress_parts, send_channel_parts
-from kiro_crew.messaging.link import ChannelLink
-from kiro_crew.messaging.transport import TransportCapabilities
-from kiro_crew.platform.context import PlatformCompositionError
-from kiro_crew.slack import gateway as gw
+from aj_crew.dashboard import chat_compaction_notice, chat_runner
+from aj_crew.messaging import egress
+from aj_crew.messaging.egress import channel_egress_parts, send_channel_parts
+from aj_crew.messaging.link import ChannelLink
+from aj_crew.messaging.transport import TransportCapabilities
+from aj_crew.platform.context import PlatformCompositionError
+from aj_crew.slack import gateway as gw
 
 _CAPS = TransportCapabilities(max_message_chars=120)
 
@@ -136,10 +136,10 @@ async def test_the_dashboard_mirror_ships_the_owners_parts() -> None:
     with (
         patch.object(chat_runner, "mirror_is_paused", return_value=False),
         patch(
-            "kiro_crew.dashboard.session_control._read_mirror_binding",
+            "aj_crew.dashboard.session_control._read_mirror_binding",
             return_value=(link, None),
         ),
-        patch("kiro_crew.dashboard.session_control.publication_withheld", return_value=False),
+        patch("aj_crew.dashboard.session_control.publication_withheld", return_value=False),
         patch.object(chat_runner, "_resolve_channel_target", return_value=(link, tr)),
     ):
         await chat_runner._deliver_cross_surface_reply(MagicMock(), "dashboard:x", _LONG)
@@ -157,7 +157,7 @@ async def test_the_completion_leg_ships_the_owners_parts() -> None:
 
     with patch.object(gw, "_resolve_channel_target", return_value=(link, tr)):
         ok = await gw.GatewayOrchestrator._deliver_channel_reply(
-            orch, "discord:kirocrew:direct:U1", _LONG, resolved_link=(link, False)
+            orch, "discord:ajcrew:direct:U1", _LONG, resolved_link=(link, False)
         )
 
     assert ok is True
@@ -174,7 +174,7 @@ async def test_the_compaction_notice_ships_the_owners_parts() -> None:
     state.sessions.get_origin_link.return_value = link
 
     with (
-        patch("kiro_crew.dashboard.chat_runner._resolve_channel_target", return_value=(link, tr)),
+        patch("aj_crew.dashboard.chat_runner._resolve_channel_target", return_value=(link, tr)),
         patch.object(chat_compaction_notice, "notice_text", return_value=_LONG),
     ):
         await chat_compaction_notice._deliver_via_transport(state, "discord:x", 0.9, success=True)
@@ -200,7 +200,7 @@ async def test_the_compaction_notice_does_not_swallow_a_composition_error() -> N
         raise PlatformCompositionError("invalid ceiling")
 
     with (
-        patch("kiro_crew.dashboard.chat_runner._resolve_channel_target", return_value=(link, tr)),
+        patch("aj_crew.dashboard.chat_runner._resolve_channel_target", return_value=(link, tr)),
         patch.object(egress, "redact_via_context", _cannot_compose),
         pytest.raises(PlatformCompositionError),
     ):

@@ -14,8 +14,8 @@ from pathlib import Path
 
 from aiohttp.test_utils import make_mocked_request
 
-import kiro_crew.config.loader as loader
-from kiro_crew.secrets import SecretVault
+import aj_crew.config.loader as loader
+from aj_crew.secrets import SecretVault
 
 SHARED_CONFIG_HANDLER_CHECKS = ("save_rejects_whitespace_credentials",)
 
@@ -35,7 +35,7 @@ CHAT_ID = "oc_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"
 
 def test_save_denies_non_loopback(monkeypatch) -> None:
     """Config writes are loopback-only: remote sessions are read-only."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     monkeypatch.setattr(mod, "is_direct_local_request", lambda req: False)
     req = make_mocked_request(
@@ -50,7 +50,7 @@ def test_save_denies_non_loopback(monkeypatch) -> None:
 
 def test_save_denies_forwarded_loopback_request() -> None:
     """A reverse-proxied request (loopback peer + XFF) cannot plant secrets."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     req = make_mocked_request(
         "PUT",
@@ -86,7 +86,7 @@ def _client_put(mod, monkeypatch, tmp_path, body):
 
 def test_save_persists_credentials_and_config(tmp_path: Path, monkeypatch) -> None:
     """Both secrets land in .env (0600), config in config.json, environ synced."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     monkeypatch.delenv("FEISHU_APP_ID", raising=False)
     monkeypatch.delenv("FEISHU_APP_SECRET", raising=False)
@@ -128,7 +128,7 @@ def test_save_persists_credentials_and_config(tmp_path: Path, monkeypatch) -> No
 
 def test_save_rejects_open_id_without_prefix(tmp_path: Path, monkeypatch) -> None:
     """A user id missing the ou_ prefix fails closed, nothing persisted."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     status_body, _env = _client_put(
         mod, monkeypatch, tmp_path, {"allowed_user_ids": ["c99cbd8a1b2c3d4e"]}
@@ -146,7 +146,7 @@ def test_save_rejects_chat_id_in_the_user_list(tmp_path: Path, monkeypatch) -> N
     the transport reads the two lists for different decisions — accepting it
     would leave an entry that looks authoritative while authorising nobody.
     """
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     status_body, _env = _client_put(mod, monkeypatch, tmp_path, {"allowed_user_ids": [CHAT_ID]})
     status, body = status_body
@@ -163,7 +163,7 @@ def test_save_rejects_non_ascii_id_body(tmp_path: Path, monkeypatch) -> None:
     """Unicode digits/letters are rejected: str.isalnum() alone would admit
     them, but they can never match a real Feishu id — the entry would sit in the
     allow-list looking authoritative while granting nothing."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     for bad in ("ou_张三", "ou_１２３４５６", "ou_abc\u200bdef", "ou_abc def", "ou_"):
         status_body, _env = _client_put(mod, monkeypatch, tmp_path, {"allowed_user_ids": [bad]})
@@ -174,7 +174,7 @@ def test_save_rejects_non_ascii_id_body(tmp_path: Path, monkeypatch) -> None:
 
 def test_save_dedupes_and_preserves_order(tmp_path: Path, monkeypatch) -> None:
     """Repeated ids collapse to the first occurrence, order otherwise kept."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     status_body, _env = _client_put(
         mod,
@@ -190,7 +190,7 @@ def test_save_dedupes_and_preserves_order(tmp_path: Path, monkeypatch) -> None:
 
 def test_group_access_is_a_separate_axis(tmp_path: Path, monkeypatch) -> None:
     """allow_group + allowed_group_ids persist independently of the DM list."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     status_body, _env = _client_put(
         mod,
@@ -212,7 +212,7 @@ def test_group_access_is_a_separate_axis(tmp_path: Path, monkeypatch) -> None:
 
 def test_save_rejects_non_bool_allow_group(tmp_path: Path, monkeypatch) -> None:
     """A truthy non-bool must not be coerced into widening group access."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     status_body, _env = _client_put(mod, monkeypatch, tmp_path, {"allow_group": "yes"})
     status, body = status_body
@@ -223,7 +223,7 @@ def test_save_rejects_non_bool_allow_group(tmp_path: Path, monkeypatch) -> None:
 
 def test_clear_credentials(tmp_path: Path, monkeypatch) -> None:
     """bot_token_clear / bot_id_clear remove secrets from .env and environ."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     env = tmp_path / ".env"
     env.write_text(f"FEISHU_APP_ID={APP_ID}\nFEISHU_APP_SECRET={APP_SECRET}\n", encoding="utf-8")
@@ -244,7 +244,7 @@ def test_clear_credentials(tmp_path: Path, monkeypatch) -> None:
 
 def test_clear_wins_over_a_simultaneous_value(tmp_path: Path, monkeypatch) -> None:
     """A body carrying both a clear flag and a value clears, never sets."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     monkeypatch.delenv("FEISHU_APP_SECRET", raising=False)
     status_body, env = _client_put(
@@ -260,7 +260,7 @@ def test_clear_wins_over_a_simultaneous_value(tmp_path: Path, monkeypatch) -> No
 
 def test_save_strips_an_accidental_env_line_paste(tmp_path: Path, monkeypatch) -> None:
     """`FEISHU_APP_SECRET=…` pasted whole stores only the value."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     monkeypatch.delenv("FEISHU_APP_SECRET", raising=False)
     status_body, env = _client_put(
@@ -278,7 +278,7 @@ def test_get_masks_credentials_and_reports_state(tmp_path: Path, monkeypatch) ->
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     env = tmp_path / ".env"
     env.write_text(f"FEISHU_APP_ID={APP_ID}\nFEISHU_APP_SECRET={APP_SECRET}\n", encoding="utf-8")
@@ -334,7 +334,7 @@ def test_get_reports_unconfigured_while_the_allowlist_is_empty(tmp_path: Path, m
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     env = tmp_path / ".env"
     env.write_text(f"FEISHU_APP_ID={APP_ID}\nFEISHU_APP_SECRET={APP_SECRET}\n", encoding="utf-8")
@@ -369,7 +369,7 @@ def test_save_rejects_a_config_whose_top_level_is_not_an_object(
     of the wrong SHAPE is the same class of problem to the person who has to fix
     it, and letting `data.get` raise AttributeError instead tells them nothing.
     """
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     (tmp_path / "config.json").write_text("[]", encoding="utf-8")
     status_body, _env = _client_put(mod, monkeypatch, tmp_path, {"enabled": True})
@@ -388,7 +388,7 @@ def test_a_failed_credential_write_leaves_no_folder_behind(tmp_path: Path, monke
     that has already been created or renamed is NOT — so reconciling before the
     write would leave a durable change behind from a save that reported failure.
     """
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     calls: list[tuple] = []
 
@@ -438,7 +438,7 @@ def test_a_malformed_stored_value_does_not_crash_the_save(tmp_path: Path, monkey
     hand-edited `null` returns None, and handing that to `list(None)` /
     `int(None)` raises — a 500 from the exact request that would fix the file.
     """
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     cfg = tmp_path / "config.json"
     cfg.write_text(
@@ -478,7 +478,7 @@ def test_a_stored_bool_threshold_is_not_read_as_a_number(tmp_path: Path, monkeyp
     Otherwise saving the default 80 over a stored `true` would look like a change
     from 1 and report restart_required for a value the user never had.
     """
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     cfg = tmp_path / "config.json"
     cfg.write_text(json.dumps({"feishu": {"soft_threshold_pct": True}}), encoding="utf-8")
@@ -499,7 +499,7 @@ def test_get_reads_the_config_off_the_event_loop(tmp_path: Path, monkeypatch) ->
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     env = tmp_path / ".env"
     env.write_text(f"FEISHU_APP_ID={APP_ID}\n", encoding="utf-8")
@@ -508,13 +508,13 @@ def test_get_reads_the_config_off_the_event_loop(tmp_path: Path, monkeypatch) ->
     monkeypatch.setattr(mod, "is_direct_local_request", lambda req: True)
 
     read_threads: list[int] = []
-    real_load = loader.KiroCrewConfig.load
+    real_load = loader.AjCrewConfig.load
 
     def _spy_load(*a, **kw):
         read_threads.append(threading.get_ident())
         return real_load(*a, **kw)
 
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", _spy_load)
+    monkeypatch.setattr(loader.AjCrewConfig, "load", _spy_load)
 
     loop_thread: list[int] = []
 
@@ -547,8 +547,8 @@ def test_save_waits_on_the_cross_process_config_lock(tmp_path: Path, monkeypatch
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    import kiro_crew.dashboard.handlers.messaging as mod
-    from kiro_crew.platform_compat import file_lock
+    import aj_crew.dashboard.handlers.messaging as mod
+    from aj_crew.platform_compat import file_lock
 
     cfg_path = tmp_path / "config.json"
     cfg_path.write_text(json.dumps({"feishu": {"enabled": False}}), encoding="utf-8")
@@ -613,7 +613,7 @@ def test_rollback_keeps_a_concurrent_edit_it_does_not_own(tmp_path: Path, monkey
     """
     import threading
 
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     cfg = tmp_path / "config.json"
     cfg.write_text(
@@ -625,7 +625,7 @@ def test_rollback_keeps_a_concurrent_edit_it_does_not_own(tmp_path: Path, monkey
     injected: list[bool] = []
 
     def _set_foreign(data: dict) -> dict:
-        # Stand in for `kirocrew config set feishu.allow_group true` landing
+        # Stand in for `ajcrew config set feishu.allow_group true` landing
         # after our write and before our rollback.
         data.setdefault("feishu", {})["allow_group"] = "set-by-someone-else"
         return data
@@ -688,7 +688,7 @@ def test_id_shape_validator() -> None:
     No fixed length on purpose: the id body length is not contractual, and a
     stricter rule would reject ids a future tenant issues.
     """
-    from kiro_crew.dashboard.handlers.messaging import _is_valid_feishu_id
+    from aj_crew.dashboard.handlers.messaging import _is_valid_feishu_id
 
     assert _is_valid_feishu_id(OPEN_ID, "ou_")
     assert _is_valid_feishu_id(CHAT_ID, "oc_")
@@ -708,7 +708,7 @@ def test_id_shape_validator() -> None:
 
 def _get_config(monkeypatch, *, connected: bool = False) -> dict:
     """Run the Feishu config GET and return its JSON body."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     class _State:
         feishu_connected = connected
@@ -722,7 +722,7 @@ def _get_config(monkeypatch, *, connected: bool = False) -> dict:
 
 def test_get_reports_the_sdk_as_present_when_importable(monkeypatch) -> None:
     """An importable SDK needs no advice, so the command is empty."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     monkeypatch.setattr(mod.importlib.util, "find_spec", lambda name: object())
     body = _get_config(monkeypatch)
@@ -739,7 +739,7 @@ def test_get_names_this_interpreter_when_the_sdk_is_missing(monkeypatch) -> None
     """
     import sys
 
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     monkeypatch.setattr(mod.importlib.util, "find_spec", lambda name: None)
     monkeypatch.setattr(mod, "_pip_install_channel_available", lambda: True)
@@ -747,10 +747,10 @@ def test_get_names_this_interpreter_when_the_sdk_is_missing(monkeypatch) -> None
     assert body["sdk_installed"] is False
     assert body["sdk_install_supported"] is True
     assert sys.executable in body["sdk_install_command"]
-    # The dependency itself, because `pip install kirocrew[feishu]` cannot
+    # The dependency itself, because `pip install ajcrew[feishu]` cannot
     # resolve -- this project is published on no index.
     assert "lark-oapi" in body["sdk_install_command"]
-    assert "kirocrew[" not in body["sdk_install_command"]
+    assert "ajcrew[" not in body["sdk_install_command"]
     assert "-m pip install" in body["sdk_install_command"]
 
 
@@ -761,7 +761,7 @@ def test_get_withholds_a_command_that_cannot_work(monkeypatch) -> None:
     bundle and is discarded on the next app update, so naming the command there
     is wrong advice rather than merely unhelpful.
     """
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     monkeypatch.setattr(mod.importlib.util, "find_spec", lambda name: None)
     monkeypatch.setattr(mod, "_pip_install_channel_available", lambda: False)
@@ -773,6 +773,6 @@ def test_get_withholds_a_command_that_cannot_work(monkeypatch) -> None:
 
 def test_sdk_probe_reports_nothing_missing_for_a_channel_without_an_extra() -> None:
     """A channel with no optional extra renders no card: nothing can be missing."""
-    from kiro_crew.dashboard.handlers.messaging import _channel_sdk_status
+    from aj_crew.dashboard.handlers.messaging import _channel_sdk_status
 
     assert _channel_sdk_status("wecom") == (True, False, "")

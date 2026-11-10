@@ -6,9 +6,9 @@ from pathlib import Path
 
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import chat_persistence as cp
-from kiro_crew.history import ConversationLog, is_incognito_transcript
-from kiro_crew.testing.fixtures import seeded_home
+from aj_crew.dashboard import chat_persistence as cp
+from aj_crew.history import ConversationLog, is_incognito_transcript
+from aj_crew.testing.fixtures import seeded_home
 
 _TRANSCRIPTS = ("dashboard_normal", "dashboard_incognito", "dashboard_temporary")
 

@@ -4,7 +4,7 @@ Every gateway on a host placed its agent scopes in ONE slice whose name was a
 module constant, so a scope's identity was "the agents slice, at time T" and
 neither component named an owner. Anything reasoning about scopes as a
 population therefore could not separate its own from a co-resident gateway's --
-and a host routinely runs several at once, because ``kirocrew pod up`` creates
+and a host routinely runs several at once, because ``ajcrew pod up`` creates
 one per pod by design. These tests pin the owner being expressible, and pin the
 two properties that made the shared constant safe (aggregate ceiling, cgroup
 path matching) surviving the change.
@@ -33,24 +33,24 @@ def wrapped():
     test host having systemd-run in a trusted directory, and the off-thread
     slice reconciliation is stubbed so no thread or subprocess is started.
     """
-    import kiro_crew.sandbox as sb
+    import aj_crew.sandbox as sb
 
     def _call(argv=None):
         sb._CGROUP_SCOPE_PROBE = None
         sb._CGROUP_WARNED = False
         try:
             with (
-                patch("kiro_crew.sandbox._probe_cgroup_scope", return_value=(True, "ok")),
+                patch("aj_crew.sandbox._probe_cgroup_scope", return_value=(True, "ok")),
                 patch(
-                    "kiro_crew.platform_compat.trusted_system_bin",
+                    "aj_crew.platform_compat.trusted_system_bin",
                     return_value="/usr/bin/systemd-run",
                 ),
-                patch("kiro_crew.sandbox._reconcile_slice_memory_high_off_thread"),
+                patch("aj_crew.sandbox._reconcile_slice_memory_high_off_thread"),
                 patch(
-                    "kiro_crew.sandbox._cgroup_limits_from_config",
+                    "aj_crew.sandbox._cgroup_limits_from_config",
                     return_value=(8192, 8192, 50, 0),
                 ),
-                patch("kiro_crew.sandbox._cpu_controller_delegated", return_value=False),
+                patch("aj_crew.sandbox._cpu_controller_delegated", return_value=False),
             ):
                 return sb.cgroup_scope_argv(list(argv or ["kiro-cli", "chat"]))
         finally:
@@ -68,9 +68,9 @@ class TestAgentSliceIdentity:
         any scope-level sweep, and the sweep reaches into a live session that
         belongs to another gateway on the same host.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "instance-a"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "instance-a"))
         slice_a = _slice_arg(wrapped())
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "instance-b"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "instance-b"))
         slice_b = _slice_arg(wrapped())
 
         assert slice_a != slice_b, (
@@ -79,22 +79,22 @@ class TestAgentSliceIdentity:
 
     def test_slice_is_stable_for_one_instance(self, wrapped, monkeypatch, tmp_path):
         """Recomputable: an owner check is only possible if the name is stable."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "instance-a"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "instance-a"))
         assert _slice_arg(wrapped()) == _slice_arg(wrapped(["git", "status"]))
 
     def test_slice_nests_under_the_aggregate_parent(self, wrapped, monkeypatch, tmp_path):
         """The parent stays the aggregate enforcement boundary.
 
-        systemd's dash-hierarchy makes ``kirocrew-agents-<tok>.slice`` a child
-        of ``kirocrew-agents.slice``, so the MemoryHigh / MemoryMax applied to
+        systemd's dash-hierarchy makes ``ajcrew-agents-<tok>.slice`` a child
+        of ``ajcrew-agents.slice``, so the MemoryHigh / MemoryMax applied to
         the parent keep bounding every instance's scopes (cgroup v2 bounds a
         descendant by the minimum effective limit along its ancestor chain), and
         the parent remains a path component of every scope's cgroup -- which is
         what callers matching the parent name in ``/proc/self/cgroup`` rely on.
         """
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "instance-a"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "instance-a"))
         name = _slice_arg(wrapped())
         parent_stem = sb._CGROUP_AGENTS_SLICE[: -len(".slice")]
 
@@ -111,9 +111,9 @@ class TestAgentSliceIdentity:
         nest under ``...-ab.slice`` -- an extra level, and a prefix two tokens
         could share.
         """
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "instance-a"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "instance-a"))
         token = sb._instance_slice_token()
 
         assert token
@@ -129,10 +129,10 @@ class TestAgentSliceIdentity:
         """
         import logging
 
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         with patch(
-            "kiro_crew.sandbox._instance_slice_token",
+            "aj_crew.sandbox._instance_slice_token",
             side_effect=RuntimeError("no home"),
         ):
             with caplog.at_level(logging.WARNING):
@@ -154,8 +154,8 @@ class TestSlicePressureScanFindsNestedScopes:
 
     def _slice_tree(self, tmp_path, *, nested: bool):
         """Build a fake agents-slice cgroup dir with one OOM-killed scope."""
-        root = tmp_path / "kirocrew-agents.slice"
-        holder = root / "kirocrew-agents-abc123.slice" if nested else root
+        root = tmp_path / "ajcrew-agents.slice"
+        holder = root / "ajcrew-agents-abc123.slice" if nested else root
         scope = holder / "run-rdeadbeef.scope"
         scope.mkdir(parents=True)
         (scope / "memory.events.local").write_text("max 3\noom_kill 2\n")
@@ -174,7 +174,7 @@ class TestSlicePressureScanFindsNestedScopes:
         build keeps putting scopes directly in it, and its kills are still
         worth naming.
         """
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         root, scope_name = self._slice_tree(tmp_path, nested=nested)
         prev = sb._SLICE_OOM_SEEN
@@ -182,8 +182,8 @@ class TestSlicePressureScanFindsNestedScopes:
             # Baseline below the tree's counters, so the scan sees new kills.
             sb._SLICE_OOM_SEEN = {"oom_kill": 0, "max": 0}
             with (
-                patch("kiro_crew.sandbox._agents_slice_cgroup_dir", return_value=root),
-                patch("kiro_crew.sandbox._SLICE_LIMITS_APPLIED", False),
+                patch("aj_crew.sandbox._agents_slice_cgroup_dir", return_value=root),
+                patch("aj_crew.sandbox._SLICE_LIMITS_APPLIED", False),
             ):
                 message = sb.check_agents_slice_pressure()
         finally:

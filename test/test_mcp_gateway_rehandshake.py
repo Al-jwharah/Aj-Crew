@@ -19,9 +19,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from test_update_provider import _UNALLOCATABLE_PID
 
-from kiro_crew.mcp_gateway import backend as backend_mod
-from kiro_crew.mcp_gateway.backend import Backend
-from kiro_crew.mcp_gateway.pool import PoolKey
+from aj_crew.mcp_gateway import backend as backend_mod
+from aj_crew.mcp_gateway.backend import Backend
+from aj_crew.mcp_gateway.pool import PoolKey
 
 LOST_SESSION = {"code": -32602, "message": "Invalid request parameters", "data": ""}
 INIT_PARAMS = {

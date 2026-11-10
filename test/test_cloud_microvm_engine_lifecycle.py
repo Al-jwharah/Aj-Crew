@@ -14,8 +14,8 @@ from cloud_microvm_engine_helpers import (  # noqa: F401 -- fixtures are request
     engine_fixture,
 )
 
-from kiro_crew.cloud.microvm import states
-from kiro_crew.cloud.microvm.record import CrewRecord
+from aj_crew.cloud.microvm import states
+from aj_crew.cloud.microvm.record import CrewRecord
 
 
 class TestRegistrationNamesTheGuestsRunAsUser:
@@ -26,10 +26,10 @@ class TestRegistrationNamesTheGuestsRunAsUser:
     """
 
     def test_the_registry_is_given_the_guests_user(self, tmp_path, monkeypatch):
-        from kiro_crew.cloud.microvm import engine as engine_mod
-        from kiro_crew.cloud.microvm import recipe as recipe_mod
-        from kiro_crew.cloud.microvm.engine import MicroVmLaunchEngine
-        from kiro_crew.cloud.microvm.record import CrewStore
+        from aj_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import recipe as recipe_mod
+        from aj_crew.cloud.microvm.engine import MicroVmLaunchEngine
+        from aj_crew.cloud.microvm.record import CrewStore
 
         seen: list[dict] = []
         monkeypatch.setattr(
@@ -42,10 +42,10 @@ class TestRegistrationNamesTheGuestsRunAsUser:
         assert seen and seen[0]["ssm_run_as"] == recipe_mod.GUEST_RUN_AS
 
     def test_it_is_not_the_registrys_default(self, tmp_path, monkeypatch):
-        from kiro_crew.cloud.microvm import engine as engine_mod
-        from kiro_crew.cloud.microvm.engine import MicroVmLaunchEngine
-        from kiro_crew.cloud.microvm.record import CrewStore
-        from kiro_crew.instances.registry import _DEFAULT_SSM_RUN_AS
+        from aj_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm.engine import MicroVmLaunchEngine
+        from aj_crew.cloud.microvm.record import CrewStore
+        from aj_crew.instances.registry import _DEFAULT_SSM_RUN_AS
 
         seen: list[dict] = []
         monkeypatch.setattr(
@@ -60,7 +60,7 @@ class TestRegistrationNamesTheGuestsRunAsUser:
     def test_a_lane_that_names_no_user_keeps_the_registry_default(self):
         """EC2 and Fargate are unchanged: an omitted user means the registry's own
         default, not an empty one."""
-        from kiro_crew.cloud.connect import _run_as_kwargs
+        from aj_crew.cloud.connect import _run_as_kwargs
 
         assert _run_as_kwargs("") == {}
         assert _run_as_kwargs("crew") == {"ssm_run_as": "crew"}
@@ -75,7 +75,7 @@ class TestTheControlSecretExistsBeforeTheVmReadsIt:
     """
 
     def test_the_secret_is_written_before_the_vm_runs(self, engine, monkeypatch):
-        from kiro_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import engine as engine_mod
 
         built, _store, launcher = engine
         order: list[str] = []
@@ -103,7 +103,7 @@ class TestTheControlSecretExistsBeforeTheVmReadsIt:
         """
         from pathlib import Path
 
-        from kiro_crew.cloud.microvm import api as api_mod
+        from aj_crew.cloud.microvm import api as api_mod
 
         source = Path(api_mod.__file__).read_text(encoding="utf-8")
         head = source.split("def put_secret(", 1)[1].split("\ndef ", 1)[0]
@@ -142,7 +142,7 @@ class TestTheControlSecretExistsBeforeTheVmReadsIt:
         assert body["identityRef"] != body["secretRef"]
 
     def test_teardown_deletes_the_secret_after_the_vm_is_gone(self, engine, monkeypatch):
-        from kiro_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import engine as engine_mod
 
         built, _store, launcher = engine
         order: list[str] = []
@@ -173,7 +173,7 @@ class TestTheControlSecretExistsBeforeTheVmReadsIt:
         """
         import dataclasses
 
-        from kiro_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import engine as engine_mod
 
         built, store, _launcher = engine
         order: list[str] = []
@@ -200,7 +200,7 @@ class TestTheControlSecretExistsBeforeTheVmReadsIt:
         """Non-vacuity: a launch that never got a node must not send an empty id,
         which `deregister-managed-instance` would answer with a validation error that
         replaces the teardown's own outcome."""
-        from kiro_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import engine as engine_mod
 
         built, _store, _launcher = engine
         asked: list[str] = []
@@ -222,7 +222,7 @@ class TestTheControlSecretExistsBeforeTheVmReadsIt:
         permission error at teardown and a node nobody can remove."""
         import inspect
 
-        from kiro_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import engine as engine_mod
 
         source = inspect.getsource(engine_mod._deregister_node)
         assert "ssm:DeregisterManagedInstance" in source
@@ -233,7 +233,7 @@ class TestTheControlSecretExistsBeforeTheVmReadsIt:
         reversible."""
         import inspect
 
-        from kiro_crew.cloud.microvm import api as api_mod
+        from aj_crew.cloud.microvm import api as api_mod
 
         assert "--force-delete-without-recovery" not in inspect.getsource(api_mod.delete_secret)
 
@@ -250,7 +250,7 @@ class TestALifecycleStepRechecksTheRecordAfterItWaits:
     def test_a_teardown_during_the_online_wait_is_not_overwritten(self, engine, monkeypatch):
         """S1. The row says terminated and the VM is gone; the launch must not put
         its pre-wait copy back and leave a row claiming a running crew."""
-        from kiro_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import engine as engine_mod
 
         built, store, launcher = engine
         deregistered: list[str] = []
@@ -283,7 +283,7 @@ class TestALifecycleStepRechecksTheRecordAfterItWaits:
     ):
         """S2. A relaunch of the same tag is a DIFFERENT crew. The teardown must
         release the generation it was asked to end and leave the new one alone."""
-        from kiro_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import engine as engine_mod
 
         built, store, launcher = engine
         deregistered: list[str] = []
@@ -332,7 +332,7 @@ class TestALifecycleStepRechecksTheRecordAfterItWaits:
         has already put ``pending`` back, so the row reads live and of this
         generation and the fence passes. The cancellation has to be seen here.
         """
-        from kiro_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import engine as engine_mod
 
         built, store, launcher = engine
         original = launcher.run
@@ -360,7 +360,7 @@ class TestALifecycleStepRechecksTheRecordAfterItWaits:
     def test_a_teardown_during_the_activation_create_is_not_overwritten(self, engine):
         """S1c. The same whole-record write, one step earlier: the activation id is
         stored with a ``put`` of the copy read before ``create_activation``."""
-        from kiro_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import engine as engine_mod
 
         built, store, launcher = engine
         original = launcher.create_activation
@@ -392,24 +392,24 @@ class TestTheClientTokenIsDeterministic:
     """
 
     def test_the_same_launch_attempt_gets_the_same_token(self):
-        from kiro_crew.cloud.microvm.engine import _client_token
+        from aj_crew.cloud.microvm.engine import _client_token
 
         assert _client_token("kc-a", 3) == _client_token("kc-a", 3)
 
     def test_a_relaunch_gets_a_different_one(self):
         """A retry of one launch is one VM; a relaunch is a new one."""
-        from kiro_crew.cloud.microvm.engine import _client_token
+        from aj_crew.cloud.microvm.engine import _client_token
 
         assert _client_token("kc-a", 3) != _client_token("kc-a", 4)
         assert _client_token("kc-a", 3) != _client_token("kc-b", 3)
 
     def test_it_stays_inside_the_services_bound(self):
-        from kiro_crew.cloud.microvm.engine import _client_token
+        from aj_crew.cloud.microvm.engine import _client_token
 
         assert len(_client_token("kc-" + "f" * 200, 9)) <= 64
 
     def test_the_launch_sends_that_token_and_nothing_added_to_it(self, engine):
-        from kiro_crew.cloud.microvm.engine import _client_token
+        from aj_crew.cloud.microvm.engine import _client_token
 
         built, store, launcher = engine
         built.provision(tag="kc-a", size_key="", profile="p", region="us-east-1")
@@ -426,7 +426,7 @@ class TestAFailedRegistrationIsRolledBack:
 
     @pytest.fixture()
     def launched(self, engine, monkeypatch):
-        from kiro_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import engine as engine_mod
 
         built, store, launcher = engine
         monkeypatch.setattr(engine_mod.api, "delete_secret", lambda name, **kw: None)
@@ -470,7 +470,7 @@ class TestAFailedRegistrationIsRolledBack:
 
     def test_a_successful_registration_tears_nothing_down(self, engine, monkeypatch):
         """Non-vacuity: the rollback is on the failure path only."""
-        from kiro_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import engine as engine_mod
 
         built, store, launcher = engine
         monkeypatch.setattr(engine_mod.connect, "register_instance", lambda *a, **k: "row")
@@ -492,7 +492,7 @@ class TestTeardownUsesTheRecordsOwnCoordinates:
 
     @pytest.fixture()
     def launched(self, engine, monkeypatch):
-        from kiro_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import engine as engine_mod
 
         built, store, launcher = engine
         seen: dict[str, tuple[str, str]] = {}
@@ -535,7 +535,7 @@ class TestTeardownUsesTheRecordsOwnCoordinates:
 
     def test_a_row_with_no_coordinates_falls_back_to_the_request(self, engine, monkeypatch):
         """Rows written before this lane recorded them still have to tear down."""
-        from kiro_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import engine as engine_mod
 
         built, store, launcher = engine
         monkeypatch.setattr(engine_mod, "_delete_activation", lambda *a, **kw: None)
@@ -560,7 +560,7 @@ class TestTheWallIsRecordedAndSwept:
 
     @pytest.fixture()
     def swept(self, engine, monkeypatch):
-        from kiro_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import engine as engine_mod
 
         built, store, launcher = engine
         monkeypatch.setattr(engine_mod.api, "delete_secret", lambda name, **kw: None)
@@ -584,7 +584,7 @@ class TestTheWallIsRecordedAndSwept:
         assert record.wall_at - 500.0 == record.wall_seconds
 
     def test_an_expired_crew_is_released(self, swept):
-        from kiro_crew.cloud.microvm.engine import WALL_GRACE_SECONDS
+        from aj_crew.cloud.microvm.engine import WALL_GRACE_SECONDS
 
         built, store, launcher = swept
         store.put(
@@ -681,7 +681,7 @@ class TestTheWallIsRecordedAndSwept:
         that one is a crew the wall already took, which is what this sweep is for
         and which ``TestATerminateThatAnswersNotFoundIsACrewAlreadyGone`` covers.
         """
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         built, store, launcher = swept
 
@@ -740,7 +740,7 @@ class TestASweepInsideALaunchIsTimeBounded:
     @pytest.fixture()
     def slow(self, engine, monkeypatch):
         """A sweep whose every teardown costs 100 seconds of the engine's clock."""
-        from kiro_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import engine as engine_mod
 
         built, store, launcher = engine
         monkeypatch.setattr(engine_mod.api, "delete_secret", lambda name, **kw: None)
@@ -802,7 +802,7 @@ class TestASweepInsideALaunchIsTimeBounded:
     ):
         """Non-vacuity for the three above: the cap is reached by the clock the
         teardowns spend, not by the number of rows."""
-        from kiro_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import engine as engine_mod
 
         built, store, _launcher = engine
         monkeypatch.setattr(engine_mod.api, "delete_secret", lambda name, **kw: None)

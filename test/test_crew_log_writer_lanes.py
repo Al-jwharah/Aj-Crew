@@ -24,12 +24,12 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log.errors import CODE_ALREADY_OWNED, CrewLogError
-from kiro_crew.crew_log.writer import CrewLogWriter, GroupPart, WriteJob, WriterLimits
-from kiro_crew.testing.wait import default_timeout, wait_until
+from aj_crew import crew_log as lg
+from aj_crew.crew_log.errors import CODE_ALREADY_OWNED, CrewLogError
+from aj_crew.crew_log.writer import CrewLogWriter, GroupPart, WriteJob, WriterLimits
+from aj_crew.testing.wait import default_timeout, wait_until
 
-LOGGER = "kiro_crew.crew_log.writer"
+LOGGER = "aj_crew.crew_log.writer"
 UNITS = [f"acp-lane-{n:04d}" for n in range(8)]
 
 
@@ -47,7 +47,7 @@ class _Home:
 
     def create(self, unit: str) -> None:
         self.handles[unit] = lg.CrewLog.create(
-            lg.KIND_SESSION, unit, owner="default", agent="kirocrew"
+            lg.KIND_SESSION, unit, owner="default", agent="ajcrew"
         )
 
     def open_unit(self, unit: str) -> Any:
@@ -108,7 +108,7 @@ class _Home:
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     h = _Home()
     for unit in UNITS:
         h.create(unit)
@@ -301,8 +301,8 @@ def test_lanes_never_exceed_the_limit(home, pool):
 
 _HOLD_LEASE = """
 import sys
-from kiro_crew import crew_log as lg
-log = lg.CrewLog.create(lg.KIND_SESSION, sys.argv[1], owner="default", agent="kirocrew")
+from aj_crew import crew_log as lg
+log = lg.CrewLog.create(lg.KIND_SESSION, sys.argv[1], owner="default", agent="ajcrew")
 log.append("step/started", {"turn": 1, "step": 0}, src="gateway")
 print("held", flush=True)
 sys.stdin.read()
@@ -440,9 +440,9 @@ def test_units_of_one_slot_publish_in_the_order_they_appended(home, pool, groupe
 
 def test_the_emitters_writer_keeps_one_slots_units_on_one_lane(tmp_path, monkeypatch):
     """The installed writer takes its keys from ``writer_groups``, keyed by slot."""
-    from kiro_crew.crew_log import emit_runtime, writer_groups
+    from aj_crew.crew_log import emit_runtime, writer_groups
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     emit_runtime.reset_caches()
     try:
         writer_groups.note_unit_slot("acp-a", "chat-board")
@@ -518,7 +518,7 @@ def test_a_rebuilt_writer_does_not_write_beside_a_retired_writers_stuck_lane(hom
         assert home.steps(unit) == []
     finally:
         release.set()
-    from kiro_crew.crew_log.writer_groups import PROCESS_HOLDS
+    from aj_crew.crew_log.writer_groups import PROCESS_HOLDS
 
     # Step 1 lands in the file BEFORE the retired lane lets the unit go (it finishes the
     # batch's bookkeeping first). A flush in that window spends its whole fake-clock
@@ -556,10 +556,10 @@ def test_a_lane_that_close_retired_before_it_ran_writes_nothing(home):
 def test_a_work_report_into_an_unopened_unit_gets_its_slot_key(tmp_path, monkeypatch):
     """A unit this process never opened (a conductor's unit after a restart) is keyed by
     its header slot before its work record is handed to the writer."""
-    from kiro_crew.crew_log import emit, emit_runtime, writer_groups
+    from aj_crew.crew_log import emit, emit_runtime, writer_groups
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    monkeypatch.delenv("KIROCREW_CREW_LOG", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.delenv("AJCREW_CREW_LOG", raising=False)
     emit_runtime.reset_caches()
     try:
         unit = "acp-board-after-restart"
@@ -574,15 +574,15 @@ def test_a_work_report_into_an_unopened_unit_gets_its_slot_key(tmp_path, monkeyp
 
 
 def test_an_over_long_slot_is_not_kept_and_a_closed_session_forgets_its_key(tmp_path, monkeypatch):
-    from kiro_crew.crew_log import emit, emit_runtime, writer_groups
+    from aj_crew.crew_log import emit, emit_runtime, writer_groups
 
     writer_groups.note_unit_slot("acp-long", "s" * (writer_groups.MAX_KEY_CHARS + 1))
     assert writer_groups.hold_key("acp-long") == ""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    monkeypatch.delenv("KIROCREW_CREW_LOG", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.delenv("AJCREW_CREW_LOG", raising=False)
     emit_runtime.reset_caches()
     try:
-        emit.on_session_opened("acp-closing", agent="kirocrew", slot="chat-9")
+        emit.on_session_opened("acp-closing", agent="ajcrew", slot="chat-9")
         assert emit.flush()
         assert writer_groups.hold_key("acp-closing") == "slot:chat-9"
         emit.on_session_closed("acp-closing", "removed")
@@ -596,7 +596,7 @@ def test_a_unit_held_outside_this_writers_lanes_is_waited_for_not_left_stranded(
     """A unit held by an inline write or another writer is not this writer's lane's to
     come back to. The lane must keep looking until the hold goes, not exit and leave the
     entry buffered with nothing left to write it."""
-    from kiro_crew.crew_log.writer_groups import PROCESS_HOLDS
+    from aj_crew.crew_log.writer_groups import PROCESS_HOLDS
 
     unit = UNITS[0]
     writer = _writer(home, pool, hold_key=lambda u: "slot:stall-test" if u == unit else "")
@@ -692,7 +692,7 @@ def test_a_bare_id_freeze_upgrades_when_the_slot_is_noted_again(home, pool):
     try:
         # Admitted with no slot known, so frozen under its bare id. A stand-in hold on
         # the unit keeps every lane off it until its slot has been noted again.
-        from kiro_crew.crew_log.writer_groups import PROCESS_HOLDS
+        from aj_crew.crew_log.writer_groups import PROCESS_HOLDS
 
         assert PROCESS_HOLDS.try_claim(first, first, lambda u: "")
         try:
@@ -715,7 +715,7 @@ def test_two_units_of_one_known_slot_are_never_held_together_in_any_event_order(
     slot is unknown for at least one of them at that moment."""
     import itertools
 
-    from kiro_crew.crew_log.writer_groups import Holds
+    from aj_crew.crew_log.writer_groups import Holds
 
     ops = ["noteA", "noteB", "forgetA", "freezeA", "freezeB", "claimA", "claimB", "releaseA"]
     for order in itertools.permutations(ops):

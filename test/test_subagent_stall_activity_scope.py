@@ -19,19 +19,19 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp._dispatch import classify_notification
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import METHOD_SUBAGENT_LIST_UPDATE
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.base import (
+from aj_crew.acp._dispatch import classify_notification
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import METHOD_SUBAGENT_LIST_UPDATE
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.base import (
     EVENT_COMPLETE,
     EVENT_SUBAGENT_LIST,
     EVENT_TEXT_CHUNK,
     LLMEvent,
 )
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.testing.wait import finished
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.testing.wait import finished
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -154,7 +154,7 @@ async def test_dispatch_carries_provenance_onto_every_fanned_out_notice(kind, co
     sole owner) is not. The handle already gates its own compaction state on
     this; the event carries it so a consumer measuring this session's activity
     or startup sees the same answer."""
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         EVENT_AGENT_SWITCHED,
         EVENT_CLEAR_STATUS,
         EVENT_COMPACTION_STATUS,
@@ -274,7 +274,7 @@ async def _observe_after(event: SimpleNamespace) -> tuple[float, bool]:
 
     mgr = _manager(stream_factory)
     holder["mgr"] = mgr
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("watch my idle clock")
         assert info is not None
         await mgr._tasks[info.id]

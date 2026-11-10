@@ -21,7 +21,7 @@ name: Build Desktop (reusable)
 #
 # Linux is built NATIVELY per arch, never cross-compiled: build-desktop.sh
 # provisions a python-build-standalone interpreter and then RUNS it (pip
-# install + the self-containment gate `python -m kiro_crew --version`), so a
+# install + the self-containment gate `python -m aj_crew --version`), so a
 # host that cannot execute the target arch cannot build it. macOS gets away
 # with one host because Rosetta 2 executes the x86_64 slice; Linux has no
 # equivalent, hence one runner per arch.
@@ -95,7 +95,7 @@ on:
       build_channel:
         description: >-
           Release lane baked into each backend's _build_info.BUILD_CHANNEL
-          (scripts/stamp-distribution.sh, read by kiro_crew.build_channel).
+          (scripts/stamp-distribution.sh, read by aj_crew.build_channel).
           nightly.yml passes nightly, which makes a nightly build default
           agent.kas_bundle on. Empty (the default) stamps no lane.
         required: false
@@ -104,7 +104,7 @@ on:
       ui_index_strict:
         description: >-
           Fail the frontend build when the committed find_ui index
-          (src/kiro_crew/docs/ui-index.generated.json, guidePlans.gen.ts) is
+          (src/aj_crew/docs/ui-index.generated.json, guidePlans.gen.ts) is
           stale, instead of warning. Sets KC_UI_INDEX_STRICT=1 for
           `npm run build`. release.yml passes true so a stale release branch
           fails before any lane publishes; nightly.yml leaves it false, so a
@@ -172,7 +172,7 @@ on:
       build_channel:
         description: >-
           Release lane baked into each backend's _build_info.BUILD_CHANNEL
-          (scripts/stamp-distribution.sh, read by kiro_crew.build_channel).
+          (scripts/stamp-distribution.sh, read by aj_crew.build_channel).
           nightly.yml passes nightly, which makes a nightly build default
           agent.kas_bundle on. Empty (the default) stamps no lane.
         required: false
@@ -181,7 +181,7 @@ on:
       ui_index_strict:
         description: >-
           Fail the frontend build when the committed find_ui index
-          (src/kiro_crew/docs/ui-index.generated.json, guidePlans.gen.ts) is
+          (src/aj_crew/docs/ui-index.generated.json, guidePlans.gen.ts) is
           stale, instead of warning. Sets KC_UI_INDEX_STRICT=1 for
           `npm run build`. release.yml passes true so a stale release branch
           fails before any lane publishes; nightly.yml leaves it false, so a
@@ -199,7 +199,7 @@ env:
   KC_UI_INDEX_STRICT: ${{ inputs.ui_index_strict && '1' || '' }}
   # The edition stamp (setup.py build_py, packaging/build-desktop.sh). Empty for
   # every caller but release-lts.yml, which both readers take as oss.
-  KIROCREW_BUILD_EDITION: ${{ inputs.edition == 'lts' && 'lts' || '' }}
+  AJCREW_BUILD_EDITION: ${{ inputs.edition == 'lts' && 'lts' || '' }}
   # Read by scripts/stamp-distribution.sh: the lane baked into _build_info.py.
   KC_BUILD_CHANNEL: ${{ inputs.build_channel }}
 
@@ -238,7 +238,7 @@ jobs:
           - os: macos-15
             # 'unsigned-' prefix: this artifact is an inter-job handoff to the
             # sign job, NOT an installable deliverable. Humans should download
-            # only the KiroCrew-notarized-* artifact. GitHub shows all uploaded
+            # only the AjCrew-notarized-* artifact. GitHub shows all uploaded
             # artifacts on the run page with equal prominence, so the name is
             # the only place to signal that.
             artifact-name: unsigned-build-darwin-universal
@@ -330,8 +330,8 @@ jobs:
         shell: bash
         run: |
           # BSD-sed-compatible -i.bak form: this step runs on macos-15 too.
-          sed -i.bak "s/__version__ = \".*\"/__version__ = \"${STAMP_VERSION}\"/" src/kiro_crew/__init__.py
-          rm -f src/kiro_crew/__init__.py.bak
+          sed -i.bak "s/__version__ = \".*\"/__version__ = \"${STAMP_VERSION}\"/" src/aj_crew/__init__.py
+          rm -f src/aj_crew/__init__.py.bak
           # Stamp the Electron app: app.getVersion() (from the bundle's
           # Info.plist, which electron-builder fills from package.json) must
           # equal the feed version for the auto-updater's compare gate.
@@ -466,8 +466,8 @@ jobs:
           STAMP_VERSION: ${{ inputs.version }}
         shell: bash
         run: |
-          sed -i.bak "s/__version__ = \".*\"/__version__ = \"${STAMP_VERSION}\"/" src/kiro_crew/__init__.py
-          rm -f src/kiro_crew/__init__.py.bak
+          sed -i.bak "s/__version__ = \".*\"/__version__ = \"${STAMP_VERSION}\"/" src/aj_crew/__init__.py
+          rm -f src/aj_crew/__init__.py.bak
           node -e "const fs=require('fs');const f='website/electron/package.json';const p=JSON.parse(fs.readFileSync(f));p.version=process.env.STAMP_VERSION;fs.writeFileSync(f,JSON.stringify(p,null,2)+'\n')"
           echo "Building desktop: ${STAMP_VERSION}"
 
@@ -504,7 +504,7 @@ jobs:
   # answer /api/health. That launch is the only place the Electron shell's
   # bundled-KAS-engine hand-off (gateway-env.js) runs against a shipped bundle,
   # so the gateway child's environment is read back to prove it, and the
-  # installed `kirocrew kas status` must report the engine as built into the
+  # installed `ajcrew kas status` must report the engine as built into the
   # app. Unsigned build by design: signing is a later stage, and the launch
   # exercises the binary, not Gatekeeper. See scripts/smoke-macos-install.sh.
   smoke-install-macos:
@@ -532,7 +532,7 @@ jobs:
         with:
           name: macos-install-smoke-evidence
           path: |
-            ${{ runner.temp }}/kirocrew-smoke-*/logs/*
+            ${{ runner.temp }}/ajcrew-smoke-*/logs/*
             ~/Library/Logs/*/gateway-launch.log
           if-no-files-found: warn
           retention-days: 14
@@ -553,7 +553,7 @@ jobs:
   smoke-linux-packages:
     name: Smoke-install Linux packages (deb + rpm)
     needs: build-desktop
-    # The `kirocrew-runners` group in THIS repository, rather than the standard
+    # The `ajcrew-runners` group in THIS repository, rather than the standard
     # pool whose concurrency is shared enterprise-wide. The install checks run
     # in distro containers, so the runner's own image is not what they measure;
     # `build-desktop` above keeps its pinned ubuntu-22.04 legs, which ARE a
@@ -561,7 +561,7 @@ jobs:
     # group belongs to the kirodotdev organization, so a fork running its own
     # copy cannot reach it and would wait forever for a runner. The `||` leg
     # keeps a fork on the hosted image.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

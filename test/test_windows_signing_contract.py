@@ -62,13 +62,13 @@ SIGN_HOOK = ROOT / "website" / "electron" / "scripts" / "sign-windows.js"
 # a rename on either side has to be a deliberate, visible edit here: the Signer
 # application name doubles as the IAM role prefix AND the sts:ExternalId, so
 # changing it forces Signer to recreate the signing profiles or every job starts
-# failing with AccessDeniedException. Deployed in KiroCrewPublishCDK
+# failing with AccessDeniedException. Deployed in AjCrewPublishCDK
 # lib/windows-signer-stack.ts.
-SIGNER_APPLICATION_NAME = "KiroCrewWindows"
+SIGNER_APPLICATION_NAME = "AjCrewWindows"
 EXPECTED_SIGNING_ENV = {
-    "WINDOWS_SIGNING_UNSIGNED_BUCKET": "kirocrew-windows-unsigned-116101834266",
-    "WINDOWS_SIGNING_SIGNED_BUCKET": "kirocrew-windows-signed-116101834266",
-    "WINDOWS_SIGNING_PROFILE_ID": "KiroCrewWindowsExe",
+    "WINDOWS_SIGNING_UNSIGNED_BUCKET": "ajcrew-windows-unsigned-116101834266",
+    "WINDOWS_SIGNING_SIGNED_BUCKET": "ajcrew-windows-signed-116101834266",
+    "WINDOWS_SIGNING_PROFILE_ID": "AjCrewWindowsExe",
     "WINDOWS_SIGNING_ARTIFACT_ROLE": (
         f"arn:aws:iam::116101834266:role/{SIGNER_APPLICATION_NAME}-ArtifactAccessRole"
     ),
@@ -256,12 +256,12 @@ def test_the_publish_lane_expects_the_publisher_the_client_verifies() -> None:
 def test_the_published_basename_matches_the_clients_manual_download_url() -> None:
     # manualDownloadUrl() is the escape hatch a user follows when an in-app
     # update fails, so a basename drift turns the one recovery path into a 404.
-    # One stem per edition: `KiroCrew-Setup` on every oss channel,
-    # `KiroCrew-LTS-Setup` on lts (release-lts.yml). The client builds the same  # brand-ok
+    # One stem per edition: `AjCrew-Setup` on every oss channel,
+    # `AjCrew-LTS-Setup` on lts (release-lts.yml). The client builds the same  # brand-ok
     # name from the same stem (`${stem}-Setup.exe`).
     basename = _publish_job()["env"]["PUBLISHED_BASENAME"]
     assert basename == (
-        "${{ inputs.channel == 'lts' && 'KiroCrew-LTS-Setup' || 'KiroCrew-Setup' }}"  # brand-ok
+        "${{ inputs.channel == 'lts' && 'AjCrew-LTS-Setup' || 'AjCrew-Setup' }}"  # brand-ok
     )
     auto_update = (ROOT / "website" / "electron" / "auto-update.js").read_text(encoding="utf-8")
     assert "x64: `${stem}-Setup.exe`" in auto_update, (
@@ -269,7 +269,7 @@ def test_the_published_basename_matches_the_clients_manual_download_url() -> Non
         "the manual download link would 404."
     )
     assert (
-        'const stem = channel === "lts" ? "KiroCrew-LTS" : "KiroCrew";' in auto_update  # brand-ok
+        'const stem = channel === "lts" ? "AjCrew-LTS" : "AjCrew";' in auto_update  # brand-ok
     )  # brand-ok
 
 
@@ -389,7 +389,7 @@ def test_the_updater_offers_exactly_the_channels_that_publish_windows() -> None:
     assert release["with"]["promotion_base_version"], "stable promotion needs a base version"
     # The stable installer comes from the verified handoff artifact, never from a
     # fresh build-windows upload.
-    assert "KiroCrew-notarized-stable-" in release["with"]["installer_artifact"]
+    assert "AjCrew-notarized-stable-" in release["with"]["installer_artifact"]
 
     lts = next(
         job
@@ -473,7 +473,7 @@ def test_publishing_callers_consume_the_artifact_the_build_uploads() -> None:
             assert (
                 f"|| '{upload_name}'" in consumed
             ), f"{caller}'s fresh-build branch does not name {upload_name!r}: {consumed!r}"
-            assert "KiroCrew-notarized-stable-" in consumed, (
+            assert "AjCrew-notarized-stable-" in consumed, (
                 f"{caller}'s promotion branch must consume the verified handoff "
                 f"artifact, not a fresh build: {consumed!r}"
             )

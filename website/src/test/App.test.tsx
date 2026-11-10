@@ -57,7 +57,7 @@ vi.mock('../pages/ChatPage', () => ({ default: () => <div data-testid="chat-page
 vi.mock('../pages/SystemPage', () => ({ default: () => <div data-testid="system-page">SystemPage</div> }))
 vi.mock('../pages/ProjectsPage', () => ({ default: () => <div data-testid="projects-page">ProjectsPage</div> }))
 vi.mock('../pages/LogsPage', () => ({ default: () => <div data-testid="logs-page">LogsPage</div> }))
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => <div data-testid="mc-agents-page">MCAgentsPage</div> }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => <div data-testid="mc-agents-page">MCAgentsPage</div> }))
 vi.mock('../pages/CapabilitiesPage', () => ({ default: () => <div data-testid="capabilities-page">CapabilitiesPage</div> }))
 vi.mock('../pages/NotificationsPage', () => ({ default: () => <div data-testid="notifications-page">NotificationsPage</div> }))
 vi.mock('../pages/SchedulePage', () => ({ default: () => <div data-testid="schedule-page">SchedulePage</div> }))
@@ -73,7 +73,7 @@ vi.mock('../pages/HooksPage', () => {
   return { default: () => <div data-testid="hooks-page">HooksPage</div> }
 })
 vi.mock('../hooks/useWebSocket', () => ({ useWebSocket: () => ({ subscribeLogs: () => {} }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'kirocrew' }, { name: 'reviewer' }, { name: 'oracle' }], defaultAgent: 'kirocrew' })) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'ajcrew' }, { name: 'reviewer' }, { name: 'oracle' }], defaultAgent: 'ajcrew' })) }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span>, Lightbox: () => null }))
 vi.mock('../api/client', () => ({
@@ -85,7 +85,7 @@ vi.mock('../api/client', () => ({
     listApps: vi.fn().mockResolvedValue([]),
     // A NON-Kiro harness by default, so the credit pill's Kiro-only surfaces
     // (the no-reading dash) stay off unless a test names the kiro backend.
-    kirocrewConfig: vi.fn().mockResolvedValue({ agent: { acp_backend: 'claude' } }),
+    ajcrewConfig: vi.fn().mockResolvedValue({ agent: { acp_backend: 'claude' } }),
     system: vi.fn().mockResolvedValue({ mem_used_gb: 4.0, mem_total_gb: 16.0, cpu_pct: 25.0, disk_total_gb: 100.0, disk_free_gb: 60.0 }),
     chatSlotAgent: vi.fn().mockResolvedValue({}),
     // The left dock reads the roster; an empty one keeps its notice out of these frames.
@@ -117,7 +117,7 @@ vi.mock('../api/client', () => ({
       reason: 'ready',
       endpoint_configured: true,
       env_override: false,
-      env_var: 'KIROCREW_TELEMETRY_DISABLED',
+      env_var: 'AJCREW_TELEMETRY_DISABLED',
     }),
     patchConfig: vi.fn().mockResolvedValue({}),
     createChatSlot: vi.fn().mockResolvedValue({ key: 'feature-slot', title: 'feature-slot', messages: 0, running: false }),
@@ -231,7 +231,7 @@ describe('App routing', () => {
       expect(localStorage.getItem('mc-import-onboarded')).toBe('1')
     })
     expect(screen.queryByRole('dialog', { name: 'Import agent setup' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('dialog', { name: 'Welcome to Kiro Crew' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Welcome to Aj Crew' })).not.toBeInTheDocument()
   })
 
   it('waits for theme boot before deciding the foreign-agent import gate', async () => {
@@ -498,7 +498,7 @@ describe('App routing', () => {
       const api = await existingUser(0)
       vi.mocked(api.beaconStatus).mockResolvedValueOnce({
         enabled: false, would_send: false, reason: 'disabled', reason_code: 'disabled',
-        endpoint_configured: true, env_override: false, env_var: 'KIROCREW_TELEMETRY_DISABLED',
+        endpoint_configured: true, env_override: false, env_var: 'AJCREW_TELEMETRY_DISABLED',
       } as never)
       vi.mocked(api.collectionStatus).mockResolvedValueOnce({ enabled: false, env_pinned: false } as never)
       renderWithProviders(<App />, { route: '/chat' })
@@ -657,7 +657,7 @@ describe('App routing', () => {
     // kiro.dev link was removed.
     expect(screen.getByText('Star us')).toBeInTheDocument()
     expect(screen.getByText('Report issue')).toBeInTheDocument()
-    expect(screen.getByLabelText('Star Kiro Crew on GitHub')).toBeInTheDocument()
+    expect(screen.getByLabelText('Star Aj Crew on GitHub')).toBeInTheDocument()
     expect(
       screen.getByLabelText(
         'Report a problem — collects logs and crash reports, secrets removed',
@@ -777,7 +777,7 @@ describe('App routing', () => {
 
   it('refetches the Apps nav when the gateway reconnects (post-update recovery)', async () => {
     // Regression for the empty-rail-after-update bug: the dashboard fetches
-    // /api/apps once on mount, and right after a `kirocrew update` restart that
+    // /api/apps once on mount, and right after a `ajcrew update` restart that
     // first fetch can come back empty while the gateway is still warming. When
     // the WebSocket reconnects, the Apps nav must refetch and self-heal —
     // previously it stayed empty until a manual reload (Browse, lazy-fetched,
@@ -795,7 +795,7 @@ describe('App routing', () => {
     // Let the (empty) mount fetch settle; the app is absent.
     await waitFor(() => expect(screen.getByText('Sessions')).toBeInTheDocument())
     expect(screen.queryByText('Late App')).not.toBeInTheDocument()
-    // Simulate a `kirocrew update` restart: the WS connects, drops, reconnects.
+    // Simulate a `ajcrew update` restart: the WS connects, drops, reconnects.
     // Only the reconnect (after a drop) refetches the Apps nav — the rail
     // self-heals without a manual reload.
     act(() => { store.dispatch(sseConnected()) })
@@ -1127,11 +1127,11 @@ describe('App routing', () => {
     localStorage.removeItem('mc-apps-expanded')
   })
 
-  it('renders Kiro Crew branding', () => {
+  it('renders Aj Crew branding', () => {
     localStorage.setItem('mc-nav', '0') // expanded sidebar shows the brand text
     renderWithProviders(<App />, { route: '/chat' })
     // Brand (logo + name) moved from the top bar into the sidebar menu row.
-    // The wordmark renders as two colored segments ('Kiro ' + 'Crew').
+    // The wordmark renders as two colored segments ('Aj ' + 'Crew').
     expect(screen.getAllByText('Crew').length).toBeGreaterThan(0)
     localStorage.removeItem('mc-nav')
     return shellSettled()
@@ -1154,7 +1154,7 @@ describe('App routing', () => {
       light: { '--bg': '#fff', '--text': '#000', '--accent': '#840' },
       assets: {
         branding: {
-          botName: 'KIRO CREW',
+          botName: 'AJ CREW',
           logo: 'branding/logo.svg',
           favicon: 'branding/favicon.svg',
         },
@@ -1165,7 +1165,7 @@ describe('App routing', () => {
     try {
       const nav = screen.getByRole('navigation', { name: 'Main navigation' })
       const brand = within(nav).getByRole('button', { name: 'Collapse sidebar' })
-      await waitFor(() => expect(brand).toHaveTextContent('KIRO CREW'))
+      await waitFor(() => expect(brand).toHaveTextContent('AJ CREW'))
       expect(brand.querySelector('img')).toHaveAttribute(
         'src',
         '/api/theme/pearce/assets/branding/logo.svg',
@@ -1621,7 +1621,7 @@ describe('App routing', () => {
 
     // Entering the Web Preview's expand mode collapses the rail.
     act(() => {
-      window.dispatchEvent(new CustomEvent('kirocrew-preview-expand', { detail: { expanded: true } }))
+      window.dispatchEvent(new CustomEvent('ajcrew-preview-expand', { detail: { expanded: true } }))
     })
     expect(within(nav).getByRole('button', { name: 'Expand sidebar' })).toBeInTheDocument()
 
@@ -1631,7 +1631,7 @@ describe('App routing', () => {
 
     // Leaving expand mode must not undo that explicit choice.
     act(() => {
-      window.dispatchEvent(new CustomEvent('kirocrew-preview-expand', { detail: { expanded: false } }))
+      window.dispatchEvent(new CustomEvent('ajcrew-preview-expand', { detail: { expanded: false } }))
     })
     expect(within(nav).getByRole('button', { name: 'Collapse sidebar' })).toBeInTheDocument()
     localStorage.removeItem('mc-nav')
@@ -1645,12 +1645,12 @@ describe('App routing', () => {
     expect(within(nav).getByRole('button', { name: 'Collapse sidebar' })).toBeInTheDocument()
 
     act(() => {
-      window.dispatchEvent(new CustomEvent('kirocrew-preview-expand', { detail: { expanded: true } }))
+      window.dispatchEvent(new CustomEvent('ajcrew-preview-expand', { detail: { expanded: true } }))
     })
     expect(within(nav).getByRole('button', { name: 'Expand sidebar' })).toBeInTheDocument()
 
     act(() => {
-      window.dispatchEvent(new CustomEvent('kirocrew-preview-expand', { detail: { expanded: false } }))
+      window.dispatchEvent(new CustomEvent('ajcrew-preview-expand', { detail: { expanded: false } }))
     })
     expect(within(nav).getByRole('button', { name: 'Collapse sidebar' })).toBeInTheDocument()
     // The auto-collapse is transient: it never writes the persisted preference.

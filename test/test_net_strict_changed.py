@@ -1,7 +1,7 @@
 """``scripts/net_strict_changed.py`` runs the test files a change touches with the network floor strict.
 
 The rootdir floor already refuses an off-loopback connect, send or name lookup under
-``KIROCREW_NET_STRICT=1`` (raising at the call, failing the test at teardown) and CI
+``AJCREW_NET_STRICT=1`` (raising at the call, failing the test at teardown) and CI
 never sets it. The script sets it for the changed test files only, so a file is held
 to testing-conventions D10 from the day someone touches it and no baseline needs
 cleaning. These tests pin the three parts: which files it picks, that a changed file
@@ -27,7 +27,7 @@ from test_ratchet_scope import (
     assert_fixture_ignores_ambient_git,
 )
 
-from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS
+from aj_crew.platform.update_governance import _GIT_LOCATION_VARS
 
 ROOT = repo_root()
 _SPEC = importlib.util.spec_from_file_location(
@@ -130,11 +130,11 @@ def test_the_git_fixture_ignores_ambient_git_state(request, monkeypatch, tmp_pat
         ("test/test_a.py", True),
         ("test/sub/test_a.py", True),
         ("test/a_test.py", True),
-        ("src/kiro_crew/apps/builtins/x/tests/test_a.py", True),
+        ("src/aj_crew/apps/builtins/x/tests/test_a.py", True),
         ("test/conftest.py", False),
         ("test/helpers.py", False),
         ("test/test_a.txt", False),
-        ("src/kiro_crew/session.py", False),
+        ("src/aj_crew/session.py", False),
         ("scripts/test_a.py", False),
         ("-rf/test_a.py", False),
         ("test/test_a.py::test_b", False),
@@ -210,7 +210,7 @@ def _strict_run(repo: Path, files: list[str], monkeypatch, tmp_path: Path):
     """
     monkeypatch.setenv("PYTHONPATH", os.pathsep.join([str(ROOT), os.environ.get("PYTHONPATH", "")]))
     # This test's own data-home pin is not the child's: the child makes its own floor.
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
     junit = tmp_path / "junit.xml"
     finished, _code = strict.run_strict(
         files, root=repo, junit=junit, extra_args=("-p", "conftest"), timeout=240
@@ -263,7 +263,7 @@ def test_both_strict_failure_spellings_are_one_finding_and_other_failures_are_co
         '<failure message="OffLoopbackNetworkRefused: off-loopback network refused in a test: '
         'connect 203.0.113.9:443">trace</failure>'
         '<error message="failed on teardown with AssertionError: this test reached past '
-        "loopback under KIROCREW_NET_STRICT=1: connect 203.0.113.9:443. Stub the network at "
+        "loopback under AJCREW_NET_STRICT=1: connect 203.0.113.9:443. Stub the network at "
         'the seam">trace</error></testcase>'
         '<testcase classname="test.test_a" name="test_y"><failure message="assert 1 == 2">t'
         "</failure></testcase>"

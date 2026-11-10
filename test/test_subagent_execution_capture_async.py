@@ -8,18 +8,18 @@ from types import SimpleNamespace
 import pytest
 from test_subagent_continuable import _manager
 
-from kiro_crew import execution_context as execution
-from kiro_crew import subagent, subagent_persistence
-from kiro_crew.history import ConversationLog
-from kiro_crew.subagent import SubagentInfo
+from aj_crew import execution_context as execution
+from aj_crew import subagent, subagent_persistence
+from aj_crew.history import ConversationLog
+from aj_crew.subagent import SubagentInfo
 
 
 @pytest.fixture
 def legacy_v1_run(tmp_path, monkeypatch):
     """Write the pre-canonical state and sidecar shared by Global and named V1."""
-    from kiro_crew.config import paths
+    from aj_crew.config import paths
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setattr(paths, "_resolved_home", None)
     monkeypatch.setattr(subagent_persistence, "_SUBAGENTS_DIR", tmp_path / "subagents")
     (tmp_path / "config.json").write_text(
@@ -36,7 +36,7 @@ def legacy_v1_run(tmp_path, monkeypatch):
                 {
                     "id": run_id,
                     "task": "original",
-                    "agent": "kirocrew",
+                    "agent": "ajcrew",
                     "parent_session": "dashboard:closed",
                     "status": "done",
                     "session_id": "original-sid",
@@ -74,7 +74,7 @@ def test_legacy_v1_run_reopens_with_original_store_retention_and_app(
         assert restored.store.legacy_name == store
         assert restored.memory_mode == mode
         assert restored.app == app
-        assert restored.template_id == "kirocrew"
+        assert restored.template_id == "ajcrew"
     assert (state_path.read_bytes(), sidecar.read_bytes()) == before
 
 
@@ -173,7 +173,7 @@ async def test_async_spawn_captures_parent_off_loop_before_policy_gates(
     )
     parent = "dashboard:spawn-capture"
     captured = execution.ExecutionContext(
-        None, execution.MemoryStoreRef("default"), "template", "kirocrew", app="owner-app"
+        None, execution.MemoryStoreRef("default"), "template", "ajcrew", app="owner-app"
     )
     await asyncio.to_thread(execution.bind_session_execution, parent, captured)
     manager._memory_mode_for_session = lambda _key: "persistent"
@@ -204,7 +204,7 @@ async def test_async_spawn_captures_parent_off_loop_before_policy_gates(
     # beside it (as ``/api/spawn`` does): the gate's allowlist read then needs
     # no parent record either.
     options = (
-        {"_execution_context": captured.to_record(), "_parent_spawn_policy": ("kirocrew", ())}
+        {"_execution_context": captured.to_record(), "_parent_spawn_policy": ("ajcrew", ())}
         if supplied
         else {}
     )
@@ -222,7 +222,7 @@ async def test_cold_continuation_reads_one_snapshot_off_loop_and_rechecks_busy(
     manager = _manager()
     conv_id = "cold-capture"
     captured = execution.ExecutionContext(
-        None, execution.MemoryStoreRef("default"), "template", "kirocrew", "persistent", "owner-app"
+        None, execution.MemoryStoreRef("default"), "template", "ajcrew", "persistent", "owner-app"
     )
     await asyncio.to_thread(
         subagent_persistence.create_agent_folder,
@@ -285,7 +285,7 @@ async def test_cold_continuation_reads_one_snapshot_off_loop_and_rechecks_busy(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("cold", [False, True])
 async def test_retry_retains_original_member_app_and_mode_after_parent_closes(monkeypatch, cold):
-    from kiro_crew.dashboard.handlers import messaging
+    from aj_crew.dashboard.handlers import messaging
 
     parent = "dashboard:retry-parent"
     captured = execution.ExecutionContext(

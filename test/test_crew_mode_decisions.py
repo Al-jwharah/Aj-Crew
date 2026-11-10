@@ -13,7 +13,7 @@ from typing import Any
 import pytest
 from aiohttp import web
 
-from kiro_crew import crew_mode
+from aj_crew import crew_mode
 
 
 @pytest.fixture(autouse=True)
@@ -25,7 +25,7 @@ def _clean(_floor_monkeypatch):
     yield
 
 
-def _slot(key: str, agent: str = "kirocrew", **over: Any) -> SimpleNamespace:
+def _slot(key: str, agent: str = "ajcrew", **over: Any) -> SimpleNamespace:
     base = dict(
         key=key,
         agent=agent,
@@ -59,7 +59,7 @@ class _Sel:
 
 @pytest.fixture
 def _sel(monkeypatch):
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     rec = _Sel()
     monkeypatch.setattr(chat_handlers, "sel", lambda: rec)
@@ -67,7 +67,7 @@ def _sel(monkeypatch):
 
 
 def _refusal(slot: Any, agent: str, kind: str = "template", migration: bool = False):
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     caller = (
         chat_handlers.SlotAgentSwitchCaller.for_crew_mode_migration()
@@ -78,7 +78,7 @@ def _refusal(slot: Any, agent: str, kind: str = "template", migration: bool = Fa
 
 
 def test_a_crew_mode_root_refuses_another_agent_with_crew_mode_locked(_sel):
-    resp = _refusal(_slot("r", "kirocrew-team-lead"), "kirocrew")
+    resp = _refusal(_slot("r", "ajcrew-team-lead"), "ajcrew")
     assert isinstance(resp, web.Response) and resp.status == 409
     assert json.loads(resp.text)["code"] == "crew_mode_locked"
     assert _sel.calls and _sel.calls[0]["outcome"] == "denied"
@@ -87,44 +87,44 @@ def test_a_crew_mode_root_refuses_another_agent_with_crew_mode_locked(_sel):
 def test_crew_mode_turns_off_before_the_first_user_message_and_locks_after(_sel):
     # No user message yet (the switch notice is not one): back to a plain agent passes.
     fresh = _slot(
-        "r", "kirocrew-conductor", messages=[{"role": "assistant", "content": "Switched"}]
+        "r", "ajcrew-conductor", messages=[{"role": "assistant", "content": "Switched"}]
     )
-    assert _refusal(fresh, "kirocrew") is None
+    assert _refusal(fresh, "ajcrew") is None
     # Not onto another conductor, and not onto a crewmate.
-    assert _refusal(fresh, "kirocrew-security-conductor").status == 409
-    assert _refusal(fresh, "kirocrew", kind="member").status == 409
+    assert _refusal(fresh, "ajcrew-security-conductor").status == 409
+    assert _refusal(fresh, "ajcrew", kind="member").status == 409
     # From the first user message on, it is locked, in the window or trimmed to disk.
-    sent = _slot("r", "kirocrew-conductor")
-    assert _refusal(sent, "kirocrew").status == 409
-    trimmed = _slot("r", "kirocrew-conductor", messages=[], _disk_older_count=3)
-    assert _refusal(trimmed, "kirocrew").status == 409
+    sent = _slot("r", "ajcrew-conductor")
+    assert _refusal(sent, "ajcrew").status == 409
+    trimmed = _slot("r", "ajcrew-conductor", messages=[], _disk_older_count=3)
+    assert _refusal(trimmed, "ajcrew").status == 409
 
 
 def test_the_lock_lets_any_caller_move_a_root_onto_the_configured_conductor(_sel):
     # A root on another conductor (reopened after the migration finished, or stamped
     # with a conductor an update retired) is still Crew Mode; the one move the lock
     # allows is onto the conductor the config names, whoever asks.
-    root = _slot("r", "kirocrew-conductor")
-    assert _refusal(root, "kirocrew-team-lead") is None
-    assert _refusal(root, "kirocrew-team-lead", migration=True) is None
+    root = _slot("r", "ajcrew-conductor")
+    assert _refusal(root, "ajcrew-team-lead") is None
+    assert _refusal(root, "ajcrew-team-lead", migration=True) is None
     # Not onto another conductor, not into the member namespace, not as a name-only
     # pick (a crewmate of the same name would resolve first), and the migration moves
     # only onto the configured conductor.
-    assert _refusal(root, "kirocrew-security-conductor").status == 409
-    assert _refusal(root, "kirocrew-team-lead", kind="member").status == 409
-    assert _refusal(root, "kirocrew-team-lead", kind="").status == 409
-    assert _refusal(root, "kirocrew", migration=True).status == 409
+    assert _refusal(root, "ajcrew-security-conductor").status == 409
+    assert _refusal(root, "ajcrew-team-lead", kind="member").status == 409
+    assert _refusal(root, "ajcrew-team-lead", kind="").status == 409
+    assert _refusal(root, "ajcrew", migration=True).status == 409
     # A name-only re-pick of the agent the root is on is not a re-pick either: the
     # name resolves to a crewmate of the same name first.
-    assert _refusal(_slot("r", "kirocrew-team-lead"), "kirocrew-team-lead", kind="").status == 409
+    assert _refusal(_slot("r", "ajcrew-team-lead"), "ajcrew-team-lead", kind="").status == 409
 
 
 def test_a_reopened_worker_on_a_conductor_template_is_not_a_root(monkeypatch):
     """A reopen restores the creator onto the saved line only (``_saved_created_by``),
     never ``_created_by``; the root rule reads the saved creator like the slot list."""
-    reopened = _slot("w", "kirocrew-conductor", _saved_created_by="r")
+    reopened = _slot("w", "ajcrew-conductor", _saved_created_by="r")
     assert not crew_mode.slot_is_crew_mode_root(reopened)
-    assert _refusal(reopened, "kirocrew") is None
+    assert _refusal(reopened, "ajcrew") is None
     # With settled lineage the session tree decides: a tracked node with no parent
     # edge is a session ``session_release`` let go, so it stands on its own.
     monkeypatch.setattr(crew_mode, "lineage_is_settled", lambda: True)
@@ -135,21 +135,21 @@ def test_a_reopened_worker_on_a_conductor_template_is_not_a_root(monkeypatch):
     # A slot the tree never saw falls back to its saved creator.
     monkeypatch.setattr(crew_mode, "persisted_tree_slots", lambda: frozenset({"other"}))
     assert not crew_mode.slot_is_crew_mode_root(reopened)
-    assert crew_mode.slot_is_crew_mode_root(_slot("r", "kirocrew-conductor"))
+    assert crew_mode.slot_is_crew_mode_root(_slot("r", "ajcrew-conductor"))
 
 
 def test_a_re_pick_of_the_same_agent_passes_and_a_plain_chat_is_never_locked(_sel):
-    assert _refusal(_slot("r", "kirocrew-conductor"), "kirocrew-conductor") is None
-    assert _refusal(_slot("p"), "kirocrew-conductor") is None
+    assert _refusal(_slot("r", "ajcrew-conductor"), "ajcrew-conductor") is None
+    assert _refusal(_slot("p"), "ajcrew-conductor") is None
     # A worker (something dispatched it) is not a Crew Mode root, so it is not locked.
-    assert _refusal(_slot("w", "kirocrew-conductor", _created_by="r"), "kirocrew") is None
+    assert _refusal(_slot("w", "ajcrew-conductor", _created_by="r"), "ajcrew") is None
     assert _sel.calls == []
 
 
 def test_the_switch_loads_a_restored_window_off_the_loop_before_the_lock_reads_it():
     # The lock reads the transcript for a user message; a restored row never opened
     # still has its window on disk, and a read on the loop would load it inline.
-    from kiro_crew.dashboard.chat_api import agent_switch
+    from aj_crew.dashboard.chat_api import agent_switch
 
     source = open(agent_switch.__file__, encoding="utf-8").read()
     body = source.split("async def switch_slot_agent(", 1)[1]
@@ -162,10 +162,10 @@ def test_the_switch_loads_a_restored_window_off_the_loop_before_the_lock_reads_i
 async def test_the_provider_side_switch_is_vetoed_on_a_crew_mode_root(monkeypatch):
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard import chat_runner
-    from kiro_crew.dashboard.chat_turn.turn_locals import _Flow
+    from aj_crew.dashboard import chat_runner
+    from aj_crew.dashboard.chat_turn.turn_locals import _Flow
 
-    assert chat_runner.crew_mode_is_root(_slot("r", "kirocrew-conductor"))
+    assert chat_runner.crew_mode_is_root(_slot("r", "ajcrew-conductor"))
     assert not chat_runner.crew_mode_is_root(_slot("p"))
     audit = MagicMock()
     monkeypatch.setattr(chat_runner, "sel", lambda: audit)
@@ -186,13 +186,13 @@ async def test_the_provider_side_switch_is_vetoed_on_a_crew_mode_root(monkeypatc
     # The backend switching its own agent mid-turn is the one door the HTTP lock
     # cannot reach: the phase keeps the slot's agent, audits the denial, shows it,
     # and ends the turn so the session resets onto the conductor.
-    root = _slot("r", "kirocrew-conductor")
+    root = _slot("r", "ajcrew-conductor")
     root.append = lambda role, text, cls, **_kw: notices.append((role, text))
     notices: list = []
     turn = _turn(root)
-    event = SimpleNamespace(text="kirocrew")
+    event = SimpleNamespace(text="ajcrew")
     assert await chat_runner._on_agent_switched(turn, event) is _Flow.BREAK
-    assert root.agent == "kirocrew-conductor"
+    assert root.agent == "ajcrew-conductor"
     assert turn.needs_session_reset and turn._produced_visible_output
     assert notices and notices[0][0] == "notice" and "Ultra Mode" in notices[0][1]
     assert audit.log_api_access.call_args.kwargs["source"] == "crew_mode_locked"
@@ -217,9 +217,9 @@ class _State:
 @pytest.fixture
 def _switch(monkeypatch, tmp_path):
     """The migration's switch, recorded; ``busy`` keys answer turn_in_flight."""
-    from kiro_crew.config import paths
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.dashboard import crew_mode_migration as mig
+    from aj_crew.config import paths
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import crew_mode_migration as mig
 
     monkeypatch.setattr(paths, "data_home", lambda: tmp_path)
     monkeypatch.setattr(mig, "_pending", set())
@@ -243,26 +243,26 @@ def _switch(monkeypatch, tmp_path):
 
 @pytest.mark.asyncio
 async def test_a_first_start_records_the_conductor_and_moves_nothing(_switch):
-    state = _State(_slot("r", "kirocrew-team-lead"))
+    state = _State(_slot("r", "ajcrew-team-lead"))
     assert await _switch.mig.reconcile(state) is None
     assert _switch.mig.read_applied() == crew_mode.DEFAULT_CREW_MODE_AGENT
     assert _switch.calls == []
-    assert state._slots["r"].agent == "kirocrew-team-lead"
+    assert state._slots["r"].agent == "ajcrew-team-lead"
 
 
 @pytest.mark.asyncio
 async def test_a_changed_conductor_moves_every_idle_root_and_audits_each(_switch, monkeypatch):
-    _switch.mig.write_applied("kirocrew-conductor")
+    _switch.mig.write_applied("ajcrew-conductor")
     monkeypatch.setattr(crew_mode, "_configured", "better-conductor")
-    idle = _slot("r1", "kirocrew-conductor")
-    old = _slot("r2", "kirocrew-team-lead")
+    idle = _slot("r1", "ajcrew-conductor")
+    old = _slot("r2", "ajcrew-team-lead")
     plain = _slot("p")
-    worker = _slot("w", "kirocrew-conductor", _created_by="r1")
+    worker = _slot("w", "ajcrew-conductor", _created_by="r1")
     state = _State(idle, old, plain, worker)
     out = await _switch.mig.reconcile(state)
     assert out == {"moved": ["r1", "r2"], "pending": []}
     assert idle.agent == old.agent == "better-conductor"
-    assert plain.agent == "kirocrew" and worker.agent == "kirocrew-conductor"
+    assert plain.agent == "ajcrew" and worker.agent == "ajcrew-conductor"
     assert all(migration for _n, _a, migration in _switch.calls)
     assert len(_switch.audits) == 2
     assert _switch.mig.read_applied() == "better-conductor"
@@ -270,15 +270,15 @@ async def test_a_changed_conductor_moves_every_idle_root_and_audits_each(_switch
 
 @pytest.mark.asyncio
 async def test_a_busy_root_waits_for_its_next_idle_point(_switch, monkeypatch):
-    _switch.mig.write_applied("kirocrew-conductor")
+    _switch.mig.write_applied("ajcrew-conductor")
     monkeypatch.setattr(crew_mode, "_configured", "better-conductor")
-    busy = _slot("r", "kirocrew-conductor", turn_running=True)
+    busy = _slot("r", "ajcrew-conductor", turn_running=True)
     state = _State(busy)
     out = await _switch.mig.reconcile(state)
     assert out == {"moved": [], "pending": ["r"]}
-    assert busy.agent == "kirocrew-conductor" and _switch.calls == []
+    assert busy.agent == "ajcrew-conductor" and _switch.calls == []
     # Not advanced while a root is owed the move: a restart migrates it then.
-    assert _switch.mig.read_applied() == "kirocrew-conductor"
+    assert _switch.mig.read_applied() == "ajcrew-conductor"
     busy.turn_running = False
     out = await _switch.mig.migrate(state)
     assert out == {"moved": ["r"], "pending": []}
@@ -287,8 +287,8 @@ async def test_a_busy_root_waits_for_its_next_idle_point(_switch, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_an_update_shipping_a_new_default_moves_the_roots(_switch):
-    _switch.mig.write_applied("kirocrew-old-default")
-    root = _slot("r", "kirocrew-old-default", crew_mode_agent="kirocrew-old-default")
+    _switch.mig.write_applied("ajcrew-old-default")
+    root = _slot("r", "ajcrew-old-default", crew_mode_agent="ajcrew-old-default")
     state = _State(root)
     await _switch.mig.reconcile(state)
     assert root.agent == crew_mode.DEFAULT_CREW_MODE_AGENT
@@ -309,20 +309,20 @@ async def test_the_start_pass_learns_closed_roots_and_writes_no_stamp(_switch):
 
         def list_sessions(self) -> list[dict]:
             return [
-                {"key": "dashboard_old-root", "agent": "kirocrew-team-lead"},
-                {"key": "dashboard_old-worker", "agent": "kirocrew-team-lead"},
-                {"key": "dashboard_on-root", "agent": "kirocrew-conductor"},
-                {"key": "dashboard_plain", "agent": "kirocrew"},
+                {"key": "dashboard_old-root", "agent": "ajcrew-team-lead"},
+                {"key": "dashboard_old-worker", "agent": "ajcrew-team-lead"},
+                {"key": "dashboard_on-root", "agent": "ajcrew-conductor"},
+                {"key": "dashboard_plain", "agent": "ajcrew"},
             ]
 
         def get_metadata(self, key: str) -> dict:
             if key == "dashboard_old-worker":
-                return {"agent": "kirocrew-team-lead", "created_by": "old-root"}
+                return {"agent": "ajcrew-team-lead", "created_by": "old-root"}
             if key == "dashboard_on-root":
-                return {"agent": "kirocrew-conductor", "crew_mode_agent": "kirocrew-conductor"}
-            return {"agent": "kirocrew-team-lead"}
+                return {"agent": "ajcrew-conductor", "crew_mode_agent": "ajcrew-conductor"}
+            return {"agent": "ajcrew-team-lead"}
 
-    lead = _slot("lead", "kirocrew-team-lead")
+    lead = _slot("lead", "ajcrew-team-lead")
     state = _State(lead)
     state.conversation_log = _Log()
     await _switch.mig.on_start(state)
@@ -334,10 +334,10 @@ async def test_the_start_pass_learns_closed_roots_and_writes_no_stamp(_switch):
 
 class _RootLog:
     def list_sessions(self) -> list[dict]:
-        return [{"key": "dashboard_closed-root", "agent": "kirocrew-conductor"}]
+        return [{"key": "dashboard_closed-root", "agent": "ajcrew-conductor"}]
 
     def get_metadata(self, key: str) -> dict:
-        return {"agent": "kirocrew-conductor"}
+        return {"agent": "ajcrew-conductor"}
 
     def update_metadata(self, key: str, fields: dict) -> None:
         pass
@@ -347,7 +347,7 @@ class _RootLog:
 async def test_G5_a_live_worker_of_a_closed_root_is_hidden_from_the_first_frame(_switch):
     """The start pass learns closed roots off the boot path and says when one holds a
     live slot, so the slot frame that follows stamps the worker."""
-    worker = _slot("w", "kirocrew-worker", _created_by="closed-root")
+    worker = _slot("w", "ajcrew-worker", _created_by="closed-root")
     state = _State(worker)
     state.conversation_log = _RootLog()
     assert "closed-root" not in crew_mode.known_roots()
@@ -362,7 +362,7 @@ async def test_G5_a_live_worker_of_a_closed_root_is_hidden_from_the_first_frame(
 
 @pytest.mark.asyncio
 async def test_G5_the_start_pass_pushes_a_frame_when_it_learns_a_holding_root(_switch):
-    worker = _slot("w", "kirocrew-worker", _created_by="closed-root")
+    worker = _slot("w", "ajcrew-worker", _created_by="closed-root")
     state = _State(worker)
     state.conversation_log = _RootLog()
     await _switch.mig.on_start(state)
@@ -370,7 +370,7 @@ async def test_G5_the_start_pass_pushes_a_frame_when_it_learns_a_holding_root(_s
 
 
 def test_a_history_stem_is_its_slot_key():
-    from kiro_crew.dashboard.crew_mode_migration import history_slot_key
+    from aj_crew.dashboard.crew_mode_migration import history_slot_key
 
     assert history_slot_key("dashboard_chat-3-1792") == "chat-3-1792"
     assert history_slot_key("dashboard_dashboard_chat-3-1792") == "chat-3-1792"
@@ -379,8 +379,8 @@ def test_a_history_stem_is_its_slot_key():
 
 
 def test_the_config_key_is_watched_live_and_the_start_pass_follows_the_restore():
-    from kiro_crew.dashboard import server
-    from kiro_crew.dashboard.server_runtime import config_watch
+    from aj_crew.dashboard import server
+    from aj_crew.dashboard.server_runtime import config_watch
 
     source = open(config_watch.__file__, encoding="utf-8").read()
     assert '"agent.crew_mode_agent"' in source
@@ -396,15 +396,15 @@ def test_the_config_key_is_watched_live_and_the_start_pass_follows_the_restore()
 def test_the_session_catalog_carries_the_crew_fields(tmp_path):
     # ``list_sessions`` rows name the creator, the namespace and the Crew Mode stamp off
     # the metadata line, so History can classify a row without opening its file.
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     log = ConversationLog(base_dir=tmp_path)
     log.append("dashboard_root", "user", "go")
-    log.update_metadata("dashboard_root", {"agent": "kirocrew-conductor", "agent_kind": "template"})
+    log.update_metadata("dashboard_root", {"agent": "ajcrew-conductor", "agent_kind": "template"})
     log.append("dashboard_w", "user", "go")
     log.update_metadata(
         "dashboard_w",
-        {"agent": "kirocrew-conductor", "created_by": "root", "crew_mode_agent": ""},
+        {"agent": "ajcrew-conductor", "created_by": "root", "crew_mode_agent": ""},
     )
     by_key = {row["key"]: row for row in log.list_sessions()}
     assert by_key["dashboard_root"]["agent_kind"] == "template"

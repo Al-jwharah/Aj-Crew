@@ -108,7 +108,7 @@ function everyTopKeyAtColumnZero(block: string, doc: Document.Parsed): boolean {
 /** Reproduce the reader's fold for a BARE LITERAL block scalar, from the source lines
  *  after its header.
  *
- *  Mirrors `fold_block_scalar` in `src/kiro_crew/frontmatter.py` for the `|` family: it
+ *  Mirrors `fold_block_scalar` in `src/aj_crew/frontmatter.py` for the `|` family: it
  *  separates the trailing blank lines from the content, dedents by the first non-blank
  *  line's indent, joins with newlines, and applies the header's chomping modifier --
  *  `-` drops every trailing break, `+` keeps them all, and the default keeps exactly one.
@@ -884,7 +884,7 @@ export function parseSkillContent(raw: string, key: string): SkillFormData {
 }
 
 /** The name the skills create handler will store this under, mirrored from
- *  `api_skills_create` in `src/kiro_crew/dashboard/handlers/prompts_skill_edits.py`.
+ *  `api_skills_create` in `src/aj_crew/dashboard/handlers/prompts_skill_edits.py`.
  *
  *  This is NOT `sanitizePromptName`, and the difference is deliberate: the skills
  *  rule PERMITS `/` so a name can nest (`utils/code`), it strips leading and

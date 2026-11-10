@@ -37,9 +37,9 @@ from dashboard_templates_helpers import (
 )
 from skill_script_helpers import load_skill_script, no_bytecode
 
-import kiro_crew.dashboard_templates.parity as parity
-from kiro_crew.crew_log.projection import FOLD_NAMES
-from kiro_crew.dashboard_templates import (
+import aj_crew.dashboard_templates.parity as parity
+from aj_crew.crew_log.projection import FOLD_NAMES
+from aj_crew.dashboard_templates import (
     MAX_CARD_DATA_BYTES,
     MAX_CARD_FIELDS,
     NOT_SAID,
@@ -52,7 +52,7 @@ from kiro_crew.dashboard_templates import (
     read_int,
     read_text,
 )
-from kiro_crew.dashboard_templates.parity import (
+from aj_crew.dashboard_templates.parity import (
     CONTROL_TAGS,
     contract_keys,
     control_tags_used,
@@ -61,16 +61,16 @@ from kiro_crew.dashboard_templates.parity import (
     html_fields,
     outbound_references,
 )
-from kiro_crew.dashboard_templates.registry import REGISTRY, html_path, spec_for
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.dashboard_templates.registry import REGISTRY, html_path, spec_for
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
-PACKAGE = ROOT / "src" / "kiro_crew" / "dashboard_templates"
+PACKAGE = ROOT / "src" / "aj_crew" / "dashboard_templates"
 SCAFFOLD = (
     ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
+    / "ajcrew-dev"
     / "dashboard-template"
     / "scripts"
     / "scaffold.py"
@@ -388,7 +388,7 @@ class TestTheRegistry:
         Only the real normalizer checks html bytes, data bytes, field count and names at
         once; a page past a cap passes every other gate and the host drops it WHOLE.
         """
-        host = importlib.import_module("kiro_crew.dashboard.dynamic_cards")
+        host = importlib.import_module("aj_crew.dashboard.dynamic_cards")
         for slug, spec in REGISTRY.items():
             page = html_path(slug).read_text(encoding="utf-8")
             contract_module = importlib.import_module(spec.contract.__module__)
@@ -700,9 +700,9 @@ class TestTheScaffoldedTemplateHoldsTheInvariants:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(text, encoding="utf-8")
 
-        pkg = tmp_path / "src" / "kiro_crew" / "dashboard_templates"
-        contract_name = f"kiro_crew.dashboard_templates.{self.SLUG}_contract"
-        provider_name = f"kiro_crew.dashboard_templates.{self.SLUG}_provider"
+        pkg = tmp_path / "src" / "aj_crew" / "dashboard_templates"
+        contract_name = f"aj_crew.dashboard_templates.{self.SLUG}_contract"
+        provider_name = f"aj_crew.dashboard_templates.{self.SLUG}_provider"
         with no_bytecode():
             contract = load_skill_script(contract_name, pkg / f"{self.SLUG}_contract.py")
             sys.modules[contract_name] = contract
@@ -750,7 +750,7 @@ class TestTheScaffoldedTemplateHoldsTheInvariants:
         together, judged on html bytes, data bytes, field count and every field name at
         once. A template born over a cap would be dropped whole on first render.
         """
-        host = importlib.import_module("kiro_crew.dashboard.dynamic_cards")
+        host = importlib.import_module("aj_crew.dashboard.dynamic_cards")
         card = emitted.build({}, emitted.empty_judgment, captured_at=self.STAMP)
         accepted = host.normalize_card({"html": emitted.page, "data": card_data(card)})
         assert accepted is not None, "the host refuses the scaffold's own template"
@@ -919,7 +919,7 @@ class TestTheRestatedHostLimits:
     @staticmethod
     def _host() -> Any:
         """The host card normalizer. Imported per call so a stub can be injected."""
-        return importlib.import_module("kiro_crew.dashboard.dynamic_cards")
+        return importlib.import_module("aj_crew.dashboard.dynamic_cards")
 
     def test_the_field_cap_is_the_hosts_real_boundary(self) -> None:
         """Pinned against behaviour because the host names no constant for it.
@@ -978,11 +978,11 @@ class TestTheRestatedHostLimits:
         case reading the host must fail. The browser-side case reads a file, so no stub
         can make it lie; it is excluded.
         """
-        stub = types.ModuleType("kiro_crew.dashboard.dynamic_cards")
+        stub = types.ModuleType("aj_crew.dashboard.dynamic_cards")
         stub.MAX_DATA_BYTES = MAX_CARD_DATA_BYTES + 1  # type: ignore[attr-defined]
         stub._FIELD_NAME = re.compile(r"zzz\Z")  # type: ignore[attr-defined]
         stub.normalize_card = lambda raw, previous=None: None  # type: ignore[attr-defined]
-        monkeypatch.setitem(sys.modules, "kiro_crew.dashboard.dynamic_cards", stub)
+        monkeypatch.setitem(sys.modules, "aj_crew.dashboard.dynamic_cards", stub)
 
         for case in (
             self.test_the_field_cap_is_the_hosts_real_boundary,
@@ -1000,7 +1000,7 @@ class TestTheRestatedHostLimits:
         """
         host = self._host()
         assert callable(getattr(host, "normalize_card", None)), (
-            "kiro_crew.dashboard.dynamic_cards imports but has no normalize_card; "
+            "aj_crew.dashboard.dynamic_cards imports but has no normalize_card; "
             "_host() is pointed at the wrong module"
         )
         assert Path(host.__file__).name == "dynamic_cards.py"
@@ -1019,7 +1019,7 @@ class TestWhatShips:
     def _declared_globs() -> list[str]:
         cfg = configparser.ConfigParser()
         cfg.read(ROOT / "setup.cfg", encoding="utf-8")
-        raw = cfg.get("options.package_data", "kiro_crew", fallback="")
+        raw = cfg.get("options.package_data", "aj_crew", fallback="")
         return [
             line.strip()
             for line in raw.splitlines()
@@ -1033,7 +1033,7 @@ class TestWhatShips:
         start failing only once the first template arrived -- charged to whoever added
         it. The declaration is what has to exist now.
         """
-        pkg = ROOT / "src" / "kiro_crew"
+        pkg = ROOT / "src" / "aj_crew"
         probe = (PACKAGE / "example.html").relative_to(pkg).as_posix()
         assert any(fnmatch(probe, glob) for glob in self._declared_globs()), (
             "no [options.package_data] glob covers this package's .html pages, so pip "
@@ -1063,7 +1063,7 @@ class TestWhichCheckoutItWritesInto:
 
     @staticmethod
     def _fake_checkout(root: Path) -> Path:
-        (root / "src" / "kiro_crew").mkdir(parents=True)
+        (root / "src" / "aj_crew").mkdir(parents=True)
         return root
 
     def test_the_working_directorys_checkout_wins(
@@ -1132,7 +1132,7 @@ class TestTheScaffoldCli:
         """
         mod = _scaffold()
         root = tmp_path
-        (root / "src" / "kiro_crew").mkdir(parents=True)
+        (root / "src" / "aj_crew").mkdir(parents=True)
         files = mod.emit("x_board", "work", mod.parse_fields(["open:fraction:calls"]), root)
         real = os.open
 
@@ -1176,7 +1176,7 @@ class TestTheScaffoldCli:
         """
         mod = _scaffold()
         root = tmp_path
-        (root / "src" / "kiro_crew").mkdir(parents=True)
+        (root / "src" / "aj_crew").mkdir(parents=True)
         first = mod.emit("x_board", "tools", mod.parse_fields(["open:fraction:calls"]), root)
         second = mod.emit(
             "x_board", "approvals", mod.parse_fields(["pending:fraction:requested"]), root
@@ -1197,7 +1197,7 @@ class TestTheScaffoldCli:
         """
         mod = _scaffold()
         root = tmp_path
-        (root / "src" / "kiro_crew").mkdir(parents=True)
+        (root / "src" / "aj_crew").mkdir(parents=True)
         files = mod.emit("x_board", "tools", mod.parse_fields(["open:fraction:calls"]), root)
         target = list(files)[-1]
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -1224,7 +1224,7 @@ class TestTheScaffoldCli:
         """
         mod = _scaffold()
         root = tmp_path
-        (root / "src" / "kiro_crew").mkdir(parents=True)
+        (root / "src" / "aj_crew").mkdir(parents=True)
         files = mod.emit("x_board", "tools", mod.parse_fields(["open:fraction:calls"]), root)
         mod.publish(root, files, force=False)
         changed = {path: text + "\n# changed\n" for path, text in files.items()}
@@ -1236,7 +1236,7 @@ class TestTheScaffoldCli:
         the file that stopped it alone -- that file belongs to whoever wrote it first."""
         mod = _scaffold()
         root = tmp_path
-        (root / "src" / "kiro_crew").mkdir(parents=True)
+        (root / "src" / "aj_crew").mkdir(parents=True)
         files = mod.emit("x_board", "tools", mod.parse_fields(["open:fraction:calls"]), root)
         targets = list(files)
         targets[-1].parent.mkdir(parents=True, exist_ok=True)
@@ -1257,12 +1257,12 @@ class TestTheScaffoldCli:
         `mkdir(parents=True)` accepts a linked directory, so BOTH shapes are pinned.
         """
         root = tmp_path / "checkout"
-        (root / "src" / "kiro_crew").mkdir(parents=True)
+        (root / "src" / "aj_crew").mkdir(parents=True)
         outside = tmp_path / "outside"
         outside.mkdir()
         victim = outside / "victim.py"
         victim.write_text("do not touch\n", encoding="utf-8")
-        pkg = root / "src" / "kiro_crew" / "dashboard_templates"
+        pkg = root / "src" / "aj_crew" / "dashboard_templates"
         if planted == "file":
             pkg.mkdir()
             (pkg / "x_board_contract.py").symlink_to(victim)
@@ -1293,7 +1293,7 @@ class TestTheScaffoldCli:
         ]
         assert commands, "SKILL.md documents no runnable scaffold command in a bash block"
         root = tmp_path / "checkout"
-        (root / "src" / "kiro_crew").mkdir(parents=True)
+        (root / "src" / "aj_crew").mkdir(parents=True)
         for command in commands:
             argv = shlex.split(command)
             index = next(i for i, token in enumerate(argv) if token.endswith("scaffold.py"))

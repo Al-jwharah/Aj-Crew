@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.security import redact_credentials
-from kiro_crew.security import redaction as _redaction
+from aj_crew.security import redact_credentials
+from aj_crew.security import redaction as _redaction
 
 # The canonical AWS documentation example secret key, never a live credential.
 KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
@@ -172,8 +172,8 @@ def test_many_arns_are_scanned_once() -> None:
 
 def _flush_streamed(deltas: list[str]) -> str:
     """Stream *deltas* through the per-delta removers as the run loop does, then flush."""
-    from kiro_crew.dashboard import chat_runner
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard import chat_runner
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("arn-flush")
     text = ""
@@ -186,7 +186,7 @@ def _flush_streamed(deltas: list[str]) -> str:
 
 @pytest.mark.parametrize("cut", [10, 30, 49])
 def test_a_delta_split_target_group_arn_saves_the_reply_not_the_withheld_notice(cut: int) -> None:
-    from kiro_crew.dashboard.chat_turn.segment_flush import _SEGMENT_UNCHECKED_TEXT
+    from aj_crew.dashboard.chat_turn.segment_flush import _SEGMENT_UNCHECKED_TEXT
 
     # The later delta cannot see the `arn:` prefix and redacts the run, so the
     # save falls back to main's verdict instead of withholding the whole reply.

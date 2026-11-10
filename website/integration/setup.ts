@@ -550,13 +550,13 @@ beforeEach(({ onTestFinished }) => {
 // out of the log. Any other file is expected to emit none; its warning is printed
 // as usual and reported again at the end of the file. Repeated full local runs list
 // the same files bar one or two, each seen in one run only, so whether a file warns
-// can depend on timing: that report does not fail the run. KIROCREW_ACT_STRICT=1 fails
+// can depend on timing: that report does not fail the run. AJCREW_ACT_STRICT=1 fails
 // the test that emitted the warning instead (or the file, for a warning outside any
 // test). A listed file that emitted none in a run of every one of its tests is
 // reported too, so the list shrinks. SHRINK-ONLY: remove a file once its barriers
 // are fixed; never add one to quiet a new warning.
 const ACT_WARNING_FILES: ReadonlySet<string> = new Set(actWarningBaseline)
-const ACT_STRICT = process.env.KIROCREW_ACT_STRICT === '1'
+const ACT_STRICT = process.env.AJCREW_ACT_STRICT === '1'
 let actInTest = 0
 let actInFile = 0
 let actInTests = 0

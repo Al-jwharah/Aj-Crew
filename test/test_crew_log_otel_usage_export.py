@@ -21,13 +21,13 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import bus as crew_log_bus
-from kiro_crew.crew_log import checkpoint as savepoints
-from kiro_crew.crew_log import eager, emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log.projection_otel_usage import (
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import bus as crew_log_bus
+from aj_crew.crew_log import checkpoint as savepoints
+from aj_crew.crew_log import eager, emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log.projection_otel_usage import (
     OTEL_USAGE_FOLD_NAME,
     SESSION_OPENED_TYPE,
     TURN_STARTED_TYPE,
@@ -38,9 +38,9 @@ from kiro_crew.crew_log.projection_otel_usage import (
     _otel_usage_start,
     _otel_usage_step,
 )
-from kiro_crew.crew_log.schema import Entry
-from kiro_crew.metrics import crew_log_export as export
-from kiro_crew.metrics.crew_log_export import Metric
+from aj_crew.crew_log.schema import Entry
+from aj_crew.metrics import crew_log_export as export
+from aj_crew.metrics.crew_log_export import Metric
 
 GATEWAY = "gateway"
 SESSION = "s-otel-usage-eager"
@@ -73,7 +73,7 @@ class TestTheDashboardTypeDeclaration:
     """
 
     def test_otel_usage_turns_is_declared_opaque(self) -> None:
-        from kiro_crew import dashboard_types as dt
+        from aj_crew import dashboard_types as dt
 
         assert dt._OPAQUE.get("otel_usage.turns") == "an actor value"
 
@@ -96,7 +96,7 @@ class TestTheFold:
         accident. See the module's own docstring for why nothing here is free text.
         """
         state = _otel_usage_start()
-        _otel_usage_step(state, _entry(1, SESSION_OPENED_TYPE, _opened("kirocrew-worker")))
+        _otel_usage_step(state, _entry(1, SESSION_OPENED_TYPE, _opened("ajcrew-worker")))
         rendered = _otel_usage_render(state)
         assert set(rendered) == {
             "opened",
@@ -108,18 +108,18 @@ class TestTheFold:
         }
         assert rendered["opened"] is True
         # The raw name was folded to the closed kind in step; the render carries the
-        # enum, never "kirocrew-worker".
+        # enum, never "ajcrew-worker".
         assert rendered["opened_agent_kind"] == "worker"
         assert rendered["opened_ts"] == 1_001
         assert rendered["turns"] == {}
 
     def test_session_opened_is_counted_once_even_on_a_resumed_reattach(self) -> None:
         state = _otel_usage_start()
-        _otel_usage_step(state, _entry(1, SESSION_OPENED_TYPE, _opened("kirocrew-worker")))
+        _otel_usage_step(state, _entry(1, SESSION_OPENED_TYPE, _opened("ajcrew-worker")))
         # A re-attach to the same crew log carries another session/opened with
         # resumed=True; this fold's own opening fact must not flip or re-fire.
         _otel_usage_step(
-            state, _entry(2, SESSION_OPENED_TYPE, {**_opened("kirocrew-lite"), "resumed": True})
+            state, _entry(2, SESSION_OPENED_TYPE, {**_opened("ajcrew-lite"), "resumed": True})
         )
         rendered = _otel_usage_render(state)
         assert rendered["opened"] is True
@@ -205,7 +205,7 @@ class TestTheFold:
         state = _otel_usage_start()
         _otel_usage_step(
             state,
-            _entry(1, SESSION_OPENED_TYPE, {**_opened("kirocrew-worker"), "slot": 7}),
+            _entry(1, SESSION_OPENED_TYPE, {**_opened("ajcrew-worker"), "slot": 7}),
         )
         assert _otel_usage_render(state)["opened_agent_kind"] == "worker"
 
@@ -220,20 +220,20 @@ class TestTheClosedVocabularies:
     @pytest.mark.parametrize(
         "raw_agent,expected",
         [
-            ("kirocrew-worker", "worker"),
-            ("kirocrew-conductor", "conductor"),
-            ("kirocrew-pipeline-conductor", "pipeline_conductor"),
-            ("kirocrew-ledger-conductor", "ledger_conductor"),
-            ("kirocrew-security-conductor", "security_conductor"),
-            ("kirocrew-lite", "lite"),
-            ("kirocrew-guest", "guest"),
-            ("kirocrew-dashboard-author", "dashboard_author"),
-            ("kirocrew-knowledge", "knowledge"),
-            ("kirocrew-research", "research"),
-            ("kirocrew-team-lead", "team_lead"),
-            ("kirocrew-heartbeat", "heartbeat"),
-            ("kirocrew-dashboard-manager", "dashboard_manager"),
-            ("kirocrew", "default"),
+            ("ajcrew-worker", "worker"),
+            ("ajcrew-conductor", "conductor"),
+            ("ajcrew-pipeline-conductor", "pipeline_conductor"),
+            ("ajcrew-ledger-conductor", "ledger_conductor"),
+            ("ajcrew-security-conductor", "security_conductor"),
+            ("ajcrew-lite", "lite"),
+            ("ajcrew-guest", "guest"),
+            ("ajcrew-dashboard-author", "dashboard_author"),
+            ("ajcrew-knowledge", "knowledge"),
+            ("ajcrew-research", "research"),
+            ("ajcrew-team-lead", "team_lead"),
+            ("ajcrew-heartbeat", "heartbeat"),
+            ("ajcrew-dashboard-manager", "dashboard_manager"),
+            ("ajcrew", "default"),
             ("", "other"),
             ("a-third-party-agent", "other"),
             ("my-custom-template", "other"),
@@ -266,11 +266,11 @@ class TestTheClosedVocabularies:
         stem a crewmate happens to be named after.
         """
         assert _agent_kind("Some Crewmate", raw_slot) == "crewmate"
-        assert _agent_kind("kirocrew-worker", raw_slot) == "crewmate"
+        assert _agent_kind("ajcrew-worker", raw_slot) == "crewmate"
 
     def test_an_ordinary_slot_key_leaves_the_agent_name_to_answer(self) -> None:
-        assert _agent_kind("kirocrew-worker", "dashboard_main") == "worker"
-        assert _agent_kind("kirocrew", "chat-2883") == "default"
+        assert _agent_kind("ajcrew-worker", "dashboard_main") == "worker"
+        assert _agent_kind("ajcrew", "chat-2883") == "default"
         assert _agent_kind("a-third-party-agent", "dashboard_main") == "other"
 
     def test_agent_kind_table_matches_owned_kiro_agent_files(self) -> None:
@@ -293,10 +293,10 @@ class TestTheClosedVocabularies:
 
         unique = "zzq-private-agent-name-in-log-5e1d"
         unique_slot = "member-zzq-private-slug-in-log-5e1d"
-        # Force the ``kiro_crew.members`` import inside _agent_kind to raise, driving the
+        # Force the ``aj_crew.members`` import inside _agent_kind to raise, driving the
         # except branch. Both raw strings are locals in that frame.
-        monkeypatch.setitem(sys.modules, "kiro_crew.members", None)
-        with caplog.at_level("DEBUG", logger="kiro_crew.crew_log.projection"):
+        monkeypatch.setitem(sys.modules, "aj_crew.members", None)
+        with caplog.at_level("DEBUG", logger="aj_crew.crew_log.projection"):
             # The slot shape cannot be asked without the import, so the name answers --
             # a crewmate session folds to ``other`` rather than guessing at the shape.
             assert _agent_kind(unique, unique_slot) == "other"
@@ -324,8 +324,8 @@ class TestTheClosedVocabularies:
         monkeypatch.setattr("builtins.open", _no_open)
         # One input per bucket kind: an owned stem, the bare default, a crewmate DM
         # slot key, and an unknown name -- the full set of branches _agent_kind takes.
-        assert _agent_kind("kirocrew-worker", "") == "worker"
-        assert _agent_kind("kirocrew", "") == "default"
+        assert _agent_kind("ajcrew-worker", "") == "worker"
+        assert _agent_kind("ajcrew", "") == "default"
         assert _agent_kind("Some Crewmate", "dashboard:member-acme") == "crewmate"
         assert _agent_kind("some-third-party-agent", "") == "other"
 
@@ -362,7 +362,7 @@ class TestTheClosedVocabularies:
     def test_the_actor_set_is_the_writers_own_closed_set(self) -> None:
         # One definition: the export reads ACTOR_VALUES rather than a second spelling,
         # so a value the writer adds can never be silently folded to other here.
-        from kiro_crew.crew_log.entry_types_lifecycle import ACTOR_VALUES
+        from aj_crew.crew_log.entry_types_lifecycle import ACTOR_VALUES
 
         assert export._known_actors() == frozenset(ACTOR_VALUES)
         assert "other" in export._known_actors()
@@ -375,7 +375,7 @@ class TestTheClosedVocabularies:
             ("crewmate", "crewmate"),
             ("default", "default"),
             ("", "other"),
-            ("kirocrew-worker", "other"),
+            ("ajcrew-worker", "other"),
             ("some-raw-agent-name", "other"),
         ],
     )
@@ -472,10 +472,10 @@ class TestTheSubscriberInstallAndIsolation:
     def test_install_does_not_subscribe_when_telemetry_is_disabled(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.metrics.recorder import MetricsRecorder
+        from aj_crew.metrics.recorder import MetricsRecorder
 
         monkeypatch.setattr(
-            "kiro_crew.metrics.provider.get_recorder", lambda: MetricsRecorder(None)
+            "aj_crew.metrics.provider.get_recorder", lambda: MetricsRecorder(None)
         )
         installed = export.install_otel_crew_log_subscriber()
         assert installed is False
@@ -484,10 +484,10 @@ class TestTheSubscriberInstallAndIsolation:
     def test_install_subscribes_when_telemetry_is_enabled_and_is_idempotent(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.metrics.recorder import MetricsRecorder
+        from aj_crew.metrics.recorder import MetricsRecorder
 
         recorder = MetricsRecorder(object())  # any non-None meter marks it enabled
-        monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: recorder)
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: recorder)
         assert export.install_otel_crew_log_subscriber() is True
         assert crew_log_bus.subscriber_count(crew_log_bus.FOLD_ADVANCED) == 1
         # A second install call replaces rather than adds a second subscription.
@@ -497,7 +497,7 @@ class TestTheSubscriberInstallAndIsolation:
     def test_a_delivery_accumulates_the_right_counter_adds_over_two_publishes(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.metrics.recorder import MetricsRecorder
+        from aj_crew.metrics.recorder import MetricsRecorder
 
         recorded: list[tuple[str, Any, dict[str, Any]]] = []
 
@@ -512,7 +512,7 @@ class TestTheSubscriberInstallAndIsolation:
                 pass
 
         recorder = _Recorder()
-        monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: recorder)
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: recorder)
         assert export.install_otel_crew_log_subscriber() is True
         # opened_ts BEFORE install -> a resumed session: session.started does not fire,
         # so this test isolates the turn-delta accounting.
@@ -557,7 +557,7 @@ class TestTheSubscriberInstallAndIsolation:
         lookup. The population it is read for is the diff-and-record work, so one
         sample per EXPORTED delivery and none for the rest.
         """
-        from kiro_crew.metrics.recorder import MetricsRecorder
+        from aj_crew.metrics.recorder import MetricsRecorder
 
         lags: list[tuple[str, Any]] = []
 
@@ -571,7 +571,7 @@ class TestTheSubscriberInstallAndIsolation:
             def histogram(self, name: str, value: Any = 0, **_: Any) -> None:
                 lags.append((name, value))
 
-        monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: _Recorder())
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: _Recorder())
         assert export.install_otel_crew_log_subscriber() is True
 
         def _publish(fold: str, rev: int) -> None:
@@ -625,7 +625,7 @@ class TestTheSubscriberInstallAndIsolation:
         its first sight counts session.started exactly once, attributed by agent_kind.
         A second delivery does not re-count it.
         """
-        from kiro_crew.metrics.recorder import MetricsRecorder
+        from aj_crew.metrics.recorder import MetricsRecorder
 
         recorded: list[tuple[str, Any, dict[str, Any]]] = []
 
@@ -639,7 +639,7 @@ class TestTheSubscriberInstallAndIsolation:
             def histogram(self, *args: Any, **kwargs: Any) -> None:
                 pass
 
-        monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: _Recorder())
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: _Recorder())
         assert export.install_otel_crew_log_subscriber() is True
         new_ts = export._install_ms + 1
 
@@ -677,7 +677,7 @@ class TestTheSubscriberInstallAndIsolation:
         delivery for a resumed session carries its whole cumulative render. Baselining
         the first sight means that render is the floor, not a re-add.
         """
-        from kiro_crew.metrics.recorder import MetricsRecorder
+        from aj_crew.metrics.recorder import MetricsRecorder
 
         recorded: list[tuple[str, Any, dict[str, Any]]] = []
 
@@ -691,7 +691,7 @@ class TestTheSubscriberInstallAndIsolation:
             def histogram(self, *args: Any, **kwargs: Any) -> None:
                 pass
 
-        monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: _Recorder())
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: _Recorder())
         assert export.install_otel_crew_log_subscriber() is True
         # opened_ts BEFORE install -> a session opened by a previous process. Its
         # session.started must not fire and its pre-restart turns must not be re-added.
@@ -742,7 +742,7 @@ class TestTheSubscriberInstallAndIsolation:
         evicted-max anchor rises to the victim's opened_ts on eviction, so its re-sight
         reads as not-new and baselines.
         """
-        from kiro_crew.metrics.recorder import MetricsRecorder
+        from aj_crew.metrics.recorder import MetricsRecorder
 
         recorded: list[tuple[str, Any, dict[str, Any]]] = []
 
@@ -756,7 +756,7 @@ class TestTheSubscriberInstallAndIsolation:
             def histogram(self, *args: Any, **kwargs: Any) -> None:
                 pass
 
-        monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: _Recorder())
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: _Recorder())
         assert export.install_otel_crew_log_subscriber() is True
         base = export._install_ms
 
@@ -803,7 +803,7 @@ class TestTheSubscriberInstallAndIsolation:
         the re-sight baselines instead of re-adding the turns since the floor. The
         fillers opened before install, so only the victim's resume can move the anchor.
         """
-        from kiro_crew.metrics.recorder import MetricsRecorder
+        from aj_crew.metrics.recorder import MetricsRecorder
 
         recorded: list[tuple[str, Any, dict[str, Any]]] = []
 
@@ -817,7 +817,7 @@ class TestTheSubscriberInstallAndIsolation:
             def histogram(self, *args: Any, **kwargs: Any) -> None:
                 pass
 
-        monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: _Recorder())
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: _Recorder())
         assert export.install_otel_crew_log_subscriber() is True
         base = export._install_ms
 
@@ -860,7 +860,7 @@ class TestTheSubscriberInstallAndIsolation:
         """The other side of the evicted-max rule: a session opened AFTER the newest
         evicted session is still provably new and is counted whole.
         """
-        from kiro_crew.metrics.recorder import MetricsRecorder
+        from aj_crew.metrics.recorder import MetricsRecorder
 
         recorded: list[tuple[str, Any, dict[str, Any]]] = []
 
@@ -874,7 +874,7 @@ class TestTheSubscriberInstallAndIsolation:
             def histogram(self, *args: Any, **kwargs: Any) -> None:
                 pass
 
-        monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: _Recorder())
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: _Recorder())
         assert export.install_otel_crew_log_subscriber() is True
         base = export._install_ms
 
@@ -912,7 +912,7 @@ class TestTheSubscriberInstallAndIsolation:
         """The bus's own isolation contract (``bus.publish`` logs and continues), proved
         with this module's real callback as the SURVIVING subscriber.
         """
-        from kiro_crew.metrics.recorder import MetricsRecorder
+        from aj_crew.metrics.recorder import MetricsRecorder
 
         recorded: list[tuple[str, Any, dict[str, Any]]] = []
 
@@ -927,7 +927,7 @@ class TestTheSubscriberInstallAndIsolation:
                 pass
 
         recorder = _Recorder()
-        monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: recorder)
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: recorder)
         assert export.install_otel_crew_log_subscriber() is True
 
         def _boom(_event: Any) -> None:
@@ -953,7 +953,7 @@ class TestTheSubscriberInstallAndIsolation:
         _publish(1, {})
         _publish(2, {"user": 1})
         # Only this module's instruments: the bus counts the sibling's raise through the
-        # same recorder (``kirocrew.crew_log.bus.subscriber_error``), which is the bus's
+        # same recorder (``ajcrew.crew_log.bus.subscriber_error``), which is the bus's
         # contract, not this subscriber's.
         ours = (export.SESSION_STARTED_METRIC, export.TURN_STARTED_METRIC)
         assert [item for item in recorded if item[0] in ours] == [
@@ -963,10 +963,10 @@ class TestTheSubscriberInstallAndIsolation:
     def test_this_subscriber_raising_on_a_malformed_event_does_not_raise_to_the_bus(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.metrics.recorder import MetricsRecorder
+        from aj_crew.metrics.recorder import MetricsRecorder
 
         recorder = MetricsRecorder(object())
-        monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: recorder)
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: recorder)
         assert export.install_otel_crew_log_subscriber() is True
 
         class _NotAFoldAdvanced:
@@ -1000,7 +1000,7 @@ class TestTheContractExtensions:
 
     @staticmethod
     def _recorder() -> Any:
-        from kiro_crew.metrics.recorder import MetricsRecorder
+        from aj_crew.metrics.recorder import MetricsRecorder
 
         recorded: list[tuple[str, str, Any, dict[str, Any]]] = []
 
@@ -1026,14 +1026,14 @@ class TestTheContractExtensions:
         def _other_diff(previous: Any, current: Any) -> "list[Metric]":
             if previous is None:  # first sight baselines, like every real diff
                 return []
-            return [Metric("kirocrew.crew.other.count", current.get("n", 0), {})]
+            return [Metric("ajcrew.crew.other.count", current.get("n", 0), {})]
 
         export._EXPORTERS = (
             export.UsageExporter("otel_usage", export._otel_usage_diff),
             export.UsageExporter("other_test", _other_diff),
         )
         recorder, recorded = self._recorder()
-        monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: recorder)
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: recorder)
         assert export.install_otel_crew_log_subscriber() is True
         # One subscription serves both session-keyed rows.
         assert crew_log_bus.subscriber_count(crew_log_bus.FOLD_ADVANCED) == 1
@@ -1067,7 +1067,7 @@ class TestTheContractExtensions:
             2,
             {"opened": True, "opened_agent_kind": "worker", "turns": {"user": 1}},
         )
-        assert ("counter", "kirocrew.crew.other.count", 5, {}) in recorded
+        assert ("counter", "ajcrew.crew.other.count", 5, {}) in recorded
         assert (
             "counter",
             export.TURN_STARTED_METRIC,
@@ -1090,8 +1090,8 @@ class TestTheRealAppendPath:
     @pytest.fixture(autouse=True)
     def _isolated_home(self, tmp_path: Any, _floor_monkeypatch: pytest.MonkeyPatch) -> Any:
         # Patches through _floor_monkeypatch, not the shared monkeypatch, so a test that
-        # calls monkeypatch.undo() cannot lift this fixture's KIROCREW_HOME pin (D11).
-        _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        # calls monkeypatch.undo() cannot lift this fixture's AJCREW_HOME pin (D11).
+        _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         eager.stop_for_tests()
         crew_log.forget_slot_folds()
         crew_log.forget_session_folds()
@@ -1107,7 +1107,7 @@ class TestTheRealAppendPath:
         export.reset_for_tests()
 
     def _log(self, unit_id: str = SESSION) -> CrewLog:
-        return CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="kirocrew-worker")
+        return CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="ajcrew-worker")
 
     def _wake(self, unit_id: str, entry_type: str, seq: int) -> None:
         eager.note_commit(unit_id, entry_type, seq)
@@ -1122,7 +1122,7 @@ class TestTheRealAppendPath:
         done = handle.append(
             "session/opened",
             {
-                "agent": "kirocrew-worker",
+                "agent": "ajcrew-worker",
                 "slot": "",
                 "model": "",
                 "cwd": "",
@@ -1137,7 +1137,7 @@ class TestTheRealAppendPath:
         assert len(otel_events) == 1
         value = otel_events[0].value
         assert value["opened"] is True
-        # The raw "kirocrew-worker" was folded to the closed kind in the fold's step;
+        # The raw "ajcrew-worker" was folded to the closed kind in the fold's step;
         # the render the subscriber sees carries only the enum.
         assert value["opened_agent_kind"] == "worker"
         assert value["turns"] == {}
@@ -1152,8 +1152,8 @@ class TestTheRealAppendPath:
         """The full chain this story ships: an append, the eager wake, the bus publish,
         this module's subscriber, and a real (stubbed-transport) recorder's ``.add()``.
         """
-        from kiro_crew.metrics.crew_log_health import FOLD_APPLY, FOLD_START
-        from kiro_crew.metrics.recorder import MetricsRecorder
+        from aj_crew.metrics.crew_log_health import FOLD_APPLY, FOLD_START
+        from aj_crew.metrics.recorder import MetricsRecorder
 
         recorded: list[tuple[str, Any, dict[str, Any]]] = []
 
@@ -1168,11 +1168,11 @@ class TestTheRealAppendPath:
                 pass
 
         recorder = _Recorder()
-        monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: recorder)
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: recorder)
         # The eager fold worker records its own crew log fold counters through the
         # same recorder. Freeze their clock so every pass lands in one bucket and the
         # whole stream below stays an exact equality.
-        monkeypatch.setattr("kiro_crew.metrics.crew_log_health._now", lambda: 0.0)
+        monkeypatch.setattr("aj_crew.metrics.crew_log_health._now", lambda: 0.0)
         assert export.install_otel_crew_log_subscriber() is True
         # Pin the "new" anchors BELOW any real now_ms() the appends below will stamp, so
         # the opening's opened_ts is deterministically > the anchor -- otherwise install
@@ -1185,7 +1185,7 @@ class TestTheRealAppendPath:
         opened = handle.append(
             "session/opened",
             {
-                "agent": "kirocrew-worker",
+                "agent": "ajcrew-worker",
                 "slot": "",
                 "model": "",
                 "cwd": "",
@@ -1241,7 +1241,7 @@ class TestTheRealAppendPath:
         loses. The second restart resumes with no turn before the next one, so the
         floor equals the total and nothing is re-added.
         """
-        from kiro_crew.metrics.recorder import MetricsRecorder
+        from aj_crew.metrics.recorder import MetricsRecorder
 
         recorded: list[tuple[str, Any]] = []
 
@@ -1256,7 +1256,7 @@ class TestTheRealAppendPath:
             def histogram(self, *args: Any, **kwargs: Any) -> None:
                 pass
 
-        monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: _Recorder())
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: _Recorder())
         # Entry time is the log's own clock, set per "process" so each anchor sits
         # strictly between the entries before it and after it.
         clock = [1_000]
@@ -1274,7 +1274,7 @@ class TestTheRealAppendPath:
             return handle.append(
                 "session/opened",
                 {
-                    "agent": "kirocrew-worker",
+                    "agent": "ajcrew-worker",
                     "slot": "",
                     "model": "",
                     "cwd": "",
@@ -1415,7 +1415,7 @@ class TestTheBootKickRunsOffTheLoop:
 
         # Through the composed ``server`` facade: the owner module's functions run on
         # its globals (``logger`` among them), bound only once ``server`` is imported.
-        from kiro_crew.dashboard import server
+        from aj_crew.dashboard import server
 
         ran_on: list[int] = []
 
@@ -1448,7 +1448,7 @@ class TestTheBootKickRunsOffTheLoop:
 
         # Through the composed ``server`` facade: the owner module's functions run on
         # its globals (``logger`` among them), bound only once ``server`` is imported.
-        from kiro_crew.dashboard import server
+        from aj_crew.dashboard import server
 
         def _boom() -> bool:
             raise RuntimeError("install failed")

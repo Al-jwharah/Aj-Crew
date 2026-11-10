@@ -114,7 +114,7 @@ const SCENARIOS = [
       connect_error: "lark-oapi is not installed — run: pip install 'lark-oapi>=1.4,<2'",
       sdk_installed: false,
       sdk_install_supported: true,
-      sdk_install_command: "/opt/kirocrew/.venv/bin/python -m pip install 'lark-oapi>=1.4,<2'",
+      sdk_install_command: "/opt/ajcrew/.venv/bin/python -m pip install 'lark-oapi>=1.4,<2'",
     },
     // Assert the COMMAND, not the badge reason: the badge cannot report this
     // state before a restart (maybe_start_feishu returns early when the channel

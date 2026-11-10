@@ -78,7 +78,7 @@ async function preparePage(context, scan) {
     if (path === '/api/chat/slots') return json(route, [{
       key: 'chat-1',
       title: 'First run',
-      agent: 'kirocrew',
+      agent: 'ajcrew',
       running: false,
       messages: 0,
       tags: [],

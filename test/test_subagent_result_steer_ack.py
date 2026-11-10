@@ -17,8 +17,8 @@ from idle_tab_drain_helpers import (  # noqa: F401 -- the autouse fixture regist
 )
 from subagent_stop_reason_helpers import _manager, _mock_sessions, _single_turn, _spawn_and_wait
 
-import kiro_crew.subagent_persistence as sp
-from kiro_crew.acp.types import STOP_REASON_END_TURN
+import aj_crew.subagent_persistence as sp
+from aj_crew.acp.types import STOP_REASON_END_TURN
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 

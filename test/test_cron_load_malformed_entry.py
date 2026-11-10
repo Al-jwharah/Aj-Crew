@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cron as cron_mod
-from kiro_crew.cron import CronService, _job_from_record
+from aj_crew import cron as cron_mod
+from aj_crew.cron import CronService, _job_from_record
 
 
 def _write_store(path: Path, jobs: list) -> None:
@@ -38,7 +38,7 @@ def test_malformed_entry_is_skipped_and_good_jobs_survive(tmp_path, caplog) -> N
     bad = {"id": "bad", "message": "m", "schedule": {"kind": "every"}}  # no "name"
     _write_store(mgr._path, [_good("a"), bad, _good("b")])
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.cron"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.cron"):
         mgr._load()
 
     assert [j.id for j in mgr._jobs] == ["a", "b"]
@@ -72,7 +72,7 @@ def test_unparseable_file_still_resets_whole_store(tmp_path, caplog) -> None:
     mgr._path.parent.mkdir(parents=True, exist_ok=True)
     mgr._path.write_text("{not json", encoding="utf-8")
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.cron"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.cron"):
         mgr._load()
 
     assert mgr._jobs == []
@@ -133,7 +133,7 @@ def test_top_level_non_object_resets_store_and_counts_zero(tmp_path, caplog) -> 
     for payload in ("[]", '{"jobs": null}', '{"jobs": 3}'):
         mgr._path.write_text(payload, encoding="utf-8")
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.cron"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.cron"):
             mgr._load()
 
         assert mgr._jobs == [], payload
@@ -258,7 +258,7 @@ def test_genuine_bad_data_skips_and_the_next_write_keeps_it(tmp_path) -> None:
 
 def test_skipped_record_obeys_the_per_record_size_cap() -> None:
     """Small malformed records are kept, but oversized ones are not."""
-    from kiro_crew.cron_service.store import MAX_UNKNOWN_FIELDS_BYTES, decode_store
+    from aj_crew.cron_service.store import MAX_UNKNOWN_FIELDS_BYTES, decode_store
 
     bad = {**_good("bad"), "schedule": {"kind": "every", "every_secs": "60"}}
     small = decode_store(json.dumps({"jobs": [_good("a"), bad]}).encode("utf-8"))
@@ -275,7 +275,7 @@ def test_skipped_record_obeys_the_per_record_size_cap() -> None:
 
 def test_a_record_the_utc_stamp_would_push_past_the_cap_is_not_kept() -> None:
     """A record kept now must still fit the cap once an older store's save stamps it."""
-    from kiro_crew.cron_service.store import MAX_UNKNOWN_FIELDS_BYTES, decode_store
+    from aj_crew.cron_service.store import MAX_UNKNOWN_FIELDS_BYTES, decode_store
 
     bad = {**_good("bad"), "schedule": {"kind": "every", "every_secs": "60"}, "pad": ""}
     bad["pad"] = "x" * (MAX_UNKNOWN_FIELDS_BYTES - len(json.dumps(bad)))
@@ -287,7 +287,7 @@ def test_a_record_the_utc_stamp_would_push_past_the_cap_is_not_kept() -> None:
 
 def test_a_skipped_record_with_a_non_text_name_is_not_kept() -> None:
     """A kept record must still let ``restore --mode merge`` read the live store."""
-    from kiro_crew.cron_service.store import decode_store
+    from aj_crew.cron_service.store import decode_store
 
     no_name = {k: v for k, v in _good("n").items() if k != "name"}
     records = [no_name, {**_good("x"), "name": None}, {**_good("z"), "name": 5}]
@@ -299,7 +299,7 @@ def test_a_skipped_record_with_a_non_text_name_is_not_kept() -> None:
 
 def test_empty_skipped_records_count_against_the_store_budget(monkeypatch) -> None:
     """An empty object costs its encoded bytes, so many of them cannot pass the total cap."""
-    from kiro_crew.cron_service import store
+    from aj_crew.cron_service import store
 
     # An empty record is charged as the ``{"timezone": "UTC"}`` an older store's save may write.
     each = len(json.dumps({"timezone": "UTC"}))
@@ -324,7 +324,7 @@ def test_only_an_entry_a_snapshot_restore_accepts_is_kept(tmp_path, caplog) -> N
     """A snapshot restore refuses a non-object job entry and a store nested past
     ``MAX_DOCUMENT_NESTING``, and ``_save``'s ``indent=2`` encoder raises
     ``RecursionError`` about a thousand levels down, so only such an entry is dropped."""
-    from kiro_crew.user_json import MAX_DOCUMENT_NESTING, exceeds_nesting
+    from aj_crew.user_json import MAX_DOCUMENT_NESTING, exceeds_nesting
 
     mgr = CronService(base_dir=tmp_path)
     records = [
@@ -336,7 +336,7 @@ def test_only_an_entry_a_snapshot_restore_accepts_is_kept(tmp_path, caplog) -> N
     ]
     _write_store(mgr._path, records)
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.cron"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.cron"):
         mgr._load()
     mgr._save()
 
@@ -367,7 +367,7 @@ def test_a_value_nested_past_the_bound_never_blocks_a_save(tmp_path, place, kept
     encoder raised ``RecursionError`` on it at every write. The store keeps none of it: a
     newer build's keys are dropped and the job stays, and a known field skips the job like
     any malformed record, so the write lands and a snapshot restore accepts the store."""
-    from kiro_crew.user_json import exceeds_nesting
+    from aj_crew.user_json import exceeds_nesting
 
     deep: list = []
     for _ in range(1200):
@@ -444,7 +444,7 @@ def test_non_string_metadata_fields_coerce_and_warn(tmp_path, caplog) -> None:
     good = {**_good("ok"), "approval_mode": "auto", "channel": "slack"}
     _write_store(mgr._path, [_corrupted_metadata("bad"), good])
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.cron"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.cron"):
         mgr._load()
 
     by_id = {j.id: j for j in mgr._jobs}
@@ -538,7 +538,7 @@ async def test_listing_renders_despite_corrupted_records(tmp_path) -> None:
     import json as _json
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard.handlers import api_crons
+    from aj_crew.dashboard.handlers import api_crons
 
     mgr = CronService(base_dir=tmp_path)
     _write_store(
@@ -576,7 +576,7 @@ def test_probe_readers_do_not_repeat_the_coercion_warning(tmp_path, caplog) -> N
     mgr = CronService(base_dir=tmp_path)
     _write_store(mgr._path, [_corrupted_metadata("bad"), _good("ok")])
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.cron"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.cron"):
         assert mgr.count_enabled_from_disk() == 2
         assert mgr.count_enabled_from_disk() == 2
 
@@ -593,7 +593,7 @@ def test_every_string_typed_field_is_guarded_completeness_pin(tmp_path) -> None:
     ""/None) or skipped (the record never loads)."""
     import dataclasses
 
-    from kiro_crew.cron import CronJob
+    from aj_crew.cron import CronJob
 
     str_field_names = [
         f.name
@@ -630,7 +630,7 @@ async def test_extreme_schedule_values_load_and_render_without_dropping(tmp_path
     import json as _json
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard.handlers import api_crons
+    from aj_crew.dashboard.handlers import api_crons
 
     mgr = CronService(base_dir=tmp_path)
     poisoned = {**_good("poisoned"), "schedule": {"kind": "at", "at_ts": at_ts}}
@@ -686,7 +686,7 @@ def test_compute_next_run_ts_never_returns_non_finite(tmp_path) -> None:
     it reaches the GET /api/crons payload, where json.dumps(allow_nan=True)
     would emit the invalid-JSON token Infinity and break the whole listing
     client-side."""
-    from kiro_crew.cron import CronJob, CronSchedule, compute_next_run_ts
+    from aj_crew.cron import CronJob, CronSchedule, compute_next_run_ts
 
     job = CronJob(
         id="j",
@@ -735,8 +735,8 @@ async def test_numeric_field_consumer_matrix_pin(tmp_path) -> None:
     import json as _json
     from unittest.mock import MagicMock
 
-    from kiro_crew.cron import CronJob, compute_next_run_ts, format_schedule
-    from kiro_crew.dashboard.handlers import api_crons
+    from aj_crew.cron import CronJob, compute_next_run_ts, format_schedule
+    from aj_crew.dashboard.handlers import api_crons
 
     numeric_fields = {
         f.name
@@ -793,7 +793,7 @@ def test_explicit_null_numeric_warns_unless_none_is_the_declared_unset(tmp_path,
         [{**_good("a"), "created_ts": None, "last_run_ts": None}],
     )
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.cron"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.cron"):
         mgr._load()
 
     warnings = [r.getMessage() for r in caplog.records if "Coercing" in r.getMessage()]
@@ -807,7 +807,7 @@ def test_mcp_next_run_render_degrades_on_extreme_at_ts(tmp_path) -> None:
     """cron_list's next-run formatter degrades an unrenderable (representable
     but beyond-strftime-range) timestamp instead of raising inside the loop
     that renders every job -- same posture as format_schedule and the CLI."""
-    from kiro_crew.mcp_cron import _format_next_run
+    from aj_crew.mcp_cron import _format_next_run
 
     mgr = CronService(base_dir=tmp_path)
     _write_store(

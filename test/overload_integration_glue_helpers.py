@@ -14,7 +14,7 @@ from typing import Any
 import pytest
 from overload_fakes import Clock
 
-from kiro_crew.taskq.store import TaskStore
+from aj_crew.taskq.store import TaskStore
 
 
 @pytest.fixture(name="clock")
@@ -51,7 +51,7 @@ def no_memory_pressure_fixture(monkeypatch: pytest.MonkeyPatch) -> None:
     the runner admission reads the posture from ``resource_status``, so without
     this a loaded machine turns an admission into a defer.
     """
-    from kiro_crew import resource_status
+    from aj_crew import resource_status
 
     monkeypatch.setattr(
         resource_status,

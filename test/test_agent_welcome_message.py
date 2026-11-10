@@ -26,7 +26,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.agent_discovery import (
+from aj_crew.agent_discovery import (
     SCOPE_PROJECT,
     WELCOME_MESSAGE_MAX_CHARS,
     agent_welcome_message,
@@ -34,7 +34,7 @@ from kiro_crew.agent_discovery import (
     list_agents,
     spec_welcome_message,
 )
-from kiro_crew.dashboard.state import _TRANSIENT_ROLES
+from aj_crew.dashboard.state import _TRANSIENT_ROLES
 
 _HINT = "Drop a URL and I will turn it into slides."
 
@@ -219,7 +219,7 @@ class TestSurfaceAgentWelcome:
     @staticmethod
     def _slot(monkeypatch, tmp_path, hint: str, *, agent: str = "helper"):
         """A slot plus a stubbed reader, so no test here touches a real spec."""
-        import kiro_crew.dashboard.chat_runner as runner
+        import aj_crew.dashboard.chat_runner as runner
 
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
@@ -239,7 +239,7 @@ class TestSurfaceAgentWelcome:
         """The issue asks for a transcript entry, not an ephemeral hint: the role
         must be outside ``_TRANSIENT_ROLES``, which is what the save path and
         every durable reader key off."""
-        from kiro_crew.dashboard.chat_runner import _surface_agent_welcome
+        from aj_crew.dashboard.chat_runner import _surface_agent_welcome
 
         state, slot, _ = self._slot(monkeypatch, tmp_path, _HINT)
         await _surface_agent_welcome(state, slot, "helper")
@@ -252,7 +252,7 @@ class TestSurfaceAgentWelcome:
         """The whole point of a transcript entry over a system-prompt injection is
         that it costs no per-turn context. Only ``user``/``assistant`` rows are
         replayed as conversation, so the hint must be neither."""
-        from kiro_crew.dashboard.chat_runner import _surface_agent_welcome
+        from aj_crew.dashboard.chat_runner import _surface_agent_welcome
 
         state, slot, _ = self._slot(monkeypatch, tmp_path, _HINT)
         await _surface_agent_welcome(state, slot, "helper")
@@ -267,7 +267,7 @@ class TestSurfaceAgentWelcome:
         """A switch and the session start its own reset produces are two events
         for ONE activation; the hint must not appear twice, and the disk read
         must not repeat either."""
-        from kiro_crew.dashboard.chat_runner import _surface_agent_welcome
+        from aj_crew.dashboard.chat_runner import _surface_agent_welcome
 
         state, slot, reads = self._slot(monkeypatch, tmp_path, _HINT)
         await _surface_agent_welcome(state, slot, "helper")
@@ -280,7 +280,7 @@ class TestSurfaceAgentWelcome:
     async def test_switching_to_a_different_agent_emits_again(self, monkeypatch, tmp_path) -> None:
         """The guard is per ACTIVATION, not per slot lifetime: a new agent taking
         over is a new greeting."""
-        from kiro_crew.dashboard.chat_runner import _surface_agent_welcome
+        from aj_crew.dashboard.chat_runner import _surface_agent_welcome
 
         state, slot, reads = self._slot(monkeypatch, tmp_path, _HINT)
         await _surface_agent_welcome(state, slot, "helper")
@@ -293,7 +293,7 @@ class TestSurfaceAgentWelcome:
     async def test_concurrent_activations_emit_once(self, monkeypatch, tmp_path) -> None:
         """The guard is claimed before the offload, so two coroutines racing the
         same activation cannot both get past it."""
-        from kiro_crew.dashboard.chat_runner import _surface_agent_welcome
+        from aj_crew.dashboard.chat_runner import _surface_agent_welcome
 
         state, slot, reads = self._slot(monkeypatch, tmp_path, _HINT)
         await asyncio.gather(
@@ -306,7 +306,7 @@ class TestSurfaceAgentWelcome:
 
     @pytest.mark.asyncio
     async def test_no_hint_appends_no_row(self, monkeypatch, tmp_path) -> None:
-        from kiro_crew.dashboard.chat_runner import _surface_agent_welcome
+        from aj_crew.dashboard.chat_runner import _surface_agent_welcome
 
         state, slot, _ = self._slot(monkeypatch, tmp_path, "")
         before = len(slot.messages)
@@ -316,7 +316,7 @@ class TestSurfaceAgentWelcome:
 
     @pytest.mark.asyncio
     async def test_empty_agent_name_reads_nothing(self, monkeypatch, tmp_path) -> None:
-        from kiro_crew.dashboard.chat_runner import _surface_agent_welcome
+        from aj_crew.dashboard.chat_runner import _surface_agent_welcome
 
         state, slot, reads = self._slot(monkeypatch, tmp_path, _HINT, agent="")
         await _surface_agent_welcome(state, slot, "")
@@ -335,7 +335,7 @@ class TestSurfaceAgentWelcome:
         second activation read as already welcomed. One-shot is per activation,
         not per slot lifetime.
         """
-        from kiro_crew.dashboard.chat_runner import _surface_agent_welcome
+        from aj_crew.dashboard.chat_runner import _surface_agent_welcome
 
         state, slot, reads = self._slot(monkeypatch, tmp_path, _HINT)
         await _surface_agent_welcome(state, slot, "helper")
@@ -349,7 +349,7 @@ class TestSurfaceAgentWelcome:
     async def test_the_slot_project_scopes_the_read(self, monkeypatch, tmp_path) -> None:
         """A project-local agent's hint lives in the checkout, so the slot's
         project must reach the reader."""
-        from kiro_crew.dashboard.chat_runner import _surface_agent_welcome
+        from aj_crew.dashboard.chat_runner import _surface_agent_welcome
 
         state, slot, reads = self._slot(monkeypatch, tmp_path, _HINT)
         slot.project = "/repo/checkout"
@@ -362,7 +362,7 @@ class TestSurfaceAgentWelcome:
         """The field is untrusted config data reaching a PERSISTED window and
         every open tab, so it goes through the same display redactors as any
         other foreign string on that path."""
-        from kiro_crew.dashboard.chat_runner import _surface_agent_welcome
+        from aj_crew.dashboard.chat_runner import _surface_agent_welcome
 
         secret = "AKIA" + "I" * 16
         state, slot, _ = self._slot(monkeypatch, tmp_path, f"use {secret} to start")
@@ -375,8 +375,8 @@ class TestSurfaceAgentWelcome:
     @pytest.mark.asyncio
     async def test_an_unreadable_hint_never_fails_the_turn(self, monkeypatch, tmp_path) -> None:
         """Decoration must not be able to abort a chat turn."""
-        import kiro_crew.dashboard.chat_runner as runner
-        from kiro_crew.dashboard.chat_runner import _surface_agent_welcome
+        import aj_crew.dashboard.chat_runner as runner
+        from aj_crew.dashboard.chat_runner import _surface_agent_welcome
 
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
@@ -398,8 +398,8 @@ class TestSurfaceAgentWelcome:
     ) -> None:
         """The guard is claimed before the read, so a broken agents directory
         cannot re-scan on every later event of the same activation."""
-        import kiro_crew.dashboard.chat_runner as runner
-        from kiro_crew.dashboard.chat_runner import _surface_agent_welcome
+        import aj_crew.dashboard.chat_runner as runner
+        from aj_crew.dashboard.chat_runner import _surface_agent_welcome
 
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
@@ -429,8 +429,8 @@ class TestWelcomeMessageInARunnerTurn:
 
     @staticmethod
     def _install_agent(name: str, hint: str) -> None:
-        from kiro_crew.config.loader import refresh_materialized_agents
-        from kiro_crew.config.paths import kiro_agents_dir
+        from aj_crew.config.loader import refresh_materialized_agents
+        from aj_crew.config.paths import kiro_agents_dir
 
         d = kiro_agents_dir()
         d.mkdir(parents=True, exist_ok=True)
@@ -443,7 +443,7 @@ class TestWelcomeMessageInARunnerTurn:
 
     @classmethod
     def _harness(cls, monkeypatch, tmp_path, hint: str, *, is_new: bool, agent: str):
-        import kiro_crew.dashboard.chat_runner as runner
+        import aj_crew.dashboard.chat_runner as runner
 
         if agent:
             cls._install_agent(agent, hint)
@@ -479,8 +479,8 @@ class TestWelcomeMessageInARunnerTurn:
 
     @staticmethod
     def _text_stream(client):
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         async def _stream(msg):
             yield LLMEvent(kind=EVENT_TEXT_CHUNK, text="ok")
@@ -555,7 +555,7 @@ class TestWelcomeMessageInARunnerTurn:
         self._install_agent("template-agent", _HINT)
         slot.agent = "crew-alias"
 
-        import kiro_crew.dashboard.chat_runner as runner
+        import aj_crew.dashboard.chat_runner as runner
 
         seen: list[str] = []
         real = runner._surface_agent_welcome
@@ -567,7 +567,7 @@ class TestWelcomeMessageInARunnerTurn:
         monkeypatch.setattr(runner, "_surface_agent_welcome", _spy)
 
         def _fake_bindings(cfg, name=None, project=None, **kw):
-            from kiro_crew.config.loader import resolve_agent_bindings as _real
+            from aj_crew.config.loader import resolve_agent_bindings as _real
 
             bindings = _real(cfg, "template-agent", project)
             return bindings
@@ -593,7 +593,7 @@ class TestWelcomeMessageInARunnerTurn:
         from chat_test_helpers import pin_kiro_cli_harness
 
         pin_kiro_cli_harness()
-        from kiro_crew.providers.base import EVENT_AGENT_SWITCHED, EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_AGENT_SWITCHED, EVENT_COMPLETE, LLMEvent
 
         state, slot, client, _run_chat = self._harness(
             monkeypatch, tmp_path, "", is_new=False, agent="helper"

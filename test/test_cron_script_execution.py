@@ -1,4 +1,4 @@
-"""Accepting and running a cron job's script or command (``kiro_crew.cron_script``).
+"""Accepting and running a cron job's script or command (``aj_crew.cron_script``).
 
 This file pins ``resolve_script_path`` and its sensitive-path refusal, the POSIX shell a
 command cron resolves before it spawns, how ``run_command_sandboxed`` and
@@ -19,8 +19,8 @@ from cron_script_helpers import (  # noqa: F401 -- the autouse fixtures register
     _crons_dir_tracks_patched_home,
 )
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.cron_script import (
+from aj_crew import platform_compat as pc
+from aj_crew.cron_script import (
     _split_script_spec,
     resolve_script_path,
     run_command_sandboxed,
@@ -34,7 +34,7 @@ class TestResolveScriptPath:
     """Tests for resolve_script_path validation."""
 
     def test_valid_path(self, tmp_path):
-        crons_dir = tmp_path / ".kirocrew" / "crons"
+        crons_dir = tmp_path / ".ajcrew" / "crons"
         crons_dir.mkdir(parents=True)
         script = crons_dir / "test.py"
         script.write_text("def run(ctx): pass")
@@ -63,10 +63,10 @@ class TestResolveScriptPath:
     def test_file_not_found_raises(self, tmp_path):
         with patch("pathlib.Path.home", return_value=tmp_path):
             with pytest.raises(FileNotFoundError):
-                resolve_script_path(str(tmp_path / ".kirocrew/crons/missing.py") + ":run")
+                resolve_script_path(str(tmp_path / ".ajcrew/crons/missing.py") + ":run")
 
     def test_outside_crons_dir_raises(self, tmp_path):
-        crons_dir = tmp_path / ".kirocrew" / "crons"
+        crons_dir = tmp_path / ".ajcrew" / "crons"
         crons_dir.mkdir(parents=True)
         outside = tmp_path / "outside.py"
         outside.write_text("x = 1")
@@ -75,7 +75,7 @@ class TestResolveScriptPath:
                 resolve_script_path(str(outside) + ":run")
 
     def test_tilde_expansion(self, tmp_path):
-        crons_dir = tmp_path / ".kirocrew" / "crons"
+        crons_dir = tmp_path / ".ajcrew" / "crons"
         crons_dir.mkdir(parents=True)
         script = crons_dir / "monitor.py"
         script.write_text("def check(ctx): pass")
@@ -86,7 +86,7 @@ class TestResolveScriptPath:
             patch("pathlib.Path.home", return_value=tmp_path),
             patch.dict(os.environ, {"HOME": str(tmp_path), "USERPROFILE": str(tmp_path)}),
         ):
-            file_path, func_name = resolve_script_path("~/.kirocrew/crons/monitor.py:check")
+            file_path, func_name = resolve_script_path("~/.ajcrew/crons/monitor.py:check")
         assert func_name == "check"
         # The tilde must actually have expanded to the patched home, not been
         # left literal — otherwise the assertion above would pass on a path that
@@ -98,18 +98,18 @@ class TestRunCommandSandboxed:
     """Tests for run_command_sandboxed shell execution."""
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture moved verbatim and no test in the cron script files calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture moved verbatim and no test in the cron script files calls monkeypatch.undo()
     def _passthrough_sandbox(self, monkeypatch, posix_test_shell):
         """Run commands directly, bypassing the OS-sandbox wrap.
 
         wrap_argv fails closed with no sandbox backend, so every command would raise;
         these tests pin the output and exit-code plumbing, not the sandbox.
         """
-        monkeypatch.setattr("kiro_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
+        monkeypatch.setattr("aj_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
         # Bypass the runtime shell probe (which itself spawns a child): these
         # tests exercise the run_command_sandboxed plumbing, not shell fingerprinting.
         monkeypatch.setattr(
-            "kiro_crew.cron_script._resolve_command_shell", lambda: posix_test_shell
+            "aj_crew.cron_script._resolve_command_shell", lambda: posix_test_shell
         )
 
     def test_basic_echo(self):
@@ -199,7 +199,7 @@ class TestCronSandboxUnavailableIsStructuredNotRaised:
 
     @pytest.fixture
     def _sandbox_refuses(self, monkeypatch):
-        from kiro_crew.sandbox import SandboxUnavailableError
+        from aj_crew.sandbox import SandboxUnavailableError
 
         def _raise(argv, **k):
             raise SandboxUnavailableError(
@@ -210,12 +210,12 @@ class TestCronSandboxUnavailableIsStructuredNotRaised:
                 detail="not Linux",
             )
 
-        monkeypatch.setattr("kiro_crew.cron_script.wrap_argv", _raise)
+        monkeypatch.setattr("aj_crew.cron_script.wrap_argv", _raise)
         # The runtime shell probe itself routes through wrap_argv now, so a
         # sandbox-refusing test would surface the "No POSIX shell" error before
         # ever reaching the wrap_argv call this test is about. Skip the probe
         # to isolate what's under test.
-        monkeypatch.setattr("kiro_crew.cron_script._resolve_command_shell", lambda: "sh")
+        monkeypatch.setattr("aj_crew.cron_script._resolve_command_shell", lambda: "sh")
 
     def test_command_cron_returns_error_with_remedy(self, _sandbox_refuses):
         result = run_command_sandboxed("echo hello")
@@ -233,7 +233,7 @@ class TestCronSandboxUnavailableIsStructuredNotRaised:
         # bare spec, so a signature change fails at the real call site instead of
         # inside the stub.
         monkeypatch.setattr(
-            "kiro_crew.cron_script.resolve_script_path",
+            "aj_crew.cron_script.resolve_script_path",
             lambda spec, **_kw: (str(script), "run"),
         )
         result = run_script_sandboxed(f"{script}:run", "job-id", timeout=10)
@@ -249,7 +249,7 @@ class TestCommandCronShellResolution:
         """A `sh` that refuses brace expansion (dash / ash / POSIX-strict) is
         accepted — the language matches what mcp_cron._vet_shell_command was
         written against."""
-        from kiro_crew import cron_script
+        from aj_crew import cron_script
 
         monkeypatch.setattr(cron_script.platform_compat, "IS_WINDOWS", False)
         # Resolver walks a FIXED trusted-path list (never $PATH). /bin/sh exists
@@ -267,7 +267,7 @@ class TestCommandCronShellResolution:
         What stays refused is a shell that expands however it is invoked,
         otherwise `cat ~/.a{w,w}s/credentials` hides from the vet. No fallback:
         the caller then fails-closed with a legible error."""
-        from kiro_crew import cron_script
+        from aj_crew import cron_script
 
         monkeypatch.setattr(cron_script.platform_compat, "IS_WINDOWS", False)
         # Both trusted candidates exist on disk, but neither survives the
@@ -282,7 +282,7 @@ class TestCommandCronShellResolution:
         agent-planted `sh` shim would be probed under `cc` isolation but `cc`
         leaves ~/.ssh reachable, so a probe-passing shim can then read it.
         The resolver MUST NOT touch PATH — regression-locking here."""
-        from kiro_crew import cron_script
+        from aj_crew import cron_script
 
         monkeypatch.setattr(cron_script.platform_compat, "IS_WINDOWS", False)
 
@@ -308,11 +308,11 @@ class TestCommandCronShellResolution:
         `x.a x.a` (bash expanded)."""
         from unittest.mock import MagicMock
 
-        from kiro_crew import cron_script
+        from aj_crew import cron_script
 
         # Bypass the sandbox wrap the probe now routes through (so this test
         # exercises the DECISION LOGIC, not the sandbox backend availability).
-        monkeypatch.setattr("kiro_crew.cron_script.wrap_argv", lambda argv, **k: (argv, None))
+        monkeypatch.setattr("aj_crew.cron_script.wrap_argv", lambda argv, **k: (argv, None))
         # Fresh cache per test (the probe memoizes per shell path).
         cron_script._POSIX_STRICT_CACHE.clear()
 
@@ -332,7 +332,7 @@ class TestCommandCronShellResolution:
         under bash or Git-sh). Returning ``None`` on Windows makes command crons
         fail-closed with the legible error rather than route a vetted string
         through a shell that widens its language."""
-        from kiro_crew import cron_script
+        from aj_crew import cron_script
 
         monkeypatch.setattr(cron_script.platform_compat, "IS_WINDOWS", True)
         # Even if a `sh.exe` were reachable (Git for Windows ships one), Windows
@@ -341,7 +341,7 @@ class TestCommandCronShellResolution:
         assert cron_script._resolve_command_shell() is None
 
     def test_no_shell_returns_legible_error_not_winerror(self, monkeypatch):
-        from kiro_crew import cron_script
+        from aj_crew import cron_script
 
         monkeypatch.setattr(cron_script.platform_compat, "IS_WINDOWS", True)
         result = cron_script.run_command_sandboxed("echo hi", timeout=10)
@@ -356,7 +356,7 @@ class TestCommandCronShellResolution:
         names the trusted paths, the probe they failed and the remedy, and never
         names Windows.
         """
-        from kiro_crew import cron_script
+        from aj_crew import cron_script
 
         monkeypatch.setattr(cron_script.platform_compat, "IS_WINDOWS", False)
         monkeypatch.setattr(cron_script, "_resolve_command_shell", lambda: None)
@@ -375,7 +375,7 @@ class TestCommandCronShellResolution:
 
     def test_windows_refusal_keeps_its_by_design_reason(self, monkeypatch):
         """The Windows wording is unchanged: there the refusal IS the platform."""
-        from kiro_crew import cron_script
+        from aj_crew import cron_script
 
         monkeypatch.setattr(cron_script.platform_compat, "IS_WINDOWS", True)
         output = cron_script.run_command_sandboxed("echo hi", timeout=10)["output"]
@@ -392,7 +392,7 @@ class TestCommandCronShellResolution:
         """
         import threading
 
-        from kiro_crew import cron_script
+        from aj_crew import cron_script
 
         monkeypatch.setattr(cron_script, "_POSIX_STRICT_CACHE", {})
         monkeypatch.setattr(cron_script, "_BRACE_OFF_SHELLS", {})
@@ -459,7 +459,7 @@ class TestCommandCronShellResolution:
         import shutil
         import subprocess
 
-        from kiro_crew import cron_script
+        from aj_crew import cron_script
 
         if source == "host-bin-sh":
             sh = "/bin/sh"
@@ -493,27 +493,27 @@ class TestRunScriptSandboxed:
     """Tests for run_script_sandboxed Python function execution."""
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture moved verbatim and no test in the cron script files calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture moved verbatim and no test in the cron script files calls monkeypatch.undo()
     def _passthrough_sandbox(self, monkeypatch, posix_test_shell):
-        """Bypass OS-sandbox wrap and ensure subprocess can import kiro_crew.
+        """Bypass OS-sandbox wrap and ensure subprocess can import aj_crew.
 
         wrap_argv fails closed with no sandbox backend, and outside a packaged install
-        the fresh sys.executable child cannot import kiro_crew, so src/ is injected.
+        the fresh sys.executable child cannot import aj_crew, so src/ is injected.
         """
         import os as _os
 
         src_dir = str(Path(__file__).resolve().parents[1] / "src")
         existing = _os.environ.get("PYTHONPATH", "")
         monkeypatch.setenv("PYTHONPATH", src_dir + (_os.pathsep + existing if existing else ""))
-        monkeypatch.setattr("kiro_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
+        monkeypatch.setattr("aj_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
         # Bypass the runtime shell probe (which itself spawns a child): these
         # tests exercise the run_command_sandboxed plumbing, not shell fingerprinting.
         monkeypatch.setattr(
-            "kiro_crew.cron_script._resolve_command_shell", lambda: posix_test_shell
+            "aj_crew.cron_script._resolve_command_shell", lambda: posix_test_shell
         )
 
     def _write_script(self, tmp_path, code):
-        crons_dir = tmp_path / ".kirocrew" / "crons"
+        crons_dir = tmp_path / ".ajcrew" / "crons"
         crons_dir.mkdir(parents=True)
         script = crons_dir / "test_script.py"
         script.write_text(code)
@@ -642,7 +642,7 @@ class TestRunScriptSandboxed:
         script_path = self._write_script(
             tmp_path,
             """
-from kiro_crew.cron_script import Skip, Done
+from aj_crew.cron_script import Skip, Done
 def run(ctx):
     pass  # normal return = ok
 """,
@@ -655,7 +655,7 @@ def run(ctx):
         script_path = self._write_script(
             tmp_path,
             """
-from kiro_crew.cron_script import Skip, Done
+from aj_crew.cron_script import Skip, Done
 def run(ctx):
     raise Skip()
 """,
@@ -668,7 +668,7 @@ def run(ctx):
         script_path = self._write_script(
             tmp_path,
             """
-from kiro_crew.cron_script import Skip, Done
+from aj_crew.cron_script import Skip, Done
 def run(ctx):
     raise Done("task complete")
 """,
@@ -682,7 +682,7 @@ def run(ctx):
         script_path = self._write_script(
             tmp_path,
             """
-from kiro_crew.cron_script import Skip, Done
+from aj_crew.cron_script import Skip, Done
 def run(ctx):
     raise RuntimeError("something broke")
 """,
@@ -709,7 +709,7 @@ def other_func(ctx):
         script_path = self._write_script(
             tmp_path,
             """
-from kiro_crew.cron_script import Skip, Done
+from aj_crew.cron_script import Skip, Done
 def run(ctx):
     if ctx.message != "hello-world":
         raise RuntimeError(f"expected hello-world, got {ctx.message!r}")
@@ -746,13 +746,13 @@ class TestResolveScriptPathSensitive:
     """Test for is_sensitive_path block (line 275)."""
 
     def test_sensitive_path_blocked(self, tmp_path):
-        crons_dir = tmp_path / ".kirocrew" / "crons"
+        crons_dir = tmp_path / ".ajcrew" / "crons"
         crons_dir.mkdir(parents=True)
         script = crons_dir / "test.py"
         script.write_text("def run(ctx): pass")
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.cron_script.canonical_path_refusal", return_value="Blocked: x"),
+            patch("aj_crew.cron_script.canonical_path_refusal", return_value="Blocked: x"),
         ):
             with pytest.raises(PermissionError, match="security policy"):
                 resolve_script_path(str(script) + ":run")
@@ -763,8 +763,8 @@ class TestMcpCronHandlerPaths:
 
     def test_cron_list_shows_error(self, tmp_path):
         """Lines 350-351: cron_list shows last_error for errored jobs."""
-        from kiro_crew.cron import CronJob, CronSchedule
-        from kiro_crew.mcp_cron import _call_tool_inner
+        from aj_crew.cron import CronJob, CronSchedule
+        from aj_crew.mcp_cron import _call_tool_inner
 
         job = CronJob(
             id="t1",
@@ -778,10 +778,10 @@ class TestMcpCronHandlerPaths:
         job.enabled = True
         # cron_list scopes to the caller's own rows, so the fixture row has to
         # name the session the autouse caller fixture provides.
-        job.session_key = os.environ["KIROCREW_SESSION_KEY"]
+        job.session_key = os.environ["AJCREW_SESSION_KEY"]
         with (
-            patch("kiro_crew.mcp_cron.config_dir", return_value=tmp_path),
-            patch("kiro_crew.mcp_cron.CronService") as mock_svc,
+            patch("aj_crew.mcp_cron.config_dir", return_value=tmp_path),
+            patch("aj_crew.mcp_cron.CronService") as mock_svc,
         ):
             mock_svc.return_value.list_jobs.return_value = [job]
             result = _call_tool_inner("cron_list", {})
@@ -789,8 +789,8 @@ class TestMcpCronHandlerPaths:
 
     def test_cron_list_shows_last_result(self, tmp_path):
         """Lines 353-354: cron_list shows last_result for script jobs."""
-        from kiro_crew.cron import CronJob, CronSchedule
-        from kiro_crew.mcp_cron import _call_tool_inner
+        from aj_crew.cron import CronJob, CronSchedule
+        from aj_crew.mcp_cron import _call_tool_inner
 
         job = CronJob(
             id="t2",
@@ -804,10 +804,10 @@ class TestMcpCronHandlerPaths:
         job.enabled = True
         # cron_list scopes to the caller's own rows, so the fixture row has to
         # name the session the autouse caller fixture provides.
-        job.session_key = os.environ["KIROCREW_SESSION_KEY"]
+        job.session_key = os.environ["AJCREW_SESSION_KEY"]
         with (
-            patch("kiro_crew.mcp_cron.config_dir", return_value=tmp_path),
-            patch("kiro_crew.mcp_cron.CronService") as mock_svc,
+            patch("aj_crew.mcp_cron.config_dir", return_value=tmp_path),
+            patch("aj_crew.mcp_cron.CronService") as mock_svc,
         ):
             mock_svc.return_value.list_jobs.return_value = [job]
             result = _call_tool_inner("cron_list", {})
@@ -815,9 +815,9 @@ class TestMcpCronHandlerPaths:
 
     def test_cron_add_invalid_script_path(self, tmp_path):
         """Lines 364-367: cron_add rejects invalid script path."""
-        from kiro_crew.mcp_cron import _call_tool_inner
+        from aj_crew.mcp_cron import _call_tool_inner
 
-        with patch("kiro_crew.mcp_cron.config_dir", return_value=tmp_path):
+        with patch("aj_crew.mcp_cron.config_dir", return_value=tmp_path):
             result = _call_tool_inner(
                 "cron_add", {"name": "bad", "script": "/nonexistent/path.py:func", "every": 60}
             )
@@ -825,8 +825,8 @@ class TestMcpCronHandlerPaths:
 
     def test_cron_add_with_command(self, tmp_path):
         """Lines 429, 431: cron_add sets script and command fields."""
-        from kiro_crew.cron import CronJob, CronSchedule
-        from kiro_crew.mcp_cron import _call_tool_inner
+        from aj_crew.cron import CronJob, CronSchedule
+        from aj_crew.mcp_cron import _call_tool_inner
 
         job = CronJob(
             id="new-id",
@@ -836,9 +836,9 @@ class TestMcpCronHandlerPaths:
             command="echo hi",
         )
         with (
-            patch("kiro_crew.mcp_cron.config_dir", return_value=tmp_path),
-            patch("kiro_crew.mcp_cron.CronService") as mock_svc,
-            patch("kiro_crew.mcp_cron._resolve_session_key", return_value=""),
+            patch("aj_crew.mcp_cron.config_dir", return_value=tmp_path),
+            patch("aj_crew.mcp_cron.CronService") as mock_svc,
+            patch("aj_crew.mcp_cron._resolve_session_key", return_value=""),
         ):
             mock_svc.return_value.add_job.return_value = job
             result = _call_tool_inner(
@@ -848,10 +848,10 @@ class TestMcpCronHandlerPaths:
 
     def test_cron_add_with_script(self, tmp_path):
         """Line 429: cron_add sets script field."""
-        from kiro_crew.cron import CronJob, CronSchedule
-        from kiro_crew.mcp_cron import _call_tool_inner
+        from aj_crew.cron import CronJob, CronSchedule
+        from aj_crew.mcp_cron import _call_tool_inner
 
-        crons_dir = tmp_path / ".kirocrew" / "crons"
+        crons_dir = tmp_path / ".ajcrew" / "crons"
         crons_dir.mkdir(parents=True)
         (crons_dir / "mon.py").write_text("def run(ctx): pass")
         script_path = str(crons_dir / "mon.py") + ":run"
@@ -863,9 +863,9 @@ class TestMcpCronHandlerPaths:
             script=script_path,
         )
         with (
-            patch("kiro_crew.mcp_cron.config_dir", return_value=tmp_path),
-            patch("kiro_crew.mcp_cron.CronService") as mock_svc,
-            patch("kiro_crew.mcp_cron._resolve_session_key", return_value=""),
+            patch("aj_crew.mcp_cron.config_dir", return_value=tmp_path),
+            patch("aj_crew.mcp_cron.CronService") as mock_svc,
+            patch("aj_crew.mcp_cron._resolve_session_key", return_value=""),
             patch("pathlib.Path.home", return_value=tmp_path),
         ):
             mock_svc.return_value.add_job.return_value = job
@@ -880,7 +880,7 @@ class TestValidationCustomValidator:
     """Tests for validation.py custom validator (lines 348, 350)."""
 
     def test_requires_message_or_script(self):
-        from kiro_crew.validation import (
+        from aj_crew.validation import (
             ValidationError,
             _validate_cron_add_requires_message_or_script,
         )
@@ -889,7 +889,7 @@ class TestValidationCustomValidator:
             _validate_cron_add_requires_message_or_script({})
 
     def test_script_and_command_mutually_exclusive(self):
-        from kiro_crew.validation import (
+        from aj_crew.validation import (
             ValidationError,
             _validate_cron_add_requires_message_or_script,
         )

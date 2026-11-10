@@ -1,7 +1,7 @@
 """Tests for the resource-pressure notification producer.
 
 Exercises the episode/hysteresis state machine in
-:mod:`kiro_crew.notifications.resource_pressure` against a real
+:mod:`aj_crew.notifications.resource_pressure` against a real
 :class:`NotificationBus` (list sink) with injected probes and clock — no real
 ``/proc`` or wall-clock dependence.
 """
@@ -15,24 +15,24 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import resource_status
-from kiro_crew.notifications import resource_pressure
-from kiro_crew.notifications.bus import SYSTEM_CHANNELS, NotificationBus
-from kiro_crew.notifications.resource_pressure import (
+from aj_crew import resource_status
+from aj_crew.notifications import resource_pressure
+from aj_crew.notifications.bus import SYSTEM_CHANNELS, NotificationBus
+from aj_crew.notifications.resource_pressure import (
     CHANNEL,
     CRITICAL_REALERT_SECS,
     SAMPLE_INTERVAL_SECS,
     SUSTAINED_TIGHT_SECS,
     ResourcePressureNotifier,
 )
-from kiro_crew.resource_status import (
+from aj_crew.resource_status import (
     POSTURE_AMPLE,
     POSTURE_CRITICAL,
     POSTURE_TIGHT,
     POSTURE_UNKNOWN,
     ResourceStatus,
 )
-from kiro_crew.testing.wait import finished
+from aj_crew.testing.wait import finished
 
 
 def _status(posture: str, gb: float = 1.5, load: float | None = 0.5) -> ResourceStatus:
@@ -77,7 +77,7 @@ class TestSliceOomNote:
         monkeypatch.setattr(
             resource_pressure,
             "check_agents_slice_pressure",
-            lambda: "cgroup OOM kill inside kirocrew-agents.slice: 1 new kill(s); …",
+            lambda: "cgroup OOM kill inside ajcrew-agents.slice: 1 new kill(s); …",
         )
         await notifier.maybe_sample()
         oom = [n for n in notes if n.get("group_key") == "agents-slice-oom"]

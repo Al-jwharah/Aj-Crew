@@ -18,9 +18,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from aiohttp import web
 
-from kiro_crew import session_directive
-from kiro_crew.dashboard import directive_queue
-from kiro_crew.dashboard.handlers.sessions import api_session_directive
+from aj_crew import session_directive
+from aj_crew.dashboard import directive_queue
+from aj_crew.dashboard.handlers.sessions import api_session_directive
 
 
 @pytest.fixture(autouse=True)
@@ -69,7 +69,7 @@ class TestPublishAndClaim:
         assert _claim("never-published", {}) is None
 
     def test_unknown_kind_is_refused(self):
-        """The only legitimate publishers are Kiro Crew's own directive tools, so
+        """The only legitimate publishers are Aj Crew's own directive tools, so
         an unrecognized kind means the request did not come from one."""
         with pytest.raises(ValueError, match="unknown directive kind"):
             _pub("sess-a", "rm_rf_everything", {})
@@ -403,7 +403,7 @@ class TestEndpoint:
 
     @pytest.mark.asyncio
     async def test_happy_path_parks_the_derived_record_for_the_declared_session(self):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         raw = {"message": "go"}
         resp = await api_session_directive(
@@ -482,14 +482,14 @@ class TestEndpoint:
     async def test_a_pre_call_input_body_is_named_as_a_stale_backend(self, caplog):
         """The body shape an MCP server from BEFORE this protocol sends.
 
-        A pooled ``kirocrew mcp-core`` that outlived a code change kept POSTing
+        A pooled ``ajcrew mcp-core`` that outlived a code change kept POSTing
         ``{kind, args}``; read as an empty ``tool`` it was refused ``not_derivable``,
         which pointed an operator at the directive tools when the fault was a
         stale process. The refusal now names the process and the fix.
         """
         import json as _json
 
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.handlers.sessions"):
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.handlers.sessions"):
             resp = await api_session_directive(
                 _request(
                     {"X-Session-Key": "dashboard:slot-a"},
@@ -501,7 +501,7 @@ class TestEndpoint:
         assert directive_queue.depth("dashboard:slot-a") == 0
         msg = " ".join(r.getMessage() for r in caplog.records)
         assert "stale_mcp_backend" in msg
-        assert "kirocrew restart" in msg
+        assert "ajcrew restart" in msg
         assert "not_derivable" not in msg
 
     @pytest.mark.asyncio
@@ -514,7 +514,7 @@ class TestEndpoint:
 
     @pytest.mark.asyncio
     async def test_a_non_directive_core_tool_cannot_be_derived_into_one(self):
-        # A real kirocrew-core tool that is not a directive tool: derive refuses
+        # A real ajcrew-core tool that is not a directive tool: derive refuses
         # before ever running it.
         resp = await api_session_directive(
             _request({"X-Session-Key": "dashboard:slot-a"}, self._body("learn_list", {}))
@@ -595,8 +595,8 @@ class TestEmitHelperPublishes:
     marker — the marker alone is what a provider-less backend cannot use."""
 
     def test_emit_posts_the_call_not_the_payload(self):
-        from kiro_crew import mcp_core
-        from kiro_crew.mcp_tools import control
+        from aj_crew import mcp_core
+        from aj_crew.mcp_tools import control
 
         posted: list[tuple] = []
         with patch.object(mcp_core, "_post", side_effect=lambda p, b, **kw: posted.append((p, b))):
@@ -606,13 +606,13 @@ class TestEmitHelperPublishes:
         assert path == "/api/session-directive"
         assert body == {"tool": "monitor_start", "raw_args": {"message": "hi"}}
         assert "args" not in body and "input_digest" not in body
-        from kiro_crew import session_directive
+        from aj_crew import session_directive
 
         assert session_directive.has_marker(out)
         assert control is not None
 
     def test_capture_mode_records_instead_of_posting(self):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         posted: list[tuple] = []
         with patch.object(mcp_core, "_post", side_effect=lambda p, b, **kw: posted.append((p, b))):
@@ -627,8 +627,8 @@ class TestEmitHelperPublishes:
     def test_a_refused_oversized_directive_is_never_published(self):
         """``encode`` refuses an over-limit payload and tells the model nothing was
         applied. Publishing anyway would leave a record that contradicts that."""
-        from kiro_crew import session_directive
-        from kiro_crew.mcp_tools import control
+        from aj_crew import session_directive
+        from aj_crew.mcp_tools import control
 
         posted: list[tuple] = []
         huge = {"message": "x" * (session_directive.MAX_DIRECTIVE_CHARS + 100)}
@@ -644,8 +644,8 @@ class TestEmitHelperPublishes:
     def test_a_publish_failure_does_not_break_the_tool(self):
         """An older gateway with no such route, or one that is down, must not turn
         a working tool call into an error — the marker path may still work."""
-        from kiro_crew import session_directive
-        from kiro_crew.mcp_tools import control
+        from aj_crew import session_directive
+        from aj_crew.mcp_tools import control
 
         with patch.object(control.mcp_core, "_post", side_effect=RuntimeError("gateway down")):
             out = control._emit_directive("monitor_start", {"message": "hi"}, "Monitor requested.")

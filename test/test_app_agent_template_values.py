@@ -26,7 +26,7 @@ APP_ROOT, APP_DATA, UV_BIN, HOST_PATH, PATH_SEP = (
 
 @pytest.fixture(name="values_mod")
 def _values_mod():
-    from kiro_crew.apps import agent_template_values
+    from aj_crew.apps import agent_template_values
 
     return agent_template_values
 
@@ -60,7 +60,7 @@ class TestHostValues:
         assert not (app_env["home"] / "apps" / "some-app").exists()
 
     def test_the_data_dir_is_the_one_the_hooks_receive(self, tmp_path, app_env, values_mod):
-        from kiro_crew.apps.manager import app_data_dir
+        from aj_crew.apps.manager import app_data_dir
 
         assert _values(values_mod, tmp_path)[APP_DATA] == str(app_data_dir("some-app"))
 

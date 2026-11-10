@@ -9,7 +9,7 @@
  * (mirroring `macInset`), and the host-rendered loading/error strips must
  * inset their own right side.
  *
- * Deliberately NO vi.mock of ../lib/electron here: `window.kirocrew` is set in
+ * Deliberately NO vi.mock of ../lib/electron here: `window.ajcrew` is set in
  * a hoisted block BEFORE the module loads, so the real derivation in
  * src/lib/electron.ts is what is under test — a refactor that stops
  * classifying `platform: 'win32'` as a Windows shell fails this test.
@@ -23,7 +23,7 @@ import { setWarm } from '../store/instancesSlice'
 
 // Must run before src/lib/electron.ts is imported (module-level consts).
 vi.hoisted(() => {
-  ;(window as unknown as { kirocrew: { isElectron: boolean; platform: string } }).kirocrew = {
+  ;(window as unknown as { ajcrew: { isElectron: boolean; platform: string } }).ajcrew = {
     isElectron: true,
     platform: 'win32',
   }

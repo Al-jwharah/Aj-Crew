@@ -118,21 +118,21 @@ class TestDesignTakeAwayCheck:
         block = self._block(DESIGN_LANES[0])
         named = (
             "website/src/",
-            "src/kiro_crew/dashboard/chat_runner.py",
-            "src/kiro_crew/dashboard/chat_turn/",
-            "src/kiro_crew/session_agent_selection.py",
-            "src/kiro_crew/subagent_manager/",
-            "src/kiro_crew/subagent_persistence.py",
-            "src/kiro_crew/cron_script.py",
-            "src/kiro_crew/cron_service/",
-            "src/kiro_crew/apps/",
-            "src/kiro_crew/context_assembly/",
-            "src/kiro_crew/execution_context.py",
+            "src/aj_crew/dashboard/chat_runner.py",
+            "src/aj_crew/dashboard/chat_turn/",
+            "src/aj_crew/session_agent_selection.py",
+            "src/aj_crew/subagent_manager/",
+            "src/aj_crew/subagent_persistence.py",
+            "src/aj_crew/cron_script.py",
+            "src/aj_crew/cron_service/",
+            "src/aj_crew/apps/",
+            "src/aj_crew/context_assembly/",
+            "src/aj_crew/execution_context.py",
             ".github/workflows/release.yml",
             "packaging/",
         )
         for path in named:
-            leaf = path.removeprefix("src/kiro_crew/")
+            leaf = path.removeprefix("src/aj_crew/")
             assert leaf in block, f"the sweep no longer names {leaf}; update this list"
             assert (root / path).exists(), f"the sweep names {path}, which does not exist"
 

@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
 """A crewmate's file never carries a platform server it cannot launch.
 
-A template without ``kirocrew-mate`` must not get ``"kirocrew-mate":
+A template without ``ajcrew-mate`` must not get ``"ajcrew-mate":
 {"disabled": false}`` written into the crewmate's file at creation: that is a
 server with no command, which a session that ran the file would wait on until
 its MCP readiness timed out. The shapes here are the templates the soak run used
 (``temp-screenshots/soak/driver/broken-templates/``): ``docs-helper`` (no
-``kirocrew-mate``) and the ``Briar`` file it produced.
+``ajcrew-mate``) and the ``Briar`` file it produced.
 """
 
 from __future__ import annotations
@@ -18,13 +18,13 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from test_member_memory_creation_capability import _app, _environment
 
-import kiro_crew.config.paths as paths_mod
-from kiro_crew import mate_worker
-from kiro_crew.config import loader
+import aj_crew.config.paths as paths_mod
+from aj_crew import mate_worker
+from aj_crew.config import loader
 
 NOTES = {"command": "python3", "args": ["stub_mcp.py", "notes"]}
 #: The soak's ``docs-helper`` template: its own prompt, a ``notes`` server, no
-#: ``kirocrew-mate``.
+#: ``ajcrew-mate``.
 DOCS_HELPER = {
     "name": "docs-helper",
     "description": "Keeps the changelog and README current.",
@@ -39,7 +39,7 @@ DOCS_HELPER = {
 BRIAR = {
     **DOCS_HELPER,
     "name": "Briar",
-    "mcpServers": {"notes": NOTES, "kirocrew-mate": {"disabled": False}},
+    "mcpServers": {"notes": NOTES, "ajcrew-mate": {"disabled": False}},
 }
 
 
@@ -68,17 +68,17 @@ async def test_creating_from_a_template_without_the_mate_server_writes_no_overri
     await asyncio.to_thread(_environment, monkeypatch, "linux", "kas", "auto", "namespace", False)
     async with TestClient(TestServer(_app(monkeypatch))) as client:
         response = await client.post(
-            "/api/agents", json={"name": "briar", "kiro_agent": "kirocrew"}
+            "/api/agents", json={"name": "briar", "kiro_agent": "ajcrew"}
         )
         assert response.status == 200, await response.text()
     # The minimal file copies NO servers from any template, so a bare
-    # ``kirocrew-mate`` override cannot be written — and neither is ``notes``.
+    # ``ajcrew-mate`` override cannot be written — and neither is ``notes``.
     servers = _servers(home / "mates" / "agents" / "briar.json")
     assert servers == {}
 
 
 def test_a_template_carrying_the_bare_override_is_copied_without_it(home):
-    from kiro_crew.mate_config import write_mate_config
+    from aj_crew.mate_config import write_mate_config
 
     (home / "agents" / "with-switch.json").write_text(
         json.dumps({**BRIAR, "name": "with-switch"}), encoding="utf-8"
@@ -89,7 +89,7 @@ def test_a_template_carrying_the_bare_override_is_copied_without_it(home):
 
 
 def test_a_crewmate_file_holding_the_bare_override_is_repaired_at_start(home):
-    from kiro_crew.mate_config_migration import repair_partial_platform_servers
+    from aj_crew.mate_config_migration import repair_partial_platform_servers
 
     path = home / "mates" / "agents" / "Briar.json"
     path.write_text(json.dumps(BRIAR), encoding="utf-8")
@@ -100,17 +100,17 @@ def test_a_crewmate_file_holding_the_bare_override_is_repaired_at_start(home):
 
 
 def test_the_startup_migration_runs_the_repair(home):
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.mate_config_migration import migrate_existing_crewmates
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.mate_config_migration import migrate_existing_crewmates
 
     path = home / "mates" / "agents" / "Briar.json"
     path.write_text(json.dumps(BRIAR), encoding="utf-8")
-    migrate_existing_crewmates(KiroCrewConfig())
+    migrate_existing_crewmates(AjCrewConfig())
     assert set(_servers(path)) == {"notes"}
 
 
 def test_reading_a_crewmate_file_never_hands_on_the_bare_override(home):
-    from kiro_crew.acp.harness.kas import resolve_projected_spec
+    from aj_crew.acp.harness.kas import resolve_projected_spec
 
     (home / "mates" / "agents" / "Briar.json").write_text(json.dumps(BRIAR), encoding="utf-8")
     spec, _ = resolve_projected_spec(home / "agents", "Briar", None)
@@ -120,11 +120,11 @@ def test_reading_a_crewmate_file_never_hands_on_the_bare_override(home):
 def test_only_a_bare_switch_on_a_platform_server_is_dropped():
     spec = {
         "mcpServers": {
-            "kirocrew-mate": {"disabled": False},
-            "kirocrew-core": {"disabledTools": ["spawn_run"]},
-            "kirocrew-guide": {"command": "kc", "args": ["guide"]},
+            "ajcrew-mate": {"disabled": False},
+            "ajcrew-core": {"disabledTools": ["spawn_run"]},
+            "ajcrew-guide": {"command": "kc", "args": ["guide"]},
             "notes": {"disabled": False},
         }
     }
-    assert mate_worker.drop_partial_platform_servers(spec) == ["kirocrew-mate"]
-    assert set(spec["mcpServers"]) == {"kirocrew-core", "kirocrew-guide", "notes"}
+    assert mate_worker.drop_partial_platform_servers(spec) == ["ajcrew-mate"]
+    assert set(spec["mcpServers"]) == {"ajcrew-core", "ajcrew-guide", "notes"}

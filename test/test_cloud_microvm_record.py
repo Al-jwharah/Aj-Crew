@@ -6,8 +6,8 @@ import json
 
 import pytest
 
-from kiro_crew.cloud.microvm import states
-from kiro_crew.cloud.microvm.record import CrewRecord, CrewStore
+from aj_crew.cloud.microvm import states
+from aj_crew.cloud.microvm.record import CrewRecord, CrewStore
 
 
 @pytest.fixture()
@@ -75,7 +75,7 @@ class TestTolerance:
         assert set(loaded) == {"good"}
 
     def test_an_oversized_file_reads_as_no_crews(self, store, monkeypatch):
-        from kiro_crew.cloud.microvm import record as record_module
+        from aj_crew.cloud.microvm import record as record_module
 
         monkeypatch.setattr(record_module, "_MAX_FILE_BYTES", 10)
         store.path.parent.mkdir(parents=True, exist_ok=True)
@@ -133,7 +133,7 @@ class TestApplyEvent:
 
 class TestCaps:
     def test_publishing_past_the_cap_is_refused(self, store, monkeypatch):
-        from kiro_crew.cloud.microvm import record as record_module
+        from aj_crew.cloud.microvm import record as record_module
 
         monkeypatch.setattr(record_module, "_MAX_RECORDS", 2)
         with pytest.raises(ValueError, match="cap is 2"):
@@ -166,7 +166,7 @@ class TestAWriteNeverErasesWhatItCouldNotRead:
     """
 
     def test_an_unparseable_store_refuses_a_put(self, tmp_path):
-        from kiro_crew.cloud.microvm.record import CrewRecord, CrewStore, CrewStoreUnreadable
+        from aj_crew.cloud.microvm.record import CrewRecord, CrewStore, CrewStoreUnreadable
 
         path = tmp_path / "crews.json"
         path.write_text("{ not json at all")
@@ -174,7 +174,7 @@ class TestAWriteNeverErasesWhatItCouldNotRead:
             CrewStore(path).put(CrewRecord(tag="newcrew"))
 
     def test_the_file_is_left_exactly_as_it_was(self, tmp_path):
-        from kiro_crew.cloud.microvm.record import CrewRecord, CrewStore, CrewStoreUnreadable
+        from aj_crew.cloud.microvm.record import CrewRecord, CrewStore, CrewStoreUnreadable
 
         path = tmp_path / "crews.json"
         path.write_text("{ not json at all")
@@ -184,7 +184,7 @@ class TestAWriteNeverErasesWhatItCouldNotRead:
         assert path.read_bytes() == before
 
     def test_an_unparseable_store_refuses_an_event(self, tmp_path):
-        from kiro_crew.cloud.microvm.record import CrewStore, CrewStoreUnreadable
+        from aj_crew.cloud.microvm.record import CrewStore, CrewStoreUnreadable
 
         path = tmp_path / "crews.json"
         path.write_text('{"crews": "not a list"}')
@@ -192,7 +192,7 @@ class TestAWriteNeverErasesWhatItCouldNotRead:
             CrewStore(path).apply_event("c", "launch_recorded")
 
     def test_an_unparseable_store_refuses_a_delete(self, tmp_path):
-        from kiro_crew.cloud.microvm.record import CrewStore, CrewStoreUnreadable
+        from aj_crew.cloud.microvm.record import CrewStore, CrewStoreUnreadable
 
         path = tmp_path / "crews.json"
         path.write_text("\x00\x01 binary")
@@ -202,14 +202,14 @@ class TestAWriteNeverErasesWhatItCouldNotRead:
     def test_a_store_that_never_existed_is_the_one_true_empty(self, tmp_path):
         """A file that was never written genuinely holds no crews, so a first
         write must not be refused."""
-        from kiro_crew.cloud.microvm.record import CrewRecord, CrewStore
+        from aj_crew.cloud.microvm.record import CrewRecord, CrewStore
 
         store = CrewStore(tmp_path / "crews.json")
         assert store.put(CrewRecord(tag="first")).tag == "first"
         assert set(store.load()) == {"first"}
 
     def test_a_readable_store_still_writes_and_keeps_the_others(self, tmp_path):
-        from kiro_crew.cloud.microvm.record import CrewRecord, CrewStore
+        from aj_crew.cloud.microvm.record import CrewRecord, CrewStore
 
         store = CrewStore(tmp_path / "crews.json")
         store.put(CrewRecord(tag="one"))
@@ -218,7 +218,7 @@ class TestAWriteNeverErasesWhatItCouldNotRead:
 
     def test_the_reader_stays_tolerant(self, tmp_path):
         """Unchanged, and deliberately: one bad byte must not blank the dashboard."""
-        from kiro_crew.cloud.microvm.record import CrewStore
+        from aj_crew.cloud.microvm.record import CrewStore
 
         path = tmp_path / "crews.json"
         path.write_text("{ not json at all")
@@ -237,7 +237,7 @@ class TestAWriteRefusesAPartiallyUnreadableLedger:
     def test_one_unparseable_record_refuses_a_put(self, tmp_path):
         import json as _json
 
-        from kiro_crew.cloud.microvm.record import CrewRecord, CrewStore, CrewStoreUnreadable
+        from aj_crew.cloud.microvm.record import CrewRecord, CrewStore, CrewStoreUnreadable
 
         path = tmp_path / "crews.json"
         good = CrewStore(path)
@@ -251,7 +251,7 @@ class TestAWriteRefusesAPartiallyUnreadableLedger:
     def test_the_keeper_is_still_on_disk_afterwards(self, tmp_path):
         import json as _json
 
-        from kiro_crew.cloud.microvm.record import CrewRecord, CrewStore, CrewStoreUnreadable
+        from aj_crew.cloud.microvm.record import CrewRecord, CrewStore, CrewStoreUnreadable
 
         path = tmp_path / "crews.json"
         CrewStore(path).put(CrewRecord(tag="keeper", crew_name="keeper-crew"))
@@ -266,7 +266,7 @@ class TestAWriteRefusesAPartiallyUnreadableLedger:
         """Unchanged: one unreadable crew must not hide the others."""
         import json as _json
 
-        from kiro_crew.cloud.microvm.record import CrewRecord, CrewStore
+        from aj_crew.cloud.microvm.record import CrewRecord, CrewStore
 
         path = tmp_path / "crews.json"
         CrewStore(path).put(CrewRecord(tag="keeper"))
@@ -279,7 +279,7 @@ class TestAWriteRefusesAPartiallyUnreadableLedger:
 class TestTwoWritersCannotLoseACrew:
     """The lane has two writers by design and they are in different processes.
 
-    The gateway and a ``kirocrew cloud`` command both write it. ``publish`` replaces the
+    The gateway and a ``ajcrew cloud`` command both write it. ``publish`` replaces the
     WHOLE document, so the second rename would discard the first writer's row, leaving a
     billing VM nothing can address. The READ and the publish share one hold of the lock.
     """
@@ -292,7 +292,7 @@ class TestTwoWritersCannotLoseACrew:
         counts it as a competing holder even in this process -- which is exactly
         the property under test. ``wait=False`` makes it one attempt.
         """
-        from kiro_crew import platform_lock_compat
+        from aj_crew import platform_lock_compat
 
         with open(str(path) + ".lock", "a+") as handle:
             try:
@@ -393,7 +393,7 @@ class TestTwoWritersCannotLoseACrew:
         that never writes again."""
         import json as _json
 
-        from kiro_crew.cloud.microvm.record import CrewStoreUnreadable
+        from aj_crew.cloud.microvm.record import CrewStoreUnreadable
 
         path = tmp_path / "crews.json"
         CrewStore(path).put(CrewRecord(tag="keeper"))
@@ -481,16 +481,16 @@ class TestTheStoreIsNotAgentWritable:
     def test_the_file_name_is_the_one_the_protection_lists_name(self):
         """Non-vacuity for every assertion below: they all key off the leaf name,
         so a rename that left the lists alone would pass them all silently."""
-        from kiro_crew.cloud.microvm import record
+        from aj_crew.cloud.microvm import record
 
         assert record._FILENAME == self.LEAF
 
     def test_a_write_is_refused_by_the_file_edit_gate(self):
         import os
 
-        from kiro_crew.security import paths
+        from aj_crew.security import paths
 
-        target = os.path.join(os.path.expanduser("~/.kirocrew"), self.LEAF)
+        target = os.path.join(os.path.expanduser("~/.ajcrew"), self.LEAF)
         assert paths.is_sensitive_write_path(target), (
             "the store is writable through the agent's file-edit tool, so an agent "
             "can choose which VM the next teardown terminates"
@@ -502,22 +502,22 @@ class TestTheStoreIsNotAgentWritable:
         mask a path the gateway itself resolves, and the harm here is the write."""
         import os
 
-        from kiro_crew.security import paths
+        from aj_crew.security import paths
 
-        target = os.path.join(os.path.expanduser("~/.kirocrew"), self.LEAF)
+        target = os.path.join(os.path.expanduser("~/.ajcrew"), self.LEAF)
         assert not paths.is_sensitive_path(target)
 
     def test_a_sandboxed_shell_meets_a_kernel_seal_too(self):
         """The file-edit gate covers the agent's tool; only a kernel denial covers
         ``open(..., "w")`` from a sandboxed shell, however the write is spelled."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert self.LEAF in sandbox._CREW_READONLY_LEAVES
 
     def test_the_name_is_pre_created_so_it_cannot_be_squatted(self):
         """``mount(2)`` cannot seal a name nothing occupies, and this file does not
         exist until the lane's first launch -- which is never, on most installs."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert self.LEAF in sandbox._CREW_PRECREATE_READONLY_FILE_LEAVES
 
@@ -526,7 +526,7 @@ class TestTheStoreIsNotAgentWritable:
         engine and the crew-turn route are the only callers and both run in the
         gateway. What a read would hand over is every crew's VM id, node id and
         endpoint, which is reconnaissance for the write the seal exists to stop."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert self.LEAF in sandbox._CREW_CHILD_WITHHELD_LEAVES
         assert self.LEAF not in sandbox._CREW_CHILD_READABLE_LEAVES
@@ -569,7 +569,7 @@ class TestThePrecreatedEmptyStoreIsWritable:
         """Non-vacuity: only the exact pre-created ``{}`` is accepted. A document
         of some other shape may be another writer's file, and publishing over it
         would discard whatever it holds."""
-        from kiro_crew.cloud.microvm.record import CrewStoreUnreadable
+        from aj_crew.cloud.microvm.record import CrewStoreUnreadable
 
         store.path.write_text(document, encoding="utf-8")
         with pytest.raises(CrewStoreUnreadable):
@@ -585,12 +585,12 @@ class TestAnUnreadableRecordIsNeverPublished:
     """
 
     def test_an_over_long_field_is_refused_and_the_store_is_unchanged(self, tmp_path):
-        from kiro_crew.cloud.microvm import record as rec
+        from aj_crew.cloud.microvm import record as rec
 
         store = rec.CrewStore(tmp_path / "crews.json")
         store.put(rec.CrewRecord(tag="ok", mi_id="mi-0123456789abcdef0"))
         before = (tmp_path / "crews.json").read_bytes()
-        long_ref = "kirocrew/" + "x" * (rec._MAX_STRING_LEN + 1)
+        long_ref = "ajcrew/" + "x" * (rec._MAX_STRING_LEN + 1)
         with pytest.raises(ValueError, match="would not read back"):
             store.put(rec.CrewRecord(tag="bad", control_secret_ref=long_ref))
         assert (tmp_path / "crews.json").read_bytes() == before

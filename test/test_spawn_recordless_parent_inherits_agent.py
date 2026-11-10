@@ -5,9 +5,9 @@ turn is saved, so a sub-agent spawned in that turn has a parent with none.
 For that parent the route takes the parent's live selection
 (``SessionManager.get_agent_selection``), the fallback ``resolve_spawn_execution``
 applies to the same parent, so the child runs the parent's agent spec (its prompt,
-tools, hooks and MCP servers) instead of the default ``kirocrew``. Only a request
+tools, hooks and MCP servers) instead of the default ``ajcrew``. Only a request
 with no parent, or a parent whose live selection is the default template, keeps
-``kirocrew``.
+``ajcrew``.
 """
 
 from __future__ import annotations
@@ -20,8 +20,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from handlers_messaging_coverage_helpers import _payload, _Req, _run, _state
 
-import kiro_crew.config.loader as loader
-import kiro_crew.dashboard.handlers.messaging as messaging
+import aj_crew.config.loader as loader
+import aj_crew.dashboard.handlers.messaging as messaging
 
 #: A Slack thread session: the channel inbound path writes no execution record.
 SLACK_PARENT = "slack:C1:1700000000.1"
@@ -40,8 +40,8 @@ def spawn_route(monkeypatch):
     does not model. Returns ``call(body, selection)`` -> ``(response, mgr,
     get_agent_selection)``.
     """
-    from kiro_crew.shared_crew import admission_entry
-    from kiro_crew.shared_crew.admission_gate import Admission
+    from aj_crew.shared_crew import admission_entry
+    from aj_crew.shared_crew.admission_gate import Admission
 
     async def _passthrough(*_a, **_kw):
         return Admission(None, "passthrough")
@@ -84,8 +84,8 @@ def test_a_channel_parent_without_a_record_hands_its_template_to_the_child(spawn
 
 
 def test_a_channel_parent_on_a_crewmate_hands_its_member_to_the_child(spawn_route) -> None:
-    cfg = loader.KiroCrewConfig.load()
-    cfg.agents["alice"] = loader.KiroCrewAgentConfig(kiro_agent="alice-agent")
+    cfg = loader.AjCrewConfig.load()
+    cfg.agents["alice"] = loader.AjCrewAgentConfig(kiro_agent="alice-agent")
     cfg.save()
     response, mgr, _ = spawn_route(
         {"task": "review this", "parent_session": SLACK_PARENT}, ("member", "alice")
@@ -101,10 +101,10 @@ def test_a_channel_parent_on_a_crewmate_hands_its_member_to_the_child(spawn_rout
     "selection", [("template", "amzn-builder"), ("member", "alice")], ids=["template", "member"]
 )
 def test_the_route_and_the_spawn_gate_hand_down_the_same_execution(spawn_route, selection) -> None:
-    from kiro_crew.subagent_manager.admission.gate import _GateMixin
+    from aj_crew.subagent_manager.admission.gate import _GateMixin
 
-    cfg = loader.KiroCrewConfig.load()
-    cfg.agents["alice"] = loader.KiroCrewAgentConfig(kiro_agent="alice-agent")
+    cfg = loader.AjCrewConfig.load()
+    cfg.agents["alice"] = loader.AjCrewAgentConfig(kiro_agent="alice-agent")
     cfg.save()
     response, mgr, _ = spawn_route({"task": "x", "parent_session": SLACK_PARENT}, selection)
     assert response.status == 200, _payload(response)
@@ -125,7 +125,7 @@ def test_the_route_and_the_spawn_gate_hand_down_the_same_execution(spawn_route, 
     [("member", "gone"), ("unknown", "amzn-builder"), None],
     ids=["missing_member", "unknown_kind", "not_a_tuple"],
 )
-def test_an_unusable_live_selection_is_refused_rather_than_run_as_kirocrew(
+def test_an_unusable_live_selection_is_refused_rather_than_run_as_ajcrew(
     spawn_route, selection
 ) -> None:
     """The same refusal ``spawn_async`` gives this parent: never a silent default."""
@@ -135,10 +135,10 @@ def test_an_unusable_live_selection_is_refused_rather_than_run_as_kirocrew(
     mgr.spawn.assert_not_called()
 
 
-def test_a_parent_on_the_default_template_keeps_kirocrew(spawn_route) -> None:
+def test_a_parent_on_the_default_template_keeps_ajcrew(spawn_route) -> None:
     response, mgr, _ = spawn_route({"task": "x", "parent_session": SLACK_PARENT})
     assert response.status == 200, _payload(response)
-    assert _admitted(mgr)["template_id"] == "kirocrew"
+    assert _admitted(mgr)["template_id"] == "ajcrew"
 
 
 def test_an_explicit_agent_wins_and_the_selection_is_not_read(spawn_route) -> None:
@@ -151,15 +151,15 @@ def test_an_explicit_agent_wins_and_the_selection_is_not_read(spawn_route) -> No
     assert _admitted(mgr)["template_id"] == "reviewer"
 
 
-def test_a_parentless_request_keeps_kirocrew(spawn_route) -> None:
+def test_a_parentless_request_keeps_ajcrew(spawn_route) -> None:
     response, mgr, selection = spawn_route({"task": "x"}, ("template", "amzn-builder"))
     assert response.status == 200, _payload(response)
     selection.assert_not_called()
-    assert _admitted(mgr)["template_id"] == "kirocrew"
+    assert _admitted(mgr)["template_id"] == "ajcrew"
 
 
 def test_a_parent_with_a_record_keeps_the_recorded_template(spawn_route) -> None:
-    from kiro_crew.execution_context import bind_session_execution, execution_for_store
+    from aj_crew.execution_context import bind_session_execution, execution_for_store
 
     parent = "dashboard:chat-1"
     bind_session_execution(parent, execution_for_store("", template_id="recorded-agent"))

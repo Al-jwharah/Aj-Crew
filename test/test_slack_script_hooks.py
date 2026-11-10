@@ -23,12 +23,12 @@ from slack_transport_dispatch_helpers import (
 )
 
 from conftest import MockSlackClient
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
-from kiro_crew.hooks import HOOK_EVENT_STOP, HOOK_EVENT_USER_PROMPT_SUBMIT
-from kiro_crew.messaging import script_hooks as messaging_hooks
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.slack import handler as slack_handler
-from kiro_crew.slack import script_hooks, transport_dispatch
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
+from aj_crew.hooks import HOOK_EVENT_STOP, HOOK_EVENT_USER_PROMPT_SUBMIT
+from aj_crew.messaging import script_hooks as messaging_hooks
+from aj_crew.providers.base import LLMEvent
+from aj_crew.slack import handler as slack_handler
+from aj_crew.slack import script_hooks, transport_dispatch
 
 OWNER = "U_OWNER"
 

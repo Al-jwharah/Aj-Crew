@@ -18,11 +18,11 @@ import time
 
 import pytest
 
-from kiro_crew.apps.builtins.issue_radar.backend import crew_store as cs
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log_projection
-from kiro_crew.crew_log.schema import KIND_SESSION
-from kiro_crew.crew_log.store import CrewLog
+from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log_projection
+from aj_crew.crew_log.schema import KIND_SESSION
+from aj_crew.crew_log.store import CrewLog
 
 OWNER, REPO = "kirodotdev", "KiroCrew"  # brand-ok: the repository name
 
@@ -30,10 +30,10 @@ _SEQ = itertools.count(1)
 
 
 @pytest.fixture(autouse=True)
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture, moved verbatim; no test in the modules that import it calls monkeypatch.undo()
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture, moved verbatim; no test in the modules that import it calls monkeypatch.undo()
 def _isolated_crew_log(tmp_path, monkeypatch):
     """Own crew log data home, crew log on, and no writer state carried between tests."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(crew_log_emit.CREW_LOG_ENV, "1")
     crew_log_emit.reset_caches()
     crew_log_projection.forget_slot_folds()
@@ -57,7 +57,7 @@ def _unit(crew_id, session_id=None):
     """
     session_id = session_id or f"acp-{next(_SEQ)}"
     CrewLog.create(
-        KIND_SESSION, session_id, owner="owner", agent="kirocrew", slot=cs.slot_key_for(crew_id)
+        KIND_SESSION, session_id, owner="owner", agent="ajcrew", slot=cs.slot_key_for(crew_id)
     )
     return session_id
 

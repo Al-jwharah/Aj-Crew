@@ -27,9 +27,9 @@ from unittest.mock import MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import chat_runner as cr
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard import chat_runner as cr
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import (
     CRON_NOTIFICATION_KIND,
     SUBAGENT_COMPLETION_KIND,
     SYNTHETIC_RECOVERY_KIND,
@@ -302,7 +302,7 @@ def test_unsent_restored_cards_wait_and_a_sent_one_is_judged(tmp_path):
     """A restored card carries no snapshot (the restore strips it) and no drain
     runs it, so the sweep leaves it for the user. The card the user sends, named
     or marked chosen, is judged like any unmarked entry and fails closed."""
-    from kiro_crew.dashboard.slot_queue_repository import (
+    from aj_crew.dashboard.slot_queue_repository import (
         RESTORED_QUEUE_KEY,
         RESTORED_SEND_CHOSEN_KEY,
     )
@@ -545,7 +545,7 @@ def test_probe_failure_drop_says_unverified_not_gained(tmp_path):
 def test_drop_audit_uses_the_effective_session_key(tmp_path, _inline_audit):
     """A linked slot's turns run under `linked_session_key`; filing the drop
     under the slot key would hide exactly the drops this feature records."""
-    from kiro_crew.dashboard.chat_utils import effective_session_key
+    from aj_crew.dashboard.chat_utils import effective_session_key
 
     state = _make_state(tmp_path)
     slot = _busy(state.get_or_create_slot("chat-1"))
@@ -673,7 +673,7 @@ async def test_mixed_origin_merge_keeps_channel_provenance(tmp_path, monkeypatch
         task.done.return_value = True
         return task
 
-    monkeypatch.setattr(cr.KiroCrewConfig, "load", lambda: config)
+    monkeypatch.setattr(cr.AjCrewConfig, "load", lambda: config)
     monkeypatch.setattr(cr, "_run_chat", _stub_run_chat)
     monkeypatch.setattr(cr, "spawn_guarded_turn", _fake_spawn)
 
@@ -779,7 +779,7 @@ async def test_drain_strips_snapshot_from_the_persisted_row(tmp_path, monkeypatc
 
 
 def _restored_cards():
-    from kiro_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
+    from aj_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
 
     return [
         {"id": "r1", "content": "accepted parked send", RESTORED_QUEUE_KEY: True},
@@ -854,11 +854,11 @@ async def test_restored_parked_send_on_unconstrained_slot_still_runs(tmp_path, m
 def test_a_restored_entry_loses_its_composer_send_mark():
     """The act-now mark lets an entry drain past the sub-agent hold, so the
     reader drops it with the other authority-bearing keys."""
-    from kiro_crew.dashboard.chat_utils_injected_rows import (
+    from aj_crew.dashboard.chat_utils_injected_rows import (
         COMPOSER_SEND_META,
         releases_past_subagent_hold,
     )
-    from kiro_crew.dashboard.slot_queue_repository import sanitize_restored_queue
+    from aj_crew.dashboard.slot_queue_repository import sanitize_restored_queue
 
     saved = [{"id": "s1", "content": "act now", "meta": {COMPOSER_SEND_META: True, "sendId": "x"}}]
     (restored,) = sanitize_restored_queue(json.loads(json.dumps(saved)))
@@ -873,8 +873,8 @@ async def test_a_restored_steer_under_the_subagent_hold_is_not_dispatched(tmp_pa
     """A saved act-now steer, restored onto a slot that is now linked while a
     sub-agent hold is active, must not drain through the hold's system path:
     that path runs no containment sweep. It waits as an ordinary card."""
-    from kiro_crew.dashboard.chat_utils_injected_rows import COMPOSER_SEND_META
-    from kiro_crew.dashboard.slot_queue_repository import sanitize_restored_queue
+    from aj_crew.dashboard.chat_utils_injected_rows import COMPOSER_SEND_META
+    from aj_crew.dashboard.slot_queue_repository import sanitize_restored_queue
 
     state = _make_state(tmp_path)
     state.subagents = None
@@ -902,11 +902,11 @@ def test_the_subagent_hold_path_never_drains_an_unchosen_restored_card():
     """Even a restored card still wearing the act-now mark (built here directly,
     so the reader's strip does not apply) stays queued on the hold's system path;
     an in-process steer behind it still drains."""
-    from kiro_crew.dashboard.chat_utils_injected_rows import (
+    from aj_crew.dashboard.chat_utils_injected_rows import (
         COMPOSER_SEND_META,
         _dequeue_next_system_message,
     )
-    from kiro_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
+    from aj_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
 
     restored = {
         "id": "r1",
@@ -935,11 +935,11 @@ async def test_a_card_chosen_during_the_drains_await_is_judged_before_it_runs(
     restored card is queued. A "run this next" click marks the card chosen
     during that wait. On a slot that is now linked the card is judged after
     the wait, so it is dropped, not dispatched."""
-    from kiro_crew.dashboard.slot_queue_repository import (
+    from aj_crew.dashboard.slot_queue_repository import (
         RESTORED_QUEUE_KEY,
         RESTORED_SEND_CHOSEN_KEY,
     )
-    from kiro_crew.shared_crew import admission_gate
+    from aj_crew.shared_crew import admission_gate
 
     entered, release = asyncio.Event(), asyncio.Event()
 
@@ -995,7 +995,7 @@ async def test_a_slot_linked_during_the_drains_await_is_judged_before_the_pop(
     Shared Crew cancelled-parked check, and the slot is linked during that
     wait. The card is judged after the wait, before it is popped: dropped, not
     dispatched, whether a card's send named it or it was next."""
-    from kiro_crew.shared_crew import admission_gate
+    from aj_crew.shared_crew import admission_gate
 
     entered, release = asyncio.Event(), asyncio.Event()
 

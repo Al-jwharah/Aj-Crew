@@ -61,7 +61,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _SCRIPT = _REPO_ROOT / ".github" / "scripts" / "await-fast-gate.sh"

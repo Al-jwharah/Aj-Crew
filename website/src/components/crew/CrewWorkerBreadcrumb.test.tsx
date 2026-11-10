@@ -168,7 +168,7 @@ describe('CrewWorkerBreadcrumb on a phone', () => {
     // The list answered once (the worker is done); a 5s poll then fails. The
     // row's own flags cannot say done, so the last read stands under the notice.
     vi.useFakeTimers({ shouldAdvanceTime: true })
-    fail.workers = [{ key: 'w1', title: 'First-week checklist', agent: 'kirocrew-worker', status: 'idle', group: 'done', last_activity: '', ledger_item: '', summary: '', created_by: '' }]
+    fail.workers = [{ key: 'w1', title: 'First-week checklist', agent: 'ajcrew-worker', status: 'idle', group: 'done', last_activity: '', ledger_item: '', summary: '', created_by: '' }]
     try {
       renderCrumb()
       expect(await screen.findByText('Done')).toBeInTheDocument()
@@ -187,7 +187,7 @@ describe('CrewWorkerBreadcrumb on a phone', () => {
 describe('CrewWorkerBreadcrumb for a sub-conductor\'s crew (C)', () => {
   it('keeps a dispatcher the list does not hold yet as a label', async () => {
     fail.on = false
-    fail.workers = [{ key: 'w1', title: 'First-week checklist', agent: 'kirocrew-worker', status: 'idle', group: 'done', last_activity: '', ledger_item: '', created_by: 'gone', dispatched_by: 'gone' }]
+    fail.workers = [{ key: 'w1', title: 'First-week checklist', agent: 'ajcrew-worker', status: 'idle', group: 'done', last_activity: '', ledger_item: '', created_by: 'gone', dispatched_by: 'gone' }]
     try {
       renderCrumb()
       const via = await screen.findByTestId('crew-breadcrumb-via')
@@ -202,8 +202,8 @@ describe('CrewWorkerBreadcrumb for a sub-conductor\'s crew (C)', () => {
     mobile.value = false
     fail.on = false
     fail.workers = [
-      { key: 'sub', title: 'Sub conductor', agent: 'kirocrew-conductor', status: 'idle', group: 'done', last_activity: '', ledger_item: '', created_by: 'root', dispatched_by: 'root' },
-      { key: 'w1', title: 'First-week checklist', agent: 'kirocrew-worker', status: 'idle', group: 'done', last_activity: '', ledger_item: '', created_by: 'sub', dispatched_by: 'sub' },
+      { key: 'sub', title: 'Sub conductor', agent: 'ajcrew-conductor', status: 'idle', group: 'done', last_activity: '', ledger_item: '', created_by: 'root', dispatched_by: 'root' },
+      { key: 'w1', title: 'First-week checklist', agent: 'ajcrew-worker', status: 'idle', group: 'done', last_activity: '', ledger_item: '', created_by: 'sub', dispatched_by: 'sub' },
     ]
     const store = createTestStore({ dashboard: { slots: [{ key: 'root', title: 'New Teammate Welcome Kit', crew_mode_root: true }, { key: 'sub', title: 'Sub conductor', crew_root: 'root' }] } } as never)
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })

@@ -2,11 +2,11 @@
 
 ## Overview
 
-Dev Fleet is a builtin App Store app (`kiro_crew/apps/builtins/dev_fleet/`) for
-managing Kiro Crew feature worktrees (git worktrees of the main repo) and their isolated
+Dev Fleet is a builtin App Store app (`aj_crew/apps/builtins/dev_fleet/`) for
+managing Aj Crew feature worktrees (git worktrees of the main repo) and their isolated
 pod test instances. It runs as a managed app backend SUBPROCESS: an aiohttp server on the
 backend-assigned port, reached only through the gateway proxy. Every proxied request
-carries an HMAC signature (`X-KiroCrew-Proxy: <ts>:<hmac>` over
+carries an HMAC signature (`X-AjCrew-Proxy: <ts>:<hmac>` over
 `<ts>:<METHOD>:<path>[?q]:<sha256(body)>`, +/-60s window) verified fail-closed by the
 backend's middleware; the shared secret lives at `apps_dir()/dev-fleet/.app_secret`.
 Gateway session auth (token/cookie) gates the proxy entrance as with all builtin apps.
@@ -17,7 +17,7 @@ Gateway session auth (token/cookie) gates the proxy entrance as with all builtin
    dropping records git flags `prunable` (checkout directory deleted without a
    `git worktree prune`); the primary checkout is never dropped, since it anchors `is_main`.
    That git runs in the agent sandbox, which masks the whole scratch root, so a worktree under
-   any session's `$KIROCREW_SCRATCH` also reads as `prunable` and is dropped. A name lookup that
+   any session's `$AJCREW_SCRATCH` also reads as `prunable` and is dropped. A name lookup that
    finds nothing else (`repository._find_worktree`, behind `pod_up` / `pod_status` /
    `pod_restart` / `pod_down`) checks for that case (`scratch_worktrees`) and answers with the
    scratch path and the commands that recreate it under `<repo>/.worktrees/`, instead of
@@ -84,7 +84,7 @@ authoritative instance. The facade forwards legacy private attribute reads, writ
 deletes to that owner, but tests patch the actual owner rather than treating the facade as
 a dependency-injection namespace.
 
-`live.py` and `worktree_ops.py` are in turn `kiro_crew._facade_mirror` facades over their
+`live.py` and `worktree_ops.py` are in turn `aj_crew._facade_mirror` facades over their
 `live_*` and `worktree_ops_*` owners: a name is still reached as `live.<name>` or
 `worktree_ops.<name>`, a patch through the facade reaches every owner holding the name,
 and each facade keeps the code that rebinds the state it shares. Owners never import
@@ -123,15 +123,15 @@ Every other module imports the page, never an owner.
 
 The core names no Dev Fleet symbol. What the app asks of the host is data in
 `apps/builtins/dev_fleet/host_grants.py`, read through the core's
-`kiro_crew.apps.builtin_host_grants` seam (only packages in `BUILTIN_NAMES` are read,
+`aj_crew.apps.builtin_host_grants` seam (only packages in `BUILTIN_NAMES` are read,
 a row may grant only its own app, and every path it claims must sit under that app's
 own `/api/apps/<app>/` or `/apps/<app>/` namespace):
 
 | Grant | Value | Applied by |
 |---|---|---|
 | `build_rlimit` | yes | `apps/backend.py` spawns the backend with `RLIMIT_PROFILE_BUILD` |
-| `backend_env_names` | `KIROCREW_DEVFLEET_REPO` | forwarded to every app backend by `apps/backend.py` |
-| `backend_env_prefixes` | `KIROCREW_DEVFLEET_BIN_` | as above, by prefix |
+| `backend_env_names` | `AJCREW_DEVFLEET_REPO` | forwarded to every app backend by `apps/backend.py` |
+| `backend_env_prefixes` | `AJCREW_DEVFLEET_BIN_` | as above, by prefix |
 | `config_top_keys` | `dev_fleet` | `config/validation.py`'s unrecognized-key warning skips it |
 | `strict_internal_paths` | the five `/api/apps/dev-fleet/pod/*` verbs | folded into `server._STRICT_INTERNAL_API_PATHS` |
 | `relay_credential_paths` | `/api/apps/dev-fleet/pod-token`, `/apps/dev-fleet/api/pod/token` | refused to every relayed caller by `kiro_relay/limits.py` |
@@ -147,15 +147,15 @@ fleet manages. It is resolved in this order, first hit wins:
 
 | Tier | Source | Marker-tested? |
 |------|--------|----------------|
-| 1 | `KIROCREW_DEVFLEET_REPO` env var | no — taken verbatim |
+| 1 | `AJCREW_DEVFLEET_REPO` env var | no — taken verbatim |
 | 2 | `dev_fleet.repo_path` in `config.json` / `config.local.json` | no — taken verbatim |
-| 3 | `KIROCREW_PROJECT_DIR` | yes |
-| 4 | the checkout this gateway is executing from (`src/kiro_crew` layout walk) | yes |
-| 5 | conventional clone locations under `$HOME`: a directory named `kirocrew` or `kiro-crew` (`_CHECKOUT_DIR_NAMES`) directly under `$HOME` or under one of `repos`, `src`, `projects`, `dev`, `git`, `code`, `workplace` (`_CHECKOUT_PARENT_DIRS`), every name matched case-insensitively | yes |
+| 3 | `AJCREW_PROJECT_DIR` | yes |
+| 4 | the checkout this gateway is executing from (`src/aj_crew` layout walk) | yes |
+| 5 | conventional clone locations under `$HOME`: a directory named `ajcrew` or `aj-crew` (`_CHECKOUT_DIR_NAMES`) directly under `$HOME` or under one of `repos`, `src`, `projects`, `dev`, `git`, `code`, `workplace` (`_CHECKOUT_PARENT_DIRS`), every name matched case-insensitively | yes |
 
 Tier 5 matches directory names case-insensitively against each parent's own listing rather than joining the guessed spellings, so the resolved path is spelled the way the filesystem spells it. A blind join succeeds against a differently-cased directory on a case-insensitive filesystem (macOS) and yields a path that does not match the ones git reports for the same tree.
 
-The marker test (`_is_kirocrew_checkout`) requires `.git`, `src/kiro_crew/` and
+The marker test (`_is_ajcrew_checkout`) requires `.git`, `src/aj_crew/` and
 `pyproject.toml` together. `.git` alone is insufficient on purpose: an unrelated
 repository adopted as the main checkout would have its worktrees listed and Pull+Build,
 rebase and worktree-removal git commands run inside it. Tiers 1–2 skip the test *during
@@ -207,7 +207,7 @@ stay once-per-process.
 
 Only tier 2 self-heals. `_load_dev_fleet_cfg` re-reads `config.json` on every call, whereas
 tier 1 is read off this process's own environment, which no outside shell can change, so
-setting `KIROCREW_DEVFLEET_REPO` still requires a restart and the setup card names the two
+setting `AJCREW_DEVFLEET_REPO` still requires a restart and the setup card names the two
 routes separately. A resolved path that FAILS the marker test latches too, and renders the
 `RepoUnreadable` banner naming the path and the remedy. That latch is reopened by
 `_invalid_resolution_is_stale` once the configured string changes: because tier 2 is
@@ -312,7 +312,7 @@ verification. Route names below are relative to that prefix.
 | `/apps/dev-fleet/api/prune-run` | `{names[], force_names?, discard_untracked_paths?}` | Batch-remove eligible worktrees. `force_names` is a list of names to force-remove (`400 invalid_force_names` otherwise); `discard_untracked_paths` maps a worktree name to its list of paths (`400 invalid_discard_paths` otherwise). The main checkout and the live or staged worktree are never forced |
 | `/apps/dev-fleet/api/pod/up` | `{name}` | Start isolated pod instance (re-verifies the unit is active). Boots with `--no-token`: this backend is sandboxed, so the pod would refuse its mint; the Open button gets the token from the gateway's `pod-token` route |
 | `/apps/dev-fleet/api/pod/down` | `{name}` | Stop pod instance (re-verifies the unit is gone before reporting success) |
-| `/apps/dev-fleet/api/pod/restart` | `{name}` | Restart the pod in place through `kirocrew pod restart`, keeping its isolated HOME. On Windows, where `pod restart` refuses, it stops then starts the pod and the HOME is reclaimed |
+| `/apps/dev-fleet/api/pod/restart` | `{name}` | Restart the pod in place through `ajcrew pod restart`, keeping its isolated HOME. On Windows, where `pod restart` refuses, it stops then starts the pod and the HOME is reclaimed |
 | `/apps/dev-fleet/api/pod/token` | `{name}` | Refused with `code=wrong_process`: the mint moved to the gateway's `POST /api/apps/dev-fleet/pod-token` |
 | `/apps/dev-fleet/api/pod/provision` | `{name}` | Start async venv+dist build (returns `{run_id}`) |
 | `/apps/dev-fleet/api/pod/provision/dismiss` | `{name, run_id}` | Forget a terminal provision failure when the run id still matches |
@@ -396,7 +396,7 @@ filter applies to the one-tag fetch too, so the release's files would arrive onl
 `git worktree add` fetched them itself, a network step outside the two the action
 bounds; the refusal names the commands that hydrate the clone. The route's
 main-checkout discovery (`_ensure_repo`), which runs before the action, is outside that
-statement. Nor does it cover an agent session whose isolation Kiro Crew leaves to the
+statement. Nor does it cover an agent session whose isolation Aj Crew leaves to the
 Kiro CLI's own sandbox (on macOS with that sandbox switched on, or the official Kiro CLI
 on Windows), which these tiers do not confine.
 
@@ -441,7 +441,7 @@ answers `sandbox_unavailable`, the route's 503, whichever step meets it: either
 host that permits unsandboxed execution: `agent.sandbox_allow_unsandboxed_exec` in
 effect (its default on Windows only) and no governance `sandbox.min_level` floor above
 `off`. There `wrap_argv` runs every step's git with no OS sandbox around it and only a
-credential-scrubbed environment, the same as any agent spawn on that host that Kiro Crew
+credential-scrubbed environment, the same as any agent spawn on that host that Aj Crew
 does not hand to the Kiro CLI's own sandbox. Every other refusal is a 409, a state the
 operator can change.
 
@@ -504,7 +504,7 @@ gateway process** rather than by the backend subprocess (`agent_pod_api.py`).
 
 Why it is separate rather than a reuse of the proxied routes above: on Linux, an agent
 session runs behind a sandbox with its own user namespace, so it cannot `connect(2)`
-the systemd user-bus socket that pod lifecycle verbs need, and `kirocrew pod up` in
+the systemd user-bus socket that pod lifecycle verbs need, and `ajcrew pod up` in
 an agent shell fails with a bare `Permission denied`. The gateway is the process the
 sandbox launcher descends from, so it holds the host bus. The agent reaches these routes the
 way it reaches any tool — an MCP call, then loopback HTTP — with no D-Bus passthrough
@@ -515,7 +515,7 @@ internal-secret caller there would expose the app's whole backend surface.
 | Method | Route | Input | Description |
 |--------|-------|-------|-------------|
 | POST | `/api/apps/dev-fleet/pod/up` | `{worktree, memory?, cpu?}` | Boot a pod, passing `memory` / `cpu` to the CLI as `--memory` / `--cpu`; answers the CLI's `--json` handle (`base_url`, `token`, `port`, `ttl`, and `checkout`, the pod's own clone path, which the pod-e2e harness compares with its own checkout). The token is minted **in the gateway process** when pod config is available (see *Token mint runs in the gateway*); otherwise the CLI mints it. Provisioning is NOT reachable here: a cold venv + SPA build is minutes of work, and one blocking request for that dies to any timeout with no way to learn the outcome. An unbuilt worktree is refused with the CLI's own remedy; the dashboard's Provision button streams the same work under a run id |
-| POST | `/api/apps/dev-fleet/pod/restart` | `{worktree, memory?, cpu?}` | Restart the pod in place through `kirocrew pod restart`, keeping its isolated HOME, and answer the same handle as `pod/up`. `memory` / `cpu` record new ceilings first |
+| POST | `/api/apps/dev-fleet/pod/restart` | `{worktree, memory?, cpu?}` | Restart the pod in place through `ajcrew pod restart`, keeping its isolated HOME, and answer the same handle as `pod/up`. `memory` / `cpu` record new ceilings first |
 | POST | `/api/apps/dev-fleet/pod/down` | `{worktree}` | Stop the pod and reclaim its isolated HOME |
 | GET | `/api/apps/dev-fleet/pod/status?worktree=` | — | `{name, status, port, health, memory, cpu}`, as `pod status --json` reports it |
 | GET | `/api/apps/dev-fleet/pod/list` | — | `{pods: [{name, port, health, memory, cpu}]}` for every pod active on the host, unfiltered by repo |
@@ -527,10 +527,10 @@ Contract:
 - **No operator opt-in and no per-call approval, deliberately.** A pod runs the code
   in a git worktree an agent can write, started by the per-user service manager
   (systemd `--user` on Linux, launchd on macOS or Task Scheduler on Windows), so it
-  executes outside the agent's sandbox. That reachability is Kiro Crew's DOCUMENTED
+  executes outside the agent's sandbox. That reachability is Aj Crew's DOCUMENTED
   posture rather than something these routes introduce: `security.md`, under "Scoped
   user-bus locator forward", records that sandboxed agent shells legitimately run
-  `systemctl --user` and the `kirocrew pod` CLI, and names the residual in the same
+  `systemctl --user` and the `ajcrew pod` CLI, and names the residual in the same
   paragraph; the builtin `pod-e2e` skill has always told agents to boot pods. An
   extra gate here would not close that residual — every other path to it stays open —
   it would only stop the agent-driven QA loop these routes exist to restore. Agent
@@ -607,7 +607,7 @@ Contract:
 
 The model-facing half is the `pod_up` / `pod_restart` / `pod_down` / `pod_status` /
 `pod_ls` tools, which this app declares in its own `app.json` (`agentTools`, namespace
-`pod`, so the names are the ones these tools always had) and `kirocrew-core` lists and
+`pod`, so the names are the ones these tools always had) and `ajcrew-core` lists and
 forwards ([app-kit-platform §30.1](app-kit-platform.md)). No code of this app runs in
 that MCP server. A call reaches `POST /api/app-tools/call`, which hands it to the one
 route `backend.hooks.routes` (`agent_tools.py`) registers in the gateway,
@@ -618,7 +618,7 @@ matching `pod/*` route runs (`agent_pod_api.pod_*_response`), reads its answer a
 core's gateway client read a route's (a refusal becomes `{error, code}` with its message
 scrubbed) and answers with the reply the core tool rendered. Each tool is
 declared `result: "text"` with the wait the core tool had (210s to start or restart,
-120s to stop, 45s to read: a pod read spawns a `python -m kiro_crew pod` child in the
+120s to stop, 45s to read: a pod read spawns a `python -m aj_crew pod` child in the
 gateway, which 10s cannot cover) and the core tool's bounds (a worktree of at most 200
 characters, `memory` / `cpu` of at most 16). The `pod/*` routes above are unchanged.
 The core redacts that reply as it relays it, except the pod token: a pod start's
@@ -752,9 +752,9 @@ that ceiling, so a reused branch name can never authorize removing new work.
 
 ## Pod Integration
 
-Relies on `kiro_crew.pod` subpackage (optional import — degrades gracefully if unavailable).
+Relies on `aj_crew.pod` subpackage (optional import — degrades gracefully if unavailable).
 On Linux, `runtime.require_backend()` runs `systemctl --user is-system-running` once at
-pod verb entry and at each Dev Fleet removal safety gate. `kirocrew doctor` runs the same
+pod verb entry and at each Dev Fleet removal safety gate. `ajcrew doctor` runs the same
 probe for its advisory row. Low-level `systemctl()`, `is_active()`, and `main_pid()` calls
 keep only the cheap platform, executable, and bus-address checks, so a multi-query verb does
 not pay a five-second probe before every unit command. A provably absent bus address returns
@@ -802,10 +802,10 @@ All blocking pod operations are offloaded via `asyncio.get_running_loop().run_in
 subprocess_executor(), ...)` to avoid blocking the gateway event loop.
 
 Pod lifecycle verbs (`up`/`down`/`restart`/`provision`) shell the CLI via
-`_find_cli()` = `[sys.executable, "-m", "kiro_crew"]` — the **package** entry
-(`kiro_crew/__main__`, which also runs the required SSL-cert / UTF-8-console
-setup), never `-m kiro_crew.cli`. `kiro_crew/cli.py` has no
-`if __name__ == "__main__"` guard, so `python -m kiro_crew.cli <cmd>` imports the
+`_find_cli()` = `[sys.executable, "-m", "aj_crew"]` — the **package** entry
+(`aj_crew/__main__`, which also runs the required SSL-cert / UTF-8-console
+setup), never `-m aj_crew.cli`. `aj_crew/cli.py` has no
+`if __name__ == "__main__"` guard, so `python -m aj_crew.cli <cmd>` imports the
 module, runs no `main()`, and exits 0 with no output — which turned every pod op
 into a **silent no-op the backend reported as success** (the "Stopped but still
 running" bug, issue #220). As defence-in-depth, `_pod_up` and `_pod_down` both
@@ -831,7 +831,7 @@ which decodes the bytes itself, and Dev Fleet's strict pin reader does the same.
 ### Pod runtime ownership
 
 Dev Fleet, the pod CLI and the pod test suite all reach the pod runtime as one
-namespace, `kiro_crew.pod.runtime`. That module holds the core: pod names and the
+namespace, `aj_crew.pod.runtime`. That module holds the core: pod names and the
 pod exception types, the per-pod env file, git worktree resolution, a pod's
 identity paths, the `systemd --user` adapter with the launchd / Task Scheduler
 dispatch (`require_backend`, `is_active`, `main_pid`, `unit_state`,
@@ -839,7 +839,7 @@ dispatch (`require_backend`, `is_active`, `main_pid`, `unit_state`,
 `pod_plane_mutex`), seed sanitization, `build_pod_env` and `_ensure_pod_dir`. Six
 owners build on that core. The core imports them at the end of its own body, once
 its own names are bound and before it installs its forwarding, so each owner's
-module-level bindings are taken when `kiro_crew.pod.runtime` is imported, as they
+module-level bindings are taken when `aj_crew.pod.runtime` is imported, as they
 were when it was one module, and never later inside a test's patch of the module
 they come from:
 
@@ -883,7 +883,7 @@ tests patch the owner: here the facade is the permanent surface every caller
 already uses, not a migration step. The core stays in `runtime.py` because
 repository gates and other specs cite it there: the spawn-audit allowlist, the
 subprocess-encoding baseline, `require_systemd`, seed sanitization and
-`build_pod_env`. Purging `kiro_crew.pod.runtime` from `sys.modules` and importing it
+`build_pod_env`. Purging `aj_crew.pod.runtime` from `sys.modules` and importing it
 again is unsupported, because every owner holds the core module object.
 
 ### Pod identity guard
@@ -899,7 +899,7 @@ collision would stop another repository's pod or delete its HOME.
 A missing checkout is attributed only by git's retained worktree record for this
 repository. `repository._find_retained_worktree_path` includes a `prunable`
 record that normal discovery omits. When no record names the worktree, the agent
-surface refuses and the CLI `kirocrew pod down <name>` remains the remedy.
+surface refuses and the CLI `ajcrew pod down <name>` remains the remedy.
 
 For a retained record, `_pod_down` submits `_reclaim_pod_locked` to the
 subprocess executor. The helper runs under `pod_name_mutex`, re-reads the pin,
@@ -911,7 +911,7 @@ checkout and never takes this missing-checkout path.
 
 ### Pod HOME reclamation on worktree removal
 
-Removing a worktree reclaims the isolated `KIROCREW_HOME` of that worktree's pod
+Removing a worktree reclaims the isolated `AJCREW_HOME` of that worktree's pod
 whether or not the pod is still running, because a stopped pod still owns its
 HOME and this is the last moment anything can attribute that directory to this
 checkout — afterwards the per-pod env pin naming it is gone and only a bulk
@@ -994,11 +994,11 @@ step needs before using them, so provisioning a **fresh** worktree (no
 `.venv`, no gitignored `website/node_modules`) does not fail on missing tools:
 
 - **venv (`ensure_venv`)** — builds with `python -m venv` + pip by default.
-  When `KIROCREW_PROVISION_USE_UV` is truthy (opt-in; the default flip is
+  When `AJCREW_PROVISION_USE_UV` is truthy (opt-in; the default flip is
   Phase 2 of [the shared-dependency-cache RFC](../../request-for-change/rfc-shared-dependency-cache.md),
   whose entry conditions are that RFC accepted with a non-draft status and
   Phase 1 exercised beyond the author's host) and `_find_uv` locates `uv`
-  (`kiro_crew.env.resolve_uv`: `uv.find_uv_bin()` from the declared `uv` wheel
+  (`aj_crew.env.resolve_uv`: `uv.find_uv_bin()` from the declared `uv` wheel
   first, then `PATH` — the one ladder pptx-maker's `resolve_uv` also consumes),
   it runs
   `uv venv --seed --allow-existing --link-mode clone --python <py3.12> .venv` then `uv pip install --link-mode clone
@@ -1073,7 +1073,7 @@ outlast what systemd may take. The unit sets `TimeoutStopSec` to
 (`gateway_shutdown_budget.TOTAL_SHUTDOWN_BUDGET_SECS`). systemd allows that long for
 SIGTERM and again for the SIGKILL after it, so `halt_pod` and `stop_pod` wait
 `SYSTEMCTL_STOP_WAIT_SECS` (twice that, plus a margin). Dev Fleet's `_pod_down` gives
-`kirocrew pod down` `_POD_DOWN_TIMEOUT_SECS`, which adds the unit refresh, the cgroup
+`ajcrew pod down` `_POD_DOWN_TIMEOUT_SECS`, which adds the unit refresh, the cgroup
 drain and the CLI start, and the `pod_down` MCP tool's client timeout is above that,
 so the gateway's bound fires first and names the cause. A shorter wait reports a pod
 that is still stopping as a failed `pod down`. Before stopping, `halt_pod` and
@@ -1278,7 +1278,7 @@ While the handshake runs, the frontend holds an explicit **"Restarting —
 reconnecting"** full-screen state and disables Restart / Pull+Build / Make Live
 so the slow window cannot be re-fired. The poll is bounded (`RESTART_TIMEOUT_MS`,
 60s); on timeout it surfaces an actionable error ("reload manually / check
-`kirocrew logs`") instead of spinning forever.
+`ajcrew logs`") instead of spinning forever.
 
 **The lockout starts before the overlay does.** The restarting flag only goes
 true once `POST …/make-live` has *returned*, but that request is itself what
@@ -1343,8 +1343,8 @@ form for "in progress, amount unknown".
 
 The whole FRONTEND half of the sync — `npm ci` and `npm build + stage` — is
 **skipped on an edition checkout** (`frontend.edition_configured()`). The build
-runs under `_build_env()`, whose allowlist drops `KIROCREW_EDITION_DIR` and
-`KIROCREW_ALLOW_EDITION`, so on an edition composition root it can only compile
+runs under `_build_env()`, whose allowlist drops `AJCREW_EDITION_DIR` and
+`AJCREW_ALLOW_EDITION`, so on an edition composition root it can only compile
 the STOCK SPA; staging that would silently replace the edition dashboard with
 upstream's. Skipping is what makes it safe, and it costs an edition nothing —
 the only artifact this path could produce for it is a bundle it must never
@@ -1411,7 +1411,7 @@ tree-id read run back-to-back under the staging lock, and the preflight runs
 immediately before the merge.
 
 The final **npm build + stage** step builds the frontend and stages `website/dist`
-as the served `src/kiro_crew/static/dist` under the Dev Fleet backend's OWN interpreter, with
+as the served `src/aj_crew/static/dist` under the Dev Fleet backend's OWN interpreter, with
 the target repo passed as an argument. Resolving the helper from the target
 instead would make the step's very existence contingent on the pulled revision
 already carrying it, so an older target would turn the whole Pull+Build into an
@@ -1486,7 +1486,7 @@ Fetch, probe and merge consume ONE commit. `<remote>/<base branch>` cannot serve
 for that: it is mutable, and the status refresher re-fetches it every
 `_NET_REFRESH_S` seconds in the same process, so with a real install between them
 the probe could certify a revision the merge does not install. The fetch step also
-writes the tip it brought to a per-process ref (`refs/kirocrew/sync-base-<pid>`),
+writes the tip it brought to a per-process ref (`refs/ajcrew/sync-base-<pid>`),
 which the refresher never touches; `_prune_dead_sync_base_refs` collects refs left
 by gateway processes that are gone, and leaves alone any whose PID is still alive.
 
@@ -1769,7 +1769,7 @@ raises it too, although no restart is needed for that build.
 `POST /api/apps/dev-fleet/make-live` — served by the **gateway process**, not the
 Dev Fleet backend — repoints the live gateway at a different worktree by writing a
 **live-target pointer file** (`live_target.json`). The gateway resolves this
-pointer at startup and `execve`s into the named checkout's own `kirocrew` binary
+pointer at startup and `execve`s into the named checkout's own `ajcrew` binary
 — moving the working directory and `PATH` with it. No service definition is
 ever mutated.
 
@@ -1790,7 +1790,7 @@ typically `~/.kiro/crew/live_target.json`). Contents:
 ```
 
 `previous_checkout` is optional and records exactly one completed cutover for the
-post-restart **Undo** banner. Both fields validate as executable Kiro Crew
+post-restart **Undo** banner. Both fields validate as executable Aj Crew
 checkouts before they are written. At read time, `checkout` follows the normal
 boot validation, while the Undo path validates `previous_checkout`; rebuilding
 the checkout already running does not hide an otherwise safe return target.
@@ -1825,9 +1825,9 @@ choose the gateway's next image. Instead:
   a `GatewayPointerBroker` (`pointer_broker.py`) as `live`'s pointer provider: it
   exchanges the app secret at `POST /api/apps/dev-fleet/token` and reads
   `GET /api/apps/dev-fleet/live-target` (30 s display cache; `fresh=1` for the
-  removal guards). The broker aims at `KIROCREW_GATEWAY_ORIGIN`, which
+  removal guards). The broker aims at `AJCREW_GATEWAY_ORIGIN`, which
   `apps/backend.py` builds for every backend at spawn from the gateway's own
-  `KIROCREW_BOUND_PORT` — the port is exported the moment it is reserved
+  `AJCREW_BOUND_PORT` — the port is exported the moment it is reserved
   (`dashboard.server._reserve_dashboard_port`, before any backend spawns;
   `_export_bound_port` republishes it once the site serves), so
   `dashboard.server.start_dashboard` spawns this backend in the one boot wave
@@ -1971,7 +1971,7 @@ choose the gateway's next image. Instead:
 - **Foreground restart.** `ForegroundBackend` refuses inside the backend
   (`backend_confined`: a replacement spawned inside the sandbox would inherit its
   confinement). In the gateway there is no confinement, so the last-resort
-  foreground restart is *attempted* there — the same detached `kirocrew restart` the CLI's own restart uses.
+  foreground restart is *attempted* there — the same detached `ajcrew restart` the CLI's own restart uses.
   It is never attempted for a gateway a generated service definition launched
   (`_foreground_eligible` reads `launched_as_managed_service()` in the gateway):
   the detached restart would run in the unit's cgroup and be stopped with the
@@ -2030,7 +2030,7 @@ The `plan` object describes the cutover mechanism:
 |-----|-------|
 | `mechanism` | `"live-target pointer"` |
 | `pointer_path` | absolute path to the pointer file |
-| `exec` | the target worktree's `kirocrew` binary that the gateway execs into |
+| `exec` | the target worktree's `ajcrew` binary that the gateway execs into |
 | `restart` | `"automatic"` when a drivable service manager is present; `"manual"` otherwise |
 | `manual_restart` | (only when `restart` is `"manual"`) the shell command the operator runs |
 
@@ -2045,10 +2045,10 @@ The `plan` object describes the cutover mechanism:
 | `already_live` | the target is already the live gateway |
 | `undo_changed` | the requested Undo path no longer equals the pointer's validated previous checkout (stale banner or newer cutover); refresh before retrying |
 | `undo_not_ready` | the requested inverse is still the running checkout, so the original cutover is only staged; use Cancel staged cutover instead |
-| `missing_venv` | the worktree has no `.venv/bin/kirocrew` (Provision it first) |
-| `venv_not_executable` | the worktree's `.venv/bin/kirocrew` exists but is **not executable** (`chmod +x` it or re-Provision) — a non-executable binary would stop the live gateway but could not start the replacement, leaving no gateway running |
-| `missing_dist` | the worktree has no built `src/kiro_crew/static/dist/index.html` (Pull+Build first) — a cutover without a built dist serves a broken dashboard |
-| `unsafe_path` | the worktree path cannot be used as a live target (control characters, unresolvable, missing binary, no `src/kiro_crew` dir) |
+| `missing_venv` | the worktree has no `.venv/bin/ajcrew` (Provision it first) |
+| `venv_not_executable` | the worktree's `.venv/bin/ajcrew` exists but is **not executable** (`chmod +x` it or re-Provision) — a non-executable binary would stop the live gateway but could not start the replacement, leaving no gateway running |
+| `missing_dist` | the worktree has no built `src/aj_crew/static/dist/index.html` (Pull+Build first) — a cutover without a built dist serves a broken dashboard |
+| `unsafe_path` | the worktree path cannot be used as a live target (control characters, unresolvable, missing binary, no `src/aj_crew` dir) |
 | `write_failed` | writing the pointer file failed — rolled back to prior state |
 | `restart_failed` | the detached restart failed to launch — the pointer is rolled back before returning (response carries `rolled_back`) |
 | `busy` | another make-live cutover is already in progress — the mutation sequence is single-flighted, so a concurrent request is refused immediately (no queueing) rather than racing the in-flight pointer write/rollback |
@@ -2081,19 +2081,19 @@ Fleet can also bounce the gateway:
   `no_systemd` / `no_user_unit` / `no_launchd` / `no_agent` — nothing to drive at
   all, e.g. a terminal-launched gateway on a host whose per-user systemd cannot
   be used — `gateway_service.ForegroundBackend` finishes the cutover by
-  establishing a **detached `kirocrew restart --port <port>`** (new session, so
+  establishing a **detached `ajcrew restart --port <port>`** (new session, so
   it survives the gateway it kills), reusing the CLI's whole kill-and-respawn
   path instead of reimplementing it. Selection is strictly
   systemd > launchd > foreground, POSIX-only, and requires: an UNCONFINED
-  backend (no `KIROCREW_SANDBOX_ACTIVE` marker, not inside
-  `kirocrew-agents.slice` — a replacement spawned from inside the sandbox or
+  backend (no `AJCREW_SANDBOX_ACTIVE` marker, not inside
+  `ajcrew-agents.slice` — a replacement spawned from inside the sandbox or
   cgroup scope would inherit that confinement for the gateway's whole life); a
   gateway no generated service definition launched (see *Foreground restart*; a
   definition old enough to lack the launch marker is not detected, and
-  `kirocrew doctor` asks for its re-install);
+  `ajcrew doctor` asks for its re-install);
   exactly ONE run-marker whose recorded pid is alive; and the marker's own
-  recorded `kirocrew` launcher (keystone-fenced `run/` dir — there is
-  deliberately NO `PATH` fallback, which an agent-planted `~/.local/bin/kirocrew`
+  recorded `ajcrew` launcher (keystone-fenced `run/` dir — there is
+  deliberately NO `PATH` fallback, which an agent-planted `~/.local/bin/ajcrew`
   could poison). The mis-set-up manager codes (`user_unit_inactive`,
   `agent_not_indirected`, `agent_restart_contract_outdated`,
   `live_program_missing`) keep their named remedies and are never bounced
@@ -2104,7 +2104,7 @@ Fleet can also bounce the gateway:
   killed and the request degrades to the staged-only outcome below, pointer
   intact.
 - **Staged only** (`can_restart = False`, no usable foreground gateway): no
-  drivable service manager is available (system unit via `kirocrew service
+  drivable service manager is available (system unit via `ajcrew service
   install`, macOS without a launchd agent or with a legacy restart contract, or
   another unsupported manager). The pointer is still
   written and the cutover is reported as a success carrying `staged_only: true`,
@@ -2150,8 +2150,8 @@ unusable worktree instead of promising a cutover that would then be refused.
 
 Rejects with a distinct message for each: empty/blank value; control characters
 (ord < 0x20 or 0x7F); unresolvable path; path is not a directory; missing
-`target_bin` (`.venv/bin/kirocrew`, or `.venv/Scripts/kirocrew.exe` on Windows);
-`target_bin` not executable; no `src/kiro_crew` directory in the checkout.
+`target_bin` (`.venv/bin/ajcrew`, or `.venv/Scripts/ajcrew.exe` on Windows);
+`target_bin` not executable; no `src/aj_crew` directory in the checkout.
 Returns the resolved checkout path on success.
 
 ### Rollback semantics
@@ -2190,7 +2190,7 @@ Disk and loaded launchd definitions must both report `KeepAlive=true` and
 `ExitTimeOut=TOTAL_SHUTDOWN_BUDGET_SECS` (20s). The Gateway's cooperative cap is
 `GRACEFUL_SHUTDOWN_SECS` (10s), leaving the remaining budget for cleanup and
 exit before launchd escalates to SIGKILL. An agent with a legacy contract falls
-back to staged-only Make Live and names `kirocrew service install` as the repair.
+back to staged-only Make Live and names `ajcrew service install` as the repair.
 
 ## Git environment hardening
 
@@ -2384,7 +2384,7 @@ things:
 
 | Flag | Meaning | True when |
 |---|---|---|
-| `_POD_IMPORTED` | the `kiro_crew.pod` modules imported, so its platform-neutral helpers are callable | the import succeeded (any platform) |
+| `_POD_IMPORTED` | the `aj_crew.pod` modules imported, so its platform-neutral helpers are callable | the import succeeded (any platform) |
 | `_POD_AVAILABLE` | pods can actually **run** here | Linux with `systemctl` on PATH, macOS with `launchctl` on PATH, or Windows with `schtasks.exe` in a trusted system directory |
 
 Build state (`prov.has_venv` / `prov.has_dist`, plain filesystem checks) is computed
@@ -2417,7 +2417,7 @@ Per-platform behavior:
   main + rebuild), Rebase and Prune all work. The UI shows a notice carrying
   `pods_unavailable_reason` and hides the actions that cannot work: Spin up /
   Restart / Stop pod, Open, QA + video. Make Live and Provision are **not**
-  hidden — `kirocrew pod provision` does not touch a service manager, so building
+  hidden — `ajcrew pod provision` does not touch a service manager, so building
   a worktree's venv + dist works anywhere; Make Live stages the pointer on any
   platform and reports `staged_only` when it cannot bounce the gateway itself.
 - **Make Live** — staging (pointer write) works on every platform. Automatic
@@ -2489,15 +2489,15 @@ which it can install without root.
 Prefer `browser-recording` instead when a short silent clip of a UI interaction
 is all that is wanted: it is a smaller tool and needs no narration script.
 
-`kirocrew-worktree-dev` carries no app-bridged copy: the canonical copy is
-owned by the `kirocrew-dev` development-skills suite under
-`src/kiro_crew/builtin_skills/`, and the app-bridged duplicate was removed
+`ajcrew-worktree-dev` carries no app-bridged copy: the canonical copy is
+owned by the `ajcrew-dev` development-skills suite under
+`src/aj_crew/builtin_skills/`, and the app-bridged duplicate was removed
 because two copies of the same skill drift and get loaded nondeterministically
 against each other (PR #353 arbiter finding). That single-copy rule is what
 matters here; where the one copy lives is a packaging question, and it lives in
 the packaged tree so `_ensure_builtin_skills` reaches every distribution. The
 project-dir mechanism reaches only some: `_project_skills_dir()` reads
-`KIROCREW_PROJECT_DIR`, which a repo checkout provides, but a `pip install` from
+`AJCREW_PROJECT_DIR`, which a repo checkout provides, but a `pip install` from
 the wheel or sdist does not — and neither does the desktop bundle, whose builder
 stages no top-level `skills/` tree.
 

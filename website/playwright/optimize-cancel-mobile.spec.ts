@@ -44,7 +44,7 @@ async function openComposer(page: Page, baseURL: string) {
   await stubDashboardApi(page, {
     localStorageEntries: { 'mc-lang': 'en', 'mc-active-slot': SLOT, 'mc-active-slot-chat': SLOT },
     slots: [{ key: SLOT, title: 'Build triage', running: false, messages: 2,
-      agent: 'kirocrew', memory_mode: 'persistent', project: '', folder_id: '',
+      agent: 'ajcrew', memory_mode: 'persistent', project: '', folder_id: '',
       modified: 1788780000, source_links: [], source_links_total: 0 }],
     extra: async (path: string, route: Route) => {
       if (path === `/api/chat/slots/${SLOT}`) {

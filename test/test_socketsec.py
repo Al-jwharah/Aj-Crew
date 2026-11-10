@@ -21,9 +21,9 @@ import pytest
 from named_cases_helpers import named_cases
 from tmpdir_helpers import SHORT_TMP_PREFIX, short_tmp_base
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.mcp_gateway import socketsec
-from kiro_crew.mcp_gateway.socketsec import PeerCredResult
+from aj_crew import platform_compat as pc
+from aj_crew.mcp_gateway import socketsec
+from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
 # --- socket_owner_only -------------------------------------------------------
 
@@ -346,7 +346,7 @@ def test_windows_check_matches_a_pipe_we_connected_to_ourselves(
     the SID comparison lands on MATCH for a peer that is us."""
     import asyncio
 
-    from kiro_crew.mcp_gateway import transport
+    from aj_crew.mcp_gateway import transport
 
     sock = tmp_path / "gateway.sock"
     transport.prepare_dir(sock)
@@ -650,7 +650,7 @@ def test_macos_check_matches_a_socket_we_connected_to_ourselves(
     """
     import asyncio
 
-    from kiro_crew.mcp_gateway import transport
+    from aj_crew.mcp_gateway import transport
 
     # Removed at the end: `mkdtemp` registers no finalizer, so this otherwise left a
     # directory in /tmp for good. /tmp (not tmp_path) because an AF_UNIX sun_path is

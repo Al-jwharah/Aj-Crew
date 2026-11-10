@@ -12,7 +12,7 @@ So nothing here runs git. The boundary is injected at exactly two seams:
 ``subprocess.CompletedProcess`` values) and, for the endpoint tests,
 ``_git_toplevel`` / ``_create_worktree_sync``. No subprocess is spawned, no
 network is touched, and every filesystem write lands under ``tmp_path`` or the
-autouse-isolated ``KIROCREW_HOME`` from ``conftest.py``.
+autouse-isolated ``AJCREW_HOME`` from ``conftest.py``.
 
 Style follows ``test_worktree_create.py`` (aiohttp ``TestClient`` +
 ``TestServer`` for endpoint work, direct calls for the sync helpers) and
@@ -33,7 +33,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from kiro_crew.dashboard.handlers import worktree as wt
+from aj_crew.dashboard.handlers import worktree as wt
 
 # ── injected git boundary ────────────────────────────────────────────────
 

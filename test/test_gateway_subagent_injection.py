@@ -32,7 +32,7 @@ from test_gateway_subagent_wiring import (
     recording_clock,
 )
 
-from kiro_crew.slack import gateway as gw_mod
+from aj_crew.slack import gateway as gw_mod
 
 
 @pytest.fixture
@@ -296,7 +296,7 @@ async def test_only_the_completion_that_arms_the_synthesis_carries_the_final_not
 ) -> None:
     """The batch's last result tells the model so, letting that turn write the
     consolidated report the fire gate then counts as the synthesis."""
-    from kiro_crew.dashboard.state import SUBAGENT_FINAL_COMPLETION_NOTE
+    from aj_crew.dashboard.state import SUBAGENT_FINAL_COMPLETION_NOTE
 
     slot = done.tab("main")
     slot.running = True
@@ -314,7 +314,7 @@ async def test_only_the_completion_that_arms_the_synthesis_carries_the_final_not
 def test_the_final_note_is_conditional_and_promises_no_end_of_batch() -> None:
     """The arm sees in-memory state only, so a sibling queued in the store may
     still be out: the note must not tell the model the batch is finished."""
-    from kiro_crew.dashboard.state import SUBAGENT_FINAL_COMPLETION_NOTE
+    from aj_crew.dashboard.state import SUBAGENT_FINAL_COMPLETION_NOTE
 
     note = SUBAGENT_FINAL_COMPLETION_NOTE.lower()
     assert "may be the last" in note

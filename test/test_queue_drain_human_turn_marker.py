@@ -2,7 +2,7 @@
 
 The Slack sessions list ranks by the last HUMAN turn, and the ranking gate
 (``chat_persistence``) counts a row only when its ``meta`` carries
-:data:`~kiro_crew.history.HUMAN_TURN_META_KEY` set to ``True``. The direct
+:data:`~aj_crew.history.HUMAN_TURN_META_KEY` set to ``True``. The direct
 ``/api/chat`` path stamps that marker on the user row whenever the send is
 human-authored (``chat_handlers``: ``if not request_app``). A message that
 arrives while the slot is busy is QUEUED instead and later written by the drain
@@ -22,13 +22,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.history import HUMAN_TURN_META_KEY
+from aj_crew.history import HUMAN_TURN_META_KEY
 
 _TEXT = "typed while the agent was working"
 
 
 async def _drain_once(state, slot) -> None:
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     with (
         patch.object(chat_runner, "spawn_guarded_turn", return_value=MagicMock()),
@@ -51,13 +51,13 @@ class TestDrainedHumanTurnMarker:
         """The reachable finding: a human types while the slot is busy, the send
         is queued and later drained -- the drained user row must carry the
         human-turn marker so the last-human-turn ranking counts it."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.subagents = None
         slot = state.get_or_create_slot("busy-chat")
 
-        from kiro_crew.dashboard.chat_delivery import queue_for_next_turn
+        from aj_crew.dashboard.chat_delivery import queue_for_next_turn
 
         # ``directive_user_origin=True`` is the ``not request_app`` provenance the
         # HTTP handler carries onto the entry for a genuine human send.
@@ -77,13 +77,13 @@ class TestDrainedHumanTurnMarker:
         """Fail-closed: an app-initiated send (``directive_user_origin`` false)
         that drains must NOT be marked, or app traffic would forge a human turn
         and displace human sessions in the ranking."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.subagents = None
         slot = state.get_or_create_slot("busy-chat")
 
-        from kiro_crew.dashboard.chat_delivery import queue_for_next_turn
+        from aj_crew.dashboard.chat_delivery import queue_for_next_turn
 
         queue_for_next_turn(state, slot, _TEXT, directive_user_origin=False)
         await _drain_once(state, slot)
@@ -100,13 +100,13 @@ class TestDrainedHumanTurnMarker:
     async def test_default_origin_drain_is_not_marked(self, tmp_path, monkeypatch):
         """An entry with no explicit origin defaults to non-human, so it stays
         unmarked -- the marker is added only on proven human provenance."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.subagents = None
         slot = state.get_or_create_slot("busy-chat")
 
-        from kiro_crew.dashboard.chat_delivery import queue_for_next_turn
+        from aj_crew.dashboard.chat_delivery import queue_for_next_turn
 
         queue_for_next_turn(state, slot, _TEXT)
         await _drain_once(state, slot)

@@ -39,7 +39,7 @@ const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 const pullOn = params.get('pull') === 'on'
 
 localStorage.setItem('mc-theme', theme)
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 document.documentElement.setAttribute('data-mode', theme)
 document.documentElement.setAttribute('data-pull', pullOn ? 'on' : 'off')
 

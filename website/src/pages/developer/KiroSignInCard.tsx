@@ -119,7 +119,7 @@ function SignedInSummary({
       </div>
       {/* askAgent on: the card holds no draft (sign-out is a single press), and
           an unwritable or corrupt vault store is exactly the kind of failure the
-          agent can diagnose (`kirocrew doctor`, permissions on the data home). */}
+          agent can diagnose (`ajcrew doctor`, permissions on the data home). */}
       <ErrorNotice
         className="mt-3"
         askAgent
@@ -132,7 +132,7 @@ function SignedInSummary({
 }
 
 /**
- * Settings > Agent Harness card for signing in to Kiro Crew's OWN Kiro identity
+ * Settings > Agent Harness card for signing in to Aj Crew's OWN Kiro identity
  * -- the one the gateway hands to agent processes (KAS relay) so they run as the
  * user without depending on `kiro-cli login`. Wraps the sign-in flow
  * `KasLoginGate` carries in its embedded chrome, and adds the two things a card

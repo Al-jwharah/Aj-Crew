@@ -26,12 +26,12 @@ from overload_integration_glue_helpers import (  # noqa: F401 -- the fixture is 
     no_memory_pressure_fixture,
 )
 
-from kiro_crew.slack.gateway import GatewayOrchestrator
-from kiro_crew.subagent_manager import admission as admission_mod
-from kiro_crew.taskq import dependency as dep_mod
-from kiro_crew.taskq import model
-from kiro_crew.taskq import store as store_mod
-from kiro_crew.testing.wait import async_wait_until, await_until, finished
+from aj_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.subagent_manager import admission as admission_mod
+from aj_crew.taskq import dependency as dep_mod
+from aj_crew.taskq import model
+from aj_crew.taskq import store as store_mod
+from aj_crew.testing.wait import async_wait_until, await_until, finished
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -45,8 +45,8 @@ async def test_claim_unavailable_leaves_the_row_queued_instead_of_starting(
 ) -> None:
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew import taskq as _taskq
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew import taskq as _taskq
+    from aj_crew.subagent import SubagentManager
 
     sessions = MagicMock()
     sessions.get_pid = MagicMock(return_value=None)
@@ -90,8 +90,8 @@ async def test_a_fenced_claim_is_unavailable_not_refused() -> None:
 
     from overload_fakes import task_record as _rec
 
-    from kiro_crew import taskq as _taskq
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew import taskq as _taskq
+    from aj_crew.subagent import SubagentManager
 
     sessions = MagicMock()
     sessions.get_pid = MagicMock(return_value=None)
@@ -129,9 +129,9 @@ async def test_store_accepted_row_is_re_vetted_after_its_awaits(
     refused work can never run."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew import subagent as subagent_mod
-    from kiro_crew import taskq as _taskq
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew import subagent as subagent_mod
+    from aj_crew import taskq as _taskq
+    from aj_crew.subagent import SubagentManager
 
     sessions = MagicMock()
     sessions.get_pid = MagicMock(return_value=None)
@@ -183,9 +183,9 @@ async def test_a_drained_row_refused_by_the_pump_is_failed_in_the_store(
 ) -> None:
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew import subagent as subagent_mod
-    from kiro_crew import taskq as _taskq
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew import subagent as subagent_mod
+    from aj_crew import taskq as _taskq
+    from aj_crew.subagent import SubagentManager
 
     sessions = MagicMock()
     sessions.get_pid = MagicMock(return_value=None)
@@ -233,7 +233,7 @@ async def test_batch_members_are_counted_once_including_a_prepare_refusal(
     refused member too."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.subagent import SubagentManager
 
     sessions = MagicMock()
     sessions.get_pid = MagicMock(return_value=None)
@@ -271,8 +271,8 @@ async def test_batch_members_are_counted_once_including_a_prepare_refusal(
 async def test_spawn_is_refused_typed_when_the_enabled_store_is_unavailable() -> None:
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.subagent import SubagentManager
-    from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+    from aj_crew.subagent import SubagentManager
+    from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
 
     sessions = MagicMock()
     sessions.get_pid = MagicMock(return_value=None)
@@ -305,7 +305,7 @@ async def test_spawn_is_refused_typed_when_the_enabled_store_is_unavailable() ->
 async def _app_manager(monkeypatch: pytest.MonkeyPatch) -> Any:
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.subagent import SubagentManager
 
     sessions = MagicMock()
     sessions.get_pid = MagicMock(return_value=None)
@@ -334,7 +334,7 @@ async def test_committed_prevalidated_app_spawn_queues_instead_of_refusing(
     """Capacity is a scheduling fact: an accepted (committed) app spawn that
     finds no slot QUEUES like any other row, with its prevalidation dropped so
     the drain re-validates the agent and re-proves app ownership."""
-    from kiro_crew import taskq as _taskq
+    from aj_crew import taskq as _taskq
 
     mgr = await _app_manager(monkeypatch)
     store = mgr._admission.taskq_store()
@@ -359,8 +359,8 @@ async def test_drained_app_spawn_reproves_ownership_or_fails_its_row(
 ) -> None:
     from types import SimpleNamespace as NS
 
-    from kiro_crew import subagent as subagent_mod
-    from kiro_crew import taskq as _taskq
+    from aj_crew import subagent as subagent_mod
+    from aj_crew import taskq as _taskq
 
     mgr = await _app_manager(monkeypatch)
     store = mgr._admission.taskq_store()
@@ -394,9 +394,9 @@ async def test_durable_row_never_carries_prevalidation(monkeypatch: pytest.Monke
     a start rebuilt from the row (window refill, restart) runs the gates."""
     from types import SimpleNamespace as NS
 
-    from kiro_crew import subagent as subagent_mod
-    from kiro_crew import taskq as _taskq
-    from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+    from aj_crew import subagent as subagent_mod
+    from aj_crew import taskq as _taskq
+    from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
 
     mgr = await _app_manager(monkeypatch)
     store = mgr._admission.taskq_store()
@@ -540,7 +540,7 @@ async def test_a_spawn_during_the_parked_claim_queues_instead_of_overshooting(
 async def test_a_refused_or_unavailable_claim_releases_the_reservation(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew import taskq as _taskq
+    from aj_crew import taskq as _taskq
 
     mgr = await _app_manager(monkeypatch)
     store = mgr._admission.taskq_store()
@@ -590,7 +590,7 @@ async def test_posted_terminal_writes_are_tracked_and_drained_by_cancel_all(
     run ended does not leave a ``running`` row for the next boot to re-run."""
     import threading
 
-    from kiro_crew import taskq as _taskq
+    from aj_crew import taskq as _taskq
 
     mgr = await _app_manager(monkeypatch)
     store = mgr._admission.taskq_store()
@@ -608,7 +608,7 @@ async def test_posted_terminal_writes_are_tracked_and_drained_by_cancel_all(
     assert mgr._admission.taskq_accept_record(rec) is None
     claimed = store.claim("done1")
     assert claimed is not None
-    from kiro_crew.subagent import SubagentInfo
+    from aj_crew.subagent import SubagentInfo
 
     info = SubagentInfo(
         id="done1", task="t", parent_session_key="web-1", done=True, user_stopped=True
@@ -644,8 +644,8 @@ async def test_nested_child_of_a_blocked_parent_runs_w3_off_loop(
     writer thread -- pinned with the strict guard armed for the whole call."""
     from types import SimpleNamespace as NS
 
-    from kiro_crew import taskq as _taskq
-    from kiro_crew.dashboard.handlers import messaging
+    from aj_crew import taskq as _taskq
+    from aj_crew.dashboard.handlers import messaging
 
     mgr = await _app_manager(monkeypatch)
     mgr._max_concurrent = 2
@@ -653,7 +653,7 @@ async def test_nested_child_of_a_blocked_parent_runs_w3_off_loop(
     monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
     # The parent: a live run (a hand-built record, so the fake session cannot
     # end it), in the store as ``running``, blocked in the blocking tool.
-    from kiro_crew.subagent import SubagentInfo
+    from aj_crew.subagent import SubagentInfo
 
     rec = mgr._admission.taskq_build_record(
         "parent1",
@@ -672,7 +672,7 @@ async def test_nested_child_of_a_blocked_parent_runs_w3_off_loop(
     store.transition("parent1", _taskq.RUNNING, generation=claimed.generation)
     live = SubagentInfo(id="parent1", task="parent", parent_session_key="web-1")
     live._taskq_generation = claimed.generation
-    live._inflight_tool = NS(tool_name="@kirocrew-core/spawn_sub_agents", title="call-1")
+    live._inflight_tool = NS(tool_name="@ajcrew-core/spawn_sub_agents", title="call-1")
     mgr._agents["parent1"] = live
     mgr._running_count = 1
     parent = live
@@ -710,7 +710,7 @@ async def test_nested_child_of_a_blocked_parent_runs_w3_off_loop(
 async def test_a_raise_inside_reenter_releases_the_reservation(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew import taskq as _taskq
+    from aj_crew import taskq as _taskq
 
     mgr = await _app_manager(monkeypatch)
     store = mgr._admission.taskq_store()
@@ -800,7 +800,7 @@ async def test_admitting_id_is_held_until_the_posted_defer_landed(
 ) -> None:
     import threading
 
-    from kiro_crew import subagent as subagent_mod
+    from aj_crew import subagent as subagent_mod
 
     mgr = await _app_manager(monkeypatch)
     store = mgr._admission.taskq_store()
@@ -861,9 +861,9 @@ async def test_corrupt_tasks_db_is_quarantined_and_spawns_proceed(
 ) -> None:
     import os
 
-    from kiro_crew.taskq.store import TaskStore as _TS
+    from aj_crew.taskq.store import TaskStore as _TS
 
-    home = Path(os.environ["KIROCREW_HOME"])
+    home = Path(os.environ["AJCREW_HOME"])
     path = _TS.default_path(home)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(b"garbage, not sqlite\n" * 32)

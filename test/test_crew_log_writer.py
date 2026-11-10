@@ -1,4 +1,4 @@
-"""Interface tests for the crew log's durable writer, :mod:`kiro_crew.crew_log.writer`.
+"""Interface tests for the crew log's durable writer, :mod:`aj_crew.crew_log.writer`.
 
 Every test builds its own :class:`CrewLogWriter` against REAL session crew logs on the
 test's temporary data home, through an ``open_unit`` adapter that can inject a fault
@@ -27,9 +27,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import emit, lease
-from kiro_crew.crew_log.writer import (
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import emit, lease
+from aj_crew.crew_log.writer import (
     DEFAULT_LIMITS,
     CrewLogWriter,
     DrainReport,
@@ -40,7 +40,7 @@ from kiro_crew.crew_log.writer import (
 
 UNIT = "acp-writer-0001"
 OTHER = "acp-writer-0002"
-LOGGER = "kiro_crew.crew_log.writer"
+LOGGER = "aj_crew.crew_log.writer"
 # Entries a real-thread test queues per unit. Every append opens the log and fsyncs it,
 # and a Windows runner's fsync can take hundreds of milliseconds, so the count is what
 # sets these tests' wall time against their flush ceiling. Order and a held backlog
@@ -82,7 +82,7 @@ class _Units:
     def create(self, *units: str) -> None:
         for unit in units:
             self._handles[unit] = lg.CrewLog.create(
-                lg.KIND_SESSION, unit, owner="default", agent="kirocrew"
+                lg.KIND_SESSION, unit, owner="default", agent="ajcrew"
             )
 
     def open_unit(self, unit: str) -> "_Log | None":
@@ -128,7 +128,7 @@ class _Log:
 
 @pytest.fixture
 def units(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     home = _Units()
     yield home
     home.close()
@@ -1404,16 +1404,16 @@ def test_a_repeat_is_logged_at_debug_as_text_without_the_exception(clock, caplog
 
 def test_the_writer_reports_through_the_budget_and_logger_it_is_given(units, clock, caplog):
     units.create(UNIT)
-    named = logging.getLogger("kiro_crew.crew_log.emit")
+    named = logging.getLogger("aj_crew.crew_log.emit")
     budget = WarningBudget(named, clock=clock)
     writer = CrewLogWriter(
         units.open_unit, clock=clock, sleep=clock.sleep, warnings=budget, logger=named
     )
     units.fault = _failing(_is_step(1))
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.crew_log.emit"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.crew_log.emit"):
         writer.submit(UNIT, _step(units, UNIT, 1))
         assert writer.flush(timeout=60.0)
-    crew_log = {r.name for r in caplog.records if r.name.startswith("kiro_crew.crew_log")}
-    assert crew_log == {"kiro_crew.crew_log.emit"}
+    crew_log = {r.name for r in caplog.records if r.name.startswith("aj_crew.crew_log")}
+    assert crew_log == {"aj_crew.crew_log.emit"}
     assert _messages(caplog, "session log writes are failing")
     assert _messages(caplog, "gave up on")

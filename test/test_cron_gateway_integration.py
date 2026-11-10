@@ -21,7 +21,7 @@ from cron_gateway_integration_helpers import (
     _run_script_callback,
 )
 
-from kiro_crew.cron import CronJob, CronSchedule
+from aj_crew.cron import CronJob, CronSchedule
 
 
 class TestScriptExecution:
@@ -98,20 +98,20 @@ class TestScriptExecution:
         """A busy store on the Done removal must hand off to defer_removal, not
         silently drop it (Arbiter BLOCK item 1). Otherwise the completed job
         lingers enabled and re-fires."""
-        from kiro_crew.cron import CronStoreBusy
+        from aj_crew.cron import CronStoreBusy
 
         gw = _make_gw()
         job = _make_script_job()
         captured_cb = None
 
         with (
-            patch("kiro_crew.slack.gateway.CronService") as mock_cron_cls,
+            patch("aj_crew.slack.gateway.CronService") as mock_cron_cls,
             patch(
-                "kiro_crew.slack.gateway.run_script_sandboxed",
+                "aj_crew.slack.gateway.run_script_sandboxed",
                 return_value={"status": "done", "message": "CR merged"},
             ),
-            patch("kiro_crew.slack.gateway.vet_job_at_fire_time", return_value=None),
-            patch("kiro_crew.slack.gateway.sel"),
+            patch("aj_crew.slack.gateway.vet_job_at_fire_time", return_value=None),
+            patch("aj_crew.slack.gateway.sel"),
         ):
 
             def capture_cron(on_job=None, **kw):
@@ -169,9 +169,9 @@ class TestScriptExecution:
         captured_cb = None
 
         with (
-            patch("kiro_crew.slack.gateway.CronService") as mock_cron_cls,
-            patch("kiro_crew.slack.gateway.run_script_sandboxed") as mock_run,
-            patch("kiro_crew.slack.gateway.sel"),
+            patch("aj_crew.slack.gateway.CronService") as mock_cron_cls,
+            patch("aj_crew.slack.gateway.run_script_sandboxed") as mock_run,
+            patch("aj_crew.slack.gateway.sel"),
         ):
 
             def capture_cron(on_job=None, **kw):
@@ -406,9 +406,9 @@ class TestCommandExecution:
         gw = _make_gw()
         job = _make_command_job()
         with (
-            patch("kiro_crew.mcp_cron._vet_cron_capability_governance", return_value=None),
+            patch("aj_crew.mcp_cron._vet_cron_capability_governance", return_value=None),
             patch(
-                "kiro_crew.mcp_cron._vet_command_governance",
+                "aj_crew.mcp_cron._vet_command_governance",
                 return_value="Error: cron command blocked by governance policy: denied",
             ),
         ):
@@ -425,7 +425,7 @@ class TestCommandExecution:
         gw = _make_gw()
         job = _make_command_job()
         with patch(
-            "kiro_crew.mcp_cron._vet_cron_capability_governance",
+            "aj_crew.mcp_cron._vet_cron_capability_governance",
             return_value="Error: cron scheduling blocked by governance policy: disabled",
         ):
             result, mock_run = await _run_command_callback(
@@ -440,8 +440,8 @@ class TestCommandExecution:
         gw = _make_gw()
         job = _make_command_job()
         with (
-            patch("kiro_crew.mcp_cron._vet_cron_capability_governance", return_value=None),
-            patch("kiro_crew.mcp_cron._vet_command_governance", return_value=None),
+            patch("aj_crew.mcp_cron._vet_cron_capability_governance", return_value=None),
+            patch("aj_crew.mcp_cron._vet_command_governance", return_value=None),
         ):
             result, mock_run = await _run_command_callback(
                 gw, job, {"status": "ok", "output": "hello\n", "exit_code": 0}
@@ -462,14 +462,14 @@ class TestFireTimeGatesScriptAndMessage:
         captured_cb = None
 
         with (
-            patch("kiro_crew.slack.gateway.CronService") as mock_cron_cls,
+            patch("aj_crew.slack.gateway.CronService") as mock_cron_cls,
             patch(
-                "kiro_crew.slack.gateway.run_script_sandboxed", return_value=script_result
+                "aj_crew.slack.gateway.run_script_sandboxed", return_value=script_result
             ) as mock_run,
-            patch("kiro_crew.mcp_cron._vet_cron_capability_governance", return_value=cap),
-            patch("kiro_crew.mcp_cron.resolve_script_path", return_value=("/tmp/x.py", "run")),
-            patch("kiro_crew.mcp_cron._vet_script_file", return_value=script_vet) as mock_vet_file,
-            patch("kiro_crew.slack.gateway.sel") as mock_sel,
+            patch("aj_crew.mcp_cron._vet_cron_capability_governance", return_value=cap),
+            patch("aj_crew.mcp_cron.resolve_script_path", return_value=("/tmp/x.py", "run")),
+            patch("aj_crew.mcp_cron._vet_script_file", return_value=script_vet) as mock_vet_file,
+            patch("aj_crew.slack.gateway.sel") as mock_sel,
         ):
 
             def capture_cron(on_job=None, **kw):
@@ -555,9 +555,9 @@ class TestFireTimeGatesScriptAndMessage:
         captured_cb = None
 
         with (
-            patch("kiro_crew.slack.gateway.CronService") as mock_cron_cls,
-            patch("kiro_crew.mcp_cron._vet_cron_capability_governance", return_value=cap),
-            patch("kiro_crew.slack.gateway.sel") as mock_sel,
+            patch("aj_crew.slack.gateway.CronService") as mock_cron_cls,
+            patch("aj_crew.mcp_cron._vet_cron_capability_governance", return_value=cap),
+            patch("aj_crew.slack.gateway.sel") as mock_sel,
         ):
 
             def capture_cron(on_job=None, **kw):
@@ -628,7 +628,7 @@ class TestFireTimeDenyOneShotRetention:
     @pytest.mark.asyncio
     async def test_allowed_run_resets_flag_via_execute(self):
         # CronService._execute resets the marker at the start of every run.
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         job = _make_script_job()
         job.fire_time_denied = True  # stale from a prior denied run
@@ -642,7 +642,7 @@ class TestFireTimeDenyOneShotRetention:
         assert job.fire_time_denied is False
 
     def test_merge_retains_denied_delete_after_run_job(self, tmp_path):
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         svc = CronService(base_dir=tmp_path)
         job = svc.add_job(name="one-shot", message="go", at_ts=9999999999.0)
@@ -668,7 +668,7 @@ class TestFireTimeDenyOneShotRetention:
     async def test_denied_past_due_at_job_does_not_stay_due(self):
         """A past-due at-job denied at fire time must be parked disabled —
         leaving it enabled would make it due again on every timer tick."""
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         job = _make_script_job(schedule=CronSchedule(kind="at", at_ts=1.0), delete_after_run=True)
 
@@ -690,13 +690,13 @@ class TestFireTimeAuditTrail:
     governance_decision event keyed cron:<job.id>."""
 
     def test_allowed_fire_emits_governance_decision(self):
-        from kiro_crew.mcp_cron import vet_job_at_fire_time
+        from aj_crew.mcp_cron import vet_job_at_fire_time
 
         job = _make_command_job()
         with (
-            patch("kiro_crew.mcp_cron._vet_cron_capability_governance", return_value=None),
-            patch("kiro_crew.mcp_cron._vet_command_governance", return_value=None),
-            patch("kiro_crew.mcp_cron.sel") as mock_sel,
+            patch("aj_crew.mcp_cron._vet_cron_capability_governance", return_value=None),
+            patch("aj_crew.mcp_cron._vet_command_governance", return_value=None),
+            patch("aj_crew.mcp_cron.sel") as mock_sel,
         ):
             assert vet_job_at_fire_time(job) is None
         calls = mock_sel.return_value.log_governance_decision.call_args_list
@@ -706,16 +706,16 @@ class TestFireTimeAuditTrail:
         )
 
     def test_denied_fire_emits_governance_decision(self):
-        from kiro_crew.mcp_cron import vet_job_at_fire_time
+        from aj_crew.mcp_cron import vet_job_at_fire_time
 
         job = _make_command_job()
         with (
-            patch("kiro_crew.mcp_cron._vet_cron_capability_governance", return_value=None),
+            patch("aj_crew.mcp_cron._vet_cron_capability_governance", return_value=None),
             patch(
-                "kiro_crew.mcp_cron._vet_command_governance",
+                "aj_crew.mcp_cron._vet_command_governance",
                 return_value="Error: cron command blocked by governance policy: x",
             ),
-            patch("kiro_crew.mcp_cron.sel") as mock_sel,
+            patch("aj_crew.mcp_cron.sel") as mock_sel,
         ):
             assert vet_job_at_fire_time(job) is not None
         calls = mock_sel.return_value.log_governance_decision.call_args_list
@@ -725,16 +725,16 @@ class TestFireTimeAuditTrail:
         )
 
     def test_script_body_deny_emits_scoped_decision(self):
-        from kiro_crew.mcp_cron import vet_job_at_fire_time
+        from aj_crew.mcp_cron import vet_job_at_fire_time
 
         job = _make_script_job()
         with (
-            patch("kiro_crew.mcp_cron._vet_cron_capability_governance", return_value=None),
-            patch("kiro_crew.mcp_cron.resolve_script_path", return_value=("/tmp/x.py", "run")),
+            patch("aj_crew.mcp_cron._vet_cron_capability_governance", return_value=None),
+            patch("aj_crew.mcp_cron.resolve_script_path", return_value=("/tmp/x.py", "run")),
             patch(
-                "kiro_crew.mcp_cron._vet_script_file", return_value="Error: cron script blocked: x"
+                "aj_crew.mcp_cron._vet_script_file", return_value="Error: cron script blocked: x"
             ),
-            patch("kiro_crew.mcp_cron.sel") as mock_sel,
+            patch("aj_crew.mcp_cron.sel") as mock_sel,
         ):
             assert vet_job_at_fire_time(job) is not None
         calls = mock_sel.return_value.log_governance_decision.call_args_list
@@ -748,7 +748,7 @@ class TestTimeoutPersistence:
     """Test that timeout field survives save/load cycle."""
 
     def test_timeout_round_trips(self, tmp_path):
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         svc = CronService(base_dir=tmp_path)
         job = svc.add_job(
@@ -817,7 +817,7 @@ class TestCronDefaultAgent:
 
         await _run_llm_callback(gw, job)
 
-        assert self._dispatched_agent(gw) == "kirocrew"
+        assert self._dispatched_agent(gw) == "ajcrew"
 
     @pytest.mark.asyncio
     async def test_non_str_configured_default_degrades_to_the_floor(self):
@@ -836,7 +836,7 @@ class TestCronDefaultAgent:
 
         result, _ = await _run_llm_callback(gw, job)
 
-        assert self._dispatched_agent(gw) == "kirocrew"
+        assert self._dispatched_agent(gw) == "ajcrew"
         assert result == "Agent response here"
 
     @pytest.mark.asyncio
@@ -978,9 +978,9 @@ class TestCronDefaultAgent:
 
         Every fire re-binds the stable ``cron:{job.id}`` key with
         ``replace_existing`` False, which raises when the candidate differs from the
-        recorded ``template_id="kirocrew"``; the job would fail every fire and auto-pause.
+        recorded ``template_id="ajcrew"``; the job would fail every fire and auto-pause.
         """
-        from kiro_crew import execution_context
+        from aj_crew import execution_context
 
         gw = _make_gw_for_llm()
         gw._cfg.agent.default_agent = "configured-default"
@@ -998,7 +998,7 @@ class TestCronDefaultAgent:
 
         assert self._dispatched_agent(gw) == "configured-default"
         assert bound, "bind_session_execution was never called"
-        assert bound[0].template_id == "kirocrew", (
+        assert bound[0].template_id == "ajcrew", (
             "the configured default leaked into the captured execution identity; "
             "a second fire on the stable cron: key would raise "
             "'session already belongs to another execution'"
@@ -1012,7 +1012,7 @@ class TestCronDefaultAgent:
         ``execution_context.template_id`` with ``agent_id`` empty, so the override is
         gated on the resolved agent still being the floor.
         """
-        from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+        from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
         captured = ExecutionContext(None, MemoryStoreRef("default"), "template", "researcher")
         gw = _make_gw_for_llm()
@@ -1025,14 +1025,14 @@ class TestCronDefaultAgent:
 
     @pytest.mark.asyncio
     async def test_a_captured_floor_template_still_gets_the_default(self):
-        """An agent-less job whose captured ``template_id`` is the ``"kirocrew"`` floor.
+        """An agent-less job whose captured ``template_id`` is the ``"ajcrew"`` floor.
 
         Post-migration records all carry an ``execution_context``, so a gate inside the
         legacy arm alone would reach only pre-migration jobs.
         """
-        from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+        from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
-        captured = ExecutionContext(None, MemoryStoreRef("default"), "template", "kirocrew")
+        captured = ExecutionContext(None, MemoryStoreRef("default"), "template", "ajcrew")
         gw = _make_gw_for_llm()
         gw._cfg.agent.default_agent = "configured-default"
         job = _make_llm_job(agent_id="", execution_context=captured.to_record())
@@ -1046,13 +1046,13 @@ class TestCronDefaultAgent:
         """A member execution is a real selection even when it spells the floor.
 
         ``resolve_member_execution`` sets ``template_id`` to
-        ``agent.kiro_agent or "kirocrew"``. Substituting would inject another template's
+        ``agent.kiro_agent or "ajcrew"``. Substituting would inject another template's
         prompt into the member's envelope, so the override needs ``member_id`` unset.
         """
-        from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+        from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
         captured = ExecutionContext(
-            "alice", MemoryStoreRef("alice-store", "alice"), "member", "kirocrew"
+            "alice", MemoryStoreRef("alice-store", "alice"), "member", "ajcrew"
         )
         gw = _make_gw_for_llm()
         gw._cfg.agent.default_agent = "configured-default"
@@ -1069,10 +1069,10 @@ class TestCronDefaultAgent:
         A member predating the identity migration persists no ``member_id`` and is named
         by ``selection_kind == 'member'`` alone, so the gate tests ``selection_kind``.
         """
-        from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+        from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
         captured = ExecutionContext(
-            None, MemoryStoreRef("legacy-global-store"), "member", "kirocrew"
+            None, MemoryStoreRef("legacy-global-store"), "member", "ajcrew"
         )
         assert captured.member_id is None, "the legacy shape under test"
         gw = _make_gw_for_llm()
@@ -1108,7 +1108,7 @@ class TestCronDefaultAgent:
         which names the floor, so the substituted template's declaration would never be
         consulted and a child it forbids would start.
         """
-        from kiro_crew import subagent as _subagent
+        from aj_crew import subagent as _subagent
 
         monkeypatch.setattr(
             _subagent, "parent_spawn_allowlists", lambda template: (("only-this-child",),)
@@ -1129,7 +1129,7 @@ class TestCronDefaultAgent:
         ``None`` means a spec file in the user-writable agents dir was refused, where a
         restrictive declaration could hide.
         """
-        from kiro_crew import subagent as _subagent
+        from aj_crew import subagent as _subagent
 
         monkeypatch.setattr(_subagent, "parent_spawn_allowlists", lambda template: None)
         gw = _make_gw_for_llm()
@@ -1170,7 +1170,7 @@ class TestCronDefaultAgent:
         """
         import copy
 
-        from kiro_crew.config import live
+        from aj_crew.config import live
 
         gw = _make_gw_for_llm()
         gw._cfg.agent.default_agent = "stale-boot-default"
@@ -1194,7 +1194,7 @@ class TestCronDefaultAgent:
         """
         import copy
 
-        from kiro_crew.config import live, loader
+        from aj_crew.config import live, loader
 
         gw = _make_gw_for_llm()
         live_cfg = copy.copy(gw._cfg)
@@ -1209,7 +1209,7 @@ class TestCronDefaultAgent:
         live_cfg.workspaces = {"crew-ws": MagicMock()}
         monkeypatch.setattr(live, "snapshot", lambda: live_cfg)
         crew_bindings = MagicMock()
-        crew_bindings.kiro_agent = "kirocrew"
+        crew_bindings.kiro_agent = "ajcrew"
         monkeypatch.setattr(loader, "resolve_agent_bindings", lambda *a, **k: crew_bindings)
         monkeypatch.setattr(loader, "workspace_dir_from_entry", lambda *a, **k: "/tmp/crew-ws")
         job = _make_llm_job(agent_id="")
@@ -1242,7 +1242,7 @@ class TestFailedOneShotIsParkedNotDeleted:
 
     @staticmethod
     def _svc(tmp_path, on_job):
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         svc = CronService(base_dir=tmp_path, on_job=on_job)
         svc._load()
@@ -1253,14 +1253,14 @@ class TestFailedOneShotIsParkedNotDeleted:
 
     @staticmethod
     def _on_disk(tmp_path, job_id):
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         fresh = CronService(base_dir=tmp_path)
         fresh._load()
         return next((j for j in fresh.list_jobs(include_disabled=True) if j.id == job_id), None)
 
     async def _run(self, svc, job):
-        from kiro_crew.cron_service.execution import close_run
+        from aj_crew.cron_service.execution import close_run
 
         await svc._execute_with_timeout(job)
         # The production shape: merge the run's frozen COPY against a store
@@ -1287,7 +1287,7 @@ class TestFailedOneShotIsParkedNotDeleted:
 
     @pytest.mark.asyncio
     async def test_timed_out_one_shot_is_kept_and_disabled(self, tmp_path, monkeypatch):
-        import kiro_crew.cron as cron_mod
+        import aj_crew.cron as cron_mod
 
         monkeypatch.setattr(cron_mod, "effective_wake_budget", lambda j: 0.05)
         for name in ("_pool_queue_allowance", "_gate_budget_allowance", "_vet_allowance"):
@@ -1341,7 +1341,7 @@ class TestFailedOneShotIsParkedNotDeleted:
 
     @pytest.mark.asyncio
     async def test_stale_failed_record_does_not_park_a_newer_run(self, tmp_path):
-        from kiro_crew.cron_service.execution import close_run
+        from aj_crew.cron_service.execution import close_run
 
         async def _boom(j):
             raise RuntimeError("old run failed")
@@ -1365,8 +1365,8 @@ class TestFailedOneShotIsParkedNotDeleted:
 
     @pytest.mark.asyncio
     async def test_save_fault_on_a_failed_one_shot_queues_no_consume(self, tmp_path):
-        from kiro_crew.cron_service.execution import close_run
-        from kiro_crew.cron_service.store import CronStoreUnreadable
+        from aj_crew.cron_service.execution import close_run
+        from aj_crew.cron_service.store import CronStoreUnreadable
 
         async def _boom(j):
             raise RuntimeError("agent failed")
@@ -1389,7 +1389,7 @@ class TestFailedOneShotIsParkedNotDeleted:
 
     @pytest.mark.asyncio
     async def test_cancel_during_failure_alert_still_parks_the_one_shot(self, tmp_path):
-        from kiro_crew.cron_service.execution import close_run
+        from aj_crew.cron_service.execution import close_run
 
         async def _fail_then_cancelled_in_alert(j):
             # The command/script contract: mark the run failed on the shared job,

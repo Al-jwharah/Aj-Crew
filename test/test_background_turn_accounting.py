@@ -20,15 +20,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard.handlers import usage as usage_mod
-from kiro_crew.llm_helpers import background_turn, provider_last_turn_usage
-from kiro_crew.providers.base import LLMProvider
+from aj_crew.dashboard.handlers import usage as usage_mod
+from aj_crew.llm_helpers import background_turn, provider_last_turn_usage
+from aj_crew.providers.base import LLMProvider
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).
 pytestmark = pytest.mark.usefixtures("ample_host_free_memory")
 
-_USAGE_TARGET = "kiro_crew.dashboard.handlers.usage.persist_token_record_async"
+_USAGE_TARGET = "aj_crew.dashboard.handlers.usage.persist_token_record_async"
 
 
 class _Stats:
@@ -75,7 +75,7 @@ class _Sessions:
 
 class TestBackgroundTurnAccounting(unittest.IsolatedAsyncioTestCase):
     async def test_extraction_and_cheap_judge_use_separate_keys(self):
-        from kiro_crew.history_consolidation import HistoryConsolidator
+        from aj_crew.history_consolidation import HistoryConsolidator
 
         sessions = _Sessions(_Client())
         consolidator = HistoryConsolidator.__new__(HistoryConsolidator)
@@ -83,12 +83,12 @@ class TestBackgroundTurnAccounting(unittest.IsolatedAsyncioTestCase):
         with (
             patch(_USAGE_TARGET),
             patch(
-                "kiro_crew.history_consolidation._facade_stream_and_collect_json",
+                "aj_crew.history_consolidation._facade_stream_and_collect_json",
                 new_callable=AsyncMock,
                 return_value={"history_entry": "extracted"},
             ),
             patch(
-                "kiro_crew.history_consolidation._facade_stream_and_collect",
+                "aj_crew.history_consolidation._facade_stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="DUP",
             ),
@@ -100,8 +100,8 @@ class TestBackgroundTurnAccounting(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             sessions.acquire_calls,
             [
-                ("_consolidate", {"agent": "kirocrew-lite"}),
-                ("_bg", {"agent": "kirocrew-lite"}),
+                ("_consolidate", {"agent": "ajcrew-lite"}),
+                ("_bg", {"agent": "ajcrew-lite"}),
             ],
         )
         self.assertEqual(sessions.released_keys, ["_consolidate", "_bg"])
@@ -132,13 +132,13 @@ class TestBackgroundTurnAccounting(unittest.IsolatedAsyncioTestCase):
     async def test_a_non_default_backend_is_named_through_the_wrapper_chain(self):
         """The resolver only recognises a provider handed to it directly, and the
         shared background session wraps one behind ``_sess.provider``."""
-        from kiro_crew.acp.types import PROVIDER_LABEL_CLAUDE
-        from kiro_crew.llm_helpers import _provider_label
+        from aj_crew.acp.types import PROVIDER_LABEL_CLAUDE
+        from aj_crew.llm_helpers import _provider_label
 
         inner = SimpleNamespace()
         adapter = SimpleNamespace(_sess=SimpleNamespace(provider=inner))
         with patch(
-            "kiro_crew.providers.acp.provider_label",
+            "aj_crew.providers.acp.provider_label",
             side_effect=lambda node: (PROVIDER_LABEL_CLAUDE if node is inner else "acp"),
         ):
             self.assertEqual(_provider_label(adapter), PROVIDER_LABEL_CLAUDE)
@@ -231,7 +231,7 @@ class TestBackgroundTurnAccounting(unittest.IsolatedAsyncioTestCase):
         instead of the host's speed."""
         sessions = _Sessions(_Client())
         clock = iter([100.0, 100.25])
-        with patch("kiro_crew.llm_helpers.time", SimpleNamespace(monotonic=lambda: next(clock))):
+        with patch("aj_crew.llm_helpers.time", SimpleNamespace(monotonic=lambda: next(clock))):
             with patch(_USAGE_TARGET) as persist:
                 async with background_turn(sessions, task="consolidation") as client:
                     client.begin_turn(1.0)
@@ -245,11 +245,11 @@ class TestBackgroundTurnAccounting(unittest.IsolatedAsyncioTestCase):
         with patch(_USAGE_TARGET):
             async with background_turn(sessions, task="plan_rephrase"):
                 pass
-            async with background_turn(sessions, task="consolidation", agent="kirocrew-lite"):
+            async with background_turn(sessions, task="consolidation", agent="ajcrew-lite"):
                 pass
 
         self.assertEqual(sessions.acquire_calls[0][1], {})
-        self.assertEqual(sessions.acquire_calls[1][1], {"agent": "kirocrew-lite"})
+        self.assertEqual(sessions.acquire_calls[1][1], {"agent": "ajcrew-lite"})
 
     async def test_dedicated_key_owns_its_session_and_recycle(self):
         sessions = _Sessions(_Client())
@@ -257,7 +257,7 @@ class TestBackgroundTurnAccounting(unittest.IsolatedAsyncioTestCase):
             async with background_turn(
                 sessions,
                 task="consolidation",
-                agent="kirocrew-lite",
+                agent="ajcrew-lite",
                 session_key="_consolidate",
             ) as client:
                 client.begin_turn(1.0)
@@ -267,12 +267,12 @@ class TestBackgroundTurnAccounting(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(persist.await_args.kwargs["surface"], "bg:consolidation")
         self.assertEqual(
             sessions.acquire_calls,
-            [("_consolidate", {"agent": "kirocrew-lite"})],
+            [("_consolidate", {"agent": "ajcrew-lite"})],
         )
         self.assertEqual(sessions.released_keys, ["_consolidate"])
         self.assertEqual(
             sessions.recycle_calls,
-            [{"session_key": "_consolidate", "agent": "kirocrew-lite"}],
+            [{"session_key": "_consolidate", "agent": "ajcrew-lite"}],
         )
 
 
@@ -316,7 +316,7 @@ class TestBillingIsReadThroughTheDeclaredSeam(unittest.TestCase):
         under a name the private walk does not know reported empty usage, which
         the ``usage_has_billing`` gate reads as "nothing to record" -- the spend
         never reaching the usage store, with no error raised."""
-        from kiro_crew.llm_helpers import usage_has_billing
+        from aj_crew.llm_helpers import usage_has_billing
 
         class _Runner:
             def __init__(self) -> None:
@@ -353,7 +353,7 @@ class TestBillingIsReadThroughTheDeclaredSeam(unittest.TestCase):
     def test_the_abc_default_does_not_count_as_a_declaration(self):
         """A provider that inherits the ABC default has declared nothing, so the
         read must fall back to what it carries rather than report "no billing"."""
-        from kiro_crew.providers.base import resolve_billing_stats
+        from aj_crew.providers.base import resolve_billing_stats
 
         class _Inheriting(LLMProvider):
             """Implements ONLY the abstract surface; billing is the ABC default."""
@@ -437,19 +437,19 @@ class TestEveryProviderDeclaresItsBilling(unittest.TestCase):
     def _product_subclasses(root: type) -> list[type]:
         """Every subclass defined in the product tree, transitively.
 
-        Filtered to ``kiro_crew.*`` so a test module's own double (this file's
+        Filtered to ``aj_crew.*`` so a test module's own double (this file's
         included) is not held to the product contract.
         """
         out: list[type] = []
         for cls in root.__subclasses__():
-            if cls.__module__.startswith("kiro_crew."):
+            if cls.__module__.startswith("aj_crew."):
                 out.append(cls)
             out.extend(TestEveryProviderDeclaresItsBilling._product_subclasses(cls))
         return out
 
     def test_concrete_providers_override_billing_stats(self):
-        import kiro_crew.acp.session_provider  # noqa: F401
-        import kiro_crew.providers.acp  # noqa: F401
+        import aj_crew.acp.session_provider  # noqa: F401
+        import aj_crew.providers.acp  # noqa: F401
 
         found = self._product_subclasses(LLMProvider)
         # Guards the ratchet itself: an import that stopped registering the
@@ -475,7 +475,7 @@ class TestEveryProviderDeclaresItsBilling(unittest.TestCase):
         application code that must not import the provider layer (the
         agent-SDK boundary gate) -- so the walk reaching that node and resolving
         ITS declaration is what keeps a background turn's spend visible."""
-        from kiro_crew.session_background import _ProviderBgSession
+        from aj_crew.session_background import _ProviderBgSession
 
         stats = _Stats(5.5)
 
@@ -493,8 +493,8 @@ class TestEveryProviderDeclaresItsBilling(unittest.TestCase):
         AcpSessionProvider, and both shapes must report the same turn. Asserted
         through the seam itself: the walk would find these stats anyway, so only
         an identity check on ``billing_stats()`` pins the declaration."""
-        from kiro_crew.acp.session_provider import AcpSessionProvider
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew.providers.acp import AcpProvider
 
         raw_stats = _Stats(1.5)
         raw = object.__new__(AcpProvider)
@@ -519,8 +519,8 @@ class TestEveryProviderDeclaresItsBilling(unittest.TestCase):
         object instead would re-introduce the same name dependency one level
         down: an inner provider that keeps its runner elsewhere has no such
         attribute, and its billed turn would report nothing."""
-        from kiro_crew.providers.acp import AcpProvider
-        from kiro_crew.session_background import _ProviderBgSession
+        from aj_crew.providers.acp import AcpProvider
+        from aj_crew.session_background import _ProviderBgSession
 
         stats = _Stats(8.25)
 
@@ -551,9 +551,9 @@ class TestBilledAttemptsSurviveARetry(unittest.IsolatedAsyncioTestCase):
         """The first attempt's metering lands, the stream then breaks before any
         text, and the retry replaces the stats object that carried those credits.
         Reading the live stats afterwards would report only the retry's spend."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.llm_helpers import stream_and_collect
-        from kiro_crew.providers.base import EVENT_COMPLETE
+        from aj_crew.acp.client import AcpError
+        from aj_crew.llm_helpers import stream_and_collect
+        from aj_crew.providers.base import EVENT_COMPLETE
 
         class _Provider:
             def __init__(self) -> None:
@@ -571,7 +571,7 @@ class TestBilledAttemptsSurviveARetry(unittest.IsolatedAsyncioTestCase):
                 yield SimpleNamespace(kind=EVENT_COMPLETE, text="")
 
         provider = _Provider()
-        with patch("kiro_crew.llm_helpers.transient_retry_delay", return_value=0):
+        with patch("aj_crew.llm_helpers.transient_retry_delay", return_value=0):
             await stream_and_collect(provider, "p")
 
         self.assertEqual(provider.calls, 2)
@@ -581,9 +581,9 @@ class TestBilledAttemptsSurviveARetry(unittest.IsolatedAsyncioTestCase):
         """The sum is handed over once. A second read falls back to the live
         stats -- which for a retried turn is the final attempt alone -- so the
         total cannot be counted into two different rows."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.llm_helpers import stream_and_collect
-        from kiro_crew.providers.base import EVENT_COMPLETE
+        from aj_crew.acp.client import AcpError
+        from aj_crew.llm_helpers import stream_and_collect
+        from aj_crew.providers.base import EVENT_COMPLETE
 
         class _Provider:
             def __init__(self) -> None:
@@ -598,7 +598,7 @@ class TestBilledAttemptsSurviveARetry(unittest.IsolatedAsyncioTestCase):
                 yield SimpleNamespace(kind=EVENT_COMPLETE, text="")
 
         provider = _Provider()
-        with patch("kiro_crew.llm_helpers.transient_retry_delay", return_value=0):
+        with patch("aj_crew.llm_helpers.transient_retry_delay", return_value=0):
             await stream_and_collect(provider, "p")
 
         self.assertEqual(provider_last_turn_usage(provider).credits, 3.5)
@@ -617,8 +617,8 @@ class TestBilledAttemptsSurviveARetry(unittest.IsolatedAsyncioTestCase):
         is still on the provider at read time. A later ``stream_and_collect`` turn
         would overwrite the stale total instead, so it cannot show this.
         """
-        from kiro_crew.llm_helpers import stream_and_collect
-        from kiro_crew.providers.base import EVENT_COMPLETE
+        from aj_crew.llm_helpers import stream_and_collect
+        from aj_crew.providers.base import EVENT_COMPLETE
 
         class _Provider:
             def __init__(self) -> None:
@@ -646,7 +646,7 @@ class TestBilledAttemptsSurviveARetry(unittest.IsolatedAsyncioTestCase):
         """The guard is on the stats object's identity, not on ordering: a total
         published against stats the provider has since replaced is stale by
         definition, and the live read takes over."""
-        from kiro_crew.llm_helpers import _TURN_BILLED_ATTR, TurnUsage
+        from aj_crew.llm_helpers import _TURN_BILLED_ATTR, TurnUsage
 
         provider = SimpleNamespace(last_prompt_stats=_Stats(4.0))
         stale_stats = _Stats(9.0)
@@ -661,12 +661,12 @@ class TestBilledAttemptsSurviveARetry(unittest.IsolatedAsyncioTestCase):
         records the turn. Consuming the total there would leave the recording read
         only the retry's live stats, so the abandoned attempt's spend would never
         reach the usage store."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.history_consolidation import (
+        from aj_crew.acp.client import AcpError
+        from aj_crew.history_consolidation import (
             HistoryConsolidator,
             _ConsolidationReplyUnusable,
         )
-        from kiro_crew.providers.base import EVENT_COMPLETE
+        from aj_crew.providers.base import EVENT_COMPLETE
 
         class _RetriedClient(_Client):
             # A backend in ACP_BACKENDS_REPORT_USAGE, where the billing read decides the charge.
@@ -687,7 +687,7 @@ class TestBilledAttemptsSurviveARetry(unittest.IsolatedAsyncioTestCase):
         consolidator._sessions = _Sessions(_RetriedClient())
         with (
             patch(_USAGE_TARGET) as persist,
-            patch("kiro_crew.llm_helpers.transient_retry_delay", return_value=0),
+            patch("aj_crew.llm_helpers.transient_retry_delay", return_value=0),
             self.assertRaises(_ConsolidationReplyUnusable),
         ):
             await consolidator._call_llm("extract")
@@ -717,7 +717,7 @@ class TestClaudeSeamBackgroundAccounting(unittest.IsolatedAsyncioTestCase):
         at zero. Dropping the gate's cost_usd conjunct, or bypassing the
         duck-typed to_turn_usage read in _attempt_usage (whose credits-only
         fallback zeroes every claude dimension), makes this fail."""
-        from kiro_crew.acp.types import TurnUsage
+        from aj_crew.acp.types import TurnUsage
 
         sessions = _Sessions(_Client())
         with patch(_USAGE_TARGET) as persist:
@@ -734,7 +734,7 @@ class TestClaudeSeamBackgroundAccounting(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(recorded.credits, 0.0)
 
     async def test_an_all_zero_claude_turn_writes_no_row(self):
-        from kiro_crew.acp.types import TurnUsage
+        from aj_crew.acp.types import TurnUsage
 
         sessions = _Sessions(_Client())
         with tempfile.TemporaryDirectory() as shard_dir:
@@ -753,8 +753,8 @@ class TestSumUsageCarriesTheBilledDimensions(unittest.TestCase):
         num_turns and duration_ms are deliberately absent: to_turn_usage never
         fills them and every persist site passes elapsed_ms explicitly.
         """
-        from kiro_crew.acp.types import TurnUsage
-        from kiro_crew.llm_helpers import _sum_usage
+        from aj_crew.acp.types import TurnUsage
+        from aj_crew.llm_helpers import _sum_usage
 
         left = TurnUsage(
             input_tokens=10,
@@ -786,8 +786,8 @@ class TestUsageHasBilling(unittest.TestCase):
     alone must open the gate, and an all-zero turn must not."""
 
     def test_each_dimension_alone_opens_the_gate(self):
-        from kiro_crew.acp.types import TurnUsage
-        from kiro_crew.llm_helpers import usage_has_billing
+        from aj_crew.acp.types import TurnUsage
+        from aj_crew.llm_helpers import usage_has_billing
 
         for kwargs in (
             {"credits": 0.5},
@@ -801,8 +801,8 @@ class TestUsageHasBilling(unittest.TestCase):
                 self.assertTrue(usage_has_billing(TurnUsage(**kwargs)))
 
     def test_an_all_zero_turn_stays_out(self):
-        from kiro_crew.acp.types import TurnUsage
-        from kiro_crew.llm_helpers import usage_has_billing
+        from aj_crew.acp.types import TurnUsage
+        from aj_crew.llm_helpers import usage_has_billing
 
         self.assertFalse(usage_has_billing(TurnUsage()))
 

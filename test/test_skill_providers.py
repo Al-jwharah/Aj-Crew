@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.skill_providers.base import ProviderRegistry, SkillSearchResult
-from kiro_crew.skill_providers.skillsh import (
+from aj_crew.skill_providers.base import ProviderRegistry, SkillSearchResult
+from aj_crew.skill_providers.skillsh import (
     SkillsShConfig,
     SkillsShProvider,
     _is_allowed_host,
@@ -53,7 +53,7 @@ class TestSkillsShProvider:
             ]
         }
         with patch(
-            "kiro_crew.skill_providers.skillsh._sync_fetch_json",
+            "aj_crew.skill_providers.skillsh._sync_fetch_json",
             return_value=mock_data,
         ):
             p = SkillsShProvider()
@@ -70,7 +70,7 @@ class TestSkillsShProvider:
     @pytest.mark.asyncio
     async def test_search_handles_timeout(self):
         with patch(
-            "kiro_crew.skill_providers.skillsh._sync_fetch_json",
+            "aj_crew.skill_providers.skillsh._sync_fetch_json",
             side_effect=TimeoutError,
         ):
             p = SkillsShProvider()
@@ -84,7 +84,7 @@ class TestSkillsShProvider:
         # items[:limit] TypeError. Both must degrade to [] rather than crash.
         for payload in ("maintenance", 42, {"skills": None}, {"skills": "x"}, {"nope": 1}):
             with patch(
-                "kiro_crew.skill_providers.skillsh._sync_fetch_json",
+                "aj_crew.skill_providers.skillsh._sync_fetch_json",
                 return_value=payload,
             ):
                 assert await SkillsShProvider().search("docker") == []
@@ -98,7 +98,7 @@ class TestSkillsShProvider:
             ]
         }
         with patch(
-            "kiro_crew.skill_providers.skillsh._sync_fetch_json",
+            "aj_crew.skill_providers.skillsh._sync_fetch_json",
             return_value=bundle,
         ):
             p = SkillsShProvider()
@@ -113,7 +113,7 @@ class TestSkillsShProvider:
             ]
         }
         with patch(
-            "kiro_crew.skill_providers.skillsh._sync_fetch_json",
+            "aj_crew.skill_providers.skillsh._sync_fetch_json",
             return_value=bundle,
         ):
             p = SkillsShProvider()
@@ -196,7 +196,7 @@ class TestProviderRegistry:
         # production 10s — the test pins the timeout->empty-result contract,
         # not the budget's magnitude.
         with patch.object(p, "search", side_effect=slow_search), \
-             patch("kiro_crew.skill_providers.base._SEARCH_TIMEOUT_SECS", 0.05):
+             patch("aj_crew.skill_providers.base._SEARCH_TIMEOUT_SECS", 0.05):
             results = await reg.search("test")
             assert results == []
 
@@ -218,7 +218,7 @@ class TestProviderRegistry:
         with (
             patch.object(slow, "search", side_effect=slow_search),
             patch.object(fast, "search", return_value=fast_results),
-            patch("kiro_crew.skill_providers.base._SEARCH_TIMEOUT_SECS", 0.05),
+            patch("aj_crew.skill_providers.base._SEARCH_TIMEOUT_SECS", 0.05),
         ):
             response = await reg.search_with_outcomes("test")
 
@@ -276,14 +276,14 @@ class TestSkillsShTagsCoercion:
     @pytest.mark.asyncio
     async def test_null_tags_coerced_to_empty_list(self):
         payload = {"skills": [{"id": "o/r/x", "name": "x", "source": "o/r", "tags": None}]}
-        with patch("kiro_crew.skill_providers.skillsh._sync_fetch_json", return_value=payload):
+        with patch("aj_crew.skill_providers.skillsh._sync_fetch_json", return_value=payload):
             results = await SkillsShProvider().search("x")
         assert results[0].tags == []
 
     @pytest.mark.asyncio
     async def test_non_string_tag_items_are_dropped(self):
         payload = {"skills": [{"id": "o/r/y", "name": "y", "source": "o/r", "tags": [5, {}, "ok"]}]}
-        with patch("kiro_crew.skill_providers.skillsh._sync_fetch_json", return_value=payload):
+        with patch("aj_crew.skill_providers.skillsh._sync_fetch_json", return_value=payload):
             results = await SkillsShProvider().search("y")
         assert results[0].tags == ["ok"]
 
@@ -291,14 +291,14 @@ class TestSkillsShTagsCoercion:
     async def test_bare_string_tags_not_iterated_per_character(self):
         # Pre-fix a bare string iterated per-char -> garbage single-char tags.
         payload = {"skills": [{"id": "o/r/z", "name": "z", "source": "o/r", "tags": "python,web"}]}
-        with patch("kiro_crew.skill_providers.skillsh._sync_fetch_json", return_value=payload):
+        with patch("aj_crew.skill_providers.skillsh._sync_fetch_json", return_value=payload):
             results = await SkillsShProvider().search("z")
         assert results[0].tags == []
 
     @pytest.mark.asyncio
     async def test_well_formed_tags_preserved(self):
         payload = {"skills": [{"id": "o/r/g", "name": "g", "source": "o/r", "tags": ["docker", "ci"]}]}
-        with patch("kiro_crew.skill_providers.skillsh._sync_fetch_json", return_value=payload):
+        with patch("aj_crew.skill_providers.skillsh._sync_fetch_json", return_value=payload):
             results = await SkillsShProvider().search("g")
         assert results[0].tags == ["docker", "ci"]
 
@@ -321,7 +321,7 @@ class TestSkillsShDownloadUrl:
             return {"files": [{"path": "SKILL.md", "contents": "# ok"}]}
 
         with patch(
-            "kiro_crew.skill_providers.skillsh._sync_fetch_json",
+            "aj_crew.skill_providers.skillsh._sync_fetch_json",
             side_effect=fake_fetch,
         ):
             bundle = await SkillsShProvider().fetch_skill_bundle(
@@ -344,7 +344,7 @@ class TestSkillsShDownloadUrl:
             return {"files": [{"path": "SKILL.md", "contents": "# ok"}]}
 
         with patch(
-            "kiro_crew.skill_providers.skillsh._sync_fetch_json",
+            "aj_crew.skill_providers.skillsh._sync_fetch_json",
             side_effect=fake_fetch,
         ):
             await SkillsShProvider().fetch_skill_bundle("owner/repo/a b?x=1#f")
@@ -364,7 +364,7 @@ class TestSkillsShDownloadUrl:
             return {"files": [{"path": "SKILL.md", "contents": "x"}]}
 
         with patch(
-            "kiro_crew.skill_providers.skillsh._sync_fetch_json",
+            "aj_crew.skill_providers.skillsh._sync_fetch_json",
             side_effect=fake_fetch,
         ):
             p = SkillsShProvider()
@@ -389,7 +389,7 @@ class TestSkillsShReadCeiling:
             seen.append(kwargs["max_bytes"])
             return {"files": [], "skills": []}
 
-        with patch("kiro_crew.skill_providers.skillsh._http.sync_fetch_json", fake_http):
+        with patch("aj_crew.skill_providers.skillsh._http.sync_fetch_json", fake_http):
             asyncio.run(fetch_name(SkillsShProvider()))
         return seen
 
@@ -398,7 +398,7 @@ class TestSkillsShReadCeiling:
         assert ceiling > 5 * 1024 * 1024
 
     def test_search_keeps_the_default_ceiling(self):
-        from kiro_crew.skill_providers import _http
+        from aj_crew.skill_providers import _http
 
         (ceiling,) = self._ceiling_seen_by(lambda p: p.search("react"))
         assert ceiling == _http.MAX_RESPONSE_BYTES
@@ -419,7 +419,7 @@ class TestSkillsShBundleMalformedInput:
         # must not raise — it should be treated as "no bundle".
         for payload in ([{"path": "SKILL.md", "contents": "x"}], "html", 42, None):
             with patch(
-                "kiro_crew.skill_providers.skillsh._sync_fetch_json",
+                "aj_crew.skill_providers.skillsh._sync_fetch_json",
                 return_value=payload,
             ):
                 assert await SkillsShProvider().fetch_skill_bundle("o/r/s") is None
@@ -428,7 +428,7 @@ class TestSkillsShBundleMalformedInput:
     async def test_non_list_files_returns_none(self):
         for files in ("abc", {"a": 1}, 5):
             with patch(
-                "kiro_crew.skill_providers.skillsh._sync_fetch_json",
+                "aj_crew.skill_providers.skillsh._sync_fetch_json",
                 return_value={"files": files},
             ):
                 assert await SkillsShProvider().fetch_skill_bundle("o/r/s") is None
@@ -437,7 +437,7 @@ class TestSkillsShBundleMalformedInput:
     async def test_non_dict_entries_are_dropped(self):
         payload = {"files": ["not-a-dict", 7, {"path": "SKILL.md", "contents": "ok"}]}
         with patch(
-            "kiro_crew.skill_providers.skillsh._sync_fetch_json",
+            "aj_crew.skill_providers.skillsh._sync_fetch_json",
             return_value=payload,
         ):
             bundle = await SkillsShProvider().fetch_skill_bundle("o/r/s")
@@ -455,7 +455,7 @@ class TestSkillsShBundleMalformedInput:
             ]
         }
         with patch(
-            "kiro_crew.skill_providers.skillsh._sync_fetch_json",
+            "aj_crew.skill_providers.skillsh._sync_fetch_json",
             return_value=payload,
         ):
             bundle = await SkillsShProvider().fetch_skill_bundle("o/r/s")
@@ -521,12 +521,12 @@ class TestIsInternalUrlSSRF:
     def test_blocked_internal_ip_emits_sel_audit(self):
         # A blocked SSRF-to-internal-IP is a security-relevant event and must be
         # visible to audit tooling.
-        with patch("kiro_crew.skill_providers.skillsh._audit_ssrf_blocked") as m:
+        with patch("aj_crew.skill_providers.skillsh._audit_ssrf_blocked") as m:
             assert _is_internal_url("http://0xa9fea9fe/") is True  # hex metadata endpoint
             assert m.called, "blocked SSRF attempt did not emit a SEL audit event"
 
     def test_external_host_does_not_emit_sel_audit(self):
         # Allowed hosts must NOT spam the audit log.
-        with patch("kiro_crew.skill_providers.skillsh._audit_ssrf_blocked") as m:
+        with patch("aj_crew.skill_providers.skillsh._audit_ssrf_blocked") as m:
             assert _is_internal_url("https://raw.githubusercontent.com/o/r/main/S.md") is False
             assert not m.called

@@ -115,7 +115,7 @@ test("RASTERIZER_DISABLE_SWITCH: is the switch the disable-gpu opt-in appends", 
 });
 
 test("applySoftwareRendering: removes disable-software-rasterizer before requesting SwiftShader", () => {
-  // KIROCREW_DISABLE_GPU=1 survives app.relaunch(), so the opt-in re-appends
+  // AJCREW_DISABLE_GPU=1 survives app.relaunch(), so the opt-in re-appends
   // --disable-software-rasterizer on the software-mode boot. Left in place it
   // vetoes --use-angle=swiftshader and the app exits with no window again.
   const order = [];

@@ -15,9 +15,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.cron import CronJob
-from kiro_crew.cron_service.model import _AUTO_PAUSE_MAX
-from kiro_crew.dashboard.handlers.cron import api_cron_update, api_crons
+from aj_crew.cron import CronJob
+from aj_crew.cron_service.model import _AUTO_PAUSE_MAX
+from aj_crew.dashboard.handlers.cron import api_cron_update, api_crons
 
 pytestmark = pytest.mark.asyncio
 

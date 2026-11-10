@@ -30,7 +30,7 @@ vi.mock('../api/client', () => ({
     updateCron: vi.fn(),
     models: vi.fn().mockResolvedValue([]),
     cronHistoryAll: vi.fn().mockResolvedValue({ runs: [] }),
-    kirocrewAgents: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
+    ajcrewAgents: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
     agentCatalog: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
     defaultAgent: vi.fn().mockResolvedValue({ default_agent: '' }),
   },

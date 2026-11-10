@@ -12,7 +12,7 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
-from kiro_crew.history import ConversationLog
+from aj_crew.history import ConversationLog
 
 
 # ── Bug 7: dashboard persistence save must hold _locked vs. append_off_loop ──
@@ -26,7 +26,7 @@ class TestDashboardSaveHoldsLock:
     def _make_state(self, tmp_path: Path):
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.state import DashboardState
 
         sessions = MagicMock(count=0)
         sessions.get_pid = MagicMock(return_value=None)
@@ -44,11 +44,11 @@ class TestDashboardSaveHoldsLock:
     def test_concurrent_append_off_loop_survives_save(self, tmp_path, monkeypatch):
         import threading
 
-        from kiro_crew.dashboard import chat_persistence
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-        from kiro_crew.dashboard.chat_utils import _history_key_for
+        from aj_crew.dashboard import chat_persistence
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_utils import _history_key_for
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(tmp_path)
         slot = state.get_or_create_slot("locktest")
         slot.append("user", "m1")
@@ -83,7 +83,7 @@ class TestDashboardSaveHoldsLock:
             # sleep and the real write below clobbers it.
             go.set()
             # flake-ok: pre-existing 500 ms hold inside the stubbed atomic_write that widens the race window the competitor's append aims at, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing sleep, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing sleep, moved verbatim; tracked for a de-flake pass
             time.sleep(0.5)
             return real_atomic_write(path, data, **kwargs)
 
@@ -111,9 +111,9 @@ class TestDashboardSaveHoldsLock:
         The ``window`` snapshot is taken before ``_locked``, so the append lands in that
         gap; here it is committed to the file first, without threads.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-        from kiro_crew.dashboard.chat_utils import _history_key_for
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_utils import _history_key_for
 
         state = self._make_state(tmp_path)
         slot = state.get_or_create_slot("staleoverwrite")
@@ -151,9 +151,9 @@ class TestDashboardSaveHoldsLock:
         With no writer between saves 2..4, each matches ``slot._frozen_prefix_cache``;
         a fast path returning no foreign lines would drop the preserved append.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-        from kiro_crew.dashboard.chat_utils import _history_key_for
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_utils import _history_key_for
 
         state = self._make_state(tmp_path)
         slot = state.get_or_create_slot("fastpathloss")
@@ -200,9 +200,9 @@ class TestDashboardSaveHoldsLock:
         concurrent consolidation apply a stale offset and mark never-consolidated
         retained messages as done (undoing the rotation-generation fix).
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-        from kiro_crew.dashboard.chat_utils import _history_key_for
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_utils import _history_key_for
 
         state = self._make_state(tmp_path)
         slot = state.get_or_create_slot("rotgen")
@@ -236,11 +236,11 @@ class TestDashboardSaveHoldsLock:
         """
         import json
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.chat_persistence import (
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.chat_persistence import (
             _frozen_prefix_and_foreign_appends,
         )
-        from kiro_crew.dashboard.chat_utils import _history_key_for
+        from aj_crew.dashboard.chat_utils import _history_key_for
 
         state = self._make_state(tmp_path)
         slot = state.get_or_create_slot("dedupsem")
@@ -319,7 +319,7 @@ class TestForeignFoldMidIdentity:
     def _make_state(self, tmp_path: Path):
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.state import DashboardState
 
         sessions = MagicMock(count=0)
         sessions.get_pid = MagicMock(return_value=None)
@@ -338,11 +338,11 @@ class TestForeignFoldMidIdentity:
         """Write *disk_entries* (after a metadata line) and run the fold."""
         import json
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.chat_persistence import (
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.chat_persistence import (
             _frozen_prefix_and_foreign_appends,
         )
-        from kiro_crew.dashboard.chat_utils import _history_key_for
+        from aj_crew.dashboard.chat_utils import _history_key_for
 
         state = self._make_state(tmp_path)
         slot = state.get_or_create_slot(slot_name)
@@ -630,11 +630,11 @@ class TestForeignFoldMidIdentity:
         """
         import json
 
-        from kiro_crew.chat_attachments import attachments_dir
-        from kiro_crew.dashboard.chat_persistence import _frozen_prefix_and_foreign_appends
-        from kiro_crew.dashboard.chat_utils import _history_key_for
+        from aj_crew.chat_attachments import attachments_dir
+        from aj_crew.dashboard.chat_persistence import _frozen_prefix_and_foreign_appends
+        from aj_crew.dashboard.chat_utils import _history_key_for
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(tmp_path)
         slot = state.get_or_create_slot("imgfold")
         path = state.conversation_log._path(_history_key_for(slot.key))
@@ -685,10 +685,10 @@ class TestForeignFoldMidIdentity:
         import json
         import logging
 
-        from kiro_crew.dashboard.chat_persistence import _frozen_prefix_and_foreign_appends
+        from aj_crew.dashboard.chat_persistence import _frozen_prefix_and_foreign_appends
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        caplog.set_level(logging.WARNING, logger="kiro_crew.dashboard.chat_persistence")
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        caplog.set_level(logging.WARNING, logger="aj_crew.dashboard.chat_persistence")
         slot = self._make_state(tmp_path).get_or_create_slot("kc_warn_foreign")
         path = tmp_path / "kc_warn_foreign.jsonl"
         mine = {"role": "user", "content": "mine", "ts": "T1", "meta": {"mid": "m-1"}}
@@ -733,7 +733,7 @@ class TestBestEffortSaveMarksDirty:
     def _make_state(self, tmp_path: Path):
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.state import DashboardState
 
         sessions = MagicMock(count=0)
         sessions.get_pid = MagicMock(return_value=None)
@@ -751,9 +751,9 @@ class TestBestEffortSaveMarksDirty:
     def test_offloaded_best_effort_failure_marks_dirty(self, tmp_path, monkeypatch):
         import asyncio
 
-        from kiro_crew.dashboard import chat_persistence
+        from aj_crew.dashboard import chat_persistence
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(tmp_path)
         slot = state.get_or_create_slot("beffail")
         slot.append("user", "m1")

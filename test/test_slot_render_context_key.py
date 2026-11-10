@@ -4,9 +4,9 @@ import json
 
 import pytest
 
-from kiro_crew.dashboard import chat_utils as cu
-from kiro_crew.dashboard import mcp_oauth_provenance, wire_render
-from kiro_crew.security import exfil
+from aj_crew.dashboard import chat_utils as cu
+from aj_crew.dashboard import mcp_oauth_provenance, wire_render
+from aj_crew.security import exfil
 
 
 @pytest.fixture(autouse=True)

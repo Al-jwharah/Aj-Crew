@@ -9,7 +9,7 @@ import ErrorNotice from '../components/ErrorNotice'
 import { PinSurfaceButton } from '../components/PinSurfaceButton'
 import { useProvider } from '../providers'
 import { useConnectionsUiEnabled } from '../hooks/useConnectionsUi'
-import KiroCrewAgentsPage from './KiroCrewAgentsPage'
+import AjCrewAgentsPage from './AjCrewAgentsPage'
 import HooksPage from './HooksPage'
 import ConnectionsPage from './connections/ConnectionsPage'
 import { SkillsTab, PromptsTab, SteeringTab } from './overview'
@@ -34,7 +34,7 @@ const KnowledgePage = lazy(() => import('./KnowledgePage'))
  * The Connections work (provider registry, OAuth relay, card gallery) ships ON:
  * with no `connections_ui` key — the state of every install that never touched
  * it — this tab's Services panel offers the launched provider cards. Setting
- * `connections_ui: false` in the running instance's `$KIROCREW_HOME/config.json`
+ * `connections_ui: false` in the running instance's `$AJCREW_HOME/config.json`
  * empties that panel again, leaving the MCP Servers sub-tab as the only way to
  * reach a server. Config is read live, so no gateway restart is needed either
  * way.
@@ -121,7 +121,7 @@ export default function CapabilitiesPage() {
   return (
     <SidePanelLayout title={t('pages.capabilitiesPage.agent_capabilities')} tabs={tabs} rememberKey="capabilities" footer={pendingSkillsNotice} headerRight={<PinSurfaceButton defaultTab={tabs[0]?.key} />}>
       {tab => <>
-        {tab === 'crews' && <KiroCrewAgentsPage embedded />}
+        {tab === 'crews' && <AjCrewAgentsPage embedded />}
         {/* ErrorBoundary around the lazy chunk: a stale chunk request after a
             deploy rejects the import, and without a local boundary that rejection
             would replace the whole dashboard with the app-shell error screen. */}

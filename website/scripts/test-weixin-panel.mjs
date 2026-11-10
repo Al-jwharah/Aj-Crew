@@ -132,7 +132,7 @@ await page.route('**/api/**', async route => {
       tracking_channels: [], open_channels: [], trusted_bot_ids: [],
       reactions: {}, reactions_enabled: true, allow_forum: false,
       soft_threshold_pct: 80, hard_threshold_pct: 95,
-      command: 'kirocrew', allow_all_users: false, ws_url: '',
+      command: 'ajcrew', allow_all_users: false, ws_url: '',
     })
   }
 
@@ -143,18 +143,18 @@ await page.route('**/api/**', async route => {
   if (p === '/api/governance/channels') return json(route, {
     slack: true, discord: true, telegram: true, webex: true, wecom: true, weixin: true,
   })
-  if (p === '/api/dashboard/branding') return json(route, { bot_name: 'Kiro Crew', avatar: '' })
+  if (p === '/api/dashboard/branding') return json(route, { bot_name: 'Aj Crew', avatar: '' })
   if (p === '/api/theme/boot') return json(route, { mode: 'dark', theme: '' })
   if (p === '/api/notifications') return json(route, { notifications: [], unread: 0 })
   if (p.startsWith('/api/instances')) return json(route, { instances: [], active: '' })
   if (p === '/api/models') return json(route, { models: [], default: 'auto' })
   if (p === '/api/chat/slots') return json(route, [])
-  if (p === '/api/kirocrew-config' || p === '/api/config/kirocrew') return json(route, {
-    agents: { kirocrew: { provider: 'kiroacp', model: 'auto', approval_mode: 'reads' } },
-    default_agent: 'kirocrew',
+  if (p === '/api/ajcrew-config' || p === '/api/config/ajcrew') return json(route, {
+    agents: { ajcrew: { provider: 'kiroacp', model: 'auto', approval_mode: 'reads' } },
+    default_agent: 'ajcrew',
     workspaces: { default: { dir: '~/.kiro/crew/workspace' } },
     default_workspace: 'default',
-    agent: { default_agent: 'kirocrew', provider: 'kiroacp', model: 'auto' },
+    agent: { default_agent: 'ajcrew', provider: 'kiroacp', model: 'auto' },
     session: { timeout_secs: 900 },
     memory: { embedding_provider: 'local' },
     auto_update: true,

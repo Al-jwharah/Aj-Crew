@@ -31,8 +31,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.chat_folders import api_chat_slot_mutes_opened
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.chat_folders import api_chat_slot_mutes_opened
+from aj_crew.dashboard.state import _ChatSlot
 
 
 def _make_app(
@@ -75,11 +75,11 @@ def _owned_slot(key: str, app: str = "") -> _ChatSlot:
 # tests isolate the dashboard-user provenance gate on top of them.
 def _pass_all_fences():
     return (
-        patch("kiro_crew.dashboard.chat_folders.refuse_unattributable_caller", return_value=None),
-        patch("kiro_crew.dashboard.chat_folders.member_slot_write_refused", return_value=None),
-        patch("kiro_crew.dashboard.chat_folders.deny_app_slot_access", return_value=None),
-        patch("kiro_crew.dashboard.chat_folders.app_owns_transcript", return_value=True),
-        patch("kiro_crew.dashboard.chat_folders._effective_request_app", return_value=""),
+        patch("aj_crew.dashboard.chat_folders.refuse_unattributable_caller", return_value=None),
+        patch("aj_crew.dashboard.chat_folders.member_slot_write_refused", return_value=None),
+        patch("aj_crew.dashboard.chat_folders.deny_app_slot_access", return_value=None),
+        patch("aj_crew.dashboard.chat_folders.app_owns_transcript", return_value=True),
+        patch("aj_crew.dashboard.chat_folders._effective_request_app", return_value=""),
     )
 
 
@@ -96,7 +96,7 @@ class TestMuteIsDashboardUserOnly:
             f4,
             f5,
             patch(
-                "kiro_crew.dashboard.chat_folders.save_slot_off_loop", AsyncMock(return_value=True)
+                "aj_crew.dashboard.chat_folders.save_slot_off_loop", AsyncMock(return_value=True)
             ) as save,
         ):
             app = _make_app(state, declared_app="auto-improvement")
@@ -122,7 +122,7 @@ class TestMuteIsDashboardUserOnly:
             f4,
             f5,
             patch(
-                "kiro_crew.dashboard.chat_folders.save_slot_off_loop", AsyncMock(return_value=True)
+                "aj_crew.dashboard.chat_folders.save_slot_off_loop", AsyncMock(return_value=True)
             ) as save,
         ):
             app = _make_app(state, internal_auth=True)
@@ -154,7 +154,7 @@ class TestMuteIsDashboardUserOnly:
             f3,
             f4,
             f5,
-            patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", _commit),
+            patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", _commit),
         ):
             app = _make_app(state)  # dashboard user: empty app, no internal_auth
             async with TestClient(TestServer(app)) as client:
@@ -200,7 +200,7 @@ class TestMutePersistBeforePublish:
             f3,
             f4,
             f5,
-            patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", _fake_save),
+            patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", _fake_save),
         ):
             app = _make_app(state)
             async with TestClient(TestServer(app)) as client:
@@ -240,7 +240,7 @@ class TestMutePersistBeforePublish:
             f3,
             f4,
             f5,
-            patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", _fake_save),
+            patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", _fake_save),
         ):
             app = _make_app(state)
             async with TestClient(TestServer(app)) as client:
@@ -268,7 +268,7 @@ class TestMutePersistBeforePublish:
             f3,
             f4,
             f5,
-            patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", _boom),
+            patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", _boom),
         ):
             app = _make_app(state)
             async with TestClient(TestServer(app)) as client:
@@ -296,7 +296,7 @@ class TestMutePersistBeforePublish:
             f4,
             f5,
             patch(
-                "kiro_crew.dashboard.chat_folders.save_slot_off_loop",
+                "aj_crew.dashboard.chat_folders.save_slot_off_loop",
                 AsyncMock(return_value=False),
             ),
         ):
@@ -334,7 +334,7 @@ class TestMutePersistBeforePublish:
             f3,
             f4,
             f5,
-            patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", _skip),
+            patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", _skip),
         ):
             app = _make_app(state)
             async with TestClient(TestServer(app)) as client:
@@ -356,7 +356,7 @@ class TestStagedValueReachesBothSavePaths:
     funnel the field through."""
 
     def test_full_line_form_honors_the_staged_override(self) -> None:
-        from kiro_crew.dashboard.slot_persistence import metadata_codec as mc
+        from aj_crew.dashboard.slot_persistence import metadata_codec as mc
 
         slot = _owned_slot("chat-1-100")  # live flag False
         # Live flag is False, but the staged override is True: the serialized
@@ -366,7 +366,7 @@ class TestStagedValueReachesBothSavePaths:
         assert line.get("mutes_opened") is True
 
     def test_empty_window_merge_form_honors_the_staged_override(self) -> None:
-        from kiro_crew.dashboard.slot_persistence import metadata_codec as mc
+        from aj_crew.dashboard.slot_persistence import metadata_codec as mc
 
         slot = _owned_slot("chat-1-100")  # live flag False
         folds = mc.SaveFolds(memory_mode="persistent", mutes_opened=True)
@@ -376,7 +376,7 @@ class TestStagedValueReachesBothSavePaths:
         assert merged.get("mutes_opened") is True
 
     def test_no_override_reads_the_live_flag(self) -> None:
-        from kiro_crew.dashboard.slot_persistence import metadata_codec as mc
+        from aj_crew.dashboard.slot_persistence import metadata_codec as mc
 
         slot = _owned_slot("chat-1-100")
         slot.mutes_opened = True

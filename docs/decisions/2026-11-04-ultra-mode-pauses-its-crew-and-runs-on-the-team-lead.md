@@ -13,7 +13,7 @@ queued messages wait, no new session opens) and leaves members that wait on the
 person as they are. **Resume all** continues exactly what the pause stopped. Each
 stopped member keeps its own **Continue**. The pause survives a reload.
 
-Ultra Mode runs on `kirocrew-team-lead` when `agent.crew_mode_agent` is unset. A set
+Ultra Mode runs on `ajcrew-team-lead` when `agent.crew_mode_agent` is unset. A set
 value is kept.
 
 The lead records the work-ledger goal first whenever the person gives a new goal or

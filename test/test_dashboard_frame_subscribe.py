@@ -1,9 +1,9 @@
-"""``window.kirocrew.subscribe``: the frame contract's third way a value reaches a page.
+"""``window.ajcrew.subscribe``: the frame contract's third way a value reaches a page.
 
 The two that already exist are a text binding and a frozen snapshot, and neither lets a
 page HEAR a change: a binding is filled by the host, and a snapshot is a value read once.
 A page that draws a tree, a chart or a scene has to redraw when one field moves, and the
-only signal it had was the generic :data:`~kiro_crew.dashboard_frame.PAGE_EVENT` -- which
+only signal it had was the generic :data:`~aj_crew.dashboard_frame.PAGE_EVENT` -- which
 says "something landed" and leaves the page to diff the whole read itself.
 
 THE BOOTSTRAP IS EXECUTED HERE, not pattern-matched. Every other test of this module
@@ -27,7 +27,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import dashboard_frame
+from aj_crew import dashboard_frame
 
 #: The DOM the bootstrap actually touches, and nothing else.
 #:
@@ -47,7 +47,7 @@ const nodes = [];
 globalThis.document = {
   readyState: 'complete',
   documentElement: { setAttribute() {}, lang: '' },
-  getElementById: (id) => (id === 'kirocrew-dashboard-data' ? { textContent: ISLAND } : null),
+  getElementById: (id) => (id === 'ajcrew-dashboard-data' ? { textContent: ISLAND } : null),
   querySelectorAll: () => nodes,
 };
 globalThis.window = globalThis;
@@ -127,7 +127,7 @@ class TestSubscribeOnFirstLoad:
         calls = _run(
             dashboard_frame._BOOTSTRAP_JS,
             _read(),
-            "window.kirocrew.subscribe('boards', (v) => __calls.push(v));",
+            "window.ajcrew.subscribe('boards', (v) => __calls.push(v));",
         )
         assert calls == [2]
 
@@ -142,19 +142,19 @@ class TestSubscribeOnFirstLoad:
         calls = _run(
             dashboard_frame._BOOTSTRAP_JS,
             _read(fields={"owner": "atlas"}, missing=["boards"]),
-            "window.kirocrew.subscribe('boards', (v) => __calls.push(v));",
+            "window.ajcrew.subscribe('boards', (v) => __calls.push(v));",
         )
         assert calls == []
 
     def test_subscribe_survives_the_refill_that_replaces_the_global(self) -> None:
         """The global is replaced wholesale on every push, so ``subscribe`` has to
-        travel with it -- a page holding ``window.kirocrew.subscribe`` from first load
+        travel with it -- a page holding ``window.ajcrew.subscribe`` from first load
         and calling it after a push must not meet ``undefined``."""
         calls = _run(
             dashboard_frame._BOOTSTRAP_JS,
             _read(),
             "__push({ fields: { boards: 9 }, agentic: [], seq: 2, stale: false, missing: [] });"
-            "__calls.push(typeof window.kirocrew.subscribe);",
+            "__calls.push(typeof window.ajcrew.subscribe);",
         )
         assert calls == ["function"]
 
@@ -167,7 +167,7 @@ class TestSubscribeOnEveryPush:
         calls = _run(
             dashboard_frame._BOOTSTRAP_JS,
             _read(),
-            "window.kirocrew.subscribe('boards', (v) => __calls.push(v));"
+            "window.ajcrew.subscribe('boards', (v) => __calls.push(v));"
             "__push({ fields: { boards: 3 }, agentic: [], seq: 2, stale: false, missing: [] });"
             "__push({ fields: { boards: 4 }, agentic: [], seq: 3, stale: false, missing: [] });",
         )
@@ -180,7 +180,7 @@ class TestSubscribeOnEveryPush:
         calls = _run(
             dashboard_frame._BOOTSTRAP_JS,
             _read(),
-            "window.kirocrew.subscribe('boards', (v) => __calls.push(v));"
+            "window.ajcrew.subscribe('boards', (v) => __calls.push(v));"
             "__push({ fields: { owner: 'nyx' }, agentic: [], seq: 2, stale: false, missing: [] });",
         )
         assert calls == [2]
@@ -193,8 +193,8 @@ class TestSubscribeOnEveryPush:
         calls = _run(
             dashboard_frame._BOOTSTRAP_JS,
             _read(),
-            "window.kirocrew.subscribe('boards', () => { throw new Error('x'); });"
-            "window.kirocrew.subscribe('boards', (v) => __calls.push(v));"
+            "window.ajcrew.subscribe('boards', () => { throw new Error('x'); });"
+            "window.ajcrew.subscribe('boards', (v) => __calls.push(v));"
             "__push({ fields: { boards: 7 }, agentic: [], seq: 2, stale: false, missing: [] });",
         )
         assert calls == [2, 7]
@@ -205,7 +205,7 @@ class TestSubscribeOnEveryPush:
         calls = _run(
             dashboard_frame._BOOTSTRAP_JS,
             _read(),
-            "const off = window.kirocrew.subscribe('boards', (v) => __calls.push(v));"
+            "const off = window.ajcrew.subscribe('boards', (v) => __calls.push(v));"
             "off();"
             "__push({ fields: { boards: 5 }, agentic: [], seq: 2, stale: false, missing: [] });",
         )
@@ -222,7 +222,7 @@ class TestSubscribeOnEveryPush:
         calls = _run(
             dashboard_frame._BOOTSTRAP_JS,
             _read(),
-            "window.kirocrew.subscribe('boards', (v) => __calls.push(v));"
+            "window.ajcrew.subscribe('boards', (v) => __calls.push(v));"
             "for (const fn of listeners.message || []) {"
             "  fn({ source: { other: true },"
             f"       data: {{ type: {json.dumps(dashboard_frame.DATA_MESSAGE_TYPE)},"
@@ -252,7 +252,7 @@ class TestTheBindingsStayTextOnly:
         calls = _run(
             dashboard_frame._BOOTSTRAP_JS,
             _read(fields={"boards": "<img src=x onerror=alert(1)>"}),
-            "window.kirocrew.subscribe('boards', (v) => __calls.push(v));",
+            "window.ajcrew.subscribe('boards', (v) => __calls.push(v));",
         )
         assert calls == ["<img src=x onerror=alert(1)>"]
 
@@ -273,7 +273,7 @@ def test_the_harness_can_see_a_subscriber_that_never_fires() -> None:
     calls = _run(
         broken,
         _read(),
-        "window.kirocrew.subscribe('boards', (v) => __calls.push(v));"
+        "window.ajcrew.subscribe('boards', (v) => __calls.push(v));"
         "__push({ fields: { boards: 3 }, agentic: [], seq: 2, stale: false, missing: [] });",
     )
     assert calls == [], "the harness reports callbacks a bootstrap that cannot deliver made"
@@ -303,7 +303,7 @@ def _posted(bootstrap: str, read: dict[str, Any], page_js: str) -> list[Any]:
 class TestAPatchCarriesOnlyWhatMoved:
     """A push carries only the changed fields, so the frame merges it into the rest.
 
-    Without the merge ``window.kirocrew.fields`` would hold that one field and every
+    Without the merge ``window.ajcrew.fields`` would hold that one field and every
     other cell would read missing.
     """
 
@@ -313,7 +313,7 @@ class TestAPatchCarriesOnlyWhatMoved:
             _read(fields={"boards": 2, "owner": "atlas"}),
             "__push({ patch: true, version: 1, fields: { boards: 5 }, agentic: [],"
             "         seq: 2, stale: false, missing: [] });"
-            "__calls.push(window.kirocrew.fields.owner, window.kirocrew.fields.boards);",
+            "__calls.push(window.ajcrew.fields.owner, window.ajcrew.fields.boards);",
         )
         assert calls == ["atlas", 5]
 
@@ -323,8 +323,8 @@ class TestAPatchCarriesOnlyWhatMoved:
         calls = _run(
             dashboard_frame._BOOTSTRAP_JS,
             _read(fields={"boards": 2, "owner": "atlas"}),
-            "window.kirocrew.subscribe('owner', (v) => __calls.push(['owner', v]));"
-            "window.kirocrew.subscribe('boards', (v) => __calls.push(['boards', v]));"
+            "window.ajcrew.subscribe('owner', (v) => __calls.push(['owner', v]));"
+            "window.ajcrew.subscribe('boards', (v) => __calls.push(['boards', v]));"
             "__push({ patch: true, version: 1, fields: { boards: 5 }, agentic: [],"
             "         seq: 2, stale: false, missing: [] });",
         )
@@ -339,8 +339,8 @@ class TestAPatchCarriesOnlyWhatMoved:
             _read(fields={"boards": 2, "owner": "atlas"}),
             "__push({ version: 7, fields: { boards: 5 }, agentic: [], seq: 2,"
             "         stale: false, missing: [] });"
-            "__calls.push(window.kirocrew.fields.owner === undefined,"
-            "             window.kirocrew.fields.boards);",
+            "__calls.push(window.ajcrew.fields.owner === undefined,"
+            "             window.ajcrew.fields.boards);",
         )
         assert calls == [True, 5]
 
@@ -372,7 +372,7 @@ class TestAVersionGapRefetches:
             "         seq: 2, stale: false, missing: [] });"
             "__push({ patch: true, version: 4, fields: { boards: 9 }, agentic: [],"
             "         seq: 5, stale: false, missing: [] });"
-            "__calls.push(window.kirocrew.fields.boards);",
+            "__calls.push(window.ajcrew.fields.boards);",
         )
         assert calls == [3]
 
@@ -443,7 +443,7 @@ class TestAnOlderFullReadCannotReplaceANewerOne:
             "         agentic: [], seq: 7, stale: false, missing: [] });"
             "__push({ version: 5, generation: 'gen-a', fields: { boards: 5 },"
             "         agentic: [], seq: 5, stale: false, missing: [] });"
-            "__calls.push(window.kirocrew.fields.boards);",
+            "__calls.push(window.ajcrew.fields.boards);",
         )
         assert calls == [7], "the older full read replaced the newer one's values"
 
@@ -453,7 +453,7 @@ class TestAnOlderFullReadCannotReplaceANewerOne:
         calls = _run(
             dashboard_frame._BOOTSTRAP_JS,
             _read(fields={"boards": 2}, generation="gen-a"),
-            "window.kirocrew.subscribe('boards', function (v) { __calls.push(v); });"
+            "window.ajcrew.subscribe('boards', function (v) { __calls.push(v); });"
             "__push({ version: 7, generation: 'gen-a', fields: { boards: 7 },"
             "         agentic: [], seq: 7, stale: false, missing: [] });"
             "__push({ version: 5, generation: 'gen-a', fields: { boards: 5 },"
@@ -472,7 +472,7 @@ class TestAnOlderFullReadCannotReplaceANewerOne:
             "         agentic: [], seq: 7, stale: false, missing: [] });"
             "__push({ version: 1, generation: 'gen-b', fields: { boards: 1 },"
             "         agentic: [], seq: 1, stale: false, missing: [] });"
-            "__calls.push(window.kirocrew.fields.boards);",
+            "__calls.push(window.ajcrew.fields.boards);",
         )
         assert calls == [1], "a re-armed page's own read was refused as stale"
 
@@ -519,7 +519,7 @@ class TestAnOlderFullReadCannotReplaceANewerOne:
             "__push({ patch: true, version: 2, generation: 'gen-b',"
             "         fields: { boards: 9 }, agentic: [], seq: 2, stale: false,"
             "         missing: [] });"
-            "__calls.push(window.kirocrew.fields.boards);",
+            "__calls.push(window.ajcrew.fields.boards);",
         )
         assert calls == [2]
 
@@ -556,7 +556,7 @@ def test_the_refetch_type_matches_the_tab_that_answers_it() -> None:
     would ask forever and the tab would never hear it, leaving a dashboard applying
     no patches and showing no error -- indistinguishable from a quiet crew.
     """
-    # `parents[2]` is the repository root: this module sits at `src/kiro_crew/`, so
+    # `parents[2]` is the repository root: this module sits at `src/aj_crew/`, so
     # `parents[1]` is `src` and the path below it never exists -- which made this pin
     # skip itself every run while reading as green.
     tab = (
@@ -601,7 +601,7 @@ class TestSubscribeCountsAsAPageThatRefills:
         return calls[-1]
 
     def test_a_page_that_subscribes_reports_that_it_refills(self) -> None:
-        assert self._flag_after("window.kirocrew.subscribe('boards', () => {});") is True
+        assert self._flag_after("window.ajcrew.subscribe('boards', () => {});") is True
 
     def test_a_page_that_never_listens_still_reports_that_it_does_not(self) -> None:
         """The flag must stay false for a page that draws once, or the host would post
@@ -611,7 +611,7 @@ class TestSubscribeCountsAsAPageThatRefills:
     def test_a_call_that_registers_nothing_does_not_count(self) -> None:
         """``subscribe`` returns early for a bad name or callback, so no subscriber
         exists and nothing on the page would redraw."""
-        assert self._flag_after("window.kirocrew.subscribe('boards', 'not a function');") is False
+        assert self._flag_after("window.ajcrew.subscribe('boards', 'not a function');") is False
 
 
 def test_a_patch_naming_a_field_missing_dims_the_cell_it_carried_forward() -> None:
@@ -628,7 +628,7 @@ def test_a_patch_naming_a_field_missing_dims_the_cell_it_carried_forward() -> No
         "__calls.push([cell.textContent, cell.attrs['data-dashboard-missing'] || null]);"
         "__push({ patch: true, version: 2, fields: {}, missing: ['boards'] });"
         "__calls.push([cell.textContent, cell.attrs['data-dashboard-missing'] || null,"
-        "  window.kirocrew.fields.boards]);",
+        "  window.ajcrew.fields.boards]);",
     )
     assert calls == [["5", None], ["5", "true", 5]], calls
 
@@ -651,7 +651,7 @@ def test_a_field_named_constructor_is_not_dimmed_while_it_resolves() -> None:
 
 #: A page script recording what each callback was told: value, and the meta flags.
 _RECORD = (
-    "window.kirocrew.subscribe('boards', (v, n, m) =>"
+    "window.ajcrew.subscribe('boards', (v, n, m) =>"
     "  __calls.push([v, m.missing, Object.keys(m).length]));"
 )
 
@@ -678,7 +678,7 @@ class TestASubscriberIsToldAFieldStoppedResolving:
         calls = _run(
             dashboard_frame._BOOTSTRAP_JS,
             _read(),
-            "window.kirocrew.subscribe('boards', (v, n) => __calls.push([v, n]));"
+            "window.ajcrew.subscribe('boards', (v, n) => __calls.push([v, n]));"
             "__push({ fields: {}, agentic: [], seq: 2, missing: ['boards'], version: 1 });",
         )
         assert calls == [[2, "boards"], [2, "boards"]]
@@ -785,7 +785,7 @@ class TestAMissingCellSaysSo:
         assert calls == [["old", "true", dashboard_frame._MISSING_LABELS["zh-CN"]]]
 
     def test_every_shipped_catalog_has_a_label(self) -> None:
-        from kiro_crew.context_assembly.output_contract import _UI_LANGUAGE_CATALOGS
+        from aj_crew.context_assembly.output_contract import _UI_LANGUAGE_CATALOGS
 
         assert set(dashboard_frame._MISSING_LABELS) == set(_UI_LANGUAGE_CATALOGS)
         assert all(label.strip() for label in dashboard_frame._MISSING_LABELS.values())
@@ -799,7 +799,7 @@ class TestAMissingCellSaysSo:
 #: A page script counting the page-wide event.
 _COUNT_EVENTS = (
     "globalThis.__events = 0;"
-    "addEventListener('kirocrew-dashboard', () => { globalThis.__events += 1; });"
+    "addEventListener('ajcrew-dashboard', () => { globalThis.__events += 1; });"
 )
 _EVENTS = "__calls.push(globalThis.__events);"
 
@@ -857,8 +857,8 @@ class TestAnUnchangedReadRedrawsNothing:
         calls = _run(
             dashboard_frame._BOOTSTRAP_JS,
             _read(),
-            _COUNT_EVENTS + "window.kirocrew.subscribe('owner', (v) => __calls.push(['owner', v]));"
-            "window.kirocrew.subscribe('boards', (v) => __calls.push(['boards', v]));"
+            _COUNT_EVENTS + "window.ajcrew.subscribe('owner', (v) => __calls.push(['owner', v]));"
+            "window.ajcrew.subscribe('boards', (v) => __calls.push(['boards', v]));"
             + _push(fields={"boards": 3, "owner": "atlas"}, version=1)
             + _EVENTS,
         )
@@ -886,7 +886,7 @@ class TestAnUnchangedReadRedrawsNothing:
                 fields={"boards": 3, "owner": "atlas"},
                 last_user_at="2026-11-01T00:00:00Z",
             )
-            + "__calls.push(window.kirocrew.last_user_at);"
+            + "__calls.push(window.ajcrew.last_user_at);"
             + _EVENTS,
         )
         assert calls == ["2026-11-01T00:00:00Z", 1]
@@ -903,7 +903,7 @@ class TestAnUnchangedReadRedrawsNothing:
             _read(subject="session", last_user_at=stamp),
             _COUNT_EVENTS
             + f"__push({json.dumps(patch)});"
-            + "__calls.push(window.kirocrew.subject, window.kirocrew.last_user_at);"
+            + "__calls.push(window.ajcrew.subject, window.ajcrew.last_user_at);"
             + _push(
                 version=2,
                 fields={"boards": 3, "owner": "atlas"},
@@ -939,7 +939,7 @@ class TestAnUnchangedReadRedrawsNothing:
             dashboard_frame._BOOTSTRAP_JS,
             _read(),
             _cell_js("boards")
-            + "addEventListener('kirocrew-dashboard', () => __calls.push(cell.textContent));"
+            + "addEventListener('ajcrew-dashboard', () => __calls.push(cell.textContent));"
             "const t0 = Date.now(); let now = t0; Date.now = () => now;"
             "cell.textContent = 'page text';"
             "now = t0 + 61000;" + _push(version=1),

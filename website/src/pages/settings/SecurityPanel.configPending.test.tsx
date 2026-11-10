@@ -31,7 +31,7 @@ vi.mock('../../api/client', async () => ({
     deniedCommands: vi.fn(),
     governancePolicy: vi.fn(),
     securityPosture: vi.fn(),
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
     tailnetStatus: vi.fn(),
     configPending: vi.fn(),
     applyConfigPending: vi.fn(),
@@ -92,7 +92,7 @@ describe('SecurityPanel - settings files changed outside the dashboard', () => {
     mocked(api.deniedCommands).mockResolvedValue({ builtins: [], user_added: [], disable_all: false, effective_count: 0, governance_locked: false })
     mocked(api.securityPosture).mockResolvedValue({ controls: [], counts: {} })
     mocked(api.governancePolicy).mockResolvedValue({ version: null, has_policy: false, profile: null, unavailable: false, scopes: [] })
-    mocked(api.kirocrewConfig).mockResolvedValue({})
+    mocked(api.ajcrewConfig).mockResolvedValue({})
     mocked(api.tailnetStatus).mockResolvedValue({ enabled: false, governance_pinned: false, host: '', origin: '', resolved_at: 0, state: 'off' })
   })
 

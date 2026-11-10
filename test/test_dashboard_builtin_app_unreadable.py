@@ -14,8 +14,8 @@ from types import SimpleNamespace
 import pytest
 from aiohttp import web
 
-from kiro_crew.apps.builtins import BUILTIN_NAMES
-from kiro_crew.dashboard.routes import system
+from aj_crew.apps.builtins import BUILTIN_NAMES
+from aj_crew.dashboard.routes import system
 
 
 def _app() -> web.Application:
@@ -36,7 +36,7 @@ def test_an_unreadable_builtin_is_skipped_and_the_rest_still_register(
     real_import = importlib.import_module
 
     def _import(name: str, *args, **kwargs):
-        if name == f"kiro_crew.apps.builtins.{failing}":
+        if name == f"aj_crew.apps.builtins.{failing}":
             raise PermissionError(13, "Permission denied", f"{failing}/service.py")
         return real_import(name, *args, **kwargs)
 
@@ -68,7 +68,7 @@ def test_an_unreadable_lazily_loaded_routes_file_is_skipped(
     real_import = importlib.import_module
 
     def _import(name: str, *args, **kwargs):
-        if name == f"kiro_crew.apps.builtins.{failing}":
+        if name == f"aj_crew.apps.builtins.{failing}":
             return _LazyRoutesDenied()
         return real_import(name, *args, **kwargs)
 
@@ -87,7 +87,7 @@ def test_a_builtin_with_a_missing_dependency_still_fails_loudly(
     real_import = importlib.import_module
 
     def _import(name: str, *args, **kwargs):
-        if name == f"kiro_crew.apps.builtins.{failing}":
+        if name == f"aj_crew.apps.builtins.{failing}":
             raise ModuleNotFoundError("No module named 'missing_dep'", name="missing_dep")
         return real_import(name, *args, **kwargs)
 
@@ -108,7 +108,7 @@ def test_an_oserror_while_registering_routes_still_aborts(
         raise PermissionError(13, "Permission denied", "state.json")
 
     def _import(name: str, *args, **kwargs):
-        if name == f"kiro_crew.apps.builtins.{failing}":
+        if name == f"aj_crew.apps.builtins.{failing}":
             return SimpleNamespace(register_routes=_broken_register)
         return real_import(name, *args, **kwargs)
 

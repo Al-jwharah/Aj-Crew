@@ -32,10 +32,10 @@ from botocore.exceptions import (  # noqa: E402
 from botocore.response import StreamingBody  # noqa: E402
 from botocore.stub import Stubber  # noqa: E402
 
-from kiro_crew.config.sections import DecisionProviderConfig, DecisionsConfig  # noqa: E402
-from kiro_crew.decisions import capability, gate, impl_sagemaker  # noqa: E402
-from kiro_crew.decisions.impl_jev import JevOracle  # noqa: E402
-from kiro_crew.decisions.impl_sagemaker import (  # noqa: E402
+from aj_crew.config.sections import DecisionProviderConfig, DecisionsConfig  # noqa: E402
+from aj_crew.decisions import capability, gate, impl_sagemaker  # noqa: E402
+from aj_crew.decisions.impl_jev import JevOracle  # noqa: E402
+from aj_crew.decisions.impl_sagemaker import (  # noqa: E402
     IMAGES_ATTRIBUTE,
     MAX_ATTEMPTS,
     BoxAnswer,
@@ -59,8 +59,8 @@ from kiro_crew.decisions.impl_sagemaker import (  # noqa: E402
     parse_box,
     parse_endpoint,
 )
-from kiro_crew.decisions.impl_systemone import ProviderProtocolError  # noqa: E402
-from kiro_crew.decisions.types import (  # noqa: E402
+from aj_crew.decisions.impl_systemone import ProviderProtocolError  # noqa: E402
+from aj_crew.decisions.types import (  # noqa: E402
     IMAGE_MAX_BYTES,
     Answer,
     Box,
@@ -483,7 +483,7 @@ def test_no_image_bytes_or_state_in_logs_or_errors(stubbed, caplog):
 
 
 def test_the_sagemaker_provider_declares_images_and_box():
-    from kiro_crew.decisions import provider as provider_mod
+    from aj_crew.decisions import provider as provider_mod
 
     spec = provider_mod.select(gate.LANE_JEV, endpoint=ENDPOINT)
     assert spec.id == provider_mod.PROVIDER_SAGEMAKER
@@ -503,7 +503,7 @@ def test_the_sagemaker_provider_declares_images_and_box():
 def sagemaker_gate(tmp_path, monkeypatch):
     """The real gate over a consented ``sagemaker://`` keystone; sends are recorded."""
     keystone = tmp_path / "decisions_consent.json"
-    monkeypatch.setattr("kiro_crew.config.loader.decisions_consent_path", lambda: keystone)
+    monkeypatch.setattr("aj_crew.config.loader.decisions_consent_path", lambda: keystone)
 
     def write(**fields):
         keystone.write_text(json.dumps({"enabled": True, "endpoint": ENDPOINT, **fields}))

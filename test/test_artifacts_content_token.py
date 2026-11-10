@@ -17,7 +17,7 @@ from artifacts_helpers import (  # noqa: F401 -- the fixture is requested by nam
     store_fixture,
 )
 
-from kiro_crew.artifacts import (
+from aj_crew.artifacts import (
     Artifact,
     ArtifactConflictError,
     ArtifactStore,
@@ -30,7 +30,7 @@ from kiro_crew.artifacts import (
 def sequential_tokens(monkeypatch: pytest.MonkeyPatch) -> None:
     """Hand out distinct content tokens in order, so no comparison rests on chance."""
     counter = itertools.count(1)
-    monkeypatch.setattr("kiro_crew.artifacts._new_content_token", lambda: f"{next(counter):064x}")
+    monkeypatch.setattr("aj_crew.artifacts._new_content_token", lambda: f"{next(counter):064x}")
 
 
 # ── optimistic-concurrency content token ────────────────────────────────────

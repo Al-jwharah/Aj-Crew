@@ -2,7 +2,7 @@
 
 Focus: request validation, run-lifecycle state transitions, error responses and
 status codes for every endpoint in
-``kiro_crew.dashboard.handlers.taskrunner`` — plus the redaction applied to
+``aj_crew.dashboard.handlers.taskrunner`` — plus the redaction applied to
 LLM-authored text on the status / plan / export surfaces.
 
 Everything is driven through ``make_mocked_request`` against a fake
@@ -38,7 +38,7 @@ from handlers_taskrunner_coverage_helpers import (  # noqa: F401 -- the autouse 
     _stub_sel,
 )
 
-from kiro_crew.dashboard.handlers.taskrunner import (
+from aj_crew.dashboard.handlers.taskrunner import (
     _validate_spec_path,
     api_taskrunner_cancel,
     api_taskrunner_delete,
@@ -57,9 +57,9 @@ from kiro_crew.dashboard.handlers.taskrunner import (
     api_taskrunner_update_plan,
     api_taskrunner_update_task,
 )
-from kiro_crew.hooks import FileTooLargeError
-from kiro_crew.taskrunner import Step, StepStatus, TaskRun, TaskRunner
-from kiro_crew.testing.wait import await_until
+from aj_crew.hooks import FileTooLargeError
+from aj_crew.taskrunner import Step, StepStatus, TaskRun, TaskRunner
+from aj_crew.testing.wait import await_until
 
 # ── GET /api/taskrunner ──
 
@@ -155,7 +155,7 @@ class TestStart:
         # Disabled in Library means no new runs: the run would have no page.
         runner = _runner(tmp_path)
         with patch(
-            "kiro_crew.apps.manager._read_installed",
+            "aj_crew.apps.manager._read_installed",
             return_value=SimpleNamespace(enabled=False),
         ) as read:
             resp = await api_taskrunner_start(
@@ -173,7 +173,7 @@ class TestStart:
         self, tmp_path: Path, meta: Any
     ) -> None:
         runner = _runner(tmp_path)
-        with patch("kiro_crew.apps.manager._read_installed", return_value=meta):
+        with patch("aj_crew.apps.manager._read_installed", return_value=meta):
             resp = await api_taskrunner_start(
                 _request(_state(runner), json_body={"spec": "__inline__:# t"})
             )
@@ -196,7 +196,7 @@ class TestStart:
         runner = _runner(tmp_path)
         runner.plan = AsyncMock(return_value=_planned_run())  # so an unrefused plan answers 200
         with patch(
-            "kiro_crew.apps.manager._read_installed",
+            "aj_crew.apps.manager._read_installed",
             return_value=SimpleNamespace(enabled=False),
         ):
             resp = await handler(
@@ -215,7 +215,7 @@ class TestStart:
         runner = _runner(tmp_path)
         runner.update_plan = AsyncMock(return_value=_planned_run())  # an unrefused plan answers 200
         with patch(
-            "kiro_crew.apps.manager._read_installed",
+            "aj_crew.apps.manager._read_installed",
             return_value=SimpleNamespace(enabled=False),
         ):
             resp = await api_taskrunner_from_chat(
@@ -268,7 +268,7 @@ class TestStart:
         spec = tmp_path / "creds.md"
         spec.write_text("# t", encoding="utf-8")
         runner = _runner(tmp_path)
-        with patch("kiro_crew.dashboard.handlers.taskrunner.is_sensitive_path", return_value=True):
+        with patch("aj_crew.dashboard.handlers.taskrunner.is_sensitive_path", return_value=True):
             resp = await api_taskrunner_start(
                 _request(_state(runner), json_body={"spec": str(spec)})
             )
@@ -286,7 +286,7 @@ class TestStart:
         # followed target that could open an SMB connection.
         with (
             patch(
-                "kiro_crew.dashboard.handlers.taskrunner.validate_file_path", return_value=None
+                "aj_crew.dashboard.handlers.taskrunner.validate_file_path", return_value=None
             ) as screen,
             patch("pathlib.Path.is_file") as is_file,
         ):
@@ -707,7 +707,7 @@ class TestExportYaml:
             tasks=[Step(index=1, title="a", description="b")],
         )
         with patch(
-            "kiro_crew.dashboard.handlers.taskrunner.plan_to_yaml",
+            "aj_crew.dashboard.handlers.taskrunner.plan_to_yaml",
             side_effect=RuntimeError("boom SECRET"),
         ):
             resp = await api_taskrunner_export_yaml(
@@ -760,7 +760,7 @@ class TestToChat:
         async def _noop(*_a: Any, **_kw: Any) -> None:
             return None
 
-        with patch("kiro_crew.dashboard.chat._run_chat", new=_noop):
+        with patch("aj_crew.dashboard.chat._run_chat", new=_noop):
             yield
 
     @staticmethod
@@ -935,7 +935,7 @@ class TestPlan:
         # The file-source branch shares the same validate_file_path screen.
         with (
             patch(
-                "kiro_crew.dashboard.handlers.taskrunner.validate_file_path", return_value=None
+                "aj_crew.dashboard.handlers.taskrunner.validate_file_path", return_value=None
             ) as screen,
             patch("pathlib.Path.is_file") as is_file,
         ):
@@ -961,7 +961,7 @@ class TestValidateSpecPath:
         # followed target and returns the invalid_spec_path code.
         with (
             patch(
-                "kiro_crew.dashboard.handlers.taskrunner.validate_file_path", return_value=None
+                "aj_crew.dashboard.handlers.taskrunner.validate_file_path", return_value=None
             ) as screen,
             patch("pathlib.Path.is_file") as is_file,
         ):
@@ -983,10 +983,10 @@ class TestValidateSpecPath:
         spec.write_text("# t", encoding="utf-8")
         with (
             patch(
-                "kiro_crew.dashboard.handlers.taskrunner.validate_file_path",
+                "aj_crew.dashboard.handlers.taskrunner.validate_file_path",
                 return_value=str(spec),
             ),
-            patch("kiro_crew.dashboard.handlers.taskrunner.is_sensitive_path", return_value=True),
+            patch("aj_crew.dashboard.handlers.taskrunner.is_sensitive_path", return_value=True),
         ):
             resolved, code = _validate_spec_path(str(spec))
         assert (resolved, code) == (None, "access_denied")
@@ -996,9 +996,9 @@ class TestValidateSpecPath:
         # link-free lexical check must still map it to access_denied, not the
         # generic invalid_spec_path, so the 403 contract survives.
         with (
-            patch("kiro_crew.dashboard.handlers.taskrunner.validate_file_path", return_value=None),
+            patch("aj_crew.dashboard.handlers.taskrunner.validate_file_path", return_value=None),
             patch(
-                "kiro_crew.dashboard.handlers.taskrunner.is_sensitive_resolved_path",
+                "aj_crew.dashboard.handlers.taskrunner.is_sensitive_resolved_path",
                 return_value=True,
             ) as sens,
             patch("pathlib.Path.is_file") as is_file,

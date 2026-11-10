@@ -28,7 +28,7 @@ _LATIN1_GLOBAL = json.dumps(
 def _owner_caller(_floor_monkeypatch):
     """Run as the dashboard owner: the owner boundary has its own coverage."""
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
@@ -48,11 +48,11 @@ def _unreadable_global(kind: str, tmp_path: Path):
 @pytest.fixture(params=["latin-1", "permission-denied"])
 def env(request, tmp_path: Path):
     """An agent spec with ``builder-mcp`` switched off, beside an unreadable global file."""
-    agent_cfg = tmp_path / "kirocrew.json"
+    agent_cfg = tmp_path / "ajcrew.json"
     agent_cfg.write_text(
         json.dumps(
             {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "mcpServers": {"builder-mcp": {"command": "builder-mcp", "disabled": True}},
                 "tools": [],
                 "allowedTools": [],
@@ -62,13 +62,13 @@ def env(request, tmp_path: Path):
     )
     with (
         patch(
-            "kiro_crew.dashboard.handlers.mcp._GLOBAL_MCP_JSON",
+            "aj_crew.dashboard.handlers.mcp._GLOBAL_MCP_JSON",
             _unreadable_global(request.param, tmp_path),
         ),
         patch(
-            "kiro_crew.dashboard.handlers.agents._installed_agent_config", return_value=agent_cfg
+            "aj_crew.dashboard.handlers.agents._installed_agent_config", return_value=agent_cfg
         ),
-        patch("kiro_crew.dashboard.handlers.mcp.may_skip_gate_now", lambda ref: True),
+        patch("aj_crew.dashboard.handlers.mcp.may_skip_gate_now", lambda ref: True),
     ):
         yield agent_cfg
 
@@ -86,7 +86,7 @@ def _sync_must_not_raise(fn, *args, **kwargs) -> None:
 
 
 def test_single_sync_skips_the_copy(env):
-    from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
+    from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
 
     before = _load(env)
     # slack-mcp needs the global spec, so the copy is skipped.
@@ -95,7 +95,7 @@ def test_single_sync_skips_the_copy(env):
 
 
 def test_batch_sync_still_syncs_the_servers_it_has(env):
-    from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch
+    from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch
 
     _sync_must_not_raise(_sync_mcp_to_agent_batch, ["builder-mcp", "slack-mcp"], enabled=True)
     cfg = _load(env)
@@ -111,8 +111,8 @@ def test_batch_sync_still_syncs_the_servers_it_has(env):
 async def test_capability_install_answers_ok(env):
     """The handler that reaches the copy: the package is installed before the sync,
     so a raise there answered 500 for an install that had already happened."""
-    from kiro_crew.dashboard.handlers.agents import api_capability_mcp_install
-    from kiro_crew.platform.interfaces import CapabilityResult
+    from aj_crew.dashboard.handlers.agents import api_capability_mcp_install
+    from aj_crew.platform.interfaces import CapabilityResult
 
     mgr = MagicMock()
     mgr.available.return_value = True
@@ -120,7 +120,7 @@ async def test_capability_install_answers_ok(env):
     req = MagicMock()
     req.json = AsyncMock(return_value={"server_id": "slack-mcp"})
     req.app = {"state": MagicMock()}
-    with patch("kiro_crew.dashboard.handlers.agents._capability_manager", return_value=mgr):
+    with patch("aj_crew.dashboard.handlers.agents._capability_manager", return_value=mgr):
         resp = await api_capability_mcp_install(req)
 
     assert resp.status == 200, resp.text

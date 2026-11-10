@@ -16,13 +16,13 @@ from unittest.mock import MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.handlers import session_control as handlers_sc
-from kiro_crew.mcp_dashboard import TABLE
-from kiro_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
-from kiro_crew.validation import SESSION_PALETTE_SIZE
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.handlers import session_control as handlers_sc
+from aj_crew.mcp_dashboard import TABLE
+from aj_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew.validation import SESSION_PALETTE_SIZE
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -287,7 +287,7 @@ def test_color_route_colors_the_target(tmp_path):
 def test_the_route_is_registered_strict_internal():
     """An unlisted session-control path falls through to cookie auth, and the
     MCP caller's secret is then ignored in production."""
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     assert "/api/session-control/set-color" in server._STRICT_INTERNAL_API_PATHS
 
@@ -385,8 +385,8 @@ def test_both_color_writers_store_through_the_one_slot_color_write(
     Mutation guard: inlining the field writes back into either caller leaves
     the recorder empty for that writer.
     """
-    from kiro_crew.dashboard import chat_handlers, slot_color
-    from kiro_crew.dashboard.session_control_parts import session_titles
+    from aj_crew.dashboard import chat_handlers, slot_color
+    from aj_crew.dashboard.session_control_parts import session_titles
 
     state = _make_state(tmp_path)
     caller, child = _owner_and_child(state)

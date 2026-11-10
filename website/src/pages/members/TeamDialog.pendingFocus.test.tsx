@@ -32,7 +32,7 @@ import TeamDialog from './TeamDialog'
 
 const row = (name: string): MemberRosterRow => ({
   name, slug: name.toLowerCase(), bound: true, slot_key: `member-${name}`, running: false,
-  kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', model: '',
+  kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', model: '',
 } as MemberRosterRow)
 
 const MEMBERS = [row('oncall'), row('docs')]

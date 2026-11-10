@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard import session_memory as sm
+from aj_crew.dashboard import session_memory as sm
 
 
 def _shard(tmp: Path, slot: str, credits: float) -> None:
@@ -27,7 +27,7 @@ def _shard(tmp: Path, slot: str, credits: float) -> None:
 
 def test_spend_key_for_slot_is_the_single_owner_of_the_prefix_rule() -> None:
     """Bare dashboard slot keys gain the prefix; every other shape passes through."""
-    from kiro_crew.dashboard.handlers.usage import spend_key_for_slot
+    from aj_crew.dashboard.handlers.usage import spend_key_for_slot
 
     assert spend_key_for_slot("chat-69-1785905004") == "dashboard:chat-69-1785905004"
     # Already-qualified and non-dashboard keys must not be double-prefixed.
@@ -131,7 +131,7 @@ def test_end_to_end_linked_slot_credits_reach_the_payload(
     """The whole chain: shard keyed by slot -> alias -> credits on the session row."""
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard.handlers import usage
+    from aj_crew.dashboard.handlers import usage
 
     tmp = Path(str(tmp_path))
     shards = tmp / "shards"

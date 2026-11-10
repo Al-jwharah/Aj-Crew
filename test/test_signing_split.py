@@ -204,7 +204,7 @@ def _failed_run_shape(splitter, root: Path) -> dict:
     length class as the real ones; the shell names are the real ones."""
     gen = _load(GENERATOR)
     electron = "Contents/Frameworks/Electron Framework.framework"
-    helper = "Contents/Frameworks/KiroCrew Nightly Helper"
+    helper = "Contents/Frameworks/AjCrew Nightly Helper"
     shell_files = [
         f"{electron}/Versions/A/Helpers/app_shim_loader",
         f"{electron}/Versions/A/Helpers/chrome_crashpad_handler",
@@ -212,7 +212,7 @@ def _failed_run_shape(splitter, root: Path) -> dict:
     ]
     shell_dirs = [electron, f"{helper} (GPU).app", f"{helper} (Plugin).app"]
     shell_dirs += [f"{helper} (Renderer).app", f"{helper}.app"]
-    python = "Contents/Resources/backend-dist/kirocrew-backend-{}/lib/python3.12/site-packages"
+    python = "Contents/Resources/backend-dist/ajcrew-backend-{}/lib/python3.12/site-packages"
     node = "Contents/Resources/backend-dist/kas/0.66.33/bundle/node_modules/native-addon"
     backend = []
     for base, count in ((python.format("arm64"), 169), (python.format("x64"), 149), (node, 11)):

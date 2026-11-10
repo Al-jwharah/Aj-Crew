@@ -1,25 +1,25 @@
-# KiroCrew — public build targets (pip + npm/vite + pytest).
+# AjCrew — public build targets (pip + npm/vite + pytest).
 # Common flow: `make` runs build (frontend + backend) then tests.
 #
 # Standalone distribution targets:
 #   make wheel     — self-contained pip wheel (dashboard bundled)
 #   make backend-bin — standalone backend tree (bundled interpreter, no system Python)
 #   make desktop   — double-clickable desktop app (universal DMG on macOS / AppImage on Linux)
-# All three take EDITION=oss|lts (else $KIROCREW_BUILD_EDITION, else oss).
+# All three take EDITION=oss|lts (else $AJCREW_BUILD_EDITION, else oss).
 .PHONY: all build frontend backend test clean wheel backend-bin desktop check-edition
 
 PY ?= python3
-# Edition stamped into the built package (src/kiro_crew/edition.py). The
-# packaging targets pass it to setup.py's build_py as KIROCREW_BUILD_EDITION;
+# Edition stamped into the built package (src/aj_crew/edition.py). The
+# packaging targets pass it to setup.py's build_py as AJCREW_BUILD_EDITION;
 # the source tree always stays oss. Keep EDITIONS equal to edition.EDITIONS.
-# EDITION comes from `EDITION=`, else from KIROCREW_BUILD_EDITION, else oss, so
-# `KIROCREW_BUILD_EDITION=lts make wheel` cannot quietly build oss.
+# EDITION comes from `EDITION=`, else from AJCREW_BUILD_EDITION, else oss, so
+# `AJCREW_BUILD_EDITION=lts make wheel` cannot quietly build oss.
 # check-edition refuses the two when both are set and differ.
 # `override` on each edition variable: under `make -e` (or `e` in MAKEFLAGS)
 # an environment variable of the same name beats a plain assignment, which
 # would let an ambient EDITION, EDITIONS or helper pick or widen the edition.
 override EDITIONS := oss lts
-override _EDITION_ENV := $(strip $(KIROCREW_BUILD_EDITION))
+override _EDITION_ENV := $(strip $(AJCREW_BUILD_EDITION))
 # Only a command-line EDITION= counts: an exported shell EDITION is a generic
 # name something else may have set, so it is ignored.
 ifneq ($(origin EDITION),command line)
@@ -29,18 +29,18 @@ endif
 override _edition_eq = $(and $(findstring $(1),$(2)),$(findstring $(2),$(1)))
 VENV := .venv
 PIP := $(VENV)/bin/pip
-# Build the venv under a umask that masks group/other WRITE so bin/kirocrew is
-# born non-group-writable -- `kirocrew service install` refuses to attach its
+# Build the venv under a umask that masks group/other WRITE so bin/ajcrew is
+# born non-group-writable -- `ajcrew service install` refuses to attach its
 # AppArmor profile to a group/world-writable launcher (see cli.sh). Caller umask
 # OR 022: only ever ADDS write-mask bits, a stricter umask is preserved.
 TIGHT_UMASK := umask "$$(printf '%03o' "$$(( $$(umask) | 022 ))")"
 PYTEST := $(VENV)/bin/pytest
-# Stage website/dist as the served src/kiro_crew/static/dist with the package's
+# Stage website/dist as the served src/aj_crew/static/dist with the package's
 # own stager, through the venv `backend` installed it into: it links
 # static/dist to website/dist, keeps that link, or points it at a fresh copy --
 # never rm + cp under a running gateway. Not part of `frontend`, so
 # `backend-bin` (which copies website/dist itself) needs no Python for it.
-STAGE_DIST := $(VENV)/bin/python -m kiro_crew.frontend stage .
+STAGE_DIST := $(VENV)/bin/python -m aj_crew.frontend stage .
 
 all: test
 
@@ -64,7 +64,7 @@ frontend:
 	# node-bin-dir PATH handling, and AFTER `npm run build`, so the desktop-only
 	# dependency tree cannot block building the dashboard itself (#7226).
 	cd website && \
-	  NBD="$$(cat "$${KIROCREW_HOME:-$$HOME/.kiro/crew}/node-bin-dir" 2>/dev/null || true)"; \
+	  NBD="$$(cat "$${AJCREW_HOME:-$$HOME/.kiro/crew}/node-bin-dir" 2>/dev/null || true)"; \
 	  { [ -z "$$NBD" ] || export PATH="$$NBD:$$PATH"; }; \
 	  if ! command -v npm >/dev/null 2>&1; then \
 	    echo "ERROR: npm not found. Install Node >= 18 (see ensure-node.sh) and re-run." >&2; \
@@ -82,7 +82,7 @@ backend:
 	# command line is the caller's explicit choice and skips the marker, which
 	# would otherwise keep winning and make `make backend PY=python3.12` a silent
 	# no-op -- the same precedence make.ps1 gives `-Py`.
-	PY="$(if $(and $(filter command line,$(origin PY)),$(strip $(PY))),,$$(cat "$${KIROCREW_HOME:-$$HOME/.kiro/crew}/python-bin" 2>/dev/null || true))"; [ -n "$$PY" ] || PY="$(PY)"; \
+	PY="$(if $(and $(filter command line,$(origin PY)),$(strip $(PY))),,$$(cat "$${AJCREW_HOME:-$$HOME/.kiro/crew}/python-bin" 2>/dev/null || true))"; [ -n "$$PY" ] || PY="$(PY)"; \
 	  if [ -x $(VENV)/bin/python ] && ! $(VENV)/bin/python -c 'import sys; sys.exit(0 if sys.version_info >= (3,12) else 1)'; then \
 	    echo "  → recreating $(VENV) (existing interpreter < 3.12)"; rm -rf $(VENV); fi; \
 	  if ! "$$PY" -c 'import sys; sys.exit(0 if sys.version_info >= (3,12) else 1)' 2>/dev/null; then \
@@ -104,7 +104,7 @@ backend:
 	# GCC / missing -dev headers). --prefer-binary makes pip take an older
 	# prebuilt wheel instead. No-op where the newest deps already have a usable
 	# wheel (macOS, AL2023).
-	$(TIGHT_UMASK) && KIROCREW_SKIP_FRONTEND=1 $(PIP) install --prefer-binary -e ".[dev]"
+	$(TIGHT_UMASK) && AJCREW_SKIP_FRONTEND=1 $(PIP) install --prefer-binary -e ".[dev]"
 	# CI parity: also install the PEP 735 dev dependency-group (pins
 	# jsonschema so the config-validation guard tests actually run).
 	$(TIGHT_UMASK) && $(PIP) install --group dev
@@ -127,14 +127,14 @@ test: build
 wheel: check-edition frontend backend
 	$(STAGE_DIST)
 	$(PIP) install --upgrade build
-	KIROCREW_BUILD_EDITION=$(EDITION) $(VENV)/bin/python -m build --wheel
+	AJCREW_BUILD_EDITION=$(EDITION) $(VENV)/bin/python -m build --wheel
 
 # Refuse an unknown or conflicting EDITION before any slow build step runs.
 # EDITION is the TEXT and EDITIONS the patterns, so `EDITION=%` matches nothing.
 # setup.py checks the value again, so a direct `python -m build` or
 # build-desktop.sh run is covered too.
 check-edition:
-	$(if $(and $(_EDITION_ENV),$(if $(call _edition_eq,$(_EDITION_ENV),$(EDITION)),,x)),$(error EDITION '$(EDITION)' conflicts with KIROCREW_BUILD_EDITION '$(_EDITION_ENV)'; set one, or set both the same))
+	$(if $(and $(_EDITION_ENV),$(if $(call _edition_eq,$(_EDITION_ENV),$(EDITION)),,x)),$(error EDITION '$(EDITION)' conflicts with AJCREW_BUILD_EDITION '$(_EDITION_ENV)'; set one, or set both the same))
 	$(if $(and $(filter 1,$(words $(EDITION))),$(filter $(EDITIONS),$(EDITION))),,$(error unknown EDITION '$(EDITION)' (want one of: $(EDITIONS))))
 	@echo "edition: $(EDITION)"
 
@@ -143,7 +143,7 @@ check-edition:
 # website/dist in the bundle itself. Host-arch only (UNIVERSAL=0): the standalone backend is a
 # local-machine artifact, not a distributable app.
 backend-bin: check-edition frontend
-	KIROCREW_BUILD_EDITION=$(EDITION) UNIVERSAL=0 SKIP_FRONTEND=1 SKIP_ELECTRON=1 bash packaging/build-desktop.sh
+	AJCREW_BUILD_EDITION=$(EDITION) UNIVERSAL=0 SKIP_FRONTEND=1 SKIP_ELECTRON=1 bash packaging/build-desktop.sh
 
 # Full double-clickable desktop app. macOS: ONE universal DMG (arm64 + x86_64,
 # needs an Apple-Silicon host with Rosetta 2 — see docs/build/desktop-app.md;
@@ -155,13 +155,13 @@ backend-bin: check-edition frontend
 # script's npm step instead of installing it like every other target does.
 desktop: check-edition
 	bash ensure-node.sh || true
-	NBD="$$(cat "$${KIROCREW_HOME:-$$HOME/.kiro/crew}/node-bin-dir" 2>/dev/null || true)"; \
+	NBD="$$(cat "$${AJCREW_HOME:-$$HOME/.kiro/crew}/node-bin-dir" 2>/dev/null || true)"; \
 	  { [ -z "$$NBD" ] || export PATH="$$NBD:$$PATH"; }; \
-	  KIROCREW_BUILD_EDITION=$(EDITION) bash packaging/build-desktop.sh
+	  AJCREW_BUILD_EDITION=$(EDITION) bash packaging/build-desktop.sh
 
 clean:
 	rm -rf build dist *.egg-info src/*.egg-info \
-	       src/kiro_crew/static/dist src/kiro_crew/static/.dist.* website/dist \
+	       src/aj_crew/static/dist src/aj_crew/static/.dist.* website/dist \
 	       website/.dist*.next-* website/.dist*.ready-* website/.dist*.prev-* \
 	       website/electron/backend-dist website/electron/dist \
 	       .pytest_cache .mypy_cache

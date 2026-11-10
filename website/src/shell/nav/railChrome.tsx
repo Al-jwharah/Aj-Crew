@@ -116,7 +116,7 @@ export function RailBrandToggle({ effectiveCollapsed, toggleNav, avatar, brandin
                 transition={{ duration: 0.2, ease: 'easeOut' }}
                 className="text-[13px] font-bold tracking-[.14em] uppercase whitespace-nowrap truncate min-w-0"
               >
-                {/* Last word of the bot name carries the accent (KIRO
+                {/* Last word of the bot name carries the accent (AJ
                     CREW: muted brand, accent product); single-word names
                     render all-muted. */}
                 {botName.includes(' ') ? (
@@ -237,7 +237,7 @@ export function RailCommunityLinks({ effectiveCollapsed, setReportProblemOpen }:
             language), the second link drops to its own line with the full
             row width instead of truncating to a third of itself. */}
         <div className="rail-community-links flex flex-wrap items-center gap-x-[5px] gap-y-0.5 flex-1 min-w-0 ml-1.5 text-[12px]">
-          <a href="https://github.com/kirodotdev/KiroCrew" target="_blank" rel="noopener noreferrer" title={i18nT('app.star_kirocrew_on_github')} aria-label={i18nT('app.star_kirocrew_on_github')} className="shrink-0 rounded text-muted hover:text-text transition-colors">{i18nT('app.star_us')}</a>
+          <a href="https://github.com/Al-jwharah/Aj-Crew" target="_blank" rel="noopener noreferrer" title={i18nT('app.star_ajcrew_on_github')} aria-label={i18nT('app.star_ajcrew_on_github')} className="shrink-0 rounded text-muted hover:text-text transition-colors">{i18nT('app.star_us')}</a>
           <span aria-hidden="true" className="shrink-0 opacity-40">·</span>
           {/* "Report issue" opens the SAME diagnostics flow as Settings ›
               About › Support rather than linking to the bare issue list.

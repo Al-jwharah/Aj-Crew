@@ -11,8 +11,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.cron import CronJob, CronSchedule
-from kiro_crew.cron_service import agent_presence
+from aj_crew.cron import CronJob, CronSchedule
+from aj_crew.cron_service import agent_presence
 
 
 @pytest.fixture(autouse=True)
@@ -30,17 +30,17 @@ def test_blank_name_is_never_missing() -> None:
 
 
 def test_resolved_name_is_not_missing() -> None:
-    with patch("kiro_crew.config.loader_agents._resolve_agent_selection", _selection(True)):
+    with patch("aj_crew.config.loader_agents._resolve_agent_selection", _selection(True)):
         assert agent_presence.cron_agent_missing(object(), "here", None) is False
 
 
 def test_unresolved_name_is_missing_after_a_complete_rescan() -> None:
     refresh = MagicMock()
     with (
-        patch("kiro_crew.config.loader_agents._resolve_agent_selection", _selection(False)),
-        patch("kiro_crew.config.loader_snapshots.refresh_materialized_agents", refresh),
+        patch("aj_crew.config.loader_agents._resolve_agent_selection", _selection(False)),
+        patch("aj_crew.config.loader_snapshots.refresh_materialized_agents", refresh),
         patch(
-            "kiro_crew.config.loader_snapshots.materialized_snapshot_complete", return_value=True
+            "aj_crew.config.loader_snapshots.materialized_snapshot_complete", return_value=True
         ),
     ):
         assert agent_presence.cron_agent_missing(object(), "gone", None) is True
@@ -49,10 +49,10 @@ def test_unresolved_name_is_missing_after_a_complete_rescan() -> None:
 
 def test_incomplete_rescan_cannot_prove_a_miss() -> None:
     with (
-        patch("kiro_crew.config.loader_agents._resolve_agent_selection", _selection(False)),
-        patch("kiro_crew.config.loader_snapshots.refresh_materialized_agents"),
+        patch("aj_crew.config.loader_agents._resolve_agent_selection", _selection(False)),
+        patch("aj_crew.config.loader_snapshots.refresh_materialized_agents"),
         patch(
-            "kiro_crew.config.loader_snapshots.materialized_snapshot_complete", return_value=False
+            "aj_crew.config.loader_snapshots.materialized_snapshot_complete", return_value=False
         ),
     ):
         assert agent_presence.cron_agent_missing(object(), "gone", None) is False
@@ -61,10 +61,10 @@ def test_incomplete_rescan_cannot_prove_a_miss() -> None:
 def test_name_found_by_the_rescan_is_not_missing() -> None:
     selection = MagicMock(side_effect=[(None, "", "", False), (None, "", "new", True)])
     with (
-        patch("kiro_crew.config.loader_agents._resolve_agent_selection", selection),
-        patch("kiro_crew.config.loader_snapshots.refresh_materialized_agents"),
+        patch("aj_crew.config.loader_agents._resolve_agent_selection", selection),
+        patch("aj_crew.config.loader_snapshots.refresh_materialized_agents"),
         patch(
-            "kiro_crew.config.loader_snapshots.materialized_snapshot_complete", return_value=True
+            "aj_crew.config.loader_snapshots.materialized_snapshot_complete", return_value=True
         ),
     ):
         assert agent_presence.cron_agent_missing(object(), "new", None) is False
@@ -72,7 +72,7 @@ def test_name_found_by_the_rescan_is_not_missing() -> None:
 
 def _fire(job: CronJob, missing: bool) -> MagicMock:
     """Run the real cron callback for *job* and return the gateway double."""
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     gw = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gw.sessions = MagicMock()
@@ -99,8 +99,8 @@ def _fire(job: CronJob, missing: bool) -> MagicMock:
         return "done"
 
     with (
-        patch("kiro_crew.slack.gateway.stream_and_collect", fake_stream),
-        patch("kiro_crew.slack.gateway.CronService") as cron_cls,
+        patch("aj_crew.slack.gateway.stream_and_collect", fake_stream),
+        patch("aj_crew.slack.gateway.CronService") as cron_cls,
         patch.object(agent_presence, "cron_agent_missing", return_value=missing),
     ):
 

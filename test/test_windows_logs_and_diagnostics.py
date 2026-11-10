@@ -8,9 +8,9 @@ from types import SimpleNamespace
 import pytest
 from _clock_isolation import assert_clock_is_private
 
-from kiro_crew import cli_doctor, cli_server, platform_compat
-from kiro_crew.service.common import Platform
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import cli_doctor, cli_server, platform_compat
+from aj_crew.service.common import Platform
+from aj_crew.testing.clock import ManualClock
 
 
 @pytest.fixture
@@ -314,5 +314,5 @@ def test_logs_read_failure_has_guidance(windows_log, monkeypatch, capsys, error)
     assert result.value.code == 1
     output = capsys.readouterr()
     assert "Unable to read gateway log" in output.err
-    assert "kirocrew logs" in output.err
+    assert "ajcrew logs" in output.err
     assert "Traceback" not in output.err

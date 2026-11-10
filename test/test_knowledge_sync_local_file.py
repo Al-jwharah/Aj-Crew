@@ -15,10 +15,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import knowledge as kh
-from kiro_crew.dashboard.handlers.knowledge import sync_source
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.dashboard.handlers import knowledge as kh
+from aj_crew.dashboard.handlers.knowledge import sync_source
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.testing.wait import async_wait_until
 
 
 @pytest.fixture()

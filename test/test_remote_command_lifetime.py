@@ -9,9 +9,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from kiro_crew.remote_session import workspace_tools as wt
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
-from kiro_crew.testing.wait import wait_until
+from aj_crew.remote_session import workspace_tools as wt
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.wait import wait_until
 
 posix_groups = pytest.mark.skipif(
     not hasattr(os, "killpg"), reason="guest commands run on a POSIX workspace"

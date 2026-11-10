@@ -1,4 +1,4 @@
-"""``KIROCREW_NODE_BIN_DIR`` reaches the installed service.
+"""``AJCREW_NODE_BIN_DIR`` reaches the installed service.
 
 launchd and systemd start the gateway with only what ``service_environment()``
 bakes, so an override exported in the installing shell is otherwise lost and the
@@ -13,9 +13,9 @@ import os
 
 import pytest
 
-from kiro_crew.service.common import service_environment
+from aj_crew.service.common import service_environment
 
-_KEY = "KIROCREW_NODE_BIN_DIR"
+_KEY = "AJCREW_NODE_BIN_DIR"
 
 pytestmark = pytest.mark.skipif(
     os.name != "posix", reason="launchd and systemd services only; their PATH is colon-joined"

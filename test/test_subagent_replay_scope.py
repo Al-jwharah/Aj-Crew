@@ -23,21 +23,21 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew import executors
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.dashboard import subagent_replay_scope as scope
-from kiro_crew.dashboard import ws as dashboard_ws
-from kiro_crew.sel_request_provenance import bind_request_forwarded, current_request_forwarded
-from kiro_crew.testing.wait import await_until, finished, wait_until
+from aj_crew import crew_log as lg
+from aj_crew import executors
+from aj_crew.crew_log import CrewLog
+from aj_crew.dashboard import subagent_replay_scope as scope
+from aj_crew.dashboard import ws as dashboard_ws
+from aj_crew.sel_request_provenance import bind_request_forwarded, current_request_forwarded
+from aj_crew.testing.wait import await_until, finished, wait_until
 
 GATEWAY = "gateway"
 
 
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     scope.UNIT_INDEX.clear()
     scope.UNIT_ROWS.clear()
     yield
@@ -46,11 +46,11 @@ def _isolated(tmp_path, _floor_monkeypatch):
 
 
 def _unit(unit_id: str, slot: str, *, children: int = 0, turns: int = 20) -> CrewLog:
-    handle = CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="kirocrew", slot=slot)
+    handle = CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="ajcrew", slot=slot)
     handle.append(
         "session/opened",
         {
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "slot": slot,
             "model": "opus",
             "cwd": "/w",
@@ -94,7 +94,7 @@ class _Counter:
 
 @pytest.fixture
 def folds(monkeypatch) -> _Counter:
-    from kiro_crew.crew_log import projection
+    from aj_crew.crew_log import projection
 
     counter = _Counter()
     monkeypatch.setattr(projection, "fold_session", counter.wrap(projection.fold_session))
@@ -172,7 +172,7 @@ class TestWorkScalesWithViewedSlotsAndUnitsHoldingChildren:
 class TestTheIndexIsConservative:
     def test_a_unit_whose_front_was_trimmed_has_no_drawable_row(self, tmp_path):
         """The class read refuses such a log, so no row of it is ever drawn."""
-        from kiro_crew.crew_log.store_paths import crew_log_dir
+        from aj_crew.crew_log.store_paths import crew_log_dir
 
         _unit("acp-t", "chat-1", children=1)
         directory = crew_log_dir(lg.KIND_SESSION, "acp-t")
@@ -252,7 +252,7 @@ def _race(target, entered, release, others: int = 2) -> list:
 
 class TestSharedWork:
     def test_two_readers_of_one_unit_share_one_fold(self, monkeypatch):
-        from kiro_crew.crew_log import projection
+        from aj_crew.crew_log import projection
 
         _unit("acp-s", "chat-1", children=1)
         blocking, release, entered, calls = _held(
@@ -268,12 +268,12 @@ class TestSharedWork:
         """The cache uses the crew log's own identity, which a recreation changes."""
         import shutil
 
-        from kiro_crew.crew_log.store_paths import crew_log_dir
+        from aj_crew.crew_log.store_paths import crew_log_dir
 
         _unit("acp-x", "chat-1", children=1)
         first = scope.UNIT_ROWS.rows("acp-x")[1]
         assert set(first) == {"acp-x-child-0"}
-        from kiro_crew.crew_log import eager
+        from aj_crew.crew_log import eager
 
         with eager.paused():
             shutil.rmtree(crew_log_dir(lg.KIND_SESSION, "acp-x"))
@@ -285,7 +285,7 @@ class TestSharedWork:
     def test_a_unit_with_no_readable_owner_is_not_refolded_on_every_connect(self, monkeypatch):
         """No class record: skipped as unowned, and the answer is reused for a while."""
         handle = CrewLog.create(
-            lg.KIND_SESSION, "acp-nc", owner="raymond", agent="kirocrew", slot="chat-1"
+            lg.KIND_SESSION, "acp-nc", owner="raymond", agent="ajcrew", slot="chat-1"
         )
         handle.append("subagent/spawned", {"agent_id": "c1", "task": "t"}, src=GATEWAY)
         handle.append("subagent/completed", {"agent_id": "c1", "ms": 1}, src=GATEWAY)
@@ -308,7 +308,7 @@ class TestSharedWork:
 
     def test_a_rewrite_in_place_past_the_old_size_is_read_again(self):
         """A tail repair truncates, and the next append regrows the same inode."""
-        from kiro_crew.crew_log.store_paths import crew_log_dir
+        from aj_crew.crew_log.store_paths import crew_log_dir
 
         _unit("acp-r", "chat-1")
         assert scope.UNIT_INDEX.scan("acp-r") is False
@@ -324,7 +324,7 @@ class TestSharedWork:
 
     def test_a_rewrite_in_place_to_the_same_size_is_read_again(self):
         """A rollback can regrow a truncated segment to exactly its old size."""
-        from kiro_crew.crew_log.store_paths import crew_log_dir
+        from aj_crew.crew_log.store_paths import crew_log_dir
 
         _unit("acp-e", "chat-1")
         assert scope.UNIT_INDEX.scan("acp-e") is False
@@ -516,7 +516,7 @@ class TestTheHandlerReplaysOnlyWhatTheSocketViews:
         monkeypatch.setattr(dashboard_ws, "handle_focus_frame", lambda *a, **k: None)
         monkeypatch.setattr(dashboard_ws, "note_foreground", lambda *a, **k: None)
         monkeypatch.setattr(dashboard_ws, "_check_ws_origin", lambda request: None)
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard.handlers import source_providers
 
         monkeypatch.setattr(source_providers, "is_owner_dashboard_request", lambda request: not app)
 
@@ -727,7 +727,7 @@ class TestTheHandlerReplaysOnlyWhatTheSocketViews:
     def test_a_nested_run_replays_into_its_root_chats_slot(self, monkeypatch):
         """A managed run whose parent is a sub-agent replays, running or done,
         into the tab of the chat its tree started from, as its live frames do."""
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         running = SubagentInfo(id="b", task="t", parent_session_key="subagent:a")
         finished = SubagentInfo(id="c", task="t", parent_session_key="subagent:b")
@@ -746,7 +746,7 @@ class TestTheHandlerReplaysOnlyWhatTheSocketViews:
 
     def test_with_the_crew_log_off_the_folder_replay_still_runs_once(self, monkeypatch, folds):
         """The opt-out keeps its folder reader; the per-slot admit must not refuse it."""
-        monkeypatch.setenv("KIROCREW_CREW_LOG", "0")
+        monkeypatch.setenv("AJCREW_CREW_LOG", "0")
         calls: list[dict] = []
         record = {
             "id": "folder-1",

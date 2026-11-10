@@ -25,10 +25,10 @@ from cloud_microvm_engine_helpers import (  # noqa: F401 -- the autouse fixture 
     _no_real_secret_writes,
 )
 
-from kiro_crew.cloud.microvm import api
-from kiro_crew.cloud.microvm.engine import MicroVmLaunchEngine, MicroVmLaunchSpec
-from kiro_crew.cloud.microvm.recipe import RecipeRefused
-from kiro_crew.cloud.microvm.record import CrewStore
+from aj_crew.cloud.microvm import api
+from aj_crew.cloud.microvm.engine import MicroVmLaunchEngine, MicroVmLaunchSpec
+from aj_crew.cloud.microvm.recipe import RecipeRefused
+from aj_crew.cloud.microvm.record import CrewStore
 
 
 def _stage_wheel(path):
@@ -41,7 +41,7 @@ def _stage_wheel(path):
     """
     with zipfile.ZipFile(path, "w") as archive:
         archive.writestr(
-            zipfile.ZipInfo("kiro_crew/__init__.py", date_time=(2020, 1, 2, 3, 4, 6)),
+            zipfile.ZipInfo("aj_crew/__init__.py", date_time=(2020, 1, 2, 3, 4, 6)),
             b"# serving code\n",
         )
     return path
@@ -70,9 +70,9 @@ class TestResolveImage:
         A launch READS the wheel rather than building one, so these tests supply
         one instead of running a build toolchain.
         """
-        from kiro_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import engine as engine_mod
 
-        wheel = _stage_wheel(tmp_path / "kiro_crew-0.0.0-py3-none-any.whl")
+        wheel = _stage_wheel(tmp_path / "aj_crew-0.0.0-py3-none-any.whl")
         _floor_monkeypatch.setattr(engine_mod, "_staged_wheel", lambda: wheel)
         return wheel
 
@@ -86,7 +86,7 @@ class TestResolveImage:
         return root
 
     def test_a_prebuilt_pin_short_circuits_the_build(self):
-        from kiro_crew.cloud.microvm.engine import ApiVmLauncher
+        from aj_crew.cloud.microvm.engine import ApiVmLauncher
 
         launcher = ApiVmLauncher(SPEC)
         assert launcher.resolve_image(profile="p", region="us-east-1") == (
@@ -95,7 +95,7 @@ class TestResolveImage:
         )
 
     def test_a_lane_with_neither_refuses_rather_than_guessing(self):
-        from kiro_crew.cloud.microvm.engine import ApiVmLauncher
+        from aj_crew.cloud.microvm.engine import ApiVmLauncher
 
         bare = MicroVmLaunchSpec(kms_key_id="k")
         with pytest.raises(ValueError, match="no image to launch"):
@@ -103,7 +103,7 @@ class TestResolveImage:
 
     def test_a_buildable_lane_with_no_bundle_refuses(self):
         """Building from a guessed bundle is the error this lane will not make."""
-        from kiro_crew.cloud.microvm.engine import ApiVmLauncher
+        from aj_crew.cloud.microvm.engine import ApiVmLauncher
 
         with pytest.raises(ValueError, match="no crew bundle to build it from"):
             ApiVmLauncher(self.BUILD_SPEC).resolve_image(profile="p", region="us-east-1")
@@ -113,9 +113,9 @@ class TestResolveImage:
     ):
         import dataclasses
 
-        from kiro_crew.cloud.microvm import engine as engine_mod
-        from kiro_crew.cloud.microvm import recipe as recipe_mod
-        from kiro_crew.cloud.microvm.engine import ApiVmLauncher
+        from aj_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import recipe as recipe_mod
+        from aj_crew.cloud.microvm.engine import ApiVmLauncher
 
         spec = dataclasses.replace(self.BUILD_SPEC, bundle_dir=str(bundle))
         uploaded: list[tuple[str, str]] = []
@@ -156,8 +156,8 @@ class TestResolveImage:
 
         assert identifier.endswith("microvm-image/crew")
         assert version == "3"
-        from kiro_crew.cloud.microvm.engine import spec_account_id
-        from kiro_crew.cloud.microvm.image import Recipe, default_build_digest
+        from aj_crew.cloud.microvm.engine import spec_account_id
+        from aj_crew.cloud.microvm.image import Recipe, default_build_digest
 
         digest = Recipe(
             base_image_arn=spec.base_image_arn,
@@ -176,16 +176,16 @@ class TestResolveImage:
         would need a build toolchain on the owner's machine."""
         import dataclasses
 
-        from kiro_crew.cloud.microvm import engine as engine_mod
-        from kiro_crew.cloud.microvm.engine import ApiVmLauncher
+        from aj_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm.engine import ApiVmLauncher
 
         spec = dataclasses.replace(self.BUILD_SPEC, bundle_dir=str(bundle))
         monkeypatch.setattr(
             engine_mod,
             "_staged_wheel",
-            lambda: (_ for _ in ()).throw(ValueError("no Kiro Crew wheel is staged")),
+            lambda: (_ for _ in ()).throw(ValueError("no Aj Crew wheel is staged")),
         )
-        with pytest.raises(ValueError, match="no Kiro Crew wheel is staged"):
+        with pytest.raises(ValueError, match="no Aj Crew wheel is staged"):
             ApiVmLauncher(spec).resolve_image(profile="p", region="us-east-1")
 
     def test_a_rebuilt_base_gives_the_crew_a_different_image_name(self, bundle, _staged_wheel):
@@ -193,8 +193,8 @@ class TestResolveImage:
         separately built base image to take a digest of. So a changed wheel is a
         changed base, and the crew gets a new image rather than reusing one built on
         the old content."""
-        from kiro_crew.cloud.microvm import recipe as recipe_mod
-        from kiro_crew.cloud.microvm.image import Recipe, default_build_digest
+        from aj_crew.cloud.microvm import recipe as recipe_mod
+        from aj_crew.cloud.microvm.image import Recipe, default_build_digest
 
         digest = recipe_mod.bundle_digest_of(bundle)
         first = Recipe(
@@ -237,7 +237,7 @@ class TestBothWheelStagingPathsDateTheWheelAlike:
 
         path = (
             Path(__file__).resolve().parents[1]
-            / "src/kiro_crew/apps/builtins/aws_control/crew/scripts/build_crew_base_image.sh"
+            / "src/aj_crew/apps/builtins/aws_control/crew/scripts/build_crew_base_image.sh"
         )
         return path.read_text(encoding="utf-8")
 
@@ -345,14 +345,14 @@ class TestTheRecipeIsNotEncryptedWithTheLaneKey:
     def _upload_kwargs(tmp_path, monkeypatch) -> list[dict]:
         import dataclasses
 
-        from kiro_crew.cloud.microvm import engine as engine_mod
-        from kiro_crew.cloud.microvm.engine import ApiVmLauncher
+        from aj_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm.engine import ApiVmLauncher
 
         root = tmp_path / "bundle"
         (root / "skills").mkdir(parents=True)
         for name in ("manifest.json", "agent.json", "mcp.json"):
             (root / name).write_text("{}\n")
-        wheel = _stage_wheel(tmp_path / "kiro_crew-0.0.0-py3-none-any.whl")
+        wheel = _stage_wheel(tmp_path / "aj_crew-0.0.0-py3-none-any.whl")
         monkeypatch.setattr(engine_mod, "_staged_wheel", lambda: wheel)
         spec = dataclasses.replace(TestResolveImage.BUILD_SPEC, bundle_dir=str(root))
         seen: list[dict] = []
@@ -404,7 +404,7 @@ class TestTheRecipeIsNotEncryptedWithTheLaneKey:
     def test_an_upload_with_no_key_still_sends_an_encryption_header(self, monkeypatch):
         """S3-managed, not absent. A bucket that denies unencrypted puts tests the
         request HEADER, and a bucket default does not set one."""
-        from kiro_crew.cloud.microvm import api as api_mod
+        from aj_crew.cloud.microvm import api as api_mod
 
         argvs: list[list[str]] = []
         monkeypatch.setattr(
@@ -434,15 +434,15 @@ class TestTheAccountBakedIntoTheImageIsReadFromTheOperatorsOwnArns:
         return dataclasses.replace(MicroVmLaunchSpec(kms_key_id=""), **overrides)
 
     def test_the_activation_role_names_the_account(self):
-        from kiro_crew.cloud.microvm.engine import spec_account_id
+        from aj_crew.cloud.microvm.engine import spec_account_id
 
         spec = self._spec(
-            activation_role_arn="arn:aws:iam::123456789012:role/kirocrew-microvm-crew"
+            activation_role_arn="arn:aws:iam::123456789012:role/ajcrew-microvm-crew"
         )
         assert spec_account_id(spec) == "123456789012"
 
     def test_the_configured_spec_in_this_file_resolves_to_its_account(self):
-        from kiro_crew.cloud.microvm.engine import spec_account_id
+        from aj_crew.cloud.microvm.engine import spec_account_id
 
         assert spec_account_id(SPEC) == "123456789012"
 
@@ -450,7 +450,7 @@ class TestTheAccountBakedIntoTheImageIsReadFromTheOperatorsOwnArns:
         """A managed base ARN carries no account at all
         (``arn:aws:lambda:::microvm-image/...``), so reading it would answer ``""``
         for the normal case and quietly leave the image unpinned."""
-        from kiro_crew.cloud.microvm.engine import spec_account_id
+        from aj_crew.cloud.microvm.engine import spec_account_id
 
         spec = self._spec(base_image_arn="arn:aws:lambda:::microvm-image/al2023")
         assert spec_account_id(spec) == ""
@@ -458,9 +458,9 @@ class TestTheAccountBakedIntoTheImageIsReadFromTheOperatorsOwnArns:
     @pytest.mark.parametrize(
         "value",
         [
-            "kirocrew-microvm-crew",
+            "ajcrew-microvm-crew",
             "11111111-2222-3333-4444-555555555555",
-            "alias/kirocrew",
+            "alias/ajcrew",
             "",
             "arn:aws:iam::not-an-account:role/Crew",
         ],
@@ -469,7 +469,7 @@ class TestTheAccountBakedIntoTheImageIsReadFromTheOperatorsOwnArns:
         """A bare role name, a KMS key id and an alias are all spellings an
         operator may have written, and a fragment of one baked as a pin is a guest
         that refuses every payload."""
-        from kiro_crew.cloud.microvm.engine import spec_account_id
+        from aj_crew.cloud.microvm.engine import spec_account_id
 
         assert spec_account_id(self._spec(kms_key_id=value)) == ""
 
@@ -477,7 +477,7 @@ class TestTheAccountBakedIntoTheImageIsReadFromTheOperatorsOwnArns:
         """One account holds both secrets and registers the node, so there is no
         single value to bake -- and picking one would bake a pin that refuses every
         payload naming the other."""
-        from kiro_crew.cloud.microvm.engine import spec_account_id
+        from aj_crew.cloud.microvm.engine import spec_account_id
 
         spec = self._spec(
             activation_role_arn="arn:aws:iam::111111111111:role/Crew",
@@ -487,7 +487,7 @@ class TestTheAccountBakedIntoTheImageIsReadFromTheOperatorsOwnArns:
             spec_account_id(spec)
 
     def test_the_same_account_in_several_fields_is_not_a_conflict(self):
-        from kiro_crew.cloud.microvm.engine import spec_account_id
+        from aj_crew.cloud.microvm.engine import spec_account_id
 
         spec = self._spec(
             activation_role_arn="arn:aws:iam::111111111111:role/Crew",
@@ -501,19 +501,19 @@ class TestTheAccountBakedIntoTheImageIsReadFromTheOperatorsOwnArns:
         ``CreateMicrovmImage`` is this launch's own pair."""
         import dataclasses
 
-        from kiro_crew.cloud.microvm import engine as engine_mod
-        from kiro_crew.cloud.microvm.engine import ApiVmLauncher
+        from aj_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm.engine import ApiVmLauncher
 
         root = tmp_path / "bundle"
         (root / "skills").mkdir(parents=True)
         for name in ("manifest.json", "agent.json", "mcp.json"):
             (root / name).write_text("{}\n")
-        wheel = _stage_wheel(tmp_path / "kiro_crew-0.0.0-py3-none-any.whl")
+        wheel = _stage_wheel(tmp_path / "aj_crew-0.0.0-py3-none-any.whl")
         monkeypatch.setattr(engine_mod, "_staged_wheel", lambda: wheel)
         spec = dataclasses.replace(
             TestResolveImage.BUILD_SPEC,
             bundle_dir=str(root),
-            activation_role_arn="arn:aws:iam::123456789012:role/kirocrew-microvm-crew",
+            activation_role_arn="arn:aws:iam::123456789012:role/ajcrew-microvm-crew",
         )
         created: list[dict] = []
         monkeypatch.setattr(engine_mod.api, "list_microvm_images", lambda **kw: [])

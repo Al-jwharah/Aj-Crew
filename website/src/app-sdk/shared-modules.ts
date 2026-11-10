@@ -15,29 +15,29 @@ import * as jsxRuntime from 'react/jsx-runtime'
 import * as lucideReact from 'lucide-react'
 import * as reactQuery from '@tanstack/react-query'
 import * as appSdk from './index'
-import * as kirocrewUi from '../kirocrew-ui'
+import * as ajcrewUi from '../ajcrew-ui'
 
 // Register on window for vendor stubs to access
 declare global {
   interface Window {
-    __kirocrew_modules: {
+    __ajcrew_modules: {
       react: typeof React
       'react-dom': typeof ReactDOM
       'react/jsx-runtime': typeof jsxRuntime
       'lucide-react': typeof lucideReact
       '@tanstack/react-query': typeof reactQuery
-      '@kirocrew/app-sdk': typeof appSdk
-      '@kirocrew/ui': typeof kirocrewUi
+      '@ajcrew/app-sdk': typeof appSdk
+      '@ajcrew/ui': typeof ajcrewUi
     }
   }
 }
 
-window.__kirocrew_modules = {
+window.__ajcrew_modules = {
   react: React,
   'react-dom': ReactDOM,
   'react/jsx-runtime': jsxRuntime,
   'lucide-react': lucideReact,
   '@tanstack/react-query': reactQuery,
-  '@kirocrew/app-sdk': appSdk,
-  '@kirocrew/ui': kirocrewUi,
+  '@ajcrew/app-sdk': appSdk,
+  '@ajcrew/ui': ajcrewUi,
 }

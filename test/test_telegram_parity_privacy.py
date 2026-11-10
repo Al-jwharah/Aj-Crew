@@ -28,7 +28,7 @@ class TestUploadGate:
     @pytest.mark.asyncio
     async def test_a_channel_native_key_is_allowed(self) -> None:
         dispatcher, _, _ = _dispatcher({1})
-        assert await dispatcher._uploads_restricted("telegram:kirocrew:direct:1") is False
+        assert await dispatcher._uploads_restricted("telegram:ajcrew:direct:1") is False
 
     @pytest.mark.asyncio
     async def test_a_persisted_mode_survives_an_empty_tracker(self, tmp_path) -> None:
@@ -38,12 +38,12 @@ class TestUploadGate:
         # explicit file_send — reaches this gate with empty trackers even though
         # the user's !incognito is on disk. Without the durable restore the gate
         # reads "unrestricted" and the bytes leave the session that forbade them.
-        from kiro_crew.messaging import privacy_mode
-        from kiro_crew.messaging.upload_gate import uploads_restricted
-        from kiro_crew.session_map import SessionMap
+        from aj_crew.messaging import privacy_mode
+        from aj_crew.messaging.upload_gate import uploads_restricted
+        from aj_crew.session_map import SessionMap
 
-        key = "telegram:kirocrew:direct:1"
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        key = "telegram:ajcrew:direct:1"
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             sm = SessionMap()
         # ``set_flag`` -> ``_save`` schedules a debounced ``_flush_async`` task on
         # THIS test's loop, so the retirement has to be in a ``finally``: loop
@@ -70,18 +70,18 @@ class TestUploadGate:
     async def test_an_unflagged_channel_key_stays_allowed_after_the_restore(self, tmp_path) -> None:
         # The restore must not turn the common case into a refusal: a conversation
         # with no durable flag is still permitted.
-        from kiro_crew.messaging import privacy_mode
-        from kiro_crew.messaging.upload_gate import uploads_restricted
-        from kiro_crew.session_map import SessionMap
+        from aj_crew.messaging import privacy_mode
+        from aj_crew.messaging.upload_gate import uploads_restricted
+        from aj_crew.session_map import SessionMap
 
         privacy_mode.reset()
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             state = SimpleNamespace(sessions=SimpleNamespace(_session_map=SessionMap()))
 
         assert (
             await uploads_restricted(
                 state,
-                "telegram:kirocrew:direct:1",
+                "telegram:ajcrew:direct:1",
                 channel_type="telegram",
                 persisted_probe=lambda _slot: (False, None),
             )
@@ -101,7 +101,7 @@ class TestUploadGate:
     async def test_no_live_slot_falls_through_to_the_persisted_mode(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.messaging import upload_gate as ug
+        from aj_crew.messaging import upload_gate as ug
 
         dispatcher, _, _ = _dispatcher({1})
         dispatcher.dashboard_state = SimpleNamespace(get_slot=lambda _name: None)
@@ -118,7 +118,7 @@ class TestUploadGate:
         # The gate must consult the probe its CALLER supplied. A gate that reached
         # for `dashboard` itself would answer without ever calling this one, and
         # would reintroduce the import `messaging` may not have.
-        from kiro_crew.messaging.upload_gate import uploads_restricted
+        from aj_crew.messaging.upload_gate import uploads_restricted
 
         calls: list[str] = []
 
@@ -138,7 +138,7 @@ class TestUploadGate:
     @pytest.mark.asyncio
     async def test_a_probe_that_raises_denies(self) -> None:
         # Fail closed: a caller cannot open the gate by handing in something broken.
-        from kiro_crew.messaging.upload_gate import uploads_restricted
+        from aj_crew.messaging.upload_gate import uploads_restricted
 
         def boom(_slot: str) -> tuple[bool, str | None]:
             raise RuntimeError("transcript unreadable")
@@ -157,7 +157,7 @@ class TestUploadGate:
     async def test_the_denial_is_audited_so_the_ceiling_is_observable(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.messaging import upload_gate as ug
+        from aj_crew.messaging import upload_gate as ug
 
         seen: list[dict] = []
         monkeypatch.setattr(
@@ -182,13 +182,13 @@ class TestPrivacyModes:
     """
 
     def setup_method(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         privacy_mode.reset()
 
     @pytest.mark.asyncio
     async def test_a_bare_temporary_command_marks_and_answers_nothing(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, client, sessions = _dispatcher({7})
         await d.handle_message(_dm("/temporary"))
@@ -206,7 +206,7 @@ class TestPrivacyModes:
     async def test_incognito_with_a_question_marks_and_still_answers(self) -> None:
         # Slack's `!incognito summarise this` both marks the thread and answers, so
         # dropping the question here would be a silent behaviour difference.
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, client, _ = _dispatcher({7})
         await d.handle_message(_dm("/incognito summarise this"))
@@ -233,7 +233,7 @@ class TestPrivacyModes:
         assert "Temporary" in client.sent[-1][0]
 
     def test_a_restricted_session_persists_no_transcript(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         logged: list = []
         d, _, _ = _dispatcher({7})
@@ -242,12 +242,12 @@ class TestPrivacyModes:
             set_title=lambda *a, **k: None,
             atomic_appends=lambda _key: nullcontext(),
         )
-        key = "telegram:kirocrew:direct:7"
-        d._persist_turn(key, "hello", "hi there", True, "kirocrew")
+        key = "telegram:ajcrew:direct:7"
+        d._persist_turn(key, "hello", "hi there", True, "ajcrew")
         assert logged, "an unrestricted session must still persist"
         logged.clear()
         privacy_mode.mark_incognito(key)
-        d._persist_turn(key, "hello", "hi there", True, "kirocrew")
+        d._persist_turn(key, "hello", "hi there", True, "ajcrew")
         assert not logged, "an incognito session must write no transcript"
 
 
@@ -262,7 +262,7 @@ class TestARestrictedSessionWritesNothingAtAll:
     """
 
     def setup_method(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         privacy_mode.reset()
 
@@ -312,9 +312,9 @@ class TestARestrictedSessionWritesNothingAtAll:
         import ast
         from pathlib import Path
 
-        import kiro_crew as kiro_crew_pkg
+        import aj_crew as aj_crew_pkg
 
-        root = Path(kiro_crew_pkg.__file__).parent
+        root = Path(aj_crew_pkg.__file__).parent
         found: dict[str, list[str]] = {}
         for path in sorted(root.glob("*/transport_dispatch.py")):
             source = "\n".join(
@@ -362,9 +362,9 @@ class TestARestrictedSessionWritesNothingAtAll:
         import ast
         from pathlib import Path
 
-        import kiro_crew as kiro_crew_pkg
+        import aj_crew as aj_crew_pkg
 
-        root = Path(kiro_crew_pkg.__file__).parent
+        root = Path(aj_crew_pkg.__file__).parent
         ungated: list[str] = []
         for channel, functions in sorted(self._title_writes_by_channel().items()):
             for module in self._dispatch_sources(root / channel / "transport_dispatch.py"):
@@ -398,13 +398,13 @@ class TestARestrictedSessionUploadsNothing:
     """
 
     def setup_method(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         privacy_mode.reset()
 
     @staticmethod
     async def _restricted(key: str) -> bool:
-        from kiro_crew.messaging.upload_gate import uploads_restricted
+        from aj_crew.messaging.upload_gate import uploads_restricted
 
         return await uploads_restricted(
             None,
@@ -416,9 +416,9 @@ class TestARestrictedSessionUploadsNothing:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("mark", ["mark_temporary", "mark_incognito"])
     async def test_a_marked_channel_session_may_not_upload(self, mark: str) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
-        key = "telegram:kirocrew:direct:7"
+        key = "telegram:ajcrew:direct:7"
         getattr(privacy_mode, mark)(key)
         assert await self._restricted(key) is True
 
@@ -426,15 +426,15 @@ class TestARestrictedSessionUploadsNothing:
     async def test_an_unmarked_channel_session_still_may(self) -> None:
         # The common case, and the reason this rung is not a blanket fail-closed:
         # denying here would disable uploads for every ordinary conversation.
-        assert await self._restricted("telegram:kirocrew:direct:7") is False
+        assert await self._restricted("telegram:ajcrew:direct:7") is False
 
     @pytest.mark.asyncio
     async def test_a_forum_topic_key_is_covered_too(self) -> None:
         # The audience that makes this worst: a Topic is readable by the whole
         # supergroup, and its key is shaped differently from a DM's.
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
-        key = "telegram:kirocrew:forum:-100999:4"
+        key = "telegram:ajcrew:forum:-100999:4"
         privacy_mode.mark_temporary(key)
         assert await self._restricted(key) is True
 
@@ -446,12 +446,12 @@ class TestARestrictedSessionUploadsNothing:
         must be invisible to a channel that offers no modes, or it would read as a
         behaviour change to every other channel's uploads.
         """
-        from kiro_crew.messaging.upload_gate import uploads_restricted
+        from aj_crew.messaging.upload_gate import uploads_restricted
 
         assert (
             await uploads_restricted(
                 None,
-                "discord:kirocrew:direct:42",
+                "discord:ajcrew:direct:42",
                 channel_type="discord",
                 persisted_probe=lambda _slot: (False, None),
             )
@@ -461,11 +461,11 @@ class TestARestrictedSessionUploadsNothing:
     @pytest.mark.asyncio
     async def test_the_denial_is_audited(self) -> None:
         # The ceiling has to be observable, like every other transport denial.
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
-        key = "telegram:kirocrew:direct:7"
+        key = "telegram:ajcrew:direct:7"
         privacy_mode.mark_incognito(key)
-        with patch("kiro_crew.messaging.upload_gate.sel") as mock_sel:
+        with patch("aj_crew.messaging.upload_gate.sel") as mock_sel:
             assert await self._restricted(key) is True
         kw = mock_sel.return_value.log_api_access.call_args.kwargs
         assert kw["outcome"] == "denied" and kw["error"] == "restricted_session"
@@ -477,7 +477,7 @@ class TestARestrictedSessionUploadsNothing:
         The gate answering correctly buys nothing if the dispatcher does not consult
         it, so this asserts the value that actually reaches the renderer.
         """
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, _, _ = _dispatcher({7})
         route = ("direct", "7")
@@ -497,7 +497,7 @@ class TestAMidTurnModifierSurvivesTheQueue:
     """
 
     def setup_method(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         privacy_mode.reset()
 
@@ -525,7 +525,7 @@ class TestAMidTurnModifierSurvivesTheQueue:
 
     @pytest.mark.asyncio
     async def test_the_drained_turn_is_restricted_before_it_persists(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, client, sessions = _dispatcher({7})
         key = d._session_key(("direct", "7"))
@@ -546,12 +546,12 @@ class TestAMidTurnModifierSurvivesTheQueue:
         assert any(t.startswith("Answer:") for t, _ in client.sent), "the drained turn must run"
         assert privacy_mode.is_temporary(key)
         logged.clear()
-        d._persist_turn(key, "summarise this", "done", True, "kirocrew")
+        d._persist_turn(key, "summarise this", "done", True, "ajcrew")
         assert not logged
 
     @pytest.mark.asyncio
     async def test_the_strictest_of_a_collapsed_burst_wins(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, _, sessions = _dispatcher({7})
         key = d._session_key(("direct", "7"))
@@ -566,7 +566,7 @@ class TestAMidTurnModifierSurvivesTheQueue:
 
     @pytest.mark.asyncio
     async def test_a_message_deferred_past_the_collapse_cap_keeps_its_protection(self) -> None:
-        from kiro_crew.messaging.queue_receipt import MAX_COLLAPSE
+        from aj_crew.messaging.queue_receipt import MAX_COLLAPSE
 
         d, _, sessions = _dispatcher({7})
         key = d._session_key(("direct", "7"))
@@ -598,7 +598,7 @@ class TestAMidTurnModifierSurvivesTheQueue:
 
     @pytest.mark.asyncio
     async def test_a_steered_modifier_marks_the_running_turn(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, _, sessions = _dispatcher({7})
         d.cfg.messaging.queue_mode = "steer"
@@ -622,7 +622,7 @@ class TestAMidTurnModifierSurvivesTheQueue:
 
     @pytest.mark.asyncio
     async def test_a_refused_steer_does_not_leave_the_session_marked(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, _, sessions = _dispatcher({7})
         d.cfg.messaging.queue_mode = "steer"
@@ -647,10 +647,10 @@ class TestAMidTurnModifierSurvivesTheQueue:
     @staticmethod
     def _real_map(sessions, tmp_path, monkeypatch):
         """Give the sessions double a real ``SessionMap`` so the row is a real record."""
-        from kiro_crew.session_map import SessionMap
+        from aj_crew.session_map import SessionMap
 
-        monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.session_map._KIRO_SESSIONS_DIR", tmp_path / "kiro")
+        monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_map._KIRO_SESSIONS_DIR", tmp_path / "kiro")
         sessions._session_map = SessionMap()
         return sessions._session_map
 
@@ -658,7 +658,7 @@ class TestAMidTurnModifierSurvivesTheQueue:
     def _audits(monkeypatch) -> list[dict]:
         from unittest.mock import MagicMock
 
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         events: list[dict] = []
         fake = MagicMock()
@@ -672,7 +672,7 @@ class TestAMidTurnModifierSurvivesTheQueue:
         refuses the message -- the steer never runs, the user is told, one denial.
         Mutation: check the row read-only, steer, then apply best-effort -- the steer
         runs and the mark holds with no row behind it."""
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, client, sessions = _dispatcher({7})
         d.cfg.messaging.queue_mode = "steer"
@@ -715,7 +715,7 @@ class TestAMidTurnModifierSurvivesTheQueue:
         preceding it. Mutation: return before the map's flush -- the steer runs on
         a row that only exists in memory (red: the steer was called and the mark
         holds)."""
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, client, sessions = _dispatcher({7})
         d.cfg.messaging.queue_mode = "steer"
@@ -752,7 +752,7 @@ class TestAMidTurnModifierSurvivesTheQueue:
         on, flag on, header stamped -- with a ``retained`` record, and the message
         still takes the queue path with its request. Mutation: drop the mark before
         the clear is durable -- the key reads persistent with its row still on disk."""
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, client, sessions = _dispatcher({7})
         d.cfg.messaging.queue_mode = "steer"
@@ -787,8 +787,8 @@ class TestAMidTurnModifierSurvivesTheQueue:
 
     @pytest.mark.asyncio
     async def test_a_full_map_refuses_before_the_steer(self, tmp_path, monkeypatch) -> None:
-        import kiro_crew.session_map as session_map_mod
-        from kiro_crew.messaging import privacy_mode
+        import aj_crew.session_map as session_map_mod
+        from aj_crew.messaging import privacy_mode
 
         d, client, sessions = _dispatcher({7})
         d.cfg.messaging.queue_mode = "steer"
@@ -797,7 +797,7 @@ class TestAMidTurnModifierSurvivesTheQueue:
         self._busy(d)
         sm = self._real_map(sessions, tmp_path, monkeypatch)
         monkeypatch.setattr(session_map_mod, "PRIVACY_ROW_CAP", 1)
-        sm.set_flag("telegram:kirocrew:direct:other", "incognito", True)
+        sm.set_flag("telegram:ajcrew:direct:other", "incognito", True)
         events = self._audits(monkeypatch)
         steer = AsyncMock(return_value=True)
         sessions._gp = SimpleNamespace(
@@ -820,9 +820,9 @@ class TestAMidTurnModifierSurvivesTheQueue:
         message takes the queue path with its request. Mutation: reserve after the
         steer -- the row is absent when the steer runs (red: ``steered == [False]``);
         never release -- the row stays (red: ``privacy_flagged_entries``)."""
-        from kiro_crew import history as history_mod
-        from kiro_crew.history import ConversationLog
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew import history as history_mod
+        from aj_crew.history import ConversationLog
+        from aj_crew.messaging import privacy_mode
 
         d, client, sessions = _dispatcher({7})
         d.cfg.messaging.queue_mode = "steer"
@@ -868,7 +868,7 @@ class TestAMidTurnModifierSurvivesTheQueue:
         and only an explicit decline (the steer returning False) releases.
         Mutation: release on the raise (the r36 shape) -- red: the row is
         cleared while the backend may be recording the message."""
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, client, sessions = _dispatcher({7})
         d.cfg.messaging.queue_mode = "steer"
@@ -906,7 +906,7 @@ class TestPrivacyModeEnforcement:
     """
 
     def setup_method(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         privacy_mode.reset()
 
@@ -915,7 +915,7 @@ class TestPrivacyModeEnforcement:
         # This is the documented difference between the two modes, and the half the
         # transcript gate cannot cover: refusing to WRITE still leaves yesterday's
         # memories and lessons in today's prompt.
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, _, _ = _dispatcher({7})
         await d.handle_message(_dm("/temporary summarise this"))
@@ -941,7 +941,7 @@ class TestPrivacyModeEnforcement:
         # the idle/daily rotation can mint a different key for the very turn the
         # user is asking to protect. Marking the old key would leave the turn
         # unrestricted while reporting success.
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, _, _ = _dispatcher({7})
         route = ("direct", "7")
@@ -971,7 +971,7 @@ class TestPrivacyModeEnforcement:
         # The in-memory trackers are empty on a cold process, so without hydration a
         # session the operator marked incognito yesterday reads as unrestricted
         # today and this turn's transcript is written.
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, _, _ = _dispatcher({7})
         key = d._session_key(("direct", "7"))
@@ -991,7 +991,7 @@ class TestPrivacyModeEnforcement:
     async def test_hydration_uses_the_post_rotation_key(self) -> None:
         # Hydrating the pre-rotation key would restore the restriction onto a key
         # nothing runs under, which reads as working and enforces nothing.
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, _, _ = _dispatcher({7})
         seen: list[str] = []
@@ -1019,7 +1019,7 @@ class TestRotationChokepoint:
     """
 
     def setup_method(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         privacy_mode.reset()
 
@@ -1042,7 +1042,7 @@ class TestRotationChokepoint:
     async def test_the_next_message_runs_under_the_protected_key(self) -> None:
         # The end-to-end version: mark, then send, and the transcript must not be
         # written. This is the consequence the key mismatch would produce.
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, _, _ = _dispatcher({7})
         d.cfg.messaging.idle_reset_minutes = 1
@@ -1067,7 +1067,7 @@ class TestRotationChokepoint:
         import inspect
         from pathlib import Path
 
-        from kiro_crew.telegram import transport_dispatch as td
+        from aj_crew.telegram import transport_dispatch as td
 
         src = inspect.getsource(td)
         assert (
@@ -1129,7 +1129,7 @@ class TestDurableWritesUseTheRotatedKey:
     def test_every_classified_method_matches_its_side(self) -> None:
         import inspect
 
-        from kiro_crew.telegram.transport_dispatch import TelegramDispatcher
+        from aj_crew.telegram.transport_dispatch import TelegramDispatcher
 
         wrong: list[str] = []
         for name, rotates in self._CLASSIFIED.items():
@@ -1149,7 +1149,7 @@ class TestDurableWritesUseTheRotatedKey:
         # exactly the gap this class exists to close.
         import inspect
 
-        from kiro_crew.telegram.transport_dispatch import TelegramDispatcher
+        from aj_crew.telegram.transport_dispatch import TelegramDispatcher
 
         consumers = self._consumers(inspect.getsource(TelegramDispatcher))
         # The methods ``telegram/dispatch`` owns are bound on the class too, so their
@@ -1200,10 +1200,10 @@ class TestDurableWritesUseTheRotatedKey:
         import importlib
         from pathlib import Path
 
-        from kiro_crew.telegram import transport_dispatch as td
+        from aj_crew.telegram import transport_dispatch as td
 
         return [
-            importlib.import_module(f"kiro_crew.telegram.dispatch.{p.stem}")
+            importlib.import_module(f"aj_crew.telegram.dispatch.{p.stem}")
             for p in sorted(Path(td.__file__).with_name("dispatch").glob("*.py"))
             if p.stem != "__init__"
         ]

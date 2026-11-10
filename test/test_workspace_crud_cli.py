@@ -1,4 +1,4 @@
-"""Unit tests for the ``kirocrew workspace`` CLI subcommand group.
+"""Unit tests for the ``ajcrew workspace`` CLI subcommand group.
 
 Tests cover argparse subparser structure, dispatch routing, list output
 format, and error handling for create/update/delete operations.
@@ -19,15 +19,15 @@ from conftest import requires_symlinks
 # ``main`` imports the mirrored facade lazily. Imported here, before any test
 # patches ``config_dir`` or ``sel``, so its owners bind the real objects: a
 # first import under those patches composes a family that disagrees with itself.
-from kiro_crew import cli_commands  # noqa: F401
-from kiro_crew import platform_compat
-from kiro_crew.cli import main
+from aj_crew import cli_commands  # noqa: F401
+from aj_crew import platform_compat
+from aj_crew.cli import main
 
 
 @pytest.fixture(autouse=True)
 def _mock_sel():
     """Mock SEL logging for all workspace CLI tests."""
-    with unittest.mock.patch("kiro_crew.sel.sel"):
+    with unittest.mock.patch("aj_crew.sel.sel"):
         yield
 
 
@@ -48,7 +48,7 @@ def _base_config() -> dict:
         "default_workspace": "default",
         "agents": {
             "default": {
-                "kiro_agent": "kirocrew",
+                "kiro_agent": "ajcrew",
                 "workspace": "default",
                 "memory_store": "default",
             },
@@ -72,18 +72,18 @@ class TestWorkspaceArgparse:
         # Verify each subcommand is accepted by argparse (no SystemExit(2)) and
         # leaves the workspace set it promises in the config file.
         for subcmd, argv, expected in [
-            ("list", ["kirocrew", "workspace", "list"], ["default", "staging"]),
+            ("list", ["ajcrew", "workspace", "list"], ["default", "staging"]),
             (
                 "create",
-                ["kirocrew", "workspace", "create", "--name", "newtest"],
+                ["ajcrew", "workspace", "create", "--name", "newtest"],
                 ["default", "newtest", "staging"],
             ),
-            ("update", ["kirocrew", "workspace", "update", "staging"], ["default", "staging"]),
-            ("delete", ["kirocrew", "workspace", "delete", "staging"], ["default"]),
+            ("update", ["ajcrew", "workspace", "update", "staging"], ["default", "staging"]),
+            ("delete", ["ajcrew", "workspace", "delete", "staging"], ["default"]),
         ]:
             with (
-                unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-                unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
+                unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+                unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
                 unittest.mock.patch("sys.argv", argv),
             ):
                 # Should not raise SystemExit(2) (argparse error)
@@ -96,7 +96,7 @@ class TestWorkspaceArgparse:
     def test_create_requires_name_flag(self) -> None:
         """Req 6.2: create subcommand requires --name."""
         with (
-            unittest.mock.patch("sys.argv", ["kirocrew", "workspace", "create"]),
+            unittest.mock.patch("sys.argv", ["ajcrew", "workspace", "create"]),
             pytest.raises(SystemExit) as exc_info,
         ):
             main()
@@ -107,16 +107,16 @@ class TestWorkspaceArgparse:
         """Req 6.2: create accepts --dir."""
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
             # cli_commands binds config_dir at import, so the loader patch above
             # does not reach it. Create now materializes its directory, so that
             # binding has to point at a real one.
-            unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
             unittest.mock.patch(
                 "sys.argv",
                 [
-                    "kirocrew",
+                    "ajcrew",
                     "workspace",
                     "create",
                     "--name",
@@ -141,12 +141,12 @@ class TestWorkspaceArgparse:
         """
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
-            unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "create", "--name", "newws"],
+                ["ajcrew", "workspace", "create", "--name", "newws"],
             ),
         ):
             main()
@@ -163,12 +163,12 @@ class TestWorkspaceArgparse:
         target.mkdir()
         platform_compat.symlink_or_junction(str(target), str(tmp_path / "linked"))
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
-            unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "create", "--name", "newws", "--dir", "linked"],
+                ["ajcrew", "workspace", "create", "--name", "newws", "--dir", "linked"],
             ),
             pytest.raises(SystemExit) as exc_info,
         ):
@@ -185,15 +185,15 @@ class TestWorkspaceArgparse:
         # Create the source workspace directory so copytree has something to copy
         (tmp_path / "workspace-staging").mkdir(parents=True, exist_ok=True)
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
             # cli_commands binds config_dir at import, so the loader patch above
             # does not reach it -- and this create now does real filesystem work.
-            unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
             unittest.mock.patch(
                 "sys.argv",
                 [
-                    "kirocrew",
+                    "ajcrew",
                     "workspace",
                     "create",
                     "--name",
@@ -216,12 +216,12 @@ class TestWorkspaceArgparse:
         # because a declared-but-missing workspace refuses every private member.
         (tmp_path / "new-path").mkdir()
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
-            unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "update", "staging", "--dir", "new-path"],
+                ["ajcrew", "workspace", "update", "staging", "--dir", "new-path"],
             ),
         ):
             main()
@@ -236,12 +236,12 @@ class TestWorkspaceArgparse:
         (tmp_path / "a-file").write_text("not a directory", encoding="utf-8")
         for target in ("never-created", "a-file"):
             with (
-                unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-                unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
-                unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
+                unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+                unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
+                unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
                 unittest.mock.patch(
                     "sys.argv",
-                    ["kirocrew", "workspace", "update", "staging", "--dir", target],
+                    ["ajcrew", "workspace", "update", "staging", "--dir", target],
                 ),
                 pytest.raises(SystemExit) as exc_info,
             ):
@@ -255,10 +255,10 @@ class TestWorkspaceArgparse:
         """Req 6.4: delete accepts positional name."""
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "delete", "staging"],
+                ["ajcrew", "workspace", "delete", "staging"],
             ),
         ):
             main()
@@ -270,7 +270,7 @@ class TestWorkspaceArgparse:
 
 
 class TestWorkspaceList:
-    """Test ``kirocrew workspace list`` output format."""
+    """Test ``ajcrew workspace list`` output format."""
 
     def test_list_shows_header_and_default_marker(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
@@ -278,8 +278,8 @@ class TestWorkspaceList:
         """Req 5.1: formatted table with * marker for default workspace."""
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("sys.argv", ["kirocrew", "workspace", "list"]),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("sys.argv", ["ajcrew", "workspace", "list"]),
         ):
             main()
 
@@ -301,8 +301,8 @@ class TestWorkspaceList:
         data["workspaces"]["staging"] = {"dir": "work\nspace\x07-staging"}
         cfg_path = _write_config(tmp_path, data)
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("sys.argv", ["kirocrew", "workspace", "list"]),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("sys.argv", ["ajcrew", "workspace", "list"]),
         ):
             main()
 
@@ -318,7 +318,7 @@ class TestWorkspaceList:
 
 
 class TestWorkspaceCreate:
-    """Test ``kirocrew workspace create`` error paths."""
+    """Test ``ajcrew workspace create`` error paths."""
 
     def test_create_duplicate_name_exits_nonzero(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
@@ -326,10 +326,10 @@ class TestWorkspaceCreate:
         """Req 5.4: duplicate name → stderr + exit 1."""
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "create", "--name", "default"],
+                ["ajcrew", "workspace", "create", "--name", "default"],
             ),
             pytest.raises(SystemExit) as exc_info,
         ):
@@ -345,11 +345,11 @@ class TestWorkspaceCreate:
         """Req 5.5: copy_from with non-existent source → stderr + exit 1."""
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
                 "sys.argv",
                 [
-                    "kirocrew",
+                    "ajcrew",
                     "workspace",
                     "create",
                     "--name",
@@ -379,16 +379,16 @@ class TestWorkspaceCreate:
         (tmp_path / "workspace-staging" / "notes.md").write_text("source", encoding="utf-8")
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
-            unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
             unittest.mock.patch(
-                "kiro_crew.config.loader.write_config_atomically",
+                "aj_crew.config.loader.write_config_atomically",
                 side_effect=OSError("no space left on device"),
             ),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "create", "--name", "copied", "--copy-from", "staging"],
+                ["ajcrew", "workspace", "create", "--name", "copied", "--copy-from", "staging"],
             ),
             pytest.raises(OSError),
         ):
@@ -417,13 +417,13 @@ class TestWorkspaceCreate:
         with (
             # Windows ``expanduser`` reads USERPROFILE, not HOME (test_agent_spec_hardened_reads).
             unittest.mock.patch.dict("os.environ", {"HOME": str(home), "USERPROFILE": str(home)}),
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=crew),
-            unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=crew),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=crew),
+            unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=crew),
             unittest.mock.patch(
                 "sys.argv",
                 [
-                    "kirocrew",
+                    "ajcrew",
                     "workspace",
                     "create",
                     "--name",
@@ -456,13 +456,13 @@ class TestWorkspaceCreate:
         with (
             # Windows ``expanduser`` reads USERPROFILE, not HOME (test_agent_spec_hardened_reads).
             unittest.mock.patch.dict("os.environ", {"HOME": str(home), "USERPROFILE": str(home)}),
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=crew),
-            unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=crew),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=crew),
+            unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=crew),
             unittest.mock.patch(
                 "sys.argv",
                 [
-                    "kirocrew",
+                    "ajcrew",
                     "workspace",
                     "create",
                     "--name",
@@ -484,7 +484,7 @@ class TestWorkspaceCreate:
 
 
 class TestWorkspaceUpdate:
-    """Test ``kirocrew workspace update`` error paths."""
+    """Test ``ajcrew workspace update`` error paths."""
 
     def test_update_nonexistent_exits_nonzero(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
@@ -492,10 +492,10 @@ class TestWorkspaceUpdate:
         """Req 5.7: non-existent name → stderr + exit 1."""
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "update", "nonexistent", "--dir", "/x"],
+                ["ajcrew", "workspace", "update", "nonexistent", "--dir", "/x"],
             ),
             pytest.raises(SystemExit) as exc_info,
         ):
@@ -510,7 +510,7 @@ class TestWorkspaceUpdate:
 
 
 class TestWorkspaceDelete:
-    """Test ``kirocrew workspace delete`` error paths."""
+    """Test ``ajcrew workspace delete`` error paths."""
 
     def test_delete_default_workspace_exits_nonzero(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
@@ -518,10 +518,10 @@ class TestWorkspaceDelete:
         """Req 5.9: delete default workspace → stderr + exit 1."""
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "delete", "default"],
+                ["ajcrew", "workspace", "delete", "default"],
             ),
             pytest.raises(SystemExit) as exc_info,
         ):
@@ -539,17 +539,17 @@ class TestWorkspaceDelete:
         # Add a non-default workspace referenced by an agent
         data["workspaces"]["oncall"] = {"dir": "workspace-oncall"}
         data["agents"]["oncall-agent"] = {
-            "kiro_agent": "kirocrew",
+            "kiro_agent": "ajcrew",
             "workspace": "oncall",
             "memory_store": "default",
         }
         cfg_path = _write_config(tmp_path, data)
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "delete", "oncall"],
+                ["ajcrew", "workspace", "delete", "oncall"],
             ),
             pytest.raises(SystemExit) as exc_info,
         ):
@@ -566,10 +566,10 @@ class TestWorkspaceDelete:
         """Req 5.11: non-existent workspace → stderr + exit 1."""
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "delete", "nonexistent"],
+                ["ajcrew", "workspace", "delete", "nonexistent"],
             ),
             pytest.raises(SystemExit) as exc_info,
         ):
@@ -596,12 +596,12 @@ class TestWorkspaceDirContainmentMessage:
     ) -> None:
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
-            unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "create", "--name", "ws1", "--dir", bad_dir],
+                ["ajcrew", "workspace", "create", "--name", "ws1", "--dir", bad_dir],
             ),
             pytest.raises(SystemExit) as exc_info,
         ):
@@ -619,12 +619,12 @@ class TestWorkspaceDirContainmentMessage:
     ) -> None:
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
-            unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "update", "staging", "--dir", "/etc"],
+                ["ajcrew", "workspace", "update", "staging", "--dir", "/etc"],
             ),
             pytest.raises(SystemExit) as exc_info,
         ):
@@ -640,12 +640,12 @@ class TestWorkspaceDirContainmentMessage:
         """The fix is diagnostics-only — a legitimate relative name must still work."""
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
-            unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "create", "--name", "ws2", "--dir", "workspace-ws2"],
+                ["ajcrew", "workspace", "create", "--name", "ws2", "--dir", "workspace-ws2"],
             ),
         ):
             main()
@@ -664,12 +664,12 @@ class TestWorkspaceDirContainmentMessage:
         """
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
-            unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "create", "--name", "tildews", "--dir", bad_dir],
+                ["ajcrew", "workspace", "create", "--name", "tildews", "--dir", bad_dir],
             ),
             pytest.raises(SystemExit) as exc_info,
         ):
@@ -687,13 +687,13 @@ class TestWorkspaceDirContainmentMessage:
         bad_dir = "~nosuchuser_kc/x"
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
-            unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
             unittest.mock.patch(
                 "sys.argv",
                 [
-                    "kirocrew",
+                    "ajcrew",
                     "workspace",
                     "create",
                     "--name",
@@ -722,7 +722,7 @@ class TestWorkspaceDirContainmentMessage:
         through while the plain absolute form was refused. Containment is now a
         STRICT descendant test, decided in the one place that expands.
         """
-        from kiro_crew import cli_commands as cc
+        from aj_crew import cli_commands as cc
 
         monkeypatch.setattr(cc, "config_dir", lambda: tmp_path)
         monkeypatch.setenv("HOME", str(tmp_path.parent))
@@ -744,12 +744,12 @@ class TestWorkspaceDirContainmentMessage:
         """End-to-end: `--dir <data-home root>` exits 1, no traceback."""
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
-            unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "create", "--name", "rootws", "--dir", str(tmp_path)],
+                ["ajcrew", "workspace", "create", "--name", "rootws", "--dir", str(tmp_path)],
             ),
             pytest.raises(SystemExit) as exc_info,
         ):
@@ -782,10 +782,10 @@ class TestWorkspaceDirContainmentMessage:
         ``profiles/locked.json``.
 
         Uses the REAL default home shape because ``is_sensitive_path()`` matches
-        the literal ``~/.kiro/crew`` / ``~/.kirocrew`` prefixes rather than
+        the literal ``~/.kiro/crew`` / ``~/.ajcrew`` prefixes rather than
         ``config_dir()``, so a tmp_path home would not exercise the gate at all.
         """
-        from kiro_crew import cli_commands as cc
+        from aj_crew import cli_commands as cc
 
         home = Path.home() / ".kiro" / "crew"
         monkeypatch.setattr(cc, "config_dir", lambda: home)
@@ -794,7 +794,7 @@ class TestWorkspaceDirContainmentMessage:
     @pytest.mark.parametrize("ok_dir", ["workspace", "workspace-ok", "ws/nested/ok"])
     def test_ordinary_workspace_dirs_still_allowed(self, monkeypatch, ok_dir: str) -> None:
         """The keystone screen must not block legitimate workspace dirs."""
-        from kiro_crew import cli_commands as cc
+        from aj_crew import cli_commands as cc
 
         home = Path.home() / ".kiro" / "crew"
         monkeypatch.setattr(cc, "config_dir", lambda: home)
@@ -802,7 +802,7 @@ class TestWorkspaceDirContainmentMessage:
 
     def test_guard_fails_closed_on_unresolvable_path(self, monkeypatch, tmp_path: Path) -> None:
         """Any resolution failure returns False (deny), never propagates."""
-        from kiro_crew import cli_commands as cc
+        from aj_crew import cli_commands as cc
 
         monkeypatch.setattr(cc, "config_dir", lambda: tmp_path)
 
@@ -826,12 +826,12 @@ class TestWorkspaceDirContainmentMessage:
         cfg_path = _write_config(tmp_path, _base_config())
         inside = str(tmp_path / "ws-inside")
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
-            unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "create", "--name", "insidews", "--dir", inside],
+                ["ajcrew", "workspace", "create", "--name", "insidews", "--dir", inside],
             ),
         ):
             main()
@@ -841,7 +841,7 @@ class TestWorkspaceDirContainmentMessage:
     def test_help_does_not_advertise_absolute_paths(self) -> None:
         """The help text must not tell users to pass `/path/to/dir` when that is refused."""
         with (
-            unittest.mock.patch("sys.argv", ["kirocrew", "workspace", "create", "--help"]),
+            unittest.mock.patch("sys.argv", ["ajcrew", "workspace", "create", "--help"]),
             pytest.raises(SystemExit),
         ):
             main()
@@ -861,20 +861,20 @@ class TestCliCrudIsLockedDelta:
 
     def _run(self, argv: list[str], cfg_path: Path, tmp_path: Path) -> None:
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
             # cli_commands binds config_dir at import, so the loader patch above
             # does not reach it. Create now materializes its directory, so that
             # binding has to point at a real one.
-            unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            unittest.mock.patch("sys.argv", ["kirocrew", *argv]),
+            unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            unittest.mock.patch("sys.argv", ["ajcrew", *argv]),
         ):
             main()
 
     def test_workspace_create_preserves_a_concurrently_landed_key(self, tmp_path: Path) -> None:
         """A document key the CLI's snapshot never saw survives the write.
 
-        ``KiroCrewConfig`` drops unknown keys on re-serialization, so under
+        ``AjCrewConfig`` drops unknown keys on re-serialization, so under
         the old ``cfg.save()`` path the marker below was erased; the delta
         write rewrites only the workspaces section and keeps it.
         """
@@ -914,7 +914,7 @@ class TestCliCrudIsLockedDelta:
         # Simulate a racer: the name is free in the CLI's snapshot but taken
         # by the time the locked read runs. Patch the loader's snapshot load
         # to hide the workspace from the pre-check only.
-        import kiro_crew.cli_commands as cli_commands_module
+        import aj_crew.cli_commands as cli_commands_module
 
         original_mutator_runner = cli_commands_module._locked_config_write
 
@@ -925,14 +925,14 @@ class TestCliCrudIsLockedDelta:
             original_mutator_runner(mutate, **kwargs)
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
             unittest.mock.patch.object(
                 cli_commands_module, "_locked_config_write", _inject_racer_then_run
             ),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "create", "--name", "fresh", "--dir", "workspace-f2"],
+                ["ajcrew", "workspace", "create", "--name", "fresh", "--dir", "workspace-f2"],
             ),
             pytest.raises(SystemExit) as exc_info,
         ):
@@ -957,7 +957,7 @@ class TestCliRound8Hardening:
         data = _base_config()
         cfg_path = _write_config(tmp_path, data)
 
-        import kiro_crew.cli_commands as cc
+        import aj_crew.cli_commands as cc
 
         original = cc._locked_config_write
 
@@ -968,10 +968,10 @@ class TestCliRound8Hardening:
             original(mutate, **kwargs)
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
             unittest.mock.patch.object(cc, "_locked_config_write", _racer_selects_default_then_run),
-            unittest.mock.patch("sys.argv", ["kirocrew", "workspace", "delete", "staging"]),
+            unittest.mock.patch("sys.argv", ["ajcrew", "workspace", "delete", "staging"]),
             pytest.raises(SystemExit) as exc_info,
         ):
             main()
@@ -989,9 +989,9 @@ class TestCliRound8Hardening:
         data["default_agent"] = "spare"
         cfg_path = _write_config(tmp_path, data)
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
-            unittest.mock.patch("sys.argv", ["kirocrew", "agent", "delete", "spare"]),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("sys.argv", ["ajcrew", "agent", "delete", "spare"]),
             pytest.raises(SystemExit) as exc_info,
         ):
             main()
@@ -1008,7 +1008,7 @@ class TestCliRound8Hardening:
         (src / "loser-file.md").write_text("x", encoding="utf-8")
         cfg_path = _write_config(tmp_path, _base_config())
 
-        import kiro_crew.cli_commands as cc
+        import aj_crew.cli_commands as cc
 
         original = cc._locked_config_write
 
@@ -1022,13 +1022,13 @@ class TestCliRound8Hardening:
             original(mutate, **kwargs)
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
-            unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
             unittest.mock.patch.object(cc, "_locked_config_write", _racer_takes_name_then_run),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "create", "--name", "copied", "--copy-from", "default"],
+                ["ajcrew", "workspace", "create", "--name", "copied", "--copy-from", "default"],
             ),
             pytest.raises(SystemExit) as exc_info,
         ):
@@ -1063,9 +1063,9 @@ class TestCliRound8Hardening:
         (tmp_path / "workspace" / "notes.md").write_text("x", encoding="utf-8")
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
-            unittest.mock.patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
             unittest.mock.patch.object(
                 platform_compat,
                 "publish_dir_noreplace",
@@ -1073,7 +1073,7 @@ class TestCliRound8Hardening:
             ),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "workspace", "create", "--name", "copied", "--copy-from", "default"],
+                ["ajcrew", "workspace", "create", "--name", "copied", "--copy-from", "default"],
             ),
             pytest.raises(SystemExit) as exc_info,
         ):
@@ -1095,9 +1095,9 @@ class TestWorkspaceNameRefusalNamesTheShape:
         cfg_path = _write_config(tmp_path, _base_config())
         before = cfg_path.read_text(encoding="utf-8")
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
-            unittest.mock.patch("sys.argv", ["kirocrew", "workspace", "create", "--name", bad]),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
+            unittest.mock.patch("sys.argv", ["ajcrew", "workspace", "create", "--name", bad]),
             pytest.raises(SystemExit) as exc_info,
         ):
             main()
@@ -1109,7 +1109,7 @@ class TestWorkspaceNameRefusalNamesTheShape:
         assert cfg_path.read_text(encoding="utf-8") == before
 
     def test_the_hint_matches_the_pattern_it_describes(self) -> None:
-        from kiro_crew.validation import AGENT_NAME_HINT, WORKSPACE_NAME_RE
+        from aj_crew.validation import AGENT_NAME_HINT, WORKSPACE_NAME_RE
 
         assert "1-64" in AGENT_NAME_HINT
         assert "starting and ending with a letter or digit" in AGENT_NAME_HINT

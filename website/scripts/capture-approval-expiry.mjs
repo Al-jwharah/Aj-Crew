@@ -32,7 +32,7 @@ import { logPageProblems, stubDashboardApi, json } from './lib/stub-dashboard-ap
 
 const OUT = process.argv[2] || '../temp-screenshots/11178-approval-expiry'
 const SLOT = 'chat-approval-expiry'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 /** The catalog sentences the retire path must render — copied from
  *  `hooks.useWebSocket.approval_wait_expired` / `approval_rejected` in
@@ -57,7 +57,7 @@ const slots = [{
   running: true,
   last_message: 'Waiting on your approval before I touch the build tree.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   folder_id: '',
@@ -107,7 +107,7 @@ async function main() {
   const extra = (path, route) => {
     if (path === '/api/spawn') {
       return json(route, {
-        agents: [{ id: SPAWN_AGENT_ID, task: SPAWN_TASK, done: false, parent: `dashboard:${SLOT}`, agent: 'kirocrew' }],
+        agents: [{ id: SPAWN_AGENT_ID, task: SPAWN_TASK, done: false, parent: `dashboard:${SLOT}`, agent: 'ajcrew' }],
       }), true
     }
     if (path.startsWith('/api/chat/slots/')) return json(route, detail), true

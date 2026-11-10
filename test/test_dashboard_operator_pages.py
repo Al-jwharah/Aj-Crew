@@ -17,9 +17,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import agent_panel
-from kiro_crew.dashboard.handlers import member_dashboard as routes
-from kiro_crew.dashboard_templates import catalog, instance
+from aj_crew import agent_panel
+from aj_crew.dashboard.handlers import member_dashboard as routes
+from aj_crew.dashboard_templates import catalog, instance
 
 MEMBER = "Fleet Conductor"
 SLUG = "fleet-conductor"
@@ -79,12 +79,12 @@ def _can_symlink(tmp_path: Path) -> bool:
 @pytest.fixture(autouse=True)
 def _env(tmp_path, _floor_monkeypatch):
     """A scratch data home, one built-in fixture page, and the member checks stubbed."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     builtin = _write(tmp_path / "builtin" / "fixture-board", "fixture-board", "builtin")
     _floor_monkeypatch.setattr(catalog, "builtin_dir", lambda: builtin.parent)
 
     cfg = SimpleNamespace(agents={MEMBER: SimpleNamespace(member_id="")})
-    _floor_monkeypatch.setattr(routes.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+    _floor_monkeypatch.setattr(routes.AjCrewConfig, "load", staticmethod(lambda: cfg))
     _floor_monkeypatch.setattr(routes.members_mod, "member_slug", lambda name, config=None: SLUG)
     _floor_monkeypatch.setattr(routes.members_mod, "validate_slug", lambda slug: slug)
     _floor_monkeypatch.setattr(routes, "_member_names_for_slug", lambda cfg, slug: [MEMBER])
@@ -257,7 +257,7 @@ def test_the_served_page_is_framed_exactly_like_a_built_in_one() -> None:
     assert builtin_body is not None and user_body is not None
     assert user_body == builtin_body
 
-    from kiro_crew import dashboard_frame
+    from aj_crew import dashboard_frame
 
     document = dashboard_frame.compose(PAGE, dashboard_frame.read_payload({}))
     assert f'content="{dashboard_frame.FRAME_CSP}"' in document
@@ -308,23 +308,23 @@ def _page_file() -> str:
 
 
 def test_an_agent_file_tool_write_to_a_page_file_is_refused() -> None:
-    from kiro_crew.security import is_sensitive_write_path
+    from aj_crew.security import is_sensitive_write_path
 
     assert is_sensitive_write_path(_page_file())
     assert is_sensitive_write_path(str(_operator_root() / "my-board" / "manifest.json"))
-    for prefix in (".kiro/crew", ".kirocrew"):
+    for prefix in (".kiro/crew", ".ajcrew"):
         spelled = Path.home() / prefix / "panel-templates" / "my-board" / "template.html"
         assert is_sensitive_write_path(str(spelled)), spelled
 
 
 def test_an_agent_file_tool_may_still_read_a_page_file() -> None:
-    from kiro_crew.security import is_sensitive_path
+    from aj_crew.security import is_sensitive_path
 
     assert not is_sensitive_path(_page_file())
 
 
 def test_the_sandbox_seals_the_folder_read_only_and_precreates_it() -> None:
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     leaf = agent_panel.TEMPLATES_DIRNAME
     assert leaf in sandbox._CREW_READONLY_LEAVES
@@ -338,7 +338,7 @@ def test_the_sandbox_seals_the_folder_read_only_and_precreates_it() -> None:
 
 
 def test_the_folder_name_refuses_an_alias_and_is_classified() -> None:
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     leaf = agent_panel.TEMPLATES_DIRNAME
     assert leaf in sandbox._CREW_NO_ALIAS_LEAVES

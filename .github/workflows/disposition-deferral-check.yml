@@ -45,7 +45,7 @@ jobs:
     # dispatched by GitHub rather than that webhook, so no actor allowlist
     # applies and the reason above is untouched; it buys queue position on a
     # lane whose reply a maintainer is waiting on to clear a disposition.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 5
     steps:
       # The four tests a tracked deferral passes live in

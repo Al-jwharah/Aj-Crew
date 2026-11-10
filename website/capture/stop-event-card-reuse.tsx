@@ -31,7 +31,7 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 initI18n(params.get('lang') || 'en')
 
 /** Exactly what the gateway writes for a stop, for each state it can settle in. */

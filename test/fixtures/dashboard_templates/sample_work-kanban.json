@@ -68,7 +68,7 @@
         "agent": "dash-demo",
         "close_reason": null,
         "closed_at": null,
-        "cwd": "/home/you/kirocrew/workspace",
+        "cwd": "/home/you/ajcrew/workspace",
         "dropped": {
           "bytes": 0,
           "count": 0
@@ -525,7 +525,7 @@
           {
             "acceptance": {
               "kind": "file",
-              "path": "src/kiro_crew/dashboard_templates/builtin/crewmate-overview/manifest.json"
+              "path": "src/aj_crew/dashboard_templates/builtin/crewmate-overview/manifest.json"
             },
             "artifacts": {
               "pr": "16317"
@@ -559,7 +559,7 @@
           {
             "acceptance": {
               "kind": "file",
-              "path": "src/kiro_crew/dashboard_templates/builtin/goal-board/manifest.json"
+              "path": "src/aj_crew/dashboard_templates/builtin/goal-board/manifest.json"
             },
             "artifacts": {},
             "closed_at": "2026-10-03T12:11:52+00:00",
@@ -623,7 +623,7 @@
           {
             "acceptance": {
               "kind": "file",
-              "path": "src/kiro_crew/dashboard_templates/builtin/work-kanban/manifest.json"
+              "path": "src/aj_crew/dashboard_templates/builtin/work-kanban/manifest.json"
             },
             "artifacts": {},
             "closed_at": null,
@@ -655,7 +655,7 @@
           {
             "acceptance": {
               "kind": "file",
-              "path": "src/kiro_crew/dashboard_templates/builtin/session-ledger/manifest.json"
+              "path": "src/aj_crew/dashboard_templates/builtin/session-ledger/manifest.json"
             },
             "artifacts": {},
             "closed_at": null,
@@ -687,7 +687,7 @@
           {
             "acceptance": {
               "kind": "file",
-              "path": "src/kiro_crew/dashboard_templates/builtin/work-map/manifest.json"
+              "path": "src/aj_crew/dashboard_templates/builtin/work-map/manifest.json"
             },
             "artifacts": {},
             "closed_at": null,
@@ -719,7 +719,7 @@
           {
             "acceptance": {
               "kind": "file",
-              "path": "src/kiro_crew/dashboard_templates/builtin/spend-and-tools/manifest.json"
+              "path": "src/aj_crew/dashboard_templates/builtin/spend-and-tools/manifest.json"
             },
             "artifacts": {},
             "closed_at": null,
@@ -751,7 +751,7 @@
           {
             "acceptance": {
               "kind": "file",
-              "path": "src/kiro_crew/dashboard_templates/share.py"
+              "path": "src/aj_crew/dashboard_templates/share.py"
             },
             "artifacts": {},
             "closed_at": null,
@@ -783,7 +783,7 @@
           {
             "acceptance": {
               "kind": "file",
-              "path": "src/kiro_crew/dashboard_templates/builtin/fold-heatmap/manifest.json"
+              "path": "src/aj_crew/dashboard_templates/builtin/fold-heatmap/manifest.json"
             },
             "artifacts": {},
             "closed_at": "2026-10-03T13:01:12+00:00",
@@ -815,7 +815,7 @@
           {
             "acceptance": {
               "kind": "file",
-              "path": "src/kiro_crew/dashboard_templates/builtin/session-cards/manifest.json"
+              "path": "src/aj_crew/dashboard_templates/builtin/session-cards/manifest.json"
             },
             "artifacts": {},
             "closed_at": "2026-10-03T12:00:19+00:00",

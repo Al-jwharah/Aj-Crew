@@ -28,11 +28,11 @@ from aiohttp.test_utils import TestClient, TestServer
 from member_memory_helpers import write_member_home
 from off_loop_helpers import off_loop
 
-from kiro_crew import agent_panel
-from kiro_crew import members as members_mod
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log_projection
-from kiro_crew.dashboard.handlers import agent_panel as routes
+from aj_crew import agent_panel
+from aj_crew import members as members_mod
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log_projection
+from aj_crew.dashboard.handlers import agent_panel as routes
 
 # through a real allocation
 
@@ -43,11 +43,11 @@ def _member_session_key(crew_name: str = CREW) -> str:
     Production's own derivation rather than a string spelled a second way here,
     because a key spelled a second way is the entire bug this section guards.
     """
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     slug = members_mod.member_slug(crew_name)
     try:
-        _slot, store = routes._member_thread_slot(KiroCrewConfig.load(), crew_name, slug)
+        _slot, store = routes._member_thread_slot(AjCrewConfig.load(), crew_name, slug)
     except Exception:
         store = ""
     return members_mod.member_thread_session_alias(slug, store)
@@ -60,10 +60,10 @@ def _real_allocation(crew_name: str = CREW, *, member: str | None = None):
     show WHICH key reaches a live allocation. ``member`` is the ``capability_member``;
     empty models a session with a blank ``crew_agent`` that selected a provider template.
     """
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.session import SessionManager, _Session
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.session import SessionManager, _Session
 
-    sessions = SessionManager(KiroCrewConfig())
+    sessions = SessionManager(AjCrewConfig())
     session = _Session(provider=SimpleNamespace(session_id=_unit_for(crew_name)), agent=crew_name)
     session.capability_member = crew_name if member is None else member
     sessions._sessions[_member_session_key(crew_name)] = session
@@ -75,7 +75,7 @@ def test_the_registry_key_is_the_slot_key_behind_a_transport_prefix():
 
     ``_normalize_slot_key`` strips the prefix, so its output always misses the registry.
     """
-    from kiro_crew.dashboard.state import _normalize_slot_key
+    from aj_crew.dashboard.state import _normalize_slot_key
 
     registry_key = _member_session_key()
     slot_key = _crew_slot(CREW)
@@ -235,7 +235,7 @@ async def test_a_key_the_registry_does_not_hold_is_refused_as_unresolved(vetted)
 async def test_a_degraded_roster_refuses_takeover_rather_than_granting_it(vetted, monkeypatch):
     """ "Cannot read the roster" must not answer "the owner is gone".
 
-    ``KiroCrewConfig.load()`` returns defaults when the file is unreadable, so an empty
+    ``AjCrewConfig.load()`` returns defaults when the file is unreadable, so an empty
     roster may mean "unreadable", and takeover would hand a live crew's record away.
     """
     async with _client() as owner:
@@ -247,14 +247,14 @@ async def test_a_degraded_roster_refuses_takeover_rather_than_granting_it(vetted
             )
         ).status == 200
 
-    real_load = routes.KiroCrewConfig.load
+    real_load = routes.AjCrewConfig.load
 
     def _degraded_load(*a, **kw):
         cfg = real_load(*a, **kw)
         object.__setattr__(cfg, "_degraded_sections", frozenset({"whole-config"}))
         return cfg
 
-    monkeypatch.setattr(routes.KiroCrewConfig, "load", staticmethod(_degraded_load))
+    monkeypatch.setattr(routes.AjCrewConfig, "load", staticmethod(_degraded_load))
 
     other = CREW.upper()
     assert members_mod.slug_for_name(other) == SLUG, "fixture no longer collides"
@@ -309,7 +309,7 @@ async def test_an_invalid_legacy_name_still_holds_its_panel(vetted, monkeypatch)
     assert kept["crew_key"] == agent_panel.crew_key(legacy_name)
     assert kept["data"] == {"cycle": 47}
 
-    real_load = routes.KiroCrewConfig.load
+    real_load = routes.AjCrewConfig.load
 
     def _roster_with_the_legacy_crew(*a, **kw):
         cfg = real_load(*a, **kw)
@@ -317,7 +317,7 @@ async def test_an_invalid_legacy_name_still_holds_its_panel(vetted, monkeypatch)
         cfg.agents[legacy_name] = SimpleNamespace(name=legacy_name)
         return cfg
 
-    monkeypatch.setattr(routes.KiroCrewConfig, "load", staticmethod(_roster_with_the_legacy_crew))
+    monkeypatch.setattr(routes.AjCrewConfig, "load", staticmethod(_roster_with_the_legacy_crew))
 
     colliding = "cafe"
     assert members_mod.slug_for_name(colliding) == legacy_slug, "fixture no longer collides"
@@ -342,12 +342,12 @@ async def test_a_v2_member_round_trips_through_the_resolving_slot(vetted):
     ``_member_thread_slot`` adds the store to the key for a V2 member, so a fallback-only
     test proves nothing: the fold would miss and the drawer show "never published".
     """
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.config.paths import config_dir
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.config.paths import config_dir
 
     home = config_dir()
     write_member_home(home, CREW)
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     # The premise, asserted against the resolver rather than restated: the slot must
     # carry the store, which is what makes this the branch the fallback is not.
@@ -392,7 +392,7 @@ async def test_a_publish_whose_append_is_skipped_is_still_what_a_reader_gets(vet
 
         # A third cycle with the log off: the file advances, the fold cannot.
         with pytest.MonkeyPatch.context() as patch:
-            patch.setenv("KIROCREW_CREW_LOG", "0")
+            patch.setenv("AJCREW_CREW_LOG", "0")
             crew_log_emit.reset_caches()
             resp = await c.post(
                 "/api/agent-panel/publish",
@@ -413,12 +413,12 @@ async def test_a_publish_whose_append_is_skipped_is_still_what_a_reader_gets(vet
     # The fold's history rides along with the file's panel, so the crew's past is not
     # lost just because its newest cycle went unlogged. Asserted on the record rather
     # than the response, because the route does not surface ``history`` yet.
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     crew_log_projection.forget_slot_folds()
     record = off_loop(
         routes._panel_record,
-        routes._panel_slot(KiroCrewConfig.load(), CREW, SLUG),
+        routes._panel_slot(AjCrewConfig.load(), CREW, SLUG),
         SLUG,
         agent_panel.crew_key(CREW),
     )
@@ -785,7 +785,7 @@ async def test_the_gateway_registers_exactly_these_paths_without_importing_us():
     """
     import inspect
 
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     ours = {str(r.resource.canonical) for r in _mounted().router.routes()}
     boot_src = inspect.getsource(server._register_mcp_routes)

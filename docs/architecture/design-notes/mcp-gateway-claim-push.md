@@ -5,7 +5,7 @@ fallback, so both designs below are live behaviour.
 
 ## Problem
 
-gatewayd stamps a caller identity (`_meta.kirocrew.caller`) on every MCP call
+gatewayd stamps a caller identity (`_meta.ajcrew.caller`) on every MCP call
 it forwards, so pooled backends know which session is calling. That identity
 comes from one place: the `register` frame each stub sends when it connects.
 No `session_key` on the register means every call from that connection is
@@ -117,12 +117,12 @@ claim-path involvement.
 
 ## Files
 
-- `src/kiro_crew/mcp_gateway/claim.py` — frame builder + sender (stdlib-only)
-- `src/kiro_crew/mcp_gateway/daemon/identity.py` — `_StubConn`, `_CONN_INDEX`;
+- `src/aj_crew/mcp_gateway/claim.py` — frame builder + sender (stdlib-only)
+- `src/aj_crew/mcp_gateway/daemon/identity.py` — `_StubConn`, `_CONN_INDEX`;
   `daemon/control.py` — `_apply_claim`, claim first-frame dispatch;
   `daemon/connection.py` — per-frame caller pickup
-- `src/kiro_crew/mcp_gateway/stub_register.py` — `ancestor_pids` on register;
-  `src/kiro_crew/mcp_gateway/stub.py` — unbounded backoff recaller
-- `src/kiro_crew/acp/client_lifecycle.py`, `src/kiro_crew/acp/session_provider.py` —
+- `src/aj_crew/mcp_gateway/stub_register.py` — `ancestor_pids` on register;
+  `src/aj_crew/mcp_gateway/stub.py` — unbounded backoff recaller
+- `src/aj_crew/acp/client_lifecycle.py`, `src/aj_crew/acp/session_provider.py` —
   `rekey()` claim hooks
 - `test/test_mcp_gateway_claim.py` — functional + unit coverage

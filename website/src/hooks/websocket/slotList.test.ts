@@ -4,9 +4,9 @@ import { describe, it, expect } from 'vitest'
 import type { ChatSlot } from '../../types'
 import { applySlotsDiff } from './slotList'
 
-const rowA = { key: 'slot-a', title: 'A', agent: 'kirocrew', running: false } as ChatSlot
-const rowB = { key: 'slot-b', title: 'B', agent: 'kirocrew', running: false } as ChatSlot
-const rowC = { key: 'slot-c', title: 'C', agent: 'kirocrew', running: false } as ChatSlot
+const rowA = { key: 'slot-a', title: 'A', agent: 'ajcrew', running: false } as ChatSlot
+const rowB = { key: 'slot-b', title: 'B', agent: 'ajcrew', running: false } as ChatSlot
+const rowC = { key: 'slot-c', title: 'C', agent: 'ajcrew', running: false } as ChatSlot
 
 describe('applySlotsDiff', () => {
   const held = { seq: 4, rows: [rowA, rowB, rowC], envelope: {} }

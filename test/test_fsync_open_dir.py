@@ -1,6 +1,6 @@
 """``fsync_open_dir`` syncs an already-open directory descriptor the caller owns.
 
-The guarantee is the same as :func:`kiro_crew.atomic_write.fsync_dir` -- a crash after a
+The guarantee is the same as :func:`aj_crew.atomic_write.fsync_dir` -- a crash after a
 rename must not come back to the old name -- for a caller that already holds the
 directory open rather than a path to open. The behaviour worth guarding is WHICH
 ``fsync`` errors it tolerates: a directory that the filesystem cannot sync at all
@@ -19,8 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.atomic_write import _DIR_SYNC_UNSUPPORTED, fsync_open_dir
+from aj_crew import platform_compat
+from aj_crew.atomic_write import _DIR_SYNC_UNSUPPORTED, fsync_open_dir
 
 pytestmark = pytest.mark.skipif(
     platform_compat.IS_WINDOWS, reason="no directory descriptor to open on Windows"
@@ -38,7 +38,7 @@ def _raise(code: int):
     return _fsync
 
 
-_LOGGER = "kiro_crew.atomic_write"
+_LOGGER = "aj_crew.atomic_write"
 
 
 def _levels(caplog: pytest.LogCaptureFixture) -> list[int]:

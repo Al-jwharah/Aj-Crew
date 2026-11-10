@@ -17,14 +17,14 @@ from test_subagent_turn_resilience import (
     _text_event,
 )
 
-from kiro_crew.dashboard.handlers.sessions import api_approval_resolve
-from kiro_crew.dashboard.token_auth import generate_token, token_auth_middleware
-from kiro_crew.dashboard.ws import api_ws
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.slack.gateway import GatewayOrchestrator
-from kiro_crew.subagent import SubagentManager
-from kiro_crew.testing.wait import await_until
-from kiro_crew.testing.workflow_memory_scenario import spawn_progress_summary
+from aj_crew.dashboard.handlers.sessions import api_approval_resolve
+from aj_crew.dashboard.token_auth import generate_token, token_auth_middleware
+from aj_crew.dashboard.ws import api_ws
+from aj_crew.providers.base import LLMEvent
+from aj_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.subagent import SubagentManager
+from aj_crew.testing.wait import await_until
+from aj_crew.testing.workflow_memory_scenario import spawn_progress_summary
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 

@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from kiro_crew.secrets_mediation.policy import (
+from aj_crew.secrets_mediation.policy import (
     POLICY_FILENAME,
     CredentialPlacement,
     PolicyError,
@@ -14,7 +14,7 @@ from kiro_crew.secrets_mediation.policy import (
     normalize_origin,
     policy_path,
 )
-from kiro_crew.secrets_mediation.provenance import REQUEST_POLICY_DIRNAME
+from aj_crew.secrets_mediation.provenance import REQUEST_POLICY_DIRNAME
 
 
 @pytest.fixture(autouse=True)
@@ -25,7 +25,7 @@ def _host_policy_key(tmp_path, _floor_monkeypatch):
     not the shared ``monkeypatch``: a test that calls ``monkeypatch.undo()`` to
     drop one of its own pins must not also drop this fixture's key install.
     """
-    from kiro_crew.secrets_mediation import provenance
+    from aj_crew.secrets_mediation import provenance
 
     _floor_monkeypatch.setattr(provenance, "_token_root", lambda: b"T" * 32)
 
@@ -38,7 +38,7 @@ def _write_raw(config_dir, text, encoding="utf-8"):
 
 
 def _write_policy(config_dir, authorizations):
-    from kiro_crew.secrets_mediation.provenance import SIGNATURE_FIELD, sign_secret_authorizations
+    from aj_crew.secrets_mediation.provenance import SIGNATURE_FIELD, sign_secret_authorizations
 
     sig = sign_secret_authorizations(authorizations)
     _write_raw(
@@ -196,7 +196,7 @@ def test_malformed_json_fails_closed(tmp_path):
 
 
 def test_policy_filename_is_registered_on_the_secret_floor():
-    from kiro_crew import security
+    from aj_crew import security
 
     assert REQUEST_POLICY_DIRNAME in security._CREW_SECRET_LEAVES
 
@@ -204,7 +204,7 @@ def test_policy_filename_is_registered_on_the_secret_floor():
 def test_agent_file_tools_cannot_touch_the_policy():
     import os
 
-    from kiro_crew import security
+    from aj_crew import security
 
     for prefix in security._CREW_HOME_PREFIXES:
         for name in (POLICY_FILENAME, ".policy.json.lock", "any-future-name"):
@@ -236,7 +236,7 @@ def test_unsigned_policy_fails_closed(tmp_path):
 def test_tampered_authorizations_fail_closed(tmp_path):
     # Sign one origin, then swap it for an attacker origin: the signature no
     # longer matches the authorizations, so it must be refused.
-    from kiro_crew.secrets_mediation.provenance import SIGNATURE_FIELD, sign_secret_authorizations
+    from aj_crew.secrets_mediation.provenance import SIGNATURE_FIELD, sign_secret_authorizations
 
     good = _auth_map()
     sig = sign_secret_authorizations(good)
@@ -251,7 +251,7 @@ def test_tampered_authorizations_fail_closed(tmp_path):
 
 
 def test_correctly_signed_policy_loads(tmp_path):
-    from kiro_crew.secrets_mediation.provenance import SIGNATURE_FIELD, sign_secret_authorizations
+    from aj_crew.secrets_mediation.provenance import SIGNATURE_FIELD, sign_secret_authorizations
 
     good = _auth_map()
     sig = sign_secret_authorizations(good)
@@ -274,7 +274,7 @@ def test_oversized_policy_is_refused_before_parsing(tmp_path):
     Mutation guard: removing the byte cap makes this load the whole file and the
     'too large' assertion fails (json then raises a different error, or OOM).
     """
-    import kiro_crew.secrets_mediation.policy as policy_mod
+    import aj_crew.secrets_mediation.policy as policy_mod
 
     # One byte past the cap of otherwise-valid-looking JSON padding.
     blob = (

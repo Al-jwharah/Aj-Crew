@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import logging
 
-from kiro_crew.session_summary import (
+from aj_crew.session_summary import (
     STATE_DONE,
     STATE_DROPPED,
     STATE_IN_PROGRESS,
@@ -263,12 +263,12 @@ class TestNormalizePayload:
         line the loss leaves no trace anywhere.
         """
         raw = {"intents": [{"title": f"i{n}", "ranges": [[n, n]]} for n in range(1, 21)]}
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_summary"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_summary"):
             normalize_payload(raw, max_intents=3)
         assert "dropping 17 of 20 intents" in caplog.text
 
     def test_trimming_project_notes_is_reported(self, caplog):
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_summary"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_summary"):
             normalize_payload(
                 {
                     "intents": [{"title": "t", "ranges": [[1, 1]]}],
@@ -286,7 +286,7 @@ class TestNormalizePayload:
         every session that emits a note -- the routine noise the warning exists
         to avoid being, and the reason the quiet case is tested at all.
         """
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_summary"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_summary"):
             payload = normalize_payload(
                 {
                     "intents": [{"title": "t", "ranges": [[1, 1]]}],
@@ -303,7 +303,7 @@ class TestNormalizePayload:
         A line that fires on every ordinary session is one an operator learns to
         ignore, which would cost exactly the signal this is here to provide.
         """
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_summary"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_summary"):
             normalize_payload(
                 {
                     "intents": [{"title": "t", "ranges": [[1, 1]]}],

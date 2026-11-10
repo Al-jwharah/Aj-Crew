@@ -825,7 +825,7 @@ test("showing an overlay re-asserts the host's Dock presence on macOS", () => {
 
     // Showing the accessory-shaped overlay demotes the app to a Dock-less
     // accessory; the overlay must put the host straight back in the Dock, or
-    // opening the companion makes Kiro Crew's Dock icon disappear.
+    // opening the companion makes Aj Crew's Dock icon disappear.
     assert.ok(
       stub.dockCalls.setActivationPolicy.includes("regular"),
       "activation policy re-asserted to regular after showing the overlay",
@@ -942,7 +942,7 @@ test("an approval with no owning session raises the dashboard but routes nowhere
 });
 
 test("hostsDashboard takes an explicit backend URL, so it answers before init", () => {
-  // The kirocrew:// deep-link handler shares this predicate and can be asked
+  // The ajcrew:// deep-link handler shares this predicate and can be asked
   // before initCrewCompanion has recorded a backend URL.
   const stub = stubElectron();
   try {

@@ -25,17 +25,17 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.apps import app_frame as af
-from kiro_crew.apps import message_action_grants as mag
-from kiro_crew.apps import point_grants as lpg
-from kiro_crew.apps.manager_records import (
+from aj_crew.apps import app_frame as af
+from aj_crew.apps import message_action_grants as mag
+from aj_crew.apps import point_grants as lpg
+from aj_crew.apps.manager_records import (
     STAGED_GRANT_FAMILIES,
     _approved_grants_after_manifest_change,
     _declared_grant_entries,
     _held_back_entries,
 )
-from kiro_crew.apps.manifest import CORE_APP_ROUTE_SEGMENTS, AppManifest
-from kiro_crew.apps.manifest_contributes import (
+from aj_crew.apps.manifest import CORE_APP_ROUTE_SEGMENTS, AppManifest
+from aj_crew.apps.manifest_contributes import (
     MAX_MESSAGE_ACTION_CHARS,
     Contributes,
     MessageActionConfig,
@@ -187,7 +187,7 @@ def _staged(approved: list[str]) -> Any:
 
 def test_the_row_keeps_an_action_at_its_approved_reach(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "kiro_crew.apps.manager_records.staged_app_grants", _staged(["save:role:assistant"])
+        "aj_crew.apps.manager_records.staged_app_grants", _staged(["save:role:assistant"])
     )
     m = _manifest(_action(roles=["assistant", "user"], format="markdown", maxChars=500))
     row = mag.message_action_grant_row(APP, m)["messageActionGrant"]
@@ -203,7 +203,7 @@ def test_the_row_keeps_an_action_at_its_approved_reach(monkeypatch: pytest.Monke
     ]
     assert row["staged"] == ["save:role:user", "save:format:markdown"]
     # Nothing approved: the action is not offered at all.
-    monkeypatch.setattr("kiro_crew.apps.manager_records.staged_app_grants", _staged([]))
+    monkeypatch.setattr("aj_crew.apps.manager_records.staged_app_grants", _staged([]))
     assert mag.message_action_grant_row(APP, m)["messageActionGrant"]["actions"] == []
     assert mag.approved_message_action(APP, m, "save") is None
     assert mag.message_action_grant_row(APP, {"contributes": {}}) == {}
@@ -239,8 +239,8 @@ async def _client(
 
     monkeypatch.setattr(af, "_point_entry", entry)
     monkeypatch.setattr(af, "_point_admits", admits)
-    monkeypatch.setattr("kiro_crew.apps.hooks_integration.get_route_registry", lambda: registry)
-    monkeypatch.setattr("kiro_crew.dashboard.server._embed_parent_port", lambda request, app: None)
+    monkeypatch.setattr("aj_crew.apps.hooks_integration.get_route_registry", lambda: registry)
+    monkeypatch.setattr("aj_crew.dashboard.server._embed_parent_port", lambda request, app: None)
 
     @web.middleware
     async def auth(request: web.Request, handler: Any) -> web.StreamResponse:
@@ -409,7 +409,7 @@ globalThis.document = {
 };
 """
 _DRIVER = r"""
-const deliver = (data) => (listeners.message || []).forEach((f) => f({ source: parent, data: { 'kirocrew-app-frame': 1, ...data } }));
+const deliver = (data) => (listeners.message || []).forEach((f) => f({ source: parent, data: { 'ajcrew-app-frame': 1, ...data } }));
 deliver({ type: 'init', capability: 'c' });
 for (let i = 0; i < 50 && !posted.some((m) => m.type === 'ready'); i++) await new Promise((r) => setTimeout(r, 10));
 deliver({ type: 'message.invoke', invocationId: 'inv-00001', text: 'hello', format: 'html', truncated: 'yes', role: 'system' });

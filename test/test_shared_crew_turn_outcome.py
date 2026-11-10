@@ -8,18 +8,18 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
-from kiro_crew.shared_crew import admission_entry as entry
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import turn_gate, work_store
-from kiro_crew.shared_crew.admission import (
+from aj_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
+from aj_crew.shared_crew import admission_entry as entry
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import turn_gate, work_store
+from aj_crew.shared_crew.admission import (
     Liveness,
     OperationKind,
     OperationState,
     ReasonCode,
 )
-from kiro_crew.shared_crew.containment import ContainmentReport, SliceManager
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew.containment import ContainmentReport, SliceManager
+from aj_crew.shared_crew.contracts import (
     DisplaySnapshot,
     EnforcementLevel,
     Principal,
@@ -27,9 +27,9 @@ from kiro_crew.shared_crew.contracts import (
     Provenance,
     principal_id_for,
 )
-from kiro_crew.shared_crew.work_store import WorkStore
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.shared_crew.work_store import WorkStore
+from aj_crew.taskq.store import TaskStore
+from aj_crew.testing.clock import ManualClock
 
 REPO = Path(__file__).resolve().parent.parent
 S = OperationState
@@ -97,7 +97,7 @@ def service(tmp_path, monkeypatch):
 
     monkeypatch.setattr(ag, "current_service", _current)
     monkeypatch.setattr(ag, "_SERVICE", svc)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_slack.slot_is_live", lambda _s, _slot: True)
+    monkeypatch.setattr("aj_crew.dashboard.chat_slack.slot_is_live", lambda _s, _slot: True)
     yield svc
     entry._PENDING_SLOTS.clear()
     work_store.set_change_listener(None)

@@ -20,11 +20,11 @@ from terminal_handler_helpers import (  # noqa: F401 -- the autouse fixture regi
     _make_session,
 )
 
-from kiro_crew.dashboard import chat_folders_routes
-from kiro_crew.dashboard.chat_folders import MAX_CHAT_FOLDERS, api_chat_folder_create
-from kiro_crew.dashboard.handlers import terminal
-from kiro_crew.dashboard.mate_folders import MateFolderError
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard import chat_folders_routes
+from aj_crew.dashboard.chat_folders import MAX_CHAT_FOLDERS, api_chat_folder_create
+from aj_crew.dashboard.handlers import terminal
+from aj_crew.dashboard.mate_folders import MateFolderError
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 
 def _folder_state(count: int) -> DashboardState:

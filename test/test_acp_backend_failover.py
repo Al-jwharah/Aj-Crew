@@ -12,7 +12,7 @@ import logging
 
 import pytest
 
-from kiro_crew.acp_failover import (
+from aj_crew.acp_failover import (
     FAILOVER_TRIGGERS,
     AcpFailoverConfig,
     failover_policy,
@@ -116,7 +116,7 @@ class TestFailoverPolicy:
 
 
 def _patch_selectable(monkeypatch, values):
-    from kiro_crew import acp_backends
+    from aj_crew import acp_backends
 
     monkeypatch.setattr(acp_backends, "selectable_backend_values", lambda: sorted(values))
 
@@ -126,12 +126,12 @@ class TestNormalizeAcpFailover:
 
     @pytest.mark.parametrize("raw", [None, ["codex"]])
     def test_absent_or_not_an_object_loads_as_off(self, raw):
-        from kiro_crew.config.sections_agent_fields import normalize_acp_failover
+        from aj_crew.config.sections_agent_fields import normalize_acp_failover
 
         assert normalize_acp_failover(raw) == {}
 
     def test_a_non_selectable_member_is_dropped_with_a_warning(self, monkeypatch, caplog):
-        from kiro_crew.config.sections_agent_fields import normalize_acp_failover
+        from aj_crew.config.sections_agent_fields import normalize_acp_failover
 
         _patch_selectable(monkeypatch, ["", "claude"])
         with caplog.at_level(logging.WARNING):
@@ -140,7 +140,7 @@ class TestNormalizeAcpFailover:
         assert "codex" in caplog.text
 
     def test_kiro_is_selectable_by_its_config_spelling(self, monkeypatch):
-        from kiro_crew.config.sections_agent_fields import normalize_acp_failover
+        from aj_crew.config.sections_agent_fields import normalize_acp_failover
 
         _patch_selectable(monkeypatch, ["", "claude"])
         block = {"enabled": True, "chain": ["claude", "kiro"]}
@@ -156,7 +156,7 @@ class TestNormalizeAcpFailover:
         ids=["repeated-name", "phase2-trigger", "string-enabled"],
     )
     def test_an_invalid_block_loads_as_off_with_a_warning(self, block, caplog):
-        from kiro_crew.config.sections_agent_fields import normalize_acp_failover
+        from aj_crew.config.sections_agent_fields import normalize_acp_failover
 
         with caplog.at_level(logging.WARNING):
             assert normalize_acp_failover(block) == {}
@@ -167,7 +167,7 @@ class TestValidateAcpFailover:
     """The write path refuses what the load path would only log."""
 
     def test_a_valid_block_is_stored_as_written(self, monkeypatch):
-        from kiro_crew.config.sections_agent_fields import validate_acp_failover
+        from aj_crew.config.sections_agent_fields import validate_acp_failover
 
         _patch_selectable(monkeypatch, ["", "claude", "codex"])
         block = {"enabled": True, "chain": ["codex", "kiro"]}
@@ -184,7 +184,7 @@ class TestValidateAcpFailover:
         ids=["not-an-object", "repeated-name", "phase2-trigger", "not-selectable"],
     )
     def test_an_unusable_block_is_refused(self, monkeypatch, block, reason):
-        from kiro_crew.config.sections_agent_fields import validate_acp_failover
+        from aj_crew.config.sections_agent_fields import validate_acp_failover
 
         _patch_selectable(monkeypatch, ["", "claude", "codex"])
         with pytest.raises(ValueError, match=reason):
@@ -195,9 +195,9 @@ class TestConfigDocument:
     """The block survives every place config is serialized."""
 
     def test_the_default_config_serializes(self):
-        from kiro_crew.config import KiroCrewConfig
+        from aj_crew.config import AjCrewConfig
 
-        doc = KiroCrewConfig().to_dict()
+        doc = AjCrewConfig().to_dict()
         # Plain JSON data: the document reads back unchanged, and the default is off.
         assert json.loads(json.dumps(doc)) == doc
         assert doc["agent"]["acp_failover"] == {}
@@ -205,17 +205,17 @@ class TestConfigDocument:
     def test_a_configured_block_round_trips_through_to_dict(self):
         import dataclasses
 
-        from kiro_crew.config import KiroCrewConfig
+        from aj_crew.config import AjCrewConfig
 
         block = {"enabled": True, "chain": ["codex", "kiro"]}
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent = dataclasses.replace(cfg.agent, acp_failover=block)
         doc = json.loads(json.dumps(cfg.to_dict()))
         assert doc["agent"]["acp_failover"] == block
 
     def test_the_schema_entry_serializes(self):
         # What GET /api/config/schema emits, one entry per path.
-        from kiro_crew.config.schema import SCHEMA_REGISTRY, config_entry_to_dict
+        from aj_crew.config.schema import SCHEMA_REGISTRY, config_entry_to_dict
 
         [entry] = [e for e in SCHEMA_REGISTRY if e.path == "agent.acp_failover"]
         doc = json.loads(json.dumps(config_entry_to_dict(entry)))
@@ -226,8 +226,8 @@ class TestConfigDocument:
         # the config from loading, and the block is kept as written.
         from unittest.mock import patch
 
-        from kiro_crew.agent_sdk import backends
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.agent_sdk import backends
+        from aj_crew.config.loader import AjCrewConfig
 
         block = {"enabled": True, "chain": ["codex", "claude"]}
         cfg_file = tmp_path / "config.json"
@@ -237,14 +237,14 @@ class TestConfigDocument:
             backends.apply_selectable_denials({"codex"})
             assert "codex" not in backends._selectable
             with (
-                patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
+                patch("aj_crew.config.loader.config_path", return_value=cfg_file),
                 patch(
-                    "kiro_crew.config.loader.config_local_path",
+                    "aj_crew.config.loader.config_local_path",
                     return_value=tmp_path / "config.local.json",
                 ),
-                patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
+                patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
             ):
-                loaded = KiroCrewConfig.load()
+                loaded = AjCrewConfig.load()
         finally:
             backends._selectable.clear()
             backends._selectable.update(before)
@@ -255,8 +255,8 @@ class TestConfigDocument:
     def test_a_save_keeps_a_dropped_member_on_disk(self, tmp_path):
         from unittest.mock import patch
 
-        from kiro_crew.agent_sdk import backends
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.agent_sdk import backends
+        from aj_crew.config.loader import AjCrewConfig
 
         block = {"enabled": True, "chain": ["codex", "claude"]}
         cfg_file = tmp_path / "config.json"
@@ -265,14 +265,14 @@ class TestConfigDocument:
         try:
             backends.apply_selectable_denials({"codex"})
             with (
-                patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
+                patch("aj_crew.config.loader.config_path", return_value=cfg_file),
                 patch(
-                    "kiro_crew.config.loader.config_local_path",
+                    "aj_crew.config.loader.config_local_path",
                     return_value=tmp_path / "config.local.json",
                 ),
-                patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
+                patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
             ):
-                loaded = KiroCrewConfig.load()
+                loaded = AjCrewConfig.load()
                 assert loaded.agent.acp_failover["chain"] == ["claude"]
                 loaded.save()
         finally:
@@ -287,7 +287,7 @@ class TestSpawnRunReceipt:
     def _receipt(self, responses: list[dict]) -> str:
         from unittest.mock import MagicMock, patch
 
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         replies = iter(responses)
 

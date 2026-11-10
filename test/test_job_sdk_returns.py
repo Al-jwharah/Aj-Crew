@@ -29,8 +29,8 @@ from job_sdk_helpers import (  # noqa: F401 -- the fixture is requested by name
     sdk_fixture,
 )
 
-from kiro_crew.apps import job_sdk
-from kiro_crew.apps.job_sdk import (
+from aj_crew.apps import job_sdk
+from aj_crew.apps.job_sdk import (
     DONE,
     FAILED,
     INTERRUPTED,
@@ -42,7 +42,7 @@ from kiro_crew.apps.job_sdk import (
     JobSDK,
     UnknownJobKind,
 )
-from kiro_crew.testing.wait import await_until, default_timeout, until_parked, wait_until
+from aj_crew.testing.wait import await_until, default_timeout, until_parked, wait_until
 
 # Helpers
 

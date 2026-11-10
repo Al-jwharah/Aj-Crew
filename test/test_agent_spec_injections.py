@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import agent_spec_injections as injections
+from aj_crew import agent_spec_injections as injections
 
 _EXPECTED = {"name": "x", "tools": []}
 

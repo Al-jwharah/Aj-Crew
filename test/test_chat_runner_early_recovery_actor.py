@@ -19,10 +19,10 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.acp.client import AcpError, AcpProcessDied
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_delivery import START_BACKGROUND_META_KEY
-from kiro_crew.dashboard.chat_runner import TURN_ACTOR_META_KEY, _run_chat
+from aj_crew.acp.client import AcpError, AcpProcessDied
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_delivery import START_BACKGROUND_META_KEY
+from aj_crew.dashboard.chat_runner import TURN_ACTOR_META_KEY, _run_chat
 
 
 def _requeued(slot) -> list[dict]:

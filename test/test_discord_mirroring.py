@@ -17,10 +17,10 @@ from discord_helpers import _drop_live_config_snapshot  # noqa: F401
 from discord_helpers import FakeProvider, FakeSessions, _dispatcher
 from off_loop_helpers import off_loop
 
-from kiro_crew.messaging.link import ChannelLink, legacy_dashboard_mirror_key
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.session import _opt_out_key
-from kiro_crew.testing.wait import await_until, until_parked
+from aj_crew.messaging.link import ChannelLink, legacy_dashboard_mirror_key
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.session import _opt_out_key
+from aj_crew.testing.wait import await_until, until_parked
 
 
 def _read_session_log(unit: str) -> list[Any]:
@@ -30,7 +30,7 @@ def _read_session_log(unit: str) -> list[Any]:
     the eager folder reads the unit on its own thread after each entry, and an
     acquire on the event-loop thread makes one attempt that such a read refuses.
     """
-    from kiro_crew.crew_log import projection
+    from aj_crew.crew_log import projection
 
     handle = projection.open_session_log(unit)
     assert handle is not None, f"no crew log for {unit!r}"
@@ -180,11 +180,11 @@ class TestDispatcherOriginMirroring:
         from aiohttp import web
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.crew_log import emit
-        from kiro_crew.crew_log.resolve import unit_for_session_key
-        from kiro_crew.dashboard.handlers import work_ledger as ledger_routes
+        from aj_crew.crew_log import emit
+        from aj_crew.crew_log.resolve import unit_for_session_key
+        from aj_crew.dashboard.handlers import work_ledger as ledger_routes
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
         unsync_appends(monkeypatch)  # the records are the subject, not their durability
         monkeypatch.setattr(emit, "_retry_delay", lambda _attempts: 0.0)
@@ -230,7 +230,7 @@ class TestDispatcherOriginMirroring:
             assert len(opened) == 1
             assert (opened[0].data["slot"], opened[0].data["agent"]) == (
                 key.replace(":", "_"),
-                "kirocrew",
+                "ajcrew",
             )
             assert opened[0].data["model"] == "model-x"
             assert opened[0].data.get("model_requested") == "model-requested"
@@ -252,10 +252,10 @@ class TestDispatcherOriginMirroring:
         """
         from types import SimpleNamespace
 
-        from kiro_crew.crew_log import emit
-        from kiro_crew.dashboard.channel_slots import channel_slot_name
+        from aj_crew.crew_log import emit
+        from aj_crew.dashboard.channel_slots import channel_slot_name
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
         unsync_appends(monkeypatch)  # the records are the subject, not their durability
         monkeypatch.setattr(emit, "_retry_delay", lambda _attempts: 0.0)
@@ -273,7 +273,7 @@ class TestDispatcherOriginMirroring:
             # The tab's turn: the dashboard runner opens the same log from the slot.
             emit.on_session_opened(
                 "acp-tabbed-dm",
-                agent="kirocrew",
+                agent="ajcrew",
                 slot=channel_slot_name(key),
                 memory="persistent",
                 channel=True,
@@ -301,7 +301,7 @@ class TestDispatcherOriginMirroring:
         runner, which alone holds its lineage (``_created_by``); an opener from here
         would create that log without its ``parent``. The channel's own session is
         opened, the resumed one is left to its owner."""
-        from kiro_crew.crew_log import emit as crew_log_emit
+        from aj_crew.crew_log import emit as crew_log_emit
 
         opened: list[str] = []
         monkeypatch.setattr(
@@ -350,9 +350,9 @@ class TestDispatcherOriginMirroring:
         is modelled as the mapping still naming the old id while the provider hands
         out a new one.
         """
-        from kiro_crew.crew_log import emit
+        from aj_crew.crew_log import emit
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
         unsync_appends(monkeypatch)  # the records are the subject, not their durability
         monkeypatch.setattr(emit, "_retry_delay", lambda _attempts: 0.0)
@@ -395,9 +395,9 @@ class TestDispatcherOriginMirroring:
         The restart drops every in-process cache and the double maps nothing, so only
         the store can answer; the slot's genuine first store states it has none.
         """
-        from kiro_crew.crew_log import emit
+        from aj_crew.crew_log import emit
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
         unsync_appends(monkeypatch)  # the records are the subject, not their durability
         monkeypatch.setattr(emit, "_retry_delay", lambda _attempts: 0.0)
@@ -431,9 +431,9 @@ class TestDispatcherOriginMirroring:
         The winner's session is recycled during that wait, so a predecessor read even
         just before the call would cite the grandparent and drop a log from the chain.
         """
-        from kiro_crew.crew_log import emit
+        from aj_crew.crew_log import emit
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
         unsync_appends(monkeypatch)  # the records are the subject, not their durability
         monkeypatch.setattr(emit, "_retry_delay", lambda _attempts: 0.0)
@@ -495,10 +495,10 @@ class TestDispatcherOriginMirroring:
         """
         import contextlib
 
-        from kiro_crew.crew_log import emit
-        from kiro_crew.discord import transport_dispatch as td
+        from aj_crew.crew_log import emit
+        from aj_crew.discord import transport_dispatch as td
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
         unsync_appends(monkeypatch)  # the records are the subject, not their durability
         monkeypatch.setattr(emit, "_retry_delay", lambda _attempts: 0.0)

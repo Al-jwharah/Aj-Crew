@@ -17,13 +17,13 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from handlers_taskrunner_coverage_helpers import _body, _request, _state
 
-from kiro_crew.dashboard.handlers.taskrunner import api_taskrunner_retry
-from kiro_crew.learn import LessonStore
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.session import BACKGROUND_KEY
-from kiro_crew.task_models import TaskStatus
-from kiro_crew.taskrunner import TaskRunner
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.handlers.taskrunner import api_taskrunner_retry
+from aj_crew.learn import LessonStore
+from aj_crew.providers.base import LLMEvent
+from aj_crew.session import BACKGROUND_KEY
+from aj_crew.task_models import TaskStatus
+from aj_crew.taskrunner import TaskRunner
+from aj_crew.testing.wait import await_until
 
 #: Two steps, the second after the first, so a step opens after the run has started.
 _PLAN = json.dumps(
@@ -38,7 +38,7 @@ _PLAN = json.dumps(
 def _no_self_review(_floor_monkeypatch):
     # The post-step review is its own turn on its own session; these tests read the
     # sessions the STEPS open.
-    _floor_monkeypatch.setattr("kiro_crew.task_executor.self_review", AsyncMock(return_value=True))
+    _floor_monkeypatch.setattr("aj_crew.task_executor.self_review", AsyncMock(return_value=True))
 
 
 def _provider(text: str) -> MagicMock:

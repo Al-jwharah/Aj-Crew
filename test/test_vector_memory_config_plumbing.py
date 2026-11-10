@@ -2,7 +2,7 @@
 
 They pin that the CLI and dashboard paths pass ``embedding_dim``; that the production store
 constructions pass the loaded config as ``config=`` while every other construction site
-carries a recorded exemption (an inventory over src/kiro_crew, with a seeded self-test of
+carries a recorded exemption (an inventory over src/aj_crew, with a seeded self-test of
 the guard); and that the config loader coerces a numeric ``episodic_dedup_threshold``
 string, clamps it into the cosine range and falls back to the default on a typo there and in
 its numeric siblings. The decay-rate sanitizer is pinned beside its scoring in
@@ -15,10 +15,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew.vector_memory import VectorMemoryStore
 
 # Same xdist group as ``test_vector_memory.py`` and the topic files its docstring names.
-# ``TestMemoryTuningPlumbing`` walks every module under src/kiro_crew to inventory the store
+# ``TestMemoryTuningPlumbing`` walks every module under src/aj_crew to inventory the store
 # construction sites.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_test_vector_memory")
 
@@ -48,14 +48,14 @@ class TestEmbeddingDimPlumbing:
             original_init(self, *args, **kwargs)
 
         with (
-            patch("kiro_crew.cli_commands.KiroCrewConfig.load", return_value=mock_cfg),
+            patch("aj_crew.cli_commands.AjCrewConfig.load", return_value=mock_cfg),
             patch.object(VectorMemoryStore, "__init__", capturing_init),
             patch.object(VectorMemoryStore, "init", return_value=None),
             patch.object(VectorMemoryStore, "close", return_value=None),
         ):
             import argparse
 
-            from kiro_crew.cli_commands import _learn
+            from aj_crew.cli_commands import _learn
 
             args = argparse.Namespace(learn_action="list")
             try:
@@ -81,14 +81,14 @@ class TestEmbeddingDimPlumbing:
             original_init(self, *args, **kwargs)
 
         with (
-            patch("kiro_crew.cli_commands.KiroCrewConfig.load", return_value=mock_cfg),
+            patch("aj_crew.cli_commands.AjCrewConfig.load", return_value=mock_cfg),
             patch.object(VectorMemoryStore, "__init__", capturing_init),
             patch.object(VectorMemoryStore, "init", return_value=None),
             patch.object(VectorMemoryStore, "close", return_value=None),
         ):
             import argparse
 
-            from kiro_crew.cli_commands import _memory_cmd
+            from aj_crew.cli_commands import _memory_cmd
 
             args = argparse.Namespace(mem_action="list")
             try:
@@ -102,7 +102,7 @@ class TestEmbeddingDimPlumbing:
         """Dashboard _get_vector_store fallback constructs store with cfg embedding_dim."""
         from unittest.mock import MagicMock
 
-        import kiro_crew.dashboard.handlers.memory as mem_mod
+        import aj_crew.dashboard.handlers.memory as mem_mod
 
         mock_cfg = MagicMock()
         mock_cfg.memory.embedding_dim = 384
@@ -121,16 +121,16 @@ class TestEmbeddingDimPlumbing:
             def init(self):
                 pass
 
-        # _get_vector_store does lazy `from kiro_crew.config.loader import KiroCrewConfig`
-        # and `from kiro_crew.vector_memory import VectorMemoryStore` inside the function.
+        # _get_vector_store does lazy `from aj_crew.config.loader import AjCrewConfig`
+        # and `from aj_crew.vector_memory import VectorMemoryStore` inside the function.
         # Patch at the source module so the local import picks them up.
-        import kiro_crew.config.loader as loader_mod
-        import kiro_crew.vector_memory as vm_mod
+        import aj_crew.config.loader as loader_mod
+        import aj_crew.vector_memory as vm_mod
 
         mock_config_cls = MagicMock()
         mock_config_cls.load.return_value = mock_cfg
 
-        monkeypatch.setattr(loader_mod, "KiroCrewConfig", mock_config_cls)
+        monkeypatch.setattr(loader_mod, "AjCrewConfig", mock_config_cls)
         monkeypatch.setattr(vm_mod, "VectorMemoryStore", TrackingStore)
 
         # Mock _get_memory to return a Memory with no vector_store
@@ -162,7 +162,7 @@ class TestMemoryTuningPlumbing:
         "cli_server.py",
         "cli_commands_learn.py",
         "cli_commands_memory.py",
-        # `kirocrew consolidate` hands its pass the default store.
+        # `ajcrew consolidate` hands its pass the default store.
         "cli_knowledge.py",
         "dashboard/handlers/memory_services.py",
         "apps/builtins/ops_mission_control/backend/dispatch.py",
@@ -180,7 +180,7 @@ class TestMemoryTuningPlumbing:
         # Forwards its caller's `**vector_options` unchanged.
         "vector_memory_member.py": "open_member_database and declared_store forward caller options",
         # Builds its store on an arbitrary data_home whose config
-        # KiroCrewConfig.load() does not read.
+        # AjCrewConfig.load() does not read.
         "onboarding_import.py": "foreign data_home",
         # The bench harness sweeps its own values.
         "eval/bench/ingest.py": "bench sweep values",
@@ -200,7 +200,7 @@ class TestMemoryTuningPlumbing:
         """The dashboard standalone fallback carries the configured tuning."""
         from unittest.mock import MagicMock
 
-        import kiro_crew.dashboard.handlers.memory as mem_mod
+        import aj_crew.dashboard.handlers.memory as mem_mod
 
         mock_cfg = MagicMock()
         mock_cfg.memory.embedding_dim = 1024
@@ -225,12 +225,12 @@ class TestMemoryTuningPlumbing:
             def init(self) -> None:  # sqlite/migrations are not what this pins
                 return None
 
-        import kiro_crew.config.loader as loader_mod
-        import kiro_crew.vector_memory as vm_mod
+        import aj_crew.config.loader as loader_mod
+        import aj_crew.vector_memory as vm_mod
 
         mock_config_cls = MagicMock()
         mock_config_cls.load.return_value = mock_cfg
-        monkeypatch.setattr(loader_mod, "KiroCrewConfig", mock_config_cls)
+        monkeypatch.setattr(loader_mod, "AjCrewConfig", mock_config_cls)
         monkeypatch.setattr(vm_mod, "VectorMemoryStore", TmpPathStore)
 
         mock_memory = MagicMock()
@@ -296,9 +296,9 @@ class TestMemoryTuningPlumbing:
         import inspect
         from pathlib import Path as _Path
 
-        import kiro_crew
+        import aj_crew
 
-        pkg_root = _Path(inspect.getfile(kiro_crew)).parent
+        pkg_root = _Path(inspect.getfile(aj_crew)).parent
         violations: list[str] = []
         for rel in self._PLUMBED_SITES:
             src = pkg_root / rel
@@ -317,9 +317,9 @@ class TestMemoryTuningPlumbing:
         import inspect
         from pathlib import Path as _Path
 
-        import kiro_crew
+        import aj_crew
 
-        pkg_root = _Path(inspect.getfile(kiro_crew)).parent
+        pkg_root = _Path(inspect.getfile(aj_crew)).parent
         found: set[str] = set()
         for src in pkg_root.rglob("*.py"):
             rel = src.relative_to(pkg_root).as_posix()
@@ -393,15 +393,15 @@ class TestDedupThresholdLoaderValidation:
     def _memory_section(self, tmp_path: Path, monkeypatch, raw_value: object):
         import json as _json
 
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         cfg_path = tmp_path / "config.json"
         cfg_path.write_text(
             _json.dumps({"memory": {"episodic_dedup_threshold": raw_value}}),
             encoding="utf-8",
         )
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: cfg_path)
-        return KiroCrewConfig.load().memory
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: cfg_path)
+        return AjCrewConfig.load().memory
 
     def test_a_string_typo_falls_back_to_the_default(self, tmp_path: Path, monkeypatch) -> None:
         section = self._memory_section(tmp_path, monkeypatch, "0.9x")
@@ -424,12 +424,12 @@ class TestDedupThresholdLoaderValidation:
     def _section_with(self, tmp_path: Path, monkeypatch, memory: dict):
         import json as _json
 
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         cfg_path = tmp_path / "config.json"
         cfg_path.write_text(_json.dumps({"memory": memory}), encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: cfg_path)
-        return KiroCrewConfig.load().memory
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: cfg_path)
+        return AjCrewConfig.load().memory
 
     def test_sibling_numeric_fields_absorb_typos_the_same_way(
         self, tmp_path: Path, monkeypatch

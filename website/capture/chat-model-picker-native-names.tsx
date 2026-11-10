@@ -7,7 +7,7 @@
  * ("Opus 5.5"), not the raw id, so the open list shows the native names.
  * Ids are passed through filterInteractiveModels exactly as the chat does.
  *
- * Query: ?theme=dark|light (maps to the app's kiro-dark / kiro-light tokens).
+ * Query: ?theme=dark|light (maps to the app's aj-dark / aj-light tokens).
  */
 import { createRoot } from 'react-dom/client'
 import { useLayoutEffect, useRef, useState } from 'react'
@@ -25,7 +25,7 @@ import notificationsReducer from '../src/store/notificationsSlice'
 import '../src/index.css'
 
 const theme = new URLSearchParams(location.search).get('theme') === 'light' ? 'light' : 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const claudeModels = [
   { name: 'auto', description: '' },

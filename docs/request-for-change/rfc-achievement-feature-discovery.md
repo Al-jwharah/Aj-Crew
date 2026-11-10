@@ -63,15 +63,15 @@ It is deterministic and never calls a model. The local file is user-editable; th
 | First-run flow | `website/src/components/OnboardingFlow.tsx` | Unchanged. This design only takes effect after it ends |
 | Empty chat page | `website/src/pages/chat/page/ChatEmptyState.tsx` | Surface 2 changes this |
 | Top bar | `website/src/shell/topbar/shellHeader.tsx` (the notification bell lives here) | Surface 1's indicator sits next to the bell |
-| Feature Videos | `src/kiro_crew/feature_videos.py`, `GET /api/feature-videos/library` (`api_feature_videos_library` in `dashboard/routes/realtime.py`; replaced `/next` on 2026-11-01, 8.11) | Reuse the clips and the `seen/dismissed` state; its `used_when` probes are used only for the one-time backfill (4.4) |
-| Feature Tips | `src/kiro_crew/tips.py` | Model-generated; kept. The milestone table never goes through a model |
-| Mate first welcome | `src/kiro_crew/dashboard/mate_welcome.py`, copy in `src/kiro_crew/crewmate_prompts.json` | Surface 4 reuses `dispatch_hidden_turn` and the copy table |
-| Mate check-ins (daily/weekly) | `src/kiro_crew/dashboard/goal_reminder.py` | Surface 4 follows its hidden-turn pattern; does not reuse its hosted cron (see 4.8) |
+| Feature Videos | `src/aj_crew/feature_videos.py`, `GET /api/feature-videos/library` (`api_feature_videos_library` in `dashboard/routes/realtime.py`; replaced `/next` on 2026-11-01, 8.11) | Reuse the clips and the `seen/dismissed` state; its `used_when` probes are used only for the one-time backfill (4.4) |
+| Feature Tips | `src/aj_crew/tips.py` | Model-generated; kept. The milestone table never goes through a model |
+| Mate first welcome | `src/aj_crew/dashboard/mate_welcome.py`, copy in `src/aj_crew/crewmate_prompts.json` | Surface 4 reuses `dispatch_hidden_turn` and the copy table |
+| Mate check-ins (daily/weekly) | `src/aj_crew/dashboard/goal_reminder.py` | Surface 4 follows its hidden-turn pattern; does not reuse its hosted cron (see 4.8) |
 | Putting text into the composer | `website/src/pages/chat/page/launchIntake.ts` (`setPendingInput`, `?autoSend=1`) | Starter tasks use this channel |
-| Crew Mode | `src/kiro_crew/crew_mode.py` (the `crew_mode_agent` stamp on a session) | Signal source for the "used Crew Mode" milestone, see 3.2 |
-| Durable user-chat counter | `src/kiro_crew/dashboard/session_pulse_counter.py`, called from `dashboard/state_parts/slot_directory.py` | Model for the milestone file writes (off-loop, best-effort); its call site is the "chats opened" hook, see 3.4 |
-| Turn start | `src/kiro_crew/dashboard/chat_turn/turn_dispatch_gates.py` (the `crew_log_emit.on_turn_started` call) | Hook for turns, streak, Mate, Crew Mode and the "running at once" peak, see 3.4 |
-| Metrics | `src/kiro_crew/metrics/events.py` (`emit_counter`), `metrics/schema.py` | New `kirocrew.milestone.*` counters |
+| Crew Mode | `src/aj_crew/crew_mode.py` (the `crew_mode_agent` stamp on a session) | Signal source for the "used Crew Mode" milestone, see 3.2 |
+| Durable user-chat counter | `src/aj_crew/dashboard/session_pulse_counter.py`, called from `dashboard/state_parts/slot_directory.py` | Model for the milestone file writes (off-loop, best-effort); its call site is the "chats opened" hook, see 3.4 |
+| Turn start | `src/aj_crew/dashboard/chat_turn/turn_dispatch_gates.py` (the `crew_log_emit.on_turn_started` call) | Hook for turns, streak, Mate, Crew Mode and the "running at once" peak, see 3.4 |
+| Metrics | `src/aj_crew/metrics/events.py` (`emit_counter`), `metrics/schema.py` | New `ajcrew.milestone.*` counters |
 
 The design follows three product principles:
 
@@ -182,12 +182,12 @@ Each hook calls one helper, `milestones.record(id)` (or `record_peak(id, n)` and
 
 | Event | Counter | Hook (repo-relative) |
 |---|---|---|
-| Artifact created | `widgets` | `src/kiro_crew/artifacts_writes.py`, `create()` after the write succeeds. This covers chat widgets, the artifact tools and the dashboard, because the MCP tools post to the gateway |
-| Scheduled task added | `scheduled-task` | `src/kiro_crew/cron_service/service/job_writes.py`, `add_job()` after the job is stored |
-| `session_create`, `monitor_start`, `monitor_watch` completed | `parallel-chats`, `pr-watch` | `src/kiro_crew/dashboard/chat_turn/tool_results.py`, beside `crew_log_emit.on_tool_completed`, only when the call was not refused and did not fail |
-| Slack connected | `slack` | `src/kiro_crew/dashboard/messaging_api/slack_settings.py`, `_slack_config_save_locked()` after a successful save |
-| Turn starts | `turns-sent`, streak, `mate`, `crew-mode` (user-sent turns only); `chats-concurrent` (all turns) | `src/kiro_crew/dashboard/chat_turn/turn_dispatch_gates.py`, beside `crew_log_emit.on_turn_started` |
-| User opens a new chat | `chats-opened` | `src/kiro_crew/dashboard/state_parts/slot_directory.py`, beside `increment_user_session_count_off_loop()` |
+| Artifact created | `widgets` | `src/aj_crew/artifacts_writes.py`, `create()` after the write succeeds. This covers chat widgets, the artifact tools and the dashboard, because the MCP tools post to the gateway |
+| Scheduled task added | `scheduled-task` | `src/aj_crew/cron_service/service/job_writes.py`, `add_job()` after the job is stored |
+| `session_create`, `monitor_start`, `monitor_watch` completed | `parallel-chats`, `pr-watch` | `src/aj_crew/dashboard/chat_turn/tool_results.py`, beside `crew_log_emit.on_tool_completed`, only when the call was not refused and did not fail |
+| Slack connected | `slack` | `src/aj_crew/dashboard/messaging_api/slack_settings.py`, `_slack_config_save_locked()` after a successful save |
+| Turn starts | `turns-sent`, streak, `mate`, `crew-mode` (user-sent turns only); `chats-concurrent` (all turns) | `src/aj_crew/dashboard/chat_turn/turn_dispatch_gates.py`, beside `crew_log_emit.on_turn_started` |
+| User opens a new chat | `chats-opened` | `src/aj_crew/dashboard/state_parts/slot_directory.py`, beside `increment_user_session_count_off_loop()` |
 
 The tool-result hook does not depend on the crew log being on; it sits beside that call, not inside it.
 
@@ -197,7 +197,7 @@ Write cost: one small off-loop write per user turn (for `turns-sent`) and per co
 
 ### 4.1 Data model
 
-A new module `src/kiro_crew/milestones.py`, shaped after `VideoEntry` (a frozen dataclass, validated at startup; a bad row is logged and dropped so the API never 500s):
+A new module `src/aj_crew/milestones.py`, shaped after `VideoEntry` (a frozen dataclass, validated at startup; a bad row is logged and dropped so the API never 500s):
 
 ```python
 @dataclass(frozen=True)
@@ -294,7 +294,7 @@ feature milestone done = counter[id] >= 1   OR  marked done by hand
 usage tier reached     = counter[id] >= tier      (streak tiers read streak.best)
 ```
 
-**The state file (D9).** One file per machine: `milestones.json` in `config_dir()`, which is `~/.kiro/crew/milestones.json` by default (it follows `KIROCREW_HOME`). Mode 0600, written with `atomic_write`, beside `feature_videos_state.json` (see `_state_path` in `feature_videos.py`). Writes run off the event loop under one process lock, the same pattern as `session_pulse_counter.py`. A read or write error is logged and never reaches the caller: a milestone can never break artifact saves, cron adds, chat creation or turns.
+**The state file (D9).** One file per machine: `milestones.json` in `config_dir()`, which is `~/.kiro/crew/milestones.json` by default (it follows `AJCREW_HOME`). Mode 0600, written with `atomic_write`, beside `feature_videos_state.json` (see `_state_path` in `feature_videos.py`). Writes run off the event loop under one process lock, the same pattern as `session_pulse_counter.py`. A read or write error is logged and never reaches the caller: a milestone can never break artifact saves, cron adds, chat creation or turns.
 
 ```json
 { "version": 1,
@@ -503,7 +503,7 @@ On the first dashboard open of the day, a `passive` notification (list only, no 
 | `dashboard.milestones_enabled` | `true` | Main switch: the indicator, panel, empty-state cards, notices and Mate entry points all follow it. Off hides every surface; the state file is kept and the hooks keep counting, so turning it back on shows true progress |
 | `dashboard.milestones_daily_nudge` | `true` | Turns off only the daily task (Ship 2) |
 
-Both go into `DashboardConfig` in `src/kiro_crew/config/sections_dashboard.py`, read the same way as `feature_videos_enabled` (`_safe_bool` in `loader_builders.py`). The Settings page gains two toggles in the Display group. The empty state's "Don't show again" is not a switch; it is "skip all" (4.5).
+Both go into `DashboardConfig` in `src/aj_crew/config/sections_dashboard.py`, read the same way as `feature_videos_enabled` (`_safe_bool` in `loader_builders.py`). The Settings page gains two toggles in the Display group. The empty state's "Don't show again" is not a switch; it is "skip all" (4.5).
 
 Defaulting on matters for existing users: a saved config without the key reads `true`, so an existing install also shows the indicator and the milestone empty state after upgrading. That is fine: features already used are credited by the one-time backfill (without notices), so someone who has used all 7 still sees today's empty state, and someone who has used some sees the rest recommended. Anyone who wants none of it can press "Mark all as done" or "Don't show again". Defaulting off would mean new users never see it, which defeats the design; nor does it depend on clips being available, unlike Feature Videos.
 
@@ -521,17 +521,17 @@ Product telemetry uses only the existing anonymous metrics counters (`metrics.ev
 
 | Counter | Attributes | Question answered |
 |---|---|---|
-| `kirocrew.milestone.shown` | `surface` (empty_state / panel / mate / daily), `milestone` | Exposure of feature rows |
-| `kirocrew.milestone.starter_clicked` | `surface`, `milestone`, `send` (prefill / send / route) | Click rate; separately for direct send and prefill |
-| `kirocrew.milestone.prefill_sent` | `milestone` | Share of prefills the user actually sent |
-| `kirocrew.milestone.reached` | `group`, `milestone` (tiers carry the tier, e.g. `chats-opened:100`, `streak-best:7`), `via` (starter / organic / backfill / manual) | Whether starter tasks really lead to use; how many reach each tier |
-| `kirocrew.milestone.skipped` | `surface`, `milestone` ("Don't show again" records `all`) | Which recommendations annoy people |
-| `kirocrew.milestone.mark_all_done` | — | How many people want no guidance at all |
-| `kirocrew.milestone.panel_opened` | — | Whether anyone opens the panel |
-| `kirocrew.milestone.notice_shown` | `group` | Notice volume, to keep it quiet |
-| `kirocrew.milestone.nudge` | `outcome` (sent / skipped_busy / skipped_done / skipped_off / replied) | Whether anyone answers the daily task (Ship 2) |
-| `kirocrew.milestone.opted_out` | `surface` | How many turn off the main switch, given the default is on |
-| `kirocrew.milestone.features_completed` | `via` (organic / mixed / manual) | Number of users with every new-feature row done, and how |
+| `ajcrew.milestone.shown` | `surface` (empty_state / panel / mate / daily), `milestone` | Exposure of feature rows |
+| `ajcrew.milestone.starter_clicked` | `surface`, `milestone`, `send` (prefill / send / route) | Click rate; separately for direct send and prefill |
+| `ajcrew.milestone.prefill_sent` | `milestone` | Share of prefills the user actually sent |
+| `ajcrew.milestone.reached` | `group`, `milestone` (tiers carry the tier, e.g. `chats-opened:100`, `streak-best:7`), `via` (starter / organic / backfill / manual) | Whether starter tasks really lead to use; how many reach each tier |
+| `ajcrew.milestone.skipped` | `surface`, `milestone` ("Don't show again" records `all`) | Which recommendations annoy people |
+| `ajcrew.milestone.mark_all_done` | — | How many people want no guidance at all |
+| `ajcrew.milestone.panel_opened` | — | Whether anyone opens the panel |
+| `ajcrew.milestone.notice_shown` | `group` | Notice volume, to keep it quiet |
+| `ajcrew.milestone.nudge` | `outcome` (sent / skipped_busy / skipped_done / skipped_off / replied) | Whether anyone answers the daily task (Ship 2) |
+| `ajcrew.milestone.opted_out` | `surface` | How many turn off the main switch, given the default is on |
+| `ajcrew.milestone.features_completed` | `via` (organic / mixed / manual) | Number of users with every new-feature row done, and how |
 
 `via` on `reached`:
 
@@ -616,15 +616,15 @@ Q4, Q5, Q6 and Q8 were closed by D7.
 **2026-10-31, product owner:**
 
 - **D15 "Explore", "Try today" and one entry card.** Crew is a work tool, so the user-facing text drops game words. The panel is "Explore", with "Try today" (up to 3 untried features for today) and "Your progress" (streak and usage counts). The new-chat page keeps its suggestion cards and replaces only the last one with a "Try today" entry card. The top-bar ring shows a dot while "Try today" has something left; where it sits is set by D17. The Mate daily task stays out of Ship 1. See section 8.
-- **D16 Final Ship 1 Explore panel, and a Ship 2 list.** Top to bottom: a "Kiro Crew in 15 seconds" intro video card (the only home for that video; no startup popup, not on the new-chat page), Try today (quick untried features only), Your progress (a "Getting started" pair for the first days, a progress bar toward each next tier, and a badge wall), then the full feature list. Badges are Regular (quiet line icon) or Advanced (one calm color); only Ship 2's Hard tier is showy, because owner feedback said trophies felt like too much. The streak stays "a day you used Crew" in Ship 1. Ship 2 items are listed in 8.10. See 8.2–8.4 and 8.9–8.10.
+- **D16 Final Ship 1 Explore panel, and a Ship 2 list.** Top to bottom: a "Aj Crew in 15 seconds" intro video card (the only home for that video; no startup popup, not on the new-chat page), Try today (quick untried features only), Your progress (a "Getting started" pair for the first days, a progress bar toward each next tier, and a badge wall), then the full feature list. Badges are Regular (quiet line icon) or Advanced (one calm color); only Ship 2's Hard tier is showy, because owner feedback said trophies felt like too much. The streak stays "a day you used Crew" in Ship 1. Ship 2 items are listed in 8.10. See 8.2–8.4 and 8.9–8.10.
 - **D17 Final Ship 1 rulings on the video, the top-bar entry and badges.** Three rulings settle what the build shows:
-  1. *Intro video.* The video lives only in the "Kiro Crew in 15 seconds" card at the top of the Explore panel. It is not on the new-chat page, and there is no standalone startup popup for it. The new-chat page keeps its suggestion cards, with a "Try today" card as the last one while untried features remain. See 8.2 and 8.6.
+  1. *Intro video.* The video lives only in the "Aj Crew in 15 seconds" card at the top of the Explore panel. It is not on the new-chat page, and there is no standalone startup popup for it. The new-chat page keeps its suggestion cards, with a "Try today" card as the last one while untried features remain. See 8.2 and 8.6.
   2. *Top-bar entry.* The ring sits in its own pill beside the readout capsule, as its own button, not inside the capsule, so the capsule keeps at most two buttons per row. The pill shows the ring and the label "Explore N/M" (for example "Explore 2/7"), with the streak ("5-day streak") as smaller secondary text. A small dot shows while something is left to try. Clicking it opens Explore. This replaces D15's capsule placement. See 8.7.
   3. *Badges (amends D14).* Your progress has a tiered badge wall, and each usage row shows a progress bar. The Regular tier uses quiet line icons; the Advanced tier uses one calm color; the showy style of the hardest tier is Ship 2. The overall style stays quiet. See 8.4 and 8.10.
 
 **2026-11-01, product owner:**
 
-- **D18 Feature videos only in Explore (amends D16, D17 and 8.2).** Every feature video shows only in the video card at the top of the Explore panel; the startup popup (`StartupVideoModal`) is removed for all clips, along with the Meet your Mates dialog and the rail "New" tag that only it set. The card plays one clip drawn at random from those this machine has not finished (no `seen` / `dismissed` verdict), keeps that pick for the page session, and is hidden when none are left. The "Kiro Crew in 15 seconds" intro is distributed like every other clip, through the signed CDN manifest, and is no longer bundled in the package. See 8.11.
+- **D18 Feature videos only in Explore (amends D16, D17 and 8.2).** Every feature video shows only in the video card at the top of the Explore panel; the startup popup (`StartupVideoModal`) is removed for all clips, along with the Meet your Mates dialog and the rail "New" tag that only it set. The card plays one clip drawn at random from those this machine has not finished (no `seen` / `dismissed` verdict), keeps that pick for the page session, and is hidden when none are left. The "Aj Crew in 15 seconds" intro is distributed like every other clip, through the signed CDN manifest, and is no longer bundled in the package. See 8.11.
 
 ## 8. Amendment, 2026-10-31 (product owner)
 
@@ -649,12 +649,12 @@ The panel opens from the top-bar ring (8.7). Its parts, in order:
 
 | # | Part | Section |
 |---|---|---|
-| 1 | "Kiro Crew in 15 seconds" intro video card | 8.2 below |
+| 1 | "Aj Crew in 15 seconds" intro video card | 8.2 below |
 | 2 | Try today | 8.3 |
 | 3 | Your progress: Getting started, progress bars, badge wall | 8.4, 8.5 |
 | 4 | The full feature list, with "Try it" and "Mark as done" as in 4.6 | 4.6 |
 
-**Intro video card.** One "Kiro Crew in 15 seconds" card plays the 15-second intro video. It stays until the person watches it or closes it, and then it is gone for good. That choice is stored locally, in the same Feature Videos `seen` / `dismissed` state on this machine (the local `feature_videos_state.json`). When the clip is not available on this install, the card is not shown. This card is the only home for the intro video: it is not on the new-chat page (8.6), and it is not shown through the standalone startup popup (`StartupVideoModal`). *(Amended by D18 on 2026-11-01: the card shows any unfinished feature clip, and there is no startup popup for any clip. See 8.11.)*
+**Intro video card.** One "Aj Crew in 15 seconds" card plays the 15-second intro video. It stays until the person watches it or closes it, and then it is gone for good. That choice is stored locally, in the same Feature Videos `seen` / `dismissed` state on this machine (the local `feature_videos_state.json`). When the clip is not available on this install, the card is not shown. This card is the only home for the intro video: it is not on the new-chat page (8.6), and it is not shown through the standalone startup popup (`StartupVideoModal`). *(Amended by D18 on 2026-11-01: the card shows any unfinished feature clip, and there is no startup popup for any clip. See 8.11.)*
 
 A "Try it" button anywhere in the panel keeps the send modes in 4.5: only `widgets` and `parallel-chats` send at once, the Mate row opens its page, and every other row only fills the composer.
 
@@ -726,7 +726,7 @@ This replaces the placement and label in 4.6 and D15.
 
 ### 8.8 Labels
 
-The layout strings in 4.10 become: "Explore", "Kiro Crew in 15 seconds" and the intro card's close label, "Try today", "Your progress", "Getting started", "Get a first finished result", "Set up a morning brief", the morning-brief starter prompt, "{value} / {next}", "Explore {done}/{total}", "{n}-day streak", "{n} days · best {best}", the badge-wall heading and per-badge date, "Try it", "Skip", "Mark as done", "Marked done", "Mark all as done", "Mark every new feature as done?", the "Try today" entry-card title and line, and the notice strings in 8.5. "Things you can try", "Do it", "Fill it in for me", "Take a look", "Don't show again", "Milestones", "Milestone: {title}" and "{n} new milestones" are removed. The button never says "Do it": "Try it" is the one label, and the row's blurb says whether it sends at once or fills the composer.
+The layout strings in 4.10 become: "Explore", "Aj Crew in 15 seconds" and the intro card's close label, "Try today", "Your progress", "Getting started", "Get a first finished result", "Set up a morning brief", the morning-brief starter prompt, "{value} / {next}", "Explore {done}/{total}", "{n}-day streak", "{n} days · best {best}", the badge-wall heading and per-badge date, "Try it", "Skip", "Mark as done", "Marked done", "Mark all as done", "Mark every new feature as done?", the "Try today" entry-card title and line, and the notice strings in 8.5. "Things you can try", "Do it", "Fill it in for me", "Take a look", "Don't show again", "Milestones", "Milestone: {title}" and "{n} new milestones" are removed. The button never says "Do it": "Try it" is the one label, and the row's blurb says whether it sends at once or fills the composer.
 
 ### 8.9 Ship 1 scope
 
@@ -757,7 +757,7 @@ Listed only; each item gets its own design before it is built.
 
 - **One home.** Feature videos show only in the video card at the top of the Explore panel. The startup popup (`StartupVideoModal`), its launch sequencing gate, the Meet your Mates dialog it drew, and the rail "New" tag its "Not now" set are removed. `GET /api/feature-videos/next`, the popup's pick, is removed; `GET /api/feature-videos/library` lists every eligible clip instead. `/status`, `/feedback` and `/fetch-all` stay.
 - **Which clip.** The card draws one clip at random from the listed ones: on disk, no `seen` / `dismissed` verdict, version floor met, and no `used_when` probe firing (the existing eligibility rules). The pick stays the same for the page session (closing and reopening Explore shows the same clip) and is drawn again only when that clip is finished. When nothing is listed, the card is hidden. Watching 80% records `seen`; closing records `dismissed`.
-- **Where the intro comes from.** The "Kiro Crew in 15 seconds" clip ships through the signed CDN manifest like every other clip (`scripts/feature-videos/`), and is no longer a static asset in the package. A clip is played only once the gateway has downloaded and sha256-checked it, so the card follows the existing `dashboard.feature_videos_enabled` switch and `capabilities.feature_videos_download` ceiling. The source clip is English only.
+- **Where the intro comes from.** The "Aj Crew in 15 seconds" clip ships through the signed CDN manifest like every other clip (`scripts/feature-videos/`), and is no longer a static asset in the package. A clip is played only once the gateway has downloaded and sha256-checked it, so the card follows the existing `dashboard.feature_videos_enabled` switch and `capabilities.feature_videos_download` ceiling. The source clip is English only.
 - **What does not change.** The `seen` / `dismissed` state file and its meaning, the manifest format and signing, the download pass, and the Settings cache readout.
 
 ## Appendix: what does not change

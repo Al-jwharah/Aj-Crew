@@ -1,7 +1,7 @@
 ---
 title: The work ledger drops the advisory goal item cap and its one-time notice
 status: accepted
-author: kirocrew agent session, directed by the repository owner
+author: ajcrew agent session, directed by the repository owner
 created: 2026-11-09
 last-audited: 2026-11-09
 audited-at: 1e3b894d87
@@ -31,9 +31,9 @@ amends §3 and §5 of
 
 Since [#19338](https://github.com/kirodotdev/KiroCrew/pull/19338) the goal's
 `item_cap` refuses nothing. `ConductorRecord.cap_exceeded` in
-`src/kiro_crew/work_ledger_records.py` turns true once `goal_items_used >
+`src/aj_crew/work_ledger_records.py` turns true once `goal_items_used >
 item_cap` (default `DEFAULT_GOAL_ITEM_CAP` = 20), and the conductor prompt
-(`spend_bounded` in `src/kiro_crew/agent_parts/spec_prompts.py`) and the
+(`spend_bounded` in `src/aj_crew/agent_parts/spec_prompts.py`) and the
 goal-conductor skill tell the conductor to say so once and to keep an
 `item_cap_notice` artifact in its session ledger at every round close.
 

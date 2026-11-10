@@ -22,10 +22,10 @@ from side_helpers import (  # noqa: F401 -- the autouse fixture registers by imp
     _published_readonly_spec_fixture,
 )
 
-from kiro_crew.dashboard.handlers.side import _run_side_turn, api_side_queue_edit
-from kiro_crew.dashboard.side_state import SideState
-from kiro_crew.llm_helpers import PromptBusyExhaustedError
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard.handlers.side import _run_side_turn, api_side_queue_edit
+from aj_crew.dashboard.side_state import SideState
+from aj_crew.llm_helpers import PromptBusyExhaustedError
+from aj_crew.testing.wait import async_wait_until, await_until
 
 _RAW_CREDENTIAL = "AKIAIOSFODNN7EXAMPLE"
 
@@ -73,7 +73,7 @@ async def test_the_read_returns_the_question_queue_and_running_turn(tmp_path, mo
                 slot._side.is_complete = True
                 slot._side.task = None
 
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side._run_side_turn", _blocking)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side._run_side_turn", _blocking)
     state = _make_state(tmp_path)
     events = _capture_broadcasts(state)
     slot = state.get_or_create_slot("parent")
@@ -127,7 +127,7 @@ async def test_the_read_and_the_edit_frame_carry_the_entry_revision(tmp_path, mo
                 slot._side.is_complete = True
                 slot._side.task = None
 
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side._run_side_turn", _blocking)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side._run_side_turn", _blocking)
     state = _make_state(tmp_path)
     events = _capture_broadcasts(state)
     slot = state.get_or_create_slot("parent")
@@ -169,7 +169,7 @@ async def test_a_steer_and_an_answer_are_read_back_under_their_frame_ids(tmp_pat
     state = _make_state(tmp_path)
     events = _capture_broadcasts(state)
     parent = state.get_or_create_slot("parent")
-    parent.agent = "kirocrew"
+    parent.agent = "ajcrew"
     parent._side = SideState(open=True, created_at="2026-01-01T00:00:00Z")
     parent._side.append_user("q", run_id="run-1")
     parent._side.last_run_id = "run-1"
@@ -187,7 +187,7 @@ async def test_a_steer_and_an_answer_are_read_back_under_their_frame_ids(tmp_pat
         on_steer_consumed("also this")
         return "the answer"
 
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side.stream_and_collect", _fake_stream)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side.stream_and_collect", _fake_stream)
 
     await _run_side_turn(state, parent, "run-1", "q", is_first_turn=True)
     status, body = await _read(state)
@@ -225,7 +225,7 @@ async def test_a_stopped_turn_is_read_back_as_the_notice_its_frame_drew(tmp_path
                 slot._side.task = None
             raise
 
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side._run_side_turn", _blocking)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side._run_side_turn", _blocking)
     state = _make_state(tmp_path)
     state.sessions.destroy = AsyncMock()
     events = _capture_broadcasts(state)
@@ -257,7 +257,7 @@ async def test_an_interrupted_turn_is_read_back_as_its_frames_drew_it(
     state = _make_state(tmp_path)
     events = _capture_broadcasts(state)
     parent = state.get_or_create_slot("parent")
-    parent.agent = "kirocrew"
+    parent.agent = "ajcrew"
     parent._side = SideState(open=True, created_at="2026-01-01T00:00:00Z")
     parent._side.append_user("q", run_id="run-1")
     parent._side.last_run_id = "run-1"
@@ -274,7 +274,7 @@ async def test_an_interrupted_turn_is_read_back_as_its_frames_drew_it(
             on_chunk(streamed)
         raise PromptBusyExhaustedError("busy")
 
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side.stream_and_collect", _interrupted)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side.stream_and_collect", _interrupted)
 
     await _run_side_turn(state, parent, "run-1", "q", is_first_turn=True)
     status, body = await _read(state)
@@ -311,7 +311,7 @@ async def test_an_interrupted_turn_sends_no_partial_answer_into_a_reopened_conve
     state = _make_state(tmp_path)
     events = _capture_broadcasts(state)
     parent = state.get_or_create_slot("parent")
-    parent.agent = "kirocrew"
+    parent.agent = "ajcrew"
     parent._side = SideState(open=True, created_at="2026-01-01T00:00:00Z")
     parent._side.append_user("q", run_id="run-1")
     parent._side.last_run_id = "run-1"
@@ -329,7 +329,7 @@ async def test_an_interrupted_turn_sends_no_partial_answer_into_a_reopened_conve
         raise PromptBusyExhaustedError("busy")
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.side.stream_and_collect", _interrupted_after_reopen
+        "aj_crew.dashboard.handlers.side.stream_and_collect", _interrupted_after_reopen
     )
 
     await _run_side_turn(state, parent, "run-1", "q", is_first_turn=True)
@@ -414,7 +414,7 @@ async def test_the_read_reports_running_exactly_when_a_submit_would_queue(
 ):
     """``running`` on the read is the gate a submit meets (``turn_in_flight``), so
     a restored panel offers steer and queue exactly when a submit would get them."""
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side._run_side_turn", AsyncMock())
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side._run_side_turn", AsyncMock())
     state = _make_state(tmp_path)
     _capture_broadcasts(state)
     parent = state.get_or_create_slot("parent")

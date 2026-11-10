@@ -14,7 +14,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.cron_history import CronHistoryStore, CronRunRecord
+from aj_crew.cron_history import CronHistoryStore, CronRunRecord
 
 _GARBAGE = b"\xff\xfe not utf-8\n"
 

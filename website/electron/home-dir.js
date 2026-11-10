@@ -1,6 +1,6 @@
 // Desktop data-home resolution -- a mirror of the backend's data-home resolver
-// in src/kiro_crew/config/paths.py (config_dir -> _resolve_default_home):
-//   1. A valid KIROCREW_HOME env override wins. INVALID overrides -- a
+// in src/aj_crew/config/paths.py (config_dir -> _resolve_default_home):
+//   1. A valid AJCREW_HOME env override wins. INVALID overrides -- a
 //      filesystem/drive root ("/" or "C:\") or a POSIX system dir
 //      (/usr, /System, /etc) -- are rejected (paths.py _valid_override_home)
 //      and fall through to the default, so both sides agree on which overrides
@@ -25,7 +25,7 @@ function canonicalHome(os = nodeOs, path = nodePath) {
 }
 
 /**
- * The resolved KIROCREW_HOME override iff set AND valid, else null. Mirrors
+ * The resolved AJCREW_HOME override iff set AND valid, else null. Mirrors
  * paths.py _valid_override_home: the value is expanduser()'d + resolve()'d to a
  * normalized absolute path (so a literal "~/foo" or a relative override matches
  * Python instead of being read verbatim), then a filesystem/drive root or a
@@ -34,7 +34,7 @@ function canonicalHome(os = nodeOs, path = nodePath) {
  * @returns {string|null}
  */
 function validOverride(env, os, path) {
-  const raw = env.KIROCREW_HOME;
+  const raw = env.AJCREW_HOME;
   if (!raw) return null;
   // Expand a leading "~" against the home dir (path.resolve treats "~" as a
   // literal segment, unlike Python's expanduser()), then normalize to absolute.
@@ -52,7 +52,7 @@ function validOverride(env, os, path) {
 
 /**
  * The data home whose config content governs this launch: a valid
- * KIROCREW_HOME override, else the default ~/.kiro/crew.
+ * AJCREW_HOME override, else the default ~/.kiro/crew.
  * @param {{env?: object, os?: object, path?: object}} deps
  * @returns {string}
  */

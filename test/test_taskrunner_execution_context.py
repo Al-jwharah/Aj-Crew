@@ -8,26 +8,26 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from handlers_taskrunner_coverage_helpers import _body, _request, _state
 
-import kiro_crew.taskrunner as taskrunner_module
-from kiro_crew.config.paths import kiro_agents_dir
-from kiro_crew.dashboard.handlers.taskrunner import api_taskrunner_retry
-from kiro_crew.execution_context import (
+import aj_crew.taskrunner as taskrunner_module
+from aj_crew.config.paths import kiro_agents_dir
+from aj_crew.dashboard.handlers.taskrunner import api_taskrunner_retry
+from aj_crew.execution_context import (
     ExecutionContext,
     MemoryStoreRef,
     bind_session_execution,
     read_session_execution,
 )
-from kiro_crew.history import ConversationLog
-from kiro_crew.mate_worker import MATE_WORKER_AGENT
-from kiro_crew.task_models import PROGRESS_FILE, Project, Task, TaskStatus
-from kiro_crew.task_reporter import save_progress
-from kiro_crew.taskrunner import TaskRunner
-from kiro_crew.testing.wait import await_until
+from aj_crew.history import ConversationLog
+from aj_crew.mate_worker import MATE_WORKER_AGENT
+from aj_crew.task_models import PROGRESS_FILE, Project, Task, TaskStatus
+from aj_crew.task_reporter import save_progress
+from aj_crew.taskrunner import TaskRunner
+from aj_crew.testing.wait import await_until
 
 
 def member_execution(member="alpha", mode="persistent"):
     return ExecutionContext(
-        member, MemoryStoreRef("memory-" + member, member), "member", "kirocrew", mode
+        member, MemoryStoreRef("memory-" + member, member), "member", "ajcrew", mode
     )
 
 
@@ -113,7 +113,7 @@ def write_spec(tmp_path):
 CARRIER_CASES = [
     pytest.param(template_execution(), "", "custom-agent", id="template-carrier"),
     pytest.param(template_execution(), "picked", "picked", id="explicit-agent-wins"),
-    pytest.param(template_execution("kirocrew"), "", "", id="default-chat"),
+    pytest.param(template_execution("ajcrew"), "", "", id="default-chat"),
     pytest.param(template_execution("project-only-agent"), "", "", id="project-only-template"),
     pytest.param(member_bound_execution("member", "member-template"), "", "", id="member-carrier"),
     pytest.param(
@@ -139,7 +139,7 @@ async def test_a_plan_decomposes_and_runs_as_the_starting_chat_s_agent(
         bind_session_execution(session_key, carrier)
 
     run = await runner.plan("a plan", agent=explicit, session_key=session_key)
-    with patch("kiro_crew.taskrunner.asyncio.create_task", _discard_scheduled_coroutine):
+    with patch("aj_crew.taskrunner.asyncio.create_task", _discard_scheduled_coroutine):
         await runner.execute_plan(run.task_id, agent=explicit)
     await run_remaining_work(runner, run)
 
@@ -173,7 +173,7 @@ async def test_overlapping_runs_from_different_chats_each_keep_their_own_agent(
     """A start from one chat never moves a run another chat started onto its agent."""
     runner = make_runner(tmp_path)
     seen = record_session_agents(monkeypatch)
-    bind_session_execution("default-chat", template_execution("kirocrew"))
+    bind_session_execution("default-chat", template_execution("ajcrew"))
     bind_session_execution("custom-chat", template_execution())
     spec = write_spec(tmp_path)
     started = defaultdict(asyncio.Event)
@@ -226,8 +226,8 @@ async def retry_as_the_dashboard_does(runner, task_id):
     """
     request = _request(_state(runner), match_info={"task_id": task_id}, json_body={"from_step": 1})
     with (
-        patch("kiro_crew.dashboard.handlers.taskrunner._sel"),
-        patch("kiro_crew.taskrunner.asyncio.create_task", _discard_scheduled_coroutine),
+        patch("aj_crew.dashboard.handlers.taskrunner._sel"),
+        patch("aj_crew.taskrunner.asyncio.create_task", _discard_scheduled_coroutine),
     ):
         response = await api_taskrunner_retry(request)
     assert _body(response) == {"ok": True, "task_id": task_id}
@@ -239,7 +239,7 @@ async def test_a_dashboard_retry_keeps_each_run_on_its_own_chat_s_agent(tmp_path
     seen = record_session_agents(monkeypatch)
     runs = [
         failed_run("custom-run", template_execution()),
-        failed_run("default-run", template_execution("kirocrew")),
+        failed_run("default-run", template_execution("ajcrew")),
         failed_run("other-run", template_execution("other-agent")),
     ]
     for run in runs:
@@ -269,7 +269,7 @@ async def test_a_resumed_run_keeps_the_agent_its_persisted_carrier_names(
     restored = make_runner(tmp_path)
 
     if entry == "execute_plan":
-        with patch("kiro_crew.taskrunner.asyncio.create_task", _discard_scheduled_coroutine):
+        with patch("aj_crew.taskrunner.asyncio.create_task", _discard_scheduled_coroutine):
             await restored.execute_plan(run.task_id)
     else:
         await retry_as_the_dashboard_does(restored, run.task_id)
@@ -338,7 +338,7 @@ async def test_restored_project_rebinds_without_origin_or_runtime_lookup(tmp_pat
 
 def test_legacy_run_recovers_runtime_identity_without_global_fallback(tmp_path, monkeypatch):
     runner = make_runner(tmp_path)
-    legacy = ExecutionContext(None, MemoryStoreRef("legacy-v1"), "template", "kirocrew")
+    legacy = ExecutionContext(None, MemoryStoreRef("legacy-v1"), "template", "ajcrew")
     runtime_key = "taskrunner:legacy-v1-run:runtime"
     monkeypatch.setattr(
         ConversationLog,
@@ -348,7 +348,7 @@ def test_legacy_run_recovers_runtime_identity_without_global_fallback(tmp_path, 
         ),
     )
     monkeypatch.setattr(
-        "kiro_crew.taskrunner.capture_session_execution",
+        "aj_crew.taskrunner.capture_session_execution",
         lambda key: legacy if key == runtime_key else None,
     )
     runner._runs_path().write_text(

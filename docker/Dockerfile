@@ -1,11 +1,11 @@
-# KiroCrew gateway image — headless dashboard + channel bots (Slack/Discord/
+# AjCrew gateway image — headless dashboard + channel bots (Slack/Discord/
 # Telegram/WeCom/Webex) in a container.
 #
 # Build contract: the image consumes the CI-BUILT WHEEL from dist/ (the same
 # artifact pip users install — frontend staged in, version stamped), never a
 # raw source tree. Building from source here would duplicate build-wheel.yml
 # and let the Docker bytes drift from the pip bytes for the same version.
-#   docker build -f docker/Dockerfile .        (requires dist/kirocrew-*.whl
+#   docker build -f docker/Dockerfile .        (requires dist/ajcrew-*.whl
 #                                                and BuildKit — the default
 #                                                builder since Docker 23; on
 #                                                older engines prefix with
@@ -17,10 +17,10 @@
 # py3-none-any — multi-arch needs no compilation.
 #
 # Security posture:
-#   - Non-root user (kirocrew, uid 1000). All state lives under
-#     /home/kirocrew so a single volume mount persists everything: gateway
+#   - Non-root user (ajcrew, uid 1000). All state lives under
+#     /home/ajcrew so a single volume mount persists everything: gateway
 #     home (~/.kiro/crew), kiro-cli credentials, agents, skills.
-#   - KIROCREW_BIND=0.0.0.0 binds the container's network namespace only;
+#   - AJCREW_BIND=0.0.0.0 binds the container's network namespace only;
 #     nothing reaches the host unless the operator publishes the port
 #     (-p 5476:5476). Token auth is always mounted server-side (see
 #     dashboard/origin.py bind_address_for), CSRF + Host checks apply to
@@ -32,8 +32,8 @@
 #     The release is the one pinned in packaging/kiro-cli-version and
 #     sha256-verified fail-closed against packaging/kiro-cli-sha256, the same
 #     two files the desktop build reads; the version is recorded at
-#     /usr/local/share/kirocrew/kiro-cli-version and (when the lane passes
-#     KIRO_CLI_VERSION) in the dev.kirocrew.kiro-cli.version OCI label.
+#     /usr/local/share/ajcrew/kiro-cli-version and (when the lane passes
+#     KIRO_CLI_VERSION) in the dev.ajcrew.kiro-cli.version OCI label.
 
 FROM python:3.12-slim-trixie
 
@@ -42,7 +42,7 @@ FROM python:3.12-slim-trixie
 ARG TARGETARCH
 
 # Version stamped into OCI labels by the publish lane (dev builds: "dev").
-ARG KIROCREW_VERSION=dev
+ARG AJCREW_VERSION=dev
 ARG VCS_REF=unknown
 
 # kiro-cli version the lane expects, for the OCI label. The build installs
@@ -54,14 +54,14 @@ ARG KIRO_CLI_VERSION=
 # Source repository for the OCI label. The publish lane passes the actual
 # repository (forks label their own images correctly instead of
 # masquerading as the canonical repo).
-ARG SOURCE_REPO_URL="https://github.com/kirodotdev/KiroCrew"
+ARG SOURCE_REPO_URL="https://github.com/Al-jwharah/Aj-Crew"
 
 LABEL org.opencontainers.image.source="${SOURCE_REPO_URL}" \
-      org.opencontainers.image.description="KiroCrew gateway — personal AI agent crew (dashboard + Slack/Discord/Telegram/WeCom/Webex)" \
+      org.opencontainers.image.description="AjCrew gateway — personal AI agent crew (dashboard + Slack/Discord/Telegram/WeCom/Webex)" \
       org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.version="${KIROCREW_VERSION}" \
+      org.opencontainers.image.version="${AJCREW_VERSION}" \
       org.opencontainers.image.revision="${VCS_REF}" \
-      dev.kirocrew.kiro-cli.version="${KIRO_CLI_VERSION}"
+      dev.ajcrew.kiro-cli.version="${KIRO_CLI_VERSION}"
 
 # Runtime toolset for agent sessions: git (repo work), curl (healthcheck +
 # fetches), ripgrep (agent search), unzip (kiro-cli archive), tini (PID 1:
@@ -78,7 +78,7 @@ RUN apt-get update \
         unzip \
     && rm -rf /var/lib/apt/lists/*
 
-# kiro-cli — the agent runtime KiroCrew drives over ACP; chat sessions
+# kiro-cli — the agent runtime AjCrew drives over ACP; chat sessions
 # require it. Every kiro-cli* binary the release ships (kiro-cli, and
 # kiro-cli-chat / kiro-cli-term where present) ends up in /usr/local/bin.
 # Older installers honour Q_INSTALL_GLOBAL; newer ones read
@@ -98,7 +98,7 @@ RUN apt-get update \
 #   3. Download that version's zip and verify its sha256 fail-closed before
 #      executing anything from it. A pin with no sha line fails the build.
 #   4. Record the version at a fixed path for runtime audit
-#      (docker run --rm <image> cat /usr/local/share/kirocrew/kiro-cli-version).
+#      (docker run --rm <image> cat /usr/local/share/ajcrew/kiro-cli-version).
 RUN --mount=type=bind,source=packaging,target=/tmp/kiro-cli-pin \
     set -eux; \
     case "${TARGETARCH}" in \
@@ -130,8 +130,8 @@ RUN --mount=type=bind,source=packaging,target=/tmp/kiro-cli-pin \
         mv -f "${bin}" /usr/local/bin/; \
     done; \
     rm -rf /tmp/kirocli /tmp/kirocli.zip; \
-    mkdir -p /usr/local/share/kirocrew; \
-    printf '%s\n' "${RESOLVED}" > /usr/local/share/kirocrew/kiro-cli-version; \
+    mkdir -p /usr/local/share/ajcrew; \
+    printf '%s\n' "${RESOLVED}" > /usr/local/share/ajcrew/kiro-cli-version; \
     test -x /usr/local/bin/kiro-cli; \
     kiro-cli --version
 
@@ -149,26 +149,26 @@ RUN --mount=type=bind,source=packaging,target=/tmp/kiro-cli-pin \
 # reads the wheel. .dockerignore's allowlist means the mounted dist/ contains
 # exactly the staged *.whl, so the one-wheel guard keeps its meaning.
 # Bare `--version` is a pre-dispatch fast-path that answers before
-# `kiro_crew.cli` is imported, so it cannot prove the import chain resolves.
-# The `import kiro_crew.cli` probe is what catches a runtime import the wheel
+# `aj_crew.cli` is imported, so it cannot prove the import chain resolves.
+# The `import aj_crew.cli` probe is what catches a runtime import the wheel
 # metadata does not declare.
 RUN --mount=type=bind,source=dist,target=/tmp/wheels \
     set -eux; \
     WHEEL_COUNT=$(ls /tmp/wheels/*.whl | wc -l); \
     [ "${WHEEL_COUNT}" -eq 1 ] || { echo "expected exactly one wheel, found ${WHEEL_COUNT}" >&2; exit 1; }; \
     pip install --no-cache-dir /tmp/wheels/*.whl; \
-    kirocrew --version; \
-    python -c 'import kiro_crew.cli'
+    ajcrew --version; \
+    python -c 'import aj_crew.cli'
 
 # Re-stamp the provenance the wheel already carries: this image installs the
 # wheel artifact, which is stamped "wheel", so without this every container
 # reports the wheel channel and the two are indistinguishable. Overwrite the
 # baked module in the installed package rather than setting
-# KIROCREW_DISTRIBUTION -- the baked value deliberately outranks the env var,
+# AJCREW_DISTRIBUTION -- the baked value deliberately outranks the env var,
 # so an ENV here would be ignored. Carry over the wheel's baked build lane.
 RUN set -eux; \
-    PKG_DIR="$(python -c 'import kiro_crew, pathlib; print(pathlib.Path(kiro_crew.__file__).parent)')"; \
-    CHANNEL="$(python -c 'from kiro_crew.build_channel import baked_build_channel; print(baked_build_channel())')"; \
+    PKG_DIR="$(python -c 'import aj_crew, pathlib; print(pathlib.Path(aj_crew.__file__).parent)')"; \
+    CHANNEL="$(python -c 'from aj_crew.build_channel import baked_build_channel; print(baked_build_channel())')"; \
     printf '%s\n' \
       '"""Build-time provenance. GENERATED -- do not edit."""' \
       '' \
@@ -177,35 +177,35 @@ RUN set -eux; \
       'DISTRIBUTION = "docker"' \
       "BUILD_CHANNEL = \"${CHANNEL}\"" \
       > "${PKG_DIR}/_build_info.py"; \
-    python -c 'import sys; from kiro_crew import beacon; from kiro_crew.build_channel import baked_build_channel; assert beacon.distribution() == "docker", beacon.distribution(); assert baked_build_channel() == sys.argv[1], baked_build_channel()' "${CHANNEL}"
+    python -c 'import sys; from aj_crew import beacon; from aj_crew.build_channel import baked_build_channel; assert beacon.distribution() == "docker", beacon.distribution(); assert baked_build_channel() == sys.argv[1], baked_build_channel()' "${CHANNEL}"
 
 # Non-root runtime user. HOME holds ALL persistent state; users mount a
-# named volume at /home/kirocrew (recommended over a bind mount: named
+# named volume at /home/ajcrew (recommended over a bind mount: named
 # volumes inherit the image's ownership on first use).
-RUN useradd --create-home --uid 1000 --shell /bin/bash kirocrew
-COPY --chmod=755 docker/entrypoint.sh /usr/local/bin/kirocrew-entrypoint
+RUN useradd --create-home --uid 1000 --shell /bin/bash ajcrew
+COPY --chmod=755 docker/entrypoint.sh /usr/local/bin/ajcrew-entrypoint
 
 # Bundled KAS engine: the `agent.kas_bundle` route with no download.
 #
 # BUNDLE_KAS=1 stages the KAS engine bundle this release PINS
-# (kiro_crew/acp/kas_pin.py: KAS_PIN_VERSION + KAS_PIN_MANIFEST_SHA256) at
-# /usr/local/share/kirocrew/kas, outside the home volume and root-owned, so a
+# (aj_crew/acp/kas_pin.py: KAS_PIN_VERSION + KAS_PIN_MANIFEST_SHA256) at
+# /usr/local/share/ajcrew/kas, outside the home volume and root-owned, so a
 # mounted home can never shadow or rewrite it. The staging IS the backend's own
 # installer (acp.kas_bundle.install_bundle) run from the wheel installed above,
 # exactly as packaging/build-desktop.sh stages the desktop app's copy: manifest
 # bytes checked against the pin before parsing, every artifact sha256+size-
 # pinned by that manifest, tar filter="data", a `node --version` probe, one
 # atomic publish. The tree is read back through the reader the gateway uses,
-# first as root and then as the kirocrew user, so a tree the gateway would
+# first as root and then as the ajcrew user, so a tree the gateway would
 # ignore fails the build rather than the first prompt. The root holds
-# <version>/{bundle,node,install.json}, the layout `kirocrew kas install`
+# <version>/{bundle,node,install.json}, the layout `ajcrew kas install`
 # writes under the data home.
 #
-# KIROCREW_BUNDLED_KAS_DIR names the root as an image ENV, so every process in
-# the container sees it: the gateway, and `docker exec <ctr> kirocrew kas
+# AJCREW_BUNDLED_KAS_DIR names the root as an image ENV, so every process in
+# the container sees it: the gateway, and `docker exec <ctr> ajcrew kas
 # status` / `doctor`, which bypass the entrypoint. It is the variable the
 # desktop shell exports in gateway-env.js, and installed_bundle() reads it as
-# the second root after the data home's own `kirocrew kas install`. The
+# the second root after the data home's own `ajcrew kas install`. The
 # directory is created on every build, so on a BUNDLE_KAS=0 image it is an
 # empty root-owned directory: the reader finds no version in it, and the
 # read-only seal the sandbox puts on this root covers a path that exists.
@@ -215,60 +215,60 @@ COPY --chmod=755 docker/entrypoint.sh /usr/local/bin/kirocrew-entrypoint
 # --with-kas), and the staged engine adds about 370 MB to every pull of an
 # image whose users have not switched the route on.
 ARG BUNDLE_KAS=0
-ENV KIROCREW_BUNDLED_KAS_DIR=/usr/local/share/kirocrew/kas
+ENV AJCREW_BUNDLED_KAS_DIR=/usr/local/share/ajcrew/kas
 RUN set -eux; \
     case "${BUNDLE_KAS}" in \
         0|1) ;; \
         *) echo "BUNDLE_KAS must be 0 or 1, got '${BUNDLE_KAS}'" >&2; exit 1 ;; \
     esac; \
-    rm -rf "${KIROCREW_BUNDLED_KAS_DIR}"; \
-    mkdir -p "${KIROCREW_BUNDLED_KAS_DIR}"; \
+    rm -rf "${AJCREW_BUNDLED_KAS_DIR}"; \
+    mkdir -p "${AJCREW_BUNDLED_KAS_DIR}"; \
     if [ "${BUNDLE_KAS}" = "0" ]; then \
         echo "BUNDLE_KAS=0: image ships without a bundled KAS engine"; exit 0; \
     fi; \
     python -I -c 'import sys; from pathlib import Path; \
-from kiro_crew.acp import kas_bundle; \
-from kiro_crew.acp.kas_pin import KAS_PIN_MANIFEST_SHA256, KAS_PIN_VERSION; \
-from kiro_crew.config.sections import KAS_BUNDLE_DEFAULT_URL; \
+from aj_crew.acp import kas_bundle; \
+from aj_crew.acp.kas_pin import KAS_PIN_MANIFEST_SHA256, KAS_PIN_VERSION; \
+from aj_crew.config.sections import KAS_BUNDLE_DEFAULT_URL; \
 dest = Path(sys.argv[1]); \
 manifest, url = kas_bundle.fetch_manifest(KAS_BUNDLE_DEFAULT_URL, version=KAS_PIN_VERSION, sha256=KAS_PIN_MANIFEST_SHA256); \
 installed = kas_bundle.install_bundle(manifest, source=url, root=dest); \
 again = kas_bundle.installed_bundle(root=dest, version=KAS_PIN_VERSION); \
 assert again is not None and again.acp_server == installed.acp_server and again.node_bin == installed.node_bin, "staged tree does not read back"; \
 print(f"KAS {KAS_PIN_VERSION} staged, Node v{installed.node_version}")' \
-        "${KIROCREW_BUNDLED_KAS_DIR}"; \
-    chmod -R u=rwX,go=rX "${KIROCREW_BUNDLED_KAS_DIR}"; \
-    runuser -u kirocrew -- python -I -c 'import sys; from pathlib import Path; \
-from kiro_crew.acp import kas_bundle; \
-from kiro_crew.acp.kas_pin import KAS_PIN_VERSION; \
+        "${AJCREW_BUNDLED_KAS_DIR}"; \
+    chmod -R u=rwX,go=rX "${AJCREW_BUNDLED_KAS_DIR}"; \
+    runuser -u ajcrew -- python -I -c 'import sys; from pathlib import Path; \
+from aj_crew.acp import kas_bundle; \
+from aj_crew.acp.kas_pin import KAS_PIN_VERSION; \
 found = kas_bundle.installed_bundle(root=Path(sys.argv[1]), version=KAS_PIN_VERSION); \
-assert found is not None, "the kirocrew user cannot read the staged KAS engine"; \
-print(f"kirocrew reads KAS {KAS_PIN_VERSION}: {found.acp_server}")' \
-        "${KIROCREW_BUNDLED_KAS_DIR}"
+assert found is not None, "the ajcrew user cannot read the staged KAS engine"; \
+print(f"ajcrew reads KAS {KAS_PIN_VERSION}: {found.acp_server}")' \
+        "${AJCREW_BUNDLED_KAS_DIR}"
 
-USER kirocrew
-WORKDIR /home/kirocrew
+USER ajcrew
+WORKDIR /home/ajcrew
 
 # Container networking: published ports map to the bridge interface, so the
 # gateway must bind beyond loopback INSIDE the container namespace. This is
 # an explicit, validated override (see bind_address_for) — operators can set
-# KIROCREW_BIND=127.0.0.1 to force loopback-only (e.g. behind an in-pod
+# AJCREW_BIND=127.0.0.1 to force loopback-only (e.g. behind an in-pod
 # sidecar proxy).
-ENV KIROCREW_BIND=0.0.0.0
+ENV AJCREW_BIND=0.0.0.0
 
 EXPOSE 5476
 
 # Probes loopback inside the container namespace: the default 0.0.0.0 bind
-# answers there. Operators who narrow KIROCREW_BIND to a specific interface
+# answers there. Operators who narrow AJCREW_BIND to a specific interface
 # address own the corresponding healthcheck override.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-    CMD curl -fsS "http://127.0.0.1:${KIROCREW_PORT:-5476}/api/health" || exit 1
+    CMD curl -fsS "http://127.0.0.1:${AJCREW_PORT:-5476}/api/health" || exit 1
 
 # tini as PID 1: reaps agent subprocess zombies and forwards signals.
 # The script (not tini) is the ENTRYPOINT: it must scrub credentials from
 # the environment BEFORE any long-lived process image is created, then it
-# execs `tini -- kirocrew ...` itself. Wrapping the script IN tini would
+# execs `tini -- ajcrew ...` itself. Wrapping the script IN tini would
 # give PID 1 an execve-time environ snapshot containing every credential
 # (verified by the docker-smoke environ scan).
-ENTRYPOINT ["kirocrew-entrypoint"]
+ENTRYPOINT ["ajcrew-entrypoint"]
 CMD ["gateway"]

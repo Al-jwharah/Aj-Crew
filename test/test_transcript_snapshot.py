@@ -22,11 +22,11 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import session_transfer as st
-from kiro_crew.dashboard import transcript_snapshot
-from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-from kiro_crew.dashboard.slot_persistence import write_guards
-from kiro_crew.dashboard.transcript_snapshot import (
+from aj_crew.dashboard import session_transfer as st
+from aj_crew.dashboard import transcript_snapshot
+from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+from aj_crew.dashboard.slot_persistence import write_guards
+from aj_crew.dashboard.transcript_snapshot import (
     FORK,
     PAGE,
     SNAPSHOT_ATTEMPTS,
@@ -119,7 +119,7 @@ def _disk(state, key: str) -> list[str]:
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     return _make_state(tmp_path)
 
 
@@ -717,13 +717,13 @@ class TestTheLogLines:
         )
         hook.on_call(1, lambda: slot.append("user", "late", "msg msg-u"))
 
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.dashboard.chat_fork"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.dashboard.chat_fork"):
             await _fork(state, "l-fork")
 
         assert [
             (r.levelno, r.getMessage())
             for r in caplog.records
-            if r.name == "kiro_crew.dashboard.chat_fork" and "transcript read" in r.getMessage()
+            if r.name == "aj_crew.dashboard.chat_fork" and "transcript read" in r.getMessage()
         ] == [
             (logging.DEBUG, "chat_fork: slot=l-fork changed during the transcript read; retrying")
         ]
@@ -739,13 +739,13 @@ class TestTheLogLines:
         )
         hook.on_call(1, lambda: slot.append("user", "late", "msg msg-u"))
 
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.dashboard.session_transfer"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.dashboard.session_transfer"):
             await st.build_transfer_bundle_async(state, slot, origin="here")
 
         assert [
             (r.levelno, r.getMessage())
             for r in caplog.records
-            if r.name == "kiro_crew.dashboard.session_transfer"
+            if r.name == "aj_crew.dashboard.session_transfer"
             and "transcript read" in r.getMessage()
         ] == [
             (
@@ -786,14 +786,14 @@ class TestTheLogLines:
         else:
             assert state.conversation_log.delete_session("dashboard:l-gone") is True
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.session_transfer"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.session_transfer"):
             with pytest.raises(st.SnapshotUnstable):
                 await st.build_transfer_bundle_async(state, slot, origin="here")
 
         assert [
             (r.levelno, r.getMessage())
             for r in caplog.records
-            if r.name == "kiro_crew.dashboard.session_transfer"
+            if r.name == "aj_crew.dashboard.session_transfer"
         ] == [(logging.WARNING, line)]
 
     @pytest.mark.asyncio
@@ -806,7 +806,7 @@ class TestTheLogLines:
             raise OSError("transient")
 
         monkeypatch.setattr(state.conversation_log, "read_messages_chained_page", _transient)
-        handlers_logger = "kiro_crew.dashboard.chat_handlers"
+        handlers_logger = "aj_crew.dashboard.chat_handlers"
 
         with caplog.at_level(logging.DEBUG, logger=handlers_logger):
             page = await _page(state, "l-page", limit=10)

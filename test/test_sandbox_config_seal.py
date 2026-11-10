@@ -18,7 +18,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import sandbox
+from aj_crew import sandbox
 
 _CONFIG_LEAVES = ("config.json", "config.local.json")
 
@@ -28,7 +28,7 @@ def test_config_leaf_is_read_only_in_every_mode(leaf):
     assert leaf in sandbox._CREW_READONLY_LEAVES
     assert leaf not in sandbox._CREW_HIDDEN_LEAVES
     assert leaf not in sandbox._CREW_SANDBOX_VISIBLE_LEAVES
-    for prefix in (".kiro/crew", ".kirocrew"):
+    for prefix in (".kiro/crew", ".ajcrew"):
         assert f"{prefix}/{leaf}" in sandbox._CREW_READONLY_TARGETS
 
 
@@ -49,23 +49,23 @@ def _set_args(*, local: bool = True):
 def home(tmp_path, monkeypatch):
     """A data home with the two config paths pointed at it, and NO sandbox marker.
 
-    ``cli.main()`` pops ``KIROCREW_SANDBOX_ACTIVE`` before dispatch, so the marker is
-    never in the environment when ``kirocrew config`` runs -- inside the sandbox or
+    ``cli.main()`` pops ``AJCREW_SANDBOX_ACTIVE`` before dispatch, so the marker is
+    never in the environment when ``ajcrew config`` runs -- inside the sandbox or
     out. The hint has to be decided from the failure itself; a test that set the
     marker would pass against a hint that never fires in production.
     """
-    monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+    monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
     d = tmp_path / "crew"
     d.mkdir()
     (d / "config.json").write_text(
         json.dumps({"session": {"autocompact_pct": 90.0}}), encoding="utf-8"
     )
     with (
-        patch("kiro_crew.cli_config.config_path", return_value=d / "config.json"),
-        patch("kiro_crew.cli_config.config_local_path", return_value=d / "config.local.json"),
-        patch("kiro_crew.config.loader.config_path", return_value=d / "config.json"),
-        patch("kiro_crew.config.loader.config_dir", return_value=d),
-        patch("kiro_crew.cli_config.sel"),
+        patch("aj_crew.cli_config.config_path", return_value=d / "config.json"),
+        patch("aj_crew.cli_config.config_local_path", return_value=d / "config.local.json"),
+        patch("aj_crew.config.loader.config_path", return_value=d / "config.json"),
+        patch("aj_crew.config.loader.config_dir", return_value=d),
+        patch("aj_crew.cli_config.sel"),
     ):
         yield d
 
@@ -79,10 +79,10 @@ def _assert_hint(err: str) -> None:
 @pytest.mark.parametrize("leaf", _CONFIG_LEAVES)
 def test_sandboxed_config_set_reports_the_seal_on_an_in_place_write(home, capsys, code, leaf):
     """``open(path, "w")`` refused by the seal names the sealed file as ``filename``."""
-    from kiro_crew.cli_config import _config_cmd
+    from aj_crew.cli_config import _config_cmd
 
     with patch(
-        "kiro_crew.cli_config.update_config_locked",
+        "aj_crew.cli_config.update_config_locked",
         side_effect=OSError(code, "denied", str(home / leaf)),
     ):
         with pytest.raises(SystemExit) as exc:
@@ -99,11 +99,11 @@ def test_sandboxed_config_set_reports_the_seal_on_the_publishing_rename(home, ca
     writable), and the rename over the sealed leaf is what the OS refuses -- ``EPERM``
     from Seatbelt, ``EBUSY`` from a Linux bind mount.
     """
-    from kiro_crew.cli_config import _config_cmd
+    from aj_crew.cli_config import _config_cmd
 
     tmp = home / "tmpa1b2c3.tmp"
     with patch(
-        "kiro_crew.cli_config.update_config_locked",
+        "aj_crew.cli_config.update_config_locked",
         side_effect=OSError(code, "denied", str(tmp), None, str(home / "config.local.json")),
     ):
         with pytest.raises(SystemExit) as exc:
@@ -115,11 +115,11 @@ def test_sandboxed_config_set_reports_the_seal_on_the_publishing_rename(home, ca
 @pytest.mark.parametrize("code", [errno.EPERM, errno.EROFS])
 def test_sandboxed_config_set_reports_the_seal_on_the_publication_record(home, capsys, code):
     """The writer records a save before the rename, so the record's seal refuses first."""
-    from kiro_crew.cli_config import _config_cmd
-    from kiro_crew.config.write_provenance import record_path
+    from aj_crew.cli_config import _config_cmd
+    from aj_crew.config.write_provenance import record_path
 
     with patch(
-        "kiro_crew.cli_config.update_config_locked",
+        "aj_crew.cli_config.update_config_locked",
         side_effect=OSError(code, "denied", str(record_path())),
     ):
         with pytest.raises(SystemExit) as exc:
@@ -130,10 +130,10 @@ def test_sandboxed_config_set_reports_the_seal_on_the_publication_record(home, c
 
 def test_a_denial_against_an_unrelated_file_is_not_relabelled(home):
     """Errno alone is not the seal: the same errno against another path is re-raised."""
-    from kiro_crew.cli_config import _config_cmd
+    from aj_crew.cli_config import _config_cmd
 
     with patch(
-        "kiro_crew.cli_config.update_config_locked",
+        "aj_crew.cli_config.update_config_locked",
         side_effect=PermissionError(errno.EPERM, "denied", str(home / "other.json")),
     ):
         with pytest.raises(PermissionError):
@@ -141,10 +141,10 @@ def test_a_denial_against_an_unrelated_file_is_not_relabelled(home):
 
 
 def test_a_denial_with_no_filename_is_not_relabelled(home):
-    from kiro_crew.cli_config import _config_cmd
+    from aj_crew.cli_config import _config_cmd
 
     with patch(
-        "kiro_crew.cli_config.update_config_locked",
+        "aj_crew.cli_config.update_config_locked",
         side_effect=PermissionError(errno.EPERM, "denied"),
     ):
         with pytest.raises(PermissionError):
@@ -153,10 +153,10 @@ def test_a_denial_with_no_filename_is_not_relabelled(home):
 
 def test_a_non_denial_errno_against_the_config_is_not_relabelled(home):
     """A full data home names the same file but is not the seal."""
-    from kiro_crew.cli_config import _config_cmd
+    from aj_crew.cli_config import _config_cmd
 
     with patch(
-        "kiro_crew.cli_config.update_config_locked",
+        "aj_crew.cli_config.update_config_locked",
         side_effect=OSError(errno.ENOSPC, "full", str(home / "config.local.json")),
     ):
         with pytest.raises(OSError) as exc:
@@ -166,10 +166,10 @@ def test_a_non_denial_errno_against_the_config_is_not_relabelled(home):
 
 def test_config_edit_editor_exec_denial_is_not_relabelled(home):
     """``config edit`` failing to exec the editor is an editor problem, not the seal."""
-    from kiro_crew.cli_config import _config_cmd
+    from aj_crew.cli_config import _config_cmd
 
     with patch(
-        "kiro_crew.cli_config.os.execvp",
+        "aj_crew.cli_config.os.execvp",
         side_effect=PermissionError(errno.EACCES, "denied", "vi"),
     ):
         with pytest.raises(PermissionError):
@@ -178,10 +178,10 @@ def test_config_edit_editor_exec_denial_is_not_relabelled(home):
 
 def test_sandboxed_config_defaults_adopt_reports_the_seal(home, capsys):
     """``config defaults --adopt`` writes ``config.json`` through its own error path."""
-    from kiro_crew.cli_config import _config_cmd
+    from aj_crew.cli_config import _config_cmd
 
     with patch(
-        "kiro_crew.cli_config.update_config_locked",
+        "aj_crew.cli_config.update_config_locked",
         side_effect=OSError(errno.EPERM, "denied", str(home / "config.json")),
     ):
         with pytest.raises(SystemExit) as exc:
@@ -195,10 +195,10 @@ def test_sandboxed_config_defaults_adopt_reports_the_seal(home, capsys):
 
 
 def test_config_defaults_adopt_keeps_its_own_message_for_other_failures(home, capsys):
-    from kiro_crew.cli_config import _config_cmd
+    from aj_crew.cli_config import _config_cmd
 
     with patch(
-        "kiro_crew.cli_config.update_config_locked",
+        "aj_crew.cli_config.update_config_locked",
         side_effect=OSError(errno.ENOSPC, "full", str(home / "config.json")),
     ):
         with pytest.raises(SystemExit) as exc:
@@ -217,11 +217,11 @@ def test_a_save_refused_in_the_provenance_directory_reports_the_seal(monkeypatch
     Inside the sandbox ``config-provenance`` is a read-only bind, so the first write a
     save makes there -- the temp ``atomic_write`` stages for the endorsed copy -- is what
     the OS refuses, and the error names that temp, not a sealed file. The conftest pins
-    ``KIROCREW_HOME`` per test, so ``config_dir()`` is a fresh data home.
+    ``AJCREW_HOME`` per test, so ``config_dir()`` is a fresh data home.
     """
-    from kiro_crew.cli_config import _config_cmd
-    from kiro_crew.config import loosening_provenance
-    from kiro_crew.config.paths import config_dir
+    from aj_crew.cli_config import _config_cmd
+    from aj_crew.config import loosening_provenance
+    from aj_crew.config.paths import config_dir
 
     home = config_dir()
     before = json.dumps({"watchdog": {"stale_window_secs": 300.0}})

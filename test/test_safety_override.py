@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.safety_override — time-limited safety override (YOLO replacement)."""
+"""Tests for aj_crew.safety_override — time-limited safety override (YOLO replacement)."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from conftest import drain_breadcrumb_writes
-from kiro_crew.safety_override import (
+from aj_crew.safety_override import (
     ActivationResult,
     OverrideStatus,
     RenewResult,
@@ -50,7 +50,7 @@ def override() -> SafetyOverride:
 
 class TestActivation:
     def test_activate_from_slack(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             result = override.activate("slack")
         assert isinstance(result, ActivationResult)
@@ -59,7 +59,7 @@ class TestActivation:
         assert result.active is True
 
     def test_activate_from_dashboard(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             result = override.activate("dashboard")
         assert result.ttl == SafetyOverride._ADHOC_TTL_DEFAULT
@@ -67,7 +67,7 @@ class TestActivation:
         assert result.active is True
 
     def test_activate_from_config(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             result = override.activate("config")
         assert result.ttl == SafetyOverride._ADHOC_TTL_DEFAULT
@@ -75,7 +75,7 @@ class TestActivation:
         assert result.active is True
 
     def test_activate_caps_at_max_ttl(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             result = override.activate("slack", ttl=200000)
         assert result.ttl == SafetyOverride._MAX_TTL
@@ -84,13 +84,13 @@ class TestActivation:
     def test_activate_fires_callback(self, override: SafetyOverride) -> None:
         callback = MagicMock()
         override._on_activated = callback
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             result = override.activate("slack")
         callback.assert_called_once_with("slack", result.ttl)
 
     def test_activation_count_increments(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             assert override._activation_count == 0
             override.activate("slack")
@@ -99,13 +99,13 @@ class TestActivation:
             assert override._activation_count == 2
 
     def test_activate_custom_ttl_within_max(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             result = override.activate("slack", ttl=3600)
         assert result.ttl == 3600
 
     def test_activate_sets_active_true(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             assert not override.is_active()
             override.activate("slack")
@@ -117,7 +117,7 @@ class TestActivation:
 
 class TestExpiry:
     def test_is_active_returns_false_after_expiry(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack", ttl=1)
         # Manually expire it
@@ -127,12 +127,12 @@ class TestExpiry:
     def test_expiry_fires_callback(self, override: SafetyOverride) -> None:
         callback = MagicMock()
         override._on_expired = callback
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack", ttl=1)
         # Manually expire
         override._expires_at = time.monotonic() - 1
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             result = override.is_active()
         assert not result
@@ -140,12 +140,12 @@ class TestExpiry:
 
     def test_expiry_logs_sel_event(self, override: SafetyOverride) -> None:
         mock_sel_instance = MagicMock()
-        with patch("kiro_crew.safety_override.sel", return_value=mock_sel_instance):
+        with patch("aj_crew.safety_override.sel", return_value=mock_sel_instance):
             override.activate("slack", ttl=1)
         # Force expiry
         override._expires_at = time.monotonic() - 1
         mock_sel_instance2 = MagicMock()
-        with patch("kiro_crew.safety_override.sel", return_value=mock_sel_instance2):
+        with patch("aj_crew.safety_override.sel", return_value=mock_sel_instance2):
             override.is_active()
         mock_sel_instance2.log_api_access.assert_called_once()
         call_kwargs = mock_sel_instance2.log_api_access.call_args.kwargs
@@ -158,7 +158,7 @@ class TestExpiry:
 
 class TestDeactivation:
     def test_deactivate(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack")
             assert override.is_active()
@@ -167,7 +167,7 @@ class TestDeactivation:
 
     def test_deactivate_when_inactive_is_noop(self, override: SafetyOverride) -> None:
         # Should not raise, not log a SEL event
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel_instance = MagicMock()
             mock_sel.return_value = mock_sel_instance
             assert not override.is_active()
@@ -175,7 +175,7 @@ class TestDeactivation:
         mock_sel_instance.log_api_access.assert_not_called()
 
     def test_renew_after_explicit_deactivate_fails(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack")
             override.deactivate("slack")
@@ -187,11 +187,11 @@ class TestDeactivation:
         """An explicit deactivate against a grant that already lapsed is an
         operator DECISION and must reach the SEL sink — lazy expiry clearing
         ``_active`` first must not swallow it."""
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack")
         override._expires_at = time.monotonic() - 1
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             assert not override.is_active()  # trips lazy expiry
         # Pin the discriminator: lazy expiry clears _active but NOT _expires_at,
@@ -200,7 +200,7 @@ class TestDeactivation:
         assert override._expires_at > 0.0
 
         mock_sel_instance = MagicMock()
-        with patch("kiro_crew.safety_override.sel", return_value=mock_sel_instance):
+        with patch("aj_crew.safety_override.sel", return_value=mock_sel_instance):
             override.deactivate("dashboard")
         mock_sel_instance.log_api_access.assert_called_once()
         kwargs = mock_sel_instance.log_api_access.call_args.kwargs
@@ -218,11 +218,11 @@ class TestDeactivation:
         """A live-grant deactivate keeps its event, with was_active recording
         that a real grant was revoked — the lapsed-grant event does not
         replace or dilute the existing signal."""
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack", ttl=600)
         mock_sel_instance = MagicMock()
-        with patch("kiro_crew.safety_override.sel", return_value=mock_sel_instance):
+        with patch("aj_crew.safety_override.sel", return_value=mock_sel_instance):
             override.deactivate("slack")
         mock_sel_instance.log_api_access.assert_called_once()
         kwargs = mock_sel_instance.log_api_access.call_args.kwargs
@@ -233,11 +233,11 @@ class TestDeactivation:
     def test_deactivate_permanent_grant_records_permanence(
         self, override: SafetyOverride
     ) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate_declared()
         mock_sel_instance = MagicMock()
-        with patch("kiro_crew.safety_override.sel", return_value=mock_sel_instance):
+        with patch("aj_crew.safety_override.sel", return_value=mock_sel_instance):
             override.deactivate("dashboard")
         kwargs = mock_sel_instance.log_api_access.call_args.kwargs
         assert "was_active:True" in kwargs["resources"]
@@ -247,12 +247,12 @@ class TestDeactivation:
     def test_second_deactivate_is_silent(self, override: SafetyOverride) -> None:
         """After an explicit deactivate the 0.0 sentinel is restored, so a
         repeat call has no grant to report and emits nothing."""
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack")
             override.deactivate("slack")
         mock_sel_instance = MagicMock()
-        with patch("kiro_crew.safety_override.sel", return_value=mock_sel_instance):
+        with patch("aj_crew.safety_override.sel", return_value=mock_sel_instance):
             override.deactivate("slack")
         assert (override.is_active(), override._expires_at) == (False, 0.0)
         mock_sel_instance.log_api_access.assert_not_called()
@@ -263,13 +263,13 @@ class TestDeactivation:
         """A TTL that lapsed WITHOUT an intervening is_active() poll leaves
         _active stale at True; the event must still report was_active:False —
         liveness is derived from the deadline, not the unreconciled flag."""
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack")
         override._expires_at = time.monotonic() - 1
         assert override._active is True  # lazy expiry has NOT run
         mock_sel_instance = MagicMock()
-        with patch("kiro_crew.safety_override.sel", return_value=mock_sel_instance):
+        with patch("aj_crew.safety_override.sel", return_value=mock_sel_instance):
             override.deactivate("dashboard")
         mock_sel_instance.log_api_access.assert_called_once()
         kwargs = mock_sel_instance.log_api_access.call_args.kwargs
@@ -281,7 +281,7 @@ class TestDeactivation:
     ) -> None:
         """Deactivating a lapsed grant zeroes _expires_at, so the renew grace
         window cannot resurrect an explicitly revoked grant."""
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack")
             override._expires_at = time.monotonic() - 60  # lapsed, within 300s grace
@@ -297,7 +297,7 @@ class TestDeactivation:
 
 class TestRenewal:
     def test_renew_active_override(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack")
             result = override.renew("slack")
@@ -306,32 +306,32 @@ class TestRenewal:
         assert result.ttl > 0
 
     def test_renew_within_grace_period(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack", ttl=1)
         # Expire it but stay within grace window (_RENEW_GRACE_SECS = 300)
         override._expires_at = time.monotonic() - 60  # 60s past expiry, < 300s grace
         override._active = False  # mark expired
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             result = override.renew("slack")
         assert result.renewed is True
 
     def test_renew_outside_grace_period_fails(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack", ttl=1)
         # Expire it way beyond grace window
         override._expires_at = time.monotonic() - 400  # 400s past expiry > 300s grace
         override._active = False
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             result = override.renew("slack")
         assert result.renewed is False
 
     def test_renew_logs_sel(self, override: SafetyOverride) -> None:
         mock_sel_instance = MagicMock()
-        with patch("kiro_crew.safety_override.sel", return_value=mock_sel_instance):
+        with patch("aj_crew.safety_override.sel", return_value=mock_sel_instance):
             override.activate("slack")
             override.renew("slack")
         # Expect at least two log_api_access calls: activation + renewal
@@ -342,7 +342,7 @@ class TestRenewal:
     def test_renew_denied_logs_sel(self, override: SafetyOverride) -> None:
         # Renew on an override that was never activated (neither active nor in grace)
         mock_sel_instance = MagicMock()
-        with patch("kiro_crew.safety_override.sel", return_value=mock_sel_instance):
+        with patch("aj_crew.safety_override.sel", return_value=mock_sel_instance):
             result = override.renew("slack")
         assert result.renewed is False
         calls = mock_sel_instance.log_api_access.call_args_list
@@ -356,7 +356,7 @@ class TestRenewal:
     ) -> None:
         """Happy path: the deadline moves forward and ONE renewed event is logged."""
         mock_sel_instance = MagicMock()
-        with patch("kiro_crew.safety_override.sel", return_value=mock_sel_instance):
+        with patch("aj_crew.safety_override.sel", return_value=mock_sel_instance):
             override.activate("slack", ttl=60)
             deadline_before = override._expires_at
             result = override.renew("slack")
@@ -377,7 +377,7 @@ class TestRenewal:
 
 class TestStatus:
     def test_status_when_active(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack")
         status = override.status()
@@ -408,7 +408,7 @@ class TestRemainingSecs:
         assert override.remaining_secs() == 0
 
     def test_remaining_secs_when_active(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack", ttl=3600)
         secs = override.remaining_secs()
@@ -416,7 +416,7 @@ class TestRemainingSecs:
         assert secs <= 3600
 
     def test_remaining_secs_zero_after_expiry(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack", ttl=1)
         override._expires_at = time.monotonic() - 5
@@ -449,22 +449,22 @@ class TestSingleton:
 class TestSelFaultTolerance:
     def test_sel_crash_rolls_back_activate(self, override: SafetyOverride) -> None:
         """SEL audit failure during activate() must roll back — fail closed."""
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock(log_api_access=MagicMock(side_effect=RuntimeError("boom")))
             result = override.activate("slack")
         assert result.active is False
         assert not override.is_active()
         assert override._expires_at == 0.0
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             renew_result = override.renew("slack")
         assert renew_result.renewed is False
 
     def test_sel_crash_does_not_crash_deactivate(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack")
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock(log_api_access=MagicMock(side_effect=RuntimeError("boom")))
             # Should not raise
             override.deactivate("slack")
@@ -479,12 +479,12 @@ class TestSelFaultTolerance:
         ``_log_sel`` would pass regardless of the ``critical`` flag, and the
         flag is exactly what this test pins.
         """
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack", ttl=60)
         deadline_before = override._expires_at
         last_renewed_before = override._last_renewed_at
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock(
                 log_api_access=MagicMock(side_effect=RuntimeError("boom"))
             )
@@ -506,7 +506,7 @@ class TestSelFaultTolerance:
         deactivate() can zero the grant in that window; the post-audit
         re-verify must refuse the commit rather than resurrect the grant.
         """
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack", ttl=60)
 
@@ -520,7 +520,7 @@ class TestSelFaultTolerance:
                 override.deactivate("dashboard")
 
         sink.log_api_access.side_effect = _deactivate_on_renew
-        with patch("kiro_crew.safety_override.sel", return_value=sink):
+        with patch("aj_crew.safety_override.sel", return_value=sink):
             result = override.renew("slack")
 
         assert result.renewed is False
@@ -540,7 +540,7 @@ class TestSelFaultTolerance:
         with a deadline computed for the OLD grant. The activation-count
         snapshot must refuse the commit.
         """
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack", ttl=60)
 
@@ -554,7 +554,7 @@ class TestSelFaultTolerance:
                 override.activate("dashboard", ttl=30)
 
         sink.log_api_access.side_effect = _activate_on_renew
-        with patch("kiro_crew.safety_override.sel", return_value=sink):
+        with patch("aj_crew.safety_override.sel", return_value=sink):
             result = override.renew("slack")
 
         assert result.renewed is False
@@ -576,7 +576,7 @@ class TestSelFaultTolerance:
         must be followed by a corrective denied event so the SEL stays
         truthful.
         """
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack", ttl=60)
 
@@ -590,7 +590,7 @@ class TestSelFaultTolerance:
                 override.activate_declared()
 
         sink.log_api_access.side_effect = _go_permanent_on_renew
-        with patch("kiro_crew.safety_override.sel", return_value=sink):
+        with patch("aj_crew.safety_override.sel", return_value=sink):
             result = override.renew("slack")
 
         assert result.renewed is False
@@ -619,7 +619,7 @@ class TestSelFaultTolerance:
         the grant to STILL be active — not slide into grace and restore
         auto-approval over the operator's off.
         """
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack", ttl=60)
 
@@ -639,7 +639,7 @@ class TestSelFaultTolerance:
                 override.deactivate("dashboard")
 
         sink.log_api_access.side_effect = _lapse_and_off_on_renew
-        with patch("kiro_crew.safety_override.sel", return_value=sink):
+        with patch("aj_crew.safety_override.sel", return_value=sink):
             result = override.renew("slack")
 
         assert result.renewed is False
@@ -650,7 +650,7 @@ class TestSelFaultTolerance:
 
     def test_sel_import_error_rolls_back_activate(self, override: SafetyOverride) -> None:
         """SEL import error during activate() must roll back — fail closed."""
-        with patch("kiro_crew.safety_override.sel", side_effect=ImportError("no sel")):
+        with patch("aj_crew.safety_override.sel", side_effect=ImportError("no sel")):
             result = override.activate("slack")
         assert result.active is False
         assert not override.is_active()
@@ -668,14 +668,14 @@ class TestSelFaultTolerance:
         critical synchronous write, the error propagates and activate() rolls
         back.
         """
-        from kiro_crew.sel import SecurityEventLog
+        from aj_crew.sel import SecurityEventLog
 
         SecurityEventLog._instance = None
         SecurityEventLog._initialized = False
         real_sel = SecurityEventLog(base_dir=tmp_path)
         try:
             with monkeypatch.context() as mp:
-                mp.setattr("kiro_crew.safety_override.sel", lambda: real_sel)
+                mp.setattr("aj_crew.safety_override.sel", lambda: real_sel)
 
                 real_os_open = os.open
 
@@ -708,7 +708,7 @@ class TestCallbacks:
     def test_on_activated_callback_receives_correct_args(self, override: SafetyOverride) -> None:
         received: list[tuple] = []
         override._on_activated = lambda source, ttl: received.append((source, ttl))
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             result = override.activate("dashboard")
         assert len(received) == 1
@@ -717,11 +717,11 @@ class TestCallbacks:
     def test_on_expired_callback_receives_source(self, override: SafetyOverride) -> None:
         received: list[str] = []
         override._on_expired = lambda source: received.append(source)
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("config")
         override._expires_at = time.monotonic() - 1
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.is_active()
         assert received == ["config"]
@@ -730,11 +730,11 @@ class TestCallbacks:
         """Neither callback set — activation and expiry must not raise."""
         assert override._on_activated is None
         assert override._on_expired is None
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack")
         override._expires_at = time.monotonic() - 1
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             assert not override.is_active()
 
@@ -746,7 +746,7 @@ class TestAdhocDuration:
     """Slack, dashboard and API grants all expire on the same clock."""
 
     def test_every_adhoc_source_gets_the_same_ttl(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             ttls = {src: override.activate(src).ttl for src in ("slack", "dashboard", "api")}
         assert len(set(ttls.values())) == 1, f"per-surface TTLs diverged: {ttls}"
@@ -757,7 +757,7 @@ class TestAdhocDuration:
 
     def test_configured_duration_is_honoured(self, override: SafetyOverride) -> None:
         override.adhoc_ttl = 3600
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             assert override.activate("slack").ttl == 3600
             assert override.activate("dashboard").ttl == 3600
@@ -768,7 +768,7 @@ class TestAdhocDuration:
 
     def test_activate_unknown_source_uses_adhoc_ttl(self, override: SafetyOverride) -> None:
         """Unknown sources should fall back to a sensible default."""
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             result = override.activate("unknown_source")
         assert result.active is True
@@ -780,7 +780,7 @@ class TestAdhocDuration:
 
 class TestScopedGrants:
     def test_activate_scoped_uses_source_ttl(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             result = override.activate_scoped("taskrunner:t1:autoapprove", source="dashboard")
         assert result.active is True
@@ -788,7 +788,7 @@ class TestScopedGrants:
         assert override.is_scope_active("taskrunner:t1:autoapprove") is True
 
     def test_ttl_capped_at_ceiling(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             result = override.activate_scoped("s", source="dashboard", ttl=999999)
         assert result.ttl == SafetyOverride._MAX_TTL
@@ -797,17 +797,17 @@ class TestScopedGrants:
         assert override.is_scope_active("never-granted") is False
 
     def test_scope_expires_and_is_purged(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate_scoped("s", source="dashboard", ttl=60)
             # Fast-forward past the TTL.
-            with patch("kiro_crew.safety_override.time.monotonic", return_value=time.monotonic() + 120):
+            with patch("aj_crew.safety_override.time.monotonic", return_value=time.monotonic() + 120):
                 assert override.is_scope_active("s") is False
         # Purged from the internal map after expiry.
         assert "s" not in override._scoped
 
     def test_deactivate_scope_revokes(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate_scoped("s", source="dashboard")
             assert override.is_scope_active("s") is True
@@ -815,14 +815,14 @@ class TestScopedGrants:
         assert override.is_scope_active("s") is False
 
     def test_scoped_grant_does_not_flip_global(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate_scoped("s", source="dashboard")
         # A scoped grant must NOT activate the session-wide override.
         assert override.is_active() is False
 
     def test_activate_scoped_fails_closed_on_audit_error(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value.log_api_access.side_effect = RuntimeError("sel down")
             result = override.activate_scoped("s", source="dashboard")
         # No grant is committed when the fail-closed audit raises.
@@ -830,27 +830,27 @@ class TestScopedGrants:
         assert override.is_scope_active("s") is False
 
     def test_renew_scoped_extends_expiry(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             base = time.monotonic()
-            with patch("kiro_crew.safety_override.time.monotonic", return_value=base):
+            with patch("aj_crew.safety_override.time.monotonic", return_value=base):
                 override.activate_scoped("s", source="dashboard", ttl=100)
             # 90s later a tool call renews it — expiry slides forward.
-            with patch("kiro_crew.safety_override.time.monotonic", return_value=base + 90):
+            with patch("aj_crew.safety_override.time.monotonic", return_value=base + 90):
                 r = override.renew_scoped("s", source="dashboard", ttl=100)
                 assert r.renewed is True
                 # Now ~100s of remaining window, not the ~10s left before renewal.
                 assert override.scope_remaining_secs("s") > 50
 
     def test_renew_capped_at_ceiling(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             base = time.monotonic()
-            with patch("kiro_crew.safety_override.time.monotonic", return_value=base):
+            with patch("aj_crew.safety_override.time.monotonic", return_value=base):
                 override.activate_scoped("s", source="dashboard", ttl=100)
             # Past the 24h ceiling from first activation → cannot renew further.
             with patch(
-                "kiro_crew.safety_override.time.monotonic",
+                "aj_crew.safety_override.time.monotonic",
                 return_value=base + SafetyOverride._MAX_TTL + 10,
             ):
                 r = override.renew_scoped("s", source="dashboard", ttl=100)
@@ -873,7 +873,7 @@ class TestDeclaredGrant:
     """``dangerouslySkipPermissions`` is standing, not a session decision."""
 
     def test_declared_grant_never_expires(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate_declared()
             # Push far past any conceivable deadline.
@@ -882,19 +882,19 @@ class TestDeclaredGrant:
 
     def test_declared_grant_survives_the_24h_ceiling(self, override: SafetyOverride) -> None:
         """The finite placeholder deadline must not resurrect expiry."""
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate_declared()
             base = time.monotonic()
             with patch(
-                "kiro_crew.safety_override.time.monotonic",
+                "aj_crew.safety_override.time.monotonic",
                 return_value=base + SafetyOverride._MAX_TTL + 60,
             ):
                 assert override.is_active() is True
                 assert override.status().active is True
 
     def test_declared_grant_reports_no_expiry(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate_declared()
         st = override.status()
@@ -907,7 +907,7 @@ class TestDeclaredGrant:
     def test_no_expiry_callback_ever_fires(self, override: SafetyOverride) -> None:
         cb = MagicMock()
         override.on_expired = cb
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate_declared()
             override._expires_at = time.monotonic() - 1
@@ -916,7 +916,7 @@ class TestDeclaredGrant:
 
     def test_deactivate_clears_a_declared_grant(self, override: SafetyOverride) -> None:
         """Picking another approval mode wins immediately."""
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate_declared()
             override.deactivate("dashboard")
@@ -925,7 +925,7 @@ class TestDeclaredGrant:
         assert override.status().permanent is False
 
     def test_renew_does_not_downgrade_to_a_deadline(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate_declared()
             r = override.renew("dashboard")
@@ -935,7 +935,7 @@ class TestDeclaredGrant:
 
     def test_adhoc_activation_downgrades_a_declared_grant(self, override: SafetyOverride) -> None:
         """An explicit ad-hoc activation replaces permanence with a deadline."""
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate_declared()
             assert override.is_permanent is True
@@ -944,7 +944,7 @@ class TestDeclaredGrant:
         assert 0 < override.remaining_secs() <= SafetyOverride._ADHOC_TTL_DEFAULT
 
     def test_declared_activation_is_audited_as_permanent(self, override: SafetyOverride) -> None:
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate_declared()
             calls = mock_sel.return_value.log_api_access.call_args_list
@@ -955,7 +955,7 @@ class TestDeclaredGrant:
 
     def test_sel_failure_still_refuses_a_declared_grant(self, override: SafetyOverride) -> None:
         """Fail-closed discipline is not weakened by the permanent path."""
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value.log_api_access.side_effect = OSError("disk full")
             result = override.activate_declared()
         assert result.active is False
@@ -967,29 +967,29 @@ class TestDeclaredGrantGovernance:
     """An enterprise policy can forbid a never-expiring grant."""
 
     def test_permitted_when_ungoverned(self) -> None:
-        from kiro_crew.safety_override import declared_grant_permitted
+        from aj_crew.safety_override import declared_grant_permitted
 
         assert declared_grant_permitted() is True
 
     def test_denied_when_policy_denies_permanent(self) -> None:
-        from kiro_crew import safety_override as so_mod
+        from aj_crew import safety_override as so_mod
 
         denied = MagicMock()
         denied.permitted = False
         with patch(
-            "kiro_crew.platform.governance_profiles.governance_permits", return_value=denied
+            "aj_crew.platform.governance_profiles.governance_permits", return_value=denied
         ):
             assert so_mod.declared_grant_permitted() is False
 
     def test_asks_the_host_profile_fail_closed(self) -> None:
         """Bypassing the host profile would let a session profile decide this."""
-        from kiro_crew import safety_override as so_mod
-        from kiro_crew.platform.governance_profiles import HOST_SESSION_KEY
+        from aj_crew import safety_override as so_mod
+        from aj_crew.platform.governance_profiles import HOST_SESSION_KEY
 
         permitted = MagicMock()
         permitted.permitted = True
         with patch(
-            "kiro_crew.platform.governance_profiles.governance_permits", return_value=permitted
+            "aj_crew.platform.governance_profiles.governance_permits", return_value=permitted
         ) as gp:
             permitted_result = so_mod.declared_grant_permitted()
         assert permitted_result is True
@@ -999,9 +999,9 @@ class TestDeclaredGrantGovernance:
 
     def test_denied_policy_falls_back_to_adhoc_ttl(self) -> None:
         """A forbidden permanent grant becomes a bounded one, not nothing."""
-        from kiro_crew import safety_override as so_mod
+        from aj_crew import safety_override as so_mod
 
-        with patch("kiro_crew.safety_override.sel") as mock_sel, patch.object(
+        with patch("aj_crew.safety_override.sel") as mock_sel, patch.object(
             so_mod, "declared_grant_permitted", return_value=False
         ), patch.object(so_mod, "apply_config_duration", return_value=21600):
             mock_sel.return_value = MagicMock()
@@ -1013,9 +1013,9 @@ class TestDeclaredGrantGovernance:
         assert 0 < so.remaining_secs() <= SafetyOverride._MAX_TTL
 
     def test_permitted_policy_grants_permanence(self) -> None:
-        from kiro_crew import safety_override as so_mod
+        from aj_crew import safety_override as so_mod
 
-        with patch("kiro_crew.safety_override.sel") as mock_sel, patch.object(
+        with patch("aj_crew.safety_override.sel") as mock_sel, patch.object(
             so_mod, "declared_grant_permitted", return_value=True
         ), patch.object(so_mod, "apply_config_duration", return_value=21600):
             mock_sel.return_value = MagicMock()
@@ -1036,7 +1036,7 @@ class TestUntilShutdownDuration:
 
     def test_adhoc_grant_has_no_timed_expiry(self, override: SafetyOverride) -> None:
         override.adhoc_until_shutdown = True
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             result = override.activate("dashboard")
         assert result.active is True
@@ -1045,19 +1045,19 @@ class TestUntilShutdownDuration:
 
     def test_survives_past_the_ceiling(self, override: SafetyOverride) -> None:
         override.adhoc_until_shutdown = True
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("slack")
         base = time.monotonic()
         with patch(
-            "kiro_crew.safety_override.time.monotonic",
+            "aj_crew.safety_override.time.monotonic",
             return_value=base + SafetyOverride._MAX_TTL + 60,
         ):
             assert override.is_active() is True
 
     def test_every_adhoc_surface_gets_it(self, override: SafetyOverride) -> None:
         override.adhoc_until_shutdown = True
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             for src in ("slack", "dashboard", "api"):
                 override.activate(src)
@@ -1066,7 +1066,7 @@ class TestUntilShutdownDuration:
     def test_explicit_ttl_still_wins(self, override: SafetyOverride) -> None:
         """A caller asking for a specific TTL must get a timed grant."""
         override.adhoc_until_shutdown = True
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             result = override.activate("dashboard", ttl=600)
         assert result.ttl == 600
@@ -1074,7 +1074,7 @@ class TestUntilShutdownDuration:
 
     def test_deactivate_clears_it(self, override: SafetyOverride) -> None:
         override.adhoc_until_shutdown = True
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("dashboard")
             override.deactivate("dashboard")
@@ -1082,28 +1082,28 @@ class TestUntilShutdownDuration:
 
     def test_governance_can_forbid_it(self) -> None:
         """A denied until_shutdown falls back to a timed duration."""
-        from kiro_crew import safety_override as so_mod
+        from aj_crew import safety_override as so_mod
 
         cfg = MagicMock()
         cfg.agent.yolo_duration = "until_shutdown"
         denied = MagicMock()
         denied.permitted = False
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=cfg), patch(
-            "kiro_crew.platform.governance_profiles.governance_permits", return_value=denied
+        with patch("aj_crew.config.loader.AjCrewConfig.load", return_value=cfg), patch(
+            "aj_crew.platform.governance_profiles.governance_permits", return_value=denied
         ):
             secs = so_mod.apply_config_duration()
         assert secs == SafetyOverride._ADHOC_TTL_DEFAULT
         assert safety_override().adhoc_until_shutdown is False
 
     def test_permitted_until_shutdown_is_applied(self) -> None:
-        from kiro_crew import safety_override as so_mod
+        from aj_crew import safety_override as so_mod
 
         cfg = MagicMock()
         cfg.agent.yolo_duration = "until_shutdown"
         permitted = MagicMock()
         permitted.permitted = True
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=cfg), patch(
-            "kiro_crew.platform.governance_profiles.governance_permits", return_value=permitted
+        with patch("aj_crew.config.loader.AjCrewConfig.load", return_value=cfg), patch(
+            "aj_crew.platform.governance_profiles.governance_permits", return_value=permitted
         ):
             secs = so_mod.apply_config_duration()
         assert secs == 0
@@ -1115,7 +1115,7 @@ class TestRenamedConfigKey:
 
     @staticmethod
     def _load(agent: dict) -> bool:
-        from kiro_crew.config.loader import _read_skip_permissions
+        from aj_crew.config.loader import _read_skip_permissions
 
         return _read_skip_permissions(agent)
 
@@ -1145,19 +1145,19 @@ class TestRenamedConfigKey:
         Regression guard: reading only the camelCase spelling while save() wrote
         snake_case silently dropped the setting on the next load.
         """
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         cfg_file = tmp_path / "config.json"
         local = tmp_path / "config.local.json"
         cfg_file.write_text(json.dumps({"agent": {"dangerously_skip_permissions": False}}))
-        with patch("kiro_crew.config.loader.config_path", return_value=cfg_file), patch(
-            "kiro_crew.config.loader.config_local_path", return_value=local
+        with patch("aj_crew.config.loader.config_path", return_value=cfg_file), patch(
+            "aj_crew.config.loader.config_local_path", return_value=local
         ):
-            cfg = KiroCrewConfig.load()
+            cfg = AjCrewConfig.load()
             assert cfg.agent.dangerously_skip_permissions is False
             cfg.agent.dangerously_skip_permissions = True
             cfg.save()
-            assert KiroCrewConfig.load().agent.dangerously_skip_permissions is True
+            assert AjCrewConfig.load().agent.dangerously_skip_permissions is True
 
     def test_absent_defaults_to_off(self) -> None:
         assert self._load({}) is False
@@ -1205,14 +1205,14 @@ class TestGrantLifetimeCopy:
 
     @staticmethod
     def _helpers():
-        from kiro_crew.slack.handler import describe_grant_lifetime, describe_new_grant
+        from aj_crew.slack.handler import describe_grant_lifetime, describe_new_grant
 
         return describe_grant_lifetime, describe_new_grant
 
     def test_declared_grant_is_not_described_as_expiring(self) -> None:
         describe_grant_lifetime, _ = self._helpers()
         so = safety_override()
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             so.activate_declared()
         text = describe_grant_lifetime()
@@ -1224,7 +1224,7 @@ class TestGrantLifetimeCopy:
         describe_grant_lifetime, _ = self._helpers()
         so = safety_override()
         so.adhoc_until_shutdown = True
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             so.activate("slack")
         text = describe_grant_lifetime()
@@ -1234,7 +1234,7 @@ class TestGrantLifetimeCopy:
     def test_timed_grant_still_reports_minutes(self) -> None:
         describe_grant_lifetime, _ = self._helpers()
         so = safety_override()
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             so.activate("slack", ttl=3600)
         assert "min remaining" in describe_grant_lifetime()
@@ -1253,7 +1253,7 @@ class TestGrantLifetimeCopy:
         """Structural guard: a new surface must use the helper, not `// 60`."""
         import pathlib
 
-        import kiro_crew.slack.handler as h
+        import aj_crew.slack.handler as h
 
         src_dir = pathlib.Path(h.__file__).parent
         # The native handler's owners render its ``!yolo`` replies, so they are
@@ -1292,7 +1292,7 @@ class TestDurationResolvedLive:
     def test_activate_reads_the_resolver_each_time(self, override: SafetyOverride) -> None:
         seen = {"ttl": 1800, "until": False}
         override.duration_resolver = lambda: (seen["ttl"], seen["until"])
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             assert override.activate("dashboard").ttl == 1800
             seen["ttl"] = 43200
@@ -1301,7 +1301,7 @@ class TestDurationResolvedLive:
     def test_resolver_can_switch_to_until_shutdown(self, override: SafetyOverride) -> None:
         state = {"until": False}
         override.duration_resolver = lambda: (21600, state["until"])
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("dashboard")
             assert override.is_permanent is False
@@ -1315,7 +1315,7 @@ class TestDurationResolvedLive:
 
         override.adhoc_ttl = 3600
         override.duration_resolver = _boom
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             result = override.activate("dashboard")
         assert result.active is True
@@ -1323,7 +1323,7 @@ class TestDurationResolvedLive:
 
     def test_resolver_output_is_capped(self, override: SafetyOverride) -> None:
         override.duration_resolver = lambda: (999999, False)
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             assert override.activate("dashboard").ttl == SafetyOverride._MAX_TTL
 
@@ -1332,7 +1332,7 @@ class TestDurationIsEditableFromSettings:
     """The Settings card PATCHes the real handler, so the key must be allowlisted."""
 
     def test_yolo_duration_is_in_the_editable_allowlist(self) -> None:
-        from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+        from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
         spec = _EDITABLE_CONFIG.get("agent.yolo_duration")
         assert spec is not None, "Settings duration card would 400 on every save"
@@ -1342,7 +1342,7 @@ class TestDurationIsEditableFromSettings:
 
     def test_the_declared_grant_is_NOT_editable_from_settings(self) -> None:
         """The never-expiring grant stays config-file-only, by design."""
-        from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+        from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
         assert "agent.dangerously_skip_permissions" not in _EDITABLE_CONFIG
         assert "agent.yolo" not in _EDITABLE_CONFIG
@@ -1359,7 +1359,7 @@ class TestStatusDoesNotBlockTheEventLoop:
     def test_duration_fields_are_resolved_in_a_worker_thread(self) -> None:
         import inspect
 
-        from kiro_crew.dashboard import handlers_system
+        from aj_crew.dashboard import handlers_system
 
         src = inspect.getsource(handlers_system.api_status)
         # Whitespace-insensitive: black may wrap the to_thread(...) call across
@@ -1372,13 +1372,13 @@ class TestStatusDoesNotBlockTheEventLoop:
 
     def test_helper_is_fail_soft(self) -> None:
         """A broken config or governance layer must not break the status call."""
-        from kiro_crew.dashboard.handlers_system import _yolo_duration_fields
+        from aj_crew.dashboard.handlers_system import _yolo_duration_fields
 
         with patch(
-            "kiro_crew.dashboard.handlers_system.KiroCrewConfig.load",
+            "aj_crew.dashboard.handlers_system.AjCrewConfig.load",
             side_effect=RuntimeError("unreadable"),
         ), patch(
-            "kiro_crew.dashboard.handlers_system.until_shutdown_permitted",
+            "aj_crew.dashboard.handlers_system.until_shutdown_permitted",
             side_effect=RuntimeError("governance down"),
         ):
             label, permitted, disabled_modes = _yolo_duration_fields()
@@ -1399,10 +1399,10 @@ class TestBreadcrumbPathResolvedAtEnqueueTime:
 
     ``_sync_breadcrumb`` runs synchronously on whatever thread committed the
     state transition (an event-loop callback, or a test). The actual file I/O
-    is queued onto a long-lived daemon worker (``kirocrew-safety-breadcrumb``)
+    is queued onto a long-lived daemon worker (``ajcrew-safety-breadcrumb``)
     so that thread never blocks the caller. If the worker resolved
     ``config_dir()`` itself -- lazily, at write time -- then a caller whose
-    ``KIROCREW_HOME`` override has since been reverted (a test's monkeypatch
+    ``AJCREW_HOME`` override has since been reverted (a test's monkeypatch
     torn down at fixture teardown, or a production reload that changes the
     active home) would have its publish land wherever ``config_dir()``
     resolves to BY THEN, not where it resolved when the grant was actually
@@ -1423,7 +1423,7 @@ class TestBreadcrumbPathResolvedAtEnqueueTime:
         write somewhere else (or make it fail outright), which this test would
         catch by finding no breadcrumb under *tmp_path*.
         """
-        import kiro_crew.safety_override as so_mod
+        import aj_crew.safety_override as so_mod
 
         real_config_dir = so_mod.config_dir
         pinned_dir = tmp_path / "pinned-home"
@@ -1436,7 +1436,7 @@ class TestBreadcrumbPathResolvedAtEnqueueTime:
         diverted_dir.mkdir()
 
         monkeypatch.setattr(so_mod, "config_dir", lambda: pinned_dir)
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             result = override.activate("dashboard", ttl=60)
         assert result.active is True
@@ -1469,14 +1469,14 @@ class TestBreadcrumbPathResolvedAtEnqueueTime:
         under the home that was active when it committed, not wherever
         ``config_dir()`` resolves to once the worker actually runs.
         """
-        import kiro_crew.safety_override as so_mod
+        import aj_crew.safety_override as so_mod
 
         real_config_dir = so_mod.config_dir
         pinned_dir = tmp_path / "pinned-home"
         pinned_dir.mkdir()
 
         monkeypatch.setattr(so_mod, "config_dir", lambda: pinned_dir)
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.activate("dashboard", ttl=60)
         drain_breadcrumb_writes()
@@ -1489,7 +1489,7 @@ class TestBreadcrumbPathResolvedAtEnqueueTime:
         # not whatever config_dir() answers once it actually runs.
         diverted_dir = tmp_path / "diverted-home"
         diverted_dir.mkdir()
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             override.deactivate("dashboard")
         monkeypatch.setattr(so_mod, "config_dir", lambda: diverted_dir)
@@ -1513,7 +1513,7 @@ class TestBreadcrumbPathResolvedAtEnqueueTime:
         BEFORE ``monkeypatch`` reverts anything. Leaving the stub in place would
         make that unrelated teardown call also raise.
         """
-        import kiro_crew.safety_override as so_mod
+        import aj_crew.safety_override as so_mod
 
         with monkeypatch.context() as mp:
             mp.setattr(so_mod, "flush_breadcrumb_writes", lambda timeout=5.0: False)

@@ -11,8 +11,8 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state, close_before_resume
 
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.history import ConversationLog
 
 # ── History persistence and disk fallback ──
 
@@ -30,7 +30,7 @@ class TestHistoryPersistence:
     @pytest.mark.asyncio
     async def test_disk_fallback_for_trimmed_slot(self, tmp_path, monkeypatch):
         """Default view uses in-memory; pagination of older messages uses disk."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("big")
         log = state.conversation_log
@@ -63,7 +63,7 @@ class TestHistoryPersistence:
 class TestPrepareMessages:
     def test_queued_preserved_done_stripped(self):
         """queued messages must survive _prepare_messages so the frontend shows the banner after tab switch."""
-        from kiro_crew.dashboard.chat import _prepare_messages
+        from aj_crew.dashboard.chat import _prepare_messages
 
         msgs = [
             {"role": "user", "content": "hello"},
@@ -78,7 +78,7 @@ class TestPrepareMessages:
 
     def test_chunks_collapsed_to_streaming(self):
         """Trailing chunks should be collapsed into a single streaming message."""
-        from kiro_crew.dashboard.chat import _prepare_messages
+        from aj_crew.dashboard.chat import _prepare_messages
 
         msgs = [
             {"role": "user", "content": "hi"},
@@ -93,7 +93,7 @@ class TestPrepareMessages:
         """When a queued message starts processing, its placeholder is replaced by a user entry."""
         import json
 
-        from kiro_crew.dashboard.chat import _remove_queued_by_id
+        from aj_crew.dashboard.chat import _remove_queued_by_id
 
         slot = _ChatSlot("s1")
         slot.append("user", "first")
@@ -112,7 +112,7 @@ class TestPrepareMessages:
         """When the same text is queued twice, only the targeted placeholder is removed by ID."""
         import json
 
-        from kiro_crew.dashboard.chat import _remove_queued_by_id
+        from aj_crew.dashboard.chat import _remove_queued_by_id
 
         slot = _ChatSlot("s1")
         qid1 = slot.queue_append("hello")
@@ -139,7 +139,7 @@ class TestPrepareMessagesInterleaved:
 
         Validates: Requirements 6.1
         """
-        from kiro_crew.dashboard.chat import _prepare_messages
+        from aj_crew.dashboard.chat import _prepare_messages
 
         messages = [
             {"role": "user", "content": "hello"},
@@ -165,7 +165,7 @@ class TestPrepareMessagesInterleaved:
 
     def test_no_trailing_chunks_no_streaming(self):
         """Without trailing chunks, no streaming message is produced."""
-        from kiro_crew.dashboard.chat import _prepare_messages
+        from aj_crew.dashboard.chat import _prepare_messages
 
         messages = [
             {"role": "user", "content": "hello"},
@@ -194,8 +194,8 @@ class TestKiroReadinessQueueHandoff:
         sibling switch's busy scan must see which session the parked turn is
         starting on) and retired by the refused turn itself afterwards.
         """
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         release = asyncio.Event()
 
@@ -231,7 +231,7 @@ class TestKiroReadinessQueueHandoff:
         # otherwise materialise a ``MagicMock/`` tree in the current directory.
         state.conversation_log._path.return_value = tmp_path / "transcript.jsonl"
         if wait_end == "deadline":
-            monkeypatch.setattr("kiro_crew.memory_startup.MEMORY_ADMISSION_WAIT_SECONDS", 0.0)
+            monkeypatch.setattr("aj_crew.memory_startup.MEMORY_ADMISSION_WAIT_SECONDS", 0.0)
         state.memory_startup_task = asyncio.create_task(prepare_memory())
         slot = state.get_or_create_slot("memory-startup-admission")
         slot.queue_append("keep queued during startup")
@@ -284,8 +284,8 @@ class TestKiroReadinessQueueHandoff:
         Readiness is latched at boot and the ACP attempt reports auth failures, so a
         probe before dequeueing could only drop an item already popped.
         """
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         delivered: list[str] = []
 
@@ -331,7 +331,7 @@ class TestKiroReadinessQueueHandoff:
 class TestHistorySaveOnClose:
     @pytest.mark.asyncio
     async def test_close_saves_to_history(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hello")
@@ -351,7 +351,7 @@ class TestHistorySaveOnClose:
     @pytest.mark.asyncio
     async def test_transient_roles_excluded_from_history(self, tmp_path, monkeypatch):
         """chunk, done, queued, permission should not be saved to history."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "run ls")
@@ -381,7 +381,7 @@ class TestHistorySaveOnClose:
         The History resume endpoint reaches channel conversations opened by hand; without
         the marker the slot reads as never-filed to every in-memory reader.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("dashboard:filed1", "user", "hello")
@@ -406,9 +406,9 @@ class TestHistorySaveOnClose:
         ran on the default model, and its next save wrote ``model: ""`` over the
         pick on disk.
         """
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("dashboard:modeled1", "user", "hello")
@@ -436,7 +436,7 @@ class TestHistorySaveOnClose:
     @pytest.mark.asyncio
     async def test_resume_ignores_a_non_string_model(self, tmp_path, monkeypatch):
         """A non-string ``model`` in transcript metadata must not crash resume."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("dashboard:badmodel1", "user", "hello")
@@ -453,7 +453,7 @@ class TestHistorySaveOnClose:
     @pytest.mark.asyncio
     async def test_no_save_for_unchanged_resumed_session(self, tmp_path, monkeypatch):
         """Resumed session closed without new messages should not re-save."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("dashboard:hist1", "user", "old msg")
@@ -475,9 +475,9 @@ class TestHistorySaveOnClose:
 
     def test_close_saves_mode_to_history(self, tmp_path, monkeypatch):
         """Slot mode is persisted in session metadata on close."""
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("orch1", mode="design-critique")
         slot.append("user", "plan")
@@ -490,9 +490,9 @@ class TestHistorySaveOnClose:
 
     def test_close_does_not_persist_trust(self, tmp_path, monkeypatch):
         """Trust flags are ephemeral — not written to session metadata."""
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("t1")
         slot._trust = True
@@ -508,7 +508,7 @@ class TestHistorySaveOnClose:
 class TestResumeMetadataRead:
     @pytest.mark.asyncio
     async def test_metadata_read_runs_off_the_event_loop(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("dashboard:legacy", "user", "hello")
@@ -542,7 +542,7 @@ class TestResumeDedupe:
     ):
         """Autopilot retired: a session persisted under mode='orchestrator'
         resumes as plain chat, with its transcript intact."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("dashboard:orchhist", "user", "plan this")
@@ -565,7 +565,7 @@ class TestResumeDedupe:
         """A fresh resume must send next_before. The client pages by that field
         and treats its absence as 'no older history', so omitting it strands
         every row outside the returned window."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         for i in range(250):
@@ -588,7 +588,7 @@ class TestResumeDedupe:
         """`total` on this branch counts only the in-memory window, so the cursor
         has to add the frozen on-disk prefix back. Without that it points inside
         the range it is meant to skip past, and paging silently loses rows."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.conversation_log.append("dashboard:s1", "user", "hello")
 
@@ -615,7 +615,7 @@ class TestResumeDedupe:
     @pytest.mark.asyncio
     async def test_resume_existing_slot_returns_it(self, tmp_path, monkeypatch):
         """Resuming a session that's already active should return existing slot."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("dashboard:s1", "user", "hello")
@@ -646,7 +646,7 @@ class TestResumeDedupe:
     @pytest.mark.asyncio
     async def test_resume_close_resume_no_duplicate_history(self, tmp_path, monkeypatch):
         """Resume → close → resume → close should not create duplicate history."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("dashboard:s1", "user", "hello")
@@ -683,9 +683,9 @@ class TestCronTranscriptResume:
         second ``dashboard:cron_<id>`` file under the first file's identity, so the
         delete witness refuses each save and the turns are never kept.
         """
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("cron:job1", "user", "cron prompt")
@@ -713,7 +713,7 @@ class TestCronTranscriptResume:
         self, tmp_path, monkeypatch
     ):
         """With the job's tab open, its History row opens that tab, not a second one."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("cron:job1", "assistant", "cron result")
@@ -743,7 +743,7 @@ class TestHistoryKeyPrefix:
         registers the slot under the bare canonical key — the API response's
         ``key`` field is authoritative for follow-up calls.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("dashboard:chat-1", "user", "hello")
@@ -783,7 +783,7 @@ class TestHistoryKeyFor:
         ],
     )
     def test_history_key(self, slot_key: str, expected: str):
-        from kiro_crew.dashboard.chat import _history_key_for
+        from aj_crew.dashboard.chat import _history_key_for
 
         assert _history_key_for(slot_key) == expected
 
@@ -793,9 +793,9 @@ class TestHistoryResumeInterruptedTurnMarker:
 
     @staticmethod
     def _saved_state(tmp_path, monkeypatch, name: str, rows: list[tuple], generation: int):
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot(name)
         for row in rows:

@@ -21,21 +21,21 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import emit, emit_runtime
-from kiro_crew.crew_log import store as crew_log_store
-from kiro_crew.crew_log import store_segment_writes
-from kiro_crew.crew_log.writer import (
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import emit, emit_runtime
+from aj_crew.crew_log import store as crew_log_store
+from aj_crew.crew_log import store_segment_writes
+from aj_crew.crew_log.writer import (
     CrewLogWriter,
     GroupPart,
     WarningBudget,
     WriteJob,
     WriterLimits,
 )
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.testing.wait import default_timeout
 
 UNIT = "acp-group-0001"
-LOGGER = "kiro_crew.crew_log.writer"
+LOGGER = "aj_crew.crew_log.writer"
 
 
 class _Clock:
@@ -59,7 +59,7 @@ class _Home:
 
     def create(self, unit: str = UNIT) -> None:
         self.handles[unit] = lg.CrewLog.create(
-            lg.KIND_SESSION, unit, owner="default", agent="kirocrew"
+            lg.KIND_SESSION, unit, owner="default", agent="ajcrew"
         )
 
     def open_unit(self, unit: str) -> Any:
@@ -127,7 +127,7 @@ class _Home:
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     h = _Home()
     h.create()
     yield h
@@ -361,15 +361,15 @@ def test_concurrent_submitters_lose_nothing_and_keep_each_threads_order(home):
 def test_the_emitters_plain_appends_share_one_commit_and_settle_after_it(tmp_path, monkeypatch):
     """End to end through ``_write``: entries queued on the loop land as one commit, in
     order, and ``on_settled`` reports each only after that commit returned."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    monkeypatch.delenv("KIROCREW_CREW_LOG", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.delenv("AJCREW_CREW_LOG", raising=False)
     # Held behind a pause no burst outlasts, so all five are queued before any pass; the
     # flush below is what releases it.
     emit_runtime.reset_caches(
         limits=WriterLimits(batch_deadline_seconds=3600.0)  # flake-ok: released by flush
     )
     session = "acp-group-emit-0001"
-    lg.CrewLog.create(lg.KIND_SESSION, session, owner="default", agent="kirocrew")
+    lg.CrewLog.create(lg.KIND_SESSION, session, owner="default", agent="ajcrew")
     calls: list[int] = []
     real_commit = emit._commit_appends
 
@@ -436,7 +436,7 @@ def test_a_run_whose_rollback_also_failed_is_not_written_twice(home, monkeypatch
 
 
 def test_a_residue_is_cut_only_when_it_is_still_this_appends_bytes(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setattr(crew_log_store, "_RESIDUE", {})
     path = tmp_path / "seg.jsonl"
     written = b'{"a":1}\n{"b":2}\n'

@@ -1,16 +1,16 @@
 /**
- * Generate the TypeScript declarations for `@kirocrew/app-sdk` and
- * `@kirocrew/app-sdk/ui`, as one file an app project adds to its sources.
+ * Generate the TypeScript declarations for `@ajcrew/app-sdk` and
+ * `@ajcrew/app-sdk/ui`, as one file an app project adds to its sources.
  * Usage: node scripts/gen-app-sdk-types.mjs <out-file>
  *
- * `npm run build` writes it to `dist/vendor/kirocrew-app-sdk.d.ts`, so every
+ * `npm run build` writes it to `dist/vendor/ajcrew-app-sdk.d.ts`, so every
  * gateway serves the declarations of the exact SDK it hosts.
  *
  * The SDK's sources import most of the dashboard, so emitting the whole program
  * would publish every host module. Only the two barrels are emitted, then each
  * host module their declarations name, transitively. Each becomes a
  * `declare module` block: a barrel under its public specifier, a host module
- * under a `kirocrew-host:` name that no import map resolves, so an app cannot
+ * under a `ajcrew-host:` name that no import map resolves, so an app cannot
  * mistake it for a public entry point.
  */
 import { writeFileSync } from 'node:fs'
@@ -23,12 +23,12 @@ const toPosix = (p) => p.split(path.sep).join('/')
 const WEBSITE = toPosix(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'))
 const SRC = `${WEBSITE}/src`
 const ENTRIES = new Map([
-  [`${SRC}/app-sdk/index.ts`, '@kirocrew/app-sdk'],
-  [`${SRC}/kirocrew-ui/index.ts`, '@kirocrew/app-sdk/ui'],
+  [`${SRC}/app-sdk/index.ts`, '@ajcrew/app-sdk'],
+  [`${SRC}/ajcrew-ui/index.ts`, '@ajcrew/app-sdk/ui'],
 ])
 
 const moduleName = (file) =>
-  ENTRIES.get(file) ?? `kirocrew-host:${path.posix.relative(SRC, file).replace(/\.tsx?$/, '')}`
+  ENTRIES.get(file) ?? `ajcrew-host:${path.posix.relative(SRC, file).replace(/\.tsx?$/, '')}`
 
 /** Every module specifier a declaration file names: imports, re-exports, `import("…")` types. */
 function specifiers(source) {

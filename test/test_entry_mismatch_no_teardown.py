@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from kiro_crew.dashboard import chat_handlers
+from aj_crew.dashboard import chat_handlers
 
 
 class _Slot:
@@ -55,7 +55,7 @@ def teardown_spies(monkeypatch):
         return True
 
     monkeypatch.setattr(chat_handlers, "_retire_slot_nudge_loop", _retire)
-    teardown = pytest.importorskip("kiro_crew.apps.teardown")
+    teardown = pytest.importorskip("aj_crew.apps.teardown")
     monkeypatch.setattr(teardown, "notify_slot_closed", _notify)
     return calls
 

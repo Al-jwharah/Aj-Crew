@@ -29,7 +29,7 @@ const OUT = process.argv[2] || '/tmp/session-tree-shots'
 mkdirSync(OUT, { recursive: true })
 
 const session = (over) => ({
-  untitled: false, agent: 'kirocrew', owns_runtime: true, prompts: 4, channel: 'dashboard',
+  untitled: false, agent: 'ajcrew', owns_runtime: true, prompts: 4, channel: 'dashboard',
   procs: 3, mcp: 2, cpu_cores: 0.12, uptime_s: 5400, credits: 3.5, turns: 4, parent: null,
   ...over,
 })
@@ -43,19 +43,19 @@ const SESSIONS_MEMORY = {
     }),
     session({
       key: 'dashboard:chat-1577-1789769995', slot_key: 'chat-1577-1789769995',
-      title: 'lineage-probe: child of ledger session', agent: 'kirocrew-worker', pid: 4002,
+      title: 'lineage-probe: child of ledger session', agent: 'ajcrew-worker', pid: 4002,
       rss_mb: 402.1, credits: 1.1, turns: 2, uptime_s: 3900,
       parent: { slot: 'chat-1531-1789617025', key: 'dashboard:chat-1531-1789617025' },
     }),
     session({
       key: 'dashboard:chat-1590-1789771201', slot_key: 'chat-1590-1789771201',
-      title: 'worker: verify the fold against dsh', agent: 'kirocrew-worker', pid: 4003,
+      title: 'worker: verify the fold against dsh', agent: 'ajcrew-worker', pid: 4003,
       rss_mb: 377.9, credits: 0.6, turns: 1, uptime_s: 1200,
       parent: { slot: 'chat-1577-1789769995', key: 'dashboard:chat-1577-1789769995' },
     }),
     session({
       key: 'dashboard:chat-1402-1789600310', slot_key: 'chat-1402-1789600310',
-      title: 'worker whose conductor was closed', agent: 'kirocrew-worker', pid: 4004,
+      title: 'worker whose conductor was closed', agent: 'ajcrew-worker', pid: 4004,
       rss_mb: 355.0, credits: 2.0, turns: 6, uptime_s: 9000,
       parent: { slot: 'chat-1399-1789600101', key: null },
     }),
@@ -67,12 +67,12 @@ const SESSIONS_MEMORY = {
   ],
   tasks: [
     {
-      id: 'task-7a1', task: 'run the crew-log tests on the rebased head', agent: 'kirocrew-lite',
+      id: 'task-7a1', task: 'run the crew-log tests on the rebased head', agent: 'ajcrew-lite',
       parent: 'dashboard:chat-1590-1789771201', rss_mb: 96.3, peak_rss_mb: 120.0, cpu_cores: 0.05,
       procs: 2, mcp: 0, started_at: Date.now() / 1000 - 240, shared: false, pid: 4010, sampled: true,
     },
     {
-      id: 'task-7a2', task: 'summarise the dsh lineage reader', agent: 'kirocrew-lite',
+      id: 'task-7a2', task: 'summarise the dsh lineage reader', agent: 'ajcrew-lite',
       parent: 'dashboard:chat-1531-1789617025', rss_mb: 88.0, peak_rss_mb: 91.0, cpu_cores: 0.02,
       procs: 2, mcp: 0, started_at: Date.now() / 1000 - 60, shared: false, pid: 4011, sampled: true,
     },

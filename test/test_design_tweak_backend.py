@@ -24,7 +24,7 @@ if sys.platform == "win32":  # pragma: no cover - platform-gated
 from design_tweak_backend_helpers import isolated_queue_fixture  # noqa: F401
 
 from conftest import requires_symlinks
-from kiro_crew.apps.builtins.design_tweak.backend import server
+from aj_crew.apps.builtins.design_tweak.backend import server
 
 
 class TestContained:
@@ -108,9 +108,9 @@ class TestChildEnv:
     """The dev script is untrusted project code — it gets none of our secrets."""
 
     def test_proxy_secret_stripped(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_PROXY_SECRET", "s3cr3t-hmac-key")
+        monkeypatch.setenv("AJCREW_PROXY_SECRET", "s3cr3t-hmac-key")
         env = server._child_env(tmp_path)
-        assert "KIROCREW_PROXY_SECRET" not in env
+        assert "AJCREW_PROXY_SECRET" not in env
         assert "s3cr3t-hmac-key" not in "".join(env.values())
 
     def test_port_stripped(self, monkeypatch, tmp_path):
@@ -135,15 +135,15 @@ class TestChildEnv:
     @pytest.mark.parametrize(
         "name",
         [
-            "KIROCREW_HOME",
-            "KIROCREW_APP_NAME",
-            "KIROCREW_APP_DATA_DIR",
-            "KIROCREW_PROJECT_DIR",
-            "KIROCREW_DEVFLEET_BIN_GIT",
-            "KIRO_CREW_ANYTHING",
+            "AJCREW_HOME",
+            "AJCREW_APP_NAME",
+            "AJCREW_APP_DATA_DIR",
+            "AJCREW_PROJECT_DIR",
+            "AJCREW_DEVFLEET_BIN_GIT",
+            "AJ_CREW_ANYTHING",
         ],
     )
-    def test_kirocrew_capability_vars_stripped(self, monkeypatch, tmp_path, name):
+    def test_ajcrew_capability_vars_stripped(self, monkeypatch, tmp_path, name):
         monkeypatch.setenv(name, "value")
         assert name not in server._child_env(tmp_path)
 
@@ -558,7 +558,7 @@ class TestProxyAuthDenialIsAudited:
 class TestProjectSecretsAreNeverServed:
     """A previewed project's OWN credential files must not be readable.
 
-    `is_sensitive_path` is HOME-relative — it covers `~/.aws` and Kiro Crew's data
+    `is_sensitive_path` is HOME-relative — it covers `~/.aws` and Aj Crew's data
     home, not `<project>/.env`. The static preview is same-origin with the
     project's scripts, so `fetch('/.env')` from the page would read it back, and
     unlike a real dev server this server would happily serve any contained byte.
@@ -680,8 +680,8 @@ class TestProjectSecretsAreNeverServed:
         assert b"How to rotate" in body
 
 
-class TestKiroCrewInternalTreesAreNeverServed:
-    """Registering `~` must not expose Kiro Crew's OWN secrets.
+class TestAjCrewInternalTreesAreNeverServed:
+    """Registering `~` must not expose Aj Crew's OWN secrets.
 
     This is the hole the earlier denylist left open. `is_sensitive_path()` gates
     only the enumerated LEAVES under the crew home, so `is_sensitive_path(
@@ -700,7 +700,7 @@ class TestKiroCrewInternalTreesAreNeverServed:
         (secret / ".app_secret").write_text("hmac-credential-value")
         (home / "index.html").write_text("<h1>site</h1>")
 
-        monkeypatch.setattr(server, "_KIROCREW_INTERNAL_DIRS", (os.path.realpath(home / ".kiro"),))
+        monkeypatch.setattr(server, "_AJCREW_INTERNAL_DIRS", (os.path.realpath(home / ".kiro"),))
 
         code, _ctype, body = server._static_response(
             str(home), "/.kiro/crew/apps/design-tweak/.app_secret", "/p/"
@@ -714,7 +714,7 @@ class TestKiroCrewInternalTreesAreNeverServed:
         hist.mkdir(parents=True)
         (hist / "2026-08-03.jsonl").write_text('{"role":"user","content":"private"}')
 
-        monkeypatch.setattr(server, "_KIROCREW_INTERNAL_DIRS", (os.path.realpath(home / ".kiro"),))
+        monkeypatch.setattr(server, "_AJCREW_INTERNAL_DIRS", (os.path.realpath(home / ".kiro"),))
 
         code, _ctype, body = server._static_response(
             str(home), "/.kiro/crew/history/2026-08-03.jsonl", "/p/"
@@ -724,13 +724,13 @@ class TestKiroCrewInternalTreesAreNeverServed:
 
     def test_the_legacy_data_home_is_refused_too(self, tmp_path, monkeypatch):
         home = tmp_path / "home"
-        legacy = home / ".kirocrew"
+        legacy = home / ".ajcrew"
         legacy.mkdir(parents=True)
         (legacy / ".env").write_text("SLACK_BOT_TOKEN=xoxb-secret")
 
-        monkeypatch.setattr(server, "_KIROCREW_INTERNAL_DIRS", (os.path.realpath(legacy),))
+        monkeypatch.setattr(server, "_AJCREW_INTERNAL_DIRS", (os.path.realpath(legacy),))
 
-        code, _ctype, body = server._static_response(str(home), "/.kirocrew/.env", "/p/")
+        code, _ctype, body = server._static_response(str(home), "/.ajcrew/.env", "/p/")
         assert code == 403
         assert b"xoxb-secret" not in body
 
@@ -745,7 +745,7 @@ class TestKiroCrewInternalTreesAreNeverServed:
         proj.mkdir()
         (proj / "shortcut").symlink_to(crew)
 
-        monkeypatch.setattr(server, "_KIROCREW_INTERNAL_DIRS", (os.path.realpath(home / ".kiro"),))
+        monkeypatch.setattr(server, "_AJCREW_INTERNAL_DIRS", (os.path.realpath(home / ".kiro"),))
 
         code, _ctype, body = server._static_response(str(proj), "/shortcut/sel_hmac.key", "/p/")
         assert code == 403
@@ -758,7 +758,7 @@ class TestKiroCrewInternalTreesAreNeverServed:
         sibling.mkdir(parents=True)
         (sibling / "notes.html").write_text("<h1>ordinary</h1>")
 
-        monkeypatch.setattr(server, "_KIROCREW_INTERNAL_DIRS", (os.path.realpath(home / ".kiro"),))
+        monkeypatch.setattr(server, "_AJCREW_INTERNAL_DIRS", (os.path.realpath(home / ".kiro"),))
 
         code, _ctype, body = server._static_response(str(home), "/.kiro-backup/notes.html", "/p/")
         assert code == 200
@@ -800,7 +800,7 @@ class TestEntryPointCannotLaunderASecret:
         root.mkdir()
         (root / "index.html").symlink_to(crew / "sel_hmac.key")
 
-        monkeypatch.setattr(server, "_KIROCREW_INTERNAL_DIRS", (os.path.realpath(home / ".kiro"),))
+        monkeypatch.setattr(server, "_AJCREW_INTERNAL_DIRS", (os.path.realpath(home / ".kiro"),))
 
         code, _ctype, body = server._static_response(str(root), "/", "/p/")
         assert b"signing-key" not in body
@@ -1003,13 +1003,13 @@ class TestStaticPreviewIsSizeBounded:
 
 
 class TestDataHomeDefault:
-    def test_default_home_is_kiro_crew(self, tmp_path, monkeypatch):
+    def test_default_home_is_aj_crew(self, tmp_path, monkeypatch):
         """With no env override the data dir lands under ~/.kiro/crew.
 
-        The pre-move `~/.kirocrew` home is dead; loading a fresh copy of the
+        The pre-move `~/.ajcrew` home is dead; loading a fresh copy of the
         module proves the fallback, rather than asserting on source text.
         """
-        for var in ("KIROCREW_APP_DATA_DIR", "KIROCREW_APP_DATA", "KIROCREW_HOME"):
+        for var in ("AJCREW_APP_DATA_DIR", "AJCREW_APP_DATA", "AJCREW_HOME"):
             monkeypatch.delenv(var, raising=False)
         monkeypatch.setenv("HOME", str(tmp_path))
         monkeypatch.setattr(os.path, "expanduser", lambda p: p.replace("~", str(tmp_path), 1))
@@ -1023,7 +1023,7 @@ class TestDataHomeDefault:
 
         expected = (tmp_path / ".kiro" / "crew" / "apps" / mod.APP_NAME / "data").resolve()
         assert mod.DATA_DIR == expected
-        assert ".kirocrew" not in str(mod.DATA_DIR)
+        assert ".ajcrew" not in str(mod.DATA_DIR)
 
 
 class TestGuessCtypeIsConstant:
@@ -1302,7 +1302,7 @@ class TestStaticPreviewServer:
         _base, _root, get = static_preview
         status, headers, body = get(
             "/p1/",
-            headers={"Cookie": "kirocrew_token=super-secret", "Authorization": "Bearer x"},
+            headers={"Cookie": "ajcrew_token=super-secret", "Authorization": "Bearer x"},
         )
         assert status == 200
         assert b"super-secret" not in body
@@ -1366,17 +1366,17 @@ class TestCustomCrewHomeIsRefused:
 
     def test_default_home_is_covered_by_the_kiro_entry(self):
         home = Path(os.path.realpath(os.path.expanduser("~")))
-        assert server._is_kirocrew_internal(home / ".kiro" / "crew" / "history" / "x.jsonl")
+        assert server._is_ajcrew_internal(home / ".kiro" / "crew" / "history" / "x.jsonl")
 
     def test_the_resolved_crew_home_is_listed(self):
         """Structural: the resolution must land in the tuple, not hold by accident."""
-        listed = {os.path.realpath(p) for p in server._KIROCREW_INTERNAL_DIRS}
+        listed = {os.path.realpath(p) for p in server._AJCREW_INTERNAL_DIRS}
         assert os.path.realpath(server._CREW_HOME) in listed
 
     def test_a_sibling_of_the_home_is_not_over_blocked(self):
         """Separator-aware: `~/.kiro-backup` is a user directory, not ours."""
         home = Path(os.path.realpath(os.path.expanduser("~")))
-        assert not server._is_kirocrew_internal(home / ".kiro-backup" / "notes.md")
+        assert not server._is_ajcrew_internal(home / ".kiro-backup" / "notes.md")
 
     def test_custom_home_resolution_honours_the_env_var(self, tmp_path, monkeypatch):
         """Reload the module under a relocated home and check the tree is refused.
@@ -1388,14 +1388,14 @@ class TestCustomCrewHomeIsRefused:
 
         relocated = tmp_path / "relocated-crew"
         (relocated / "history").mkdir(parents=True)
-        monkeypatch.setenv("KIROCREW_HOME", str(relocated))
-        monkeypatch.delenv("KIROCREW_APP_DATA_DIR", raising=False)
-        monkeypatch.delenv("KIROCREW_APP_DATA", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(relocated))
+        monkeypatch.delenv("AJCREW_APP_DATA_DIR", raising=False)
+        monkeypatch.delenv("AJCREW_APP_DATA", raising=False)
 
         reloaded = importlib.reload(server)
         try:
-            assert reloaded._is_kirocrew_internal(relocated / "history" / "chat.jsonl")
-            assert reloaded._is_kirocrew_internal(relocated / "sessions.db")
+            assert reloaded._is_ajcrew_internal(relocated / "history" / "chat.jsonl")
+            assert reloaded._is_ajcrew_internal(relocated / "sessions.db")
         finally:
             # Restore the module for every later test in the session.
             monkeypatch.undo()

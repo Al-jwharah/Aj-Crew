@@ -13,14 +13,14 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent_state
-from kiro_crew.security import (
+from aj_crew import agent_state
+from aj_crew.security import (
     is_sensitive_path,
     is_sensitive_write_path,
     write_protected_home_paths,
 )
 
-_PREFIXES = ("~/.kiro/crew", "~/.kirocrew")
+_PREFIXES = ("~/.kiro/crew", "~/.ajcrew")
 
 
 class TestAgentStateSidecarWriteProtection:
@@ -35,7 +35,7 @@ class TestAgentStateSidecarWriteProtection:
         """Pin the gate entry to agent_state's own filename constant.
 
         A rename in agent_state must fail here, not unprotect the record. Constant-based
-        so it does not depend on the live KIROCREW_HOME anchor.
+        so it does not depend on the live AJCREW_HOME anchor.
         """
         entries = write_protected_home_paths()
         assert any(e.endswith("/" + agent_state._STATE_FILENAME) for e in entries), entries
@@ -70,7 +70,7 @@ class TestAgentStateSidecarWriteProtection:
         # so the sidecar must sit in BOTH seal
         # lists — the read-only seal for a present file and the Linux
         # pre-create seal for an absent one.
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert "agent_model_state.json" in sandbox._CREW_READONLY_LEAVES
         assert "agent_model_state.json" in sandbox._CREW_PRECREATE_READONLY_FILE_LEAVES
@@ -87,8 +87,8 @@ class TestAgentStateSidecarWriteProtection:
         # covered by the same directory seal. Resolved per spawn (never a
         # hard-coded literal), and the dir is pre-created so the Linux mount
         # seal has a target on an install where it does not exist yet.
-        from kiro_crew import sandbox
-        from kiro_crew.config.paths import kiro_agents_dir
+        from aj_crew import sandbox
+        from aj_crew.config.paths import kiro_agents_dir
 
         # ``normpath`` on the expected side because the resolver normalizes too, so a
         # ``..``-bearing KIRO_HOME cannot false-red this.

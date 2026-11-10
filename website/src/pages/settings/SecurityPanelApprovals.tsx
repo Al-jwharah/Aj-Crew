@@ -15,7 +15,7 @@ import ErrorNotice from '../../components/ErrorNotice'
 
 /* ── Ad-hoc auto-approve duration ── */
 
-export interface KirocrewCfgShape { agent?: { yolo_duration?: string; apps_allow_third_party?: unknown } }
+export interface AjcrewCfgShape { agent?: { yolo_duration?: string; apps_allow_third_party?: unknown } }
 
 const YOLO_DURATION_KEYS = ['30m', '1h', '6h', '12h', '24h', 'until_shutdown'] as const
 type YoloDurationKey = (typeof YOLO_DURATION_KEYS)[number]
@@ -33,14 +33,14 @@ export function YoloDurationCard() {
   const dispatch = useAppDispatch()
   const status = useAppSelector(s => s.dashboard.status)
   const untilShutdownPermitted = status?.yolo_until_shutdown_permitted ?? true
-  const { data, isError: cfgError } = useQuery<KirocrewCfgShape>({ queryKey: ['kirocrewConfig'], queryFn: api.kirocrewConfig })
+  const { data, isError: cfgError } = useQuery<AjcrewCfgShape>({ queryKey: ['ajcrewConfig'], queryFn: api.ajcrewConfig })
   const configured = data?.agent?.yolo_duration
   const current: YoloDurationKey =
     YOLO_DURATION_KEYS.find(k => k === configured) ?? '6h'
   const save = useMutation({
     mutationFn: (v: YoloDurationKey) => api.patchConfig('agent.yolo_duration', v),
     onSuccess: (_data, saved) => {
-      qc.invalidateQueries({ queryKey: ['kirocrewConfig'] })
+      qc.invalidateQueries({ queryKey: ['ajcrewConfig'] })
       // The approval-mode picker reads the duration from `dashboard.status`,
       // which only the HTTP status reply carries (the WebSocket push omits it).
       // Record the save in the store, or the picker keeps naming the duration

@@ -16,10 +16,10 @@ import pytest
 from kiro_prerequisite_helpers import _agents_dir_never_the_real_home  # noqa: F401
 from kiro_prerequisite_helpers import _isolate_agent_specs  # noqa: F401
 
-from kiro_crew import kiro_prerequisite as prerequisite_module
-from kiro_crew import platform_compat
-from kiro_crew.kiro_prerequisite import _run_process
-from kiro_crew.testing.wait import await_until
+from aj_crew import kiro_prerequisite as prerequisite_module
+from aj_crew import platform_compat
+from aj_crew.kiro_prerequisite import _run_process
+from aj_crew.testing.wait import await_until
 
 
 class TestKiroPrerequisiteWorkflowSupervisor:
@@ -73,11 +73,11 @@ class TestKiroPrerequisiteWorkflowSupervisor:
         # and every spawn is sandboxed now — so stub the builder rather than let
         # host sandbox availability decide the outcome.
         monkeypatch.setattr(
-            "kiro_crew.kiro_prerequisite._prepare_sandboxed_spawn",
+            "aj_crew.kiro_prerequisite._prepare_sandboxed_spawn",
             passthrough_sandbox,
         )
         monkeypatch.setattr(
-            "kiro_crew.kiro_prerequisite._TERMINATION_GRACE_SECS",
+            "aj_crew.kiro_prerequisite._TERMINATION_GRACE_SECS",
             0.001,
         )
 
@@ -179,7 +179,7 @@ class TestKiroPrerequisiteWorkflowSupervisor:
         monkeypatch.setattr(platform_compat, "IS_POSIX", False)
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
         monkeypatch.setattr(
-            "kiro_crew.kiro_prerequisite._TERMINATION_GRACE_SECS",
+            "aj_crew.kiro_prerequisite._TERMINATION_GRACE_SECS",
             0.01,
         )
 

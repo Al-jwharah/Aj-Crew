@@ -18,7 +18,7 @@ from slack_code_channel_surface_helpers import (  # noqa: F401 - fixtures by nam
     env_fixture,
 )
 
-from kiro_crew.slack.code_channels import tools
+from aj_crew.slack.code_channels import tools
 
 TOKEN = "ghp_" + "A" * 36
 HEAD, TAIL = TOKEN[:18], TOKEN[18:]

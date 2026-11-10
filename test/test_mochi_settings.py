@@ -17,8 +17,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.apps.builtins.mochi.settings import (
+from aj_crew import platform_compat
+from aj_crew.apps.builtins.mochi.settings import (
     MAX_PET_NAME_LEN,
     MODE_ACTIVE,
     MODE_QUIET,
@@ -301,12 +301,12 @@ class TestShortcuts:
         # Settings shows one key while a different one is actually bound. The
         # values are platform-dependent (see _default_shortcuts), so this asserts
         # against that function rather than restating one platform's strings.
-        from kiro_crew.apps.builtins.mochi.settings import _default_shortcuts
+        from aj_crew.apps.builtins.mochi.settings import _default_shortcuts
 
         assert load_settings(tmp_path)["shortcuts"] == _default_shortcuts()
 
     def test_rebinding_one_action_leaves_the_other_alone(self, tmp_path: Path) -> None:
-        from kiro_crew.apps.builtins.mochi.settings import _default_shortcuts
+        from aj_crew.apps.builtins.mochi.settings import _default_shortcuts
 
         out = save_settings(tmp_path, {"shortcuts": {"toggleWindow": "CommandOrControl+Shift+K"}})
         assert out["shortcuts"]["toggleWindow"] == "CommandOrControl+Shift+K"
@@ -349,7 +349,7 @@ class TestShortcuts:
         (tmp_path / "mochi-settings.json").write_text(
             '{"shortcuts": {"toggleWindow": "Shift", "hideAll": "Option+Shift+J"}}'
         )
-        from kiro_crew.apps.builtins.mochi.settings import _default_shortcuts
+        from aj_crew.apps.builtins.mochi.settings import _default_shortcuts
 
         loaded = load_settings(tmp_path)["shortcuts"]
         assert loaded["toggleWindow"] == _default_shortcuts()["toggleWindow"]
@@ -372,17 +372,17 @@ class TestCrossPlatformAccelerators:
     """
 
     def test_option_is_normalised_to_alt(self) -> None:
-        from kiro_crew.apps.builtins.mochi.settings import validate_accelerator
+        from aj_crew.apps.builtins.mochi.settings import validate_accelerator
 
         assert validate_accelerator("Option+Shift+X") == "Alt+Shift+X"
 
     def test_short_aliases_are_expanded(self) -> None:
-        from kiro_crew.apps.builtins.mochi.settings import validate_accelerator
+        from aj_crew.apps.builtins.mochi.settings import validate_accelerator
 
         assert validate_accelerator("CmdOrCtrl+Shift+M") == "CommandOrControl+Shift+M"
 
     def test_defaults_avoid_ctrl_shift_off_darwin(self, monkeypatch) -> None:
-        from kiro_crew.apps.builtins.mochi import settings as mod
+        from aj_crew.apps.builtins.mochi import settings as mod
 
         monkeypatch.setattr(mod.sys, "platform", "win32")
         defaults = mod._default_shortcuts()
@@ -393,14 +393,14 @@ class TestCrossPlatformAccelerators:
             assert accelerator.startswith("Alt+Shift+")
 
     def test_defaults_use_command_on_darwin(self, monkeypatch) -> None:
-        from kiro_crew.apps.builtins.mochi import settings as mod
+        from aj_crew.apps.builtins.mochi import settings as mod
 
         monkeypatch.setattr(mod.sys, "platform", "darwin")
         for accelerator in mod._default_shortcuts().values():
             assert accelerator.startswith("CommandOrControl+Shift+")
 
     def test_screen_capture_is_a_real_action(self) -> None:
-        from kiro_crew.apps.builtins.mochi.settings import (
+        from aj_crew.apps.builtins.mochi.settings import (
             SHORTCUT_ACTIONS,
             _default_shortcuts,
         )
@@ -420,7 +420,7 @@ class TestSettingsConcurrency:
         import threading
         import time
 
-        from kiro_crew.apps.builtins.mochi import settings as mod
+        from aj_crew.apps.builtins.mochi import settings as mod
 
         data_dir = tmp_path
         save_settings(data_dir, {"petName": "seed"})
@@ -460,7 +460,7 @@ class TestSettingsConcurrency:
         assert final["bgModel"] == "claude"
 
     def test_lock_is_a_sibling_file(self, tmp_path) -> None:
-        from kiro_crew.apps.builtins.mochi.settings import (
+        from aj_crew.apps.builtins.mochi.settings import (
             settings_mutation,
             settings_path,
         )

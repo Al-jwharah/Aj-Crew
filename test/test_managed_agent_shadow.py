@@ -1,7 +1,7 @@
 """A project spec that declares a managed agent name refuses the kiro spawn.
 
 kiro-cli resolves ``--agent`` against the session's cwd before the installed agents
-directory, so a checkout carrying a spec under a name Kiro Crew writes would run in
+directory, so a checkout carrying a spec under a name Aj Crew writes would run in
 place of the installed one. These tests pin the decision function and the kiro
 harness's enforcement of it; ``test_agent_admission_paths_ratchet.py`` pins every
 spawn path that must call it.
@@ -17,17 +17,17 @@ from pathlib import Path
 import pytest
 
 from conftest import requires_symlinks
-from kiro_crew import agent as agent_mod
-from kiro_crew import sandbox as sandbox_mod
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp import managed_agent_shadow as managed_shadow
-from kiro_crew.acp.harness import SpawnContext, harness_for
-from kiro_crew.acp.managed_agent_shadow import (
+from aj_crew import agent as agent_mod
+from aj_crew import sandbox as sandbox_mod
+from aj_crew.acp import client as client_mod
+from aj_crew.acp import managed_agent_shadow as managed_shadow
+from aj_crew.acp.harness import SpawnContext, harness_for
+from aj_crew.acp.managed_agent_shadow import (
     SHADOW_REFUSED_AGENT_NAMES,
     managed_agent_shadow_refusal,
 )
-from kiro_crew.acp.types import ACP_BACKEND_KIRO
-from kiro_crew.agent_files import OWNED_KIRO_AGENT_FILES, WORKER_AGENT_FILENAME
+from aj_crew.acp.types import ACP_BACKEND_KIRO
+from aj_crew.agent_files import OWNED_KIRO_AGENT_FILES, WORKER_AGENT_FILENAME
 
 
 def _project_spec(project: Path, filename: str, body: dict | str) -> Path:
@@ -57,7 +57,7 @@ _APPLE_DOUBLE = (
 def test_every_managed_name_is_covered():
     stems = {name[: -len(".json")] for name in OWNED_KIRO_AGENT_FILES}
     assert SHADOW_REFUSED_AGENT_NAMES == stems
-    assert {"kirocrew", WORKER_AGENT_FILENAME[: -len(".json")]} <= SHADOW_REFUSED_AGENT_NAMES
+    assert {"ajcrew", WORKER_AGENT_FILENAME[: -len(".json")]} <= SHADOW_REFUSED_AGENT_NAMES
 
 
 @pytest.mark.parametrize("agent", sorted(SHADOW_REFUSED_AGENT_NAMES))
@@ -72,14 +72,14 @@ def test_a_project_copy_of_a_managed_name_is_refused(agent, tmp_path):
 
 
 def test_a_project_file_declaring_the_name_under_another_filename_is_refused(tmp_path):
-    _project_spec(tmp_path, "anything.json", {"name": "kirocrew"})
-    assert managed_agent_shadow_refusal("kirocrew", tmp_path) is not None
+    _project_spec(tmp_path, "anything.json", {"name": "ajcrew"})
+    assert managed_agent_shadow_refusal("ajcrew", tmp_path) is not None
 
 
 def test_a_project_file_named_after_the_agent_is_refused_whatever_it_declares(tmp_path):
     """kiro-cli also selects a file by its stem, so the declared name cannot hide it."""
-    shadow = _project_spec(tmp_path, "kirocrew.json", {"name": "other", "allowedTools": ["*"]})
-    refusal = managed_agent_shadow_refusal("kirocrew", tmp_path)
+    shadow = _project_spec(tmp_path, "ajcrew.json", {"name": "other", "allowedTools": ["*"]})
+    refusal = managed_agent_shadow_refusal("ajcrew", tmp_path)
     assert refusal is not None and str(shadow) in refusal
 
 
@@ -87,91 +87,91 @@ def test_a_session_in_the_home_directory_does_not_shadow_itself(tmp_path, monkey
     """With cwd at home, the checkout's agents directory IS the installed one."""
     installed = tmp_path / ".kiro" / "agents"
     monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: installed)
-    _project_spec(tmp_path, "kirocrew.json", {"name": "kirocrew"})
-    assert managed_agent_shadow_refusal("kirocrew", tmp_path) is None
+    _project_spec(tmp_path, "ajcrew.json", {"name": "ajcrew"})
+    assert managed_agent_shadow_refusal("ajcrew", tmp_path) is None
 
 
 def test_a_file_the_discovery_roster_hides_is_still_seen(tmp_path):
     """The roster omits skill-view aliases; kiro-cli does not, so neither may this."""
-    _project_spec(tmp_path, "kirocrew-skill-view-x.json", {"name": "kirocrew", "tools": ["*"]})
-    assert managed_agent_shadow_refusal("kirocrew", tmp_path) is not None
+    _project_spec(tmp_path, "ajcrew-skill-view-x.json", {"name": "ajcrew", "tools": ["*"]})
+    assert managed_agent_shadow_refusal("ajcrew", tmp_path) is not None
 
 
 def test_a_markdown_file_declaring_the_name_is_refused(tmp_path):
-    _project_spec(tmp_path, "notes.md", "---\nname: kirocrew\n---\nprompt\n")
-    assert managed_agent_shadow_refusal("kirocrew", tmp_path) is not None
+    _project_spec(tmp_path, "notes.md", "---\nname: ajcrew\n---\nprompt\n")
+    assert managed_agent_shadow_refusal("ajcrew", tmp_path) is not None
 
 
 def test_a_protected_checkout_is_not_scanned(tmp_path, monkeypatch):
-    from kiro_crew.acp import managed_agent_shadow as mod
+    from aj_crew.acp import managed_agent_shadow as mod
 
-    _project_spec(tmp_path, "kirocrew.json", {"name": "kirocrew"})
+    _project_spec(tmp_path, "ajcrew.json", {"name": "ajcrew"})
     monkeypatch.setattr(
         mod, "sensitive_path_refusal", lambda path: "Blocked: access to sensitive path: x"
     )
     monkeypatch.setattr(mod, "_project_spec_files", lambda d: pytest.fail("scanned"))
-    assert managed_agent_shadow_refusal("kirocrew", tmp_path) is None
+    assert managed_agent_shadow_refusal("ajcrew", tmp_path) is None
 
 
 def test_a_checkout_the_resolver_could_not_check_is_refused(tmp_path, monkeypatch):
     """A stalled resolver confirmed nothing, so it is not the protected-checkout pass."""
-    from kiro_crew.acp import managed_agent_shadow as mod
-    from kiro_crew.security import UNVERIFIABLE_PATH_PREFIX
+    from aj_crew.acp import managed_agent_shadow as mod
+    from aj_crew.security import UNVERIFIABLE_PATH_PREFIX
 
-    _project_spec(tmp_path, "kirocrew.json", {"name": "kirocrew", "allowedTools": ["*"]})
+    _project_spec(tmp_path, "ajcrew.json", {"name": "ajcrew", "allowedTools": ["*"]})
     monkeypatch.setattr(
         mod, "sensitive_path_refusal", lambda path: UNVERIFIABLE_PATH_PREFIX + " stalled"
     )
     monkeypatch.setattr(mod, "_project_spec_files", lambda d: pytest.fail("scanned"))
-    refusal = managed_agent_shadow_refusal("kirocrew", tmp_path)
+    refusal = managed_agent_shadow_refusal("ajcrew", tmp_path)
     assert refusal is not None and "could not be checked" in refusal
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink loop")
 def test_an_unstatable_entry_does_not_hide_the_shadow(tmp_path):
     """A self-looping symlink makes its stat raise; the other entries still count."""
-    shadow = _project_spec(tmp_path, "kirocrew.json", {"name": "kirocrew"})
+    shadow = _project_spec(tmp_path, "ajcrew.json", {"name": "ajcrew"})
     loop = shadow.parent / "loop.json"
     loop.symlink_to(loop)
-    refusal = managed_agent_shadow_refusal("kirocrew", tmp_path)
+    refusal = managed_agent_shadow_refusal("ajcrew", tmp_path)
     assert refusal is not None and str(shadow) in refusal
 
 
-@pytest.mark.parametrize("agent", ["kirocrew", "reviewer"])
+@pytest.mark.parametrize("agent", ["ajcrew", "reviewer"])
 def test_a_project_file_claiming_a_skill_view_alias_is_refused_for_any_agent(agent, tmp_path):
     """The spawn may hand kiro-cli an alias rather than the agent's own name."""
     _project_spec(tmp_path, "reviewer.json", {"name": "reviewer"})
-    _project_spec(tmp_path, "x.json", {"name": "kirocrew-skill-view-0123", "tools": ["*"]})
+    _project_spec(tmp_path, "x.json", {"name": "ajcrew-skill-view-0123", "tools": ["*"]})
     refusal = managed_agent_shadow_refusal(agent, tmp_path)
-    assert refusal is not None and "'kirocrew-skill-view-0123'" in refusal
+    assert refusal is not None and "'ajcrew-skill-view-0123'" in refusal
 
 
 def test_a_project_file_named_as_a_skill_view_alias_is_refused(tmp_path):
-    _project_spec(tmp_path, "kirocrew-skill-view-abc.json", {"name": "anything"})
+    _project_spec(tmp_path, "ajcrew-skill-view-abc.json", {"name": "anything"})
     assert managed_agent_shadow_refusal("reviewer", tmp_path) is not None
 
 
 def test_a_claimed_managed_name_refuses_whichever_agent_the_spawn_names(tmp_path):
     """kiro-cli loads every project agent, and a shared runtime can switch to one."""
-    _project_spec(tmp_path, "kirocrew-lite.json", {"name": "kirocrew-lite", "tools": ["*"]})
+    _project_spec(tmp_path, "ajcrew-lite.json", {"name": "ajcrew-lite", "tools": ["*"]})
     _project_spec(tmp_path, "reviewer.json", {"name": "reviewer"})
     refusal = managed_agent_shadow_refusal("reviewer", tmp_path)
-    assert refusal is not None and "'kirocrew-lite'" in refusal
+    assert refusal is not None and "'ajcrew-lite'" in refusal
 
 
 def test_a_nested_file_declaring_a_managed_name_is_refused(tmp_path):
     """kiro-cli loads nested agent directories too."""
-    _project_spec(tmp_path, "team/x.json", {"name": "kirocrew"})
+    _project_spec(tmp_path, "team/x.json", {"name": "ajcrew"})
     assert managed_agent_shadow_refusal("reviewer", tmp_path) is not None
 
 
 def test_a_managed_name_in_another_case_is_refused(tmp_path):
-    _project_spec(tmp_path, "KIROCREW-LITE.json", {"name": "KIROCREW-LITE"})
-    assert managed_agent_shadow_refusal("kirocrew", tmp_path) is not None
+    _project_spec(tmp_path, "AJCREW-LITE.json", {"name": "AJCREW-LITE"})
+    assert managed_agent_shadow_refusal("ajcrew", tmp_path) is not None
 
 
 def test_an_agents_tree_too_large_to_check_is_refused(tmp_path, monkeypatch):
-    from kiro_crew.acp import managed_agent_shadow as mod
+    from aj_crew.acp import managed_agent_shadow as mod
 
     monkeypatch.setattr(mod, "_MAX_SPEC_FILES", 2)
     for i in range(3):
@@ -182,7 +182,7 @@ def test_an_agents_tree_too_large_to_check_is_refused(tmp_path, monkeypatch):
 
 def test_a_spec_the_hardened_reader_refuses_is_not_read_as_its_filename(tmp_path):
     """A hardlinked spec cannot be read, so its declaration cannot be ruled out."""
-    shadow = _project_spec(tmp_path, "anything.json", {"name": "kirocrew", "tools": ["*"]})
+    shadow = _project_spec(tmp_path, "anything.json", {"name": "ajcrew", "tools": ["*"]})
     (tmp_path / "outside.json").hardlink_to(shadow)
     refusal = managed_agent_shadow_refusal("reviewer", tmp_path)
     assert refusal is not None and str(shadow) in refusal
@@ -193,10 +193,10 @@ def test_a_spec_the_hardened_reader_refuses_is_not_read_as_its_filename(tmp_path
     "filename, body",
     [
         ("broken.json", b"{not json"),
-        ("latin.json", b'{"name": "kirocrew", "description": "caf\xe9"}'),
-        ("list.json", b'["kirocrew"]'),
-        ("unclosed.md", b"---\nname: kirocrew\nprompt\n"),
-        ("badyaml.md", b"---\nname: [kirocrew\n---\nprompt\n"),
+        ("latin.json", b'{"name": "ajcrew", "description": "caf\xe9"}'),
+        ("list.json", b'["ajcrew"]'),
+        ("unclosed.md", b"---\nname: ajcrew\nprompt\n"),
+        ("badyaml.md", b"---\nname: [ajcrew\n---\nprompt\n"),
         ("deep.json", b"[" * 10000 + b"]" * 10000),
     ],
     ids=["broken-json", "non-utf8", "not-an-object", "unclosed-fence", "bad-yaml", "too-deep"],
@@ -210,29 +210,29 @@ def test_a_file_that_does_not_parse_as_a_spec_claims_nothing(filename, body, tmp
 
 def test_a_spec_past_the_size_cap_is_not_read_as_claiming_nothing(tmp_path, monkeypatch):
     """kiro-cli has no such cap, so an oversized spec may still declare a name."""
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
-    spec = _project_spec(tmp_path, "big.json", {"name": "kirocrew", "pad": "x" * 256})
+    spec = _project_spec(tmp_path, "big.json", {"name": "ajcrew", "pad": "x" * 256})
     monkeypatch.setattr(hooks, "MAX_FILE_BYTES", 64)
     refusal = managed_agent_shadow_refusal("reviewer", tmp_path)
     assert refusal is not None and "could not be read" in refusal and str(spec) in refusal
 
 
-@pytest.mark.parametrize("filename", ["kirocrew.JSON", "kirocrew.Md", "x.JSON"])
+@pytest.mark.parametrize("filename", ["ajcrew.JSON", "ajcrew.Md", "x.JSON"])
 def test_a_spec_suffix_in_another_case_is_still_a_spec(filename, tmp_path):
-    _project_spec(tmp_path, filename, {"name": "kirocrew"} if "JSON" in filename else "x")
+    _project_spec(tmp_path, filename, {"name": "ajcrew"} if "JSON" in filename else "x")
     assert managed_agent_shadow_refusal("reviewer", tmp_path) is not None
 
 
 def test_a_markdown_project_copy_is_refused(tmp_path):
-    _project_spec(tmp_path, "kirocrew-lite.md", "---\nname: kirocrew-lite\n---\nprompt\n")
-    assert managed_agent_shadow_refusal("kirocrew-lite", tmp_path) is not None
+    _project_spec(tmp_path, "ajcrew-lite.md", "---\nname: ajcrew-lite\n---\nprompt\n")
+    assert managed_agent_shadow_refusal("ajcrew-lite", tmp_path) is not None
 
 
 def test_a_project_copy_that_only_removes_restrictions_is_refused_too(tmp_path):
     """The refusal does not weigh the copy's grants: a looser copy is still not ours."""
-    _project_spec(tmp_path, "kirocrew.json", {"name": "kirocrew", "tools": []})
-    assert managed_agent_shadow_refusal("kirocrew", tmp_path) is not None
+    _project_spec(tmp_path, "ajcrew.json", {"name": "ajcrew", "tools": []})
+    assert managed_agent_shadow_refusal("ajcrew", tmp_path) is not None
 
 
 def test_a_project_agent_under_its_own_name_is_admitted(tmp_path):
@@ -242,20 +242,20 @@ def test_a_project_agent_under_its_own_name_is_admitted(tmp_path):
 
 def test_a_managed_name_with_no_project_copy_is_admitted(tmp_path):
     _project_spec(tmp_path, "reviewer.json", {"name": "reviewer"})
-    assert managed_agent_shadow_refusal("kirocrew", tmp_path) is None
+    assert managed_agent_shadow_refusal("ajcrew", tmp_path) is None
 
 
 def test_a_project_copy_of_the_worker_is_refused(tmp_path):
-    shadow = _project_spec(tmp_path, WORKER_AGENT_FILENAME, {"name": "kirocrew-worker"})
-    refusal = managed_agent_shadow_refusal("kirocrew-worker", tmp_path)
+    shadow = _project_spec(tmp_path, WORKER_AGENT_FILENAME, {"name": "ajcrew-worker"})
+    refusal = managed_agent_shadow_refusal("ajcrew-worker", tmp_path)
     assert refusal is not None and str(shadow) in refusal
 
 
 def test_a_nested_file_declaring_the_worker_is_refused_for_any_agent(tmp_path):
     """The derived-spec gate scans only the top level, so this check covers the rest."""
-    shadow = _project_spec(tmp_path, "team/x.json", {"name": "kirocrew-worker"})
+    shadow = _project_spec(tmp_path, "team/x.json", {"name": "ajcrew-worker"})
     refusal = managed_agent_shadow_refusal("reviewer", tmp_path)
-    assert refusal is not None and "'kirocrew-worker'" in refusal and str(shadow) in refusal
+    assert refusal is not None and "'ajcrew-worker'" in refusal and str(shadow) in refusal
 
 
 # ── Files that are not specs claim nothing ──
@@ -267,7 +267,7 @@ def test_a_markdown_file_without_frontmatter_claims_nothing(filename, tmp_path):
     _project_spec(tmp_path, "reviewer.json", {"name": "reviewer"})
     _project_spec(tmp_path, filename, "# Agents\n\nThe reviewer agent checks pull requests.\n")
     assert managed_agent_shadow_refusal("reviewer", tmp_path) is None
-    assert managed_agent_shadow_refusal("kirocrew", tmp_path) is None
+    assert managed_agent_shadow_refusal("ajcrew", tmp_path) is None
 
 
 @pytest.mark.parametrize("filename", ["._reviewer.json", "._helper.json", "team/._notes.md"])
@@ -280,13 +280,13 @@ def test_an_apple_double_sidecar_claims_nothing(filename, tmp_path):
 
 def test_a_sidecar_name_holding_a_spec_is_still_refused(tmp_path):
     """kiro-cli loads a ``._`` file that parses, under the name it declares."""
-    shadow = _project_spec(tmp_path, "._x.json", {"name": "kirocrew", "allowedTools": ["*"]})
+    shadow = _project_spec(tmp_path, "._x.json", {"name": "ajcrew", "allowedTools": ["*"]})
     refusal = managed_agent_shadow_refusal("reviewer", tmp_path)
     assert refusal is not None and str(shadow) in refusal
 
 
 def test_a_markdown_file_named_after_a_managed_agent_is_refused_without_frontmatter(tmp_path):
-    shadow = _project_spec(tmp_path, "kirocrew.md", "# not a spec\n")
+    shadow = _project_spec(tmp_path, "ajcrew.md", "# not a spec\n")
     refusal = managed_agent_shadow_refusal("reviewer", tmp_path)
     assert refusal is not None and str(shadow) in refusal
 
@@ -299,12 +299,12 @@ def test_a_symlinked_subdirectory_is_scanned(tmp_path):
     """kiro-cli follows a linked directory when it loads nested agents."""
     target = tmp_path / "elsewhere"
     target.mkdir()
-    (target / "x.json").write_text(json.dumps({"name": "kirocrew"}), encoding="utf-8")
+    (target / "x.json").write_text(json.dumps({"name": "ajcrew"}), encoding="utf-8")
     agents = tmp_path / "project" / ".kiro" / "agents"
     agents.mkdir(parents=True)
     (agents / "linked").symlink_to(target, target_is_directory=True)
     refusal = managed_agent_shadow_refusal("reviewer", tmp_path / "project")
-    assert refusal is not None and "'kirocrew'" in refusal
+    assert refusal is not None and "'ajcrew'" in refusal
 
 
 @requires_symlinks
@@ -318,8 +318,8 @@ def test_a_directory_symlink_loop_is_walked_once(tmp_path):
 
 @requires_symlinks
 def test_a_symlinked_directory_into_a_protected_tree_is_refused_unlisted(tmp_path, monkeypatch):
-    from kiro_crew import hooks
-    from kiro_crew.acp import managed_agent_shadow as mod
+    from aj_crew import hooks
+    from aj_crew.acp import managed_agent_shadow as mod
 
     protected = tmp_path / "protected"
     protected.mkdir()
@@ -347,8 +347,8 @@ def test_a_symlinked_directory_into_a_protected_tree_is_refused_unlisted(tmp_pat
 @requires_symlinks
 def test_every_link_is_screened_before_anything_follows_it(tmp_path, monkeypatch):
     """A follow-link probe on a link to a share is the outbound connection itself."""
-    from kiro_crew import hooks
-    from kiro_crew.acp import managed_agent_shadow as mod
+    from aj_crew import hooks
+    from aj_crew.acp import managed_agent_shadow as mod
 
     target = tmp_path / "elsewhere"
     target.mkdir()
@@ -380,8 +380,8 @@ def test_every_link_is_screened_before_anything_follows_it(tmp_path, monkeypatch
 def test_an_agents_directory_linked_to_a_protected_location_is_refused_unlisted(
     tmp_path, monkeypatch
 ):
-    from kiro_crew import hooks
-    from kiro_crew.acp import managed_agent_shadow as mod
+    from aj_crew import hooks
+    from aj_crew.acp import managed_agent_shadow as mod
 
     protected = tmp_path / "protected"
     protected.mkdir()
@@ -396,7 +396,7 @@ def test_an_agents_directory_linked_to_a_protected_location_is_refused_unlisted(
 
 
 def test_an_agents_tree_with_too_many_directories_is_refused(tmp_path, monkeypatch):
-    from kiro_crew.acp import managed_agent_shadow as mod
+    from aj_crew.acp import managed_agent_shadow as mod
 
     monkeypatch.setattr(mod, "_MAX_SPEC_DIRS", 2)
     for i in range(3):
@@ -407,7 +407,7 @@ def test_an_agents_tree_with_too_many_directories_is_refused(tmp_path, monkeypat
 
 @pytest.mark.parametrize("work_dir", [None, ""])
 def test_no_work_dir_has_nothing_to_shadow(work_dir):
-    assert managed_agent_shadow_refusal("kirocrew", work_dir) is None
+    assert managed_agent_shadow_refusal("ajcrew", work_dir) is None
 
 
 def test_no_agent_is_admitted(tmp_path):
@@ -440,11 +440,11 @@ def _ctx(work_dir: Path, agent: str) -> SpawnContext:
 
 @pytest.mark.asyncio
 async def test_the_kiro_harness_refuses_a_shadowed_managed_agent(kiro_spawn_ready, tmp_path):
-    from kiro_crew.acp.session_handle import AcpRuntimeError
+    from aj_crew.acp.session_handle import AcpRuntimeError
 
-    _project_spec(tmp_path, "kirocrew.json", {"name": "kirocrew", "allowedTools": ["*"]})
-    with pytest.raises(AcpRuntimeError, match="declares its own 'kirocrew' agent spec"):
-        await harness_for(ACP_BACKEND_KIRO).resolve_spawn(_ctx(tmp_path, "kirocrew"))
+    _project_spec(tmp_path, "ajcrew.json", {"name": "ajcrew", "allowedTools": ["*"]})
+    with pytest.raises(AcpRuntimeError, match="declares its own 'ajcrew' agent spec"):
+        await harness_for(ACP_BACKEND_KIRO).resolve_spawn(_ctx(tmp_path, "ajcrew"))
 
 
 @pytest.mark.asyncio
@@ -456,9 +456,9 @@ async def test_the_kiro_harness_asks_about_the_spawn_cwd(kiro_spawn_ready, monke
         return None
 
     monkeypatch.setattr(managed_shadow, "managed_agent_shadow_refusal", _record)
-    plan = await harness_for(ACP_BACKEND_KIRO).resolve_spawn(_ctx(tmp_path, "kirocrew"))
-    assert seen == [("kirocrew", str(tmp_path))]
-    assert plan.argv[:4] == ["/pinned/kiro-cli", "acp", "--agent", "kirocrew"]
+    plan = await harness_for(ACP_BACKEND_KIRO).resolve_spawn(_ctx(tmp_path, "ajcrew"))
+    assert seen == [("ajcrew", str(tmp_path))]
+    assert plan.argv[:4] == ["/pinned/kiro-cli", "acp", "--agent", "ajcrew"]
 
 
 @pytest.mark.asyncio
@@ -469,7 +469,7 @@ async def test_the_kiro_harness_admits_a_project_agent_of_its_own(kiro_spawn_rea
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("agent", ["kirocrew", "reviewer"])
+@pytest.mark.parametrize("agent", ["ajcrew", "reviewer"])
 async def test_the_kiro_harness_admits_a_checkout_with_a_readme_and_sidecars(
     kiro_spawn_ready, agent, tmp_path
 ):
@@ -486,8 +486,8 @@ def test_the_direct_client_refuses_a_shadowed_managed_agent(tmp_path):
     """The other kiro-cli spawn path, driven through ``AcpClient._spawn`` itself."""
     import acp_launch_capture as capture_mod
 
-    _project_spec(tmp_path / "workspace", "kirocrew.json", {"name": "kirocrew"})
-    with pytest.raises(client_mod.AcpError, match="declares its own 'kirocrew' agent spec"):
+    _project_spec(tmp_path / "workspace", "ajcrew.json", {"name": "ajcrew"})
+    with pytest.raises(client_mod.AcpError, match="declares its own 'ajcrew' agent spec"):
         capture_mod.capture(ACP_BACKEND_KIRO, tmp_path)
 
 

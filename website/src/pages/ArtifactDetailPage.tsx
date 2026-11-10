@@ -312,8 +312,8 @@ export default function ArtifactDetailPage({ popout = false }: { popout?: boolea
         navigate('/artifacts')
       }
     }
-    window.addEventListener('kirocrew:artifact-deleted', onDeleted)
-    return () => window.removeEventListener('kirocrew:artifact-deleted', onDeleted)
+    window.addEventListener('ajcrew:artifact-deleted', onDeleted)
+    return () => window.removeEventListener('ajcrew:artifact-deleted', onDeleted)
   }, [slug, popout, navigate, dirty, setSaveError])
 
   // Drop a pending in-iframe selection when the user switches to edit mode or

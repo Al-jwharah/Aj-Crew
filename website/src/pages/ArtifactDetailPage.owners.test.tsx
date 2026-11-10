@@ -112,7 +112,7 @@ describe('ArtifactDetailPage owners', () => {
       'const buildCompanionContext = useCallback(',
       'useArtifactDetailPageCompanion(',
       'const openCompanionChat = useCallback(',
-      "window.addEventListener('kirocrew:artifact-deleted', onDeleted)",
+      "window.addEventListener('ajcrew:artifact-deleted', onDeleted)",
       'if (editing || !isCurrent) clearSelectionState()',
       'useArtifactDetailPageThreads(',
       'useArtifactDetailPageMenu(',

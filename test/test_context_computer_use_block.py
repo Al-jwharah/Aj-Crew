@@ -1,10 +1,10 @@
-"""`{{COMPUTER_USE_BLOCK}}` follows the spec gate that mounts `kirocrew-computer`.
+"""`{{COMPUTER_USE_BLOCK}}` follows the spec gate that mounts `ajcrew-computer`.
 
 ``agent._computer_use_spec_gate`` keeps the server out of the emitted spec whenever
 the feature is off or the OS has no driver, so such a session has no ``computer_*``
 tool. The default agent prompt's Computer Use slot resolves against that same gate:
 empty when it is open, because the mounted server carries its own usage text as MCP
-``instructions`` (``kiro_crew.mcp_instructions.COMPUTER``), and a short pointer to the
+``instructions`` (``aj_crew.mcp_instructions.COMPUTER``), and a short pointer to the
 setting when it is closed. The reading is taken once per session, the way the
 delegation-cap figure is, so a compaction restores the contract the session started with.
 """
@@ -16,14 +16,14 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.context import ContextBuilder
-from kiro_crew.context_assembly import sections
-from kiro_crew.context_assembly.markers import _MULTIBYTE_TABLE
-from kiro_crew.mcp_instructions import COMPUTER
-from kiro_crew.memory import MemoryStore
-from kiro_crew.session import SessionManager
-from kiro_crew.skills import SkillsLoader
+from aj_crew.config import AjCrewConfig
+from aj_crew.context import ContextBuilder
+from aj_crew.context_assembly import sections
+from aj_crew.context_assembly.markers import _MULTIBYTE_TABLE
+from aj_crew.mcp_instructions import COMPUTER
+from aj_crew.memory import MemoryStore
+from aj_crew.session import SessionManager
+from aj_crew.skills import SkillsLoader
 
 _HEADING = "## Computer Use (native desktop apps)"
 # Phrases only the usage text carries: how to call the tools.
@@ -56,14 +56,14 @@ class _Gate:
 @pytest.fixture
 def gate(monkeypatch: pytest.MonkeyPatch) -> _Gate:
     g = _Gate(False)
-    monkeypatch.setattr("kiro_crew.agent._computer_use_spec_gate", g)
+    monkeypatch.setattr("aj_crew.agent._computer_use_spec_gate", g)
     return g
 
 
 @pytest.fixture
 def builder(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> ContextBuilder:
     # The SHIPPED contract, not a data-home override a host may carry.
-    monkeypatch.setattr("kiro_crew.context._prompt_path", lambda **_kw: _SHIPPED_PROMPT)
+    monkeypatch.setattr("aj_crew.context._prompt_path", lambda **_kw: _SHIPPED_PROMPT)
     return ContextBuilder(
         memory=MemoryStore(workspace=tmp_path / "ws"),
         skills=SkillsLoader(skills_path=tmp_path / "skills", install_builtins=False),
@@ -137,7 +137,7 @@ class TestTheSlot:
         def boom() -> bool:
             raise OSError("keystone unreadable")
 
-        monkeypatch.setattr("kiro_crew.agent._computer_use_spec_gate", boom)
+        monkeypatch.setattr("aj_crew.agent._computer_use_spec_gate", boom)
         assert ContextBuilder._live_computer_use_gate() is False
         out = ContextBuilder._resolve_prompt_templates("{{COMPUTER_USE_BLOCK}}", "cli:local")
         assert out == _POINTER
@@ -148,7 +148,7 @@ class TestTheSlot:
         ContextBuilder._resolve_prompt_templates("no slot here", "cli:local")
         custom = tmp_path / "custom.md"
         custom.write_text("You are {bot_name}.", encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.context._prompt_path", lambda **_kw: custom)
+        monkeypatch.setattr("aj_crew.context._prompt_path", lambda **_kw: custom)
         builder._resolve_agent_prompt(
             None,
             project=None,
@@ -207,13 +207,13 @@ class TestTheShippedContract:
     ) -> None:
         """PINNED RESIDUAL, not a contract to keep. The slot reads the same
         host-wide predicate the spec writers do, so a fork of the managed contract
-        whose own ``tools`` list leaves out ``@kirocrew-computer`` gets no pointer
+        whose own ``tools`` list leaves out ``@ajcrew-computer`` gets no pointer
         while the gate is open, though it has no ``computer_*`` tool. Narrowing it
         per agent means reading the named agent's own spec (its ``mcpServers`` and
         ``tools``), which this change does not do."""
         import json
 
-        from kiro_crew.agent import _NATIVE_PROMPT_STUB
+        from aj_crew.agent import _NATIVE_PROMPT_STUB
 
         agents_dir = tmp_path / ".kiro" / "agents"
         agents_dir.mkdir(parents=True)
@@ -222,8 +222,8 @@ class TestTheShippedContract:
             encoding="utf-8",
         )
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir)
-        monkeypatch.setattr("kiro_crew.agent_discovery._KIRO_AGENTS_DIR", agents_dir)
+        monkeypatch.setattr("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir)
+        monkeypatch.setattr("aj_crew.agent_discovery._KIRO_AGENTS_DIR", agents_dir)
         gate.open = True
         prompt = builder._resolve_agent_prompt(
             "fork",
@@ -343,9 +343,9 @@ class TestASessionOpenAcrossTheSwitch:
         sessions_dir.mkdir()
         (sessions_dir / "sid-before-reset.json").write_text("{}", encoding="utf-8")
         (sessions_dir / "sid-before-reset.jsonl").write_text('{"turn": 1}\n', encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.session_map._KIRO_SESSIONS_DIR", sessions_dir)
+        monkeypatch.setattr("aj_crew.session_map._KIRO_SESSIONS_DIR", sessions_dir)
 
-        mgr = SessionManager(KiroCrewConfig(), provider_factory=factory)
+        mgr = SessionManager(AjCrewConfig(), provider_factory=factory)
         await mgr.get_or_create("dashboard:reset-me")
         mgr.release("dashboard:reset-me")
         mgr._session_map.set("dashboard:reset-me", "sid-before-reset")

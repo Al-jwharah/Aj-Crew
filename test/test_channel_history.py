@@ -7,7 +7,7 @@ import time
 
 import pytest
 
-from kiro_crew.channel_history import ChannelHistory
+from aj_crew.channel_history import ChannelHistory
 
 
 class TestChannelHistory:
@@ -361,7 +361,7 @@ class TestChannelHistoryContext:
 
     def test_context_builder_injects_channel_history(self):
         """ContextBuilder includes channel history when channel_id is provided."""
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         h = ChannelHistory()
         h.push("C123", "alice", "pipeline broke")
@@ -376,7 +376,7 @@ class TestChannelHistoryContext:
 
     def test_context_builder_no_injection_without_channel_id(self):
         """ContextBuilder does NOT inject channel history for DMs (no channel_id)."""
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         h = ChannelHistory()
         h.push("C123", "alice", "secret channel message")
@@ -388,7 +388,7 @@ class TestChannelHistoryContext:
 
     def test_context_builder_no_injection_without_history(self):
         """ContextBuilder works fine with no channel_history set."""
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         builder = ContextBuilder()
         msg, _ = builder.build_message("hello", False, channel_id="C123")

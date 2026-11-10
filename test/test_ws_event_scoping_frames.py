@@ -17,9 +17,9 @@ import pytest
 import ws_event_scoping_helpers
 from ws_event_scoping_helpers import _allowed, _make_slot, _make_state
 
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.dashboard.token_auth import app_token_path_allowed
-from kiro_crew.dashboard.ws_event_scope import build_allowed_event_set, ws_event_allowed
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.dashboard.token_auth import app_token_path_allowed
+from aj_crew.dashboard.ws_event_scope import build_allowed_event_set, ws_event_allowed
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _clear_module_caches = ws_event_scoping_helpers._clear_module_caches
@@ -52,7 +52,7 @@ class TestEventTableCompleteness:
         declared, which is silent loss of the whole subagent stream rather than a
         loud error.
         """
-        source_root = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+        source_root = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
         source_paths = [source_root / "subagent.py"]
         source_paths.extend(sorted((source_root / "subagent_manager").glob("*.py")))
         source_paths.extend(sorted((source_root / "subagent_parts").glob("*.py")))
@@ -74,7 +74,7 @@ class TestEventTableCompleteness:
         unknown-event floor and is denied outright, and the SDK's slot-scoped
         drift loop stops covering it.
         """
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         assert mod._SUBAGENT_EVENTS <= mod._SLOT_SCOPED_EVENTS, (
             mod._SUBAGENT_EVENTS - mod._SLOT_SCOPED_EVENTS
@@ -82,7 +82,7 @@ class TestEventTableCompleteness:
 
     @staticmethod
     def _classified() -> frozenset[str]:
-        from kiro_crew.dashboard import ws_event_scope as m
+        from aj_crew.dashboard import ws_event_scope as m
 
         return frozenset(
             set(m._TIER0_ALWAYS)
@@ -99,9 +99,9 @@ class TestEventTableCompleteness:
         import ast
         from pathlib import Path
 
-        import kiro_crew
+        import aj_crew
 
-        root = Path(kiro_crew.__file__).parent
+        root = Path(aj_crew.__file__).parent
         # Owner-only fan-outs never reach an app socket, so their event names
         # need no classification.
         gated = {"broadcast_ws", "broadcast_ws_subagent_subscribers"}
@@ -199,7 +199,7 @@ class TestWildcardDeclaration:
     such a manifest would keep its subscription and receive nothing."""
 
     def test_wildcard_expands_instead_of_passing_through(self):
-        from kiro_crew.dashboard.ws_event_scope import build_allowed_event_set
+        from aj_crew.dashboard.ws_event_scope import build_allowed_event_set
 
         allowed = build_allowed_event_set(["*"])
         assert "*" not in allowed, "the wildcard must be expanded, not stored"
@@ -208,7 +208,7 @@ class TestWildcardDeclaration:
         assert "notification:all" in allowed
 
     def test_wildcard_covers_every_global_declaration(self):
-        from kiro_crew.dashboard.ws_event_scope import (
+        from aj_crew.dashboard.ws_event_scope import (
             _GLOBAL_EVENT_DECLARATIONS,
             build_allowed_event_set,
         )
@@ -218,7 +218,7 @@ class TestWildcardDeclaration:
         assert not missing, f"wildcard omits declarations: {missing}"
 
     def test_ordinary_declarations_pass_through_unchanged(self):
-        from kiro_crew.dashboard.ws_event_scope import build_allowed_event_set
+        from aj_crew.dashboard.ws_event_scope import build_allowed_event_set
 
         assert build_allowed_event_set(["slots:own", "notification"]) == frozenset(
             {"slots:own", "notification"}
@@ -241,20 +241,20 @@ class TestNotificationSourceParsing:
 
     def test_constants_match_the_real_emitters(self):
         """Pin the two producers, so a rename on either side fails here."""
-        from kiro_crew.dashboard import ws_event_scope as wes
-        from kiro_crew.notifications import bus
+        from aj_crew.dashboard import ws_event_scope as wes
+        from aj_crew.notifications import bus
 
         # state.notify() -> payload_from_legacy() stamps this exact value.
         assert wes._SYSTEM_SOURCE == bus._SYSTEM_SOURCE
 
         # api_push_notification builds `source=f"app:{app_name}"`.
         push = Path(
-            __import__("kiro_crew.dashboard.handlers.notifications_push", fromlist=["x"]).__file__
+            __import__("aj_crew.dashboard.handlers.notifications_push", fromlist=["x"]).__file__
         ).read_text(encoding="utf-8")
         assert f'source=f"{wes._APP_SOURCE_PREFIX}{{app_name}}"' in push
 
     def test_parses_the_app_identity_out_of_the_prefix(self):
-        from kiro_crew.dashboard.ws_event_scope import notification_source_app
+        from aj_crew.dashboard.ws_event_scope import notification_source_app
 
         assert notification_source_app("app:mochi-pet") == "mochi-pet"
         # A bare name is NOT an app push: it never appears on the wire, and
@@ -331,7 +331,7 @@ class TestNotificationSourceParsing:
         handed an app the ack stream for every other app's and the system's
         notifications. Unattributable metadata takes the broad scope.
         """
-        from kiro_crew.dashboard.ws_event_scope import (
+        from aj_crew.dashboard.ws_event_scope import (
             _SOURCE_FILTERED_EVENTS,
             _UNATTRIBUTED_NOTIFICATION_EVENTS,
         )
@@ -400,8 +400,8 @@ class TestAppEventFrames:
 
     def test_constant_matches_the_event_bus(self):
         """Pin the mirrored constant against the app layer's own definition."""
-        from kiro_crew.apps.event_bus import APP_EVENT_WS_TYPE
-        from kiro_crew.dashboard.ws_event_scope import _APP_EVENT_WS_TYPE
+        from aj_crew.apps.event_bus import APP_EVENT_WS_TYPE
+        from aj_crew.dashboard.ws_event_scope import _APP_EVENT_WS_TYPE
 
         assert _APP_EVENT_WS_TYPE == APP_EVENT_WS_TYPE
 
@@ -427,7 +427,7 @@ class TestAppEventFrames:
         """`events: ["*"]` expands into CORE scopes, which cannot contain an
         app-chosen event name -- so ownership, not a second declaration lookup,
         has to decide, or every wildcard app loses its own events."""
-        from kiro_crew.dashboard.ws_event_scope import build_allowed_event_set
+        from aj_crew.dashboard.ws_event_scope import build_allowed_event_set
 
         state = _make_state()
         assert (
@@ -477,8 +477,8 @@ class TestConstantValuedEventNamesAreClassified:
     constant-valued types explicitly."""
 
     def test_app_event_is_classified(self):
-        from kiro_crew.apps.event_bus import APP_EVENT_WS_TYPE
-        from kiro_crew.dashboard import ws_event_scope as wes
+        from aj_crew.apps.event_bus import APP_EVENT_WS_TYPE
+        from aj_crew.dashboard import ws_event_scope as wes
 
         src = Path(wes.__file__).read_text(encoding="utf-8")
         assert APP_EVENT_WS_TYPE in src, (
@@ -501,7 +501,7 @@ class TestApprovalResolvedCarriesSlot:
 
         from chat_test_helpers import _make_ready_kiro_prerequisite
 
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.state import DashboardState
 
         sessions = MagicMock(count=0)
         sessions.remove = AsyncMock()
@@ -530,7 +530,7 @@ class TestApprovalResolvedCarriesSlot:
         async def _run():
             fut: asyncio.Future = asyncio.get_running_loop().create_future()
             slot._approval_futures["a1"] = fut
-            with patch.object(state, "broadcast_ws") as bws, patch("kiro_crew.dashboard.state.sel"):
+            with patch.object(state, "broadcast_ws") as bws, patch("aj_crew.dashboard.state.sel"):
                 state.resolve_approval("a1", True)
             return [c for c in bws.call_args_list if c.args[0] == "approval_resolved"]
 
@@ -550,7 +550,7 @@ class TestApprovalResolvedCarriesSlot:
         async def _run():
             fut: asyncio.Future = asyncio.get_running_loop().create_future()
             state._approval_futures["b1"] = fut
-            with patch.object(state, "broadcast_ws") as bws, patch("kiro_crew.dashboard.state.sel"):
+            with patch.object(state, "broadcast_ws") as bws, patch("aj_crew.dashboard.state.sel"):
                 state.resolve_state_approval("b1", True)
             return [c for c in bws.call_args_list if c.args[0] == "approval_resolved"]
 
@@ -571,7 +571,7 @@ class TestApprovalResolvedCarriesSlot:
         async def _run():
             fut: asyncio.Future = asyncio.get_running_loop().create_future()
             slot._approval_futures["a1"] = fut
-            with patch.object(state, "broadcast_ws") as bws, patch("kiro_crew.dashboard.state.sel"):
+            with patch.object(state, "broadcast_ws") as bws, patch("aj_crew.dashboard.state.sel"):
                 state.resolve_approval("a1", True)
             return next(c.args[1] for c in bws.call_args_list if c.args[0] == "approval_resolved")
 
@@ -597,7 +597,7 @@ class TestApprovalResolvedCarriesSlot:
         withhold the resolution from the owning app. Pin every broadcast site."""
         import re
 
-        dashboard = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard"
+        dashboard = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard"
         roots = [
             dashboard / f
             for f in (
@@ -641,13 +641,13 @@ class TestApiStatusRequiresDeclaration:
     def test_declared_app_still_reaches_api_status(self):
         """Removing the implicit grant must not break apps that declare it."""
         with patch(
-            "kiro_crew.dashboard.token_auth._app_api_allowlist",
+            "aj_crew.dashboard.token_auth._app_api_allowlist",
             return_value=("/api/status",),
         ):
             assert app_token_path_allowed("design-critique", "/api/status") is True
 
     def test_undeclared_app_is_denied_api_status(self):
-        with patch("kiro_crew.dashboard.token_auth._app_api_allowlist", return_value=()):
+        with patch("aj_crew.dashboard.token_auth._app_api_allowlist", return_value=()):
             assert app_token_path_allowed("mochi-pet", "/api/status") is False
 
     def test_shipped_manifests_that_use_api_status_declare_it(self):
@@ -663,7 +663,7 @@ class TestApiStatusRequiresDeclaration:
         """
         import json
 
-        builtins = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "apps" / "builtins"
+        builtins = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "apps" / "builtins"
         frontends = Path(__file__).resolve().parents[1] / "website" / "src" / "apps"
 
         declared: list[str] = []
@@ -765,7 +765,7 @@ class TestGlobalEventWithSlotDoesNotBypassScope:
         gw = (
             Path(__file__).resolve().parents[1]
             / "src"
-            / "kiro_crew"
+            / "aj_crew"
             / "slack"
             / "gateway_runtime"
             / "result_egress.py"
@@ -775,7 +775,7 @@ class TestGlobalEventWithSlotDoesNotBypassScope:
     def test_meta_merge_is_flat_so_slot_lands_top_level(self):
         """Source guard on the mechanism: bus.push merges meta keys flat."""
         bus = (
-            Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "notifications" / "bus.py"
+            Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "notifications" / "bus.py"
         ).read_text(encoding="utf-8")
         assert "note[key] = value" in bus
 
@@ -808,7 +808,7 @@ class TestSubagentBatchFrames:
         )
 
     def test_filter_keeps_only_own_items(self):
-        from kiro_crew.dashboard.ws_event_scope import filter_subagent_batch_for_app
+        from aj_crew.dashboard.ws_event_scope import filter_subagent_batch_for_app
 
         state = self._state()
         items = [
@@ -819,14 +819,14 @@ class TestSubagentBatchFrames:
         assert [i["slot"] for i in kept] == ["mine"]
 
     def test_filter_drops_items_with_unresolvable_slot(self):
-        from kiro_crew.dashboard.ws_event_scope import filter_subagent_batch_for_app
+        from aj_crew.dashboard.ws_event_scope import filter_subagent_batch_for_app
 
         state = self._state()
         items = [{"id": "a1", "slot": "gone"}, {"id": "a2"}, "notadict"]
         assert filter_subagent_batch_for_app(items, "mochi-pet", frozenset(), state) == []
 
     def test_subagent_all_sees_every_item(self):
-        from kiro_crew.dashboard.ws_event_scope import filter_subagent_batch_for_app
+        from aj_crew.dashboard.ws_event_scope import filter_subagent_batch_for_app
 
         state = self._state()
         items = [{"id": "a1", "slot": "mine"}, {"id": "a2", "slot": "theirs"}]
@@ -837,7 +837,7 @@ class TestSubagentBatchFrames:
         """Source guard: this class is only meaningful while the coalescer emits
         these two frames AND seeds every buffered row with its slot."""
         src = (
-            Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "subagent_scale.py"
+            Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "subagent_scale.py"
         ).read_text(encoding="utf-8")
         assert '"subagent_batch_update"' in src
         assert '"subagent_batch_chunks"' in src
@@ -848,10 +848,10 @@ class TestSubagentBatchFrames:
 
     def test_batch_item_key_map_matches_the_emitter(self):
         """The payload keys the filter reads must be the ones actually sent."""
-        from kiro_crew.dashboard.ws_event_scope import _SUBAGENT_BATCH_ITEM_KEY
+        from aj_crew.dashboard.ws_event_scope import _SUBAGENT_BATCH_ITEM_KEY
 
         src = (
-            Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "subagent_scale.py"
+            Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "subagent_scale.py"
         ).read_text(encoding="utf-8")
         assert '"subagent_batch_update", {"updates": updates}' in src
         assert '"subagent_batch_chunks", {"chunks": chunks}' in src
@@ -896,7 +896,7 @@ class TestDashboardFieldFrameIsOwnerOnly:
     def test_the_denial_is_audited_as_owner_only_and_not_as_an_unknown_event(self):
         """The whole difference this classification makes, and the only place it shows."""
         state = _make_state()
-        with patch("kiro_crew.sel.sel") as sel_mock:
+        with patch("aj_crew.sel.sel") as sel_mock:
             ws_event_allowed(
                 "dashboard_fields",
                 self.FRAME,
@@ -915,7 +915,7 @@ class TestDashboardFieldFrameIsOwnerOnly:
     def test_it_is_the_name_the_push_actually_broadcasts(self):
         """Pinned against the emitter's own constant, so a rename cannot leave the
         classification behind on a string nothing sends."""
-        from kiro_crew.dashboard import ws_event_scope
-        from kiro_crew.dashboard.handlers import member_dashboard_fields
+        from aj_crew.dashboard import ws_event_scope
+        from aj_crew.dashboard.handlers import member_dashboard_fields
 
         assert member_dashboard_fields.FIELD_FRAME in ws_event_scope._OWNER_ONLY_EVENTS

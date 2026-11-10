@@ -133,7 +133,7 @@ describe('useWebSocket folder-tree generation invalidation', () => {
     act(() => {
       ws.simulateMessage({
         type: 'slots',
-        data: [{ key: 'chat-1', title: 's', agent: 'kirocrew', folder_id: 'f2' }],
+        data: [{ key: 'chat-1', title: 's', agent: 'ajcrew', folder_id: 'f2' }],
         folders: [{ id: 'f1', name: 'Work', order: 0 }, { id: 'f2', name: 'Crew', order: 1 }],
         foldersGeneration: 5,
       })
@@ -149,9 +149,9 @@ describe('useWebSocket folder-tree generation invalidation', () => {
 
     // Routine session activity: three more frames, same tree. A refetch here
     // would land over an in-flight collapse/rename/reorder and snap it back.
-    act(() => { ws.simulateMessage({ type: 'slots', data: [{ key: 'a', title: 'x', agent: 'kirocrew' }], foldersGeneration: 4 }) })
-    act(() => { ws.simulateMessage({ type: 'slots', data: [{ key: 'b', title: 'y', agent: 'kirocrew' }], foldersGeneration: 4 }) })
-    act(() => { ws.simulateMessage({ type: 'slots', data: [{ key: 'c', title: 'z', agent: 'kirocrew' }], foldersGeneration: 4 }) })
+    act(() => { ws.simulateMessage({ type: 'slots', data: [{ key: 'a', title: 'x', agent: 'ajcrew' }], foldersGeneration: 4 }) })
+    act(() => { ws.simulateMessage({ type: 'slots', data: [{ key: 'b', title: 'y', agent: 'ajcrew' }], foldersGeneration: 4 }) })
+    act(() => { ws.simulateMessage({ type: 'slots', data: [{ key: 'c', title: 'z', agent: 'ajcrew' }], foldersGeneration: 4 }) })
 
     expect(folderInvalidations()).toBe(1)
   })

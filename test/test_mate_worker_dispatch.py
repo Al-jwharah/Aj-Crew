@@ -2,9 +2,9 @@
 """A crewmate on its own file chats on the conductor and hands work to its worker.
 
 The chat half: a binding whose ``kiro_agent`` names a file found ONLY in the
-crewmate folder runs its chat on ``kirocrew-mate-conductor``, so the file never
+crewmate folder runs its chat on ``ajcrew-mate-conductor``, so the file never
 reaches the chat. The hand-off half: that chat's ``session_create`` with no
-agent (or the worker named bare) opens ``kirocrew-mate-worker`` on the
+agent (or the worker named bare) opens ``ajcrew-mate-worker`` on the
 crewmate's own workspace, store and member identity. Driven through the real
 config, resolver and ``create_session``.
 """
@@ -19,18 +19,18 @@ import pytest
 from chat_test_helpers import _make_state
 from member_memory_helpers import forget_declared_stores, write_member_home
 
-from kiro_crew import mate_worker
-from kiro_crew.acp_backends import (
+from aj_crew import mate_worker
+from aj_crew.acp_backends import (
     ACP_BACKEND_KIRO,
     ACP_BACKENDS_KNOWN,
     ACP_BACKENDS_MATE_WORKER_KIT,
 )
-from kiro_crew.config import loader
-from kiro_crew.dashboard import create_rate_limit
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.mate_worker import MATE_CONDUCTOR_AGENT, MATE_WORKER_AGENT
-from kiro_crew.members import DM_SLOT_KEY_PREFIX
+from aj_crew.config import loader
+from aj_crew.dashboard import create_rate_limit
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.mate_worker import MATE_CONDUCTOR_AGENT, MATE_WORKER_AGENT
+from aj_crew.members import DM_SLOT_KEY_PREFIX
 
 
 class TestMemberChatAgent:
@@ -79,11 +79,11 @@ def _fresh_create_budget():
 @pytest.fixture
 def crewmate(tmp_path, monkeypatch):
     """``pixel`` bound to its own crewmate file, in its own workspace."""
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.execution_context import bind_session_execution, resolve_member_execution
-    from kiro_crew.history import ConversationLog
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.execution_context import bind_session_execution, resolve_member_execution
+    from aj_crew.history import ConversationLog
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     config = write_member_home(tmp_path, "pixel", "ada")
     config["workspaces"] = {
         "default": {"dir": "workspace"},
@@ -112,7 +112,7 @@ def crewmate(tmp_path, monkeypatch):
     caller = state.get_or_create_slot(DM_SLOT_KEY_PREFIX + "pixel", mode="member")
     caller.workspace = "member-pixel"
     caller.agent = "pixel"
-    execution = resolve_member_execution(KiroCrewConfig.load(), "pixel")
+    execution = resolve_member_execution(AjCrewConfig.load(), "pixel")
     caller.memory_store = execution.store.legacy_name
     bind_session_execution(slot_history_key(caller), execution, vouch=True)
     return state, caller, execution
@@ -136,10 +136,10 @@ def test_the_crewmates_own_chat_runs_on_the_conductor(crewmate):
         (MATE_WORKER_AGENT, ""),
         (MATE_WORKER_AGENT, "template"),
         # The stock leaf worker the session_create schema names for every caller.
-        ("kirocrew-worker", "template"),
-        ("kirocrew-worker", ""),
+        ("ajcrew-worker", "template"),
+        ("ajcrew-worker", ""),
         # Whatever else the model names: the gateway, not the prompt, decides.
-        ("kirocrew", ""),
+        ("ajcrew", ""),
         ("some-agent-nobody-declared", ""),
         ("reviewer", "template"),
         # A template that shares a peer's name is still a template.
@@ -149,7 +149,7 @@ def test_the_crewmates_own_chat_runs_on_the_conductor(crewmate):
     ],
 )
 def test_the_conductor_hands_off_to_its_worker(crewmate, named, kind):
-    from kiro_crew.execution_context import read_session_execution
+    from aj_crew.execution_context import read_session_execution
 
     state, caller, execution = crewmate
     result = _create(state, caller, agent=named, agent_kind=kind)
@@ -169,8 +169,8 @@ def test_the_conductor_hands_off_to_its_worker(crewmate, named, kind):
 def test_a_conductor_slot_with_no_record_opens_no_worker(crewmate, tmp_path):
     """A slot from before records names its crewmate by slot agent only, which
     is not an identity: it hands off to no worker."""
-    from kiro_crew.execution_context import clear_session_execution, read_session_execution
-    from kiro_crew.history import ConversationLog
+    from aj_crew.execution_context import clear_session_execution, read_session_execution
+    from aj_crew.history import ConversationLog
 
     state, caller, _execution = crewmate
     # On the default workspace, so no workspace check refuses it first.
@@ -206,7 +206,7 @@ def test_the_conductor_naming_another_crewmate_stays_refused(crewmate):
 
 def test_the_worker_does_not_hand_off_to_another_worker_by_default(crewmate):
     """A worker is not a conductor: its own unnamed child inherits the worker."""
-    from kiro_crew.execution_context import read_session_execution
+    from aj_crew.execution_context import read_session_execution
 
     state, caller, _execution = crewmate
     worker = state.get_slot(_create(state, caller)["target"])
@@ -215,8 +215,8 @@ def test_the_worker_does_not_hand_off_to_another_worker_by_default(crewmate):
 
 
 def sc_conducts(slot):
-    from kiro_crew.dashboard.session_control_parts.session_create import _conducts_for_a_worker
-    from kiro_crew.execution_context import read_session_execution
+    from aj_crew.dashboard.session_control_parts.session_create import _conducts_for_a_worker
+    from aj_crew.execution_context import read_session_execution
 
     return _conducts_for_a_worker(read_session_execution(slot_history_key(slot)))
 
@@ -235,16 +235,16 @@ def _set_backends(tmp_path, *, default: str, member: str) -> None:
 
 @pytest.fixture
 def no_known_workers(monkeypatch):
-    from kiro_crew import members
+    from aj_crew import members
 
     monkeypatch.setattr(members, "_CREWMATE_WORKER_SLOTS", set())
     return members
 
 
 def _selected(key: str) -> str:
-    from kiro_crew.members import select_provider_backend
+    from aj_crew.members import select_provider_backend
 
-    agent = loader.KiroCrewConfig.load().agent
+    agent = loader.AjCrewConfig.load().agent
     return select_provider_backend(key, agent.member_acp_backend, agent.acp_backend)
 
 
@@ -254,7 +254,7 @@ def test_the_worker_runs_on_its_crewmates_backend_not_the_default(
 ):
     """Ray's live shape: ``acp_backend`` Kiro, crewmates on KAS (a stored ``kiro``
     member backend reads as KAS too). The worker follows its crewmate."""
-    from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
 
     _set_backends(tmp_path, default="kiro", member=member)
     state, caller, _execution = crewmate
@@ -269,8 +269,8 @@ def test_the_worker_runs_on_its_crewmates_backend_not_the_default(
 def test_the_worker_keeps_its_backend_after_a_restart(crewmate, tmp_path, no_known_workers):
     """A restart forgets the in-memory set; the record read every turn makes
     before allocating (``resolve_session_agent_bindings``) puts the worker back."""
-    from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-    from kiro_crew.session_agent_selection import resolve_session_agent_bindings
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+    from aj_crew.session_agent_selection import resolve_session_agent_bindings
 
     _set_backends(tmp_path, default="kiro", member="kas")
     state, caller, _execution = crewmate
@@ -281,7 +281,7 @@ def test_the_worker_keeps_its_backend_after_a_restart(crewmate, tmp_path, no_kno
     def resolver(config, selected, *project, **kwargs):
         return SimpleNamespace(kiro_agent=MATE_WORKER_AGENT, memory_store_name="")
 
-    resolve_session_agent_bindings(resolver, loader.KiroCrewConfig.load(), key, MATE_WORKER_AGENT)
+    resolve_session_agent_bindings(resolver, loader.AjCrewConfig.load(), key, MATE_WORKER_AGENT)
 
     assert _selected(key) == ACP_BACKEND_KAS
 
@@ -293,22 +293,22 @@ def test_a_worker_switched_to_another_template_leaves_its_crewmates_backend(
     takes the key off the crewmate's backend."""
     from dataclasses import replace
 
-    from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-    from kiro_crew.execution_context import bind_session_execution, read_session_execution
-    from kiro_crew.session_agent_selection import resolve_session_agent_bindings
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+    from aj_crew.execution_context import bind_session_execution, read_session_execution
+    from aj_crew.session_agent_selection import resolve_session_agent_bindings
 
     _set_backends(tmp_path, default="kiro", member="kas")
     state, caller, _execution = crewmate
     key = slot_history_key(state.get_slot(_create(state, caller)["target"]))
     assert _selected(key) == ACP_BACKEND_KAS
     worker = read_session_execution(key, required=True)
-    switched = replace(worker, template_id="kirocrew", selection_name="kirocrew")
+    switched = replace(worker, template_id="ajcrew", selection_name="ajcrew")
     bind_session_execution(key, switched, replace_existing=True, expected=worker)
 
     def resolver(config, selected, *project, **kwargs):
-        return SimpleNamespace(kiro_agent="kirocrew", memory_store_name="")
+        return SimpleNamespace(kiro_agent="ajcrew", memory_store_name="")
 
-    resolve_session_agent_bindings(resolver, loader.KiroCrewConfig.load(), key, "kirocrew")
+    resolve_session_agent_bindings(resolver, loader.AjCrewConfig.load(), key, "ajcrew")
 
     assert _selected(key) == ACP_BACKEND_KIRO
 
@@ -322,7 +322,7 @@ def test_a_worker_slot_made_again_on_an_ordinary_template_leaves_at_the_commit(
     from chat_test_helpers import _make_app_with_agent_routes
     from dashboard_owner_helpers import as_owner
 
-    from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
 
     _set_backends(tmp_path, default="kiro", member="kas")
     state, caller, _execution = crewmate
@@ -330,7 +330,7 @@ def test_a_worker_slot_made_again_on_an_ordinary_template_leaves_at_the_commit(
     key = slot_history_key(worker)
     assert _selected(key) == ACP_BACKEND_KAS
     monkeypatch.setattr(
-        loader, "_MATERIALIZED_AGENTS", frozenset({*loader._MATERIALIZED_AGENTS, "kirocrew"})
+        loader, "_MATERIALIZED_AGENTS", frozenset({*loader._MATERIALIZED_AGENTS, "ajcrew"})
     )
     state._slots.pop(worker.key)
 
@@ -338,13 +338,13 @@ def test_a_worker_slot_made_again_on_an_ordinary_template_leaves_at_the_commit(
         async with TestClient(TestServer(as_owner(_make_app_with_agent_routes(state)))) as client:
             response = await client.post(
                 "/api/chat/slots",
-                json={"name": worker.key, "agent": "kirocrew", "agent_kind": "template"},
+                json={"name": worker.key, "agent": "ajcrew", "agent_kind": "template"},
             )
             assert response.status == 200, await response.text()
 
     asyncio.run(remake())
 
-    assert state._slots[worker.key].agent == "kirocrew"
+    assert state._slots[worker.key].agent == "ajcrew"
     assert _selected(key) == ACP_BACKEND_KIRO
 
 
@@ -409,7 +409,7 @@ def test_a_worker_its_pin_cannot_carry_is_refused_naming_the_pin(
 
 
 def test_only_the_crewmates_worker_record_routes_to_its_backend(no_known_workers):
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
     def record(kind, template, member="pixel"):
         return ExecutionContext(member, MemoryStoreRef("member-pixel-1", member), kind, template)
@@ -419,7 +419,7 @@ def test_only_the_crewmates_worker_record_routes_to_its_backend(no_known_workers
     )
     for key, other in (
         ("dashboard:chat-2", record("member", MATE_CONDUCTOR_AGENT)),
-        ("dashboard:chat-3", record("template", "kirocrew-worker")),
+        ("dashboard:chat-3", record("template", "ajcrew-worker")),
         ("dashboard:chat-4", record("member", MATE_WORKER_AGENT)),
         ("dashboard:chat-5", None),
     ):
@@ -439,7 +439,7 @@ def test_every_backend_carries_the_kit_or_refuses_the_worker(backend, monkeypatc
         assert refusal and "agent.member_acp_backend" in refusal
         return
     assert refusal is None
-    from kiro_crew.config import paths as paths_mod
+    from aj_crew.config import paths as paths_mod
 
     mates = tmp_path / "mates"
     mates.mkdir()
@@ -451,7 +451,7 @@ def test_every_backend_carries_the_kit_or_refuses_the_worker(backend, monkeypatc
     monkeypatch.setattr(mate_worker, "mate_file_for_member", lambda member, config=None: "pixel")
     monkeypatch.setattr(mate_worker, "globally_disabled_refs", lambda names: [])
     monkeypatch.setattr(
-        "kiro_crew.execution_context.read_session_execution",
+        "aj_crew.execution_context.read_session_execution",
         lambda key: SimpleNamespace(member_id="pixel"),
     )
     base = {"name": MATE_WORKER_AGENT, "prompt": "base", "tools": ["fs_read"], "mcpServers": {}}
@@ -462,10 +462,10 @@ def test_every_backend_carries_the_kit_or_refuses_the_worker(backend, monkeypatc
 
 
 def test_unknown_harness_pin_refuses_worker_creation_without_echoing_it(crewmate, caplog):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     secret = "sk-test-not-a-real-secret-0000"
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents["pixel"].acp_backend = secret
     cfg.save()
     state, caller, _execution = crewmate
@@ -477,4 +477,4 @@ def test_unknown_harness_pin_refuses_worker_creation_without_echoing_it(crewmate
     assert "an unknown harness" in raised.value.message
     assert secret not in str(raised.value) + caplog.text
     assert set(state._slots) == before
-    assert KiroCrewConfig.load().agents["pixel"].acp_backend == secret
+    assert AjCrewConfig.load().agents["pixel"].acp_backend == secret

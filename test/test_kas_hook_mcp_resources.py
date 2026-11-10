@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.acp import kas_permissions
+from aj_crew.acp import kas_permissions
 
 #: Real tool names per server, as the MCP probe cache would hold them.
 _TOOLS = {"srv": ["get_creds", "search"], "srv_": ["x", "search"], "Docs": ["Get_Creds", "find"]}
@@ -82,8 +82,8 @@ def test_an_mcp_hook_still_fires_on_a_server_written_differently_in_config():
     # The hook is written `mcp__srv___x` / `@SRV_/X`; the server is `srv_` and its
     # tool `x`. The real call must stay a permission request so the gate, which
     # names it from the trusted server identity, runs the hook on it.
-    from kiro_crew.hook_runtime.hook_dispatch import pre_tool_match_names
-    from kiro_crew.hooks import _tool_matches
+    from aj_crew.hook_runtime.hook_dispatch import pre_tool_match_names
+    from aj_crew.hooks import _tool_matches
 
     policy = {"rules": [{"capability": "mcp", "match": ["srv_/*"], "effect": "allow"}]}
     for matcher in ("mcp__srv___x", "@SRV_/X"):
@@ -225,8 +225,8 @@ def test_a_bare_hook_holds_the_tool_on_a_server_the_policy_does_not_list():
 
 
 def test_the_bare_hook_holds_the_tool_the_gate_runs_it_on():
-    from kiro_crew.hook_runtime.hook_dispatch import pre_tool_match_names
-    from kiro_crew.hooks import _tool_matches
+    from aj_crew.hook_runtime.hook_dispatch import pre_tool_match_names
+    from aj_crew.hooks import _tool_matches
 
     names, _ = pre_tool_match_names("call", tool_identity="get_creds", mcp_server="srv")
     assert any(_tool_matches("get_creds", n) for n in names)
@@ -277,7 +277,7 @@ def test_a_bare_hook_that_proves_nothing_still_covers_everything(matcher, allows
 def test_the_projection_holds_only_the_hooked_mcp_tool(monkeypatch):
     """Through the real KAS projection of a spec like the reported one: a hook on
     one MCP tool by its bare name, both servers auto-approved in ``allowedTools``."""
-    from kiro_crew.acp import kas_agents
+    from aj_crew.acp import kas_agents
 
     monkeypatch.setattr(
         kas_permissions,

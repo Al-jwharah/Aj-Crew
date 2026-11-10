@@ -32,17 +32,17 @@ mkdirSync(OUT, { recursive: true })
 const NOW = Date.now()
 const T0 = new Date(NOW - 5 * 60_000).toISOString()
 const row = (key, title, extra = {}) => ({
-  key, title, messages: 4, running: false, agent: 'kirocrew', agent_kind: 'template', mode: '', origin: 'user',
+  key, title, messages: 4, running: false, agent: 'ajcrew', agent_kind: 'template', mode: '', origin: 'user',
   memory_mode: 'persistent', created: T0, last_ts: T0, folder_id: '', workspace: 'default', ...extra,
 })
 // stale_at_ms: when the ledger flags it (15 min after its last report).
 const item = (worker, agoMs) => ({ worker, stale_at_ms: NOW - agoMs + 15 * 60_000 })
 const root = (key, title, crewWork) => row(key, title, {
-  agent: 'kirocrew-conductor', crew_mode_root: true, has_options: true,
+  agent: 'ajcrew-conductor', crew_mode_root: true, has_options: true,
   last_message: 'Patrol armed. Next check in 15 min.', crew_work: crewWork,
 })
 const worker = (key, rootKey, title, running) => row(key, title, {
-  agent: 'kirocrew-worker', crew_root: rootKey, created_by: rootKey, running,
+  agent: 'ajcrew-worker', crew_root: rootKey, created_by: rootKey, running,
 })
 const ROOTS = {
   'chat-working': { title: 'Ship the sidebar fix', worker: 'chat-w1', running: true, work: { open: 1, person: 0, items: [item('chat-w1', 60_000)] } },
@@ -60,15 +60,15 @@ const loop = slotKey => ({
   cycle_count: 3, max_cycles: 96, idle_secs: 900, created_ts: NOW / 1000 - 3600, last_fire_ts: NOW / 1000 - 300,
 })
 const CATALOG = {
-  agents: ['kirocrew', 'kirocrew-conductor', 'kirocrew-worker'].map(name => ({ name, selection_kind: 'template', kiro_agent: '', workspace: 'default', memory_store: 'default', source: 'builtin' })),
-  default_agent: 'kirocrew', crew_mode_agent: 'kirocrew-conductor', conductor_agents: ['kirocrew-conductor'],
+  agents: ['ajcrew', 'ajcrew-conductor', 'ajcrew-worker'].map(name => ({ name, selection_kind: 'template', kiro_agent: '', workspace: 'default', memory_store: 'default', source: 'builtin' })),
+  default_agent: 'ajcrew', crew_mode_agent: 'ajcrew-conductor', conductor_agents: ['ajcrew-conductor'],
 }
 const workersFor = key => {
   const r = ROOTS[key]
   return {
     root: key,
     workers: [{
-      key: r.worker, title: `${r.title} (worker)`, agent: 'kirocrew-worker',
+      key: r.worker, title: `${r.title} (worker)`, agent: 'ajcrew-worker',
       status: r.running ? 'working' : 'idle', group: r.running ? 'working' : 'waiting',
       last_activity: T0, created_by: key, dispatched_by: key,
     }],

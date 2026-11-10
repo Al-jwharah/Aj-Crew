@@ -7,7 +7,7 @@ Also pinned: Slack delivery unchanged, the fail-closed ``channels`` gate on the 
 credential redaction, and a dashboard fallback when no channel is reachable.
 
 Every collaborator is a double, so no socket, subprocess or write outside the per-test
-``KIROCREW_HOME`` happens.
+``AJCREW_HOME`` happens.
 """
 
 from __future__ import annotations
@@ -19,14 +19,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.cron import CronJob, CronSchedule
-from kiro_crew.platform import governance_profiles
-from kiro_crew.slack import gateway as gw
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.cron import CronJob, CronSchedule
+from aj_crew.platform import governance_profiles
+from aj_crew.slack import gateway as gw
 
 #: A Discord DM session key: ``{channel}:{agent}:{chatType}:{user}``. Direct, so
 #: it is allowed to take ``_channel_reply_link``'s stored-channel rung.
-DISCORD_KEY = "discord:kirocrew:direct:U9"
+DISCORD_KEY = "discord:ajcrew:direct:U9"
 
 #: The postable Discord conversation the origin link names.
 DISCORD_CONVERSATION = "C_DISCORD"
@@ -44,8 +44,8 @@ def _make_orchestrator() -> Any:
     Returned as ``Any`` on purpose: every test swaps real collaborators for
     doubles, which do not satisfy the declared attribute types.
     """
-    cfg = KiroCrewConfig()
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U_OWNER"}):
+    cfg = AjCrewConfig()
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U_OWNER"}):
         return gw.GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
 
 
@@ -830,7 +830,7 @@ class TestFailureAuditNamesOnlyLandedSurfaces:
         job = _job(
             script="raise SystemExit(1)",
             message="",
-            session_key="dashboard:kirocrew:direct:local",
+            session_key="dashboard:ajcrew:direct:local",
             channel="C_SLACK",
         )
         audit = MagicMock()
@@ -847,7 +847,7 @@ class TestFailureAuditNamesOnlyLandedSurfaces:
         job = _job(
             script="raise SystemExit(1)",
             message="",
-            session_key="dashboard:kirocrew:direct:local",
+            session_key="dashboard:ajcrew:direct:local",
             channel="C_SLACK",
         )
         audit = MagicMock()
@@ -867,7 +867,7 @@ class TestFailureAuditNamesOnlyLandedSurfaces:
     async def test_crash_names_slack_when_slack_is_the_one_that_posted(self) -> None:
         slack = _slack_double()
         orch, tr = _discord_orch(slack=slack)
-        job = _job(session_key="dashboard:kirocrew:direct:local", channel="C_SLACK")
+        job = _job(session_key="dashboard:ajcrew:direct:local", channel="C_SLACK")
         audit = MagicMock()
         await self._agent_crash(orch, job, audit)
         tr.send_message.assert_not_awaited()

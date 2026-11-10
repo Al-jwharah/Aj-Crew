@@ -1,6 +1,6 @@
 """Every ``cloud <sub>`` the cloud spec and the cloud code name is one the parser registers.
 
-A reader who copies ``kirocrew cloud <sub>`` from the spec or a docstring and gets an
+A reader who copies ``ajcrew cloud <sub>`` from the spec or a docstring and gets an
 argparse error has been sent to a command that does not exist. The command that
 re-attaches to an existing launch is ``cloud launch``; there is no ``cloud resume``. This
 test reads the subcommand set from ``register_cloud_parser`` itself, so a renamed or
@@ -13,20 +13,20 @@ import argparse
 import re
 from pathlib import Path
 
-from kiro_crew.cli_parser_admin import register_cloud_parser
+from aj_crew.cli_parser_admin import register_cloud_parser
 
 REPO = Path(__file__).resolve().parent.parent
 
-# The texts that describe the shipped `kirocrew cloud` command. Guides are left out on
+# The texts that describe the shipped `ajcrew cloud` command. Guides are left out on
 # purpose: one names a `cloud config` command it says does not exist yet.
 SCANNED = [
     REPO / "docs/system-specs/modules/cloud.md",
-    REPO / "src/kiro_crew/cli_cloud.py",
-    *sorted((REPO / "src/kiro_crew/cloud").rglob("*.py")),
+    REPO / "src/aj_crew/cli_cloud.py",
+    *sorted((REPO / "src/aj_crew/cloud").rglob("*.py")),
 ]
 
-# `cloud <sub>` inside a code span (`...` or ``...``), with or without `kirocrew `.
-_NAMED_SUBCOMMAND = re.compile(r"`(?:kirocrew\s+)?cloud\s+([a-z][a-z-]*)")
+# `cloud <sub>` inside a code span (`...` or ``...``), with or without `ajcrew `.
+_NAMED_SUBCOMMAND = re.compile(r"`(?:ajcrew\s+)?cloud\s+([a-z][a-z-]*)")
 
 
 def _registered_cloud_subcommands() -> set[str]:
@@ -62,7 +62,7 @@ def test_every_named_cloud_subcommand_is_registered():
         name: sites for name, sites in _named_subcommands().items() if name not in registered
     }
     assert unknown == {}, (
-        "These texts name a `kirocrew cloud` subcommand the parser does not register "
+        "These texts name a `ajcrew cloud` subcommand the parser does not register "
         f"(registered: {sorted(registered)}): {unknown}"
     )
 

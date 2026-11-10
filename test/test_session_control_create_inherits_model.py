@@ -24,13 +24,13 @@ import pytest
 from chat_test_helpers import _make_state
 from member_memory_helpers import forget_declared_stores, make_request, write_member_home
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.sections import KiroCrewAgentConfig, worker_session_defaults
-from kiro_crew.dashboard import create_rate_limit
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.handlers.session_control import api_session_control_create
-from kiro_crew.members import DM_SLOT_KEY_PREFIX
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.sections import AjCrewAgentConfig, worker_session_defaults
+from aj_crew.dashboard import create_rate_limit
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.handlers.session_control import api_session_control_create
+from aj_crew.members import DM_SLOT_KEY_PREFIX
 
 _MEMBER = "radar"
 
@@ -44,7 +44,7 @@ def _fresh_create_budget():
 
 def _crewmate_home(tmp_path: Path, monkeypatch, **record) -> None:
     """A home with one V2 crewmate, ``radar``, whose record carries *record*."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     config = write_member_home(tmp_path, _MEMBER, "peer")
     config["agents"][_MEMBER].update(record)
     (tmp_path / "config.json").write_text(json.dumps(config), encoding="utf-8")
@@ -53,15 +53,15 @@ def _crewmate_home(tmp_path: Path, monkeypatch, **record) -> None:
 
 def _crewmate_caller(tmp_path: Path, monkeypatch, **record):
     """A crewmate DM slot with its execution record bound, as the thread endpoint mints it."""
-    from kiro_crew.config.sections import ResolvedBindings
-    from kiro_crew.execution_context import bind_session_execution, resolve_member_execution
-    from kiro_crew.history import ConversationLog
+    from aj_crew.config.sections import ResolvedBindings
+    from aj_crew.execution_context import bind_session_execution, resolve_member_execution
+    from aj_crew.history import ConversationLog
 
     _crewmate_home(tmp_path, monkeypatch, **record)
     state = _make_state(tmp_path)
     state.conversation_log = ConversationLog()
     caller = state.get_or_create_slot(DM_SLOT_KEY_PREFIX + _MEMBER, mode="member")
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     execution = resolve_member_execution(cfg, _MEMBER)
     caller.agent = _MEMBER
     caller.memory_store = execution.store.legacy_name
@@ -244,7 +244,7 @@ class TestCrewmateChildInherits:
         The child starts on the default, the effort still inherits, the reply flags
         the drop, and the SEL record names the refused id (redacted).
         """
-        import kiro_crew.dashboard.chat_handlers as ch
+        import aj_crew.dashboard.chat_handlers as ch
 
         monkeypatch.setattr(
             ch, "_model_rejected_reason", lambda name, provider=None: f"{name} is display-only"
@@ -272,7 +272,7 @@ class TestCrewmateChildInherits:
 
     def test_a_pin_from_another_harness_is_dropped_for_the_worker(self, tmp_path, monkeypatch):
         """Member thread on claude, workers on kiro: the crewmate's claude id must not ride the worker."""
-        from kiro_crew.config.loader import KiroCrewConfig as _Cfg
+        from aj_crew.config.loader import AjCrewConfig as _Cfg
 
         state, caller = _crewmate_caller(tmp_path, monkeypatch, model="claude-opus-4.6")
         real_load = _Cfg.load
@@ -297,7 +297,7 @@ class TestCrewmateChildInherits:
 
     def test_dropping_the_crewmates_model_drops_its_own_effort_too(self, tmp_path, monkeypatch):
         """The crewmate's level rode along for its model; with the model gone it goes too."""
-        from kiro_crew.config.loader import KiroCrewConfig as _Cfg
+        from aj_crew.config.loader import AjCrewConfig as _Cfg
 
         state, caller = _crewmate_caller(
             tmp_path, monkeypatch, model="claude-opus-4.6", reasoning_effort="max"
@@ -324,7 +324,7 @@ class TestCrewmateChildInherits:
         self, tmp_path, monkeypatch
     ):
         """`worker_model` was validated for the worker's harness, so the namespace read does not drop it."""
-        from kiro_crew.config.loader import KiroCrewConfig as _Cfg
+        from aj_crew.config.loader import AjCrewConfig as _Cfg
 
         state, caller = _crewmate_caller(
             tmp_path,
@@ -352,7 +352,7 @@ class TestCrewmateChildInherits:
         assert "inherited_model_dropped" not in created
 
     def test_auto_rides_any_harness(self, tmp_path, monkeypatch):
-        from kiro_crew.config.loader import KiroCrewConfig as _Cfg
+        from aj_crew.config.loader import AjCrewConfig as _Cfg
 
         state, caller = _crewmate_caller(tmp_path, monkeypatch, worker_model="auto")
         real_load = _Cfg.load
@@ -374,7 +374,7 @@ class TestCrewmateChildInherits:
         self, tmp_path, monkeypatch
     ):
         """The drop is for the profile's pin only: the caller's own bad pick is its own error."""
-        import kiro_crew.dashboard.chat_handlers as ch
+        import aj_crew.dashboard.chat_handlers as ch
 
         monkeypatch.setattr(
             ch, "_model_rejected_reason", lambda name, provider=None: f"{name} is display-only"
@@ -419,14 +419,14 @@ class TestNonCrewmateCaller:
         self, tmp_path, monkeypatch
     ):
         """A worker keeps the crewmate's store but runs as a template; its own children do not inherit."""
-        from kiro_crew.execution_context import bind_session_execution, resolve_member_execution
+        from aj_crew.execution_context import bind_session_execution, resolve_member_execution
 
         state, caller = _crewmate_caller(
             tmp_path, monkeypatch, model="claude-opus-4.6", reasoning_effort="max"
         )
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         as_template = resolve_member_execution(cfg, _MEMBER).with_template(
-            "kirocrew-worker", "kirocrew-worker"
+            "ajcrew-worker", "ajcrew-worker"
         )
         worker = state.get_or_create_slot("chat-worker", workspace=caller.workspace)
         bind_session_execution(slot_history_key(worker), as_template, vouch=True)
@@ -441,7 +441,7 @@ class TestNonCrewmateCaller:
         self, tmp_path, monkeypatch
     ):
         """The record of an id-less member's worker still says ``member``; the template tells it apart."""
-        from kiro_crew.execution_context import (
+        from aj_crew.execution_context import (
             ExecutionContext,
             MemoryStoreRef,
             bind_session_execution,
@@ -456,7 +456,7 @@ class TestNonCrewmateCaller:
             None,
             MemoryStoreRef("default"),
             "member",
-            "kirocrew-worker",
+            "ajcrew-worker",
             "persistent",
             selection_name=_MEMBER,
         )
@@ -487,7 +487,7 @@ class TestNonCrewmateCaller:
 
     def test_a_slot_with_no_record_is_no_crewmate_whatever_its_agent(self, tmp_path, monkeypatch):
         """A slot's agent name is not an attested identity: only a record names a crewmate."""
-        from kiro_crew.execution_context import read_session_execution
+        from aj_crew.execution_context import read_session_execution
 
         state, caller = _crewmate_caller(
             tmp_path, monkeypatch, model="claude-opus-4.6", reasoning_effort="max"
@@ -595,9 +595,9 @@ class TestMcpTool:
     """The ``session_create`` tool frame, against an in-memory dashboard."""
 
     def _call(self, args, reply):
-        from kiro_crew.mcp_dashboard import TABLE
-        from kiro_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
-        from kiro_crew.mcp_tools.table import Caller, ToolContext
+        from aj_crew.mcp_dashboard import TABLE
+        from aj_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
+        from aj_crew.mcp_tools.table import Caller, ToolContext
 
         dash = InMemoryDashboardClient(
             {
@@ -614,7 +614,7 @@ class TestMcpTool:
 
     def test_forwards_reasoning_effort_and_names_what_was_inherited(self):
         out, body = self._call(
-            {"title": "w", "agent": "kirocrew-worker", "reasoning_effort": "low"},
+            {"title": "w", "agent": "ajcrew-worker", "reasoning_effort": "low"},
             {
                 "ok": True,
                 "target": "chat-9",
@@ -624,7 +624,7 @@ class TestMcpTool:
                 "inherited": ["model"],
             },
         )
-        from kiro_crew.mcp_dashboard_session_runs import _PROFILE_COPY_NOTE
+        from aj_crew.mcp_dashboard_session_runs import _PROFILE_COPY_NOTE
 
         assert body["reasoning_effort"] == "low"
         assert "model" not in body
@@ -638,28 +638,28 @@ class TestMcpTool:
         The child holds the pin on its own slot from birth, so a later profile edit
         never reaches it: the reply must say it was copied, never that it inherits.
         """
-        from kiro_crew.mcp_dashboard_session_runs import _PROFILE_COPY_NOTE
+        from aj_crew.mcp_dashboard_session_runs import _PROFILE_COPY_NOTE
 
         state, caller = _crewmate_caller(tmp_path, monkeypatch, model="claude-sonnet-4.6")
         created = _create(state, caller)
         assert created["inherited"] == ["model"]
         assert state.get_slot(created["target"]).model == "claude-sonnet-4.6"
 
-        out, _ = self._call({"title": "w", "agent": "kirocrew-worker"}, created)
+        out, _ = self._call({"title": "w", "agent": "ajcrew-worker"}, created)
 
         assert f"on model `claude-sonnet-4.6` ({_PROFILE_COPY_NOTE}: model)" in out
         assert "inherit" not in out.lower()
 
     def test_a_profile_effort_reads_as_copied_at_creation(self, tmp_path, monkeypatch):
         """The same for a crewmate that pins only its reasoning effort."""
-        from kiro_crew.mcp_dashboard_session_runs import _PROFILE_COPY_NOTE
+        from aj_crew.mcp_dashboard_session_runs import _PROFILE_COPY_NOTE
 
         state, caller = _crewmate_caller(tmp_path, monkeypatch, reasoning_effort="high")
         created = _create(state, caller)
         assert created["inherited"] == ["reasoning_effort"]
         assert state.get_slot(created["target"]).reasoning_effort == "high"
 
-        out, _ = self._call({"title": "w", "agent": "kirocrew-worker"}, created)
+        out, _ = self._call({"title": "w", "agent": "ajcrew-worker"}, created)
 
         assert f"at reasoning effort `high` ({_PROFILE_COPY_NOTE}: reasoning_effort)" in out
         assert "inherit" not in out.lower()
@@ -670,27 +670,27 @@ class TestMcpTool:
         The child follows the default, so the reply goes straight from the title to
         the empty-session line, with no model clause and no copy note.
         """
-        from kiro_crew.mcp_dashboard_session_runs import _PROFILE_COPY_NOTE
+        from aj_crew.mcp_dashboard_session_runs import _PROFILE_COPY_NOTE
 
         state, caller = _crewmate_caller(tmp_path, monkeypatch)
         created = _create(state, caller)
         assert "inherited" not in created
 
-        out, _ = self._call({"title": "w", "agent": "kirocrew-worker"}, created)
+        out, _ = self._call({"title": "w", "agent": "ajcrew-worker"}, created)
 
         assert f"Opened `{created['target']}` ({created['title']}). It is empty" in out
         assert _PROFILE_COPY_NOTE not in out
 
     def test_an_omitted_effort_is_not_sent(self):
         out, body = self._call(
-            {"title": "w", "agent": "kirocrew-worker"},
+            {"title": "w", "agent": "ajcrew-worker"},
             {"ok": True, "target": "chat-9", "title": "w"},
         )
         assert "reasoning_effort" not in body
         assert "inherited" not in out
 
     def test_the_schema_bounds_the_level(self):
-        from kiro_crew.validation import SESSION_CREATE_SCHEMA, ValidationError, validate_tool_args
+        from aj_crew.validation import SESSION_CREATE_SCHEMA, ValidationError, validate_tool_args
 
         assert (
             validate_tool_args({"reasoning_effort": "high"}, SESSION_CREATE_SCHEMA)[
@@ -709,15 +709,15 @@ class TestProfileWritesTheWorkerPair:
     @pytest.fixture(autouse=True)
     def _owner_caller(self, _floor_monkeypatch):
         _floor_monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             lambda request: True,
         )
 
     @pytest.fixture()
     def seeded_agent(self):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["existing"] = KiroCrewAgentConfig(
-            kiro_agent="kirocrew", workspace="default", memory_store="default"
+        cfg = AjCrewConfig.load()
+        cfg.agents["existing"] = AjCrewAgentConfig(
+            kiro_agent="ajcrew", workspace="default", memory_store="default"
         )
         cfg.save()
         return "existing"
@@ -726,10 +726,10 @@ class TestProfileWritesTheWorkerPair:
     def _app():
         from aiohttp import web
 
-        from kiro_crew.dashboard.handlers import api_kirocrew_agent_update
+        from aj_crew.dashboard.handlers import api_ajcrew_agent_update
 
         app = web.Application()
-        app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+        app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
         return app
 
     @pytest.mark.asyncio
@@ -743,7 +743,7 @@ class TestProfileWritesTheWorkerPair:
             )
             assert resp.status == 200, await resp.text()
 
-        stored = KiroCrewConfig.load().agents[seeded_agent]
+        stored = AjCrewConfig.load().agents[seeded_agent]
         # "auto" is a pin here, where `model` would have folded it to "".
         assert stored.worker_model == "auto"
         assert stored.worker_reasoning_effort == "low"
@@ -764,7 +764,7 @@ class TestProfileWritesTheWorkerPair:
             )
             assert resp.status == 200
 
-        stored = KiroCrewConfig.load().agents[seeded_agent]
+        stored = AjCrewConfig.load().agents[seeded_agent]
         assert stored.worker_model == ""
         assert stored.worker_reasoning_effort == ""
 
@@ -787,7 +787,7 @@ class TestProfileWritesTheWorkerPair:
             assert resp.status == 400
             assert (await resp.json())["code"] == code
 
-        stored = KiroCrewConfig.load().agents[seeded_agent]
+        stored = AjCrewConfig.load().agents[seeded_agent]
         assert stored.worker_model == ""
         assert stored.worker_reasoning_effort == ""
         assert stored.workspace == "default"
@@ -802,7 +802,7 @@ class TestRosterShipsTheWorkerPair:
         from aiohttp import web
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.dashboard.handlers.members import api_members
+        from aj_crew.dashboard.handlers.members import api_members
 
         _crewmate_home(tmp_path, monkeypatch, worker_model="auto", worker_reasoning_effort="low")
         app = web.Application()
@@ -824,18 +824,18 @@ class TestWorkerSessionDefaults:
     """The resolver the create reads, on its own."""
 
     def test_nothing_set_pins_nothing(self):
-        assert worker_session_defaults(KiroCrewAgentConfig()) == ("", "")
+        assert worker_session_defaults(AjCrewAgentConfig()) == ("", "")
 
     def test_the_own_pair_is_the_fallback(self):
-        crew = KiroCrewAgentConfig(model="claude-opus-4.6", reasoning_effort="high")
+        crew = AjCrewAgentConfig(model="claude-opus-4.6", reasoning_effort="high")
         assert worker_session_defaults(crew) == ("claude-opus-4.6", "high")
 
     def test_the_own_models_auto_is_inherit_but_the_worker_models_is_a_pin(self):
-        assert worker_session_defaults(KiroCrewAgentConfig(model="auto")) == ("", "")
-        assert worker_session_defaults(KiroCrewAgentConfig(worker_model="auto")) == ("auto", "")
+        assert worker_session_defaults(AjCrewAgentConfig(model="auto")) == ("", "")
+        assert worker_session_defaults(AjCrewAgentConfig(worker_model="auto")) == ("auto", "")
 
     def test_the_worker_pair_wins(self):
-        crew = KiroCrewAgentConfig(
+        crew = AjCrewAgentConfig(
             model="claude-opus-4.6",
             reasoning_effort="high",
             worker_model=" claude-haiku-4.5 ",
@@ -844,13 +844,13 @@ class TestWorkerSessionDefaults:
         assert worker_session_defaults(crew) == ("claude-haiku-4.5", "low")
 
     def test_the_own_effort_carries_only_while_workers_run_the_own_model(self):
-        own = KiroCrewAgentConfig(model="claude-opus-4.6", reasoning_effort="high")
+        own = AjCrewAgentConfig(model="claude-opus-4.6", reasoning_effort="high")
         assert worker_session_defaults(own) == ("claude-opus-4.6", "high")
-        other = KiroCrewAgentConfig(
+        other = AjCrewAgentConfig(
             model="claude-opus-4.6", reasoning_effort="high", worker_model="auto"
         )
         assert worker_session_defaults(other) == ("auto", "")
-        effort_only = KiroCrewAgentConfig(
+        effort_only = AjCrewAgentConfig(
             model="claude-opus-4.6", reasoning_effort="high", worker_reasoning_effort="low"
         )
         assert worker_session_defaults(effort_only) == ("claude-opus-4.6", "low")
@@ -864,7 +864,7 @@ class TestWorkerSessionDefaults:
             worker_model="  auto ",
             worker_reasoning_effort="sometimes",
         )
-        crew = KiroCrewConfig.load().agents[_MEMBER]
+        crew = AjCrewConfig.load().agents[_MEMBER]
         assert crew.worker_model == "auto"
         assert crew.worker_reasoning_effort == ""
         # "auto" workers take no effort of their own: the typo falls to "", not to "high".

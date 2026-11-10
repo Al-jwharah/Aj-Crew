@@ -20,11 +20,11 @@ from test_chat_agent_selection import _turn_state
 from turn_harness import ScriptedProvider, SlotSpec, TurnScript, run_turn
 
 from conftest import requires_symlinks
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_CODEX, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.apps import bridges, manager
-from kiro_crew.apps.agent_launch import app_agent_launch_name
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.agent_sdk.backends import ACP_BACKEND_CODEX, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.apps import bridges, manager
+from aj_crew.apps.agent_launch import app_agent_launch_name
+from aj_crew.config.loader import AjCrewConfig
 
 
 class _KiroProvider(ScriptedProvider):
@@ -128,7 +128,7 @@ def test_a_refused_registered_spec_link_is_reported_not_followed(tmp_path, monke
     # The screen runs BEFORE the hardened reader: the reader's resolve() would
     # follow the link to wherever it points (a UNC share is probed by the resolve
     # itself on Windows), so a link the screen refuses is reported and never read.
-    from kiro_crew import agent_discovery, hooks
+    from aj_crew import agent_discovery, hooks
 
     agents_dir = _agents(tmp_path, monkeypatch)
     registered = agents_dir / "pr-bulk-ops--deploy.json"
@@ -152,7 +152,7 @@ def test_a_refused_registered_spec_link_is_reported_not_followed(tmp_path, monke
 
 
 def test_a_refused_manifest_link_falls_back_to_the_app_id(tmp_path, monkeypatch):
-    from kiro_crew import agent_discovery, hooks
+    from aj_crew import agent_discovery, hooks
 
     _agents(tmp_path, monkeypatch)
 
@@ -177,7 +177,7 @@ def test_a_differently_named_user_level_competitor_is_refused(tmp_path, monkeypa
 
 
 def test_an_unlistable_user_level_directory_is_unverifiable(tmp_path, monkeypatch):
-    from kiro_crew.acp import managed_agent_shadow
+    from aj_crew.acp import managed_agent_shadow
 
     agents_dir = _agents(tmp_path, monkeypatch)
     nested = agents_dir / "team"
@@ -198,7 +198,7 @@ def test_an_unlistable_user_level_directory_is_unverifiable(tmp_path, monkeypatc
 
 @pytest.mark.parametrize("limit", ["_MAX_SPEC_FILES", "_MAX_SPEC_DIRS"])
 def test_user_level_scan_limits_are_unverifiable(tmp_path, monkeypatch, limit):
-    from kiro_crew.acp import managed_agent_shadow
+    from aj_crew.acp import managed_agent_shadow
 
     agents_dir = _agents(tmp_path, monkeypatch)
     nested = agents_dir / "team"
@@ -233,7 +233,7 @@ def test_display_name_is_read_from_the_manifest(tmp_path, monkeypatch):
 
 
 def test_display_name_refuses_a_manifest_symlinked_to_a_sensitive_file(tmp_path, monkeypatch):
-    from kiro_crew import agent_discovery
+    from aj_crew import agent_discovery
 
     secret = tmp_path / "credentials"
     secret.write_text('{"displayName": "LEAKED"}')
@@ -259,7 +259,7 @@ def test_an_unregistered_app_agent_is_refused(tmp_path, monkeypatch):
 async def test_the_turn_is_refused_before_the_prompt_reaches_the_provider(
     tmp_path, monkeypatch, refused, provider
 ):
-    agent = KiroCrewConfig.load().default_agent
+    agent = AjCrewConfig.load().default_agent
     # The app's registered spec, which a kiro-cli turn launches a copy of.
     agents_dir = tmp_path / "kiro-agents"
     agents_dir.mkdir()
@@ -304,7 +304,7 @@ async def test_the_turn_is_refused_before_the_prompt_reaches_the_provider(
 
 
 def _bind_to_default_agent(ctx):
-    agent = KiroCrewConfig.load().default_agent
+    agent = AjCrewConfig.load().default_agent
     ctx.slot.agent = agent
     ctx.slot.app_agent_owner = f"pr-bulk-ops/{agent}"
 
@@ -388,7 +388,7 @@ async def test_on_an_allowed_backend_the_turn_runs_only_while_the_namespaced_spe
     # The real check, on each allowed backend: the turn runs while the app's own
     # ``<app>--<agent>.json`` is the only spec declaring the name, and is refused
     # once a second spec in ~/.kiro/agents declares it too.
-    agent = KiroCrewConfig.load().default_agent
+    agent = AjCrewConfig.load().default_agent
     agents_dir = tmp_path / "kiro-agents"
     agents_dir.mkdir()
     (agents_dir / f"pr-bulk-ops--{agent}.json").write_text(json.dumps({"name": agent}))
@@ -409,7 +409,7 @@ def test_kas_is_handed_the_namespaced_spec_over_a_same_named_project_spec(tmp_pa
     # KAS takes no ``--agent`` name: Crew reads the spec it sends. A name the user
     # level declares resolves to the user-level spec whatever the checkout holds, so
     # the app's ``<app>--<agent>.json`` is the spec KAS runs.
-    from kiro_crew.acp.harness.kas import resolve_projected_spec
+    from aj_crew.acp.harness.kas import resolve_projected_spec
 
     agents_dir = tmp_path / "kiro-agents"
     agents_dir.mkdir()
@@ -481,12 +481,12 @@ async def test_create_stamps_the_owner_on_a_template_pick(tmp_path, monkeypatch)
     assert state._slots["owned"].app_agent_owner == f"pr-bulk-ops/{TEMPLATE}"
     # Durable at birth: no title or folder rides this create, and nothing later
     # writes the binding, so a restart would otherwise drop it.
-    from kiro_crew.dashboard.chat_persistence import slot_history_key
+    from aj_crew.dashboard.chat_persistence import slot_history_key
 
     meta = state.conversation_log.get_metadata(slot_history_key(state._slots["owned"]))
     assert meta.get("app_agent_owner") == f"pr-bulk-ops/{TEMPLATE}"
     # And the restored slot carries it, so its turns stay checked after a restart.
-    from kiro_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
+    from aj_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
 
     state._slots.pop("owned")
     restored = _rehydrate_slot_from_history(state, "owned")
@@ -499,7 +499,7 @@ async def test_create_stamps_the_owner_on_a_template_pick(tmp_path, monkeypatch)
 async def test_create_fails_when_the_owner_cannot_be_persisted(tmp_path, monkeypatch, outcome):
     from test_chat_agent_selection import TEMPLATE, _template_chat
 
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state, _slot, _store = await _template_chat(tmp_path, monkeypatch, first_turn=False)
 
@@ -544,7 +544,7 @@ async def test_a_create_cancelled_mid_write_retracts_the_newborn(tmp_path, monke
     import aiohttp
     from test_chat_agent_selection import TEMPLATE, _template_chat
 
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state, _slot, _store = await _template_chat(tmp_path, monkeypatch, first_turn=False)
 
@@ -573,7 +573,7 @@ async def test_a_fork_keeps_the_app_agent_binding(tmp_path, monkeypatch):
     # per-turn shadow check keys on.
     from test_chat_fork_error_codes import _fork, _seeded_state
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seeded_state(tmp_path)
     parent = state._slots["forkable"]
     parent.agent = "deploy"
@@ -608,8 +608,8 @@ def test_an_app_owned_slot_is_never_eagerly_started(monkeypatch):
     # A speculative start would resolve the agent before the per-turn check runs.
     from types import SimpleNamespace
 
-    from kiro_crew.config import live
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.config import live
+    from aj_crew.dashboard import chat_runner
 
     enabled = SimpleNamespace(session=SimpleNamespace(eager_spawn=True))
     monkeypatch.setattr(live, "snapshot", lambda: enabled)
@@ -627,8 +627,8 @@ def test_a_switched_app_owned_slot_pre_warms_again(monkeypatch):
     # persisted binding would cold-start every first turn forever.
     from types import SimpleNamespace
 
-    from kiro_crew.config import live
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.config import live
+    from aj_crew.dashboard import chat_runner
 
     enabled = SimpleNamespace(session=SimpleNamespace(eager_spawn=True))
     monkeypatch.setattr(live, "snapshot", lambda: enabled)
@@ -641,7 +641,7 @@ def test_a_switched_app_owned_slot_pre_warms_again(monkeypatch):
     monkeypatch.setattr(chat_runner, "_eager_spawn", fake_eager_spawn)
     monkeypatch.setattr(chat_runner.asyncio, "create_task", lambda coro: (coro.close(), "task")[1])
     slot = SimpleNamespace(
-        key="owned", agent="kirocrew", app_agent_owner="pr-bulk-ops/deploy", _eager_spawn_task=None
+        key="owned", agent="ajcrew", app_agent_owner="pr-bulk-ops/deploy", _eager_spawn_task=None
     )
     assert chat_runner.app_agent_binding_applies(slot) is False
     assert chat_runner.schedule_eager_spawn(SimpleNamespace(), slot) == "task"
@@ -652,7 +652,7 @@ async def test_a_refusal_retires_a_session_registered_under_the_key():
     import asyncio
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     removed = []
 
@@ -676,17 +676,17 @@ def test_a_skill_view_shaped_agent_name_is_refused(tmp_path, monkeypatch):
     # so even a registered, unique spec under that name is not the app's to run.
     agents_dir = tmp_path / "kiro-agents"
     agents_dir.mkdir()
-    view = "kirocrew-skill-view-0123456789abcdef01234567"
+    view = "ajcrew-skill-view-0123456789abcdef01234567"
     (agents_dir / f"pr-bulk-ops--{view}.json").write_text(f'{{"name": "{view}"}}')
     monkeypatch.setattr(bridges, "KIRO_AGENTS_DIR", agents_dir)
     refusal = manager.app_command_agent_refusal("pr-bulk-ops", view)
-    assert refusal and "a name Kiro Crew reserves" in refusal
+    assert refusal and "a name Aj Crew reserves" in refusal
 
 
 def test_the_manifest_never_vouches_for_a_skill_view_name(tmp_path):
-    from kiro_crew.apps.manifest import contain_command_agents
+    from aj_crew.apps.manifest import contain_command_agents
 
-    view = "kirocrew-skill-view-0123456789abcdef01234567"
+    view = "ajcrew-skill-view-0123456789abcdef01234567"
     (tmp_path / "agents").mkdir()
     (tmp_path / "agents" / "x.json").write_text(f'{{"name": "{view}"}}')
     data = {"contributes": {"commands": [{"id": "c", "agent": view}]}}

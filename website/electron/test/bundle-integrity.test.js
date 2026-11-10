@@ -31,7 +31,7 @@ ${childOutput}`,
     bundled: true,
   });
 
-const ROOT = "/mock/backend-dist/kirocrew-backend";
+const ROOT = "/mock/backend-dist/ajcrew-backend";
 const WIN_PY = path.join(ROOT, "python.exe");
 
 // A fully-extracted package: the dir AND the __init__.py that makes it
@@ -90,18 +90,18 @@ describe("interpreter detection", () => {
 
   it("judges a POSIX tree (bin/python3.12)", () => {
     const bin = path.join(ROOT, "bin");
-    const fs = fakeFs([bin], { [bin]: ["python3.12", "kirocrew"] });
+    const fs = fakeFs([bin], { [bin]: ["python3.12", "ajcrew"] });
     assert.deepStrictEqual(missingFor(fs, ROOT), ["Lib"]);
   });
 
   it("stays silent on the legacy flat layout (frozen exe, no interpreter tree)", () => {
-    const flat = path.join(ROOT, "kirocrew-backend");
+    const flat = path.join(ROOT, "ajcrew-backend");
     assert.deepStrictEqual(missingFor(fakeFs([flat]), ROOT), []);
   });
 
   it("stays silent on a bin/ dir holding no python3 binary", () => {
     const bin = path.join(ROOT, "bin");
-    const fs = fakeFs([bin], { [bin]: ["kirocrew"] });
+    const fs = fakeFs([bin], { [bin]: ["ajcrew"] });
     assert.deepStrictEqual(missingFor(fs, ROOT), []);
   });
 });
@@ -145,7 +145,7 @@ describe("stdlib layout resolution", () => {
     const bin = path.join(ROOT, "bin");
     const fs = fakeFsCaseInsensitive(
       [bin, lib, py, ...allPkgPaths(py)],
-      { [lib]: ["python3.12", "pkgconfig"], [bin]: ["python3.12", "kirocrew"] }
+      { [lib]: ["python3.12", "pkgconfig"], [bin]: ["python3.12", "ajcrew"] }
     );
     assert.deepStrictEqual(missingFor(fs, ROOT), []);
   });
@@ -174,14 +174,14 @@ describe("findMissingBundleParts", () => {
     const py = path.join(lib, "python3.12");
     const bin = path.join(ROOT, "bin");
     const existing = [bin, lib, py, ...allPkgPaths(py)];
-    const fs = fakeFs(existing, { [lib]: ["python3.12"], [bin]: ["python3.12", "kirocrew"] });
+    const fs = fakeFs(existing, { [lib]: ["python3.12"], [bin]: ["python3.12", "ajcrew"] });
     assert.deepStrictEqual(findMissingBundleParts(fs, path, ROOT), []);
   });
 
   // The gate must stay silent on trees it does not model, or it would refuse a
   // launch that would actually have worked.
   it("reports nothing for the legacy flat layout (no interpreter tree to check)", () => {
-    const flat = path.join(ROOT, "kirocrew-backend");
+    const flat = path.join(ROOT, "ajcrew-backend");
     assert.deepStrictEqual(findMissingBundleParts(fakeFs([flat]), path, ROOT), []);
   });
 
@@ -249,7 +249,7 @@ describe("crash matching (via shouldReclassifyAsInstalling)", () => {
   // The exact traceback this whole change exists to explain.
   const REAL_LOG = [
     "Traceback (most recent call last):",
-    '  File "...\\Lib\\site-packages\\kiro_crew\\platform_compat.py", line 29, in <module>',
+    '  File "...\\Lib\\site-packages\\aj_crew\\platform_compat.py", line 29, in <module>',
     "    from pathlib import Path",
     '  File "...\\Lib\\pathlib.py", line 20, in <module>',
     "    from urllib.parse import quote_from_bytes as urlquote_from_bytes",
@@ -281,7 +281,7 @@ describe("crash matching (via shouldReclassifyAsInstalling)", () => {
   });
 
   it("does not excuse a missing first-party module", () => {
-    assert.equal(crashIsInstalling("ModuleNotFoundError: No module named 'kiro_crew'"), false);
+    assert.equal(crashIsInstalling("ModuleNotFoundError: No module named 'aj_crew'"), false);
   });
 
   // A dotted stdlib name means the package landed but a submodule had not —
@@ -295,7 +295,7 @@ describe("crash matching (via shouldReclassifyAsInstalling)", () => {
 
   it("still refuses a dotted NON-stdlib name", () => {
     assert.equal(
-      crashIsInstalling("ModuleNotFoundError: No module named 'kiro_crew.acp'"),
+      crashIsInstalling("ModuleNotFoundError: No module named 'aj_crew.acp'"),
       false
     );
   });
@@ -317,7 +317,7 @@ describe("crash matching (via shouldReclassifyAsInstalling)", () => {
   it("does not excuse a partially initialized NON-stdlib package", () => {
     assert.equal(
       crashIsInstalling(
-        "ImportError: cannot import name 'x' from partially initialized module 'kiro_crew'"
+        "ImportError: cannot import name 'x' from partially initialized module 'aj_crew'"
       ),
       false
     );
@@ -517,9 +517,9 @@ describe("describeIncompleteBundle", () => {
     for (const options of [undefined, { autoRetry: true }]) {
       const msg = describeIncompleteBundle(["urllib"], options);
       assert.match(msg, /If the install is still unfinished after five minutes/);
-      assert.match(msg, /quit and reopen Kiro Crew \(the Quit button below\)/);
+      assert.match(msg, /quit and reopen Aj Crew \(the Quit button below\)/);
       assert.ok(!/restart the app/.test(msg), `names a control the dialog lacks: ${msg}`);
-      assert.match(msg, /reinstall the Kiro Crew app/, "says what 'reinstall' means");
+      assert.match(msg, /reinstall the Aj Crew app/, "says what 'reinstall' means");
     }
   });
 });
@@ -529,18 +529,18 @@ describe("describeIncompleteBundle", () => {
 // reopens, probe says complete... These cases mirror the launcher's two
 // refusal conditions and its "not a bundle" bypass.
 describe("launchBlockingBundleParts", () => {
-  const WIN_BIN = path.join(ROOT, "bin", "kirocrew.cmd");
-  const POSIX_BIN = path.join(ROOT, "bin", "kirocrew");
+  const WIN_BIN = path.join(ROOT, "bin", "ajcrew.cmd");
+  const POSIX_BIN = path.join(ROOT, "bin", "ajcrew");
   const POSIX_LIB = path.join(ROOT, "lib", "python3.12");
   const posixDirs = () => ({
-    [path.join(ROOT, "bin")]: ["python3", "kirocrew"],
+    [path.join(ROOT, "bin")]: ["python3", "ajcrew"],
     [path.join(ROOT, "lib")]: ["python3.12"],
   });
 
   it("is null for a launcher outside any bundled tree (unknown, not complete)", () => {
     const fs = fakeFs(completeWindows());
-    assert.equal(launchBlockingBundleParts(fs, path, "/usr/local/bin/kirocrew"), null);
-    assert.equal(launchBlockingBundleParts(fs, path, "kirocrew"), null);
+    assert.equal(launchBlockingBundleParts(fs, path, "/usr/local/bin/ajcrew"), null);
+    assert.equal(launchBlockingBundleParts(fs, path, "ajcrew"), null);
     assert.equal(launchBlockingBundleParts(fs, path, undefined), null);
   });
 
@@ -583,7 +583,7 @@ describe("launchBlockingBundleParts", () => {
     assert.deepEqual(launchBlockingBundleParts(fs, path, WIN_BIN), expected);
   });
 
-  it("derives the backend root from a POSIX bin/kirocrew launcher", () => {
+  it("derives the backend root from a POSIX bin/ajcrew launcher", () => {
     const partial = [
       path.join(ROOT, "bin"), path.join(ROOT, "lib"), POSIX_LIB,
       ...allPkgPaths(POSIX_LIB).filter((p) => !p.includes("urllib")),
@@ -599,9 +599,9 @@ describe("nextInstallingDialogState", () => {
   it("is complete only for an empty part list, and title and message both say so", () => {
     const state = nextInstallingDialogState([]);
     assert.equal(state.complete, true);
-    assert.equal(state.title, "Kiro Crew — installation finished");
+    assert.equal(state.title, "Aj Crew — installation finished");
     assert.match(state.message, /Installation finished/);
-    assert.match(state.message, /starting Kiro Crew/i);
+    assert.match(state.message, /starting Aj Crew/i);
   });
 
   it("carries the falling count while parts remain, in the auto-retry voice", () => {
@@ -637,7 +637,7 @@ describe("nextInstallingDialogState", () => {
       assert.equal(state.complete, false);
       assert.equal(state.title, PRUNED_DIALOG_TITLE);
       assert.equal(state.message, PRUNED_BACKEND_MESSAGE);
-      assert.match(state.message, /^Some of Kiro Crew's app files were removed/);
+      assert.match(state.message, /^Some of Aj Crew's app files were removed/);
       assert.ok(!/backend|Quit button below/.test(state.message), `developer wording leaked: ${state.message}`);
       assert.ok(!/backend/.test(state.title), `developer wording leaked: ${state.title}`);
       assert.ok(
@@ -646,7 +646,7 @@ describe("nextInstallingDialogState", () => {
       );
       assert.ok(!/being installed|five minutes|few minutes/.test(state.message), `install wait leaked: ${state.message}`);
       assert.ok(!/starts on its own|wait/i.test(state.message), `a second, waiting option leaked: ${state.message}`);
-      assert.match(state.message, /If it still doesn't start after reopening, reinstall Kiro Crew the same way you installed it; your chats and settings are kept\./);
+      assert.match(state.message, /If it still doesn't start after reopening, reinstall Aj Crew the same way you installed it; your chats and settings are kept\./);
     }
   });
 

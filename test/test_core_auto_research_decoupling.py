@@ -1,8 +1,8 @@
-"""GATE: Kiro Crew core does not depend on the Research Lab (``auto-research``) app's code.
+"""GATE: Aj Crew core does not depend on the Research Lab (``auto-research``) app's code.
 
 Research Lab is to leave this repository whole. That is only possible while nothing
-outside ``src/kiro_crew/apps/builtins/`` imports it. A core feature that needs to know
-something about the app's own slots asks a seam in :mod:`kiro_crew.apps.seams` (the
+outside ``src/aj_crew/apps/builtins/`` imports it. A core feature that needs to know
+something about the app's own slots asks a seam in :mod:`aj_crew.apps.seams` (the
 autonudge stop asks ``stopped_loop_tombstone``), and the app answers from its own
 ``seams.py``. The scans are the shared ones in
 ``test/core_app_independence.py``.
@@ -10,9 +10,9 @@ autonudge stop asks ``stopped_loop_tombstone``), and the app answers from its ow
 Two properties are pinned:
 
 1. **No core module or script imports the app.** Every module under
-   ``src/kiro_crew`` outside ``apps/builtins/``, and every script under
+   ``src/aj_crew`` outside ``apps/builtins/``, and every script under
    ``scripts/``, is parsed. ``import``, ``from ... import`` (relative ones
-   resolved), ``from kiro_crew.apps.builtins import auto_research``,
+   resolved), ``from aj_crew.apps.builtins import auto_research``,
    ``importlib.import_module`` and ``__import__`` with a literal name are all in
    scope, and the probes below fail if any of those forms stops being caught.
 2. **The strings that still name the app are a pinned, shrinking list.** A path
@@ -39,11 +39,11 @@ import pytest
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_test_core_auto_research_decoupling")
 
-APP_PACKAGE = "kiro_crew.apps.builtins.auto_research"
+APP_PACKAGE = "aj_crew.apps.builtins.auto_research"
 #: The package directory name and the app id: every spelling that addresses the app.
 APP_NAMES = ("auto_research", "auto-research")
 
-#: (path relative to ``src/kiro_crew``, the literal): the security-posture rows that
+#: (path relative to ``src/aj_crew``, the literal): the security-posture rows that
 #: classify the app's backend modules as the app's own HTTP/SSE surface rather than
 #: core egress. Each row is deleted together with the file it names.
 KNOWN_NAME_REFERENCES: frozenset[tuple[str, str]] = frozenset(
@@ -71,7 +71,7 @@ def test_no_core_module_or_script_imports_the_app(core_trees):
     offenders = independence.core_app_imports(core_trees, APP_PACKAGE)
     assert not offenders, (
         "core imports the Research Lab app; ask a seam in "
-        "kiro_crew.apps.seams instead:\n" + "\n".join(offenders)
+        "aj_crew.apps.seams instead:\n" + "\n".join(offenders)
     )
 
 
@@ -88,29 +88,29 @@ def test_the_strings_naming_the_app_are_the_pinned_list(core_trees):
     ("source", "importer", "is_package"),
     [
         (
-            "from kiro_crew.apps.builtins.auto_research.session_keys import is_owned_research_slot",
-            "kiro_crew.dashboard.x",
+            "from aj_crew.apps.builtins.auto_research.session_keys import is_owned_research_slot",
+            "aj_crew.dashboard.x",
             False,
         ),
-        ("import kiro_crew.apps.builtins.auto_research.handlers", "kiro_crew.x", False),
-        ("from kiro_crew.apps.builtins import auto_research", "kiro_crew.x", False),
-        ("from ..apps.builtins.auto_research import session_keys", "kiro_crew.dashboard.y", False),
-        ("from .builtins.auto_research import session_keys", "kiro_crew.apps.y", False),
-        ("from .builtins import auto_research", "kiro_crew.apps", True),
+        ("import aj_crew.apps.builtins.auto_research.handlers", "aj_crew.x", False),
+        ("from aj_crew.apps.builtins import auto_research", "aj_crew.x", False),
+        ("from ..apps.builtins.auto_research import session_keys", "aj_crew.dashboard.y", False),
+        ("from .builtins.auto_research import session_keys", "aj_crew.apps.y", False),
+        ("from .builtins import auto_research", "aj_crew.apps", True),
         (
             "import importlib\n"
-            "importlib.import_module('kiro_crew.apps.builtins.auto_research.session_keys')",
-            "kiro_crew.x",
+            "importlib.import_module('aj_crew.apps.builtins.auto_research.session_keys')",
+            "aj_crew.x",
             False,
         ),
-        ("__import__('kiro_crew.apps.builtins.auto_research')", "kiro_crew.x", False),
+        ("__import__('aj_crew.apps.builtins.auto_research')", "aj_crew.x", False),
         (
             "from typing import TYPE_CHECKING\n"
             "if TYPE_CHECKING:\n"
-            "    from kiro_crew.apps.builtins.auto_research.session_keys import (\n"
+            "    from aj_crew.apps.builtins.auto_research.session_keys import (\n"
             "        is_owned_research_slot,\n"
             "    )",
-            "kiro_crew.x",
+            "aj_crew.x",
             False,
         ),
     ],
@@ -122,13 +122,13 @@ def test_the_scan_catches_every_import_form(source, importer, is_package):
 @pytest.mark.parametrize(
     "source",
     [
-        "from kiro_crew.apps import seams",
-        "from kiro_crew.apps.builtins import BUILTIN_NAMES",
-        "import kiro_crew.apps.builtins.auto_research_other",
+        "from aj_crew.apps import seams",
+        "from aj_crew.apps.builtins import BUILTIN_NAMES",
+        "import aj_crew.apps.builtins.auto_research_other",
     ],
 )
 def test_the_scan_leaves_other_imports_alone(source):
-    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "kiro_crew.x", False)
+    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "aj_crew.x", False)
 
 
 def test_the_string_scan_skips_docstrings_but_not_paths_or_ids():

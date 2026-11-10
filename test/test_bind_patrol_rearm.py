@@ -27,10 +27,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import autonudge, autonudge_authz, conductor_patrol, mcp_core, mcp_work
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.dashboard.handlers import work_ledger as routes
-from kiro_crew.monitoring.models import MonitorOutcome
+from aj_crew import autonudge, autonudge_authz, conductor_patrol, mcp_core, mcp_work
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.dashboard.handlers import work_ledger as routes
+from aj_crew.monitoring.models import MonitorOutcome
 
 WORKER = "chat-r-worker"
 DASHBOARD = "chat-r-conductor"
@@ -80,7 +80,7 @@ _SLOTS: dict[str, _Slot] = {}
 
 @pytest.fixture(autouse=True)
 def _env(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _SLOTS.clear()
 
     async def _recognized(*a: Any, **k: Any) -> None:

@@ -24,16 +24,16 @@ from crew_log_fold_eager_helpers import (  # noqa: F401 -- the autouse fixture r
     _work_entry,
 )
 
-from kiro_crew.crew_log import bus, eager
-from kiro_crew.dashboard import revocation_gen, token_auth
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.dashboard.handlers.crew_log import SLOT_FRAME, CrewLogPublisher
-from kiro_crew.dashboard.websocket_hub import (
+from aj_crew.crew_log import bus, eager
+from aj_crew.dashboard import revocation_gen, token_auth
+from aj_crew.dashboard.handlers import updates
+from aj_crew.dashboard.handlers.crew_log import SLOT_FRAME, CrewLogPublisher
+from aj_crew.dashboard.websocket_hub import (
     FOLD_DELTA_CAPABILITY,
     FOLD_DELTA_WS_FLAG,
     FOLD_HELLO_FRAME,
 )
-from kiro_crew.testing.wait import async_wait_until, finished
+from aj_crew.testing.wait import async_wait_until, finished
 
 _FENCE = "fold-watch-fence"
 
@@ -41,8 +41,8 @@ _FENCE = "fold-watch-fence"
 @pytest.fixture
 def e2e_state(tmp_path, monkeypatch):
     bus.reset_for_tests()
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(token_auth, "_get_secret", lambda: b"fold-watch-test-signing-key")
     monkeypatch.setattr(token_auth, "_state", token_auth.TokenStateManager())
     monkeypatch.setattr(token_auth, "_app_perms_cache", {})
@@ -50,9 +50,9 @@ def e2e_state(tmp_path, monkeypatch):
     monkeypatch.setattr(revocation_gen, "_gen", 0)
     stopped = asyncio.Event()
     monkeypatch.setattr(updates, "shutdown_event", stopped)
-    monkeypatch.setattr("kiro_crew.dashboard.ws.shutdown_event", stopped)
+    monkeypatch.setattr("aj_crew.dashboard.ws.shutdown_event", stopped)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.ws.load_declared_events_for_connect",
+        "aj_crew.dashboard.ws.load_declared_events_for_connect",
         lambda _app: (True, frozenset()),
     )
     st = _make_state(tmp_path)
@@ -88,7 +88,7 @@ def _slot_frames(frames: list[dict]) -> list[tuple[str, str]]:
 async def test_a_tab_declaring_fold_delta_on_todays_handler_still_gets_every_board(
     e2e_state, monkeypatch
 ):
-    from kiro_crew.dashboard.ws import api_ws
+    from aj_crew.dashboard.ws import api_ws
 
     # An older gateway never flags the socket: the handler asks the state, and this
     # one answers as a state without the capability would.

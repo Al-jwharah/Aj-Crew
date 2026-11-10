@@ -1,15 +1,15 @@
-"""``kiro_crew.subagent_persistence`` keeps the patch seams and the surface the one module had.
+"""``aj_crew.subagent_persistence`` keeps the patch seams and the surface the one module had.
 
-``kiro_crew.subagent_persistence`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the owners in
+``aj_crew.subagent_persistence`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the owners in
 its ``_OWNERS``, lowest layer first: ``subagent_persistence_layout``, ``subagent_persistence_dismissals``, ``subagent_persistence_state`` and ``subagent_persistence_tombstones``. It keeps two of the readers that sweep every
 run folder: the panel records (:func:`read_panel_records`) and the stale-tombstone prune. Every name an owner defines
-still resolves as ``kiro_crew.subagent_persistence.<name>``.
+still resolves as ``aj_crew.subagent_persistence.<name>``.
 
 ``test/test_facade_mirror_guards.py`` holds every mirrored facade to the shared rules. These
 tests pin what is particular to this one: every name the test trees patch through it reaches
 every module holding it, and the scan finds the seams it is known to have; the owner list and
 its layering; that every public name the module held before the split still type-checks
-through it; that the owners log as ``kiro_crew.subagent_persistence``; that
+through it; that the owners log as ``aj_crew.subagent_persistence``; that
 ``RetentionPromotionResult`` keeps the facade as its module; that a write of
 ``os`` or of the registry root through the facade reaches the code reading it;
 and the frozen import inventory that stands in for the F401 check
@@ -33,7 +33,7 @@ import pytest
 import source_corpus
 import test_campaign_facades_base_public_names as base_names
 
-from kiro_crew import _facade_mirror, subagent_persistence
+from aj_crew import _facade_mirror, subagent_persistence
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_subagent_persistence_facade")
 
@@ -52,12 +52,12 @@ SHARED_FACADE_CHECKS = (
     "logger_scan_can_fail",
 )
 
-FACADE = "kiro_crew.subagent_persistence"
+FACADE = "aj_crew.subagent_persistence"
 OWNERS = (
-    "kiro_crew.subagent_persistence_layout",
-    "kiro_crew.subagent_persistence_dismissals",
-    "kiro_crew.subagent_persistence_state",
-    "kiro_crew.subagent_persistence_tombstones",
+    "aj_crew.subagent_persistence_layout",
+    "aj_crew.subagent_persistence_dismissals",
+    "aj_crew.subagent_persistence_state",
+    "aj_crew.subagent_persistence_tombstones",
 )
 
 #: Names the test trees are known to patch through the facade, one or more per kind of
@@ -88,8 +88,8 @@ _KNOWN_SEAMS = frozenset(
 
 #: A test file worth parsing spells the facade itself, never only a ``subagent_persistence_*`` owner.
 _SPELLS_THE_FACADE = re.compile(
-    r"kiro_crew\.subagent_persistence(?![\w])"
-    r"|from\s+kiro_crew\s+import\s+(?:\([^)]*?\bsubagent_persistence\b(?!_)|[^\n]*?\bsubagent_persistence\b(?!_))"
+    r"aj_crew\.subagent_persistence(?![\w])"
+    r"|from\s+aj_crew\s+import\s+(?:\([^)]*?\bsubagent_persistence\b(?!_)|[^\n]*?\bsubagent_persistence\b(?!_))"
 )
 
 #: Every name the facade's import statements bound before its owners moved out. They stay
@@ -138,34 +138,34 @@ def patched_names(source: str) -> set[str]:
 #: Each spelling the patch scan must read, and each it must skip, keyed by case id.
 _SPELLING_CASES = {
     "monkeypatch-from-import": (
-        "from kiro_crew import subagent_persistence\n"
+        "from aj_crew import subagent_persistence\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(subagent_persistence, 'A', 1)\n",
         {"A"},
     ),
     "patch-object-import-as": (
-        "import kiro_crew.subagent_persistence as facade\n"
+        "import aj_crew.subagent_persistence as facade\n"
         "from unittest import mock\n"
         "def t():\n    with mock.patch.object(facade, 'B'):\n        pass\n",
         {"B"},
     ),
     "mock-patch-string": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.subagent_persistence.C'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.subagent_persistence.C'):\n        pass\n",
         {"C"},
     ),
     "dotted-setattr": (
-        "def t(monkeypatch):\n    monkeypatch.setattr('kiro_crew.subagent_persistence.D', 1)\n",
+        "def t(monkeypatch):\n    monkeypatch.setattr('aj_crew.subagent_persistence.D', 1)\n",
         {"D"},
     ),
     # An owner is not the facade, even bound under the facade's name.
     "owner-named-like-the-facade": (
-        "from kiro_crew import subagent_persistence_layout as subagent_persistence\n"
+        "from aj_crew import subagent_persistence_layout as subagent_persistence\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(subagent_persistence, 'X', 1)\n",
         set(),
     ),
     "owner-string": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.subagent_persistence_tombstones.Y'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.subagent_persistence_tombstones.Y'):\n        pass\n",
         set(),
     ),
 }
@@ -235,7 +235,7 @@ def test_a_facade_write_of_the_os_module_reaches_every_reader() -> None:
     lives in ``subagent_persistence_tombstones``: the swap must land there."""
     sentinel = object()
     readers = [m for m in _family() if "os" in vars(m)]
-    assert {m.__name__ for m in readers} >= {FACADE, "kiro_crew.subagent_persistence_tombstones"}
+    assert {m.__name__ for m in readers} >= {FACADE, "aj_crew.subagent_persistence_tombstones"}
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(subagent_persistence, "os", sentinel)
         assert [m.__name__ for m in readers if vars(m)["os"] is not sentinel] == []
@@ -249,10 +249,10 @@ def test_a_facade_write_of_the_registry_root_is_the_root_every_owner_resolves(
     registry root, every run folder and the facade's own sweep must resolve under it."""
     root = tmp_path / "subagents"
     with pytest.MonkeyPatch.context() as patch:
-        patch.setattr("kiro_crew.subagent_persistence._SUBAGENTS_DIR", root)
+        patch.setattr("aj_crew.subagent_persistence._SUBAGENTS_DIR", root)
         assert subagent_persistence._subagents_dir() == root
         assert subagent_persistence._agent_dir("abc123").parent == root.resolve()
-        layout = sys.modules["kiro_crew.subagent_persistence_layout"]
+        layout = sys.modules["aj_crew.subagent_persistence_layout"]
         assert layout._SUBAGENTS_DIR == root
 
 
@@ -274,7 +274,7 @@ def test_the_mirror_indexes_exactly_the_owners_with_no_exclusion_and_no_forward(
 def test_the_owners_are_every_subagent_persistence_sibling() -> None:
     assert subagent_persistence.__file__ is not None
     siblings = sorted(
-        f"kiro_crew.{path.stem}"
+        f"aj_crew.{path.stem}"
         for path in Path(subagent_persistence.__file__).parent.glob("subagent_persistence_*.py")
     )
     assert siblings == sorted(OWNERS)
@@ -306,8 +306,8 @@ def _layering_gaps(trees: dict[str, ast.Module]) -> dict[str, list[str]]:
 
 def test_the_layering_check_can_fail() -> None:
     trees = {name: _tree(sys.modules[name]) for name in OWNERS}
-    trees[OWNERS[0]] = ast.parse("from kiro_crew.subagent_persistence_tombstones import x\n")
-    trees[OWNERS[1]] = ast.parse("import kiro_crew.subagent_persistence\n")
+    trees[OWNERS[0]] = ast.parse("from aj_crew.subagent_persistence_tombstones import x\n")
+    trees[OWNERS[1]] = ast.parse("import aj_crew.subagent_persistence\n")
     assert _layering_gaps(trees) == {
         OWNERS[0]: [OWNERS[-1]],
         OWNERS[1]: [FACADE],
@@ -338,15 +338,15 @@ def test_only_the_family_imports_an_owner() -> None:
 
 
 def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None:
-    root = tmp_path / "kiro_crew"
+    root = tmp_path / "aj_crew"
     owner = OWNERS[0].rpartition(".")[2]
     sources = {
-        root / "pkg" / "caller.py": f"from kiro_crew.{owner} import x\n",
-        root / "other.py": f"from kiro_crew import {owner} as low\n",
-        root / "plain.py": f"import kiro_crew.{owner}\n",
+        root / "pkg" / "caller.py": f"from aj_crew.{owner} import x\n",
+        root / "other.py": f"from aj_crew import {owner} as low\n",
+        root / "plain.py": f"import aj_crew.{owner}\n",
         root / "relative.py": f"from .{owner} import x\n",
         root / "deep" / "up.py": f"from .. import {owner}\n",
-        root / "facade_user.py": "from kiro_crew.subagent_persistence import x\n",
+        root / "facade_user.py": "from aj_crew.subagent_persistence import x\n",
     }
     assert _owner_importers(sources.items(), root) == {
         "pkg/caller.py",
@@ -383,7 +383,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for owner in OWNERS:
         for node in _tree(sys.modules[owner]).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     if f"{node.module}.{alias.name}" not in family:
@@ -451,13 +451,13 @@ def test_a_moved_class_keeps_the_facade_module(name: str) -> None:
 @pytest.mark.parametrize(
     ("name", "home"),
     [
-        ("publish_live_cleanup_identity", "kiro_crew.subagent_persistence_layout"),
-        ("remember_live_cleanup_identity", "kiro_crew.subagent_persistence_layout"),
-        ("write_run_agent", "kiro_crew.subagent_persistence_state"),
+        ("publish_live_cleanup_identity", "aj_crew.subagent_persistence_layout"),
+        ("remember_live_cleanup_identity", "aj_crew.subagent_persistence_layout"),
+        ("write_run_agent", "aj_crew.subagent_persistence_state"),
     ],
 )
 def test_the_run_coordinators_helpers_keep_the_facade_module(name: str, home: str) -> None:
-    """The run coordinator binds these three as ``kiro_crew.subagent_persistence`` helpers,
+    """The run coordinator binds these three as ``aj_crew.subagent_persistence`` helpers,
     and ``test_run_bindings.py`` pins the module each reports: the owner's object, under the
     facade's name."""
     owner = sys.modules[home]
@@ -529,11 +529,11 @@ def test_the_inventory_check_reports_a_planted_import() -> None:
     name that owner does not define, are both reported."""
     planted = (
         _source(subagent_persistence)
-        + "\nimport pickle\nfrom kiro_crew.subagent_persistence_layout import read_panel_records\n"
+        + "\nimport pickle\nfrom aj_crew.subagent_persistence_layout import read_panel_records\n"
     )
     assert unexpected_imports(planted, _owner_names()) == [
         "pickle",
-        "kiro_crew.subagent_persistence_layout.read_panel_records",
+        "aj_crew.subagent_persistence_layout.read_panel_records",
     ]
 
 

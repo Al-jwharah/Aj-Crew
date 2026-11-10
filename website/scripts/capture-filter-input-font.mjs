@@ -87,10 +87,10 @@ const MODELS = [
 ]
 
 const AGENTS = [
-  { name: 'default', kiro_agent: 'kirocrew', description: 'Default crew agent' },
-  { name: 'reviewer', kiro_agent: 'kirocrew', description: 'Reads a diff and reports findings' },
-  { name: 'researcher', kiro_agent: 'kirocrew', description: 'Gathers evidence before a decision' },
-  { name: 'translator', kiro_agent: 'kirocrew', description: 'Keeps the locale catalogs in parity' },
+  { name: 'default', kiro_agent: 'ajcrew', description: 'Default crew agent' },
+  { name: 'reviewer', kiro_agent: 'ajcrew', description: 'Reads a diff and reports findings' },
+  { name: 'researcher', kiro_agent: 'ajcrew', description: 'Gathers evidence before a decision' },
+  { name: 'translator', kiro_agent: 'ajcrew', description: 'Keeps the locale catalogs in parity' },
 ]
 
 const now = Date.now() / 1000
@@ -147,7 +147,7 @@ async function main() {
     // `provider: 'acp'` is what turns the agent chip on at all — onAgentClick is
     // wired only when provider.capabilities.agentTemplates is true, and acp is
     // the adapter that declares it (providers/adapters/acp.ts).
-    if (path === '/api/config/kirocrew') {
+    if (path === '/api/config/ajcrew') {
       return json(route, {
         agent: { model: SHELF_MODEL, reasoning_effort: '', provider: 'acp' },
         session: { autocompact_pct: 90 },
@@ -160,7 +160,7 @@ async function main() {
     if (path === '/api/models') return json(route, MODELS)
     if (path.startsWith('/api/effort-levels')) return json(route, ['low', 'medium', 'high', 'xhigh', 'max'])
     if (path === '/api/agents') return json(route, { agents: AGENTS, default_agent: 'default' })
-    if (path.startsWith('/api/agents/detail/')) return json(route, { name: 'kirocrew', model: SHELF_MODEL, skills: [] })
+    if (path.startsWith('/api/agents/detail/')) return json(route, { name: 'ajcrew', model: SHELF_MODEL, skills: [] })
     if (path === '/api/agents/installed') return json(route, AGENTS)
     if (path === '/api/theme/boot') return json(route, { mode: 'light', theme: '', language: 'en' })
     return handleBootRoute(route, path, { project: PROJECT, theme: 'light', fixedApi: makeFixedApi(PROJECT) })

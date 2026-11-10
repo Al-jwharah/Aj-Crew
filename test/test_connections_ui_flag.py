@@ -3,12 +3,12 @@
 The Connections gallery is held for a later release and is reachable only when
 ``connections_ui: true`` is set as a TOP-LEVEL key in the running instance's
 ``config.json``. The frontend reads that flag live off ``GET
-/api/config/kirocrew`` (``website/src/hooks/useConnectionsUi.ts``:
+/api/config/ajcrew`` (``website/src/hooks/useConnectionsUi.ts``:
 ``connectionsUiEnabled`` requires the value to be exactly ``true``), so the
 whole feature turns on the key reaching the browser in that response body.
 
 Nothing but a real, schema-known config value gets there. An unmodelled
-top-level key is captured into ``KiroCrewConfig._extra_sections`` at load and
+top-level key is captured into ``AjCrewConfig._extra_sections`` at load and
 then dropped wholesale by ``_masked_config_dict`` — a deliberate guard, because
 an edition-contributed section is absent from the schema and the sensitivity
 walk cannot know which of its values are secrets. These tests pin the flag on
@@ -22,8 +22,8 @@ import json
 
 import pytest
 
-from kiro_crew.config import loader as L
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config import loader as L
+from aj_crew.config.loader import AjCrewConfig
 
 # The one spelling the frontend, the docs and existing user configs all use.
 FLAG = "connections_ui"
@@ -38,8 +38,8 @@ def _point_loader_at(tmp_path, monkeypatch, data: dict) -> None:
     monkeypatch.setattr(L, "config_local_path", lambda: tmp_path / "config.local.json")
 
 
-def _masked(cfg: KiroCrewConfig) -> dict:
-    from kiro_crew.dashboard.handlers.core import _masked_config_dict
+def _masked(cfg: AjCrewConfig) -> dict:
+    from aj_crew.dashboard.handlers.core import _masked_config_dict
 
     return _masked_config_dict(cfg)
 
@@ -52,7 +52,7 @@ def _frontend_says_enabled(masked: dict) -> bool:
 def test_flag_set_true_reaches_the_masked_get(tmp_path, monkeypatch):
     """The launch blocker: ``true`` on disk must arrive in the browser's copy."""
     _point_loader_at(tmp_path, monkeypatch, {FLAG: True})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.connections_ui is True
     # Modelled, therefore NOT swept up as an unknown section...
@@ -70,7 +70,7 @@ def test_flag_absent_defaults_the_gallery_on(tmp_path, monkeypatch):
     backend and the launch never fires on a real install.
     """
     _point_loader_at(tmp_path, monkeypatch, {"agent": {"provider": "acp"}})
-    masked = _masked(KiroCrewConfig.load())
+    masked = _masked(AjCrewConfig.load())
 
     assert masked.get(FLAG) is True
     assert _frontend_says_enabled(masked)
@@ -83,7 +83,7 @@ def test_flag_set_false_leaves_the_gallery_off(tmp_path, monkeypatch):
     install reaches after its first post-launch boot."""
     _point_loader_at(tmp_path, monkeypatch, {FLAG: False})
     (tmp_path / L.CONNECTIONS_UI_MIGRATION_MARKER).write_text("{}", encoding="utf-8")
-    masked = _masked(KiroCrewConfig.load())
+    masked = _masked(AjCrewConfig.load())
 
     assert masked.get(FLAG) is False
     assert not _frontend_says_enabled(masked)
@@ -94,14 +94,14 @@ def test_a_non_bool_value_falls_back_to_the_default(tmp_path, monkeypatch):
 
     Pre-launch this pinned fail-CLOSED, because the flag revealed a
     held-for-release surface. Default-on inverts the safety direction: the flag
-    is now an opt-OUT, and the only honest reading of a value Kiro Crew cannot
+    is now an opt-OUT, and the only honest reading of a value Aj Crew cannot
     parse is the same fallback every other ``_safe_bool`` field takes — the
     default — never a guess at operator intent. An explicit boolean ``false``
     remains the one way to hide the gallery (pinned separately below), and the
     frontend still receives a real boolean either way.
     """
     _point_loader_at(tmp_path, monkeypatch, {FLAG: "true"})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.connections_ui is True
     assert _frontend_says_enabled(_masked(cfg))
@@ -116,12 +116,12 @@ def test_flag_survives_a_config_write(tmp_path, monkeypatch):
     still reach the browser on the next read.
     """
     _point_loader_at(tmp_path, monkeypatch, {FLAG: True, "timezone": "UTC"})
-    KiroCrewConfig.load().save()
+    AjCrewConfig.load().save()
 
     written = json.loads((tmp_path / "config.json").read_text(encoding="utf-8"))
     assert written[FLAG] is True
 
-    assert _frontend_says_enabled(_masked(KiroCrewConfig.load()))
+    assert _frontend_says_enabled(_masked(AjCrewConfig.load()))
 
 
 def test_flag_is_schema_known_so_load_does_not_warn_about_it():
@@ -132,7 +132,7 @@ def test_flag_is_schema_known_so_load_does_not_warn_about_it():
     Connections-enabled config log "unrecognized top-level keys:
     connections_ui" — the same missing-citizenship as the stripped GET.
     """
-    from kiro_crew.config.schema import SCHEMA_REGISTRY
+    from aj_crew.config.schema import SCHEMA_REGISTRY
 
     top_level = {e.path for e in SCHEMA_REGISTRY if "." not in e.path}
     assert FLAG in top_level
@@ -153,13 +153,13 @@ def test_flag_set_in_the_local_overlay_also_reaches_the_browser(tmp_path, monkey
     monkeypatch.setattr(L, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(L, "config_local_path", lambda: localp)
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert _frontend_says_enabled(_masked(cfg))
 
     cfg.save()
     base = json.loads(cfgp.read_text(encoding="utf-8"))
     assert FLAG not in base  # overlay-owned, not leaked into config.json
-    assert _frontend_says_enabled(_masked(KiroCrewConfig.load()))
+    assert _frontend_says_enabled(_masked(AjCrewConfig.load()))
 
 
 def test_the_unknown_extras_guard_is_not_weakened(tmp_path, monkeypatch):
@@ -179,7 +179,7 @@ def test_the_unknown_extras_guard_is_not_weakened(tmp_path, monkeypatch):
             "some_vendor_token": "SECRET-scalar-value",
         },
     )
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     masked = _masked(cfg)
 
     assert _frontend_says_enabled(masked)
@@ -202,14 +202,14 @@ async def test_the_wire_response_carries_the_flag(tmp_path, monkeypatch):
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import core as core_mod
+    from aj_crew.dashboard.handlers import core as core_mod
 
     _point_loader_at(tmp_path, monkeypatch, {FLAG: True})
 
     app = web.Application()
-    app.router.add_route("*", "/api/config/kirocrew", core_mod.api_kirocrew_config)
+    app.router.add_route("*", "/api/config/ajcrew", core_mod.api_ajcrew_config)
     async with TestClient(TestServer(app)) as client:
-        resp = await client.get("/api/config/kirocrew")
+        resp = await client.get("/api/config/ajcrew")
         assert resp.status == 200
         assert _frontend_says_enabled(await resp.json())
 
@@ -233,7 +233,7 @@ def _marker_path(tmp_path):
 def test_materialized_false_is_stripped_once_and_the_gallery_turns_on(tmp_path, monkeypatch):
     """The upgrade trap: pre-launch noise must not read as an opt-out."""
     _point_loader_at(tmp_path, monkeypatch, {FLAG: False, "auto_update": True})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.connections_ui is True, "stale materialized false still wins the load"
     on_disk = json.loads((tmp_path / "config.json").read_text(encoding="utf-8"))
@@ -246,7 +246,7 @@ def test_false_after_the_marker_is_a_deliberate_opt_out(tmp_path, monkeypatch):
     """Post-migration, explicit false is the honoured opt-out — forever."""
     _point_loader_at(tmp_path, monkeypatch, {FLAG: False})
     _marker_path(tmp_path).write_text("{}", encoding="utf-8")
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.connections_ui is False
     on_disk = json.loads((tmp_path / "config.json").read_text(encoding="utf-8"))
@@ -256,7 +256,7 @@ def test_false_after_the_marker_is_a_deliberate_opt_out(tmp_path, monkeypatch):
 def test_true_is_never_touched_and_still_records_the_marker(tmp_path, monkeypatch):
     """Pre-launch true was the one deliberate act; it survives, marker lands."""
     _point_loader_at(tmp_path, monkeypatch, {FLAG: True})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.connections_ui is True
     on_disk = json.loads((tmp_path / "config.json").read_text(encoding="utf-8"))
@@ -267,7 +267,7 @@ def test_true_is_never_touched_and_still_records_the_marker(tmp_path, monkeypatc
 def test_absent_key_records_the_marker_without_touching_the_flag(tmp_path, monkeypatch):
     """Nothing to migrate: no flag key materializes, only the marker is written."""
     _point_loader_at(tmp_path, monkeypatch, {"auto_update": True})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.connections_ui is True
     # Other one-shot migrations (agents seeding) may rewrite the document; the
@@ -280,11 +280,11 @@ def test_absent_key_records_the_marker_without_touching_the_flag(tmp_path, monke
 def test_second_load_after_migration_is_a_no_op(tmp_path, monkeypatch):
     """Idempotency: the marker makes the migration one-shot."""
     _point_loader_at(tmp_path, monkeypatch, {FLAG: False})
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
     migrated = (tmp_path / "config.json").read_text(encoding="utf-8")
     marker_stat = _marker_path(tmp_path).stat().st_mtime_ns
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg.connections_ui is True
     assert (tmp_path / "config.json").read_text(encoding="utf-8") == migrated
     assert _marker_path(tmp_path).stat().st_mtime_ns == marker_stat
@@ -304,7 +304,7 @@ def test_a_deferred_strip_defers_the_marker_too(tmp_path, monkeypatch):
         return False  # what a BlockingIOError-swallowing persist returns
 
     monkeypatch.setattr(L, "_persist_config_migration", contended)
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     # This boot still serves the launch default in memory...
     assert cfg.connections_ui is True

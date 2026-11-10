@@ -25,11 +25,11 @@ vi.mock('../pages/ChatPage', () => ({ default: () => <div data-testid="chat-page
 vi.mock('../pages/SystemPage', () => ({ default: () => null }))
 vi.mock('../pages/ProjectsPage', () => ({ default: () => null }))
 vi.mock('../pages/LogsPage', () => ({ default: () => null }))
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => null }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => null }))
 vi.mock('../pages/NotificationsPage', () => ({ default: () => null }))
 vi.mock('../pages/SchedulePage', () => ({ default: () => null }))
 vi.mock('../hooks/useWebSocket', () => ({ useWebSocket: () => ({ subscribeLogs: () => {} }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'kirocrew' }], defaultAgent: 'kirocrew' })) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'ajcrew' }], defaultAgent: 'ajcrew' })) }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span>, Lightbox: () => null }))
 
@@ -604,7 +604,7 @@ describe('top-bar metrics control — collapsed band opens a popover', () => {
 
 // happy-dom runs no cascade, so the tests above prove the classes, not the
 // colour. A theme that overrides `.text-accent` unlayered in index.css
-// (kiro-dark) matches the glyph at the same specificity as the compiled
+// (aj-dark) matches the glyph at the same specificity as the compiled
 // `group-aria-[expanded=false]:` rule and comes after it, so the override wins
 // and the unpinned glyph paints accent. Only `!important` on the muted rule
 // beats it, so this compiles the glyph's real classes and checks that.
@@ -615,7 +615,7 @@ describe('collapsed-band metrics glyph against theme accent overrides', () => {
 
   it('mutes the unpinned glyph with a rule no theme `.text-accent` override can beat', async () => {
     const overrides = indexCss.match(/\[data-theme="[^"]+"\]\s+\.text-accent\{color:[^}]*\}/g) ?? []
-    expect(overrides.length, 'the kiro-dark .text-accent override this guards against').toBeGreaterThan(0)
+    expect(overrides.length, 'the aj-dark .text-accent override this guards against').toBeGreaterThan(0)
     for (const rule of overrides) expect(rule).not.toContain('!important')
 
     const glyphClasses = [...source.matchAll(/<AudioWaveform[^>]*className="([^"]*)"/g)].map((m) => m[1])

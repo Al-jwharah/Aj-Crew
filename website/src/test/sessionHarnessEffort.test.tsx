@@ -12,9 +12,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 vi.mock('../api/client', () => ({
   api: {
-    kirocrewConfig: vi.fn().mockResolvedValue({}),
+    ajcrewConfig: vi.fn().mockResolvedValue({}),
     projectGit: vi.fn(),
-    updateKirocrewAgent: vi.fn(),
+    updateAjcrewAgent: vi.fn(),
   },
 }))
 

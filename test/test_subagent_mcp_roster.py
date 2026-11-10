@@ -6,13 +6,13 @@ import json
 
 import pytest
 
-import kiro_crew.agent as agent_mod
-import kiro_crew.subagent as subagent
-from kiro_crew import subagent_mcp_roster as roster
+import aj_crew.agent as agent_mod
+import aj_crew.subagent as subagent
+from aj_crew import subagent_mcp_roster as roster
 
 
 def _write_spec(tmp_path, servers: dict) -> None:
-    (tmp_path / "kirocrew.json").write_text(json.dumps({"mcpServers": servers}), encoding="utf-8")
+    (tmp_path / "ajcrew.json").write_text(json.dumps({"mcpServers": servers}), encoding="utf-8")
 
 
 def test_counts_only_the_stdio_servers_a_session_launches(tmp_path, monkeypatch) -> None:
@@ -38,9 +38,9 @@ def test_an_unreadable_spec_prices_nothing_extra(tmp_path, monkeypatch) -> None:
 
 
 def test_the_default_roster_stays_under_the_unlearned_price() -> None:
-    # Four of Kiro Crew's own servers: a default install is priced as before.
+    # Four of Aj Crew's own servers: a default install is priced as before.
     assert roster.roster_gb_for(4) < subagent._UNLEARNED_DEDICATED_START_GB
-    # 26 user servers plus four of Kiro Crew's own measured 4.3 GiB per session.
+    # 26 user servers plus four of Aj Crew's own measured 4.3 GiB per session.
     assert roster.roster_gb_for(30) == pytest.approx(4.25)
 
 
@@ -48,9 +48,9 @@ def test_a_heavy_roster_raises_the_unlearned_and_the_ceiling(monkeypatch) -> Non
     monkeypatch.setattr(subagent, "session_mcp_roster_gb", lambda: 4.25)
     assert subagent._dedicated_start_price_gb(0.5, {}, "") == pytest.approx(4.25)
     # A learned figure past the old 2 GiB ceiling is trusted up to the roster.
-    assert subagent._dedicated_start_price_gb(0.5, {"kirocrew": 5.0}, "") == pytest.approx(4.25)
+    assert subagent._dedicated_start_price_gb(0.5, {"ajcrew": 5.0}, "") == pytest.approx(4.25)
     # A learned figure below the roster is a measurement, and it wins.
-    assert subagent._dedicated_start_price_gb(0.5, {"kirocrew": 1.2}, "") == pytest.approx(1.2)
+    assert subagent._dedicated_start_price_gb(0.5, {"ajcrew": 1.2}, "") == pytest.approx(1.2)
 
 
 def test_a_light_roster_prices_exactly_as_before(monkeypatch) -> None:
@@ -58,7 +58,7 @@ def test_a_light_roster_prices_exactly_as_before(monkeypatch) -> None:
     assert subagent._dedicated_start_price_gb(0.5, {}, "") == (
         subagent._UNLEARNED_DEDICATED_START_GB
     )
-    assert subagent._dedicated_start_price_gb(0.5, {"kirocrew": 3.0}, "") == (
+    assert subagent._dedicated_start_price_gb(0.5, {"ajcrew": 3.0}, "") == (
         subagent._SETTLED_PROJECTION_CEILING_GB
     )
 

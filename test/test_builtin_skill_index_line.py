@@ -8,7 +8,7 @@ telling an agent whether to ``cat`` the skill. A description that spends its
 first 300 characters on what the skill does and puts "use when ..." / "load
 this whenever ..." after the cut ships a routing rule no agent ever reads.
 
-This happened to ``kirocrew-prepare-pr``: its "FULL LOOP IS THE DEFAULT: load this
+This happened to ``ajcrew-prepare-pr``: its "FULL LOOP IS THE DEFAULT: load this
 whenever a task will open or update a PR" sentence started at character 339,
 so a worker that opened a PR saw a feature summary and never loaded the loop
 that answers reviewer CONCERNS. Five other packaged skills had the same shape.
@@ -24,10 +24,10 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew
-from kiro_crew.skills import _SHORT_DESC_CHARS, SkillsLoader
+import aj_crew
+from aj_crew.skills import _SHORT_DESC_CHARS, SkillsLoader
 
-PKG = Path(kiro_crew.__file__).resolve().parent
+PKG = Path(aj_crew.__file__).resolve().parent
 BUILTIN = PKG / "builtin_skills"
 
 # Phrases a description uses to say WHEN the skill applies. Case-insensitive.
@@ -93,8 +93,8 @@ class TestRoutingDirectiveSurvivesIndexCut:
     @pytest.mark.parametrize(
         "name",
         [
-            "kirocrew-dev/kirocrew-prepare-pr",
-            "kirocrew-dev/babysit",
+            "ajcrew-dev/ajcrew-prepare-pr",
+            "ajcrew-dev/babysit",
             "goal-conductor",
             "llm-council",
             "pipeline-conductor",

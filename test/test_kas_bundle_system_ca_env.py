@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import kiro_cli
-from kiro_crew.acp import kas_bundle
-from kiro_crew.acp.harness.kas import KasHarness
+from aj_crew import kiro_cli
+from aj_crew.acp import kas_bundle
+from aj_crew.acp.harness.kas import KasHarness
 
 _CA = "NODE_USE_SYSTEM_CA"
 
@@ -20,8 +20,8 @@ _CA = "NODE_USE_SYSTEM_CA"
 def quiet_host(tmp_path, _floor_monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep credentials and engine probes independent of the host."""
     mp = _floor_monkeypatch
-    mp.setattr("kiro_crew.config.loader.inject_kiro_cli_api_key", lambda _env: None)
-    mp.setattr("kiro_crew.config.loader.strip_kiro_cli_api_key", lambda _env: None)
+    mp.setattr("aj_crew.config.loader.inject_kiro_cli_api_key", lambda _env: None)
+    mp.setattr("aj_crew.config.loader.strip_kiro_cli_api_key", lambda _env: None)
     mp.setattr(kiro_cli, "mandatory_mcps_drop_allowed", lambda _binary: False)
     mp.setattr(kas_bundle, "kas_engines_root", lambda home=None: tmp_path / "kas")
     mp.setattr(kas_bundle, "bundled_kas_root", lambda: None)

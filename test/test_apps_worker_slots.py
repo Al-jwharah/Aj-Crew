@@ -1,4 +1,4 @@
-"""Tests for the supported app worker-slot seam (kiro_crew.apps.worker_slots)."""
+"""Tests for the supported app worker-slot seam (aj_crew.apps.worker_slots)."""
 
 from __future__ import annotations
 
@@ -10,8 +10,8 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew.apps import worker_slots
-from kiro_crew.apps.worker_slots import (
+from aj_crew.apps import worker_slots
+from aj_crew.apps.worker_slots import (
     DEFAULT_WORKER_SLOT_LIMIT,
     MAX_TRUST_TTL_SECS,
     WorkerSlotTimeout,
@@ -19,8 +19,8 @@ from kiro_crew.apps.worker_slots import (
     set_worker_slot_limit,
     worker_trust_scope,
 )
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard import chat_runner
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 class _Slot:
@@ -446,9 +446,9 @@ async def test_an_unowned_app_origin_slot_is_still_restamped():
 
 
 def _real_state(monkeypatch, tmp_path):
-    from kiro_crew.dashboard.state import DashboardState
+    from aj_crew.dashboard.state import DashboardState
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = DashboardState(
         sessions=mock.MagicMock(count=0),
         crons=mock.MagicMock(
@@ -466,7 +466,7 @@ def _real_state(monkeypatch, tmp_path):
 async def test_a_person_slot_is_not_adopted_under_any_spelling_of_its_key(
     _env, monkeypatch, tmp_path, key
 ):
-    from kiro_crew.dashboard.state import SlotOrigin
+    from aj_crew.dashboard.state import SlotOrigin
 
     state = _real_state(monkeypatch, tmp_path)
     slot = state.get_or_create_slot(name="chat-1", origin=SlotOrigin.USER)

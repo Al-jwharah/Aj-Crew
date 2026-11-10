@@ -11,7 +11,7 @@ import json
 
 import pytest
 
-from kiro_crew.session_map import SessionMap
+from aj_crew.session_map import SessionMap
 
 
 def _make_kiro_session(kiro_dir, sid: str) -> None:
@@ -23,8 +23,8 @@ def _make_kiro_session(kiro_dir, sid: str) -> None:
 @pytest.fixture()
 def patched(tmp_path, monkeypatch):
     kiro = tmp_path / "kiro"
-    monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.session_map._KIRO_SESSIONS_DIR", kiro)
+    monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.session_map._KIRO_SESSIONS_DIR", kiro)
     return tmp_path, kiro
 
 
@@ -92,11 +92,11 @@ class TestPrivacyFlagsAndPrune:
     (it runs on the loop); ``stamp_privacy_headers()`` stamps on a worker thread.
     """
 
-    KEY = "telegram:kirocrew:direct:4242"
+    KEY = "telegram:ajcrew:direct:4242"
 
     def test_flag_names_are_the_privacy_mode_names_strictest_first(self):
-        from kiro_crew.messaging import privacy_mode
-        from kiro_crew.session_map import _PRIVACY_STRICTNESS
+        from aj_crew.messaging import privacy_mode
+        from aj_crew.session_map import _PRIVACY_STRICTNESS
 
         assert set(_PRIVACY_STRICTNESS) == {
             privacy_mode.MODE_TEMPORARY,
@@ -115,7 +115,7 @@ class TestPrivacyFlagsAndPrune:
         ``replace_with_retry`` retries the Windows sharing violation only when no loop
         runs on the calling thread.
         """
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         key = key or TestPrivacyFlagsAndPrune.KEY
         log = ConversationLog()
@@ -131,7 +131,7 @@ class TestPrivacyFlagsAndPrune:
         self, patched, monkeypatch, flag
     ):
         """The loop-side half: sid cleared, flag kept, on disk -- and no header read."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         monkeypatch.setattr(
             ConversationLog,
@@ -205,7 +205,7 @@ class TestPrivacyFlagsAndPrune:
         already records the mode must cost no write -- the stamp is tighten-only AND
         write-free at equality (``privacy_mode.needs_tightening``). Mutation: compare
         with plain ``strictest`` -- the second boot rewrites the header again."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         log = await asyncio.to_thread(self._log, seed=True)  # legacy header: no mode
         writes: list[str] = []
@@ -237,7 +237,7 @@ class TestPrivacyFlagsAndPrune:
         normalizes first (``transcript_privacy_mode``, the shared predicate's rule):
         the header keeps what it spells and counts as recording the flag. Mutation:
         compare the raw string -- the header reads ``incognito``."""
-        from kiro_crew.history import transcript_privacy_mode
+        from aj_crew.history import transcript_privacy_mode
 
         log = await asyncio.to_thread(self._log, seed=True, mode="Temporary")
         sm = SessionMap()
@@ -253,7 +253,7 @@ class TestPrivacyFlagsAndPrune:
     async def test_a_flagged_entry_with_no_transcript_is_kept_and_none_is_created(self, patched):
         """``!incognito`` as the very first message: no sid, no transcript. Nothing to
         stamp (a refusal must never create a transcript), and the row stays."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         sm = SessionMap()
         sm.set_flag(self.KEY, "incognito", True)
@@ -267,8 +267,8 @@ class TestPrivacyFlagsAndPrune:
         self, patched, monkeypatch
     ):
         """Unwritable is not "recorded": the sweep raises naming the row, and the row stays."""
-        from kiro_crew.history import ConversationLog
-        from kiro_crew.messaging.privacy_mode import PrivacySweepIncomplete
+        from aj_crew.history import ConversationLog
+        from aj_crew.messaging.privacy_mode import PrivacySweepIncomplete
 
         await asyncio.to_thread(self._log, seed=True, mode="incognito")
         monkeypatch.setattr(
@@ -291,7 +291,7 @@ class TestPrivacyFlagsAndPrune:
         header) is one no line writer will stamp, so the sweep counts it not
         recorded and finishes rather than raising forever. Mutation: raise for
         it like any other existing transcript whose header is too weak -- red."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         log = ConversationLog()
         log.init()
@@ -340,7 +340,7 @@ class TestPrivacyFlagsAndPrune:
     def test_the_per_read_repair_keeps_the_flag_and_reads_no_transcript(self, patched, monkeypatch):
         """``get()`` on a stale sid keeps the entry whatever the header says; the
         header stamp belongs to the startup step, off the loop."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         self._log(seed=True, mode="temporary")
         monkeypatch.setattr(
@@ -359,7 +359,7 @@ class TestPrivacyFlagsAndPrune:
         """The whole point of the split: the transcript I/O is a worker thread's."""
         import threading
 
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         loop_thread = threading.current_thread()
         seen: list[threading.Thread] = []
@@ -396,8 +396,8 @@ class TestPrivacyFlagsAndPrune:
         """
         from types import SimpleNamespace
 
-        from kiro_crew import session_map as session_map_mod
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew import session_map as session_map_mod
+        from aj_crew.messaging import privacy_mode
 
         log = await asyncio.to_thread(self._log, seed=True, mode="incognito")
         sm = SessionMap()
@@ -452,11 +452,11 @@ class TestPrivacyFlagsAndPrune:
         import threading
         from types import SimpleNamespace
 
-        from kiro_crew import session_map as session_map_mod
-        from kiro_crew.history import transcript_privacy_mode
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew import session_map as session_map_mod
+        from aj_crew.history import transcript_privacy_mode
+        from aj_crew.messaging import privacy_mode
 
-        first, second = self.KEY, "telegram:kirocrew:direct:4343"
+        first, second = self.KEY, "telegram:ajcrew:direct:4343"
         log = await asyncio.to_thread(self._log, seed=True, mode="incognito")
         await asyncio.to_thread(self._log, seed=True, key=second)
         sm = SessionMap()
@@ -532,7 +532,7 @@ class TestPrivacyFlagsAndPrune:
         import ast
         import inspect
 
-        from kiro_crew.messaging import privacy_mode as privacy_mode_mod
+        from aj_crew.messaging import privacy_mode as privacy_mode_mod
 
         tree = ast.parse(inspect.getsource(privacy_mode_mod))
         sweep = next(
@@ -579,9 +579,9 @@ class TestStartPoolPrunesOffTheLoop:
         import threading
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.history import ConversationLog
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.history import ConversationLog
+        from aj_crew.session import SessionManager
 
         key = TestPrivacyFlagsAndPrune.KEY
         await asyncio.to_thread(TestPrivacyFlagsAndPrune._log, seed=True)
@@ -613,7 +613,7 @@ class TestStartPoolPrunesOffTheLoop:
             m.stream_command = MagicMock()
             return m
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.session.timeout_secs = 2
         mgr = SessionManager(cfg, provider_factory=factory)
         try:
@@ -636,7 +636,7 @@ class TestANonBlockingStartDoesNotWaitForTheSweep:
 
     @staticmethod
     def _hook_sweep(monkeypatch, events: list[str]):
-        from kiro_crew.session_map import SessionMap
+        from aj_crew.session_map import SessionMap
 
         async def _recording_sweep(self) -> int:
             events.append("sweep started")
@@ -650,10 +650,10 @@ class TestANonBlockingStartDoesNotWaitForTheSweep:
 
     @staticmethod
     def _manager():
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.session.timeout_secs = 2
         return SessionManager(cfg, provider_factory=_provider_factory)
 
@@ -697,7 +697,7 @@ class TestANonBlockingStartDoesNotWaitForTheSweep:
         header is stamped on a worker thread, and the row is kept."""
         import threading
 
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         key = TestPrivacyFlagsAndPrune.KEY
         await asyncio.to_thread(TestPrivacyFlagsAndPrune._log, seed=True)
@@ -742,7 +742,7 @@ class TestANonBlockingStartDoesNotWaitForTheSweep:
         A failed release relies on the next sweep to restore the header, and a turn
         must not read a flagged thread as persistent. Asserted as an ORDER of events.
         """
-        from kiro_crew.session_pool import WarmSessionPool
+        from aj_crew.session_pool import WarmSessionPool
 
         events: list[str] = []
 
@@ -791,7 +791,7 @@ class TestANonBlockingStartDoesNotWaitForTheSweep:
         Until then header-only readers (``get_chat_session``'s guard) would serve the
         private transcript.
         """
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         key = TestPrivacyFlagsAndPrune.KEY
         await asyncio.to_thread(TestPrivacyFlagsAndPrune._log, seed=True)
@@ -834,8 +834,8 @@ class TestANonBlockingStartDoesNotWaitForTheSweep:
         The write defers on ``METADATA_LINE_TRANSIENT``, so the sweep raises
         ``PrivacySweepIncomplete`` naming the row rather than reporting a clean pass.
         """
-        from kiro_crew.history import METADATA_LINE_TRANSIENT, ConversationLog
-        from kiro_crew.messaging.privacy_mode import PrivacySweepIncomplete
+        from aj_crew.history import METADATA_LINE_TRANSIENT, ConversationLog
+        from aj_crew.messaging.privacy_mode import PrivacySweepIncomplete
 
         key = TestPrivacyFlagsAndPrune.KEY
         await asyncio.to_thread(TestPrivacyFlagsAndPrune._log, seed=True)
@@ -901,7 +901,7 @@ class TestPrivacyRowsAcrossARestart:
     memory readers read the HEADER, so the row stays in every cell.
     """
 
-    KEY = "telegram:kirocrew:direct:5150"
+    KEY = "telegram:ajcrew:direct:5150"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -913,11 +913,11 @@ class TestPrivacyRowsAcrossARestart:
     ):
         from types import SimpleNamespace
 
-        from kiro_crew import execution_context
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.history import ConversationLog, transcript_withholds_derivation
-        from kiro_crew.messaging import privacy_mode, upload_gate
-        from kiro_crew.session import SessionManager
+        from aj_crew import execution_context
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.history import ConversationLog, transcript_withholds_derivation
+        from aj_crew.messaging import privacy_mode, upload_gate
+        from aj_crew.session import SessionManager
 
         key = self.KEY
 
@@ -942,7 +942,7 @@ class TestPrivacyRowsAcrossARestart:
 
         # The restart: empty trackers, then the real startup path.
         privacy_mode.reset()
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.session.timeout_secs = 2
         mgr = SessionManager(cfg, provider_factory=_provider_factory)
         try:
@@ -1037,7 +1037,7 @@ class TestNoClobber:
 class TestGenerationFloor:
     def test_explicit_generation_survives_reload_and_prune(self, patched):
         tmp, _ = patched
-        bucket = "discord:kirocrew:direct:u1"
+        bucket = "discord:ajcrew:direct:u1"
         sm = SessionMap()
 
         sm.reserve_generation(f"{bucket}:gen4")
@@ -1052,12 +1052,12 @@ class TestGenerationFloor:
 
     def test_generation_floor_is_monotonic_and_supports_unified_keys(self, patched):
         sm = SessionMap()
-        sm.reserve_generation("discord:kirocrew:direct:u1:gen5")
-        sm.reserve_generation("discord:kirocrew:direct:u1:gen2")
-        sm.reserve_generation("unified:kirocrew:gen3")
+        sm.reserve_generation("discord:ajcrew:direct:u1:gen5")
+        sm.reserve_generation("discord:ajcrew:direct:u1:gen2")
+        sm.reserve_generation("unified:ajcrew:gen3")
 
-        assert sm.max_generation("discord:kirocrew:direct:u1") == 5
-        assert sm.max_generation("unified:kirocrew") == 3
+        assert sm.max_generation("discord:ajcrew:direct:u1") == 5
+        assert sm.max_generation("unified:ajcrew") == 3
 
     def test_non_dm_key_is_rejected(self, patched):
         with pytest.raises(ValueError, match="not a canonical DM session key"):

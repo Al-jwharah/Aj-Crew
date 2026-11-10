@@ -44,7 +44,7 @@ const STATUS = {
 
 const MANAGED = ['alpha-mcp', 'beta-mcp'].map(name => ({
   name, stub: true, can_stub: true, in_allowlist: true, entry_poolable: false,
-  agents: ['kirocrew'], transport: 'stdio', denylisted: false,
+  agents: ['ajcrew'], transport: 'stdio', denylisted: false,
 }))
 
 mkdirSync(OUT, { recursive: true })

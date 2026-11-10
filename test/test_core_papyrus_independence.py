@@ -1,7 +1,7 @@
-"""Kiro Crew core imports no Papyrus code and names the app nowhere it could act on it.
+"""Aj Crew core imports no Papyrus code and names the app nowhere it could act on it.
 
 Papyrus is to move out of this repository intact, so no module outside
-``src/kiro_crew/apps/builtins/`` may import its package -- by an ``import`` statement,
+``src/aj_crew/apps/builtins/`` may import its package -- by an ``import`` statement,
 a ``from`` import (absolute or relative), or an ``importlib.import_module`` /
 ``__import__`` call spelled with a literal. The core reaches it only the way it
 reaches every built-in: by name through ``BUILTIN_NAMES``.
@@ -21,10 +21,10 @@ from pathlib import Path
 import pytest
 
 _SRC = Path(__file__).resolve().parents[1] / "src"
-_PACKAGE = _SRC / "kiro_crew"
+_PACKAGE = _SRC / "aj_crew"
 _BUILTINS = _PACKAGE / "apps" / "builtins"
 
-_APP = "kiro_crew.apps.builtins.papyrus"
+_APP = "aj_crew.apps.builtins.papyrus"
 _LEAF = _APP.rpartition(".")[2]
 
 _IMPORT_CALLS = frozenset({"import_module", "__import__"})
@@ -34,21 +34,21 @@ _NAMED_LITERALS: dict[tuple[str, str], str] = {
     # The five Papyrus skills ship in ``builtin_skills/`` like every other packaged
     # skill, so the closed skill-id list names them; ``test_feature_usage`` pins the
     # list equal to that tree.
-    ("kiro_crew/metrics/feature_usage.py", "papyrus-diagnose-compilation"): "shipped skill",
-    ("kiro_crew/metrics/feature_usage.py", "papyrus-latex-comments"): "shipped skill",
-    ("kiro_crew/metrics/feature_usage.py", "papyrus-latex-suggestions"): "shipped skill",
-    ("kiro_crew/metrics/feature_usage.py", "papyrus-make-fluent"): "shipped skill",
-    ("kiro_crew/metrics/feature_usage.py", "papyrus-writing"): "shipped skill",
+    ("aj_crew/metrics/feature_usage.py", "papyrus-diagnose-compilation"): "shipped skill",
+    ("aj_crew/metrics/feature_usage.py", "papyrus-latex-comments"): "shipped skill",
+    ("aj_crew/metrics/feature_usage.py", "papyrus-latex-suggestions"): "shipped skill",
+    ("aj_crew/metrics/feature_usage.py", "papyrus-make-fluent"): "shipped skill",
+    ("aj_crew/metrics/feature_usage.py", "papyrus-writing"): "shipped skill",
     # The redaction-posture classification names every module in the package that
     # calls the redactor, built-in apps included; a row leaves with its module.
-    ("kiro_crew/security_posture.py", "apps/builtins/papyrus/backend/routes.py"): "posture row",
+    ("aj_crew/security_posture.py", "apps/builtins/papyrus/backend/routes.py"): "posture row",
     # Setup's sandbox prompt names the app as an example of what a refusal disables.
     (
-        "kiro_crew/cli_setup.py",
+        "aj_crew/cli_setup.py",
         "  Papyrus compiler on this host — they will report a sandbox error.",
     ): "setup copy",
     (
-        "kiro_crew/cli_setup.py",
+        "aj_crew/cli_setup.py",
         "  subprocesses at all — MCP servers, Dev Fleet and the Papyrus",
     ): "setup copy",
 }
@@ -68,7 +68,7 @@ def _resolve(module: str | None, level: int, package: str) -> str:
 
 def _targets(tree: ast.AST, package: str) -> list[tuple[int, str]]:
     """Every ``(line, dotted target)`` the module imports, including ``from X import y``
-    as ``X.y`` so a ``from kiro_crew.apps.builtins import papyrus`` is caught."""
+    as ``X.y`` so a ``from aj_crew.apps.builtins import papyrus`` is caught."""
     found: list[tuple[int, str]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -147,16 +147,16 @@ def test_core_names_papyrus_only_where_listed() -> None:
 @pytest.mark.parametrize(
     ("relpath", "source"),
     [
-        ("kiro_crew/a.py", "import kiro_crew.apps.builtins.papyrus.backend.routes\n"),
-        ("kiro_crew/a.py", "from kiro_crew.apps.builtins import papyrus\n"),
-        ("kiro_crew/a.py", "from kiro_crew.apps.builtins.papyrus.backend import latex\n"),
-        ("kiro_crew/apps/a.py", "from .builtins.papyrus.backend import store\n"),
-        ("kiro_crew/apps/a.py", "from .builtins import papyrus\n"),
+        ("aj_crew/a.py", "import aj_crew.apps.builtins.papyrus.backend.routes\n"),
+        ("aj_crew/a.py", "from aj_crew.apps.builtins import papyrus\n"),
+        ("aj_crew/a.py", "from aj_crew.apps.builtins.papyrus.backend import latex\n"),
+        ("aj_crew/apps/a.py", "from .builtins.papyrus.backend import store\n"),
+        ("aj_crew/apps/a.py", "from .builtins import papyrus\n"),
         (
-            "kiro_crew/a.py",
-            "import importlib\nimportlib.import_module('kiro_crew.apps.builtins.papyrus')\n",
+            "aj_crew/a.py",
+            "import importlib\nimportlib.import_module('aj_crew.apps.builtins.papyrus')\n",
         ),
-        ("kiro_crew/a.py", "__import__('kiro_crew.apps.builtins.papyrus.backend')\n"),
+        ("aj_crew/a.py", "__import__('aj_crew.apps.builtins.papyrus.backend')\n"),
     ],
 )
 def test_every_import_spelling_is_caught(tmp_path, monkeypatch, relpath, source) -> None:
@@ -171,11 +171,11 @@ def test_every_import_spelling_is_caught(tmp_path, monkeypatch, relpath, source)
 
 def test_an_unrelated_builtin_import_is_not_flagged(tmp_path, monkeypatch) -> None:
     root = tmp_path / "src"
-    target = root / "kiro_crew" / "a.py"
+    target = root / "aj_crew" / "a.py"
     target.parent.mkdir(parents=True)
     target.write_text(
-        "from kiro_crew.apps.builtins import BUILTIN_NAMES\n"
-        "import kiro_crew.apps.builtins.papyrusish\n",
+        "from aj_crew.apps.builtins import BUILTIN_NAMES\n"
+        "import aj_crew.apps.builtins.papyrusish\n",
         encoding="utf-8",
     )
     monkeypatch.setattr(sys.modules[__name__], "_SRC", root)
@@ -184,7 +184,7 @@ def test_an_unrelated_builtin_import_is_not_flagged(tmp_path, monkeypatch) -> No
 
 def test_a_new_literal_naming_the_app_is_caught(tmp_path, monkeypatch) -> None:
     root = tmp_path / "src"
-    target = root / "kiro_crew" / "a.py"
+    target = root / "aj_crew" / "a.py"
     target.parent.mkdir(parents=True)
     target.write_text(
         '"""Papyrus in a docstring is prose."""\n'
@@ -193,4 +193,4 @@ def test_a_new_literal_naming_the_app_is_caught(tmp_path, monkeypatch) -> None:
         encoding="utf-8",
     )
     monkeypatch.setattr(sys.modules[__name__], "_SRC", root)
-    assert _named_literals([target]) == {("kiro_crew/a.py", "/api/apps/papyrus/projects")}
+    assert _named_literals([target]) == {("aj_crew/a.py", "/api/apps/papyrus/projects")}

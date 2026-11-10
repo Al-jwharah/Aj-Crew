@@ -14,7 +14,7 @@
  * Scenes, each in light and dark:
  *   1. first paint -- the pre-spawn refusal with 3 components missing
  *   2. one probe later -- two parts landed, "1 component is" repainted in place
- *   3. complete -- "Installation finished — starting Kiro Crew…" (the linger
+ *   3. complete -- "Installation finished — starting Aj Crew…" (the linger
  *      frame before the dialog closes itself)
  *
  * Usage: node scripts/capture-installing-dialog.mjs [outDir]
@@ -33,8 +33,8 @@ const OUT = process.argv[2] || '../temp-screenshots/installing-dialog-auto-retry
 mkdirSync(OUT, { recursive: true })
 
 const PROBE_MS = 5000
-const BUNDLE_ROOT = '/virtual/resources/backend-dist/kirocrew-backend-x64'
-const BUNDLE_BIN = `${BUNDLE_ROOT}/bin/kirocrew`
+const BUNDLE_ROOT = '/virtual/resources/backend-dist/ajcrew-backend-x64'
+const BUNDLE_BIN = `${BUNDLE_ROOT}/bin/ajcrew`
 const BUNDLE_LIB = `${BUNDLE_ROOT}/lib/python3.12`
 
 function bundleFiles(missing) {
@@ -47,7 +47,7 @@ function bundleFiles(missing) {
 
 function fakeFs(files) {
   const dirs = {
-    [`${BUNDLE_ROOT}/bin`]: ['python3', 'kirocrew'],
+    [`${BUNDLE_ROOT}/bin`]: ['python3', 'ajcrew'],
     [`${BUNDLE_ROOT}/lib`]: ['python3.12'],
   }
   return {
@@ -111,7 +111,7 @@ async function openDialog(dark) {
     shell: { showItemInFolder() {} },
     ipcMain: { on() {}, removeListener() {} },
     port: 5476,
-    home: '/virtual/kirocrew-home',
+    home: '/virtual/ajcrew-home',
     getMainWindow: () => window,
     isQuitting: () => false,
     requestQuit() {},
@@ -136,7 +136,7 @@ async function openDialog(dark) {
     setIntervalFn: (fn, ms) => { intervals.push({ fn, ms }); return intervals.length },
     clearIntervalFn(id) { intervals[id - 1] = null },
     processRef: {
-      platform: 'linux', arch: 'x64', env: { KIROCREW_HOME: '/virtual/kirocrew-home' },
+      platform: 'linux', arch: 'x64', env: { AJCREW_HOME: '/virtual/ajcrew-home' },
       resourcesPath: '/virtual/resources', kill() {},
     },
     dirname: '/virtual/electron',

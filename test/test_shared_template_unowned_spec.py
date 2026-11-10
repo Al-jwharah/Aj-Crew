@@ -1,6 +1,6 @@
-"""Kiro Crew never writes a crew-bound spec it does not own, and the ceiling still holds.
+"""Aj Crew never writes a crew-bound spec it does not own, and the ceiling still holds.
 
-That file is the one kiro-cli loads for the agent outside Kiro Crew, so rewriting it
+That file is the one kiro-cli loads for the agent outside Aj Crew, so rewriting it
 would strip the user's own sessions. The rebuild leaves it byte-identical on every harness; KAS
 filters the grants in its projection; and a kiro-cli start on such a file is refused
 while its grants exceed the ceiling, since kiro-cli would honour them before Crew's gate.
@@ -15,16 +15,16 @@ from typing import Any, Iterator
 
 import pytest
 
-from kiro_crew import agent, agent_state
-from kiro_crew.acp import kas_agents
-from kiro_crew.acp_backends import (
+from aj_crew import agent, agent_state
+from aj_crew.acp import kas_agents
+from aj_crew.acp_backends import (
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     ACP_BACKENDS_KNOWN,
     ACP_BACKENDS_SPEC_FILE_GRANTS,
 )
-from kiro_crew.agent_materialization import auto_approve, fork_refresh
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.agent_materialization import auto_approve, fork_refresh
+from aj_crew.config.loader import AjCrewConfig
 
 #: A spec a package manager installed: denied grants on both lists, odd formatting.
 _RAW = (
@@ -71,7 +71,7 @@ def bound_spec(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 def _bind(monkeypatch: pytest.MonkeyPatch, bound: dict[str, str]) -> None:
     agents = {crew: SimpleNamespace(kiro_agent=name) for crew, name in bound.items()}
     cfg = SimpleNamespace(agents=agents)
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
 
 
 def test_a_bound_unowned_spec_is_byte_identical_after_a_rebuild(bound_spec: Path) -> None:
@@ -155,12 +155,12 @@ def test_a_start_on_an_unbound_spec_is_not_checked(
 def test_a_crew_owned_spec_is_left_to_its_own_writer(
     bound_spec: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    owned = bound_spec.parent / "kirocrew.json"
-    raw = json.dumps({"name": "kirocrew", "allowedTools": ["web_fetch"]})
+    owned = bound_spec.parent / "ajcrew.json"
+    raw = json.dumps({"name": "ajcrew", "allowedTools": ["web_fetch"]})
     owned.write_text(raw, encoding="utf-8")
-    _bind(monkeypatch, {"default": "kirocrew"})
+    _bind(monkeypatch, {"default": "ajcrew"})
     agent._refresh_forked_templates_locked(gated_off=frozenset())
-    fork_refresh.require_shared_template_within_ceiling("kirocrew", ACP_BACKEND_KIRO)
+    fork_refresh.require_shared_template_within_ceiling("ajcrew", ACP_BACKEND_KIRO)
     assert owned.read_text(encoding="utf-8") == raw
 
 
@@ -168,7 +168,7 @@ def test_an_unreadable_binding_refuses_the_start(monkeypatch: pytest.MonkeyPatch
     def boom(cls: object) -> None:
         raise OSError("config.json unreadable")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(boom))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(boom))
     with pytest.raises(fork_refresh.SharedTemplateOverCeiling, match="could not be checked"):
         fork_refresh.require_shared_template_within_ceiling("pkg-reviewer", ACP_BACKEND_KIRO)
 
@@ -179,7 +179,7 @@ def test_a_kiro_cli_client_spawn_runs_the_check_first(tmp_path: Path) -> None:
 
     from acp_launch_capture import capture
 
-    from kiro_crew.acp import client_start
+    from aj_crew.acp import client_start
 
     calls: list[tuple[str | None, str]] = []
     seen: list[str | None] = []
@@ -247,7 +247,7 @@ def test_a_binding_on_the_file_stem_is_checked_under_its_declared_name(
     bound_spec: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A row can record the file stem while kiro-cli is dispatched the declared name."""
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     stem = bound_spec.parent / "KiroPkg-captain.json"
     stem.write_text(json.dumps({"name": "captain", "allowedTools": ["web_fetch"]}))
@@ -267,7 +267,7 @@ def test_a_config_load_missing_a_file_still_checks_the_agent(
     """A load that could not read a config file whole may lack the binding this start
     runs, so an absent binding is no proof the spec is unbound."""
     cfg = SimpleNamespace(agents={}, _overlay_unreadable=True)
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
     with pytest.raises(fork_refresh.SharedTemplateOverCeiling, match="pkg-reviewer.json"):
         fork_refresh.require_shared_template_within_ceiling("pkg-reviewer", ACP_BACKEND_KIRO)
 
@@ -277,7 +277,7 @@ def test_the_spec_a_moved_crewmate_ran_on_is_still_checked(
 ) -> None:
     """A conversation from before the move keeps the template its record names, so
     that template stays checked after no binding names it any more."""
-    from kiro_crew import mate_config_migration
+    from aj_crew import mate_config_migration
 
     _bind(monkeypatch, {"rvw": "rvw"})
     monkeypatch.setattr(mate_config_migration, "moved_from_agents", lambda: {"pkg-reviewer"})
@@ -288,7 +288,7 @@ def test_the_spec_a_moved_crewmate_ran_on_is_still_checked(
 def test_an_unreadable_ledger_checks_the_agent_rather_than_skipping_it(
     bound_spec: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew import mate_config_migration
+    from aj_crew import mate_config_migration
 
     def unreadable() -> frozenset[str]:
         raise mate_config_migration.LedgerUnreadable("migrated.json is unreadable")
@@ -304,8 +304,8 @@ def test_a_moved_stem_binding_is_checked_under_its_declared_name(
 ) -> None:
     """The ledger records the stem the binding used; the old conversation is
     dispatched the name that file declares."""
-    from kiro_crew import mate_config_migration
-    from kiro_crew.config import loader
+    from aj_crew import mate_config_migration
+    from aj_crew.config import loader
 
     stem = bound_spec.parent / "KiroPkg-captain.json"
     stem.write_text(json.dumps({"name": "captain", "allowedTools": ["web_fetch"]}))
@@ -339,7 +339,7 @@ def test_a_refused_auto_approve_only_spec_writes_no_record(
 ) -> None:
     """The real strip runs on the check path with its audit off: a spec whose only
     over-ceiling grant is a server ``autoApprove`` records no withheld decision."""
-    from kiro_crew.platform import governance
+    from aj_crew.platform import governance
 
     monkeypatch.setattr(agent_state, "all_fork_info", lambda: {})
     monkeypatch.setattr(agent_state, "get_capabilities", lambda _name: None)

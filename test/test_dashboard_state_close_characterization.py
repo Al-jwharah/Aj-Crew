@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.state import DashboardState
 
 
 class _FlushTask:

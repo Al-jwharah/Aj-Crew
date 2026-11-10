@@ -63,7 +63,7 @@ class TestNameAsDataIsNotAnInvocation:
             f"ssh remote-host {_NAME} {_TOK}",
             f"docker exec c {_NAME} {_TOK}",
             f"sudo {_KA} {_NAME}",
-            f"KIROCREW_HOME=/tmp/h {_NAME} {_TOK}",
+            f"AJCREW_HOME=/tmp/h {_NAME} {_TOK}",
             f"env FOO=1 {_NAME} {_TOK}",
             f"nohup {_NAME} {_TOK}",
             f"timeout 5 {_NAME} {_TOK}",

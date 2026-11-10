@@ -15,8 +15,8 @@ from publish_personal_drive_helpers import _clean_registry  # noqa: F401 - fixtu
 from publish_personal_drive_helpers import payload_fixture  # noqa: F401 - fixture
 from publish_personal_drive_helpers import BUCKET, DIST, _EngineSpy, _publish, _stub_profiles
 
-from kiro_crew.publish import personal_drive as pd
-from kiro_crew.publish_provider import CapabilityNotSupportedError, PublishError
+from aj_crew.publish import personal_drive as pd
+from aj_crew.publish_provider import CapabilityNotSupportedError, PublishError
 
 # ── drive creation ───────────────────────────────────────────────────────────
 
@@ -112,10 +112,10 @@ def test_bucket_policy_denies_every_request_not_sent_over_tls():
             BUCKET, "arn:aws:cloudfront::1:distribution/E1"
         )
     )
-    tls = [s for s in policy["Statement"] if s.get("Sid") == "KiroCrewDenyInsecureTransport"]
+    tls = [s for s in policy["Statement"] if s.get("Sid") == "AjCrewDenyInsecureTransport"]
     assert tls == [
         {
-            "Sid": "KiroCrewDenyInsecureTransport",
+            "Sid": "AjCrewDenyInsecureTransport",
             "Effect": "Deny",
             "Principal": "*",
             "Action": "s3:*",
@@ -126,7 +126,7 @@ def test_bucket_policy_denies_every_request_not_sent_over_tls():
     assert [s["Sid"] for s in policy["Statement"]] == [
         "AllowCloudFrontServedPrefixOnly",
         "DenyCloudFrontEverythingElse",
-        "KiroCrewDenyInsecureTransport",
+        "AjCrewDenyInsecureTransport",
     ]
 
 
@@ -139,7 +139,7 @@ def test_an_existing_drive_gets_the_tls_deny_on_its_next_publish(monkeypatch, pa
     _publish(pd.PersonalDriveProvider(), payload)
     assert spy.created_buckets == []
     sids = [s.get("Sid") for s in spy.bucket_policy()["Statement"]]
-    assert "KiroCrewDenyInsecureTransport" in sids
+    assert "AjCrewDenyInsecureTransport" in sids
 
 
 # ── sharing changes and removal ──────────────────────────────────────────────
@@ -214,7 +214,7 @@ def test_a_discovery_miss_is_not_confirmed_absence(monkeypatch):
         provider._require_drive("prof", "us-west-2", require_serving=False)
     # Imported from the DEFINING module: personal_drive does not reference the type at
     # all, which is itself the point -- it has nothing left that can prove absence.
-    from kiro_crew.publish_provider import DriveNotFound
+    from aj_crew.publish_provider import DriveNotFound
 
     assert not isinstance(caught.value, DriveNotFound)
     # And it still tells the user their copy may be live rather than implying it is gone.

@@ -17,11 +17,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.messaging import privacy_mode
-from kiro_crew.session_map import SessionMap
+from aj_crew.messaging import privacy_mode
+from aj_crew.session_map import SessionMap
 
 #: A key in a namespace that is NOT Slack. The whole point of the hoist.
-_TG_KEY = "telegram:kirocrew:direct:4242"
+_TG_KEY = "telegram:ajcrew:direct:4242"
 
 
 @pytest.fixture(autouse=True)
@@ -39,8 +39,8 @@ def session_map_fixture(tmp_path, monkeypatch):
     A second instance reading the same directory IS the restart: it shares no
     in-memory state with the first, only the file on disk.
     """
-    monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.session_map._KIRO_SESSIONS_DIR", tmp_path / "kiro")
+    monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.session_map._KIRO_SESSIONS_DIR", tmp_path / "kiro")
     return SessionMap
 
 

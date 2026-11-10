@@ -10,8 +10,8 @@ import inspect
 
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+from aj_crew.dashboard.state import _ChatSlot
 
 
 def test_an_omitted_ephemeral_flag_stays_memory_only():
@@ -21,7 +21,7 @@ def test_an_omitted_ephemeral_flag_stays_memory_only():
     be a one-way contract change for every external caller that names nothing, and both
     in-repo callers pass it explicitly, so no in-repo test would notice.
     """
-    from kiro_crew.dashboard import chat_handlers as ch
+    from aj_crew.dashboard import chat_handlers as ch
 
     for fn in (ch.api_chat_slot_context, ch.api_chat_slot_note):
         src = " ".join(inspect.getsource(fn).split())
@@ -39,7 +39,7 @@ def test_the_ephemeral_flag_is_stamped_on_the_entry():
     A flag dropped at the boundary cannot be honoured by anything downstream, and the
     request has already been answered 200 by then.
     """
-    from kiro_crew.dashboard import chat_handlers as ch
+    from aj_crew.dashboard import chat_handlers as ch
 
     src = inspect.getsource(ch._build_pending_context_entry)
     assert '"ephemeral"' in src, "the flag must be stamped, not discarded at the boundary"
@@ -55,7 +55,7 @@ def test_transcript_naming_is_closed_over_transcript_stems():
     Consumers refuse names outside the set, so a third derivation added to ``_path`` alone
     would silently hide transcripts.
     """
-    from kiro_crew.history import ConversationLog, transcript_stem, transcript_stems
+    from aj_crew.history import ConversationLog, transcript_stem, transcript_stems
 
     src = inspect.getsource(ConversationLog._path)
     # Every filename in `_path` is built through `_safe_key`, so a new derivation

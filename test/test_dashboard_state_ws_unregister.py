@@ -24,7 +24,7 @@ from dashboard_state_ws_helpers import (  # noqa: F401 -- the autouse fixture re
 )
 from test_chat_send_echo_scope import echo_state  # noqa: F401  (fixture, used by name)
 
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 class TestWebSocketUnregisteredOnEveryExit:
@@ -39,8 +39,8 @@ class TestWebSocketUnregisteredOnEveryExit:
     async def test_a_connect_frame_ended_by_a_base_exception_unregisters(
         self, echo_state, monkeypatch, ending  # noqa: F811
     ) -> None:
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard.handlers import source_providers
 
         state = echo_state
         registered: list[object] = []
@@ -102,7 +102,7 @@ class TestWebSocketUnregisteredOnEveryExit:
         from aiohttp.test_utils import TestClient, TestServer
         from chat_test_helpers import _make_app
 
-        from kiro_crew.dashboard.ws import api_ws
+        from aj_crew.dashboard.ws import api_ws
 
         state = echo_state
         connect_frames_held = asyncio.Event()

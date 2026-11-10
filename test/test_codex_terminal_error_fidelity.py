@@ -25,17 +25,17 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp import _dispatch
-from kiro_crew.acp.client import AcpError
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp import _dispatch
+from aj_crew.acp.client import AcpError
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_STEER_CONSUMED,
     EVENT_TEXT_CHUNK,
     STOP_REASON_END_TURN,
     JsonRpcMessage,
 )
-from kiro_crew.acp_backends import (
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_GOOSE,
@@ -44,7 +44,7 @@ from kiro_crew.acp_backends import (
     ACP_BACKEND_OPENCODE,
     ACP_BACKENDS_UNATTRIBUTED_TERMINAL_ERROR,
 )
-from kiro_crew.llm_helpers import acp_error_is_transient
+from aj_crew.llm_helpers import acp_error_is_transient
 
 _REQ_ID = 11
 _SID = "sess-codex"
@@ -267,7 +267,7 @@ class TestTerminalErrorIsAFailure:
     async def test_another_tenants_fanned_out_frame_does_not_release_the_hold(self):
         """On a shared codex process a co-tenant's ownerless frame can land
         between the error chunk and this turn's ``end_turn``."""
-        from kiro_crew.acp.types import EVENT_CLEAR_STATUS, AcpEvent
+        from aj_crew.acp.types import EVENT_CLEAR_STATUS, AcpEvent
 
         handle = _handle([END_TURN])
         foreign = AcpEvent(kind=EVENT_CLEAR_STATUS, runtime_global=True)

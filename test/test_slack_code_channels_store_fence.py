@@ -16,9 +16,9 @@ import sys
 
 import pytest
 
-from kiro_crew import sandbox, sandbox_plan, sandbox_precreate
-from kiro_crew.security import is_sensitive_path, is_sensitive_write_path
-from kiro_crew.slack.code_channels import store as scc_store
+from aj_crew import sandbox, sandbox_plan, sandbox_precreate
+from aj_crew.security import is_sensitive_path, is_sensitive_write_path
+from aj_crew.slack.code_channels import store as scc_store
 
 
 def _store_path() -> str:
@@ -73,7 +73,7 @@ def test_a_write_creates_the_directory(tmp_path) -> None:
 
 
 def _workspace_store_path() -> str:
-    from kiro_crew.slack.code_channels.workspace.store import WorkspaceStore
+    from aj_crew.slack.code_channels.workspace.store import WorkspaceStore
 
     return str(WorkspaceStore()._file())
 

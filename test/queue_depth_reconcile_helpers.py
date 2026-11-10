@@ -25,16 +25,16 @@ from overload_fakes import (
     wait_taskq_open,
 )
 
-import kiro_crew.subagent as subagent_mod
-import kiro_crew.subagent_manager.admission.taskq_bridge as taskq_bridge_mod
-import kiro_crew.subagent_manager.run as run_mod
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
-from kiro_crew.subagent_manager.admission.types import MIN_RECHECK_DELAY_SECS
-from kiro_crew.subagent_wait_reasons import QUEUED_REASON_LOW_MEMORY
-from kiro_crew.taskq import KIND_SUBAGENT, model
-from kiro_crew.taskq.waits import WaitRecord
-from kiro_crew.testing.wait import async_wait_until
+import aj_crew.subagent as subagent_mod
+import aj_crew.subagent_manager.admission.taskq_bridge as taskq_bridge_mod
+import aj_crew.subagent_manager.run as run_mod
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+from aj_crew.subagent_manager.admission.types import MIN_RECHECK_DELAY_SECS
+from aj_crew.subagent_wait_reasons import QUEUED_REASON_LOW_MEMORY
+from aj_crew.taskq import KIND_SUBAGENT, model
+from aj_crew.taskq.waits import WaitRecord
+from aj_crew.testing.wait import async_wait_until
 
 #: Where each warning these tests count is logged; a count filters on it, so a
 #: record another thread in the worker logs cannot move it.

@@ -15,9 +15,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import knowledge as kh
-from kiro_crew.dashboard.handlers.source_providers import is_owner_dashboard_request
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.dashboard.handlers import knowledge as kh
+from aj_crew.dashboard.handlers.source_providers import is_owner_dashboard_request
+from aj_crew.knowledge.store import KnowledgeStore
 
 OWNER = "U0OWNER"
 NON_OWNER = "U0NONOWNER"
@@ -144,7 +144,7 @@ async def test_owner_can_delete_source(real_store):
 async def test_internal_secret_caller_keeps_agent_document(monkeypatch):
     """An internal-secret loopback caller carries no ``app`` key at all."""
     monkeypatch.setattr(
-        kh.KiroCrewConfig,
+        kh.AjCrewConfig,
         "load",
         classmethod(lambda cls: MagicMock(knowledge=MagicMock(auto_add_documents=True))),
     )

@@ -14,7 +14,7 @@ from unittest.mock import patch
 import pytest
 from test_gate_tiers import ALL_SCENARIOS, gate_world, judge_scenario  # noqa: F401
 
-from kiro_crew.metrics import events as ev
+from aj_crew.metrics import events as ev
 
 
 class _CapturingRecorder:
@@ -31,7 +31,7 @@ class _CapturingRecorder:
 @pytest.fixture
 def rec():
     r = _CapturingRecorder()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=r):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=r):
         yield r
 
 
@@ -61,20 +61,20 @@ class TestApprovalDecisions:
     """Every ``ToolHookResult`` construction is a gate verdict."""
 
     def test_allow_is_the_branch_that_reaches_a_prompt(self, rec):
-        from kiro_crew.hooks import TOOL_ALLOW, ToolHookResult
+        from aj_crew.hooks import TOOL_ALLOW, ToolHookResult
 
         ToolHookResult.allow()
         call = _named(rec, ev.APPROVAL_DECISIONS)[-1]
         assert call["attrs"]["decision"] == TOOL_ALLOW
 
     def test_auto_approve_is_counted_separately(self, rec):
-        from kiro_crew.hooks import TOOL_AUTO_APPROVE, ToolHookResult
+        from aj_crew.hooks import TOOL_AUTO_APPROVE, ToolHookResult
 
         ToolHookResult.auto_approve()
         assert _named(rec, ev.APPROVAL_DECISIONS)[-1]["attrs"]["decision"] == TOOL_AUTO_APPROVE
 
     def test_a_security_deny_and_a_policy_deny_are_distinguishable(self, rec):
-        from kiro_crew.hooks import ToolHookResult
+        from aj_crew.hooks import ToolHookResult
 
         ToolHookResult.deny("blocked")
         ToolHookResult.deny_policy("ceiling")
@@ -84,28 +84,28 @@ class TestApprovalDecisions:
 
     def test_the_deny_reason_never_reaches_the_attributes(self, rec):
         """A reason carries paths and commands -- unbounded, and often sensitive."""
-        from kiro_crew.hooks import ToolHookResult
+        from aj_crew.hooks import ToolHookResult
 
         ToolHookResult.deny("refusing to read /home/someone/.aws/credentials")
         call = _named(rec, ev.APPROVAL_DECISIONS)[-1]
         assert set(call["attrs"]) == {"decision", "security_deny"}
 
     def test_the_gate_still_returns_its_verdict_when_telemetry_raises(self):
-        from kiro_crew.hooks import TOOL_DENY, ToolHookResult
+        from aj_crew.hooks import TOOL_DENY, ToolHookResult
 
-        with patch("kiro_crew.metrics.events.emit_counter", side_effect=RuntimeError("boom")):
+        with patch("aj_crew.metrics.events.emit_counter", side_effect=RuntimeError("boom")):
             result = ToolHookResult.deny("blocked")
         assert result.action == TOOL_DENY
         assert result.reason == "blocked"
 
     def test_the_existing_child_permission_counters_are_untouched(self):
         """Those measure a specific hang-resilience fix, not this population."""
-        assert ev.CHILD_PERMISSION_DENIED == "kirocrew.acp.child_permission.denied"
-        assert ev.CHILD_PERMISSION_ROUTED == "kirocrew.acp.child_permission.routed"
+        assert ev.CHILD_PERMISSION_DENIED == "ajcrew.acp.child_permission.denied"
+        assert ev.CHILD_PERMISSION_ROUTED == "ajcrew.acp.child_permission.routed"
 
     def test_a_surface_downgrade_of_the_verdict_is_not_a_second_decision(self, rec):
         """Found in review: chat_runner rebuilds the result to downgrade it."""
-        from kiro_crew.hooks import TOOL_ALLOW, ToolHookResult
+        from aj_crew.hooks import TOOL_ALLOW, ToolHookResult
 
         ToolHookResult.auto_approve()  # the gate's verdict
         before = len(_named(rec, ev.APPROVAL_DECISIONS))
@@ -131,8 +131,8 @@ class TestApprovalDecisions:
     def test_a_refusal_the_gate_makes_of_itself_is_counted_once(self, rec, monkeypatch):
         """The two verdicts no tier returns -- a crash, and an unsound table -- are
         counted decisions too."""
-        from kiro_crew import hooks
-        from kiro_crew.hooks import HookManager, ToolCall
+        from aj_crew import hooks
+        from aj_crew.hooks import HookManager, ToolCall
 
         call = ToolCall(title="Running: ls -la", is_shell=True, command="ls -la")
 
@@ -150,7 +150,7 @@ class TestApprovalDecisions:
         ] * 2
 
     def test_a_consultation_inside_uncounted_gate_counts_nothing(self, rec):
-        from kiro_crew.hooks import HookManager, ToolCall, uncounted_gate
+        from aj_crew.hooks import HookManager, ToolCall, uncounted_gate
 
         with uncounted_gate():
             HookManager().judge(ToolCall(title="Running: ls -la", is_shell=True, command="ls -la"))
@@ -166,7 +166,7 @@ class TestSpawnCounterPlacement:
         Admission is a package, so the funnel is only guaranteed if no sibling
         module emits the counter from its own -- necessarily earlier -- frame.
         """
-        from kiro_crew.subagent_manager import admission
+        from aj_crew.subagent_manager import admission
 
         holders = []
         for module in sorted(Path(admission.__file__).resolve().parent.glob("*.py")):
@@ -189,7 +189,7 @@ class TestSpawnCounterPlacement:
     def test_it_sits_beside_the_repo_s_own_spawn_stat(self):
         import inspect
 
-        from kiro_crew.subagent_manager.admission.pump import _PumpMixin
+        from aj_crew.subagent_manager.admission.pump import _PumpMixin
 
         body = inspect.getsource(_PumpMixin._log_spawned_impl)
         assert "inc_subagent_spawned" in body
@@ -204,7 +204,7 @@ class TestCompactions:
         from types import SimpleNamespace
         from typing import Any, cast
 
-        from kiro_crew.session_compaction import CompactionCoordinator
+        from aj_crew.session_compaction import CompactionCoordinator
 
         coordinator = CompactionCoordinator.__new__(CompactionCoordinator)
         stub = cast(Any, coordinator)
@@ -300,7 +300,7 @@ class TestCallSitesAreWired:
         declared = {
             name
             for name, value in vars(ev).items()
-            if name.isupper() and isinstance(value, str) and value.startswith("kirocrew.")
+            if name.isupper() and isinstance(value, str) and value.startswith("ajcrew.")
         }
         # The hang-resilience series predates this change and is emitted from
         # acp/ + session.py; only the business series is asserted here.
@@ -387,20 +387,20 @@ class TestOverloadSeriesNames:
 
     @pytest.mark.parametrize("const", NAMES)
     def test_name_is_declared_and_valid(self, const):
-        from kiro_crew.metrics.schema import validate_name
+        from aj_crew.metrics.schema import validate_name
 
         value = getattr(ev, const)
-        assert value.startswith("kirocrew.")
+        assert value.startswith("ajcrew.")
         assert validate_name(value) == value
 
     def test_emit_histogram_never_raises(self, rec):
         ev.emit_histogram(ev.RECOVERY_DURATION_SECS, 1.5, {"layer": "L1_tool_call"}, unit="s")
-        with patch("kiro_crew.metrics.provider.get_recorder", side_effect=RuntimeError("x")):
+        with patch("aj_crew.metrics.provider.get_recorder", side_effect=RuntimeError("x")):
             ev.emit_histogram(ev.TASKQ_DEPTH, 1.0, {"state": "queued"})
 
 
 class TestWebhookRequests:
-    """``kirocrew.webhook.requests``, driven through ``WebhookRunStore.record``.
+    """``ajcrew.webhook.requests``, driven through ``WebhookRunStore.record``.
 
     The run store is the one commit point every inbound request reaches, so these
     drive the real method against a temp base dir rather than calling
@@ -410,7 +410,7 @@ class TestWebhookRequests:
 
     @pytest.fixture
     def store(self, tmp_path):
-        from kiro_crew.webhooks import WebhookRunStore
+        from aj_crew.webhooks import WebhookRunStore
 
         return WebhookRunStore(base_dir=tmp_path)
 
@@ -441,7 +441,7 @@ class TestWebhookRequests:
         assert seen == ["unauthorized", "disabled", "rejected_capacity", "timeout"]
 
     def test_an_unknown_outcome_maps_to_other(self):
-        from kiro_crew.webhooks import METRIC_OUTCOME_OTHER, metric_outcome
+        from aj_crew.webhooks import METRIC_OUTCOME_OTHER, metric_outcome
 
         assert metric_outcome("teleported") == METRIC_OUTCOME_OTHER
         assert metric_outcome("") == METRIC_OUTCOME_OTHER
@@ -451,7 +451,7 @@ class TestWebhookRequests:
     def test_an_unknown_outcome_is_refused_before_it_is_counted(self, rec, store):
         """``record`` rejects a value outside its own enum, so the fold is the
         fallback for a stored row -- not a way to admit a new outcome."""
-        from kiro_crew.webhooks import WebhookError
+        from aj_crew.webhooks import WebhookError
 
         with pytest.raises(WebhookError):
             store.record(outcome="teleported")
@@ -464,7 +464,7 @@ class TestWebhookRequests:
         the whole-enum shape are pinned in
         ``test/test_webhooks_request_counter.py``, which owns that population.
         """
-        from kiro_crew.webhooks import METRIC_OUTCOME_OTHER, METRIC_OUTCOMES, VALID_OUTCOMES
+        from aj_crew.webhooks import METRIC_OUTCOME_OTHER, METRIC_OUTCOMES, VALID_OUTCOMES
 
         assert VALID_OUTCOMES <= METRIC_OUTCOMES
         assert METRIC_OUTCOME_OTHER not in VALID_OUTCOMES
@@ -484,23 +484,23 @@ class TestWebhookRequests:
     def test_a_history_write_failure_still_counts_the_request(self, rec, store):
         """The series counts REQUESTS, not history rows: the request happened
         whether or not the bounded ring could record it."""
-        with patch("kiro_crew.webhooks.write_json_atomic", side_effect=OSError("full")):
+        with patch("aj_crew.webhooks.write_json_atomic", side_effect=OSError("full")):
             store.record(outcome="completed")
         assert len(_named(rec, ev.WEBHOOK_REQUESTS)) == 1
 
     def test_nothing_is_recorded_with_telemetry_off(self, store):
         """A disabled recorder is the gate: no instrument, no point."""
-        from kiro_crew.metrics.recorder import MetricsRecorder
+        from aj_crew.metrics.recorder import MetricsRecorder
 
         off = MetricsRecorder(None)
         assert off.enabled is False
-        with patch("kiro_crew.metrics.provider.get_recorder", return_value=off):
+        with patch("aj_crew.metrics.provider.get_recorder", return_value=off):
             # Would raise if a disabled recorder tried to reach an instrument.
             store.record(outcome="completed")
 
 
 class TestSubagentCompleted:
-    """``kirocrew.subagent.completed`` -- one increment per run, never two."""
+    """``ajcrew.subagent.completed`` -- one increment per run, never two."""
 
     def test_each_terminal_outcome_keeps_its_own_label(self):
         assert ev.subagent_outcome("completed") == "completed"
@@ -523,7 +523,7 @@ class TestSubagentCompleted:
         value appearing in that fold without a row in the metrics doc would
         silently land on ``unknown``; read the fold itself and fail here instead.
         """
-        from kiro_crew.subagent_ending import SubagentEnding
+        from aj_crew.subagent_ending import SubagentEnding
 
         returned = {o.coarse for o in SubagentEnding}
         assert returned == {"completed", "failed", "stopped"}
@@ -533,7 +533,7 @@ class TestSubagentCompleted:
     def test_one_terminal_is_exactly_one_increment(self, rec):
         """The emit sits past the finalize claim, so the reaper and the run
         loop's ``finally`` cannot both count the same run."""
-        from kiro_crew.subagent_manager.terminal import TerminalCoordinator
+        from aj_crew.subagent_manager.terminal import TerminalCoordinator
 
         class _Info:
             outcome = "completed"
@@ -547,7 +547,7 @@ class TestSubagentCompleted:
 
     @pytest.mark.parametrize("outcome", ["completed", "failed", "stopped"])
     def test_a_stopped_run_is_not_reported_as_a_completion(self, rec, outcome):
-        from kiro_crew.subagent_manager.terminal import TerminalCoordinator
+        from aj_crew.subagent_manager.terminal import TerminalCoordinator
 
         class _Info:
             pass
@@ -561,7 +561,7 @@ class TestSubagentCompleted:
     def test_a_record_whose_outcome_raises_is_counted_as_unknown(self, rec):
         """``outcome`` is a property, so reading it is the one line that can
         raise -- and a run that reached a terminal must still be counted."""
-        from kiro_crew.subagent_manager.terminal import TerminalCoordinator
+        from aj_crew.subagent_manager.terminal import TerminalCoordinator
 
         class _Info:
             @property
@@ -592,7 +592,7 @@ class TestSubagentCompleted:
     def test_result_says_only_whether_the_result_was_empty(
         self, rec, outcome, result, truncated, expected
     ):
-        from kiro_crew.subagent_manager.terminal import TerminalCoordinator
+        from aj_crew.subagent_manager.terminal import TerminalCoordinator
 
         class _Info:
             pass
@@ -620,7 +620,7 @@ class TestSubagentCompleted:
     def test_the_runners_reply_flag_decides_over_the_stored_text(
         self, rec, returned_reply, result, expected
     ):
-        from kiro_crew.subagent_manager.terminal import TerminalCoordinator
+        from aj_crew.subagent_manager.terminal import TerminalCoordinator
 
         class _Info:
             pass
@@ -637,7 +637,7 @@ class TestSubagentCompleted:
 
     def test_the_runner_sets_the_reply_flag_before_annotating(self):
         """``returned_reply`` is read from the reply before the fallback notice."""
-        from kiro_crew.subagent_manager import run_turn
+        from aj_crew.subagent_manager import run_turn
 
         source = Path(run_turn.__file__).read_text(encoding="utf-8")
         flag = source.index("info.returned_reply = not _no_reply")
@@ -647,7 +647,7 @@ class TestSubagentCompleted:
     def test_the_no_reply_placeholder_is_the_runners_own(self):
         """``empty`` is read from the placeholder the runner stores for a run with
         no reply, so the two spellings must not drift apart."""
-        from kiro_crew.subagent_manager import run_turn
+        from aj_crew.subagent_manager import run_turn
 
         source = Path(run_turn.__file__).read_text(encoding="utf-8")
         assert (
@@ -664,7 +664,7 @@ class TestSubagentCompleted:
         """It is called BESIDE ``_record_crew_log_terminal``, not inside it: that
         method returns early with the crew log off, which would narrow this
         counter's population to installs that happen to keep one."""
-        from kiro_crew.subagent_manager import terminal as term
+        from aj_crew.subagent_manager import terminal as term
 
         source = Path(term.__file__).read_text(encoding="utf-8")
         tree = ast.parse(source)
@@ -688,8 +688,8 @@ class TestSubagentCompleted:
         assert len(calls) == 1, "exactly one call, from the exclusive terminal report"
 
     def test_nothing_is_recorded_with_telemetry_off(self):
-        from kiro_crew.metrics.recorder import MetricsRecorder
-        from kiro_crew.subagent_manager.terminal import TerminalCoordinator
+        from aj_crew.metrics.recorder import MetricsRecorder
+        from aj_crew.subagent_manager.terminal import TerminalCoordinator
 
         class _Info:
             outcome = "failed"
@@ -697,5 +697,5 @@ class TestSubagentCompleted:
         off = MetricsRecorder(None)
         assert off.enabled is False
         coordinator = TerminalCoordinator.__new__(TerminalCoordinator)
-        with patch("kiro_crew.metrics.provider.get_recorder", return_value=off):
+        with patch("aj_crew.metrics.provider.get_recorder", return_value=off):
             coordinator._record_terminal_metric(_Info())

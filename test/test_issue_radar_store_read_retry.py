@@ -17,9 +17,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import atomic_write as atomic_write_module
-from kiro_crew import platform_compat
-from kiro_crew.apps.builtins.issue_radar.backend import store
+from aj_crew import atomic_write as atomic_write_module
+from aj_crew import platform_compat
+from aj_crew.apps.builtins.issue_radar.backend import store
 
 OWNER, REPO = "acme", "widgets"
 

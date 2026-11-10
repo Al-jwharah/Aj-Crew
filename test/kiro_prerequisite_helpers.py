@@ -11,8 +11,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService, ProcessResult
-from kiro_crew.testing.wait import await_until
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService, ProcessResult
+from aj_crew.testing.wait import await_until
 
 
 @pytest.fixture(autouse=True)
@@ -21,7 +21,7 @@ def _isolate_agent_specs(tmp_path_factory, _floor_monkeypatch):
 
     Readiness folds agent-spec presence into ``ready``: a missing spec means
     kiro-cli cannot resolve the agent, so the install is not ready. Those specs
-    live in a MACHINE-WIDE directory that no ``KIROCREW_HOME`` override isolates,
+    live in a MACHINE-WIDE directory that no ``AJCREW_HOME`` override isolates,
     so an unpinned probe test reads the developer's real ``~/.kiro/agents`` and its
     verdict follows host state rather than the code under test. This pin removes
     that confound.
@@ -29,8 +29,8 @@ def _isolate_agent_specs(tmp_path_factory, _floor_monkeypatch):
     Tests that exercise the missing-spec behaviour re-patch the same hook inside
     the test body, which runs after this fixture and therefore wins.
     """
-    from kiro_crew import agent as agent_module
-    from kiro_crew.agent_files import REQUIRED_KIRO_AGENT_FILES
+    from aj_crew import agent as agent_module
+    from aj_crew.agent_files import REQUIRED_KIRO_AGENT_FILES
 
     agents = tmp_path_factory.mktemp("kiro-agents")
     for name in REQUIRED_KIRO_AGENT_FILES:
@@ -98,7 +98,7 @@ def _agents_dir_never_the_real_home(
     assertions depend on the machine they run on.
     """
     _floor_monkeypatch.setenv("KIRO_HOME", str(tmp_path_factory.mktemp("kiro-home")))
-    import kiro_crew.kiro_prerequisite as kiro_prerequisite_module
+    import aj_crew.kiro_prerequisite as kiro_prerequisite_module
 
     _floor_monkeypatch.setattr(
         kiro_prerequisite_module, "_default_spec_lister", lambda: [], raising=True

@@ -12,9 +12,9 @@ import pytest
 from test_embedding_rebuild_generation import rebuild_home as _rebuild_home
 from test_embedding_rebuild_generation import vector_blobs
 
-from kiro_crew import embeddings as emb
-from kiro_crew.dashboard.handlers import memory
-from kiro_crew.testing.wait import wait_until
+from aj_crew import embeddings as emb
+from aj_crew.dashboard.handlers import memory
+from aj_crew.testing.wait import wait_until
 
 rebuild_home = _rebuild_home
 
@@ -22,9 +22,9 @@ _CHILD = r"""
 import asyncio, json, os, sys
 from pathlib import Path
 from types import SimpleNamespace
-from kiro_crew import embeddings as emb
-from kiro_crew.dashboard.handlers import memory
-from kiro_crew.vector_memory import VectorMemoryStore, open_member_database
+from aj_crew import embeddings as emb
+from aj_crew.dashboard.handlers import memory
+from aj_crew.vector_memory import VectorMemoryStore, open_member_database
 home = Path(sys.argv[1])
 mode = sys.argv[2]
 model = home / 'model.gguf'
@@ -103,7 +103,7 @@ emb.reset_shared_embedder()
 
 
 def child(home, mode, *args):
-    env = dict(os.environ, KIROCREW_HOME=str(home))
+    env = dict(os.environ, AJCREW_HOME=str(home))
     env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
     return subprocess.Popen(
         [sys.executable, "-c", _CHILD, str(home), mode, *map(str, args)],
@@ -118,7 +118,7 @@ def child(home, mode, *args):
 
 
 #: A lost-run ceiling, not a budget the assertions rely on: it bounds only the
-#: child's process spawn and its own import of `kiro_crew.embeddings` and
+#: child's process spawn and its own import of `aj_crew.embeddings` and
 #: `VectorMemoryStore`, which cost about 1.7s on a Linux runner and 2.1s on a
 #: Windows one, and are not what any test here asserts. Keeping that cost off the
 #: timed path is what lets the bounds below stay at their original values.
@@ -289,7 +289,7 @@ def test_cross_process_old_vector_cannot_publish_after_rebuild(rebuild_home, kin
 def test_child_config_rollback_keeps_competing_edits(rebuild_home, edit):
     import json
 
-    from kiro_crew.config.loader import update_config_locked
+    from aj_crew.config.loader import update_config_locked
 
     home = rebuild_home
     process = child(home.root, "rollback")

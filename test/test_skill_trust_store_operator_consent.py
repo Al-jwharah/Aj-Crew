@@ -20,7 +20,7 @@ from skill_trust_store_helpers import (  # noqa: F401 -- fixtures register by im
     project_fixture,
 )
 
-from kiro_crew import skill_trust
+from aj_crew import skill_trust
 
 pytestmark = pytest.mark.skipif(
     not skill_trust.project_skill_traversal_supported(),
@@ -53,7 +53,7 @@ class TestRequestingSlotProject:
         records consent for a directory this chat will never load from, and the
         catalog advertises skills whose $token expands to nothing.
         """
-        from kiro_crew.dashboard.handlers._shared import (
+        from aj_crew.dashboard.handlers._shared import (
             active_project_dir,
             requesting_slot_project,
         )
@@ -68,7 +68,7 @@ class TestRequestingSlotProject:
         assert requesting_slot_project(state, "dashboard:chat-1") is None
 
     def test_a_bound_chat_resolves_to_its_own_project(self, tmp_path):
-        from kiro_crew.dashboard.handlers._shared import requesting_slot_project
+        from aj_crew.dashboard.handlers._shared import requesting_slot_project
 
         a, b = tmp_path / "A", tmp_path / "B"
         a.mkdir()
@@ -80,7 +80,7 @@ class TestRequestingSlotProject:
 
     def test_no_session_key_resolves_to_no_project(self, tmp_path):
         """Without a key there is no requesting chat, so there is no answer."""
-        from kiro_crew.dashboard.handlers._shared import requesting_slot_project
+        from aj_crew.dashboard.handlers._shared import requesting_slot_project
 
         project_p = tmp_path / "P"
         project_p.mkdir()
@@ -153,7 +153,7 @@ class TestRevokeIsNotBlockedByItsAudit:
         skill_trust.grant_project_trust(project)
         monkeypatch.setattr(skill_trust, "sel", lambda: _Boom())
 
-        with caplog.at_level(logging.ERROR, logger="kiro_crew.skill_trust"):
+        with caplog.at_level(logging.ERROR, logger="aj_crew.skill_trust"):
             assert skill_trust.revoke_project_trust(project) is True
 
         messages = "\n".join(record.getMessage() for record in caplog.records)
@@ -171,7 +171,7 @@ class TestLockFailuresAreFailClosed:
     """
 
     def test_listing_degrades_when_the_store_cannot_be_locked(self, project, monkeypatch):
-        from kiro_crew import skill_trust as st
+        from aj_crew import skill_trust as st
 
         skill_trust.grant_project_trust(project)
         assert skill_trust.list_trusted_projects(), "precondition: a grant is listed"
@@ -185,7 +185,7 @@ class TestLockFailuresAreFailClosed:
         assert skill_trust.list_trusted_projects() == []
 
     def test_a_grant_refuses_when_the_store_cannot_be_locked(self, project, monkeypatch):
-        from kiro_crew import skill_trust as st
+        from aj_crew import skill_trust as st
 
         def boom(*_a, **_kw):
             raise OSError("permission denied")
@@ -201,7 +201,7 @@ class TestLockFailuresAreFailClosed:
     def test_mutators_normalize_store_write_failures(
         self, project, tmp_path, monkeypatch, operation
     ):
-        from kiro_crew import skill_trust as st
+        from aj_crew import skill_trust as st
 
         if operation == "revoke":
             skill_trust.grant_project_trust(project)
@@ -228,7 +228,7 @@ class TestLockFailuresAreFailClosed:
         reads directly and fails closed on OSError, so a lock-path failure must not
         turn "may this load" into an exception on a hot path.
         """
-        from kiro_crew import skill_trust as st
+        from aj_crew import skill_trust as st
 
         skill_trust.grant_project_trust(project)
         skill_trust.reset_cache_for_tests()
@@ -248,9 +248,9 @@ class TestCatalogOnlyOffersLoadableWorkspaceSkills:
 
     def test_an_escaped_skill_is_not_listed_as_trusted(self, project, tmp_path, monkeypatch):
         """Project catalog assembly never routes through the unconfined scanner."""
-        from kiro_crew.dashboard.handlers import _shared
-        from kiro_crew.dashboard.handlers._shared import collect_skills_blocking
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.dashboard.handlers import _shared
+        from aj_crew.dashboard.handlers._shared import collect_skills_blocking
+        from aj_crew.skills import SkillsLoader
 
         outside = tmp_path / "outside" / "escaped"
         outside.mkdir(parents=True)
@@ -300,8 +300,8 @@ class TestCatalogOnlyOffersLoadableWorkspaceSkills:
 
     def test_a_genuine_workspace_row_is_still_marked_trusted(self, project, tmp_path):
         """The filter must not cost the marking it exists to protect."""
-        from kiro_crew.dashboard.handlers._shared import collect_skills_blocking
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.dashboard.handlers._shared import collect_skills_blocking
+        from aj_crew.skills import SkillsLoader
 
         skills_root = project / ".kiro" / "skills" / "genuine"
         skills_root.mkdir(parents=True)
@@ -316,8 +316,8 @@ class TestCatalogOnlyOffersLoadableWorkspaceSkills:
         assert row.get("trusted") is True, row
 
     def test_a_genuine_untrusted_workspace_row_is_offered_for_consent(self, project, tmp_path):
-        from kiro_crew.dashboard.handlers._shared import collect_skills_blocking
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.dashboard.handlers._shared import collect_skills_blocking
+        from aj_crew.skills import SkillsLoader
 
         skill_dir = project / ".kiro" / "skills" / "genuine"
         skill_dir.mkdir(parents=True)
@@ -332,8 +332,8 @@ class TestCatalogOnlyOffersLoadableWorkspaceSkills:
         assert row.get("trusted") is False, row
 
     def test_a_workspace_row_shadowed_by_a_global_skill_is_not_offered(self, project, tmp_path):
-        from kiro_crew.dashboard.handlers._shared import collect_skills_blocking
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.dashboard.handlers._shared import collect_skills_blocking
+        from aj_crew.skills import SkillsLoader
 
         project_skill = project / ".kiro" / "skills" / "same-name"
         project_skill.mkdir(parents=True)
@@ -354,8 +354,8 @@ class TestCatalogOnlyOffersLoadableWorkspaceSkills:
         assert workspace == []
 
     def test_project_metadata_is_redacted_before_reaching_the_dashboard(self, project, tmp_path):
-        from kiro_crew.dashboard.handlers._shared import collect_skills_blocking
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.dashboard.handlers._shared import collect_skills_blocking
+        from aj_crew.skills import SkillsLoader
 
         skill_dir = project / ".kiro" / "skills" / "hostile"
         skill_dir.mkdir(parents=True)
@@ -384,7 +384,7 @@ class TestCatalogOnlyOffersLoadableWorkspaceSkills:
 
 class TestTrustEndpointAuthorization:
     def test_owner_authorization_is_audited(self, monkeypatch):
-        from kiro_crew.dashboard.handlers import prompts
+        from aj_crew.dashboard.handlers import prompts
 
         audit = SimpleNamespace(log_api_access=Mock())
         monkeypatch.setattr(
@@ -403,7 +403,7 @@ class TestTrustEndpointAuthorization:
 
     @pytest.mark.asyncio
     async def test_non_owner_is_refused_by_every_trust_endpoint(self, monkeypatch):
-        from kiro_crew.dashboard.handlers import prompts
+        from aj_crew.dashboard.handlers import prompts
 
         audit = SimpleNamespace(log_api_access=Mock())
 
@@ -437,7 +437,7 @@ class TestTrustEndpointAuthorization:
 class TestTrustGrantHandler:
     @pytest.mark.asyncio
     async def test_no_project_returns_a_coded_400(self, monkeypatch):
-        from kiro_crew.dashboard.handlers import prompts
+        from aj_crew.dashboard.handlers import prompts
 
         request = SimpleNamespace(
             app={"state": object()},
@@ -455,7 +455,7 @@ class TestTrustGrantHandler:
 
     @pytest.mark.asyncio
     async def test_full_store_returns_a_coded_409_without_evicting(self, project, monkeypatch):
-        from kiro_crew.dashboard.handlers import prompts
+        from aj_crew.dashboard.handlers import prompts
 
         entries = [
             {"path": f"/synthetic/project-{i}", "granted_at": i}
@@ -485,8 +485,8 @@ class TestTrustGrantHandler:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("operation", ["grant", "revoke"])
     async def test_write_failure_returns_a_coded_409(self, project, monkeypatch, operation):
-        from kiro_crew import skill_trust as st
-        from kiro_crew.dashboard.handlers import prompts
+        from aj_crew import skill_trust as st
+        from aj_crew.dashboard.handlers import prompts
 
         monkeypatch.setattr(
             st,
@@ -526,7 +526,7 @@ class TestReviewedProjectConfirmation:
     """Consent is recorded only for the directory the operator actually reviewed."""
 
     def test_a_matching_reviewed_key_grants(self, project):
-        from kiro_crew.dashboard.handlers.prompts import _grant_reviewed_project
+        from aj_crew.dashboard.handlers.prompts import _grant_reviewed_project
 
         key = _grant_reviewed_project(project, skill_trust.canonical_key(project), session_key="t")
         assert key == skill_trust.canonical_key(project)
@@ -534,7 +534,7 @@ class TestReviewedProjectConfirmation:
 
     def test_a_non_identical_reviewed_key_is_refused(self, project):
         """The confirmation is an opaque echo, never another path to resolve."""
-        from kiro_crew.dashboard.handlers.prompts import (
+        from aj_crew.dashboard.handlers.prompts import (
             _grant_reviewed_project,
             _ReviewedProjectChanged,
         )
@@ -546,7 +546,7 @@ class TestReviewedProjectConfirmation:
 
     def test_an_unmatched_network_path_is_never_resolved(self, project, monkeypatch):
         """Client-controlled confirmation text must not trigger an SMB probe."""
-        from kiro_crew.dashboard.handlers import prompts
+        from aj_crew.dashboard.handlers import prompts
 
         canonical_key = skill_trust.canonical_key
 
@@ -562,7 +562,7 @@ class TestReviewedProjectConfirmation:
 
     def test_a_reviewed_alias_cannot_retarget_before_the_grant(self, tmp_path, monkeypatch):
         """The grant must persist the key compared, not resolve the alias again."""
-        from kiro_crew.dashboard.handlers import prompts
+        from aj_crew.dashboard.handlers import prompts
 
         reviewed = tmp_path / "reviewed"
         unreviewed = tmp_path / "unreviewed"
@@ -640,7 +640,7 @@ class TestReviewedProjectConfirmation:
 
     def test_a_changed_project_refuses_and_records_nothing(self, project, tmp_path):
         """The slot moved between rendering the dialog and clicking Trust."""
-        from kiro_crew.dashboard.handlers.prompts import (
+        from aj_crew.dashboard.handlers.prompts import (
             _grant_reviewed_project,
             _ReviewedProjectChanged,
         )
@@ -658,7 +658,7 @@ class TestReviewedProjectConfirmation:
         assert skill_trust.is_project_trusted(other) is False
 
     def test_an_absent_expected_key_is_refused(self, project):
-        from kiro_crew.dashboard.handlers.prompts import (
+        from aj_crew.dashboard.handlers.prompts import (
             _grant_reviewed_project,
             _ReviewedProjectChanged,
         )
@@ -668,7 +668,7 @@ class TestReviewedProjectConfirmation:
         assert skill_trust.is_project_trusted(project) is False
 
     def test_a_project_alias_retargeted_after_snapshot_is_refused(self, tmp_path):
-        from kiro_crew.dashboard.handlers.prompts import (
+        from aj_crew.dashboard.handlers.prompts import (
             _grant_reviewed_project,
             _ReviewedProjectChanged,
             _trust_snapshot,
@@ -705,7 +705,7 @@ class TestReviewedProjectConfirmation:
 
         src_path = (
             _pathlib.Path(__file__).resolve().parents[1]
-            / "src/kiro_crew/dashboard/handlers/prompts_skill_catalog.py"
+            / "src/aj_crew/dashboard/handlers/prompts_skill_catalog.py"
         )
         tree = ast.parse(src_path.read_text(encoding="utf-8"))
 

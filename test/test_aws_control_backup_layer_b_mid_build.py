@@ -18,8 +18,8 @@ from aws_control_backup_helpers import (
     _SessionsArchiveLayerBGateHarness,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.apps.builtins.aws_control.backend import backup
+from aj_crew import platform_compat
+from aj_crew.apps.builtins.aws_control.backend import backup
 
 
 class TestSessionsArchiveLayerBGateMidBuild(_SessionsArchiveLayerBGateHarness):

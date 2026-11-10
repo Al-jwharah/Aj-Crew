@@ -16,7 +16,7 @@
  *   renderToolAction(action) -> string                i18n template
  *   deriveToolCallTitle(input) -> DerivedToolTitle    the two, plus fallbacks
  *
- * The split is load-bearing: `src/kiro_crew/tool_call_title.py` is a
+ * The split is load-bearing: `src/aj_crew/tool_call_title.py` is a
  * line-for-line mirror of `classifyToolCall` for the messaging renderers, and
  * `test/fixtures/tool_call_titles.json` pins both implementations to one case
  * table (action + English title). Change a rule here and the fixture fails on
@@ -79,7 +79,7 @@ import { i18nT } from '../i18n/t'
 import { classifyShellCommand, hostOf } from './shellCommandParse'
 import { decodePathForDisplay } from './pathBasename'
 import type { ToolAction } from './toolAction'
-import declaredMcpToolTitles from '../../../src/kiro_crew/data/mcp_tool_titles.json'
+import declaredMcpToolTitles from '../../../src/aj_crew/data/mcp_tool_titles.json'
 
 export type { ToolAction } from './toolAction'
 
@@ -382,7 +382,7 @@ export function salientMcpArg(args: Record<string, unknown> | undefined): string
   return undefined
 }
 
-/** The `Tool.title` Kiro Crew's own servers declare (the table their `tools/list`
+/** The `Tool.title` Aj Crew's own servers declare (the table their `tools/list`
  *  serves), keyed by server so a same-named third-party tool keeps its
  *  humanised name. Own-property lookups only: a tool named `constructor` has none. */
 export function declaredMcpToolTitle(server: string, tool: string): string | undefined {

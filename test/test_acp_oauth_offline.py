@@ -20,10 +20,10 @@ from urllib.parse import parse_qsl, urlsplit
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.oauth_offline import with_google_offline_access
-from kiro_crew.acp.session_handle_mcp import _accept_oauth_request
-from kiro_crew.acp.types import (
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.oauth_offline import with_google_offline_access
+from aj_crew.acp.session_handle_mcp import _accept_oauth_request
+from aj_crew.acp.types import (
     EVENT_MCP_OAUTH_REQUEST,
     METHOD_MCP_OAUTH_REQUEST,
     JsonRpcMessage,

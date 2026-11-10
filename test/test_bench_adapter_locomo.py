@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.eval.bench.adapters.locomo import IMAGE_MARKER, load_locomo
-from kiro_crew.eval.bench.corpus import (
+from aj_crew.eval.bench.adapters.locomo import IMAGE_MARKER, load_locomo
+from aj_crew.eval.bench.corpus import (
     CAT_ADVERSARIAL,
     CAT_COMMONSENSE,
     CAT_MULTI_HOP,

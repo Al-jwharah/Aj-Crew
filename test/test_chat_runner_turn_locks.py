@@ -32,17 +32,17 @@ from turn_harness import (
     run_turn,
 )
 
-from kiro_crew.acp.transport_errors import AcpError
-from kiro_crew.acp.types import (
+from aj_crew.acp.transport_errors import AcpError
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.dashboard.chat_utils import effective_session_key
-from kiro_crew.llm_helpers import slot_switch_session_lock
-from kiro_crew.session_allocation import SessionBusyError
+from aj_crew.dashboard.chat_utils import effective_session_key
+from aj_crew.llm_helpers import slot_switch_session_lock
+from aj_crew.session_allocation import SessionBusyError
 
 _REPLY = AcpEvent(kind=EVENT_TEXT_CHUNK, text="the reply")
 _DONE = AcpEvent(kind=EVENT_COMPLETE, stop_reason=STOP_REASON_END_TURN)

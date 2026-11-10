@@ -17,16 +17,16 @@ import pytest
 from _clock_isolation import assert_clock_is_private
 from overload_fakes import settle_depth_emits
 
-import kiro_crew.subagent as subagent
+import aj_crew.subagent as subagent
 from conftest import absent_sysconf
-from kiro_crew.constants import DEFAULT_SUBAGENT_QUEUE_MAX_WAIT_SECS
-from kiro_crew.subagent import (
+from aj_crew.constants import DEFAULT_SUBAGENT_QUEUE_MAX_WAIT_SECS
+from aj_crew.subagent import (
     compute_max_subagents,
     compute_memory_sized_parallel_cap,
     resolve_max_subagents,
 )
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import await_until
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -35,7 +35,7 @@ pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
 @pytest.fixture(autouse=True)
 def _no_learned_cost(monkeypatch):
-    """Isolate from the machine's learned-cost store (~/.kirocrew/subagents/
+    """Isolate from the machine's learned-cost store (~/.ajcrew/subagents/
     cost_samples.jsonl). compute_memory_sized_parallel_cap prefers read_cap_costs over
     the cfg fallback, so on a dev box with a populated store these tests would
     read the real mem_gb/cpu_cores instead of the per-case fallback costs and
@@ -58,7 +58,7 @@ def _cfg(
     hard_cap: int = 16,
     pool_size: int = 0,
 ) -> types.SimpleNamespace:
-    """Minimal duck-typed stand-in for KiroCrewConfig (agent + session)."""
+    """Minimal duck-typed stand-in for AjCrewConfig (agent + session)."""
     return types.SimpleNamespace(
         agent=types.SimpleNamespace(
             max_subagents=max_subagents,
@@ -123,7 +123,7 @@ class TestTheSubagentAutoCapIsACountCeiling:
         assert compute_max_subagents(cfg) == 32
 
     def test_the_floor_switch_and_its_memory_terms_are_sizing_inputs(self) -> None:
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         assert SubagentManager.SIZING_CONFIG_PATHS == (
             "agent.max_subagents",
@@ -158,7 +158,7 @@ class TestMemoryIsTheOnlyHostTerm:
         assert compute_memory_sized_parallel_cap(cfg) == 12
 
     def test_the_deprecated_cpu_cost_key_is_not_a_sizing_input(self) -> None:
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         assert "agent.subagent_cpu_cost_cores" not in SubagentManager.SIZING_CONFIG_PATHS
         assert "agent.subagent_cpu_cost_cores" not in SubagentManager.LIVE_CONFIG_PATHS
@@ -301,7 +301,7 @@ def test_manager_reports_resolved_cap_for_auto_sentinel(patch_host) -> None:
     """The cap the gateway feeds SubagentManager is what `.max_concurrent` reports."""
     from unittest.mock import MagicMock
 
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.subagent import SubagentManager
 
     patch_host(174.7, 48)
     cfg = _cfg(max_subagents=0, mem_cost=0.315, cpu_cost=0.8, hard_cap=16)
@@ -322,7 +322,7 @@ def test_manager_effective_cap_sits_under_the_resolved_ceiling(patch_host) -> No
     and is never written by the bound."""
     from unittest.mock import MagicMock
 
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.subagent import SubagentManager
 
     patch_host(174.7, 48)
     cap = resolve_max_subagents(_cfg(max_subagents=0, mem_cost=0.315, cpu_cost=0.8, hard_cap=16))
@@ -341,7 +341,7 @@ def _mgr(*, running: int, max_concurrent: int, last_ts: float, stagger: float = 
     """Build a SubagentManager with stagger state set, mock heavy deps."""
     from unittest.mock import MagicMock
 
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.subagent import SubagentManager
 
     sessions = MagicMock()
     sessions.get_agent_selection.return_value = ("template", "")
@@ -372,7 +372,7 @@ class _PinnedClock:
 def _pin_pump_clock(monkeypatch, now: float) -> None:
     """Freeze the clock the spawn gate and the drain pump read at ``now``.
 
-    Both read ``time.monotonic()`` through ``kiro_crew.subagent``'s globals, so only that
+    Both read ``time.monotonic()`` through ``aj_crew.subagent``'s globals, so only that
     ``time`` name is swapped; the real module stays for ``asyncio.run()``'s own scheduling.
     """
     monkeypatch.setattr(subagent, "time", _PinnedClock(now))
@@ -595,7 +595,7 @@ class TestQueuedDepthWiring:
         import asyncio
         import time as _t
 
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         # Bypass governance so we deterministically reach the queue branch.
         monkeypatch.setattr(sub, "_vet_spawn_governance", lambda *a, **k: None)
@@ -668,7 +668,7 @@ class TestQueuedReasonOnTheEvent:
         import asyncio
         import time as _t
 
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         monkeypatch.setattr(sub, "_vet_spawn_governance", lambda *a, **k: None)
 
@@ -692,7 +692,7 @@ class TestQueuedReasonOnTheEvent:
         import asyncio
         import time as _t
 
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         monkeypatch.setattr(sub, "_vet_spawn_governance", lambda *a, **k: None)
 
@@ -768,7 +768,7 @@ class TestQueuedIdentityRoundTrip:
         import re
         from unittest.mock import MagicMock
 
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         monkeypatch.setattr(sub, "_vet_spawn_governance", lambda *a, **k: None)
 
@@ -795,7 +795,7 @@ class TestQueuedIdentityRoundTrip:
         """A drained spawn that hits the gate AGAIN keeps the same id."""
         import time as _t
 
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         monkeypatch.setattr(sub, "_vet_spawn_governance", lambda *a, **k: None)
 
@@ -824,7 +824,7 @@ class TestQueuedIdentityRoundTrip:
         """
         import time as _t
 
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         monkeypatch.setattr(sub, "_vet_spawn_governance", lambda *a, **k: None)
         # Refuse on memory so the guard fires ahead of the queue gate.
@@ -853,7 +853,7 @@ class TestSubtreeCpuJiffies:
     """
 
     def test_sums_tree(self, monkeypatch) -> None:
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         # tree: 1 -> [2, 3]; 2 -> [4]
         children = {1: [2, 3], 2: [4], 3: [], 4: []}
@@ -877,21 +877,21 @@ class TestSampleLiveCosts:
     """_sample_live_costs: high-water RSS/CPU tracking across polls."""
 
     def _agent(self):
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
-        info = SubagentInfo(id="a1", task="t", agent="kirocrew")
+        info = SubagentInfo(id="a1", task="t", agent="ajcrew")
         info._pid = 4242
         return info
 
     @staticmethod
     def _sample(rss_kb: int = -1, jiffies: int = 0):
         """The one subtree reading the sweep takes per agent."""
-        from kiro_crew.platform_compat import SubtreeSample
+        from aj_crew.platform_compat import SubtreeSample
 
         return SubtreeSample(rss_kb, jiffies, None, None)
 
     def test_rss_high_water(self, monkeypatch) -> None:
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         m = _mgr(running=1, max_concurrent=16, last_ts=0.0)
         info = self._agent()
@@ -906,7 +906,7 @@ class TestSampleLiveCosts:
         assert info.peak_rss_gb == pytest.approx(2.0, abs=0.01)
 
     def test_cpu_high_water_uses_delta(self, monkeypatch) -> None:
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         m = _mgr(running=1, max_concurrent=16, last_ts=0.0)
         info = self._agent()
@@ -933,7 +933,7 @@ class TestSampleLiveCosts:
         assert info.peak_cpu_cores == pytest.approx(1.0, abs=0.01)
 
     def test_done_or_pidless_agents_skipped(self, monkeypatch) -> None:
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         m = _mgr(running=1, max_concurrent=16, last_ts=0.0)
         done = self._agent()
@@ -954,15 +954,15 @@ class TestSampleLiveCosts:
         """Shared subagents share ONE runtime PID; each must be charged the
         measured RSS/CPU divided by the number of live shared sessions on that
         PID (an empirical per-session average), not the whole shared process."""
-        import kiro_crew.subagent as sub
-        from kiro_crew.subagent import SubagentInfo
+        import aj_crew.subagent as sub
+        from aj_crew.subagent import SubagentInfo
 
         m = _mgr(running=2, max_concurrent=16, last_ts=0.0)
         # Two shared subagents on the SAME runtime PID.
-        a = SubagentInfo(id="a1", task="t", agent="kirocrew")
+        a = SubagentInfo(id="a1", task="t", agent="ajcrew")
         a._pid = 4242
         a._session_sharing = True
-        b = SubagentInfo(id="a2", task="t", agent="kirocrew")
+        b = SubagentInfo(id="a2", task="t", agent="ajcrew")
         b._pid = 4242
         b._session_sharing = True
         m._agents = {"a1": a, "a2": b}
@@ -992,9 +992,9 @@ class TestSampleLiveCosts:
 
 class TestSettledRuntimeReading:
     def _agent(self, **kw):
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
-        info = SubagentInfo(id=kw.pop("id", "a1"), task="t", agent="kirocrew")
+        info = SubagentInfo(id=kw.pop("id", "a1"), task="t", agent="ajcrew")
         info._pid = 4242
         for k, v in kw.items():
             setattr(info, k, v)
@@ -1002,13 +1002,13 @@ class TestSettledRuntimeReading:
 
     @staticmethod
     def _sample(rss_kb: int = -1, jiffies: int = 0):
-        from kiro_crew.platform_compat import SubtreeSample
+        from aj_crew.platform_compat import SubtreeSample
 
         return SubtreeSample(rss_kb, jiffies, None, None)
 
     @staticmethod
     def _tool():
-        from kiro_crew.acp.liveness import ToolCallState
+        from aj_crew.acp.liveness import ToolCallState
 
         return ToolCallState(title="bash", command="pytest", dispatch_ts=0.0, dispatch_boot_ts=0.0)
 
@@ -1091,7 +1091,7 @@ class TestSettledRuntimeReading:
         m = _mgr(running=1, max_concurrent=16, last_ts=0.0)
         info = self._agent(_first_stream_started=1.0)
         m._agents = {"a1": info}
-        from kiro_crew.platform_compat import SubtreeSample
+        from aj_crew.platform_compat import SubtreeSample
 
         asked: list[bool] = []
 
@@ -1193,28 +1193,28 @@ class TestSettledRuntimeReading:
         monkeypatch.setattr(subagent, "append_cost_sample", lambda *a, **k: calls.append((a, k)))
         m._learned_settled_dirty = False
         m._record_cost(info)
-        assert calls == [(("kirocrew", 132.3, 4.0), {"shared": False, "settled_gb": 0.5})]
+        assert calls == [(("ajcrew", 132.3, 4.0), {"shared": False, "settled_gb": 0.5})]
         assert m._learned_settled_dirty is True, "a new settled reading re-arms the refresh"
 
     def test_the_settled_map_is_refreshed_whole_or_merged_when_the_read_is_partial(
         self, monkeypatch
     ) -> None:
         m = _mgr(running=1, max_concurrent=16, last_ts=0.0)
-        m._learned_settled_gb = {"kept": 1.0, "kirocrew": 0.4}
+        m._learned_settled_gb = {"kept": 1.0, "ajcrew": 0.4}
         monkeypatch.setattr(
-            subagent, "read_learned_costs_checked", lambda *a, **k: ({"kirocrew": 0.6}, False)
+            subagent, "read_learned_costs_checked", lambda *a, **k: ({"ajcrew": 0.6}, False)
         )
         m._learned_settled_dirty = True
         m._refresh_learned_settled()
-        assert m._learned_settled_gb == {"kept": 1.0, "kirocrew": 0.6}
+        assert m._learned_settled_gb == {"kept": 1.0, "ajcrew": 0.6}
         monkeypatch.setattr(
-            subagent, "read_learned_costs_checked", lambda *a, **k: ({"kirocrew": 0.7}, True)
+            subagent, "read_learned_costs_checked", lambda *a, **k: ({"ajcrew": 0.7}, True)
         )
         m._refresh_learned_settled()
-        assert m._learned_settled_gb == {"kept": 1.0, "kirocrew": 0.6}, "clean: not re-read"
+        assert m._learned_settled_gb == {"kept": 1.0, "ajcrew": 0.6}, "clean: not re-read"
         m._learned_settled_dirty = True
         m._refresh_learned_settled()
-        assert m._learned_settled_gb == {"kirocrew": 0.7}
+        assert m._learned_settled_gb == {"ajcrew": 0.7}
 
         def _boom(*_a, **_k):
             raise OSError("unreadable")
@@ -1222,7 +1222,7 @@ class TestSettledRuntimeReading:
         monkeypatch.setattr(subagent, "read_learned_costs_checked", _boom)
         m._learned_settled_dirty = True
         m._refresh_learned_settled()
-        assert m._learned_settled_gb == {"kirocrew": 0.7}, "a failed read keeps the map"
+        assert m._learned_settled_gb == {"ajcrew": 0.7}, "a failed read keeps the map"
 
     def test_a_stale_settled_figure_ages_out_without_a_new_run(self, monkeypatch, tmp_path) -> None:
         """A bucket priced out by a figure learned under a heavier roster records
@@ -1230,7 +1230,7 @@ class TestSettledRuntimeReading:
         re-read drops it and the bucket is priced at the unlearned default."""
         import json
 
-        from kiro_crew import subagent_cost as sc
+        from aj_crew import subagent_cost as sc
 
         log = tmp_path / "cost_samples.jsonl"
         monkeypatch.setattr(sc, "_cost_log_path", lambda: log)
@@ -1238,7 +1238,7 @@ class TestSettledRuntimeReading:
         mono = [5_000.0]
         log.write_text(
             "".join(
-                json.dumps({"agent": "kirocrew", "mem_gb": 3.0, "settled_gb": 1.9, "ts": wall[0]})
+                json.dumps({"agent": "ajcrew", "mem_gb": 3.0, "settled_gb": 1.9, "ts": wall[0]})
                 + "\n"
                 for _ in range(3)
             ),
@@ -1248,7 +1248,7 @@ class TestSettledRuntimeReading:
         clock = types.SimpleNamespace(time=lambda: wall[0], monotonic=lambda: mono[0])
         monkeypatch.setattr(subagent, "time", clock)
         m._refresh_learned_settled()
-        assert m._learned_settled_gb == {"kirocrew": pytest.approx(1.9)}
+        assert m._learned_settled_gb == {"ajcrew": pytest.approx(1.9)}
         assert subagent._dedicated_start_price_gb(0.5, m._learned_settled_gb, "") == (
             pytest.approx(1.9)
         )
@@ -1258,7 +1258,7 @@ class TestSettledRuntimeReading:
         wall[0] += 8 * 24 * 3600
         mono[0] += 3599
         m._refresh_learned_settled()
-        assert m._learned_settled_gb == {"kirocrew": pytest.approx(1.9)}, "not re-read yet"
+        assert m._learned_settled_gb == {"ajcrew": pytest.approx(1.9)}, "not re-read yet"
         mono[0] += 2
         m._refresh_learned_settled()
         assert m._learned_settled_gb == {}
@@ -1271,7 +1271,7 @@ class TestSettledRuntimeReading:
         incomplete read keeps what it could not confirm -- but not past the
         horizon, or a figure it can never re-check would hold for good."""
         m = _mgr(running=0, max_concurrent=16, last_ts=0.0)
-        m._learned_settled_gb = {"kirocrew": 1.9}
+        m._learned_settled_gb = {"ajcrew": 1.9}
         mono = [5_000.0]
         clock = types.SimpleNamespace(time=lambda: 1_000_000_000.0, monotonic=lambda: mono[0])
         monkeypatch.setattr(subagent, "time", clock)
@@ -1279,10 +1279,10 @@ class TestSettledRuntimeReading:
             subagent, "read_learned_costs_checked", lambda *a, **k: ({"light": 0.4}, False)
         )
         m._refresh_learned_settled()
-        assert m._learned_settled_gb == {"kirocrew": 1.9, "light": 0.4}
+        assert m._learned_settled_gb == {"ajcrew": 1.9, "light": 0.4}
         mono[0] += 6 * 24 * 3600
         m._refresh_learned_settled()
-        assert m._learned_settled_gb == {"kirocrew": 1.9, "light": 0.4}, "inside the horizon"
+        assert m._learned_settled_gb == {"ajcrew": 1.9, "light": 0.4}, "inside the horizon"
         mono[0] += 2 * 24 * 3600
         m._refresh_learned_settled()
         assert m._learned_settled_gb == {"light": 0.4}, "rebuilt from what the read saw"
@@ -1301,21 +1301,21 @@ class TestSettledRuntimeReading:
 
 class TestReadIntFile:
     def test_reads_int(self, tmp_path) -> None:
-        from kiro_crew.subagent import _read_int_file
+        from aj_crew.subagent import _read_int_file
 
         p = tmp_path / "v"
         p.write_text("12345\n")
         assert _read_int_file(str(p)) == 12345
 
     def test_max_returns_none(self, tmp_path) -> None:
-        from kiro_crew.subagent import _read_int_file
+        from aj_crew.subagent import _read_int_file
 
         p = tmp_path / "v"
         p.write_text("max\n")
         assert _read_int_file(str(p)) is None
 
     def test_missing_and_garbage_return_none(self, tmp_path) -> None:
-        from kiro_crew.subagent import _read_int_file
+        from aj_crew.subagent import _read_int_file
 
         assert _read_int_file(str(tmp_path / "nope")) is None
         g = tmp_path / "g"
@@ -1341,7 +1341,7 @@ class TestCgroupAvailable:
         return files
 
     def test_v2_headroom(self, monkeypatch) -> None:
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         vals = {
             "/sys/fs/cgroup/memory.max": 16 * 1024**3,
@@ -1351,21 +1351,21 @@ class TestCgroupAvailable:
         assert sub._cgroup_available_gb() == pytest.approx(14.0, abs=0.01)
 
     def test_v2_unlimited_max_falls_through_to_minus_one(self, monkeypatch) -> None:
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         # memory.max == 'max' → _read_int_file None; v1 absent → -1.0 (unlimited)
         monkeypatch.setattr(sub, "_read_int_file", lambda p: None)
         assert sub._cgroup_available_gb() == -1.0
 
     def test_sentinel_large_limit_is_unlimited(self, monkeypatch) -> None:
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         vals = {"/sys/fs/cgroup/memory.max": sub._CGROUP_UNLIMITED + 1}
         monkeypatch.setattr(sub, "_read_int_file", lambda p: vals.get(p))
         assert sub._cgroup_available_gb() == -1.0
 
     def test_v1_headroom(self, monkeypatch) -> None:
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         vals = {
             "/sys/fs/cgroup/memory.max": None,  # v2 absent
@@ -1378,7 +1378,7 @@ class TestCgroupAvailable:
     def test_v2_inactive_page_cache_is_headroom(self, cgroup_files, monkeypatch) -> None:
         """A container whose usage is mostly cold page cache is not full: the
         kernel drops inactive file pages before it OOM-kills anything."""
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         gib = 1024**3
         vals = {
@@ -1394,7 +1394,7 @@ class TestCgroupAvailable:
         assert sub._cgroup_available_gb() == pytest.approx(13.0, abs=0.01)
 
     def test_v1_reads_the_hierarchical_inactive_cache(self, cgroup_files, monkeypatch) -> None:
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         gib = 1024**3
         vals = {
@@ -1584,7 +1584,7 @@ class TestCgroupAvailable:
 
 class TestAvailableMemoryClamp:
     def test_clamps_to_cgroup_when_smaller(self, monkeypatch) -> None:
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         # Force the Linux branch so the clamp logic runs regardless of test host.
         monkeypatch.setattr(sub.platform_compat, "IS_LINUX", True)
@@ -1594,7 +1594,7 @@ class TestAvailableMemoryClamp:
         assert sub._available_memory_gb() == pytest.approx(14.0, abs=0.01)
 
     def test_unconstrained_uses_host(self, monkeypatch) -> None:
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         monkeypatch.setattr(sub.platform_compat, "IS_LINUX", True)
         monkeypatch.setattr(sub.platform_compat, "IS_MACOS", False)
@@ -1603,7 +1603,7 @@ class TestAvailableMemoryClamp:
         assert sub._available_memory_gb() == pytest.approx(100.0, abs=0.01)
 
     def test_linux_unreadable_fails_open(self, monkeypatch) -> None:
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         monkeypatch.setattr(sub.platform_compat, "IS_LINUX", True)
         monkeypatch.setattr(sub.platform_compat, "IS_MACOS", False)
@@ -1613,7 +1613,7 @@ class TestAvailableMemoryClamp:
 
     def test_cgroup_clamp_lowers_computed_cap(self, monkeypatch) -> None:
         """End-to-end: a 4 GB cgroup headroom on a big host caps the memory-sized figure."""
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         monkeypatch.setattr(sub.platform_compat, "IS_LINUX", True)
         monkeypatch.setattr(sub.platform_compat, "IS_MACOS", False)
@@ -1628,7 +1628,7 @@ class TestAvailableMemoryClamp:
 
     def test_macos_branch_uses_macos_probe(self, monkeypatch) -> None:
         """On macOS, dispatch delegates to the vm_stat probe (not /proc)."""
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         monkeypatch.setattr(sub.platform_compat, "IS_LINUX", False)
         monkeypatch.setattr(sub.platform_compat, "IS_MACOS", True)
@@ -1637,7 +1637,7 @@ class TestAvailableMemoryClamp:
 
     def test_windows_reads_the_shared_host_probe(self, monkeypatch) -> None:
         """Windows reads memory through ``platform_compat.host_available_mib``."""
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         monkeypatch.setattr(sub.platform_compat, "IS_LINUX", False)
         monkeypatch.setattr(sub.platform_compat, "IS_MACOS", False)
@@ -1647,7 +1647,7 @@ class TestAvailableMemoryClamp:
 
     def test_unsupported_platform_fails_open(self, monkeypatch) -> None:
         """A platform with no probe yet fails open to -1.0."""
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         monkeypatch.setattr(sub.platform_compat, "IS_LINUX", False)
         monkeypatch.setattr(sub.platform_compat, "IS_MACOS", False)
@@ -1667,7 +1667,7 @@ class TestMacosMemoryProbe:
     """
 
     def test_computes_available_gb_from_pages(self, monkeypatch) -> None:
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         real_sysconf = getattr(sub.os, "sysconf", absent_sysconf)
         monkeypatch.setattr(
@@ -1687,7 +1687,7 @@ class TestMacosMemoryProbe:
         ],
     )
     def test_missing_page_count_fails_open(self, monkeypatch, pages) -> None:
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         real_sysconf = getattr(sub.os, "sysconf", absent_sysconf)
         monkeypatch.setattr(
@@ -1697,7 +1697,7 @@ class TestMacosMemoryProbe:
         assert sub._macos_available_memory_gb() == -1.0
 
     def test_sysconf_error_fails_open(self, monkeypatch) -> None:
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         real_sysconf = getattr(sub.os, "sysconf", absent_sysconf)
 
@@ -1710,7 +1710,7 @@ class TestMacosMemoryProbe:
         assert sub._macos_available_memory_gb() == -1.0
 
     def test_nonpositive_page_size_fails_open(self, monkeypatch) -> None:
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         real_sysconf = getattr(sub.os, "sysconf", absent_sysconf)
         monkeypatch.setattr(
@@ -1742,7 +1742,7 @@ class TestQueuedSpawnParamsPreserved:
             {
                 "task": "do work",
                 "parent_session_key": "p1",
-                "agent": "kirocrew",
+                "agent": "ajcrew",
                 "max_turns": 7,
                 "model": "claude-x",
                 "allowed_tools": ["fs_read"],
@@ -1780,7 +1780,7 @@ class TestForceReapDrainsQueue:
         import time as _t
         from unittest.mock import MagicMock
 
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         m = _mgr(running=3, max_concurrent=3, last_ts=_t.monotonic() - 100.0)
         m._queue.append(
@@ -1815,16 +1815,16 @@ class TestLastSampleAndMemoryRows:
     released memory would read as still holding it."""
 
     def _agent(self, **kw):
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
-        info = SubagentInfo(id=kw.pop("id", "a1"), task=kw.pop("task", "t"), agent="kirocrew")
+        info = SubagentInfo(id=kw.pop("id", "a1"), task=kw.pop("task", "t"), agent="ajcrew")
         info._pid = 4242
         for k, v in kw.items():
             setattr(info, k, v)
         return info
 
     def test_last_rss_follows_down_while_peak_holds(self, monkeypatch) -> None:
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         m = _mgr(running=1, max_concurrent=16, last_ts=0.0)
         info = self._agent()
@@ -1844,7 +1844,7 @@ class TestLastSampleAndMemoryRows:
     def test_shared_agents_report_a_divided_last_sample(self, monkeypatch) -> None:
         """Sharing agents all report the SAME runtime pid, so the per-agent figure
         is the runtime's measurement split between them."""
-        import kiro_crew.subagent as sub
+        import aj_crew.subagent as sub
 
         m = _mgr(running=2, max_concurrent=16, last_ts=0.0)
         a = self._agent(id="a1", _session_sharing=True)

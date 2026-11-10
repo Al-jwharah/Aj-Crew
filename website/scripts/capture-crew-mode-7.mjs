@@ -51,33 +51,33 @@ const APPROVAL = {
 }
 
 const slots = [
-  { key: ROOT, title: 'Crew Haiku Sea Trees Rain', messages: 2, running: false, agent: 'kirocrew-conductor', agent_kind: 'template', crew_mode_root: true, mode: '', origin: 'user', memory_mode: 'persistent', created: T0, last_ts: '2026-10-28T08:12:00Z', folder_id: '', workspace: 'default' },
-  { key: WORKER, title: 'Rain haiku', messages: 2, running: false, agent: 'kirocrew-worker', agent_kind: 'template', crew_root: ROOT, created_by: ROOT, pending_approval: true, pending_approval_info: APPROVAL, mode: '', origin: 'user', memory_mode: 'persistent', created: T0, last_ts: '2026-10-28T08:11:00Z', folder_id: '', workspace: 'default' },
-  { key: DONE, title: 'Tree haiku', messages: 2, running: false, agent: 'kirocrew-worker', agent_kind: 'template', crew_root: ROOT, created_by: ROOT, mode: '', origin: 'user', memory_mode: 'persistent', created: T0, last_ts: '2026-10-28T08:09:00Z', folder_id: '', workspace: 'default' },
-  { key: BUSY, title: 'New Session…', messages: 0, running: true, agent: 'kirocrew', agent_kind: 'template', mode: '', origin: 'user', memory_mode: 'persistent', created: T0, last_ts: T0, folder_id: '', workspace: 'default' },
-  { key: PLAIN, title: 'New Session…', messages: 0, running: false, agent: 'kirocrew', agent_kind: 'template', mode: '', origin: 'user', memory_mode: 'persistent', created: T0, last_ts: T0, folder_id: '', workspace: 'default' },
+  { key: ROOT, title: 'Crew Haiku Sea Trees Rain', messages: 2, running: false, agent: 'ajcrew-conductor', agent_kind: 'template', crew_mode_root: true, mode: '', origin: 'user', memory_mode: 'persistent', created: T0, last_ts: '2026-10-28T08:12:00Z', folder_id: '', workspace: 'default' },
+  { key: WORKER, title: 'Rain haiku', messages: 2, running: false, agent: 'ajcrew-worker', agent_kind: 'template', crew_root: ROOT, created_by: ROOT, pending_approval: true, pending_approval_info: APPROVAL, mode: '', origin: 'user', memory_mode: 'persistent', created: T0, last_ts: '2026-10-28T08:11:00Z', folder_id: '', workspace: 'default' },
+  { key: DONE, title: 'Tree haiku', messages: 2, running: false, agent: 'ajcrew-worker', agent_kind: 'template', crew_root: ROOT, created_by: ROOT, mode: '', origin: 'user', memory_mode: 'persistent', created: T0, last_ts: '2026-10-28T08:09:00Z', folder_id: '', workspace: 'default' },
+  { key: BUSY, title: 'New Session…', messages: 0, running: true, agent: 'ajcrew', agent_kind: 'template', mode: '', origin: 'user', memory_mode: 'persistent', created: T0, last_ts: T0, folder_id: '', workspace: 'default' },
+  { key: PLAIN, title: 'New Session…', messages: 0, running: false, agent: 'ajcrew', agent_kind: 'template', mode: '', origin: 'user', memory_mode: 'persistent', created: T0, last_ts: T0, folder_id: '', workspace: 'default' },
 ]
 
 const CATALOG = {
   agents: [
-    { name: 'kirocrew', selection_kind: 'template', kiro_agent: '', workspace: 'default', memory_store: 'default', source: 'builtin' },
-    { name: 'kirocrew-conductor', selection_kind: 'template', kiro_agent: '', workspace: 'default', memory_store: 'default', source: 'builtin' },
-    { name: 'kirocrew-worker', selection_kind: 'template', kiro_agent: '', workspace: 'default', memory_store: 'default', source: 'builtin' },
+    { name: 'ajcrew', selection_kind: 'template', kiro_agent: '', workspace: 'default', memory_store: 'default', source: 'builtin' },
+    { name: 'ajcrew-conductor', selection_kind: 'template', kiro_agent: '', workspace: 'default', memory_store: 'default', source: 'builtin' },
+    { name: 'ajcrew-worker', selection_kind: 'template', kiro_agent: '', workspace: 'default', memory_store: 'default', source: 'builtin' },
   ],
-  default_agent: 'kirocrew',
-  crew_mode_agent: 'kirocrew-conductor',
-  conductor_agents: ['kirocrew-conductor'],
+  default_agent: 'ajcrew',
+  crew_mode_agent: 'ajcrew-conductor',
+  conductor_agents: ['ajcrew-conductor'],
 }
 
 const WORKERS = {
   root: ROOT,
   workers: [{
-    key: WORKER, title: 'Rain haiku', agent: 'kirocrew-worker', status: 'needs_approval', group: 'approval',
+    key: WORKER, title: 'Rain haiku', agent: 'ajcrew-worker', status: 'needs_approval', group: 'approval',
     last_activity: '2026-10-28T08:11:00Z', ledger_item: 'it_rain0001',
     summary: 'Write one short haiku (5-7-5) about rain and save it to a file.',
     created_by: ROOT, dispatched_by: ROOT, approval: APPROVAL,
   }, {
-    key: DONE, title: 'Tree haiku', agent: 'kirocrew-worker', status: 'idle', group: 'done',
+    key: DONE, title: 'Tree haiku', agent: 'ajcrew-worker', status: 'idle', group: 'done',
     last_activity: '2026-10-28T08:09:00Z', ledger_item: 'it_tree0001',
     summary: 'Write one short haiku (5-7-5) about trees and save it to a file.',
     created_by: ROOT, dispatched_by: ROOT,
@@ -107,7 +107,7 @@ const transcripts = {
   [PLAIN]: [],
 }
 
-let agentNow = 'kirocrew'
+let agentNow = 'ajcrew'
 
 /** Route /api/** -- MUST return truthy once fulfilled (see stubDashboardApi). */
 const extra = async (path, route) => {
@@ -117,7 +117,7 @@ const extra = async (path, route) => {
   // conductor the row carries the Crew Mode stamp, so the list row, the side
   // panel and the footer mark all agree with what the press just did.
   if (path === '/api/chat/slots' && method === 'GET') {
-    const onConductor = agentNow === 'kirocrew-conductor'
+    const onConductor = agentNow === 'ajcrew-conductor'
     await json(route, (slotsNow ?? slots).map(s => s.key === PLAIN ? { ...s, agent: agentNow, ...(onConductor ? { crew_mode_root: true } : {}) } : s))
     return true
   }
@@ -127,7 +127,7 @@ const extra = async (path, route) => {
   if (path === `/api/chat/slots/${ROOT}/crew-timeline`) { await json(route, { root: ROOT, lanes: [], gaps: [] }); return true }
   if (path === `/api/chat/slots/${PLAIN}/agent` && method === 'POST') {
     const body = route.request().postDataJSON?.() ?? {}
-    agentNow = body.agent || 'kirocrew'
+    agentNow = body.agent || 'ajcrew'
     await json(route, { agent: agentNow, agent_kind: 'template', workspace: 'default' })
     return true
   }
@@ -170,7 +170,7 @@ async function main() {
     assert(await page.getByRole('button', { name: 'Reject' }).isVisible(), 'Reject on the card')
     const trust = page.getByRole('button', { name: 'Trust this crew member' })
     assert(await trust.isVisible(), 'Trust on the card')
-    const scope = page.getByText('Approves this and lets this crew member run tools without asking until Kiro Crew restarts.')
+    const scope = page.getByText('Approves this and lets this crew member run tools without asking until Aj Crew restarts.')
     assert(await scope.isVisible(), 'Trust scope line visible beside Trust')
     assert((await page.getByTestId('crew-approval-trust-row').getByRole('button').count()) === 1, 'Trust row holds one button')
     assert((await page.getByRole('button', { name: /^Agent: / }).count()) === 0, 'no agent picker on the conductor composer')

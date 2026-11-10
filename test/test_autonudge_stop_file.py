@@ -8,9 +8,9 @@ import logging
 
 import pytest
 
-from kiro_crew import autonudge as _an
-from kiro_crew import autonudge_stop_log as stoplog
-from kiro_crew.autonudge import AutoNudgeService
+from aj_crew import autonudge as _an
+from aj_crew import autonudge_stop_log as stoplog
+from aj_crew.autonudge import AutoNudgeService
 
 # Obviously fake GitHub classic PAT shape, split so no scanner sees a literal.
 _FAKE_PAT = "ghp_" "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef12"
@@ -18,7 +18,7 @@ _FAKE_PAT = "ghp_" "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef12"
 
 @pytest.fixture(autouse=True)
 def _enable(monkeypatch):
-    monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
 
 @pytest.fixture(autouse=True)
@@ -84,7 +84,7 @@ def test_the_file_rotates_at_its_cap(tmp_path, monkeypatch):
 def test_an_unwritable_stop_file_keeps_the_store_write_and_the_log_line(tmp_path, caplog):
     # ``logs`` is a plain file, so the directory cannot be made and every append fails.
     (tmp_path / "logs").write_text("not a directory", encoding="utf-8")
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.autonudge"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.autonudge"):
         loop_id = _stop_one(tmp_path)
     messages = [r.getMessage() for r in caplog.records]
     assert any("reason='runtime_budget'" in m for m in messages)

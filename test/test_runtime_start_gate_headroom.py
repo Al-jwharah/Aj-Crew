@@ -1,7 +1,7 @@
 """The session-start gate always keeps a permit for a start that has not gone out.
 
 A timed-out ``session/new`` hands its gate permit to a
-:class:`~kiro_crew.acp.runtime.StartCollector`, which holds it for
+:class:`~aj_crew.acp.runtime.StartCollector`, which holds it for
 ``agent.start_collect_timeout_secs`` (default 300 s). At the default limit of 2
 that let two slow starts park BOTH permits for five minutes, so every
 ``session/new`` on the gateway queued behind requests that had already given up
@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.acp.runtime import SessionStartGate
-from kiro_crew.testing.wait import finished
+from aj_crew.acp.runtime import SessionStartGate
+from aj_crew.testing.wait import finished
 
 
 @pytest.mark.asyncio

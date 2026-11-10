@@ -19,13 +19,13 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.dashboard import chat_folders, chat_fork, chat_handlers, chat_pins, chat_slack
-from kiro_crew.dashboard import handlers as handlers_pkg
-from kiro_crew.dashboard import slot_ownership
-from kiro_crew.dashboard.chat_api import resume as chat_resume
-from kiro_crew.dashboard.handlers import prompts_caller_gates, side
-from kiro_crew.dashboard.routes import chat as routes_chat
-from kiro_crew.dashboard.slot_ownership import slot_not_found
+from aj_crew.dashboard import chat_folders, chat_fork, chat_handlers, chat_pins, chat_slack
+from aj_crew.dashboard import handlers as handlers_pkg
+from aj_crew.dashboard import slot_ownership
+from aj_crew.dashboard.chat_api import resume as chat_resume
+from aj_crew.dashboard.handlers import prompts_caller_gates, side
+from aj_crew.dashboard.routes import chat as routes_chat
+from aj_crew.dashboard.slot_ownership import slot_not_found
 
 Handler = Callable[[web.Request], Awaitable[web.StreamResponse]]
 

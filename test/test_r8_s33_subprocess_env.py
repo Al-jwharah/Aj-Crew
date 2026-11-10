@@ -1,7 +1,7 @@
 """Every gateway spawn that runs untrusted or third-party code passes a scrubbed env.
 
 Four sites, one property: the child's environment is built from
-:func:`kiro_crew.apps.registry.minimal_env`'s allowlist, so a gateway-seeded
+:func:`aj_crew.apps.registry.minimal_env`'s allowlist, so a gateway-seeded
 channel credential cannot reach it. The two ``/bin/sh -c <detectInstalled>``
 probes go one step further through :func:`registry._detect_probe_env`, because a
 probe's command string is manifest-supplied rather than operator-authored: the
@@ -111,7 +111,7 @@ def _assert_scrubbed_and_usable(captured: dict, site: str) -> None:
 
 def _assert_no_ambient_identity(captured: dict, site: str) -> None:
     """A manifest-supplied probe command cannot authenticate as the operator."""
-    from kiro_crew.apps import registry
+    from aj_crew.apps import registry
 
     env = captured["env"]
     for key in ("SSH_AUTH_SOCK", "SSH_AGENT_PID", "GIT_SSH"):
@@ -198,7 +198,7 @@ def _fake_proc(returncode: int) -> MagicMock:
 # ---------------------------------------------------------------------------
 def test_pip_bootstrap_spawn_env_is_scrubbed(monkeypatch):
     """``memory._ensure_pip_available`` runs ``python -m ensurepip``."""
-    from kiro_crew.dashboard.handlers import memory
+    from aj_crew.dashboard.handlers import memory
 
     monkeypatch.setenv(_PLANTED_KEY, _PLANTED_VALUE)
     # A None entry in sys.modules makes ``import pip`` raise ImportError, which
@@ -228,7 +228,7 @@ def test_faiss_install_spawn_env_is_scrubbed(monkeypatch):
     reached once pip imports and faiss does not, and the capture raises out
     before any of the handler's later wiring runs.
     """
-    from kiro_crew.dashboard.handlers import memory
+    from aj_crew.dashboard.handlers import memory
 
     monkeypatch.setenv(_PLANTED_KEY, _PLANTED_VALUE)
     monkeypatch.setitem(sys.modules, "pip", MagicMock())
@@ -307,7 +307,7 @@ def test_detect_probe_spawn_env_is_scrubbed(monkeypatch, returncode, expected):
     code. Both probe verdicts are driven: the scrub must not swallow either answer
     on its way back to the caller.
     """
-    from kiro_crew.apps import registry
+    from aj_crew.apps import registry
 
     _plant_gateway_identity(monkeypatch)
     # The POSIX probe path; the native-Windows refusal has its own tests.
@@ -332,7 +332,7 @@ def test_install_detect_guard_spawn_env_is_scrubbed(monkeypatch):
     stops with that message -- the positive control that the guard's verdict
     still reaches its caller.
     """
-    from kiro_crew.apps import registry
+    from aj_crew.apps import registry
 
     _plant_gateway_identity(monkeypatch)
 

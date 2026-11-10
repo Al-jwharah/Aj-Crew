@@ -13,7 +13,7 @@ const ID = 'a1b2c3d4'
 
 function spawn(store: ReturnType<typeof createTestStore>) {
   const SLOT = store.getState().chat.activeSlot
-  store.dispatch(sseSubagentSpawn({ slot: SLOT, id: ID, task: 'do a thing', agent: 'kirocrew' }))
+  store.dispatch(sseSubagentSpawn({ slot: SLOT, id: ID, task: 'do a thing', agent: 'ajcrew' }))
   return SLOT
 }
 const sub = (store: ReturnType<typeof createTestStore>) => store.getState().chat.subagents[ID]

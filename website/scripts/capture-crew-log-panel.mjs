@@ -36,7 +36,7 @@ const now = Math.floor(Date.now() / 1000)
 
 const slots = [{
   key: SLOT, title: 'Crew log demo', running: false, last_message: '', messages: 8,
-  agent: 'kirocrew', memory_mode: 'persistent', project: '', folder_id: '',
+  agent: 'ajcrew', memory_mode: 'persistent', project: '', folder_id: '',
   modified: now, tags: [], source_links: [], source_links_total: 0,
 }]
 
@@ -51,7 +51,7 @@ const POPULATED = {
     close_reason: null,
     resumed: false,
     seeded: true,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     owner: 'owner',
     slot: SLOT,
     cwd: '',
@@ -138,12 +138,12 @@ const POPULATED = {
     by_id: {
       'sub-1': {
         agent_id: 'sub-1', seq_spawned: 1204,
-        agent: 'kirocrew-worker', model: 'a-model',
+        agent: 'ajcrew-worker', model: 'a-model',
         outcome: 'completed', ms: 412000, credits: 3.18, reason: '',
       },
       'sub-2': {
         agent_id: 'sub-2', seq_spawned: 1388,
-        agent: 'kirocrew-lite', model: 'another-model',
+        agent: 'ajcrew-lite', model: 'another-model',
         outcome: 'stopped', ms: 9400, credits: null,
         // A stop whose kill then failed: the outcome stays neutral while `info.error`
         // gains the reap failure, which is the row that made an outcome-gated container
@@ -152,7 +152,7 @@ const POPULATED = {
       },
       'sub-3': {
         agent_id: 'sub-3', seq_spawned: 1836,
-        agent: 'kirocrew-worker', model: 'a-model',
+        agent: 'ajcrew-worker', model: 'a-model',
         outcome: null, ms: null, credits: null, reason: '',
       },
     },
@@ -366,7 +366,7 @@ async function main() {
       assertContains('subagents/dark', text, [
         'subagents dispatched',
         'subagent', 'model', 'outcome', 'elapsed', 'credits',
-        'kirocrew-worker', 'kirocrew-lite', 'another-model',
+        'ajcrew-worker', 'ajcrew-lite', 'another-model',
         'finished', 'stopped', 'running',
         // The middle state, which is the one a panel gets wrong.
         'not reported',
@@ -391,7 +391,7 @@ async function main() {
       // session's history expects. Matched with startsWith, not equality: the agent cell
       // carries a second line (the turn, the steer count, a failure's reason), so its full
       // text is the name followed by that detail.
-      if (!rows[0][0].startsWith('kirocrew-worker') || !rows[1][0].startsWith('kirocrew-lite')) {
+      if (!rows[0][0].startsWith('ajcrew-worker') || !rows[1][0].startsWith('ajcrew-lite')) {
         throw new Error(`subagents: rows out of dispatch order: ${JSON.stringify(rows)}`)
       }
 
@@ -504,7 +504,7 @@ async function main() {
         for (let i = 4; i <= 17; i += 1) {
           byId[`sub-${i}`] = {
             agent_id: `sub-${i}`, seq_spawned: 1836 + i,
-            agent: 'kirocrew-worker', model: 'a-model',
+            agent: 'ajcrew-worker', model: 'a-model',
             outcome: 'completed', ms: 30000 + i * 1000, credits: 0.4, reason: '',
           }
         }
@@ -738,7 +738,7 @@ async function main() {
         'a chat that has just started has none saved yet',
       ])
       // Recording is on here, so the switch-off instructions belong to the other frame.
-      if (text.includes('KIROCREW_CREW_LOG')) {
+      if (text.includes('AJCREW_CREW_LOG')) {
         throw new Error('empty: recording is on but the switch-off instructions are shown')
       }
       if (text.includes('Lifecycle')) {
@@ -758,7 +758,7 @@ async function main() {
       assertContains('off', text, [
         'The crew log is off',
         'Messages in this chat are not being saved.',
-        'KIROCREW_CREW_LOG has a value that is not recognised, “fasle”',
+        'AJCREW_CREW_LOG has a value that is not recognised, “fasle”',
         'Crew log off',
         'Remove that setting',
         'what the crew log stores',
@@ -792,7 +792,7 @@ async function main() {
       assertContains('off-entries', text, [
         'The crew log is off',
         'New messages in this chat are not being saved. The ones below stay.',
-        'Remove KIROCREW_CREW_LOG from ~/.kiro/crew/.env',
+        'Remove AJCREW_CREW_LOG from ~/.kiro/crew/.env',
         'It is set to “0”.',
         'Status', 'Usage', 'Timeline', 'Tools', 'Approvals',
         'Crew log off · last saved entry 1,842',

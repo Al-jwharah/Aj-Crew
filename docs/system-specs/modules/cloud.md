@@ -2,13 +2,13 @@
 
 ## Overview
 
-`src/kiro_crew/cloud/` runs KiroCrew on the user's **own** AWS EC2 instance with a
+`src/aj_crew/cloud/` runs AjCrew on the user's **own** AWS EC2 instance with a
 single command. It provisions a CloudFormation stack, ships an available local
 checkout (or clones the public repo from packaged installs), signs the box's Kiro
 backend in over SSM (`kiro-cli`, or Crew's own vault on the KAS bundle route), and
 opens the dashboard through an SSM port-forward. Command surface
 (wired in `cli_cloud.py`, invoked via
-`kirocrew cloud <action>`):
+`ajcrew cloud <action>`):
 
 ```
 launch | list | status | connect | tunnel | login | logout | stop | start | destroy | iam-policy | iam-boundary | doctor
@@ -27,7 +27,7 @@ single hard boundary in the default posture**:
 - (2) the shell `deniedCommands` in `config/defaults.json` (kiro-cli
   `execute_bash`/`shell`) block both the raw AWS CLI verbs (`aws ec2
   terminate-instances` / `delete-*`, `aws cloudformation delete-stack`) **and**
-  the `kirocrew cloud destroy|stop|start|launch|connect|tunnel|login|logout` wrappers
+  the `ajcrew cloud destroy|stop|start|launch|connect|tunnel|login|logout` wrappers
   (the latter mint/print tokens); read-only `list`/`status` stay allowed. The
   AWS patterns tolerate global options in BOTH positions — before the service
   AND between the service and the operation
@@ -37,7 +37,7 @@ single hard boundary in the default posture**:
   The block covers the low-level `s3api` write surface too (`put-object`,
   `copy-object`, the multipart-upload family, `put-bucket-*`), not just the
   high-level `aws s3 cp/mv/sync` — otherwise the launcher's `s3:PutObject` grant
-  to `kirocrew-src-*` would be an agent exfiltration path. It also blocks the
+  to `ajcrew-src-*` would be an agent exfiltration path. It also blocks the
   launcher's **creation/mutation** verbs (`cloudformation deploy/create-stack/
   update-stack/*-change-set`, `ec2 run-instances/create-security-group/
   authorize-security-group-*`, `iam create-role/put-role-policy/
@@ -47,7 +47,7 @@ single hard boundary in the default posture**:
   `security.py`'s underscored `BUILTIN_DENY_PATTERNS`, which don't match
   hyphenated CLI strings;
 - (3) an in-layer chokepoint — `run_aws` calls `assert_chokepoint_allowed()`,
-  which under an agent session (`KIROCREW_SESSION_KEY` set) allows only an
+  which under an agent session (`AJCREW_SESSION_KEY` set) allows only an
   **exact** read-only `(service, operation)` allowlist and refuses everything
   else, including secret reads (`secretsmanager get-secret-value` / `ssm
   get-parameter --with-decryption` / `ssm get-command-invocation`); the
@@ -55,7 +55,7 @@ single hard boundary in the default posture**:
 
 **Honest containment model.** Layers (2) and (3) are *best-effort friction*, not
 containment: a code-executing agent can obfuscate a shell string,
-`del os.environ['KIROCREW_SESSION_KEY']` before an in-process call, or — since
+`del os.environ['AJCREW_SESSION_KEY']` before an in-process call, or — since
 the **default `agent.sandbox = "auto"` resolves to `standard`, which does NOT
 hide `~/.aws`** — just run `aws`/boto3 directly. So the load-bearing control is
 the **least-privilege IAM scope of the operator's own credentials** (`iam.py` —
@@ -70,26 +70,26 @@ claim that a hostile in-process agent is fully contained.
 | Module | Role |
 |--------|------|
 | `aws.py` | The `run_aws` chokepoint for captured AWS CLI calls — fixed argv, no shell, sandbox-wrapped, `--profile` only (never boto3, never a raw key), and a child environment without the gateway's Python interpreter settings (`sandbox.without_python_env`), because aws-cli v1 is a Python program. `checked`/`checked_json`; `AccessDenied → exact IAM action` mapping; `env_credentials_hint()`; `warn_if_started_from_agent_session()`, the gateway's log-only post-READY WARNING when its own process reads as an agent session (`_in_agent_session`, the check `assert_human_action` refuses on), e.g. restarted from an agent's shell. |
-| `ec2.py` | `deploy`/`status`/`stop`/`start`/`destroy` via `aws cloudformation` + `ec2`; AZ- **and egress-**aware `discover_network` + `resolve_explicit_subnet` (`--subnet` pin, same guarantees); tag-based stateless discovery (`list_instances` drops an instance EC2 reports terminated, shutting down, or no longer has, so a crew whose stack was deleted leaves `list` as `status`/`destroy` already report it absent); `_validate_cidr`. `find_stack` verifies BOTH `kirocrew:managed=true` AND `kirocrew:instance==<tag>` before status/stop/start/destroy touch a stack — so a same-prefix managed stack with a different instance tag can't be acted on by the wrong `--tag`. |
-| `iam.py` | Least-privilege launcher policy generator (applied by the user, never by KiroCrew) + read-only reachability check + the **content-fixed instance permissions-boundary document** (`boundary_policy_document`/`boundary_arn`) and its constants (`BOUNDARY_NAME`). |
+| `ec2.py` | `deploy`/`status`/`stop`/`start`/`destroy` via `aws cloudformation` + `ec2`; AZ- **and egress-**aware `discover_network` + `resolve_explicit_subnet` (`--subnet` pin, same guarantees); tag-based stateless discovery (`list_instances` drops an instance EC2 reports terminated, shutting down, or no longer has, so a crew whose stack was deleted leaves `list` as `status`/`destroy` already report it absent); `_validate_cidr`. `find_stack` verifies BOTH `ajcrew:managed=true` AND `ajcrew:instance==<tag>` before status/stop/start/destroy touch a stack — so a same-prefix managed stack with a different instance tag can't be acted on by the wrong `--tag`. |
+| `iam.py` | Least-privilege launcher policy generator (applied by the user, never by AjCrew) + read-only reachability check + the **content-fixed instance permissions-boundary document** (`boundary_policy_document`/`boundary_arn`) and its constants (`BOUNDARY_NAME`). |
 | `host_policy.py` | Reads and validates the edition's `cloud_instance_policy` seam (managed policies for the EC2 instance role, plus the boundary statements they need). The one reader for the boundary document, the second launcher policy (`iam.host_policy_document`) and the template's `ExtraManagedPolicyArns`; see Security model. |
 | `ssm.py` | SSM `send-command` run-and-poll (base64-wrapped remote scripts) + `start-session` port-forward; `open_port_forward()` directly spawns the streaming `aws ssm start-session` child because `run_aws` captures output, and calls `aws.assert_human_action()` before doing so; `port_is_free` / `wait_for_local_port`. The local plugin installer (`install_session_manager_plugin()`) and the copy-paste command the dashboard shows (`session_manager_plugin_install_command()`, except its Homebrew line, which Homebrew checks against its own cask) fetch the plugin release pinned in `_SSM_PLUGIN_VERSION` and check the package's sha256 before any `sudo` step; the pins are a copy of `packaging/pins/aws-tools.env`, which the wheel does not ship, kept equal by `test/test_installer_tool_pins.py`. |
 | `login.py` | Device-code / social sign-in on the box over SSM -- `kiro-cli`'s, or Crew's own vault's on the KAS bundle route (every remote script asks the box which, see `login_vault.py`) -- plus `cancel_device_login` — which stops a login this crew started and removes the files holding its code, WITHOUT dropping the box's session, because a cancelled attempt must not sign the crew in later and must not take an older valid session with it — and `logout` — the account switch. `login` short-circuits on an existing session, so `logout` is what makes a different Kiro account reachable without a hand-run SSM command. It kills any still-polling background `kiro-cli login` **and** any live `kiro-cli acp` runtime **before** signing out (otherwise the login re-authenticates the old account, and an ACP runtime keeps serving the old account's in-memory credential until its next 401), removes the login log/PID/FIFO (they hold the previous device-code URL + code, which must never be re-shown as a fresh prompt), and confirms the result with `is_logged_in` rather than the exit code — `kiro-cli logout` exits non-zero when there was no session to drop, which is still the requested state. That confirmation fails CLOSED: it requires a positive signed-out sentinel (`__NOAUTH__`), so an SSM timeout or transport error — where the session may still be active — reports failure rather than a false "signed out". The same fail-closed applies to the cleanup command itself: if that SSM invocation doesn't return `Success`, the kills it was meant to do can't be trusted and logout reports failure without probing. The CLI warns the operator that in-flight chats/cron sessions are stopped (their runtimes are killed). |
-| `login_vault.py` | The on-box half of the sign-in when Crew's own vault owns the credential. The local `kirocrew cloud` command cannot read the instance's `config.json`, so **the box decides**: every remote script (`login.py`'s check / whoami / login / logout / callback / cancel) splices in `route_prelude()`, which resolves the box's `kirocrew` and runs its `kirocrew kas route`; only the exact answer `kas-bundle` (`agent.acp_backend == "kas"` AND `agent.kas_bundle` on, the positive shape `kiro_prerequisite_service._kas_bundle_route` uses) takes the vault branch -- an empty answer (a box whose Kiro Crew predates the verb, or no `kirocrew` at all) and every other answer take the kiro-cli branch, whose `kiro-cli` invocations are the ones the scripts always ran. Before either branch, `require_sign_in_program()` refuses readably in two cases. First, when the probe RAN and could not decide -- `kas route` exited `ROUTE_UNKNOWN_EXIT` (1: unreadable config, or a crash) -- it echoes `__KIROCREW_ROUTE_UNKNOWN__`, the probe's output and the remedy, and touches NEITHER program whether or not kiro-cli is installed: a box whose config just broke may be on the bundle route, and `kiro-cli logout` there would report a sign-out while the vault credential stays usable. Argparse's 2 (a `kirocrew` too old for the verb) and the shell's 127 (no `kirocrew`) are NOT that case: they are "no route answer" and keep the kiro-cli branch. Second, when the box has NEITHER program: the route was not `kas-bundle` (the probe's exit code, its stdout and its stderr are kept apart in `$KC_ROUTE_RC` / `$KC_ROUTE_OUT` / `$KC_ROUTE_ERR`; only stdout is compared, since the config loader warns on stderr while the verb still answers `kas-bundle`) and `kiro-cli` did not resolve. It echoes `__KIROCREW_NO_SIGNIN_PROGRAM__`, the probe's output (the `kas route` error for an unreadable config, or the shell's "not found" for a missing `kirocrew`) and the remedy, so the operator never reads `kiro-cli: command not found` for what is a bundle-route box whose config broke; the local side reads either sentinel as UNKNOWN (`_auth_probe` None, `remote_identity` None, `logout` False) and as the prompt's error, never as signed out and never as a reason to start a flow. On the vault branch the scripts drive `kirocrew kas whoami [--format json]`, `kirocrew kas login [--provider idc --start-url U --region R]` (one background launch for every target: the verb prompts for nothing, so the kiro-cli IdC pty driver has no counterpart) and `kirocrew kas logout` ([kas-auth.md](kas-auth.md) § Sign-in from a shell); their output is read by the SAME capture loop, `parse_login_output` and `parse_whoami_output`, because the verbs print kiro-cli's vocabulary (`https://…user_code=…`, `code: XXXX-XXXX`, the `accountType`/`startUrl` document) and use its exit codes. The device-login script echoes `__KIROCREW_VAULT_ROUTE__` on that branch so `start_device_login` never degrades a failed vault sign-in into the kiro-cli social-callback flow (there is no kiro-cli on that box); the callback script itself refuses with `__KIROCREW_VAULT_NO_CALLBACK__`. Cancel and replace `pkill` both command-line patterns (`kiro-cli login`, `kirocrew kas login`) and confirm the stop only when both are gone. The vault logout kills no engine process: the vault is part of the gateway's identity fingerprint and its pre-turn identity-change check retires the agent processes on the next turn. Nothing crosses SSM but the prompt the user must open; the device code and the token stay between the box's `kirocrew` and the issuer. |
+| `login_vault.py` | The on-box half of the sign-in when Crew's own vault owns the credential. The local `ajcrew cloud` command cannot read the instance's `config.json`, so **the box decides**: every remote script (`login.py`'s check / whoami / login / logout / callback / cancel) splices in `route_prelude()`, which resolves the box's `ajcrew` and runs its `ajcrew kas route`; only the exact answer `kas-bundle` (`agent.acp_backend == "kas"` AND `agent.kas_bundle` on, the positive shape `kiro_prerequisite_service._kas_bundle_route` uses) takes the vault branch -- an empty answer (a box whose Aj Crew predates the verb, or no `ajcrew` at all) and every other answer take the kiro-cli branch, whose `kiro-cli` invocations are the ones the scripts always ran. Before either branch, `require_sign_in_program()` refuses readably in two cases. First, when the probe RAN and could not decide -- `kas route` exited `ROUTE_UNKNOWN_EXIT` (1: unreadable config, or a crash) -- it echoes `__AJCREW_ROUTE_UNKNOWN__`, the probe's output and the remedy, and touches NEITHER program whether or not kiro-cli is installed: a box whose config just broke may be on the bundle route, and `kiro-cli logout` there would report a sign-out while the vault credential stays usable. Argparse's 2 (a `ajcrew` too old for the verb) and the shell's 127 (no `ajcrew`) are NOT that case: they are "no route answer" and keep the kiro-cli branch. Second, when the box has NEITHER program: the route was not `kas-bundle` (the probe's exit code, its stdout and its stderr are kept apart in `$KC_ROUTE_RC` / `$KC_ROUTE_OUT` / `$KC_ROUTE_ERR`; only stdout is compared, since the config loader warns on stderr while the verb still answers `kas-bundle`) and `kiro-cli` did not resolve. It echoes `__AJCREW_NO_SIGNIN_PROGRAM__`, the probe's output (the `kas route` error for an unreadable config, or the shell's "not found" for a missing `ajcrew`) and the remedy, so the operator never reads `kiro-cli: command not found` for what is a bundle-route box whose config broke; the local side reads either sentinel as UNKNOWN (`_auth_probe` None, `remote_identity` None, `logout` False) and as the prompt's error, never as signed out and never as a reason to start a flow. On the vault branch the scripts drive `ajcrew kas whoami [--format json]`, `ajcrew kas login [--provider idc --start-url U --region R]` (one background launch for every target: the verb prompts for nothing, so the kiro-cli IdC pty driver has no counterpart) and `ajcrew kas logout` ([kas-auth.md](kas-auth.md) § Sign-in from a shell); their output is read by the SAME capture loop, `parse_login_output` and `parse_whoami_output`, because the verbs print kiro-cli's vocabulary (`https://…user_code=…`, `code: XXXX-XXXX`, the `accountType`/`startUrl` document) and use its exit codes. The device-login script echoes `__AJCREW_VAULT_ROUTE__` on that branch so `start_device_login` never degrades a failed vault sign-in into the kiro-cli social-callback flow (there is no kiro-cli on that box); the callback script itself refuses with `__AJCREW_VAULT_NO_CALLBACK__`. Cancel and replace `pkill` both command-line patterns (`kiro-cli login`, `ajcrew kas login`) and confirm the stop only when both are gone. The vault logout kills no engine process: the vault is part of the gateway's identity fingerprint and its pre-turn identity-change check retires the agent processes on the next turn. Nothing crosses SSM but the prompt the user must open; the device code and the token stay between the box's `ajcrew` and the issuer. |
 | `login_target.py` | `KiroLoginTarget`, the durable identity a managed launch signs in as (Builder ID default, or an Identity Center start URL + region), the `whoami` parser both routes share, `identity_matches_target`, and `discover_local_identity` -- the launching machine's own sign-in, inherited by `cloud launch` / `setup`. On a local KAS bundle route that reading comes from Crew's own vault (`local_vault_identity`, rendered through `auth/whoami.whoami_document` and read back through the same parser), with the same three answers as the kiro-cli reading: an identity, `{}` for none to inherit, `None` for unknown. An explicitly supplied `kiro_bin` still asks kiro-cli. |
 | `connect.py` | SSM port-forward + token mint + open browser; Instances-registry integration; `redact_token`. **The Fargate lane has no connect verb here.** A Fargate crew is reached by the instances layer's `fargate` connection method, surfaced as **Settings > Remote Crew**, whose card opens the forward and shows the task's turn API URL. What this module contributes to that lane is `FARGATE_TURN_PATH`, the path that forward dials, spelled here rather than imported from an image's source; `FARGATE_HEALTH_PATH` beside it is dialled from nowhere in the gateway and exists so the container-contract test can assert the pair. Nothing mints for a Fargate task: it runs the crew container, whose only listener is a front proxy serving a JSON turn API with the backend loopback-only and every control path authorisation-gated and then 404, so there is no mint route to call and no browser to open. There is no CLI counterpart either, and the asymmetry is the reason -- `cloud connect` addresses a crew by EC2 tag, and `cloud launch` cannot create a Fargate crew at all, because that engine is reachable only through the dashboard's provisioner API -- so `cloud connect`'s no-instance failure names Settings > Remote Crew rather than a verb that would dial a crew the CLI cannot make. `is_launched_instance()` prevents the generic instance PATCH endpoint from rewriting a correlated launch’s connection method, SSM target, AWS profile, or region, so Stop/Start/Delete retain the stack address and a running billable instance is not stranded. |
-| `source.py` | Detect and package an editable local checkout (`git archive`, tarfile fallback) and upload it to a per-account S3 bucket; packaged installs instead use the template's public-repo clone fallback, pinned to this build's release tag by `ec2.resolve_public_ref` (see Provisioning shape and source). The secret-excluding filter is shared by both packaging paths. Also **`ensure_instance_boundary`** — creates the shared, immutable `kirocrew-ec2-boundary` managed policy once (create-if-not-exists, never re-versioned) and returns its ARN; `delete_instance_boundary` for admin cleanup. **`ensure_crew_boundary`** and **`ensure_crew_exec_boundary`** do the same for the two Fargate ceilings (`kirocrew-crew-boundary`, `kirocrew-crew-exec-boundary`), and all three route through one `_ensure_boundary` sequence whose ORDER is the security property: an existing policy is verified against the expected content-fixed document BEFORE it is reused, and a lost create race is verified on the way back, so a permissive policy seeded at either name is refused rather than trusted to cap nothing. |
+| `source.py` | Detect and package an editable local checkout (`git archive`, tarfile fallback) and upload it to a per-account S3 bucket; packaged installs instead use the template's public-repo clone fallback, pinned to this build's release tag by `ec2.resolve_public_ref` (see Provisioning shape and source). The secret-excluding filter is shared by both packaging paths. Also **`ensure_instance_boundary`** — creates the shared, immutable `ajcrew-ec2-boundary` managed policy once (create-if-not-exists, never re-versioned) and returns its ARN; `delete_instance_boundary` for admin cleanup. **`ensure_crew_boundary`** and **`ensure_crew_exec_boundary`** do the same for the two Fargate ceilings (`ajcrew-crew-boundary`, `ajcrew-crew-exec-boundary`), and all three route through one `_ensure_boundary` sequence whose ORDER is the security property: an existing policy is verified against the expected content-fixed document BEFORE it is reused, and a lost create race is verified on the way back, so a permissive policy seeded at either name is refused rather than trusted to cap nothing. |
 | `config.py` | Persisted profile / region / tag **plus the optional `fargate` and `microvm` blocks** (**never credentials**); `load()` tolerates a hand-edited/corrupt `cloud.json` -- bad JSON *or* a non-object shape falls back to defaults rather than crashing every cloud command. The `fargate` and `microvm` fields hold each block **exactly as read**, and `fargate_config()` / `microvm_config()` are what judge them (see "The MicroVM lane" below for the second). **This module has no writer:** no `save()`, no `apply_update()`, no lock. `profile` / `region` / `last_tag` are still READ here so an install whose pointer predates `launch_state.py` keeps resuming, and `launch_state.py` is where those three are written now. See "The Fargate lane's configuration home" and "Where launch state lives" below. |
 | `launch_state.py` | The product-owned launch record (`cloud_launch_state.json`): the profile, region and tag a LAUNCH decided. One writer, three fields, frozen dataclass, whole-record `atomic_write`. `load()` falls back to the legacy fields in `cloud.json` when the record holds none, read-only, so `cloud launch` works on an install that predates it. `clear_tag(expect)` clears only while the pointer still names the stack `destroy` deleted. See "Where launch state lives" below. |
 | `sizes.py` | arm64/Graviton (and x86_64) size tiers. The default is the Development tier (`DEFAULT_TIER_KEY = "balanced"`, `m7g.2xlarge`); `t4g.xlarge` is the 16 GB Light floor, not the default. |
 | `fargate/` | A crew's Fargate task definition and `RunTask` request produced as **data**, by pure functions that call nothing. `identity.py` recovers which crew an ARN belongs to and refuses a document naming more than one; `taskdef.py` holds the revision key and the `RegisterTaskDefinition` document; `runtask.py` holds the launch request and the closed set of overrides it may carry. See "Fargate task definitions as data" below. |
-| `fargate_engine.py` | The `LaunchEngine` for Fargate, reachable through `engine_for("aws_fargate")` when -- and only when -- `cloud.json` carries a complete `fargate` block (see the `config.py` row and "The Fargate lane's configuration home" below). The lane is registered by `DefaultRemoteProvisionerProvider`, which appends the descriptor to `provisioners()` on the same condition; an absent or incomplete block leaves the lane unregistered rather than registered and refusing, and `engine_for` then raises the same `KeyError` an unknown id raises. Registration makes the lane reachable through the API and does **not** put a row in the Set-up picker: `kind` names a frontend form and no renderer claims this kind yet, so the dashboard skips it. Its teardown decides ownership from a task's tags: the `kirocrew:managed` marker is checked as a boolean gate **before** the identifier, so a task whose marker holds anything other than `true` is `UNMARKED` and is never stopped, and identity is then read under the imported `LAUNCH_TAG_KEY`. A running task this launch started but whose launch tag is absent or names another launch is `MISLABELLED`; both it and a running `UNMARKED` task carrying this launch's `startedBy` are REFUSED rather than deleted, and the plan returns `confirmed=False` naming the ARNs, because deleting on a `startedBy` match alone is a guess and reporting `True` would tell the operator their billing stopped when a task may still be running. Neither the marker's key nor its value nor the launch-tag key is spelled here; all three are imported from the modules that own them. |
+| `fargate_engine.py` | The `LaunchEngine` for Fargate, reachable through `engine_for("aws_fargate")` when -- and only when -- `cloud.json` carries a complete `fargate` block (see the `config.py` row and "The Fargate lane's configuration home" below). The lane is registered by `DefaultRemoteProvisionerProvider`, which appends the descriptor to `provisioners()` on the same condition; an absent or incomplete block leaves the lane unregistered rather than registered and refusing, and `engine_for` then raises the same `KeyError` an unknown id raises. Registration makes the lane reachable through the API and does **not** put a row in the Set-up picker: `kind` names a frontend form and no renderer claims this kind yet, so the dashboard skips it. Its teardown decides ownership from a task's tags: the `ajcrew:managed` marker is checked as a boolean gate **before** the identifier, so a task whose marker holds anything other than `true` is `UNMARKED` and is never stopped, and identity is then read under the imported `LAUNCH_TAG_KEY`. A running task this launch started but whose launch tag is absent or names another launch is `MISLABELLED`; both it and a running `UNMARKED` task carrying this launch's `startedBy` are REFUSED rather than deleted, and the plan returns `confirmed=False` naming the ARNs, because deleting on a `startedBy` match alone is a guess and reporting `True` would tell the operator their billing stopped when a task may still be running. Neither the marker's key nor its value nor the launch-tag key is spelled here; all three are imported from the modules that own them. |
 | `microvm/` | The Lambda MicroVM lane (see "The MicroVM lane" below). `config.py` holds `MicroVmConfig`, the typed `microvm` block, judged complete-or-absent like the Fargate block. `api.py` is every `lambda-microvms` call, through `aws.run_aws` / `checked_json` only (no boto3), with `endpoint_url` for the local harness. `image.py` resolves a crew's image: reuse a built one by digest, or build it once. `recipe.py` zips the SAME crew recipe the Fargate lane builds (the headless runtime base plus that crew's signed bundle) so `CreateMicrovmImage` runs the build on Lambda. `payload.py` builds the run-hook payload, the one channel into the VM at boot: the SSM activation, references (never values) to the control secret and the model credential, and the crew generation. `record.py` is the crew store (below). `states.py` holds where a crew can be and the only function that moves it. `engine.py` is `MicroVmLaunchEngine`, the five-method `LaunchEngine`, reachable through `engine_for("microvm")` only when the block is complete. |
-| `ui.py` / `wizard.py` | Terminal UI + the interactive launch flow. `_deploy_with_progress` runs the blocking deploy on a daemon thread and captures the `aws cloudformation deploy` child via a `proc_sink`, so a Ctrl+C on the main (poll) thread terminates it instead of orphaning it (~1800s). While it waits, `_stream_progress` prints each new stack event and, from the `Instance` event's physical id (the stack's `InstanceId` output exists only once the WaitCondition completes), the tail of `/var/log/kirocrew-setup.log` over SSM as `[box]` lines; 30 s with no new line prints the elapsed time. Every `ui` line helper flushes, so piped or `tee`d output streams too. An unknown `--size`/`size_key` on the public `launch()` entrypoint yields a clean rc=1 + message, not an uncaught `KeyError`. Resuming a saved stack (`launch` after `stop`) first calls `_ensure_running_and_ssm_ready` — starts a `stopped` instance and waits for SSM `Online` before sign-in/tunnel (which are SSM-only and would otherwise fail); a `terminated` instance fails clean pointing at `--new`. `last_tag` is persisted (to the launch record, via `_record_launch`) **only after** a deploy confirms healthy, and a write that fails there WARNS rather than aborting -- the instance is already billing and sign-in still has to happen — a failed first launch leaves no saved pointer, so the next `launch` retries clean instead of resuming a rolled-back/instance-less stack; `_saved_launch_is_usable` additionally ignores a stale saved tag (from an older build) whose stack is in a `_FAILED_STATES` status or has no instance. |
-| `templates/kirocrew-ec2.yaml` | The CloudFormation stack. |
-| `templates/kirocrew-microvm-base.yaml` | The account-and-region MicroVM stack, deployed by hand once, like the Fargate base: the launcher never creates a bucket or a key. It holds no networking, because a MicroVM launched with the egress connector has no security group or route table to place. Its resources: a KMS key and alias for the per-crew secrets, the recipe bucket, the image-build role Lambda assumes, the hybrid-activation role the guest's SSM agent registers under, and the execution role the crew runs as. Its outputs are the identifiers the `microvm` block names. |
-| `templates/kirocrew-fargate-base.yaml` | The account-and-region Fargate stack: the ECS cluster and an egress-only security group with no ingress. One per account and region, shared by every crew's tasks, so deleting one crew's stack cannot delete the cluster its siblings run on. |
-| `templates/kirocrew-fargate-crew.yaml` | Not deployed by any production path yet (the template says so). `source.ensure_crew_boundary` / `ensure_crew_exec_boundary` have one production caller, the `kirocrew cloud iam-boundary` admin step; no launch path calls them yet. The per-crew Fargate stack: the execution role (crew-scoped secret read, log write), a task role holding exactly the four `ssmmessages` channel actions, and the log group. Resource names are the ones `identity.py` derives (`kirocrew-crew-<crew>-exec`, `-task`, `/kirocrew/crew/<crew>`) and `taskdef.py` refuses a document that disagrees with, so a rename on either side becomes a launch refusal rather than a mismatch that runs. The task role's whole grant is four `ssmmessages` actions -- the channel the in-task SSM agent opens so a port-forward can reach the crew -- and it must never gain `secretsmanager:GetSecretValue`: the execution role holds that read, scoped to the one crew's secret namespace. Each role carries its OWN permissions boundary, both required parameters with no default, because a boundary caps to the intersection of identity policy and ceiling: `kirocrew-crew-boundary` permits exactly those four actions and `kirocrew-crew-exec-boundary` permits exactly the execution role's seven (the crew secret read, two log-stream writes, four ECR reads). One shared ceiling cannot fit both -- sized for the task role it denies the secret fetch and log-stream open ECS performs before the container starts, so no task launches; sized as their union it would admit the secret read under the role a prompt can reach. |
+| `ui.py` / `wizard.py` | Terminal UI + the interactive launch flow. `_deploy_with_progress` runs the blocking deploy on a daemon thread and captures the `aws cloudformation deploy` child via a `proc_sink`, so a Ctrl+C on the main (poll) thread terminates it instead of orphaning it (~1800s). While it waits, `_stream_progress` prints each new stack event and, from the `Instance` event's physical id (the stack's `InstanceId` output exists only once the WaitCondition completes), the tail of `/var/log/ajcrew-setup.log` over SSM as `[box]` lines; 30 s with no new line prints the elapsed time. Every `ui` line helper flushes, so piped or `tee`d output streams too. An unknown `--size`/`size_key` on the public `launch()` entrypoint yields a clean rc=1 + message, not an uncaught `KeyError`. Resuming a saved stack (`launch` after `stop`) first calls `_ensure_running_and_ssm_ready` — starts a `stopped` instance and waits for SSM `Online` before sign-in/tunnel (which are SSM-only and would otherwise fail); a `terminated` instance fails clean pointing at `--new`. `last_tag` is persisted (to the launch record, via `_record_launch`) **only after** a deploy confirms healthy, and a write that fails there WARNS rather than aborting -- the instance is already billing and sign-in still has to happen — a failed first launch leaves no saved pointer, so the next `launch` retries clean instead of resuming a rolled-back/instance-less stack; `_saved_launch_is_usable` additionally ignores a stale saved tag (from an older build) whose stack is in a `_FAILED_STATES` status or has no instance. |
+| `templates/ajcrew-ec2.yaml` | The CloudFormation stack. |
+| `templates/ajcrew-microvm-base.yaml` | The account-and-region MicroVM stack, deployed by hand once, like the Fargate base: the launcher never creates a bucket or a key. It holds no networking, because a MicroVM launched with the egress connector has no security group or route table to place. Its resources: a KMS key and alias for the per-crew secrets, the recipe bucket, the image-build role Lambda assumes, the hybrid-activation role the guest's SSM agent registers under, and the execution role the crew runs as. Its outputs are the identifiers the `microvm` block names. |
+| `templates/ajcrew-fargate-base.yaml` | The account-and-region Fargate stack: the ECS cluster and an egress-only security group with no ingress. One per account and region, shared by every crew's tasks, so deleting one crew's stack cannot delete the cluster its siblings run on. |
+| `templates/ajcrew-fargate-crew.yaml` | Not deployed by any production path yet (the template says so). `source.ensure_crew_boundary` / `ensure_crew_exec_boundary` have one production caller, the `ajcrew cloud iam-boundary` admin step; no launch path calls them yet. The per-crew Fargate stack: the execution role (crew-scoped secret read, log write), a task role holding exactly the four `ssmmessages` channel actions, and the log group. Resource names are the ones `identity.py` derives (`ajcrew-crew-<crew>-exec`, `-task`, `/ajcrew/crew/<crew>`) and `taskdef.py` refuses a document that disagrees with, so a rename on either side becomes a launch refusal rather than a mismatch that runs. The task role's whole grant is four `ssmmessages` actions -- the channel the in-task SSM agent opens so a port-forward can reach the crew -- and it must never gain `secretsmanager:GetSecretValue`: the execution role holds that read, scoped to the one crew's secret namespace. Each role carries its OWN permissions boundary, both required parameters with no default, because a boundary caps to the intersection of identity policy and ceiling: `ajcrew-crew-boundary` permits exactly those four actions and `ajcrew-crew-exec-boundary` permits exactly the execution role's seven (the crew secret read, two log-stream writes, four ECR reads). One shared ceiling cannot fit both -- sized for the task role it denies the secret fetch and log-stream open ECS performs before the container starts, so no task launches; sized as their union it would admit the secret read under the role a prompt can reach. |
 
 The two Fargate stacks publish the fields the launch engine's refusal at
 `fargate_engine.py` lists, so each has exactly one place to be read from. The
@@ -112,12 +112,12 @@ failed bootstrap folds the on-box setup-log tail into the signal reason so the c
 
 Bootstrap is reboot-resilient. UserData performs no package or build work directly:
 it first copies its already-rendered script to
-`/usr/local/sbin/kirocrew-bootstrap`, installs and enables the
-`kirocrew-bootstrap.service` systemd oneshot, starts it without blocking, and
+`/usr/local/sbin/ajcrew-bootstrap`, installs and enables the
+`ajcrew-bootstrap.service` systemd oneshot, starts it without blocking, and
 exits. If an account-level State Manager association such as
 `AWS-RunPatchBaseline` reboots a newly-online managed node during npm/Vite,
 systemd starts the same rendered script again on the next boot. Durable markers
-under `/var/lib/kirocrew-bootstrap/` checkpoint installation separately from
+under `/var/lib/ajcrew-bootstrap/` checkpoint installation separately from
 successful WaitCondition delivery: a reboot after installation retries gateway
 health and the success signal without replacing the checkout, while a reboot
 before installation completes stops any partially enabled gateway and safely
@@ -129,12 +129,12 @@ retry. This installs the existing `voice` extra (`boto3` and
 `amazon-transcribe`) before the gateway first imports its Transcribe provider;
 installing those SDKs after startup would otherwise require a gateway restart.
 Like every `install.sh` run it also downloads the pinned KAS engine into the
-instance's data home (`kirocrew kas install`); a failed download only warns, and
+instance's data home (`ajcrew kas install`); a failed download only warns, and
 `agent.kas_bundle` stays off.
 
 When the installed module belongs to a valid source checkout, the launcher
 packages that checkout and uploads it to a launcher-owned bucket
-(`kirocrew-src-<account>-<region>`); the instance downloads it with its own IAM
+(`ajcrew-src-<account>-<region>`); the instance downloads it with its own IAM
 role (`s3:GetObject` scoped to the single object). Wheel and desktop installs
 have no checkout to package, so `ec2.deploy` omits `SourceBucket` by default and
 the template clones the public repository instead. With no explicit ref and not a
@@ -202,12 +202,12 @@ generic, from a failed stack event (a denial CloudFormation meets creating a
 resource, such as `iam:PassRole` for the instance). The WaitCondition's reason
 is not read for it: it is the instance's own setup log, not a grant the launcher
 policy owns. A named action sets `missing_action` and puts
-``grant `<action>` (see `kirocrew cloud iam-policy`) and retry`` right after
+``grant `<action>` (see `ajcrew cloud iam-policy`) and retry`` right after
 `cloudformation deploy failed:`, ahead of the raw error, so the dashboard's
 400-character error keeps it and `cloud launch` prints its grant line instead of
 the `--keep-on-failure` tip. On a build with host policies, a denied
 `iam:AttachRolePolicy` leads with the second policy from
-`kirocrew cloud iam-policy --host-policies` instead and takes no
+`ajcrew cloud iam-policy --host-policies` instead and takes no
 `missing_action` from the events: the first policy already grants the one attach
 it allows. `aws.checked`, `find_stack` and the boundary read put their remedy
 ahead of the raw error the same way. The CLI's stderr is kept whole, so the stack
@@ -355,10 +355,10 @@ incomplete means absent: the lane is registered by `DefaultRemoteProvisionerProv
 block holds identifiers only, never a secret value: the base image ARN, the build
 role, the recipe bucket and the bundle path (or a pinned prebuilt
 `image_identifier` with its `image_version`, which must go together), the KMS key
-for the per-crew secrets, the secret path prefix (`kirocrew/crew` by default), the
+for the per-crew secrets, the secret path prefix (`ajcrew/crew` by default), the
 model-credential secret reference, the execution and activation roles, the log
 group and an optional `wall_seconds`. Most of these are the outputs of
-`templates/kirocrew-microvm-base.yaml`.
+`templates/ajcrew-microvm-base.yaml`.
 
 **Connection.** A launched crew is recorded as an Instances row with
 `provisioner_id = "microvm"` and the plain `ssm` connection method, aimed at the
@@ -382,7 +382,7 @@ process choose which VM the next delete destroys, so the file is a write-protect
 target in `security/paths_lists.py`.
 
 **What the lane borrows from an app.** Two things the lane needs ship with the
-aws-control app, and `cloud/` reaches both through seams in `kiro_crew.apps.seams`
+aws-control app, and `cloud/` reaches both through seams in `aj_crew.apps.seams`
 (see `app-kit-platform.md`, "A core feature that needs an app's code asks a seam"),
 never by importing the app. The crew runtime (`crew_runtime` seam) is the Docker build context the recipe zips, and the bundle
 digest is computed by the bundle builder that ships beside it. `recipe.runtime_path(name)`
@@ -418,9 +418,9 @@ Refusing lands after the deploy is billed and before sign-in, so the command abo
 pointer; overwriting loses the block. Splitting the owners removes the choice.
 
 **A stack the record does not name is offered, never chosen.** With no usable saved launch,
-`cloud launch` lists the `kirocrew-<tag>` stacks (`ec2.list_stacks`) and offers one only
-when it is neither failed nor in progress and a live instance carries `kirocrew:managed=true`
-and `kirocrew:instance=<tag>` (`ec2.live_instance_tags`, one `describe-instances` call
+`cloud launch` lists the `ajcrew-<tag>` stacks (`ec2.list_stacks`) and offers one only
+when it is neither failed nor in progress and a live instance carries `ajcrew:managed=true`
+and `ajcrew:instance=<tag>` (`ec2.live_instance_tags`, one `describe-instances` call
 however many stacks there are). Every other stack is named as not offered, with the
 `cloud status --tag` for the Region and profile searched, since it may still bill or be this
 machine's own interrupted launch. The menu's default is "Create a new installation", and
@@ -438,7 +438,7 @@ cleared.
 **A write failure does not fail the command.** `wizard._record_launch` swallows `OSError`,
 warns, and prints how to reach the instance. Every caller runs after its remote work, and
 sign-in, the tunnel and the closing instructions all matter more to the operator than a
-pointer -- which `kirocrew cloud list` can rediscover from the real stacks anyway.
+pointer -- which `ajcrew cloud list` can rediscover from the real stacks anyway.
 
 ## Security model
 
@@ -529,7 +529,7 @@ pointer -- which `kirocrew cloud list` can rediscover from the real stacks anywa
   nothing is created and nothing bills, so an abort is free. AFTER the deploy confirms, a
   failed write only WARNS (`wizard._record_launch`, and `destroy`'s own `clear_tag`) -- the
   irreversible work is done and cannot be retried, so losing the pointer costs a
-  `kirocrew cloud list`. Without the first half the second is destructive rather than lossy: a
+  `ajcrew cloud list`. Without the first half the second is destructive rather than lossy: a
   failed post-deploy write would leave the record naming the old stack while the new one is
   what exists, and a later `destroy` with no `--tag` would delete the old one. A DECLINED clear
   aborts the launch too when a different tag is saved: declining means another launch recorded
@@ -581,7 +581,7 @@ pointer -- which `kirocrew cloud list` can rediscover from the real stacks anywa
   mangle them. `${!tail_ctx}` in the template is a `!Sub` literal escape, not a
   bug (guarded by a test).
 - **IMDSv2 enforced** on the instance (`HttpTokens: required`, hop limit 1):
-  KiroCrew runs a prompt-injectable agent, so an SSRF/injection that reaches the
+  AjCrew runs a prompt-injectable agent, so an SSRF/injection that reaches the
   metadata endpoint must not read the instance role's STS credentials via IMDSv1.
 - **No unverified remote scripts in bootstrap.** Node.js installs from the AL2023
   AppStream `dnf` repo (the reliable primary path, validated live). The
@@ -598,14 +598,14 @@ pointer -- which `kirocrew cloud list` can rediscover from the real stacks anywa
 - **Least-privilege, tag-/prefix-scoped IAM.** The RCE-adjacent SSM verbs
   (`ssm:StartSession` / `ssm:SendCommand` on instances) and the EC2 destructive
   verbs (`DeleteSecurityGroup` / `RevokeSecurityGroup{Ingress,Egress}` / `DeleteTags`)
-  require `kirocrew:managed=true`; CloudFormation stack mutation/delete is scoped
-  to `stack/kirocrew-*/*`, and the change-set verbs (which `aws cloudformation
+  require `ajcrew:managed=true`; CloudFormation stack mutation/delete is scoped
+  to `stack/ajcrew-*/*`, and the change-set verbs (which `aws cloudformation
   deploy` authorizes on the **changeSet ARN**, not just the stack ARN) are a
-  separate statement scoped to both `changeSet/kirocrew-*/*` and
-  `stack/kirocrew-*/*` (scoping to `stack/*` alone would deny the launch under
+  separate statement scoped to both `changeSet/ajcrew-*/*` and
+  `stack/ajcrew-*/*` (scoping to `stack/*` alone would deny the launch under
   the generated policy); only enumerate/`GetTemplateSummary` stay on `*`.
-  `iam:PassRole` is scoped to `/kirocrew-ec2/kirocrew-ec2-*`; S3 is scoped to `kirocrew-src-*`.
-  EC2 reads are one `ec2:Describe*` on `*`: CloudFormation's EC2 handlers call many Describe actions and none take resource-level scoping. The trade is a broader read of the account's EC2 metadata, with no added write. The reads that return secrets are denied explicitly: `DenyForeignUserData` blocks `DescribeInstanceAttribute` on any instance not tagged `kirocrew:managed=true`, and `DenySecretReads` blocks `DescribeLaunchTemplateVersions`, `DescribeSpot*Requests`, `DescribeTags` and `DescribeVpnConnections`. `DescribeInstances` stays allowed: the CLI and CloudFormation need it. `test/test_cloud_iam_cfn_schema.py` checks every permission the public CloudFormation schemas list for the template's resource types against the printed policy.
+  `iam:PassRole` is scoped to `/ajcrew-ec2/ajcrew-ec2-*`; S3 is scoped to `ajcrew-src-*`.
+  EC2 reads are one `ec2:Describe*` on `*`: CloudFormation's EC2 handlers call many Describe actions and none take resource-level scoping. The trade is a broader read of the account's EC2 metadata, with no added write. The reads that return secrets are denied explicitly: `DenyForeignUserData` blocks `DescribeInstanceAttribute` on any instance not tagged `ajcrew:managed=true`, and `DenySecretReads` blocks `DescribeLaunchTemplateVersions`, `DescribeSpot*Requests`, `DescribeTags` and `DescribeVpnConnections`. `DescribeInstances` stays allowed: the CLI and CloudFormation need it. `test/test_cloud_iam_cfn_schema.py` checks every permission the public CloudFormation schemas list for the template's resource types against the printed policy.
   Command-history
   read is minimal: `ssm:GetCommandInvocation` (needed to poll `send-command`
   results) is granted but `ssm:ListCommandInvocations` is NOT, so a leaked
@@ -613,7 +613,7 @@ pointer -- which `kirocrew cloud list` can rediscover from the real stacks anywa
   minted dashboard token.
 - **Create verbs require the managed request-tag (per-resource-ARN split).**
   `ec2:RunInstances` and `ec2:CreateSecurityGroup` require
-  `aws:RequestTag/kirocrew:managed=true`, so a leaked launcher credential can't
+  `aws:RequestTag/ajcrew:managed=true`, so a leaked launcher credential can't
   create untagged instances/SGs that sit outside the tag-gated
   Stop/Terminate/Delete/Authorize statements. Because these calls authorize
   **per-resource** across ARNs that don't carry the tag (RunInstances also creates
@@ -630,26 +630,26 @@ pointer -- which `kirocrew cloud list` can rediscover from the real stacks anywa
 - **Escalation primitives constrained + immutable, pre-created permissions
   boundary.** `ec2:CreateTags` is gated by an `ec2:CreateAction` condition
   (`RunInstances`/`CreateSecurityGroup`) so it can only tag at creation — a holder
-  can't tag an *existing* resource `kirocrew:managed=true` to pull it under the
+  can't tag an *existing* resource `ajcrew:managed=true` to pull it under the
   tag-gated Stop/Terminate/Delete statements. `iam:AttachRolePolicy`/`DetachRolePolicy`
   are pinned by `iam:PolicyARN` to exactly `AmazonSSMManagedInstanceCore`. The
   `PutRolePolicy` escalation is closed by a **required permissions boundary** that
   is now **shared, content-fixed, and immutable** — closing the earlier
   self-authorship gap:
-  - The boundary is a **single** managed policy named `kirocrew-ec2-boundary`
+  - The boundary is a **single** managed policy named `ajcrew-ec2-boundary`
     (NO per-`StackTag` suffix), created **once** by launcher CODE
     (`source.ensure_instance_boundary`, via the `aws.run_aws` chokepoint) —
     **not** per-launch CloudFormation. It is create-if-not-exists (tolerates
     `EntityAlreadyExists`) and NEVER re-versioned. Its content = the exact
     `AmazonSSMManagedInstanceCore` action set + `s3:GetObject` on
-    `kirocrew-src-<account>-*/*` (region-agnostic — IAM is global; the
+    `ajcrew-src-<account>-*/*` (region-agnostic — IAM is global; the
     whole-prefix read is safe because a boundary only *caps*, and the role's
     INLINE `SourceObjectRead` policy still pins the actual read to the single
     derived object).
   - The template no longer creates the boundary; the `InstanceRole` references it
     by a FIXED ARN via a new `PermissionsBoundaryArn` parameter (AllowedPattern
-    `^arn:aws:iam::[0-9]{12}:policy/kirocrew-ec2-boundary$`), which the launcher
-    fills with `arn:aws:iam::<account>:policy/kirocrew-ec2-boundary`.
+    `^arn:aws:iam::[0-9]{12}:policy/ajcrew-ec2-boundary$`), which the launcher
+    fills with `arn:aws:iam::<account>:policy/ajcrew-ec2-boundary`.
   - The launcher policy grants only `iam:CreatePolicy` + `iam:GetPolicy` +
     `iam:GetPolicyVersion` on that **exact** ARN
     (`IamInstanceBoundaryCreateOnce`) — and NO
@@ -659,7 +659,7 @@ pointer -- which `kirocrew cloud list` can rediscover from the real stacks anywa
     make an existing boundary permissive**. So the ceiling holds not just against
     the prompt-injectable on-box agent but against a leaked *launcher* credential.
   - `iam:CreateRole` remains gated on `ArnLike iam:PermissionsBoundary ==
-    arn:…:policy/kirocrew-ec2-boundary` (`ArnLike`, NOT `StringEquals` — the
+    arn:…:policy/ajcrew-ec2-boundary` (`ArnLike`, NOT `StringEquals` — the
     latter would deny CreateRole under the generated policy; verified with the
     IAM policy simulator). `PutRolePolicy` is a separate role-ARN-scoped statement
     — a boundary set at CreateRole can't be removed by it.
@@ -667,7 +667,7 @@ pointer -- which `kirocrew cloud list` can rediscover from the real stacks anywa
     `CreatePolicy` could be run by an attacker holding the launcher policy BEFORE
     the legitimate first launch, seeding a permissive boundary at that name. That
     is materially smaller than the old "author an arbitrary boundary at any time"
-    hole. Operators who want it gone entirely run `kirocrew cloud iam-boundary`
+    hole. Operators who want it gone entirely run `ajcrew cloud iam-boundary`
     once as an admin, then remove the `iam:CreatePolicy` action from the
     `IamInstanceBoundaryCreateOnce` statement in the applied launcher policy — the
     launcher then only *references* the ARN. Keep the statement itself and its two
@@ -675,11 +675,11 @@ pointer -- which `kirocrew cloud list` can rediscover from the real stacks anywa
     content before reuse, so a launcher that cannot read it cannot launch at all,
     whatever order the calls are made in. The agent-shell deny-list also blocks
     `aws iam create-policy`/`create-policy-version`.
-  - **`kirocrew cloud iam-boundary` creates all three boundaries the statement
-    names**, in order: `kirocrew-ec2-boundary` (the instance ceiling above),
-    `kirocrew-crew-boundary` (the Fargate task-role ceiling: the four
+  - **`ajcrew cloud iam-boundary` creates all three boundaries the statement
+    names**, in order: `ajcrew-ec2-boundary` (the instance ceiling above),
+    `ajcrew-crew-boundary` (the Fargate task-role ceiling: the four
     `ssmmessages` channel actions, `iam.crew_boundary_policy_document`) and
-    `kirocrew-crew-exec-boundary` (the Fargate execution-role ceiling: the crew
+    `ajcrew-crew-exec-boundary` (the Fargate execution-role ceiling: the crew
     secret read, two log-stream writes and four ECR reads,
     `iam.crew_exec_boundary_policy_document`). The documents are the content-fixed
     ones in `cloud/iam.py`; the step adds no permission of its own. Each goes
@@ -697,7 +697,7 @@ pointer -- which `kirocrew cloud list` can rediscover from the real stacks anywa
     on-box SSM agent to call `kms:Decrypt` on the session data key, and the
     default boundary caps it away. The default boundary is NOT widened. With the
     flag, and only then, the launch uses a second content-fixed boundary,
-    `kirocrew-ec2-kms-boundary` (`iam.kms_boundary_policy_document`): the default
+    `ajcrew-ec2-kms-boundary` (`iam.kms_boundary_policy_document`): the default
     document plus one statement allowing `kms:Decrypt` on `arn:aws:kms:*:*:key/*`
     only when the encryption context carries both `aws:ssm:SessionId` and
     `aws:ssm:TargetId`. The agent calls KMS directly with the instance role, so
@@ -711,7 +711,7 @@ pointer -- which `kirocrew cloud list` can rediscover from the real stacks anywa
     The CLI and the template's `AllowedPattern` accept one full `arn:aws` key ARN
     only (no alias, wildcard, bare id, other service or other partition).
   - **The launcher never creates the KMS boundary.** An admin does, once, with
-    `kirocrew cloud iam-boundary --ssm-kms`. A launcher-held `iam:CreatePolicy`
+    `ajcrew cloud iam-boundary --ssm-kms`. A launcher-held `iam:CreatePolicy`
     on that name would leave it claimable forever in every account that never
     opts in: a leaked launcher credential could author a permissive policy there
     and create a role capped by it, since `CreateRole` accepts the name. So the
@@ -724,7 +724,7 @@ pointer -- which `kirocrew cloud list` can rediscover from the real stacks anywa
     Without the flag the deploy argv, the default boundary document and the role
     are unchanged, and no launch names or reads the KMS boundary. The key is fixed
     at creation, like `--ami`: an existing stack refuses it under `--yes`. Using
-    the flag needs the current launcher policy (`kirocrew cloud iam-policy`); an
+    the flag needs the current launcher policy (`ajcrew cloud iam-policy`); an
     older applied policy still launches without it. The SSM status reads and
     `sts:GetCallerIdentity` share `CloudFormationAndResourceDiscovery` (same
     Effect, `*`, no Condition, so one statement grants exactly what two would),
@@ -739,7 +739,7 @@ pointer -- which `kirocrew cloud list` can rediscover from the real stacks anywa
     `cloud/host_policy.py`, so they cannot disagree: the instance boundary
     document appends the statements (the KMS boundary inherits them, with its
     own statement last), a second launcher policy (`iam.host_policy_document`,
-    printed by `kirocrew cloud iam-policy --host-policies` and returned as
+    printed by `ajcrew cloud iam-policy --host-policies` and returned as
     `host_policies` by `GET /api/cloud/iam-policy`) lets the launcher attach the
     ARNs, and the template's `ExtraManagedPolicyArns` parameter attaches them
     beside Session Manager's policy. The grant is a separate policy because the
@@ -747,7 +747,7 @@ pointer -- which `kirocrew cloud list` can rediscover from the real stacks anywa
     because it must reach only roles the boundary caps: its resource is the
     role path alone (the main attach statement also covers `LEGACY_ROLE_ARN`,
     whose root-path roles may predate the boundary) and it requires the
-    `kirocrew:managed` tag, which only the launcher's boundary-gated
+    `ajcrew:managed` tag, which only the launcher's boundary-gated
     `CreateRole` applies, so a role created out-of-band at that path cannot be
     given an edition policy, which would run uncapped.
     `host_policy.instance_policy` refuses a descriptor with a `Deny`,
@@ -771,49 +771,49 @@ pointer -- which `kirocrew cloud list` can rediscover from the real stacks anywa
     continues. That succeeds only from a terminal whose credentials hold
     `iam:CreatePolicyVersion`; a launcher-only credential, an agent session or a
     policy at its five-version limit gets the refusal naming
-    `kirocrew cloud iam-boundary --upgrade` (`--upgrade --ssm-kms` for
+    `ajcrew cloud iam-boundary --upgrade` (`--upgrade --ssm-kms` for
     the KMS boundary, whose upgrade needs that flag). That admin step
     (`source.upgrade_boundary`, refused in an agent session) re-versions the
     boundary only when it holds that earlier document, sets the new version as
     default, audits it, and reads it back through the launch's own verify; a
     current boundary is left alone, and a hand-edited one is refused unchanged.
     The operator also applies the second policy from
-    `kirocrew cloud iam-policy --host-policies` so the launcher may attach the
+    `ajcrew cloud iam-policy --host-policies` so the launcher may attach the
     new policies; a launch denied that attach says so. A crew launched before
-    is not changed: resuming it (`kirocrew cloud launch`) does not redeploy its
+    is not changed: resuming it (`ajcrew cloud launch`) does not redeploy its
     stack, so it gets the host policies only when it is destroyed and launched
-    again, or when an admin attaches them to its `kirocrew-ec2-<tag>` role by
+    again, or when an admin attaches them to its `ajcrew-ec2-<tag>` role by
     hand (the upgraded boundary is what lets them take effect).
   - **Who needs which KMS grant in an encrypted session.** Two principals touch
     the key. The operator credential that runs the interactive
-    `aws ssm start-session` (directly, or through `kirocrew cloud connect`, which
+    `aws ssm start-session` (directly, or through `ajcrew cloud connect`, which
     uses the operator's own profile) calls `kms:GenerateDataKey`; that grant is
-    the operator's own and kirocrew never issues it. The instance role calls
+    the operator's own and ajcrew never issues it. The instance role calls
     `kms:Decrypt`, which is all the box side needs. Both calls carry exactly the
     `aws:ssm:SessionId` and `aws:ssm:TargetId` encryption context. The launcher
     policy is neither principal and keeps no `kms:*`. Verified live (2026-10-14,
     a key pinned in the Session Manager preferences): a box with the flag opened
     an encrypted shell; a box without it failed the handshake on `kms:Decrypt`.
   The instance role's inline `s3:GetObject` is still pinned to the **derived**
-  launcher path (`kirocrew-src-${AccountId}-${Region}/${StackTag}/…`), not the
+  launcher path (`ajcrew-src-${AccountId}-${Region}/${StackTag}/…`), not the
   `SourceBucket`/`SourceKey` deploy params — so a caller can't grant the box read
   on an arbitrary S3 object. `ec2:AuthorizeSecurityGroup{Ingress,Egress}` are
-  tag-gated (`aws:ResourceTag/kirocrew:managed=true`) so a leaked credential
+  tag-gated (`aws:ResourceTag/ajcrew:managed=true`) so a leaked credential
   can't open ingress on an unrelated security group.
   `ec2:RevokeSecurityGroupEgress` sits in the same tag-gated statement:
   CloudFormation revokes a new security group's implicit allow-all egress rule
   before it applies the template's declared `SecurityGroupEgress`, so without it
   every launch fails at `InstanceSecurityGroup`.
-- **`PassRole` scoped by IAM path and service.** The template puts the instance role under the IAM path `/kirocrew-ec2/` (`cloud/iam.py` `ROLE_PATH`). `iam:CreateRole`, `iam:PutRolePolicy`, `iam:TagRole` and `iam:PassRole` are scoped to `arn:aws:iam::*:role/kirocrew-ec2/kirocrew-ec2-*`, and `PassRole` also requires `iam:PassedToService=ec2.amazonaws.com`. `PassRole` carries no `aws:ResourceTag` or `iam:AssociatedResourceArn` condition: AWS documents that `aws:ResourceTag` does not give reliable results for `iam:PassRole`, and with either key the launch fails at `Instance`. The path does the tag's job: the launcher's only way to put a role there is the boundary-gated `CreateRole`, so a pre-existing root-path `kirocrew-ec2-*` role can be neither passed nor edited. Residual: `PassRole` is gated only by path and `iam:PassedToService`, so a role created out-of-band AT `/kirocrew-ec2/` without the boundary is passable. The non-escalating role-management verbs and the SSM-core attach/detach keep the root-path pattern beside the path, so a stack launched before the path existed can still be stopped, started and destroyed. Re-launching such a stack under the same tag fails, because CloudFormation must replace a custom-named role to change its path; destroy it and launch again.
+- **`PassRole` scoped by IAM path and service.** The template puts the instance role under the IAM path `/ajcrew-ec2/` (`cloud/iam.py` `ROLE_PATH`). `iam:CreateRole`, `iam:PutRolePolicy`, `iam:TagRole` and `iam:PassRole` are scoped to `arn:aws:iam::*:role/ajcrew-ec2/ajcrew-ec2-*`, and `PassRole` also requires `iam:PassedToService=ec2.amazonaws.com`. `PassRole` carries no `aws:ResourceTag` or `iam:AssociatedResourceArn` condition: AWS documents that `aws:ResourceTag` does not give reliable results for `iam:PassRole`, and with either key the launch fails at `Instance`. The path does the tag's job: the launcher's only way to put a role there is the boundary-gated `CreateRole`, so a pre-existing root-path `ajcrew-ec2-*` role can be neither passed nor edited. Residual: `PassRole` is gated only by path and `iam:PassedToService`, so a role created out-of-band AT `/ajcrew-ec2/` without the boundary is passable. The non-escalating role-management verbs and the SSM-core attach/detach keep the root-path pattern beside the path, so a stack launched before the path existed can still be stopped, started and destroyed. Re-launching such a stack under the same tag fails, because CloudFormation must replace a custom-named role to change its path; destroy it and launch again.
 - **`PutRolePolicy` tag-gated (not just name-prefix).** `iam:PutRolePolicy`
-  additionally requires `aws:ResourceTag/kirocrew:managed=true` on the target
-  role — not just the `kirocrew-ec2-*` name prefix. Without the tag gate, a leaked
-  launcher credential could target a **pre-existing** `kirocrew-ec2-*` role that
+  additionally requires `aws:ResourceTag/ajcrew:managed=true` on the target
+  role — not just the `ajcrew-ec2-*` name prefix. Without the tag gate, a leaked
+  launcher credential could target a **pre-existing** `ajcrew-ec2-*` role that
   a third party created out-of-band **without** our permissions boundary (so
   `CreateRole`'s boundary gate never applied) and inline an admin policy. The tag makes the
   constraint non-spoofable: only a role WE created via the boundary-gated
   `CreateRole` — which applies `Tags` **atomically** at creation (see the
-  template's `InstanceRole.Tags`) — carries `kirocrew:managed=true`, and the tag
+  template's `InstanceRole.Tags`) — carries `ajcrew:managed=true`, and the tag
   lands in the same call, so there is no untagged window before CFN's subsequent
   `PutRolePolicy`. `aws:ResourceTag` (the global key, honored by `PutRolePolicy` —
   verified with the IAM policy simulator: allowed with the tag, `implicitDeny`
@@ -823,9 +823,9 @@ pointer -- which `kirocrew cloud list` can rediscover from the real stacks anywa
 - **`iam:TagRole` gated so the tag gate can't be self-defeated.** The tag gate
   above is only non-spoofable if the *same* launcher policy can't apply the tag
   to an arbitrary role — otherwise a leaked credential could tag a pre-existing
-  unbounded `kirocrew-ec2-*` role `kirocrew:managed=true`, then inline admin into
+  unbounded `ajcrew-ec2-*` role `ajcrew:managed=true`, then inline admin into
   it. `iam:TagRole` is therefore **not** unconditioned in the role-management
-  statement; it is gated on `aws:ResourceTag/kirocrew:managed=true` in the merged
+  statement; it is gated on `aws:ResourceTag/ajcrew:managed=true` in the merged
   `IamPutRolePolicyAndTagRoleOnManaged` statement (which it shares with
   `PutRolePolicy` — same Effect, role ARN and Condition, combined to keep the
   policy under IAM's 6,144-char cap). `TagRole` is
@@ -843,7 +843,7 @@ pointer -- which `kirocrew cloud list` can rediscover from the real stacks anywa
   propagate that key into the `CreateRole`-embedded `TagRole` check (it denied the
   legitimate create in the harness); `aws:ResourceTag` is the key that works.
 - **Anti-squat bucket pin, end to end.** The launcher source bucket name is
-  deterministic (`kirocrew-src-<account>-<region>`) and thus globally
+  deterministic (`ajcrew-src-<account>-<region>`) and thus globally
   guessable/squattable. Every S3 op that could ship or reveal source pins
   `--expected-bucket-owner <account>`: `head-bucket`/`create-bucket`
   (`ensure_bucket`) AND the upload/delete — so a delete-and-recreate race between
@@ -855,11 +855,11 @@ pointer -- which `kirocrew cloud list` can rediscover from the real stacks anywa
   upload/delete is **derived from the (fail-closed-resolved) bucket name**
   (`_account_from_bucket`), NOT a second `sts:get-caller-identity` — a transient
   STS `""` would otherwise silently DROP the pin and ship/delete without owner
-  verification; if the account can't be derived (the `kirocrew-src-unknown-*`
+  verification; if the account can't be derived (the `ajcrew-src-unknown-*`
   fallback), upload raises and delete returns `removed=False` rather than issue an
   unpinned call. The public-access block is
   enforced (fail-closed) on **every** `ensure_bucket` path — freshly-created AND
-  reused — not just on create, so a pre-existing `kirocrew-src-*` bucket whose
+  reused — not just on create, so a pre-existing `ajcrew-src-*` bucket whose
   BPA was disabled can't silently receive private source (the call is idempotent).
 - **SSM-only by default** — no inbound ports, no SSH key; the gateway binds
   loopback and is reached via tunnel + minted token. The dashboard token transits
@@ -929,9 +929,9 @@ pointer -- which `kirocrew cloud list` can rediscover from the real stacks anywa
   **non-recursively** and skips gitlink directories: `git ls-files` lists a
   submodule as a single directory entry, and a recursive `tar.add` on it would
   package the submodule's untracked/gitignored files — so we never let tar walk
-  a directory for us. On top of that, both paths run the denylist (`.kirocrew*`,
+  a directory for us. On top of that, both paths run the denylist (`.ajcrew*`,
   `.aws`, `.ssh`, `.gnupg`, `.env*`, `*.pem`/`*.key`/`*.p12`, credential
-  filenames) and drop a custom-named `KIROCREW_HOME` (incl. nested) under the
+  filenames) and drop a custom-named `AJCREW_HOME` (incl. nested) under the
   repo. `redact_token()` strips JWTs before any log line.
 - **Tarball staging and upload pin.** The tarball is staged in
   `<data home>/cloud-src-staging`, never `TMPDIR`: a launcher-owned directory locked
@@ -980,32 +980,32 @@ override naming `SMC_FRONT_PORT` is refused, since a task whose front port
 disagrees with the declared `portMappings` is unreachable and an unreachable task
 is indistinguishable from a slow one. The container's `stopTimeout` is `CREW_STOP_TIMEOUT_SECS` (115 s, the three drain windows plus the teardown reap margin); it is unoverridable but constant, so it stays out of the key for the front port's reason. A constant that lives outside the hashed payload cannot tell two revisions apart on its own, so a revision registered before it would carry an identical key while running Fargate's 30 s default; `FINGERPRINT_SCHEME` is bumped whenever the document gains such a field, so the scheme and not the hash alone discriminates them.
 
-A registered revision carries its own key as the `kirocrew:revision-key` tag.
+A registered revision carries its own key as the `ajcrew:revision-key` tag.
 That is not telemetry: without it a lost local cache has no witness, the launcher
 re-registers, and the revision leak the key exists to prevent happens anyway.
 The account can answer what a revision was keyed on.
 
-Both emitted payloads carry `kirocrew:managed=true`, and its value is derived. The
+Both emitted payloads carry `ajcrew:managed=true`, and its value is derived. The
 rest of the code base matches this tag **by value**, not merely by key: `ec2.py`
-discovers with `Key=kirocrew:managed,Values=true` and refuses a stack whose value
+discovers with `Key=ajcrew:managed,Values=true` and refuses a stack whose value
 is not `true`, and `iam.py` conditions resource permissions on
-`aws:ResourceTag/kirocrew:managed` equalling `true`. A task carrying any other
+`aws:ResourceTag/ajcrew:managed` equalling `true`. A task carrying any other
 value is therefore a running task teardown does not enumerate and the teardown
 role is not permitted to stop, billing in the owner's account with nothing
 pointing at it. The caller's own correlation value has its own key,
-`kirocrew:launch`, because the two answers have opposite requirements: the marker
+`ajcrew:launch`, because the two answers have opposite requirements: the marker
 must be constant for teardown to match it, and the correlation value must vary for
 a caller to find one launch. `ec2.py` already separates them the same way, tagging
-`kirocrew:managed=true` beside `kirocrew:instance=<tag>`; collapsing both into one
+`ajcrew:managed=true` beside `ajcrew:instance=<tag>`; collapsing both into one
 key let a caller's value displace the marker.
 
 ### The data home is a declared volume, or the sessions end with the task
 
 A task's own disk is erased when the task stops, and the only storage knob a
 `RunTask` request can set is `ephemeralStorage`, which is that disk. The image is
-built for the other arrangement: it creates `/var/lib/kirocrew/sessions/archive`,
+built for the other arrangement: it creates `/var/lib/ajcrew/sessions/archive`,
 `artifacts` and `run`, chowns them to its non-root user, and points
-`KIROCREW_HOME`, `SMC_DATA_HOME` and `SMC_CONFIG_DIR` at that directory, so a crew
+`AJCREW_HOME`, `SMC_DATA_HOME` and `SMC_CONFIG_DIR` at that directory, so a crew
 that keeps its data home on the task's disk loses every transcript, the session
 archive and the installed bundle the moment it stops -- and comes back looking
 healthy. `volumes` and `mountPoints` exist only on the task **definition**, so the
@@ -1068,7 +1068,7 @@ it is this crew's, so a definition naming another crew's secret produces a task 
 starts, answers, and serves turns under the wrong identity, silently at both ends.
 
 **IAM is the primary control.** Each crew's execution role is derived per crew
-(`kirocrew-crew-<crew>-exec`), so it can be granted that crew's secret and no
+(`ajcrew-crew-<crew>-exec`), so it can be granted that crew's secret and no
 other, and a definition naming another crew's ARN fails when the role cannot read
 it, before the container starts. **Refusing at generation is defence in depth**,
 and it earns its place: a refusal names the problem, while the same mistake
@@ -1207,7 +1207,7 @@ an ARN's region and a log configuration's.
 
 The package's EXPORT LIST is held to the same standard, because a name a consumer
 cannot import is a name it re-spells. That is not cosmetic: a launch engine that
-wrote its own `"kirocrew:task"` rather than importing `LAUNCH_TAG_KEY` classified
+wrote its own `"ajcrew:task"` rather than importing `LAUNCH_TAG_KEY` classified
 every managed task as foreign, so its teardown planner returned an empty delete
 set and reported success while every task kept running and kept billing in the
 owner's account. Absent from an export list read as a value, exactly as an empty
@@ -1267,7 +1267,7 @@ can contradict one.
   refusal in the module, because each reads the spec while the identifier decides
   what executes. What the module does not establish, and says so in that
   function's docstring, is that revision N holds the content the spec describes:
-  that needs the registered definition's `kirocrew:revision-key` tag, which is an
+  that needs the registered definition's `ajcrew:revision-key` tag, which is an
   AWS call. The caller verifies it, and a mismatch is a stale cache.
 - The definition delivers the model credential, and a `RunTask` environment
   override may not name anything the definition delivers. Those two are one
@@ -1281,7 +1281,7 @@ Which way each fails is the reason. It argued a foreign group was
 safe as an input because a per-crew execution role carries `logs` permission for
 its own group only, making IAM the guard. No such role document exists in this
 repository: the only `logs`-scoped policy here belongs to the deploy-app track and
-is scoped to `/kirocrew-deploy-app/*`. The guard was an assumption about a document
+is scoped to `/ajcrew-deploy-app/*`. The guard was an assumption about a document
 the deploy track has not written, and until it is written a caller-supplied group
 decides where the transcript of every turn is stored with nothing checking it.
 Nothing else catches it either, because a log group name is not an ARN and so the
@@ -1328,13 +1328,13 @@ shape would be the quiet failure this module exists to avoid.
 
 `install.ps1` (Windows client) and `cloud-install.sh` (macOS/Linux) ensure the
 `aws` CLI + `session-manager-plugin` + Python are present, then hand off to
-`kirocrew cloud launch`. They install *client* prerequisites only — the gateway
+`ajcrew cloud launch`. They install *client* prerequisites only — the gateway
 always runs on the Linux EC2 box, never on Windows.
 `cloud-install.sh --voice` additionally installs the existing `voice` extra in
 the launcher's managed client venv; the EC2 bootstrap includes that extra by
 default regardless of this client-side flag.
 
-`kirocrew cloud launch` runs `python -m kiro_crew`, which imports the whole CLI —
+`ajcrew cloud launch` runs `python -m aj_crew`, which imports the whole CLI —
 including gateway/cron/session modules (plus `apps/bridges` and the PTY
 `dashboard/handlers/terminal`) that use POSIX `fcntl` (`flock` for advisory
 locks, `ioctl` for PTY control). **All** such modules on the CLI import path

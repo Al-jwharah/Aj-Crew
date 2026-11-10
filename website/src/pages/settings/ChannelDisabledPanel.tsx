@@ -51,7 +51,7 @@ export function ChannelDisabledPanel({
         <ErrorNotice
           // The catalog string carries source-formatting newlines that a <p>
           // used to collapse; ErrorNotice renders pre-wrap, so collapse them here.
-          message={i18nT('pages.settings.channelDisabledPanel.kirocrew_couldn_t_confirm_whether_your_organizat').replace(/\s+/g, ' ')}
+          message={i18nT('pages.settings.channelDisabledPanel.ajcrew_couldn_t_confirm_whether_your_organizat').replace(/\s+/g, ' ')}
           askAgent
         />
       </div>

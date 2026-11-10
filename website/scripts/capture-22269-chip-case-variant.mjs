@@ -35,12 +35,12 @@ const now = Math.floor(Date.now() / 1000)
 const slots = [
   {
     key: ACTIVE, title: 'Draft the release notes', running: false, messages: 2,
-    agent: 'kirocrew', modified: now, last_ts: '2026-10-20T00:10:00Z', folder_id: '',
+    agent: 'ajcrew', modified: now, last_ts: '2026-10-20T00:10:00Z', folder_id: '',
     last_message: 'Grouped the entries by area.',
   },
   {
     key: OTHER, title: 'Session flyout for the collapsed sidebar', running: false, messages: 3,
-    agent: 'kirocrew', modified: now - 900, last_ts: '2026-10-20T00:00:00Z', folder_id: '',
+    agent: 'ajcrew', modified: now - 900, last_ts: '2026-10-20T00:00:00Z', folder_id: '',
     last_message: 'Both pull requests are up.',
     source_links: [
       { provider: 'github', number: 634, url: CHIP_634, state: 'open', ci: 'passed', kind: 'change' },

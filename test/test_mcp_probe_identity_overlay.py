@@ -23,8 +23,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.dashboard.handlers import mcp as mcp_mod
-from kiro_crew.mcp_discovery import McpServerInfo, _cache_probe, _probe_cache
+from aj_crew.dashboard.handlers import mcp as mcp_mod
+from aj_crew.mcp_discovery import McpServerInfo, _cache_probe, _probe_cache
 
 
 def _request(state) -> object:
@@ -56,11 +56,11 @@ class _State:
 
 def _arrange(monkeypatch, tmp_path, servers, cache):
     """Point the handler at a synthetic server list and a warm probe cache."""
-    import kiro_crew.mcp_discovery as disc
+    import aj_crew.mcp_discovery as disc
 
     monkeypatch.setattr(disc, "list_servers", lambda *a, **k: list(servers))
     monkeypatch.setattr(mcp_mod, "_GLOBAL_MCP_JSON", tmp_path / "absent.json")
-    monkeypatch.setattr(mcp_mod, "_kirocrew_mcp_json", lambda: tmp_path / "absent-kc.json")
+    monkeypatch.setattr(mcp_mod, "_ajcrew_mcp_json", lambda: tmp_path / "absent-kc.json")
     monkeypatch.setattr(mcp_mod, "_mcp_probe_cache", list(cache))
     # Warm: the TTL branch must not be what decides this test.
     monkeypatch.setattr(mcp_mod, "_mcp_probe_ts", time.time())
@@ -188,7 +188,7 @@ class TestAnEditArmsOneReprobe:
 
         # The armed probe lands under new-bin, then the config moves again.
         _cache_probe(McpServerInfo(name="srv", command="new-bin", status="ok", tools=["t2"]))
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         monkeypatch.setattr(
             disc, "list_servers", lambda *a, **k: [McpServerInfo(name="srv", command="third-bin")]

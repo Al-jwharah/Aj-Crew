@@ -16,7 +16,7 @@ from typing import Any
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.apps import official_editorial as oe
+from aj_crew.apps import official_editorial as oe
 
 
 @pytest.fixture(autouse=True)
@@ -137,7 +137,7 @@ class TestCaching:
 
 class TestFetchSeam:
     def test_the_url_is_the_editorial_document_beside_the_registry(self):
-        from kiro_crew.apps import official_catalog as oc
+        from aj_crew.apps import official_catalog as oc
 
         assert oe.OFFICIAL_EDITORIAL_URL.startswith(oc.OFFICIAL_CATALOG_BASE)
         assert oe.OFFICIAL_EDITORIAL_URL.endswith("editorial.json")

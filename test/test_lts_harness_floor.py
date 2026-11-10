@@ -13,14 +13,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import agent_backend_governance as abg
-from kiro_crew import lts_boot
-from kiro_crew.agent_sdk import backends as acp_backends
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform.bootstrap import apply_kas_cli_floor, build_default_context
-from kiro_crew.platform.governance import parse_policy
-from kiro_crew.platform.governance_parts.baseline import BASELINE_CONTROLS
+from aj_crew import agent_backend_governance as abg
+from aj_crew import lts_boot
+from aj_crew.agent_sdk import backends as acp_backends
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform.bootstrap import apply_kas_cli_floor, build_default_context
+from aj_crew.platform.governance import parse_policy
+from aj_crew.platform.governance_parts.baseline import BASELINE_CONTROLS
 
 KIRO = acp_backends.ACP_BACKEND_KIRO
 KAS = acp_backends.ACP_BACKEND_KAS
@@ -49,7 +49,7 @@ def _isolate(tmp_path, _floor_monkeypatch):
 
 @pytest.fixture
 def lts(monkeypatch):
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 def _registered(monkeypatch, *backends):
@@ -65,13 +65,13 @@ def _install(policy_body):
     default context on the ``oss`` path and installs the ceiling itself, then
     restores the edition the test asked for, which is what the evaluator reads.
     """
-    from kiro_crew import edition
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew import edition
+    from aj_crew.config.loader import AjCrewConfig
 
     asked = edition.EDITION
     edition.EDITION = "oss"
     try:
-        base = build_default_context(KiroCrewConfig.load())
+        base = build_default_context(AjCrewConfig.load())
     finally:
         edition.EDITION = asked
     ceiling = parse_policy(policy_body) if policy_body is not None else None
@@ -187,13 +187,13 @@ def _cfg(main, member=None, *, kas_bundle=False):
 
 
 def _verdict(monkeypatch, offers, reason):
-    from kiro_crew import agent_sdk
+    from aj_crew import agent_sdk
 
     monkeypatch.setattr(agent_sdk, "kas_engine_verdict", lambda: (offers, reason))
 
 
 def _bundle(monkeypatch, *, installed, installable):
-    from kiro_crew.agent_sdk import backend_install, kas_bundle
+    from aj_crew.agent_sdk import backend_install, kas_bundle
 
     monkeypatch.setattr(kas_bundle, "installed_bundle", lambda: object() if installed else None)
     monkeypatch.setattr(backend_install, "_engine_installable_here", lambda: installable)
@@ -305,7 +305,7 @@ class TestRequireKasHarness:
         monkeypatch.setattr(lts_boot, "kas_unrunnable", _raise)
         with pytest.raises(SystemExit):
             lts_boot.require_kas_harness(_cfg(KAS))
-        assert "kirocrew doctor" in capsys.readouterr().err
+        assert "ajcrew doctor" in capsys.readouterr().err
 
     def test_a_check_that_raises_records_nothing_for_a_kiro_cli_main(self, lts, monkeypatch):
         _registered(monkeypatch, KIRO, KAS)
@@ -354,7 +354,7 @@ class TestASessionOnAnUnstartableKasIsRefused:
     """Fix 2: every session whose backend is KAS, refused before any process."""
 
     def test_the_refusal_names_the_fix(self, lts, monkeypatch):
-        from kiro_crew.crewmate_harness import (
+        from aj_crew.crewmate_harness import (
             HARNESS_UNAVAILABLE_CODE,
             CrewmateHarnessUnavailable,
             KasUnavailable,
@@ -374,24 +374,24 @@ class TestASessionOnAnUnstartableKasIsRefused:
     def test_nothing_recorded_refuses_nothing(self, lts, monkeypatch):
         monkeypatch.setattr(lts_boot, "_kas_refusal", None)
         factory, built = self._factory(monkeypatch, KAS)
-        factory(session_key="dashboard:chat-1", agent="kirocrew")
+        factory(session_key="dashboard:chat-1", agent="ajcrew")
         assert [kw["acp_backend"] for kw in built] == [KAS]
 
     def test_oss_refuses_nothing(self, monkeypatch):
         monkeypatch.setattr(lts_boot, "_kas_refusal", REFUSAL)
         factory, built = self._factory(monkeypatch, KAS)
-        factory(session_key="dashboard:chat-1", agent="kirocrew")
+        factory(session_key="dashboard:chat-1", agent="ajcrew")
         assert [kw["acp_backend"] for kw in built] == [KAS]
 
     def _factory(self, monkeypatch, selected):
-        from kiro_crew import members
-        from kiro_crew.agent_sdk.drivers import acp
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew import members
+        from aj_crew.agent_sdk.drivers import acp
+        from aj_crew.config.loader import AjCrewConfig
 
         monkeypatch.setattr(members, "select_provider_backend", lambda *a, **k: selected)
         built: list[dict] = []
         monkeypatch.setattr(acp, "build_acp_provider", lambda **kw: built.append(kw) or kw)
-        return KiroCrewConfig().create_provider_factory(), built
+        return AjCrewConfig().create_provider_factory(), built
 
     @pytest.mark.parametrize(
         "kwargs",
@@ -403,12 +403,12 @@ class TestASessionOnAnUnstartableKasIsRefused:
         ids=["main-switched-to-kas", "crewmate-dm", "spawn-run-override"],
     )
     def test_the_factory_refuses_a_kas_session_before_building_it(self, lts, monkeypatch, kwargs):
-        from kiro_crew.crewmate_harness import KasUnavailable
+        from aj_crew.crewmate_harness import KasUnavailable
 
         monkeypatch.setattr(lts_boot, "_kas_refusal", REFUSAL)
         factory, built = self._factory(monkeypatch, KAS)
         with pytest.raises(KasUnavailable):
-            factory(agent="kirocrew", **kwargs)
+            factory(agent="ajcrew", **kwargs)
         assert built == [], "a provider was built for a KAS that cannot start"
 
     @pytest.mark.parametrize("selected", [KIRO, CLAUDE], ids=["kiro-cli", "claude"])
@@ -420,7 +420,7 @@ class TestASessionOnAnUnstartableKasIsRefused:
 
         monkeypatch.setattr(lts_boot, "refuse_unstartable_kas", _boom)
         factory, built = self._factory(monkeypatch, selected)
-        factory(session_key="dashboard:chat-1", agent="kirocrew")
+        factory(session_key="dashboard:chat-1", agent="ajcrew")
         assert built and built[0]["acp_backend"] == selected
 
 
@@ -442,9 +442,9 @@ class TestBackgroundRuntimeFloor:
     def test_the_unreadable_backend_fallback(self, monkeypatch, edition_name, expected):
         from types import SimpleNamespace
 
-        from kiro_crew.session_background import BackgroundSessionRuntime
+        from aj_crew.session_background import BackgroundSessionRuntime
 
-        monkeypatch.setattr("kiro_crew.edition.EDITION", edition_name)
+        monkeypatch.setattr("aj_crew.edition.EDITION", edition_name)
         runtime = object.__new__(BackgroundSessionRuntime)
         runtime._deps = SimpleNamespace(acp_backend_kiro=KIRO)
         assert runtime._unreadable_backend() == expected
@@ -454,7 +454,7 @@ class TestBackgroundRuntimeFloor:
         # so the KAS refusal must sit right before that build, for KAS only.
         import inspect
 
-        from kiro_crew import session_background
+        from aj_crew import session_background
 
         src = inspect.getsource(session_background)
         check = src.index("if configured_backend == ACP_BACKEND_KAS:")
@@ -469,11 +469,11 @@ class TestFailoverNeverPicksKiroCliInLts:
     def _run(self, monkeypatch, chain, available):
         import asyncio
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.dashboard.messaging_api import spawn as spawn_mod
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.dashboard.messaging_api import spawn as spawn_mod
 
         cfg = SimpleNamespace(agent=SimpleNamespace(acp_failover={"enabled": True, "chain": chain}))
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
         return asyncio.run(
             spawn_mod._failover_backend("codex", "backend_not_installed", frozenset(available))
         )

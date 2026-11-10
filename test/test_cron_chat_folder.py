@@ -21,17 +21,17 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.cron import CronJob, CronService
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.cron_inject import (
+from aj_crew.cron import CronJob, CronService
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.cron_inject import (
     chat_folder_exists,
     chat_folder_for_minted_tab,
     inject_cron_result_to_dashboard,
     move_cron_job_tab,
 )
-from kiro_crew.dashboard.handlers.cron import api_cron_update, api_crons, api_crons_create
-from kiro_crew.session_surface import set_dashboard_surfaced
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.handlers.cron import api_cron_update, api_crons, api_crons_create
+from aj_crew.session_surface import set_dashboard_surfaced
+from aj_crew.testing.wait import await_until
 
 FOLDER = "f00dcafe"
 OTHER_FOLDER = "beadfeed"
@@ -117,7 +117,7 @@ def _inject(state, job, text, **kw):
     ``_bind_cron_slot`` schedules the placement as a task. The write answers ``True``;
     tests about its verdict patch it themselves.
     """
-    import kiro_crew.dashboard.chat_persistence as persistence
+    import aj_crew.dashboard.chat_persistence as persistence
 
     async def _go():
         original = persistence.save_slot_off_loop
@@ -450,8 +450,8 @@ class TestFilingAtTheMint:
         """For a persistent job the mint is usually the run-START pre-create, so the
         filing has to ride on that call -- and delivery then finds the tab in place
         and writes nothing about its placement."""
-        import kiro_crew.dashboard.chat_persistence as persistence
-        from kiro_crew.dashboard.cron_inject import ensure_cron_slot
+        import aj_crew.dashboard.chat_persistence as persistence
+        from aj_crew.dashboard.cron_inject import ensure_cron_slot
 
         saved: list[str] = []
 
@@ -484,7 +484,7 @@ class TestDeletedFolder:
 
     def test_the_skip_is_recorded_once(self, monkeypatch) -> None:
         """ "Why is this run not in my folder?" must have an answer with no repro."""
-        import kiro_crew.dashboard.cron_inject as mod
+        import aj_crew.dashboard.cron_inject as mod
 
         logged: list[dict] = []
         monkeypatch.setattr(
@@ -498,7 +498,7 @@ class TestDeletedFolder:
         assert logged[0]["outcome"] == "skipped"
 
     def test_a_sel_failure_cannot_fail_the_run(self, monkeypatch) -> None:
-        import kiro_crew.dashboard.cron_inject as mod
+        import aj_crew.dashboard.cron_inject as mod
 
         def _boom():
             raise RuntimeError("no audit today")
@@ -523,7 +523,7 @@ class TestTheFilingIsSynchronous:
 
     @pytest.mark.asyncio
     async def test_the_delivery_does_not_wait_for_the_filing(self, monkeypatch) -> None:
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         started = asyncio.Event()
         release = asyncio.Event()
@@ -552,7 +552,7 @@ class TestTheFilingIsSynchronous:
         folder assigned on that path would advertise a placement that is not on
         disk. The assignment belongs to the commit, whose own broadcast carries the
         verdict."""
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         release = asyncio.Event()
 
@@ -577,7 +577,7 @@ class TestTheFilingIsSynchronous:
         """A forced metadata write is open-shaped, so an unpinned save landing after
         the reader closed and archived the tab would erase its ``closed`` metadata
         and the tab resurfaces at the next restart."""
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         seen: list[dict] = []
 
@@ -597,7 +597,7 @@ class TestTheFilingIsSynchronous:
 
     @pytest.mark.asyncio
     async def test_the_write_is_tracked_so_it_cannot_be_collected(self, monkeypatch) -> None:
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         saved: list[str] = []
 
@@ -617,7 +617,7 @@ class TestTheFilingIsSynchronous:
     @pytest.mark.asyncio
     async def test_a_failed_write_retracts_the_placement(self, monkeypatch) -> None:
         """So memory and disk agree on "not filed" rather than disagreeing."""
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         async def _save(state, slot, *a, **kw):
             raise OSError("disk full")
@@ -635,7 +635,7 @@ class TestTheFilingIsSynchronous:
         the slot's routing does not resolve to the authorized transcript key. The
         absence of an exception is therefore not confirmation, and treating it as one
         published placements that were never written."""
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         async def _save(state, slot, *a, **kw):
             return False
@@ -652,7 +652,7 @@ class TestTheFilingIsSynchronous:
         """`best_effort=False` is the documented way to get a verdict: the save still
         runs off-loop, but a real failure propagates instead of being swallowed
         behind a retry flag this caller cannot observe."""
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         seen: list[dict] = []
 
@@ -669,7 +669,7 @@ class TestTheFilingIsSynchronous:
 
     @pytest.mark.asyncio
     async def test_a_retraction_never_moves_a_tab_the_reader_moved(self, monkeypatch) -> None:
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         started = asyncio.Event()
         release = asyncio.Event()
@@ -691,7 +691,7 @@ class TestTheFilingIsSynchronous:
 
     @pytest.mark.asyncio
     async def test_a_failed_write_cannot_fail_the_run(self, monkeypatch) -> None:
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         async def _save(state, slot, *a, **kw):
             raise OSError("disk full")
@@ -709,8 +709,8 @@ class TestTheFilingIsSynchronous:
         state-wide slot-metadata transaction lock, the one the sidebar's folder
         endpoint takes, so the two writers take turns: a manual move landing in this
         window is not overwritten by a save that started before it."""
-        import kiro_crew.dashboard.chat_persistence as persistence
-        from kiro_crew.dashboard.chat_folders import _slot_meta_txn_lock
+        import aj_crew.dashboard.chat_persistence as persistence
+        from aj_crew.dashboard.chat_folders import _slot_meta_txn_lock
 
         save = AsyncMock(return_value=True)
         monkeypatch.setattr(persistence, "save_slot_off_loop", save)
@@ -733,7 +733,7 @@ class TestSupplementsDelivery:
     async def test_the_result_row_is_written_whether_or_not_a_folder_is_set(
         self, monkeypatch
     ) -> None:
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         monkeypatch.setattr(persistence, "save_slot_off_loop", AsyncMock(return_value=True))
         filed_state, plain_state = _make_state(), _make_state(folders=())
@@ -752,7 +752,7 @@ class TestSupplementsDelivery:
     ) -> None:
         """The folder's timeline is read from the on-disk session list, so an
         in-memory-only assignment shows nothing after a restart."""
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         saved: list[tuple[str, bool]] = []
 
@@ -768,7 +768,7 @@ class TestSupplementsDelivery:
 
     @pytest.mark.asyncio
     async def test_no_metadata_write_when_nothing_moved(self, monkeypatch) -> None:
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         saved: list[str] = []
 
@@ -784,7 +784,7 @@ class TestSupplementsDelivery:
 
     @pytest.mark.asyncio
     async def test_a_failed_persist_cannot_fail_a_completed_run(self, monkeypatch) -> None:
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         async def _save(state, slot, *a, **kw):
             raise OSError("disk full")
@@ -808,7 +808,7 @@ class TestMovingTheTabAtTheSave:
     @staticmethod
     async def _filed_tab(state, job):
         """Mint the job's tab on the running loop and let its folder write land."""
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         original = persistence.save_slot_off_loop
         persistence.save_slot_off_loop = AsyncMock(return_value=True)
@@ -823,7 +823,7 @@ class TestMovingTheTabAtTheSave:
     async def test_filing_an_unfiled_job_moves_its_existing_tab(self, monkeypatch) -> None:
         """Delivery files only a tab it has just minted, so a job that already has
         its tab would otherwise show nothing until that tab was recreated."""
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         monkeypatch.setattr(persistence, "save_slot_off_loop", AsyncMock(return_value=True))
         state = _make_state()
@@ -846,7 +846,7 @@ class TestMovingTheTabAtTheSave:
 
     @pytest.mark.asyncio
     async def test_the_job_wide_tab_is_unfiled(self, monkeypatch) -> None:
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         saved: list[tuple[str, bool]] = []
 
@@ -868,7 +868,7 @@ class TestMovingTheTabAtTheSave:
         """The move takes the same forced, open-shaped write as the filing, so it
         carries the same two pins: a tab closed and archived while the write is in
         flight refuses it rather than having its ``closed`` metadata erased."""
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         state = _make_state(folders=(FOLDER, OTHER_FOLDER))
         slot = await self._filed_tab(state, _job(chat_folder_id=FOLDER))
@@ -909,7 +909,7 @@ class TestMovingTheTabAtTheSave:
 
     @pytest.mark.asyncio
     async def test_an_unfiled_tab_needs_no_write(self, monkeypatch) -> None:
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         saved: list[str] = []
 
@@ -934,7 +934,7 @@ class TestMovingTheTabAtTheSave:
 
     @pytest.mark.asyncio
     async def test_a_refused_write_restores_the_prior_folder(self, monkeypatch) -> None:
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         monkeypatch.setattr(persistence, "save_slot_off_loop", AsyncMock(return_value=False))
         state = _make_state(folders=(FOLDER, OTHER_FOLDER))
@@ -947,7 +947,7 @@ class TestMovingTheTabAtTheSave:
 
     @pytest.mark.asyncio
     async def test_a_raising_write_restores_the_prior_folder(self, monkeypatch) -> None:
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         monkeypatch.setattr(
             persistence, "save_slot_off_loop", AsyncMock(side_effect=OSError("disk full"))
@@ -962,7 +962,7 @@ class TestMovingTheTabAtTheSave:
 
     @pytest.mark.asyncio
     async def test_a_retraction_never_moves_a_tab_the_reader_moved(self, monkeypatch) -> None:
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         started = asyncio.Event()
         release = asyncio.Event()
@@ -990,7 +990,7 @@ class TestMovingTheTabAtTheSave:
 
     @pytest.mark.asyncio
     async def test_the_move_asks_for_a_confirmed_write(self, monkeypatch) -> None:
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         save = AsyncMock(return_value=True)
         monkeypatch.setattr(persistence, "save_slot_off_loop", save)
@@ -1010,7 +1010,7 @@ class TestMovingTheTabAtTheSave:
 
     @pytest.mark.asyncio
     async def test_a_failed_persist_cannot_fail_the_save(self, monkeypatch) -> None:
-        import kiro_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence as persistence
 
         async def _save(state, slot, *a, **kw):
             raise OSError("disk full")
@@ -1026,8 +1026,8 @@ class TestMovingTheTabAtTheSave:
         """The move takes the same state-wide slot-metadata transaction lock the
         filing and the sidebar's folder endpoint take, so a save's move and a manual
         one take turns rather than rolling each other back."""
-        import kiro_crew.dashboard.chat_persistence as persistence
-        from kiro_crew.dashboard.chat_folders import _slot_meta_txn_lock
+        import aj_crew.dashboard.chat_persistence as persistence
+        from aj_crew.dashboard.chat_folders import _slot_meta_txn_lock
 
         state = _make_state(folders=(FOLDER, OTHER_FOLDER))
         slot = await self._filed_tab(state, _job(chat_folder_id=FOLDER))
@@ -1095,7 +1095,7 @@ class TestRestCreate:
 
     async def test_the_store_s_refusal_of_a_stateless_pair_reaches_the_client(self) -> None:
         """The message is shown verbatim under Save, so it has to name the rule."""
-        from kiro_crew.cron import _CHAT_FOLDER_NEEDS_PERSISTENT
+        from aj_crew.cron import _CHAT_FOLDER_NEEDS_PERSISTENT
 
         add = AsyncMock(side_effect=ValueError(_CHAT_FOLDER_NEEDS_PERSISTENT))
         app = _app(api_crons_create, "/api/crons", add_job_async=add)
@@ -1204,7 +1204,7 @@ class TestRestUpdate:
     @staticmethod
     def _capture_unfile(monkeypatch):
         """Record (job id, prior folder) for each unfile the handler performs."""
-        import kiro_crew.dashboard.handlers.cron as handler_mod
+        import aj_crew.dashboard.handlers.cron as handler_mod
 
         calls: list[tuple[str, str]] = []
 

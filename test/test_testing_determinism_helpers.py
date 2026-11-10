@@ -1,6 +1,6 @@
-"""Self-tests for ``kiro_crew.testing.clock``, ``.wait`` and ``.ids``, and their fixtures.
+"""Self-tests for ``aj_crew.testing.clock``, ``.wait`` and ``.ids``, and their fixtures.
 
-Every wait-loop test runs ``kiro_crew.testing.wait`` on a :class:`ManualClock`
+Every wait-loop test runs ``aj_crew.testing.wait`` on a :class:`ManualClock`
 (through its private ``_monotonic`` / ``_sleep`` / ``_asyncio_sleep`` names), so
 none of them bets on how fast the host is. Real time only bounds a broken run.
 """
@@ -22,13 +22,13 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew.loop_lock import LoopBoundLock
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
-from kiro_crew.testing import clock as clock_mod
-from kiro_crew.testing import ids as ids_mod
-from kiro_crew.testing import wait
-from kiro_crew.testing.clock import DEFAULT_START, ManualClock
-from kiro_crew.testing.fixtures import one_pool_thread  # noqa: F401 (fixture)
+from aj_crew.loop_lock import LoopBoundLock
+from aj_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.testing import clock as clock_mod
+from aj_crew.testing import ids as ids_mod
+from aj_crew.testing import wait
+from aj_crew.testing.clock import DEFAULT_START, ManualClock
+from aj_crew.testing.fixtures import one_pool_thread  # noqa: F401 (fixture)
 
 pytest_plugins = ("pytester",)
 
@@ -42,7 +42,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 
 @pytest.fixture
 def virtual(monkeypatch):
-    """A ManualClock that ``kiro_crew.testing.wait`` reads instead of real time."""
+    """A ManualClock that ``aj_crew.testing.wait`` reads instead of real time."""
     clock = ManualClock(monotonic_start=0.0)
     real_asyncio_sleep = asyncio.sleep
 
@@ -555,12 +555,12 @@ class TestDefaultTimeout:
             imported.append(name)
             return stand_in
 
-        monkeypatch.delitem(sys.modules, "kiro_crew.testing.wait")
+        monkeypatch.delitem(sys.modules, "aj_crew.testing.wait")
         monkeypatch.setattr(
             conftest, "importlib", types.SimpleNamespace(import_module=import_module)
         )
         conftest._publish_runner_timeout(7.0)
-        assert imported == ["kiro_crew.testing.wait"]
+        assert imported == ["aj_crew.testing.wait"]
         assert stand_in.runner_timeout_secs == 7.0
 
     @pytest.mark.timeout(37)
@@ -1326,10 +1326,10 @@ def test_the_helper_modules_import_without_pytest(tmp_path):
         "import sys\n"
         "sys.modules['pytest'] = None\n"
         "sys.modules['_pytest'] = None\n"
-        "import kiro_crew.testing\n"
+        "import aj_crew.testing\n"
         "before = set(sys.modules)\n"
-        "import kiro_crew.testing.clock, kiro_crew.testing.ids, kiro_crew.testing.wait\n"
-        "new = sorted(m for m in set(sys.modules) - before if m.startswith('kiro_crew'))\n"
+        "import aj_crew.testing.clock, aj_crew.testing.ids, aj_crew.testing.wait\n"
+        "new = sorted(m for m in set(sys.modules) - before if m.startswith('aj_crew'))\n"
         "print(','.join(new))\n"
     )
     env = dict(os.environ)
@@ -1344,8 +1344,8 @@ def test_the_helper_modules_import_without_pytest(tmp_path):
         **UTF8_TEXT,
     )
     loaded = set(out.stdout.strip().split(","))
-    helpers = {"kiro_crew.testing.clock", "kiro_crew.testing.ids", "kiro_crew.testing.wait"}
-    assert helpers <= loaded <= helpers | {"kiro_crew.loop_lock"}
+    helpers = {"aj_crew.testing.clock", "aj_crew.testing.ids", "aj_crew.testing.wait"}
+    assert helpers <= loaded <= helpers | {"aj_crew.loop_lock"}
 
 
 @pytest.mark.parametrize("name", ["clock", "ids", "wait"])
@@ -1353,7 +1353,7 @@ def test_the_helpers_import_only_the_standard_library(name):
     import ast
 
     tree = ast.parse(
-        (_REPO_ROOT / "src" / "kiro_crew" / "testing" / f"{name}.py").read_text("utf-8")
+        (_REPO_ROOT / "src" / "aj_crew" / "testing" / f"{name}.py").read_text("utf-8")
     )
     imported = set()
     for node in ast.walk(tree):
@@ -1362,10 +1362,10 @@ def test_the_helpers_import_only_the_standard_library(name):
         elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
             imported.add(
                 node.module
-                if node.module.startswith("kiro_crew")
+                if node.module.startswith("aj_crew")
                 else node.module.partition(".")[0]
             )
-    allowed = set(sys.stdlib_module_names) | {"__future__", "kiro_crew.loop_lock"}
+    allowed = set(sys.stdlib_module_names) | {"__future__", "aj_crew.loop_lock"}
     assert imported <= allowed, sorted(imported - allowed)
 
 
@@ -1539,11 +1539,11 @@ class TestTheAuditFloor:
         conftest = _root_conftest(request)
         state = conftest._AuditState()
         monkeypatch.setattr(conftest, "_AUDIT", state)
-        monkeypatch.setenv("KIROCREW_NET_STRICT", "0")
+        monkeypatch.setenv("AJCREW_NET_STRICT", "0")
         item = types.SimpleNamespace(nodeid="s::t", stash={}, get_closest_marker=lambda _name: None)
         conftest._determinism_floors_begin(item)
         assert state.strict_net is False
-        monkeypatch.setenv("KIROCREW_NET_STRICT", "1")
+        monkeypatch.setenv("AJCREW_NET_STRICT", "1")
         conftest._determinism_floors_begin(item)
         assert state.strict_net is True
         state.active = False
@@ -1607,7 +1607,7 @@ class TestTheAuditFloor:
         audit.strict_net = True
         refusal = conftest._determinism_floors_end(item)
         assert findings == [("network", "probe::test", "connect 192.0.2.1:80 (x3)")]
-        assert isinstance(refusal, AssertionError) and "KIROCREW_NET_STRICT" in str(refusal)
+        assert isinstance(refusal, AssertionError) and "AJCREW_NET_STRICT" in str(refusal)
         assert audit.active is False
 
     def test_the_marker_is_registered(self, request):
@@ -1623,7 +1623,7 @@ class TestTheFloorsAreOn:
         assert conftest._AUDIT.pid == os.getpid()
 
     def test_the_floor_fixtures_run_for_every_test(self, request):
-        for name in ("_kiro_crew_package_attr_floor", "_report_only_floor_summary"):
+        for name in ("_aj_crew_package_attr_floor", "_report_only_floor_summary"):
             assert name in request.fixturenames, name
         conftest = _root_conftest(request)
         assert request.node.stash.get(conftest._TZ_STATE, None) is not None
@@ -1655,7 +1655,7 @@ class TestTheReportOnlyFloors:
         monkeypatch.setattr(conftest, "_FLOOR_FINDINGS", findings)
         fake = types.ModuleType("determinism_probe_executors")
         fake._pool = ThreadPoolExecutor(max_workers=1)
-        monkeypatch.setitem(sys.modules, "kiro_crew.executors", fake)
+        monkeypatch.setitem(sys.modules, "aj_crew.executors", fake)
         release = threading.Event()
         started = threading.Event()
 
@@ -1691,12 +1691,12 @@ class TestTheReportOnlyFloors:
 
 class TestThePackageAttributeFloor:
     def _probe(self, monkeypatch, name="_determinism_floor_probe"):
-        import kiro_crew
+        import aj_crew
 
-        module = types.ModuleType(f"kiro_crew.{name}")
-        monkeypatch.setitem(sys.modules, f"kiro_crew.{name}", module)
-        monkeypatch.setattr(kiro_crew, name, module, raising=False)
-        return kiro_crew, module
+        module = types.ModuleType(f"aj_crew.{name}")
+        monkeypatch.setitem(sys.modules, f"aj_crew.{name}", module)
+        monkeypatch.setattr(aj_crew, name, module, raising=False)
+        return aj_crew, module
 
     def test_an_evicted_and_reimported_module_is_put_back(self, request, monkeypatch):
         conftest = _root_conftest(request)
@@ -1711,8 +1711,8 @@ class TestThePackageAttributeFloor:
         changed = table.restore()
         assert sys.modules[module.__name__] is module
         assert package._determinism_floor_probe is module
-        assert "sys.modules['kiro_crew._determinism_floor_probe'] replaced" in changed
-        assert "kiro_crew._determinism_floor_probe rebound" in changed
+        assert "sys.modules['aj_crew._determinism_floor_probe'] replaced" in changed
+        assert "aj_crew._determinism_floor_probe rebound" in changed
         assert table.intact()
 
     def test_a_root_package_global_rebound_by_a_reload_is_put_back(self, request, monkeypatch):
@@ -1724,44 +1724,44 @@ class TestThePackageAttributeFloor:
         original = package._determinism_floor_value
         monkeypatch.setattr(package, "_determinism_floor_value", object())
         assert not table.intact()
-        assert "kiro_crew._determinism_floor_value rebound" in table.restore()
+        assert "aj_crew._determinism_floor_value rebound" in table.restore()
         assert package._determinism_floor_value is original
 
     def test_a_loaded_module_its_parent_lost_is_bound_back(self, request, monkeypatch):
-        import kiro_crew
+        import aj_crew
 
         conftest = _root_conftest(request)
         name = "_determinism_floor_unbound"
-        module = types.ModuleType(f"kiro_crew.{name}")
+        module = types.ModuleType(f"aj_crew.{name}")
         monkeypatch.setitem(sys.modules, module.__name__, module)
-        monkeypatch.setattr(kiro_crew, name, None, raising=False)
-        monkeypatch.delattr(kiro_crew, name)  # undo leaves the attribute absent
-        assert f"kiro_crew.{name} was unbound" in conftest._bind_unbound_kiro_crew_modules()
-        assert getattr(kiro_crew, name) is module
+        monkeypatch.setattr(aj_crew, name, None, raising=False)
+        monkeypatch.delattr(aj_crew, name)  # undo leaves the attribute absent
+        assert f"aj_crew.{name} was unbound" in conftest._bind_unbound_aj_crew_modules()
+        assert getattr(aj_crew, name) is module
 
     def test_the_agent_state_pin_survives_a_lost_parent_attribute(
         self, request, monkeypatch, tmp_path
     ):
-        import kiro_crew
-        import kiro_crew.agent_state
+        import aj_crew
+        import aj_crew.agent_state
 
         conftest = _root_conftest(request)
-        monkeypatch.delattr(kiro_crew, "agent_state")
+        monkeypatch.delattr(aj_crew, "agent_state")
         with pytest.MonkeyPatch.context() as mp:
             conftest._pin_agent_state_sidecar(mp, tmp_path)
-            assert sys.modules["kiro_crew.agent_state"].config_dir() == tmp_path
+            assert sys.modules["aj_crew.agent_state"].config_dir() == tmp_path
 
 
 class TestTheSuiteFloors:
     def test_the_history_sweep_throttle_starts_closed(self):
         import math
 
-        from kiro_crew import history
+        from aj_crew import history
 
         assert history._last_cleanup == math.inf
 
     def test_an_autouse_floor_survives_a_tests_own_undo(self, monkeypatch):
-        from kiro_crew.mcp_gateway import launch_approval
+        from aj_crew.mcp_gateway import launch_approval
 
         stub = launch_approval.launch_approved
         assert stub("anything") is True

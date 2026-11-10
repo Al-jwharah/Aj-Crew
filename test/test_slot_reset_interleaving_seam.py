@@ -15,9 +15,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard.chat import api_chat_slot_model, api_chat_slot_reload
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard.chat import api_chat_slot_model, api_chat_slot_reload
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 # Registry aliases the model guard accepts, matching the ids the sibling
 # switch-atomicity tests use.

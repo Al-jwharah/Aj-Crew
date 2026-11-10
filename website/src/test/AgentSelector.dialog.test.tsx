@@ -28,11 +28,11 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import AgentSelector from '../components/AgentSelector'
-import type { KiroCrewAgent } from '../components/AgentSelector'
+import type { AjCrewAgent } from '../components/AgentSelector'
 
-const agents: KiroCrewAgent[] = [
-  { name: 'coding', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: 'Coding agent', source: 'kirocrew' },
-  { name: 'oncall', kiro_agent: 'oncall-agent', workspace: 'oncall', memory_store: 'oncall-kb', description: 'Oncall agent', source: 'kirocrew' },
+const agents: AjCrewAgent[] = [
+  { name: 'coding', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: 'Coding agent', source: 'ajcrew' },
+  { name: 'oncall', kiro_agent: 'oncall-agent', workspace: 'oncall', memory_store: 'oncall-kb', description: 'Oncall agent', source: 'ajcrew' },
 ]
 
 describe('AgentSelector popup layering (#6358)', () => {

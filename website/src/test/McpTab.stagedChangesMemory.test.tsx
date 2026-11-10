@@ -11,7 +11,7 @@ const mockApi = vi.hoisted(() => ({
   mcpGlobalScopes: vi.fn(),
   mcpApply: vi.fn(),
   mcpProbe: vi.fn(),
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
   acpBackends: vi.fn(),
   mcpGatewayStatus: vi.fn(),
 }))
@@ -29,10 +29,10 @@ const server = (name: string) => ({
   command: `/x/${name}`,
   status: 'ok',
   tools: ['send'],
-  source: 'kirocrew',
+  source: 'ajcrew',
   enabled: true,
   disabledTools: [],
-  presence: { kirocrew: true, kiroGlobal: false },
+  presence: { ajcrew: true, kiroGlobal: false },
 })
 
 function renderTab() {
@@ -51,7 +51,7 @@ beforeEach(() => {
   mockApi.mcpServers.mockResolvedValue([server('alpha'), server('beta')])
   mockApi.mcpGlobalScopes.mockResolvedValue({ scopes: [] })
   mockApi.mcpApply.mockResolvedValue({ applied: 1 })
-  mockApi.kirocrewConfig.mockResolvedValue({})
+  mockApi.ajcrewConfig.mockResolvedValue({})
   mockApi.acpBackends.mockResolvedValue({ backends: [] })
   mockApi.mcpGatewayStatus.mockResolvedValue({ enabled: false })
 })
@@ -68,7 +68,7 @@ describe('McpTab — staged changes survive leaving the page (#25962)', () => {
     fireEvent.click(apply)
     await waitFor(() => expect(mockApi.mcpApply).toHaveBeenCalled())
     expect(mockApi.mcpApply.mock.calls[0][0]).toEqual([
-      expect.objectContaining({ name: 'alpha', kirocrew: true, kiroGlobal: true }),
+      expect.objectContaining({ name: 'alpha', ajcrew: true, kiroGlobal: true }),
     ])
   })
 
@@ -131,7 +131,7 @@ describe('McpTab — staged changes survive leaving the page (#25962)', () => {
 
     // The Apply wrote alpha's Kiro global scope, so the list now carries it.
     mockApi.mcpServers.mockResolvedValue([
-      { ...server('alpha'), presence: { kirocrew: true, kiroGlobal: true } },
+      { ...server('alpha'), presence: { ajcrew: true, kiroGlobal: true } },
       server('beta'),
     ])
     renderTab()

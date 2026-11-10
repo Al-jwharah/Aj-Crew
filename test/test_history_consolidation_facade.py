@@ -3,7 +3,7 @@
 Method bodies live in the owners ``history_consolidation_span``, ``_lease``, ``_memory``,
 ``_skills`` and ``_pass``. The checks pin what callers and ``patch.object`` rely on: names,
 member kinds and signatures, one object per mirrored name, the owners' import order, and
-logging on ``kiro_crew.history``. Each structural check has a self-test that can fail.
+logging on ``aj_crew.history``. Each structural check has a self-test that can fail.
 """
 
 from __future__ import annotations
@@ -18,9 +18,9 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew
-from kiro_crew import history_consolidation as facade
-from kiro_crew.history_consolidation import HistoryConsolidator
+import aj_crew
+from aj_crew import history_consolidation as facade
+from aj_crew.history_consolidation import HistoryConsolidator
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_history_consolidation_facade")
 
@@ -28,9 +28,9 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_history_consolidation_facad
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("class_body_check_can_fail",)
 
-_SRC = Path(kiro_crew.__file__).resolve().parent
+_SRC = Path(aj_crew.__file__).resolve().parent
 _ROOT = _SRC.parents[1]
-_FACADE = "kiro_crew.history_consolidation"
+_FACADE = "aj_crew.history_consolidation"
 _PREFIX = _FACADE + "_"
 _FACADE_PATH = _SRC / "history_consolidation.py"
 
@@ -331,7 +331,7 @@ def _index():
 
 
 def _owner_paths() -> dict[str, Path]:
-    return {f"kiro_crew.{p.stem}": p for p in sorted(_SRC.glob("history_consolidation_*.py"))}
+    return {f"aj_crew.{p.stem}": p for p in sorted(_SRC.glob("history_consolidation_*.py"))}
 
 
 def _kind(cls: type, name: str) -> tuple[str, object]:
@@ -370,7 +370,7 @@ def _bound_functions(cls: type) -> dict[str, object]:
     """Class members whose function lives in an owner, not in the class body.
 
     Selected by the owner prefix, not by ``cls.__module__``: ``history.py`` sets the
-    class's ``__module__`` to ``kiro_crew.history``, which no member function carries.
+    class's ``__module__`` to ``aj_crew.history``, which no member function carries.
     """
     out = {}
     for name in vars(cls):
@@ -430,13 +430,13 @@ def _runtime_imports(tree: ast.Module) -> list[ast.Import | ast.ImportFrom]:
     ]
 
 
-def _kiro_crew_modules(node: ast.Import | ast.ImportFrom, package: str) -> set[str]:
-    """The top-level ``kiro_crew.<module>`` names *node* imports or imports from.
+def _aj_crew_modules(node: ast.Import | ast.ImportFrom, package: str) -> set[str]:
+    """The top-level ``aj_crew.<module>`` names *node* imports or imports from.
 
     A relative import resolves against *package*, the package of the importing module.
     ``from pkg import name`` counts ``pkg.name`` too, since ``name`` may be a submodule;
     each name is cut to its first two parts, which is where the facade and its owners
-    live, so ``from kiro_crew.history_consolidation_span import AttemptedSpan`` counts
+    live, so ``from aj_crew.history_consolidation_span import AttemptedSpan`` counts
     as the owner itself.
     """
     if isinstance(node, ast.Import):
@@ -448,31 +448,31 @@ def _kiro_crew_modules(node: ast.Import | ast.ImportFrom, package: str) -> set[s
         else:
             module = node.module or ""
         candidates = [module, *(f"{module}.{alias.name}" for alias in node.names)]
-    return {".".join(name.split(".")[:2]) for name in candidates if name.startswith("kiro_crew.")}
+    return {".".join(name.split(".")[:2]) for name in candidates if name.startswith("aj_crew.")}
 
 
 def _package_of(path: Path) -> str:
-    return ".".join(("kiro_crew", *path.relative_to(_SRC).parent.parts))
+    return ".".join(("aj_crew", *path.relative_to(_SRC).parent.parts))
 
 
-def _runtime_facade_imports(source: str, package: str = "kiro_crew") -> list[str]:
+def _runtime_facade_imports(source: str, package: str = "aj_crew") -> list[str]:
     """Run-time imports in *source* of the facade module itself, in any form."""
     return [
         module
         for node in _runtime_imports(ast.parse(source))
-        for module in sorted(_kiro_crew_modules(node, package))
+        for module in sorted(_aj_crew_modules(node, package))
         if module == _FACADE
     ]
 
 
-def _owner_imports(source: str, package: str = "kiro_crew") -> list[str]:
+def _owner_imports(source: str, package: str = "aj_crew") -> list[str]:
     """Owner modules *source* imports, in any form and any block."""
     return sorted(
         {
             module
             for node in ast.walk(ast.parse(source))
             if isinstance(node, (ast.Import, ast.ImportFrom))
-            for module in _kiro_crew_modules(node, package)
+            for module in _aj_crew_modules(node, package)
             if module.startswith(_PREFIX)
         }
     )
@@ -559,7 +559,7 @@ def test_a_moved_exception_keeps_the_facade_module_and_other_moved_classes_name_
     }
     for name, owner in owned.items():
         assert getattr(facade, name).__module__ == f"{_PREFIX}{owner}", name
-    assert facade.AttemptedSpan.__module__ == "kiro_crew.history"
+    assert facade.AttemptedSpan.__module__ == "aj_crew.history"
 
 
 # -- the HistoryConsolidator class -----------------------------------------------------
@@ -618,10 +618,10 @@ def test_no_bound_member_depends_on_the_class_body_it_left() -> None:
 # -- patch reach -----------------------------------------------------------------------
 
 _PATCH_TREES = (_ROOT / "test", _SRC / "apps" / "builtins")
-_STRING_TARGET = re.compile(r"""["']kiro_crew\.history_consolidation\.([A-Za-z_]\w*)""")
+_STRING_TARGET = re.compile(r"""["']aj_crew\.history_consolidation\.([A-Za-z_]\w*)""")
 _ALIASES = (
-    re.compile(r"from kiro_crew import [^\n]*?\bhistory_consolidation\b(?: as (\w+))?"),
-    re.compile(r"import kiro_crew\.history_consolidation as (\w+)"),
+    re.compile(r"from aj_crew import [^\n]*?\bhistory_consolidation\b(?: as (\w+))?"),
+    re.compile(r"import aj_crew\.history_consolidation as (\w+)"),
 )
 
 
@@ -684,18 +684,18 @@ def test_a_name_read_on_both_sides_of_the_split_is_patched_on_both() -> None:
     the moved ``_consolidate``: one patch through the facade must reach both readers."""
     holders = set(_index().holders["_persistence_disabled"])
     assert {
-        "kiro_crew.history_consolidation_span",
-        "kiro_crew.history_consolidation_pass",
+        "aj_crew.history_consolidation_span",
+        "aj_crew.history_consolidation_pass",
     } <= holders
     assert "_persistence_disabled" in vars(facade)
 
 
 def test_the_patch_target_scan_can_fail() -> None:
     text = (
-        "from kiro_crew import history_consolidation as hc\n"
+        "from aj_crew import history_consolidation as hc\n"
         "monkeypatch.setattr(hc, '_persistence_disabled', f)\n"
-        "patch('kiro_crew.history_consolidation._facade_sel')\n"
-        "from kiro_crew import history_consolidation_pass\n"
+        "patch('aj_crew.history_consolidation._facade_sel')\n"
+        "from aj_crew import history_consolidation_pass\n"
     )
     assert _patched_names(text) == {"_persistence_disabled", "_facade_sel"}
     assert _patched_names("monkeypatch.setattr(other, 'x', 1)\n") == set()
@@ -717,16 +717,16 @@ def test_the_facade_import_check_can_fail() -> None:
     source = (
         "from typing import TYPE_CHECKING\n"
         "if TYPE_CHECKING:\n"
-        "    from kiro_crew.history_consolidation import HistoryConsolidator\n"
-        "from kiro_crew import history_consolidation\n"
-        "import kiro_crew.history_consolidation\n"
+        "    from aj_crew.history_consolidation import HistoryConsolidator\n"
+        "from aj_crew import history_consolidation\n"
+        "import aj_crew.history_consolidation\n"
         "def f():\n"
-        "    from kiro_crew.history_consolidation import AttemptedSpan\n"
+        "    from aj_crew.history_consolidation import AttemptedSpan\n"
         "try:\n"
         "    pass\n"
         "except ImportError:\n"
         "    from . import history_consolidation as hc\n"
-        "from kiro_crew import history_consolidation_span\n"
+        "from aj_crew import history_consolidation_span\n"
     )
     assert _runtime_facade_imports(source) == [_FACADE] * 4
 
@@ -745,31 +745,31 @@ def test_only_the_facade_imports_an_owner() -> None:
 
 def test_the_owner_import_check_can_fail() -> None:
     source = (
-        "from kiro_crew.history_consolidation_span import AttemptedSpan\n"
-        "from kiro_crew import history_consolidation_pass as _pass\n"
-        "import kiro_crew.history_consolidation_skills\n"
+        "from aj_crew.history_consolidation_span import AttemptedSpan\n"
+        "from aj_crew import history_consolidation_pass as _pass\n"
+        "import aj_crew.history_consolidation_skills\n"
         "from .history_consolidation_memory import _save_lessons\n"
     )
     assert _owner_imports(source) == [
-        "kiro_crew.history_consolidation_memory",
-        "kiro_crew.history_consolidation_pass",
-        "kiro_crew.history_consolidation_skills",
-        "kiro_crew.history_consolidation_span",
+        "aj_crew.history_consolidation_memory",
+        "aj_crew.history_consolidation_pass",
+        "aj_crew.history_consolidation_skills",
+        "aj_crew.history_consolidation_span",
     ]
     relative = "from ..history_consolidation_span import _fmt_message\n"
-    assert _owner_imports(relative, package="kiro_crew.dashboard") == [
-        "kiro_crew.history_consolidation_span"
+    assert _owner_imports(relative, package="aj_crew.dashboard") == [
+        "aj_crew.history_consolidation_span"
     ]
-    assert _owner_imports("from kiro_crew import history_consolidation\n") == []
+    assert _owner_imports("from aj_crew import history_consolidation\n") == []
 
 
 # -- logging and review reach ------------------------------------------------------------
 
 
 def test_moved_code_logs_on_the_history_logger() -> None:
-    """The class keeps the pre-split ``kiro_crew.history`` logger category, and no owner
+    """The class keeps the pre-split ``aj_crew.history`` logger category, and no owner
     builds a logger of its own that a moved body could reach instead."""
-    assert facade._HISTORY_LOGGER.name == "kiro_crew.history"
+    assert facade._HISTORY_LOGGER.name == "aj_crew.history"
     assert HistoryConsolidator.__new__(HistoryConsolidator)._logger is facade._HISTORY_LOGGER
     for dotted in _index().owners:
         owner = importlib.import_module(dotted)
@@ -795,7 +795,7 @@ def _globstar(pattern: str) -> re.Pattern[str]:
 
 def _rules_missing_owners(rules: list[dict]) -> tuple[set[str], dict[str, list[str]]]:
     """``(ids of rules matching the facade, {id: owner files those rules miss})``."""
-    facade_path = "src/kiro_crew/history_consolidation.py"
+    facade_path = "src/aj_crew/history_consolidation.py"
     owners = [path.relative_to(_ROOT).as_posix() for path in _owner_paths().values()]
     matched: set[str] = set()
     missing: dict[str, list[str]] = {}

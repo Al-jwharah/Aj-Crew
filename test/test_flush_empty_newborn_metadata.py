@@ -12,8 +12,8 @@ import asyncio
 
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
 
 
 def _newborn(state):
@@ -58,7 +58,7 @@ def test_a_clean_empty_slot_is_not_saved(tmp_path, monkeypatch):
     slot._dirty = False
     calls: list[dict] = []
 
-    from kiro_crew.dashboard import chat
+    from aj_crew.dashboard import chat
 
     monkeypatch.setattr(chat, "_save_slot_to_history", lambda *a, **k: calls.append(k))
 
@@ -80,7 +80,7 @@ def _commit_before_the_lock(state, monkeypatch, commit):
 
 
 def test_an_older_queue_snapshot_does_not_overwrite_a_newer_committed_queue(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.slot_queue_repository import queue_persist_signature
+    from aj_crew.dashboard.slot_queue_repository import queue_persist_signature
 
     monkeypatch.setattr(sc, "session_control_enabled", lambda: True)
     state = _make_state(tmp_path)
@@ -124,8 +124,8 @@ def test_a_slot_replaced_under_the_same_name_is_not_written_over(tmp_path, monke
 
 
 def test_a_closing_empty_save_still_commits_the_close(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import chat_persistence as cp
-    from kiro_crew.dashboard.slot_queue_repository import queue_persist_signature
+    from aj_crew.dashboard import chat_persistence as cp
+    from aj_crew.dashboard.slot_queue_repository import queue_persist_signature
 
     monkeypatch.setattr(sc, "session_control_enabled", lambda: True)
     state = _make_state(tmp_path)
@@ -144,7 +144,7 @@ def test_a_closing_empty_save_still_commits_the_close(tmp_path, monkeypatch):
 
 
 def test_a_newer_queue_committed_after_the_merge_keeps_its_witness(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.slot_queue_repository import queue_persist_signature
+    from aj_crew.dashboard.slot_queue_repository import queue_persist_signature
 
     monkeypatch.setattr(sc, "session_control_enabled", lambda: True)
     state = _make_state(tmp_path)
@@ -175,8 +175,8 @@ def test_a_route_forced_save_still_commits_as_on_main(tmp_path, monkeypatch):
     # The tag, folder, pin and transfer routes save with force=True and roll
     # back on False. They do not opt in to the flush's refusals, so the same
     # race that refuses the flush still commits the route's edit.
-    from kiro_crew.dashboard import chat_persistence as cp
-    from kiro_crew.dashboard.slot_queue_repository import queue_persist_signature
+    from aj_crew.dashboard import chat_persistence as cp
+    from aj_crew.dashboard.slot_queue_repository import queue_persist_signature
 
     monkeypatch.setattr(sc, "session_control_enabled", lambda: True)
     state = _make_state(tmp_path)
@@ -204,8 +204,8 @@ def test_queue_drift_alone_on_a_line_less_tab_is_saved_once(tmp_path, monkeypatc
     # A line-less tab has nothing on disk to carry the queue. The merge credits
     # the witness, so a second pass does not re-run the save for the same drift,
     # and the tab still gets no file.
-    from kiro_crew.dashboard import chat
-    from kiro_crew.dashboard.chat_utils import slot_history_key
+    from aj_crew.dashboard import chat
+    from aj_crew.dashboard.chat_utils import slot_history_key
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("chat-queued")
@@ -230,7 +230,7 @@ def test_queue_drift_alone_on_a_line_less_tab_is_saved_once(tmp_path, monkeypatc
 
 
 def test_a_dirty_line_less_tab_is_saved_once(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import chat
+    from aj_crew.dashboard import chat
 
     state = _make_state(tmp_path)
     plain = state.get_or_create_slot("chat-plain")
@@ -255,7 +255,7 @@ def test_a_queue_cancel_on_a_clean_message_less_session_reaches_disk(tmp_path, m
     # A restored message-less session with a line: cancelling its persisted
     # queued prompt changes the queue without marking the slot dirty. The flush
     # must still write the cancel, or a restart restores the cancelled prompt.
-    from kiro_crew.dashboard.slot_queue_repository import queue_persist_signature
+    from aj_crew.dashboard.slot_queue_repository import queue_persist_signature
 
     monkeypatch.setattr(sc, "session_control_enabled", lambda: True)
     state = _make_state(tmp_path)

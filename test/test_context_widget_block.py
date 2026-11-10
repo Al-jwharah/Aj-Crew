@@ -15,15 +15,15 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.crew_mode import CONDUCTOR_TEMPLATES
+from aj_crew.crew_mode import CONDUCTOR_TEMPLATES
 
 
 def _resolve(prompt: str, session_key: str, density: str = "more") -> str:
     """Call the private template resolver with a canned config."""
-    from kiro_crew.context import ContextBuilder
+    from aj_crew.context import ContextBuilder
 
     fake_cfg = SimpleNamespace(dashboard=SimpleNamespace(widget_density=density))
-    with patch("kiro_crew.context.KiroCrewConfig.load", return_value=fake_cfg):
+    with patch("aj_crew.context.AjCrewConfig.load", return_value=fake_cfg):
         return ContextBuilder._resolve_prompt_templates(prompt, session_key)
 
 
@@ -116,10 +116,10 @@ class TestWidgetBlockPlaceholder:
 
     def test_density_default_when_config_missing(self):
         # If the dashboard config omits widget_density entirely, fall back to "more".
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         fake_cfg = SimpleNamespace(dashboard=SimpleNamespace())
-        with patch("kiro_crew.context.KiroCrewConfig.load", return_value=fake_cfg):
+        with patch("aj_crew.context.AjCrewConfig.load", return_value=fake_cfg):
             result = ContextBuilder._resolve_prompt_templates("{{WIDGET_BLOCK}}", "dashboard:x")
         # The `more` branch fires (skill pointer + encouraging wording) and the
         # `less` branch does not. Assert structurally, not on specific prose
@@ -130,13 +130,13 @@ class TestWidgetBlockPlaceholder:
 
 def _spec_body(agent: str) -> str:
     """*agent*'s charter, the text its installer's spec prompt is built from."""
-    from kiro_crew.agent_parts import spec_prompts
+    from aj_crew.agent_parts import spec_prompts
 
     return {
-        "kirocrew-worker": spec_prompts._WORKER_SYSTEM_PROMPT,
-        "kirocrew-team-lead": spec_prompts._TEAM_LEAD_SYSTEM_PROMPT,
-        "kirocrew-pipeline-conductor": spec_prompts._PIPELINE_CONDUCTOR_SYSTEM_PROMPT,
-        "kirocrew-security-conductor": spec_prompts._SECURITY_CONDUCTOR_SYSTEM_PROMPT,
+        "ajcrew-worker": spec_prompts._WORKER_SYSTEM_PROMPT,
+        "ajcrew-team-lead": spec_prompts._TEAM_LEAD_SYSTEM_PROMPT,
+        "ajcrew-pipeline-conductor": spec_prompts._PIPELINE_CONDUCTOR_SYSTEM_PROMPT,
+        "ajcrew-security-conductor": spec_prompts._SECURITY_CONDUCTOR_SYSTEM_PROMPT,
     }.get(agent, spec_prompts._CONDUCTOR_SYSTEM_PROMPT)
 
 
@@ -151,9 +151,9 @@ class TestConductorCarriesTheWidgetBlock:
     def _contract(tmp_path, monkeypatch, agent, session_key, *, private_owner):
         import json
 
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.context import ContextBuilder
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         agents_dir = tmp_path / ".kiro" / "agents"
         agents_dir.mkdir(parents=True, exist_ok=True)
@@ -161,14 +161,14 @@ class TestConductorCarriesTheWidgetBlock:
             json.dumps({"name": agent, "prompt": _spec_body(agent)}), encoding="utf-8"
         )
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir)
-        monkeypatch.setattr("kiro_crew.agent_discovery._KIRO_AGENTS_DIR", agents_dir)
+        monkeypatch.setattr("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir)
+        monkeypatch.setattr("aj_crew.agent_discovery._KIRO_AGENTS_DIR", agents_dir)
         builder = ContextBuilder(
             memory=MemoryStore(workspace=tmp_path / "ws"),
             skills=SkillsLoader(skills_path=tmp_path / "skills", install_builtins=False),
         )
         fake_cfg = SimpleNamespace(dashboard=SimpleNamespace(widget_density="more"))
-        with patch("kiro_crew.context.KiroCrewConfig.load", return_value=fake_cfg):
+        with patch("aj_crew.context.AjCrewConfig.load", return_value=fake_cfg):
             return builder._resolve_agent_prompt(
                 agent,
                 project=None,
@@ -179,7 +179,7 @@ class TestConductorCarriesTheWidgetBlock:
                 session_start=True,
             )
 
-    @pytest.mark.parametrize("agent", [*sorted(CONDUCTOR_TEMPLATES), "kirocrew-worker"])
+    @pytest.mark.parametrize("agent", [*sorted(CONDUCTOR_TEMPLATES), "ajcrew-worker"])
     def test_the_spec_prompts_carry_no_unresolved_placeholder(self, agent):
         assert "{{" not in _spec_body(agent)
 
@@ -205,7 +205,7 @@ class TestConductorCarriesTheWidgetBlock:
         contract = self._contract(
             tmp_path,
             monkeypatch,
-            "kirocrew-conductor",
+            "ajcrew-conductor",
             "slack:C123:123.456",
             private_owner=private_owner,
         )
@@ -216,15 +216,15 @@ class TestConductorCarriesTheWidgetBlock:
 
     def test_the_team_lead_gets_no_pointer_off_the_dashboard(self, tmp_path, monkeypatch):
         contract = self._contract(
-            tmp_path, monkeypatch, "kirocrew-team-lead", "slack:C123:123.456", private_owner=False
+            tmp_path, monkeypatch, "ajcrew-team-lead", "slack:C123:123.456", private_owner=False
         )
-        assert "# Kiro Crew Team Lead" in contract
+        assert "# Aj Crew Team Lead" in contract
         assert "Inline Widgets" not in contract
         assert "{{WIDGET_BLOCK}}" not in contract
 
     @pytest.mark.parametrize(
         ("agent", "heading"),
-        [("kirocrew-worker", "# Kiro Crew Worker"), ("kirocrew-mate-worker", "## Output Format")],
+        [("ajcrew-worker", "# Aj Crew Worker"), ("ajcrew-mate-worker", "## Output Format")],
     )
     def test_a_worker_gets_no_pointer(self, tmp_path, monkeypatch, agent, heading):
         # The crewmate's worker is default-named, so its contract is the default
@@ -242,19 +242,19 @@ class TestMaxSubagentsPlaceholder:
 
     @staticmethod
     def _resolve_cap(prompt, session_key, *, cap=None, raises=False, live=0):
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         fake_cfg = SimpleNamespace(dashboard=SimpleNamespace(widget_density="more"))
         if raises:
             sub = patch(
-                "kiro_crew.subagent.resolve_max_subagents",
+                "aj_crew.subagent.resolve_max_subagents",
                 side_effect=RuntimeError("boom"),
             )
         else:
-            sub = patch("kiro_crew.subagent.resolve_max_subagents", return_value=cap)
+            sub = patch("aj_crew.subagent.resolve_max_subagents", return_value=cap)
         with (
-            patch("kiro_crew.context.KiroCrewConfig.load", return_value=fake_cfg),
-            patch("kiro_crew.resource_status.adaptive_exec_cap", return_value=live),
+            patch("aj_crew.context.AjCrewConfig.load", return_value=fake_cfg),
+            patch("aj_crew.resource_status.adaptive_exec_cap", return_value=live),
             sub,
         ):
             return ContextBuilder._resolve_prompt_templates(prompt, session_key)
@@ -290,12 +290,12 @@ class TestMaxSubagentsPlaceholder:
 
     def test_absent_token_skips_resolver(self):
         # No token → the (heavier) sub-agent resolver is never invoked.
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         fake_cfg = SimpleNamespace(dashboard=SimpleNamespace(widget_density="more"))
         with (
-            patch("kiro_crew.context.KiroCrewConfig.load", return_value=fake_cfg),
-            patch("kiro_crew.subagent.resolve_max_subagents") as resolver,
+            patch("aj_crew.context.AjCrewConfig.load", return_value=fake_cfg),
+            patch("aj_crew.subagent.resolve_max_subagents") as resolver,
         ):
             ContextBuilder._resolve_prompt_templates(
                 "no token here {{WIDGET_BLOCK}}", "dashboard:abc"

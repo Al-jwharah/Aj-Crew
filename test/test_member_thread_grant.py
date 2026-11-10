@@ -44,24 +44,24 @@ from chat_mode_security_helpers import (  # noqa: F401 -- fixtures are requested
 )
 from members_dm_thread_helpers import CREW, _patched_config
 
-from kiro_crew.apps.manifest_sections import Permissions
-from kiro_crew.apps.permissions import (
+from aj_crew.apps.manifest_sections import Permissions
+from aj_crew.apps.permissions import (
     NO_SESSION_CONTROL,
     SessionControlGrant,
     app_session_control_grant,
 )
-from kiro_crew.dashboard.slot_ownership import (
+from aj_crew.dashboard.slot_ownership import (
     MEMBER_KEY_RESERVED,
     app_may_control_session,
     app_new_key_refusal,
     is_member_thread,
 )
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.members import DM_SLOT_MODE, member_slot_key, write_dm_binding
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.members import DM_SLOT_MODE, member_slot_key, write_dm_binding
 
 APP = "crew-keyboard"
-_GRANT = "kiro_crew.apps.permissions.app_can_manage_session_approvals"
-_MANIFEST = "kiro_crew.apps.permissions.get_app_manifest"
+_GRANT = "aj_crew.apps.permissions.app_can_manage_session_approvals"
+_MANIFEST = "aj_crew.apps.permissions.get_app_manifest"
 _NOT_FOUND = {"error": "not found", "code": "slot_not_found"}
 THREAD = member_slot_key(CREW)
 
@@ -180,9 +180,9 @@ async def _app_send(
     with (
         patch(_GRANT, return_value=True),
         patch(_MANIFEST, return_value=_scoped(scope)),
-        patch("kiro_crew.dashboard.chat_handlers._run_chat", new=run_chat),
-        patch("kiro_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
-        patch("kiro_crew.dashboard.chat_handlers.sel", return_value=audit),
+        patch("aj_crew.dashboard.chat_handlers._run_chat", new=run_chat),
+        patch("aj_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_handlers.sel", return_value=audit),
         _patched_config([CREW]),
     ):
         async with _app_client(state) as client:
@@ -225,7 +225,7 @@ async def test_a_thread_closed_during_the_member_reads_takes_no_turn(state, clos
     """The config and binding reads await after the app's last liveness check. A
     thread the owner closes while the binding read is pending answers the uniform
     404: no user row, no turn, no success receipt for a detached slot."""
-    from kiro_crew.members import read_dm_binding_for_slot
+    from aj_crew.members import read_dm_binding_for_slot
 
     slot = _member_thread(state)
 
@@ -236,7 +236,7 @@ async def test_a_thread_closed_during_the_member_reads_takes_no_turn(state, clos
             slot._closing += 1
         return read_dm_binding_for_slot(key)
 
-    with patch("kiro_crew.members.read_dm_binding_for_slot", side_effect=_close_then_read):
+    with patch("aj_crew.members.read_dm_binding_for_slot", side_effect=_close_then_read):
         status, body, run_chat, audit = await _app_send(state, THREAD, scope=True)
     assert (status, body) == (404, _NOT_FOUND)
     run_chat.assert_not_called()
@@ -266,8 +266,8 @@ def test_the_flag_round_trips_and_fails_closed() -> None:
     assert "memberThreads" not in Permissions().to_dict()
 
 
-_RECORD = "kiro_crew.apps.permissions._read_installed"
-_ENABLED = "kiro_crew.apps.permissions.is_app_enabled"
+_RECORD = "aj_crew.apps.permissions._read_installed"
+_ENABLED = "aj_crew.apps.permissions.is_app_enabled"
 _CONSENTED = SimpleNamespace(sessionApprovalConsentPending=False, enabled=True)
 
 
@@ -413,7 +413,7 @@ def test_widening_is_the_grant_or_its_scope_newly_declared(
 ) -> None:
     """The decision and the words agree: a widening names exactly the keys the
     owner has not consented to, never the grant it already held."""
-    from kiro_crew.apps.manager import _session_control_widening
+    from aj_crew.apps.manager import _session_control_widening
 
     widening = _session_control_widening(prior, requested)
     assert (widening.keys if widening else None) == added
@@ -425,7 +425,7 @@ def test_an_update_that_adds_the_scope_disables_until_reconsent(tmp_path, app_ho
     Until they re-enable, the one grant read reaches NOTHING -- the scope the new
     manifest declares is not lent to the consent the old one earned -- and the
     SEL row says what was added, not that the grant they already held was."""
-    from kiro_crew.apps.manager import enable_app, get_app, install_app, update_app
+    from aj_crew.apps.manager import enable_app, get_app, install_app, update_app
 
     assert install_app(_make_app_source(tmp_path, permissions={"sessionApproval": True})).ok
     assert enable_app("test-app", session_approval_consent=True).ok
@@ -435,7 +435,7 @@ def test_an_update_that_adds_the_scope_disables_until_reconsent(tmp_path, app_ho
     )
 
     audit = MagicMock()
-    with patch("kiro_crew.apps.manager.sel", return_value=audit):
+    with patch("aj_crew.apps.manager.sel", return_value=audit):
         result = update_app(
             _make_app_source(
                 tmp_path / "v2",
@@ -464,7 +464,7 @@ def test_an_update_that_adds_the_scope_disables_until_reconsent(tmp_path, app_ho
 def test_a_registration_that_adds_the_scope_names_it_in_the_audit_row(tmp_path, app_home) -> None:
     """``register_external_app`` is the other writer of ``session_approval_widened``:
     the same row for a self-managed app whose re-registration adds only the scope."""
-    from kiro_crew.apps.manager import enable_app, get_app, register_external_app
+    from aj_crew.apps.manager import enable_app, get_app, register_external_app
 
     def _register(**permissions: bool):
         return register_external_app(
@@ -483,7 +483,7 @@ def test_a_registration_that_adds_the_scope_names_it_in_the_audit_row(tmp_path, 
     assert get_app("self-managed")["enabled"] is True
 
     audit = MagicMock()
-    with patch("kiro_crew.apps.manager.sel", return_value=audit):
+    with patch("aj_crew.apps.manager.sel", return_value=audit):
         result = _register(sessionApproval=True, memberThreads=True)
     assert result.ok, result.error
     assert result.notice == "session_approval_reconsent"
@@ -500,7 +500,7 @@ def test_a_registration_that_adds_the_scope_names_it_in_the_audit_row(tmp_path, 
 
 
 def _record_path(name: str):
-    from kiro_crew.apps.manager import INSTALLED_META_FILENAME, app_dir
+    from aj_crew.apps.manager import INSTALLED_META_FILENAME, app_dir
 
     return app_dir(name) / INSTALLED_META_FILENAME
 
@@ -518,7 +518,7 @@ def _as_written_by_an_older_host(name: str) -> None:
 
 
 def test_an_enable_records_the_scope_consent_only_while_declared(tmp_path, app_home) -> None:
-    from kiro_crew.apps.manager import enable_app, get_app, install_app
+    from aj_crew.apps.manager import enable_app, get_app, install_app
 
     both = {"sessionApproval": True, "memberThreads": True}
     assert install_app(_make_app_source(tmp_path, permissions=both)).ok
@@ -538,7 +538,7 @@ def test_a_consent_that_did_not_name_the_scope_is_refused(tmp_path, app_home) ->
     it is refused and the record stays pending until a dialog that names the
     scope is confirmed. A scope consent for a manifest without the scope records
     nothing."""
-    from kiro_crew.apps.manager import enable_app, get_app, install_app, update_app
+    from aj_crew.apps.manager import enable_app, get_app, install_app, update_app
 
     assert install_app(_make_app_source(tmp_path, permissions={"sessionApproval": True})).ok
     assert enable_app("test-app", session_approval_consent=True).ok
@@ -570,7 +570,7 @@ def test_a_host_upgrade_does_not_lend_the_scope_to_an_older_consent(tmp_path, ap
     host is upgraded: the consent on record never covered the scope, so the grant
     reads pending -- refused outright, scope included -- until the owner
     re-consents, and the boot reconcile disables it with a row naming the scope."""
-    from kiro_crew.apps.manager import (
+    from aj_crew.apps.manager import (
         _session_approval_consent_unrecorded_on_disk,
         enable_app,
         get_app,
@@ -592,7 +592,7 @@ def test_a_host_upgrade_does_not_lend_the_scope_to_an_older_consent(tmp_path, ap
     assert (refused.ok, refused.error_code) == (False, "session_approval_consent_required")
 
     audit = MagicMock()
-    with patch("kiro_crew.apps.manager.sel", return_value=audit):
+    with patch("aj_crew.apps.manager.sel", return_value=audit):
         assert mark_session_approval_consent_pending("test-app") is True
     info = get_app("test-app")
     assert (info["enabled"], info["sessionApprovalConsentPending"]) == (False, True)
@@ -610,7 +610,7 @@ def test_a_host_upgrade_does_not_lend_the_scope_to_an_older_consent(tmp_path, ap
 def test_a_host_upgrade_keeps_a_grant_that_declares_no_scope(tmp_path, app_home) -> None:
     """The same older record for a manifest without the scope owes nothing: its
     consent covered everything the manifest declares."""
-    from kiro_crew.apps.manager import (
+    from aj_crew.apps.manager import (
         _session_approval_consent_unrecorded_on_disk,
         enable_app,
         install_app,

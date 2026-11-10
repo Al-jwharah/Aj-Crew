@@ -1,10 +1,10 @@
 # Design Document: Builtin App Optional Enable
 
-Status: implemented in `src/kiro_crew/apps/manager_builtins.py` and the dashboard app navigation/store surfaces.
+Status: implemented in `src/aj_crew/apps/manager_builtins.py` and the dashboard app navigation/store surfaces.
 
 ## Overview
 
-This feature extends KiroCrew's builtin app registration system to support apps that default to disabled. The change is minimal: add a `defaultEnabled` field to the builtin app definition dictionary, use it during first-time registration, and adjust the frontend Browse tab to show disabled builtin apps alongside registry apps.
+This feature extends AjCrew's builtin app registration system to support apps that default to disabled. The change is minimal: add a `defaultEnabled` field to the builtin app definition dictionary, use it during first-time registration, and adjust the frontend Browse tab to show disabled builtin apps alongside registry apps.
 
 The existing architecture already handles most of the work:
 - `register_builtin_apps()` already preserves user state on restart (only updates version/displayName)
@@ -186,7 +186,7 @@ const disabledBuiltins: BrowseItem[] = apps
     displayName: a.displayName || a.name,
     description: a.manifest?.description || '',
     version: a.version,
-    author: a.manifest?.author || 'kirocrew',
+    author: a.manifest?.author || 'ajcrew',
     tags: a.manifest?.tags,
     installed: true,  // They ARE installed, just disabled
     enabled: false,
@@ -217,7 +217,7 @@ The card rendering for disabled builtins shows an "Enable" button instead of "Ge
 )}
 ```
 
-**UX note:** The "Built-in" badge distinguishes these from registry apps (which show "Get"). Users understand that "Enable" means activating a feature already bundled in KiroCrew, while "Get" means downloading something new.
+**UX note:** The "Built-in" badge distinguishes these from registry apps (which show "Get"). Users understand that "Enable" means activating a feature already bundled in AjCrew, while "Get" means downloading something new.
 
 ### Frontend: Installed Tab Behavior
 

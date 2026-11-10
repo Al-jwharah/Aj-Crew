@@ -39,7 +39,7 @@ export interface CronJob {
    *  the backoff has elapsed. */
   failure_backoff_until?: number | null
   /** The zone the cron expression's hour/minute fields are read in: an IANA name,
-   * or 'local' (the zone of the computer Kiro Crew runs on, wherever it is). Absent
+   * or 'local' (the zone of the computer Aj Crew runs on, wherever it is). Absent
    * / null when the job names none and takes the default zone. */
   timezone?: string | null
   /** The IANA zone the job's wall clock is read in right now, with 'local' and the

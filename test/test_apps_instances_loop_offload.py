@@ -23,14 +23,14 @@ from typing import Any, Callable, cast
 import pytest
 from aiohttp.test_utils import make_mocked_request
 
-import kiro_crew.apps.bridges as bridges_mod
-import kiro_crew.apps.hooks_integration as hooks_mod
-import kiro_crew.apps.routes as routes_mod
-import kiro_crew.dashboard.handlers_instances as handlers_instances_mod
-import kiro_crew.dashboard.handlers_instances_gate as handlers_instances_gate_mod
-import kiro_crew.dashboard.handlers_instances_peer as handlers_instances_peer_mod
-import kiro_crew.instances.ssh_tunnel_manager as ssh_tunnel_manager_mod
-from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager, TunnelStatus
+import aj_crew.apps.bridges as bridges_mod
+import aj_crew.apps.hooks_integration as hooks_mod
+import aj_crew.apps.routes as routes_mod
+import aj_crew.dashboard.handlers_instances as handlers_instances_mod
+import aj_crew.dashboard.handlers_instances_gate as handlers_instances_gate_mod
+import aj_crew.dashboard.handlers_instances_peer as handlers_instances_peer_mod
+import aj_crew.instances.ssh_tunnel_manager as ssh_tunnel_manager_mod
+from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager, TunnelStatus
 
 # Helpers
 
@@ -130,7 +130,7 @@ async def test_handle_publish_providers_collects_off_the_loop_thread(
 ) -> None:
     """The publish-provider collection (walk + per-provider config reads)
     must not run on the loop thread."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     loop_thread = threading.current_thread()
     walk_threads: list[threading.Thread] = []
     monkeypatch.setattr(routes_mod, "list_apps", _recorder(walk_threads, result=[]))
@@ -303,10 +303,10 @@ def test_list_apps_is_read_only_under_version_drift(
     races real mutators (install/enable/register) and silently overwrites
     their fields. The manifest version is still reflected in the RETURNED
     metadata (display), just not persisted from this path."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     import json as _json
 
-    from kiro_crew.apps.manager import InstalledApp, _write_installed, apps_dir, list_apps
+    from aj_crew.apps.manager import InstalledApp, _write_installed, apps_dir, list_apps
 
     app_root = apps_dir() / "drift-app"
     app_root.mkdir(parents=True)
@@ -409,7 +409,7 @@ def test_no_direct_registry_write_in_async_frames() -> None:
     worker holds it across an fsync) may not be called directly inside an
     async frame of the tunnel manager. Sync helpers (e.g. _reserved_ports) are
     separate frames and stay out of scope."""
-    import kiro_crew.instances.ssh_tunnel_manager as stm_mod
+    import aj_crew.instances.ssh_tunnel_manager as stm_mod
 
     write_methods = {
         "update",
@@ -483,7 +483,7 @@ def _admit_as_owner(monkeypatch: pytest.MonkeyPatch) -> None:
         return None
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers._shared.require_owner_dashboard_request", _allowed
+        "aj_crew.dashboard.handlers._shared.require_owner_dashboard_request", _allowed
     )
 
 
@@ -601,7 +601,7 @@ async def test_cancelled_registries_write_still_audits_the_trust_grant(
 
     monkeypatch.setattr(routes_mod, "update_config_locked", _blocking_update)
 
-    from kiro_crew.dashboard.chat_utils import run_config_write
+    from aj_crew.dashboard.chat_utils import run_config_write
 
     task = asyncio.ensure_future(
         run_config_write(routes_mod._write_registries_config, cfg, validated)
@@ -743,7 +743,7 @@ async def test_registries_config_write_holds_the_loop_side_config_lock(
     writers (``updates.py``, ``security.py`` and others) take only ``_get_config_lock``.
     ``run_config_write`` holds both, so a concurrent PUT cannot revert this write.
     """
-    from kiro_crew.dashboard.handlers.agents import _get_config_lock
+    from aj_crew.dashboard.handlers.agents import _get_config_lock
 
     lock_held: list[bool] = []
     write_threads: list[threading.Thread] = []

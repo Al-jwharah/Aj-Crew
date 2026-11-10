@@ -204,7 +204,7 @@ function HookForm({ hook, onSave, onCancel }: {
               // the moment of choice is here, and a reader who has never
               // seen the table cannot tell `waiting` from `stored`.
               return mark
-                ? { label: mark, source: 'kirocrew', hint: dormantHint(e) }
+                ? { label: mark, source: 'ajcrew', hint: dormantHint(e) }
                 : undefined
             })}
             // Choosing a dormant trigger does NOT clear `matcher`, it only hides

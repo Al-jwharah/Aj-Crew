@@ -19,7 +19,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from turn_harness import TurnContext, TurnScript, run_turn
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
@@ -27,7 +27,7 @@ from kiro_crew.acp.types import (
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.config import KiroCrewConfig
+from aj_crew.config import AjCrewConfig
 
 _REPLY = AcpEvent(kind=EVENT_TEXT_CHUNK, text="the reply")
 _DONE = AcpEvent(kind=EVENT_COMPLETE, stop_reason=STOP_REASON_END_TURN)
@@ -36,12 +36,12 @@ _SID = "sid-fresh"
 
 @pytest.fixture()
 def map_dir(tmp_path):
-    with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+    with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
         yield tmp_path
 
 
 def _kas_label() -> str:
-    from kiro_crew.providers.acp import AcpProvider, provider_label
+    from aj_crew.providers.acp import AcpProvider, provider_label
 
     p = MagicMock(spec=AcpProvider)
     p.client = MagicMock()
@@ -52,10 +52,10 @@ def _kas_label() -> str:
 
 
 def _real_manager(key: str, label: str) -> Any:
-    from kiro_crew.providers.acp import AcpProvider
-    from kiro_crew.session import SessionManager, _Session
+    from aj_crew.providers.acp import AcpProvider
+    from aj_crew.session import SessionManager, _Session
 
-    mgr = SessionManager(KiroCrewConfig(), provider_factory=MagicMock())
+    mgr = SessionManager(AjCrewConfig(), provider_factory=MagicMock())
     provider = MagicMock(spec=AcpProvider)
     provider.shutdown = AsyncMock()
     provider.client = MagicMock()
@@ -127,7 +127,7 @@ async def test_a_warm_retry_with_the_marker_still_pending_flushes_before_the_pro
 
 
 def test_the_marker_is_written_only_where_get_honours_it(map_dir):
-    from kiro_crew.session_map import SessionMap
+    from aj_crew.session_map import SessionMap
 
     sm = SessionMap()
     sm.set("dashboard:kas", _SID, provider=_kas_label())

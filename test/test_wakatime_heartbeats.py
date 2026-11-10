@@ -14,7 +14,7 @@ from typing import Any, cast
 
 import pytest
 
-from kiro_crew.wakatime import heartbeats
+from aj_crew.wakatime import heartbeats
 
 
 @dataclass
@@ -99,8 +99,8 @@ def test_entity_is_project_basename_never_full_path() -> None:
 
 
 def test_entity_falls_back_to_a_stable_label_when_no_project() -> None:
-    assert heartbeats._entity_for_project(None) == "kirocrew-session"
-    assert heartbeats._entity_for_project("") == "kirocrew-session"
+    assert heartbeats._entity_for_project(None) == "ajcrew-session"
+    assert heartbeats._entity_for_project("") == "ajcrew-session"
 
 
 def test_entity_redacts_a_credential_shaped_basename() -> None:
@@ -162,7 +162,7 @@ def test_cadence_schedules_a_task_without_reading_config(monkeypatch: pytest.Mon
     def _fail_load() -> Any:
         raise AssertionError("cadence must not read config on the calling thread")
 
-    monkeypatch.setattr(heartbeats.KiroCrewConfig, "load", staticmethod(_fail_load))
+    monkeypatch.setattr(heartbeats.AjCrewConfig, "load", staticmethod(_fail_load))
     heartbeats.note_coding_cadence("/tmp/repo")
     assert len(loop.tasks) == 1
 
@@ -175,7 +175,7 @@ async def test_cadence_send_drops_when_opt_in_is_off(monkeypatch: pytest.MonkeyP
     stub = _StubClient()
     _install_client(monkeypatch, stub)
     monkeypatch.setattr(
-        heartbeats.KiroCrewConfig,
+        heartbeats.AjCrewConfig,
         "load",
         staticmethod(lambda: _Cfg(wakatime=_WakaCfg(enabled=True, send_heartbeats=False))),
     )
@@ -192,7 +192,7 @@ async def test_cadence_heartbeat_carries_no_attribution(
     # attribution against the end-of-turn beat however often it fires.
     stub = _StubClient()
     _install_client(monkeypatch, stub)
-    monkeypatch.setattr(heartbeats.KiroCrewConfig, "load", staticmethod(lambda: _Cfg()))
+    monkeypatch.setattr(heartbeats.AjCrewConfig, "load", staticmethod(lambda: _Cfg()))
 
     await _run_scheduled_sends(monkeypatch, lambda: heartbeats.note_coding_cadence("/tmp/my-repo"))
 
@@ -220,7 +220,7 @@ async def test_enabled_and_opted_in_sends_one_heartbeat(
 ) -> None:
     stub = _StubClient()
     _install_client(monkeypatch, stub)
-    monkeypatch.setattr(heartbeats.KiroCrewConfig, "load", staticmethod(lambda: _Cfg()))
+    monkeypatch.setattr(heartbeats.AjCrewConfig, "load", staticmethod(lambda: _Cfg()))
 
     await _run_scheduled_sends(
         monkeypatch,
@@ -370,7 +370,7 @@ async def test_send_rechecks_opt_in_at_send_time(monkeypatch: pytest.MonkeyPatch
     stub = _StubClient()
     _install_client(monkeypatch, stub)
     monkeypatch.setattr(
-        heartbeats.KiroCrewConfig,
+        heartbeats.AjCrewConfig,
         "load",
         staticmethod(lambda: _Cfg(wakatime=_WakaCfg(enabled=True, send_heartbeats=False))),
     )
@@ -401,7 +401,7 @@ async def test_send_resolves_destination_once_inside_task(
         calls["key"] += 1
         return "single-snapshot-key"
 
-    monkeypatch.setattr(heartbeats.KiroCrewConfig, "load", staticmethod(_load))
+    monkeypatch.setattr(heartbeats.AjCrewConfig, "load", staticmethod(_load))
     monkeypatch.setattr(heartbeats, "resolve_base_url", _base)
     monkeypatch.setattr(heartbeats, "resolve_api_key", _key)
     monkeypatch.setattr(
@@ -423,7 +423,7 @@ async def test_send_swallows_failure_and_closes_client(
 ) -> None:
     stub = _StubClient(fail=True)
     _install_client(monkeypatch, stub)
-    monkeypatch.setattr(heartbeats.KiroCrewConfig, "load", staticmethod(lambda: _Cfg()))
+    monkeypatch.setattr(heartbeats.AjCrewConfig, "load", staticmethod(lambda: _Cfg()))
 
     await heartbeats.send_heartbeat(heartbeats._make_heartbeat("/tmp/repo"))
 
@@ -434,7 +434,7 @@ async def test_send_swallows_failure_and_closes_client(
 async def test_send_is_a_noop_when_no_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
     cfg = _Cfg()
     monkeypatch.setattr(heartbeats, "resolve_api_key", lambda: "")
-    monkeypatch.setattr(heartbeats.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+    monkeypatch.setattr(heartbeats.AjCrewConfig, "load", staticmethod(lambda: cfg))
     monkeypatch.setattr(
         heartbeats,
         "WakaTimeClient",

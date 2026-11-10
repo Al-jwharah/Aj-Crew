@@ -12,28 +12,28 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.context_assembly.sections import (
+from aj_crew.context_assembly.sections import (
     browser_section,
     computer_use_block,
     subagent_section,
 )
-from kiro_crew.mcp_instructions import COMPUTER, CRON
-from kiro_crew.validation_parts.cron_schemas import CRON_ADD_SCHEMA
+from aj_crew.mcp_instructions import COMPUTER, CRON
+from aj_crew.validation_parts.cron_schemas import CRON_ADD_SCHEMA
 
 ROOT = Path(__file__).resolve().parents[1]
-CONFIG = ROOT / "src" / "kiro_crew" / "config"
+CONFIG = ROOT / "src" / "aj_crew" / "config"
 # Absolute UTF-8 source-byte budgets, not token counts or live git baselines.
 # A maintainer may raise a budget in a reviewed change when a new rule earns
 # its space. Preserve the operational clauses below rather than cutting them
 # to fit; their tests, not a size limit, check the retained text contracts.
 # Measured on the prompt with its Computer Use slot filled the larger way: the
-# pointer a session without `kirocrew-computer` gets (a mounted server carries
-# its own usage text as MCP `instructions`, `kiro_crew.mcp_instructions`), and
+# pointer a session without `ajcrew-computer` gets (a mounted server carries
+# its own usage text as MCP `instructions`, `aj_crew.mcp_instructions`), and
 # with its Browser section kept and its markers gone, as a session with browsing
 # set up gets it. The
 # `{{MAX_SUBAGENTS}}` and `{{WIDGET_BLOCK}}` slots are still counted as their
 # raw tokens.
-BABYSIT_SKILL_DIR = CONFIG.parent / "builtin_skills" / "kirocrew-dev" / "babysit"
+BABYSIT_SKILL_DIR = CONFIG.parent / "builtin_skills" / "ajcrew-dev" / "babysit"
 PROMPT_BYTE_CEILINGS = {"prompt.md": 40_676}
 _COMPUTER_USE_TOKEN = "{{COMPUTER_USE_BLOCK}}"
 
@@ -151,7 +151,7 @@ def test_single_task_default_survives_prompt_compaction() -> None:
 
 
 def test_cron_modes_and_session_ownership_remain_explicit() -> None:
-    # The cron bullets are kirocrew-cron's own MCP instructions now.
+    # The cron bullets are ajcrew-cron's own MCP instructions now.
     _require(
         CRON,
         r"no-LLM.*mutually exclusive `command`.*deterministic",
@@ -163,14 +163,14 @@ def test_cron_modes_and_session_ownership_remain_explicit() -> None:
     )
     for value in ("persistent_session=false", "minimal_context=true", "hide_in_chat=true"):
         assert value in CRON
-    assert "kirocrew cron preview <script:function> -m <message>" in CRON
-    capabilities = _section(_read(), "## KiroCrew Capabilities")  # brand-ok: exact prompt heading
+    assert "ajcrew cron preview <script:function> -m <message>" in CRON
+    capabilities = _section(_read(), "## AjCrew Capabilities")  # brand-ok: exact prompt heading
     _require(capabilities, r"`ask_question`.*DEFAULT TO SILENCE", r"\[OPTIONS: .*cheaper")
 
 
 def test_merged_trigger_lines_keep_every_sibling_tools_trigger() -> None:
     """A deferred tool shows only its name, so each one keeps its own when-to-use line."""
-    capabilities = _section(_read(), "## KiroCrew Capabilities")  # brand-ok: exact prompt heading
+    capabilities = _section(_read(), "## AjCrew Capabilities")  # brand-ok: exact prompt heading
     _require(
         capabilities,
         r"`knowledge_add_document`: add a load-bearing design/spec/RFC/runbook/wiki you READ",
@@ -186,7 +186,7 @@ def test_merged_trigger_lines_keep_every_sibling_tools_trigger() -> None:
 
 
 def _tools() -> dict[str, dict]:
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     return {t["name"]: t for t in mcp_core._list_tools()}
 
@@ -265,7 +265,7 @@ def test_agent_started_processes_end_with_the_runtime() -> None:
         _section(_read(), "## Rules"),
         r"`nohup`, `&`, `setsid` and `disown` included, stops without notice",
         r'never tell the user a job "runs by itself in the background"',
-        r"one-shot `cron_add` `command` job's `timeout` \(at most 3600 s; set `timeout_secs` above it\).*outside Kiro Crew",
+        r"one-shot `cron_add` `command` job's `timeout` \(at most 3600 s; set `timeout_secs` above it\).*outside Aj Crew",
     )
     # The cap the rule quotes is the one `cron_add` enforces.
     assert next(f for f in CRON_ADD_SCHEMA.fields if f.name == "timeout").max_val == 3600
@@ -296,9 +296,9 @@ def test_the_prompt_points_monitoring_at_the_babysit_skill() -> None:
     monitor = _section(_read(), "## Wait & Webhook Tools")
     _require(
         monitor,
-        r"core Kiro Crew feature",
+        r"core Aj Crew feature",
         r"wait for, keep checking, keep an eye on, babysit",
-        r"read the `kirocrew-dev/babysit` skill first, every time",
+        r"read the `ajcrew-dev/babysit` skill first, every time",
         r"required even when you are only asked to plan, describe or propose the call",
         r"Never choose a driver or write its arguments from memory",
         r"`wait`, `monitor_watch`, `monitor_start`, `cron_add`, `register_hook`",
@@ -337,7 +337,7 @@ def test_the_babysit_skill_keeps_the_monitor_contract() -> None:
     for token in (
         "session_ledger_record",
         "session_ledger_read",
-        "kiro_crew.heartbeat.append_heartbeat_task(entry)",
+        "aj_crew.heartbeat.append_heartbeat_task(entry)",
         "HEARTBEAT_KEEP",
     ):
         assert token in skill, token
@@ -367,7 +367,7 @@ def test_browser_keeps_the_gate_takeover_and_ref_rules() -> None:
 
 
 def test_computer_use_keeps_opt_in_and_cursor_password_refusals() -> None:
-    # What a session gets while its spec mounts `kirocrew-computer`: the server's
+    # What a session gets while its spec mounts `ajcrew-computer`: the server's
     # own MCP instructions. Its "off by default" and "turned off after this
     # session started" lines stayed behind: a mounted server is on, and a session
     # whose server goes away loses its instructions with it and gets the pointer.

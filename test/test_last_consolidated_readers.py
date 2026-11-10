@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.history import ConversationLog
+from aj_crew.history import ConversationLog
 
 
 @pytest.fixture
@@ -99,7 +99,7 @@ def test_failures_on_a_repaired_marker_count_toward_the_cap(
     log: ConversationLog, stored: object
 ) -> None:
     """A charge taken from the repaired snapshot describes the span still in front of us."""
-    from kiro_crew.history_consolidation_span import AttemptedSpan
+    from aj_crew.history_consolidation_span import AttemptedSpan
 
     generation = log.rotation_generation("k")
     log.update_metadata(

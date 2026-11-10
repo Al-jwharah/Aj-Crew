@@ -9,7 +9,7 @@ without anything going red. Each class pins the named sites to the helper:
 | a cut never splits a grapheme cluster | ``imessage.plaintext._grapheme_boundary`` / ``_grapheme_end`` | ``computer_use.render._clip``, ``dashboard.chat_title._title_reveal_prefixes`` |
 | a download name is sent as RFC 5987 ``filename*=UTF-8''`` | ``dashboard.session_export.content_disposition`` | ``GET /api/knowledge/export`` |
 | a temp-write-and-rename uses a unique temp name | ``atomic_write.atomic_write`` | ``auto_research.subquestion_queue.save_queue`` |
-| column alignment is measured in display columns, not ``len`` | ``messaging.tables.display_width`` | ``kirocrew knowledge stats`` |
+| column alignment is measured in display columns, not ``len`` | ``messaging.tables.display_width`` | ``ajcrew knowledge stats`` |
 
 Two kinds of assertion. A spy on the module's own binding of the helper proves the
 site still reaches it. A behavioural assertion proves what the helper buys: the
@@ -29,13 +29,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from knowledge_handlers_coverage_helpers import _client, _make_app
 
-import kiro_crew.apps.builtins.auto_research.subquestion_queue as sq
-import kiro_crew.computer_use.render as render
-import kiro_crew.dashboard.chat_title as chat_title
-import kiro_crew.dashboard.handlers.knowledge_bundles as knowledge_bundles
-from kiro_crew.dashboard.session_export import content_disposition
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.messaging.tables import display_width
+import aj_crew.apps.builtins.auto_research.subquestion_queue as sq
+import aj_crew.computer_use.render as render
+import aj_crew.dashboard.chat_title as chat_title
+import aj_crew.dashboard.handlers.knowledge_bundles as knowledge_bundles
+from aj_crew.dashboard.session_export import content_disposition
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.messaging.tables import display_width
 
 FAMILY = "👨\u200d👩\u200d👧"
 
@@ -164,11 +164,11 @@ class TestKnowledgeStatsColumns:
         return tmp_path
 
     def _table(self, home, capsys) -> list[str]:
-        from kiro_crew import cli
+        from aj_crew import cli
 
         with (
-            patch("kiro_crew.cli.config_dir", return_value=home),
-            patch("kiro_crew.cli.sel", return_value=MagicMock()),
+            patch("aj_crew.cli.config_dir", return_value=home),
+            patch("aj_crew.cli.sel", return_value=MagicMock()),
         ):
             cli._knowledge(SimpleNamespace(knowledge_action="stats", json=False))
         lines = capsys.readouterr().out.splitlines()

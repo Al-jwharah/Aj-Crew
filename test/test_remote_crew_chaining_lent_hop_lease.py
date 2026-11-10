@@ -45,9 +45,9 @@ import time
 import pytest
 from remote_crew_chaining_helpers import _FakeTunnel, _mgr
 
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import async_wait_until
 
 
 class TestTheHopOwnershipInvariantHolds:
@@ -89,7 +89,7 @@ class TestTheHopOwnershipInvariantHolds:
         invariant it is meant to check. Which branch satisfies it is recorded so a reader
         can see the case really did exercise one.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr, hop = self._lent(tmp_path, monkeypatch)
         try:
@@ -109,7 +109,7 @@ class TestTheHopOwnershipInvariantHolds:
     def test_it_holds_after_the_recovery_gives_up(self, tmp_path, monkeypatch):
         """Past `max_recovery_attempts` the ERROR entry stays for good, so this is the
         state that would otherwise persist for the credential's whole lifetime."""
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr, hop = self._lent(tmp_path, monkeypatch)
         # The give-up path also schedules a diagnosis, and the real one spawns
@@ -154,7 +154,7 @@ class TestTheHopOwnershipInvariantHolds:
         makes the invariant true rather than the invariant itself: the reclaim returns
         before touching anything, leaving the port occupied.
         """
-        import kiro_crew.instances.ssh_tunnel_manager as stm
+        import aj_crew.instances.ssh_tunnel_manager as stm
 
         reg, mgr, hop = self._lent(tmp_path, monkeypatch)
         try:
@@ -221,7 +221,7 @@ class TestLentHopReservation:
         # shorter one cannot fake expiry, which is the property that stops a
         # second mint from shortening a reservation an earlier one earned. The clock is
         # the registry module's own, set one second past the lease's recorded deadline.
-        from kiro_crew.instances import registry as reg_mod
+        from aj_crew.instances import registry as reg_mod
 
         deadline = reg.live_hop_lease_deadlines()[hop]
         ManualClock(start=deadline + 1).install(monkeypatch, reg_mod)
@@ -329,7 +329,7 @@ class TestLentHopReservation:
         freed while the credential naming it stayed valid -- the exposure itself, reached
         without any orphan, reclaim or restart.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = _mgr(tmp_path, monkeypatch, real_hop_guard=True)
         reg.add(name="C", ssh_host="c-host", instance_id="c", ttl="2h")
@@ -429,7 +429,7 @@ class TestLentHopReservation:
         import inspect
         import textwrap
 
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         after = ast.parse(
             textwrap.dedent(inspect.getsource(stm.SshTunnelManager._recover_after))
@@ -540,7 +540,7 @@ class TestLentHopReservation:
         no hold taken, while the hub kept forwarding the crew's bearer token to that
         loopback port. Any other local binder that took it was handed the credential.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         held_during_mint: list[bool] = []
         # `connect` and `mint_embed_token` mint too, and both run before the port is
@@ -670,7 +670,7 @@ class TestLentHopReservation:
         valid. Asserted on the GUARD, because the cache surviving proves nothing about who
         owns the port.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = _mgr(tmp_path, monkeypatch, real_hop_guard=True)
         reg.add(name="C", ssh_host="c-host", instance_id="c", ttl="2h")
@@ -711,7 +711,7 @@ class TestLentHopReservation:
         in-memory cache, and this case proves it by making every registry read raise: if
         the seam consults the record at all, it fails here.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = _mgr(tmp_path, monkeypatch, real_hop_guard=True)
         reg.add(name="C", ssh_host="c-host", instance_id="c", ttl="2h")
@@ -745,7 +745,7 @@ class TestLentHopReservation:
         ``_hold_lent_port_now`` directly, so deleting the call from the seam leaves them
         all green. This drives the real entry point the monitor uses.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = _mgr(tmp_path, monkeypatch, real_hop_guard=True)
         reg.add(name="C", ssh_host="c-host", instance_id="c", ttl="2h")
@@ -782,7 +782,7 @@ class TestLentHopReservation:
         all -- the port would stay free for the rest of the lease with no later pass to
         notice. It pins the hold as the seam's FIRST act rather than one of its outcomes.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = _mgr(tmp_path, monkeypatch, real_hop_guard=True)
         reg.add(name="C", ssh_host="c-host", instance_id="c", ttl="2h")
@@ -803,7 +803,7 @@ class TestLentHopReservation:
 
     def test_a_lapsed_cache_entry_is_not_held(self, tmp_path, monkeypatch):
         """The cache mirrors a deadline, so it must not resurrect a dead credential."""
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = _mgr(tmp_path, monkeypatch, real_hop_guard=True)
         reg.add(name="C", ssh_host="c-host", instance_id="c", ttl="2h")
@@ -862,7 +862,7 @@ class TestLentHopReservation:
         import inspect
         import textwrap
 
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         fn = ast.parse(
             textwrap.dedent(inspect.getsource(stm.SshTunnelManager._teardown_locked))
@@ -899,7 +899,7 @@ class TestLentHopReservation:
         making it raise proves the lease check returned BEFORE anything was inspected or
         signalled.
         """
-        import kiro_crew.instances.ssh_tunnel_manager as stm
+        import aj_crew.instances.ssh_tunnel_manager as stm
 
         reg, mgr = _mgr(tmp_path, monkeypatch)
         reg.add(name="C", ssh_host="c-host", instance_id="c", ttl="2h")
@@ -1000,7 +1000,7 @@ class TestLentHopReservation:
         measuring the clamp rather than max-wins, and the real writer cannot exceed it
         either (it takes the shorter of the crew's row TTL and ``LENT_HOP_TTL_CAP``).
         """
-        from kiro_crew.instances.constants import HOP_LEASE_DEADLINE_CAP_SECS
+        from aj_crew.instances.constants import HOP_LEASE_DEADLINE_CAP_SECS
 
         reg, _ = _mgr(tmp_path, monkeypatch)
         far = time.time() + HOP_LEASE_DEADLINE_CAP_SECS - 60
@@ -1067,10 +1067,10 @@ class TestALentCredentialIsShortLived:
     def test_the_lent_lifetime_the_lease_and_the_answer_are_one_capped_number(
         self, tmp_path, monkeypatch, manual_clock
     ):
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew.instances import registry as reg_mod
-        from kiro_crew.instances.constants import LENT_HOP_TTL_CAP
-        from kiro_crew.instances.token_mint import ttl_to_seconds
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew.instances import registry as reg_mod
+        from aj_crew.instances.constants import LENT_HOP_TTL_CAP
+        from aj_crew.instances.token_mint import ttl_to_seconds
 
         asked: list[str] = []
         reg, mgr = _mgr(tmp_path, monkeypatch, mint=self._recording_mint(asked))
@@ -1105,10 +1105,10 @@ class TestALentCredentialIsShortLived:
         the cap gets it; raising the cap to their row would widen the exposure they
         asked to narrow.
         """
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew.instances import registry as reg_mod
-        from kiro_crew.instances.constants import LENT_HOP_TTL_CAP
-        from kiro_crew.instances.token_mint import ttl_to_seconds
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew.instances import registry as reg_mod
+        from aj_crew.instances.constants import LENT_HOP_TTL_CAP
+        from aj_crew.instances.token_mint import ttl_to_seconds
 
         assert ttl_to_seconds("5m") < ttl_to_seconds(LENT_HOP_TTL_CAP), "5m is not the shorter one"
 
@@ -1134,7 +1134,7 @@ class TestALentCredentialIsShortLived:
         lent to anyone, nothing releases a hold on its behalf, and capping it would
         re-mint every half hour for no window closed.
         """
-        from kiro_crew.instances.constants import LENT_HOP_TTL_CAP
+        from aj_crew.instances.constants import LENT_HOP_TTL_CAP
 
         asked: list[str] = []
         reg, mgr = _mgr(tmp_path, monkeypatch, mint=self._recording_mint(asked))
@@ -1152,13 +1152,13 @@ class TestALentCredentialIsShortLived:
         margin a re-mint has to complete inside. A cap small enough to eat that margin
         expires the token mid-mint, and the hub's pane reloads every cycle.
         """
-        from kiro_crew.instances.constants import (
+        from aj_crew.instances.constants import (
             DEFAULT_SSM_MINT_TIMEOUT_SECS,
             DEFAULT_TOKEN_REFRESH_FRACTION,
             LENT_HOP_TTL_CAP,
             MINT_TIMEOUT_CEILING_SECS,
         )
-        from kiro_crew.instances.token_mint import ttl_to_seconds
+        from aj_crew.instances.token_mint import ttl_to_seconds
 
         margin = ttl_to_seconds(LENT_HOP_TTL_CAP) * (1.0 - DEFAULT_TOKEN_REFRESH_FRACTION)
         slowest = max(MINT_TIMEOUT_CEILING_SECS + 15.0, DEFAULT_SSM_MINT_TIMEOUT_SECS)
@@ -1186,8 +1186,8 @@ class TestTheRetainedLeaseMapIsBounded:
         string it mirrors, and drift would silently widen or narrow the load clamp, so the
         equality is pinned rather than trusted.
         """
-        from kiro_crew.instances.constants import HOP_LEASE_DEADLINE_CAP_SECS, LENT_HOP_TTL_CAP
-        from kiro_crew.instances.token_mint import ttl_to_seconds
+        from aj_crew.instances.constants import HOP_LEASE_DEADLINE_CAP_SECS, LENT_HOP_TTL_CAP
+        from aj_crew.instances.token_mint import ttl_to_seconds
 
         assert HOP_LEASE_DEADLINE_CAP_SECS == ttl_to_seconds(LENT_HOP_TTL_CAP), (
             "the seconds-valued cap the registry clamps to has drifted from the TTL cap "
@@ -1205,8 +1205,8 @@ class TestTheRetainedLeaseMapIsBounded:
         still be allowed at the cap, or a chained crew would stop being able to re-mint
         precisely when the map is full.
         """
-        from kiro_crew.instances.constants import HOP_LEASE_MAX
-        from kiro_crew.instances.registry import InstancesRegistry, InvalidInstanceError
+        from aj_crew.instances.constants import HOP_LEASE_MAX
+        from aj_crew.instances.registry import InstancesRegistry, InvalidInstanceError
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
         soon = time.time() + 600
@@ -1232,9 +1232,9 @@ class TestTheRetainedLeaseMapIsBounded:
         admission's clamp deleted. Mutation M40 proved exactly that -- it survived a
         through-the-registry assertion -- so the two bounds have to be measured apart.
         """
-        from kiro_crew.instances import registry as reg_mod
-        from kiro_crew.instances.constants import HOP_LEASE_DEADLINE_CAP_SECS
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances import registry as reg_mod
+        from aj_crew.instances.constants import HOP_LEASE_DEADLINE_CAP_SECS
+        from aj_crew.instances.registry import InstancesRegistry
 
         # The clamp is `now + cap` on the registry's clock; frozen, the bound is exact.
         manual_clock.install(monkeypatch, reg_mod)
@@ -1257,9 +1257,9 @@ class TestTheRetainedLeaseMapIsBounded:
         removes the very lease that would prove the clamp missing. Mutation M42 survived
         the combined assertion for that reason.
         """
-        from kiro_crew.instances import registry as reg_mod
-        from kiro_crew.instances.constants import HOP_LEASE_DEADLINE_CAP_SECS, HOP_LEASE_MAX
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances import registry as reg_mod
+        from aj_crew.instances.constants import HOP_LEASE_DEADLINE_CAP_SECS, HOP_LEASE_MAX
+        from aj_crew.instances.registry import InstancesRegistry
 
         manual_clock.install(monkeypatch, reg_mod)
         now = manual_clock.time()
@@ -1287,9 +1287,9 @@ class TestTheRetainedLeaseMapIsBounded:
         pin the cap's worth of ports for the full horizon. Loud with a count, because every
         shed lease makes a port allocatable while a credential may still name it.
         """
-        from kiro_crew.instances import registry as reg_mod
-        from kiro_crew.instances.constants import HOP_LEASE_DEADLINE_CAP_SECS, HOP_LEASE_MAX
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances import registry as reg_mod
+        from aj_crew.instances.constants import HOP_LEASE_DEADLINE_CAP_SECS, HOP_LEASE_MAX
+        from aj_crew.instances.registry import InstancesRegistry
 
         manual_clock.install(monkeypatch, reg_mod)
         now = manual_clock.time()
@@ -1339,8 +1339,8 @@ class TestTheRetainedLeaseMapIsBounded:
         `<= now + cap`, which is true under both anchors, so mutation M42 is about the clamp
         EXISTING. This case is about it decaying.
         """
-        from kiro_crew.instances.constants import HOP_LEASE_DEADLINE_CAP_SECS
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.constants import HOP_LEASE_DEADLINE_CAP_SECS
+        from aj_crew.instances.registry import InstancesRegistry
 
         now = time.time()
         path = tmp_path / "instances.json"

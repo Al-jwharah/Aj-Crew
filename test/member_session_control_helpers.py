@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.dashboard import create_rate_limit
-from kiro_crew.members import DM_SLOT_KEY_PREFIX
+from aj_crew.dashboard import create_rate_limit
+from aj_crew.members import DM_SLOT_KEY_PREFIX
 
 _MEMBER = DM_SLOT_KEY_PREFIX + "radar"
 

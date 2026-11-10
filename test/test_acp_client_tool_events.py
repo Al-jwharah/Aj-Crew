@@ -8,7 +8,7 @@ import pytest
 from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F401 - fixture
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
-from kiro_crew.acp.client import AcpClient, _make_unified_diff
+from aj_crew.acp.client import AcpClient, _make_unified_diff
 
 
 class TestMakeUnifiedDiff:
@@ -47,7 +47,7 @@ class TestMakeUnifiedDiff:
         """A cut diff ends with the ``\\ diff truncated`` annotation on its own
         line (unified-diff escape convention — renderers skip it), never with a
         garbled half-row, so downstream +/- counting can detect understatement."""
-        from kiro_crew.acp._dispatch import DIFF_TRUNCATION_MARK
+        from aj_crew.acp._dispatch import DIFF_TRUNCATION_MARK
 
         result = _make_unified_diff("", "wordwordword\n" * 5000, "file.py", max_len=200)
         assert len(result) <= 200
@@ -60,7 +60,7 @@ class TestMakeUnifiedDiff:
         )
 
     def test_under_cap_diff_is_not_marked(self):
-        from kiro_crew.acp._dispatch import DIFF_TRUNCATION_MARK
+        from aj_crew.acp._dispatch import DIFF_TRUNCATION_MARK
 
         result = _make_unified_diff("old\n", "new\n", "file.py")
         assert DIFF_TRUNCATION_MARK not in result
@@ -71,7 +71,7 @@ class TestDeriveEditDiff:
     tool_call with no diff content block still displays what changed."""
 
     def test_create_content_becomes_addition_diff(self):
-        from kiro_crew.acp._dispatch import derive_edit_diff
+        from aj_crew.acp._dispatch import derive_edit_diff
 
         diff = derive_edit_diff(
             {"path": "/a/new.py", "command": "create", "fileText": "x = 1\ny = 2\n"}
@@ -81,7 +81,7 @@ class TestDeriveEditDiff:
         assert "+++ /a/new.py" in diff
 
     def test_str_replace_pair_becomes_replace_hunk(self):
-        from kiro_crew.acp._dispatch import derive_edit_diff
+        from aj_crew.acp._dispatch import derive_edit_diff
 
         diff = derive_edit_diff(
             {"path": "/a/b.py", "command": "strReplace", "oldStr": "x = 1\n", "newStr": "x = 2\n"}
@@ -90,7 +90,7 @@ class TestDeriveEditDiff:
         assert "+x = 2" in diff
 
     def test_unrecognized_shapes_yield_empty(self):
-        from kiro_crew.acp._dispatch import derive_edit_diff
+        from aj_crew.acp._dispatch import derive_edit_diff
 
         assert derive_edit_diff({"path": "/a/b", "command": "create"}) == ""
         assert derive_edit_diff({"command": "create", "fileText": "x"}) == ""  # no path
@@ -100,7 +100,7 @@ class TestDeriveEditDiff:
     def test_non_string_arguments_never_reach_difflib(self):
         """Malformed args (numeric path, dict oldStr) must yield "" instead of
         letting a TypeError out of difflib abort the whole dispatch mid-turn."""
-        from kiro_crew.acp._dispatch import derive_edit_diff
+        from aj_crew.acp._dispatch import derive_edit_diff
 
         assert (
             derive_edit_diff({"path": 42, "command": "strReplace", "oldStr": "a", "newStr": "b"})
@@ -118,7 +118,7 @@ class TestDeriveEditDiff:
     def test_insert_with_line_number_derives_positioned_hunk(self):
         """An insert IS additions-only, so with a line number the derived
         hunk is exact: zero old lines at insertLine, additions after it."""
-        from kiro_crew.acp._dispatch import derive_edit_diff
+        from aj_crew.acp._dispatch import derive_edit_diff
 
         diff = derive_edit_diff(
             {"path": "/a/b.py", "command": "insert", "insertLine": 4, "content": "x = 1\ny = 2"}
@@ -130,7 +130,7 @@ class TestDeriveEditDiff:
     def test_insert_without_line_number_derives_nothing(self):
         """Without a line number the hunk position would be a guess — the
         row keeps its fold-proof trace via the file_changes snapshot."""
-        from kiro_crew.acp._dispatch import derive_edit_diff
+        from aj_crew.acp._dispatch import derive_edit_diff
 
         assert derive_edit_diff({"path": "/a/b.py", "command": "insert", "content": "x = 1"}) == ""
 
@@ -151,14 +151,14 @@ class TestExtractToolEvent:
         """Non-dict update raised AttributeError on update.get() in the
         prompt-turn dispatch path — must be a clean None instead."""
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(method="session/update", params={"update": bad_update})
         assert client._extract_tool_event(msg) is None  # must not raise
 
     def test_basic_tool_call(self):
         client = AcpClient()
-        from kiro_crew.acp.types import EVENT_TOOL_CALL, JsonRpcMessage
+        from aj_crew.acp.types import EVENT_TOOL_CALL, JsonRpcMessage
 
         msg = JsonRpcMessage(
             method="session/update",
@@ -182,7 +182,7 @@ class TestExtractToolEvent:
         must not reach the log in the clear."""
         import logging
 
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         token = "ghp_" + "a1B2" * 9
         msg = JsonRpcMessage(
@@ -197,7 +197,7 @@ class TestExtractToolEvent:
                 }
             },
         )
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.acp"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.acp"):
             AcpClient()._extract_tool_event(msg)
         lines = [r.getMessage() for r in caplog.records if "ACP tool_call raw" in r.getMessage()]
         assert lines, "the debug frame line was not logged"
@@ -205,7 +205,7 @@ class TestExtractToolEvent:
 
     def test_tool_call_with_diff_content(self):
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             method="session/update",
@@ -234,7 +234,7 @@ class TestExtractToolEvent:
         agent-influenced ``kind`` cannot hide a real file write from
         ``tool.risk``'s caution carve-out."""
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             method="session/update",
@@ -262,7 +262,7 @@ class TestExtractToolEvent:
 
     def test_tool_call_str_replace_fallback(self):
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             method="session/update",
@@ -287,7 +287,7 @@ class TestExtractToolEvent:
 
     def test_non_tool_call_returns_none(self):
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             method="session/update",
@@ -329,7 +329,7 @@ class TestExtractToolEvent:
     )
     def test_tool_purpose(self, update, expected):
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             method="session/update",
@@ -345,7 +345,7 @@ class TestBuildPermissionEvent:
 
     def test_basic_permission(self):
         client = AcpClient()
-        from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, JsonRpcMessage
+        from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, JsonRpcMessage
 
         msg = JsonRpcMessage(
             id=42,
@@ -370,7 +370,7 @@ class TestBuildPermissionEvent:
         # (e.g. the display-name length cap). Without the carried kind a long
         # bash command aborts as "User refused permission".
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             id=43,
@@ -385,7 +385,7 @@ class TestBuildPermissionEvent:
 
     def test_tool_kind_defaults_empty_when_absent(self):
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             id=44,
@@ -397,7 +397,7 @@ class TestBuildPermissionEvent:
 
     def test_default_options_when_empty(self):
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             id=10,
@@ -415,7 +415,7 @@ class TestBuildPermissionEvent:
         dict keys), tearing down the prompt-turn event generator instead of
         degrading to the default allow options."""
         client = AcpClient()
-        from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, JsonRpcMessage
+        from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, JsonRpcMessage
 
         msg = JsonRpcMessage(
             id=12,
@@ -431,7 +431,7 @@ class TestBuildPermissionEvent:
     def test_non_dict_toolcall_degrades_to_unknown(self, bad_toolcall):
         """A non-dict toolCall made tool_call.get(...) raise AttributeError."""
         client = AcpClient()
-        from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, JsonRpcMessage
+        from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, JsonRpcMessage
 
         msg = JsonRpcMessage(
             id=13,
@@ -447,7 +447,7 @@ class TestBuildPermissionEvent:
         crashed opt_id.lower() in the legacy-kind synthesis. Both must be
         skipped while valid entries still parse."""
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             id=14,
@@ -467,7 +467,7 @@ class TestBuildPermissionEvent:
 
     def test_cached_tool_input_used(self):
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client._tool_call_inputs["tc-6"] = '{"cmd": "rm -rf /"}'
         msg = JsonRpcMessage(
@@ -487,7 +487,7 @@ class TestBuildPermissionEvent:
         """A secret removed before the permission event must leave a boolean
         provenance bit; the original bytes must not be copied onto the event."""
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         tool = JsonRpcMessage(
             params={
@@ -523,7 +523,7 @@ class TestBuildPermissionEvent:
 
     def test_fallback_input_from_tool_call(self):
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             id=12,
@@ -539,7 +539,7 @@ class TestBuildPermissionEvent:
     def test_acp_spec_shape_records_optionids(self):
         """ACP-spec shape (optionId/name/kind) populates _permission_options."""
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             id=20,
@@ -558,7 +558,7 @@ class TestBuildPermissionEvent:
     def test_legacy_kiro_shape_records_optionids(self):
         """Legacy kiro shape (id/label, no kind) is classified by literal id."""
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             id=21,
@@ -583,7 +583,7 @@ class TestBuildPermissionEvent:
         the claude-agent-acp adapter turns into "Tool use aborted").
         """
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             id=22,
@@ -604,7 +604,7 @@ class TestBuildPermissionEvent:
         ``cancelled`` fallback, which the backend treats as cancelling the
         TURN — every later tool call was auto-denied without prompting."""
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         for req_id, opt_id in ((24, "reject"), (25, "deny"), (26, "Deny_Once")):
             msg = JsonRpcMessage(
@@ -626,12 +626,12 @@ class TestBuildPermissionEvent:
         recognized by BOTH classification sites — the event builder (recorded
         reject option) and the auto-answer path (reject_option_id). Driven by
         the table itself so a vocabulary addition cannot ship untested."""
-        from kiro_crew.acp._dispatch import (
+        from aj_crew.acp._dispatch import (
             _DENY_BEHAVIORS,
             _DENY_OPTION_IDS,
             reject_option_id,
         )
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         assert _DENY_OPTION_IDS, "derived deny-id table must not be empty"
         client = AcpClient()
@@ -672,7 +672,7 @@ class TestBuildPermissionEvent:
         {kind:"allow_once"} with a contradictory deny behavior or deny-naming
         id must never be selected as the reject — answering with an allow
         optionId would APPROVE the tool the caller meant to deny."""
-        from kiro_crew.acp._dispatch import reject_option_id
+        from aj_crew.acp._dispatch import reject_option_id
 
         # behavior:"deny" on an allow-kind option: not a reject candidate.
         params = {
@@ -702,7 +702,7 @@ class TestBuildPermissionEvent:
         ``kind`` is a per-tool reject whatever its id is called. An allow
         behavior must never be classified as a reject."""
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             id=27,
@@ -726,7 +726,7 @@ class TestBuildPermissionEvent:
         reject_tool answers a per-tool ``selected`` reject — never the
         turn-cancelling ``cancelled`` outcome."""
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             id=28,
@@ -754,7 +754,7 @@ class TestBuildPermissionEvent:
     def test_unknown_legacy_id_not_classified(self):
         """Unknown legacy ids do not get a synthesized kind."""
         client = AcpClient()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             id=23,
@@ -774,7 +774,7 @@ class TestApproveTool:
     @pytest.fixture(autouse=True)
     def _recorded_requests(self, _floor_monkeypatch):
         """Every id approved here stands for a request the client built an event for."""
-        from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
+        from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
 
         class _Recorded(dict):
             def pop(self, key, default=None):
@@ -790,7 +790,7 @@ class TestApproveTool:
 
     @pytest.mark.asyncio
     async def test_always_uses_recorded_optionid(self, tmp_path):
-        from kiro_crew.acp.types import OUTCOME_SELECTED
+        from aj_crew.acp.types import OUTCOME_SELECTED
 
         client = AcpClient(work_dir=tmp_path)
         client._permission_options[42] = {"once": "allow", "always": "allow_always"}
@@ -804,7 +804,7 @@ class TestApproveTool:
 
     @pytest.mark.asyncio
     async def test_once_uses_recorded_optionid(self, tmp_path):
-        from kiro_crew.acp.types import OUTCOME_SELECTED
+        from aj_crew.acp.types import OUTCOME_SELECTED
 
         client = AcpClient(work_dir=tmp_path)
         client._permission_options[43] = {"once": "allow", "always": "allow_always"}
@@ -817,7 +817,7 @@ class TestApproveTool:
 
     @pytest.mark.asyncio
     async def test_no_recorded_falls_back_to_literal(self, tmp_path):
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             OPTION_ALLOW_ALWAYS,
             OPTION_ALLOW_ONCE,
             OUTCOME_SELECTED,
@@ -836,7 +836,7 @@ class TestApproveTool:
     async def test_explicit_option_id_skips_recorded_pop(self, tmp_path):
         """Explicit option_id bypasses the recorded entry — defensive retries
         with a recorded entry left intact still send the explicit id."""
-        from kiro_crew.acp.types import OUTCOME_SELECTED
+        from aj_crew.acp.types import OUTCOME_SELECTED
 
         client = AcpClient(work_dir=tmp_path)
         client._permission_options[46] = {"once": "allow", "always": "allow_always"}
@@ -853,7 +853,7 @@ class TestApproveTool:
         """A request that advertised only a reject option records {"reject": ...}
         with no "once"/"always" keys. Approving it must fall back to the canonical
         allow id rather than KeyError-ing on the missing key."""
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             OPTION_ALLOW_ALWAYS,
             OPTION_ALLOW_ONCE,
             OUTCOME_SELECTED,
@@ -885,7 +885,7 @@ class TestRejectTool:
         """When a reject option was advertised, reject_tool sends a clean
         ``selected`` reject so the adapter returns behavior:"deny" rather than
         throwing "Tool use aborted" on a cancelled outcome."""
-        from kiro_crew.acp.types import OUTCOME_SELECTED
+        from aj_crew.acp.types import OUTCOME_SELECTED
 
         client = AcpClient(work_dir=tmp_path)
         # claude-agent-acp advertises optionId "reject" with kind "reject_once"
@@ -902,7 +902,7 @@ class TestRejectTool:
     async def test_falls_back_to_cancelled_when_no_reject_option(self, tmp_path):
         """When no reject option was advertised (kiro-cli), reject_tool falls
         back to the cancelled outcome — kiro handles it as a clean rejection."""
-        from kiro_crew.acp.types import OUTCOME_CANCELLED
+        from aj_crew.acp.types import OUTCOME_CANCELLED
 
         client = AcpClient(work_dir=tmp_path)
         client._permission_options[61] = {"once": "allow_once", "always": "allow_always"}
@@ -917,7 +917,7 @@ class TestRejectTool:
     @pytest.mark.asyncio
     async def test_falls_back_to_cancelled_when_nothing_recorded(self, tmp_path):
         """No recorded options at all → cancelled fallback (safe for kiro)."""
-        from kiro_crew.acp.types import OUTCOME_CANCELLED
+        from aj_crew.acp.types import OUTCOME_CANCELLED
 
         client = AcpClient(work_dir=tmp_path)
         client._send_response = AsyncMock()
@@ -936,7 +936,7 @@ class TestHandlePermission:
     @pytest.mark.asyncio
     async def test_auto_approves(self, tmp_path):
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             id=55,

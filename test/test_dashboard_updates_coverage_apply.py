@@ -32,9 +32,9 @@ from dashboard_updates_coverage_helpers import (  # noqa: F401 -- the autouse fi
     _sequence_procs,
 )
 
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.frontend import FrontendBuildResult
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard.handlers import updates
+from aj_crew.frontend import FrontendBuildResult
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 class TestPipInstallFailureReport:
@@ -42,7 +42,7 @@ class TestPipInstallFailureReport:
 
     @pytest.mark.asyncio
     async def test_a_huge_stderr_is_truncated_with_a_marker(self, monkeypatch):
-        from kiro_crew import dep_sync
+        from aj_crew import dep_sync
 
         state = MagicMock()
 
@@ -90,7 +90,7 @@ class TestApplyRefusals:
         """An apply started now would be cut off mid-write by the shutdown."""
         from types import SimpleNamespace
 
-        from kiro_crew.platform import update_provider
+        from aj_crew.platform import update_provider
 
         monkeypatch.setattr(updates, "shutdown_event", SimpleNamespace(is_set=lambda: True))
         applied = AsyncMock()
@@ -109,7 +109,7 @@ class TestApplyRefusals:
         Stands in for ``CommandProvider.apply``, whose cancel arm stops the
         installer child with SIGTERM.
         """
-        from kiro_crew.platform import update_provider
+        from aj_crew.platform import update_provider
 
         started = asyncio.Event()
         hold = asyncio.Event()  # never set: only a cancel ends the apply
@@ -170,19 +170,19 @@ class TestApplyRefusals:
     async def test_refuses_when_no_project_dir_is_configured(self):
         resp = await updates.api_update_apply(_request({}))
         assert resp.status == 400
-        assert "KIROCREW_PROJECT_DIR" in json.loads(resp.body.decode())["error"]
+        assert "AJCREW_PROJECT_DIR" in json.loads(resp.body.decode())["error"]
 
     @pytest.mark.asyncio
     async def test_refuses_a_tarball_install_with_a_specific_message(self, monkeypatch, tmp_path):
         """No ``.git`` means ``git pull`` cannot update it — say so, not "pull failed"."""
         plain = tmp_path / "tarball"
         plain.mkdir()
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(plain))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(plain))
         resp = await updates.api_update_apply(_request({}))
         assert resp.status == 409
         error = json.loads(resp.body.decode())["error"]
         assert "Not a git checkout" in error
-        assert "kirocrew update" in error
+        assert "ajcrew update" in error
         assert "cloud launch" not in error
 
     @pytest.mark.asyncio
@@ -195,7 +195,7 @@ class TestApplyRefusals:
         permits this host to pull from this remote -- and a blocked update must
         leave no "updating" overlay behind for the user to dismiss.
         """
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
         monkeypatch.setattr(
             updates, "resolve_remote_url", lambda _p, **_k: "https://example.invalid/x"
         )
@@ -213,7 +213,7 @@ class TestApplyRefusals:
 
     @pytest.mark.asyncio
     async def test_a_hung_status_check_answers_500_rather_than_hanging(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
         monkeypatch.setattr(updates, "resolve_remote_url", lambda _p, **_k: "")
         monkeypatch.setattr(updates, "update_blocked_reason", lambda _u: "")
         _sequence_procs(monkeypatch, [_FakeProc(time_out=True, kill_raises=True)])
@@ -227,10 +227,10 @@ class TestApplyRefusals:
 
     @pytest.mark.asyncio
     async def test_a_dirty_tree_is_refused_without_starting_the_worker(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
         monkeypatch.setattr(updates, "resolve_remote_url", lambda _p, **_k: "")
         monkeypatch.setattr(updates, "update_blocked_reason", lambda _u: "")
-        _sequence_procs(monkeypatch, [_FakeProc(out=b" M src/kiro_crew/cli.py\n")])
+        _sequence_procs(monkeypatch, [_FakeProc(out=b" M src/aj_crew/cli.py\n")])
 
         req = _request({})
         resp = await updates.api_update_apply(req)
@@ -247,12 +247,12 @@ class TestApplyRefusals:
 
         The count is of changed entries only: no paths leave the gateway.
         """
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
         monkeypatch.setattr(updates, "resolve_remote_url", lambda _p, **_k: "")
         monkeypatch.setattr(updates, "update_blocked_reason", lambda _u: "")
         _sequence_procs(
             monkeypatch,
-            [_FakeProc(out=b" M src/kiro_crew/cli.py\n?? notes.txt\n")],
+            [_FakeProc(out=b" M src/aj_crew/cli.py\n?? notes.txt\n")],
         )
 
         req = _request({})
@@ -278,9 +278,9 @@ class TestApplyRefusals:
         -- a state the running gateway then serves from memory while every
         later attempt repeats the pull and the refusal.
         """
-        from kiro_crew import dep_sync
+        from aj_crew import dep_sync
 
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
         monkeypatch.setattr(updates, "resolve_remote_url", lambda _p, **_k: "")
         monkeypatch.setattr(updates, "update_blocked_reason", lambda _u: "")
         _sequence_procs(
@@ -319,9 +319,9 @@ class TestApplyRefusals:
     @pytest.mark.asyncio
     async def test_a_floor_git_cannot_read_refuses_rather_than_passing(self, monkeypatch, tmp_path):
         """ "Could not read the floor" is not "no floor": the pinned revision stays out."""
-        from kiro_crew import dep_sync
+        from aj_crew import dep_sync
 
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
         monkeypatch.setattr(updates, "resolve_remote_url", lambda _p, **_k: "")
         monkeypatch.setattr(updates, "update_blocked_reason", lambda _u: "")
         _sequence_procs(
@@ -348,9 +348,9 @@ class TestApplyRefusals:
     @pytest.mark.asyncio
     async def test_an_unresolvable_upstream_pin_is_refused(self, monkeypatch, tmp_path):
         """rev-parse @{u} failing means nothing to floor-check and nothing to land on."""
-        from kiro_crew import dep_sync
+        from aj_crew import dep_sync
 
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
         monkeypatch.setattr(updates, "resolve_remote_url", lambda _p, **_k: "")
         monkeypatch.setattr(updates, "update_blocked_reason", lambda _u: "")
         _sequence_procs(
@@ -377,7 +377,7 @@ class TestApplyRefusals:
 
     @pytest.mark.asyncio
     async def test_a_hung_upstream_pin_is_a_500_and_reaps_the_process(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
         monkeypatch.setattr(updates, "resolve_remote_url", lambda _p, **_k: "")
         monkeypatch.setattr(updates, "update_blocked_reason", lambda _u: "")
         pin = _FakeProc(time_out=True)
@@ -395,9 +395,9 @@ class TestApplyRefusals:
 
     async def _drive_worker(self, monkeypatch, tmp_path, procs: list[_FakeProc | OSError]):
         """Accept the request, then await the background worker it scheduled."""
-        from kiro_crew import dep_sync
+        from aj_crew import dep_sync
 
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
         monkeypatch.setattr(updates, "resolve_remote_url", lambda _p, **_k: "")
         monkeypatch.setattr(updates, "update_blocked_reason", lambda _u: "")
         # The fabricated checkout has no commits for the floor gate to read, and
@@ -476,7 +476,7 @@ class TestApplyRefusals:
     @pytest.mark.asyncio
     async def test_the_worker_owns_the_bundle_gap(self, monkeypatch, tmp_path):
         """The build can empty the served bundle, so the watchdog must see an owner."""
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         seen = []
 
@@ -499,7 +499,7 @@ class TestApplyRefusals:
     @pytest.mark.asyncio
     async def test_the_worker_hands_the_gap_to_the_restart(self, monkeypatch, tmp_path):
         """No update step is still open around the restart, so its own maximum binds."""
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         open_at_restart = []
 
@@ -517,7 +517,7 @@ class TestApplyRefusals:
 
     @pytest.mark.asyncio
     async def test_a_failed_reinstall_refuses_the_watchdogs_relaunch(self, monkeypatch, tmp_path):
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         monkeypatch.setattr(updates, "_build_frontend", AsyncMock())
         monkeypatch.setattr(updates, "_venv_pip_install", AsyncMock(return_value=False))
@@ -531,7 +531,7 @@ class TestApplyRefusals:
         self, monkeypatch, tmp_path
     ):
         """The moved tree still gets its dependencies; only the restart is refused."""
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         log_path = tmp_path / "logs" / "frontend-build.log"
         build = FrontendBuildResult("failed", log_path, "error TS2304: Cannot find name")
@@ -559,7 +559,7 @@ class TestApplyRefusals:
         self, monkeypatch, tmp_path
     ):
         """No website/ or no npm keeps the shipped bundle, as before: not a failure."""
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         monkeypatch.setattr(
             updates, "_build_frontend", AsyncMock(return_value=FrontendBuildResult("skipped"))
@@ -578,7 +578,7 @@ class TestApplyRefusals:
     @pytest.mark.asyncio
     async def test_a_later_update_whose_merge_fails_keeps_the_refusal(self, monkeypatch, tmp_path):
         """The unsynced tree the refusal describes is still on disk."""
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         update_ownership.refuse_restart("an earlier install did not complete")
 
@@ -590,7 +590,7 @@ class TestApplyRefusals:
     async def test_a_later_update_that_installs_its_tree_ends_the_refusal(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         update_ownership.refuse_restart("an earlier install did not complete")
         monkeypatch.setattr(updates, "_build_frontend", AsyncMock())
@@ -604,7 +604,7 @@ class TestApplyRefusals:
     @pytest.mark.asyncio
     async def test_a_merge_that_never_spawned_records_no_refusal(self, monkeypatch, tmp_path):
         """A fork failure wrote nothing to the checkout, so nothing describes a moved tree."""
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         await self._drive_worker(
             monkeypatch, tmp_path, [BlockingIOError(11, "Resource temporarily unavailable")]
@@ -617,7 +617,7 @@ class TestApplyRefusals:
     async def test_an_update_that_raises_after_the_merge_refuses_the_relaunch(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         monkeypatch.setattr(
             updates, "_build_frontend", AsyncMock(side_effect=RuntimeError("vite crashed"))
@@ -633,10 +633,10 @@ class TestApplyRefusals:
         The copy is recorded into the same list as every spawn, so the order
         between it and the fast-forward is read off one sequence.
         """
-        from kiro_crew import dep_sync
-        from kiro_crew.platform import wheel_apply
+        from aj_crew import dep_sync
+        from aj_crew.platform import wheel_apply
 
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
         monkeypatch.setattr(updates, "resolve_remote_url", lambda _p, **_k: "")
         monkeypatch.setattr(updates, "update_blocked_reason", lambda _u: "")
         monkeypatch.setattr(dep_sync, "incoming_python_floor_breach", lambda *a, **k: None)
@@ -667,7 +667,7 @@ class TestApplyRefusals:
 
     @pytest.mark.asyncio
     async def test_memory_is_copied_before_the_fast_forward(self, monkeypatch, tmp_path):
-        """The same copy `kirocrew update` takes lands before the tree is rewritten."""
+        """The same copy `ajcrew update` takes lands before the tree is rewritten."""
         resp, _state, events = await self._apply_with_copy(
             monkeypatch, tmp_path, (1, ""), [_FakeProc()]
         )
@@ -698,7 +698,7 @@ class TestApplyRefusals:
         """A provider that can apply rewrites the install too, so it gets the same gate."""
         from types import SimpleNamespace
 
-        from kiro_crew.platform import update_provider, wheel_apply
+        from aj_crew.platform import update_provider, wheel_apply
 
         events: list[str] = []
 
@@ -732,7 +732,7 @@ class TestApplyRefusals:
         """Shutdown during the copy must refuse before the policy installer starts."""
         from types import SimpleNamespace
 
-        from kiro_crew.platform import update_provider, wheel_apply
+        from aj_crew.platform import update_provider, wheel_apply
 
         shutdown = SimpleNamespace(stopping=False)
         shutdown.is_set = lambda: shutdown.stopping
@@ -765,9 +765,9 @@ class TestApplyRefusals:
         The overlay has no other way to leave the "updating" state, so a
         swallowed error strands the user on a spinner forever.
         """
-        from kiro_crew import dep_sync
+        from aj_crew import dep_sync
 
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
         monkeypatch.setattr(updates, "resolve_remote_url", lambda _p, **_k: "")
         monkeypatch.setattr(updates, "update_blocked_reason", lambda _u: "")
         monkeypatch.setattr(dep_sync, "incoming_python_floor_breach", lambda *a, **k: None)

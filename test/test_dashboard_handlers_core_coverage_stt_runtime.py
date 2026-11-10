@@ -20,10 +20,10 @@ from dashboard_handlers_core_coverage_helpers import fake_sel_fixture  # noqa: F
 from dashboard_handlers_core_coverage_helpers import seeded_config_fixture  # noqa: F401
 from dashboard_handlers_core_coverage_helpers import _json_req, _req, _seed_stt
 
-from kiro_crew import transcribe as transcribe_mod
-from kiro_crew.dashboard.handlers import core as core_mod
-from kiro_crew.stt import models as stt_models
-from kiro_crew.testing.wait import finished
+from aj_crew import transcribe as transcribe_mod
+from aj_crew.dashboard.handlers import core as core_mod
+from aj_crew.stt import models as stt_models
+from aj_crew.testing.wait import finished
 
 # ── STT status / prepare / prewarm ──────────────────────────────────────
 
@@ -83,9 +83,9 @@ class TestSttStatus:
         _floor_monkeypatch.setattr(
             core_mod, "availability_detail", lambda _cfg: _availability(True)
         )
-        _floor_monkeypatch.setattr("kiro_crew.stt.models.is_present", lambda _m: False)
+        _floor_monkeypatch.setattr("aj_crew.stt.models.is_present", lambda _m: False)
         _floor_monkeypatch.setattr(
-            "kiro_crew.stt.engine.shared_engine", lambda *a, **k: SimpleNamespace(loaded=False)
+            "aj_crew.stt.engine.shared_engine", lambda *a, **k: SimpleNamespace(loaded=False)
         )
         # The decoder probe stats the operator's real package directories and can
         # hash an 80 MB executable, so the default answer is pinned; the tests
@@ -104,7 +104,7 @@ class TestSttStatus:
         """
         probed = []
         monkeypatch.setattr(
-            "kiro_crew.stt.engine.WhisperEngine.capabilities",
+            "aj_crew.stt.engine.WhisperEngine.capabilities",
             classmethod(lambda _cls: probed.append(1)),
         )
         _seed_stt(seeded_config, enabled=False)
@@ -133,7 +133,7 @@ class TestSttStatus:
     async def test_status_reports_a_present_model_as_present(
         self, seeded_config, monkeypatch, model_store
     ) -> None:
-        monkeypatch.setattr("kiro_crew.stt.models.is_present", lambda _m: True)
+        monkeypatch.setattr("aj_crew.stt.models.is_present", lambda _m: True)
         body = json.loads((await core_mod.api_stt_status(_req())).body)
         assert body["model_present"] is True
         assert all(row["present"] is True for row in body["models"])
@@ -149,7 +149,7 @@ class TestSttStatus:
         test recreates that attribute because the failure shows only in full-suite order.
         """
         monkeypatch.setattr(core_mod.stt, "is_present", lambda _m: False, raising=False)
-        monkeypatch.setattr("kiro_crew.stt.models.is_present", lambda _m: True)
+        monkeypatch.setattr("aj_crew.stt.models.is_present", lambda _m: True)
         body = json.loads((await core_mod.api_stt_status(_req())).body)
         assert body["model_present"] is True
         assert all(row["present"] is True for row in body["models"])
@@ -179,7 +179,7 @@ class TestSttStatus:
         """Residency is what decides between a 30 ms transcription and one that
         pays a model load first, so the panel can say which the user will get."""
         monkeypatch.setattr(
-            "kiro_crew.stt.engine.shared_engine", lambda *a, **k: SimpleNamespace(loaded=True)
+            "aj_crew.stt.engine.shared_engine", lambda *a, **k: SimpleNamespace(loaded=True)
         )
         assert json.loads((await core_mod.api_stt_status(_req())).body)["engine_loaded"] is True
 
@@ -321,7 +321,7 @@ class TestSttPrepare:
             self.requested.append(name)
             return True
 
-        _floor_monkeypatch.setattr("kiro_crew.stt.session.ensure_model", _fake_ensure)
+        _floor_monkeypatch.setattr("aj_crew.stt.session.ensure_model", _fake_ensure)
 
     @pytest.mark.asyncio
     async def test_prepare_answers_202_and_starts_the_transfer(
@@ -415,7 +415,7 @@ class TestSttPrepare:
 class TestSttResolveStaysOffTheLoop:
     """Neither STT handler may resolve a model name on the gateway's event loop.
 
-    For :data:`~kiro_crew.stt.models.CUSTOM_MODEL` ``resolve`` reads ``config.json``.
+    For :data:`~aj_crew.stt.models.CUSTOM_MODEL` ``resolve`` reads ``config.json``.
     Asserted on the thread, not a duration, because a timing bound this small flakes.
     """
 
@@ -424,9 +424,9 @@ class TestSttResolveStaysOffTheLoop:
         _floor_monkeypatch.setattr(
             core_mod, "availability_detail", lambda _cfg: _availability(True)
         )
-        _floor_monkeypatch.setattr("kiro_crew.stt.models.is_present", lambda _m: False)
+        _floor_monkeypatch.setattr("aj_crew.stt.models.is_present", lambda _m: False)
         _floor_monkeypatch.setattr(
-            "kiro_crew.stt.engine.shared_engine", lambda *a, **k: SimpleNamespace(loaded=False)
+            "aj_crew.stt.engine.shared_engine", lambda *a, **k: SimpleNamespace(loaded=False)
         )
         _floor_monkeypatch.setattr(core_mod, "ensure_ffmpeg_in_path", lambda: None)
         _floor_monkeypatch.setattr(core_mod, "ffmpeg_source", lambda: None)
@@ -460,7 +460,7 @@ class TestSttResolveStaysOffTheLoop:
         async def _fake_ensure(_name: str) -> bool:
             return True
 
-        monkeypatch.setattr("kiro_crew.stt.session.ensure_model", _fake_ensure)
+        monkeypatch.setattr("aj_crew.stt.session.ensure_model", _fake_ensure)
         loop_thread = threading.current_thread()
         assert (await core_mod.api_stt_prepare(_json_req(raises=True))).status == 202
         await _drain_stt_background()
@@ -583,7 +583,7 @@ class TestSttFfmpegDownload:
         """The handler is unreachable without its route, and 404 says nothing."""
         from aiohttp import web as _web
 
-        from kiro_crew.dashboard.routes import memory as memory_routes
+        from aj_crew.dashboard.routes import memory as memory_routes
 
         app = _web.Application()
         memory_routes.register(app)
@@ -622,7 +622,7 @@ class TestSttPrewarm:
             await release.wait()
             return _availability(True)
 
-        monkeypatch.setattr("kiro_crew.stt.session.prewarm", _fake_prewarm)
+        monkeypatch.setattr("aj_crew.stt.session.prewarm", _fake_prewarm)
         resp = await core_mod.api_stt_prewarm(_req())
         assert resp.status == 202
         assert json.loads(resp.body) == {"ok": True}
@@ -647,7 +647,7 @@ class TestSttPrewarm:
         async def _boom(**_kwargs):
             raise RuntimeError("no recogniser here")
 
-        monkeypatch.setattr("kiro_crew.stt.session.prewarm", _boom)
+        monkeypatch.setattr("aj_crew.stt.session.prewarm", _boom)
         resp = await core_mod.api_stt_prewarm(_req())
         assert resp.status == 202
         outcomes = await _drain_stt_background()
@@ -663,7 +663,7 @@ class TestSttPrewarm:
             started.append("ran")
             return _availability(True)
 
-        monkeypatch.setattr("kiro_crew.stt.session.prewarm", _fake_prewarm)
+        monkeypatch.setattr("aj_crew.stt.session.prewarm", _fake_prewarm)
         resp = await core_mod.api_stt_prewarm(_req(app_token="meetings"))
         assert resp.status == 403
         assert await _drain_stt_background() == []
@@ -764,7 +764,7 @@ class TestSttTranscribe:
         probe = AsyncMock(return_value=True)
         monkeypatch.setattr(core_mod, "audio_exceeds_secs", probe)
         transcribe = AsyncMock()
-        monkeypatch.setattr("kiro_crew.transcribe.transcribe_audio", transcribe)
+        monkeypatch.setattr("aj_crew.transcribe.transcribe_audio", transcribe)
         field = SimpleNamespace(
             name="audio",
             filename="recording.webm",
@@ -784,7 +784,7 @@ class TestSttTranscribe:
         monkeypatch.setattr(core_mod, "batch_duration_cap_secs", lambda _cfg: 3600)
         monkeypatch.setattr(core_mod, "audio_exceeds_secs", AsyncMock(return_value=None))
         transcribe = AsyncMock()
-        monkeypatch.setattr("kiro_crew.transcribe.transcribe_audio", transcribe)
+        monkeypatch.setattr("aj_crew.transcribe.transcribe_audio", transcribe)
         field = SimpleNamespace(
             name="audio",
             filename="recording.webm",
@@ -803,7 +803,7 @@ class TestSttTranscribe:
         reaches this endpoint from a microphone, so nothing upstream of it has had
         a chance to screen what was said."""
         monkeypatch.setattr(
-            "kiro_crew.transcribe.transcribe_audio",
+            "aj_crew.transcribe.transcribe_audio",
             AsyncMock(return_value="the key is AKIAIOSFODNN7EXAMPLE thanks"),
         )
         field = SimpleNamespace(
@@ -840,7 +840,7 @@ class TestSttTranscribe:
             assert os.path.exists(path)
             return await outcome(path, _cfg)
 
-        monkeypatch.setattr("kiro_crew.transcribe.transcribe_audio", transcribe)
+        monkeypatch.setattr("aj_crew.transcribe.transcribe_audio", transcribe)
         field = SimpleNamespace(
             name="audio",
             filename="recording.webm",
@@ -856,7 +856,7 @@ class TestSttTranscribe:
     async def test_none_backend_result_is_a_generic_500(self, monkeypatch) -> None:
         """The backend's failure sentinel must not look like a silent recording."""
         monkeypatch.setattr(
-            "kiro_crew.transcribe.transcribe_audio",
+            "aj_crew.transcribe.transcribe_audio",
             AsyncMock(return_value=None),
         )
         field = SimpleNamespace(
@@ -877,7 +877,7 @@ class TestSttTranscribe:
     async def test_empty_transcript_remains_a_success(self, monkeypatch) -> None:
         """A valid recording with no recognised speech remains distinguishable."""
         monkeypatch.setattr(
-            "kiro_crew.transcribe.transcribe_audio",
+            "aj_crew.transcribe.transcribe_audio",
             AsyncMock(return_value=""),
         )
         field = SimpleNamespace(
@@ -894,7 +894,7 @@ class TestSttTranscribe:
     @pytest.mark.asyncio
     async def test_backend_failure_is_a_generic_500(self, monkeypatch) -> None:
         monkeypatch.setattr(
-            "kiro_crew.transcribe.transcribe_audio",
+            "aj_crew.transcribe.transcribe_audio",
             AsyncMock(side_effect=RuntimeError("recogniser exploded")),
         )
         field = SimpleNamespace(
@@ -922,7 +922,7 @@ class TestSttTranscribe:
                 cancelled.set()
                 raise
 
-        monkeypatch.setattr("kiro_crew.transcribe.transcribe_audio", _decode_forever)
+        monkeypatch.setattr("aj_crew.transcribe.transcribe_audio", _decode_forever)
         field = SimpleNamespace(
             name="audio",
             filename="recording.webm",

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from kiro_crew.task_executor import _error_fingerprint
+from aj_crew.task_executor import _error_fingerprint
 
 
 class TestErrorFingerprint:

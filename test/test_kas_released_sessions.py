@@ -25,17 +25,17 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import released_sessions, sandbox_launch_mark
-from kiro_crew.acp.harness import _HARNESSES, harness_for
-from kiro_crew.acp.runtime import _TERMINATE_TIMEOUT, AcpRuntime
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew import released_sessions, sandbox_launch_mark
+from aj_crew.acp.harness import _HARNESSES, harness_for
+from aj_crew.acp.runtime import _TERMINATE_TIMEOUT, AcpRuntime
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     METHOD_KAS_SESSION_DELETE,
     METHOD_SESSION_CLOSE,
     METHOD_SESSION_TERMINATE,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until, default_timeout
+from aj_crew.testing.wait import async_wait_until, await_until, default_timeout
 
 #: What KAS 0.66.22 and 0.66.26 answer in ``initialize``.
 _CLOSE_ADVERTISED = {
@@ -227,7 +227,7 @@ class TestDestroy:
         """Its ``released-sessions/`` is masked, so an entry written there would be lost."""
         handle, _runtime_, send = self._handle(tmp_path, monkeypatch)
         handle.delete_delay_secs = 1800.0
-        # What ``cli.main`` records before it drops ``KIROCREW_SANDBOX_ACTIVE``.
+        # What ``cli.main`` records before it drops ``AJCREW_SANDBOX_ACTIVE``.
         monkeypatch.setattr(sandbox_launch_mark, "_launched_in_sandbox", True)
 
         await handle.destroy()
@@ -547,7 +547,7 @@ class TestTheSweep:
         reports = [r.getMessage() for r in caplog.records if r.name == released_sessions.__name__]
         assert len(reports) == 1
         assert f"1 record(s) released on the {ACP_BACKEND_KAS} backend" in reports[0]
-        assert f"kirocrew config set agent.acp_backend {ACP_BACKEND_KAS}" in reports[0]
+        assert f"ajcrew config set agent.acp_backend {ACP_BACKEND_KAS}" in reports[0]
         assert [e["session_id"] for e in _entries()] == [_SID]
 
     @pytest.mark.asyncio
@@ -586,21 +586,21 @@ class TestTheStoreIsProtected:
     is missing -- it just leaves the store writable -- so each is pinned by name."""
 
     def test_the_leaf_is_a_direct_child_of_the_data_home(self):
-        from kiro_crew.config.paths import data_home
+        from aj_crew.config.paths import data_home
 
         directory = released_sessions.released_sessions_dir()
         assert directory.parent == data_home()
         assert "trust" not in directory.parts
 
     def test_the_leaf_is_on_the_file_gates_sensitive_floor(self):
-        from kiro_crew.security import paths as security_paths
+        from aj_crew.security import paths as security_paths
 
         floor = security_paths._CREW_SECRET_LEAVES
         assert "panel-dismissals" in floor, "not the floor list this test means to read"
         assert released_sessions._RELEASED_SESSIONS_LEAF in floor
 
     def test_the_leaf_is_bind_masked_precreated_and_refuses_a_link(self):
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         leaf = released_sessions._RELEASED_SESSIONS_LEAF
         assert leaf in sandbox._CREW_HIDDEN_LEAVES
@@ -614,7 +614,7 @@ class TestTheCleanupLoopRunsTheSweep:
 
     @staticmethod
     def _manager():
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         return SessionManager.__new__(SessionManager)
 

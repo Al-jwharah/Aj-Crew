@@ -66,13 +66,13 @@ export function ChatHeaderMenu({ activeSlot, agent, onReveal, onRename, onAutoTi
     queryFn: () => api.mcpActive(agent || undefined),
     enabled: mcpOpen,
   })
-  // Tool Search mode for this session's MCP tools (shared ['kirocrewConfig']
+  // Tool Search mode for this session's MCP tools (shared ['ajcrewConfig']
   // cache). When on, tool specs are deferred (search-and-call), so every server
   // shows as connected but its tools load only when used; when off, every spec
   // is sent each turn. Explains the "why are they all loaded?" question.
   const { data: toolSearchOn = true } = useQuery<{ agent?: { tool_search?: boolean } }, Error, boolean>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
     select: (c) => c.agent?.tool_search ?? true,
     enabled: mcpOpen,
   })

@@ -14,11 +14,11 @@ from acp_runtime_helpers import _fast_no_report_ceiling  # noqa: F401
 from acp_runtime_helpers import _pinned_kiro_cli_version  # noqa: F401
 from acp_runtime_helpers import _await_pending, _make_runtime, _start_reader, _stop_reader
 
-from kiro_crew import autonudge as _an
-from kiro_crew.acp.runtime import AcpRuntimeDead
-from kiro_crew.acp.transport_errors import AcpProcessDied
-from kiro_crew.dashboard.chat_turn.recovery import _note_cycle_start_failure
-from kiro_crew.testing.wait import await_until
+from aj_crew import autonudge as _an
+from aj_crew.acp.runtime import AcpRuntimeDead
+from aj_crew.acp.transport_errors import AcpProcessDied
+from aj_crew.dashboard.chat_turn.recovery import _note_cycle_start_failure
+from aj_crew.testing.wait import await_until
 
 SLOT = "chat-1-987"
 

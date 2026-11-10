@@ -44,9 +44,9 @@ function makeArtifact(overrides?: Partial<Artifact>): Artifact {
         backend: 'API Gateway HTTP API -> Lambda',
         state: 'DynamoDB (IAM scoped to table)',
         resources: [
-          { type: 'frontend', id: 's3://kirocrew-deploy-base/kanban/' },
-          { type: 'backend', id: 'kirocrew-deploy-app-kanban-demo' },
-          { type: 'state', id: 'kirocrew-deploy-app-kanban-demo-table' },
+          { type: 'frontend', id: 's3://ajcrew-deploy-base/kanban/' },
+          { type: 'backend', id: 'ajcrew-deploy-app-kanban-demo' },
+          { type: 'state', id: 'ajcrew-deploy-app-kanban-demo-table' },
         ],
       },
       lifecycle: {
@@ -144,9 +144,9 @@ describe('WebAppArtifactCard', () => {
     const dialog = await screen.findByRole('dialog', { name: 'Tear down deployment' })
     const resources = within(dialog).getAllByRole('listitem')
     expect(resources.map(resource => resource.textContent)).toEqual([
-      'frontend: s3://kirocrew-deploy-base/kanban/',
-      'backend: kirocrew-deploy-app-kanban-demo',
-      'state: kirocrew-deploy-app-kanban-demo-table',
+      'frontend: s3://ajcrew-deploy-base/kanban/',
+      'backend: ajcrew-deploy-app-kanban-demo',
+      'state: ajcrew-deploy-app-kanban-demo-table',
     ])
     expect(dialog).toHaveTextContent('This action is not reversible. Continue?')
     await confirmAction('Tear down deployment')

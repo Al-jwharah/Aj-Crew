@@ -25,13 +25,13 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import chat_persistence as cp
-from kiro_crew.dashboard import state as dashboard_state
-from kiro_crew.dashboard import ws as dashboard_ws
-from kiro_crew.dashboard.chat_utils import _history_key_for
-from kiro_crew.dashboard.handlers import source_providers
-from kiro_crew.dashboard.source_providers import cache, chip_refresh, chip_status
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard import chat_persistence as cp
+from aj_crew.dashboard import state as dashboard_state
+from aj_crew.dashboard import ws as dashboard_ws
+from aj_crew.dashboard.chat_utils import _history_key_for
+from aj_crew.dashboard.handlers import source_providers
+from aj_crew.dashboard.source_providers import cache, chip_refresh, chip_status
+from aj_crew.testing.wait import async_wait_until, await_until
 
 #: The idle tier's clock and per-TTL budget, as this file pins them.
 _IDLE_TTL = 15 * 60
@@ -177,7 +177,7 @@ _KEYS = ["chat-1-alpha", "chat-2-beta", "chat-3-gamma"]
 def restored(tmp_path, monkeypatch):
     """Three tabs restored from ``open_slots.json``, each linking its own PR and
     the first two also sharing one."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     seed = _make_state(tmp_path / "sessions")
     for n, key in enumerate(_KEYS, start=1):
         history_key = _history_key_for(key)

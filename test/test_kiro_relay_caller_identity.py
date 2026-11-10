@@ -30,15 +30,15 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer, make_mocked_request
 from token_auth_helpers import clear_nonces  # noqa: F401 -- the autouse fixture registers by import
 
-from kiro_crew.apps.proxy_auth import PRINCIPAL_NONE, PRINCIPAL_OWNER_SESSION
-from kiro_crew.apps.routes_proxy import _proxy_principal
-from kiro_crew.dashboard import relay_headers
-from kiro_crew.dashboard import server as dashboard_server
-from kiro_crew.dashboard.handlers.source_providers import is_owner_dashboard_request
-from kiro_crew.dashboard.kiro_relay import caller as relay_caller
-from kiro_crew.dashboard.kiro_relay import ingress as relay_ingress
-from kiro_crew.dashboard.kiro_relay import limits
-from kiro_crew.dashboard.kiro_relay.caller import (
+from aj_crew.apps.proxy_auth import PRINCIPAL_NONE, PRINCIPAL_OWNER_SESSION
+from aj_crew.apps.routes_proxy import _proxy_principal
+from aj_crew.dashboard import relay_headers
+from aj_crew.dashboard import server as dashboard_server
+from aj_crew.dashboard.handlers.source_providers import is_owner_dashboard_request
+from aj_crew.dashboard.kiro_relay import caller as relay_caller
+from aj_crew.dashboard.kiro_relay import ingress as relay_ingress
+from aj_crew.dashboard.kiro_relay import limits
+from aj_crew.dashboard.kiro_relay.caller import (
     RELAY_HANDOVER_HEADER,
     RELAY_REMOTE,
     RELAY_USER_HEADER,
@@ -50,31 +50,31 @@ from kiro_crew.dashboard.kiro_relay.caller import (
     Transport,
     published_relay_caller,
 )
-from kiro_crew.dashboard.kiro_relay.ingress import (
+from aj_crew.dashboard.kiro_relay.ingress import (
     RELAY_INGRESS_APP_KEY,
     RelayIngress,
     RelayIngressError,
     relay_ingress_middleware,
 )
-from kiro_crew.dashboard.origin import (
+from aj_crew.dashboard.origin import (
     check_origin,
     is_direct_local_request,
     is_https_request,
     is_proxied_request,
 )
-from kiro_crew.dashboard.relay_headers import (
+from aj_crew.dashboard.relay_headers import (
     relay_header_strip_middleware,
     strip_client_relay_headers,
 )
-from kiro_crew.dashboard.server import audit_actor
-from kiro_crew.dashboard.server_internal_paths import _STRICT_INTERNAL_API_PATHS
-from kiro_crew.dashboard.token_auth import (
+from aj_crew.dashboard.server import audit_actor
+from aj_crew.dashboard.server_internal_paths import _STRICT_INTERNAL_API_PATHS
+from aj_crew.dashboard.token_auth import (
     generate_token,
     token_auth_middleware,
 )
-from kiro_crew.shared_crew.contracts import PrincipalKind
-from kiro_crew.shared_crew.contracts import Provenance as ContractProvenance
-from kiro_crew.shared_crew.identity import actor_of
+from aj_crew.shared_crew.contracts import PrincipalKind
+from aj_crew.shared_crew.contracts import Provenance as ContractProvenance
+from aj_crew.shared_crew.identity import actor_of
 
 OWNER = "kiro-user.owner-0001"
 TEAMMATE = "kiro-user.teammate-0002"
@@ -737,7 +737,7 @@ async def test_a_stamped_email_and_name_reach_the_handler_as_the_callers_labels(
 
 
 def test_the_stamp_writes_the_name_in_the_one_rfc_8187_form() -> None:
-    from kiro_crew.dashboard.kiro_relay.caller import (
+    from aj_crew.dashboard.kiro_relay.caller import (
         RELAY_USER_EMAIL_HEADER,
         RELAY_USER_NAME_HEADER,
         decode_display_name,
@@ -787,7 +787,7 @@ async def test_a_malformed_name_header_is_ignored_and_the_request_still_served(
 ) -> None:
     from multidict import CIMultiDict
 
-    from kiro_crew.dashboard.kiro_relay.caller import (
+    from aj_crew.dashboard.kiro_relay.caller import (
         RELAY_USER_EMAIL_HEADER,
         RELAY_USER_NAME_HEADER,
     )

@@ -6,7 +6,7 @@
 ``docs/system-specs/common/testing-conventions.md`` says the process working
 directory is per-PROCESS and, under pytest, is the repository root. A structural
 test that asserts something about the repository's own source text therefore has
-to name a file, and naming it as a bare relative path -- ``Path("src/kiro_crew/x.py")``
+to name a file, and naming it as a bare relative path -- ``Path("src/aj_crew/x.py")``
 -- binds the test to whatever directory the process happens to start in.
 
 That binding holds only while pytest is launched from the root. Launched from
@@ -20,7 +20,7 @@ The remedy is to root the path at something the test already knows:
 
 * Best -- the MODULE UNDER TEST, imported and asked where it lives::
 
-      from kiro_crew.dashboard import ws
+      from aj_crew.dashboard import ws
       source = Path(ws.__file__).read_text(encoding="utf-8")
 
   A module that moves or is renamed then fails at import, which no stale literal
@@ -30,7 +30,7 @@ The remedy is to root the path at something the test already knows:
 * Acceptable -- the REPOSITORY, resolved from the test file::
 
       _REPO = Path(__file__).resolve().parents[1]
-      source = (_REPO / "src/kiro_crew/dashboard/ws.py").read_text(encoding="utf-8")
+      source = (_REPO / "src/aj_crew/dashboard/ws.py").read_text(encoding="utf-8")
 
   Independent of the working directory, but it still spells the layout by hand, so
   moving the module leaves a literal that names nothing.
@@ -339,23 +339,23 @@ def scan(root: Path, files: list[Path], top_level: set[str]) -> list[str]:
 _PROBES: tuple[tuple[str, str, bool], ...] = (
     (
         "a bare relative read",
-        'from pathlib import Path\nPath("src/kiro_crew/x.py").read_text()\n',
+        'from pathlib import Path\nPath("src/aj_crew/x.py").read_text()\n',
         True,
     ),
     (
         "the same read through the module alias",
-        'import pathlib\npathlib.Path("src/kiro_crew/x.py").read_text(encoding="utf-8")\n',
+        'import pathlib\npathlib.Path("src/aj_crew/x.py").read_text(encoding="utf-8")\n',
         True,
     ),
-    ("a builtin open", 'open("src/kiro_crew/x.py").read()\n', True),
+    ("a builtin open", 'open("src/aj_crew/x.py").read()\n', True),
     (
         "a relative path bound to a name first",
-        'from pathlib import Path\nP = Path("src/kiro_crew/x.py")\nP.read_text()\n',
+        'from pathlib import Path\nP = Path("src/aj_crew/x.py")\nP.read_text()\n',
         True,
     ),
     (
         "a join bound to a name first",
-        'from pathlib import Path\nP = Path("src/kiro_crew") / "x.py"\nP.read_text()\n',
+        'from pathlib import Path\nP = Path("src/aj_crew") / "x.py"\nP.read_text()\n',
         True,
     ),
     (
@@ -365,29 +365,29 @@ _PROBES: tuple[tuple[str, str, bool], ...] = (
     ),
     (
         "a relative write into the checkout",
-        'from pathlib import Path\nPath("src/kiro_crew/x.py").write_text("")\n',
+        'from pathlib import Path\nPath("src/aj_crew/x.py").write_text("")\n',
         True,
     ),
     (
         "a join onto the literal",
-        'from pathlib import Path\n(Path("src") / "kiro_crew" / "x.py").read_text()\n',
+        'from pathlib import Path\n(Path("src") / "aj_crew" / "x.py").read_text()\n',
         True,
     ),
     (
         "a relative literal only compared, never read",
-        'from pathlib import Path\nALLOWED = {Path("src/kiro_crew/x.py")}\n'
+        'from pathlib import Path\nALLOWED = {Path("src/aj_crew/x.py")}\n'
         'assert Path("a/b") in ALLOWED\n',
         False,
     ),
     (
         "the repository resolved from the test file",
         "from pathlib import Path\n_REPO = Path(__file__).resolve().parents[1]\n"
-        '(_REPO / "src/kiro_crew/x.py").read_text()\n',
+        '(_REPO / "src/aj_crew/x.py").read_text()\n',
         False,
     ),
     (
         "the module under test asked where it lives",
-        "from pathlib import Path\nfrom kiro_crew.dashboard import ws\n"
+        "from pathlib import Path\nfrom aj_crew.dashboard import ws\n"
         "Path(ws.__file__).read_text()\n",
         False,
     ),
@@ -398,13 +398,13 @@ _PROBES: tuple[tuple[str, str, bool], ...] = (
     ),
     (
         "an absolute path",
-        'from pathlib import Path\nPath("/srv/src/kiro_crew/x.py").read_text()\n',
+        'from pathlib import Path\nPath("/srv/src/aj_crew/x.py").read_text()\n',
         False,
     ),
     (
         "a file that manages the working directory itself",
         "import os\nfrom pathlib import Path\n"
-        'os.chdir("/somewhere")\nPath("src/kiro_crew/x.py").read_text()\n',
+        'os.chdir("/somewhere")\nPath("src/aj_crew/x.py").read_text()\n',
         False,
     ),
     (
@@ -461,7 +461,7 @@ def main(argv: list[str] | None = None) -> int:
         print(
             "A test reaches the repository through the process working directory.\n"
             "Root the path at the module under test instead:\n"
-            "    from kiro_crew.<pkg> import <mod>\n"
+            "    from aj_crew.<pkg> import <mod>\n"
             '    source = Path(<mod>.__file__).read_text(encoding="utf-8")\n'
             "or, when no module owns the file, at the repository resolved from the\n"
             "test file: Path(__file__).resolve().parents[1] / <relative path>.\n"

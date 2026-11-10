@@ -48,7 +48,7 @@ const theme = params.get('theme') || 'dark'
 // The column cap, standing in for whichever container the row is rendered into:
 // the 800px main chat column by default, or a session-grid pane's own width.
 const colw = params.get('colw') || '800px'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const realFetch = globalThis.fetch.bind(globalThis)
 globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {

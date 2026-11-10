@@ -22,9 +22,9 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp.multipart import BodyPartReader
 
-from kiro_crew import pinned_fs, staging
-from kiro_crew.dashboard import part_stream
-from kiro_crew.dashboard.handlers import portability as ph
+from aj_crew import pinned_fs, staging
+from aj_crew.dashboard import part_stream
+from aj_crew.dashboard.handlers import portability as ph
 
 #: Ceiling on any wait a test must unblock itself; far above a healthy run, so
 #: reaching it means the run is lost rather than slow.

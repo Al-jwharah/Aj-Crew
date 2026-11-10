@@ -15,8 +15,8 @@ from typing import Any
 import pytest
 from turn_harness import TurnContext, TurnScript, run_turn
 
-from kiro_crew import session_directive
-from kiro_crew.acp.types import (
+from aj_crew import session_directive
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
@@ -24,8 +24,8 @@ from kiro_crew.acp.types import (
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.dashboard.session_directive_apply_outcome import QUIET_END_OUTCOME_PREFIX
-from kiro_crew.slack.client import SlackClientOps
+from aj_crew.dashboard.session_directive_apply_outcome import QUIET_END_OUTCOME_PREFIX
+from aj_crew.slack.client import SlackClientOps
 
 
 class _RecordingSlack:
@@ -92,7 +92,7 @@ async def _run_linked_wake(events: list[AcpEvent]) -> _RecordingSlack:
 class TestQuietEndReachesOtherLinkedChannels:
     @pytest.mark.asyncio
     async def test_the_cross_surface_leg_gets_the_outcome_line(self, monkeypatch) -> None:
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         sent: list[str] = []
 

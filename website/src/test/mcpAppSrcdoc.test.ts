@@ -142,7 +142,7 @@ describe('buildMcpAppSrcdoc', () => {
     const metaEnd = out.indexOf('">') + 2
     const rest = out.slice(metaEnd)
     // Our trusted bridge-guard bootstrap is injected here, then the app markup.
-    expect(rest).toContain('__kirocrew_nav__')
+    expect(rest).toContain('__ajcrew_nav__')
     expect(rest.endsWith('<html><head><title>App</title></head><body>hi</body></html>')).toBe(true)
     expect(out).toContain("default-src 'none'")
   })
@@ -154,7 +154,7 @@ describe('buildMcpAppSrcdoc', () => {
     // Sits AFTER the CSP meta (so the policy governs it) and BEFORE app markup
     // (so its capture-phase listeners register first).
     const metaIdx = out.indexOf('Content-Security-Policy')
-    const guardIdx = out.indexOf('__kirocrew_nav__')
+    const guardIdx = out.indexOf('__ajcrew_nav__')
     const appIdx = out.indexOf('<title>App</title>')
     expect(metaIdx).toBeGreaterThanOrEqual(0)
     expect(guardIdx).toBeGreaterThan(metaIdx)

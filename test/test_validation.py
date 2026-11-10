@@ -1,11 +1,11 @@
-"""Tests for kiro_crew.validation — tool input/output validation."""
+"""Tests for aj_crew.validation — tool input/output validation."""
 
 from __future__ import annotations
 
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.validation import (
+from aj_crew.validation import (
     ARTIFACT_SAVE_SCHEMA,
     CHANNEL_ID_RE,
     CRON_ADD_SCHEMA,
@@ -199,7 +199,7 @@ class TestSanitizeString:
         assert sanitize_string("\u3000\u200d\U0001f468") == "\u200d\U0001f468"
 
     def test_edge_runs_need_one_strip_pass(self, monkeypatch):
-        import kiro_crew.validation as validation
+        import aj_crew.validation as validation
 
         calls = []
         real = validation.strip_hidden_unicode
@@ -879,7 +879,7 @@ class TestDeployArtifactSchema:
     """Test the deploy_artifact MCP tool schema validation."""
 
     def test_schema_accepts_valid_artifact_slug(self):
-        from kiro_crew.validation import DEPLOY_ARTIFACT_SCHEMA
+        from aj_crew.validation import DEPLOY_ARTIFACT_SCHEMA
 
         # confirm/override_scan were REMOVED from the schema (round-19: the MCP
         # tool is preview-only; human confirmation happens in the dashboard).
@@ -890,18 +890,18 @@ class TestDeployArtifactSchema:
         assert "confirm" not in result
 
     def test_schema_accepts_valid_local_dir(self):
-        from kiro_crew.validation import DEPLOY_ARTIFACT_SCHEMA
+        from aj_crew.validation import DEPLOY_ARTIFACT_SCHEMA
         args = {"site_id": "my-app", "local_dir": "/home/user/app/public"}
         result = validate_tool_args(args, DEPLOY_ARTIFACT_SCHEMA)
         assert result["local_dir"] == "/home/user/app/public"
 
     def test_schema_rejects_missing_site_id(self):
-        from kiro_crew.validation import DEPLOY_ARTIFACT_SCHEMA
+        from aj_crew.validation import DEPLOY_ARTIFACT_SCHEMA
         with pytest.raises(ValidationError, match="site_id"):
             validate_tool_args({"artifact_slug": "x"}, DEPLOY_ARTIFACT_SCHEMA)
 
     def test_schema_accepts_ttl_hours(self):
-        from kiro_crew.validation import DEPLOY_ARTIFACT_SCHEMA
+        from aj_crew.validation import DEPLOY_ARTIFACT_SCHEMA
         args = {"site_id": "s", "artifact_slug": "a", "ttl_hours": 48}
         result = validate_tool_args(args, DEPLOY_ARTIFACT_SCHEMA)
         assert result["ttl_hours"] == 48
@@ -915,11 +915,11 @@ class TestValidateMcpToolArguments:
     UNTRUSTED tools/call arguments (e.g. from an MCP App iframe)."""
 
     def _v(self, args, schema):
-        from kiro_crew.validation import validate_mcp_tool_arguments
+        from aj_crew.validation import validate_mcp_tool_arguments
         validate_mcp_tool_arguments(args, schema)
 
     def _raises(self, args, schema, fragment):
-        from kiro_crew.validation import ValidationError, validate_mcp_tool_arguments
+        from aj_crew.validation import ValidationError, validate_mcp_tool_arguments
         with pytest.raises(ValidationError) as exc:
             validate_mcp_tool_arguments(args, schema)
         assert fragment in str(exc.value)

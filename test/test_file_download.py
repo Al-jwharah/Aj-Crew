@@ -22,7 +22,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer, make_mocked_request
 from dashboard_owner_helpers import NoConfiguredOwner, as_owner
 
-from kiro_crew.dashboard.handlers import api_file_download
+from aj_crew.dashboard.handlers import api_file_download
 
 
 def _make_app() -> web.Application:
@@ -33,8 +33,8 @@ def _make_app() -> web.Application:
 
 @pytest.fixture
 def mock_sel():
-    with patch("kiro_crew.sel.sel") as m, \
-         patch("kiro_crew.dashboard.handlers.files.is_sensitive_path", return_value=False):
+    with patch("aj_crew.sel.sel") as m, \
+         patch("aj_crew.dashboard.handlers.files.is_sensitive_path", return_value=False):
         instance = MagicMock()
         m.return_value = instance
         yield instance
@@ -57,7 +57,7 @@ async def test_binary_bytes_survive_round_trip(tmp_path, mock_sel):
     """The regression: docx-like bytes must come back identical."""
     f = tmp_path / "doc.docx"
     f.write_bytes(_DOCX_LIKE_BYTES)
-    with patch("kiro_crew.dashboard.handlers._validate_dashboard_path", return_value=str(f)):
+    with patch("aj_crew.dashboard.handlers._validate_dashboard_path", return_value=str(f)):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get(f"/api/file-download?path={f}")
             assert resp.status == 200
@@ -69,7 +69,7 @@ async def test_binary_bytes_survive_round_trip(tmp_path, mock_sel):
 async def test_sets_attachment_disposition_and_nosniff(tmp_path, mock_sel):
     f = tmp_path / "Stores Discovery.docx"
     f.write_bytes(_DOCX_LIKE_BYTES)
-    with patch("kiro_crew.dashboard.handlers._validate_dashboard_path", return_value=str(f)):
+    with patch("aj_crew.dashboard.handlers._validate_dashboard_path", return_value=str(f)):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get(f"/api/file-download?path={f}")
             assert resp.status == 200
@@ -91,7 +91,7 @@ async def test_content_type_for_known_extensions(tmp_path, mock_sel):
     for name, expected in cases.items():
         f = tmp_path / name
         f.write_bytes(_DOCX_LIKE_BYTES if not name.endswith(".csv") else b"a,b,c\n1,2,3\n")
-        with patch("kiro_crew.dashboard.handlers._validate_dashboard_path", return_value=str(f)):
+        with patch("aj_crew.dashboard.handlers._validate_dashboard_path", return_value=str(f)):
             async with TestClient(TestServer(_make_app())) as client:
                 resp = await client.get(f"/api/file-download?path={f}")
                 assert resp.status == 200, f"failed for {name}"
@@ -102,7 +102,7 @@ async def test_content_type_for_known_extensions(tmp_path, mock_sel):
 async def test_unknown_extension_falls_back_to_octet_stream(tmp_path, mock_sel):
     f = tmp_path / "blob.bin"
     f.write_bytes(b"\x00\x01\x02")
-    with patch("kiro_crew.dashboard.handlers._validate_dashboard_path", return_value=str(f)):
+    with patch("aj_crew.dashboard.handlers._validate_dashboard_path", return_value=str(f)):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get(f"/api/file-download?path={f}")
             assert resp.status == 200
@@ -116,7 +116,7 @@ async def test_unknown_extension_falls_back_to_octet_stream(tmp_path, mock_sel):
 async def test_text_file_served_when_clean(tmp_path, mock_sel):
     f = tmp_path / "notes.txt"
     f.write_text("hello world\nno secrets here")
-    with patch("kiro_crew.dashboard.handlers._validate_dashboard_path", return_value=str(f)):
+    with patch("aj_crew.dashboard.handlers._validate_dashboard_path", return_value=str(f)):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get(f"/api/file-download?path={f}")
             assert resp.status == 200
@@ -132,8 +132,8 @@ async def test_flagged_text_file_is_served_whole(tmp_path, mock_sel):
     """
     f = tmp_path / "leaky.txt"
     f.write_text("ok body")
-    redact_path = "kiro_crew.dashboard.handlers.files.redact"
-    with patch("kiro_crew.dashboard.handlers._validate_dashboard_path", return_value=str(f)), \
+    redact_path = "aj_crew.dashboard.handlers.files.redact"
+    with patch("aj_crew.dashboard.handlers._validate_dashboard_path", return_value=str(f)), \
             patch(redact_path, return_value="ok body REDACTED"):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get(f"/api/file-download?path={f}")
@@ -146,7 +146,7 @@ async def test_flagged_text_file_is_served_whole(tmp_path, mock_sel):
 
 @pytest.mark.asyncio
 async def test_invalid_path_rejected(mock_sel):
-    with patch("kiro_crew.dashboard.handlers._validate_dashboard_path", return_value=None):
+    with patch("aj_crew.dashboard.handlers._validate_dashboard_path", return_value=None):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get("/api/file-download?path=/etc/passwd")
             assert resp.status == 400
@@ -161,9 +161,9 @@ async def test_sensitive_path_rejected(tmp_path):
     f.write_text("x")
     # Patch is_sensitive_path on the importing module so the alias bound at
     # files.py import-time resolves to the True-returning mock.
-    with patch("kiro_crew.dashboard.handlers._validate_dashboard_path", return_value=str(f)), \
-         patch("kiro_crew.dashboard.handlers.files.is_sensitive_path", return_value=True), \
-         patch("kiro_crew.sel.sel") as m:
+    with patch("aj_crew.dashboard.handlers._validate_dashboard_path", return_value=str(f)), \
+         patch("aj_crew.dashboard.handlers.files.is_sensitive_path", return_value=True), \
+         patch("aj_crew.sel.sel") as m:
         m.return_value = MagicMock()
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get(f"/api/file-download?path={f}")
@@ -173,7 +173,7 @@ async def test_sensitive_path_rejected(tmp_path):
 @pytest.mark.asyncio
 async def test_missing_file_404(tmp_path, mock_sel):
     missing = tmp_path / "nope.docx"
-    with patch("kiro_crew.dashboard.handlers._validate_dashboard_path", return_value=str(missing)):
+    with patch("aj_crew.dashboard.handlers._validate_dashboard_path", return_value=str(missing)):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get(f"/api/file-download?path={missing}")
             assert resp.status == 404
@@ -186,7 +186,7 @@ async def test_symlink_rejected(tmp_path, mock_sel):
     target.write_bytes(_DOCX_LIKE_BYTES)
     link = tmp_path / "linked.docx"
     os.symlink(target, link)
-    with patch("kiro_crew.dashboard.handlers._validate_dashboard_path", return_value=str(link)):
+    with patch("aj_crew.dashboard.handlers._validate_dashboard_path", return_value=str(link)):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get(f"/api/file-download?path={link}")
             assert resp.status == 403
@@ -199,7 +199,7 @@ async def test_symlink_rejected(tmp_path, mock_sel):
 # The threshold is shrunk instead of writing 50 MB to disk; the file is
 # genuinely over the (patched) threshold, so the real branch runs.
 
-_FILES = "kiro_crew.dashboard.handlers.files"
+_FILES = "aj_crew.dashboard.handlers.files"
 
 
 @pytest.fixture
@@ -210,7 +210,7 @@ def small_threshold():
 
 
 async def _get(path, query=""):
-    with patch("kiro_crew.dashboard.handlers._validate_dashboard_path", return_value=str(path)):
+    with patch("aj_crew.dashboard.handlers._validate_dashboard_path", return_value=str(path)):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get(f"/api/file-download?path={path}{query}")
             return resp.status, await resp.read(), resp.headers
@@ -273,7 +273,7 @@ async def test_a_growing_large_file_stops_at_its_fstat_size(
     tmp_path, mock_sel, small_threshold
 ):
     """Bytes written after the fstat are not sent: the length is the fstat's."""
-    from kiro_crew.dashboard.handlers import files
+    from aj_crew.dashboard.handlers import files
 
     f = tmp_path / "huge.log"
     f.write_bytes(b"a" * 1024)
@@ -296,7 +296,7 @@ async def _get_streamed(path):
 
     received = bytearray()
     short = False
-    with patch("kiro_crew.dashboard.handlers._validate_dashboard_path", return_value=str(path)):
+    with patch("aj_crew.dashboard.handlers._validate_dashboard_path", return_value=str(path)):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get(f"/api/file-download?path={path}")
             try:
@@ -347,7 +347,7 @@ async def test_after_a_stall_the_handler_returns_and_the_close_is_deferred(
     """
     import threading
 
-    from kiro_crew.dashboard.handlers import files
+    from aj_crew.dashboard.handlers import files
 
     f = tmp_path / "huge.bin"
     f.write_bytes(b"x" * 2048)
@@ -406,7 +406,7 @@ async def test_a_small_read_past_its_ceiling_defers_the_close(tmp_path, mock_sel
     """
     import threading
 
-    from kiro_crew.dashboard.handlers import files
+    from aj_crew.dashboard.handlers import files
 
     f = tmp_path / "notes.txt"
     f.write_text("hello world")
@@ -459,7 +459,7 @@ async def test_a_small_read_past_its_ceiling_defers_the_close(tmp_path, mock_sel
 
 @pytest.mark.asyncio
 async def test_a_busy_transfer_pool_ends_the_stream(tmp_path, mock_sel, small_threshold):
-    from kiro_crew.dashboard.handlers import files
+    from aj_crew.dashboard.handlers import files
 
     f = tmp_path / "huge.bin"
     f.write_bytes(b"x" * 2048)
@@ -482,7 +482,7 @@ async def test_a_busy_pool_closes_the_file_off_the_event_loop(tmp_path, mock_sel
     """When the transfer pool refuses the close, it still never runs on the loop."""
     import threading
 
-    from kiro_crew.dashboard.handlers import files
+    from aj_crew.dashboard.handlers import files
 
     f = tmp_path / "notes.txt"
     f.write_text("hello world")
@@ -534,7 +534,7 @@ async def test_a_sensitive_path_over_the_threshold_is_refused(
     f = tmp_path / "huge.env"
     f.write_bytes(b"x" * 2048)
     with patch(f"{_FILES}.is_sensitive_path", return_value=True), \
-         patch("kiro_crew.sel.sel") as m:
+         patch("aj_crew.sel.sel") as m:
         m.return_value = MagicMock()
         status, _, _ = await _get(f)
     assert status == 403
@@ -552,7 +552,7 @@ async def test_a_non_owner_is_refused_a_large_file(tmp_path, mock_sel, small_thr
     )
     req["user"] = "slack-user-7"
     req["app"] = ""
-    with patch("kiro_crew.dashboard.handlers._validate_dashboard_path", return_value=str(f)):
+    with patch("aj_crew.dashboard.handlers._validate_dashboard_path", return_value=str(f)):
         resp = await api_file_download(req)
     assert resp.status == 403
 
@@ -567,9 +567,9 @@ async def test_resolve_relative_path_within_project(tmp_path, mock_sel, monkeypa
     f = proj / "sub" / "doc.docx"
     f.parent.mkdir()
     f.write_bytes(_DOCX_LIKE_BYTES)
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(proj))
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(proj))
     # _validate_dashboard_path receives the resolved absolute path
-    with patch("kiro_crew.dashboard.handlers._validate_dashboard_path", return_value=str(f.resolve())):
+    with patch("aj_crew.dashboard.handlers._validate_dashboard_path", return_value=str(f.resolve())):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get("/api/file-download?path=sub/doc.docx&resolve=1")
             assert resp.status == 200
@@ -580,7 +580,7 @@ async def test_resolve_relative_path_within_project(tmp_path, mock_sel, monkeypa
 async def test_resolve_relative_path_outside_project_rejected(tmp_path, mock_sel, monkeypatch):
     proj = tmp_path / "project"
     proj.mkdir()
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(proj))
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(proj))
     async with TestClient(TestServer(_make_app())) as client:
         # ../../etc/passwd would resolve outside proj
         resp = await client.get("/api/file-download?path=../../etc/passwd&resolve=1")
@@ -618,7 +618,7 @@ def _inline_png_html() -> bytes:
 
 
 async def _download(path, **kwargs):
-    with patch("kiro_crew.dashboard.handlers._validate_dashboard_path", return_value=str(path)):
+    with patch("aj_crew.dashboard.handlers._validate_dashboard_path", return_value=str(path)):
         return await api_file_download(_owner_request(path, **kwargs))
 
 
@@ -696,12 +696,12 @@ class TestBinaryScanReadsBothProjections:
         return b"\xff\n" + f"Authorization: Bearer\u00a0opaque-{_key_shaped(4, 12)}\n".encode()
 
     def test_nbsp_bearer_is_flagged(self):
-        from kiro_crew.platform import binary_content_is_flagged
+        from aj_crew.platform import binary_content_is_flagged
 
         assert binary_content_is_flagged(self._nbsp_bearer())
 
     def test_baseline_jpeg_is_not_flagged(self):
-        from kiro_crew.platform import binary_content_is_flagged
+        from aj_crew.platform import binary_content_is_flagged
 
         image = pytest.importorskip("PIL.Image")
         buf = io.BytesIO()

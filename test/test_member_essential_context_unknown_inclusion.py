@@ -1,6 +1,6 @@
 """A steering file with an unrecognised ``inclusion`` value reads as ``always``.
 
-``src/kiro_crew/docs/steering-and-hooks.md`` documents that an absent or misspelled
+``src/aj_crew/docs/steering-and-hooks.md`` documents that an absent or misspelled
 ``inclusion`` reads as ``always``. Every reader in ``member_essential_context`` must
 follow it: a bad value is a warning, never a refused member session.
 
@@ -11,7 +11,7 @@ from pathlib import Path
 
 import member_essential_context_helpers
 
-from kiro_crew import member_essential_context as _mec
+from aj_crew import member_essential_context as _mec
 
 _close_skills_loaders = member_essential_context_helpers._close_skills_loaders
 env = member_essential_context_helpers.env

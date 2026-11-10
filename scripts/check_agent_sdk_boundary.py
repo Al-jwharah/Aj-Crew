@@ -3,27 +3,27 @@
 
 ## The failure class
 
-`kiro_crew.providers` is positioned as the boundary between application code and
+`aj_crew.providers` is positioned as the boundary between application code and
 the agent backend, and is not one. It re-exports ACP symbols rather than
-translating them -- `providers/base.py` aliases `kiro_crew.acp.types.AcpEvent` as
+translating them -- `providers/base.py` aliases `aj_crew.acp.types.AcpEvent` as
 `LLMEvent`, so the "provider-agnostic" event type IS the ACP dataclass, complete
 with a raw JSON-RPC `request_id` -- and dozens of modules skip it and import
-`kiro_crew.acp` directly, several reaching underscore-private names. The
+`aj_crew.acp` directly, several reaching underscore-private names. The
 consequence is that switching agent backends is not a driver swap; it is an edit
 across the whole tree.
 
 `docs/request-for-change/rfc-crew-agent-sdk-boundary.md` proposes
-`kiro_crew.agent_sdk` as the single import surface, with `kiro_crew.acp` private
+`aj_crew.agent_sdk` as the single import surface, with `aj_crew.acp` private
 to one driver behind it. This gate is that RFC's Phase 1: it does not move any
 code, it records today's leak and refuses to let it grow.
 
 ## What counts as a violation
 
 An import, in a file under `src/` that is NOT part of the boundary itself, whose
-target resolves to `kiro_crew.acp*` or `kiro_crew.providers*`.
+target resolves to `aj_crew.acp*` or `aj_crew.providers*`.
 
 Both targets are forbidden, and the second one is the point. A gate that watched
-only `kiro_crew.acp` would report progress that is not real: `providers` is a
+only `aj_crew.acp` would report progress that is not real: `providers` is a
 legal laundering channel for exactly the vocabulary the boundary exists to
 contain (`LLMEvent` and the `EVENT_*` constants), so a
 consumer could be "migrated" off `acp` while still reading ACP shapes, and the
@@ -32,23 +32,23 @@ stops depending on the backend at all.
 
 Three source trees are exempt, because they ARE the boundary:
 
-* `src/kiro_crew/agent_sdk/` -- the SDK and its driver, the one place allowed to
+* `src/aj_crew/agent_sdk/` -- the SDK and its driver, the one place allowed to
   reach the ACP layer.
-* `src/kiro_crew/acp/` -- itself.
-* `src/kiro_crew/providers/` -- the shim being retired. **This exemption is
+* `src/aj_crew/acp/` -- itself.
+* `src/aj_crew/providers/` -- the shim being retired. **This exemption is
   temporary**: the RFC's final phase deletes the package, and when it goes this
   entry should go with it.
 
 `test/` is out of scope on purpose. A test that exercises the driver must import
 the driver's own dependencies, and gating that would make the boundary
 untestable. A built-in app's own test suite, under
-`src/kiro_crew/apps/builtins/<app>/tests/`, is test code for the same reason and
+`src/aj_crew/apps/builtins/<app>/tests/`, is test code for the same reason and
 is out of scope too; the app's runtime code beside it stays in scope.
 
 Matching is AST-based, so a multi-line import is judged as one statement and a
 `if TYPE_CHECKING:` import is still a violation -- a type-only dependency is
 still boundary knowledge, and it is how a consumer keeps hold of an ACP class
-after the runtime call is gone. `importlib.import_module("kiro_crew.acp...")`
+after the runtime call is gone. `importlib.import_module("aj_crew.acp...")`
 and `__import__` with a literal argument are caught for the same reason. A file
 that does not parse is a hard ERROR, never "clean": under a shrink-only ratchet
 a parse failure that read as zero violations would invite a prune that deletes
@@ -101,26 +101,26 @@ DEFAULT_BASELINE = ROOT / ".github" / "agent-sdk-boundary-baseline.txt"
 DEFAULT_TARGETS = ("src",)
 
 # Import targets application code may not reach.
-FORBIDDEN_ROOTS = ("kiro_crew.acp", "kiro_crew.providers")
+FORBIDDEN_ROOTS = ("aj_crew.acp", "aj_crew.providers")
 
 # Source trees that ARE the boundary: the SDK plus the two packages it is built
 # on. All three stay. ACP is the SDK's foundation rather than an implementation
 # detail being sealed off, so providers/ is not scheduled for deletion.
 EXEMPT_PREFIXES = (
-    "src/kiro_crew/agent_sdk/",
-    "src/kiro_crew/acp/",
-    "src/kiro_crew/providers/",
+    "src/aj_crew/agent_sdk/",
+    "src/aj_crew/acp/",
+    "src/aj_crew/providers/",
 )
 
 # A built-in app's test suite lives inside its package rather than under test/,
 # and is test code all the same; see the module docstring.
-APP_TEST_TREE = re.compile(r"^src/kiro_crew/apps/builtins/[^/]+/tests/")
+APP_TEST_TREE = re.compile(r"^src/aj_crew/apps/builtins/[^/]+/tests/")
 
 DYNAMIC_IMPORTERS = ("import_module", "__import__")
 
 HEADER = """\
 # Imports of the ACP layer from application code, as `<count> <path>`.
-# Both `kiro_crew.acp` and `kiro_crew.providers` count: providers re-exports ACP
+# Both `aj_crew.acp` and `aj_crew.providers` count: providers re-exports ACP
 # shapes (LLMEvent and the EVENT_* constants), so watching only `acp` would let
 # a consumer look migrated while still reading the backend's own types.
 #
@@ -140,7 +140,7 @@ HEADER = """\
 # mechanism.
 #
 # Do NOT add or raise a line to make a red gate green -- route the dependency
-# through kiro_crew.agent_sdk instead. Design of record:
+# through aj_crew.agent_sdk instead. Design of record:
 # docs/request-for-change/rfc-crew-agent-sdk-boundary.md
 #
 # Refresh (after removing something listed here):
@@ -235,7 +235,7 @@ def _dynamic_importer_names(tree: ast.AST) -> set[str]:
     Collected in one pre-pass so the order of definition and use does not matter.
 
     The canonical names stay in the set unconditionally, so a module that defines
-    its own `def import_module(...)` and passes it a `kiro_crew.acp.*` string is
+    its own `def import_module(...)` and passes it a `aj_crew.acp.*` string is
     flagged. That is deliberate: no such definition exists in this tree, and the
     gate must prefer a visible false red -- which a reader corrects -- over a
     silent false green, the same reason a file that fails to parse is a hard error
@@ -264,7 +264,7 @@ def _dynamic_importer_names(tree: ast.AST) -> set[str]:
 def _is_ancestor_of_forbidden(dotted: str) -> bool:
     """True when a forbidden root lives strictly under `dotted`.
 
-    `kiro_crew` is an ancestor of `kiro_crew.acp`; `kiro_crew.sandbox` is not.
+    `aj_crew` is an ancestor of `aj_crew.acp`; `aj_crew.sandbox` is not.
     This is what decides whether a `fromlist` can reach the boundary at all.
     """
     return any(root.startswith(f"{dotted}.") for root in FORBIDDEN_ROOTS)
@@ -317,12 +317,12 @@ def _dynamic_import_targets(rel: str, call: ast.Call) -> list[str]:
     in more than one place, and a gate that reads only the first positional
     argument is bypassed by every other spelling:
 
-    - `name` may be a keyword (`import_module(name="kiro_crew.acp.client")`).
+    - `name` may be a keyword (`import_module(name="aj_crew.acp.client")`).
     - `fromlist` holds the real target when `name` is only the package
-      (`__import__("kiro_crew", fromlist=("acp",))` imports `kiro_crew.acp`).
+      (`__import__("aj_crew", fromlist=("acp",))` imports `aj_crew.acp`).
     - a leading-dot `name` plus a `package` is relative, in either slot
-      (`import_module(".acp", package="kiro_crew")` and the positional
-      `import_module(".acp", "kiro_crew")`).
+      (`import_module(".acp", package="aj_crew")` and the positional
+      `import_module(".acp", "aj_crew")`).
     - `level` > 0 is relative to the calling module's own package
       (`__import__("acp", level=1)`).
 
@@ -334,7 +334,7 @@ def _dynamic_import_targets(rel: str, call: ast.Call) -> list[str]:
     # `or` would be wrong here: `_str_const` returns "" for `__import__("", ...)`,
     # which is FALSY but a perfectly legal module name -- it is how a purely
     # relative import spells itself, and `__import__("", globals(), locals(),
-    # ("acp",), 2)` really does import `kiro_crew.acp`. Chaining with `or` treated
+    # ("acp",), 2)` really does import `aj_crew.acp`. Chaining with `or` treated
     # that as "no name given" and returned early, so the whole relative branch
     # below never ran. Test for None, not for truth.
     name = _str_const(_positional(call, 0))
@@ -351,10 +351,10 @@ def _dynamic_import_targets(rel: str, call: ast.Call) -> list[str]:
     )
     # `package` is argument 1 of `import_module(name, package=None)`, so reading
     # only the keyword left the positional spelling `import_module(".acp",
-    # "kiro_crew")` with package=None. The relative branch then fell back to
+    # "aj_crew")` with package=None. The relative branch then fell back to
     # resolving against the CALLING file's package, and for any nested consumer
     # that lands on a non-forbidden target (`dashboard/foo.py` ->
-    # `kiro_crew.dashboard.acp`) -- a false green, in the one branch whose whole
+    # `aj_crew.dashboard.acp`) -- a false green, in the one branch whose whole
     # claim is that it closes every spelling. Slot 1 is `globals` for
     # `__import__`, but a dict literal is not a string constant, so reading it
     # here cannot produce a name.
@@ -414,8 +414,8 @@ def _violations_in_source(rel: str, source: str) -> dict[int, str]:
                 if node.level
                 else (node.module or "")
             )
-            # The from-target alone is not enough. `from kiro_crew import acp`
-            # has `node.module == "kiro_crew"`, which matches no forbidden root,
+            # The from-target alone is not enough. `from aj_crew import acp`
+            # has `node.module == "aj_crew"`, which matches no forbidden root,
             # while the NAME it binds is the forbidden package itself -- and with
             # no inline opt-out marker this ordinary spelling would have been the
             # standard way around the gate. So each bound name is also resolved
@@ -624,7 +624,7 @@ def run_gate(baseline_path: Path, update: bool) -> int:
     for rel in new_offenders:
         print(
             f"::error file={rel}::imports the ACP layer. Application code must "
-            "reach the agent backend through kiro_crew.agent_sdk."
+            "reach the agent backend through aj_crew.agent_sdk."
         )
         for line in violations[rel]:
             print(f"  {rel}:{line}")
@@ -672,84 +672,84 @@ def run_gate(baseline_path: Path, update: bool) -> int:
 
 def _self_test() -> int:
     """Plant one probe per rule family; a broken rule fails here, not in prod."""
-    rel = "src/kiro_crew/dashboard/probe.py"
+    rel = "src/aj_crew/dashboard/probe.py"
     flagged = {
-        "plain from-import": "from kiro_crew.acp.types import AcpEvent\n",
-        "module import": "import kiro_crew.acp.client\n",
-        "providers re-export": "from kiro_crew.providers.base import LLMEvent\n",
-        "package root": "import kiro_crew.providers\n",
+        "plain from-import": "from aj_crew.acp.types import AcpEvent\n",
+        "module import": "import aj_crew.acp.client\n",
+        "providers re-export": "from aj_crew.providers.base import LLMEvent\n",
+        "package root": "import aj_crew.providers\n",
         "multi-line": (
-            "from kiro_crew.acp.types import (\n    AcpEvent,\n    EVENT_COMPLETE,\n)\n"
+            "from aj_crew.acp.types import (\n    AcpEvent,\n    EVENT_COMPLETE,\n)\n"
         ),
         "TYPE_CHECKING only": (
             "from typing import TYPE_CHECKING\n"
             "if TYPE_CHECKING:\n"
-            "    from kiro_crew.acp.runtime import AcpRuntime\n"
+            "    from aj_crew.acp.runtime import AcpRuntime\n"
         ),
         "relative import": "from ..acp.types import AcpEvent\n",
         "dynamic import_module": (
-            "import importlib\n" "importlib.import_module('kiro_crew.acp.client')\n"
+            "import importlib\n" "importlib.import_module('aj_crew.acp.client')\n"
         ),
-        "dunder import": "__import__('kiro_crew.providers.acp')\n",
+        "dunder import": "__import__('aj_crew.providers.acp')\n",
         "dynamic keyword name=": (
-            "import importlib\n" "importlib.import_module(name='kiro_crew.acp.client')\n"
+            "import importlib\n" "importlib.import_module(name='aj_crew.acp.client')\n"
         ),
         "dynamic aliased importer": (
-            "from importlib import import_module as _im\n" "_im('kiro_crew.acp.client')\n"
+            "from importlib import import_module as _im\n" "_im('aj_crew.acp.client')\n"
         ),
         "dynamic importer bound by assignment": (
             "import importlib\n"
             "_im = importlib.import_module\n"
-            "_im('kiro_crew.providers.acp')\n"
+            "_im('aj_crew.providers.acp')\n"
         ),
-        "dunder fromlist names the package": ("__import__('kiro_crew', fromlist=('acp',))\n"),
-        "dunder fromlist list form": ("__import__('kiro_crew', fromlist=['providers'])\n"),
-        "dunder fromlist dict keys": ("__import__('kiro_crew', fromlist={'acp': True})\n"),
-        "fromlist starred unpack": ("x = ['acp']\n__import__('kiro_crew', fromlist=(*x,))\n"),
-        "fromlist dict unpack": ("__import__('kiro_crew', fromlist={**{'acp': True}})\n"),
-        "fromlist literal concat": ("__import__('kiro_crew', fromlist=('acp',) + ())\n"),
-        "fromlist opaque call": ("__import__('kiro_crew', fromlist=frozenset({'acp'}))\n"),
-        "fromlist comprehension": ("__import__('kiro_crew', fromlist=[m for m in ('acp',)])\n"),
-        "fromlist name reference": ("f = ['acp']\n__import__('kiro_crew', fromlist=f)\n"),
-        "dunder fromlist set": "__import__('kiro_crew', fromlist={'providers'})\n",
+        "dunder fromlist names the package": ("__import__('aj_crew', fromlist=('acp',))\n"),
+        "dunder fromlist list form": ("__import__('aj_crew', fromlist=['providers'])\n"),
+        "dunder fromlist dict keys": ("__import__('aj_crew', fromlist={'acp': True})\n"),
+        "fromlist starred unpack": ("x = ['acp']\n__import__('aj_crew', fromlist=(*x,))\n"),
+        "fromlist dict unpack": ("__import__('aj_crew', fromlist={**{'acp': True}})\n"),
+        "fromlist literal concat": ("__import__('aj_crew', fromlist=('acp',) + ())\n"),
+        "fromlist opaque call": ("__import__('aj_crew', fromlist=frozenset({'acp'}))\n"),
+        "fromlist comprehension": ("__import__('aj_crew', fromlist=[m for m in ('acp',)])\n"),
+        "fromlist name reference": ("f = ['acp']\n__import__('aj_crew', fromlist=f)\n"),
+        "dunder fromlist set": "__import__('aj_crew', fromlist={'providers'})\n",
         "dynamic relative via positional package": (
-            "import importlib\n" "importlib.import_module('.acp', 'kiro_crew')\n"
+            "import importlib\n" "importlib.import_module('.acp', 'aj_crew')\n"
         ),
         "dynamic relative via two-dot positional package": (
-            "import importlib\n" "importlib.import_module('..acp', 'kiro_crew.dashboard')\n"
+            "import importlib\n" "importlib.import_module('..acp', 'aj_crew.dashboard')\n"
         ),
         "dynamic relative via package=": (
-            "import importlib\n" "importlib.import_module('.acp', package='kiro_crew')\n"
+            "import importlib\n" "importlib.import_module('.acp', package='aj_crew')\n"
         ),
         "dunder relative via level=": ("__import__('acp', level=2)\n"),
         "empty name, purely relative": ("__import__('', globals(), locals(), ('acp',), 2)\n"),
         "empty name, relative by keyword": ("__import__('', fromlist=('providers',), level=2)\n"),
-        "bound name is the package (acp)": "from kiro_crew import acp\n",
-        "bound name is the package (providers)": "from kiro_crew import providers\n",
+        "bound name is the package (acp)": "from aj_crew import acp\n",
+        "bound name is the package (providers)": "from aj_crew import providers\n",
         "bound name via relative ancestor": "from .. import acp\n",
-        "bound name aliased": "from kiro_crew import acp as _a\n",
+        "bound name aliased": "from aj_crew import acp as _a\n",
     }
     clean = {
-        "sdk import": "from kiro_crew.agent_sdk import AgentEvent\n",
-        "unrelated kiro_crew": "from kiro_crew.session import SessionManager\n",
-        "name collision": "from kiro_crew.acpx import thing\n",
-        "bound name is an unrelated sibling": "from kiro_crew import session\n",
-        "star-import of an ancestor": "from kiro_crew import *\n",
-        "string mention only": "MSG = 'see kiro_crew.acp.types for the event'\n",
+        "sdk import": "from aj_crew.agent_sdk import AgentEvent\n",
+        "unrelated aj_crew": "from aj_crew.session import SessionManager\n",
+        "name collision": "from aj_crew.acpx import thing\n",
+        "bound name is an unrelated sibling": "from aj_crew import session\n",
+        "star-import of an ancestor": "from aj_crew import *\n",
+        "string mention only": "MSG = 'see aj_crew.acp.types for the event'\n",
         "dynamic fromlist on an unrelated package": (
-            "__import__('kiro_crew', fromlist=('session',))\n"
+            "__import__('aj_crew', fromlist=('session',))\n"
         ),
-        "dynamic star fromlist names no root": ("__import__('kiro_crew', fromlist=('*',))\n"),
+        "dynamic star fromlist names no root": ("__import__('aj_crew', fromlist=('*',))\n"),
         "opaque fromlist under a sibling package": (
-            "f = compute()\n__import__('kiro_crew.sandbox', fromlist=f)\n"
+            "f = compute()\n__import__('aj_crew.sandbox', fromlist=f)\n"
         ),
-        "empty fromlist": "__import__('kiro_crew', fromlist=())\n",
+        "empty fromlist": "__import__('aj_crew', fromlist=())\n",
         "empty name with no level": "__import__('')\n",
         "import_module with an empty name raises at runtime": (
-            "import importlib\nimportlib.import_module('', package='kiro_crew.acp')\n"
+            "import importlib\nimportlib.import_module('', package='aj_crew.acp')\n"
         ),
         "dynamic non-literal": (
-            "import importlib\n" "mod = 'kiro_crew.acp'\n" "importlib.import_module(mod)\n"
+            "import importlib\n" "mod = 'aj_crew.acp'\n" "importlib.import_module(mod)\n"
         ),
     }
 
@@ -761,16 +761,16 @@ def _self_test() -> int:
         if _violations_in_source(rel, source):
             failures.append(f"clean probe WAS flagged (rule is too wide): {label}")
 
-    if not _is_exempt("src/kiro_crew/agent_sdk/drivers/acp.py"):
+    if not _is_exempt("src/aj_crew/agent_sdk/drivers/acp.py"):
         failures.append("the SDK driver tree is not exempt")
-    if _is_exempt("src/kiro_crew/dashboard/chat_runner.py"):
+    if _is_exempt("src/aj_crew/dashboard/chat_runner.py"):
         failures.append("a consumer tree is exempt")
-    if not _is_app_test("src/kiro_crew/apps/builtins/probe_app/tests/test_probe.py"):
+    if not _is_app_test("src/aj_crew/apps/builtins/probe_app/tests/test_probe.py"):
         failures.append("a built-in app's test suite is in scope")
     for in_scope in (
-        "src/kiro_crew/apps/builtins/probe_app/backend/tests_helper.py",
-        "src/kiro_crew/apps/builtins/probe_app/backend/tests/runner.py",
-        "src/kiro_crew/dashboard/tests/probe.py",
+        "src/aj_crew/apps/builtins/probe_app/backend/tests_helper.py",
+        "src/aj_crew/apps/builtins/probe_app/backend/tests/runner.py",
+        "src/aj_crew/dashboard/tests/probe.py",
     ):
         if _is_app_test(in_scope):
             failures.append(f"runtime code is treated as an app test: {in_scope}")

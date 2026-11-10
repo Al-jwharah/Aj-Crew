@@ -17,11 +17,11 @@ import os
 
 import pytest
 
-from kiro_crew import hooks
-from kiro_crew.platform import governance
-from kiro_crew.platform.governance import gate_decision, parse_policy, parse_profile
+from aj_crew import hooks
+from aj_crew.platform import governance
+from aj_crew.platform.governance import gate_decision, parse_policy, parse_profile
 
-_WS_FILE = os.path.expanduser(os.path.join("~", "workplace", "kirocrew-workspace", "notes.txt"))
+_WS_FILE = os.path.expanduser(os.path.join("~", "workplace", "ajcrew-workspace", "notes.txt"))
 _OUTSIDE = os.path.abspath(os.path.join(os.sep, "etc", "passwd"))
 
 
@@ -35,11 +35,11 @@ def _ceiling(**controls: object) -> governance.GovernanceCeiling:
 
 # A remote policy that closes the open controls: read-only local tools, reads in the
 # default workspace, no writes, no commands, only the core MCP server.
-_WS_ROOT = os.path.join("~", "workplace", "kirocrew-workspace")
+_WS_ROOT = os.path.join("~", "workplace", "ajcrew-workspace")
 _CLOSED: dict[str, object] = {
     "tools": {"mode": "allow", "allow": ["fs_read", "glob", "grep"]},
     "commands": {"mode": "allow", "allow": []},
-    "mcp": {"mode": "allow", "allow": ["@kirocrew-core"]},
+    "mcp": {"mode": "allow", "allow": ["@ajcrew-core"]},
     "filesystem": {
         "read": {"mode": "allow", "allow": [_WS_ROOT, os.path.join(_WS_ROOT, "**")]},
         "write": {"mode": "allow", "allow": []},
@@ -57,7 +57,7 @@ def _closed(**overrides: object) -> governance.GovernanceCeiling:
 
 @pytest.fixture
 def lts(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 # The shapes kiro-cli and KAS send (test/fixtures/acp_frames/kiro/side-read-only-live.jsonl).
@@ -191,9 +191,9 @@ def test_lts_write_not_sent_as_an_edit_meets_the_write_scope(lts: None) -> None:
 
 
 def test_lts_core_mcp_passes_and_other_servers_do_not(lts: None) -> None:
-    assert _mcp("kirocrew-core", own_scopes=("mcp",)).permitted
+    assert _mcp("ajcrew-core", own_scopes=("mcp",)).permitted
     assert not _mcp("other", own_scopes=("mcp",)).permitted
-    assert not _mcp("kirocrew-core").permitted
+    assert not _mcp("ajcrew-core").permitted
 
 
 def test_lts_writes_stay_denied(lts: None) -> None:
@@ -247,7 +247,7 @@ def test_lts_profile_only_narrows_the_tools_baseline(lts: None) -> None:
 def test_own_scopes_without_an_identity_changes_nothing(lts: None) -> None:
     assert not gate_decision(_closed(), None, "grep", own_scopes=_ROW_READ).permitted
     assert not gate_decision(
-        _closed(), None, "Running: @kirocrew-core/x", own_scopes=("mcp",)
+        _closed(), None, "Running: @ajcrew-core/x", own_scopes=("mcp",)
     ).permitted
 
 
@@ -298,7 +298,7 @@ def _scope(**fields: object) -> tuple[str, ...]:
         ({"mcp_tool": "grep"}, _ROW_READ),
         ({"mcp_tool": "write"}, _ROW_WRITE),
         ({"mcp_tool": "read_file", "kas_builtin_ids": True}, _ROW_READ),
-        ({"mcp_tool": "work_report", "mcp_server": "kirocrew-core"}, ("mcp",)),
+        ({"mcp_tool": "work_report", "mcp_server": "ajcrew-core"}, ("mcp",)),
         # Commands in its own row, or no row at all: not proven.
         ({"mcp_tool": "code"}, ()),
         ({"mcp_tool": "shell"}, ()),
@@ -321,7 +321,7 @@ def test_lts_own_scope_proof(lts: None, fields: dict[str, object], expected: str
 
 def test_oss_own_scope_proof_is_off() -> None:
     assert _scope(mcp_tool="fs_read") == ()
-    assert _scope(mcp_tool="work_report", mcp_server="kirocrew-core") == ()
+    assert _scope(mcp_tool="work_report", mcp_server="ajcrew-core") == ()
 
 
 # ── end to end through the gate ──────────────────────────────────────────────
@@ -334,11 +334,11 @@ def lts_gate(monkeypatch: pytest.MonkeyPatch) -> None:
     The standalone context is composed first: in LTS an unbooted
     ``current_context`` refuses to compose (the boot gate's job, not this one's).
     """
-    import kiro_crew.platform.governance_profiles as profiles_mod
-    from kiro_crew.platform.context import current_context
+    import aj_crew.platform.governance_profiles as profiles_mod
+    from aj_crew.platform.context import current_context
 
     current_context()
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
     monkeypatch.setattr(
         profiles_mod,
         "resolve_active_scope",
@@ -362,8 +362,8 @@ def test_lts_gate_leaves_reads_writes_and_shell_to_crews_default(
     )
     assert grep.action != hooks.TOOL_DENY, grep.reason
     core = _gate(
-        "Running: @kirocrew-core/work_report",
-        mcp_server_name="kirocrew-core",
+        "Running: @ajcrew-core/work_report",
+        mcp_server_name="ajcrew-core",
         mcp_tool_name="work_report",
     )
     assert core.action != hooks.TOOL_DENY, core.reason

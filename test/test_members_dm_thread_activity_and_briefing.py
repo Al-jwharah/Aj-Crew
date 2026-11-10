@@ -27,7 +27,7 @@ from members_dm_thread_helpers import (
     _record_or_explain,
 )
 
-from kiro_crew.members import (
+from aj_crew.members import (
     MEMBER_BRIEFING_MAX_CHARS,
     member_slot_key,
     members_root,
@@ -76,9 +76,9 @@ class TestMemberActivityRoute:
         state = _make_state(tmp_path)
         from unittest import mock
 
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.eventlog import types as _types
-        from kiro_crew.members import slug_for_name
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog import types as _types
+        from aj_crew.members import slug_for_name
 
         assert _record_or_explain(
             CREW, "dashboard_chat-1", "persistent", project="/repo", via="chat"
@@ -124,9 +124,9 @@ class TestMemberActivityRoute:
         a fixed newest slice would drop a busy member's timeline. The filter runs first.
         """
         state = _make_state(tmp_path)
-        from kiro_crew.eventlog import types as _types
-        from kiro_crew.eventlog.service import get_service
-        from kiro_crew.members import slug_for_name
+        from aj_crew.eventlog import types as _types
+        from aj_crew.eventlog.service import get_service
+        from aj_crew.members import slug_for_name
 
         assert _record_or_explain(
             CREW, "dashboard_chat-1", "persistent", project="/repo", via="chat"
@@ -207,7 +207,7 @@ class TestMemberActivityRoute:
         timeline — including a numeric epoch from a foreign writer, which
         must read as unplaceable rather than crash the endpoint."""
         state = _make_state(tmp_path)
-        from kiro_crew.members import ACTIVITY_FILE_NAME, member_dir
+        from aj_crew.members import ACTIVITY_FILE_NAME, member_dir
 
         assert _record_or_explain(CREW, "dashboard_chat-1", "persistent", via="chat")
         path = member_dir("code-reviewer") / ACTIVITY_FILE_NAME
@@ -256,7 +256,7 @@ class TestMemberActivityRoute:
         response says the window is saturated so the drawer renders its
         derived counters as floors ("N+") instead of asserting exact totals."""
         state = _make_state(tmp_path)
-        from kiro_crew.dashboard.handlers import members as handler_mod
+        from aj_crew.dashboard.handlers import members as handler_mod
 
         for i in range(handler_mod._ACTIVITY_LIMIT + 3):
             assert _record_or_explain(CREW, f"dashboard_chat-{i}", "persistent", via="chat")
@@ -285,8 +285,8 @@ class TestEventlogSingletonDoesNotLeakAcrossTests:
     _bound_home: str = ""
 
     def test_a_service_built_here_binds_to_this_home(self, tmp_path):
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.members import slug_for_name
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.members import slug_for_name
 
         # Touch the service the way a real test does, leaving it live at teardown.
         assert _record_or_explain(CREW, "dashboard_chat-1", "persistent", via="chat")
@@ -297,7 +297,7 @@ class TestEventlogSingletonDoesNotLeakAcrossTests:
         assert svc_mod._singleton is not None
 
     def test_the_next_test_does_not_inherit_that_service(self, tmp_path):
-        from kiro_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog import service as svc_mod
 
         # The floor reset the singleton at the previous test's teardown (and this
         # test's setup), so nothing is inherited: the first read here rebuilds
@@ -321,7 +321,7 @@ class TestEventlogServiceRetirementReleasesHandles:
     """
 
     def test_set_service_none_clears_cached_logs_and_breaks_cycle(self, tmp_path):
-        from kiro_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog import service as svc_mod
 
         # Touch the service so it caches a MemberLog whose CrewLog took the lease.
         assert _record_or_explain(CREW, "dashboard_chat-1", "persistent", via="chat")
@@ -345,7 +345,7 @@ class TestEventlogServiceRetirementReleasesHandles:
         )
 
     def test_home_change_rebuild_retires_the_previous_service(self, tmp_path, monkeypatch):
-        from kiro_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog import service as svc_mod
 
         # First home: build a live service with a cached log.
         assert _record_or_explain(CREW, "dashboard_chat-1", "persistent", via="chat")
@@ -356,8 +356,8 @@ class TestEventlogServiceRetirementReleasesHandles:
         # this; a test boundary does). The rebuild must retire `first`.
         new_home = tmp_path / "second-home"
         new_home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(new_home))
-        import kiro_crew.config.paths as paths
+        monkeypatch.setenv("AJCREW_HOME", str(new_home))
+        import aj_crew.config.paths as paths
 
         monkeypatch.setattr(paths, "_resolved_home", None, raising=False)
 
@@ -369,8 +369,8 @@ class TestEventlogServiceRetirementReleasesHandles:
         assert first._registry._on_change is None
 
     def test_close_is_idempotent_and_reopens_on_demand(self, tmp_path):
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.members import slug_for_name
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.members import slug_for_name
 
         assert _record_or_explain(CREW, "dashboard_chat-1", "persistent", via="chat")
         svc = svc_mod.get_service()
@@ -403,7 +403,7 @@ class TestMemberBriefingEndpoint:
 
     @staticmethod
     def _write_briefing(text: str):
-        from kiro_crew.members import member_briefing_path
+        from aj_crew.members import member_briefing_path
 
         path = member_briefing_path("code-reviewer")
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -448,8 +448,8 @@ class TestMemberBriefingEndpoint:
         """Same renderer as the pointer's skill, so the person reads exactly what the
         crewmate reads -- and not the briefing read, so it is there even where notes
         cannot be read."""
-        from kiro_crew import dashboard_agentic, dashboard_upkeep
-        from kiro_crew.dashboard_templates import instance
+        from aj_crew import dashboard_agentic, dashboard_upkeep
+        from aj_crew.dashboard_templates import instance
 
         # An ADOPTED page: an unadopted one shows the suggestions page and offers no upkeep.
         instance.adopt("code-reviewer", "project-report")
@@ -460,7 +460,7 @@ class TestMemberBriefingEndpoint:
         state = _make_state(tmp_path)
         with (
             _patched_config([CREW]),
-            patch("kiro_crew.members.member_briefing_supported", return_value=False),
+            patch("aj_crew.members.member_briefing_supported", return_value=False),
         ):
             async with TestClient(TestServer(_make_members_app(state))) as client:
                 resp = await client.get(
@@ -489,7 +489,7 @@ class TestMemberBriefingEndpoint:
         }
         with (
             _patched_config([CREW]),
-            patch("kiro_crew.dashboard_upkeep.view", return_value=fake),
+            patch("aj_crew.dashboard_upkeep.view", return_value=fake),
         ):
             async with TestClient(TestServer(_make_members_app(state))) as client:
                 resp = await client.get(
@@ -529,8 +529,8 @@ class TestMemberBriefingEndpoint:
         state = _make_state(tmp_path)
         self._write_briefing("Notes the platform cannot read safely.\n")
         # Both the handler (module attribute) and the mtime helper (module global)
-        # resolve the gate through kiro_crew.members at call time.
-        monkeypatch.setattr("kiro_crew.members.member_briefing_supported", lambda: False)
+        # resolve the gate through aj_crew.members at call time.
+        monkeypatch.setattr("aj_crew.members.member_briefing_supported", lambda: False)
         with _patched_config([CREW]):
             async with TestClient(TestServer(_make_members_app(state))) as client:
                 resp = await client.get(
@@ -616,7 +616,7 @@ class TestMemberBriefingEndpoint:
         with _patched_config([CREW]):
             async with TestClient(TestServer(_make_members_app(state))) as client:
                 with patch(
-                    "kiro_crew.members.read_member_briefing_bounded",
+                    "aj_crew.members.read_member_briefing_bounded",
                     side_effect=AssertionError("read must not run for a non-owner"),
                 ):
                     resp = await client.get(
@@ -779,7 +779,7 @@ class TestMemberBriefingEndpoint:
             def log_api_access(self, **kwargs):
                 record["kwargs"] = kwargs
 
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.sel", lambda: _RecordingSel())
+        monkeypatch.setattr("aj_crew.dashboard.handlers.sel", lambda: _RecordingSel())
         with _patched_config([CREW]):
             async with TestClient(TestServer(_make_members_app(state))) as client:
                 resp = await client.get(
@@ -812,7 +812,7 @@ class TestDenialAuditOffload:
     async def test_app_denial_audit_runs_inline(self, tmp_path, monkeypatch):
         state = _make_state(tmp_path)
         record: dict = {}
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.sel", lambda: self._recording_sel(record))
+        monkeypatch.setattr("aj_crew.dashboard.handlers.sel", lambda: self._recording_sel(record))
 
         @web.middleware
         async def _as_app(request: web.Request, handler):
@@ -836,7 +836,7 @@ class TestDenialAuditOffload:
         """The pin-mismatch denial (binding names a non-owner) audits inline."""
         state = _make_state(tmp_path)
         record: dict = {}
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.sel", lambda: self._recording_sel(record))
+        monkeypatch.setattr("aj_crew.dashboard.handlers.sel", lambda: self._recording_sel(record))
         # ``Code_Reviewer`` slugifies to CREW's slug (so the binding reads back
         # as present) but is NOT a config-registered owner → pin mismatch.
         write_dm_binding(CREW, member="Code_Reviewer", slot_key=member_slot_key(CREW))
@@ -862,7 +862,7 @@ class TestDenialAuditOffload:
         import importlib
         import inspect
 
-        from kiro_crew.dashboard.handlers import members as members_mod_py
+        from aj_crew.dashboard.handlers import members as members_mod_py
 
         source = inspect.getsource(members_mod_py)
         source += "".join(

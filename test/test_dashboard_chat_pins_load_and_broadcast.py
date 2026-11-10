@@ -21,7 +21,7 @@ async def test_load_transient_io_error_preserves_existing_state(tmp_path, monkey
     """Transient read I/O error during load_chat_pins must NOT replace valid
     in-memory pins with an empty list — it must re-raise so the caller knows
     the load failed and the previous in-memory state remains intact."""
-    from kiro_crew.dashboard import state as state_module
+    from aj_crew.dashboard import state as state_module
 
     monkeypatch.setattr(state_module, "config_dir", lambda: tmp_path)
 
@@ -67,7 +67,7 @@ async def test_load_transient_io_error_no_destructive_followon(tmp_path, monkeyp
     pins remain from the prior good load, and save persists them correctly."""
     import json as _json
 
-    from kiro_crew.dashboard import state as state_module
+    from aj_crew.dashboard import state as state_module
 
     monkeypatch.setattr(state_module, "config_dir", lambda: tmp_path)
 
@@ -114,7 +114,7 @@ async def test_load_transient_io_error_no_destructive_followon(tmp_path, monkeyp
 async def test_load_missing_file_sets_empty(tmp_path, monkeypatch):
     """Missing chat_pins.json (first run) correctly sets empty list — this is
     the normal path, NOT a transient error."""
-    from kiro_crew.dashboard import state as state_module
+    from aj_crew.dashboard import state as state_module
 
     monkeypatch.setattr(state_module, "config_dir", lambda: tmp_path)
 

@@ -2,7 +2,7 @@
 
 kiro-cli expands ``${VAR}`` in a declared ``env`` map but never in ``args``, so a
 launch path written as ``${HOME}/.local/share/server/index.js`` reaches the child
-literally unless Kiro Crew resolves it: the probe fails, the server is
+literally unless Aj Crew resolves it: the probe fails, the server is
 quarantined, and the session cannot start it either. These tests pin both launch
 inputs -- the emitted agent spec and the probe's argv -- and that only home and
 login-name variables are ever substituted, so no other variable's value lands on
@@ -16,10 +16,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import mcp_discovery
-from kiro_crew.agent_materialization import mcp_sources
-from kiro_crew.env import expand_spec_args
-from kiro_crew.mcp_discovery import McpServerInfo, probe_server
+from aj_crew import mcp_discovery
+from aj_crew.agent_materialization import mcp_sources
+from aj_crew.env import expand_spec_args
+from aj_crew.mcp_discovery import McpServerInfo, probe_server
 
 HOME = "/home/alice"
 
@@ -74,7 +74,7 @@ def test_non_list_args_and_the_source_list_are_untouched() -> None:
 @pytest.fixture
 def windows_no_home_env(monkeypatch: pytest.MonkeyPatch) -> None:
     """Windows shape: HOME/USER/LOGNAME unset, home and login in the twins."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
     for name in ("HOME", "USER", "LOGNAME"):
@@ -108,7 +108,7 @@ def test_windows_set_home_still_wins_over_the_profile_twin(
 def test_posix_home_unset_stays_literal(monkeypatch: pytest.MonkeyPatch) -> None:
     # Off Windows the twin fallback does not apply: an unset HOME stays literal,
     # so POSIX behaviour is unchanged.
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
     monkeypatch.delenv("HOME", raising=False)
@@ -123,7 +123,7 @@ def test_the_emitted_agent_spec_carries_the_expanded_launch_path(
     spec = {"command": "node", "args": ["${HOME}/.local/share/bb/build/index.js"]}
     config: dict[str, Any] = {"mcpServers": {"bitbucket": dict(spec)}}
     sources = mcp_sources.McpSources(
-        kirocrew={}, kiro_global={"bitbucket": spec}, provider_global={}, managed_names=set()
+        ajcrew={}, kiro_global={"bitbucket": spec}, provider_global={}, managed_names=set()
     )
     monkeypatch.setattr(mcp_sources, "_gateway_routed_names", frozenset)
     monkeypatch.setattr(mcp_sources, "_app_owned_mcp_keys", dict)
@@ -173,7 +173,7 @@ def test_the_emitted_agent_spec_expands_home_in_command_and_env(
     }
     config: dict[str, Any] = {"mcpServers": {"tf": dict(spec)}}
     sources = mcp_sources.McpSources(
-        kirocrew={}, kiro_global={"tf": spec}, provider_global={}, managed_names=set()
+        ajcrew={}, kiro_global={"tf": spec}, provider_global={}, managed_names=set()
     )
     monkeypatch.setattr(mcp_sources, "_gateway_routed_names", frozenset)
     monkeypatch.setattr(mcp_sources, "_app_owned_mcp_keys", dict)

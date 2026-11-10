@@ -30,8 +30,8 @@ from mcp_launch_approval_helpers import (
     _write_agent,
 )
 
-from kiro_crew import agent_discovery
-from kiro_crew.mcp_gateway import rewriter
+from aj_crew import agent_discovery
+from aj_crew.mcp_gateway import rewriter
 
 #: Opts this module out of the conftest fixture that approves every gatewayd launch.
 ENFORCE_LAUNCH_APPROVAL = True
@@ -348,7 +348,7 @@ def test_a_rebind_keeps_the_pair_of_an_agent_whose_source_could_not_be_read(tmp_
 
 
 def _crew_agents(tmp_path: Path, agents: dict[str, dict]) -> None:
-    """Agents named to sort after every ``aim-NN`` one, as ``kiro-crew`` does."""
+    """Agents named to sort after every ``aim-NN`` one, as ``aj-crew`` does."""
     source = tmp_path / "agents"
     source.mkdir(parents=True, exist_ok=True)
     for name, servers in agents.items():
@@ -396,7 +396,7 @@ def test_a_rebind_is_admitted_after_other_agents_fill_the_launch_cap(tmp_path, m
     monkeypatch.setenv("KC_TEST_TOKEN", "v0")
     static_entry = {"command": _APPROVED_CMD, "args": ["-V"], "env": {"LEVEL": "debug"}}
     _crew_agents(
-        tmp_path, {"kiro-crew": {"srv": _PLACEHOLDER_ENTRY}, "other": {"srv": static_entry}}
+        tmp_path, {"aj-crew": {"srv": _PLACEHOLDER_ENTRY}, "other": {"srv": static_entry}}
     )
     _approve_as_the_toggle_does(tmp_path, mod, store)
     _crowd_before(tmp_path, "srv", cap + 1)
@@ -408,7 +408,7 @@ def test_a_rebind_is_admitted_after_other_agents_fill_the_launch_cap(tmp_path, m
         approvals, target_env = _rewrite_and_persist(tmp_path, mod, store)
 
         assert approvals.refused == {"SRV": mod.REFUSED_TOO_MANY}
-        assert _wrapped(tmp_path, "kiro-crew", "srv"), f"rebind refused after {i} changes"
+        assert _wrapped(tmp_path, "aj-crew", "srv"), f"rebind refused after {i} changes"
         assert _wrapped(tmp_path, "other", "srv")
         assert not _wrapped(tmp_path, "aim-00", "srv")
         running = {target_env[key] for key in _targets_running(target_env, _APPROVED_CMD)}
@@ -432,7 +432,7 @@ def test_a_cap_filled_on_one_server_keeps_another_servers_rebinds_retiring(tmp_p
     names = ("big", "tok")
     monkeypatch.setenv("KC_TEST_TOKEN", "v0")
     big_entry = {"command": _APPROVED_CMD, "args": []}
-    _crew_agents(tmp_path, {"kiro-crew": {"big": big_entry, "tok": _PLACEHOLDER_ENTRY}})
+    _crew_agents(tmp_path, {"aj-crew": {"big": big_entry, "tok": _PLACEHOLDER_ENTRY}})
     _approve_as_the_toggle_does(tmp_path, mod, store, names)
     _crowd_before(tmp_path, "big", cap + 1)
     big_hash = rewriter.hash_command(_APPROVED_CMD, [])
@@ -443,8 +443,8 @@ def test_a_cap_filled_on_one_server_keeps_another_servers_rebinds_retiring(tmp_p
         approvals, _target_env = _rewrite_and_persist(tmp_path, mod, store, names)
 
         assert approvals.refused == {"BIG": mod.REFUSED_TOO_MANY}
-        assert _wrapped(tmp_path, "kiro-crew", "big")
-        assert _wrapped(tmp_path, "kiro-crew", "tok")
+        assert _wrapped(tmp_path, "aj-crew", "big")
+        assert _wrapped(tmp_path, "aj-crew", "tok")
         stored = mod.load_approvals(store)
         assert stored.admits_launch("BIG", big_hash, mod.env_fingerprint({}))
         # Keeping a pair per change would reach the cap after that many changes.

@@ -52,7 +52,7 @@ const IDENTITY_PROBE = "probeGatewayPortOwner";
 // `switch` writes `case "none":` and an array writes a bare `"none"`, so a guard
 // that only understood `===` would let exactly the shapes it exists to catch
 // through.
-const SENTINELS = ["free", "bound", "none", "unknown", "kirocrew", "service", "foreign"];
+const SENTINELS = ["free", "bound", "none", "unknown", "ajcrew", "service", "foreign"];
 
 // THE FOUR OCCUPANCY DECISIONS. Each entry is the exact source text and the
 // exact number of times it appears, so a site that is reworded stops matching
@@ -111,7 +111,7 @@ const IDENTITY_SITES = [
   },
   {
     what: "restart handoff: our own process or its service manager holds it, so confirm",
-    code: 'if (owner === "kirocrew" || owner === "service") return "confirm";',
+    code: 'if (owner === "ajcrew" || owner === "service") return "confirm";',
     times: 1,
   },
   {
@@ -136,7 +136,7 @@ const IDENTITY_SITES = [
   },
   {
     what: "boot: stale-bundle detection requires a positively local holder",
-    code: '&& (localOwner === "kirocrew" || localOwner === "service")',
+    code: '&& (localOwner === "ajcrew" || localOwner === "service")',
     times: 1,
   },
   {
@@ -155,8 +155,8 @@ const IDENTITY_SITES = [
     times: 1,
   },
   {
-    what: "unresponsive holder: only a positively local Kiro Crew holder is offered a stop",
-    code: 'if (localOwner !== "kirocrew" && localOwner !== "service") return "spawn";',
+    what: "unresponsive holder: only a positively local Aj Crew holder is offered a stop",
+    code: 'if (localOwner !== "ajcrew" && localOwner !== "service") return "spawn";',
     times: 1,
   },
   {
@@ -289,8 +289,8 @@ function bodyOf(source, name) {
 // `getCommand` reads the holder's command line; the predicates judge it.
 const SELF_ASSERTED_IDENTITY = [
   "getCommand",
-  "isKirocrew",
-  "isKirocrewCommand",
+  "isAjcrew",
+  "isAjcrewCommand",
   "isTrustedWindowsGatewayCommand",
   "classifyPortOwner",
   "windowsProcessCommand",

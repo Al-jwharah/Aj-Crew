@@ -11,10 +11,10 @@ import sys
 from collections.abc import Iterator
 from pathlib import Path
 
-from kiro_crew.config import fields, loader, resolution, sections
+from aj_crew.config import fields, loader, resolution, sections
 
 _PRE_SPLIT_REEXPORT_NAMES = {
-    "kiro_crew.config.sections": tuple("""
+    "aj_crew.config.sections": tuple("""
 ACTIVATION_ALWAYS
 ACTIVATION_MENTION
 ACTIVATION_OBSERVE
@@ -67,7 +67,7 @@ JAIL_MODE_AUTO
 JAIL_MODE_OFF
 JAIL_MODE_ON
 JiraAuthEntry
-KiroCrewAgentConfig
+AjCrewAgentConfig
 KnowledgeConfig
 LOOP_STALL_EXIT_AFTER_DEFAULT
 LOOP_STALL_EXIT_AFTER_MANAGED_DEFAULT
@@ -204,7 +204,7 @@ resolve_memory_store_config
 resolve_selected_backend
 yolo_duration_to_secs
 """.split()),
-    "kiro_crew.config.resolution": tuple("""
+    "aj_crew.config.resolution": tuple("""
 CONFIG_RESERVED_TOP_KEYS
 DEGRADED_TAILSCALE
 DEGRADED_WHOLE_CONFIG
@@ -256,14 +256,14 @@ def test_extracted_modules_do_not_import_the_loader() -> None:
     """The facade owns orchestration; extracted modules cannot depend back on it."""
     code = (
         "import sys\n"
-        "import kiro_crew.config.sections\n"
-        "import kiro_crew.config.resolution\n"
-        "import kiro_crew.config.section_builders\n"
-        "import kiro_crew.config.migration\n"
+        "import aj_crew.config.sections\n"
+        "import aj_crew.config.resolution\n"
+        "import aj_crew.config.section_builders\n"
+        "import aj_crew.config.migration\n"
         "forbidden = (\n"
-        "    'kiro_crew.config.loader',\n"
-        "    'kiro_crew.config.schema',\n"
-        "    'kiro_crew.config.validation',\n"
+        "    'aj_crew.config.loader',\n"
+        "    'aj_crew.config.schema',\n"
+        "    'aj_crew.config.validation',\n"
         ")\n"
         "print(','.join(name for name in forbidden if name in sys.modules))\n"
     )
@@ -286,149 +286,149 @@ def test_extracted_modules_do_not_import_the_loader() -> None:
 # the builders and migration rules sit under the loader and never import it, and
 # the ``loader_*`` owners sit under the loader facade, lowest layer first.
 _OWNER_CONFIG_IMPORTS = {
-    "kiro_crew.config.fields": set(),
-    "kiro_crew.config.service_sections": {"kiro_crew.config.fields"},
-    "kiro_crew.config.memory_sections": {"kiro_crew.config.fields"},
-    "kiro_crew.config.integration_sections": {"kiro_crew.config.fields"},
-    "kiro_crew.config.sections_defaults": {"kiro_crew.config.fields"},
-    "kiro_crew.config.sections_agent_env": set(),
-    "kiro_crew.config.sections_agent_fields": {
-        "kiro_crew.config.fields",
-        "kiro_crew.config.sections_defaults",
+    "aj_crew.config.fields": set(),
+    "aj_crew.config.service_sections": {"aj_crew.config.fields"},
+    "aj_crew.config.memory_sections": {"aj_crew.config.fields"},
+    "aj_crew.config.integration_sections": {"aj_crew.config.fields"},
+    "aj_crew.config.sections_defaults": {"aj_crew.config.fields"},
+    "aj_crew.config.sections_agent_env": set(),
+    "aj_crew.config.sections_agent_fields": {
+        "aj_crew.config.fields",
+        "aj_crew.config.sections_defaults",
     },
-    "kiro_crew.config.sections_agent": {
-        "kiro_crew.config.fields",
-        "kiro_crew.config.sections_agent_env",
-        "kiro_crew.config.sections_agent_fields",
-        "kiro_crew.config.sections_defaults",
+    "aj_crew.config.sections_agent": {
+        "aj_crew.config.fields",
+        "aj_crew.config.sections_agent_env",
+        "aj_crew.config.sections_agent_fields",
+        "aj_crew.config.sections_defaults",
     },
-    "kiro_crew.config.sections_session": {
-        "kiro_crew.config.fields",
-        "kiro_crew.config.sections_defaults",
+    "aj_crew.config.sections_session": {
+        "aj_crew.config.fields",
+        "aj_crew.config.sections_defaults",
     },
-    "kiro_crew.config.sections_limits": {
-        "kiro_crew.config.fields",
-        "kiro_crew.config.sections_agent",
+    "aj_crew.config.sections_limits": {
+        "aj_crew.config.fields",
+        "aj_crew.config.sections_agent",
     },
-    "kiro_crew.config.sections_tailnet": {
-        "kiro_crew.config.fields",
-        "kiro_crew.config.resolution",
-        "kiro_crew.config.sections_defaults",
+    "aj_crew.config.sections_tailnet": {
+        "aj_crew.config.fields",
+        "aj_crew.config.resolution",
+        "aj_crew.config.sections_defaults",
     },
-    "kiro_crew.config.sections_dashboard": {
-        "kiro_crew.config.fields",
-        "kiro_crew.config.sections_shared_crew",
-        "kiro_crew.config.sections_tailnet",
+    "aj_crew.config.sections_dashboard": {
+        "aj_crew.config.fields",
+        "aj_crew.config.sections_shared_crew",
+        "aj_crew.config.sections_tailnet",
     },
-    "kiro_crew.config.sections_dashboard_hosts": {"kiro_crew.config.sections_dashboard"},
-    "kiro_crew.config.sections_slack": {
-        "kiro_crew.config.fields",
-        "kiro_crew.config.sections_defaults",
+    "aj_crew.config.sections_dashboard_hosts": {"aj_crew.config.sections_dashboard"},
+    "aj_crew.config.sections_slack": {
+        "aj_crew.config.fields",
+        "aj_crew.config.sections_defaults",
     },
-    "kiro_crew.config.sections_channels": {"kiro_crew.config.fields"},
-    "kiro_crew.config.sections_telegram": {
-        "kiro_crew.config.fields",
-        "kiro_crew.config.sections_channels",
-        "kiro_crew.config.sections_defaults",
-        "kiro_crew.config.sections_slack",
+    "aj_crew.config.sections_channels": {"aj_crew.config.fields"},
+    "aj_crew.config.sections_telegram": {
+        "aj_crew.config.fields",
+        "aj_crew.config.sections_channels",
+        "aj_crew.config.sections_defaults",
+        "aj_crew.config.sections_slack",
     },
-    "kiro_crew.config.sections_stt": {"kiro_crew.config.fields"},
-    "kiro_crew.config.sections_browser": {
-        "kiro_crew.config.fields",
-        "kiro_crew.config.sections_defaults",
+    "aj_crew.config.sections_stt": {"aj_crew.config.fields"},
+    "aj_crew.config.sections_browser": {
+        "aj_crew.config.fields",
+        "aj_crew.config.sections_defaults",
     },
-    "kiro_crew.config.sections_decisions": {
-        "kiro_crew.config.fields",
-        "kiro_crew.config.sections_agent_fields",
-        "kiro_crew.config.sections_defaults",
+    "aj_crew.config.sections_decisions": {
+        "aj_crew.config.fields",
+        "aj_crew.config.sections_agent_fields",
+        "aj_crew.config.sections_defaults",
     },
-    "kiro_crew.config.sections_telemetry": {"kiro_crew.config.fields"},
-    "kiro_crew.config.section_builders": {
-        "kiro_crew.config.fields",
-        "kiro_crew.config.integration_sections",
-        "kiro_crew.config.memory_sections",
-        "kiro_crew.config.sections",
-        "kiro_crew.config.service_sections",
+    "aj_crew.config.sections_telemetry": {"aj_crew.config.fields"},
+    "aj_crew.config.section_builders": {
+        "aj_crew.config.fields",
+        "aj_crew.config.integration_sections",
+        "aj_crew.config.memory_sections",
+        "aj_crew.config.sections",
+        "aj_crew.config.service_sections",
     },
-    "kiro_crew.config.migration": {
-        "kiro_crew.config.sections",
-        "kiro_crew.config.superseded_defaults",
-        "kiro_crew.config.windows_exec_adoption",
+    "aj_crew.config.migration": {
+        "aj_crew.config.sections",
+        "aj_crew.config.superseded_defaults",
+        "aj_crew.config.windows_exec_adoption",
     },
-    "kiro_crew.config.loader_credentials": {"kiro_crew.config.paths", "kiro_crew.config.sections"},
-    "kiro_crew.config.loader_locations": {
-        "kiro_crew.config.loosening_provenance",
-        "kiro_crew.config.paths",
+    "aj_crew.config.loader_credentials": {"aj_crew.config.paths", "aj_crew.config.sections"},
+    "aj_crew.config.loader_locations": {
+        "aj_crew.config.loosening_provenance",
+        "aj_crew.config.paths",
     },
-    "kiro_crew.config.write_provenance": {"kiro_crew.config.paths"},
-    "kiro_crew.config.loader_document": {
-        "kiro_crew.config.loader_locations",
-        "kiro_crew.config.loosening_provenance",
-        "kiro_crew.config.migration",
-        "kiro_crew.config.paths",
-        "kiro_crew.config.sections",
-        "kiro_crew.config.validation",
-        "kiro_crew.config.write_provenance",
+    "aj_crew.config.write_provenance": {"aj_crew.config.paths"},
+    "aj_crew.config.loader_document": {
+        "aj_crew.config.loader_locations",
+        "aj_crew.config.loosening_provenance",
+        "aj_crew.config.migration",
+        "aj_crew.config.paths",
+        "aj_crew.config.sections",
+        "aj_crew.config.validation",
+        "aj_crew.config.write_provenance",
     },
-    "kiro_crew.config.loader_builders": {
-        "kiro_crew.config.loader_document",
-        "kiro_crew.config.loader_locations",
-        "kiro_crew.config.sections",
+    "aj_crew.config.loader_builders": {
+        "aj_crew.config.loader_document",
+        "aj_crew.config.loader_locations",
+        "aj_crew.config.sections",
     },
-    "kiro_crew.config.loader_snapshots": {
-        "kiro_crew.config.loader_document",
-        "kiro_crew.config.loader_locations",
-        "kiro_crew.config.paths",
-        "kiro_crew.config.sections",
+    "aj_crew.config.loader_snapshots": {
+        "aj_crew.config.loader_document",
+        "aj_crew.config.loader_locations",
+        "aj_crew.config.paths",
+        "aj_crew.config.sections",
     },
-    "kiro_crew.config.loader_agents": {
-        "kiro_crew.config.loader_snapshots",
-        "kiro_crew.config.sections",
+    "aj_crew.config.loader_agents": {
+        "aj_crew.config.loader_snapshots",
+        "aj_crew.config.sections",
     },
-    "kiro_crew.config.loader_writeback": {
-        "kiro_crew.config.loader_document",
-        "kiro_crew.config.loader_locations",
-        "kiro_crew.config.loader_snapshots",
-        "kiro_crew.config.migration",
-        "kiro_crew.config.paths",
-        "kiro_crew.config.superseded_defaults",
+    "aj_crew.config.loader_writeback": {
+        "aj_crew.config.loader_document",
+        "aj_crew.config.loader_locations",
+        "aj_crew.config.loader_snapshots",
+        "aj_crew.config.migration",
+        "aj_crew.config.paths",
+        "aj_crew.config.superseded_defaults",
     },
-    "kiro_crew.config.loader_config": {
-        "kiro_crew.config.integration_sections",
-        "kiro_crew.config.loader_agents",
-        "kiro_crew.config.loader_builders",
-        "kiro_crew.config.loader_credentials",
-        "kiro_crew.config.loader_document",
-        "kiro_crew.config.loader_locations",
-        "kiro_crew.config.loader_snapshots",
-        "kiro_crew.config.paths",
-        "kiro_crew.config.resolution",
-        "kiro_crew.config.sections",
+    "aj_crew.config.loader_config": {
+        "aj_crew.config.integration_sections",
+        "aj_crew.config.loader_agents",
+        "aj_crew.config.loader_builders",
+        "aj_crew.config.loader_credentials",
+        "aj_crew.config.loader_document",
+        "aj_crew.config.loader_locations",
+        "aj_crew.config.loader_snapshots",
+        "aj_crew.config.paths",
+        "aj_crew.config.resolution",
+        "aj_crew.config.sections",
     },
-    "kiro_crew.config.loader_pipeline": {
-        "kiro_crew.config.fields",
-        "kiro_crew.config.integration_sections",
-        "kiro_crew.config.loader_agents",
-        "kiro_crew.config.loader_builders",
-        "kiro_crew.config.loader_config",
-        "kiro_crew.config.loader_document",
-        "kiro_crew.config.loader_locations",
-        "kiro_crew.config.loader_snapshots",
-        "kiro_crew.config.loader_writeback",
-        "kiro_crew.config.loosening_provenance",
-        "kiro_crew.config.migration",
-        "kiro_crew.config.paths",
-        "kiro_crew.config.resolution",
-        "kiro_crew.config.section_builders",
-        "kiro_crew.config.sections",
-        "kiro_crew.config.superseded_defaults",
-        "kiro_crew.config.validation",
-        "kiro_crew.config.windows_exec_adoption",
+    "aj_crew.config.loader_pipeline": {
+        "aj_crew.config.fields",
+        "aj_crew.config.integration_sections",
+        "aj_crew.config.loader_agents",
+        "aj_crew.config.loader_builders",
+        "aj_crew.config.loader_config",
+        "aj_crew.config.loader_document",
+        "aj_crew.config.loader_locations",
+        "aj_crew.config.loader_snapshots",
+        "aj_crew.config.loader_writeback",
+        "aj_crew.config.loosening_provenance",
+        "aj_crew.config.migration",
+        "aj_crew.config.paths",
+        "aj_crew.config.resolution",
+        "aj_crew.config.section_builders",
+        "aj_crew.config.sections",
+        "aj_crew.config.superseded_defaults",
+        "aj_crew.config.validation",
+        "aj_crew.config.windows_exec_adoption",
     },
 }
 
 _CONFIG_SUBMODULES = {
-    info.name for info in pkgutil.iter_modules(importlib.import_module("kiro_crew.config").__path__)
+    info.name for info in pkgutil.iter_modules(importlib.import_module("aj_crew.config").__path__)
 }
 
 
@@ -456,25 +456,25 @@ def _module_scope_nodes(body: list[ast.stmt]) -> Iterator[ast.stmt]:
 
 
 def _config_imports(source: str) -> set[str]:
-    """``kiro_crew.config*`` modules *source* imports when it is imported.
+    """``aj_crew.config*`` modules *source* imports when it is imported.
 
-    ``from kiro_crew.config import sections`` names the submodule, so it counts as
-    an edge to ``kiro_crew.config.sections``; any other name imported from the
+    ``from aj_crew.config import sections`` names the submodule, so it counts as
+    an edge to ``aj_crew.config.sections``; any other name imported from the
     package is an edge to the package itself, which resolves through the loader.
     """
     found: set[str] = set()
     for node in _module_scope_nodes(ast.parse(source).body):
-        if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew.config":
+        if isinstance(node, ast.ImportFrom) and node.module == "aj_crew.config":
             for alias in node.names:
                 if alias.name in _CONFIG_SUBMODULES:
-                    found.add(f"kiro_crew.config.{alias.name}")
+                    found.add(f"aj_crew.config.{alias.name}")
                 else:
-                    found.add("kiro_crew.config")
+                    found.add("aj_crew.config")
         elif isinstance(node, ast.ImportFrom) and node.module:
             found.add(node.module)
         elif isinstance(node, ast.Import):
             found.update(alias.name for alias in node.names)
-    return {name for name in found if name.startswith("kiro_crew.config")}
+    return {name for name in found if name.startswith("aj_crew.config")}
 
 
 def _module_scope_imports(module_name: str) -> set[str]:
@@ -485,22 +485,22 @@ def _module_scope_imports(module_name: str) -> set[str]:
 def test_config_import_scanner_sees_submodule_and_nested_imports() -> None:
     source = (
         "from typing import TYPE_CHECKING\n"
-        "from kiro_crew.config import live\n"
-        "from kiro_crew.config import KiroCrewConfig\n"
+        "from aj_crew.config import live\n"
+        "from aj_crew.config import AjCrewConfig\n"
         "try:\n"
-        "    from kiro_crew.config import loader\n"
+        "    from aj_crew.config import loader\n"
         "except ImportError:\n"
-        "    import kiro_crew.config.schema\n"
+        "    import aj_crew.config.schema\n"
         "if TYPE_CHECKING:\n"
-        "    from kiro_crew.config import validation\n"
+        "    from aj_crew.config import validation\n"
         "def _later():\n"
-        "    from kiro_crew.config import resolution\n"
+        "    from aj_crew.config import resolution\n"
     )
     assert _config_imports(source) == {
-        "kiro_crew.config",
-        "kiro_crew.config.live",
-        "kiro_crew.config.loader",
-        "kiro_crew.config.schema",
+        "aj_crew.config",
+        "aj_crew.config.live",
+        "aj_crew.config.loader",
+        "aj_crew.config.schema",
     }
 
 
@@ -520,4 +520,4 @@ def test_field_primitives_import_nothing_from_the_package() -> None:
             imported.add(node.module or "")
         elif isinstance(node, ast.Import):
             imported.update(alias.name for alias in node.names)
-    assert sorted(name for name in imported if name.startswith("kiro_crew")) == []
+    assert sorted(name for name in imported if name.startswith("aj_crew")) == []

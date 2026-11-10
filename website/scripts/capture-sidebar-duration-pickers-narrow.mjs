@@ -37,12 +37,12 @@ const now = Math.floor(Date.now() / 1000)
 const slots = [
   {
     key: 'chat-a', title: 'Draft the release notes', running: false, messages: 4,
-    agent: 'kirocrew', modified: now, last_ts: new Date().toISOString(), folder_id: '',
+    agent: 'ajcrew', modified: now, last_ts: new Date().toISOString(), folder_id: '',
     last_message: 'Grouped the entries by area.',
   },
   {
     key: 'chat-b', title: 'Sweep the option pickers', running: false, messages: 6,
-    agent: 'kirocrew', modified: now - 900, last_ts: new Date(Date.now() - 9e5).toISOString(), folder_id: '',
+    agent: 'ajcrew', modified: now - 900, last_ts: new Date(Date.now() - 9e5).toISOString(), folder_id: '',
     last_message: 'All checks pass.',
   },
 ]

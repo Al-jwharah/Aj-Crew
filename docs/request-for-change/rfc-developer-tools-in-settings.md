@@ -42,7 +42,7 @@ gated. Deep links (`/developer?tab=mcp-pool`, the default-mate badge, curated
 tips, the doctor's MCP hint) already reach it without the switch, which is why
 the doctor and two docs carry "Developer Mode does not need to be on".
 
-The server's `KIROCREW_DEV_MODE` environment flag and per-app dev mode
+The server's `AJCREW_DEV_MODE` environment flag and per-app dev mode
 (`/api/apps/{name}/dev`) are separate mechanisms and are not part of this.
 
 ## 2. Decision
@@ -66,7 +66,7 @@ The server's `KIROCREW_DEV_MODE` environment flag and per-app dev mode
 
 ## 3. Not decided here
 
-- The server's `KIROCREW_DEV_MODE` flag and app dev mode stay as they are.
+- The server's `AJCREW_DEV_MODE` flag and app dev mode stay as they are.
 - What any internals page shows is unchanged.
 - The standalone `/logs` page and the other routed pages stay where they are.
 

@@ -16,7 +16,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from kiro_crew.agent_sdk.backends_turns import (
+from aj_crew.agent_sdk.backends_turns import (
     ACP_BACKENDS_COMPACT,
     ACP_BACKENDS_HARNESS_MANAGED_COMPACTION,
     ACP_BACKENDS_INLINE_COMPACTION,

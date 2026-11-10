@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import vector_memory
-from kiro_crew.vector_memory import VectorMemoryStore
-from kiro_crew.vector_memory_runtime.lessons import (
+from aj_crew import vector_memory
+from aj_crew.vector_memory import VectorMemoryStore
+from aj_crew.vector_memory_runtime.lessons import (
     LESSON_TRUNCATION_MARKER,
     truncate_explicit_lessons,
 )

@@ -1,6 +1,6 @@
 """Unit tests for the consolidated KAS wire-shape helpers.
 
-Pins :mod:`kiro_crew.acp.kas_wire` (the single home for KAS ``_meta.kiro``
+Pins :mod:`aj_crew.acp.kas_wire` (the single home for KAS ``_meta.kiro``
 parsing) and the shared ``AcpPromptStats`` context-meter helpers that both the
 AcpClient and AcpSessionHandle paths now delegate to, so a future change to
 either cannot silently drift the two backends apart.
@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import math
 
-from kiro_crew.acp import kas_wire
-from kiro_crew.acp.types import AcpPromptStats
+from aj_crew.acp import kas_wire
+from aj_crew.acp.types import AcpPromptStats
 
 
 class TestKiroMeta:

@@ -7,10 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent, agent_discovery, agent_spec_pins
-from kiro_crew.context_assembly.agent_spec import _load_agent_prompt
-from kiro_crew.dashboard.side_readonly_spec import ReadOnlySpecError, _read_base_spec
-from kiro_crew.member_essential_context import (
+from aj_crew import agent, agent_discovery, agent_spec_pins
+from aj_crew.context_assembly.agent_spec import _load_agent_prompt
+from aj_crew.dashboard.side_readonly_spec import ReadOnlySpecError, _read_base_spec
+from aj_crew.member_essential_context import (
     MemberEssentialContextError,
     read_template_spec,
     resolve_template_path,
@@ -52,7 +52,7 @@ def test_member_essentials_resolve_the_pinned_template(pinned_context):
 
 
 def test_mate_scope_template_read_follows_the_pin(pinned_context, tmp_path, monkeypatch):
-    from kiro_crew.config import paths
+    from aj_crew.config import paths
 
     directory, _pins = pinned_context
     empty = tmp_path / "empty"
@@ -178,7 +178,7 @@ def test_a_pinned_link_the_fence_refuses_never_reads_the_other_claimant(
 ):
     """A pinned link whose target the managed-state fence refuses is refused, not
     swapped for the one claimant the fence still admits."""
-    import kiro_crew.member_essential_context as essential
+    import aj_crew.member_essential_context as essential
 
     directory, pins = pinned_context
     _link_claimant(directory, tmp_path / "managed")
@@ -197,7 +197,7 @@ def test_a_pinned_link_the_fence_refuses_never_reads_the_other_claimant(
 def test_a_pin_on_the_lone_claimant_keeps_its_overlay(pinned_context, tmp_path):
     """A pin naming the only claimant has nothing to choose, so the overlay lookup
     finds that file's overlay instead of pooling nothing."""
-    from kiro_crew.mcp_gateway.session_servers import _load_overlay_for_agent
+    from aj_crew.mcp_gateway.session_servers import _load_overlay_for_agent
 
     directory, pins = pinned_context
     (directory / "PkgA-helper.json").unlink()
@@ -212,9 +212,9 @@ def test_a_pin_on_the_lone_claimant_keeps_its_overlay(pinned_context, tmp_path):
 def test_a_projection_refusal_keeps_the_claimants_for_the_chooser(pinned_context):
     """A kiro-cli start refused for an unpinned contest still carries the
     resolver's exception, so the dashboard can render the file chooser."""
-    from kiro_crew.acp.skill_projection_parts.native_projection import NativeSkillProjection
-    from kiro_crew.acp.skill_projection_parts.preparation import _pinned_source
-    from kiro_crew.agent_spec_pin_ops import ambiguity_meta
+    from aj_crew.acp.skill_projection_parts.native_projection import NativeSkillProjection
+    from aj_crew.acp.skill_projection_parts.preparation import _pinned_source
+    from aj_crew.agent_spec_pin_ops import ambiguity_meta
 
     directory, pins = pinned_context
     pins.clear()

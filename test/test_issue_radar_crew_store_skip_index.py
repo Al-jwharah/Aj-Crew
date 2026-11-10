@@ -21,9 +21,9 @@ from issue_radar_crew_store_helpers import (  # noqa: F401 -- the autouse fixtur
     _tick,
 )
 
-from kiro_crew.apps.builtins.issue_radar.backend import crew_store as cs
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log_projection
+from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log_projection
 
 
 def test_a_pass_is_readable_by_number_and_by_predicate(tmp_path):

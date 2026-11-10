@@ -16,27 +16,27 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard.chat_folders_records import CREATED_BY_SESSION
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard.chat_folders_records import CREATED_BY_SESSION
 
 
-def _config() -> KiroCrewConfig:
-    from kiro_crew.memory_stores import provision_member_memory
+def _config() -> AjCrewConfig:
+    from aj_crew.memory_stores import provision_member_memory
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        "default": KiroCrewAgentConfig(kiro_agent="kirocrew"),
-        "worker": KiroCrewAgentConfig(kiro_agent="kirocrew"),
+        "default": AjCrewAgentConfig(kiro_agent="ajcrew"),
+        "worker": AjCrewAgentConfig(kiro_agent="ajcrew"),
     }
     cfg.default_agent = "default"
     provision_member_memory(cfg, "worker")
     return cfg
 
 
-def _state(tmp_path, monkeypatch, cfg: KiroCrewConfig) -> Any:
+def _state(tmp_path, monkeypatch, cfg: AjCrewConfig) -> Any:
     state = _make_state(tmp_path)
-    monkeypatch.setattr(chat_handlers, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+    monkeypatch.setattr(chat_handlers, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
     monkeypatch.setattr(chat_handlers, "schedule_eager_spawn", lambda *args, **kwargs: None)
     return state
 
@@ -60,7 +60,7 @@ async def test_a_member_refusal_builds_no_session_folder(tmp_path, monkeypatch, 
     Mutation pin: move the check back after the session folder and a folder is
     built for the refused create.
     """
-    import kiro_crew.execution_context as execution_context
+    import aj_crew.execution_context as execution_context
 
     cfg = _config()
     root = tmp_path / "sessions"
@@ -79,7 +79,7 @@ async def test_a_member_refusal_builds_no_session_folder(tmp_path, monkeypatch, 
     def refuse(*args: Any, **kwargs: Any) -> Any:
         raise OSError("member store unavailable")
 
-    from kiro_crew.dashboard import chat_persistence
+    from aj_crew.dashboard import chat_persistence
 
     monkeypatch.setattr(chat_handlers, "create_session_folder", build)
     if refusal == "member_identity":

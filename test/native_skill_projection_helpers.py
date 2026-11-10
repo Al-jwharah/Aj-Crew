@@ -18,8 +18,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.acp import skill_projection as projection
-from kiro_crew.acp.skill_projection_parts import alias_reclaim as _reaper_owner
+from aj_crew.acp import skill_projection as projection
+from aj_crew.acp.skill_projection_parts import alias_reclaim as _reaper_owner
 
 # The queue the reaper thread drains, read before any test can swap it out.
 _REAPER_QUEUE = projection._COLLECTED_ENDS
@@ -77,7 +77,7 @@ def _alias_is_live(directory, alias):
 
 
 @pytest.fixture(autouse=True)
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- the native skill projection suites' autouse prune pin; none of them calls monkeypatch.undo()
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- the native skill projection suites' autouse prune pin; none of them calls monkeypatch.undo()
 def _prune_on_every_spawn(monkeypatch):
     """These tests prepare views back to back and assert each one's prune; the
     burst throttle is pinned by its own test."""
@@ -147,7 +147,7 @@ def _wait_for_dropped_projection_ends() -> None:
 
 
 @pytest.fixture(autouse=True)
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- patches nothing; it requests monkeypatch only so the test's patches are undone after this teardown
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- patches nothing; it requests monkeypatch only so the test's patches are undone after this teardown
 def _end_projections_before_tmp_path_goes(tmp_path, monkeypatch):
     """Requesting ``tmp_path`` and ``monkeypatch`` sets both up first, so this
     tears down before either: the release still writes into the test's tree."""
@@ -177,7 +177,7 @@ def cyclic_gc_quiesced():
 
 @pytest.fixture
 def native_tree(tmp_path, monkeypatch):
-    monkeypatch.delenv("KIROCREW_NATIVE_SKILL_PROJECTION", raising=False)
+    monkeypatch.delenv("AJCREW_NATIVE_SKILL_PROJECTION", raising=False)
     home = tmp_path / "kiro"
     crew_home = tmp_path / "crew"
     agents = home / "agents"
@@ -190,7 +190,7 @@ def native_tree(tmp_path, monkeypatch):
     monkeypatch.setattr(projection.platform_compat, "path_volume_is_remote", lambda path: False)
     monkeypatch.setattr(projection.platform_compat, "first_linked_ancestor", lambda path: None)
     monkeypatch.setattr(
-        "kiro_crew.agent.managed_mcp_spec_entry",
+        "aj_crew.agent.managed_mcp_spec_entry",
         lambda name, **_kw: {"command": "test-core", "args": []},
     )
     monkeypatch.setattr(
@@ -200,7 +200,7 @@ def native_tree(tmp_path, monkeypatch):
     )
     # The projection reads the settings files the control-plane mount reads;
     # point the global one into the temp tree so no test reads this host's own.
-    monkeypatch.setattr("kiro_crew.agent._KIRO_MCP_JSON", home / "settings" / "mcp.json")
+    monkeypatch.setattr("aj_crew.agent._KIRO_MCP_JSON", home / "settings" / "mcp.json")
     return home, agents, project
 
 
@@ -223,7 +223,7 @@ def _legacy_alias(agents, digest="0" * 24, name=None, resources=None, age_secs=3
     if owned:
         # One positive mark the projection itself writes; shape alone must not
         # authorize an unlink.
-        view["mcpServers"] = {"kirocrew-core": {"command": "test-core", "args": []}}
+        view["mcpServers"] = {"ajcrew-core": {"command": "test-core", "args": []}}
     path = agents / f"{stem}.json"
     path.write_text(json.dumps(view), encoding="utf-8")
     if age_secs:

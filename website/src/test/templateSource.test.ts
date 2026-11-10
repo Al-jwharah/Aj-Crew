@@ -2,18 +2,18 @@ import { describe, it, expect } from 'vitest'
 import { templateSourceKind, templateSourceLabel, templateSourceBadge } from '../lib/templateSource'
 
 describe('templateSourceKind', () => {
-  it('treats a template Kiro Crew owns as built-in whatever source reports', () => {
+  it('treats a template Aj Crew owns as built-in whatever source reports', () => {
     // The helper specs report source 'builtin' — the same value a hand-written
     // template gets — so the ownership flag is the only thing that separates them.
-    expect(templateSourceKind({ source: 'builtin', kirocrew_owned: true })).toBe('builtin')
-    expect(templateSourceKind({ source: 'kirocrew' })).toBe('builtin')
+    expect(templateSourceKind({ source: 'builtin', ajcrew_owned: true })).toBe('builtin')
+    expect(templateSourceKind({ source: 'ajcrew' })).toBe('builtin')
   })
 
   it('lets ownership outrank a package-shaped filename', () => {
     // `<package>-<name>.json` is a filename convention, so a package literally
-    // named kirocrew would collide with a file Kiro Crew rewrites. Kiro Crew wins:
+    // named ajcrew would collide with a file Aj Crew rewrites. Aj Crew wins:
     // it is the one that will overwrite the file.
-    expect(templateSourceKind({ source: 'package', package: 'kirocrew', kirocrew_owned: true }))
+    expect(templateSourceKind({ source: 'package', package: 'ajcrew', ajcrew_owned: true }))
       .toBe('builtin')
   })
 
@@ -25,7 +25,7 @@ describe('templateSourceKind', () => {
   it('only accepts a literal true for ownership', () => {
     // The out-of-tree edition seam passes this through from a raw row; a truthy
     // string must not become a provenance claim nothing verified.
-    expect(templateSourceKind({ kirocrew_owned: 'yes' as unknown as boolean })).toBe('custom')
+    expect(templateSourceKind({ ajcrew_owned: 'yes' as unknown as boolean })).toBe('custom')
   })
 })
 
@@ -51,7 +51,7 @@ describe('templateSourceBadge', () => {
   })
 
   it('shows the category word for non-package sources', () => {
-    expect(templateSourceBadge({ source: 'kirocrew' })).toBe('Built-in')
+    expect(templateSourceBadge({ source: 'ajcrew' })).toBe('Built-in')
     expect(templateSourceBadge({ source: 'builtin' })).toBe('Custom')
     expect(templateSourceBadge(undefined)).toBe('')
   })

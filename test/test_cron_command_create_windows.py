@@ -2,7 +2,7 @@
 
 ``cron_script._resolve_command_shell`` returns ``None`` on Windows by design, so
 every command cron fails at its first wake there. Each create door (MCP
-``cron_add``, ``kirocrew cron add --command``, app manifest crons and the app
+``cron_add``, ``ajcrew cron add --command``, app manifest crons and the app
 cron SDK) runs the same refusal up front, with the fire step's own text, and
 stores nothing. POSIX hosts are unchanged, and the import and fire-time re-vet
 (``_vet_shell_command``) keep accepting a clean command on Windows.
@@ -17,11 +17,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from app_bridges_helpers import app_env_fixture  # noqa: F401
 
-from kiro_crew import platform_compat
-from kiro_crew.cli_commands import _cron
-from kiro_crew.config.loader import config_dir
-from kiro_crew.cron import CronService
-from kiro_crew.cron_script import _no_command_shell_message
+from aj_crew import platform_compat
+from aj_crew.cli_commands import _cron
+from aj_crew.config.loader import config_dir
+from aj_crew.cron import CronService
+from aj_crew.cron_script import _no_command_shell_message
 
 
 @pytest.fixture()
@@ -40,12 +40,12 @@ def _windows_text() -> str:
 
 
 def _mcp_add(tmp_path, args: dict):
-    from kiro_crew.mcp_cron import _call_tool_inner
+    from aj_crew.mcp_cron import _call_tool_inner
 
     with (
-        patch("kiro_crew.mcp_cron.config_dir", return_value=tmp_path),
-        patch("kiro_crew.mcp_cron.CronService") as svc_cls,
-        patch("kiro_crew.mcp_cron._resolve_session_key", return_value=""),
+        patch("aj_crew.mcp_cron.config_dir", return_value=tmp_path),
+        patch("aj_crew.mcp_cron.CronService") as svc_cls,
+        patch("aj_crew.mcp_cron._resolve_session_key", return_value=""),
     ):
         svc_cls.return_value.add_job.return_value = MagicMock(id="new1", name="cmd-job")
         result = _call_tool_inner("cron_add", args)
@@ -115,14 +115,14 @@ def _ns(**overrides) -> argparse.Namespace:
 @pytest.fixture()
 def home(tmp_path, monkeypatch):
     root = tmp_path / "home"
-    monkeypatch.setenv("KIROCREW_HOME", str(root))
+    monkeypatch.setenv("AJCREW_HOME", str(root))
     (config_dir() / "crons").mkdir(parents=True)
     return root
 
 
 class TestCliCronAdd:
     def test_windows_refuses_command_exit_1_nothing_stored(self, home, capsys, on_windows):
-        with patch("kiro_crew.cli_commands.sel"), pytest.raises(SystemExit) as exc:
+        with patch("aj_crew.cli_commands.sel"), pytest.raises(SystemExit) as exc:
             _cron(_ns())
         assert exc.value.code == 1
         out, err = capsys.readouterr()
@@ -131,7 +131,7 @@ class TestCliCronAdd:
         assert CronService(base_dir=config_dir()).list_jobs(include_disabled=True) == []
 
     def test_posix_still_stores_command(self, home, capsys, on_posix):
-        with patch("kiro_crew.cli_commands.sel"):
+        with patch("aj_crew.cli_commands.sel"):
             _cron(_ns())
         (job,) = CronService(base_dir=config_dir()).list_jobs(include_disabled=True)
         assert job.command == "echo hi"
@@ -139,7 +139,7 @@ class TestCliCronAdd:
 
 class TestAppDoors:
     def test_cron_sdk_windows_raises_and_stores_nothing(self, tmp_path, on_windows):
-        from kiro_crew.apps.cron_sdk import CronSDK
+        from aj_crew.apps.cron_sdk import CronSDK
 
         svc = CronService(base_dir=tmp_path)
         with pytest.raises(ValueError, match="cron command rejected: Error: No POSIX shell"):
@@ -153,7 +153,7 @@ class TestAppDoors:
     ):
         import json
 
-        from kiro_crew.apps.bridges import _app_crons_path, register_app_crons_with_service
+        from aj_crew.apps.bridges import _app_crons_path, register_app_crons_with_service
 
         path = _app_crons_path("test-app")
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -163,7 +163,7 @@ class TestAppDoors:
         sdk = MagicMock()
         sdk.list_jobs.return_value = []
         sdk.add_job_if_absent_async = AsyncMock()
-        with patch("kiro_crew.apps.bridges.CronSDK", return_value=sdk), caplog.at_level("WARNING"):
+        with patch("aj_crew.apps.bridges.CronSDK", return_value=sdk), caplog.at_level("WARNING"):
             result = asyncio.run(register_app_crons_with_service("test-app", MagicMock()))
         assert result == []
         sdk.add_job_if_absent_async.assert_not_called()
@@ -172,6 +172,6 @@ class TestAppDoors:
 
 def test_shell_vet_still_accepts_clean_command_on_windows(on_windows):
     """Import and the fire-time re-vet call this; they must keep the job."""
-    from kiro_crew.mcp_cron import _vet_shell_command
+    from aj_crew.mcp_cron import _vet_shell_command
 
     assert _vet_shell_command("echo hi") is None

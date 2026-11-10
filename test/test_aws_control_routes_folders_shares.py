@@ -25,8 +25,8 @@ from aws_control_routes_helpers import (
     _request,
 )
 
-from kiro_crew.apps.builtins.aws_control.backend import routes as routes_mod
-from kiro_crew.deploy.engine import AWSError
+from aj_crew.apps.builtins.aws_control.backend import routes as routes_mod
+from aj_crew.deploy.engine import AWSError
 
 # ---------------------------------------------------------------------------
 # Drive folder create

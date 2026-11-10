@@ -26,10 +26,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import kiro_crew.sel as sel_mod
-from kiro_crew.acp import _dispatch as d
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
+import aj_crew.sel as sel_mod
+from aj_crew.acp import _dispatch as d
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
 
 _BODY = "Cleanup example: rm -rf /tmp/example"
 _TCID = "toolu_bdrk_01E9iotykDeJMw8UKDLFzCvn"
@@ -46,9 +46,9 @@ _ARGS = {
 _DEFAULT_TOOL_CALL = {
     "sessionUpdate": "tool_call",
     "toolCallId": _TCID,
-    "title": "Running: @kirocrew-core/knowledge_add_document",
+    "title": "Running: @ajcrew-core/knowledge_add_document",
     "rawInput": _ARGS,
-    "_meta": {"kiro": {"toolName": "knowledge_add_document", "mcpServerName": "kirocrew-core"}},
+    "_meta": {"kiro": {"toolName": "knowledge_add_document", "mcpServerName": "ajcrew-core"}},
 }
 _DEFAULT_PERMISSION = {
     "jsonrpc": "2.0",
@@ -58,7 +58,7 @@ _DEFAULT_PERMISSION = {
         "sessionId": "s-default",
         "toolCall": {
             "toolCallId": _TCID,
-            "title": "Running: @kirocrew-core/knowledge_add_document",
+            "title": "Running: @ajcrew-core/knowledge_add_document",
             "rawInput": _ARGS,
         },
         "options": [
@@ -67,7 +67,7 @@ _DEFAULT_PERMISSION = {
             {"optionId": "reject_once", "name": "No", "kind": "reject_once"},
         ],
         "_meta": {
-            "mcpToolIdentity": {"serverName": "kirocrew-core", "toolName": "knowledge_add_document"}
+            "mcpToolIdentity": {"serverName": "ajcrew-core", "toolName": "knowledge_add_document"}
         },
     },
 }
@@ -77,18 +77,18 @@ _DEFAULT_PERMISSION = {
 # the meta-tool's ``arguments``.
 _KAS_PERM_META = {
     "kiro": {
-        "toolId": "mcp_kirocrew_core_knowledge_add_document",
+        "toolId": "mcp_ajcrew_core_knowledge_add_document",
         "agentManagesTrust": True,
         "consent": {
             "capability": "mcp",
-            "resource": "kirocrew-core/knowledge_add_document",
+            "resource": "ajcrew-core/knowledge_add_document",
             "askType": "implicit",
             "workspaceRoot": "/workspace",
         },
         "consentRound": 1,
         "mcpTool": {
             "version": 1,
-            "identity": {"serverName": "kirocrew-core", "toolName": "knowledge_add_document"},
+            "identity": {"serverName": "ajcrew-core", "toolName": "knowledge_add_document"},
         },
     }
 }
@@ -97,7 +97,7 @@ _KAS_TOOL_CALLS = {
     "resident": {
         "sessionUpdate": "tool_call",
         "toolCallId": _TCID,
-        "title": "@kirocrew-core/knowledge_add_document",
+        "title": "@ajcrew-core/knowledge_add_document",
         "kind": "other",
         "status": "pending",
         "rawInput": {
@@ -108,16 +108,16 @@ _KAS_TOOL_CALLS = {
                 "_completedPaths": [["title"], ["source_uri"], ["content"]],
             },
         },
-        "_meta": {"kiro": {"serverName": "kirocrew-core", "toolOrigin": "client"}},
+        "_meta": {"kiro": {"serverName": "ajcrew-core", "toolOrigin": "client"}},
     },
     "deferred": {
         "sessionUpdate": "tool_call",
         "toolCallId": _TCID,
-        "title": "@kirocrew-core/knowledge_add_document",
+        "title": "@ajcrew-core/knowledge_add_document",
         "kind": "other",
         "status": "pending",
-        "rawInput": {"tool_id": "kirocrew-core::knowledge_add_document", "arguments": _ARGS},
-        "_meta": {"kiro": {"serverName": "kirocrew-core", "toolOrigin": "default"}},
+        "rawInput": {"tool_id": "ajcrew-core::knowledge_add_document", "arguments": _ARGS},
+        "_meta": {"kiro": {"serverName": "ajcrew-core", "toolOrigin": "default"}},
     },
 }
 _KAS_PERMISSION = {
@@ -129,7 +129,7 @@ _KAS_PERMISSION = {
         "toolCall": {
             "toolCallId": _TCID,
             "status": "pending",
-            "title": "@kirocrew-core/knowledge_add_document",
+            "title": "@ajcrew-core/knowledge_add_document",
         },
         "options": [
             {"optionId": "accept", "name": "Allow", "kind": "allow_once"},
@@ -207,7 +207,7 @@ class TestDefaultEngineStoresADocumentThatQuotesACommand:
         assert ev.shell_classified is False
         assert ev.is_shell is False
         assert ev.mcp_identity_trusted is True
-        assert (ev.mcp_server_name, ev.tool_name) == ("kirocrew-core", "knowledge_add_document")
+        assert (ev.mcp_server_name, ev.tool_name) == ("ajcrew-core", "knowledge_add_document")
 
     @pytest.mark.asyncio
     async def test_the_body_is_not_read_as_a_command(self) -> None:
@@ -228,7 +228,7 @@ class TestEverythingElseKeepsTheFullScan:
     async def test_another_core_tool_is_denied(self) -> None:
         tc = _with(
             _DEFAULT_TOOL_CALL,
-            _meta={"kiro": {"toolName": "artifact_save", "mcpServerName": "kirocrew-core"}},
+            _meta={"kiro": {"toolName": "artifact_save", "mcpServerName": "ajcrew-core"}},
         )
         approved, _ = await _resolve(_replay(tc, _DEFAULT_PERMISSION))
         assert approved is False
@@ -271,7 +271,7 @@ class TestKasReadsTheSameBarFromItsOwnFrames:
         ev = _replay(_KAS_TOOL_CALLS["resident"], _KAS_PERMISSION, kas=True)
         assert ev.mcp_identity_trusted is True
         assert ev.is_shell is False
-        assert (ev.mcp_server_name, ev.tool_name) == ("kirocrew-core", "knowledge_add_document")
+        assert (ev.mcp_server_name, ev.tool_name) == ("ajcrew-core", "knowledge_add_document")
 
     @pytest.mark.asyncio
     async def test_a_resident_body_is_not_read_as_a_command(self) -> None:
@@ -284,7 +284,7 @@ class TestKasReadsTheSameBarFromItsOwnFrames:
     async def test_a_deferred_body_is_still_denied(self) -> None:
         ev = _replay(_KAS_TOOL_CALLS["deferred"], _KAS_PERMISSION, kas=True)
         # Same pair, but the body is nested, so nothing is exempt.
-        assert (ev.mcp_server_name, ev.tool_name) == ("kirocrew-core", "knowledge_add_document")
+        assert (ev.mcp_server_name, ev.tool_name) == ("ajcrew-core", "knowledge_add_document")
         approved, err = await _resolve(ev)
         assert approved is False
         assert err
@@ -295,7 +295,7 @@ class TestKasReadsTheSameBarFromItsOwnFrames:
             _KAS_TOOL_CALLS["resident"],
             _meta={"kiro": {"serverName": "notes", "toolOrigin": "client"}},
         )
-        # The request names kirocrew-core; the tool_call named notes. Two
+        # The request names ajcrew-core; the tool_call named notes. Two
         # harness-authored frames disagree, so no pair is adopted.
         approved, _ = await _resolve(_replay(tc, _KAS_PERMISSION, kas=True))
         assert approved is False

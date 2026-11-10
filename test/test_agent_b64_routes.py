@@ -16,8 +16,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer, make_mocked_request
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew.agent_url_path import (
+from aj_crew import change_card_catalog as catalog
+from aj_crew.agent_url_path import (
     B64_ROUTE_ALIASES,
     agent_path,
     agent_record_write,
@@ -25,9 +25,9 @@ from kiro_crew.agent_url_path import (
     encode_agent_name,
     needs_proxy_safe_path,
 )
-from kiro_crew.dashboard.agent_name_segment import agent_route_name
-from kiro_crew.dashboard.handlers import change_cards
-from kiro_crew.dashboard.routes import agents as agents_routes
+from aj_crew.dashboard.agent_name_segment import agent_route_name
+from aj_crew.dashboard.handlers import change_cards
+from aj_crew.dashboard.routes import agents as agents_routes
 
 # ── the encoding ──
 

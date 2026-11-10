@@ -18,12 +18,12 @@ from pathlib import Path
 import pytest
 from instances_helpers import _body, _enable, _FakeReq, _State
 
-from kiro_crew import webhooks
-from kiro_crew.cloud import connect
-from kiro_crew.dashboard import handlers_instances as handlers
-from kiro_crew.hooks import ScriptHookStore
-from kiro_crew.instances import registry as registry_mod
-from kiro_crew.instances.registry import InstancesRegistry
+from aj_crew import webhooks
+from aj_crew.cloud import connect
+from aj_crew.dashboard import handlers_instances as handlers
+from aj_crew.hooks import ScriptHookStore
+from aj_crew.instances import registry as registry_mod
+from aj_crew.instances.registry import InstancesRegistry
 
 BOM = b"\xef\xbb\xbf"
 _SHARING_VIOLATION = (13, "The process cannot access the file because it is being used")

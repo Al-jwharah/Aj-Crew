@@ -17,14 +17,14 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 from test_deferred_note_persistence import _hold_note, _meta, _persist, _seeded_slot
 
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard.chat_handlers import _persist_deferred_note_hold
-from kiro_crew.dashboard.chat_persistence import (
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard.chat_handlers import _persist_deferred_note_hold
+from aj_crew.dashboard.chat_persistence import (
     _rehydrate_slot_from_history,
     _save_slot_to_history,
 )
-from kiro_crew.dashboard.chat_utils import effective_session_key, slot_history_key
-from kiro_crew.dashboard.slot_buffers import (
+from aj_crew.dashboard.chat_utils import effective_session_key, slot_history_key
+from aj_crew.dashboard.slot_buffers import (
     MAX_DEFERRED_NOTE_CHARS,
     MAX_DEFERRED_NOTES,
     DeferredHoldFull,
@@ -34,8 +34,8 @@ from kiro_crew.dashboard.slot_buffers import (
     sanitize_restored_deferred_notes,
     serialize_deferred_notes,
 )
-from kiro_crew.dashboard.state import DashboardState, load_window_off_loop
-from kiro_crew.session_lifecycle import STOP_DECLINED_KEY_MAX_CHARS
+from aj_crew.dashboard.state import DashboardState, load_window_off_loop
+from aj_crew.session_lifecycle import STOP_DECLINED_KEY_MAX_CHARS
 
 
 class TestRestoreTrustBoundary:
@@ -47,7 +47,7 @@ class TestRestoreTrustBoundary:
         and a restore that kept only the live cap's worth would silently
         discard acknowledged content); a note without an authorization
         session is dropped, never delivered unconditionally."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = _seeded_slot(state, "tb1")
         session = effective_session_key(slot)
@@ -82,7 +82,7 @@ class TestRestoreTrustBoundary:
         of it: the newest half are undelivered 200-acknowledged notes whose
         callers were told not to re-post, so capping the restore at the live
         cap would silently discard exactly those."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = _seeded_slot(state, "tb2")
         session = effective_session_key(slot)
@@ -217,7 +217,7 @@ class TestRestoreTrustBoundary:
         """A retained entry is the only durable copy of an acknowledged note.
         When the union would exceed the ceiling, the NEW note is refused
         (DeferredHoldFull -> the handler's 429), never an eviction."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = _seeded_slot(state, "hf1")
         session = effective_session_key(slot)
@@ -248,7 +248,7 @@ class TestRestoreTrustBoundary:
         """The third share of the durable hold is for merge cards alone: a plain
         note is refused at the plain-note ceiling, and a merge card past it is
         still accepted."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = _seeded_slot(state, "hf2")
         session = effective_session_key(slot)
@@ -295,7 +295,7 @@ class TestRestoreTrustBoundary:
         worker thread reads the live hold. The write must still contain that
         note's entry — otherwise the 200 acknowledges a note with no durable
         copy anywhere."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = _seeded_slot(state, "en1")
         note = {
@@ -356,7 +356,7 @@ class TestRestoreTrustBoundary:
         sees BOTH the committed row and the stale on-disk hold. Restoring
         that hold would deliver the acknowledged note a second time — the
         restore drops entries the transcript already owns."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = _seeded_slot(state, "rowwin")
         key = slot_history_key(slot)
@@ -479,7 +479,7 @@ class TestRestoreTrustBoundary:
         merge card's context is queued exactly once, and the uncommitted note
         stays held. Before the fix the load read the cleared line, emptied the
         hold and queued nothing."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         restored = self._restore_lazy_row_whose_hold_awaits_settling(state, "lazyhold")
 
@@ -502,7 +502,7 @@ class TestRestoreTrustBoundary:
         Before the fix the flush copied and cleared the unsettled hold, its
         first append loaded the window against the empty hold, and every
         committed note got a second row."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         restored = self._restore_lazy_row_whose_hold_awaits_settling(state, "lazyflush")
 
@@ -523,7 +523,7 @@ class TestRestoreTrustBoundary:
         self, seam: str, tmp_path: Path, monkeypatch
     ):
         """Cleanup and handover must preload a lazy transcript before flushing notes."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         name = f"lazy-{seam}"
         restored = self._restore_lazy_row_whose_hold_awaits_settling(state, name)
@@ -582,7 +582,7 @@ class TestRestoreTrustBoundary:
         whether any row needs tightening, so skipping the preload would read the
         pending transcript on the event loop.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         name = f"empty-{seam}"
         restored = self._restore_lazy_row_whose_hold_awaits_settling(state, name)
@@ -643,7 +643,7 @@ class TestRestoreTrustBoundary:
     ):
         """No flush runs when the preload fails, so a note still held is a row owed that
         never reached disk, and the drain must not report the rows committed."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         name = "unloadable-handover"
         restored = self._restore_lazy_row_whose_hold_awaits_settling(state, name)
@@ -672,7 +672,7 @@ class TestRestoreTrustBoundary:
         delivered row. Counting it as evidence would back a 200 with an entry
         the save destroys — a loss the caller never retries. The refusal must
         stand even when a sibling's merge writer put the entry on disk."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = _seeded_slot(state, "dropdur")
         key = slot_history_key(slot)
@@ -706,7 +706,7 @@ class TestRestoreTrustBoundary:
         slot-side flag is monotonic: once the slot has observed its on-disk
         identity, a no-line outcome is refused no matter when the delete
         landed."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = _seeded_slot(state, "earlydel")
         key = slot_history_key(slot)
@@ -720,7 +720,7 @@ class TestRestoreTrustBoundary:
             return DeferredHoldOutcome(written=False, evidence=NoteEvidence(False, False))
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.persist_deferred_notes_sync", _no_line
+            "aj_crew.dashboard.chat_handlers.persist_deferred_notes_sync", _no_line
         )
         resp = await _persist_deferred_note_hold(state, slot, note, key)
         assert resp is not None and resp.status == 404
@@ -752,7 +752,7 @@ class TestRestoreTrustBoundary:
         replay a second copy of a line the transcript permanently carries.
         Under the lock, an ensure whose noteId is already in the committed
         transcript is skipped."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = _seeded_slot(state, "le1")
         note = {
@@ -793,7 +793,7 @@ class TestRestoreTrustBoundary:
         not mirror the (possibly just-drained) live hold over a disk entry
         whose delivered row this save does not write. Merge writers union;
         only the full save's paired snapshot retires."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("mw1")
         slot._titled = True

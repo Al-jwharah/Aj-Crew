@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.state import DashboardState
 
 
 def test_agent_defect() -> None:

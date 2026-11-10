@@ -14,7 +14,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps.builtins.mochi import hooks
+from aj_crew.apps.builtins.mochi import hooks
 
 
 class _Ctx:
@@ -42,13 +42,13 @@ class TestLifecycleHookResolution:
     the hook and the routes share ONE module instance."""
 
     def test_builtin_hook_resolves_from_package(self):
-        from kiro_crew.apps.lifecycle import LifecycleDispatcher
+        from aj_crew.apps.lifecycle import LifecycleDispatcher
 
         func = LifecycleDispatcher._resolve_hook("mochi", "hooks:on_startup")
         assert func is hooks.on_startup  # same object, not a parallel copy
 
     def test_builtin_hook_missing_callable_raises(self):
-        from kiro_crew.apps.lifecycle import LifecycleDispatcher
+        from aj_crew.apps.lifecycle import LifecycleDispatcher
 
         with pytest.raises(ImportError, match="not found in builtin"):
             LifecycleDispatcher._resolve_hook("mochi", "hooks:nonexistent")
@@ -57,7 +57,7 @@ class TestLifecycleHookResolution:
         """`_invoke` must resolve through `_resolve_hook`, not `load_app_module`.
 
         `load_app_module` is a file-path load that registers the module as
-        `_kirocrew_app_<app>.<mod>` — a SECOND object. For a builtin whose routes
+        `_ajcrew_app_<app>.<mod>` — a SECOND object. For a builtin whose routes
         read state its `on_startup` created, that means the hook populates the
         copy and the routes keep reading the empty original: no error anywhere,
         the feature is just inert. Upstream's launch-boundary change routed
@@ -65,7 +65,7 @@ class TestLifecycleHookResolution:
         """
         import inspect
 
-        from kiro_crew.apps.lifecycle import LifecycleDispatcher
+        from aj_crew.apps.lifecycle import LifecycleDispatcher
 
         src = inspect.getsource(LifecycleDispatcher._invoke)
         assert "_resolve_hook(" in src
@@ -78,7 +78,7 @@ class TestLifecycleHookResolution:
     @pytest.mark.asyncio
     async def test_dispatch_enable_starts_the_runtime(self, tmp_path, monkeypatch):
         """End-to-end through the real dispatcher: enable → on_startup runs."""
-        from kiro_crew.apps import lifecycle as lc
+        from aj_crew.apps import lifecycle as lc
 
         monkeypatch.setattr(lc, "app_dir", lambda name: tmp_path)
         dispatcher = lc.LifecycleDispatcher()
@@ -316,7 +316,7 @@ class TestAgentAuthoredEventsAreRedacted:
     async def test_imported_pack_description_never_enters_the_persona(self, tmp_path):
         # A downloaded pack's meta.description is untrusted; it must NOT be
         # sourced into the persona (agent system prompt) — prompt-injection.
-        from kiro_crew.apps.builtins.mochi.settings import save_settings
+        from aj_crew.apps.builtins.mochi.settings import save_settings
 
         save_settings(tmp_path, {"activeAppearance": "evil-imported-pack"})
         ctx, _events = await self._bus(tmp_path)

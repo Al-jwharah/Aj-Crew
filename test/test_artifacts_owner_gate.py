@@ -16,9 +16,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from body_stream_helpers import attach_json_body
 
-from kiro_crew import artifacts as art_mod
-from kiro_crew.artifacts import ArtifactStore
-from kiro_crew.dashboard.handlers import artifacts as handlers
+from aj_crew import artifacts as art_mod
+from aj_crew.artifacts import ArtifactStore
+from aj_crew.dashboard.handlers import artifacts as handlers
 
 OWNER = "U_OWNER_0001"
 NON_OWNER = "U_ALLOWLISTED_CHANNEL_USER"

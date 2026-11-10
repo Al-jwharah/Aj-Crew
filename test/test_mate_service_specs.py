@@ -16,17 +16,17 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-from kiro_crew import agent
-from kiro_crew.agent_files import (
+import aj_crew.config.paths as paths_mod
+from aj_crew import agent
+from aj_crew.agent_files import (
     MATE_CONDUCTOR_AGENT_FILENAME,
     MATE_SERVICE_AGENT_NAMES,
     MATE_WORKER_AGENT_FILENAME,
 )
-from kiro_crew.agent_materialization import service_agents
+from aj_crew.agent_materialization import service_agents
 
-CONDUCTOR = "kirocrew-mate-conductor"
-WORKER = "kirocrew-mate-worker"
+CONDUCTOR = "ajcrew-mate-conductor"
+WORKER = "ajcrew-mate-worker"
 INSTALLERS = {
     MATE_CONDUCTOR_AGENT_FILENAME: service_agents._install_mate_conductor_agent,
     MATE_WORKER_AGENT_FILENAME: service_agents._install_mate_worker_agent,
@@ -76,12 +76,12 @@ def test_a_user_level_file_that_is_not_the_generated_one_is_kept(dirs, filename,
     with caplog.at_level(logging.WARNING):
         INSTALLERS[filename]()
     assert json.loads((user / filename).read_text(encoding="utf-8")) == mine
-    assert any("is not the spec Kiro Crew generated" in r.getMessage() for r in caplog.records)
+    assert any("is not the spec Aj Crew generated" in r.getMessage() for r in caplog.records)
 
 
 @pytest.mark.parametrize("name", sorted(MATE_SERVICE_AGENT_NAMES))
 def test_kas_resolves_both_from_the_crewmate_folder_first(dirs, name):
-    from kiro_crew.acp.harness.kas import resolve_projected_spec
+    from aj_crew.acp.harness.kas import resolve_projected_spec
 
     user, mates = dirs
     mates.mkdir(parents=True)
@@ -95,18 +95,18 @@ def test_kas_resolves_both_from_the_crewmate_folder_first(dirs, name):
 
 
 def test_an_array_backed_host_reads_the_conductor_from_the_crewmate_folder(dirs, monkeypatch):
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
     _user, mates = dirs
     mates.mkdir(parents=True)
-    spec = {"name": CONDUCTOR, "mcpServers": {"kirocrew-core": {"command": "kc"}}}
+    spec = {"name": CONDUCTOR, "mcpServers": {"ajcrew-core": {"command": "kc"}}}
     (mates / f"{CONDUCTOR}.json").write_text(json.dumps(spec), "utf-8")
     monkeypatch.setattr(paths_mod, "mate_agents_dir", lambda: mates)
     assert session_mcp._user_agent_spec(CONDUCTOR)["mcpServers"] == spec["mcpServers"]
 
 
 def test_the_member_worker_spec_reads_the_moved_worker_base(dirs, monkeypatch):
-    from kiro_crew import mate_worker
+    from aj_crew import mate_worker
 
     _user, mates = dirs
     mates.mkdir(parents=True)
@@ -119,7 +119,7 @@ def test_the_member_worker_spec_reads_the_moved_worker_base(dirs, monkeypatch):
 
 
 def test_the_migration_reads_the_moved_worker_base(dirs):
-    from kiro_crew.mate_config_migration import _worker_base
+    from aj_crew.mate_config_migration import _worker_base
 
     _user, mates = dirs
     mates.mkdir(parents=True)
@@ -131,21 +131,21 @@ def test_the_migration_reads_the_moved_worker_base(dirs):
 
 
 def test_the_migration_skips_a_crewmate_named_after_a_service_spec(dirs, monkeypatch, caplog):
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-    from kiro_crew.mate_config_migration import _candidates
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+    from aj_crew.mate_config_migration import _candidates
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        WORKER: KiroCrewAgentConfig(member_id="w1", kiro_agent="kirocrew"),
-        "ada": KiroCrewAgentConfig(member_id="ada", kiro_agent="kirocrew"),
+        WORKER: AjCrewAgentConfig(member_id="w1", kiro_agent="ajcrew"),
+        "ada": AjCrewAgentConfig(member_id="ada", kiro_agent="ajcrew"),
     }
     with caplog.at_level(logging.WARNING):
-        assert _candidates(cfg) == {"ada": "kirocrew"}
+        assert _candidates(cfg) == {"ada": "ajcrew"}
     assert any("cannot be named after a spec" in r.getMessage() for r in caplog.records)
 
 
 def test_a_binding_on_the_conductor_owns_no_crewmate_file(dirs, monkeypatch):
-    from kiro_crew import execution_context, mate_worker
+    from aj_crew import execution_context, mate_worker
 
     _user, mates = dirs
     mates.mkdir(parents=True)
@@ -156,7 +156,7 @@ def test_a_binding_on_the_conductor_owns_no_crewmate_file(dirs, monkeypatch):
 
 
 def test_the_snapshot_lists_both_as_declared_but_not_as_crewmates(dirs, monkeypatch):
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     user, mates = dirs
     mates.mkdir(parents=True)

@@ -10,21 +10,21 @@ from unittest.mock import Mock
 import pytest
 from e2e.scenarios import conftest as scenarios
 
-from kiro_crew.pod import runtime
-from kiro_crew.testing import harness
+from aj_crew.pod import runtime
+from aj_crew.testing import harness
 
 
 @pytest.fixture
 def plane_setup(tmp_path, monkeypatch):
     root = tmp_path / "checkout"
-    (root / "src" / "kiro_crew" / "static" / "dist").mkdir(parents=True)
+    (root / "src" / "aj_crew" / "static" / "dist").mkdir(parents=True)
     basetemp = tmp_path / "pytest-base"
     basetemp.mkdir()
     # Outside the factory's basetemp, but still owned by this test's tmp_path.
     scratch = tmp_path / "plane"
-    monkeypatch.setenv("KIROCREW_E2E_SCENARIOS", "1")
-    monkeypatch.delenv("KIROCREW_E2E_REQUIRE", raising=False)
-    monkeypatch.delenv("KIROCREW_E2E_SCENARIOS_REAL_AGENT", raising=False)
+    monkeypatch.setenv("AJCREW_E2E_SCENARIOS", "1")
+    monkeypatch.delenv("AJCREW_E2E_REQUIRE", raising=False)
+    monkeypatch.delenv("AJCREW_E2E_SCENARIOS_REAL_AGENT", raising=False)
     monkeypatch.setattr(runtime, "require_backend", Mock())
     monkeypatch.setattr(scenarios, "_repo_root", lambda: root)
     monkeypatch.setattr(scenarios.prov, "venv_bin", lambda _root: Path(sys.executable))
@@ -43,8 +43,8 @@ def plane_setup(tmp_path, monkeypatch):
 
 @pytest.mark.parametrize("required", [False, True], ids=["optional-skip", "required-fail"])
 def test_missing_real_backend_reclaims_plane(plane_setup, monkeypatch, required):
-    monkeypatch.setenv("KIROCREW_E2E_SCENARIOS_REAL_AGENT", "1")
-    monkeypatch.setenv("KIROCREW_E2E_REQUIRE", "1" if required else "0")
+    monkeypatch.setenv("AJCREW_E2E_SCENARIOS_REAL_AGENT", "1")
+    monkeypatch.setenv("AJCREW_E2E_REQUIRE", "1" if required else "0")
     monkeypatch.setattr(scenarios.shutil, "which", lambda _name: None)
     outcome = pytest.fail.Exception if required else pytest.skip.Exception
 

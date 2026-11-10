@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from kiro_crew.connections.vendors.github import descriptors as d
-from kiro_crew.connections.vendors.github.signatures import (
+from aj_crew.connections.vendors.github import descriptors as d
+from aj_crew.connections.vendors.github.signatures import (
     known_tool_names,
     resolve_operation_id,
 )
@@ -59,7 +59,7 @@ def test_every_multi_op_tool_is_covered_by_the_method_table() -> None:
     # least one method-qualified entry, so no multi-op tool mints false gaps.
     from collections import Counter
 
-    from kiro_crew.connections.vendors.github.signatures import _METHOD_QUALIFIED
+    from aj_crew.connections.vendors.github.signatures import _METHOD_QUALIFIED
 
     tool_op_count = Counter(t for desc in d.DESCRIPTORS.values() for t in desc.tool_names)
     covered = {tool for (tool, _m) in _METHOD_QUALIFIED}

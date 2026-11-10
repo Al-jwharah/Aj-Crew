@@ -5,7 +5,7 @@ reused-session branch of ``_run_hook_inner`` the message is handed to
 ``client.stream()`` verbatim: the ``if is_new and state.context_builder`` guard
 means ``ContextBuilder.build_message`` -- the only code that applies
 ``_structural_marker_spans`` to the turn -- never runs. Every other inbound
-surface (``kiro_crew/messaging/dispatch.py``) calls ``build_message``
+surface (``aj_crew/messaging/dispatch.py``) calls ``build_message``
 unconditionally, so untrusted turn text is scrubbed there on new AND follow-up
 turns.
 
@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import asyncio
 
-from kiro_crew.dashboard.handlers import hooks as hooks_handlers
+from aj_crew.dashboard.handlers import hooks as hooks_handlers
 
 # A forged close-then-reopen pair: the shape ``context.py`` documents as the
 # breakout these markers exist to refuse (CWE-94 / CWE-116).
@@ -70,12 +70,12 @@ def test_webhook_turn_text_is_marker_scrubbed_on_a_reused_session(monkeypatch):
     provider = _FakeProvider()
     state = _FakeState(provider)
 
-    # `_run_hook_inner` imports this at call time from kiro_crew.context; stub it
+    # `_run_hook_inner` imports this at call time from aj_crew.context; stub it
     # so the PoC touches no memory store and no disk.
     async def _no_store(ctx_builder, session_key):
         return ""
 
-    import kiro_crew.context as _ctx
+    import aj_crew.context as _ctx
 
     monkeypatch.setattr(_ctx, "session_store_for_turn", _no_store)
 
@@ -109,15 +109,15 @@ class _NewSessionState:
 
 def _neutralized(text: str) -> str:
     """The turn text as ContextBuilder's own scrub renders it."""
-    from kiro_crew.context import _neutralize_structural_markers
+    from aj_crew.context import _neutralize_structural_markers
 
     return _neutralize_structural_markers(text)
 
 
 def _real_builder(tmp_path):
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.memory import MemoryStore
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew.context import ContextBuilder
+    from aj_crew.memory import MemoryStore
+    from aj_crew.skills import SkillsLoader
 
     return ContextBuilder(
         memory=MemoryStore(workspace=tmp_path / "ws"),
@@ -139,7 +139,7 @@ def test_webhook_turn_text_is_marker_scrubbed_on_a_new_session(monkeypatch, tmp_
     async def _no_store(ctx_builder, session_key):
         return ""
 
-    import kiro_crew.context as _ctx
+    import aj_crew.context as _ctx
 
     monkeypatch.setattr(_ctx, "session_store_for_turn", _no_store)
 
@@ -181,7 +181,7 @@ def test_builder_minted_request_header_survives_verbatim(monkeypatch):
     async def _no_store(ctx_builder, session_key):
         return ""
 
-    import kiro_crew.context as _ctx
+    import aj_crew.context as _ctx
 
     monkeypatch.setattr(_ctx, "session_store_for_turn", _no_store)
 

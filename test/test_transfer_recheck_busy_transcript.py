@@ -26,7 +26,7 @@ from test_session_transfer import (
     _slot,
 )
 
-from kiro_crew.history import TranscriptBusy, TranscriptWithheld
+from aj_crew.history import TranscriptBusy, TranscriptWithheld
 
 
 class _ChangesAtRecheck(_FakeLog):
@@ -59,17 +59,17 @@ async def _send_through_recheck(monkeypatch, tmp_path, error):
     The peer answers 200 to any POST and counts them. Returns the fake log, the
     POST counter and the handler's response.
     """
-    from kiro_crew.dashboard import handlers_instances as hi
-    from kiro_crew.dashboard import session_transfer as st
-    from kiro_crew.instances import ssh_tunnel_manager as mod
-    from kiro_crew.instances.ssh_tunnel_manager import (
+    from aj_crew.dashboard import handlers_instances as hi
+    from aj_crew.dashboard import session_transfer as st
+    from aj_crew.instances import ssh_tunnel_manager as mod
+    from aj_crew.instances.ssh_tunnel_manager import (
         SshTunnelManager,
         TunnelState,
         TunnelStatus,
     )
 
     monkeypatch.setattr(
-        hi.KiroCrewConfig,
+        hi.AjCrewConfig,
         "load",
         staticmethod(lambda: SimpleNamespace(instances=SimpleNamespace(enabled=True))),
     )

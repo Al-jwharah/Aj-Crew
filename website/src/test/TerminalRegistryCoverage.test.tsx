@@ -484,11 +484,11 @@ describe('terminalRegistry', () => {
       const ws = WS_INSTANCES[0]
       expect(getTerminalCwd(id)).toBeUndefined()
 
-      ws.simulateJson({ type: 'cwd', path: '/home/builder/kiro-crew' })
-      expect(getTerminalCwd(id)).toBe('/home/builder/kiro-crew')
+      ws.simulateJson({ type: 'cwd', path: '/home/builder/aj-crew' })
+      expect(getTerminalCwd(id)).toBe('/home/builder/aj-crew')
 
       ws.simulateJson({ type: 'cwd', path: null })
-      expect(getTerminalCwd(id)).toBe('/home/builder/kiro-crew')
+      expect(getTerminalCwd(id)).toBe('/home/builder/aj-crew')
     })
   })
 

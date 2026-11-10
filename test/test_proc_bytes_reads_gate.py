@@ -14,7 +14,7 @@ of a group reads as absent and the group is declared empty.
 
 ## The rule
 
-Inside ``src/kiro_crew`` (vendored code and in-package test suites excluded), a
+Inside ``src/aj_crew`` (vendored code and in-package test suites excluded), a
 read whose path ends in ``stat``, ``status`` or ``comm`` must not decode
 strictly. Flagged:
 

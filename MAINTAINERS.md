@@ -23,7 +23,7 @@ None yet.
 
 ## Reaching maintainers
 
-For anything about the project itself, open a [GitHub issue](https://github.com/kirodotdev/KiroCrew/issues) rather than contacting a maintainer directly. Public questions get answered where the next person with the same question can find them.
+For anything about the project itself, open a [GitHub issue](https://github.com/Al-jwharah/Aj-Crew/issues) rather than contacting a maintainer directly. Public questions get answered where the next person with the same question can find them.
 
 Do not use this list to report a security vulnerability. Follow [SECURITY.md](SECURITY.md) instead, which routes reports privately so a fix can ship before the problem is public.
 

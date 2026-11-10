@@ -13,7 +13,7 @@ from contextlib import closing
 
 import pytest
 
-from kiro_crew import snapshot
+from aj_crew import snapshot
 
 
 def _make_db(path, marker: str) -> None:

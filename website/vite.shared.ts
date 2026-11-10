@@ -6,7 +6,7 @@
 
 /**
  * Force a SINGLE instance of every CONTEXT-CARRYING singleton across a bundle.
- * A KIROCREW_EDITION_DIR in a separate repo may resolve these from ITS OWN
+ * A AJCREW_EDITION_DIR in a separate repo may resolve these from ITS OWN
  * node_modules; a second copy binds an edition component's hooks to a DIFFERENT
  * context instance than the core's providers — "Invalid hook call" (react),
  * "No QueryClient set" / null router context / silently empty data (the rest) —

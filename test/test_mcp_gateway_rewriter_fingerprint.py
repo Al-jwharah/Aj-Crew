@@ -33,10 +33,10 @@ from mcp_gateway_rewriter_fingerprint_helpers import (  # noqa: F401 -- fixtures
 )
 
 from conftest import make_dir_link
-from kiro_crew import agent_discovery
-from kiro_crew.mcp_gateway import rewriter
-from kiro_crew.mcp_gateway.hashing import expand_stub_flags
-from kiro_crew.mcp_gateway.rewriter import _FINGERPRINT_NAME, rewrite_agents
+from aj_crew import agent_discovery
+from aj_crew.mcp_gateway import rewriter
+from aj_crew.mcp_gateway.hashing import expand_stub_flags
+from aj_crew.mcp_gateway.rewriter import _FINGERPRINT_NAME, rewrite_agents
 
 
 def test_rewrite_agents_signature_is_pinned_to_fingerprint_inputs() -> None:
@@ -93,8 +93,8 @@ _AMBIENT_READ_ALLOWLIST = frozenset(
         # The configured ``agent.env`` map that view lays over ``os.environ``:
         # read only through placeholder expansion, so it is uncacheable the same
         # way and never fingerprinted.
-        ("_configured_agent_env", "config-import:kiro_crew.config"),
-        ("_configured_agent_env", "config-import:kiro_crew.config.sections"),
+        ("_configured_agent_env", "config-import:aj_crew.config"),
+        ("_configured_agent_env", "config-import:aj_crew.config.sections"),
         # Output-NEUTRAL: distinguishes a credential-filtered refusal from a
         # plain typo purely to pick the log message; the substitution result is
         # the literal ``${VAR}`` either way.
@@ -103,12 +103,12 @@ _AMBIENT_READ_ALLOWLIST = frozenset(
         # all. Read once per pass in rewrite_agents and
         # fingerprinted as "forward_declared_env" (see
         # test_forward_declared_env_change_invalidates).
-        ("forward_declared_env_enabled", "config-import:kiro_crew.config.loader"),
+        ("forward_declared_env_enabled", "config-import:aj_crew.config.loader"),
         # Output-AFFECTING: decides which secret-prefixed keys are folded into
         # effective_env_hash and passed on stub argv. Read once per pass in
         # rewrite_agents and fingerprinted as "pool_identity_env" (see
         # test_pool_identity_env_change_invalidates).
-        ("pool_identity_env_keys", "config-import:kiro_crew.config.loader"),
+        ("pool_identity_env_keys", "config-import:aj_crew.config.loader"),
     }
 )
 
@@ -118,21 +118,21 @@ _REWRITE_PASS_ROOTS = frozenset({"rewrite_agents", "_rewrite_single_spec", "_bui
 
 
 def _module_config_names(tree: ast.Module) -> set[str]:
-    """Module-level names bound by importing from ``kiro_crew.config*``.
+    """Module-level names bound by importing from ``aj_crew.config*``.
 
-    A module-scope ``from kiro_crew.config.x import Y`` followed by ``Y.load()``
+    A module-scope ``from aj_crew.config.x import Y`` followed by ``Y.load()``
     inside a helper is a config read with no function-local import to detect,
     so the imported names themselves become detection targets.
     """
     names: set[str] = set()
     for node in tree.body:
         if isinstance(node, ast.ImportFrom):
-            if (node.module or "").startswith("kiro_crew.config"):
+            if (node.module or "").startswith("aj_crew.config"):
                 for alias in node.names:
                     names.add(alias.asname or alias.name)
         elif isinstance(node, ast.Import):
             for alias in node.names:
-                if alias.name.startswith("kiro_crew.config"):
+                if alias.name.startswith("aj_crew.config"):
                     names.add((alias.asname or alias.name).split(".")[0])
     return names
 
@@ -204,11 +204,11 @@ def _ambient_reads(func_name: str, fn: ast.AST, config_names: set[str]) -> set[t
             hits.add((func_name, f"os.environ:{key}"))
             consumed.add(id(node.value))
         elif isinstance(node, ast.ImportFrom):
-            if (node.module or "").startswith("kiro_crew.config"):
+            if (node.module or "").startswith("aj_crew.config"):
                 hits.add((func_name, f"config-import:{node.module}"))
         elif isinstance(node, ast.Import):
             for alias in node.names:
-                if alias.name.startswith("kiro_crew.config"):
+                if alias.name.startswith("aj_crew.config"):
                     hits.add((func_name, f"config-import:{alias.name}"))
     # Second pass: reads the call-shaped pass above did not consume — a bare
     # ``os.environ`` (copy/iteration/membership), sys/platform attributes, and
@@ -537,8 +537,8 @@ def test_a_kept_overlay_from_before_the_vendor_denylist_drops_the_vendor_stub(
     """
     from mcp_gateway_rewriter_fingerprint_helpers import _CMD
 
-    from kiro_crew.mcp_gateway import rewriter_spec
-    from kiro_crew.mcp_gateway.rewriter_launch import _WRAPPER_MARKER
+    from aj_crew.mcp_gateway import rewriter_spec
+    from aj_crew.mcp_gateway.rewriter_launch import _WRAPPER_MARKER
 
     src = tmp_path / "agents"
     src.mkdir()
@@ -1006,7 +1006,7 @@ def test_unresolved_bare_command_is_reprobed_and_install_invalidates(
     monkeypatch.setenv("PATH", str(bin_dir) + os.pathsep + os.environ.get("PATH", ""))
     src = _mk_tree(tmp_path, n_agents=1, with_env=False)
     spec = json.loads((src / "agent-0.json").read_text())
-    spec["mcpServers"]["srv"]["command"] = "kirocrew-test-definitely-missing-cmd"
+    spec["mcpServers"]["srv"]["command"] = "ajcrew-test-definitely-missing-cmd"
     (src / "agent-0.json").write_text(json.dumps(spec))
 
     _rewrite(tmp_path)
@@ -1021,9 +1021,9 @@ def test_unresolved_bare_command_is_reprobed_and_install_invalidates(
     # shutil.which resolves bare names only through PATHEXT, so the file
     # needs a .bat suffix there; the spec keeps declaring the bare name.
     exe_name = (
-        "kirocrew-test-definitely-missing-cmd.bat"
+        "ajcrew-test-definitely-missing-cmd.bat"
         if os.name == "nt"
-        else "kirocrew-test-definitely-missing-cmd"
+        else "ajcrew-test-definitely-missing-cmd"
     )
     exe = bin_dir / exe_name
     exe.write_text("#!/bin/sh\nexit 0\n")
@@ -1049,7 +1049,7 @@ def test_resolved_binary_removal_invalidates(
     bin_dir.mkdir()
     # .bat on Windows: shutil.which resolves bare names only through PATHEXT.
     exe_name = (
-        "kirocrew-test-vanishing-cmd.bat" if os.name == "nt" else "kirocrew-test-vanishing-cmd"
+        "ajcrew-test-vanishing-cmd.bat" if os.name == "nt" else "ajcrew-test-vanishing-cmd"
     )
     exe = bin_dir / exe_name
     exe.write_text("#!/bin/sh\nexit 0\n")
@@ -1057,7 +1057,7 @@ def test_resolved_binary_removal_invalidates(
     monkeypatch.setenv("PATH", str(bin_dir) + os.pathsep + os.environ.get("PATH", ""))
     src = _mk_tree(tmp_path, n_agents=1, with_env=False)
     spec = json.loads((src / "agent-0.json").read_text())
-    spec["mcpServers"]["srv"]["command"] = "kirocrew-test-vanishing-cmd"
+    spec["mcpServers"]["srv"]["command"] = "ajcrew-test-vanishing-cmd"
     (src / "agent-0.json").write_text(json.dumps(spec))
 
     _rewrite(tmp_path)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.cloud import sizes
+from aj_crew.cloud import sizes
 
 
 class TestTierCatalog:
@@ -21,7 +21,7 @@ class TestTierCatalog:
         assert sizes.default_tier().arch == sizes.ARCH_ARM64
 
     def test_no_tier_below_working_set(self):
-        # 8 GB is below Kiro Crew's ~10 GB working set and is not offered.
+        # 8 GB is below Aj Crew's ~10 GB working set and is not offered.
         for t in sizes.all_tiers():
             assert t.ram_gb >= 16
             assert t.disk_gb >= 40

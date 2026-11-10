@@ -26,20 +26,20 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 from stt_stream_helpers import _cfg, _make_app, _recv_json
 
-from kiro_crew import speech_providers, transcribe, voice_reply
-from kiro_crew.config import sections_stt
-from kiro_crew.config.loader import KiroCrewConfig, _invalidate_config_cache, config_path
-from kiro_crew.config.sections_stt import SttConfig
-from kiro_crew.platform import bootstrap as bootstrap_mod
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.context import reset_context, set_context
-from kiro_crew.platform.interfaces import (
+from aj_crew import speech_providers, transcribe, voice_reply
+from aj_crew.config import sections_stt
+from aj_crew.config.loader import AjCrewConfig, _invalidate_config_cache, config_path
+from aj_crew.config.sections_stt import SttConfig
+from aj_crew.platform import bootstrap as bootstrap_mod
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.context import reset_context, set_context
+from aj_crew.platform.interfaces import (
     PROVIDER_ACTION_LOGIN,
     AudioChunk,
     ProviderAction,
     ProviderStatus,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 _SIGN_IN = ProviderAction(PROVIDER_ACTION_LOGIN, "Sign in to Acme")
 
@@ -154,7 +154,7 @@ def _clean_state():
 
 
 def _install(stt: tuple = (), tts: tuple = ()) -> None:
-    ctx = build_default_context(KiroCrewConfig())
+    ctx = build_default_context(AjCrewConfig())
     set_context(dataclasses.replace(ctx, speech=_Registry(stt, tts)))
 
 
@@ -173,12 +173,12 @@ class TestConfigAcceptsIt:
     def test_the_loader_and_the_tts_resolver_keep_it(self) -> None:
         _install(stt=(_AcmeStt(),), tts=(_AcmeTts(),))
         _write_config({"stt": {"provider": "acme"}})
-        assert KiroCrewConfig.load().stt.provider == "acme"
+        assert AjCrewConfig.load().stt.provider == "acme"
         assert voice_reply.resolve_configured_provider({"provider": "acme"}) == "acme"
 
     @pytest.mark.asyncio
     async def test_the_stt_put_stores_it(self) -> None:
-        from kiro_crew.dashboard.handlers import core as core_mod
+        from aj_crew.dashboard.handlers import core as core_mod
 
         _install(stt=(_AcmeStt(),))
         path = _write_config({"stt": {"provider": "local"}})
@@ -195,10 +195,10 @@ class TestConfigAcceptsIt:
     async def test_the_voice_put_stores_it(self, tmp_path, monkeypatch) -> None:
         _install(tts=(_AcmeTts(),))
         path = _write_config({})
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_voice.config_path", lambda: path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat_voice.config_path", lambda: path)
         vc = SimpleNamespace(provider="system")
-        monkeypatch.setattr("kiro_crew.dashboard.chat_voice._vc", vc)
+        monkeypatch.setattr("aj_crew.dashboard.chat_voice._vc", vc)
         async with TestClient(TestServer(_voice_app(_make_state(tmp_path)))) as client:
             resp = await client.put("/api/voice/config", json={"provider": "acme"})
             assert resp.status == 200
@@ -210,7 +210,7 @@ class TestConfigAcceptsIt:
 
 
 def _voice_app(state) -> web.Application:
-    from kiro_crew.dashboard.chat_voice import (
+    from aj_crew.dashboard.chat_voice import (
         api_voice_config,
         api_voice_synthesize,
         register_voice_lifecycle,
@@ -233,7 +233,7 @@ _BUILTIN_ROW_KEYS = {"name", "builtin"}
 class TestCapabilityResponses:
     @pytest.mark.asyncio
     async def test_stt_rows_list_builtins_first_then_acme_then_off(self, monkeypatch) -> None:
-        from kiro_crew.dashboard.handlers import core as core_mod
+        from aj_crew.dashboard.handlers import core as core_mod
 
         acme = _AcmeStt(status=ProviderStatus(False, "Acme needs a sign-in", action=_SIGN_IN))
         _install(stt=(acme,))
@@ -273,7 +273,7 @@ class TestCapabilityResponses:
     async def test_voice_rows_list_builtins_first_then_acme(self, tmp_path, monkeypatch) -> None:
         acme = _AcmeTts(status=ProviderStatus(False, "Acme needs a sign-in", action=_SIGN_IN))
         _install(tts=(acme,))
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         async with TestClient(TestServer(_voice_app(_make_state(tmp_path)))) as client:
             rows = (await (await client.get("/api/voice/config")).json())["providers"]
         assert rows[:2] == [
@@ -290,14 +290,14 @@ class TestCapabilityResponses:
     @pytest.mark.asyncio
     async def test_opening_settings_runs_no_builtin_probe(self, tmp_path, monkeypatch) -> None:
         """Built-in rows carry no status, so no built-in check runs on a GET."""
-        from kiro_crew import voice_reply as vr
-        from kiro_crew.dashboard.handlers import core_stt_settings
+        from aj_crew import voice_reply as vr
+        from aj_crew.dashboard.handlers import core_stt_settings
 
         def boom(*a, **k):
             raise AssertionError("a built-in provider was probed for its row")
 
         monkeypatch.setattr(vr, "is_available", boom)
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         async with TestClient(TestServer(_voice_app(_make_state(tmp_path)))) as client:
             rows = (await (await client.get("/api/voice/config")).json())["providers"]
         assert all(set(r) == _BUILTIN_ROW_KEYS for r in rows)
@@ -462,7 +462,7 @@ class TestTtsDispatch:
     @pytest.mark.parametrize("failure", ["format", "factory", "endless"])
     def test_a_bad_stream_answers_none(self, failure, monkeypatch) -> None:
         """An unsupported format, a raise on start, or no end all return ``None``."""
-        from kiro_crew import voice_reply_registered
+        from aj_crew import voice_reply_registered
 
         class _Bad(_AcmeTts):
             def synthesize(self, text, voice_config):
@@ -485,7 +485,7 @@ class TestTtsDispatch:
         import tempfile
         import threading
 
-        from kiro_crew import voice_reply_registered
+        from aj_crew import voice_reply_registered
 
         release = threading.Event()
         made: list[str] = []
@@ -519,7 +519,7 @@ class TestTtsDispatch:
     async def test_the_dashboard_streams_its_chunks(self, tmp_path, monkeypatch) -> None:
         acme = _AcmeTts()
         _install(tts=(acme,))
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         vc = SimpleNamespace(
             provider="acme",
             default_voice="Ruth",
@@ -529,7 +529,7 @@ class TestTtsDispatch:
             system_voice="",
             language_code="ja-JP",
         )
-        monkeypatch.setattr("kiro_crew.dashboard.chat_voice._vc", vc)
+        monkeypatch.setattr("aj_crew.dashboard.chat_voice._vc", vc)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         async with TestClient(TestServer(_voice_app(state))) as client:
@@ -550,13 +550,13 @@ class TestTtsDispatch:
 class TestStreaming:
     def _point_at_acme(self, monkeypatch) -> None:
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.KiroCrewConfig.load",
+            "aj_crew.dashboard.stt_stream.AjCrewConfig.load",
             classmethod(lambda cls: _cfg(provider="acme")),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
 
     def test_only_a_streaming_provider_joins_the_grant(self) -> None:
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         _install(stt=(_AcmeStt(streaming=False),))
         assert stt_stream.streaming_providers() == stt_stream._STREAMING_PROVIDERS
@@ -564,7 +564,7 @@ class TestStreaming:
         assert stt_stream.streaming_providers() == (*stt_stream._STREAMING_PROVIDERS, "acme")
 
     def test_only_a_provider_that_declares_it_joins_language_identification(self) -> None:
-        from kiro_crew.dashboard.handlers import core_stt_settings
+        from aj_crew.dashboard.handlers import core_stt_settings
 
         builtins = core_stt_settings._LANGUAGE_IDENTIFYING_PROVIDERS
         # The attribute is optional: a provider without it stays out.
@@ -642,7 +642,7 @@ def _record_deadline(monkeypatch) -> list[float]:
     it is held on an event nothing sets (the session's teardown cancels it), and
     every other sleep is the stdlib's.
     """
-    from kiro_crew.dashboard import stt_stream
+    from aj_crew.dashboard import stt_stream
 
     delays: list[float] = []
     never = asyncio.Event()
@@ -663,10 +663,10 @@ def _record_deadline(monkeypatch) -> list[float]:
 class TestProviderOwnedSessionLimit:
     def _point_at_acme(self, monkeypatch) -> None:
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.KiroCrewConfig.load",
+            "aj_crew.dashboard.stt_stream.AjCrewConfig.load",
             classmethod(lambda cls: _cfg(provider="acme")),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
 
     @pytest.mark.parametrize(
         "value, owns",
@@ -700,7 +700,7 @@ class TestProviderOwnedSessionLimit:
 
     @pytest.mark.asyncio
     async def test_without_a_declared_limit_core_keeps_its_own_cap(self, monkeypatch) -> None:
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         _install(stt=(_AcmeStt(streaming=True),))
         self._point_at_acme(monkeypatch)
@@ -748,26 +748,26 @@ class TestPreBootSnapshotIsNeverSavedAsOff:
     """A config loaded without boot resolves a registered name to ``off``; saving keeps the name."""
 
     def test_a_companion_host_keeps_the_stored_name(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.platform.discovery.plugin_entry_points", lambda: [object()])
+        monkeypatch.setattr("aj_crew.platform.discovery.plugin_entry_points", lambda: [object()])
         path = _write_config({"stt": {"provider": "acme"}})
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert cfg.stt.provider == "off"  # no context yet: built-ins only
         cfg.save()
         assert json.loads(path.read_text())["stt"]["provider"] == "acme"
 
     def test_a_snapshot_taken_before_registration_keeps_it_after_boot(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.platform.discovery.plugin_entry_points", lambda: [])
+        monkeypatch.setattr("aj_crew.platform.discovery.plugin_entry_points", lambda: [])
         path = _write_config({"stt": {"provider": "acme"}})
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert cfg.stt.provider == "off"
         _install(stt=(_AcmeStt(),))
         cfg.save()
         assert json.loads(path.read_text())["stt"]["provider"] == "acme"
 
     def test_standalone_still_saves_an_unknown_name_as_off(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.platform.discovery.plugin_entry_points", lambda: [])
+        monkeypatch.setattr("aj_crew.platform.discovery.plugin_entry_points", lambda: [])
         path = _write_config({"stt": {"provider": "acme"}})
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.save()
         assert json.loads(path.read_text())["stt"]["provider"] == "off"
 
@@ -949,7 +949,7 @@ class TestTtsLanguage:
         assert language({"language_code": "not a tag"}) == ""
 
     def test_the_loader_reads_it_and_drops_a_malformed_one(self, monkeypatch) -> None:
-        from kiro_crew.slack.handler import _vc, load_voice_reply_config
+        from aj_crew.slack.handler import _vc, load_voice_reply_config
 
         monkeypatch.setattr(_vc, "language_code", "")
         monkeypatch.setattr(_vc, "provider", _vc.provider)
@@ -973,12 +973,12 @@ class TestTtsLanguage:
 
     @pytest.mark.asyncio
     async def test_the_put_saves_it_and_the_get_serves_it(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.slack.handler import _vc
+        from aj_crew.slack.handler import _vc
 
         _install(tts=(_AcmeTts(),))
         path = _write_config({"voice_reply": {"provider": "acme"}})
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_voice.config_path", lambda: path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat_voice.config_path", lambda: path)
         monkeypatch.setattr(_vc, "provider", "acme")
         monkeypatch.setattr(_vc, "language_code", "")
         async with TestClient(TestServer(_voice_app(_make_state(tmp_path)))) as client:
@@ -1003,7 +1003,7 @@ class TestTtsLanguage:
     async def test_a_stored_code_outside_the_list_stays_selectable(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.slack.handler import _vc
+        from aj_crew.slack.handler import _vc
 
         monkeypatch.setattr(_vc, "language_code", "th-TH")
         async with TestClient(TestServer(_voice_app(_make_state(tmp_path)))) as client:

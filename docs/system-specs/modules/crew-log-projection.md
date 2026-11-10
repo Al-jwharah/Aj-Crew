@@ -33,7 +33,7 @@ the crew kind does have writers (`on_crew_dispatch`, `on_crew_report`).
 
 `crew_log/projection.py` is the module every caller imports, and every name it bound
 before its owners moved out is still reached there. It is a mirror facade
-(`kiro_crew._facade_mirror`): a read of a moved name is served by the owner that binds
+(`aj_crew._facade_mirror`): a read of a moved name is served by the owner that binds
 it, and a patch through the facade reaches every owner holding the name, so the moved
 code reads its names as plain module globals. Owners never import the facade, and new
 work goes to the owner of its responsibility rather than back into the facade.
@@ -258,7 +258,7 @@ and its one caller asks the registry for it by name.
 | projection | what it answers |
 |---|---|
 | `status` | Is this session open, and what is it doing: lifecycle, the open turn and its attempt, agent/owner/slot/cwd, current model and provider, turns completed and refused, the last stop reason, dropped writes. |
-| `usage` | What it spent: credits from all three spenders, split by which spent what in `credits_by_source`; the four token dimensions, per model; the context bill summed from `context/composed` (`context.tokens`, `chars`, `blocks`, `estimated_turns`), plus the context part, one fixed-size state that does not grow with the session (`projection_usage_measured`): Crew's five running sums since the engine's context last restarted (a new unit or an engine compaction restarts them, and a `compaction/applied` keeps only what was composed after the newest turn closed with an occupancy reading), the newest `context/measured` breakdown and time to first output (last-wins), the newest occupancy reading from `turn/completed` (reset by a new unit), a 30-row trend ring whose rows each hold one turn whole (its ordinal, its Kiro Crew blocks by name up to 64, its own engine measurement and occupancy reading), the newest session-start row kept apart, and the newest 200 dated occupancy readings plus the configured window, for the fullest-turn peak the context trace reports. It renders slim, so a push stays a few KB: `context.latest` (the newest turn whole), `trend` (each row its ordinal, five sums, `loop` and its own reading `used` only), `start` (the same plus `figure`), `earlier` (the turns before the ring, exact), `turns` (the turn counter) and `chars_per_token`; a kept row's whole turn is read from the state on demand (`context_turn`, `GET /api/telemetry/context-trace?turn=`); compaction count and the context they freed; step count and time. The usage route also reads it per SLOT (`read_slot_projection(slot, "usage")`), with the slot's units ordered by `previous` succession (`units_in_succession`) rather than by `createdAt`. |
+| `usage` | What it spent: credits from all three spenders, split by which spent what in `credits_by_source`; the four token dimensions, per model; the context bill summed from `context/composed` (`context.tokens`, `chars`, `blocks`, `estimated_turns`), plus the context part, one fixed-size state that does not grow with the session (`projection_usage_measured`): Crew's five running sums since the engine's context last restarted (a new unit or an engine compaction restarts them, and a `compaction/applied` keeps only what was composed after the newest turn closed with an occupancy reading), the newest `context/measured` breakdown and time to first output (last-wins), the newest occupancy reading from `turn/completed` (reset by a new unit), a 30-row trend ring whose rows each hold one turn whole (its ordinal, its Aj Crew blocks by name up to 64, its own engine measurement and occupancy reading), the newest session-start row kept apart, and the newest 200 dated occupancy readings plus the configured window, for the fullest-turn peak the context trace reports. It renders slim, so a push stays a few KB: `context.latest` (the newest turn whole), `trend` (each row its ordinal, five sums, `loop` and its own reading `used` only), `start` (the same plus `figure`), `earlier` (the turns before the ring, exact), `turns` (the turn counter) and `chars_per_token`; a kept row's whole turn is read from the state on demand (`context_turn`, `GET /api/telemetry/context-trace?turn=`); compaction count and the context they freed; step count and time. The usage route also reads it per SLOT (`read_slot_projection(slot, "usage")`), with the slot's units ordered by `previous` succession (`units_in_succession`) rather than by `createdAt`. |
 | `timeline` | The newest turn, lifecycle and cost MOMENTS, oldest first. Message, step and tool entries are deliberately absent: they are the bulk of a log, the page route and `tools` already serve them, and including them would make the timeline a second copy of the file. |
 | `tools` | Calls matched to completions by `call_id`: totals, per name, open calls, unmatched completions. An error is `status` in `refused`/`error`/`failed` OR `is_error` true -- two independent signals, and an absent `is_error` is not a claim that the call worked. |
 | `approvals` | Requests matched to decisions by `approval_id`: pending, decided, the decision tally, the last decision. The native permission path writes both types (`on_approval_requested` / `on_approval_decided` in the chat runner); coordinator approvals and question cards are not recorded. |
@@ -603,12 +603,12 @@ folds those ids name is the remaining step, and it must read the walk's own `end
 reason: only `first` means the chain reached the slot's first unit, so any other
 reason totals PART of a life and must not be presented as the whole of one (§8).
 
-`recording` -- false when `KIROCREW_CREW_LOG` has switched the crew log off. Only then
+`recording` -- false when `AJCREW_CREW_LOG` has switched the crew log off. Only then
 does the read add `flag_value`: that one variable's value, stripped, printable
 characters only and cut at 40, so the panel can quote the typo that switched it off,
 and `flag_recognised`, whether that value is one of the switch-off spellings, so the
 panel words any other value as unrecognised, and `env_file`, the `.env` path the
-gateway reads (`constants.env_file_display()`, which follows `KIROCREW_HOME`), so the
+gateway reads (`constants.env_file_display()`, which follows `AJCREW_HOME`), so the
 panel names the file to edit. Apart from that variable's value and that path, no
 environment value is sent.
 
@@ -631,7 +631,7 @@ to the unit it is serving through `crew_log.resolve.unit_for_session_key`, and a
 id the registry does not recognise -- which is what an ACP id is, since it is not a
 session key -- is used VERBATIM. That ordering is what keeps a unit-id-addressed
 read working, and two callers address by unit id: the
-`kirocrew-crew-log` MCP server reads a unit by id through the unit-keyed door
+`ajcrew-crew-log` MCP server reads a unit by id through the unit-keyed door
 described below, and the `session_projection` frame carries the unit it folded as
 `session_id`, so anything taking an id out of a frame addresses by unit id too.
 Both responses echo the id the CALLER sent, never the resolved one: a client polling
@@ -671,7 +671,7 @@ caller above it rather than here. The dashboard panel states the limit in its ow
 footer rather than implying a whole-life total.
 
 Those two are the BROWSER's door: cookie auth, keyed on a session id the dashboard
-already holds. A second, unit-keyed door serves the `kirocrew-crew-log` MCP server
+already holds. A second, unit-keyed door serves the `ajcrew-crew-log` MCP server
 over the same `read_page` and projection reads, on the strict internal transport
 only: `GET /api/crew-log/sessions` lists units, `GET /api/crew-log/resolve` answers
 which unit a caller's key lands in, and `GET /api/crew-log/units/{unit}/page` and
@@ -834,7 +834,7 @@ history in front of it. That is the posture `crew-log-core.md` section 6 states 
 
 A session with no crew log is not an error: the page reads as empty with
 `exists: false`, and each projection is the empty one at seq 0. A session that
-ran with `KIROCREW_CREW_LOG=0` has none, and the panel renders without
+ran with `AJCREW_CREW_LOG=0` has none, and the panel renders without
 first asking whether the file exists.
 
 Both routes are gated on the DASHBOARD OWNER. `resolve` makes no authorization
@@ -885,7 +885,7 @@ logs one WARNING per call site:
 crew log read over budget: slot=<slot> fold=<fold> unit=<unit> records=<n> delta=<d> k=256 cold=<bool> caller=<file:line func> < ...
 ```
 
-`KIROCREW_CREW_LOG_READ_BUDGET` picks the mode, read per call: `report` (the default,
+`AJCREW_CREW_LOG_READ_BUDGET` picks the mode, read per call: `report` (the default,
 and any unknown value) counts and warns and changes no read; `off` counts nothing. A
 mode that answers "not ready" instead of folding cold comes with the first change that
 opts a real caller into it. `test_crew_log_read_budget.py` pins today's gateway callers
@@ -953,7 +953,7 @@ one's panel. A frame arriving while the panel's read is in flight is not seeded 
 that response settles (`website/src/hooks/websocket/sessionProjection.ts`).
 
 The storage package is imported LAZILY by the handler module, never at import
-time. The crew log can be switched off with `KIROCREW_CREW_LOG=0`, this module sits
+time. The crew log can be switched off with `AJCREW_CREW_LOG=0`, this module sits
 on the dashboard's boot path, and a gateway launched with the flag off must not
 pay to load a store it will not read -- the same split the emitter keeps, pinned
 by a test that imports the module in a clean interpreter.
@@ -1073,7 +1073,7 @@ no held cell is not sealed, so the worker never folds cold here.
 **The warm slot memos are bounded by RESIDENT BYTES, and each cell is charged what it
 retains.** `slot_fold_cache_bytes()` is the one ceiling for every slot cell together,
 across every data home, slot and fold. It defaults to 256 MiB and an operator lowers it
-with `KIROCREW_SLOT_FOLD_CACHE_BYTES`; an unparseable or non-positive value leaves the
+with `AJCREW_SLOT_FOLD_CACHE_BYTES`; an unparseable or non-positive value leaves the
 default standing, because a typo'd ceiling must not silently cost every read a cold fold.
 
 A cell is charged `(rows + 1) x` its fold's ROW cost, where `rows` is the fold's own
@@ -1161,7 +1161,7 @@ That is the POINT -- one 2 GiB cell should lose to four hundred small ones -- be
 what is being bounded is resident bytes and not cell count.
 
 **The warm SESSION memos have a ceiling of their own**, `session_fold_cache_bytes()`,
-64 MiB by default, lowered with `KIROCREW_SESSION_FOLD_CACHE_BYTES`. A session cell is
+64 MiB by default, lowered with `AJCREW_SESSION_FOLD_CACHE_BYTES`. A session cell is
 charged its SERIALIZED size, summed over its seven folds and weighed only for the folds
 a pass changed. That is affordable here for a reason the slot table does not have: a
 session fold's state is flat and small, and the fold already copies it for every entry
@@ -1190,7 +1190,7 @@ making anything slower than the lazy path it replaced.
 
 How many boards that is now depends on what each board holds, which is the behaviour a
 count ceiling could not express. A deployment whose boards are larger than the default
-leaves room for raises `KIROCREW_SLOT_FOLD_CACHE_BYTES`, which is why the ceiling is a
+leaves room for raises `AJCREW_SLOT_FOLD_CACHE_BYTES`, which is why the ceiling is a
 variable rather than a constant.
 
 The per-key fold locks are a second table, and what bounds it is the passes in flight: an
@@ -1533,7 +1533,7 @@ interpolated from `totals.lineage_cap`), since the bubble opens away from the
 stat it explains, and leads with what it means (old logs are piling up), says
 what it can cost the page (below), names where its remedy is typed ("in a
 terminal run:"),
-and what to do (the `kirocrew config set` command for the retention setting,
+and what to do (the `ajcrew config set` command for the retention setting,
 named as the one switch that also expires the transcripts the Archive page
 lists, since `store.sweep_expired` runs off the same value), stating no default,
 since the default lives in `config/sections_session.py` and prose restating it would go
@@ -1597,7 +1597,7 @@ of its responsibility:
 | `crew_log/session_tree_projection_checkpoint.py` | the checkpoint: `CHECKPOINT_NAME`, `CHECKPOINT_VERSION`, the store identity a payload is bound to (`_current_root`), the row codec with the string bounds every door into the state applies (`_within_bounds`, `_edge_within_bounds`), `_load_checkpoint`, `_save_checkpoint`, and the debounced write (`_schedule_checkpoint`, `flush_checkpoint`, `cancel_pending_checkpoint`) |
 | `crew_log/session_tree_projection_seed.py` | the cold start: `ensure_seeded`, the tail replay (`_replay_tail`, `_replay_spawned`), the install over commits made while the scan ran, and the timed re-attempt of a seed that raised (`SEED_RETRY_COOLDOWN_SECS`) |
 
-The module is a mirror facade (`kiro_crew._facade_mirror`). An owner function whose first
+The module is a mirror facade (`aj_crew._facade_mirror`). An owner function whose first
 parameter is `self` is bound as the `SessionTreeProjection` attribute of the same name, so
 its `__module__` and `__qualname__` name the owner. Their annotations resolve for type
 checkers only: both owners import `SessionTreeProjection`, and the seed owner
@@ -1904,7 +1904,7 @@ an advance that earns a savepoint write persists the state it already holds inst
 folding from disk; the eager warm path then costs the new entries alone. A bundle on a
 unit with no counter keeps the old rule and refolds from disk to earn a write.
 
-The envelope is the projection kernel's (`kiro_crew.projection.checkpoint`), and this
+The envelope is the projection kernel's (`aj_crew.projection.checkpoint`), and this
 package supplies the two blocks inside it. The `identity` block holds the facts a
 savepoint must MATCH to describe this log, compared verbatim by the kernel and never
 interpreted by it. The `witness` holds the evidence a LIVE check needs, which cannot
@@ -2168,7 +2168,7 @@ now, exactly as for a savepoint the gateway wrote. A refused file is a refused s
 the read goes on as before. A unit being removed refuses the lease and the staged file is
 deleted; a staged file never admitted is deleted after `STALE_STAGED_SECS` (1 h) by the
 next backfill. At most one child runs per process; three failures in a row turn it off for
-the process with one WARNING; `KIROCREW_SLOT_BACKFILL_CHILD=0` keeps it off.
+the process with one WARNING; `AJCREW_SLOT_BACKFILL_CHILD=0` keeps it off.
 
 **Beside the session folds' `projections/`, never inside it.** The kernel store derives a
 file name from the fold name alone, and `tools` is read both as a session fold and as a

@@ -48,13 +48,13 @@ from _hot_reload_helpers import (
     sel_outcomes,
 )
 
-from kiro_crew.config import live
-from kiro_crew.discord.transport import DiscordTransport
-from kiro_crew.discord.transport_dispatch import DiscordDispatcher
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.telegram.transport import TelegramTransport
-from kiro_crew.telegram.transport_dispatch import TelegramDispatcher
-from kiro_crew.webex.transport import WebexTransport
+from aj_crew.config import live
+from aj_crew.discord.transport import DiscordTransport
+from aj_crew.discord.transport_dispatch import DiscordDispatcher
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.telegram.transport import TelegramTransport
+from aj_crew.telegram.transport_dispatch import TelegramDispatcher
+from aj_crew.webex.transport import WebexTransport
 
 CASES = channel_cases()
 
@@ -241,7 +241,7 @@ def test_an_unreadable_config_falls_back_to_the_boot_copy(case: ChannelCase, mon
     """A threshold is not an authorization decision, so a turn keeps running."""
     d = case.make_dispatcher(soft=80, hard=95)
     monkeypatch.setattr(
-        "kiro_crew.config.loader.KiroCrewConfig.load",
+        "aj_crew.config.loader.AjCrewConfig.load",
         staticmethod(lambda *a, **k: (_ for _ in ()).throw(OSError("boom"))),
     )
     assert case.read_thresholds(d) == case.expected_thresholds(80, 95)
@@ -255,7 +255,7 @@ def test_dm_scope_is_boot_only(case: ChannelCase) -> None:
     keys in the other namespace and resume a stale session. The field is
     ``restart=True``; a live change is invisible before and after ``/new``.
     """
-    from kiro_crew.config.schema import requires_restart
+    from aj_crew.config.schema import requires_restart
 
     assert requires_restart("messaging.dm_scope")
     assert case.dm_scope_probe is not None

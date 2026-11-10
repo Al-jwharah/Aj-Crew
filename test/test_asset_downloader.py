@@ -1,4 +1,4 @@
-"""Unit tests for kiro_crew.asset_downloader — the shared verified-transfer engine.
+"""Unit tests for aj_crew.asset_downloader — the shared verified-transfer engine.
 
 No network: ``build_opener`` is replaced with a fake opener that streams bytes from
 memory and honours (or deliberately ignores) a ``Range`` header, which is the only
@@ -26,8 +26,8 @@ from types import SimpleNamespace
 import pytest
 from _clock_isolation import assert_clock_is_private
 
-from kiro_crew import asset_downloader as dl
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import asset_downloader as dl
+from aj_crew.testing.clock import ManualClock
 
 #: The real ``build_opener``, captured before the autouse no-network fixture
 #: replaces it -- the handler-wiring test is about the real one.
@@ -120,10 +120,10 @@ def _no_network(monkeypatch: pytest.MonkeyPatch) -> None:
         raise urllib.error.URLError("blocked by test fixture")
 
     monkeypatch.setattr(
-        "kiro_crew.asset_downloader.build_opener",
+        "aj_crew.asset_downloader.build_opener",
         lambda *a, **k: SimpleNamespace(open=_blocked),
     )
-    monkeypatch.setattr("kiro_crew.asset_downloader.urllib.request.urlopen", _blocked)
+    monkeypatch.setattr("aj_crew.asset_downloader.urllib.request.urlopen", _blocked)
 
 
 class TestHappyPath:
@@ -131,7 +131,7 @@ class TestHappyPath:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         open_fn, state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         target = tmp_path / "clips" / "clip.mp4"
         ok, err = dl.download_to(target, _URL, sha256=_SHA)
         assert (ok, err) == (True, "")
@@ -144,7 +144,7 @@ class TestHappyPath:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         open_fn, _state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         seen: list[tuple[int, int]] = []
         verifying: list[bool] = []
         ok, _err = dl.download_to(
@@ -166,7 +166,7 @@ class TestHappyPath:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         open_fn, _state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         target = tmp_path / "clip.mp4"
         assert dl.download_to(target, _URL, sha256=_SHA, restrict_to_owner=True)[0] is True
         assert stat.S_IMODE(target.stat().st_mode) == 0o600
@@ -194,7 +194,7 @@ class TestRefusals:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         open_fn, _state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         target = tmp_path / "clip.mp4"
         ok, err = dl.download_to(target, _URL, sha256="0" * 64)
         assert ok is False
@@ -207,7 +207,7 @@ class TestRefusals:
     ) -> None:
         """A manifest states the size; a longer body is a lie, not a bigger file."""
         open_fn, _state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         target = tmp_path / "clip.mp4"
         ok, err = dl.download_to(target, _URL, sha256=_SHA, size=100, chunk_bytes=64)
         assert ok is False
@@ -218,7 +218,7 @@ class TestRefusals:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         open_fn, _state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         target = tmp_path / "clip.mp4"
         ok, err = dl.download_to(target, _URL, sha256=_SHA, min_bytes=len(_PAYLOAD) + 1)
         assert ok is False
@@ -229,7 +229,7 @@ class TestRefusals:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         open_fn, _state = _fake_urlopen(fail_first=True)
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         target = tmp_path / "clip.mp4"
         ok, err = dl.download_to(target, _URL, sha256=_SHA)
         assert ok is False
@@ -248,7 +248,7 @@ class TestResume:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         open_fn, state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         target = tmp_path / "clip.mp4"
         self._part(target, 1000)
         ok, err = dl.download_to(target, _URL, sha256=_SHA, size=len(_PAYLOAD), resume=True)
@@ -261,7 +261,7 @@ class TestResume:
     ) -> None:
         """A 200 answer to a ranged request must not be appended to the prefix."""
         open_fn, state = _fake_urlopen(honour_range=False)
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         target = tmp_path / "clip.mp4"
         self._part(target, 1000)
         ok, err = dl.download_to(target, _URL, sha256=_SHA, resume=True)
@@ -274,7 +274,7 @@ class TestResume:
     ) -> None:
         """Those bytes are not a PREFIX of the wanted file, so resuming them is wrong."""
         open_fn, state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         target = tmp_path / "clip.mp4"
         part = target.parent / f"{target.name}{dl.PART_SUFFIX}"
         part.parent.mkdir(parents=True, exist_ok=True)
@@ -288,7 +288,7 @@ class TestResume:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         open_fn, _state = _fake_urlopen(fail_first=True)
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         target = tmp_path / "clip.mp4"
         part = self._part(target, 1000)
         ok, _err = dl.download_to(target, _URL, sha256=_SHA, resume=True)
@@ -304,7 +304,7 @@ class TestResume:
         with 416. Keeping that partial would send the same range forever.
         """
         open_fn, state = _fake_urlopen(refuse_range_at_end=True)
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         target = tmp_path / "poster.jpg"
         part = self._part(target, len(_PAYLOAD))
         first = dl.download_to(target, _URL, sha256=_SHA, max_bytes=8 * 1024 * 1024, resume=True)
@@ -320,7 +320,7 @@ class TestResume:
     ) -> None:
         """The digest is end to end, so wrong bytes in the prefix cannot slip through."""
         open_fn, _state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         target = tmp_path / "clip.mp4"
         part = target.parent / f"{target.name}{dl.PART_SUFFIX}"
         part.parent.mkdir(parents=True, exist_ok=True)
@@ -334,7 +334,7 @@ class TestResume:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         open_fn, state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         target = tmp_path / "clip.mp4"
         staging = tmp_path / ".clip.mp4.tmp"
         staging.write_bytes(b"junk from a dead process")
@@ -365,7 +365,7 @@ class TestRateLimit:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         open_fn, _state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         clock = _pin_clock(monkeypatch)
         target = tmp_path / "clip.mp4"
         # 1 KiB/s over 4 KiB of payload: every chunk owes time it has not spent.
@@ -380,7 +380,7 @@ class TestRateLimit:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         open_fn, _state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         clock = _pin_clock(monkeypatch)
         assert dl.download_to(tmp_path / "clip.mp4", _URL, sha256=_SHA, chunk_bytes=512)[0] is True
         assert clock.sleeps == ()
@@ -428,7 +428,7 @@ class TestRedaction:
             raise exc
 
         monkeypatch.setattr(
-            "kiro_crew.asset_downloader.build_opener",
+            "aj_crew.asset_downloader.build_opener",
             lambda *a, **k: SimpleNamespace(open=_open),
         )
         ok, reason = dl.download_to(tmp_path / "a.bin", url, sha256="0" * 64)
@@ -532,7 +532,7 @@ class TestCeiling:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         open_fn, _state = _fake_urlopen(endless=True)
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         target = tmp_path / "clip.mp4"
         ok, err = dl.download_to(target, _URL, sha256=_SHA, max_bytes=4096, chunk_bytes=512)
         assert ok is False
@@ -552,7 +552,7 @@ class TestCeiling:
         inside the open block.
         """
         open_fn, _state = _fake_urlopen(endless=True)
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         target = tmp_path / "clip.mp4"
         ok, err = dl.download_to(target, _URL, sha256=_SHA, max_bytes=64, chunk_bytes=32)
         assert ok is False
@@ -567,7 +567,7 @@ class TestCeiling:
     ) -> None:
         """No transfer is unbounded -- DEFAULT_MAX_BYTES applies when nothing is given."""
         open_fn, _state = _fake_urlopen(endless=True)
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         monkeypatch.setattr(dl, "DEFAULT_MAX_BYTES", 2048)
         ok, err = dl.download_to(tmp_path / "clip.mp4", _URL, sha256=_SHA, chunk_bytes=512)
         assert ok is False
@@ -578,7 +578,7 @@ class TestCeiling:
     ) -> None:
         """It is a BOUND, not a declared length, so it cannot mean "already complete"."""
         open_fn, state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         target = tmp_path / "clip.mp4"
         part = tmp_path / f"clip.mp4{dl.PART_SUFFIX}"
         part.write_bytes(_PAYLOAD[:1000])
@@ -670,7 +670,7 @@ class TestStagingSymlink:
         (held open), never to the replacement, and the install refuses the
         replacement because it is not the inode the digest was computed on."""
         open_fn, _state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         target = tmp_path / "clip.mp4"
         staging = tmp_path / f"clip.mp4{dl.PART_SUFFIX}"
         staging.write_bytes(_PAYLOAD[:1000])
@@ -699,7 +699,7 @@ class TestStagingSymlink:
         other rule passes. The link count on the descriptor is what refuses it, and
         the user's other name keeps exactly the bytes it had."""
         open_fn, _state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         victim = tmp_path / "notes.txt"
         victim.write_bytes(_PAYLOAD[:4])
         staging = tmp_path / f"clip.mp4{dl.PART_SUFFIX}"
@@ -724,7 +724,7 @@ class TestStagingSymlink:
         a freed inode number is handed straight back on ext4 and tmpfs, so the
         comparison only holds because the hashed descriptor is still open."""
         open_fn, _state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         target = tmp_path / "clip.mp4"
         staging = tmp_path / f"clip.mp4{dl.PART_SUFFIX}"
         real_install = dl.install_verified
@@ -771,7 +771,7 @@ class TestStagingSymlink:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         open_fn, _state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         seen: list[tuple[int, int]] = []
         real_install = dl.install_verified
 
@@ -845,7 +845,7 @@ class TestStagingSymlink:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         open_fn, _state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         victim = tmp_path / "protected.json"
         victim.write_bytes(b"do not touch")
         target = tmp_path / "clip.mp4"
@@ -868,7 +868,7 @@ class TestStagingSymlink:
         this branch cannot be reached by the resume test above.
         """
         open_fn, _state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         victim = tmp_path / "protected.json"
         victim.write_bytes(b"do not touch")
         staging = tmp_path / "staged.tmp"
@@ -895,7 +895,7 @@ class TestPinnedTargetDir:
         its new name, and the victim directory receives nothing.
         """
         open_fn, _state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         cache = tmp_path / "cache"
         cache.mkdir()
         victim = tmp_path / "victim"
@@ -933,7 +933,7 @@ class TestPinnedTargetDir:
         operation is by name under it. Exercised here by taking that branch on
         purpose, since the other platform cannot be tested from this one."""
         open_fn, _state = _fake_urlopen()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: open_fn)
         monkeypatch.setattr(dl.pinned_fs, "supports_pinned_walk", lambda: False)
         cache = tmp_path / "cache"
         cache.mkdir()
@@ -958,8 +958,8 @@ class TestPinnedTargetDir:
 
 def test_the_install_rename_waits_out_a_brief_windows_hold(tmp_path, monkeypatch):
     """A file held for a moment on Windows does not cost the verified download."""
-    import kiro_crew.atomic_write as aw
-    from kiro_crew import platform_compat
+    import aj_crew.atomic_write as aw
+    from aj_crew import platform_compat
 
     (tmp_path / "asset.part").write_bytes(b"verified")
     real_replace = os.replace

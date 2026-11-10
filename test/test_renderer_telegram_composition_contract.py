@@ -1,9 +1,9 @@
 """``TelegramRenderer`` is one class composed from owner modules; these tests pin how.
 
-``kiro_crew.telegram.renderer`` keeps the renderer's state and the constructs repository
+``aj_crew.telegram.renderer`` keeps the renderer's state and the constructs repository
 guards read in that file. An owner function whose first parameter is ``self`` is bound as
 the class attribute of the same name, and every other moved name is served from its owner
-through ``kiro_crew._facade_mirror``. Pinned here: the owner set and its layer order, that
+through ``aj_crew._facade_mirror``. Pinned here: the owner set and its layer order, that
 each moved member is its owner's own function with its base kind and signature, the rules
 a function bound from outside the class body needs, the logger name, and, over the owners,
 the three sealing and offload rules ``test_split_credential_boundary.py`` runs on
@@ -23,10 +23,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.messaging import display_safety
-from kiro_crew.telegram import renderer as FACADE_MODULE
+from aj_crew.messaging import display_safety
+from aj_crew.telegram import renderer as FACADE_MODULE
 
-FACADE = "kiro_crew.telegram.renderer"
+FACADE = "aj_crew.telegram.renderer"
 STEM = "renderer"
 FACADE_PATH = Path(FACADE_MODULE.__file__).resolve()
 TELEGRAM_DIR = FACADE_PATH.parent
@@ -212,7 +212,7 @@ FACADE_PINNED = frozenset(
 
 
 def _owner(stem: str) -> ModuleType:
-    return importlib.import_module(f"kiro_crew.telegram.{stem}")
+    return importlib.import_module(f"aj_crew.telegram.{stem}")
 
 
 def _source(stem: str) -> str:

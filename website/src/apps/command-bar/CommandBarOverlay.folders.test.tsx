@@ -67,7 +67,7 @@ vi.mock('../../hooks/useTheme', () => ({ useTheme: () => ({ cycle: vi.fn() }) })
 /** Every network call the overlay could make, so a request is observable. */
 const listApps = vi.fn(async () => [])
 const chatFolders = vi.fn(async () => [] as unknown[])
-const kirocrewConfig = vi.fn(async () => ({}) as unknown)
+const ajcrewConfig = vi.fn(async () => ({}) as unknown)
 // The settings-search governance reads: the root must answer from cache, never fetch.
 const dashboardConfig = vi.fn(async () => ({}) as unknown)
 const tipsStatus = vi.fn(async () => ({}) as unknown)
@@ -75,7 +75,7 @@ vi.mock('../../api/client', () => ({
   api: {
     listApps: (...a: unknown[]) => listApps(...(a as [])),
     chatFolders: (...a: unknown[]) => chatFolders(...(a as [])),
-    kirocrewConfig: (...a: unknown[]) => kirocrewConfig(...(a as [])),
+    ajcrewConfig: (...a: unknown[]) => ajcrewConfig(...(a as [])),
     dashboardConfig: (...a: unknown[]) => dashboardConfig(...(a as [])),
     tipsStatus: (...a: unknown[]) => tipsStatus(...(a as [])),
   },
@@ -118,7 +118,7 @@ const folderRowOrder = (names: string[]): string[] =>
  * Pass `seed: false` for the cold-cache case: nothing is in the key, so the view's
  * own fetch is what produces the list.
  *
- * `config` seeds the shared `['kirocrewConfig']` entry the way the shell's own read
+ * `config` seeds the shared `['ajcrewConfig']` entry the way the shell's own read
  * leaves it: a body puts the entry in its success state; `'failed'` runs one
  * rejecting read through the client first, so the entry is in its ERROR state
  * before the bar mounts — the bar itself never fetches that key.
@@ -138,12 +138,12 @@ async function mount(
   if (opts.config === 'failed') {
     await client
       .fetchQuery({
-        queryKey: ['kirocrewConfig'],
+        queryKey: ['ajcrewConfig'],
         queryFn: () => Promise.reject(new Error('settings read refused: 503')),
       })
       .catch(() => undefined)
   } else if (opts.config) {
-    client.setQueryData(['kirocrewConfig'], opts.config)
+    client.setQueryData(['ajcrewConfig'], opts.config)
   }
   const onClose = vi.fn()
   const { unmount } = render(
@@ -271,7 +271,7 @@ describe('command bar — the root', () => {
     expect(listApps).not.toHaveBeenCalled()
     // The folder ORDER's settings read is a cache subscription too: the shell holds
     // that entry, and opening the bar must not refetch it.
-    expect(kirocrewConfig).not.toHaveBeenCalled()
+    expect(ajcrewConfig).not.toHaveBeenCalled()
     // Nor do the settings rows' governance reads, whatever their age.
     expect(dashboardConfig).not.toHaveBeenCalled()
     expect(tipsStatus).not.toHaveBeenCalled()
@@ -286,7 +286,7 @@ describe('command bar — folders view, sort mode', () => {
     await waitFor(() => expect(hasRow('Zulu')).toBe(true))
     expect(folderRowOrder(['Zulu', 'alpha', 'Mike'])).toEqual(['alpha', 'Mike', 'Zulu'])
     // Read from the cache, not fetched: the launcher invariant holds in the view too.
-    expect(kirocrewConfig).not.toHaveBeenCalled()
+    expect(ajcrewConfig).not.toHaveBeenCalled()
   })
 
   it('draws the stored order when the setting is absent or unknown', async () => {
@@ -307,7 +307,7 @@ describe('command bar — folders view, sort mode', () => {
     })
     await waitFor(() => expect(hasRow('Zulu')).toBe(true))
     expect(folderRowOrder(['Zulu', 'alpha', 'Mike'])).toEqual(['Zulu', 'alpha', 'Mike'])
-    client.setQueryData(['kirocrewConfig'], { dashboard: { folder_sort: 'created' } })
+    client.setQueryData(['ajcrewConfig'], { dashboard: { folder_sort: 'created' } })
     await waitFor(() =>
       expect(folderRowOrder(['Zulu', 'alpha', 'Mike'])).toEqual(['Mike', 'Zulu', 'alpha']),
     )
@@ -340,7 +340,7 @@ describe('command bar — folders view, sort mode', () => {
     // The list itself is still there, in the stored order.
     await waitFor(() => expect(hasRow('Zulu')).toBe(true))
     expect(folderRowOrder(['Zulu', 'alpha', 'Mike'])).toEqual(['Zulu', 'alpha', 'Mike'])
-    expect(kirocrewConfig).not.toHaveBeenCalled()
+    expect(ajcrewConfig).not.toHaveBeenCalled()
   })
 
   it('says nothing when a body is on hand, even if the shell\'s last refetch of it failed', async () => {
@@ -352,12 +352,12 @@ describe('command bar — folders view, sort mode', () => {
     await waitFor(() => expect(hasRow('Zulu')).toBe(true))
     await client
       .fetchQuery({
-        queryKey: ['kirocrewConfig'],
+        queryKey: ['ajcrewConfig'],
         queryFn: () => Promise.reject(new Error('settings read refused: 503')),
         staleTime: 0,
       })
       .catch(() => undefined)
-    expect(client.getQueryState(['kirocrewConfig'])?.status).toBe('error')
+    expect(client.getQueryState(['ajcrewConfig'])?.status).toBe('error')
     await waitFor(() => expect(folderRowOrder(['Zulu', 'alpha', 'Mike'])).toEqual(['alpha', 'Mike', 'Zulu']))
     expect(screen.queryByTestId('command-bar-folder-order-unavailable')).toBeNull()
   })

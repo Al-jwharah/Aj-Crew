@@ -14,12 +14,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
+from aj_crew.config import AjCrewConfig
 
 
 @pytest.fixture(name="cfg")
 def cfg_fixture():
-    c = KiroCrewConfig()
+    c = AjCrewConfig()
     c.session.timeout_secs = 2  # short for testing
     return c
 
@@ -70,7 +70,7 @@ def _raw_sid(mgr, key: str):
     "was it cleared?" assertion pass whether or not the clear ran. These tests
     care about the stored pointer, so they read it.
     """
-    from kiro_crew.session_map import canonical_key
+    from aj_crew.session_map import canonical_key
 
     return (mgr._session_map._data.get(canonical_key(key)) or {}).get("sid")
 

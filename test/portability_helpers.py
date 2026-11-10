@@ -1,11 +1,11 @@
 """The crew-home fixtures shared by ``test_portability.py`` and its topic siblings.
 
-``fake_kirocrew_home`` builds a realistic crew directory under ``tmp_path``: config,
+``fake_ajcrew_home`` builds a realistic crew directory under ``tmp_path``: config,
 hooks, crons, notifications, the memory databases, workspace memory, plan memory and a
 skill, plus the secret files, pid lists, snapshots and outbox an export must leave out.
-``patched_config_dir`` points ``kiro_crew.portability`` and ``KIROCREW_HOME`` at it.
+``patched_config_dir`` points ``aj_crew.portability`` and ``AJCREW_HOME`` at it.
 Every module whose tests request them binds both by name, because
-``patched_config_dir`` requests ``fake_kirocrew_home``.
+``patched_config_dir`` requests ``fake_ajcrew_home``.
 """
 
 from __future__ import annotations
@@ -19,9 +19,9 @@ import pytest
 
 
 @pytest.fixture
-def fake_kirocrew_home(tmp_path):
-    """Create a realistic ~/.kirocrew directory structure for testing."""
-    mc = tmp_path / ".kirocrew"
+def fake_ajcrew_home(tmp_path):
+    """Create a realistic ~/.ajcrew directory structure for testing."""
+    mc = tmp_path / ".ajcrew"
     mc.mkdir()
 
     # config.json
@@ -97,7 +97,7 @@ def fake_kirocrew_home(tmp_path):
         "# User Preferences\n\n- Prefers dark mode\n- Uses vim\n"
     )
     (mem_dir / "projects.md").write_text(
-        "# Active Projects\n\n## KiroCrew\nWorking on portability feature\n"
+        "# Active Projects\n\n## AjCrew\nWorking on portability feature\n"
     )
     hist_dir = mem_dir / "history"
     hist_dir.mkdir()
@@ -137,8 +137,8 @@ def fake_kirocrew_home(tmp_path):
 
 
 @pytest.fixture
-def patched_config_dir(fake_kirocrew_home):
+def patched_config_dir(fake_ajcrew_home):
     """Patch config_dir() to return our fake directory."""
-    with patch("kiro_crew.portability.config_dir", return_value=fake_kirocrew_home):
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(fake_kirocrew_home)}):
-            yield fake_kirocrew_home
+    with patch("aj_crew.portability.config_dir", return_value=fake_ajcrew_home):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(fake_ajcrew_home)}):
+            yield fake_ajcrew_home

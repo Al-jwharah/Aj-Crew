@@ -44,14 +44,14 @@ from prompts_helpers import (
     _write_request,
 )
 
-from kiro_crew.dashboard.chat import _expand_prompt_mention
-from kiro_crew.dashboard.handlers import (
+from aj_crew.dashboard.chat import _expand_prompt_mention
+from aj_crew.dashboard.handlers import (
     MAX_PROMPT_BYTES,
     api_prompt_detail,
     api_prompts,
     api_prompts_create,
 )
-from kiro_crew.dashboard.handlers import prompts as _prompts_mod
+from aj_crew.dashboard.handlers import prompts as _prompts_mod
 
 
 class TestApiPromptsCreate:
@@ -949,7 +949,7 @@ class TestPromptWriteHardening:
 
         # The update writes through the descriptor-pinned writer, not atomic_write.
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.prompts.verified_replace_file_nolink", _boom
+            "aj_crew.dashboard.handlers.prompts.verified_replace_file_nolink", _boom
         )
         resp = asyncio.run(
             api_prompt_detail(
@@ -1070,7 +1070,7 @@ class TestScopedReadOversizeRace:
 
     def test_gate_oversize_maps_to_a_coded_413(self, tmp_path, mock_sel, monkeypatch):
         _user_prompt(tmp_path, "grower", "small\n")
-        import kiro_crew.dashboard.handlers.prompts as mod
+        import aj_crew.dashboard.handlers.prompts as mod
 
         def _boom(*a, **k):
             raise mod.FileTooLargeError("grew after the stat")
@@ -1089,7 +1089,7 @@ class TestScopedReadDescriptionSource:
 
     def test_description_comes_from_the_validated_bytes(self, tmp_path, mock_sel, monkeypatch):
         _user_prompt(tmp_path, "p", "---\ndescription: real one\n---\n\n# Body\n")
-        import kiro_crew.dashboard.handlers.prompts as mod
+        import aj_crew.dashboard.handlers.prompts as mod
 
         # Any path reopen after the gate is a defect, so make one fail loudly.
         def _no_reopen(_path):
@@ -1249,7 +1249,7 @@ class TestUpdateCarriesAccessControlMetadata:
         _user_prompt(tmp_path, "tagged", "ORIGINAL\n")
         path = tmp_path / ".kiro" / "prompts" / "tagged.md"
         try:
-            os.setxattr(str(path), "user.kirocrew_test", b"keep-me")
+            os.setxattr(str(path), "user.ajcrew_test", b"keep-me")
         except (AttributeError, OSError) as exc:  # tmpfs and several net mounts
             pytest.skip(f"filesystem does not support user xattrs: {exc}")
 
@@ -1262,7 +1262,7 @@ class TestUpdateCarriesAccessControlMetadata:
         )
         assert resp.status == 200
         assert path.read_text() == "EDITED\n"
-        assert os.getxattr(str(path), "user.kirocrew_test") == b"keep-me"
+        assert os.getxattr(str(path), "user.ajcrew_test") == b"keep-me"
 
     @pytest.mark.skipif(
         sys.platform == "win32",

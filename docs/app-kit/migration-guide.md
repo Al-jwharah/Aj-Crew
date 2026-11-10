@@ -1,19 +1,19 @@
 # Migration Guide — Adopting the App SDK
 
-For apps that already talk to the Kiro Crew Gateway via raw `fetch()`,
+For apps that already talk to the Aj Crew Gateway via raw `fetch()`,
 `urllib`, or custom HTTP wrappers, this guide shows how to migrate to the
 supported integration paths step by step:
 
 - **Dashboard UI pages (TypeScript/React)** → the host-provided
-  `@kirocrew/app-sdk` hooks (`useAppApi`, `useAppEvents`, …).
+  `@ajcrew/app-sdk` hooks (`useAppApi`, `useAppEvents`, …).
 - **Python apps / external CLI tools** → the source-only standalone
-  `kirocrew-client` package under `packages/kirocrew-client-py/`.
+  `ajcrew-client` package under `packages/ajcrew-client-py/`.
 
 ## Why Migrate
 
 - No more guessing endpoint paths and response shapes
 - Permission-scoped API access declared in `app.json` (UI hooks)
-- Built-in retry with exponential backoff (5xx and network errors for GET/PUT/DELETE, 429 for every method) — `kirocrew-client`
+- Built-in retry with exponential backoff (5xx and network errors for GET/PUT/DELETE, 429 for every method) — `ajcrew-client`
 - Auth handling (localhost skip, token injection, explicit app-secret exchange)
 - Host-managed WebSocket subscriptions for dashboard UI apps
 - Context injection with local buffering
@@ -27,9 +27,9 @@ You can replace one `fetch()` call at a time — no big-bang rewrite needed.
 
 ## TypeScript / Dashboard UI Apps
 
-Dashboard UI pages use the `@kirocrew/app-sdk` hooks, which the dashboard host
+Dashboard UI pages use the `@ajcrew/app-sdk` hooks, which the dashboard host
 provides at runtime via its import map — there is **no `npm install`** and no
-published gateway-client npm package. Mark `@kirocrew/app-sdk` (and React,
+published gateway-client npm package. Mark `@ajcrew/app-sdk` (and React,
 ReactDOM, lucide-react) as build externals.
 
 ### Shared transport and host interaction contracts
@@ -50,7 +50,7 @@ with the default automatic send. `agent` applies only to a newly created session
 The host remains responsible for session activation and backend authorization.
 
 In-process app backends use `CronSDK.set_enabled` / `set_enabled_async` for pause
-and resume; `kirocrew_client` callers use `pause_cron` / `resume_cron`. Passing
+and resume; `ajcrew_client` callers use `pause_cron` / `resume_cron`. Passing
 `enabled` to `CronSDK.update_job` raises instead of silently doing nothing.
 `CronSDK` toggles only the app's own jobs; IDs, history and existing execution
 gates remain.
@@ -58,13 +58,13 @@ gates remain.
 ### Step 1: Import the hooks
 
 ```typescript
-import { useAppApi, useAppEvents } from '@kirocrew/app-sdk'
+import { useAppApi, useAppEvents } from '@ajcrew/app-sdk'
 ```
 
 ### Step 2: Create the client
 
 ```tsx
-import { useAppApi, useAppEvents } from '@kirocrew/app-sdk'
+import { useAppApi, useAppEvents } from '@ajcrew/app-sdk'
 
 function MyPage() {
   const api = useAppApi()   // permission-scoped GET/POST/PUT/PATCH/DELETE
@@ -147,24 +147,24 @@ custom HTTP client, WS manager, and auth helper files.
 ### Step 1: Install
 
 The package is not published to PyPI or included in the main wheel. Install it
-from a Kiro Crew source checkout:
+from a Aj Crew source checkout:
 
 ```bash
-python -m pip install -e /path/to/KiroCrew/packages/kirocrew-client-py
+python -m pip install -e /path/to/AjCrew/packages/ajcrew-client-py
 ```
 
 ### Step 2: Replace sync calls with async
 
 ```python
-# Before — kiro_crew.apps.sdk (removed; was a sync client embedded in the main package)
-from kiro_crew.apps.sdk import KiroCrewClient
-mc = KiroCrewClient(app_name="my-tool")
+# Before — aj_crew.apps.sdk (removed; was a sync client embedded in the main package)
+from aj_crew.apps.sdk import AjCrewClient
+mc = AjCrewClient(app_name="my-tool")
 result = mc.dispatch_agent("my-agent", "Do something")
 mc.cron_add("refresh", every=3600, message="Check updates")
 
-# After — kirocrew_client (async, standalone)
-from kirocrew_client import KiroCrewClient
-async with KiroCrewClient(app_name="my-tool") as mc:
+# After — ajcrew_client (async, standalone)
+from ajcrew_client import AjCrewClient
+async with AjCrewClient(app_name="my-tool") as mc:
     task_id = await mc.dispatch_agent_async("my-agent", "Do something")
     result = await mc.get_task_result(task_id)
     await mc.add_cron("refresh", message="Check updates", every=3600)
@@ -172,14 +172,14 @@ async with KiroCrewClient(app_name="my-tool") as mc:
 
 Key differences:
 
-> **Note:** `kiro_crew.apps.sdk` does not exist. Do not try to import it; use
-> `kirocrew_client` for all Python apps.
+> **Note:** `aj_crew.apps.sdk` does not exist. Do not try to import it; use
+> `ajcrew_client` for all Python apps.
 
-| | Old (`kiro_crew.apps.sdk`, removed) | New (`kirocrew_client`) |
+| | Old (`aj_crew.apps.sdk`, removed) | New (`ajcrew_client`) |
 |---|---|---|
 | I/O model | Sync (`urllib`) | Async (`aiohttp`) |
-| Dependencies | Requires `kiro_crew` package | Standalone (only `aiohttp`) |
-| Errors | `{"_error": True}` dicts | `KiroCrewError` exceptions |
+| Dependencies | Requires `aj_crew` package | Standalone (only `aiohttp`) |
+| Errors | `{"_error": True}` dicts | `AjCrewError` exceptions |
 | Retry | None | Built-in (exponential backoff) |
 | Auth | Localhost only | Localhost + remote with app-secret auto-exchange |
 
@@ -187,19 +187,19 @@ Key differences:
 
 | Scenario | Recommended |
 |----------|-------------|
-| App backend managed by Kiro Crew (behind the gateway reverse proxy) | `kirocrew_client` (async) for outbound calls |
-| External CLI tool or service (Python) | `kirocrew_client` (async, standalone) |
-| Dashboard UI page (TypeScript/React) | `@kirocrew/app-sdk` hooks (host-provided) |
+| App backend managed by Aj Crew (behind the gateway reverse proxy) | `ajcrew_client` (async) for outbound calls |
+| External CLI tool or service (Python) | `ajcrew_client` (async, standalone) |
+| Dashboard UI page (TypeScript/React) | `@ajcrew/app-sdk` hooks (host-provided) |
 | Electron / Node.js app | Call the Gateway REST/WS endpoints directly via `fetch()` / a WebSocket |
 
 ## Compatibility with older Gateways
 
 Compatibility is endpoint-by-endpoint; the current project is pre-1.0, so there
-is no blanket “since 1.0” floor. Set `minKiroCrewVersion` for a feature your app
+is no blanket “since 1.0” floor. Set `minAjCrewVersion` for a feature your app
 requires. For an optional newer endpoint, handle a structured 404:
 
 ```tsx
-import type { AppApiError } from '@kirocrew/app-sdk'
+import type { AppApiError } from '@ajcrew/app-sdk'
 
 const api = useAppApi()
 try {
@@ -217,11 +217,11 @@ try {
 ```
 
 ```python
-from kirocrew_client import KiroCrewError
+from ajcrew_client import AjCrewError
 
 try:
     await mc.inject_context(slot_id, background_info, source="watch")
-except KiroCrewError as e:
+except AjCrewError as e:
     if e.code.value == "NOT_FOUND":
         fallback_method(background_info)
     else:
@@ -233,11 +233,11 @@ fail clearly and enforce the version floor in `app.json`.
 
 ## Migration Checklist
 
-- [ ] Choose the path: `@kirocrew/app-sdk` hooks (dashboard UI) or `kirocrew-client` (Python / external)
-- [ ] Python: install `packages/kirocrew-client-py/` from a source checkout and create `KiroCrewClient` at startup
+- [ ] Choose the path: `@ajcrew/app-sdk` hooks (dashboard UI) or `ajcrew-client` (Python / external)
+- [ ] Python: install `packages/ajcrew-client-py/` from a source checkout and create `AjCrewClient` at startup
 - [ ] UI: import `useAppApi` / `useAppEvents` and declare `permissions.api` / `permissions.events` in `app.json`
-- [ ] Replace raw HTTP calls (one at a time) with `api.get/post/...` or supported `kirocrew-client` methods
+- [ ] Replace raw HTTP calls (one at a time) with `api.get/post/...` or supported `ajcrew-client` methods
 - [ ] UI: replace custom WebSocket code with `useAppEvents`; Python: replace a hand-rolled WebSocket with `create_ws()`, which returns a `WsClient` with `on`, `on_slot` and `on_raw` listeners (see [Python Client](api-reference.md#python-client))
-- [ ] Add try/catch fallbacks for optional newer endpoints, or set `minKiroCrewVersion`
+- [ ] Add try/catch fallbacks for optional newer endpoints, or set `minAjCrewVersion`
 - [ ] Remove old HTTP/WS wrapper code
 - [ ] Test against your target Gateway version

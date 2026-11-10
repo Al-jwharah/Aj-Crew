@@ -42,9 +42,9 @@ from mcp_gateway_backend_coverage_helpers import _no_real_metrics_file  # noqa: 
 from mcp_gateway_backend_coverage_helpers import _drain, _frames, _line, _make_backend, _reader
 from stray_line_helpers import STRAY_LINES, too_deep_to_decode
 
-from kiro_crew.mcp_caller import CallerContext
-from kiro_crew.mcp_gateway import backend as backend_mod
-from kiro_crew.mcp_gateway.backend import (
+from aj_crew.mcp_caller import CallerContext
+from aj_crew.mcp_gateway import backend as backend_mod
+from aj_crew.mcp_gateway.backend import (
     Backend,
     BackendGone,
     _PendingRequest,
@@ -52,7 +52,7 @@ from kiro_crew.mcp_gateway.backend import (
     _write_json_line,
     send_initialize,
 )
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.testing.wait import await_until, finished
 
 # --- run_stdout_pump --------------------------------------------------------
 
@@ -435,13 +435,13 @@ class TestPumpStderr:
     @pytest.mark.asyncio
     async def test_drains_until_eof(self) -> None:
         reader = _reader(b"line one\nline two\n")
-        await _pump_stderr(reader, "kirocrew:example-mcp")
+        await _pump_stderr(reader, "ajcrew:example-mcp")
         assert reader.at_eof()
 
     @pytest.mark.asyncio
     async def test_oversize_line_skipped_without_wedging(self) -> None:
         reader = _reader(b"x" * 400 + b"\n" + b"short\n", limit=32)
-        await _pump_stderr(reader, "kirocrew:example-mcp")
+        await _pump_stderr(reader, "ajcrew:example-mcp")
         assert reader.at_eof()
 
     @pytest.mark.asyncio

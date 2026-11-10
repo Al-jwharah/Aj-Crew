@@ -19,7 +19,7 @@ from unittest.mock import patch
 import pytest
 from turn_harness import ScriptedProvider, SlotSpec, TurnScript, run_turn
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     ACP_BACKEND_CLAUDE,
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
@@ -27,8 +27,8 @@ from kiro_crew.acp.types import (
     AcpEvent,
     TurnUsage,
 )
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.metrics.turns import (
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.metrics.turns import (
     TURN_COST_METRIC,
     TURN_CREDITS_METRIC,
     TURN_METRIC,
@@ -75,7 +75,7 @@ async def _metered_turn(provider: type[ScriptedProvider]):
         stop_reason=STOP_REASON_END_TURN,
         usage=TurnUsage(input_tokens=900, output_tokens=120, credits=3.5, duration_ms=1500),
     )
-    with patch("kiro_crew.metrics.turns.get_recorder", return_value=recorder):
+    with patch("aj_crew.metrics.turns.get_recorder", return_value=recorder):
         record = await run_turn(
             TurnScript(
                 events=[AcpEvent(kind=EVENT_TEXT_CHUNK, text="ok"), landed], provider=provider
@@ -87,7 +87,7 @@ async def _metered_turn(provider: type[ScriptedProvider]):
 
 def _emit(**kwargs) -> _CapturingRecorder:
     rec = _CapturingRecorder()
-    with patch("kiro_crew.metrics.turns.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.turns.get_recorder", return_value=rec):
         emit_turn_usage(**kwargs)
     return rec
 
@@ -179,7 +179,7 @@ class TestDefensiveValueHandling:
             def histogram(self, *a, **k):
                 raise RuntimeError("boom")
 
-        with patch("kiro_crew.metrics.turns.get_recorder", return_value=_Boom()):
+        with patch("aj_crew.metrics.turns.get_recorder", return_value=_Boom()):
             emit_turn_usage(input_tokens=1, credits=1.0, cost_usd=1.0)
 
 
@@ -206,7 +206,7 @@ class TestModelProviderAttrs:
         assert attrs["provider"] == "kiro"
 
     def test_no_outcome_or_session_source_on_the_usage_family(self):
-        """Both live on kirocrew.turn.duration, which samples the same turns.
+        """Both live on ajcrew.turn.duration, which samples the same turns.
 
         Repeating them here would multiply these series by two dimensions to
         answer a question the duration instrument already answers.
@@ -222,7 +222,7 @@ class TestCancelledOutcome:
         assert turn_outcome("cancelled") == "cancelled"
 
     def test_it_is_not_a_terminal_fault(self):
-        from kiro_crew.dashboard.handlers.telemetry import _TERMINAL_FAULT_OUTCOMES
+        from aj_crew.dashboard.handlers.telemetry import _TERMINAL_FAULT_OUTCOMES
 
         assert "cancelled" not in _TERMINAL_FAULT_OUTCOMES
 
@@ -234,7 +234,7 @@ class TestStopReasonVocabularyIsPinnedToTheBackend:
     """`metrics/turns.py` spells its stop reasons instead of importing them.
 
     It has to: `scripts/check_agent_sdk_boundary.py` forbids application code
-    from importing `kiro_crew.acp`, and the baseline it ratchets can only shrink,
+    from importing `aj_crew.acp`, and the baseline it ratchets can only shrink,
     so a metrics leaf cannot take an exemption. Duplicating a wire constant is
     only safe with a guard, and this is it -- the test tree is outside the gate's
     scope (`DEFAULT_TARGETS = ("src",)`), so these assertions may import what the
@@ -247,13 +247,13 @@ class TestStopReasonVocabularyIsPinnedToTheBackend:
     """
 
     def test_each_local_constant_equals_its_backend_counterpart(self):
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             STOP_REASON_CANCELLED,
             STOP_REASON_END_TURN,
             STOP_REASON_STALE_RECOVER,
             STOP_REASON_TOOL_STALL,
         )
-        from kiro_crew.metrics import turns
+        from aj_crew.metrics import turns
 
         assert turns._STOP_CANCELLED == STOP_REASON_CANCELLED
         assert turns._STOP_TOOL_STALL == STOP_REASON_TOOL_STALL
@@ -271,7 +271,7 @@ class TestStopReasonVocabularyIsPinnedToTheBackend:
         import ast
         from pathlib import Path
 
-        from kiro_crew.metrics import turns
+        from aj_crew.metrics import turns
 
         tree = ast.parse(Path(turns.__file__).read_text(encoding="utf-8"))
         imported: list[str] = []
@@ -283,7 +283,7 @@ class TestStopReasonVocabularyIsPinnedToTheBackend:
         offenders = [
             m
             for m in imported
-            if m.startswith("kiro_crew.acp") or m.startswith("kiro_crew.providers")
+            if m.startswith("aj_crew.acp") or m.startswith("aj_crew.providers")
         ]
         assert not offenders, (
             f"metrics/turns.py imports the ACP layer again: {offenders}. "
@@ -295,10 +295,10 @@ class TestSharedBoundaryEmitsTheWholeFamily:
     """``usage._emit_turn_histogram`` is the one call every surface makes."""
 
     def _run(self, record, event=None):
-        from kiro_crew.dashboard.handlers import usage as usage_mod
+        from aj_crew.dashboard.handlers import usage as usage_mod
 
         rec = _CapturingRecorder()
-        with patch("kiro_crew.metrics.turns.get_recorder", return_value=rec):
+        with patch("aj_crew.metrics.turns.get_recorder", return_value=rec):
             usage_mod._emit_turn_histogram(record, "cron:nightly", event or object())
         return rec
 
@@ -355,17 +355,17 @@ class TestDashboardOwnerEmitsTheWholeFamily:
     """
 
     def _run(self, usage, **kw):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         rec = _CapturingRecorder()
-        with patch("kiro_crew.metrics.turns.get_recorder", return_value=rec):
+        with patch("aj_crew.metrics.turns.get_recorder", return_value=rec):
             chat_runner._emit_turn_metric(
                 0, "end_turn", "dashboard:abc123", elapsed_ms=1500, usage=usage, **kw
             )
         return rec
 
     def test_usage_reaches_the_instruments_from_the_dashboard_path(self):
-        from kiro_crew.acp.types import TurnUsage
+        from aj_crew.acp.types import TurnUsage
 
         rec = self._run(
             TurnUsage(input_tokens=900, output_tokens=120, credits=3.5),
@@ -397,7 +397,7 @@ class TestServedBackendAttribution:
         """The premise. If this ever gains values, revisit the emit site."""
         from dataclasses import fields
 
-        from kiro_crew.config.loader import AgentConfig
+        from aj_crew.config.loader import AgentConfig
 
         provider = next(f for f in fields(AgentConfig) if f.name == "provider")
         assert provider.default == "acp"
@@ -409,18 +409,18 @@ class TestServedBackendAttribution:
         The richer `provider_label` (which also names KAS) is deliberately NOT
         used: the boundary gate rejects an ACP-layer import on any line a change
         touches, so chat_runner cannot reach it. Asserted here anyway, so the day
-        the label is exposed through `kiro_crew.agent_sdk` the KAS gap is already
+        the label is exposed through `aj_crew.agent_sdk` the KAS gap is already
         described.
         """
-        from kiro_crew.acp.session_provider import AcpSessionProvider
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew.acp.types import (
             ACP_BACKEND_CLAUDE,
             ACP_BACKEND_KAS,
             PROVIDER_LABEL_CLAUDE,
             PROVIDER_LABEL_DEFAULT,
             PROVIDER_LABEL_KAS,
         )
-        from kiro_crew.providers.acp import provider_label
+        from aj_crew.providers.acp import provider_label
 
         # `backend` is a read-only property that delegates to the live runtime, so
         # a stand-in shadows it with a class attribute rather than assigning it.
@@ -460,7 +460,7 @@ class TestServedBackendAttribution:
         `scripts/check_agent_sdk_boundary.py` rejects an ACP-layer import sitting
         on any line a change touches -- baselined file or not -- so pulling
         `provider_label` in, even onto the module's existing
-        `from kiro_crew.providers.acp import ...` line, is a hard gate failure.
+        `from aj_crew.providers.acp import ...` line, is a hard gate failure.
         Named directly rather than diffed against main: a new ACP import can only
         appear by touching this file, which is exactly when the repo gate runs, so
         the one thing worth pinning here is the symbol that looked like the obvious
@@ -473,7 +473,7 @@ class TestServedBackendAttribution:
         import ast
         from pathlib import Path
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         tree = ast.parse(
             "\n".join(
@@ -492,7 +492,7 @@ class TestServedBackendAttribution:
         assert "provider_label" not in imported, (
             "chat_runner imports provider_label again; the boundary gate fails on "
             "an ACP-layer import on any touched line. Read the label from "
-            "SessionCapabilities.provider_seam, which is how kiro_crew.agent_sdk "
+            "SessionCapabilities.provider_seam, which is how aj_crew.agent_sdk "
             "exposes it."
         )
         # The sanctioned route, which is also the guard-the-guard: the harvest must
@@ -526,7 +526,7 @@ class TestAggregatorReportsAmountsWithoutMsKeys:
     amount arriving there would be rendered as a duration."""
 
     def _aggregate(self, tmp_path: Path, points):
-        from kiro_crew.dashboard.handlers.telemetry import _aggregate
+        from aj_crew.dashboard.handlers.telemetry import _aggregate
 
         metrics = []
         for name, bounds, landed, total in points:
@@ -559,7 +559,7 @@ class TestAggregatorReportsAmountsWithoutMsKeys:
         return _aggregate([shard])
 
     def test_credits_are_reported_in_the_turn_block_under_unit_neutral_keys(self, tmp_path):
-        from kiro_crew.metrics.provider import _CREDIT_BUCKETS
+        from aj_crew.metrics.provider import _CREDIT_BUCKETS
 
         out = self._aggregate(tmp_path, [(TURN_CREDITS_METRIC, _CREDIT_BUCKETS, 8, 6.75)])
         credits = out["turn"]["credits"]
@@ -570,7 +570,7 @@ class TestAggregatorReportsAmountsWithoutMsKeys:
         assert not [k for k in credits if k.endswith("_ms")], credits
 
     def test_they_never_appear_on_the_generic_ms_surface(self, tmp_path):
-        from kiro_crew.metrics.provider import _CREDIT_BUCKETS, _USD_BUCKETS
+        from aj_crew.metrics.provider import _CREDIT_BUCKETS, _USD_BUCKETS
 
         out = self._aggregate(
             tmp_path,
@@ -584,13 +584,13 @@ class TestAggregatorReportsAmountsWithoutMsKeys:
 
     def test_a_host_that_does_not_bill_in_a_unit_reports_an_empty_block(self, tmp_path):
         """Absent must read as absent, not as a measured zero."""
-        from kiro_crew.metrics.provider import _CREDIT_BUCKETS
+        from aj_crew.metrics.provider import _CREDIT_BUCKETS
 
         out = self._aggregate(tmp_path, [(TURN_CREDITS_METRIC, _CREDIT_BUCKETS, 8, 6.75)])
         assert out["turn"]["cost_usd"] == {"count": 0, "unit": "usd"}
 
     def test_a_sub_cent_p50_is_not_rounded_away(self, tmp_path):
-        from kiro_crew.metrics.provider import _USD_BUCKETS
+        from aj_crew.metrics.provider import _USD_BUCKETS
 
         out = self._aggregate(tmp_path, [(TURN_COST_METRIC, _USD_BUCKETS, 1, 0.002)])
         cost = out["turn"]["cost_usd"]
@@ -609,7 +609,7 @@ class TestSpendAttributionByModel:
 
     def _aggregate(self, tmp_path: Path, points):
         """`points` are (name, bounds, landed_bucket, total, attrs) tuples."""
-        from kiro_crew.dashboard.handlers.telemetry import _aggregate
+        from aj_crew.dashboard.handlers.telemetry import _aggregate
 
         metrics = []
         for name, bounds, landed, total, attrs in points:
@@ -642,7 +642,7 @@ class TestSpendAttributionByModel:
         return _aggregate([shard])
 
     def _credit_points(self, spend):
-        from kiro_crew.metrics.provider import _CREDIT_BUCKETS
+        from aj_crew.metrics.provider import _CREDIT_BUCKETS
 
         return [(TURN_CREDITS_METRIC, _CREDIT_BUCKETS, 8, amount, attrs) for amount, attrs in spend]
 
@@ -698,7 +698,7 @@ class TestSpendAttributionByModel:
 
     def test_no_split_key_when_nothing_was_collected(self, tmp_path):
         """Absent rather than an empty list, so a non-billing host publishes no key."""
-        from kiro_crew.metrics.provider import _USD_BUCKETS
+        from aj_crew.metrics.provider import _USD_BUCKETS
 
         out = self._aggregate(
             tmp_path, [(TURN_COST_METRIC, _USD_BUCKETS, 3, 0.0075, {"model": "m"})]

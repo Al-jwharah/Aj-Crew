@@ -1,8 +1,8 @@
-"""Tests for kiro_crew.security: exfiltration-URL redaction and the links it must judge.
+"""Tests for aj_crew.security: exfiltration-URL redaction and the links it must judge.
 
 ``redact_exfiltration_urls`` / ``scan_exfiltration_urls`` on payload shape, URL paths and raw-IP
 hosts, and the exact-host exemption a companion credential policy supplies; then the links that
-meet the redactor: Kiro Crew's own Slack app-create link, a dashboard access token in every host
+meet the redactor: Aj Crew's own Slack app-create link, a dashboard access token in every host
 form, and the GitHub issue-prefill link, redacted when a model writes it and delivered whole
 through the trusted structured-field channel instead.
 """
@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import security
-from kiro_crew.security import (
+from aj_crew import security
+from aj_crew.security import (
     oauth_url_contains_credential,
     redact_exfiltration_urls,
     scan_exfiltration_urls,
@@ -35,7 +35,7 @@ class TestRedactExfiltrationUrls:
         substitution to the exported constant: if the f-string ever drifts from
         the prefix, this goes red instead of the notice silently never firing.
         """
-        from kiro_crew.security import (
+        from aj_crew.security import (
             EXFILTRATION_REDACTION_TAG_PREFIX,
             redact_exfiltration_urls,
         )
@@ -56,7 +56,7 @@ class TestRedactExfiltrationUrls:
         prefix stays OUT of the tuple (it is a prefix, not a full tag -- see the
         tuple's docstring).
         """
-        from kiro_crew.security import (
+        from aj_crew.security import (
             CREDENTIAL_REDACTION_TAGS,
             EXFILTRATION_REDACTION_TAG_PREFIX,
         )
@@ -69,7 +69,7 @@ class TestRedactExfiltrationUrls:
 
     def test_external_long_query_redacted(self) -> None:
         """External domains with long query strings are still redacted."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         url = "https://evil.com/steal?data=" + "A" * 250
         result, warnings = redact_exfiltration_urls(f"Link: {url}")
@@ -78,7 +78,7 @@ class TestRedactExfiltrationUrls:
 
     def test_long_query_redacted_domain_agnostic(self) -> None:
         """Long query strings are redacted regardless of domain (no allowlist)."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         # Detection is domain-agnostic: there is no trusted-domain allowlist,
         # so even a long multi-param query on any host is flagged.
@@ -91,7 +91,7 @@ class TestRedactExfiltrationUrls:
 
     def test_heavy_url_encoding_redacted(self) -> None:
         """Heavily URL-encoded destinations are redacted regardless of domain."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         url = (
             "https://sso.example.com/federate?account=123456"
@@ -107,7 +107,7 @@ class TestRedactExfiltrationUrls:
 
     def test_short_query_not_redacted_domain_agnostic(self) -> None:
         """Short, benign query strings are not redacted on any domain."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         url = "https://console.example.com/page?k0=val0&k1=val1&k2=val2"
         result, warnings = redact_exfiltration_urls(f"Link: {url}")
@@ -116,7 +116,7 @@ class TestRedactExfiltrationUrls:
 
     def test_safe_domain_credential_still_redacted(self) -> None:
         """Credential patterns on safe domains are still redacted."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         url = "https://example.com/api?key=AKIAIOSFODNN7EXAMPLE1234"
         result, warnings = redact_exfiltration_urls(f"Link: {url}")
@@ -125,7 +125,7 @@ class TestRedactExfiltrationUrls:
 
     def test_short_query_no_redaction(self) -> None:
         """Short query strings on any domain are not redacted."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         url = "https://example.com/page?id=123&name=test"
         result, warnings = redact_exfiltration_urls(f"Link: {url}")
@@ -134,7 +134,7 @@ class TestRedactExfiltrationUrls:
 
     def test_amazonaws_not_safe(self) -> None:
         """amazonaws.com is NOT allowlisted — anyone can provision endpoints."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         params = "&".join(f"d{i}=stolen{i}" for i in range(30))
         url = f"https://attacker-bucket.s3.amazonaws.com/exfil?{params}"
@@ -144,7 +144,7 @@ class TestRedactExfiltrationUrls:
 
     def test_s3_presigned_url_preserved(self) -> None:
         """S3 presigned URLs on amazonaws.com are NOT redacted."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         url = (
             "https://my-bucket.s3.us-east-1.amazonaws.com/results/abc.csv"
@@ -163,7 +163,7 @@ class TestRedactExfiltrationUrls:
 
     def test_s3_presigned_url_scan_clean(self) -> None:
         """scan_exfiltration_urls returns no warnings for S3 presigned URLs."""
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew.security import scan_exfiltration_urls
 
         url = (
             "https://bucket.s3.amazonaws.com/file.csv"
@@ -181,7 +181,7 @@ class TestRedactExfiltrationUrls:
 
     def test_amazonaws_non_presigned_still_redacted(self) -> None:
         """amazonaws.com URLs without presigned params are still redacted."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         url = "https://evil.s3.amazonaws.com/steal" "?data=" + "A" * 250
         result, warnings = redact_exfiltration_urls(f"Link: {url}")
@@ -190,7 +190,7 @@ class TestRedactExfiltrationUrls:
 
     def test_spoofed_presigned_params_still_redacted(self) -> None:
         """Spoofed presigned param names with dummy values are still redacted."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         url = (
             "https://attacker.s3.amazonaws.com/exfil"
@@ -203,7 +203,7 @@ class TestRedactExfiltrationUrls:
 
     def test_presigned_url_with_slack_token_still_redacted(self) -> None:
         """Presigned URL that also contains a Slack token is still redacted."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         url = (
             "https://bucket.s3.amazonaws.com/file.csv"
@@ -222,7 +222,7 @@ class TestRedactExfiltrationUrls:
 
     def test_presigned_url_with_extra_exfil_params_still_redacted(self) -> None:
         """Presigned URL with extra non-standard params is still redacted."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         url = (
             "https://attacker.s3.amazonaws.com/file.csv"
@@ -246,7 +246,7 @@ class TestRedactExfiltrationUrls:
         (not just scan), because the bad URL causes scan to return warnings,
         so redact doesn't early-return.
         """
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         bad_url = "https://evil.com/steal?data=" + "A" * 250
         good_url = (
@@ -269,7 +269,7 @@ class TestRedactExfiltrationUrls:
 
     def test_presigned_url_with_sts_security_token_preserved(self) -> None:
         """Presigned URL with realistic base64 STS session token is preserved."""
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew.security import scan_exfiltration_urls
 
         # Realistic 200+ char base64 STS token (matches _EXFIL_PATTERNS blob pattern)
         sts_token = "IQoJb3JpZ2luX2VjE" + "A" * 180 + "=="
@@ -290,7 +290,7 @@ class TestRedactExfiltrationUrls:
 
     def test_presigned_url_with_exfil_in_allowed_param_redacted(self) -> None:
         """Exfil payload in an allowed param value is caught by value scanning."""
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew.security import scan_exfiltration_urls
 
         url = (
             "https://evil.s3.us-east-1.amazonaws.com/out.csv"
@@ -307,7 +307,7 @@ class TestRedactExfiltrationUrls:
 
     def test_presigned_url_with_exfil_in_credential_scope_redacted(self) -> None:
         """Arbitrary data in credential scope is caught by structural validation."""
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew.security import scan_exfiltration_urls
 
         url = (
             "https://evil.s3.us-east-1.amazonaws.com/out.csv"
@@ -324,7 +324,7 @@ class TestRedactExfiltrationUrls:
 
     def test_presigned_url_with_fake_security_token_redacted(self) -> None:
         """Non-STS payload in Security-Token is caught by structural validation."""
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew.security import scan_exfiltration_urls
 
         url = (
             "https://evil.s3.us-east-1.amazonaws.com/out.csv"
@@ -457,7 +457,7 @@ class TestExfilExactHostExemption:
             self._hosts = hosts
 
         def redact(self, text: str) -> str:
-            from kiro_crew.security import redact
+            from aj_crew.security import redact
 
             return redact(text)
 
@@ -467,11 +467,11 @@ class TestExfilExactHostExemption:
     def _install_exempt_hosts(self, hosts: "frozenset[str]") -> None:
         import dataclasses
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.platform.bootstrap import build_default_context
-        from kiro_crew.platform.context import set_context
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.platform.bootstrap import build_default_context
+        from aj_crew.platform.context import set_context
 
-        base = build_default_context(KiroCrewConfig())
+        base = build_default_context(AjCrewConfig())
         stub = self._StubCredentialPolicy(hosts)
         set_context(dataclasses.replace(base, credentials=stub))
 
@@ -494,7 +494,7 @@ class TestExfilExactHostExemption:
         Byte-identical to today: with no exemptions every host runs the
         heuristics, so a long base64 query is redacted regardless of host.
         """
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         url = self._long_nav_url("contoso.sharepoint.com")
         result, warnings = redact_exfiltration_urls(f"Doc: {url}")
@@ -503,7 +503,7 @@ class TestExfilExactHostExemption:
 
     def test_exempted_host_long_query_preserved(self) -> None:
         """An exact-member host's long base64 nav URL is NOT redacted."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         self._install_exempt_hosts(self._EXEMPT)
         url = self._long_nav_url("contoso.sharepoint.com")
@@ -513,7 +513,7 @@ class TestExfilExactHostExemption:
 
     def test_second_exempted_host_preserved(self) -> None:
         """A different exact-member host is also exempt (whole set honored)."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         self._install_exempt_hosts(self._EXEMPT)
         url = self._long_nav_url("trusted.example.com")
@@ -523,7 +523,7 @@ class TestExfilExactHostExemption:
 
     def test_exempted_host_scan_clean(self) -> None:
         """scan_exfiltration_urls returns no warnings for an exempted host URL."""
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew.security import scan_exfiltration_urls
 
         self._install_exempt_hosts(self._EXEMPT)
         url = self._long_nav_url("contoso.sharepoint.com")
@@ -534,7 +534,7 @@ class TestExfilExactHostExemption:
         emit, e.g. ``Contoso.SharePoint.com``) whose lowercase form is in the
         exempt set is NOT redacted. Guards against a case-sensitive ``in`` check
         that would wrongly redact a legitimate document pointer."""
-        from kiro_crew.security import redact_exfiltration_urls, scan_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls, scan_exfiltration_urls
 
         self._install_exempt_hosts(self._EXEMPT)
         url = self._long_nav_url("Contoso.SharePoint.com")
@@ -546,7 +546,7 @@ class TestExfilExactHostExemption:
     def test_mixed_case_exempt_member_preserved(self) -> None:
         """Symmetric to the above: a mixed-case MEMBER of the exempt set still
         matches a lowercase host (both sides normalized to lowercase)."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         self._install_exempt_hosts(frozenset({"Contoso.SharePoint.com"}))
         url = self._long_nav_url("contoso.sharepoint.com")
@@ -558,7 +558,7 @@ class TestExfilExactHostExemption:
         """The heavy percent-encoding detector is NOT part of the exempted
         base64/length heuristics — a URL-encoded payload to an exempted host is
         still flagged and redacted."""
-        from kiro_crew.security import (
+        from aj_crew.security import (
             _EXFIL_QUERY_MIN_LEN,
             redact_exfiltration_urls,
             scan_exfiltration_urls,
@@ -576,7 +576,7 @@ class TestExfilExactHostExemption:
 
     def test_non_exempted_tenant_still_redacted(self) -> None:
         """A non-member host is NOT exempt (exact match only, not suffix)."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         self._install_exempt_hosts(self._EXEMPT)
         # Same registrable domain family, different subdomain — must NOT match.
@@ -587,7 +587,7 @@ class TestExfilExactHostExemption:
 
     def test_exempted_host_credential_query_still_redacted(self) -> None:
         """A hard AWS key in the QUERY on an exempted host is still redacted."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         self._install_exempt_hosts(self._EXEMPT)
         url = "https://contoso.sharepoint.com/doc?key=AKIAIOSFODNN7EXAMPLE1234"
@@ -599,7 +599,7 @@ class TestExfilExactHostExemption:
         """BINDING: an exempted host with an AKIA key in the URL PATH is still
         redacted — the exemption narrows only the heuristics, never the
         unconditional path+query hard-credential floor."""
-        from kiro_crew.security import redact_exfiltration_urls, scan_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls, scan_exfiltration_urls
 
         self._install_exempt_hosts(self._EXEMPT)
         url = "https://contoso.sharepoint.com/upload/AKIAIOSFODNN7EXAMPLE/report"
@@ -617,7 +617,7 @@ class TestExfilExactHostExemption:
         skipped for exempt hosts — decode-and-scan closes that gap)."""
         import base64
 
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew.security import scan_exfiltration_urls
 
         self._install_exempt_hosts(self._EXEMPT)
         # An AWS key wrapped in base64 — the raw AKIA regex won't see it, and the
@@ -633,7 +633,7 @@ class TestExfilExactHostExemption:
         stays avoided."""
         import base64
 
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew.security import scan_exfiltration_urls
 
         self._install_exempt_hosts(self._EXEMPT)
         # 60+ char base64 of plain readable text: trips the raw blob heuristic
@@ -645,7 +645,7 @@ class TestExfilExactHostExemption:
     def test_exempted_host_bare_secret_value_redacted(self) -> None:
         """A bare ``SecretAccessKey=<base64>`` value (no AKIA prefix) on an
         exempted host is redacted at the URL level, not silently skipped."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         self._install_exempt_hosts(self._EXEMPT)
         secret = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
@@ -668,17 +668,17 @@ class TestExfilExactHostExemption:
         """
         import pytest as _pytest
 
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.platform import context as context_mod
-        from kiro_crew.platform.context import reset_context
-        from kiro_crew.security import redact
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.platform import context as context_mod
+        from aj_crew.platform.context import reset_context
+        from aj_crew.security import redact
 
         calls: list[str] = []
         real_current = context_mod.current_context
-        real_load = KiroCrewConfig.load
+        real_load = AjCrewConfig.load
 
         with _pytest.MonkeyPatch.context() as mp:
-            mp.setenv("KIROCREW_PROFILE", "enterprise")
+            mp.setenv("AJCREW_PROFILE", "enterprise")
             reset_context()
 
             def _spy_current():  # type: ignore[no-untyped-def]
@@ -690,7 +690,7 @@ class TestExfilExactHostExemption:
                 return real_load(*a, **k)
 
             mp.setattr(context_mod, "current_context", _spy_current)
-            mp.setattr(KiroCrewConfig, "load", _spy_load)
+            mp.setattr(AjCrewConfig, "load", _spy_load)
             try:
                 # Redact many lines, as a stderr drain would.
                 for _ in range(25):
@@ -707,16 +707,16 @@ class TestExfilExactHostExemption:
         backend spawn in gatewayd died building its own log line."""
         import dataclasses
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.platform.bootstrap import build_default_context
-        from kiro_crew.platform.context import PlatformCompositionError, set_context
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.platform.bootstrap import build_default_context
+        from aj_crew.platform.context import PlatformCompositionError, set_context
+        from aj_crew.security import redact_exfiltration_urls
 
         class _RaisingCredentialPolicy(self._StubCredentialPolicy):
             def exempt_exact_hosts(self) -> "frozenset[str]":
                 raise PlatformCompositionError("no companion")
 
-        base = build_default_context(KiroCrewConfig())
+        base = build_default_context(AjCrewConfig())
         set_context(dataclasses.replace(base, credentials=_RaisingCredentialPolicy(frozenset())))
         url = self._long_nav_url("contoso.sharepoint.com")
         result, warnings = redact_exfiltration_urls(f"Doc: {url}")
@@ -728,7 +728,7 @@ class TestExfilExactHostExemption:
         non-standalone profile must not raise.
 
         ``gatewayd`` never installs a ``PlatformContext``; under
-        ``KIROCREW_PROFILE=enterprise`` ``current_context()`` fail-closes, and
+        ``AJCREW_PROFILE=enterprise`` ``current_context()`` fail-closes, and
         the exempt-host lookup inside ``redact()`` must not propagate that error,
         killing every pooled MCP backend spawn while it built the spawn log
         line.  The lookup must degrade to the empty set (maximum redaction)
@@ -736,15 +736,15 @@ class TestExfilExactHostExemption:
         """
         import pytest as _pytest
 
-        from kiro_crew.platform.context import (
+        from aj_crew.platform.context import (
             PlatformCompositionError,
             current_context,
             reset_context,
         )
-        from kiro_crew.security import redact
+        from aj_crew.security import redact
 
         with _pytest.MonkeyPatch.context() as mp:
-            mp.setenv("KIROCREW_PROFILE", "enterprise")
+            mp.setenv("AJCREW_PROFILE", "enterprise")
             reset_context()
             try:
                 # Precondition: the context itself still fail-closes (that
@@ -769,16 +769,16 @@ class TestExfilExactHostExemption:
         set = MORE redaction (the safe direction), never fewer exemptions."""
         import dataclasses
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.platform.bootstrap import build_default_context
-        from kiro_crew.platform.context import set_context
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.platform.bootstrap import build_default_context
+        from aj_crew.platform.context import set_context
+        from aj_crew.security import redact_exfiltration_urls
 
         class _BrokenCredentialPolicy(self._StubCredentialPolicy):
             def exempt_exact_hosts(self) -> "frozenset[str]":
                 raise RuntimeError("adapter broke")
 
-        base = build_default_context(KiroCrewConfig())
+        base = build_default_context(AjCrewConfig())
         set_context(dataclasses.replace(base, credentials=_BrokenCredentialPolicy(frozenset())))
         url = self._long_nav_url("contoso.sharepoint.com")
         result, warnings = redact_exfiltration_urls(f"Doc: {url}")
@@ -790,16 +790,16 @@ class TestExfilExactHostExemption:
         the empty set via getattr rather than raising — full redaction stands."""
         import dataclasses
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.platform.bootstrap import build_default_context
-        from kiro_crew.platform.context import set_context
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.platform.bootstrap import build_default_context
+        from aj_crew.platform.context import set_context
+        from aj_crew.security import redact_exfiltration_urls
 
         class _LegacyCredentialPolicy:
             def redact(self, text: str) -> str:
                 return text
 
-        base = build_default_context(KiroCrewConfig())
+        base = build_default_context(AjCrewConfig())
         set_context(dataclasses.replace(base, credentials=_LegacyCredentialPolicy()))
         url = self._long_nav_url("contoso.sharepoint.com")
         result, warnings = redact_exfiltration_urls(f"Doc: {url}")
@@ -807,10 +807,10 @@ class TestExfilExactHostExemption:
         assert len(warnings) == 1
 
 
-class TestKiroCrewSlackAppCreateLink:
-    """Kiro Crew's OWN Slack app-create deep link survives the exfil redactor.
+class TestAjCrewSlackAppCreateLink:
+    """Aj Crew's OWN Slack app-create deep link survives the exfil redactor.
 
-    ``kirocrew manifest --url`` and ``GET /api/slack/manifest`` emit
+    ``ajcrew manifest --url`` and ``GET /api/slack/manifest`` emit
     ``https://api.slack.com/apps?new_app=1&manifest_yaml=<encoded manifest>``.
     The encoded manifest is ~1.9 KB, so the aggregate query-length heuristic
     classified the whole link as exfiltration and the user was shown
@@ -825,14 +825,14 @@ class TestKiroCrewSlackAppCreateLink:
 
     def _payload(self, alias: str = "someone") -> str:
         """The deep-link payload as the REAL emitters build it."""
-        from kiro_crew import slack_manifest
+        from aj_crew import slack_manifest
 
         return slack_manifest.render(alias, strip_comments=True)
 
     def _link(self, alias: str = "someone", **over: str) -> str:
         from urllib.parse import quote
 
-        from kiro_crew import slack_manifest
+        from aj_crew import slack_manifest
 
         if not over:
             # Default case goes through the actual emitter, so a change to its
@@ -858,8 +858,8 @@ class TestKiroCrewSlackAppCreateLink:
         still green, which is the same "no test exercised the real URL" failure
         that hid the original bug.
         """
-        from kiro_crew import slack_manifest
-        from kiro_crew.security import redact_exfiltration_urls, scan_exfiltration_urls
+        from aj_crew import slack_manifest
+        from aj_crew.security import redact_exfiltration_urls, scan_exfiltration_urls
 
         url = slack_manifest.deep_link("someone")
         assert len(url.split("?", 1)[1]) >= 200  # premise: over the threshold
@@ -868,7 +868,7 @@ class TestKiroCrewSlackAppCreateLink:
 
     def test_manifest_link_is_not_redacted(self) -> None:
         """The real emitted link passes the general text scanner untouched."""
-        from kiro_crew.security import redact_exfiltration_urls, scan_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls, scan_exfiltration_urls
 
         url = self._link()
         assert len(url.split("?", 1)[1]) >= 200
@@ -879,7 +879,7 @@ class TestKiroCrewSlackAppCreateLink:
 
     def test_alias_shapes_accepted(self) -> None:
         """Any alias the emitters permit (alnum, hyphen, underscore) is accepted."""
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew.security import scan_exfiltration_urls
 
         for alias in ("a", "user99", "first-last", "with_underscore", "A1_b-2"):
             assert scan_exfiltration_urls(self._link(alias)) == [], alias
@@ -896,8 +896,8 @@ class TestKiroCrewSlackAppCreateLink:
         """
         from urllib.parse import quote
 
-        from kiro_crew import slack_manifest
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew import slack_manifest
+        from aj_crew.security import scan_exfiltration_urls
 
         # Over ALIAS_MAX — the derived pattern refuses it, so no exemption.
         secret40 = "wJalrXUtnFEMIK7MDENG" "bPxRfiCYEXAMPLEKEYXY"
@@ -916,8 +916,8 @@ class TestKiroCrewSlackAppCreateLink:
 
     def test_mismatched_aliases_redacted(self) -> None:
         """The manifest names the alias twice; they must be the SAME alias."""
-        from kiro_crew import slack_manifest
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew import slack_manifest
+        from aj_crew.security import scan_exfiltration_urls
 
         tampered = (
             slack_manifest.stripped_template()
@@ -928,7 +928,7 @@ class TestKiroCrewSlackAppCreateLink:
 
     def test_arbitrary_payload_redacted(self) -> None:
         """A long payload that is not the template stays redacted."""
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew.security import scan_exfiltration_urls
 
         assert scan_exfiltration_urls(self._link(payload="x" * 900)) != []
 
@@ -939,7 +939,7 @@ class TestKiroCrewSlackAppCreateLink:
         selection, so the carve-out cannot shield a credential even at the
         approved endpoint.
         """
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew.security import scan_exfiltration_urls
 
         payload = self._payload("someone") + "\nAKIAIOSFODNN7EXAMPLE\n"
         warnings = scan_exfiltration_urls(self._link(payload=payload))
@@ -948,19 +948,19 @@ class TestKiroCrewSlackAppCreateLink:
 
     def test_extra_parameter_redacted(self) -> None:
         """An extra query parameter refuses the exemption (exact param set)."""
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew.security import scan_exfiltration_urls
 
         assert scan_exfiltration_urls(self._link(extra="&exfil=" + "z" * 300)) != []
 
     def test_tampered_new_app_redacted(self) -> None:
         """``new_app`` must be exactly ``1``."""
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew.security import scan_exfiltration_urls
 
         assert scan_exfiltration_urls(self._link(new_app="2")) != []
 
     def test_neighbouring_endpoints_redacted(self) -> None:
         """Only the exact https host+path is eligible — no scheme/host/path drift."""
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew.security import scan_exfiltration_urls
 
         assert scan_exfiltration_urls(self._link(scheme="http")) != []
         assert scan_exfiltration_urls(self._link(path="/apps2")) != []
@@ -973,7 +973,7 @@ class TestKiroCrewSlackAppCreateLink:
         Guards the documented invariant that query-length detection has no host
         allowlist: this carve-out keys on a validated payload, not on Slack.
         """
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew.security import scan_exfiltration_urls
 
         url = "https://api.slack.com/api/chat.postMessage?blob=" + "A" * 250
         assert scan_exfiltration_urls(url) != []
@@ -984,7 +984,7 @@ class TestKiroCrewSlackAppCreateLink:
         Failing closed matters more than the convenience: an install that cannot
         prove what its own manifest looks like must not exempt a 1.9 KB payload.
         """
-        import kiro_crew.security as sec
+        import aj_crew.security as sec
 
         url = self._link()
         monkeypatch.setattr(sec, "_slack_manifest_re_slot", [None])
@@ -1022,7 +1022,7 @@ class TestDashboardLinkTokenAcrossHostForms:
     )
 
     def test_token_is_redacted_on_every_host_form(self) -> None:
-        from kiro_crew.security import redact_credentials
+        from aj_crew.security import redact_credentials
 
         for host in self.HOST_FORMS:
             cleaned, _ = redact_credentials(f"http://{host}/?token={self._TOKEN}")
@@ -1040,7 +1040,7 @@ class TestDashboardLinkTokenAcrossHostForms:
         covers loopback links (the test above) rather than discovering later that
         redaction depended on the host pattern.
         """
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew.security import scan_exfiltration_urls
 
         assert scan_exfiltration_urls(f"http://localhost:7778/?token={self._TOKEN}") == []
         assert scan_exfiltration_urls(f"http://127.0.0.1:7778/?token={self._TOKEN}") != []
@@ -1231,22 +1231,22 @@ class TestTrustedIssueLinkChannel:
         The other two host reads in that field are pure: ``platform.platform()`` is
         stdlib and ``beacon.distribution()`` reads a baked constant or an env var.
         """
-        from kiro_crew import diagnostics
+        from aj_crew import diagnostics
 
         _floor_monkeypatch.setattr(diagnostics, "_kiro_cli_version", lambda: "kiro-cli 2.14.2")
 
     def _bundle(self) -> object:
-        from kiro_crew import diagnostics
+        from aj_crew import diagnostics
 
         return diagnostics.BundleResult(
-            zip_path=Path("/tmp/kirocrew-diagnostics-20260907.zip"),
-            filename="kirocrew-diagnostics-20260907.zip",
-            redaction_summary={"kirocrew.log": 3},
+            zip_path=Path("/tmp/ajcrew-diagnostics-20260907.zip"),
+            filename="ajcrew-diagnostics-20260907.zip",
+            redaction_summary={"ajcrew.log": 3},
         )
 
     def test_the_trusted_builder_assembles_the_prefill_from_structured_fields(self) -> None:
         """Built by code from named fields, never parsed out of prose."""
-        from kiro_crew import diagnostics
+        from aj_crew import diagnostics
 
         url = diagnostics._issue_url(self._bundle(), "chat drops long links")
         assert url.startswith(f"https://github.com/{diagnostics._ISSUE_REPO}/issues/new?")
@@ -1259,7 +1259,7 @@ class TestTrustedIssueLinkChannel:
 
     def test_that_builders_output_is_what_the_dashboard_field_carries(self) -> None:
         """``github_issue_url`` is the prefilled variant, so the feature still works."""
-        from kiro_crew import diagnostics
+        from aj_crew import diagnostics
 
         result = self._bundle()
         result.github_issue_url = diagnostics._issue_url(result, "note")
@@ -1272,7 +1272,7 @@ class TestTrustedIssueLinkChannel:
         text, and that is now true with no exception. Pinned so nobody 'fixes' the
         asymmetry by reaching back into the redactor.
         """
-        from kiro_crew import diagnostics
+        from aj_crew import diagnostics
 
         url = diagnostics._issue_url(self._bundle(), "chat drops long links")
         cleaned, warnings = redact_exfiltration_urls(f"file it here: {url}")
@@ -1285,7 +1285,7 @@ class TestTrustedIssueLinkChannel:
         This is the shape the codebase already chose for paths that DO get relayed
         through prose, and it is why removing the waiver strands nothing.
         """
-        from kiro_crew import diagnostics
+        from aj_crew import diagnostics
 
         url = diagnostics.terminal_issue_url(self._bundle(), "note")
         cleaned, warnings = redact_exfiltration_urls(f"file it here: {url}")

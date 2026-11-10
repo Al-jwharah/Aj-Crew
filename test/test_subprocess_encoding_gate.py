@@ -98,7 +98,7 @@ class TestRuleFamilies(gate_script_checks.SelfTestPasses):
         assert self._lines(source) == [2]
 
     def test_flags_kwargs_forwarding_wrappers(self) -> None:
-        source = "from kiro_crew.sandbox import run_limited\nrun_limited(['git'], text=True)\n"
+        source = "from aj_crew.sandbox import run_limited\nrun_limited(['git'], text=True)\n"
         assert self._lines(source)
 
     def test_flags_encoding_none(self) -> None:
@@ -130,7 +130,7 @@ class TestRuleFamilies(gate_script_checks.SelfTestPasses):
     def test_utf8_text_splat_is_compliant(self) -> None:
         source = (
             "import subprocess\n"
-            "from kiro_crew.subprocess_utf8 import UTF8_TEXT\n"
+            "from aj_crew.subprocess_utf8 import UTF8_TEXT\n"
             "subprocess.run(['git'], **UTF8_TEXT)\n"
         )
         assert self._lines(source) == []
@@ -256,7 +256,7 @@ class TestBaselineRatchet:
         the PR added nothing. Both calls are pinned now and the
         baseline entry is pruned; this pins the file at zero so it can never
         silently re-enter the list."""
-        for path in sorted((ROOT / "src" / "kiro_crew").glob("cli_server*.py")):
+        for path in sorted((ROOT / "src" / "aj_crew").glob("cli_server*.py")):
             rel = path.relative_to(ROOT).as_posix()
             violations = gate._violations_in_source(path.read_text(encoding="utf-8"))
             assert violations == []

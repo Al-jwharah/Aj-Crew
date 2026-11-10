@@ -1,6 +1,6 @@
 """``SubagentManager._provider_label_of`` keeps the label the one-module manager persisted.
 
-The run surface reads ``provider_label`` through ``kiro_crew.agent_sdk.drivers.acp``
+The run surface reads ``provider_label`` through ``aj_crew.agent_sdk.drivers.acp``
 instead of importing the providers layer. The label is persisted with a run's state and
 keys resume compatibility, so the SDK wrapper and the manager must answer exactly what the
 providers-layer helper answers, for every provider kind a run can hold: an ``AcpProvider``
@@ -15,18 +15,18 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import kiro_crew.subagent as subagent
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.acp.types import PROVIDER_LABEL_BY_BACKEND, PROVIDER_LABEL_CLAUDE
-from kiro_crew.agent_sdk.drivers import acp as sdk_acp
-from kiro_crew.providers import acp as providers_acp
-from kiro_crew.providers.acp import AcpProvider
+import aj_crew.subagent as subagent
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.acp.types import PROVIDER_LABEL_BY_BACKEND, PROVIDER_LABEL_CLAUDE
+from aj_crew.agent_sdk.drivers import acp as sdk_acp
+from aj_crew.providers import acp as providers_acp
+from aj_crew.providers.acp import AcpProvider
 
 
 def _acp_provider(backend: str) -> AcpProvider:
     """An unstarted provider, constructed without spawning anything."""
-    with patch("kiro_crew.providers.acp.AcpClient"):
+    with patch("aj_crew.providers.acp.AcpClient"):
         provider = AcpProvider(acp_backend=backend)
     provider._client = MagicMock()
     provider._client.backend = backend

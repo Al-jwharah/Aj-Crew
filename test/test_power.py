@@ -10,8 +10,8 @@ import time
 
 import pytest
 
-from kiro_crew import platform_compat, power
-from kiro_crew.power import SleepInhibitor
+from aj_crew import platform_compat, power
+from aj_crew.power import SleepInhibitor
 
 
 class _FakeProc:
@@ -517,7 +517,7 @@ class _FakeState:
 
 
 def _patch_prevent_sleep_flag(monkeypatch, enabled: bool):  # type: ignore[no-untyped-def]
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     class _Dash:
         prevent_sleep = enabled
@@ -525,7 +525,7 @@ def _patch_prevent_sleep_flag(monkeypatch, enabled: bool):  # type: ignore[no-un
     class _Cfg:
         dashboard = _Dash()
 
-    monkeypatch.setattr(server.KiroCrewConfig, "load", classmethod(lambda cls: _Cfg()))
+    monkeypatch.setattr(server.AjCrewConfig, "load", classmethod(lambda cls: _Cfg()))
     return server
 
 
@@ -547,8 +547,8 @@ def test_should_prevent_sleep_no_sessions(monkeypatch):  # type: ignore[no-untyp
 
 
 def test_prevent_sleep_is_editable_and_defaults_off():
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
     assert _EDITABLE_CONFIG.get("dashboard.prevent_sleep") == {"type": "bool"}
-    assert KiroCrewConfig().dashboard.prevent_sleep is False
+    assert AjCrewConfig().dashboard.prevent_sleep is False

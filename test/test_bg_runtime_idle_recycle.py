@@ -21,13 +21,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from test_update_provider import _UNALLOCATABLE_PID
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.session import SessionManager
+from aj_crew.config import AjCrewConfig
+from aj_crew.session import SessionManager
 
 
 @pytest.fixture
 def cfg():
-    c = KiroCrewConfig()
+    c = AjCrewConfig()
     c.session.timeout_secs = 2
     return c
 

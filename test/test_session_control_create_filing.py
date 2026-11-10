@@ -26,9 +26,9 @@ from session_control_helpers import (  # noqa: F401 -- the autouse fixtures regi
     _slot,
 )
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.validation import MAX_SHORT_STRING
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.validation import MAX_SHORT_STRING
 
 # ── session_create: filing at birth ─────────────────────────────────
 
@@ -40,7 +40,7 @@ def test_create_schema_bounds_the_folder_reference():
     the same contract `chat_folder_move_session.folder` carries. Over-length is
     refused at validation, before any resolution work.
     """
-    from kiro_crew.validation import SESSION_CREATE_SCHEMA, ValidationError, validate_tool_args
+    from aj_crew.validation import SESSION_CREATE_SCHEMA, ValidationError, validate_tool_args
 
     out = validate_tool_args({"folder": "aaaaaaaaaaaa"}, SESSION_CREATE_SCHEMA)
     assert out["folder"] == "aaaaaaaaaaaa", "an id-shaped reference must pass"
@@ -180,7 +180,7 @@ def test_a_caller_project_switch_mid_create_is_refused(tmp_path, monkeypatch):
     A switch inside an await of the create would otherwise start the child in the
     caller's former project.
     """
-    from kiro_crew.dashboard.session_control_parts import session_create as create_mod
+    from aj_crew.dashboard.session_control_parts import session_create as create_mod
 
     state = _make_state(tmp_path)
     first = tmp_path / "first-project"
@@ -211,7 +211,7 @@ def test_the_validated_project_is_the_one_the_late_gate_compares(tmp_path, monke
     The helper validates the snapshot it is handed and never re-reads the slot, so
     the late gate's equality check compares against the very value the child gets.
     """
-    from kiro_crew.dashboard.session_control_parts import session_create as create_mod
+    from aj_crew.dashboard.session_control_parts import session_create as create_mod
 
     state = _make_state(tmp_path)
     first = tmp_path / "first-project"
@@ -240,7 +240,7 @@ def test_the_validated_project_is_the_one_the_late_gate_compares(tmp_path, monke
 @pytest.mark.parametrize("stored", ["", "relative/path", "/nonexistent/kc-project-gone"])
 def test_a_caller_without_a_usable_project_gives_the_default(tmp_path, monkeypatch, stored):
     """An empty, relative or vanished caller project is not reused."""
-    from kiro_crew.dashboard.session_control_parts import session_create as create_mod
+    from aj_crew.dashboard.session_control_parts import session_create as create_mod
 
     default = tmp_path / "workspace-default"
     default.mkdir()
@@ -317,7 +317,7 @@ def test_create_without_a_model_leaves_the_default(tmp_path):
 
 def test_create_refuses_a_model_the_picker_refuses(tmp_path, monkeypatch):
     """The picker's own guard decides, and a refusal allocates nothing."""
-    import kiro_crew.dashboard.chat_handlers as ch
+    import aj_crew.dashboard.chat_handlers as ch
 
     monkeypatch.setattr(
         ch, "_model_rejected_reason", lambda name, provider=None: f"{name} is display-only"
@@ -472,7 +472,7 @@ def test_moving_an_empty_newborn_before_its_first_message_survives_a_restart(tmp
     writes nothing for a message-less slot; without the metadata merge a restart would
     restore the birth placement.
     """
-    from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
+    from aj_crew.dashboard.chat_persistence import save_slot_off_loop
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -512,7 +512,7 @@ def test_metadata_mutations_on_an_empty_newborn_survive_a_restart(tmp_path):
     merge. The merge cannot delete a key, so untag/unpin write falsy values that
     rehydrate reads as cleared.
     """
-    from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
+    from aj_crew.dashboard.chat_persistence import save_slot_off_loop
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -555,8 +555,8 @@ def test_the_empty_window_merge_mirrors_the_full_saves_slot_owned_fields(tmp_pat
     Keyed to ``SLOT_OWNED_META_KEYS``, so a field added to the full save fails here.
     Exclusions are keys the merge writes only when the slot carries them.
     """
-    from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
-    from kiro_crew.history import SLOT_OWNED_META_KEYS
+    from aj_crew.dashboard.chat_persistence import save_slot_off_loop
+    from aj_crew.history import SLOT_OWNED_META_KEYS
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -615,7 +615,7 @@ def test_the_empty_window_merge_mirrors_the_full_saves_slot_owned_fields(tmp_pat
     assert meta.get("color_index") == 3
     assert meta.get("title") == "Pinned title"
     assert meta.get("title_origin") == "user"
-    from kiro_crew.context import store_of_session
+    from aj_crew.context import store_of_session
 
     assert (
         store_of_session(state.conversation_log, slot_history_key(child)) == ""
@@ -629,7 +629,7 @@ def test_the_empty_window_merge_keeps_a_named_memory_store(tmp_path):
     merges the crew into global memory. Both directions matter: rebinding to the
     default store depends on absence.
     """
-    from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
+    from aj_crew.dashboard.chat_persistence import save_slot_off_loop
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -644,7 +644,7 @@ def test_the_empty_window_merge_keeps_a_named_memory_store(tmp_path):
     # Rebinding to the default RETRACTS it. The merge cannot delete a key, so the
     # cleared form is a falsy value; what must hold is that the consolidator
     # resolves it to the global store again.
-    from kiro_crew.context import store_of_session
+    from aj_crew.context import store_of_session
 
     child.memory_store = "default"
     asyncio.run(save_slot_off_loop(state, child, force=True))
@@ -655,7 +655,7 @@ def test_the_empty_window_merge_keeps_a_named_memory_store(tmp_path):
 
 def test_the_empty_window_merge_writes_a_forks_parent_identity(tmp_path):
     """The parent transcript a fork was copied from is slot-owned, like the link."""
-    from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
+    from aj_crew.dashboard.chat_persistence import save_slot_off_loop
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -680,7 +680,7 @@ def test_the_empty_window_merge_reads_slot_state_at_write_time(tmp_path):
     """
     from unittest.mock import patch
 
-    from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
+    from aj_crew.dashboard.chat_persistence import save_slot_off_loop
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -713,7 +713,7 @@ def test_closing_an_empty_newborn_does_not_resurrect_it_open(tmp_path):
     line stays open-shaped and the next restart resurrects a tab the user
     dismissed.
     """
-    from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
+    from aj_crew.dashboard.chat_persistence import save_slot_off_loop
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -738,7 +738,7 @@ def test_an_unreadable_record_fails_the_empty_window_merge_loudly(tmp_path):
     """
     from unittest.mock import patch
 
-    from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
+    from aj_crew.dashboard.chat_persistence import save_slot_off_loop
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -797,7 +797,7 @@ def test_the_empty_window_merge_cannot_resurrect_a_deleted_session(tmp_path):
     The plain update is an upsert, so check-then-write could recreate a file deleted in
     between; `update_metadata_if` decides inside the cross-process lock.
     """
-    from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
+    from aj_crew.dashboard.chat_persistence import save_slot_off_loop
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -828,12 +828,12 @@ def test_a_crew_mode_root_creates_its_worker_outside_the_persons_folders(tmp_pat
     # not depend on a conductor spec being installed in the test home.
     from types import SimpleNamespace
 
-    from kiro_crew import crew_mode
+    from aj_crew import crew_mode
 
-    caller.agent = "kirocrew"
+    caller.agent = "ajcrew"
     # The chat turned Crew Mode on: its root slot carries the stamp.
     caller.crew_mode_agent = caller.agent
-    crew_mode.remember(SimpleNamespace(agent=SimpleNamespace(crew_mode_agent="kirocrew")))
+    crew_mode.remember(SimpleNamespace(agent=SimpleNamespace(crew_mode_agent="ajcrew")))
     request.addfinalizer(
         lambda: crew_mode.remember(SimpleNamespace(agent=SimpleNamespace(crew_mode_agent="")))
     )
@@ -868,18 +868,18 @@ def test_fork_filing_respects_the_callers_crew_mode_tree(
     tmp_path, monkeypatch, conductor, folder_id
 ):
     """Crew workers are unfiled at birth; plain forks keep normal folder inheritance."""
-    from kiro_crew import crew_mode
-    from kiro_crew.dashboard import chat_fork
-    from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+    from aj_crew import crew_mode
+    from aj_crew.dashboard import chat_fork
+    from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
     caller.agent_kind = "template"
-    caller.agent = "kirocrew"
+    caller.agent = "ajcrew"
     if conductor:
         caller.crew_mode_agent = caller.agent
     monkeypatch.setattr(crew_mode, "_live_cfg", lambda: None)
-    monkeypatch.setattr(crew_mode, "_configured", "kirocrew" if conductor else "other-conductor")
+    monkeypatch.setattr(crew_mode, "_configured", "ajcrew" if conductor else "other-conductor")
     _folder(state, "fold00000001", "Parent", hidden=True)
     named_folder = _folder(state, "fold00000002", "Requested", hidden=True)
     caller.folder_id = "fold00000001"
@@ -935,21 +935,21 @@ def test_a_plain_caller_still_files_its_child(tmp_path):
 
 def _unstamped_conductor_root(state, monkeypatch):
     """A root chat on the configured conductor that never turned Crew Mode on."""
-    from kiro_crew import crew_mode
+    from aj_crew import crew_mode
 
     caller = _slot(state, "chat-1")
     caller.agent_kind = "template"
-    caller.agent = "kirocrew"
+    caller.agent = "ajcrew"
     caller.crew_mode_agent = ""
     monkeypatch.setattr(crew_mode, "_live_cfg", lambda: None)
-    monkeypatch.setattr(crew_mode, "_configured", "kirocrew")
+    monkeypatch.setattr(crew_mode, "_configured", "ajcrew")
     assert crew_mode.slot_is_crew_mode_root(caller)
     return caller
 
 
 def test_an_unstamped_conductor_root_still_files_its_child(tmp_path, monkeypatch):
     """Folder effects follow the root's stamp, not the conductor template alone."""
-    from kiro_crew import crew_mode
+    from aj_crew import crew_mode
 
     state = _make_state(tmp_path)
     caller = _unstamped_conductor_root(state, monkeypatch)
@@ -975,7 +975,7 @@ def test_an_unstamped_conductor_root_still_files_its_child(tmp_path, monkeypatch
 
 
 def test_an_unstamped_conductor_roots_fork_inherits_its_folder(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+    from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
     state = _make_state(tmp_path)
     caller = _unstamped_conductor_root(state, monkeypatch)
@@ -998,9 +998,9 @@ def test_an_unstamped_conductor_roots_fork_inherits_its_folder(tmp_path, monkeyp
 
 
 def test_turned_on_tree_reads_the_root_rows_stamp():
-    from kiro_crew import crew_mode
+    from aj_crew import crew_mode
 
-    stamped = {"key": "r1", "crew_mode_root": True, "crew_mode_agent": "kirocrew"}
+    stamped = {"key": "r1", "crew_mode_root": True, "crew_mode_agent": "ajcrew"}
     unstamped = {"key": "r2", "crew_mode_root": True, "crew_mode_agent": ""}
     rows = {
         "r1": stamped,

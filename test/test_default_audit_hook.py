@@ -26,7 +26,7 @@ from pathlib import Path
 import pytest
 
 DEFAULTS_JSON = (
-    Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "config" / "defaults.json"
+    Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "config" / "defaults.json"
 )
 SH = shutil.which("sh")
 
@@ -75,7 +75,7 @@ def _bin_dir(tmp_path: Path, mode: str) -> Path:
 
 def _hook(home: Path, bindir: Path, payload: bytes) -> subprocess.Popen[bytes]:
     assert SH is not None
-    env = {**os.environ, "KIROCREW_HOME": str(home), "PATH": str(bindir)}
+    env = {**os.environ, "AJCREW_HOME": str(home), "PATH": str(bindir)}
     proc = subprocess.Popen([SH, "-c", _audit_command()], stdin=subprocess.PIPE, env=env, cwd=home)
     assert proc.stdin is not None
     proc.stdin.write(payload)

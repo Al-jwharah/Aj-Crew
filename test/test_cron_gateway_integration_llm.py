@@ -21,14 +21,14 @@ from cron_gateway_integration_helpers import (
     _run_script_callback,
 )
 
-from kiro_crew.testing.wait import finished
+from aj_crew.testing.wait import finished
 
 
 def _usage_rows(monkeypatch, tmp_path):
     """Point the usage shards at *tmp_path*; return a reader of the rows written."""
     import json
 
-    import kiro_crew.dashboard.handlers.usage as usage_mod
+    import aj_crew.dashboard.handlers.usage as usage_mod
 
     shard_dir = tmp_path / "usage" / "tokens"
     monkeypatch.setattr(usage_mod, "_TOKEN_USAGE_DIR", shard_dir)
@@ -51,7 +51,7 @@ class TestLlmCronAdmission:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("with_modes", [False, True])
     async def test_execution_binding_runs_off_loop(self, monkeypatch, with_modes):
-        from kiro_crew import execution_context
+        from aj_crew import execution_context
 
         gw = _make_gw_for_llm()
         gw.ctx_builder._session_memory_modes = {} if with_modes else None
@@ -76,7 +76,7 @@ class TestLlmCronAdmission:
 
     @pytest.mark.asyncio
     async def test_session_closing_retains_undispatched_one_shot(self):
-        from kiro_crew.session import SessionClosingError
+        from aj_crew.session import SessionClosingError
 
         gw = _make_gw_for_llm()
         job = _make_llm_job(
@@ -118,21 +118,21 @@ class TestLlmCronAdmission:
         from pathlib import Path
         from types import SimpleNamespace
 
-        from kiro_crew import execution_context
-        from kiro_crew.config import loader
-        from kiro_crew.config.sections import KiroCrewAgentConfig, MemoryStoreConfig
-        from kiro_crew.cron_service.identity import migrate_legacy_member_schedules
-        from kiro_crew.cron_service.store import _job_from_record
-        from kiro_crew.history import ConversationLog
-        from kiro_crew.vector_memory import create_member_database
+        from aj_crew import execution_context
+        from aj_crew.config import loader
+        from aj_crew.config.sections import AjCrewAgentConfig, MemoryStoreConfig
+        from aj_crew.cron_service.identity import migrate_legacy_member_schedules
+        from aj_crew.cron_service.store import _job_from_record
+        from aj_crew.history import ConversationLog
+        from aj_crew.vector_memory import create_member_database
 
-        home = Path(os.environ["KIROCREW_HOME"])
+        home = Path(os.environ["AJCREW_HOME"])
         db = home / "memory_stores" / "member-alice" / "memory.db"
         db.parent.mkdir(parents=True, exist_ok=True)
         create_member_database(db, member_id="id-alice", store_id="member-alice")
         cfg = SimpleNamespace(
             agents={
-                "alice": KiroCrewAgentConfig(
+                "alice": AjCrewAgentConfig(
                     member_id="id-alice", memory_store="member-alice", kiro_agent="shared"
                 )
             },
@@ -143,7 +143,7 @@ class TestLlmCronAdmission:
             },
         )
         loader._invalidate_config_cache()
-        monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+        monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(lambda cls: cfg))
         execution_context._LIVE_EXECUTIONS.clear()
 
         store_dir = tmp_path / "cron-store"
@@ -195,8 +195,8 @@ class TestLlmCronAdmission:
         reaches the scheduler, whose catch records an ordinary failed run whose
         error text is the ``memory_unavailable:`` refusal naming the repair.
         """
-        from kiro_crew import cron
-        from kiro_crew.cron_service.identity import LegacyScheduleRefused
+        from aj_crew import cron
+        from aj_crew.cron_service.identity import LegacyScheduleRefused
 
         def refuse(job, **_kwargs):
             raise LegacyScheduleRefused("its store's member was deleted", "delete this schedule")
@@ -222,7 +222,7 @@ class TestLlmCronAdmission:
 
     @pytest.mark.asyncio
     async def test_other_refusals_before_dispatch_still_raise(self, monkeypatch):
-        from kiro_crew import cron
+        from aj_crew import cron
 
         def refuse(job, **_kwargs):
             raise ValueError("memory_unavailable: schedule has no canonical execution context")
@@ -333,7 +333,7 @@ class TestThrottleFallbackCronWiring:
         gw = _make_gw_for_llm()
         job = _make_llm_job(model="")
         with patch(
-            "kiro_crew.slack.gateway.configured_fallback_chain",
+            "aj_crew.slack.gateway.configured_fallback_chain",
             return_value=("fb-1", "fb-2"),
         ):
             _result, stream_mock = await _run_llm_callback(gw, job)
@@ -341,7 +341,7 @@ class TestThrottleFallbackCronWiring:
 
     @pytest.mark.asyncio
     async def test_fallback_served_run_is_annotated(self):
-        from kiro_crew.llm_helpers import TURN_FALLBACK_ATTR
+        from aj_crew.llm_helpers import TURN_FALLBACK_ATTR
 
         gw = _make_gw_for_llm()
         job = _make_llm_job(model="")
@@ -362,7 +362,7 @@ class TestThrottleFallbackCronWiring:
     ):
         """A pinned job.model must NOT be billed while a fallback served the
         turn — the usage row blanks it so model_source reports what ran."""
-        from kiro_crew.llm_helpers import TURN_FALLBACK_ATTR
+        from aj_crew.llm_helpers import TURN_FALLBACK_ATTR
 
         rows = _usage_rows(monkeypatch, tmp_path)
         gw = _make_gw_for_llm()
@@ -388,7 +388,7 @@ class TestThrottleFallbackCronWiring:
     def test_annotate_noop_without_marker(self):
         from types import SimpleNamespace
 
-        from kiro_crew.slack.gateway import _annotate_model_fallback
+        from aj_crew.slack.gateway import _annotate_model_fallback
 
         provider = SimpleNamespace()
         assert _annotate_model_fallback("text", provider) == "text"
@@ -396,8 +396,8 @@ class TestThrottleFallbackCronWiring:
     def test_annotate_malformed_marker_is_noop(self):
         from types import SimpleNamespace
 
-        from kiro_crew.llm_helpers import TURN_FALLBACK_ATTR
-        from kiro_crew.slack.gateway import _annotate_model_fallback
+        from aj_crew.llm_helpers import TURN_FALLBACK_ATTR
+        from aj_crew.slack.gateway import _annotate_model_fallback
 
         provider = SimpleNamespace()
         setattr(provider, TURN_FALLBACK_ATTR, ("only-one",))
@@ -406,8 +406,8 @@ class TestThrottleFallbackCronWiring:
     def test_gateway_annotator_is_the_shared_body(self):
         """DRIFT PIN: the gateway name must BE the shared
         helper next to TURN_FALLBACK_ATTR — not a re-spelled copy."""
-        from kiro_crew.llm_helpers import annotate_model_fallback
-        from kiro_crew.slack.gateway import _annotate_model_fallback
+        from aj_crew.llm_helpers import annotate_model_fallback
+        from aj_crew.slack.gateway import _annotate_model_fallback
 
         assert _annotate_model_fallback is annotate_model_fallback
 
@@ -419,8 +419,8 @@ class TestThrottleFallbackCronWiring:
         dashboard notify and the Slack DM legs, and even when the backend
         error is verbose enough to hit the detail cap (a real ACP throttle
         payload routinely exceeds it)."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.llm_helpers import FALLBACK_STORY_ATTR
+        from aj_crew.acp.client import AcpError
+        from aj_crew.llm_helpers import FALLBACK_STORY_ATTR
 
         gw = _make_gw_for_llm()
         job = _make_llm_job(model="")
@@ -444,11 +444,11 @@ class TestThrottleFallbackCronWiring:
         _stream_mock = AsyncMock(side_effect=exc)
 
         with (
-            patch("kiro_crew.slack.gateway.CronService") as mock_cron_cls,
-            patch("kiro_crew.slack.gateway.run_in_embed_pool", _embed_mock),
-            patch("kiro_crew.slack.gateway.stream_and_collect", _stream_mock),
-            patch("kiro_crew.slack.gateway.sel"),
-            patch("kiro_crew.slack.gateway.build_cron_session_context") as mock_ctx,
+            patch("aj_crew.slack.gateway.CronService") as mock_cron_cls,
+            patch("aj_crew.slack.gateway.run_in_embed_pool", _embed_mock),
+            patch("aj_crew.slack.gateway.stream_and_collect", _stream_mock),
+            patch("aj_crew.slack.gateway.sel"),
+            patch("aj_crew.slack.gateway.build_cron_session_context") as mock_ctx,
         ):
             mock_ctx.return_value = (f"cron:{job.id}", job.message)
 
@@ -488,7 +488,7 @@ class TestThrottleFallbackCronWiring:
         # appended (the budget trims the error part). +60 absorbs the fixed
         # "❌ Job failed:\n" / "❌ Job failed (suppressed — same error):\n"
         # prefixes around exc_detail — the bound under test is exc_detail's.
-        from kiro_crew.slack.gateway import _CRON_FAILURE_DETAIL_CAP
+        from aj_crew.slack.gateway import _CRON_FAILURE_DETAIL_CAP
 
         for b in bodies:
             assert len(b) <= _CRON_FAILURE_DETAIL_CAP + 60, f"unbounded alert body: {len(b)} chars"
@@ -517,9 +517,9 @@ class TestCronUsageRow:
         # Patch gateway's own bindings: the imports are at module scope there,
         # so patching the source module would not be seen by the call site.
         with (
-            patch("kiro_crew.slack.gateway.persist_token_record_async", persist),
+            patch("aj_crew.slack.gateway.persist_token_record_async", persist),
             patch(
-                "kiro_crew.slack.gateway.read_context_tokens",
+                "aj_crew.slack.gateway.read_context_tokens",
                 MagicMock(return_value=(1234, 200000)),
                 create=True,
             ),
@@ -542,19 +542,19 @@ class TestCronUsageRow:
 
         with (
             patch(
-                "kiro_crew.slack.gateway.read_context_tokens",
+                "aj_crew.slack.gateway.read_context_tokens",
                 MagicMock(return_value=(10, 100)),
                 create=True,
             ),
             patch(
-                "kiro_crew.slack.gateway.read_effective_agent",
+                "aj_crew.slack.gateway.read_effective_agent",
                 MagicMock(return_value="served-agent"),
                 create=True,
             ),
         ):
             await _run_llm_callback(gw, job)
 
-        # The job names no agent, so the configured one is the default `kirocrew`.
+        # The job names no agent, so the configured one is the default `ajcrew`.
         assert [(r["surface"], r["agent"]) for r in rows()] == [("cron", "served-agent")]
 
     @pytest.mark.asyncio
@@ -574,7 +574,7 @@ class TestCronUsageRow:
             return (provider_mock, True, False)
 
         with patch(
-            "kiro_crew.slack.gateway.read_context_tokens",
+            "aj_crew.slack.gateway.read_context_tokens",
             MagicMock(return_value=(10, 100)),
             create=True,
         ):
@@ -589,7 +589,7 @@ class TestCronUsageRow:
         job = _make_script_job()
 
         persist = AsyncMock()
-        with patch("kiro_crew.slack.gateway.persist_token_record_async", persist):
+        with patch("aj_crew.slack.gateway.persist_token_record_async", persist):
             result, mock_run = await _run_script_callback(gw, job, {"status": "ok"})
 
         persist.assert_not_awaited()
@@ -603,7 +603,7 @@ class TestCronUsageRow:
         job = _make_command_job()
 
         persist = AsyncMock()
-        with patch("kiro_crew.slack.gateway.persist_token_record_async", persist):
+        with patch("aj_crew.slack.gateway.persist_token_record_async", persist):
             result, mock_run = await _run_command_callback(
                 gw, job, {"status": "ok", "output": "hello\n", "exit_code": 0}
             )

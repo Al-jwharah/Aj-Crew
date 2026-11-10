@@ -4,7 +4,7 @@ The field case these pin: a daemon spawned on Sep 4 was still serving on Sep 8.
 The gateway had restarted twice in between, each time with newer code, and each
 time found "a healthy daemon already owns the socket" and ADOPTED it -- the
 adoption gate compared target stems, which had not changed, and nothing else.
-The daemon's pooled ``kirocrew mcp-core`` backend was a day older than the
+The daemon's pooled ``ajcrew mcp-core`` backend was a day older than the
 control-frame shape the gateway read (``/api/session-directive`` moved from
 ``{kind,args}`` to ``{tool,raw_args}``), so every ``monitor_start`` for a day was
 refused as ``not_derivable`` while the tool reported success.
@@ -36,11 +36,11 @@ from unittest.mock import AsyncMock
 import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from kiro_crew import code_fingerprint as cf
-from kiro_crew.mcp_gateway import gatewayd as gw
-from kiro_crew.mcp_gateway import manager as mgr
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
-from kiro_crew.testing.wait import async_wait_until, await_until, finished
+from aj_crew import code_fingerprint as cf
+from aj_crew.mcp_gateway import gatewayd as gw
+from aj_crew.mcp_gateway import manager as mgr
+from aj_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.testing.wait import async_wait_until, await_until, finished
 
 _POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="/proc and unix sockets")
 
@@ -168,7 +168,7 @@ class TestCodeFingerprint:
         monkeypatch.setenv("GIT_CONFIG_PARAMETERS", "'diff.external=/tmp/evil'")
         # The repo-driver preflight has its own real-repo tests; here it is clean.
         monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.repo_exec_driver_reason", lambda *_a, **_k: ""
+            "aj_crew.platform.update_governance.repo_exec_driver_reason", lambda *_a, **_k: ""
         )
         assert cf._git_fingerprint(tmp_path) == "abc"
         assert len(seen) == 2
@@ -378,7 +378,7 @@ async def test_a_real_daemon_exits_when_its_owner_dies(
     """
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.chdir(home)
     monkeypatch.setattr(gw, "_OWNER_LIVENESS_INTERVAL_SECS", 0.2)
     sock = short_sock_dir / "gw.sock"
@@ -398,7 +398,7 @@ async def test_a_real_daemon_exits_when_its_owner_dies(
         # Same entry the manager uses, with the probe interval shortened so
         # the test does not wait the production 15 s.
         "import sys, asyncio\n"
-        "from kiro_crew.mcp_gateway import gatewayd as g\n"
+        "from aj_crew.mcp_gateway import gatewayd as g\n"
         "g._OWNER_LIVENESS_INTERVAL_SECS = 0.2\n"
         "sys.exit(asyncio.run(g._amain(sys.argv[1:])))",
         "--socket",
@@ -417,7 +417,7 @@ async def test_a_real_daemon_exits_when_its_owner_dies(
         start_new_session=True,
     )
     try:
-        from kiro_crew.mcp_gateway.daemon_control import describe_daemon
+        from aj_crew.mcp_gateway.daemon_control import describe_daemon
 
         info = await async_wait_until(
             lambda: describe_daemon(sock),
@@ -429,7 +429,7 @@ async def test_a_real_daemon_exits_when_its_owner_dies(
         assert info.owner_pid == owner.pid
         assert info.pid == daemon.pid
         assert info.fingerprint == cf.code_fingerprint()
-        from kiro_crew.platform_compat import process_start_time
+        from aj_crew.platform_compat import process_start_time
 
         assert info.start_time == process_start_time(daemon.pid)
 
@@ -681,7 +681,7 @@ class TestDaemonAcceptsAStaleCodeStandDown:
     def test_the_old_frame_shape_still_works(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """A manager without the fingerprint field asks by stems alone, as before."""
         for key in [
-            k for k in os.environ if k.startswith(("KIROCREW_MCP_TARGET_", "MC_MCP_TARGET_"))
+            k for k in os.environ if k.startswith(("AJCREW_MCP_TARGET_", "MC_MCP_TARGET_"))
         ]:
             monkeypatch.delenv(key, raising=False)
         stop = asyncio.Event()
@@ -714,20 +714,20 @@ class TestDaemonAcceptsAStaleCodeStandDown:
 
 
 class TestStubBinaryVersion:
-    def test_kirocrew_servers_fold_in_the_code_fingerprint(
+    def test_ajcrew_servers_fold_in_the_code_fingerprint(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.mcp_gateway import stub
+        from aj_crew.mcp_gateway import stub
 
         monkeypatch.setattr(stub, "_binary_version", lambda cmd: "shimhash")
         assert (
-            stub.pool_binary_version("kirocrew", ["mcp-core"])
+            stub.pool_binary_version("ajcrew", ["mcp-core"])
             == f"shimhash+{cf.code_fingerprint()}"
         )
 
     def test_third_party_servers_are_untouched(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """A git pull of Kiro Crew must not cold-start every npx server."""
-        from kiro_crew.mcp_gateway import stub
+        """A git pull of Aj Crew must not cold-start every npx server."""
+        from aj_crew.mcp_gateway import stub
 
         monkeypatch.setattr(stub, "_binary_version", lambda cmd: "shimhash")
         assert stub.pool_binary_version("npx", ["-y", "server-pdf"]) == "shimhash"

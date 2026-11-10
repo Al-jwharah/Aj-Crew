@@ -7,7 +7,7 @@ import aiohttp
 import pytest
 
 # Capture the transport before the suite's network floor replaces this seam.
-from kiro_crew.dashboard.handlers.updates import _fetch_feed_bytes
+from aj_crew.dashboard.handlers.updates import _fetch_feed_bytes
 
 _FEED_URL = "https://updates.example/feed/stable/latest-cli.json"
 _HTTPS_PROXY = "http://https-proxy.example:3128"

@@ -20,10 +20,10 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew import cron as cron_facade
-from kiro_crew.cron import _AUTO_PAUSE_THRESHOLD, CronJob, CronService
-from kiro_crew.cron_service.model import _AUTO_PAUSE_MAX
-from kiro_crew.dashboard.handlers.cron import api_cron_update, api_crons, api_crons_create
+from aj_crew import cron as cron_facade
+from aj_crew.cron import _AUTO_PAUSE_THRESHOLD, CronJob, CronService
+from aj_crew.cron_service.model import _AUTO_PAUSE_MAX
+from aj_crew.dashboard.handlers.cron import api_cron_update, api_crons, api_crons_create
 
 pytestmark = pytest.mark.asyncio
 
@@ -149,7 +149,7 @@ class TestAuditThroughTheRealStore:
         # The PATCH route imports ``dashboard.server`` lazily, and its facade mirror
         # refuses to load while ``sel`` is patched. Load it first, so the test does
         # not depend on another test in the same worker having imported it already.
-        import kiro_crew.dashboard.server  # noqa: F401
+        import aj_crew.dashboard.server  # noqa: F401
 
         class _Sel:
             def log_tool_invocation(self, **kw: object) -> None:

@@ -20,9 +20,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.dashboard import crash_dump_store
-from kiro_crew.dashboard.crash_dump_store import (
+from aj_crew import platform_compat
+from aj_crew.dashboard import crash_dump_store
+from aj_crew.dashboard.crash_dump_store import (
     LOOP_THREAD_HEADER,
     LOOP_THREAD_MISSING_NOTE,
     DumpFile,
@@ -30,12 +30,12 @@ from kiro_crew.dashboard.crash_dump_store import (
     dump_replay_lines,
     dump_wedged_frames,
 )
-from kiro_crew.dashboard.loop_watchdog import LoopStallWatchdog
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew.dashboard.loop_watchdog import LoopStallWatchdog
+from aj_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 _HEADER = (
-    "# KiroCrew loop-stall crash dump — opened 20261107T000000Z\n"  # brand-ok: mirrors production dump header
+    "# AjCrew loop-stall crash dump — opened 20261107T000000Z\n"  # brand-ok: mirrors production dump header
     "# PID: 12345\n"
     "# If thread stacks appear below, the event loop wedged and faulthandler fired.\n"
     "\n"
@@ -126,9 +126,9 @@ def test_an_in_place_restart_right_after_a_recovered_stall_leaves_the_file_heade
 ) -> None:
     import asyncio
 
-    from kiro_crew import pre_exec_stops
-    from kiro_crew.dashboard import crash_dump_store as store
-    from kiro_crew.dashboard import server
+    from aj_crew import pre_exec_stops
+    from aj_crew.dashboard import crash_dump_store as store
+    from aj_crew.dashboard import server
 
     # Owner functions run on the server module's globals: patch there.
     monkeypatch.setattr(server, "sweep_stale_dumps", lambda: None)
@@ -202,7 +202,7 @@ def test_a_main_thread_past_the_frame_limit_is_not_read_as_a_cut_dump(tmp_path: 
     path = tmp_path / "loopstall-20261107T000004Z.txt"
     deep_main = (
         "Thread 0x0000000000000001 (most recent call first):\n"
-        + "".join(f'  File "/srv/kiro_crew/deep.py", line {n} in deep_{n}\n' for n in range(100))
+        + "".join(f'  File "/srv/aj_crew/deep.py", line {n} in deep_{n}\n' for n in range(100))
         + "  ...\n"
     )
     path.write_text(_HEADER + _faulthandler_dump(1, cut=False) + deep_main, encoding="utf-8")
@@ -234,13 +234,13 @@ def test_faulthandlers_stack_of_the_loop_thread_beats_an_older_loop_block(tmp_pa
     path = tmp_path / "loopstall-20261107T000005Z.txt"
     stale = (
         f"{LOOP_THREAD_HEADER} 0x0000000000000abc (most recent call first):\n"
-        '  File "/srv/kiro_crew/a.py", line 1 in recovered_earlier\n'
+        '  File "/srv/aj_crew/a.py", line 1 in recovered_earlier\n'
     )
     fatal = (
         "Thread 0x0000000000000def (most recent call first):\n"
         '  File "/usr/lib/python3.12/threading.py", line 1 in idle\n'
         "Current thread 0x0000000000000abc (most recent call first):\n"
-        '  File "/srv/kiro_crew/b.py", line 2 in fatal_now\n'
+        '  File "/srv/aj_crew/b.py", line 2 in fatal_now\n'
     )
     path.write_text(_HEADER + stale + fatal, encoding="utf-8")
     assert "fatal_now" in "\n".join(dump_wedged_frames(path))
@@ -300,7 +300,7 @@ def test_the_watchdogs_loop_block_wins_over_a_cut_dump(tmp_path: Path) -> None:
         "# Event-loop thread after 15s of silence, written by the loop watchdog: "
         "120 threads were alive; only the newest 100 are listed after this block.\n"
         f"{LOOP_THREAD_HEADER} 0x00007f0000000abc (most recent call first):\n"
-        '  File "/srv/kiro_crew/history_search.py", line 505 in _list_sessions_status\n'
+        '  File "/srv/aj_crew/history_search.py", line 505 in _list_sessions_status\n'
         "\n"
     )
     path.write_text(_HEADER + loop_block + _faulthandler_dump(100, cut=True), encoding="utf-8")
@@ -314,8 +314,8 @@ def test_the_watchdogs_loop_block_wins_over_a_cut_dump(tmp_path: Path) -> None:
 
 _CHILD = textwrap.dedent("""
     import logging, os, sys, threading, time
-    from kiro_crew.dashboard.crash_dump_store import DumpFile
-    from kiro_crew.dashboard.loop_watchdog import LoopStallWatchdog
+    from aj_crew.dashboard.crash_dump_store import DumpFile
+    from aj_crew.dashboard.loop_watchdog import LoopStallWatchdog
     path = sys.argv[1]
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_BINARY", 0), 0o600)
     os.write(fd, b"# h1\\n# h2\\n# h3\\n\\n")

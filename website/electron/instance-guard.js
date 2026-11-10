@@ -1,15 +1,15 @@
 /**
  * instance-guard.js — cross-app gateway ownership guard.
  *
- * The nightly app ("KiroCrew Nightly.app") and the production app
- * ("KiroCrew.app", stable ⇄ insider via the update channel) are separate
- * INSTALLS sharing ONE bundle identifier (com.amazon.kiro.crew — Finder
+ * The nightly app ("AjCrew Nightly.app") and the production app
+ * ("AjCrew.app", stable ⇄ insider via the update channel) are separate
+ * INSTALLS sharing ONE bundle identifier (io.github.al-jwharah.ajcrew — Finder
  * separates installs by filename; Squirrel validates updates against the
  * host's designated requirement, which pins the id), ONE data home
  * (~/.kiro/crew), and ONE gateway port (5476). That makes the port a mutex:
- * only one KiroCrew-family gateway may run at a time. Electron's
+ * only one AjCrew-family gateway may run at a time. Electron's
  * requestSingleInstanceLock is keyed on userData (per productName), so it
- * cannot stop "KiroCrew Nightly" launching while "KiroCrew" runs — this
+ * cannot stop "AjCrew Nightly" launching while "AjCrew" runs — this
  * module covers that cross-app seam.
  *
  * Decision inputs: our own stamped version (identity family derives from it,
@@ -81,11 +81,11 @@ function classifyGatewayReadiness(statusCode, payload) {
 const FAMILY_META = {
   // appName is the technical Finder/AppleScript target. displayName is the
   // product spelling shown in dialogs and status text.
-  prod: { appName: "KiroCrew", displayName: "Kiro Crew" },
-  nightly: { appName: "KiroCrew Nightly", displayName: "Kiro Crew Nightly" },
+  prod: { appName: "AjCrew", displayName: "Aj Crew" },
+  nightly: { appName: "AjCrew Nightly", displayName: "Aj Crew Nightly" },
   // The LTS edition is a third side-by-side install (build-desktop.sh). Its
   // gateway runs the lts backend, so an LTS shell must never adopt an oss one.
-  lts: { appName: "KiroCrew LTS", displayName: "Kiro Crew LTS" }, // brand-ok
+  lts: { appName: "AjCrew LTS", displayName: "Aj Crew LTS" }, // brand-ok
 };
 
 /**
@@ -112,7 +112,7 @@ function identityFamily(version, edition = "oss") {
  * @param {{ok?:boolean, app?:string, version?:string}|null} remoteHealth
  *        parsed /api/health JSON, or null when unreachable/unparseable
  * @param {object} [opts]
- * @param {"kirocrew"|"service"|"foreign"|"none"|"unknown"} [opts.localOwner="unknown"]
+ * @param {"ajcrew"|"service"|"foreign"|"none"|"unknown"} [opts.localOwner="unknown"]
  *        who LOCALLY owns the port's LISTEN socket (classifyPortOwner in
  *        gateway-stop.js). Defaults to "unknown" so a caller that forgets to
  *        pass it fails SAFE (reuse) rather than inheriting the old
@@ -137,10 +137,10 @@ function decideGatewayAction(ownVersion, remoteHealth, {
   const own = identityFamily(ownVersion, ownEdition);
   // A shell we can't classify never evicts anyone.
   if (own === null) return { action: "reuse", reason: "unclassified-shell" };
-  // Legacy (pre-identity health payload) or non-kirocrew responder on the
+  // Legacy (pre-identity health payload) or non-ajcrew responder on the
   // port: keep the historical reuse behavior. The guard turns on organically
   // once both sides carry the identity fields.
-  if (!remoteHealth || remoteHealth.app !== "kirocrew" || !remoteHealth.version) {
+  if (!remoteHealth || remoteHealth.app !== "ajcrew" || !remoteHealth.version) {
     return { action: "reuse", reason: "unidentified-gateway" };
   }
   const remote = identityFamily(remoteHealth.version, remoteHealth.edition);
@@ -148,18 +148,18 @@ function decideGatewayAction(ownVersion, remoteHealth, {
     // An app replacement can leave a detached gateway running the old bundle.
     // Warn only for that exact local bundled gateway; never warn for a tunnel,
     // a separate CLI/service install, or a newer gateway on downgrade.
-    if (bundledGateway && (localOwner === "kirocrew" || localOwner === "service")
+    if (bundledGateway && (localOwner === "ajcrew" || localOwner === "service")
         && isNewerVersion(bundleVersion || ownVersion, remoteHealth.version) === true) {
       return { action: "warn-stale", oldVersion: remoteHealth.version, reason: "same-family" };
     }
     return { action: "reuse", reason: "same-family" };
   }
   if (remote === null) return { action: "reuse", reason: "dev-gateway" };
-  // Cross-family: the payload says "a rival KiroCrew owns the port". That is
+  // Cross-family: the payload says "a rival AjCrew owns the port". That is
   // necessary but NOT sufficient to evict, because the payload is identical
   // whether the responder is a local install or a REMOTE gateway forwarded
   // here by `ssh -L <port>:localhost:<port>`. Only a positively identified
-  // local KiroCrew LISTEN owner authorises the eviction; a tunnel ("foreign",
+  // local AjCrew LISTEN owner authorises the eviction; a tunnel ("foreign",
   // owner is `ssh`), an unseen socket ("none"), or a failed probe ("unknown")
   // all reuse instead. Evicting a tunnel is doubly wrong: the AppleScript quit
   // targets a local app that is not running, and killing the port would tear
@@ -175,7 +175,7 @@ function decideGatewayAction(ownVersion, remoteHealth, {
       action: "takeover-prompt", otherFamily: remote, otherVersion: remoteHealth.version, holder: "service",
     };
   }
-  if (localOwner !== "kirocrew") {
+  if (localOwner !== "ajcrew") {
     return { action: "reuse", reason: `non-local-holder:${localOwner}` };
   }
   return { action: "takeover-prompt", otherFamily: remote, otherVersion: remoteHealth.version };

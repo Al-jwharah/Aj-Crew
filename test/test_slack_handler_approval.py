@@ -20,8 +20,8 @@ from slack_handler_helpers import (
 )
 
 from conftest import MockSlackClient
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.slack.handler import (
+from aj_crew.providers.base import LLMEvent
+from aj_crew.slack.handler import (
     _pending_approvals,
     _trusted_sessions,
     add_trusted_session,
@@ -38,7 +38,7 @@ class TestAllowedUsers:
 
     @pytest.fixture(autouse=True)
     def _reset_globals(self):
-        from kiro_crew.slack.handler import _trusted_sessions
+        from aj_crew.slack.handler import _trusted_sessions
 
         _trusted_sessions.clear()
         yield
@@ -83,7 +83,7 @@ class TestAllowedUsers:
         """Non-allowed user's approve action is silently rejected."""
         set_owner_id("U1")
         set_allowed_users({"U1"})
-        import kiro_crew.slack.handler as _h
+        import aj_crew.slack.handler as _h
 
         monkeypatch.setattr(_h, "_trusted_sessions", type(_h._trusted_sessions)())
         slack = MockSlackClient()
@@ -127,7 +127,7 @@ class TestAllowedUsers:
     @pytest.mark.asyncio
     async def test_empty_allowed_users_rejects_all(self, monkeypatch):
         """With no allowed users only the owner passes the gate; a stale click claims nothing."""
-        import kiro_crew.slack.handler as _h
+        import aj_crew.slack.handler as _h
 
         set_allowed_users(set())
         rec = MagicMock()
@@ -231,7 +231,7 @@ class TestSlackApproveTransportFloor:
     @pytest.mark.asyncio
     async def test_approve_click_refused_by_floor_returns_reject(self):
         """The card must not be relabelled as approved when approve_tool refused."""
-        from kiro_crew.slack.handler import _ACTION_REJECT, _OUTCOME_REJECTED, _PendingApproval
+        from aj_crew.slack.handler import _ACTION_REJECT, _OUTCOME_REJECTED, _PendingApproval
 
         set_owner_id("U1")
         set_allowed_users({"U1"})
@@ -251,7 +251,7 @@ class TestSlackTrustSubagentPropagation:
 
     @pytest.mark.asyncio
     async def test_trust_sets_session_approval_policy_auto(self):
-        from kiro_crew.slack.handler import _PendingApproval
+        from aj_crew.slack.handler import _PendingApproval
 
         set_owner_id("U1")
         set_allowed_users({"U1"})
@@ -271,7 +271,7 @@ class TestSlackTrustSubagentPropagation:
 
     @pytest.mark.asyncio
     async def test_trust_without_sessions_does_not_raise(self):
-        from kiro_crew.slack.handler import _PendingApproval
+        from aj_crew.slack.handler import _PendingApproval
 
         set_owner_id("U1")
         set_allowed_users({"U1"})
@@ -300,7 +300,7 @@ class TestSlackTrustSubagentPropagation:
         fake_map = MagicMock()
         fake_map.get_session_for_thread.return_value = ""  # no override → key is thread_ts
 
-        with patch("kiro_crew.session.SessionMap", return_value=fake_map):
+        with patch("aj_crew.session.SessionMap", return_value=fake_map):
             result = await handle_interaction(
                 "C9",
                 "ts9",

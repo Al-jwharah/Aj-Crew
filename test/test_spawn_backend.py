@@ -20,8 +20,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.execution_context import execution_for_store
-from kiro_crew.validation import SPAWN_RUN_SCHEMA, ValidationError, validate_tool_args
+from aj_crew.execution_context import execution_for_store
+from aj_crew.validation import SPAWN_RUN_SCHEMA, ValidationError, validate_tool_args
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -35,9 +35,9 @@ def _close_subagent_managers(close_subagent_managers):
 def selectable(monkeypatch):
     """Pin the selectable set to Kiro, Claude, Codex and Pi, and this machine's
     installs: Pi is allowed but missing, Codex's probe could not decide."""
-    from kiro_crew import acp_backends
-    from kiro_crew.agent_sdk import backend_install
-    from kiro_crew.agent_sdk.backend_install import (
+    from aj_crew import acp_backends
+    from aj_crew.agent_sdk import backend_install
+    from aj_crew.agent_sdk.backend_install import (
         INSTALLED,
         MISSING,
         UNKNOWN,
@@ -96,7 +96,7 @@ class TestSchema:
 def _drive(result: Any) -> str:
     """``spawn_run`` returns a :class:`DeferredTool` the stdio loop steps;
     drive it to its text here, as ``_call_tool`` does."""
-    from kiro_crew import mcp_core, mcp_shared
+    from aj_crew import mcp_core, mcp_shared
 
     if isinstance(result, mcp_shared.DeferredTool):
         return mcp_shared.drive_deferred(result, clock=mcp_core.time)
@@ -104,7 +104,7 @@ def _drive(result: Any) -> str:
 
 
 def _run_tool(args: dict[str, Any]) -> list[dict]:
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     bodies: list[dict] = []
 
@@ -138,7 +138,7 @@ class TestToolForwarding:
         assert all("backend" not in b for b in bodies)
 
     def test_the_tool_advertises_the_field(self):
-        from kiro_crew.mcp_tools.spawn import schemas
+        from aj_crew.mcp_tools.spawn import schemas
 
         spec = next(t for t in schemas() if t["name"] == "spawn_run")
         props = spec["inputSchema"]["properties"]
@@ -146,7 +146,7 @@ class TestToolForwarding:
         assert "backend" in props["tasks"]["items"]["properties"]
 
     def test_a_not_installed_refusal_shows_its_install_command(self):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         refusal = {
             "error": "backend 'codex' is not installed on this machine",
@@ -209,7 +209,7 @@ class TestSpawnEndpoint:
         ],
     )
     async def test_an_admitted_backend_reaches_spawn(self, selectable, name, reaches):
-        from kiro_crew.dashboard.handlers.messaging import api_spawn
+        from aj_crew.dashboard.handlers.messaging import api_spawn
 
         request, mgr = _real_request({"task": "x", "backend": name})
         resp = await api_spawn(request)
@@ -221,8 +221,8 @@ class TestSpawnEndpoint:
     ):
         """The parent's session ends while the route awaits its backend probe:
         the spawn still carries the project scope the parent had when it asked."""
-        from kiro_crew import subagent
-        from kiro_crew.dashboard.handlers import messaging
+        from aj_crew import subagent
+        from aj_crew.dashboard.handlers import messaging
 
         live = [str(tmp_path)]
         monkeypatch.setattr(
@@ -255,7 +255,7 @@ class TestSpawnEndpoint:
 
     @pytest.mark.asyncio
     async def test_no_backend_reaches_spawn_as_none(self, selectable):
-        from kiro_crew.dashboard.handlers.messaging import api_spawn
+        from aj_crew.dashboard.handlers.messaging import api_spawn
 
         request, mgr = _real_request({"task": "x"})
         resp = await api_spawn(request)
@@ -266,7 +266,7 @@ class TestSpawnEndpoint:
     async def test_an_unavailable_backend_is_refused_with_the_list(self, selectable, name):
         # "goose" is a backend this build knows but this gateway does not allow;
         # "nonesuch" is not a backend at all. Neither may degrade to the default.
-        from kiro_crew.dashboard.handlers.messaging import api_spawn
+        from aj_crew.dashboard.handlers.messaging import api_spawn
 
         request, mgr = _request({"task": "x", "backend": name})
         resp = await api_spawn(request)
@@ -286,7 +286,7 @@ class TestSpawnEndpoint:
         # command that installs it, instead of failing at cold start.
         import json
 
-        from kiro_crew.dashboard.handlers.messaging import api_spawn
+        from aj_crew.dashboard.handlers.messaging import api_spawn
 
         request, mgr = _request({"task": "x", "backend": "pi"})
         resp = await api_spawn(request)
@@ -302,7 +302,7 @@ class TestSpawnEndpoint:
         # The gateway still holds the cached absence, so the start would fail.
         import json
 
-        from kiro_crew.dashboard.handlers.messaging import api_spawn
+        from aj_crew.dashboard.handlers.messaging import api_spawn
 
         request, mgr = _request({"task": "x", "backend": "kas"})
         resp = await api_spawn(request)
@@ -319,7 +319,7 @@ class TestTheParentsCreatedHarnessIsInherited:
     carries it through the durable queue, a restart replay and a continuation."""
 
     async def _spawn(self, monkeypatch, body: dict) -> MagicMock:
-        from kiro_crew.dashboard.handlers import messaging
+        from aj_crew.dashboard.handlers import messaging
 
         async def _persistent(*_a):
             return "persistent"
@@ -338,7 +338,7 @@ class TestTheParentsCreatedHarnessIsInherited:
     async def test_a_child_with_no_backend_starts_on_the_parents_pick(
         self, selectable, monkeypatch
     ):
-        from kiro_crew import members
+        from aj_crew import members
 
         members.note_session_backend_pick("w", "claude")
         mgr = await self._spawn(monkeypatch, {})
@@ -346,7 +346,7 @@ class TestTheParentsCreatedHarnessIsInherited:
 
     @pytest.mark.asyncio
     async def test_the_childs_own_backend_wins(self, selectable, monkeypatch):
-        from kiro_crew import members
+        from aj_crew import members
 
         members.note_session_backend_pick("w", "claude")
         mgr = await self._spawn(monkeypatch, {"backend": "kiro"})
@@ -358,8 +358,8 @@ class TestTheParentsCreatedHarnessIsInherited:
         assert mgr.spawn.call_args.kwargs["backend"] is None
 
     def test_a_child_selected_as_another_bot_inherits_nothing(self):
-        from kiro_crew import members
-        from kiro_crew.dashboard.handlers.messaging import _inherited_backend_name
+        from aj_crew import members
+        from aj_crew.dashboard.handlers.messaging import _inherited_backend_name
 
         members.note_session_backend_pick("w", "codex")
         assert _inherited_backend_name("dashboard:w", member=False) == "codex"
@@ -384,19 +384,19 @@ class TestSpawnFailover:
         import copy
         import dataclasses
 
-        from kiro_crew.config import KiroCrewConfig
+        from aj_crew.config import AjCrewConfig
 
-        real_load = KiroCrewConfig.load.__func__  # type: ignore[attr-defined]
+        real_load = AjCrewConfig.load.__func__  # type: ignore[attr-defined]
 
         def _load(c):
             loaded = copy.copy(real_load(c))
             loaded.agent = dataclasses.replace(loaded.agent, acp_failover=dict(block))
             return loaded
 
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_load))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(_load))
 
     async def _spawn(self, body: dict):
-        from kiro_crew.dashboard.handlers.messaging import api_spawn
+        from aj_crew.dashboard.handlers.messaging import api_spawn
 
         request, mgr = _real_request(body)
         resp = await api_spawn(request)
@@ -444,7 +444,7 @@ class TestSpawnFailover:
     async def test_a_member_a_ceiling_denies_later_is_never_tried(self, selectable, monkeypatch):
         # codex was selectable when the chain was written; a ceiling then denies
         # it. The spawn skips it without probing it and starts on claude.
-        from kiro_crew.agent_sdk import backend_install
+        from aj_crew.agent_sdk import backend_install
 
         self._failover(monkeypatch, {"enabled": True, "chain": ["pi", "codex", "claude"]})
         selectable.remove("codex")
@@ -488,7 +488,7 @@ class TestSpawnFailover:
         ids=["disabled", "repeated-name", "phase2-trigger", "trigger-omitted", "exhausted"],
     )
     async def test_no_hop_keeps_the_typed_refusal(self, selectable, monkeypatch, block):
-        from kiro_crew.dashboard.handlers.messaging import api_spawn
+        from aj_crew.dashboard.handlers.messaging import api_spawn
 
         self._failover(monkeypatch, block)
         request, mgr = _request({"task": "x", "backend": "pi"})
@@ -507,7 +507,7 @@ class TestSpawnFailover:
 
     @pytest.mark.asyncio
     async def test_an_exhausted_chain_is_named_in_the_refusal(self, selectable, monkeypatch):
-        from kiro_crew.dashboard.handlers.messaging import api_spawn
+        from aj_crew.dashboard.handlers.messaging import api_spawn
 
         self._failover(monkeypatch, {"enabled": True, "chain": ["pi", "kas"]})
         request, _mgr = _request({"task": "x", "backend": "pi"})
@@ -520,7 +520,7 @@ class TestSpawnFailover:
     async def test_the_last_chain_member_names_no_tried_members(self, selectable, monkeypatch):
         # claude can start, but it comes BEFORE pi: nothing after pi is tried, so the
         # refusal must not claim the chain has no member that can start.
-        from kiro_crew.dashboard.handlers.messaging import api_spawn
+        from aj_crew.dashboard.handlers.messaging import api_spawn
 
         self._failover(monkeypatch, {"enabled": True, "chain": ["claude", "pi"]})
         request, mgr = _request({"task": "x", "backend": "pi"})
@@ -531,8 +531,8 @@ class TestSpawnFailover:
         mgr.spawn.assert_not_called()
 
     def test_status_and_list_name_a_hop(self):
-        from kiro_crew.dashboard.messaging_api.run_views import _failover_fields
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.dashboard.messaging_api.run_views import _failover_fields
+        from aj_crew.subagent import SubagentInfo
 
         moved = SubagentInfo(id="a", task="t", backend="", failover_from="pi")
         assert _failover_fields(moved) == {"failover_from": "pi", "backend": "kiro"}
@@ -541,8 +541,8 @@ class TestSpawnFailover:
     def test_spawn_status_and_spawn_list_render_a_hop(self):
         from unittest.mock import patch
 
-        from kiro_crew import mcp_core
-        from kiro_crew.mcp_tools.spawn_parts import listing
+        from aj_crew import mcp_core
+        from aj_crew.mcp_tools.spawn_parts import listing
 
         status = {
             "id": "a1",
@@ -564,7 +564,7 @@ class TestSpawnFailover:
 
     @pytest.mark.asyncio
     async def test_an_unknown_backend_never_fails_over(self, selectable, monkeypatch):
-        from kiro_crew.dashboard.handlers.messaging import api_spawn
+        from aj_crew.dashboard.handlers.messaging import api_spawn
 
         self._failover(monkeypatch, {"enabled": True, "chain": ["nonesuch", "claude"]})
         request, mgr = _request({"task": "x", "backend": "nonesuch"})
@@ -586,7 +586,7 @@ class TestSpawnFailover:
 
 
 def _mgr():
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.subagent import SubagentManager
 
     sessions = MagicMock()
     sessions.get_pid = MagicMock(return_value=None)
@@ -634,9 +634,9 @@ class TestManager:
 
 
 def _run(backend: str | None) -> tuple[dict, AsyncMock]:
-    from kiro_crew.config.loader import AgentConfig, KiroCrewConfig
-    from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
-    from kiro_crew.subagent import SubagentInfo, SubagentManager
+    from aj_crew.config.loader import AgentConfig, AjCrewConfig
+    from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
+    from aj_crew.subagent import SubagentInfo, SubagentManager
 
     sessions = MagicMock()
     sessions.get_pid = MagicMock(return_value=None)
@@ -658,7 +658,7 @@ def _run(backend: str | None) -> tuple[dict, AsyncMock]:
 
     sessions.get_or_create = fake_get_or_create
     client.stream = fake_stream
-    cfg = KiroCrewConfig(agent=AgentConfig(session_sharing=True))
+    cfg = AjCrewConfig(agent=AgentConfig(session_sharing=True))
     runner = SubagentManager(sessions=sessions, ctx_builder=ctx_builder)
     shared = AsyncMock(side_effect=AssertionError("shared runtime used for a per-spawn backend"))
     info = SubagentInfo(
@@ -672,7 +672,7 @@ def _run(backend: str | None) -> tuple[dict, AsyncMock]:
     sessions.is_session_sharing_eligible = MagicMock(return_value=True)
     with (
         patch.object(runner, "_create_shared_session", shared),
-        patch("kiro_crew.config.loader.KiroCrewConfig.load", classmethod(lambda c: cfg)),
+        patch("aj_crew.config.loader.AjCrewConfig.load", classmethod(lambda c: cfg)),
     ):
         asyncio.run(runner._run_inner(info, "subagent:sub1"))
     return captured, shared
@@ -692,13 +692,13 @@ class TestRun:
         assert "backend_override" not in captured
 
     def test_sharing_is_ruled_out_by_a_backend(self):
-        from kiro_crew.config.loader import AgentConfig, KiroCrewConfig
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.config.loader import AgentConfig, AjCrewConfig
+        from aj_crew.subagent import SubagentInfo
 
         mgr = _mgr()
         mgr._sessions.is_session_sharing_eligible = MagicMock(return_value=True)
-        cfg = KiroCrewConfig(agent=AgentConfig(session_sharing=True))
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load", classmethod(lambda c: cfg)):
+        cfg = AjCrewConfig(agent=AgentConfig(session_sharing=True))
+        with patch("aj_crew.config.loader.AjCrewConfig.load", classmethod(lambda c: cfg)):
             plain = SubagentInfo(id="s1", task="t", parent_session_key="p")
             picked = SubagentInfo(id="s2", task="t", parent_session_key="p", backend="codex")
             assert mgr._should_use_session_sharing(plain) is True
@@ -710,8 +710,8 @@ class TestRun:
 
 class TestSelectionGate:
     def test_the_override_beats_the_member_route_and_the_default(self, monkeypatch):
-        from kiro_crew.agent_sdk import backends
-        from kiro_crew.members import select_provider_backend
+        from aj_crew.agent_sdk import backends
+        from aj_crew.members import select_provider_backend
 
         monkeypatch.setattr(backends, "selectable_backends", lambda: {"", "claude", "kas"})
         assert select_provider_backend("dashboard:dm-x", "kas", "", backend_override="claude") == (
@@ -719,20 +719,20 @@ class TestSelectionGate:
         )
 
     def test_kiro_is_an_override_not_unset(self, monkeypatch):
-        from kiro_crew.agent_sdk import backends
-        from kiro_crew.members import select_provider_backend
+        from aj_crew.agent_sdk import backends
+        from aj_crew.members import select_provider_backend
 
         monkeypatch.setattr(backends, "selectable_backends", lambda: {"", "claude"})
         assert select_provider_backend("subagent:a", "", "claude", backend_override="") == ""
 
     def test_no_override_leaves_selection_as_it_was(self):
-        from kiro_crew.members import select_provider_backend
+        from aj_crew.members import select_provider_backend
 
         assert select_provider_backend("subagent:a", "", "claude") == "claude"
 
     def test_an_override_that_stopped_being_selectable_degrades_to_kiro(self, monkeypatch):
-        from kiro_crew.agent_sdk import backends
-        from kiro_crew.members import select_provider_backend
+        from aj_crew.agent_sdk import backends
+        from aj_crew.members import select_provider_backend
 
         monkeypatch.setattr(backends, "selectable_backends", lambda: {""})
         assert select_provider_backend("subagent:a", "", "", backend_override="codex") == ""
@@ -740,16 +740,16 @@ class TestSelectionGate:
     def test_the_factory_names_the_kwarg(self):
         # Named, not left to ``**_kwargs``: swallowed there, the session would
         # start on the default backend with no error.
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        src = inspect.getsource(KiroCrewConfig.create_provider_factory)
+        src = inspect.getsource(AjCrewConfig.create_provider_factory)
         assert "backend_override: str | None = None" in src
         assert "backend_override=backend_override" in src
 
 
 class TestWarmPool:
     def test_a_backend_override_skips_the_warm_pool(self):
-        from kiro_crew import session_allocation
+        from aj_crew import session_allocation
 
         src = "".join(
             inspect.getsource(sys.modules[name])
@@ -764,10 +764,10 @@ class TestSuccessorsKeepTheBackend:
     a session started on a per-spawn backend must come back on the same one."""
 
     def _session(self, backend):
-        from kiro_crew.session import _Session
+        from aj_crew.session import _Session
 
         session = _Session.__new__(_Session)
-        session.agent = "kirocrew"
+        session.agent = "ajcrew"
         session.approval_policy = ""
         session.provider = SimpleNamespace(cwd="/w")
         session.requested_model = ""
@@ -777,21 +777,21 @@ class TestSuccessorsKeepTheBackend:
 
     @pytest.mark.parametrize("backend", ["claude", ""])
     def test_the_identity_carries_the_backend(self, backend):
-        from kiro_crew.session_lifecycle import allocation_identity
+        from aj_crew.session_lifecycle import allocation_identity
 
         owner = SimpleNamespace(get_channel=lambda key: "")
         ident = allocation_identity(owner, "subagent:a", self._session(backend))
         assert ident["backend_override"] == backend
 
     def test_a_session_without_one_rebuilds_with_the_old_kwargs(self):
-        from kiro_crew.session_lifecycle import allocation_identity
+        from aj_crew.session_lifecycle import allocation_identity
 
         owner = SimpleNamespace(get_channel=lambda key: "")
         ident = allocation_identity(owner, "subagent:a", self._session(None))
         assert "backend_override" not in ident
 
     def test_registration_stamps_the_backend_the_session_started_on(self):
-        from kiro_crew import session_allocation
+        from aj_crew import session_allocation
 
         src = "".join(
             inspect.getsource(sys.modules[name])
@@ -809,7 +809,7 @@ class TestEffortVerdict:
         # These report their levels at session/new (goose per model); the registry
         # cannot judge them, so neither line may be printed -- a "dropped" there
         # would be a false report.
-        from kiro_crew.subagent import effort_applied_note, effort_drop_reason
+        from aj_crew.subagent import effort_applied_note, effort_drop_reason
 
         assert effort_drop_reason("some-model", "high", backend=backend) == ""
         assert effort_applied_note("some-model", "high", backend=backend) == ""
@@ -817,8 +817,8 @@ class TestEffortVerdict:
     def test_the_applied_note_names_the_channel_the_backend_uses(self, monkeypatch):
         # kiro-cli reads the level from cli.json; an adapter harness gets it as a
         # live config option -- the receipt must name the one that delivers it.
-        from kiro_crew import subagent
-        from kiro_crew.acp_backends import effort_config_option_id
+        from aj_crew import subagent
+        from aj_crew.acp_backends import effort_config_option_id
 
         monkeypatch.setattr(subagent, "_spawn_effective_model", lambda *a, **kw: "gpt-5")
         monkeypatch.setattr(subagent, "model_supports_effort", lambda m: True)
@@ -836,7 +836,7 @@ class TestEffortVerdict:
     def test_a_backend_that_takes_no_effort_is_reported_dropped(self, monkeypatch, backend):
         # Neither cli.json nor a config option reaches such a harness: the level
         # is never sent, so the receipt must say dropped, not applied.
-        from kiro_crew import subagent
+        from aj_crew import subagent
 
         monkeypatch.setattr(subagent, "_spawn_effective_model", lambda *a, **kw: "claude-sonnet")
         monkeypatch.setattr(subagent, "model_supports_effort", lambda m: True)
@@ -844,8 +844,8 @@ class TestEffortVerdict:
         assert backend in subagent.effort_drop_reason("claude-sonnet", "high", backend=backend)
 
     def test_the_model_is_translated_into_the_requested_backends_namespace(self, monkeypatch):
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.subagent import _spawn_effective_model
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.subagent import _spawn_effective_model
 
         seen: dict = {}
 
@@ -853,9 +853,9 @@ class TestEffortVerdict:
             seen["namespace"] = namespace
             return "m"
 
-        monkeypatch.setattr(KiroCrewConfig, "acp_effective_model", _effective)
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda c: KiroCrewConfig()))
-        from kiro_crew.agent_sdk.capabilities import capabilities_for
+        monkeypatch.setattr(AjCrewConfig, "acp_effective_model", _effective)
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda c: AjCrewConfig()))
+        from aj_crew.agent_sdk.capabilities import capabilities_for
 
         assert _spawn_effective_model("m", "", crew_agent="", backend="claude") == "m"
         assert seen["namespace"] == capabilities_for("claude").model_id_namespace
@@ -864,7 +864,7 @@ class TestEffortVerdict:
 
     @pytest.mark.asyncio
     async def test_the_endpoint_hands_the_backend_to_the_verdict(self, selectable, monkeypatch):
-        from kiro_crew.dashboard.handlers import messaging
+        from aj_crew.dashboard.handlers import messaging
 
         calls: list = []
         monkeypatch.setattr(
@@ -891,7 +891,7 @@ class TestFollowUps:
         return captured
 
     def test_a_continuation_inherits_the_live_runs_backend(self, monkeypatch):
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         mgr = _mgr()
         mgr._agents["conv1"] = SubagentInfo(id="conv1", task="t", backend="codex")
@@ -899,7 +899,7 @@ class TestFollowUps:
 
     def test_a_continuation_after_a_restart_reads_the_recorded_backend(self, monkeypatch):
         mgr = _mgr()
-        monkeypatch.setattr("kiro_crew.subagent.read_state", lambda _id: {"backend": "claude"})
+        monkeypatch.setattr("aj_crew.subagent.read_state", lambda _id: {"backend": "claude"})
         monkeypatch.setattr(mgr, "_inherited_memory_store", lambda _id: "")
         monkeypatch.setattr(
             mgr._continuation._persistence, "read_run_app", lambda _id: "", raising=True
@@ -907,15 +907,15 @@ class TestFollowUps:
         assert self._continue(mgr, monkeypatch, "gone")["backend"] == "claude"
 
     def test_a_run_predating_the_field_continues_on_the_default(self, monkeypatch):
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         mgr = _mgr()
         mgr._agents["conv2"] = SubagentInfo(id="conv2", task="t")
         assert self._continue(mgr, monkeypatch, "conv2")["backend"] is None
 
     def test_the_spawn_writes_the_backend_into_the_run_record(self, tmp_path, monkeypatch):
-        from kiro_crew import subagent_persistence
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew import subagent_persistence
+        from aj_crew.subagent import SubagentInfo
 
         monkeypatch.setattr(subagent_persistence, "_subagents_dir", lambda: tmp_path)
         mgr = _mgr()
@@ -926,7 +926,7 @@ class TestFollowUps:
         assert subagent_persistence.read_state("r3")["backend"] == "codex"
 
     def test_the_run_record_carries_the_backend(self, tmp_path, monkeypatch):
-        from kiro_crew import subagent_persistence
+        from aj_crew import subagent_persistence
 
         monkeypatch.setattr(subagent_persistence, "_subagents_dir", lambda: tmp_path)
         subagent_persistence.create_agent_folder("r1", task="t", backend="codex")
@@ -936,9 +936,9 @@ class TestFollowUps:
 
     @pytest.mark.asyncio
     async def test_a_retry_runs_on_the_original_backend(self):
-        from kiro_crew.dashboard.handlers.messaging import api_spawn_retry
-        from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.dashboard.handlers.messaging import api_spawn_retry
+        from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+        from aj_crew.subagent import SubagentInfo
 
         mgr = _mgr()
         mgr._run = AsyncMock()  # type: ignore[method-assign]

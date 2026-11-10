@@ -1,5 +1,5 @@
 /**
- * Screenshot harness for issue #21531: a chat on the `kirocrew-conductor`
+ * Screenshot harness for issue #21531: a chat on the `ajcrew-conductor`
  * TEMPLATE is labelled "Conductor" in the session list and the composer, while
  * a crewmate that shares the name keeps it.
  *
@@ -22,17 +22,17 @@ const now = Math.floor(Date.now() / 1000)
 const slots = [
   {
     key: ACTIVE, title: 'Plan the launch week', running: false, messages: 2,
-    agent: 'kirocrew-conductor', agent_kind: 'template', modified: now, last_ts: '2026-10-21T00:10:00Z', folder_id: '',
+    agent: 'ajcrew-conductor', agent_kind: 'template', modified: now, last_ts: '2026-10-21T00:10:00Z', folder_id: '',
     last_message: 'Split the goal into four tasks.',
   },
   {
     key: 'chat-mate', title: 'Crewmate with the same name', running: false, messages: 2,
-    agent: 'kirocrew-conductor', agent_kind: 'member', modified: now - 600, last_ts: '2026-10-21T00:05:00Z', folder_id: '',
+    agent: 'ajcrew-conductor', agent_kind: 'member', modified: now - 600, last_ts: '2026-10-21T00:05:00Z', folder_id: '',
     last_message: 'Done.',
   },
   {
     key: 'chat-plain', title: 'Fix the flaky test', running: false, messages: 2,
-    agent: 'kirocrew', agent_kind: 'template', modified: now - 900, last_ts: '2026-10-21T00:00:00Z', folder_id: '',
+    agent: 'ajcrew', agent_kind: 'template', modified: now - 900, last_ts: '2026-10-21T00:00:00Z', folder_id: '',
     last_message: 'Pushed the fix.',
   },
 ]

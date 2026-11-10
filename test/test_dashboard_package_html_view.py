@@ -3,7 +3,7 @@
 A view is one HTML page, since a tree, a chart or a 3D scene fits no fixed renderer. A
 stored block list is read as the page it becomes, one way. The page
 is agent-authored and may run JS, and what keeps that safe is not a check on the markup --
-it is :mod:`kiro_crew.dashboard_frame`: text-only bindings, ``connect-src 'none'``,
+it is :mod:`aj_crew.dashboard_frame`: text-only bindings, ``connect-src 'none'``,
 ``allow-scripts`` and nothing else, over an opaque origin. The checks here are the ones
 that catch an author's mistake while the author is still present:
 
@@ -20,8 +20,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.artifact_store import dashboard_package as dp
-from kiro_crew.artifacts import ArtifactValidationError
+from aj_crew.artifact_store import dashboard_package as dp
+from aj_crew.artifacts import ArtifactValidationError
 
 BOUND = "crewmate:mate"
 
@@ -125,7 +125,7 @@ class TestThePageItself:
         whatever the page's script does."""
         html = (
             '<div id="tree"></div>'
-            "<script>window.kirocrew.subscribe('boards', (n) => draw(n));</script>"
+            "<script>window.ajcrew.subscribe('boards', (n) => draw(n));</script>"
         )
         assert dp.validate_package(package(view={"html": html}))["view"]["html"] == html
 
@@ -149,10 +149,10 @@ class TestTheModelIsTheAllowlist:
         assert "bords" in refusal(package(view={"html": "<p data-dashboard-field='bords'></p>"}))
 
     def test_a_page_that_binds_nothing_is_allowed(self) -> None:
-        """A page may draw entirely from ``window.kirocrew.subscribe`` and carry no text
+        """A page may draw entirely from ``window.ajcrew.subscribe`` and carry no text
         binding at all. Requiring one would refuse exactly the pages this view kind was
         added for -- a canvas, a scene, an SVG tree."""
-        html = "<canvas id=t></canvas><script>window.kirocrew.subscribe('boards', f);</script>"
+        html = "<canvas id=t></canvas><script>window.ajcrew.subscribe('boards', f);</script>"
         assert dp.validate_package(package(view={"html": html}))["view"]["html"] == html
 
 
@@ -294,7 +294,7 @@ def test_the_binding_attribute_matches_the_frame() -> None:
     Mirrored, not imported (write path vs. read path), so a drift would pass bindings
     the frame never fills.
     """
-    from kiro_crew import dashboard_frame
+    from aj_crew import dashboard_frame
 
     assert dashboard_frame.BINDING_ATTRIBUTE in dp._HTML_BINDING_RE.pattern
 
@@ -313,7 +313,7 @@ def test_the_page_cap_is_the_frames_own() -> None:
     over the frame's would let a package save a page its own reader then refuses, and
     the tab would show the refusal where the page should be.
     """
-    from kiro_crew import dashboard_frame
+    from aj_crew import dashboard_frame
 
     assert dp.MAX_VIEW_HTML_BYTES == dashboard_frame.MAX_PAGE_BYTES
 
@@ -327,12 +327,12 @@ class TestAScriptsOffPageStillShowsItsValues:
 
     @staticmethod
     def _read(**fields: Any) -> dict[str, Any]:
-        from kiro_crew import dashboard_frame
+        from aj_crew import dashboard_frame
 
         return dashboard_frame.read_payload(dict(fields))
 
     def test_a_quoted_cell_is_filled(self) -> None:
-        from kiro_crew import dashboard_frame as frame
+        from aj_crew import dashboard_frame as frame
 
         out = frame.fill_bindings_as_text(
             '<p data-dashboard-field="goal"></p>', self._read(goal="land it")
@@ -342,7 +342,7 @@ class TestAScriptsOffPageStillShowsItsValues:
     def test_an_unquoted_cell_is_filled_too(self) -> None:
         """The attribute's value need not be quoted for a browser to read it, so it
         must not need quoting for this to find it either."""
-        from kiro_crew import dashboard_frame as frame
+        from aj_crew import dashboard_frame as frame
 
         out = frame.fill_bindings_as_text(
             "<span data-dashboard-field=goal></span>", self._read(goal="land it")
@@ -353,7 +353,7 @@ class TestAScriptsOffPageStillShowsItsValues:
         """The promise this path has to keep. A value is TEXT, so it is escaped before
         it is placed -- otherwise the scripts-off page would be the one place a value
         could inject."""
-        from kiro_crew import dashboard_frame as frame
+        from aj_crew import dashboard_frame as frame
 
         out = frame.fill_bindings_as_text(
             '<p data-dashboard-field="goal"></p>', self._read(goal="<img onerror=x>")
@@ -365,7 +365,7 @@ class TestAScriptsOffPageStillShowsItsValues:
         """A binding is a text cell by definition, so an element holding tags was never
         one; rewriting it would be this fill guessing at a structure the contract does
         not describe."""
-        from kiro_crew import dashboard_frame as frame
+        from aj_crew import dashboard_frame as frame
 
         page = '<b data-dashboard-field="goal"><i>nested</i></b>'
         assert frame.fill_bindings_as_text(page, self._read(goal="land it")) == page
@@ -374,7 +374,7 @@ class TestAScriptsOffPageStillShowsItsValues:
         """The model is the allowlist on this path as on every other: a cell naming a
         field the read does not carry is not filled with a dash by this function, it is
         left exactly as the author wrote it."""
-        from kiro_crew import dashboard_frame as frame
+        from aj_crew import dashboard_frame as frame
 
         page = '<p data-dashboard-field="other">author text</p>'
         assert frame.fill_bindings_as_text(page, self._read(goal="land it")) == page
@@ -383,7 +383,7 @@ class TestAScriptsOffPageStillShowsItsValues:
         """A field the read names in ``missing`` did not resolve, so its cell must not
         read as a current value. The bootstrap marks it with the "not current" label in
         the reader's language; with scripts off this fill has to set the same marker."""
-        from kiro_crew import dashboard_frame as frame
+        from aj_crew import dashboard_frame as frame
 
         read = frame.read_payload({}, missing=["goal"], locale="de")
         out = frame.fill_bindings_as_text('<p data-dashboard-field="goal">0 open</p>', read)
@@ -395,7 +395,7 @@ class TestAScriptsOffPageStillShowsItsValues:
     def test_missing_wins_over_a_value_the_read_still_carries(self) -> None:
         """As in the bootstrap, ``missing`` wins over presence: an old value still in
         ``fields`` is not drawn as current. The cell keeps its own text and is marked."""
-        from kiro_crew import dashboard_frame as frame
+        from aj_crew import dashboard_frame as frame
 
         read = frame.read_payload({"goal": "old"}, missing=["goal"])
         out = frame.fill_bindings_as_text('<p data-dashboard-field="goal">0 open</p>', read)
@@ -428,7 +428,7 @@ class TestAScriptsOffPageStillShowsItsValues:
         holds the GIL for hours there. The per-test timeout fails a regression; no time
         is asserted.
         """
-        from kiro_crew import dashboard_frame as frame
+        from aj_crew import dashboard_frame as frame
 
         cell = '<p data-dashboard-field="goal"></p>'
         room = frame.MAX_PAGE_BYTES - len(prefix) - len(suffix) - len(cell)
@@ -440,7 +440,7 @@ class TestAScriptsOffPageStillShowsItsValues:
     def test_a_start_tag_is_not_read_across_the_next_tag(self) -> None:
         """The price of the linear scan, pinned: a literal ``<`` inside a start tag
         ends the search, so the cell keeps the author's own text."""
-        from kiro_crew import dashboard_frame as frame
+        from aj_crew import dashboard_frame as frame
 
         page = '<p title="a<b" data-dashboard-field="goal">author text</p>'
         assert frame.fill_bindings_as_text(page, self._read(goal="land it")) == page
@@ -456,7 +456,7 @@ class TestAScriptsOffPageStillShowsItsValues:
         """``<my-el>`` is an element named ``my-el``, so only ``</my-el>`` closes it.
         Reading the name as ``my`` and then closing it with ``</my>`` is what cut the
         name at every ``-``, and a browser does not read it that way either."""
-        from kiro_crew import dashboard_frame as frame
+        from aj_crew import dashboard_frame as frame
 
         read = self._read(goal="land it")
         closed = f"<{name} data-dashboard-field=goal>author text</{name}>"
@@ -472,7 +472,7 @@ class TestAScriptsOffPageStillShowsItsValues:
         read for as long as it takes the script to run."""
         import inspect
 
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as fields
+        from aj_crew.dashboard.handlers import member_dashboard_fields as fields
 
         src = inspect.getsource(fields.render_package_page)
         assert "if not scripts:" in src
@@ -483,7 +483,7 @@ class TestAScriptsOffPageStillShowsItsValues:
         the value, not the end of the tag. Read with ``[^>]`` the tag ended at the
         quoted ``>``, so the fill overwrote the rest of the attribute and the original
         text -- a corrupted page served as a current one."""
-        from kiro_crew import dashboard_frame as frame
+        from aj_crew import dashboard_frame as frame
 
         page = '<span data-dashboard-field="goal" title="a>b">old</span>'
         out = frame.fill_bindings_as_text(page, self._read(goal="land it"))
@@ -494,7 +494,7 @@ class TestAScriptsOffPageStillShowsItsValues:
         the value too. Read with ``[^>]`` the tag ended before the binding attribute was
         reached, so the cell was silently left unfilled -- an empty cell on a page that
         reads as current."""
-        from kiro_crew import dashboard_frame as frame
+        from aj_crew import dashboard_frame as frame
 
         page = '<span title="a>b" data-dashboard-field="goal">old</span>'
         out = frame.fill_bindings_as_text(page, self._read(goal="land it"))
@@ -502,7 +502,7 @@ class TestAScriptsOffPageStillShowsItsValues:
 
     def test_a_single_quoted_gt_after_the_binding_does_not_cut_the_tag(self) -> None:
         """The same for a single-quoted value: the two quoting styles are units alike."""
-        from kiro_crew import dashboard_frame as frame
+        from aj_crew import dashboard_frame as frame
 
         page = "<span data-dashboard-field='goal' title='a>b'>old</span>"
         out = frame.fill_bindings_as_text(page, self._read(goal="land it"))
@@ -510,7 +510,7 @@ class TestAScriptsOffPageStillShowsItsValues:
 
     def test_a_single_quoted_gt_before_the_binding_still_finds_the_cell(self) -> None:
         """And a single-quoted ``>`` before the binding attribute is part of the value."""
-        from kiro_crew import dashboard_frame as frame
+        from aj_crew import dashboard_frame as frame
 
         page = "<span title='a>b' data-dashboard-field='goal'>old</span>"
         out = frame.fill_bindings_as_text(page, self._read(goal="land it"))
@@ -520,7 +520,7 @@ class TestAScriptsOffPageStillShowsItsValues:
         """A quoted value may contain the literal text ``data-dashboard-field=`` without
         being the binding attribute. The reader must see it as one value and find the
         real binding attribute that follows, not stop inside the decoy."""
-        from kiro_crew import dashboard_frame as frame
+        from aj_crew import dashboard_frame as frame
 
         page = '<span title="data-dashboard-field=x" data-dashboard-field="goal">old</span>'
         out = frame.fill_bindings_as_text(page, self._read(goal="land it"))
@@ -532,7 +532,7 @@ class TestAScriptsOffPageStillShowsItsValues:
         """The no-nested-markup rule holds through a quoted ``>``: an element whose start
         tag carries a quoted ``>`` but whose body holds tags is not a text cell, so it is
         left exactly as the author wrote it rather than rewritten."""
-        from kiro_crew import dashboard_frame as frame
+        from aj_crew import dashboard_frame as frame
 
         page = '<b data-dashboard-field="goal" title="a>b"><i>nested</i></b>'
         assert frame.fill_bindings_as_text(page, self._read(goal="land it")) == page
@@ -548,8 +548,8 @@ class TestThePageWearsItsTheme:
 
     @staticmethod
     def _body(theme: dict[str, Any]) -> str:
-        from kiro_crew import dashboard_frame
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as fields
+        from aj_crew import dashboard_frame
+        from aj_crew.dashboard.handlers import member_dashboard_fields as fields
 
         read = dashboard_frame.read_payload({"boards": 2})
         return fields.render_package_page(dp.validate_package(package(theme=theme)), read)
@@ -576,8 +576,8 @@ class TestThePageWearsItsTheme:
         assert self._body({"tokens": {}}).count("<style>") == 1
 
     def test_a_theme_the_gate_would_refuse_draws_nothing(self) -> None:
-        from kiro_crew import dashboard_frame
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as fields
+        from aj_crew import dashboard_frame
+        from aj_crew.dashboard.handlers import member_dashboard_fields as fields
 
         stored = dp.validate_package(package())
         # Written under an older validator: a css that closes the element.

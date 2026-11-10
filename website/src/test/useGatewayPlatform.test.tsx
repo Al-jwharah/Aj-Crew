@@ -125,8 +125,8 @@ const V1_HINTS = {
   version: 1,
   encoding: 'utf-8-base64',
   shells: [
-    { id: 'powershell', prefix: "& 'C:\\Kiro Crew\\bin\\kirocrew.cmd'" },
-    { id: 'cmd', prefix: '"C:\\Kiro Crew\\bin\\kirocrew.cmd"' },
+    { id: 'powershell', prefix: "& 'C:\\Aj Crew\\bin\\ajcrew.cmd'" },
+    { id: 'cmd', prefix: '"C:\\Aj Crew\\bin\\ajcrew.cmd"' },
   ],
 }
 
@@ -171,11 +171,11 @@ describe('useConfigSetHintsV1', () => {
     ['another encoding', { ...V1_HINTS, encoding: 'base64url' }],
     ['no shells', { ...V1_HINTS, shells: [] }],
     ['shells that are not a list', { ...V1_HINTS, shells: 'powershell' }],
-    ['an unknown shell id', { ...V1_HINTS, shells: [{ id: 'fish', prefix: 'kirocrew' }] }],
+    ['an unknown shell id', { ...V1_HINTS, shells: [{ id: 'fish', prefix: 'ajcrew' }] }],
     ['a duplicate shell id', { ...V1_HINTS, shells: [V1_HINTS.shells[0], V1_HINTS.shells[0]] }],
     ['an empty prefix', { ...V1_HINTS, shells: [{ id: 'posix', prefix: '   ' }] }],
     ['a non-string prefix', { ...V1_HINTS, shells: [{ id: 'posix', prefix: 7 }] }],
-    ['a multi-line prefix', { ...V1_HINTS, shells: [{ id: 'posix', prefix: 'kirocrew\nrm -rf x' }] }],
+    ['a multi-line prefix', { ...V1_HINTS, shells: [{ id: 'posix', prefix: 'ajcrew\nrm -rf x' }] }],
     ['a row that is not an object', { ...V1_HINTS, shells: ['posix'] }],
     ['a payload that is not an object', 'powershell'],
   ])('reads %s as absent', async (_name, hints) => {

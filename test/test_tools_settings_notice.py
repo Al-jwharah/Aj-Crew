@@ -19,9 +19,9 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-from kiro_crew.agent_sdk import spec_hooks
-from kiro_crew.agent_sdk.backends import (
+import aj_crew.config.paths as paths_mod
+from aj_crew.agent_sdk import spec_hooks
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_COPILOT,
@@ -33,10 +33,10 @@ from kiro_crew.agent_sdk.backends import (
     ACP_BACKEND_PI,
     ACP_BACKEND_STRANDS,
 )
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.providers.mirrors import MIRRORS, mirror_for
-from kiro_crew.providers.mirrors.base import Concern, Disposition
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard import chat_runner
+from aj_crew.providers.mirrors import MIRRORS, mirror_for
+from aj_crew.providers.mirrors.base import Concern, Disposition
 
 _SHELL_ALLOWLIST = {"shell": {"denyByDefault": True, "allowedCommands": ["git status"]}}
 _NOT_RECEIVED = "sets toolsSettings, which this backend does not receive"
@@ -155,7 +155,7 @@ def test_an_unreadable_spec_renders_no_notice_and_fails_nothing(agents_dir, noti
 
 
 def test_an_unreadable_ruling_establishes_nothing(monkeypatch):
-    import kiro_crew.providers.mirrors as mirrors_mod
+    import aj_crew.providers.mirrors as mirrors_mod
 
     def _boom(_backend):
         raise RuntimeError("ruling unreadable")
@@ -213,7 +213,7 @@ def test_an_unreadable_ruling_establishes_nothing(monkeypatch):
 )
 def test_only_what_the_spawn_gate_does_not_read_is_named(settings, named):
     """``subagent.availableAgents`` is read by the spawn gate on every backend."""
-    from kiro_crew.agent_sdk.tools_settings_reach import tools_settings_unapplied
+    from aj_crew.agent_sdk.tools_settings_reach import tools_settings_unapplied
 
     assert tools_settings_unapplied(settings) == named
 
@@ -294,6 +294,6 @@ def test_claude_names_only_what_its_gate_does_not_apply(agents_dir, notices):
 def test_the_gate_applied_allowlists_are_left_out(settings, named):
     """Both halves of an applied allowlist, on the alias key kiro-cli keeps, are left out;
     without either switch the field is named as on every other mirror."""
-    from kiro_crew.agent_sdk.tools_settings_reach import tools_settings_unapplied
+    from aj_crew.agent_sdk.tools_settings_reach import tools_settings_unapplied
 
     assert tools_settings_unapplied(settings, gate_allowlists=True) == named

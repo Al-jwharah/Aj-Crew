@@ -28,8 +28,8 @@ from publish_sync_helpers import (  # noqa: F401 -- fixtures are requested by na
     wire,
 )
 
-from kiro_crew import publish_sync
-from kiro_crew.artifacts import ArtifactPublication, ForkMetadata
+from aj_crew import publish_sync
+from aj_crew.artifacts import ArtifactPublication, ForkMetadata
 
 
 def _remote_get(
@@ -80,7 +80,7 @@ def _track_publication(store, slug, *, sha="sha-v1", cloud_v=1):
         artifact_id="uuid-123",
         view_url="https://x/uuid-123",
         last_pushed_sha256=sha,
-        last_synced_kirocrew_version=1,
+        last_synced_ajcrew_version=1,
         version_map={"1": cloud_v},
         auto_sync=True,
     )
@@ -97,7 +97,7 @@ async def test_pull_upstream_publication_pulls_when_ahead(store, fake_client, tm
     reloaded = store.get(art.slug)
     assert reloaded.content == "collab edit"
     assert reloaded.version == 2  # new local snapshot
-    assert reloaded.publication.last_synced_kirocrew_version == 2
+    assert reloaded.publication.last_synced_ajcrew_version == 2
     assert reloaded.publication.version_map["2"] == 2
 
 
@@ -128,7 +128,7 @@ async def test_pull_upstream_no_conflict_appends_when_both_diverged(store, fake_
     assert reloaded.content == "their edit"  # cloud content is now current
     assert reloaded.version == 3  # appended on top of my v2
     assert store.get(art.slug, version=2).content == "my local edit"  # preserved in history
-    assert reloaded.publication.last_synced_kirocrew_version == 3
+    assert reloaded.publication.last_synced_ajcrew_version == 3
     # Pull never pushes: the local edit was NOT uploaded over the upstream.
     assert fake_client.called("upload_version") == []
 
@@ -151,7 +151,7 @@ async def test_pull_upstream_checkpoints_live_dirty_before_pull(store, fake_clie
     assert reloaded.content == "collab edit"
     assert reloaded.version == 3  # v1 old, v2 checkpoint(working edit), v3 pulled
     assert store.get(art.slug, version=2).content == "unsaved working edit"  # preserved
-    assert reloaded.publication.last_synced_kirocrew_version == 3
+    assert reloaded.publication.last_synced_ajcrew_version == 3
     # The checkpoint did NOT auto-publish the working edit (race defused).
     assert fake_client.called("upload_version") == []
 
@@ -193,7 +193,7 @@ async def test_pull_upstream_file_backed_writes_through_to_source_file(
     reloaded = store.get(art.slug)
     assert reloaded.content == "collab edit"
     assert reloaded.version == 2
-    assert reloaded.publication.last_synced_kirocrew_version == 2
+    assert reloaded.publication.last_synced_ajcrew_version == 2
 
 
 @pytest.mark.asyncio
@@ -586,12 +586,12 @@ async def test_refresh_does_not_flag_upstream_ahead(store, fake_client):
 
 @pytest.mark.asyncio
 async def test_pull_upstream_widget_unwraps_and_stays_widget(store, fake_client, tmp_path):
-    """A Kiro Crew-published widget pulled back is unwrapped from its standalone
+    """A Aj Crew-published widget pulled back is unwrapped from its standalone
     document to the original inner fragment and STAYS a widget — so it remains
     inline-embeddable in chat (no html regression)."""
     art = store.create(name="W", content="<b>inner</b>", kind="widget")
     _track_publication(store, art.slug)
-    # The remote bytes are what Kiro Crew uploads: the sentinel-wrapped doc.
+    # The remote bytes are what Aj Crew uploads: the sentinel-wrapped doc.
     wrapped = publish_sync.wrap_widget_html("<b>collab edit</b>")
     fake_client.get_response = _remote_get(
         tmp_path, wrapped, version=2, sha="sha-v2", ctype="text/html"
@@ -687,7 +687,7 @@ async def test_push_snapshots_live_dirty_before_push_no_map_drift(store, fake_cl
     assert reloaded.content == "blue live edit"
     # The map keys on the version that was actually pushed, and that version's
     # content matches the remote it points at — invariant intact, no drift.
-    assert pub.last_synced_kirocrew_version == 2
+    assert pub.last_synced_ajcrew_version == 2
     assert pub.version_map["2"] == fake_client.upload_version_response["versionNumber"]
     # No stale entry maps a prior version number whose bytes differ from what
     # was pushed (the pre-fix drift signature was version_map["1"] -> remote).

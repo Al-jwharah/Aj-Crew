@@ -1,6 +1,6 @@
 """Tests for the Microsoft Teams channel configuration (``TeamsConfig``).
 
-Covers config round-trip through ``KiroCrewConfig.load()`` / ``to_dict()``,
+Covers config round-trip through ``AjCrewConfig.load()`` / ``to_dict()``,
 the soft<=hard threshold clamp, the ``sensitive`` flag on ``app_password``,
 and clean defaults when the ``teams`` section is missing.
 """
@@ -13,20 +13,20 @@ import tempfile
 import unittest.mock
 from pathlib import Path
 
-from kiro_crew.config.loader import KiroCrewConfig, TeamsConfig
+from aj_crew.config.loader import AjCrewConfig, TeamsConfig
 
 
-def _load_from_dict(data: object) -> KiroCrewConfig:
-    """Write *data* to a temp config file and load via KiroCrewConfig.load()."""
+def _load_from_dict(data: object) -> AjCrewConfig:
+    """Write *data* to a temp config file and load via AjCrewConfig.load()."""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(data, f)
         tmp = Path(f.name)
     try:
         with unittest.mock.patch(
-            "kiro_crew.config.loader.config_path",
+            "aj_crew.config.loader.config_path",
             return_value=tmp,
         ):
-            return KiroCrewConfig.load()
+            return AjCrewConfig.load()
     finally:
         tmp.unlink(missing_ok=True)
 

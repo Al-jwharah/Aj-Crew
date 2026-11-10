@@ -12,8 +12,8 @@ from typing import List
 
 import pytest
 
-from kiro_crew import link_unfurl as lu
-from kiro_crew.dashboard.handlers import link_meta as lm
+from aj_crew import link_unfurl as lu
+from aj_crew.dashboard.handlers import link_meta as lm
 
 
 def _public(_host: str, _port: int) -> List[str]:
@@ -33,7 +33,7 @@ def _isolate(_floor_monkeypatch):
 
 def _set_enabled(monkeypatch, enabled: bool) -> None:
     """Patch the config loader the handler imports at call time."""
-    from kiro_crew.config import loader as loader_mod
+    from aj_crew.config import loader as loader_mod
 
     cfg = SimpleNamespace(dashboard=SimpleNamespace(link_previews=enabled))
-    monkeypatch.setattr(loader_mod.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+    monkeypatch.setattr(loader_mod.AjCrewConfig, "load", staticmethod(lambda: cfg))

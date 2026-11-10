@@ -14,7 +14,7 @@ from typing import Any
 import aiohttp
 import pytest
 
-from kiro_crew.wakatime.client import (
+from aj_crew.wakatime.client import (
     WakaTimeAuthError,
     WakaTimeClient,
     WakaTimeUnavailableError,
@@ -278,7 +278,7 @@ async def test_verify_returns_user_on_success() -> None:
 async def test_api_key_never_appears_in_logs(caplog: pytest.LogCaptureFixture) -> None:
     session = _FakeSession([_FakeResp(500), _FakeResp(500)])
     client = _client_with(session)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.wakatime.client"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.wakatime.client"):
         await client.get_summaries("2026-09-01", "2026-09-03")
     assert _FAKE_KEY not in caplog.text
 

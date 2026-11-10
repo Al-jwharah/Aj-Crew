@@ -20,11 +20,11 @@ mkdirSync(OUT, { recursive: true })
 const now = Math.floor(Date.now() / 1000)
 
 const slots = [
-  { key: 'c-running-1', title: 'Build the release bundle', running: true, messages: 4, agent: 'kirocrew', modified: now - 60, last_ts: new Date(Date.now() - 60_000).toISOString(), folder_id: '' },
-  { key: 'c-running-2', title: 'Deploy to staging', running: true, messages: 2, agent: 'kirocrew', modified: now - 120, last_ts: new Date(Date.now() - 120_000).toISOString(), folder_id: '' },
-  { key: 'c-idle-1', title: 'Review CR feedback', running: false, messages: 8, agent: 'kirocrew', modified: now - 300, last_ts: new Date(Date.now() - 300_000).toISOString(), folder_id: '' },
+  { key: 'c-running-1', title: 'Build the release bundle', running: true, messages: 4, agent: 'ajcrew', modified: now - 60, last_ts: new Date(Date.now() - 60_000).toISOString(), folder_id: '' },
+  { key: 'c-running-2', title: 'Deploy to staging', running: true, messages: 2, agent: 'ajcrew', modified: now - 120, last_ts: new Date(Date.now() - 120_000).toISOString(), folder_id: '' },
+  { key: 'c-idle-1', title: 'Review CR feedback', running: false, messages: 8, agent: 'ajcrew', modified: now - 300, last_ts: new Date(Date.now() - 300_000).toISOString(), folder_id: '' },
   { key: 'c-idle-2', title: 'On-call ticket triage', running: false, messages: 12, agent: 'oncall', modified: now - 600, last_ts: new Date(Date.now() - 600_000).toISOString(), folder_id: '' },
-  { key: 'c-idle-3', title: 'Daily worklog', running: false, messages: 3, agent: 'kirocrew', modified: now - 900, last_ts: new Date(Date.now() - 900_000).toISOString(), folder_id: '' },
+  { key: 'c-idle-3', title: 'Daily worklog', running: false, messages: 3, agent: 'ajcrew', modified: now - 900, last_ts: new Date(Date.now() - 900_000).toISOString(), folder_id: '' },
 ]
 
 const FILTER_BTN = 'button[aria-label="Sort and filter sessions"]'

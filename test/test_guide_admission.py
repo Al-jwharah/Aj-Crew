@@ -1,4 +1,4 @@
-"""The ``kirocrew-guide`` tools answer only a turn the user sent from the dashboard.
+"""The ``ajcrew-guide`` tools answer only a turn the user sent from the dashboard.
 
 A conversation that started in a messaging channel is mirrored into a dashboard
 slot, so a live slot alone says nothing about who is asking. These tests drive
@@ -15,8 +15,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from guide_route_helpers import CREWMATE, FakeState, agent, in_dashboard_turn, run_guide_app
 
-from kiro_crew import mcp_guide
-from kiro_crew.dashboard.handlers import member_self as self_routes
+from aj_crew import mcp_guide
+from aj_crew.dashboard.handlers import member_self as self_routes
 
 SLACK_KEY = "slack:C1:1700000000.000100"
 
@@ -117,8 +117,8 @@ async def test_a_peer_steer_into_a_user_turn_drops_its_user_sent_mark(user_origi
     """A ``session_send`` or app text steered into a running turn the user sent
     is not the user asking, so the turn stops counting as user-sent; the
     composer's own steer leaves it as it was."""
-    from kiro_crew.dashboard import chat_delivery
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard import chat_delivery
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("chat-1")
     slot._turn_user_sent = True
@@ -146,7 +146,7 @@ def test_a_turn_the_user_did_not_send_cannot_start_a_guide() -> None:
 
 
 def test_a_turn_the_user_did_not_send_cannot_propose_a_card() -> None:
-    from kiro_crew.dashboard.handlers import change_cards as card_routes
+    from aj_crew.dashboard.handlers import change_cards as card_routes
 
     state = FakeState()
     state.open_slot("chat-1")._turn_user_sent = False
@@ -198,8 +198,8 @@ async def test_the_turn_records_its_opener_provenance_for_its_duration(
 ) -> None:
     from test_acp_tool_identity import _stub_state
 
-    from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
-    from kiro_crew.dashboard import chat_runner as cr
+    from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
+    from aj_crew.dashboard import chat_runner as cr
 
     state = _stub_state(tmp_path)
     slot = state.get_or_create_slot("chat-1")

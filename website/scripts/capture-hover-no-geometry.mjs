@@ -69,7 +69,7 @@ const EPSILON = 0.25
 const PRESS_MIN_DELTA = 1.5
 
 const OUT = process.argv[2]
-  || (process.env.KIROCREW_SCRATCH ? `${process.env.KIROCREW_SCRATCH}/evidence` : '../temp-screenshots/hover-no-geometry')
+  || (process.env.AJCREW_SCRATCH ? `${process.env.AJCREW_SCRATCH}/evidence` : '../temp-screenshots/hover-no-geometry')
 
 // Without a slot the chat route's own shell throws on an undefined field and the
 // ErrorBoundary replaces the whole app, rail included — so the rail scenes need
@@ -80,7 +80,7 @@ const SLOTS = [
     title: 'Hover geometry evidence',
     messages: 2,
     running: false,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     mode: '',
     created: '2026-09-06T01:00:00Z',
     last_ts: '2026-09-06T04:00:00Z',
@@ -96,7 +96,7 @@ const SCHEDULE_JOBS = [{
   timezone: 'UTC',
   message: 'Capture hover geometry.',
   enabled: true,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   created_ts: 1_757_376_000,
   next_run_ts: 1_757_980_800,
 }]
@@ -133,7 +133,7 @@ const COMMENT_FIXTURE = {
 const ISSUE_REPO = {
   // The gate's kirodotdev/KiroCrew slug exemption cannot see this one, because
   // owner and repo are separate fields here rather than one joined string.
-  owner: 'kirodotdev', repo: 'KiroCrew', provider: 'github', host: 'github.com', // brand-ok: repo slug, not prose
+  owner: 'kirodotdev', repo: 'AjCrew', provider: 'github', host: 'github.com', // brand-ok: repo slug, not prose
 }
 const ISSUE = {
   number: 11099,
@@ -192,10 +192,10 @@ const NAV_APPS = Array.from({ length: 18 }, (_, i) => ({
 }))
 
 const STORE_APPS = [
-  { name: 'hover-main', displayName: 'Hover Main', description: 'Full hero treatment.', author: 'Kiro Crew', version: '1.0.0', tags: ['developer-tools'], heroImage: '/hover-main.svg', featured: 1, origin: 'registry', provenance: 'official', verified: true },
-  { name: 'hover-compact-a', displayName: 'Hover Compact A', description: 'Compact collection member.', author: 'Kiro Crew', version: '1.0.0', tags: ['developer-tools'], origin: 'registry', provenance: 'official', verified: true },
-  { name: 'hover-compact-b', displayName: 'Hover Compact B', description: 'Compact collection member.', author: 'Kiro Crew', version: '1.0.0', tags: ['developer-tools'], origin: 'registry', provenance: 'official', verified: true },
-  { name: 'hover-row-peer', displayName: 'Hover Row Peer', description: 'Second row card.', author: 'Kiro Crew', version: '1.0.0', tags: ['developer-tools'], origin: 'registry', provenance: 'official', verified: true },
+  { name: 'hover-main', displayName: 'Hover Main', description: 'Full hero treatment.', author: 'Aj Crew', version: '1.0.0', tags: ['developer-tools'], heroImage: '/hover-main.svg', featured: 1, origin: 'registry', provenance: 'official', verified: true },
+  { name: 'hover-compact-a', displayName: 'Hover Compact A', description: 'Compact collection member.', author: 'Aj Crew', version: '1.0.0', tags: ['developer-tools'], origin: 'registry', provenance: 'official', verified: true },
+  { name: 'hover-compact-b', displayName: 'Hover Compact B', description: 'Compact collection member.', author: 'Aj Crew', version: '1.0.0', tags: ['developer-tools'], origin: 'registry', provenance: 'official', verified: true },
+  { name: 'hover-row-peer', displayName: 'Hover Row Peer', description: 'Second row card.', author: 'Aj Crew', version: '1.0.0', tags: ['developer-tools'], origin: 'registry', provenance: 'official', verified: true },
 ]
 const STORE_SECTIONS = [
   { form: 'full', items: [{ type: 'app', appRefs: ['hover-main'], artwork: { url: 'https://apps.crew.kiro.dev/hover-main.svg', alt: 'Full hero evidence' } }] },
@@ -787,7 +787,7 @@ async function openScene(browser, scene) {
     // matters — the old whileHover was skipped when collapsed, so a collapsed
     // rail would make scene 1 vacuous.
     localStorageEntries: {
-      'mc-color-theme': 'kiro-dark',
+      'mc-color-theme': 'aj-dark',
       'mc-privacy-notice-v1': '1',
       'mc-nav': '0',
       ...scene.localStorageEntries,
@@ -796,7 +796,7 @@ async function openScene(browser, scene) {
   })
   await page.goto(base + scene.url, { waitUntil: 'domcontentloaded' })
   await page.waitForFunction(
-    () => document.documentElement.getAttribute('data-theme') === 'kiro-dark',
+    () => document.documentElement.getAttribute('data-theme') === 'aj-dark',
     undefined,
     { timeout: 20000 },
   )

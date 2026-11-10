@@ -31,9 +31,9 @@ from pathlib import Path
 import pytest
 from source_corpus import parsed_candidates, src_root
 
-from kiro_crew.acp_backends import ACP_BACKEND_CODEX, permission_config_for, routing_for
-from kiro_crew.agent_sdk import backends as sdk_backends
-from kiro_crew.agent_sdk.capabilities import (
+from aj_crew.acp_backends import ACP_BACKEND_CODEX, permission_config_for, routing_for
+from aj_crew.agent_sdk import backends as sdk_backends
+from aj_crew.agent_sdk.capabilities import (
     MODEL_NAMESPACE_ACP,
     UNKNOWN_BACKEND_CAPABILITIES,
     SessionCapabilities,
@@ -41,9 +41,9 @@ from kiro_crew.agent_sdk.capabilities import (
     capabilities_of,
     capture_prompt_timeout,
 )
-from kiro_crew.agent_sdk.provider_identity import PROVIDER_ACP, PROVIDER_CLAUDE_CODE
+from aj_crew.agent_sdk.provider_identity import PROVIDER_ACP, PROVIDER_CLAUDE_CODE
 
-SRC = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+SRC = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 
 #: The six sites RFC PR 3 names, and the identity spelling each one used.
 #:
@@ -316,7 +316,7 @@ MAIN_ROUTING = {
 @pytest.mark.parametrize("backend", sorted(MAIN_ROUTING))
 def test_routing_and_permission_config_are_unchanged_by_the_move(backend: str) -> None:
     """The tool-gate answers survive the move to ``agent_sdk``, fail-closed included."""
-    from kiro_crew import acp_tool_gate
+    from aj_crew import acp_tool_gate
 
     expected_routing, expected_config, expected_enforced = MAIN_ROUTING[backend]
     assert routing_for(backend).value == expected_routing
@@ -531,7 +531,7 @@ def test_a_spec_mock_does_not_read_as_a_member_of_everything() -> None:
     """
     from unittest.mock import MagicMock
 
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.providers.acp import AcpProvider
 
     assert capabilities_of(MagicMock(spec=AcpProvider)) is UNKNOWN_BACKEND_CAPABILITIES
 
@@ -540,7 +540,7 @@ def test_the_provider_property_answers_for_its_own_client_backend() -> None:
     """``AcpProvider.capabilities`` is the record for the backend it is talking to."""
     from types import SimpleNamespace
 
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.providers.acp import AcpProvider
 
     provider = object.__new__(AcpProvider)
     for backend in ("", "kas", "claude", "codex"):
@@ -559,7 +559,7 @@ class TestTheKiroConstructionPathIsUnconditional:
     @staticmethod
     def _translations(monkeypatch, backend: str) -> list[tuple]:
         """Record which registry translator ``acp_effective_model`` calls."""
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         calls: list[tuple] = []
 
@@ -574,7 +574,7 @@ class TestTheKiroConstructionPathIsUnconditional:
         monkeypatch.setattr(loader_mod.model_registry, "to_acp_id", _acp_id)
         monkeypatch.setattr(loader_mod.model_registry, "to_provider_id", _provider_id)
 
-        cfg = loader_mod.KiroCrewConfig()
+        cfg = loader_mod.AjCrewConfig()
         cfg.agent.acp_backend = backend
         cfg.acp_effective_model(None, "opus-4.8-1m")
         return calls
@@ -630,7 +630,7 @@ class TestAForeignProviderIsClassifiedThePreviousWay:
 
     @staticmethod
     def _foreign_provider() -> object:
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         class _Foreign(LLMProvider):
             """A complete LLMProvider that is not an AcpProvider."""
@@ -675,7 +675,7 @@ class TestAForeignProviderIsClassifiedThePreviousWay:
         ``~/.claude`` or ``~/.kiro``. A foreign provider answered False before and
         must answer False now, or cleanup walks the wrong tree.
         """
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         assert SubagentManager._is_cc_provider(self._foreign_provider()) is False
 
@@ -687,8 +687,8 @@ def test_honor_zero_tool_ban_membership_matches_the_rule() -> None:
     with a mirror or ``ProjectionKind.BROKER_ONLY`` mounts (pi), and the backend is
     not in ``ACP_BACKENDS_ACP_RUNTIME`` (the refusal lives only on ``AcpClient``).
     """
-    from kiro_crew.agent_sdk.tool_gate import ENFORCED_ROUTINGS
-    from kiro_crew.providers.mirrors.registry import MIRRORS, ProjectionKind, projection_for
+    from aj_crew.agent_sdk.tool_gate import ENFORCED_ROUTINGS
+    from aj_crew.providers.mirrors.registry import MIRRORS, ProjectionKind, projection_for
 
     # A fourth fact the three above assume: the harness asks about EVERY call, so
     # ``_deny_zero_tools`` sees each one. Copilot CLI 1.0.100 reads a file inside the
@@ -741,7 +741,7 @@ def test_the_knowledge_pool_client_takes_the_default_backend() -> None:
     and ``acp_client_spawnable``. claude qualifies because its zero-tool session mounts
     no tool, so an inherited ``~/.claude`` pre-approval has nothing to run.
     """
-    from kiro_crew.agent_sdk.backends import (
+    from aj_crew.agent_sdk.backends import (
         ACP_BACKEND_CLAUDE,
         ACP_BACKEND_DEEPSEEK,
         ACP_BACKEND_GOOSE,

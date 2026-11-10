@@ -369,7 +369,7 @@ def test_host_marker_sweep_uses_the_repository_gates_patterns(cap):
 
 
 def test_a_missing_binary_is_reported_with_the_install_command(cap, monkeypatch, capsys, tmp_path):
-    from kiro_crew.acp import client as acp_client
+    from aj_crew.acp import client as acp_client
 
     monkeypatch.setattr(
         acp_client, "_resolve_self_served_bin", lambda backend: (None, "/usr/bin:/bin")

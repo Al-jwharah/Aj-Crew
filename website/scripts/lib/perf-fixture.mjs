@@ -98,7 +98,7 @@ export function buildWorld({ sessions = 222, longRows = 100, seed = 1018 } = {})
     .map((name, i) => ({ id: `f${i.toString(16).padStart(11, '0')}`, name, order: i, collapsed: false, parent_id: '' }))
   const perfFolder = folders[5].id
   const slot = (key, title, messages, extra = {}) => ({
-    key, title, running: false, messages, agent: 'kirocrew', model: 'auto',
+    key, title, running: false, messages, agent: 'ajcrew', model: 'auto',
     last_ts: new Date(now - int(10, 60 * 24 * 14) * 60_000).toISOString(), ...extra,
   })
   const slots = [

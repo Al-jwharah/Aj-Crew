@@ -20,21 +20,21 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.acp._dispatch import build_permission_event
-from kiro_crew.acp.runtime import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp._dispatch import build_permission_event
+from aj_crew.acp.runtime import AcpSessionHandle
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     AcpEvent,
     JsonRpcMessage,
 )
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_approve
-from kiro_crew.dashboard.chat_turn.deny_chokepoints import _reject_attributed
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.rejection_reason import REJECTION_REASON_MAX_CHARS, rejection_reason_text
-from kiro_crew.testing.links import make_dir_link
-from kiro_crew.testing.wait import finished
-from kiro_crew.trust_patterns import (
+from aj_crew.dashboard.chat_handlers import api_chat_slot_approve
+from aj_crew.dashboard.chat_turn.deny_chokepoints import _reject_attributed
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.rejection_reason import REJECTION_REASON_MAX_CHARS, rejection_reason_text
+from aj_crew.testing.links import make_dir_link
+from aj_crew.testing.wait import finished
+from aj_crew.trust_patterns import (
     approval_command,
     approval_display_command,
     exact_trust_pattern,
@@ -125,12 +125,12 @@ async def test_reject_attributed_passes_a_reason_only_when_given():
 
 @pytest.fixture(autouse=True)
 def _hermetic_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
 
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.push_slots_update = MagicMock()
@@ -294,7 +294,7 @@ def test_path_scope_trust_needs_harness_provenance():
 def _turn_harness():
     import dashboard_approval_helpers as h
 
-    from kiro_crew.dashboard.chat import _run_chat
+    from aj_crew.dashboard.chat import _run_chat
 
     return h, _run_chat
 
@@ -349,7 +349,7 @@ def _fs_write(h, request_id: str, path: str) -> AcpEvent:
 
 @pytest.mark.asyncio
 async def test_the_card_offers_a_grant_on_that_file(tmp_path):
-    from kiro_crew.dashboard.state import parse_cls_meta
+    from aj_crew.dashboard.state import parse_cls_meta
 
     h, run_chat = _turn_harness()
     target = os.path.join(os.path.realpath(tmp_path), "a.txt")

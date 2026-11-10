@@ -4,7 +4,7 @@
 Two holes let the crewmate's own file (or an outdated template) reach its chat:
 
 * a ``member`` execution record whose ``template_id`` predates the conductor
-  (``kirocrew-conductor``) was dispatched verbatim, bypassing
+  (``ajcrew-conductor``) was dispatched verbatim, bypassing
   ``mate_worker.member_chat_agent``;
 * on a running loop, a crewmate file the snapshot did not know yet (just
   created by another process) answered "not mate-owned", so the chat ran the
@@ -21,12 +21,12 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-from kiro_crew import mate_worker, session_agent_selection
-from kiro_crew.config import loader
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, ResolvedBindings
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-from kiro_crew.mate_worker import MATE_CONDUCTOR_AGENT
+import aj_crew.config.paths as paths_mod
+from aj_crew import mate_worker, session_agent_selection
+from aj_crew.config import loader
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, ResolvedBindings
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+from aj_crew.mate_worker import MATE_CONDUCTOR_AGENT
 
 
 @pytest.fixture
@@ -41,7 +41,7 @@ def home(monkeypatch, tmp_path):
     monkeypatch.setattr(paths_mod, "kiro_home", lambda: kiro)
     monkeypatch.setattr(paths_mod, "_agents_dir_override", lambda: kiro / "agents")
     monkeypatch.setattr(paths_mod, "_mate_agents_dir_override", lambda: kiro / "mates" / "agents")
-    monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"auto-improvement", "kirocrew"}))
+    monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"auto-improvement", "ajcrew"}))
     monkeypatch.setattr(loader, "_MATERIALIZED_MATE_ONLY", frozenset())
     monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS_READY", True)
     # No rescan may rescue the answer on the loop.
@@ -79,27 +79,27 @@ def _resolve(monkeypatch, cfg, record) -> ResolvedBindings:
     return session_agent_selection.resolve_session_agent_bindings(resolver, cfg, "chat-1", None)
 
 
-def _config(**bindings: str) -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
+def _config(**bindings: str) -> AjCrewConfig:
+    cfg = AjCrewConfig()
     cfg.agents = {
-        name: KiroCrewAgentConfig(member_id=name, kiro_agent=kiro_agent)
+        name: AjCrewAgentConfig(member_id=name, kiro_agent=kiro_agent)
         for name, kiro_agent in bindings.items()
     }
     return cfg
 
 
 def test_a_member_record_with_a_stale_template_chats_on_the_conductor(home, monkeypatch):
-    """A pre-conductor thread kept ``kirocrew-conductor`` as its template."""
+    """A pre-conductor thread kept ``ajcrew-conductor`` as its template."""
     _write_mate_file(home, "atlas")
-    monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"atlas", "kirocrew"}))
+    monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"atlas", "ajcrew"}))
     monkeypatch.setattr(loader, "_MATERIALIZED_MATE_ONLY", frozenset({"atlas"}))
-    bindings = _resolve(monkeypatch, _config(atlas="atlas"), _record("atlas", "kirocrew-conductor"))
+    bindings = _resolve(monkeypatch, _config(atlas="atlas"), _record("atlas", "ajcrew-conductor"))
     assert bindings.kiro_agent == MATE_CONDUCTOR_AGENT
 
 
 def test_a_member_record_naming_the_crewmate_file_chats_on_the_conductor(home, monkeypatch):
     _write_mate_file(home, "atlas")
-    monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"atlas", "kirocrew"}))
+    monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"atlas", "ajcrew"}))
     monkeypatch.setattr(loader, "_MATERIALIZED_MATE_ONLY", frozenset({"atlas"}))
     bindings = _resolve(monkeypatch, _config(atlas="atlas"), _record("atlas", "atlas"))
     assert bindings.kiro_agent == MATE_CONDUCTOR_AGENT
@@ -113,7 +113,7 @@ def test_a_shared_agent_crewmate_keeps_running_its_agent(home, monkeypatch):
 
 def test_a_rebound_shared_agent_crewmate_keeps_the_agent_its_thread_recorded(home, monkeypatch):
     """Only a crewmate-owned binding overrides the record; a shared rebind does not."""
-    cfg = _config(fixer="kirocrew")
+    cfg = _config(fixer="ajcrew")
     bindings = _resolve(monkeypatch, cfg, _record("fixer", "auto-improvement"))
     assert bindings.kiro_agent == "auto-improvement"
 
@@ -121,9 +121,9 @@ def test_a_rebound_shared_agent_crewmate_keeps_the_agent_its_thread_recorded(hom
 def test_a_stale_member_record_is_its_crewmates_conductor_given_config(home, monkeypatch):
     """The identity check follows the same rule the chat dispatches by."""
     _write_mate_file(home, "atlas")
-    monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"atlas", "kirocrew"}))
+    monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"atlas", "ajcrew"}))
     monkeypatch.setattr(loader, "_MATERIALIZED_MATE_ONLY", frozenset({"atlas"}))
-    stale = _record("atlas", "kirocrew-conductor")
+    stale = _record("atlas", "ajcrew-conductor")
     assert mate_worker.is_conductor_execution(stale, _config(atlas="atlas"))
     assert not mate_worker.is_conductor_execution(stale, _config(atlas="auto-improvement"))
     worker = _record("atlas", mate_worker.MATE_WORKER_AGENT, kind="template")

@@ -1,4 +1,4 @@
-"""Coverage tests for ``kiro_crew.hooks``.
+"""Coverage tests for ``aj_crew.hooks``.
 
 This family's focus is the parts of the module the existing hook suites never reach: the
 descriptor-pinned file helpers (``safe_*``), the internal-read allowlist and its
@@ -34,9 +34,9 @@ from hooks_coverage_helpers import (
     _write,
 )
 
-from kiro_crew import hooks as hooks_mod
-from kiro_crew import security
-from kiro_crew.hooks import (
+from aj_crew import hooks as hooks_mod
+from aj_crew import security
+from aj_crew.hooks import (
     FileTooLargeError,
     HooksConfig,
     UserDeniedPattern,
@@ -207,7 +207,7 @@ class TestDeniedCommandsState:
         assert load_denied_commands_state() == {}
 
     def test_load_state_reads_keystone(self, tmp_path, monkeypatch):
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         keystone = tmp_path / "denied_commands.json"
         _write(keystone, json.dumps({"disable_all": True}))
@@ -215,14 +215,14 @@ class TestDeniedCommandsState:
         assert load_denied_commands_state() == {"disable_all": True}
 
     def test_load_state_non_object_degrades(self, tmp_path, monkeypatch):
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         keystone = _write(tmp_path / "denied_commands.json", "[1, 2]")
         monkeypatch.setattr(loader, "denied_commands_path", lambda: keystone)
         assert load_denied_commands_state() == {}
 
     def test_load_state_corrupt_json_degrades(self, tmp_path, monkeypatch):
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         keystone = _write(tmp_path / "denied_commands.json", "{not json")
         monkeypatch.setattr(loader, "denied_commands_path", lambda: keystone)
@@ -326,7 +326,7 @@ class TestValidateFilePath:
         r"""Only a drive-absolute ``\\?\`` remainder folds to a plain
         local path; ``\\?\UNC\`` and every other extended namespace are left
         intact so they stay UNC-shaped and fail closed."""
-        from kiro_crew import hooks as hooks_mod
+        from aj_crew import hooks as hooks_mod
 
         assert hooks_mod._fold_extended_length_local(raw) == expected
 
@@ -340,8 +340,8 @@ class TestValidateFilePath:
         path and refuses a read of ``\\?\C:\Users\<user>\<secret-dir>\<leaf>``.
         The probe asserts the fence never sees the ``\\?\`` prefix -- the
         property that makes the credential leaf recognisable."""
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew import platform_compat
+        from aj_crew import hooks as hooks_mod
+        from aj_crew import platform_compat
 
         seen: list[str] = []
         secret_dir = "." + "aws"
@@ -364,8 +364,8 @@ class TestValidateFilePath:
         ``is_unc_shape`` see a plain (non-UNC) ``C:\`` path, and the fence
         passes a non-secret file. Proves the refusal above is the fence firing,
         not a blanket ``\\?\`` ban."""
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew import platform_compat
+        from aj_crew import hooks as hooks_mod
+        from aj_crew import platform_compat
 
         self._windows(monkeypatch)
         monkeypatch.setattr(platform_compat, "first_linked_ancestor", lambda _p: None)
@@ -387,7 +387,7 @@ class TestValidateFilePath:
         is NOT folded to a local path: it stays UNC-shaped and the UNC
         trusted-root gate refuses it before any resolution (``realpath`` wired
         to explode proves the gate returned first)."""
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         def _boom(_p):  # pragma: no cover
             raise AssertionError("resolution ran on an extended-namespace input")
@@ -406,7 +406,7 @@ class TestValidateFilePath:
         joins with sep) so a stub miss cannot masquerade as a product bug."""
         import types
 
-        from kiro_crew import hooks as hooks_mod
+        from aj_crew import hooks as hooks_mod
 
         monkeypatch.setattr(
             hooks_mod,
@@ -438,8 +438,8 @@ class TestValidateFilePath:
         """The exact reported path stays clickable when ``Tasks`` is a local
         junction. The screen replaces the linked prefix before ``realpath``
         while preserving the descendant path."""
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew import platform_compat
+        from aj_crew import hooks as hooks_mod
+        from aj_crew import platform_compat
 
         raw = (
             r"C:\wbr\workflow-takeover\Tasks"
@@ -473,8 +473,8 @@ class TestValidateFilePath:
     def test_junction_ancestor_aimed_at_unc_is_refused_before_realpath(self, monkeypatch):
         """A local-looking junction aimed at an SMB share still refuses before
         ``realpath`` can start an outbound connection."""
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew import platform_compat
+        from aj_crew import hooks as hooks_mod
+        from aj_crew import platform_compat
 
         raw = r"C:\wbr\workflow-takeover\Tasks\TASK-2028\cr-comments.md"
         linked = r"C:\wbr\workflow-takeover\Tasks"
@@ -497,7 +497,7 @@ class TestValidateFilePath:
 
     def test_plain_path_still_validates_without_links(self, tmp_path, monkeypatch):
         """A normal local path still validates when the screen finds no links."""
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         f = _write(tmp_path / "ok.txt", "x")
         self._windows(monkeypatch)
@@ -528,8 +528,8 @@ class TestValidateFilePath:
         assert _same(got, str(doc))
 
     def _stub_ancestor(self, monkeypatch, raw, linked, destination):
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew import platform_compat
+        from aj_crew import hooks as hooks_mod
+        from aj_crew import platform_compat
 
         self._windows(monkeypatch, path_module=ntpath)
         monkeypatch.setattr(
@@ -543,8 +543,8 @@ class TestValidateFilePath:
         """``screen_windows_linked_ancestors`` rewrites the linked prefix and
         does NOT follow the leaf, even when the leaf is itself a link: the
         caller's own leaf rule judges that."""
-        from kiro_crew import platform_compat
-        from kiro_crew.hooks import screen_windows_linked_ancestors
+        from aj_crew import platform_compat
+        from aj_crew.hooks import screen_windows_linked_ancestors
 
         raw = r"C:\wbr\Tasks\shot.png"
         self._stub_ancestor(monkeypatch, raw, r"C:\wbr\Tasks", r"\\?\C:\wbr\tasks-real")
@@ -568,7 +568,7 @@ class TestValidateFilePath:
     def test_shared_ancestor_screen_refuses_untrusted_targets(self, monkeypatch, destination):
         """UNC share, device namespace, drive-relative and root-relative targets
         are refused by the shared screen, so every caller refuses them."""
-        from kiro_crew.hooks import screen_windows_linked_ancestors
+        from aj_crew.hooks import screen_windows_linked_ancestors
 
         raw = r"C:\wbr\Tasks\shot.png"
         self._stub_ancestor(monkeypatch, raw, r"C:\wbr\Tasks", destination)
@@ -578,7 +578,7 @@ class TestValidateFilePath:
     def test_shared_ancestor_screen_refuses_a_suffix_climbing_out_of_the_link(self, monkeypatch):
         """A child suffix that climbs back above the link with ``..`` is refused,
         so the rewritten path can never land above the link's target."""
-        from kiro_crew.hooks import screen_windows_linked_ancestors
+        from aj_crew.hooks import screen_windows_linked_ancestors
 
         raw = r"C:\wbr\Tasks\..\secret.png"
         self._stub_ancestor(monkeypatch, raw, r"C:\wbr\Tasks", r"\\?\C:\wbr\tasks-real")
@@ -591,8 +591,8 @@ class TestValidateFilePath:
         leaf link aimed straight at an untrusted UNC share must be refused
         before the realpath that would probe it. readlink is a local
         metadata read, wired here to prove no traversal happened."""
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew import platform_compat
+        from aj_crew import hooks as hooks_mod
+        from aj_crew import platform_compat
 
         def _boom(_p):  # pragma: no cover
             raise AssertionError("realpath ran before the leaf target screen")
@@ -612,8 +612,8 @@ class TestValidateFilePath:
         untrusted-UNC target refuses. Under this simulation no real link
         exists, so the pin is that validation SUCCEEDS (reaches realpath)
         rather than returning None."""
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew import platform_compat
+        from aj_crew import hooks as hooks_mod
+        from aj_crew import platform_compat
 
         alias = tmp_path / "alias.txt"
         self._windows(monkeypatch)
@@ -630,8 +630,8 @@ class TestValidateFilePath:
         """A Windows link whose own target ``os.readlink`` cannot read is declined
         as UNCHECKED: the screen did not finish, so a caller that keeps state per
         path retries it. ``validate_file_path`` still answers ``None``."""
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew import platform_compat
+        from aj_crew import hooks as hooks_mod
+        from aj_crew import platform_compat
 
         def _boom(_p):  # pragma: no cover
             raise AssertionError("realpath ran past a link the screen could not read")
@@ -654,8 +654,8 @@ class TestValidateFilePath:
 
     def test_a_link_target_the_screen_does_not_accept_is_refused(self, tmp_path, monkeypatch):
         """A link target the screen does not accept is a lasting decline."""
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew import platform_compat
+        from aj_crew import hooks as hooks_mod
+        from aj_crew import platform_compat
 
         self._windows(monkeypatch)
         monkeypatch.setattr(platform_compat, "first_linked_ancestor", lambda _p: None)
@@ -679,8 +679,8 @@ class TestValidateFilePath:
     def test_the_decline_kind_follows_the_refusal_wording(
         self, tmp_path, monkeypatch, second_reading, expected
     ):
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew.security import UNVERIFIABLE_PATH_PREFIX
+        from aj_crew import hooks as hooks_mod
+        from aj_crew.security import UNVERIFIABLE_PATH_PREFIX
 
         def refusal(p, base_dir=None):
             if second_reading is None:
@@ -694,7 +694,7 @@ class TestValidateFilePath:
         assert hooks_mod.screen_file_path(str(target)) is getattr(hooks_mod.PathDecline, expected)
 
     def test_validate_file_path_reads_the_sensitive_list_once(self, tmp_path, monkeypatch):
-        from kiro_crew import hooks as hooks_mod
+        from aj_crew import hooks as hooks_mod
 
         asked: list[str] = []
         target = _write(tmp_path / "doc.txt", "x")
@@ -707,7 +707,7 @@ class TestValidateFilePath:
         assert asked == []
 
     def test_an_accepted_path_is_the_validated_path(self, tmp_path):
-        from kiro_crew import hooks as hooks_mod
+        from aj_crew import hooks as hooks_mod
 
         target = _write(tmp_path / "doc.txt", "x")
 
@@ -717,8 +717,8 @@ class TestValidateFilePath:
         r"""A leaf link -> LOCAL link -> UNC chain must be refused hop by hop:
         screening only the first target would launder the probe through the
         intermediate local link."""
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew import platform_compat
+        from aj_crew import hooks as hooks_mod
+        from aj_crew import platform_compat
 
         alias = tmp_path / "alias.txt"
         mid_t = r"C:\Users\me\mid.txt"
@@ -740,8 +740,8 @@ class TestValidateFilePath:
     def test_an_overlong_leaf_chain_is_refused_not_probed(self, tmp_path, monkeypatch):
         """A chain longer than the walk's bound refuses rather than probes --
         the same fail-closed posture as the kernels' own ELOOP ceiling."""
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew import platform_compat
+        from aj_crew import hooks as hooks_mod
+        from aj_crew import platform_compat
 
         alias = tmp_path / "alias.txt"
 
@@ -765,8 +765,8 @@ class TestValidateFilePath:
         against ambient state the walk cannot see, so the screened string
         and the resolved string could diverge by drive. Refused fail-closed
         before realpath."""
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew import platform_compat
+        from aj_crew import hooks as hooks_mod
+        from aj_crew import platform_compat
 
         alias = tmp_path / "alias.txt"
 
@@ -783,7 +783,7 @@ class TestValidateFilePath:
         """The screen is one lstat per component, so the walk's cost is
         bounded BEFORE it starts: a path with thousands of components would
         stall the event loop inside the guard itself."""
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         def _boom(_p):  # pragma: no cover
             raise AssertionError("ancestor walk started on an over-deep path")
@@ -794,8 +794,8 @@ class TestValidateFilePath:
         assert validate_file_path(deep) is None
 
     def test_an_unreadable_leaf_link_fails_closed(self, tmp_path, monkeypatch):
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew import platform_compat
+        from aj_crew import hooks as hooks_mod
+        from aj_crew import platform_compat
 
         def _raise(_p):
             raise OSError("unreadable reparse point")
@@ -809,8 +809,8 @@ class TestValidateFilePath:
     def test_a_longform_unc_leaf_target_is_still_refused(self, tmp_path, monkeypatch):
         r"""The \\?\UNC\host\share long-path spelling folds into the screened
         UNC shape rather than slipping past as a non-UNC-looking string."""
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew import platform_compat
+        from aj_crew import hooks as hooks_mod
+        from aj_crew import platform_compat
 
         self._windows(monkeypatch)
         monkeypatch.setattr(platform_compat, "first_linked_ancestor", lambda _p: None)
@@ -840,8 +840,8 @@ class TestValidateFilePath:
         match would drop a lowercase spelling into the plain \\?\ branch,
         strip four characters, and launder the share into a relative-looking
         string that realpath would then probe over SMB."""
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew import platform_compat
+        from aj_crew import hooks as hooks_mod
+        from aj_crew import platform_compat
 
         def _boom(_p):  # pragma: no cover
             raise AssertionError("realpath ran on a mixed-case UNC target")
@@ -869,8 +869,8 @@ class TestValidateFilePath:
         refused outright: stripping the prefix would leave a string with no
         leading separator and no drive, which the shape allowlist would then
         anchor as PLAIN RELATIVE while realpath follows the real link."""
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew import platform_compat
+        from aj_crew import hooks as hooks_mod
+        from aj_crew import platform_compat
 
         def _boom(_p):  # pragma: no cover
             raise AssertionError("realpath ran on an extended-namespace target")
@@ -906,7 +906,7 @@ class TestValidateFilePath:
         an unconditional walk would refuse a symlinked /home."""
         if os.name == "nt":
             pytest.skip("gate is active on Windows by design")
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         def _boom(_p):  # pragma: no cover
             raise AssertionError("ancestor walk ran on POSIX")
@@ -924,8 +924,8 @@ class TestValidateFilePath:
         this single screen covers the expanded form too."""
         import types
 
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew import platform_compat
+        from aj_crew import hooks as hooks_mod
+        from aj_crew import platform_compat
 
         def _boom(_p):  # pragma: no cover
             raise AssertionError("ancestor walk ran on a UNC-shaped expansion")
@@ -964,7 +964,7 @@ class TestValidateFilePath:
         dir to the gate is a separate trust decision. This
         test therefore pins that the transcript STAYS refused.
         """
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         # No linked ancestor: isolate the pure UNC-shape screen.
         monkeypatch.setattr(platform_compat, "first_linked_ancestor", lambda _p: None)
@@ -978,7 +978,7 @@ class TestValidateFilePath:
         attributable to the sessions dir being outside the trusted roots, not
         to a blanket UNC ban. Uses a UNC-shaped data_home so unc_probe_allowed
         has a UNC root to match against."""
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         unc_home = "//roaming-server/profiles/alice/.kiro/crew"
         monkeypatch.setattr(hooks_mod._config_paths, "peek_data_home", lambda: Path(unc_home))
@@ -999,11 +999,11 @@ class TestValidateFilePath:
         ``peek_data_home()`` instead: same override predicate, no filesystem
         writes.
         """
-        import kiro_crew.config.paths as paths_mod
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.config.paths as paths_mod
+        import aj_crew.hooks as hooks_mod
 
         home = tmp_path / "unmade" / ".kiro" / "crew"
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         # Fresh resolution state: nothing memoized from other tests.
         monkeypatch.setattr(paths_mod, "_resolved_home", None)
         monkeypatch.setattr(hooks_mod, "_unc_data_home_root_cache", None)
@@ -1022,7 +1022,7 @@ class TestValidateFilePath:
         how every test above steers the gate -- invalidates the memo instead
         of serving a stale root past it.
         """
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         monkeypatch.setattr(hooks_mod, "_unc_data_home_root_cache", None)
         first = hooks_mod._unc_data_home_root()
@@ -1035,7 +1035,7 @@ class TestValidateFilePath:
     def test_root_memo_keeps_a_failed_computation_as_absent(self, monkeypatch):
         """A raising resolve memoizes root-absent and is not re-run on the next
         check: ``config.paths`` pins only a resolve that returned."""
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         calls: list[int] = []
 
@@ -1091,7 +1091,7 @@ class TestSafeReadFile:
         """
         import errno as _errno
 
-        from kiro_crew import platform_compat as _pc
+        from aj_crew import platform_compat as _pc
 
         f = tmp_path / "map.json"
         f.write_text("{}", encoding="utf-8")
@@ -1164,7 +1164,7 @@ class TestSafeReadFileBytesWithIdentity:
         f = _write(tmp_path / "a.txt", "payload")
         import errno as _errno
 
-        from kiro_crew import platform_compat as _pc
+        from aj_crew import platform_compat as _pc
 
         real_no_reparse = _pc.open_file_no_reparse
 

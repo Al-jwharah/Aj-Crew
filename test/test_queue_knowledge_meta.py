@@ -16,7 +16,7 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app
 from chat_test_helpers import _make_state as _make_full_state
 
-from kiro_crew.dashboard.chat_delivery import (
+from aj_crew.dashboard.chat_delivery import (
     KNOWLEDGE_ENVELOPE_MAX_LEN,
     KNOWLEDGE_HASH_MAX_LEN,
     knowledge_meta,
@@ -48,12 +48,12 @@ class TestKnowledgeMeta:
 
 
 def _busy_state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_full_state(tmp_path)
     state.broadcast_ws = MagicMock()
     slot = state.get_or_create_slot("busy-chat")
     slot._turn_admission_reserved = True  # force the busy queue path
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", MagicMock())
     return state, slot
 
 
@@ -89,7 +89,7 @@ async def test_busy_slot_entry_frame_and_queue_view_carry_the_mark(tmp_path, mon
 
 @pytest.mark.asyncio
 async def test_a_steer_the_turn_never_took_requeues_with_the_mark(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+    from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
 
     state, slot = _busy_state(tmp_path, monkeypatch)
     slot._acp_client = MagicMock(supports_steer=True, steer=AsyncMock(return_value=True))

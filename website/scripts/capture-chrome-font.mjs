@@ -42,7 +42,7 @@ import { json, makeFixedApi, handleBootRoute } from './lib/boot-api.mjs'
 const OUT = process.argv[2] || '../temp-screenshots/chrome-font'
 const SLOT = 'chat-chrome-font'
 // Basename is what the shelf shows, so the fixture ends in the folder a
-// KiroCrew user actually sees there.
+// AjCrew user actually sees there.
 const PROJECT = '/home/user/.kiro/crew/workspace'
 const VIEW = { width: 1500, height: 1000 }
 
@@ -150,7 +150,7 @@ async function main() {
     if (path === '/api/chat/slots') return json(route, slots)
     if (path.startsWith('/api/chat/slots/')) return json(route, detail)
     // The shelf advertises what the turn WILL run on, resolved from config.
-    if (path === '/api/config/kirocrew') {
+    if (path === '/api/config/ajcrew') {
       return json(route, {
         agent: { model: 'claude-opus-5', reasoning_effort: '', provider: 'acp' },
         session: { autocompact_pct: 90 },
@@ -161,11 +161,11 @@ async function main() {
     if (path.startsWith('/api/effort-levels')) return json(route, ['low', 'medium', 'high', 'xhigh', 'max'])
     if (path === '/api/agents') {
       return json(route, {
-        agents: [{ name: 'default', kiro_agent: 'kirocrew', description: 'Default crew agent' }],
+        agents: [{ name: 'default', kiro_agent: 'ajcrew', description: 'Default crew agent' }],
         default_agent: 'default',
       })
     }
-    if (path.startsWith('/api/agents/detail/')) return json(route, { name: 'kirocrew', model: 'claude-opus-5', skills: [] })
+    if (path.startsWith('/api/agents/detail/')) return json(route, { name: 'ajcrew', model: 'claude-opus-5', skills: [] })
     if (path === '/api/agents/installed') return json(route, [])
     // The boot payload carries the UI language, and LanguageProvider treats it as
     // authoritative over the localStorage fast-path — a payload without
@@ -176,7 +176,7 @@ async function main() {
     // a tick cannot sweep the agents out mid-capture.
     if (path === '/api/spawn') {
       return json(route, {
-        agents: AGENTS.map(a => ({ id: a.id, task: a.task, done: false, parent: `dashboard:${SLOT}`, agent: 'kirocrew' })),
+        agents: AGENTS.map(a => ({ id: a.id, task: a.task, done: false, parent: `dashboard:${SLOT}`, agent: 'ajcrew' })),
       })
     }
     return handleBootRoute(route, path, { project: PROJECT, theme: 'light', fixedApi: FIXED_API })
@@ -224,7 +224,7 @@ async function main() {
   async function pushWave() {
     await push('subagent_queued', { slot: SLOT, queued: 1 }, 150)
     for (const a of AGENTS) {
-      await push('subagent_spawn', { slot: SLOT, id: a.id, task: a.task, agent: 'kirocrew' }, 150)
+      await push('subagent_spawn', { slot: SLOT, id: a.id, task: a.task, agent: 'ajcrew' }, 150)
       await push('subagent_tool', { slot: SLOT, id: a.id, tool: a.tool, turns: 1, tool_count: a.tool_count }, 200)
     }
     await page.waitForTimeout(600)

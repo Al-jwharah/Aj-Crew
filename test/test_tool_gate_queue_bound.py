@@ -17,10 +17,10 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.executors as ex
-from kiro_crew.hooks import TOOL_DENY
-from kiro_crew.testing.wait import await_until
-from kiro_crew.tool_gate_busy import TOOL_GATE_BUSY_REASON, hook_gate_busy
+import aj_crew.executors as ex
+from aj_crew.hooks import TOOL_DENY
+from aj_crew.testing.wait import await_until
+from aj_crew.tool_gate_busy import TOOL_GATE_BUSY_REASON, hook_gate_busy
 
 _BOUND = 0.3
 # Generous for a loaded runner, and far below the pre-bound behaviour (forever).
@@ -144,7 +144,7 @@ def test_the_hook_gate_refusal_is_a_policy_deny_naming_the_busy_gate() -> None:
 
 def test_settle_refuses_a_call_the_gate_never_judged(small_bound) -> None:
     """``tool_permission.settle`` (subagents, task runner) fails closed."""
-    from kiro_crew import tool_permission as tp
+    from aj_crew import tool_permission as tp
 
     judged: list[object] = []
 

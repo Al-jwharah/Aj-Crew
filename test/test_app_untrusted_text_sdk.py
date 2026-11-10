@@ -13,10 +13,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import security
-from kiro_crew.apps.context import AppContext, build_app_context
-from kiro_crew.apps.untrusted_text_sdk import UNTRUSTED_FENCE_KINDS, UntrustedTextSDK
-from kiro_crew.context import (
+from aj_crew import security
+from aj_crew.apps.context import AppContext, build_app_context
+from aj_crew.apps.untrusted_text_sdk import UNTRUSTED_FENCE_KINDS, UntrustedTextSDK
+from aj_crew.context import (
     UNTRUSTED_CALENDAR_FENCE_CLOSE,
     UNTRUSTED_CALENDAR_FENCE_OPEN,
     neutralize_untrusted_text,

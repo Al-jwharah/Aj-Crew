@@ -24,7 +24,7 @@ import pytest
 from auto_research_helpers import isolate_fixture  # noqa: F401 - fixture
 
 from conftest import requires_symlinks
-from kiro_crew.apps.builtins.auto_research.handlers import (
+from aj_crew.apps.builtins.auto_research.handlers import (
     DEFAULT_DEPTH_DECAY,
     DEFAULT_EXECUTION_MODE,
     DEFAULT_MAX_SUBQUESTIONS_PER_ROUND,
@@ -69,7 +69,7 @@ class TestPathValidation:
         assert not _validate_campaign_id("")
 
     def test_worker_slot_key_contract(self):
-        from kiro_crew.apps.builtins.auto_research.session_keys import (
+        from aj_crew.apps.builtins.auto_research.session_keys import (
             is_owned_research_slot,
             is_research_slot_key,
             research_slot_key,
@@ -83,7 +83,7 @@ class TestPathValidation:
         assert not is_research_slot_key("research-a1b2c3d4-extra")
 
     def test_safe_dir_rejects_invalid(self, tmp_path: Path):
-        with patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
+        with patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
             assert _safe_campaign_dir("../etc") is None
             assert _safe_campaign_dir("a1b2c3d4") is not None
 
@@ -197,7 +197,7 @@ class TestValidation:
     def test_overlength_model_rejected_not_truncated(self):
         # A sliced id would be a different string that is never served (silent
         # fallback); the create must be refused with an error naming the cap.
-        from kiro_crew.apps.builtins.auto_research.handlers import _campaign_model
+        from aj_crew.apps.builtins.auto_research.handlers import _campaign_model
 
         long_id = "m" * 200
         r = validate_campaign(
@@ -218,7 +218,7 @@ class TestStagnation:
         assert not check_stagnation("a1b2c3d4")
 
     def test_fewer_than_5(self, tmp_path: Path):
-        with patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
+        with patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
             d = tmp_path / "a1b2c3d4" / "findings"
             d.mkdir(parents=True)
             for i in range(4):
@@ -226,7 +226,7 @@ class TestStagnation:
             assert not check_stagnation("a1b2c3d4")
 
     def test_5_zeros_stagnant(self, tmp_path: Path):
-        with patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
+        with patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
             d = tmp_path / "a1b2c3d4" / "findings"
             d.mkdir(parents=True)
             for i in range(5):
@@ -234,7 +234,7 @@ class TestStagnation:
             assert check_stagnation("a1b2c3d4")
 
     def test_recent_finding_not_stagnant(self, tmp_path: Path):
-        with patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
+        with patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
             d = tmp_path / "a1b2c3d4" / "findings"
             d.mkdir(parents=True)
             for i in range(4):
@@ -243,7 +243,7 @@ class TestStagnation:
             assert not check_stagnation("a1b2c3d4")
 
     def test_malformed_json_safe(self, tmp_path: Path):
-        with patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
+        with patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
             d = tmp_path / "a1b2c3d4" / "findings"
             d.mkdir(parents=True)
             for i in range(4):
@@ -263,7 +263,7 @@ class TestCycleFileMatching:
         return d
 
     def test_canonical_names_matched(self, tmp_path: Path):
-        with patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
+        with patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
             d = self._findings_dir(tmp_path)
             (d / "cycle_000.json").write_text(json.dumps({"cycle": 0, "new_findings_count": 1}))
             (d / "cycle_001.json").write_text(json.dumps({"cycle": 1, "new_findings_count": 1}))
@@ -271,7 +271,7 @@ class TestCycleFileMatching:
 
     def test_near_miss_names_matched(self, tmp_path: Path):
         # Unpadded, dash separator, and mixed case all map to a real cycle.
-        with patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
+        with patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
             d = self._findings_dir(tmp_path)
             (d / "cycle_0.json").write_text(json.dumps({"cycle": 0, "new_findings_count": 1}))
             (d / "cycle-1.json").write_text(json.dumps({"cycle": 1, "new_findings_count": 1}))
@@ -281,7 +281,7 @@ class TestCycleFileMatching:
     def test_duplicate_name_variants_deduped_by_cycle_number(self, tmp_path: Path):
         # Two name variants of the SAME logical cycle must count once, not twice
         # (else total_cycles/cycle_offset inflate and a finding surfaces twice).
-        with patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
+        with patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
             d = self._findings_dir(tmp_path)
             (d / "cycle_001.json").write_text(json.dumps({"cycle": 1, "new_findings_count": 1}))
             (d / "cycle-1.json").write_text(json.dumps({"cycle": 1, "new_findings_count": 1}))
@@ -291,16 +291,16 @@ class TestCycleFileMatching:
 
     def test_non_cycle_files_ignored(self, tmp_path: Path):
         # A descriptive name (the 02dfaefd incident) and unrelated json are skipped.
-        with patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
+        with patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
             d = self._findings_dir(tmp_path)
             (d / "cycle_000.json").write_text(json.dumps({"cycle": 0, "new_findings_count": 1}))
-            (d / "01-kiroom-vs-kirocrew.md").write_text("# not a cycle file")
+            (d / "01-kiroom-vs-ajcrew.md").write_text("# not a cycle file")
             (d / "notes.json").write_text(json.dumps({"cycle": 99}))
             assert [f["cycle"] for f in get_findings("a1b2c3d4")] == [0]
 
     def test_orders_by_cycle_number_not_lexically(self, tmp_path: Path):
         # Regression: lexical sort puts cycle_10 before cycle_2; integer sort fixes it.
-        with patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
+        with patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
             d = self._findings_dir(tmp_path)
             for n in (2, 10, 1):
                 (d / f"cycle_{n}.json").write_text(
@@ -310,7 +310,7 @@ class TestCycleFileMatching:
 
     def test_stagnation_counts_near_miss_names(self, tmp_path: Path):
         # 5 zero-finding cycles under near-miss names still trips stagnation.
-        with patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
+        with patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
             d = self._findings_dir(tmp_path)
             for i in range(5):
                 (d / f"cycle-{i}.json").write_text(json.dumps({"new_findings_count": 0}))
@@ -321,7 +321,7 @@ class TestCycleFileMatching:
         # widen the exfiltration surface — a finding under a near-miss name is
         # still LLM-authored content, so get_findings() must run the SAME
         # credential + exfil-URL redaction on it as on a canonical-named file.
-        with patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
+        with patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
             d = self._findings_dir(tmp_path)
             # 40+ char base64-ish blob in the query = exfil-shaped URL, which the
             # URL leg redacts wholesale (domain included). A plain source URL is
@@ -351,24 +351,24 @@ class TestCycleFileMatching:
 
 class TestFileInterface:
     def test_write_status(self, tmp_path: Path):
-        with patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
+        with patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
             write_status("a1b2c3d4", "running")
             d = json.loads((tmp_path / "a1b2c3d4" / "status.json").read_text(encoding="utf-8"))
             assert d["status"] == "running"
 
     def test_write_status_rejects_invalid(self, tmp_path: Path):
-        with patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
+        with patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
             write_status("../etc", "running")
             assert not (tmp_path / ".." / "etc").exists()
 
     def test_write_guidance(self, tmp_path: Path):
-        with patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
+        with patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
             write_status("a1b2c3d4", "running")
             write_guidance("a1b2c3d4", "focus on X")
             assert (tmp_path / "a1b2c3d4" / "guidance.txt").read_text(encoding="utf-8") == "focus on X"
 
     def test_get_findings_sorted(self, tmp_path: Path):
-        with patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
+        with patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
             d = tmp_path / "a1b2c3d4" / "findings"
             d.mkdir(parents=True)
             (d / "cycle_002.json").write_text(json.dumps({"cycle": 2, "new_findings_count": 1}))
@@ -457,7 +457,7 @@ class TestCRUD:
         assert get_campaign("../etc") is None
 
     def test_delete_removes_row_and_dir(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import (
+        from aj_crew.apps.builtins.auto_research.handlers import (
             _campaign_dir,
             delete_campaign,
         )
@@ -472,12 +472,12 @@ class TestCRUD:
         assert not _safe_campaign_dir(cid).exists()
 
     def test_delete_missing(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import delete_campaign
+        from aj_crew.apps.builtins.auto_research.handlers import delete_campaign
 
         assert "error" in delete_campaign("a1b2c3d4")
 
     def test_parallel_workers_stored_and_in_brief(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import (
+        from aj_crew.apps.builtins.auto_research.handlers import (
             _campaign_dir,
             _get_db,
             _write_brief,
@@ -559,7 +559,7 @@ class TestStalledCampaignVerdict:
         return p
 
     def test_verified_finding_completes(self, _isolate: Path):
-        from kiro_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
+        from aj_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
 
         f = self._write_finding(
             _isolate, 3, {"summary": "done", "verification": {"passed": True}}
@@ -569,7 +569,7 @@ class TestStalledCampaignVerdict:
         assert message is None
 
     def test_done_marker_with_findings_is_deliberate_stop(self, _isolate: Path):
-        from kiro_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
+        from aj_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
 
         # verification null — exactly what a self-stopped worker leaves behind.
         f = self._write_finding(
@@ -585,8 +585,8 @@ class TestStalledCampaignVerdict:
     ):
         """A source-owned tombstone is sufficient and short-circuits the
         LLM-written marker fallback."""
-        from kiro_crew.apps.builtins.auto_research import handlers as h
-        from kiro_crew.autonudge import AUTONUDGE_STOP_REASON
+        from aj_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.autonudge import AUTONUDGE_STOP_REASON
 
         f = self._write_finding(
             _isolate, 9, {"summary": "final synthesis", "verification": None}
@@ -607,8 +607,8 @@ class TestStalledCampaignVerdict:
     def test_stop_tombstone_without_readable_findings_stays_failed(self):
         """A deterministic stop source must not claim findings were preserved
         when the worker produced no readable result."""
-        from kiro_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
-        from kiro_crew.autonudge import AUTONUDGE_STOP_REASON
+        from aj_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
+        from aj_crew.autonudge import AUTONUDGE_STOP_REASON
 
         status, _ = _stalled_campaign_verdict(
             self.CID,
@@ -620,7 +620,7 @@ class TestStalledCampaignVerdict:
     def test_no_marker_and_unverified_is_a_real_stall(self, _isolate: Path):
         """The exact case GPT review flagged: a worker session deleted mid-run
         (loop removed by error cleanup, no marker written) must stay FAILED."""
-        from kiro_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
+        from aj_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
 
         f = self._write_finding(_isolate, 2, {"summary": "partial"})
         status, message = _stalled_campaign_verdict(self.CID, [f])
@@ -630,14 +630,14 @@ class TestStalledCampaignVerdict:
     def test_no_findings_fails_even_with_marker(self, _isolate: Path):
         """A worker that produced nothing did not 'finish' — the marker alone
         must not launder a dead campaign into STOPPED."""
-        from kiro_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
+        from aj_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
 
         self._write_done(_isolate)
         status, _ = _stalled_campaign_verdict(self.CID, [])
         assert status == CampaignStatus.FAILED
 
     def test_verified_wins_over_marker(self, _isolate: Path):
-        from kiro_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
+        from aj_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
 
         f = self._write_finding(
             _isolate, 5, {"summary": "done", "verification": {"passed": True}}
@@ -647,7 +647,7 @@ class TestStalledCampaignVerdict:
         assert status == CampaignStatus.COMPLETE
 
     def test_verification_failed_flag_does_not_complete(self, _isolate: Path):
-        from kiro_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
+        from aj_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
 
         f = self._write_finding(
             _isolate, 4, {"summary": "not there yet", "verification": {"passed": False}}
@@ -660,7 +660,7 @@ class TestStalledCampaignVerdict:
         or a marker without a non-empty string reason must read as absent
         (conservative FAILED), never raise into the watchdog or launder a
         stall into STOPPED."""
-        from kiro_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
+        from aj_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
 
         f = self._write_finding(_isolate, 2, {"summary": "partial"})
         for payload in (
@@ -680,7 +680,7 @@ class TestStalledCampaignVerdict:
     def test_unreadable_finding_falls_back_to_failed(self, _isolate: Path):
         """_read_finding_file returns {} on parse error — verdict must not crash
         and must stay conservative."""
-        from kiro_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
+        from aj_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
 
         d = _isolate / "research" / self.CID / "findings"
         d.mkdir(parents=True, exist_ok=True)
@@ -695,7 +695,7 @@ class TestStalledCampaignVerdict:
         of the watchdog and leave the campaign RUNNING forever. With no
         readable finding on disk, even a valid done marker must NOT produce
         STOPPED — its "findings are preserved" promise would be false."""
-        from kiro_crew.apps.builtins.auto_research.handlers import (
+        from aj_crew.apps.builtins.auto_research.handlers import (
             _read_finding_file,
             _stalled_campaign_verdict,
         )
@@ -716,7 +716,7 @@ class TestStalledCampaignVerdict:
     def test_marker_with_malformed_only_finding_fails(self, _isolate: Path):
         """Valid marker + sole UNPARSEABLE cycle file → FAILED, not STOPPED:
         no readable finding exists, so 'findings are preserved' would lie."""
-        from kiro_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
+        from aj_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
 
         d = _isolate / "research" / self.CID / "findings"
         d.mkdir(parents=True, exist_ok=True)
@@ -731,7 +731,7 @@ class TestStalledCampaignVerdict:
         """A LINK at the marker path is rejected by the reader outright — a
         marker symlinked to an unbounded source (e.g. /dev/zero) must never
         become an uncapped read inside the gateway."""
-        from kiro_crew.apps.builtins.auto_research.handlers import (
+        from aj_crew.apps.builtins.auto_research.handlers import (
             _read_worker_done,
             _stalled_campaign_verdict,
         )
@@ -754,7 +754,7 @@ class TestStalledCampaignVerdict:
     def test_oversized_marker_is_ignored(self, _isolate: Path):
         """A marker larger than the read cap is treated as absent — bounded
         read, never truncated-and-parsed into a valid-looking payload."""
-        from kiro_crew.apps.builtins.auto_research.handlers import (
+        from aj_crew.apps.builtins.auto_research.handlers import (
             _WORKER_DONE_MAX_BYTES,
             _read_worker_done,
         )
@@ -771,7 +771,7 @@ class TestStalledCampaignVerdict:
         """_launch_loop clears worker_done.json (via _clear_worker_done_marker)
         so a resumed run's genuine stall is not misclassified as STOPPED by the
         previous run's marker."""
-        from kiro_crew.apps.builtins.auto_research.handlers import (
+        from aj_crew.apps.builtins.auto_research.handlers import (
             _clear_worker_done_marker,
             _read_worker_done,
         )
@@ -786,7 +786,7 @@ class TestStalledCampaignVerdict:
     def test_clear_marker_tolerates_rogue_directory(self, _isolate: Path):
         """The campaign dir is LLM-writable: a DIRECTORY named worker_done.json
         must be removed, not raise IsADirectoryError out of _launch_loop."""
-        from kiro_crew.apps.builtins.auto_research.handlers import (
+        from aj_crew.apps.builtins.auto_research.handlers import (
             _clear_worker_done_marker,
             _read_worker_done,
         )
@@ -804,7 +804,7 @@ class TestStalledCampaignVerdict:
     def test_clear_marker_symlink_removes_link_not_target(self, _isolate: Path):
         """A symlink at the marker path is unlinked — its target's contents
         must never be recursively deleted."""
-        from kiro_crew.apps.builtins.auto_research.handlers import _clear_worker_done_marker
+        from aj_crew.apps.builtins.auto_research.handlers import _clear_worker_done_marker
 
         campaign_dir = _isolate / "research" / self.CID
         campaign_dir.mkdir(parents=True, exist_ok=True)
@@ -821,7 +821,7 @@ class TestStalledCampaignVerdict:
         """Non-UTF-8 bytes in either LLM-written file must not raise
         UnicodeDecodeError out of the watchdog — both readers fall back to
         their conservative defaults and the verdict stays FAILED."""
-        from kiro_crew.apps.builtins.auto_research.handlers import (
+        from aj_crew.apps.builtins.auto_research.handlers import (
             _read_finding_file,
             _read_worker_done,
             _stalled_campaign_verdict,
@@ -858,7 +858,7 @@ class TestStalledCampaignVerdict:
 
 class TestGrillParse:
     def test_parses_clarifier_and_research(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import _parse_grill_nodes
+        from aj_crew.apps.builtins.auto_research.handlers import _parse_grill_nodes
 
         raw = (
             'ok: [{"kind":"clarifier","text":"Prod or explore?","recommended":"prod"},'
@@ -871,13 +871,13 @@ class TestGrillParse:
         ]
 
     def test_drops_bad_and_empty(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import _parse_grill_nodes
+        from aj_crew.apps.builtins.auto_research.handlers import _parse_grill_nodes
 
         raw = '[{"kind":"bogus","text":"x"},{"kind":"research","text":""},{"text":"no kind"}]'
         assert _parse_grill_nodes(raw) == []
 
     def test_garbage_returns_empty(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import _parse_grill_nodes
+        from aj_crew.apps.builtins.auto_research.handlers import _parse_grill_nodes
 
         assert _parse_grill_nodes("no json here") == []
 
@@ -885,7 +885,7 @@ class TestGrillParse:
         # The old outermost find('[') .. rfind(']') span ran from the "[1]:"
         # marker to the trailing "[12]." citation, so the slice never parsed
         # and a valid payload was silently lost.
-        from kiro_crew.apps.builtins.auto_research.handlers import _parse_grill_nodes
+        from aj_crew.apps.builtins.auto_research.handlers import _parse_grill_nodes
 
         raw = (
             'Expanding item [1]: [{"kind":"research","text":"How is it stored?"}] '
@@ -896,7 +896,7 @@ class TestGrillParse:
     def test_two_different_node_arrays_refuse_the_guess(self):
         # The shared extractor's ambiguity contract: two DIFFERENT node-shaped
         # arrays mean the caller cannot know which is the real payload.
-        from kiro_crew.apps.builtins.auto_research.handlers import _parse_grill_nodes
+        from aj_crew.apps.builtins.auto_research.handlers import _parse_grill_nodes
 
         raw = (
             'For example [{"kind":"research","text":"Example?"}] but my answer is '
@@ -906,7 +906,7 @@ class TestGrillParse:
 
     def test_fenced_reply_is_accepted(self):
         # Fence markers are just prose to the shared scanner.
-        from kiro_crew.apps.builtins.auto_research.handlers import _parse_grill_nodes
+        from aj_crew.apps.builtins.auto_research.handlers import _parse_grill_nodes
 
         raw = '```json\n[{"kind":"research","text":"How is it stored?"}]\n```'
         assert _parse_grill_nodes(raw) == [{"kind": "research", "text": "How is it stored?"}]
@@ -914,12 +914,12 @@ class TestGrillParse:
     def test_nesting_bomb_degrades_to_no_nodes(self):
         # A RecursionError from the stdlib decoder must not escape into the
         # grill-expand handler (it would surface as HTTP 500, not empty nodes).
-        from kiro_crew.apps.builtins.auto_research.handlers import _parse_grill_nodes
+        from aj_crew.apps.builtins.auto_research.handlers import _parse_grill_nodes
 
         assert _parse_grill_nodes("[" * 100_000) == []
 
     def test_node_depth(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import _node_depth
+        from aj_crew.apps.builtins.auto_research.handlers import _node_depth
 
         tree = [{"id": "n0", "parent": None}, {"id": "n1", "parent": "n0"}]
         assert _node_depth(tree, "n0") == 0
@@ -929,7 +929,7 @@ class TestGrillParse:
 
 class TestGrillBrief:
     def test_scope_block_checklist_and_origin(self, tmp_path: Path):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         cfg = {
             "question": "Should we migrate auth to BigWeaver?",
@@ -959,7 +959,7 @@ class TestGrillBrief:
         assert "- Latency under load? _(emergent)_" in brief
 
     def test_no_subquestions_brief_is_not_contradictory(self, tmp_path: Path):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         cid = h.create_campaign(
             {
@@ -987,7 +987,7 @@ class TestGrillBrief:
 
 class TestGrillSuggestedCycles:
     def test_suggested_max_cycles(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import validate_campaign
+        from aj_crew.apps.builtins.auto_research.handlers import validate_campaign
 
         v = validate_campaign(
             {
@@ -1024,7 +1024,7 @@ class TestGrillHTTP:
     def app(self, tmp_path: Path):
         from aiohttp import web
 
-        from kiro_crew.apps.builtins.auto_research.handlers import register_routes
+        from aj_crew.apps.builtins.auto_research.handlers import register_routes
 
         @web.middleware
         async def _inject_user(request, handler):
@@ -1032,9 +1032,9 @@ class TestGrillHTTP:
             return await handler(request)
 
         with patch(
-            "kiro_crew.apps.builtins.auto_research.handlers.DB_PATH", tmp_path / "t.db"
+            "aj_crew.apps.builtins.auto_research.handlers.DB_PATH", tmp_path / "t.db"
         ), patch(
-            "kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path / "r"
+            "aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path / "r"
         ):
             a = web.Application(middlewares=[_inject_user])
             register_routes(a)
@@ -1145,7 +1145,7 @@ class TestGrillHTTP:
 
     @pytest.mark.asyncio
     async def test_expand_requires_auth(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import _handle_grill_expand
+        from aj_crew.apps.builtins.auto_research.handlers import _handle_grill_expand
 
         request = MagicMock()
         request.get.return_value = None  # no authenticated user
@@ -1327,7 +1327,7 @@ class TestRecursiveExploration:
         assert not self._emergent_path(cid).exists()
 
     def test_a_failed_round_keeps_the_file(self, monkeypatch):
-        from kiro_crew.apps.builtins.auto_research.campaign import exploration
+        from aj_crew.apps.builtins.auto_research.campaign import exploration
 
         cid = self._agent_campaign()
         self._write_emergent(cid, [{"text": "keep me", "priority": 0.9}])
@@ -1443,17 +1443,17 @@ class TestReserveAndFinalize:
 
 
 class TestResearchBackendInfra:
-    """KIROCREW_HOME path isolation + off-event-loop DB concurrency."""
+    """AJCREW_HOME path isolation + off-event-loop DB concurrency."""
 
     def test_nudge_dir_tracks_campaign_dir(self):
         # The per-cycle nudge must point the agent at the real campaign dir
-        # (resolves via config_dir()/KIROCREW_HOME), NOT a hardcoded ~/.kirocrew
+        # (resolves via config_dir()/AJCREW_HOME), NOT a hardcoded ~/.ajcrew
         # literal — otherwise a dev gateway is aimed at the prod home.
-        from kiro_crew.apps.builtins.auto_research.handlers import (
+        from aj_crew.apps.builtins.auto_research.handlers import (
             _RESEARCH_NUDGE,
             _campaign_dir,
         )
-        assert "~/.kirocrew" not in _RESEARCH_NUDGE
+        assert "~/.ajcrew" not in _RESEARCH_NUDGE
         cid = "abc12345"
         msg = _RESEARCH_NUDGE.format(cid=cid, dir=_campaign_dir(cid))
         assert str(_campaign_dir(cid)) in msg
@@ -1479,7 +1479,7 @@ class TestPromptTrustBoundary:
     before it is fed back into fresh LLM prompts."""
 
     def test_fence_untrusted_wraps_with_unique_nonce(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import _fence_untrusted
+        from aj_crew.apps.builtins.auto_research.handlers import _fence_untrusted
 
         a = _fence_untrusted("payload")
         b = _fence_untrusted("payload")
@@ -1490,7 +1490,7 @@ class TestPromptTrustBoundary:
         assert a != b
 
     def test_report_prompt_fences_findings(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import (
+        from aj_crew.apps.builtins.auto_research.handlers import (
             _UNTRUSTED_DATA_NOTICE,
             _build_report_prompt,
         )
@@ -1505,7 +1505,7 @@ class TestPromptTrustBoundary:
 
     @pytest.mark.asyncio
     async def test_grill_prompt_fences_question_and_tree(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import (
+        from aj_crew.apps.builtins.auto_research.handlers import (
             _UNTRUSTED_DATA_NOTICE,
             _grill_expand_children,
         )
@@ -1527,10 +1527,10 @@ class TestPromptTrustBoundary:
         assert question in prompt and "malicious node text" in prompt
 
     def test_workflow_source_fences_untrusted_and_still_validates(self):
-        from kiro_crew.apps.builtins.auto_research.workflow_template import (
+        from aj_crew.apps.builtins.auto_research.workflow_template import (
             RESEARCH_WORKFLOW_SOURCE,
         )
-        from kiro_crew.workflows.validate import validate
+        from aj_crew.workflows.validate import validate
 
         # The sandboxed source cannot import uuid, so it uses static DATA markers
         # (the issue_radar pattern) plus an explicit never-as-instructions notice.

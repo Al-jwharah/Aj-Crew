@@ -44,7 +44,7 @@ _SKIP_DIRS = ("_vendor", "__pycache__", "node_modules")
 # needle appears there as string data rather than as a call.
 _ALLOWLIST = frozenset(
     {
-        "src/kiro_crew/apps/builtins/ops_mission_control/tests/test_schedule_file.py",
+        "src/aj_crew/apps/builtins/ops_mission_control/tests/test_schedule_file.py",
     }
 )
 

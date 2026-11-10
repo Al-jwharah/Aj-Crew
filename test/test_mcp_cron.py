@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.mcp_cron import _call_tool_inner
+from aj_crew.mcp_cron import _call_tool_inner
 
 
 @pytest.fixture(autouse=True)
@@ -22,9 +22,9 @@ def _cron_caller_is_named(named_cron_caller):
 
 class TestCronAddChannelCapture:
     def test_cron_add_captures_channel_from_env(self, monkeypatch, tmp_path):
-        """KIROCREW_CHANNEL_ID env var is used as job channel."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.setenv("KIROCREW_CHANNEL_ID", "C0ABC123")
+        """AJCREW_CHANNEL_ID env var is used as job channel."""
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_CHANNEL_ID", "C0ABC123")
 
         job_name = f"test-job-{uuid.uuid4().hex[:8]}"
         result = _call_tool_inner(
@@ -33,7 +33,7 @@ class TestCronAddChannelCapture:
         )
         assert "Added job" in result
 
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         svc = CronService(base_dir=tmp_path)
         jobs = svc.list_jobs()
@@ -42,9 +42,9 @@ class TestCronAddChannelCapture:
         assert matching[0].channel == "C0ABC123"
 
     def test_cron_add_no_env_channel_is_none(self, monkeypatch, tmp_path):
-        """Without KIROCREW_CHANNEL_ID, job channel is None (DM fallback)."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        """Without AJCREW_CHANNEL_ID, job channel is None (DM fallback)."""
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
 
         job_name = f"test-no-channel-{uuid.uuid4().hex[:8]}"
         _call_tool_inner(
@@ -52,7 +52,7 @@ class TestCronAddChannelCapture:
             {"name": job_name, "message": "hello", "every": 120},
         )
 
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         svc = CronService(base_dir=tmp_path)
         jobs = svc.list_jobs()
@@ -60,10 +60,10 @@ class TestCronAddChannelCapture:
         assert len(matching) == 1
         assert matching[0].channel is None
 
-    def test_cron_respects_kirocrew_home(self, monkeypatch, tmp_path):
-        """CronService uses KIROCREW_HOME when set, not the default ~/.kirocrew."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+    def test_cron_respects_ajcrew_home(self, monkeypatch, tmp_path):
+        """CronService uses AJCREW_HOME when set, not the default ~/.ajcrew."""
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
 
         job_name = f"test-home-{uuid.uuid4().hex[:8]}"
         result = _call_tool_inner(
@@ -72,11 +72,11 @@ class TestCronAddChannelCapture:
         )
         assert "Added job" in result
 
-        # Job should be in tmp_path, not ~/.kirocrew
+        # Job should be in tmp_path, not ~/.ajcrew
         crons_file = tmp_path / "crons.json"
-        assert crons_file.exists(), "crons.json not written to KIROCREW_HOME directory"
+        assert crons_file.exists(), "crons.json not written to AJCREW_HOME directory"
 
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         svc = CronService(base_dir=tmp_path)
         jobs = svc.list_jobs()
@@ -88,8 +88,8 @@ class TestCronAddModel:
 
     def test_cron_add_with_valid_model(self, monkeypatch, tmp_path):
         """A recognized model is stored on the job."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
 
         job_name = f"model-valid-{uuid.uuid4().hex[:8]}"
         result = _call_tool_inner(
@@ -98,7 +98,7 @@ class TestCronAddModel:
         )
         assert "Added job" in result
 
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         svc = CronService(base_dir=tmp_path)
         matching = [j for j in svc.list_jobs() if j.name == job_name]
@@ -119,8 +119,8 @@ class TestCronAddModel:
         ],
     )
     def test_cron_add_persists_the_model_verbatim(self, monkeypatch, tmp_path, model):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
 
         job_name = f"model-{uuid.uuid4().hex[:8]}"
         result = _call_tool_inner(
@@ -129,7 +129,7 @@ class TestCronAddModel:
         )
         assert "Added job" in result
 
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         svc = CronService(base_dir=tmp_path)
         matching = [j for j in svc.list_jobs() if j.name == job_name]
@@ -138,15 +138,15 @@ class TestCronAddModel:
 
     def test_cron_update_model(self, monkeypatch, tmp_path):
         """cron_update with a valid model stores it on the job."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
 
         job_name = f"model-upd-{uuid.uuid4().hex[:8]}"
         _call_tool_inner(
             "cron_add",
             {"name": job_name, "message": "go", "every": 120},
         )
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         svc = CronService(base_dir=tmp_path)
         job = next(j for j in svc.list_jobs() if j.name == job_name)
@@ -163,15 +163,15 @@ class TestCronAddModel:
 
     def test_cron_update_model_clear(self, monkeypatch, tmp_path):
         """cron_update with model='' clears the override."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
 
         job_name = f"model-clr-{uuid.uuid4().hex[:8]}"
         _call_tool_inner(
             "cron_add",
             {"name": job_name, "message": "go", "every": 120, "model": "sonnet"},
         )
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         svc = CronService(base_dir=tmp_path)
         job = next(j for j in svc.list_jobs() if j.name == job_name)
@@ -193,15 +193,15 @@ class TestCronAddModel:
         comes from the live kiro-cli --list-models, so any advertised id is
         valid. Matches the chat model path.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
 
         job_name = f"model-upd-arb-{uuid.uuid4().hex[:8]}"
         _call_tool_inner(
             "cron_add",
             {"name": job_name, "message": "go", "every": 120},
         )
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         svc = CronService(base_dir=tmp_path)
         job = next(j for j in svc.list_jobs() if j.name == job_name)
@@ -223,11 +223,11 @@ class TestCronAddPersistenceOwner:
     unlocked _save() (which could persist a job missing its agent_id/model)."""
 
     def test_cron_add_persists_all_fields_in_one_save(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:slot9")
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:slot9")
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
 
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         # Count _save() calls made during the create. The old fold path saved
         # TWICE (add_job's first save + the post-hoc svc._save()); the fix saves
@@ -248,7 +248,7 @@ class TestCronAddPersistenceOwner:
                 "name": job_name,
                 "message": "go",
                 "every": 120,
-                "agent": "kirocrew",
+                "agent": "ajcrew",
                 "model": "sonnet",
                 "silent": True,
                 "minimal_context": True,
@@ -263,7 +263,7 @@ class TestCronAddPersistenceOwner:
         matching = [j for j in svc.list_jobs() if j.name == job_name]
         assert len(matching) == 1
         job = matching[0]
-        assert job.agent_id == "kirocrew"
+        assert job.agent_id == "ajcrew"
         assert job.model != ""
         assert job.silent is True
         assert job.minimal_context is True
@@ -275,8 +275,8 @@ class TestCronAddPersistenceOwner:
         must not abort creation or persist JSON null -- the always-pass fold
         normalizes falsy values back to '' (regression guard for the
         conditional-set -> always-pass conversion)."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
 
         job_name = f"nullfields-{uuid.uuid4().hex[:8]}"
         result = _call_tool_inner(
@@ -294,7 +294,7 @@ class TestCronAddPersistenceOwner:
         assert "Added job" in result
         assert "Invalid approval_mode" not in result
 
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         matching = [j for j in CronService(base_dir=tmp_path).list_jobs() if j.name == job_name]
         assert len(matching) == 1
@@ -324,22 +324,22 @@ class TestCronRemoveAudit:
             def log_tool_invocation(self, **kw):
                 events.append(kw)
 
-        import kiro_crew.cron as cron_mod
-        import kiro_crew.mcp_cron as mcp_cron_mod
+        import aj_crew.cron as cron_mod
+        import aj_crew.mcp_cron as mcp_cron_mod
 
         monkeypatch.setattr(mcp_cron_mod, "sel", lambda: _FakeSel())
         monkeypatch.setattr(cron_mod, "sel", SimpleNamespace(sel=lambda: _FakeSel()))
         return events
 
     def test_cron_remove_emits_sel_audit(self, monkeypatch, tmp_path, sel_events):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
 
         job_name = f"audit-rm-{uuid.uuid4().hex[:8]}"
         result = _call_tool_inner("cron_add", {"name": job_name, "message": "hello", "every": 120})
         assert "Added job" in result
 
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         jobs = [j for j in CronService(base_dir=tmp_path).list_jobs() if j.name == job_name]
         assert len(jobs) == 1
@@ -361,8 +361,8 @@ class TestCronRemoveAudit:
         # An unknown id never reaches the store mutation: the ownership gate
         # answers its anti-enumeration refusal first, so no cron.remove event
         # (with any outcome) may claim a delete that did not happen.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
 
         result = _call_tool_inner("cron_remove", {"job_id": "no-such-job"})
         assert "Removed job" not in result
@@ -374,21 +374,21 @@ class TestCronRemoveAudit:
         # The first sel() of a process constructs the log and can raise; the
         # job is already removed by then, so the tool must still report the
         # completed delete instead of surfacing an error.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
 
         job_name = f"audit-raise-{uuid.uuid4().hex[:8]}"
         result = _call_tool_inner("cron_add", {"name": job_name, "message": "hello", "every": 120})
         assert "Added job" in result
 
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         jobs = [j for j in CronService(base_dir=tmp_path).list_jobs() if j.name == job_name]
         assert len(jobs) == 1
         jid = jobs[0].id
 
-        import kiro_crew.cron as cron_mod
-        import kiro_crew.mcp_cron as mcp_cron_mod
+        import aj_crew.cron as cron_mod
+        import aj_crew.mcp_cron as mcp_cron_mod
 
         def _raising_sel():
             raise RuntimeError("SEL trust root unavailable")
@@ -408,7 +408,7 @@ class TestCronSubFloorTimeoutWarning:
     """
 
     def _reload(self, tmp_path, name):
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         matching = [j for j in CronService(base_dir=tmp_path).list_jobs() if j.name == name]
         assert len(matching) == 1, f"expected exactly one job named {name}"
@@ -416,10 +416,10 @@ class TestCronSubFloorTimeoutWarning:
 
     def test_cron_add_sub_floor_timeout_secs_warns(self, monkeypatch, tmp_path):
         """A sub-floor timeout_secs is stored verbatim and flagged in the reply."""
-        from kiro_crew.cron import _JOB_TIMEOUT_SECS
+        from aj_crew.cron import _JOB_TIMEOUT_SECS
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = f"low-{uuid.uuid4().hex[:8]}"
         result = _call_tool_inner(
             "cron_add",
@@ -432,10 +432,10 @@ class TestCronSubFloorTimeoutWarning:
 
     def test_cron_add_at_floor_timeout_secs_no_warn(self, monkeypatch, tmp_path):
         """A timeout_secs at the floor is honored without the caveat note."""
-        from kiro_crew.cron import _JOB_TIMEOUT_SECS
+        from aj_crew.cron import _JOB_TIMEOUT_SECS
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = f"atfloor-{uuid.uuid4().hex[:8]}"
         result = _call_tool_inner(
             "cron_add",
@@ -446,8 +446,8 @@ class TestCronSubFloorTimeoutWarning:
 
     def test_cron_add_without_timeout_secs_no_warn(self, monkeypatch, tmp_path):
         """The note only appears when timeout_secs is explicitly set sub-floor."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = f"none-{uuid.uuid4().hex[:8]}"
         result = _call_tool_inner("cron_add", {"name": name, "message": "go", "every": 300})
         assert "Added job" in result
@@ -455,10 +455,10 @@ class TestCronSubFloorTimeoutWarning:
 
     def test_cron_update_sub_floor_timeout_secs_warns(self, monkeypatch, tmp_path):
         """Lowering timeout_secs below the floor via cron_update also warns."""
-        from kiro_crew.cron import _JOB_TIMEOUT_SECS
+        from aj_crew.cron import _JOB_TIMEOUT_SECS
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = f"upd-low-{uuid.uuid4().hex[:8]}"
         _call_tool_inner("cron_add", {"name": name, "message": "go", "every": 300})
         jid = self._reload(tmp_path, name).id
@@ -470,10 +470,10 @@ class TestCronSubFloorTimeoutWarning:
 
     def test_cron_update_at_floor_timeout_secs_no_warn(self, monkeypatch, tmp_path):
         """A cron_update at the floor updates without the caveat note."""
-        from kiro_crew.cron import _JOB_TIMEOUT_SECS
+        from aj_crew.cron import _JOB_TIMEOUT_SECS
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = f"upd-floor-{uuid.uuid4().hex[:8]}"
         _call_tool_inner("cron_add", {"name": name, "message": "go", "every": 300})
         jid = self._reload(tmp_path, name).id

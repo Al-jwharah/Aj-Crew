@@ -19,8 +19,8 @@
 //
 // The LLM output is already scanned by redact_exfiltration_urls() and
 // redact_credentials() in the backend's response pipeline before reaching
-// the frontend (see kiro_crew/dashboard/handlers/artifacts.py:_serialize
-// and kiro_crew/chat.py streaming).
+// the frontend (see aj_crew/dashboard/handlers/artifacts.py:_serialize
+// and aj_crew/chat.py streaming).
 //
 // Theme vars pass through sanitizeCssValue() (char allowlist + dangerous-
 // function denylist + 200-char cap) before reaching this module, so the
@@ -555,7 +555,7 @@ const EXTERNAL_LINK_TARGET_SHIM_BODY = `(function(){
  * crewmate's Dashboard page).
  * Those frames are `sandbox="allow-scripts"` with no popup grant, so a page
  * cannot open a window itself; this hands the request to the host instead, as
- * `{type: 'kirocrew-dashboard:open', url}` -- the message the crew pages already
+ * `{type: 'ajcrew-dashboard:open', url}` -- the message the crew pages already
  * post. The host (`useFrameLinkBridge`) opens it only for a web URL and only right
  * after a real click in this frame, once per click.
  *
@@ -574,7 +574,7 @@ const EXTERNAL_LINK_TARGET_SHIM_BODY = `(function(){
  *   - `data-action` anchors are the composer pre-fill buttons; their own handler
  *     owns them, so they are skipped.
  *   - Each click or key in the frame is reported as
- *     `{type: 'kirocrew-dashboard:input'}`, so the host does not open a SIBLING
+ *     `{type: 'ajcrew-dashboard:input'}`, so the host does not open a SIBLING
  *     frame's request at once on that click (it offers its "Open <host>"
  *     button instead).
  *
@@ -592,11 +592,11 @@ const EXTERNAL_LINK_TARGET_SHIM_BODY = `(function(){
  */
 const LINK_BRIDGE_SHIM_BODY = `(function(){
   if (window.parent === window) return;
-  var T = 'kirocrew-dashboard:open';
+  var T = 'ajcrew-dashboard:open';
   var P = window.parent;
   // Each click or key here is reported, so the host can tell that a live
   // activation may be this frame's when a sibling frame asks to open a link.
-  function input(){ try { P.postMessage({ type: 'kirocrew-dashboard:input' }, '*'); } catch (_) {} }
+  function input(){ try { P.postMessage({ type: 'ajcrew-dashboard:input' }, '*'); } catch (_) {} }
   ['keydown', 'mousedown', 'pointerdown', 'pointerup', 'touchend'].forEach(function(t){
     window.addEventListener(t, input, { capture: true, passive: true });
   });
@@ -618,7 +618,7 @@ const LINK_BRIDGE_SHIM_BODY = `(function(){
   // returned only while it stays there, so //host and /\\host (another origin) and any
   // scheme are refused. Used only for a link that opens a window, never a bare one.
   function path(raw){
-    var s = String(raw).trim(), u, o = 'https://kirocrew-path.invalid';
+    var s = String(raw).trim(), u, o = 'https://ajcrew-path.invalid';
     if (s.charAt(0) !== '/') return null;
     try { u = new URL(s, o); } catch (_) { return null; }
     // A dot segment can normalise to //host (/.//host), which the host would read
@@ -726,7 +726,7 @@ const LINK_BRIDGE_SHIM_BODY = `(function(){
  * it shows the same "Open <host>" button as the dashboard (`FrameLinkChip`),
  * whose click is the person's own in the tab. */
 const POPOUT_LINK_BRIDGE_BODY = `(function(){
-  var T = 'kirocrew-dashboard:open';
+  var T = 'ajcrew-dashboard:open';
   var LIFE = ${ACTIVATION_LIFESPAN_MS};
   // The tab's own clicks and keys, never the frame's. This script runs as the
   // tab loads, before any input in it.

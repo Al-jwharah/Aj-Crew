@@ -7,7 +7,7 @@
  * `linuxFrameless` (native frame kept — SSD desktop, X11 session, or the
  * operator override) must never claim the frameless const, so no header
  * inset class and no reserved corner apply. Module-level on purpose: the
- * consts are computed once at module load from `window.kirocrew`, so the
+ * consts are computed once at module load from `window.ajcrew`, so the
  * derivation itself is what's under test, without duplicating the full App
  * mock harness.
  */
@@ -15,7 +15,7 @@ import { describe, it, expect, vi } from 'vitest'
 
 // Must run before src/lib/electron.ts is imported (module-level consts).
 vi.hoisted(() => {
-  ;(window as unknown as { kirocrew: object }).kirocrew = {
+  ;(window as unknown as { ajcrew: object }).ajcrew = {
     isElectron: true,
     platform: 'linux',
     linuxFrameless: false,

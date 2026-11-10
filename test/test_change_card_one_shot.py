@@ -13,8 +13,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew.dashboard import change_cards as cards
+from aj_crew import change_card_catalog as catalog
+from aj_crew.dashboard import change_cards as cards
 
 KIND = catalog.KIND_SCHEDULE_CREATE
 FUTURE = "2099-10-04T09:00"
@@ -91,7 +91,7 @@ def test_context_resolves_at_in_the_cards_zone():
 
 
 def test_context_defaults_to_the_configured_zone(monkeypatch):
-    from kiro_crew.cron_service import schedule
+    from aj_crew.cron_service import schedule
 
     monkeypatch.setattr(schedule, "get_local_tz", lambda: ("Asia/Tokyo", ZoneInfo("Asia/Tokyo")))
     ctx = cards.one_shot_context(FUTURE, "")
@@ -120,7 +120,7 @@ def test_context_refuses_a_wall_clock_the_zone_skips():
 
 
 def test_a_recurring_card_without_a_zone_names_the_configured_one(monkeypatch):
-    from kiro_crew.cron_service import schedule
+    from aj_crew.cron_service import schedule
 
     monkeypatch.setattr(schedule, "get_local_tz", lambda: (LA, ZoneInfo(LA)))
     p = catalog.validate_params(
@@ -201,7 +201,7 @@ def test_card_record_carries_the_once_marker():
 
 
 def test_the_existing_route_creates_a_single_fire_job():
-    from kiro_crew.dashboard.handlers import cron as cron_handlers
+    from aj_crew.dashboard.handlers import cron as cron_handlers
 
     calls: list[tuple[str, str, dict[str, Any]]] = []
 

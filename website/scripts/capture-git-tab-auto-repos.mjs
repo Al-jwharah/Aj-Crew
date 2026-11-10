@@ -56,7 +56,7 @@ const now = Date.now()
 const slots = [{
   key: SLOT, title: 'Fix payments retry + infra alarm', running: false,
   last_message: 'Edited the retry policy and the alarm threshold.', messages: 2,
-  agent: 'kirocrew', memory_mode: 'persistent', project: WORKSPACE,
+  agent: 'ajcrew', memory_mode: 'persistent', project: WORKSPACE,
   modified: Math.floor(now / 1000), source_links: [], source_links_total: 0,
 }]
 const detail = {

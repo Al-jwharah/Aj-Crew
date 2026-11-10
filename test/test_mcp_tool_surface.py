@@ -2,10 +2,10 @@
 
 Two layers, both here so the contract reads in one place:
 
-* :mod:`kiro_crew.mcp_gateway.tool_surface` — the pure projection and the change
+* :mod:`aj_crew.mcp_gateway.tool_surface` — the pure projection and the change
   description every adoption point compares through. What counts as a change,
   what deliberately does not, and which listings are unmeasurable.
-* :class:`~kiro_crew.mcp_gateway.backend.Backend` — recording the tool set a
+* :class:`~aj_crew.mcp_gateway.backend.Backend` — recording the tool set a
   session was told about, and asking a replacement what IT publishes.
 
 The gateway-side decision built on these (refuse the respawn, audit it) lives
@@ -24,14 +24,14 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.mcp_gateway import backend as backend_mod
-from kiro_crew.mcp_gateway.backend import (
+from aj_crew.mcp_gateway import backend as backend_mod
+from aj_crew.mcp_gateway.backend import (
     TOOL_SURFACE_STUB_PREFIX,
     Backend,
     _PendingRequest,
 )
-from kiro_crew.mcp_gateway.pool import PoolKey
-from kiro_crew.mcp_gateway.tool_surface import (
+from aj_crew.mcp_gateway.pool import PoolKey
+from aj_crew.mcp_gateway.tool_surface import (
     _MAX_NAME_LEN,
     _MAX_TOOLS,
     _is_control,
@@ -656,7 +656,7 @@ class TestTheNameBoundIsOneDefinition:
     bind to, and a name it refuses must never be carried into the deny tier."""
 
     def test_the_surface_and_the_identity_read_agree_at_the_bound(self) -> None:
-        from kiro_crew.mcp_gateway.tool_surface import (
+        from aj_crew.mcp_gateway.tool_surface import (
             _MAX_NAME_LEN,
             admits_name,
             mcp_identity_name,
@@ -677,7 +677,7 @@ class TestTheNameBoundIsOneDefinition:
     def test_the_surface_guard_reads_through_the_shared_predicate(self) -> None:
         """A listing whose one name is over the bound is unmeasurable, through the
         same predicate the identity read uses."""
-        from kiro_crew.mcp_gateway.tool_surface import _MAX_NAME_LEN, project_tool_surface
+        from aj_crew.mcp_gateway.tool_surface import _MAX_NAME_LEN, project_tool_surface
 
         listing = {"tools": [{"name": "n" * (_MAX_NAME_LEN + 1), "inputSchema": {}}]}
         assert project_tool_surface(listing) is None

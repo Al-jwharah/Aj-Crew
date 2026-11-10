@@ -4,8 +4,8 @@ import os
 
 import pytest
 
-from kiro_crew.remote_session import workspace_tools
-from kiro_crew.remote_session.workspace_tools import Server, ToolError, Workspace
+from aj_crew.remote_session import workspace_tools
+from aj_crew.remote_session.workspace_tools import Server, ToolError, Workspace
 
 #: The grep nesting bound, spelled here so the tests state the contract.
 GROUP_DEPTH_BOUND = 100
@@ -156,7 +156,7 @@ def test_glob_matches_path_segments(tmp_path, pattern, expected):
 
 
 def test_paging_counts_a_line_longer_than_one_bounded_read_once(tmp_path):
-    from kiro_crew.remote_session.workspace_tools import MAX_READ_BYTES
+    from aj_crew.remote_session.workspace_tools import MAX_READ_BYTES
 
     path = tmp_path / "wide.txt"
     path.write_bytes(b"x" * (MAX_READ_BYTES * 2 + 7) + b"\nsecond\nthird\n")

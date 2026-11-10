@@ -36,7 +36,7 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.dashboard as dashboard_pkg
+import aj_crew.dashboard as dashboard_pkg
 
 #: Spellings a dispatch uses to read the request's app claim. ``is_dashboard_caller``
 #: is the inverted form ``openai_compat`` computes once and passes as the origin;
@@ -251,8 +251,8 @@ def test_a_restored_queue_entry_carries_no_actor():
     Driven through the real restore, with the stamp present on the line, so this
     fails if the key is ever added back to what the reader carries.
     """
-    from kiro_crew.dashboard.chat_delivery import TURN_ACTOR_META_KEY
-    from kiro_crew.dashboard.slot_queue_repository import sanitize_restored_queue
+    from aj_crew.dashboard.chat_delivery import TURN_ACTOR_META_KEY
+    from aj_crew.dashboard.slot_queue_repository import sanitize_restored_queue
 
     on_disk = [
         {

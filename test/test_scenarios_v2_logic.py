@@ -12,8 +12,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.task_models import MAX_RETRIES
-from kiro_crew.taskrunner import (
+from aj_crew.task_models import MAX_RETRIES
+from aj_crew.taskrunner import (
     MAX_TOTAL_TASKS,
     Step,
     StepStatus,
@@ -21,7 +21,7 @@ from kiro_crew.taskrunner import (
     TaskRunner,
     WorkingMemory,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 
 def _make_mock_sessions() -> MagicMock:
@@ -48,7 +48,7 @@ def _make_mock_sessions() -> MagicMock:
 
 
 def _make_provider(text: str = "done"):
-    from kiro_crew.providers.base import LLMEvent
+    from aj_crew.providers.base import LLMEvent
 
     provider = MagicMock()
 
@@ -85,7 +85,7 @@ class TestScenarioStepOrdering:
             ]
         )
 
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         decompose_provider = MagicMock()
 
@@ -144,7 +144,7 @@ class TestScenarioStepOrdering:
             ]
         )
 
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         decompose_provider = MagicMock()
 
@@ -326,16 +326,16 @@ class TestScenarioReviewModes:
 
         runner = TaskRunner(sessions=sessions, auto_test=False, work_dir=tmp_path)
         run = TaskRun(spec_path=str(tmp_path / "t.md"), spec_content="s")
-        run.branch_name = "kirocrew/task/test"
+        run.branch_name = "ajcrew/task/test"
         step = Step(index=1, title="Fix bug", description="Fix the auth bug")
         run.tasks = [step]
 
         fake_diff = "--- a/auth.py\n+++ b/auth.py\n-old\n+new"
 
         with patch(
-            "kiro_crew.task_executor.stream_and_collect_json", return_value={"ok": True}
+            "aj_crew.task_executor.stream_and_collect_json", return_value={"ok": True}
         ) as mock_json, patch(
-            "kiro_crew.task_executor.git_coord.get_step_diff", return_value=fake_diff
+            "aj_crew.task_executor.git_coord.get_step_diff", return_value=fake_diff
         ):
             result = await runner.self_review(run, step)
 
@@ -361,7 +361,7 @@ class TestScenarioReviewModes:
         run.tasks = [step]
 
         with patch(
-            "kiro_crew.task_executor.stream_and_collect_json", return_value={"ok": True}
+            "aj_crew.task_executor.stream_and_collect_json", return_value={"ok": True}
         ) as mock_json:
             result = await runner.self_review(run, step)
 
@@ -384,7 +384,7 @@ class TestScenarioStepPromptWithGit:
         runner = TaskRunner(sessions=sessions, auto_test=False, work_dir=tmp_path)
 
         run = TaskRun(spec_path="/t.md", spec_content="s")
-        run.branch_name = "kirocrew/task/test"
+        run.branch_name = "ajcrew/task/test"
         run.tasks = [
             Step(index=1, title="Done", description="d", status=StepStatus.PASSED),
             Step(index=2, title="Current", description="do the thing"),
@@ -394,7 +394,7 @@ class TestScenarioStepPromptWithGit:
             "## Git Log\n```\nabc1234 step 1: Done\n```\n## Files\n```\nfoo.py | 5 +\n```"
         )
 
-        with patch("kiro_crew.git_coord.get_state_summary", return_value=fake_summary):
+        with patch("aj_crew.git_coord.get_state_summary", return_value=fake_summary):
             prompt = await runner._build_task_prompt(run, run.tasks[1], attempt=1)
 
         assert "Git Log" in prompt
@@ -429,7 +429,7 @@ class TestScenarioFailureInParallelGroup:
         """If step B fails in group [B, C], the group fails (both run via gather)."""
         sessions = _make_mock_sessions()
 
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         step_json = json.dumps(
             [
@@ -543,7 +543,7 @@ class TestScenarioParallelExecution:
             ]
         )
 
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         decompose_provider = MagicMock()
 

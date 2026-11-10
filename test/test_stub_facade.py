@@ -1,21 +1,21 @@
 """The MCP stub's facade: the process code it keeps, and the contract its owners meet.
 
-``kiro_crew.mcp_gateway.stub`` keeps the stub process -- its argv, its signal handlers,
+``aj_crew.mcp_gateway.stub`` keeps the stub process -- its argv, its signal handlers,
 the warm-pool caller repair and ``_amain``, which drives the ``stub_*`` owner modules
 from the first connect to the exit -- and serves every other name from the owner that
-defines it (``kiro_crew._facade_mirror``). This file pins:
+defines it (``aj_crew._facade_mirror``). This file pins:
 
 * ``_amain``'s control flow on each way out it has, with the owners it drives replaced
   through the facade, the same seam the stub's other tests patch;
 * ``main`` and the signal handlers;
 * the logger: the stub logs under the name its facade's ``__name__`` gives -- ``__main__``
-  when it runs as ``python -m kiro_crew.mcp_gateway.stub``, the dotted name when it is
+  when it runs as ``python -m aj_crew.mcp_gateway.stub``, the dotted name when it is
   imported -- and a second import of the facade under its dotted name inside such a
   process, which gatewayd's import performs on the fallback vetting path, finds every
   name the family shares bound to one object;
 * the read ceiling, which ``_adopt_read_ceiling`` rebinds at run time, is bound in
   ``stub_link`` alone, beside every reader of it;
-* every name an owner imports from the rest of ``kiro_crew`` and the facade serves is
+* every name an owner imports from the rest of ``aj_crew`` and the facade serves is
   named in the facade's ``TYPE_CHECKING`` block, where type checkers read it.
 """
 
@@ -34,9 +34,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import _facade_mirror
-from kiro_crew.mcp_gateway import stub, stub_link
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import _facade_mirror
+from aj_crew.mcp_gateway import stub, stub_link
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 _OWNERS = tuple(importlib.import_module(name) for name in stub._STUB_OWNERS)
 _SRC = Path(__file__).resolve().parents[1] / "src"
@@ -182,7 +182,7 @@ class _Run:
 
 @pytest.fixture
 def run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> _Run:
-    monkeypatch.delenv("KIROCREW_MCP_LOG", raising=False)
+    monkeypatch.delenv("AJCREW_MCP_LOG", raising=False)
     monkeypatch.delenv("MC_MCP_LOG", raising=False)
     return _Run(monkeypatch, tmp_path)
 
@@ -219,7 +219,7 @@ async def test_a_private_server_behind_a_daemon_without_poolable_ack_degrades(
 
 @pytest.mark.asyncio
 async def test_a_nonce_scoped_server_behind_a_nonce_blind_daemon_degrades(run: _Run) -> None:
-    run.argv[1] = "kirocrew-computer"
+    run.argv[1] = "ajcrew-computer"
     run.argv.append("--poolable")
     run.registered = {"capabilities": ["poolable_ack"]}
     assert await run() == "exec"
@@ -302,7 +302,7 @@ async def test_an_unrecognised_log_level_falls_back_to_warning(
     monkeypatch.setattr(
         stub.logging, "basicConfig", lambda **kwargs: levels.append(kwargs["level"])
     )
-    monkeypatch.setenv("KIROCREW_MCP_LOG", "verbose")
+    monkeypatch.setenv("AJCREW_MCP_LOG", "verbose")
     run.handshake_error = stub.FallbackRequestedError("x")
     assert await run() == "exec"
     assert levels == ["WARNING"]
@@ -455,7 +455,7 @@ def _probe(tmp_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
     """Run a fresh interpreter against this checkout's ``src``."""
     env = dict(os.environ)
     env["PYTHONPATH"] = str(_SRC)
-    env["KIROCREW_HOME"] = str(tmp_path / "crew")
+    env["AJCREW_HOME"] = str(tmp_path / "crew")
     return subprocess.run(
         [sys.executable, "-B", *args],
         cwd=tmp_path,
@@ -468,9 +468,9 @@ def _probe(tmp_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
 
 def test_the_stub_starts_under_python_dash_m(tmp_path: Path) -> None:
     """The launch line every overlay carries: the facade installs its mirror as ``__main__``."""
-    proc = _probe(tmp_path, "-m", "kiro_crew.mcp_gateway.stub", "--help")
+    proc = _probe(tmp_path, "-m", "aj_crew.mcp_gateway.stub", "--help")
     assert proc.returncode == 0, proc.stderr
-    assert "kirocrew-mcp-stub" in proc.stdout
+    assert "ajcrew-mcp-stub" in proc.stdout
 
 
 _MAIN_THEN_IMPORT = """
@@ -478,11 +478,11 @@ import contextlib, io, json, runpy, sys
 sys.argv = ["stub", "--help"]
 with contextlib.redirect_stdout(io.StringIO()):
     try:
-        runpy.run_module("kiro_crew.mcp_gateway.stub", run_name="__main__", alter_sys=True)
+        runpy.run_module("aj_crew.mcp_gateway.stub", run_name="__main__", alter_sys=True)
     except SystemExit as exc:
         assert exc.code == 0, exc.code
-import kiro_crew.mcp_gateway.stub as canonical
-from kiro_crew.mcp_gateway import stub_bridge, stub_link
+import aj_crew.mcp_gateway.stub as canonical
+from aj_crew.mcp_gateway import stub_bridge, stub_link
 print(json.dumps({
     "name": stub_bridge.logger.name,
     "same": canonical.logger is stub_bridge.logger is stub_link.logger,
@@ -504,7 +504,7 @@ def test_a_stub_run_as_main_logs_as_main_and_survives_a_second_import(tmp_path: 
 
 
 def test_an_imported_stub_logs_under_its_dotted_name() -> None:
-    assert stub.logger.name == "kiro_crew.mcp_gateway.stub"
+    assert stub.logger.name == "aj_crew.mcp_gateway.stub"
     assert all(owner.logger is stub.logger for owner in _OWNERS)
 
 
@@ -535,12 +535,12 @@ def test_the_read_ceiling_is_bound_beside_its_readers_alone(name: str) -> None:
 
 
 def _home_imports(tree: ast.Module, family: set[str]) -> dict[str, str]:
-    """Name -> module, for each name *tree* imports at its top from kiro_crew outside *family*."""
+    """Name -> module, for each name *tree* imports at its top from aj_crew outside *family*."""
     found: dict[str, str] = {}
     for node in tree.body:
         if isinstance(node, ast.ImportFrom) and node.level == 0:
             module = node.module or ""
-            if module.split(".")[0] == "kiro_crew" and module not in family:
+            if module.split(".")[0] == "aj_crew" and module not in family:
                 found.update({alias.asname or alias.name: module for alias in node.names})
     return found
 

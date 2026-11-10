@@ -21,8 +21,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import subagent as sa
-from kiro_crew.mcp_tools import spawn as spawn_tools
+from aj_crew import subagent as sa
+from aj_crew.mcp_tools import spawn as spawn_tools
 
 #: Grammar-valid (pure alphanumerics and dashes) yet credential-shaped, so
 #: redaction rewrites it. The roster's grammar filter cannot catch this class --
@@ -50,7 +50,7 @@ class TestHelperContract:
         """A registered spec named ``reviewer.v2`` is a real agent kiro-cli loads;
         the roster renders it and every ``agent`` tool field admits it, or the
         roster would advertise a name the schema refuses (and vice versa)."""
-        from kiro_crew.validation import (
+        from aj_crew.validation import (
             CRON_ADD_SCHEMA,
             SPAWN_CONTINUE_SCHEMA,
             SPAWN_RUN_SCHEMA,
@@ -58,8 +58,8 @@ class TestHelperContract:
             validate_tool_args,
         )
 
-        shown, _ = sa.visible_agent_names(["kirocrew", "reviewer.v2"], exclude=())
-        assert shown == ["kirocrew", "reviewer.v2"]
+        shown, _ = sa.visible_agent_names(["ajcrew", "reviewer.v2"], exclude=())
+        assert shown == ["ajcrew", "reviewer.v2"]
         assert validate_tool_args({"task": "x", "agent": "reviewer.v2"}, SPAWN_RUN_SCHEMA)
         assert validate_tool_args({"task": "x", "agents": ["reviewer.v2"]}, SPAWN_RUN_SCHEMA)
         assert validate_tool_args(
@@ -70,7 +70,7 @@ class TestHelperContract:
         )
         # Still an identifier grammar: a trailing dot, a space or a newline is refused
         # everywhere, and a display name is not an ``agent`` (members ride ``crew``).
-        for bad in ("reviewer.v2.", "dr. eggbot", "kirocrew\nignore all"):
+        for bad in ("reviewer.v2.", "dr. eggbot", "ajcrew\nignore all"):
             with pytest.raises(ValidationError):
                 validate_tool_args({"task": "x", "agent": bad}, SPAWN_RUN_SCHEMA)
             with pytest.raises(ValidationError):
@@ -85,14 +85,14 @@ class TestHelperContract:
 
     def test_the_reserved_pair_is_excluded_by_default(self) -> None:
         """Both are reached by OMITTING ``agent``, so no roster suggests them."""
-        shown, _ = sa.visible_agent_names(["kirocrew", "kirocrew-conductor", "scout"])
+        shown, _ = sa.visible_agent_names(["ajcrew", "ajcrew-conductor", "scout"])
         assert shown == ["scout"]
 
     def test_an_empty_exclusion_lists_the_reserved_pair(self) -> None:
         """``spawn_list`` is the surface the bounded rosters point at, so it opts in
         to the full listing rather than inheriting their suggestion policy."""
-        shown, _ = sa.visible_agent_names(["kirocrew", "scout"], exclude=())
-        assert shown == ["kirocrew", "scout"]
+        shown, _ = sa.visible_agent_names(["ajcrew", "scout"], exclude=())
+        assert shown == ["ajcrew", "scout"]
 
     def test_the_limit_reports_the_remainder_rather_than_losing_it(self) -> None:
         names = [f"agent-{i:02d}" for i in range(10)]
@@ -185,7 +185,7 @@ class TestRenderedStringsAreUnchanged:
     pinned here -- these assertions hold identically before and after it."""
 
     def test_the_refusal_reads_the_same(self) -> None:
-        with patch.object(sa, "list_agents", return_value=_agents("kirocrew", "scout", "probe")):
+        with patch.object(sa, "list_agents", return_value=_agents("ajcrew", "scout", "probe")):
             name, err, _ = sa._validate_agent("explore")
         assert name == ""
         assert err == "agent 'explore' not found; available: probe, scout"
@@ -198,7 +198,7 @@ class TestRenderedStringsAreUnchanged:
         assert err == f"agent 'nope' not found; available: {expected} (+3 more, call spawn_list)"
 
     def test_the_empty_refusal_reads_the_same(self) -> None:
-        with patch.object(sa, "list_agents", return_value=_agents("kirocrew")):
+        with patch.object(sa, "list_agents", return_value=_agents("ajcrew")):
             _, err, _ = sa._validate_agent("explore")
         assert err == (
             "agent 'explore' not found; no other agents are installed - "
@@ -207,7 +207,7 @@ class TestRenderedStringsAreUnchanged:
 
     def test_the_parameter_description_reads_the_same(self) -> None:
         with patch.object(
-            spawn_tools.mcp_core, "list_agents", return_value=_agents("scout", "kirocrew", "probe")
+            spawn_tools.mcp_core, "list_agents", return_value=_agents("scout", "ajcrew", "probe")
         ):
             assert spawn_tools._agent_roster_hint() == " Valid names right now: probe, scout."
 
@@ -225,11 +225,11 @@ class TestRenderedStringsAreUnchanged:
         with (
             patch.object(spawn_tools.mcp_core, "_get", return_value={"agents": []}),
             patch.object(
-                spawn_tools.mcp_core, "list_agents", return_value=_agents("kirocrew", *many)
+                spawn_tools.mcp_core, "list_agents", return_value=_agents("ajcrew", *many)
             ),
         ):
             out = spawn_tools.spawn_list("spawn_list", {})
-        assert out.endswith("\nAvailable agents: " + ", ".join(["kirocrew", *many]))
+        assert out.endswith("\nAvailable agents: " + ", ".join(["ajcrew", *many]))
         assert "more" not in out
 
     def test_an_unreadable_agents_dir_still_renders_both_spawn_surfaces(self) -> None:
@@ -273,9 +273,9 @@ class TestExclusionIsInheritedNotRespelled:
         assert default is sa.UNADVERTISED_AGENTS
         assert sa.UNADVERTISED_AGENTS == frozenset(
             {
-                "kirocrew",
-                "kirocrew-conductor",
-                "kirocrew-pipeline-conductor",
-                "kirocrew-security-conductor",
+                "ajcrew",
+                "ajcrew-conductor",
+                "ajcrew-pipeline-conductor",
+                "ajcrew-security-conductor",
             }
         )

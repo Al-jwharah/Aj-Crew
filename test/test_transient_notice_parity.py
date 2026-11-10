@@ -3,8 +3,8 @@
 Every status row the chat gateway appends (the transient-5xx ladder, connection
 lost, session busy, stalled turn or tool, session stuck, the empty-response and
 model-fallback notices) carries a ``meta["notice"]`` wire token. The tokens are
-``TRANSIENT_NOTICE_*`` in ``kiro_crew.dashboard.chat_utils`` and
-``GATEWAY_NOTICE_*`` in ``kiro_crew.dashboard.gateway_notice``.
+``TRANSIENT_NOTICE_*`` in ``aj_crew.dashboard.chat_utils`` and
+``GATEWAY_NOTICE_*`` in ``aj_crew.dashboard.gateway_notice``.
 ``NOTICE_FAMILIES`` in ``website/src/pages/chat/gatewayNotice.ts`` is the
 frontend's copy of that list, keyed to pick which localized card a row renders
 as, and ``COPY_KEY`` beside it names each token's catalog key. Nothing links the
@@ -31,20 +31,20 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.acp import kas_route
-from kiro_crew.acp.kas_route import (
+from aj_crew.acp import kas_route
+from aj_crew.acp.kas_route import (
     REASON_CONFIGURED,
     REASON_KIRO_CLI_LAUNCHER,
     REASON_KIRO_CLI_SIGNED_OUT,
     REASON_NO_KIRO_CLI,
     KasRoute,
 )
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS
-from kiro_crew.messaging import empty_turn_copy
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS
+from aj_crew.messaging import empty_turn_copy
 
 _REPO = Path(__file__).resolve().parents[1]
-_CHAT_UTILS = _REPO / "src" / "kiro_crew" / "dashboard" / "chat_utils.py"
-_GATEWAY = _REPO / "src" / "kiro_crew" / "dashboard" / "gateway_notice.py"
+_CHAT_UTILS = _REPO / "src" / "aj_crew" / "dashboard" / "chat_utils.py"
+_GATEWAY = _REPO / "src" / "aj_crew" / "dashboard" / "gateway_notice.py"
 _FRONTEND = _REPO / "website" / "src" / "pages" / "chat" / "gatewayNotice.ts"
 _EN_CATALOG = _REPO / "website" / "src" / "i18n" / "locales" / "en.json"
 
@@ -235,12 +235,12 @@ def _tokenized_literal_sites() -> list[tuple[str, int, str, str]]:
     import ast
     import importlib
 
-    from kiro_crew.dashboard import gateway_notice as gn
+    from aj_crew.dashboard import gateway_notice as gn
 
     token_re = re.compile(r"\bgn\.(GATEWAY_NOTICE_[A-Z_]+)")
     src_root = _REPO / "src"
     sites = []
-    for path in sorted((src_root / "kiro_crew").rglob("*.py")):
+    for path in sorted((src_root / "aj_crew").rglob("*.py")):
         source = path.read_text(encoding="utf-8")
         if "GATEWAY_NOTICE_" not in source:
             continue
@@ -295,11 +295,11 @@ def test_every_tokenized_literal_site_is_recognised_by_its_legacy_pattern() -> N
 
 
 def test_run_time_chosen_tokens_match_their_wording() -> None:
-    from kiro_crew.dashboard.chat_runner import (
+    from aj_crew.dashboard.chat_runner import (
         SESSION_NOT_FOUND_GIVE_UP_TEXT,
         SESSION_NOT_FOUND_RETRY_TEXT,
     )
-    from kiro_crew.llm_helpers import CREDENTIAL_RELOAD_RETRY_NOTICE
+    from aj_crew.llm_helpers import CREDENTIAL_RELOAD_RETRY_NOTICE
 
     # The acp_recovery module reads the give-up text through chat_runner at run
     # time, so the source scan above cannot resolve it.
@@ -319,7 +319,7 @@ def test_run_time_chosen_tokens_match_their_wording() -> None:
 
 
 def test_every_cancelled_replay_wording_has_its_own_token() -> None:
-    from kiro_crew.dashboard.recovery_replays import (
+    from aj_crew.dashboard.recovery_replays import (
         ReplayFamily,
         ReplayRevocation,
         cancel_notice,
@@ -384,8 +384,8 @@ def test_composed_owner_modules_read_the_notice_module_locally() -> None:
     # chat_turn and chat_api functions run on their facade's globals, and the
     # facade binds no module objects from its owners, so a global ``gn`` lookup
     # would be a NameError at the append. Each reader imports it as a local.
-    import kiro_crew.dashboard.chat_api as chat_api
-    import kiro_crew.dashboard.chat_turn as chat_turn
+    import aj_crew.dashboard.chat_api as chat_api
+    import aj_crew.dashboard.chat_turn as chat_turn
 
     readers = 0
     for package in (chat_turn, chat_api):
@@ -400,7 +400,7 @@ def test_composed_owner_modules_read_the_notice_module_locally() -> None:
 
 
 def test_gateway_notice_meta_shape() -> None:
-    from kiro_crew.dashboard import gateway_notice as gn
+    from aj_crew.dashboard import gateway_notice as gn
 
     # No args: only the token field, so a row's meta stays as small as before.
     assert gn.gateway_notice_meta(gn.GATEWAY_NOTICE_SESSION_STUCK) == {"notice": "session_stuck"}
@@ -422,9 +422,9 @@ def test_gateway_notice_meta_shape() -> None:
 def test_kas_signed_out_row_carries_the_token_and_its_route(
     monkeypatch: pytest.MonkeyPatch, route: KasRoute | None, named: str | None
 ) -> None:
-    from kiro_crew.acp.transport_errors import AcpAuthRequired
-    from kiro_crew.agent_sdk.host_auth import signed_out_message
-    from kiro_crew.dashboard.chat_turn.recovery import _terminal_error_meta
+    from aj_crew.acp.transport_errors import AcpAuthRequired
+    from aj_crew.agent_sdk.host_auth import signed_out_message
+    from aj_crew.dashboard.chat_turn.recovery import _terminal_error_meta
 
     monkeypatch.setattr(kas_route, "_LAST_SPAWN_ROUTE", route)
     text = signed_out_message(ACP_BACKEND_KAS)
@@ -438,9 +438,9 @@ def test_kas_signed_out_row_carries_the_token_and_its_route(
 
 
 def test_other_signed_out_wording_keeps_its_english(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.acp.transport_errors import AcpAuthRequired
-    from kiro_crew.agent_sdk.host_auth import signed_out_message
-    from kiro_crew.dashboard.chat_turn.recovery import _terminal_error_meta
+    from aj_crew.acp.transport_errors import AcpAuthRequired
+    from aj_crew.agent_sdk.host_auth import signed_out_message
+    from aj_crew.dashboard.chat_turn.recovery import _terminal_error_meta
 
     # The launcher relay names `kiro-cli login`, which the translated copy does not.
     launcher = KasRoute(bundle=False, reason=REASON_KIRO_CLI_LAUNCHER)

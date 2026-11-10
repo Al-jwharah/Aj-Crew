@@ -12,10 +12,10 @@ from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.dashboard.handlers import files as files_mod
-from kiro_crew.dashboard.handlers.files import api_file_diff
-from kiro_crew.platform import redact_via_context as redact
-from kiro_crew.security.redaction import redact_credentials
+from aj_crew.dashboard.handlers import files as files_mod
+from aj_crew.dashboard.handlers.files import api_file_diff
+from aj_crew.platform import redact_via_context as redact
+from aj_crew.security.redaction import redact_credentials
 
 requires_git = pytest.mark.skipif(shutil.which("git") is None, reason="git not available")
 
@@ -51,7 +51,7 @@ def _mock_sel():
 async def test_empty_path_returns_empty():
     """No path param returns empty diff and original."""
     req = _req("")
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
         resp = await api_file_diff(req)
     assert resp.status == 200
     body = json.loads(resp.body)
@@ -62,7 +62,7 @@ async def test_empty_path_returns_empty():
 async def test_nonexistent_file_returns_empty():
     """Non-existent file returns empty diff and original."""
     req = _req("/tmp/nonexistent_file_abc123.txt")
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
         resp = await api_file_diff(req)
     assert resp.status == 200
     body = json.loads(resp.body)
@@ -73,9 +73,9 @@ async def test_nonexistent_file_returns_empty():
 async def test_sensitive_path_returns_403():
     """Sensitive paths are rejected with 403."""
     req = _req("/home/user/.ssh/id_rsa")
-    with patch("kiro_crew.dashboard.handlers.files.is_sensitive_path", return_value=True), \
-         patch("kiro_crew.dashboard.handlers.files.os.path.isfile", return_value=True), \
-         patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
+    with patch("aj_crew.dashboard.handlers.files.is_sensitive_path", return_value=True), \
+         patch("aj_crew.dashboard.handlers.files.os.path.isfile", return_value=True), \
+         patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
         resp = await api_file_diff(req)
     assert resp.status == 403
     body = json.loads(resp.body)
@@ -93,7 +93,7 @@ async def test_file_not_in_git_repo(tmp_path, monkeypatch):
     # inherits the environment, so git's own ceiling stops the walk above
     # `tmp_path` (the ceiling entry itself is never descended into).
     monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
         req = _req(str(f))
         resp = await api_file_diff(req)
     assert resp.status == 200
@@ -116,7 +116,7 @@ async def test_clean_file_in_git_repo(tmp_path):
     subprocess.run(["git", "add", "clean.txt"], cwd=tmp_path, capture_output=True, check=True)
     subprocess.run(["git", "commit", "-m", "init"], cwd=tmp_path, capture_output=True, check=True)
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
         req = _req(str(f))
         resp = await api_file_diff(req)
     assert resp.status == 200
@@ -140,7 +140,7 @@ async def test_modified_file_in_git_repo(tmp_path):
     # Modify the file
     f.write_text("modified content")
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
         req = _req(str(f))
         resp = await api_file_diff(req)
     assert resp.status == 200
@@ -165,7 +165,7 @@ async def test_untracked_file_in_git_repo(tmp_path):
     f = tmp_path / "untracked.txt"
     f.write_text("new file content")
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
         req = _req(str(f))
         resp = await api_file_diff(req)
     assert resp.status == 200
@@ -201,8 +201,8 @@ async def test_failed_git_diff_reports_error_not_clean(tmp_path):
             return subprocess.CompletedProcess(cmd, returncode=128, stdout="", stderr="fatal: boom")
         return orig_run(cmd, **kwargs)
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()), \
-         patch("kiro_crew.dashboard.handlers.files.subprocess.run", side_effect=failing_diff_run):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()), \
+         patch("aj_crew.dashboard.handlers.files.subprocess.run", side_effect=failing_diff_run):
         req = _req(str(f))
         resp = await api_file_diff(req)
     assert resp.status == 200
@@ -226,7 +226,7 @@ async def test_empty_repo_file_is_untracked_not_error(tmp_path):
     f = tmp_path / "first.txt"
     f.write_text("the very first file, no commit yet")
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
         req = _req(str(f))
         resp = await api_file_diff(req)
     assert resp.status == 200
@@ -258,8 +258,8 @@ async def test_timeout_after_preflight_reports_error_not_not_git(tmp_path):
             raise subprocess.TimeoutExpired(cmd, 10)
         return orig_run(cmd, **kwargs)
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()), \
-         patch("kiro_crew.dashboard.handlers.files.subprocess.run", side_effect=slow_diff_run):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()), \
+         patch("aj_crew.dashboard.handlers.files.subprocess.run", side_effect=slow_diff_run):
         req = _req(str(f))
         resp = await api_file_diff(req)
     assert resp.status == 200
@@ -291,8 +291,8 @@ async def test_git_output_is_decoded_as_utf8(tmp_path):
             calls.append(kwargs)
         return original_run(cmd, **kwargs)
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()), \
-         patch("kiro_crew.dashboard.handlers.files.subprocess.run", side_effect=spy_run):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()), \
+         patch("aj_crew.dashboard.handlers.files.subprocess.run", side_effect=spy_run):
         response = await api_file_diff(_req(str(target)))
 
     body = json.loads(response.body)
@@ -324,8 +324,8 @@ async def test_textconv_hardening(tmp_path):
         calls.append(cmd)
         return orig_run(cmd, **kwargs)
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()), \
-         patch("kiro_crew.dashboard.handlers.files.subprocess.run", side_effect=spy_run):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()), \
+         patch("aj_crew.dashboard.handlers.files.subprocess.run", side_effect=spy_run):
         req = _req(str(f))
         resp = await api_file_diff(req)
 
@@ -360,8 +360,8 @@ async def test_git_env_nosystem(tmp_path):
             envs.append(kwargs["env"])
         return orig_run(cmd, **kwargs)
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()), \
-         patch("kiro_crew.dashboard.handlers.files.subprocess.run", side_effect=spy_run):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()), \
+         patch("aj_crew.dashboard.handlers.files.subprocess.run", side_effect=spy_run):
         req = _req(str(f))
         await api_file_diff(req)
 
@@ -378,9 +378,9 @@ async def test_timeout_returns_not_git(tmp_path):
     def timeout_run(cmd, **kwargs):
         raise subprocess.TimeoutExpired(cmd, 5)
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()), \
-         patch("kiro_crew.dashboard.handlers.files.subprocess.run", side_effect=timeout_run), \
-         patch("kiro_crew.dashboard.handlers.files.is_sensitive_path", return_value=False):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()), \
+         patch("aj_crew.dashboard.handlers.files.subprocess.run", side_effect=timeout_run), \
+         patch("aj_crew.dashboard.handlers.files.is_sensitive_path", return_value=False):
         req = _req(str(f))
         resp = await api_file_diff(req)
     assert resp.status == 200
@@ -395,9 +395,9 @@ async def test_sel_audit_logging_on_success(tmp_path):
     f.write_text("content")
 
     mock_sel = _mock_sel()
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=mock_sel), \
-         patch("kiro_crew.dashboard.handlers.files.is_sensitive_path", return_value=False), \
-         patch("kiro_crew.dashboard.handlers.files.subprocess.run", side_effect=subprocess.CalledProcessError(1, "git")):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=mock_sel), \
+         patch("aj_crew.dashboard.handlers.files.is_sensitive_path", return_value=False), \
+         patch("aj_crew.dashboard.handlers.files.subprocess.run", side_effect=subprocess.CalledProcessError(1, "git")):
         req = _req(str(f))
         await api_file_diff(req)
 
@@ -437,7 +437,7 @@ async def test_head_content_is_redacted_like_the_panel_buffer(tmp_path):
     # Edit an unrelated line, which is what opens the panel's diff view.
     f.write_text(BEARER_LINE + "\nchanged\n")
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
         resp = await api_file_diff(_req(str(f)))
     body = json.loads(resp.body)
 
@@ -459,7 +459,7 @@ async def test_untracked_diff_is_redacted(tmp_path):
     f = tmp_path / "new.json"
     f.write_text(BEARER_LINE + "\n")
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
         resp = await api_file_diff(_req(str(f)))
     body = json.loads(resp.body)
 
@@ -484,7 +484,7 @@ async def test_exfiltration_url_is_redacted_in_both_fields(tmp_path):
     subprocess.run(["git", "commit", "-m", "init"], cwd=tmp_path, capture_output=True, check=True)
     f.write_text(EXFIL_URL + "\nchanged\n")
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
         resp = await api_file_diff(_req(str(f)))
     body = json.loads(resp.body)
 
@@ -516,7 +516,7 @@ async def test_a_credential_straddling_the_read_cap_is_still_masked(tmp_path):
     subprocess.run(["git", "commit", "-m", "init"], cwd=tmp_path, capture_output=True, check=True)
     f.write_text(padding + secret + "\nchanged\n")
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
         resp = await api_file_diff(_req(str(f)))
     body = json.loads(resp.body)
 
@@ -589,7 +589,7 @@ async def test_an_edit_inside_a_key_block_serves_no_key_text(tmp_path, kind, edi
         tmp_path, "key.txt", filler + _pem(kind, body) + filler, filler + _pem(kind, new_body) + filler
     )
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
         body_json = json.loads((await api_file_diff(_req(str(f)))).body)
 
     assert body_json["status"] == "modified"
@@ -614,7 +614,7 @@ async def test_a_long_line_above_a_hunk_serves_no_token_text(tmp_path, shape):
     old = "\n".join(rows) + "\n"
     f = _commit_then_write(tmp_path, "cfg.txt", old, old.replace("  row 20\n", "  row 20 edited\n"))
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
         body = json.loads((await api_file_diff(_req(str(f)))).body)
 
     assert body["status"] == "modified"
@@ -636,7 +636,7 @@ async def test_an_untracked_key_is_masked_whole(tmp_path):
     f = tmp_path / "new.pem"
     f.write_text(_pem("RSA", body))
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
         resp = json.loads((await api_file_diff(_req(str(f)))).body)
 
     assert resp["status"] == "untracked"
@@ -657,8 +657,8 @@ async def test_a_failed_masked_diff_serves_no_patch(tmp_path):
             return subprocess.CompletedProcess(cmd, returncode=2, stdout="", stderr="boom")
         return orig_run(cmd, **kwargs)
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()), \
-         patch("kiro_crew.dashboard.handlers.files.subprocess.run", side_effect=failing_no_index):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()), \
+         patch("aj_crew.dashboard.handlers.files.subprocess.run", side_effect=failing_no_index):
         body = json.loads((await api_file_diff(_req(str(f)))).body)
 
     assert body["status"] == "error"
@@ -676,8 +676,8 @@ async def test_a_refused_checked_open_serves_no_patch(tmp_path):
     f = _commit_then_write(tmp_path, "a.txt", "one\n", "two\n")
     denied = files_mod._OpenDenied("symlink_refused", str(f))
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()), \
-         patch("kiro_crew.dashboard.handlers.files._open_checked_file", return_value=denied) as opened:
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()), \
+         patch("aj_crew.dashboard.handlers.files._open_checked_file", return_value=denied) as opened:
         body = json.loads((await api_file_diff(_req(str(f)))).body)
 
     opened.assert_called_once()
@@ -696,7 +696,7 @@ async def test_a_crlf_file_diffs_only_the_edited_line(tmp_path):
     subprocess.run(["git", "commit", "-m", "init"], cwd=tmp_path, capture_output=True, check=True)
     f.write_bytes(b"a\r\nB\r\nc\r\n")
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
         body = json.loads((await api_file_diff(_req(str(f)))).body)
 
     changed = [ln for ln in body["diff"].splitlines() if ln[:1] in "+-" and not ln.startswith(("+++", "---"))]
@@ -709,7 +709,7 @@ async def test_a_form_feed_line_stays_one_patch_line(tmp_path):
     """Only "\\n" ends a patch line; a form feed inside one does not split it."""
     f = _commit_then_write(tmp_path, "ff.txt", "a\n\x0cb\nc\n", "a\n\x0cb\nC\n")
 
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=_mock_sel()):
         body = json.loads((await api_file_diff(_req(str(f)))).body)
 
     lines = body["diff"].split("\n")

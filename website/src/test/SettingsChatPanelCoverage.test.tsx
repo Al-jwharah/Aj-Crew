@@ -54,7 +54,7 @@ const BASE_MC = {
 const {
   dashboardConfigMock,
   updateDashboardConfigMock,
-  kirocrewConfigMock,
+  ajcrewConfigMock,
   patchConfigMock,
   modelsMock,
   tipsStatusMock,
@@ -62,7 +62,7 @@ const {
 } = vi.hoisted(() => ({
   dashboardConfigMock: vi.fn(),
   updateDashboardConfigMock: vi.fn(() => Promise.resolve({})),
-  kirocrewConfigMock: vi.fn(),
+  ajcrewConfigMock: vi.fn(),
   patchConfigMock: vi.fn(() => Promise.resolve({})),
   modelsMock: vi.fn(() =>
     Promise.resolve([
@@ -79,8 +79,8 @@ vi.mock('../api/client', () => ({
   api: {
     dashboardConfig: dashboardConfigMock,
     updateDashboardConfig: updateDashboardConfigMock,
-    kirocrewConfig: kirocrewConfigMock,
-    kirocrewAgents: () => Promise.resolve({ agents: [], default_agent: 'default' }),
+    ajcrewConfig: ajcrewConfigMock,
+    ajcrewAgents: () => Promise.resolve({ agents: [], default_agent: 'default' }),
     agentResolvedModel: () => Promise.resolve({ model: '', pinned: false }),
     patchConfig: patchConfigMock,
     models: modelsMock,
@@ -143,14 +143,14 @@ function storedChat(): Record<string, unknown> {
   return JSON.parse(localStorage.getItem(LS_KEY) || '{}')
 }
 
-/** Seed the Kiro Crew config query with a deep-merged override of BASE_MC. */
+/** Seed the Aj Crew config query with a deep-merged override of BASE_MC. */
 function seedMc(over: {
   session?: Record<string, unknown>
   agent?: Record<string, unknown>
   dashboard?: Record<string, unknown>
   knowledge?: Record<string, unknown>
 } = {}) {
-  kirocrewConfigMock.mockImplementation(() =>
+  ajcrewConfigMock.mockImplementation(() =>
     Promise.resolve({
       session: { ...BASE_MC.session, ...over.session },
       agent: { ...BASE_MC.agent, ...over.agent },
@@ -196,7 +196,7 @@ beforeEach(() => {
   localStorage.clear()
   dashboardConfigMock.mockReset()
   updateDashboardConfigMock.mockReset()
-  kirocrewConfigMock.mockReset()
+  ajcrewConfigMock.mockReset()
   patchConfigMock.mockReset()
   tipsStatusMock.mockReset()
   tipsFeedbackMock.mockReset()
@@ -238,13 +238,13 @@ describe('ChatPanel — load failures', () => {
   })
 
   it('surfaces a config load failure and refetches on Retry', async () => {
-    rejectOnce(kirocrewConfigMock)
+    rejectOnce(ajcrewConfigMock)
     wrap()
     expect(await screen.findByText('Failed to load config.')).toBeInTheDocument()
-    expect(kirocrewConfigMock).toHaveBeenCalledTimes(1)
+    expect(ajcrewConfigMock).toHaveBeenCalledTimes(1)
 
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalledTimes(2))
     await waitFor(() =>
       expect(screen.queryByText('Failed to load config.')).not.toBeInTheDocument()
     )
@@ -252,7 +252,7 @@ describe('ChatPanel — load failures', () => {
 
   it("names each failed read's own error under its load-failure notice", async () => {
     dashboardConfigMock.mockImplementationOnce(() => Promise.reject(new Error('dashboard.json is not valid JSON')))
-    kirocrewConfigMock.mockImplementationOnce(() => Promise.reject(new Error('config.yaml line 3: bad indentation')))
+    ajcrewConfigMock.mockImplementationOnce(() => Promise.reject(new Error('config.yaml line 3: bad indentation')))
     wrap()
     expect(await screen.findByText('dashboard.json is not valid JSON')).toBeInTheDocument()
     expect(await screen.findByText('config.yaml line 3: bad indentation')).toBeInTheDocument()
@@ -260,14 +260,14 @@ describe('ChatPanel — load failures', () => {
   })
 
   it('keeps the lead alone when the failed read carries no error text', async () => {
-    kirocrewConfigMock.mockImplementationOnce(() => Promise.reject(new Error('')))
+    ajcrewConfigMock.mockImplementationOnce(() => Promise.reject(new Error('')))
     wrap()
     expect(await screen.findByText('Failed to load config.')).toBeInTheDocument()
   })
 
   it('shows one Retry per failed query when both fail', async () => {
     rejectOnce(dashboardConfigMock)
-    rejectOnce(kirocrewConfigMock)
+    rejectOnce(ajcrewConfigMock)
     wrap()
     await screen.findByText('Failed to load dashboard config.')
     await screen.findByText('Failed to load config.')
@@ -568,7 +568,7 @@ describe('ChatPanel — Messages', () => {
     await waitFor(() =>
       expect(updateDashboardConfigMock).toHaveBeenCalledWith({ side_panel_pin_summary: true })
     )
-    act(() => { qc.setQueryData(['kirocrewConfig'], { ...BASE_MC, session_summary: { enabled: true } }) })
+    act(() => { qc.setQueryData(['ajcrewConfig'], { ...BASE_MC, session_summary: { enabled: true } }) })
     await waitFor(() => expect(within(row()).queryByText(needs)).toBeNull())
   })
 
@@ -867,7 +867,7 @@ describe('ChatPanel — Context', () => {
   it('keeps the field and its notice when a typed value clamps onto a preset', async () => {
     // Stored off the presets, so Custom… shows only because of the stored value.
     let stored = 63.5
-    kirocrewConfigMock.mockImplementation(() =>
+    ajcrewConfigMock.mockImplementation(() =>
       Promise.resolve({ ...BASE_MC, session: { autocompact_pct: stored } })
     )
     patchConfigMock.mockImplementation(((_p: string, v: number) => { stored = v; return Promise.resolve({}) }) as never)
@@ -877,7 +877,7 @@ describe('ChatPanel — Context', () => {
     fireEvent.change(input, { target: { value: '95' } })
     fireEvent.keyDown(input, { key: 'Enter' })
     await waitFor(() => expect(patchConfigMock).toHaveBeenCalledWith('session.autocompact_pct', 90))
-    await waitFor(() => expect(kirocrewConfigMock.mock.calls.length).toBeGreaterThan(1))
+    await waitFor(() => expect(ajcrewConfigMock.mock.calls.length).toBeGreaterThan(1))
     expect(await screen.findByText('Saved 90%. 95% is outside the allowed range (5% to 90%).')).toBeInTheDocument()
     expect(await exactField()).toHaveValue(90)
     expect(screen.getByRole('combobox', { name: 'Auto-Compact Threshold' })).toHaveTextContent('Custom…')
@@ -905,7 +905,7 @@ describe('ChatPanel — Context', () => {
 
   it('keeps a preset picked while a typed save was pending, when that save fails', async () => {
     let stored = 90
-    kirocrewConfigMock.mockImplementation(() =>
+    ajcrewConfigMock.mockImplementation(() =>
       Promise.resolve({ ...BASE_MC, session: { autocompact_pct: stored } })
     )
     let fail: (e: unknown) => void = () => {}
@@ -921,7 +921,7 @@ describe('ChatPanel — Context', () => {
     await pickOption('Auto-Compact Threshold', 3)
     fail(new Error('boom'))
     await waitFor(() => expect(patchConfigMock).toHaveBeenCalledTimes(2))
-    await waitFor(() => expect(kirocrewConfigMock.mock.calls.length).toBeGreaterThan(1))
+    await waitFor(() => expect(ajcrewConfigMock.mock.calls.length).toBeGreaterThan(1))
     // Reopening the field and leaving it must not write the failed 63.5 over the 70.
     await pickOption('Auto-Compact Threshold', 6)
     const reopened = await exactField()

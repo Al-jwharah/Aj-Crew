@@ -19,9 +19,9 @@ from unittest.mock import AsyncMock
 import pytest
 from acp_runtime_helpers import _make_runtime, _register
 
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.providers import acp_lifecycle
-from kiro_crew.testing.wait import await_until, default_timeout
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.providers import acp_lifecycle
+from aj_crew.testing.wait import await_until, default_timeout
 
 
 async def _cleanup_session(sid: str) -> None:
@@ -53,8 +53,8 @@ def transcript(tmp_path, monkeypatch) -> tuple[str, list[Path], list[int]]:
         return sessions
 
     # Through each facade: its mirror forwards the patch to the owner that reads it.
-    monkeypatch.setattr("kiro_crew.providers.acp.kiro_sessions_dir", _sessions_dir)
-    monkeypatch.setattr("kiro_crew.acp.session_handle.kiro_sessions_dir", _sessions_dir)
+    monkeypatch.setattr("aj_crew.providers.acp.kiro_sessions_dir", _sessions_dir)
+    monkeypatch.setattr("aj_crew.acp.session_handle.kiro_sessions_dir", _sessions_dir)
     sid = "sid-delete"
     files = [sessions / f"{sid}.json", sessions / f"{sid}.jsonl"]
     for file in files:

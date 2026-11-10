@@ -47,9 +47,9 @@ from turn_harness import (
     run_turn,
 )
 
-from kiro_crew import runtime_death
-from kiro_crew.acp.transport_errors import AcpAuthRequired, AcpError, AcpProcessDied
-from kiro_crew.acp.types import (
+from aj_crew import runtime_death
+from aj_crew.acp.transport_errors import AcpAuthRequired, AcpError, AcpProcessDied
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
@@ -58,9 +58,9 @@ from kiro_crew.acp.types import (
     AcpPromptStats,
     TurnUsage,
 )
-from kiro_crew.dashboard.handlers import usage as usage_handlers
-from kiro_crew.llm_helpers import PromptBusyExhaustedError
-from kiro_crew.slack.client import SlackClientOps
+from aj_crew.dashboard.handlers import usage as usage_handlers
+from aj_crew.llm_helpers import PromptBusyExhaustedError
+from aj_crew.slack.client import SlackClientOps
 
 _DONE = AcpEvent(kind=EVENT_COMPLETE, stop_reason=STOP_REASON_END_TURN)
 _BEFORE = AcpEvent(kind=EVENT_TEXT_CHUNK, text="before steer")
@@ -408,7 +408,7 @@ class TestNothingOnTheSlotOutlivesTheTurn:
         # Every closure that reads the turn's shared state holds the turn object. Were
         # the turn to hold a closure in turn, the two would form a cycle that keeps every
         # ended turn, and the client on it, alive until a collection runs.
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         turns: list[weakref.ref[Any]] = []
 

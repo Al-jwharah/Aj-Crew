@@ -16,7 +16,7 @@ from app_manifest_helpers import (
     _valid_manifest,
 )
 
-from kiro_crew.apps.manifest import ARGUMENT_TOKEN, AppManifest, CommandArgument
+from aj_crew.apps.manifest import ARGUMENT_TOKEN, AppManifest, CommandArgument
 
 
 class TestSignatureFrozenVocabulary:
@@ -529,10 +529,10 @@ class TestContributedCommands:
         # carry broader tool grants and auto-approvals than the default) is refused
         # at install rather than letting the app borrow that agent's reach.
         errors = AppManifest.from_dict(
-            self._with_agents(self._command(agent="kirocrew"), agents)
+            self._with_agents(self._command(agent="ajcrew"), agents)
         ).validate()
         assert any(
-            "agent 'kirocrew' is not one of this app's own agents" in e for e in errors
+            "agent 'ajcrew' is not one of this app's own agents" in e for e in errors
         ), errors
 
     def test_an_agent_path_escaping_the_root_contributes_no_name(self):
@@ -586,7 +586,7 @@ class TestContributedCommands:
         # the listing the launcher reads re-checks every command's agent against the
         # files on disk. An unverified agent is dropped; the command itself stays and
         # runs on the dashboard default.
-        from kiro_crew.apps.manifest import contain_command_agents
+        from aj_crew.apps.manifest import contain_command_agents
 
         (tmp_path / "agents").mkdir()
         (tmp_path / "agents" / "spec.json").write_text('{"name": "ticket-analyst"}')
@@ -594,7 +594,7 @@ class TestContributedCommands:
             "contributes": {
                 "commands": [
                     {"id": "own", "agent": "ticket-analyst"},
-                    {"id": "host", "agent": "kirocrew"},
+                    {"id": "host", "agent": "ajcrew"},
                     {"id": "stem", "agent": "spec"},
                     {"id": "ghost", "agent": "ghost"},
                     {"id": "odd", "agent": 7},
@@ -612,12 +612,12 @@ class TestContributedCommands:
     def test_list_apps_contains_a_self_managed_commands_agent(self, tmp_path, monkeypatch):
         # End to end through list_apps: the manifest on disk names a host agent and was
         # never validated; the launcher's listing must not carry it.
-        from kiro_crew.apps import manager
+        from aj_crew.apps import manager
 
         app = tmp_path / "selfapp"
         app.mkdir()
         (app / "app.json").write_text(
-            json.dumps(self._with_agents(self._command(agent="kirocrew"), []) | {"name": "selfapp"})
+            json.dumps(self._with_agents(self._command(agent="ajcrew"), []) | {"name": "selfapp"})
         )
         monkeypatch.setattr(manager, "apps_dir", lambda: tmp_path)
         monkeypatch.setattr(manager, "detect_orphaned_builtins", lambda: set())
@@ -639,7 +639,7 @@ class TestContributedCommands:
         # The final word is what registration WROTE, not a re-derivation of its skip
         # rules: a spec that looks fine but never landed in the agents dir vouches for
         # nothing, so a skip reason this check does not list still cannot authorize it.
-        from kiro_crew.apps import bridges, manager
+        from aj_crew.apps import bridges, manager
 
         root = tmp_path / "apps"
         app = root / "selfapp"
@@ -673,7 +673,7 @@ class TestContributedCommands:
         # Sessions select by bare declared name, so a host spec declaring the same name
         # makes resolution ambiguous; the app's prompt could run with the host spec's
         # tools. Such a name is refused rather than guessed at.
-        from kiro_crew.apps import bridges, manager
+        from aj_crew.apps import bridges, manager
 
         agents_dir = tmp_path / "kiro-agents"
         agents_dir.mkdir()
@@ -688,7 +688,7 @@ class TestContributedCommands:
     def test_source_specs_are_read_through_the_hardened_reader(self, tmp_path, monkeypatch):
         # The app root is app-writable, so a source spec may be swapped for a symlink
         # to a credential file after containment; the read must be the fenced one.
-        from kiro_crew import agent_discovery
+        from aj_crew import agent_discovery
 
         (tmp_path / "agents").mkdir()
         (tmp_path / "agents" / "spec.json").write_text('{"name": "ticket-analyst"}')
@@ -709,8 +709,8 @@ class TestContributedCommands:
         # The agents dir is user-writable, so the registered config may be a symlink
         # to a sensitive file. The probe must go through `_read_agent_spec` (which
         # refuses and audits that before reading) rather than a bare read_text.
-        from kiro_crew import agent_discovery
-        from kiro_crew.apps import bridges, manager
+        from aj_crew import agent_discovery
+        from aj_crew.apps import bridges, manager
 
         agents_dir = tmp_path / "kiro-agents"
         agents_dir.mkdir()
@@ -922,7 +922,7 @@ class TestContributesPanelTabs:
         assert any("path traversal" in e for e in m.validate())
 
     def test_too_many_tabs_rejected(self):
-        from kiro_crew.apps.manifest import _MAX_PANEL_TABS_PER_APP
+        from aj_crew.apps.manifest import _MAX_PANEL_TABS_PER_APP
 
         tabs = [_panel_tab(id=f"t{i}") for i in range(_MAX_PANEL_TABS_PER_APP + 1)]
         m = AppManifest.from_dict(_valid_manifest(contributes={"panelTabs": tabs}))

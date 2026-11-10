@@ -26,31 +26,31 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.config.paths import config_dir
-from kiro_crew.dashboard.handlers.core import _SENSITIVE_MASK
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.config.paths import config_dir
+from aj_crew.dashboard.handlers.core import _SENSITIVE_MASK
 
 
 @pytest.fixture(autouse=True)
 def _owner_caller(monkeypatch):
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
 
 class TestConfigField:
     def test_defaults_to_empty(self):
-        assert KiroCrewAgentConfig(kiro_agent="x").display_name == ""
+        assert AjCrewAgentConfig(kiro_agent="x").display_name == ""
 
     def test_round_trips_through_save_and_load(self):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["labelled"] = KiroCrewAgentConfig(
-            kiro_agent="kirocrew", display_name="Release Writer"
+        cfg = AjCrewConfig.load()
+        cfg.agents["labelled"] = AjCrewAgentConfig(
+            kiro_agent="ajcrew", display_name="Release Writer"
         )
-        cfg.agents["plain"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg.agents["plain"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         cfg.save()
-        again = KiroCrewConfig.load()
+        again = AjCrewConfig.load()
         assert again.agents["labelled"].display_name == "Release Writer"
         assert again.agents["plain"].display_name == ""
 
@@ -59,29 +59,29 @@ class TestConfigField:
         """config.json is hand-editable: the label is rendered verbatim by
         every roster surface, so a non-string must collapse to "" (show the
         name), never crash the load or reach the wire."""
-        cfg = KiroCrewConfig.load()
-        cfg.agents["weird"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg = AjCrewConfig.load()
+        cfg.agents["weird"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         cfg.save()
         path = config_dir() / "config.json"
         data = json.loads(path.read_text(encoding="utf-8"))
         data["agents"]["weird"]["display_name"] = junk
         path.write_text(json.dumps(data), encoding="utf-8")
-        assert KiroCrewConfig.load().agents["weird"].display_name == ""
+        assert AjCrewConfig.load().agents["weird"].display_name == ""
 
 
 def _crud_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import api_kirocrew_agent_update
+    from aj_crew.dashboard.handlers import api_ajcrew_agent_update
 
     app = web.Application()
-    app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+    app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
     return app
 
 
 @pytest.fixture()
 def seeded_agent():
-    cfg = KiroCrewConfig.load()
-    cfg.agents["existing"] = KiroCrewAgentConfig(
-        kiro_agent="kirocrew", workspace="default", memory_store="default"
+    cfg = AjCrewConfig.load()
+    cfg.agents["existing"] = AjCrewAgentConfig(
+        kiro_agent="ajcrew", workspace="default", memory_store="default"
     )
     cfg.save()
     return "existing"
@@ -96,12 +96,12 @@ class TestUpdateEndpoint:
                     f"/api/agents/{seeded_agent}", json={"display_name": "  Ops Crew  "}
                 )
             ).status == 200
-            assert KiroCrewConfig.load().agents[seeded_agent].display_name == "Ops Crew"
+            assert AjCrewConfig.load().agents[seeded_agent].display_name == "Ops Crew"
             # "" is a real value: it clears the label back to the name.
             assert (
                 await client.put(f"/api/agents/{seeded_agent}", json={"display_name": ""})
             ).status == 200
-        assert KiroCrewConfig.load().agents[seeded_agent].display_name == ""
+        assert AjCrewConfig.load().agents[seeded_agent].display_name == ""
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("junk", [1, 0, None, True, ["x"], {"label": "x"}])
@@ -110,7 +110,7 @@ class TestUpdateEndpoint:
             resp = await client.put(f"/api/agents/{seeded_agent}", json={"display_name": junk})
             assert resp.status == 400
             assert (await resp.json())["code"] == "invalid_display_name"
-        assert KiroCrewConfig.load().agents[seeded_agent].display_name == ""
+        assert AjCrewConfig.load().agents[seeded_agent].display_name == ""
 
 
 class TestCreateEndpoint:
@@ -122,7 +122,7 @@ class TestCreateEndpoint:
     def _fake_config():
         from types import SimpleNamespace
 
-        from kiro_crew.config.sections import MemoryConfig
+        from aj_crew.config.sections import MemoryConfig
 
         saved: list[bool] = []
         return SimpleNamespace(
@@ -132,7 +132,7 @@ class TestCreateEndpoint:
             agents={},
             memory_stores={},
             workspaces={},
-            default_agent="kirocrew",
+            default_agent="ajcrew",
             save=lambda: saved.append(True),
             saved=saved,
             written={},
@@ -141,7 +141,7 @@ class TestCreateEndpoint:
     async def _post(self, body, cfg):
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.handlers.agents import api_kirocrew_agents_create
+        from aj_crew.dashboard.handlers.agents import api_ajcrew_agents_create
 
         def _fake_update_config_locked(*args, **kwargs):
             doc: dict = {"agents": {}}
@@ -151,22 +151,22 @@ class TestCreateEndpoint:
             return result
 
         app = web.Application()
-        app.router.add_post("/api/agents", api_kirocrew_agents_create)
+        app.router.add_post("/api/agents", api_ajcrew_agents_create)
         with (
             patch(
-                "kiro_crew.dashboard.handlers.agents.KiroCrewConfig.load",
+                "aj_crew.dashboard.handlers.agents.AjCrewConfig.load",
                 return_value=cfg,
             ),
             patch(
-                "kiro_crew.config.loader.update_config_locked",
+                "aj_crew.config.loader.update_config_locked",
                 new=_fake_update_config_locked,
             ),
             patch(
-                "kiro_crew.dashboard.handlers.agents.list_agents",
-                new=lambda *a, **k: [SimpleNamespace(name="kirocrew")],
+                "aj_crew.dashboard.handlers.agents.list_agents",
+                new=lambda *a, **k: [SimpleNamespace(name="ajcrew")],
             ),
             patch(
-                "kiro_crew.dashboard.handlers.agents._sel",
+                "aj_crew.dashboard.handlers.agents._sel",
                 return_value=SimpleNamespace(log_api_access=lambda **kwargs: None),
             ),
         ):
@@ -180,7 +180,7 @@ class TestCreateEndpoint:
         status, _ = await self._post(
             {
                 "name": "labelled-crew",
-                "kiro_agent": "kirocrew",
+                "kiro_agent": "ajcrew",
                 "display_name": "  Labelled Crew  ",
             },
             cfg,
@@ -192,7 +192,7 @@ class TestCreateEndpoint:
     async def test_create_refuses_non_string(self):
         cfg = self._fake_config()
         status, data = await self._post(
-            {"name": "bad-label", "kiro_agent": "kirocrew", "display_name": 7}, cfg
+            {"name": "bad-label", "kiro_agent": "ajcrew", "display_name": 7}, cfg
         )
         assert status == 400
         assert data["code"] == "invalid_display_name"
@@ -205,7 +205,7 @@ class TestCreateEndpoint:
         a derived id and keeps the typed text as the label, and the answer
         names the id so the client can address what it made."""
         cfg = self._fake_config()
-        status, data = await self._post({"name": "Release Writer", "kiro_agent": "kirocrew"}, cfg)
+        status, data = await self._post({"name": "Release Writer", "kiro_agent": "ajcrew"}, cfg)
         assert status == 200
         assert data["name"] == "release-writer"
         agents = cfg.written["doc"]["agents"]
@@ -216,7 +216,7 @@ class TestCreateEndpoint:
     async def test_explicit_label_wins_over_the_free_form_name(self):
         cfg = self._fake_config()
         status, data = await self._post(
-            {"name": "Release Writer", "kiro_agent": "kirocrew", "display_name": "Scribe"}, cfg
+            {"name": "Release Writer", "kiro_agent": "ajcrew", "display_name": "Scribe"}, cfg
         )
         assert status == 200
         assert data["name"] == "release-writer"
@@ -225,7 +225,7 @@ class TestCreateEndpoint:
     @pytest.mark.asyncio
     async def test_id_shaped_name_is_the_key_unchanged(self):
         cfg = self._fake_config()
-        status, data = await self._post({"name": "Scribe_2", "kiro_agent": "kirocrew"}, cfg)
+        status, data = await self._post({"name": "Scribe_2", "kiro_agent": "ajcrew"}, cfg)
         assert status == 200
         assert data["name"] == "Scribe_2"
         assert cfg.written["doc"]["agents"]["Scribe_2"]["display_name"] == ""
@@ -233,8 +233,8 @@ class TestCreateEndpoint:
     @pytest.mark.asyncio
     async def test_derived_id_skips_a_taken_id(self):
         cfg = self._fake_config()
-        cfg.agents["release-writer"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
-        status, data = await self._post({"name": "Release Writer", "kiro_agent": "kirocrew"}, cfg)
+        cfg.agents["release-writer"] = AjCrewAgentConfig(kiro_agent="ajcrew")
+        status, data = await self._post({"name": "Release Writer", "kiro_agent": "ajcrew"}, cfg)
         assert status == 200
         assert data["name"] == "release-writer-2"
 
@@ -250,10 +250,10 @@ class TestCreateEndpoint:
     )
     async def test_an_explicit_label_another_crew_shows_is_taken(self, body):
         cfg = self._fake_config()
-        cfg.agents["legacy"] = KiroCrewAgentConfig(
-            kiro_agent="kirocrew", display_name="Release Writer"
+        cfg.agents["legacy"] = AjCrewAgentConfig(
+            kiro_agent="ajcrew", display_name="Release Writer"
         )
-        status, data = await self._post({**body, "kiro_agent": "kirocrew"}, cfg)
+        status, data = await self._post({**body, "kiro_agent": "ajcrew"}, cfg)
         assert status == 409
         assert data["code"] == "agent_exists"
         assert cfg.saved == []
@@ -263,11 +263,11 @@ class TestCreateEndpoint:
         """The check is on what the crew will show: a typed name another crew
         shows is fine when this crew shows a different label."""
         cfg = self._fake_config()
-        cfg.agents["legacy"] = KiroCrewAgentConfig(
-            kiro_agent="kirocrew", display_name="Release Writer"
+        cfg.agents["legacy"] = AjCrewAgentConfig(
+            kiro_agent="ajcrew", display_name="Release Writer"
         )
         status, data = await self._post(
-            {"name": "Release Writer", "display_name": "Scribe", "kiro_agent": "kirocrew"}, cfg
+            {"name": "Release Writer", "display_name": "Scribe", "kiro_agent": "ajcrew"}, cfg
         )
         assert status == 200
         assert data["name"] == "release-writer"
@@ -276,15 +276,15 @@ class TestCreateEndpoint:
     @pytest.mark.parametrize(
         "existing",
         [
-            ("legacy", KiroCrewAgentConfig(kiro_agent="kirocrew", display_name="Release Writer")),
+            ("legacy", AjCrewAgentConfig(kiro_agent="ajcrew", display_name="Release Writer")),
             # A crew stored under a free-form key before ids: its key is its label.
-            ("Release Writer", KiroCrewAgentConfig(kiro_agent="kirocrew")),
+            ("Release Writer", AjCrewAgentConfig(kiro_agent="ajcrew")),
         ],
     )
     async def test_free_form_name_a_crew_already_shows_is_taken(self, existing):
         cfg = self._fake_config()
         cfg.agents[existing[0]] = existing[1]
-        status, data = await self._post({"name": "Release Writer", "kiro_agent": "kirocrew"}, cfg)
+        status, data = await self._post({"name": "Release Writer", "kiro_agent": "ajcrew"}, cfg)
         assert status == 409
         assert data["code"] == "agent_exists"
         assert cfg.saved == []
@@ -296,19 +296,19 @@ class TestCrewIdDerivation:
         [("Release Writer", "release-writer"), ("Café Bot!", "cafe-bot"), ("a" * 100, "a" * 56)],
     )
     def test_slugs_the_name(self, name, expected):
-        from kiro_crew.members import crew_id_for_display_name
+        from aj_crew.members import crew_id_for_display_name
 
         assert crew_id_for_display_name(name, set()) == expected
 
     def test_name_with_no_slug_characters_derives_from_its_hash(self):
-        from kiro_crew.members import crew_id_for_display_name, is_crew_id
+        from aj_crew.members import crew_id_for_display_name, is_crew_id
 
         first = crew_id_for_display_name("数据助手", set())
         assert first.startswith("crew-") and is_crew_id(first)
         assert crew_id_for_display_name("代码助手", set()) != first
 
     def test_suffixes_past_taken_ids(self):
-        from kiro_crew.members import crew_id_for_display_name
+        from aj_crew.members import crew_id_for_display_name
 
         taken = {"release-writer", "release-writer-2"}
         assert crew_id_for_display_name("Release Writer", taken) == "release-writer-3"
@@ -324,7 +324,7 @@ class TestCrewIdDerivation:
         ],
     )
     def test_is_crew_id(self, value, ok):
-        from kiro_crew.members import is_crew_id
+        from aj_crew.members import is_crew_id
 
         assert is_crew_id(value) is ok
 
@@ -333,8 +333,8 @@ class TestCheckCrewLabel:
     """``members.check_crew_label``: the rule every relabel outside the editor obeys."""
 
     AGENTS = {
-        "scribe": KiroCrewAgentConfig(kiro_agent="kirocrew", display_name="Release Writer"),
-        "research": KiroCrewAgentConfig(kiro_agent="kirocrew"),
+        "scribe": AjCrewAgentConfig(kiro_agent="ajcrew", display_name="Release Writer"),
+        "research": AjCrewAgentConfig(kiro_agent="ajcrew"),
     }
 
     @pytest.mark.parametrize(
@@ -347,7 +347,7 @@ class TestCheckCrewLabel:
         ],
     )
     def test_a_free_label_is_returned(self, key, label):
-        from kiro_crew.members import check_crew_label
+        from aj_crew.members import check_crew_label
 
         assert check_crew_label(key, label, self.AGENTS) == label
 
@@ -356,7 +356,7 @@ class TestCheckCrewLabel:
         [("research", "Release Writer", "scribe"), ("scribe", "research", "research")],
     )
     def test_a_name_another_crew_shows_is_taken(self, key, label, other):
-        from kiro_crew.members import MemberNameTaken, check_crew_label
+        from aj_crew.members import MemberNameTaken, check_crew_label
 
         with pytest.raises(MemberNameTaken) as exc:
             check_crew_label(key, label, self.AGENTS)
@@ -366,14 +366,14 @@ class TestCheckCrewLabel:
         "label", ["Two\nLines", " padded ", "..", "x" * 501, "https://user:password@example.com"]
     )
     def test_an_unusable_label_is_refused(self, label):
-        from kiro_crew.members import MemberNameError, check_crew_label
+        from aj_crew.members import MemberNameError, check_crew_label
 
         with pytest.raises(MemberNameError) as exc:
             check_crew_label("research", label, self.AGENTS)
         assert label not in str(exc.value)
 
     def test_crew_showing_skips_the_excluded_crew(self):
-        from kiro_crew.members import crew_showing
+        from aj_crew.members import crew_showing
 
         assert crew_showing("Release Writer", self.AGENTS) == "scribe"
         assert crew_showing("Release Writer", self.AGENTS, exclude="scribe") == ""
@@ -384,16 +384,16 @@ class TestCheckCrewLabel:
 class TestRosterSurfaces:
     @pytest.mark.asyncio
     async def test_agents_roster_carries_the_label(self, tmp_path):
-        from kiro_crew.dashboard.handlers import api_kirocrew_agents
+        from aj_crew.dashboard.handlers import api_ajcrew_agents
 
-        cfg = KiroCrewConfig.load()
-        cfg.agents["labelled"] = KiroCrewAgentConfig(
-            kiro_agent="kirocrew", display_name="Release Writer"
+        cfg = AjCrewConfig.load()
+        cfg.agents["labelled"] = AjCrewAgentConfig(
+            kiro_agent="ajcrew", display_name="Release Writer"
         )
         cfg.save()
         app = web.Application()
         app["state"] = _make_state(tmp_path)
-        app.router.add_get("/api/agents", api_kirocrew_agents)
+        app.router.add_get("/api/agents", api_ajcrew_agents)
         async with TestClient(TestServer(app)) as client:
             body = await (await client.get("/api/agents")).json()
         row = next(a for a in body["agents"] if a["name"] == "labelled")
@@ -403,18 +403,18 @@ class TestRosterSurfaces:
     async def test_credential_shaped_label_leaves_as_the_mask(self, tmp_path):
         """Same posture as description/triggers: the label is agent-writable
         free text, so a credential-shaped value must not reach the browser."""
-        from kiro_crew.dashboard.handlers import api_kirocrew_agents
+        from aj_crew.dashboard.handlers import api_ajcrew_agents
 
         # Assembled at runtime: the value must look real enough to trip the
         # redactor, but the joined literal must never appear in the file or
         # GitHub push protection (rightly) refuses the blob.
         cred = "xoxb-" + "1234567890123-1234567890123-AbCdEfGhIjKlMnOpQrStUvWx"
-        cfg = KiroCrewConfig.load()
-        cfg.agents["leaky"] = KiroCrewAgentConfig(kiro_agent="kirocrew", display_name=cred)
+        cfg = AjCrewConfig.load()
+        cfg.agents["leaky"] = AjCrewAgentConfig(kiro_agent="ajcrew", display_name=cred)
         cfg.save()
         app = web.Application()
         app["state"] = _make_state(tmp_path)
-        app.router.add_get("/api/agents", api_kirocrew_agents)
+        app.router.add_get("/api/agents", api_ajcrew_agents)
         async with TestClient(TestServer(app)) as client:
             body = await (await client.get("/api/agents")).json()
         row = next(a for a in body["agents"] if a["name"] == "leaky")
@@ -430,12 +430,12 @@ class TestProjectionLockstep:
     until a full refetch. The vocabulary lives in FOUR places kept in
     lockstep: the two `_CONFIG_FIELDS` tuples (eventlog_hooks,
     members_projections) and the `_ev_before`/`_ev_after` snapshot dicts in
-    the crew PUT handler, `api_kirocrew_agent_update`.
+    the crew PUT handler, `api_ajcrew_agent_update`.
     """
 
     def test_config_fields_tuples_match_and_carry_display_name(self):
-        from kiro_crew import eventlog_hooks
-        from kiro_crew.eventlog import members_projections
+        from aj_crew import eventlog_hooks
+        from aj_crew.eventlog import members_projections
 
         assert eventlog_hooks._CONFIG_FIELDS == members_projections._CONFIG_FIELDS, (
             "the event snapshot vocabulary and the roster fold vocabulary drifted: "
@@ -450,10 +450,10 @@ class TestProjectionLockstep:
         member/config for that field's changes -- exactly the bug this guards."""
         import inspect
 
-        from kiro_crew import eventlog_hooks
-        from kiro_crew.dashboard.handlers import agents as agents_mod
+        from aj_crew import eventlog_hooks
+        from aj_crew.dashboard.handlers import agents as agents_mod
 
-        source = inspect.getsource(agents_mod.api_kirocrew_agent_update)
+        source = inspect.getsource(agents_mod.api_ajcrew_agent_update)
         before_at = source.index("_ev_before = {")
         after_at = source.index("_ev_after = {")
         before_block = source[before_at : source.index("}", before_at)]
@@ -463,14 +463,14 @@ class TestProjectionLockstep:
             assert f'"{field}"' in after_block, f"_ev_after omits {field!r}"
 
     def test_snapshot_for_agent_carries_display_name(self):
-        from kiro_crew.eventlog_hooks import _config_snapshot_for_agent
+        from aj_crew.eventlog_hooks import _config_snapshot_for_agent
 
-        agent = KiroCrewAgentConfig(kiro_agent="kirocrew", display_name="Release Writer")
+        agent = AjCrewAgentConfig(kiro_agent="ajcrew", display_name="Release Writer")
         assert _config_snapshot_for_agent(agent)["display_name"] == "Release Writer"
 
     def test_roster_projection_folds_display_name(self):
-        from kiro_crew.eventlog import types
-        from kiro_crew.eventlog.members_projections import RosterProjection
+        from aj_crew.eventlog import types
+        from aj_crew.eventlog.members_projections import RosterProjection
 
         proj = RosterProjection()
         state = proj.init()

@@ -1,6 +1,6 @@
 """The ``depth`` field on ``session/opened``.
 
-Covers the writer side only: what :func:`kiro_crew.crew_log.emit.on_session_opened`
+Covers the writer side only: what :func:`aj_crew.crew_log.emit.on_session_opened`
 stores for the new ``depth`` argument, that the stored entry still validates, and
 that an entry written WITHOUT a ``depth`` (every log from before this change)
 replays through the declaration and the depth counter reader without error or a
@@ -18,9 +18,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.crew_log import crew_log_path, emit
-from kiro_crew.crew_log.entry_types import validate_data
-from kiro_crew.crew_log.otel_session_tree_fold import depth_observation
+from aj_crew.crew_log import crew_log_path, emit
+from aj_crew.crew_log.entry_types import validate_data
+from aj_crew.crew_log.otel_session_tree_fold import depth_observation
 
 SESSION = "acp-sess-depth-0001"
 
@@ -31,8 +31,8 @@ def _isolated_home(tmp_path, _floor_monkeypatch):
 
     Patches through ``_floor_monkeypatch`` rather than the shared ``monkeypatch`` so a
     test that calls ``monkeypatch.undo()`` mid-way cannot lift this fixture's
-    ``KIROCREW_HOME`` pin (the Determinism contract's D11)."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    ``AJCREW_HOME`` pin (the Determinism contract's D11)."""
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _floor_monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     _floor_monkeypatch.setattr(emit, "_retry_delay", lambda _attempts: 0.0)
     emit.reset_caches()
@@ -43,7 +43,7 @@ def _isolated_home(tmp_path, _floor_monkeypatch):
     # checkpoint write to the shared maintenance pool. Settle it before pytest tears
     # down this home, or that write lands against a directory this fixture is about
     # to remove and the determinism floor flags a shared-pool leftover.
-    from kiro_crew.executors import shutdown_maintenance_executor
+    from aj_crew.executors import shutdown_maintenance_executor
 
     shutdown_maintenance_executor()
 
@@ -117,7 +117,7 @@ def test_an_old_opened_entry_replays_without_a_depth_observation():
     # The exact shape of a session/opened written before this change: no depth key.
     # It must validate AND contribute no depth counter add -- not a zero.
     old = {
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         "slot": "chat-7",
         "model": "m",
         "cwd": "",
@@ -145,8 +145,8 @@ class _BareSlot:
 def test_the_resolver_states_a_root_depth_on_a_readable_tree():
     # Imported through ``chat_runner``, which is where the facade mirror injects the
     # names ``crew_log_attribution`` reads at run time.
-    from kiro_crew.crew_log import session_tree_projection as stp
-    from kiro_crew.dashboard.chat_runner import _crew_log_tree_depth
+    from aj_crew.crew_log import session_tree_projection as stp
+    from aj_crew.dashboard.chat_runner import _crew_log_tree_depth
 
     stp.reset_for_tests()
     stp.projection().ensure_seeded()
@@ -157,8 +157,8 @@ def test_the_resolver_withholds_a_root_depth_when_the_tree_cannot_be_read():
     # The whole point of asking the tree for a number that needs no walk: a zero
     # written while every child's depth is withheld would leave the distribution
     # holding roots and nothing else.
-    from kiro_crew.crew_log import session_tree_projection as stp
-    from kiro_crew.dashboard.chat_runner import _crew_log_tree_depth
+    from aj_crew.crew_log import session_tree_projection as stp
+    from aj_crew.dashboard.chat_runner import _crew_log_tree_depth
 
     stp.reset_for_tests()
     assert _crew_log_tree_depth(_BareSlot(), "") is None

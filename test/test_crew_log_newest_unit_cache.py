@@ -16,15 +16,15 @@ from typing import Any
 import pytest
 from crew_log_type_helpers import minimal_data
 
-from kiro_crew.crew_log import projection, projection_readers, store, store_units
-from kiro_crew.crew_log.schema import KIND_SESSION
-from kiro_crew.crew_log.store import CrewLog
+from aj_crew.crew_log import projection, projection_readers, store, store_units
+from aj_crew.crew_log.schema import KIND_SESSION
+from aj_crew.crew_log.store import CrewLog
 
 BOARD = "chat-board"
 
 
 def _unit(unit_id: str, *, slot: str = BOARD, opened: bool = True) -> None:
-    handle = CrewLog.create(KIND_SESSION, unit_id, owner="o", agent="kirocrew", slot=slot)
+    handle = CrewLog.create(KIND_SESSION, unit_id, owner="o", agent="ajcrew", slot=slot)
     if opened:
         data = {**minimal_data(KIND_SESSION, "session/opened"), "slot": slot, "resumed": False}
         handle.append("session/opened", data, src="gateway")

@@ -35,13 +35,13 @@ from handlers_mcp_coverage_helpers import (
 )
 
 from conftest import host_abs
-from kiro_crew.dashboard.handlers import mcp as mcp_mod
-from kiro_crew.mcp_discovery import McpServerInfo
+from aj_crew.dashboard.handlers import mcp as mcp_mod
+from aj_crew.mcp_discovery import McpServerInfo
 
 
 def _known(monkeypatch: pytest.MonkeyPatch, *names: str) -> None:
     """Make ``list_servers()`` report ``names`` as configured somewhere."""
-    import kiro_crew.mcp_discovery as disc
+    import aj_crew.mcp_discovery as disc
 
     rows = [McpServerInfo(name=n, command="/bin/true") for n in names]
     monkeypatch.setattr(disc, "list_servers", lambda *a, **k: list(rows))
@@ -155,10 +155,10 @@ class TestToggleServer:
     async def test_store_only_server_toggles_in_the_store_and_leaves_global_alone(
         self, sandbox: SimpleNamespace, global_exists: bool
     ) -> None:
-        """A custom add lives only in the Kiro Crew store. Turning it off and on
+        """A custom add lives only in the Aj Crew store. Turning it off and on
         flips the flag there; the Kiro global file is neither created nor
         rewritten."""
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(
             json.dumps({"mcpServers": {"custom": {"command": "run-me"}}}), encoding="utf-8"
@@ -188,7 +188,7 @@ class TestToggleServer:
     async def test_store_only_toggle_lands_on_the_raw_alias_key(
         self, sandbox: SimpleNamespace
     ) -> None:
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(
             json.dumps({"mcpServers": {"npm:@playwright/mcp": {"command": "npx"}}}),
@@ -207,7 +207,7 @@ class TestToggleServer:
     async def test_store_only_ambiguous_alias_is_409_and_writes_nothing(
         self, sandbox: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(
             json.dumps(
@@ -229,7 +229,7 @@ class TestToggleServer:
     async def test_store_only_toggle_is_not_blocked_by_a_commented_global_file(
         self, sandbox: SimpleNamespace
     ) -> None:
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(json.dumps({"mcpServers": {"custom": {"command": "x"}}}), encoding="utf-8")
         sandbox.global_json.write_text(
@@ -263,7 +263,7 @@ class TestToggleServer:
     ) -> None:
         """Disabled in the store, then a per-tool disable stubbed the global file:
         re-enabling has to lift the store mute as well, or the server stays off."""
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(
             json.dumps({"mcpServers": {"custom": {"command": "x", "disabled": True}}}),
@@ -283,7 +283,7 @@ class TestToggleServer:
     ) -> None:
         """The global file holds the row and has comments, so the enable is
         refused; the store mute must survive the refusal untouched."""
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(
             json.dumps({"mcpServers": {"custom": {"command": "x", "disabled": True}}}),
@@ -307,7 +307,7 @@ class TestToggleServer:
     ) -> None:
         """The store holds comments but no mute for the row, so the enable never
         writes it and must go through on the global file."""
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(
             '{\n  // mine\n  "mcpServers": {"other": {"command": "y"}}\n}\n', encoding="utf-8"
@@ -324,7 +324,7 @@ class TestToggleServer:
     async def test_failed_global_write_leaves_the_store_mute_in_place(
         self, sandbox: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(
             json.dumps({"mcpServers": {"custom": {"command": "x", "disabled": True}}}),
@@ -346,7 +346,7 @@ class TestToggleServer:
     async def test_toggle_to_the_current_store_state_writes_nothing(
         self, sandbox: SimpleNamespace
     ) -> None:
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(json.dumps({"mcpServers": {"custom": {"command": "x"}}}), encoding="utf-8")
         sandbox.global_json.unlink(missing_ok=True)
@@ -360,7 +360,7 @@ class TestToggleServer:
     async def test_malformed_store_is_refused_without_writing_a_global_stub(
         self, sandbox: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text("{not json", encoding="utf-8")
         sandbox.global_json.unlink(missing_ok=True)
@@ -376,7 +376,7 @@ class TestToggleServer:
     async def test_commented_store_is_refused_and_both_files_stay(
         self, sandbox: SimpleNamespace
     ) -> None:
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(
             '{\n  // mine\n  "mcpServers": {"custom": {"command": "x"}}\n}\n', encoding="utf-8"
@@ -393,7 +393,7 @@ class TestToggleServer:
     async def test_store_write_failure_is_500_and_never_syncs(
         self, sandbox: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(json.dumps({"mcpServers": {"custom": {"command": "x"}}}), encoding="utf-8")
         sandbox.global_json.unlink(missing_ok=True)
@@ -401,7 +401,7 @@ class TestToggleServer:
         def _boom(*_a: object, **_k: object) -> str:
             raise OSError("disk full")
 
-        monkeypatch.setattr(mcp_mod, "_set_kirocrew_entry", _boom)
+        monkeypatch.setattr(mcp_mod, "_set_ajcrew_entry", _boom)
         resp = await mcp_mod.api_mcp_toggle(_request({"name": "custom", "enabled": False}))
         assert resp.status == 500
         assert _payload(resp)["code"] == "config_write_failed"
@@ -642,7 +642,7 @@ class TestToggleAll:
 @pytest.fixture
 def no_capability_manager(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
     """Pin the capability-manager seam to 'unavailable' (a vanilla machine)."""
-    from kiro_crew.dashboard.handlers import _shared
+    from aj_crew.dashboard.handlers import _shared
 
     mgr = MagicMock()
     mgr.available.return_value = False
@@ -688,13 +688,13 @@ class TestRemove:
     async def test_removes_add_custom_store_entry(
         self, sandbox: SimpleNamespace, no_capability_manager: MagicMock
     ) -> None:
-        """An Add Custom server lives ONLY in the Kiro Crew store
+        """An Add Custom server lives ONLY in the Aj Crew store
         (``<data home>/mcp.json``), never the Kiro global. Remove must delete
         it there and report removed:true. Red on main: the handler popped the
         global file only, so the entry stayed and the response said
         removed:false ("MCP remove: <name> not found in global mcp.json")."""
         _write_global(sandbox, {})
-        store = mcp_mod._KIROCREW_MCP_JSON
+        store = mcp_mod._AJCREW_MCP_JSON
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(
             json.dumps({"mcpServers": {"weather": {"command": "npx", "disabled": True}}}),
@@ -727,7 +727,7 @@ class TestRemove:
         self, sandbox: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """An erroring package manager must not block the config removal."""
-        from kiro_crew.dashboard.handlers import _shared
+        from aj_crew.dashboard.handlers import _shared
 
         mgr = MagicMock()
         mgr.available.return_value = True
@@ -744,7 +744,7 @@ class TestRemove:
     async def test_capability_manager_success_is_reported_ok(
         self, sandbox: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.dashboard.handlers import _shared
+        from aj_crew.dashboard.handlers import _shared
 
         mgr = MagicMock()
         mgr.available.return_value = True
@@ -764,7 +764,7 @@ class TestRemove:
     ) -> None:
         """The removal would rewrite the file as plain JSON, so it is refused
         before the capability manager uninstalls anything."""
-        from kiro_crew.dashboard.handlers import _shared
+        from aj_crew.dashboard.handlers import _shared
 
         mgr = MagicMock()
         mgr.available.return_value = True
@@ -781,19 +781,19 @@ class TestRemove:
     async def test_a_commented_store_is_refused_before_the_global_is_written(
         self, sandbox: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """Remove mutates BOTH the global and the Kiro Crew store, so a
+        """Remove mutates BOTH the global and the Aj Crew store, so a
         hand-commented store is refused up front too. Red before the preflight
         covered the store: the global file lost the entry, then the store write
         raised 409, leaving a half-removed server with its agent-spec sync
         skipped."""
-        from kiro_crew.dashboard.handlers import _shared
+        from aj_crew.dashboard.handlers import _shared
 
         mgr = MagicMock()
         mgr.available.return_value = True
         mgr.uninstall_mcp = AsyncMock()
         monkeypatch.setattr(_shared, "_capability_manager", lambda: mgr)
         _write_global(sandbox, {"srv": {"command": "x"}})
-        store = mcp_mod._KIROCREW_MCP_JSON
+        store = mcp_mod._AJCREW_MCP_JSON
         store.parent.mkdir(parents=True, exist_ok=True)
         store_text = '{\n  "mcpServers": {\n    "srv": {"command": "x"},\n    // parked\n  }\n}\n'
         store.write_text(store_text, encoding="utf-8")
@@ -1001,13 +1001,13 @@ class TestServerDetail:
 
 @pytest.fixture
 def identity_bindings(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Bind every Kiro Crew agent name to a same-named kiro agent.
+    """Bind every Aj Crew agent name to a same-named kiro agent.
 
-    Without this the real resolver maps an unknown name onto the ``kirocrew``
+    Without this the real resolver maps an unknown name onto the ``ajcrew``
     default, so ``/api/mcp/active`` would always take the global-scope branch
     and the per-agent branch would be unreachable.
     """
-    import kiro_crew.config.loader as loader
+    import aj_crew.config.loader as loader
 
     monkeypatch.setattr(
         loader,
@@ -1055,7 +1055,7 @@ class TestActive:
         self, sandbox: SimpleNamespace, agents_dir: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A broken resolver must not 500 — the query name is used verbatim."""
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         monkeypatch.setattr(
             loader,
@@ -1082,23 +1082,23 @@ class TestActive:
         assert by_name["on"] is True
         assert by_name["off"] is False
         # The managed servers are always present, ahead of the configured ones.
-        for builtin in ("kirocrew-cron", "kirocrew-core", "kirocrew-computer"):
+        for builtin in ("ajcrew-cron", "ajcrew-core", "ajcrew-computer"):
             assert by_name[builtin] is True
-        assert rows[0]["name"].startswith("kirocrew-")
+        assert rows[0]["name"].startswith("ajcrew-")
 
     @pytest.mark.asyncio
     async def test_default_agent_reads_the_store_and_the_row_flag_not_only_the_shared_file(
         self, sandbox: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """A registry install awaiting consent is ``disabled: true`` in the Kiro
+        """A registry install awaiting consent is ``disabled: true`` in the Aj
         Crew store and absent from the shared file; a server switched off in a
         provider global is in neither map. Both are off for the sessions, so
         both answer ``enabled: false`` here. Red under the shared-file-only read,
         which answered ``true`` for each."""
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         _write_global(sandbox, {"on": {"command": "x"}})
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(
             json.dumps({"mcpServers": {"pending": {"command": "y", "disabled": True}}}),
@@ -1123,20 +1123,20 @@ class TestActive:
     async def test_agent_alias_resolves_to_the_global_scope(
         self, sandbox: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """A Kiro Crew agent name bound to ``kirocrew`` reads the global scope."""
-        import kiro_crew.config.loader as loader
+        """A Aj Crew agent name bound to ``ajcrew`` reads the global scope."""
+        import aj_crew.config.loader as loader
 
         monkeypatch.setattr(
             loader,
             "resolve_agent_bindings",
-            lambda cfg, name: SimpleNamespace(kiro_agent="kirocrew"),
+            lambda cfg, name: SimpleNamespace(kiro_agent="ajcrew"),
         )
         _write_global(sandbox, {"on": {"command": "x"}})
         _known(monkeypatch, "on")
         resp = await mcp_mod.api_mcp_active(
             _request(query={"agent": "default"})
         )
-        assert {r["name"] for r in _payload(resp)} >= {"on", "kirocrew-core"}
+        assert {r["name"] for r in _payload(resp)} >= {"on", "ajcrew-core"}
 
     @pytest.mark.asyncio
     async def test_corrupt_global_scope_falls_back_to_empty(
@@ -1227,7 +1227,7 @@ class TestSharingToggleFreezesTheLegacyAlias:
         every alias entry and share it — that is the unrequested topology change
         this design exists to make opt-in.
         """
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         monkeypatch.setattr(mcp_mod, "is_gateway_supported", lambda: True)
@@ -1256,7 +1256,7 @@ class TestSharingToggleFreezesTheLegacyAlias:
         private" — the whole middle state this PR adds — becomes unreachable for
         exactly the migrated operator. Turning sharing off narrows sharing only.
         """
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         monkeypatch.setattr(mcp_mod, "is_gateway_supported", lambda: True)
@@ -1282,7 +1282,7 @@ class TestSharingToggleFreezesTheLegacyAlias:
         """Key presence, not truthiness: an operator who cleared ``stub_servers``
         chose to stub nothing, and a stale ``poolable_servers`` must not revive
         the servers they just cleared."""
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         monkeypatch.setattr(mcp_mod, "is_gateway_supported", lambda: True)
@@ -1360,7 +1360,7 @@ class TestLocalOverlayOwnsTheStubKeys:
         endpoint writes, so the write can actually land. (An overlay that owns
         ``enabled`` is the refusal case covered by the next test.)
         """
-        from kiro_crew.config.loader import config_local_path, config_path
+        from aj_crew.config.loader import config_local_path, config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         monkeypatch.setattr(mcp_mod, "is_gateway_supported", lambda: True)
@@ -1391,7 +1391,7 @@ class TestLocalOverlayOwnsTheStubKeys:
         """When the overlay itself defines the key we are about to write, a base
         write cannot take effect — the overlay wins the deep merge. Reporting
         success would be the same lie as a 200 with ``applied: false``."""
-        from kiro_crew.config.loader import config_local_path, config_path
+        from aj_crew.config.loader import config_local_path, config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         monkeypatch.setattr(mcp_mod, "is_gateway_supported", lambda: True)
@@ -1413,7 +1413,7 @@ class TestLocalOverlayOwnsTheStubKeys:
     ) -> None:
         """Same invariant on the other writer: stubbing one server must not drop
         an allowlist that lives in the overlay."""
-        from kiro_crew.config.loader import config_local_path, config_path
+        from aj_crew.config.loader import config_local_path, config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         base = config_path()
@@ -1440,7 +1440,7 @@ class TestLocalOverlayOwnsTheStubKeys:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Overlay owns ``stub_servers`` -> the row toggle cannot land either."""
-        from kiro_crew.config.loader import config_local_path, config_path
+        from aj_crew.config.loader import config_local_path, config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         base = config_path()
@@ -1468,7 +1468,7 @@ class TestLocalOverlayOwnsTheStubKeys:
         value -- the silent never-takes-effect failure the guard exists to prevent,
         reintroduced by relocating the write.
         """
-        from kiro_crew.config.loader import config_local_path, config_path
+        from aj_crew.config.loader import config_local_path, config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         base = config_path()
@@ -1499,7 +1499,7 @@ class TestLocalOverlayOwnsTheStubKeys:
         """The loader logs and ignores an unparseable overlay, so this path must
         agree with it. Letting the error escape would turn a broken user file into
         a 500 on a settings click."""
-        from kiro_crew.config.loader import config_local_path, config_path
+        from aj_crew.config.loader import config_local_path, config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         monkeypatch.setattr(mcp_mod, "is_gateway_supported", lambda: True)
@@ -1535,7 +1535,7 @@ class TestGatewayEnableErrors:
     async def test_corrupt_config_json_is_500(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         monkeypatch.setattr(mcp_mod, "is_gateway_supported", lambda: True)
@@ -1555,7 +1555,7 @@ class TestGatewayEnableErrors:
     async def test_non_object_section_is_500(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         monkeypatch.setattr(mcp_mod, "is_gateway_supported", lambda: True)

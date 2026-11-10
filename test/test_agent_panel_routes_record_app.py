@@ -27,12 +27,12 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from off_loop_helpers import off_loop
 
-from kiro_crew import members as members_mod
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log_projection
-from kiro_crew.dashboard import token_auth_app_scope
-from kiro_crew.dashboard.handlers import agent_panel as routes
-from kiro_crew.dashboard.handlers import (
+from aj_crew import members as members_mod
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log_projection
+from aj_crew.dashboard import token_auth_app_scope
+from aj_crew.dashboard.handlers import agent_panel as routes
+from aj_crew.dashboard.handlers import (
     agent_panel_record,
     agent_panel_record_app,
     member_dashboard,
@@ -317,7 +317,7 @@ async def test_the_type_cap_is_shared_and_a_new_type_evicts_another_writers_olde
     """The 64-type bound is the fold's, across every writer: the door accepts a 65th
     type, and the least recently written type goes whoever wrote it. The app-author
     docs promise exactly this, not a refusal."""
-    from kiro_crew.crew_log.projection_dashboard import CUSTOM_TYPE_LIMIT
+    from aj_crew.crew_log.projection_dashboard import CUSTOM_TYPE_LIMIT
 
     async with _app_client("other-app") as c:
         resp = await _post(c, {"type": "keep", "data": {"n": 1}})

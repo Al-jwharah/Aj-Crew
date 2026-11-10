@@ -10,18 +10,18 @@ from typing import Any, Iterator
 
 import pytest
 
-from kiro_crew.dashboard import tailnet, tailnet_live_allowlist
-from kiro_crew.shared_crew import access_set
-from kiro_crew.shared_crew import tailscale_invite_store as store
-from kiro_crew.shared_crew import tailscale_invites
-from kiro_crew.shared_crew.contracts import Provenance
-from kiro_crew.shared_crew.identity import tailnet_principal
+from aj_crew.dashboard import tailnet, tailnet_live_allowlist
+from aj_crew.shared_crew import access_set
+from aj_crew.shared_crew import tailscale_invite_store as store
+from aj_crew.shared_crew import tailscale_invites
+from aj_crew.shared_crew.contracts import Provenance
+from aj_crew.shared_crew.identity import tailnet_principal
 
 
 @pytest.fixture(autouse=True)
 def _shared_crew_preview_on(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
     """These tests cover the preview's behaviour; the gate itself has its own tests."""
-    _floor_monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    _floor_monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
 
 
 @pytest.fixture(autouse=True)
@@ -140,7 +140,7 @@ async def test_an_avatar_body_split_across_reads_is_read_whole(
 
     from aiohttp.test_utils import make_mocked_request
 
-    from kiro_crew.shared_crew import routes_invites
+    from aj_crew.shared_crew import routes_invites
 
     async def owner(_r: Any) -> None:
         return None
@@ -236,7 +236,7 @@ def test_the_boot_placeholder_reads_nothing_and_admits_only_the_owner(
 def test_the_headless_server_publishes_the_set_before_and_reads_it_after_the_bind() -> None:
     import inspect
 
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     source = inspect.getsource(server.start_api_server)
     prepare = source.index("tailnet_direct_listener.prepare_access_set(_cfg)")

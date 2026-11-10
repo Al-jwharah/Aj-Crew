@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.embeddings_download as download_mod
-from kiro_crew.embeddings_download import ModelDownloadManager
+import aj_crew.embeddings_download as download_mod
+from aj_crew.embeddings_download import ModelDownloadManager
 
 
 def _spy(monkeypatch, attr, answers=None):
@@ -82,7 +82,7 @@ async def test_recheck_under_the_lock_runs_off_the_event_loop(tmp_path: Path, mo
     The first check misses and the second finds the file, as when a concurrent
     caller finished the download: no download starts and the model is ready.
     """
-    monkeypatch.delenv("KIROCREW_SKIP_MODEL_DOWNLOAD", raising=False)
+    monkeypatch.delenv("AJCREW_SKIP_MODEL_DOWNLOAD", raising=False)
     seen_ready = _spy(monkeypatch, "model_file_present", answers=[False, True])
     seen_custom = _spy(monkeypatch, "embedding_model_is_custom", answers=[False])
     loop_thread = threading.get_ident()

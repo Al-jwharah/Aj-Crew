@@ -17,8 +17,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from kiro_crew.dashboard.chat_handlers import _TURN_OPENER_ROLES
-from kiro_crew.dashboard.state import TURN_OPENING_INJECT_KINDS
+from aj_crew.dashboard.chat_handlers import _TURN_OPENER_ROLES
+from aj_crew.dashboard.state import TURN_OPENING_INJECT_KINDS
 
 _TS_CHAT = Path(__file__).resolve().parents[1] / "website" / "src" / "pages" / "chat"
 _TS_GROUPING = _TS_CHAT / "groupDisplayItems.ts"
@@ -64,7 +64,7 @@ class TestTurnBoundaryMirrorsFrontendGrouping:
         py_source = (
             Path(__file__).resolve().parents[1]
             / "src"
-            / "kiro_crew"
+            / "aj_crew"
             / "dashboard"
             / "chat_handlers.py"
         ).read_text(encoding="utf-8")

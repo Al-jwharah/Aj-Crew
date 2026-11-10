@@ -404,7 +404,7 @@ describe('ChatPage error handoff', { timeout: 15_000 }, () => {
     // The stale processor neither switches the live view nor erases the newer
     // component's active + queued crash snapshot.
     expect(store.getState().chat.activeSlot).toBe('slot-a')
-    expect(JSON.parse(sessionStorage.getItem('kirocrew_error_handoff_claimed') || '[]'))
+    expect(JSON.parse(sessionStorage.getItem('ajcrew_error_handoff_claimed') || '[]'))
       .toEqual([{ prompt: 'active diagnostic' }, { prompt: 'queued diagnostic' }])
 
     replacementPage.unmount()

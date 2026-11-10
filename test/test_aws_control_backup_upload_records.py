@@ -23,7 +23,7 @@ from aws_control_backup_helpers import (
     ARCHIVE_FINGERPRINT,
 )
 
-from kiro_crew.apps.builtins.aws_control.backend import backup
+from aj_crew.apps.builtins.aws_control.backend import backup
 
 
 def _tar_gz(payload: bytes = b"restored") -> bytes:
@@ -57,7 +57,7 @@ class TestRecordedVersionRecovery:
     def _isolated_state(self, tmp_path, _floor_monkeypatch):
         _floor_monkeypatch.setattr(backup, "_state_path", lambda: tmp_path / "backup.json")
         _floor_monkeypatch.setattr(
-            "kiro_crew.apps.builtins.aws_control.backend.backup.app_data_dir",
+            "aj_crew.apps.builtins.aws_control.backend.backup.app_data_dir",
             lambda name: tmp_path / "appdata",
         )
         # The recovery authorizes its extra read immediately before making it, with
@@ -67,14 +67,14 @@ class TestRecordedVersionRecovery:
         # the mechanism. Each gate test below revokes exactly one of the four, which
         # is what keeps them pinned individually rather than papered over.
         _floor_monkeypatch.setattr(
-            "kiro_crew.deploy.engine._checked",
+            "aj_crew.deploy.engine._checked",
             lambda args, profile, *, action="", timeout=30, extra_visible_dirs=(): (
                 '{"Account": "%s"}' % ACCOUNT
             ),
         )
-        _floor_monkeypatch.setattr("kiro_crew.apps.manager.is_app_enabled", lambda name: True)
+        _floor_monkeypatch.setattr("aj_crew.apps.manager.is_app_enabled", lambda name: True)
         _floor_monkeypatch.setattr(
-            "kiro_crew.aws_consent.read_grant",
+            "aj_crew.aws_consent.read_grant",
             lambda service: mock.Mock(profile="p", region="us-west-2", account=ACCOUNT),
         )
         backup._unpersisted_runs.clear()
@@ -239,7 +239,7 @@ class TestRecordedVersionRecovery:
         # account is.
         key = self._recorded(RECOVERED_FINGERPRINT, "v-ours")
         with mock.patch(
-            "kiro_crew.aws_consent.read_grant",
+            "aj_crew.aws_consent.read_grant",
             return_value=mock.Mock(profile="other", region="us-west-2", account=ACCOUNT),
         ):
             exc, asked = self._download(
@@ -256,7 +256,7 @@ class TestRecordedVersionRecovery:
         # whole surface off, which must stop a read the restore is spending on their
         # behalf just as a withdrawn grant does.
         key = self._recorded(RECOVERED_FINGERPRINT, "v-ours")
-        with mock.patch("kiro_crew.apps.manager.is_app_enabled", return_value=False):
+        with mock.patch("aj_crew.apps.manager.is_app_enabled", return_value=False):
             exc, asked = self._download(
                 key, current=b"somebody elses archive", by_version=RECOVERED_BYTES
             )
@@ -270,7 +270,7 @@ class TestRecordedVersionRecovery:
         # what closes that, and it runs before the read rather than after it.
         key = self._recorded(RECOVERED_FINGERPRINT, "v-ours")
         with mock.patch(
-            "kiro_crew.deploy.engine._checked", return_value='{"Account": "999988887777"}'
+            "aj_crew.deploy.engine._checked", return_value='{"Account": "999988887777"}'
         ):
             exc, asked = self._download(
                 key, current=b"somebody elses archive", by_version=RECOVERED_BYTES
@@ -286,7 +286,7 @@ class TestRecordedVersionRecovery:
         # is read and compared rather than trusted because `is_granted` said yes.
         key = self._recorded(RECOVERED_FINGERPRINT, "v-ours")
         with mock.patch(
-            "kiro_crew.aws_consent.read_grant",
+            "aj_crew.aws_consent.read_grant",
             return_value=mock.Mock(profile="p", region="us-west-2", account="999988887777"),
         ):
             exc, asked = self._download(
@@ -307,7 +307,7 @@ class TestRecordedVersionRecovery:
             reads.append(service)
             return mock.Mock(profile="p", region="us-west-2", account=ACCOUNT)
 
-        with mock.patch("kiro_crew.aws_consent.read_grant", counting):
+        with mock.patch("aj_crew.aws_consent.read_grant", counting):
             result, asked = self._download(
                 key, current=b"somebody elses archive", by_version=RECOVERED_BYTES
             )
@@ -319,7 +319,7 @@ class TestRecordedVersionRecovery:
         # A grant that cannot be read names no account, so it cannot be verified
         # against anything and is refused for the same reason a mismatched one is.
         key = self._recorded(RECOVERED_FINGERPRINT, "v-ours")
-        with mock.patch("kiro_crew.aws_consent.read_grant", return_value=None):
+        with mock.patch("aj_crew.aws_consent.read_grant", return_value=None):
             exc, asked = self._download(
                 key, current=b"somebody elses archive", by_version=RECOVERED_BYTES
             )
@@ -332,7 +332,7 @@ class TestRecordedVersionRecovery:
         # caller already had.
         key = self._recorded(RECOVERED_FINGERPRINT, "v-ours")
         with mock.patch(
-            "kiro_crew.deploy.engine._checked",
+            "aj_crew.deploy.engine._checked",
             side_effect=backup.AWSError("sts:GetCallerIdentity failed"),
         ):
             exc, asked = self._download(

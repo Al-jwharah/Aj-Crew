@@ -27,12 +27,12 @@ import pytest
 from chat_runner_coverage_helpers import _slot, _state
 from turn_harness import TurnScript, run_turn
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN, AcpEvent
-from kiro_crew.context import build_session_replay
-from kiro_crew.dashboard import chat_runner
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN, AcpEvent
+from aj_crew.context import build_session_replay
+from aj_crew.dashboard import chat_runner
 
-KEY = "dashboard:member-kirocrew-conductor"
-CONDUCTOR = "kirocrew-conductor"
+KEY = "dashboard:member-ajcrew-conductor"
+CONDUCTOR = "ajcrew-conductor"
 #: ``meta.notice`` on the trim's row: the contract the replay and the compaction card read.
 NOTICE = "context_cap"
 #: The block the stand-in session-ledger reader answers with.
@@ -138,7 +138,7 @@ def _cfg(on: bool = True) -> Any:
 
 
 def _conductor(tmp_path, sessions: _Sessions) -> tuple[Any, Any]:
-    state, slot = _state(tmp_path), _slot("member-kirocrew-conductor")
+    state, slot = _state(tmp_path), _slot("member-ajcrew-conductor")
     state.sessions = sessions
     slot.agent = CONDUCTOR
     return state, slot
@@ -190,8 +190,8 @@ async def test_rule_a_trims_a_session_over_400k_at_a_turn_start(tmp_path):
 @pytest.mark.asyncio
 async def test_a_trim_appends_no_transcript_row(tmp_path):
     """The rows the reply scans read are the same before and after a trim."""
-    from kiro_crew.dashboard.chat_backfill import _is_conversational
-    from kiro_crew.dashboard.state_parts.transcript_rows import is_turn_interrupted
+    from aj_crew.dashboard.chat_backfill import _is_conversational
+    from aj_crew.dashboard.state_parts.transcript_rows import is_turn_interrupted
 
     sessions = _Sessions(_Provider(412_000), idle_secs=0.0)
     state, slot = _conductor(tmp_path, sessions)
@@ -229,13 +229,13 @@ async def test_a_warm_session_between_the_marks_is_left_alone(tmp_path):
 @pytest.mark.asyncio
 async def test_the_clock_is_the_previous_turns_release_not_its_acquire(tmp_path):
     """A long turn that ended a minute ago is warm, however long ago it acquired."""
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.session import SessionManager, _Session
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.session import SessionManager, _Session
 
-    mgr = SessionManager(KiroCrewConfig(), provider_factory=MagicMock())
+    mgr = SessionManager(AjCrewConfig(), provider_factory=MagicMock())
     record = _Session(provider=_Provider(250_000))
     mgr._sessions[mgr._fold_key(KEY)] = record
-    state, slot = _state(tmp_path), _slot("member-kirocrew-conductor")
+    state, slot = _state(tmp_path), _slot("member-ajcrew-conductor")
     state.sessions = mgr
     slot.agent = CONDUCTOR
     # Held so a fired rule stops at a hold instead of tearing the session down.
@@ -309,7 +309,7 @@ def _not_kas(sessions, state, slot) -> None:
 
 
 def _not_conductor(sessions, state, slot) -> None:
-    slot.agent = "kirocrew"
+    slot.agent = "ajcrew"
 
 
 def _reset_queued(sessions, state, slot) -> None:
@@ -394,10 +394,10 @@ async def test_the_off_switch_leaves_every_session_alone(tmp_path, cfg):
 
 
 def test_the_cap_is_on_by_default_and_config_json_turns_it_off():
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.config.loader_builders import _build_session_config
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.config.loader_builders import _build_session_config
 
-    assert getattr(KiroCrewConfig().session, "context_cap", None) is True
+    assert getattr(AjCrewConfig().session, "context_cap", None) is True
     assert _build_session_config({}).context_cap is True
     assert _build_session_config({"context_cap": False}).context_cap is False
 
@@ -436,7 +436,7 @@ async def _replay(state, slot, provider: _Provider | None = None) -> str:
 
 @pytest.fixture
 def snapshot_reads(monkeypatch) -> list[str]:
-    from kiro_crew import session_ledger
+    from aj_crew import session_ledger
 
     reads: list[str] = []
 
@@ -462,7 +462,7 @@ async def test_the_trimmed_cold_start_replays_the_note_the_snapshot_and_a_fallba
 
     head = chat_runner.CONTEXT_CAP_TRIM_NOTE + "\n\n" + SNAPSHOT + "\n\n"
     assert seed.startswith(head)
-    assert snapshot_reads == ["member-kirocrew-conductor"]
+    assert snapshot_reads == ["member-ajcrew-conductor"]
     tail = seed[len(head) :]
     assert 140_000 < len(tail) <= 144_000
     assert tail.endswith("0699 " + "x" * 1_000)
@@ -669,9 +669,9 @@ async def _seeded_first_turn(tmp_path, monkeypatch, events) -> tuple[Any, str]:
     """One whole ``_run_chat`` first turn on a cold start a trim began; returns its prompt."""
     from recovery_l1_chat_runner_helpers import _l1_state, _RecordingSlot
 
-    from kiro_crew.dashboard.chat import _run_chat
-    from kiro_crew.dashboard.chat_utils import effective_session_key
-    from kiro_crew.providers.base import LLMEvent
+    from aj_crew.dashboard.chat import _run_chat
+    from aj_crew.dashboard.chat_utils import effective_session_key
+    from aj_crew.providers.base import LLMEvent
 
     state, client = _l1_state(tmp_path)
     client.last_infra_error = None
@@ -684,7 +684,7 @@ async def _seeded_first_turn(tmp_path, monkeypatch, events) -> tuple[Any, str]:
         "consume_replay_suppression",
     ):
         setattr(state.sessions, name, getattr(debt, name))
-    monkeypatch.setattr("kiro_crew.context.build_session_replay", lambda *a, **k: "User: earlier")
+    monkeypatch.setattr("aj_crew.context.build_session_replay", lambda *a, **k: "User: earlier")
 
     def _stream(*_a, **_kw):
         async def _gen():
@@ -699,7 +699,7 @@ async def _seeded_first_turn(tmp_path, monkeypatch, events) -> tuple[Any, str]:
     slot = _RecordingSlot("chat-cap-seed")
     key = effective_session_key(slot)
     chat_runner._remember_context_cap_trim(key)
-    with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+    with patch("aj_crew.dashboard.chat.sel") as mock_sel:
         mock_sel.return_value = MagicMock()
         await _run_chat(state, slot, "hello")
         if slot.task:
@@ -731,7 +731,7 @@ async def test_a_landed_first_turn_spends_the_seed_it_carried(
 async def test_a_first_turn_that_fails_before_output_keeps_the_seed(
     tmp_path, monkeypatch, snapshot_reads
 ):
-    from kiro_crew.acp.client import AcpError
+    from aj_crew.acp.client import AcpError
 
     trim, prompt = await _seeded_first_turn(
         tmp_path, monkeypatch, [("raise", AcpError("the backend refused the prompt"))]

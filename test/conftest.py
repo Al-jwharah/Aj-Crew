@@ -210,7 +210,7 @@ def posix_test_shell() -> str:
 
 
 # ── Windows and macOS CI ────────────────────────────────────────────────
-# The backend runs natively on Windows (kiro_crew.platform_compat), but a
+# The backend runs natively on Windows (aj_crew.platform_compat), but a
 # handful of suites exercise POSIX-only-by-design features (OS-level
 # sandbox, process groups / PGID semantics, PTY, AF_UNIX sockets -- see
 # docs/guides/windows-install.md's per-feature table). Skip collecting them on
@@ -224,7 +224,7 @@ def posix_test_shell() -> str:
 # rather than a ``collect_ignore`` list, is in platform_collect_ignore_helpers.py.
 from platform_collect_ignore_helpers import pytest_ignore_collect  # noqa: E402,F401
 
-from kiro_crew import platform_compat  # noqa: E402
+from aj_crew import platform_compat  # noqa: E402
 
 
 @pytest.fixture
@@ -270,7 +270,7 @@ from conftest_opt_in import (  # noqa: E402,F401 -- bound for pytest and importe
     short_sock_dir,
 )
 
-# Per-test resets of process-global kiro_crew state, and the network fences.
+# Per-test resets of process-global aj_crew state, and the network fences.
 from conftest_resets import (  # noqa: E402,F401 -- bound for pytest and importers
     _approve_every_mcp_launch,
     _crewmate_dynamic_capabilities_on,
@@ -330,10 +330,10 @@ from conftest_slack import (  # noqa: E402,F401 -- bound for pytest and importer
     _reset_options_control_state,
 )
 
-# ``make_dir_link`` lives in kiro_crew.testing.links so the app-embedded test
+# ``make_dir_link`` lives in aj_crew.testing.links so the app-embedded test
 # packages, which never see this conftest, share the one copy. Re-exported so
 # ``from conftest import make_dir_link`` keeps working.
-from kiro_crew.testing.links import make_dir_link  # noqa: E402,F401
+from aj_crew.testing.links import make_dir_link  # noqa: E402,F401
 
 #: Thread-CPU budget for ONE rejection of a pump in the SMALL ramp. The shipped
 #: grammars spend under one clock tick here; the exponential class a shared character
@@ -505,7 +505,7 @@ def assert_rejected_without_backtracking(
 #: ``pytest_collection_modifyitems`` -- which applies the
 #: ``windows-expected-failures.txt`` skips -- lives in the ROOTDIR ``conftest.py``.
 #: That list already names node ids under
-#: ``src/kiro_crew/apps/builtins/auto_improvement/tests/``, and a hook rooted here never
+#: ``src/aj_crew/apps/builtins/auto_improvement/tests/``, and a hook rooted here never
 #: runs when only those in-package tests are collected (which is exactly what CI's
 #: reduced-scope Windows job does on a frontend-only diff), so the skips silently did
 #: not apply where they were needed.
@@ -528,7 +528,7 @@ def _fresh_update_ownership(_floor_monkeypatch):
     never finished, which would own the gap in whatever test runs next, so that
     fails the test that left it.
     """
-    from kiro_crew import update_ownership
+    from aj_crew import update_ownership
 
     registry: list = []
     _floor_monkeypatch.setattr(update_ownership, "_live", registry)
@@ -551,7 +551,7 @@ def _krb5_keyring_check_done(_floor_monkeypatch):
     and on test order. Tests of the check
     itself re-arm it through their own ``monkeypatch``.
     """
-    from kiro_crew import env_krb5_keyring
+    from aj_crew import env_krb5_keyring
 
     _floor_monkeypatch.setattr(env_krb5_keyring, "_KRB5_KEYRING_CHECKED", True)
 
@@ -566,7 +566,7 @@ def _fresh_host_unservable_backends(_floor_monkeypatch):
     drives the floor would otherwise leave either verdict to every later test in
     the worker. Rebound per test, so a verdict made in one test is gone in the next.
     """
-    from kiro_crew.agent_sdk import backends
+    from aj_crew.agent_sdk import backends
 
     _floor_monkeypatch.setattr(backends, "_selectable", set(backends._selectable))
     _floor_monkeypatch.setattr(backends, "_host_unservable", dict(backends._host_unservable))
@@ -584,7 +584,7 @@ def _fresh_mcp_oauth_provenance(_floor_monkeypatch):
     """
     from collections import OrderedDict
 
-    from kiro_crew.dashboard import mcp_oauth_provenance
+    from aj_crew.dashboard import mcp_oauth_provenance
 
     _floor_monkeypatch.setattr(mcp_oauth_provenance, "_emitted", OrderedDict())
 
@@ -602,7 +602,7 @@ def _relay_unless_a_test_opens_the_kas_route(_floor_monkeypatch):
     state are process slots, rebound per test so one test's spawn is not the next
     one's.
     """
-    from kiro_crew.acp import kas_engine_install, kas_route
+    from aj_crew.acp import kas_engine_install, kas_route
 
     _floor_monkeypatch.setattr(kas_route, "automatic_switch_allowed", lambda pin="": False)
     _floor_monkeypatch.setattr(kas_route, "_LAST_SPAWN_ROUTE", None)
@@ -624,7 +624,7 @@ def _kas_projection_relays_no_runner_auth_env(_floor_monkeypatch):
     bare everywhere else. The tests of the relay put the real one back with
     ``monkeypatch``.
     """
-    from kiro_crew.acp import kas_env_launch
+    from aj_crew.acp import kas_env_launch
 
     _floor_monkeypatch.setattr(kas_env_launch, "inherited_auth_env", lambda _forward: {})
 
@@ -639,7 +639,7 @@ def _registry_governance_reachability_unknown(_floor_monkeypatch):
     a registry-mode spec carried before the control-plane exception. The tests of
     that exception and of the probe set their own answer with ``monkeypatch``.
     """
-    from kiro_crew import kiro_cli
+    from aj_crew import kiro_cli
 
     _floor_monkeypatch.setattr(kiro_cli, "registry_governance_known_unreachable", lambda: False)
     _floor_monkeypatch.setattr(kiro_cli, "_governance_unreachable_cache", None)
@@ -658,7 +658,7 @@ def _config_content_check_off_unless_a_test_turns_it_on(_floor_monkeypatch):
     pre-set too, so a gateway boot's ``prime_host_verdict`` never runs a real namespace
     probe; a test that wants the probe sets ``lp._host_verdict`` back to ``None``.
     """
-    from kiro_crew.config import loosening_provenance
+    from aj_crew.config import loosening_provenance
 
     _floor_monkeypatch.setattr(loosening_provenance, "enforcement_active", lambda: False)
     _floor_monkeypatch.setattr(loosening_provenance, "_host_verdict", False)
@@ -693,7 +693,7 @@ def fresh_darwin_libc_handles(_floor_monkeypatch):
     ``_floor_monkeypatch`` so a test's ``monkeypatch.undo()`` cannot lift it, and
     every value is put back at teardown.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     for name, unbuilt in (
         ("_darwin_libc_sysctl", None),
@@ -794,7 +794,7 @@ def _no_inherited_admission_service(_floor_monkeypatch):
     every turn through it, config re-reads included. Rebound only when the
     module is already imported; the inherited value is restored at teardown.
     """
-    gate = sys.modules.get("kiro_crew.shared_crew.admission_gate")
+    gate = sys.modules.get("aj_crew.shared_crew.admission_gate")
     if gate is not None:
         _floor_monkeypatch.setattr(gate, "_SERVICE", None)
         _floor_monkeypatch.setattr(gate, "_SERVICE_LOOP", None)
@@ -817,7 +817,7 @@ def _isolate_aim_skills_dir(_floor_monkeypatch):
     autouse it made every one of the suite's ~26k tests allocate a temp directory it
     never touched -- the single largest fixed cost in the suite's setup path.
     """
-    from kiro_crew.platform.defaults import DefaultMcpToolingProvider
+    from aj_crew.platform.defaults import DefaultMcpToolingProvider
 
     _floor_monkeypatch.setattr(DefaultMcpToolingProvider, "extra_skills", lambda self: [])
 
@@ -1023,7 +1023,7 @@ def _reset_reasoning_effort_globals():
     through ``_sync_effort_levels`` -> ``update_reasoning_effort_values``;
     without this, a level like ``"extreme"`` leaks into the global and poisons
     validation tests sharing the xdist worker (e.g. test_chat_slot_reasoning_effort)."""
-    import kiro_crew.dashboard.chat_persistence as _cp
+    import aj_crew.dashboard.chat_persistence as _cp
 
     saved_values = set(_cp._reasoning_effort_values)
     saved_ordered = list(_cp._reasoning_effort_ordered)
@@ -1042,14 +1042,14 @@ def _reset_overlay_refresher():
     global; left set, a later test's app registration would call into it.
     """
     yield
-    from kiro_crew.mcp_gateway import overlay_refresh
+    from aj_crew.mcp_gateway import overlay_refresh
 
     overlay_refresh.set_overlay_refresher(None)
 
 
 @pytest.fixture(autouse=True)
 def _undetected_host_timezone():
-    """Give every test a host zone that was never detected (``kiro_crew.host_timezone``).
+    """Give every test a host zone that was never detected (``aj_crew.host_timezone``).
 
     An unset cron or config zone follows the host's zone, which is the zone of
     whichever machine runs the suite. Undetected, it resolves to UTC on every
@@ -1057,7 +1057,7 @@ def _undetected_host_timezone():
     host zone publishes one (``publish_host_timezone``) or detects it
     (``detect_host_timezone``, which this does not touch).
     """
-    from kiro_crew import host_timezone
+    from aj_crew import host_timezone
 
     host_timezone.reset_host_timezone()
     host_timezone.freeze_host_timezone("")
@@ -1075,7 +1075,7 @@ def _reset_crew_workers_cache():
     """
     import sys as _sys
 
-    mod = _sys.modules.get("kiro_crew.dashboard.handlers.crew_workers")
+    mod = _sys.modules.get("aj_crew.dashboard.handlers.crew_workers")
     if mod is not None:
         mod._reset_for_tests()
     yield
@@ -1095,7 +1095,7 @@ def _reset_creator_titles():
     import sys as _sys
 
     def _reset() -> None:
-        mod = _sys.modules.get("kiro_crew.dashboard.creator_titles")
+        mod = _sys.modules.get("aj_crew.dashboard.creator_titles")
         if mod is not None:
             mod._reset_for_tests()
 
@@ -1115,7 +1115,7 @@ def _reset_main_spec_episode_globals():
     unreadable-spec skip without monkeypatching them would leave the hold open
     for whichever test runs next on the worker.
     """
-    import kiro_crew.agent as _agent
+    import aj_crew.agent as _agent
 
     def _clear() -> None:
         _agent._main_spec_unreadable = False
@@ -1131,10 +1131,10 @@ def _reset_main_spec_episode_globals():
         _clear()
 
 
-#: ``_isolation_root`` / ``_isolation_dirs`` / ``_isolate_kirocrew_home`` live in the
+#: ``_isolation_root`` / ``_isolation_dirs`` / ``_isolate_ajcrew_home`` live in the
 #: ROOTDIR ``conftest.py``, not here. The data home has to be pinned for every
 #: testpath, including the ~108 test modules that ship inside the package under
-#: ``src/kiro_crew/apps/builtins/*/tests/`` and never see this file. The fixtures
+#: ``src/aj_crew/apps/builtins/*/tests/`` and never see this file. The fixtures
 #: below still request ``_isolation_dirs`` and resolve it up the hierarchy.
 
 
@@ -1160,11 +1160,11 @@ def _isolate_message_entry_cache():
     leave the memory ceiling mis-accounted and evict a healthy cache.
 
     The memoised config bounds are reset for the same reason: they are resolved
-    once per process from whatever KIROCREW_HOME the first caller saw, so a test
+    once per process from whatever AJCREW_HOME the first caller saw, so a test
     that resolved them under its own home would otherwise leak its bounds into
     every later test's cache behaviour.
     """
-    from kiro_crew.dashboard import chat_persistence as _cp
+    from aj_crew.dashboard import chat_persistence as _cp
 
     _cp._entry_cache.clear()
     _cp._entry_cache_bytes = 0
@@ -1188,7 +1188,7 @@ def _knowledge_store_cross_thread_close():
     executor threads opened. Flipped once per session, before any store is built
     (the flag is read at connect time), and restored at session end.
     """
-    from kiro_crew.knowledge import store as knowledge_store
+    from aj_crew.knowledge import store as knowledge_store
 
     previous = knowledge_store._ALLOW_CROSS_THREAD_CLOSE_FOR_TESTS
     knowledge_store._ALLOW_CROSS_THREAD_CLOSE_FOR_TESTS = True
@@ -1240,9 +1240,9 @@ def _git_identity(_floor_monkeypatch, _git_global_config) -> None:
 
 
 # ``_reset_platform_context`` (the per-test PlatformContext reset and the
-# ``KIROCREW_PROFILE=standalone`` pin) lives in the ROOTDIR conftest, not here:
-# the ~108 test modules under ``src/kiro_crew/apps/builtins/*/tests/`` never see
-# this file, and an inherited enterprise ``KIROCREW_PROFILE`` failed 150+ of them
+# ``AJCREW_PROFILE=standalone`` pin) lives in the ROOTDIR conftest, not here:
+# the ~108 test modules under ``src/aj_crew/apps/builtins/*/tests/`` never see
+# this file, and an inherited enterprise ``AJCREW_PROFILE`` failed 150+ of them
 # closed on an operator's box while ``test/`` stayed green.
 
 
@@ -1289,15 +1289,15 @@ class _InertGatewayPosts(list):
 def _exported_gateway_ports() -> frozenset[int]:
     """Client ports the shell that started pytest exports, read once at import.
 
-    ``KIROCREW_PORT`` is the first step of the client's port resolution and the
+    ``AJCREW_PORT`` is the first step of the client's port resolution and the
     floor does not clear it, so a developer who exports it to reach their own
-    gateway sends every unconfigured test there. ``KIROCREW_BOUND_PORT`` names the
+    gateway sends every unconfigured test there. ``AJCREW_BOUND_PORT`` names the
     gateway that spawned the run when an agent session runs the suite. Read here,
     before any test edits the environment, so a test that sets either variable to
     its own server's port is not mistaken for the shell's choice.
     """
     ports: set[int] = set()
-    for name in ("KIROCREW_PORT", "KIROCREW_BOUND_PORT"):
+    for name in ("AJCREW_PORT", "AJCREW_BOUND_PORT"):
         try:
             ports.add(int(os.environ.get(name, "")))
         except ValueError:
@@ -1329,7 +1329,7 @@ def _refuse_developer_gateway(real_urlopen):
     to the real transport untouched. The default port is read at call time
     from ``port_resolution``, the module the client resolves it from.
     """
-    from kiro_crew import port_resolution
+    from aj_crew import port_resolution
 
     def _guarded(req, *args, **kwargs):
         try:
@@ -1369,7 +1369,7 @@ def _refuse_developer_gateway_opener(real_build_loopback_opener):
     the client resolves it from, so a test can point it at a stand-in by patching
     that attribute and the guard will follow.
     """
-    from kiro_crew import port_resolution
+    from aj_crew import port_resolution
 
     def _guarded_opener():
         real_opener = real_build_loopback_opener()
@@ -1412,7 +1412,7 @@ def gateway_posts(request, _floor_monkeypatch):
     without stubbing ``_post`` makes a REAL request to whatever is listening
     there, silently. On a developer machine that is the operator's own live
     gateway, and the request carries a real-looking session key. The suite only
-    avoided a live write because this conftest's ``KIROCREW_HOME`` pin makes
+    avoided a live write because this conftest's ``AJCREW_HOME`` pin makes
     the client read a different instance credential, so the gateway refuses the
     call — an unrelated guard no test is entitled to rely on. Stubbing here
     makes reaching the network opt-in for the whole suite rather than opt-out.
@@ -1443,7 +1443,7 @@ def gateway_posts(request, _floor_monkeypatch):
     a developer's gateway listens on gets the refusal a CI runner gets, and a
     request to a server the test started goes through.
 
-    Clients that import ``loopback_urlopen`` from ``kiro_crew.loopback_http``
+    Clients that import ``loopback_urlopen`` from ``aj_crew.loopback_http``
     directly (``cron_trigger``, ``cli_commands``, ``cli_server``, ``cron_script``,
     ``mcp_shared``, ``mcp_computer``) bypass ``mcp_core``. They all call
     ``loopback_http.loopback_urlopen``, which looks up ``build_loopback_opener``
@@ -1451,7 +1451,7 @@ def gateway_posts(request, _floor_monkeypatch):
     :func:`_refuse_developer_gateway_opener` covers all of them regardless of how
     they imported ``loopback_urlopen``.
     """
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     if getattr(request.module, "__name__", "") in _REAL_MCP_POST_MODULES:
 
@@ -1475,7 +1475,7 @@ def gateway_posts(request, _floor_monkeypatch):
     _floor_monkeypatch.setattr(
         mcp_core, "loopback_urlopen", _refuse_developer_gateway(mcp_core.loopback_urlopen)
     )
-    from kiro_crew import loopback_http
+    from aj_crew import loopback_http
 
     _floor_monkeypatch.setattr(
         loopback_http,
@@ -1509,7 +1509,7 @@ def _no_leaked_interleave_hook():
     the dashboard pays one dict lookup and does not drag ``chat_handlers`` and its
     import graph into every worker's collection.
     """
-    mod = sys.modules.get("kiro_crew.dashboard.chat_handlers")
+    mod = sys.modules.get("aj_crew.dashboard.chat_handlers")
     if mod is not None and mod._test_interleave is not None:
         mod._test_interleave = None
         pytest.fail(
@@ -1519,15 +1519,15 @@ def _no_leaked_interleave_hook():
         )
 
 
-#: Markers Kiro Crew sets on the processes it spawns for an agent, which
+#: Markers Aj Crew sets on the processes it spawns for an agent, which
 #: ``cloud.aws._in_agent_session`` reads to refuse cloud mutations. When an agent
 #: session runs the suite they are inherited from it, so the guard would read
 #: every "human terminal" test as an agent. CI never has them; hiding them here
 #: makes a local agent-run suite see what CI sees.
 _INHERITED_AGENT_MARKERS = (
-    "KIROCREW_SESSION_KEY",
-    "KIROCREW_RUNTIME_AGENT",
-    "KIROCREW_HOST_PID",
+    "AJCREW_SESSION_KEY",
+    "AJCREW_RUNTIME_AGENT",
+    "AJCREW_HOST_PID",
 )
 
 
@@ -1544,7 +1544,7 @@ def _cloud_guard_ignores_the_runners_agent_markers(_floor_monkeypatch):
     """
     for name in _INHERITED_AGENT_MARKERS:
         _floor_monkeypatch.delenv(name, raising=False)
-    aws_mod = sys.modules.get("kiro_crew.cloud.aws")
+    aws_mod = sys.modules.get("aj_crew.cloud.aws")
     if aws_mod is not None and hasattr(aws_mod, "_agent_confinement"):
         _floor_monkeypatch.setattr(aws_mod, "_agent_confinement", lambda: False)
 
@@ -1554,7 +1554,7 @@ def release_engine_installs(_floor_monkeypatch):
     """Record the KAS engine step of every release apply instead of running it.
 
     ``release_apply.apply_release`` ends each update with the new release's own
-    ``kirocrew kas install --if-in-use``, a child that downloads a few hundred MB
+    ``ajcrew kas install --if-in-use``, a child that downloads a few hundred MB
     from the release bucket whenever the install uses KAS -- and a stock test home
     does, since KAS is the default backend. Every update-path test that stubs only
     the package install would otherwise spawn that download. Stubbing it here makes
@@ -1564,7 +1564,7 @@ def release_engine_installs(_floor_monkeypatch):
     ``release_apply._install_engine`` again, or holds the real function it imported
     at collection time.
     """
-    from kiro_crew.platform import release_apply
+    from aj_crew.platform import release_apply
 
     calls: list[tuple[pathlib.Path, bool]] = []
 
@@ -1596,10 +1596,10 @@ def _drain_dashboard_verify_slot() -> None:
     effectively free.
     """
     yield
-    dv = sys.modules.get("kiro_crew.dashboard_verify")
+    dv = sys.modules.get("aj_crew.dashboard_verify")
     if dv is None or not dv._SLOT.locked():
         return
-    from kiro_crew.testing.wait import wait_until
+    from aj_crew.testing.wait import wait_until
 
     wait_until(
         lambda: not dv._SLOT.locked(),
@@ -1611,7 +1611,7 @@ def _drain_dashboard_verify_slot() -> None:
 @pytest.fixture
 def held_flag(monkeypatch):
     """Restore the rebuild's held-spec memo after the test changes it."""
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     monkeypatch.setattr(agent_mod, "_conductor_spec_held", False)
     monkeypatch.setattr(agent_mod, "_main_spec_unreadable", False)

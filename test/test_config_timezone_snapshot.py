@@ -1,7 +1,7 @@
 """The published config-timezone snapshot.
 
 ``CronService._on_timer`` reads the default zone on the loop every tick, so each
-``KiroCrewConfig.load`` publishes it. Pins that a settings change reaches a running
+``AjCrewConfig.load`` publishes it. Pins that a settings change reaches a running
 gateway and that a late load cannot reinstate what it read early.
 """
 
@@ -13,13 +13,13 @@ import unittest.mock
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from kiro_crew.config.loader import (
-    KiroCrewConfig,
+from aj_crew.config.loader import (
+    AjCrewConfig,
     next_config_load_ticket,
     publish_config_timezone,
     published_config_timezone,
 )
-from kiro_crew.cron import CronJob, _job_tz
+from aj_crew.cron import CronJob, _job_tz
 
 
 def _reset_published_timezone() -> None:
@@ -30,7 +30,7 @@ def _reset_published_timezone() -> None:
     The ``next_config_load_ticket`` counter is not reset: it also orders the
     compaction-threshold snapshot, whose next publish would then be dropped.
     """
-    from kiro_crew.config import loader as _loader
+    from aj_crew.config import loader as _loader
 
     _loader._CONFIG_TIMEZONE = ""
     _loader._CONFIG_TIMEZONE_TICKET = 0
@@ -49,7 +49,7 @@ def _dominating_ticket() -> int:
     return next_config_load_ticket() + _DOMINATING
 
 
-def _load_with_timezone(tz_name: str) -> KiroCrewConfig:
+def _load_with_timezone(tz_name: str) -> AjCrewConfig:
     """Load config from a temp file naming *tz_name* as the default zone.
 
     Patches ``config_path`` rather than touching the real data home; a distinct
@@ -60,8 +60,8 @@ def _load_with_timezone(tz_name: str) -> KiroCrewConfig:
         json.dump({"timezone": tz_name}, f)
         tmp = Path(f.name)
     try:
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
-            return KiroCrewConfig.load()
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
+            return AjCrewConfig.load()
     finally:
         tmp.unlink(missing_ok=True)
 
@@ -73,7 +73,7 @@ class TestTheSnapshotCarriesTheConfiguredZone:
         Checked on the publish call, not the global: other code may load config
         concurrently and replace the value before the read.
         """
-        with unittest.mock.patch("kiro_crew.config.loader.publish_config_timezone") as publish:
+        with unittest.mock.patch("aj_crew.config.loader.publish_config_timezone") as publish:
             cfg = _load_with_timezone("America/Toronto")
 
         assert cfg.timezone == "America/Toronto"
@@ -104,7 +104,7 @@ class TestTheSnapshotFailsToUnsetRatherThanToAGuess:
     def test_a_cold_snapshot_reads_as_unset(self) -> None:
         """Before any load, the snapshot says "nothing configured" -- not a zone.
 
-        ``""`` is exactly what an unset ``KiroCrewConfig.timezone`` says, so a
+        ``""`` is exactly what an unset ``AjCrewConfig.timezone`` says, so a
         read taken during the boot window resolves the same way a defaults-only
         load would: through to UTC. Inventing a zone here would make a
         cron-expression job fire at the wrong local time once at startup.
@@ -113,7 +113,7 @@ class TestTheSnapshotFailsToUnsetRatherThanToAGuess:
         # process global: a concurrent load publishing a real zone would make an
         # assertion on the reset global fail for a reason this test is not about.
         # What is under test is that an UNSET default resolves to UTC.
-        with unittest.mock.patch("kiro_crew.cron.published_config_timezone", return_value=""):
+        with unittest.mock.patch("aj_crew.cron.published_config_timezone", return_value=""):
             job = CronJob(id="j1", name="t", message="m", timezone="")
             assert _job_tz(job) == ZoneInfo("UTC")
 
@@ -130,7 +130,7 @@ class TestTheSnapshotFailsToUnsetRatherThanToAGuess:
             assert published_config_timezone() == "America/Toronto"
             # Strictly newer than the publish above, and still far beyond any
             # ticket a concurrent real load can draw -- see _DOMINATING.
-            publish_config_timezone(KiroCrewConfig(), first + 1)
+            publish_config_timezone(AjCrewConfig(), first + 1)
             assert published_config_timezone() == ""
         finally:
             _reset_published_timezone()
@@ -186,8 +186,8 @@ class TestConcurrentLoadsAreOrdered:
             _reset_published_timezone()
 
 
-def _cfg_with_tz(tz_name: str) -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
+def _cfg_with_tz(tz_name: str) -> AjCrewConfig:
+    cfg = AjCrewConfig()
     cfg.timezone = tz_name
     return cfg
 
@@ -198,4 +198,4 @@ def _live_default() -> str:
     Named so the one assertion that cannot dominate the ticket counter can admit
     the only other legal outcome, instead of being quietly flaky.
     """
-    return KiroCrewConfig.load().timezone
+    return AjCrewConfig.load().timezone

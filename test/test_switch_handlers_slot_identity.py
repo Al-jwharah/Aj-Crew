@@ -26,15 +26,15 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard.chat import (
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard.chat import (
     api_chat_slot_agent,
     api_chat_slot_model,
     api_chat_slot_reasoning_effort,
     api_chat_slot_workspace,
     api_chat_slots_model,
 )
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 _MODEL_OLD = "claude-opus-4.8"
 _MODEL_NEW = "gpt-5.6-sol"

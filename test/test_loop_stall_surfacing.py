@@ -27,22 +27,22 @@ import json
 import os
 from pathlib import Path
 
-from kiro_crew.config.loader import (
+from aj_crew.config.loader import (
     LOOP_STALL_EXIT_AFTER_MAX,
     LOOP_STALL_EXIT_AFTER_MIN,
-    KiroCrewConfig,
+    AjCrewConfig,
     _clamp_security_bounds,
     consume_managed_service_launch_environment,
     load_loop_stall_exit_after,
     resolve_loop_stall_exit_after,
 )
-from kiro_crew.dashboard.crash_dump_store import (
+from aj_crew.dashboard.crash_dump_store import (
     claim_dump_notification,
     current_process_identity,
     dump_superseded,
     dumps_with_stacks,
 )
-from kiro_crew.dashboard.loop_watchdog import LoopStallWatchdog
+from aj_crew.dashboard.loop_watchdog import LoopStallWatchdog
 
 
 def _dump(tmp_path: Path, name: str = "loopstall-20260803T000000Z.txt") -> Path:
@@ -72,7 +72,7 @@ class TestClaimDumpNotification:
 
     def test_marker_is_not_mistaken_for_a_dump(self, tmp_path) -> None:
         """The marker lives in the dumps dir; rotation must ignore it."""
-        from kiro_crew.dashboard.crash_dump_store import _list_dumps
+        from aj_crew.dashboard.crash_dump_store import _list_dumps
 
         dump = _dump(tmp_path)
         claim_dump_notification(dump, tmp_path)
@@ -183,37 +183,37 @@ class TestDumpsWithStacks:
 
 class TestLoopStallBudgetConfig:
     def test_default_remains_automatic_until_launch(self) -> None:
-        assert KiroCrewConfig().dashboard.loop_stall_exit_after_secs is None
+        assert AjCrewConfig().dashboard.loop_stall_exit_after_secs is None
 
     def test_managed_service_uses_the_wider_budget(self) -> None:
-        assert resolve_loop_stall_exit_after({}, {"KIROCREW_SERVICE_MANAGED": "1"}) == 90
+        assert resolve_loop_stall_exit_after({}, {"AJCREW_SERVICE_MANAGED": "1"}) == 90
         assert resolve_loop_stall_exit_after({}, {"INVOCATION_ID": "legacy-unit"}) == 25
         assert resolve_loop_stall_exit_after({}, {"SYSTEMD_EXEC_PID": str(os.getpid())}) == 25
-        assert resolve_loop_stall_exit_after({}, {"KIROCREW_SERVICE_MANAGED": "0"}) == 25
+        assert resolve_loop_stall_exit_after({}, {"AJCREW_SERVICE_MANAGED": "0"}) == 25
         assert resolve_loop_stall_exit_after({}, {"INVOCATION_ID": ""}) == 25
         assert resolve_loop_stall_exit_after({}, {}) == 25
 
     def test_managed_marker_is_consumed_before_children_are_started(self) -> None:
         environment = {
-            "KIROCREW_SERVICE_MANAGED": "1",
+            "AJCREW_SERVICE_MANAGED": "1",
             "PATH": "/usr/bin",
         }
 
         launch_environment = consume_managed_service_launch_environment(environment)
 
-        assert launch_environment == {"KIROCREW_SERVICE_MANAGED": "1"}
+        assert launch_environment == {"AJCREW_SERVICE_MANAGED": "1"}
         assert environment == {"PATH": "/usr/bin"}
         assert resolve_loop_stall_exit_after({}, launch_environment) == 90
         assert resolve_loop_stall_exit_after({}, environment) == 25
 
     def test_operator_budget_is_preserved_for_managed_services(self) -> None:
         explicit = {"loop_stall_exit_after_secs": 25}
-        assert resolve_loop_stall_exit_after(explicit, {"KIROCREW_SERVICE_MANAGED": "1"}) == 25
+        assert resolve_loop_stall_exit_after(explicit, {"AJCREW_SERVICE_MANAGED": "1"}) == 25
 
     def test_watchdog_arms_with_the_managed_service_budget(self) -> None:
         arms: list[float] = []
         watchdog = LoopStallWatchdog(
-            exit_after=resolve_loop_stall_exit_after({}, {"KIROCREW_SERVICE_MANAGED": "1"}),
+            exit_after=resolve_loop_stall_exit_after({}, {"AJCREW_SERVICE_MANAGED": "1"}),
             arm_later=arms.append,
             cancel_later=lambda: None,
         )
@@ -227,24 +227,24 @@ class TestLoopStallBudgetConfig:
     def test_automatic_default_survives_unrelated_full_config_save(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.config.loader import _invalidate_config_cache
+        from aj_crew.config.loader import _invalidate_config_cache
 
-        monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
         _invalidate_config_cache()
         try:
-            assert load_loop_stall_exit_after({"KIROCREW_SERVICE_MANAGED": "1"}) == 90
-            cfg = KiroCrewConfig.load()
+            assert load_loop_stall_exit_after({"AJCREW_SERVICE_MANAGED": "1"}) == 90
+            cfg = AjCrewConfig.load()
             assert cfg.dashboard.loop_stall_exit_after_secs is None
             cfg.save()
             saved = json.loads((tmp_path / "config.json").read_text(encoding="utf-8"))
             assert saved["dashboard"]["loop_stall_exit_after_secs"] is None
-            assert load_loop_stall_exit_after({"KIROCREW_SERVICE_MANAGED": "1"}) == 90
+            assert load_loop_stall_exit_after({"AJCREW_SERVICE_MANAGED": "1"}) == 90
             assert load_loop_stall_exit_after({}) == 25
         finally:
             _invalidate_config_cache()
 
     def test_schema_explains_the_automatic_launch_class_defaults(self) -> None:
-        from kiro_crew.config.schema import SCHEMA_REGISTRY
+        from aj_crew.config.schema import SCHEMA_REGISTRY
 
         entry = next(
             item for item in SCHEMA_REGISTRY if item.path == "dashboard.loop_stall_exit_after_secs"
@@ -257,17 +257,17 @@ class TestLoopStallBudgetConfig:
     def test_legacy_materialized_desktop_default_is_reported_not_rewritten(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.config.loader import _invalidate_config_cache
+        from aj_crew.config.loader import _invalidate_config_cache
 
         (tmp_path / "config.json").write_text(
             json.dumps({"dashboard": {"loop_stall_exit_after_secs": 25}}),
             encoding="utf-8",
         )
-        monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
         _invalidate_config_cache()
         try:
-            assert KiroCrewConfig.load().dashboard.loop_stall_exit_after_secs == 25
-            assert load_loop_stall_exit_after({"KIROCREW_SERVICE_MANAGED": "1"}) == 25
+            assert AjCrewConfig.load().dashboard.loop_stall_exit_after_secs == 25
+            assert load_loop_stall_exit_after({"AJCREW_SERVICE_MANAGED": "1"}) == 25
             saved = json.loads((tmp_path / "config.json").read_text(encoding="utf-8"))
             assert saved["dashboard"]["loop_stall_exit_after_secs"] == 25
         finally:
@@ -276,17 +276,17 @@ class TestLoopStallBudgetConfig:
     def test_explicit_desktop_default_is_preserved_for_managed_service(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.config.loader import _invalidate_config_cache
+        from aj_crew.config.loader import _invalidate_config_cache
 
         (tmp_path / "config.json").write_text(
             json.dumps({"dashboard": {"loop_stall_exit_after_secs": 25}}),
             encoding="utf-8",
         )
-        monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
         _invalidate_config_cache()
         try:
-            assert KiroCrewConfig.load().dashboard.loop_stall_exit_after_secs == 25
-            assert load_loop_stall_exit_after({"KIROCREW_SERVICE_MANAGED": "1"}) == 25
+            assert AjCrewConfig.load().dashboard.loop_stall_exit_after_secs == 25
+            assert load_loop_stall_exit_after({"AJCREW_SERVICE_MANAGED": "1"}) == 25
         finally:
             _invalidate_config_cache()
 
@@ -301,22 +301,22 @@ class TestLoopStallBudgetConfig:
             json.dumps({"dashboard": {"loop_stall_exit_after_secs": 60}}),
             encoding="utf-8",
         )
-        monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
 
-        assert load_loop_stall_exit_after({"KIROCREW_SERVICE_MANAGED": "1"}) == 60
+        assert load_loop_stall_exit_after({"AJCREW_SERVICE_MANAGED": "1"}) == 60
 
     def test_configured_value_is_read(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.config.loader import _invalidate_config_cache
+        from aj_crew.config.loader import _invalidate_config_cache
 
         cfg_dir = tmp_path / "cfgdir"
         cfg_dir.mkdir()
         (cfg_dir / "config.json").write_text(
             json.dumps({"dashboard": {"loop_stall_exit_after_secs": 60}}), encoding="utf-8"
         )
-        monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: cfg_dir)
+        monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: cfg_dir)
         _invalidate_config_cache()
         try:
-            assert KiroCrewConfig.load().dashboard.loop_stall_exit_after_secs == 60
+            assert AjCrewConfig.load().dashboard.loop_stall_exit_after_secs == 60
         finally:
             _invalidate_config_cache()
 
@@ -337,22 +337,22 @@ class TestChatTurnCeilingConfig:
 
         The loader carries its own fallback literal for the key; a drift between
         it and ``AgentConfig`` makes an on-disk config with the key omitted
-        behave differently from ``KiroCrewConfig()``.
+        behave differently from ``AjCrewConfig()``.
         """
-        from kiro_crew.config.loader import AgentConfig, _invalidate_config_cache
+        from aj_crew.config.loader import AgentConfig, _invalidate_config_cache
 
         (tmp_path / "config.json").write_text(json.dumps({"agent": {}}), encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
         _invalidate_config_cache()
         try:
-            loaded = KiroCrewConfig.load().agent.chat_turn_timeout_secs
+            loaded = AjCrewConfig.load().agent.chat_turn_timeout_secs
         finally:
             _invalidate_config_cache()
         assert loaded == AgentConfig().chat_turn_timeout_secs
-        assert KiroCrewConfig().agent.chat_turn_timeout_secs == AgentConfig().chat_turn_timeout_secs
+        assert AjCrewConfig().agent.chat_turn_timeout_secs == AgentConfig().chat_turn_timeout_secs
 
     def test_out_of_range_values_are_clamped(self) -> None:
-        from kiro_crew.config.loader import CHAT_TURN_TIMEOUT_MAX, CHAT_TURN_TIMEOUT_MIN
+        from aj_crew.config.loader import CHAT_TURN_TIMEOUT_MAX, CHAT_TURN_TIMEOUT_MIN
 
         data = {"agent": {"chat_turn_timeout_secs": 999999}}
         _clamp_security_bounds(data)

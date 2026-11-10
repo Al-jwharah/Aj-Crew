@@ -1,4 +1,4 @@
-"""Tests for /api/agents frequency ordering (api_kirocrew_agents).
+"""Tests for /api/agents frequency ordering (api_ajcrew_agents).
 
 The endpoint reorders the agent roster by per-agent chat-session frequency
 (most-used first), degrading to config-insertion order when history is
@@ -16,32 +16,32 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.config.loader import KiroCrewAgentConfig
+from aj_crew.config.loader import AjCrewAgentConfig
 
 DEFAULT_AGENT = "alpha"
 CONFIG_ORDER = ["alpha", "beta", "gamma"]
 
 
 def _fake_config(names):
-    """A stand-in KiroCrewConfig: ordered agents dict + default_agent."""
+    """A stand-in AjCrewConfig: ordered agents dict + default_agent."""
     return SimpleNamespace(
-        agents={name: KiroCrewAgentConfig(kiro_agent=name) for name in names},
+        agents={name: AjCrewAgentConfig(kiro_agent=name) for name in names},
         default_agent=DEFAULT_AGENT,
     )
 
 
 def _make_agents_app(state) -> web.Application:
-    from kiro_crew.dashboard.handlers.agents import api_kirocrew_agents
+    from aj_crew.dashboard.handlers.agents import api_ajcrew_agents
 
     app = web.Application()
     app["state"] = state
-    app.router.add_get("/api/agents", api_kirocrew_agents)
+    app.router.add_get("/api/agents", api_ajcrew_agents)
     return app
 
 
 async def _get_agents(state, names):
     with patch(
-        "kiro_crew.dashboard.handlers.agents.KiroCrewConfig.load",
+        "aj_crew.dashboard.handlers.agents.AjCrewConfig.load",
         return_value=_fake_config(names),
     ):
         async with TestClient(TestServer(_make_agents_app(state))) as client:
@@ -54,7 +54,7 @@ async def _get_agents(state, names):
 class TestAgentOrdering:
     @pytest.mark.asyncio
     async def test_more_sessions_ranks_higher(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("s1", "user", "hi", agent="beta")
@@ -68,7 +68,7 @@ class TestAgentOrdering:
 
     @pytest.mark.asyncio
     async def test_never_used_stable_bottom_in_config_order(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.conversation_log.append("s1", "user", "hi", agent="gamma")
 
@@ -85,7 +85,7 @@ class TestAgentOrdering:
 
     @pytest.mark.asyncio
     async def test_tie_break_recency_wins(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("s_beta", "user", "hi", agent="beta")
@@ -101,7 +101,7 @@ class TestAgentOrdering:
 
     @pytest.mark.asyncio
     async def test_tie_break_equal_recency_falls_to_config_index(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("s_beta", "user", "hi", agent="beta")
@@ -118,7 +118,7 @@ class TestAgentOrdering:
 
     @pytest.mark.asyncio
     async def test_agent_set_and_default_unchanged(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.conversation_log.append("s1", "user", "hi", agent="gamma")
 
@@ -131,7 +131,7 @@ class TestAgentOrdering:
 class TestAgentOrderingFallback:
     @pytest.mark.asyncio
     async def test_history_unreadable_returns_config_order(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         with patch.object(
             state.conversation_log, "agent_usage", side_effect=OSError("boom")
@@ -144,7 +144,7 @@ class TestAgentOrderingFallback:
 
     @pytest.mark.asyncio
     async def test_no_conversation_log_returns_config_order(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.conversation_log = None
 
@@ -167,15 +167,15 @@ class TestProjectScopeRoster:
     async def test_project_agent_appears_with_project_scope(self, tmp_path, monkeypatch):
         import json as _json
 
-        from kiro_crew.agent_discovery import clear_project_agent_cache
+        from aj_crew.agent_discovery import clear_project_agent_cache
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         proj = tmp_path / "repo"
         (proj / ".kiro" / "agents").mkdir(parents=True)
         (proj / ".kiro" / "agents" / "repo-bot.json").write_text(_json.dumps({"name": "repo-bot"}))
         clear_project_agent_cache()
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.agents.active_project_dir",
+            "aj_crew.dashboard.handlers.agents.active_project_dir",
             lambda state, key: str(proj),
         )
         state = _make_state(tmp_path)
@@ -191,15 +191,15 @@ class TestProjectScopeRoster:
     async def test_alias_shadows_project_agent_of_same_name(self, tmp_path, monkeypatch):
         import json as _json
 
-        from kiro_crew.agent_discovery import clear_project_agent_cache
+        from aj_crew.agent_discovery import clear_project_agent_cache
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         proj = tmp_path / "repo"
         (proj / ".kiro" / "agents").mkdir(parents=True)
         (proj / ".kiro" / "agents" / "alpha.json").write_text(_json.dumps({"name": "alpha"}))
         clear_project_agent_cache()
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.agents.active_project_dir",
+            "aj_crew.dashboard.handlers.agents.active_project_dir",
             lambda state, key: str(proj),
         )
         state = _make_state(tmp_path)
@@ -212,9 +212,9 @@ class TestProjectScopeRoster:
 
     @pytest.mark.asyncio
     async def test_no_project_dir_keeps_roster_global_only(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.agents.active_project_dir",
+            "aj_crew.dashboard.handlers.agents.active_project_dir",
             lambda state, key: "",
         )
         state = _make_state(tmp_path)

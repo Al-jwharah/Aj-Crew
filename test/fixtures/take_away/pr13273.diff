@@ -1,7 +1,7 @@
-diff --git a/src/kiro_crew/cron_script.py b/src/kiro_crew/cron_script.py
+diff --git a/src/aj_crew/cron_script.py b/src/aj_crew/cron_script.py
 index c57a2091106..9cc05c02f4f 100644
---- a/src/kiro_crew/cron_script.py
-+++ b/src/kiro_crew/cron_script.py
+--- a/src/aj_crew/cron_script.py
++++ b/src/aj_crew/cron_script.py
 @@ -54,9 +54,16 @@ def run(ctx):
      _AGENT_DENIED_ENV_KEYS,
      CANONICAL_TEMP_KEYS,

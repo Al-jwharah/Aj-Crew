@@ -14,9 +14,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from aiohttp import web
 
-import kiro_crew.config.loader as loader_module
-from kiro_crew.dashboard.handlers import api_agent_config
-from kiro_crew.testing.wait import await_until
+import aj_crew.config.loader as loader_module
+from aj_crew.dashboard.handlers import api_agent_config
+from aj_crew.testing.wait import await_until
 
 
 @pytest.fixture(autouse=True)
@@ -26,15 +26,15 @@ def _owner_caller(monkeypatch):
     its own enumerate-the-invariant coverage in
     test_agents_endpoints_owner_auth.py."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
 
 @pytest.mark.asyncio
 async def test_api_agent_config_put_succeeds(tmp_path):
-    installed = tmp_path / "kirocrew.json"
-    installed.write_text(json.dumps({"name": "kirocrew"}))
+    installed = tmp_path / "ajcrew.json"
+    installed.write_text(json.dumps({"name": "ajcrew"}))
     defaults = tmp_path / "defaults.json"
     mc_cfg = tmp_path / "config.json"
 
@@ -48,16 +48,16 @@ async def test_api_agent_config_put_succeeds(tmp_path):
     request.json = mock_json
 
     with (
-        patch("kiro_crew.dashboard.handlers._installed_agent_config", return_value=installed),
-        patch("kiro_crew.dashboard.handlers._find_agent_config", return_value=defaults),
-        patch("kiro_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
-        patch("kiro_crew.dashboard.handlers.config_path", return_value=mc_cfg),
+        patch("aj_crew.dashboard.handlers._installed_agent_config", return_value=installed),
+        patch("aj_crew.dashboard.handlers._find_agent_config", return_value=defaults),
+        patch("aj_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
+        patch("aj_crew.dashboard.handlers.config_path", return_value=mc_cfg),
         patch(
-            "kiro_crew.agent.build_agent_config",
+            "aj_crew.agent.build_agent_config",
             return_value={"toolsSettings": {"execute_bash": {"deniedCommands": ["rm -rf"]}}},
         ),
         patch(
-            "kiro_crew.dashboard.handlers.agents.get_shipped_tools",
+            "aj_crew.dashboard.handlers.agents.get_shipped_tools",
             return_value={"tools": ["a", "c"], "allowedTools": ["b"]},
         ),
     ):
@@ -78,9 +78,9 @@ async def test_api_agent_config_put_strips_governed_grants(tmp_path, monkeypatch
     through the governance filter — else a governed @denied allowedTools entry or
     a governed server's autoApprove written here restores the bypass the per-ref
     writers close. Executable (not source-inspection) coverage of that writer."""
-    import kiro_crew.platform.governance as gov
-    from kiro_crew.config import live as _live
-    from kiro_crew.config.loader import KiroCrewConfig as _Cfg
+    import aj_crew.platform.governance as gov
+    from aj_crew.config import live as _live
+    from aj_crew.config.loader import AjCrewConfig as _Cfg
 
     # Govern @denied only; everything else may auto-approve.
     monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: ref != "@denied")
@@ -90,8 +90,8 @@ async def test_api_agent_config_put_strips_governed_grants(tmp_path, monkeypatch
     _cfg.mcp.honour_auto_approve = True
     monkeypatch.setattr(_live, "snapshot", lambda: _cfg)
 
-    installed = tmp_path / "kirocrew.json"
-    installed.write_text(json.dumps({"name": "kirocrew"}))
+    installed = tmp_path / "ajcrew.json"
+    installed.write_text(json.dumps({"name": "ajcrew"}))
     defaults = tmp_path / "defaults.json"
     mc_cfg = tmp_path / "config.json"
 
@@ -116,12 +116,12 @@ async def test_api_agent_config_put_strips_governed_grants(tmp_path, monkeypatch
     request.json = mock_json
 
     with (
-        patch("kiro_crew.dashboard.handlers._installed_agent_config", return_value=installed),
-        patch("kiro_crew.dashboard.handlers._find_agent_config", return_value=defaults),
-        patch("kiro_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
-        patch("kiro_crew.dashboard.handlers.config_path", return_value=mc_cfg),
+        patch("aj_crew.dashboard.handlers._installed_agent_config", return_value=installed),
+        patch("aj_crew.dashboard.handlers._find_agent_config", return_value=defaults),
+        patch("aj_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
+        patch("aj_crew.dashboard.handlers.config_path", return_value=mc_cfg),
         patch(
-            "kiro_crew.dashboard.handlers.agents.get_shipped_tools",
+            "aj_crew.dashboard.handlers.agents.get_shipped_tools",
             return_value={"tools": [], "allowedTools": []},
         ),
     ):
@@ -140,17 +140,17 @@ async def test_api_agent_config_put_strips_governed_grants(tmp_path, monkeypatch
 
 @pytest.mark.asyncio
 async def test_api_agent_config_put_strips_bookkeeping_keys(tmp_path):
-    """A dashboard PUT must not re-pollute the kiro spec with Kiro Crew keys.
+    """A dashboard PUT must not re-pollute the kiro spec with Aj Crew keys.
 
     The whole-config PUT strips ``model_managed`` / ``cc_model``, matching the
     agent-detail PATCH. Persisting them verbatim is fatal:
     kiro-cli ``deny_unknown_fields`` then rejects the entire agent until the
     next ``migrate_agent_specs`` heal on gateway rebuild.
     """
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
-    installed = tmp_path / "kirocrew.json"
-    installed.write_text(json.dumps({"name": "kirocrew"}))
+    installed = tmp_path / "ajcrew.json"
+    installed.write_text(json.dumps({"name": "ajcrew"}))
     defaults = tmp_path / "defaults.json"
     mc_cfg = tmp_path / "config.json"
 
@@ -161,7 +161,7 @@ async def test_api_agent_config_put_strips_bookkeeping_keys(tmp_path):
     async def mock_json():
         return {
             "config": {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "tools": ["a"],
                 "allowedTools": ["b"],
                 "model_managed": True,
@@ -172,11 +172,11 @@ async def test_api_agent_config_put_strips_bookkeeping_keys(tmp_path):
     request.json = mock_json
 
     with (
-        patch("kiro_crew.dashboard.handlers._installed_agent_config", return_value=installed),
-        patch("kiro_crew.dashboard.handlers._find_agent_config", return_value=defaults),
-        patch("kiro_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
-        patch("kiro_crew.dashboard.handlers.config_path", return_value=mc_cfg),
-        patch("kiro_crew.agent.get_shipped_tools", return_value={"tools": [], "allowedTools": []}),
+        patch("aj_crew.dashboard.handlers._installed_agent_config", return_value=installed),
+        patch("aj_crew.dashboard.handlers._find_agent_config", return_value=defaults),
+        patch("aj_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
+        patch("aj_crew.dashboard.handlers.config_path", return_value=mc_cfg),
+        patch("aj_crew.agent.get_shipped_tools", return_value={"tools": [], "allowedTools": []}),
     ):
         response = await api_agent_config(request)
 
@@ -184,24 +184,24 @@ async def test_api_agent_config_put_strips_bookkeeping_keys(tmp_path):
     written = json.loads(installed.read_text(encoding="utf-8"))
     assert "model_managed" not in written
     assert "cc_model" not in written
-    assert written["name"] == "kirocrew"
+    assert written["name"] == "ajcrew"
     # Lifted into the sidecar when unset (same rule as migrate).
-    assert agent_state.get_model_managed("kirocrew") is True
-    assert agent_state.get_cc_model("kirocrew") == "claude-sonnet-4.6"
+    assert agent_state.get_model_managed("ajcrew") is True
+    assert agent_state.get_cc_model("ajcrew") == "claude-sonnet-4.6"
 
 
 @pytest.mark.asyncio
 async def test_api_agent_config_put_does_not_clobber_sidecar(tmp_path):
     """A stale bookkeeping key in the PUT body must not overwrite the sidecar."""
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
-    installed = tmp_path / "kirocrew.json"
-    installed.write_text(json.dumps({"name": "kirocrew"}))
+    installed = tmp_path / "ajcrew.json"
+    installed.write_text(json.dumps({"name": "ajcrew"}))
     defaults = tmp_path / "defaults.json"
     mc_cfg = tmp_path / "config.json"
 
-    agent_state.set_model_managed("kirocrew", False)
-    agent_state.set_cc_model("kirocrew", "test-model-stub")
+    agent_state.set_model_managed("ajcrew", False)
+    agent_state.set_cc_model("ajcrew", "test-model-stub")
 
     request = MagicMock(spec=web.Request)
     request.method = "PUT"
@@ -210,7 +210,7 @@ async def test_api_agent_config_put_does_not_clobber_sidecar(tmp_path):
     async def mock_json():
         return {
             "config": {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "tools": ["a"],
                 "allowedTools": ["b"],
                 "model_managed": True,
@@ -221,11 +221,11 @@ async def test_api_agent_config_put_does_not_clobber_sidecar(tmp_path):
     request.json = mock_json
 
     with (
-        patch("kiro_crew.dashboard.handlers._installed_agent_config", return_value=installed),
-        patch("kiro_crew.dashboard.handlers._find_agent_config", return_value=defaults),
-        patch("kiro_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
-        patch("kiro_crew.dashboard.handlers.config_path", return_value=mc_cfg),
-        patch("kiro_crew.agent.get_shipped_tools", return_value={"tools": [], "allowedTools": []}),
+        patch("aj_crew.dashboard.handlers._installed_agent_config", return_value=installed),
+        patch("aj_crew.dashboard.handlers._find_agent_config", return_value=defaults),
+        patch("aj_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
+        patch("aj_crew.dashboard.handlers.config_path", return_value=mc_cfg),
+        patch("aj_crew.agent.get_shipped_tools", return_value={"tools": [], "allowedTools": []}),
     ):
         response = await api_agent_config(request)
 
@@ -233,8 +233,8 @@ async def test_api_agent_config_put_does_not_clobber_sidecar(tmp_path):
     written = json.loads(installed.read_text(encoding="utf-8"))
     assert "model_managed" not in written
     assert "cc_model" not in written
-    assert agent_state.get_model_managed("kirocrew") is False
-    assert agent_state.get_cc_model("kirocrew") == "test-model-stub"
+    assert agent_state.get_model_managed("ajcrew") is False
+    assert agent_state.get_cc_model("ajcrew") == "test-model-stub"
 
 
 @pytest.mark.asyncio
@@ -245,8 +245,8 @@ async def test_api_agent_config_put_uses_atomic_write(tmp_path):
     reads the spec at every session spawn.
     """
 
-    installed = tmp_path / "kirocrew.json"
-    installed.write_text(json.dumps({"name": "kirocrew"}))
+    installed = tmp_path / "ajcrew.json"
+    installed.write_text(json.dumps({"name": "ajcrew"}))
     defaults = tmp_path / "defaults.json"
     mc_cfg = tmp_path / "config.json"
 
@@ -267,17 +267,17 @@ async def test_api_agent_config_put_uses_atomic_write(tmp_path):
         path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
     with (
-        patch("kiro_crew.dashboard.handlers._installed_agent_config", return_value=installed),
-        patch("kiro_crew.dashboard.handlers._find_agent_config", return_value=defaults),
-        patch("kiro_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
-        patch("kiro_crew.dashboard.handlers.config_path", return_value=mc_cfg),
+        patch("aj_crew.dashboard.handlers._installed_agent_config", return_value=installed),
+        patch("aj_crew.dashboard.handlers._find_agent_config", return_value=defaults),
+        patch("aj_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
+        patch("aj_crew.dashboard.handlers.config_path", return_value=mc_cfg),
         patch(
-            "kiro_crew.dashboard.handlers.agents.get_shipped_tools",
+            "aj_crew.dashboard.handlers.agents.get_shipped_tools",
             return_value={"tools": [], "allowedTools": []},
         ),
         # Intercept write_config_atomically as imported into agents.py.
         patch(
-            "kiro_crew.dashboard.handlers.agents.write_config_atomically",
+            "aj_crew.dashboard.handlers.agents.write_config_atomically",
             side_effect=_fake_atomic,
         ),
     ):
@@ -307,8 +307,8 @@ async def test_agent_config_write_holds_the_mcp_transaction_lock(tmp_path):
     """
     import contextlib
 
-    installed = tmp_path / "kirocrew.json"
-    installed.write_text(json.dumps({"name": "kirocrew"}))
+    installed = tmp_path / "ajcrew.json"
+    installed.write_text(json.dumps({"name": "ajcrew"}))
     defaults = tmp_path / "defaults.json"
     mc_cfg = tmp_path / "config.json"
 
@@ -324,7 +324,7 @@ async def test_agent_config_write_holds_the_mcp_transaction_lock(tmp_path):
     # Two INDEPENDENT observations per write, not one boolean: a recorder that
     # only tracks "some lock was held" passes just as happily when the wrong
     # lock is held. The write must be covered by the settings/mcp.lock
-    # transaction lock AND by bridges' kirocrew.lock file lock, and the file
+    # transaction lock AND by bridges' ajcrew.lock file lock, and the file
     # lock must be keyed on the file actually being written.
     lock_held: list[bool] = []
     writes: list[tuple[str, bool, tuple[str, ...]]] = []
@@ -353,28 +353,28 @@ async def test_agent_config_write_holds_the_mcp_transaction_lock(tmp_path):
         writes.append((str(path), holding, tuple(str(t) for t in file_locked)))
 
     with (
-        patch("kiro_crew.dashboard.handlers._installed_agent_config", return_value=installed),
-        patch("kiro_crew.dashboard.handlers._find_agent_config", return_value=defaults),
-        patch("kiro_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
-        patch("kiro_crew.dashboard.handlers.config_path", return_value=mc_cfg),
+        patch("aj_crew.dashboard.handlers._installed_agent_config", return_value=installed),
+        patch("aj_crew.dashboard.handlers._find_agent_config", return_value=defaults),
+        patch("aj_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
+        patch("aj_crew.dashboard.handlers.config_path", return_value=mc_cfg),
         patch(
-            "kiro_crew.agent.build_agent_config",
+            "aj_crew.agent.build_agent_config",
             return_value={"toolsSettings": {}},
         ),
         patch(
-            "kiro_crew.dashboard.handlers.agents.get_shipped_tools",
+            "aj_crew.dashboard.handlers.agents.get_shipped_tools",
             return_value={"tools": ["a", "c"], "allowedTools": ["b"]},
         ),
         patch(
-            "kiro_crew.dashboard.handlers.mcp._get_mcp_lock",
+            "aj_crew.dashboard.handlers.mcp._get_mcp_lock",
             _recording_lock,
         ),
         patch(
-            "kiro_crew.dashboard.handlers.agents._agent_file_lock",
+            "aj_crew.dashboard.handlers.agents._agent_file_lock",
             _recording_file_lock,
         ),
         patch(
-            "kiro_crew.dashboard.handlers.agents.write_config_atomically",
+            "aj_crew.dashboard.handlers.agents.write_config_atomically",
             _recording_write,
         ),
     ):
@@ -390,13 +390,13 @@ async def test_agent_config_write_holds_the_mcp_transaction_lock(tmp_path):
         held for _p, held, _f in spec_writes
     ), "the agent-spec write ran OUTSIDE the MCP transaction lock"
     # bridges_mcp.py does whole-file read-modify-writes of THIS SAME file under its
-    # own flock (kirocrew.lock), which the transaction lock does not cover: a
+    # own flock (ajcrew.lock), which the transaction lock does not cover: a
     # concurrent app enable and this PUT would each write the whole file and the
     # last atomic rename would silently discard the other side. Assert the file
     # lock was held too, and that it was keyed on the installed path -- a lock on
     # any other sidecar serializes against nothing.
     for _path, _held, locked in spec_writes:
-        assert locked, "the agent-spec write ran WITHOUT bridges' kirocrew.json file lock"
+        assert locked, "the agent-spec write ran WITHOUT bridges' ajcrew.json file lock"
         assert str(installed) in locked, (
             "bridges' file lock was taken on the wrong target: "
             f"{locked} does not include {installed}"
@@ -412,8 +412,8 @@ async def test_agent_config_write_goes_through_one_shielded_offload(tmp_path):
     (bookkeeping lift, removedTools sidecar, installed spec) must sit in one dispatch,
     or a cancellation point opens between two of them.
     """
-    installed = tmp_path / "kirocrew.json"
-    installed.write_text(json.dumps({"name": "kirocrew"}))
+    installed = tmp_path / "ajcrew.json"
+    installed.write_text(json.dumps({"name": "ajcrew"}))
     defaults = tmp_path / "defaults.json"
     mc_cfg = tmp_path / "config.json"
 
@@ -456,25 +456,25 @@ async def test_agent_config_write_goes_through_one_shielded_offload(tmp_path):
         return real_locked(path, **kwargs)
 
     with (
-        patch("kiro_crew.dashboard.handlers._installed_agent_config", return_value=installed),
-        patch("kiro_crew.dashboard.handlers._find_agent_config", return_value=defaults),
-        patch("kiro_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
-        patch("kiro_crew.dashboard.handlers.config_path", return_value=mc_cfg),
-        patch("kiro_crew.agent.build_agent_config", return_value={"toolsSettings": {}}),
+        patch("aj_crew.dashboard.handlers._installed_agent_config", return_value=installed),
+        patch("aj_crew.dashboard.handlers._find_agent_config", return_value=defaults),
+        patch("aj_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
+        patch("aj_crew.dashboard.handlers.config_path", return_value=mc_cfg),
+        patch("aj_crew.agent.build_agent_config", return_value={"toolsSettings": {}}),
         patch(
-            "kiro_crew.dashboard.handlers.agents.get_shipped_tools",
+            "aj_crew.dashboard.handlers.agents.get_shipped_tools",
             return_value={"tools": ["a", "c"], "allowedTools": ["b"]},
         ),
-        patch("kiro_crew.agent_state.lift_and_strip_bookkeeping", _recording_lift),
+        patch("aj_crew.agent_state.lift_and_strip_bookkeeping", _recording_lift),
         patch(
-            "kiro_crew.dashboard.handlers.agents.write_config_atomically",
+            "aj_crew.dashboard.handlers.agents.write_config_atomically",
             _recording_write,
         ),
         patch(
-            "kiro_crew.dashboard.handlers.agents.update_config_locked",
+            "aj_crew.dashboard.handlers.agents.update_config_locked",
             _recording_locked,
         ),
-        patch("kiro_crew.dashboard.handlers.mcp._offload_config_write", _recording_offload),
+        patch("aj_crew.dashboard.handlers.mcp._offload_config_write", _recording_offload),
     ):
         resp = await api_agent_config(request)
 
@@ -505,12 +505,12 @@ async def test_agent_config_put_persists_nothing_before_the_transaction_lock(tmp
     the spec, and the next upgrade would silently remove a tool. No write may precede
     the lock.
     """
-    installed = tmp_path / "kirocrew.json"
-    installed.write_text(json.dumps({"name": "kirocrew", "tools": ["a", "c"]}))
+    installed = tmp_path / "ajcrew.json"
+    installed.write_text(json.dumps({"name": "ajcrew", "tools": ["a", "c"]}))
     defaults = tmp_path / "defaults.json"
     mc_cfg = tmp_path / "config.json"
     # A baseline that must survive an aborted PUT byte-for-byte.
-    mc_cfg.write_text(json.dumps({"default_agent": "kirocrew"}))
+    mc_cfg.write_text(json.dumps({"default_agent": "ajcrew"}))
     before_cfg = mc_cfg.read_text()
     before_spec = installed.read_text()
 
@@ -543,17 +543,17 @@ async def test_agent_config_put_persists_nothing_before_the_transaction_lock(tmp
             return None
 
     with (
-        patch("kiro_crew.dashboard.handlers._installed_agent_config", return_value=installed),
-        patch("kiro_crew.dashboard.handlers._find_agent_config", return_value=defaults),
-        patch("kiro_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
-        patch("kiro_crew.dashboard.handlers.config_path", return_value=mc_cfg),
-        patch("kiro_crew.agent.build_agent_config", return_value={"toolsSettings": {}}),
+        patch("aj_crew.dashboard.handlers._installed_agent_config", return_value=installed),
+        patch("aj_crew.dashboard.handlers._find_agent_config", return_value=defaults),
+        patch("aj_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
+        patch("aj_crew.dashboard.handlers.config_path", return_value=mc_cfg),
+        patch("aj_crew.agent.build_agent_config", return_value={"toolsSettings": {}}),
         patch(
-            "kiro_crew.dashboard.handlers.agents.get_shipped_tools",
+            "aj_crew.dashboard.handlers.agents.get_shipped_tools",
             return_value={"tools": ["a", "c"], "allowedTools": ["b"]},
         ),
         patch(
-            "kiro_crew.dashboard.handlers.mcp._get_mcp_lock",
+            "aj_crew.dashboard.handlers.mcp._get_mcp_lock",
             lambda: _ContendedLock(),
         ),
     ):
@@ -589,8 +589,8 @@ async def test_agent_config_put_lock_releases_only_after_every_write_landed(tmp_
     import contextlib
     import threading
 
-    installed = tmp_path / "kirocrew.json"
-    installed.write_text(json.dumps({"name": "kirocrew"}))
+    installed = tmp_path / "ajcrew.json"
+    installed.write_text(json.dumps({"name": "ajcrew"}))
     defaults = tmp_path / "defaults.json"
     mc_cfg = tmp_path / "config.json"
 
@@ -638,29 +638,29 @@ async def test_agent_config_put_lock_releases_only_after_every_write_landed(tmp_
             at_release.append(list(completed))
 
     with (
-        patch("kiro_crew.dashboard.handlers._installed_agent_config", return_value=installed),
-        patch("kiro_crew.dashboard.handlers._find_agent_config", return_value=defaults),
-        patch("kiro_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
-        patch("kiro_crew.dashboard.handlers.config_path", return_value=mc_cfg),
-        patch("kiro_crew.agent.build_agent_config", return_value={"toolsSettings": {}}),
+        patch("aj_crew.dashboard.handlers._installed_agent_config", return_value=installed),
+        patch("aj_crew.dashboard.handlers._find_agent_config", return_value=defaults),
+        patch("aj_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
+        patch("aj_crew.dashboard.handlers.config_path", return_value=mc_cfg),
+        patch("aj_crew.agent.build_agent_config", return_value={"toolsSettings": {}}),
         patch(
-            "kiro_crew.dashboard.handlers.agents.get_shipped_tools",
+            "aj_crew.dashboard.handlers.agents.get_shipped_tools",
             return_value={"tools": ["a", "c"], "allowedTools": ["b"]},
         ),
         # Neutral: the filter persists nothing, and pinning it here would only
         # couple this test to the host's governance profiles.
         patch(
-            "kiro_crew.platform.governance.sanitize_agent_config_governance",
+            "aj_crew.platform.governance.sanitize_agent_config_governance",
             lambda config: None,
         ),
-        patch("kiro_crew.agent_state.lift_and_strip_bookkeeping", _blocking_bookkeeping),
-        patch("kiro_crew.dashboard.handlers.mcp._get_mcp_lock", _recording_lock),
+        patch("aj_crew.agent_state.lift_and_strip_bookkeeping", _blocking_bookkeeping),
+        patch("aj_crew.dashboard.handlers.mcp._get_mcp_lock", _recording_lock),
         patch(
-            "kiro_crew.dashboard.handlers.agents.write_config_atomically",
+            "aj_crew.dashboard.handlers.agents.write_config_atomically",
             _recording_write,
         ),
         patch(
-            "kiro_crew.dashboard.handlers.agents.update_config_locked",
+            "aj_crew.dashboard.handlers.agents.update_config_locked",
             _recording_locked,
         ),
     ):
@@ -700,7 +700,7 @@ async def test_agent_config_put_lock_releases_only_after_every_write_landed(tmp_
         "write lets the next holder observe a half-applied PUT."
     )
     # Order that is load-bearing (as opposed to incidental): the bookkeeping lift
-    # STRIPS Kiro Crew keys out of the very dict the spec write persists, so it
+    # STRIPS Aj Crew keys out of the very dict the spec write persists, so it
     # must complete first or the spec lands with keys kiro-cli rejects. The
     # sidecar write's position relative to the other two is not pinned.
     assert landed.index("bookkeeping") < landed.index("spec")
@@ -714,13 +714,13 @@ async def test_agent_config_put_unreadable_config_persists_nothing(tmp_path, mon
     bookkeeping lift, that 500 would leave ``agent_model_state.json`` naming a model
     for a spec never written. All three durable targets must stay byte-identical.
     """
-    from kiro_crew.config.loader import ConfigReadError
+    from aj_crew.config.loader import ConfigReadError
 
-    installed = tmp_path / "kirocrew.json"
-    installed.write_text(json.dumps({"name": "kirocrew", "tools": ["a", "c"]}))
+    installed = tmp_path / "ajcrew.json"
+    installed.write_text(json.dumps({"name": "ajcrew", "tools": ["a", "c"]}))
     defaults = tmp_path / "defaults.json"
     mc_cfg = tmp_path / "config.json"
-    mc_cfg.write_text(json.dumps({"default_agent": "kirocrew"}))
+    mc_cfg.write_text(json.dumps({"default_agent": "ajcrew"}))
     state = tmp_path / "agent_model_state.json"
     # ``model_managed`` already set, so only the ``cc_model`` below can lift --
     # enough for the bookkeeping write to be observable, and it keeps the
@@ -728,7 +728,7 @@ async def test_agent_config_put_unreadable_config_persists_nothing(tmp_path, mon
     state.write_text(
         json.dumps({"test": {"model_managed": False}}, indent=2, sort_keys=True) + "\n"
     )
-    monkeypatch.setattr("kiro_crew.agent_state._state_path", lambda: state)
+    monkeypatch.setattr("aj_crew.agent_state._state_path", lambda: state)
 
     before_cfg = mc_cfg.read_text()
     before_spec = installed.read_text()
@@ -758,20 +758,20 @@ async def test_agent_config_put_unreadable_config_persists_nothing(tmp_path, mon
         raise ConfigReadError("config.json is corrupt")
 
     with (
-        patch("kiro_crew.dashboard.handlers._installed_agent_config", return_value=installed),
-        patch("kiro_crew.dashboard.handlers._find_agent_config", return_value=defaults),
-        patch("kiro_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
-        patch("kiro_crew.dashboard.handlers.config_path", return_value=mc_cfg),
-        patch("kiro_crew.agent.build_agent_config", return_value={"toolsSettings": {}}),
+        patch("aj_crew.dashboard.handlers._installed_agent_config", return_value=installed),
+        patch("aj_crew.dashboard.handlers._find_agent_config", return_value=defaults),
+        patch("aj_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
+        patch("aj_crew.dashboard.handlers.config_path", return_value=mc_cfg),
+        patch("aj_crew.agent.build_agent_config", return_value={"toolsSettings": {}}),
         patch(
-            "kiro_crew.dashboard.handlers.agents.get_shipped_tools",
+            "aj_crew.dashboard.handlers.agents.get_shipped_tools",
             return_value={"tools": ["a", "c"], "allowedTools": ["b"]},
         ),
         patch(
-            "kiro_crew.platform.governance.sanitize_agent_config_governance",
+            "aj_crew.platform.governance.sanitize_agent_config_governance",
             lambda config: None,
         ),
-        patch("kiro_crew.dashboard.handlers.agents.update_config_locked", _unreadable),
+        patch("aj_crew.dashboard.handlers.agents.update_config_locked", _unreadable),
     ):
         response = await api_agent_config(request)
 
@@ -798,11 +798,11 @@ async def test_agent_config_put_keeps_a_concurrent_config_write_that_lands_befor
     """
     import contextlib
 
-    installed = tmp_path / "kirocrew.json"
-    installed.write_text(json.dumps({"name": "kirocrew"}))
+    installed = tmp_path / "ajcrew.json"
+    installed.write_text(json.dumps({"name": "ajcrew"}))
     defaults = tmp_path / "defaults.json"
     mc_cfg = tmp_path / "config.json"
-    mc_cfg.write_text(json.dumps({"default_agent": "kirocrew"}))
+    mc_cfg.write_text(json.dumps({"default_agent": "ajcrew"}))
 
     request = MagicMock(spec=web.Request)
     request.method = "PUT"
@@ -829,22 +829,22 @@ async def test_agent_config_put_keeps_a_concurrent_config_write_that_lands_befor
         return fn(*args, **kwargs)
 
     with (
-        patch("kiro_crew.dashboard.handlers._installed_agent_config", return_value=installed),
-        patch("kiro_crew.dashboard.handlers._find_agent_config", return_value=defaults),
-        patch("kiro_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
-        patch("kiro_crew.dashboard.handlers.config_path", return_value=mc_cfg),
-        patch("kiro_crew.agent.build_agent_config", return_value={"toolsSettings": {}}),
+        patch("aj_crew.dashboard.handlers._installed_agent_config", return_value=installed),
+        patch("aj_crew.dashboard.handlers._find_agent_config", return_value=defaults),
+        patch("aj_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
+        patch("aj_crew.dashboard.handlers.config_path", return_value=mc_cfg),
+        patch("aj_crew.agent.build_agent_config", return_value={"toolsSettings": {}}),
         patch(
-            "kiro_crew.dashboard.handlers.agents.get_shipped_tools",
+            "aj_crew.dashboard.handlers.agents.get_shipped_tools",
             return_value={"tools": ["a", "c"], "allowedTools": ["b"]},
         ),
         patch(
-            "kiro_crew.platform.governance.sanitize_agent_config_governance",
+            "aj_crew.platform.governance.sanitize_agent_config_governance",
             lambda config: None,
         ),
-        patch("kiro_crew.dashboard.handlers.mcp._get_mcp_lock", _neutral_lock),
+        patch("aj_crew.dashboard.handlers.mcp._get_mcp_lock", _neutral_lock),
         patch(
-            "kiro_crew.dashboard.handlers.mcp._offload_config_write",
+            "aj_crew.dashboard.handlers.mcp._offload_config_write",
             _offload_after_a_concurrent_write,
         ),
     ):
@@ -870,11 +870,11 @@ async def test_agent_config_put_failed_config_write_leaves_bookkeeping_untouched
     The ``config.json`` write must be the first durable step; if bookkeeping ran first,
     an I/O failure would leave ``agent_model_state.json`` naming an unwritten spec.
     """
-    installed = tmp_path / "kirocrew.json"
-    installed.write_text(json.dumps({"name": "kirocrew", "tools": ["a", "c"]}))
+    installed = tmp_path / "ajcrew.json"
+    installed.write_text(json.dumps({"name": "ajcrew", "tools": ["a", "c"]}))
     defaults = tmp_path / "defaults.json"
     mc_cfg = tmp_path / "config.json"
-    mc_cfg.write_text(json.dumps({"default_agent": "kirocrew"}))
+    mc_cfg.write_text(json.dumps({"default_agent": "ajcrew"}))
     state = tmp_path / "agent_model_state.json"
     # ``model_managed`` already set, so only the ``cc_model`` below can lift --
     # enough for the bookkeeping write to be observable, and it keeps the
@@ -882,7 +882,7 @@ async def test_agent_config_put_failed_config_write_leaves_bookkeeping_untouched
     state.write_text(
         json.dumps({"test": {"model_managed": False}}, indent=2, sort_keys=True) + "\n"
     )
-    monkeypatch.setattr("kiro_crew.agent_state._state_path", lambda: state)
+    monkeypatch.setattr("aj_crew.agent_state._state_path", lambda: state)
 
     before_state = state.read_text()
     before_spec = installed.read_text()
@@ -911,21 +911,21 @@ async def test_agent_config_put_failed_config_write_leaves_bookkeeping_untouched
         raise OSError("disk full")
 
     with (
-        patch("kiro_crew.dashboard.handlers._installed_agent_config", return_value=installed),
-        patch("kiro_crew.dashboard.handlers._find_agent_config", return_value=defaults),
-        patch("kiro_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
-        patch("kiro_crew.dashboard.handlers.config_path", return_value=mc_cfg),
-        patch("kiro_crew.agent.build_agent_config", return_value={"toolsSettings": {}}),
+        patch("aj_crew.dashboard.handlers._installed_agent_config", return_value=installed),
+        patch("aj_crew.dashboard.handlers._find_agent_config", return_value=defaults),
+        patch("aj_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
+        patch("aj_crew.dashboard.handlers.config_path", return_value=mc_cfg),
+        patch("aj_crew.agent.build_agent_config", return_value={"toolsSettings": {}}),
         patch(
-            "kiro_crew.dashboard.handlers.agents.get_shipped_tools",
+            "aj_crew.dashboard.handlers.agents.get_shipped_tools",
             return_value={"tools": ["a", "c"], "allowedTools": ["b"]},
         ),
         patch(
-            "kiro_crew.platform.governance.sanitize_agent_config_governance",
+            "aj_crew.platform.governance.sanitize_agent_config_governance",
             lambda config: None,
         ),
         patch(
-            "kiro_crew.dashboard.handlers.agents.update_config_locked",
+            "aj_crew.dashboard.handlers.agents.update_config_locked",
             _config_write_fails,
         ),
     ):
@@ -952,7 +952,7 @@ async def test_offload_config_write_drains_through_repeated_cancellation():
     """
     import threading
 
-    from kiro_crew.dashboard.handlers.mcp import _offload_config_write
+    from aj_crew.dashboard.handlers.mcp import _offload_config_write
 
     release = threading.Event()
     started = threading.Event()
@@ -1014,7 +1014,7 @@ async def test_offload_config_write_drains_through_repeated_cancellation():
 @pytest.mark.asyncio
 async def test_offload_config_write_propagates_write_errors():
     """A failing write still raises -- the drain must not swallow it."""
-    from kiro_crew.dashboard.handlers.mcp import _offload_config_write
+    from aj_crew.dashboard.handlers.mcp import _offload_config_write
 
     def _failing_write():
         raise OSError("disk full")
@@ -1032,18 +1032,18 @@ async def test_default_agent_write_holds_the_config_lock(tmp_path):
     """
     import contextlib
 
-    from kiro_crew.config.loader import update_config_locked
-    from kiro_crew.dashboard.handlers import api_default_agent
+    from aj_crew.config.loader import update_config_locked
+    from aj_crew.dashboard.handlers import api_default_agent
 
     mc_cfg = tmp_path / "config.json"
-    mc_cfg.write_text(json.dumps({"default_agent": "kirocrew", "unrelated": "keep me"}))
+    mc_cfg.write_text(json.dumps({"default_agent": "ajcrew", "unrelated": "keep me"}))
 
     request = MagicMock(spec=web.Request)
     request.method = "PUT"
     request.app = {"state": MagicMock()}
 
     async def mock_json():
-        return {"agent": "kirocrew"}
+        return {"agent": "ajcrew"}
 
     request.json = mock_json
 
@@ -1075,15 +1075,15 @@ async def test_default_agent_write_holds_the_config_lock(tmp_path):
         return result
 
     loaded = MagicMock()
-    loaded.agents = {"kirocrew": MagicMock()}
+    loaded.agents = {"ajcrew": MagicMock()}
     fake_config_cls = MagicMock()
     fake_config_cls.load.return_value = loaded
 
     with (
-        patch("kiro_crew.dashboard.handlers.config_path", return_value=mc_cfg),
-        patch("kiro_crew.dashboard.handlers.agents.KiroCrewConfig", fake_config_cls),
-        patch("kiro_crew.dashboard.handlers.agents._get_config_lock", _recording_lock),
-        patch("kiro_crew.dashboard.handlers.agents.update_config_locked", _recording_locked),
+        patch("aj_crew.dashboard.handlers.config_path", return_value=mc_cfg),
+        patch("aj_crew.dashboard.handlers.agents.AjCrewConfig", fake_config_cls),
+        patch("aj_crew.dashboard.handlers.agents._get_config_lock", _recording_lock),
+        patch("aj_crew.dashboard.handlers.agents.update_config_locked", _recording_locked),
     ):
         resp = await api_default_agent(request)
 
@@ -1104,7 +1104,7 @@ async def test_default_agent_write_holds_the_config_lock(tmp_path):
     )
     # And the RMW itself still preserves unrelated settings.
     assert json.loads(mc_cfg.read_text(encoding="utf-8")) == {
-        "default_agent": "kirocrew",
+        "default_agent": "ajcrew",
         "unrelated": "keep me",
     }
 
@@ -1121,15 +1121,15 @@ async def test_agent_config_put_governs_against_the_ceiling_current_at_commit(
     """
     import contextlib
 
-    import kiro_crew.platform.governance as gov
+    import aj_crew.platform.governance as gov
 
     # Mutable ceiling: everything is grantable until the lock wait revokes
     # @revoked_during_wait.
     revoked: set[str] = set()
     monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: ref not in revoked)
 
-    installed = tmp_path / "kirocrew.json"
-    installed.write_text(json.dumps({"name": "kirocrew"}))
+    installed = tmp_path / "ajcrew.json"
+    installed.write_text(json.dumps({"name": "ajcrew"}))
     defaults = tmp_path / "defaults.json"
     mc_cfg = tmp_path / "config.json"
 
@@ -1156,17 +1156,17 @@ async def test_agent_config_put_governs_against_the_ceiling_current_at_commit(
         yield
 
     with (
-        patch("kiro_crew.dashboard.handlers._installed_agent_config", return_value=installed),
-        patch("kiro_crew.dashboard.handlers._find_agent_config", return_value=defaults),
-        patch("kiro_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
-        patch("kiro_crew.dashboard.handlers.config_path", return_value=mc_cfg),
+        patch("aj_crew.dashboard.handlers._installed_agent_config", return_value=installed),
+        patch("aj_crew.dashboard.handlers._find_agent_config", return_value=defaults),
+        patch("aj_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
+        patch("aj_crew.dashboard.handlers.config_path", return_value=mc_cfg),
         patch(
-            "kiro_crew.dashboard.handlers.agents.get_shipped_tools",
+            "aj_crew.dashboard.handlers.agents.get_shipped_tools",
             # Ships the ref the submission also carries, so a diff taken AFTER
             # the filter would see it missing and record a phantom user removal.
             return_value={"tools": [], "allowedTools": ["@revoked_during_wait"]},
         ),
-        patch("kiro_crew.dashboard.handlers.mcp._get_mcp_lock", _revoking_lock),
+        patch("aj_crew.dashboard.handlers.mcp._get_mcp_lock", _revoking_lock),
     ):
         resp = await api_agent_config(request)
 

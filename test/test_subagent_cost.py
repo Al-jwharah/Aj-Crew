@@ -13,9 +13,9 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.subagent as subagent
-import kiro_crew.subagent_cost as sc
-from kiro_crew.config.sections import AgentConfig
+import aj_crew.subagent as subagent
+import aj_crew.subagent_cost as sc
+from aj_crew.config.sections import AgentConfig
 
 
 @pytest.fixture
@@ -35,11 +35,11 @@ def _seed(path: Path, records: list[dict]) -> None:
 
 
 def test_append_writes_jsonl_line(cost_log):
-    sc.append_cost_sample("kirocrew", 0.34, 0.82)
+    sc.append_cost_sample("ajcrew", 0.34, 0.82)
     lines = cost_log.read_text(encoding="utf-8").strip().splitlines()
     assert len(lines) == 1
     rec = json.loads(lines[0])
-    assert rec["agent"] == "kirocrew"
+    assert rec["agent"] == "ajcrew"
     assert rec["mem_gb"] == 0.34
     assert rec["cpu_cores"] == 0.82
     assert "ts" in rec
@@ -48,17 +48,17 @@ def test_append_writes_jsonl_line(cost_log):
 def test_append_normalizes_empty_agent(cost_log):
     sc.append_cost_sample("", 0.3, 0.5)
     rec = json.loads(cost_log.read_text(encoding="utf-8").strip())
-    assert rec["agent"] == "kirocrew"
+    assert rec["agent"] == "ajcrew"
 
 
 def test_append_skips_zero_zero(cost_log):
-    sc.append_cost_sample("kirocrew", 0.0, 0.0)
+    sc.append_cost_sample("ajcrew", 0.0, 0.0)
     assert not cost_log.exists() or cost_log.read_text(encoding="utf-8").strip() == ""
 
 
 def test_concurrent_appends_do_not_lose_samples(cost_log):
     for i in range(20):
-        sc.append_cost_sample("kirocrew", 0.3 + i * 0.001, 0.5)
+        sc.append_cost_sample("ajcrew", 0.3 + i * 0.001, 0.5)
     lines = cost_log.read_text(encoding="utf-8").strip().splitlines()
     assert len(lines) == 20  # O_APPEND keeps every line
 
@@ -69,8 +69,8 @@ def test_concurrent_appends_do_not_lose_samples(cost_log):
 def test_typical_cost_ignores_single_outlier(cost_log):
     # 20 samples ~0.3 plus one pathological 9.9 → the median stays at 0.3,
     # not dominated by the lone outlier at the top.
-    recs = [{"agent": "kirocrew", "mem_gb": 0.30, "cpu_cores": 0.1} for _ in range(20)]
-    recs.append({"agent": "kirocrew", "mem_gb": 9.9, "cpu_cores": 0.1})
+    recs = [{"agent": "ajcrew", "mem_gb": 0.30, "cpu_cores": 0.1} for _ in range(20)]
+    recs.append({"agent": "ajcrew", "mem_gb": 9.9, "cpu_cores": 0.1})
     _seed(cost_log, recs)
     val = sc.read_cap_costs("mem_gb")[0]
     assert val is not None
@@ -79,8 +79,8 @@ def test_typical_cost_ignores_single_outlier(cost_log):
 
 def test_median_across_agents(cost_log):
     recs = (
-        [{"agent": "kirocrew-lite", "mem_gb": 0.30, "cpu_cores": 0.1} for _ in range(5)]
-        + [{"agent": "kirocrew", "mem_gb": 0.40, "cpu_cores": 0.1} for _ in range(5)]
+        [{"agent": "ajcrew-lite", "mem_gb": 0.30, "cpu_cores": 0.1} for _ in range(5)]
+        + [{"agent": "ajcrew", "mem_gb": 0.40, "cpu_cores": 0.1} for _ in range(5)]
         + [{"agent": "builder", "mem_gb": 9.0, "cpu_cores": 0.1} for _ in range(5)]
     )
     _seed(cost_log, recs)
@@ -92,7 +92,7 @@ def _heavy_agent_window(heavy: int) -> list[dict]:
     """One agent with *heavy* 22 GB build runs in 50, three agents at ~2 GB."""
     recs = [{"agent": "builder", "mem_gb": 22.0, "cpu_cores": 1.0} for _ in range(heavy)]
     recs += [{"agent": "builder", "mem_gb": 2.0, "cpu_cores": 1.0} for _ in range(50 - heavy)]
-    for name, gb in (("kirocrew", 1.9), ("kirocrew-lite", 2.0), ("reviewer", 2.1)):
+    for name, gb in (("ajcrew", 1.9), ("ajcrew-lite", 2.0), ("reviewer", 2.1)):
         recs += [{"agent": name, "mem_gb": gb, "cpu_cores": 0.5} for _ in range(10)]
     return recs
 
@@ -155,11 +155,11 @@ def test_one_huge_whole_run_peak_does_not_pin_the_cap(cost_log, monkeypatch):
 
     ts = time.time()
     recs = [
-        {"agent": "kirocrew", "mem_gb": 2.0, "settled_gb": 0.9, "cpu_cores": 0.5, "ts": ts}
+        {"agent": "ajcrew", "mem_gb": 2.0, "settled_gb": 0.9, "cpu_cores": 0.5, "ts": ts}
         for _ in range(9)
     ]
     recs.append(
-        {"agent": "kirocrew", "mem_gb": 132.3, "settled_gb": 1.0, "cpu_cores": 4.0, "ts": ts}
+        {"agent": "ajcrew", "mem_gb": 132.3, "settled_gb": 1.0, "cpu_cores": 4.0, "ts": ts}
     )
     # Old-shape heavy runs with no settled reading, and shared-run readings, are
     # not the agent's own runtime and must not price a slot either.
@@ -186,7 +186,7 @@ def test_settled_cap_cost_ages_out_like_the_spawn_floor(cost_log, monkeypatch):
     # A bucket whose newest settled reading is past the horizon stops pricing
     # slots; with none left the configured cost applies.
     old = 1_000.0
-    _seed(cost_log, [{"agent": "kirocrew", "settled_gb": 9.0, "ts": old} for _ in range(5)])
+    _seed(cost_log, [{"agent": "ajcrew", "settled_gb": 9.0, "ts": old} for _ in range(5)])
     monkeypatch.setattr(subagent, "_available_memory_gb", lambda: 93.0)
     assert sc.read_cap_costs("settled_gb") == (pytest.approx(9.0), pytest.approx(9.0))
     # floor((93 * 0.8 - 2 * 0.315) / 0.315) = 234, the configured-cost fallback.
@@ -206,7 +206,7 @@ def test_typical_cost_counts_every_agent_past_the_bucket_cap(cost_log):
 
 
 def test_min_samples_fallback_returns_none(cost_log):
-    _seed(cost_log, [{"agent": "kirocrew", "mem_gb": 0.5, "cpu_cores": 0.1}])  # only 1
+    _seed(cost_log, [{"agent": "ajcrew", "mem_gb": 0.5, "cpu_cores": 0.1}])  # only 1
     assert sc.read_cap_costs("mem_gb", min_samples=3) == (None, None)
 
 
@@ -216,7 +216,7 @@ def test_empty_log_returns_none(cost_log):
 
 def test_corrupt_lines_skipped(cost_log):
     cost_log.parent.mkdir(parents=True, exist_ok=True)
-    good = json.dumps({"agent": "kirocrew", "mem_gb": 0.4, "cpu_cores": 0.1})
+    good = json.dumps({"agent": "ajcrew", "mem_gb": 0.4, "cpu_cores": 0.1})
     cost_log.write_text(f"{good}\nNOT JSON\n{good}\n{good}\n", encoding="utf-8")
     val = sc.read_cap_costs("mem_gb", min_samples=3)[0]
     assert val == pytest.approx(0.4, abs=0.01)  # 3 good lines, corrupt skipped
@@ -224,8 +224,8 @@ def test_corrupt_lines_skipped(cost_log):
 
 def test_window_limits_to_recent(cost_log):
     # Old cheap samples then recent expensive ones; window=3 → only recent count.
-    recs = [{"agent": "kirocrew", "mem_gb": 0.1, "cpu_cores": 0.1} for _ in range(10)]
-    recs += [{"agent": "kirocrew", "mem_gb": 0.9, "cpu_cores": 0.1} for _ in range(3)]
+    recs = [{"agent": "ajcrew", "mem_gb": 0.1, "cpu_cores": 0.1} for _ in range(10)]
+    recs += [{"agent": "ajcrew", "mem_gb": 0.9, "cpu_cores": 0.1} for _ in range(3)]
     _seed(cost_log, recs)
     val = sc.read_cap_costs("mem_gb", window=3, min_samples=3)[0]
     assert val == pytest.approx(0.9, abs=0.01)
@@ -235,7 +235,7 @@ def test_window_limits_to_recent(cost_log):
 
 
 def test_compaction_bounds_per_agent(cost_log):
-    recs = [{"agent": "kirocrew", "mem_gb": 0.3, "cpu_cores": 0.1, "ts": i} for i in range(100)]
+    recs = [{"agent": "ajcrew", "mem_gb": 0.3, "cpu_cores": 0.1, "ts": i} for i in range(100)]
     _seed(cost_log, recs)
     sc.compact_cost_log(window=10)
     lines = cost_log.read_text(encoding="utf-8").strip().splitlines()
@@ -246,7 +246,7 @@ def test_compaction_bounds_per_agent(cost_log):
 
 
 def test_compaction_noop_when_within_bound(cost_log):
-    recs = [{"agent": "kirocrew", "mem_gb": 0.3, "cpu_cores": 0.1, "ts": i} for i in range(5)]
+    recs = [{"agent": "ajcrew", "mem_gb": 0.3, "cpu_cores": 0.1, "ts": i} for i in range(5)]
     _seed(cost_log, recs)
     sc.compact_cost_log(window=50)
     assert len(cost_log.read_text(encoding="utf-8").strip().splitlines()) == 5
@@ -356,8 +356,8 @@ class TestOverCapRecordDoesNotLoseData:
 
 
 def test_append_writes_settled_only_when_measured(cost_log):
-    sc.append_cost_sample("kirocrew", 1.4, 0.5, settled_gb=0.62)
-    sc.append_cost_sample("kirocrew", 1.4, 0.5)
+    sc.append_cost_sample("ajcrew", 1.4, 0.5, settled_gb=0.62)
+    sc.append_cost_sample("ajcrew", 1.4, 0.5)
     first, second = (json.loads(x) for x in cost_log.read_text(encoding="utf-8").splitlines())
     assert first["settled_gb"] == 0.62
     assert first["mem_gb"] == 1.4, "the whole-run peak the cap reads is unchanged"
@@ -365,23 +365,23 @@ def test_append_writes_settled_only_when_measured(cost_log):
 
 
 def test_a_settled_reading_alone_is_still_recorded(cost_log):
-    sc.append_cost_sample("kirocrew", 0.0, 0.0, settled_gb=0.5)
+    sc.append_cost_sample("ajcrew", 0.0, 0.0, settled_gb=0.5)
     assert json.loads(cost_log.read_text(encoding="utf-8"))["settled_gb"] == 0.5
 
 
 def test_settled_reader_is_dedicated_only_per_bucket_p90(cost_log):
     _seed(
         cost_log,
-        [{"agent": "kirocrew", "mem_gb": 9.0, "settled_gb": v} for v in (0.5, 0.6, 0.7)]
-        + [{"agent": "kirocrew", "mem_gb": 9.0, "settled_gb": 50.0, "shared": True}] * 5
+        [{"agent": "ajcrew", "mem_gb": 9.0, "settled_gb": v} for v in (0.5, 0.6, 0.7)]
+        + [{"agent": "ajcrew", "mem_gb": 9.0, "settled_gb": 50.0, "shared": True}] * 5
         + [{"agent": "heavy", "mem_gb": 9.0, "settled_gb": 1.5}] * 2
-        + [{"agent": "kirocrew", "mem_gb": 9.0}] * 5,
+        + [{"agent": "ajcrew", "mem_gb": 9.0}] * 5,
     )
     costs, complete = sc.read_learned_costs_checked("settled_gb", dedicated_only=True)
     assert complete is True
     # Shared shares and records without a settled reading teach nothing; a
     # bucket with fewer than three readings is not trusted yet.
-    assert costs == {"kirocrew": pytest.approx(0.68)}
+    assert costs == {"ajcrew": pytest.approx(0.68)}
 
 
 def test_settled_reader_drops_a_bucket_once_its_newest_reading_is_past_the_horizon(cost_log):
@@ -419,7 +419,7 @@ def test_settled_reader_drops_a_bucket_once_its_newest_reading_is_past_the_horiz
 
 
 def test_settled_lookup_reads_one_bucket_and_normalizes_the_default():
-    costs = {"kirocrew": 0.6, "heavy": 1.5}
+    costs = {"ajcrew": 0.6, "heavy": 1.5}
     assert sc.learned_settled_for(costs, "") == 0.6
     assert sc.learned_settled_for(costs, "heavy") == 1.5
     assert sc.learned_settled_for(costs, "other") is None

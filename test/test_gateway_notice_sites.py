@@ -14,8 +14,8 @@ the frontend table and every wording against the LEGACY pattern it maps to.
 
 from __future__ import annotations
 
-from kiro_crew.dashboard import gateway_notice as gn
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.dashboard import gateway_notice as gn
+from aj_crew.testing.wait import default_timeout
 
 
 class _Slot:
@@ -46,7 +46,7 @@ def _args(row: dict) -> dict:
 
 
 def test_turn_timeout_notice_tokens_and_args() -> None:
-    from kiro_crew.dashboard import turn_dispatch as td
+    from aj_crew.dashboard import turn_dispatch as td
 
     text, token, args = td.turn_timeout_notice(600, None, td.TURN_LIMIT_GLOBAL)
     assert token == gn.GATEWAY_NOTICE_TURN_TIMEOUT
@@ -68,7 +68,7 @@ def test_turn_timeout_notice_tokens_and_args() -> None:
 
 
 def test_background_turn_abandoned_notice_token_and_args() -> None:
-    from kiro_crew.dashboard import turn_dispatch as td
+    from aj_crew.dashboard import turn_dispatch as td
 
     text, token, args = td.background_turn_abandoned_notice(120)
     assert token == gn.GATEWAY_NOTICE_BACKGROUND_TURN_ABANDONED
@@ -82,7 +82,7 @@ def test_finish_turn_task_abandoned_call_site_carries_its_token() -> None:
     # abandoned-turn card's notice token + args on the appended row. Removing the
     # meta from this append (buluoray's mutation) makes this fail, where the
     # helper-return test above would stay green.
-    from kiro_crew.dashboard import turn_dispatch as td
+    from aj_crew.dashboard import turn_dispatch as td
 
     class _DoneTask:
         def cancelled(self) -> bool:
@@ -111,7 +111,7 @@ def test_finish_turn_task_abandoned_call_site_carries_its_token() -> None:
 
 
 def test_close_interruption_row_carries_its_token() -> None:
-    from kiro_crew.dashboard.slot_persistence import turn_marker as tm
+    from aj_crew.dashboard.slot_persistence import turn_marker as tm
 
     slot = _Slot()
     assert tm.record_close_interruption(slot) is True
@@ -123,7 +123,7 @@ def test_close_interruption_row_carries_its_token() -> None:
 
 def test_crew_no_permit_card_carries_its_token() -> None:
     # The card text is a module constant; assert the token rides with it.
-    from kiro_crew.apps.builtins.issue_radar.backend import crew_runtime_session as crs
+    from aj_crew.apps.builtins.issue_radar.backend import crew_runtime_session as crs
 
     slot = _Slot()
     slot.append(
@@ -161,7 +161,7 @@ def test_meta_shape_for_composed_rows() -> None:
 
 
 def test_note_failed_before_the_try_tokenizes_both_variants() -> None:
-    from kiro_crew.dashboard.chat_turn.queue_cycle import (
+    from aj_crew.dashboard.chat_turn.queue_cycle import (
         TURN_FAILED_META,
         _note_failed_before_the_try,
         _TurnExit,

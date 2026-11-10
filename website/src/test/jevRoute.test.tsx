@@ -111,7 +111,7 @@ describe('isUnpinnedModel', () => {
     // chip keyed off a different set would say `Auto` for a turn that routed, which
     // is the one thing this pair exists to prevent.
     const runner = readFileSync(
-      join(__dirname, '../../../src/kiro_crew/dashboard/chat_turn/decisions_hooks.py'),
+      join(__dirname, '../../../src/aj_crew/dashboard/chat_turn/decisions_hooks.py'),
       'utf8',
     )
     expect(runner).toContain('_JEV_ROUTE_AUTO_MODELS = ("auto",)')

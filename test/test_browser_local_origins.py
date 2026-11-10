@@ -18,8 +18,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.config.sections import coerce_browser_local_origins
-from kiro_crew.mcp_tools import browser as mod
+from aj_crew.config.sections import coerce_browser_local_origins
+from aj_crew.mcp_tools import browser as mod
 
 GATEWAY_PORT = 5476
 
@@ -77,7 +77,7 @@ def test_coercer_fails_closed_on_non_list(raw: object) -> None:
 
 
 def test_loader_applies_the_coercer() -> None:
-    from kiro_crew.config.loader import _build_dashboard_config
+    from aj_crew.config.loader import _build_dashboard_config
 
     dash = _build_dashboard_config(
         set(), {"browser_local_origins": ["localhost:5173", "10.0.0.5:80"]}
@@ -187,7 +187,7 @@ def test_tool_still_refuses_unlisted_and_gateway(monkeypatch: pytest.MonkeyPatch
     # The refusal names the Settings control AND the exact command, so the agent
     # can hand the user either route to add an origin without guessing.
     assert "Settings -> Browser -> Local preview origins" in out
-    assert "`kirocrew config set dashboard.browser_local_origins '[\"localhost:5173\"]'`" in out
+    assert "`ajcrew config set dashboard.browser_local_origins '[\"localhost:5173\"]'`" in out
 
 
 def test_allowed_local_origins_reads_config_and_fails_closed(
@@ -196,11 +196,11 @@ def test_allowed_local_origins_reads_config_and_fails_closed(
     from types import SimpleNamespace
 
     cfg = SimpleNamespace(dashboard=SimpleNamespace(browser_local_origins=["localhost:5173"]))
-    monkeypatch.setattr(mod.KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(mod.AjCrewConfig, "load", classmethod(lambda cls: cfg))
     assert mod._allowed_local_origins() == frozenset({"localhost:5173"})
 
     def _broken(cls: type) -> Any:
         raise OSError("unreadable")
 
-    monkeypatch.setattr(mod.KiroCrewConfig, "load", classmethod(_broken))
+    monkeypatch.setattr(mod.AjCrewConfig, "load", classmethod(_broken))
     assert mod._allowed_local_origins() == frozenset()

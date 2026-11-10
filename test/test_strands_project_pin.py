@@ -14,9 +14,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.acp.harness import strands as strands_mod
-from kiro_crew.acp.harness import strands_project_pin as pin_mod
+from aj_crew import platform_compat
+from aj_crew.acp.harness import strands as strands_mod
+from aj_crew.acp.harness import strands_project_pin as pin_mod
 
 
 def _project(root: Path) -> Path:
@@ -29,11 +29,11 @@ def _project(root: Path) -> Path:
 
 
 def _config(monkeypatch: pytest.MonkeyPatch, project: str, pin: str) -> None:
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     agent = SimpleNamespace(strands_project=project, strands_project_sha256=pin)
     monkeypatch.setattr(
-        loader.KiroCrewConfig, "load", classmethod(lambda cls: SimpleNamespace(agent=agent))
+        loader.AjCrewConfig, "load", classmethod(lambda cls: SimpleNamespace(agent=agent))
     )
 
 
@@ -55,7 +55,7 @@ def test_an_edited_agent_py_is_refused(tmp_path, monkeypatch) -> None:
     with pytest.raises(ValueError, match="changed since you confirmed it") as caught:
         strands_mod._strands_user_project()
     # The refusal names the command, with the current value, and records nothing.
-    assert f"kirocrew config set agent.strands_project_sha256 {_pinned(entry)}" in str(caught.value)
+    assert f"ajcrew config set agent.strands_project_sha256 {_pinned(entry)}" in str(caught.value)
 
 
 def test_an_added_file_is_refused(tmp_path, monkeypatch) -> None:
@@ -129,10 +129,10 @@ def test_a_folder_past_the_file_bound_is_refused(tmp_path, monkeypatch) -> None:
 def test_the_agent_cannot_write_the_pin() -> None:
     """The pin lives in config.json: sealed to the agent's file tools and sandbox shells,
     and not a dashboard- or card-editable setting, so no agent tool can record it."""
-    from kiro_crew import sandbox_leaves
-    from kiro_crew.config.paths import config_dir
-    from kiro_crew.dashboard.handlers.core_config_schema import _EDITABLE_CONFIG
-    from kiro_crew.security import is_sensitive_write_path
+    from aj_crew import sandbox_leaves
+    from aj_crew.config.paths import config_dir
+    from aj_crew.dashboard.handlers.core_config_schema import _EDITABLE_CONFIG
+    from aj_crew.security import is_sensitive_write_path
 
     assert "config.json" in sandbox_leaves._CREW_READONLY_LEAVES
     assert "config.local.json" in sandbox_leaves._CREW_READONLY_LEAVES
@@ -147,5 +147,5 @@ def test_the_launch_passes_the_pin_to_the_gate(monkeypatch) -> None:
     launch._project, launch._project_pin = "/p/agent.py", "ab" * 32
     env: dict[str, str] = {}
     launch.apply_spawn_env(env)
-    assert env["KIROCREW_STRANDS_PROJECT"] == "/p/agent.py"
-    assert env["KIROCREW_STRANDS_PROJECT_SHA256"] == "ab" * 32
+    assert env["AJCREW_STRANDS_PROJECT"] == "/p/agent.py"
+    assert env["AJCREW_STRANDS_PROJECT_SHA256"] == "ab" * 32

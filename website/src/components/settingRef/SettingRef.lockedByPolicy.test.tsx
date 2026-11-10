@@ -35,7 +35,7 @@ describe('SettingRef locked by policy', () => {
     expect(screen.getByTestId('locked-by-policy-badge')).toHaveTextContent('Locked by policy')
     await userEvent.setup().click(screen.getByRole('button'))
     expect(await screen.findByText(/organization's policy controls this setting/i)).toBeInTheDocument()
-    expect(screen.queryByText(/kirocrew config set/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/ajcrew config set/)).not.toBeInTheDocument()
   })
 
   it('shows no badge for a path that is not locked', () => {

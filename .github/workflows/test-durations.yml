@@ -37,7 +37,7 @@ jobs:
     # Use the larger-runner label upstream; forks cannot reach the org group.
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     # runs the WHOLE suite unsharded to record per-test durations.
     timeout-minutes: 90
     steps:

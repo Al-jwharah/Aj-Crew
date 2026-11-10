@@ -23,18 +23,18 @@ from autonudge_helpers import _enable  # noqa: F401
 from autonudge_helpers import svc_fixture  # noqa: F401
 from autonudge_shutdown_drain_helpers import _LOST_RUN_SECS, _wait_until
 
-from kiro_crew import autonudge as _an
-from kiro_crew.autonudge import (
+from aj_crew import autonudge as _an
+from aj_crew.autonudge import (
     AutoNudgeService,
     MonitorUpdateConflict,
     NudgeAdmissionRefused,
     NudgeLoop,
 )
-from kiro_crew.monitoring.models import (
+from aj_crew.monitoring.models import (
     MonitorBudgets,
     MonitorOutcome,
 )
-from kiro_crew.testing.wait import async_wait_until, until_parked
+from aj_crew.testing.wait import async_wait_until, until_parked
 
 
 @pytest.mark.asyncio
@@ -1061,7 +1061,7 @@ async def test_expected_admitted_transaction_refusal_has_no_warning_traceback(tm
     async def refuse() -> None:
         raise MonitorUpdateConflict("caller-facing conflict")
 
-    caplog.set_level(logging.WARNING, logger="kiro_crew.autonudge")
+    caplog.set_level(logging.WARNING, logger="aj_crew.autonudge")
     with pytest.raises(MonitorUpdateConflict, match="caller-facing conflict"):
         await _an._timers._run_admitted_transaction(
             service,
@@ -1073,7 +1073,7 @@ async def test_expected_admitted_transaction_refusal_has_no_warning_traceback(tm
     assert not [
         record
         for record in caplog.records
-        if record.name == "kiro_crew.autonudge"
+        if record.name == "aj_crew.autonudge"
         and record.getMessage() == "unexpected detached warning"
     ]
 
@@ -1085,7 +1085,7 @@ async def test_MUTATION_a_cancelled_guard_exit_still_releases_its_user_count(tmp
     The exit runs while the service lock is held elsewhere and the user is then
     cancelled. A count left behind would pin the lock entry of a row that is gone.
     """
-    from kiro_crew.autonudge_service.maintenance import _monitor_mutation_guard
+    from aj_crew.autonudge_service.maintenance import _monitor_mutation_guard
 
     service = AutoNudgeService(base_dir=tmp_path / "home")
     entered = asyncio.Event()

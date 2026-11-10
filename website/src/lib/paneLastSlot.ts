@@ -59,6 +59,6 @@ export function relayActiveSlotToParent(key: string): void {
   const target = relayTargetOrigin()
   if (!target) return
   try {
-    window.parent.postMessage({ source: 'kirocrew', type: PANE_ACTIVE_SLOT_TYPE, key }, target)
+    window.parent.postMessage({ source: 'ajcrew', type: PANE_ACTIVE_SLOT_TYPE, key }, target)
   } catch { /* a relay must never break a state update */ }
 }

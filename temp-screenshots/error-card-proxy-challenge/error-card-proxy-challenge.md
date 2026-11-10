@@ -18,7 +18,7 @@ Open http://127.0.0.1:6844 in a new tab — if a sign-in page appears, your acce
 
 ## rejected
 
-Session expired. Run kirocrew token in a terminal, then paste the sign-in URL into the banner at the top of this page to sign back in.
+Session expired. Run ajcrew token in a terminal, then paste the sign-in URL into the banner at the top of this page to sign back in.
 Sign in to Kiro
 
 ## framed episode — link elements

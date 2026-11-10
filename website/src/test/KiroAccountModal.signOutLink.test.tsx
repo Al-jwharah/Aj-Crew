@@ -17,9 +17,9 @@ import { renderWithProviders } from './helpers'
 
 vi.mock('../api/client', async importOriginal => {
   const mod = await importOriginal<typeof import('../api/client')>()
-  return { ...mod, api: { ...mod.api, kirocrewConfig: vi.fn(), kasLoginStatus: vi.fn() } }
+  return { ...mod, api: { ...mod.api, ajcrewConfig: vi.fn(), kasLoginStatus: vi.fn() } }
 })
-const configMock = vi.mocked(api.kirocrewConfig)
+const configMock = vi.mocked(api.ajcrewConfig)
 const signInMock = vi.mocked(api.kasLoginStatus)
 const crewSignIn = (authenticated: boolean) =>
   signInMock.mockResolvedValue({ authenticated, provider: authenticated ? 'Google' : '', identity: authenticated ? 'social' : '' } as never)
@@ -43,7 +43,7 @@ const READING: KiroAccountUsage = {
 const LINK = { name: 'Sign out or switch account in Settings' }
 const SWITCH_LINK = { name: 'Switch account in Settings' }
 /** Waits on the link or its notice. The link renders only after a query chain
- *  settles: the `kirocrewConfig` read, then (on KAS) the `kas-login` read that
+ *  settles: the `ajcrewConfig` read, then (on KAS) the `kas-login` read that
  *  picks the label. On a loaded worker that chain can outlast the default 1 s. */
 const QUERY_CHAIN = { timeout: 5_000 }
 

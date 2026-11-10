@@ -20,7 +20,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import dashboard_frame, dashboard_synth
+from aj_crew import dashboard_frame, dashboard_synth
 
 DAY = re.compile(r"\d{4}-\d{2}-\d{2}\Z")
 ISO = re.compile(
@@ -94,11 +94,11 @@ MODEL: dict[str, Any] = {
 #: A page that spells out the keys of the fixture's rows, as a page that draws them does.
 PAGE = """
 <script>
-  window.kirocrew.fields.items.map(function (row) {
+  window.ajcrew.fields.items.map(function (row) {
     return [row.item_id, row.title, row.state, row.verdict, row.fails, row.pr,
             row.created_at, row.parent_item, row.tags];
   });
-  Object.values(window.kirocrew.fields.by_model).map(function (m) { return m.turns; });
+  Object.values(window.ajcrew.fields.by_model).map(function (m) { return m.turns; });
 </script>
 """
 
@@ -304,7 +304,7 @@ def test_the_clock_is_the_one_the_caller_gives_and_nothing_else_moves_a_seeded_c
 
 def test_only_a_work_item_id_keeps_the_word_in_front_of_it():
     """A word before a separator is the record's text unless the schema fixes it."""
-    from kiro_crew import work_ledger
+    from aj_crew import work_ledger
 
     free_text = [
         "ProjectAtlas-2026",
@@ -398,7 +398,7 @@ def test_no_part_of_the_record_reaches_the_composed_page():
     for value in _content(real):
         if isinstance(value, str) and len(value) >= 6 and value not in kept:
             assert value not in page, value
-    assert "ZXQ" not in page and "KiroCrew/pull" not in page
+    assert "ZXQ" not in page and "AjCrew/pull" not in page
 
 
 def test_a_fresh_seed_is_used_every_time_and_it_is_not_taken_from_the_record(monkeypatch):
@@ -761,7 +761,7 @@ def test_the_words_a_page_spells_are_found_in_one_bounded_pass():
 def test_the_keys_of_a_map_keyed_by_a_runtime_id_are_invented_even_when_the_page_names_them():
     real = _read()
     # The catalog names usage.by_model as a map keyed by a model id.
-    from kiro_crew.dashboard_synth import _shape_at
+    from aj_crew.dashboard_synth import _shape_at
 
     assert _shape_at({"fold": "usage", "path": "by_model"}) == {
         "type": "object",
@@ -791,7 +791,7 @@ def test_a_map_the_package_does_not_bind_to_a_fold_has_only_the_keys_the_page_na
 
 @pytest.mark.parametrize("fold, path", [("panel", "data"), ("agentic", "fields")])
 def test_a_map_the_owner_keyed_has_the_keys_the_page_names_and_invents_the_rest(fold, path):
-    from kiro_crew.dashboard_synth import _shape_at
+    from aj_crew.dashboard_synth import _shape_at
 
     node = _shape_at({"fold": fold, "path": path})
     assert node is not None and node["opaque"] is True
@@ -841,7 +841,7 @@ def test_an_owner_document_keeps_the_keys_the_page_names_at_every_depth():
 
 @pytest.mark.parametrize("path", ["data", "data.report"])
 def test_a_field_at_or_below_a_panel_document_is_an_owner_document(path):
-    from kiro_crew.dashboard_synth import _walk_source
+    from aj_crew.dashboard_synth import _walk_source
 
     node, owner = _walk_source({"fold": "panel", "path": path})
 
@@ -853,7 +853,7 @@ def test_a_field_at_or_below_a_panel_document_is_an_owner_document(path):
 
 def test_every_opaque_node_is_either_runtime_keyed_or_listed_as_owner_keyed():
     """A node added to the catalog is invented unless it is listed, which is the safe side."""
-    from kiro_crew.dashboard_synth import _fold_shapes
+    from aj_crew.dashboard_synth import _fold_shapes
 
     found = []
 
@@ -941,7 +941,7 @@ def test_something_that_is_not_a_read_is_refused():
 
 def test_the_work_grows_in_step_with_the_record(monkeypatch):
     """One walk to learn the values and one to build the copy, each over each value once."""
-    from kiro_crew.dashboard_synth import _Synth
+    from aj_crew.dashboard_synth import _Synth
 
     visits = []
     original = _Synth._value

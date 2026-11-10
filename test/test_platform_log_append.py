@@ -13,10 +13,10 @@ from concurrent.futures import ThreadPoolExecutor
 import pytest
 
 from conftest import make_dir_link
-from kiro_crew import platform_log_append as pla
-from kiro_crew.decisions import log
-from kiro_crew.pinned_fs import PinnedPathRefusal
-from kiro_crew.testing.wait import wait_until
+from aj_crew import platform_log_append as pla
+from aj_crew.decisions import log
+from aj_crew.pinned_fs import PinnedPathRefusal
+from aj_crew.testing.wait import wait_until
 
 
 @pytest.fixture
@@ -619,7 +619,7 @@ def test_independent_process_lock_blocks_append(path, tmp_path, monkeypatch):
     pla.append_line(path, b'{"keep":1}\n')
     script = (
         "import sys; from pathlib import Path; "
-        "from kiro_crew import platform_log_append as p; "
+        "from aj_crew import platform_log_append as p; "
         "p._APPEND_TIMEOUT_SECONDS = 0.05; "
         "p.append_line(Path(sys.argv[1]), b'{}\\n')"
     )

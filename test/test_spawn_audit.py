@@ -1,6 +1,6 @@
 """Subprocess-spawn audit.
 
-Every subprocess spawn in ``src/kiro_crew`` must be either
+Every subprocess spawn in ``src/aj_crew`` must be either
 
 * routed through the sandbox chokepoint (its enclosing function calls
   ``sandboxed_spawn_argv``, ``wrap_argv``, or the regression-pinned async
@@ -29,7 +29,7 @@ The remaining unrouted spawns, the rows of those two tables, are pre-existing an
 groups, none of which is the finding's agent-influenced-spawn vector:
 
 * Operator-invoked CLI / setup / doctor / self-update (fixed argv against our
-  own install: git pull, pip, npm, kiro-cli/kirocrew update,
+  own install: git pull, pip, npm, kiro-cli/ajcrew update,
   systemctl/launchctl, node/ollama bootstrap).
 * Internal process management (read our own ppid; enumerate/kill our own
   managed/orphaned processes) and system-metrics probes (fixed sysctl/ps/etc).
@@ -89,7 +89,7 @@ from source_corpus import (
 from spawn_audit_app_spawns import BENIGN_APP_SPAWNS
 from spawn_audit_helpers import BENIGN_PACKAGE_SPAWNS
 
-_SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+_SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 
 # One xdist worker for the whole module: every audit test here reads the module-cached
 # spawn census (``_spawn_functions_in``, one cached scan per census part). Under
@@ -133,7 +133,7 @@ def _is_container_image_asset(path: Path) -> bool:
     ``apps/builtins/<app>/crew/runtime/**`` is the build context of a Linux image: a
     Dockerfile, the processes that image runs, and their tests. The gateway does not
     import it, which ``test_container_image_assets_are_not_imported`` pins and which the
-    tree itself enforces by assuming an installed layout where ``kiro_crew`` is absent.
+    tree itself enforces by assuming an installed layout where ``aj_crew`` is absent.
 
     Its subprocess calls are the image's supervisor starting the image's own children,
     inside a container the owner's machine never runs. The sandbox chokepoint governs the
@@ -267,14 +267,14 @@ PREEXEC_EXEMPT: frozenset[str] = frozenset(
 BENIGN_SPAWNS: frozenset[str] = BENIGN_PACKAGE_SPAWNS | BENIGN_APP_SPAWNS
 
 
-# First-party fixed-argv spawn sites: every call site in ``src/kiro_crew`` that
+# First-party fixed-argv spawn sites: every call site in ``src/aj_crew`` that
 # passes the ``first_party_fixed_argv`` keyword into the sandbox chokepoint
 # (``sandboxed_spawn_argv`` / ``wrap_argv``). The flag buys an UNCONFINED spawn
 # on a backend-less host (the carve-out), so "first-party" must be a
 # reviewed property, not a copy-pasteable kwarg: a new site must be added here
 # WITH a justification proving the full argv is derived inside this package
 # with zero agent/repo/user-config influence, OR that it runs the kiro-cli
-# Kiro Crew already launches for every ACP session -- resolved only by
+# Aj Crew already launches for every ACP session -- resolved only by
 # ``kiro_cli.find_kiro_cli_candidates`` -- with a fixed argv. That binary is
 # already trusted and run on every ACP launch, so the carve-out adds no new
 # trust (owner decision, LTS sign-in check). Keyed by
@@ -284,7 +284,7 @@ FIRST_PARTY_SPAWNS: frozenset[str] = frozenset(
         # The managed-server probe. The flag value is COMPUTED, not literal:
         # ``_is_first_party_managed_argv`` requires the spec's command+args+env
         # to EQUAL what this package derives for the managed server
-        # (``agent._kirocrew_mcp_invocation`` + ``agent._managed_mcp_env``, the
+        # (``agent._ajcrew_mcp_invocation`` + ``agent._managed_mcp_env``, the
         # single sources of truth the specs are force-re-resolved from) — never
         # user-config text. Env is compared because the probe merges the spec's
         # env into the child environment and ``LD_PRELOAD`` changes what code
@@ -716,10 +716,10 @@ def test_every_spawn_is_routed_or_allowlisted(part: int):
     unrouted = _collect_unrouted_spawns(part)
     unexpected = unrouted - BENIGN_SPAWNS
     assert not unexpected, (
-        "New unrouted subprocess spawn(s) found in src/kiro_crew:\n  "
+        "New unrouted subprocess spawn(s) found in src/aj_crew:\n  "
         + "\n  ".join(sorted(unexpected))
         + "\n\nRoute agent-influenced spawns through "
-        "kiro_crew.sandbox.sandboxed_spawn_argv (OS sandbox + scrubbed env), "
+        "aj_crew.sandbox.sandboxed_spawn_argv (OS sandbox + scrubbed env), "
         "or, if the command/args/cwd are NOT agent-influenced, add the "
         "file::function key to BENIGN_SPAWNS in this test with a justification. "
         "See security-review finding 92e24570."
@@ -808,7 +808,7 @@ def test_every_routed_spawn_applies_resource_limits(part: int):
     assert not missing, (
         "Sandbox-routed spawn(s) missing a resource-limit preexec_fn:\n  "
         + "\n  ".join(sorted(missing))
-        + "\n\nPass preexec_fn=kiro_crew.sandbox.resource_limit_preexec() to the "
+        + "\n\nPass preexec_fn=aj_crew.sandbox.resource_limit_preexec() to the "
         "spawn (kernel RLIMIT ceiling — fork bomb / FD / mem / CPU), or add the "
         "file::function key to PREEXEC_EXEMPT with a justification. "
         "See security-review finding bdf0d7e5."
@@ -844,7 +844,7 @@ def test_every_routed_spawn_applies_cgroup_scope(part: int):
     assert not missing, (
         "Sandbox-routed spawn(s) missing a cgroup v2 scope:\n  "
         + "\n  ".join(sorted(missing))
-        + "\n\nWrap the final argv with kiro_crew.sandbox.cgroup_scope_argv() "
+        + "\n\nWrap the final argv with aj_crew.sandbox.cgroup_scope_argv() "
         "(pids.max + memory.max fork-bomb / memory-DoS ceiling), or route the "
         "spawn through sandboxed_spawn_argv which applies it. "
         "See security-review finding bdf0d7e5."
@@ -887,11 +887,11 @@ def _asset_imports(assets: list[Path], exempt: Callable[[Path], bool]) -> list[s
     """``<relpath>:<line> imports <module>`` for every import, outside the files *exempt*
     names, of one of *assets* or of a package holding one."""
     asset_modules = {
-        "kiro_crew." + p.relative_to(_SRC_ROOT).with_suffix("").as_posix().replace("/", ".")
+        "aj_crew." + p.relative_to(_SRC_ROOT).with_suffix("").as_posix().replace("/", ".")
         for p in assets
     }
     asset_packages = {
-        "kiro_crew." + p.relative_to(_SRC_ROOT).parent.as_posix().replace("/", ".") for p in assets
+        "aj_crew." + p.relative_to(_SRC_ROOT).parent.as_posix().replace("/", ".") for p in assets
     }
     return [
         f"{rel}:{line} imports {name}"
@@ -930,7 +930,7 @@ def test_bundled_skill_assets_are_not_imported():
     assert not offenders, (
         "Gateway code imports a bundled skill asset, which the spawn audit "
         "exempts:\n  " + "\n  ".join(sorted(offenders)) + "\n\nEither move the "
-        "shared logic into a real module under src/kiro_crew (where the spawn "
+        "shared logic into a real module under src/aj_crew (where the spawn "
         "audit reviews it), or drop the import."
     )
 
@@ -944,7 +944,7 @@ def test_container_image_assets_are_not_imported():
     gateway spawns while staying invisible to the audit.
 
     The tree also cannot be imported in practice: it assumes an installed layout where
-    ``kiro_crew`` is absent, so an import would fail at runtime rather than quietly work.
+    ``aj_crew`` is absent, so an import would fail at runtime rather than quietly work.
     This test makes the premise explicit instead of leaving it to that accident.
 
     Reading these files as DATA is expected: the image build copies the tree, and tests in
@@ -960,8 +960,8 @@ def test_container_image_assets_are_not_imported():
     assert not offenders, (
         "Gateway code imports a container image asset, which the spawn audit "
         "exempts:\n  " + "\n  ".join(sorted(offenders)) + "\n\nThat tree runs inside a "
-        "Linux image on an installed copy where kiro_crew is absent, so the import would "
-        "fail there anyway. Move the shared logic into a real module under src/kiro_crew, "
+        "Linux image on an installed copy where aj_crew is absent, so the import would "
+        "fail there anyway. Move the shared logic into a real module under src/aj_crew, "
         "or duplicate it deliberately and pin the copies equal by source text."
     )
 
@@ -1186,7 +1186,7 @@ def test_harness_preflight_seed_is_fixed_argv():
     assert len(calls) == 1
     expected = ast.parse(
         "subprocess.run(platform_compat.isolated_python_argv('-c', "
-        "'from kiro_crew.seed import seed; import sys; seed(sys.argv[1])', fixture, "
+        "'from aj_crew.seed import seed; import sys; seed(sys.argv[1])', fixture, "
         "force_isolation=True), "
         "cwd=str(spawn_cwd), env=env, capture_output=True, text=True, "
         "encoding='utf-8', errors='replace', timeout=30)",

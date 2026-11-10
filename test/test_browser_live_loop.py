@@ -20,7 +20,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.browser_harness import live_hub as lh
+from aj_crew.browser_harness import live_hub as lh
 
 pytestmark = pytest.mark.asyncio
 

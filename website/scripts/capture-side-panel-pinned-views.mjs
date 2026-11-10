@@ -61,7 +61,7 @@ for (const theme of ['dark', 'light']) {
     // an unset preference resolves to the HOST's mode, so a filename claiming a
     // theme the frame does not actually carry is the failure this catches.
     const applied = await page.evaluate(() => document.documentElement.getAttribute('data-theme'))
-    const themeOk = applied === (theme === 'light' ? 'kiro-light' : 'kiro-dark')
+    const themeOk = applied === (theme === 'light' ? 'aj-light' : 'aj-dark')
     await page.screenshot({ path: `${OUT}/${theme}-${claimed === 'on' ? 'as-documented-empty' : 'actual-always-present'}.png` })
 
     let ok

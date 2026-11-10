@@ -1,8 +1,8 @@
-"""``kiro_crew.dashboard.handlers.sessions`` keeps the patch seams and the surface the one module had.
+"""``aj_crew.dashboard.handlers.sessions`` keeps the patch seams and the surface the one module had.
 
-``handlers/sessions.py`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the owner
+``handlers/sessions.py`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the owner
 modules in ``dashboard/handlers/sessions_parts/``. Callers, tests and documents still reach
-every name as ``kiro_crew.dashboard.handlers.sessions.<name>``, and the moved code reads its
+every name as ``aj_crew.dashboard.handlers.sessions.<name>``, and the moved code reads its
 names as plain module globals, so a patch through the facade reaches that code only because
 the mirror writes it into every module holding the name.
 
@@ -30,8 +30,8 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew.dashboard.handlers import sessions, sessions_parts
+from aj_crew import _facade_mirror
+from aj_crew.dashboard.handlers import sessions, sessions_parts
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_sessions_parts_facade")
 
@@ -39,8 +39,8 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_sessions_parts_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.dashboard.handlers.sessions"
-PARTS = "kiro_crew.dashboard.handlers.sessions_parts"
+FACADE = "aj_crew.dashboard.handlers.sessions"
+PARTS = "aj_crew.dashboard.handlers.sessions_parts"
 
 #: Names the test trees are known to patch through the facade, one per kind of seam: a
 #: function the facade and an owner both bind, a project import only the facade binds, a
@@ -89,7 +89,7 @@ def _test_tree_files() -> list[Path]:
     """Every test-tree source: ``test/``, the root conftest, and the builtin apps' tests."""
     root = source_corpus.repo_root()
     test_root = root / "test"
-    builtins_root = root / "src" / "kiro_crew" / "apps" / "builtins"
+    builtins_root = root / "src" / "aj_crew" / "apps" / "builtins"
     found = []
     for path in source_corpus.repo_files_named(".py"):
         if path == root / "conftest.py" or path.is_relative_to(test_root):
@@ -172,7 +172,7 @@ def test_the_facade_keeps_the_default_read_path_and_forwards_no_table() -> None:
 
 
 def test_the_family_logs_through_one_logger_named_for_the_facade() -> None:
-    """``caplog`` filters keyed on ``kiro_crew.dashboard.handlers.sessions`` keep seeing the
+    """``caplog`` filters keyed on ``aj_crew.dashboard.handlers.sessions`` keep seeing the
     moved code, at DEBUG too: a sibling module's own logger would not be a child of it."""
     assert sessions.logger.name == FACADE
     loggers = [m for m in _family() if "logger" in vars(m)]
@@ -240,15 +240,15 @@ def _typing_imports(source: str) -> dict[str, str]:
 
 def _project_imports(source: str, family: set[str]) -> dict[str, tuple[str, str | None]]:
     """Name -> (home module, imported attribute or None for a module) of each run-time
-    import of a ``kiro_crew`` module outside the family in *source*."""
+    import of a ``aj_crew`` module outside the family in *source*."""
     found: dict[str, tuple[str, str | None]] = {}
     for node in ast.parse(source).body:
         if isinstance(node, ast.ImportFrom) and node.module:
-            if node.module.startswith("kiro_crew") and node.module not in family:
+            if node.module.startswith("aj_crew") and node.module not in family:
                 found.update({a.asname or a.name: (node.module, a.name) for a in node.names})
         elif isinstance(node, ast.Import):
             for a in node.names:
-                if a.name.startswith("kiro_crew") and a.asname:
+                if a.name.startswith("aj_crew") and a.asname:
                     found[a.asname] = (a.name, None)
     return found
 

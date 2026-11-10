@@ -17,15 +17,15 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps import lifecycle_sdk, manager
-from kiro_crew.apps.context import build_app_context
-from kiro_crew.apps.lifecycle_sdk import (
+from aj_crew.apps import lifecycle_sdk, manager
+from aj_crew.apps.context import build_app_context
+from aj_crew.apps.lifecycle_sdk import (
     DEFAULT_ADMIT_TIMEOUT_SEC,
     MAX_ADMIT_TIMEOUT_SEC,
     Admission,
     AppLifecycleSDK,
 )
-from kiro_crew.testing.wait import await_until, finished, until_parked
+from aj_crew.testing.wait import await_until, finished, until_parked
 
 APP = "lifecycle-probe"
 OTHER = "lifecycle-other"

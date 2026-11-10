@@ -18,10 +18,10 @@ from typing import Any
 import pytest
 from stray_line_helpers import cyclic_gc_quiesced  # noqa: F401 - fixture
 
-from kiro_crew import dashboard_agentic, dashboard_feed
-from kiro_crew.crew_log import entry_types, projection
-from kiro_crew.crew_log.schema import Entry
-from kiro_crew.dashboard_templates.manifest import parse_manifest
+from aj_crew import dashboard_agentic, dashboard_feed
+from aj_crew.crew_log import entry_types, projection
+from aj_crew.crew_log.schema import Entry
+from aj_crew.dashboard_templates.manifest import parse_manifest
 
 #: The raw manifest the instance-seam cases hand the stubbed store. A dict rather
 #: than a parsed manifest because that is what the record carries: the store keeps
@@ -681,7 +681,7 @@ class TestTheMistakeBookFold:
         append with bad_data_field, so the book stayed a list of errors with no
         answers in it while every fold test passed.
         """
-        from kiro_crew.crew_log import emit
+        from aj_crew.crew_log import emit
 
         refusal = dashboard_agentic.refusal_entry(
             dashboard_agentic.WriteRefused("unknown_field", "credits_total", "no such field")
@@ -711,7 +711,7 @@ class TestTheMistakeBookFold:
     def test_both_entry_types_wake_the_eager_folder(self) -> None:
         """A slot fold whose entry type is not in the wake set looks lazy: its value
         would be folded only when a reader happened to ask."""
-        from kiro_crew.crew_log import eager
+        from aj_crew.crew_log import eager
 
         assert AGENTIC in eager._WAKE_TYPES
         assert REFUSED in eager._WAKE_TYPES
@@ -745,7 +745,7 @@ class TestTheFoldScope:
         admitted a scopeless name would hand an operator writing a ``panel-templates``
         page a binding that is missing on every read.
         """
-        from kiro_crew.dashboard_templates.manifest import FOLD_NAMES
+        from aj_crew.dashboard_templates.manifest import FOLD_NAMES
 
         for name in FOLD_NAMES:
             assert dashboard_feed.scope_for(name), name
@@ -760,8 +760,8 @@ class TestTheFoldScope:
         on a refetch), which ``member_dashboard_fields.LivePage`` does for a package's
         page. A fold in neither family still fails here.
         """
-        from kiro_crew.crew_log.projection import TREE_PROJECTION_NAMES
-        from kiro_crew.dashboard_templates.manifest import PACKAGE_FOLD_NAMES
+        from aj_crew.crew_log.projection import TREE_PROJECTION_NAMES
+        from aj_crew.dashboard_templates.manifest import PACKAGE_FOLD_NAMES
 
         for name in PACKAGE_FOLD_NAMES:
             assert dashboard_feed.scope_for(name) or name in TREE_PROJECTION_NAMES, name
@@ -775,8 +775,8 @@ class TestTheFoldScope:
         and a tree fold has none -- so the block never fills and nothing on the page
         says why.
         """
-        from kiro_crew.crew_log.projection import TREE_PROJECTION_NAMES
-        from kiro_crew.dashboard_templates.manifest import ManifestError
+        from aj_crew.crew_log.projection import TREE_PROJECTION_NAMES
+        from aj_crew.dashboard_templates.manifest import ManifestError
 
         for name in TREE_PROJECTION_NAMES:
             with pytest.raises(ManifestError) as caught:
@@ -793,8 +793,8 @@ class TestTheFoldScope:
         ``dashboard_package``'s own validator because that is the gate a package goes
         through -- a package never reaches ``parse_manifest``.
         """
-        from kiro_crew.artifact_store import dashboard_package as dp
-        from kiro_crew.crew_log.projection import TREE_PROJECTION_NAMES
+        from aj_crew.artifact_store import dashboard_package as dp
+        from aj_crew.crew_log.projection import TREE_PROJECTION_NAMES
 
         for name in TREE_PROJECTION_NAMES:
             assert name in dp.fold_names(), (
@@ -810,8 +810,8 @@ class TestTheFoldScope:
         ``parse_manifest`` again, and the package loop above would still pass because
         that set is a superset.
         """
-        from kiro_crew.crew_log.projection import TREE_PROJECTION_NAMES
-        from kiro_crew.dashboard_templates.manifest import FOLD_NAMES, PACKAGE_FOLD_NAMES
+        from aj_crew.crew_log.projection import TREE_PROJECTION_NAMES
+        from aj_crew.dashboard_templates.manifest import FOLD_NAMES, PACKAGE_FOLD_NAMES
 
         assert TREE_PROJECTION_NAMES, "no tree fold is registered; this test guards none"
         for name in TREE_PROJECTION_NAMES:
@@ -839,9 +839,9 @@ class TestTheFoldScope:
         """
         import inspect
 
-        from kiro_crew.crew_log import projection
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
-        from kiro_crew.dashboard_templates.manifest import PACKAGE_FOLD_NAMES
+        from aj_crew.crew_log import projection
+        from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
+        from aj_crew.dashboard_templates.manifest import PACKAGE_FOLD_NAMES
 
         assert projection.TREE_PROJECTION_NAMES, "no tree fold is registered; this test guards none"
         for name in projection.TREE_PROJECTION_NAMES:
@@ -982,7 +982,7 @@ class TestTheInstanceSeam:
     """
 
     def handler(self) -> Any:
-        from kiro_crew.dashboard.handlers import agent_panel as handlers
+        from aj_crew.dashboard.handlers import agent_panel as handlers
 
         return handlers
 
@@ -1001,10 +1001,10 @@ class TestTheInstanceSeam:
     ) -> None:
         handlers = self.handler()
         store = SimpleNamespace(read=lambda slug: self.record(), STATE_LIVE="live")
-        monkeypatch.setitem(sys.modules, "kiro_crew.dashboard_templates.instance", store)
+        monkeypatch.setitem(sys.modules, "aj_crew.dashboard_templates.instance", store)
         # The package attribute too: once the real registry module is imported,
-        # ``from kiro_crew.dashboard_templates import instance`` reads it, not sys.modules.
-        import kiro_crew.dashboard_templates as _templates_pkg
+        # ``from aj_crew.dashboard_templates import instance`` reads it, not sys.modules.
+        import aj_crew.dashboard_templates as _templates_pkg
 
         monkeypatch.setattr(_templates_pkg, "instance", store, raising=False)
         resolved = handlers.read_instance("atlas", "atlas")
@@ -1022,10 +1022,10 @@ class TestTheInstanceSeam:
         ``error`` is the state in which the stored copy does not parse."""
         handlers = self.handler()
         store = SimpleNamespace(read=lambda slug: self.record(state=state), STATE_LIVE="live")
-        monkeypatch.setitem(sys.modules, "kiro_crew.dashboard_templates.instance", store)
+        monkeypatch.setitem(sys.modules, "aj_crew.dashboard_templates.instance", store)
         # The package attribute too: once the real registry module is imported,
-        # ``from kiro_crew.dashboard_templates import instance`` reads it, not sys.modules.
-        import kiro_crew.dashboard_templates as _templates_pkg
+        # ``from aj_crew.dashboard_templates import instance`` reads it, not sys.modules.
+        import aj_crew.dashboard_templates as _templates_pkg
 
         monkeypatch.setattr(_templates_pkg, "instance", store, raising=False)
         assert handlers.read_instance("atlas", "atlas") is None
@@ -1046,8 +1046,8 @@ class TestTheInstanceSeam:
         store = SimpleNamespace(
             read=lambda slug: self.record(state="stale"), STATE_LIVE="live", STATE_STALE="stale"
         )
-        monkeypatch.setitem(sys.modules, "kiro_crew.dashboard_templates.instance", store)
-        import kiro_crew.dashboard_templates as _templates_pkg
+        monkeypatch.setitem(sys.modules, "aj_crew.dashboard_templates.instance", store)
+        import aj_crew.dashboard_templates as _templates_pkg
 
         monkeypatch.setattr(_templates_pkg, "instance", store, raising=False)
         resolved = handlers.read_instance("atlas", "atlas")
@@ -1064,10 +1064,10 @@ class TestTheInstanceSeam:
             read=lambda slug: self.record(manifest={"id": "", "fields": {}}),
             STATE_LIVE="live",
         )
-        monkeypatch.setitem(sys.modules, "kiro_crew.dashboard_templates.instance", store)
+        monkeypatch.setitem(sys.modules, "aj_crew.dashboard_templates.instance", store)
         # The package attribute too: once the real registry module is imported,
-        # ``from kiro_crew.dashboard_templates import instance`` reads it, not sys.modules.
-        import kiro_crew.dashboard_templates as _templates_pkg
+        # ``from aj_crew.dashboard_templates import instance`` reads it, not sys.modules.
+        import aj_crew.dashboard_templates as _templates_pkg
 
         monkeypatch.setattr(_templates_pkg, "instance", store, raising=False)
         assert handlers.read_instance("atlas", "atlas") is None
@@ -1081,10 +1081,10 @@ class TestTheInstanceSeam:
             raise RuntimeError("record unreadable")
 
         store = SimpleNamespace(read=_boom, STATE_LIVE="live")
-        monkeypatch.setitem(sys.modules, "kiro_crew.dashboard_templates.instance", store)
+        monkeypatch.setitem(sys.modules, "aj_crew.dashboard_templates.instance", store)
         # The package attribute too: once the real registry module is imported,
-        # ``from kiro_crew.dashboard_templates import instance`` reads it, not sys.modules.
-        import kiro_crew.dashboard_templates as _templates_pkg
+        # ``from aj_crew.dashboard_templates import instance`` reads it, not sys.modules.
+        import aj_crew.dashboard_templates as _templates_pkg
 
         monkeypatch.setattr(_templates_pkg, "instance", store, raising=False)
         assert handlers.read_instance("atlas", "atlas") is None
@@ -1130,14 +1130,14 @@ class TestThePackageSeam:
             STATE_EMPTY="empty",
             STATE_ERROR="error",
         )
-        monkeypatch.setitem(sys.modules, "kiro_crew.dashboard_templates.instance", fake)
-        import kiro_crew.dashboard_templates as _templates_pkg
+        monkeypatch.setitem(sys.modules, "aj_crew.dashboard_templates.instance", fake)
+        import aj_crew.dashboard_templates as _templates_pkg
 
         monkeypatch.setattr(_templates_pkg, "instance", fake, raising=False)
         # FORCE the template path. These cases are about the instance store's own
         # resolution, so the package path is stubbed to the one state that falls
         # through to it rather than left to whatever the fixture's artifacts hold.
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         monkeypatch.setattr(
             dashboard_package,
@@ -1148,14 +1148,14 @@ class TestThePackageSeam:
         )
 
     def read(self, slug: Any = "atlas") -> Any:
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         return dashboard_package.read_package_model("atlas")
 
     def test_a_live_package_hands_back_a_model_a_write_can_be_checked_against(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         self.store(monkeypatch)
         got = self.read()
@@ -1265,7 +1265,7 @@ class TestThePackageSeam:
         one way, so a type import back would close a cycle -- and the vocabulary is
         therefore shared as strings. This is the pin that stops them drifting: a state
         added with no row would reach an agent as a bare "no package"."""
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         non_live = set(dashboard_package.PACKAGE_STATES) - {dashboard_package.STATE_LIVE}
         assert non_live == set(dashboard_agentic.PACKAGE_REFUSALS)
@@ -1283,7 +1283,7 @@ class TestThePackageSeam:
         """Every refusal is recorded to the mistake book BEFORE the response, which is
         the only reason the next cycle is cheaper. A raise would escape that recording
         and become a 500: the agent learns nothing."""
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         self.store(monkeypatch, manifest={"id": "", "fields": {}})
         got = self.read()
@@ -1302,7 +1302,7 @@ class TestThePackageSeam:
         unrecognised state matters as much as the named one, because it is what a
         store shipping a fifth state looks like to this reader.
         """
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         self.store(monkeypatch, state=stored)
         got = self.read()
@@ -1315,10 +1315,10 @@ class TestThePackageSeam:
     ) -> None:
         """The one thing that is not a state: nothing is known about the Model either
         way, so there is no lesson to record and no field to blame."""
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         self.store(monkeypatch)
-        import kiro_crew.dashboard_templates as _templates_pkg
+        import aj_crew.dashboard_templates as _templates_pkg
 
         fake = _templates_pkg.instance
 
@@ -1332,7 +1332,7 @@ class TestThePackageSeam:
     def test_no_package_and_no_default_answers_empty_rather_than_raising(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         self.store(monkeypatch, state="empty")
         got = self.read()
@@ -1346,7 +1346,7 @@ class TestThePackageSeam:
         behind it to move past. The stub maps it to ``live`` because the stored copy is
         complete and is the one the page is drawn from, so refusing would stop a
         crewmate writing its own fields for a reason unrelated to the write."""
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         self.store(monkeypatch, state="stale")
         got = self.read()
@@ -1400,14 +1400,14 @@ class TestTheRealPackagePath:
         parse_raises: Exception | None = None,
         no_template: bool = False,
     ) -> None:
-        from kiro_crew import artifacts
+        from aj_crew import artifacts
 
         if no_template:
             # A crewmate with NEITHER a package nor a template page, which is the only
             # population whose composite answer is ``empty``: the instance store stands
             # behind the package path for that one state, so a case about the package
             # path's own ``empty`` has to take the template out of the way to see it.
-            from kiro_crew import dashboard_templates
+            from aj_crew import dashboard_templates
 
             monkeypatch.setattr(
                 dashboard_templates,
@@ -1437,14 +1437,14 @@ class TestTheRealPackagePath:
         # The REAL exception class, not a stand-in for it: the reader distinguishes an
         # incomplete lookup from every other failure by this type, so a fake one would
         # make the stand-in disagree with production on exactly that branch.
-        from kiro_crew.artifact_store.dashboard_package import BindingLookupIncomplete
+        from aj_crew.artifact_store.dashboard_package import BindingLookupIncomplete
 
         gate = SimpleNamespace(
             parse_package=_parse,
             resolve_bound_slug=lambda bound, **_kw: resolved,
             BindingLookupIncomplete=BindingLookupIncomplete,
         )
-        monkeypatch.setitem(sys.modules, "kiro_crew.artifact_store.dashboard_package", gate)
+        monkeypatch.setitem(sys.modules, "aj_crew.artifact_store.dashboard_package", gate)
 
         def _get(slug: str, **_kw: Any) -> Any:
             if get_raises is not None:
@@ -1462,14 +1462,14 @@ class TestTheRealPackagePath:
         )
 
     def read(self, slug: Any = None, member: str = "atlas") -> Any:
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         return dashboard_package.read_package_model(member)
 
     def test_the_binding_resolves_the_slug_when_the_caller_has_none(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         self.gate(monkeypatch)
         got = self.read()
@@ -1482,7 +1482,7 @@ class TestTheRealPackagePath:
     def test_nothing_bound_is_empty_and_not_an_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """v3 ships no default page, so nothing is stored until the agent composes a
         layout. That is the ordinary first state of every crewmate."""
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         self.gate(monkeypatch, resolved=None, no_template=True)
         got = self.read()
@@ -1499,8 +1499,8 @@ class TestTheRealPackagePath:
         for this one state. The package Model wins wherever a package exists; this is
         the case where none does.
         """
-        from kiro_crew import dashboard_package
-        from kiro_crew.dashboard_templates import instance
+        from aj_crew import dashboard_package
+        from aj_crew.dashboard_templates import instance
 
         # On a template page: a crewmate that adopted none is shown no page at all.
         instance.adopt("atlas", "project-report")
@@ -1517,7 +1517,7 @@ class TestTheRealPackagePath:
         The binding scan finds the record -- it matches on the envelope, which is
         readable when the layout is not -- and answers "which slug". This read is what
         turns that slug into a reason, so the state is ``error`` and names it."""
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         self.gate(monkeypatch, parse_raises=ValueError("model.types[0]: bad type"))
         got = self.read(slug="dash-atlas")
@@ -1539,11 +1539,11 @@ class TestTheRealPackagePath:
         place the composite answer for ``empty`` is the template's ``live``, so the
         state this module produced is only visible where nothing stands behind it.
         """
-        from kiro_crew import dashboard_package
-        from kiro_crew.artifact_store.dashboard_package import BindingLookupIncomplete
+        from aj_crew import dashboard_package
+        from aj_crew.artifact_store.dashboard_package import BindingLookupIncomplete
 
         self.gate(monkeypatch, no_template=True)
-        gate = sys.modules["kiro_crew.artifact_store.dashboard_package"]
+        gate = sys.modules["aj_crew.artifact_store.dashboard_package"]
         monkeypatch.setattr(
             gate,
             "resolve_bound_slug",
@@ -1560,7 +1560,7 @@ class TestTheRealPackagePath:
     def test_a_slug_that_holds_nothing_is_empty_and_not_an_error(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import artifacts, dashboard_package
+        from aj_crew import artifacts, dashboard_package
 
         self.gate(monkeypatch, get_raises=artifacts.ArtifactNotFoundError("gone"), no_template=True)
         assert self.read(slug="dash-gone").state == dashboard_package.STATE_EMPTY
@@ -1568,7 +1568,7 @@ class TestTheRealPackagePath:
     def test_a_failed_read_raises_rather_than_reporting_a_state(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         self.gate(monkeypatch, get_raises=OSError("disk gone"))
         with pytest.raises(dashboard_package.PackageReadError):
@@ -1584,7 +1584,7 @@ class TestTheRealPackagePath:
         The page draws the package, so a write is checked against the same
         ``package_manifest`` translation the page's controller subscribes by.
         """
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         self.gate(monkeypatch)
         got = self.read()
@@ -1606,7 +1606,7 @@ class TestTheRealPackagePath:
         and answers ``live`` WITH a Model. Keying the write route's refusal on the state
         would refuse that too -- every write this product already serves.
         """
-        from kiro_crew.dashboard_templates import instance
+        from aj_crew.dashboard_templates import instance
 
         instance.adopt("atlas", "project-report")
         self.gate(monkeypatch, resolved=None)
@@ -1621,13 +1621,13 @@ class TestTheRealPackagePath:
         answer every readable package gets. The gate validated it and this reader cannot
         find a field table, which is a disagreement between two readers of one record --
         so a state with a sentence, and it stays ahead of the live answer."""
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         self.gate(monkeypatch)
         # The stand-in gate's own parse, replaced to answer a package with no field
         # table: the helper above always builds one, and what this case is about is a
         # record the gate accepted and this reader cannot read a table out of.
-        gate = sys.modules["kiro_crew.artifact_store.dashboard_package"]
+        gate = sys.modules["aj_crew.artifact_store.dashboard_package"]
         monkeypatch.setattr(
             gate,
             "parse_package",
@@ -1649,7 +1649,7 @@ class TestTheRealGateAndStore:
     """
 
     def _store(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Any) -> Any:
-        from kiro_crew import artifacts
+        from aj_crew import artifacts
 
         store = artifacts.ArtifactStore(root=tmp_path / "artifacts")
         monkeypatch.setattr(artifacts, "get_default_store", lambda: store, raising=False)
@@ -1667,7 +1667,7 @@ class TestTheRealGateAndStore:
     def test_a_stored_package_is_found_and_not_mistaken_for_a_template(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Any
     ) -> None:
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         store = self._store(monkeypatch, tmp_path)
         art = store.create(
@@ -1700,7 +1700,7 @@ class TestTheRealGateAndStore:
         text cell with an array. ``error`` is the answer that stops the write, and
         getting it requires the binding scan to FIND the record rather than skip it.
         """
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         store = self._store(monkeypatch, tmp_path)
         art = store.create(
@@ -1732,7 +1732,7 @@ class TestTheRealGateAndStore:
         and ``dashboard_write`` checked against that Model replaces a cell with a value
         of the wrong shape.
         """
-        from kiro_crew import dashboard_package
+        from aj_crew import dashboard_package
 
         store = self._store(monkeypatch, tmp_path)
         store.create(
@@ -1743,7 +1743,7 @@ class TestTheRealGateAndStore:
         )
         # The newest-first cap lowered rather than storing 257 packages: what decides
         # the answer is the cap against the library size.
-        from kiro_crew.artifact_store import dashboard_package as gate
+        from aj_crew.artifact_store import dashboard_package as gate
 
         monkeypatch.setattr(gate, "MAX_BINDING_SCAN", 1)
 
@@ -1768,8 +1768,8 @@ class TestTheRealGateAndStore:
         checked against the template's Model, which is what its page draws. The three
         cases that DO refuse each name a record the listing proved is a dashboard.
         """
-        from kiro_crew import dashboard_package
-        from kiro_crew.dashboard_templates import instance
+        from aj_crew import dashboard_package
+        from aj_crew.dashboard_templates import instance
 
         instance.adopt("atlas", "project-report")
         store = self._store(monkeypatch, tmp_path)
@@ -1812,8 +1812,8 @@ class TestTheRealGateAndStore:
         member key in the ``session:`` scope wants the LOOKUP to use that scope rather
         than prefix it, which belongs with the change that gives a session a package.
         """
-        from kiro_crew import dashboard_package
-        from kiro_crew.dashboard_templates import instance as instance_store
+        from aj_crew import dashboard_package
+        from aj_crew.dashboard_templates import instance as instance_store
 
         self._store(monkeypatch, tmp_path)
         # The key the route really hands over, built by the function that mints it: a
@@ -1824,12 +1824,12 @@ class TestTheRealGateAndStore:
 
         # The premise: this really is outside the binding grammar, so the exit under
         # test is the unspellable binding and not a lookup that found nothing.
-        from kiro_crew.artifact_store.dashboard_package import validate_bound_to
+        from aj_crew.artifact_store.dashboard_package import validate_bound_to
 
         with pytest.raises(Exception):
             validate_bound_to(f"crewmate:{member}")
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard_package"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard_package"):
             got = dashboard_package.read_package_model(member)
         assert got.state == dashboard_package.STATE_LIVE, got.state_reason
         assert got.model is not None
@@ -1850,7 +1850,7 @@ def test_a_written_value_reaches_a_page_that_declares_an_agentic_array():
     `unresolved` is asserted empty in the same breath: a page showing a freshly written
     value must not also tell the crewmate one of its fields is broken.
     """
-    from kiro_crew.dashboard_templates.manifest import parse_manifest
+    from aj_crew.dashboard_templates.manifest import parse_manifest
 
     shipped = parse_manifest(
         {
@@ -1904,8 +1904,8 @@ def test_a_written_value_reaches_the_real_default_page():
     """
     import json as _json
 
-    from kiro_crew.dashboard_templates import catalog, instance
-    from kiro_crew.dashboard_templates.manifest import parse_manifest
+    from aj_crew.dashboard_templates import catalog, instance
+    from aj_crew.dashboard_templates.manifest import parse_manifest
 
     # Rooted at the PACKAGE, through the same helper the registry scans with, so the
     # test reads the shipped file wherever the tree sits and whatever the cwd is. The

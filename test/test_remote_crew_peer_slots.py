@@ -14,11 +14,11 @@ from types import SimpleNamespace
 import aiohttp
 import pytest
 
-from kiro_crew.dashboard import handlers_instances as hi
-from kiro_crew.dashboard.slot_projection import resolved_row_identity
-from kiro_crew.dashboard.state import MAX_LIVE_SLOTS, _ChatSlot
-from kiro_crew.instances.constants import PEER_SLOTS_REPLY_MAX_BYTES
-from kiro_crew.instances.ssh_tunnel_manager import ProxyRequestError
+from aj_crew.dashboard import handlers_instances as hi
+from aj_crew.dashboard.slot_projection import resolved_row_identity
+from aj_crew.dashboard.state import MAX_LIVE_SLOTS, _ChatSlot
+from aj_crew.instances.constants import PEER_SLOTS_REPLY_MAX_BYTES
+from aj_crew.instances.ssh_tunnel_manager import ProxyRequestError
 
 
 class _Req:
@@ -52,7 +52,7 @@ def _request(state, instance_id="nobita", app="", user="local-app"):
 
 def _enable_instances(monkeypatch):
     monkeypatch.setattr(
-        hi.KiroCrewConfig,
+        hi.AjCrewConfig,
         "load",
         staticmethod(lambda: SimpleNamespace(instances=SimpleNamespace(enabled=True))),
     )
@@ -737,7 +737,7 @@ class TestTheRowCountIsBoundedNotOnlyTheByteCount:
         than the tail.
         """
         _enable_instances(monkeypatch)
-        monkeypatch.setattr("kiro_crew.dashboard.handlers_instances.MAX_LIVE_SLOTS", 3)
+        monkeypatch.setattr("aj_crew.dashboard.handlers_instances.MAX_LIVE_SLOTS", 3)
         mgr = _manager(body=_rows("a", "b", "c", "d", "e"))
 
         resp = await hi.api_instances_chat_slots(_request(_state(mgr)))
@@ -754,7 +754,7 @@ class TestTheRowCountIsBoundedNotOnlyTheByteCount:
         to stop, so it is asserted directly on the call count.
         """
         _enable_instances(monkeypatch)
-        monkeypatch.setattr("kiro_crew.dashboard.handlers_instances.MAX_LIVE_SLOTS", 3)
+        monkeypatch.setattr("aj_crew.dashboard.handlers_instances.MAX_LIVE_SLOTS", 3)
         seen: list[object] = []
         real = hi._clean_peer_slot
 
@@ -772,7 +772,7 @@ class TestTheRowCountIsBoundedNotOnlyTheByteCount:
     async def test_a_reply_exactly_at_the_row_cap_is_untouched(self, monkeypatch):
         """A ceiling, not an off-by-one exclusion — same rule as the byte cap."""
         _enable_instances(monkeypatch)
-        monkeypatch.setattr("kiro_crew.dashboard.handlers_instances.MAX_LIVE_SLOTS", 3)
+        monkeypatch.setattr("aj_crew.dashboard.handlers_instances.MAX_LIVE_SLOTS", 3)
         mgr = _manager(body=_rows("a", "b", "c"))
 
         data = await _body(await hi.api_instances_chat_slots(_request(_state(mgr))))
@@ -858,7 +858,7 @@ class TestAuthorization:
 
     async def test_the_feature_being_disabled_refuses_the_read(self, monkeypatch):
         monkeypatch.setattr(
-            hi.KiroCrewConfig,
+            hi.AjCrewConfig,
             "load",
             staticmethod(lambda: SimpleNamespace(instances=SimpleNamespace(enabled=False))),
         )
@@ -872,7 +872,7 @@ class TestAuthorization:
         subject with an empty app, so `_guard` alone would let them through."""
         _enable_instances(monkeypatch)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers_instances.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers_instances.is_owner_dashboard_request",
             lambda _r: False,
         )
 
@@ -889,7 +889,7 @@ class TestAuthorization:
         _enable_instances(monkeypatch)
         mgr = _manager()
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers_instances.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers_instances.is_owner_dashboard_request",
             lambda _r: False,
         )
 
@@ -904,7 +904,7 @@ class TestRouteRegistration:
     def test_chat_slots_resolves_to_its_own_handler_not_the_proxy(self):
         from aiohttp import web
 
-        from kiro_crew.dashboard.routes import connections
+        from aj_crew.dashboard.routes import connections
 
         app = web.Application()
         connections.register(app)
@@ -932,7 +932,7 @@ class TestRouteRegistration:
         A subset check, since ``add_get`` also binds HEAD (``allow_head=True``)."""
         from aiohttp import web
 
-        from kiro_crew.dashboard.routes import connections
+        from aj_crew.dashboard.routes import connections
 
         app = web.Application()
         connections.register(app)

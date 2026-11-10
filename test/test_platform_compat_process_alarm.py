@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat as pc
+from aj_crew import platform_compat as pc
 
 # ── process alarm (the watchdog's GIL-free last resort) ──────────────────────
 
@@ -74,7 +74,7 @@ def test_reexec_cancels_the_process_alarm_before_the_exec(
     if seam == "reexec_launcher":
         pc.reexec_launcher(str(tmp_path / "launcher"), ["gateway"])
     else:
-        pc.reexec_python_module("kiro_crew", ["gateway"], executable=str(tmp_path / "python"))
+        pc.reexec_python_module("aj_crew", ["gateway"], executable=str(tmp_path / "python"))
     assert seen == [(0.0, 0.0)]
 
 
@@ -99,7 +99,7 @@ def test_a_failed_exec_restores_a_foreign_owners_alarm(
         if seam == "reexec_launcher":
             pc.reexec_launcher(str(tmp_path / "launcher"), ["gateway"])
         else:
-            pc.reexec_python_module("kiro_crew", ["gateway"], executable=str(tmp_path / "python"))
+            pc.reexec_python_module("aj_crew", ["gateway"], executable=str(tmp_path / "python"))
     assert timer["value"] == 25.0
     assert signal.getitimer(signal.ITIMER_REAL) == (25.0, 0.0)
 
@@ -122,7 +122,7 @@ def test_a_failed_exec_restores_a_repeating_alarms_interval(
         if seam == "reexec_launcher":
             pc.reexec_launcher(str(tmp_path / "launcher"), ["gateway"])
         else:
-            pc.reexec_python_module("kiro_crew", ["gateway"], executable=str(tmp_path / "python"))
+            pc.reexec_python_module("aj_crew", ["gateway"], executable=str(tmp_path / "python"))
     assert signal.getitimer(signal.ITIMER_REAL) == (25.0, 5.0)
 
 

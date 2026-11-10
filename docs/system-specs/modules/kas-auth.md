@@ -1,10 +1,10 @@
 # KAS-Mode Auth Module
 
 > Status: implemented and wired to the KAS relay. The auth subsystem lives under
-> `src/kiro_crew/auth/` with unit tests. Its runtime consumer is
-> `src/kiro_crew/acp/kas_host_auth.py`: when the vault holds an identity, the KAS
+> `src/aj_crew/auth/` with unit tests. Its runtime consumer is
+> `src/aj_crew/acp/kas_host_auth.py`: when the vault holds an identity, the KAS
 > backend spawns the relay in `acp --agent-engine v3` mode with `--auth-method
-> client`, so the engine's `_kiro/auth/getAccessToken` request reaches Kiro Crew, and
+> client`, so the engine's `_kiro/auth/getAccessToken` request reaches Aj Crew, and
 > `AcpRuntime` answers it from `KasAuthProvider.get_access_token_callback()`. The
 > flag is passed unless the installed kiro-cli is known to be below
 > `kiro_cli.KAS_AUTH_CLIENT_MIN_KIRO_CLI` (2.35.2), because from that release an
@@ -17,7 +17,7 @@
 > install whose version probe fails stops there instead of starting. That
 > spawn enters through `kiro-cli-chat` when one sits beside the resolved `kiro-cli`
 > (`kiro_cli.chat_sibling`, consulted by `acp/harness/kas.py` on the Crew-owned
-> branch only, never for an explicit `KIROCREW_KIRO_BIN`, never on Windows whose one
+> branch only, never for an explicit `AJCREW_KIRO_BIN`, never on Windows whose one
 > `kiro-cli.exe` is the chat-cli crate itself): the POSIX `kiro-cli` is the q_cli launcher, and it checks its OWN
 > sign-in before exec'ing `kiro-cli-chat` for `acp` regardless of `--auth-method`, so
 > through it a Crew-owned spawn on a host where kiro-cli is signed out -- the host
@@ -34,8 +34,8 @@
 > the callback always reaches Crew, and there is no `--auth-method cli` to fall back
 > to.
 >
-> **Choosing KAS means Kiro Crew's own sign-in** (decision
-> [2026-10-30](../../decisions/2026-10-30-choosing-kas-runs-kiro-crews-own-engine-when-kiro-cli-cannot.md)).
+> **Choosing KAS means Aj Crew's own sign-in** (decision
+> [2026-10-30](../../decisions/2026-10-30-choosing-kas-runs-aj-crews-own-engine-when-kiro-cli-cannot.md)).
 > Where the relay cannot run -- no kiro-cli, or a kiro-cli whose own sign-in is
 > proven absent and through which the vault cannot reach the engine (no
 > `kiro-cli-chat` entry) -- a KAS spawn takes the bundle route automatically
@@ -48,24 +48,24 @@
 > names in `notice_args.route` (both set when `host_auth.kas_signed_out_route`
 > recognises it), so the dashboard draws it in the user's language, led by the
 > route in plain words; beside the card's sign-in button the copy points at that button.
-> Any other wording, the launcher form included, keeps its English. `kirocrew doctor`'s
+> Any other wording, the launcher form included, keeps its English. `ajcrew doctor`'s
 > `kas auth:` row names the route ("KAS through kiro-cli's relay") and prints the
 > same remedy when kiro-cli's own store is what answers. A stored Kiro CLI pick
 > (`agent.acp_backend == "kiro"`) is not moved: it keeps kiro-cli's sign-in.
 
 ## Why this exists
 
-In the kiro-cli runtime, Kiro Crew holds no Kiro credentials of its own: every ACP
+In the kiro-cli runtime, Aj Crew holds no Kiro credentials of its own: every ACP
 backend delegates auth to the `kiro-cli` process it spawns. In **KAS mode** kiro-cli
 stays the ACP relay, but it does not own the credential: the engine asks the host
-for a token with `_kiro/auth/getAccessToken`, and Kiro Crew answers it from
-`acp/kas_host_auth.py`. So Kiro Crew performs the entire Kiro OIDC lifecycle itself:
+for a token with `_kiro/auth/getAccessToken`, and Aj Crew answers it from
+`acp/kas_host_auth.py`. So Aj Crew performs the entire Kiro OIDC lifecycle itself:
 interactive login, token refresh, secure storage, and identity classification.
 
 ## Scope
 
 In scope: obtaining and maintaining a valid Kiro access token for the four identity
-types Kiro supports, across the three Kiro Crew install shapes, and handing it to KAS.
+types Kiro supports, across the three Aj Crew install shapes, and handing it to KAS.
 
 Out of scope: the KAS runtime itself, model routing, governance evaluation (KAS owns
 that, keyed off the `provider` field this module supplies).
@@ -76,7 +76,7 @@ Confirmed against `@kiro/agent` source (`packages/kiro-agent/src/server/`). KAS
 consumes a token through one of two injection points; both take the same logical
 contract:
 
-1. **Library injection (in-process KAS; unbuilt design).** Kiro Crew does not run KAS
+1. **Library injection (in-process KAS; unbuilt design).** Aj Crew does not run KAS
    in-process today, so this point is not wired; it records the contract a future
    in-process host would meet. `KiroAgentOptions.authProvider`
    is a required constructor field of type `IAuthProvider`
@@ -116,7 +116,7 @@ Required fields either way: **`accessToken`** + **`expiresAt` (delivered ≥ now
 `provider` drives KAS governance (`governance-service.ts`) and the `X-Kiro-Idp`
 header. Getting it wrong misroutes governance and can fail-closed. Mapping:
 
-| Kiro Crew login | `provider` value | governance-enterprise? | notes |
+| Aj Crew login | `provider` value | governance-enterprise? | notes |
 |---|---|---|---|
 | AWS Builder ID | `BuilderId` | no | MUST be set; empty → misclassified. `profileArn` is the fixed Builder ID ARN (below) |
 | Social — Google | `Google` | no | |
@@ -236,7 +236,7 @@ kiro-cli does) or parse the JWT `exp`.
 ### AWS Builder ID / IAM Identity Center — fully independent
 
 Standard AWS SSO-OIDC. **No Kiro-controlled gate.** Runtime dynamic client
-registration (`RegisterClient`, `client_type=public`, `client_name="Kiro Crew"`) →
+registration (`RegisterClient`, `client_type=public`, `client_name="Aj Crew"`) →
 returns `client_id` + `client_secret`; PKCE authorization-code on an arbitrary loopback
 port (or device code via `StartDeviceAuthorization`); `CreateToken`. Endpoints:
 `https://oidc.<region>.amazonaws.com` (Builder ID region `us-east-1`). Scopes:
@@ -301,10 +301,10 @@ the lock above orders them: the engine's `_kiro/auth/getAccessToken` callback
 (`dashboard/sign_in_refresher.run_sign_in_refresher`, started beside the
 stale-asset watchdog) that sleeps until the highest-priority stored identity
 enters the margin and renews it then, so the stored expiry the sign-in card and
-`kirocrew doctor` read does not freeze while no agent turn runs. The
+`ajcrew doctor` read does not freeze while no agent turn runs. The
 tick never renews a token outside the margin, does not retry while the
 refresh-rejected marker stands (a new sign-in clears it), backs off from 30s to
-5min on a transient failure, and does not import `kiro_crew.auth` until the vault
+5min on a transient failure, and does not import `aj_crew.auth` until the vault
 file exists. It renews while the gateway is idle too, so a refused renewal
 surfaces without waiting for a chat turn. Each renewal request is capped at
 8s, and gateway shutdown waits up to 9s (alongside, and inside, the graceful
@@ -315,7 +315,7 @@ than consumed at the issuer and lost to the hard exit.
 ## Storage
 
 Context: kiro-cli does **not** encrypt its tokens — they live plaintext in a SQLite
-`auth_kv` table protected only by `0600` file perms. Kiro Crew deliberately does
+`auth_kv` table protected only by `0600` file perms. Aj Crew deliberately does
 better, because it faces a threat kiro-cli does not: its own AI agent reads files on
 the same machine.
 
@@ -323,7 +323,7 @@ KAS tokens live in a **dedicated `SecretVault` instance** rooted at
 `<data_home>/kas` (store `kas/.vault/secrets.enc`, key `kas/.vault/.vault_key`):
 per-entry **AES-256-GCM** with per-entry AAD (entry transplant fails decryption),
 atomic replace + fsync, cross-process flock, owner-only modes / Windows ACLs — all
-provided by `kiro_crew.secrets.SecretVault`, not reimplemented. Entry name = the
+provided by `aj_crew.secrets.SecretVault`, not reimplemented. Entry name = the
 identity kind (`social` / `builder_id` / `identity_center` / `external_idp`), value
 = the token JSON.
 
@@ -356,7 +356,7 @@ Priority when multiple credentials exist (`store._PRIORITY`, mirroring kiro-cli
 
 ## Module shape
 
-New subsystem `src/kiro_crew/auth/` (implemented):
+New subsystem `src/aj_crew/auth/` (implemented):
 
 ```
 auth/
@@ -378,7 +378,7 @@ auth/
 
 Wiring: the KAS bridge answers `_kiro/auth/getAccessToken` (acp-callback) from
 `KasAuthProvider`. Handing `KasAuthProvider` to `KiroAgentOptions.authProvider` for an
-in-process KAS is unbuilt design. Refresh tokens never leave Kiro Crew; KAS only ever sees an
+in-process KAS is unbuilt design. Refresh tokens never leave Aj Crew; KAS only ever sees an
 access token.
 
 ## Security invariants
@@ -402,7 +402,7 @@ access token.
 
 ## Sign-in from a shell, and on a remote crew
 
-The dashboard card is one driver of `KasLoginService`; `kirocrew kas login | whoami |
+The dashboard card is one driver of `KasLoginService`; `ajcrew kas login | whoami |
 logout | route` (`cli_kas_login.py`) is the other, for a host with no browser and no
 dashboard session. It exists because on the bundle route the vault is the engine's
 ONLY credential and kiro-cli is not installed, so `kiro-cli login/whoami/logout` have
@@ -427,7 +427,7 @@ sign-in from another's. Every refresh (`auth/refresh.py`'s three builders) carri
 organisation", never as Builder ID.
 
 **Sign-out generation.** The service's in-memory epoch stops a login begun in THIS
-process from re-filling a vault a sign-out in this process emptied. `kirocrew kas
+process from re-filling a vault a sign-out in this process emptied. `ajcrew kas
 logout` is a second process over the same vault, so the store carries a marker beside
 the refresh-rejected ones (`TokenStore.signout_generation` / `bump_signout_generation`,
 `kas/signed-out`, a fresh random value per sign-out): every `begin_*` snapshots it, every
@@ -435,7 +435,7 @@ sign-out bumps it after the slots are deleted, and `_persist_and_finish` compare
 two before it writes. Compare-and-save (with the `replaces` slot deletions of an
 account switch) and delete-all-and-bump each run under one store-wide flock (`TokenStore.with_signout_lock`, `kas/signout.lock`, taken outside any
 identity's refresh lock), so a sign-out cannot land between a login's compare and its
-write. `kirocrew kas logout` runs the same sign-out over an empty vault too, so the
+write. `ajcrew kas logout` runs the same sign-out over an empty vault too, so the
 generation moves even when nothing was stored. A mismatch is terminal for that login
 (`{"status": "error", "code": "signed_out_during_login"}`, the entry is dropped);
 `POST /api/kas-login/poll` answers it as the same coded 409 the begin handlers answer
@@ -463,9 +463,9 @@ fails after the bump leaves only a moved marker, which reads as an account chang
 The fingerprint reads the token and the marker together under the sign-out lock, so
 it never pairs the previous account's token with a marker a login has just moved.
 
-The remote crew uses exactly these verbs: `kirocrew cloud login|logout` and the
+The remote crew uses exactly these verbs: `ajcrew cloud login|logout` and the
 launch wizard run their sign-in scripts on the instance over SSM, and every script
-asks the box's own `kirocrew kas route` which program to drive
+asks the box's own `ajcrew kas route` which program to drive
 ([cloud.md](cloud.md) § `login_vault.py`). The local machine never reads the remote
 config and never holds the remote credential. The aws_control crew container has no
 sign-in surface of its own -- its identity arrives from Secrets Manager into the
@@ -474,7 +474,7 @@ engine instead ([aws-control.md](aws-control.md)).
 
 ## Validation status
 
-- Builder ID **device-code** flow through the vault, from a shell (`kirocrew kas login
+- Builder ID **device-code** flow through the vault, from a shell (`ajcrew kas login
   --provider builder_id` in an isolated data home, no kiro-cli): `RegisterClient` and
   `StartDeviceAuthorization` were accepted by the live `oidc.us-east-1.amazonaws.com`
   and the verification URL + user code were printed. The approval half (a human
@@ -521,7 +521,7 @@ engine instead ([aws-control.md](aws-control.md)).
   `--auth-method client` with kiro-cli signed in has not been measured.
   The refused path was measured
   the same way: with the host answering every callback `-32000 "not signed in to
-  Kiro Crew"`, the engine does not wedge — `initialize` and `session/new` still
+  Aj Crew"`, the engine does not wedge — `initialize` and `session/new` still
   complete, it re-asks on each attempt (about twice a second; the runtime logs the
   first refusal of each reason at WARNING and the repeats at DEBUG until a callback
   is served, `_kas_host_auth_failure_logged`), and `session/prompt` fails `-32000` with its
@@ -535,7 +535,7 @@ engine instead ([aws-control.md](aws-control.md)).
   sign-in service: its recording carries the vault identity fingerprint the
   producing session's request went out under, and it is served only while the
   vault still names that account, so a sign-in or sign-out from the dashboard
-  or from `kirocrew kas login` / `kas logout` (`cli_kas_login.py`) turns it cold
+  or from `ajcrew kas login` / `kas logout` (`cli_kas_login.py`) turns it cold
   ([model-selection.md](../common/model-selection.md)). The dashboard drops its
   own copy as well: the sign-out button (`pages/developer/KiroSignInCard.tsx`)
   and the authorized sign-in (`components/KasLoginGate.tsx`) drop the browser's
@@ -549,7 +549,7 @@ engine instead ([aws-control.md](aws-control.md)).
   `auth/bridge.vault_identity_claims`, one `resolve()` that yields the identity
   fingerprint and the token-free slot, provider and recorded start-URL claims
   together, rendered by `auth/whoami.whoami_document_for` -- the same writer
-  `kirocrew kas whoami` prints -- and mapped onto the dashboard's field names by
+  `ajcrew kas whoami` prints -- and mapped onto the dashboard's field names by
   `dashboard/handlers/kiro_vault_identity.py`. So a Crew sign-in shows its
   provider kind and, for an Identity Center sign-in that recorded one, its portal
   host (a token stored before the start URL was recorded shows it after one
@@ -573,7 +573,7 @@ engine instead ([aws-control.md](aws-control.md)).
   When a refresh IS refused (issuer answers 400/401/403,
   `auth/refresh.RefreshRejected`), the refresher records a token-free marker beside
   the vault (`TokenStore.mark_refresh_rejected`, cleared by any new credential
-  landing in the slot), and that marker is what `kirocrew doctor` (`crew vault:`
+  landing in the slot), and that marker is what `ajcrew doctor` (`crew vault:`
   line), `KasLoginService.status()` (`refresh_rejected`) and the dashboard's
   Kiro sign-in card report as "sign-in expired -- sign in again". A Builder ID /
   IdC entry whose `client_secret_expires_at` has passed gets its cause on that
@@ -591,7 +591,7 @@ engine instead ([aws-control.md](aws-control.md)).
   `oss` order, amended 2026-10-30; delivered by #26841): any stored vault entry, including one whose access token has
   expired with no refresh token, and a vault that cannot be read, keeps the spawn
   Crew-owned and reports "not signed in"; only an empty vault hands it to
-  kiro-cli. Removing the Crew sign-in (`kirocrew kas logout`) is how a user goes
+  kiro-cli. Removing the Crew sign-in (`ajcrew kas logout`) is how a user goes
   back to kiro-cli's.
 - The product entry point for the flow is the **Kiro sign-in** section on Settings >
   Agent Harness (`website/src/pages/developer/KiroSignInCard.tsx`, `compact`

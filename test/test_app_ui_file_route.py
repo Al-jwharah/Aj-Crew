@@ -19,9 +19,9 @@ from aiohttp import ClientPayloadError, web
 from aiohttp.test_utils import TestClient, TestServer
 
 from conftest import make_dir_link, requires_symlinks
-from kiro_crew.apps import dev_mode
-from kiro_crew.apps import routes as app_routes
-from kiro_crew.testing.wait import async_wait_until, await_until, finished
+from aj_crew.apps import dev_mode
+from aj_crew.apps import routes as app_routes
+from aj_crew.testing.wait import async_wait_until, await_until, finished
 
 APP = "demo-app"
 
@@ -605,10 +605,10 @@ def _patch_agent_config(monkeypatch: pytest.MonkeyPatch, value: object) -> None:
     """Make the config source hand the route's resolver *value* for the knob."""
     from types import SimpleNamespace
 
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     monkeypatch.setattr(
-        KiroCrewConfig,
+        AjCrewConfig,
         "load",
         staticmethod(
             lambda: SimpleNamespace(agent=SimpleNamespace(apps_ui_stream_timeout_secs=value))
@@ -636,12 +636,12 @@ def test_an_unreadable_config_keeps_the_default_deadline(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A config that cannot be loaded must not remove the deadline."""
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     def _boom() -> object:
         raise OSError("config.json is unreadable")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", staticmethod(_boom))
+    monkeypatch.setattr(AjCrewConfig, "load", staticmethod(_boom))
     assert app_routes._ui_stream_timeout_secs() == app_routes._UI_STREAM_TIMEOUT_DEFAULT == 30
 
 
@@ -656,8 +656,8 @@ async def test_the_configured_deadline_is_what_the_route_enforces(
     a gateway restart."""
     from types import SimpleNamespace
 
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.config.sections import AgentConfig
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.config.sections import AgentConfig
 
     budgeted: list[float | None] = []
 
@@ -673,7 +673,7 @@ async def test_the_configured_deadline_is_what_the_route_enforces(
             return asyncio.timeout(delay)
 
     monkeypatch.setattr(
-        KiroCrewConfig,
+        AjCrewConfig,
         "load",
         staticmethod(lambda: SimpleNamespace(agent=AgentConfig(apps_ui_stream_timeout_secs=5))),
     )
@@ -862,7 +862,7 @@ async def test_the_null_origin_still_gets_its_cors_answer_on_the_gzip_path(ui_ro
 def test_accept_encoding_is_read_by_token_and_weight(header: str, expected: bool) -> None:
     from aiohttp.test_utils import make_mocked_request
 
-    from kiro_crew.apps.routes_static import _accepts_gzip
+    from aj_crew.apps.routes_static import _accepts_gzip
 
     req = make_mocked_request("GET", "/", headers={"Accept-Encoding": header} if header else {})
     assert _accepts_gzip(req) is expected
@@ -876,7 +876,7 @@ async def test_a_file_truncated_mid_stream_never_completes_a_gzip_body(
     path's Content-Length exposes the short read; a chunked gzip body has none,
     so the route must drop the connection rather than finish a valid gzip member
     holding only a prefix of the module."""
-    from kiro_crew.apps import routes_static
+    from aj_crew.apps import routes_static
 
     payload = _bundle(8192)
     (ui_root / "entry.mjs").write_bytes(payload)

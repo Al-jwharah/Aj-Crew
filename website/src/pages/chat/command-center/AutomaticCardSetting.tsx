@@ -10,14 +10,14 @@ export default function AutomaticCardSetting({ active }: { active: boolean }) {
   const { t } = useTranslation()
   const qc = useQueryClient()
   const query = useQuery<{ dashboard?: { dynamic_dashboard_cards?: boolean } }>({
-    queryKey: ['kirocrewConfig'], queryFn: () => api.kirocrewConfig(), enabled: active,
+    queryKey: ['ajcrewConfig'], queryFn: () => api.ajcrewConfig(), enabled: active,
     staleTime: 30_000, refetchOnWindowFocus: false, retry: false,
   })
   const mutation = useMutation({
     mutationFn: (enabled: boolean) => api.patchConfig('dashboard.dynamic_dashboard_cards', enabled),
     onSuccess: async () => {
       await Promise.all([
-        qc.invalidateQueries({ queryKey: ['kirocrewConfig'] }),
+        qc.invalidateQueries({ queryKey: ['ajcrewConfig'] }),
         qc.invalidateQueries({ queryKey: ['dashboard-card'] }),
       ])
     },

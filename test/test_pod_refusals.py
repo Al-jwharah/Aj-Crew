@@ -24,26 +24,26 @@ from pod_helpers import (  # noqa: F401 -- the autouse fixtures register by impo
     requires_posix_pod_lifecycle,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.pod import cli as pod_cli
-from kiro_crew.pod import launchd
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod import unit as unit_mod
-from kiro_crew.pod.config import EXIT_REFUSED_UNRECOVERABLE, TERMINAL_BOOT_EXIT_CODES, PodConfig
+from aj_crew import platform_compat
+from aj_crew.pod import cli as pod_cli
+from aj_crew.pod import launchd
+from aj_crew.pod import runtime as rt
+from aj_crew.pod import unit as unit_mod
+from aj_crew.pod.config import EXIT_REFUSED_UNRECOVERABLE, TERMINAL_BOOT_EXIT_CODES, PodConfig
 
 
 class TestBootRefusesAnUnverifiableOsHome:
     """A refused ``os-home`` stops the boot, not just the seed.
 
     It becomes the kiro-cli child's ``HOME`` (``build_pod_env`` exports
-    ``KIROCREW_OS_HOME``, ``acp.client._apply_pod_home_remap`` assigns it), so booting
+    ``AJCREW_OS_HOME``, ``acp.client._apply_pod_home_remap`` assigns it), so booting
     on a planted link would write MCP OAuth grants into the link's host target."""
 
     def _boot(
         self, root: Path, monkeypatch: pytest.MonkeyPatch
     ) -> tuple[int, list[list[str]], PodConfig]:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(root / "env"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(root / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(root / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(root / "pods"))
         c = PodConfig.load()
         rt.pin_checkout(c, "x", _ready_worktree(root, "x"))
         seen: list[list[str]] = []
@@ -55,7 +55,7 @@ class TestBootRefusesAnUnverifiableOsHome:
     def test_a_symlinked_os_home_aborts_the_boot(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         c = PodConfig.load()
         home = c.home_dir("x")
         home.mkdir(parents=True)
@@ -75,7 +75,7 @@ class TestBootRefusesAnUnverifiableOsHome:
         """``Restart=on-failure`` + ``RestartSec=5`` would otherwise turn the
         refusal into a 5s loop that re-runs the same refusal forever and buries
         the FATAL line -- the cost that made refusing look unavailable before."""
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         rendered = unit_mod.render_unit(PodConfig.load())
 
         directive = [
@@ -135,7 +135,7 @@ class TestLaunchdTerminalRefusalIsNotRestartLooped:
         the policy is "restart on non-zero". Flipping this to ``True``, or to a
         bare ``KeepAlive: True``, silently restores the 5s loop with every test
         above still green -- so the plist key is asserted here rather than assumed."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods"))
         body = launchd.render_plist(PodConfig.load(), "x")
 
         assert body["KeepAlive"] == {
@@ -154,7 +154,7 @@ class TestLaunchdTerminalRefusalIsNotRestartLooped:
         both pinned here: the mechanism adds no key at all (it reuses the policy
         this backend has always rendered), and plists are re-rendered on every
         ``up``, so they cannot go stale."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods"))
         cfg = PodConfig.load()
 
         first = set(launchd.render_plist(cfg, "x"))
@@ -175,7 +175,7 @@ class TestATerminalRefusalStaysLegibleOnBothPlatforms:
     def test_a_refused_boot_records_the_reason(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         assert rt.refusal_reason(cfg, "x") is None
 
@@ -188,7 +188,7 @@ class TestATerminalRefusalStaysLegibleOnBothPlatforms:
     ) -> None:
         """The note must mean "the LAST boot refused", not "a boot once did", or a
         healed pod reports a refusal forever."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         rt._record_refusal(cfg, "x", "boom")
 
@@ -201,7 +201,7 @@ class TestATerminalRefusalStaysLegibleOnBothPlatforms:
     ) -> None:
         """The file EXISTING is the signal; a truncated write must not read as
         clean, which would be the fail-open direction."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         target = cfg.refusal_file("x")
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -218,8 +218,8 @@ class TestATerminalRefusalStaysLegibleOnBothPlatforms:
         (found in review) -- they are translated to 0 on macOS exactly like 78, so
         they carry the same legibility problem. Exercised through the no-pinned-
         checkout path, the earliest terminal return in `boot`."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         monkeypatch.setattr(os, "execve", lambda p, a, e: pytest.fail("gateway was exec'd"))
 
@@ -236,8 +236,8 @@ class TestATerminalRefusalStaysLegibleOnBothPlatforms:
     ) -> None:
         """The refusal is about that tree, and ``down`` deletes it, so the evidence
         cannot live inside it."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "root"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "root"))
         cfg = PodConfig.load()
 
         note = cfg.refusal_file("x").resolve()
@@ -251,8 +251,8 @@ class TestATerminalRefusalStaysLegibleOnBothPlatforms:
     ) -> None:
         """End to end: the refusal path writes the note AND returns the terminal
         code, so macOS's exit-0 translation still has something to point at."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         rt.pin_checkout(cfg, "x", _ready_worktree(tmp_path, "x"))
         home = cfg.home_dir("x")
@@ -297,7 +297,7 @@ class TestEveryBootPathWriteRefusesAPlantedLink:
     ) -> None:
         """The note is HOST-side by round-6 design, so following a link here would
         let a pod agent make the gateway truncate an arbitrary host file."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         victim = tmp_path / "host-secret"
         victim.write_text("do not truncate me")
@@ -378,7 +378,7 @@ class TestEveryBootPathWriteRefusesAPlantedLink:
         `pinned_fs.write_file_pinned`."""
         import inspect
 
-        from kiro_crew import pinned_fs as pfs
+        from aj_crew import pinned_fs as pfs
 
         assert "write_file_pinned" in inspect.getsource(unit_mod._write_unit_file_atomic_nofollow)
         assert "atomic_write_at" in inspect.getsource(pfs.write_file_pinned)
@@ -431,8 +431,8 @@ class TestEveryTerminalReturnOnTheBootPathIsRecorded:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The scenario-seed refusal is recorded, pinned end to end."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         rt.pin_checkout(cfg, "x", _ready_worktree(tmp_path, "x"))
         rt.write_env_file(cfg, "x", {"SEED": "scenario:does-not-exist"})
@@ -458,7 +458,7 @@ class TestTheExitTranslationRequiresTheRecord:
     why -- worse than the restart loop the translation prevents."""
 
     def _cfg(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PodConfig:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods"))
         monkeypatch.setattr(rt, "IS_MACOS", True)
         return PodConfig.load()
 
@@ -494,7 +494,7 @@ class TestTheExitTranslationRequiresTheRecord:
     ) -> None:
         """RestartPreventExitStatus already exempts these on systemd, so the honest
         code is also the non-looping one there."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods"))
         monkeypatch.setattr(rt, "IS_MACOS", False)
         cfg = PodConfig.load()
         rt._record_refusal(cfg, "x", "recorded")
@@ -536,8 +536,8 @@ class TestNoRefusalEscapesBootWithANonTerminalExit:
         Raised from `read_env_file`, the first step after name validation. Validation is
         outside the guard on purpose: a refusal record for an unvalidated name would be a
         host-write primitive (`TestTheRefusalRecordIsNotAHostWritePrimitive`)."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         monkeypatch.setattr(
             rt,
@@ -558,8 +558,8 @@ class TestNoRefusalEscapesBootWithANonTerminalExit:
     ) -> None:
         """The reported instance, end to end: the config-link lstat refusal now
         lands as a recorded terminal exit instead of escaping as exit 1."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         rt.pin_checkout(cfg, "x", _ready_worktree(tmp_path, "x"))
         home = cfg.home_dir("x")
@@ -581,7 +581,7 @@ class TestNoRefusalEscapesBootWithANonTerminalExit:
     ) -> None:
         """systemd exempts it via RestartPreventExitStatus; launchd needs the
         record-conditional translation to 0. Neither may restart-loop."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         rt._record_refusal(cfg, "x", "recorded")
 
@@ -616,8 +616,8 @@ class TestTheRefusalRecordIsNotAHostWritePrimitive:
     def test_a_path_shaped_name_writes_nothing_and_exits_non_zero(
         self, bad_name: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "root"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "root"))
         cfg = PodConfig.load()
         victim = tmp_path / "important"
         victim.write_text("keep me")
@@ -636,7 +636,7 @@ class TestTheRefusalRecordIsNotAHostWritePrimitive:
     ) -> None:
         """There is no legitimate pod to record against, so the honest error exits
         WITHOUT a note -- the round-9 wrapper would have written one."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         monkeypatch.setattr(os, "execve", lambda p, a, e: pytest.fail("gateway was exec'd"))
 
@@ -659,7 +659,7 @@ class TestTheRefusalRecordIsNotAHostWritePrimitive:
         """Defense in depth: the floor is a property of the function, not of one
         caller's ordering, so a future caller that records before validating cannot
         reopen this."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         victim = tmp_path / "important"
         victim.write_text("keep me")
@@ -673,7 +673,7 @@ class TestTheRefusalRecordIsNotAHostWritePrimitive:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The floor must not be passing by refusing everything."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods"))
         cfg = PodConfig.load()
 
         rt._record_refusal(cfg, "x", "a real refusal")
@@ -692,7 +692,7 @@ class TestLsSurfacesARefusedPod:
     def test_a_refused_pod_appears_with_its_reason(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods"))
         c = PodConfig.load()
         rt._record_refusal(c, "x", "pod OS home is a symbolic link")
         monkeypatch.setattr(rt, "active_names", lambda cfg: set())
@@ -703,13 +703,13 @@ class TestLsSurfacesARefusedPod:
 
         assert "1 pod(s) REFUSED to boot" in out
         assert "symbolic link" in out
-        assert "kirocrew pod down x" in out
+        assert "ajcrew pod down x" in out
 
     def test_no_refusal_section_when_nothing_refused(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
     ) -> None:
         """The section must not appear for an ordinary empty plane."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods"))
         c = PodConfig.load()
         monkeypatch.setattr(rt, "active_names", lambda cfg: set())
         monkeypatch.setattr(rt, "orphan_homes", lambda cfg: [])
@@ -725,7 +725,7 @@ class TestLsSurfacesARefusedPod:
     ) -> None:
         """`_clear_refusal` runs on a boot that gets past the refusal, so the section
         must describe the LAST boot rather than every boot that ever refused."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods"))
         c = PodConfig.load()
         rt._record_refusal(c, "x", "boom")
         rt._clear_refusal(c, "x")

@@ -11,7 +11,7 @@ import pytest
 from source_corpus import iter_source_texts
 
 from conftest import make_dir_link, plant_day_link
-from kiro_crew.memory import MemoryStore
+from aj_crew.memory import MemoryStore
 
 
 class TestMemoryStore:
@@ -66,9 +66,9 @@ class TestMemoryStore:
 
     def test_projects(self, tmp_path):
         store = MemoryStore(workspace=tmp_path)
-        store.write_projects("Building KiroCrew agent")
+        store.write_projects("Building AjCrew agent")
         projects = store.read_projects()
-        assert "KiroCrew" in projects
+        assert "AjCrew" in projects
         assert "Updated:" in projects
 
     def test_daily_history(self, tmp_path):
@@ -278,7 +278,7 @@ class TestRecentHistoryCache:
     def test_write_projects_no_double_header(self, tmp_path):
         """write_projects does not double-wrap the header."""
         store = MemoryStore(workspace=tmp_path)
-        store.write_projects("# Active Projects\n\nKiroCrew agent")
+        store.write_projects("# Active Projects\n\nAjCrew agent")
         content = store.read_projects()
         assert content.count("# Active Projects") == 1
 
@@ -346,14 +346,14 @@ class TestActiveProjectsHeader:
     """
 
     def test_content_without_the_header_gains_one(self):
-        from kiro_crew.memory import normalize_projects_document
+        from aj_crew.memory import normalize_projects_document
 
         out = normalize_projects_document("just some notes", today="2026-09-15")
         assert out.startswith("# Active Projects\n\n_Updated: 2026-09-15_\n\n")
         assert out.endswith("just some notes\n")
 
     def test_content_with_the_header_is_not_wrapped_again(self):
-        from kiro_crew.memory import normalize_projects_document
+        from aj_crew.memory import normalize_projects_document
 
         out = normalize_projects_document("# Active Projects\n\nnotes", today="2026-09-15")
         assert out.count("# Active Projects") == 1
@@ -365,7 +365,7 @@ class TestActiveProjectsHeader:
         A headed document is written as ``content.strip()``; an unheaded one is wrapped
         RAW, so its outer whitespace survives. Trimming both would change behaviour.
         """
-        from kiro_crew.memory import normalize_projects_document
+        from aj_crew.memory import normalize_projects_document
 
         assert (
             normalize_projects_document("# Active Projects\n\nnotes  ", today="2026-09-15")
@@ -378,7 +378,7 @@ class TestActiveProjectsHeader:
 
     def test_the_injected_date_is_the_caller_s(self):
         """The date is a parameter so the two writes can share one clock read."""
-        from kiro_crew.memory import normalize_projects_document
+        from aj_crew.memory import normalize_projects_document
 
         out = normalize_projects_document("notes", today="1999-01-02")
         assert "_Updated: 1999-01-02_" in out
@@ -753,7 +753,7 @@ class TestHistoryDecayWording:
     def test_every_history_decay_description_matches_the_tiers(self):
         """Every source and documentation copy states the exact decay boundary."""
         repo = Path(__file__).resolve().parents[1]
-        documents = {repo / "src" / "kiro_crew" / "docs" / "configuration.md"}
+        documents = {repo / "src" / "aj_crew" / "docs" / "configuration.md"}
         documents.update((repo / "docs").rglob("*.md"))
 
         copies = [
@@ -834,10 +834,10 @@ class TestNamedV1StoreUnderFencedTree:
     def _named_store(self, monkeypatch) -> MemoryStore:
         import json
 
-        from kiro_crew import memory_stores
-        from kiro_crew.config import loader as loader_mod
-        from kiro_crew.config.loader import config_dir
-        from kiro_crew.memory_stores import memory_index_path_for, memory_store_dir_for
+        from aj_crew import memory_stores
+        from aj_crew.config import loader as loader_mod
+        from aj_crew.config.loader import config_dir
+        from aj_crew.memory_stores import memory_index_path_for, memory_store_dir_for
 
         (config_dir() / "config.json").write_text(
             json.dumps({"memory_stores": {"default": {}, self.NAME: {}}}), encoding="utf-8"
@@ -856,7 +856,7 @@ class TestNamedV1StoreUnderFencedTree:
         """Make the nolink reader's sensitive-path check fence everything under *root*."""
         import os
 
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         fenced_root = os.path.realpath(str(root))
 
@@ -874,7 +874,7 @@ class TestNamedV1StoreUnderFencedTree:
         store.write_projects("PROJECT_SENTINEL")
         self._fence(monkeypatch, store._workspace)
 
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         # Precondition: the nolink reader refuses the fenced store's own file.
         assert (
@@ -920,7 +920,7 @@ class TestNamedV1StoreUnderFencedTree:
         """
         from datetime import date, timedelta
 
-        from kiro_crew import memory_files as memory_mod
+        from aj_crew import memory_files as memory_mod
 
         store = self._named_store(monkeypatch)
         self._fence(monkeypatch, store._workspace)
@@ -1160,7 +1160,7 @@ class TestIndexCatchesUpAfterAFailedUpdate:
         store.write_preferences("- likes tea\n")
         real = store._get_db
         monkeypatch.setattr(store, "_get_db", lambda: _FullDiskIndex(real()))
-        caplog.set_level(logging.DEBUG, logger="kiro_crew.memory")
+        caplog.set_level(logging.DEBUG, logger="aj_crew.memory")
 
         assert store.write_preferences("- likes tea\n- codename zebracrossing\n")
         assert store.write_preferences("- likes tea\n- codename zebracrossingwidget\n")
@@ -1178,7 +1178,7 @@ class TestIndexCatchesUpAfterAFailedUpdate:
 
         store = MemoryStore(workspace=tmp_path)
         real = store._get_db
-        caplog.set_level(logging.DEBUG, logger="kiro_crew.memory")
+        caplog.set_level(logging.DEBUG, logger="aj_crew.memory")
         monkeypatch.setattr(store, "_get_db", lambda: _FullDiskIndex(real()))
         store.write_preferences("- one\n")
         monkeypatch.setattr(store, "_get_db", real)
@@ -1192,7 +1192,7 @@ class TestIndexCatchesUpAfterAFailedUpdate:
         import logging
 
         store = MemoryStore(workspace=tmp_path)
-        caplog.set_level(logging.DEBUG, logger="kiro_crew.memory")
+        caplog.set_level(logging.DEBUG, logger="aj_crew.memory")
         assert store.write_preferences("- likes zebracrossingwidget\n")
         assert store.search("zebracrossingwidget")
         assert not [r for r in caplog.records if "FTS index" in r.getMessage()]
@@ -1202,13 +1202,13 @@ class TestIndexCatchesUpAfterAFailedUpdate:
     ):
         """The catch-up reads a file and commits its row under the writers' own lock.
 
-        Two stores stand in for the gateway and ``kirocrew consolidate``. A free lock
+        Two stores stand in for the gateway and ``ajcrew consolidate``. A free lock
         between read and commit would let the catch-up commit older text over a newer save.
         """
         import os
         from pathlib import Path
 
-        from kiro_crew.platform_compat import file_lock
+        from aj_crew.platform_compat import file_lock
 
         gateway = MemoryStore(workspace=tmp_path)
         other = MemoryStore(workspace=tmp_path)
@@ -1264,7 +1264,7 @@ class TestIndexCatchesUpAfterAFailedUpdate:
             raise OSError(errno.ENOSPC, "No space left on device")
 
         monkeypatch.setattr(files, "replace_if", _full)
-        caplog.set_level(logging.DEBUG, logger="kiro_crew.memory")
+        caplog.set_level(logging.DEBUG, logger="aj_crew.memory")
         with pytest.raises(OSError):
             store.write_preferences("- likes coffee\n")
         assert not _index_warnings(caplog)

@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.stt import capabilities as caps
+from aj_crew.stt import capabilities as caps
 
 #: The verbatim reply of the packaged CPU-only wheel on linux-aarch64. Kept as a
 #: literal because it is evidence: this exact string is why the quantized catalog

@@ -1,10 +1,10 @@
-"""``kiro_crew.cron_script`` stays the one import path and patch surface of its owners.
+"""``aj_crew.cron_script`` stays the one import path and patch surface of its owners.
 
-The script-cron module is a :mod:`kiro_crew._facade_mirror` facade: it keeps the two
+The script-cron module is a :mod:`aj_crew._facade_mirror` facade: it keeps the two
 runners (``run_script_sandboxed``, ``run_command_sandboxed``) and the command-shell
 probe, and the rest lives in the ``cron_script_<role>.py`` owners beside it. Callers,
 tests, documents and the script launcher still reach every name as
-``kiro_crew.cron_script.<name>``, and the moved code reads its names as plain module
+``aj_crew.cron_script.<name>``, and the moved code reads its names as plain module
 globals, so a patch through the facade reaches that code only because the mirror writes
 it into every module holding the name.
 
@@ -41,17 +41,17 @@ import owner_import_scan
 import pytest
 import source_corpus
 
-import kiro_crew
-from kiro_crew import _facade_mirror
-from kiro_crew import cron_script as facade
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew
+from aj_crew import _facade_mirror
+from aj_crew import cron_script as facade
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
-# Walks the test trees and src/kiro_crew; keep it on one worker.
+# Walks the test trees and src/aj_crew; keep it on one worker.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_cron_script_facade")
 
-FACADE = "kiro_crew.cron_script"
-OWNER_PREFIX = "kiro_crew.cron_script_"
-_SRC = Path(kiro_crew.__file__).resolve().parent
+FACADE = "aj_crew.cron_script"
+OWNER_PREFIX = "aj_crew.cron_script_"
+_SRC = Path(aj_crew.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
 
 #: Names the test trees are known to patch through the facade, one of each seam the
@@ -240,7 +240,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
         for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if not isinstance(node, ast.ImportFrom) or not node.module:
                 continue
-            if not node.module.startswith("kiro_crew") or node.module in family:
+            if not node.module.startswith("aj_crew") or node.module in family:
                 continue
             for alias in node.names:
                 if f"{node.module}.{alias.name}" not in family:
@@ -266,7 +266,7 @@ def _facade_source() -> str:
 
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
-    """At BASE the module bound these by import, so ``from kiro_crew.cron_script import
+    """At BASE the module bound these by import, so ``from aj_crew.cron_script import
     config_dir`` type-checked. Where an owner holds one now and the facade does not bind
     it, the facade names it from its home module under ``TYPE_CHECKING``, and nothing else."""
     served = set(_index().exports)
@@ -278,7 +278,7 @@ def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers()
 def test_the_type_checker_census_finds_a_dropped_name() -> None:
     """The census above can fail: a manifest missing one served name differs."""
     source = _facade_source()
-    dropped = source.replace("    from kiro_crew.sel import sel  # noqa: F401\n", "")
+    dropped = source.replace("    from aj_crew.sel import sel  # noqa: F401\n", "")
     assert dropped != source
     assert "sel" not in _home_manifest(dropped)
     assert "sel" in _home_manifest(source)
@@ -303,13 +303,13 @@ def test_only_the_family_imports_an_owner() -> None:
 
 
 def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None:
-    root = tmp_path / "kiro_crew"
+    root = tmp_path / "aj_crew"
     sources = {
-        root / "pkg" / "caller.py": "from kiro_crew.cron_script_paths import resolve_script_path\n",
-        root / "other.py": "from kiro_crew import cron_script_procs as procs\n",
+        root / "pkg" / "caller.py": "from aj_crew.cron_script_paths import resolve_script_path\n",
+        root / "other.py": "from aj_crew import cron_script_procs as procs\n",
         root / "relative.py": "from .cron_script_grants import bump_grant_epoch\n",
         root / "deep" / "up.py": "from .. import cron_script_mcp\n",
-        root / "facade_user.py": "from kiro_crew.cron_script import resolve_script_path\n",
+        root / "facade_user.py": "from aj_crew.cron_script import resolve_script_path\n",
     }
     assert _owner_importers(sources.items(), root) == {
         "pkg/caller.py",
@@ -346,11 +346,11 @@ def test_the_launcher_imports_still_resolve_and_a_grant_reaches_the_env_builder(
 ) -> None:
     """The granted-run launcher imports ``child_persistence_preflight`` and the context
     names from the facade, then records the granted key names on
-    ``kiro_crew.cron_script._GRANTED_ENV_KEYS``. That set is the one ``_clean_cron_env``
+    ``aj_crew.cron_script._GRANTED_ENV_KEYS``. That set is the one ``_clean_cron_env``
     reads, so a granted secret never reaches a descendant of the child."""
     launcher = Path(facade.__file__).read_text(encoding="utf-8")
-    assert "from kiro_crew.cron_script import child_persistence_preflight" in launcher
-    assert "from kiro_crew.cron_script import ScriptContext, Skip, Done, Report" in launcher
+    assert "from aj_crew.cron_script import child_persistence_preflight" in launcher
+    assert "from aj_crew.cron_script import ScriptContext, Skip, Done, Report" in launcher
     assert "_kcs._GRANTED_ENV_KEYS.update(" in launcher
     for name in ("child_persistence_preflight", "ScriptContext", "Skip", "Done", "Report"):
         assert hasattr(facade, name), name
@@ -364,7 +364,7 @@ def test_the_launcher_imports_still_resolve_and_a_grant_reaches_the_env_builder(
 
 
 def test_the_facade_runs_as_a_module(tmp_path: Path) -> None:
-    """``python -m kiro_crew.cron_script`` imported cleanly before the split; the mirror
+    """``python -m aj_crew.cron_script`` imported cleanly before the split; the mirror
     installs on ``__main__`` too, because every member binds one logger by name."""
     env = dict(os.environ)
     src = str(_SRC.parent)

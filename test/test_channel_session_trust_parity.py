@@ -3,7 +3,7 @@
 Webex, WeCom, iLink (weixin) and iMessage render no approve/deny widget, so they run
 with ``decider=None``, which denies every tool by default. Each passes
 ``ChannelTurn.auto_approve_session``, reading the same process-global
-``safety_override`` grant the dashboard toggle and Slack's ``/kirocrew yolo`` arm.
+``safety_override`` grant the dashboard toggle and Slack's ``/ajcrew yolo`` arm.
 
 Teams has a widget (:data:`_WIDGET_CHANNELS`) but shares the same grant; it is
 enrolled because nothing else drives a real permission request through its
@@ -27,11 +27,11 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST, AcpEvent
-from kiro_crew.hooks import TOOL_DENY
-from kiro_crew.messaging.renderer import Renderer, TransportCapabilities
-from kiro_crew.safety_override import safety_override
-from kiro_crew.session_allocation import SessionClosingError
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST, AcpEvent
+from aj_crew.hooks import TOOL_DENY
+from aj_crew.messaging.renderer import Renderer, TransportCapabilities
+from aj_crew.safety_override import safety_override
+from aj_crew.session_allocation import SessionClosingError
 
 # ── Channel-neutral doubles ───────────────────────────────────────────────────
 
@@ -298,8 +298,8 @@ def _cfg(channel: str) -> SimpleNamespace:
 
 
 def _build_webex(sessions: Any, ctx: Any) -> tuple[Any, str, Any, Any]:
-    from kiro_crew.webex import transport_dispatch as mod
-    from kiro_crew.webex.client import WebexInbound
+    from aj_crew.webex import transport_dispatch as mod
+    from aj_crew.webex.client import WebexInbound
 
     d = mod.WebexDispatcher(
         sessions=sessions,
@@ -317,8 +317,8 @@ def _build_webex(sessions: Any, ctx: Any) -> tuple[Any, str, Any, Any]:
 
 
 def _build_wecom(sessions: Any, ctx: Any) -> tuple[Any, str, Any, Any]:
-    from kiro_crew.wecom import transport_dispatch as mod
-    from kiro_crew.wecom.client import WeComInbound
+    from aj_crew.wecom import transport_dispatch as mod
+    from aj_crew.wecom.client import WeComInbound
 
     d = mod.WeComDispatcher(
         sessions=sessions,
@@ -337,8 +337,8 @@ def _build_wecom(sessions: Any, ctx: Any) -> tuple[Any, str, Any, Any]:
 
 
 def _build_weixin(sessions: Any, ctx: Any) -> tuple[Any, str, Any, Any]:
-    from kiro_crew.messaging.transport import InboundMessage
-    from kiro_crew.weixin import transport_dispatch as mod
+    from aj_crew.messaging.transport import InboundMessage
+    from aj_crew.weixin import transport_dispatch as mod
 
     d = mod.WeixinDispatcher(
         sessions=sessions,
@@ -359,9 +359,9 @@ def _build_weixin(sessions: Any, ctx: Any) -> tuple[Any, str, Any, Any]:
 
 
 def _build_imessage(sessions: Any, ctx: Any) -> tuple[Any, str, Any, Any]:
-    from kiro_crew.imessage import transport_dispatch as mod
-    from kiro_crew.imessage.client import IMessageInbound
-    from kiro_crew.imessage.transport import IMessageTransport
+    from aj_crew.imessage import transport_dispatch as mod
+    from aj_crew.imessage.client import IMessageInbound
+    from aj_crew.imessage.transport import IMessageTransport
 
     d = mod.IMessageDispatcher(
         sessions=sessions,
@@ -379,8 +379,8 @@ def _build_imessage(sessions: Any, ctx: Any) -> tuple[Any, str, Any, Any]:
 
 
 def _build_teams(sessions: Any, ctx: Any) -> tuple[Any, str, Any, Any]:
-    from kiro_crew.teams import transport_dispatch as mod
-    from kiro_crew.teams.client import TeamsInbound
+    from aj_crew.teams import transport_dispatch as mod
+    from aj_crew.teams.client import TeamsInbound
 
     d = mod.TeamsDispatcher(
         sessions=sessions,
@@ -419,8 +419,8 @@ _WIDGET_CHANNELS = frozenset({"teams", "webex"})
 #: can resolve immediately instead of waiting one out. Read per call inside the
 #: decider, so patching the module attribute is enough.
 _APPROVAL_DEADLINE_SYMBOL = {
-    "teams": "kiro_crew.teams.approvals.APPROVAL_TIMEOUT_SECS",
-    "webex": "kiro_crew.messaging.approval.APPROVAL_TIMEOUT_S",
+    "teams": "aj_crew.teams.approvals.APPROVAL_TIMEOUT_SECS",
+    "webex": "aj_crew.messaging.approval.APPROVAL_TIMEOUT_S",
 }
 
 
@@ -495,7 +495,7 @@ def test_the_grant_is_read_per_tool_not_snapshotted(
     message, and letting it lapse take effect never. Mutating the grant after the
     turn has already been built is what proves the closure re-reads it.
     """
-    from kiro_crew.messaging import dispatch as D
+    from aj_crew.messaging import dispatch as D
 
     captured: list[Any] = []
 

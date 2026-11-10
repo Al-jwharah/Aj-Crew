@@ -26,7 +26,7 @@ const CHANNEL_NAME = "WhatsApp"
 /** Distribution name -- do-not-translate, like the brand name above. */
 const SDK_PACKAGE = "neonize"
 const SETUP_GUIDE =
-  'https://github.com/kirodotdev/KiroCrew/blob/main/src/kiro_crew/docs/whatsapp-integration.md'
+  'https://github.com/Al-jwharah/Aj-Crew/blob/main/src/aj_crew/docs/whatsapp-integration.md'
 
 /** How often we poll the QR scan status while a login session is open. */
 const POLL_MS = 1500

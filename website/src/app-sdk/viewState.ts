@@ -42,7 +42,7 @@
  * Imported by PATH and deliberately NOT re-exported from `./index`, following the
  * reasoning `useComposerDraft` records there and `identity.ts` repeats: the barrel is
  * what third-party apps resolve, held in exact agreement with
- * `public/vendor/kirocrew-app-sdk.mjs`, so a name added to it is published and freezing
+ * `public/vendor/ajcrew-app-sdk.mjs`, so a name added to it is published and freezing
  * a contract is easier than unfreezing one. There is nothing to publish yet — this store
  * is builtin-only BY CONSTRUCTION (see `useTrustedAppId`), so in a third-party app it
  * would be a hook that never persists anything.

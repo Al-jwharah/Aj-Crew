@@ -21,23 +21,23 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import crewmate_bundle as reader
-from kiro_crew import crewmate_bundle_export as ex
-from kiro_crew import member_goals
-from kiro_crew import members as members_mod
-from kiro_crew.config.loader import (
-    KiroCrewAgentConfig,
-    KiroCrewConfig,
+from aj_crew import crewmate_bundle as reader
+from aj_crew import crewmate_bundle_export as ex
+from aj_crew import member_goals
+from aj_crew import members as members_mod
+from aj_crew.config.loader import (
+    AjCrewAgentConfig,
+    AjCrewConfig,
     WorkspaceConfig,
     _invalidate_config_cache,
     config_dir,
 )
-from kiro_crew.config.loader_locations import workspace_dir_from_entry
-from kiro_crew.crewmate_bundle import crewmate_import_params, read_crewmate_file
-from kiro_crew.cron import CronJob, CronSchedule
-from kiro_crew.dashboard.handlers import member_export
-from kiro_crew.portability_archive import EXPORT_EXCLUDE
-from kiro_crew.portability_templates import AGENT_TEMPLATE_SECRET_PLACEHOLDER
+from aj_crew.config.loader_locations import workspace_dir_from_entry
+from aj_crew.crewmate_bundle import crewmate_import_params, read_crewmate_file
+from aj_crew.cron import CronJob, CronSchedule
+from aj_crew.dashboard.handlers import member_export
+from aj_crew.portability_archive import EXPORT_EXCLUDE
+from aj_crew.portability_templates import AGENT_TEMPLATE_SECRET_PLACEHOLDER
 
 #: Credential-shaped values that must never reach the file.
 TOKEN = "ghp_" + "a" * 36
@@ -45,7 +45,7 @@ SECRET = "sk-proj-" + "Ab3dE" * 10
 MEMBER = "scout"
 
 SPEC = {
-    "name": "kirocrew",
+    "name": "ajcrew",
     "allowedTools": ["fs_write"],
     "autoApprove": ["*"],
     "permissions": {"shell": "allow"},
@@ -297,7 +297,7 @@ def test_a_name_or_description_the_importer_refuses_never_reaches_a_file() -> No
     assert err.value.code == "invalid_name"
     plan, entries = _build(_sources(description="d" * 1001))
     assert ("description", "", ex.REASON_TOO_LARGE) in _reasons(plan)
-    assert json.loads(entries["kirobot.json"])["description"] == ""
+    assert json.loads(entries["ajbot.json"])["description"] == ""
     # The reader refuses a carriage return in these two; each stays home on its own.
     plan, entries = _build(_sources(description="one\r\ntwo", rules="a\r\nb"))
     assert ("description", "", ex.REASON_CONTROL_CHARS) in _reasons(plan)
@@ -594,7 +594,7 @@ def test_a_skill_the_sender_wrote_travels_with_every_file(tmp_path: Path) -> Non
     plan, entries = _build(_sources(skills_root=root))
     assert entries["skills/branch-triage/SKILL.md"] == b"# Triage\n"
     assert entries["skills/branch-triage/helper.py"] == b"print('hi')\r\n"
-    assert json.loads(entries["kirobot.json"])["skills"] == [
+    assert json.loads(entries["ajbot.json"])["skills"] == [
         {"name": "branch-triage", "source": "bundled"}
     ]
     assert ex.preview(plan)["skills"][0]["files"]["helper.py"] == "print('hi')\r\n"
@@ -631,7 +631,7 @@ def test_an_export_exclude_name_is_never_opened(
     root = _skills_root(tmp_path)
     _skill(root, "s", {"SKILL.md": "ok", **{name: "secret" for name in EXPORT_EXCLUDE}})
     opened: list[str] = []
-    import kiro_crew.hooks as hooks
+    import aj_crew.hooks as hooks
 
     real = hooks.safe_read_file_bytes_nolink
 
@@ -697,7 +697,7 @@ def test_the_file_stays_inside_the_entry_cap(tmp_path: Path) -> None:
     assert len(entries) <= ex.MAX_ENTRIES
     assert any(i.reason == ex.REASON_BUNDLE_FULL for i in plan.left_out)
     names = {n.split("/")[1] for n in entries if n.startswith("skills/")}
-    assert {s["name"] for s in json.loads(entries["kirobot.json"])["skills"]} == names
+    assert {s["name"] for s in json.loads(entries["ajbot.json"])["skills"]} == names
 
 
 # ── lessons ──
@@ -746,11 +746,11 @@ def test_lessons_with_an_ordinary_link_still_travel() -> None:
 
 def test_a_user_template_is_not_in_the_file_and_the_view_says_so() -> None:
     plan, entries = _build(_sources(dashboard_custom=True))
-    manifest = json.loads(entries["kirobot.json"])
+    manifest = json.loads(entries["ajbot.json"])
     assert "dashboardTemplate" not in manifest and b"user:" not in _all_bytes(entries)
     assert ("dashboard", "", ex.REASON_CUSTOM_TEMPLATE) in _reasons(plan)
     plan, entries = _build(_sources(dashboard_builtin="builtin:release-board"))
-    assert json.loads(entries["kirobot.json"])["dashboardTemplate"] == "builtin:release-board"
+    assert json.loads(entries["ajbot.json"])["dashboardTemplate"] == "builtin:release-board"
 
 
 def test_the_dashboard_reader_turns_only_a_shipped_template_into_a_builtin_id(
@@ -758,7 +758,7 @@ def test_the_dashboard_reader_turns_only_a_shipped_template_into_a_builtin_id(
 ) -> None:
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard_templates import catalog, instance
+    from aj_crew.dashboard_templates import catalog, instance
 
     rec = SimpleNamespace(package_slug="", template_id="board")
     monkeypatch.setattr(instance, "read", lambda _slug: rec)
@@ -796,7 +796,7 @@ def test_an_uploaded_avatar_travels_and_an_oversized_one_does_not() -> None:
     _plan, entries = _build(
         _sources(avatar={"kind": "ghost", "traits": {"eyes": "round", "hat": True}})
     )
-    assert json.loads(entries["kirobot.json"])["avatarTraits"] == {"eyes": "round", "hat": True}
+    assert json.loads(entries["ajbot.json"])["avatarTraits"] == {"eyes": "round", "hat": True}
 
 
 @pytest.mark.parametrize("kind", ["image", "ghost"])
@@ -851,7 +851,7 @@ def test_preview_names_the_avatar_the_file_carries(
     plan, entries = _build(_sources(avatar=avatar, avatar_image=_png() if image else None))
     assert ex.preview(plan)["avatar"] == kind
     assert ("avatar.png" in entries) is (kind == "image")
-    assert ("avatarTraits" in json.loads(entries["kirobot.json"])) is (kind == "ghost")
+    assert ("avatarTraits" in json.loads(entries["ajbot.json"])) is (kind == "ghost")
 
 
 def test_picture_metadata_never_travels() -> None:
@@ -960,13 +960,13 @@ def test_schedules_and_their_scripts_stay_inside_the_entry_cap() -> None:
 
 def test_a_non_ascii_name_is_utf8_in_the_file_and_in_the_download_name() -> None:
     plan, entries = _build(_sources(name="发布队长", description="Ünïcode ✓"))
-    manifest = json.loads(entries["kirobot.json"].decode("utf-8"))
+    manifest = json.loads(entries["ajbot.json"].decode("utf-8"))
     assert manifest["name"] == "发布队长" and manifest["description"] == "Ünïcode ✓"
-    assert "发布队长".encode("utf-8") in entries["kirobot.json"]
+    assert "发布队长".encode("utf-8") in entries["ajbot.json"]
     header = ex.content_disposition(plan.name)
     header.encode("latin-1")  # an HTTP header value must be latin-1 safe
-    assert 'filename="crewmate.kirobot"' in header
-    assert "filename*=UTF-8''%E5%8F%91%E5%B8%83%E9%98%9F%E9%95%BF.kirobot" in header
+    assert 'filename="crewmate.ajbot"' in header
+    assert "filename*=UTF-8''%E5%8F%91%E5%B8%83%E9%98%9F%E9%95%BF.ajbot" in header
     assert all(n.isascii() for n in entries)
 
 
@@ -1058,21 +1058,21 @@ def seeded(monkeypatch: pytest.MonkeyPatch) -> str:
         def log_api_access(self, **_kw: Any) -> None:
             return None
 
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     monkeypatch.setattr(sel_mod, "sel", lambda: _Null())
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        "kirocrew": KiroCrewAgentConfig(kiro_agent="kirocrew"),
-        MEMBER: KiroCrewAgentConfig(
-            kiro_agent="kirocrew",
+        "ajcrew": AjCrewAgentConfig(kiro_agent="ajcrew"),
+        MEMBER: AjCrewAgentConfig(
+            kiro_agent="ajcrew",
             display_name="Scout",
             description="Watches.",
             workspace="scout-ws",
         ),
     }
     cfg.workspaces["scout-ws"] = WorkspaceConfig(dir=str(config_dir() / "scout-ws"))
-    cfg.default_agent = "kirocrew"
+    cfg.default_agent = "ajcrew"
     cfg.save()
     _invalidate_config_cache()
     slug = members_mod.member_slug(MEMBER)
@@ -1082,7 +1082,7 @@ def seeded(monkeypatch: pytest.MonkeyPatch) -> str:
 
 def _member_skills() -> Path:
     """``<the seeded mate's own workspace>/.kiro/skills``, made if absent."""
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     entry = cfg.workspaces[cfg.agents[MEMBER].workspace]
     root = workspace_dir_from_entry(entry) / ".kiro" / "skills"
     root.mkdir(parents=True, exist_ok=True)
@@ -1150,11 +1150,11 @@ def test_the_owner_downloads_a_file_and_nothing_is_written_on_the_server(seeded:
     assert view["goals"]["longTerm"] == "Ship release notes"
     status, headers, body = _call(seeded, {"member": MEMBER}, "owner", jobs)
     assert status == 200
-    assert headers["Content-Disposition"].startswith('attachment; filename="Scout.kirobot"')
+    assert headers["Content-Disposition"].startswith('attachment; filename="Scout.ajbot"')
     assert headers["Cache-Control"] == "no-store"
     entries = _zip(body)
     assert {
-        "kirobot.json",
+        "ajbot.json",
         "agent.json",
         "goals.json",
         "crons.json",
@@ -1179,7 +1179,7 @@ def test_a_download_bound_to_a_preview_is_refused_when_a_file_changed(seeded: st
 
 
 def test_the_route_refuses_a_member_the_slug_does_not_name(seeded: str) -> None:
-    status, _h, _b = _call(seeded, {"member": "kirocrew"}, "owner")
+    status, _h, _b = _call(seeded, {"member": "ajcrew"}, "owner")
     assert status == 404
     status, _h, _b = _call(seeded, {"member": MEMBER, "crons": "yes"}, "owner")
     assert status == 400
@@ -1279,8 +1279,8 @@ def _fake_draft(monkeypatch: pytest.MonkeyPatch, answer: str) -> dict[str, Any]:
     The store is ``<member>-store`` and its lessons name the member, so a draft that
     saw another member's turn would show that member's lessons in its history.
     """
-    import kiro_crew.llm_helpers as llm
-    import kiro_crew.memory_stores as stores
+    import aj_crew.llm_helpers as llm
+    import aj_crew.memory_stores as stores
 
     seen: dict[str, Any] = {"histories": []}
 
@@ -1339,10 +1339,10 @@ def test_the_draft_runs_one_tool_less_turn_and_stores_nothing(
         f"<LESSONS>\n- Lesson of {MEMBER}-store: check the release branch first.\n</LESSONS>"
         in seen["prompt"]
     )
-    from kiro_crew.llm_helpers import ToolApprovalPolicy
+    from aj_crew.llm_helpers import ToolApprovalPolicy
 
     # Tool-free twice over: the tool-less agent, and every permission request refused.
-    assert sessions.kw[0]["agent"] == "kirocrew-lite"
+    assert sessions.kw[0]["agent"] == "ajcrew-lite"
     assert seen["kw"]["approval_policy"] is ToolApprovalPolicy.REJECT_ALL
     # Its own session, released and destroyed once the turn is over.
     [key] = sessions.created
@@ -1362,8 +1362,8 @@ def test_two_drafts_for_two_mates_share_no_conversation(
     On a backend whose background turns share one provider conversation, a draft
     run there would leave A's lessons in the conversation B's draft is sent on.
     """
-    cfg = KiroCrewConfig.load()
-    cfg.agents["ranger"] = KiroCrewAgentConfig(kiro_agent="kirocrew", display_name="Ranger")
+    cfg = AjCrewConfig.load()
+    cfg.agents["ranger"] = AjCrewAgentConfig(kiro_agent="ajcrew", display_name="Ranger")
     cfg.save()
     _invalidate_config_cache()
     seen = _fake_draft(monkeypatch, "# Lessons\n- Check first.")
@@ -1386,7 +1386,7 @@ def test_two_drafts_for_two_mates_share_no_conversation(
 def test_a_draft_that_fails_still_destroys_its_session(
     seeded: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    import kiro_crew.llm_helpers as llm
+    import aj_crew.llm_helpers as llm
 
     _fake_draft(monkeypatch, "unused")
 
@@ -1403,9 +1403,9 @@ def test_a_draft_that_fails_still_destroys_its_session(
 
 def test_a_record_naming_another_mates_private_store_gets_no_draft(seeded: str) -> None:
     """The store is resolved through the ownership check, never read off the record."""
-    from kiro_crew.config.loader import MemoryStoreConfig
+    from aj_crew.config.loader import MemoryStoreConfig
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.memory_stores["other-1"] = MemoryStoreConfig(memory_version=2, owner_member_id="other")
     cfg.agents[MEMBER].memory_store = "other-1"
     cfg.agents[MEMBER].member_id = "scout"

@@ -1,6 +1,6 @@
 """Tests for session storage measurement and the trash/restore cycle.
 
-``KIROCREW_HOME`` and ``KIRO_HOME`` point at temp directories, so the real path
+``AJCREW_HOME`` and ``KIRO_HOME`` point at temp directories, so the real path
 resolvers run. A session's halves are always reclaimed and restored together: half a
 session either lists without resuming, or resumes without history.
 """
@@ -20,8 +20,8 @@ from session_storage_helpers import (  # noqa: F401 -- fixtures are requested by
     stores_fixture,
 )
 
-from kiro_crew import session_storage
-from kiro_crew.session_storage import SessionStorageError
+from aj_crew import session_storage
+from aj_crew.session_storage import SessionStorageError
 
 
 class TestTrashLocation:
@@ -71,7 +71,7 @@ class TestSingleTrashPass:
     def test_report_payload_reads_each_manifest_exactly_once(
         self, stores: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.dashboard.handlers import session_storage as handler
+        from aj_crew.dashboard.handlers import session_storage as handler
 
         _, kiro_home = stores
         self._two_batches(kiro_home)
@@ -93,7 +93,7 @@ class TestSingleTrashPass:
     ) -> None:
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.handlers import session_storage as handler
+        from aj_crew.dashboard.handlers import session_storage as handler
 
         _, kiro_home = stores
         self._two_batches(kiro_home)
@@ -254,7 +254,7 @@ class TestManifestReaders:
             "more garbage {",
         ]
         batch = self._batch(tmp_path, lines)
-        with caplog.at_level("WARNING", logger="kiro_crew.session_storage"):
+        with caplog.at_level("WARNING", logger="aj_crew.session_storage"):
             summary = session_storage._summarize_manifest(batch)
         assert summary is not None and summary[1] == 1
         warnings = [r for r in caplog.records if "unparseable" in r.getMessage()]
@@ -272,7 +272,7 @@ class TestManifestReaders:
             '{"uid": "trunc',
         ]
         batch = self._batch(tmp_path, lines, terminated=False)
-        with caplog.at_level("WARNING", logger="kiro_crew.session_storage"):
+        with caplog.at_level("WARNING", logger="aj_crew.session_storage"):
             summary = session_storage._summarize_manifest(batch)
         assert summary is not None and summary[1] == 1
         assert not [r for r in caplog.records if "unparseable" in r.getMessage()]
@@ -328,7 +328,7 @@ class TestManifestReaders:
         batch = tmp_path / self._BATCH_ID
         batch.mkdir(parents=True)
         (batch / session_storage.MANIFEST_NAME).write_bytes(b'{"schema": 1}\n\xff\xfe garbage\n')
-        with caplog.at_level("WARNING", logger="kiro_crew.session_storage"):
+        with caplog.at_level("WARNING", logger="aj_crew.session_storage"):
             assert session_storage._read_manifest(batch) is None
             assert session_storage._summarize_manifest(batch) is None
             assert session_storage._manifest_rels(batch) == []
@@ -423,7 +423,7 @@ class TestManifestReaders:
         batch = tmp_path / self._BATCH_ID
         batch.mkdir(parents=True, exist_ok=True)
         (batch / session_storage.MANIFEST_NAME).write_text(blob, encoding="utf-8")
-        with caplog.at_level("WARNING", logger="kiro_crew.session_storage"):
+        with caplog.at_level("WARNING", logger="aj_crew.session_storage"):
             summary = session_storage._summarize_manifest(batch)
         assert summary is not None and summary[1] == 0
         assert [r for r in caplog.records if "unparseable" in r.getMessage()]
@@ -555,7 +555,7 @@ class TestReclaimHoldsTheSessionLockAcrossTheIndexPurge:
     ) -> None:
         import threading
 
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         crew_home, kiro_home = stores
         _cli_half(kiro_home, "aaaa1111", log_bytes=2048, age_days=40)
@@ -624,7 +624,7 @@ class TestFileLocksDoNotPileUp:
     def test_locks_return_to_baseline_after_append_and_delete(self, tmp_path: Path) -> None:
         import gc
 
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         n = 1000
         base = tmp_path / "sessions"
@@ -661,7 +661,7 @@ class TestFileLocksDoNotPileUp:
     def test_same_lock_object_while_a_writer_holds_it(self, tmp_path: Path) -> None:
         import threading
 
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         base = tmp_path / "sessions"
         base.mkdir()

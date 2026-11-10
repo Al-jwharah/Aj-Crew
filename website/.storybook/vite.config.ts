@@ -23,12 +23,12 @@ export default defineConfig({
       name: 'storybook-edition-languages',
       enforce: 'pre',
       resolveId(id: string) {
-        return id === 'virtual:kirocrew-edition-languages'
-          ? '\0virtual:kirocrew-edition-languages'
+        return id === 'virtual:ajcrew-edition-languages'
+          ? '\0virtual:ajcrew-edition-languages'
           : null
       },
       load(id: string) {
-        return id === '\0virtual:kirocrew-edition-languages'
+        return id === '\0virtual:ajcrew-edition-languages'
           ? 'export default []\n'
           : null
       },

@@ -1,13 +1,13 @@
 ---
 name: self-nudge-loop
-description: Build a deadline-preserving same-session autonomy loop using Kiro Crew's AutoNudgeService. One long-lived session keeps working toward a goal; each completed loop turn schedules the next nudge, while user turns defer but do not reset that deadline. Survives tab close, logout, and gateway restart. Use when user says "continuous improvement session", "keep going on its own", "same session loop", "self-nudge", or "north star loop". NOT for fresh-session crons, parallel work, or external-system callbacks.
-tags: [skill, kirocrew, autonudge, autonomy, loop]
+description: Build a deadline-preserving same-session autonomy loop using Aj Crew's AutoNudgeService. One long-lived session keeps working toward a goal; each completed loop turn schedules the next nudge, while user turns defer but do not reset that deadline. Survives tab close, logout, and gateway restart. Use when user says "continuous improvement session", "keep going on its own", "same session loop", "self-nudge", or "north star loop". NOT for fresh-session crons, parallel work, or external-system callbacks.
+tags: [skill, ajcrew, autonudge, autonomy, loop]
 ---
 
 # Self-Nudge Loop
 
 ## Overview
-`AutoNudgeService` (in `kiro_crew.autonudge`) keeps a single chat session working toward a goal by re-feeding a nudge on its persisted deadline, deferred while a user turn is active. Unlike `cron_add`, the nudge runs in the same session — warm memory, same tools, same conversation history. State persists across gateway restarts via `~/.kiro/crew/autonudge.json`.
+`AutoNudgeService` (in `aj_crew.autonudge`) keeps a single chat session working toward a goal by re-feeding a nudge on its persisted deadline, deferred while a user turn is active. Unlike `cron_add`, the nudge runs in the same session — warm memory, same tools, same conversation history. State persists across gateway restarts via `~/.kiro/crew/autonudge.json`.
 
 ## Usage
 Use when the user wants:
@@ -25,8 +25,8 @@ Do NOT use for:
 
 On by default. To disable:
 ```bash
-export KIROCREW_AUTONUDGE=0   # add to systemd unit Environment= or ~/.kiro/crew/env
-kirocrew restart
+export AJCREW_AUTONUDGE=0   # add to systemd unit Environment= or ~/.kiro/crew/env
+ajcrew restart
 ```
 
 When disabled, the REST API returns 503 and the UI popover surfaces the error.
@@ -85,7 +85,7 @@ deliberately.
 `/api/autonudge` is a **user-scoped** endpoint. Agents should use the MCP tools
 above and must not read, print, or request local-secret/token material. If a human
 needs the raw REST surface, obtain a short-lived dashboard token in a private
-terminal (for example with `kirocrew token`) and keep it out of chat and logs:
+terminal (for example with `ajcrew token`) and keep it out of chat and logs:
 
 ```bash
 # Human-controlled terminal only. Obtain this without exposing it to an agent.
@@ -108,7 +108,7 @@ Common 403 traps (all have the same error body `{"error":"Token required"}`):
 - Calling `/api/token/local` without `X-Local-Secret` — the endpoint is in `_BYPASS_EXACT` (no token needed) but still validates the machine secret via HMAC compare. Missing/wrong secret → `{"error":"invalid secret"}` 403.
 - Non-loopback source. Token issuance and most internal paths require `is_loopback(request.remote)` regardless of auth material.
 
-**Slot key** — the `slot_key` in the POST body is your dashboard session ID. Inside MCP subprocess code, read `KIROCREW_SESSION_KEY` (format `dashboard:chat-<N>-<epoch>`) and strip the `dashboard:` prefix.
+**Slot key** — the `slot_key` in the POST body is your dashboard session ID. Inside MCP subprocess code, read `AJCREW_SESSION_KEY` (format `dashboard:chat-<N>-<epoch>`) and strip the `dashboard:` prefix.
 
 Endpoints:
 | Method | Path | Auth | Purpose |
@@ -135,7 +135,7 @@ Good nudges tell the agent to:
 
 ## Common Mistakes
 
-**Forgetting the feature flag** — service loads but does nothing. Check `kirocrew logs | grep AutoNudge` for the "disabled" message.
+**Forgetting the feature flag** — service loads but does nothing. Check `ajcrew logs | grep AutoNudge` for the "disabled" message.
 
 **`interval_secs` too short** — sub-30s nudges thrash context. 300s is the value to use for external polling (CI, review bots); reserve 60s for tight local iteration.
 

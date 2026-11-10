@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.imessage.transport (IMessageTransport, Layer 1).
+"""Tests for aj_crew.imessage.transport (IMessageTransport, Layer 1).
 
 Every inbound shape is driven from a recorded bridge payload under
 ``test/fixtures/channels/imessage/``, so the parser is pinned against a real
@@ -14,13 +14,13 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.imessage.client import IMessageInbound, parse_inbound
-from kiro_crew.imessage.transport import (
+from aj_crew.imessage.client import IMessageInbound, parse_inbound
+from aj_crew.imessage.transport import (
     IMESSAGE_CAPABILITIES,
     IMESSAGE_SAFE_MESSAGE_CHARS,
     IMessageTransport,
 )
-from kiro_crew.messaging.transport import InboundMessage
+from aj_crew.messaging.transport import InboundMessage
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "channels" / "imessage"
 
@@ -128,19 +128,19 @@ class TestAuthorize:
         # There is no org boundary in front of iMessage: anyone who knows the
         # number can send to it, so an unconfigured channel must answer no one.
         transport, _, _ = _transport()
-        with patch("kiro_crew.imessage.transport.sel") as mock_sel:
+        with patch("aj_crew.imessage.transport.sel") as mock_sel:
             assert transport.authorize(_msg(OWNER)) is False
         mock_sel().log_api_access.assert_called_once()
 
     def test_a_stranger_is_denied_and_audited(self) -> None:
         transport, _, _ = _transport(OWNER)
-        with patch("kiro_crew.imessage.transport.sel") as mock_sel:
+        with patch("aj_crew.imessage.transport.sel") as mock_sel:
             assert transport.authorize(_msg("+15559999999")) is False
         mock_sel().log_api_access.assert_called_once()
 
     def test_an_empty_handle_is_denied_and_audited(self) -> None:
         transport, _, _ = _transport(OWNER)
-        with patch("kiro_crew.imessage.transport.sel") as mock_sel:
+        with patch("aj_crew.imessage.transport.sel") as mock_sel:
             assert transport.authorize(_msg("")) is False
         mock_sel().log_api_access.assert_called_once()
 
@@ -155,7 +155,7 @@ class TestAuthorize:
     def test_the_audit_never_logs_a_whole_handle(self) -> None:
         # The caller is a phone number or an email address.
         transport, _, _ = _transport(OWNER)
-        with patch("kiro_crew.imessage.transport.sel") as mock_sel:
+        with patch("aj_crew.imessage.transport.sel") as mock_sel:
             transport.authorize(_msg("+15559999999"))
         caller = mock_sel().log_api_access.call_args.kwargs["caller"]
         assert caller == "+15***"
@@ -176,7 +176,7 @@ class TestReceive:
         # A reply in a group would deliver tool output to members who are not on
         # the allowlist.
         transport, _, dispatched = _transport(OWNER, "+15559876543")
-        with patch("kiro_crew.imessage.transport.sel") as mock_sel:
+        with patch("aj_crew.imessage.transport.sel") as mock_sel:
             await transport.receive(_recorded("watch_message_group"))
         assert dispatched == []
         outcome = mock_sel().log_api_access.call_args.kwargs["outcome"]
@@ -185,7 +185,7 @@ class TestReceive:
     @pytest.mark.asyncio
     async def test_the_group_gate_runs_even_for_an_allowlisted_sender(self) -> None:
         transport, _, dispatched = _transport("+15559876543")
-        with patch("kiro_crew.imessage.transport.sel"):
+        with patch("aj_crew.imessage.transport.sel"):
             await transport.receive(_recorded("watch_message_group"))
         assert dispatched == []
 
@@ -196,7 +196,7 @@ class TestReceive:
         transport, _, dispatched = _transport(OWNER)
         recorded = _recorded("watch_message_direct")
         recorded.is_from_me = True
-        with patch("kiro_crew.imessage.transport.sel") as mock_sel:
+        with patch("aj_crew.imessage.transport.sel") as mock_sel:
             await transport.receive(recorded)
         assert dispatched == []
         mock_sel().log_api_access.assert_not_called()
@@ -207,7 +207,7 @@ class TestReceive:
         transport, _, dispatched = _transport(OWNER)
         recorded = _recorded("watch_message_group")
         recorded.is_from_me = True
-        with patch("kiro_crew.imessage.transport.sel") as mock_sel:
+        with patch("aj_crew.imessage.transport.sel") as mock_sel:
             await transport.receive(recorded)
         assert dispatched == []
         mock_sel().log_api_access.assert_not_called()
@@ -232,7 +232,7 @@ class TestReceive:
         recorded = _recorded("watch_message_direct")
         recorded.is_from_me = False
         client.own_echo_texts.append(recorded.text)
-        with patch("kiro_crew.imessage.transport.sel") as mock_sel:
+        with patch("aj_crew.imessage.transport.sel") as mock_sel:
             await transport.receive(recorded)
         assert dispatched == []
         # Own traffic, not a denial: auditing it would write one entry per
@@ -265,7 +265,7 @@ class TestReceive:
         transport, client, dispatched = _transport(OWNER)
         group = _recorded("watch_message_group")
         client.own_echo_texts.append(group.text)
-        with patch("kiro_crew.imessage.transport.sel"):
+        with patch("aj_crew.imessage.transport.sel"):
             await transport.receive(group)
         assert client.echo_checks == []
         assert client.own_echo_texts == [group.text], "the group row spent the record"
@@ -275,7 +275,7 @@ class TestReceive:
         transport, client, _dispatched = _transport("+15559876543")
         recorded = _recorded("watch_message_direct")
         client.own_echo_texts.append(recorded.text)
-        with patch("kiro_crew.imessage.transport.sel"):
+        with patch("aj_crew.imessage.transport.sel"):
             await transport.receive(recorded)
         assert client.echo_checks == []
         assert client.own_echo_texts == [recorded.text]
@@ -294,7 +294,7 @@ class TestReceive:
         transport, client, dispatched = _transport(OWNER)
         recorded = _recorded("watch_message_direct")
         recorded.handle = "+15559999999"
-        with patch("kiro_crew.imessage.transport.sel"):
+        with patch("aj_crew.imessage.transport.sel"):
             await transport.receive(recorded)
         assert dispatched == []
         assert client.sent == []

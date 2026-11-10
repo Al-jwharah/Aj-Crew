@@ -94,7 +94,7 @@ async function stubContext(context) {
       // empty-array answer puts a keyless slot in redux and crashes the shell
       // (command-palette recents maps slot.key.startsWith).
       if (route.request().method() === 'POST') {
-        return json(route, { key: 'fixture-chat', title: 'New Session…', agent: 'kirocrew' })
+        return json(route, { key: 'fixture-chat', title: 'New Session…', agent: 'ajcrew' })
       }
       return json(route, [])
     }
@@ -105,17 +105,17 @@ async function stubContext(context) {
     if (path === '/api/auth/me') return json(route, { user: 'owner', app: '' })
     if (path === '/api/themes') return json(route, { themes: [], installed: [] })
     if (path === '/api/theme/boot') return json(route, { mode: 'dark', theme: '' })
-    if (path === '/api/dashboard/branding') return json(route, { bot_name: 'Kiro Crew', avatar: '/logo.png' })
+    if (path === '/api/dashboard/branding') return json(route, { bot_name: 'Aj Crew', avatar: '/logo.png' })
     if (path === '/api/recent-projects') return json(route, { dirs: [] })
     if (path === '/api/agents') {
       return json(route, {
-        agents: [{ name: 'kirocrew', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default' }],
-        default_agent: 'kirocrew',
+        agents: [{ name: 'ajcrew', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default' }],
+        default_agent: 'ajcrew',
       })
     }
-    if (path === '/api/agents/installed') return json(route, [{ name: 'kirocrew' }])
+    if (path === '/api/agents/installed') return json(route, [{ name: 'ajcrew' }])
     if (path === '/api/workspaces') return json(route, { workspaces: [{ name: 'default' }] })
-    if (path === '/api/chat/agents') return json(route, [{ name: 'kirocrew', source: 'builtin' }])
+    if (path === '/api/chat/agents') return json(route, [{ name: 'ajcrew', source: 'builtin' }])
     const objectish = /(config|tips|voice|autonudge|branding|status|usage-summary)/.test(path)
     return json(route, objectish ? {} : [])
   })

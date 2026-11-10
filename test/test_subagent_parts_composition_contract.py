@@ -1,12 +1,12 @@
-"""``kiro_crew.subagent`` stays one namespace while its definitions live in ``subagent_parts``.
+"""``aj_crew.subagent`` stays one namespace while its definitions live in ``subagent_parts``.
 
-``kiro_crew.subagent`` keeps its import path, its patch surface and every construct a
-path-keyed repository guard reads in that file; the modules of ``kiro_crew.subagent_parts``
+``aj_crew.subagent`` keeps its import path, its patch surface and every construct a
+path-keyed repository guard reads in that file; the modules of ``aj_crew.subagent_parts``
 hold the rest, one responsibility each, and ``_facade_compose.compose`` runs every function
 they define on the facade's globals. These tests pin what that composition promises:
 
 * each owner function runs on the facade's globals, and every global it reads resolves
-  there, so a patch of ``kiro_crew.subagent.<name>`` reaches it wherever it now lives -- and
+  there, so a patch of ``aj_crew.subagent.<name>`` reaches it wherever it now lives -- and
   every name the test trees patch there is read by no owner code running anywhere else;
 * a value an owner computes while it is imported (a dataclass field factory) resolves the
   names it reads in the owner's own module;
@@ -15,7 +15,7 @@ they define on the facade's globals. These tests pin what that composition promi
   ``global``, which lives on the facade while the owner keeps only its import-time binding;
 * a function's ``__module__`` still names the facade, and an owner's classes keep their own,
   except ``SpawnApprovalUnreachable``, which reports the facade's;
-* nothing but ``kiro_crew.subagent`` imports a module of ``subagent_parts`` at runtime,
+* nothing but ``aj_crew.subagent`` imports a module of ``subagent_parts`` at runtime,
   except ``manager.py``, which imports the ``*_surface`` modules its class binds and
   ``run_limits`` for its default arguments; an owner imports the facade only for type
   checking, and no owner carries an agent-sdk boundary edge;
@@ -44,10 +44,10 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.subagent as subagent
-from kiro_crew import subagent_parts
-from kiro_crew._facade_compose import compose as facade_compose
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew.subagent as subagent
+from aj_crew import subagent_parts
+from aj_crew._facade_compose import compose as facade_compose
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 # One worker per file, so the shared checks run beside the tests that load this module.
 pytestmark = pytest.mark.xdist_group(name="subagent_parts_composition_contract")
@@ -59,7 +59,7 @@ _SRC = Path(subagent.__file__).resolve().parents[1]
 _PARTS_DIR = Path(subagent_parts.__file__).resolve().parent
 _REPO = _SRC.parent
 _GLOBAL_OPS = frozenset({"LOAD_GLOBAL", "STORE_GLOBAL", "DELETE_GLOBAL"})
-_TEST_TREES = (_REPO / "test", _SRC / "kiro_crew" / "apps" / "builtins")
+_TEST_TREES = (_REPO / "test", _SRC / "aj_crew" / "apps" / "builtins")
 
 
 def _owners() -> list[types.ModuleType]:
@@ -427,21 +427,21 @@ _BASE_SURFACE: dict[str, tuple[tuple[str, str, str], ...]] = {
             "(*, measured_only: 'bool' = False) -> 'float'",
         ),
         ("_agents_slice_available_gb", "function", "() -> 'float'"),
-        ("_auto_ceiling", "function", "(cfg: 'KiroCrewConfig') -> 'int'"),
-        ("_configured_max_subagents", "function", "(cfg: 'KiroCrewConfig') -> 'int'"),
-        ("subagent_count_ceiling", "function", "(cfg: 'KiroCrewConfig') -> 'int'"),
-        ("compute_max_subagents", "function", "(cfg: 'KiroCrewConfig') -> 'int'"),
+        ("_auto_ceiling", "function", "(cfg: 'AjCrewConfig') -> 'int'"),
+        ("_configured_max_subagents", "function", "(cfg: 'AjCrewConfig') -> 'int'"),
+        ("subagent_count_ceiling", "function", "(cfg: 'AjCrewConfig') -> 'int'"),
+        ("compute_max_subagents", "function", "(cfg: 'AjCrewConfig') -> 'int'"),
         (
             "compute_memory_sized_parallel_cap",
             "function",
-            "(cfg: 'KiroCrewConfig', *, settled: 'bool' = False) -> 'int'",
+            "(cfg: 'AjCrewConfig', *, settled: 'bool' = False) -> 'int'",
         ),
         (
             "_host_mem_term",
             "function",
-            "(cfg: 'KiroCrewConfig', *, settled: 'bool' = False) -> 'int | None'",
+            "(cfg: 'AjCrewConfig', *, settled: 'bool' = False) -> 'int | None'",
         ),
-        ("resolve_max_subagents", "function", "(cfg: 'KiroCrewConfig') -> 'int'"),
+        ("resolve_max_subagents", "function", "(cfg: 'AjCrewConfig') -> 'int'"),
         ("_CLK_TCK", "value", "int"),
     ),
     "start_pricing": (
@@ -518,7 +518,7 @@ _BASE_SURFACE: dict[str, tuple[tuple[str, str, str], ...]] = {
 #: The owner module that defines ``SubagentManager`` and binds its collaborators' functions.
 _HOST_OWNER = "manager"
 
-#: Moved classes that report ``kiro_crew.subagent`` as their module; every other class an
+#: Moved classes that report ``aj_crew.subagent`` as their module; every other class an
 #: owner defines reports the owner's.
 _FACADE_MODULE_CLASSES = frozenset({"SpawnApprovalUnreachable"})
 
@@ -766,7 +766,7 @@ _BASE_CLASS: dict[str, tuple[str, str]] = {
         "async method",
         "(self, session_key: 'str', handles: 'list[ProcessHandle]', *, popped: \"'list[tuple[Any, ProcessHandle]] | None'\" = None) -> 'str | None'",
     ),
-    "_sizing_fields": ("staticmethod", "(cfg: 'KiroCrewConfig') -> 'tuple[object, ...]'"),
+    "_sizing_fields": ("staticmethod", "(cfg: 'AjCrewConfig') -> 'tuple[object, ...]'"),
     "_spawn_after_memory_read": (
         "async method",
         "(self, first: 'Any', proceed: \"'Callable[[], bool] | None'\" = None, /, **reentry: 'Any') -> 'Any'",
@@ -837,7 +837,7 @@ _BASE_CLASS: dict[str, tuple[str, str]] = {
     "all_agents": ("property", ""),
     "apply_limits": (
         "method",
-        "(self, cfg: 'KiroCrewConfig', *, max_concurrent: 'int | None' = None) -> 'None'",
+        "(self, cfg: 'AjCrewConfig', *, max_concurrent: 'int | None' = None) -> 'None'",
     ),
     "arm_report_in_flight": ("method", "(self, info: 'SubagentInfo') -> 'None'"),
     "batch_members_pending": ("method", "(self, batch_id: 'str') -> 'bool'"),
@@ -921,7 +921,7 @@ _BASE_CLASS: dict[str, tuple[str, str]] = {
         "async method",
         "(self, parent_session_key: 'str | None' = None, *, app: 'str | None' = None) -> \"'QueuedRunListing'\"",
     ),
-    "reconfigure": ("async method", "(self, cfg: 'KiroCrewConfig') -> 'None'"),
+    "reconfigure": ("async method", "(self, cfg: 'AjCrewConfig') -> 'None'"),
     "record_lost_submission": (
         "method",
         "(self, batch_id: 'str', batch_total: 'int', reason: 'str', parent_session_key: 'str' = '') -> 'None'",
@@ -1022,12 +1022,12 @@ def test_a_value_an_owner_computes_at_import_resolves_in_the_owner() -> None:
 
 
 def _facade_aliases(tree: ast.Module) -> set[str]:
-    """Local names a test file binds to the ``kiro_crew.subagent`` module object."""
+    """Local names a test file binds to the ``aj_crew.subagent`` module object."""
     aliases: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             aliases |= {a.asname for a in node.names if a.name == _FACADE and a.asname}
-        elif isinstance(node, ast.ImportFrom) and node.module == "kiro_crew":
+        elif isinstance(node, ast.ImportFrom) and node.module == "aj_crew":
             aliases |= {a.asname or a.name for a in node.names if a.name == "subagent"}
         elif isinstance(node, ast.Assign) and _FACADE in ast.unparse(node.value):
             text = ast.unparse(node.value)
@@ -1037,7 +1037,7 @@ def _facade_aliases(tree: ast.Module) -> set[str]:
 
 
 def _patched_facade_names(sources) -> set[str]:
-    """Every name a test patches on ``kiro_crew.subagent``, from ``(label, text)`` pairs."""
+    """Every name a test patches on ``aj_crew.subagent``, from ``(label, text)`` pairs."""
     prefix = f"{_FACADE}."
     names: set[str] = set()
     for _label, text in sources:
@@ -1076,26 +1076,26 @@ def _test_sources():
 
 def test_the_patch_target_scan_sees_every_spelling() -> None:
     sources = [
-        ("a", 'from unittest.mock import patch\npatch("kiro_crew.subagent.alpha")\n'),
+        ("a", 'from unittest.mock import patch\npatch("aj_crew.subagent.alpha")\n'),
         (
             "b",
-            "import kiro_crew.subagent as sa\ndef t(monkeypatch):\n    monkeypatch.setattr(sa, 'beta', 1)\n",
+            "import aj_crew.subagent as sa\ndef t(monkeypatch):\n    monkeypatch.setattr(sa, 'beta', 1)\n",
         ),
         (
             "c",
-            "from kiro_crew import subagent\nfrom unittest import mock\nmock.patch.object(subagent, 'gamma')\n",
+            "from aj_crew import subagent\nfrom unittest import mock\nmock.patch.object(subagent, 'gamma')\n",
         ),
         (
             "d",
-            "import importlib\nmod = importlib.import_module('kiro_crew.subagent')\ndef t(mp):\n    mp.delattr(mod, 'delta')\n",
+            "import importlib\nmod = importlib.import_module('aj_crew.subagent')\ndef t(mp):\n    mp.delattr(mod, 'delta')\n",
         ),
         (
             "e",
-            'patch("kiro_crew.subagent.SubagentManager._run")\npatch("kiro_crew.subagent_manager.x")\n',
+            'patch("aj_crew.subagent.SubagentManager._run")\npatch("aj_crew.subagent_manager.x")\n',
         ),
         (
             "f",
-            "import kiro_crew.other as sa\ndef t(monkeypatch):\n    monkeypatch.setattr(sa, 'never', 1)\n",
+            "import aj_crew.other as sa\ndef t(monkeypatch):\n    monkeypatch.setattr(sa, 'never', 1)\n",
         ),
     ]
     assert _patched_facade_names(sources) == {"alpha", "beta", "gamma", "delta", "SubagentManager"}
@@ -1243,7 +1243,7 @@ def test_the_moved_exception_reports_the_facade_module() -> None:
     """``SpawnApprovalUnreachable`` keeps the module the one-module file gave it.
 
     A traceback, a log line and a pickle name an exception by its module, so it reports
-    ``kiro_crew.subagent``, and that module resolves the name to the same class.
+    ``aj_crew.subagent``, and that module resolves the name to the same class.
     """
     cls = subagent.SpawnApprovalUnreachable
     assert cls.__module__ == _FACADE
@@ -1284,13 +1284,13 @@ def _bad_owner_imports(tree: ast.Module, *, host: bool = False) -> list[str]:
 @pytest.mark.parametrize(
     ("source", "flagged"),
     [
-        ("from kiro_crew.subagent import sel\n", True),
-        ("import kiro_crew.subagent\n", True),
-        ("from kiro_crew.subagent_parts import run_limits\n", True),
-        ("from kiro_crew.subagent_parts.run_limits import X\n", True),
-        ("if TYPE_CHECKING:\n    from kiro_crew.subagent import sel\n", False),
-        ("if TYPE_CHECKING:\n    from kiro_crew.session import X\n", True),
-        ("from kiro_crew.subagent_manager import X\nimport os\n", False),
+        ("from aj_crew.subagent import sel\n", True),
+        ("import aj_crew.subagent\n", True),
+        ("from aj_crew.subagent_parts import run_limits\n", True),
+        ("from aj_crew.subagent_parts.run_limits import X\n", True),
+        ("if TYPE_CHECKING:\n    from aj_crew.subagent import sel\n", False),
+        ("if TYPE_CHECKING:\n    from aj_crew.session import X\n", True),
+        ("from aj_crew.subagent_manager import X\nimport os\n", False),
     ],
 )
 def test_the_owner_import_check_sees_every_spelling(source: str, flagged: bool) -> None:
@@ -1300,11 +1300,11 @@ def test_the_owner_import_check_sees_every_spelling(source: str, flagged: bool) 
 @pytest.mark.parametrize(
     ("source", "flagged"),
     [
-        ("from kiro_crew.subagent_parts import run_surface as _run_surface\n", False),
-        ("from kiro_crew.subagent_parts.run_limits import _TURN_LIMIT\n", False),
-        ("from kiro_crew.subagent_parts.manager import SubagentManager\n", True),
-        ("from kiro_crew.subagent import sel\n", True),
-        ("import kiro_crew.subagent\n", True),
+        ("from aj_crew.subagent_parts import run_surface as _run_surface\n", False),
+        ("from aj_crew.subagent_parts.run_limits import _TURN_LIMIT\n", False),
+        ("from aj_crew.subagent_parts.manager import SubagentManager\n", True),
+        ("from aj_crew.subagent import sel\n", True),
+        ("import aj_crew.subagent\n", True),
     ],
 )
 def test_the_host_may_import_only_its_collaborators(source: str, flagged: bool) -> None:
@@ -1334,12 +1334,12 @@ def _imports_an_owner(source: str) -> bool:
 @pytest.mark.parametrize(
     ("source", "flagged"),
     [
-        ("from kiro_crew.subagent_parts import agent_policy\n", True),
-        ("from kiro_crew.subagent_parts.host_memory import x\n", True),
-        ("import kiro_crew.subagent_parts.run_limits\n", True),
-        ("from kiro_crew import subagent_parts\n", True),
+        ("from aj_crew.subagent_parts import agent_policy\n", True),
+        ("from aj_crew.subagent_parts.host_memory import x\n", True),
+        ("import aj_crew.subagent_parts.run_limits\n", True),
+        ("from aj_crew import subagent_parts\n", True),
         ("from .subagent_parts import x\n", True),
-        ("from kiro_crew.subagent import x\n", False),
+        ("from aj_crew.subagent import x\n", False),
     ],
 )
 def test_the_importer_check_sees_every_spelling(source: str, flagged: bool) -> None:
@@ -1349,7 +1349,7 @@ def test_the_importer_check_sees_every_spelling(source: str, flagged: bool) -> N
 def test_nothing_but_the_facade_imports_an_owner() -> None:
     importers = sorted(
         str(path.relative_to(_SRC))
-        for path in sorted((_SRC / "kiro_crew").rglob("*.py"))
+        for path in sorted((_SRC / "aj_crew").rglob("*.py"))
         if path.parent != _PARTS_DIR
         and path.name != "subagent.py"
         and "subagent_parts" in (text := path.read_text(encoding="utf-8"))
@@ -1387,7 +1387,7 @@ def test_the_agent_sdk_boundary_edges_stay_in_the_facade() -> None:
 
 def _type_only_imports_from_the_facade() -> set[str]:
     names: set[str] = set()
-    roots = [_PARTS_DIR, _SRC / "kiro_crew" / "subagent_manager"]
+    roots = [_PARTS_DIR, _SRC / "aj_crew" / "subagent_manager"]
     for root in roots:
         for path in root.rglob("*.py"):
             for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
@@ -1407,14 +1407,14 @@ def test_the_stale_check_reports_a_name_nobody_reads() -> None:
 
 
 def _project_imports() -> set[str]:
-    """Public names the facade imports from ``kiro_crew``: its surface, kept whoever reads them."""
+    """Public names the facade imports from ``aj_crew``: its surface, kept whoever reads them."""
     tree = ast.parse(Path(subagent.__file__).read_text(encoding="utf-8"))
     return {
         a.asname or a.name
         for node in tree.body
         if isinstance(node, ast.ImportFrom)
         and node.module
-        and (node.module == "kiro_crew" or node.module.startswith("kiro_crew."))
+        and (node.module == "aj_crew" or node.module.startswith("aj_crew."))
         for a in node.names
         if not (a.asname or a.name).startswith("_")
     }
@@ -1437,7 +1437,7 @@ def test_every_import_kept_for_the_owners_is_read_by_one() -> None:
 
 def test_the_facade_composes_through_the_shared_helper() -> None:
     """The facade composes its owners with the one shared helper,
-    ``kiro_crew._facade_compose.compose``, calling it exactly once with
+    ``aj_crew._facade_compose.compose``, calling it exactly once with
     ``host=SubagentManager``, and the owner package keeps no copy of its own: its
     ``__init__`` defines no function or class."""
     assert subagent._facade_compose is facade_compose
@@ -1505,8 +1505,8 @@ def test_compose_rebinds_functions_methods_and_members(tmp_path: Path) -> None:
 
 def test_a_fresh_facade_import_loads_every_owner() -> None:
     probe = (
-        "import sys, kiro_crew.subagent as s\n"
-        "print(sorted(m for m in sys.modules if m.startswith('kiro_crew.subagent_parts.')))\n"
+        "import sys, aj_crew.subagent as s\n"
+        "print(sorted(m for m in sys.modules if m.startswith('aj_crew.subagent_parts.')))\n"
     )
     done = subprocess.run(
         [sys.executable, "-c", probe], capture_output=True, check=True, timeout=120, **UTF8_TEXT

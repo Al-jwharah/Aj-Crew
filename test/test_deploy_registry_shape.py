@@ -13,7 +13,7 @@ import pytest
 from stray_line_helpers import cyclic_gc_quiesced  # noqa: F401 - fixture
 from stray_line_helpers import too_deep_to_decode
 
-from kiro_crew.deploy import profiles as profiles_mod
+from aj_crew.deploy import profiles as profiles_mod
 
 EMPTY = {"version": 2, "profiles": [], "default": ""}
 

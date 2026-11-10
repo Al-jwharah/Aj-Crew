@@ -1,34 +1,34 @@
 #!/bin/sh
-# Kiro Crew first-time setup script (public build, contributor / from-source layout)
+# Aj Crew first-time setup script (public build, contributor / from-source layout)
 # Usage: source setup.sh   (bash or zsh), or: bash setup.sh
 #
 # Builds the clone it sits in, so the install follows the clone's branch (`main`
 # is the Nightly lane). For Stable on a laptop or server, use the signed wheel:
 #   curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
 #
-# Sets up KiroCrew using only public tooling:
+# Sets up AjCrew using only public tooling:
 #   1. Node.js (via ensure-node.sh)
 #   2. Optional tools (git-lfs, ffmpeg for voice)
 #   3. Optional ACP adapter + Kiro CLI prerequisite disclosure
 #   4. Build frontend (npm/vite) + backend (pip)
 #   5. PATH config
-#   6. Agent config (kirocrew setup --agent-only)
+#   6. Agent config (ajcrew setup --agent-only)
 
 # Resolve script directory (works in bash and zsh, sourced or executed)
 if [ -n "$BASH_SOURCE" ]; then
-    _kirocrew_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
+    _ajcrew_dir="$(cd "$(dirname "$BASH_SOURCE")" && pwd)"
 elif [ -n "$ZSH_VERSION" ]; then
-    _kirocrew_dir="$(cd "$(dirname "${(%):-%x}")" && pwd)"
+    _ajcrew_dir="$(cd "$(dirname "${(%):-%x}")" && pwd)"
 else
-    _kirocrew_dir="$(pwd)"
+    _ajcrew_dir="$(pwd)"
 fi
-cd "$_kirocrew_dir" || return 1
+cd "$_ajcrew_dir" || return 1
 
 # ACP_NPM_PKG and acp_adapter_spec (the exact pinned version).
 # shellcheck source=scripts/lib/acp-adapter-pin.sh
-. "$_kirocrew_dir/scripts/lib/acp-adapter-pin.sh"
+. "$_ajcrew_dir/scripts/lib/acp-adapter-pin.sh"
 
-echo "👻 KiroCrew Setup"
+echo "👻 AjCrew Setup"
 echo ""
 
 # ── Ensure PATH includes common install locations ──
@@ -61,12 +61,12 @@ done
 _has_provisioner() {
     command -v mise >/dev/null 2>&1 || [ -x "$HOME/.local/bin/mise" ]
 }
-if [ -z "$_py" ] && [ -f "$_kirocrew_dir/ensure-python.sh" ] && _has_provisioner; then
+if [ -z "$_py" ] && [ -f "$_ajcrew_dir/ensure-python.sh" ] && _has_provisioner; then
     # Runs from a clone, so the repo's own bootstrap is available: provision
     # 3.12 rather than stopping on a distro whose archive cannot supply it.
     echo "  → No system Python 3.12+; provisioning one via ensure-python.sh…"
-    bash "$_kirocrew_dir/ensure-python.sh" >/dev/null 2>&1 || true
-    _recorded="$(cat "${KIROCREW_HOME:-$HOME/.kiro/crew}/python-bin" 2>/dev/null || true)"
+    bash "$_ajcrew_dir/ensure-python.sh" >/dev/null 2>&1 || true
+    _recorded="$(cat "${AJCREW_HOME:-$HOME/.kiro/crew}/python-bin" 2>/dev/null || true)"
     if [ -n "$_recorded" ] && [ -x "$_recorded" ] \
         && "$_recorded" -c "import sys; assert sys.version_info >= (3,12)" 2>/dev/null; then
         _py="$_recorded"
@@ -88,8 +88,8 @@ echo ""
 echo "── Step 2: Dependencies ──"
 
 # Node.js (>= 22.12 required for the website build; 24 LTS recommended)
-if [ -x "$_kirocrew_dir/ensure-node.sh" ]; then
-    bash "$_kirocrew_dir/ensure-node.sh"
+if [ -x "$_ajcrew_dir/ensure-node.sh" ]; then
+    bash "$_ajcrew_dir/ensure-node.sh"
     # Re-source managers so newly-installed node lands on PATH
     export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
     [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
@@ -102,10 +102,10 @@ if [ -x "$_kirocrew_dir/ensure-node.sh" ]; then
     # Linux 2, whose glibc 2.26 cannot load the official builds -- ensure-node.sh
     # installs a private toolchain that neither nvm nor mise owns, so the
     # re-sourcing above cannot surface it. It records the directory it settled on;
-    # consume that marker the way the Makefile and kiro_crew.env.node_bin_dirs()
+    # consume that marker the way the Makefile and aj_crew.env.node_bin_dirs()
     # already do. Without this the checks below miss the node just installed and
     # the frontend build plus the agent-backend install are skipped.
-    _nbd="$(cat "${KIROCREW_HOME:-$HOME/.kiro/crew}/node-bin-dir" 2>/dev/null || true)"
+    _nbd="$(cat "${AJCREW_HOME:-$HOME/.kiro/crew}/node-bin-dir" 2>/dev/null || true)"
     if [ -n "$_nbd" ] && [ -x "$_nbd/node" ]; then
         export PATH="$_nbd:$PATH"
     fi
@@ -163,7 +163,7 @@ echo "── Step 3: Agent Backends ──"
 if _check claude-agent-acp; then
     echo "  ✅ claude-agent-acp ($(which claude-agent-acp))"
 elif _check npm; then
-    if ! ACP_NPM_SPEC="$(acp_adapter_spec "$_kirocrew_dir")"; then
+    if ! ACP_NPM_SPEC="$(acp_adapter_spec "$_ajcrew_dir")"; then
         echo "  ⚠️  Could not read the pinned $ACP_NPM_PKG version (packaging/acp-adapters/package.json) — skipping"
     else
         echo "  → Installing $ACP_NPM_SPEC via npm..."
@@ -191,20 +191,20 @@ echo ""
 
 echo "── Step 4: Build ──"
 
-# Frontend: vite emits to website/dist; stage into src/kiro_crew/static/dist
-if _check node && [ -d "$_kirocrew_dir/website" ]; then
+# Frontend: vite emits to website/dist; stage into src/aj_crew/static/dist
+if _check node && [ -d "$_ajcrew_dir/website" ]; then
     echo "→ Building frontend (website/)..."
-    if (cd "$_kirocrew_dir/website" \
+    if (cd "$_ajcrew_dir/website" \
             && { [ -f package-lock.json ] && npm ci --no-audit --no-fund --loglevel=error \
                  || npm install --no-audit --no-fund --loglevel=error; } \
             && npm run build); then
-        _dist_src="$_kirocrew_dir/website/dist"
-        _dist_dst="$_kirocrew_dir/src/kiro_crew/static/dist"
+        _dist_src="$_ajcrew_dir/website/dist"
+        _dist_dst="$_ajcrew_dir/src/aj_crew/static/dist"
         if [ -d "$_dist_src" ]; then
             rm -rf "$_dist_dst"
             mkdir -p "$(dirname "$_dist_dst")"
             cp -R "$_dist_src" "$_dist_dst"
-            echo "  ✅ Frontend built and staged → src/kiro_crew/static/dist"
+            echo "  ✅ Frontend built and staged → src/aj_crew/static/dist"
         else
             echo "  ⚠️  website/dist not found after build — dashboard will use legacy fallback"
         fi
@@ -216,9 +216,9 @@ else
 fi
 
 # Backend: venv + pip install -e .
-_venv="$_kirocrew_dir/.venv"
-# Build the venv under a umask that masks group/other WRITE so bin/kirocrew
-# and its dirs are born non-group-writable -- `kirocrew service install`
+_venv="$_ajcrew_dir/.venv"
+# Build the venv under a umask that masks group/other WRITE so bin/ajcrew
+# and its dirs are born non-group-writable -- `ajcrew service install`
 # refuses to attach its AppArmor profile to a group/world-writable launcher
 # (see the matching block in cli.sh for the full rationale). OR-ing with 022
 # only ADDS write-mask bits, so a stricter caller umask is preserved.
@@ -248,12 +248,12 @@ if [ ! -d "$_venv" ] || [ ! -x "$_venv/bin/python" ] \
         return 1 2>/dev/null || exit 1
     }
 fi
-echo "→ Installing kirocrew (pip)..."
+echo "→ Installing ajcrew (pip)..."
 "$_venv/bin/pip" install --upgrade pip setuptools wheel -q 2>/dev/null || true
-if KIROCREW_SKIP_FRONTEND=1 "$_venv/bin/pip" install -e "$_kirocrew_dir" -q; then
+if AJCREW_SKIP_FRONTEND=1 "$_venv/bin/pip" install -e "$_ajcrew_dir" -q; then
     echo "  ✅ Build succeeded"
     # Record install method for tooling that branches on it
-    echo "pip" > "$_kirocrew_dir/.install-method"
+    echo "pip" > "$_ajcrew_dir/.install-method"
     umask "$_KC_PREV_UMASK"
 else
     echo "  ❌ pip install failed"
@@ -261,13 +261,13 @@ else
     cd - > /dev/null 2>&1
     return 1 2>/dev/null || exit 1
 fi
-# Symlink CLI so `kirocrew` works on PATH
+# Symlink CLI so `ajcrew` works on PATH
 mkdir -p "$HOME/.local/bin"
-ln -sf "$_venv/bin/kirocrew" "$HOME/.local/bin/kirocrew"
-if _check kirocrew; then
-    echo "  ✅ kirocrew command available ($(which kirocrew))"
+ln -sf "$_venv/bin/ajcrew" "$HOME/.local/bin/ajcrew"
+if _check ajcrew; then
+    echo "  ✅ ajcrew command available ($(which ajcrew))"
 else
-    echo "  ✅ kirocrew symlinked → ~/.local/bin/kirocrew (restart shell or fix PATH in Step 5)"
+    echo "  ✅ ajcrew symlinked → ~/.local/bin/ajcrew (restart shell or fix PATH in Step 5)"
 fi
 echo ""
 
@@ -286,9 +286,9 @@ _add_to_rc() {
         echo "  ✅ Already in $_rc"
         return
     fi
-    # Remove any old KiroCrew PATH entry and replace with current
-    if grep -qF "KiroCrew" "$_rc" 2>/dev/null; then
-        sed -i.bak '/# KiroCrew/d;/KiroCrew.*bin/d;/\.local\/bin/d' "$_rc"
+    # Remove any old AjCrew PATH entry and replace with current
+    if grep -qF "AjCrew" "$_rc" 2>/dev/null; then
+        sed -i.bak '/# AjCrew/d;/AjCrew.*bin/d;/\.local\/bin/d' "$_rc"
         rm -f "${_rc}.bak"
     fi
     printf "→ Add ~/.local/bin to PATH permanently in %s? [Y/n] " "$_rc"
@@ -296,7 +296,7 @@ _add_to_rc() {
     case "${_answer:-Y}" in
         [Yy]*)
             echo "" >> "$_rc"
-            echo "# KiroCrew" >> "$_rc"
+            echo "# AjCrew" >> "$_rc"
             echo "$_path_line" >> "$_rc"
             echo "  ✅ Added to $_rc"
             ;;
@@ -311,15 +311,15 @@ echo ""
 
 echo "── Step 6: Agent Config ──"
 echo "→ Installing agent config..."
-KIROCREW_PROJECT_DIR="$_kirocrew_dir" kirocrew setup --agent-only \
-    || echo "  ⚠️  kirocrew setup --agent-only failed (run manually later)"
+AJCREW_PROJECT_DIR="$_ajcrew_dir" ajcrew setup --agent-only \
+    || echo "  ⚠️  ajcrew setup --agent-only failed (run manually later)"
 
 echo ""
 echo "👻 Setup complete!"
 echo ""
-echo "  kirocrew doctor     # verify everything"
-echo "  kirocrew gateway    # start dashboard + gateway"
-echo "  kirocrew chat       # interactive chat"
+echo "  ajcrew doctor     # verify everything"
+echo "  ajcrew gateway    # start dashboard + gateway"
+echo "  ajcrew chat       # interactive chat"
 echo ""
 echo "  Optional — local vector memory (embeddings):"
 echo "    Install ollama (https://ollama.com), then: ollama pull qwen3-embedding:0.6b"

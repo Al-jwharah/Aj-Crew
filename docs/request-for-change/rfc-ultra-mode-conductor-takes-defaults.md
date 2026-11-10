@@ -1,7 +1,7 @@
 ---
 title: The Ultra Mode conductor takes stated defaults instead of asking
 status: accepted
-author: kirocrew agent session, directed by iamwhatever
+author: ajcrew agent session, directed by iamwhatever
 created: 2026-11-06
 last-audited: 2026-11-06
 audited-at: 0984ba735f
@@ -34,8 +34,8 @@ notice) is untouched.
 
 ## 1. Problem
 
-Ultra Mode runs a chat on `kirocrew-team-lead` (`DEFAULT_CREW_MODE_AGENT` in
-`src/kiro_crew/crew_mode.py`), which follows the `goal-conductor` skill
+Ultra Mode runs a chat on `ajcrew-team-lead` (`DEFAULT_CREW_MODE_AGENT` in
+`src/aj_crew/crew_mode.py`), which follows the `goal-conductor` skill
 unchanged. An audit of every place that procedure stops for the person found
 five `ask_question` steps where a clear default exists, plus a milestone rule
 that invites `[OPTIONS: ...]` choices in every report. An unattended goal then
@@ -67,7 +67,7 @@ only when a default cannot settle the choice.
   patrol can hold, arm with that, and tell the person. The script itself still
   never raises a runtime.
 - **#10 exit 30.** Below the 7-day ceiling, carry on:
-  `_extend_for_open_ledger` in `src/kiro_crew/autonudge_service/firing.py`
+  `_extend_for_open_ledger` in `src/aj_crew/autonudge_service/firing.py`
   already raises a spent `max_cycles` or `max_runtime_secs` on a
   `watch="work-ledger"` loop while ledger items are open, up to
   `monitoring.max_runtime_secs` (604,800 s as shipped). At that ceiling the
@@ -82,7 +82,7 @@ only when a default cannot settle the choice.
   amends the concurrency-cap RFC's "or ask the user to raise
   `concurrency_cap`".
 - **#16 and an agent-prompt rule.** One short section, carried by both the
-  `kirocrew-conductor` and the `kirocrew-team-lead` agent prompts: act on a
+  `ajcrew-conductor` and the `ajcrew-team-lead` agent prompts: act on a
   clear recommendation and report; ask only for credentials or a permission
   only the person can grant, spend, an irreversible step or deleting or
   overwriting someone else's work, a costly preference that cannot be inferred,

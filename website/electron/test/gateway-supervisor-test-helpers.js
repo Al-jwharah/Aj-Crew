@@ -121,7 +121,7 @@ function harness(overrides = {}) {
   const processRef = overrides.processRef || {
     platform: "test",
     arch: "x64",
-    env: { KIROCREW_HOME: "/virtual/kirocrew-home" },
+    env: { AJCREW_HOME: "/virtual/ajcrew-home" },
     resourcesPath: "/virtual/resources",
     kill() { throw new Error("process kill must not run in this harness"); },
   };
@@ -156,7 +156,7 @@ function harness(overrides = {}) {
     ipcMain: { on: () => {}, removeListener: () => {} },
     port,
     backendUrl: overrides.backendUrl || `http://localhost:${port}`,
-    home: "/virtual/kirocrew-home",
+    home: "/virtual/ajcrew-home",
     getMainWindow: () => mainWindow,
     isQuitting: overrides.isQuitting || (() => false),
     requestQuit: overrides.requestQuit || (() => {}),
@@ -207,7 +207,7 @@ function harness(overrides = {}) {
   return { supervisor, store, logs, warnings, errors, spawnCalls, fsMod };
 }
 
-const APP_EXEC_PATH = "/virtual/Applications/KiroCrew.app/Contents/MacOS/KiroCrew";
+const APP_EXEC_PATH = "/virtual/Applications/AjCrew.app/Contents/MacOS/AjCrew";
 const APP_ARGV = [APP_EXEC_PATH, "--some-flag"];
 
 // The successor spawn the supervisor issues when it decides to restart the app.
@@ -237,7 +237,7 @@ function ownerProbe(command, { listening = true, ppid = 500 } = {}) {
 // A bare selector, which is how classifyPortOwner recognises our own gateway
 // without an absolute-path install to bind against. The trust rule itself is
 // unchanged and exercised by gateway-stop's own suite.
-const OWN_GATEWAY_COMMAND = "kirocrew gateway --port 5476";
+const OWN_GATEWAY_COMMAND = "ajcrew gateway --port 5476";
 const FOREIGN_COMMAND = "ssh -L 5476:localhost:5476 build-host";
 
 const INSTALLING_PROBE_MS = 5000;

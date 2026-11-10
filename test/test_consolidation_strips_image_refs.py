@@ -5,7 +5,7 @@ image block. A consolidation prompt is built from transcript rows, and a row
 that pasted a screenshot names that file by absolute path, so an unstripped
 prompt carried one full-size attachment per screenshot the session ever took
 (83 of them, 67 MB, on one measured span). These tests pin the boundary where
-that reference is replaced: :func:`kiro_crew.history_consolidation._fmt_message`.
+that reference is replaced: :func:`aj_crew.history_consolidation._fmt_message`.
 """
 
 from __future__ import annotations
@@ -14,9 +14,9 @@ import base64
 
 import pytest
 
-from kiro_crew.acp.prompt_blocks import build_prompt_blocks
-from kiro_crew.history_consolidation import _fmt_message
-from kiro_crew.image_refs import STRIPPED_IMAGE_MARKER
+from aj_crew.acp.prompt_blocks import build_prompt_blocks
+from aj_crew.history_consolidation import _fmt_message
+from aj_crew.image_refs import STRIPPED_IMAGE_MARKER
 
 # A 1x1 PNG: enough bytes to pass the raster sniff so the builder would inline it.
 _PNG_1X1 = base64.b64decode(
@@ -95,7 +95,7 @@ class _RecordingProvider:
         self._reply = reply
 
     async def stream(self, message, *, allow_image=True):
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         self.allow_image.append(allow_image)
         yield LLMEvent(kind=EVENT_TEXT_CHUNK, text=self._reply)
@@ -106,8 +106,8 @@ def _consolidator_on(provider, monkeypatch):
     import contextlib
     from unittest.mock import MagicMock
 
-    from kiro_crew import history_consolidation
-    from kiro_crew.history import HistoryConsolidator
+    from aj_crew import history_consolidation
+    from aj_crew.history import HistoryConsolidator
 
     @contextlib.asynccontextmanager
     async def _turn(*_a, **_kw):

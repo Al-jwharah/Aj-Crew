@@ -9,9 +9,9 @@ import { renderWithProviders } from './helpers'
  * branding, so a save refetches branding as well.
  */
 
-const { patchConfigMock, kirocrewConfigMock } = vi.hoisted(() => ({
+const { patchConfigMock, ajcrewConfigMock } = vi.hoisted(() => ({
   patchConfigMock: vi.fn((_path: string, _value: unknown) => Promise.resolve({})),
-  kirocrewConfigMock: vi.fn(() => Promise.resolve({})),
+  ajcrewConfigMock: vi.fn(() => Promise.resolve({})),
 }))
 
 vi.mock('../api/client', () => {
@@ -27,7 +27,7 @@ vi.mock('../api/client', () => {
   }
   return {
     api: {
-      kirocrewConfig: kirocrewConfigMock,
+      ajcrewConfig: ajcrewConfigMock,
       patchConfig: patchConfigMock,
       installTheme: vi.fn(() => Promise.resolve({ ok: true })),
     },
@@ -91,7 +91,7 @@ describe('DisplayPanel → Remote editor', () => {
   beforeEach(() => {
     patchConfigMock.mockReset()
     patchConfigMock.mockImplementation(() => Promise.resolve({}))
-    kirocrewConfigMock.mockImplementation(() => Promise.resolve({ dashboard: { remote_editor: { editor: '', host: '' } } }))
+    ajcrewConfigMock.mockImplementation(() => Promise.resolve({ dashboard: { remote_editor: { editor: '', host: '' } } }))
   })
 
   it('saves the picked editor and refetches branding for the menus', async () => {

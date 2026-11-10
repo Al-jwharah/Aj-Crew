@@ -69,7 +69,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  Reflect.deleteProperty(window, 'kirocrew')
+  Reflect.deleteProperty(window, 'ajcrew')
   Reflect.deleteProperty(window, 'folderPickAPI')
 })
 
@@ -77,7 +77,7 @@ afterEach(() => {
  *  gateway runs on this machine. */
 function desktopShell(pathFor: (f: File) => string, sameHost: boolean) {
   Object.assign(window, {
-    kirocrew: { getPathForFile: pathFor },
+    ajcrew: { getPathForFile: pathFor },
     folderPickAPI: { available: () => Promise.resolve(sameHost), pick: () => Promise.resolve(null) },
   })
 }
@@ -188,7 +188,7 @@ describe('Add Source — files and folders without a switch (#26892)', () => {
   it('a same-host answer that arrives after a drop never overwrites the path field', async () => {
     let answer: (v: boolean) => void = () => {}
     Object.assign(window, {
-      kirocrew: { getPathForFile: () => '/home/u/notes' },
+      ajcrew: { getPathForFile: () => '/home/u/notes' },
       folderPickAPI: { available: () => new Promise<boolean>(res => { answer = res }), pick: () => Promise.resolve(null) },
     })
     await openAdd()

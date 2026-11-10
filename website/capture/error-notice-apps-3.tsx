@@ -35,7 +35,7 @@ import '../src/index.css'
 
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const DISPATCH_ERROR = 'HTTP 502: provider poll timed out after 30s'
 const CLAIM_ERROR = 'HTTP 409: INV-42 is already claimed by another instance'

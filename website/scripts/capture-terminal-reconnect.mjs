@@ -45,15 +45,15 @@ const FIXTURES = {
   '/api/notifications': { notifications: [], unread: 0 },
   '/api/auth/me': { user: 'owner', app: '' },
   '/api/themes': { themes: [], installed: [] },
-  '/api/dashboard/branding': { bot_name: 'Kiro Crew', avatar: '/logo.png' },
+  '/api/dashboard/branding': { bot_name: 'Aj Crew', avatar: '/logo.png' },
   '/api/recent-projects': { dirs: [] },
   '/api/agents': {
-    agents: [{ name: 'kirocrew', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default' }],
-    default_agent: 'kirocrew',
+    agents: [{ name: 'ajcrew', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default' }],
+    default_agent: 'ajcrew',
   },
-  '/api/agents/installed': [{ name: 'kirocrew' }],
+  '/api/agents/installed': [{ name: 'ajcrew' }],
   '/api/workspaces': { workspaces: [{ name: 'default' }] },
-  '/api/chat/agents': [{ name: 'kirocrew', source: 'builtin' }],
+  '/api/chat/agents': [{ name: 'ajcrew', source: 'builtin' }],
   '/api/kiro-prerequisite': {
     platform: 'linux', installed: true, authenticated: true, ready: true,
     initial_setup_complete: true, can_auto_install: false, can_login: false,
@@ -87,7 +87,7 @@ async function stubContext(context, theme, opts = {}) {
   await context.route('**/api/**', async route => {
     const path = new URL(route.request().url()).pathname
     if (path === '/api/chat/slots' && route.request().method() === 'POST') {
-      return json(route, { key: 'fixture-chat', title: 'New Session…', agent: 'kirocrew' })
+      return json(route, { key: 'fixture-chat', title: 'New Session…', agent: 'ajcrew' })
     }
     if (path === '/api/theme/boot') return json(route, { mode: theme, theme: '' })
     if (Object.hasOwn(FIXTURES, path)) return json(route, FIXTURES[path])

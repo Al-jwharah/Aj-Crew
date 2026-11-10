@@ -27,15 +27,15 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import cli_chat
-from kiro_crew.acp._dispatch import (
+from aj_crew import cli_chat
+from aj_crew.acp._dispatch import (
     ToolCallIdentity,
     _build_tool_call_event,
     build_permission_event,
     classify_tool_call,
     parse_session_update,
 )
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_PERMISSION_REQUEST,
     EVENT_TOOL_CALL,
     EVENT_TOOL_CALL_UPDATE,
@@ -43,9 +43,9 @@ from kiro_crew.acp.types import (
     AcpPromptStats,
     JsonRpcMessage,
 )
-from kiro_crew.hooks import TOOL_DENY, HookManager
+from aj_crew.hooks import TOOL_DENY, HookManager
 
-SERVER = "kirocrew-core"
+SERVER = "ajcrew-core"
 TOOL = "spawn_run"
 
 
@@ -346,7 +346,7 @@ class TestPermissionPathCodex:
     def test_dashboard_gate_no_longer_denies_by_default(self) -> None:
         """End to end through ``HookManager.on_tool_call`` exactly as the dashboard
         runner calls it: a codex MCP write tool is not refused for lacking a
-        shell command. It is not auto-approved either -- ``kirocrew-core`` is no
+        shell command. It is not auto-approved either -- ``ajcrew-core`` is no
         app-owned server here -- so the call reaches the human prompt."""
         event = _permission_after_tool_call(_codex_mcp_update("c4"))
         result = HookManager().on_tool_call(
@@ -432,7 +432,7 @@ class TestCliChatUnverifiableShell:
 
 
 def _bare_client():
-    from kiro_crew.acp.client import AcpClient
+    from aj_crew.acp.client import AcpClient
 
     client = AcpClient.__new__(AcpClient)  # avoid spawning a real process
     client._tool_call_inputs = {}

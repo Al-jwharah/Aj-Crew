@@ -18,10 +18,10 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from test_crew_oauth_mvp import _post, _proxy_app, proxy_env  # noqa: F401 -- fixture
 
-from kiro_crew.acp import _dispatch as d
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.acp import _dispatch as d
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_COPILOT,
@@ -32,8 +32,8 @@ from kiro_crew.agent_sdk.backends import (
     ACP_BACKEND_STRANDS,
     ACP_BACKENDS_CREW_OAUTH_BRIDGE,
 )
-from kiro_crew.connections import crew_oauth, crew_oauth_proxy
-from kiro_crew.kas_env_shim import SHIM_MODULE
+from aj_crew.connections import crew_oauth, crew_oauth_proxy
+from aj_crew.kas_env_shim import SHIM_MODULE
 
 FRAMES = Path(__file__).parent / "fixtures" / "acp_frames"
 GITHUB_URL = "https://api.githubcopilot.com/mcp/"
@@ -269,17 +269,17 @@ def _pi_client(monkeypatch, tmp_path, *, disabled=()) -> AcpClient:
         agent_spec={},
         allowlist=None,
     )
-    import kiro_crew.acp.session_mcp as session_mcp
+    import aj_crew.acp.session_mcp as session_mcp
 
     monkeypatch.setattr(session_mcp, "session_mcp_projection", lambda *a, **k: projection)
     monkeypatch.setattr(crew_oauth, "enabled", lambda: True)
     monkeypatch.setattr(crew_oauth, "_chat_backend", lambda: ACP_BACKEND_PI)
-    monkeypatch.setenv("KIROCREW_BOUND_PORT", "8123")
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_BOUND_PORT", "8123")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv("PI_CODING_AGENT_DIR", str(tmp_path / "pi-agent"))
     (tmp_path / "home").mkdir()
     (tmp_path / "work").mkdir()
-    client = AcpClient(work_dir=tmp_path / "work", agent="kirocrew", acp_backend=ACP_BACKEND_PI)
+    client = AcpClient(work_dir=tmp_path / "work", agent="ajcrew", acp_backend=ACP_BACKEND_PI)
     client._session_key = SESSION
     return client
 
@@ -325,12 +325,12 @@ def test_strands_binds_the_gate_modules_mcp_owner_and_input(tmp_path):
 
 
 def test_a_bridge_snapshot_lives_in_its_own_leaf_and_the_shim_reads_it(tmp_path, monkeypatch):
-    from kiro_crew import kas_env_shim
-    from kiro_crew.acp import kas_env_launch
+    from aj_crew import kas_env_shim
+    from aj_crew.acp import kas_env_launch
 
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     entry = kas_env_launch.relay_crew_connection(
         {"url": GITHUB_URL},
         session_key=SESSION,
@@ -343,21 +343,21 @@ def test_a_bridge_snapshot_lives_in_its_own_leaf_and_the_shim_reads_it(tmp_path,
     assert (home / kas_env_shim.BRIDGE_LEAF / name).is_file()
     assert not (home / kas_env_shim.SNAPSHOT_LEAF).exists()
     args = entry["args"][entry["args"].index("--session") :]
-    server, doc, _env = kas_env_shim._resolve_snapshot(args, {"KIROCREW_HOME": str(home)})
+    server, doc, _env = kas_env_shim._resolve_snapshot(args, {"AJCREW_HOME": str(home)})
     assert server == "github" and doc["connection"] == "github"
     # Only a Connection may come out of this leaf: anything else is refused.
     path = home / kas_env_shim.BRIDGE_LEAF / name
     forged = {k: v for k, v in doc.items() if k != "connection"} | {"command": "x", "args": []}
     path.write_text(json.dumps(forged), encoding="utf-8")
     with pytest.raises(SystemExit):
-        kas_env_shim._resolve_snapshot(args, {"KIROCREW_HOME": str(home)})
+        kas_env_shim._resolve_snapshot(args, {"AJCREW_HOME": str(home)})
     kas_env_launch.discard_batch([], [name])
     assert not path.exists() and not crew_oauth_proxy._bridges
 
 
 def test_an_enforced_child_reads_the_bridge_leaf_and_never_kas_mcp_launch(tmp_path, monkeypatch):
-    from kiro_crew import sandbox
-    from kiro_crew.agent_sdk import tool_gate
+    from aj_crew import sandbox
+    from aj_crew.agent_sdk import tool_gate
 
     assert "crew-oauth-bridge" in sandbox.crew_host_runtime_leaves()
     assert "kas-mcp-launch" not in sandbox.crew_host_runtime_leaves()
@@ -381,16 +381,16 @@ def test_an_enforced_child_reads_the_bridge_leaf_and_never_kas_mcp_launch(tmp_pa
 
 def test_only_the_exact_bridge_launch_gets_an_agent_socket_pickup(monkeypatch, tmp_path):
     """The mask hides ``.local_secret`` and ``run/`` from an enforced child, so the
-    bridge gets the pickup ``kirocrew-core`` gets; an unregistered shim does not."""
-    from kiro_crew.acp import ipc_pickup, kas_env_launch
-    from kiro_crew.acp.session_mcp import acp_server_element
-    from kiro_crew.agent_ipc_wire import BRIDGE_PICKUP_PREFIX, GATEWAY_PID_ENV, PICKUP_ENV
-    from kiro_crew.dashboard import agent_ipc
+    bridge gets the pickup ``ajcrew-core`` gets; an unregistered shim does not."""
+    from aj_crew.acp import ipc_pickup, kas_env_launch
+    from aj_crew.acp.session_mcp import acp_server_element
+    from aj_crew.agent_ipc_wire import BRIDGE_PICKUP_PREFIX, GATEWAY_PID_ENV, PICKUP_ENV
+    from aj_crew.dashboard import agent_ipc
 
     store = agent_ipc.CapabilityStore()
     monkeypatch.setattr(agent_ipc, "STORE", store)
     monkeypatch.setattr(agent_ipc, "agent_socket_bound", lambda: True)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     entry = kas_env_launch.relay_crew_connection(
         {"url": GITHUB_URL},
         session_key=SESSION,
@@ -424,8 +424,8 @@ def test_only_the_exact_bridge_launch_gets_an_agent_socket_pickup(monkeypatch, t
 
 
 def test_a_bridge_holding_a_pickup_sends_no_internal_secret(monkeypatch):
-    from kiro_crew import agent_ipc_client, kas_connection_bridge
-    from kiro_crew.config import loader_locations
+    from aj_crew import agent_ipc_client, kas_connection_bridge
+    from aj_crew.config import loader_locations
 
     agent_ipc_client._reset_for_tests()
     monkeypatch.setattr(agent_ipc_client, "take_pickup", lambda: True)
@@ -445,7 +445,7 @@ def test_a_bridge_holding_a_pickup_sends_no_internal_secret(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_a_capability_for_another_session_is_refused(proxy_env):  # noqa: F811
-    from kiro_crew.dashboard import agent_ipc
+    from aj_crew.dashboard import agent_ipc
 
     @web.middleware
     async def _grant(request, handler):

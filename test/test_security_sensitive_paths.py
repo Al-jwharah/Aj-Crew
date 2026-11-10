@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.security: ``is_sensitive_path`` and the home-directory target cache.
+"""Tests for aj_crew.security: ``is_sensitive_path`` and the home-directory target cache.
 
 The path fence over credential stores and keystone leaves, then the TTL cache in front of the
 home-target rebuild and the adaptive expiry that tracks what each rebuild cost.
@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.security import is_sensitive_path
+from aj_crew.security import is_sensitive_path
 
 
 class TestIsSensitivePath:
@@ -30,11 +30,11 @@ class TestIsSensitivePath:
     def test_gnupg(self) -> None:
         assert is_sensitive_path("~/.gnupg/private-keys-v1.d") is True
 
-    def test_kirocrew_env(self) -> None:
-        # The data home moved to ~/.kiro/crew; the legacy ~/.kirocrew stays gated
+    def test_ajcrew_env(self) -> None:
+        # The data home moved to ~/.kiro/crew; the legacy ~/.ajcrew stays gated
         # (migration leaves a rollback copy that still holds real secret bytes).
         assert is_sensitive_path("~/.kiro/crew/.env") is True
-        assert is_sensitive_path("~/.kirocrew/.env") is True
+        assert is_sensitive_path("~/.ajcrew/.env") is True
 
     def test_browser_auth_cookie_paths(self) -> None:
         # The browser-auth cookie jar + the Playwright storage-state derived from
@@ -47,8 +47,8 @@ class TestIsSensitivePath:
         assert is_sensitive_path(f"{home}/.kiro/crew/browser-cookies.txt") is True
         assert is_sensitive_path(f"{home}/.kiro/crew/playwright-storage-state.json") is True
         # Legacy pre-move home is still gated.
-        assert is_sensitive_path("~/.kirocrew/browser-cookies.txt") is True
-        assert is_sensitive_path(f"{home}/.kirocrew/playwright-storage-state.json") is True
+        assert is_sensitive_path("~/.ajcrew/browser-cookies.txt") is True
+        assert is_sensitive_path(f"{home}/.ajcrew/playwright-storage-state.json") is True
 
     def test_sel_hmac_key(self) -> None:
         # The SEL HMAC signing key is the trust root of
@@ -57,17 +57,17 @@ class TestIsSensitivePath:
         # The key lives at trust/sel_hmac.key (whole-dir gate); the bare leaf
         # covers pre-migration installs and stale post-restore leftovers.
         assert is_sensitive_path("~/.kiro/crew/sel_hmac.key") is True
-        assert is_sensitive_path("~/.kirocrew/sel_hmac.key") is True
+        assert is_sensitive_path("~/.ajcrew/sel_hmac.key") is True
         assert is_sensitive_path("~/.kiro/crew/trust") is True
         assert is_sensitive_path("~/.kiro/crew/trust/sel_hmac.key") is True
-        assert is_sensitive_path("~/.kirocrew/trust") is True
-        assert is_sensitive_path("~/.kirocrew/trust/sel_hmac.key") is True
+        assert is_sensitive_path("~/.ajcrew/trust") is True
+        assert is_sensitive_path("~/.ajcrew/trust/sel_hmac.key") is True
 
     def test_security_events_log(self) -> None:
         # The SEL audit log itself must not be
         # readable/rewritable by the audited agent (tamper of the evidence trail).
         assert is_sensitive_path("~/.kiro/crew/security_events.jsonl") is True
-        assert is_sensitive_path("~/.kirocrew/security_events.jsonl") is True
+        assert is_sensitive_path("~/.ajcrew/security_events.jsonl") is True
 
     def test_rotated_security_event_segments(self) -> None:
         # A rotated segment holds exactly the same audit records the live log
@@ -80,10 +80,10 @@ class TestIsSensitivePath:
             )
             is True
         )
-        assert is_sensitive_path("~/.kirocrew/security_events.d") is True
+        assert is_sensitive_path("~/.ajcrew/security_events.d") is True
         assert (
             is_sensitive_path(
-                "~/.kirocrew/security_events.d/security_events-000001-20260821T045139Z.jsonl"
+                "~/.ajcrew/security_events.d/security_events-000001-20260821T045139Z.jsonl"
             )
             is True
         )
@@ -93,9 +93,9 @@ class TestIsSensitivePath:
         assert is_sensitive_path(f"{home}/.kiro/crew/sel_hmac.key") is True
         assert is_sensitive_path(f"{home}/.kiro/crew/trust/sel_hmac.key") is True
         assert is_sensitive_path(f"{home}/.kiro/crew/security_events.jsonl") is True
-        assert is_sensitive_path(f"{home}/.kirocrew/sel_hmac.key") is True
-        assert is_sensitive_path(f"{home}/.kirocrew/trust/sel_hmac.key") is True
-        assert is_sensitive_path(f"{home}/.kirocrew/security_events.jsonl") is True
+        assert is_sensitive_path(f"{home}/.ajcrew/sel_hmac.key") is True
+        assert is_sensitive_path(f"{home}/.ajcrew/trust/sel_hmac.key") is True
+        assert is_sensitive_path(f"{home}/.ajcrew/security_events.jsonl") is True
 
     def test_app_admission_policy(self) -> None:
         # Keystone invariant: app_admission.json is the sole fleet-controlled
@@ -105,7 +105,7 @@ class TestIsSensitivePath:
         home = str(Path.home())
         assert is_sensitive_path("~/.kiro/crew/app_admission.json") is True
         assert is_sensitive_path(f"{home}/.kiro/crew/app_admission.json") is True
-        assert is_sensitive_path("~/.kirocrew/app_admission.json") is True
+        assert is_sensitive_path("~/.ajcrew/app_admission.json") is True
 
     def test_token_signing_key(self) -> None:
         # token_signing.key (dashboard/token_secret.py) signs every
@@ -113,24 +113,24 @@ class TestIsSensitivePath:
         # forge auth tokens for itself, so it must be read-blocked like the SEL
         # HMAC key above.
         assert is_sensitive_path("~/.kiro/crew/token_signing.key") is True
-        assert is_sensitive_path("~/.kirocrew/token_signing.key") is True
+        assert is_sensitive_path("~/.ajcrew/token_signing.key") is True
 
     def test_refresh_chains_json(self) -> None:
         # refresh_chains.json (dashboard/refresh_tokens.py) stores
         # refresh-token chain state for minting new access tokens.
         assert is_sensitive_path("~/.kiro/crew/refresh_chains.json") is True
-        assert is_sensitive_path("~/.kirocrew/refresh_chains.json") is True
+        assert is_sensitive_path("~/.ajcrew/refresh_chains.json") is True
 
     def test_local_secret(self) -> None:
         # .local_secret is the shared internal-auth secret used, in turn, to
         # authenticate MCP/cron/hook callbacks back into the gateway
         # (mcp_core.py, cron_script_child_env.py, mcp_shared_policy.py, etc.).
         assert is_sensitive_path("~/.kiro/crew/.local_secret") is True
-        assert is_sensitive_path("~/.kirocrew/.local_secret") is True
+        assert is_sensitive_path("~/.ajcrew/.local_secret") is True
 
     def test_kiro_cli_binary_attestation(self) -> None:
         assert is_sensitive_path("~/.kiro/crew/.kiro_cli_binary_trust.json") is True
-        assert is_sensitive_path("~/.kirocrew/.kiro_cli_binary_trust.json") is True
+        assert is_sensitive_path("~/.ajcrew/.kiro_cli_binary_trust.json") is True
 
     def test_kiro_auth_staging_parent(self) -> None:
         assert is_sensitive_path("~/.kiro/crew-auth-staging") is True
@@ -141,17 +141,17 @@ class TestIsSensitivePath:
         assert is_sensitive_path(f"{home}/.kiro/crew/token_signing.key") is True
         assert is_sensitive_path(f"{home}/.kiro/crew/refresh_chains.json") is True
         assert is_sensitive_path(f"{home}/.kiro/crew/.local_secret") is True
-        assert is_sensitive_path(f"{home}/.kirocrew/token_signing.key") is True
-        assert is_sensitive_path(f"{home}/.kirocrew/refresh_chains.json") is True
-        assert is_sensitive_path(f"{home}/.kirocrew/.local_secret") is True
+        assert is_sensitive_path(f"{home}/.ajcrew/token_signing.key") is True
+        assert is_sensitive_path(f"{home}/.ajcrew/refresh_chains.json") is True
+        assert is_sensitive_path(f"{home}/.ajcrew/.local_secret") is True
 
     def test_non_sel_crew_file_not_blocked(self) -> None:
         # Regression guard: the SEL additions must not over-block routine
         # crew-home reads (config.json, sessions.db) that operators/tools need.
         assert is_sensitive_path("~/.kiro/crew/config.json") is False
         assert is_sensitive_path("~/.kiro/crew/sessions.db") is False
-        assert is_sensitive_path("~/.kirocrew/config.json") is False
-        assert is_sensitive_path("~/.kirocrew/sessions.db") is False
+        assert is_sensitive_path("~/.ajcrew/config.json") is False
+        assert is_sensitive_path("~/.ajcrew/sessions.db") is False
 
     def test_safe_path(self) -> None:
         assert is_sensitive_path("~/Documents/code/main.py") is False
@@ -242,7 +242,7 @@ class TestHomeDirTargetsCache:
 
     @staticmethod
     def _clear() -> None:
-        from kiro_crew import security
+        from aj_crew import security
 
         security._home_targets_cache.clear()
         # Clear any recorded stall so a PathResolutionStalled from one test
@@ -251,7 +251,7 @@ class TestHomeDirTargetsCache:
 
     def test_cached_result_matches_uncached(self, monkeypatch, tmp_path) -> None:
         """Caching must not change WHAT is considered sensitive."""
-        from kiro_crew.security import (
+        from aj_crew.security import (
             _SENSITIVE_HOME_DIRS,
             _home_dir_targets,
             _home_dir_targets_uncached,
@@ -285,7 +285,7 @@ class TestHomeDirTargetsCache:
         failing the final assertion instead of degrading back into a timing
         race.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         monkeypatch.setenv("HOME", str(tmp_path))
         self._clear()
@@ -299,7 +299,7 @@ class TestHomeDirTargetsCache:
         monkeypatch.setattr(security, "_home_dir_targets_uncached", counting)
         clock = {"now": 1000.0}
         # flake-ok: pre-existing frozen stdlib monotonic scoped to this test by monkeypatch; moved verbatim and tracked for a de-flake pass
-        # nosemgrep: kirocrew.test-stdlib-clock-rebound -- pre-existing frozen monotonic scoped to this test by monkeypatch and moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-stdlib-clock-rebound -- pre-existing frozen monotonic scoped to this test by monkeypatch and moved verbatim; tracked for a de-flake pass
         monkeypatch.setattr(security.time, "monotonic", lambda: clock["now"])
         for _ in range(50):
             security._home_dir_targets(security._SENSITIVE_HOME_DIRS)
@@ -314,15 +314,15 @@ class TestHomeDirTargetsCache:
         security._home_dir_targets(security._SENSITIVE_HOME_DIRS)
         assert len(calls) == 2
 
-    def test_kirocrew_home_change_is_not_deferred_by_ttl(self, monkeypatch, tmp_path) -> None:
-        """A changed KIROCREW_HOME must re-key immediately, not after the TTL.
+    def test_ajcrew_home_change_is_not_deferred_by_ttl(self, monkeypatch, tmp_path) -> None:
+        """A changed AJCREW_HOME must re-key immediately, not after the TTL.
 
         This is the security-relevant property: the keystone secrets live under
-        KIROCREW_HOME, so a stale target set built for the OLD home would stop
+        AJCREW_HOME, so a stale target set built for the OLD home would stop
         gating them. The resolved roots are part of the cache key precisely so
         this cannot wait out ``_HOME_TARGETS_TTL_SECS``.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         monkeypatch.setenv("HOME", str(tmp_path))
         home_a = tmp_path / "crew-a"
@@ -331,9 +331,9 @@ class TestHomeDirTargetsCache:
         home_b.mkdir()
         self._clear()
 
-        monkeypatch.setenv("KIROCREW_HOME", str(home_a))
+        monkeypatch.setenv("AJCREW_HOME", str(home_a))
         targets_a = set(security._home_dir_targets(security._SENSITIVE_HOME_DIRS))
-        monkeypatch.setenv("KIROCREW_HOME", str(home_b))
+        monkeypatch.setenv("AJCREW_HOME", str(home_b))
         targets_b = set(security._home_dir_targets(security._SENSITIVE_HOME_DIRS))
 
         # No sleep: the switch is visible on the very next call.
@@ -386,7 +386,7 @@ class TestHomeDirTargetsCache:
         that makes the race impossible: exactly one resolution per cache fill,
         and the builder receives those captured roots.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         monkeypatch.setenv("HOME", str(tmp_path))
         self._clear()
@@ -414,7 +414,7 @@ class TestHomeDirTargetsCache:
 
     def test_expired_entry_is_rebuilt(self, monkeypatch, tmp_path) -> None:
         """Past the TTL the set is rebuilt, so filesystem changes are picked up."""
-        from kiro_crew import security
+        from aj_crew import security
 
         monkeypatch.setenv("HOME", str(tmp_path))
         self._clear()
@@ -435,7 +435,7 @@ class TestHomeDirTargetsCache:
 
     def test_cache_dict_is_bounded(self, monkeypatch, tmp_path) -> None:
         """Churning the env key must not grow the cache without limit."""
-        from kiro_crew import security
+        from aj_crew import security
 
         monkeypatch.setenv("HOME", str(tmp_path))
         self._clear()
@@ -453,7 +453,7 @@ class TestHomeDirTargetsCache:
 
         monkeypatch.setattr(security, "_home_dir_targets_uncached", _cheap_uncached)
         for i in range(200):
-            monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / f"h{i}"))
+            monkeypatch.setenv("AJCREW_HOME", str(tmp_path / f"h{i}"))
             security._home_dir_targets(security._SENSITIVE_HOME_DIRS)
         assert len(security._home_targets_cache) <= 33
 
@@ -482,14 +482,14 @@ class TestAdaptiveHomeTargetsExpiry:
 
     @staticmethod
     def _clear() -> None:
-        from kiro_crew import security
+        from aj_crew import security
 
         security._home_targets_cache.clear()
 
     @staticmethod
     def _timed_rebuild(monkeypatch, clock: dict[str, float], cost: float) -> list[int]:
         """Replace the builder with one that "costs" *cost* frozen seconds."""
-        from kiro_crew import security
+        from aj_crew import security
 
         calls: list[int] = []
         real = security._home_dir_targets_uncached
@@ -510,7 +510,7 @@ class TestAdaptiveHomeTargetsExpiry:
         shipped before the law existed. A ratio raised without moving the floor
         would change idle behaviour, and this catches that.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         idle_rebuild_secs = 0.002  # measured, see the class docstring
         assert security._home_targets_ttl(idle_rebuild_secs, resolution_differed=False) == (
@@ -523,7 +523,7 @@ class TestAdaptiveHomeTargetsExpiry:
 
     def test_the_expiry_scales_with_the_measured_cost(self) -> None:
         """Between the floor and the cap the expiry is cost times the ratio."""
-        from kiro_crew import security
+        from aj_crew import security
 
         cost = 0.4  # measured under two contending threads
         assert security._home_targets_ttl(cost, resolution_differed=False) == pytest.approx(
@@ -541,7 +541,7 @@ class TestAdaptiveHomeTargetsExpiry:
         Without it a rebuild that succeeded just under its 8s budget would earn
         minutes of staleness, which is the trade this cap exists to bound.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         expensive = 7.5  # measured under eight contending threads
         assert expensive * security._HOME_TARGETS_TTL_COST_RATIO > (
@@ -553,7 +553,7 @@ class TestAdaptiveHomeTargetsExpiry:
 
     def test_a_negative_or_zero_cost_yields_the_floor(self) -> None:
         """A coarse or frozen clock must not produce a zero-length expiry."""
-        from kiro_crew import security
+        from aj_crew import security
 
         assert security._home_targets_ttl(0.0, resolution_differed=False) == (
             security._HOME_TARGETS_TTL_SECS
@@ -567,11 +567,11 @@ class TestAdaptiveHomeTargetsExpiry:
 
         The law trades freshness for availability, so the revert has to be
         operator-reachable rather than a source edit. It is the SAME knob as the
-        ratio itself (``KIROCREW_PATH_GATE_TTL_COST_RATIO=0``), because zero times
+        ratio itself (``AJCREW_PATH_GATE_TTL_COST_RATIO=0``), because zero times
         any cost clamps to the floor for every input -- so there is no second
         mechanism to keep in step with this one.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         assert security.paths._TTL_COST_RATIO_MIN == 0.0, "0 must be an accepted value"
         monkeypatch.setattr(security, "_HOME_TARGETS_TTL_COST_RATIO", 0.0)
@@ -587,13 +587,13 @@ class TestAdaptiveHomeTargetsExpiry:
         costing 0.4s was rebuilt again 0.1s later, so a contended gateway spent
         most of its wall clock rebuilding; here the same build is still served.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         monkeypatch.setenv("HOME", str(tmp_path))
         self._clear()
         clock = {"now": 1000.0}
         # flake-ok: pre-existing frozen stdlib monotonic scoped to this test by monkeypatch; moved verbatim and tracked for a de-flake pass
-        # nosemgrep: kirocrew.test-stdlib-clock-rebound -- pre-existing frozen monotonic scoped to this test by monkeypatch and moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-stdlib-clock-rebound -- pre-existing frozen monotonic scoped to this test by monkeypatch and moved verbatim; tracked for a de-flake pass
         monkeypatch.setattr(security.time, "monotonic", lambda: clock["now"])
         calls = self._timed_rebuild(monkeypatch, clock, cost=0.4)
 
@@ -623,14 +623,14 @@ class TestAdaptiveHomeTargetsExpiry:
         expiry shorter than the build, so the ordering is the only thing the
         assertion can be reading.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         monkeypatch.setenv("HOME", str(tmp_path))
         self._clear()
         monkeypatch.setattr(security, "_HOME_TARGETS_TTL_COST_RATIO", 0.5)
         clock = {"now": 1000.0}
         # flake-ok: pre-existing frozen stdlib monotonic scoped to this test by monkeypatch; moved verbatim and tracked for a de-flake pass
-        # nosemgrep: kirocrew.test-stdlib-clock-rebound -- pre-existing frozen monotonic scoped to this test by monkeypatch and moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-stdlib-clock-rebound -- pre-existing frozen monotonic scoped to this test by monkeypatch and moved verbatim; tracked for a de-flake pass
         monkeypatch.setattr(security.time, "monotonic", lambda: clock["now"])
         calls = self._timed_rebuild(monkeypatch, clock, cost=0.4)
 
@@ -651,7 +651,7 @@ class TestAdaptiveHomeTargetsExpiry:
         than a suggestion: without it an env var could widen the stale window
         above that test's guarantee, and nothing in the module would notice.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         monkeypatch.setenv(security._TTL_MAX_SECS_ENV, "99999")
         refused = security._env_float(
@@ -709,7 +709,7 @@ class TestAdaptiveHomeTargetsExpiry:
         moves, the documented number must move with it -- this derives it so the two
         cannot drift apart.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         budget = security.paths._PATH_RESOLVE_REBUILD_TIMEOUT_SECS
         grace = min(
@@ -733,7 +733,7 @@ class TestAdaptiveHomeTargetsExpiry:
         the shipped ratio and ceiling are the reviewed values, so a typo can only
         leave reviewed behaviour in place and never widen the stale window.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         for raw in ("", "   ", "abc", "-5", "1e9"):
             monkeypatch.setenv(security._TTL_COST_RATIO_ENV, raw)
@@ -759,7 +759,7 @@ class TestAdaptiveHomeTargetsExpiry:
         happens to set no override. The live values are checked against the
         defaults separately, and only when no override is present.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         idle_rebuild_secs = 0.002  # measured, see the class docstring
         assert (
@@ -794,7 +794,7 @@ class TestAdaptiveHomeTargetsExpiry:
         import pathlib
         import re
 
-        from kiro_crew.security import paths
+        from aj_crew.security import paths
 
         script = pathlib.Path(paths.__file__).parents[3] / "scripts" / "measure_path_gate_ttl.py"
         assert script.is_file(), f"the measurement script is missing at {script}"
@@ -802,7 +802,7 @@ class TestAdaptiveHomeTargetsExpiry:
         assert names, "found no gate.<private> references; the regex or the script moved"
         missing = [name for name in names if not hasattr(paths, name)]
         assert not missing, (
-            f"{script.name} reads {missing} from kiro_crew.security.paths, which no "
+            f"{script.name} reads {missing} from aj_crew.security.paths, which no "
             "longer exist; update the script in the same change as the rename"
         )
 
@@ -827,7 +827,7 @@ class TestAdaptiveHomeTargetsExpiry:
         large enough that a long expiry would be selected if the symlink were
         ignored, so this fails loudly if the fact stops reaching the law.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         crew_home = tmp_path / "crew"
         crew_home.mkdir()
@@ -844,12 +844,12 @@ class TestAdaptiveHomeTargetsExpiry:
         # Developer-Mode Windows runner therefore keeps the coverage.
         leaf.symlink_to(real_a)
         monkeypatch.setenv("HOME", str(tmp_path))
-        monkeypatch.setenv("KIROCREW_HOME", str(crew_home))
+        monkeypatch.setenv("AJCREW_HOME", str(crew_home))
         self._clear()
         monkeypatch.setattr(security, "_HOME_TARGETS_TTL_COST_RATIO", 1_000_000.0)
         clock = {"now": 1000.0}
         # flake-ok: pre-existing frozen stdlib monotonic scoped to this test by monkeypatch; moved verbatim and tracked for a de-flake pass
-        # nosemgrep: kirocrew.test-stdlib-clock-rebound -- pre-existing frozen monotonic scoped to this test by monkeypatch and moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-stdlib-clock-rebound -- pre-existing frozen monotonic scoped to this test by monkeypatch and moved verbatim; tracked for a de-flake pass
         monkeypatch.setattr(security.time, "monotonic", lambda: clock["now"])
         calls = self._timed_rebuild(monkeypatch, clock, cost=0.4)
 
@@ -888,7 +888,7 @@ class TestAdaptiveHomeTargetsExpiry:
 
         The population that can report a difference is the narrow one
         ``_BuiltTargets`` enumerates, not the built target set. This test's
-        environment sets ``KIROCREW_HOME`` here and inherits ``XDG_CONFIG_HOME``
+        environment sets ``AJCREW_HOME`` here and inherits ``XDG_CONFIG_HOME``
         from the root ``conftest``, but no declared credential leaf under either
         root is a symlink, so nothing reports a difference. Note what that does NOT
         say: a
@@ -897,16 +897,16 @@ class TestAdaptiveHomeTargetsExpiry:
         ``conftest`` that variable points at a tmp dir outside ``HOME``, so
         ``~/.config/goose`` is not the path any build resolves here.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         crew_home = tmp_path / "crew"
         crew_home.mkdir()
         monkeypatch.setenv("HOME", str(tmp_path))
-        monkeypatch.setenv("KIROCREW_HOME", str(crew_home))
+        monkeypatch.setenv("AJCREW_HOME", str(crew_home))
         self._clear()
         clock = {"now": 1000.0}
         # flake-ok: pre-existing frozen stdlib monotonic scoped to this test by monkeypatch; moved verbatim and tracked for a de-flake pass
-        # nosemgrep: kirocrew.test-stdlib-clock-rebound -- pre-existing frozen monotonic scoped to this test by monkeypatch and moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-stdlib-clock-rebound -- pre-existing frozen monotonic scoped to this test by monkeypatch and moved verbatim; tracked for a de-flake pass
         monkeypatch.setattr(security.time, "monotonic", lambda: clock["now"])
         calls = self._timed_rebuild(monkeypatch, clock, cost=0.4)
 
@@ -944,7 +944,7 @@ class TestAdaptiveHomeTargetsExpiry:
         than spelled out here, so adding a sensitive LEAF keeps this passing and
         adding a resolve CALL SITE fails it.
         """
-        from kiro_crew.security import paths as gate
+        from aj_crew.security import paths as gate
 
         crew_home = tmp_path / "crew"
         crew_home.mkdir()
@@ -953,9 +953,9 @@ class TestAdaptiveHomeTargetsExpiry:
         os_home = tmp_path / "oshome"
         os_home.mkdir()
         monkeypatch.setenv("HOME", str(tmp_path))
-        monkeypatch.setenv("KIROCREW_HOME", str(crew_home))
+        monkeypatch.setenv("AJCREW_HOME", str(crew_home))
         monkeypatch.setenv("KIRO_HOME", str(kiro_home))
-        monkeypatch.setenv("KIROCREW_OS_HOME", str(os_home))
+        monkeypatch.setenv("AJCREW_OS_HOME", str(os_home))
         # Set EVERY harness override root this test asserts on, rather than
         # inheriting one from an unrelated autouse fixture. The override-anchored
         # arm only contributes where its root is set, so leaving that to a fixture
@@ -1072,19 +1072,19 @@ class TestAdaptiveHomeTargetsExpiry:
         that is not a :class:`_BuiltTargets` at all. Either defaulting the other
         way would hand the long expiry to a build nobody vouched for.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         assert security._BuiltTargets({"x"}).resolution_differed is True
 
         crew_home = tmp_path / "crew"
         crew_home.mkdir()
         monkeypatch.setenv("HOME", str(tmp_path))
-        monkeypatch.setenv("KIROCREW_HOME", str(crew_home))
+        monkeypatch.setenv("AJCREW_HOME", str(crew_home))
         self._clear()
         monkeypatch.setattr(security, "_HOME_TARGETS_TTL_COST_RATIO", 1_000_000.0)
         clock = {"now": 1000.0}
         # flake-ok: pre-existing frozen stdlib monotonic scoped to this test by monkeypatch; moved verbatim and tracked for a de-flake pass
-        # nosemgrep: kirocrew.test-stdlib-clock-rebound -- pre-existing frozen monotonic scoped to this test by monkeypatch and moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-stdlib-clock-rebound -- pre-existing frozen monotonic scoped to this test by monkeypatch and moved verbatim; tracked for a de-flake pass
         monkeypatch.setattr(security.time, "monotonic", lambda: clock["now"])
 
         calls: list[int] = []
@@ -1113,17 +1113,17 @@ class TestAdaptiveHomeTargetsExpiry:
         double instead, so the pin runs everywhere: a build that says it traversed
         a symlink gets the floor even under a ratio that would ask for days.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         crew_home = tmp_path / "crew"
         crew_home.mkdir()
         monkeypatch.setenv("HOME", str(tmp_path))
-        monkeypatch.setenv("KIROCREW_HOME", str(crew_home))
+        monkeypatch.setenv("AJCREW_HOME", str(crew_home))
         self._clear()
         monkeypatch.setattr(security, "_HOME_TARGETS_TTL_COST_RATIO", 1_000_000.0)
         clock = {"now": 1000.0}
         # flake-ok: pre-existing frozen stdlib monotonic scoped to this test by monkeypatch; moved verbatim and tracked for a de-flake pass
-        # nosemgrep: kirocrew.test-stdlib-clock-rebound -- pre-existing frozen monotonic scoped to this test by monkeypatch and moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-stdlib-clock-rebound -- pre-existing frozen monotonic scoped to this test by monkeypatch and moved verbatim; tracked for a de-flake pass
         monkeypatch.setattr(security.time, "monotonic", lambda: clock["now"])
 
         calls: list[int] = []
@@ -1138,7 +1138,7 @@ class TestAdaptiveHomeTargetsExpiry:
 
         monkeypatch.setattr(security, "_home_dir_targets_uncached", reporting)
 
-        from kiro_crew.security import paths as gate
+        from aj_crew.security import paths as gate
 
         gate._home_targets_pin_state.clear()
         with caplog.at_level(logging.INFO, logger=gate.__name__):
@@ -1160,8 +1160,8 @@ class TestAdaptiveHomeTargetsExpiry:
         on every build that was handed that leaf, and a per-build line would be
         noise that gets filtered, which is the same as having none.
         """
-        from kiro_crew import security
-        from kiro_crew.security import paths as gate
+        from aj_crew import security
+        from aj_crew.security import paths as gate
 
         read_dirs = security._SENSITIVE_HOME_DIRS
         gate._home_targets_pin_state.clear()
@@ -1200,18 +1200,18 @@ class TestAdaptiveHomeTargetsExpiry:
         Driven through :func:`_home_dir_targets` rather than the reporter, so the
         wiring that passes the list is pinned and not only the helper.
         """
-        from kiro_crew import security
-        from kiro_crew.security import paths as gate
+        from aj_crew import security
+        from aj_crew.security import paths as gate
 
         crew_home = tmp_path / "crew"
         crew_home.mkdir()
         monkeypatch.setenv("HOME", str(tmp_path))
-        monkeypatch.setenv("KIROCREW_HOME", str(crew_home))
+        monkeypatch.setenv("AJCREW_HOME", str(crew_home))
         self._clear()
         gate._home_targets_pin_state.clear()
         clock = {"now": 1000.0}
         # flake-ok: pre-existing frozen stdlib monotonic scoped to this test by monkeypatch; moved verbatim and tracked for a de-flake pass
-        # nosemgrep: kirocrew.test-stdlib-clock-rebound -- pre-existing frozen monotonic scoped to this test by monkeypatch and moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-stdlib-clock-rebound -- pre-existing frozen monotonic scoped to this test by monkeypatch and moved verbatim; tracked for a de-flake pass
         monkeypatch.setattr(security.time, "monotonic", lambda: clock["now"])
 
         write_dirs = security._SENSITIVE_HOME_DIRS + security._WRITE_PROTECTED_HOME_PATHS
@@ -1255,7 +1255,7 @@ class TestAdaptiveHomeTargetsExpiry:
         """
         import ast
 
-        from kiro_crew.security import paths as gate
+        from aj_crew.security import paths as gate
 
         tree = ast.parse(Path(gate.__file__).read_text(encoding="utf-8"))
 
@@ -1312,7 +1312,7 @@ class TestAdaptiveHomeTargetsExpiry:
         ``_HOME_TARGETS_TTL_MAX_SECS``, with the clock frozen so nothing can
         expire during the test.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         real_a = tmp_path / "vol1" / "u"
         real_b = tmp_path / "vol2" / "u"
@@ -1329,7 +1329,7 @@ class TestAdaptiveHomeTargetsExpiry:
         monkeypatch.setattr(security, "_HOME_TARGETS_TTL_COST_RATIO", 1_000_000.0)
         clock = {"now": 1000.0}
         # flake-ok: pre-existing frozen stdlib monotonic scoped to this test by monkeypatch; moved verbatim and tracked for a de-flake pass
-        # nosemgrep: kirocrew.test-stdlib-clock-rebound -- pre-existing frozen monotonic scoped to this test by monkeypatch and moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-stdlib-clock-rebound -- pre-existing frozen monotonic scoped to this test by monkeypatch and moved verbatim; tracked for a de-flake pass
         monkeypatch.setattr(security.time, "monotonic", lambda: clock["now"])
         calls = self._timed_rebuild(monkeypatch, clock, cost=0.4)
 

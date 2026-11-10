@@ -1,21 +1,21 @@
 """Harness-native subtask boundary (RFC §14.8, SPEC-ADDENDUM §7, parity row H16).
 
 kiro-cli ``use_subagent`` children and KAS ``agentSubtaskId`` subtasks run
-INSIDE the parent's harness process. Kiro Crew can see them (a session id, a
+INSIDE the parent's harness process. Aj Crew can see them (a session id, a
 roster, attributable tool events) but cannot cancel, pause or resume one alone.
 The contract pinned here:
 
 * they are COUNTED on the parent handle (``native_child_sessions``), never
   charged a ``HostBudget`` slot, a lane slot or a taskq row;
 * the recovery boundary is the PARENT session: one ``session/cancel`` covers
-  every child, a child's ``kirocrew/status`` is rejected (``child_origin``), a
+  every child, a child's ``ajcrew/status`` is rejected (``child_origin``), a
   child cannot be resumed independently, and a late child frame after the turn
   resurrects nothing;
 * a Claude Task call on a session that does not declare ``subagents`` carries no
   per-child identity, so the handle's counter stays 0 and the liveness oracle still
   bounds the parent; with the declaration the per-session ``AcpClient`` reads the
   child form (``test_claude_native_subagent_cards.py``);
-* a Kiro Crew ``spawn_run`` child is the boundary for its OWN native
+* a Aj Crew ``spawn_run`` child is the boundary for its OWN native
   grandchildren -- they are counted on that child's handle only;
 * a 200-child parent inflates neither ``HostBudget`` nor the adaptive
   controller's timeout-rate signal;
@@ -72,10 +72,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp import runtime as rt_mod
-from kiro_crew.acp import session_handle as sh_mod
-from kiro_crew.acp.runtime import _STDOUT_BUFFER_LIMIT, AcpRuntime
-from kiro_crew.acp.session_handle import (
+from aj_crew.acp import runtime as rt_mod
+from aj_crew.acp import session_handle as sh_mod
+from aj_crew.acp.runtime import _STDOUT_BUFFER_LIMIT, AcpRuntime
+from aj_crew.acp.session_handle import (
     NATIVE_CHILD_LABEL_CAP,
     NATIVE_CHILD_NOT_RESUMABLE,
     NATIVE_CHILD_ROSTER_CAP,
@@ -83,7 +83,7 @@ from kiro_crew.acp.session_handle import (
     AcpSessionHandle,
     WatchdogSettings,
 )
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
@@ -102,17 +102,17 @@ from kiro_crew.acp.types import (
     WAIT_REASON_INPUT,
     JsonRpcMessage,
 )
-from kiro_crew.adaptive.controller import AdaptiveController, HostSample
-from kiro_crew.adaptive.signals import SIGNAL_TIMEOUTS, classify
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.mcp_gateway.host_budget import HostBudget, HostBudgetExhausted, HostBudgetLimits
-from kiro_crew.metrics.events import CHILD_PERMISSION_DENIED
-from kiro_crew.testing.wait import finished
+from aj_crew.adaptive.controller import AdaptiveController, HostSample
+from aj_crew.adaptive.signals import SIGNAL_TIMEOUTS, classify
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.mcp_gateway.host_budget import HostBudget, HostBudgetExhausted, HostBudgetLimits
+from aj_crew.metrics.events import CHILD_PERMISSION_DENIED
+from aj_crew.testing.wait import finished
 
 pytestmark = pytest.mark.timeout(30)
 
 PARENT = "sA"
-CHILD_RUN = "sB"  # a Kiro Crew spawn_run child: its own handle, its own task row
+CHILD_RUN = "sB"  # a Aj Crew spawn_run child: its own handle, its own task row
 N_CHILDREN = 200
 
 
@@ -164,7 +164,7 @@ def _claude_task_call(tool_call_id: str = "task-1") -> dict:
     """What the Claude adapter emits for its in-harness Task tool to a client that
     does not declare ``subagents``: an ordinary ``tool_call`` on the PARENT sessionId.
     No child sessionId, no roster, no ``_meta.kiro`` -- the child has no identity
-    Kiro Crew can name."""
+    Aj Crew can name."""
     return {
         "sessionUpdate": "tool_call",
         "toolCallId": tool_call_id,
@@ -289,7 +289,7 @@ def test_session_handle_never_reaches_the_scheduler():
         inspect.getsource(sys.modules[name])
         for name in (sh_mod.__name__, *sh_mod._SESSION_HANDLE_OWNERS)
     )
-    for forbidden in ("kiro_crew.taskq", "subagent_manager.admission", "yield_slot("):
+    for forbidden in ("aj_crew.taskq", "subagent_manager.admission", "yield_slot("):
         assert forbidden not in src, forbidden
 
 
@@ -486,7 +486,7 @@ def test_report_counts_overflow_too():
 
 
 def test_child_status_frame_is_rejected_child_origin():
-    """M's origin rule: a ``kirocrew/status`` riding a child-routed frame is
+    """M's origin rule: a ``ajcrew/status`` riding a child-routed frame is
     the child's, and the child has no task row -- rejected, never
     re-attributed to the parent. The child is still counted."""
     handle = _handle()
@@ -577,7 +577,7 @@ def test_spawn_continue_on_a_native_child_id_never_starts_a_run():
     typed error) before any session is created. The precise
     ``native_child_not_resumable`` reason is the seam above; wiring it ahead
     of the generic lookup miss is an integration TODO recorded in the handoff."""
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.subagent import SubagentManager
 
     sessions = MagicMock()
     sessions.get_pid = MagicMock(return_value=None)
@@ -593,7 +593,7 @@ def test_spawn_continue_on_a_native_child_id_never_starts_a_run():
     handle = _handle()
     _feed_children(handle, 1)
     (child_sid,) = handle.native_child_sessions
-    with patch("kiro_crew.subagent.sel"), patch("kiro_crew.subagent.read_state", return_value=None):
+    with patch("aj_crew.subagent.sel"), patch("aj_crew.subagent.read_state", return_value=None):
         info = manager.continue_conversation(child_sid, "keep going")
     assert info is not None and info.done
     assert info.error and ":" in info.error  # typed ``<class>: ...``
@@ -668,13 +668,13 @@ def test_claude_frames_carrying_a_child_status_are_rejected_like_any_other():
     assert handle.status_rejections == {"session_mismatch": 1}
 
 
-# ── (4) nested: the Kiro Crew spawn_run child is the boundary ─────────────────
+# ── (4) nested: the Aj Crew spawn_run child is the boundary ─────────────────
 
 
 def test_nested_spawn_run_child_is_the_boundary_for_its_native_grandchildren():
     """S (parent, its own handle) -> spawn_run child B (its own handle, a task
     row) -> B's native ``use_subagent`` grandchildren. The grandchildren are
-    counted on B only; S counts nothing for them (B is S's Kiro Crew child,
+    counted on B only; S counts nothing for them (B is S's Aj Crew child,
     not a native one), and each handle refuses to resume the other's ids."""
     parent = _handle(session=PARENT)
     child_run = _handle(session=CHILD_RUN)
@@ -740,7 +740,7 @@ async def test_shared_runtime_with_two_owners_drops_an_unannounced_grandchild_fr
 
 def test_two_hundred_children_do_not_trip_the_timeout_rate_signal():
     """The controller learns about work through ``record_start`` /
-    ``record_completion`` (one per Kiro Crew run) and the daemon's budget
+    ``record_completion`` (one per Aj Crew run) and the daemon's budget
     snapshot. A parent with 200 native children contributes exactly ONE
     start and ONE completion, and the budget's charged ``procs`` is unchanged,
     so ``attributable_timeout_rate`` is 0 and no ``timeouts`` signal fires.
@@ -749,7 +749,7 @@ def test_two_hundred_children_do_not_trip_the_timeout_rate_signal():
     clock = _Clock()
     mgr = _FakeManager()
     with patch.object(ctl_live(), "watch_object", return_value=None):
-        ctl = AdaptiveController(mgr, cfg=KiroCrewConfig(), clock=clock)
+        ctl = AdaptiveController(mgr, cfg=AjCrewConfig(), clock=clock)
     budget = HostBudget(HostBudgetLimits(max_procs=40))
     budget.reserve(label=PARENT, kind="pooled")
     handle = _handle()
@@ -777,7 +777,7 @@ def test_two_hundred_children_do_not_trip_the_timeout_rate_signal():
     # boundary keeps quiet -- 200 attributable "timeouts" against 1 success.
     bad = _FakeManager()
     with patch.object(ctl_live(), "watch_object", return_value=None):
-        bad_ctl = AdaptiveController(bad, cfg=KiroCrewConfig(), clock=clock)
+        bad_ctl = AdaptiveController(bad, cfg=AjCrewConfig(), clock=clock)
     bad_ctl.record_start(1200.0, ok=True)
     for _ in range(N_CHILDREN):
         bad_ctl.record_completion(ok=False, attributable_timeout=True)
@@ -792,7 +792,7 @@ def test_two_hundred_children_do_not_trip_the_timeout_rate_signal():
 
 
 def ctl_live():
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     return live
 
@@ -1045,7 +1045,7 @@ async def test_past_the_cap_the_refusal_names_the_cap_and_the_count_is_visible(t
                     ]
                 },
             }
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.runtime"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.acp.runtime"):
                 _feed_frame(reader, frame)
                 await _settle(rt, reader)
                 # Idempotent above the cap too: the frame IS the full list, so

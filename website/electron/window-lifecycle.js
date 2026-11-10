@@ -72,7 +72,7 @@ const { injectLinuxCaptionControls } = require("./runtime/window/linux-captions"
 const { wireWillDownloadOnce } = require("./download-handler");
 const { attachBrowserPanels } = require("./runtime/window/browser-panels");
 
-const BROWSER_PARTITION = "persist:kirocrew-browser";
+const BROWSER_PARTITION = "persist:ajcrew-browser";
 const FULLSCREEN_SETTLE_MS = [250, 1500];
 const DASHBOARD_SETTLE_MS = 1500;
 // A display rearrange (monitor hot-plug, or dragging the window to a screen
@@ -462,7 +462,7 @@ function createWindowLifecycle(options) {
       const remoteName = getRemoteHostDefaultNameForUrl(store, windowBackendUrl);
       if (!IS_WIN) {
         const suffix = customName || remoteName || `[:${windowPort}]`;
-        win.setTitle(`Kiro Crew ${suffix}`);
+        win.setTitle(`Aj Crew ${suffix}`);
         return;
       }
       // Windows omits the default local port; secondary/remote windows retain a
@@ -471,7 +471,7 @@ function createWindowLifecycle(options) {
       if (!suffix && windowPort && String(windowPort) !== "5476") {
         suffix = `[:${windowPort}]`;
       }
-      win.setTitle(suffix ? `Kiro Crew ${suffix}` : "Kiro Crew");
+      win.setTitle(suffix ? `Aj Crew ${suffix}` : "Aj Crew");
     }
 
     win._mcSetCustomName = (name) => {
@@ -589,7 +589,7 @@ function createWindowLifecycle(options) {
           cancelId: 1,
           message: "Open this link in your editor?",
           detail: url,
-          checkboxLabel: "Don't ask again for this machine until Kiro Crew quits",
+          checkboxLabel: "Don't ask again for this machine until Aj Crew quits",
         });
         return { open: response === 0, remember: checkboxChecked === true };
       },
@@ -1149,7 +1149,7 @@ function createWindowLifecycle(options) {
       <label>Remote host for :${focusedPort}</label>
       <input id="h" value="${esc(currentHost)}" placeholder="myhost.corp.example.com" autofocus>
       <div class="hint">Leave empty to use local token (no SSH).</div>
-      <label>kirocrew binary path</label>
+      <label>ajcrew binary path</label>
       <input id="b" value="${esc(currentBin)}" placeholder="${DEFAULT_REMOTE_BIN}">
       <label>Remote port <span style="font-weight:normal;opacity:0.6">(default: same as tab = ${focusedPort})</span></label>
       <input id="rp" value="${esc(currentRemotePort)}" placeholder="${focusedPort}">

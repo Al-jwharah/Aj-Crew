@@ -4,11 +4,11 @@ The pure contract-semantics slice for the Zoom connector (`W11` in the
 [connector-capability-manifest](connector-capability-manifest.md) DAG): the
 identity, paging, processing-state, and error/redaction logic a later Zoom
 adapter reuses, with **zero network, zero auth, zero dispatch**. It owns
-`src/kiro_crew/connections/vendors/zoom/` and is deliberately a leaf of pure
+`src/aj_crew/connections/vendors/zoom/` and is deliberately a leaf of pure
 functions and data — it constructs no HTTP client, no OAuth token, no meeting,
 and no dispatch path. Auth, binding, dispatch, approval, and the ambiguous-write
 decision belong to the shared control plane (`W01`,
-`src/kiro_crew/connections/control_plane/`); this slice **consumes** that real
+`src/aj_crew/connections/control_plane/`); this slice **consumes** that real
 interface — folding its generic error taxonomy, error envelope, redaction
 discipline, credential-mode axis, and opaque pagination cursor into
 `control_plane` — and never builds a second runtime, copies the anchor, or
@@ -66,8 +66,8 @@ are `identity`, `paging`, `processing`, and `errors` (redaction lives with
 
 ## The Meetings app is not this connector
 
-Kiro Crew's built-in [Meetings app](meetings.md) transcribes a meeting through
-Kiro Crew's **own** streaming speech-to-text and fans the transcript out to a
+Aj Crew's built-in [Meetings app](meetings.md) transcribes a meeting through
+Aj Crew's **own** streaming speech-to-text and fans the transcript out to a
 small crew of background agents that produce a local, model-generated summary.
 Zoom's **AI Companion meeting summary** is a distinct, vendor-side product:
 Zoom's own models generate it on Zoom's infrastructure, and this connector reads
@@ -75,7 +75,7 @@ it back through `meeting_summary` endpoints. **These two must never be
 conflated.** The builtin app's locally-produced summary is never substituted for
 Zoom's native AI Companion summary, and the AI Companion summary this connector
 reads is never treated as, or fed into, the Meetings app's own STT+LLM pipeline.
-They answer different questions ("what did Kiro Crew's agents make of the audio
+They answer different questions ("what did Aj Crew's agents make of the audio
 we captured" versus "what did Zoom's AI Companion produce for the host"), have
 different provenance and different entitlements, and a reader or a later adapter
 that treats one as the other is producing a false record.

@@ -1,6 +1,6 @@
 /**
  * useCrewEditor — the whole EDIT-mode brain of the crew editor, extracted from
- * `KiroCrewAgentsPage` so more than one surface can open it.
+ * `AjCrewAgentsPage` so more than one surface can open it.
  *
  * The crew editor was born inside the Crews page and reached from elsewhere by
  * navigating to `/capabilities?tab=crews&crew=<name>`. CREW-18688 asks the
@@ -10,7 +10,7 @@
  * discard question) must not be re-implemented per surface, so it lives here
  * once and `CrewEditorNextDialog` renders it. Both crewmate editing surfaces
  * consume it: `MembersPage` (the in-place Crewmates modal) and
- * `KiroCrewAgentsPage` (Customize > Crewmates), so there is one state machine
+ * `AjCrewAgentsPage` (Customize > Crewmates), so there is one state machine
  * reached from two entry points.
  *
  * This hook owns EDIT only. Creating a crew opens `NewCrewmateDialog` from
@@ -53,7 +53,7 @@ import {
 } from './wakesCrew'
 import { ApiError } from '../../api/apiError'
 import type { CronJob } from '../../types'
-import { type KiroCrewAgent } from '../AgentSelector'
+import { type AjCrewAgent } from '../AgentSelector'
 import { modelSupportsEffort } from '../../lib/effort'
 import { type TemplateProvenance } from '../../lib/templateSource'
 import { INHERIT_MODEL } from './crewFields'
@@ -105,7 +105,7 @@ export interface UseCrewEditorArgs {
   memberId?: string
   /** The current roster — the source of the edited record and of the
    *  shared-storage collision reads. Both callers already hold it. */
-  agents: KiroCrewAgent[]
+  agents: AjCrewAgent[]
   /** Whether `agents` (the crew roster the editor reads) has actually arrived.
    *  The page gates its roster read on the editor being opened, so between the
    *  pill click and the roster settling there is a window where `editingAgent`
@@ -148,7 +148,7 @@ export interface CrewEditorController {
   /** The crew's canonical slug (see the arg of the same name) — what the
    *  Schedules pane passes to `wakesCrew` as `member_id`. */
   memberId: string
-  editingAgent: KiroCrewAgent | undefined
+  editingAgent: AjCrewAgent | undefined
 
   // Field state (edit's OWN copies, seeded from the record on open).
   kiroAgent: string
@@ -175,7 +175,7 @@ export interface CrewEditorController {
   availableModels: { name: string }[] | undefined
   templateProvenance: Record<string, TemplateProvenance>
   templateFieldLabel: string
-  kirocrewCfg: { memory_stores?: Record<string, { memory_version?: number; owner_member?: string }> } | undefined
+  ajcrewCfg: { memory_stores?: Record<string, { memory_version?: number; owner_member?: string }> } | undefined
   editorOptionsError: unknown
   /** The model list resolved, but DEGRADED (the adapter returned an auto-only /
    *  cached list after a transport failure rather than rejecting). Surfaced as a
@@ -355,7 +355,7 @@ export function useCrewEditor(args: UseCrewEditorArgs): CrewEditorController {
     ? installedAgents
       .filter((x: { name: string; private_to?: string }) => Boolean(x.name) && !x.private_to)
       .map((x: { name: string }) => x.name)
-    : ['kirocrew']
+    : ['ajcrew']
   const templateProvenance: Record<string, TemplateProvenance> = Array.isArray(installedAgents)
     ? Object.fromEntries(
       installedAgents
@@ -371,9 +371,9 @@ export function useCrewEditor(args: UseCrewEditorArgs): CrewEditorController {
   })
   const workspaceOptions = workspacesData?.workspaces?.map((w: { name: string }) => w.name) || ['default']
 
-  const { data: kirocrewCfg, error: cfgError } = useQuery({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+  const { data: ajcrewCfg, error: cfgError } = useQuery({
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
     enabled: open,
   })
 
@@ -586,7 +586,7 @@ export function useCrewEditor(args: UseCrewEditorArgs): CrewEditorController {
     if (editing) void queryClient.invalidateQueries({ queryKey: crewCapabilitiesKey(editing) })
   }, [editing, kiroAgent, queryClient])
   const onCapabilitiesSaved = useCallback(() => {
-    const saved = queryClient.getQueryData<{ agents: KiroCrewAgent[] }>(['kirocrew-agents'])?.agents.find(agent => agent.name === editing)
+    const saved = queryClient.getQueryData<{ agents: AjCrewAgent[] }>(['ajcrew-agents'])?.agents.find(agent => agent.name === editing)
     if (saved) setKiroAgent(saved.kiro_agent)
   }, [queryClient, editing])
 
@@ -607,21 +607,21 @@ export function useCrewEditor(args: UseCrewEditorArgs): CrewEditorController {
   }, [])
 
   const updateMut = useMutation({
-    mutationFn: ({ name, data }: { name: string; data: AgentUpdatePayload; epoch: number }) => api.updateKirocrewAgent(name, data),
+    mutationFn: ({ name, data }: { name: string; data: AgentUpdatePayload; epoch: number }) => api.updateAjcrewAgent(name, data),
     onSuccess: (r: AgentMutationResult, vars) => {
       settleFor(vars.epoch, r.error)
       refetchAgents()
     },
-    onError: (e: Error, vars) => settleFor(vars.epoch, e.message || i18nT('pages.kiroCrewAgentsPage.failed_to_update_agent')),
+    onError: (e: Error, vars) => settleFor(vars.epoch, e.message || i18nT('pages.ajCrewAgentsPage.failed_to_update_agent')),
   })
   const deleteMut = useMutation({
-    mutationFn: ({ name }: { name: string; epoch: number }) => api.deleteKirocrewAgent(name),
+    mutationFn: ({ name }: { name: string; epoch: number }) => api.deleteAjcrewAgent(name),
     onSuccess: (r: AgentMutationResult, vars) => {
       if (!r.error && vars.epoch === sheetEpoch.current) onDeleted?.(vars.name)
       settleFor(vars.epoch, r.error)
       refetchAgents()
     },
-    onError: (e: Error, vars) => settleFor(vars.epoch, e.message || i18nT('pages.kiroCrewAgentsPage.failed_to_delete_agent')),
+    onError: (e: Error, vars) => settleFor(vars.epoch, e.message || i18nT('pages.ajCrewAgentsPage.failed_to_delete_agent')),
   })
 
   // ── Template switch: serialized + coalesced + 409-aware ──
@@ -662,7 +662,7 @@ export function useCrewEditor(args: UseCrewEditorArgs): CrewEditorController {
         if (latestTemplateSwitch.current !== v) return
         try {
           const expected = serverTemplateBinding.current
-          await api.updateKirocrewAgent(editing, {
+          await api.updateAjcrewAgent(editing, {
             kiro_agent: v,
             ...(expected ? { expected_kiro_agent: expected } : {}),
           })
@@ -671,12 +671,12 @@ export function useCrewEditor(args: UseCrewEditorArgs): CrewEditorController {
           // deferred close then re-evaluates dirtiness against reality. The
           // caller's refetchAgents invalidates; we await the roster query's
           // refetch so this chain link does not settle before the cache does.
-          await queryClient.refetchQueries({ queryKey: ['kirocrew-agents'] })
+          await queryClient.refetchQueries({ queryKey: ['ajcrew-agents'] })
           setTemplateSwitchError('')
         } catch (e) {
           setTemplateSwitchError(errorText(e))
           try {
-            const fresh = (await api.kirocrewAgents()) as { agents?: KiroCrewAgent[] } | undefined
+            const fresh = (await api.ajcrewAgents()) as { agents?: AjCrewAgent[] } | undefined
             const row = fresh?.agents?.find(a => a.name === editing)
             if (row && latestTemplateSwitch.current === v) {
               const actual = row.kiro_agent || ''
@@ -732,14 +732,14 @@ export function useCrewEditor(args: UseCrewEditorArgs): CrewEditorController {
             for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
             const up = await api.uploadCrewAvatar(name, new Blob([bytes], { type: mime }))
             if (!up.ok || !up.token) {
-              settleFor(epoch, up.error || i18nT('pages.kiroCrewAgentsPage.failed_to_update_agent'))
+              settleFor(epoch, up.error || i18nT('pages.ajCrewAgentsPage.failed_to_update_agent'))
               return
             }
             stagedToken = up.token
           } catch (e) {
             // eslint-disable-next-line no-console -- the only record of WHY a staged upload failed once the banner shows the localized string
             console.warn('avatar upload failed', e)
-            settleFor(epoch, i18nT('pages.kiroCrewAgentsPage.failed_to_update_agent'))
+            settleFor(epoch, i18nT('pages.ajCrewAgentsPage.failed_to_update_agent'))
             return
           } finally {
             setAvatarUploading(false)
@@ -968,7 +968,7 @@ export function useCrewEditor(args: UseCrewEditorArgs): CrewEditorController {
   const routingWords = triggers.split(',').map(s => s.trim()).filter(Boolean).length
 
   const sections = useCrewEditorSections({
-    templateLabel: i18nT('pages.kiroCrewAgentsPage.built_from'),
+    templateLabel: i18nT('pages.ajCrewAgentsPage.built_from'),
     activeSchedules: wakeJobs.filter(j => j.enabled).length,
     totalSchedules: wakeJobs.length,
     routingWords,
@@ -1048,13 +1048,13 @@ export function useCrewEditor(args: UseCrewEditorArgs): CrewEditorController {
     modelOptions,
     availableModels,
     templateProvenance,
-    templateFieldLabel: i18nT('pages.kiroCrewAgentsPage.built_from'),
-    kirocrewCfg,
+    templateFieldLabel: i18nT('pages.ajCrewAgentsPage.built_from'),
+    ajcrewCfg,
     editorOptionsError,
     modelsDegraded,
     retryModels: () => { void pinModelsQuery.refetch() },
     retryingModels: pinModelsQuery.isFetching,
-    pinHarness: acpBackendName({ id: resolved?.models_backend ?? kirocrewCfg?.agent?.acp_backend ?? '' }),
+    pinHarness: acpBackendName({ id: resolved?.models_backend ?? ajcrewCfg?.agent?.acp_backend ?? '' }),
     resolved,
     resolvedError,
     effortCapable,

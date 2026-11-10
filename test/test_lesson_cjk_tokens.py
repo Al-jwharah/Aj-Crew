@@ -17,14 +17,14 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import lesson_validation
-from kiro_crew.lesson_validation import (
+from aj_crew import lesson_validation
+from aj_crew.lesson_validation import (
     _relevance_tokens,
     any_request_overlap,
     order_by_request_relevance,
 )
-from kiro_crew.vector_memory import VectorMemoryStore
-from kiro_crew.vector_memory_runtime.lessons import lesson_keywords
+from aj_crew.vector_memory import VectorMemoryStore
+from aj_crew.vector_memory_runtime.lessons import lesson_keywords
 
 
 def test_pure_chinese_request_shares_a_pair_with_its_lesson() -> None:

@@ -28,9 +28,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import sandbox
-from kiro_crew.dashboard import pinned_session_order as pso
-from kiro_crew.sandbox import userns_available
+from aj_crew import sandbox
+from aj_crew.dashboard import pinned_session_order as pso
+from aj_crew.sandbox import userns_available
 
 pytestmark = [
     pytest.mark.skipif(sys.platform != "linux", reason="the namespace launcher is Linux-only"),
@@ -70,7 +70,7 @@ def write(path):
 
 report = {
     "mnt_ns": os.readlink("/proc/self/ns/mnt"),
-    "marker": os.environ.get("KIROCREW_SANDBOX_ACTIVE"),
+    "marker": os.environ.get("AJCREW_SANDBOX_ACTIVE"),
     "listing": attempt(lambda: sorted(os.listdir(os.path.dirname(fence_file)))),
     "read": attempt(lambda: read(fence_file)),
     "write": attempt(lambda: write(fence_file)),
@@ -86,8 +86,8 @@ def home(tmp_path, monkeypatch) -> Path:
     # here too, and every path the tests compare is spelled the way the plan spells it.
     home = (tmp_path / "home").resolve()
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
-    monkeypatch.setenv("KIROCREW_ASSUME_GATEWAY_RUNNING", "0")
+    monkeypatch.setenv("AJCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_ASSUME_GATEWAY_RUNNING", "0")
     sandbox.reset_backend()
     yield home
     sandbox.reset_backend()
@@ -97,7 +97,7 @@ def _run_agent(home: Path, tier: str, control: Path, forged: str) -> dict:
     """Run the agent's side under the real *tier* sandbox; return what it saw."""
     store = pso.store_path(home)
     argv = [sys.executable, "-c", _CHILD, str(store), str(control), forged]
-    env = {k: v for k, v in os.environ.items() if k != "KIROCREW_SANDBOX_ACTIVE"}
+    env = {k: v for k, v in os.environ.items() if k != "AJCREW_SANDBOX_ACTIVE"}
     proc = subprocess.run(
         sandbox.namespace_argv(argv, tier),
         cwd=home,

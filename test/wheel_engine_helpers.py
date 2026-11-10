@@ -13,7 +13,7 @@ from typing import Callable
 
 import pytest
 
-from kiro_crew.platform import wheel_engine
+from aj_crew.platform import wheel_engine
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -26,14 +26,14 @@ def _manifest(
     artifact_base: str = _ARTIFACT_BASE,
     **overrides: object,
 ) -> dict[str, object]:
-    wheel_name = f"kirocrew-{version}-py3-none-any.whl"
+    wheel_name = f"ajcrew-{version}-py3-none-any.whl"
     manifest: dict[str, object] = {
         "algorithm": "RSASSA_PKCS1_V1_5_SHA_256",
         "channel": channel,
         "key_id": wheel_engine.CLI_MANIFEST_KEY_ID,
         "pub_date": "2026-01-01T00:00:00Z",
         "python_requires": ">=3.10",
-        "schema": "kirocrew-cli-artifact-manifest-v1",
+        "schema": "ajcrew-cli-artifact-manifest-v1",
         "sha256": "a" * 64,
         "signature": base64.b64encode(b"not-a-real-signature").decode(),
         "version": version,

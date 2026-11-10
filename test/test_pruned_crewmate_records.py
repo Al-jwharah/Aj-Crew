@@ -16,14 +16,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import execution_context as ec
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.subagent_manager.admission.gate import _GateMixin
+from aj_crew import execution_context as ec
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.subagent_manager.admission.gate import _GateMixin
 
 
-def _config(*names: str) -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
-    cfg.agents = {name: KiroCrewAgentConfig(kiro_agent=name) for name in names}
+def _config(*names: str) -> AjCrewConfig:
+    cfg = AjCrewConfig()
+    cfg.agents = {name: AjCrewAgentConfig(kiro_agent=name) for name in names}
     return cfg
 
 
@@ -42,10 +42,10 @@ def _record(
 
 @pytest.fixture
 def config(monkeypatch):
-    holder = {"cfg": _config("kirocrew"), "removed": frozenset({"synced-agent"})}
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: holder["cfg"]))
+    holder = {"cfg": _config("ajcrew"), "removed": frozenset({"synced-agent"})}
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls, *a, **k: holder["cfg"]))
     monkeypatch.setattr(
-        "kiro_crew.crewmate_prune_migration.removed_crewmate_names", lambda: holder["removed"]
+        "aj_crew.crewmate_prune_migration.removed_crewmate_names", lambda: holder["removed"]
     )
     return holder
 
@@ -73,7 +73,7 @@ def test_decoder_keeps_every_other_member_record(config, kwargs):
 
 
 def test_decoder_keeps_a_member_whose_row_still_exists(config):
-    config["cfg"] = _config("kirocrew", "synced-agent")
+    config["cfg"] = _config("ajcrew", "synced-agent")
     assert ec.execution_from_record(_record()).selection_kind == "member"
 
 
@@ -87,7 +87,7 @@ def test_decoder_keeps_the_record_when_config_is_unreadable(config, monkeypatch)
     def boom(cls, *a, **k):
         raise OSError("unreadable")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(boom))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(boom))
     assert ec.execution_from_record(_record()).selection_kind == "member"
 
 
@@ -95,7 +95,7 @@ def test_decoder_keeps_the_record_when_the_marker_is_unreadable(config, monkeypa
     def boom():
         raise OSError("unreadable")
 
-    monkeypatch.setattr("kiro_crew.crewmate_prune_migration.removed_crewmate_names", boom)
+    monkeypatch.setattr("aj_crew.crewmate_prune_migration.removed_crewmate_names", boom)
     assert ec.execution_from_record(_record()).selection_kind == "member"
 
 
@@ -154,7 +154,7 @@ def test_spawn_inheriting_a_missing_member_on_its_own_store_still_refuses(config
 
 def test_prompt_builder_sees_no_member_for_a_pruned_crewmate(config):
     """``member_context_identity`` raised for a member name that is not configured."""
-    from kiro_crew.member_essential_context import member_context_identity
+    from aj_crew.member_essential_context import member_context_identity
 
     execution = ec.execution_from_record(_record())
     member = execution.member_id or (
@@ -165,7 +165,7 @@ def test_prompt_builder_sees_no_member_for_a_pruned_crewmate(config):
 
 
 def test_run_reader_decodes_through_the_same_seam(config):
-    from kiro_crew.subagent_persistence import read_run_execution
+    from aj_crew.subagent_persistence import read_run_execution
 
     state = dict(_record())
     execution = read_run_execution("run-1", state=state)
@@ -174,7 +174,7 @@ def test_run_reader_decodes_through_the_same_seam(config):
 
 
 def test_removed_names_come_from_every_prune_marker(tmp_path, monkeypatch):
-    from kiro_crew import crewmate_prune_migration as mig
+    from aj_crew import crewmate_prune_migration as mig
 
     monkeypatch.setattr(mig, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(mig, "_removed_cache", None)
@@ -198,7 +198,7 @@ def test_removed_names_come_from_every_prune_marker(tmp_path, monkeypatch):
 
 
 def _seed_pruned_chat(key: str, *, memory_mode: str = "persistent") -> dict:
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     log = ConversationLog()
     log.append(key, "user", "hello from before the prune", agent="synced-agent")
@@ -218,7 +218,7 @@ def _seed_pruned_chat(key: str, *, memory_mode: str = "persistent") -> dict:
 
 
 def _stored_carrier(key: str) -> dict:
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     metadata, readable = ConversationLog().get_metadata_status(key)
     assert readable
@@ -229,14 +229,14 @@ def _stored_carrier(key: str) -> dict:
 def pruned_installed(monkeypatch):
     """The prune removed ``synced-agent``; its agent file is still installed."""
     monkeypatch.setattr(
-        "kiro_crew.crewmate_prune_migration.removed_crewmate_names",
+        "aj_crew.crewmate_prune_migration.removed_crewmate_names",
         lambda: frozenset({"synced-agent"}),
     )
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
-        lambda name, project_dir=None: name if name in ("synced-agent", "kirocrew") else "",
+        "aj_crew.config.loader._materialized_kiro_agent",
+        lambda name, project_dir=None: name if name in ("synced-agent", "ajcrew") else "",
     )
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert "synced-agent" not in cfg.agents
     cfg.save()
 
@@ -252,7 +252,7 @@ async def test_first_send_on_a_resumed_pruned_crewmate_chat_is_admitted(
     from dashboard_owner_helpers import as_owner
     from test_chat_agent_selection import _turn_state
 
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     key = "dashboard:old-chat"
     stored = _seed_pruned_chat(key)
@@ -304,13 +304,13 @@ def test_bind_admits_a_restricted_pruned_record(pruned_installed):
     "concurrent",
     [
         pytest.param({"selection_revision": "other-writer"}, id="revision"),
-        pytest.param({"template_id": "kirocrew", "selection_name": "kirocrew"}, id="template"),
+        pytest.param({"template_id": "ajcrew", "selection_name": "ajcrew"}, id="template"),
         pytest.param({"selection_kind": "template"}, id="adopted-by-another-writer-then-moved"),
     ],
 )
 def test_bind_still_refuses_a_real_concurrent_change(pruned_installed, monkeypatch, concurrent):
     """A record another writer changed between the read and the CAS is refused."""
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     key = "dashboard:old-chat"
     _seed_pruned_chat(key)
@@ -338,7 +338,7 @@ def test_bind_still_refuses_a_real_concurrent_change(pruned_installed, monkeypat
 
 
 def test_restricted_bind_still_refuses_a_real_concurrent_change(pruned_installed, monkeypatch):
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     key = "dashboard:old-chat"
     _seed_pruned_chat(key)

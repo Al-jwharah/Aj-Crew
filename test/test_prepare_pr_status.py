@@ -1,4 +1,4 @@
-"""Regression tests for the kirocrew-prepare-pr aggregate readiness policy."""
+"""Regression tests for the ajcrew-prepare-pr aggregate readiness policy."""
 
 from __future__ import annotations
 
@@ -313,9 +313,9 @@ def test_a_stale_green_is_reported_and_changes_no_exit_code(capsys) -> None:
         module,
         _pr_payload([{"context": "PR Readiness", "state": "SUCCESS"}]),
         git=lambda args: _fake_git_with(
-            args, moved=["src/kiro_crew/ledger/store.py"], mine=[], commits=3
+            args, moved=["src/aj_crew/ledger/store.py"], mine=[], commits=3
         ),
-        pr_files=["src/kiro_crew/ledger/store.py"],
+        pr_files=["src/aj_crew/ledger/store.py"],
     )
 
     code = module.main(["pr_status.py", "42", "--json"])
@@ -323,7 +323,7 @@ def test_a_stale_green_is_reported_and_changes_no_exit_code(capsys) -> None:
     report = json.loads([ln for ln in out.strip().splitlines() if ln.strip()][-1])
 
     assert code == 0, "the green-age line is information, not a gate"
-    assert "src/kiro_crew/ledger/store.py (same-file)" in out
+    assert "src/aj_crew/ledger/store.py (same-file)" in out
     assert report["advisory"]["green_age"]["stale"] is True
     assert report["advisory"]["green_age"]["commits"] == 3
 

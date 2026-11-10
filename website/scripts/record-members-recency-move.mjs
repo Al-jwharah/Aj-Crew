@@ -47,9 +47,9 @@ const check = (name, ok, detail = '') => {
  *  move cannot be mistaken for the list merely re-sorting by name. `beta-lead`
  *  is the cold one -- the crewmate the user is about to message. */
 const ROSTER = [
-  { name: 'gamma-writer', slug: 'gamma-writer', bound: true, slot_key: 'member-gamma-writer', running: false, kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', model: '', last_active_ts: 3000, last_message: 'Draft is up for review.' },
-  { name: 'alpha-scout', slug: 'alpha-scout', bound: true, slot_key: 'member-alpha-scout', running: false, kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', model: '', last_active_ts: 2000, last_message: 'Scouting the queue now.' },
-  { name: 'beta-lead', slug: 'beta-lead', bound: true, slot_key: 'member-beta-lead', running: false, kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', model: '', last_active_ts: 1000, last_message: 'Standing by.' },
+  { name: 'gamma-writer', slug: 'gamma-writer', bound: true, slot_key: 'member-gamma-writer', running: false, kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', model: '', last_active_ts: 3000, last_message: 'Draft is up for review.' },
+  { name: 'alpha-scout', slug: 'alpha-scout', bound: true, slot_key: 'member-alpha-scout', running: false, kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', model: '', last_active_ts: 2000, last_message: 'Scouting the queue now.' },
+  { name: 'beta-lead', slug: 'beta-lead', bound: true, slot_key: 'member-beta-lead', running: false, kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', model: '', last_active_ts: 1000, last_message: 'Standing by.' },
 ]
 
 const SLOT_DETAIL = {
@@ -83,7 +83,7 @@ await page.route((u) => new URL(u).pathname === '/api/members', (route) => {
   return route.fulfill({
     status: 200,
     contentType: 'application/json',
-    body: JSON.stringify({ members: ROSTER, default_agent: 'kirocrew' }),
+    body: JSON.stringify({ members: ROSTER, default_agent: 'ajcrew' }),
   })
 })
 // The teams read, answered EMPTY rather than left to the shared stub's `{}`

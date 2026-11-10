@@ -13,8 +13,8 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from test_remote_git_proxy import FrameLink
 
-from kiro_crew.remote_session import git_gateway, git_proxy
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.remote_session import git_gateway, git_proxy
+from aj_crew.testing.wait import async_wait_until
 
 
 def _guest_handler(*, broken=False, upload=False):

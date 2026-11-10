@@ -1,12 +1,12 @@
 """The sandbox chokepoint's tool marker, and the separation its meaning rests on.
 
-A tree spawned through :func:`kiro_crew.sandbox.sandboxed_spawn_argv` lands in this
-install's agent slice carrying the inherited ``KIROCREW_SPAWNED`` ownership marker and
+A tree spawned through :func:`aj_crew.sandbox.sandboxed_spawn_argv` lands in this
+install's agent slice carrying the inherited ``AJCREW_SPAWNED`` ownership marker and
 appears in no membership record the runtime reconciler reads. Once such a tree outlives
 the reconciler's age floor -- a LaTeX build, an ``npx`` install, a provisioning run --
 the argv0 basename test is the only thing between it and a signal.
 
-``KIROCREW_SANDBOX_TOOL`` is the evidence that replaces the name: stamped by the
+``AJCREW_SANDBOX_TOOL`` is the evidence that replaces the name: stamped by the
 chokepoint, inherited by the whole tree, and read back out of the kernel's exec-time
 copy, which a same-uid process cannot alter on another process.
 
@@ -32,15 +32,15 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import runtime_reconcile, sandbox, session_pid
-from kiro_crew.constants import (
-    KIROCREW_SANDBOX_TOOL_ENV,
-    KIROCREW_SANDBOX_TOOL_VALUE,
-    KIROCREW_SPAWNED_ENV,
-    KIROCREW_SPAWNED_VALUE,
+from aj_crew import runtime_reconcile, sandbox, session_pid
+from aj_crew.constants import (
+    AJCREW_SANDBOX_TOOL_ENV,
+    AJCREW_SANDBOX_TOOL_VALUE,
+    AJCREW_SPAWNED_ENV,
+    AJCREW_SPAWNED_VALUE,
 )
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
-from kiro_crew.testing.ids import unallocatable_pids
+from aj_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.testing.ids import unallocatable_pids
 
 #: Fake slice pids no OS can issue: ``_unowned`` drops ``os.getpid()``, which a
 #: literal in the agent slice can equal on an xdist worker. Three tool/harness
@@ -76,8 +76,8 @@ def _marked_env() -> dict[str, str]:
     patched because an unsandboxed exec is otherwise refused outright.
     """
     with (
-        patch("kiro_crew.sandbox.detect_backend", return_value="none"),
-        patch("kiro_crew.sandbox._allow_unsandboxed_exec", return_value=True),
+        patch("aj_crew.sandbox.detect_backend", return_value="none"),
+        patch("aj_crew.sandbox._allow_unsandboxed_exec", return_value=True),
     ):
         _argv, env, cleanup = sandbox.sandboxed_spawn_argv(["echo", "hi"])
     if cleanup:
@@ -93,9 +93,9 @@ def test_the_chokepoint_stamps_the_tool_marker_alongside_the_ownership_marker() 
     without weakening the first.
     """
     env = _marked_env()
-    assert env[KIROCREW_SPAWNED_ENV] == KIROCREW_SPAWNED_VALUE
-    assert env[KIROCREW_SANDBOX_TOOL_ENV] == KIROCREW_SANDBOX_TOOL_VALUE
-    assert KIROCREW_SANDBOX_TOOL_ENV != KIROCREW_SPAWNED_ENV
+    assert env[AJCREW_SPAWNED_ENV] == AJCREW_SPAWNED_VALUE
+    assert env[AJCREW_SANDBOX_TOOL_ENV] == AJCREW_SANDBOX_TOOL_VALUE
+    assert AJCREW_SANDBOX_TOOL_ENV != AJCREW_SPAWNED_ENV
 
 
 def test_the_marker_read_answers_from_a_fixture_process_table(tmp_path: Path) -> None:
@@ -103,7 +103,7 @@ def test_the_marker_read_answers_from_a_fixture_process_table(tmp_path: Path) ->
     satisfy every fail-open case below and mean nothing."""
     proc = tmp_path / "4242"
     proc.mkdir()
-    (proc / "environ").write_bytes(b"PATH=/usr/bin\0KIROCREW_SPAWNED=1\0KIROCREW_SANDBOX_TOOL=1\0")
+    (proc / "environ").write_bytes(b"PATH=/usr/bin\0AJCREW_SPAWNED=1\0AJCREW_SANDBOX_TOOL=1\0")
     assert session_pid._env_is_sandbox_tool(4242, proc_root=tmp_path) is True
 
 
@@ -111,7 +111,7 @@ def test_a_readable_environment_without_the_marker_reads_false(tmp_path: Path) -
     """An agent runtime is exactly this case: our spawn marker, no tool marker."""
     proc = tmp_path / "4243"
     proc.mkdir()
-    (proc / "environ").write_bytes(b"PATH=/usr/bin\0KIROCREW_SPAWNED=1\0")
+    (proc / "environ").write_bytes(b"PATH=/usr/bin\0AJCREW_SPAWNED=1\0")
     assert session_pid._env_is_sandbox_tool(4243, proc_root=tmp_path) is False
 
 
@@ -130,7 +130,7 @@ def test_a_marker_value_other_than_ours_does_not_match(tmp_path: Path) -> None:
     by a user's own shell is not our marker."""
     proc = tmp_path / "4245"
     proc.mkdir()
-    (proc / "environ").write_bytes(b"KIROCREW_SANDBOX_TOOL=0\0")
+    (proc / "environ").write_bytes(b"AJCREW_SANDBOX_TOOL=0\0")
     assert session_pid._env_is_sandbox_tool(4245, proc_root=tmp_path) is False
 
 
@@ -210,7 +210,7 @@ def _referenced_names(relative: str) -> set[str]:
         paths += sorted((_SRC / "acp").glob("client_*.py"))
     if relative == "acp/runtime.py":
         # runtime.py's owner modules hold code that was its own.
-        from kiro_crew.acp import runtime
+        from aj_crew.acp import runtime
 
         paths += [Path(sys.modules[owner].__file__) for owner in runtime._RUNTIME_OWNERS]
     return {
@@ -379,12 +379,12 @@ def test_the_exclusion_reads_the_marker_from_a_fixture_process_table(tmp_path: P
     answering True would satisfy every case above and mean nothing."""
     proc = tmp_path / "4301"
     proc.mkdir()
-    (proc / "environ").write_bytes(b"KIROCREW_SPAWNED=1\0KIROCREW_SANDBOX_TOOL=1\0")
+    (proc / "environ").write_bytes(b"AJCREW_SPAWNED=1\0AJCREW_SANDBOX_TOOL=1\0")
     assert runtime_reconcile.process_is_sandbox_tool(4301, proc_root=tmp_path) is True
 
     runtime = tmp_path / "4302"
     runtime.mkdir()
-    (runtime / "environ").write_bytes(b"KIROCREW_SPAWNED=1\0")
+    (runtime / "environ").write_bytes(b"AJCREW_SPAWNED=1\0")
     assert runtime_reconcile.process_is_sandbox_tool(4302, proc_root=tmp_path) is False
     assert (
         runtime_reconcile.process_is_ours(4302, proc_root=tmp_path) is True

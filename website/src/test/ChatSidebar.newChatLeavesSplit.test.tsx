@@ -102,7 +102,7 @@ function renderSidebar(opts: {
           <MemoryRouter>
             <ChatSidebar
               slots={SLOTS} activeSlot={ORIGIN} unreadSlots={[]}
-              history={[]} historyHasMore={false} defaultAgent="kirocrew" installedAgents={[]}
+              history={[]} historyHasMore={false} defaultAgent="ajcrew" installedAgents={[]}
               onSelectSlot={opts.onSelectSlot}
               onOpenSlotInNewTab={opts.onOpenSlotInNewTab}
             />

@@ -38,7 +38,7 @@ Add a top-level `"microvm"` object to `~/.kiro/crew/cloud.json`.
 | `kms_key_id` | yes | `LaneKmsKeyArn` from the stack above. The key your crew's per-crew control secret is encrypted under. Required rather than defaulted: that secret is what authenticates your gateway to your crew, and a key you hold is the only one you can revoke |
 | `activation_role_arn` | yes | `HybridActivationRoleArn` from the stack above. Required: `ssm:CreateActivation` refuses the call without a role, so a block that omits it is a lane whose every launch fails at its first AWS call. Either the ARN or the bare role name works — the lane reduces an ARN to the name the API wants, because `iamRole`'s own pattern has no colon in it |
 | `identity_secret_ref` | yes | the Secrets Manager name or ARN of the crew's **model credential**, which you create yourself. Configured rather than derived: a launch with no tag is given `kc-<random>`, so a path built from the tag cannot exist before the launch that invents it, and the crew would stop at its secrets stage while the VM billed to its wall |
-| `secret_path_prefix` | no | Secrets Manager path prefix for per-crew control secrets. Defaults to `kirocrew/crew` |
+| `secret_path_prefix` | no | Secrets Manager path prefix for per-crew control secrets. Defaults to `ajcrew/crew` |
 | `wall_seconds` | no | the VM lifetime to ask for, in seconds. Omitted takes **one hour**, not the platform maximum: the home is not kept past the wall, so the default is how much conversation you can lose by walking away. The platform's own maximum is the ceiling and is not adjustable |
 | `execution_role_arn` | with `log_group`, yes | `ExecutionRoleArn` from the stack above — the role the platform runs the VM as. `run-microvm` refuses `--logging` without it, so a block that sets `log_group` and omits this gets no guest logs at all |
 | `log_group` | no, but take it | the CloudWatch log group the GUEST's own output goes to. A different setting from the image's, which receives the BUILD's output. Without it a guest that dies before its SSM node registers is completely dark: the control plane sees an activation with zero registrations and a VM in `RUNNING`, and a MicroVM has no other channel in |
@@ -49,11 +49,11 @@ Add a top-level `"microvm"` object to `~/.kiro/crew/cloud.json`.
   "region": "us-east-1",
   "microvm": {
     "base_image_arn": "arn:aws:lambda:us-east-1:aws:microvm-image:al2023-1",
-    "build_role_arn": "arn:aws:iam::123456789012:role/kirocrew-microvm-build",
-    "recipe_bucket": "kirocrew-microvm-recipes-123456789012-us-east-1",
+    "build_role_arn": "arn:aws:iam::123456789012:role/ajcrew-microvm-build",
+    "recipe_bucket": "ajcrew-microvm-recipes-123456789012-us-east-1",
     "bundle_dir": "/home/you/.kiro/crew/bundles/my-crew",
     "kms_key_id": "arn:aws:kms:us-east-1:123456789012:key/11111111-2222-3333-4444-555555555555",
-    "activation_role_arn": "arn:aws:iam::123456789012:role/kirocrew-microvm-crew"
+    "activation_role_arn": "arn:aws:iam::123456789012:role/ajcrew-microvm-crew"
   }
 }
 ```
@@ -120,7 +120,7 @@ The lane publishes a provisioner row as soon as its block is complete, so this
 call works.
 
 ```bash
-curl -X POST "$KIROCREW_URL/api/cloud/launch" \
+curl -X POST "$AJCREW_URL/api/cloud/launch" \
   -H "Content-Type: application/json" \
   -d '{"provider_id": "microvm",
        "confirm_recipient": "<the string the provisioner list showed you>"}'
@@ -133,7 +133,7 @@ fingerprint: a value you cannot read is one you cannot refuse.
 
 ### Stage the wheel once
 
-The base recipe installs Kiro Crew from a wheel in the build context, and a
+The base recipe installs Aj Crew from a wheel in the build context, and a
 launch reads that wheel rather than building one -- building inside a launch would
 let the launch decide which version of the product your crew runs. Stage it once
 from a checkout:
@@ -196,7 +196,7 @@ and discloses nothing. Nothing the guest serves is reachable unauthenticated
 through the VM endpoint.
 
 The MicroVM is the isolation boundary for the crew's own work, which is why the
-guest runs with `KIROCREW_ALLOW_UNSANDBOXED=1`: there is a Firecracker boundary
+guest runs with `AJCREW_ALLOW_UNSANDBOXED=1`: there is a Firecracker boundary
 around the whole machine rather than a user namespace around one process.
 
 ## Testing it without an AWS account

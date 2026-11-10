@@ -4,7 +4,7 @@
  * keeps its own plain toggle.)
  *
  * - `checked`: a save in flight, else the saved value from the shared
- *   `['kirocrewConfig']` entry (which a refresh frame re-reads), else the
+ *   `['ajcrewConfig']` entry (which a refresh frame re-reads), else the
  *   value the latest successful save reported (kept across a later failed
  *   save), else the schema default, on. `held` only while the first read is
  *   in flight; after a failed read the switch stays usable.
@@ -40,7 +40,7 @@ import { errMessage } from '../utils/thunkError'
 import { parseErrorCode } from '../utils/errorReport'
 
 const AUTO_UPDATE_PATH = 'auto_update'
-const CONFIG_KEY = ['kirocrewConfig'] as const
+const CONFIG_KEY = ['ajcrewConfig'] as const
 /** Whether config.local.json sets `auto_update`, and whose entry it is: read, and also set by every answer that reports it. */
 const AUTO_UPDATE_OVERLAY_KEY = ['update.auto_update.overlay'] as const
 /**
@@ -50,7 +50,7 @@ const AUTO_UPDATE_OVERLAY_KEY = ['update.auto_update.overlay'] as const
  */
 const AUTO_UPDATE_ANSWER_KEY = ['update.auto_update.answered'] as const
 
-type KirocrewConfigAutoUpdate = { auto_update?: unknown }
+type AjcrewConfigAutoUpdate = { auto_update?: unknown }
 /** A server answer that may carry the effective value and the overlay pin. */
 type AutoUpdateAnswer = { auto_update?: unknown; overlay_override?: unknown; overlay_source?: unknown; overlay_policy?: unknown }
 
@@ -148,9 +148,9 @@ export function useGatewayAutoUpdate(
   { readOnMount = false }: { readOnMount?: boolean } = {},
 ): SwitchState & { overlayPinned: boolean; overlayPolicy: OverlayPolicy | null } {
   const qc = useQueryClient()
-  const q = useQuery<KirocrewConfigAutoUpdate, Error, boolean>({
+  const q = useQuery<AjcrewConfigAutoUpdate, Error, boolean>({
     queryKey: CONFIG_KEY,
-    queryFn: () => api.kirocrewConfig(),
+    queryFn: () => api.ajcrewConfig(),
     // Absent means the schema default, which is on.
     select: c => (c?.auto_update === undefined ? true : c.auto_update === true),
     ...(readOnMount ? { refetchOnMount: 'always' as const } : { staleTime: 30_000, refetchOnWindowFocus: false }),

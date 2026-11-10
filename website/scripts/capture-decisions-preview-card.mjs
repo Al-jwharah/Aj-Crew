@@ -12,7 +12,7 @@
  * one, above a shared block the whole seam shares. Every state it can be in is a
  * state of three answers this harness varies: the keystone behind
  * `/api/decisions/consent` (consent, per-point scopes, and the server's status per
- * point), `config.json` behind `/api/config/kirocrew` (address, sampling share,
+ * point), `config.json` behind `/api/config/ajcrew` (address, sampling share,
  * history budget, tier-to-model map), the vault index behind `/api/secrets`
  * (whether the provider credential is set) and the fleet ceiling reported as
  * `decisions_enabled` on `/api/dashboard/config`. Frames:
@@ -58,7 +58,7 @@
 import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
 import { serveDist } from './lib/serve-dist.mjs'
-import { json, logPageProblems, stubDashboardApi, KIROCREW_CONFIG_FIXTURE } from './lib/stub-dashboard-api.mjs'
+import { json, logPageProblems, stubDashboardApi, AJCREW_CONFIG_FIXTURE } from './lib/stub-dashboard-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/decisions-preview-card'
 mkdirSync(OUT, { recursive: true })
@@ -256,7 +256,7 @@ const withDecisions = ({
   judgeProvider = 'auto',
   judgeModel = '',
 } = {}) => ({
-  ...KIROCREW_CONFIG_FIXTURE,
+  ...AJCREW_CONFIG_FIXTURE,
   decisions: {
     bucket,
     history_budget_chars: history,
@@ -378,7 +378,7 @@ async function main() {
           await json(route, MODELS)
           return true
         }
-        if (path !== '/api/config/kirocrew') return false
+        if (path !== '/api/config/ajcrew') return false
         if (!config) return false
         await json(route, config)
         // Truthy: `json` resolves to undefined, and a falsy return lets the
@@ -809,7 +809,7 @@ async function main() {
     const panel = page.locator('#decisions-global-panel')
     await panel.waitFor({ state: 'visible', timeout: 5000 })
     // The address is stated ABOVE this block, as the fact consent is given for, and
-    // the card offers no control for it: `PATCH /api/config/kirocrew` excludes
+    // the card offers no control for it: `PATCH /api/config/ajcrew` excludes
     // `decisions.provider.*`, so a field here would be one whose every save fails.
     const card = decisionsCard(page)
     const shown = (await card.textContent()) ?? ''

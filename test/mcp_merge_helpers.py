@@ -15,7 +15,7 @@ from contextlib import ExitStack
 from pathlib import Path
 from unittest.mock import patch
 
-from kiro_crew.agent import install_agent
+from aj_crew.agent import install_agent
 
 
 def bundled_defaults(tmp_path: Path) -> Path:
@@ -36,8 +36,8 @@ def bundled_defaults(tmp_path: Path) -> Path:
 
 
 DEFAULT_MANAGED_MCPS = {
-    "kirocrew-cron": {"command": "/usr/bin/kirocrew", "args": ["mcp-cron"]},
-    "kirocrew-core": {"command": "/usr/bin/kirocrew", "args": ["mcp-core"]},
+    "ajcrew-cron": {"command": "/usr/bin/ajcrew", "args": ["mcp-cron"]},
+    "ajcrew-core": {"command": "/usr/bin/ajcrew", "args": ["mcp-core"]},
 }
 
 
@@ -47,11 +47,11 @@ def run_install_mcp_merge(
     *,
     cc_servers: dict,
     kiro_servers: dict,
-    kirocrew_servers: dict | None = None,
+    ajcrew_servers: dict | None = None,
     which_side_effect=lambda c, **kw: c,
 ) -> dict:
     """Run install_agent with CC-global and Kiro-global mcp.json seeded and a
-    customizable shutil.which. Returns the parsed kirocrew.json config."""
+    customizable shutil.which. Returns the parsed ajcrew.json config."""
     kiro_dir = tmp_path / "kiro_agents"
     kiro_dir.mkdir(exist_ok=True)
     prompt = cfg_dir / "prompt.md"
@@ -62,34 +62,34 @@ def run_install_mcp_merge(
     cc_mcp = tmp_path / "fake_cc_mcp.json"
     kiro_mcp.write_text(json.dumps({"mcpServers": kiro_servers}))
     cc_mcp.write_text(json.dumps({"mcpServers": cc_servers}))
-    if kirocrew_servers is not None:
-        kc_home = tmp_path / "kirocrew_home"
+    if ajcrew_servers is not None:
+        kc_home = tmp_path / "ajcrew_home"
         kc_home.mkdir(parents=True, exist_ok=True)
-        (kc_home / "mcp.json").write_text(json.dumps({"mcpServers": kirocrew_servers}))
+        (kc_home / "mcp.json").write_text(json.dumps({"mcpServers": ajcrew_servers}))
 
-    _user_home = tmp_path / "kirocrew_home"
+    _user_home = tmp_path / "ajcrew_home"
     patches = [
         patch.multiple(
-            "kiro_crew.agent",
+            "aj_crew.agent",
             KIRO_AGENTS_DIR=kiro_dir,
             _BUNDLED_CFG_DIR=cfg_dir,
-            _KIROCREW_BIN="/usr/bin/kirocrew",
+            _AJCREW_BIN="/usr/bin/ajcrew",
             _MANAGED_MCP_SERVERS=DEFAULT_MANAGED_MCPS,
             _KIRO_MCP_JSON=kiro_mcp,
             _CC_MCP_JSON=cc_mcp,
         ),
-        patch("kiro_crew.agent._user_dir", lambda: _user_home),
-        patch("kiro_crew.agent._prompt_path", return_value=prompt),
-        patch("kiro_crew.agent._shipped_defaults", return_value=cfg_dir / "defaults.json"),
-        patch("kiro_crew.agent._project_dir", return_value=None),
-        patch("kiro_crew.agent._aim_skill_paths", return_value=[]),
-        patch("kiro_crew.agent.shutil.which", side_effect=which_side_effect),
-        patch("kiro_crew.agent._mc_config_path", return_value=mc_config),
+        patch("aj_crew.agent._user_dir", lambda: _user_home),
+        patch("aj_crew.agent._prompt_path", return_value=prompt),
+        patch("aj_crew.agent._shipped_defaults", return_value=cfg_dir / "defaults.json"),
+        patch("aj_crew.agent._project_dir", return_value=None),
+        patch("aj_crew.agent._aim_skill_paths", return_value=[]),
+        patch("aj_crew.agent.shutil.which", side_effect=which_side_effect),
+        patch("aj_crew.agent._mc_config_path", return_value=mc_config),
         # A companion contributes the Claude Code scope via the CPP seam — the
         # core does not read ~/.claude.json directly at rebuild time (OSS is
         # Kiro-only). Point the seam at cc_mcp so these merge-priority tests
         # exercise the seam-routed provider-global merge.
-        patch("kiro_crew.agent._extra_mcp_scope_globals", return_value=[cc_mcp]),
+        patch("aj_crew.agent._extra_mcp_scope_globals", return_value=[cc_mcp]),
     ]
     with ExitStack() as stack:
         for p in patches:

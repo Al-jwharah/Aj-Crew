@@ -35,7 +35,7 @@ import aiohttp
 import pytest
 from aiohttp import web
 
-from kiro_crew.telegram.client import TelegramClient
+from aj_crew.telegram.client import TelegramClient
 
 # Captured at import so an autouse stub of ``aiohttp.ClientSession`` in a test
 # module cannot replace the session the client talks through.

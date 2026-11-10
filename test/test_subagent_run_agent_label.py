@@ -2,7 +2,7 @@
 
 ``spawn_run(crew=...)`` passes no ``agent``, so ``SubagentInfo.agent`` is empty
 while the run executes on its execution record's template. The dashboard store
-draws an empty agent as "kirocrew", so every frame that feeds the Subagents
+draws an empty agent as "ajcrew", so every frame that feeds the Subagents
 panel must send the resolved name, not the raw spawn argument.
 """
 
@@ -11,9 +11,9 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 # Import cycle workaround: see test_subagent_snapshot_idle_secs.py for rationale.
-import kiro_crew.dashboard.handlers  # noqa: F401
-from kiro_crew.dashboard.ws import build_subagent_snapshot
-from kiro_crew.subagent_parts.run_record import SubagentInfo
+import aj_crew.dashboard.handlers  # noqa: F401
+from aj_crew.dashboard.ws import build_subagent_snapshot
+from aj_crew.subagent_parts.run_record import SubagentInfo
 
 
 def _info(agent: str, template_id: str | None) -> SubagentInfo:
@@ -48,8 +48,8 @@ def test_snapshot_names_the_crew_agent_for_a_crew_spawn():
 def test_crew_log_spawn_record_names_the_crew_agent(monkeypatch):
     """A restarted gateway rebuilds finished cards from ``subagent/spawned``, so
     that record must carry the run's agent too, not the empty spawn argument."""
-    from kiro_crew.crew_log import emit as crew_log_emit
-    from kiro_crew.subagent_manager.admission.gate_reporting import (
+    from aj_crew.crew_log import emit as crew_log_emit
+    from aj_crew.subagent_manager.admission.gate_reporting import (
         _record_crew_log_spawn_started,
     )
 

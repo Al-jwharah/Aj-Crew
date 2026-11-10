@@ -22,7 +22,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
 _CHILD_SOURCE = """\
 import json, os, sys

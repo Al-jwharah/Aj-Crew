@@ -18,9 +18,9 @@ import snapshot_helpers
 from snapshot_helpers import unpinnable_argv
 
 from conftest import requires_o_nofollow, requires_symlinks
-from kiro_crew import snapshot as snapshot_mod
-from kiro_crew.jsonl_util import OversizedRecord, UndecodableRecord
-from kiro_crew.testing.wait import wait_until
+from aj_crew import snapshot as snapshot_mod
+from aj_crew.jsonl_util import OversizedRecord, UndecodableRecord
+from aj_crew.testing.wait import wait_until
 
 # Fixtures shared with the sibling modules, bound by assignment so pytest registers
 # them for the tests in this module.
@@ -108,15 +108,15 @@ class TestNotificationCopyWhenNoLiveFileExists(_NotificationCopyFixtures):
         through ``_load_notifications`` shows a bad byte costs all rows.
         """
         snap, home = self._snap(tmp_path, self.GOOD + self.MORE + self.BAD_UTF8)
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         with pytest.raises(UndecodableRecord):
             self._merge(snap, home)
 
         # Same source without the bad record: the copy must be fully loadable.
         clean, home2 = self._snap(tmp_path / "clean", self.GOOD + self.MORE)
-        monkeypatch.setenv("KIROCREW_HOME", str(home2))
+        monkeypatch.setenv("AJCREW_HOME", str(home2))
         self._merge(clean, home2)
-        from kiro_crew.dashboard import state as dashboard_state
+        from aj_crew.dashboard import state as dashboard_state
 
         assert len(dashboard_state._load_notifications()) == 2
 
@@ -434,7 +434,7 @@ class TestNotificationCopyWhenNoLiveFileExists(_NotificationCopyFixtures):
         cannot run the queued append while the copy holds it, so the wait below times
         out; the note goes through the executor, the product's own route.
         """
-        from kiro_crew.dashboard import state as dashboard_state
+        from aj_crew.dashboard import state as dashboard_state
 
         snap, home = self._snap(
             tmp_path,
@@ -444,7 +444,7 @@ class TestNotificationCopyWhenNoLiveFileExists(_NotificationCopyFixtures):
                 for i in range(dashboard_state._MAX_PERSISTED_NOTIFICATIONS)
             ),
         )
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         pool = dashboard_state._notification_io_executor()
         note = {"ts": "2026-09-05T00:00:00Z", "msg": "LIVE-NOTE", "kind": "agent"}
         ran_during_copy = threading.Event()
@@ -479,7 +479,7 @@ class TestNotificationCopyWhenNoLiveFileExists(_NotificationCopyFixtures):
             "the append ran while the copy was still writing, so the two are concurrent "
             "rather than ordered"
         )
-        # Drained before teardown: reverting `KIROCREW_HOME` with the append still queued
+        # Drained before teardown: reverting `AJCREW_HOME` with the append still queued
         # would write the note to another data home. FIFO, so a no-op drains it.
         # flake-ok: unbounded drain of the single notification worker behind a one-row append,
         # moved verbatim; pytest-timeout names a hang; tracked for a de-flake pass
@@ -501,8 +501,8 @@ class TestNotificationCopyWhenNoLiveFileExists(_NotificationCopyFixtures):
         import concurrent.futures
 
         snap, home = self._snap(tmp_path, self.GOOD)
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
-        from kiro_crew.dashboard import state as dashboard_state
+        monkeypatch.setenv("AJCREW_HOME", str(home))
+        from aj_crew.dashboard import state as dashboard_state
 
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix="notif-io")
         monkeypatch.setattr(dashboard_state, "_notification_io_pool", pool)
@@ -527,7 +527,7 @@ class TestNotificationCopyWhenNoLiveFileExists(_NotificationCopyFixtures):
         acquires the executor rather than running inline when none exists, so the delivery
         queues behind it. Pinned for the `pool is None` path.
         """
-        from kiro_crew.dashboard import state as dashboard_state
+        from aj_crew.dashboard import state as dashboard_state
 
         snap, home = self._snap(
             tmp_path,
@@ -537,7 +537,7 @@ class TestNotificationCopyWhenNoLiveFileExists(_NotificationCopyFixtures):
                 for i in range(dashboard_state._MAX_PERSISTED_NOTIFICATIONS)
             ),
         )
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         # A FRESH gateway: nothing has persisted a notification, so there is no pool.
         monkeypatch.setattr(dashboard_state, "_notification_io_pool", None)
         note = {"ts": "2026-09-05T00:00:00Z", "msg": "LIVE-NOTE", "kind": "agent"}
@@ -588,7 +588,7 @@ class TestNotificationCopyWhenNoLiveFileExists(_NotificationCopyFixtures):
         first-O_CREAT-anywhere trigger would be foreign on every run, not one CI run in a
         thousand.
         """
-        from kiro_crew.dashboard import state as dashboard_state
+        from aj_crew.dashboard import state as dashboard_state
 
         snap, home = self._snap(
             tmp_path,
@@ -598,7 +598,7 @@ class TestNotificationCopyWhenNoLiveFileExists(_NotificationCopyFixtures):
                 for i in range(dashboard_state._MAX_PERSISTED_NOTIFICATIONS)
             ),
         )
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(dashboard_state, "_notification_io_pool", None)
         note = {"ts": "2026-09-05T00:00:00Z", "msg": "LIVE-NOTE", "kind": "agent"}
         ran_during_copy = threading.Event()
@@ -676,7 +676,7 @@ class TestNotificationCopyWhenNoLiveFileExists(_NotificationCopyFixtures):
         real_import = builtins.__import__
 
         def failing(name, globals=None, locals=None, fromlist=(), level=0):
-            if name == "kiro_crew.dashboard" and "state" in (fromlist or ()):
+            if name == "aj_crew.dashboard" and "state" in (fromlist or ()):
                 raise RuntimeError("dashboard state failed to initialise")
             return real_import(name, globals, locals, fromlist, level)
 
@@ -696,7 +696,7 @@ class TestNotificationCopyWhenNoLiveFileExists(_NotificationCopyFixtures):
         snap, home = self._snap(tmp_path, self.GOOD)
         # `None` in sys.modules makes the import raise ImportError, which is the exact
         # branch under test rather than a stand-in for it.
-        monkeypatch.setitem(sys.modules, "kiro_crew.dashboard.state", None)
+        monkeypatch.setitem(sys.modules, "aj_crew.dashboard.state", None)
         snapshot_mod._copy_notifications(snap / "notifications.jsonl", home / "notifications.jsonl")
         assert (home / "notifications.jsonl").read_bytes() == self.GOOD
 
@@ -709,7 +709,7 @@ class TestNotificationCopyWhenNoLiveFileExists(_NotificationCopyFixtures):
         """
         import concurrent.futures
 
-        from kiro_crew.dashboard import state as dashboard_state
+        from aj_crew.dashboard import state as dashboard_state
 
         real_executor = concurrent.futures.ThreadPoolExecutor
 
@@ -717,7 +717,7 @@ class TestNotificationCopyWhenNoLiveFileExists(_NotificationCopyFixtures):
             def __init__(self, *args, **kwargs):
                 # flake-ok: pre-existing 0.2 s construction window moved verbatim; the assertion is
                 # object identity, which no timing can satisfy falsely; tracked for a de-flake pass
-                # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing construction window moved verbatim
+                # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing construction window moved verbatim
                 time.sleep(0.2)  # the window, held open
                 super().__init__(*args, **kwargs)
 
@@ -815,7 +815,7 @@ class TestNotificationCopyRefusalWithoutONofollow(_NotificationCopyFixtures):
             opens.append(path)
             return real_open(path, *a, **kw)
 
-        from kiro_crew.dashboard import state as dashboard_state
+        from aj_crew.dashboard import state as dashboard_state
 
         real_exec = dashboard_state._notification_io_executor
 

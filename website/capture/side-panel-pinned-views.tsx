@@ -45,7 +45,7 @@ const claimed = params.get('claimed') === 'on'
 // the preference it reads, and set the attribute too so the first paint before
 // the provider's effect is already the right palette.
 localStorage.setItem('mc-theme', theme)
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 /** Fetch stub at the API boundary: every dashboard read answers an empty
  *  payload, so the panel renders its genuine no-content state instead of a

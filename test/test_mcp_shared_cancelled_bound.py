@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import collections
 
-from kiro_crew.mcp_shared import CANCELLED_IDS_MAX, _remember_cancelled_id
+from aj_crew.mcp_shared import CANCELLED_IDS_MAX, _remember_cancelled_id
 
 
 def _fresh():

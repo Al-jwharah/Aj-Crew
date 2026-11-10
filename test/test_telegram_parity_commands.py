@@ -24,7 +24,7 @@ from telegram_parity_helpers import (  # noqa: F401 -- the autouse fixture regis
 from telegram_wire_helpers import telegram_wire
 from test_telegram import _dispatcher, _dm
 
-from kiro_crew.telegram.commands import COMMAND_SPEC, bot_command_payload, parse_command
+from aj_crew.telegram.commands import COMMAND_SPEC, bot_command_payload, parse_command
 
 # ---------------------------------------------------------------------------
 # The command surface
@@ -237,7 +237,7 @@ class TestSessionsCommand:
 
     @pytest.mark.asyncio
     async def test_singular_alias_fuzzy_searches_and_posts_buttons(self, tmp_path: Any) -> None:
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         dispatcher, client, _ = _dispatcher({1})
         log = ConversationLog(base_dir=tmp_path / "sessions")
@@ -262,7 +262,7 @@ class TestSessionsCommand:
 
     @pytest.mark.asyncio
     async def test_empty_history_says_so(self, tmp_path: Any) -> None:
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         dispatcher, client, _ = _dispatcher({1})
         self._install_log(dispatcher, ConversationLog(base_dir=tmp_path / "sessions"))
@@ -275,8 +275,8 @@ class TestSessionsCommand:
     async def test_search_failure_is_audited_and_fails_closed(
         self, tmp_path: Any, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.history import ConversationLog
-        from kiro_crew.messaging import session_resume as resume_core
+        from aj_crew.history import ConversationLog
+        from aj_crew.messaging import session_resume as resume_core
 
         dispatcher, client, _ = _dispatcher({1})
         log = ConversationLog(base_dir=tmp_path / "sessions")
@@ -360,7 +360,7 @@ class TestAgentPicker:
         assert dispatcher._resolve_agent(route) == "alpha"
         await dispatcher._apply_agent(route, "")
         assert dispatcher._agent_picks.get(route) == ""
-        assert dispatcher._resolve_agent(route) == "kirocrew"
+        assert dispatcher._resolve_agent(route) == "ajcrew"
 
     @pytest.mark.asyncio
     async def test_a_pick_follows_the_new_agents_own_generations(self) -> None:
@@ -371,12 +371,12 @@ class TestAgentPicker:
         dispatcher, client, sessions = _dispatcher({1})
         route = ("direct", "1")
         sessions._has = False
-        persisted = {"kirocrew": 0, "alpha": 2}
+        persisted = {"ajcrew": 0, "alpha": 2}
         sessions.max_generation = lambda bucket: persisted[bucket.split(":")[1]]
         reserved: list[str] = []
         sessions.reserve_generation = reserved.append
         assert dispatcher._conv.current_gen(route) == 0
-        assert dispatcher._session_key(route) == "telegram:kirocrew:direct:1"
+        assert dispatcher._session_key(route) == "telegram:ajcrew:direct:1"
 
         assert await dispatcher._apply_agent(route, "alpha") == "✅ Agent set to alpha."
         assert dispatcher._session_key(route) == "telegram:alpha:direct:1:gen2"
@@ -387,8 +387,8 @@ class TestAgentPicker:
         assert reserved == ["telegram:alpha:direct:1:gen3"]
 
         # Back to the default row: its own latest again, not alpha's counter.
-        assert await dispatcher._apply_agent(route, "") == "✅ Agent set to Default (kirocrew)."
-        assert dispatcher._session_key(route) == "telegram:kirocrew:direct:1"
+        assert await dispatcher._apply_agent(route, "") == "✅ Agent set to Default (ajcrew)."
+        assert dispatcher._session_key(route) == "telegram:ajcrew:direct:1"
 
     @pytest.mark.asyncio
     async def test_pressing_the_current_row_is_not_a_switch(self) -> None:
@@ -414,9 +414,9 @@ class TestAgentPicker:
         await dispatcher._apply_agent(route, "")
         dispatcher._conv.bump_gen(route)
         key = dispatcher._session_key(route)
-        assert await dispatcher._apply_agent(route, "") == "ℹ️ Already using Default (kirocrew)."
+        assert await dispatcher._apply_agent(route, "") == "ℹ️ Already using Default (ajcrew)."
         assert dispatcher._session_key(route) == key
-        assert await dispatcher._apply_agent(route, "kirocrew") == ("ℹ️ Already using kirocrew.")
+        assert await dispatcher._apply_agent(route, "ajcrew") == ("ℹ️ Already using ajcrew.")
         assert dispatcher._session_key(route) == key
 
     @pytest.mark.asyncio
@@ -469,7 +469,7 @@ class TestAgentPicker:
     def test_the_picker_table_is_bounded_in_both_directions(self) -> None:
         import time as _time
 
-        from kiro_crew.telegram.transport_dispatch import (
+        from aj_crew.telegram.transport_dispatch import (
             _MODEL_PICKER_MAX,
             _MODEL_PICKER_TTL_SECS,
             TelegramDispatcher,
@@ -489,7 +489,7 @@ class TestAgentPicker:
 
     @staticmethod
     def _agent(name: str, filename: str, *, source: str = "builtin", owned: bool = False) -> Any:
-        from kiro_crew.agent_discovery import AgentInfo
+        from aj_crew.agent_discovery import AgentInfo
 
         return AgentInfo(
             name=name,
@@ -497,28 +497,28 @@ class TestAgentPicker:
             description="",
             model="auto",
             source=source,
-            kirocrew_owned=owned,
+            ajcrew_owned=owned,
         )
 
     def test_internal_and_app_agents_are_hidden_from_the_picker(self) -> None:
-        """The reported harm: Kiro Crew internals and app agents occupy slots and
+        """The reported harm: Aj Crew internals and app agents occupy slots and
         push the user's own agents out. Filtering is a property of the roster
-        row, so a user's own ``kirocrew``-prefixed agent (not owned) stays."""
-        from kiro_crew.telegram import transport_dispatch as td
+        row, so a user's own ``ajcrew``-prefixed agent (not owned) stays."""
+        from aj_crew.telegram import transport_dispatch as td
 
         roster = [
-            # Kiro Crew-generated internals — owned, so hidden regardless of source.
-            self._agent("kirocrew", "kirocrew.json", source="kirocrew", owned=True),
-            self._agent("kirocrew-heartbeat", "kirocrew-heartbeat.json", owned=True),
-            self._agent("kirocrew-worker", "kirocrew-worker.json", owned=True),
+            # Aj Crew-generated internals — owned, so hidden regardless of source.
+            self._agent("ajcrew", "ajcrew.json", source="ajcrew", owned=True),
+            self._agent("ajcrew-heartbeat", "ajcrew-heartbeat.json", owned=True),
+            self._agent("ajcrew-worker", "ajcrew-worker.json", owned=True),
             # An app-installed agent: materialised under the "<app>--<agent>.json"
             # link filename, declared name may be bare.
             self._agent("companion", "crew-companion--companion.json", source="package"),
             # A user's OWN agents — the ones the reporter actually uses.
             self._agent("vitrina-designer", "vitrina-designer.json"),
             self._agent("vitrina-writer", "vitrina-writer.json"),
-            # A user's hand-authored kirocrew-prefixed agent: NOT owned, so kept.
-            self._agent("kirocrew-custom", "kirocrew-custom.json"),
+            # A user's hand-authored ajcrew-prefixed agent: NOT owned, so kept.
+            self._agent("ajcrew-custom", "ajcrew-custom.json"),
             # A genuine AIM package agent the user installed: kept (not an app link).
             self._agent("customer360", "Customer360Context-customer360.json", source="package"),
         ]
@@ -527,11 +527,11 @@ class TestAgentPicker:
 
         assert names == [
             "customer360",
-            "kirocrew-custom",
+            "ajcrew-custom",
             "vitrina-designer",
             "vitrina-writer",
         ]
-        for hidden in ("kirocrew", "kirocrew-heartbeat", "kirocrew-worker", "companion"):
+        for hidden in ("ajcrew", "ajcrew-heartbeat", "ajcrew-worker", "companion"):
             assert hidden not in names
 
     @pytest.mark.asyncio
@@ -540,7 +540,7 @@ class TestAgentPicker:
     ) -> None:
         """More selectable agents than fit: the cut must be VISIBLE. A trailing
         row names how many were dropped, and it is not a pressable ``g:`` index."""
-        from kiro_crew.telegram.transport_dispatch import _PICKER_LIMIT
+        from aj_crew.telegram.transport_dispatch import _PICKER_LIMIT
 
         dispatcher, client, _ = _dispatcher({1})
         overflow = 5
@@ -573,9 +573,9 @@ class TestAgentPicker:
         the button showed that id. A copy its crew is still bound to shows the
         crew's display name (else its name); a copy no crew is bound to says
         reads "No crew"; a shared template keeps its own name."""
-        from kiro_crew.agent_discovery import AgentInfo
-        from kiro_crew.config import loader
-        from kiro_crew.telegram import transport_dispatch as td
+        from aj_crew.agent_discovery import AgentInfo
+        from aj_crew.config import loader
+        from aj_crew.telegram import transport_dispatch as td
 
         def _spec(name: str, private_to: str = "") -> AgentInfo:
             return AgentInfo(
@@ -604,7 +604,7 @@ class TestAgentPicker:
         }
         with (
             patch.object(td, "list_agents", lambda: roster),
-            patch.object(loader.KiroCrewConfig, "load", lambda: SimpleNamespace(agents=crews)),
+            patch.object(loader.AjCrewConfig, "load", lambda: SimpleNamespace(agents=crews)),
         ):
             labels = td.TelegramDispatcher._agent_labels()
 
@@ -626,9 +626,9 @@ class TestAgentPicker:
         that merely starts with ``crew-`` keeps its name."""
         from test_telegram import _press
 
-        from kiro_crew.agent_discovery import AgentInfo
-        from kiro_crew.config import loader
-        from kiro_crew.telegram import transport_dispatch as td
+        from aj_crew.agent_discovery import AgentInfo
+        from aj_crew.config import loader
+        from aj_crew.telegram import transport_dispatch as td
 
         orphan = "crew-6f74da5cdcb1d25e0b608f92"
         roster = [
@@ -637,7 +637,7 @@ class TestAgentPicker:
         ]
         monkeypatch.setattr(td, "list_agents", lambda: roster)
         monkeypatch.setattr(
-            loader.KiroCrewConfig, "load", staticmethod(lambda: SimpleNamespace(agents={}))
+            loader.AjCrewConfig, "load", staticmethod(lambda: SimpleNamespace(agents={}))
         )
         dispatcher, client, _ = _dispatcher({1})
         await dispatcher.handle_message(_msg("/agent"))
@@ -649,13 +649,13 @@ class TestAgentPicker:
         assert dispatcher._agent_picks.get(("direct", "1")) == orphan
 
     def test_an_unreadable_config_falls_back_to_the_ids(self) -> None:
-        from kiro_crew.config import loader
-        from kiro_crew.telegram import transport_dispatch as td
+        from aj_crew.config import loader
+        from aj_crew.telegram import transport_dispatch as td
 
         def _boom() -> Any:
             raise OSError("config gone")
 
-        with patch.object(loader.KiroCrewConfig, "load", _boom):
+        with patch.object(loader.AjCrewConfig, "load", _boom):
             assert td.TelegramDispatcher._agent_labels() == {}
 
     @pytest.mark.asyncio
@@ -668,12 +668,12 @@ class TestAgentPicker:
 
         rows: list[dict[str, Any]] = []
         monkeypatch.setattr(
-            "kiro_crew.telegram.transport_dispatch.sel",
+            "aj_crew.telegram.transport_dispatch.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: rows.append(kw)),
         )
-        from kiro_crew.agent_discovery import AgentInfo
-        from kiro_crew.config import loader
-        from kiro_crew.telegram import transport_dispatch as td
+        from aj_crew.agent_discovery import AgentInfo
+        from aj_crew.config import loader
+        from aj_crew.telegram import transport_dispatch as td
 
         hex_id = "crew-3cc49292d162a41643f706a9"
         roster = [
@@ -689,7 +689,7 @@ class TestAgentPicker:
         crews = {"finance": SimpleNamespace(kiro_agent=hex_id, display_name="")}
         monkeypatch.setattr(td, "list_agents", lambda: roster)
         monkeypatch.setattr(
-            loader.KiroCrewConfig, "load", staticmethod(lambda: SimpleNamespace(agents=crews))
+            loader.AjCrewConfig, "load", staticmethod(lambda: SimpleNamespace(agents=crews))
         )
         dispatcher, client, _ = _dispatcher({1})
         await dispatcher.handle_message(_msg("/agent"))
@@ -713,7 +713,7 @@ class TestSharedSessionsCollector:
         # _SESSIONS_DIR name that its suites and the lazy-data-home ratchet patch.
         # A patch that set an attribute nothing reads would leave those tests
         # passing while the read hit the operator's real home.
-        from kiro_crew.slack import sessions_view as sv
+        from aj_crew.slack import sessions_view as sv
 
         sessions = tmp_path / "sessions"
         sessions.mkdir()
@@ -726,7 +726,7 @@ class TestSharedSessionsCollector:
         assert [row["title"] for row in rows] == ["Planted"]
 
     def test_the_neutral_collector_takes_an_explicit_directory(self, tmp_path: Any) -> None:
-        from kiro_crew.messaging.sessions_view import _collect_recent_sessions
+        from aj_crew.messaging.sessions_view import _collect_recent_sessions
 
         sessions = tmp_path / "sessions"
         sessions.mkdir()
@@ -737,7 +737,7 @@ class TestSharedSessionsCollector:
         assert [row["title"] for row in rows] == ["Neutral"]
 
     def test_an_absent_directory_is_empty_not_an_error(self, tmp_path: Any) -> None:
-        from kiro_crew.messaging.sessions_view import _collect_recent_sessions
+        from aj_crew.messaging.sessions_view import _collect_recent_sessions
 
         assert _collect_recent_sessions(None, sessions_dir=tmp_path / "nope") == []
 
@@ -909,8 +909,8 @@ class TestSessionsAuditCaller:
     async def test_the_requesting_user_id_is_the_audited_caller(
         self, tmp_path: Any, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.history import ConversationLog
-        from kiro_crew.messaging import session_resume as resume_core
+        from aj_crew.history import ConversationLog
+        from aj_crew.messaging import session_resume as resume_core
 
         dispatcher, _, _ = _dispatcher({7})
         log = ConversationLog(base_dir=tmp_path / "sessions")
@@ -936,25 +936,25 @@ class TestSessionsAuditCaller:
 class TestAgentPickerCharacterization:
     """The /agent keyboard, its cut, its inert notice row and every reply."""
 
-    _DEFAULT = "Default (kirocrew)"
+    _DEFAULT = "Default (ajcrew)"
 
     @staticmethod
     def _with_names(monkeypatch: Any, d: Any, names: list[str]) -> None:
         monkeypatch.setattr(type(d), "_installed_agent_names", staticmethod(lambda: list(names)))
 
     def test_each_internal_signal_hides_an_agent_on_its_own(self) -> None:
-        from kiro_crew.telegram.transport_dispatch import _agent_is_internal
+        from aj_crew.telegram.transport_dispatch import _agent_is_internal
 
         agent = TestAgentPicker._agent
         assert _agent_is_internal(agent("a", "a.json", owned=True)) is True
-        assert _agent_is_internal(agent("b", "b.json", source="kirocrew")) is True
+        assert _agent_is_internal(agent("b", "b.json", source="ajcrew")) is True
         assert _agent_is_internal(agent("c", "app--c.json")) is True
         assert _agent_is_internal(agent("d--x", "d.json")) is False
-        assert _agent_is_internal(agent("kirocrew-custom", "kirocrew-custom.json")) is False
+        assert _agent_is_internal(agent("ajcrew-custom", "ajcrew-custom.json")) is False
         assert _agent_is_internal(agent("p", "Pkg-p.json", source="package")) is False
 
     def test_names_are_deduplicated_and_listed_with_no_arguments(self) -> None:
-        from kiro_crew.telegram import transport_dispatch as td
+        from aj_crew.telegram import transport_dispatch as td
 
         roster = [
             TestAgentPicker._agent("beta", "beta.json"),
@@ -1079,7 +1079,7 @@ class TestAgentPickerCharacterization:
 
         rows: list[dict[str, Any]] = []
         monkeypatch.setattr(
-            "kiro_crew.telegram.transport_dispatch.sel",
+            "aj_crew.telegram.transport_dispatch.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: rows.append(kw)),
         )
         d, client, sess = _dispatcher({7})
@@ -1132,10 +1132,10 @@ class TestServiceAndDashboardCharacterization:
 
     @pytest.fixture
     def _dashboard(self, monkeypatch: Any) -> dict[str, Any]:
-        import kiro_crew.dashboard.token_auth as token_auth
+        import aj_crew.dashboard.token_auth as token_auth
 
         state: dict[str, Any] = {"order": [], "minted": []}
-        monkeypatch.delenv("KIROCREW_PORT", raising=False)
+        monkeypatch.delenv("AJCREW_PORT", raising=False)
 
         def _mint(user: str, *, ttl_seconds: int) -> str:
             state["minted"].append((user, ttl_seconds))
@@ -1145,7 +1145,7 @@ class TestServiceAndDashboardCharacterization:
 
         monkeypatch.setattr(token_auth, "generate_token", _mint)
         monkeypatch.setattr(
-            "kiro_crew.telegram.transport_dispatch.sel",
+            "aj_crew.telegram.transport_dispatch.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: state["order"].append(("sel", kw))),
         )
         return state
@@ -1164,7 +1164,7 @@ class TestServiceAndDashboardCharacterization:
         return client
 
     def test_a_dm_gets_a_link(self, _dashboard: dict[str, Any]) -> None:
-        self._dm_dashboard(_dashboard, "/kirocrew dashboard 2h", "https://dash.example:8443")
+        self._dm_dashboard(_dashboard, "/ajcrew dashboard 2h", "https://dash.example:8443")
         assert _dashboard["minted"] == [("1", 7200)]
         assert _dashboard["order"] == [
             (
@@ -1184,23 +1184,23 @@ class TestServiceAndDashboardCharacterization:
         for arg, ttl, shown in (("", 3600, "1h"), (" 90m", 5400, "1h 30m"), (" 30h", 72000, "20h")):
             _dashboard["minted"].clear()
             client = self._dm_dashboard(
-                _dashboard, f"/kirocrew dashboard{arg}", "https://dash.example"
+                _dashboard, f"/ajcrew dashboard{arg}", "https://dash.example"
             )
             assert _dashboard["minted"] == [("1", ttl)], arg
             assert client.sent[-1][0].startswith(f"🔗 Dashboard link (valid {shown}):"), arg
 
     def test_a_topic_is_refused_without_minting(self, _dashboard: dict[str, Any]) -> None:
         d, client, _sess = _dispatcher({1}, allow_forum=True, allowed_forum_chat_ids=[-100999])
-        asyncio.run(d.handle_message(_forum_msg("/kirocrew dashboard")))
+        asyncio.run(d.handle_message(_forum_msg("/ajcrew dashboard")))
         assert client.sent[-1][0] == (
-            "🔒 Dashboard links are only sent in a direct message — DM me `/kirocrew dashboard`."
+            "🔒 Dashboard links are only sent in a direct message — DM me `/ajcrew dashboard`."
         )
         assert client.send_threads[-1] == 4
         assert _dashboard["minted"] == [] and _dashboard["order"] == []
 
     def test_a_mint_failure_is_audited_and_reported(self, _dashboard: dict[str, Any]) -> None:
         _dashboard["mint_error"] = RuntimeError("boom")
-        client = self._dm_dashboard(_dashboard, "/kirocrew dashboard", "https://dash.example")
+        client = self._dm_dashboard(_dashboard, "/ajcrew dashboard", "https://dash.example")
         assert [kw["outcome"] for kind, kw in _dashboard["order"] if kind == "sel"] == ["error"]
         assert client.sent[-1][0] == "⚠️ Could not generate dashboard link: boom"
 
@@ -1212,7 +1212,7 @@ class TestHostListingAudienceCharacterization:
     async def test_a_topic_refusal_is_exact_and_audited(self, monkeypatch: Any) -> None:
         rows: list[dict[str, Any]] = []
         monkeypatch.setattr(
-            "kiro_crew.telegram.transport_dispatch.sel",
+            "aj_crew.telegram.transport_dispatch.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: rows.append(kw)),
         )
         d, client, _sess = _dispatcher({1}, allow_forum=True, allowed_forum_chat_ids=[-100999])
@@ -1253,7 +1253,7 @@ class TestHostListingAudienceCharacterization:
     async def test_a_multi_owner_dm_refusal_is_exact_and_audited(self, monkeypatch: Any) -> None:
         rows: list[dict[str, Any]] = []
         monkeypatch.setattr(
-            "kiro_crew.telegram.transport_dispatch.sel",
+            "aj_crew.telegram.transport_dispatch.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: rows.append(kw)),
         )
         d, client, _sess = _dispatcher({7, 8})
@@ -1307,5 +1307,5 @@ class TestHostListingAudienceCharacterization:
             "private",
             None,
             query="launch",
-            native_key="telegram:kirocrew:direct:7",
+            native_key="telegram:ajcrew:direct:7",
         )

@@ -1,4 +1,4 @@
-"""Folder order on the kirocrew-dashboard server: where a folder sits among its siblings.
+"""Folder order on the ajcrew-dashboard server: where a folder sits among its siblings.
 
 ``chat_folder_move``'s ``before``/``after`` anchors, the renumber an app may not
 half-apply, and the tree listed in the order the sidebar draws, under the person's
@@ -22,11 +22,11 @@ from mcp_dashboard_folders_helpers import (
     _writes,
 )
 
-from kiro_crew import mcp_dashboard
-from kiro_crew.config.loader import KiroCrewConfig, config_dir
-from kiro_crew.mcp_dashboard import _list_tools
-from kiro_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller
+from aj_crew import mcp_dashboard
+from aj_crew.config.loader import AjCrewConfig, config_dir
+from aj_crew.mcp_dashboard import _list_tools
+from aj_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller
 
 
 def _set_folder_sort(value: str) -> None:
@@ -48,7 +48,7 @@ def _config_answering(value: object, monkeypatch: pytest.MonkeyPatch) -> None:
             raise value
         return type("Cfg", (), {"dashboard": type("Dash", (), {"folder_sort": value})()})()
 
-    monkeypatch.setattr(KiroCrewConfig, "load", _load)
+    monkeypatch.setattr(AjCrewConfig, "load", _load)
 
 
 #: Four root folders with explicit, contiguous positions — the shape a sidebar
@@ -280,11 +280,11 @@ class TestFolderPosition:
     def test_a_reparent_that_also_positions_says_both(self) -> None:
         out, _ = _call(
             "chat_folder_move",
-            {"folder": "Travel", "after": "kirocrew/0811"},
+            {"folder": "Travel", "after": "ajcrew/0811"},
             _positioning(folders=_FOLDERS, slots=_SLOTS),
         )
         assert out.startswith("Moved folder")
-        assert "kirocrew/Travel" in out and "after `kirocrew/0811`" in out
+        assert "ajcrew/Travel" in out and "after `ajcrew/0811`" in out
 
     def test_a_free_slot_makes_the_whole_reposition_one_write(self) -> None:
         """A position the store has room for is one PATCH, so it cannot be partial.
@@ -558,7 +558,7 @@ class TestFolderPosition:
     def test_a_real_reparent_still_sends_parent_id(self) -> None:
         out, dash = _call(
             "chat_folder_move",
-            {"folder": "Travel", "new_parent": "kirocrew"},
+            {"folder": "Travel", "new_parent": "ajcrew"},
             _positioning(folders=_FOLDERS, slots=_SLOTS),
         )
         assert not out.startswith("Error:")
@@ -579,7 +579,7 @@ class TestFolderPosition:
         """``before``/``after`` names a SIBLING, so it must live in the destination."""
         out, dash = _call(
             "chat_folder_move",
-            {"folder": "Travel", "new_parent": "root", "after": "kirocrew/0811"},
+            {"folder": "Travel", "new_parent": "root", "after": "ajcrew/0811"},
             _positioning(folders=_FOLDERS, slots=_SLOTS),
         )
         assert out.startswith("Error:") and "not in the destination" in out
@@ -968,7 +968,7 @@ class TestTreeHonoursTheFolderSortMode:
         assert mcp_dashboard._chat_folder_sort_mode(_raises) == ("custom", "OSError: gone")
 
     def test_the_setting_is_read_from_the_config_file_not_over_http(self) -> None:
-        """``GET /api/config/kirocrew`` is cookie-only -- it is in neither
+        """``GET /api/config/ajcrew`` is cookie-only -- it is in neither
         internal-secret allowlist -- so a tool that fetched it would always read
         an auth error and always list the stored order. The read goes through the
         loader instead, like the other dashboard settings the MCP tools read."""

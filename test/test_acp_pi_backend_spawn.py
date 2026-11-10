@@ -35,11 +35,11 @@ from acp_pi_backend_helpers import (
 )
 
 from conftest import make_dir_link, requires_symlinks
-from kiro_crew import acp_tool_gate, sandbox, security
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp import launch as launch_mod
-from kiro_crew.acp._dispatch import build_permission_event, gate_envelope
-from kiro_crew.acp.client import (
+from aj_crew import acp_tool_gate, sandbox, security
+from aj_crew.acp import client as acp_client
+from aj_crew.acp import launch as launch_mod
+from aj_crew.acp._dispatch import build_permission_event, gate_envelope
+from aj_crew.acp.client import (
     PI_INSTALL_COMMAND,
     AcpClient,
     AcpToolGateUnroutable,
@@ -49,18 +49,18 @@ from kiro_crew.acp.client import (
     _seal_pi_gate_extension,
     pi_gate_extension_path,
 )
-from kiro_crew.acp.harness import pi as pi_mod
-from kiro_crew.acp_backends import (
+from aj_crew.acp.harness import pi as pi_mod
+from aj_crew.acp_backends import (
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_PI,
     ACP_BACKEND_ROUTING,
     Routing,
     routing_for,
 )
-from kiro_crew.acp_tool_gate import gate_extension_issue
-from kiro_crew.config.paths import config_dir
-from kiro_crew.instances import run_marker
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.acp_tool_gate import gate_extension_issue
+from aj_crew.config.paths import config_dir
+from aj_crew.instances import run_marker
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _no_ambient_pi_env = acp_pi_backend_helpers._no_ambient_pi_env
@@ -155,11 +155,11 @@ def test_the_adapter_is_told_to_run_the_launcher(monkeypatch, tmp_path) -> None:
     assert len(steer.key) == 32 and steer.key != rig.adapter._mcp_key
     assert env == {
         "PI_ACP_PI_COMMAND": rig.LAUNCHER,
-        "KIROCREW_PI_GATE_SESSION": nonce,
-        "KIROCREW_PI_MCP_HANDOFF": handoff,
-        "KIROCREW_PI_MCP_KEY": rig.adapter._mcp_key.hex(),
-        "KIROCREW_PI_STEER": steer._stem(),
-        "KIROCREW_PI_STEER_KEY": steer.key.hex(),
+        "AJCREW_PI_GATE_SESSION": nonce,
+        "AJCREW_PI_MCP_HANDOFF": handoff,
+        "AJCREW_PI_MCP_KEY": rig.adapter._mcp_key.hex(),
+        "AJCREW_PI_STEER": steer._stem(),
+        "AJCREW_PI_STEER_KEY": steer.key.hex(),
     }
     assert len(rig.adapter._mcp_key) == 32
 
@@ -186,7 +186,7 @@ def test_only_the_gated_session_hands_the_parser_a_nonce(tmp_path) -> None:
 
 
 def test_the_backend_declares_the_verified_mechanism() -> None:
-    from kiro_crew.agent_sdk import tool_gate
+    from aj_crew.agent_sdk import tool_gate
 
     assert routing_for(ACP_BACKEND_PI) is Routing.VERIFIED_GATE_EXTENSION
     assert tool_gate.is_enforced(ACP_BACKEND_PI)
@@ -266,10 +266,10 @@ class TestGateEnvelope:
     @pytest.mark.parametrize(
         "message",
         [
-            "kiro-crew-gate",
-            '{"kiro-crew-gate": 2, "tool": "bash"}',
-            '["kiro-crew-gate"]',
-            '{"kiro-crew-gate": 1, "tool": 5}',
+            "aj-crew-gate",
+            '{"aj-crew-gate": 2, "tool": "bash"}',
+            '["aj-crew-gate"]',
+            '{"aj-crew-gate": 1, "tool": 5}',
         ],
     )
     def test_a_message_that_is_not_the_envelope_is_none(self, message):
@@ -565,7 +565,7 @@ class TestTheGateArtifactsStayReachableInsideTheSandbox:
     ):
         artifact_dir = tmp_path / "pi-gate"
         artifact_dir.mkdir()
-        stale = artifact_dir / "kirocrew_pi_gate_999999_gate.ts"
+        stale = artifact_dir / "ajcrew_pi_gate_999999_gate.ts"
         stale.write_text("gate", encoding="utf-8")
         monkeypatch.setattr(sandbox.platform_compat, "pid_exists", lambda _pid: False)
         removed = sandbox.cleanup_stale_sandbox_profiles(
@@ -577,7 +577,7 @@ class TestTheGateArtifactsStayReachableInsideTheSandbox:
     def test_sweep_refuses_a_linked_pi_gate_artifact_directory(self, monkeypatch, tmp_path):
         target = tmp_path / "outside-pi-gate"
         target.mkdir()
-        stale = target / "kirocrew_pi_gate_999999_gate.ts"
+        stale = target / "ajcrew_pi_gate_999999_gate.ts"
         stale.write_text("gate", encoding="utf-8")
         make_dir_link(tmp_path / "pi-gate", target)
         monkeypatch.setattr(sandbox.platform_compat, "pid_exists", lambda _pid: False)
@@ -590,7 +590,7 @@ class TestTheGateArtifactsStayReachableInsideTheSandbox:
     def test_sweep_refuses_a_linked_run_artifact_directory(self, monkeypatch, tmp_path):
         target = tmp_path / "outside-run"
         target.mkdir()
-        stale = target / "kirocrew_sandbox_999999.py"
+        stale = target / "ajcrew_sandbox_999999.py"
         stale.write_text("launcher", encoding="utf-8")
         make_dir_link(tmp_path / "run", target)
         monkeypatch.setattr(sandbox.platform_compat, "pid_exists", lambda _pid: False)
@@ -641,7 +641,7 @@ class TestTheReadBackAgainstARealChild:
         """Protocol drift reads as "not established", never as "loaded"."""
         drifted = json.dumps(
             {
-                "id": "kiro-crew-gate-readback",
+                "id": "aj-crew-gate-readback",
                 "type": "response",
                 "command": "get_commands",
                 "success": True,
@@ -673,7 +673,7 @@ class TestAReadBackFailureRefusesTheSession:
                 remedy="reinstall it",
             )
         message = str(excinfo.value)
-        assert "would not reach Kiro Crew's security gate" in message
+        assert "would not reach Aj Crew's security gate" in message
         assert acp_tool_gate.UNENFORCED_CONTROLS in message
         assert "reinstall it" in message
 

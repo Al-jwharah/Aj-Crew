@@ -23,7 +23,7 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // The chip's HEAD probe re-asks /api/file-raw and shows the missing-file
 // wording only on a confirmed 404. The dev server proxies /api to a backend

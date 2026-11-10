@@ -17,15 +17,15 @@ superseded-by: []
 
 Status: accepted. [#19611](https://github.com/kirodotdev/KiroCrew/pull/19611) was approved and merged on 2026-10-13 by chenmingwei23, and the maintainer iamwhatever records the acceptance here, covering all phases in §1. Nothing is built on main. Phase 3's stub has one open draft implementation, [#19627](https://github.com/kirodotdev/KiroCrew/pull/19627), which builds the binary in CI only and ships it nowhere; Phases 1 and 2 have none. Every code reference below was read at the commit in `audited-at`. Resource numbers come from one 48-core Linux host running 546 user processes (49.2 GB RSS, 7.27 cores busy); they show where memory goes, not a fleet average. The three unknowns §2.3 left open were measured on a second host on 2026-10-18; §2.4 records what it found. Every phase and decision below is unchanged by it.
 
-This document lands on its own, before any implementation, because Phase 1 changes a product default (a default install starts the MCP broker and shares Kiro Crew's own servers) and Phase 3 adds a native package to every supported platform. The First Principles lane reads both decisions from the base branch.
+This document lands on its own, before any implementation, because Phase 1 changes a product default (a default install starts the MCP broker and shares Aj Crew's own servers) and Phase 3 adds a native package to every supported platform. The First Principles lane reads both decisions from the base branch.
 
 ## 1. Summary
 
 | Phase | What | Language | Why this order |
 |---|---|---|---|
-| 1 | Stub and share all ten managed Kiro Crew MCP servers by default | Python + config | Biggest memory win, no new language, makes stubs the common case |
+| 1 | Stub and share all ten managed Aj Crew MCP servers by default | Python + config | Biggest memory win, no new language, makes stubs the common case |
 | 2 | Stub handshake carries a protocol range; the daemon owns the generation check and the PoolKey hashes | Python | A non-Python stub cannot pair with gatewayd today |
-| 3 | Rust stub as a standalone binary in a wheel-only `kirocrew-native` package, behind `mcp_gateway.stub_impl=native` | Rust + CI | Each stub drops from ~28 MB to an estimated 3-5 MB |
+| 3 | Rust stub as a standalone binary in a wheel-only `ajcrew-native` package, behind `mcp_gateway.stub_impl=native` | Rust + CI | Each stub drops from ~28 MB to an estimated 3-5 MB |
 | Later | More Rust only where profiling proves it, as PyO3 modules in the same package | Rust | Packaging is a one-time cost; the boundary stays in Python |
 
 ## 2. Motivation
@@ -51,10 +51,10 @@ The managed Python helpers (per-session servers plus stubs) hold more memory tha
 
 | Fact | Where |
 |---|---|
-| The stub sends `stub_code_fingerprint` for managed servers and refuses a daemon whose `fingerprint` differs, raising `StaleGenerationError` | `register` path in `src/kiro_crew/mcp_gateway/stub_link.py` |
-| That fingerprint is the whole package's code identity: git HEAD plus a digest of the tracked diff, or an mtime fallback | `code_fingerprint` in `src/kiro_crew/code_fingerprint.py` |
-| The same value is folded into `binary_version`, one of the six `PoolKey` fields | `_pool_binary_identity` in `stub_register.py`; `PoolKey` in `src/kiro_crew/mcp_gateway/pool.py` |
-| The stub computes `command_args_hash` and `effective_env_hash` itself | `build_register_payload` in `stub_register.py`, calling `hash_command` / `hash_effective_env` in `src/kiro_crew/mcp_gateway/hashing.py` |
+| The stub sends `stub_code_fingerprint` for managed servers and refuses a daemon whose `fingerprint` differs, raising `StaleGenerationError` | `register` path in `src/aj_crew/mcp_gateway/stub_link.py` |
+| That fingerprint is the whole package's code identity: git HEAD plus a digest of the tracked diff, or an mtime fallback | `code_fingerprint` in `src/aj_crew/code_fingerprint.py` |
+| The same value is folded into `binary_version`, one of the six `PoolKey` fields | `_pool_binary_identity` in `stub_register.py`; `PoolKey` in `src/aj_crew/mcp_gateway/pool.py` |
+| The stub computes `command_args_hash` and `effective_env_hash` itself | `build_register_payload` in `stub_register.py`, calling `hash_command` / `hash_effective_env` in `src/aj_crew/mcp_gateway/hashing.py` |
 | On mismatch a cold start logs to `stub_fallback.jsonl` and `execvpe`s the real server | `stub.py` module docstring |
 
 A Rust stub has no Python package to fingerprint. It could reimplement `code_fingerprint` and `hashing.py` byte for byte, but any drift either falls back silently (memory win lost) or lands in the wrong pool (a tenant-isolation bug). The local fallback log already holds 88 lines of `gateway code fingerprint does not match this stub` from Python stubs alone. The fix is to move those computations out of the stub, which is Phase 2.
@@ -63,12 +63,12 @@ A Rust stub has no Python package to fingerprint. It could reimplement `code_fin
 
 | Unknown | Why it is open | How to measure (owner, outside the agent sandbox) | Now |
 |---|---|---|---|
-| Which functions burn the 69% executor-thread CPU | the sandbox denies ptrace and every thread is named `kirocrew` | `sudo py-spy record --pid <gateway pid> --duration 120 --nonblocking --threads --idle=false --format speedscope -o gw-cpu.json` | measured, §2.4.1 |
+| Which functions burn the 69% executor-thread CPU | the sandbox denies ptrace and every thread is named `ajcrew` | `sudo py-spy record --pid <gateway pid> --duration 120 --nonblocking --threads --idle=false --format speedscope -o gw-cpu.json` | measured, §2.4.1 |
 | Who holds the GIL during event-loop stalls (one 5.5 s stall seen) | same | the same command with `--gil` | measured, §2.4.2 |
 | What the 1.3-2.3 GB anonymous remainder is | `/proc/<pid>/smaps` is denied | `sudo cat /proc/<gateway pid>/smaps_rollup`; restart once with `PYTHONTRACEMALLOC=25` | attributed except ~1 GB of heap, §2.4.3 |
 | Production Rust stub RSS | only a std-only proof of concept exists | Phase 3 exit criterion | open |
 
-`py-spy --nonblocking` does not pause the gateway. Do not attach gdb. Two corrections from the second host: `kirocrew` is only the OS thread name, and py-spy reports the Python names (`mc-default_N`, `mc-maint_N`, …), which is what attributes CPU to a pool. And sudo is not needed when `kernel.yama.ptrace_scope` is 0, because the gateway's owner can attach py-spy and read `smaps` directly.
+`py-spy --nonblocking` does not pause the gateway. Do not attach gdb. Two corrections from the second host: `ajcrew` is only the OS thread name, and py-spy reports the Python names (`mc-default_N`, `mc-maint_N`, …), which is what attributes CPU to a pool. And sudo is not needed when `kernel.yama.ptrace_scope` is 0, because the gateway's owner can attach py-spy and read `smaps` directly.
 
 ### 2.4 Measured on a second host (2026-10-18)
 
@@ -133,7 +133,7 @@ None of the measured CPU or GIL costs is a compute-heavy leaf that a Rust rewrit
 
 ## 3. Goals and non-goals
 
-Goals: cut per-session memory for Kiro Crew's own MCP servers on every platform; let a non-Python stub pair with gatewayd without copying Python internals; build a native packaging path once and reuse it.
+Goals: cut per-session memory for Aj Crew's own MCP servers on every platform; let a non-Python stub pair with gatewayd without copying Python internals; build a native packaging path once and reuse it.
 
 Non-goals: rewriting the gateway, gatewayd, the pool, or any security code; reducing process count (one stub per session per server stays); host-specific tuning.
 
@@ -175,14 +175,14 @@ Only the line forwarder between `kiro-cli` and gatewayd changes language. Identi
 
 | Change | Where |
 |---|---|
-| Ship the ten managed servers in the distribution roster: `kirocrew-core`, `-cron`, `-computer`, `-dashboard`, `-work`, `-crew-log`, `-debug`, `-panel`, `-guide`, `-mate` | `_resolve_stub_roster` in `src/kiro_crew/config/integration_sections.py` (today `stub_servers` defaults to `[]`) |
+| Ship the ten managed servers in the distribution roster: `ajcrew-core`, `-cron`, `-computer`, `-dashboard`, `-work`, `-crew-log`, `-debug`, `-panel`, `-guide`, `-mate` | `_resolve_stub_roster` in `src/aj_crew/config/integration_sections.py` (today `stub_servers` defaults to `[]`) |
 | Default `mcp_gateway.enabled` to true so stubbed servers share | `McpGatewayConfig.enabled` in the same file (today `False`) |
-| Drop the `KIROCREW_CHANNEL_ID` env fallback in `cron_add` and thread inheritance when the caller is `from_gateway` | `_call_tool` in `src/kiro_crew/mcp_cron.py`; a shared backend's env belongs to gatewayd, not to any session |
+| Drop the `AJCREW_CHANNEL_ID` env fallback in `cron_add` and thread inheritance when the caller is `from_gateway` | `_call_tool` in `src/aj_crew/mcp_cron.py`; a shared backend's env belongs to gatewayd, not to any session |
 | One cross-session isolation test per server: two callers on one shared backend never see each other's state or defaults | new tests beside `test/test_mcp_managed_caller_identity.py` |
 | Keep the breaker fallback to per-session exec | `stub_fallback.py`, gatewayd; unchanged |
-| Fix the stale comment that says `kirocrew-cron` reads process identity | `session_bound_by_construction` field in `src/kiro_crew/mcp_gateway/shareability.py` |
+| Fix the stale comment that says `ajcrew-cron` reads process identity | `session_bound_by_construction` field in `src/aj_crew/mcp_gateway/shareability.py` |
 
-Why it is safe: all ten set `ADVERTISE_CALLER_IDENTITY = True`, all ten are in `_MANAGED_SERVERS_CALLER_AWARE` (`src/kiro_crew/mcp_discovery_managed.py`), gatewayd strips any stub-supplied caller and injects its own verified one, and launch approval exempts managed launches (`src/kiro_crew/mcp_gateway/launch_approval.py`).
+Why it is safe: all ten set `ADVERTISE_CALLER_IDENTITY = True`, all ten are in `_MANAGED_SERVERS_CALLER_AWARE` (`src/aj_crew/mcp_discovery_managed.py`), gatewayd strips any stub-supplied caller and injects its own verified one, and launch approval exempts managed launches (`src/aj_crew/mcp_gateway/launch_approval.py`).
 
 The default topology changes. A default install today runs no broker and every session spawns its own managed servers. After Phase 1 the gateway starts gatewayd at boot, each session runs a stub per managed server, and one backend per PoolKey serves every session. A shared backend is one failure domain: a slow call queues others, and a crash hits every session until the breaker falls back to per-session exec.
 
@@ -190,7 +190,7 @@ Opt-out, in order of scope:
 
 | Setting | Effect |
 |---|---|
-| `mcp_gateway.stub_overrides: {"kirocrew-cron": false}` | that one server runs per session again |
+| `mcp_gateway.stub_overrides: {"ajcrew-cron": false}` | that one server runs per session again |
 | `mcp_gateway.enabled: false` | stubs stay, every stub gets its own backend (no sharing) |
 | `mcp_gateway.stub_servers: []` | no stubs, no broker: today's topology (key presence wins over the roster) |
 
@@ -206,16 +206,16 @@ Opt-out, in order of scope:
 | generation part of `binary_version` | daemon builds it | PoolKey partitioning stops depending on stub code |
 | `stub_code_fingerprint` and the other compat fields | stub → daemon | still sent, so a new stub can pair with an old daemon it adopts |
 
-### 4.4 Phase 3: Rust stub in `kirocrew-native`
+### 4.4 Phase 3: Rust stub in `ajcrew-native`
 
 | Item | Decision |
 |---|---|
-| Package | new `kirocrew-native`, **wheels only, no sdist**: `kirocrew update` runs `pip install -e` without `--only-binary` (`src/kiro_crew/dep_sync.py`), so an sdist would compile Rust on user machines |
+| Package | new `ajcrew-native`, **wheels only, no sdist**: `ajcrew update` runs `pip install -e` without `--only-binary` (`src/aj_crew/dep_sync.py`), so an sdist would compile Rust on user machines |
 | Contents | the stub as a standalone binary inside the wheel, found via `importlib.resources` (the shape `uv` ships) |
 | Matrix | `manylinux_2_17_x86_64`, `manylinux_2_17_aarch64`, `macosx_x86_64`, `macosx_arm64`, `win_amd64`; built with maturin-action |
-| Dependency | pinned `kirocrew-native==X.Y.Z` with a platform marker in `setup.cfg`; other platforms skip it |
+| Dependency | pinned `ajcrew-native==X.Y.Z` with a platform marker in `setup.cfg`; other platforms skip it |
 | Selection | rewriter writes native argv only when `mcp_gateway.stub_impl=native` and the binary exists; otherwise Python argv |
-| Kill switch | `KIROCREW_NATIVE=0` forces the Python stub |
+| Kill switch | `AJCREW_NATIVE=0` forces the Python stub |
 | Runtime fallback | handshake failure → existing `execvpe` path |
 | Conformance | CI feeds one register and control-frame corpus to the Python and Rust stubs and compares output byte for byte |
 | Transport | unix socket on POSIX, named pipe on Windows (as the Python stub does) |
@@ -234,17 +234,17 @@ With Phase 1 on, a session runs about 4.5-5 stubs (estimated): ~126-140 MB per s
 
 ### 4.5 Long-term boundary
 
-The packaging pipeline is a one-time cost. Later Rust pieces ship as PyO3 modules in the same `kirocrew-native`, each with a Python fallback. Python keeps orchestration and the trust boundary. Rust takes forwarding and compute-heavy leaves that profiling (§2.3) proves hot.
+The packaging pipeline is a one-time cost. Later Rust pieces ship as PyO3 modules in the same `ajcrew-native`, each with a Python fallback. Python keeps orchestration and the trust boundary. Rust takes forwarding and compute-heavy leaves that profiling (§2.3) proves hot.
 
 Do not touch:
 
 | Module | Reason |
 |---|---|
-| `src/kiro_crew/security/` | under two human review gates plus the denial-differential corpus, which imports the Python deny logic |
+| `src/aj_crew/security/` | under two human review gates plus the denial-differential corpus, which imports the Python deny logic |
 | `sandbox.py`, `sandbox_plan.py`, `sandbox_seatbelt.py` | single source of sandbox policy; two implementations would drift |
 | `mcp_gateway/gatewayd.py`, `daemon/`, `pool.py`, `hashing.py`, `socketsec.py`, `rewriter.py` | peer checks, identity, admission, PoolKey injectivity; not hot |
 | `dashboard/chat_runner.py`, `dashboard/state.py` | most-changed files; asyncio orchestration and shared mutable state |
-| `src/kiro_crew/crew_log/` | authoritative record; I/O bound on fsync |
+| `src/aj_crew/crew_log/` | authoritative record; I/O bound on fsync |
 
 ## 5. Migration plan
 
@@ -263,6 +263,6 @@ Phase 1 widens sharing to servers that hold per-user state (cron, work, crew-log
 
 | Question | Blocks |
 |---|---|
-| Does the Windows signing hook (`.github/workflows/build-windows.yml`) sign an `.exe` inside a wheel? Yes for the desktop installer, from reading the code (not yet seen in a signed build). The bundled interpreter's `Lib/site-packages` lives in `backend-dist`, which `website/electron/package.json` ships as `extraResources`. electron-builder 26.15.3 copies extra resources through `WinPackager.createTransformerForExtraFiles`, which hands every `.exe` to `website/electron/scripts/sign-windows.js`, and that hook Authenticode-signs everything except the one pinned `ffmpeg-win-x86_64-v7.1.exe`. So a stub `.exe` inside `kirocrew-native` is signed with no workflow change. Authenticode appends a signature instead of rewriting sections, so #19627's embedded source digest survives, while a pinned whole-file hash would not (the reason ffmpeg is exempt). Source installs sign nothing, as for any wheel today | not Windows in Phase 3; confirm once in the first signed build |
+| Does the Windows signing hook (`.github/workflows/build-windows.yml`) sign an `.exe` inside a wheel? Yes for the desktop installer, from reading the code (not yet seen in a signed build). The bundled interpreter's `Lib/site-packages` lives in `backend-dist`, which `website/electron/package.json` ships as `extraResources`. electron-builder 26.15.3 copies extra resources through `WinPackager.createTransformerForExtraFiles`, which hands every `.exe` to `website/electron/scripts/sign-windows.js`, and that hook Authenticode-signs everything except the one pinned `ffmpeg-win-x86_64-v7.1.exe`. So a stub `.exe` inside `ajcrew-native` is signed with no workflow change. Authenticode appends a signature instead of rewriting sections, so #19627's embedded source digest survives, while a pinned whole-file hash would not (the reason ffmpeg is exempt). Source installs sign nothing, as for any wheel today | not Windows in Phase 3; confirm once in the first signed build |
 | Does `packaging/resign-macos-libs.sh` cover suffix-less Mach-O binaries? No. It re-signs only `*.so` and `*.dylib` under `purelib`, and only `make build` runs it, so on a source install a stub binary keeps the linker-signed signature the script exists to replace. Phase 3 extends its `find` to Mach-O files by magic. The released app is already covered: `packaging/signing/generate-manifest.py` finds every Mach-O under `Contents/Resources` by magic and signs it with Developer ID, hardened runtime and a timestamp, as it already does for `imageio-ffmpeg`'s suffix-less executable. A runtime check of the stub must accept those signed bytes, which the embedded digest does (see the two-anchor rule in `transcribe_ffmpeg.py`) | local macOS installs in Phase 3, until the script change lands |
 | Which functions own the 69% executor CPU and the 1.3-2.3 GB anonymous remainder? Measured on a second host in §2.4: none of it is a leaf Rust would speed up, and the remainder is mostly llama.cpp's per-token output buffer. The question stays open, because that host averaged 0.06 cores against the §2.1 host's 0.49, so a costlier path under load may not have shown up. Still to do: a repeat of the §2.4 capture on the §2.1 host, and the call sites behind ~1 GB of glibc arena and pymalloc heap (one `PYTHONTRACEMALLOC=25` restart), both tracked in [#22215](https://github.com/kirodotdev/KiroCrew/issues/22215) | any Rust beyond the stub |

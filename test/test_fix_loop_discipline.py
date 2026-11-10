@@ -40,10 +40,10 @@ AUTOSDE = ROOT / "AUTOSDE.yaml"
 PREPARE_PR = (
     ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
+    / "ajcrew-dev"
+    / "ajcrew-prepare-pr"
     / "SKILL.md"
 )
 
@@ -465,10 +465,10 @@ class TestPatternHarvest:
     def test_semgrep_owns_the_sentinel_rule_with_fixtures(self) -> None:
         """The first harvested pattern stays enforced, and its fixtures keep both directions."""
         rule = SEMGREP_RULE.read_text(encoding="utf-8")
-        assert "kirocrew.find-sentinel-in-boolean-context" in rule
+        assert "ajcrew.find-sentinel-in-boolean-context" in rule
         fixture = SEMGREP_FIXTURE.read_text(encoding="utf-8")
-        assert "# ruleid: kirocrew.find-sentinel-in-boolean-context" in fixture
-        assert "# ok: kirocrew.find-sentinel-in-boolean-context" in fixture
+        assert "# ruleid: ajcrew.find-sentinel-in-boolean-context" in fixture
+        assert "# ok: ajcrew.find-sentinel-in-boolean-context" in fixture
 
     def test_autosde_carries_the_harvested_pattern_rule(self) -> None:
         """The review lanes read AUTOSDE, not prose promises — the harvest rule must live there."""

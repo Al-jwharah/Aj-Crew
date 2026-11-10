@@ -1,4 +1,4 @@
-"""``kirocrew doctor``'s model, channel and project sections.
+"""``ajcrew doctor``'s model, channel and project sections.
 
 The Model section, the WhatsApp Integration section, the Project labels with
 the local-bind auth row, and the platform-scope name-grant row.
@@ -13,11 +13,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from conftest import requires_symlinks
-from kiro_crew import cli_doctor
+from aj_crew import cli_doctor
 
 
 class TestEffectiveModelSection:
-    """`kirocrew doctor`'s Model section.
+    """`ajcrew doctor`'s Model section.
 
     The section names the winning tier of the four-tier model precedence and, when a
     stale spec pin decides, the command that clears it.
@@ -33,7 +33,7 @@ class TestEffectiveModelSection:
         self._tmp = tmp_path
 
     def _agents_dir(self) -> Path:
-        from kiro_crew.config.paths import kiro_agents_dir
+        from aj_crew.config.paths import kiro_agents_dir
 
         agents_dir = kiro_agents_dir()
         # Fail loudly rather than write into a real home if the override lapses.
@@ -44,16 +44,16 @@ class TestEffectiveModelSection:
         return agents_dir
 
     def _cfg(self, global_model: str):
-        from kiro_crew.config import KiroCrewConfig
+        from aj_crew.config import AjCrewConfig
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.model = global_model
         return cfg
 
     def _install_spec(self, model: str | None) -> Path:
-        from kiro_crew.agent import AGENT_FILENAME
+        from aj_crew.agent import AGENT_FILENAME
 
-        body: dict = {"name": "kirocrew"}
+        body: dict = {"name": "ajcrew"}
         if model is not None:
             body["model"] = model
         spec = self._agents_dir() / AGENT_FILENAME
@@ -71,7 +71,7 @@ class TestEffectiveModelSection:
         out = capsys.readouterr().out
         assert "effective:   'claude-opus-4.8'" in out
         assert "decided by:  default spec pin" in out
-        assert "kirocrew agent reset-model" in out
+        assert "ajcrew agent reset-model" in out
         # Advisory, not a setup failure: the state is legal and may be wanted.
         assert issues == []
 
@@ -99,9 +99,9 @@ class TestEffectiveModelSection:
         assert issues == []
 
     def test_tracking_state_is_reported(self, capsys) -> None:
-        from kiro_crew import agent_state
+        from aj_crew import agent_state
 
-        agent_state.set_model_managed("kirocrew", False)
+        agent_state.set_model_managed("ajcrew", False)
         self._install_spec("claude-opus-4.8")
         issues: list[str] = []
 
@@ -116,7 +116,7 @@ class TestEffectiveModelSection:
         assert "tracking:    not recorded" in capsys.readouterr().out
 
     def test_unreadable_spec_is_reported_not_swallowed(self, capsys) -> None:
-        from kiro_crew.agent import AGENT_FILENAME
+        from aj_crew.agent import AGENT_FILENAME
 
         (self._agents_dir() / AGENT_FILENAME).write_text("{ not json", encoding="utf-8")
         issues: list[str] = []
@@ -126,16 +126,16 @@ class TestEffectiveModelSection:
         assert issues == ["agent spec unreadable"]
 
     def test_project_local_spec_is_flagged_as_shadowing(self, capsys) -> None:
-        """kiro-cli resolves <project>/.kiro/agents FIRST and Kiro Crew's own
+        """kiro-cli resolves <project>/.kiro/agents FIRST and Aj Crew's own
         resolver never reads it, so that file can decide what actually runs while
-        every Kiro Crew surface reports something else."""
-        from kiro_crew.agent import AGENT_FILENAME
+        every Aj Crew surface reports something else."""
+        from aj_crew.agent import AGENT_FILENAME
 
         self._install_spec(None)
         project = self._tmp / "proj"
         (project / ".kiro" / "agents").mkdir(parents=True)
         (project / ".kiro" / "agents" / AGENT_FILENAME).write_text(
-            json.dumps({"name": "kirocrew", "model": "claude-opus-4.8"}), encoding="utf-8"
+            json.dumps({"name": "ajcrew", "model": "claude-opus-4.8"}), encoding="utf-8"
         )
         issues: list[str] = []
 
@@ -162,17 +162,17 @@ class TestEffectiveModelSection:
         own `kiro_agent` is that crewmate's, not the session's, so it is left
         pointing elsewhere to prove the report reads the right knob.
         """
-        from kiro_crew.config.loader import KiroCrewAgentConfig
+        from aj_crew.config.loader import AjCrewAgentConfig
 
         cfg.agent.default_agent = name
         cfg.default_agent = "default"
-        cfg.agents["default"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg.agents["default"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         return cfg
 
     def test_a_bound_custom_agent_is_attributed_to_its_own_spec(self, capsys) -> None:
         """The default template may be a kiro agent other than the built-in one,
         and the resolver consults THAT spec's pin above the global (tier 2).
-        Reading kirocrew.json in both cases attributed the pin to the wrong file
+        Reading ajcrew.json in both cases attributed the pin to the wrong file
         and printed a reset command for the wrong agent."""
         self._install_spec(None)
         agents_dir = self._agents_dir()
@@ -188,7 +188,7 @@ class TestEffectiveModelSection:
         assert "effective:   'claude-opus-4.8'" in out
         assert "decided by:  bound agent pin ('custom.agent')" in out
         # The repair must name the agent that actually holds the pin.
-        assert "kirocrew agent reset-model --agent 'custom.agent'" in out
+        assert "ajcrew agent reset-model --agent 'custom.agent'" in out
         # And the tier the resolver skipped for the built-in agent is shown here.
         assert "bound agent pin ('custom.agent'):" in out
         assert "out of date" not in out, "report must agree with the resolver"
@@ -268,11 +268,11 @@ class TestEffectiveModelSection:
         out = capsys.readouterr().out
         assert "bound agent pin" not in out
         assert "decided by:  default spec pin" in out
-        assert "kirocrew agent reset-model" in out
+        assert "ajcrew agent reset-model" in out
         assert "--agent" not in out, "the built-in agent needs no --agent flag"
 
     def test_tracking_names_the_agent_it_describes(self, capsys) -> None:
-        from kiro_crew import agent_state
+        from aj_crew import agent_state
 
         self._install_spec(None)
         agents_dir = self._agents_dir()
@@ -325,13 +325,13 @@ class TestEffectiveModelSection:
         assert "\\x1b" in out, "the value is still shown, just escaped"
 
     def test_control_sequences_in_a_project_spec_are_escaped(self, capsys) -> None:
-        from kiro_crew.agent import AGENT_FILENAME
+        from aj_crew.agent import AGENT_FILENAME
 
         self._install_spec(None)
         project = self._tmp / "proj"
         (project / ".kiro" / "agents").mkdir(parents=True)
         (project / ".kiro" / "agents" / AGENT_FILENAME).write_text(
-            json.dumps({"name": "kirocrew", "model": "x\x1b[31mred"}), encoding="utf-8"
+            json.dumps({"name": "ajcrew", "model": "x\x1b[31mred"}), encoding="utf-8"
         )
         issues: list[str] = []
 
@@ -357,8 +357,8 @@ class TestEffectiveModelSection:
         through that one reader instead of hand-rolling the checks is the point.
         A benign link is followed exactly as the resolver follows
         it, so the report cannot disagree with what will actually run."""
-        from kiro_crew import agent_discovery
-        from kiro_crew.agent import AGENT_FILENAME
+        from aj_crew import agent_discovery
+        from aj_crew.agent import AGENT_FILENAME
 
         agents_dir = self._agents_dir()
         target = self._tmp / "protected.json"
@@ -433,11 +433,11 @@ class TestEffectiveModelSection:
 
         The path is injected, not created: control bytes are illegal in Windows filenames.
         """
-        hostile = Path("/tmp/proj/.kiro/agents/kirocrew\x1b[2J.json")
+        hostile = Path("/tmp/proj/.kiro/agents/ajcrew\x1b[2J.json")
         self._install_spec(None)
         real_reader = cli_doctor._read_agent_spec
         monkeypatch.setattr(cli_doctor, "project_agent_files", lambda d, **kw: [hostile])
-        monkeypatch.setattr(cli_doctor, "project_agent_name", lambda p: "kirocrew")
+        monkeypatch.setattr(cli_doctor, "project_agent_name", lambda p: "ajcrew")
         # Only the injected path is faked; the user-level spec still goes through
         # the real reader so the report's own self-check is not disturbed. The
         # scan and reader stubs forward **kw because both take keyword-only SEL
@@ -481,11 +481,11 @@ class TestEffectiveModelSection:
         # A plain session is the default TEMPLATE on Global: the
         # `default` crewmate's broken store is that crewmate's problem, reported
         # by the bindings section, and never makes the model section fail.
-        from kiro_crew.config.loader import KiroCrewAgentConfig
+        from aj_crew.config.loader import AjCrewAgentConfig
 
         cfg = self._cfg("auto")
-        cfg.agents["writer"] = KiroCrewAgentConfig(
-            kiro_agent="kirocrew", memory_store="missing-store"
+        cfg.agents["writer"] = AjCrewAgentConfig(
+            kiro_agent="ajcrew", memory_store="missing-store"
         )
         cfg.default_agent = "writer"
         issues: list[str] = []
@@ -501,11 +501,11 @@ class TestEffectiveModelSection:
         assert "member memory binding unavailable: 'writer' -> 'missing-store'" in issues
 
     def test_default_crewmate_with_its_own_store_is_told_where_it_applies(self, capsys):
-        from kiro_crew.config.loader import KiroCrewAgentConfig
-        from kiro_crew.memory_stores import provision_member_memory
+        from aj_crew.config.loader import AjCrewAgentConfig
+        from aj_crew.memory_stores import provision_member_memory
 
         cfg = self._cfg("auto")
-        cfg.agents["writer"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg.agents["writer"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         provision_member_memory(cfg, "writer")
         cfg.default_agent = "writer"
         issues: list[str] = []
@@ -517,16 +517,16 @@ class TestEffectiveModelSection:
 
 
 class TestWhatsAppSection:
-    """`kirocrew doctor`'s WhatsApp Integration section.
+    """`ajcrew doctor`'s WhatsApp Integration section.
 
     A missing optional wheel or stored credential fails silently (messages never
     arrive), so the section reports both WITHOUT loading the Go core.
     """
 
     def _cfg(self, *, enabled: bool = True, groups: list | None = None):
-        from kiro_crew.config import KiroCrewConfig
+        from aj_crew.config import AjCrewConfig
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.whatsapp.enabled = enabled
         cfg.whatsapp.groups = groups if groups is not None else []
         return cfg
@@ -541,11 +541,11 @@ class TestWhatsAppSection:
 
     @staticmethod
     def _extra(monkeypatch, present: bool) -> None:
-        monkeypatch.setattr("kiro_crew.whatsapp.client.neonize_available", lambda: present)
+        monkeypatch.setattr("aj_crew.whatsapp.client.neonize_available", lambda: present)
 
     @staticmethod
     def _pair(home: Path) -> Path:
-        from kiro_crew.whatsapp.client import default_db_path
+        from aj_crew.whatsapp.client import default_db_path
 
         store = default_db_path(home)
         store.parent.mkdir(parents=True, exist_ok=True)
@@ -583,7 +583,7 @@ class TestWhatsAppSection:
         out = capsys.readouterr().out
         # neonize by name -- the extras form is not installable from an index.
         assert "neonize" in out
-        assert "kirocrew[" not in out
+        assert "ajcrew[" not in out
         assert "whatsapp extra missing" in issues
 
     def test_an_installed_extra_and_a_paired_store_report_clean(
@@ -606,7 +606,7 @@ class TestWhatsAppSection:
         """Load-bearing split. Pairing is a QR scan served BY the running gateway,
         so a freshly enabled channel legitimately has no store yet. Counting that
         as an issue would exit 1 and break the documented
-        `kirocrew doctor && kirocrew gateway` chain at the one moment the operator
+        `ajcrew doctor && ajcrew gateway` chain at the one moment the operator
         has to start the gateway to make progress.
         """
         self._extra(monkeypatch, True)
@@ -624,7 +624,7 @@ class TestWhatsAppSection:
     ) -> None:
         """Doctor and the channel must resolve ONE path, or the report describes a
         store the gateway never touches."""
-        from kiro_crew.whatsapp.client import default_db_path
+        from aj_crew.whatsapp.client import default_db_path
 
         self._extra(monkeypatch, True)
         issues: list[str] = []
@@ -694,9 +694,9 @@ class TestWhatsAppSection:
 
 
 class TestProjectSectionAndAuthRow:
-    """`kirocrew doctor` Project labels + the local-bind auth row.
+    """`ajcrew doctor` Project labels + the local-bind auth row.
 
-    The Project row resolves the Kiro Crew SOURCE CHECKOUT, not the user's workspace.
+    The Project row resolves the Aj Crew SOURCE CHECKOUT, not the user's workspace.
     The auth row must not claim a loopback exemption: every dashboard request needs a
     token (``token_auth.py``).
     """
@@ -708,15 +708,15 @@ class TestProjectSectionAndAuthRow:
         pinned to a pristine default, binaries "found", probes stubbed, so
         the run is deterministic and spawns nothing.
         """
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        def _pristine() -> KiroCrewConfig:
-            cfg = KiroCrewConfig()
+        def _pristine() -> AjCrewConfig:
+            cfg = AjCrewConfig()
             cfg.stt.enabled = False
             return cfg
 
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: _pristine()))
-        monkeypatch.setattr(KiroCrewConfig, "load_credentials", lambda self, **kw: {})
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: _pristine()))
+        monkeypatch.setattr(AjCrewConfig, "load_credentials", lambda self, **kw: {})
 
         async def _probe(server):
             server.status = "ok"
@@ -726,19 +726,19 @@ class TestProjectSectionAndAuthRow:
         mock_run = MagicMock(returncode=0, stdout="kiro-cli 1.0.0", stderr="")
         with (
             patch(
-                "kiro_crew.cli_doctor.shutil.which",
+                "aj_crew.cli_doctor.shutil.which",
                 side_effect=lambda b, **_kw: f"/usr/local/bin/{b}",
             ),
-            patch("kiro_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
-            patch("kiro_crew.cli_doctor.subprocess.run", return_value=mock_run),
+            patch("aj_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
+            patch("aj_crew.cli_doctor.subprocess.run", return_value=mock_run),
             patch("urllib.request.urlopen"),
-            patch("kiro_crew.cli_doctor.is_local_only", return_value=True),
-            patch("kiro_crew.cli_doctor.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_doctor.probe_server", side_effect=_probe),
+            patch("aj_crew.cli_doctor.is_local_only", return_value=True),
+            patch("aj_crew.cli_doctor.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_doctor.probe_server", side_effect=_probe),
             patch.dict(
                 "os.environ",
                 {
-                    "KIROCREW_PROJECT_DIR": project_dir,
+                    "AJCREW_PROJECT_DIR": project_dir,
                     "SLACK_APP_TOKEN": "",
                     "SLACK_BOT_TOKEN": "",
                 },
@@ -753,11 +753,11 @@ class TestProjectSectionAndAuthRow:
         self, monkeypatch, tmp_path: Path, capsys
     ) -> None:
         # Carry both _PROJECT_MARKERS so the directory measurably IS a
-        # Kiro Crew source checkout.
+        # Aj Crew source checkout.
         (tmp_path / "skills").mkdir()
-        (tmp_path / "src" / "kiro_crew").mkdir(parents=True)
+        (tmp_path / "src" / "aj_crew").mkdir(parents=True)
         out = self._run_doctor(tmp_path, monkeypatch, capsys, project_dir=str(tmp_path))
-        assert f"source dir:  ✅ {tmp_path} (Kiro Crew source checkout)" in out
+        assert f"source dir:  ✅ {tmp_path} (Aj Crew source checkout)" in out
         assert "project dir:" not in out
         # tmp_path holds no .git — the warning names the checkout, so the
         # adjacent row is not read as a finding about the user's workspace.
@@ -766,11 +766,11 @@ class TestProjectSectionAndAuthRow:
     def test_partially_marked_dir_is_not_called_a_checkout(
         self, monkeypatch, tmp_path: Path, capsys
     ) -> None:
-        # A single marker must not qualify as a Kiro Crew source checkout.
+        # A single marker must not qualify as a Aj Crew source checkout.
         (tmp_path / "skills").mkdir()
         out = self._run_doctor(tmp_path, monkeypatch, capsys, project_dir=str(tmp_path))
         assert f"source dir:  ✅ {tmp_path}" in out
-        assert "(Kiro Crew source checkout)" not in out
+        assert "(Aj Crew source checkout)" not in out
         assert "git repo:    ⚠️  not a git repo" in out
         assert "source checkout is not a git repo" not in out
 
@@ -780,7 +780,7 @@ class TestProjectSectionAndAuthRow:
         out = self._run_doctor(tmp_path, monkeypatch, capsys, project_dir="")
         assert "source dir:  ⚠️  not set" in out
         assert "not needed for wheel installs" in out
-        assert "run kirocrew setup from project root" not in out
+        assert "run ajcrew setup from project root" not in out
 
     def test_auth_row_never_advertises_loopback_exemption(
         self, monkeypatch, tmp_path: Path, capsys
@@ -800,7 +800,7 @@ class TestProjectSectionAndAuthRow:
         # reinstated loopback exemption for ordinary API routes reds a test
         # instead of drifting the way the old row did. /api/status is the
         # canonical gated route: it must never join the bypass sets.
-        from kiro_crew.dashboard import token_auth
+        from aj_crew.dashboard import token_auth
 
         assert "/api/status" not in token_auth._BYPASS_EXACT
         assert "/api/status" not in token_auth._BYPASS_EXACT_METHODS
@@ -808,7 +808,7 @@ class TestProjectSectionAndAuthRow:
 
 
 class TestNameGrantPlatformScopeRow:
-    """`kirocrew doctor` says whether hook auto-approve works on this host.
+    """`ajcrew doctor` says whether hook auto-approve works on this host.
 
     A user who sees decline lines in `gateway.log` has no other way to tell a
     host-wide reason from their own configuration.
@@ -817,7 +817,7 @@ class TestNameGrantPlatformScopeRow:
     def test_unknown_documents_folder_names_the_code_and_says_it_is_not_your_config(
         self, monkeypatch, capsys
     ):
-        from kiro_crew import name_grant
+        from aj_crew import name_grant
 
         monkeypatch.setattr(name_grant.platform_compat, "IS_WINDOWS", True)
         monkeypatch.setattr(
@@ -831,7 +831,7 @@ class TestNameGrantPlatformScopeRow:
         assert "approval card" in out
 
     def test_an_existing_profile_is_named_so_the_user_can_act(self, monkeypatch, capsys, tmp_path):
-        from kiro_crew import name_grant
+        from aj_crew import name_grant
 
         profile = tmp_path / "Microsoft.PowerShell_profile.ps1"
         profile.write_text("function ls { evil }\n", encoding="utf-8")
@@ -849,7 +849,7 @@ class TestNameGrantPlatformScopeRow:
     def test_windows_without_a_profile_reports_that_grants_can_be_satisfied(
         self, monkeypatch, capsys, tmp_path
     ):
-        from kiro_crew import name_grant
+        from aj_crew import name_grant
 
         monkeypatch.setattr(name_grant.platform_compat, "IS_WINDOWS", True)
         monkeypatch.setattr(name_grant, "_path_is_ambiguous", lambda: False)
@@ -864,7 +864,7 @@ class TestNameGrantPlatformScopeRow:
         assert name_grant.WINDOWS_UNMODELLED not in out
 
     def test_posix_reports_that_grants_can_be_satisfied(self, monkeypatch, capsys):
-        from kiro_crew import name_grant
+        from aj_crew import name_grant
 
         monkeypatch.setattr(name_grant.platform_compat, "IS_WINDOWS", False)
         monkeypatch.setattr(name_grant, "_path_is_ambiguous", lambda: False)
@@ -881,7 +881,7 @@ class TestNameGrantPlatformScopeRow:
         # exported shell functions and a relative `PATH` entry each refuse every
         # grant, so a ✅ beside them would send a user hunting a fault that is
         # their own environment.
-        from kiro_crew import name_grant
+        from aj_crew import name_grant
 
         monkeypatch.setattr(name_grant.platform_compat, "IS_WINDOWS", False)
         monkeypatch.setattr(name_grant, "_path_is_ambiguous", lambda: False)
@@ -898,7 +898,7 @@ class TestNameGrantPlatformScopeRow:
     def test_a_relative_search_path_entry_is_reported_rather_than_claimed_satisfiable(
         self, monkeypatch, capsys
     ):
-        from kiro_crew import name_grant
+        from aj_crew import name_grant
 
         monkeypatch.setattr(name_grant.platform_compat, "IS_WINDOWS", False)
         monkeypatch.setattr(name_grant, "_path_is_ambiguous", lambda: True)
@@ -923,7 +923,7 @@ class TestChannelSdkRows:
 
     @staticmethod
     def _rows(monkeypatch, *names: str) -> None:
-        from kiro_crew import channels as channels_mod
+        from aj_crew import channels as channels_mod
 
         rows = [channels_mod.ChannelReadiness(n, True, ()) for n in names]
         monkeypatch.setattr(channels_mod, "channel_readiness", lambda cfg, creds: rows)
@@ -944,12 +944,12 @@ class TestChannelSdkRows:
 
     @pytest.mark.parametrize("pip_ok", [True, False])
     def test_a_ready_channel_without_its_sdk_is_an_issue(self, monkeypatch, capsys, pip_ok):
-        from kiro_crew.doctor_checks import channels as doctor_channels
+        from aj_crew.doctor_checks import channels as doctor_channels
 
         self._rows(monkeypatch, "teams", "feishu", "telegram")
         self._sdks(monkeypatch, False)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.messaging._pip_install_channel_available",
+            "aj_crew.dashboard.handlers.messaging._pip_install_channel_available",
             lambda: pip_ok,
         )
         issues: list[str] = []
@@ -968,7 +968,7 @@ class TestChannelSdkRows:
             assert "Settings > Messaging Channels" in out
 
     def test_a_ready_channel_with_its_sdk_stays_clean(self, monkeypatch, capsys):
-        from kiro_crew.doctor_checks import channels as doctor_channels
+        from aj_crew.doctor_checks import channels as doctor_channels
 
         self._rows(monkeypatch, "teams", "feishu")
         self._sdks(monkeypatch, True)
@@ -982,12 +982,12 @@ class TestChannelSdkRows:
         assert issues == []
 
     def test_whatsapp_prints_no_pip_where_pip_cannot_install(self, tmp_path, monkeypatch, capsys):
-        from kiro_crew.config import KiroCrewConfig
+        from aj_crew.config import AjCrewConfig
 
         monkeypatch.setattr(cli_doctor, "data_home", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.whatsapp.client.neonize_available", lambda: False)
+        monkeypatch.setattr("aj_crew.whatsapp.client.neonize_available", lambda: False)
         monkeypatch.setattr(cli_doctor, "pip_install_channel_available", lambda: False)
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.whatsapp.enabled = True
         issues: list[str] = []
 
@@ -1002,7 +1002,7 @@ class TestChannelSdkRows:
         """The doctor's rows use this shared probe; it must stay a find_spec."""
         import sys
 
-        from kiro_crew.dashboard.handlers.messaging import _channel_sdk_status
+        from aj_crew.dashboard.handlers.messaging import _channel_sdk_status
 
         monkeypatch.delitem(sys.modules, "jwt", raising=False)
         monkeypatch.delitem(sys.modules, "lark_oapi", raising=False)

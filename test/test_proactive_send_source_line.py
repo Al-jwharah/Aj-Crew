@@ -13,8 +13,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.handlers import messaging as mod
-from kiro_crew.dashboard.state import NEW_SESSION_TITLE
+from aj_crew.dashboard.handlers import messaging as mod
+from aj_crew.dashboard.state import NEW_SESSION_TITLE
 
 _CHAT = "dashboard:chat-1-1700000000"
 

@@ -20,8 +20,8 @@ import pytest
 from aiohttp.test_utils import make_mocked_request
 from dashboard_owner_helpers import NoConfiguredOwner
 
-from kiro_crew.apps.builtins.mochi import hooks
-from kiro_crew.apps.builtins.mochi.backend import routes
+from aj_crew.apps.builtins.mochi import hooks
+from aj_crew.apps.builtins.mochi.backend import routes
 
 
 def _owner_request(*args, **kwargs):
@@ -266,7 +266,7 @@ class TestChatPush:
     @pytest.mark.asyncio
     async def test_duplicate_outside_window_is_delivered(self, tmp_path, monkeypatch):
         async with _live_runtime(tmp_path) as runtime:
-            from kiro_crew.apps.builtins.mochi import hooks as hooks_mod
+            from aj_crew.apps.builtins.mochi import hooks as hooks_mod
 
             seen: list[tuple[str, dict]] = []
             runtime.publish = lambda ch, data: seen.append((ch, data))  # type: ignore[assignment]
@@ -530,7 +530,7 @@ class TestManifestDeclaresEveryPublishedEvent:
     _PASSTHROUGH_PARAMS = {"event_type", "channel"}
 
     def _pkg_root(self):
-        import kiro_crew.apps.builtins.mochi as pkg
+        import aj_crew.apps.builtins.mochi as pkg
 
         return pathlib.Path(pkg.__file__).parent
 

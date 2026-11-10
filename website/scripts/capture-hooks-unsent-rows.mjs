@@ -18,7 +18,7 @@ if (!OUT) { console.error('usage: capture-hooks-unsent-rows.mjs <outDir>'); proc
 
 const KIRO_HOOKS = {
   hooks: {
-    agentSpawn: [{ command: '/opt/kirocrew/hooks/session-start.sh', matcher: '', source: 'bundled' }],
+    agentSpawn: [{ command: '/opt/ajcrew/hooks/session-start.sh', matcher: '', source: 'bundled' }],
     preToolUse: [{ command: '/home/me/.kiro/hooks/guard.sh', matcher: 'execute_bash', source: 'user' }],
   },
   // One row per reason, in the gateway's own wire shape.

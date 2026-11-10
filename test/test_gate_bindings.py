@@ -1,7 +1,7 @@
 """``_GateMixin`` keeps every member it had, each bound from the ``gate_*`` owner that holds it.
 
 The spawn gate's members other than ``spawn_impl`` live in three sibling owners of
-``kiro_crew.subagent_manager.admission``: ``gate_execution``, ``gate_pressure`` and
+``aj_crew.subagent_manager.admission``: ``gate_execution``, ``gate_pressure`` and
 ``gate_reporting``. Each body is a module-level function whose first parameter is
 ``self``, and the class in ``admission/gate.py`` binds it by name, so ``_hoist_impls``,
 ``bind_component_globals`` and every test that reaches a member through the class see
@@ -11,8 +11,8 @@ the object they always did. This file pins that contract:
   annotation aside) and the module that holds it;
 * each bound member IS its owner's function, and no owner keeps an unbound ``self``
   function;
-* every ``*_impl`` member reaches the coordinator rebound onto ``kiro_crew.subagent``'s
-  globals and every global it reads resolves there, so a patch of a ``kiro_crew.subagent``
+* every ``*_impl`` member reaches the coordinator rebound onto ``aj_crew.subagent``'s
+  globals and every global it reads resolves there, so a patch of a ``aj_crew.subagent``
   name reaches it; every other member runs on its owner's globals and every global it
   reads resolves there;
 * no bound function uses zero-argument ``super()``, ``__class__`` or a name-mangled
@@ -20,7 +20,7 @@ the object they always did. This file pins that contract:
 * no owner imports ``admission/gate.py`` at run time, and nothing else in ``src`` imports
   an owner;
 * each owner's docstring names the manager fields its members write and read;
-* no name the test trees patch through ``kiro_crew.subagent_manager.admission.gate`` is
+* no name the test trees patch through ``aj_crew.subagent_manager.admission.gate`` is
   read as a global by an owner.
 
 Each structural check has a self-test that shows it can fail.
@@ -42,10 +42,10 @@ from typing import Any
 import pytest
 from facade_mirror_scan import patched_names
 
-import kiro_crew.subagent as subagent_module
-from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
-from kiro_crew.subagent_manager.admission import gate as gate_module
-from kiro_crew.subagent_manager.admission.gate import _GateMixin
+import aj_crew.subagent as subagent_module
+from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+from aj_crew.subagent_manager.admission import gate as gate_module
+from aj_crew.subagent_manager.admission.gate import _GateMixin
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_gate_bindings")
 
@@ -58,7 +58,7 @@ SHARED_BINDINGS_CHECKS = (
     "leaf_test_scope_derives_this_file_as_a_corpus_gate",
 )
 
-_PACKAGE = "kiro_crew.subagent_manager.admission"
+_PACKAGE = "aj_crew.subagent_manager.admission"
 _GATE = f"{_PACKAGE}.gate"
 _OWNERS = ("gate_execution", "gate_pressure", "gate_reporting")
 _TEST_ROOT = Path(__file__).resolve().parent
@@ -377,15 +377,15 @@ def _owner_importers(src: Path) -> list[str]:
 
 
 def test_the_owner_importer_scan_can_fail(tmp_path: Path) -> None:
-    pkg = tmp_path / "kiro_crew" / "subagent_manager" / "admission"
+    pkg = tmp_path / "aj_crew" / "subagent_manager" / "admission"
     pkg.mkdir(parents=True)
     (pkg / "pump.py").write_text("from .gate_pressure import f\n", encoding="utf-8")
-    (tmp_path / "kiro_crew" / "other.py").write_text(
-        "from kiro_crew.subagent_manager.admission import gate_reporting\n", encoding="utf-8"
+    (tmp_path / "aj_crew" / "other.py").write_text(
+        "from aj_crew.subagent_manager.admission import gate_reporting\n", encoding="utf-8"
     )
     assert _owner_importers(tmp_path) == [
-        "kiro_crew.other",
-        "kiro_crew.subagent_manager.admission.pump",
+        "aj_crew.other",
+        "aj_crew.subagent_manager.admission.pump",
     ]
 
 
@@ -465,7 +465,7 @@ def test_each_owner_names_the_fields_it_writes_and_reads(owner: str) -> None:
 def _test_tree_files() -> list[Path]:
     """The root conftest, ``test/`` and the builtin apps' test modules and conftests."""
     files = [_REPO_ROOT / "conftest.py", *sorted(_TEST_ROOT.rglob("*.py"))]
-    builtins_root = _REPO_ROOT / "src" / "kiro_crew" / "apps" / "builtins"
+    builtins_root = _REPO_ROOT / "src" / "aj_crew" / "apps" / "builtins"
     for path in sorted(builtins_root.rglob("*.py")):
         rel = path.relative_to(builtins_root).as_posix()
         if "/tests/" in rel or path.name.startswith("test_") or path.name == "conftest.py":
@@ -513,13 +513,13 @@ def test_no_name_patched_through_the_gate_is_read_by_an_owner() -> None:
 def test_the_reach_scan_can_fail(tmp_path: Path) -> None:
     probe = tmp_path / "test_probe.py"
     probe.write_text(
-        "from kiro_crew.subagent_manager.admission import gate as gate_mod\n"
+        "from aj_crew.subagent_manager.admission import gate as gate_mod\n"
         "def test_x(monkeypatch):\n"
         "    monkeypatch.setattr(gate_mod, '_SPAWN_APPROVAL_TOOL', 'x')\n"
         "def test_y():\n"
         "    from unittest import mock\n"
         "    with mock.patch(\n"
-        "        'kiro_crew.subagent_manager.admission.gate.read_memory_pressure_level'\n"
+        "        'aj_crew.subagent_manager.admission.gate.read_memory_pressure_level'\n"
         "    ):\n"
         "        pass\n",
         encoding="utf-8",

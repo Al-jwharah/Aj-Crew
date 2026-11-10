@@ -28,7 +28,7 @@ import pytest
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SKILL_DIR = REPO_ROOT / "src" / "kiro_crew" / "builtin_skills" / "security-conductor"
+SKILL_DIR = REPO_ROOT / "src" / "aj_crew" / "builtin_skills" / "security-conductor"
 SKILL_MD = SKILL_DIR / "SKILL.md"
 ROE_JSON = SKILL_DIR / "rules-of-engagement.json"
 
@@ -128,7 +128,7 @@ class TestSkillIsInstallable:
         assert meta["name"] == "security-conductor"
         # The description is the only thing a triggering reader sees before
         # loading the body, so it has to name the agent it is the procedure for.
-        assert "kirocrew-security-conductor" in meta["description"]
+        assert "ajcrew-security-conductor" in meta["description"]
 
     def test_no_stub_scripts_are_shipped(self) -> None:
         """The scripts land in sibling changes, one at a time. Whatever has

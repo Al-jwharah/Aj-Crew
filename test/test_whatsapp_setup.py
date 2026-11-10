@@ -42,8 +42,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-import kiro_crew.config.loader as loader
-from kiro_crew.dashboard.handlers import whatsapp_setup as mod
+import aj_crew.config.loader as loader
+from aj_crew.dashboard.handlers import whatsapp_setup as mod
 
 #: A forwarding header on a loopback peer is how every remote path (tunnel,
 #: reverse proxy) reaches the gateway, and is what the production gate keys on.
@@ -148,7 +148,7 @@ def cfg_file(tmp_path: Path, monkeypatch) -> Path:
     One namespace covers both paths now: the save endpoint mutates through
     ``update_config_locked``, which resolves the target itself with the loader's
     own ``config_path()`` (and puts its sidecar lock beside it), and
-    ``KiroCrewConfig.load`` resolves the same binding.
+    ``AjCrewConfig.load`` resolves the same binding.
     """
     cp = tmp_path / "config.json"
     monkeypatch.setattr(loader, "config_path", lambda: cp)
@@ -285,7 +285,7 @@ def test_config_get_reports_no_failure_without_a_gateway_state(cfg_file: Path) -
 def _fake_neonize(monkeypatch, *, present: bool, channel: bool = True) -> None:
     """Make neonize look present or absent to the SDK probe, and the pip install
     channel available or not. Only ``neonize`` is faked."""
-    import kiro_crew.dashboard.handlers.messaging as messaging
+    import aj_crew.dashboard.handlers.messaging as messaging
 
     real = messaging.importlib.util.find_spec
     monkeypatch.setattr(
@@ -461,7 +461,7 @@ def test_config_save_persists_policy_and_preserves_other_sections(
     cfg_file: Path, folder_calls: list[dict]
 ) -> None:
     cfg_file.write_text(
-        json.dumps({"slack": {"command": "kirocrew"}, "agent": {"model": "auto"}}),
+        json.dumps({"slack": {"command": "ajcrew"}, "agent": {"model": "auto"}}),
         encoding="utf-8",
     )
     status, body = _call(
@@ -481,7 +481,7 @@ def test_config_save_persists_policy_and_preserves_other_sections(
     # process -- none of them needs the gateway restarted.
     assert body == {"ok": True, "restart_required": False}
     stored = json.loads(cfg_file.read_text(encoding="utf-8"))
-    assert stored["slack"] == {"command": "kirocrew"}
+    assert stored["slack"] == {"command": "ajcrew"}
     assert stored["agent"] == {"model": "auto"}
     assert stored["whatsapp"] == {
         "enabled": True,

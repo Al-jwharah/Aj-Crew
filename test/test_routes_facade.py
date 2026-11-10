@@ -1,7 +1,7 @@
-"""``kiro_crew.apps.routes`` stays the one import path and patch surface of its owners.
+"""``aj_crew.apps.routes`` stays the one import path and patch surface of its owners.
 
 The app management route module was split into sibling owners (``routes_<role>.py``) behind a
-:mod:`kiro_crew._facade_mirror` facade. These tests pin what the split must keep:
+:mod:`aj_crew._facade_mirror` facade. These tests pin what the split must keep:
 
 * the facade serves a mirror over exactly the ``routes_*`` modules beside it, and every
   module-level name the unsplit file bound still resolves through it, to the object each
@@ -9,10 +9,10 @@ The app management route module was split into sibling owners (``routes_<role>.p
 * the facade defines only the route table, and each handler lives in its family's owner;
 * every import the facade binds is accounted for, since flake8's F401 is off for its
   verbatim import header;
-* every owner logs as ``kiro_crew.apps.routes``, the logger name log filters and
+* every owner logs as ``aj_crew.apps.routes``, the logger name log filters and
   ``caplog`` assertions use;
 * every name the facade serves is named in a ``TYPE_CHECKING`` group, so
-  ``from kiro_crew.apps.routes import <name>`` stays visible to type checkers;
+  ``from aj_crew.apps.routes import <name>`` stays visible to type checkers;
 * nothing outside the family imports an owner: callers reach every app handler through the facade.
 
 Each structural check has a self-test that shows it can fail.
@@ -29,25 +29,25 @@ import owner_import_scan
 import pytest
 import source_corpus
 
-import kiro_crew
-from kiro_crew import _facade_mirror
-from kiro_crew.apps import routes as facade
+import aj_crew
+from aj_crew import _facade_mirror
+from aj_crew.apps import routes as facade
 
-# Walks src/kiro_crew for owner imports; keep it on one worker.
+# Walks src/aj_crew for owner imports; keep it on one worker.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_routes_facade")
 
 #: Checks ``test_facade_shared_checks.py`` runs against this module's helpers; each is
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("owners_log_as_facade",)
 
-_SRC = Path(kiro_crew.__file__).resolve().parent
-_FACADE = "kiro_crew.apps.routes"
-_OWNER_PREFIX = "kiro_crew.apps.routes_"
+_SRC = Path(aj_crew.__file__).resolve().parent
+_FACADE = "aj_crew.apps.routes"
+_OWNER_PREFIX = "aj_crew.apps.routes_"
 
 #: Every module-level name ``apps/routes.py`` bound before the split.
 _BASE_MODULE_NAMES = frozenset("""
     Any BUILTIN_NAMES ConfigReadError CronStoreBusy CronStoreUnreadable
-    DEPLOY_WEB_PROVIDER_ID Dependencies KiroCrewConfig PRINCIPAL_AGENT_TOOL
+    DEPLOY_WEB_PROVIDER_ID Dependencies AjCrewConfig PRINCIPAL_AGENT_TOOL
     PRINCIPAL_APP_TOKEN PRINCIPAL_NONE PRINCIPAL_OWNER_SESSION PROXY_PRINCIPAL_HEADER Path
     PinnedPathRefusal PlatformConfig RegistrationResult _ALLOWED_EXTENSIONS
     _ART_IMAGE_EXTENSIONS _ART_MANIFEST_FIELDS _ART_MANIFEST_LIST_FIELDS _ART_MAX_BYTES
@@ -119,7 +119,7 @@ def _source(module_name: str) -> str:
 def test_the_facade_serves_a_mirror_over_every_sibling_owner() -> None:
     assert isinstance(facade, _facade_mirror.MirroredModule)
     index = _index()
-    on_disk = sorted(f"kiro_crew.apps.{path.stem}" for path in (_SRC / "apps").glob("routes_*.py"))
+    on_disk = sorted(f"aj_crew.apps.{path.stem}" for path in (_SRC / "apps").glob("routes_*.py"))
     assert sorted(index.owners) == on_disk
     assert index.excluded == ()
     assert index.divergent() == ()
@@ -146,14 +146,14 @@ def test_every_base_module_name_resolves_through_the_facade() -> None:
 #: Each handler and unit in the family's owner, by endpoint family. The facade keeps only the
 #: route table that names them.
 _OWNER_OF = {
-    "handle_install_app": "kiro_crew.apps.routes_install",
-    "handle_uninstall_app": "kiro_crew.apps.routes_uninstall",
-    "_run_uninstall": "kiro_crew.apps.routes_uninstall",
-    "handle_migrate_cleanup": "kiro_crew.apps.routes_uninstall",
-    "handle_app_config": "kiro_crew.apps.routes_listing",
-    "handle_app_art_file": "kiro_crew.apps.routes_art",
-    "_fetch_git_blob": "kiro_crew.apps.routes_art",
-    "handle_blob_proxy": "kiro_crew.apps.routes_art",
+    "handle_install_app": "aj_crew.apps.routes_install",
+    "handle_uninstall_app": "aj_crew.apps.routes_uninstall",
+    "_run_uninstall": "aj_crew.apps.routes_uninstall",
+    "handle_migrate_cleanup": "aj_crew.apps.routes_uninstall",
+    "handle_app_config": "aj_crew.apps.routes_listing",
+    "handle_app_art_file": "aj_crew.apps.routes_art",
+    "_fetch_git_blob": "aj_crew.apps.routes_art",
+    "handle_blob_proxy": "aj_crew.apps.routes_art",
 }
 
 
@@ -231,7 +231,7 @@ def test_every_served_name_is_named_for_type_checkers() -> None:
     """A name the facade serves but does not bind is in a ``TYPE_CHECKING`` group.
 
     The facade binds none of them, so this group is what keeps
-    ``from kiro_crew.apps.routes import collect_publish_providers`` visible to mypy.
+    ``from aj_crew.apps.routes import collect_publish_providers`` visible to mypy.
     """
     served = set(_index().exports)
     named = _typing_names(_source(_FACADE))
@@ -270,13 +270,13 @@ def test_only_the_family_imports_an_owner() -> None:
 
 
 def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None:
-    root = tmp_path / "kiro_crew"
+    root = tmp_path / "aj_crew"
     sources = {
-        root / "pkg" / "caller.py": "from kiro_crew.apps.routes_lifecycle import _redact_warning\n",
-        root / "other.py": "from kiro_crew.apps import routes_lifecycle as low\n",
+        root / "pkg" / "caller.py": "from aj_crew.apps.routes_lifecycle import _redact_warning\n",
+        root / "other.py": "from aj_crew.apps import routes_lifecycle as low\n",
         root / "apps" / "relative.py": "from .routes_lifecycle import _redact_warning\n",
         root / "apps" / "deep" / "up.py": "from .. import routes_lifecycle\n",
-        root / "facade_user.py": "from kiro_crew.apps.routes import _redact_warning\n",
+        root / "facade_user.py": "from aj_crew.apps.routes import _redact_warning\n",
     }
     assert _owner_importers(sources.items(), root) == {
         "pkg/caller.py",

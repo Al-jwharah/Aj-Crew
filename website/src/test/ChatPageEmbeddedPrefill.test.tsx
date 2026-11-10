@@ -168,6 +168,6 @@ describe('embedded ChatPage prefill on first activation (artifact companion)', (
     })
     await waitFor(() => expect(store.getState().chat.activeSlot).toBe('chat-2'))
     await waitFor(() => expect(composer().value).toBe(PROMPT))
-    expect(sessionStorage.getItem('kirocrew_prefill')).toBeNull()
+    expect(sessionStorage.getItem('ajcrew_prefill')).toBeNull()
   })
 })

@@ -114,7 +114,7 @@ export function openerFor(
 /** What "Always" remembered for an entry and a host. */
 export type LinkOpenChoice = 'app' | 'browser'
 
-const STORE_KEY = 'kirocrew:link-open-always'
+const STORE_KEY = 'ajcrew:link-open-always'
 const MAX_REMEMBERED = 200
 
 function readStore(): Record<string, LinkOpenChoice> {

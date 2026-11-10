@@ -26,9 +26,9 @@ from test_task_planner_decompose_gate import (
     _sessions_with,
 )
 
-from kiro_crew.hooks import TOOL_ALLOW
-from kiro_crew.task_planner import decompose
-from kiro_crew.workflow_memory import WorkflowScope
+from aj_crew.hooks import TOOL_ALLOW
+from aj_crew.task_planner import decompose
+from aj_crew.workflow_memory import WorkflowScope
 
 _WINDOW = 200_000
 
@@ -77,7 +77,7 @@ async def test_workflow_worker_turn_is_non_interactive_and_window_sized():
     context.build_message = MagicMock(return_value=("full", None))
     provider = _with_window(MagicMock())
 
-    with patch("kiro_crew.workflow_memory.bind_session_execution"):
+    with patch("aj_crew.workflow_memory.bind_session_execution"):
         await scope.prompt(
             context,
             scope.worker_key("w"),

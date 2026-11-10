@@ -19,13 +19,13 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.config.sections import (
+from aj_crew.config import AjCrewConfig
+from aj_crew.config.sections import (
     _validated_stt_custom_path,
     _validated_stt_custom_sha256,
 )
-from kiro_crew.stt import models
-from kiro_crew.stt import session as stt_session
+from aj_crew.stt import models
+from aj_crew.stt import session as stt_session
 
 _PAYLOAD = b"custom weights" * 64
 _DIGEST = hashlib.sha256(_PAYLOAD).hexdigest()
@@ -51,7 +51,7 @@ def placed(models_dir) -> Path:
     return path
 
 
-def _load_stt_config(tmp_path: Path, **stt) -> KiroCrewConfig:
+def _load_stt_config(tmp_path: Path, **stt) -> AjCrewConfig:
     """Load a real config whose ``stt`` section is *stt*, through the loader's own
     validation -- which is where the degrade-to-default under test lives."""
     home = tmp_path / "cfg-home"
@@ -59,15 +59,15 @@ def _load_stt_config(tmp_path: Path, **stt) -> KiroCrewConfig:
     cfg_file = home / "config.json"
     cfg_file.write_text(json.dumps({"stt": stt}), encoding="utf-8")
     with (
-        unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=home),
-        unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
+        unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=home),
+        unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_file),
     ):
-        return KiroCrewConfig.load()
+        return AjCrewConfig.load()
 
 
-def _with_config(monkeypatch, cfg: KiroCrewConfig) -> None:
+def _with_config(monkeypatch, cfg: AjCrewConfig) -> None:
     """Make ``models.resolve`` see *cfg* through its deferred ``load()``."""
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda _cls: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda _cls: cfg))
 
 
 def _custom(path: str = _NAME, digest: str = _DIGEST) -> models.WhisperModel:
@@ -303,7 +303,7 @@ def test_an_unreadable_config_degrades_rather_than_raising(monkeypatch, caplog):
     def _explode(_cls):
         raise RuntimeError("config unavailable")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_explode))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_explode))
     with caplog.at_level(logging.WARNING):
         assert models.resolve(models.CUSTOM_MODEL).name == models.DEFAULT_MODEL
 
@@ -434,7 +434,7 @@ def test_a_custom_model_announces_no_download(monkeypatch, models_dir):
 async def test_the_engine_loads_the_file_ensure_vetted(monkeypatch, models_dir, placed, tmp_path):
     """If the folder changes between building the residency key and the hash, the
     loader still opens the file that PASSED the hash, never the key's earlier guess."""
-    from kiro_crew.stt import engine as engine_mod
+    from aj_crew.stt import engine as engine_mod
 
     stale = tmp_path / "stale-guess.bin"
     monkeypatch.setattr(engine_mod, "_engine", None)

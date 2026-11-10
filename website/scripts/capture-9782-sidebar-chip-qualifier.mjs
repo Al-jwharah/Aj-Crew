@@ -37,7 +37,7 @@ const URL_A2_PR = 'https://github.com/group-a/svc/pull/2'
 
 const active = {
   key: ACTIVE, title: 'Draft the release notes', running: false, messages: 2,
-  agent: 'kirocrew', modified: now, last_ts: new Date().toISOString(), folder_id: '',
+  agent: 'ajcrew', modified: now, last_ts: new Date().toISOString(), folder_id: '',
   last_message: 'Noted.',
   source_links: [], source_links_total: 0,
 }
@@ -47,7 +47,7 @@ const multiProjectSlots = [
   active,
   {
     key: 'chat-multi', title: 'Service split work', running: false, messages: 5,
-    agent: 'kirocrew', modified: now - 300, last_ts: new Date(Date.now() - 300_000).toISOString(), folder_id: '',
+    agent: 'ajcrew', modified: now - 300, last_ts: new Date(Date.now() - 300_000).toISOString(), folder_id: '',
     last_message: 'Both issues filed.',
     source_links: [
       { provider: 'github', number: 1, label: '#1', url: URL_A1, state: 'open', kind: 'issue' },
@@ -62,7 +62,7 @@ const singleProjectSlots = [
   active,
   {
     key: 'chat-single', title: 'Refactor the handlers', running: false, messages: 3,
-    agent: 'kirocrew', modified: now - 600, last_ts: new Date(Date.now() - 600_000).toISOString(), folder_id: '',
+    agent: 'ajcrew', modified: now - 600, last_ts: new Date(Date.now() - 600_000).toISOString(), folder_id: '',
     last_message: 'Both PRs open.',
     source_links: [
       { provider: 'github', number: 1, label: '#1', url: URL_A1_PR, state: 'open', ci: 'passed', kind: 'change' },

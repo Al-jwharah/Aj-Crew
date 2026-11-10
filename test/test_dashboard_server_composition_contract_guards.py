@@ -38,7 +38,7 @@ _GUARDED_CONSTRUCTS = (
     (r"^_STRICT_INTERNAL_API_PATHS = frozenset\($", 1, {"server_internal_paths": 1}),
     (r"platform_compat\.HeapTrimMaintainer\(\)", 1, {"server": 1}),
     (
-        r'os\.environ\.get\("KIROCREW_DIAG_RECORDER", ""\)\.strip\(\)\.lower\(\) in \(',
+        r'os\.environ\.get\("AJCREW_DIAG_RECORDER", ""\)\.strip\(\)\.lower\(\) in \(',
         1,
         {"server": 1},
     ),
@@ -51,7 +51,7 @@ _GUARDED_CONSTRUCTS = (
     (r"build_hardened_runner\(app", 2, {"server": 1, "api_entrypoint": 1}),
     (r"KiroPrerequisiteService,$", 2, {"server": 1, "api_entrypoint": 1}),
     (r"register_skill_read_observer\(", 2, {"server": 1, "api_entrypoint": 1}),
-    (r"^    from kiro_crew\.apps\.builtins import _MIGRATED_BUILTINS$", 1, {"server": 1}),
+    (r"^    from aj_crew\.apps\.builtins import _MIGRATED_BUILTINS$", 1, {"server": 1}),
     (r"_internal_secret = os\.urandom\(16\)\.hex\(\)$", 2, {"server": 1, "api_entrypoint": 1}),
     (r"current_context\(\)\.dashboard\.contribute_routes\(app\)", 1, {"server": 1}),
     (
@@ -113,7 +113,7 @@ def _owner_paths() -> list[str]:
 
 def _rules_missing_owners(rules: list[dict]) -> tuple[set[str], dict[str, list[str]]]:
     """``(ids of rules matching the server, {id: owner files those rules miss})``."""
-    facade = "src/kiro_crew/dashboard/server.py"
+    facade = "src/aj_crew/dashboard/server.py"
     matched: set[str] = set()
     missing: dict[str, list[str]] = {}
     for rule in rules:
@@ -169,7 +169,7 @@ def test_the_container_smoke_lane_fires_on_the_owners() -> None:
     )
     on = workflow.get("on", workflow.get(True))
     patterns = [_globstar(p) for p in on["pull_request"]["paths"]]
-    assert any(p.match("src/kiro_crew/dashboard/server.py") for p in patterns)
+    assert any(p.match("src/aj_crew/dashboard/server.py") for p in patterns)
     assert [o for o in _owner_paths() if not any(p.match(o) for p in patterns)] == []
 
 
@@ -191,7 +191,7 @@ def test_the_async_config_dir_guard_scans_every_owner_coroutine() -> None:
 
 def test_the_redaction_census_classifies_the_owners() -> None:
     """An owner that calls a redactor is classified where the server's entry was."""
-    from kiro_crew import security_posture
+    from aj_crew import security_posture
 
     rel = {
         f"dashboard/server_runtime/{stem}.py"
@@ -211,13 +211,13 @@ def test_the_redaction_census_classifies_the_owners() -> None:
 _RFC_CITED_SYMBOLS = (
     (
         "docs/request-for-change/rfc-resumable-subagent-sessions.md",
-        "kiro_crew.dashboard.server_runtime.mcp_routes",
+        "aj_crew.dashboard.server_runtime.mcp_routes",
         "_register_mcp_routes",
         ("POST", "/api/spawn"),
     ),
     (
         "docs/request-for-change/rfc-resumable-subagent-sessions.md",
-        "kiro_crew.dashboard.routes.chat",
+        "aj_crew.dashboard.routes.chat",
         "register",
         ("POST", "/api/chat"),
     ),
@@ -234,7 +234,7 @@ def test_a_route_symbol_an_rfc_cites_resolves_at_its_home(
     from aiohttp import web
 
     text = (repo_root() / doc).read_text(encoding="utf-8")
-    path = module.replace(".", "/").removeprefix("kiro_crew/") + ".py"
+    path = module.replace(".", "/").removeprefix("aj_crew/") + ".py"
     assert f"`{symbol}` in `{path}`" in text
     assert re.search(r"dashboard/server\.py:\d", text) is None
     register = getattr(importlib.import_module(module), symbol, None)

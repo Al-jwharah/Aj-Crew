@@ -24,8 +24,8 @@ from aws_control_backup_composition_contract_helpers import (
     PARTS,
 )
 
-from kiro_crew.apps.builtins.aws_control.backend import backup
-from kiro_crew.apps.builtins.aws_control.backend.backup_parts import retention
+from aj_crew.apps.builtins.aws_control.backend import backup
+from aj_crew.apps.builtins.aws_control.backend.backup_parts import retention
 
 # The patch spellings the suite may use on the facade
 
@@ -373,7 +373,7 @@ def _patch_sources(*needles: str) -> Iterator[tuple[Path, str]]:
 
 #: Imports most reader cases share.
 _CASE_IMPORTS = (
-    "from unittest import mock\n" "from kiro_crew.apps.builtins.aws_control.backend import backup\n"
+    "from unittest import mock\n" "from aj_crew.apps.builtins.aws_control.backend import backup\n"
 )
 
 #: ``(id, source, module, expected names)`` for the reader: each form the guard must
@@ -426,32 +426,32 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     (
         "another module",
         _CASE_IMPORTS
-        + "from kiro_crew import config\nmock.patch.object(config, '@EXP@', create=True)\n",
+        + "from aj_crew import config\nmock.patch.object(config, '@EXP@', create=True)\n",
         None,
         [],
     ),
     (
         "another module's .backup",
         _CASE_IMPORTS
-        + "from kiro_crew import config\nmock.patch.object(config.backup, '@EXP@', create=True)\n",
+        + "from aj_crew import config\nmock.patch.object(config.backup, '@EXP@', create=True)\n",
         None,
         [],
     ),
     (
         "patch as an alias",
-        "from unittest.mock import patch as P\nfrom kiro_crew.apps.builtins.aws_control.backend import backup\nP.object(backup, '@EXP@', create=True)\n",
+        "from unittest.mock import patch as P\nfrom aj_crew.apps.builtins.aws_control.backend import backup\nP.object(backup, '@EXP@', create=True)\n",
         None,
         ["@EXP@"],
     ),
     (
         "a local function named patch",
-        "from kiro_crew.apps.builtins.aws_control.backend import backup\ndef patch(*a, **k):\n    return None\npatch.object(backup, '@EXP@', create=True)\n",
+        "from aj_crew.apps.builtins.aws_control.backend import backup\ndef patch(*a, **k):\n    return None\npatch.object(backup, '@EXP@', create=True)\n",
         None,
         [],
     ),
     (
         "mock as an alias",
-        "from unittest import mock as M\nfrom kiro_crew.apps.builtins.aws_control.backend import backup\nM.patch.object(backup, '@EXP@', create=True)\n",
+        "from unittest import mock as M\nfrom aj_crew.apps.builtins.aws_control.backend import backup\nM.patch.object(backup, '@EXP@', create=True)\n",
         None,
         ["@EXP@"],
     ),
@@ -463,13 +463,13 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     ),
     (
         "unittest.mock by its path",
-        "import unittest.mock\nfrom kiro_crew.apps.builtins.aws_control.backend import backup\nunittest.mock.patch.multiple(backup, create=True, @EXP@=None)\n",
+        "import unittest.mock\nfrom aj_crew.apps.builtins.aws_control.backend import backup\nunittest.mock.patch.multiple(backup, create=True, @EXP@=None)\n",
         None,
         ["@EXP@"],
     ),
     (
         "a third-party mock",
-        "import mock\nfrom kiro_crew.apps.builtins.aws_control.backend import backup\nmock.patch.object(backup, '@EXP@', create=True)\n",
+        "import mock\nfrom aj_crew.apps.builtins.aws_control.backend import backup\nmock.patch.object(backup, '@EXP@', create=True)\n",
         None,
         [],
     ),
@@ -501,7 +501,7 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     ),
     (
         "another dotted string",
-        "from unittest import mock\nmock.patch('kiro_crew.config.@EXP@', create=True)\n",
+        "from unittest import mock\nmock.patch('aj_crew.config.@EXP@', create=True)\n",
         None,
         [],
     ),
@@ -514,7 +514,7 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     (
         "an f-string of another __name__",
         _CASE_IMPORTS
-        + "from kiro_crew import config\nmock.patch(f'{config.__name__}.@EXP@', create=True)\n",
+        + "from aj_crew import config\nmock.patch(f'{config.__name__}.@EXP@', create=True)\n",
         None,
         [],
     ),
@@ -526,7 +526,7 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     ),
     (
         "an f-string of another constant",
-        "from unittest import mock\nOTHER = 'kiro_crew.config'\nmock.patch(f'{OTHER}.@EXP@', create=True)\n",
+        "from unittest import mock\nOTHER = 'aj_crew.config'\nmock.patch(f'{OTHER}.@EXP@', create=True)\n",
         None,
         [],
     ),
@@ -544,7 +544,7 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     ),
     (
         "another constant concatenated",
-        "from unittest import mock\nOTHER = 'kiro_crew.config'\nmock.patch(OTHER + '.@EXP@', create=True)\n",
+        "from unittest import mock\nOTHER = 'aj_crew.config'\nmock.patch(OTHER + '.@EXP@', create=True)\n",
         None,
         [],
     ),
@@ -557,7 +557,7 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     (
         "keyword target elsewhere",
         _CASE_IMPORTS
-        + "from kiro_crew import config\nmock.patch.object(target=config, attribute='@EXP@', create=True)\n",
+        + "from aj_crew import config\nmock.patch.object(target=config, attribute='@EXP@', create=True)\n",
         None,
         [],
     ),
@@ -602,7 +602,7 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     (
         "**kwargs elsewhere",
         _CASE_IMPORTS
-        + "from kiro_crew import config\ndef test_x(kw):\n    mock.patch.multiple(config, create=True, **kw)\n",
+        + "from aj_crew import config\ndef test_x(kw):\n    mock.patch.multiple(config, create=True, **kw)\n",
         None,
         [],
     ),
@@ -614,25 +614,25 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     ),
     (
         "patch.multiple of another string",
-        "from unittest import mock\nmock.patch.multiple('kiro_crew.config', create=True, @EXP@=None)\n",
+        "from unittest import mock\nmock.patch.multiple('aj_crew.config', create=True, @EXP@=None)\n",
         None,
         [],
     ),
     (
         "an assigned re-export",
-        "from unittest import mock\nfrom kiro_crew.apps.builtins.aws_control import hooks\ndef test_x():\n    bk = hooks.backup_mod\n    mock.patch.object(bk, '@EXP@', create=True)\n",
+        "from unittest import mock\nfrom aj_crew.apps.builtins.aws_control import hooks\ndef test_x():\n    bk = hooks.backup_mod\n    mock.patch.object(bk, '@EXP@', create=True)\n",
         None,
         ["@EXP@"],
     ),
     (
         "an assigned other attribute",
-        "from unittest import mock\nfrom kiro_crew.apps.builtins.aws_control import hooks\ndef test_x():\n    bk = hooks.backup_now\n    mock.patch.object(bk, '@EXP@', create=True)\n",
+        "from unittest import mock\nfrom aj_crew.apps.builtins.aws_control import hooks\ndef test_x():\n    bk = hooks.backup_now\n    mock.patch.object(bk, '@EXP@', create=True)\n",
         None,
         [],
     ),
     (
         "another module's re-export",
-        "from unittest import mock\nfrom kiro_crew.apps.builtins.aws_control.backend import routes as routes_mod\nalias = routes_mod.backup_mod\nmock.patch.object(alias, '@EXP@', create=True)\n",
+        "from unittest import mock\nfrom aj_crew.apps.builtins.aws_control.backend import routes as routes_mod\nalias = routes_mod.backup_mod\nmock.patch.object(alias, '@EXP@', create=True)\n",
         None,
         ["@EXP@"],
     ),
@@ -644,7 +644,7 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     ),
     (
         "import_module elsewhere",
-        "import importlib\nfrom unittest import mock\nother = importlib.import_module('kiro_crew.config')\nmock.patch.object(other, '@EXP@', create=True)\n",
+        "import importlib\nfrom unittest import mock\nother = importlib.import_module('aj_crew.config')\nmock.patch.object(other, '@EXP@', create=True)\n",
         None,
         [],
     ),
@@ -657,13 +657,13 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     (
         "a relative import in a package",
         "from unittest import mock\nfrom ..backend import backup\nmock.patch.object(backup, '@EXP@', create=True)\n",
-        "kiro_crew.apps.builtins.aws_control.tests.test_case",
+        "aj_crew.apps.builtins.aws_control.tests.test_case",
         ["@EXP@"],
     ),
     (
         "a relative import elsewhere",
         "from unittest import mock\nfrom ..crew import backup\nmock.patch.object(backup, '@EXP@', create=True)\n",
-        "kiro_crew.apps.builtins.aws_control.tests.test_case",
+        "aj_crew.apps.builtins.aws_control.tests.test_case",
         [],
     ),
 ]
@@ -685,8 +685,8 @@ class TestPatchSpellings:
             backup, "_redact_for_upload"
         )
         assert _facade_reexports() >= {
-            "kiro_crew.apps.builtins.aws_control.hooks.backup_mod",
-            "kiro_crew.apps.builtins.aws_control.backend.routes.backup_mod",
+            "aj_crew.apps.builtins.aws_control.hooks.backup_mod",
+            "aj_crew.apps.builtins.aws_control.backend.routes.backup_mod",
         }
 
     @pytest.mark.parametrize(
@@ -944,8 +944,8 @@ def _direct_part_patches(source: str, module: str | None = None) -> list[_Hit]:
 _PART_CASE_IMPORTS = (
     "import pytest\n"
     "from unittest import mock\n"
-    "from kiro_crew.apps.builtins.aws_control.backend import backup\n"
-    "from kiro_crew.apps.builtins.aws_control.backend.backup_parts import state\n"
+    "from aj_crew.apps.builtins.aws_control.backend import backup\n"
+    "from aj_crew.apps.builtins.aws_control.backend.backup_parts import state\n"
 )
 
 #: ``(id, source, module, expected names)``: each write the guard must catch beside a
@@ -1059,7 +1059,7 @@ _PART_CASES: list[tuple[str, str, str | None, list[str]]] = [
     (
         "patch as an alias",
         "from unittest.mock import patch as P\n"
-        "from kiro_crew.apps.builtins.aws_control.backend.backup_parts import state\n"
+        "from aj_crew.apps.builtins.aws_control.backend.backup_parts import state\n"
         "P.object(state, '_state_path')\n",
         None,
         ["backup_parts.state"],
@@ -1067,21 +1067,21 @@ _PART_CASES: list[tuple[str, str, str | None, list[str]]] = [
     (
         "a third-party mock",
         "import mock\n"
-        "from kiro_crew.apps.builtins.aws_control.backend.backup_parts import state\n"
+        "from aj_crew.apps.builtins.aws_control.backend.backup_parts import state\n"
         "mock.patch.object(state, '_state_path')\n",
         None,
         [],
     ),
     (
         "a part under an alias",
-        "from kiro_crew.apps.builtins.aws_control.backend.backup_parts import state as st\n"
+        "from aj_crew.apps.builtins.aws_control.backend.backup_parts import state as st\n"
         "def test_x(monkeypatch):\n    monkeypatch.setattr(st, '_state_path', None)\n",
         None,
         ["backup_parts.state"],
     ),
     (
         "a part through its package",
-        "from kiro_crew.apps.builtins.aws_control.backend import backup_parts\n"
+        "from aj_crew.apps.builtins.aws_control.backend import backup_parts\n"
         "def test_x(monkeypatch):\n"
         "    monkeypatch.setattr(backup_parts.state, '_state_path', None)\n",
         None,
@@ -1089,7 +1089,7 @@ _PART_CASES: list[tuple[str, str, str | None, list[str]]] = [
     ),
     (
         "the package itself",
-        "from kiro_crew.apps.builtins.aws_control.backend import backup_parts\n"
+        "from aj_crew.apps.builtins.aws_control.backend import backup_parts\n"
         "def test_x(monkeypatch):\n"
         "    monkeypatch.setattr(backup_parts, '_FACADE_MODULE', 'x')\n",
         None,
@@ -1099,14 +1099,14 @@ _PART_CASES: list[tuple[str, str, str | None, list[str]]] = [
         "a relative import in a package",
         "from ..backend.backup_parts import state\n"
         "def test_x(monkeypatch):\n    monkeypatch.setattr(state, '_state_path', None)\n",
-        "kiro_crew.apps.builtins.aws_control.tests.test_case",
+        "aj_crew.apps.builtins.aws_control.tests.test_case",
         ["backup_parts.state"],
     ),
     (
         "a relative import elsewhere",
         "from ..crew.backup_parts import state\n"
         "def test_x(monkeypatch):\n    monkeypatch.setattr(state, '_state_path', None)\n",
-        "kiro_crew.apps.builtins.aws_control.tests.test_case",
+        "aj_crew.apps.builtins.aws_control.tests.test_case",
         [],
     ),
     (
@@ -1221,7 +1221,7 @@ _PART_CASES: list[tuple[str, str, str | None, list[str]]] = [
     ),
     (
         "another module",
-        "from kiro_crew import config\n"
+        "from aj_crew import config\n"
         "def test_x(monkeypatch):\n    monkeypatch.setattr(config, '_state_path', None)\n",
         None,
         [],
@@ -1360,7 +1360,7 @@ _PART_CASES: list[tuple[str, str, str | None, list[str]]] = [
     ),
     (
         "an attribute of a module a part imports",
-        "from kiro_crew.apps.builtins.aws_control.backend.backup_parts import retention\n"
+        "from aj_crew.apps.builtins.aws_control.backend.backup_parts import retention\n"
         "def test_x(monkeypatch):\n"
         "    monkeypatch.setattr(retention.storage, 'delete_key', None)\n",
         None,
@@ -1393,7 +1393,7 @@ _PART_CASES: list[tuple[str, str, str | None, list[str]]] = [
     (
         "an f-string of an imported module's __name__",
         "from unittest import mock\n"
-        "from kiro_crew.apps.builtins.aws_control.backend.backup_parts import retention\n"
+        "from aj_crew.apps.builtins.aws_control.backend.backup_parts import retention\n"
         "mock.patch(f'{retention.storage.__name__}.delete_key')\n",
         None,
         [],

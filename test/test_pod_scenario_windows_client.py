@@ -49,8 +49,8 @@ def _client(tmp_path: Path) -> scenarios_conftest.PodClient:
         port=7411,
         home=plane / "h" / "worktree",
         checkout=tmp_path,
-        cli=tmp_path / ".venv" / "Scripts" / "kirocrew.exe",
-        env={"KIROCREW_POD_ROOT": str(plane / "h")},
+        cli=tmp_path / ".venv" / "Scripts" / "ajcrew.exe",
+        env={"AJCREW_POD_ROOT": str(plane / "h")},
     )
 
 
@@ -83,7 +83,7 @@ def test_windows_client_exchanges_token_once_then_uses_cookie_urls(tmp_path, mon
 
 
 def test_scenario_backend_uses_supported_launcher(tmp_path, monkeypatch):
-    from kiro_crew.testing import harness
+    from aj_crew.testing import harness
 
     launcher = tmp_path / "kiro-backend.cmd"
     launcher.write_text("shim", encoding="utf-8")
@@ -94,7 +94,7 @@ def test_scenario_backend_uses_supported_launcher(tmp_path, monkeypatch):
         return launcher
 
     monkeypatch.setattr(harness, "fake_acp_backend_launcher", fake_launcher)
-    monkeypatch.delenv("KIROCREW_E2E_SCENARIOS_REAL_AGENT", raising=False)
+    monkeypatch.delenv("AJCREW_E2E_SCENARIOS_REAL_AGENT", raising=False)
 
     assert scenarios_conftest._resolve_backend(tmp_path) == launcher
     assert calls == [tmp_path]

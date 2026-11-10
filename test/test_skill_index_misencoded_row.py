@@ -21,8 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import skills as sk
-from kiro_crew.skills import SkillsLoader
+from aj_crew import skills as sk
+from aj_crew.skills import SkillsLoader
 
 _SKILL_TEXT = (
     "---\nname: {name}\ndescription: {name} description\n---\n# {name}\n\nbody of {name}\n"
@@ -81,7 +81,7 @@ class TestOneMisencodedSkillDropsOnlyItsOwnRow:
         broken = _write_skill(root, "broken", _UTF16_SKILL)
         loader = SkillsLoader(skills_path=root, install_builtins=False)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.skills"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.skills"):
             rows = loader.list_skills()
 
         assert sorted(row["key"] for row in rows) == ["alpha", "beta"], read_branch
@@ -109,7 +109,7 @@ class TestOneMisencodedSkillDropsOnlyItsOwnRow:
         _write_skill(root, "broken", _UTF16_SKILL)
         loader = SkillsLoader(skills_path=root, install_builtins=False)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.skills"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.skills"):
             first = loader.list_skills()
             second = loader.list_skills()
 
@@ -133,7 +133,7 @@ class TestOneMisencodedSkillDropsOnlyItsOwnRow:
         broken = _write_skill(root, "broken", _UTF16_SKILL)
         loader = SkillsLoader(skills_path=root, install_builtins=False)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.skills"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.skills"):
             first = loader.list_skills()
             # The walk fingerprinted the file and the warm listing trusts that
             # fingerprint without a stat of its own; the re-save below does not
@@ -177,7 +177,7 @@ class TestOneMisencodedSkillDropsOnlyItsOwnRow:
 
         monkeypatch.setattr(loader, "_read_enumerated_skill_bytes", denied)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.skills"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.skills"):
             rows = loader.list_skills()
 
         assert sorted(row["key"] for row in rows) == ["alpha", "beta"]
@@ -203,7 +203,7 @@ class TestOneMisencodedSkillDropsOnlyItsOwnRow:
         monkeypatch.setattr(loader, "_catalog_fingerprint_hint", lambda project_dir: {})
         gone.unlink()
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.skills"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.skills"):
             rows = loader.list_skills()
 
         assert sorted(row["key"] for row in rows) == ["alpha", "beta"]
@@ -249,7 +249,7 @@ class TestOneMisencodedSkillDropsOnlyItsOwnRow:
         # A new process: no in-memory list, no walk fingerprints, so the stored
         # snapshot is adopted and the row takes the listing's own stat path.
         second = SkillsLoader(skills_path=root, install_builtins=False)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.skills"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.skills"):
             listed = second.list_skills()
 
         assert sorted(row["key"] for row in listed) == ["alpha", "beta"], read_branch
@@ -266,7 +266,7 @@ class TestTheWarningIsBounded:
         one entry per distinct bad (file, fingerprint, problem) for the life of
         the process. The count assertions above stay green with the bound
         gone; this pins it."""
-        from kiro_crew.skill_runtime import listing
+        from aj_crew.skill_runtime import listing
 
         assert listing._warn_unreadable_skill.cache_info().maxsize == 256
 
@@ -278,7 +278,7 @@ class TestThePerTurnReadersDegradeTheSameWay:
     must cost its own match, not the turn."""
 
     def _loader(self, tmp_path: Path) -> tuple[SkillsLoader, Path]:
-        from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
+        from aj_crew.config.loader import AjCrewConfig, SkillsConfig
 
         root = tmp_path / "skills"
         _write_skill(root, "alpha", _TRIGGERED_SKILL_TEXT.format(name="alpha").encode("utf-8"))
@@ -287,7 +287,7 @@ class TestThePerTurnReadersDegradeTheSameWay:
         loader = SkillsLoader(
             skills_path=root,
             install_builtins=False,
-            config=KiroCrewConfig(skills=SkillsConfig(max_triggered=5)),
+            config=AjCrewConfig(skills=SkillsConfig(max_triggered=5)),
         )
         return loader, broken
 
@@ -296,7 +296,7 @@ class TestThePerTurnReadersDegradeTheSameWay:
     ) -> None:
         loader, broken = self._loader(tmp_path)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.skills"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.skills"):
             matched = loader.get_triggered_skills("please handle the zebra enclosure")
 
         assert sorted(matched) == ["alpha", "beta"]
@@ -310,7 +310,7 @@ class TestThePerTurnReadersDegradeTheSameWay:
     ) -> None:
         loader, broken = self._loader(tmp_path)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.skills"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.skills"):
             bodies, pointers = loader.split_triggered(["alpha", "broken", "beta"])
             hint = loader.trigger_hint(["broken", "alpha"])
 
@@ -332,7 +332,7 @@ class TestThePerTurnReadersDegradeTheSameWay:
         reported twice in its first turn."""
         loader, broken = self._loader(tmp_path)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.skills"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.skills"):
             listed = loader.list_skills()
             matched = loader.get_triggered_skills("please handle the zebra enclosure")
 
@@ -353,7 +353,7 @@ class TestAUtf8ByteOrderMarkIsNotMisencoding:
         _write_skill(root, "bom", _UTF8_BOM_SKILL)
         loader = SkillsLoader(skills_path=root, install_builtins=False)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.skills"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.skills"):
             rows = loader.list_skills()
 
         assert sorted(row["key"] for row in rows) == ["alpha", "beta", "bom"], read_branch

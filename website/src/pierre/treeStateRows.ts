@@ -107,7 +107,7 @@ export const STATE_ROW_MARKER = '\u200b'
  * `<svg data-icon-name="...">` with no symbol behind it (zero-sized here, and
  * hidden by the sheet); the marker stays the row's identity in the path.
  */
-export const STATE_ROW_ICON = 'kirocrew-tree-state-row'
+export const STATE_ROW_ICON = 'ajcrew-tree-state-row'
 
 /** The decoration the wrapper returns for a planned state row. */
 export const STATE_ROW_DECORATION = { icon: { name: STATE_ROW_ICON, width: 0, height: 0 } } as const
@@ -120,7 +120,7 @@ export const STATE_ROW_DECORATION = { icon: { name: STATE_ROW_ICON, width: 0, he
  * it as a state row like any other (no open, no drag, no context menu); its
  * selection hands the folder to the host instead.
  */
-export const STATE_ROW_ACTION_ICON = 'kirocrew-tree-state-row-action'
+export const STATE_ROW_ACTION_ICON = 'ajcrew-tree-state-row-action'
 
 /** The decoration the wrapper returns for an actionable state row. */
 export const STATE_ROW_ACTION_DECORATION = { icon: { name: STATE_ROW_ACTION_ICON, width: 0, height: 0 } } as const

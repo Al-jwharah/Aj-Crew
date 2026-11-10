@@ -24,12 +24,12 @@ import WebPreviewPanel from '../components/WebPreviewPanel'
 
 const PORTS = [3000, 5173, 8080]
 const ORIGINS = PORTS.flatMap(p => [`localhost:${p}`, `127.0.0.1:${p}`])
-const kirocrewConfig = vi.fn()
+const ajcrewConfig = vi.fn()
 vi.mock('../api/client', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../api/client')>()
   return {
     ...actual,
-    api: { ...actual.api, kirocrewConfig: () => kirocrewConfig() },
+    api: { ...actual.api, ajcrewConfig: () => ajcrewConfig() },
   }
 })
 
@@ -64,7 +64,7 @@ function violate(
 
 beforeEach(() => {
   localStorage.clear()
-  kirocrewConfig.mockReset().mockResolvedValue({ dashboard: { browser_local_origins: ORIGINS } })
+  ajcrewConfig.mockReset().mockResolvedValue({ dashboard: { browser_local_origins: ORIGINS } })
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(undefined))
 })
 afterEach(() => { vi.unstubAllGlobals() })

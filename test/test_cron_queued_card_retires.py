@@ -21,11 +21,11 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.cron import CronJob
-from kiro_crew.dashboard import chat_runner as cr
-from kiro_crew.dashboard.handlers import api_send_message
-from kiro_crew.dashboard.slot_queue_repository import MAX_LIVE_QUEUE_ENTRIES
-from kiro_crew.slack import gateway as gw
+from aj_crew.cron import CronJob
+from aj_crew.dashboard import chat_runner as cr
+from aj_crew.dashboard.handlers import api_send_message
+from aj_crew.dashboard.slot_queue_repository import MAX_LIVE_QUEUE_ENTRIES
+from aj_crew.slack import gateway as gw
 
 SLOT_KEY = "chat-7-origin"
 JOB_ID = "job4242"
@@ -100,7 +100,7 @@ async def test_origin_send_card_is_the_entry_the_drain_pops(tmp_path) -> None:
     app = web.Application()
     app.router.add_post("/api/send-message", api_send_message)
     app["state"] = handler_state
-    with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+    with patch("aj_crew.sel.sel", return_value=MagicMock()):
         async with TestClient(TestServer(app)) as client:
             resp = await client.post(
                 "/api/send-message",
@@ -278,7 +278,7 @@ async def test_a_script_cron_result_the_full_queue_refuses_goes_out_as_a_notific
 
 @pytest.mark.asyncio
 async def test_a_send_message_the_full_queue_refuses_takes_the_fallback(tmp_path) -> None:
-    from kiro_crew.dashboard.handlers import messaging
+    from aj_crew.dashboard.handlers import messaging
 
     state = _make_state(tmp_path)
     slot = _live_slot(state)
@@ -298,7 +298,7 @@ async def test_a_send_message_the_full_queue_refuses_takes_the_fallback(tmp_path
     app.router.add_post("/api/send-message", api_send_message)
     app["state"] = handler_state
     with (
-        patch("kiro_crew.sel.sel", return_value=MagicMock()),
+        patch("aj_crew.sel.sel", return_value=MagicMock()),
         patch.object(messaging, "_deliver_send_message_fallback", _fallback),
     ):
         async with TestClient(TestServer(app)) as client:

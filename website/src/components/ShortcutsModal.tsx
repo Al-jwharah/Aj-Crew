@@ -356,7 +356,7 @@ export function GlobalHotkeyRow({ onHandoff }: { onHandoff?: () => void } = {}) 
     <>
       {/* Unbound shows "Off" rather than hiding: a hidden switch cannot be turned back on. */}
       <ShortcutRow
-        label={i18nT('components.shortcutsModal.show_or_focus_the_kiro_crew_window')}
+        label={i18nT('components.shortcutsModal.show_or_focus_the_aj_crew_window')}
         keys={formatAcceleratorKeys(accelerator, IS_MAC)}
         status={accelerator ? undefined : i18nT('components.shortcutsModal.global_hotkey_off')}
       />
@@ -468,7 +468,7 @@ export default function ShortcutsModal({ onClose }: { onClose: () => void }) {
   const showGlobalHotkey = useMemo(() => {
     if (!globalHotkey) return false
     if (!normalizedQuery) return true
-    const label = i18nT('components.shortcutsModal.show_or_focus_the_kiro_crew_window').toLowerCase()
+    const label = i18nT('components.shortcutsModal.show_or_focus_the_aj_crew_window').toLowerCase()
     const sectionName = i18nT('components.shortcutsModal.desktop_app').toLowerCase()
     // When unbound, the row shows an "Off" cap instead of key caps — match that
     // word so searching still surfaces the section a user came to turn on.

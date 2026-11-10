@@ -55,7 +55,7 @@ const TELEMETRY = {
   enabled: true,
   window_days: 14,
   shard_count: 6,
-  metrics_dir: '/var/lib/kirocrew/metrics',
+  metrics_dir: '/var/lib/ajcrew/metrics',
   startup: null,
   turn: null,
   other: [],
@@ -129,10 +129,10 @@ const TELEMETRY = {
     // `monitor` and `webhook` are row surfaces with no Spend bucket of their own,
     // which is the reading the two tips exist to explain.
     sessions: [
-      { slot: 'chat-41-1785445181', turns: 310, peak_pct: 62, used: 620000, window: 1000000, agent: 'kirocrew', model: 'claude-opus-5', surface: 'dashboard', ts: '2026-09-24T12:41:00Z' },
-      { slot: '_hb', turns: 430, peak_pct: 38, used: 380000, window: 1000000, agent: 'kirocrew-heartbeat', model: 'claude-haiku-4.5', surface: 'heartbeat', ts: '2026-09-24T12:39:00Z' },
-      { slot: 'chat-12-1785440000', turns: 96, peak_pct: 44, used: 440000, window: 1000000, agent: 'kirocrew-worker', model: 'claude-opus-5', surface: 'monitor', ts: '2026-09-24T12:30:00Z' },
-      { slot: 'hook:review-42', turns: 18, peak_pct: 21, used: 210000, window: 1000000, agent: 'kirocrew', model: 'claude-haiku-4.5', surface: 'webhook', ts: '2026-09-24T11:58:00Z' },
+      { slot: 'chat-41-1785445181', turns: 310, peak_pct: 62, used: 620000, window: 1000000, agent: 'ajcrew', model: 'claude-opus-5', surface: 'dashboard', ts: '2026-09-24T12:41:00Z' },
+      { slot: '_hb', turns: 430, peak_pct: 38, used: 380000, window: 1000000, agent: 'ajcrew-heartbeat', model: 'claude-haiku-4.5', surface: 'heartbeat', ts: '2026-09-24T12:39:00Z' },
+      { slot: 'chat-12-1785440000', turns: 96, peak_pct: 44, used: 440000, window: 1000000, agent: 'ajcrew-worker', model: 'claude-opus-5', surface: 'monitor', ts: '2026-09-24T12:30:00Z' },
+      { slot: 'hook:review-42', turns: 18, peak_pct: 21, used: 210000, window: 1000000, agent: 'ajcrew', model: 'claude-haiku-4.5', surface: 'webhook', ts: '2026-09-24T11:58:00Z' },
     ],
   },
 }

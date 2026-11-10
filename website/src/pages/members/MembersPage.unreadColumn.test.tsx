@@ -50,7 +50,7 @@ import MembersPage from './MembersPage'
 function row(name: string) {
   return {
     name, slug: name, bound: true, slot_key: `member-${name}`, running: false,
-    kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', model: '',
+    kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', model: '',
   }
 }
 
@@ -62,7 +62,7 @@ const THREAD_OPEN_TIMEOUT_MS = 5000
 
 /** Opens `oncall` with the other crewmates on the roster beside it. */
 async function openOncall(others: string[]) {
-  ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: [row('oncall'), ...others.map(row)], default_agent: 'kirocrew' })
+  ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: [row('oncall'), ...others.map(row)], default_agent: 'ajcrew' })
   ;(api.memberThread as ReturnType<typeof vi.fn>).mockImplementation((slug: string) =>
     Promise.resolve({ slot_key: `member-${slug}`, slug, member: slug, created: true }))
   const utils = renderWithProviders(<MembersPage />, { route: '/members?member=oncall' })

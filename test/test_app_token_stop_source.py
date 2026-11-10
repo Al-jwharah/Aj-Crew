@@ -35,7 +35,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_stop, stop_slot_turn
+from aj_crew.dashboard.chat_handlers import api_chat_slot_stop, stop_slot_turn
 
 _TEST_DIR = str(Path(__file__).resolve().parent)
 
@@ -83,10 +83,10 @@ def _fences(monkeypatch, state, *, events: list, compacting: bool = False) -> li
         events.append(("deny", operation, request_app))
         return None
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.deny_app_slot_access", _deny)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.deny_app_slot_access", _deny)
     # One session, resolved once: what the route authorizes is what it cancels.
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.effective_session_key", lambda slot: KEY)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.own_session_key", lambda slot: KEY)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.effective_session_key", lambda slot: KEY)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.own_session_key", lambda slot: KEY)
 
     lines: list[dict] = []
 
@@ -95,7 +95,7 @@ def _fences(monkeypatch, state, *, events: list, compacting: bool = False) -> li
         sel.log_tool_invocation.side_effect = lambda **kwargs: lines.append(kwargs)
         return sel
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", _sel)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", _sel)
     return lines
 
 

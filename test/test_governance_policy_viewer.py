@@ -19,14 +19,14 @@ import json
 
 import pytest
 
-from kiro_crew.dashboard.handlers.security import (
+from aj_crew.dashboard.handlers.security import (
     api_governance_policy,
     build_governance_policy_snapshot,
 )
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.governance import _SCOPE_ALIASES, SCOPE_CATALOG, parse_policy
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.governance import _SCOPE_ALIASES, SCOPE_CATALOG, parse_policy
 
 
 @pytest.fixture
@@ -52,11 +52,11 @@ def _install_ceiling(policy_body, *, edition=None, monkeypatch=None):
     LTS build refuses to compose without its central policy, and the
     policy under test is installed here directly rather than fetched.
     """
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    base = build_default_context(KiroCrewConfig.load())
+    base = build_default_context(AjCrewConfig.load())
     if edition is not None:
-        monkeypatch.setattr("kiro_crew.edition.EDITION", edition)
+        monkeypatch.setattr("aj_crew.edition.EDITION", edition)
     ceiling = parse_policy(policy_body) if policy_body is not None else None
     ctx_mod.set_context(dataclasses.replace(base, governance=ceiling))
 
@@ -456,7 +456,7 @@ class TestScopeAttribution:
         # resolve_active_scope`, so patching governance_profiles' own attribute
         # leaves the handler calling the original and the snapshot SUCCEEDS —
         # which would make this test pass vacuously against the success branch.
-        import kiro_crew.dashboard.handlers.security as sec
+        import aj_crew.dashboard.handlers.security as sec
 
         def _boom(*_a, **_k):
             raise RuntimeError("resolution glitch")
@@ -490,14 +490,14 @@ class TestEndpoint:
     async def test_display_fails_safe_on_resolution_error(self, profiles_dir, monkeypatch):
         # A governance-resolution error must NOT 500 the Security page — the
         # snapshot degrades to a well-formed "unavailable" response.
-        import kiro_crew.dashboard.handlers.security as sec
+        import aj_crew.dashboard.handlers.security as sec
 
         def _boom(*_a, **_k):
             raise RuntimeError("resolution glitch")
 
         monkeypatch.setattr(sec, "resolve_active_scope", _boom, raising=False)
         # Patch the symbol the function imports lazily inside its body.
-        monkeypatch.setattr("kiro_crew.platform.governance_profiles.resolve_active_scope", _boom)
+        monkeypatch.setattr("aj_crew.platform.governance_profiles.resolve_active_scope", _boom)
         resp = await self._call()
         assert resp.status == 200
         payload = json.loads(resp.body)
@@ -596,13 +596,13 @@ class TestEndpoint:
 
     def test_fallback_profiles_empty_in_unavailable_response(self, profiles_dir, monkeypatch):
         """The unavailable response always reports an empty list."""
-        import kiro_crew.dashboard.handlers.security as sec
+        import aj_crew.dashboard.handlers.security as sec
 
         def _boom(*_a, **_k):
             raise RuntimeError("resolution glitch")
 
         monkeypatch.setattr(sec, "resolve_active_scope", _boom, raising=False)
-        monkeypatch.setattr("kiro_crew.platform.governance_profiles.resolve_active_scope", _boom)
+        monkeypatch.setattr("aj_crew.platform.governance_profiles.resolve_active_scope", _boom)
         snap = build_governance_policy_snapshot()
         assert snap["unavailable"] is True
         assert snap["fallback_profiles"] == []

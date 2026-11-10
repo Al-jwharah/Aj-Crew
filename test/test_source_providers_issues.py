@@ -14,7 +14,7 @@ from source_providers_helpers import _mock_source_sel_fixture  # noqa: F401
 from source_providers_helpers import _no_visibility_refresh_side_task  # noqa: F401
 from source_providers_helpers import _ISSUE_URL, _app
 
-from kiro_crew.dashboard.handlers import source_providers as source
+from aj_crew.dashboard.handlers import source_providers as source
 
 # --- Issues -----------------------------------------------------------------
 
@@ -23,7 +23,7 @@ def test_parse_github_issue_url() -> None:
     ref = source.parse_source_url("https://github.com/kirodotdev/KiroCrew/issues/58#issue-1")
     assert ref.provider == "github"
     assert ref.owner == "kirodotdev"
-    assert ref.repo == "KiroCrew"  # brand-ok: the kirodotdev/KiroCrew repository name
+    assert ref.repo == "AjCrew"  # brand-ok: the kirodotdev/KiroCrew repository name
     assert ref.number == 58
     assert ref.kind == "issue"
     assert ref.url == "https://github.com/kirodotdev/KiroCrew/issues/58"

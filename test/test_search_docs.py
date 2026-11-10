@@ -1,4 +1,4 @@
-"""``search_docs``: a read-only search over the packaged ``kiro_crew/docs`` pages."""
+"""``search_docs``: a read-only search over the packaged ``aj_crew/docs`` pages."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from kiro_crew import mcp_guide
+from aj_crew import mcp_guide
 
 
 def test_search_docs_finds_slack_setup():
@@ -63,16 +63,16 @@ def test_search_docs_needs_no_caller_identity(monkeypatch):
 def test_search_docs_and_find_ui_are_pre_approved_reads_on_every_agent():
     import json as _json
 
-    from kiro_crew import agent
+    from aj_crew import agent
 
-    assert "@kirocrew-guide/search_docs" in agent._GUIDE_AUTO_GRANTS
-    assert "@kirocrew-guide/find_ui" in agent._GUIDE_AUTO_GRANTS
+    assert "@ajcrew-guide/search_docs" in agent._GUIDE_AUTO_GRANTS
+    assert "@ajcrew-guide/find_ui" in agent._GUIDE_AUTO_GRANTS
     shipped = _json.loads((agent._BUNDLED_CFG_DIR / "defaults.json").read_text(encoding="utf-8"))
     # The shipped default template carries exactly the reviewed guide grants.
-    assert [g for g in shipped["allowedTools"] if g.startswith("@kirocrew-guide")] == list(
+    assert [g for g in shipped["allowedTools"] if g.startswith("@ajcrew-guide")] == list(
         agent._GUIDE_AUTO_GRANTS
     )
-    assert "@kirocrew-guide" in shipped["tools"]
+    assert "@ajcrew-guide" in shipped["tools"]
 
 
 def test_search_docs_reads_each_page_once_until_it_changes(tmp_path, monkeypatch):

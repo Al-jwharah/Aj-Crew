@@ -23,7 +23,7 @@ import pytest
 from chat_test_helpers import _make_state
 from test_workflows_library_remove import _Sel, _service_on_claimed_slug
 
-from kiro_crew.acp_backends import (
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_COPILOT,
@@ -36,17 +36,17 @@ from kiro_crew.acp_backends import (
     ACP_BACKEND_STRANDS,
     ACP_BACKENDS_LOCAL_CLEAR,
 )
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard.chat_runner import _run_chat, effective_session_key
-from kiro_crew.dashboard.chat_utils import _BLOCKED_SLASH_COMMANDS, _SLASH_COMMANDS
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard.chat_runner import _run_chat, effective_session_key
+from aj_crew.dashboard.chat_utils import _BLOCKED_SLASH_COMMANDS, _SLASH_COMMANDS
+from aj_crew.providers.acp import AcpProvider
 
 
 @pytest.fixture(autouse=True)
 def _no_spec_hooks(_floor_monkeypatch):
     """KAS has Crew fire spec hooks; these doubles carry no projection to refresh."""
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_runner._prepare_spec_hooks",
+        "aj_crew.dashboard.chat_runner._prepare_spec_hooks",
         AsyncMock(return_value=([], False, None)),
     )
 
@@ -54,7 +54,7 @@ def _no_spec_hooks(_floor_monkeypatch):
         return claimed
 
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_runner.reproject_claimed_session", _claimed
+        "aj_crew.dashboard.chat_runner.reproject_claimed_session", _claimed
     )
 
 
@@ -280,12 +280,12 @@ async def _menu_names(backend: str) -> set[str]:
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers.agents import api_slash_commands
+    from aj_crew.dashboard.handlers.agents import api_slash_commands
 
     app = web.Application()
     app.router.add_get("/api/slash-commands", api_slash_commands)
     cfg = SimpleNamespace(agent=SimpleNamespace(provider="acp", acp_backend=backend))
-    with patch("kiro_crew.dashboard.handlers.agents.KiroCrewConfig.load", return_value=cfg):
+    with patch("aj_crew.dashboard.handlers.agents.AjCrewConfig.load", return_value=cfg):
         async with TestClient(TestServer(app)) as client:
             resp = await client.get("/api/slash-commands")
             assert resp.status == 200
@@ -297,7 +297,7 @@ class TestKasMenuMatchesTheGate:
     command that only ever gets the "doesn't work with KAS" notice."""
 
     def test_membership_is_the_checked_set(self) -> None:
-        from kiro_crew.acp_backends import ACP_BACKENDS_LOCAL_HARNESS_COMMANDS
+        from aj_crew.acp_backends import ACP_BACKENDS_LOCAL_HARNESS_COMMANDS
 
         assert ACP_BACKENDS_LOCAL_HARNESS_COMMANDS == {ACP_BACKEND_KAS, ACP_BACKEND_STRANDS}
 
@@ -351,7 +351,7 @@ class TestKasMenuMatchesTheGate:
         listed = await _menu_names(ACP_BACKEND_KAS)
         assert "/workflow" in listed
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.sel", lambda: _Sel())
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.sel", lambda: _Sel())
         svc, starts = _service_on_claimed_slug(tmp_path / "workflows")
         state, slot, dispatched = _live(tmp_path, ACP_BACKEND_KAS)
         state.workflow_service = svc
@@ -376,7 +376,7 @@ class TestKasMenuMatchesTheGate:
         """A harness put in the set gets the same notice, so the gate and the
         menu cannot answer from two different rules."""
         _floor_monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.ACP_BACKENDS_LOCAL_HARNESS_COMMANDS",
+            "aj_crew.dashboard.chat_runner.ACP_BACKENDS_LOCAL_HARNESS_COMMANDS",
             frozenset({ACP_BACKEND_CODEX}),
         )
         state, slot, dispatched = _live(tmp_path, ACP_BACKEND_CODEX)
@@ -452,8 +452,8 @@ class TestStrandsCommandsAreServedHere:
 
 
 def test_only_kas_is_served_its_own_inspect_commands() -> None:
-    from kiro_crew.dashboard.chat_utils import _DASHBOARD_SERVED_SLASH_COMMANDS
-    from kiro_crew.dashboard.kas_local_commands import (
+    from aj_crew.dashboard.chat_utils import _DASHBOARD_SERVED_SLASH_COMMANDS
+    from aj_crew.dashboard.kas_local_commands import (
         KAS_LOCAL_INSPECT_COMMANDS,
         served_slash_commands,
     )

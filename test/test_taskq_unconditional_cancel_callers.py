@@ -18,9 +18,9 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-SRC = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+SRC = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 
-#: ``(path under src/kiro_crew, enclosing qualname)`` -> why it is safe.
+#: ``(path under src/aj_crew, enclosing qualname)`` -> why it is safe.
 ALLOWED: dict[tuple[str, str], str] = {
     ("taskq/waits.py", "WaitLedger.cancel_tree"): "the ledger primitive itself",
     ("taskq/waits.py", "WaitLedger.rebuild"): (

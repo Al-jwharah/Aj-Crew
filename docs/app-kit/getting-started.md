@@ -1,10 +1,10 @@
-# Getting Started with Kiro Crew Apps
+# Getting Started with Aj Crew Apps
 
-Build, install, and run your first Kiro Crew app in 5 minutes.
+Build, install, and run your first Aj Crew app in 5 minutes.
 
 ## Prerequisites
 
-- Kiro Crew installed and running (`kirocrew gateway`)
+- Aj Crew installed and running (`ajcrew gateway`)
 - Node.js 22.12+ (24 LTS recommended) (for apps with UI)
 
 ## 1. Create an App Directory
@@ -13,7 +13,7 @@ Use the CLI scaffold so the manifest, opaque 512×512 placeholder icon, agent,
 skill, and UI build files agree with the current schema:
 
 ```bash
-kirocrew app init my-dashboard --ui
+ajcrew app init my-dashboard --ui
 ```
 
 ```
@@ -48,7 +48,7 @@ SDK rejects a path or event the manifest does not declare.
   "name": "my-dashboard",
   "version": "0.1.0",
   "displayName": "My Dashboard",
-  "description": "A Kiro Crew app: My Dashboard",
+  "description": "A Aj Crew app: My Dashboard",
   "author": "yourname",
   "iconPath": "assets/icon.png",
   "agents": ["agents/sample-agent.json"],
@@ -73,31 +73,31 @@ SDK rejects a path or event the manifest does not declare.
 ### UI Page — React Component
 
 Edit `ui/src/App.tsx`. Your app is a standard React component that uses
-`@kirocrew/app-sdk` hooks and `@kirocrew/app-sdk/ui` shared components.
+`@ajcrew/app-sdk` hooks and `@ajcrew/app-sdk/ui` shared components.
 
-> **You do not `npm install` `@kirocrew/app-sdk`.** The dashboard host provides
+> **You do not `npm install` `@ajcrew/app-sdk`.** The dashboard host provides
 > it (and React, ReactDOM, lucide-react) at runtime through its import map: the
-> bare `@kirocrew/app-sdk` specifier resolves to the host's vendored copy via
-> `window.__kirocrew_modules`. This guarantees your app shares the host's exact
+> bare `@ajcrew/app-sdk` specifier resolves to the host's vendored copy via
+> `window.__ajcrew_modules`. This guarantees your app shares the host's exact
 > React instance (so hooks work) and stays a small bundle. Mark these as
 > externals in your build (don't bundle them).
 
 **TypeScript types.** Your dashboard serves the declarations for both
-specifiers at `/vendor/kirocrew-app-sdk.d.ts`, generated from the SDK it hosts.
+specifiers at `/vendor/ajcrew-app-sdk.d.ts`, generated from the SDK it hosts.
 Save the file into your UI sources and `tsc` and your editor resolve the imports:
 
 ```bash
-curl --fail -o ui/src/kirocrew-app-sdk.d.ts http://localhost:5476/vendor/kirocrew-app-sdk.d.ts
+curl --fail -o ui/src/ajcrew-app-sdk.d.ts http://localhost:5476/vendor/ajcrew-app-sdk.d.ts
 ```
 
 Use your dashboard's address if it is not the default, and fetch the file again
-after you upgrade Kiro Crew. It names some libraries the host uses: keep
+after you upgrade Aj Crew. It names some libraries the host uses: keep
 `skipLibCheck: true` in your `tsconfig.json`, as the Vite template does, or
 install their types.
 
 ```tsx
-import { useAppApi, useAppEvents } from '@kirocrew/app-sdk'
-import { Card, CardTitle, PageHeader, StatCard } from '@kirocrew/app-sdk/ui'
+import { useAppApi, useAppEvents } from '@ajcrew/app-sdk'
+import { Card, CardTitle, PageHeader, StatCard } from '@ajcrew/app-sdk/ui'
 import { useState, useEffect } from 'react'
 
 export default function MyDashboard() {
@@ -140,7 +140,7 @@ Edit `agents/sample-agent.json` to customize your agent:
   "model": "auto",
   "description": "Analyzes data and generates reports",
   "prompt": "You are a data analyst assistant.",
-  "tools": ["@kirocrew-core"]
+  "tools": ["@ajcrew-core"]
 }
 ```
 
@@ -163,7 +163,7 @@ This produces `dist/index.mjs` — the ESM bundle loaded by the dashboard.
 Install and enable with the CLI:
 
 ```bash
-kirocrew app install /absolute/path/to/my-dashboard
+ajcrew app install /absolute/path/to/my-dashboard
 ```
 
 Before you enable it, trust the app. Enable refuses every app that is not
@@ -175,11 +175,11 @@ those grants, and holds the switch that trusts all third-party apps
 [Publishing Guide](publishing-guide.md#third-party-executable-code-is-off-by-default).
 
 ```bash
-kirocrew app enable my-dashboard
+ajcrew app enable my-dashboard
 ```
 
 The REST routes require dashboard or app authentication, so do not replace these
-commands with a bare `curl`. You can also open the Kiro Crew dashboard → App Store
+commands with a bare `curl`. You can also open the Aj Crew dashboard → App Store
 and install from a local path. The enabled app then appears in the sidebar.
 
 ## 5. Iterate
@@ -198,7 +198,7 @@ is linked through the documented dev-mode workflow.
 
 ## App SDK Hooks
 
-Available in `@kirocrew/app-sdk`:
+Available in `@ajcrew/app-sdk`:
 
 | Hook | Purpose |
 |------|---------|
@@ -206,7 +206,7 @@ Available in `@kirocrew/app-sdk`:
 | `useAppEvents(event, cb)` | Subscribe to real-time WebSocket events |
 | `useTheme()` | Reactive theme (mode, accent, colorTheme) |
 | `useAppInfo()` | App metadata (name, version, permissions, `active`, `update`) |
-| `useNavigate()` | Navigate to Kiro Crew routes |
+| `useNavigate()` | Navigate to Aj Crew routes |
 | `useNotify()` | Show toast notifications |
 | `useNavBadge()` | Update sidebar badge count |
 | `useAppNotifications()` | This app's own bell notifications (`items`, `unread`, `status`) and `ack(ts)` / `ackAll()` to clear them; declare `/api/notifications/own` in `permissions.api`; needs `APP_SDK_LEVEL >= 4` |
@@ -299,7 +299,7 @@ lives — a backend can do the same comparison on start against its own data.
 
 ## Chat Marker Protocol
 
-Also in `@kirocrew/app-sdk`, for an app that renders agent messages itself. An agent puts follow-up
+Also in `@ajcrew/app-sdk`, for an app that renders agent messages itself. An agent puts follow-up
 choices and steer acknowledgements inline in its prose (`[OPTIONS: a | b]`,
 `[STEERING steer-<id>: …]`); these parse them out so your UI can show buttons instead of raw syntax.
 
@@ -314,7 +314,7 @@ roles the dashboard leaves undrawn. See
 
 ## Shared UI Components
 
-Available in `@kirocrew/app-sdk/ui`:
+Available in `@ajcrew/app-sdk/ui`:
 
 `Card`, `CardTitle`, `Btn`, `SendBtn`, `Input`, `SearchInput`, `Badge`,
 `SourceBadge`, `StatCard`, `Skeleton`, `ContentSkeleton`, `EmptyState`,
@@ -345,7 +345,7 @@ staged for the user to send. If the user leaves that draft session without havin
 typed, clicked or changed anything in it, the host discards it.
 
 To tell an older host from one with these seams, read `APP_SDK_LEVEL` through a
-namespace import (`import * as sdk from '@kirocrew/app-sdk'`; an older host has
+namespace import (`import * as sdk from '@ajcrew/app-sdk'`; an older host has
 no such export, so `sdk.APP_SDK_LEVEL` is `undefined` there). A named import of a
 name the host lacks fails the whole bundle at load time.
 
@@ -417,7 +417,7 @@ undeclared paths throws an error.
 
 ## Next Steps
 
-- **Backend communication**: Your dashboard UI can call your app's backend through the gateway reverse proxy at `/apps/{name}/api/*` — no CORS issues. Verify requests in your backend with `verify_proxy_request()` from `kiro_crew.apps.proxy_auth`.
+- **Backend communication**: Your dashboard UI can call your app's backend through the gateway reverse proxy at `/apps/{name}/api/*` — no CORS issues. Verify requests in your backend with `verify_proxy_request()` from `aj_crew.apps.proxy_auth`.
 - See [App Manifest Reference](manifest-reference.md) for all `app.json` fields
 - See [API Reference](api-reference.md) for TypeScript and Python client APIs
 - See [Publishing Guide](publishing-guide.md) for publishing to the App Store registry
@@ -425,16 +425,16 @@ undeclared paths throws an error.
 
 ## Python Client
 
-Python apps, CLI tools and services use the source-only `kirocrew-client`
-package from a Kiro Crew checkout. Install steps, the constructor and the full
+Python apps, CLI tools and services use the source-only `ajcrew-client`
+package from a Aj Crew checkout. Install steps, the constructor and the full
 method table are in [API Reference](api-reference.md#python-client).
 
 ## Publishing Your App
 
 Once your app works locally, publish it to the App Store registry so other
-Kiro Crew users can install it with one click. Your app's code stays in a
+Aj Crew users can install it with one click. Your app's code stays in a
 dedicated GitHub repository listed in the official registry
-(`kirodotdev/KiroCrewApps`); Kiro Crew accepts no new built-in app, so an app is
-never added to the Kiro Crew package itself.
+(`kirodotdev/KiroCrewApps`); Aj Crew accepts no new built-in app, so an app is
+never added to the Aj Crew package itself.
 
 See [Publishing Guide](publishing-guide.md) for the full workflow.

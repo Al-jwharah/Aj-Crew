@@ -16,19 +16,19 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.hooks import TOOL_DENY, HookManager, HooksConfig
+from aj_crew.hooks import TOOL_DENY, HookManager, HooksConfig
 
 
 @pytest.fixture
 def governance():
     """Install a governance ceiling for one test, and reset the context after."""
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.platform import context as ctx_mod
-    from kiro_crew.platform.bootstrap import build_default_context
-    from kiro_crew.platform.governance import parse_policy
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.platform import context as ctx_mod
+    from aj_crew.platform.bootstrap import build_default_context
+    from aj_crew.platform.governance import parse_policy
 
     def install(policy: dict[str, Any]) -> None:
-        base = build_default_context(KiroCrewConfig.load())
+        base = build_default_context(AjCrewConfig.load())
         body = {"version": 1, "boot": {"fail_closed": True}, **policy}
         ctx_mod.set_context(dataclasses.replace(base, governance=parse_policy(body)))
 

@@ -1,4 +1,4 @@
-"""Tests for the kirocrew-prepare-pr prove.py test-strength proof.
+"""Tests for the ajcrew-prepare-pr prove.py test-strength proof.
 
 prove.py reverts a change's production hunks, keeps its test hunks, and re-runs
 the changed test files.  These tests pin the four verdicts that matter and the
@@ -28,10 +28,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 PROVE = str(
     REPO_ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
+    / "ajcrew-dev"
+    / "ajcrew-prepare-pr"
     / "scripts"
     / "prove.py"
 )

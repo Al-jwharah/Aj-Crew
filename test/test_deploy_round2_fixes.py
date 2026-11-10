@@ -24,7 +24,7 @@ def _bash():
 @pytest.mark.asyncio
 async def test_artifact_branch_uses_single_thread_hop(monkeypatch, tmp_path: Path):
     """F2: The artifact branch wraps store.get + _stage_artifact_html in one to_thread call."""
-    from kiro_crew.deploy import handlers
+    from aj_crew.deploy import handlers
 
     calls: list[str] = []
 
@@ -41,12 +41,12 @@ async def test_artifact_branch_uses_single_thread_hop(monkeypatch, tmp_path: Pat
     async def _fake_resolve(p):
         return ("prof", "us-west-2")
 
-    monkeypatch.setattr("kiro_crew.deploy.handlers._HAS_ARTIFACTS", True)
-    monkeypatch.setattr("kiro_crew.deploy.handlers.get_default_store", lambda: FakeStore())
-    monkeypatch.setattr("kiro_crew.deploy.handlers._stage_artifact_html",
+    monkeypatch.setattr("aj_crew.deploy.handlers._HAS_ARTIFACTS", True)
+    monkeypatch.setattr("aj_crew.deploy.handlers.get_default_store", lambda: FakeStore())
+    monkeypatch.setattr("aj_crew.deploy.handlers._stage_artifact_html",
                         lambda kind, content, name: ([], str(tmp_path), 42))
-    monkeypatch.setattr("kiro_crew.deploy.handlers._resolve_profile", _fake_resolve)
-    monkeypatch.setattr("kiro_crew.deploy.handlers.validate_field", lambda v, spec: v)
+    monkeypatch.setattr("aj_crew.deploy.handlers._resolve_profile", _fake_resolve)
+    monkeypatch.setattr("aj_crew.deploy.handlers.validate_field", lambda v, spec: v)
 
     # Call _do_deploy with artifact_slug (it will hit the confirm gate and return early)
     status, body = await handlers._do_deploy({
@@ -65,14 +65,14 @@ async def test_artifact_branch_uses_single_thread_hop(monkeypatch, tmp_path: Pat
 @pytest.mark.asyncio
 async def test_both_slug_and_dir_returns_400(monkeypatch):
     """F4: Providing both artifact_slug and local_dir returns 400."""
-    from kiro_crew.deploy import handlers
+    from aj_crew.deploy import handlers
 
     async def _fake_resolve(p):
         return ("prof", "us-west-2")
 
-    monkeypatch.setattr("kiro_crew.deploy.handlers._HAS_ARTIFACTS", True)
-    monkeypatch.setattr("kiro_crew.deploy.handlers._resolve_profile", _fake_resolve)
-    monkeypatch.setattr("kiro_crew.deploy.handlers.validate_field", lambda v, spec: v)
+    monkeypatch.setattr("aj_crew.deploy.handlers._HAS_ARTIFACTS", True)
+    monkeypatch.setattr("aj_crew.deploy.handlers._resolve_profile", _fake_resolve)
+    monkeypatch.setattr("aj_crew.deploy.handlers.validate_field", lambda v, spec: v)
 
     status, body = await handlers._do_deploy({
         "site_id": "test-site",
@@ -86,12 +86,12 @@ async def test_both_slug_and_dir_returns_400(monkeypatch):
 @pytest.mark.asyncio
 async def test_neither_slug_nor_dir_returns_400(monkeypatch):
     """F4: Providing neither artifact_slug nor local_dir returns 400."""
-    from kiro_crew.deploy import handlers
+    from aj_crew.deploy import handlers
 
     async def _fake_resolve(p):
         return ("prof", "us-west-2")
 
-    monkeypatch.setattr("kiro_crew.deploy.handlers._resolve_profile", _fake_resolve)
+    monkeypatch.setattr("aj_crew.deploy.handlers._resolve_profile", _fake_resolve)
 
     status, body = await handlers._do_deploy({
         "site_id": "test-site",
@@ -119,7 +119,7 @@ def test_mcp_deploy_artifact_both_returns_error():
 
 def test_scan_line_numbers_correct():
     """F5: Verify line numbers are correct with the new bisect implementation."""
-    from kiro_crew.deploy.scan import scan_content
+    from aj_crew.deploy.scan import scan_content
 
     # Create text with a known credential on line 3
     text = "line1\nline2\nghp_AAAAAAAABBBBBBBBCCCCCCCCDDDDDDDD1234\nline4\n"
@@ -131,7 +131,7 @@ def test_scan_line_numbers_correct():
 
 def test_scan_truncates_at_500():
     """F5: Scan stops at MAX_FINDINGS and appends a findings-truncated info."""
-    from kiro_crew.deploy.scan import _MAX_FINDINGS, scan_content
+    from aj_crew.deploy.scan import _MAX_FINDINGS, scan_content
 
     # Generate a text with >500 internal hosts (guaranteed info findings)
     lines = [f"host{i}.amazon.com" for i in range(600)]
@@ -145,14 +145,14 @@ def test_scan_truncates_at_500():
 
 def test_scan_empty_text():
     """F5: Empty text returns no findings."""
-    from kiro_crew.deploy.scan import scan_content
+    from aj_crew.deploy.scan import scan_content
 
     assert scan_content("") == []
 
 
 def test_scan_output_unchanged_for_normal_input():
     """F5: Normal inputs produce the same findings as before (regression)."""
-    from kiro_crew.deploy.scan import scan_content
+    from aj_crew.deploy.scan import scan_content
 
     text = "safe content\nno secrets here\njust text"
     findings = scan_content(text)
@@ -164,11 +164,11 @@ def test_scan_output_unchanged_for_normal_input():
 
 def test_deploy_sh_reaper_check_before_upload():
     """F6: Verify deploy.sh has reaper check before s3 sync, not after."""
-    script = Path(__file__).parent.parent / "src" / "kiro_crew" / "deploy" / \
+    script = Path(__file__).parent.parent / "src" / "aj_crew" / "deploy" / \
         "skills" / "artifact-deploy" / "scripts" / "deploy.sh"
     content = script.read_text(encoding="utf-8")
     # The reaper check must come BEFORE the s3 sync
-    reaper_pos = content.find("kirocrew-deploy-reaper")
+    reaper_pos = content.find("ajcrew-deploy-reaper")
     sync_pos = content.find("s3 sync")
     assert reaper_pos < sync_pos, "Reaper check must precede s3 sync"
     # The check must exit 1 (hard abort) not just warn
@@ -180,7 +180,7 @@ def test_deploy_sh_reaper_check_before_upload():
 
 def test_deploy_sh_syntax():
     """F6: deploy.sh passes bash -n syntax check."""
-    script = Path(__file__).parent.parent / "src" / "kiro_crew" / "deploy" / \
+    script = Path(__file__).parent.parent / "src" / "aj_crew" / "deploy" / \
         "skills" / "artifact-deploy" / "scripts" / "deploy.sh"
     result = subprocess.run(
         [_bash(), "-n", str(script)],
@@ -197,7 +197,7 @@ def test_reaper_lambda_has_oac_cleanup():
     import importlib.util
     spec = importlib.util.spec_from_file_location(
         "reaper_lambda",
-        str(Path(__file__).parent.parent / "src" / "kiro_crew" / "deploy" /
+        str(Path(__file__).parent.parent / "src" / "aj_crew" / "deploy" /
             "skills" / "artifact-deploy" / "scripts" / "reaper_lambda" / "index.py")
     )
     # Just verify the source contains the OAC cleanup code
@@ -209,7 +209,7 @@ def test_reaper_lambda_has_oac_cleanup():
 
 def test_reaper_yaml_has_oac_permissions():
     """F7: reaper.yaml IAM policy includes OAC permissions."""
-    template = Path(__file__).parent.parent / "src" / "kiro_crew" / "deploy" / \
+    template = Path(__file__).parent.parent / "src" / "aj_crew" / "deploy" / \
         "skills" / "artifact-deploy" / "templates" / "reaper.yaml"
     content = template.read_text(encoding="utf-8")
     assert "cloudfront:ListOriginAccessControls" in content
@@ -219,7 +219,7 @@ def test_reaper_yaml_has_oac_permissions():
 
 def test_engine_deploy_returns_oac_id():
     """F7: engine.deploy() result includes oac_id in the return dict."""
-    from kiro_crew.deploy import engine
+    from aj_crew.deploy import engine
 
     # Mock run_aws to simulate successful deployment
     call_log: list[list[str]] = []
@@ -267,14 +267,14 @@ def test_engine_deploy_returns_oac_id():
 def test_handlers_manifest_includes_oac_id():
     """F7: The deploy manifest JSON written by handlers includes oac_id."""
     # Just verify the manifest_data construction in source code
-    source = Path(__file__).parent.parent / "src" / "kiro_crew" / "deploy" / "handlers_sites.py"
+    source = Path(__file__).parent.parent / "src" / "aj_crew" / "deploy" / "handlers_sites.py"
     content = source.read_text(encoding="utf-8")
     assert '"oac_id": result.get("oac_id", "")' in content
 
 
 def test_reaper_sh_has_oac_cleanup():
     """F7: reaper.sh includes OAC deletion for engine-arch."""
-    script = Path(__file__).parent.parent / "src" / "kiro_crew" / "deploy" / \
+    script = Path(__file__).parent.parent / "src" / "aj_crew" / "deploy" / \
         "skills" / "artifact-deploy" / "scripts" / "reaper.sh"
     content = script.read_text(encoding="utf-8")
     assert "delete-origin-access-control" in content
@@ -283,7 +283,7 @@ def test_reaper_sh_has_oac_cleanup():
 
 def test_reaper_sh_syntax():
     """F7: reaper.sh passes bash -n syntax check."""
-    script = Path(__file__).parent.parent / "src" / "kiro_crew" / "deploy" / \
+    script = Path(__file__).parent.parent / "src" / "aj_crew" / "deploy" / \
         "skills" / "artifact-deploy" / "scripts" / "reaper.sh"
     result = subprocess.run(
         [_bash(), "-n", str(script)],

@@ -19,7 +19,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.apps import manager, registry
+from aj_crew.apps import manager, registry
 
 GOOD_URL = "https://github.com/good-org/shared-name.git"
 EVIL_URL = "https://github.com/evil-org/shared-name.git"
@@ -28,7 +28,7 @@ EVIL_URL = "https://github.com/evil-org/shared-name.git"
 @pytest.fixture(autouse=True)
 def _admit_registry_execution(monkeypatch):
     """These tests must reach the admitted post-clone install path."""
-    monkeypatch.setattr("kiro_crew.apps.execution.third_party_execution_allowed", lambda: True)
+    monkeypatch.setattr("aj_crew.apps.execution.third_party_execution_allowed", lambda: True)
     monkeypatch.setattr(registry, "app_admission_denied", lambda *a, **k: None)
 
 
@@ -40,7 +40,7 @@ def _catalog_absent(monkeypatch):
     call, so a test that forgets to stub ``get_registry_app`` would need live network.
     """
     monkeypatch.setattr(
-        "kiro_crew.apps.official_catalog.inventory_for_install",
+        "aj_crew.apps.official_catalog.inventory_for_install",
         lambda name: None,
     )
 
@@ -183,12 +183,12 @@ class TestIdentityGate:
 class TestProvenanceCapture:
     @pytest.fixture()
     def signing_home(self, tmp_path, monkeypatch) -> Path:
-        """An explicitly-isolated KIROCREW_HOME, so writing an admission policy
+        """An explicitly-isolated AJCREW_HOME, so writing an admission policy
         below can never reach the developer's real ``~/.kiro/crew``."""
-        home = tmp_path / "kirocrew-home"
+        home = tmp_path / "ajcrew-home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
-        monkeypatch.setattr("kiro_crew.config.paths._resolved_home", None)
+        monkeypatch.setenv("AJCREW_HOME", str(home))
+        monkeypatch.setattr("aj_crew.config.paths._resolved_home", None)
         assert manager.config_dir() == home
         return home
 
@@ -205,7 +205,7 @@ class TestProvenanceCapture:
             json.dumps({"mode": "open", "trust_keys": {"acme": secret}}), encoding="utf-8"
         )
 
-        from kiro_crew.apps.manifest import AppManifest
+        from aj_crew.apps.manifest import AppManifest
 
         manifest = _manifest("signed-app", signer="acme")
         manifest["signature"] = hmac.new(

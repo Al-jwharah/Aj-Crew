@@ -13,9 +13,9 @@ import { createTestStore } from './helpers'
 import type { NormalizedUsage } from '../providers'
 import UsageTab from '../pages/overview/UsageTab'
 
-const { fetchUsage, kirocrewConfig, usageSeries } = vi.hoisted(() => ({
+const { fetchUsage, ajcrewConfig, usageSeries } = vi.hoisted(() => ({
   fetchUsage: vi.fn(),
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
   usageSeries: vi.fn(),
 }))
 
@@ -24,7 +24,7 @@ vi.mock('../providers', () => ({
     id: 'acp', displayName: 'Kiro', capabilities: { usageBilling: true }, fetchUsage,
   }),
 }))
-vi.mock('../api/client', () => ({ api: { kirocrewConfig, usageSeries } }))
+vi.mock('../api/client', () => ({ api: { ajcrewConfig, usageSeries } }))
 vi.mock('../hooks/useSessionPalette', () => ({
   useSessionPalette: () => ({ paletteColors: ['#ff0000', '#00ff00', '#0000ff'] }),
 }))
@@ -53,18 +53,18 @@ beforeEach(() => {
     dropped_rows: 0,
     complete_from: null,
   })
-  kirocrewConfig.mockReset()
+  ajcrewConfig.mockReset()
 })
 afterEach(() => {
   cleanup()
   client.clear()
 })
 
-// Subscribes to the same `['kirocrewConfig']` entry the tab reads. Both
+// Subscribes to the same `['ajcrewConfig']` entry the tab reads. Both
 // observers are notified in one batch, so once this probe has rendered the
 // answer, the tab has it too -- "the request was sent" is not that.
 function ConfigProbe() {
-  const { data } = useQuery({ queryKey: ['kirocrewConfig'], queryFn: () => kirocrewConfig() })
+  const { data } = useQuery({ queryKey: ['ajcrewConfig'], queryFn: () => ajcrewConfig() })
   return data === undefined ? null : <span data-testid="cfg-loaded" />
 }
 
@@ -84,7 +84,7 @@ describe('UsageTab spend chart harness gate', () => {
     ['an unset key, which the gateway reads as kiro-cli', {}],
     ['KAS', { agent: { acp_backend: 'kas' } }],
   ])('mounts the credits chart for %s', async (_name, cfg) => {
-    kirocrewConfig.mockResolvedValue(cfg)
+    ajcrewConfig.mockResolvedValue(cfg)
 
     mount()
 
@@ -94,7 +94,7 @@ describe('UsageTab spend chart harness gate', () => {
   })
 
   it('mounts no credits chart for a harness that bills in tokens or dollars, and never asks for the series', async () => {
-    kirocrewConfig.mockResolvedValue({ agent: { acp_backend: 'claude' } })
+    ajcrewConfig.mockResolvedValue({ agent: { acp_backend: 'claude' } })
 
     mount()
 
@@ -106,7 +106,7 @@ describe('UsageTab spend chart harness gate', () => {
   })
 
   it('says so where the card would stand when the config read fails, holds the notice through a retry, and mounts the card once a read succeeds', async () => {
-    kirocrewConfig.mockRejectedValue(new Error('config unavailable'))
+    ajcrewConfig.mockRejectedValue(new Error('config unavailable'))
     mount()
     const notice = await screen.findByTestId('usage-series-harness-unread')
     expect(notice).toHaveTextContent("Couldn’t read the agent backend setting")
@@ -116,21 +116,21 @@ describe('UsageTab spend chart harness gate', () => {
     // Try again re-reads the config. While that read is in flight the query is
     // pending with its error cleared, and the notice must not blink out.
     let release!: (cfg: unknown) => void
-    kirocrewConfig.mockImplementation(() => new Promise(resolve => { release = resolve }))
+    ajcrewConfig.mockImplementation(() => new Promise(resolve => { release = resolve }))
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }))
-    await waitFor(() => expect(client.getQueryState(['kirocrewConfig'])?.fetchStatus).toBe('fetching'))
+    await waitFor(() => expect(client.getQueryState(['ajcrewConfig'])?.fetchStatus).toBe('fetching'))
     expect(screen.getByTestId('usage-series-harness-unread')).toBeInTheDocument()
 
     act(() => release({ agent: { acp_backend: 'kiro' } }))
 
     expect(await screen.findByText('Spend over time (credits)')).toBeInTheDocument()
     expect(screen.queryByTestId('usage-series-harness-unread')).toBeNull()
-    expect(kirocrewConfig).toHaveBeenCalledTimes(2)
+    expect(ajcrewConfig).toHaveBeenCalledTimes(2)
   })
 
   it('mounts nothing on a guess while the config has not loaded', async () => {
     let answer!: (cfg: unknown) => void
-    kirocrewConfig.mockImplementation(() => new Promise(resolve => { answer = resolve }))
+    ajcrewConfig.mockImplementation(() => new Promise(resolve => { answer = resolve }))
     mount()
     await screen.findByText('Session Activity (30 days)')
 
@@ -146,15 +146,15 @@ describe('UsageTab spend chart harness gate', () => {
 
 describe('UsageTab harness-unread Try again', () => {
   it('keeps the pressed button in the tab order while the config re-reads (#32868)', async () => {
-    kirocrewConfig.mockRejectedValue(new Error('config unavailable'))
+    ajcrewConfig.mockRejectedValue(new Error('config unavailable'))
     mount()
     const retry = await screen.findByRole('button', { name: 'Try again' })
 
     let release!: (cfg: unknown) => void
-    kirocrewConfig.mockImplementation(() => new Promise(resolve => { release = resolve }))
+    ajcrewConfig.mockImplementation(() => new Promise(resolve => { release = resolve }))
     retry.focus()
     fireEvent.click(retry)
-    await waitFor(() => expect(client.getQueryState(['kirocrewConfig'])?.fetchStatus).toBe('fetching'))
+    await waitFor(() => expect(client.getQueryState(['ajcrewConfig'])?.fetchStatus).toBe('fetching'))
 
     expect(retry).toBeInTheDocument()
     expect(retry).toHaveFocus()
@@ -163,7 +163,7 @@ describe('UsageTab harness-unread Try again', () => {
     // Sighted users see the retry start: the label says so while it reads.
     expect(retry).toHaveTextContent('Retrying…')
     fireEvent.click(retry)
-    expect(kirocrewConfig).toHaveBeenCalledTimes(2)
+    expect(ajcrewConfig).toHaveBeenCalledTimes(2)
 
     act(() => release({ agent: { acp_backend: 'kiro' } }))
     expect(await screen.findByText('Spend over time (credits)')).toBeInTheDocument()

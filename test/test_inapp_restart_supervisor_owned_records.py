@@ -37,8 +37,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import platform_compat
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 # Only POSIX keeps a pid across exec, so only there can a supervisor be left
 # behind; the real-process layouts need a non-Python supervisor at /bin/sh.
@@ -57,14 +57,14 @@ _NEW_GATEWAY = textwrap.dedent("""
     import os, stat, sys
     from pathlib import Path
     old_pid, start_id, work = int(sys.argv[1]), sys.argv[2], Path(sys.argv[3])
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
     still_live = (
         platform_compat.pid_exists(old_pid)
         and platform_compat.get_process_start_id(old_pid) == start_id
     )
 
     # 1. runtime_reconcile: the old image's row for a dead child.
-    from kiro_crew import runtime_reconcile as rr, session_pid
+    from aj_crew import runtime_reconcile as rr, session_pid
     rr._mcp_backend_pids = lambda: set()
     rr.instance_slice_pids = lambda: set()
     real_liveness = platform_compat.pid_liveness
@@ -77,14 +77,14 @@ _NEW_GATEWAY = textwrap.dedent("""
     reconcile = f"forgotten={reading.forgotten},rows={len(rows)}"
 
     # 2. metrics.sessions: the old image's start crumb.
-    from kiro_crew.metrics import sessions
+    from aj_crew.metrics import sessions
     metrics = str(sessions._owner_still_running(old_pid, start_id))
 
     # 3. crash_dump_store: the old image's header-only dump and in-flight identity.
-    from kiro_crew.dashboard import crash_dump_store as cds
+    from aj_crew.dashboard import crash_dump_store as cds
     dump = work / "loopstall-old.txt"
     dump.write_text(
-        f"# kirocrew loopstall dump {cds._CLEAN_EXIT_AWARE_TOKEN}\\n"
+        f"# ajcrew loopstall dump {cds._CLEAN_EXIT_AWARE_TOKEN}\\n"
         f"# PID: {old_pid} @ {cds._pid_domain()} start={start_id}\\n"
         "# header\\n\\n",
         encoding="utf-8",
@@ -96,10 +96,10 @@ _NEW_GATEWAY = textwrap.dedent("""
     dumps = f"owner={owner_alive},identity={identity_alive},swept={swept}"
 
     # 4. transcribe: the old image's decoder snapshot.
-    from kiro_crew import transcribe
+    from aj_crew import transcribe
     root = work / "snapshots"
     root.mkdir(mode=0o700)
-    snap = root / f".kirocrew-ffmpeg-{old_pid}-abc"
+    snap = root / f".ajcrew-ffmpeg-{old_pid}-abc"
     snap.mkdir(mode=0o700)
     (snap / "ffmpeg").write_bytes(b"")
     transcribe._cleanup_stale_ffmpeg_snapshots(str(root))
@@ -114,7 +114,7 @@ _NEW_GATEWAY = textwrap.dedent("""
 _OLD_GATEWAY = textwrap.dedent("""
     import os, subprocess, sys
     layout, work, new_gateway = sys.argv[1:4]
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
     path = session_pid._session_pid_file_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(f"{os.getpid()}:%(dead)d:TOK-B\\n", encoding="utf-8")
@@ -141,7 +141,7 @@ def _restart(layout: str, tmp_path: Path) -> tuple[int, int, int, dict[str, str]
     work.mkdir()
     old = subprocess.Popen(
         [sys.executable, "-c", _OLD_GATEWAY, layout, str(work), _NEW_GATEWAY],
-        env={**os.environ, "KIROCREW_HOME": str(home)},
+        env={**os.environ, "AJCREW_HOME": str(home)},
         cwd=tmp_path,
         # Its own process group, so a hung tree is reaped whole below.
         start_new_session=True,
@@ -227,8 +227,8 @@ class TestEachReaderWithTheSupervisorPinned:
     def test_the_reconciler_retracts_the_supervisors_dead_row(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import runtime_reconcile as rr
-        from kiro_crew import session_pid
+        from aj_crew import runtime_reconcile as rr
+        from aj_crew import session_pid
 
         home = tmp_path / "home"
         home.mkdir()
@@ -246,12 +246,12 @@ class TestEachReaderWithTheSupervisorPinned:
         assert rows.read_text(encoding="utf-8").strip() == ""
 
     def test_the_supervisor_is_not_running_its_crumbs_sessions(self) -> None:
-        from kiro_crew.metrics import sessions
+        from aj_crew.metrics import sessions
 
         assert sessions._owner_still_running(self._SUPERVISOR, "any-start-id") is False
 
     def test_the_supervisors_dump_and_marker_have_no_live_owner(self, tmp_path: Path) -> None:
-        from kiro_crew.dashboard import crash_dump_store as cds
+        from aj_crew.dashboard import crash_dump_store as cds
 
         dump = tmp_path / "loopstall-old.txt"
         dump.write_text(
@@ -262,9 +262,9 @@ class TestEachReaderWithTheSupervisorPinned:
         assert cds.pid_identity_alive(self._SUPERVISOR, cds._pid_domain(), None) is False
 
     def test_the_supervisors_decoder_snapshot_is_pruned(self, tmp_path: Path) -> None:
-        from kiro_crew import transcribe
+        from aj_crew import transcribe
 
-        snap = tmp_path / f".kirocrew-ffmpeg-{self._SUPERVISOR}-abc"
+        snap = tmp_path / f".ajcrew-ffmpeg-{self._SUPERVISOR}-abc"
         snap.mkdir(mode=0o700)
         transcribe._cleanup_stale_ffmpeg_snapshots(str(tmp_path))
         assert not snap.exists()

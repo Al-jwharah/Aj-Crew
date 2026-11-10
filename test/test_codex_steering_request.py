@@ -17,18 +17,18 @@ import pytest
 from test_card_handshake_fields import live_init
 from test_update_provider import _UNALLOCATABLE_PID
 
-from kiro_crew.acp import session_handle as sh
-from kiro_crew.acp.runtime import AcpRuntime, AcpRuntimeError
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp import session_handle as sh
+from aj_crew.acp.runtime import AcpRuntime, AcpRuntimeError
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KIRO,
     METHOD_CANCEL,
     wrap_user_message,
 )
-from kiro_crew.dashboard.steer_settle import settle_consumed_steers
-from kiro_crew.testing.wait import async_wait_until, await_until
-from kiro_crew.testing.wait import finished as _finished
+from aj_crew.dashboard.steer_settle import settle_consumed_steers
+from aj_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import finished as _finished
 
 
 class _Runtime:
@@ -359,7 +359,7 @@ def test_only_codex_claude_goose_and_pi_take_the_steering_request():
     claude, goose and pi are members on ``AcpClient``'s own channels (pi's is the
     sealed steer file Crew's gate extension reads) and never run on this handle.
     """
-    from kiro_crew.agent_sdk.backends import (
+    from aj_crew.agent_sdk.backends import (
         ACP_BACKEND_CLAUDE,
         ACP_BACKEND_GOOSE,
         ACP_BACKEND_PI,
@@ -968,8 +968,8 @@ def _handle_for(backend: str) -> AcpSessionHandle:
 async def test_the_provider_wrapper_refuses_a_codex_steer():
     """Channels and Side Chat steer AcpProvider; for codex it reports no steer
     and refuses one, so those surfaces take their queue paths."""
-    from kiro_crew.acp.session_provider import AcpSessionProvider
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.providers.acp import AcpProvider
 
     handle = _handle_for(ACP_BACKEND_CODEX)
     handle.steer = AsyncMock(return_value=True)  # type: ignore[method-assign]
@@ -985,7 +985,7 @@ async def test_the_provider_wrapper_refuses_a_codex_steer():
 
 @pytest.mark.asyncio
 async def test_the_provider_wrapper_still_steers_kiro():
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.providers.acp import AcpProvider
 
     inner = MagicMock()
     inner.supports_steer = True
@@ -1198,7 +1198,7 @@ async def test_a_stalled_steering_write_raises_only_when_its_frame_was_buffered(
     drain-phase stall left the frame in a pipe the live child may still read:
     it raises, so the caller requeues the steer as possibly delivered instead
     of re-sending it as fresh text."""
-    from kiro_crew.acp.runtime import AcpRuntimeStdinStalled
+    from aj_crew.acp.runtime import AcpRuntimeStdinStalled
 
     rt = _Runtime()
 
@@ -1222,7 +1222,7 @@ async def test_a_written_steer_whose_runtime_then_stalls_is_ambiguous():
     """A sibling's stall kills the runtime after this steer's frame drained: the
     unanswered steer may still be read and injected, so it raises an ambiguous
     death instead of reporting itself undelivered."""
-    from kiro_crew.acp.session_handle import AcpRuntimeDead
+    from aj_crew.acp.session_handle import AcpRuntimeDead
 
     rt = _Runtime()
     rt.stdin_stall_death = True

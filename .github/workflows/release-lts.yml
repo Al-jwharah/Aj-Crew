@@ -9,7 +9,7 @@ on:
 # its own `lts` channel, through the same reusable build, sign and publish
 # workflows release.yml calls. It writes only lts paths: feed/lts/, cli/lts/,
 # desktop/lts/ (and the signing bucket's lts/ keys), under the LTS file stems
-# (`KiroCrew-LTS`, `kirocrew_lts`). No Docker image and no GitHub release. # brand-ok
+# (`AjCrew-LTS`, `ajcrew_lts`). No Docker image and no GitHub release. # brand-ok
 #
 # The tag does not start with `v`, so release.yml's `v*` trigger never fires
 # for it, and no `v*` tag fires this one: the oss release path is unchanged.
@@ -32,7 +32,7 @@ jobs:
   version:
     name: Derive LTS Version
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     timeout-minutes: 10
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -59,11 +59,11 @@ jobs:
   release-candidate-tests:
     name: Test Release Candidate SHA
     needs: version
-    # `kirocrew-runners` larger-runner group, targeted by GROUP not label; see
+    # `ajcrew-runners` larger-runner group, targeted by GROUP not label; see
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     # Match ci.yml's whole-file split so every runner carries a bounded part of
     # the exact-SHA gate while the matrix still covers the full test population.
     timeout-minutes: 60

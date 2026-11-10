@@ -60,7 +60,7 @@ async function mdnbCall<T>(method: string, path: string, body?: unknown): Promis
     // `token_auth._deny` answers an unauthenticated call with `_403_HTML` — a 403,
     // `text/html`, an HTML document — which satisfies every signal the proxy test
     // looks for. `X-Auth-Required` is what tells the two apart: it proves the
-    // gateway itself answered, so the remedy is `kirocrew token`, not the proxy.
+    // gateway itself answered, so the remedy is `ajcrew token`, not the proxy.
     const gatewayAuth = res.status === 403 && res.headers.get('X-Auth-Required') === 'true'
     const challenge = gatewayAuth
       ? null
@@ -200,7 +200,7 @@ export const notesApi = {
 }
 
 // ---------------------------------------------------------------------------
-// Kiro Crew Knowledge library (host API, not the app's backend)
+// Aj Crew Knowledge library (host API, not the app's backend)
 // ---------------------------------------------------------------------------
 
 /**

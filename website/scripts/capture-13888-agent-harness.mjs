@@ -97,7 +97,7 @@ try {
     page.on('pageerror', error => errors.push(String(error)))
     await page.route(url => new URL(url).pathname.startsWith('/api/'), route => {
       const p = new URL(route.request().url()).pathname
-      if (p === '/api/config/kirocrew') return json(route, { agent: { acp_backend: s.current } })
+      if (p === '/api/config/ajcrew') return json(route, { agent: { acp_backend: s.current } })
       if (p === '/api/config/schema') return json(route, { entries: [{ path: 'agent.acp_backend', type: 'enum', enumValues: ['', 'kas', 'claude', 'codex', 'opencode', 'pi', 'goose'] }] })
       if (p === '/api/acp-backends') return json(route, { backends })
       if (p === '/api/kas-login') return json(route, signedOut)

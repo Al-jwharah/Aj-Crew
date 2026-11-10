@@ -62,7 +62,7 @@ from _manifest import (  # noqa: E402
     verify_signature,
 )
 
-from kiro_crew.tips_allowlist import TIP_DOC_ALLOWLIST  # noqa: E402
+from aj_crew.tips_allowlist import TIP_DOC_ALLOWLIST  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 

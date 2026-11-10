@@ -13,15 +13,15 @@ import ast
 import pytest
 from split_credential_boundary_helpers import HEAD, KEY, SRC, TAIL, _name_of
 
-from kiro_crew.messaging import split as split_module
-from kiro_crew.messaging.display_safety import (
+from aj_crew.messaging import split as split_module
+from aj_crew.messaging.display_safety import (
     FURTHER_READINGS,
     _plain_reading,
     canonicalize_display,
     redact_for_display,
 )
-from kiro_crew.messaging.renderer import _default_redactor
-from kiro_crew.messaging.split import (
+from aj_crew.messaging.renderer import _default_redactor
+from aj_crew.messaging.split import (
     _collapse_reads_as_a_key,
     _collapses_to_a_key,
     _flattened_for_any_cut,

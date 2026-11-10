@@ -54,7 +54,7 @@ def _announce(marker: Path, value: str) -> None:
 
 
 def _taskq_store():
-    from kiro_crew.taskq.store import TaskStore
+    from aj_crew.taskq.store import TaskStore
 
     base = float(os.environ["CRASH_CLOCK"])
     return TaskStore(
@@ -63,7 +63,7 @@ def _taskq_store():
 
 
 def _taskq_record(task_id: str):
-    from kiro_crew.taskq import model
+    from aj_crew.taskq import model
 
     return model.TaskRecord(
         id=task_id,
@@ -74,7 +74,7 @@ def _taskq_record(task_id: str):
 
 
 def _taskq(failpoint: str, marker: Path) -> None:
-    from kiro_crew.taskq import model
+    from aj_crew.taskq import model
 
     if failpoint in ("claimed", "running", "result-written"):
         store = _taskq_store()

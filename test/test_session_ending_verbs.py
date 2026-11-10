@@ -20,9 +20,9 @@ from session_helpers import (  # noqa: F401 -- the fixture is requested by name
     cfg_fixture,
 )
 
-from kiro_crew.session import SessionManager
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.session import SessionManager
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 class TestDrainProviders:
@@ -144,7 +144,7 @@ class TestResetRetainsTheTornDownSession:
         The client's reset can clear its pid after an unconfirmed kill and then hang, so the
         handle is captured in the pop's own lock hold and the session is never re-read.
         """
-        from kiro_crew.process_identity import process_handle_of
+        from aj_crew.process_identity import process_handle_of
 
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         provider, _, _ = await mgr.get_or_create("k1")
@@ -349,8 +349,8 @@ class TestResetWithPid:
             patch("os.kill", return_value=None),
             patch("os.killpg") as mock_killpg,
             patch("os.getpgid", return_value=12345),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=None),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=None),
         ):
             await mgr.reset("k1")
             mock_killpg.assert_called_once()
@@ -372,9 +372,9 @@ class TestResetWithPid:
 
         with (
             patch("os.kill", side_effect=ProcessLookupError),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False) as probe,
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=None),
+            patch("aj_crew.platform_compat.pid_exists", return_value=False) as probe,
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=None),
         ):
             await mgr.reset("k1")
 
@@ -397,10 +397,10 @@ class TestResetWithPid:
 
         with (
             patch("os.kill", side_effect=ProcessLookupError),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[333]),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=3000),
-            patch("kiro_crew.acp.client._read_basename", return_value=b"node"),
-            patch("kiro_crew.acp.client._kill_escaped_children") as mock_sweep,
+            patch("aj_crew.acp.client._get_child_pids", return_value=[333]),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=3000),
+            patch("aj_crew.acp.client._read_basename", return_value=b"node"),
+            patch("aj_crew.acp.client._kill_escaped_children") as mock_sweep,
         ):
             await mgr.reset("k1")
             mock_sweep.assert_called_once()
@@ -742,7 +742,7 @@ class TestDestroy:
 
         with (
             patch(
-                "kiro_crew.session_lifecycle.record_session_ended",
+                "aj_crew.session_lifecycle.record_session_ended",
                 new=AsyncMock(side_effect=delayed_metric),
             ),
             patch.object(mgr._session_map, "delete") as mock_delete,
@@ -1154,8 +1154,8 @@ class TestCloseAllPersistence:
     async def test_close_all_persists_acp_session_ids(self, cfg):
         from unittest.mock import MagicMock
 
-        from kiro_crew.providers.acp import AcpProvider
-        from kiro_crew.session import _Session
+        from aj_crew.providers.acp import AcpProvider
+        from aj_crew.session import _Session
 
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         mock_provider = MagicMock(spec=AcpProvider)
@@ -1214,7 +1214,7 @@ class TestSafeCleanup:
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         mock_p = AsyncMock()
         mock_p.cleanup_session = AsyncMock()
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.session"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.session"):
             await mgr._safe_cleanup(mock_p, "sid-123")
         mock_p.cleanup_session.assert_awaited_once_with("sid-123")
         assert "Cleaned up session files for sid-123" in caplog.messages
@@ -1224,7 +1224,7 @@ class TestSafeCleanup:
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         mock_p = AsyncMock()
         mock_p.cleanup_session = AsyncMock(side_effect=OSError("disk full"))
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session"):
             await mgr._safe_cleanup(mock_p, "sid-456")
         assert "Failed to clean up session files for sid-456" in caplog.messages
 

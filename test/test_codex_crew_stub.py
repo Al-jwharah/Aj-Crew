@@ -20,20 +20,20 @@ import codex_session_mcp_helpers
 import pytest
 from codex_session_mcp_helpers import _by_name, _write_spec
 
-from kiro_crew import mcp_discovery_managed, mcp_work
-from kiro_crew.mcp_gateway import STUB_MODULE
-from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
-from kiro_crew.mcp_gateway.hashing import STUB_FLAGS_FLAG, encode_target_args
-from kiro_crew.mcp_gateway.session_servers import attach_stub_session_token
-from kiro_crew.members import MEMBER_DISPATCH_SERVER
-from kiro_crew.providers.mirrors.codex import codex_projection
-from kiro_crew.providers.mirrors.identity import identity_bound_crew_servers
+from aj_crew import mcp_discovery_managed, mcp_work
+from aj_crew.mcp_gateway import STUB_MODULE
+from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+from aj_crew.mcp_gateway.hashing import STUB_FLAGS_FLAG, encode_target_args
+from aj_crew.mcp_gateway.session_servers import attach_stub_session_token
+from aj_crew.members import MEMBER_DISPATCH_SERVER
+from aj_crew.providers.mirrors.codex import codex_projection
+from aj_crew.providers.mirrors.identity import identity_bound_crew_servers
 
 agents_dir = codex_session_mcp_helpers.agents_dir
 
 _TOKEN = "session-token-a"
 _WORK = mcp_work.SERVER_NAME
-_GUIDE = "kirocrew-guide"
+_GUIDE = "ajcrew-guide"
 
 #: Every identity-bound Crew server whose stub goes through the shape check. The
 #: dashboard has its own admission rule (a granted stub of any shape), so it is
@@ -42,7 +42,7 @@ _SHAPE_CHECKED = sorted(identity_bound_crew_servers() - {MEMBER_DISPATCH_SERVER}
 
 
 def _stub_args(server: str, *, envelope: bool = False) -> list[str]:
-    flags = ["--server", server, "--agent", "kirocrew", "--socket", "/run/gw.sock"]
+    flags = ["--server", server, "--agent", "ajcrew", "--socket", "/run/gw.sock"]
     if envelope:
         return ["-m", STUB_MODULE, f"{STUB_FLAGS_FLAG}={encode_target_args(flags)}"]
     return ["-m", STUB_MODULE, *flags]
@@ -60,14 +60,14 @@ def _stub(server: str = _WORK, *, token: str = _TOKEN, envelope: bool = False) -
 
 
 def _grant(agents_dir, *names: str, entry: dict | None = None) -> None:
-    servers = {n: dict(entry or {"command": "/opt/kirocrew", "args": ["mcp-x"]}) for n in names}
+    servers = {n: dict(entry or {"command": "/opt/ajcrew", "args": ["mcp-x"]}) for n in names}
     _write_spec(agents_dir, servers=servers, tools=[f"@{n}" for n in names])
 
 
 def _mounted(stubs: list[dict], *, session_token: str = _TOKEN) -> dict[str, dict]:
     names = tuple(sorted({s["name"] for s in stubs}))
     projection = codex_projection(
-        "kirocrew",
+        "ajcrew",
         session_key="worker:one",
         session_token=session_token,
         stub_server_names=names,
@@ -79,8 +79,8 @@ def _mounted(stubs: list[dict], *, session_token: str = _TOKEN) -> dict[str, dic
 def test_the_shape_checked_set_is_every_non_dashboard_crew_server():
     assert _WORK in _SHAPE_CHECKED
     assert _GUIDE in _SHAPE_CHECKED
-    assert "kirocrew-mate" in _SHAPE_CHECKED
-    assert "kirocrew-core" not in _SHAPE_CHECKED
+    assert "ajcrew-mate" in _SHAPE_CHECKED
+    assert "ajcrew-core" not in _SHAPE_CHECKED
 
 
 @pytest.mark.parametrize("server", _SHAPE_CHECKED)
@@ -98,8 +98,8 @@ def test_session_bound_crew_stub_is_mounted_as_given(agents_dir, server, envelop
     assert env[STUB_SESSION_TOKEN_ENV] == stub["env"][0]["value"]
     # No Crew identity is added: the stub token is the only credential it carries,
     # and every other pair names the instance, not the session.
-    assert set(env) - {STUB_SESSION_TOKEN_ENV} <= {"KIROCREW_BOUND_PORT", "KIROCREW_HOME"}
-    assert "KIROCREW_BOUND_PORT" in env
+    assert set(env) - {STUB_SESSION_TOKEN_ENV} <= {"AJCREW_BOUND_PORT", "AJCREW_HOME"}
+    assert "AJCREW_BOUND_PORT" in env
 
 
 def test_every_crew_stub_mounts_together(agents_dir):
@@ -132,15 +132,15 @@ def _look_alikes(server: str) -> dict[str, dict]:
             [dict(pair), {"name": STUB_SESSION_TOKEN_ENV, "value": "session-token-b"}],
         ),
         "extra env pair": _with_env(
-            server, [dict(pair), {"name": "KIROCREW_SESSION_KEY", "value": "x"}]
+            server, [dict(pair), {"name": "AJCREW_SESSION_KEY", "value": "x"}]
         ),
         "env as a mapping": _with(server, env={STUB_SESSION_TOKEN_ENV: _TOKEN}),
         "pair with extra keys": _with_env(server, [{**pair, "extra": "1"}]),
-        "not the stub module": _with(server, args=["-m", "kiro_crew.mcp_x", "--server", server]),
-        "spec launch, no stub": _with(server, command="/opt/kirocrew", args=["mcp-x"]),
+        "not the stub module": _with(server, args=["-m", "aj_crew.mcp_x", "--server", server]),
+        "spec launch, no stub": _with(server, command="/opt/ajcrew", args=["mcp-x"]),
         "registers another server": _with(server, args=_stub_args(other)),
         "registers two servers": _with(
-            server, args=[*_stub_args(server), "--server", "kirocrew-panel"]
+            server, args=[*_stub_args(server), "--server", "ajcrew-panel"]
         ),
         "unreadable envelope": _with(
             server, args=["-m", STUB_MODULE, f"{STUB_FLAGS_FLAG}=@@not-base64@@"]
@@ -177,16 +177,16 @@ def test_a_session_with_no_token_admits_no_crew_stub(agents_dir, server):
 @pytest.mark.parametrize(
     "entry,granted",
     [
-        ({"command": "/opt/kirocrew", "disabledTools": ["some_tool"]}, True),
-        ({"command": "/opt/kirocrew", "disabled": True}, True),
-        ({"command": "/opt/kirocrew"}, False),
+        ({"command": "/opt/ajcrew", "disabledTools": ["some_tool"]}, True),
+        ({"command": "/opt/ajcrew", "disabled": True}, True),
+        ({"command": "/opt/ajcrew"}, False),
     ],
     ids=["tool switched off", "server disabled", "not granted"],
 )
 def test_crew_stub_keeps_the_spec_restrictions(agents_dir, server, entry, granted):
     _grant(agents_dir, server)
     assert server in _mounted([_stub(server)])
-    tools = [f"@{server}"] if granted else ["@kirocrew-core"]
+    tools = [f"@{server}"] if granted else ["@ajcrew-core"]
     _write_spec(agents_dir, servers={server: entry}, tools=tools)
     assert server not in _mounted([_stub(server)])
 

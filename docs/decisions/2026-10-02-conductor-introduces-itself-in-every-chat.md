@@ -5,7 +5,7 @@ Date: 2026-10-02
 
 ## Decision
 
-Every `kirocrew-conductor` chat introduces itself in plain words and reports with a live task board that puts "Needs you" first, wherever it is opened (agent picker, Crew Mode, cron, CLI), not only chats where Crew Mode is on.
+Every `ajcrew-conductor` chat introduces itself in plain words and reports with a live task board that puts "Needs you" first, wherever it is opened (agent picker, Crew Mode, cron, CLI), not only chats where Crew Mode is on.
 
 ## Why
 

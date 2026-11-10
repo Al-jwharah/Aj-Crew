@@ -10,8 +10,8 @@ from unittest.mock import patch
 
 import pytest
 
-import kiro_crew.dashboard.handlers._shared as _shared
-from kiro_crew.platform.defaults import DefaultMcpToolingProvider
+import aj_crew.dashboard.handlers._shared as _shared
+from aj_crew.platform.defaults import DefaultMcpToolingProvider
 
 
 class _FakeState:
@@ -26,14 +26,14 @@ def _no_extra_paths():
 
 @pytest.fixture(autouse=True)
 def _isolate_config():
-    # Warm the platform context BEFORE patching KiroCrewConfig.load to raise —
+    # Warm the platform context BEFORE patching AjCrewConfig.load to raise —
     # otherwise current_context()'s lazy build (reached via the extra_skills
     # seam in _resolve_skill_root) would call the raising load() and degrade the
     # edition-root lookup to [].
-    from kiro_crew.platform.context import current_context
+    from aj_crew.platform.context import current_context
 
     current_context()
-    with patch.object(_shared.KiroCrewConfig, "load", side_effect=_no_extra_paths):
+    with patch.object(_shared.AjCrewConfig, "load", side_effect=_no_extra_paths):
         yield
 
 
@@ -50,17 +50,17 @@ def test_resolve_skill_root_resolves_edition_nested_key(tmp_path, monkeypatch):
     skill_dir.mkdir(parents=True)
     (skill_dir / "SKILL.md").write_text("# hi", encoding="utf-8")
 
-    empty_kirocrew = tmp_path / "kirocrew_skills"
-    empty_kirocrew.mkdir()
-    monkeypatch.setattr(_shared, "skills_dir", lambda: empty_kirocrew)
+    empty_ajcrew = tmp_path / "ajcrew_skills"
+    empty_ajcrew.mkdir()
+    monkeypatch.setattr(_shared, "skills_dir", lambda: empty_ajcrew)
     _set_edition_roots(monkeypatch, pkg_root)
 
     resolved = _shared._resolve_skill_root("Pkg/my-skill", _FakeState())
     assert resolved == skill_dir.resolve()
 
 
-def test_resolve_skill_root_still_prefers_kirocrew_root(tmp_path, monkeypatch):
-    mc_root = tmp_path / "kirocrew_skills"
+def test_resolve_skill_root_still_prefers_ajcrew_root(tmp_path, monkeypatch):
+    mc_root = tmp_path / "ajcrew_skills"
     (mc_root / "local-skill").mkdir(parents=True)
     (mc_root / "local-skill" / "SKILL.md").write_text("# local", encoding="utf-8")
     pkg_root = tmp_path / "package_skills"
@@ -88,7 +88,7 @@ def test_resolve_skill_root_finds_skill_in_extra_paths(tmp_path, monkeypatch):
     (extra_root / "custom-skill").mkdir(parents=True)
     (extra_root / "custom-skill" / "SKILL.md").write_text("# custom", encoding="utf-8")
 
-    empty_mc = tmp_path / "kirocrew_skills"
+    empty_mc = tmp_path / "ajcrew_skills"
     empty_mc.mkdir()
     empty_pkg = tmp_path / "package_skills"
     empty_pkg.mkdir()
@@ -99,7 +99,7 @@ def test_resolve_skill_root_finds_skill_in_extra_paths(tmp_path, monkeypatch):
         class skills:  # noqa: N801
             extra_paths = [str(extra_root)]
 
-    with patch.object(_shared.KiroCrewConfig, "load", return_value=_FakeConfig()):
+    with patch.object(_shared.AjCrewConfig, "load", return_value=_FakeConfig()):
         resolved = _shared._resolve_skill_root("custom-skill", _FakeState())
     assert resolved == (extra_root / "custom-skill").resolve()
 
@@ -117,7 +117,7 @@ def test_resolve_skill_root_rejects_tilde_prefix(tmp_path, monkeypatch):
 def test_resolve_skill_root_extra_paths_take_precedence_over_edition(tmp_path, monkeypatch):
     # Same skill name in BOTH an extra path and an edition root must resolve to
     # the extra path, matching SkillsLoader.load_skill() precedence
-    # (kirocrew -> extra_paths -> edition roots).
+    # (ajcrew -> extra_paths -> edition roots).
     extra_root = tmp_path / "extra_skills"
     (extra_root / "dup-skill").mkdir(parents=True)
     (extra_root / "dup-skill" / "SKILL.md").write_text("# extra", encoding="utf-8")
@@ -126,7 +126,7 @@ def test_resolve_skill_root_extra_paths_take_precedence_over_edition(tmp_path, m
     (pkg_root / "dup-skill").mkdir(parents=True)
     (pkg_root / "dup-skill" / "SKILL.md").write_text("# package", encoding="utf-8")
 
-    empty_mc = tmp_path / "kirocrew_skills"
+    empty_mc = tmp_path / "ajcrew_skills"
     empty_mc.mkdir()
     monkeypatch.setattr(_shared, "skills_dir", lambda: empty_mc)
     _set_edition_roots(monkeypatch, pkg_root)
@@ -135,7 +135,7 @@ def test_resolve_skill_root_extra_paths_take_precedence_over_edition(tmp_path, m
         class skills:  # noqa: N801
             extra_paths = [str(extra_root)]
 
-    with patch.object(_shared.KiroCrewConfig, "load", return_value=_FakeConfig()):
+    with patch.object(_shared.AjCrewConfig, "load", return_value=_FakeConfig()):
         resolved = _shared._resolve_skill_root("dup-skill", _FakeState())
     assert resolved == (extra_root / "dup-skill").resolve()
 
@@ -144,7 +144,7 @@ def test_resolve_skill_root_extra_paths_take_precedence_over_edition(tmp_path, m
 
 
 def test_package_row_matched_by_exact_key():
-    from kiro_crew.dashboard.handlers.prompts import _match_package_row
+    from aj_crew.dashboard.handlers.prompts import _match_package_row
 
     rows = [
         {"key": "package/SomePkg/shared-skill", "name": "shared-skill", "path": "/a/SKILL.md"},
@@ -165,13 +165,13 @@ def test_ambiguous_leaf_name_refuses_rather_than_serving_the_wrong_file(caplog):
     """
     import logging
 
-    from kiro_crew.dashboard.handlers.prompts import _match_package_row
+    from aj_crew.dashboard.handlers.prompts import _match_package_row
 
     rows = [
         {"key": "one/shared-skill", "name": "shared-skill", "path": "/a/SKILL.md"},
         {"key": "two/shared-skill", "name": "shared-skill", "path": "/b/SKILL.md"},
     ]
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.handlers.prompts"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.handlers.prompts"):
         assert _match_package_row(rows, "package/shared-skill", "shared-skill") is None
     assert any("refusing to guess" in r.getMessage() for r in caplog.records)
 
@@ -182,7 +182,7 @@ def test_unique_leaf_name_still_matches_for_editions_that_key_differently():
     Dropping the leaf leg outright would break it, so the fallback stays — gated
     on being unambiguous.
     """
-    from kiro_crew.dashboard.handlers.prompts import _match_package_row
+    from aj_crew.dashboard.handlers.prompts import _match_package_row
 
     rows = [{"key": "AIPowerUser/agent-builder", "name": "agent-builder", "path": "/x"}]
     row = _match_package_row(rows, "package/agent-builder", "agent-builder")
@@ -199,10 +199,10 @@ def test_no_match_is_quiet_while_ambiguity_warns(caplog):
     """
     import logging
 
-    from kiro_crew.dashboard.handlers.prompts import _match_package_row
+    from aj_crew.dashboard.handlers.prompts import _match_package_row
 
     rows = [{"key": "package/other", "name": "other", "path": "/x"}]
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.handlers.prompts"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.handlers.prompts"):
         assert _match_package_row(rows, "package/missing", "missing") is None
     assert caplog.records == [], [r.getMessage() for r in caplog.records]
 
@@ -246,7 +246,7 @@ def test_same_relative_path_in_two_roots_refuses_to_guess(tmp_path, monkeypatch,
         (root / "shared-skill" / "SKILL.md").write_text(f"# {root}", encoding="utf-8")
     _set_edition_roots(monkeypatch, root_a, root_b)
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.handlers._shared"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.handlers._shared"):
         assert _shared._resolve_package_skill_path("shared-skill") is None
     assert any("refusing to guess" in r.getMessage() for r in caplog.records)
 
@@ -313,7 +313,7 @@ def test_symlink_loop_root_does_not_break_key_enumeration(tmp_path, monkeypatch)
     the dedupe comparison rather than dropped, so this stays a pure crash fix and
     keeps enumerating every root it is handed.
     """
-    data_home = tmp_path / "kirocrew_skills"
+    data_home = tmp_path / "ajcrew_skills"
     data_home.mkdir()
     loop_root = tmp_path / "loop_root"
     loop_root.symlink_to(tmp_path / "loop_other")
@@ -339,7 +339,7 @@ def test_canonical_root_never_answers_a_package_key(tmp_path, monkeypatch):
     kiro_user = tmp_path / ".kiro" / "skills"
     (kiro_user / "foo").mkdir(parents=True)
     (kiro_user / "foo" / "SKILL.md").write_text("# user's own", encoding="utf-8")
-    data_home = tmp_path / "kirocrew_skills"
+    data_home = tmp_path / "ajcrew_skills"
     (data_home / "bar").mkdir(parents=True)
     (data_home / "bar" / "SKILL.md").write_text("# data home", encoding="utf-8")
 
@@ -382,7 +382,7 @@ def test_enumeration_and_resolution_agree_on_package_territory(tmp_path, monkeyp
     """
     kiro_user = tmp_path / ".kiro" / "skills"
     kiro_user.mkdir(parents=True)
-    data_home = tmp_path / "kirocrew_skills"
+    data_home = tmp_path / "ajcrew_skills"
     data_home.mkdir()
     pkg_root = tmp_path / "package_skills"
     pkg_root.mkdir()
@@ -410,7 +410,7 @@ def test_edition_root_already_keyed_elsewhere_is_not_re_added_as_package(tmp_pat
     file two catalog keys, and the ``package/`` one presents a user's OWN
     editable skill as a read-only package skill.
     """
-    data_home = tmp_path / "kirocrew_skills"
+    data_home = tmp_path / "ajcrew_skills"
     data_home.mkdir()
     kiro_user = tmp_path / ".kiro" / "skills"
     kiro_user.mkdir(parents=True)

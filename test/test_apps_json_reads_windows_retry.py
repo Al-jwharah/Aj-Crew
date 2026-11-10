@@ -16,13 +16,13 @@ from pathlib import Path
 import pytest
 from windows_sim import read_sharing_violation
 
-from kiro_crew import atomic_write as aw
-from kiro_crew import platform_compat
-from kiro_crew.apps import bridges_agents, bridges_crons
-from kiro_crew.apps import official_catalog as oc
-from kiro_crew.apps import official_category_order as co
-from kiro_crew.apps import official_editorial as oe
-from kiro_crew.apps.app_storage import AppStorage
+from aj_crew import atomic_write as aw
+from aj_crew import platform_compat
+from aj_crew.apps import bridges_agents, bridges_crons
+from aj_crew.apps import official_catalog as oc
+from aj_crew.apps import official_category_order as co
+from aj_crew.apps import official_editorial as oe
+from aj_crew.apps.app_storage import AppStorage
 
 
 @pytest.fixture

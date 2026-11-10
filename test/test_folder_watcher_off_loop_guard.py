@@ -7,7 +7,7 @@ watchdog heartbeat included -- for that whole wait, and past
 ``dashboard.loop_stall_exit_after_secs`` the watchdog kills the gateway.
 
 The store's accessor carries an on-loop guard for exactly this
-(``kiro_crew.on_loop_db``). In production it only WARNS, so a regression here is
+(``aj_crew.on_loop_db``). In production it only WARNS, so a regression here is
 one log line an operator never reads. These tests arm the store's strict switch,
 which turns the warning into ``OnLoopStoreError``, and then drive a scan through
 every state transition the watcher persists (new -> done, unchanged, changed,
@@ -34,10 +34,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.knowledge.folder_watcher import FolderWatcher
-from kiro_crew.knowledge.ingestion import IngestionPipeline
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.on_loop_db import STORE_STRICT_ENV, OnLoopStoreError
+from aj_crew.knowledge.folder_watcher import FolderWatcher
+from aj_crew.knowledge.ingestion import IngestionPipeline
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.on_loop_db import STORE_STRICT_ENV, OnLoopStoreError
 
 pytestmark = pytest.mark.asyncio
 

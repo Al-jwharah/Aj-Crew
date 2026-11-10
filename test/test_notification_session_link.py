@@ -20,20 +20,20 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app
 from chat_test_helpers import _make_state as _make_chat_state
 
-from kiro_crew.dashboard.chat_utils import effective_session_key
-from kiro_crew.dashboard.handlers.messaging import (
+from aj_crew.dashboard.chat_utils import effective_session_key
+from aj_crew.dashboard.handlers.messaging import (
     _publishing_session_meta,
     api_notification_agent_push,
 )
-from kiro_crew.dashboard.messaging_api import proactive_send
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.messaging_api import proactive_send
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 ATTESTED = {"peer_verified": True}
 
 
 def _make_state(monkeypatch, tmp_path) -> DashboardState:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
     return DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(),
@@ -58,7 +58,7 @@ def _cron_run(state: DashboardState, created_by: str) -> str:
 
 def _open_cron_tab(state: DashboardState, monkeypatch) -> None:
     """Give cron job ``abc`` an open dashboard tab bound to its cron session."""
-    monkeypatch.setattr("kiro_crew.session_surface._dashboard_surfaced", frozenset({"cron:abc"}))
+    monkeypatch.setattr("aj_crew.session_surface._dashboard_surfaced", frozenset({"cron:abc"}))
     slot = _ChatSlot("cron-abc")
     slot.linked_session_key = "cron:abc"
     state._slots[slot.key] = slot
@@ -166,8 +166,8 @@ class TestAgentPushRoute:
 
     @pytest.mark.asyncio
     async def test_a_closed_publishing_session_resumes_its_messages(self, monkeypatch, tmp_path):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
         state = _make_chat_state(tmp_path)
         worker = _open(state, "chat-2-200")
         history_key = "dashboard:chat-2-200"

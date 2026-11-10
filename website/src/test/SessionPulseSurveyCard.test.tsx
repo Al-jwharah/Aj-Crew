@@ -26,7 +26,7 @@ vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }))
 
-const RATING_QUESTION = 'How would you rate your experience with Kiro Crew today?'
+const RATING_QUESTION = 'How would you rate your experience with Aj Crew today?'
 const THANKS = 'Thanks for your feedback!'
 const DISMISS_LABEL = 'Dismiss survey'
 
@@ -36,7 +36,7 @@ function renderCard(onLayoutChange = vi.fn()) {
     <QueryClientProvider client={qc}>
       <SessionPulseSurveyCard
         sessionId="chat-1-1786589233"
-        kiroCrewVersion="1.0.0"
+        ajCrewVersion="1.0.0"
         turnCount={0}
         slotOrigin="user"
         onLayoutChange={onLayoutChange}
@@ -48,7 +48,7 @@ function renderCard(onLayoutChange = vi.fn()) {
       <QueryClientProvider client={qc}>
         <SessionPulseSurveyCard
           sessionId="chat-1-1786589233"
-          kiroCrewVersion="1.0.0"
+          ajCrewVersion="1.0.0"
           turnCount={turnCount}
           slotOrigin="user"
           onLayoutChange={onLayoutChange}
@@ -130,7 +130,7 @@ describe('SessionPulseSurveyCard (collapsed disclosure)', () => {
     // the turn gate crossed, the 30-day cooldown must keep the card hidden --
     // this is what stops anyone who already answered from being re-surveyed.
     const { rerenderWithTurnCount } = renderCard()
-    localStorage.setItem('kirocrew_survey_last_shown', new Date().toISOString())
+    localStorage.setItem('ajcrew_survey_last_shown', new Date().toISOString())
     rerenderWithTurnCount(10)
     await new Promise((r) => setTimeout(r, 100))
     expect(screen.queryByText(RATING_QUESTION)).not.toBeInTheDocument()
@@ -141,7 +141,7 @@ describe('SessionPulseSurveyCard (collapsed disclosure)', () => {
     // remains periodic rather than one-and-done.
     const { rerenderWithTurnCount } = renderCard()
     const thirtyOneDaysAgoMs = Date.now() - 31 * 24 * 60 * 60 * 1000
-    localStorage.setItem('kirocrew_survey_last_shown', new Date(thirtyOneDaysAgoMs).toISOString())
+    localStorage.setItem('ajcrew_survey_last_shown', new Date(thirtyOneDaysAgoMs).toISOString())
     await showCard(rerenderWithTurnCount)
   })
 
@@ -211,7 +211,7 @@ describe('SessionPulseSurveyCard (origin-based surface gate)', () => {
       <QueryClientProvider client={qc}>
         <SessionPulseSurveyCard
           sessionId={sessionId}
-          kiroCrewVersion="1.0.0"
+          ajCrewVersion="1.0.0"
           turnCount={0}
           slotOrigin={slotOrigin}
         />
@@ -222,7 +222,7 @@ describe('SessionPulseSurveyCard (origin-based surface gate)', () => {
         <QueryClientProvider client={qc}>
           <SessionPulseSurveyCard
             sessionId={sessionId}
-            kiroCrewVersion="1.0.0"
+            ajCrewVersion="1.0.0"
             turnCount={turnCount}
             slotOrigin={slotOrigin}
           />
@@ -282,7 +282,7 @@ describe('SessionPulseSurveyCard (cooldown re-checked at show time)', () => {
       <QueryClientProvider client={qc}>
         <SessionPulseSurveyCard
           sessionId="chat-1-1786589233"
-          kiroCrewVersion="1.0.0"
+          ajCrewVersion="1.0.0"
           turnCount={turnCount}
           slotOrigin="user"
         />
@@ -295,7 +295,7 @@ describe('SessionPulseSurveyCard (cooldown re-checked at show time)', () => {
     await waitFor(() => {
       expect(screen.getByText(RATING_QUESTION)).toBeInTheDocument()
     })
-    expect(localStorage.getItem('kirocrew_survey_last_shown')).not.toBeNull()
+    expect(localStorage.getItem('ajcrew_survey_last_shown')).not.toBeNull()
 
     // Remount the same session on the same QueryClient: the eligible query is
     // cached `true`, `handled` has reset, but the 30-day cooldown is now active.
@@ -453,7 +453,7 @@ describe('SessionPulseSurveyCard (turn baseline / reopened chat)', () => {
       <QueryClientProvider client={qc}>
         <SessionPulseSurveyCard
           sessionId="chat-9-1786950000"
-          kiroCrewVersion="1.0.0"
+          ajCrewVersion="1.0.0"
           turnCount={turnCount}
           slotOrigin="user"
         />

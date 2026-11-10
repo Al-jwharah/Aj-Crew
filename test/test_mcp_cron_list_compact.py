@@ -12,9 +12,9 @@ import uuid
 
 import pytest
 
-from kiro_crew.cron import CronService
-from kiro_crew.mcp_cron import _call_tool_inner, _validate_args
-from kiro_crew.validation import ValidationError
+from aj_crew.cron import CronService
+from aj_crew.mcp_cron import _call_tool_inner, _validate_args
+from aj_crew.validation import ValidationError
 
 # ── Fixtures ──
 
@@ -44,11 +44,11 @@ def _seed_jobs(tmp_path, count: int, msg_size: int = 1500) -> CronService:
 
 @pytest.fixture
 def home(monkeypatch, tmp_path):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
-    monkeypatch.delenv("KIROCREW_CLI", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
+    monkeypatch.delenv("AJCREW_CLI", raising=False)
     # The identity the seeded jobs are owned by; see _OWNER.
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", _OWNER)
+    monkeypatch.setenv("AJCREW_SESSION_KEY", _OWNER)
     # Every job seeded in this module belongs to that session. Defaulted here
     # rather than threaded through ~15 call sites: the owner is a precondition of
     # these tests, not part of what any of them is checking.

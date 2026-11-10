@@ -25,8 +25,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps import routes
-from kiro_crew.apps.registry_pipeline import checkout, indexes, manifests
+from aj_crew.apps import routes
+from aj_crew.apps.registry_pipeline import checkout, indexes, manifests
 
 _HOOKS_VALUE = f"core.hooksPath={os.devnull}"
 
@@ -183,7 +183,7 @@ async def _capture_blob(monkeypatch, tmp_path: Path) -> list[list[str]]:
 
     # ``_fetch_git_blob`` imports ``is_clone_host_trusted`` from the registry
     # facade inside the function, so patch it at the source module.
-    from kiro_crew.apps import registry as registry_facade
+    from aj_crew.apps import registry as registry_facade
 
     monkeypatch.setattr(registry_facade, "is_clone_host_trusted", lambda url: True)
     cache_path = tmp_path / "cache" / "logo.png"

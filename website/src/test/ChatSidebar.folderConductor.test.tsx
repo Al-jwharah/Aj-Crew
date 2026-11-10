@@ -155,7 +155,7 @@ function renderSidebar(slotData: ChatSlot[] = slots, onSelectSlot?: (key: string
   qc.setQueryData(['chat-tags'], [])
   qc.setQueryData(['tag-columns'], [])
   qc.setQueryData(['chat-folders'], folderData)
-  qc.setQueryData(['kirocrewConfig'], { dashboard: {} })
+  qc.setQueryData(['ajcrewConfig'], { dashboard: {} })
   mocks.chatFolders.mockImplementation(() => Promise.resolve(folderData))
   const utils = render(
     <QueryClientProvider client={qc}>

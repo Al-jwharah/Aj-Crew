@@ -9,9 +9,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.dashboard import slot_retention, warm_task_brief
-from kiro_crew.dashboard.slot_preparing import preparing_caption
-from kiro_crew.session_summary import TranscriptTurn
+from aj_crew.dashboard import slot_retention, warm_task_brief
+from aj_crew.dashboard.slot_preparing import preparing_caption
+from aj_crew.session_summary import TranscriptTurn
 
 
 class _State:
@@ -129,7 +129,7 @@ def _thread(monkeypatch, *, user_ago: float | None, log: _Log | None = None):
 
     monkeypatch.setattr(warm_task_brief, "run_bg_oneliner", run_model)
     monkeypatch.setattr(
-        warm_task_brief.KiroCrewConfig,
+        warm_task_brief.AjCrewConfig,
         "load",
         lambda: SimpleNamespace(agent=SimpleNamespace(resolve_model=lambda role: "background")),
     )
@@ -550,7 +550,7 @@ async def test_one_model_call_and_one_message_that_is_a_structured_brief(
     monkeypatch.setattr(warm_task_brief, "_snapshot", read_snapshot)
     monkeypatch.setattr(warm_task_brief, "run_bg_oneliner", run_model)
     monkeypatch.setattr(
-        warm_task_brief.KiroCrewConfig,
+        warm_task_brief.AjCrewConfig,
         "load",
         lambda: SimpleNamespace(
             agent=SimpleNamespace(resolve_model=lambda role: "background"),
@@ -656,7 +656,7 @@ async def test_model_failure_posts_an_ordinary_failure_message(monkeypatch):
     monkeypatch.setattr(warm_task_brief, "_snapshot", read_snapshot)
     monkeypatch.setattr(warm_task_brief, "run_bg_oneliner", fail)
     monkeypatch.setattr(
-        warm_task_brief.KiroCrewConfig,
+        warm_task_brief.AjCrewConfig,
         "load",
         lambda: SimpleNamespace(agent=SimpleNamespace(resolve_model=lambda role: "background")),
     )
@@ -689,7 +689,7 @@ async def test_a_picture_naming_an_unknown_pr_drops_the_model_fields(monkeypatch
     monkeypatch.setattr(warm_task_brief, "_snapshot", read_snapshot)
     monkeypatch.setattr(warm_task_brief, "run_bg_oneliner", run_model)
     monkeypatch.setattr(
-        warm_task_brief.KiroCrewConfig,
+        warm_task_brief.AjCrewConfig,
         "load",
         lambda: SimpleNamespace(agent=SimpleNamespace(resolve_model=lambda role: "background")),
     )
@@ -720,7 +720,7 @@ async def test_user_send_drops_stale_result_and_keeps_preparing(monkeypatch):
     monkeypatch.setattr(warm_task_brief, "_snapshot", read_snapshot)
     monkeypatch.setattr(warm_task_brief, "run_bg_oneliner", run_model)
     monkeypatch.setattr(
-        warm_task_brief.KiroCrewConfig,
+        warm_task_brief.AjCrewConfig,
         "load",
         lambda: SimpleNamespace(agent=SimpleNamespace(resolve_model=lambda role: "background")),
     )
@@ -765,7 +765,7 @@ def test_generated_plain_messages_stay_out_of_summary_input():
 
 
 def test_generated_plain_messages_stay_out_of_model_replay():
-    from kiro_crew import context
+    from aj_crew import context
 
     class _Log:
         def read_messages_chained(self, key):
@@ -784,8 +784,8 @@ def test_generated_plain_messages_stay_out_of_model_replay():
 
 
 def test_generated_plain_messages_stay_out_of_secondary_model_inputs():
-    from kiro_crew.autonudge_judge import session_evidence
-    from kiro_crew.history_consolidation import _prompt_rows
+    from aj_crew.autonudge_judge import session_evidence
+    from aj_crew.history_consolidation import _prompt_rows
 
     generated = {
         "role": "assistant",
@@ -801,8 +801,8 @@ def test_generated_plain_messages_stay_out_of_secondary_model_inputs():
 
 
 def test_transfer_and_projection_keep_generated_rows_out_of_replay():
-    from kiro_crew.dashboard.session_transfer import _assemble_bundle
-    from kiro_crew.history_projection import TranscriptReadProjection
+    from aj_crew.dashboard.session_transfer import _assemble_bundle
+    from aj_crew.history_projection import TranscriptReadProjection
 
     generated = {
         "role": "assistant",
@@ -1022,7 +1022,7 @@ async def test_cancel_during_model_suppresses_result_without_cancelling_acquisit
     monkeypatch.setattr(warm_task_brief, "_snapshot", read_snapshot)
     monkeypatch.setattr(warm_task_brief, "run_bg_oneliner", run_model)
     monkeypatch.setattr(
-        warm_task_brief.KiroCrewConfig,
+        warm_task_brief.AjCrewConfig,
         "load",
         lambda: SimpleNamespace(agent=SimpleNamespace(resolve_model=lambda role: "background")),
     )
@@ -1094,7 +1094,7 @@ def test_every_text_label_language_has_every_label():
 
 @pytest.mark.parametrize("kind", [[], {}, ["warm_task_brief_result"], None, 3])
 def test_non_string_meta_kind_is_not_a_brief_row_and_never_raises(kind):
-    from kiro_crew.warm_task_brief_contract import is_warm_task_brief_message
+    from aj_crew.warm_task_brief_contract import is_warm_task_brief_message
 
     assert is_warm_task_brief_message({"role": "user", "meta": {"kind": kind}}) is False
 
@@ -1110,7 +1110,7 @@ def _arm_model(monkeypatch, slot, snapshots, run_model=None):
     monkeypatch.setattr(warm_task_brief, "_snapshot", read_snapshot)
     monkeypatch.setattr(warm_task_brief, "run_bg_oneliner", run_model or default_model)
     monkeypatch.setattr(
-        warm_task_brief.KiroCrewConfig,
+        warm_task_brief.AjCrewConfig,
         "load",
         lambda: SimpleNamespace(agent=SimpleNamespace(resolve_model=lambda role: "background")),
     )
@@ -1157,7 +1157,7 @@ class _LiveState(_State):
 
 
 def _live_slot(state: _LiveState):
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("thread-x")
     slot.mode = "member"
@@ -1255,7 +1255,7 @@ def _brief_seen_by_a_real_turn(*, user_row: bool, message: str) -> list[bool]:
     """Run one real dashboard turn beside a pending brief; was it cancelled?"""
     from turn_harness import Do, SlotSpec, TurnScript, run_turn
 
-    from kiro_crew.acp.types import EVENT_TEXT_CHUNK, AcpEvent
+    from aj_crew.acp.types import EVENT_TEXT_CHUNK, AcpEvent
 
     seen: list[bool] = []
     brief = SimpleNamespace(done=lambda: False, cancelled=False)
@@ -1593,7 +1593,7 @@ async def test_a_turn_started_while_preparing_defers_and_the_indicator_holds(mon
 
 
 def test_structured_brief_survives_a_transcript_round_trip(tmp_path):
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     brief = warm_task_brief._parse_result(
         '{"asked":"Fix it","headline":"Ready.","needs_you":[],"next":["Review"]}', ""
@@ -1881,7 +1881,7 @@ async def test_every_grounding_miss_keeps_the_waiting_cards_and_is_not_a_catch_u
     # The "as of" minute is pinned so the body's 23:47 is never the known clock.
     monkeypatch.setattr(warm_task_brief.inputs, "clock", lambda *args, **kwargs: "12:00")
     monkeypatch.setattr(
-        warm_task_brief.KiroCrewConfig,
+        warm_task_brief.AjCrewConfig,
         "load",
         lambda: SimpleNamespace(agent=SimpleNamespace(resolve_model=lambda role: "background")),
     )
@@ -1961,7 +1961,7 @@ async def test_a_note_in_the_live_window_wins_over_the_settled_disk_read(monkeyp
     monkeypatch.setattr(warm_task_brief, "_snapshot", read_snapshot)
     monkeypatch.setattr(warm_task_brief, "run_bg_oneliner", run_model)
     monkeypatch.setattr(
-        warm_task_brief.KiroCrewConfig,
+        warm_task_brief.AjCrewConfig,
         "load",
         lambda: SimpleNamespace(agent=SimpleNamespace(resolve_model=lambda role: "background")),
     )

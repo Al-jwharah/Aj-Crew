@@ -26,9 +26,9 @@ from test_acp_launch_goldens import (
     _Scratch,
 )
 
-from kiro_crew import env as env_mod
-from kiro_crew.acp.agent_env import agent_env_overlay
-from kiro_crew.config import loader as L
+from aj_crew import env as env_mod
+from aj_crew.acp.agent_env import agent_env_overlay
+from aj_crew.config import loader as L
 
 pytestmark = pytest.mark.skipif(
     sys.platform == "win32", reason="POSIX launcher fixture (an executable shell script)"
@@ -122,7 +122,7 @@ def test_nothing_contributed_leaves_the_child_path_unchanged(monkeypatch, tmp_pa
 
 
 def test_no_contributed_dir_reaches_a_unit_file_or_an_emitted_spec(monkeypatch, tmp_path) -> None:
-    from kiro_crew.service.common import service_environment
+    from aj_crew.service.common import service_environment
 
     mcp_dir = str(tmp_path / "mcp")
     op_dir = str(tmp_path / "op")

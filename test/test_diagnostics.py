@@ -27,10 +27,10 @@ import pytest
 import yaml
 
 from conftest import make_dir_link, requires_symlinks
-from kiro_crew import agent_scratch, beacon, diagnostics, release_channel
-from kiro_crew.dashboard import crash_dump_store
-from kiro_crew.dashboard.handlers import diagnostics as dh
-from kiro_crew.diagnostics import BundleResult
+from aj_crew import agent_scratch, beacon, diagnostics, release_channel
+from aj_crew.dashboard import crash_dump_store
+from aj_crew.dashboard.handlers import diagnostics as dh
+from aj_crew.diagnostics import BundleResult
 
 _GATEWAY = (
     "09:00 boot ok\n"
@@ -53,9 +53,9 @@ def _pin_provenance(monkeypatch, *, distribution=None, recorded=None) -> None:
     """Answer the two release-provenance probes in-process.
 
     ``release_channel.provenance`` reads the installed distribution's metadata
-    version and the ``$KIROCREW_HOME/channel`` record beside the version stamp.
+    version and the ``$AJCREW_HOME/channel`` record beside the version stamp.
     Both are host state -- the developer running this suite may follow a lane
-    and has SOME ``kirocrew`` dist-info installed -- so every bundle test pins
+    and has SOME ``ajcrew`` dist-info installed -- so every bundle test pins
     them, defaulting to "nothing beyond the version stamp", which is what a
     source checkout and a desktop install with no record look like.
     """
@@ -68,7 +68,7 @@ def _pin_provenance(monkeypatch, *, distribution=None, recorded=None) -> None:
 def _isolate(monkeypatch, home: Path) -> None:
     """Point the collector at a temp home and stub host-specific probes."""
     home.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setattr("kiro_crew.diagnostics.config_dir", lambda: home)
+    monkeypatch.setattr("aj_crew.diagnostics.config_dir", lambda: home)
     # The per-process kiro-cli logs are read from the agent scratch root, which
     # sits under the data home too.
     monkeypatch.setattr(agent_scratch, "config_dir", lambda: home)
@@ -114,7 +114,7 @@ def test_home_prefixes_collapse_but_system_and_repo_frames_survive(tmp_path, mon
     survive -- but a maintainer still needs the file locations that make a
     bundle useful. Drive the collector end to end with a traceback whose frames
     span the data-home, a system path and a repo-relative path, and assert the
-    home frames show as ``~/...`` while ``/usr/lib/...`` and ``src/kiro_crew/...``
+    home frames show as ``~/...`` while ``/usr/lib/...`` and ``src/aj_crew/...``
     frames are left intact. The ``versions.txt`` ``data_home`` line collapses the
     same way.
     """
@@ -125,7 +125,7 @@ def test_home_prefixes_collapse_but_system_and_repo_frames_survive(tmp_path, mon
     # slash-normalized copy so one assertion holds on POSIX and Windows alike.
     home_frame = f'  File "{home}{os.sep}gateway.log", line 3, in handle'
     system_frame = '  File "/usr/lib/python3.12/asyncio/events.py", line 80, in _run'
-    repo_frame = '  File "src/kiro_crew/diagnostics.py", line 42, in collect_bundle'
+    repo_frame = '  File "src/aj_crew/diagnostics.py", line 42, in collect_bundle'
     (home / "gateway.log").write_text(
         f"Traceback (most recent call last):\n"
         f"{home_frame}\n{system_frame}\n{repo_frame}\n"
@@ -147,7 +147,7 @@ def test_home_prefixes_collapse_but_system_and_repo_frames_survive(tmp_path, mon
     assert "data_home: ~" in versions, "data_home should collapse to ~"
     # System and repo-relative frames are left intact so the trace stays useful.
     assert "/usr/lib/python3.12/asyncio/events.py" in gw, "system frame must survive"
-    assert "src/kiro_crew/diagnostics.py" in gw, "repo-relative frame must survive"
+    assert "src/aj_crew/diagnostics.py" in gw, "repo-relative frame must survive"
     assert ", line 3, in handle" in gw, "the rest of the home frame must survive"
     assert "a perfectly normal log line" in gw
     # The data_home collapse in versions.txt is a path collapse, not a secret:
@@ -372,7 +372,7 @@ def test_nested_data_home_keeps_relative_tail(tmp_path, monkeypatch):
     data_home.mkdir(parents=True, exist_ok=True)
     # Pin config_dir to the nested data home and Path.home to home. Set the host
     # probes directly (not via _isolate, which would pin Path.home to data_home).
-    monkeypatch.setattr("kiro_crew.diagnostics.config_dir", lambda: data_home)
+    monkeypatch.setattr("aj_crew.diagnostics.config_dir", lambda: data_home)
     monkeypatch.setattr(diagnostics.Path, "home", classmethod(lambda cls: home))
     monkeypatch.setattr(diagnostics, "_macos_crash_reports", lambda: [])
     monkeypatch.setattr(diagnostics, "_kiro_cli_chat_log", lambda: None)
@@ -399,9 +399,9 @@ def test_separate_data_home_collapses_on_its_own(monkeypatch):
     """Ruling 3 (other branch): a data home NOT under home collapses on its own."""
     home = "/" + "home" + "/a1"  # assembled so no literal home path is on a line
     monkeypatch.setattr(diagnostics.Path, "home", classmethod(lambda cls: Path(home)))
-    monkeypatch.setattr(diagnostics, "config_dir", lambda: Path("/var/lib/kirocrew"))
+    monkeypatch.setattr(diagnostics, "config_dir", lambda: Path("/var/lib/ajcrew"))
     out, n = diagnostics._collapse_home_prefixes(
-        f"{home}/notes.txt and /var/lib/kirocrew/gateway.log and /usr/bin/x"
+        f"{home}/notes.txt and /var/lib/ajcrew/gateway.log and /usr/bin/x"
     )
     assert out == "~/notes.txt and ~/gateway.log and /usr/bin/x", out
     assert n == 2
@@ -854,7 +854,7 @@ def test_quoted_serialized_headers_are_redacted(tmp_path, monkeypatch):
 def test_bundle_keeps_a_stall_dump_ahead_of_unexplained_exits_and_markers(tmp_path, monkeypatch):
     """The sweep keeps an unexplained exit's header on purpose; neither those headers
     nor an empty clean-exit marker may push a stall's stacks out of the bundle."""
-    from kiro_crew.dashboard import crash_dump_store
+    from aj_crew.dashboard import crash_dump_store
 
     home = tmp_path / "home"
     _isolate(monkeypatch, home)
@@ -1064,7 +1064,7 @@ def test_issue_url_is_well_formed(tmp_path, monkeypatch):
 
     r = diagnostics.collect_bundle(note="hi", output_dir=tmp_path / "out")
 
-    assert r.github_issue_url.startswith("https://github.com/kirodotdev/KiroCrew/issues/new?")
+    assert r.github_issue_url.startswith("https://github.com/Al-jwharah/Aj-Crew/issues/new?")
     # Routes through the issue FORM, not a free-form body: the form is what
     # carries the version / install / channel answers triage reads.
     assert "template=bug_report.yml" in r.github_issue_url
@@ -1098,7 +1098,7 @@ class TestFeedbackTrackerSeam:
         """Install a context whose ``feedback`` seam is the given provider."""
         import dataclasses
 
-        from kiro_crew import platform as platform_pkg
+        from aj_crew import platform as platform_pkg
 
         def _install(provider):  # type: ignore[no-untyped-def]
             ctx = dataclasses.replace(platform_pkg.current_context(), feedback=provider)
@@ -1115,11 +1115,11 @@ class TestFeedbackTrackerSeam:
         _pin_provenance(_floor_monkeypatch)
 
     def _result(self, tmp_path):  # type: ignore[no-untyped-def]
-        name = "kirocrew-diagnostics-20260811.zip"
+        name = "ajcrew-diagnostics-20260811.zip"
         return BundleResult(zip_path=tmp_path / name, filename=name)
 
     def test_default_provider_keeps_the_public_link(self, tmp_path) -> None:  # type: ignore[no-untyped-def]
-        from kiro_crew.platform.defaults import DefaultFeedbackTrackerProvider
+        from aj_crew.platform.defaults import DefaultFeedbackTrackerProvider
 
         result = self._result(tmp_path)
         assert DefaultFeedbackTrackerProvider().report_issue_url(result, "x", prefill=True) is None
@@ -1164,7 +1164,7 @@ class TestFeedbackTrackerSeam:
     def test_a_composition_error_keeps_the_bundle_without_issue_links(
         self, tmp_path, monkeypatch, install, caplog
     ) -> None:  # type: ignore[no-untyped-def]
-        from kiro_crew.platform import PlatformCompositionError
+        from aj_crew.platform import PlatformCompositionError
 
         install(self._Tracker(exc=PlatformCompositionError("companion did not compose")))
         _isolate(monkeypatch, tmp_path / "home")
@@ -1182,7 +1182,7 @@ class TestFeedbackTrackerSeam:
 
 
 class TestTerminalIssueUrlSurvivesRedaction:
-    """The link `kirocrew doctor` PRINTS must reach the user intact.
+    """The link `ajcrew doctor` PRINTS must reach the user intact.
 
     The dashboard renders `github_issue_url` from a JSON response no redactor
     scans, so it keeps the full pre-filled body. A link printed to stdout has no
@@ -1201,15 +1201,15 @@ class TestTerminalIssueUrlSurvivesRedaction:
         These tests are about URL shape and redaction, so the seam is answered
         in-process, the same way ``_isolate`` answers it for the bundle tests.
         """
-        from kiro_crew import diagnostics
+        from aj_crew import diagnostics
 
         monkeypatch.setattr(diagnostics, "_kiro_cli_version", lambda: "kiro-cli 2.14.2")
         _pin_provenance(monkeypatch)
 
     def _result(self, tmp_path):  # type: ignore[no-untyped-def]
-        from kiro_crew import diagnostics
+        from aj_crew import diagnostics
 
-        name = "kirocrew-diagnostics-20260811.zip"
+        name = "ajcrew-diagnostics-20260811.zip"
         return diagnostics.BundleResult(
             zip_path=tmp_path / name,
             filename=name,
@@ -1218,16 +1218,16 @@ class TestTerminalIssueUrlSurvivesRedaction:
 
     def test_prefilled_variant_is_the_one_that_gets_eaten(self, tmp_path) -> None:  # type: ignore[no-untyped-def]
         """Guard the premise — if this stops being redacted the fix is moot."""
-        from kiro_crew import diagnostics
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew import diagnostics
+        from aj_crew.security import scan_exfiltration_urls
 
         rich = diagnostics._issue_url(self._result(tmp_path), "something broke")
         assert len(rich.split("?", 1)[1]) >= 200
         assert scan_exfiltration_urls(rich) != []
 
     def test_terminal_variant_is_not_redacted(self, tmp_path) -> None:  # type: ignore[no-untyped-def]
-        from kiro_crew import diagnostics
-        from kiro_crew.security import redact_exfiltration_urls, scan_exfiltration_urls
+        from aj_crew import diagnostics
+        from aj_crew.security import redact_exfiltration_urls, scan_exfiltration_urls
 
         url = diagnostics.terminal_issue_url(self._result(tmp_path), "something broke")
         assert scan_exfiltration_urls(url) == []
@@ -1240,8 +1240,8 @@ class TestTerminalIssueUrlSurvivesRedaction:
         note, so a budget that merely fits today's fields is not enough — the
         free-form fields are dropped so the query is bounded by construction.
         """
-        from kiro_crew import diagnostics
-        from kiro_crew.security import scan_exfiltration_urls
+        from aj_crew import diagnostics
+        from aj_crew.security import scan_exfiltration_urls
 
         result = self._result(tmp_path)
         for note in ("", "short note", "x" * 5000, "multi\nline\nnote " * 200):
@@ -1253,7 +1253,7 @@ class TestTerminalIssueUrlSurvivesRedaction:
         """Shortening must not cost the answers automatic triage reads."""
         from urllib.parse import parse_qs, urlsplit
 
-        from kiro_crew import diagnostics
+        from aj_crew import diagnostics
 
         params = parse_qs(urlsplit(diagnostics.terminal_issue_url(self._result(tmp_path))).query)
         assert params["template"] == ["bug_report.yml"]
@@ -1491,7 +1491,7 @@ class TestReportProvenance:
         assert _prefill(r.github_issue_url) == ([version], [option], [f"bug,{label}"])
 
     def test_terminal_link_carries_the_same_provenance(self, tmp_path, monkeypatch):
-        """``kirocrew doctor --bundle`` prints the bounded variant; it must not
+        """``ajcrew doctor --bundle`` prints the bounded variant; it must not
         answer differently from the dashboard's link."""
         _isolate(monkeypatch, tmp_path / "home")
         monkeypatch.setattr(diagnostics, "__version__", "0.7.0.5")
@@ -1516,14 +1516,14 @@ class TestReportProvenance:
             versions = z.read("versions.txt").decode()
             manifest = json.loads(z.read("manifest.json"))
         for line in (
-            "kirocrew_version: 0.7.0.5",
+            "ajcrew_version: 0.7.0.5",
             "release: 0.7.0",
             "distribution_version: 0.7.0rc7",
             "channel: insider",
             "channel_record: absent",
         ):
             assert line in versions, line
-        assert manifest["kirocrew_version"] == "0.7.0.5"
+        assert manifest["ajcrew_version"] == "0.7.0.5"
         assert manifest["release"] == "0.7.0"
         assert manifest["distribution_version"] == "0.7.0rc7"
         assert manifest["channel"] == "insider"
@@ -1533,7 +1533,7 @@ class TestReportProvenance:
         assert "0.7.0.5" not in r.github_issue_url
 
     def test_private_bundle_records_the_channel_record(self, tmp_path, monkeypatch):
-        """The ``$KIROCREW_HOME/channel`` record is evidence, so both private
+        """The ``$AJCREW_HOME/channel`` record is evidence, so both private
         surfaces name it verbatim -- the manifest as the same value the
         resolver weighed, not a re-derivation."""
         _isolate(monkeypatch, tmp_path / "home")
@@ -1816,12 +1816,12 @@ class _CollectReq(_OwnerReq):
 def _stub_sel(monkeypatch) -> MagicMock:
     """Install a mock SEL logger and return it (download handler audits via it)."""
     sel = MagicMock()
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.sel", lambda: sel)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.sel", lambda: sel)
     return sel
 
 
 def test_download_rejects_path_traversal(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.diagnostics.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.diagnostics.config_dir", lambda: tmp_path)
     sel = _stub_sel(monkeypatch)
     resp = asyncio.run(dh.api_diagnostics_download(_DownloadReq("../../etc/passwd")))
     assert resp.status == 403
@@ -1832,7 +1832,7 @@ def test_download_rejects_non_zip(tmp_path, monkeypatch):
     diag = tmp_path / "diagnostics"
     diag.mkdir()
     (diag / "foo.txt").write_text("not a zip")
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.diagnostics.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.diagnostics.config_dir", lambda: tmp_path)
     sel = _stub_sel(monkeypatch)
     resp = asyncio.run(dh.api_diagnostics_download(_DownloadReq("foo.txt")))
     assert resp.status == 403
@@ -1843,7 +1843,7 @@ def test_download_allows_and_audits_valid_zip(tmp_path, monkeypatch):
     diag = tmp_path / "diagnostics"
     diag.mkdir()
     (diag / "b.zip").write_bytes(b"PK\x03\x04zip")
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.diagnostics.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.diagnostics.config_dir", lambda: tmp_path)
     sel = _stub_sel(monkeypatch)
     resp = asyncio.run(dh.api_diagnostics_download(_DownloadReq("b.zip")))
     assert resp.status == 200
@@ -1859,7 +1859,7 @@ def test_download_path_checks_run_off_the_event_loop_thread(tmp_path, monkeypatc
     diag = tmp_path / "diagnostics"
     diag.mkdir()
     (diag / "b.zip").write_bytes(b"PK\x03\x04zip")
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.diagnostics.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.diagnostics.config_dir", lambda: tmp_path)
     sel = _stub_sel(monkeypatch)
     loop_thread = threading.get_ident()
     check_threads: set[int] = set()
@@ -1890,14 +1890,14 @@ def test_download_path_checks_run_off_the_event_loop_thread(tmp_path, monkeypatc
 
 
 def test_collect_handler_returns_download_url(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.diagnostics.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.diagnostics.config_dir", lambda: tmp_path)
     fake = BundleResult(
         zip_path=tmp_path / "b.zip",
         filename="b.zip",
         included=["versions.txt", "manifest.json"],
         skipped=[],
         redaction_summary={"versions.txt": 0},
-        github_issue_url="https://github.com/kirodotdev/KiroCrew/issues/new?title=x",
+        github_issue_url="https://github.com/Al-jwharah/Aj-Crew/issues/new?title=x",
     )
     monkeypatch.setattr(dh.diagnostics, "collect_bundle", lambda **kw: fake)
 
@@ -1937,17 +1937,17 @@ def test_old_bundles_are_pruned(tmp_path):
     out.mkdir()
     base = time.time()
     for i in range(6):
-        p = out / f"kirocrew-diagnostics-2026010{i}-000000.zip"
+        p = out / f"ajcrew-diagnostics-2026010{i}-000000.zip"
         p.write_bytes(b"x")
         os.utime(p, (base + i, base + i))  # distinct mtimes; newest = i==5
     diagnostics._prune_old_bundles(out, keep=3)
-    kept = {p.name for p in out.glob("kirocrew-diagnostics-*.zip")}
+    kept = {p.name for p in out.glob("ajcrew-diagnostics-*.zip")}
     assert len(kept) == 3
-    assert "kirocrew-diagnostics-20260105-000000.zip" in kept  # newest kept
-    assert "kirocrew-diagnostics-20260100-000000.zip" not in kept  # oldest pruned
+    assert "ajcrew-diagnostics-20260105-000000.zip" in kept  # newest kept
+    assert "ajcrew-diagnostics-20260100-000000.zip" not in kept  # oldest pruned
 
 
 def test_collect_handler_rejects_non_object_body(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.diagnostics.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.diagnostics.config_dir", lambda: tmp_path)
     resp = asyncio.run(dh.api_diagnostics_collect(_CollectReq(["not", "a", "dict"])))
     assert resp.status == 400

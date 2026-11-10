@@ -1,7 +1,7 @@
 """The black gate must be real, and the docs must describe the gate that exists.
 
 This repository ran for a long time with `black --check` commented out in CI while
-`AGENTS.md` listed `black src/kiro_crew test` as a gate to run before committing.
+`AGENTS.md` listed `black src/aj_crew test` as a gate to run before committing.
 That is a worse failure than a missing gate: following the documented command
 reformats ~95,800 lines across 1,420 pre-existing files, so a contributor either
 buries their own diff or knowingly skips a documented step. Both happened.
@@ -68,14 +68,14 @@ def test_ci_does_not_run_a_bare_repo_wide_black_check() -> None:
     ],
 )
 def test_no_document_tells_a_contributor_to_reformat_the_whole_tree(doc: str) -> None:
-    # `black src/kiro_crew test` is the exact command that buries a diff under
+    # `black src/aj_crew test` is the exact command that buries a diff under
     # ~95,800 lines of unrelated churn. AGENTS.md carried it for months.
     text = (ROOT / doc).read_text(encoding="utf-8")
     for line in text.splitlines():
         stripped = line.strip()
         if not stripped.startswith("black "):
             continue
-        assert "src/kiro_crew test" not in stripped and "src/ test/" not in stripped, (
+        assert "src/aj_crew test" not in stripped and "src/ test/" not in stripped, (
             f"{doc} instructs a repo-wide reformat: {stripped!r}. Point at "
             "scripts/check_black_formatting.py and per-file formatting instead."
         )

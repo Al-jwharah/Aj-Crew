@@ -19,7 +19,7 @@ That shape is the durable-data view for an app-bundle cron script: mask the whol
 ``apps/`` ancestor so no app's ``.app_secret`` is reachable -- including an app
 installed while a long-running script executes -- and keep ``apps/<app>/data``
 live at its real path on its real inode, so provisioned dependencies
-(``data/.kirocrew-deps``, whose swap renames require one filesystem) and logs
+(``data/.ajcrew-deps``, whose swap renames require one filesystem) and logs
 survive the run instead of landing in a tree that is deleted afterwards.
 
 Most assertions here are lexical: over the namespace plan
@@ -41,9 +41,9 @@ from pathlib import Path
 import pytest
 from test_sandbox_launcher_program import CoveringLibc, launch, refusal
 
-from kiro_crew import sandbox
-from kiro_crew import sandbox_launcher_program as program
-from kiro_crew import sandbox_plan
+from aj_crew import sandbox
+from aj_crew import sandbox_launcher_program as program
+from aj_crew import sandbox_plan
 
 
 @pytest.fixture(autouse=True)
@@ -242,7 +242,7 @@ class TestTheDurableDataView:
 
     def test_the_app_reaches_its_own_data_and_nothing_else_in_the_tree(self) -> None:
         hidden, _files, windows = _launcher_view(**self._KWARGS)
-        assert not _denied(os.path.join(_DATA, ".kirocrew-deps", "pkg"), hidden, windows)
+        assert not _denied(os.path.join(_DATA, ".ajcrew-deps", "pkg"), hidden, windows)
         assert not _denied(os.path.join(_DATA, "logs", "run.log"), hidden, windows)
         assert _denied(_SIBLING_SECRET, hidden, windows)
         # An app installed after the sandbox was built falls under the ancestor

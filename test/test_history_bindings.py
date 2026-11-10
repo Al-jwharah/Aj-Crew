@@ -1,6 +1,6 @@
 """``ConversationLog`` keeps every member it had, and each is bound from the module that owns it.
 
-Part of the class's behaviour lives in the ``kiro_crew.history_*`` owner modules the facade
+Part of the class's behaviour lives in the ``aj_crew.history_*`` owner modules the facade
 lists in ``_OWNERS``: each moved member's body is a module-level function there whose first
 parameter is ``self``, and the class binds it by name (``m = _owner.m``, or
 ``staticmethod(_owner.f)``). The instance state, and the process-wide lock registries, stay on
@@ -18,7 +18,7 @@ file pins the binding contract:
 * no subclass of ``ConversationLog`` binds its own value for a registry the owners read
   through ``type(self)``, which is the one case where that read differs from the class's;
 * owners log under the facade's logger, and a moved class keeps the facade as its module;
-* a write through ``kiro_crew.history`` reaches every owner that binds the name (the
+* a write through ``aj_crew.history`` reaches every owner that binds the name (the
   facade's mirror, ``_facade_mirror``).
 """
 
@@ -36,14 +36,14 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import history
-from kiro_crew.history import ConversationLog
+from aj_crew import history
+from aj_crew.history import ConversationLog
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_history_bindings")
 
 SHARED_BINDINGS_CHECKS = ("the_class_only_scan_can_fail",)
 
-_PACKAGE = "kiro_crew"
+_PACKAGE = "aj_crew"
 _REPO = Path(__file__).resolve().parents[1]
 
 #: Member -> (kind, signature digest, owning module). Frozen at the split: the kind and
@@ -352,7 +352,7 @@ def test_no_bound_function_needs_its_class_body(owner: str) -> None:
 
 
 def _runtime_facade_imports(tree: ast.Module) -> list[int]:
-    """Lines that import the facade (``kiro_crew.history``) outside a ``TYPE_CHECKING`` block."""
+    """Lines that import the facade (``aj_crew.history``) outside a ``TYPE_CHECKING`` block."""
     guarded: set[int] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.If) and ast.unparse(node.test) == "TYPE_CHECKING":
@@ -375,10 +375,10 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
 def test_the_facade_import_scan_can_fail() -> None:
     tree = ast.parse(
         "from typing import TYPE_CHECKING\n"
-        "if TYPE_CHECKING:\n    from kiro_crew.history import ConversationLog\n"
-        "def f():\n    from kiro_crew.history import x\n"
-        "import kiro_crew.history\n"
-        "from kiro_crew import history\n"
+        "if TYPE_CHECKING:\n    from aj_crew.history import ConversationLog\n"
+        "def f():\n    from aj_crew.history import x\n"
+        "import aj_crew.history\n"
+        "from aj_crew import history\n"
     )
     assert sorted(_runtime_facade_imports(tree)) == [5, 6, 7]
 
@@ -407,14 +407,14 @@ def _owner_imports(tree: ast.Module) -> set[str]:
 
 def test_the_owner_import_scan_can_fail() -> None:
     tree = ast.parse(
-        "from kiro_crew.history_files import _safe_key\n"
-        "from kiro_crew import history_schema as _schema, platform_compat\n"
-        "import kiro_crew.history_offload\n"
+        "from aj_crew.history_files import _safe_key\n"
+        "from aj_crew import history_schema as _schema, platform_compat\n"
+        "import aj_crew.history_offload\n"
     )
     assert _owner_imports(tree) == {
-        "kiro_crew.history_files",
-        "kiro_crew.history_schema",
-        "kiro_crew.history_offload",
+        "aj_crew.history_files",
+        "aj_crew.history_schema",
+        "aj_crew.history_offload",
     }
 
 
@@ -566,11 +566,11 @@ def _class_names_binding_registries(source: str) -> list[str]:
 
 def test_the_subclass_registry_scan_can_fail() -> None:
     source = (
-        "from kiro_crew.history import ConversationLog\n"
+        "from aj_crew.history import ConversationLog\n"
         "class Plain(ConversationLog):\n    def append(self, *a): ...\n"
         "class Own(history.ConversationLog):\n    _flock_state = {}\n"
         "class Deeper(Plain):\n    _file_locks: dict = {}\n"
-        "from kiro_crew.history import ConversationLog as _Log\n"
+        "from aj_crew.history import ConversationLog as _Log\n"
         "Alias = history.ConversationLog\n"
         "class ByImport(_Log):\n    _flock_guard = None\n"
         "class ByAssign(Alias):\n    def _flock_epochs(self): ...\n"
@@ -644,8 +644,8 @@ def test_every_moved_exception_is_one_class_named_through_the_facade() -> None:
     for name in _MOVED_EXCEPTIONS:
         cls = getattr(history, name)
         assert issubclass(cls, BaseException)
-        assert cls.__module__ == "kiro_crew.history"
-        assert f"{cls.__module__}.{cls.__qualname__}" == f"kiro_crew.history.{name}"
+        assert cls.__module__ == "aj_crew.history"
+        assert f"{cls.__module__}.{cls.__qualname__}" == f"aj_crew.history.{name}"
     assert issubclass(history.TranscriptBusy, history.TranscriptWithheld)
 
 
@@ -701,7 +701,7 @@ def test_every_name_the_facade_binds_reaches_the_owners_reading_it() -> None:
 
 def test_the_reach_scan_can_fail() -> None:
     index = _facade_index()
-    owner = "kiro_crew.history_locks"
+    owner = "aj_crew.history_locks"
     holders = dict(index.holders)
     holders["logger"] = tuple(h for h in holders["logger"] if h != owner)
     blind = dataclasses.replace(index, holders=holders)
@@ -712,12 +712,12 @@ def test_the_reach_scan_can_fail() -> None:
 @pytest.mark.parametrize(
     ("name", "owners"),
     [
-        ("_FLOCK_ACQUIRE_TIMEOUT_S", ("kiro_crew.history_locks",)),
-        ("THREADS_SIDECAR_MAX_BYTES", ("kiro_crew.history_threads",)),
-        ("_sessions_dir", ("kiro_crew.history_files",)),
+        ("_FLOCK_ACQUIRE_TIMEOUT_S", ("aj_crew.history_locks",)),
+        ("THREADS_SIDECAR_MAX_BYTES", ("aj_crew.history_threads",)),
+        ("_sessions_dir", ("aj_crew.history_files",)),
         (
             "datetime",
-            ("kiro_crew.history_files", "kiro_crew.history_schema", "kiro_crew.history_append"),
+            ("aj_crew.history_files", "aj_crew.history_schema", "aj_crew.history_append"),
         ),
     ],
 )
@@ -739,8 +739,8 @@ def test_a_patch_through_the_facade_lands_on_the_owners_and_is_undone(
 @pytest.mark.parametrize(
     ("name", "owner"),
     [
-        ("_last_cleanup", "kiro_crew.history_files"),
-        ("_on_loop_warn_last", "kiro_crew.history_offload"),
+        ("_last_cleanup", "aj_crew.history_files"),
+        ("_on_loop_warn_last", "aj_crew.history_offload"),
     ],
 )
 def test_a_global_its_owner_rebinds_is_served_live_and_never_bound_here(

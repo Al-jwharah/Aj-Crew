@@ -11,7 +11,7 @@ spawn-then-exit, so the backend comes up under a NEW pid and this process dies.
 kiro-cli reads that as the server hanging up and reports
 ``connection closed: initialize response``, with the server's whole tool surface
 missing from the session. Reported from the field on 0.6.0.16: every stubbed
-server (``kirocrew-core``, ``kirocrew-cron``) failed exactly that way while every
+server (``ajcrew-core``, ``ajcrew-cron``) failed exactly that way while every
 directly-launched one in the same session was fine, and the real servers all
 answered ``initialize`` correctly when started by hand -- the middle hop was the
 only broken thing.
@@ -32,8 +32,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.mcp_gateway import stub
+from aj_crew import platform_compat
+from aj_crew.mcp_gateway import stub
 
 
 class _FakeProc:

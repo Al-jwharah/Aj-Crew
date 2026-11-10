@@ -3,7 +3,7 @@
 * ``memory.inject_memory`` / ``memory.inject_lessons`` apply inside
   ``build_session_context``, so the MAIN path (``context_groups=None``) obeys them.
 * ``memory.persistence_enabled`` off withholds BOTH groups and stops the writers:
-  consolidation, ``POST /api/lessons`` and the ``kirocrew learn add`` CLI.
+  consolidation, ``POST /api/lessons`` and the ``ajcrew learn add`` CLI.
 
 Every group is populated, since an "absent" check on an empty store passes with no gate.
 """
@@ -20,20 +20,20 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import history as history_mod
-from kiro_crew.config.loader import config_dir, config_path
-from kiro_crew.context import (
+from aj_crew import history as history_mod
+from aj_crew.config.loader import config_dir, config_path
+from aj_crew.context import (
     CONTEXT_GROUP_MEMORY,
     CONTEXT_GROUP_PROJECT,
     SWITCHABLE_CONTEXT_GROUPS,
     ContextBuilder,
     _config_scoped_groups,
 )
-from kiro_crew.history import ConversationLog, HistoryConsolidator
-from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED
-from kiro_crew.learn import Lesson, LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew.history import ConversationLog, HistoryConsolidator
+from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED
+from aj_crew.learn import Lesson, LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 ALL_GROUPS = frozenset(SWITCHABLE_CONTEXT_GROUPS)
 
@@ -213,11 +213,11 @@ class TestValidationPathIgnoresInjectionConfig:
         builder = _builder(tmp_path)
         calls: list[object] = []
         monkeypatch.setattr(
-            "kiro_crew.member_essential_context.member_context_identity",
+            "aj_crew.member_essential_context.member_context_identity",
             lambda member, *, member_is_id=True: ("alice", "template"),
         )
         monkeypatch.setattr(
-            "kiro_crew.context._config_scoped_groups",
+            "aj_crew.context._config_scoped_groups",
             lambda groups, cfg=None: calls.append(groups) or groups,
         )
         # Downstream rendering needs a fully provisioned V2 member; this test is
@@ -333,7 +333,7 @@ class TestLessonsRouteGate:
     @pytest.mark.asyncio
     async def test_post_api_lessons_refuses_when_disabled(self, tmp_path):
         _write_config({"persistence_enabled": False})
-        from kiro_crew.dashboard.handlers import cron as cron_mod
+        from aj_crew.dashboard.handlers import cron as cron_mod
 
         req = MagicMock()
         req.app = {"state": MagicMock()}
@@ -364,7 +364,7 @@ class TestConsolidateRouteGate:
         leaves no trace that the switch turned work away.
         """
         _write_config({"persistence_enabled": False})
-        from kiro_crew.dashboard.handlers import memory as memory_mod
+        from aj_crew.dashboard.handlers import memory as memory_mod
 
         req = MagicMock()
         req.app = {"state": MagicMock()}
@@ -391,7 +391,7 @@ class TestConsolidateRouteGate:
 class TestLearnCliGate:
     def test_learn_add_refuses_when_disabled(self, tmp_path, capsys):
         _write_config({"persistence_enabled": False})
-        from kiro_crew import cli_commands
+        from aj_crew import cli_commands
 
         args = argparse.Namespace(
             learn_action="add", rule="Always frobnicate", category="tool", negative=None
@@ -422,7 +422,7 @@ class TestTaskrunnerLessonGate:
 
     async def _capture_reached(self) -> bool:
         """Drive the extractor on a stub and report whether it ran past the gate."""
-        from kiro_crew.taskrunner import TaskRunner
+        from aj_crew.taskrunner import TaskRunner
 
         reached = False
 

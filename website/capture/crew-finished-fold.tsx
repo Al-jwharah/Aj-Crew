@@ -23,7 +23,7 @@ localStorage.setItem(CREW_FINISHED_OPEN_KEY, params.get('open') === '1' ? '1' : 
 
 const ago = (min: number) => new Date(Date.now() - min * 60_000).toISOString()
 const W = (key: string, title: string, status: string, group: string, min: number, summary = '') =>
-  ({ key, title, agent: 'kirocrew-worker', status, group, last_activity: ago(min), ledger_item: '', created_by: 'root', summary })
+  ({ key, title, agent: 'ajcrew-worker', status, group, last_activity: ago(min), ledger_item: '', created_by: 'root', summary })
 
 const WORKERS = [
   W('w1', 'Fold finished workers', 'working', 'working', 1, 'Writing the panel tests'),

@@ -11,7 +11,7 @@ import { isAssistantMember } from '../../lib/assistantMember'
 import { compareText } from '../../i18n/format'
 
 /** Crew origin. `mine` = crews created in the crew manager (source
- *  'kirocrew'); `builtin` = shipped with Kiro Crew; `package` = written by the
+ *  'ajcrew'); `builtin` = shipped with Aj Crew; `package` = written by the
  *  agent sync from installed capability packages — on a busy host the large
  *  majority of the roster, and the reason the filter exists. */
 export type MemberSourceFilter = 'all' | 'mine' | 'builtin' | 'package'
@@ -21,15 +21,15 @@ export function parseSourceFilter(raw: string | null): MemberSourceFilter {
   return raw === 'mine' || raw === 'builtin' || raw === 'package' ? raw : 'all'
 }
 
-/** The server normalizes `source` to kirocrew | builtin | package before it
+/** The server normalizes `source` to ajcrew | builtin | package before it
  *  reaches the wire; the fallback-to-package here only covers a row from an
  *  older gateway that omits the field. */
 export function matchesSource(m: { source?: unknown }, f: MemberSourceFilter): boolean {
   if (f === 'all') return true
   const src = typeof m.source === 'string' ? m.source : ''
-  if (f === 'mine') return src === 'kirocrew'
+  if (f === 'mine') return src === 'ajcrew'
   if (f === 'builtin') return src === 'builtin'
-  return src !== 'kirocrew' && src !== 'builtin'
+  return src !== 'ajcrew' && src !== 'builtin'
 }
 
 /** Live state a member is in right now — the roster's counterpart to the
@@ -116,7 +116,7 @@ export function rowLabel(m: RosterRowLike): string {
  *  displayed label, or of the agent template the row runs. One function so the
  *  hide rule below, the narrowing, and the folded roster in the header chip all
  *  agree on what "the search reaches" means -- the template term is how the
- *  chip's search has always reached a row by what it RUNS (`kirocrew-oncall`)
+ *  chip's search has always reached a row by what it RUNS (`ajcrew-oncall`)
  *  rather than by what it is called. */
 function matchesSearch(m: RosterRowLike, needle: string): boolean {
   return (

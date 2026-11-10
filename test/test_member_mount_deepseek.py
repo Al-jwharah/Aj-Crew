@@ -12,18 +12,18 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.validation  # noqa: F401 - break the legacy import cycle first
-from kiro_crew import acp_tool_gate
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import (
+import aj_crew.validation  # noqa: F401 - break the legacy import cycle first
+from aj_crew import acp_tool_gate
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import (
     ACP_BACKEND_DEEPSEEK,
     ACP_BACKEND_PI,
     ACP_BACKENDS_MEMBER_DISPATCH,
     ACP_BACKENDS_MEMBER_PANEL,
     ACP_BACKENDS_SESSION_MCP_ARRAY,
 )
-from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
-from kiro_crew.members import MEMBER_DISPATCH_SERVER, MEMBER_PANEL_SERVER
+from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+from aj_crew.members import MEMBER_DISPATCH_SERVER, MEMBER_PANEL_SERVER
 
 MEMBER_KEY = "dashboard_member-autofix"
 FIXTURES = Path(__file__).parent / "fixtures" / "acp_frames" / "deepseek"
@@ -31,15 +31,15 @@ FIXTURES = Path(__file__).parent / "fixtures" / "acp_frames" / "deepseek"
 #: The control-plane server the agent spec declares; the mirror includes it in the
 #: array because it is not identity-bound (CONTROL_PLANE_SERVERS are not withheld
 #: by ``identity_bound_crew_servers``).
-CONTROL_PLANE_SERVER = "kirocrew-core"
+CONTROL_PLANE_SERVER = "ajcrew-core"
 
 
 @pytest.fixture
 def agents_dir(tmp_path, monkeypatch):
     """An agent spec on disk that DECLARES the dashboard server, and the panel on."""
-    import kiro_crew.agent as agent_mod
-    import kiro_crew.members as members_mod
-    from kiro_crew.acp import session_mcp
+    import aj_crew.agent as agent_mod
+    import aj_crew.members as members_mod
+    from aj_crew.acp import session_mcp
 
     d = tmp_path / "agents"
     d.mkdir()
@@ -48,14 +48,14 @@ def agents_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(session_mcp, "ensure_agent_materialized", lambda _a: True)
     monkeypatch.setattr(session_mcp, "_mcp_registry_mode", lambda: False)
     monkeypatch.setattr(members_mod, "crew_panel_enabled", lambda: True)
-    (d / "kirocrew.json").write_text(
+    (d / "ajcrew.json").write_text(
         json.dumps(
             {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "mcpServers": {
-                    CONTROL_PLANE_SERVER: {"command": "/opt/kirocrew", "args": ["mcp-core"]},
+                    CONTROL_PLANE_SERVER: {"command": "/opt/ajcrew", "args": ["mcp-core"]},
                     MEMBER_DISPATCH_SERVER: {
-                        "command": "/opt/kirocrew",
+                        "command": "/opt/ajcrew",
                         "args": ["mcp-dashboard"],
                     },
                 },
@@ -72,7 +72,7 @@ def _client(tmp_path: Path, session_key: str, backend: str = ACP_BACKEND_DEEPSEE
     client = object.__new__(AcpClient)
     client._acp_backend = backend
     client._mcp_gateway_overlay = None  # shared gateway off: no broker stubs
-    client._agent = "kirocrew"
+    client._agent = "ajcrew"
     client._work_dir = tmp_path / "work"
     client._session_key = session_key
     client._channel_id = "dashboard"
@@ -104,14 +104,14 @@ class TestDeepseekSessionArray:
     def test_a_member_session_carries_both_member_elements(self, agents_dir, tmp_path):
         client = _client(tmp_path, MEMBER_KEY)
         out = client._resolve_session_mcp_servers()
-        # The mirror processes the spec: kirocrew-core (control plane, not identity-bound)
-        # appears at position 0; kirocrew-dashboard is withheld from the spec-described half
+        # The mirror processes the spec: ajcrew-core (control plane, not identity-bound)
+        # appears at position 0; ajcrew-dashboard is withheld from the spec-described half
         # (identity-bound) then re-added with identity by _append_member_dispatch_server.
         assert _names(out) == [CONTROL_PLANE_SERVER, MEMBER_DISPATCH_SERVER, MEMBER_PANEL_SERVER]
         # Every element carries session identity (opencode_elements places it on all entries).
         for element in out:
             env = {p["name"]: p["value"] for p in element["env"]}
-            assert env["KIROCREW_SESSION_KEY"] == MEMBER_KEY
+            assert env["AJCREW_SESSION_KEY"] == MEMBER_KEY
             assert env[STUB_SESSION_TOKEN_ENV] == client._stub_session_token
         assert client.member_dispatch_mounted is True
 
@@ -126,7 +126,7 @@ class TestDeepseekSessionArray:
     def test_an_ordinary_session_carries_spec_servers_only(self, agents_dir, tmp_path):
         """The spec's control-plane server is included; member mounts are not."""
         client = _client(tmp_path, "dashboard_abc123")
-        # The mirror processes the spec: kirocrew-core appears; no member mounts.
+        # The mirror processes the spec: ajcrew-core appears; no member mounts.
         assert _names(client._resolve_session_mcp_servers()) == [CONTROL_PLANE_SERVER]
         assert client.member_dispatch_mounted is False
 
@@ -156,7 +156,7 @@ class TestDeepseekSessionArray:
         ]
 
     def test_the_panel_switch_withholds_only_the_panel(self, agents_dir, tmp_path, monkeypatch):
-        import kiro_crew.members as members_mod
+        import aj_crew.members as members_mod
 
         monkeypatch.setattr(members_mod, "crew_panel_enabled", lambda: False)
         client = _client(tmp_path, MEMBER_KEY)
@@ -167,7 +167,7 @@ class TestDeepseekSessionArray:
 
     def test_an_unreadable_spec_still_mounts_the_member_elements(self, agents_dir, tmp_path):
         """A spec that cannot be parsed reads as no spec; the member mounts still land."""
-        (agents_dir / "kirocrew.json").write_text("{not json", encoding="utf-8")
+        (agents_dir / "ajcrew.json").write_text("{not json", encoding="utf-8")
         client = _client(tmp_path, MEMBER_KEY)
         names = _names(client._resolve_session_mcp_servers())
         assert CONTROL_PLANE_SERVER in names
@@ -180,31 +180,31 @@ class TestDeepseekSessionArray:
         Driven through the real gate: the default spec drops an auto-approval, the
         heartbeat copy keeps it, and the re-derive that would bring it current fails.
         """
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         def default_spec(auto_approve: list[str]) -> str:
-            core = {"command": "/opt/kirocrew", "args": ["mcp-core"], "autoApprove": auto_approve}
+            core = {"command": "/opt/ajcrew", "args": ["mcp-core"], "autoApprove": auto_approve}
             return json.dumps(
                 {
-                    "name": "kirocrew",
+                    "name": "ajcrew",
                     "tools": ["@" + CONTROL_PLANE_SERVER],
                     "mcpServers": {CONTROL_PLANE_SERVER: core},
                 }
             )
 
         monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: agents_dir)
-        (agents_dir / "kirocrew.json").write_text(
+        (agents_dir / "ajcrew.json").write_text(
             default_spec(["learn_add", "cron_add"]), encoding="utf-8"
         )
         agent_mod._install_heartbeat_agent()
-        (agents_dir / "kirocrew.json").write_text(default_spec(["learn_add"]), encoding="utf-8")
+        (agents_dir / "ajcrew.json").write_text(default_spec(["learn_add"]), encoding="utf-8")
 
         def failing() -> None:
             raise OSError("heartbeat spec is not writable")
 
         monkeypatch.setattr(agent_mod, "_install_heartbeat_agent", failing)
         client = _client(tmp_path, MEMBER_KEY)
-        client._agent = "kirocrew-heartbeat"
+        client._agent = "ajcrew-heartbeat"
         with pytest.raises(agent_mod.DerivedSpecStale):
             client._resolve_session_mcp_servers()
 
@@ -212,7 +212,7 @@ class TestDeepseekSessionArray:
         """The mirror-less branch composes the same set the deepseek mirror does.
 
         pi has no mirror, but ``_mirrorless_member_mounts`` emits the spec's own
-        servers too: the spec's ``kirocrew-core`` leads, then the member dispatch
+        servers too: the spec's ``ajcrew-core`` leads, then the member dispatch
         and panel -- the same array ``test_a_member_session_carries_both`` pins for
         deepseek over this identical spec.
         """
@@ -260,4 +260,4 @@ def test_deepseek_mirror_keeps_crew_servers(agents_dir, tmp_path):
     names = _names(out)
     assert (
         CONTROL_PLANE_SERVER in names
-    ), f"kirocrew-core missing from the array after the mirror move: {names}"
+    ), f"ajcrew-core missing from the array after the mirror move: {names}"

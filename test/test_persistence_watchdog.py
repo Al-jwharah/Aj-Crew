@@ -16,8 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard import persistence_watchdog as pw
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard import persistence_watchdog as pw
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 class _Event:
@@ -77,7 +77,7 @@ async def test_exits_nonzero_on_confirmed_restartable_failure() -> None:
     # Must be a RESTARTED exit, never the terminal live-holder code (78), which
     # the Linux unit exempts from Restart= via RestartPreventExitStatus. 72
     # (EX_OSFILE) is restarted like 69 and 75.
-    from kiro_crew.gateway_lock import LIVE_HOLDER_EXIT_CODE
+    from aj_crew.gateway_lock import LIVE_HOLDER_EXIT_CODE
 
     assert pw.PERSISTENCE_LOST_EXIT_CODE != LIVE_HOLDER_EXIT_CODE
 
@@ -238,7 +238,7 @@ async def test_exit_code_mapper_is_defensive() -> None:
 
 @pytest.mark.asyncio
 async def test_probe_data_home_marks_enosys_restartable(monkeypatch) -> None:
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     seen = {}
 
@@ -257,7 +257,7 @@ async def test_probe_data_home_marks_enosys_restartable(monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_probe_data_home_marks_enospc_not_restartable(monkeypatch) -> None:
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(
         platform_compat,
@@ -272,7 +272,7 @@ async def test_probe_data_home_marks_enospc_not_restartable(monkeypatch) -> None
 
 @pytest.mark.asyncio
 async def test_probe_data_home_healthy_returns_none(monkeypatch) -> None:
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "probe_file_persistence", lambda _d: None)
     probe = pw.probe_data_home(Path("/x"))
@@ -310,7 +310,7 @@ async def test_real_probe_enosys_message_is_classified_restartable(
     import errno
     import os
 
-    from kiro_crew import platform_lock_compat
+    from aj_crew import platform_lock_compat
 
     def _enosys_mkstemp(*_a, **_k):
         raise OSError(errno.ENOSYS, os.strerror(errno.ENOSYS))

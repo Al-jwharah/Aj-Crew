@@ -35,7 +35,7 @@ async def _fork(state, payload=None) -> tuple[int, dict]:
 @pytest.mark.asyncio
 @pytest.mark.parametrize("pinned", [True, False])
 async def test_the_fork_takes_the_parents_pin(tmp_path, monkeypatch, pinned) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seeded_state(tmp_path, pinned=pinned)
 
     status, body = await _fork(state)
@@ -48,7 +48,7 @@ async def test_the_fork_takes_the_parents_pin(tmp_path, monkeypatch, pinned) -> 
 
 @pytest.mark.asyncio
 async def test_a_tail_fork_takes_the_pin_too(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seeded_state(tmp_path, pinned=True)
 
     status, body = await _fork(state, {"at_message_index": 0, "direction": "tail"})
@@ -61,9 +61,9 @@ async def test_a_tail_fork_takes_the_pin_too(tmp_path, monkeypatch) -> None:
 async def test_the_pin_is_in_the_birth_save(tmp_path, monkeypatch) -> None:
     """The pin is set before the child's first save, so a restart that rehydrates
     the child from disk still finds it pinned."""
-    from kiro_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
+    from aj_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seeded_state(tmp_path, pinned=True)
 
     status, body = await _fork(state)

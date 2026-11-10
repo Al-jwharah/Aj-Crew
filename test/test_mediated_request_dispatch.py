@@ -16,16 +16,16 @@ import json
 
 import pytest
 
-from kiro_crew import link_unfurl
-from kiro_crew.secrets import SecretVault
-from kiro_crew.secrets_mediation import dispatch
-from kiro_crew.secrets_mediation.dispatch import (
+from aj_crew import link_unfurl
+from aj_crew.secrets import SecretVault
+from aj_crew.secrets_mediation import dispatch
+from aj_crew.secrets_mediation.dispatch import (
     MediatedRequest,
     MediationError,
     perform_mediated_request,
 )
-from kiro_crew.secrets_mediation.policy import PolicyError, policy_path
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.secrets_mediation.policy import PolicyError, policy_path
+from aj_crew.testing.clock import ManualClock
 
 CANARY = "sk-canary-3f9a2b7c1d8e-DO-NOT-LEAK"
 OPAQUE_CREDENTIAL = "opaque-7a9c2d4e6f8b1a3c5e7d9f0b2a4c6e8f"
@@ -38,7 +38,7 @@ _REAL_PAD = dispatch._wait_for_withheld_deadline
 @pytest.fixture(autouse=True)
 def _host_policy_key(tmp_path, _floor_monkeypatch):
     """Pin the token-signing secret, resolve every host to a public address, skip the pad."""
-    from kiro_crew.secrets_mediation import provenance
+    from aj_crew.secrets_mediation import provenance
 
     _floor_monkeypatch.setattr(provenance, "_token_root", lambda: b"T" * 32)
     _floor_monkeypatch.setattr(dispatch, "_resolve", lambda host, port: [PUBLIC_IP])
@@ -54,7 +54,7 @@ def _seed_vault(config_dir, value=CANARY):
 
 
 def _write_policy(config_dir, authorizations):
-    from kiro_crew.secrets_mediation.provenance import SIGNATURE_FIELD, sign_secret_authorizations
+    from aj_crew.secrets_mediation.provenance import SIGNATURE_FIELD, sign_secret_authorizations
 
     sig = sign_secret_authorizations(authorizations)
     path = policy_path(config_dir)

@@ -17,13 +17,13 @@ from typing import Any, Callable
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew import agent_panel
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import store
-from kiro_crew.crew_log.entry_types import (
+from aj_crew import agent_panel
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import store
+from aj_crew.crew_log.entry_types import (
     PANEL_CREW_KEY_LIMIT,
     PANEL_ENTRY_TYPE,
     PANEL_FOLD_NAME,
@@ -43,8 +43,8 @@ OTHER_KEY = "b" * 40
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
     """Own data home, crew log on, and no warm fold carried between tests."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     crew_log_emit.reset_caches()
     crew_log.forget_slot_folds()
     yield
@@ -138,7 +138,7 @@ def test_the_emitter_is_a_no_op_with_the_crew_log_off(monkeypatch):
     create a log behind the operator's back when the feature is off.
     """
     _unit()
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "0")
+    monkeypatch.setenv("AJCREW_CREW_LOG", "0")
     crew_log_emit.reset_caches()
 
     _publish()
@@ -307,8 +307,8 @@ def test_the_recorded_order_beats_a_backward_header_clock(monkeypatch):
     backward (NTP, manual set) and is never rewritten, so the fold orders by what the
     appends recorded; otherwise a retired session's panel would win for good.
     """
-    from kiro_crew.crew_log import store
-    from kiro_crew.crew_log.store import session_units_for_slot
+    from aj_crew.crew_log import store
+    from aj_crew.crew_log.store import session_units_for_slot
 
     older = "acp-fleet-clock-older"
     newer = "acp-fleet-clock-newer"

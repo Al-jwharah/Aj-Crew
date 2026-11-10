@@ -49,7 +49,7 @@ describe('useWebSocket frame router', () => {
   let originalRevokeObjectUrl: typeof URL.revokeObjectURL
 
   const slotFixture = (key: string, extra: Partial<ChatSlot> = {}): ChatSlot => ({
-    key, title: key, agent: 'kirocrew', ...extra,
+    key, title: key, agent: 'ajcrew', ...extra,
   } as ChatSlot)
 
   beforeEach(() => {
@@ -190,7 +190,7 @@ describe('useWebSocket frame router', () => {
   it('threads the whole subagent lifecycle into one card', () => {
     const { ws } = mount()
     act(() => {
-      ws.simulateMessage({ type: 'subagent_spawn', data: { slot: ACTIVE, id: 'ag-1', task: 'Read specs', agent: 'kirocrew' } })
+      ws.simulateMessage({ type: 'subagent_spawn', data: { slot: ACTIVE, id: 'ag-1', task: 'Read specs', agent: 'ajcrew' } })
       ws.simulateMessage({ type: 'subagent_queued', data: { slot: ACTIVE, queued: 3 } })
     })
     expect(chat().subagents['ag-1']?.status).toBe('running')
@@ -500,7 +500,7 @@ describe('useWebSocket frame router', () => {
     const { ws } = mount()
     const kinds: string[] = []
     const listener = (e: Event) => { kinds.push((e as CustomEvent).detail?.type) }
-    window.addEventListener('kirocrew-channel', listener)
+    window.addEventListener('ajcrew-channel', listener)
     try {
       act(() => {
         for (const type of [
@@ -513,7 +513,7 @@ describe('useWebSocket frame router', () => {
         'channel_closed', 'channel_agent_joined', 'channel_agent_left',
       ])
     } finally {
-      window.removeEventListener('kirocrew-channel', listener)
+      window.removeEventListener('ajcrew-channel', listener)
     }
   })
 
@@ -525,7 +525,7 @@ describe('useWebSocket frame router', () => {
     const { ws } = mount()
     const seen: unknown[] = []
     const onTool = (e: Event) => { seen.push((e as CustomEvent).detail) }
-    window.addEventListener('kirocrew-tool-call', onTool)
+    window.addEventListener('ajcrew-tool-call', onTool)
     try {
       act(() => {
         ws.simulateMessage({
@@ -539,7 +539,7 @@ describe('useWebSocket frame router', () => {
       expect(seen).toHaveLength(1)
       expect((seen[0] as { input_preview: string }).input_preview).toContain('curl')
     } finally {
-      window.removeEventListener('kirocrew-tool-call', onTool)
+      window.removeEventListener('ajcrew-tool-call', onTool)
     }
   })
 
@@ -551,8 +551,8 @@ describe('useWebSocket frame router', () => {
     const onBrowser = push('browser')
     const onComputer = push('computer')
     window.addEventListener('cron_history', onCron)
-    window.addEventListener('kirocrew-browser-frame', onBrowser)
-    window.addEventListener('kirocrew-computer-use-frame', onComputer)
+    window.addEventListener('ajcrew-browser-frame', onBrowser)
+    window.addEventListener('ajcrew-computer-use-frame', onComputer)
     try {
       act(() => {
         ws.simulateMessage({ type: 'cron_history', data: { job: 'j1' } })
@@ -565,8 +565,8 @@ describe('useWebSocket frame router', () => {
       expect(seen).toEqual(['cron', 'computer'])
     } finally {
       window.removeEventListener('cron_history', onCron)
-      window.removeEventListener('kirocrew-browser-frame', onBrowser)
-      window.removeEventListener('kirocrew-computer-use-frame', onComputer)
+      window.removeEventListener('ajcrew-browser-frame', onBrowser)
+      window.removeEventListener('ajcrew-computer-use-frame', onComputer)
     }
   })
 

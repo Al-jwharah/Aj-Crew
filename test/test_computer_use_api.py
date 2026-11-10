@@ -2,7 +2,7 @@
 
 Three endpoints: the browser-called ``GET``/``PUT /api/computer-use/config`` pair
 and the machine-only ``POST /api/computer-use/invoke`` leg the
-``kirocrew-computer`` stdio shim forwards to.
+``ajcrew-computer`` stdio shim forwards to.
 
 Two things this file pins that no other test can:
 
@@ -53,7 +53,7 @@ from computer_use_api_helpers import (  # noqa: F401 -- fixtures are requested b
     state_file_fixture,
 )
 
-from kiro_crew.computer_use.types import (
+from aj_crew.computer_use.types import (
     PERMISSION_GRANTED,
     PERMISSION_UNKNOWN,
     PERMISSION_UNSUPPORTED,
@@ -62,7 +62,7 @@ from kiro_crew.computer_use.types import (
     STATE_KEY_ALLOWED_APPS,
     STATE_KEY_ENABLED,
 )
-from kiro_crew.dashboard.handlers import computer_use as cu_api
+from aj_crew.dashboard.handlers import computer_use as cu_api
 
 # The REAL probe, captured at import time — the autouse ``no_real_probe`` fixture
 # replaces the module attribute, and ``TestPermissionProbe`` needs the genuine
@@ -92,11 +92,11 @@ class TestConfigGet:
 
     @pytest.mark.asyncio
     async def test_macos_platform_reports_the_probed_grants(self, home):
-        from kiro_crew.computer_use.types import BackendStatus
+        from aj_crew.computer_use.types import BackendStatus
 
         backend = MagicMock()
         backend.status.return_value = BackendStatus(supported=True, platform_id=PLATFORM_MACOS)
-        with patch("kiro_crew.computer_use.backend.get_shared_backend", return_value=backend):
+        with patch("aj_crew.computer_use.backend.get_shared_backend", return_value=backend):
             async with _client() as client:
                 body = await (await client.get("/api/computer-use/config")).json()
         assert body["platform"] == PLATFORM_MACOS
@@ -125,7 +125,7 @@ class TestConfigGet:
 
     @pytest.mark.asyncio
     async def test_unsupported_platform_reports_reason_and_skips_the_probe(self, home, monkeypatch):
-        from kiro_crew.computer_use.backend import UnsupportedBackend
+        from aj_crew.computer_use.backend import UnsupportedBackend
 
         calls: list[str] = []
 
@@ -135,7 +135,7 @@ class TestConfigGet:
 
         monkeypatch.setattr(cu_api, "_probe_permissions", _spy)
         backend = UnsupportedBackend(PLATFORM_LINUX, "the Linux AT-SPI driver is not implemented")
-        with patch("kiro_crew.computer_use.backend.get_shared_backend", return_value=backend):
+        with patch("aj_crew.computer_use.backend.get_shared_backend", return_value=backend):
             async with _client() as client:
                 body = await (await client.get("/api/computer-use/config")).json()
         assert body["supported"] is False
@@ -203,7 +203,7 @@ class TestPermissionProbe:
 
         async def _spawn(*argv, **_kw):
             # Fixed argv, no shell, nothing request-derived: this interpreter running
-            # the probe module, never the ``kirocrew`` CLI, whose start-up alone can
+            # the probe module, never the ``ajcrew`` CLI, whose start-up alone can
             # outlast the probe timeout.
             assert argv[0] == sys.executable
             assert argv[-2:] == ("-m", cu_api.PERMISSION_PROBE_MODULE)
@@ -296,7 +296,7 @@ class TestConfigSave:
     @pytest.mark.asyncio
     async def test_limits_write_preserves_unrelated_config_sections(self, config_file: Path):
         # ``_write_limits`` merges into the RAW JSON rather than round-tripping
-        # ``KiroCrewConfig.to_dict()``, so an unrelated section keeps whatever the
+        # ``AjCrewConfig.to_dict()``, so an unrelated section keeps whatever the
         # user (or an edition) put there.
         config_file.write_text(
             json.dumps({"agent": {"model": "keep-me"}, "her_section": {"x": 1}}),
@@ -325,8 +325,8 @@ class TestConfigSave:
         """
         import threading
 
-        from kiro_crew import platform_compat
-        from kiro_crew.config.loader import update_config_locked
+        from aj_crew import platform_compat
+        from aj_crew.config.loader import update_config_locked
 
         config_file.write_text(
             json.dumps({"unrelated_setting": "keep", "computer_use": {"max_tree_depth": 3}}),
@@ -483,7 +483,7 @@ class TestInvoke:
             )
             return '0 window "Documents"'
 
-        monkeypatch.setattr("kiro_crew.computer_use.tools.dispatch_tool", _fake_dispatch)
+        monkeypatch.setattr("aj_crew.computer_use.tools.dispatch_tool", _fake_dispatch)
         async with _client() as client:
             resp = await client.post(
                 "/api/computer-use/invoke",
@@ -491,7 +491,7 @@ class TestInvoke:
                     "tool": "computer_get_state",
                     "args": {"app": "Finder"},
                     "session_key": "dashboard:slot1",
-                    "agent": "kirocrew",
+                    "agent": "ajcrew",
                 },
             )
             body = await resp.json()
@@ -501,7 +501,7 @@ class TestInvoke:
             "tool": "computer_get_state",
             "args": {"app": "Finder"},
             "session_key": "dashboard:slot1",
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "app": "",
         }
 
@@ -517,7 +517,7 @@ class TestInvoke:
             seen["session_key"] = session_key
             return "Error: Blocked: the calling session could not be identified"
 
-        monkeypatch.setattr("kiro_crew.computer_use.tools.dispatch_tool", _fake_dispatch)
+        monkeypatch.setattr("aj_crew.computer_use.tools.dispatch_tool", _fake_dispatch)
         async with _client() as client:
             resp = await client.post(
                 "/api/computer-use/invoke", json={"tool": "computer_list_apps"}
@@ -535,7 +535,7 @@ class TestInvoke:
         def _boom(*_a, **_kw):
             raise AssertionError("the dispatcher must not be reached")
 
-        monkeypatch.setattr("kiro_crew.computer_use.tools.dispatch_tool", _boom)
+        monkeypatch.setattr("aj_crew.computer_use.tools.dispatch_tool", _boom)
         async with _client() as client:
             resp = await client.post("/api/computer-use/invoke", json=body)
         assert resp.status == 400
@@ -548,7 +548,7 @@ class TestInvoke:
         def _raise(*_a, **_kw):
             raise RuntimeError("driver exploded")
 
-        monkeypatch.setattr("kiro_crew.computer_use.tools.dispatch_tool", _raise)
+        monkeypatch.setattr("aj_crew.computer_use.tools.dispatch_tool", _raise)
         async with _client() as client:
             resp = await client.post(
                 "/api/computer-use/invoke",
@@ -574,7 +574,7 @@ class TestInvoke:
             seen.update(kw)
             return "ok"
 
-        monkeypatch.setattr("kiro_crew.computer_use.tools.dispatch_tool", _fake_dispatch)
+        monkeypatch.setattr("aj_crew.computer_use.tools.dispatch_tool", _fake_dispatch)
         async with _client() as client:
             await client.post(
                 "/api/computer-use/invoke",
@@ -596,7 +596,7 @@ class TestRouteWiring:
         it must stay in the strict set — while the browser-called config pair must
         stay OUT of it or the panel could not load at all.
         """
-        from kiro_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
+        from aj_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
 
         assert "/api/computer-use/invoke" in _STRICT_INTERNAL_API_PATHS
         assert "/api/computer-use/config" not in _STRICT_INTERNAL_API_PATHS
@@ -609,12 +609,12 @@ class TestRouteWiring:
         authenticated page (or an app-scoped token) inject frames into every owner
         window's live view.
         """
-        from kiro_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
+        from aj_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
 
         assert "/api/computer-use/frame" in _STRICT_INTERNAL_API_PATHS
 
     def test_handlers_are_re_exported_from_the_handlers_package(self):
-        import kiro_crew.dashboard.handlers as handlers
+        import aj_crew.dashboard.handlers as handlers
 
         assert callable(handlers.api_computer_use_config_get)
         assert callable(handlers.api_computer_use_config_save)
@@ -628,7 +628,7 @@ class TestRouteWiring:
         ``computer_use.enabled`` key here would reintroduce exactly the hole the
         keystone exists to close.
         """
-        from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+        from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
         assert "computer_use.max_tree_nodes" in _EDITABLE_CONFIG
         assert "computer_use.screenshot_max_px" in _EDITABLE_CONFIG
@@ -650,8 +650,8 @@ class TestInvokeSecretEnforcement:
 
     @staticmethod
     def _authed_client(secret: str) -> TestClient:
-        from kiro_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
-        from kiro_crew.dashboard.token_auth import token_auth_middleware
+        from aj_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
+        from aj_crew.dashboard.token_auth import token_auth_middleware
 
         app = web.Application(
             middlewares=[
@@ -675,7 +675,7 @@ class TestInvokeSecretEnforcement:
         """
         reached: list[str] = []
         monkeypatch.setattr(
-            "kiro_crew.computer_use.tools.dispatch_tool",
+            "aj_crew.computer_use.tools.dispatch_tool",
             lambda tool_name, *a, **k: reached.append(tool_name) or "ok",
         )
         self.reached = reached
@@ -753,7 +753,7 @@ class TestInvokeSecretEnforcement:
         pins that: a good token, no secret, must still be refused and must never
         reach the dispatcher.
         """
-        from kiro_crew.dashboard.token_auth import generate_token
+        from aj_crew.dashboard.token_auth import generate_token
 
         token = generate_token("tester", 3600)
         async with self._authed_client("the-real-secret") as client:
@@ -790,7 +790,7 @@ class TestConfigSection:
         (``is_sensitive_bash_command`` deliberately does not block it), so an
         enable stored there would be flippable by prompt injection.
         """
-        from kiro_crew.config.loader import ComputerUseConfig
+        from aj_crew.config.loader import ComputerUseConfig
 
         names = {f.name for f in dataclasses.fields(ComputerUseConfig)}
         assert "enabled" not in names
@@ -809,15 +809,15 @@ class TestConfigSection:
         }
 
     def test_section_is_known_and_round_trips(self, home):
-        from kiro_crew.config.loader import _KNOWN_CONFIG_SECTIONS, KiroCrewConfig
+        from aj_crew.config.loader import _KNOWN_CONFIG_SECTIONS, AjCrewConfig
 
         assert "computer_use" in _KNOWN_CONFIG_SECTIONS
-        assert "computer_use" in KiroCrewConfig.load().to_dict()
+        assert "computer_use" in AjCrewConfig.load().to_dict()
 
     def test_state_path_is_on_the_keystone_floor(self):
-        from kiro_crew import sandbox
-        from kiro_crew.config.loader import computer_use_state_path
-        from kiro_crew.security import _CREW_SECRET_LEAVES, is_sensitive_path
+        from aj_crew import sandbox
+        from aj_crew.config.loader import computer_use_state_path
+        from aj_crew.security import _CREW_SECRET_LEAVES, is_sensitive_path
 
         assert "computer_use.json" in _CREW_SECRET_LEAVES
         assert computer_use_state_path().name == "computer_use.json"
@@ -867,7 +867,7 @@ class TestErrorCodes:
     def test_no_refusal_in_this_module_is_prose_only(self) -> None:
         missing = sorted(f.lineno for f in self._findings() if f.bucket == "missing_code")
         assert missing == [], (
-            "these src/kiro_crew/dashboard/handlers/computer_use.py lines refuse with "
+            "these src/aj_crew/dashboard/handlers/computer_use.py lines refuse with "
             f"prose and no machine-readable code: {missing}"
         )
 
@@ -973,7 +973,7 @@ class TestErrorCodes:
         import io as _io
         import urllib.error
 
-        from kiro_crew.mcp_core import _http_error_body
+        from aj_crew.mcp_core import _http_error_body
 
         async with _client() as client:
             resp = await client.post("/api/computer-use/invoke", json={"args": {}})
@@ -1040,9 +1040,9 @@ class TestPolicyLock:
     def pinned_off(self, monkeypatch):
         from types import SimpleNamespace
 
-        from kiro_crew.platform import context as pc
-        from kiro_crew.platform import governance_profiles
-        from kiro_crew.platform.governance import parse_policy
+        from aj_crew.platform import context as pc
+        from aj_crew.platform import governance_profiles
+        from aj_crew.platform.governance import parse_policy
 
         doc = {"version": 1, "boot": {}, "capabilities": {"computer_use": {"enabled": False}}}
         ctx = SimpleNamespace(governance=parse_policy(doc))

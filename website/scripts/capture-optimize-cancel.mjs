@@ -25,7 +25,7 @@ const DRAFT = 'look at the failing build and tell me what broke'
 const now = Math.floor(Date.now() / 1000)
 const slots = [{
   key: SLOT, title: 'Build triage', running: false, stop_state: 'idle',
-  last_message: 'Ready.', messages: 2, agent: 'kirocrew', memory_mode: 'persistent',
+  last_message: 'Ready.', messages: 2, agent: 'ajcrew', memory_mode: 'persistent',
   modified: now, source_links: [], source_links_total: 0,
 }]
 const detail = {

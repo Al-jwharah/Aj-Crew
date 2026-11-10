@@ -1,4 +1,4 @@
-"""PATCH /api/config/kirocrew and ``telemetry.otlp_endpoints``.
+"""PATCH /api/config/ajcrew and ``telemetry.otlp_endpoints``.
 
 The recording switch promises local-only, so the enable gate must count every
 OTLP destination, not only ``telemetry.otlp_endpoint`` (that case is pinned in
@@ -16,12 +16,12 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from test_config_patch import _make_app, _patch, tmp_config  # noqa: F401
 
-from kiro_crew.config import validation
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.platform import build_default_context
-from kiro_crew.platform.context import reset_context, set_context
-from kiro_crew.platform.defaults import DefaultTelemetryProvider
-from kiro_crew.platform.interfaces import OtlpDestination
+from aj_crew.config import validation
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.platform import build_default_context
+from aj_crew.platform.context import reset_context, set_context
+from aj_crew.platform.defaults import DefaultTelemetryProvider
+from aj_crew.platform.interfaces import OtlpDestination
 
 
 class _EditionTelemetry(DefaultTelemetryProvider):
@@ -54,7 +54,7 @@ async def test_a_list_entry_refuses_the_enable(tmp_config) -> None:  # noqa: F81
 @pytest.mark.asyncio
 async def test_a_build_collector_refuses_the_enable(tmp_config) -> None:  # noqa: F811
     """A build-shipped collector is egress on its own, with nothing in config.json."""
-    base = build_default_context(KiroCrewConfig())
+    base = build_default_context(AjCrewConfig())
     set_context(dataclasses.replace(base, telemetry=_EditionTelemetry()))
     try:
         async with TestClient(TestServer(_make_app())) as c:
@@ -85,10 +85,10 @@ def test_the_config_view_masks_every_value_in_the_list() -> None:
     """Entries carry endpoint userinfo, and a literal ``headers`` value the entry
     parser refuses can still sit in the file; the list item has no schema of its
     own, so the whole sensitive list is masked."""
-    from kiro_crew.config.loader import TelemetryConfig
-    from kiro_crew.dashboard.handlers.core_config_view import _SENSITIVE_MASK, _masked_config_dict
+    from aj_crew.config.loader import TelemetryConfig
+    from aj_crew.dashboard.handlers.core_config_view import _SENSITIVE_MASK, _masked_config_dict
 
-    cfg = KiroCrewConfig(
+    cfg = AjCrewConfig(
         telemetry=TelemetryConfig(
             otlp_endpoints=[
                 {
@@ -118,7 +118,7 @@ def test_a_wrong_type_entry_is_masked_in_the_validation_warning(caplog) -> None:
     every value inside it is too."""
     secret = "https://user:TOKEN@c.example.com/v1/metrics"
     data = {"telemetry": {"otlp_endpoints": [secret]}}
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
         validation.validate_config_data(data)
     text = "\n".join(r.getMessage() for r in caplog.records)
     assert "telemetry.otlp_endpoints.0" in text

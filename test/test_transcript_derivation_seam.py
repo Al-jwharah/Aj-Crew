@@ -31,8 +31,8 @@ from collections import Counter
 import pytest
 from source_corpus import parsed_candidates
 
-from kiro_crew import history as history_mod
-from kiro_crew.history import (
+from aj_crew import history as history_mod
+from aj_crew.history import (
     ConversationLog,
     HistoryLockTimeout,
     TranscriptBusy,
@@ -67,97 +67,97 @@ PLUMBING: frozenset[tuple[str, str]] = frozenset(
     {
         # An app's test snapshotting a transcript it wrote, to assert it survives.
         (
-            "kiro_crew/apps/builtins/auto_improvement/tests/test_auto_improvement_members.py",
+            "aj_crew/apps/builtins/auto_improvement/tests/test_auto_improvement_members.py",
             "recent",
         ),
         # An app reading its own slot's conversation for the user.
-        ("kiro_crew/apps/builtins/spec_builder/backend/runtime.py", "read_messages"),
+        ("aj_crew/apps/builtins/spec_builder/backend/runtime.py", "read_messages"),
         # Channel file migration: moves rows between stems, derives nothing.
-        ("kiro_crew/channel_transcript_migration.py", "read_messages"),
+        ("aj_crew/channel_transcript_migration.py", "read_messages"),
         # SEL audit log `recent`, not a transcript.
-        ("kiro_crew/cli_commands_security.py", "recent"),
-        # `kirocrew consolidate`: a yes/no sensitive-session check on a tail
+        ("aj_crew/cli_commands_security.py", "recent"),
+        # `ajcrew consolidate`: a yes/no sensitive-session check on a tail
         # consolidate_now left, to report the skip; no rows leave.
-        ("kiro_crew/cli_knowledge.py", "_read_messages"),
+        ("aj_crew/cli_knowledge.py", "_read_messages"),
         # The live session's OWN rows into its OWN prompt / compaction.
-        ("kiro_crew/context.py", "read_messages"),
-        ("kiro_crew/context.py", "read_messages_chained"),
-        ("kiro_crew/context.py", "recent"),
-        ("kiro_crew/context_assembly/turn_message.py", "recent"),
-        ("kiro_crew/dashboard/channel_slots.py", "read_messages"),
+        ("aj_crew/context.py", "read_messages"),
+        ("aj_crew/context.py", "read_messages_chained"),
+        ("aj_crew/context.py", "recent"),
+        ("aj_crew/context_assembly/turn_message.py", "recent"),
+        ("aj_crew/dashboard/channel_slots.py", "read_messages"),
         # The chat handlers' resume, resume-window and slot-detail owners, composed
         # into chat_handlers: the same resume, reconcile and render reads it made.
-        ("kiro_crew/dashboard/chat_api/resume.py", "read_messages_chained"),
-        ("kiro_crew/dashboard/chat_api/resume_window.py", "read_messages_chained"),
-        ("kiro_crew/dashboard/chat_api/slot_detail.py", "read_messages_chained"),
-        ("kiro_crew/dashboard/chat_api/slot_detail.py", "read_messages_chained_full"),
-        ("kiro_crew/dashboard/chat_backfill.py", "read_messages_chained"),
-        ("kiro_crew/dashboard/chat_backfill.py", "recent"),
-        ("kiro_crew/dashboard/chat_fork.py", "read_messages_chained"),
-        ("kiro_crew/dashboard/chat_fork.py", "read_messages_chained_full"),
+        ("aj_crew/dashboard/chat_api/resume.py", "read_messages_chained"),
+        ("aj_crew/dashboard/chat_api/resume_window.py", "read_messages_chained"),
+        ("aj_crew/dashboard/chat_api/slot_detail.py", "read_messages_chained"),
+        ("aj_crew/dashboard/chat_api/slot_detail.py", "read_messages_chained_full"),
+        ("aj_crew/dashboard/chat_backfill.py", "read_messages_chained"),
+        ("aj_crew/dashboard/chat_backfill.py", "recent"),
+        ("aj_crew/dashboard/chat_fork.py", "read_messages_chained"),
+        ("aj_crew/dashboard/chat_fork.py", "read_messages_chained_full"),
         # ``selection.recent`` -- a mirror selection field, not a transcript read.
-        ("kiro_crew/dashboard/chat_mirror.py", "recent"),
-        ("kiro_crew/dashboard/chat_persistence_parts/slot_builders.py", "read_messages_chained"),
-        ("kiro_crew/dashboard/chat_rewind.py", "read_messages_chained"),
-        ("kiro_crew/dashboard/chat_slack.py", "recent"),
+        ("aj_crew/dashboard/chat_mirror.py", "recent"),
+        ("aj_crew/dashboard/chat_persistence_parts/slot_builders.py", "read_messages_chained"),
+        ("aj_crew/dashboard/chat_rewind.py", "read_messages_chained"),
+        ("aj_crew/dashboard/chat_slack.py", "recent"),
         # The decisions hooks composed into chat_runner: the same read it made.
-        ("kiro_crew/dashboard/chat_turn/decisions_hooks.py", "recent"),
-        ("kiro_crew/dashboard/chat_threads.py", "read_messages_chained"),
-        ("kiro_crew/dashboard/cron_inject.py", "read_messages"),
+        ("aj_crew/dashboard/chat_turn/decisions_hooks.py", "recent"),
+        ("aj_crew/dashboard/chat_threads.py", "read_messages_chained"),
+        ("aj_crew/dashboard/cron_inject.py", "read_messages"),
         # Rendering the transcript's own artifacts / rows to its user.
-        ("kiro_crew/dashboard/handlers/artifacts_parts/session_documents.py", "read_messages"),
+        ("aj_crew/dashboard/handlers/artifacts_parts/session_documents.py", "read_messages"),
         # The Files tab listing the paths this session edited, to its user.
-        ("kiro_crew/dashboard/session_files.py", "read_file_change_messages"),
+        ("aj_crew/dashboard/session_files.py", "read_file_change_messages"),
         # The same tab showing one of those edits, as the transcript's own card does.
-        ("kiro_crew/dashboard/session_files.py", "read_messages"),
+        ("aj_crew/dashboard/session_files.py", "read_messages"),
         # SEL audit log `recent`, not a transcript.
-        ("kiro_crew/dashboard/handlers/core_security.py", "recent"),
-        ("kiro_crew/dashboard/handlers/cron_runs.py", "read_messages"),
-        ("kiro_crew/dashboard/handlers/session_control.py", "read_messages"),
+        ("aj_crew/dashboard/handlers/core_security.py", "recent"),
+        ("aj_crew/dashboard/handlers/cron_runs.py", "read_messages"),
+        ("aj_crew/dashboard/handlers/session_control.py", "read_messages"),
         # The History browser showing the user their own transcript. Its
         # list_sessions(summarize=true) leg goes through the seam (derive_recent).
-        ("kiro_crew/dashboard/handlers/sessions_parts/app_scope.py", "read_messages"),
-        ("kiro_crew/dashboard/handlers/sessions_parts/history_reads.py", "read_messages"),
-        ("kiro_crew/decisions/points/compaction_keep.py", "read_messages"),
+        ("aj_crew/dashboard/handlers/sessions_parts/app_scope.py", "read_messages"),
+        ("aj_crew/dashboard/handlers/sessions_parts/history_reads.py", "read_messages"),
+        ("aj_crew/decisions/points/compaction_keep.py", "read_messages"),
         # Thread diagnostics probe `recent`, not a transcript.
-        ("kiro_crew/diag/threads.py", "recent"),
-        ("kiro_crew/discord/session_resume.py", "recent"),
+        ("aj_crew/diag/threads.py", "recent"),
+        ("aj_crew/discord/session_resume.py", "recent"),
         # SEL `recent`, not a transcript.
-        ("kiro_crew/feature_videos.py", "recent"),
+        ("aj_crew/feature_videos.py", "recent"),
         # The log and its read projection ARE the plain reads.
-        ("kiro_crew/history.py", "_read_messages"),
-        ("kiro_crew/history.py", "_read_messages_locked"),
-        ("kiro_crew/history.py", "_recent_via_tail"),
-        ("kiro_crew/history.py", "read_file_change_messages"),
-        ("kiro_crew/history.py", "read_messages"),
-        ("kiro_crew/history.py", "read_messages_chained"),
-        ("kiro_crew/history.py", "read_messages_chained_full"),
-        ("kiro_crew/history.py", "recent"),
-        ("kiro_crew/history.py", "recent_chained"),
-        ("kiro_crew/history.py", "sliding_window"),
+        ("aj_crew/history.py", "_read_messages"),
+        ("aj_crew/history.py", "_read_messages_locked"),
+        ("aj_crew/history.py", "_recent_via_tail"),
+        ("aj_crew/history.py", "read_file_change_messages"),
+        ("aj_crew/history.py", "read_messages"),
+        ("aj_crew/history.py", "read_messages_chained"),
+        ("aj_crew/history.py", "read_messages_chained_full"),
+        ("aj_crew/history.py", "recent"),
+        ("aj_crew/history.py", "recent_chained"),
+        ("aj_crew/history.py", "sliding_window"),
         # The log's own members, bound from its owners: the append dedup check, the
         # seam itself, the consolidation snapshot and counts, the thread parent probe.
-        ("kiro_crew/history_append.py", "_read_messages"),
-        ("kiro_crew/history_derivation.py", "_read_messages"),
-        ("kiro_crew/history_derivation.py", "read_messages"),
-        ("kiro_crew/history_derivation.py", "recent"),
-        ("kiro_crew/history_marker.py", "_read_messages"),
-        ("kiro_crew/history_threads.py", "read_messages_chained"),
+        ("aj_crew/history_append.py", "_read_messages"),
+        ("aj_crew/history_derivation.py", "_read_messages"),
+        ("aj_crew/history_derivation.py", "read_messages"),
+        ("aj_crew/history_derivation.py", "recent"),
+        ("aj_crew/history_marker.py", "_read_messages"),
+        ("aj_crew/history_threads.py", "read_messages_chained"),
         # Scheduling counts only (`len(...)`); the rows it consolidates come from
         # the gated snapshot and skill detection goes through derive_messages.
-        ("kiro_crew/history_consolidation.py", "_read_messages"),
-        ("kiro_crew/history_projection_reads.py", "_read_messages"),
-        ("kiro_crew/history_projection_reads.py", "_read_messages_locked"),
-        ("kiro_crew/history_projection_reads.py", "_recent_via_tail"),
-        ("kiro_crew/history_projection_reads.py", "read_messages_chained"),
+        ("aj_crew/history_consolidation.py", "_read_messages"),
+        ("aj_crew/history_projection_reads.py", "_read_messages"),
+        ("aj_crew/history_projection_reads.py", "_read_messages_locked"),
+        ("aj_crew/history_projection_reads.py", "_recent_via_tail"),
+        ("aj_crew/history_projection_reads.py", "read_messages_chained"),
         # SEL audit log `recent` (the class binds sel_reader's), not a transcript.
-        ("kiro_crew/sel.py", "recent"),
-        ("kiro_crew/slack/gateway_runtime/cron_delivery.py", "read_messages"),
-        ("kiro_crew/slack/gateway_runtime/nudge_wiring.py", "read_messages"),
+        ("aj_crew/sel.py", "recent"),
+        ("aj_crew/slack/gateway_runtime/cron_delivery.py", "read_messages"),
+        ("aj_crew/slack/gateway_runtime/nudge_wiring.py", "read_messages"),
         # A yes/no "does this session already have turns" check on its OWN
         # transcript, gating a write to that transcript; no rows leave.
-        ("kiro_crew/slack/thread_parent.py", "recent"),
-        ("kiro_crew/teams/session_resume.py", "recent"),
+        ("aj_crew/slack/thread_parent.py", "recent"),
+        ("aj_crew/teams/session_resume.py", "recent"),
     }
 )
 
@@ -190,7 +190,7 @@ class TestTheFence:
         """
         found = _plain_read_sites()
         # The chat_api owners are in the sweep, not beside it.
-        assert {rel for rel, _ in found if rel.startswith("kiro_crew/dashboard/chat_api/")}
+        assert {rel for rel, _ in found if rel.startswith("aj_crew/dashboard/chat_api/")}
         unnamed = sorted(found - PLUMBING)
         assert not unnamed, f"plain transcript reads not named as plumbing: {unnamed}"
 
@@ -201,15 +201,15 @@ class TestTheFence:
     def test_the_known_derivers_do_not_use_plain_reads(self):
         """The consumers this seam exists for are not merely fenced -- they are off it."""
         derivers = {
-            "kiro_crew/dashboard/chat_summary.py",
-            "kiro_crew/dashboard/session_transfer.py",
-            "kiro_crew/dashboard/session_transfer_install.py",
-            "kiro_crew/dashboard/session_transfer_intake.py",
-            "kiro_crew/dashboard/session_transfer_layers.py",
-            "kiro_crew/dashboard/session_transfer_staging.py",
-            "kiro_crew/dashboard/session_export.py",
-            "kiro_crew/suggestions.py",
-            "kiro_crew/mcp_tools/sessions.py",
+            "aj_crew/dashboard/chat_summary.py",
+            "aj_crew/dashboard/session_transfer.py",
+            "aj_crew/dashboard/session_transfer_install.py",
+            "aj_crew/dashboard/session_transfer_intake.py",
+            "aj_crew/dashboard/session_transfer_layers.py",
+            "aj_crew/dashboard/session_transfer_staging.py",
+            "aj_crew/dashboard/session_export.py",
+            "aj_crew/suggestions.py",
+            "aj_crew/mcp_tools/sessions.py",
         }
         offenders = sorted(site for site in _plain_read_sites() if site[0] in derivers)
         assert not offenders, offenders
@@ -239,101 +239,101 @@ _PUBLISH_NAMES = frozenset(
 )
 _PUBLISH_MODULES = frozenset(
     {
-        "kiro_crew/dashboard/chat_summary.py",
-        "kiro_crew/dashboard/handlers/sessions.py",
-        "kiro_crew/dashboard/handlers/sessions_parts/app_scope.py",
-        "kiro_crew/dashboard/handlers/sessions_parts/delete_claim.py",
-        "kiro_crew/dashboard/handlers/sessions_parts/delete_routes.py",
-        "kiro_crew/dashboard/handlers/sessions_parts/history_reads.py",
-        "kiro_crew/dashboard/handlers/sessions_parts/live_turn.py",
-        "kiro_crew/dashboard/handlers/sessions_parts/restart.py",
-        "kiro_crew/dashboard/handlers/sessions_parts/slot_teardown.py",
-        "kiro_crew/dashboard/handlers/sessions_parts/summaries.py",
-        "kiro_crew/dashboard/handlers/sessions_parts/tool_policy.py",
-        "kiro_crew/dashboard/handlers/sessions_parts/usage_scrape.py",
-        "kiro_crew/dashboard/session_export.py",
-        "kiro_crew/dashboard/handlers_instances.py",
-        "kiro_crew/dashboard/handlers_instances_gate.py",
-        "kiro_crew/dashboard/handlers_instances_peer.py",
-        "kiro_crew/history_consolidation.py",
-        "kiro_crew/history_consolidation_memory.py",
-        "kiro_crew/history_consolidation_pass.py",
-        "kiro_crew/history_consolidation_skills.py",
-        "kiro_crew/history_consolidation_span.py",
+        "aj_crew/dashboard/chat_summary.py",
+        "aj_crew/dashboard/handlers/sessions.py",
+        "aj_crew/dashboard/handlers/sessions_parts/app_scope.py",
+        "aj_crew/dashboard/handlers/sessions_parts/delete_claim.py",
+        "aj_crew/dashboard/handlers/sessions_parts/delete_routes.py",
+        "aj_crew/dashboard/handlers/sessions_parts/history_reads.py",
+        "aj_crew/dashboard/handlers/sessions_parts/live_turn.py",
+        "aj_crew/dashboard/handlers/sessions_parts/restart.py",
+        "aj_crew/dashboard/handlers/sessions_parts/slot_teardown.py",
+        "aj_crew/dashboard/handlers/sessions_parts/summaries.py",
+        "aj_crew/dashboard/handlers/sessions_parts/tool_policy.py",
+        "aj_crew/dashboard/handlers/sessions_parts/usage_scrape.py",
+        "aj_crew/dashboard/session_export.py",
+        "aj_crew/dashboard/handlers_instances.py",
+        "aj_crew/dashboard/handlers_instances_gate.py",
+        "aj_crew/dashboard/handlers_instances_peer.py",
+        "aj_crew/history_consolidation.py",
+        "aj_crew/history_consolidation_memory.py",
+        "aj_crew/history_consolidation_pass.py",
+        "aj_crew/history_consolidation_skills.py",
+        "aj_crew/history_consolidation_span.py",
     }
 )
 _EXPECTED_PUBLISHERS = Counter(
     {
         (
-            "kiro_crew/dashboard/chat_summary.py",
+            "aj_crew/dashboard/chat_summary.py",
             "_publish_if_derivation_is_allowed",
             "set_cached_intent_summary",
         ): 1,
         (
-            "kiro_crew/dashboard/handlers/sessions_parts/summaries.py",
+            "aj_crew/dashboard/handlers/sessions_parts/summaries.py",
             "_publish_if_derivation_is_allowed",
             "set_cached_summary",
         ): 1,
-        ("kiro_crew/history_consolidation_pass.py", "_write_preferences", "write_preferences"): 1,
-        ("kiro_crew/history_consolidation_pass.py", "_write_projects", "write_projects"): 1,
+        ("aj_crew/history_consolidation_pass.py", "_write_preferences", "write_preferences"): 1,
+        ("aj_crew/history_consolidation_pass.py", "_write_projects", "write_projects"): 1,
         (
-            "kiro_crew/history_consolidation_pass.py",
+            "aj_crew/history_consolidation_pass.py",
             "_apply_member_consolidation",
             "apply_consolidation",
         ): 1,
         (
-            "kiro_crew/history_consolidation_pass.py",
+            "aj_crew/history_consolidation_pass.py",
             "_append_history_under_hold",
             "append_history",
         ): 1,
         (
-            "kiro_crew/history_consolidation_memory.py",
+            "aj_crew/history_consolidation_memory.py",
             "_write_structured_memory",
             "propose_semantic_delete",
         ): 1,
         (
-            "kiro_crew/history_consolidation_memory.py",
+            "aj_crew/history_consolidation_memory.py",
             "_write_structured_memory",
             "delete_semantic",
         ): 1,
         (
-            "kiro_crew/history_consolidation_memory.py",
+            "aj_crew/history_consolidation_memory.py",
             "_write_structured_memory",
             "set_semantic",
         ): 1,
-        ("kiro_crew/history_consolidation_memory.py", "_save_lessons", "write_lesson"): 1,
+        ("aj_crew/history_consolidation_memory.py", "_save_lessons", "write_lesson"): 1,
         (
-            "kiro_crew/history_consolidation_memory.py",
+            "aj_crew/history_consolidation_memory.py",
             "_write_structured_memory",
             "write_episodic",
         ): 1,
         (
-            "kiro_crew/history_consolidation_skills.py",
+            "aj_crew/history_consolidation_skills.py",
             "_stage_skill_update",
             "stage_skill_candidate",
         ): 1,
         (
-            "kiro_crew/history_consolidation_skills.py",
+            "aj_crew/history_consolidation_skills.py",
             "_process_auto_skills",
             "stage_skill_candidate",
         ): 1,
         (
-            "kiro_crew/history_consolidation_skills.py",
+            "aj_crew/history_consolidation_skills.py",
             "_process_auto_skills",
             "create_auto_skill",
         ): 1,
         (
-            "kiro_crew/history_consolidation_skills.py",
+            "aj_crew/history_consolidation_skills.py",
             "_process_auto_skills",
             "update_auto_skill",
         ): 1,
         (
-            "kiro_crew/dashboard/session_export.py",
+            "aj_crew/dashboard/session_export.py",
             "api_chat_slot_export",
             "build_transfer_bundle_async",
         ): 1,
         (
-            "kiro_crew/dashboard/handlers_instances.py",
+            "aj_crew/dashboard/handlers_instances.py",
             "api_instances_send_session",
             "build_transfer_bundle_async",
         ): 1,
@@ -344,12 +344,12 @@ _EXPECTED_PUBLISHERS = Counter(
 # response commit or awaited tunnel send; the ordering is pinned below.
 _PUBLICATION_ALLOWLIST = {
     (
-        "kiro_crew/dashboard/session_export.py",
+        "aj_crew/dashboard/session_export.py",
         "api_chat_slot_export",
         "build_transfer_bundle_async",
     ): "bundle assembly awaits; the response commit revalidates afterwards",
     (
-        "kiro_crew/dashboard/handlers_instances.py",
+        "aj_crew/dashboard/handlers_instances.py",
         "api_instances_send_session",
         "build_transfer_bundle_async",
     ): "bundle assembly awaits; the tunnel send revalidates afterwards",
@@ -457,13 +457,13 @@ class TestThePublicationFence:
 
     def test_the_skill_guard_is_the_publication_seam(self):
         calls = _calls_in_function(
-            "kiro_crew/history_consolidation_skills.py", "_skill_publication_guard"
+            "aj_crew/history_consolidation_skills.py", "_skill_publication_guard"
         )
         assert len(calls.get("_publication_hold_checked", [])) == 1
         assert not calls.get("publication_hold")
         assert not calls.get("derivation_hold")
         checked = _calls_in_function(
-            "kiro_crew/history_consolidation.py", "_publication_hold_checked"
+            "aj_crew/history_consolidation.py", "_publication_hold_checked"
         )
         assert len(checked.get("publication_hold", [])) == 1
         assert len(checked.get("_persistence_disabled", [])) == 1
@@ -483,9 +483,9 @@ class TestThePublicationFence:
         # merge-back draft commit under the fork's hold and the note delivery
         # holding a source transcript through its durable write.
         holders = (
-            {"kiro_crew/history.py"}
-            | {f"kiro_crew/{owner.rsplit('.', 1)[-1]}.py" for owner in history_mod._OWNERS}
-            | {"kiro_crew/dashboard/chat_merge_back.py", "kiro_crew/dashboard/chat_handlers.py"}
+            {"aj_crew/history.py"}
+            | {f"aj_crew/{owner.rsplit('.', 1)[-1]}.py" for owner in history_mod._OWNERS}
+            | {"aj_crew/dashboard/chat_merge_back.py", "aj_crew/dashboard/chat_handlers.py"}
         )
         for rel in sorted(_PUBLISH_MODULES | holders):
             tree = ast.parse((SRC / rel).read_text(encoding="utf-8"), filename=rel)
@@ -515,12 +515,12 @@ class TestThePublicationFence:
         ("rel", "function", "commit"),
         [
             (
-                "kiro_crew/dashboard/session_export.py",
+                "aj_crew/dashboard/session_export.py",
                 "api_chat_slot_export",
                 "_StagedExport",
             ),
             (
-                "kiro_crew/dashboard/handlers_instances.py",
+                "aj_crew/dashboard/handlers_instances.py",
                 "api_instances_send_session",
                 "send_session_bundle",
             ),
@@ -553,7 +553,7 @@ class TestThePublicationFence:
     def test_consolidation_embedding_precedes_the_publication_hold(
         self, function, embed_call, write_call
     ):
-        calls = _calls_in_function("kiro_crew/history_consolidation_memory.py", function)
+        calls = _calls_in_function("aj_crew/history_consolidation_memory.py", function)
         assert len(calls[embed_call]) == len(calls[write_call]) == 1
         assert calls["_publication_hold_checked"]
         holds_before_write = [
@@ -566,17 +566,17 @@ class TestThePublicationFence:
         ("rel", "function", "write_call"),
         [
             (
-                "kiro_crew/dashboard/chat_api/handover_drain.py",
+                "aj_crew/dashboard/chat_api/handover_drain.py",
                 "_persist_handover_tail",
                 "save_slot_off_loop",
             ),
             (
-                "kiro_crew/dashboard/chat_turn/tool_rows.py",
+                "aj_crew/dashboard/chat_turn/tool_rows.py",
                 "_persist_tool_result_rows",
                 "save_slot_off_loop",
             ),
             (
-                "kiro_crew/dashboard/chat_title.py",
+                "aj_crew/dashboard/chat_title.py",
                 "_persist_title",
                 "to_thread",
             ),

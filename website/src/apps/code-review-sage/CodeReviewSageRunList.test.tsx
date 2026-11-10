@@ -478,7 +478,7 @@ describe('why a review failed', () => {
     // A different remedy from the missing executable — the CLI may well be
     // installed — so it must not share that sentence.
     const reason = failureReason(failed(
-      'the reviewer cannot run: the ACP runtime (kiro_crew.acp.runtime) is not '
+      'the reviewer cannot run: the ACP runtime (aj_crew.acp.runtime) is not '
       + 'importable in this install'))
     expect(reason?.text).toMatch(/cannot load the agent runtime/i)
     expect(reason?.text).not.toMatch(/PATH/)
@@ -504,7 +504,7 @@ describe('why a review failed', () => {
     // pattern rather than an incidental pass-through case.
     const raw = "Agent spec 'code-review-sage-reviewer' is not installed: kiro-cli "
       + "found no 'code-review-sage-reviewer.json' in /home/u/.kiro/agents. Every "
-      + 'turn fails until it is restored — repair with `kirocrew setup '
+      + 'turn fails until it is restored — repair with `ajcrew setup '
       + '--agent-only --clean`, then restart the gateway.'
     expect(failureReason(failed(raw))?.text).toBe(raw)
   })
@@ -541,7 +541,7 @@ describe('why a review failed', () => {
       ['Runtime process died during prompt', /stopped mid-review/i],
       ['the reviewer cannot run: no kiro-cli executable was found on this host',
         /never started/i],
-      ['the reviewer cannot run: the ACP runtime (kiro_crew.acp.runtime) is not '
+      ['the reviewer cannot run: the ACP runtime (aj_crew.acp.runtime) is not '
         + 'importable in this install', /cannot load the agent runtime/i],
       ['the reviewer never ran: its agent runtime is unavailable on this host',
         /agent runtime is unavailable on this host/i],
@@ -650,7 +650,7 @@ describe('why a review failed', () => {
     // prose is the information and the token is not a substitute for it.
     const raw = "Agent spec 'code-review-sage-reviewer' is not installed: kiro-cli "
       + "found no 'code-review-sage-reviewer.json' in /home/u/.kiro/agents. Every "
-      + 'turn fails until it is restored - repair with `kirocrew setup '
+      + 'turn fails until it is restored - repair with `ajcrew setup '
       + '--agent-only --clean`, then restart the gateway.'
     expect(failureReason(withToken(raw, 'review_failed'))?.text).toBe(raw)
   })

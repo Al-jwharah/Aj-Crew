@@ -9,8 +9,8 @@ from pathlib import Path
 
 from aiohttp.test_utils import make_mocked_request
 
-import kiro_crew.config.loader as loader
-from kiro_crew.secrets import SecretVault
+import aj_crew.config.loader as loader
+from aj_crew.secrets import SecretVault
 
 SHARED_CONFIG_HANDLER_CHECKS = ("save_rejects_non_numeric_user_ids", "soft_threshold_bounds")
 
@@ -23,7 +23,7 @@ def _vault_value(env: Path, key: str) -> str | None:
 
 def test_save_denies_non_loopback(monkeypatch) -> None:
     """Config writes are loopback-only: remote sessions are read-only."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     monkeypatch.setattr(mod, "is_direct_local_request", lambda req: False)
     req = make_mocked_request(
@@ -38,7 +38,7 @@ def test_save_denies_non_loopback(monkeypatch) -> None:
 
 def test_save_denies_forwarded_loopback_request() -> None:
     """A reverse-proxied request (loopback peer + XFF) cannot plant tokens."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     req = make_mocked_request(
         "PUT",
@@ -97,7 +97,7 @@ def _accept_token(monkeypatch, mod) -> None:
 
 def test_save_persists_token_and_config(tmp_path: Path, monkeypatch) -> None:
     """Token lands in .env (0600), config in config.json, environ synced."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     _accept_token(monkeypatch, mod)
     monkeypatch.delenv("DISCORD_BOT_TOKEN", raising=False)
@@ -130,7 +130,7 @@ def test_save_persists_token_and_config(tmp_path: Path, monkeypatch) -> None:
     ]
     assert cfg["discord"]["allowed_thread_ids"] == ["234567890123456789"]
     assert cfg["discord"]["allowed_channel_ids"] == ["345678901234567890"]
-    loaded = loader.KiroCrewConfig.load().discord
+    loaded = loader.AjCrewConfig.load().discord
     assert loaded.allowed_thread_ids == ["234567890123456789"]
     assert loaded.allowed_channel_ids == ["345678901234567890"]
     assert loaded.auto_thread is False
@@ -139,7 +139,7 @@ def test_save_persists_token_and_config(tmp_path: Path, monkeypatch) -> None:
 
 def test_save_rejects_malformed_token(tmp_path: Path, monkeypatch) -> None:
     """A token that doesn't match the three-segment shape fails before any write."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     _accept_token(monkeypatch, mod)
     status_body, env = _client_put(mod, monkeypatch, tmp_path, {"bot_token": "not-a-token"})
@@ -151,7 +151,7 @@ def test_save_rejects_malformed_token(tmp_path: Path, monkeypatch) -> None:
 
 def test_save_strips_accidental_bot_prefix(tmp_path: Path, monkeypatch) -> None:
     """A pasted 'Bot <token>' Authorization-header line stores the bare token."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     _accept_token(monkeypatch, mod)
     status_body, env = _client_put(mod, monkeypatch, tmp_path, {"bot_token": f"Bot {VALID_TOKEN}"})
@@ -163,7 +163,7 @@ def test_save_strips_accidental_bot_prefix(tmp_path: Path, monkeypatch) -> None:
 
 def test_save_rejects_token_discord_refuses(tmp_path: Path, monkeypatch) -> None:
     """A token Discord rejects (401) fails the save; nothing written."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     async def _reject(token):
         return "401: Unauthorized"
@@ -178,7 +178,7 @@ def test_save_rejects_token_discord_refuses(tmp_path: Path, monkeypatch) -> None
 
 def test_save_proceeds_with_warning_when_discord_unreachable(tmp_path: Path, monkeypatch) -> None:
     """Being offline must not block a save — token stored, warning returned."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     async def _unreachable(token):
         raise ConnectionError("no route to discord.com")
@@ -193,7 +193,7 @@ def test_save_proceeds_with_warning_when_discord_unreachable(tmp_path: Path, mon
 
 
 def test_save_rejects_non_numeric_thread_ids(tmp_path: Path, monkeypatch) -> None:
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     _accept_token(monkeypatch, mod)
     status_body, _ = _client_put(mod, monkeypatch, tmp_path, {"allowed_thread_ids": ["general"]})
@@ -204,7 +204,7 @@ def test_save_rejects_non_numeric_thread_ids(tmp_path: Path, monkeypatch) -> Non
 
 
 def test_save_rejects_non_numeric_channel_ids(tmp_path: Path, monkeypatch) -> None:
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     _accept_token(monkeypatch, mod)
     status_body, _ = _client_put(mod, monkeypatch, tmp_path, {"allowed_channel_ids": ["general"]})
@@ -214,7 +214,7 @@ def test_save_rejects_non_numeric_channel_ids(tmp_path: Path, monkeypatch) -> No
 
 
 def test_save_requires_boolean_auto_thread(tmp_path: Path, monkeypatch) -> None:
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     _accept_token(monkeypatch, mod)
     status_body, _ = _client_put(mod, monkeypatch, tmp_path, {"auto_thread": "true"})
@@ -223,7 +223,7 @@ def test_save_requires_boolean_auto_thread(tmp_path: Path, monkeypatch) -> None:
 
 def test_clear_flag_must_be_strict_boolean(tmp_path: Path, monkeypatch) -> None:
     """Truthy non-bool clear flags (e.g. "false", 1) must not delete the token."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     _accept_token(monkeypatch, mod)
     env = tmp_path / ".env"
@@ -240,7 +240,7 @@ def test_clear_flag_must_be_strict_boolean(tmp_path: Path, monkeypatch) -> None:
 
 def test_restart_required_only_on_actual_change(tmp_path: Path, monkeypatch) -> None:
     """Unchanged fields must NOT flag restart_required."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     _accept_token(monkeypatch, mod)
     cfg = tmp_path / "config.json"
@@ -273,7 +273,7 @@ def test_restart_required_only_on_actual_change(tmp_path: Path, monkeypatch) -> 
 
 def test_get_masks_token_and_reports_state(tmp_path: Path, monkeypatch) -> None:
     """GET returns presence + masked preview, never the raw token."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     env = tmp_path / ".env"
     env.write_text(f"DISCORD_BOT_TOKEN={VALID_TOKEN}\n", encoding="utf-8")
@@ -310,7 +310,7 @@ def test_save_persists_session_folder_without_asking_for_a_restart(
     tmp_path: Path, monkeypatch
 ) -> None:
     """``session_folder`` is read live, so changing it alone needs no restart."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     status_body, _ = _client_put(mod, monkeypatch, tmp_path, {"session_folder": " Discord "})
     status, body = status_body
@@ -328,7 +328,7 @@ def test_save_creates_the_configured_folder(tmp_path: Path, monkeypatch) -> None
     could drop a concurrent folder edit. The save endpoint is user-initiated and
     already writes config.json, so it is the right owner.
     """
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     created: list[tuple[str, str, bool]] = []
 
@@ -350,7 +350,7 @@ def test_save_ignores_a_hand_edited_non_string_session_folder(tmp_path: Path, mo
     The save reads ``session_folder`` from the RAW config.json, past the loader's
     coercion; ``str()`` would create a folder named ``123``, so it fails closed to off.
     """
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     # Hand-edited config: session_folder is a number, not text.
     (tmp_path / "config.json").write_text(
@@ -372,7 +372,7 @@ def test_save_ignores_a_hand_edited_non_string_session_folder(tmp_path: Path, mo
 
 def test_save_creates_no_folder_when_the_setting_is_off(tmp_path: Path, monkeypatch) -> None:
     """Off is the default; a save that leaves it off must not create anything."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     created: list[tuple[str, str, bool]] = []
 
@@ -392,7 +392,7 @@ def test_save_asks_for_a_restart_only_for_a_credential_write(tmp_path: Path, mon
     The hint comes from the schema's ``restart`` flag. ``session_folder`` and
     ``enabled`` are hot-reloaded; the token is read from the env at connect time.
     """
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     status_body, _ = _client_put(
         mod, monkeypatch, tmp_path, {"session_folder": "Discord", "enabled": True}
@@ -409,7 +409,7 @@ def test_save_asks_for_a_restart_only_for_a_credential_write(tmp_path: Path, mon
 
 def test_save_rejects_an_unusable_session_folder(tmp_path: Path, monkeypatch) -> None:
     """A name that could not address a sidebar folder is refused, not coerced."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     for bad in ("nested/name", "back\\slash", "line\nbreak", "x" * 101, 42):
         status_body, _ = _client_put(mod, monkeypatch, tmp_path, {"session_folder": bad})
@@ -418,7 +418,7 @@ def test_save_rejects_an_unusable_session_folder(tmp_path: Path, monkeypatch) ->
 
 def test_get_reports_the_configured_session_folder(tmp_path: Path, monkeypatch) -> None:
     """The panel reads the current value back, defaulting to off."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     cfg = tmp_path / "config.json"
     cfg.write_text('{"discord": {"session_folder": "Discord"}}', encoding="utf-8")
@@ -442,7 +442,7 @@ def test_an_unrelated_save_does_not_relabel_the_folder(tmp_path: Path, monkeypat
     renamed a folder the user had renamed in the sidebar back to the stored config
     value — undoing their change on a save that had nothing to do with folders.
     """
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     # Stored config already carries a folder name; this save touches another field.
     (tmp_path / "config.json").write_text(
@@ -465,7 +465,7 @@ def test_an_unrelated_save_does_not_relabel_the_folder(tmp_path: Path, monkeypat
 
 def test_a_folder_save_does_relabel(tmp_path: Path, monkeypatch) -> None:
     """The save that expresses folder intent is the one allowed to rename."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     created: list[tuple[str, str, bool]] = []
 
@@ -490,7 +490,7 @@ def test_a_save_answers_only_after_the_watcher_applied_it(tmp_path: Path, monkey
     """
     from unittest.mock import AsyncMock
 
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     _accept_token(monkeypatch, mod)
     applied = AsyncMock()
@@ -505,7 +505,7 @@ def test_save_survives_wrong_typed_stored_allow_list(tmp_path: Path, monkeypatch
     empty, so the save's comparison does not iterate a non-iterable and the
     save still applies.
     """
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     _accept_token(monkeypatch, mod)
     cfg = tmp_path / "config.json"

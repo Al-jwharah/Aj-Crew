@@ -20,21 +20,21 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from real_dashboard_state import settle_notification_writes
 
-from kiro_crew.dashboard.handlers.messaging import api_notification_channel_settings
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.notifications import bridge as bridge_mod
-from kiro_crew.notifications import bridge_egress as bridge_egress_mod
-from kiro_crew.notifications import bridge_slack as bridge_slack_mod
-from kiro_crew.notifications import bridge_transport as bridge_transport_mod
-from kiro_crew.notifications.bridge import (
+from aj_crew.dashboard.handlers.messaging import api_notification_channel_settings
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.notifications import bridge as bridge_mod
+from aj_crew.notifications import bridge_egress as bridge_egress_mod
+from aj_crew.notifications import bridge_slack as bridge_slack_mod
+from aj_crew.notifications import bridge_transport as bridge_transport_mod
+from aj_crew.notifications.bridge import (
     BRIDGE_TRANSPORTS,
     BridgeDispatcher,
     DeliveryRule,
     composite_sink,
     rule_from_settings,
 )
-from kiro_crew.notifications.bus import NotificationPayload
-from kiro_crew.notifications.settings import (
+from aj_crew.notifications.bus import NotificationPayload
+from aj_crew.notifications.settings import (
     ChannelSettings,
     ChannelSettingsError,
     parse_imported_settings,
@@ -62,13 +62,13 @@ def _settle_writes():
 
 @pytest.fixture()
 def settings(monkeypatch, tmp_path) -> ChannelSettings:
-    monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
     return ChannelSettings()
 
 
 def _make_state(monkeypatch, tmp_path) -> DashboardState:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
     return DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(),
@@ -390,7 +390,7 @@ def test_bridge_module_never_reaches_the_bus(module):
     assert "notification_bus" not in names
     assert not any(
         isinstance(n, (ast.Import, ast.ImportFrom))
-        and "kiro_crew.notifications.bus" in (getattr(n, "module", "") or "")
+        and "aj_crew.notifications.bus" in (getattr(n, "module", "") or "")
         for n in ast.walk(tree)
     )
 

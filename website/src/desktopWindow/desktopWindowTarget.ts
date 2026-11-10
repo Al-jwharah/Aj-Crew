@@ -5,7 +5,7 @@
  * a window an app declares in its manifest `desktop` block and points it at
  * `/popout/desktop/<app>/<window>`. That document mounts only the app's declared
  * `entry` module (see `DesktopWindowRoot.tsx`), never the dashboard shell. The
- * shell's preload exposes `window.kirocrewDesktopWindow` in that window and in no
+ * shell's preload exposes `window.ajcrewDesktopWindow` in that window and in no
  * other: a plain browser tab on the same path finds no bridge and renders nothing.
  *
  * Pure, so `main.tsx` can read it at document load before any provider mounts.
@@ -51,9 +51,9 @@ const CALLS = ['ready', 'close', 'open', 'setHitRegions', 'setFocusable', 'onSho
 /** The shell's bridge when it describes exactly *target*, else `null`. */
 export function desktopWindowBridge(
   target: DesktopWindowTarget,
-  win: { kirocrewDesktopWindow?: unknown } = window as unknown as { kirocrewDesktopWindow?: unknown },
+  win: { ajcrewDesktopWindow?: unknown } = window as unknown as { ajcrewDesktopWindow?: unknown },
 ): DesktopWindowBridge | null {
-  const raw = win.kirocrewDesktopWindow
+  const raw = win.ajcrewDesktopWindow
   if (!raw || typeof raw !== 'object') return null
   const bridge = raw as Partial<DesktopWindowBridge>
   if (typeof bridge.level !== 'number' || bridge.level < 1) return null

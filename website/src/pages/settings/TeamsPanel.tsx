@@ -19,7 +19,7 @@ const CHANNEL_NAME = "Teams"
 const SDK_PACKAGE = "PyJWT"
 const AZURE_BOT_URL = 'https://portal.azure.com/#create/Microsoft.AzureBot'
 const SETUP_GUIDE =
-  'https://github.com/kirodotdev/KiroCrew/blob/main/src/kiro_crew/docs/teams-integration.md'
+  'https://github.com/Al-jwharah/Aj-Crew/blob/main/src/aj_crew/docs/teams-integration.md'
 const WEBHOOK_PATH = '/api/messaging/teams'
 /** In-chat commands the soft-threshold nudge names. Protocol tokens the channel
  *  matches by value, so they stay code constants rather than catalog values. */

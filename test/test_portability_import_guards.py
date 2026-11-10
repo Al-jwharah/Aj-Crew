@@ -23,8 +23,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import platform_compat, portability, snapshot
-from kiro_crew.portability import apply_import_zip
+from aj_crew import platform_compat, portability, snapshot
+from aj_crew.portability import apply_import_zip
 
 
 def _make_min_import_zip(path, extra_files=1):
@@ -38,7 +38,7 @@ def _make_min_import_zip(path, extra_files=1):
 
 def test_import_zip_bomb_member_cap(tmp_path, monkeypatch):
     # SEC-7F44A198: too many entries is rejected before extraction.
-    import kiro_crew.portability as port
+    import aj_crew.portability as port
 
     z = _make_min_import_zip(tmp_path / "imp.zip", extra_files=3)
     monkeypatch.setattr(port, "_MAX_IMPORT_MEMBERS", 1)
@@ -49,7 +49,7 @@ def test_import_zip_bomb_member_cap(tmp_path, monkeypatch):
 
 
 def test_import_member_inventory_is_rejected_before_zipfile(tmp_path, monkeypatch):
-    import kiro_crew.portability as port
+    import aj_crew.portability as port
 
     z = _make_min_import_zip(tmp_path / "inventory.zip", extra_files=3)
     monkeypatch.setattr(port, "_MAX_IMPORT_MEMBERS", 1)
@@ -67,7 +67,7 @@ def test_import_member_inventory_is_rejected_before_zipfile(tmp_path, monkeypatc
 
 def test_import_zip_bomb_size_cap(tmp_path, monkeypatch):
     # SEC-7F44A198: excessive declared uncompressed size is rejected (zip bomb).
-    import kiro_crew.portability as port
+    import aj_crew.portability as port
 
     z = _make_min_import_zip(tmp_path / "imp2.zip", extra_files=1)
     monkeypatch.setattr(port, "_MAX_IMPORT_UNCOMPRESSED", 1)
@@ -105,12 +105,12 @@ def _make_cron_import_zip(path, jobs):
 
 def _import_names(zip_path, tmp_path, mode="merge"):
     """Apply an import into a fresh target and return (summary, installed names)."""
-    import kiro_crew.portability as port
+    import aj_crew.portability as port
 
     target = tmp_path / "target_mc"
     target.mkdir()
     with patch.object(port, "config_dir", return_value=target):
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
             summary = port.apply_import_zip(zip_path, mode=mode)
     crons_file = target / "crons.json"
     names = []
@@ -188,7 +188,7 @@ def test_a_malformed_crons_store_is_replaced_not_installed(tmp_path, payload):
     for `[]`/`null`/a scalar, which its `except (JSONDecodeError, KeyError)` does
     not catch. An empty store is the only thing safe to hand the loader.
     """
-    import kiro_crew.portability as port
+    import aj_crew.portability as port
 
     z = tmp_path / "malformed-store.zip"
     with zipfile.ZipFile(str(z), "w") as zf:
@@ -198,7 +198,7 @@ def test_a_malformed_crons_store_is_replaced_not_installed(tmp_path, payload):
     target = tmp_path / "target_nonobj"
     target.mkdir()
     with patch.object(port, "config_dir", return_value=target):
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
             summary = port.apply_import_zip(z, mode="merge")
 
     # The import completed rather than aborting, and it said so.
@@ -208,7 +208,7 @@ def test_a_malformed_crons_store_is_replaced_not_installed(tmp_path, payload):
     installed = json.loads((target / "crons.json").read_text())
     assert installed == {"jobs": []}
 
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     svc = CronService.__new__(CronService)
     svc._path = target / "crons.json"
@@ -229,7 +229,7 @@ def test_a_dropped_cron_command_is_audited(tmp_path):
     # The dropped command never reaches the ACP permission/hook flow, so this is
     # the only place the denial can be recorded. Silently dropping it would leave
     # no audit trail for a rejected scheduled command.
-    import kiro_crew.mcp_cron as mcp_cron
+    import aj_crew.mcp_cron as mcp_cron
 
     events = []
 
@@ -269,7 +269,7 @@ def test_an_imported_job_that_executes_is_restored_paused(tmp_path):
     ``script`` cannot be vetted at all — the export never carries the ``crons/``
     directory, so the name resolves against whatever the target already has.
     """
-    import kiro_crew.mcp_cron as mcp_cron
+    import aj_crew.mcp_cron as mcp_cron
 
     events = []
 
@@ -287,11 +287,11 @@ def test_an_imported_job_that_executes_is_restored_paused(tmp_path):
     )
     target = tmp_path / "target_paused"
     target.mkdir()
-    import kiro_crew.portability as port
+    import aj_crew.portability as port
 
     with patch.object(mcp_cron, "sel", lambda: _FakeSel()):
         with patch.object(port, "config_dir", return_value=target):
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
                 summary = port.apply_import_zip(z, mode="merge")
 
     jobs = {j["name"]: j for j in json.loads((target / "crons.json").read_text())["jobs"]}
@@ -337,7 +337,7 @@ def test_a_malformed_job_cannot_reach_the_cron_loader(tmp_path):
     assert len(summary.get("rejected_crons", [])) == 7, summary
 
     # The rewritten store loads without raising.
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     svc = CronService.__new__(CronService)
     svc._path = tmp_path / "target_mc" / "crons.json"
@@ -365,13 +365,13 @@ def test_a_malformed_job_cannot_reach_the_cron_loader(tmp_path):
 
 def _import_into_target_with_live_crons(zip_path, tmp_path, live_store_text):
     """Apply a merge import into a target that already has a crons.json."""
-    import kiro_crew.portability as port
+    import aj_crew.portability as port
 
     target = tmp_path / "target_mc"
     target.mkdir()
     (target / "crons.json").write_text(live_store_text)
     with patch.object(port, "config_dir", return_value=target):
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
             summary = port.apply_import_zip(zip_path, mode="merge")
     return summary, target
 
@@ -440,7 +440,7 @@ def test_merge_crons_returns_the_outcome_on_every_path(tmp_path):
     (the sanitizer rewrites the snapshot's store first) but fully reachable from
     the snapshot restore path, so they are locked here at the merger itself.
     """
-    from kiro_crew.snapshot import _merge_crons
+    from aj_crew.snapshot import _merge_crons
 
     good = json.dumps({"jobs": [_cron_job("d1", "existing", message="m")]})
     src, dst = tmp_path / "src.json", tmp_path / "dst.json"
@@ -501,7 +501,7 @@ async def test_import_handler_outcome_reflects_a_refused_merge(
     # merge must land as "partial" with the refused component named.
     from aiohttp.test_utils import make_mocked_request
 
-    import kiro_crew.dashboard.handlers.portability as ph
+    import aj_crew.dashboard.handlers.portability as ph
 
     events = []
 
@@ -562,7 +562,7 @@ async def test_a_refused_import_names_a_machine_readable_code(tmp_path, error, e
     from aiohttp.test_utils import make_mocked_request
     from dashboard_owner_helpers import NoConfiguredOwner
 
-    import kiro_crew.dashboard.handlers.portability as ph
+    import aj_crew.dashboard.handlers.portability as ph
 
     upload = tmp_path / "upload.zip"
     upload.write_bytes(b"")
@@ -772,8 +772,8 @@ def test_oversized_imported_command_is_dropped_without_scanning_it(tmp_path):
     DECISION, and the decision is a length comparison that does not care how far over the
     input is.
     """
-    from kiro_crew.mcp_cron import _CRON_MAX_COMMAND_SCAN
-    from kiro_crew.portability import _sanitize_imported_crons
+    from aj_crew.mcp_cron import _CRON_MAX_COMMAND_SCAN
+    from aj_crew.portability import _sanitize_imported_crons
 
     crons = tmp_path / "crons.json"
     crons.write_text(

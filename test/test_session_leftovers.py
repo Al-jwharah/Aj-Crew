@@ -15,11 +15,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew import platform_compat_proctable as proctable
-from kiro_crew import session_cleanup_leftovers as leftovers_mod
-from kiro_crew import session_pid
-from kiro_crew.session_pid_rss import Leftover, SessionLeftovers
+from aj_crew import platform_compat
+from aj_crew import platform_compat_proctable as proctable
+from aj_crew import session_cleanup_leftovers as leftovers_mod
+from aj_crew import session_pid
+from aj_crew.session_pid_rss import Leftover, SessionLeftovers
 
 
 def _write_stat(root, pid: int, ppid: int, pgrp: int, sid: int, state: str = "S") -> None:
@@ -126,7 +126,7 @@ class TestEndSessionLeftovers:
 
 
 def _manager(*, end_mid_turn: object = False):
-    from kiro_crew.session import SessionManager
+    from aj_crew.session import SessionManager
 
     cfg = MagicMock()
     cfg.session.pool_size = 0
@@ -151,12 +151,12 @@ _FOUND = SessionLeftovers("s4242", [Leftover(5000, "s5000", 1800, "python3")])
 async def _tick(manager, end=None, *, linux: bool = True) -> MagicMock:
     end = end or MagicMock(return_value=1)
     with (
-        patch("kiro_crew.session._build_child_map", return_value={}),
-        patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
+        patch("aj_crew.session._build_child_map", return_value={}),
+        patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
         patch.object(session_pid.platform_compat, "IS_WINDOWS", False),
         patch.object(session_pid.platform_compat, "IS_LINUX", linux),
-        patch("kiro_crew.session_pid.find_session_leftovers", return_value=_FOUND),
-        patch("kiro_crew.session_pid.end_session_leftovers", end),
+        patch("aj_crew.session_pid.find_session_leftovers", return_value=_FOUND),
+        patch("aj_crew.session_pid.end_session_leftovers", end),
     ):
         await manager._rss_threshold_check()
     return end
@@ -246,6 +246,6 @@ class TestRssTickLeftovers:
 
 
 def test_the_setting_ships_off() -> None:
-    from kiro_crew.config.sections import SessionConfig
+    from aj_crew.config.sections import SessionConfig
 
     assert SessionConfig().watchdog_end_leftovers_mid_turn is False

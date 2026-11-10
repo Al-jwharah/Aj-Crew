@@ -22,22 +22,22 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import mcp_core
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.mcp_tools import control
+from aj_crew import mcp_core
+from aj_crew.config import AjCrewConfig
+from aj_crew.mcp_tools import control
 
 MEANING = (
     "awake time while the gateway runs; a restart counts the time since "
     "created_ts on the wall clock"
 )
-DOC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "docs" / "monitor-loops.md"
+DOC = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "docs" / "monitor-loops.md"
 
 
 @pytest.fixture
 def operator_ceiling(monkeypatch):
     """Pin the operator ceiling the descriptions quote, so no config on disk is read."""
     monkeypatch.setattr(
-        KiroCrewConfig,
+        AjCrewConfig,
         "load",
         lambda: SimpleNamespace(monitoring=SimpleNamespace(max_runtime_secs=604_800)),
     )

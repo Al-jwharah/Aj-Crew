@@ -4,7 +4,7 @@ Seam: the real ``session/new`` params an ``AcpClient`` on the claude backend sen
 built from a real agent spec and a real ``.claude/settings.local.json`` in the work
 dir. When that file is not Crew's (the project's own, or another open session's seed)
 the session leaves it out and pins ``default``; a requested ``auto`` must not cost the
-Bot its ``kirocrew-dashboard`` mount there. A plain claude chat in the same state keeps
+Bot its ``ajcrew-dashboard`` mount there. A plain claude chat in the same state keeps
 Crew's servers and never gets the dashboard server. Fixtures are in
 ``acp_session_mcp_helpers.py``.
 """
@@ -21,9 +21,9 @@ from acp_session_mcp_helpers import agents_dir_fixture  # noqa: F401
 from acp_session_mcp_helpers import isolated_seed_provenance  # noqa: F401
 from acp_session_mcp_helpers import _by_name, _write_spec
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
-from kiro_crew.members import MEMBER_DISPATCH_SERVER
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE
+from aj_crew.members import MEMBER_DISPATCH_SERVER
 
 
 async def _session_new_params(client, tmp_path, monkeypatch):
@@ -57,7 +57,7 @@ async def _session_new_params(client, tmp_path, monkeypatch):
 async def test_a_claude_bot_in_auto_mode_keeps_the_dashboard_server(
     tmp_path, agents_dir, monkeypatch, foreign_file, session_key, dashboard
 ):
-    """The Bot DM gets ``kirocrew-dashboard`` with or without a foreign file.
+    """The Bot DM gets ``ajcrew-dashboard`` with or without a foreign file.
 
     A plain claude chat (``dashboard_chat-1``) gets Crew's own servers in both cases
     and no dashboard server, exactly as before.
@@ -69,7 +69,7 @@ async def test_a_claude_bot_in_auto_mode_keeps_the_dashboard_server(
         path.write_text(json.dumps({"permissions": {}}), encoding="utf-8")
     client = AcpClient(
         work_dir=tmp_path,
-        agent="kirocrew",
+        agent="ajcrew",
         acp_backend=ACP_BACKEND_CLAUDE,
         permission_mode="auto",
         session_key=session_key,
@@ -105,8 +105,8 @@ def test_the_chat_says_once_why_auto_runs_as_default(
     """
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard import chat_runner
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.dashboard import chat_runner
+    from aj_crew.providers.acp import AcpProvider
 
     _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
     if foreign_file:
@@ -115,7 +115,7 @@ def test_the_chat_says_once_why_auto_runs_as_default(
         path.write_text(json.dumps({"permissions": {}}), encoding="utf-8")
     client = AcpClient(
         work_dir=tmp_path,
-        agent="kirocrew",
+        agent="ajcrew",
         acp_backend=ACP_BACKEND_CLAUDE,
         permission_mode=mode,
         session_key="dashboard:member-probe",

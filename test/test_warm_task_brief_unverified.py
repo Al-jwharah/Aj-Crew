@@ -10,7 +10,7 @@ from types import SimpleNamespace
 import pytest
 from test_warm_task_brief import _WAITING_ITEM, _claimed, _posted, _Slot, _snapshot, _State
 
-from kiro_crew.dashboard import warm_task_brief
+from aj_crew.dashboard import warm_task_brief
 
 
 @pytest.mark.asyncio
@@ -45,7 +45,7 @@ async def test_an_unbacked_sha_or_time_is_kept_and_tagged_unverified(
     monkeypatch.setattr(warm_task_brief, "run_bg_oneliner", run_model)
     monkeypatch.setattr(warm_task_brief.inputs, "clock", lambda *args, **kwargs: "12:00")
     monkeypatch.setattr(
-        warm_task_brief.KiroCrewConfig,
+        warm_task_brief.AjCrewConfig,
         "load",
         lambda: SimpleNamespace(agent=SimpleNamespace(resolve_model=lambda role: "background")),
     )

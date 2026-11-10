@@ -1,10 +1,10 @@
 """Ratchet: how many places can still end a runtime without saying who fired.
 
 Every path that signals a process reaches one of a handful of primitives in
-:mod:`kiro_crew.platform_compat`, and a caller that reaches them directly does so
+:mod:`aj_crew.platform_compat`, and a caller that reaches them directly does so
 unattributed: the log that follows says a process died, never who decided it
 should. Routing those callers through one gated place
-(:func:`kiro_crew.runtime_ownership.authorize_runtime_kill`, which both refuses a
+(:func:`aj_crew.runtime_ownership.authorize_runtime_kill`, which both refuses a
 leased runtime and writes the attribution) is the work of several changes, so this module measures the remainder and ratchets it:
 :data:`BYPASS_BASELINE` may go DOWN in any change and may never go up. A new kill
 site must either attribute itself or lower something else to pay for itself.
@@ -40,7 +40,7 @@ from pathlib import Path
 
 import pytest
 
-SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 # A gate here parses a whole tree, so the module has its own ``tree_scan`` group
 # and takes that group's per-test timeout (``TREE_SCAN_TIMEOUT_SECS`` in conftest.py).
@@ -159,7 +159,7 @@ def test_kill_primitive_bypass_count_does_not_grow() -> None:
     assert total <= BYPASS_BASELINE, (
         f"{total} direct kill-primitive call(s) now bypass the attribution point, above "
         f"the baseline of {BYPASS_BASELINE}. Route the new site through a path that calls "
-        f"kiro_crew.runtime_ownership.{GATE} instead of raising this number.\n"
+        f"aj_crew.runtime_ownership.{GATE} instead of raising this number.\n"
         f"Per module:\n{breakdown}"
     )
 
@@ -281,17 +281,17 @@ def test_the_gate_verdict_is_acted_on(module: str, function: str) -> None:
 #: with no effect, which is why this list is short rather than exhaustive.
 _RELEASE_BEFORE_KILL = (
     (
-        "src/kiro_crew/session_allocation_parts/get_or_create.py",
+        "src/aj_crew/session_allocation_parts/get_or_create.py",
         "release_session_lease",
         "_dispatch_hard_kill",
     ),
     (
-        "src/kiro_crew/dashboard/handlers/sessions_parts/restart.py",
+        "src/aj_crew/dashboard/handlers/sessions_parts/restart.py",
         "release_session_lease",
         "_sync_kill_provider",
     ),
     (
-        "src/kiro_crew/acp/session_provider.py",
+        "src/aj_crew/acp/session_provider.py",
         "release_runtime_lease",
         "kill",
     ),
@@ -300,7 +300,7 @@ _RELEASE_BEFORE_KILL = (
     # same one: the gate refuses a claimed process, so a claim still held when
     # this flow tears its own child down makes it refuse its own teardown.
     (
-        "src/kiro_crew/connections/mint.py",
+        "src/aj_crew/connections/mint.py",
         "release_runtime_tenancy",
         "_shutdown_quietly",
     ),

@@ -1,6 +1,6 @@
 """The native Slack handler keeps its wire behaviour and its surface while its owners move.
 
-``kiro_crew.slack.handler`` is the native Slack turn path's import path and its patch
+``aj_crew.slack.handler`` is the native Slack turn path's import path and its patch
 surface. The goldens in ``test_slack_handler_composition_contract_golden.py`` drive its
 public callbacks against the recording doubles of
 ``slack_handler_composition_contract_helpers.py`` and pin what reaches Slack, the SEL
@@ -35,9 +35,9 @@ from types import SimpleNamespace
 import pytest
 from source_corpus import repo_root
 
-from kiro_crew._facade_compose import compose as facade_compose
-from kiro_crew.slack import handler, handler_runtime
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew._facade_compose import compose as facade_compose
+from aj_crew.slack import handler, handler_runtime
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 # One worker per file, so the shared checks run beside the tests that load this module.
 pytestmark = pytest.mark.xdist_group(name="slack_handler_composition_contract")
@@ -61,7 +61,7 @@ _BASE_NAMES = frozenset("""
     CronService DEFAULT_PROVIDER DELIVERY_DEBT_NOTICE DENY_CAUSE_APPROVAL_TIMEOUT
     DENY_CAUSE_POLICY EVENT_COMPLETE EVENT_PERMISSION_REQUEST EVENT_TEXT_CHUNK
     EVENT_THINKING_CHUNK EVENT_TOOL_CALL HOOK_REPLY HUMAN_TURN_META_KEY HistoryConsolidator
-    InboundRoute Iterator KiroCrewConfig LLMEvent LLMProvider MessageContext
+    InboundRoute Iterator AjCrewConfig LLMEvent LLMProvider MessageContext
     OUTCOME_REJECTED_TRANSPORT_FLOOR PROVIDER_SYSTEM Path PostedOptions
     SESSIONS_INCLUDE_ENDED_ARGS SLACK_MSG_LIMIT STEER_NOTICE_BOUND_SECS
     STOP_DECLINED_COMPACTING_TEXT STOP_REASON_CANCELLED STOP_REASON_COMPACTION_FAILED
@@ -334,10 +334,10 @@ def test_a_fresh_interpreter_sees_the_surface_and_loads_every_owner(tmp_path: Pa
         tmp_path,
         """
         import sys
-        import kiro_crew.slack.handler as handler
+        import aj_crew.slack.handler as handler
         owners = sys.argv[1].split(",")
         missing = [n for n in sys.argv[2:] if not hasattr(handler, n)]
-        unloaded = [o for o in owners if f"kiro_crew.slack.handler_runtime.{o}" not in sys.modules]
+        unloaded = [o for o in owners if f"aj_crew.slack.handler_runtime.{o}" not in sys.modules]
         assert missing == [] and unloaded == [], (missing, unloaded)
         print("ok")
         """,
@@ -357,9 +357,9 @@ def test_no_owner_function_keeps_its_own_globals_once_the_entry_points_load(
         tmp_path,
         """
         import gc, os, types
-        import kiro_crew.slack.gateway
-        import kiro_crew.dashboard.server
-        import kiro_crew.slack.handler as handler
+        import aj_crew.slack.gateway
+        import aj_crew.dashboard.server
+        import aj_crew.slack.handler as handler
 
         def norm(path):
             return os.path.normcase(os.path.realpath(path))
@@ -390,7 +390,7 @@ def test_a_star_import_carries_the_moved_public_names(tmp_path: Path) -> None:
     public binding goes out. Loaded through ``exec_module`` from a probe file."""
     assert not hasattr(handler, "__all__")
     probe = tmp_path / "slack_handler_star_probe.py"
-    probe.write_text("from kiro_crew.slack.handler import *  # noqa: F401,F403\n", encoding="utf-8")
+    probe.write_text("from aj_crew.slack.handler import *  # noqa: F401,F403\n", encoding="utf-8")
     spec = importlib.util.spec_from_file_location("slack_handler_star_probe", probe)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -402,8 +402,8 @@ def test_a_star_import_carries_the_moved_public_names(tmp_path: Path) -> None:
 def test_the_shared_trackers_are_still_the_shared_objects() -> None:
     """The aliases conftest clears and the channel-neutral owners read are the very
     objects ``messaging`` keeps, not copies an owner could hold."""
-    from kiro_crew.config import paths
-    from kiro_crew.messaging import auto_title, privacy_mode, session_trust
+    from aj_crew.config import paths
+    from aj_crew.messaging import auto_title, privacy_mode, session_trust
 
     assert handler._trusted_sessions is session_trust._trusted_sessions
     assert handler._thread_temporary is privacy_mode._temporary
@@ -418,7 +418,7 @@ def test_the_shared_trackers_are_still_the_shared_objects() -> None:
 def _facade_importers() -> dict[str, set[str]]:
     """``{module path: names}`` every source file imports from the facade by name."""
     found: dict[str, set[str]] = {}
-    for path in sorted((_SRC / "kiro_crew").rglob("*.py")):
+    for path in sorted((_SRC / "aj_crew").rglob("*.py")):
         if path.resolve() == _FACADE_PATH or "_vendor" in path.parts:
             continue
         text = path.read_text(encoding="utf-8")
@@ -438,7 +438,7 @@ def test_every_name_a_production_module_imports_from_the_facade_resolves() -> No
     importers = {
         path: names
         for path, names in _facade_importers().items()
-        if not path.startswith("kiro_crew/slack/handler_runtime/")
+        if not path.startswith("aj_crew/slack/handler_runtime/")
     }
     assert len(importers) >= 12
     imported = {name for names in importers.values() for name in names}
@@ -523,7 +523,7 @@ def test_every_definition_is_in_exactly_one_place() -> None:
 
 
 def test_the_owners_log_as_the_facade() -> None:
-    """Log capture keyed to ``kiro_crew.slack.handler`` keeps seeing the moved sites."""
+    """Log capture keyed to ``aj_crew.slack.handler`` keeps seeing the moved sites."""
     assert handler.logger.name == _FACADE
     readers = [
         label for label, fn in _owner_functions() if "logger" in set(_global_names(fn.__code__))
@@ -532,7 +532,7 @@ def test_the_owners_log_as_the_facade() -> None:
 
 
 def test_every_owner_function_runs_on_the_facade_globals() -> None:
-    """A patch of ``kiro_crew.slack.handler.<name>`` reaches an owner function only
+    """A patch of ``aj_crew.slack.handler.<name>`` reaches an owner function only
     because the function reads the facade's globals, not its own."""
     functions = _owner_functions()
     assert len(functions) >= 110
@@ -636,7 +636,7 @@ def test_a_moved_function_reads_its_source_from_its_owner() -> None:
 
 def test_the_facade_composes_through_the_shared_helper() -> None:
     """The facade composes its owners with the one shared helper,
-    ``kiro_crew._facade_compose.compose``, calling it exactly once, and the owner
+    ``aj_crew._facade_compose.compose``, calling it exactly once, and the owner
     package keeps no copy of its own: its ``__init__`` defines no function."""
     assert handler._facade_compose is facade_compose
     source = Path(handler.__file__).read_text(encoding="utf-8")
@@ -691,7 +691,7 @@ def _runtime_project_imports(source: str) -> list[int]:
             and isinstance(node.args[0], ast.Constant)
         ):
             targets = [str(node.args[0].value)]
-        if any(t.startswith(("kiro_crew", ".")) for t in targets):
+        if any(t.startswith(("aj_crew", ".")) for t in targets):
             lines.append(node.lineno)
     return sorted(lines)
 
@@ -701,11 +701,11 @@ def _runtime_project_imports(source: str) -> list[int]:
     [
         ("from . import stream\n", True),
         ("from .stream import _AnswerStream\n", True),
-        ("from kiro_crew.slack import handler\n", True),
-        ("import kiro_crew.slack.handler as handler\n", True),
-        ("import importlib\nimportlib.import_module('kiro_crew.slack.handler')\n", True),
-        ("if TYPE_CHECKING:\n    from kiro_crew.slack.handler import sel\n", False),
-        ("def f():\n    from kiro_crew.slack.blocks import review_draft_blocks\n", False),
+        ("from aj_crew.slack import handler\n", True),
+        ("import aj_crew.slack.handler as handler\n", True),
+        ("import importlib\nimportlib.import_module('aj_crew.slack.handler')\n", True),
+        ("if TYPE_CHECKING:\n    from aj_crew.slack.handler import sel\n", False),
+        ("def f():\n    from aj_crew.slack.blocks import review_draft_blocks\n", False),
         ("import asyncio\nfrom typing import Any\n", False),
     ],
 )
@@ -736,7 +736,7 @@ def test_an_owner_imports_project_modules_only_for_type_checking() -> None:
 def test_nothing_but_the_facade_imports_an_owner() -> None:
     """The facade is the one import path and the one patch surface."""
     importers = []
-    for path in sorted((_SRC / "kiro_crew").rglob("*.py")):
+    for path in sorted((_SRC / "aj_crew").rglob("*.py")):
         resolved = path.resolve()
         if _OWNER_DIR in resolved.parents or resolved == _FACADE_PATH or "_vendor" in path.parts:
             continue
@@ -783,7 +783,7 @@ def _facade_aliases(tree: ast.Module) -> set[str]:
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             aliases |= {a.asname for a in node.names if a.name == _FACADE and a.asname}
-        elif isinstance(node, ast.ImportFrom) and node.module == "kiro_crew.slack":
+        elif isinstance(node, ast.ImportFrom) and node.module == "aj_crew.slack":
             aliases |= {a.asname or a.name for a in node.names if a.name == "handler"}
     changed = True
     while changed:
@@ -868,24 +868,24 @@ def _facade_writes(source: str) -> set[str]:
     ("source", "expected"),
     [
         (
-            "import kiro_crew.slack.handler as h\nmonkeypatch.setattr(h, '_EDIT_INTERVAL', 0)\n",
+            "import aj_crew.slack.handler as h\nmonkeypatch.setattr(h, '_EDIT_INTERVAL', 0)\n",
             {"_EDIT_INTERVAL"},
         ),
-        ("from kiro_crew.slack import handler\nmonkeypatch.setattr(handler, 'os', 1)\n", {"os"}),
-        ("monkeypatch.setattr('kiro_crew.slack.handler.is_owner', None)\n", {"is_owner"}),
-        ("from unittest import mock\nmock.patch('kiro_crew.slack.handler.sel')\n", {"sel"}),
-        ("patch('kiro_crew.slack.handler.Path.home')\n", {"Path"}),
+        ("from aj_crew.slack import handler\nmonkeypatch.setattr(handler, 'os', 1)\n", {"os"}),
+        ("monkeypatch.setattr('aj_crew.slack.handler.is_owner', None)\n", {"is_owner"}),
+        ("from unittest import mock\nmock.patch('aj_crew.slack.handler.sel')\n", {"sel"}),
+        ("patch('aj_crew.slack.handler.Path.home')\n", {"Path"}),
         (
-            "from kiro_crew.slack import handler as h\npatch.object(h, '_PendingApproval')\n",
+            "from aj_crew.slack import handler as h\npatch.object(h, '_PendingApproval')\n",
             {"_PendingApproval"},
         ),
-        ("import kiro_crew.slack.handler as h\nh.sel = lambda: None\n", {"sel"}),
+        ("import aj_crew.slack.handler as h\nh.sel = lambda: None\n", {"sel"}),
         (
-            "import kiro_crew.slack.handler as h\nassert h._trusted_sessions is t\n",
+            "import aj_crew.slack.handler as h\nassert h._trusted_sessions is t\n",
             {"_trusted_sessions"},
         ),
-        ("import kiro_crew.slack.handler as h\nx = h._EDIT_INTERVAL\n", set()),
-        ("monkeypatch.setattr('kiro_crew.slack.events.is_owner', None)\n", set()),
+        ("import aj_crew.slack.handler as h\nx = h._EDIT_INTERVAL\n", set()),
+        ("monkeypatch.setattr('aj_crew.slack.events.is_owner', None)\n", set()),
         ("monkeypatch.setattr(other, '_owner_id', 1)\n", set()),
     ],
 )
@@ -902,7 +902,7 @@ def _test_sources() -> list[tuple[str, str]]:
         if path.resolve() == Path(__file__).resolve():
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
-        if _FACADE in text or "kiro_crew.slack import handler" in text:
+        if _FACADE in text or "aj_crew.slack import handler" in text:
             out.append((path.relative_to(_ROOT).as_posix(), text))
     return out
 
@@ -929,7 +929,7 @@ def test_the_corpus_sweep_finds_the_seams_the_suite_is_known_to_patch() -> None:
         "_resolve_agent_name",
         "disable_yolo",
         "_pending_approvals",
-        "KiroCrewConfig",
+        "AjCrewConfig",
         "_collect_recent_sessions_off_loop",
         "is_sensitive_path",
         "os",
@@ -965,7 +965,7 @@ def _runtime_shadows(source: str) -> dict[str, list[int]]:
 
 def test_the_binding_sweep_reports_a_shadow_and_ignores_an_inert_import() -> None:
     assert "sel" in _runtime_shadows(
-        "def f():\n    from kiro_crew.sel import sel\n\n    return sel\n"
+        "def f():\n    from aj_crew.sel import sel\n\n    return sel\n"
     )
     assert "CAP" in _runtime_shadows("CAP = 7\n")
     assert "os" not in _runtime_shadows("import os\n\n\ndef f():\n    return os.name\n")
@@ -1116,13 +1116,13 @@ def test_the_import_time_phase_table_is_built_in_the_facade() -> None:
 
 
 def test_a_frame_in_an_owner_is_attributed_to_slack() -> None:
-    """A loop stall whose outermost Kiro Crew frame is an owner function still reads
+    """A loop stall whose outermost Aj Crew frame is an owner function still reads
     as the Slack surface (``stall_attribution``'s slack rule names the package)."""
-    from kiro_crew import stall_attribution
+    from aj_crew import stall_attribution
 
     frames = stall_attribution.parse_frames(
         [
-            '  File "/opt/venv/lib/python3.12/site-packages/kiro_crew/slack/handler_runtime/'
+            '  File "/opt/venv/lib/python3.12/site-packages/aj_crew/slack/handler_runtime/'
             'stream.py", line 1 in on_text'
         ]
     )

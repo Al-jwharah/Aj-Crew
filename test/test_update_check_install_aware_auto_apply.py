@@ -22,12 +22,12 @@ from update_check_install_aware_helpers import (  # noqa: F401 -- the autouse fi
     _wheel_install,
 )
 
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.platform import update_provider
-from kiro_crew.platform.update_capability import AutoUpdateEffect
-from kiro_crew.platform.update_provider import CommandProvider, UpdateCheckResult
+from aj_crew.dashboard.handlers import updates
+from aj_crew.platform import update_provider
+from aj_crew.platform.update_capability import AutoUpdateEffect
+from aj_crew.platform.update_provider import CommandProvider, UpdateCheckResult
 
-_GATEWAY_LOGGER = "kiro_crew.slack.gateway"
+_GATEWAY_LOGGER = "aj_crew.slack.gateway"
 _BUILDING = "Auto-update enabled for managed install — building beside it"
 _SHUTTING_DOWN = "Auto-update not started: the gateway is shutting down"
 
@@ -44,7 +44,7 @@ class TestAutoApplyGuard:
 
     @staticmethod
     def _orchestrator():
-        from kiro_crew.slack.gateway import GatewayOrchestrator
+        from aj_crew.slack.gateway import GatewayOrchestrator
 
         # __new__ without __init__: _check_for_updates only touches
         # dashboard_state and _auto_apply_update, and a real construction would
@@ -73,29 +73,29 @@ class TestAutoApplyGuard:
         busy: int = 0,
         effect=None,
     ):
-        import kiro_crew.dashboard.handlers as handlers
+        import aj_crew.dashboard.handlers as handlers
 
         orch = self._orchestrator()
         orch._in_flight_work_counts = MagicMock(return_value=(busy, 0))
         cfg = MagicMock()
         cfg.auto_update = auto_update
-        from kiro_crew.platform.governance import UpdatePins
+        from aj_crew.platform.governance import UpdatePins
 
         original = dict(handlers._update_info)
         try:
             handlers._update_info.clear()
             handlers._update_info.update(info)
             with patch.object(handlers, "_do_update_check", new_callable=AsyncMock):
-                with patch("kiro_crew.config.KiroCrewConfig.load", return_value=cfg):
+                with patch("aj_crew.config.AjCrewConfig.load", return_value=cfg):
                     with patch(
-                        "kiro_crew.platform.update_governance.update_required",
+                        "aj_crew.platform.update_governance.update_required",
                         return_value=False,
                     ):
                         # Runtime ownership is authoritative. Old managed wheels
                         # predate the build stamp and report "source", while a
-                        # foreign wheel must never be rewritten by Kiro Crew.
+                        # foreign wheel must never be rewritten by Aj Crew.
                         with patch(
-                            "kiro_crew.platform.wheel_engine.running_from_managed_venv",
+                            "aj_crew.platform.wheel_engine.running_from_managed_venv",
                             return_value=managed_venv,
                         ):
                             # No commands in the policy pins, so resolve_provider
@@ -103,12 +103,12 @@ class TestAutoApplyGuard:
                             # path under test.
                             with (
                                 patch(
-                                    "kiro_crew.platform.governance.active_update_pins",
+                                    "aj_crew.platform.governance.active_update_pins",
                                     return_value=UpdatePins(),
                                 ),
                                 (
                                     patch(
-                                        "kiro_crew.slack.gateway.auto_update_effect",
+                                        "aj_crew.slack.gateway.auto_update_effect",
                                         return_value=effect,
                                     )
                                     if effect is not None
@@ -125,7 +125,7 @@ class TestAutoApplyGuard:
         info = {
             "update_available": True,
             "can_apply": False,
-            "managed_by": "kirocrew",
+            "managed_by": "ajcrew",
             "channel": "stable",
             "latest_version": "9.9.9",
             "remediation": {
@@ -135,7 +135,7 @@ class TestAutoApplyGuard:
             },
         }
         with patch(
-            "kiro_crew.slack.gateway.distribution",
+            "aj_crew.slack.gateway.distribution",
             side_effect=AssertionError("managed-venv ownership must replace the build stamp"),
         ):
             orch = self._run(
@@ -154,7 +154,7 @@ class TestAutoApplyGuard:
     _MANAGED_UPDATE = {
         "update_available": True,
         "can_apply": False,
-        "managed_by": "kirocrew",
+        "managed_by": "ajcrew",
         "remediation": {
             "kind": "command",
             "message": "Re-run the installer to upgrade.",
@@ -168,7 +168,7 @@ class TestAutoApplyGuard:
         # installer admitted now would be stopped mid-write moments later.
         # The effect is pinned so the managed-venv route, and its shutdown gate,
         # is reached on every platform.
-        with patch("kiro_crew.slack.gateway.shutdown_event", SimpleNamespace(is_set=lambda: True)):
+        with patch("aj_crew.slack.gateway.shutdown_event", SimpleNamespace(is_set=lambda: True)):
             orch = self._run(
                 dict(self._MANAGED_UPDATE),
                 auto_update=True,
@@ -184,7 +184,7 @@ class TestAutoApplyGuard:
         orch._pending_update_respawn = MagicMock()
         orch._restart_after_update = AsyncMock()
         orch._finish_auto_update_apply = AsyncMock()
-        with patch("kiro_crew.slack.gateway.shutdown_event", SimpleNamespace(is_set=lambda: True)):
+        with patch("aj_crew.slack.gateway.shutdown_event", SimpleNamespace(is_set=lambda: True)):
             asyncio.run(orch._retry_pending_update_restart())
         orch._restart_after_update.assert_not_awaited()
         orch.sessions.pause_turn_admission_for_update.assert_not_awaited()
@@ -193,7 +193,7 @@ class TestAutoApplyGuard:
     def test_finishing_while_the_pause_is_kept_schedules_no_replay(self):
         # During a shutdown the resume keeps the pause and reports it; a replay
         # then would tell senders to resend while the gateway is stopping.
-        from kiro_crew.slack.gateway import GatewayOrchestrator
+        from aj_crew.slack.gateway import GatewayOrchestrator
 
         orch = self._orchestrator()
         orch.sessions.resume_turn_admission_after_update = AsyncMock(return_value=False)
@@ -215,7 +215,7 @@ class TestAutoApplyGuard:
             {
                 "update_available": True,
                 "can_apply": False,
-                "managed_by": "kirocrew",
+                "managed_by": "ajcrew",
                 "channel": "stable",
                 "latest_version": "9.9.9",
                 "remediation": {
@@ -300,7 +300,7 @@ class TestAutoApplyGuard:
             {
                 "update_available": True,
                 "can_apply": False,
-                "managed_by": "kirocrew",
+                "managed_by": "ajcrew",
                 "remediation": {
                     "kind": "command",
                     "message": "Re-run the installer to upgrade.",
@@ -313,7 +313,7 @@ class TestAutoApplyGuard:
         orch._auto_apply_update.assert_not_awaited()
         orch._auto_apply_wheel_update.assert_not_awaited()
         notified = [m for m in gateway_logs() if "cannot apply it unattended" in m]
-        assert notified and "this install (kirocrew)" in notified[0]
+        assert notified and "this install (ajcrew)" in notified[0]
         assert _BUILDING not in gateway_logs()
 
     def test_git_checkout_auto_applies_when_the_version_moved(self, gateway_logs):
@@ -338,12 +338,12 @@ class TestAutoApplyGuard:
         )
         orch._auto_apply_update.assert_awaited_once()
         assert "Auto-update enabled — applying update" in gateway_logs()
-        # The git apply reloads `kiro_crew`, so its queued restart is never held.
+        # The git apply reloads `aj_crew`, so its queued restart is never held.
         assert orch._pending_update_version == ""
 
     def test_a_failed_check_does_not_claim_up_to_date(self, capsys):
         orch = self._run(
-            {"update_available": None, "error_code": "feed_unreachable", "managed_by": "kirocrew"},
+            {"update_available": None, "error_code": "feed_unreachable", "managed_by": "ajcrew"},
             auto_update=True,
         )
         orch._auto_apply_update.assert_not_awaited()
@@ -384,7 +384,7 @@ class TestAutoApplyGuard:
         assert "Already on latest version" not in capsys.readouterr().out
 
     def test_failed_apply_replay_waits_for_the_existing_pass(self, tmp_path):
-        from kiro_crew.slack import gateway
+        from aj_crew.slack import gateway
 
         orch = object.__new__(gateway.GatewayOrchestrator)
         replay = AsyncMock()
@@ -530,7 +530,7 @@ def _pin_install_shape(
 
     ``manual`` is a policy with ``updates.unattended_apply: false``.
     """
-    from kiro_crew.platform import (
+    from aj_crew.platform import (
         update_capability,
         update_governance,
         update_layout,
@@ -550,7 +550,7 @@ def _pin_install_shape(
             requires_restart=True,
         ),
     )
-    monkeypatch.setattr("kiro_crew.platform_compat.trusted_git_bin", lambda: "/usr/bin/git")
+    monkeypatch.setattr("aj_crew.platform_compat.trusted_git_bin", lambda: "/usr/bin/git")
     monkeypatch.setattr(update_governance, "_git", lambda _root, *_args: branch)
     monkeypatch.setattr(update_governance, "repo_exec_config_reason", lambda _root: exec_config)
     monkeypatch.setattr(update_governance, "tracks_upstream", lambda _root, _b, **_k: tracks)
@@ -563,13 +563,13 @@ def _pin_install_shape(
     monkeypatch.setattr(update_layout, "cdn_bases", lambda: ("https://a", "https://b"))
     monkeypatch.setattr(update_capability, "_installer_runs_here", lambda: platform != "win32")
     monkeypatch.setattr(
-        "kiro_crew.platform_compat.trusted_system_bin", lambda _n: "/bin/sh" if shell else None
+        "aj_crew.platform_compat.trusted_system_bin", lambda _n: "/bin/sh" if shell else None
     )
     monkeypatch.setattr(update_provider, "resolve_provider", lambda: provider)
 
 
 def _provider(*, can_apply: bool):
-    from kiro_crew.platform.update_provider import UpdateCheckResult
+    from aj_crew.platform.update_provider import UpdateCheckResult
 
     provider = MagicMock()
     provider.can_apply = MagicMock(return_value=can_apply)
@@ -595,41 +595,41 @@ _SHAPES = [
         None,
         id="git-feature-below-floor",
     ),
-    pytest.param({"managed_by": "kirocrew"}, "install", "wheel", id="managed-venv"),
+    pytest.param({"managed_by": "ajcrew"}, "install", "wheel", id="managed-venv"),
     pytest.param(
-        {"managed_by": "kirocrew", "cdn_safe": False}, "notify", None, id="managed-venv-unsafe-cdn"
+        {"managed_by": "ajcrew", "cdn_safe": False}, "notify", None, id="managed-venv-unsafe-cdn"
     ),
     pytest.param(
-        {"managed_by": "kirocrew", "managed_venv": False}, "notify", None, id="foreign-wheel"
+        {"managed_by": "ajcrew", "managed_venv": False}, "notify", None, id="foreign-wheel"
     ),
     pytest.param(
-        {"managed_by": "kirocrew", "platform": "win32"}, "notify", None, id="managed-on-windows"
+        {"managed_by": "ajcrew", "platform": "win32"}, "notify", None, id="managed-on-windows"
     ),
     pytest.param(
-        {"managed_by": "kirocrew", "shell": False}, "notify", None, id="managed-without-openssl"
+        {"managed_by": "ajcrew", "shell": False}, "notify", None, id="managed-without-openssl"
     ),
     pytest.param(
-        {"managed_by": "kirocrew", "blocked": "pinned"}, "notify", None, id="managed-pinned-away"
+        {"managed_by": "ajcrew", "blocked": "pinned"}, "notify", None, id="managed-pinned-away"
     ),
     pytest.param(
-        {"managed_by": "kirocrew", "floor": True}, "mandatory", "wheel", id="managed-below-floor"
+        {"managed_by": "ajcrew", "floor": True}, "mandatory", "wheel", id="managed-below-floor"
     ),
     pytest.param({"managed_by": "electron"}, "notify", None, id="desktop-bundle"),
     pytest.param({"managed_by": "container", "floor": True}, "notify", None, id="container-floor"),
     pytest.param(
-        {"managed_by": "kirocrew", "provider": "apply"}, "install", "provider", id="provider-apply"
+        {"managed_by": "ajcrew", "provider": "apply"}, "install", "provider", id="provider-apply"
     ),
     pytest.param(
-        {"managed_by": "kirocrew", "provider": "check-only"}, "notify", None, id="provider-no-apply"
+        {"managed_by": "ajcrew", "provider": "check-only"}, "notify", None, id="provider-no-apply"
     ),
     pytest.param(
-        {"managed_by": "kirocrew", "provider": "check-only", "floor": True},
+        {"managed_by": "ajcrew", "provider": "check-only", "floor": True},
         "notify",
         None,
         id="provider-no-apply-below-floor",
     ),
     pytest.param(
-        {"managed_by": "kirocrew", "provider": "apply", "floor": True},
+        {"managed_by": "ajcrew", "provider": "apply", "floor": True},
         "mandatory",
         "provider",
         id="provider-apply-below-floor",
@@ -637,13 +637,13 @@ _SHAPES = [
     # `updates.unattended_apply: false`: a route that can install only notifies,
     # and keeps its route for a person's Update; the floor still installs.
     pytest.param(
-        {"managed_by": "kirocrew", "provider": "apply", "manual": True},
+        {"managed_by": "ajcrew", "provider": "apply", "manual": True},
         "notify",
         "provider",
         id="provider-apply-manual-only",
     ),
     pytest.param(
-        {"managed_by": "kirocrew", "provider": "apply", "manual": True, "floor": True},
+        {"managed_by": "ajcrew", "provider": "apply", "manual": True, "floor": True},
         "mandatory",
         "provider",
         id="provider-apply-manual-only-below-floor",
@@ -656,10 +656,10 @@ _SHAPES = [
         id="git-manual-only-below-floor",
     ),
     pytest.param(
-        {"managed_by": "kirocrew", "manual": True}, "notify", "wheel", id="managed-venv-manual-only"
+        {"managed_by": "ajcrew", "manual": True}, "notify", "wheel", id="managed-venv-manual-only"
     ),
     pytest.param(
-        {"managed_by": "kirocrew", "provider": "check-only", "manual": True},
+        {"managed_by": "ajcrew", "provider": "check-only", "manual": True},
         "notify",
         None,
         id="provider-no-apply-manual-only",
@@ -680,7 +680,7 @@ class TestAutoUpdateEffect:
 
     @pytest.mark.parametrize("shape, effect, route", _SHAPES)
     def test_the_effect_of_each_install_shape(self, monkeypatch, shape, effect, route):
-        from kiro_crew.platform.update_capability import auto_update_effect
+        from aj_crew.platform.update_capability import auto_update_effect
 
         self._shape(monkeypatch, shape)
         answer = auto_update_effect(running_version="1.0.0")
@@ -726,9 +726,9 @@ class TestAutoUpdateEffect:
         "shape",
         [
             pytest.param({"managed_by": "git", "manual": True}, id="git"),
-            pytest.param({"managed_by": "kirocrew", "manual": True}, id="managed-venv"),
+            pytest.param({"managed_by": "ajcrew", "manual": True}, id="managed-venv"),
             pytest.param(
-                {"managed_by": "kirocrew", "provider": "apply", "manual": True}, id="provider"
+                {"managed_by": "ajcrew", "provider": "apply", "manual": True}, id="provider"
             ),
         ],
     )
@@ -752,8 +752,8 @@ class TestAutoUpdateEffect:
     def _run_one_cycle(shape, *, auto_update):
         """One ``_check_for_updates`` with an update available; the orchestrator and the
         published verdict."""
-        import kiro_crew.dashboard.handlers as handlers
-        from kiro_crew.platform.governance import UpdatePins
+        import aj_crew.dashboard.handlers as handlers
+        from aj_crew.platform.governance import UpdatePins
 
         orch = TestAutoApplyGuard._orchestrator()
         orch._prepare_auto_update_apply = AsyncMock(return_value=True)
@@ -776,9 +776,9 @@ class TestAutoUpdateEffect:
             )
             with (
                 patch.object(handlers, "_do_update_check", new_callable=AsyncMock),
-                patch("kiro_crew.config.KiroCrewConfig.load", return_value=cfg),
+                patch("aj_crew.config.AjCrewConfig.load", return_value=cfg),
                 patch(
-                    "kiro_crew.platform.governance.active_update_pins", return_value=UpdatePins()
+                    "aj_crew.platform.governance.active_update_pins", return_value=UpdatePins()
                 ),
             ):
                 asyncio.run(orch._check_for_updates())
@@ -807,13 +807,13 @@ def test_unattended_installs_turned_off_mid_cycle_stop_the_provider_apply(
     catches. Either way the apply never runs, admission reopens, and the update
     is still offered.
     """
-    import kiro_crew.dashboard.handlers as handlers
-    from kiro_crew.platform import update_governance
-    from kiro_crew.platform.governance import UpdatePins
-    from kiro_crew.platform.update_provider import UpdateCheckResult
+    import aj_crew.dashboard.handlers as handlers
+    from aj_crew.platform import update_governance
+    from aj_crew.platform.governance import UpdatePins
+    from aj_crew.platform.update_provider import UpdateCheckResult
 
     provider = _provider(can_apply=True)
-    _pin_install_shape(monkeypatch, managed_by="kirocrew", provider=provider)
+    _pin_install_shape(monkeypatch, managed_by="ajcrew", provider=provider)
     policy = {"unattended_apply": True}
     monkeypatch.setattr(
         update_governance, "unattended_apply_allowed", lambda: policy["unattended_apply"]
@@ -833,7 +833,7 @@ def test_unattended_installs_turned_off_mid_cycle_stop_the_provider_apply(
         return 1, ""
 
     provider.check = AsyncMock(side_effect=_check)
-    monkeypatch.setattr("kiro_crew.platform.wheel_apply.snapshot_memory_before_update", _snapshot)
+    monkeypatch.setattr("aj_crew.platform.wheel_apply.snapshot_memory_before_update", _snapshot)
     orch = TestAutoApplyGuard._orchestrator()
     orch._prepare_auto_update_apply = AsyncMock(return_value=True)
     orch._finish_auto_update_apply = AsyncMock()
@@ -845,8 +845,8 @@ def test_unattended_installs_turned_off_mid_cycle_stop_the_provider_apply(
     try:
         handlers._update_info.clear()
         with (
-            patch("kiro_crew.config.KiroCrewConfig.load", return_value=cfg),
-            patch("kiro_crew.platform.governance.active_update_pins", return_value=UpdatePins()),
+            patch("aj_crew.config.AjCrewConfig.load", return_value=cfg),
+            patch("aj_crew.platform.governance.active_update_pins", return_value=UpdatePins()),
         ):
             asyncio.run(orch._check_for_updates())
         published = dict(handlers._update_info)
@@ -869,9 +869,9 @@ def test_a_provider_the_check_resolves_stops_the_built_in_routes(monkeypatch):
     provider configured in between is first seen by the check itself. A provider
     OWNS the update, so no built-in route may apply that cycle.
     """
-    import kiro_crew.dashboard.handlers as handlers
-    from kiro_crew.platform.governance import UpdatePins
-    from kiro_crew.platform.update_capability import MANAGED_BY_COMMAND
+    import aj_crew.dashboard.handlers as handlers
+    from aj_crew.platform.governance import UpdatePins
+    from aj_crew.platform.update_capability import MANAGED_BY_COMMAND
 
     _pin_install_shape(monkeypatch, managed_by="git")
     orch = TestAutoApplyGuard._orchestrator()
@@ -896,8 +896,8 @@ def test_a_provider_the_check_resolves_stops_the_built_in_routes(monkeypatch):
         handlers._update_info.clear()
         with (
             patch.object(handlers, "_do_update_check", _check_installs_a_provider),
-            patch("kiro_crew.config.KiroCrewConfig.load", return_value=cfg),
-            patch("kiro_crew.platform.governance.active_update_pins", return_value=UpdatePins()),
+            patch("aj_crew.config.AjCrewConfig.load", return_value=cfg),
+            patch("aj_crew.platform.governance.active_update_pins", return_value=UpdatePins()),
         ):
             asyncio.run(orch._check_for_updates())
     finally:
@@ -911,10 +911,10 @@ def test_a_provider_the_check_resolves_stops_the_built_in_routes(monkeypatch):
 
 def test_a_wheel_route_without_an_installer_command_does_not_pause_admission(monkeypatch):
     """The command comes from the CHECK, so the route cannot vouch for it."""
-    import kiro_crew.dashboard.handlers as handlers
-    from kiro_crew.platform.governance import UpdatePins
+    import aj_crew.dashboard.handlers as handlers
+    from aj_crew.platform.governance import UpdatePins
 
-    _pin_install_shape(monkeypatch, managed_by="kirocrew")
+    _pin_install_shape(monkeypatch, managed_by="ajcrew")
     orch = TestAutoApplyGuard._orchestrator()
     orch._prepare_auto_update_apply = AsyncMock(return_value=True)
     orch._finish_auto_update_apply = AsyncMock()
@@ -925,12 +925,12 @@ def test_a_wheel_route_without_an_installer_command_does_not_pause_admission(mon
     try:
         handlers._update_info.clear()
         handlers._update_info.update(
-            {"update_available": True, "managed_by": "kirocrew", "remediation": None}
+            {"update_available": True, "managed_by": "ajcrew", "remediation": None}
         )
         with (
             patch.object(handlers, "_do_update_check", new_callable=AsyncMock),
-            patch("kiro_crew.config.KiroCrewConfig.load", return_value=cfg),
-            patch("kiro_crew.platform.governance.active_update_pins", return_value=UpdatePins()),
+            patch("aj_crew.config.AjCrewConfig.load", return_value=cfg),
+            patch("aj_crew.platform.governance.active_update_pins", return_value=UpdatePins()),
         ):
             asyncio.run(orch._check_for_updates())
     finally:
@@ -953,7 +953,7 @@ def test_every_unattended_apply_consults_the_effect_first():
     import inspect
     from pathlib import Path
 
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     cls = next(
         node
@@ -1003,21 +1003,21 @@ def test_every_unattended_apply_consults_the_effect_first():
 
 def test_a_provider_without_can_apply_still_installs(monkeypatch):
     """A provider predating ``can_apply`` keeps applying when asked, as before."""
-    from kiro_crew.platform.update_capability import auto_update_effect
+    from aj_crew.platform.update_capability import auto_update_effect
 
     legacy = MagicMock(spec=["check", "apply"])
-    _pin_install_shape(monkeypatch, managed_by="kirocrew", provider=legacy)
+    _pin_install_shape(monkeypatch, managed_by="ajcrew", provider=legacy)
 
     answer = auto_update_effect(running_version="1.0.0")
     assert (answer.effect, answer.route) == ("install", "provider")
 
 
-def test_a_source_pinned_install_below_the_floor_is_not_told_to_run_kirocrew_update(
+def test_a_source_pinned_install_below_the_floor_is_not_told_to_run_ajcrew_update(
     monkeypatch,
 ):
-    """The pin refuses `kirocrew update` too, so no badge points at it."""
-    import kiro_crew.dashboard.handlers as handlers
-    from kiro_crew.platform.governance import UpdatePins
+    """The pin refuses `ajcrew update` too, so no badge points at it."""
+    import aj_crew.dashboard.handlers as handlers
+    from aj_crew.platform.governance import UpdatePins
 
     _pin_install_shape(monkeypatch, managed_by="git", blocked="pinned", floor=True)
     orch = TestAutoApplyGuard._orchestrator()
@@ -1030,12 +1030,12 @@ def test_a_source_pinned_install_below_the_floor_is_not_told_to_run_kirocrew_upd
                 "update_available": False,
                 "can_apply": True,
                 "managed_by": "git",
-                "remediation": {"kind": "command", "message": "m", "command": "kirocrew update"},
+                "remediation": {"kind": "command", "message": "m", "command": "ajcrew update"},
             }
         )
         with (
             patch.object(handlers, "_do_update_check", new_callable=AsyncMock),
-            patch("kiro_crew.platform.governance.active_update_pins", return_value=UpdatePins()),
+            patch("aj_crew.platform.governance.active_update_pins", return_value=UpdatePins()),
         ):
             asyncio.run(orch._check_for_updates())
         forced = handlers._update_info["update_available"]
@@ -1053,14 +1053,14 @@ def test_a_source_pinned_install_below_the_floor_is_not_told_to_run_kirocrew_upd
 # DERIVED from the helpers it calls, so a newly added gate fails here until the
 # route reads it too — or until it is declared dynamic below, with its reason.
 _GATE_HELPER_MODULES = (
-    "kiro_crew.platform.update_fetch",
-    "kiro_crew.platform.update_governance",
-    "kiro_crew.platform.update_layout",
-    "kiro_crew.platform.wheel_engine",
-    "kiro_crew.platform.wheel_engine_contract",
-    "kiro_crew.platform.wheel_engine_layout",
-    "kiro_crew.platform.wheel_engine_build_child",
-    "kiro_crew.platform.wheel_engine_transfer",
+    "aj_crew.platform.update_fetch",
+    "aj_crew.platform.update_governance",
+    "aj_crew.platform.update_layout",
+    "aj_crew.platform.wheel_engine",
+    "aj_crew.platform.wheel_engine_contract",
+    "aj_crew.platform.wheel_engine_layout",
+    "aj_crew.platform.wheel_engine_build_child",
+    "aj_crew.platform.wheel_engine_transfer",
 )
 
 #: Helpers an apply path calls that the STATIC derivation cannot read, with why.
@@ -1085,7 +1085,7 @@ _DYNAMIC_GATES = {
 
 _APPLY_ROUTES = [("_auto_apply_update", "_git_route"), ("_auto_apply_wheel_update", "_wheel_route")]
 #: The gateway owner module both apply paths are defined in.
-_APPLY_OWNER = "kiro_crew.slack.gateway_runtime.update_apply"
+_APPLY_OWNER = "aj_crew.slack.gateway_runtime.update_apply"
 
 
 def _gate_helper_names() -> set[str]:
@@ -1108,7 +1108,7 @@ def test_the_derivation_reads_every_static_gate_its_apply_path_reads(apply_name,
     import importlib
     import inspect
 
-    from kiro_crew.platform import update_capability
+    from aj_crew.platform import update_capability
 
     def _names(module, name: str) -> set[str]:
         fn = next(
@@ -1129,7 +1129,7 @@ def test_the_derivation_reads_every_static_gate_its_apply_path_reads(apply_name,
     applied = _names(importlib.import_module(_APPLY_OWNER), apply_name)
     if "preflight_bases" in applied:
         # The managed-venv apply runs its gates through the shared preflight.
-        from kiro_crew.platform import wheel_apply
+        from aj_crew.platform import wheel_apply
 
         applied |= _names(wheel_apply, "preflight_bases")
     static_gates = (applied & helpers) - set(_DYNAMIC_GATES)
@@ -1153,7 +1153,7 @@ class TestTheStatusFrameAnswersBeforeAnyCheck:
 
     @pytest.fixture(autouse=True)
     def _no_derivation_yet(self, _floor_monkeypatch):
-        from kiro_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers import updates
 
         _floor_monkeypatch.setattr(updates, "_auto_effect", None)
         _floor_monkeypatch.setattr(updates, "_auto_effect_task", None)
@@ -1165,15 +1165,15 @@ class TestTheStatusFrameAnswersBeforeAnyCheck:
         def _boom(*_a, **_k):  # pragma: no cover - must not be called
             raise AssertionError("the status frame must not shell out to git")
 
-        monkeypatch.setattr("kiro_crew.platform.update_governance._git_probe", _boom)
+        monkeypatch.setattr("aj_crew.platform.update_governance._git_probe", _boom)
         # update_fetch imports the probe by name, so its binding is patched too.
-        monkeypatch.setattr("kiro_crew.platform.update_fetch._git_probe", _boom)
-        monkeypatch.setattr("kiro_crew.platform.update_capability.subprocess.run", _boom)
+        monkeypatch.setattr("aj_crew.platform.update_fetch._git_probe", _boom)
+        monkeypatch.setattr("aj_crew.platform.update_capability.subprocess.run", _boom)
 
     def test_a_desktop_bundle_reports_notify(self, monkeypatch, _no_derivation_yet):
         self._no_git(monkeypatch)
-        monkeypatch.setattr("kiro_crew.platform.update_capability.distribution", lambda: "dmg")
-        monkeypatch.setattr("kiro_crew.platform.update_provider.resolve_provider", lambda: None)
+        monkeypatch.setattr("aj_crew.platform.update_capability.distribution", lambda: "dmg")
+        monkeypatch.setattr("aj_crew.platform.update_provider.resolve_provider", lambda: None)
 
         assert status_fields_of(_no_derivation_yet)["update_auto_effect"] == "notify"
 
@@ -1191,30 +1191,30 @@ class TestTheStatusFrameAnswersBeforeAnyCheck:
         self, monkeypatch, _no_derivation_yet, unattended, effect, manual_only
     ):
         self._no_git(monkeypatch)
-        monkeypatch.setattr("kiro_crew.platform.update_capability.distribution", lambda: "wheel")
-        monkeypatch.setattr("kiro_crew.platform.update_provider.resolve_provider", lambda: None)
+        monkeypatch.setattr("aj_crew.platform.update_capability.distribution", lambda: "wheel")
+        monkeypatch.setattr("aj_crew.platform.update_provider.resolve_provider", lambda: None)
         monkeypatch.setattr(
-            "kiro_crew.platform.update_capability._source_checkout_root", lambda: None
+            "aj_crew.platform.update_capability._source_checkout_root", lambda: None
         )
         monkeypatch.setattr(
-            "kiro_crew.platform.update_capability._runs_from_managed_venv", lambda: True
+            "aj_crew.platform.update_capability._runs_from_managed_venv", lambda: True
         )
         monkeypatch.setattr(
-            "kiro_crew.platform.update_capability._installer_runs_here", lambda: True
+            "aj_crew.platform.update_capability._installer_runs_here", lambda: True
         )
-        monkeypatch.setattr("kiro_crew.platform_compat.trusted_system_bin", lambda _n: "/bin/sh")
-        monkeypatch.setattr("kiro_crew.platform.update_layout.cdn_bases_are_safe", lambda: True)
+        monkeypatch.setattr("aj_crew.platform_compat.trusted_system_bin", lambda _n: "/bin/sh")
+        monkeypatch.setattr("aj_crew.platform.update_layout.cdn_bases_are_safe", lambda: True)
         monkeypatch.setattr(
-            "kiro_crew.platform.update_layout.cdn_bases", lambda: ("https://a", "https://b")
-        )
-        monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.update_blocked_reason", lambda _u: ""
+            "aj_crew.platform.update_layout.cdn_bases", lambda: ("https://a", "https://b")
         )
         monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.update_required", lambda _v: False
+            "aj_crew.platform.update_governance.update_blocked_reason", lambda _u: ""
         )
         monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.unattended_apply_allowed", lambda: unattended
+            "aj_crew.platform.update_governance.update_required", lambda _v: False
+        )
+        monkeypatch.setattr(
+            "aj_crew.platform.update_governance.unattended_apply_allowed", lambda: unattended
         )
 
         fields = status_fields_of(_no_derivation_yet)
@@ -1231,11 +1231,11 @@ class TestTheStatusFrameAnswersBeforeAnyCheck:
         """The provider path publishes no ``can_apply``, so the field must not read it."""
         self._no_git(monkeypatch)
         monkeypatch.setattr(
-            "kiro_crew.platform.update_provider.resolve_provider",
+            "aj_crew.platform.update_provider.resolve_provider",
             lambda: _provider(can_apply=can_apply),
         )
         monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.update_required", lambda _v: floor
+            "aj_crew.platform.update_governance.update_required", lambda _v: floor
         )
 
         original = dict(_no_derivation_yet._update_info)
@@ -1256,10 +1256,10 @@ class TestTheStatusFrameAnswersBeforeAnyCheck:
     def test_a_checkout_is_the_one_shape_that_waits(self, monkeypatch, _no_derivation_yet):
         """Only git can report a branch and a remote, so this one stays unknown."""
         self._no_git(monkeypatch)
-        monkeypatch.setattr("kiro_crew.platform.update_capability.distribution", lambda: "source")
-        monkeypatch.setattr("kiro_crew.platform.update_provider.resolve_provider", lambda: None)
+        monkeypatch.setattr("aj_crew.platform.update_capability.distribution", lambda: "source")
+        monkeypatch.setattr("aj_crew.platform.update_provider.resolve_provider", lambda: None)
         monkeypatch.setattr(
-            "kiro_crew.platform.update_capability._source_checkout_root",
+            "aj_crew.platform.update_capability._source_checkout_root",
             lambda: Path("/somewhere/checkout"),
         )
 
@@ -1278,15 +1278,15 @@ def test_a_non_boolean_auto_update_on_disk_reads_as_the_default(tmp_path, monkey
     Stored verbatim it is truthy to the update loop, which would install on a
     host whose owner wrote the opposite, and no switch can render a string.
     """
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     path = tmp_path / "config.json"
-    monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: path)
-    monkeypatch.setattr("kiro_crew.config.loader.config_local_path", lambda: tmp_path / "none.json")
+    monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: path)
+    monkeypatch.setattr("aj_crew.config.loader.config_local_path", lambda: tmp_path / "none.json")
 
     def _loaded(value) -> bool:
         path.write_text(json.dumps({"auto_update": value}), encoding="utf-8")
-        return KiroCrewConfig.load().auto_update
+        return AjCrewConfig.load().auto_update
 
     # A recognized spelling is honoured either way.
     assert _loaded("false") is False
@@ -1301,7 +1301,7 @@ def test_a_non_boolean_auto_update_on_disk_reads_as_the_default(tmp_path, monkey
         assert _loaded(unreadable) is False, unreadable
     # An absent key still defaults ON.
     path.write_text("{}", encoding="utf-8")
-    assert KiroCrewConfig.load().auto_update is True
+    assert AjCrewConfig.load().auto_update is True
 
 
 class TestTheProviderPathPublishesItsOwnCanApply:
@@ -1314,11 +1314,11 @@ class TestTheProviderPathPublishesItsOwnCanApply:
 
     @pytest.mark.parametrize("can_apply", [True, False])
     def test_a_loop_check_publishes_the_providers_verdict(self, monkeypatch, can_apply):
-        import kiro_crew.dashboard.handlers as handlers
-        from kiro_crew.platform.governance import UpdatePins
+        import aj_crew.dashboard.handlers as handlers
+        from aj_crew.platform.governance import UpdatePins
 
         provider = _provider(can_apply=can_apply)
-        _pin_install_shape(monkeypatch, managed_by="kirocrew", provider=provider)
+        _pin_install_shape(monkeypatch, managed_by="ajcrew", provider=provider)
         orch = TestAutoApplyGuard._orchestrator()
         orch._prepare_auto_update_apply = AsyncMock(return_value=True)
         orch._finish_auto_update_apply = AsyncMock()
@@ -1330,11 +1330,11 @@ class TestTheProviderPathPublishesItsOwnCanApply:
         try:
             handlers._update_info.clear()
             with (
-                patch("kiro_crew.config.KiroCrewConfig.load", return_value=cfg),
+                patch("aj_crew.config.AjCrewConfig.load", return_value=cfg),
                 patch(
-                    "kiro_crew.platform.governance.active_update_pins", return_value=UpdatePins()
+                    "aj_crew.platform.governance.active_update_pins", return_value=UpdatePins()
                 ),
-                patch("kiro_crew.slack.gateway.respawn_executable", create=True),
+                patch("aj_crew.slack.gateway.respawn_executable", create=True),
             ):
                 asyncio.run(orch._check_for_updates())
             fields = handlers.updates.status_update_fields()
@@ -1349,29 +1349,29 @@ class TestTheProviderPathPublishesItsOwnCanApply:
 
 def test_a_pipx_install_answers_notify_without_git(monkeypatch):
     """Not a checkout, not the managed venv: the git-free path already knows."""
-    from kiro_crew.dashboard.handlers import updates
+    from aj_crew.dashboard.handlers import updates
 
     def _boom(*_a, **_k):  # pragma: no cover - must not be called
         raise AssertionError("the status frame must not shell out to git")
 
-    monkeypatch.setattr("kiro_crew.platform.update_governance._git_probe", _boom)
-    monkeypatch.setattr("kiro_crew.platform.update_fetch._git_probe", _boom)
+    monkeypatch.setattr("aj_crew.platform.update_governance._git_probe", _boom)
+    monkeypatch.setattr("aj_crew.platform.update_fetch._git_probe", _boom)
     monkeypatch.setattr(updates, "_auto_effect", None)
     monkeypatch.setattr(updates, "_shape_effect", None)
-    monkeypatch.setattr("kiro_crew.platform.update_capability.distribution", lambda: "wheel")
-    monkeypatch.setattr("kiro_crew.platform.update_provider.resolve_provider", lambda: None)
-    monkeypatch.setattr("kiro_crew.platform.update_capability._source_checkout_root", lambda: None)
+    monkeypatch.setattr("aj_crew.platform.update_capability.distribution", lambda: "wheel")
+    monkeypatch.setattr("aj_crew.platform.update_provider.resolve_provider", lambda: None)
+    monkeypatch.setattr("aj_crew.platform.update_capability._source_checkout_root", lambda: None)
     monkeypatch.setattr(
-        "kiro_crew.platform.update_capability._runs_from_managed_venv", lambda: False
+        "aj_crew.platform.update_capability._runs_from_managed_venv", lambda: False
     )
-    monkeypatch.setattr("kiro_crew.platform.update_capability._installer_runs_here", lambda: True)
-    monkeypatch.setattr("kiro_crew.platform_compat.trusted_system_bin", lambda _n: "/bin/sh")
+    monkeypatch.setattr("aj_crew.platform.update_capability._installer_runs_here", lambda: True)
+    monkeypatch.setattr("aj_crew.platform_compat.trusted_system_bin", lambda _n: "/bin/sh")
 
     assert status_fields_of(updates)["update_auto_effect"] == "notify"
 
 
 def test_the_git_free_answer_is_derived_once_per_process(monkeypatch):
-    from kiro_crew.dashboard.handlers import updates
+    from aj_crew.dashboard.handlers import updates
 
     calls = {"n": 0}
 
@@ -1389,7 +1389,7 @@ def test_the_git_free_answer_is_derived_once_per_process(monkeypatch):
 
 def test_the_status_reader_never_derives_on_the_loop(monkeypatch):
     """The sync reader only reads the memo; the funnel primes it off the loop."""
-    from kiro_crew.dashboard.handlers import updates
+    from aj_crew.dashboard.handlers import updates
 
     def _boom(**_kw):  # pragma: no cover - must not be called
         raise AssertionError("status_update_fields must not derive the effect itself")
@@ -1401,9 +1401,9 @@ def test_the_status_reader_never_derives_on_the_loop(monkeypatch):
 
 
 def test_the_status_funnel_primes_the_effect_before_reading(monkeypatch):
-    from kiro_crew.dashboard import status_counts
-    from kiro_crew.dashboard.handlers import updates
-    from kiro_crew.platform.update_capability import AutoUpdateEffect
+    from aj_crew.dashboard import status_counts
+    from aj_crew.dashboard.handlers import updates
+    from aj_crew.platform.update_capability import AutoUpdateEffect
 
     monkeypatch.setattr(updates, "_auto_effect", None)
     monkeypatch.setattr(updates, "_shape_effect", None)
@@ -1433,7 +1433,7 @@ def test_the_status_funnel_primes_the_effect_before_reading(monkeypatch):
     ],
 )
 def test_only_a_desktop_bundle_reports_itself_bundled_by_the_app(dist, bundled):
-    from kiro_crew.platform.update_capability import bundled_by_desktop_app
+    from aj_crew.platform.update_capability import bundled_by_desktop_app
 
     assert bundled_by_desktop_app(dist) is bundled
 
@@ -1450,15 +1450,15 @@ def test_a_bundled_gateway_with_a_policy_provider_says_both_facts(
     The effect is the provider's answer, because the provider is what this
     gateway's loop runs; without one, the app's own updater owns it: notify.
     """
-    from kiro_crew.dashboard.handlers import updates
+    from aj_crew.dashboard.handlers import updates
 
     provider = None if provider_kind is None else _provider(can_apply=provider_kind == "apply")
     monkeypatch.setattr(updates, "_auto_effect", None)
     monkeypatch.setattr(updates, "_shape_effect", None)
-    monkeypatch.setattr("kiro_crew.platform.update_capability.distribution", lambda: "dmg")
-    monkeypatch.setattr("kiro_crew.platform.update_capability.baked_distribution", lambda: "dmg")
-    monkeypatch.setattr("kiro_crew.platform.update_provider.resolve_provider", lambda: provider)
-    monkeypatch.setattr("kiro_crew.platform.update_governance.update_required", lambda _v: False)
+    monkeypatch.setattr("aj_crew.platform.update_capability.distribution", lambda: "dmg")
+    monkeypatch.setattr("aj_crew.platform.update_capability.baked_distribution", lambda: "dmg")
+    monkeypatch.setattr("aj_crew.platform.update_provider.resolve_provider", lambda: provider)
+    monkeypatch.setattr("aj_crew.platform.update_governance.update_required", lambda _v: False)
     original = dict(updates._update_info)
     try:
         updates._update_info.clear()
@@ -1475,8 +1475,8 @@ def test_a_bundled_gateway_with_a_policy_provider_says_both_facts(
 
 def test_a_runtime_distribution_override_cannot_claim_the_bundle(monkeypatch):
     """Only the BAKED stamp says "bundled": an env override cannot relabel it."""
-    from kiro_crew.platform.update_capability import bundled_by_desktop_app
+    from aj_crew.platform.update_capability import bundled_by_desktop_app
 
-    monkeypatch.setattr("kiro_crew.platform.update_capability.baked_distribution", lambda: "")
-    monkeypatch.setattr("kiro_crew.platform.update_capability.distribution", lambda: "dmg")
+    monkeypatch.setattr("aj_crew.platform.update_capability.baked_distribution", lambda: "")
+    monkeypatch.setattr("aj_crew.platform.update_capability.distribution", lambda: "dmg")
     assert bundled_by_desktop_app() is False

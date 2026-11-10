@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.apps.plugin_import -- converting a plugin package into an app.
+"""Tests for aj_crew.apps.plugin_import -- converting a plugin package into an app.
 
 The three properties worth a test are the ones a converter gets wrong in a way
 nobody notices: it silently drops a kind, it follows a path out of the package
@@ -27,9 +27,9 @@ from plugin_import_helpers import (
     _write_json,
 )
 
-from kiro_crew.apps import plugin_import
-from kiro_crew.apps.manifest import AppManifest
-from kiro_crew.apps.plugin_import import (
+from aj_crew.apps import plugin_import
+from aj_crew.apps.manifest import AppManifest
+from aj_crew.apps.plugin_import import (
     FORMAT_SCHEMA_QUALIFIED,
     FORMAT_VENDOR_DIRECTORY,
     SCHEMA_NAMESPACE_PREFIX,
@@ -47,7 +47,7 @@ from kiro_crew.apps.plugin_import import (
 
 class TestSourceAndOutputResolution:
     def test_a_relative_source_dir_converts_without_a_valueerror(self, tmp_path, monkeypatch):
-        """``kirocrew app import ./pkg`` passes a relative source. The manifest
+        """``ajcrew app import ./pkg`` passes a relative source. The manifest
         path must be resolved against the same absolute base as the root, or
         ``manifest_path.relative_to(root)`` raises ``ValueError``."""
         root = _package(tmp_path, skills="./skills")
@@ -401,7 +401,7 @@ class TestUnmappedKinds:
         A change to either map, or a merge of the two, must come with a decision on
         whether plugin import pairs SessionStart with agentSpawn.
         """
-        from kiro_crew.agent_materialization import kiro_hooks
+        from aj_crew.agent_materialization import kiro_hooks
 
         agent_map = kiro_hooks._KAS_TRIGGER_TO_EVENT
         import_map = plugin_import.AGENT_HOOK_EVENT_EQUIVALENT
@@ -510,13 +510,13 @@ class TestIdentity:
 
         A truthy non-string reached ``normalize_app_name``, whose ``.strip()``
         raised ``AttributeError`` past the handler's ``(OSError,
-        JSONDecodeError)`` arms, so ``kirocrew app import`` aborted with a
+        JSONDecodeError)`` arms, so ``ajcrew app import`` aborted with a
         traceback. An unusable name is an ABSENT name, and an absent one already
         has a documented fallback: the source directory.
         """
         import argparse
 
-        from kiro_crew.cli_commands import _handle_app_import
+        from aj_crew.cli_commands import _handle_app_import
 
         root = tmp_path / "src" / "my-plugin-dir"
         root.mkdir(parents=True)
@@ -638,7 +638,7 @@ class TestForeignManifestShape:
         of its except arms."""
         import argparse
 
-        from kiro_crew.cli_commands import _handle_app_import
+        from aj_crew.cli_commands import _handle_app_import
 
         root = tmp_path / "src" / "demo-plugin"
         root.mkdir(parents=True)
@@ -712,7 +712,7 @@ class TestForeignManifestShape:
         import ast
         from pathlib import Path as _Path
 
-        module = _Path(__file__).resolve().parents[1] / "src/kiro_crew/apps/plugin_import.py"
+        module = _Path(__file__).resolve().parents[1] / "src/aj_crew/apps/plugin_import.py"
         raised = set()
         for node in ast.walk(ast.parse(module.read_text(encoding="utf-8"))):
             if (
@@ -747,7 +747,7 @@ class TestLinksAndJunctions:
         """Junctions cannot be created on POSIX, so the platform's own verdict is
         what gets stubbed: this pins that the walk ASKS the junction-aware helper
         and honours it, which is the part that was missing."""
-        from kiro_crew.apps import plugin_import as PI
+        from aj_crew.apps import plugin_import as PI
 
         root = _package(tmp_path)
         skill = root / "skills" / "greet"
@@ -774,7 +774,7 @@ class TestLinksAndJunctions:
         have already left, so the link check is ordered ahead of the resolve and
         this test pins that order by observing that resolve is never reached.
         """
-        from kiro_crew.apps import plugin_import as PI
+        from aj_crew.apps import plugin_import as PI
 
         root = tmp_path / "pkg"
         (root / "real").mkdir(parents=True)
@@ -803,7 +803,7 @@ class TestLinksAndJunctions:
         whole rather than one call site at a time."""
         from pathlib import Path as _Path
 
-        module = _Path(__file__).resolve().parents[1] / "src/kiro_crew/apps/plugin_import.py"
+        module = _Path(__file__).resolve().parents[1] / "src/aj_crew/apps/plugin_import.py"
         source = module.read_text(encoding="utf-8")
         assert ".is_symlink()" not in source, (
             "use platform_compat.is_link_or_junction: Path.is_symlink answers False "
@@ -816,7 +816,7 @@ class TestLinksAndJunctions:
         escaping OSError reaches the operator as a traceback."""
         import shutil as _shutil
 
-        from kiro_crew.apps import plugin_import as PI
+        from aj_crew.apps import plugin_import as PI
 
         root = _package(tmp_path)
         _skill(root / "skills", "greet")
@@ -842,7 +842,7 @@ class TestOutput:
         pinning this on a malformed field breaks the moment that field gains
         validation, which is what happened to the first version of this test.
         """
-        from kiro_crew.apps import plugin_import as PI
+        from aj_crew.apps import plugin_import as PI
 
         def _boom(*_a, **_k):
             raise RuntimeError("a later conversion step failed")
@@ -890,7 +890,7 @@ class TestOutput:
         """A pathologically deep resource tree must be skipped past the depth
         bound rather than recursing to a RecursionError that leaves a partial
         import."""
-        from kiro_crew.apps.plugin_import import (
+        from aj_crew.apps.plugin_import import (
             MAX_SKILL_TREE_DEPTH,
             _copy_tree_without_links,
         )
@@ -909,7 +909,7 @@ class TestOutput:
     def test_the_skip_list_is_capped_rather_than_unbounded(self, tmp_path):
         """A pathologically wide tree of skippable entries must not grow the
         retained skip-description list without a ceiling."""
-        from kiro_crew.apps.plugin_import import (
+        from aj_crew.apps.plugin_import import (
             MAX_SKIP_DESCRIPTIONS,
             _copy_tree_without_links,
         )
@@ -938,7 +938,7 @@ class TestOutput:
         directories each over the cap is the smallest shape that tells the two
         apart: one directory cannot, because there is no second list to add.
         """
-        from kiro_crew.apps.plugin_import import (
+        from aj_crew.apps.plugin_import import (
             MAX_SKIP_DESCRIPTIONS,
             _copy_tree_without_links,
         )
@@ -1009,11 +1009,11 @@ class TestEmittedAppIsInstallable:
         assert AppManifest.from_dict(data).validate(out) == []
 
     def test_a_converted_package_installs_and_lists(self, tmp_path, monkeypatch):
-        from kiro_crew.apps.manager import get_app_manifest, install_app, list_apps
+        from aj_crew.apps.manager import get_app_manifest, install_app, list_apps
 
-        home = tmp_path / "kirocrew-home"
+        home = tmp_path / "ajcrew-home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         (home / "config.json").write_text(
             json.dumps({"agent": {"apps_allow_third_party": True}}), encoding="utf-8"
         )

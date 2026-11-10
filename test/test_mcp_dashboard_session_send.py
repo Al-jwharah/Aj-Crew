@@ -11,10 +11,10 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.mcp_dashboard import TABLE
-from kiro_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
-from kiro_crew.validation import SESSION_SEND_SCHEMA, ValidationError, validate_tool_args
+from aj_crew.mcp_dashboard import TABLE
+from aj_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew.validation import SESSION_SEND_SCHEMA, ValidationError, validate_tool_args
 
 
 def _send(args: dict, resp: dict) -> tuple[str, DashboardRequest]:

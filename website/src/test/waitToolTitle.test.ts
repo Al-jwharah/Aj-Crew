@@ -2,7 +2,7 @@
  * `isWaitToolTitle` — the transport-shaped name match behind the wait countdown.
  *
  * The three title forms asserted first are not hypothetical: the direct MCP path
- * sends `wait`, the pooled gateway namespaces it `kirocrew-core___wait`, and one
+ * sends `wait`, the pooled gateway namespaces it `ajcrew-core___wait`, and one
  * path appends a suffix (`wait (mcp)`). The `toolName === 'wait'` comparison this
  * replaced matched only the bare form, so on the other two transports the
  * countdown silently never appeared — which reads as "the feature is broken on my
@@ -10,7 +10,7 @@
  *
  * The backend has no title matcher to mirror: its liveness contract selects the
  * wait by the provenance-verified adapter identity
- * (`src/kiro_crew/acp/liveness.py::ToolCallState.is_trusted_wait`). This title
+ * (`src/aj_crew/acp/liveness.py::ToolCallState.is_trusted_wait`). This title
  * match is the frontend's only signal, so every transport form a real `wait` call
  * arrives under must match here, or its countdown never shows.
  */
@@ -20,25 +20,25 @@ import { isWaitToolTitle } from '../utils/waitToolTitle'
 describe('isWaitToolTitle', () => {
   it('matches every transport shape of the wait tool title', () => {
     expect(isWaitToolTitle('wait')).toBe(true) // direct MCP
-    expect(isWaitToolTitle('kirocrew-core___wait')).toBe(true) // pooled gateway
+    expect(isWaitToolTitle('ajcrew-core___wait')).toBe(true) // pooled gateway
     expect(isWaitToolTitle('wait (mcp)')).toBe(true) // suffixed
-    expect(isWaitToolTitle('@kirocrew-core/wait')).toBe(true) // default (kas) harness
-    expect(isWaitToolTitle(' @KIROCREW-CORE/WAIT ')).toBe(true)
+    expect(isWaitToolTitle('@ajcrew-core/wait')).toBe(true) // default (kas) harness
+    expect(isWaitToolTitle(' @AJCREW-CORE/WAIT ')).toBe(true)
   })
 
-  it('accepts the kas shape only for the kirocrew-core server', () => {
-    // Another server's `wait` must not adopt kirocrew-core's deadline.
+  it('accepts the kas shape only for the ajcrew-core server', () => {
+    // Another server's `wait` must not adopt ajcrew-core's deadline.
     expect(isWaitToolTitle('@other/wait')).toBe(false)
-    expect(isWaitToolTitle('@kirocrew-core/wait_for_ci')).toBe(false)
-    expect(isWaitToolTitle('@kirocrew-core/wait (mcp)')).toBe(false)
-    expect(isWaitToolTitle('x@kirocrew-core/wait')).toBe(false)
+    expect(isWaitToolTitle('@ajcrew-core/wait_for_ci')).toBe(false)
+    expect(isWaitToolTitle('@ajcrew-core/wait (mcp)')).toBe(false)
+    expect(isWaitToolTitle('x@ajcrew-core/wait')).toBe(false)
   })
 
   it('is case-insensitive and ignores surrounding whitespace', () => {
     expect(isWaitToolTitle('WAIT')).toBe(true)
     expect(isWaitToolTitle('Wait')).toBe(true)
     expect(isWaitToolTitle(' wait ')).toBe(true)
-    expect(isWaitToolTitle('\tKiroCrew-Core___Wait\n')).toBe(true)
+    expect(isWaitToolTitle('\tAjCrew-Core___Wait\n')).toBe(true)
   })
 
   it('rejects titles that merely contain the letters', () => {
@@ -78,7 +78,7 @@ describe('isWaitToolTitle', () => {
 
   it('accepts a namespace prefix and an mcp suffix together', () => {
     // The two decorations are independent, so the combination has to hold too.
-    expect(isWaitToolTitle('kirocrew-core___wait (mcp)')).toBe(true)
+    expect(isWaitToolTitle('ajcrew-core___wait (mcp)')).toBe(true)
     expect(isWaitToolTitle('some.server_1___wait')).toBe(true)
   })
 

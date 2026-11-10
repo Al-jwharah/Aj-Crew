@@ -8,9 +8,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.slack import handler as handler_mod
-from kiro_crew.slack.handler import _vc, _VoiceConfig, load_voice_reply_config, set_orch_cfg
-from kiro_crew.voice_reply import DEFAULT_PROVIDER, PROVIDER_POLLY
+from aj_crew.slack import handler as handler_mod
+from aj_crew.slack.handler import _vc, _VoiceConfig, load_voice_reply_config, set_orch_cfg
+from aj_crew.voice_reply import DEFAULT_PROVIDER, PROVIDER_POLLY
 
 
 @pytest.fixture(autouse=True)
@@ -126,7 +126,7 @@ def test_provider_polly_accepted(tmp_path, monkeypatch):
 
 def test_removed_piper_provider_loads_as_the_local_default(tmp_path, monkeypatch):
     # A saved Piper config must keep the gateway speaking, not fail to load.
-    monkeypatch.setattr("kiro_crew.voice_reply._warned_removed_providers", set())
+    monkeypatch.setattr("aj_crew.voice_reply._warned_removed_providers", set())
     _cfg_file(tmp_path, monkeypatch, {"provider": "piper", "piper_model": "~/v.onnx"})
     set_orch_cfg(SimpleNamespace())
     assert _vc.provider == "system"
@@ -144,7 +144,7 @@ def test_provider_typo_falls_back_to_local_with_warning(tmp_path, monkeypatch, c
     import logging
 
     _cfg_file(tmp_path, monkeypatch, {"provider": "ploly"})
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.slack.handler"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.slack.handler"):
         set_orch_cfg(SimpleNamespace())
     assert _vc.provider == DEFAULT_PROVIDER
     # The direction is the point: a bad or absent value must never resolve
@@ -267,7 +267,7 @@ def test_dashboard_entrypoints_restore_voice_settings():
     disabled while the dashboard's settings PUT keeps reporting success."""
     import inspect
 
-    from kiro_crew.dashboard import server as server_mod
+    from aj_crew.dashboard import server as server_mod
 
     for func, name in (
         (server_mod.start_dashboard, "start_dashboard"),

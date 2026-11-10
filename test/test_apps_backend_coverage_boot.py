@@ -1,4 +1,4 @@
-"""Unit coverage for :mod:`kiro_crew.apps.backend`: boot, and the remaining defensive branches.
+"""Unit coverage for :mod:`aj_crew.apps.backend`: boot, and the remaining defensive branches.
 
 ``start_enabled_app_backends``' boot-time MCP and executable-resource reconcile, its
 spawn gating and fixed-port preclaim, and the defensive branches that keep a start, a
@@ -30,8 +30,8 @@ from apps_backend_coverage_helpers import (
     _StopSpawn,
 )
 
-import kiro_crew.apps.backend as bmod
-from kiro_crew.apps.backend import AppProcess
+import aj_crew.apps.backend as bmod
+from aj_crew.apps.backend import AppProcess
 
 # Boot reconcile
 
@@ -74,7 +74,7 @@ def boot_env(monkeypatch: pytest.MonkeyPatch) -> dict[str, list[Any]]:
     monkeypatch.setattr(bmod, "app_execution_denied", lambda _name, **_kw: None)
     monkeypatch.setattr(bmod, "start_app_backend", _start)
     monkeypatch.setattr(
-        "kiro_crew.apps.backend._app_activation_denied", lambda _name, **_kwargs: None
+        "aj_crew.apps.backend._app_activation_denied", lambda _name, **_kwargs: None
     )
 
     def _dereg_mcp(name: str) -> int:
@@ -96,11 +96,11 @@ def boot_env(monkeypatch: pytest.MonkeyPatch) -> dict[str, list[Any]]:
     def _reconcile(name: str) -> None:
         calls["reconcile_skills"].append(name)
 
-    monkeypatch.setattr("kiro_crew.apps.bridges._deregister_mcp_servers", _dereg_mcp)
-    monkeypatch.setattr("kiro_crew.apps.bridges._deregister_agents", _dereg_agents)
-    monkeypatch.setattr("kiro_crew.apps.bridges._deregister_skills", _dereg_skills)
-    monkeypatch.setattr("kiro_crew.apps.bridges.register_app", _register)
-    monkeypatch.setattr("kiro_crew.apps.bridges.reconcile_app_skills", _reconcile)
+    monkeypatch.setattr("aj_crew.apps.bridges._deregister_mcp_servers", _dereg_mcp)
+    monkeypatch.setattr("aj_crew.apps.bridges._deregister_agents", _dereg_agents)
+    monkeypatch.setattr("aj_crew.apps.bridges._deregister_skills", _dereg_skills)
+    monkeypatch.setattr("aj_crew.apps.bridges.register_app", _register)
+    monkeypatch.setattr("aj_crew.apps.bridges.reconcile_app_skills", _reconcile)
     return calls
 
 
@@ -134,7 +134,7 @@ class TestBootMcpReconcile:
         def _boom(_name: str) -> int:
             raise RuntimeError("mcp.json locked")
 
-        monkeypatch.setattr("kiro_crew.apps.bridges._deregister_mcp_servers", _boom)
+        monkeypatch.setattr("aj_crew.apps.bridges._deregister_mcp_servers", _boom)
         monkeypatch.setattr(
             bmod,
             "list_apps",
@@ -162,7 +162,7 @@ class TestBootResourceReconcile:
         caplog: pytest.LogCaptureFixture,
     ) -> None:
         monkeypatch.setattr(
-            "kiro_crew.apps.bridges.register_app",
+            "aj_crew.apps.bridges.register_app",
             lambda _n: SimpleNamespace(errors=["skill clash"]),
         )
         monkeypatch.setattr(bmod, "list_apps", lambda: [_app("noisy")])
@@ -179,7 +179,7 @@ class TestBootResourceReconcile:
         def _boom(_name: str) -> Any:
             raise RuntimeError("registry corrupt")
 
-        monkeypatch.setattr("kiro_crew.apps.bridges.register_app", _boom)
+        monkeypatch.setattr("aj_crew.apps.bridges.register_app", _boom)
         monkeypatch.setattr(bmod, "list_apps", lambda: [_app("broken")])
         with caplog.at_level(logging.WARNING):
             bmod.start_enabled_app_backends()
@@ -193,7 +193,7 @@ class TestBootResourceReconcile:
         """A policy tightened after enable must revoke, not merely decline to start."""
 
         monkeypatch.setattr(
-            "kiro_crew.apps.backend._app_activation_denied",
+            "aj_crew.apps.backend._app_activation_denied",
             lambda _n, **_kwargs: "not in allowlist",
         )
         monkeypatch.setattr(bmod, "list_apps", lambda: [_app("banned")])
@@ -213,9 +213,9 @@ class TestBootResourceReconcile:
         def _boom(_name: str) -> int:
             raise RuntimeError("agents dir read-only")
 
-        monkeypatch.setattr("kiro_crew.apps.bridges._deregister_agents", _boom)
+        monkeypatch.setattr("aj_crew.apps.bridges._deregister_agents", _boom)
         monkeypatch.setattr(
-            "kiro_crew.apps.backend._app_activation_denied", lambda _n, **_kwargs: "banned"
+            "aj_crew.apps.backend._app_activation_denied", lambda _n, **_kwargs: "banned"
         )
         monkeypatch.setattr(bmod, "list_apps", lambda: [_app("banned")])
         with caplog.at_level(logging.ERROR):
@@ -244,7 +244,7 @@ class TestBootResourceReconcile:
     ) -> None:
         """Boot must still start admitted backends when the reconcile cannot load."""
 
-        monkeypatch.setitem(sys.modules, "kiro_crew.apps.bridges", SimpleNamespace())
+        monkeypatch.setitem(sys.modules, "aj_crew.apps.bridges", SimpleNamespace())
         monkeypatch.setattr(bmod, "list_apps", lambda: [_app("a"), _app("b")])
         with caplog.at_level(logging.WARNING):
             bmod.start_enabled_app_backends()
@@ -257,7 +257,7 @@ class TestBootSpawnGating:
         self, boot_env: dict[str, list[Any]], monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(
-            "kiro_crew.apps.backend._app_activation_denied", lambda _n, **_kwargs: "not allowed"
+            "aj_crew.apps.backend._app_activation_denied", lambda _n, **_kwargs: "not allowed"
         )
         monkeypatch.setattr(bmod, "list_apps", lambda: [_app("blocked")])
         assert bmod.start_enabled_app_backends() == []

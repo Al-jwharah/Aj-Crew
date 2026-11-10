@@ -1,4 +1,4 @@
-"""Tests for :mod:`kiro_crew.mcp_gateway.backend_tmp`.
+"""Tests for :mod:`aj_crew.mcp_gateway.backend_tmp`.
 
 Everything runs against a monkeypatched data home under ``tmp_path``; the
 real ``<data home>/run`` is never touched.
@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import sandbox as sandbox_mod
-from kiro_crew.mcp_gateway import backend_tmp as bt
+from aj_crew import sandbox as sandbox_mod
+from aj_crew.mcp_gateway import backend_tmp as bt
 
 
 @pytest.fixture
@@ -64,7 +64,7 @@ class TestAllocate:
         # token-bearing temp files. Allocation must route through the shim
         # (owner-only DACL with inheritance on Windows, chmod 0o700 on
         # POSIX) for BOTH the root and the fresh child dir.
-        from kiro_crew import platform_compat as pc
+        from aj_crew import platform_compat as pc
 
         calls: list[str] = []
         real = pc.restrict_dir_to_owner

@@ -1,4 +1,4 @@
-"""`kirocrew cloud launch --ami` / `--extra-packages`: additive launch customization.
+"""`ajcrew cloud launch --ami` / `--extra-packages`: additive launch customization.
 
 Covers the CLI flags, their validation (the values reach the root UserData
 script, so the charset is an allowlist), the template parameters they fill, and
@@ -12,11 +12,11 @@ import re
 
 import pytest
 
-from kiro_crew import cli, cli_cloud
-from kiro_crew.cloud import aws, ec2, sizes, wizard
-from kiro_crew.validation import ValidationError
+from aj_crew import cli, cli_cloud
+from aj_crew.cloud import aws, ec2, sizes, wizard
+from aj_crew.validation import ValidationError
 
-_BOUNDARY_ARN = "arn:aws:iam::123456789012:policy/kirocrew-ec2-boundary"
+_BOUNDARY_ARN = "arn:aws:iam::123456789012:policy/ajcrew-ec2-boundary"
 
 
 def _param_block(name: str) -> str:
@@ -49,14 +49,14 @@ class TestStockLaunchUnchanged:
             "cloudformation",
             "deploy",
             "--stack-name",
-            "kirocrew-t1",
+            "ajcrew-t1",
             "--template-file",
             str(ec2._template_path()),
             "--capabilities",
             "CAPABILITY_NAMED_IAM",
             "--tags",
-            "kirocrew:managed=true",
-            "kirocrew:instance=t1",
+            "ajcrew:managed=true",
+            "ajcrew:instance=t1",
             "--parameter-overrides",
             f"InstanceType={tier.instance_type}",
             f"Architecture={tier.arch}",
@@ -69,7 +69,7 @@ class TestStockLaunchUnchanged:
         ]
 
     def test_stock_dry_run_carries_no_customization_overrides(self, monkeypatch):
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         monkeypatch.setattr(source_mod, "find_repo_root", lambda: object())
         monkeypatch.setattr(aws, "run_aws", lambda *a, **k: pytest.fail("dry run hit AWS"))
@@ -104,7 +104,7 @@ class TestDeployArgvCustomization:
         assert "ExtraPackages=gh jq" in argv
 
     def test_deploy_dry_run_validates_and_passes_through(self, monkeypatch):
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         monkeypatch.setattr(source_mod, "find_repo_root", lambda: object())
         monkeypatch.setattr(aws, "run_aws", lambda *a, **k: pytest.fail("dry run hit AWS"))
@@ -215,8 +215,8 @@ class TestCliFlags:
         from unittest.mock import patch
 
         with (
-            patch.object(sys, "argv", ["kirocrew", "cloud", "launch", *argv]),
-            patch("kiro_crew.cli.handle_cloud", return_value=0) as h,
+            patch.object(sys, "argv", ["ajcrew", "cloud", "launch", *argv]),
+            patch("aj_crew.cli.handle_cloud", return_value=0) as h,
         ):
             with pytest.raises(SystemExit):
                 cli.main()
@@ -284,7 +284,7 @@ class TestCliFlags:
     ):
         # The image and package set are fixed at creation; a script that asked
         # for them must not silently get the old box.
-        from kiro_crew.cloud.launch_state import LaunchState
+        from aj_crew.cloud.launch_state import LaunchState
 
         cfg = LaunchState(profile="dev", region="us-west-2", last_tag="kc-old")
         monkeypatch.setattr(wizard.LaunchState, "load", classmethod(lambda cls, *a: cfg))

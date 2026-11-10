@@ -1,6 +1,6 @@
 """Widget-extraction tests (Python side of the parser pair).
 
-``kiro_crew.widget_parse.parse_widgets`` must assign the SAME 0-based
+``aj_crew.widget_parse.parse_widgets`` must assign the SAME 0-based
 ``widgetIndex`` to the same widget as the frontend's ``parseBlocks``
 (``website/src/hooks/useBlockAssembler.ts``), because that index feeds the slug
 both sides derive. The fixtures in :data:`SHARED_FIXTURES` are duplicated in
@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.widget_parse import _JS_TRIM_CHARS, _js_trim, mask_inline_code, parse_widgets
+from aj_crew.widget_parse import _JS_TRIM_CHARS, _js_trim, mask_inline_code, parse_widgets
 
 #: ``(label, raw_text, [(index, content, title, slug), ...])``.
 SHARED_FIXTURES = [

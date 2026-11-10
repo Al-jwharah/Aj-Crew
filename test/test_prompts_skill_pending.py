@@ -19,8 +19,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.dashboard.handlers import prompts as H
-from kiro_crew.skills import AutoSkillProvenance, SkillsLoader
+from aj_crew.dashboard.handlers import prompts as H
+from aj_crew.skills import AutoSkillProvenance, SkillsLoader
 
 _OMITTED = object()
 
@@ -253,7 +253,7 @@ async def test_a_dismissal_naming_a_stale_digest_keeps_the_candidate(loader, eve
 
 @pytest.mark.asyncio
 async def test_a_dismissal_refused_for_another_reason_is_a_coded_409(loader, events, monkeypatch):
-    from kiro_crew.skills import PendingDismissRefused
+    from aj_crew.skills import PendingDismissRefused
 
     def _refuse(_slug, _content_sha256=None):
         raise PendingDismissRefused("lock_unavailable")

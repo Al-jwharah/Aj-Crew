@@ -15,7 +15,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config.loader import AjCrewConfig
 
 FIELDS = ("side_panel_always_open", "side_panel_pin_summary")
 
@@ -24,36 +24,36 @@ FIELDS = ("side_panel_always_open", "side_panel_pin_summary")
 def cfg_file(tmp_path):
     p = tmp_path / "config.json"
     p.write_text("{}", encoding="utf-8")
-    with patch("kiro_crew.config.loader.config_path", return_value=p):
+    with patch("aj_crew.config.loader.config_path", return_value=p):
         yield p
 
 
 @pytest.mark.parametrize("field", FIELDS)
 def test_defaults_off(field):
-    assert getattr(KiroCrewConfig().dashboard, field) is False
+    assert getattr(AjCrewConfig().dashboard, field) is False
 
 
 @pytest.mark.parametrize("field", FIELDS)
 def test_save_load_round_trip(cfg_file, field):
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     setattr(cfg.dashboard, field, True)
     cfg.save()
 
     raw = json.loads(cfg_file.read_text(encoding="utf-8"))
     assert raw["dashboard"][field] is True
-    assert getattr(KiroCrewConfig.load().dashboard, field) is True
+    assert getattr(AjCrewConfig.load().dashboard, field) is True
 
 
 @pytest.mark.parametrize("field", FIELDS)
 def test_non_bool_falls_back_to_off(cfg_file, field):
     # A hand-edited truthy string must not turn the behaviour on.
     cfg_file.write_text(json.dumps({"dashboard": {field: "yes"}}), encoding="utf-8")
-    assert getattr(KiroCrewConfig.load().dashboard, field) is False
+    assert getattr(AjCrewConfig.load().dashboard, field) is False
 
 
 @pytest.mark.parametrize("field", FIELDS)
 def test_in_generated_schema(field):
-    from kiro_crew.config.schema import JSON_SCHEMA
+    from aj_crew.config.schema import JSON_SCHEMA
 
     node = JSON_SCHEMA["properties"]["dashboard"]["properties"][field]
     assert node["type"] == "boolean"

@@ -15,14 +15,14 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard.chat_runner import subagents_hold_user_messages
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard.chat_runner import subagents_hold_user_messages
+from aj_crew.dashboard.chat_utils import (
     COMPOSER_SEND_META,
     CRON_NOTIFICATION_KIND,
     SUBAGENT_COMPLETION_KIND,
     _dequeue_next_system_message,
 )
-from kiro_crew.dashboard.state import (
+from aj_crew.dashboard.state import (
     CRON_NOTIFY_PREFIX,
     SUBAGENT_COMPLETION_PREFIX,
     _ChatSlot,
@@ -154,11 +154,11 @@ class TestSteerFallbackSurvivesTheHold:
 
     @pytest.fixture(autouse=True)
     def _sel(self):
-        with patch("kiro_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
+        with patch("aj_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
             yield
 
     def _state(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         subs = MagicMock()
         subs.running_agents_for = MagicMock(return_value=[{"id": "live"}])
         state = _make_state(tmp_path, subagents=subs)
@@ -166,7 +166,7 @@ class TestSteerFallbackSurvivesTheHold:
         return state
 
     async def _drain(self, state, slot):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         slot.task = None
         with (
@@ -177,7 +177,7 @@ class TestSteerFallbackSurvivesTheHold:
         return started, spawn, run_chat
 
     async def test_unconsumed_steer_drains_while_children_run(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = self._state(tmp_path, monkeypatch)
         slot = _busy(state.get_or_create_slot("s1"))
@@ -237,7 +237,7 @@ class TestSteerFallbackSurvivesTheHold:
 
     async def test_turn_end_card_runs_under_the_hold(self, tmp_path, monkeypatch):
         """The card a turn-end read hands the floor runs when the hold releases it."""
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = self._state(tmp_path, monkeypatch)
         slot = _busy(state.get_or_create_slot("s1"))
@@ -259,8 +259,8 @@ class TestSteerFallbackSurvivesTheHold:
 
     async def test_peer_steer_requeue_carries_no_intent(self, tmp_path, monkeypatch):
         """Only the session's own human gets the release; a peer's text waits."""
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat_delivery import steer_into_running_turn
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat_delivery import steer_into_running_turn
 
         state = self._state(tmp_path, monkeypatch)
         slot = _busy(state.get_or_create_slot("s1"))
@@ -289,16 +289,16 @@ class TestResultsArriveWhileChatting:
 
     @pytest.fixture(autouse=True)
     def _sel(self):
-        with patch("kiro_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
+        with patch("aj_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
             yield
 
     async def _scenario(self, tmp_path, monkeypatch, *, result_first: bool):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         load = MagicMock()
         load.return_value.dashboard.merge_queued_messages = True
-        monkeypatch.setattr(chat_runner.KiroCrewConfig, "load", load)
+        monkeypatch.setattr(chat_runner.AjCrewConfig, "load", load)
         subs = MagicMock()
         subs.running_agents_for = MagicMock(return_value=[{"id": "sibling"}])
         state = _make_state(tmp_path, subagents=subs)
@@ -351,14 +351,14 @@ class TestApiChatSubagentQueueGate:
     send is held, while the session's own human starts a turn at once."""
 
     async def test_composer_send_is_not_held_by_running_subagents(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         ran = {"called": False}
 
         async def fake_run_chat(st, sl, msg, *, _directive_user_origin, _directive_owner_origin=False):
             assert _directive_user_origin is True
             ran["called"] = True
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
         subs = MagicMock()
         subs.running_agents_for = MagicMock(return_value=[{"id": "a1"}])
         state = _make_state(tmp_path, subagents=subs)
@@ -382,13 +382,13 @@ class TestApiChatSubagentQueueGate:
         for the wave, and a busy-slot copy carries no composer mark."""
         from aiohttp import web
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         ran = {"called": False}
 
         async def fake_run_chat(st, sl, msg, *, _directive_user_origin):
             ran["called"] = True
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
         subs = MagicMock()
         subs.running_agents_for = MagicMock(return_value=[{"id": "a1"}])
         state = _make_state(tmp_path, subagents=subs)
@@ -424,15 +424,15 @@ class TestApiChatSubagentQueueGate:
         no dashboard-user mark (a caller the auth layer did not mark)."""
         from aiohttp import web
 
-        from kiro_crew.shared_crew import identity
-        from kiro_crew.shared_crew.contracts import ActorContext, Provenance, Transport
+        from aj_crew.shared_crew import identity
+        from aj_crew.shared_crew.contracts import ActorContext, Provenance, Transport
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
         async def fake_run_chat(st, sl, msg, *, _directive_user_origin, _directive_owner_origin=False):
             return None
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
         ann = identity.tailnet_principal("ann@example.com", "phone", Provenance.TAILSCALE_SERVE)
         actor = ActorContext(principal=ann, request_id="r", transport=Transport.HTTP, correlation_id="r")
         monkeypatch.setattr(identity, "actor_of", lambda _request: actor)
@@ -463,9 +463,9 @@ class TestApiChatSubagentQueueGate:
         no dashboard-user mark."""
         from aiohttp import web
 
-        from kiro_crew.dashboard.slot_queue_repository import MAX_DURABLE_QUEUE_ENTRIES
+        from aj_crew.dashboard.slot_queue_repository import MAX_DURABLE_QUEUE_ENTRIES
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         subs = MagicMock()
         subs.running_agents_for = MagicMock(return_value=[{"id": "a1"}])
         state = _make_state(tmp_path, subagents=subs)
@@ -490,13 +490,13 @@ class TestApiChatSubagentQueueGate:
         assert push["meta"]["durable"] is False
 
     async def test_not_queued_when_no_subagents_running(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
         async def fake_run_chat(st, sl, msg, *, _directive_user_origin, _directive_owner_origin=False):
             assert _directive_user_origin is True
             return None
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
         subs = MagicMock()
         subs.running_agents_for = MagicMock(return_value=[])  # no agents running
         state = _make_state(tmp_path, subagents=subs)
@@ -512,13 +512,13 @@ class TestApiChatSubagentQueueGate:
 
     async def test_stalled_child_does_not_hold_the_message(self, tmp_path, monkeypatch):
         """A child the reaper flagged stalled must not park the user's send."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         ran = {"called": False}
 
         async def fake_run_chat(st, sl, msg, *, _directive_user_origin, _directive_owner_origin=False):
             ran["called"] = True
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
         subs = MagicMock()
         subs.running_agents_for = MagicMock(return_value=[{"id": "dead", "stalled": True}])
         state = _make_state(tmp_path, subagents=subs)
@@ -534,21 +534,21 @@ class TestApiChatSubagentQueueGate:
 
     async def test_send_behind_parked_message_keeps_order(self, tmp_path, monkeypatch):
         """A message parked while the child was live is answered before a later send."""
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         direct = []
 
         async def fake_run_chat(st, sl, msg, *, _directive_user_origin, _directive_owner_origin=False):
             direct.append(msg)
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
         drained = MagicMock(return_value=MagicMock())
         monkeypatch.setattr(chat_runner, "_run_chat", drained)
         monkeypatch.setattr(chat_runner, "spawn_guarded_turn", lambda *a, **k: None)
         load = MagicMock()
         load.return_value.dashboard.merge_queued_messages = False
-        monkeypatch.setattr(chat_runner.KiroCrewConfig, "load", load)
+        monkeypatch.setattr(chat_runner.AjCrewConfig, "load", load)
         subs = MagicMock()
         subs.running_agents_for = MagicMock(return_value=[{"id": "dead", "stalled": True}])
         state = _make_state(tmp_path, subagents=subs)
@@ -574,17 +574,17 @@ class TestApiChatSubagentQueueGate:
         turn's end; a non-composer send in the same branch carries none."""
         from aiohttp import web
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._run_chat", AsyncMock(return_value=None)
+            "aj_crew.dashboard.chat_handlers._run_chat", AsyncMock(return_value=None)
         )
         monkeypatch.setattr(chat_runner, "_run_chat", MagicMock(return_value=MagicMock()))
         monkeypatch.setattr(chat_runner, "spawn_guarded_turn", lambda *a, **k: None)
         load = MagicMock()
         load.return_value.dashboard.merge_queued_messages = False
-        monkeypatch.setattr(chat_runner.KiroCrewConfig, "load", load)
+        monkeypatch.setattr(chat_runner.AjCrewConfig, "load", load)
         subs = MagicMock()
         subs.running_agents_for = MagicMock(return_value=[{"id": "dead", "stalled": True}])
         state = _make_state(tmp_path, subagents=subs)
@@ -656,9 +656,9 @@ class TestSubagentsHoldUserMessages:
 @pytest.mark.asyncio
 async def test_drain_releases_user_message_when_only_child_is_stalled(tmp_path, monkeypatch):
     """The drain-side hold uses the same rule: a stalled child lets users drain."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     subs = MagicMock()
     subs.running_agents_for = MagicMock(return_value=[{"id": "dead", "stalled": True}])
     state = _make_state(tmp_path, subagents=subs)
@@ -685,9 +685,9 @@ class TestDrainIdleParentQueueForStall:
     """
 
     def _make(self, tmp_path, monkeypatch, agents):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         subs = MagicMock()
         subs.running_agents_for = MagicMock(return_value=agents)
         state = _make_state(tmp_path, subagents=subs)
@@ -794,7 +794,7 @@ class TestApiChatBusySlotEmptyMessage:
 
     async def _busy_client(self, tmp_path, monkeypatch):
         """Real state + slot; the slot is made busy via a live, never-done task."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         pushes: list[tuple[str, dict]] = []
@@ -867,7 +867,7 @@ class TestSerializeSlotsSubagentsRunning:
     (see precedent)."""
 
     async def test_flag_true_when_agents_running(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         subs = MagicMock()
         subs.running_agents_for = MagicMock(return_value=[{"id": "a1"}])
         state = _make_state(tmp_path, subagents=subs)
@@ -880,7 +880,7 @@ class TestSerializeSlotsSubagentsRunning:
         subs.running_agents_for.assert_any_call("dashboard:s1")
 
     async def test_flag_false_when_no_agents_running(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         subs = MagicMock()
         subs.running_agents_for = MagicMock(return_value=[])
         state = _make_state(tmp_path, subagents=subs)

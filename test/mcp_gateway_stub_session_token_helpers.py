@@ -24,9 +24,9 @@ from test_mcp_gateway_claim import (
     _register,
 )
 
-from kiro_crew.mcp_gateway import gatewayd as gw
-from kiro_crew.mcp_gateway import stub as stub_mod
-from kiro_crew.testing.wait import await_until
+from aj_crew.mcp_gateway import gatewayd as gw
+from aj_crew.mcp_gateway import stub as stub_mod
+from aj_crew.testing.wait import await_until
 
 PARENT_KEY = "dashboard:chat-1-parent"
 SUB_KEY = "dashboard:chat-1-parent:sub-7"

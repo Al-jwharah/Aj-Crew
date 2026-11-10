@@ -7,21 +7,21 @@ with a live PDF preview and an AI co-author. The user writes in a split-pane
 workspace, presses Cmd/Ctrl+S to compile with `pdflatex` or `tectonic`, and reads
 the rendered PDF beside the source. A machine with **no TeX installation at all**
 is a supported starting point: the app offers a one-click, digest-pinned Tectonic
-install (see Managed compiler), so `pip install kirocrew` does not ship a
+install (see Managed compiler), so `pip install ajcrew` does not ship a
 broken-by-default editor. Compiler output is parsed into a clickable
 diagnostics list that jumps the editor to the offending line. A paper can be
 cloned from any git remote and committed/pulled/pushed from the toolbar. The
-co-author panel is a real Kiro Crew chat session scoped to the paper, so the agent
+co-author panel is a real Aj Crew chat session scoped to the paper, so the agent
 edits the LaTeX while the user watches the PDF update.
 
 Ported from a standalone app by **tricatte**; see
-`src/kiro_crew/apps/builtins/papyrus/ATTRIBUTION.md` for what was kept and what
+`src/aj_crew/apps/builtins/papyrus/ATTRIBUTION.md` for what was kept and what
 changed.
 
 ## Routes
 
 All routes live under `/api/apps/papyrus/` and are registered by
-`src/kiro_crew/apps/builtins/papyrus/backend/routes.py:register_routes`. Every handler is
+`src/aj_crew/apps/builtins/papyrus/backend/routes.py:register_routes`. Every handler is
 wrapped in `_require_enabled`, which answers 403 `app_disabled` while the app is disabled
 and then 403 `owner_only` to anyone but the dashboard owner (see Caller authorization) —
 pinned by `test/test_papyrus_routes.py::TestRouteRegistration`, since routes are registered
@@ -96,7 +96,7 @@ and the `test_create_explains_*` tests in `test/test_papyrus_routes.py`.
 Create and clone also refuse (`store.is_unportable_project_name`), on every platform,
 a slug Windows would not keep as a folder name: one ending in `.` (Windows stores
 `draft.` as `draft`) or whose part before the first `.` is a Windows device stem
-(`nul`, `con.paper`; the set is `kiro_crew.constants.WINDOWS_DEVICE_STEMS`). They
+(`nul`, `con.paper`; the set is `aj_crew.constants.WINDOWS_DEVICE_STEMS`). They
 answer a JSON 400 `{"code": "unportable_project_name"}` before the "already exists"
 check, because `nul` exists in every Windows folder; the dashboard shows the server's
 `error`. Opening an existing project of such a name is unchanged. Pinned by
@@ -169,7 +169,7 @@ external compiler, so two functions own every filesystem decision:
 
 - **`safe_project_dir(name)`** — the name must match `PROJECT_NAME_RE`; a
   **symlink OR Windows junction at the project entry is refused outright** (like
-  `_config_path`: this is a directory Kiro Crew creates, so a link there is
+  `_config_path`: this is a directory Aj Crew creates, so a link there is
   illegitimate wherever it points); and the resolved directory must be a **strict
   child** of `projects_dir()`.
 
@@ -306,7 +306,7 @@ app was a stdlib `ThreadingHTTPServer` on its own port using blocking
 - **the path-validation gate is offloaded too, because validation is itself
   blocking.** `_project` / `_project_for_create` / `_safe_relative` read like cheap
   string checks, but each calls `Path.resolve()` plus a `stat`-family probe
-  (`is_dir`/`exists`). With `KIROCREW_HOME` on a stalled network mount those
+  (`is_dir`/`exists`). With `AJCREW_HOME` on a stalled network mount those
   syscalls block for as long as the mount takes to answer, wedging every session,
   every cron job and the liveness heartbeat *inside the authorization check* —
   before the handler has done any work of its own. Twenty-two call sites had that
@@ -401,7 +401,7 @@ authoritative. Carried over from upstream and pinned by
 ## Managed compiler
 
 A stock machine has no LaTeX compiler, so before this the app was broken by
-default on a fresh `pip install kirocrew`: every compile answered *"No LaTeX
+default on a fresh `pip install ajcrew`: every compile answered *"No LaTeX
 compiler found"*, and the only remedy on offer was a multi-gigabyte TeX Live
 install. There is no LaTeX compiler on PyPI either — the `tectonic` name there is
 an unrelated placeholder (version `0.0.0dev`, no files).
@@ -409,7 +409,7 @@ an unrelated placeholder (version `0.0.0dev`, no files).
 `tectonic.py` closes that gap. **Tectonic** is one self-contained static binary
 (10-22MB) that downloads only the TeX support files a document actually needs and
 drives its own bibtex/rerun cycle, which `latex.py` already knew how to handle.
-The module follows `kiro_crew/embeddings.py`, the in-tree precedent for the same
+The module follows `aj_crew/embeddings.py`, the in-tree precedent for the same
 problem (a large per-platform artifact, fetched over plain HTTPS, sha256-pinned,
 installed persistently under the data home, downloaded off the loop with retries,
 behind a status surface the UI polls).
@@ -436,13 +436,13 @@ Windows-on-ARM is deliberately absent: the release publishes no
 manual install path. `platform.machine()` normalization handles the
 `arm64`/`aarch64` and `AMD64`/`x86_64` naming splits.
 
-`KIROCREW_PAPYRUS_TECTONIC_URL` overrides the download URL for a mirrored or
+`AJCREW_PAPYRUS_TECTONIC_URL` overrides the download URL for a mirrored or
 air-gapped deployment. It must be `https://` (a `file://` or `http://` value is
 refused and logged), and the pin still has to match — an override changes **where**
 bytes come from, never **which** bytes are accepted. Logged and returned URLs are
 redacted to scheme+host, so a signed query string, userinfo or path token never
 reaches a log or the install banner.
-`KIROCREW_PAPYRUS_SKIP_TECTONIC_DOWNLOAD=1` refuses provisioning outright, which
+`AJCREW_PAPYRUS_SKIP_TECTONIC_DOWNLOAD=1` refuses provisioning outright, which
 is how the test suite guarantees it never reaches the network.
 
 ### This is NOT the system-package install `pptx-maker` refuses
@@ -621,7 +621,7 @@ cannot reach:
   indirection — point it at another repository and `info`/`attributes` are
   legitimate non-links *inside that repo*, so both inner checks pass while a status
   poll rewrites a different repository's attributes, outside the project entirely.
-  The rule holds for every segment Kiro Crew traverses by name, not just the leaf.
+  The rule holds for every segment Aj Crew traverses by name, not just the leaf.
 - **The rewrite preserves the existing mode.** `atomic_write` renames a fresh temp
   file into place, so without carrying the mode across, a user who had tightened
   `.git/info/attributes` to 0600 would find it 0644 after any status poll — a
@@ -791,7 +791,7 @@ session working", rather than a private `chat_done` subscription.
 
 ## Skill
 
-Five bundled skills under `src/kiro_crew/builtin_skills/papyrus-*/` (NOT the
+Five bundled skills under `src/aj_crew/builtin_skills/papyrus-*/` (NOT the
 repo-only top-level `skills/`), so every `pip`/DMG install receives them, per the
 skill-bundling rule in `AGENTS.md`:
 
@@ -884,7 +884,7 @@ that host reports `supported: false` and keeps the manual install path.
 
 | Path | Purpose |
 |------|---------|
-| `src/kiro_crew/apps/builtins/papyrus/app.json` | Manifest (opt-in, author `tricatte`, Apache-2.0) |
+| `src/aj_crew/apps/builtins/papyrus/app.json` | Manifest (opt-in, author `tricatte`, Apache-2.0) |
 | `.../papyrus/ATTRIBUTION.md` | Upstream credit + the port's diff |
 | `.../papyrus/backend/store.py` | Path-containment gate, project/file layout |
 | `.../papyrus/backend/latex.py` | Compiler discovery, the compile pipeline, log parsing |
@@ -892,7 +892,7 @@ that host reports `supported: false` and keeps the manual install path.
 | `.../papyrus/backend/gitops.py` | Clone/status/commit/push/pull, **and** the repo-config RCE denylist (19 `-c` overrides + the attributes pin + pack-program flags + `GIT_PROXY_COMMAND`) |
 | `.../papyrus/backend/routes.py` | aiohttp handlers + `register_routes` |
 | `.../papyrus/backend/doc_title.py` | Reads `\title{...}` from a cloned paper's main document, once, at clone time |
-| `src/kiro_crew/builtin_skills/papyrus-writing/SKILL.md` | Base skill: conduct, paper-quality principles, LaTeX house style, project path, compile workflow |
+| `src/aj_crew/builtin_skills/papyrus-writing/SKILL.md` | Base skill: conduct, paper-quality principles, LaTeX house style, project path, compile workflow |
 | `.../builtin_skills/papyrus-make-fluent/SKILL.md` | Polish English as tracked suggestions |
 | `.../builtin_skills/papyrus-latex-comments/SKILL.md` | Comment layer — `\aicomment` margin notes |
 | `.../builtin_skills/papyrus-latex-suggestions/SKILL.md` | Inline tracked edits — `\aisuggest` old→new |
@@ -914,8 +914,8 @@ that host reports `supported: false` and keeps the manual install path.
 Papyrus is to leave this repository intact, so the core neither
 imports it nor names it where it could act on it:
 
-- **Backend.** No module outside `src/kiro_crew/apps/builtins/` imports
-  `kiro_crew.apps.builtins.papyrus`. The gateway reaches the app only the way it
+- **Backend.** No module outside `src/aj_crew/apps/builtins/` imports
+  `aj_crew.apps.builtins.papyrus`. The gateway reaches the app only the way it
   reaches every built-in: by name through `BUILTIN_NAMES`, importing the package and
   calling its `register_routes` at boot. The `app.task.completed` counter labels an
   app by whether it is a shipped built-in (`metrics.feature_usage.OFFICIAL_APP_IDS`
@@ -959,8 +959,8 @@ imports it nor names it where it could act on it:
 
 The backend tests live in the repo-level `test/` tree by convention; the frontend
 tests live beside the page in `website/src/apps/papyrus/`. `setup.cfg`
-sets `testpaths = test src/kiro_crew/apps/builtins`, so an in-package test under
-`src/kiro_crew/apps/builtins/...` is also collected.
+sets `testpaths = test src/aj_crew/apps/builtins`, so an in-package test under
+`src/aj_crew/apps/builtins/...` is also collected.
 
 Compiler subprocesses are mocked, so no `pdflatex` or `bibtex` is invoked and the
 suite runs on a host with no TeX installation. Several repo-config security tests use
@@ -968,6 +968,6 @@ real `git` when it is available and skip otherwise.
 
 **No test reaches the network.** Every compiler download is mocked at the
 `urllib.request` opener, and `test/test_papyrus_tectonic.py` sets
-`KIROCREW_PAPYRUS_SKIP_TECTONIC_DOWNLOAD=1` for the whole module as a second belt,
+`AJCREW_PAPYRUS_SKIP_TECTONIC_DOWNLOAD=1` for the whole module as a second belt,
 so even a test that slipped past its mock is refused before a socket opens rather
 than pulling 22MB in CI.

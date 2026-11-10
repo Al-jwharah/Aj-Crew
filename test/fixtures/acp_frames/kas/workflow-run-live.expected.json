@@ -140,7 +140,7 @@
           },
           "builtIn": false,
           "description": "Two tiny steps: a note to the parent, then a question for the user.",
-          "name": "kirocrew-capture",
+          "name": "ajcrew-capture",
           "plan": [
             {
               "agentName": "wf-coder",
@@ -153,7 +153,7 @@
               "type": "step"
             }
           ],
-          "source": "/work/.kiro/workflows/kirocrew-capture.workflow.json"
+          "source": "/work/.kiro/workflows/ajcrew-capture.workflow.json"
         },
         {
           "_meta": {
@@ -568,7 +568,7 @@
       "stepsTotal": 2,
       "waitingOnWatch": false,
       "workflowId": "wf_0000000000000001",
-      "workflowName": "kirocrew-capture"
+      "workflowName": "ajcrew-capture"
     }
   },
   {
@@ -1028,7 +1028,7 @@
         "runLabel": "capture",
         "status": "paused",
         "workflowId": "wf_0000000000000001",
-        "workflowName": "kirocrew-capture",
+        "workflowName": "ajcrew-capture",
         "workspacePath": "/work"
       },
       "parentSessionId": "kas-wf-session-1",
@@ -1068,7 +1068,7 @@
       "stepsTotal": 2,
       "waitingOnWatch": false,
       "workflowId": "wf_0000000000000001",
-      "workflowName": "kirocrew-capture"
+      "workflowName": "ajcrew-capture"
     }
   },
   {
@@ -1247,7 +1247,7 @@
         "runLabel": "capture",
         "status": "completed",
         "workflowId": "wf_0000000000000001",
-        "workflowName": "kirocrew-capture",
+        "workflowName": "ajcrew-capture",
         "workspacePath": "/work"
       },
       "parentSessionId": "kas-wf-session-1",

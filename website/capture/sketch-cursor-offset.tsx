@@ -34,7 +34,7 @@ import { LanguageProvider } from '../src/i18n/LanguageProvider'
 import SketchDialog from '../src/components/SketchDialog'
 import '../src/index.css'
 
-document.documentElement.setAttribute('data-theme', 'kiro-dark')
+document.documentElement.setAttribute('data-theme', 'aj-dark')
 document.documentElement.dataset.mode = 'dark'
 initI18n('en')
 

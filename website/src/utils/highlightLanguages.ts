@@ -12,9 +12,9 @@
  * other seams: a highlight.js grammar is a function, so it cannot be posted to
  * the worker, and the worker never imports the composition root (which also
  * pulls in React). Instead the edition ships a DATA module,
- * `$KIROCREW_EDITION_DIR/languages.ts`, whose default export is a
+ * `$AJCREW_EDITION_DIR/languages.ts`, whose default export is a
  * `HighlightLanguageContribution[]`. The `editionLanguagesPlugin` in
- * vite.config.ts resolves `virtual:kirocrew-edition-languages` to that file
+ * vite.config.ts resolves `virtual:ajcrew-edition-languages` to that file
  * (or to an empty list in the stock build), for the main bundle AND the worker
  * bundles. Keep that module worker-safe: no React, no DOM.
  *
@@ -27,7 +27,7 @@
 import type { LanguageFn } from 'highlight.js'
 import type { LanguageRegistration } from '@pierre/diffs'
 import { reportSeamCollision } from '../apps/seamCollision'
-import editionLanguages from 'virtual:kirocrew-edition-languages'
+import editionLanguages from 'virtual:ajcrew-edition-languages'
 
 export interface HighlightLanguageContribution {
   /** Canonical language id and markdown fence tag, e.g. `demo` for ```demo. */

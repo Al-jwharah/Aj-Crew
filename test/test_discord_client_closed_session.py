@@ -8,7 +8,7 @@ from __future__ import annotations
 import aiohttp
 import pytest
 
-from kiro_crew.discord.client import DiscordClient
+from aj_crew.discord.client import DiscordClient
 
 
 @pytest.mark.asyncio

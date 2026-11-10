@@ -66,7 +66,7 @@ const slots = SEED.map(s => ({
   messages: 6,
   running: !!s.running,
   pending_approval: !!s.pending_approval,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   created: '2026-07-20T01:00:00Z',
   last_ts: new Date(NOW - s.hoursAgo * 3600_000).toISOString(),
   folder_id: '',

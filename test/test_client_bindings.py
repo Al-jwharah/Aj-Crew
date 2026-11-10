@@ -1,6 +1,6 @@
 """``AcpClient`` keeps every member it had, and each is bound from the module that owns it.
 
-The class's behaviour lives in the ``kiro_crew.acp.client_*`` owner modules: each member's
+The class's behaviour lives in the ``aj_crew.acp.client_*`` owner modules: each member's
 body is a module-level function there whose first parameter is ``self``, and the class
 binds it by name (``m = _owner.m``, or ``staticmethod(_owner.f)``). The instance state
 stays on the instance, so tests, ``AcpClient.__new__`` builds and the ``ProcessSession``
@@ -13,7 +13,7 @@ port see the same object they always did. This file pins the binding contract:
   attribute, which only work inside a class body;
 * no owner imports the facade or the class's module at run time;
 * each owner's docstring names the instance fields its members write and read;
-* a write through ``kiro_crew.acp.client`` reaches every owner that reads the name, for
+* a write through ``aj_crew.acp.client`` reaches every owner that reads the name, for
   every name the test trees patch there (the facade's mirror, ``_facade_mirror``);
 * the class statement lives in ``client_class`` and still names the facade as its module,
   for reprs, pickles and type hints;
@@ -34,8 +34,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp.client import AcpClient
+from aj_crew.acp import client as acp_client
+from aj_crew.acp.client import AcpClient
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_client_bindings")
 
@@ -423,7 +423,7 @@ _DECLARED = frozenset(
     }
 )
 
-_PACKAGE = "kiro_crew.acp"
+_PACKAGE = "aj_crew.acp"
 
 
 def _owners() -> list[ModuleType]:
@@ -540,7 +540,7 @@ def test_no_bound_function_needs_its_class_body(owner: str) -> None:
 
 
 def _runtime_facade_imports(tree: ast.Module) -> list[int]:
-    """Lines that import the facade (``kiro_crew.acp.client``) outside a ``TYPE_CHECKING`` block."""
+    """Lines that import the facade (``aj_crew.acp.client``) outside a ``TYPE_CHECKING`` block."""
     guarded: set[int] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.If) and ast.unparse(node.test) == "TYPE_CHECKING":
@@ -563,10 +563,10 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
 def test_the_facade_import_scan_can_fail() -> None:
     tree = ast.parse(
         "from typing import TYPE_CHECKING\n"
-        "if TYPE_CHECKING:\n    from kiro_crew.acp.client import AcpClient\n"
-        "def f():\n    from kiro_crew.acp.client import x\n"
-        "import kiro_crew.acp.client\n"
-        "from kiro_crew.acp import client\n"
+        "if TYPE_CHECKING:\n    from aj_crew.acp.client import AcpClient\n"
+        "def f():\n    from aj_crew.acp.client import x\n"
+        "import aj_crew.acp.client\n"
+        "from aj_crew.acp import client\n"
     )
     assert sorted(_runtime_facade_imports(tree)) == [5, 6, 7]
 
@@ -654,7 +654,7 @@ def test_a_moved_class_keeps_the_facade_as_its_module(owner: str) -> None:
 
 
 def test_the_kiro_trust_error_names_the_facade_in_an_error_chain() -> None:
-    from kiro_crew.subagent import _describe_exception
+    from aj_crew.subagent import _describe_exception
 
     try:
         try:
@@ -665,7 +665,7 @@ def test_the_kiro_trust_error_names_the_facade_in_an_error_chain() -> None:
         text = _describe_exception(outer)
     assert text == (
         "RuntimeError: spawn refused <- caused by "
-        "kiro_crew.acp.client._KiroExecutableTrustError: bytes not approved"
+        "aj_crew.acp.client._KiroExecutableTrustError: bytes not approved"
     )
 
 
@@ -703,14 +703,14 @@ def _owner_imports(tree: ast.Module) -> set[str]:
 
 def test_the_owner_import_scan_can_fail() -> None:
     tree = ast.parse(
-        "from kiro_crew.acp.client_timeouts import X\n"
-        "from kiro_crew.acp import client_spawn_env as _se, launch\n"
-        "import kiro_crew.acp.client_permissions\n"
+        "from aj_crew.acp.client_timeouts import X\n"
+        "from aj_crew.acp import client_spawn_env as _se, launch\n"
+        "import aj_crew.acp.client_permissions\n"
     )
     assert _owner_imports(tree) == {
-        "kiro_crew.acp.client_timeouts",
-        "kiro_crew.acp.client_spawn_env",
-        "kiro_crew.acp.client_permissions",
+        "aj_crew.acp.client_timeouts",
+        "aj_crew.acp.client_spawn_env",
+        "aj_crew.acp.client_permissions",
     }
 
 
@@ -788,7 +788,7 @@ def test_every_name_patched_through_the_facade_reaches_the_owners_reading_it() -
 
 def test_the_reach_scan_can_fail() -> None:
     index = acp_client._MIRROR
-    owner = "kiro_crew.acp.client_permissions"
+    owner = "aj_crew.acp.client_permissions"
     holders = dict(index.holders)
     holders["logger"] = tuple(h for h in holders["logger"] if h != owner)
     blind = dataclasses.replace(index, holders=holders)
@@ -852,7 +852,7 @@ def test_the_facade_resolver_answers_a_name_added_after_the_install(
 
 
 def test_install_refuses_a_facade_resolver_that_answers_a_served_name() -> None:
-    from kiro_crew import _facade_mirror
+    from aj_crew import _facade_mirror
 
     def answering(name: str) -> object:
         return object()
@@ -876,7 +876,7 @@ def test_install_refuses_a_facade_resolver_that_answers_a_served_name() -> None:
 def test_a_patch_through_the_facade_lands_on_the_owner_and_is_undone(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    owner = sys.modules["kiro_crew.acp.client_timeouts"]
+    owner = sys.modules["aj_crew.acp.client_timeouts"]
     before = owner._READ_TIMEOUT
     sentinel = object()
     with monkeypatch.context() as patch:
@@ -924,7 +924,7 @@ def _class_resident() -> dict[str, Any]:
 def test_the_class_keeps_the_facade_as_its_module_name_and_pickle_path() -> None:
     import importlib
 
-    from kiro_crew.acp import client_class
+    from aj_crew.acp import client_class
 
     assert AcpClient is client_class.AcpClient is acp_client.AcpClient
     assert (AcpClient.__module__, AcpClient.__qualname__) == (acp_client.__name__, "AcpClient")
@@ -951,7 +951,7 @@ def test_a_facade_patch_of_the_class_reaches_its_class_resident_statics(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """The class's own statics call each other through the ``AcpClient`` global, which a
-    patch of ``kiro_crew.acp.client.AcpClient`` still replaces for them."""
+    patch of ``aj_crew.acp.client.AcpClient`` still replaces for them."""
     calls: list[tuple[Path, Path]] = []
 
     class StandIn(AcpClient):
@@ -972,7 +972,7 @@ def test_a_facade_patch_of_the_class_reaches_its_class_resident_statics(
 
 
 def test_the_facade_fills_the_session_starts_spawn_env_resolver() -> None:
-    from kiro_crew.acp import client_start
+    from aj_crew.acp import client_start
 
     assert client_start._resolve_spawn_env is vars(acp_client)["_resolve_spawn_env"]
     assert client_start._resolve_spawn_env.__module__ == acp_client.__name__
@@ -989,7 +989,7 @@ def test_the_facade_fills_the_session_starts_spawn_env_resolver() -> None:
 def test_a_facade_patch_of_the_spawn_env_resolver_reaches_the_session_start(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.acp import client_start
+    from aj_crew.acp import client_start
 
     def stand_in(env: dict[str, str], *, kiro_api_key: bool = False) -> dict[str, str]:
         return env
@@ -1022,6 +1022,6 @@ def test_only_the_facade_and_the_class_import_the_session_start() -> None:
 
 
 def test_the_session_start_import_scan_can_fail() -> None:
-    assert _imports_the_session_start(ast.parse("from kiro_crew.acp import client_start\n"))
-    assert _imports_the_session_start(ast.parse("from kiro_crew.acp.client_start import X\n"))
-    assert not _imports_the_session_start(ast.parse("from kiro_crew.acp import client\n"))
+    assert _imports_the_session_start(ast.parse("from aj_crew.acp import client_start\n"))
+    assert _imports_the_session_start(ast.parse("from aj_crew.acp.client_start import X\n"))
+    assert not _imports_the_session_start(ast.parse("from aj_crew.acp import client\n"))

@@ -37,12 +37,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp import runtime as runtime_mod
-from kiro_crew.acp.harness import kas as kas_harness_mod
-from kiro_crew.acp.kas_host_auth import HostAuthCallbackError
-from kiro_crew.acp.kas_transport import METHOD_KAS_AUTH_GET_ACCESS_TOKEN
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.types import (
+from aj_crew.acp import runtime as runtime_mod
+from aj_crew.acp.harness import kas as kas_harness_mod
+from aj_crew.acp.kas_host_auth import HostAuthCallbackError
+from aj_crew.acp.kas_transport import METHOD_KAS_AUTH_GET_ACCESS_TOKEN
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     ACP_CLIENT_CAPABILITIES,
@@ -62,8 +62,8 @@ _AGENT = "pinned-agent"
 _RESUME_SID = "pinned-resume-sid"
 _SESSION_FILE = "/pinned/transcript.jsonl"
 _MCP_ROSTER: list[dict[str, Any]] = [
-    {"name": "kirocrew-core", "command": "pinned-core"},
-    {"name": "kirocrew-cron", "command": "pinned-cron"},
+    {"name": "ajcrew-core", "command": "pinned-core"},
+    {"name": "ajcrew-cron", "command": "pinned-cron"},
 ]
 _KAS_AGENTS = [{"name": _AGENT, "prompt": "pinned"}]
 # Advertised so set_mode is reached on both paths rather than skipped: the mode
@@ -87,7 +87,7 @@ def _fast_no_report_ceiling(monkeypatch):
     each capture stalls for seconds and buys nothing -- the ceiling is not what
     this module measures.
     """
-    import kiro_crew.acp.session_handle as sh
+    import aj_crew.acp.session_handle as sh
 
     monkeypatch.setattr(sh, "_MCP_DRAIN_NO_REPORT_CEILING", 0.05, raising=False)
 
@@ -202,7 +202,7 @@ async def _capture(backend: str, monkeypatch: pytest.MonkeyPatch) -> dict[str, A
     ):
         # The real projection reads ~/.kiro/agents; the GATE it is behind is what
         # this capture is about, so the payload is pinned and the gate is not.
-        from kiro_crew.acp.harness import SessionExtras
+        from aj_crew.acp.harness import SessionExtras
 
         return SessionExtras(custom_agents=_KAS_AGENTS if backend == ACP_BACKEND_KAS else None)
 
@@ -352,7 +352,7 @@ def test_only_kas_answers_the_host_auth_callback() -> None:
     that started answering the callback on a backend that owns no credential
     would flip this pair.
     """
-    from kiro_crew.acp.kas_transport import KAS_AUTH_CALLBACK_ERROR_CODE
+    from aj_crew.acp.kas_transport import KAS_AUTH_CALLBACK_ERROR_CODE
 
     kas_frame = json.loads(_golden_path("kas").read_text(encoding="utf-8"))["stdin_frames"][0]
     kiro_frame = json.loads(_golden_path("kiro").read_text(encoding="utf-8"))["stdin_frames"][0]
@@ -371,7 +371,7 @@ def test_handshake_params_come_from_the_shared_constants() -> None:
     pre-extraction inline conditional read, including KAS's integer
     ``protocolVersion`` -- KAS rejects the date-string spelling outright.
     """
-    from kiro_crew.acp.runtime import PROTOCOL_VERSION, PROTOCOL_VERSION_KAS
+    from aj_crew.acp.runtime import PROTOCOL_VERSION, PROTOCOL_VERSION_KAS
 
     assert PROTOCOL_VERSION == "2025-08-22"
     assert PROTOCOL_VERSION_KAS == 1
@@ -409,7 +409,7 @@ def test_this_gate_cannot_write_to_the_repository() -> None:
 
 def test_host_auth_callback_membership_is_kas_only() -> None:
     """Which backend the host answers for is a membership fact, not a branch."""
-    from kiro_crew.agent_sdk.backends import ACP_BACKENDS_HOST_AUTH_CALLBACK
+    from aj_crew.agent_sdk.backends import ACP_BACKENDS_HOST_AUTH_CALLBACK
 
     assert ACP_BACKEND_KAS in ACP_BACKENDS_HOST_AUTH_CALLBACK
     assert ACP_BACKEND_KIRO not in ACP_BACKENDS_HOST_AUTH_CALLBACK

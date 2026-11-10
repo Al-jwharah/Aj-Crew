@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock
 import pytest
 from test_dashboard_chat_refusal import TestRunChatRefusalFallback as _RefusalFallbackSuite
 
-from kiro_crew.dashboard.recovery_replays import ReplayFamily
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.recovery_replays import ReplayFamily
+from aj_crew.testing.wait import await_until
 
 
 class TestRunChatRefusalFallbackSwap:
@@ -24,13 +24,13 @@ class TestRunChatRefusalFallbackSwap:
         ``_active_fallback_model`` is empty — the slot.model backfill must not
         persist the temporary candidate into the (durable) pin."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
         # Simulate the real provider contract the backfill documents: the
         # resolved model readable off the client IS the currently served one.
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._backfill_canonical_model",
+            "aj_crew.dashboard.chat_runner._backfill_canonical_model",
             lambda client, provider_name: getattr(client, "served_model", "") or "",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -39,7 +39,7 @@ class TestRunChatRefusalFallbackSwap:
         client = self._make_refusing_client(self._refusal_events(category="CYBER"))
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
         # Turn 1 backfilled the PRIMARY (legitimate). Clear it to model the
@@ -58,7 +58,7 @@ class TestRunChatRefusalFallbackSwap:
         """A synthetic recovery turn after the replay keeps the fallback
         active; only a genuine turn restores the primary."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -66,16 +66,16 @@ class TestRunChatRefusalFallbackSwap:
         client = self._make_refusing_client(self._refusal_events(category="CYBER"))
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
         assert slot.task is not None
         await slot.task
         assert slot._refusal_fallback_primary == "fable-5"
 
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.dashboard.chat_utils import _SYNTHETIC_RECOVERY_MSGS
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.dashboard.chat_utils import _SYNTHETIC_RECOVERY_MSGS
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         async def _ok_stream(msg):
             yield LLMEvent(kind=EVENT_COMPLETE, stop_reason=STOP_REASON_END_TURN)
@@ -102,7 +102,7 @@ class TestRunChatRefusalFallbackSwap:
         """A non-raising ``set_model`` that does not move the model must NOT
         clear the restore record — the next turn retries instead of stranding
         the session on the fallback with nothing left to restore from."""
-        from kiro_crew.dashboard.chat_runner import _restore_refusal_fallback
+        from aj_crew.dashboard.chat_runner import _restore_refusal_fallback
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -134,7 +134,7 @@ class TestRunChatRefusalFallbackSwap:
         even a pick of the fallback candidate itself, which current-model
         equality alone cannot distinguish from the automatic swap."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -142,7 +142,7 @@ class TestRunChatRefusalFallbackSwap:
         client = self._make_refusing_client(self._refusal_events(category="CYBER"))
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
         assert slot.task is not None
@@ -152,8 +152,8 @@ class TestRunChatRefusalFallbackSwap:
         # An explicit pick moves the generation (api_chat_slot_model's seam).
         slot._model_pick_gen += 1
 
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         async def _ok_stream(msg):
             yield LLMEvent(kind=EVENT_COMPLETE, stop_reason=STOP_REASON_END_TURN)
@@ -174,7 +174,7 @@ class TestRunChatRefusalFallbackSwap:
         would run BEFORE that correction; the retry must refuse instead and
         leave the queue untouched."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -183,7 +183,7 @@ class TestRunChatRefusalFallbackSwap:
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
         slot.queue_append("actually, drop that request")
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -208,7 +208,7 @@ class TestRunChatRefusalFallbackSwap:
         under the swap: the swap is unwound (witnessed restore), the refusal
         surfaces, and nothing is queued ahead of the follow-up."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -223,7 +223,7 @@ class TestRunChatRefusalFallbackSwap:
         client.set_model = AsyncMock(side_effect=_apply_and_interrupt)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -249,7 +249,7 @@ class TestRunChatRefusalFallbackSwap:
         replays, and the enqueue snapshot would bake the moved counter in so
         the drain purge could never catch it either."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -267,7 +267,7 @@ class TestRunChatRefusalFallbackSwap:
         client.set_model = AsyncMock(side_effect=_apply_and_stop)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -288,7 +288,7 @@ class TestRunChatRefusalFallbackSwap:
         TRUE primary P; a second refusal's swap A->B reads A as "active" —
         recording A would lose P permanently (restore would return to A,
         never to P)."""
-        from kiro_crew.dashboard.chat_runner import (
+        from aj_crew.dashboard.chat_runner import (
             _refusal_fallback_swap,
             _restore_refusal_fallback,
         )
@@ -330,7 +330,7 @@ class TestRunChatRefusalFallbackSwap:
         sentinel refuse — the restore then fails every turn and the session
         stays stranded on the candidate. The swap must not run when the
         return leg is unprovable."""
-        from kiro_crew.dashboard.chat_runner import _refusal_fallback_swap
+        from aj_crew.dashboard.chat_runner import _refusal_fallback_swap
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -355,7 +355,7 @@ class TestRunChatRefusalFallbackSwap:
         """When the backend advertises the "auto" sentinel as a target the
         round trip is provable: the swap runs and records "auto" as the
         primary for the restore."""
-        from kiro_crew.dashboard.chat_runner import _refusal_fallback_swap
+        from aj_crew.dashboard.chat_runner import _refusal_fallback_swap
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -384,7 +384,7 @@ class TestRunChatRefusalFallbackSwap:
         it must not suppress the configured retry. Only USER-authored queue
         entries express superseding intent (`_has_user_queued_followup`)."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -392,13 +392,13 @@ class TestRunChatRefusalFallbackSwap:
         client = self._make_refusing_client(self._refusal_events(category="CYBER"))
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat_utils import CRON_NOTIFICATION_KIND
+        from aj_crew.dashboard.chat_utils import CRON_NOTIFICATION_KIND
 
         slot.queue_append(
             '[Cron notification from "scanner"]\nno new items', kind=CRON_NOTIFICATION_KIND
         )
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -417,7 +417,7 @@ class TestRunChatRefusalFallbackSwap:
         attends the announced swap, and an unattended replay doubles whatever
         the wake was about. The gate reads the turn's ledger actor."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -425,7 +425,7 @@ class TestRunChatRefusalFallbackSwap:
         client = self._make_refusing_client(self._refusal_events(category="CYBER"))
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "nightly scan wake", _turn_actor="subagent")
 
@@ -449,7 +449,7 @@ class TestRunChatRefusalFallbackSwap:
         unattended cycle, so the card is terminal either way.
         """
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -457,7 +457,7 @@ class TestRunChatRefusalFallbackSwap:
         client = self._make_refusing_client(self._refusal_events(category="CYBER"))
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(
             state,
@@ -480,7 +480,7 @@ class TestRunChatRefusalFallbackSwap:
         client = self._make_refusing_client(self._refusal_events(category="CYBER"))
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -490,7 +490,7 @@ class TestRunChatRefusalFallbackSwap:
     @pytest.mark.asyncio
     async def test_a_genuine_new_turn_clears_the_refused_cycle(self, tmp_path, monkeypatch):
         """A person's next message is a new context, so the loop may fire again."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -504,7 +504,7 @@ class TestRunChatRefusalFallbackSwap:
         )
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "try a different angle")
 
@@ -529,7 +529,7 @@ class TestRunChatRefusalFallbackSwap:
         slot._active_fallback_model = "haiku-test"
         slot._fallback_primary_model = "opus-test"  # walk departed FROM our candidate
 
-        from kiro_crew.dashboard.chat_runner import _restore_refusal_fallback
+        from aj_crew.dashboard.chat_runner import _restore_refusal_fallback
 
         await _restore_refusal_fallback(slot, client)
 
@@ -569,7 +569,7 @@ class TestRunChatRefusalFallbackSwap:
         # which model equality alone cannot see.
         inner._explicit_pick_epoch = 1
 
-        from kiro_crew.dashboard.chat_runner import _restore_refusal_fallback
+        from aj_crew.dashboard.chat_runner import _restore_refusal_fallback
 
         await _restore_refusal_fallback(slot, client)
 
@@ -589,9 +589,9 @@ class TestRunChatRefusalFallbackSwap:
         """
         import asyncio as _asyncio
 
-        from kiro_crew.dashboard.chat_runner import _restore_refusal_fallback
-        from kiro_crew.dashboard.chat_utils import effective_session_key
-        from kiro_crew.llm_helpers import pick_epoch_host, slot_switch_session_lock
+        from aj_crew.dashboard.chat_runner import _restore_refusal_fallback
+        from aj_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.llm_helpers import pick_epoch_host, slot_switch_session_lock
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -651,12 +651,12 @@ class TestRunChatRefusalFallbackSwap:
         """
         import asyncio as _asyncio
 
-        from kiro_crew.dashboard.chat_runner import (
+        from aj_crew.dashboard.chat_runner import (
             _refusal_fallback_swap,
             _restore_refusal_fallback,
         )
-        from kiro_crew.dashboard.chat_utils import effective_session_key
-        from kiro_crew.llm_helpers import pick_epoch_host, slot_switch_session_lock
+        from aj_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.llm_helpers import pick_epoch_host, slot_switch_session_lock
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")

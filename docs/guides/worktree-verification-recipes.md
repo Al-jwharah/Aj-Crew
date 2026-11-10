@@ -1,6 +1,6 @@
 # Worktree verification recipes
 
-These traces prove a Kiro Crew change against an isolated gateway running the
+These traces prove a Aj Crew change against an isolated gateway running the
 changed worktree. They do not touch the live gateway or its data home. Run them
 from the worktree root after the normal build and test gates pass.
 
@@ -9,11 +9,11 @@ from the worktree root after the normal build and test gates pass.
 The pod lifecycle, packaged scenarios, diagnostic commands, and pod-e2e harness
 are on `main`:
 
-- `kirocrew pod scenarios [--json]`
-- `kirocrew pod up/down/ls/status/logs/prune/api`
-- `src/kiro_crew/apps/builtins/dev_fleet/skills/pod-e2e/scripts/pod-e2e.sh`
+- `ajcrew pod scenarios [--json]`
+- `ajcrew pod up/down/ls/status/logs/prune/api`
+- `src/aj_crew/apps/builtins/dev_fleet/skills/pod-e2e/scripts/pod-e2e.sh`
 
-`kirocrew pod api` prints a stable JSON object with `name`, `method`, `path`,
+`ajcrew pod api` prints a stable JSON object with `name`, `method`, `path`,
 `status`, `ok`, and `body`. It permits `GET` and `HEAD` by default; `POST`,
 `PUT`, `PATCH`, and `DELETE` require `--allow-write`. It mints the selected
 pod's dashboard token internally, so do not add a `token` query parameter. If an
@@ -21,17 +21,17 @@ older installed CLI lacks the verb, update that installation before using these
 recipes:
 
 ```bash
-kirocrew pod --help | grep -qw api || {
-  echo "This recipe requires a current Kiro Crew installation with pod api" >&2
+ajcrew pod --help | grep -qw api || {
+  echo "This recipe requires a current Aj Crew installation with pod api" >&2
   exit 1
 }
 ```
 
 The packaged scenarios are the agent's **native seeding vocabulary**:
-`kirocrew pod scenarios` prints each name plus its description, and that listing
+`ajcrew pod scenarios` prints each name plus its description, and that listing
 — not this guide — is the authoritative inventory. Use the smallest scenario
 that establishes the state under test. The fixture job names asserted below are
-owned by [`minimal/crons.json`](../../src/kiro_crew/tests_fixtures/minimal/crons.json).
+owned by [`minimal/crons.json`](../../src/aj_crew/tests_fixtures/minimal/crons.json).
 
 A new scenario earns its place with two things in one PR: a **named debugging or
 verification use case** in its `fixture.yaml` description (the state it pins and
@@ -76,21 +76,21 @@ set -euo pipefail
 WT="$(basename "$PWD")"
 PATH_TO_ASSERT=/api/crons
 
-kirocrew pod scenarios
-kirocrew pod --help | grep -qw api || {
-  echo "This recipe requires a current Kiro Crew installation with pod api" >&2
+ajcrew pod scenarios
+ajcrew pod --help | grep -qw api || {
+  echo "This recipe requires a current Aj Crew installation with pod api" >&2
   exit 1
 }
 
-HANDLE="$(kirocrew pod up "$WT" --seed minimal --json)"
-trap 'kirocrew pod down "$WT"' EXIT
+HANDLE="$(ajcrew pod up "$WT" --seed minimal --json)"
+trap 'ajcrew pod down "$WT"' EXIT
 printf '%s\n' "$HANDLE" | jq -e --arg wt "$WT" '
   .name == $wt and
   .status == "up" and
   (.base_url | startswith("http://127.0.0.1:"))
 ' >/dev/null
 
-RESPONSE="$(kirocrew pod api "$WT" GET "$PATH_TO_ASSERT")"
+RESPONSE="$(ajcrew pod api "$WT" GET "$PATH_TO_ASSERT")"
 printf '%s\n' "$RESPONSE" | jq -e '
   .status == 200 and
   .ok == true and
@@ -98,7 +98,7 @@ printf '%s\n' "$RESPONSE" | jq -e '
     (["daily minimal fixture ping", "paused weekly recap"] | sort)
 ' >/dev/null
 
-kirocrew pod down "$WT"
+ajcrew pod down "$WT"
 trap - EXIT
 ```
 
@@ -114,7 +114,7 @@ A successful boot without the `jq` API assertion is not backend verification.
 
 ## Recipe 2: prove a frontend change
 
-The [pod-e2e skill](../../src/kiro_crew/apps/builtins/dev_fleet/skills/pod-e2e/SKILL.md)
+The [pod-e2e skill](../../src/aj_crew/apps/builtins/dev_fleet/skills/pod-e2e/SKILL.md)
 owns the harness flags, manifest syntax, authenticated Playwright context, and
 artifact contract. Follow that skill for harness details. This recipe adds the
 worktree-specific proof delta: a seeded boot, a passing verdict assertion, and
@@ -124,11 +124,11 @@ changed surface includes onboarding or another first-run overlay.
 ```bash
 set -euo pipefail
 WT="$(basename "$PWD")"
-HARNESS="$PWD/src/kiro_crew/apps/builtins/dev_fleet/skills/pod-e2e/scripts/pod-e2e.sh"
-ARTIFACT_DIR="$HOME/.kirocrew-pods/.e2e-artifacts/$WT"
+HARNESS="$PWD/src/aj_crew/apps/builtins/dev_fleet/skills/pod-e2e/scripts/pod-e2e.sh"
+ARTIFACT_DIR="$HOME/.ajcrew-pods/.e2e-artifacts/$WT"
 
-HANDLE="$(kirocrew pod up "$WT" --seed rich --json)"
-trap 'kirocrew pod down "$WT"' EXIT
+HANDLE="$(ajcrew pod up "$WT" --seed rich --json)"
+trap 'ajcrew pod down "$WT"' EXIT
 printf '%s\n' "$HANDLE" | jq -e '
   .status == "up" and (.base_url | startswith("http://127.0.0.1:"))
 ' >/dev/null
@@ -143,7 +143,7 @@ jq -se '
 ' "$ARTIFACT_DIR/verdict.jsonl" >/dev/null
 test -s "$ARTIFACT_DIR/fe-smoke.png"
 
-kirocrew pod down "$WT"
+ajcrew pod down "$WT"
 trap - EXIT
 printf 'Evidence: %s\n' "$ARTIFACT_DIR/fe-smoke.png"
 ```
@@ -242,12 +242,12 @@ the acceptance trace for closing that compatibility gap, not as a green recipe:
 set -euo pipefail
 WT="$(basename "$PWD")"
 
-CREATED="$(kirocrew pod api "$WT" POST /api/session-control/create \
+CREATED="$(ajcrew pod api "$WT" POST /api/session-control/create \
   --data '{"title":"cron verification agent"}' --allow-write)"
 TARGET="$(printf '%s\n' "$CREATED" | jq -er \
   '.status == 200 and .body.ok == true and .body.target')"
 
-SENT="$(kirocrew pod api "$WT" POST /api/session-control/send \
+SENT="$(ajcrew pod api "$WT" POST /api/session-control/send \
   --data "$(jq -nc --arg target "$TARGET" \
     --arg message 'list my cron jobs' '{target:$target,message:$message}')" \
   --allow-write)"
@@ -256,7 +256,7 @@ printf '%s\n' "$SENT" | jq -e \
   >/dev/null
 
 while :; do
-  READ="$(kirocrew pod api "$WT" GET \
+  READ="$(ajcrew pod api "$WT" GET \
     "/api/session-control/read?target=$TARGET&limit=20")"
   printf '%s\n' "$READ" | jq -e '.status == 200 and .body.ok == true' >/dev/null
   [ "$(printf '%s\n' "$READ" | jq -r '.body.running')" = false ] && break
@@ -268,10 +268,10 @@ printf '%s\n' "$READ" | jq -e '
       (.content | ascii_downcase | contains("cron")))
 ' >/dev/null
 
-kirocrew pod api "$WT" POST /api/session-control/stop \
+ajcrew pod api "$WT" POST /api/session-control/stop \
   --data "$(jq -nc --arg target "$TARGET" '{target:$target}')" \
   --allow-write >/dev/null
-kirocrew pod api "$WT" POST /api/session-control/close \
+ajcrew pod api "$WT" POST /api/session-control/close \
   --data "$(jq -nc --arg target "$TARGET" '{target:$target}')" \
   --allow-write >/dev/null
 ```
@@ -288,13 +288,13 @@ Use the non-destructive views first:
 set -euo pipefail
 WT="$(basename "$PWD")"
 
-kirocrew pod ls
-STATUS="$(kirocrew pod status "$WT" --json)"
+ajcrew pod ls
+STATUS="$(ajcrew pod status "$WT" --json)"
 printf '%s\n' "$STATUS" | jq -e --arg wt "$WT" \
   '.name == $wt and .status == "up" and (.health == 200 or .health == 401 or .health == 403)' \
   >/dev/null
-kirocrew pod logs "$WT" --lines 100
-kirocrew pod prune --dry-run --json | jq .
+ajcrew pod logs "$WT" --lines 100
+ajcrew pod prune --dry-run --json | jq .
 ```
 
 `pod ls` distinguishes running pods from orphaned pod homes. `pod status`
@@ -306,17 +306,17 @@ Reclaim one known pod with the same stop-drain-delete-verify path used by every
 recipe:
 
 ```bash
-kirocrew pod down "$WT"
+ajcrew pod down "$WT"
 ```
 
 After reviewing the dry-run, reclaim orphaned homes older than the default three
 days with:
 
 ```bash
-kirocrew pod prune
+ajcrew pod prune
 ```
 
-Use `kirocrew pod prune --all` only when every reported orphan should be
+Use `ajcrew pod prune --all` only when every reported orphan should be
 removed regardless of age. Reclamation is destructive to the isolated pod home,
 so keep a fresh crash home until its logs and sessions are no longer needed.
 
@@ -331,27 +331,27 @@ above and drives five user-visible flows against it.
 | `test_settings_save.py` | A setting written through the API survives a gateway restart. |
 | `test_cron_fire.py` | A cron created through the API fires and records a run. |
 | `test_subagent_spawn.py` | One agent turn completes, with its tool call, against the packaged fake ACP backend. |
-| `test_service_install_dry_run.py` | The rendered host service definition captures `KIROCREW_PORT` and never the pod's throwaway home. |
-| `test_wheel_install.py` | The built wheel installs into a clean venv and `kirocrew --version` plus `kirocrew doctor` answer. |
+| `test_service_install_dry_run.py` | The rendered host service definition captures `AJCREW_PORT` and never the pod's throwaway home. |
+| `test_wheel_install.py` | The built wheel installs into a clean venv and `ajcrew --version` plus `ajcrew doctor` answer. |
 
 Run the phase from the worktree you are proving:
 
 ```bash
-KIROCREW_E2E_SCENARIOS=1 \
+AJCREW_E2E_SCENARIOS=1 \
   .venv/bin/python -m pytest -v -p no:cacheprovider -o addopts= \
   -n0 --timeout=600 test/e2e/scenarios/
 ```
 
-Add `KIROCREW_E2E_REQUIRE=1` when you need a verdict rather than a
+Add `AJCREW_E2E_REQUIRE=1` when you need a verdict rather than a
 best-effort run: it turns every precondition skip into a failure, so a missing
 venv, an unbuilt SPA bundle or a host with no pod backend cannot read as a pass.
 That is the setting the nightly job uses. Each file also runs alone, so
 `pytest ... test/e2e/scenarios/test_cron_fire.py` is a valid single check.
 
 Three preconditions, all of them the same ones the recipes above need. The
-worktree must have `.venv/bin/kirocrew`, because a pod boots the CHECKOUT's own
+worktree must have `.venv/bin/ajcrew`, because a pod boots the CHECKOUT's own
 binary and the suite refuses to fall back to the host's installed build. It must
-have a built `src/kiro_crew/static/dist`. And the host must be able to run pods
+have a built `src/aj_crew/static/dist`. And the host must be able to run pods
 at all, which the suite asks through the pod's own `runtime.require_backend()`
 rather than testing the platform itself.
 
@@ -359,7 +359,7 @@ The suite runs on a hermetic pod plane (its own roots, unit prefix and port
 band), so it can never touch or reclaim your real pods. Its plane root is chosen
 SHORT deliberately: a pod's private dashboard socket lives at
 `<pod home>/dashboard-<port>.sock`, and a path over the AF_UNIX limit makes the
-gateway fall back to TCP-only, after which every `kirocrew pod api` call refuses
+gateway fall back to TCP-only, after which every `ajcrew pod api` call refuses
 correctly and permanently while the pod still answers health.
 
 CI runs this phase nightly on Linux, macOS and Windows. See

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from split_credential_boundary_helpers import KEY, _on_screen, _rejoins
 
-from kiro_crew.messaging.split import split_markdown_safe
+from aj_crew.messaging.split import split_markdown_safe
 
 
 class TheBudgetAloneHandsTheReaderTheKey:

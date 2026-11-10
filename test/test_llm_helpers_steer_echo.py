@@ -12,10 +12,10 @@ from collections.abc import AsyncIterator
 
 import pytest
 
-from kiro_crew.acp.client import AcpError, AcpPromptBusy
-from kiro_crew.acp.types import EVENT_STEER_CONSUMED
-from kiro_crew.llm_helpers import stream_and_collect
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.acp.client import AcpError, AcpPromptBusy
+from aj_crew.acp.types import EVENT_STEER_CONSUMED
+from aj_crew.llm_helpers import stream_and_collect
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
 
 class _ScriptedProvider:
@@ -122,7 +122,7 @@ class TestSteerConsumptionAcrossRetries:
         async def _instant(_seconds: float) -> None:
             return None
 
-        monkeypatch.setattr("kiro_crew.llm_helpers.asyncio.sleep", _instant)
+        monkeypatch.setattr("aj_crew.llm_helpers.asyncio.sleep", _instant)
 
         provider = _Flaky()
         out = await stream_and_collect(

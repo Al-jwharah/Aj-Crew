@@ -1005,7 +1005,7 @@ describe('ChannelFolderBackfill on an expired session', () => {
     // inside the instruction sentence rather than its own <code> element,
     // because a catalog value that stops mid-sentence cannot be reordered by a
     // translator.
-    expect(banner()?.textContent).toContain('kirocrew token')
+    expect(banner()?.textContent).toContain('ajcrew token')
     expect(banner()?.querySelector('input')).not.toBeNull()
   })
 

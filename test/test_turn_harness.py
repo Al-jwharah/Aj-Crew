@@ -39,8 +39,8 @@ from turn_harness import (
     run_turn,
 )
 
-from kiro_crew import autonudge
-from kiro_crew.acp.types import (
+from aj_crew import autonudge
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_STEER_CONSUMED,
@@ -48,14 +48,14 @@ from kiro_crew.acp.types import (
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.constants import TOOL_APPROVAL_TIMEOUT
-from kiro_crew.context import ContextBuilder
-from kiro_crew.crew_log import emit
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard import turn_dispatch as td
-from kiro_crew.messaging.link import ChannelLink
-from kiro_crew.sel import SecurityEventLog
-from kiro_crew.start_priority import StartPriority
+from aj_crew.constants import TOOL_APPROVAL_TIMEOUT
+from aj_crew.context import ContextBuilder
+from aj_crew.crew_log import emit
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard import turn_dispatch as td
+from aj_crew.messaging.link import ChannelLink
+from aj_crew.sel import SecurityEventLog
+from aj_crew.start_priority import StartPriority
 
 _REPLY = AcpEvent(kind=EVENT_TEXT_CHUNK, text="the reply")
 _DONE = AcpEvent(kind=EVENT_COMPLETE, stop_reason=STOP_REASON_END_TURN)
@@ -631,7 +631,7 @@ class TestNothingOutlivesTheRun:
 
     @pytest.mark.asyncio
     async def test_config_is_the_turns_and_is_put_back(self) -> None:
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         path = config_path()
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -645,7 +645,7 @@ class TestNothingOutlivesTheRun:
 
     @pytest.mark.asyncio
     async def test_an_absent_config_stays_absent(self) -> None:
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         path = config_path()
         path.unlink(missing_ok=True)

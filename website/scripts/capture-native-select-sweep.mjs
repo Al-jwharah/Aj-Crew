@@ -25,7 +25,7 @@ const OUT = process.argv[2] || '/tmp/native-select-sweep-shots'
 const CRONS = {
   jobs: [{
     id: 'job-1', name: 'Nightly digest', message: 'summarise the day',
-    schedule: 'every 24 hours', enabled: true, agent: 'kirocrew',
+    schedule: 'every 24 hours', enabled: true, agent: 'ajcrew',
     timezone: 'UTC', cron_expr: '0 2 * * *',
     next_run: Math.floor(Date.now() / 1000) + 3600,
   }],

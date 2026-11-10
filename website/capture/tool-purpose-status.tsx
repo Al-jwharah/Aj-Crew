@@ -42,11 +42,11 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const scene = params.get('refinement') || 'with-purpose'
 const theme = params.get('theme') || 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const SLOT = 'chat-1'
 const PURPOSE = 'Count the backend modules'
-const REFINED_TITLE = 'Running: sleep 40; ls src/kiro_crew | wc -l'
+const REFINED_TITLE = 'Running: sleep 40; ls src/aj_crew | wc -l'
 
 /** Frames captured from a real turn: kiro-cli emits the initial `tool_call`
  *  with the agent's purpose, then a `tool_call_update` refinement carrying the
@@ -68,7 +68,7 @@ const REFINEMENT = {
     slot: SLOT,
     tool: REFINED_TITLE,
     kind: 'execute',
-    input_preview: '{"command":"sleep 40; ls src/kiro_crew | wc -l"}',
+    input_preview: '{"command":"sleep 40; ls src/aj_crew | wc -l"}',
     tool_call_id: 'tc-1',
     is_update: true,
     ...(scene === 'with-purpose' ? { purpose: PURPOSE } : {}),
@@ -100,7 +100,7 @@ const SLOTS: ChatSlot[] = [
     title: 'Session list purpose fix',
     messages: 12,
     running: true,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     last_ts: new Date().toISOString(),
   },
   {
@@ -108,7 +108,7 @@ const SLOTS: ChatSlot[] = [
     title: 'App Store editorial',
     messages: 34,
     running: false,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     last_message: 'Both PRs are green.',
     last_ts: new Date(Date.now() - 3_600_000).toISOString(),
   },
@@ -140,8 +140,8 @@ function Harness() {
         unreadSlots={[]}
         history={[]}
         historyHasMore={false}
-        defaultAgent="kirocrew"
-        installedAgents={[{ name: 'kirocrew', description: 'Kiro Crew' }]}
+        defaultAgent="ajcrew"
+        installedAgents={[{ name: 'ajcrew', description: 'Aj Crew' }]}
       />
     </div>
   )

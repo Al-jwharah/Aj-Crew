@@ -16,7 +16,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config.loader import KiroCrewConfig, config_dir
+from aj_crew.config.loader import AjCrewConfig, config_dir
 
 OLD = "claude-sonnet-5"
 NEW = "claude-sonnet-5.5"
@@ -33,11 +33,11 @@ async def _owner_identity(request, handler):
 
 
 def _patch_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import api_kirocrew_config_patch
+    from aj_crew.dashboard.handlers import api_ajcrew_config_patch
 
     app = web.Application(middlewares=[_owner_identity])
     app["state"] = unittest.mock.MagicMock()
-    app.router.add_patch("/api/config/kirocrew", api_kirocrew_config_patch)
+    app.router.add_patch("/api/config/ajcrew", api_ajcrew_config_patch)
     return app
 
 
@@ -56,21 +56,21 @@ def _models(monkeypatch):
     (config_dir() / "config.json").write_text(
         json.dumps({"agent": {"model": OLD}}), encoding="utf-8"
     )
-    from kiro_crew.dashboard.handlers import core
+    from aj_crew.dashboard.handlers import core
 
     monkeypatch.setattr(core, "_active_advertised_ids", lambda request, backend=None: [OLD, NEW])
     monkeypatch.setattr(
         core, "_revalidate_role_pin_evidence", unittest.mock.AsyncMock(return_value=None)
     )
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_handlers._model_rejected_reason",
+        "aj_crew.dashboard.chat_handlers._model_rejected_reason",
         lambda m, provider=None: None,
     )
 
 
 async def _patch(path: str, value: object) -> tuple[int, dict]:
     async with TestClient(TestServer(_patch_app())) as c:
-        resp = await c.patch("/api/config/kirocrew", json={"path": path, "value": value})
+        resp = await c.patch("/api/config/ajcrew", json={"path": path, "value": value})
         return resp.status, await resp.json()
 
 
@@ -83,7 +83,7 @@ async def test_a_default_model_the_overlay_sets_is_refused_and_not_written(_mode
     assert body["overlay_override"] is True
     assert "config.local.json" in body["error"]
     assert _base()["agent"]["model"] == OLD
-    assert KiroCrewConfig.load().agent.model == OLD
+    assert AjCrewConfig.load().agent.model == OLD
 
 
 @pytest.mark.asyncio
@@ -101,7 +101,7 @@ async def test_an_overlay_on_another_key_of_the_section_does_not_block(_models):
     status, body = await _patch("agent.model", NEW)
     assert status == 200, body
     assert _base()["agent"]["model"] == NEW
-    assert KiroCrewConfig.load().agent.model == NEW
+    assert AjCrewConfig.load().agent.model == NEW
 
 
 @pytest.mark.asyncio

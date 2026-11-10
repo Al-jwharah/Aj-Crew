@@ -22,9 +22,9 @@ from crew_log_projection_helpers import (  # noqa: F401 -- fixtures are used by 
     _turn_items,
 )
 
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import store
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import store
 
 # --------------------------------------------------------------------------- #
 # bounded state (a-bound-bounds-every-field-it-retains)

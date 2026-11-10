@@ -41,7 +41,7 @@ import { json, makeFixedApi, handleBootRoute } from './lib/boot-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/default-model-label'
 const PREFIX = process.argv[3] || 'after'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -73,7 +73,7 @@ const fixedApi = makeFixedApi(PROJECT)
 
 await page.route('**/api/**', (route) => {
   const path = new URL(route.request().url()).pathname
-  if (path === '/api/config/kirocrew') {
+  if (path === '/api/config/ajcrew') {
     if (route.request().method() === 'PATCH') return json(route, { ok: true })
     return json(route, mcConfig)
   }

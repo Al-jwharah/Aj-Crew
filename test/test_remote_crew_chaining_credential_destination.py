@@ -121,7 +121,7 @@ class TestForgedHostIsNeverDialled:
 
         src = (
             _p.Path(__file__).resolve().parents[1]
-            / "src/kiro_crew/instances/ssh_tunnel_manager_transport.py"
+            / "src/aj_crew/instances/ssh_tunnel_manager_transport.py"
         ).read_text(encoding="utf-8")
         fn = next(
             n
@@ -143,12 +143,12 @@ class TestForgedHostIsNeverDialled:
 
 class TestGatewayIdentity:
     def test_it_is_stable_and_persisted(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.config import loader
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.config import loader
 
         loader._invalidate_config_cache()
-        from kiro_crew import gateway_identity
-        from kiro_crew.gateway_identity import GATEWAY_ID_FILE, gateway_id
+        from aj_crew import gateway_identity
+        from aj_crew.gateway_identity import GATEWAY_ID_FILE, gateway_id
 
         first = gateway_id()
         assert len(first) == 32
@@ -162,11 +162,11 @@ class TestGatewayIdentity:
     def test_a_repeat_read_does_not_touch_the_disk(self, tmp_path, monkeypatch):
         """`/api/health` is the most polled endpoint there is and the id cannot
         change, so only the first resolve may pay for the file."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.config import loader
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.config import loader
 
         loader._invalidate_config_cache()
-        from kiro_crew import gateway_identity
+        from aj_crew import gateway_identity
 
         gateway_identity._CACHED_IDS.clear()
         first = gateway_identity.gateway_id()
@@ -183,11 +183,11 @@ class TestGatewayIdentity:
         assert reads == [], "re-read the id file for a value that cannot change"
 
     def test_a_corrupt_file_is_replaced(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.config import loader
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.config import loader
 
         loader._invalidate_config_cache()
-        from kiro_crew.gateway_identity import GATEWAY_ID_FILE, gateway_id
+        from aj_crew.gateway_identity import GATEWAY_ID_FILE, gateway_id
 
         path = loader.config_dir()
         path.mkdir(parents=True, exist_ok=True)
@@ -196,11 +196,11 @@ class TestGatewayIdentity:
         assert len(fresh) == 32 and fresh != "not-a-uuid"
 
     def test_reading_without_create_does_not_mint(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.config import loader
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.config import loader
 
         loader._invalidate_config_cache()
-        from kiro_crew.gateway_identity import GATEWAY_ID_FILE, gateway_id
+        from aj_crew.gateway_identity import GATEWAY_ID_FILE, gateway_id
 
         assert gateway_id(create=False) == ""
         assert not (loader.config_dir() / GATEWAY_ID_FILE).exists()
@@ -208,12 +208,12 @@ class TestGatewayIdentity:
     def test_two_homes_get_different_ids(self, tmp_path, monkeypatch):
         """Two gateways sharing a machine but not a data home are two gateways,
         which is precisely the distinction the cycle guard needs."""
-        from kiro_crew.config import loader
-        from kiro_crew.gateway_identity import gateway_id
+        from aj_crew.config import loader
+        from aj_crew.gateway_identity import gateway_id
 
         ids = []
         for name in ("home-a", "home-b"):
-            monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / name))
+            monkeypatch.setenv("AJCREW_HOME", str(tmp_path / name))
             loader._invalidate_config_cache()
             ids.append(gateway_id())
         assert ids[0] != ids[1]
@@ -234,7 +234,7 @@ class TestEveryPeerCallAwaitsItsCredential:
         import inspect
         import sys
 
-        from kiro_crew.instances import ssh_tunnel_manager
+        from aj_crew.instances import ssh_tunnel_manager
 
         return "".join(
             inspect.getsource(sys.modules[name])
@@ -244,7 +244,7 @@ class TestEveryPeerCallAwaitsItsCredential:
     def test_the_credential_builder_is_a_coroutine_function(self):
         import inspect
 
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         assert inspect.iscoroutinefunction(
             SshTunnelManager._peer_cookie_header
@@ -279,7 +279,7 @@ class TestAPeerRequestRefusesAForwardThatMovedUnderIt:
     @staticmethod
     def _chained(tmp_path, monkeypatch):
         """A connected parent ``b`` on a known port, plus the chained child ``c``."""
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = _mgr(tmp_path, monkeypatch)
         reg.add(name="B", ssh_host="b-host", instance_id="b")
@@ -305,7 +305,7 @@ class TestAPeerRequestRefusesAForwardThatMovedUnderIt:
 
     def _mint(self, mgr, inst, reg, monkeypatch, during):
         """Run the chained mint with *during* executing inside the credential await."""
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         _FakeMintSession.posted = []
         # Set, not inherited: `reply` is a CLASS attribute several cases here rewrite,
@@ -331,7 +331,7 @@ class TestAPeerRequestRefusesAForwardThatMovedUnderIt:
     def test_a_forward_that_moved_during_the_credential_await_is_not_spent_on(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.instances.ssh_tunnel_manager import TokenMintError
+        from aj_crew.instances.ssh_tunnel_manager import TokenMintError
 
         reg, mgr, inst, tunnel, hop = self._chained(tmp_path, monkeypatch)
         params = self._mint(
@@ -359,7 +359,7 @@ class TestAPeerRequestRefusesAForwardThatMovedUnderIt:
         Port equality holds while the forward is a different generation, which is the
         reading ``_remint_parent_under_lock`` already relies on.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import TokenMintError
+        from aj_crew.instances.ssh_tunnel_manager import TokenMintError
 
         reg, mgr, inst, tunnel, hop = self._chained(tmp_path, monkeypatch)
         params = self._mint(
@@ -397,7 +397,7 @@ class TestAPeerRequestRefusesAForwardThatMovedUnderIt:
         import inspect
         import sys
 
-        from kiro_crew.instances import ssh_tunnel_manager
+        from aj_crew.instances import ssh_tunnel_manager
 
         source = "".join(
             inspect.getsource(sys.modules[name])
@@ -478,7 +478,7 @@ class TestAChainedCredentialGoesOnlyToTheCrewItWasBuiltFor:
     @staticmethod
     def _no_token_probe(monkeypatch):
         """Fail the test if the token-carrying liveness probe is ever sent."""
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         sent: list[str] = []
 
@@ -573,7 +573,7 @@ class TestAChainedCredentialGoesOnlyToTheCrewItWasBuiltFor:
         assert sent == [], "opened a session to send the token to the squatter"
 
     def test_the_peer_link_is_not_exchanged_with_a_squatter(self, tmp_path, monkeypatch):
-        from kiro_crew.instances.ssh_tunnel_manager import _PeerUnavailable
+        from aj_crew.instances.ssh_tunnel_manager import _PeerUnavailable
 
         _reg, mgr, answer, _probed, exchanged = self._chained(tmp_path, monkeypatch)
 
@@ -591,7 +591,7 @@ class TestAChainedCredentialGoesOnlyToTheCrewItWasBuiltFor:
         assert exchanged == [], "the link went to a far end that is not the crew"
 
     def test_a_cached_session_is_not_sent_to_a_squatter(self, tmp_path, monkeypatch):
-        from kiro_crew.instances.ssh_tunnel_manager import _PeerUnavailable
+        from aj_crew.instances.ssh_tunnel_manager import _PeerUnavailable
 
         _reg, mgr, answer, _probed, _ex = self._chained(tmp_path, monkeypatch)
 
@@ -634,7 +634,7 @@ class TestAChainedCredentialGoesOnlyToTheCrewItWasBuiltFor:
     def test_a_dead_forward_withholds_the_credential(self, tmp_path, monkeypatch):
         """The abnormal exit: the forwarder child is gone and the tunnel reads
         ERROR before any teardown has run. Nothing goes out over it."""
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, _PeerUnavailable
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, _PeerUnavailable
 
         _reg, mgr, _answer, _probed, exchanged = self._chained(tmp_path, monkeypatch)
 
@@ -706,7 +706,7 @@ class TestAChainedCredentialGoesOnlyToTheCrewItWasBuiltFor:
 
     @pytest.mark.parametrize("bad", [None, 7, ["CREW-C"], {"id": "x"}])
     def test_a_non_string_stated_id_is_treated_as_absent(self, tmp_path, monkeypatch, bad):
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         reg, mgr = _mgr(tmp_path, monkeypatch)
         reg.add(name="B", ssh_host="b-host", instance_id="b")
@@ -789,7 +789,7 @@ class TestAChainedCredentialGoesOnlyToTheCrewItWasBuiltFor:
         """The child dies while the identity probe is in flight: the state flips
         to ERROR with the generation unchanged, and whatever then answers on the
         port must not receive the credential on the strength of that answer."""
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         _reg, mgr, _answer, _probed, _ex = self._chained(tmp_path, monkeypatch)
 
@@ -839,7 +839,7 @@ class TestTheIdentityProbeCrossesARelayedChain:
     def test_the_crews_id_comes_back_through_two_hops(self, tmp_path, monkeypatch):
         from aiohttp import web
 
-        from kiro_crew.dashboard.handlers import core as core_mod
+        from aj_crew.dashboard.handlers import core as core_mod
 
         monkeypatch.setattr(core_mod, "gateway_id", lambda *_a, **_k: "CREW-C")
         _reg, mgr = _mgr(tmp_path, monkeypatch, real_identity=True)
@@ -954,7 +954,7 @@ class TestAProbeWithNoAnswerIsNotACrewWithNoId:
         a TypeError instead of quietly answering ``""``."""
         import inspect
 
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         param = inspect.signature(SshTunnelManager._answer_embed_mint).parameters["crew_gateway_id"]
         assert param.kind is inspect.Parameter.KEYWORD_ONLY
@@ -975,7 +975,7 @@ class TestAProbeWithNoAnswerIsNotACrewWithNoId:
 class TestTheIdentityReplyIsReadThreeWays:
     @staticmethod
     def _answer(monkeypatch, status, body):
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         raw = body if isinstance(body, bytes) else json.dumps(body).encode()
 

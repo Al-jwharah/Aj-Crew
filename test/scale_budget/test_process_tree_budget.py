@@ -72,7 +72,7 @@ def _pin_children_interface(monkeypatch: pytest.MonkeyPatch) -> None:
     cache "no interface" and leave the F8 budget failing on a correct fix. Code
     without the cache has no such name, and nothing is pinned.
     """
-    module = optional_module("kiro_crew.acp.runtime_process_tree")
+    module = optional_module("aj_crew.acp.runtime_process_tree")
     if module is not None and hasattr(module, CHILDREN_INTERFACE_CACHE):
         monkeypatch.setattr(module, CHILDREN_INTERFACE_CACHE, True)
 
@@ -81,14 +81,14 @@ def _pin_children_interface(monkeypatch: pytest.MonkeyPatch) -> None:
 def walk(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     """The real walk over the fake ``/proc``, with every subprocess call counted.
 
-    The seam is the ``kiro_crew.acp.client`` facade: ``_direct_children`` in
+    The seam is the ``aj_crew.acp.client`` facade: ``_direct_children`` in
     ``runtime_process_tree.py`` imports ``Path``, ``sys``, ``subprocess_mod`` and
     ``platform_compat`` from it at call time. The fixture walks the top pid once
     before handing over, so a walk that does not read these names fails here as
     a harness break instead of as a budget's expected failure.
     """
-    from kiro_crew.acp import client as client_facade
-    from kiro_crew.acp import runtime_process_tree
+    from aj_crew.acp import client as client_facade
+    from aj_crew.acp import runtime_process_tree
 
     proc, top, total = _fake_proc(tmp_path)
     real_path = client_facade.Path

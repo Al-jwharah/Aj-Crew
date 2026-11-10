@@ -19,7 +19,7 @@
    The `@source` lines restore the v3 content list: index.html plus src/**. A
    downstream edition's own sources are appended by `editionExtensionPlugin` in
    vite.config.ts (see `EDITION_SOURCE_MARKER` there), gated on the same
-   KIROCREW_ALLOW_EDITION opt-in as the rest of the seam.
+   AJCREW_ALLOW_EDITION opt-in as the rest of the seam.
 
    The utility ↔ token bridge (`@theme`, the `dark:` variant and the
    safe-area utilities) lives in tailwind-theme.css so the phantom-classes gate
@@ -32,7 +32,7 @@
 @import "./tailwind-theme.css";
 @source "../index.html";
 @source "../src/**/*.{ts,tsx}";
-/* @kirocrew-edition-source */
+/* @ajcrew-edition-source */
 @tailwind utilities source(none);
 
 /* ── Tailwind v3 → v4 Preflight compensation ──

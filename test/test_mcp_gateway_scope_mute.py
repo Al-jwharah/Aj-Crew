@@ -17,10 +17,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.acp.harness.kas import withdrawn_worker_stubs
-from kiro_crew.acp.kas_agents import build_kas_custom_agents
-from kiro_crew.mcp_gateway.rewriter import rewrite_agents
-from kiro_crew.mcp_gateway.session_servers import injection_server_names, pooled_session_servers
+from aj_crew.acp.harness.kas import withdrawn_worker_stubs
+from aj_crew.acp.kas_agents import build_kas_custom_agents
+from aj_crew.mcp_gateway.rewriter import rewrite_agents
+from aj_crew.mcp_gateway.session_servers import injection_server_names, pooled_session_servers
 
 AGENT = "probe-agent"
 SERVER = "oauth-server"
@@ -29,7 +29,7 @@ SERVER = "oauth-server"
 @pytest.fixture
 def home(tmp_path, monkeypatch):
     """A kiro home (agents + settings) and a crew store, both pinned as the scopes."""
-    from kiro_crew import mcp_discovery
+    from aj_crew import mcp_discovery
 
     agents = tmp_path / "kiro" / "agents"
     agents.mkdir(parents=True)
@@ -38,7 +38,7 @@ def home(tmp_path, monkeypatch):
     store = tmp_path / "crew" / "mcp.json"
     store.parent.mkdir(parents=True)
     monkeypatch.setattr(
-        mcp_discovery, "_MCP_SOURCES", ((store, "kirocrew"), (kiro_global, "kiroGlobal"))
+        mcp_discovery, "_MCP_SOURCES", ((store, "ajcrew"), (kiro_global, "kiroGlobal"))
     )
     monkeypatch.setattr(mcp_discovery, "_MCP_JSON_PATHS", None)
     return tmp_path, agents, kiro_global, store
@@ -173,7 +173,7 @@ class TestAKeepWhenTheSettingsFileIsUnsignable:
 
     @staticmethod
     def _keep(prev: list[str], cur: list[str]) -> bool:
-        from kiro_crew.mcp_gateway.rewriter_overlay import _overlay_inputs_unchanged
+        from aj_crew.mcp_gateway.rewriter_overlay import _overlay_inputs_unchanged
 
         sources = {"a.json": [1, 2, "d"]}
         stored = {"inputs": {"sources": sources, "settings": [1], "scope_muted": prev}}
@@ -187,7 +187,7 @@ class TestAKeepWhenTheSettingsFileIsUnsignable:
         assert self._keep(["a"], ["a", "b"]) is False
 
     def test_a_signable_pass_compares_it_exactly(self):
-        from kiro_crew.mcp_gateway.rewriter_overlay import _overlay_inputs_unchanged
+        from aj_crew.mcp_gateway.rewriter_overlay import _overlay_inputs_unchanged
 
         sources = {"a.json": [1]}
         stored = {"inputs": {"sources": sources, "settings": [1], "scope_muted": ["a"]}}
@@ -201,7 +201,7 @@ class TestACrewmateOverlay:
 
     @pytest.fixture
     def mates(self, home, monkeypatch):
-        from kiro_crew import mate_config
+        from aj_crew import mate_config
 
         root, agents, _kiro_global, store = home
         _agent(agents, {})
@@ -215,8 +215,8 @@ class TestACrewmateOverlay:
 
     @staticmethod
     def _stubbed(root: Path, agents: Path, mates: Path) -> bool:
-        from kiro_crew.mcp_gateway import mate_overlays
-        from kiro_crew.mcp_gateway.rewriter import _WRAPPER_MARKER
+        from aj_crew.mcp_gateway import mate_overlays
+        from aj_crew.mcp_gateway.rewriter import _WRAPPER_MARKER
 
         overlay = root / "overlay" / "agents"
         rewrite_agents(

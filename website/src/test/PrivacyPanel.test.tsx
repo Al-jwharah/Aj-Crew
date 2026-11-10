@@ -29,7 +29,7 @@ const ON = {
   reason: 'ready',
   endpoint_configured: true,
   env_override: false,
-  env_var: 'KIROCREW_TELEMETRY_DISABLED',
+  env_var: 'AJCREW_TELEMETRY_DISABLED',
   overlay_override: false,
 }
 
@@ -43,14 +43,14 @@ const HEARTBEAT_FIELDS = [
   'first-run flag',
 ] as const
 
-const RECEIPT_DISCLOSURE = "Official app slug · per-app anonymous token (not linkable across apps) · fresh/update flag · Kiro Crew version"
+const RECEIPT_DISCLOSURE = "Official app slug · per-app anonymous token (not linkable across apps) · fresh/update flag · Aj Crew version"
 
 const RECEIPT_FIELDS = [
   'Official app slug',
   'per-app anonymous token',
   'not linkable across apps',
   'fresh/update flag',
-  'Kiro Crew version',
+  'Aj Crew version',
 ] as const
 
 // Fields the payload excludes. Asserted ABSENT, not just omitted from the list
@@ -68,17 +68,17 @@ const REMOVED_FIELDS = [
 const EXCLUSION_DISCLOSURE = "Prompts, responses, files, credentials, hostnames, usernames, or your operating system. Your IP is not stored."
 
 const CONTROL_COMMANDS = [
-  'kirocrew telemetry status',
-  'kirocrew telemetry disable',
-  'export KIROCREW_TELEMETRY_DISABLED=1',
-  "$env:KIROCREW_TELEMETRY_DISABLED = '1'",
-  'set KIROCREW_TELEMETRY_DISABLED=1',
+  'ajcrew telemetry status',
+  'ajcrew telemetry disable',
+  'export AJCREW_TELEMETRY_DISABLED=1',
+  "$env:AJCREW_TELEMETRY_DISABLED = '1'",
+  'set AJCREW_TELEMETRY_DISABLED=1',
 ] as const
 
 const SHELL_COMMANDS = [
-  ['macOS / Linux', 'export KIROCREW_TELEMETRY_DISABLED=1'],
-  ['Windows PowerShell', "$env:KIROCREW_TELEMETRY_DISABLED = '1'"],
-  ['Windows Command Prompt', 'set KIROCREW_TELEMETRY_DISABLED=1'],
+  ['macOS / Linux', 'export AJCREW_TELEMETRY_DISABLED=1'],
+  ['Windows PowerShell', "$env:AJCREW_TELEMETRY_DISABLED = '1'"],
+  ['Windows Command Prompt', 'set AJCREW_TELEMETRY_DISABLED=1'],
 ] as const
 
 const TOGGLE_LABEL = 'Send anonymous usage heartbeat'
@@ -203,14 +203,14 @@ describe('PrivacyPanel', () => {
       ...ON,
       enabled: false,
       would_send: false,
-      reason: 'opted out via KIROCREW_TELEMETRY_DISABLED',
+      reason: 'opted out via AJCREW_TELEMETRY_DISABLED',
       env_override: true,
     })
     renderWithProviders(<PrivacyPanel />)
 
     // Text is split across SettingRef element and surrounding i18n strings
     expect(
-      await screen.findByLabelText(/Environment variable KIROCREW_TELEMETRY_DISABLED/),
+      await screen.findByLabelText(/Environment variable AJCREW_TELEMETRY_DISABLED/),
     ).toBeInTheDocument()
     expect(screen.getByText(/is set in this environment/)).toBeInTheDocument()
 
@@ -284,7 +284,7 @@ describe('PrivacyPanel', () => {
     beaconStatus.mockResolvedValue({
       ...ON,
       would_send: false,
-      reason: 'non-default KIROCREW_HOME (dev home / pod / preview)',
+      reason: 'non-default AJCREW_HOME (dev home / pod / preview)',
       reason_code: 'non_default_home',
     })
     renderWithProviders(<PrivacyPanel />)

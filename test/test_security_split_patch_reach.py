@@ -1,10 +1,10 @@
-"""A name a test patches on ``kiro_crew.security`` or its shell reader reaches every reader.
+"""A name a test patches on ``aj_crew.security`` or its shell reader reaches every reader.
 
-Two splits shaped this family. ``kiro_crew.security`` is a forwarding facade: ``_EXPORTS``
+Two splits shaped this family. ``aj_crew.security`` is a forwarding facade: ``_EXPORTS``
 names the module that owns each re-exported name, and a write on the package lands in that
 owner. The controls the package defined itself live in the owners it imports at its foot
 (``deny_gate``, ``display_safety``, ``memory_audit``, ``text_redaction``).
-``kiro_crew.security.shell_normalizer`` keeps argv attribution and re-imports what its
+``aj_crew.security.shell_normalizer`` keeps argv attribution and re-imports what its
 callers name from the lexical owners below it (``shell_normalizer_*.py``).
 
 A patch reaches a reader only when the reader looks the name up where the patch writes it.
@@ -35,19 +35,19 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-import kiro_crew.security as security
+import aj_crew.security as security
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_security_split_patch_reach")
 
-PACKAGE = "kiro_crew.security"
-READER = "kiro_crew.security.shell_normalizer"
+PACKAGE = "aj_crew.security"
+READER = "aj_crew.security.shell_normalizer"
 SECURITY_DIR = Path(security.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
 #: Text every test file that binds either module must hold: a dotted spelling (an import,
 #: a string target, an ``import_module`` or ``sys.modules`` key) or an import from the
-#: ``kiro_crew`` package, one line or parenthesized. The scan parses only files holding it.
+#: ``aj_crew`` package, one line or parenthesized. The scan parses only files holding it.
 _BINDS_THE_PACKAGE = re.compile(
-    r"kiro_crew\.security\b|from kiro_crew import[^\n]*\bsecurity\b|from kiro_crew import \("
+    r"aj_crew\.security\b|from aj_crew import[^\n]*\bsecurity\b|from aj_crew import \("
 )
 
 #: One of each seam the two splits had to keep, which the scan must find: the audit log
@@ -135,7 +135,7 @@ def _module_aliases(tree: ast.Module) -> dict[str, str]:
             for alias in node.names:
                 if alias.name in (PACKAGE, READER) and alias.asname:
                     aliases[alias.asname] = alias.name
-        elif isinstance(node, ast.ImportFrom) and node.module in ("kiro_crew", PACKAGE):
+        elif isinstance(node, ast.ImportFrom) and node.module in ("aj_crew", PACKAGE):
             for alias in node.names:
                 dotted = f"{node.module}.{alias.name}"
                 if dotted in (PACKAGE, READER):
@@ -408,7 +408,7 @@ def test_a_name_written_in_two_modules_has_no_reader_both_writes_reach() -> None
 
 def test_the_loop_reader_reads_the_constants_a_loop_patches() -> None:
     source = (
-        "from kiro_crew import security as sec\n"
+        "from aj_crew import security as sec\n"
         "def test_x(monkeypatch):\n"
         "    for name in ('_shell_tokens', '_argv_programs'):\n"
         "        monkeypatch.setattr(sec, name, None)\n"
@@ -451,7 +451,7 @@ def test_the_shell_reader_owners_never_import_the_reader() -> None:
 
 
 def test_the_facade_owners_take_only_the_resolver_and_the_logger_from_it() -> None:
-    """An owner binding any other package name by ``from kiro_crew.security import`` would
+    """An owner binding any other package name by ``from aj_crew.security import`` would
     hold a copy no patch on the package reaches."""
     taken: dict[str, set[str]] = {}
     for stem in _facade_owners():

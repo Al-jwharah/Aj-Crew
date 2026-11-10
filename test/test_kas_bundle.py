@@ -1,4 +1,4 @@
-"""Kiro Crew's own KAS engine bundle: manifest, install, resolve, and the spawn route.
+"""Aj Crew's own KAS engine bundle: manifest, install, resolve, and the spawn route.
 
 The route exists so an operator can run KAS with no kiro-cli at all. What these
 tests pin: the manifest is validated before anything is fetched; every artifact is
@@ -23,16 +23,16 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.acp import kas_bundle
-from kiro_crew.acp.harness.base import SpawnContext
-from kiro_crew.acp.harness.kas import KAS_BUNDLE_SPAWN_LABEL, KasHarness
-from kiro_crew.acp.kas_transport import (
+from aj_crew.acp import kas_bundle
+from aj_crew.acp.harness.base import SpawnContext
+from aj_crew.acp.harness.kas import KAS_BUNDLE_SPAWN_LABEL, KasHarness
+from aj_crew.acp.kas_transport import (
     KAS_BUNDLE_AUTH_ARG,
     KAS_BUNDLE_NODE_FLAG,
     KAS_BUNDLE_TRANSPORT_ARG,
     build_kas_bundle_argv,
 )
-from kiro_crew.acp.session_handle import AcpRuntimeError
+from aj_crew.acp.session_handle import AcpRuntimeError
 
 pytestmark = pytest.mark.skipif(os.name == "nt", reason="POSIX exec bits and tar layout")
 
@@ -548,7 +548,7 @@ class TestInstall:
 
 
 class TestBundledRoot:
-    """The desktop app's staged copy (KIROCREW_BUNDLED_KAS_DIR) is a SECOND root:
+    """The desktop app's staged copy (AJCREW_BUNDLED_KAS_DIR) is a SECOND root:
     asked only when the data home has nothing at the pin, so an operator's own
     install always wins, and flagged so status and doctor can say where it came from."""
 
@@ -565,7 +565,7 @@ class TestBundledRoot:
     ):
         app_root = tmp_path / "app" / "kas"
         _install(source_dir, app_root)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         monkeypatch.setenv(kas_bundle.BUNDLED_KAS_DIR_ENV, str(app_root))
         found = kas_bundle.installed_bundle(version="0.66.33")
         assert found is not None
@@ -579,7 +579,7 @@ class TestBundledRoot:
         _install(source_dir, app_root)
         home = tmp_path / "home"
         _install(source_dir, home / "engines" / "kas")
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setenv(kas_bundle.BUNDLED_KAS_DIR_ENV, str(app_root))
         found = kas_bundle.installed_bundle(version="0.66.33")
         assert found is not None
@@ -615,7 +615,7 @@ class TestArgv:
 
 
 def _ctx(tmp_path: Path) -> SpawnContext:
-    return SpawnContext(agent="kirocrew", work_dir=tmp_path, model=None, environ={}, home=tmp_path)
+    return SpawnContext(agent="ajcrew", work_dir=tmp_path, model=None, environ={}, home=tmp_path)
 
 
 class TestSpawnRoute:
@@ -629,10 +629,10 @@ class TestSpawnRoute:
         root = tmp_path / "root"
         installed = _install(source_dir, root)
         with (
-            patch("kiro_crew.acp.harness.kas._bundle_route_selected", return_value=True),
+            patch("aj_crew.acp.harness.kas._bundle_route_selected", return_value=True),
             patch.object(kas_bundle, "installed_bundle", return_value=installed),
             patch(
-                "kiro_crew.acp.harness.kas.vault_holds_identity_off_loop",
+                "aj_crew.acp.harness.kas.vault_holds_identity_off_loop",
                 side_effect=AssertionError("the vault is not consulted on the bundle route"),
             ),
         ):
@@ -658,7 +658,7 @@ class TestSpawnRoute:
             return installed
 
         with (
-            patch("kiro_crew.acp.harness.kas._bundle_route_selected", return_value=True),
+            patch("aj_crew.acp.harness.kas._bundle_route_selected", return_value=True),
             patch.object(kas_bundle, "installed_bundle", return_value=None),
             patch.object(kas_bundle, "install_pinned", side_effect=fake_install_pinned),
         ):
@@ -677,35 +677,35 @@ class TestSpawnRoute:
             raise kas_bundle.KasBundleError("could not fetch https://h.test/kas: no route to host")
 
         with (
-            patch("kiro_crew.acp.harness.kas._bundle_route_selected", return_value=True),
+            patch("aj_crew.acp.harness.kas._bundle_route_selected", return_value=True),
             patch.object(kas_bundle, "installed_bundle", return_value=None),
             patch.object(kas_bundle, "install_pinned", side_effect=offline),
         ):
             with pytest.raises(AcpRuntimeError) as caught:
                 await KasHarness().resolve_spawn(_ctx(tmp_path))
         text = str(caught.value)
-        assert "Kiro Crew's own engine" in text
+        assert "Aj Crew's own engine" in text
         assert "no route to host" in text
-        assert "`kirocrew kas install`" in text
+        assert "`ajcrew kas install`" in text
 
     @pytest.mark.asyncio
     async def test_bundle_off_keeps_the_relay(self, tmp_path):
         """The default route is byte-for-byte what it was: kiro-cli's relay, with the
         auth owner decided from the vault."""
-        import kiro_crew.acp.client as client_mod
+        import aj_crew.acp.client as client_mod
 
         async def _bin(*, environ=None, home=None):
             return "/opt/kiro/kiro-cli"
 
         with (
-            patch("kiro_crew.acp.harness.kas._bundle_route_selected", return_value=False),
+            patch("aj_crew.acp.harness.kas._bundle_route_selected", return_value=False),
             patch.object(
                 kas_bundle,
                 "installed_bundle",
                 side_effect=AssertionError("the bundle is not consulted on the relay route"),
             ),
             patch.object(client_mod, "_resolve_kiro_bin_for_spawn", _bin),
-            patch("kiro_crew.acp.harness.kas.vault_holds_identity_off_loop", return_value=False),
+            patch("aj_crew.acp.harness.kas.vault_holds_identity_off_loop", return_value=False),
         ):
             plan = await KasHarness().resolve_spawn(_ctx(tmp_path))
         assert plan.argv == [
@@ -719,14 +719,14 @@ class TestSpawnRoute:
         assert plan.host_auth is False
 
     def test_the_route_reads_the_config_field(self, tmp_path, monkeypatch):
-        from kiro_crew.acp.harness.kas import _bundle_route_selected
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.acp.harness.kas import _bundle_route_selected
+        from aj_crew.config.loader import AjCrewConfig
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        KiroCrewConfig.reset_cache() if hasattr(KiroCrewConfig, "reset_cache") else None
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        AjCrewConfig.reset_cache() if hasattr(AjCrewConfig, "reset_cache") else None
         assert _bundle_route_selected() is False
         (tmp_path / "config.json").write_text(json.dumps({"agent": {"kas_bundle": True}}))
-        KiroCrewConfig.reset_cache() if hasattr(KiroCrewConfig, "reset_cache") else None
+        AjCrewConfig.reset_cache() if hasattr(AjCrewConfig, "reset_cache") else None
         assert _bundle_route_selected() is True
 
 
@@ -739,7 +739,7 @@ class TestTheLeafIsSealed:
         sandbox may rewrite the code the next session runs. Same disposition as
         ``browser-harness``, and the same precreate + no-follow pins so an absent
         directory on a fresh install is not a name the agent gets to create."""
-        from kiro_crew import sandbox, security
+        from aj_crew import sandbox, security
 
         leaf = kas_bundle.KAS_BUNDLE_ENGINES_LEAF
         assert leaf in sandbox._CREW_READONLY_LEAVES
@@ -757,10 +757,10 @@ class TestTheLeafIsSealed:
 
 
 class TestThePin:
-    """Each Kiro Crew release runs exactly one engine version, fixed by one digest."""
+    """Each Aj Crew release runs exactly one engine version, fixed by one digest."""
 
     def test_the_pin_is_well_formed(self):
-        from kiro_crew.acp import kas_pin
+        from aj_crew.acp import kas_pin
 
         assert kas_bundle._VERSION_RE.match(kas_pin.KAS_PIN_VERSION)
         assert kas_bundle._SHA256_RE.match(kas_pin.KAS_PIN_MANIFEST_SHA256)
@@ -771,7 +771,7 @@ class TestThePin:
         """Two versions on disk (an update ran, the old release is still around): the
         release asks for ITS version. This is what lets an old process keep its engine
         and a rollback find its engine."""
-        from kiro_crew.acp import kas_pin
+        from aj_crew.acp import kas_pin
 
         root = tmp_path / "root"
         _install(source_dir, root)  # 0.66.33
@@ -788,7 +788,7 @@ class TestThePin:
         assert kas_bundle.installed_bundle(root=root).version == "0.99.0"
 
     def test_the_override_env_names_another_version(self, monkeypatch):
-        from kiro_crew.acp import kas_pin
+        from aj_crew.acp import kas_pin
 
         monkeypatch.delenv(kas_pin.KAS_VERSION_OVERRIDE_ENV, raising=False)
         assert kas_pin.pinned_version() == kas_pin.KAS_PIN_VERSION
@@ -852,14 +852,14 @@ class TestExistingRoutesAreUntouched:
     """Default config: kiro-cli users and KAS-over-relay users see no change."""
 
     def test_kas_bundle_defaults_off(self):
-        from kiro_crew.config.sections import AgentConfig
+        from aj_crew.config.sections import AgentConfig
 
         assert AgentConfig().kas_bundle is False
 
     @pytest.mark.asyncio
     async def test_the_kiro_harness_never_consults_the_bundle(self, tmp_path):
-        import kiro_crew.acp.client as client_mod
-        from kiro_crew.acp.harness import KiroHarness
+        import aj_crew.acp.client as client_mod
+        from aj_crew.acp.harness import KiroHarness
 
         async def _bin(*, environ=None, home=None):
             return "/opt/kiro/kiro-cli"
@@ -869,7 +869,7 @@ class TestExistingRoutesAreUntouched:
                 kas_bundle, "installed_bundle", side_effect=AssertionError("bundle consulted")
             ),
             patch(
-                "kiro_crew.acp.harness.kas._bundle_route_selected",
+                "aj_crew.acp.harness.kas._bundle_route_selected",
                 side_effect=AssertionError("kas route read on the kiro harness"),
             ),
             patch.object(client_mod, "_resolve_kiro_bin_for_spawn", _bin),
@@ -889,7 +889,7 @@ class TestExistingRoutesAreUntouched:
 
 def _patch_glibc(version: tuple[int, int] | None):
     """Patch the ONE glibc reader kas_bundle reuses, so the test never reads the host's libc."""
-    return patch("kiro_crew.constants._host_glibc_version", return_value=version)
+    return patch("aj_crew.constants._host_glibc_version", return_value=version)
 
 
 class TestOldGlibcRefusal:

@@ -24,21 +24,21 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-import kiro_crew.hooks as hooks_mod
-from kiro_crew.acp import _dispatch
-from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, JsonRpcMessage
-from kiro_crew.agent_sdk import spec_hooks
-from kiro_crew.agent_sdk.backends import (
+import aj_crew.config.paths as paths_mod
+import aj_crew.hooks as hooks_mod
+from aj_crew.acp import _dispatch
+from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, JsonRpcMessage
+from aj_crew.agent_sdk import spec_hooks
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_OPENCODE,
     ACP_BACKENDS_CREW_FIRES_SPEC_HOOKS,
 )
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.hooks import (
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard import chat_runner
+from aj_crew.hooks import (
     HOOK_EVENT_AGENT_SPAWN,
     HOOK_EVENT_POST_TOOL_USE,
     HOOK_EVENT_PRE_TOOL_USE,
@@ -47,8 +47,8 @@ from kiro_crew.hooks import (
     ScriptHookResult,
     ScriptHookStore,
 )
-from kiro_crew.providers.mirrors import mirror_for
-from kiro_crew.providers.mirrors.base import Concern, Disposition
+from aj_crew.providers.mirrors import mirror_for
+from aj_crew.providers.mirrors.base import Concern, Disposition
 
 _FRAMES = Path(__file__).parent / "fixtures" / "acp_frames"
 
@@ -294,8 +294,8 @@ def test_the_chat_turn_loop_fires_the_other_four_events(backend, agents_dir, tmp
 
 def _bare_client(backend: str):
     """An ``AcpClient`` with only the tool-call caches, as the goose tests build one."""
-    from kiro_crew.acp.client import AcpClient
-    from kiro_crew.acp.types import AcpPromptStats
+    from aj_crew.acp.client import AcpClient
+    from aj_crew.acp.types import AcpPromptStats
 
     client = AcpClient.__new__(AcpClient)
     client._acp_backend = backend
@@ -400,20 +400,20 @@ def _blocks(event, matcher, tmp_path, monkeypatch) -> bool:
 
 @pytest.mark.parametrize(
     "matcher",
-    ["mcp__kirocrew-core__monitor_start", "mcp__kirocrew-core__*", "kirocrew-core_monitor_start"],
+    ["mcp__ajcrew-core__monitor_start", "mcp__ajcrew-core__*", "ajcrew-core_monitor_start"],
 )
 def test_an_opencode_mcp_deny_hook_meets_the_fused_tool(matcher, tmp_path, monkeypatch):
-    event = _opencode_mcp_permission_event(("kirocrew-core", "other"))
-    assert event.harness_tool_id.split("|")[0] == "opencode#@kirocrew-core/monitor_start"
+    event = _opencode_mcp_permission_event(("ajcrew-core", "other"))
+    assert event.harness_tool_id.split("|")[0] == "opencode#@ajcrew-core/monitor_start"
     assert _blocks(event, matcher, tmp_path, monkeypatch)
     assert not _blocks(event, "mcp__other__*", tmp_path, monkeypatch)
 
 
-@pytest.mark.parametrize("matcher", ["@kirocrew-core/monitor_start", "@kirocrew-core/*"])
+@pytest.mark.parametrize("matcher", ["@ajcrew-core/monitor_start", "@ajcrew-core/*"])
 def test_an_at_server_slash_tool_matcher_meets_the_fused_tool(matcher, tmp_path, monkeypatch):
     # The documented MCP spelling the split already produces: Crew-fired spec
     # hooks accept it beside the object form's rule, scoped to its own server.
-    event = _opencode_mcp_permission_event(("kirocrew-core", "other"))
+    event = _opencode_mcp_permission_event(("ajcrew-core", "other"))
     assert _blocks(event, matcher, tmp_path, monkeypatch)
     assert not _blocks(event, "@other/*", tmp_path, monkeypatch)
 
@@ -473,9 +473,9 @@ def test_opencodes_apply_patch_is_reported_to_a_hook_as_fs_write(servers, tmp_pa
 
 def test_an_mcp_name_that_is_no_native_tool_keeps_its_split_first():
     names = spec_hooks.spec_hook_tool_names(
-        _qualified("opencode", "kirocrew-core_monitor_start", ("kirocrew-core",))
+        _qualified("opencode", "ajcrew-core_monitor_start", ("ajcrew-core",))
     )
-    assert names is not None and names[0] == "@kirocrew-core/monitor_start"
+    assert names is not None and names[0] == "@ajcrew-core/monitor_start"
 
 
 def test_an_ambiguous_fused_name_keeps_every_split(tmp_path, monkeypatch):
@@ -486,14 +486,14 @@ def test_an_ambiguous_fused_name_keeps_every_split(tmp_path, monkeypatch):
 
 
 def test_a_name_with_no_underscore_stays_as_written():
-    assert _qualified("opencode", "bash", ("kirocrew-core",)) == "opencode#bash"
+    assert _qualified("opencode", "bash", ("ajcrew-core",)) == "opencode#bash"
     assert _qualified("opencode", "webfetch", ()) == "opencode#webfetch"
     # goose states its server itself, so it is never split.
-    assert _qualified("goose", "kirocrew-core_x", ("kirocrew-core",)) == "goose#kirocrew-core_x"
+    assert _qualified("goose", "ajcrew-core_x", ("ajcrew-core",)) == "goose#ajcrew-core_x"
 
 
 def _qualified(backend, name, servers):
-    from kiro_crew.acp.harness_tool_names import qualified_harness_tool_id
+    from aj_crew.acp.harness_tool_names import qualified_harness_tool_id
 
     return qualified_harness_tool_id(backend, name, servers)
 
@@ -523,17 +523,17 @@ def test_a_goose_mcp_deny_hook_meets_the_served_tool(tmp_path, monkeypatch):
 
 def test_the_direct_client_splits_by_the_servers_it_placed():
     client = _bare_client(ACP_BACKEND_OPENCODE)
-    client._session_mcp_cache = [{"name": "kirocrew-core"}, {"name": 3}]
-    assert client._placed_mcp_server_names() == ("kirocrew-core",)
+    client._session_mcp_cache = [{"name": "ajcrew-core"}, {"name": 3}]
+    assert client._placed_mcp_server_names() == ("ajcrew-core",)
     del client._session_mcp_cache
     assert client._placed_mcp_server_names() == ()
 
 
 def test_the_direct_client_permission_event_carries_the_mcp_split():
     # End to end on AcpClient: the live opencode MCP tool_call, then a permission
-    # request for it, with kirocrew-core placed on the session's array.
+    # request for it, with ajcrew-core placed on the session's array.
     client = _bare_client(ACP_BACKEND_OPENCODE)
-    client._session_mcp_cache = [{"name": "kirocrew-core"}]
+    client._session_mcp_cache = [{"name": "ajcrew-core"}]
     call_id = ""
     for line in (_FRAMES / "opencode/mcp-directive-call-live.jsonl").read_text().splitlines():
         frame = json.loads(line) if line.strip() else {}
@@ -554,7 +554,7 @@ def test_the_direct_client_permission_event_carries_the_mcp_split():
     )
     event = client._build_permission_event(msg)
     assert event is not None
-    assert event.harness_tool_id.split("|")[0] == "opencode#@kirocrew-core/monitor_start"
+    assert event.harness_tool_id.split("|")[0] == "opencode#@ajcrew-core/monitor_start"
 
 
 def test_the_direct_client_splits_a_rewritten_server_by_its_placed_name():
@@ -618,7 +618,7 @@ def test_a_rewritten_server_from_opencodes_own_config_meets_its_exact_deny(tmp_p
 def test_a_long_mcp_title_keeps_its_identity_and_meets_its_deny(tmp_path, monkeypatch):
     # KAS's 128-character id bound does not apply: a 130-character server name
     # fused with its tool is still read, so a deny written for it still blocks.
-    from kiro_crew.acp.harness_tool_names import MAX_HARNESS_TOOL_NAME_LEN
+    from aj_crew.acp.harness_tool_names import MAX_HARNESS_TOOL_NAME_LEN
 
     server = "s" * 130
     client = _bare_client(ACP_BACKEND_OPENCODE)
@@ -634,7 +634,7 @@ def test_a_long_mcp_title_keeps_its_identity_and_meets_its_deny(tmp_path, monkey
 def test_the_every_underscore_split_of_a_bounded_name_stays_small():
     # The worst title the bound admits ("a_a_..._a") splits at every "_"; the id
     # it yields stays within a fixed size, not megabytes.
-    from kiro_crew.acp.harness_tool_names import MAX_HARNESS_TOOL_NAME_LEN
+    from aj_crew.acp.harness_tool_names import MAX_HARNESS_TOOL_NAME_LEN
 
     title = ("a_" * MAX_HARNESS_TOOL_NAME_LEN)[: MAX_HARNESS_TOOL_NAME_LEN - 1] + "a"
     assert _dispatch.harness_tool_name({"title": title}) == title
@@ -746,7 +746,7 @@ def test_an_unreadable_project_spec_fails_closed(backend, agents_dir, tmp_path):
 
 
 def test_kas_still_reads_the_user_level_alone(agents_dir, tmp_path):
-    from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS
 
     _write_spec(agents_dir, "a1", {})
     project = _project_spec(
@@ -777,8 +777,8 @@ def test_a_server_name_opencode_rewrites_still_meets_its_deny_hook(matcher, tmp_
 def test_a_server_from_opencodes_own_config_still_meets_its_deny_hook(
     matcher, tmp_path, monkeypatch
 ):
-    # Crew placed only kirocrew-core; opencode's own config mounted local-chorus-mcp.
-    tool_id = _qualified("opencode", "local-chorus-mcp_search", ("kirocrew-core",))
+    # Crew placed only ajcrew-core; opencode's own config mounted local-chorus-mcp.
+    tool_id = _qualified("opencode", "local-chorus-mcp_search", ("ajcrew-core",))
     event = SimpleNamespace(
         title="local-chorus-mcp_search",
         tool_input=None,
@@ -787,4 +787,4 @@ def test_a_server_from_opencodes_own_config_still_meets_its_deny_hook(
         harness_tool_id=tool_id,
     )
     assert _blocks(event, matcher, tmp_path, monkeypatch)
-    assert not _blocks(event, "mcp__kirocrew-core__*", tmp_path, monkeypatch)
+    assert not _blocks(event, "mcp__ajcrew-core__*", tmp_path, monkeypatch)

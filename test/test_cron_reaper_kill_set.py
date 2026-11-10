@@ -38,10 +38,10 @@ from cron_reaper_helpers import (
 )
 from test_update_provider import _UNALLOCATABLE_PID
 
-from kiro_crew import platform_compat
-from kiro_crew.cron import _JOB_TIMEOUT_SECS, CronJob, CronService, _RunClaim
-from kiro_crew.cron_history import CronHistoryStore
-from kiro_crew.process_identity import ProcessHandle, kill_set
+from aj_crew import platform_compat
+from aj_crew.cron import _JOB_TIMEOUT_SECS, CronJob, CronService, _RunClaim
+from aj_crew.cron_history import CronHistoryStore
+from aj_crew.process_identity import ProcessHandle, kill_set
 
 #: Every cron reaper suite pins a healthy free-memory reading (see
 #: ``ample_host_free_memory``): ``test_cron_reaper.py`` fires cron jobs through the
@@ -89,26 +89,26 @@ class TestALeaderlessGroupIsNeverReaped:
         child = _vouching_child(client, 8373)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
             # Alive at the snapshot (the bracketed group read), exited by the kill;
             # the late-spawned recorded child still reads back in the group.
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=_start_id_reads({7373: [_START_ID, _START_ID, None], child: "5150001"}),
             ),
             patch("os.getpgid", return_value=7373, create=True),
-            patch("kiro_crew.platform_compat.pgroup_of", return_value=7373),
-            patch("kiro_crew.platform_compat.pid_exists", side_effect=lambda pid: pid == child),
-            patch("kiro_crew.platform_compat.pid_is_zombie", return_value=False),
-            patch("kiro_crew.platform_compat.pgroup_exists", return_value=True),
+            patch("aj_crew.platform_compat.pgroup_of", return_value=7373),
+            patch("aj_crew.platform_compat.pid_exists", side_effect=lambda pid: pid == child),
+            patch("aj_crew.platform_compat.pid_is_zombie", return_value=False),
+            patch("aj_crew.platform_compat.pgroup_exists", return_value=True),
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 side_effect=PermissionError("[Errno 1] Operation not permitted"),
             ) as group_kill,
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
         ):
             await svc._force_reap("leaderless1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -131,15 +131,15 @@ class TestALeaderlessGroupIsNeverReaped:
         child = _vouching_child(client, 8474)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
             # The leader's start id reads back at the snapshot (the bracketed group
             # read), then another process owns the pid; the recorded child's reads
             # back throughout.
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=_start_id_reads(
                     {7474: [_START_ID, _START_ID, "9999999"], child: "5150001"}
                 ),
@@ -148,16 +148,16 @@ class TestALeaderlessGroupIsNeverReaped:
             # belongs to a stranger whose group is a different one -- a kill that
             # resolved the group from the pid now would signal THAT group.
             patch("os.getpgid", side_effect=[7474, 7474, 31337, 31337, 31337], create=True),
-            patch("kiro_crew.platform_compat.pgroup_of", return_value=7474),
-            patch("kiro_crew.platform_compat.pgroup_exists", return_value=True),
+            patch("aj_crew.platform_compat.pgroup_of", return_value=7474),
+            patch("aj_crew.platform_compat.pgroup_exists", return_value=True),
             # After the delivered group kill the vouching child sits in the zombie
             # state (its start id still reads back): a finished process, not a
             # survivor of the sweep -- pinned, since the post-sweep recheck reads
             # the child's liveness and a made-up pid answers whatever the host runs.
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.platform_compat.pid_is_zombie", return_value=True),
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.pid_is_zombie", return_value=True),
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
         ):
             await svc._force_reap("leaderless2", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -180,10 +180,10 @@ class TestALeaderlessGroupIsNeverReaped:
         _session_with_pid(svc, "cron:leaderless3", 7575)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
             # Unreadable at snapshot time: no verified group id on the handle. By
             # the kill the leader has exited.
             patch(
@@ -191,11 +191,11 @@ class TestALeaderlessGroupIsNeverReaped:
                 side_effect=ProcessLookupError("[Errno 3] No such process"),
                 create=True,
             ),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=None),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
-            patch("kiro_crew.platform_compat.pgroup_exists", return_value=True),
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=None),
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.pgroup_exists", return_value=True),
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
         ):
             await svc._force_reap("leaderless3", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -226,18 +226,18 @@ class TestALeaderlessGroupIsNeverReaped:
         child = _vouching_child(client, 8676)
 
         with (
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
             patch("os.getpgid", return_value=7676, create=True),
-            patch("kiro_crew.platform_compat.pgroup_of", return_value=7676),
+            patch("aj_crew.platform_compat.pgroup_of", return_value=7676),
             # Snapshot bracket (2), then the leader is gone; the child gone too.
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=_start_id_reads({7676: [_START_ID, _START_ID, None], child: None}),
             ),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
-            patch("kiro_crew.platform_compat.pgroup_exists", return_value=True),
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.pgroup_exists", return_value=True),
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             handle = _handle_of(svc, "cron:held")
             assert handle.pgid == 7676, "the snapshot did not verify the group id"
@@ -255,7 +255,7 @@ class TestALeaderlessGroupIsNeverReaped:
         """``getpgid`` refuses a darwin zombie; the group listing matched on (pid, start id) stands in."""
         from types import SimpleNamespace
 
-        from kiro_crew.process_identity import ProcessHandle, _group_member_vouches
+        from aj_crew.process_identity import ProcessHandle, _group_member_vouches
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
         monkeypatch.setattr(sys, "platform", "darwin")
@@ -263,10 +263,10 @@ class TestALeaderlessGroupIsNeverReaped:
         handle = ProcessHandle(pid=pid, start_id=_START_ID, pgid=pid, child_pids={})
 
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID),
-            patch("kiro_crew.platform_compat.pgroup_of", return_value=None),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID),
+            patch("aj_crew.platform_compat.pgroup_of", return_value=None),
             patch(
-                "kiro_crew.platform_compat.darwin_pgroup_members",
+                "aj_crew.platform_compat.darwin_pgroup_members",
                 return_value=[SimpleNamespace(pid=pid, start_id=_START_ID)],
             ) as listing,
         ):
@@ -275,10 +275,10 @@ class TestALeaderlessGroupIsNeverReaped:
 
         # A listed member under a recycled number does not pass: the start id differs.
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID),
-            patch("kiro_crew.platform_compat.pgroup_of", return_value=None),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID),
+            patch("aj_crew.platform_compat.pgroup_of", return_value=None),
             patch(
-                "kiro_crew.platform_compat.darwin_pgroup_members",
+                "aj_crew.platform_compat.darwin_pgroup_members",
                 return_value=[SimpleNamespace(pid=pid, start_id="9999999")],
             ),
         ):
@@ -294,19 +294,19 @@ class TestALeaderlessGroupIsNeverReaped:
         _session_with_pid(svc, "cron:emptied1", 7777)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
             # Alive at the snapshot, gone by the kill; the captured group probes empty.
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=_start_id_reads({7777: [_START_ID, _START_ID, None]}),
             ),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
             patch("os.getpgid", return_value=7777, create=True),
             _group_gone(),
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await svc._force_reap("emptied1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -326,25 +326,25 @@ class TestALeaderlessGroupIsNeverReaped:
         svc._sessions.reset = AsyncMock(return_value=True)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._kill_escaped_children"),
             # Alive at the snapshot (the bracketed group read), gone ever after;
             # the recorded child reads back throughout.
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=_start_id_reads({7878: [_START_ID, _START_ID, None], child: "5150001"}),
             ),
             patch("os.getpgid", return_value=7878, create=True),
-            patch("kiro_crew.platform_compat.pgroup_of", return_value=7878),
+            patch("aj_crew.platform_compat.pgroup_of", return_value=7878),
             # The leader is gone; the recorded child is a zombie still in the group
             # -- it vouches for the group (a zombie reads its group) and is not a
             # running survivor. Both liveness reads pinned per pid.
-            patch("kiro_crew.platform_compat.pid_exists", side_effect=lambda pid: pid == child),
-            patch("kiro_crew.platform_compat.pid_is_zombie", return_value=True),
-            patch("kiro_crew.platform_compat.pgroup_exists", return_value=True),
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.pid_exists", side_effect=lambda pid: pid == child),
+            patch("aj_crew.platform_compat.pid_is_zombie", return_value=True),
+            patch("aj_crew.platform_compat.pgroup_exists", return_value=True),
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await svc._force_reap("survivors1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -377,7 +377,7 @@ class TestARecordedChildTheSweepLeftStandingIsNamed:
         """The root reads back throughout and leads its own group; the child's start id as given."""
         with (
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=_start_id_reads({pid: _START_ID, child: child_start}),
             ),
             _isolated_leader(),
@@ -392,17 +392,17 @@ class TestARecordedChildTheSweepLeftStandingIsNamed:
         svc, job, claim = self._fixture(tmp_path, "execd1", 7171, 8171)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children") as sweep,
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children") as sweep,
             self._reads(7171, 8171),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.platform_compat.pid_is_zombie", return_value=False),
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.pid_is_zombie", return_value=False),
             _group_gone(),
-            patch("kiro_crew.process_identity._SWEEP_SETTLE_SECS", 0, create=True),
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
+            patch("aj_crew.process_identity._SWEEP_SETTLE_SECS", 0, create=True),
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
         ):
             await svc._force_reap("execd1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -425,15 +425,15 @@ class TestARecordedChildTheSweepLeftStandingIsNamed:
         svc, job, claim = self._fixture(tmp_path, "execd2", 7272, 8272)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
             self._reads(7272, 8272),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.platform_compat.pid_is_zombie", return_value=True),
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.pid_is_zombie", return_value=True),
             _group_gone(),
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True),
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True),
         ):
             await svc._force_reap("execd2", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -448,16 +448,16 @@ class TestARecordedChildTheSweepLeftStandingIsNamed:
         svc, job, claim = self._fixture(tmp_path, "execd3", 7373, 8373)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
             self._reads(7373, 8373),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.platform_compat.pid_is_zombie", side_effect=[False, True]) as zombie,
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.pid_is_zombie", side_effect=[False, True]) as zombie,
             _group_gone(),
-            patch("kiro_crew.process_identity._SWEEP_SETTLE_SECS", 0, create=True),
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True),
+            patch("aj_crew.process_identity._SWEEP_SETTLE_SECS", 0, create=True),
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True),
         ):
             await svc._force_reap("execd3", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -473,17 +473,17 @@ class TestARecordedChildTheSweepLeftStandingIsNamed:
         svc, job, claim = self._fixture(tmp_path, "execd4", 7474, 8474)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
             self._reads(7474, 8474, child_start="9999999"),
             # Alive and running under the recorded pid -- but not the process the
             # client recorded, so nothing this run answers for.
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.platform_compat.pid_is_zombie", return_value=False),
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.pid_is_zombie", return_value=False),
             _group_gone(),
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True),
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True),
         ):
             await svc._force_reap("execd4", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -499,19 +499,19 @@ class TestARecordedChildTheSweepLeftStandingIsNamed:
         _vouching_child(client, 8575)
 
         with (
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
             self._reads(7575, 8575),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.platform_compat.pid_is_zombie", return_value=False),
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.pid_is_zombie", return_value=False),
             _group_gone(),
-            patch("kiro_crew.process_identity._SWEEP_SETTLE_SECS", 0, create=True),
+            patch("aj_crew.process_identity._SWEEP_SETTLE_SECS", 0, create=True),
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 side_effect=PermissionError("[Errno 1] Operation not permitted"),
             ),
             patch(
-                "kiro_crew.platform_compat.kill_pid_async",
+                "aj_crew.platform_compat.kill_pid_async",
                 AsyncMock(side_effect=PermissionError("[Errno 1] Operation not permitted")),
             ),
         ):
@@ -588,18 +588,18 @@ class TestEveryProcessUnderTheKeyIsAnswered:
         svc._sessions.reset = AsyncMock(return_value=True)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
             # The pid now reads the successor's start id: the predecessor is
             # recycled (nothing to kill, its group probes empty), the successor is
             # alive and verified.
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="7777777"),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="7777777"),
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
             _isolated_leader(),
             _group_gone(),
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             await svc._force_reap("recycled-both", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -620,12 +620,12 @@ class TestEveryProcessUnderTheKeyIsAnswered:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             await svc._force_reap("both1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -650,13 +650,13 @@ class TestEveryProcessUnderTheKeyIsAnswered:
             return True
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 side_effect=_refuse_the_run_s_process,
             ),
         ):
@@ -703,12 +703,12 @@ class TestTheSessionTheResetPopsIsCaptured:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             await svc._force_reap("late1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -727,9 +727,9 @@ class TestTheSessionTheResetPopsIsCaptured:
         )
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
         ):
             await svc._force_reap("late2", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -755,12 +755,12 @@ class TestTheSessionTheResetPopsIsCaptured:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             await svc._force_reap("late3", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -795,8 +795,8 @@ class TestTheSessionTheResetPopsIsCaptured:
         ``get_or_create`` never registers under the run. The held call is not dropped:
         it lands once the fence lifts.
         """
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
         def _factory(
             session_key: Any = None, agent: Any = None, channel_id: Any = None, **_: Any
@@ -812,7 +812,7 @@ class TestTheSessionTheResetPopsIsCaptured:
             provider.shutdown = AsyncMock()
             return provider
 
-        mgr = SessionManager(KiroCrewConfig(), provider_factory=_factory)
+        mgr = SessionManager(AjCrewConfig(), provider_factory=_factory)
         parked, door = _parks_at_the_fence_door(mgr)
         racing: list[asyncio.Task[Any]] = []
         held_during_reset: list[str] = []
@@ -838,16 +838,16 @@ class TestTheSessionTheResetPopsIsCaptured:
             return await real_pass(session_key, pairs, **kwargs)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             patch.object(svc, "_reset_and_kill_once", _cold_start_then_pass),
             door,
-            patch("kiro_crew.cron._REAPER_RESET_TIMEOUT", 0.2),
+            patch("aj_crew.cron._REAPER_RESET_TIMEOUT", 0.2),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             assert svc._session_process_handles("cron:late4") == []
             await svc._force_reap("late4", _JOB_TIMEOUT_SECS + 60, claim=claim)

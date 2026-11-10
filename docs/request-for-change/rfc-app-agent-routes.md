@@ -20,14 +20,14 @@ superseded-by: []
 > file under `src/` names `agentRoutes`, and no `app_request` tool exists.
 > `token_auth` honours the internal secret only on the paths enumerated in
 > `_STRICT_INTERNAL_API_PATHS` and `_MIXED_INTERNAL_API_PATHS`. Both sets are
-> defined in `src/kiro_crew/dashboard/server_internal_paths.py` (moved out of
+> defined in `src/aj_crew/dashboard/server_internal_paths.py` (moved out of
 > `server.py` by #22867, which re-exports them) and enforced through
-> `src/kiro_crew/dashboard/server_runtime/security_middleware.py`, which adds
+> `src/aj_crew/dashboard/server_runtime/security_middleware.py`, which adds
 > an edition's contributed paths to the mixed set. Four builtin apps are named
 > there one route at a time: Issue Radar (`/investigation`, `/crew`,
 > `/crew/work`), Ops Mission Control (ten routes), Dev Fleet (four `/pod/*`
 > routes, strict) and Design Tweak (`/apps/design-tweak/api/thread`).
-> `RouteRegistry.dispatch` in `src/kiro_crew/apps/route_registry.py` hands an
+> `RouteRegistry.dispatch` in `src/aj_crew/apps/route_registry.py` hands an
 > app handler no caller session. A full implementation is open as
 > [#17015](https://github.com/kirodotdev/KiroCrew/pull/17015). It was written
 > before this document and is offered as the reference for it, not as a decision.
@@ -36,9 +36,9 @@ superseded-by: []
 
 An installed app lists, in `app.json`, the routes agents may call:
 `"agentRoutes": ["POST /subscriptions", "DELETE /subscriptions/{id}"]`. An
-agent calls them through one `kirocrew-core` tool, `app_request`. The gateway
+agent calls them through one `ajcrew-core` tool, `app_request`. The gateway
 admits that call only on a declared route of an enabled app, and the app's
-handler receives the calling session as `request["kirocrew_agent_session"]`.
+handler receives the calling session as `request["ajcrew_agent_session"]`.
 Core never names the app.
 
 ## Motivation
@@ -141,7 +141,7 @@ marked `request["app_agent_route"]`. A host-owned route at the same path, a core
 lifecycle handler and any path outside `/api/apps/` are not the catch-all, so
 they never arm.
 
-`app_request` stamps every call with `X-KiroCrew-App-Request: 1`. A marked call
+`app_request` stamps every call with `X-AjCrew-App-Request: 1`. A marked call
 is refused on any static internal path (`app_request_static_route_refused`) and
 anywhere the arm did not engage (`app_request_route_refused`), each with an
 audit row. Static internal paths therefore stay reachable only through their
@@ -158,14 +158,14 @@ it refuses with 403 before any handler runs unless:
   path instantiates it with no empty, `.` or `..` segment
   (`agent_route_not_declared` otherwise).
 
-Only then does it set `request["kirocrew_agent_session"]`. Nothing else sets
+Only then does it set `request["ajcrew_agent_session"]`. Nothing else sets
 it, so a cookie request never carries it, whatever headers it sends. The
 dispatch audit row names the calling session as caller and
 `app:<name> METHOD path` as the resource.
 
 ### 4. The agent tool
 
-`app_request(app, method, path, body?)` is one `kirocrew-core` tool. It:
+`app_request(app, method, path, body?)` is one `ajcrew-core` tool. It:
 
 - resolves the caller through `require_strict_session_key` and refuses an
   unidentified caller or a channel agent;
@@ -188,7 +188,7 @@ Apps teach agents their routes through the skills they already ship.
 
 | Phase | Scope | Exit criteria |
 |---|---|---|
-| 1 | Manifest field, admission arm, dispatch decision, `app_request`, docs ([#17015](https://github.com/kirodotdev/KiroCrew/pull/17015)) | An app that declares no `agentRoutes` behaves as on main. A declared route answers 200 with the caller's session in `kirocrew_agent_session`. An undeclared route, a missing `X-Session-Key` and a `..` path answer 403 before any handler runs. A marked call to a static internal path answers 403. A disabled app's routes answer 404. All of these hold over both the unix socket and TCP loopback. Phase 1 applies no signature gate to `agentRoutes`; the manifest-edit threat in Security considerations stays open until open question 5 is decided. |
+| 1 | Manifest field, admission arm, dispatch decision, `app_request`, docs ([#17015](https://github.com/kirodotdev/KiroCrew/pull/17015)) | An app that declares no `agentRoutes` behaves as on main. A declared route answers 200 with the caller's session in `ajcrew_agent_session`. An undeclared route, a missing `X-Session-Key` and a `..` path answer 403 before any handler runs. A marked call to a static internal path answers 403. A disabled app's routes answer 404. All of these hold over both the unix socket and TCP loopback. Phase 1 applies no signature gate to `agentRoutes`; the manifest-edit threat in Security considerations stays open until open question 5 is decided. |
 | 2 (optional) | Move an in-repo app (Issue Radar first) off its static paths and dedicated tool | Its paths leave the static sets in `dashboard/server_internal_paths.py`, and its existing tests pass through `app_request`. Not required for Phase 1 to be useful. Blocked on a maintainer wanting it. |
 
 Phase 1 was run end to end on an isolated gateway booted from the #17015 branch;
@@ -207,7 +207,7 @@ header.
 
 ## Security considerations
 
-- **Attestation is transport-dependent.** `kirocrew_agent_session` is pinned to
+- **Attestation is transport-dependent.** `ajcrew_agent_session` is pinned to
   the kernel-identified peer only on the unix socket, and only when
   `_verify_unix_peer` resolves that peer's tenancy. Over TCP loopback, or when
   tenancy is unknown, it is the caller's own claim. An app must read it as the
@@ -244,9 +244,9 @@ header.
   over the app's whole checkout whose secret the agent cannot read (open
   question 5).
 - **Governance ceiling.** `app_request` sits under POLICY ∩ PROFILE through two
-  existing scopes and adds none. As a `kirocrew-core` MCP tool it passes Plane A's
+  existing scopes and adds none. As a `ajcrew-core` MCP tool it passes Plane A's
   `gate_decision` under the `mcp` scope, so a policy or a surface profile can deny
-  `@kirocrew-core/app_request` like any other tool. The `apps` scope governs
+  `@ajcrew-core/app_request` like any other tool. The `apps` scope governs
   activation: an app the ceiling denies never activates, `app_request` refuses
   an app that is not enabled, and the `token_auth` arm does not engage for it.
   The gap is granularity. The `mcp` rule matches the tool, not its `app`

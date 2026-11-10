@@ -125,7 +125,7 @@ def fake_home(tmp_path, monkeypatch):
     home = tmp_path / "home"
     home.mkdir()
     monkeypatch.setenv("HOME", str(home))
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
     monkeypatch.setattr(Path, "home", lambda: home)
     return home
 
@@ -148,7 +148,7 @@ def attested_internal_identity(monkeypatch):
     arrives with, and without them every internal row would stop on a 409 that
     says nothing about whether the owner gate fired.
     """
-    from kiro_crew.dashboard.handlers import _shared
+    from aj_crew.dashboard.handlers import _shared
 
     async def _scope(request: web.Request):
         if request.get("internal_auth") is not True:
@@ -171,7 +171,7 @@ INTERNAL_HEADERS = {"X-Session-Key": INTERNAL_SESSION}
 
 
 def _steering_app() -> web.Application:
-    from kiro_crew.dashboard.handlers.steering import api_steering_create, api_steering_detail
+    from aj_crew.dashboard.handlers.steering import api_steering_create, api_steering_detail
 
     app = web.Application()
     app["state"] = MagicMock(
@@ -229,7 +229,7 @@ async def test_owner_can_delete_a_steering_file(fake_home) -> None:
 
 
 def _spawn_app() -> tuple[web.Application, MagicMock]:
-    from kiro_crew.dashboard.handlers.messaging import api_spawn
+    from aj_crew.dashboard.handlers.messaging import api_spawn
 
     info = SimpleNamespace(id="a1", agent_id="a1", done=False, error=None, error_code=None)
     spawn = MagicMock(return_value=info)
@@ -290,7 +290,7 @@ async def test_app_token_caller_can_still_spawn(attested_internal_identity) -> N
 
 
 def _cron_app() -> tuple[web.Application, AsyncMock]:
-    from kiro_crew.dashboard.handlers.cron import api_crons_create
+    from aj_crew.dashboard.handlers.cron import api_crons_create
 
     add_job = AsyncMock(return_value=SimpleNamespace(id="j1", job_id="j1", name="j"))
     app = web.Application()
@@ -397,7 +397,7 @@ class _FakeWorkflowService:
 
 
 def _workflow_app() -> tuple[web.Application, _FakeWorkflowService]:
-    from kiro_crew.dashboard.handlers.workflows import (
+    from aj_crew.dashboard.handlers.workflows import (
         api_workflow_definition_remove,
         api_workflow_definition_run,
         api_workflow_definition_update,
@@ -603,7 +603,7 @@ async def test_reads_stay_open_for_a_non_owner() -> None:
     dashboard link was sent for. Gating a module rather than its mutating verbs
     would take that away, and nothing in the refusal tests would notice.
     """
-    from kiro_crew.dashboard.handlers.workflows import api_workflow_definitions
+    from aj_crew.dashboard.handlers.workflows import api_workflow_definitions
 
     app, _service = _workflow_app()
     claims = {"user": NON_OWNER, "app": ""}

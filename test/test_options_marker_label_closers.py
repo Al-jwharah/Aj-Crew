@@ -46,13 +46,13 @@ import pytest
 from named_cases_helpers import named_cases
 
 from conftest import assert_rejected_without_backtracking
-from kiro_crew.constants import (
+from aj_crew.constants import (
     MARKER_CLOSERS,
     OPTIONS_RE_LINE,
     OPTIONS_RE_TRAILER,
     _marker_labels_have_unmatched_opener,
 )
-from kiro_crew.messaging.renderer import split_options_trailer
+from aj_crew.messaging.renderer import split_options_trailer
 
 #: Same-line shapes that must NOT match: the swallowed closer has no ``[`` to
 #: match it AND is followed by an ordinary word rather than a separator, so
@@ -150,7 +150,7 @@ class TestACloserMustBeMatchedOrContinueTheList:
 
         So the marker now renders as visible text. Nothing is removed, which is the
         direction every cost in this grammar fails in, and the full argument lives at
-        :func:`kiro_crew.constants._marker_labels_have_unmatched_opener`.
+        :func:`aj_crew.constants._marker_labels_have_unmatched_opener`.
         """
         text = "[OPTIONS: Fix [x logging | Skip]"
         assert OPTIONS_RE_LINE.search(text) is None

@@ -37,7 +37,7 @@ vi.mock('../../api/client', async () => ({
     deniedCommands: vi.fn(),
     governancePolicy: vi.fn(),
     securityPosture: vi.fn(),
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
     patchConfig: vi.fn(),
     tailnetStatus: vi.fn(),
     credentialRedaction: vi.fn(),
@@ -73,7 +73,7 @@ describe('SecurityPanel - credential redaction switch', () => {
     ;(api.governancePolicy as ReturnType<typeof vi.fn>).mockResolvedValue({
       version: null, has_policy: false, profile: null, unavailable: false, scopes: [],
     })
-    ;(api.kirocrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({})
+    ;(api.ajcrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({})
     ;(api.patchConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true })
     ;(api.tailnetStatus as ReturnType<typeof vi.fn>).mockResolvedValue({
       enabled: false, governance_pinned: false, host: '', origin: '', resolved_at: 0, state: 'off',

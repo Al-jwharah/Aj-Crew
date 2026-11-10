@@ -33,7 +33,7 @@ const NUMBERS: Record<NumberField, { min: number; max: number; fallback: number 
   typing_idle_seconds: { min: 3, max: 60, fallback: 10 },
 }
 
-const CONFIG_KEY = ['kirocrewConfig'] as const
+const CONFIG_KEY = ['ajcrewConfig'] as const
 
 type SharedCrewSection = Partial<Record<Field, unknown>>
 
@@ -63,7 +63,7 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
 
 export function PeopleAdvanced() {
   const qc = useQueryClient()
-  const config = useQuery({ queryKey: CONFIG_KEY, queryFn: () => api.kirocrewConfig(), retry: false })
+  const config = useQuery({ queryKey: CONFIG_KEY, queryFn: () => api.ajcrewConfig(), retry: false })
   const [drafts, setDrafts] = useState<Partial<Record<NumberField, string>>>({})
   const overlay = useOptimisticConfigPaths(qc)
   const saveOpts = overlay.mutationOpts<{ field: Field; value: boolean | number }>({

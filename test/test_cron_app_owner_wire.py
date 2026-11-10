@@ -14,9 +14,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.apps.cron_sdk import APP_OWNER_PREFIX, app_owner_name, owner_tag
-from kiro_crew.cron import CronJob, CronSchedule
-from kiro_crew.dashboard.handlers.cron import api_crons
+from aj_crew.apps.cron_sdk import APP_OWNER_PREFIX, app_owner_name, owner_tag
+from aj_crew.cron import CronJob, CronSchedule
+from aj_crew.dashboard.handlers.cron import api_crons
 
 
 def _request_with_job(**job_kw) -> MagicMock:

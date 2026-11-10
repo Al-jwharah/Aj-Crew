@@ -16,13 +16,13 @@ import json
 
 import pytest
 
-from kiro_crew.projection import (
+from aj_crew.projection import (
     EMPTY_WATERMARK,
     DirectoryCheckpointStore,
     ProjectionRegistry,
     Savepoint,
 )
-from kiro_crew.projection import checkpoint as checkpoint_mod
+from aj_crew.projection import checkpoint as checkpoint_mod
 
 IDENTITY = {"origin": "log-a", "first_seq": 1}
 

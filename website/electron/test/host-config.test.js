@@ -28,20 +28,20 @@ function mockStore(initial = {}) {
 
 describe("migrateRemoteHostConfig", () => {
   it("migrates legacy remoteHost to remoteHosts[port]", () => {
-    const store = mockStore({ remoteHost: "myhost.corp.example.com", kirocrewBinPath: "~/.local/bin/kirocrew", remoteHosts: {} });
+    const store = mockStore({ remoteHost: "myhost.corp.example.com", ajcrewBinPath: "~/.local/bin/ajcrew", remoteHosts: {} });
     const result = migrateRemoteHostConfig(store, 7778);
     assert.equal(result, true);
-    assert.deepEqual(store._data.remoteHosts, { 7778: { host: "myhost.corp.example.com", binPath: "~/.local/bin/kirocrew" } });
+    assert.deepEqual(store._data.remoteHosts, { 7778: { host: "myhost.corp.example.com", binPath: "~/.local/bin/ajcrew" } });
     assert.equal(store._data.remoteHost, undefined);
-    assert.equal(store._data.kirocrewBinPath, undefined);
+    assert.equal(store._data.ajcrewBinPath, undefined);
   });
 
 
 
-  it("uses DEFAULT_REMOTE_BIN when kirocrewBinPath is empty", () => {
-    const store = mockStore({ remoteHost: "host.com", kirocrewBinPath: "", remoteHosts: {} });
+  it("uses DEFAULT_REMOTE_BIN when ajcrewBinPath is empty", () => {
+    const store = mockStore({ remoteHost: "host.com", ajcrewBinPath: "", remoteHosts: {} });
     migrateRemoteHostConfig(store, 7777);
-    assert.equal(store._data.remoteHosts[7777].binPath, "~/.local/bin/kirocrew");
+    assert.equal(store._data.remoteHosts[7777].binPath, "~/.local/bin/ajcrew");
   });
 
   it("does not migrate when remoteHosts already has entries", () => {
@@ -62,7 +62,7 @@ describe("legacyMigrationPort", () => {
   // A legacy entry names a host and no port, so this key has to be the port the
   // launch will actually bind. Keying it anywhere else leaves the launch running
   // against a port whose remote host is recorded somewhere else.
-  it("takes an explicit KIROCREW_PORT over the configured port", () => {
+  it("takes an explicit AJCREW_PORT over the configured port", () => {
     // The override short-circuits selection, so that value is bound whether or
     // not this module would have picked it.
     const store = mockStore({ remoteHosts: {} });
@@ -217,7 +217,7 @@ describe("setRemoteHostConfig", () => {
   it("defaults binPath to DEFAULT_REMOTE_BIN when omitted", () => {
     const store = mockStore({ remoteHosts: {} });
     setRemoteHostConfig(store, 7777, { host: "h.com" });
-    assert.equal(store._data.remoteHosts["7777"].binPath, "~/.local/bin/kirocrew");
+    assert.equal(store._data.remoteHosts["7777"].binPath, "~/.local/bin/ajcrew");
   });
 });
 
@@ -258,7 +258,7 @@ describe("remoteHostPort", () => {
   it("skips an entry whose host was cleared", () => {
     const store = mockStore({
       remoteHosts: {
-        "5477": { host: "", binPath: "~/.local/bin/kirocrew" },
+        "5477": { host: "", binPath: "~/.local/bin/ajcrew" },
         "7778": { host: "a.example.com" },
       },
     });
@@ -657,7 +657,7 @@ describe("retireLegacyEmptyPortHost", () => {
     // the exposure this change exists to close -- with no way back, since no
     // later save on that port can ever succeed either.
     const store = mockStore({ remoteHosts: { "": { host: "legacy.example.test" } } });
-    const fields = { host: "legacy.example.test", binPath: "~/.local/bin/kirocrew", remotePort: "", remotePath: "" };
+    const fields = { host: "legacy.example.test", binPath: "~/.local/bin/ajcrew", remotePort: "", remotePath: "" };
 
     const { saved } = saveRemoteCrewConfig(store, "80", fields);
     assert.equal(saved, false, "80 is unselectable, so the replacement cannot be written");

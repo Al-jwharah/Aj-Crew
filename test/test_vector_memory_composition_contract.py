@@ -1,8 +1,8 @@
 """Composition contract between ``VectorMemoryStore`` and ``vector_memory_runtime``.
 
-``kiro_crew.vector_memory`` keeps the store's one connection, lock and pinned write
+``aj_crew.vector_memory`` keeps the store's one connection, lock and pinned write
 paths and delegates its retrieval, ranking, repair and parsing rules to the modules
-under ``kiro_crew.vector_memory_runtime``. What this file pins is what callers of
+under ``aj_crew.vector_memory_runtime``. What this file pins is what callers of
 the store observe independently of where each rule lives:
 
 * the class keeps every member it had, with the same kind and signature, and the
@@ -52,13 +52,13 @@ from source_corpus import repo_files_named, repo_root
 from test_core_path_redact_before_bound import _find_slice_inside_redact_call
 from test_security_posture import _REDACTOR_CALL_RE
 
-import kiro_crew.vector_memory as vm
-from kiro_crew.vector_memory import VectorMemoryStore
+import aj_crew.vector_memory as vm
+from aj_crew.vector_memory import VectorMemoryStore
 
-RUNTIME_PACKAGE = "kiro_crew.vector_memory_runtime"
+RUNTIME_PACKAGE = "aj_crew.vector_memory_runtime"
 RUNTIME_DIR = Path(vm.__file__).resolve().with_name("vector_memory_runtime")
 FACADE_PATH = Path(vm.__file__).resolve()
-STORE_LOGGER = "kiro_crew.vector_memory"
+STORE_LOGGER = "aj_crew.vector_memory"
 
 #: The runtime modules the store composes. A module added or removed changes the
 #: composition, so the set is spelled out rather than globbed.
@@ -98,35 +98,35 @@ OUT_OWNER_MODULES = frozenset(
 
 #: A test module that rebinds a facade name names the facade in one of these spellings.
 _MENTIONS_THE_FACADE = re.compile(
-    r"kiro_crew\.vector_memory\b|from kiro_crew import [^\n]*\bvector_memory\b"
+    r"aj_crew\.vector_memory\b|from aj_crew import [^\n]*\bvector_memory\b"
 )
 
 
 def _facade_patch_targets(source: str) -> set[str]:
-    """Names one test module rebinds on ``kiro_crew.vector_memory`` itself.
+    """Names one test module rebinds on ``aj_crew.vector_memory`` itself.
 
     A rebinding is ``setattr`` or ``patch.object`` on a facade alias with a literal
-    name, or a ``"kiro_crew.vector_memory.<name>"`` string target. An alias is
-    ``import kiro_crew.vector_memory as x``, ``from kiro_crew import vector_memory
-    as x`` or ``x = importlib.import_module("kiro_crew.vector_memory")``.
+    name, or a ``"aj_crew.vector_memory.<name>"`` string target. An alias is
+    ``import aj_crew.vector_memory as x``, ``from aj_crew import vector_memory
+    as x`` or ``x = importlib.import_module("aj_crew.vector_memory")``.
     """
     tree = ast.parse(source)
-    aliases = {"kiro_crew.vector_memory"}
+    aliases = {"aj_crew.vector_memory"}
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew":
+        if isinstance(node, ast.ImportFrom) and node.module == "aj_crew":
             aliases |= {a.asname or a.name for a in node.names if a.name == "vector_memory"}
         elif isinstance(node, ast.Import):
             aliases |= {
-                a.asname for a in node.names if a.name == "kiro_crew.vector_memory" and a.asname
+                a.asname for a in node.names if a.name == "aj_crew.vector_memory" and a.asname
             }
         elif (
             isinstance(node, ast.Assign)
             and isinstance(node.value, ast.Call)
             and ast.unparse(node.value.func).endswith("import_module")
-            and [ast.unparse(arg) for arg in node.value.args] == ["'kiro_crew.vector_memory'"]
+            and [ast.unparse(arg) for arg in node.value.args] == ["'aj_crew.vector_memory'"]
         ):
             aliases |= {target.id for target in node.targets if isinstance(target, ast.Name)}
-    found = set(re.findall(r"""["']kiro_crew\.vector_memory\.(\w+)["']""", source))
+    found = set(re.findall(r"""["']aj_crew\.vector_memory\.(\w+)["']""", source))
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call) or len(node.args) < 2:
             continue
@@ -415,7 +415,7 @@ _STORE_SIGNATURES = {
     "write_lesson": "(self, rule: 'str', category: 'str' = 'knowledge', negative: 'str | None' = None, source: 'str' = 'user_explicit', rule_emb: 'list[float] | None' = None, rule_emb_generation: 'int | None' = None, repo_scope: 'str | None' = None, *, applies: 'str | None' = None, rule_emb_resolved: 'bool' = False, defer_backfills: 'bool' = False, facets: \"'memory_schema.MemoryFacets | None'\" = None, written_by: 'Mapping[str, str] | None' = None) -> 'LessonWriteResult'",
 }
 
-#: Every name ``kiro_crew.vector_memory`` itself bound (definitions, not imports),
+#: Every name ``aj_crew.vector_memory`` itself bound (definitions, not imports),
 #: plus the explicit ``vector_memory_constants`` re-export block.
 _MODULE_NAMES = """
 EPISODIC_BLOCK_TEXT_CHARS EpisodicWriteOutcome LessonWriteOutcome LessonWriteResult MAX_MEMORY_SEARCH_QUERY
@@ -448,7 +448,7 @@ _MAX_LESSONS_PER_CONSOLIDATION _MAX_SEMANTIC_PER_CONSOLIDATION _contains_injecti
 """.split()
 
 
-#: Public names the facade exposes by importing them from other ``kiro_crew``
+#: Public names the facade exposes by importing them from other ``aj_crew``
 #: modules. Callers may import them from here, so they stay; standard-library
 #: bindings (``re``, ``heapq``, ...) are implementation detail, not surface.
 _IMPORTED_PUBLIC_NAMES = """
@@ -553,7 +553,7 @@ class TestSurface(
         assert {"_mmr_rerank", "_lesson_display_text", "_EpisodicScoringSet"} <= set(moved)
 
     def test_a_star_import_still_binds_every_public_name(self, tmp_path: Path) -> None:
-        probe, _ = _load_probe(tmp_path, "vm_star_probe", "from kiro_crew.vector_memory import *\n")
+        probe, _ = _load_probe(tmp_path, "vm_star_probe", "from aj_crew.vector_memory import *\n")
         public = [name for name in _MODULE_NAMES if not name.startswith("_") and name != "logger"]
         public += _IMPORTED_PUBLIC_NAMES
         assert [name for name in public if not hasattr(probe, name)] == []
@@ -576,7 +576,7 @@ class TestPlacement(
 
     def test_the_facade_imports_every_runtime_module_when_it_loads(self) -> None:
         """Owners load with the facade, so their by-name imports are taken when
-        ``kiro_crew.vector_memory`` is imported, never later inside a test's patch."""
+        ``aj_crew.vector_memory`` is imported, never later inside a test's patch."""
         tree = ast.parse(FACADE_PATH.read_text(encoding="utf-8"))
         imported = set()
         for node in tree.body:
@@ -604,7 +604,7 @@ class TestPlacement(
                     if isinstance(node, ast.Import)
                     else [f"{node.module}.{alias.name}" for alias in node.names]
                 )
-                assert "kiro_crew.vector_memory" not in names, stem
+                assert "aj_crew.vector_memory" not in names, stem
                 assert not any(
                     name.startswith("numpy") or name.startswith("faiss") for name in names
                 )
@@ -636,7 +636,7 @@ class TestPlacement(
             visit(stem, ())
 
     def test_runtime_functions_import_the_facade_as_a_module(self) -> None:
-        """``from kiro_crew import vector_memory`` and then ``vector_memory.<seam>``:
+        """``from aj_crew import vector_memory`` and then ``vector_memory.<seam>``:
         never a by-name import of a facade binding, which would read the binding
         once instead of through the module."""
         imports = 0
@@ -651,12 +651,12 @@ class TestPlacement(
             for node in ast.walk(tree):
                 if id(node) in typing_only:
                     continue
-                if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew":
+                if isinstance(node, ast.ImportFrom) and node.module == "aj_crew":
                     imports += "vector_memory" in [alias.name for alias in node.names]
-                if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew.vector_memory":
+                if isinstance(node, ast.ImportFrom) and node.module == "aj_crew.vector_memory":
                     raise AssertionError(f"{stem}:{node.lineno} imports facade names by name")
                 if isinstance(node, ast.Import):
-                    assert "kiro_crew.vector_memory" not in [a.name for a in node.names], stem
+                    assert "aj_crew.vector_memory" not in [a.name for a in node.names], stem
         assert imports > 10
 
     @staticmethod
@@ -666,7 +666,7 @@ class TestPlacement(
         Seams must be read as ``vm.<name>``. Flagged: a bare global ``np``/``_now_iso``, a
         function-local import of a seam (``import time``, ``... as when``), and a read
         through a sibling (``_text_scoring._ROW_STEM_CACHE_SIZE``). The facade import
-        (``from kiro_crew import vector_memory``) is allowed; module-level code is out
+        (``from aj_crew import vector_memory``) is allowed; module-level code is out
         of scope.
         """
         seams = _facade_seams()
@@ -700,7 +700,7 @@ class TestPlacement(
                         imported = alias.name.split(".")[-1]
                         local.add(bound)
                         facade = isinstance(node, ast.ImportFrom) and (
-                            node.module == "kiro_crew" and alias.name == "vector_memory"
+                            node.module == "aj_crew" and alias.name == "vector_memory"
                         )
                         if {bound, imported} & seams and not facade:
                             hits.append(f"{node.lineno}: import binds {imported}")
@@ -727,14 +727,14 @@ class TestPlacement(
         planted = (
             "WIDTH = _ROW_STEM_CACHE_SIZE\n"
             "def f(store, row: 'datetime') -> 'np.ndarray':\n"
-            "    from kiro_crew import vector_memory as vm\n"
+            "    from aj_crew import vector_memory as vm\n"
             "    good = vm.np.zeros(2)\n"
             "    faiss = vm.faiss\n"
             "    faiss.IndexFlatIP(2)\n"
             "    return np.zeros(2), _now_iso(), datetime.now()\n"
             "class Scoring:\n"
             "    def build(self):\n"
-            "        from kiro_crew import vector_memory\n"
+            "        from aj_crew import vector_memory\n"
             "        return vector_memory.time.monotonic(), _HAS_NUMPY\n"
             "    class Inner:\n"
             "        def stamp(self):\n"
@@ -771,7 +771,7 @@ class TestPlacement(
 
     def test_the_seam_scan_catches_a_seam_read_through_a_sibling_module(self) -> None:
         planted = (
-            "from kiro_crew.vector_memory_runtime import text_scoring as _text_scoring\n"
+            "from aj_crew.vector_memory_runtime import text_scoring as _text_scoring\n"
             "def f(width):\n"
             "    return width > _text_scoring._ROW_STEM_CACHE_SIZE, _text_scoring._MMR_MAX_POOL\n"
         )
@@ -780,7 +780,7 @@ class TestPlacement(
     def test_the_seams_are_the_names_tests_rebind_on_the_facade(self) -> None:
         """Non-vacuous: the scan reads other test modules, in the spellings they rebind
         with. No test here patches these three: ``sqlite3`` is set through a local
-        ``from kiro_crew import vector_memory``, ``_MAX_PROMOTION_REFUSED`` through
+        ``from aj_crew import vector_memory``, ``_MAX_PROMOTION_REFUSED`` through
         ``patch.object`` on an ``import ... as`` alias, and
         ``read_member_database_identity`` through a dotted string."""
         assert {"sqlite3", "_MAX_PROMOTION_REFUSED", "read_member_database_identity"} <= (
@@ -792,21 +792,21 @@ class TestPlacement(
         # facade-only function that no runtime module binds.
         planted = (
             "import importlib\n"
-            "import kiro_crew.vector_memory as memory\n"
+            "import aj_crew.vector_memory as memory\n"
             "from unittest import mock\n"
-            "from kiro_crew import vector_memory as vm\n"
-            "from kiro_crew.vector_memory_runtime import semantic\n"
+            "from aj_crew import vector_memory as vm\n"
+            "from aj_crew.vector_memory_runtime import semantic\n"
             "def test_it(monkeypatch, name):\n"
-            "    store = importlib.import_module('kiro_crew.vector_memory')\n"
+            "    store = importlib.import_module('aj_crew.vector_memory')\n"
             "    monkeypatch.setattr(vm, '_MAX_VALUE_BYTES', 16)\n"
             "    monkeypatch.setattr(memory, '_KEY_PATTERN', None)\n"
             "    monkeypatch.setattr(store, '_MMR_MAX_POOL', 8)\n"
             "    mock.patch.object(vm, '_json_value_equal')\n"
-            "    mock.patch('kiro_crew.vector_memory.open_member_database')\n"
+            "    mock.patch('aj_crew.vector_memory.open_member_database')\n"
             "    monkeypatch.setattr(vm, name, 1)\n"
             "    monkeypatch.setattr(vm.VectorMemoryStore, 'recall', None)\n"
             "    monkeypatch.setattr(semantic, '_MAX_KEY_LEN', 1)\n"
-            "    mock.patch('kiro_crew.vector_memory_runtime.semantic._EMPTY_VALUE_JSON')\n"
+            "    mock.patch('aj_crew.vector_memory_runtime.semantic._EMPTY_VALUE_JSON')\n"
         )
         assert _facade_patch_targets(planted) == {
             "_MAX_VALUE_BYTES",
@@ -826,7 +826,7 @@ class TestPlacement(
             facade = {
                 alias.asname or alias.name
                 for node in ast.walk(function)
-                if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew"
+                if isinstance(node, ast.ImportFrom) and node.module == "aj_crew"
                 for alias in node.names
                 if alias.name == "vector_memory"
             }
@@ -886,7 +886,7 @@ class TestPlacement(
         aliases = {
             alias.asname or alias.name: alias.name
             for node in tree.body
-            if isinstance(node, ast.ImportFrom) and node.module in (RUNTIME_PACKAGE, "kiro_crew")
+            if isinstance(node, ast.ImportFrom) and node.module in (RUNTIME_PACKAGE, "aj_crew")
             for alias in node.names
             if node.module == RUNTIME_PACKAGE or alias.name in OUT_OWNER_MODULES
         }
@@ -945,7 +945,7 @@ class TestPlacement(
                 alias.asname or alias.name: alias.name
                 for node in tree.body
                 if isinstance(node, ast.ImportFrom)
-                and node.module in (RUNTIME_PACKAGE, "kiro_crew")
+                and node.module in (RUNTIME_PACKAGE, "aj_crew")
                 for alias in node.names
                 if node.module == RUNTIME_PACKAGE or alias.name in OUT_OWNER_MODULES
             }
@@ -1116,10 +1116,10 @@ class TestOneBindingPerSharedName:
     @pytest.mark.parametrize(
         "planted",
         [
-            "from kiro_crew.vector_memory_runtime.text_scoring import _MMR_MAX_POOL\n",
-            "from kiro_crew.vector_memory_runtime.lessons import _lesson_fields as fields\n",
-            "def f():\n    from kiro_crew.vector_memory_runtime.semantic import _json_value_equal\n",
-            "from kiro_crew.vector_memory_runtime import _hybrid_score\n",
+            "from aj_crew.vector_memory_runtime.text_scoring import _MMR_MAX_POOL\n",
+            "from aj_crew.vector_memory_runtime.lessons import _lesson_fields as fields\n",
+            "def f():\n    from aj_crew.vector_memory_runtime.semantic import _json_value_equal\n",
+            "from aj_crew.vector_memory_runtime import _hybrid_score\n",
             "from .text_scoring import _stem_words\n",
         ],
     )
@@ -1129,9 +1129,9 @@ class TestOneBindingPerSharedName:
     @pytest.mark.parametrize(
         "allowed",
         [
-            "from kiro_crew.vector_memory_runtime import text_scoring as _text_scoring\n",
+            "from aj_crew.vector_memory_runtime import text_scoring as _text_scoring\n",
             "from . import lessons\n",
-            "from kiro_crew.vector_memory_runtime.embedding import _RecallQuery\n",
+            "from aj_crew.vector_memory_runtime.embedding import _RecallQuery\n",
         ],
     )
     def test_the_sibling_import_scan_allows_a_module_or_a_class(self, allowed: str) -> None:
@@ -1141,11 +1141,11 @@ class TestOneBindingPerSharedName:
         sources = {
             "text_scoring": "LIMIT = 3\ndef cap(rows):\n    return rows[:LIMIT]\n",
             "episodic_search": (
-                "from kiro_crew.vector_memory_runtime.text_scoring import LIMIT\n"
+                "from aj_crew.vector_memory_runtime.text_scoring import LIMIT\n"
                 "def head(rows):\n    return rows[:LIMIT]\n"
             ),
             "semantic": (
-                "from kiro_crew.vector_memory_runtime import text_scoring as _ts\n"
+                "from aj_crew.vector_memory_runtime import text_scoring as _ts\n"
                 "def head(rows):\n    return rows[: _ts.LIMIT]\n"
             ),
         }
@@ -1337,7 +1337,7 @@ class TestSeamsReachTheRuntime:
 @pytest.fixture
 def member_store(tmp_path, opened, monkeypatch):
     """A V2 member store, which ranks with the member retrieval policy."""
-    from kiro_crew import memory_stores
+    from aj_crew import memory_stores
 
     monkeypatch.setattr(memory_stores, "memory_stores_root", lambda: tmp_path / "memory_stores")
     path = tmp_path / "memory_stores" / "member-store" / "memory.db"
@@ -1840,7 +1840,7 @@ class TestFaissAccelerator:
     ) -> None:
         _seed_episodes(faiss_store)
         faiss_store.build_faiss_index()
-        from kiro_crew._sqlite_compat import sqlite3
+        from aj_crew._sqlite_compat import sqlite3
 
         other = sqlite3.connect(tmp_path / "memory.db")
         try:

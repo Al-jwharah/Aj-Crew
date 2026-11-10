@@ -26,8 +26,8 @@ from pathlib import Path
 import pytest
 from skill_script_helpers import load_skill_script
 
-from kiro_crew import work_ledger as wl
-from kiro_crew.skills import _BUILTIN_SKILLS_DIR
+from aj_crew import work_ledger as wl
+from aj_crew.skills import _BUILTIN_SKILLS_DIR
 
 SCRIPT = Path(_BUILTIN_SKILLS_DIR) / "goal-conductor" / "scripts" / "accept_eval.py"
 
@@ -156,9 +156,9 @@ def test_every_argv_element_is_a_template_literal_or_a_validated_field(monkeypat
 
 def test_pr_merged_adds_no_self_built_command():
     """``pr_merged`` runs ``gh``, which ``pr_checks`` already needed, so it adds no
-    binary. ``kirocrew`` is ``edition_check``'s."""
+    binary. ``ajcrew`` is ``edition_check``'s."""
     mod = _load()
-    assert mod._SELF_BUILT_COMMANDS == {"gh", "kirocrew"}
+    assert mod._SELF_BUILT_COMMANDS == {"gh", "ajcrew"}
 
 
 def test_the_ledger_mirror_uses_the_evaluators_own_pattern():

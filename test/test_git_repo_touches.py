@@ -1,6 +1,6 @@
 """The Git tab's repository discovery: which repos a session's tool calls touched.
 
-Covers ``kiro_crew.dashboard.git_repo_touches`` (candidate extraction, root
+Covers ``aj_crew.dashboard.git_repo_touches`` (candidate extraction, root
 resolution, slot bookkeeping, transcript seeding) and the two routes that read
 it: ``GET /api/project/git/repos`` lists a slot's repositories, and
 ``GET /api/project/git/status`` admits a touched root that is not any slot's
@@ -24,18 +24,18 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from kiro_crew.dashboard import git_repo_touches as touches
-from kiro_crew.dashboard.chat_runner import _flush_file_changes
-from kiro_crew.dashboard.handlers import (
+from aj_crew.dashboard import git_repo_touches as touches
+from aj_crew.dashboard.chat_runner import _flush_file_changes
+from aj_crew.dashboard.handlers import (
     api_project_git_log,
     api_project_git_repos,
     api_project_git_status,
 )
-from kiro_crew.dashboard.handlers.files import _project_git_branch
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.platform import tool_paths
-from kiro_crew.platform.tool_paths import _PATCH_TEXT_MAX_CHARS
-from kiro_crew.providers.base import (
+from aj_crew.dashboard.handlers.files import _project_git_branch
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.platform import tool_paths
+from aj_crew.platform.tool_paths import _PATCH_TEXT_MAX_CHARS
+from aj_crew.providers.base import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
@@ -43,7 +43,7 @@ from kiro_crew.providers.base import (
     EVENT_TOOL_RESULT,
     LLMEvent,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 @pytest.fixture(autouse=True)
@@ -54,7 +54,7 @@ def ceiling_at_tmp_path(tmp_path, _floor_monkeypatch) -> None:
 
 @pytest.fixture()
 def mock_sel():
-    with patch("kiro_crew.dashboard.handlers.sel") as m:
+    with patch("aj_crew.dashboard.handlers.sel") as m:
         m.return_value = MagicMock()
         yield m.return_value
 
@@ -918,7 +918,7 @@ class TestReposRoute:
     async def test_a_remote_session_lists_no_gateway_repository(
         self, tmp_path, mock_sel, monkeypatch
     ):
-        from kiro_crew.dashboard.handlers import files
+        from aj_crew.dashboard.handlers import files
 
         proj = _init_repo(tmp_path / "proj")
         state = _State(s=_Slot(project=str(proj), repos=[_real(proj)]))
@@ -933,7 +933,7 @@ class TestReposRoute:
     async def test_the_placement_read_runs_off_the_event_loop(
         self, tmp_path, mock_sel, monkeypatch
     ):
-        from kiro_crew.dashboard.handlers import files
+        from aj_crew.dashboard.handlers import files
 
         loop_thread = threading.get_ident()
         threads: list[int] = []
@@ -1112,7 +1112,7 @@ class TestReposRoute:
     @pytest.mark.asyncio
     async def test_app_caller_cannot_read_a_foreign_slot(self, tmp_path, mock_sel):
         app = _app(_State(s=_Slot(app="other-app")), request_app="some-app")
-        with patch("kiro_crew.dashboard.slot_ownership.sel") as iso_sel:
+        with patch("aj_crew.dashboard.slot_ownership.sel") as iso_sel:
             async with TestClient(TestServer(app)) as client:
                 resp = await client.get("/api/project/git/repos?slot=s")
                 assert resp.status == 404
@@ -1134,7 +1134,7 @@ class TestReposRoute:
 class TestStatusAdmitsTouchedRoots:
     @pytest.fixture(autouse=True)
     def passthrough_sandbox(self, _floor_monkeypatch):
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         _floor_monkeypatch.setattr(
             files_mod,
@@ -1226,9 +1226,9 @@ class TestExecutedToolTouches:
 
     @staticmethod
     async def _run(tmp_path, monkeypatch, stream):
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.push_slots_update = MagicMock()
@@ -1389,7 +1389,7 @@ class TestExecutedToolTouches:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("status", ["completed", "refused", "cancelled"])
     async def test_terminal_update_can_supply_the_first_path(self, tmp_path, monkeypatch, status):
-        from kiro_crew.acp._dispatch import parse_session_update
+        from aj_crew.acp._dispatch import parse_session_update
 
         repo = _init_repo(tmp_path / "late-input")
         events = parse_session_update(

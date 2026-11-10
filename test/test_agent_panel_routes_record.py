@@ -26,14 +26,14 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from off_loop_helpers import off_loop
 
-from kiro_crew import agent_panel
-from kiro_crew import members as members_mod
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log_projection
-from kiro_crew.dashboard.handlers import _shared
-from kiro_crew.dashboard.handlers import agent_panel as routes
-from kiro_crew.dashboard.handlers import agent_panel_record, member_dashboard
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+from aj_crew import agent_panel
+from aj_crew import members as members_mod
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log_projection
+from aj_crew.dashboard.handlers import _shared
+from aj_crew.dashboard.handlers import agent_panel as routes
+from aj_crew.dashboard.handlers import agent_panel_record, member_dashboard
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
 RECORD_PATH = "/api/agent-panel/dashboard/record"
 JOB_ID = "stock-poll"
@@ -54,7 +54,7 @@ def _execution(member_id: str | None = MEMBER_ID) -> ExecutionContext:
         member_id=member_id,
         store=MemoryStoreRef(f"member-{member_id}", member_id),
         selection_kind="member",
-        template_id="kirocrew",
+        template_id="ajcrew",
     )
 
 
@@ -75,7 +75,7 @@ def bound_cron_fixture(monkeypatch):
     """
     _scope_is(monkeypatch, _shared.MemberScope(CRON_KEY, True, "", _execution()))
     monkeypatch.setattr(members_mod, "crew_panel_enabled", lambda: True)
-    from kiro_crew import execution_context
+    from aj_crew import execution_context
 
     monkeypatch.setattr(
         execution_context,
@@ -178,7 +178,7 @@ async def test_a_cron_bound_to_no_crewmate_is_refused(bound_cron, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_a_member_the_config_no_longer_holds_is_a_409(bound_cron, monkeypatch):
-    from kiro_crew import execution_context
+    from aj_crew import execution_context
 
     def _gone(_cfg, _member_id):
         raise execution_context._unavailable("member identity is missing or ambiguous")
@@ -393,7 +393,7 @@ def test_colliding_keys_are_suffixed_in_linear_time():
 async def test_a_record_over_the_ceiling_is_refused_before_it_is_scrubbed(bound_cron, monkeypatch):
     """The raw record is measured before the scrub walks it, so an oversize payload never
     reaches the regex pass."""
-    from kiro_crew.dashboard.handlers import agent_panel_record as door
+    from aj_crew.dashboard.handlers import agent_panel_record as door
 
     scrubbed: list[Any] = []
     monkeypatch.setattr(
@@ -475,7 +475,7 @@ async def test_the_door_scrubs_the_record_even_when_the_client_did_not(bound_cro
     a script posting through ``ctx._post`` sends whatever it holds. The DOOR scrubs
     what lands -- a credential on its own, and a bearer token that only matches beside
     its ``authorization`` key -- and the fold answers the scrubbed form."""
-    from kiro_crew.security import REDACTED_CREDENTIAL_TAG
+    from aj_crew.security import REDACTED_CREDENTIAL_TAG
 
     secret = "AKIA" + "1234567890123456"
     bearer = "Bearer " + "abcdefghijklmnopqrstuvwxyz0123"
@@ -506,7 +506,7 @@ async def test_the_door_scrubs_the_record_even_when_the_client_did_not(bound_cro
 async def test_a_value_with_two_tokens_loses_both_at_the_door(bound_cron):
     """The keyed judgement runs on the CLEANED value: a header value carrying an access
     key the bare scrub catches AND a bearer only its key reveals keeps neither."""
-    from kiro_crew.security import REDACTED_CREDENTIAL_TAG
+    from aj_crew.security import REDACTED_CREDENTIAL_TAG
 
     secret = "AKIA" + "1234567890123456"
     bearer = "Bearer " + "abcdefghijklmnopqrstuvwxyz0123"
@@ -523,7 +523,7 @@ async def test_a_value_with_two_tokens_loses_both_at_the_door(bound_cron):
 @pytest.mark.asyncio
 async def test_a_record_that_only_fits_before_scrubbing_is_judged_on_what_lands(bound_cron):
     """The size is measured on the scrubbed record, the bytes the fold re-measures."""
-    from kiro_crew.dashboard.handlers import agent_panel_record as door
+    from aj_crew.dashboard.handlers import agent_panel_record as door
 
     seen: list[Any] = []
 
@@ -560,8 +560,8 @@ def test_every_accepted_record_type_is_a_bindable_fold_path_segment():
     """A record type the door accepts must be a name a page can bind: one segment of a
     manifest fold path (``manifest._PATH``), so ``custom.latest.<type>.data`` is a path
     the manifest accepts and the feed's dot-split walk reads back under the stored key."""
-    from kiro_crew.crew_log import projection_dashboard as fold
-    from kiro_crew.dashboard_templates import manifest
+    from aj_crew.crew_log import projection_dashboard as fold
+    from aj_crew.dashboard_templates import manifest
 
     for name in ("stock_check", "Weather", "q1_2026", "a"):
         assert fold.custom_type_name_ok(name)
@@ -575,7 +575,7 @@ def test_every_accepted_record_type_is_a_bindable_fold_path_segment():
 async def test_the_fold_is_in_the_type_catalog_a_page_binds_from(bound_cron):
     """``dashboard_types`` lists ``custom`` with ``latest`` as an open-keyed map, and the
     seq it has been folded through advances once a record lands."""
-    from kiro_crew import dashboard_types
+    from aj_crew import dashboard_types
 
     before = {row.name: row for row in dashboard_types.catalog()}
     assert before["custom"].keyed_by == "slot"
@@ -636,7 +636,7 @@ async def test_a_record_with_the_crew_log_off_is_refused_not_shrugged(bound_cron
 
 
 def _entry(data: dict[str, Any], seq: int = 1):
-    from kiro_crew.crew_log.schema import Entry
+    from aj_crew.crew_log.schema import Entry
 
     return Entry(
         type="dashboard/custom_value", seq=seq, time=1_760_000_000_000, src="gateway", data=data
@@ -657,7 +657,7 @@ def _entry(data: dict[str, Any], seq: int = 1):
 def test_the_fold_skips_a_planted_or_damaged_line(data):
     """The caps are RE-APPLIED on read: a line off disk that names no type or no writer,
     or carries a record the door would refuse, is skipped rather than keyed."""
-    from kiro_crew.crew_log import projection_dashboard as fold
+    from aj_crew.crew_log import projection_dashboard as fold
 
     state = fold._custom_start()
     fold._custom_step(state, _entry(data))
@@ -673,7 +673,7 @@ def test_the_fold_skips_a_planted_or_damaged_line(data):
 def test_the_fold_skips_a_planted_line_nested_a_thousand_deep_without_raising():
     """The same bounded walk on read: a line that deep is skipped, never a crash out of
     the fold step."""
-    from kiro_crew.crew_log import projection_dashboard as fold
+    from aj_crew.crew_log import projection_dashboard as fold
 
     deep: dict[str, Any] = {"v": 1}
     for _ in range(1000):
@@ -686,8 +686,8 @@ def test_the_fold_skips_a_planted_line_nested_a_thousand_deep_without_raising():
 
 
 def test_the_fold_bounds_the_types_it_keeps_and_counts_what_it_evicts():
-    from kiro_crew.crew_log import projection_dashboard as fold
-    from kiro_crew.crew_log.entry_types import CUSTOM_TYPE_LIMIT
+    from aj_crew.crew_log import projection_dashboard as fold
+    from aj_crew.crew_log.entry_types import CUSTOM_TYPE_LIMIT
 
     state = fold._custom_start()
     for index in range(CUSTOM_TYPE_LIMIT + 3):
@@ -710,7 +710,7 @@ def test_the_fold_bounds_the_types_it_keeps_and_counts_what_it_evicts():
 
 
 def _failed(writer: str, error: str, seq: int, time_ms: int = 1_760_000_060_000):
-    from kiro_crew.crew_log.schema import Entry
+    from aj_crew.crew_log.schema import Entry
 
     return Entry(
         type="dashboard/custom_failed",
@@ -727,7 +727,7 @@ def test_a_declared_max_age_renders_stale_after_from_the_entry_time():
     and the body never names the time."""
     from datetime import datetime, timedelta
 
-    from kiro_crew.crew_log import projection_dashboard as fold
+    from aj_crew.crew_log import projection_dashboard as fold
 
     state = fold._custom_start()
     fold._custom_step(
@@ -743,7 +743,7 @@ def test_a_declared_max_age_renders_stale_after_from_the_entry_time():
 
 @pytest.mark.parametrize("bad", [59, 30 * 24 * 3600 + 1, True, "600", 600.5, -1])
 def test_a_max_age_out_of_range_on_disk_is_dropped_and_the_record_kept(bad):
-    from kiro_crew.crew_log import projection_dashboard as fold
+    from aj_crew.crew_log import projection_dashboard as fold
 
     state = fold._custom_start()
     fold._custom_step(
@@ -757,7 +757,7 @@ def test_a_max_age_out_of_range_on_disk_is_dropped_and_the_record_kept(bad):
 def test_a_record_then_a_failed_run_marks_the_record_until_the_next_record():
     """Cron OK, then failing: the last good record stays, marked failed, so the page
     can stop presenting it as current; the writer's next record clears the mark."""
-    from kiro_crew.crew_log import projection_dashboard as fold
+    from aj_crew.crew_log import projection_dashboard as fold
 
     state = fold._custom_start()
     fold._custom_step(state, _entry({"type": "ok", "data": {"v": 1}, "writer": "cron:x"}, 1))
@@ -780,7 +780,7 @@ def test_a_record_then_a_failed_run_marks_the_record_until_the_next_record():
 
 def test_a_cron_that_never_lands_a_record_is_still_listed():
     """Cron never succeeding: nothing in ``latest``, and ``failures`` says who failed."""
-    from kiro_crew.crew_log import projection_dashboard as fold
+    from aj_crew.crew_log import projection_dashboard as fold
 
     state = fold._custom_start()
     fold._custom_step(state, _failed("cron:x", "RuntimeError: boom", 1))
@@ -793,8 +793,8 @@ def test_a_cron_that_never_lands_a_record_is_still_listed():
 
 
 def test_a_failure_naming_no_writer_is_skipped_and_failures_are_bounded():
-    from kiro_crew.crew_log import projection_dashboard as fold
-    from kiro_crew.crew_log.entry_types import CUSTOM_ERROR_LIMIT, CUSTOM_FAILURE_LIMIT
+    from aj_crew.crew_log import projection_dashboard as fold
+    from aj_crew.crew_log.entry_types import CUSTOM_ERROR_LIMIT, CUSTOM_FAILURE_LIMIT
 
     state = fold._custom_start()
     fold._custom_step(state, _failed("", "x", 1))
@@ -830,7 +830,7 @@ async def test_the_door_refuses_a_max_age_it_cannot_honour(bound_cron, bad):
 def test_the_scheduler_records_a_bound_crons_failed_run_and_the_fold_marks_it(bound_cron):
     """``record_cron_failure`` stamps the writer from the job id it was handed, scrubs
     the error, and the entry folds onto that writer's record."""
-    from kiro_crew.dashboard.handlers.agent_panel_record import record_cron_failure
+    from aj_crew.dashboard.handlers.agent_panel_record import record_cron_failure
 
     secret = "AKIA" + "1234567890123456"
     assert off_loop(
@@ -848,7 +848,7 @@ def test_the_scheduler_records_a_bound_crons_failed_run_and_the_fold_marks_it(bo
 def test_a_failure_with_no_crew_log_or_no_member_records_nothing(bound_cron, monkeypatch):
     """Best-effort: a crewmate whose chat never ran (crew_log_unavailable) or a job
     bound to no crewmate answers False and raises nothing."""
-    from kiro_crew.dashboard.handlers.agent_panel_record import record_cron_failure
+    from aj_crew.dashboard.handlers.agent_panel_record import record_cron_failure
 
     assert record_cron_failure(JOB_ID, "", "boom") is False
     monkeypatch.setattr(member_dashboard, "_newest_unit", lambda _slot: "")
@@ -862,8 +862,8 @@ def test_a_failure_with_no_crew_log_or_no_member_records_nothing(bound_cron, mon
 async def test_the_cron_callback_records_only_a_bound_scripts_failed_run(
     monkeypatch, member_id, recorded
 ):
-    from kiro_crew.dashboard.handlers import agent_panel_record as door
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.dashboard.handlers import agent_panel_record as door
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     calls: list[tuple[str, str, str]] = []
     monkeypatch.setattr(door, "record_cron_failure", lambda *a: calls.append(a) or True)
@@ -879,7 +879,7 @@ def test_the_cron_callback_skips_a_run_that_never_started():
     error with ``run_never_started``; the job did not fail, so nothing is recorded."""
     import inspect
 
-    from kiro_crew.slack.gateway_runtime import cron_fire
+    from aj_crew.slack.gateway_runtime import cron_fire
 
     source = inspect.getsource(cron_fire._init_cron)
     hook = source.index("await self._record_bound_script_failure(job)")
@@ -891,8 +891,8 @@ def test_failures_rank_by_slot_order_not_by_a_units_seq():
     """A slot folds every unit it ran under and each unit's seq starts again, so a
     failure from the live unit (low seq) is still the newest and is never evicted
     ahead of an older unit's."""
-    from kiro_crew.crew_log import projection_dashboard as fold
-    from kiro_crew.crew_log.entry_types import CUSTOM_FAILURE_LIMIT
+    from aj_crew.crew_log import projection_dashboard as fold
+    from aj_crew.crew_log.entry_types import CUSTOM_FAILURE_LIMIT
 
     state = fold._custom_start()
     for index in range(CUSTOM_FAILURE_LIMIT):
@@ -911,7 +911,7 @@ async def test_a_timed_out_bound_script_lands_a_failure_entry(bound_cron, never_
     """A deadline cancels the run inside ``_cron_run_script``, so the callback's own
     recorder never runs; the service's timeout alert records it instead. A run that
     never started is still skipped."""
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     alerts: list[str] = []
 

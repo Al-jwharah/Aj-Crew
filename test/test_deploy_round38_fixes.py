@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.deploy import engine
+from aj_crew.deploy import engine
 
 
 def _resp(arns):

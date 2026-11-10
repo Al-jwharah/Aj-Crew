@@ -33,15 +33,15 @@ async function shoot(scene, theme, mustSee, name) {
 
 // No checkout found anywhere: a question the user can answer, not a red failure
 // against a path they never chose.
-await shoot('setup', 'dark', ['No Kiro Crew checkout found', 'KIROCREW_DEVFLEET_REPO='],
+await shoot('setup', 'dark', ['No Aj Crew checkout found', 'AJCREW_DEVFLEET_REPO='],
   '01-needs-setup-dark.png')
-await shoot('setup', 'light', ['No Kiro Crew checkout found'], '02-needs-setup-light.png')
+await shoot('setup', 'light', ['No Aj Crew checkout found'], '02-needs-setup-light.png')
 
 // A checkout WAS named and git cannot read it: still an error, and it still
 // names the path, because that path came from the user's own configuration.
 // The path is asserted without its leading slash: `text=/…` is Playwright's
 // regex form and would match nothing here.
-await shoot('error', 'dark', ['Discovery Error', 'checkouts/kirocrew'],
+await shoot('error', 'dark', ['Discovery Error', 'checkouts/ajcrew'],
   '03-configured-path-unreadable-dark.png')
 
 await browser.close()

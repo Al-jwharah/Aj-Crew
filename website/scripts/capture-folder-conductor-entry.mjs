@@ -30,12 +30,12 @@ const FOLDER = 'wave2'
 const folders = [{ id: FOLDER, name: 'wave2', order: 0, collapsed: false }]
 const LEAD = 'chat-lead'
 const slots = [
-  { key: LEAD, title: 'Wave 2 rollout', messages: 18, running: false, agent: 'kirocrew',
+  { key: LEAD, title: 'Wave 2 rollout', messages: 18, running: false, agent: 'ajcrew',
     created: '2026-10-28T01:00:00Z', last_ts: '2026-10-28T09:10:00Z', folder_id: FOLDER },
-  { key: 'chat-w1', title: 'Fargate task definition', messages: 6, running: false, agent: 'kirocrew',
+  { key: 'chat-w1', title: 'Fargate task definition', messages: 6, running: false, agent: 'ajcrew',
     created: '2026-10-28T02:00:00Z', last_ts: '2026-10-28T09:05:00Z', folder_id: FOLDER,
     parent: { slot: LEAD, key: LEAD } },
-  { key: 'chat-w2', title: 'ALB health checks', messages: 4, running: false, agent: 'kirocrew',
+  { key: 'chat-w2', title: 'ALB health checks', messages: 4, running: false, agent: 'ajcrew',
     created: '2026-10-28T03:00:00Z', last_ts: '2026-10-28T09:00:00Z', folder_id: FOLDER,
     parent: { slot: LEAD, key: LEAD } },
 ]

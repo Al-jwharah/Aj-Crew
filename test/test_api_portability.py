@@ -20,7 +20,7 @@ import pytest
 from aiohttp import FormData, web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 class _AuditLog:
@@ -32,7 +32,7 @@ class _AuditLog:
 
 
 def _handler_module():
-    return importlib.import_module("kiro_crew.dashboard.handlers.portability")
+    return importlib.import_module("aj_crew.dashboard.handlers.portability")
 
 
 class _OwnerState:
@@ -81,7 +81,7 @@ class _FakePlan:
         agent_templates_past_cap: int = 0,
         sessions_skipped: int = 0,
     ) -> None:
-        self.prefix = "kirocrew-export-20260101T000000Z"
+        self.prefix = "ajcrew-export-20260101T000000Z"
         self.created_at = created_at
         self.include_sessions = include_sessions
         self.memory_only = memory_only
@@ -772,7 +772,7 @@ async def test_export_build_failure_after_headers_is_fail_safe(monkeypatch) -> N
 
 def _home_with_one_chat(tmp_path):
     """A minimal crew home whose sessions/ holds one exportable persistent chat."""
-    mc = tmp_path / ".kirocrew"
+    mc = tmp_path / ".ajcrew"
     (mc / "sessions").mkdir(parents=True)
     (mc / "config.json").write_text("{}")
     header = json.dumps({"_type": "metadata", "title": "chat", "memory_mode": "persistent"})
@@ -791,7 +791,7 @@ async def test_export_disconnect_releases_the_builder_and_its_lock(
     lock -- that would wedge every later write to that chat. After the client goes,
     the build thread exits and the lock is free: a fresh locked_stems acquires it.
     """
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     module = _handler_module()
     monkeypatch.setattr(module, "_sel", lambda: _AuditLog())
@@ -799,7 +799,7 @@ async def test_export_disconnect_releases_the_builder_and_its_lock(
     monkeypatch.setattr(module, "unbundled_agent_templates", lambda *a, **k: ([], 0))
 
     mc = _home_with_one_chat(tmp_path)
-    monkeypatch.setenv("KIROCREW_HOME", str(mc))
+    monkeypatch.setenv("AJCREW_HOME", str(mc))
     sessions_dir = mc / "sessions"
 
     lock_held = threading.Event()
@@ -862,7 +862,7 @@ async def test_export_stalled_client_tears_down_and_frees_the_lock(monkeypatch, 
     down (releasing the lock), abort the transport, and record an SEL error. A fresh
     ``locked_stems`` on the chat must then acquire the lock within a bound.
     """
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     module = _handler_module()
     log = _AuditLog()
@@ -876,7 +876,7 @@ async def test_export_stalled_client_tears_down_and_frees_the_lock(monkeypatch, 
     monkeypatch.setattr(module, "_EXPORT_STREAM_CHUNK_BYTES", 1024)
 
     mc = _home_with_one_chat(tmp_path)
-    monkeypatch.setenv("KIROCREW_HOME", str(mc))
+    monkeypatch.setenv("AJCREW_HOME", str(mc))
     sessions_dir = mc / "sessions"
 
     lock_held = threading.Event()

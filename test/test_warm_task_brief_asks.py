@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import json
 
-from kiro_crew.dashboard import warm_task_brief
+from aj_crew.dashboard import warm_task_brief
 
 WAITING = (
     {"kind": "options", "text": "Push now or wait?", "options": ["Push now", "Wait for CI"]},

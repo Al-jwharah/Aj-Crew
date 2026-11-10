@@ -166,7 +166,7 @@ function createIpcRegistrar({
       throw new Error(`${channel} is restricted to the local dashboard`);
     }
     const portOwner = await gateway.probePrimaryPortOwner();
-    if (portOwner !== "kirocrew" && portOwner !== "service") {
+    if (portOwner !== "ajcrew" && portOwner !== "service") {
       log(
         `${channel} rejected: :${port} held by ${portOwner}, `
         + "not this shell's gateway",
@@ -944,7 +944,7 @@ function createIpcRegistrar({
         return;
       }
       // Gate 4 — current-bundle ownership (governance handler only).
-      // A second copy of the app can also hold the port as "kirocrew"; its
+      // A second copy of the app can also hold the port as "ajcrew"; its
       // policy provider would incorrectly suppress this copy's updater.
       // Unlike assertLocalDashboard's three gates which apply to every shell
       // channel, this check is only relevant for governance, and

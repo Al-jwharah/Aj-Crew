@@ -10,11 +10,11 @@ F2:  an unreachable manifest fails teardown retryably for finite-TTL deploys
 from pathlib import Path
 from unittest.mock import patch
 
-from kiro_crew.deploy import engine
-from kiro_crew.deploy import iam as iam_mod
+from aj_crew.deploy import engine
+from aj_crew.deploy import iam as iam_mod
 
 REPO = Path(__file__).resolve().parents[1]
-HANDLERS = (REPO / "src" / "kiro_crew" / "deploy" / "handlers.py").read_text(encoding="utf-8")
+HANDLERS = (REPO / "src" / "aj_crew" / "deploy" / "handlers.py").read_text(encoding="utf-8")
 
 
 def _statements(doc):

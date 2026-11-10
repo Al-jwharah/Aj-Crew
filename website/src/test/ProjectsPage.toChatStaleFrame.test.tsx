@@ -25,7 +25,7 @@ vi.mock('../components/AgentSelector', () => ({ default: () => null }))
 vi.mock('../api/client', () => ({
   api: {
     taskRunnerStatus: vi.fn(),
-    kirocrewAgents: vi.fn(),
+    ajcrewAgents: vi.fn(),
     agentCatalog: vi.fn(),
     refineStatus: vi.fn(),
     taskRunToChat: vi.fn(),
@@ -52,7 +52,7 @@ beforeEach(() => {
   sessionStorage.clear()
   localStorage.clear()
   vi.mocked(api.taskRunnerStatus).mockResolvedValue({ running: false, available: true, runs: [run] })
-  vi.mocked(api.kirocrewAgents).mockResolvedValue({ agents: [], default_agent: '' })
+  vi.mocked(api.ajcrewAgents).mockResolvedValue({ agents: [], default_agent: '' })
   vi.mocked(api.agentCatalog).mockResolvedValue({ agents: [], default_agent: '' })
   vi.mocked(api.refineStatus).mockResolvedValue({ status: 'idle', text: '', error: '' })
   vi.mocked(api.taskRunToChat).mockResolvedValue({ ok: true, slot: 'task-review-1' })

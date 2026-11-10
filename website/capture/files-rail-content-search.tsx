@@ -46,7 +46,7 @@ const arm = params.get('arm') || 'ok'
 // itself, so setting `data-theme` alone is clobbered on mount (an unset
 // preference resolves to `system`, which is LIGHT in headless Chromium).
 localStorage.setItem('mc-theme', theme)
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const PROJECT = '/home/dev/acme-api'
 

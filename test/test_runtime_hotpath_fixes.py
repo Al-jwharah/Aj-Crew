@@ -2,7 +2,7 @@
 
 1. ``ScriptHookStore.fire`` rewrote ``hooks.json`` on EVERY fire, matched or not
    (every tool call and turn). It now writes only when a hook ran.
-2. ``mcp_shared`` imported a constant from ``kiro_crew.acp.types``, which ran the
+2. ``mcp_shared`` imported a constant from ``aj_crew.acp.types``, which ran the
    whole ACP package in every stdio MCP server.
 """
 
@@ -17,8 +17,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from kiro_crew import mcp_shared
-from kiro_crew.hooks import HOOK_EVENT_POST_TOOL_USE, HOOK_EVENT_PRE_TOOL_USE, ScriptHookStore
+from aj_crew import mcp_shared
+from aj_crew.hooks import HOOK_EVENT_POST_TOOL_USE, HOOK_EVENT_PRE_TOOL_USE, ScriptHookStore
 
 SRC = Path(__file__).resolve().parents[1] / "src"
 
@@ -60,7 +60,7 @@ async def test_a_fire_that_runs_a_hook_still_records_its_status(tmp_path):
         h.run_count += 1
         return result
 
-    with patch("kiro_crew.hooks.run_script_hook", new=AsyncMock(side_effect=_run)):
+    with patch("aj_crew.hooks.run_script_hook", new=AsyncMock(side_effect=_run)):
         await store.fire(HOOK_EVENT_PRE_TOOL_USE, tool_name="bash")
     saved = json.loads((tmp_path / "hooks.json").read_text())
     entry = next(h for h in saved["hooks"] if h["id"] == hook.id)
@@ -68,7 +68,7 @@ async def test_a_fire_that_runs_a_hook_still_records_its_status(tmp_path):
 
 
 def test_mcp_shared_import_does_not_load_the_acp_client():
-    code = "import sys, kiro_crew.mcp_shared; print('kiro_crew.acp.client' in sys.modules)"
+    code = "import sys, aj_crew.mcp_shared; print('aj_crew.acp.client' in sys.modules)"
     out = subprocess.run(
         [sys.executable, "-c", code],
         env={**os.environ, "PYTHONPATH": str(SRC)},

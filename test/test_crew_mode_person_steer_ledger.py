@@ -21,9 +21,9 @@ from test_work_ledger_tools import (  # noqa: F401 - the autouse fixtures ride a
     two_by_two,
 )
 
-from kiro_crew import work_ledger as wl
-from kiro_crew.dashboard.handlers import work_ledger as routes
-from kiro_crew.dashboard.handlers import work_ledger_worker as worker_routes
+from aj_crew import work_ledger as wl
+from aj_crew.dashboard.handlers import work_ledger as routes
+from aj_crew.dashboard.handlers import work_ledger_worker as worker_routes
 
 
 @pytest.fixture(autouse=True)
@@ -100,7 +100,7 @@ def test_a_newer_steer_answers_an_outstanding_question():
     """The person outranks the conductor: a steer after a ``question`` report is the
     answer the board shows, the same as a conductor's decision would be; a steer from
     before the question is not."""
-    from kiro_crew.dashboard.handlers.work_ledger_board import _is_outstanding
+    from aj_crew.dashboard.handlers.work_ledger_board import _is_outstanding
 
     item = wl.WorkItem(status="question", last_report_at="2026-09-22T04:00:00+00:00")
     asked = {"ts": "2026-09-22T04:00:00+00:00", "kind": "report", "status": "question"}

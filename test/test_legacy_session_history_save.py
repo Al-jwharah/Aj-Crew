@@ -15,11 +15,11 @@ from __future__ import annotations
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.dashboard import chat_handlers as handlers
-from kiro_crew.execution_context import read_session_execution
-from kiro_crew.history import ConversationLog
-from kiro_crew.memory_stores import (
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.dashboard import chat_handlers as handlers
+from aj_crew.execution_context import read_session_execution
+from aj_crew.history import ConversationLog
+from aj_crew.memory_stores import (
     MissingExecutionIdentity,
     UnknownMemoryStore,
     provision_member_memory,
@@ -33,8 +33,8 @@ KEY = f"dashboard:{NAME}"
 
 @pytest.fixture
 def legacy_store() -> str:
-    cfg = KiroCrewConfig.load()
-    cfg.agents["writer"] = KiroCrewAgentConfig(kiro_agent="kirocrew", triggers="write")
+    cfg = AjCrewConfig.load()
+    cfg.agents["writer"] = AjCrewAgentConfig(kiro_agent="ajcrew", triggers="write")
     store = provision_member_memory(cfg, "writer")
     cfg.save()
     return store
@@ -75,7 +75,7 @@ def _legacy_identity_is_the_members(legacy_store: str) -> None:
     # persisted the member's own identity rather than refusing.
     execution = read_session_execution(KEY)
     assert execution is not None
-    assert execution.member_id == KiroCrewConfig.load().agents["writer"].member_id
+    assert execution.member_id == AjCrewConfig.load().agents["writer"].member_id
     assert execution.store.store_id == legacy_store
     assert "execution_context" in ConversationLog().get_metadata(KEY)
 

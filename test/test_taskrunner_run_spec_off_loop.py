@@ -18,7 +18,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from taskrunner_helpers import _make_mock_sessions
 
-from kiro_crew.taskrunner import TaskRunner
+from aj_crew.taskrunner import TaskRunner
 
 
 def _spy(monkeypatch: pytest.MonkeyPatch, method: str, match: Callable[[Path], bool]) -> list[int]:

@@ -39,7 +39,7 @@ def redeploy(service: str) -> bool:
 Raw output from the last run, unlabelled on purpose:
 
 \`\`\`
-$ kirocrew service status
+$ ajcrew service status
 active (running) since Mon 2026-08-17 09:00:00 UTC
 \`\`\`
 `

@@ -24,12 +24,12 @@ from typing import Any
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import eager as crew_log_eager
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import store as crew_log_store
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import eager as crew_log_eager
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import store as crew_log_store
 
 SLOT = "chat-tailcost"
 UNIT = "acp-tailcost-unit"
@@ -43,8 +43,8 @@ def _isolated_home(tmp_path, _floor_monkeypatch):
     Patches through ``_floor_monkeypatch`` rather than the shared ``monkeypatch``, so a
     test calling ``monkeypatch.undo()`` cannot lift the home pin out from under it.
     """
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     _floor_monkeypatch.setattr(crew_log_eager, "note_commit", lambda *a, **k: None)
     crew_log_emit.reset_caches()
     crew_log_eager.stop_for_tests()
@@ -61,7 +61,7 @@ def _isolated_home(tmp_path, _floor_monkeypatch):
 
 
 def _unit(unit_id: str, *, slot: str = SLOT) -> None:
-    CrewLog.create(lg.KIND_SESSION, unit_id, owner="owner", agent="kirocrew", slot=slot)
+    CrewLog.create(lg.KIND_SESSION, unit_id, owner="owner", agent="ajcrew", slot=slot)
 
 
 def _log(unit_id: str) -> Path:

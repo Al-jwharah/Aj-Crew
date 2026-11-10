@@ -25,9 +25,9 @@ from slack_code_channel_surface_helpers import (  # noqa: F401 - fixtures by nam
 )
 from slack_code_channels_helpers import OWNER
 
-from kiro_crew.dashboard.handlers import worktree as wt
-from kiro_crew.slack.code_channels import cleanup, wrapup
-from kiro_crew.slack.code_channels.workspace import git_ops
+from aj_crew.dashboard.handlers import worktree as wt
+from aj_crew.slack.code_channels import cleanup, wrapup
+from aj_crew.slack.code_channels.workspace import git_ops
 
 pytestmark = pytest.mark.usefixtures("unsandboxed_git")
 

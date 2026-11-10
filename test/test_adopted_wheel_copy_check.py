@@ -22,7 +22,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / ".github" / "scripts" / "adopted_wheel_copy_check.py"
 WORKFLOW = ROOT / ".github" / "workflows" / "pr-hygiene.yml"
-SHIPPED_PINS = ROOT / "src" / "kiro_crew" / "apps" / "adoption-pins.json"
+SHIPPED_PINS = ROOT / "src" / "aj_crew" / "apps" / "adoption-pins.json"
 
 PAPYRUS = "KiroCrewCaptain/kirocrew-app-papyrus"
 FILE_EXPLORER = "KiroCrewCaptain/kirocrew-app-file-explorer"
@@ -53,12 +53,12 @@ def _ns(*rows: tuple[str, str]) -> str:
 
 
 PR30438 = _ns(
-    ("M", "src/kiro_crew/apps/builtins/papyrus/backend/latex.py"),
+    ("M", "src/aj_crew/apps/builtins/papyrus/backend/latex.py"),
     ("M", "test/test_papyrus_latex.py"),
 )
 PR30505 = _ns(
-    ("M", "src/kiro_crew/apps/builtins/file_explorer/server.py"),
-    ("M", "src/kiro_crew/apps/builtins/file_explorer/tests/test_server.py"),
+    ("M", "src/aj_crew/apps/builtins/file_explorer/server.py"),
+    ("M", "src/aj_crew/apps/builtins/file_explorer/tests/test_server.py"),
 )
 
 
@@ -84,14 +84,14 @@ class TestDetection:
         assert list(mod.changed_apps(ns, mod.load_pins([_pins("papyrus")]))) == ["papyrus"]
 
     def test_added_file_counts(self) -> None:
-        ns = _ns(("A", "src/kiro_crew/apps/builtins/personal_shopper/new.py"))
+        ns = _ns(("A", "src/aj_crew/apps/builtins/personal_shopper/new.py"))
         assert list(mod.changed_apps(ns, mod.load_pins([_pins("personal-shopper")]))) == [
             "personal-shopper"
         ]
 
     def test_deleting_the_wheel_copy_is_allowed(self) -> None:
         ns = _ns(
-            ("D", "src/kiro_crew/apps/builtins/papyrus/app.json"),
+            ("D", "src/aj_crew/apps/builtins/papyrus/app.json"),
             ("D", "website/src/apps/papyrus/lib.ts"),
         )
         assert mod.check(ns, [_pins("papyrus")], "") == []
@@ -99,13 +99,13 @@ class TestDetection:
     def test_test_files_are_exempt(self) -> None:
         ns = _ns(
             ("M", "website/src/apps/papyrus/FileTree.cov80.test.tsx"),
-            ("M", "src/kiro_crew/apps/builtins/papyrus/tests/test_x.py"),
+            ("M", "src/aj_crew/apps/builtins/papyrus/tests/test_x.py"),
         )
         assert mod.check(ns, [_pins("papyrus")], "") == []
 
     def test_an_unpinned_builtin_is_not_checked(self) -> None:
         ns = _ns(
-            ("M", "src/kiro_crew/apps/builtins/mochi/server.py"),
+            ("M", "src/aj_crew/apps/builtins/mochi/server.py"),
             ("M", "website/src/apps/mochi/x.tsx"),
         )
         assert mod.check(ns, [_pins("papyrus")], "") == []
@@ -117,19 +117,19 @@ class TestDetection:
         assert mod.check(ns, [_pins("papyrus")], "") == []
 
     def test_a_pin_dropped_at_the_head_still_counts(self) -> None:
-        ns = _ns(("M", "src/kiro_crew/apps/builtins/papyrus/server.py"))
+        ns = _ns(("M", "src/aj_crew/apps/builtins/papyrus/server.py"))
         assert len(mod.check(ns, [_pins("papyrus"), _pins()], "")) == 1
 
     def test_a_pin_added_at_the_head_counts(self) -> None:
-        ns = _ns(("M", "src/kiro_crew/apps/builtins/papyrus/server.py"))
+        ns = _ns(("M", "src/aj_crew/apps/builtins/papyrus/server.py"))
         assert len(mod.check(ns, ["", _pins("papyrus")], "")) == 1
 
     def test_a_pin_only_at_the_base_tip_counts(self) -> None:
-        ns = _ns(("M", "src/kiro_crew/apps/builtins/papyrus/server.py"))
+        ns = _ns(("M", "src/aj_crew/apps/builtins/papyrus/server.py"))
         assert len(mod.check(ns, ["", _pins("papyrus"), ""], "")) == 1
 
     def test_no_table_at_any_revision_passes(self) -> None:
-        ns = _ns(("M", "src/kiro_crew/apps/builtins/papyrus/server.py"))
+        ns = _ns(("M", "src/aj_crew/apps/builtins/papyrus/server.py"))
         assert mod.check(ns, ["", "", ""], "") == []
 
 
@@ -161,7 +161,7 @@ class TestMarker:
             assert any(e.startswith("papyrus:") for e in self._errors(bad)), bad
 
     def test_an_unreadable_table_fails_closed(self) -> None:
-        ns = _ns(("M", "src/kiro_crew/apps/builtins/papyrus/server.py"))
+        ns = _ns(("M", "src/aj_crew/apps/builtins/papyrus/server.py"))
         for bad in ("{not json", json.dumps({"pins": [{"name": "papyrus"}]})):
             with pytest.raises(ValueError):
                 mod.check(ns, [bad], "")
@@ -243,7 +243,7 @@ class TestWiring:
         run = step["run"]
         assert 'git diff --name-status --no-renames "$MERGE_BASE" "$HEAD_SHA"' in run
         assert 'for rev in "$MERGE_BASE" "$BASE_TIP" "$HEAD_SHA"' in run
-        assert "src/kiro_crew/apps/adoption-pins.json" in run
+        assert "src/aj_crew/apps/adoption-pins.json" in run
 
     def test_the_script_is_read_from_the_base_ref(self) -> None:
         run = self._step()["run"]

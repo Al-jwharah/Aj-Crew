@@ -20,7 +20,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from kiro_crew.dashboard.handlers import prompts
+from aj_crew.dashboard.handlers import prompts
 
 
 class _Request:
@@ -375,7 +375,7 @@ class TestUpdateRefusesAStaleBase:
 
     @staticmethod
     def _real_state(tmp_path):
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         root = tmp_path / "skills"
         (root / "demo").mkdir(parents=True)

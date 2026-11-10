@@ -18,11 +18,11 @@ from session_helpers import (  # noqa: F401 -- the fixture is requested by name
     cfg_fixture,
 )
 
-from kiro_crew.acp.types import AcpPromptStats
-from kiro_crew.messaging.link import ChannelLink
-from kiro_crew.session import BACKGROUND_KEY, CONSOLIDATE_KEY, HEARTBEAT_KEY, SessionManager
-from kiro_crew.start_priority import StartPriority
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.types import AcpPromptStats
+from aj_crew.messaging.link import ChannelLink
+from aj_crew.session import BACKGROUND_KEY, CONSOLIDATE_KEY, HEARTBEAT_KEY, SessionManager
+from aj_crew.start_priority import StartPriority
+from aj_crew.testing.wait import await_until
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).
@@ -376,7 +376,7 @@ class TestSessionManager:
         # blocks on A's held semaphore. On the buggy code it blocks while
         # holding self._lock — the freeze.
         a2 = asyncio.create_task(mgr.get_or_create("A"))
-        # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing window for the same-key caller to park on the held semaphore; kept in place and tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing window for the same-key caller to park on the held semaphore; kept in place and tracked for a de-flake pass
         await asyncio.sleep(0.1)
         assert not a2.done()  # correctly waiting on A's semaphore
 
@@ -417,7 +417,7 @@ class TestSessionManager:
         # Both pass the fast path (no existing session) and park in start().
         c1 = asyncio.create_task(mgr.get_or_create("A"))
         c2 = asyncio.create_task(mgr.get_or_create("A"))
-        # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing window for both cold starts to park in start before the gate opens; kept in place and tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing window for both cold starts to park in start before the gate opens; kept in place and tracked for a de-flake pass
         await asyncio.sleep(0.1)
         start_gate.set()  # release both; they serialize on the registration lock
 
@@ -445,7 +445,7 @@ class TestSessionManager:
         await mgr.get_or_create("A")  # holds A's semaphore
 
         second = asyncio.create_task(mgr.get_or_create("A"))
-        # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing window for the second claim to park on the held semaphore; kept in place and tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing window for the second claim to park on the held semaphore; kept in place and tracked for a de-flake pass
         await asyncio.sleep(0.2)
         assert not second.done()  # blocked on A's semaphore, as intended
         mgr.release("A")  # let the first holder's turn "finish"
@@ -469,7 +469,7 @@ class TestSessionManager:
         # find it dead only AFTER acquiring the semaphore. Park caller 2 on the
         # semaphore first, THEN kill A's provider, THEN release.
         second = asyncio.create_task(mgr.get_or_create("A"))
-        # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing window for caller 2 to park on the held semaphore; kept in place and tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing window for caller 2 to park on the held semaphore; kept in place and tracked for a de-flake pass
         await asyncio.sleep(0.2)
         assert not second.done()  # blocked on A's semaphore behind caller 1
 
@@ -505,7 +505,7 @@ class TestWarmPool:
     async def test_deferred_background_first_use_with_the_background_agent(self, cfg, monkeypatch):
         """Consolidation names the background agent; it must still go through
         ``_ensure_background`` rather than the generic cold start."""
-        from kiro_crew.session import BACKGROUND_AGENT
+        from aj_crew.session import BACKGROUND_AGENT
 
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         await mgr.start_pool()
@@ -530,7 +530,7 @@ class TestWarmPool:
         agent. When it is the first user, ``_bg`` must still be created as the
         background agent: the session is shared and persistent, so every later
         background job would otherwise run on the custom agent."""
-        from kiro_crew.session import BACKGROUND_AGENT
+        from aj_crew.session import BACKGROUND_AGENT
 
         created: list[object] = []
         inner = _mock_provider_factory()
@@ -558,7 +558,7 @@ class TestWarmPool:
         Returns ``(factory, starts, started)``. ``warm_agent_specs`` is stubbed so the path
         to ``start`` stays on the loop and a yield lets an unserialized caller reach it.
         """
-        import kiro_crew.session_background as session_background
+        import aj_crew.session_background as session_background
 
         async def _no_warm(**_kwargs):
             return None
@@ -663,7 +663,7 @@ class TestWarmPool:
         session a concurrent turn allocated and recycled."""
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         await mgr.start_pool()
-        key = "discord:kirocrew:direct:7:gen1"
+        key = "discord:ajcrew:direct:7:gen1"
         assert mgr.allocation_predecessor(key) == ""
 
         # The conversation served ``sid-p0`` and a failed compaction recycled it:
@@ -733,7 +733,7 @@ class TestWarmPool:
         mgr._session_map.get = MagicMock(return_value="stale-sid")
         try:
             assert CONSOLIDATE_KEY not in mgr._sessions
-            first, _, resumed = await mgr.get_or_create(CONSOLIDATE_KEY, agent="kirocrew-lite")
+            first, _, resumed = await mgr.get_or_create(CONSOLIDATE_KEY, agent="ajcrew-lite")
             assert not resumed
             mgr.release(CONSOLIDATE_KEY)
             assert _raw_sid(mgr, CONSOLIDATE_KEY) is None
@@ -743,7 +743,7 @@ class TestWarmPool:
             first.shutdown.assert_awaited_once()
 
             second, is_new, resumed = await mgr.get_or_create(
-                CONSOLIDATE_KEY, agent="kirocrew-lite"
+                CONSOLIDATE_KEY, agent="ajcrew-lite"
             )
             mgr.release(CONSOLIDATE_KEY)
             assert second is not first
@@ -756,12 +756,12 @@ class TestWarmPool:
 
     @pytest.mark.asyncio
     async def test_active_consolidation_survives_idle_sweep(self, cfg):
-        from kiro_crew.llm_helpers import background_turn
+        from aj_crew.llm_helpers import background_turn
 
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         try:
             async with background_turn(
-                mgr, task="consolidation", agent="kirocrew-lite", session_key=CONSOLIDATE_KEY
+                mgr, task="consolidation", agent="ajcrew-lite", session_key=CONSOLIDATE_KEY
             ) as provider:
                 provider.last_prompt_stats = AcpPromptStats()
                 mgr._sessions[CONSOLIDATE_KEY].last_used = time.monotonic() - 9999
@@ -839,7 +839,7 @@ class TestWorkflowPoolStateless:
     context and violating the pool's isolation guarantee."""
 
     def test_wf_pool_prefix_is_stateless(self):
-        from kiro_crew.session import _STATELESS_PREFIXES
+        from aj_crew.session import _STATELESS_PREFIXES
 
         assert any("wf-pool:".startswith(p) for p in _STATELESS_PREFIXES)
         assert "wf-pool:run-1:0".startswith(

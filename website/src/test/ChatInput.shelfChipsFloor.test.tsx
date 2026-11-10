@@ -17,7 +17,7 @@ async function renderShelf() {
     renderWithProviders(
       <ChatInput
         value="" onChange={vi.fn()} onSend={vi.fn()} connected
-        onAgentClick={vi.fn()} agentName="kirocrew"
+        onAgentClick={vi.fn()} agentName="ajcrew"
         onProjectClick={vi.fn()} projectBranch="main"
         onModelClick={vi.fn()} modelName="claude-opus-5.5" reasoningEffort="high" hasEffort
         contextPct={53} contextUsedTokens={524800} contextWindowTokens={1000000}
@@ -25,7 +25,7 @@ async function renderShelf() {
       />,
     )
   })
-  const agentChip = screen.getByRole('button', { name: 'Agent: kirocrew' })
+  const agentChip = screen.getByRole('button', { name: 'Agent: ajcrew' })
   return {
     agentChip,
     projectChip: screen.getByTestId('composer-project-chip'),
@@ -67,7 +67,7 @@ describe('ChatInput — shelf chips keep their room', () => {
       act(() => observers.get(shelf)?.([{
         target: shelf, contentRect: { width: 320, height: 32 },
       } as ResizeObserverEntry], {} as ResizeObserver))
-      const agentChip = screen.getByRole('button', { name: 'Agent: kirocrew' })
+      const agentChip = screen.getByRole('button', { name: 'Agent: ajcrew' })
       const projectChip = screen.getByTestId('composer-project-chip')
       const chipGroup = agentChip.parentElement as HTMLElement
       // Compact, icons only: 2 x (px-2.5 + 13px icon) + gap-2 = 74, + the pill's gap-1.5

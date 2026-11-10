@@ -546,7 +546,7 @@ def test_the_handler_is_comment_triggered_and_gated_on_the_command() -> None:
     # takes the larger-runner label; a personal fork cannot reach that
     # definition, so it falls back to the shared hosted pool.
     assert job["runs-on"] == (
-        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' "
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' "
         "|| 'ubuntu-latest' }}"
     )
     assert wf["permissions"] == {

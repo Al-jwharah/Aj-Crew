@@ -1,4 +1,4 @@
-"""Tests for the board-column tools on the kirocrew-dashboard server.
+"""Tests for the board-column tools on the ajcrew-dashboard server.
 
 Covers ``chat_tag_column_list`` / ``chat_tag_column_create`` /
 ``chat_tag_column_move`` through their table rows: schema validation,
@@ -14,9 +14,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.mcp_dashboard import TABLE, _list_tools
-from kiro_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew.mcp_dashboard import TABLE, _list_tools
+from aj_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
 
 _TAGS = [
     {"id": "aaaaaaaaaaaa", "name": "Active", "color": "#22c55e", "order": 0, "status": True},
@@ -275,7 +275,7 @@ class TestChannelContainment:
         assert "not available to channel agents" in out
 
     def test_the_writes_are_on_the_channel_blocklist_and_the_read_is_not(self) -> None:
-        from kiro_crew.channel import CHANNEL_AGENT_BLOCKED_TOOLS
+        from aj_crew.channel import CHANNEL_AGENT_BLOCKED_TOOLS
 
         assert "chat_tag_column_create" in CHANNEL_AGENT_BLOCKED_TOOLS
         assert "chat_tag_column_move" in CHANNEL_AGENT_BLOCKED_TOOLS

@@ -20,7 +20,7 @@ import { serveDist } from './lib/serve-dist.mjs'
 import { json, logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url))
-const BUILTINS = fileURLToPath(new URL('../../src/kiro_crew/apps/builtins/', import.meta.url))
+const BUILTINS = fileURLToPath(new URL('../../src/aj_crew/apps/builtins/', import.meta.url))
 const OUTPUT_ROOT = resolve(process.argv[2]
   || fileURLToPath(new URL('../public/app-assets/', import.meta.url)))
 const VIEWPORT = { width: 1280, height: 800 }

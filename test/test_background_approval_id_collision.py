@@ -15,9 +15,9 @@ from types import SimpleNamespace
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.slack.gateway import GatewayOrchestrator
-from kiro_crew.testing.wait import async_wait_until, finished
+from aj_crew.providers.base import LLMEvent
+from aj_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.testing.wait import async_wait_until, finished
 
 
 def _gateway(state):

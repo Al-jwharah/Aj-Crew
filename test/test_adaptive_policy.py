@@ -23,7 +23,7 @@ from dataclasses import replace
 
 import pytest
 
-from kiro_crew.adaptive.policy import (
+from aj_crew.adaptive.policy import (
     ACTION_DECREASE,
     ACTION_FIXED,
     ACTION_HOLD,
@@ -36,7 +36,7 @@ from kiro_crew.adaptive.policy import (
     PolicyParams,
     params_from_config,
 )
-from kiro_crew.adaptive.signals import (
+from aj_crew.adaptive.signals import (
     SIGNAL_GATE_FAILURES,
     SIGNAL_GATE_SLOW_INITS,
     SIGNAL_LOOP_LAG,

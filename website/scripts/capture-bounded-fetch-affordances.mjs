@@ -41,7 +41,7 @@ mkdirSync(OUT, { recursive: true })
 const now = Date.now() / 1000
 const slots = [{
   key: SLOT, title: 'Bounded fetch', running: false,
-  last_message: 'rollout complete', messages: 243, agent: 'kirocrew',
+  last_message: 'rollout complete', messages: 243, agent: 'ajcrew',
   memory_mode: 'persistent', project: PROJECT, modified: Math.floor(now),
   source_links: [], source_links_total: 0,
 }]

@@ -22,7 +22,7 @@ import pytest
 from aiohttp import web
 
 from conftest import requires_symlinks
-from kiro_crew.dashboard.handlers import api_agent_config
+from aj_crew.dashboard.handlers import api_agent_config
 
 
 @pytest.fixture(autouse=True)
@@ -30,7 +30,7 @@ def _owner_caller(monkeypatch):
     """Run as the dashboard owner: the owner boundary on this endpoint has its
     own enumerate-the-invariant coverage in test_agents_endpoints_owner_auth.py."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
@@ -80,7 +80,7 @@ async def _put(
     """
     if apps is None:
         apps = {"demo": ("notes",)}
-    installed = tmp_path / "kirocrew.json"
+    installed = tmp_path / "ajcrew.json"
     installed.write_text(
         on_disk if isinstance(on_disk, str) else json.dumps(on_disk), encoding="utf-8"
     )
@@ -102,8 +102,8 @@ async def _put(
         if unreadable_scope:
             # The scope exists but could not be read: it declares nothing and is
             # reported unreadable, so no name is proven client-declared.
-            return ({"kirocrew": {}}, ("kirocrew",))
-        return ({"kirocrew": {name: {"url": "scope"} for name in scope_names}}, ())
+            return ({"ajcrew": {}}, ("ajcrew",))
+        return ({"ajcrew": {name: {"url": "scope"} for name in scope_names}}, ())
 
     if file_lock is None:
 
@@ -229,36 +229,36 @@ async def _put(
         _managed_map.update(managed_specs)
 
     patches = [
-        patch("kiro_crew.dashboard.handlers._installed_agent_config", return_value=installed),
-        patch("kiro_crew.dashboard.handlers._find_agent_config", return_value=defaults),
-        patch("kiro_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
-        patch("kiro_crew.dashboard.handlers.config_path", return_value=mc_cfg),
+        patch("aj_crew.dashboard.handlers._installed_agent_config", return_value=installed),
+        patch("aj_crew.dashboard.handlers._find_agent_config", return_value=defaults),
+        patch("aj_crew.dashboard.handlers._reset_all_sessions", new_callable=AsyncMock),
+        patch("aj_crew.dashboard.handlers.config_path", return_value=mc_cfg),
         patch(
-            "kiro_crew.dashboard.handlers.agents.get_shipped_tools",
+            "aj_crew.dashboard.handlers.agents.get_shipped_tools",
             return_value={"tools": [], "allowedTools": []},
         ),
         # Patched at the AGENTS binding, not at bridges: the handler imports
         # ``_mcp_lock as _agent_file_lock`` at module scope, so a patch on the
         # source module would not reach the already-bound name.
-        patch("kiro_crew.dashboard.handlers.agents._agent_file_lock", file_lock),
+        patch("aj_crew.dashboard.handlers.agents._agent_file_lock", file_lock),
         # ``apps_dir`` is patched in BOTH modules on purpose: the handler binds it
         # at module scope, while the real ``app_enabled_state`` resolves the
         # metadata path through manager's own copy.
         patch(
-            "kiro_crew.dashboard.handlers.agents.apps_dir",
+            "aj_crew.dashboard.handlers.agents.apps_dir",
             return_value=_handler_apps_root,
         ),
-        patch("kiro_crew.apps.manager.apps_dir", return_value=_apps_root),
-        patch("kiro_crew.dashboard.handlers.agents._registration_source", _reg_source),
-        patch("kiro_crew.agent._MANAGED_MCP_SERVERS", _managed_map),
-        patch("kiro_crew.agent._extra_mcp_servers", return_value=dict(extra_managed or {})),
-        patch("kiro_crew.dashboard.handlers.mcp._get_mcp_lock", lock),
-        patch("kiro_crew.connections.ownership.spec_census", _census),
+        patch("aj_crew.apps.manager.apps_dir", return_value=_apps_root),
+        patch("aj_crew.dashboard.handlers.agents._registration_source", _reg_source),
+        patch("aj_crew.agent._MANAGED_MCP_SERVERS", _managed_map),
+        patch("aj_crew.agent._extra_mcp_servers", return_value=dict(extra_managed or {})),
+        patch("aj_crew.dashboard.handlers.mcp._get_mcp_lock", lock),
+        patch("aj_crew.connections.ownership.spec_census", _census),
     ]
     if not govern:
         patches.append(
             patch(
-                "kiro_crew.platform.governance.sanitize_agent_config_governance",
+                "aj_crew.platform.governance.sanitize_agent_config_governance",
                 lambda config: None,
             )
         )
@@ -282,7 +282,7 @@ async def test_app_bridge_registered_during_the_lock_wait_survives_the_put(tmp_p
     An app enable queued on the flock commits its entry after the client's read and
     before this write. The fake lock registers the bridge as it is acquired.
     """
-    installed = tmp_path / "kirocrew.json"
+    installed = tmp_path / "ajcrew.json"
 
     @contextlib.asynccontextmanager
     async def _registering_lock():
@@ -296,8 +296,8 @@ async def test_app_bridge_registered_during_the_lock_wait_survives_the_put(tmp_p
     response, written = await _put(
         tmp_path,
         # The client read this — no app bridge in it yet.
-        on_disk={"name": "kirocrew", "mcpServers": {"weather": {"url": "w"}}},
-        submitted={"name": "kirocrew", "mcpServers": {"weather": {"url": "w"}}},
+        on_disk={"name": "ajcrew", "mcpServers": {"weather": {"url": "w"}}},
+        submitted={"name": "ajcrew", "mcpServers": {"weather": {"url": "w"}}},
         scope_names=frozenset({"weather"}),
         lock=_registering_lock,
     )
@@ -320,7 +320,7 @@ async def test_app_deregistered_during_the_put_is_not_resurrected(tmp_path):
     app never self-heals, since reconciliation only re-registers ENABLED apps. The fake
     flock deregisters at acquisition.
     """
-    installed = tmp_path / "kirocrew.json"
+    installed = tmp_path / "ajcrew.json"
 
     @contextlib.contextmanager
     def _deregistering_lock(*, exclusive: bool = True, target=None):  # noqa: ANN001
@@ -335,10 +335,10 @@ async def test_app_deregistered_during_the_put_is_not_resurrected(tmp_path):
         tmp_path,
         # The client read this while the app was still enabled.
         on_disk={
-            "name": "kirocrew",
+            "name": "ajcrew",
             "mcpServers": {"demo:notes": {"command": "notes-mcp"}, "weather": {"url": "w"}},
         },
-        submitted={"name": "kirocrew", "mcpServers": {"weather": {"url": "w"}}},
+        submitted={"name": "ajcrew", "mcpServers": {"weather": {"url": "w"}}},
         scope_names=frozenset({"weather"}),
         file_lock=_deregistering_lock,
     )
@@ -364,8 +364,8 @@ async def test_direct_client_entry_deletes_on_a_sequential_add_then_remove(tmp_p
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"myserver": {"command": "mine"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        on_disk={"name": "ajcrew", "mcpServers": {"myserver": {"command": "mine"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         scope_names=frozenset(),
     )
 
@@ -382,8 +382,8 @@ async def test_app_owned_entry_absent_from_the_snapshot_is_preserved(tmp_path):
     """No scope declares an app bridge, so its absence carries no instruction."""
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        on_disk={"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         scope_names=frozenset(),
     )
 
@@ -403,8 +403,8 @@ async def test_client_owned_entry_absent_from_the_snapshot_is_deleted(tmp_path):
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"weather": {"url": "w"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        on_disk={"name": "ajcrew", "mcpServers": {"weather": {"url": "w"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         scope_names=frozenset({"weather"}),
     )
 
@@ -425,8 +425,8 @@ async def test_entry_of_unknown_ownership_is_deleted(tmp_path):
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"weather": {"url": "w"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        on_disk={"name": "ajcrew", "mcpServers": {"weather": {"url": "w"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         unreadable_scope=True,
     )
 
@@ -447,8 +447,8 @@ async def test_a_scope_declaration_does_not_defeat_proven_ownership(tmp_path):
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        on_disk={"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         scope_names=frozenset({"demo:notes"}),
         apps={"demo": ("notes",)},
     )
@@ -471,8 +471,8 @@ async def test_a_scope_declared_name_with_no_proven_owner_is_deleted(tmp_path):
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"demo:custom": {"command": "mine"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        on_disk={"name": "ajcrew", "mcpServers": {"demo:custom": {"command": "mine"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         scope_names=frozenset({"demo:custom"}),
         apps={"demo": ("notes",)},
     )
@@ -493,8 +493,8 @@ async def test_a_namespaced_entry_of_an_uninstalled_app_is_deleted(tmp_path):
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"nosuchapp:thing": {"command": "x"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        on_disk={"name": "ajcrew", "mcpServers": {"nosuchapp:thing": {"command": "x"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         apps={"demo": ("notes",)},
     )
 
@@ -506,33 +506,33 @@ async def test_a_namespaced_entry_of_an_uninstalled_app_is_deleted(tmp_path):
 async def test_host_managed_entry_is_preserved(tmp_path):
     """An ALWAYS-EMITTED host-managed server is positively owned, so it survives.
 
-    A rebuild re-adds ``kirocrew-core`` unconditionally, so removing it here never sticks.
+    A rebuild re-adds ``ajcrew-core`` unconditionally, so removing it here never sticks.
     The managed entries that are not always emitted are the rows below.
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"kirocrew-core": {"command": "c"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
-        managed=("kirocrew-core",),
+        on_disk={"name": "ajcrew", "mcpServers": {"ajcrew-core": {"command": "c"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
+        managed=("ajcrew-core",),
     )
 
     assert response.status == 200
-    assert written["mcpServers"] == {"kirocrew-core": {"command": "c"}}
+    assert written["mcpServers"] == {"ajcrew-core": {"command": "c"}}
 
 
 @pytest.mark.asyncio
 async def test_an_opt_in_managed_server_omitted_from_the_snapshot_is_deleted(tmp_path):
     """An opt-in grant must be REVOCABLE through this editor.
 
-    ``kirocrew-dashboard`` carries ``opt_in``: ``build_agent_config`` never emits it and
+    ``ajcrew-dashboard`` carries ``opt_in``: ``build_agent_config`` never emits it and
     ``_refresh_dynamic_fields`` never re-adds it, so preserving it would leave the grant
     undeletable through the only surface that revokes it.
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"kirocrew-dashboard": {"command": "d"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
-        managed_specs={"kirocrew-dashboard": {"opt_in": True}},
+        on_disk={"name": "ajcrew", "mcpServers": {"ajcrew-dashboard": {"command": "d"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
+        managed_specs={"ajcrew-dashboard": {"opt_in": True}},
     )
 
     assert response.status == 200
@@ -546,15 +546,15 @@ async def test_an_opt_in_managed_server_omitted_from_the_snapshot_is_deleted(tmp
 async def test_a_gate_closed_managed_server_omitted_from_the_snapshot_is_deleted(tmp_path):
     """A CLOSED ``spec_gate`` means the rebuild would not re-add it.
 
-    Both spec writers ``pop`` ``kirocrew-computer`` while its gate is closed, since
+    Both spec writers ``pop`` ``ajcrew-computer`` while its gate is closed, since
     emitting it makes kiro-cli spawn a backend for a capability that is off. Preserving
     it here would resurrect what the gate withholds.
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"kirocrew-computer": {"command": "u"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
-        managed_specs={"kirocrew-computer": {"spec_gate": lambda: False}},
+        on_disk={"name": "ajcrew", "mcpServers": {"ajcrew-computer": {"command": "u"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
+        managed_specs={"ajcrew-computer": {"spec_gate": lambda: False}},
     )
 
     assert response.status == 200
@@ -575,13 +575,13 @@ async def test_a_gate_open_managed_server_is_still_preserved(tmp_path):
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"kirocrew-computer": {"command": "u"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
-        managed_specs={"kirocrew-computer": {"spec_gate": lambda: True}},
+        on_disk={"name": "ajcrew", "mcpServers": {"ajcrew-computer": {"command": "u"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
+        managed_specs={"ajcrew-computer": {"spec_gate": lambda: True}},
     )
 
     assert response.status == 200
-    assert written["mcpServers"] == {"kirocrew-computer": {"command": "u"}}
+    assert written["mcpServers"] == {"ajcrew-computer": {"command": "u"}}
 
 
 @pytest.mark.asyncio
@@ -599,9 +599,9 @@ async def test_a_managed_server_whose_gate_raises_is_deleted(tmp_path):
 
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"kirocrew-computer": {"command": "u"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
-        managed_specs={"kirocrew-computer": {"spec_gate": _explode}},
+        on_disk={"name": "ajcrew", "mcpServers": {"ajcrew-computer": {"command": "u"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
+        managed_specs={"ajcrew-computer": {"spec_gate": _explode}},
     )
 
     assert response.status == 200
@@ -637,8 +637,8 @@ async def test_an_edition_extra_is_preserved(tmp_path, name, command):
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {name: {"command": command}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        on_disk={"name": "ajcrew", "mcpServers": {name: {"command": command}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         extra_managed={name: {"command": command, "args": []}},
     )
 
@@ -655,8 +655,8 @@ async def test_a_malformed_host_spec_does_not_fail_the_put(tmp_path):
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"internal-mcp": {"command": "i"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        on_disk={"name": "ajcrew", "mcpServers": {"internal-mcp": {"command": "i"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         extra_managed={"internal-mcp": "not-a-mapping"},  # type: ignore[dict-item]
     )
 
@@ -673,8 +673,8 @@ async def test_client_entry_under_an_installed_apps_namespace_is_deleted(tmp_pat
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"demo:custom": {"command": "mine"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        on_disk={"name": "ajcrew", "mcpServers": {"demo:custom": {"command": "mine"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         apps={"demo": ("notes",)},
     )
 
@@ -694,8 +694,8 @@ async def test_a_declared_app_server_is_still_preserved(tmp_path):
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        on_disk={"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         apps={"demo": ("notes",)},
     )
 
@@ -713,13 +713,13 @@ async def test_unreadable_app_manifest_fails_the_put_and_writes_nothing(tmp_path
     Preserving makes entries undeletable; deleting clobbers live bridges on a fault that
     may be transient. Step (0a) runs before any durable write, so the client can retry.
     """
-    installed = tmp_path / "kirocrew.json"
-    on_disk = {"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}}
+    installed = tmp_path / "ajcrew.json"
+    on_disk = {"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}}
 
     response, written = await _put(
         tmp_path,
         on_disk=on_disk,
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         apps={"demo": ("notes",)},
         apps_unreadable=True,
     )
@@ -745,13 +745,13 @@ async def test_non_object_mcp_servers_manifest_fails_the_put_and_writes_nothing(
     nothing, rather than reading an empty map as "declares nothing" and deleting the
     app's live bridges.
     """
-    installed = tmp_path / "kirocrew.json"
-    on_disk = {"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}}
+    installed = tmp_path / "ajcrew.json"
+    on_disk = {"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}}
 
     response, written = await _put(
         tmp_path,
         on_disk=on_disk,
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         apps={"demo": ("notes",)},
         manifest_mcp_non_object=True,
     )
@@ -775,13 +775,13 @@ async def test_corrupt_installed_metadata_fails_the_put_and_writes_nothing(tmp_p
     Absence means "not installed"; corruption means "cannot know", and skipping it would
     delete the app's live bridges.
     """
-    installed = tmp_path / "kirocrew.json"
-    on_disk = {"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}}
+    installed = tmp_path / "ajcrew.json"
+    on_disk = {"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}}
 
     response, written = await _put(
         tmp_path,
         on_disk=on_disk,
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         apps={"demo": ("notes",)},
         installed_corrupt=True,
     )
@@ -808,8 +808,8 @@ async def test_absent_installed_metadata_is_still_skipped(tmp_path):
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        on_disk={"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         apps={"demo": ("notes",)},
         installed_absent=True,
     )
@@ -830,8 +830,8 @@ async def test_disabled_app_bridge_is_deleted(tmp_path):
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        on_disk={"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         apps={"demo": ("notes",)},
         enabled=False,
     )
@@ -852,8 +852,8 @@ async def test_absent_enabled_field_counts_as_enabled(tmp_path):
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        on_disk={"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         apps={"demo": ("notes",)},
         enabled=None,
     )
@@ -872,13 +872,13 @@ async def test_unreadable_apps_directory_fails_the_put(tmp_path):
     Treating it as empty would classify every app bridge on the host as
     client-owned and delete all of them in one PUT.
     """
-    installed = tmp_path / "kirocrew.json"
-    on_disk = {"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}}
+    installed = tmp_path / "ajcrew.json"
+    on_disk = {"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}}
 
     response, written = await _put(
         tmp_path,
         on_disk=on_disk,
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         apps={"demo": ("notes",)},
         apps_dir_unreadable=True,
     )
@@ -891,13 +891,13 @@ async def test_unreadable_apps_directory_fails_the_put(tmp_path):
 
 async def _assert_refused_and_intact(tmp_path, **kwargs):
     """PUT refuses with the ownership code and leaves the spec byte-identical."""
-    installed = tmp_path / "kirocrew.json"
-    on_disk = {"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}}
+    installed = tmp_path / "ajcrew.json"
+    on_disk = {"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}}
 
     response, written = await _put(
         tmp_path,
         on_disk=on_disk,
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         apps={"demo": ("notes",)},
         **kwargs,
     )
@@ -987,8 +987,8 @@ async def test_an_apps_root_child_that_vanished_after_the_listing_still_skips(tm
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        on_disk={"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         apps={"demo": ("notes",)},
         apps_child_vanishes=True,
     )
@@ -1004,7 +1004,7 @@ def test_a_dangling_app_root_link_is_not_absence(tmp_path):
     This walk gates whether an app's BRIDGES may be deleted, so an entry it
     cannot read must refuse rather than report the app's names as unowned.
     """
-    from kiro_crew.dashboard.handlers.agents import (
+    from aj_crew.dashboard.handlers.agents import (
         AppOwnershipUnreadable,
         _app_declared_server_names,
     )
@@ -1014,7 +1014,7 @@ def test_a_dangling_app_root_link_is_not_absence(tmp_path):
     (apps_root / "demo").symlink_to(apps_root / "no-such-app-root")
 
     with (
-        patch("kiro_crew.dashboard.handlers.agents.apps_dir", return_value=apps_root),
+        patch("aj_crew.dashboard.handlers.agents.apps_dir", return_value=apps_root),
         pytest.raises(AppOwnershipUnreadable) as caught,
     ):
         _app_declared_server_names()
@@ -1032,8 +1032,8 @@ async def test_a_plain_file_where_an_app_root_belongs_still_skips(tmp_path):
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        on_disk={"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         apps={"demo": ("notes",)},
         app_root_shape="plain_file",
     )
@@ -1052,7 +1052,7 @@ def test_an_app_root_link_to_a_file_is_not_absence(tmp_path):
     ``S_ISDIR``, so the walk must reach "not absence" from the entry's own
     link-ness rather than from a raised error.
     """
-    from kiro_crew.dashboard.handlers.agents import (
+    from aj_crew.dashboard.handlers.agents import (
         AppOwnershipUnreadable,
         _app_declared_server_names,
     )
@@ -1064,7 +1064,7 @@ def test_an_app_root_link_to_a_file_is_not_absence(tmp_path):
     (apps_root / "demo").symlink_to(target)
 
     with (
-        patch("kiro_crew.dashboard.handlers.agents.apps_dir", return_value=apps_root),
+        patch("aj_crew.dashboard.handlers.agents.apps_dir", return_value=apps_root),
         pytest.raises(AppOwnershipUnreadable) as caught,
     ):
         _app_declared_server_names()
@@ -1081,8 +1081,8 @@ async def test_genuinely_absent_installed_metadata_still_skips(tmp_path):
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        on_disk={"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         apps={"demo": ("notes",)},
         installed_absent=True,
     )
@@ -1099,8 +1099,8 @@ async def test_client_owned_entry_present_in_the_snapshot_is_updated(tmp_path):
     """A submitted entry always wins — merge adds, it never shadows."""
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"weather": {"url": "old"}}},
-        submitted={"name": "kirocrew", "mcpServers": {"weather": {"url": "new"}}},
+        on_disk={"name": "ajcrew", "mcpServers": {"weather": {"url": "old"}}},
+        submitted={"name": "ajcrew", "mcpServers": {"weather": {"url": "new"}}},
         scope_names=frozenset({"weather"}),
     )
 
@@ -1113,8 +1113,8 @@ async def test_app_owned_entry_present_in_the_snapshot_is_updated(tmp_path):
     """Preservation must not shadow a submitted edit to the same name either."""
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "old"}}},
-        submitted={"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "new"}}},
+        on_disk={"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "old"}}},
+        submitted={"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "new"}}},
         scope_names=frozenset(),
     )
 
@@ -1135,8 +1135,8 @@ async def test_non_mcp_keys_are_still_replaced_wholesale(tmp_path):
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "prompt": "old", "tools": ["a"], "mcpServers": {}},
-        submitted={"name": "kirocrew", "tools": ["b"]},
+        on_disk={"name": "ajcrew", "prompt": "old", "tools": ["a"], "mcpServers": {}},
+        submitted={"name": "ajcrew", "tools": ["b"]},
         scope_names=frozenset(),
     )
 
@@ -1155,7 +1155,7 @@ async def test_unreadable_installed_spec_still_accepts_the_snapshot(tmp_path):
     response, written = await _put(
         tmp_path,
         on_disk="{ not json at all",
-        submitted={"name": "kirocrew", "mcpServers": {"weather": {"url": "w"}}},
+        submitted={"name": "ajcrew", "mcpServers": {"weather": {"url": "w"}}},
     )
 
     assert response.status == 200
@@ -1171,8 +1171,8 @@ async def test_non_object_mcp_servers_submission_is_left_untouched(tmp_path):
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
-        submitted={"name": "kirocrew", "mcpServers": []},
+        on_disk={"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
+        submitted={"name": "ajcrew", "mcpServers": []},
         scope_names=frozenset(),
     )
 
@@ -1192,17 +1192,17 @@ async def test_preserved_entries_go_through_the_governance_filter(tmp_path, monk
     straight to disk — reopening the bypass that filter exists to close. Ordering
     the merge ahead of the filter makes that unrepresentable.
     """
-    import kiro_crew.platform.governance as gov
+    import aj_crew.platform.governance as gov
 
     monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: ref != "@demo:notes")
 
     response, written = await _put(
         tmp_path,
         on_disk={
-            "name": "kirocrew",
+            "name": "ajcrew",
             "mcpServers": {"demo:notes": {"command": "notes-mcp", "autoApprove": ["write"]}},
         },
-        submitted={"name": "kirocrew", "mcpServers": {}},
+        submitted={"name": "ajcrew", "mcpServers": {}},
         scope_names=frozenset(),
         govern=True,
     )
@@ -1234,9 +1234,9 @@ async def test_a_stale_snapshot_cannot_resurrect_an_uninstalled_apps_bridge(tmp_
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"plainuser": {"url": "u"}}},
+        on_disk={"name": "ajcrew", "mcpServers": {"plainuser": {"url": "u"}}},
         submitted={
-            "name": "kirocrew",
+            "name": "ajcrew",
             "mcpServers": {
                 "demoapp:tool": {"url": "http://127.0.0.1:9100/mcp"},
                 "plainuser": {"url": "u"},
@@ -1263,8 +1263,8 @@ async def test_a_stale_snapshot_cannot_resurrect_a_disabled_apps_bridge(tmp_path
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {}},
-        submitted={"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
+        on_disk={"name": "ajcrew", "mcpServers": {}},
+        submitted={"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
         apps={"demo": ("notes",)},
         enabled=False,
         scope_names=frozenset({"demo:notes"}),
@@ -1288,9 +1288,9 @@ async def test_a_stale_snapshot_cannot_rewrite_a_deliberately_skipped_http_bridg
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {}},
+        on_disk={"name": "ajcrew", "mcpServers": {}},
         submitted={
-            "name": "kirocrew",
+            "name": "ajcrew",
             # The manifest's illustrative port, which is what a snapshot taken
             # before the scrub carries.
             "mcpServers": {"demo:notes": {"url": "http://127.0.0.1:9100/mcp"}},
@@ -1317,11 +1317,11 @@ async def test_both_directions_decide_from_one_baseline_in_a_single_put(tmp_path
     response, written = await _put(
         tmp_path,
         on_disk={
-            "name": "kirocrew",
+            "name": "ajcrew",
             "mcpServers": {"demo:notes": {"command": "notes-mcp"}, "plainuser": {"url": "u"}},
         },
         submitted={
-            "name": "kirocrew",
+            "name": "ajcrew",
             "mcpServers": {"gone:tool": {"command": "t"}, "plainuser": {"url": "u"}},
         },
         apps={"demo": ("notes",)},
@@ -1350,8 +1350,8 @@ async def test_a_plain_client_entry_the_client_adds_is_still_persisted(tmp_path)
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {}},
-        submitted={"name": "kirocrew", "mcpServers": {"myserver": {"command": "mine"}}},
+        on_disk={"name": "ajcrew", "mcpServers": {}},
+        submitted={"name": "ajcrew", "mcpServers": {"myserver": {"command": "mine"}}},
     )
 
     assert response.status == 200
@@ -1370,8 +1370,8 @@ async def test_a_namespaced_edition_extra_the_client_resubmits_is_left_alone(tmp
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {}},
-        submitted={"name": "kirocrew", "mcpServers": {"edition:extra": {"command": "x"}}},
+        on_disk={"name": "ajcrew", "mcpServers": {}},
+        submitted={"name": "ajcrew", "mcpServers": {"edition:extra": {"command": "x"}}},
         extra_managed={"edition:extra": {"command": "x"}},
     )
 
@@ -1391,8 +1391,8 @@ async def test_a_readable_spec_with_no_servers_still_drops_a_namespaced_addition
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {}},
-        submitted={"name": "kirocrew", "mcpServers": {"demoapp:tool": {"command": "t"}}},
+        on_disk={"name": "ajcrew", "mcpServers": {}},
+        submitted={"name": "ajcrew", "mcpServers": {"demoapp:tool": {"command": "t"}}},
         apps={},
     )
 
@@ -1412,8 +1412,8 @@ async def test_a_spec_with_no_mcpservers_key_still_drops_a_namespaced_addition(t
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew"},  # readable, and carries no mcpServers at all
-        submitted={"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
+        on_disk={"name": "ajcrew"},  # readable, and carries no mcpServers at all
+        submitted={"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "notes-mcp"}}},
         apps={"demo": ("notes",)},
         enabled=False,
     )
@@ -1436,8 +1436,8 @@ async def test_a_malformed_mcpservers_value_on_disk_decides_nothing(tmp_path):
     """
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": "not an object"},
-        submitted={"name": "kirocrew", "mcpServers": {"demoapp:tool": {"command": "t"}}},
+        on_disk={"name": "ajcrew", "mcpServers": "not an object"},
+        submitted={"name": "ajcrew", "mcpServers": {"demoapp:tool": {"command": "t"}}},
         apps={},
     )
 
@@ -1458,7 +1458,7 @@ async def test_an_unreadable_spec_still_persists_a_namespaced_entry(tmp_path):
     response, written = await _put(
         tmp_path,
         on_disk="{ not json at all",
-        submitted={"name": "kirocrew", "mcpServers": {"demoapp:tool": {"command": "t"}}},
+        submitted={"name": "ajcrew", "mcpServers": {"demoapp:tool": {"command": "t"}}},
         apps={},
     )
 
@@ -1482,12 +1482,12 @@ async def test_the_app_namespace_region_decides_every_axis_it_claims_to(tmp_path
       reverts a corrected definition) and is asserted as it behaves; changing it
       reverses the editor-snapshot-wins contract, which is a maintainer ruling.
     """
-    submitted_only = {"name": "kirocrew", "mcpServers": {"demo:ghost": {"command": "ghost"}}}
+    submitted_only = {"name": "ajcrew", "mcpServers": {"demo:ghost": {"command": "ghost"}}}
     matrix = [
         (
             "existence / absent from the submission -> on disk decides",
             {"demo:notes": {"command": "live"}},
-            {"name": "kirocrew", "mcpServers": {}},
+            {"name": "ajcrew", "mcpServers": {}},
             {"demo:notes": {"command": "live"}},
             "an owned bridge the submission omits was not preserved",
         ),
@@ -1501,7 +1501,7 @@ async def test_the_app_namespace_region_decides_every_axis_it_claims_to(tmp_path
         (
             "content / on both sides -> the submission decides (OPEN, #7470)",
             {"demo:notes": {"command": "live"}},
-            {"name": "kirocrew", "mcpServers": {"demo:notes": {"command": "stale"}}},
+            {"name": "ajcrew", "mcpServers": {"demo:notes": {"command": "stale"}}},
             {"demo:notes": {"command": "stale"}},
             "the content axis changed verdict without the ruling #7470 is waiting on",
         ),
@@ -1510,7 +1510,7 @@ async def test_the_app_namespace_region_decides_every_axis_it_claims_to(tmp_path
     for axis, on_disk, submitted, expected, why in matrix:
         response, written = await _put(
             tmp_path,
-            on_disk={"name": "kirocrew", "mcpServers": on_disk},
+            on_disk={"name": "ajcrew", "mcpServers": on_disk},
             submitted=submitted,
         )
 
@@ -1533,8 +1533,8 @@ async def test_a_stale_snapshot_reverts_a_live_http_bridge_to_a_dead_url(tmp_pat
 
     response, written = await _put(
         tmp_path,
-        on_disk={"name": "kirocrew", "mcpServers": {"demo:notes": {"url": live}}},
-        submitted={"name": "kirocrew", "mcpServers": {"demo:notes": {"url": illustrative}}},
+        on_disk={"name": "ajcrew", "mcpServers": {"demo:notes": {"url": live}}},
+        submitted={"name": "ajcrew", "mcpServers": {"demo:notes": {"url": illustrative}}},
     )
 
     assert response.status == 200

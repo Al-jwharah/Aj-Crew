@@ -69,11 +69,11 @@ async def main(messages: int, rounds: int) -> None:
     loop.slow_callback_duration = 0.05
     with tempfile.TemporaryDirectory(prefix="expiry-block-") as tmp:
         root = Path(tmp)
-        # Every path Kiro Crew resolves (memory stores, breadcrumbs) lands in
+        # Every path Aj Crew resolves (memory stores, breadcrumbs) lands in
         # the temporary directory, so the run leaves nothing behind.
-        os.environ["KIROCREW_HOME"] = str(root / "home")  # flake-ok: standalone process, not a test
-        from kiro_crew.history import ConversationLog, HistoryConsolidator
-        from kiro_crew.memory import MemoryStore
+        os.environ["AJCREW_HOME"] = str(root / "home")  # flake-ok: standalone process, not a test
+        from aj_crew.history import ConversationLog, HistoryConsolidator
+        from aj_crew.memory import MemoryStore
 
         log = ConversationLog(base_dir=root / "sessions")
         log.init()

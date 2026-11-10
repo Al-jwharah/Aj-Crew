@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 from test_snapshot import unpinnable_argv
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 
 def _real_db(path: Path) -> bytes:
@@ -35,7 +35,7 @@ def home(tmp_path, monkeypatch):
 
 
 def _bundle(tmp_path, crons: bytes, name: str = "b") -> Path:
-    payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+    payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
     payload.mkdir(parents=True, exist_ok=True)
     (payload / "crons.json").write_bytes(crons)
     (payload / "MANIFEST.json").write_text(
@@ -92,7 +92,7 @@ class TestComponentJsonIsValidatedBeforeInstall:
         """
         # An existing destination: the merger's own guard covers it, so the pre-flight
         # stands aside and one unreadable component does not fail every other one.
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         payload.mkdir(parents=True)
         (payload / "crons.json").write_text('{"jobs": ["x"]}', encoding="utf-8")
         (home / "crons.json").write_text('{"jobs": []}', encoding="utf-8")
@@ -129,7 +129,7 @@ class TestComponentJsonIsValidatedBeforeInstall:
         Keying validation on the index's OWN destination let a corrupt index overwrite a
         healthy one, because the copy is triggered by the other file's absence.
         """
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         payload.mkdir(parents=True)
         (payload / "memory.db").write_bytes(_real_db(tmp_path / "sound.db"))
         (payload / "memory_index.db").write_bytes(b"corrupt index")

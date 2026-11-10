@@ -16,8 +16,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.platform import wheel_apply, wheel_engine
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.platform import wheel_apply, wheel_engine
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 @pytest.fixture(autouse=True)
@@ -63,7 +63,7 @@ class TestPreflight:
     ) -> None:
         seen: list[str] = []
         monkeypatch.setattr(
-            "kiro_crew.platform.update_layout.cdn_bases",
+            "aj_crew.platform.update_layout.cdn_bases",
             lambda: ("https://feed.example", "https://bytes.example"),
         )
 
@@ -75,8 +75,8 @@ class TestPreflight:
             seen.append("shape")
             return True
 
-        monkeypatch.setattr("kiro_crew.platform.update_governance.update_blocked_reason", blocked)
-        monkeypatch.setattr("kiro_crew.platform.update_layout.cdn_bases_are_safe", safe)
+        monkeypatch.setattr("aj_crew.platform.update_governance.update_blocked_reason", blocked)
+        monkeypatch.setattr("aj_crew.platform.update_layout.cdn_bases_are_safe", safe)
         with pytest.raises(wheel_apply.WheelApplyRefused) as info:
             wheel_apply.preflight_bases()
         assert info.value.code == "blocked_by_policy"
@@ -84,9 +84,9 @@ class TestPreflight:
 
     def test_the_cdn_shape_is_checked_after_the_pin(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.update_blocked_reason", lambda _b: ""
+            "aj_crew.platform.update_governance.update_blocked_reason", lambda _b: ""
         )
-        monkeypatch.setattr("kiro_crew.platform.update_layout.cdn_bases_are_safe", lambda: False)
+        monkeypatch.setattr("aj_crew.platform.update_layout.cdn_bases_are_safe", lambda: False)
         with pytest.raises(wheel_apply.WheelApplyRefused) as info:
             wheel_apply.preflight_bases()
         assert info.value.code == "bad_cdn"
@@ -97,7 +97,7 @@ class TestMemoryReadiness:
 
     @staticmethod
     def _phase(monkeypatch: pytest.MonkeyPatch, phase: str, error: str = "") -> None:
-        import kiro_crew.memory_startup as startup
+        import aj_crew.memory_startup as startup
 
         monkeypatch.setattr(startup, "memory_startup_preparing", lambda: phase == "preparing")
 
@@ -110,7 +110,7 @@ class TestMemoryReadiness:
     def test_only_a_running_unsettled_startup_is_preparing(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.memory_startup as startup
+        import aj_crew.memory_startup as startup
 
         monkeypatch.setattr(startup, "_active", None)
         assert startup.memory_startup_preparing() is False, "no startup here (the CLI)"
@@ -137,7 +137,7 @@ class TestMemoryReadiness:
             wheel_apply.check_memory_ready()
 
     def test_an_unresolvable_store_refuses(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        import kiro_crew.memory_stores as stores
+        import aj_crew.memory_stores as stores
 
         self._phase(monkeypatch, "ready")
         monkeypatch.setattr(stores, "active_store_names", lambda: ["default", "lost"])
@@ -150,9 +150,9 @@ class TestMemoryReadiness:
     def test_a_store_that_failed_its_startup_gets_an_unverified_copy(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        import kiro_crew.memory_backup as backup
-        import kiro_crew.memory_startup as startup
-        import kiro_crew.memory_stores as stores
+        import aj_crew.memory_backup as backup
+        import aj_crew.memory_startup as startup
+        import aj_crew.memory_stores as stores
 
         db = tmp_path / "memory.db"
         db.write_bytes(b"sqlite bytes")
@@ -177,9 +177,9 @@ class TestMemoryReadiness:
     ) -> None:
         """The memory folder is sandbox-writable; a planted ``-wal`` link must not
         carry a masked file (``.env``) into the agent-readable backups."""
-        import kiro_crew.memory_backup as backup
-        import kiro_crew.memory_startup as startup
-        import kiro_crew.memory_stores as stores
+        import aj_crew.memory_backup as backup
+        import aj_crew.memory_startup as startup
+        import aj_crew.memory_stores as stores
 
         secret = tmp_path / "outside" / ".env"
         secret.parent.mkdir()
@@ -218,7 +218,7 @@ class TestMemorySnapshotHook:
             wheel_apply.memory_snapshot_hook(lambda _m: None)()
 
     def test_a_snapshot_reports_its_count_and_where(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        import kiro_crew.memory_backup as backup
+        import aj_crew.memory_backup as backup
 
         monkeypatch.setattr(wheel_apply, "snapshot_memory_before_update", lambda: (2, ""))
         newest = Path("/home/u/backups/m.db")
@@ -252,7 +252,7 @@ class TestUnattendedOffAtTheSwap:
         status: str,
         copies: int,
     ) -> None:
-        import kiro_crew.memory_backup as backup
+        import aj_crew.memory_backup as backup
 
         copied: list[int] = []
 
@@ -267,7 +267,7 @@ class TestUnattendedOffAtTheSwap:
         monkeypatch.setattr(wheel_apply, "snapshot_memory_before_update", snapshot)
         monkeypatch.setattr(backup, "newest_backup", lambda *a: None)
         monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.unattended_apply_allowed", lambda: allowed
+            "aj_crew.platform.update_governance.unattended_apply_allowed", lambda: allowed
         )
         outcome = await _run(apply, monkeypatch, refuse_if_unattended_off=refuse)
         assert outcome.status == status
@@ -277,7 +277,7 @@ class TestUnattendedOffAtTheSwap:
     async def test_a_policy_landing_during_the_memory_copy_still_refuses_the_swap(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        import kiro_crew.memory_backup as backup
+        import aj_crew.memory_backup as backup
 
         policy = {"unattended_apply": True}
         promoted: list[int] = []
@@ -294,7 +294,7 @@ class TestUnattendedOffAtTheSwap:
         monkeypatch.setattr(wheel_apply, "snapshot_memory_before_update", snapshot)
         monkeypatch.setattr(backup, "newest_backup", lambda *a: None)
         monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.unattended_apply_allowed",
+            "aj_crew.platform.update_governance.unattended_apply_allowed",
             lambda: policy["unattended_apply"],
         )
         outcome = await _run(apply, monkeypatch, refuse_if_unattended_off=True)
@@ -313,12 +313,12 @@ class TestUsernsReattach:
         restricted: bool = True,
         applies: bool = True,
     ) -> None:
-        from kiro_crew.service import apparmor
-        from kiro_crew.service import linux as service_linux
+        from aj_crew.service import apparmor
+        from aj_crew.service import linux as service_linux
 
         legacy = tmp_path / "crew-venv"
         (legacy / "bin").mkdir(parents=True)
-        launcher = legacy / "bin" / "kirocrew"
+        launcher = legacy / "bin" / "ajcrew"
         launcher.write_text("", encoding="utf-8")
         layout = wheel_engine.ManagedVenvLayout(
             legacy=legacy, stable_link=tmp_path / "crew-venv-current"
@@ -332,7 +332,7 @@ class TestUsernsReattach:
             "service_profile_attachment",
             lambda *_a: str(launcher.resolve()) if applies else None,
         )
-        monkeypatch.setattr(service_linux, "kirocrew_bin", lambda: str(launcher))
+        monkeypatch.setattr(service_linux, "ajcrew_bin", lambda: str(launcher))
 
     def test_an_attached_profile_needs_reattaching_after_promotion(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
@@ -355,32 +355,32 @@ class TestUsernsReattach:
     def test_the_shared_predicate_honours_a_unit_directive(self, tmp_path: Path) -> None:
         """The predicate doctor reports with: an ``AppArmorProfile=`` line in the
         unit silently wins over the path attachment, so the profile does not apply."""
-        from kiro_crew.service import apparmor
+        from aj_crew.service import apparmor
 
-        launcher = tmp_path / "kirocrew"
+        launcher = tmp_path / "ajcrew"
         launcher.write_text("", encoding="utf-8")
-        profile = tmp_path / "kirocrew-userns"
+        profile = tmp_path / "ajcrew-userns"
         profile.write_text(
             f'profile {apparmor.PROFILE_NAME} "{launcher.resolve()}" flags=(unconfined) {{}}\n',
             encoding="utf-8",
         )
-        unit = tmp_path / "kirocrew.service"
+        unit = tmp_path / "ajcrew.service"
         unit.write_text("[Service]\nExecStart=/x\n", encoding="utf-8")
         attached = apparmor.service_profile_attachment(str(launcher), unit, profile)
         assert attached == str(launcher.resolve())
-        unit.write_text("[Service]\nAppArmorProfile=kirocrew-userns\n", encoding="utf-8")
+        unit.write_text("[Service]\nAppArmorProfile=ajcrew-userns\n", encoding="utf-8")
         assert apparmor.service_profile_attachment(str(launcher), unit, profile) is None
 
     @pytest.mark.skipif(not wheel_engine.IS_POSIX, reason="the managed venv is POSIX-only")
     def test_a_profile_attached_to_every_tree_survives_the_promotion(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        """``crew-venv-*/bin/kirocrew``, the attachment ``service install`` renders
+        """``crew-venv-*/bin/ajcrew``, the attachment ``service install`` renders
         for a managed install, covers the tree an update promotes: the unattended
         apply does not wait for the operator, and after the real promotion flips
         the stable link the doctor predicate still reports the profile applying."""
-        from kiro_crew.service import apparmor
-        from kiro_crew.service import linux as service_linux
+        from aj_crew.service import apparmor
+        from aj_crew.service import linux as service_linux
 
         layout = wheel_engine.ManagedVenvLayout(
             legacy=tmp_path / "crew-venv", stable_link=tmp_path / "crew-venv-current"
@@ -388,15 +388,15 @@ class TestUsernsReattach:
         for version in ("1.0.0", "9.9.9"):
             bin_dir = layout.versioned_tree(version) / "bin"
             bin_dir.mkdir(parents=True)
-            (bin_dir / "kirocrew").write_text("", encoding="utf-8")
+            (bin_dir / "ajcrew").write_text("", encoding="utf-8")
         layout.stable_link.symlink_to(layout.versioned_tree("1.0.0"))
-        launcher = layout.stable_link / "bin" / "kirocrew"
+        launcher = layout.stable_link / "bin" / "ajcrew"
         profile = tmp_path / apparmor.PROFILE_NAME
         profile.write_text(
-            apparmor.render_profile(None, f"{tmp_path.resolve()}/crew-venv-*/bin/kirocrew"),
+            apparmor.render_profile(None, f"{tmp_path.resolve()}/crew-venv-*/bin/ajcrew"),
             encoding="utf-8",
         )
-        unit = tmp_path / "kirocrew.service"
+        unit = tmp_path / "ajcrew.service"
         unit.write_text(f"[Service]\nExecStart={launcher} gateway\n", encoding="utf-8")
         monkeypatch.setattr(wheel_engine, "managed_venv_layout", lambda: layout)
         monkeypatch.setattr(wheel_apply.sys, "platform", "linux")
@@ -404,7 +404,7 @@ class TestUsernsReattach:
         monkeypatch.setattr(apparmor, "userns_restricted", lambda: True)
         monkeypatch.setattr(apparmor, "PROFILE_PATH", profile)
         monkeypatch.setattr(service_linux, "UNIT_PATH", unit)
-        monkeypatch.setattr(service_linux, "kirocrew_bin", lambda: str(launcher))
+        monkeypatch.setattr(service_linux, "ajcrew_bin", lambda: str(launcher))
 
         assert apparmor.service_profile_attachment(str(launcher), unit) is not None
         assert wheel_apply.userns_reattach_needed("9.9.9") is False
@@ -412,7 +412,7 @@ class TestUsernsReattach:
         wheel_engine.promote(layout.versioned_tree("9.9.9"), layout.stable_link)
 
         assert os.path.realpath(launcher) == os.path.realpath(
-            layout.versioned_tree("9.9.9") / "bin" / "kirocrew"
+            layout.versioned_tree("9.9.9") / "bin" / "ajcrew"
         )
         assert apparmor.service_profile_attachment(str(launcher), unit) is not None
 
@@ -431,7 +431,7 @@ class TestRestartReaches:
         promoted = tmp_path / "crew-venv-9.9.9"
         for tree in (legacy, promoted):
             (tree / "bin").mkdir(parents=True)
-            (tree / "bin" / "kirocrew").write_text("", encoding="utf-8")
+            (tree / "bin" / "ajcrew").write_text("", encoding="utf-8")
             python = tree / "bin" / "python3"
             python.write_text("", encoding="utf-8")
             python.chmod(0o755)
@@ -507,7 +507,7 @@ class TestOutcomes:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         def apply(**_kwargs: object) -> Path:
-            raise wheel_engine.WheelUpdateBusy("another kirocrew update is already in progress")
+            raise wheel_engine.WheelUpdateBusy("another ajcrew update is already in progress")
 
         state = _state()
         outcome = await _run(apply, monkeypatch, state=state)
@@ -693,7 +693,7 @@ class TestOutcomes:
             def submit(self, *args: object) -> None:
                 raise RuntimeError("executor is shut down")
 
-        monkeypatch.setattr("kiro_crew.executors.update_executor", StoppedExecutor)
+        monkeypatch.setattr("aj_crew.executors.update_executor", StoppedExecutor)
         monkeypatch.setattr(wheel_engine, "release_update_lock", release)
         apply = MagicMock()
         fd = wheel_engine.hold_update_lock()
@@ -803,7 +803,7 @@ class TestOwnership:
     async def test_a_process_exit_cancels_the_apply(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Every exec seam and hard exit cancels the applies in flight through
         ``platform_compat.cancel_wheel_applies_in_flight``."""
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         started = threading.Event()
         reasons: list[str] = []

@@ -23,10 +23,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.types import JSONRPC_METHOD_NOT_FOUND
-from kiro_crew.constants import SUBAGENT_TIMEOUT_SECS
-from kiro_crew.mcp_gateway import backend as backend_mod
-from kiro_crew.mcp_gateway.backend import (
+from aj_crew.acp.types import JSONRPC_METHOD_NOT_FOUND
+from aj_crew.constants import SUBAGENT_TIMEOUT_SECS
+from aj_crew.mcp_gateway import backend as backend_mod
+from aj_crew.mcp_gateway.backend import (
     HARD_WEDGE_CEILING_SECS,
     HEARTBEAT_PING_ID,
     HEARTBEAT_TIMEOUT_SECS,
@@ -39,8 +39,8 @@ from kiro_crew.mcp_gateway.backend import (
 
 @dataclass
 class _FakePoolKey:
-    server_name: str = "kirocrew-core"
-    agent_name: str = "kirocrew"
+    server_name: str = "ajcrew-core"
+    agent_name: str = "ajcrew"
 
     def human_readable(self) -> str:
         return f"{self.agent_name}:{self.server_name}"
@@ -138,7 +138,7 @@ async def test_old_request_fresh_ping_warns_once() -> None:
     assert "gw-9999-1" in backend._warned_slow_ids
 
     # Second heartbeat: same id already warned, no duplicate
-    with patch("kiro_crew.mcp_gateway.backend.logger") as mock_logger:
+    with patch("aj_crew.mcp_gateway.backend.logger") as mock_logger:
         await backend._heartbeat_once(now=now + 60)
         for call in mock_logger.warning.call_args_list:
             assert "slow in-flight" not in str(call)
@@ -260,8 +260,8 @@ def test_tool_cancelled_exception_suppresses_response(cancelled_by_raise: bool) 
     Guards the str/int id mismatch: the gateway sends requestId as a
     STRING ("2") while the loop stored the tools/call id as an INT (2) --
     suppression must still fire (ids are normalized to str internally)."""
-    import kiro_crew.mcp_shared as mod
-    from kiro_crew.mcp_shared import ToolCancelled, run_mcp_stdio_loop
+    import aj_crew.mcp_shared as mod
+    from aj_crew.mcp_shared import ToolCancelled, run_mcp_stdio_loop
 
     tool_started = threading.Event()
     # Set by the loop's own "cancel received" log line, which it writes right
@@ -375,8 +375,8 @@ def test_unknown_notification_silently_ignored() -> None:
     """An unknown notification delivered through the loop must be ignored:
     no error response is emitted and the loop keeps serving (a subsequent
     tools/call still succeeds)."""
-    import kiro_crew.mcp_shared as mod
-    from kiro_crew.mcp_shared import run_mcp_stdio_loop
+    import aj_crew.mcp_shared as mod
+    from aj_crew.mcp_shared import run_mcp_stdio_loop
 
     call_idx = [0]
 
@@ -443,8 +443,8 @@ def test_unknown_notification_silently_ignored() -> None:
 
 def test_unknown_request_uses_canonical_method_not_found_code() -> None:
     """An unknown MCP request receives the shared JSON-RPC reserved code."""
-    import kiro_crew.mcp_shared as mod
-    from kiro_crew.mcp_shared import run_mcp_stdio_loop
+    import aj_crew.mcp_shared as mod
+    from aj_crew.mcp_shared import run_mcp_stdio_loop
 
     messages = iter(
         [
@@ -502,8 +502,8 @@ def test_ping_answered_while_tool_in_flight() -> None:
     """When a tool is executing, an incoming 'ping' request must still be
     answered with an empty-object response so the gateway's wedge detector
     sees the backend as responsive."""
-    import kiro_crew.mcp_shared as mod
-    from kiro_crew.mcp_shared import run_mcp_stdio_loop
+    import aj_crew.mcp_shared as mod
+    from aj_crew.mcp_shared import run_mcp_stdio_loop
 
     tool_started = threading.Event()
     tool_release = threading.Event()

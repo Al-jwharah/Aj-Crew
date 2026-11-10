@@ -1,6 +1,6 @@
 """The crew_log package's lazy re-export seam -- one storage location per name.
 
-``kiro_crew.crew_log`` resolves its public names from the submodules that define
+``aj_crew.crew_log`` resolves its public names from the submodules that define
 them (:pep:`562`). The rule these tests pin is that the submodule is the ONLY
 place such a value lives: a read through the package reads the submodule, and a
 write through the package writes the submodule.
@@ -28,8 +28,8 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.crew_log as pkg
-from kiro_crew.crew_log import _EXPORTS
+import aj_crew.crew_log as pkg
+from aj_crew.crew_log import _EXPORTS
 
 #: A module-level integer, so a wrong restore is a wrong number rather than a
 #: type error, and the owner is the module the clamp arithmetic reads.
@@ -39,7 +39,7 @@ OWNER = "schema"
 
 def _owner_of(name: str):
     """Import and return the submodule that defines ``name``."""
-    return importlib.import_module(f"kiro_crew.crew_log.{_EXPORTS[name]}")
+    return importlib.import_module(f"aj_crew.crew_log.{_EXPORTS[name]}")
 
 
 @pytest.fixture(autouse=True)
@@ -149,7 +149,7 @@ def test_deleting_a_re_exported_name_through_the_package_reaches_the_owner():
 def test_no_submodule_name_is_also_a_re_exported_name():
     """A collision here would break importing that submodule at all.
 
-    Importing ``kiro_crew.crew_log.store`` makes the import machinery bind
+    Importing ``aj_crew.crew_log.store`` makes the import machinery bind
     ``store`` on the package with an ordinary ``setattr``. A name the seam
     forwards would send that binding into the submodule instead of the package,
     so the two namespaces must not overlap.
@@ -161,8 +161,8 @@ def test_no_submodule_name_is_also_a_re_exported_name():
 
 def test_importing_a_submodule_still_binds_it_on_the_package():
     """The import machinery's own write to the package is not forwarded."""
-    importlib.import_module("kiro_crew.crew_log.store")
-    assert pkg.__dict__["store"].__name__ == "kiro_crew.crew_log.store"
+    importlib.import_module("aj_crew.crew_log.store")
+    assert pkg.__dict__["store"].__name__ == "aj_crew.crew_log.store"
 
 
 def test_a_name_the_package_owns_itself_is_not_forwarded():
@@ -195,9 +195,9 @@ def test_importing_the_package_does_not_import_its_storage_submodules():
     """
     probe = (
         "import importlib, json, sys;"
-        "importlib.import_module('kiro_crew.crew_log');"
+        "importlib.import_module('aj_crew.crew_log');"
         "print(json.dumps(sorted(k for k in sys.modules "
-        "if k.startswith('kiro_crew.crew_log.'))))"
+        "if k.startswith('aj_crew.crew_log.'))))"
     )
     done = subprocess.run(  # noqa: S603 - fixed argv, no shell
         [os.path.abspath(sys.executable), "-B", "-c", probe],
@@ -207,7 +207,7 @@ def test_importing_the_package_does_not_import_its_storage_submodules():
         env={
             **os.environ,
             "PYTHONPATH": str(Path(__file__).resolve().parents[1] / "src"),
-            "KIROCREW_HOME": os.environ.get("KIROCREW_HOME", ""),
+            "AJCREW_HOME": os.environ.get("AJCREW_HOME", ""),
         },
         capture_output=True,
         text=True,

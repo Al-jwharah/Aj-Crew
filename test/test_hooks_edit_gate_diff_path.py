@@ -20,7 +20,7 @@ import os
 
 import pytest
 
-from kiro_crew.hooks import TOOL_DENY, HookManager, HooksConfig
+from aj_crew.hooks import TOOL_DENY, HookManager, HooksConfig
 
 #: An absolute delete target on this host. A delete's one params spelling is
 #: anchored only with a drive on Windows (``tool_paths._is_anchored``), so a
@@ -167,7 +167,7 @@ class TestADiffBlockRoutesOntoTheWritePlane:
         assert decision.action != TOOL_DENY
 
     def test_the_always_enforced_tier_routes_on_the_diff_block_too(self) -> None:
-        from kiro_crew.platform.tool_paths import is_edit_call
+        from aj_crew.platform.tool_paths import is_edit_call
 
         assert is_edit_call("", _WRITE_ONLY) is True
         assert is_edit_call("read", _WRITE_ONLY) is True
@@ -180,7 +180,7 @@ class TestADiffBlockRoutesOntoTheWritePlane:
         for a KAS ``delete``; ``is_workspace_edit_call`` is the ``tool.risk``
         caution-badge carve-out's edit-only reading and does not -- a deletion
         is not "easy to put back". Everywhere else the two agree."""
-        from kiro_crew.platform.tool_paths import (
+        from aj_crew.platform.tool_paths import (
             WRITE_PLANE_KINDS,
             is_edit_call,
             is_workspace_edit_call,
@@ -202,7 +202,7 @@ class TestADiffBlockRoutesOntoTheWritePlane:
         subprocess. An unhashable one in a set-membership test would raise and
         abort the turn; both readings answer it as "not on the plane by kind",
         so only a diff block can route it."""
-        from kiro_crew.platform.tool_paths import is_edit_call, is_workspace_edit_call
+        from aj_crew.platform.tool_paths import is_edit_call, is_workspace_edit_call
 
         assert is_edit_call(bad_kind, "") is False
         assert is_edit_call(bad_kind, _WRITE_ONLY) is True
@@ -210,7 +210,7 @@ class TestADiffBlockRoutesOntoTheWritePlane:
         assert is_workspace_edit_call(bad_kind, _WRITE_ONLY) is True
 
     def test_governance_classifies_a_kindless_diff_block_call_as_a_write(self) -> None:
-        from kiro_crew.platform.governance import classify_tool_args
+        from aj_crew.platform.governance import classify_tool_args
 
         pairs = classify_tool_args("", None, diff_path="/tmp/outside.md")
         assert ("filesystem.write", "/tmp/outside.md") in pairs
@@ -228,8 +228,8 @@ class TestTheClientEventDrivesTheHookGate:
     hand them — are denied by the hook gate."""
 
     def _event(self, diff_path: str):
-        from kiro_crew.acp import _dispatch
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp import _dispatch
+        from aj_crew.acp.types import JsonRpcMessage
 
         caches = dict(
             tool_input_cache={},
@@ -299,7 +299,7 @@ class TestTheTwoGatesJudgeTheSameSet:
     silently fork again."""
 
     def test_edit_target_candidates_union(self) -> None:
-        from kiro_crew.platform.tool_paths import edit_target_candidates
+        from aj_crew.platform.tool_paths import edit_target_candidates
 
         assert list(edit_target_candidates({"path": "/a"}, "/b")) == ["/a", "/b"]
         assert list(edit_target_candidates({"path": "/a"}, "/a")) == ["/a"], "deduped"
@@ -308,7 +308,7 @@ class TestTheTwoGatesJudgeTheSameSet:
         assert edit_target_candidates(None, "") == []
 
     def test_patch_text_targets_are_in_the_same_union(self) -> None:
-        from kiro_crew.platform.tool_paths import edit_target_candidates
+        from aj_crew.platform.tool_paths import edit_target_candidates
 
         patch = (
             "*** Begin Patch\n"
@@ -323,7 +323,7 @@ class TestTheTwoGatesJudgeTheSameSet:
         ]
 
     def test_patch_target_is_classified_for_governance(self) -> None:
-        from kiro_crew.platform.governance import classify_tool_args
+        from aj_crew.platform.governance import classify_tool_args
 
         patch = "*** Begin Patch\n*** Add File: /tmp/proj/notes.md\n+notes\n*** End Patch"
         assert ("filesystem.write", "/tmp/proj/notes.md") in classify_tool_args(
@@ -350,7 +350,7 @@ class TestTheTwoGatesJudgeTheSameSet:
         assert "config.json" in decision.reason
 
     def test_oversized_patch_is_unverifiable(self) -> None:
-        from kiro_crew.platform.tool_paths import _PATCH_TEXT_MAX_CHARS, edit_target_candidates
+        from aj_crew.platform.tool_paths import _PATCH_TEXT_MAX_CHARS, edit_target_candidates
 
         patch = (
             "*** Begin Patch\n*** Add File: /tmp/ok.md\n+"
@@ -360,13 +360,13 @@ class TestTheTwoGatesJudgeTheSameSet:
         assert edit_target_candidates({"patchText": patch}).truncated is True
 
     def test_update_end_of_file_marker_is_valid(self) -> None:
-        from kiro_crew.platform.tool_paths import edit_target_candidates
+        from aj_crew.platform.tool_paths import edit_target_candidates
 
         patch = "*** Begin Patch\n*** Update File: /tmp/ok.md\n@@\n-old\n+new\n*** End of File\n*** End Patch"
         assert list(edit_target_candidates({"patchText": patch})) == ["/tmp/ok.md"]
 
     def test_truncated_flag_survives_the_union(self) -> None:
-        from kiro_crew.platform.tool_paths import (
+        from aj_crew.platform.tool_paths import (
             _TARGET_PATH_MAX_PATHS,
             edit_target_candidates,
         )
@@ -381,8 +381,8 @@ class TestTheTwoGatesJudgeTheSameSet:
         assert len(candidates) <= _TARGET_PATH_MAX_PATHS
 
     def test_llm_helpers_denial_uses_the_shared_helper(self) -> None:
-        from kiro_crew import llm_helpers
-        from kiro_crew.platform import tool_paths
+        from aj_crew import llm_helpers
+        from aj_crew.platform import tool_paths
 
         assert (
             getattr(llm_helpers, "edit_target_candidates", None)
@@ -398,8 +398,8 @@ class TestTheReorderGuardStaysArmed:
     walk and assert the edit branch still fails closed on its own reading."""
 
     def test_edit_branch_denies_truncation_without_the_keystone(self, monkeypatch) -> None:
-        import kiro_crew.hooks as hooks_mod
-        from kiro_crew.platform.tool_paths import _TARGET_PATH_MAX_PATHS, TargetPaths
+        import aj_crew.hooks as hooks_mod
+        from aj_crew.platform.tool_paths import _TARGET_PATH_MAX_PATHS, TargetPaths
 
         # The keystone reads hooks.target_paths; the edit branch reads
         # hooks.edit_target_candidates (which calls platform.tool_paths' own
@@ -435,7 +435,7 @@ class TestAnUnanchoredDiffBlockPathIsDenied:
         assert "relative target path" in decision.reason
 
     def test_relative_diff_path_is_denied_by_the_always_enforced_tier(self) -> None:
-        from kiro_crew.llm_helpers import _edit_target_denial
+        from aj_crew.llm_helpers import _edit_target_denial
 
         hit = _edit_target_denial({"command": "create", "fileText": "x"}, "sub/x.md")
         assert hit is not None
@@ -449,7 +449,7 @@ class TestAnUnanchoredDiffBlockPathIsDenied:
         assert decision.action != TOOL_DENY
 
     def test_unanchored_flag_is_set_and_path_withheld(self) -> None:
-        from kiro_crew.platform.tool_paths import edit_target_candidates
+        from aj_crew.platform.tool_paths import edit_target_candidates
 
         candidates = edit_target_candidates({"path": "/tmp/ok.md"}, "sub/x.md")
         assert candidates.unanchored is True
@@ -483,7 +483,7 @@ class TestARelativeParamsPathIsUnverifiableOnlyWhereItIsTheWholeTarget:
         assert "relative target path" in decision.reason
 
     def test_relative_delete_target_is_denied_by_the_always_enforced_tier(self) -> None:
-        from kiro_crew.llm_helpers import _edit_target_denial
+        from aj_crew.llm_helpers import _edit_target_denial
 
         hit = _edit_target_denial({"targetFile": "../.kiro/crew/config.json"}, "", "delete")
         assert hit is not None
@@ -506,7 +506,7 @@ class TestARelativeParamsPathIsUnverifiableOnlyWhereItIsTheWholeTarget:
         assert decision.action != TOOL_DENY
 
     def test_relative_edit_params_path_is_not_refused_by_the_always_enforced_tier(self) -> None:
-        from kiro_crew.llm_helpers import _edit_target_denial
+        from aj_crew.llm_helpers import _edit_target_denial
 
         assert _edit_target_denial({"path": "notes/plan.md"}, "", "edit") is None
         assert _edit_target_denial({"path": "notes/plan.md"}, "") is None
@@ -522,7 +522,7 @@ class TestARelativeParamsPathIsUnverifiableOnlyWhereItIsTheWholeTarget:
         assert decision.action != TOOL_DENY
 
     def test_the_flag_is_set_and_the_path_withheld_only_for_the_delete_kind(self) -> None:
-        from kiro_crew.platform.tool_paths import PARAMS_ONLY_TARGET_KINDS, edit_target_candidates
+        from aj_crew.platform.tool_paths import PARAMS_ONLY_TARGET_KINDS, edit_target_candidates
 
         assert PARAMS_ONLY_TARGET_KINDS == frozenset({"delete"})
         ok = os.path.join(_DELETE_ROOT, "ok.md")
@@ -538,7 +538,7 @@ class TestARelativeParamsPathIsUnverifiableOnlyWhereItIsTheWholeTarget:
         assert list(unknown) == [ok, "../x"]
 
     def test_governance_emits_the_never_permittable_marker_for_a_delete(self) -> None:
-        from kiro_crew.platform.governance import (
+        from aj_crew.platform.governance import (
             _UNANCHORED_TARGET_ITEM,
             classify_tool_args,
         )
@@ -568,14 +568,14 @@ class TestARelativeParamsPathIsUnverifiableOnlyWhereItIsTheWholeTarget:
         different files; it is unanchored like a relative path."""
         import ntpath
 
-        from kiro_crew.platform.tool_paths import _is_anchored
+        from aj_crew.platform.tool_paths import _is_anchored
 
         assert _is_anchored(path, require_drive=True, pathmod=ntpath) is anchored, path
 
     def test_the_posix_reading_is_unchanged(self) -> None:
         import posixpath
 
-        from kiro_crew.platform.tool_paths import _is_anchored
+        from aj_crew.platform.tool_paths import _is_anchored
 
         assert _is_anchored("/tmp/x", pathmod=posixpath) is True
         assert _is_anchored("../x", pathmod=posixpath) is False
@@ -586,7 +586,7 @@ class TestARelativeParamsPathIsUnverifiableOnlyWhereItIsTheWholeTarget:
         diff-block path is read as before on Windows."""
         import ntpath
 
-        from kiro_crew.platform.tool_paths import _is_anchored
+        from aj_crew.platform.tool_paths import _is_anchored
 
         assert _is_anchored("/Users/me/notes.md", pathmod=ntpath) is True
 
@@ -598,7 +598,7 @@ class TestGovernanceClassifiesTheDiffBlockPath:
     and the confinement never binds."""
 
     def test_diff_only_edit_is_classified_for_filesystem_write(self) -> None:
-        from kiro_crew.platform.governance import classify_tool_args
+        from aj_crew.platform.governance import classify_tool_args
 
         pairs = classify_tool_args(
             "edit", {"command": "create", "fileText": "x"}, diff_path="/tmp/outside.md"
@@ -606,20 +606,20 @@ class TestGovernanceClassifiesTheDiffBlockPath:
         assert ("filesystem.write", "/tmp/outside.md") in pairs
 
     def test_diff_only_edit_with_no_params_is_classified(self) -> None:
-        from kiro_crew.platform.governance import classify_tool_args
+        from aj_crew.platform.governance import classify_tool_args
 
         pairs = classify_tool_args("edit", None, diff_path="/tmp/outside.md")
         assert ("filesystem.write", "/tmp/outside.md") in pairs
 
     def test_params_and_diff_paths_are_both_classified(self) -> None:
-        from kiro_crew.platform.governance import classify_tool_args
+        from aj_crew.platform.governance import classify_tool_args
 
         pairs = classify_tool_args("edit", {"path": "/a"}, diff_path="/b")
         assert ("filesystem.write", "/a") in pairs
         assert ("filesystem.write", "/b") in pairs
 
     def test_unanchored_diff_path_emits_the_never_permittable_marker(self) -> None:
-        from kiro_crew.platform.governance import (
+        from aj_crew.platform.governance import (
             _UNANCHORED_TARGET_ITEM,
             classify_tool_args,
         )
@@ -629,15 +629,15 @@ class TestGovernanceClassifiesTheDiffBlockPath:
         assert ("filesystem.write", "sub/x.md") not in pairs
 
     def test_truncated_walk_still_emits_the_truncation_marker(self) -> None:
-        from kiro_crew.platform.governance import _TRUNCATED_SCAN_ITEM, classify_tool_args
-        from kiro_crew.platform.tool_paths import _TARGET_PATH_MAX_PATHS
+        from aj_crew.platform.governance import _TRUNCATED_SCAN_ITEM, classify_tool_args
+        from aj_crew.platform.tool_paths import _TARGET_PATH_MAX_PATHS
 
         flood = {"operations": [{"path": f"/tmp/f{i}"} for i in range(_TARGET_PATH_MAX_PATHS + 5)]}
         pairs = classify_tool_args("edit", flood, diff_path="/tmp/extra")
         assert ("filesystem.write", _TRUNCATED_SCAN_ITEM) in pairs
 
     def test_non_edit_kinds_are_unchanged(self) -> None:
-        from kiro_crew.platform.governance import classify_tool_args
+        from aj_crew.platform.governance import classify_tool_args
 
         assert classify_tool_args("read", {"path": "/a"}) == (("filesystem.read", "/a"),)
         assert classify_tool_args("read", None) == ()

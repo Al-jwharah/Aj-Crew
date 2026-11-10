@@ -19,10 +19,10 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.skills as skills_mod
-import kiro_crew.skills_discovery as skills_disc
-from kiro_crew.skills import _iter_skill_files, _within_any
-from kiro_crew.skills_builtin_provenance import _skill_script_index
+import aj_crew.skills as skills_mod
+import aj_crew.skills_discovery as skills_disc
+from aj_crew.skills import _iter_skill_files, _within_any
+from aj_crew.skills_builtin_provenance import _skill_script_index
 
 # Creating a symlink on Windows needs elevation or Developer Mode, which CI
 # runners do not have. The repo's established idiom is to skip such a test there
@@ -192,7 +192,7 @@ class TestOutsideRootLinkIsReported:
         base.mkdir()
         os.symlink(str(outsider), str(base / "my-skill"))
 
-        with caplog.at_level("WARNING", logger="kiro_crew.skills"):
+        with caplog.at_level("WARNING", logger="aj_crew.skills"):
             names = {name for name, _ in _iter_skill_files(base, warn_outside_links=True)}
 
         assert "my-skill" not in names, "the containment boundary must still refuse it"
@@ -213,7 +213,7 @@ class TestOutsideRootLinkIsReported:
         base.mkdir()
         os.symlink(str(outsider), str(base / "my-skill"))
 
-        with caplog.at_level("WARNING", logger="kiro_crew.skills"):
+        with caplog.at_level("WARNING", logger="aj_crew.skills"):
             _iter_skill_files(base, warn_outside_links=True)
             _iter_skill_files(base, warn_outside_links=True)
             _iter_skill_files(base, warn_outside_links=True)
@@ -228,7 +228,7 @@ class TestOutsideRootLinkIsReported:
     def test_a_non_catalog_walk_never_warns(self, tmp_path: Path, caplog) -> None:
         """The warning is opt-in: a walk that does not request it stays silent.
 
-        Every caller but the catalog base walk (``kirocrew doctor``'s script
+        Every caller but the catalog base walk (``ajcrew doctor``'s script
         index, provenance, selection, sync) walks with ``warn_outside_links``
         off, so a refused direct-child link is dropped silently there, matching
         the behaviour before this warning existed. Only the catalog can say a
@@ -240,7 +240,7 @@ class TestOutsideRootLinkIsReported:
         base.mkdir()
         os.symlink(str(outsider), str(base / "my-skill"))
 
-        with caplog.at_level("WARNING", logger="kiro_crew.skills"):
+        with caplog.at_level("WARNING", logger="aj_crew.skills"):
             names = {name for name, _ in _iter_skill_files(base)}
 
         assert "my-skill" not in names, "the containment boundary must still refuse it"
@@ -249,7 +249,7 @@ class TestOutsideRootLinkIsReported:
         ], "a walk that did not opt in must not emit the outside-root warning"
 
     def test_skill_script_index_walk_never_warns(self, tmp_path: Path, caplog) -> None:
-        """The ``kirocrew doctor`` script-index walk is a non-catalog walk: silent.
+        """The ``ajcrew doctor`` script-index walk is a non-catalog walk: silent.
 
         ``_skill_script_index`` walks the skills dir to map script assets and
         does not opt into the warning, so an out-of-root link in that dir is
@@ -262,7 +262,7 @@ class TestOutsideRootLinkIsReported:
         base.mkdir()
         os.symlink(str(outsider), str(base / "my-skill"))
 
-        with caplog.at_level("WARNING", logger="kiro_crew.skills"):
+        with caplog.at_level("WARNING", logger="aj_crew.skills"):
             _skill_script_index(base)
 
         assert not [
@@ -281,7 +281,7 @@ class TestOutsideRootLinkIsReported:
         base.mkdir()
         os.symlink(str(data_home / "apps" / "my-app" / "skills" / "thing"), str(base / "thing"))
 
-        with caplog.at_level("WARNING", logger="kiro_crew.skills"):
+        with caplog.at_level("WARNING", logger="aj_crew.skills"):
             names = {name for name, _ in _iter_skill_files(base, warn_outside_links=True)}
 
         assert "thing" in names
@@ -305,7 +305,7 @@ class TestOutsideRootLinkIsReported:
         os.symlink(str(outsider), str(base / "my-skill"))
         extra_root = os.path.realpath(str(tmp_path / "repo"))
 
-        with caplog.at_level("WARNING", logger="kiro_crew.skills"):
+        with caplog.at_level("WARNING", logger="aj_crew.skills"):
             names = {
                 name
                 for name, _ in _iter_skill_files(

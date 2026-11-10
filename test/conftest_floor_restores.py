@@ -31,9 +31,9 @@ def _join_install_receipt_workers() -> None:
     ``dispatch()`` hands the receipt write to a daemon thread. The worker receives
     every environment-derived input (the data home, the config fields) from the
     dispatching thread and reads nothing itself -- but a thread still alive when
-    ``monkeypatch`` undoes ``KIROCREW_HOME`` is a thread whose WRITE lands after the
+    ``monkeypatch`` undoes ``AJCREW_HOME`` is a thread whose WRITE lands after the
     test that owned it is gone. The per-test probe in the 5x hygiene run saw exactly
-    that: the ``kirocrew-install-receipt`` thread alive after teardown in 3 of 5
+    that: the ``ajcrew-install-receipt`` thread alive after teardown in 3 of 5
     runs, and once a receipt secret written into the operator's real ``~/.kiro/crew``.
 
     Structural rather than opt-in, for the same reason as the CWD restore: the
@@ -46,7 +46,7 @@ def _join_install_receipt_workers() -> None:
     lock acquire; the module is looked up rather than imported so a test run that
     never touches the receipt path pays nothing.
     """
-    mod = sys.modules.get("kiro_crew.apps.install_receipt")
+    mod = sys.modules.get("aj_crew.apps.install_receipt")
     waiter = getattr(mod, "wait_for_pending_receipt_writes", None)
     if waiter is not None:
         waiter()
@@ -55,7 +55,7 @@ def _join_install_receipt_workers() -> None:
 #: Thread name ``metrics.provider._schedule_consent_check_locked`` gives its worker.
 #: Matched by name, like the exporter guard below: the module keeps no handle to the
 #: thread (only an in-flight flag), so the name is the one thing a test can find it by.
-_TELEMETRY_CONSENT_THREAD = "kirocrew-telemetry-consent"
+_TELEMETRY_CONSENT_THREAD = "ajcrew-telemetry-consent"
 
 
 def _live_telemetry_consent_workers() -> list:
@@ -71,7 +71,7 @@ def _resume_crew_log_eager_fold() -> None:
     tests, this one hands the worker back to the test itself. Looked up rather than
     imported, so a run that never touches the crew log pays nothing.
     """
-    mod = sys.modules.get("kiro_crew.crew_log.eager")
+    mod = sys.modules.get("aj_crew.crew_log.eager")
     resume = getattr(mod, "resume_for_tests", None)
     if resume is not None:
         resume()
@@ -83,7 +83,7 @@ def _retire_crew_log_eager_fold() -> "BaseException | None":
     The worker is a process-wide daemon that the PRODUCTION append path starts: an
     ``emit`` call with the crew log on reaches ``note_commit``, which starts the thread.
     So any test that appends a work or panel entry has one running, whether or not it
-    knows the module exists -- and the worker resolves ``KIROCREW_HOME`` when it folds,
+    knows the module exists -- and the worker resolves ``AJCREW_HOME`` when it folds,
     which is the pin that lifts a moment later. Stopping it here rather than in each
     file's own fixture is the point: the next test file to call ``on_work_recorded``
     should be safe by default, not by remembering.
@@ -101,7 +101,7 @@ def _retire_crew_log_eager_fold() -> "BaseException | None":
     instead, beside :func:`_refuse_a_resolved_real_default_home`, which is the established
     place for "this test left damage".
     """
-    mod = sys.modules.get("kiro_crew.crew_log.eager")
+    mod = sys.modules.get("aj_crew.crew_log.eager")
     retire = getattr(mod, "retire_for_tests", None)
     if retire is None:
         return None
@@ -122,7 +122,7 @@ def _cancel_session_tree_checkpoints() -> None:
     process-wide projection, which is bound to a store this test's home is about to take
     with it. Looked up, never imported: a run that never reaches the crew log pays nothing.
     """
-    mod = sys.modules.get("kiro_crew.crew_log.session_tree_projection")
+    mod = sys.modules.get("aj_crew.crew_log.session_tree_projection")
     reset = getattr(mod, "reset_for_tests", None)
     if reset is not None:
         with contextlib.suppress(Exception):
@@ -145,13 +145,13 @@ def _join_test_loop_executor(item) -> None:
       is destroyed with the loop, and a coroutine destroyed mid-await gets
       ``GeneratorExit`` thrown into it -- so its ``finally`` blocks run at garbage
       collection, whenever that is. ``_run_chat``'s queue-cycle ``finally`` reaches a
-      synchronous ``KiroCrewConfig.load()``; run after the ``KIROCREW_HOME`` pin is gone,
+      synchronous ``AjCrewConfig.load()``; run after the ``AJCREW_HOME`` pin is gone,
       that resolves the OPERATOR's data home. A fresh fake ``HOME`` grew ``~/.kiro/crew``
       and the breadcrumb after four subagent ``on_done`` tests exactly this way, and not
       one of them failed.
     * **Default-executor jobs.** ``asyncio.to_thread`` and ``run_in_executor(None, ...)``
       hand work to the loop's default ``ThreadPoolExecutor``; ``close()`` shuts it down
-      without waiting, so a running or queued ``KiroCrewConfig.load()`` finishes after
+      without waiting, so a running or queued ``AjCrewConfig.load()`` finishes after
       the pins are gone. A started thread cannot be cancelled by anything the loop does.
 
     This does what :func:`asyncio.run` does at shutdown -- cancel every pending task,
@@ -283,7 +283,7 @@ def _no_leaked_telemetry_exporter():
     leaked = _live_exporter_threads() - before
     if not leaked:
         return
-    provider = sys.modules.get("kiro_crew.metrics.provider")
+    provider = sys.modules.get("aj_crew.metrics.provider")
     if provider is not None:
         with contextlib.suppress(Exception):
             provider.reset_for_testing()
@@ -316,7 +316,7 @@ def _no_leaked_embed_evictor():
     ``embedding_idle_evict_secs`` -> ``config_path`` -> ``config_dir()`` -- for as long
     as the model stays loaded. A test that loads a (fake) model and never closes the
     backend therefore leaves a resolver polling the data home from under every later
-    test on the worker. When a tick lands inside a test that has no ``KIROCREW_HOME``
+    test on the worker. When a tick lands inside a test that has no ``AJCREW_HOME``
     (one that cleared ``os.environ``), the resolution falls through to the operator's
     real ``~/.kiro/crew`` and the home guard blames THAT test, not the one that loaded
     the model. The class-4 entry in ``testing-conventions.md`` carries the measurement.
@@ -451,7 +451,7 @@ def _restore_log_queue_listener():
     stopping it propagating is the whole job.
 
     HANDLERS stay untouched, the boundary ``_restore_logger_levels`` below draws and for
-    its reasons. The ``_CliLogQueueHandler`` left on the ``kiro_crew`` logger therefore
+    its reasons. The ``_CliLogQueueHandler`` left on the ``aj_crew`` logger therefore
     outlives the listener it fed, holding an unattended queue; it is the same handler
     accumulation that fixture already records as a separate defect, and
     ``test_cli_logging.py``'s ``_pristine_logging`` is what absorbs it today by clearing
@@ -462,10 +462,10 @@ def _restore_log_queue_listener():
     and, as there, such a fixture has to stop its own listener, because every later test
     then inherits it and so restores to it.
     """
-    cli = sys.modules.get("kiro_crew.cli")
+    cli = sys.modules.get("aj_crew.cli")
     before = getattr(cli, "_LOG_QUEUE_LISTENER", None)
     yield
-    cli = sys.modules.get("kiro_crew.cli")
+    cli = sys.modules.get("aj_crew.cli")
     if cli is None:
         return
     after = getattr(cli, "_LOG_QUEUE_LISTENER", None)
@@ -510,7 +510,7 @@ def _restore_hooks_integration_globals():
     through ``sys.modules`` so a worker that never imported the module pays
     nothing and no import is charged to the lazy-import ratchets.
     """
-    hi = sys.modules.get("kiro_crew.apps.hooks_integration")
+    hi = sys.modules.get("aj_crew.apps.hooks_integration")
     before = None
     if hi is not None:
         before = (
@@ -518,7 +518,7 @@ def _restore_hooks_integration_globals():
             getattr(hi, "_route_registry", None),
         )
     yield
-    hi = sys.modules.get("kiro_crew.apps.hooks_integration")
+    hi = sys.modules.get("aj_crew.apps.hooks_integration")
     if hi is None:
         return
     if before is None:
@@ -540,10 +540,10 @@ def _restore_relay_gateway_ingress():
     would otherwise hand the next test its app's ingress. Reached through
     ``sys.modules`` for the same reason as the hooks floor above.
     """
-    provider = sys.modules.get("kiro_crew.relay_client.provider")
+    provider = sys.modules.get("aj_crew.relay_client.provider")
     before = getattr(provider, "_gateway_ingress", None) if provider is not None else None
     yield
-    provider = sys.modules.get("kiro_crew.relay_client.provider")
+    provider = sys.modules.get("aj_crew.relay_client.provider")
     if provider is not None:
         provider._gateway_ingress = before
 
@@ -581,7 +581,7 @@ def _restore_logger_levels():
 
     A level is PROCESS-GLOBAL and HIERARCHICAL, which together are what make a leak here
     so hard to attribute: ``Logger.debug`` checks the EFFECTIVE level, so an explicit
-    level left on ``kiro_crew`` decides what every ``kiro_crew.*`` logger in the worker
+    level left on ``aj_crew`` decides what every ``aj_crew.*`` logger in the worker
     may emit, and it outranks the root level ``caplog.at_level()`` sets. The victim then
     sees ``caplog.text == ""`` -- not the wrong text, NOTHING -- from a test that passes
     alone, in a file that has nothing to do with the cause.
@@ -590,7 +590,7 @@ def _restore_logger_levels():
     test_options_post_failure_still_delivers_text`` asserts on a ``logger.debug`` line and
     reds whenever ``test_cli_cron.py::TestCronCli::test_cli_argparse_cron_add_agent_flag``
     shares its worker -- an ARGPARSE test, in a file with no connection to Slack. It
-    drives the real ``cli.main()``, whose ``_setup_cli_logging`` pins ``kiro_crew`` at
+    drives the real ``cli.main()``, whose ``_setup_cli_logging`` pins ``aj_crew`` at
     WARNING, exactly as production does once per process and never undoes. Test modules
     across the suite drive ``main()`` that way.
 
@@ -612,7 +612,7 @@ def _restore_logger_levels():
     back during teardown, re-attaching the setup phase's handler and dropping the one the
     teardown phase is capturing through.
 
-    The handlers ``_setup_cli_logging`` leaves on ``kiro_crew`` do accumulate -- each open
+    The handlers ``_setup_cli_logging`` leaves on ``aj_crew`` do accumulate -- each open
     on a ``gateway.log`` under a ``tmp_path`` the next test deletes -- but that is a
     separate defect from this one, and it is not what empties ``caplog``.
     ``test_cli_logging.py``'s own ``_pristine_logging`` fixture is what absorbs it today,

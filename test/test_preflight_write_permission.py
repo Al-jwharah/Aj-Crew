@@ -1,4 +1,4 @@
-"""Tests for the kirocrew-prepare-pr preflight.py write-permission gate.
+"""Tests for the ajcrew-prepare-pr preflight.py write-permission gate.
 
 The gate closes a stranding failure mode: a comment/issue-triggered agent run
 does all its work (clone, plan, implement, test, review, commit) and only
@@ -47,16 +47,16 @@ from pathlib import Path
 import pytest
 from git_maintenance_helpers import GIT_MAINTENANCE_OFF_CONFIG, git_maintenance_off_entries
 
-from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS
+from aj_crew.platform.update_governance import _GIT_LOCATION_VARS
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PREFLIGHT = str(
     REPO_ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
+    / "ajcrew-dev"
+    / "ajcrew-prepare-pr"
     / "scripts"
     / "preflight.py"
 )

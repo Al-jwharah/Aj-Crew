@@ -77,7 +77,7 @@ function SeedMemory({ store, member, onClose, onCopied }: { store: string; membe
   </div>}>
     <div className="flex min-w-0 flex-col gap-3">
       <p className="text-[13px] text-muted">{t('memoryV2.copy_explanation')}</p>
-      <SimpleSelect aria-label={t('memoryV2.source')} options={choices.map(s => s.name)} optionLabels={choices.map(s => s.is_default ? t('pages.kiroCrewAgentsPage.global_memory_v1') : s.owner_member || s.name)} optionIcons={choices.map(s => <MemoryStoreAvatar key={s.name} summary={s} />)} value={source} onChange={value => { setSource(value); setSelection([]); copy.reset() }} disabled={copy.isPending} />
+      <SimpleSelect aria-label={t('memoryV2.source')} options={choices.map(s => s.name)} optionLabels={choices.map(s => s.is_default ? t('pages.ajCrewAgentsPage.global_memory_v1') : s.owner_member || s.name)} optionIcons={choices.map(s => <MemoryStoreAvatar key={s.name} summary={s} />)} value={source} onChange={value => { setSource(value); setSelection([]); copy.reset() }} disabled={copy.isPending} />
       <label className="space-y-1 text-[13px]"><span className="block">{t('memoryV2.search')}</span><Input className="w-full" placeholder={t('memoryV2.search')} value={filter} onChange={e => setFilter(e.target.value)} /></label>
       {/* No hand-off: the selection is an unsaved copy request. */}
       <ErrorNotice message={errorText(data.error || copy.error) || copyFailure} />
@@ -134,13 +134,13 @@ export default function MemberMemoryPanel({ store, summary, onDirtyChange }: { s
   if (!privateMemory && !legacyMemory) {
     return <Card className="mb-0 min-w-0 py-4">
       <CardTitle>{t('memoryV2.identity_unavailable')}</CardTitle>
-      <p className="mt-2 text-[13px] text-muted">{t('pages.kiroCrewAgentsPage.memory_binding_unavailable')}</p>
+      <p className="mt-2 text-[13px] text-muted">{t('pages.ajCrewAgentsPage.memory_binding_unavailable')}</p>
       <Btn className="mt-3 min-h-11" onClick={() => {
         const destination = summary.owner_member
           ? `/capabilities?tab=crews&crew=${encodeURIComponent(summary.owner_member)}`
           : '/capabilities?tab=crews'
         leave(() => navigate(destination), destination)
-      }}>{t('pages.kiroCrewAgentsPage.open_crew_manager')}</Btn>
+      }}>{t('pages.ajCrewAgentsPage.open_crew_manager')}</Btn>
     </Card>
   }
   return <div className="min-w-0 space-y-4">
@@ -148,12 +148,12 @@ export default function MemberMemoryPanel({ store, summary, onDirtyChange }: { s
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <div className="relative shrink-0 rounded-md shadow-[0_0_24px_var(--accent-glow)]"><MemoryStoreAvatar summary={summary} size={48} /></div>
-          <div className="min-w-0 space-y-2"><CardTitle className="mb-0 min-w-0 text-lg leading-snug"><span className="min-w-0 break-words">{t('memoryV2.title', { member: summary.owner_member || summary.name })}</span></CardTitle><ul className="m-0 flex list-none flex-wrap items-center gap-x-3 gap-y-1 p-0 text-[12px] text-muted"><li>{privateMemory ? t('memoryV2.private_status') : summary.is_default ? t('pages.kiroCrewAgentsPage.global_memory_v1') : t('pages.kiroCrewAgentsPage.legacy_memory_v1')}</li>{total !== undefined && <li>{t('memoryV2.remembered_count', { count: fmtNumber(total) })}</li>}</ul></div>
+          <div className="min-w-0 space-y-2"><CardTitle className="mb-0 min-w-0 text-lg leading-snug"><span className="min-w-0 break-words">{t('memoryV2.title', { member: summary.owner_member || summary.name })}</span></CardTitle><ul className="m-0 flex list-none flex-wrap items-center gap-x-3 gap-y-1 p-0 text-[12px] text-muted"><li>{privateMemory ? t('memoryV2.private_status') : summary.is_default ? t('pages.ajCrewAgentsPage.global_memory_v1') : t('pages.ajCrewAgentsPage.legacy_memory_v1')}</li>{total !== undefined && <li>{t('memoryV2.remembered_count', { count: fmtNumber(total) })}</li>}</ul></div>
         </div>
         {copyAction && <div className="shrink-0">{copyAction}</div>}
       </div>
     </Card>
-    {!privateMemory && !summary.is_default && <p className="text-[13px] text-muted">{t('pages.kiroCrewAgentsPage.private_memory_legacy')}</p>}
+    {!privateMemory && !summary.is_default && <p className="text-[13px] text-muted">{t('pages.ajCrewAgentsPage.private_memory_legacy')}</p>}
     <Tabs value={section} layoutId={`member-memory-sections-${store}`} onValueChange={selectSection}>
       <div className="mb-4 border-b border-border pb-3"><TabsList aria-label={t('memoryV2.title', { member: summary.owner_member || summary.name })} className="w-full sm:w-fit"><TabsTrigger value="memories" className="min-h-11 flex-1 justify-center sm:flex-none"><Brain className="lucide-inline" />{t('memoryV2.tab_memories')}</TabsTrigger><TabsTrigger value="profile" className="min-h-11 flex-1 justify-center sm:flex-none"><BookOpen className="lucide-inline" />{t('memoryV2.tab_profile')}</TabsTrigger><TabsTrigger value="recovery" className="min-h-11 flex-1 justify-center sm:flex-none"><History className="lucide-inline" />{t('memoryV2.tab_recovery')}</TabsTrigger></TabsList></div>
       <TabsContent value="memories" forceMount hidden={section !== 'memories'}><MemoryRecordsEditor store={store} privateMemory={privateMemory} onDirtyChange={setRecordsDirty} onRecovery={() => selectSection('recovery')} emptyActions={<>{privateMemory && <Btn className="min-h-11" onClick={openMember}><ArrowUpRight className="lucide-inline" />{t('memoryV2.open_member')}</Btn>}</>} /></TabsContent>

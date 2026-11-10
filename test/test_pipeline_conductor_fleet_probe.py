@@ -132,7 +132,7 @@ def test_own_rows_needle_matches_the_real_writer_spelling(mod):
         (["pytest", "-n", "0"], "suite"),
         (["pytest", "--ignore", "src/x", "-q"], "suite"),
         (["pytest", "test"], "suite"),
-        (["python", "-m", "pytest", "--pyargs", "kiro_crew.mod"], "suite"),
+        (["python", "-m", "pytest", "--pyargs", "aj_crew.mod"], "suite"),
         (["vitest", "run"], "suite"),
         (["vitest", "run", "src/a.test.ts"], "paths"),
         (["pytest.exe", "C:\\repo\\test_a.py"], "paths"),
@@ -457,7 +457,7 @@ def test_atomic_write_cleans_up_when_the_write_fails(mod, tmp_path, monkeypatch)
 
 
 def test_data_home_follows_the_environment(mod, monkeypatch, tmp_path):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "elsewhere"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "elsewhere"))
     assert mod.data_home() == tmp_path / "elsewhere"
-    monkeypatch.delenv("KIROCREW_HOME")
+    monkeypatch.delenv("AJCREW_HOME")
     assert mod.data_home() == Path.home() / ".kiro" / "crew"

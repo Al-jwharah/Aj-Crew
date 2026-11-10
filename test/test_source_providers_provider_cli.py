@@ -16,9 +16,9 @@ from source_providers_helpers import _clear_shared_fetch_state  # noqa: F401
 from source_providers_helpers import _mock_source_sel_fixture  # noqa: F401
 from source_providers_helpers import _no_visibility_refresh_side_task  # noqa: F401
 
-from kiro_crew import github_runner
-from kiro_crew.dashboard.handlers import source_providers as source
-from kiro_crew.sandbox import spawn_shim_argv
+from aj_crew import github_runner
+from aj_crew.dashboard.handlers import source_providers as source
+from aj_crew.sandbox import spawn_shim_argv
 
 
 def _trust_ancestors_above(monkeypatch, base):
@@ -61,9 +61,9 @@ def test_provider_executable_rejects_agent_writable_tree(monkeypatch, tmp_path) 
     shim = project / "bin" / "gh"
     shim.write_text("#!/bin/sh\nexit 99\n")
     shim.chmod(0o755)
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(project))
-    monkeypatch.setenv("KIROCREW_GH_BIN", str(shim))
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(project))
+    monkeypatch.setenv("AJCREW_GH_BIN", str(shim))
 
     with pytest.raises(source.SourceProviderError, match="inside the agent-writable tree"):
         source._resolve_provider_executable("gh")
@@ -77,17 +77,17 @@ def test_provider_executable_candidates_append_path_hits(monkeypatch, tmp_path) 
     found = user_bin / "gh"
     found.write_text("#!/bin/sh\nexit 0\n")
     found.chmod(0o755)
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
     monkeypatch.setenv("PATH", f"{user_bin}:/usr/bin")
     monkeypatch.setattr(
         github_runner,
         "PROVIDER_EXECUTABLE_CANDIDATES",
-        {"gh": ("/usr/local/libexec/kirocrew/gh",), "glab": ("/usr/bin/glab",)},
+        {"gh": ("/usr/local/libexec/ajcrew/gh",), "glab": ("/usr/bin/glab",)},
     )
 
     candidates = source.provider_executable_candidates("gh")
 
-    assert candidates[0] == "/usr/local/libexec/kirocrew/gh"
+    assert candidates[0] == "/usr/local/libexec/ajcrew/gh"
     assert str(found) in candidates
 
 
@@ -97,7 +97,7 @@ def test_provider_executable_candidates_ignore_path_in_strict_mode(monkeypatch, 
     planted = user_bin / "gh"
     planted.write_text("#!/bin/sh\nexit 0\n")
     planted.chmod(0o755)
-    monkeypatch.setenv("KIROCREW_PROVIDER_BIN_STRICT", "1")
+    monkeypatch.setenv("AJCREW_PROVIDER_BIN_STRICT", "1")
     monkeypatch.setenv("PATH", str(user_bin))
 
     assert (
@@ -106,8 +106,8 @@ def test_provider_executable_candidates_ignore_path_in_strict_mode(monkeypatch, 
 
 
 def test_provider_executable_not_found_gives_install_guidance(monkeypatch) -> None:
-    monkeypatch.delenv("KIROCREW_GH_BIN", raising=False)
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.delenv("AJCREW_GH_BIN", raising=False)
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
     monkeypatch.setenv("PATH", "")
     # The brew line is the POSIX arm; pin the platform so the Windows CI job
     # (which now gets the winget arm) still exercises this assertion.
@@ -115,7 +115,7 @@ def test_provider_executable_not_found_gives_install_guidance(monkeypatch) -> No
     monkeypatch.setattr(
         github_runner,
         "PROVIDER_EXECUTABLE_CANDIDATES",
-        {"gh": ("/nonexistent-kirocrew/gh",), "glab": ("/nonexistent-kirocrew/glab",)},
+        {"gh": ("/nonexistent-ajcrew/gh",), "glab": ("/nonexistent-ajcrew/glab",)},
     )
     # Windows also scans the Program Files install dirs; a host with a real gh
     # there (GitHub's own runners ship one) must still read as "not found".
@@ -129,20 +129,20 @@ def test_provider_executable_not_found_gives_install_guidance(monkeypatch) -> No
     assert "brew install gh" in message
     assert "gh auth login" in message
     assert "sudo cp" not in message
-    assert "KIROCREW_GH_BIN" in message
+    assert "AJCREW_GH_BIN" in message
     assert "{executable}" not in message
 
 
 def test_provider_executable_not_found_gives_winget_guidance_on_windows(monkeypatch) -> None:
-    monkeypatch.delenv("KIROCREW_GH_BIN", raising=False)
-    monkeypatch.delenv("KIROCREW_GLAB_BIN", raising=False)
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.delenv("AJCREW_GH_BIN", raising=False)
+    monkeypatch.delenv("AJCREW_GLAB_BIN", raising=False)
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
     monkeypatch.setenv("PATH", "")
     monkeypatch.setattr(source.sys, "platform", "win32")
     monkeypatch.setattr(
         github_runner,
         "PROVIDER_EXECUTABLE_CANDIDATES",
-        {"gh": ("/nonexistent-kirocrew/gh",), "glab": ("/nonexistent-kirocrew/glab",)},
+        {"gh": ("/nonexistent-ajcrew/gh",), "glab": ("/nonexistent-ajcrew/glab",)},
     )
     monkeypatch.setattr(github_runner, "_wellknown_windows_dirs", lambda _executable: ())
 
@@ -158,11 +158,11 @@ def test_provider_executable_not_found_gives_winget_guidance_on_windows(monkeypa
 
 
 def test_provider_executable_strict_winget_guidance_on_windows(monkeypatch) -> None:
-    monkeypatch.delenv("KIROCREW_GH_BIN", raising=False)
-    monkeypatch.setenv("KIROCREW_PROVIDER_BIN_STRICT", "1")
+    monkeypatch.delenv("AJCREW_GH_BIN", raising=False)
+    monkeypatch.setenv("AJCREW_PROVIDER_BIN_STRICT", "1")
     monkeypatch.setattr(source.sys, "platform", "win32")
 
-    message = source._provider_setup_message("gh", "KIROCREW_GH_BIN", "")
+    message = source._provider_setup_message("gh", "AJCREW_GH_BIN", "")
     assert "winget install --id GitHub.cli --scope machine" in message
     assert "Program Files" in message
     assert "sudo" not in message
@@ -185,8 +185,8 @@ async def test_run_json_audits_provider_resolution_failure_reason(
     candidate_dir = tmp_path / "provider-bin"
     candidate_dir.mkdir()
     candidate = candidate_dir / "gh"
-    monkeypatch.delenv("KIROCREW_GH_BIN", raising=False)
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.delenv("AJCREW_GH_BIN", raising=False)
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
     monkeypatch.setenv("PATH", str(empty_path))
     monkeypatch.setattr(
         github_runner,
@@ -205,7 +205,7 @@ async def test_run_json_audits_provider_resolution_failure_reason(
 
         monkeypatch.setattr(source, "_validate_provider_executable", reject_found)
     if case == "override_untrusted":
-        monkeypatch.setenv("KIROCREW_GH_BIN", str(candidate))
+        monkeypatch.setenv("AJCREW_GH_BIN", str(candidate))
 
     with pytest.raises(source.SourceProviderError):
         await source._run_json("gh", "api", "repos/acme/repo")
@@ -217,14 +217,14 @@ async def test_run_json_audits_provider_resolution_failure_reason(
 
 
 def test_provider_executable_strict_mode_asks_for_a_root_owned_copy(monkeypatch) -> None:
-    monkeypatch.delenv("KIROCREW_GH_BIN", raising=False)
-    monkeypatch.setenv("KIROCREW_PROVIDER_BIN_STRICT", "1")
+    monkeypatch.delenv("AJCREW_GH_BIN", raising=False)
+    monkeypatch.setenv("AJCREW_PROVIDER_BIN_STRICT", "1")
     monkeypatch.setattr(
         github_runner,
         "PROVIDER_EXECUTABLE_CANDIDATES",
         {
-            "gh": ("/usr/local/libexec/kirocrew/gh",),
-            "glab": ("/usr/local/libexec/kirocrew/glab",),
+            "gh": ("/usr/local/libexec/ajcrew/gh",),
+            "glab": ("/usr/local/libexec/ajcrew/glab",),
         },
     )
     monkeypatch.setattr(
@@ -237,13 +237,13 @@ def test_provider_executable_strict_mode_asks_for_a_root_owned_copy(monkeypatch)
         source._resolve_provider_executable("gh")
 
     message = str(excinfo.value)
-    assert "KIROCREW_PROVIDER_BIN_STRICT" in message
-    assert 'sudo cp "$(command -v gh)" /usr/local/libexec/kirocrew/gh' in message
+    assert "AJCREW_PROVIDER_BIN_STRICT" in message
+    assert 'sudo cp "$(command -v gh)" /usr/local/libexec/ajcrew/gh' in message
     assert "gh auth login" in message
 
 
 def test_provider_executable_rejects_relative_override(monkeypatch) -> None:
-    monkeypatch.setenv("KIROCREW_GH_BIN", "workspace/bin/gh")
+    monkeypatch.setenv("AJCREW_GH_BIN", "workspace/bin/gh")
 
     with pytest.raises(source.SourceProviderError, match="path must be absolute"):
         source._resolve_provider_executable("gh")
@@ -262,9 +262,9 @@ def test_provider_executable_accepts_user_owned_install(monkeypatch, tmp_path) -
     executable = tmp_path / "gh"
     executable.write_text("#!/bin/sh\nexit 0\n")
     executable.chmod(0o755)
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
     monkeypatch.setattr(github_runner, "agent_writable_roots", lambda: ())
-    monkeypatch.setenv("KIROCREW_GH_BIN", str(executable))
+    monkeypatch.setenv("AJCREW_GH_BIN", str(executable))
     _trust_ancestors_above(monkeypatch, tmp_path)
 
     assert source._resolve_provider_executable("gh") == str(executable.resolve())
@@ -283,9 +283,9 @@ def test_provider_executable_accepts_symlinked_install(monkeypatch, tmp_path) ->
     bin_dir.mkdir()
     link = bin_dir / "gh"
     link.symlink_to(target)
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
     monkeypatch.setattr(github_runner, "agent_writable_roots", lambda: ())
-    monkeypatch.setenv("KIROCREW_GH_BIN", str(link))
+    monkeypatch.setenv("AJCREW_GH_BIN", str(link))
     _trust_ancestors_above(monkeypatch, tmp_path)
 
     assert source._resolve_provider_executable("gh") == str(target.resolve())
@@ -295,8 +295,8 @@ def test_provider_executable_strict_mode_rejects_user_owned_install(monkeypatch,
     executable = tmp_path / "gh"
     executable.write_text("#!/bin/sh\nexit 0\n")
     executable.chmod(0o500)
-    monkeypatch.setenv("KIROCREW_PROVIDER_BIN_STRICT", "1")
-    monkeypatch.setenv("KIROCREW_GH_BIN", str(executable))
+    monkeypatch.setenv("AJCREW_PROVIDER_BIN_STRICT", "1")
+    monkeypatch.setenv("AJCREW_GH_BIN", str(executable))
 
     with pytest.raises(source.SourceProviderError, match="executable is not root-owned"):
         source._resolve_provider_executable("gh")
@@ -308,8 +308,8 @@ def test_provider_executable_strict_mode_rejects_symlink(monkeypatch, tmp_path) 
     target.chmod(0o500)
     link = tmp_path / "gh"
     link.symlink_to(target)
-    monkeypatch.setenv("KIROCREW_PROVIDER_BIN_STRICT", "1")
-    monkeypatch.setenv("KIROCREW_GH_BIN", str(link))
+    monkeypatch.setenv("AJCREW_PROVIDER_BIN_STRICT", "1")
+    monkeypatch.setenv("AJCREW_GH_BIN", str(link))
 
     with pytest.raises(source.SourceProviderError, match="canonical.*no symlinks"):
         source._resolve_provider_executable("gh")
@@ -327,7 +327,7 @@ def test_provider_executable_refuses_a_root_gateway(monkeypatch, tmp_path) -> No
     executable = tmp_path / "gh"
     executable.write_text("#!/bin/sh\nexit 0\n")
     executable.chmod(0o755)
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
     monkeypatch.setattr(github_runner, "agent_writable_roots", lambda: ())
     monkeypatch.setattr(github_runner.os, "geteuid", lambda: 0)
 
@@ -348,7 +348,7 @@ def test_provider_executable_elevated_windows_gateway_is_not_refused(monkeypatch
     def fake_windows_check(path, *, label, me_sid, strict):
         checked.append((label, me_sid))
 
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
     monkeypatch.setattr(github_runner.sys, "platform", "win32")
     monkeypatch.setattr(github_runner.platform_compat, "current_user_sid", lambda: "S-1-5-21-7-500")
     monkeypatch.setattr(github_runner, "check_provider_path_component_windows", fake_windows_check)
@@ -382,7 +382,7 @@ def _windows_arm_refusing(monkeypatch, refused: pathlib.Path) -> list[pathlib.Pa
         if pathlib.Path(path) == refused:
             raise ValueError(f"{label} can be written by a non-trusted account")
 
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
     monkeypatch.setattr(github_runner.sys, "platform", "win32")
     monkeypatch.setattr(github_runner.platform_compat, "current_user_sid", lambda: "S-1-5-21-7")
     monkeypatch.setattr(github_runner, "agent_writable_roots", lambda: ())
@@ -452,7 +452,7 @@ def test_provider_executable_rejects_binary_owned_by_another_user(monkeypatch, t
     executable.chmod(0o755)
     real_stat = executable.stat()
     foreign_stat = github_runner.os.stat_result([*list(real_stat)[:4], 4242, *list(real_stat)[5:]])
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
     monkeypatch.setattr(github_runner, "agent_writable_roots", lambda: ())
     monkeypatch.setattr(github_runner.Path, "stat", lambda _path: foreign_stat)
 
@@ -464,7 +464,7 @@ def test_provider_executable_rejects_world_writable_binary(monkeypatch, tmp_path
     executable = tmp_path / "gh"
     executable.write_text("#!/bin/sh\nexit 0\n")
     executable.chmod(0o777)
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
     monkeypatch.setattr(github_runner, "agent_writable_roots", lambda: ())
 
     with pytest.raises(ValueError, match="executable is world-writable"):
@@ -478,7 +478,7 @@ def test_provider_executable_rejects_world_writable_parent(monkeypatch, tmp_path
     executable.write_text("#!/bin/sh\nexit 0\n")
     executable.chmod(0o755)
     parent.chmod(0o777)
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
     monkeypatch.setattr(github_runner, "agent_writable_roots", lambda: ())
     _trust_ancestors_above(monkeypatch, tmp_path)
 
@@ -499,7 +499,7 @@ def test_provider_executable_tolerates_a_sticky_world_writable_parent(
     executable.write_text("#!/bin/sh\nexit 0\n")
     executable.chmod(0o755)
     parent.chmod(0o1777)
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
     monkeypatch.setattr(github_runner, "agent_writable_roots", lambda: ())
     _trust_ancestors_above(monkeypatch, tmp_path)
 
@@ -524,7 +524,7 @@ def test_provider_executable_strict_mode_rejects_untrusted_ancestor(monkeypatch,
             return root_executable_stat
         return real_stat(path)
 
-    monkeypatch.setenv("KIROCREW_PROVIDER_BIN_STRICT", "1")
+    monkeypatch.setenv("AJCREW_PROVIDER_BIN_STRICT", "1")
     monkeypatch.setattr(
         github_runner.platform_compat,
         "traversed_components_and_links",
@@ -561,7 +561,7 @@ def test_provider_executable_relaxed_mode_declines_a_writable_hop_in_the_middle_
     entry = trusted / "gh"
     entry.symlink_to(middle)
     writable.chmod(0o777)
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
     monkeypatch.setattr(github_runner, "agent_writable_roots", lambda: ())
     _trust_ancestors_above(monkeypatch, tmp_path)
 
@@ -588,7 +588,7 @@ def test_provider_executable_relaxed_mode_declines_a_writable_ancestor_of_a_syml
     leaf.chmod(0o755)
     (prefix / "bin").symlink_to(real_bin)
     holder.chmod(0o777)
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
     monkeypatch.setattr(github_runner, "agent_writable_roots", lambda: ())
     _trust_ancestors_above(monkeypatch, tmp_path)
 
@@ -618,7 +618,7 @@ def test_provider_executable_relaxed_mode_still_accepts_a_chain_through_tight_di
     middle.symlink_to(target)
     entry = trusted / "gh"
     entry.symlink_to(middle)
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
     monkeypatch.setattr(github_runner, "agent_writable_roots", lambda: ())
     # The link rule applies where an ACL's write shows in the mode bits.
     monkeypatch.setattr(github_runner, "_acl_writes_show_in_mode_bits", lambda: True)
@@ -636,7 +636,7 @@ def test_provider_executable_refuses_a_chain_the_walk_cannot_enumerate(
     executable = tmp_path / "gh"
     executable.write_text("#!/bin/sh\nexit 0\n")
     executable.chmod(0o755)
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
     monkeypatch.setattr(github_runner, "agent_writable_roots", lambda: ())
     monkeypatch.setattr(
         github_runner.platform_compat, "traversed_components_and_links", lambda _path: None
@@ -669,7 +669,7 @@ def test_redact_provider_data_recurses_through_external_strings() -> None:
 async def test_run_json_kills_process_tree_when_stdout_exceeds_limit(monkeypatch) -> None:
     class FakeProcess:
         def __init__(self) -> None:
-            # nosemgrep: kirocrew.mock-pid-allocatable -- pre-existing literal pid on the fake process, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.mock-pid-allocatable -- pre-existing literal pid on the fake process, moved verbatim; tracked for a de-flake pass
             self.pid = 4242
             self.stdout = source.asyncio.StreamReader()
             self.stderr = source.asyncio.StreamReader()
@@ -771,7 +771,7 @@ async def test_run_json_on_windows_proceeds_once_the_sandbox_gate_allows(monkeyp
     test pins is the sandbox gate, not the spawn mechanics.
     """
 
-    from kiro_crew.dashboard.source_providers import runner as runner_module
+    from aj_crew.dashboard.source_providers import runner as runner_module
 
     monkeypatch.setattr(source.platform_compat, "IS_WINDOWS", True)
     monkeypatch.setattr(
@@ -1167,7 +1167,7 @@ async def test_terminate_process_reaps_via_communicate_not_wait(monkeypatch):
     """``_terminate_process`` must route through the bounded, pipe-draining
     ``kill_and_reap`` -- a bare ``await proc.wait()`` here can hang the gateway
     task forever when the child is killed with a full pipe."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     proc = _ReapProbe()
     tree_kills: "list[tuple[int, int]]" = []

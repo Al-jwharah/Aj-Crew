@@ -312,9 +312,9 @@ export function useMembersPageSchedules({
   const requestCancelSchedDraft = useCallback((proceed: () => void) => {
     void (async () => {
       const ok = await confirmSched({
-        title: t('pages.kiroCrewAgentsPage.discard_new_schedule'),
-        body: schedSaving.current ? t('pages.kiroCrewAgentsPage.discard_anyway_note') : undefined,
-        confirmLabel: t('pages.kiroCrewAgentsPage.discard_schedule_confirm'),
+        title: t('pages.ajCrewAgentsPage.discard_new_schedule'),
+        body: schedSaving.current ? t('pages.ajCrewAgentsPage.discard_anyway_note') : undefined,
+        confirmLabel: t('pages.ajCrewAgentsPage.discard_schedule_confirm'),
       })
       if (ok) proceed()
     })()
@@ -352,8 +352,8 @@ export function useMembersPageSchedules({
     if (schedSaving.current) return false
     if (!schedDraftDirty.current) return true
     const ok = await confirmSched({
-      title: t('pages.kiroCrewAgentsPage.discard_new_schedule'),
-      confirmLabel: t('pages.kiroCrewAgentsPage.discard_schedule_confirm'),
+      title: t('pages.ajCrewAgentsPage.discard_new_schedule'),
+      confirmLabel: t('pages.ajCrewAgentsPage.discard_schedule_confirm'),
     })
     if (ok) releaseSchedRetention()
     return ok

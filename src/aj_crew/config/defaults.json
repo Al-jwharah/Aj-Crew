@@ -1,0 +1,81 @@
+{
+  "name": "ajcrew",
+  "description": "Autonomous personal AI agent — schedules recurring tasks, spawns parallel workers, learns from corrections, and operates independently via the dashboard, CLI, and messaging channels",
+  "model": "auto",
+  "tools": [
+    "execute_bash",
+    "fs_read",
+    "fs_write",
+    "code",
+    "grep",
+    "glob",
+    "web_fetch",
+    "web_search",
+    "introspect",
+    "session",
+    "report",
+    "tool_search",
+    "@ajcrew-cron",
+    "@ajcrew-core",
+    "@ajcrew-computer",
+    "@ajcrew-guide",
+    "@ajcrew-mate"
+  ],
+  "allowedTools": [
+    "fs_read",
+    "code",
+    "glob",
+    "grep",
+    "web_fetch",
+    "web_search",
+    "introspect",
+    "session",
+    "report",
+    "@ajcrew-cron/cron_list",
+    "@ajcrew-cron/cron_pause",
+    "@ajcrew-cron/cron_resume",
+    "@ajcrew-cron/cron_trigger",
+    "@ajcrew-cron/cron_remove",
+    "@ajcrew-cron/cron_remove_all",
+    "@ajcrew-core",
+    "@ajcrew-guide/find_ui",
+    "@ajcrew-guide/search_docs",
+    "@ajcrew-guide/guide_list_actions",
+    "@ajcrew-guide/guide_start",
+    "@ajcrew-guide/guide_status",
+    "@ajcrew-guide/guide_cancel",
+    "@ajcrew-guide/list_change_kinds",
+    "@ajcrew-guide/find_setting",
+    "@ajcrew-guide/get_member_capabilities",
+    "@ajcrew-guide/diagnose_settings",
+    "@ajcrew-guide/propose_change",
+    "@ajcrew-guide/get_change_status",
+    "@ajcrew-mate/update_self",
+    "@ajcrew-mate/set_model",
+    "@ajcrew-mate/set_approval_mode",
+    "@ajcrew-mate/request_capabilities",
+    "@ajcrew-mate/find_capabilities",
+    "@ajcrew-mate/goal_read",
+    "@ajcrew-mate/set_goal",
+    "@ajcrew-mate/set_key_results",
+    "@ajcrew-mate/set_check_ins",
+    "@ajcrew-mate/offer_dashboard_page",
+    "@ajcrew-mate/key_result_progress",
+    "@ajcrew-mate/save_goal_report",
+    "@ajcrew-mate/save_notes"
+  ],
+  "resources": [
+    "file://.kiro/steering/**/*.md"
+  ],
+  "includeMcpJson": false,
+  "hooks": {
+    "auto_approve_tools": [
+    ],
+    "postToolUse": [
+      {
+        "matcher": "execute_bash",
+        "command": "f=\"${AJCREW_HOME:-$HOME/.kiro/crew}/audit.log\"; if command -v python3 >/dev/null 2>&1; then python3 -c 'import os,sys,time;d=sys.stdin.buffer.read().replace(b\"\\r\",b\"\").replace(b\"\\n\",b\"\");r=time.strftime(\"%Y-%m-%dT%H:%M:%SZ\",time.gmtime()).encode()+b\" BASH: \"+d+b\"\\n\";fd=os.open(sys.argv[1],os.O_WRONLY|os.O_APPEND|os.O_CREAT|getattr(os,\"O_BINARY\",0),0o600);os.write(fd,r);os.close(fd)' \"$f\"; else umask 077; printf '%s BASH: %s\\n' \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\" \"$(tr -d '\\r\\n')\" >> \"$f\"; fi"
+      }
+    ]
+  }
+}

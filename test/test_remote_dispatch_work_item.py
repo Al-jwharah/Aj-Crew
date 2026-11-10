@@ -26,12 +26,12 @@ from aiohttp.test_utils import TestClient, TestServer, make_mocked_request
 from chat_test_helpers import _make_state
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew import remote_dispatch_mailbox as mailbox
-from kiro_crew import work_ledger as wl
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.dashboard import chat_handlers, remote_dispatch_headroom
-from kiro_crew.dashboard.handlers import remote_work_item
-from kiro_crew.dashboard.handlers import work_ledger as routes
+from aj_crew import remote_dispatch_mailbox as mailbox
+from aj_crew import work_ledger as wl
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.dashboard import chat_handlers, remote_dispatch_headroom
+from aj_crew.dashboard.handlers import remote_work_item
+from aj_crew.dashboard.handlers import work_ledger as routes
 
 HUB_CONDUCTOR = "chat-hub-conductor"
 
@@ -69,11 +69,11 @@ def preview(monkeypatch):
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    cfg = KiroCrewConfig()
-    cfg.agents = {"default": KiroCrewAgentConfig(kiro_agent="kirocrew")}
+    cfg = AjCrewConfig()
+    cfg.agents = {"default": AjCrewAgentConfig(kiro_agent="ajcrew")}
     cfg.default_agent = "default"
     st = _make_state(tmp_path)
-    monkeypatch.setattr(chat_handlers, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+    monkeypatch.setattr(chat_handlers, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
     monkeypatch.setattr(chat_handlers, "schedule_eager_spawn", lambda *a, **k: None)
     return st
 
@@ -531,10 +531,10 @@ def test_the_route_table_and_the_create_do_not_load_remote_dispatch_at_import():
 
     code = (
         "import sys\n"
-        "import kiro_crew.dashboard.routes.chat\n"
-        "import kiro_crew.dashboard.chat_handlers\n"
-        "loaded = [m for m in ('kiro_crew.dashboard.handlers.remote_work_item',"
-        " 'kiro_crew.remote_dispatch_mailbox') if m in sys.modules]\n"
+        "import aj_crew.dashboard.routes.chat\n"
+        "import aj_crew.dashboard.chat_handlers\n"
+        "loaded = [m for m in ('aj_crew.dashboard.handlers.remote_work_item',"
+        " 'aj_crew.remote_dispatch_mailbox') if m in sys.modules]\n"
         "print(loaded)\n"
     )
     out = subprocess.run(

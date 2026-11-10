@@ -18,16 +18,16 @@ import time
 
 import pytest
 
-from kiro_crew import session_environment as se
-from kiro_crew.coder import remote_worker
-from kiro_crew.coder.session_browse import summarize_unsaved
-from kiro_crew.context_assembly.turn import rail_parts
-from kiro_crew.remote_session import link as link_mod
-from kiro_crew.remote_session import wire
-from kiro_crew.remote_session import worker as worker_mod
-from kiro_crew.remote_session.relay import WorkspaceRelay
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
-from kiro_crew.testing.wait import async_wait_until, await_until, wait_until
+from aj_crew import session_environment as se
+from aj_crew.coder import remote_worker
+from aj_crew.coder.session_browse import summarize_unsaved
+from aj_crew.context_assembly.turn import rail_parts
+from aj_crew.remote_session import link as link_mod
+from aj_crew.remote_session import wire
+from aj_crew.remote_session import worker as worker_mod
+from aj_crew.remote_session.relay import WorkspaceRelay
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.wait import async_wait_until, await_until, wait_until
 
 SID = "sess-1"
 ECHO = [
@@ -539,7 +539,7 @@ linux_guest = pytest.mark.skipif(not os.path.isdir("/proc/self"), reason="a Linu
 
 
 def _sessions(home):
-    sessions = home / ".kirocrew-worker" / "sessions"
+    sessions = home / ".ajcrew-worker" / "sessions"
     sessions.mkdir(parents=True)
     return sessions
 

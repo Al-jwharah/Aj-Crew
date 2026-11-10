@@ -194,7 +194,7 @@ export function DecisionsCard() {
     staleTime: 30_000,
   })
   const governancePermits = dashCfgQ.data?.decisions_enabled === true
-  const configQ = useQuery({ queryKey: ['kirocrewConfig'], queryFn: () => api.kirocrewConfig() })
+  const configQ = useQuery({ queryKey: ['ajcrewConfig'], queryFn: () => api.ajcrewConfig() })
   const consentQ = useQuery({
     queryKey: ['decisionsConsent'],
     queryFn: () => api.getDecisionsConsent(),
@@ -292,7 +292,7 @@ export function DecisionsCard() {
   const configMut = useMutation({
     mutationFn: ({ path, value }: { path: string; value: unknown }) =>
       api.patchConfig(path, value),
-    onSettled: () => qc.invalidateQueries({ queryKey: ['kirocrewConfig'] }),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['ajcrewConfig'] }),
   })
   // The prior-conversation ceiling, on the keystone beside the switch. `enabled` is
   // omitted for the reason a scope omits it: raising a ceiling is not a review of an
@@ -566,7 +566,7 @@ export function DecisionsCard() {
           <span className="font-mono break-all">{view.configuredEndpoint}</span>
         </p>
       )}
-      {/* Where an address set by hand is changed. `PATCH /api/config/kirocrew`
+      {/* Where an address set by hand is changed. `PATCH /api/config/ajcrew`
           excludes `decisions.provider.*`, so no generic field here can choose where
           the state a decision point collects is sent. The picker below switches
           between hosted Jev and a local preset through its own owner-only route,

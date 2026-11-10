@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 
 def _bash_can_run_the_assembly_step() -> bool:
@@ -79,7 +79,7 @@ WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
 STEP_NAME = "Assemble release assets (require gated macOS artifacts)"
 CHANNEL = "stable"
 VERSION = "1.2.3"
-ARTIFACT_NAME = f"KiroCrew-notarized-{CHANNEL}-{VERSION}"
+ARTIFACT_NAME = f"AjCrew-notarized-{CHANNEL}-{VERSION}"
 
 
 def _assembly_script() -> str:
@@ -101,7 +101,7 @@ def _artifact_dir(root: Path, name: str = ARTIFACT_NAME) -> Path:
     return path
 
 
-def _write_valid_zip(path: Path, app_name: str = "KiroCrew.app") -> None:
+def _write_valid_zip(path: Path, app_name: str = "AjCrew.app") -> None:
     with zipfile.ZipFile(path, "w") as archive:
         archive.writestr(f"{app_name}/Contents/Info.plist", "<plist/>")
 
@@ -116,8 +116,8 @@ def _write_valid_dmg(path: Path) -> None:
 #: ARTIFACT_BASENAME) because a promotion bundle is one flat directory.
 MAC_ARCHES = ("arm64", "x64")
 #: The artifact filename stem, named once: the brand gate exempts a literal
-#: ``KiroCrew.dmg`` but not the templated single-arch spellings below.
-PRODUCT = "KiroCrew"  # brand-ok: artifact filename stem
+#: ``AjCrew.dmg`` but not the templated single-arch spellings below.
+PRODUCT = "AjCrew"  # brand-ok: artifact filename stem
 
 
 def _write_valid_handoff(root: Path, name: str = ARTIFACT_NAME, *, promoted: bool = False) -> Path:
@@ -130,7 +130,7 @@ def _write_valid_handoff(root: Path, name: str = ARTIFACT_NAME, *, promoted: boo
     """
     artifact = _artifact_dir(root, name)
     _write_valid_zip(artifact / "notarized.zip")
-    _write_valid_dmg(artifact / "KiroCrew.dmg")
+    _write_valid_dmg(artifact / "AjCrew.dmg")
     for arch in MAC_ARCHES:
         leg = artifact if promoted else _artifact_dir(root, f"{name}-{arch}")
         _write_valid_zip(leg / f"notarized-{arch}.zip")
@@ -167,12 +167,12 @@ def _run_assembly(
 
 #: The release page's Windows asset name, stamped and arch-suffixed the way the
 #: macOS assets beside it are.
-WINDOWS_ASSET = f"KiroCrew-{VERSION}-Setup-x64.exe"  # brand-ok: artifact filename
+WINDOWS_ASSET = f"AjCrew-{VERSION}-Setup-x64.exe"  # brand-ok: artifact filename
 #: electron-builder's default NSIS name, `${productName} Setup ${version}.exe`.
 #: The space and the embedded version are the whole point: that is why a rebuilt
-#: installer never collides with the bundle's `KiroCrew-Setup.exe`, and why an
+#: installer never collides with the bundle's `AjCrew-Setup.exe`, and why an
 #: extension glob would attach both instead of choosing.
-REBUILT_INSTALLER = f"KiroCrew Setup {VERSION}.exe"  # brand-ok: artifact filename
+REBUILT_INSTALLER = f"AjCrew Setup {VERSION}.exe"  # brand-ok: artifact filename
 
 
 def _windows_asset(root: Path) -> Path:
@@ -182,9 +182,9 @@ def _windows_asset(root: Path) -> Path:
 def test_missing_exact_gated_artifact_does_not_fall_back_to_unsigned(tmp_path: Path) -> None:
     """A valid-looking unsigned build or stale notarized run cannot be selected."""
     unsigned = _artifact_dir(tmp_path, "unsigned-build-darwin-universal")
-    _write_valid_zip(unsigned / "KiroCrew-universal-mac.zip")
-    _write_valid_dmg(unsigned / "KiroCrew.dmg")
-    _write_valid_handoff(tmp_path, "KiroCrew-notarized-stable-1.2.2")
+    _write_valid_zip(unsigned / "AjCrew-universal-mac.zip")
+    _write_valid_dmg(unsigned / "AjCrew.dmg")
+    _write_valid_handoff(tmp_path, "AjCrew-notarized-stable-1.2.2")
 
     result = _run_assembly(tmp_path)
 
@@ -198,11 +198,11 @@ def test_missing_exact_gated_artifact_does_not_fall_back_to_unsigned(tmp_path: P
     ("leg", "missing_name", "expected_error"),
     (
         ("", "notarized.zip", "Required gated macOS ZIP is missing or empty"),
-        ("", "KiroCrew.dmg", "Required gated macOS DMG is missing or empty"),
+        ("", "AjCrew.dmg", "Required gated macOS DMG is missing or empty"),
         ("-arm64", "notarized-arm64.zip", "Required gated macOS ZIP is missing or empty"),
-        ("-arm64", "KiroCrew-arm64.dmg", "Required gated macOS DMG is missing or empty"),
+        ("-arm64", "AjCrew-arm64.dmg", "Required gated macOS DMG is missing or empty"),
         ("-x64", "notarized-x64.zip", "Required gated macOS ZIP is missing or empty"),
-        ("-x64", "KiroCrew-x64.dmg", "Required gated macOS DMG is missing or empty"),
+        ("-x64", "AjCrew-x64.dmg", "Required gated macOS DMG is missing or empty"),
     ),
 )
 def test_incomplete_gated_handoff_fails(
@@ -243,7 +243,7 @@ def test_a_single_arch_file_inside_the_universal_artifact_is_not_a_handoff(
 def test_corrupt_notarized_zip_fails(tmp_path: Path) -> None:
     artifact = _artifact_dir(tmp_path)
     (artifact / "notarized.zip").write_bytes(b"not a zip")
-    _write_valid_dmg(artifact / "KiroCrew.dmg")
+    _write_valid_dmg(artifact / "AjCrew.dmg")
 
     result = _run_assembly(tmp_path)
 
@@ -254,7 +254,7 @@ def test_corrupt_notarized_zip_fails(tmp_path: Path) -> None:
 def test_non_udif_dmg_fails(tmp_path: Path) -> None:
     artifact = _artifact_dir(tmp_path)
     _write_valid_zip(artifact / "notarized.zip")
-    (artifact / "KiroCrew.dmg").write_bytes(b"not a UDIF image")
+    (artifact / "AjCrew.dmg").write_bytes(b"not a UDIF image")
 
     result = _run_assembly(tmp_path)
 
@@ -305,10 +305,10 @@ def test_exact_gated_handoff_is_renamed_for_the_release(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stderr + result.stdout
     release = tmp_path / "release"
-    release_zip = release / f"KiroCrew-{VERSION}-universal-mac.zip"
-    release_dmg = release / f"KiroCrew-{VERSION}-universal.dmg"
+    release_zip = release / f"AjCrew-{VERSION}-universal-mac.zip"
+    release_dmg = release / f"AjCrew-{VERSION}-universal.dmg"
     assert release_zip.read_bytes() == (gated / "notarized.zip").read_bytes()
-    assert release_dmg.read_bytes() == (gated / "KiroCrew.dmg").read_bytes()
+    assert release_dmg.read_bytes() == (gated / "AjCrew.dmg").read_bytes()
     # The single-arch legs land beside it under the same shape: the arch is
     # spelled on every mac asset, x64 included (electron-builder's default
     # would drop it), so the three are told apart at a glance.
@@ -360,8 +360,8 @@ def test_promotion_publishes_the_bundled_installer_and_never_the_rebuild(
     -- the rebuild looking the more official for carrying the version number.
     """
     gated = _write_valid_handoff(tmp_path, promoted=True)
-    (gated / "KiroCrew-Setup.exe").write_bytes(b"promoted installer")
-    (gated / "KiroCrew-Setup.exe.blockmap").write_bytes(b"promoted blockmap")
+    (gated / "AjCrew-Setup.exe").write_bytes(b"promoted installer")
+    (gated / "AjCrew-Setup.exe.blockmap").write_bytes(b"promoted blockmap")
     rebuilt = _artifact_dir(tmp_path, "build-windows-x64")
     (rebuilt / REBUILT_INSTALLER).write_bytes(b"rebuilt installer")
 

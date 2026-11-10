@@ -284,7 +284,7 @@ function changeValue(c: CardChange, v: unknown): string {
   if (c.field === 'dynamic_capabilities' && typeof v === 'boolean') return i18nT(v ? 'components.changeCards.tool_access_allowed' : 'components.changeCards.tool_access_not_allowed')
   // An effort level is a code identifier on the wire; "" is the inherit
   // sentinel, which the crew editor also labels as inherited.
-  if (c.field === 'reasoning_effort' && typeof v === 'string') return v === '' ? i18nT('pages.kiroCrewAgentsPage.inherited') : effortLabel(v)
+  if (c.field === 'reasoning_effort' && typeof v === 'string') return v === '' ? i18nT('pages.ajCrewAgentsPage.inherited') : effortLabel(v)
   // An approval mode is a code identifier on the wire; the card shows the word
   // the picker shows for it, so "trust" reads as the same thing in both places.
   if ((c.field === 'approval_mode' || c.field === 'import_approval') && typeof v === 'string' && APPROVAL_MODE_LABELS[v]) return APPROVAL_MODE_LABELS[v]()

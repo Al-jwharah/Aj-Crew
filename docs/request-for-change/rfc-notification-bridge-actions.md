@@ -17,7 +17,7 @@ superseded-by: []
 > Notification Bridge ([rfc-notification-bridge.md](rfc-notification-bridge.md)),
 > which that RFC lists as "future, separate proposal" (its §Migration plan,
 > Phase B4) and as a non-goal of its own scope. The bridge egress half that B4
-> builds on IS on main — `src/kiro_crew/notifications/bridge.py`,
+> builds on IS on main — `src/aj_crew/notifications/bridge.py`,
 > `bridge_egress.py` and `bridge_slack.py`, landed by B1a
 > ([#32384](https://github.com/kirodotdev/KiroCrew/pull/32384)) and B1b
 > ([#32537](https://github.com/kirodotdev/KiroCrew/pull/32537)). B4 adds the

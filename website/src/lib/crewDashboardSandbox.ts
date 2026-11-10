@@ -10,7 +10,7 @@
  * - No `allow-popups`. A template is loaded at run time, including one a user
  *   imported from a shared file, and a window it could open is a capability
  *   nothing about a status page needs. The one way out is the host's own
- *   `kirocrew-dashboard:open` bridge (`useFrameLinkBridge`): a web URL or a
+ *   `ajcrew-dashboard:open` bridge (`useFrameLinkBridge`): a web URL or a
  *   dashboard path, from this frame, right after a user gesture, opened by the host.
  * - No `allow-top-navigation`, `allow-forms`, or `allow-modals`.
  *

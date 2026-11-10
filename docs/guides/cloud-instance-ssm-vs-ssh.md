@@ -30,7 +30,7 @@ A launched box is registered like this (`cloud/connect.py::register_instance`):
 
 ```python
 reg.add(
-    name="Kiro Crew Cloud (kc-3f9a)",
+    name="Aj Crew Cloud (kc-3f9a)",
     connection_method="ssm",
     ssm_target="i-0abc123456789def0",   # the EC2 instance id
     aws_profile="dev",                   # the profile the launch used
@@ -44,7 +44,7 @@ and an instance role that permits Session Manager. Requirements on the client:
 the `aws` CLI + `session-manager-plugin`; `ssm:StartSession` opens the tunnel,
 while managed token and remote-command operations also require
 `ssm:SendCommand` and `ssm:GetCommandInvocation`. The policy printed by
-`kirocrew cloud iam-policy` includes these permissions with the launcher-managed
+`ajcrew cloud iam-policy` includes these permissions with the launcher-managed
 resource bounds.
 
 ### Legacy SSH over an SSM `ProxyCommand` (`connection_method="ssh"`)
@@ -93,16 +93,16 @@ here, and opens the dashboard — all from your laptop.
 1. **One-time prep.** Install the AWS CLI and `session-manager-plugin` — on a bare
    machine the `cloud-install.sh` (macOS/Linux) or `install.ps1` (Windows)
    bootstrapper does this and hands off to the wizard. Verify prerequisites with
-   `kirocrew cloud doctor`. Attach the least-privilege policy printed by
-   `kirocrew cloud iam-policy` to the AWS profile you'll launch with.
-2. **Launch.** Run `kirocrew cloud launch` — interactive (size picker + a confirm
+   `ajcrew cloud doctor`. Attach the least-privilege policy printed by
+   `ajcrew cloud iam-policy` to the AWS profile you'll launch with.
+2. **Launch.** Run `ajcrew cloud launch` — interactive (size picker + a confirm
    that names the AWS account and profile the stack will be created in),
-   or non-interactive, e.g. `kirocrew cloud launch --size power --region us-west-2
+   or non-interactive, e.g. `ajcrew cloud launch --size power --region us-west-2
    --profile dev -y`. Useful flags: `--new` (a separate box instead of resuming
    your saved one) and `--keep-on-failure` (disable CloudFormation rollback to
    inspect a failed bootstrap). To customize a **new** box: `--extra-packages
    gh,jq` installs extra dnf packages after the stock set (a name dnf cannot
-   find is skipped with a warning in `/var/log/kirocrew-setup.log`; names are
+   find is skipped with a warning in `/var/log/ajcrew-setup.log`; names are
    letters, digits and `. _ + -`, at most 256 characters in total), and
    `--ami ami-xxxx` launches from your own image instead of the latest Amazon
    Linux 2023 one (it must match the size tier's architecture and be
@@ -122,7 +122,7 @@ here, and opens the dashboard — all from your laptop.
    hub afterwards opens its **own** managed SSM tunnel — allocating its own local
    port, with token refresh and startup auto-reconnect — independent of that
    one-shot launch tunnel. Re-running `launch` for the same box updates its record
-   in place; `kirocrew cloud destroy` removes both the box and this registration.
+   in place; `ajcrew cloud destroy` removes both the box and this registration.
 
 For setting up a box you manage yourself (SSH or SSM, and the common EC2 gotchas),
 see [remote-crew-on-ec2.md](remote-crew-on-ec2.md).
@@ -132,7 +132,7 @@ see [remote-crew-on-ec2.md](remote-crew-on-ec2.md).
 A launched box appears as a managed instance whose connection line reads, e.g.:
 
 ```
-Kiro Crew Cloud (kc-3f9a)
+Aj Crew Cloud (kc-3f9a)
 SSM  i-0abc123456789def0 (us-west-2)   port 5476   TTL 20h · token 19h58m left
 ```
 

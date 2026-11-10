@@ -19,9 +19,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.cron import CronService
-from kiro_crew.dashboard import token_auth
-from kiro_crew.dashboard.handlers import cron as h
+from aj_crew.cron import CronService
+from aj_crew.dashboard import token_auth
+from aj_crew.dashboard.handlers import cron as h
 
 pytestmark = pytest.mark.asyncio
 
@@ -32,7 +32,7 @@ CODE = "app_auto_approval_refused"
 
 @pytest.fixture
 def sel_calls(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     recorder = MagicMock()
     monkeypatch.setattr(sel_mod, "sel", lambda: recorder)
@@ -205,7 +205,7 @@ async def test_owner_rewrite_keeps_auto(svc, sel_calls) -> None:
 
 
 def test_rest_and_tool_reset_the_same_fields() -> None:
-    from kiro_crew import mcp_cron
-    from kiro_crew.dashboard.handlers import cron_jobs
+    from aj_crew import mcp_cron
+    from aj_crew.dashboard.handlers import cron_jobs
 
     assert cron_jobs._APP_AUTO_RESETTING_FIELDS == mcp_cron._AUTO_RESETTING_FIELDS

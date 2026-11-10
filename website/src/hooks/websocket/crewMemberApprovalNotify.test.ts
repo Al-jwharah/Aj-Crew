@@ -76,7 +76,7 @@ describe("a crew member's approval alerts the person, pointed at its conductor",
     const { result } = renderHook(() => useChatStream({ dispatch: store.dispatch, queryClient: new QueryClient(), buffers, voice, reconnectingRef: { current: false } }))
     result.current.onChatMessage({ slot: 'w1', role: 'permission', content: 'Shell', ts: '2026-10-29T16:10:00Z', meta: { approval_id: 'r1' } })
     expect(chimes).toEqual([APPROVAL_KIND])
-    expect(toasts.posted).toEqual([{ title: 'Flag A', tag: 'kirocrew-approval:w1:r1' }])
+    expect(toasts.posted).toEqual([{ title: 'Flag A', tag: 'ajcrew-approval:w1:r1' }])
     // The conductor, the row the person's lists show, is marked unread too.
     expect(store.getState().dashboard.unreadSlots).toContain('root')
   })

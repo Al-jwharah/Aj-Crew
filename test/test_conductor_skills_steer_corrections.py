@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from kiro_crew.skills import _BUILTIN_SKILLS_DIR
+from aj_crew.skills import _BUILTIN_SKILLS_DIR
 
 GOAL_SKILL = Path(_BUILTIN_SKILLS_DIR) / "goal-conductor" / "SKILL.md"
 PIPELINE_SKILL = Path(_BUILTIN_SKILLS_DIR) / "pipeline-conductor" / "SKILL.md"

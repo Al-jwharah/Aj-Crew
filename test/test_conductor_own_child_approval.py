@@ -1,8 +1,8 @@
 """A conductor's ``session_send`` / ``session_close`` into a session it created needs no
 per-call approval (rfc-conductor-own-child-verbs.md, section 5.2).
 
-Only ``kirocrew-conductor`` and ``kirocrew-team-lead`` qualify, only for those two
-verbs, only with a verified ``kirocrew-dashboard`` identity and arguments, and only
+Only ``ajcrew-conductor`` and ``ajcrew-team-lead`` qualify, only for those two
+verbs, only with a verified ``ajcrew-dashboard`` identity and arguments, and only
 when the ``target`` is the exact key of a live session whose GATEWAY-VOUCHED
 creator is the caller. ``agent.conductor_own_child_verbs`` turns it off. Everything
 else asks.
@@ -14,16 +14,16 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import crew_mode
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.resolution import DEGRADED_WHOLE_CONFIG
-from kiro_crew.dashboard import chat_runner  # noqa: F401  (composes tool_approval's names)
-from kiro_crew.dashboard.chat_turn import tool_approval
-from kiro_crew.dashboard.chat_turn.tool_approval import (
+from aj_crew import crew_mode
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.resolution import DEGRADED_WHOLE_CONFIG
+from aj_crew.dashboard import chat_runner  # noqa: F401  (composes tool_approval's names)
+from aj_crew.dashboard.chat_turn import tool_approval
+from aj_crew.dashboard.chat_turn.tool_approval import (
     _conductor_own_child_call,
     _conductor_own_child_verbs_enabled,
 )
-from kiro_crew.hook_runtime.hook_types import HooksConfig
+from aj_crew.hook_runtime.hook_types import HooksConfig
 
 _RULE_NS = _conductor_own_child_call.__globals__
 
@@ -59,17 +59,17 @@ def _state(**hooks: object) -> SimpleNamespace:
     return SimpleNamespace(
         context_builder=_builder(**hooks),
         _slots={
-            "cond": _slot("cond", agent="kirocrew-conductor"),
-            "lead": _slot("lead", agent="kirocrew-team-lead"),
-            "ledger": _slot("ledger", agent="kirocrew-ledger-conductor"),
-            "plain": _slot("plain", agent="kirocrew"),
-            "w-cond": _slot("w-cond", agent="kirocrew-worker", created_by="cond"),
-            "w-lead": _slot("w-lead", agent="kirocrew-worker", created_by="lead"),
-            "w-ledger": _slot("w-ledger", agent="kirocrew-worker", created_by="ledger"),
-            "w-plain": _slot("w-plain", agent="kirocrew-worker", created_by="plain"),
+            "cond": _slot("cond", agent="ajcrew-conductor"),
+            "lead": _slot("lead", agent="ajcrew-team-lead"),
+            "ledger": _slot("ledger", agent="ajcrew-ledger-conductor"),
+            "plain": _slot("plain", agent="ajcrew"),
+            "w-cond": _slot("w-cond", agent="ajcrew-worker", created_by="cond"),
+            "w-lead": _slot("w-lead", agent="ajcrew-worker", created_by="lead"),
+            "w-ledger": _slot("w-ledger", agent="ajcrew-worker", created_by="ledger"),
+            "w-plain": _slot("w-plain", agent="ajcrew-worker", created_by="plain"),
             "tab": _slot("tab"),
             # A birth stamp this process never minted (read back from saved metadata).
-            "restored": _slot("restored", agent="kirocrew-worker", created_by="cond", minted=False),
+            "restored": _slot("restored", agent="ajcrew-worker", created_by="cond", minted=False),
         },
     )
 
@@ -79,7 +79,7 @@ def _event(tool: str = "session_send", target: object = "w-cond", **over: object
         sub_session_id="",
         mcp_identity_trusted=True,
         raw_params_trusted=True,
-        mcp_server_name="kirocrew-dashboard",
+        mcp_server_name="ajcrew-dashboard",
         tool_name=tool,
         raw_tool_params={"target": target, "message": "go"},
     )
@@ -96,7 +96,7 @@ def test_a_send_or_close_to_its_own_child_is_granted(tool, caller, child) -> Non
 
 def test_a_deferred_tool_call_reads_the_target_from_its_arguments() -> None:
     state = _state()
-    wrapped = {"tool_id": "kirocrew-dashboard::session_send", "arguments": {"target": "w-cond"}}
+    wrapped = {"tool_id": "ajcrew-dashboard::session_send", "arguments": {"target": "w-cond"}}
     assert _conductor_own_child_call(state, state._slots["cond"], _event(raw_tool_params=wrapped))
 
 
@@ -104,7 +104,7 @@ def test_a_codex_envelope_reads_the_target_from_its_arguments() -> None:
     state = _state()
     cond = state._slots["cond"]
     codex = {
-        "server": "kirocrew-dashboard",
+        "server": "ajcrew-dashboard",
         "tool": "session_send",
         "arguments": {"target": "w-cond"},
     }
@@ -126,7 +126,7 @@ def test_a_codex_envelope_reads_the_target_from_its_arguments() -> None:
         ("cond", _event(tool="work_dispatch")),  # still prompts (rfc-work-dispatch Q1)
         ("cond", _event(tool="session_stop")),
         ("cond", _event(tool="session_broadcast")),
-        ("cond", _event(mcp_server_name="kirocrew-core")),
+        ("cond", _event(mcp_server_name="ajcrew-core")),
         ("cond", _event(mcp_identity_trusted=False)),
         ("cond", _event(raw_params_trusted=False)),
         ("cond", _event(sub_session_id="sub-1")),  # a subagent's call
@@ -142,7 +142,7 @@ def test_anything_else_still_asks(caller: str, event: SimpleNamespace) -> None:
 
 
 @pytest.mark.parametrize(
-    "pattern", ["@kirocrew-dashboard/session_*", "@kirocrew-dashboard", "*session_send*"]
+    "pattern", ["@ajcrew-dashboard/session_*", "@ajcrew-dashboard", "*session_send*"]
 )
 def test_an_operator_confirm_pattern_still_asks(pattern: str) -> None:
     state = _state(confirm_tools=[pattern])
@@ -153,7 +153,7 @@ def test_an_operator_confirm_pattern_still_asks(pattern: str) -> None:
     "pattern, title",
     [
         ("session_send", ""),  # a bare tool-name pattern
-        ("mcp__kirocrew-dashboard__session_send", ""),
+        ("mcp__ajcrew-dashboard__session_send", ""),
         ("Sending to worker*", "Sending to worker w-cond"),  # keyed on the title
     ],
 )
@@ -164,7 +164,7 @@ def test_a_confirm_pattern_in_any_spelling_the_gate_reads_still_asks(pattern, ti
 
 
 def test_an_unrelated_confirm_pattern_does_not_ask() -> None:
-    state = _state(confirm_tools=["@kirocrew-core/*"])
+    state = _state(confirm_tools=["@ajcrew-core/*"])
     assert _conductor_own_child_call(state, state._slots["cond"], _event()) is True
 
 
@@ -208,7 +208,7 @@ def test_the_call_leaves_the_child_mode_alone() -> None:
 
 def test_the_switch_defaults_on_and_fails_closed(monkeypatch) -> None:
     # The real reader (imported before the autouse fixture replaced the module name).
-    assert KiroCrewConfig().agent.conductor_own_child_verbs is True
+    assert AjCrewConfig().agent.conductor_own_child_verbs is True
 
     def _load(value: bool, degraded: frozenset = frozenset()):
         cfg = SimpleNamespace(
@@ -216,18 +216,18 @@ def test_the_switch_defaults_on_and_fails_closed(monkeypatch) -> None:
         )
         return classmethod(lambda cls: cfg)
 
-    monkeypatch.setattr(KiroCrewConfig, "load", _load(True))
+    monkeypatch.setattr(AjCrewConfig, "load", _load(True))
     assert _conductor_own_child_verbs_enabled() is True
-    monkeypatch.setattr(KiroCrewConfig, "load", _load(False))
+    monkeypatch.setattr(AjCrewConfig, "load", _load(False))
     assert _conductor_own_child_verbs_enabled() is False
     for lost in ("agent", DEGRADED_WHOLE_CONFIG):
-        monkeypatch.setattr(KiroCrewConfig, "load", _load(True, frozenset({lost})))
+        monkeypatch.setattr(AjCrewConfig, "load", _load(True, frozenset({lost})))
         assert _conductor_own_child_verbs_enabled() is False
 
     def _boom(cls):
         raise OSError("unreadable")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_boom))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_boom))
     assert _conductor_own_child_verbs_enabled() is False
 
 
@@ -244,13 +244,13 @@ def _decide(
     import asyncio
     from unittest.mock import AsyncMock, MagicMock, patch
 
-    from kiro_crew.hooks import TOOL_ALLOW, TOOL_DENY, ToolHookResult
+    from aj_crew.hooks import TOOL_ALLOW, TOOL_DENY, ToolHookResult
 
     state = _state()
     state.context_builder.hooks.on_tool_call = lambda *a, **k: ToolHookResult(action=TOOL_ALLOW)
     state.is_yolo_active = lambda: False
     state.broadcast_ws = lambda *a, **k: None
-    slot = MagicMock(key="cond", agent="kirocrew-conductor", _app="", _trust=False)
+    slot = MagicMock(key="cond", agent="ajcrew-conductor", _app="", _trust=False)
     slot._trust_reads = False
     client = MagicMock()
     client.approve_tool = AsyncMock(return_value=True)

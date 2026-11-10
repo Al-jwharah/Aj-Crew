@@ -1,4 +1,4 @@
-"""``kirocrew config set`` on a list-typed key: a list, or a refusal that stores nothing.
+"""``ajcrew config set`` on a list-typed key: a list, or a refusal that stores nothing.
 
 The generic parser answers a word it cannot parse with the STRING itself. Under a
 list key the loader replaces that string with the field's default (and logs one
@@ -19,7 +19,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.cli_config import _config_cmd, _is_list_key, _parse_list_value
+from aj_crew.cli_config import _config_cmd, _is_list_key, _parse_list_value
 
 TRUSTED = "agent.apps_trusted"
 
@@ -27,11 +27,11 @@ TRUSTED = "agent.apps_trusted"
 def _set(home: Path, key: str, value: str, *, local: bool = False) -> None:
     args = argparse.Namespace(config_action="set", key=key, value=value, file=None, local=local)
     with (
-        patch("kiro_crew.cli_config.config_path", return_value=home / "config.json"),
-        patch("kiro_crew.cli_config.config_local_path", return_value=home / "config.local.json"),
-        patch("kiro_crew.config.loader.config_path", return_value=home / "config.json"),
-        patch("kiro_crew.config.loader.config_dir", return_value=home),
-        patch("kiro_crew.cli_config.sel"),
+        patch("aj_crew.cli_config.config_path", return_value=home / "config.json"),
+        patch("aj_crew.cli_config.config_local_path", return_value=home / "config.local.json"),
+        patch("aj_crew.config.loader.config_path", return_value=home / "config.json"),
+        patch("aj_crew.config.loader.config_dir", return_value=home),
+        patch("aj_crew.cli_config.sel"),
     ):
         _config_cmd(args)
 
@@ -84,7 +84,7 @@ def test_the_hint_never_echoes_the_refused_value(home, capsys):
     # and run the remainder. (The error summary may name the refused value; it is
     # not a command to paste.)
     err = _refused(home, TRUSTED, "[safe,x'; id; #]", capsys=capsys)
-    retry_lines = [ln for ln in err.splitlines() if "kirocrew config set" in ln]
+    retry_lines = [ln for ln in err.splitlines() if "ajcrew config set" in ln]
     assert retry_lines  # the hint was printed
     for ln in retry_lines:
         assert "id" not in ln
@@ -98,7 +98,7 @@ def test_the_hint_never_pastes_an_unsafe_key(home, capsys):
     # that is not a plain config dot-path is shown as a <key> placeholder.
     bad_key = "telegram.accounts.main; printf INJECTED; #.allowed_user_ids"
     err = _refused(home, bad_key, "[a,b]", capsys=capsys)
-    retry_lines = [ln for ln in err.splitlines() if "kirocrew config set" in ln]
+    retry_lines = [ln for ln in err.splitlines() if "ajcrew config set" in ln]
     assert retry_lines
     for ln in retry_lines:
         assert "printf INJECTED" not in ln
@@ -110,7 +110,7 @@ def test_the_hint_shows_a_plain_dotpath_key_verbatim(home, capsys):
     # A real key (a plain dot-path, wildcards allowed) is safe to paste, so it is
     # shown as typed — the hint stays useful for the overwhelming common case.
     err = _refused(home, "telegram.accounts.main.allowed_user_ids", "[a,b]", capsys=capsys)
-    retry_lines = [ln for ln in err.splitlines() if "kirocrew config set" in ln]
+    retry_lines = [ln for ln in err.splitlines() if "ajcrew config set" in ln]
     assert retry_lines
     assert all("telegram.accounts.main.allowed_user_ids" in ln for ln in retry_lines)
     assert all("<key>" not in ln for ln in retry_lines)
@@ -198,7 +198,7 @@ def test_an_undeclared_key_is_not_treated_as_a_list(home):
     # The registry is the sole authority: an unknown key returns False (the base
     # write path refuses an unknown key before the list rule is consulted), so no
     # config load happens on a write whose key misses the registry.
-    with patch("kiro_crew.cli_config.KiroCrewConfig.load") as load:
+    with patch("aj_crew.cli_config.AjCrewConfig.load") as load:
         assert not _is_list_key("custom.things")
         assert not _is_list_key("custom.other")
         load.assert_not_called()
@@ -238,11 +238,11 @@ def _set_encoded(
         local=local,
     )
     with (
-        patch("kiro_crew.cli_config.config_path", return_value=home / "config.json"),
-        patch("kiro_crew.cli_config.config_local_path", return_value=home / "config.local.json"),
-        patch("kiro_crew.config.loader.config_path", return_value=home / "config.json"),
-        patch("kiro_crew.config.loader.config_dir", return_value=home),
-        patch("kiro_crew.cli_config.sel"),
+        patch("aj_crew.cli_config.config_path", return_value=home / "config.json"),
+        patch("aj_crew.cli_config.config_local_path", return_value=home / "config.local.json"),
+        patch("aj_crew.config.loader.config_path", return_value=home / "config.json"),
+        patch("aj_crew.config.loader.config_dir", return_value=home),
+        patch("aj_crew.cli_config.sel"),
     ):
         _config_cmd(args)
 
@@ -314,9 +314,9 @@ def test_the_equals_empty_form_on_a_list_key_is_refused_as_not_an_array(home, ca
 def test_a_missing_key_with_a_token_prints_usage(home, capsys):
     err = _refused_encoded(home, capsys=capsys, key=None, token=UNICODE_TOKEN)
     assert err == (
-        "Usage: kirocrew config set <key> <value>\n"
-        "       kirocrew config set --local <key> <value>\n"
-        "       kirocrew config set --file <path.json>\n"
+        "Usage: ajcrew config set <key> <value>\n"
+        "       ajcrew config set --local <key> <value>\n"
+        "       ajcrew config set --file <path.json>\n"
     )
     assert not (home / "config.json").exists()
 
@@ -386,7 +386,7 @@ def test_an_empty_token_with_file_is_refused(home, tmp_path, capsys):
 
 
 def test_decode_value_base64_is_strict_standard_base64():
-    from kiro_crew.cli_config import _decode_value_base64
+    from aj_crew.cli_config import _decode_value_base64
 
     assert _decode_value_base64("") == ""
     assert _decode_value_base64("W10=") == "[]"

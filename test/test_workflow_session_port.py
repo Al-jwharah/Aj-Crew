@@ -37,17 +37,17 @@ from session_control_helpers import (  # noqa: F401 -- the autouse fixtures regi
     _slot,
 )
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.workflow_session_port import (
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.workflow_session_port import (
     WORKFLOW_OPENED_TAG,
     WorkflowSessionError,
     WorkflowSessionPort,
 )
-from kiro_crew.history import ConversationLog
-from kiro_crew.workflow_memory import WorkflowScope
-from kiro_crew.workflows import BudgetExceeded
-from kiro_crew.workflows.runner import WorkflowRunner
-from kiro_crew.workflows.service import WorkflowService
+from aj_crew.history import ConversationLog
+from aj_crew.workflow_memory import WorkflowScope
+from aj_crew.workflows import BudgetExceeded
+from aj_crew.workflows.runner import WorkflowRunner
+from aj_crew.workflows.service import WorkflowService
 
 NOW = "2026-10-28T00:00:00Z"
 
@@ -243,7 +243,7 @@ def test_a_launcher_lowered_before_the_change_is_applied_is_honoured(setup, monk
 
 def test_a_launcher_lowered_while_the_change_is_written_puts_it_back(setup, monkeypatch):
     """A drop inside the mode write itself is caught after it and undone."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state, launcher, port = setup
     launcher._trust = True
@@ -295,7 +295,7 @@ def test_a_workflow_cannot_raise_a_session_the_person_lowered(setup):
 
 
 def test_asking_for_the_mode_a_session_already_has_changes_nothing(setup, monkeypatch):
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state, launcher, port = setup
     launcher._trust = True
@@ -439,9 +439,9 @@ def test_open_session_counts_against_the_runs_agent_cap():
 
 
 def test_open_session_stops_at_the_budget_ceiling():
-    from kiro_crew.workflows.context import AgentCounter, Budget
-    from kiro_crew.workflows.events import EventStream
-    from kiro_crew.workflows.runner import _RunContext
+    from aj_crew.workflows.context import AgentCounter, Budget
+    from aj_crew.workflows.events import EventStream
+    from aj_crew.workflows.runner import _RunContext
 
     opened: list = []
     budget = Budget(total=10)
@@ -651,7 +651,7 @@ def test_a_workflow_opens_a_session_and_seeds_it_as_the_launcher(setup, monkeypa
     async def _fake_run_chat(_state, slot, prompt):
         ran[slot.key] = prompt
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
 
     ports = {
         verb: (lambda fn: lambda **kw: fn(run_id="wf_h", **kw))(_verb(port, verb))
@@ -695,7 +695,7 @@ def test_send_to_session_reaches_only_sessions_the_launcher_opened(setup, monkey
     async def _fake_run_chat(_state, slot, prompt):
         ran[slot.key] = prompt
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
     peer = _slot(state, "chat-2")
     peer._trust = True
     with pytest.raises(WorkflowSessionError) as exc:
@@ -743,9 +743,9 @@ def test_send_to_session_counts_against_the_runs_agent_cap():
 
 
 def test_send_to_session_stops_at_the_budget_ceiling():
-    from kiro_crew.workflows.context import AgentCounter, Budget
-    from kiro_crew.workflows.events import EventStream
-    from kiro_crew.workflows.runner import _RunContext
+    from aj_crew.workflows.context import AgentCounter, Budget
+    from aj_crew.workflows.events import EventStream
+    from aj_crew.workflows.runner import _RunContext
 
     ports, calls = _counting_ports()
     budget = Budget(total=10)

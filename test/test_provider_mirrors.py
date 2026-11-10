@@ -17,16 +17,16 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.acp_backends import (
+from aj_crew.acp_backends import (
     ACP_BACKEND_CODEX,
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_KAS,
     ACP_BACKEND_OPENCODE,
     ACP_BACKENDS_KNOWN,
 )
-from kiro_crew.agent_sdk.backends import BASELINE_SELECTABLE_BACKENDS
-from kiro_crew.agent_sdk.mcp_refs import unresolved_server_refs
-from kiro_crew.providers.mirrors import (
+from aj_crew.agent_sdk.backends import BASELINE_SELECTABLE_BACKENDS
+from aj_crew.agent_sdk.mcp_refs import unresolved_server_refs
+from aj_crew.providers.mirrors import (
     MIRRORS,
     PROJECTIONS,
     Concern,
@@ -259,7 +259,7 @@ class TestEveryBackendIsAccountedFor:
         """
         declared = projection_for(ACP_BACKEND_KAS)
         assert declared.kind is ProjectionKind.EXTERNAL
-        assert declared.projection == "kiro_crew.acp.kas_agents"
+        assert declared.projection == "aj_crew.acp.kas_agents"
         assert declared.tracking
 
     def test_any_no_channel_backend_names_what_would_have_to_exist(self):
@@ -362,7 +362,7 @@ class TestCodexMirror:
     def test_codex_uses_only_the_wire_face(self, tmp_path):
         mirror = mirror_for("codex")
         before = set(tmp_path.rglob("*"))
-        assert mirror.write_files("kirocrew", work_dir=tmp_path) is None
+        assert mirror.write_files("ajcrew", work_dir=tmp_path) is None
         assert set(tmp_path.rglob("*")) == before
 
     def test_hooks_and_tools_settings_are_the_open_gaps_and_they_are_addressed(self):
@@ -539,7 +539,7 @@ class TestAProseOnlyDeclarationFailsTheParityTest:
                 McpProjection(
                     kind=ProjectionKind.EXTERNAL,
                     reason="its projection lives beside the transport that carries it",
-                    projection="kiro_crew.acp.kas_agents",
+                    projection="aj_crew.acp.kas_agents",
                     tracking="docs/request-for-change/rfc-agent-config-mirror.md#no-such-heading",
                 )
             )
@@ -552,7 +552,7 @@ class TestAProseOnlyDeclarationFailsTheParityTest:
                 McpProjection(
                     kind=ProjectionKind.EXTERNAL,
                     reason="its projection lives beside the transport that carries it",
-                    projection="kiro_crew.acp.no_such_module",
+                    projection="aj_crew.acp.no_such_module",
                     tracking="docs/request-for-change/rfc-agent-config-mirror.md#5-migration",
                 )
             )
@@ -658,11 +658,11 @@ class TestPerToolDenyIsDeclaredAndTrue:
     """
 
     _NARROWED_SPEC = {
-        "name": "kirocrew",
-        "tools": ["@narrowed", "@kirocrew-core"],
+        "name": "ajcrew",
+        "tools": ["@narrowed", "@ajcrew-core"],
         "mcpServers": {
             "narrowed": {"command": "/bin/foo", "disabledTools": ["danger"]},
-            "kirocrew-core": {"command": "/x", "disabledTools": ["spawn_run"]},
+            "ajcrew-core": {"command": "/x", "disabledTools": ["spawn_run"]},
         },
     }
 
@@ -675,18 +675,18 @@ class TestPerToolDenyIsDeclaredAndTrue:
         """
         import json
 
-        from kiro_crew import agent as agent_mod
-        from kiro_crew.acp import session_mcp
+        from aj_crew import agent as agent_mod
+        from aj_crew.acp import session_mcp
 
         agents = tmp_path / "agents"
         agents.mkdir()
-        (agents / "kirocrew.json").write_text(json.dumps(self._NARROWED_SPEC), encoding="utf-8")
+        (agents / "ajcrew.json").write_text(json.dumps(self._NARROWED_SPEC), encoding="utf-8")
         monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", agents)
         monkeypatch.setattr(agent_mod, "_KIRO_MCP_JSON", tmp_path / "settings-mcp.json")
         monkeypatch.setattr(session_mcp, "ensure_agent_materialized", lambda _a: True)
         managed = {
-            "kirocrew-core": {"command": "/opt/kirocrew", "args": ["mcp-core"]},
-            "kirocrew-cron": {"command": "/opt/kirocrew", "args": ["mcp-cron"]},
+            "ajcrew-core": {"command": "/opt/ajcrew", "args": ["mcp-core"]},
+            "ajcrew-cron": {"command": "/opt/ajcrew", "args": ["mcp-cron"]},
         }
         monkeypatch.setattr(
             session_mcp,
@@ -733,7 +733,7 @@ class TestPerToolDenyIsDeclaredAndTrue:
         """
         mirror = mirror_for(backend)
         assert mirror is not None
-        projection = mirror.session_projection("kirocrew", permission_surface_owned=True)
+        projection = mirror.session_projection("ajcrew", permission_surface_owned=True)
         mounted = {str(e.get("name")) for e in projection.params.get("mcpServers") or []}
         declared = projection_for(backend).per_tool_deny
 
@@ -753,11 +753,11 @@ class TestPerToolDenyIsDeclaredAndTrue:
                 f"{backend!r} declares per-call, so the projection must hand the client "
                 "the pairs it refuses calls with -- an empty set means nothing enforces it"
             )
-            assert "kirocrew-core" in mounted, (
+            assert "ajcrew-core" in mounted, (
                 f"{backend!r} declares per-call, which is complete for Crew's own control "
-                "plane, so a narrowed kirocrew-core must stay mounted"
+                "plane, so a narrowed ajcrew-core must stay mounted"
             )
-            narrowed = {"narrowed": "danger", "kirocrew-core": "spawn_run"}
+            narrowed = {"narrowed": "danger", "ajcrew-core": "spawn_run"}
             for server, tool in narrowed.items():
                 if server in mounted:
                     assert (server, tool) in projection.denied_tools, (
@@ -786,7 +786,7 @@ class TestPerToolDenyIsDeclaredAndTrue:
         def project(backend):
             mirror = mirror_for(backend)
             assert mirror is not None
-            return mirror.session_projection("kirocrew")
+            return mirror.session_projection("ajcrew")
 
         def names(projection):
             return {str(e.get("name")) for e in projection.params["mcpServers"]}
@@ -795,14 +795,14 @@ class TestPerToolDenyIsDeclaredAndTrue:
         goose = project(ACP_BACKEND_GOOSE)
         codex = project(ACP_BACKEND_CODEX)
 
-        assert {"narrowed", "kirocrew-core"} <= names(opencode)
-        assert set(opencode.harness_deny_rules) == {"narrowed_danger", "kirocrew-core_spawn_run"}
+        assert {"narrowed", "ajcrew-core"} <= names(opencode)
+        assert set(opencode.harness_deny_rules) == {"narrowed_danger", "ajcrew-core_spawn_run"}
         assert opencode.denied_tools == frozenset()
 
-        assert not {"narrowed", "kirocrew-core"} & names(goose)
+        assert not {"narrowed", "ajcrew-core"} & names(goose)
         assert goose.denied_tools == frozenset()
 
-        assert "kirocrew-core" in names(codex)
+        assert "ajcrew-core" in names(codex)
         assert "narrowed" not in names(codex)
 
     def test_a_settled_non_mirror_kind_may_not_declare_it(self):
@@ -834,7 +834,7 @@ class TestPerToolDenyIsDeclaredAndTrue:
         per-provider ability card renders the same field. A member added here without
         a mention there is a state a user can be in and cannot look up.
         """
-        readme = (_REPO_ROOT / "src/kiro_crew/providers/mirrors/README.md").read_text(
+        readme = (_REPO_ROOT / "src/aj_crew/providers/mirrors/README.md").read_text(
             encoding="utf-8"
         )
         for member in PerToolDeny:

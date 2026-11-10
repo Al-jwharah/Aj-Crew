@@ -41,7 +41,7 @@ describe("describeSingletonLock against a real userData dir", posixOnly, () => {
   let dir;
 
   beforeEach(() => {
-    dir = fs.mkdtempSync(path.join(os.tmpdir(), "kirocrew-singleton-"));
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), "ajcrew-singleton-"));
   });
 
   afterEach(() => {

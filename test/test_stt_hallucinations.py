@@ -15,7 +15,7 @@ import logging
 
 import pytest
 
-from kiro_crew.stt.hallucinations import (
+from aj_crew.stt.hallucinations import (
     _collapse_repeated_phrases,
     _is_boilerplate_line,
     filter_hallucinations,
@@ -98,7 +98,7 @@ class TestBoilerplateDetection:
         import re as _re
 
         attribution_markers = _re.compile(r"subtitle|caption|transcri|translat|amara|mooji")
-        from kiro_crew.stt.hallucinations import _WHISPER_BOILERPLATE as phrases
+        from aj_crew.stt.hallucinations import _WHISPER_BOILERPLATE as phrases
 
         for phrase in phrases:
             assert attribution_markers.search(phrase), (
@@ -114,7 +114,7 @@ class TestBoilerplateDetection:
         import re as _re
 
         speech_markers = _re.compile(r"watch|subscribe|bell|video|thank|see you|like and")
-        from kiro_crew.stt.hallucinations import _WHISPER_BOILERPLATE as phrases
+        from aj_crew.stt.hallucinations import _WHISPER_BOILERPLATE as phrases
 
         for phrase in phrases:
             assert not speech_markers.search(phrase), (
@@ -207,7 +207,7 @@ class TestFilterHallucinationsVisibility:
     """
 
     def test_dropped_boilerplate_is_named_in_the_log(self, caplog):
-        with caplog.at_level(logging.INFO, logger="kiro_crew.stt.hallucinations"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.stt.hallucinations"):
             filter_hallucinations("Priya owns the rollout. Subtitles by Amara.org.")
         assert "dropped 1 boilerplate line(s)" in caplog.text
         assert "Subtitles by Amara.org." in caplog.text
@@ -215,7 +215,7 @@ class TestFilterHallucinationsVisibility:
     def test_collapsed_repetitions_are_counted_but_not_quoted(self, caplog):
         # A repeated sentence is ordinary speech; its text belongs in the
         # transcript, not in the log, so only the count is recorded.
-        with caplog.at_level(logging.INFO, logger="kiro_crew.stt.hallucinations"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.stt.hallucinations"):
             filter_hallucinations(" ".join(["Ship the thing."] * 8))
         assert "collapsed 7 repeated sentence(s)" in caplog.text
         assert "Ship the thing" not in caplog.text
@@ -223,7 +223,7 @@ class TestFilterHallucinationsVisibility:
     def test_discarding_the_whole_transcript_warns(self, caplog):
         # The caller turns "" into None and the recording is gone with no other
         # trace, so this case is a warning rather than an info line.
-        with caplog.at_level(logging.INFO, logger="kiro_crew.stt.hallucinations"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.stt.hallucinations"):
             assert filter_hallucinations("Subtitles by Amara.org. Transcribed by.") == ""
         assert "discarded the entire transcript" in caplog.text
         assert any(r.levelno == logging.WARNING for r in caplog.records)
@@ -231,7 +231,7 @@ class TestFilterHallucinationsVisibility:
     def test_an_untouched_transcript_logs_nothing(self, caplog):
         # Every recording passes through here. A line per transcription would bury
         # the removals this logging exists to surface.
-        with caplog.at_level(logging.INFO, logger="kiro_crew.stt.hallucinations"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.stt.hallucinations"):
             filter_hallucinations("We agreed to ship on Friday.")
         assert caplog.records == []
 

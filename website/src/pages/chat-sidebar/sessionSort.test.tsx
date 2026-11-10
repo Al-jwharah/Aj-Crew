@@ -10,11 +10,11 @@ import type { ReactNode } from 'react'
 
 const mocks = vi.hoisted(() => ({
   server: { dashboard: {} as Record<string, unknown> },
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
   patchConfig: vi.fn(),
 }))
 vi.mock('../../api/client', () => ({
-  api: { kirocrewConfig: mocks.kirocrewConfig, patchConfig: mocks.patchConfig },
+  api: { ajcrewConfig: mocks.ajcrewConfig, patchConfig: mocks.patchConfig },
 }))
 
 import { useSessionSort } from './sessionSort'
@@ -65,7 +65,7 @@ function holdNextPatch(): { land: () => void } {
 beforeEach(() => {
   localStorage.clear()
   mocks.server = { dashboard: {} }
-  mocks.kirocrewConfig.mockReset().mockImplementation(async () => structuredClone(mocks.server))
+  mocks.ajcrewConfig.mockReset().mockImplementation(async () => structuredClone(mocks.server))
   mocks.patchConfig.mockReset().mockImplementation(async (path: string, value: unknown, opts?: { ifUnset?: boolean }) => storePatch(path, value, opts))
 })
 
@@ -73,13 +73,13 @@ describe('useSessionSortKey', () => {
   it('reads the stored value and falls back to date-desc for an unknown one', async () => {
     // Fresh for the whole test, so no mount refetch races the cache writes below.
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } })
-    qc.setQueryData(['kirocrewConfig'], { dashboard: { session_sort: 'name-desc' } })
+    qc.setQueryData(['ajcrewConfig'], { dashboard: { session_sort: 'name-desc' } })
     const wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={qc}>{children}</QueryClientProvider>
     )
     const { result } = renderHook(() => useSessionSortKey(), { wrapper })
     expect(result.current).toEqual({ sortKey: 'name-desc', known: true })
-    act(() => { qc.setQueryData(['kirocrewConfig'], { dashboard: { session_sort: 'sideways' } }) })
+    act(() => { qc.setQueryData(['ajcrewConfig'], { dashboard: { session_sort: 'sideways' } }) })
     await waitFor(() => expect(result.current.sortKey).toBe('date-desc'))
     expect(result.current.known).toBe(true)
   })
@@ -96,7 +96,7 @@ describe('useSessionSort', () => {
   it('a menu pick is written through patchConfig and drawn at once', async () => {
     let land: () => void = () => {}
     const { qc, hook } = harness()
-    await waitFor(() => expect(qc.getQueryData(['kirocrewConfig'])).toBeDefined())
+    await waitFor(() => expect(qc.getQueryData(['ajcrewConfig'])).toBeDefined())
     mocks.patchConfig.mockImplementationOnce((path: string, value: unknown) => new Promise(resolve => {
       land = () => { mocks.server.dashboard.session_sort = value; resolve({ ok: true }) }
     }))
@@ -113,7 +113,7 @@ describe('useSessionSort', () => {
 
   it('two quick picks save in pick order, and the last one is drawn and kept', async () => {
     const { qc, hook, drawn } = harness()
-    await waitFor(() => expect(qc.getQueryData(['kirocrewConfig'])).toBeDefined())
+    await waitFor(() => expect(qc.getQueryData(['ajcrewConfig'])).toBeDefined())
     const first = holdNextPatch()
     act(() => hook.result.current.setSortKey('name-asc'))
     act(() => hook.result.current.setSortKey('created-desc'))
@@ -124,7 +124,7 @@ describe('useSessionSort', () => {
     await act(async () => { first.land() })
     await waitFor(() => expect(mocks.patchConfig).toHaveBeenCalledTimes(2))
     expect(mocks.patchConfig.mock.calls.map(call => call[1])).toEqual(['name-asc', 'created-desc'])
-    await waitFor(() => expect(qc.getQueryData(['kirocrewConfig'])).toEqual({ dashboard: { session_sort: 'created-desc' } }))
+    await waitFor(() => expect(qc.getQueryData(['ajcrewConfig'])).toEqual({ dashboard: { session_sort: 'created-desc' } }))
     expect(mocks.server.dashboard.session_sort).toBe('created-desc')
     expect(hook.result.current.sortKey).toBe('created-desc')
     // From the second pick on, nothing else is drawn: not the first pick as it
@@ -168,7 +168,7 @@ describe('useSessionSort', () => {
     // A later config read back on the default is not a second carry-over.
     localStorage.setItem(LEGACY, 'created-desc')
     mocks.server.dashboard.session_sort = 'date-desc'
-    await act(async () => { await qc.invalidateQueries({ queryKey: ['kirocrewConfig'] }) })
+    await act(async () => { await qc.invalidateQueries({ queryKey: ['ajcrewConfig'] }) })
     await waitFor(() => expect(hook.result.current.sortKey).toBe('date-desc'))
     expect(mocks.patchConfig).toHaveBeenCalledTimes(1)
   })
@@ -178,13 +178,13 @@ describe('useSessionSort', () => {
     const carry = holdNextPatch()
     const { qc, hook } = harness()
     await waitFor(() => expect(mocks.patchConfig).toHaveBeenCalledWith('dashboard.session_sort', 'name-desc', { ifUnset: true }))
-    expect(qc.getQueryData(['kirocrewConfig'])).toEqual({ dashboard: {} })
+    expect(qc.getQueryData(['ajcrewConfig'])).toEqual({ dashboard: {} })
     expect(hook.result.current.sortKey).toBe('name-desc')
     // The other browser saves after this read, before the gateway handles the PATCH.
     mocks.server.dashboard.session_sort = picked
     await act(async () => { carry.land() })
     await waitFor(() => expect(localStorage.getItem(LEGACY)).toBeNull())
-    await waitFor(() => expect(qc.getQueryData(['kirocrewConfig'])).toEqual({ dashboard: { session_sort: picked } }))
+    await waitFor(() => expect(qc.getQueryData(['ajcrewConfig'])).toEqual({ dashboard: { session_sort: picked } }))
     await waitFor(() => expect(hook.result.current.sortKey).toBe(picked))
     expect(mocks.server.dashboard.session_sort).toBe(picked)
     expect(mocks.patchConfig).toHaveBeenCalledTimes(1)
@@ -213,7 +213,7 @@ describe('useSessionSort', () => {
     act(() => hook.result.current.setSortKey('created-asc'))
     await act(async () => { carry.land() })
     await waitFor(() => expect(hook.result.current.sortError).toEqual({ key: 'created-asc', message: 'pick refused' }))
-    await waitFor(() => expect(qc.getQueryData(['kirocrewConfig'])).toEqual({ dashboard: { session_sort: 'name-asc' } }))
+    await waitFor(() => expect(qc.getQueryData(['ajcrewConfig'])).toEqual({ dashboard: { session_sort: 'name-asc' } }))
     await waitFor(() => expect(hook.result.current.sortKey).toBe('name-asc'))
     expect(localStorage.getItem(LEGACY)).toBeNull()
     expect(mocks.patchConfig).toHaveBeenLastCalledWith('dashboard.session_sort', 'created-asc')
@@ -253,7 +253,7 @@ describe('useSessionSort', () => {
     hook.unmount()
     // Next load: nothing is left to carry, so the pick is not written over.
     const reload = harness()
-    await waitFor(() => expect(reload.qc.getQueryData(['kirocrewConfig'])).toBeDefined())
+    await waitFor(() => expect(reload.qc.getQueryData(['ajcrewConfig'])).toBeDefined())
     await act(async () => {})
     expect(reload.qc.isMutating()).toBe(0)
     expect(mocks.patchConfig).toHaveBeenCalledTimes(2)
@@ -264,7 +264,7 @@ describe('useSessionSort', () => {
   it('a pick made before the first config read lands is not followed by a carry-over', async () => {
     localStorage.setItem(LEGACY, 'name-asc')
     const firstRead = { release: () => {} }
-    mocks.kirocrewConfig.mockImplementationOnce(() => new Promise(resolve => {
+    mocks.ajcrewConfig.mockImplementationOnce(() => new Promise(resolve => {
       // The gateway's answer as it stood when the page asked: still the default.
       firstRead.release = () => resolve({ dashboard: {} })
     }))

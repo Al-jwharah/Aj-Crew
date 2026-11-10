@@ -1,4 +1,4 @@
-"""The ``kirocrew-dashboard-manager`` subagent, and the base prompt that routes to it.
+"""The ``ajcrew-dashboard-manager`` subagent, and the base prompt that routes to it.
 
 The prompt names the agent, and kiro-cli resolves it from ``<agents dir>/<name>.json``,
 so the name in the prompt, in the spec and the spec's filename must be one string or the
@@ -14,15 +14,15 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew.agent_files import (
+from aj_crew import agent as agent_mod
+from aj_crew.agent_files import (
     DASHBOARD_MANAGER_AGENT_FILENAME,
     DASHBOARD_MANAGER_AGENT_NAME,
     OWNED_KIRO_AGENT_FILES,
     REQUIRED_KIRO_AGENT_FILES,
 )
-from kiro_crew.agent_materialization import managed_mcp, service_agents
-from kiro_crew.context import _MEMBER_DASHBOARD_ITEM, _MEMBER_HOW_YOU_WORK
+from aj_crew.agent_materialization import managed_mcp, service_agents
+from aj_crew.context import _MEMBER_DASHBOARD_ITEM, _MEMBER_HOW_YOU_WORK
 
 
 @pytest.fixture
@@ -96,7 +96,7 @@ class TestTheNameIsOneString:
         briefing reads fail closed has a page like any other -- and a member there
         told nothing about it would answer "change my dashboard" with nothing.
         """
-        from kiro_crew.context_assembly.member import (
+        from aj_crew.context_assembly.member import (
             _MEMBER_BRIEFING_ITEM_UNAVAILABLE,
             _MEMBER_HOW_YOU_WORK_COMMON,
         )
@@ -111,7 +111,7 @@ class TestTheSpecsSurfaceIsSmallOnPurpose:
     """This agent runs on a request forwarded out of a chat it never read."""
 
     def test_it_mounts_the_panel_server_and_nothing_else(self, installed: dict[str, Any]) -> None:
-        assert installed["tools"] == ["fs_read", "@kirocrew-panel"]
+        assert installed["tools"] == ["fs_read", "@ajcrew-panel"]
 
     def test_every_declared_server_is_also_configured(self, installed: dict[str, Any]) -> None:
         """Every server declared in ``tools`` is configured in ``mcpServers``.
@@ -133,9 +133,9 @@ class TestTheSpecsSurfaceIsSmallOnPurpose:
         """An entry with no command is as dead as an absent one.
 
         ``_managed_opt_in_entry`` adds what a hand-built entry forgets: the registry
-        ``type`` (or the client drops it) and the ``KIROCREW_HOME`` pin.
+        ``type`` (or the client drops it) and the ``AJCREW_HOME`` pin.
         """
-        entry = installed["mcpServers"]["kirocrew-panel"]
+        entry = installed["mcpServers"]["ajcrew-panel"]
         assert entry == managed_mcp._managed_opt_in_entry("mcp-panel")
         assert entry["command"], "no command, so nothing launches"
         assert any("mcp-panel" in str(arg) for arg in entry["args"]), entry["args"]
@@ -154,8 +154,8 @@ class TestTheSpecsSurfaceIsSmallOnPurpose:
         self, installed: dict[str, Any]
     ) -> None:
         """It neither dispatches work nor reads anybody's sessions."""
-        assert "@kirocrew-core" not in installed["tools"]
-        assert "@kirocrew-dashboard" not in installed["tools"]
+        assert "@ajcrew-core" not in installed["tools"]
+        assert "@ajcrew-dashboard" not in installed["tools"]
 
     def test_its_grants_are_the_crewmates_own_tuple_reused(self, installed: dict[str, Any]) -> None:
         """REUSED, not copied.
@@ -213,7 +213,7 @@ class TestTheSpecsSurfaceIsSmallOnPurpose:
 
 class TestItIsOwnedButNotRequired:
     def test_the_filename_is_in_the_owned_allowlist(self) -> None:
-        """The convergence sweep rewrites only files Kiro Crew generates."""
+        """The convergence sweep rewrites only files Aj Crew generates."""
         assert DASHBOARD_MANAGER_AGENT_FILENAME in OWNED_KIRO_AGENT_FILES
 
     def test_it_is_not_required_for_the_product_to_work(self) -> None:

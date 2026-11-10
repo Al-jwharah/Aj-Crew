@@ -35,7 +35,7 @@ const CONTENT = `![image](${IMG})\n\nWhat is wrong in this screen?\n${TOKEN}\nTh
 
 const now = Math.floor(Date.now() / 1000)
 const SLOTS = [{
-  key: ACTIVE, title: 'Screen question', running: false, messages: 2, agent: 'kirocrew',
+  key: ACTIVE, title: 'Screen question', running: false, messages: 2, agent: 'ajcrew',
   memory_mode: 'persistent', modified: now, last_ts: '2026-11-02T21:00:00Z', folder_id: '',
   last_message: 'The dialog is clipped.', source_links: [], source_links_total: 0,
 }]

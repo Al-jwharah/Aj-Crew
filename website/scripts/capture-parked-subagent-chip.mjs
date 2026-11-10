@@ -52,8 +52,8 @@ const PARKED_TASK = 'draft the migration note for the pinned schema'
 
 const LAUNCH_OUTPUT = [
   'Spawned 2 subagent(s). Results will arrive as completion events:',
-  `  ${RUNNING_ID} (kirocrew): audit the retry ladder in the uploader`,
-  `  ${PARKED_ID} (kirocrew): ${PARKED_TASK}`,
+  `  ${RUNNING_ID} (ajcrew): audit the retry ladder in the uploader`,
+  `  ${PARKED_ID} (ajcrew): ${PARKED_TASK}`,
 ].join('\n')
 
 const slots = [{
@@ -62,7 +62,7 @@ const slots = [{
   running: true,
   last_message: 'Spawned 2 subagent(s).',
   messages: 3,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   folder_id: '',
@@ -144,7 +144,7 @@ async function main() {
   }
 
   // 1. The member that actually started, with a tool so its row looks alive.
-  await send('subagent_spawn', { slot: SLOT, id: RUNNING_ID, task: 'audit the retry ladder in the uploader', agent: 'kirocrew' })
+  await send('subagent_spawn', { slot: SLOT, id: RUNNING_ID, task: 'audit the retry ladder in the uploader', agent: 'ajcrew' })
   await send('subagent_tool', { slot: SLOT, id: RUNNING_ID, tool: 'Reading: src/uploader/retry.py', tool_count: 4 })
   // 2. The member parked on an unanswered spawn approval. Verbatim the frame the
   //    gateway broadcasts: an `approval` whose id is `spawn:<agent_id>`, which

@@ -27,7 +27,7 @@ import { serveDist } from './lib/serve-dist.mjs'
 import { json, logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 import { crewsApi } from './lib/crews-fixtures.mjs'
 
-const OUT = process.argv[2] || join(process.env.KIROCREW_SCRATCH || '/tmp', 'mate-editor-wording')
+const OUT = process.argv[2] || join(process.env.AJCREW_SCRATCH || '/tmp', 'mate-editor-wording')
 mkdirSync(OUT, { recursive: true })
 
 const crew = (model) => ({
@@ -64,7 +64,7 @@ async function openEditor(page, base, c) {
     extra: async (path, route) => {
       if (path === '/api/agents/resolved-model') return json(route, c.resolved), true
       if (path === '/api/models') return json(route, MODELS), true
-      return crewsApi({ crews: [crew(c.model)], defaultAgent: 'kirocrew', installed: ['reviewer-agent'] })(path, route)
+      return crewsApi({ crews: [crew(c.model)], defaultAgent: 'ajcrew', installed: ['reviewer-agent'] })(path, route)
     },
   })
   await page.goto(base + '/capabilities', { waitUntil: 'domcontentloaded' })

@@ -19,10 +19,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KIRO, ACP_BACKEND_PI
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.providers.acp import AcpProvider, _read_cli_overlay, _write_cli_overlay
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KIRO, ACP_BACKEND_PI
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.providers.acp import AcpProvider, _read_cli_overlay, _write_cli_overlay
 
 _PI_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh"]
 
@@ -36,7 +36,7 @@ def _provider(
     family seeds its effort map from a real overlay there, as on a reused
     workspace.
     """
-    with patch("kiro_crew.providers.acp.AcpClient") as client_cls:
+    with patch("aj_crew.providers.acp.AcpClient") as client_cls:
         if work_dir is not None:
             client_cls.return_value.backend = backend
             client_cls.return_value._model = model or "auto"
@@ -64,13 +64,13 @@ def _provider(
 class TestFactoryCarriesTheLevel:
     @pytest.mark.parametrize("backend", [ACP_BACKEND_PI, ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO])
     def test_explicitly_empty_model_carries_the_level_unkeyed(self, backend, tmp_path):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.provider = "acp"
         cfg.agent.acp_backend = backend
         cfg.agent.model = ""
         with (
-            patch("kiro_crew.providers.acp.AcpProvider") as mock_provider,
-            patch("kiro_crew.members.select_provider_backend", return_value=backend),
+            patch("aj_crew.providers.acp.AcpProvider") as mock_provider,
+            patch("aj_crew.members.select_provider_backend", return_value=backend),
         ):
             mock_provider.return_value = MagicMock()
             factory = cfg.create_provider_factory()
@@ -85,9 +85,9 @@ class TestFactoryCarriesTheLevel:
         assert kwargs["unbound_effort"] == "low"
 
     def test_pinned_model_keys_the_level_and_carries_nothing(self, tmp_path):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.provider = "acp"
-        with patch("kiro_crew.providers.acp.AcpProvider") as mock_provider:
+        with patch("aj_crew.providers.acp.AcpProvider") as mock_provider:
             mock_provider.return_value = MagicMock()
             factory = cfg.create_provider_factory()
             factory(
@@ -129,7 +129,7 @@ class TestProviderBindsTheLevel:
     @pytest.mark.asyncio
     async def test_served_model_without_effort_logs_the_drop_and_pushes_nothing(self, caplog):
         provider = _provider(ACP_BACKEND_CLAUDE, unbound="high", served="deepseek-3.2")
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.providers.acp"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.providers.acp"):
             await provider.start()
             await provider.start()
         provider._client.set_config_option.assert_not_awaited()
@@ -143,7 +143,7 @@ class TestProviderBindsTheLevel:
         provider = _provider(ACP_BACKEND_CLAUDE, unbound="high", served="")
         # No effort option offering a level, so the pseudo-model takes none.
         provider._client.get_valid_effort_levels = MagicMock(return_value=[])
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.providers.acp"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.providers.acp"):
             await provider.start()
         provider._client.set_config_option.assert_not_awaited()
         assert any(
@@ -181,7 +181,7 @@ class TestProviderBindsTheLevel:
         provider._apply_effort_overlay = MagicMock(return_value=True)
         provider._client.send_command = AsyncMock(side_effect=RuntimeError("refused"))
         with patch(
-            "kiro_crew.providers.acp._clear_cli_overlay_effort", return_value=True
+            "aj_crew.providers.acp._clear_cli_overlay_effort", return_value=True
         ) as clear_overlay:
             await provider._bind_unbound_effort()
         clear_overlay.assert_called_once_with(provider._client._work_dir, "claude-sonnet-5.5")
@@ -282,7 +282,7 @@ def _claude_default(*, served: str, unbound: str = "high", levels=_CLAUDE_LEVELS
 
 class TestClaudeDefaultPseudoModel:
     def test_membership_is_exactly_claude(self):
-        from kiro_crew.agent_sdk.backends import (
+        from aj_crew.agent_sdk.backends import (
             ACP_BACKENDS_DEFAULT_PSEUDO_MODEL,
             ACP_BACKENDS_EFFORT_FROM_ADVERTISED_OPTION,
         )
@@ -341,7 +341,7 @@ class TestClaudeDefaultPseudoModel:
 class TestHarnessEffortBeforeTheSessionReports:
     @pytest.mark.parametrize("model", ["", "auto"])
     def test_an_unpinned_claude_session_is_unknown_not_unsupported(self, model):
-        from kiro_crew.dashboard.handlers.agents_harness_effort import harness_effort
+        from aj_crew.dashboard.handlers.agents_harness_effort import harness_effort
 
         assert harness_effort(None, ACP_BACKEND_CLAUDE, model) == {
             "effort_supported": None,
@@ -349,6 +349,6 @@ class TestHarnessEffortBeforeTheSessionReports:
         }
 
     def test_a_non_member_on_auto_keeps_the_registry_answer(self):
-        from kiro_crew.dashboard.handlers.agents_harness_effort import harness_effort
+        from aj_crew.dashboard.handlers.agents_harness_effort import harness_effort
 
         assert harness_effort(None, ACP_BACKEND_KIRO, "auto")["effort_supported"] is False

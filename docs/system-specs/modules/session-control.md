@@ -11,7 +11,7 @@ has spent an hour on a PR cannot tell whether the session watching the build has
 finished, and today the only way to find out is for the human to switch tabs and
 look. Session control lets the session ask directly.
 
-The `session_*` tools on `kirocrew-dashboard`, one strict-internal route each, and
+The `session_*` tools on `ajcrew-dashboard`, one strict-internal route each, and
 two config switches: `agent.session_control` plus the member-dispatch bypass
 ceiling. Every route in the Route column is on `_STRICT_INTERNAL_API_PATHS`; an unlisted one is
 unreachable in production because the caller's `X-Internal-Secret` is ignored.
@@ -40,7 +40,7 @@ unreachable in production because the caller's `X-Internal-Secret` is ignored.
 | `session_release` | `POST /api/session-control/release` | Let a session the caller holds, or the caller itself, out from under its parent; the released session keeps its own subtree |
 | `session_read_message` | `GET /api/session-control/read` | Read another session's transcript tail + liveness |
 | `session_summary` | `GET /api/session-control/summary` | Read another session's cached intent summary + liveness, authorized as `session_read_message` is; never generates one |
-| `work_dispatch` | `POST /api/work-ledger/record`, then `POST /api/session-control/create`, `record` again and `POST /api/session-control/send` | Create a work item, open its worker, bind it and seed it in one call ([rfc-work-dispatch](../../request-for-change/rfc-work-dispatch.md)). No route of its own: the MCP process calls the four routes in order as the caller, sends the seed only after `bind` succeeded and only to the key `create` returned, and on a failure names the step and closes what it made (session, then item). The step-1 create carries `dispatch`; `/api/work-ledger/record` strips it before schema validation and refuses `no_ledger` when the verified caller owns no ledger, so `work_dispatch` never opens one and only `kirocrew-work`'s `work_ledger_record` does (rfc-work-dispatch amendment 2026-10-28); not auto-approved |
+| `work_dispatch` | `POST /api/work-ledger/record`, then `POST /api/session-control/create`, `record` again and `POST /api/session-control/send` | Create a work item, open its worker, bind it and seed it in one call ([rfc-work-dispatch](../../request-for-change/rfc-work-dispatch.md)). No route of its own: the MCP process calls the four routes in order as the caller, sends the seed only after `bind` succeeded and only to the key `create` returned, and on a failure names the step and closes what it made (session, then item). The step-1 create carries `dispatch`; `/api/work-ledger/record` strips it before schema validation and refuses `no_ledger` when the verified caller owns no ledger, so `work_dispatch` never opens one and only `ajcrew-work`'s `work_ledger_record` does (rfc-work-dispatch amendment 2026-10-28); not auto-approved |
 
 `session_adopt` and `session_release` reshape the session tree, so both go
 through `authorize_target` like every other verb and add tree checks of their
@@ -84,8 +84,8 @@ slot and folder routes that file the new session when `folder` is given.
 internal allowlists. `SESSION_CONTROL_TOOLS` is read off the rows
 (`TABLE.names("strict")`), which is what keeps the gate, the channel containment
 list and the registration tests' pinned set naming one set. A new session verb is
-a new row in `_session_tools()` (`kiro_crew.mcp_dashboard_session_tools`), its body
-(`kiro_crew.mcp_dashboard_session_runs`), and its schema in
+a new row in `_session_tools()` (`aj_crew.mcp_dashboard_session_tools`), its body
+(`aj_crew.mcp_dashboard_session_runs`), and its schema in
 `MCP_DASHBOARD_SCHEMAS`.
 
 **A conductor's own archived worker is revived on send.** `session_send` from a
@@ -554,7 +554,7 @@ A project-only template has no user-level spec, so it is refused the same way an
 creates, then calls `session_send`. `session_create` is read with the
 over-matching `mcp_refs.entry_reaches` (reading more refuses more), and
 `session_send` with the strict `mcp_refs.entry_grants`: only the exact ref, `*`,
-a bare `@kirocrew-dashboard`, or `@kirocrew-dashboard/<glob>` (case-sensitive,
+a bare `@ajcrew-dashboard`, or `@ajcrew-dashboard/<glob>` (case-sensitive,
 `*` and `?` only) count as granting send. A bare `session_send`, `*_send` or `@*`
 does not, since kiro-cli still prompts for them.
 
@@ -606,7 +606,7 @@ It is the selection namespace for `agent`, and it exists for the one case a bare
 shadows. Name-first resolution (the kind omitted) selects the member, and a
 caller that may not bind that member's private store is refused
 `memory_delegation_denied` even when it wanted only the template. The stock
-`kirocrew-worker` is such a name on installs where the pre-0.8 enrol-on-mount
+`ajcrew-worker` is such a name on installs where the pre-0.8 enrol-on-mount
 agent sync registered it as a crew member with its own V2 store (a binding that
 is immutable by design, so no setting undoes it): a conductor running as a crew
 member's DM thread on the shared store, or a child a parent conductor created,
@@ -616,8 +616,8 @@ caller's own store exactly as an unshadowed template child does (see "A created
 worker receives one execution identity"). On an install with no shadowing member
 the template kind resolves exactly what the bare name resolves — the resolver
 skips only the alias lookup — so the goal conductor's charter and the
-goal-conductor skill always pass it when they dispatch `kirocrew-worker`. The
-route does not rely on the caller remembering: a bare `agent: "kirocrew-worker"`
+goal-conductor skill always pass it when they dispatch `ajcrew-worker`. The
+route does not rely on the caller remembering: a bare `agent: "ajcrew-worker"`
 with no kind is read as `agent_kind: "template"` (`_STOCK_WORKER_AGENT` in
 `session_create.py`), so a model that drops the kind still gets the template on
 its own store instead of the refusal. That default covers the stock worker's
@@ -974,10 +974,10 @@ skill-view name is first mapped back to its source agent with `_source_of_view`,
 then `resolve_agent_identity(cfg, agent, selection_kind=agent_kind)` decides
 whether the name is a Bot alias. An alias gets the member carrier
 `resolve_member_execution` writes for an owner's create, with that Bot's
-template, model pin and store, so `default` launches `kirocrew` rather than a
+template, model pin and store, so `default` launches `ajcrew` rather than a
 template called `default`. Any other name, and any slot stamped `template`, gets
 a template carrier under the name as written, and an empty name falls back to
-`kirocrew`. The fork is refused with `store_unavailable` when the recorded store
+`ajcrew`. The fork is refused with `store_unavailable` when the recorded store
 or the Bot's resolved store is private V2 memory, because no carrier proves
 the parent ran on it, and when the resolved store differs from a store the
 parent recorded. `agent_kind` is one of the identity fields the fork re-reads
@@ -992,7 +992,7 @@ boundary; a child left in `default` would be both a boundary crossing and
 unaddressable by its own creator), inherits the caller's agent when none is
 named -- except a Bot's own chat running on the Bot conductor, whose
 child is always its WORKER whatever `agent` it passes, opened as the template
-`kirocrew-mate-worker` on the Bot's own workspace, store and member
+`ajcrew-mate-worker` on the Bot's own workspace, store and member
 identity (`_hands_off_to_own_worker` over `_conducts_for_a_worker`, read from
 the caller's execution record through `_dispatching_crewmate`; the one
 exception is a name-first `agent` naming another `config.agents` row, which
@@ -1006,7 +1006,7 @@ caller's ACP session id is also frozen onto the child at this mint
 lineage cites the creator that was live when it was made rather than a
 replacement that may take the creator's slot before the child's first turn. The
 id is backend-authored, so it is bounded where it is retained: one past
-`MAX_ACP_SESSION_ID_LEN` (`kiro_crew/validation_parts/input_bounds.py`, the constant every store of a
+`MAX_ACP_SESSION_ID_LEN` (`aj_crew/validation_parts/input_bounds.py`, the constant every store of a
 backend session id shares) is dropped at mint, never truncated -- the sid
 is optional and absent is a legal record. The mint also sets `_lineage_minted`, the
 in-memory witness that THIS process stamped both fields; neither the witness nor
@@ -1079,7 +1079,7 @@ moves. A Bot's own worker is skipped: its Profile decides. Descendants are
 the creation tree, not the sidebar tree `session_adopt` rearranges. The picker's
 `reads_desc` and `trust_desc` name this scope.
 
-`kirocrew-dashboard` rather than `kirocrew-core`, because these tools are not a
+`ajcrew-dashboard` rather than `ajcrew-core`, because these tools are not a
 capability every session should carry. That server is an **assignable set**: it
 is absent from the default agent's spec unless the owner mounts it from Settings >
 Developer > Agent MCP servers (a mount-only record, `template_mcp_additions.py`),
@@ -1107,7 +1107,7 @@ that is out of bounds is visible after the fact even though nothing happened.
 
 | Refusal | Status | Why |
 |---------|--------|-----|
-| Config switch off (`agent.session_control` explicitly `false`) | 403 | Operator withdrew the capability from every agent at once. Defaults to true — the agent's `kirocrew-dashboard` mount is the grant. **Exception:** a crew member bypasses this switch while `agent.member_dispatch` is true (its default) — recognised either as a `member-*` DM caller key OR as a chat slot bound to that member's private V2 store; see "Member callers" below. The Conductor in the owner's own dashboard tab bypasses it under the same ceiling; see "The owner's Conductor" below |
+| Config switch off (`agent.session_control` explicitly `false`) | 403 | Operator withdrew the capability from every agent at once. Defaults to true — the agent's `ajcrew-dashboard` mount is the grant. **Exception:** a crew member bypasses this switch while `agent.member_dispatch` is true (its default) — recognised either as a `member-*` DM caller key OR as a chat slot bound to that member's private V2 store; see "Member callers" below. The Conductor in the owner's own dashboard tab bypasses it under the same ceiling; see "The owner's Conductor" below |
 | Caller session cannot be identified | 403 | An unidentifiable caller makes the self-target guard blind |
 | Caller is an unattended session (`workflow-*`) | 403 | A `workflow-<run_id>` slot exists only once its originating tab is gone, so there is no owning session to fence it to. **Exception:** a cron slot (`cron-*` caller key) is admitted and fenced by creator ownership instead — see "Cron callers" below |
 | Caller is itself incognito, temporary, or app-scoped | 403 | Caller-side isolation — the direction the target-side checks cannot see |
@@ -1115,7 +1115,7 @@ that is out of bounds is visible after the fact even though nothing happened.
 | Caller is channel-linked (`linked_session_key` set) | 403 | The exfiltration direction: a linked caller's conversation IS a channel thread, so a read would hand a private dashboard transcript to that channel's readers. `CHANNEL_AGENT_BLOCKED_TOOLS` keys on the agent identity; a linked slot is a second route to the same surface. **Two exceptions:** a `cron:<job_id>` link, which names the job's own run transcript and republishes to nobody; and a 1:1 DM whose only human is the configured owner (`owner_dm_refusal` answering `""`) — see "Owner-DM channel callers" below |
 | Caller's own session is no longer open | 403 | Nothing to attribute the operation to |
 | Caller changed workspace while a creation was in flight | 403 | Creation resolves the workspace's project directory off-loop, so it suspends between authorizing the caller and allocating the slot. Both decisions that read the caller's workspace -- the memory boundary the child inherits, and whether the answering agent is bound to that workspace -- are invalidated by a move, and re-deciding the binding here is not available: it needs a config load, which must not run on the event loop |
-| Agent that would answer is bound to another workspace | 403 | `agent_workspace_mismatch`. The child runs in the caller's workspace, so an agent whose own binding names a different one would carry that workspace's memory into it. Checked on whatever answers, an omitted agent included (it resolves to the default template). **One inheritance:** an explicitly named TEMPLATE (`ResolvedBindings.selection_kind == "template"`, a passthrough or the default template, never a `config.agents` row) passes when the caller has an execution record and is the crew member whose own declared workspace (`config.workspaces`) is the caller slot's workspace (`_caller_member_workspace`), or whose own store the caller runs on: a Bot's worker, a template record that keeps the Bot's id and store (`_store_s_crewmate`), so its own child runs where it does. A template has no workspace binding -- `resolve_agent_bindings` files every template session under `default_workspace` -- and the template arm already binds the child to the caller's own store, so the child runs on the caller's workspace, project directory and store, under the template persona. Without it every crew member created on its own `member-<slug>` workspace (#19230) was refused `agent_workspace_mismatch` for `agent="kirocrew-worker"`, while members created before #19230 (workspace `default`) were not. Still refused: a crew MEMBER bound elsewhere (its store would cross), a caller with no record (the child would fall to the default store), and any non-member caller, whose template child has no store of its own in that workspace |
+| Agent that would answer is bound to another workspace | 403 | `agent_workspace_mismatch`. The child runs in the caller's workspace, so an agent whose own binding names a different one would carry that workspace's memory into it. Checked on whatever answers, an omitted agent included (it resolves to the default template). **One inheritance:** an explicitly named TEMPLATE (`ResolvedBindings.selection_kind == "template"`, a passthrough or the default template, never a `config.agents` row) passes when the caller has an execution record and is the crew member whose own declared workspace (`config.workspaces`) is the caller slot's workspace (`_caller_member_workspace`), or whose own store the caller runs on: a Bot's worker, a template record that keeps the Bot's id and store (`_store_s_crewmate`), so its own child runs where it does. A template has no workspace binding -- `resolve_agent_bindings` files every template session under `default_workspace` -- and the template arm already binds the child to the caller's own store, so the child runs on the caller's workspace, project directory and store, under the template persona. Without it every crew member created on its own `member-<slug>` workspace (#19230) was refused `agent_workspace_mismatch` for `agent="ajcrew-worker"`, while members created before #19230 (workspace `default`) were not. Still refused: a crew MEMBER bound elsewhere (its store would cross), a caller with no record (the child would fall to the default store), and any non-member caller, whose template child has no store of its own in that workspace |
 | Named agent does not resolve to a configured one | 403 | The resolver falls back to the default agent, which passes the workspace check because it is the caller's own default -- so no boundary is crossed, but the created session would store and advertise a name that is not what answers. `ResolvedBindings.requested_resolved` states that contract for callers that store the requested name. Refused rather than rewritten to the effective agent: nothing exists yet, so a corrected name costs one retry, whereas an existing slot keeps its stored name verbatim so a momentarily stale resolution cannot permanently rebind it |
 | Caller may not bind a child to the selected member's private store | 403 | `memory_delegation_denied`; one check, on the route every branch of agent resolution has already produced, before slot allocation. Two admissions: the store is the caller's OWN, which requires this process's vouched identity and the caller's durable record to agree, or the caller's delegation lineage is not fenced (`_delegation_lineage_fenced`: an owner-rooted chain is admitted; a cron-, channel- or member-rooted chain, or a broken one, is fenced). Same-store workers remain allowed; unfenced global callers retain member assignment. See "A created worker receives one execution identity" |
 | Caller changes history key, agent or memory store during creation | 400 | `caller_memory_changed`; the live caller must still match the identity checked before awaited preparation |
@@ -1180,7 +1180,7 @@ session, and the owner's Conductor while `agent.session_control` is off, see
   fenced caller created it; an unfenced agent in a person's own tab can adopt it.
 
 The manager lives in `session_managers.json` under the data home's `crew-log` root
-(`src/kiro_crew/dashboard/session_managers.py`), keyed by slot key, holding the manager
+(`src/aj_crew/dashboard/session_managers.py`), keyed by slot key, holding the manager
 key and the tab identity of the session the record was written for. The `crew-log`
 root is hidden from sandboxed processes and fenced from the file tools, so a giver
 cannot delete or rewrite the record. The file is read once per process and cached;
@@ -1229,7 +1229,7 @@ ownership fence both read):
   `POST /api/members/{slug}/thread`); and
 - **(b) an ORDINARY dashboard chat slot** (`chat-<n>-<ts>`) whose bound memory
   store is that member's private V2 store — the store a DM slot would be bound
-  to. A member agent (e.g. `kirocrew-conductor`) also runs in an ordinary chat
+  to. A member agent (e.g. `ajcrew-conductor`) also runs in an ordinary chat
   slot bound to its V2 store, and its whole operating model (`session_create` /
   `session_send` / `session_read_message` / `session_stop` / `session_close` /
   `session_revive`) runs from there, so refusing it in a chat slot would leave the member
@@ -1286,8 +1286,8 @@ and `session_set_color`, whose creator fence also binds every caller class.
 
 #### The owner's Conductor: the same bypass, the same fence
 
-The shipped Conductor (`kirocrew-conductor`, and its deprecated alias
-`kirocrew-ledger-conductor`) exists to open and drive worker sessions. When the
+The shipped Conductor (`ajcrew-conductor`, and its deprecated alias
+`ajcrew-ledger-conductor`) exists to open and drive worker sessions. When the
 person starts it in their own dashboard tab, it gets the member bypass on the
 member's terms, so Ultra Mode works on an install whose stored
 `agent.session_control` is `false`:
@@ -1632,7 +1632,7 @@ it too: with
 `_member_bypass` and can `session_create` its own children — grandchildren of the
 original member — without the operator's global `session_control` switch. This is
 INTENDED, not an accidental widening: the conductor model is recursive by design (a
-`kirocrew-conductor` dispatches a `kirocrew-conductor` child for a sub-goal that
+`ajcrew-conductor` dispatches a `ajcrew-conductor` child for a sub-goal that
 itself decomposes), and depth is bounded elsewhere — the conductor agent caps
 nesting (children may conduct, grandchildren may not), not this fence. Every node
 in that tree stays bounded by the SAME ownership fence: a worker reaches only the
@@ -1651,12 +1651,12 @@ and from then on every cron-authored turn in that child runs unfenced. The quest
 the predicate can answer is "whose authority is this session", not "is a person at
 the keyboard", so a person working in an agent-created session keeps that session's
 reach rather than their own.
-The member-facing tool surface is the ordinary `kirocrew-dashboard` `session_*`
+The member-facing tool surface is the ordinary `ajcrew-dashboard` `session_*`
 tool set, mounted **per session** rather than through the on-disk agent
 template: a member DM session's ACP `session/new` **and `session/load`** carry
 the dashboard server as a session-level `mcpServers` entry (built by
-`members.member_dispatch_session_server`, identity via `KIROCREW_SESSION_KEY`
-in the entry's env, plus `KIROCREW_BOUND_PORT` — the entry's env is built from
+`members.member_dispatch_session_server`, identity via `AJCREW_SESSION_KEY`
+in the entry's env, plus `AJCREW_BOUND_PORT` — the entry's env is built from
 scratch rather than inherited, and a child left to rediscover the port falls
 through to the run-marker check, which needs an `lsof` view the sandbox's user
 namespace does not have, so a gateway on any non-default port would be dialled
@@ -1694,7 +1694,7 @@ accepted-and-ignored for exactly that reason. deepseek's routing, `VERIFIED_GATE
 
 ### The crew panel rides the same vehicle
 
-A crew member's DM session mounts a SECOND session-level server, `kirocrew-panel`,
+A crew member's DM session mounts a SECOND session-level server, `ajcrew-panel`,
 by which the member publishes its own webview: `panel_publish` sends a JSON object
 and names a template, and the Members page Dashboard tab renders it. Same vehicle,
 same reason. The server is `opt_in` in `agent._MANAGED_MCP_SERVERS`, so no spec
@@ -1706,9 +1706,9 @@ publish a panel at all.
 
 The element is `members.member_panel_session_server`, composed by the one writer
 `members._member_session_element` that also builds the dispatch entry, so both
-carry `KIROCREW_SESSION_KEY`, `KIROCREW_BOUND_PORT` and the managed `KIROCREW_HOME`
+carry `AJCREW_SESSION_KEY`, `AJCREW_BOUND_PORT` and the managed `AJCREW_HOME`
 override by construction. On the KAS backend the wire projection grants
-`@kirocrew-panel` in `tools` plus `_MEMBER_PANEL_GRANTS` in `allowedTools`,
+`@ajcrew-panel` in `tools` plus `_MEMBER_PANEL_GRANTS` in `allowedTools`,
 ceiling-filtered like every other grant.
 
 Both panel verbs are approval-free, and the reason is worth stating because
@@ -1730,7 +1730,7 @@ Two operator switches, asked per server rather than shared. `agent.crew_panel`
 which fails closed on a raising read AND on a config that loaded having discarded
 the `agent` section -- `load()` coerces a malformed section away and falls back to
 the permissive default, so trusting that default would be a fail-open. A
-whole-server `disabled` on `kirocrew-panel` withholds the mount too, for the reason
+whole-server `disabled` on `ajcrew-panel` withholds the mount too, for the reason
 it withholds the dashboard one. Neither switch is inherited from the other server's
 answer: an operator who withdrew session control keeps the drawer, and one who
 switched the panel off loses only the panel. The grant follows the mount in the
@@ -1863,7 +1863,7 @@ moved, since that changes `session_key` and leaves the record naming the old own
 `CallerContext.from_meta` never reads the flag, and no update surface (MCP
 `cron_update`, dashboard `PATCH`, CLI `cron update`) writes the field, so the record
 can be changed only where `session_key` itself can. The operator still recovers a
-refused job with `kirocrew cron adopt <id> --release` (or `--session-of` an open
+refused job with `ajcrew cron adopt <id> --release` (or `--session-of` an open
 non-app tab); a released job carries no `session_key` and passes this gate.
 
 Applied at both
@@ -1894,7 +1894,7 @@ origin (`_serialize_for_client` returns the unfiltered payload to a dashboard
 user), so a CRON-origin descendant stays in the sidebar exactly as a cron tab does.
 
 Capability remains bounded per agent, which the slot-key prefix could not see:
-`@kirocrew-dashboard` is an opt-in per-agent server, absent from the default
+`@ajcrew-dashboard` is an opt-in per-agent server, absent from the default
 agent's spec, so a job whose agent does not mount it never has the verbs at all.
 A cron whose fan-out must run without an approval prompt needs the write verbs in
 its own agent's `allowedTools`; `_CONDUCTOR_DASHBOARD_GRANTS` deliberately
@@ -1943,7 +1943,7 @@ check closes the cookie path, the app-token path, and the non-loopback
 reclassification together. The same reasoning is why
 `/api/computer-use/frame` re-asserts it.
 
-The config read fails **closed**: `KiroCrewConfig.load()` raising resolves to
+The config read fails **closed**: `AjCrewConfig.load()` raising resolves to
 disabled even though the field's declared default is enabled, so neither a
 malformed unrelated section nor an unreadable setting can produce cross-session
 reach.
@@ -1971,7 +1971,7 @@ sessions the launching session opened or was handed and refuses any other
 (operation `set_mode`), requires it to be a session the launching session
 created, and refuses a mode above that session's current mode or above the
 launching session's own posture, judged again after the write. The rest
-is in [workflows](workflows.md) (ports native to Kiro Crew).
+is in [workflows](workflows.md) (ports native to Aj Crew).
 
 ### Owner-DM channel callers: the audience predicate
 
@@ -2700,7 +2700,7 @@ the whole manager line under it and hands a closed manager's sessions up; see
 
 `agent.session_control` (bool, default **true**). The grant that decides who may
 reach a peer session is the **agent config**, not this switch: the five tools come
-from the `kirocrew-dashboard` MCP server, so an agent whose spec does not mount it
+from the `ajcrew-dashboard` MCP server, so an agent whose spec does not mount it
 never has them — the same rule as every other MCP server. A second default-off
 gate on top of that only made the capability unreachable for an agent that had
 already been given it deliberately, and `_install_conductor_agent()` shipping that
@@ -2812,53 +2812,53 @@ peer's kiro-cli or KAS steer too.
 
 ## Module layout
 
-`kiro_crew.dashboard.session_control` stays the only import path and the only patch
-seam for every verb: `src/kiro_crew/dashboard/session_control.py` is a mirrored facade
-(`kiro_crew._facade_mirror`) over the owner package
-`src/kiro_crew/dashboard/session_control_parts/`, one responsibility per module. A patch of
+`aj_crew.dashboard.session_control` stays the only import path and the only patch
+seam for every verb: `src/aj_crew/dashboard/session_control.py` is a mirrored facade
+(`aj_crew._facade_mirror`) over the owner package
+`src/aj_crew/dashboard/session_control_parts/`, one responsibility per module. A patch of
 `session_control.<name>` lands in every owner that binds the name, so a test patches the
 facade, never one owner; `test_facade_mirror_guards.py` holds the family to that contract
 and `test_session_control_parts_contract.py` to the rest of this layout. Every owner logs
-under the logger name `kiro_crew.dashboard.session_control`. New code for a responsibility
+under the logger name `aj_crew.dashboard.session_control`. New code for a responsibility
 goes to its owner, and the owners import each other lowest layer first, in this order:
 
-- `src/kiro_crew/dashboard/session_control_parts/caller_access.py`: who is calling, the
+- `src/aj_crew/dashboard/session_control_parts/caller_access.py`: who is calling, the
   enablement gates, the member, cron and delegation ownership fences, and the audit record
   every verb writes.
-- `src/kiro_crew/dashboard/session_control_parts/delivery_containment.py`: the
+- `src/aj_crew/dashboard/session_control_parts/delivery_containment.py`: the
   channel-mirror probes, the containment stamps a queued entry carries, the drop and
   discard notices, and the audience-admission record.
-- `src/kiro_crew/dashboard/session_control_parts/target_authorization.py`: the owner-DM
+- `src/aj_crew/dashboard/session_control_parts/target_authorization.py`: the owner-DM
   judgement, a creator's eligibility, slot resolution, the refusal factories and
   `authorize_target`.
-- `src/kiro_crew/dashboard/session_control_parts/turn_control.py`: stop, retry, continue,
+- `src/aj_crew/dashboard/session_control_parts/turn_control.py`: stop, retry, continue,
   end a wait, reload and close.
-- `src/kiro_crew/dashboard/session_control_parts/model_switch.py`: `session_set_model` and
+- `src/aj_crew/dashboard/session_control_parts/model_switch.py`: `session_set_model` and
   the deferred model pick.
-- `src/kiro_crew/dashboard/session_control_parts/session_titles.py`: title cleaning,
+- `src/aj_crew/dashboard/session_control_parts/session_titles.py`: title cleaning,
   `session_rename`, `session_generate_title` and `session_set_color`.
-- `src/kiro_crew/dashboard/session_control_parts/crew_filing.py`: the Ultra Mode filing
+- `src/aj_crew/dashboard/session_control_parts/crew_filing.py`: the Ultra Mode filing
   rule `session_create` and `session_fork` share: whether the caller is in a turned-on
   Ultra Mode tree, and the `folder_ignored` / `crew_mode` reply keys.
-- `src/kiro_crew/dashboard/session_control_parts/session_create.py`: `session_create` and
+- `src/aj_crew/dashboard/session_control_parts/session_create.py`: `session_create` and
   the spawn record a created or forked child gets.
-- `src/kiro_crew/dashboard/session_control_parts/session_tree.py`: `session_fork`,
+- `src/aj_crew/dashboard/session_control_parts/session_tree.py`: `session_fork`,
   `session_adopt` and `session_release`, the tree-mutation lock and append fence, and
   the transcript notice adopt, release and handoff write.
-- `src/kiro_crew/dashboard/session_control_parts/session_handoff.py`: `session_handoff`
+- `src/aj_crew/dashboard/session_control_parts/session_handoff.py`: `session_handoff`
   and the hand-back when a manager closes.
-- `src/kiro_crew/dashboard/session_control_parts/session_messaging.py`: `session_send` and
+- `src/aj_crew/dashboard/session_control_parts/session_messaging.py`: `session_send` and
   `session_broadcast`, the provenance envelope, and the steer deliveries a cancelled
   sender leaves behind.
-- `src/kiro_crew/dashboard/session_control_parts/session_status.py`: the read verbs: the
+- `src/aj_crew/dashboard/session_control_parts/session_status.py`: the read verbs: the
   status roster of the sessions a caller created, a target's transcript tail and its
   cached summary, and their limits.
-- `src/kiro_crew/dashboard/session_control_parts/session_revive.py`: listing the revivable
+- `src/aj_crew/dashboard/session_control_parts/session_revive.py`: listing the revivable
   history and `session_revive`.
 
 The facade itself holds no verb: its docstring, its logger and the mirror.
 
-The `crew=` half of five verbs sits outside the facade: `src/kiro_crew/dashboard/handlers/remote_dispatch_routes.py` (the gateway checks and peer calls), `src/kiro_crew/mcp_session_crew.py` (the tool bodies and the schema overlay) and `src/kiro_crew/remote_dispatch.py` (the switch).
+The `crew=` half of five verbs sits outside the facade: `src/aj_crew/dashboard/handlers/remote_dispatch_routes.py` (the gateway checks and peer calls), `src/aj_crew/mcp_session_crew.py` (the tool bodies and the schema overlay) and `src/aj_crew/remote_dispatch.py` (the switch).
 
 ## What is deliberately not here
 
@@ -2876,7 +2876,7 @@ The `crew=` half of five verbs sits outside the facade: `src/kiro_crew/dashboard
 
 ### Ordinary Codex dashboard grants
 
-An ordinary agent that explicitly grants `@kirocrew-dashboard` receives the
+An ordinary agent that explicitly grants `@ajcrew-dashboard` receives the
 managed dashboard mount on both create and resume through the Codex mirror.
 The grant, disabled-server and per-tool restrictions remain authoritative; a
 spec-supplied command is replaced before session identity is attached. Broker

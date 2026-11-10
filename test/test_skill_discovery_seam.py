@@ -15,10 +15,10 @@ import dataclasses
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.defaults import DefaultSkillDiscoveryProvider
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.defaults import DefaultSkillDiscoveryProvider
 
 #: The built-in catalog, in registration order: the public registry and the
 #: GitHub-repo importer. Named once because every assertion below means "the
@@ -98,7 +98,7 @@ class _AllowOnly:
 @pytest.fixture
 def _reset_registry():
     """The discover provider registry is a module-level singleton."""
-    from kiro_crew.dashboard.handlers import discover
+    from aj_crew.dashboard.handlers import discover
 
     discover._registry = None
     yield
@@ -106,7 +106,7 @@ def _reset_registry():
 
 
 def _with_context(monkeypatch, **overrides):
-    base = build_default_context(KiroCrewConfig())
+    base = build_default_context(AjCrewConfig())
     monkeypatch.setattr(ctx_mod, "current_context", lambda: dataclasses.replace(base, **overrides))
 
 
@@ -115,14 +115,14 @@ def test_default_contributes_nothing() -> None:
 
 
 def test_default_context_registers_builtin_only(monkeypatch, _reset_registry) -> None:
-    from kiro_crew.dashboard.handlers import discover
+    from aj_crew.dashboard.handlers import discover
 
     _with_context(monkeypatch)
     assert discover._build_registry().provider_names == _BUILTIN
 
 
 def test_contributed_provider_is_registered_after_builtin(monkeypatch, _reset_registry) -> None:
-    from kiro_crew.dashboard.handlers import discover
+    from aj_crew.dashboard.handlers import discover
 
     fake = _FakeProvider()
     _with_context(monkeypatch, skill_discovery=_Source([fake]))
@@ -133,7 +133,7 @@ def test_contributed_provider_is_registered_after_builtin(monkeypatch, _reset_re
 
 def test_contributed_provider_passes_the_same_policy_gate(monkeypatch, _reset_registry) -> None:
     """An allowlist admitting only the edition base keeps the built-in out too."""
-    from kiro_crew.dashboard.handlers import discover
+    from aj_crew.dashboard.handlers import discover
 
     policy = _AllowOnly("https://catalog.example.test")
     _with_context(
@@ -160,7 +160,7 @@ def test_a_refused_policy_keeps_the_github_provider_unregistered(
     suffices is pinned here: refused, it is never registered, and with no
     registration there is no search, preview or install path left.
     """
-    from kiro_crew.dashboard.handlers import discover
+    from aj_crew.dashboard.handlers import discover
 
     policy = _AllowOnly("https://skills.sh/api")
     _with_context(monkeypatch, external_access=policy)
@@ -172,7 +172,7 @@ def test_a_refused_policy_keeps_the_github_provider_unregistered(
 
 
 def test_denied_contributed_provider_is_not_registered(monkeypatch, _reset_registry) -> None:
-    from kiro_crew.dashboard.handlers import discover
+    from aj_crew.dashboard.handlers import discover
 
     _with_context(
         monkeypatch,
@@ -183,7 +183,7 @@ def test_denied_contributed_provider_is_not_registered(monkeypatch, _reset_regis
 
 
 def test_provider_without_api_base_is_gated_on_empty_base(monkeypatch, _reset_registry) -> None:
-    from kiro_crew.dashboard.handlers import discover
+    from aj_crew.dashboard.handlers import discover
 
     policy = _AllowOnly("https://")  # any non-empty https base passes; "" does not
     _with_context(
@@ -197,8 +197,8 @@ def test_provider_without_api_base_is_gated_on_empty_base(monkeypatch, _reset_re
 
 
 def test_name_collision_keeps_the_builtin(monkeypatch, _reset_registry) -> None:
-    from kiro_crew.dashboard.handlers import discover
-    from kiro_crew.skill_providers.skillsh import SkillsShProvider
+    from aj_crew.dashboard.handlers import discover
+    from aj_crew.skill_providers.skillsh import SkillsShProvider
 
     _with_context(monkeypatch, skill_discovery=_Source([_FakeProvider(name="skillsh")]))
     reg = discover._build_registry()
@@ -207,7 +207,7 @@ def test_name_collision_keeps_the_builtin(monkeypatch, _reset_registry) -> None:
 
 
 def test_raising_adapter_fails_closed_to_builtin_only(monkeypatch, _reset_registry) -> None:
-    from kiro_crew.dashboard.handlers import discover
+    from aj_crew.dashboard.handlers import discover
 
     _with_context(monkeypatch, skill_discovery=_BoomSource())
     assert discover._build_registry().provider_names == _BUILTIN
@@ -216,7 +216,7 @@ def test_raising_adapter_fails_closed_to_builtin_only(monkeypatch, _reset_regist
 def test_path_like_provider_name_is_rejected(monkeypatch, _reset_registry) -> None:
     """A provider name becomes the first segment of an installed skill's
     on-disk key, so a separator-carrying or absolute name must never register."""
-    from kiro_crew.dashboard.handlers import discover
+    from aj_crew.dashboard.handlers import discover
 
     bad = [
         _FakeProvider(name="/writable/path"),
@@ -231,7 +231,7 @@ def test_path_like_provider_name_is_rejected(monkeypatch, _reset_registry) -> No
 def test_non_protocol_object_is_rejected(monkeypatch, _reset_registry) -> None:
     """An object missing part of the protocol (here ``is_available``) must be
     refused at registration, not crash the aggregate search later."""
-    from kiro_crew.dashboard.handlers import discover
+    from aj_crew.dashboard.handlers import discover
 
     class _Shapeless:
         name = "edition-shapeless"
@@ -255,7 +255,7 @@ def test_provider_raising_during_protocol_check_does_not_crash(
     properties, so a raising member surfaces inside the protocol check there
     (3.12 inspects statically and does not call it). Either way, registry
     construction must complete and the built-in catalog must survive."""
-    from kiro_crew.dashboard.handlers import discover
+    from aj_crew.dashboard.handlers import discover
 
     class _RaisingMember(_FakeProvider):
         @property
@@ -270,7 +270,7 @@ def test_provider_raising_during_protocol_check_does_not_crash(
 def test_registration_uses_the_gate_checked_identity(monkeypatch, _reset_registry) -> None:
     """``name`` is a property; a second read could differ from the vetted one.
     Registration must key on the value the policy gate actually checked."""
-    from kiro_crew.dashboard.handlers import discover
+    from aj_crew.dashboard.handlers import discover
 
     class _ShiftyName(_FakeProvider):
         def __init__(self) -> None:
@@ -290,7 +290,7 @@ def test_registration_uses_the_gate_checked_identity(monkeypatch, _reset_registr
 
 def test_raising_is_available_reads_as_unavailable() -> None:
     """One broken provider must not take the aggregate search down."""
-    from kiro_crew.skill_providers.base import ProviderRegistry
+    from aj_crew.skill_providers.base import ProviderRegistry
 
     class _BrokenAvail(_FakeProvider):
         def is_available(self) -> bool:
@@ -305,8 +305,8 @@ def test_raising_is_available_reads_as_unavailable() -> None:
 
 
 def test_display_name_is_scrubbed_and_falls_back(monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers import discover
-    from kiro_crew.skill_providers.base import ProviderRegistry
+    from aj_crew.dashboard.handlers import discover
+    from aj_crew.skill_providers.base import ProviderRegistry
 
     class _RaisingLabel(_FakeProvider):
         @property
@@ -339,8 +339,8 @@ async def test_result_provenance_is_stamped_from_the_registration_key(
     from aiohttp import web
     from aiohttp.test_utils import make_mocked_request
 
-    from kiro_crew.dashboard.handlers import discover
-    from kiro_crew.skill_providers.base import SkillSearchResult
+    from aj_crew.dashboard.handlers import discover
+    from aj_crew.skill_providers.base import SkillSearchResult
 
     class _LyingProvider(_FakeProvider):
         async def search(self, query, *, limit=20):
@@ -385,7 +385,7 @@ async def test_install_with_raising_availability_probe_is_404_not_500(
     from aiohttp import web
     from aiohttp.test_utils import make_mocked_request
 
-    from kiro_crew.dashboard.handlers import discover
+    from aj_crew.dashboard.handlers import discover
 
     class _BrokenAvail(_FakeProvider):
         def is_available(self) -> bool:

@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import agent_panel, dashboard_frame
+from aj_crew import agent_panel, dashboard_frame
 
 
 def _page_of(size: int) -> str:
@@ -182,12 +182,12 @@ class TestTheComposedDocument:
             '<h1 data-dashboard-field="risk_note"></h1>'
             '<span data-dashboard-field="entries"></span>'
             "<canvas id=c></canvas>"
-            "<script>var s = window.kirocrew.fields.entries;</script>"
+            "<script>var s = window.ajcrew.fields.entries;</script>"
         )
 
     @staticmethod
     def island(doc: str) -> str:
-        return doc.split('id="kirocrew-dashboard-data">')[1].split("</script>")[0]
+        return doc.split('id="ajcrew-dashboard-data">')[1].split("</script>")[0]
 
     def doc(self, **over: Any) -> str:
         read = dashboard_frame.read_payload(
@@ -211,7 +211,7 @@ class TestTheComposedDocument:
         it would leave the first script reading ``undefined`` -- and a chart that
         cannot see its data on first paint draws nothing."""
         doc = self.doc()
-        assert doc.index("kirocrew-dashboard-data") < doc.index("<h1 data-dashboard-field")
+        assert doc.index("ajcrew-dashboard-data") < doc.index("<h1 data-dashboard-field")
 
     def test_the_ready_beacon_follows_the_page(self) -> None:
         """So a page's own scripts have run by the time readiness is decided."""
@@ -308,7 +308,7 @@ class TestTheComposedDocument:
     def test_the_binding_attribute_matches_parity(self) -> None:
         """The dev-time gate that checks a template's bindings and the frame that
         fills them must not disagree about what a binding is."""
-        from kiro_crew.dashboard_templates import parity
+        from aj_crew.dashboard_templates import parity
 
         assert dashboard_frame.BINDING_ATTRIBUTE == parity._BINDING
 
@@ -359,7 +359,7 @@ class TestTheComposedDocument:
         )
         for text in (doc, body):
             for marker in (
-                "kirocrew-stale-band",
+                "ajcrew-stale-band",
                 "data-dashboard-stale",
                 "data-stale-detail",
                 "Some numbers are older",
@@ -377,7 +377,7 @@ class TestTheComposedDocument:
         """A value this module could not encode must not blank somebody's
         dashboard, and the empty read carries no staleness flag."""
         doc = dashboard_frame.compose("<p>x</p>", {"fields": {"a": object()}})
-        island = doc.split('id="kirocrew-dashboard-data">')[1].split("</script>")[0]
+        island = doc.split('id="ajcrew-dashboard-data">')[1].split("</script>")[0]
         assert json.loads(island)["fields"] == {}
         assert "stale" not in json.loads(island)
 
@@ -1059,19 +1059,19 @@ class TestThePageToHostMessageTypes:
         # FAILS rather than skips: a pin that cannot find a side has not been satisfied.
         assert tab.exists(), f"the tab this pin compares against is not at {tab}"
         text = tab.read_text(encoding="utf-8")
-        assert "const ACT_MESSAGE_TYPE = 'kirocrew-dashboard:act'" in text
-        assert "const SEND_MESSAGE_TYPE = 'kirocrew-dashboard:send'" in text
-        builtin = root / "src" / "kiro_crew" / "dashboard_templates" / "builtin"
+        assert "const ACT_MESSAGE_TYPE = 'ajcrew-dashboard:act'" in text
+        assert "const SEND_MESSAGE_TYPE = 'ajcrew-dashboard:send'" in text
+        builtin = root / "src" / "aj_crew" / "dashboard_templates" / "builtin"
         pages = "".join(
             (builtin / n / "template.html").read_text(encoding="utf-8")
             for n in ("goal-board", "office", "project-report")
         )
-        assert pages.count("type: 'kirocrew-dashboard:send'") == 3
+        assert pages.count("type: 'ajcrew-dashboard:send'") == 3
 
     def test_the_server_and_the_tab_agree_on_the_text_bound(self) -> None:
         from pathlib import Path
 
-        from kiro_crew.dashboard import card_send
+        from aj_crew.dashboard import card_send
 
         tab = (
             Path(dashboard_frame.__file__).resolve().parents[2]

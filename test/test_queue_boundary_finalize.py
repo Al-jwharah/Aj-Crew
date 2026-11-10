@@ -36,12 +36,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.dashboard import chat_runner as cr
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.dashboard import chat_runner as cr
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND
+from aj_crew.providers.base import LLMEvent
+from aj_crew.testing.wait import await_until
 
 
 @pytest.fixture(autouse=True)

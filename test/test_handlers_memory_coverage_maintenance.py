@@ -1,6 +1,6 @@
 """The stats, maintenance and diagnostics routes of the memory dashboard handlers.
 
-This file pins, for ``kiro_crew.dashboard.handlers.memory``, stats, migrate and import, the
+This file pins, for ``aj_crew.dashboard.handlers.memory``, stats, migrate and import, the
 context preview and observability, promote, consolidate (including which sessions a
 consolidation may target) and the graph error path. The family's style and its other
 files are described in ``test_handlers_memory_coverage.py``.
@@ -28,10 +28,10 @@ from handlers_memory_coverage_helpers import (  # noqa: F401 -- the autouse fixt
     _store,
 )
 
-import kiro_crew.dashboard.handlers.memory as mem_mod
-from kiro_crew.testing.wait import await_until
+import aj_crew.dashboard.handlers.memory as mem_mod
+from aj_crew.testing.wait import await_until
 
-_MOD = "kiro_crew.dashboard.handlers.memory"
+_MOD = "aj_crew.dashboard.handlers.memory"
 
 
 # stats / migrate / import / context-preview / observability / promote
@@ -46,8 +46,8 @@ class TestStatsMigrateImport:
         cfg = _cfg(migrated=True)
         cfg.memory.embedding_provider = "llama_cpp"
         with (
-            patch(f"{_MOD}.KiroCrewConfig.load", return_value=cfg),
-            patch("kiro_crew.memory.legacy_memory_present", return_value=True),
+            patch(f"{_MOD}.AjCrewConfig.load", return_value=cfg),
+            patch("aj_crew.memory.legacy_memory_present", return_value=True),
         ):
             body = _body(await mem_mod.api_memory_stats(_make_request(state)))
         assert body == {
@@ -411,8 +411,8 @@ class TestConsolidate:
         """
         from windows_sim import replace_sharing_violation
 
-        from kiro_crew import atomic_write, platform_compat
-        from kiro_crew.history import ConversationLog
+        from aj_crew import atomic_write, platform_compat
+        from aj_crew.history import ConversationLog
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
         monkeypatch.setattr(atomic_write, "_REPLACE_BACKOFF_SECONDS", 0)
@@ -446,7 +446,7 @@ class TestConsolidate:
         )
         # Patched in ``cron``, whose globals ``_recognize_session`` reads.
         with patch(
-            "kiro_crew.dashboard.handlers.cron._probe_persisted_session",
+            "aj_crew.dashboard.handlers.cron._probe_persisted_session",
             return_value=(False, None),
         ):
             resp = await mem_mod.api_memory_consolidate(req)
@@ -496,7 +496,7 @@ class TestConsolidate:
 
     @pytest.mark.asyncio
     async def test_already_running_is_409(self) -> None:
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         cons = _consolidator()
         cons._running.add("s1")
@@ -511,7 +511,7 @@ class TestConsolidate:
 
     @pytest.mark.asyncio
     async def test_schedules_background_consolidation(self) -> None:
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         cons = _consolidator()
         state = _make_state(consolidator=cons)
@@ -554,7 +554,7 @@ class TestConsolidate:
         A handler that tests only the caller answers ``200 {"ok": true}`` here and
         dispatches ``_consolidate`` for the private key.
         """
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         cons = _consolidator()
         state = _make_state(consolidator=cons, restricted_keys={f"dashboard:{mode[:3]}1"})
@@ -566,7 +566,7 @@ class TestConsolidate:
             json_body={"key": f"dashboard:{mode[:3]}1", "include_history": False},
             session_key="dashboard:ui",
         )
-        with patch("kiro_crew.dashboard.handlers.memory._sel") as sel:
+        with patch("aj_crew.dashboard.handlers.memory._sel") as sel:
             resp = await mem_mod.api_memory_consolidate(req)
         assert resp.status == 403
         body = _body(resp)
@@ -594,8 +594,8 @@ class TestConsolidate:
         "Consolidate all" hands the endpoint ``list_sessions`` stems, which have no
         live slot; the mode then comes from the transcript's own ``memory_mode``.
         """
-        from kiro_crew.config.paths import config_dir
-        from kiro_crew.history import ConversationLog
+        from aj_crew.config.paths import config_dir
+        from aj_crew.history import ConversationLog
 
         log = ConversationLog(base_dir=config_dir() / "sessions")
         await _seed_incognito_transcript(log, "dashboard:ghost-13077")
@@ -622,9 +622,9 @@ class TestConsolidate:
         has no ``memory_mode``. A real ``SessionMap`` with empty in-process trackers forces
         the post-restart path: unfold the stem and read the flag from disk.
         """
-        from kiro_crew.history import ConversationLog
-        from kiro_crew.messaging import privacy_mode
-        from kiro_crew.session_map import SessionMap
+        from aj_crew.history import ConversationLog
+        from aj_crew.messaging import privacy_mode
+        from aj_crew.session_map import SessionMap
 
         live_key = "slack:1785861252.833429"
         stem = "slack_1785861252.833429"
@@ -659,7 +659,7 @@ class TestConsolidate:
     @pytest.mark.asyncio
     async def test_persistent_live_target_still_dispatches(self) -> None:
         """Pin: a target that positively resolves as persistent is untouched."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         cons = _consolidator()
         state = _make_state(consolidator=cons)
@@ -689,10 +689,10 @@ class TestConsolidate:
         header probe the route would answer ``200 {"ok": true}`` for a pass
         ``_consolidate`` refuses.
         """
-        from kiro_crew.config.paths import config_dir
-        from kiro_crew.history import ConversationLog
-        from kiro_crew.messaging import privacy_mode
-        from kiro_crew.session_map import SessionMap
+        from aj_crew.config.paths import config_dir
+        from aj_crew.history import ConversationLog
+        from aj_crew.messaging import privacy_mode
+        from aj_crew.session_map import SessionMap
 
         live_key = "slack:1785861252.833429"
         stem = "slack_1785861252.833429"

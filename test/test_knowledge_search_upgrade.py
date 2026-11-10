@@ -1,7 +1,7 @@
 """Tests for knowledge search upgrade: embedding endpoints + search-for-context."""
 
-from kiro_crew.embeddings import PRIORITY_BULK, PRIORITY_NORMAL
-from kiro_crew.knowledge.embedder import (
+from aj_crew.embeddings import PRIORITY_BULK, PRIORITY_NORMAL
+from aj_crew.knowledge.embedder import (
     InProcessEmbedder,
     OllamaEmbedder,
     create_embedder_from_config,
@@ -84,7 +84,7 @@ class TestInProcessEmbedder:
                 raise AssertionError("wait_ready result should populate the availability cache")
 
         fake = _FakeShared()
-        monkeypatch.setattr("kiro_crew.embeddings.get_shared_embedder", lambda: fake)
+        monkeypatch.setattr("aj_crew.embeddings.get_shared_embedder", lambda: fake)
         emb = InProcessEmbedder()
 
         assert emb.wait_ready(timeout=12.5) is True
@@ -101,7 +101,7 @@ class TestInProcessEmbedder:
                 return True
 
         fake = _FakeShared()
-        monkeypatch.setattr("kiro_crew.embeddings.get_shared_embedder", lambda: fake)
+        monkeypatch.setattr("aj_crew.embeddings.get_shared_embedder", lambda: fake)
         emb = InProcessEmbedder()
 
         assert emb.wait_ready(timeout=12.5) is True
@@ -124,7 +124,7 @@ class TestInProcessEmbedder:
                 return [0.1, 0.2]
 
         fake = _FakeShared()
-        monkeypatch.setattr("kiro_crew.embeddings.get_shared_embedder", lambda: fake)
+        monkeypatch.setattr("aj_crew.embeddings.get_shared_embedder", lambda: fake)
         emb = InProcessEmbedder()
         assert emb.embed("hello world") == [0.1, 0.2]
         assert fake.texts == ["hello world"]
@@ -164,7 +164,7 @@ class TestInProcessEmbedder:
                 return None  # model still downloading
 
         fake = _FakeShared()
-        monkeypatch.setattr("kiro_crew.embeddings.get_shared_embedder", lambda: fake)
+        monkeypatch.setattr("aj_crew.embeddings.get_shared_embedder", lambda: fake)
         emb = InProcessEmbedder()
         assert emb.is_available() is False
         assert emb.is_available() is False  # served from negative cache
@@ -202,7 +202,7 @@ class TestInProcessEmbedder:
         chunker's max output, so a realistic largest chunk embeds whole — RED on the
         old 2000-char cap.
         """
-        from kiro_crew.knowledge.chunker import CHUNK_OVERLAP, CHUNK_TOKEN_SIZE
+        from aj_crew.knowledge.chunker import CHUNK_OVERLAP, CHUNK_TOKEN_SIZE
 
         emb = InProcessEmbedder()
         captured = {}
@@ -217,7 +217,7 @@ class TestInProcessEmbedder:
 
     def test_embed_for_item_bounds_pathological_blob(self, monkeypatch):
         """A blob far past the safety bound is truncated AND logged (never silent)."""
-        from kiro_crew.knowledge.embedder import _EMBED_CONTENT_BUDGET
+        from aj_crew.knowledge.embedder import _EMBED_CONTENT_BUDGET
 
         emb = InProcessEmbedder()
         captured = {}
@@ -234,7 +234,7 @@ class TestInProcessEmbedder:
         import contextlib
         import logging
 
-        from kiro_crew.knowledge import embedder
+        from aj_crew.knowledge import embedder
 
         @contextlib.contextmanager
         def _cap():
@@ -266,13 +266,13 @@ class TestSearchForContext:
     """search_for_context endpoint logic."""
 
     def test_estimate_tokens(self):
-        from kiro_crew.dashboard.handlers.knowledge import _estimate_tokens
+        from aj_crew.dashboard.handlers.knowledge import _estimate_tokens
 
         assert _estimate_tokens("hello world") == 2  # 11 chars // 4
         assert _estimate_tokens("") == 0
 
     def test_knowledge_fetch_defaults(self):
-        from kiro_crew.dashboard.handlers.knowledge import (
+        from aj_crew.dashboard.handlers.knowledge import (
             KNOWLEDGE_FETCH_MAX_TOKENS,
             KNOWLEDGE_FETCH_TOP_N,
         )
@@ -281,7 +281,7 @@ class TestSearchForContext:
         assert KNOWLEDGE_FETCH_MAX_TOKENS == 4096
 
     def test_context_card_carries_citation_fields(self):
-        from kiro_crew.dashboard.handlers.knowledge import _build_context_card
+        from aj_crew.dashboard.handlers.knowledge import _build_context_card
 
         result = {
             "id": "i1",
@@ -304,7 +304,7 @@ class TestSearchForContext:
         assert card["chunk_range"] == "10-25"
 
     def test_context_card_artifact_slug(self):
-        from kiro_crew.dashboard.handlers.knowledge import _build_context_card
+        from aj_crew.dashboard.handlers.knowledge import _build_context_card
 
         result = {
             "id": "i3",
@@ -321,7 +321,7 @@ class TestSearchForContext:
         assert card["artifact_name"] == "OP Vision Plan"
 
     def test_context_card_without_location_degrades(self):
-        from kiro_crew.dashboard.handlers.knowledge import _build_context_card
+        from aj_crew.dashboard.handlers.knowledge import _build_context_card
 
         result = {"id": "i2", "title": "DB Schema", "source": "src-2"}
         card = _build_context_card(result, content="body", tokens=1)
@@ -338,7 +338,7 @@ class TestRedactMeta:
     """_redact_meta security helper."""
 
     def test_redacts_strings(self):
-        from kiro_crew.dashboard.chat_utils import _redact_meta
+        from aj_crew.dashboard.chat_utils import _redact_meta
 
         meta = {"title": "safe text", "content": "key is AKIAIOSFODNN7EXAMPLE here"}
         result = _redact_meta(meta)
@@ -346,14 +346,14 @@ class TestRedactMeta:
         assert result["title"] == "safe text"
 
     def test_redacts_nested_dicts(self):
-        from kiro_crew.dashboard.chat_utils import _redact_meta
+        from aj_crew.dashboard.chat_utils import _redact_meta
 
         meta = {"knowledge": {"content": [{"title": "ok", "text": "AKIAIOSFODNN7EXAMPLE"}]}}
         result = _redact_meta(meta)
         assert "AKIAIOSFODNN7EXAMPLE" not in str(result)
 
     def test_preserves_non_strings(self):
-        from kiro_crew.dashboard.chat_utils import _redact_meta
+        from aj_crew.dashboard.chat_utils import _redact_meta
 
         meta = {"items": 3, "tokens": 1054, "titles": ["safe"]}
         result = _redact_meta(meta)

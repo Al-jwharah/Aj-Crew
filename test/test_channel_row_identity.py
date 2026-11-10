@@ -20,23 +20,23 @@ from types import SimpleNamespace
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import channel_slots
-from kiro_crew.dashboard.state import row_mid
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard import channel_slots
+from aj_crew.dashboard.state import row_mid
+from aj_crew.history import ConversationLog
 
 #: Every dispatcher sharing the two-append ``_persist_turn`` shape. Slack is absent
 #: deliberately: its persist is a different topology (three write branches, off-loop
 #: stamping) and is not covered by this change.
 _CHANNELS = [
-    ("weixin", "kiro_crew.weixin.transport_dispatch"),
-    ("telegram", "kiro_crew.telegram.transport_dispatch"),
-    ("discord", "kiro_crew.discord.transport_dispatch"),
-    ("feishu", "kiro_crew.feishu.transport_dispatch"),
-    ("imessage", "kiro_crew.imessage.transport_dispatch"),
-    ("teams", "kiro_crew.teams.transport_dispatch"),
-    ("webex", "kiro_crew.webex.transport_dispatch"),
-    ("wecom", "kiro_crew.wecom.transport_dispatch"),
-    ("whatsapp", "kiro_crew.whatsapp.transport_dispatch"),
+    ("weixin", "aj_crew.weixin.transport_dispatch"),
+    ("telegram", "aj_crew.telegram.transport_dispatch"),
+    ("discord", "aj_crew.discord.transport_dispatch"),
+    ("feishu", "aj_crew.feishu.transport_dispatch"),
+    ("imessage", "aj_crew.imessage.transport_dispatch"),
+    ("teams", "aj_crew.teams.transport_dispatch"),
+    ("webex", "aj_crew.webex.transport_dispatch"),
+    ("wecom", "aj_crew.wecom.transport_dispatch"),
+    ("whatsapp", "aj_crew.whatsapp.transport_dispatch"),
 ]
 
 
@@ -68,7 +68,7 @@ def _persist(cls, host, key, user_text, reply_text, is_new):
     cannot cover both shapes.
     """
     try:
-        cls._persist_turn(host, key, user_text, reply_text, is_new, agent="kirocrew-research")
+        cls._persist_turn(host, key, user_text, reply_text, is_new, agent="ajcrew-research")
     except TypeError:
         cls._persist_turn(host, key, user_text, reply_text, is_new)
 
@@ -97,7 +97,7 @@ class TestMintRowMid:
     """
 
     def test_mints_the_shape_every_reader_matches(self) -> None:
-        from kiro_crew.history import mint_row_mid
+        from aj_crew.history import mint_row_mid
 
         mid = mint_row_mid()
         assert mid.startswith("m-")
@@ -107,7 +107,7 @@ class TestMintRowMid:
         assert all(c in "0123456789abcdef" for c in mid[2:])
 
     def test_ids_are_distinct(self) -> None:
-        from kiro_crew.history import mint_row_mid
+        from aj_crew.history import mint_row_mid
 
         # A collision makes a client DROP a real message, so distinctness is the
         # property that matters, not merely the format.
@@ -182,7 +182,7 @@ class TestDiscordMirroredBranchStaysIdempotent:
 
     @staticmethod
     def _discord_cls():
-        module = __import__("kiro_crew.discord.transport_dispatch", fromlist=["_"])
+        module = __import__("aj_crew.discord.transport_dispatch", fromlist=["_"])
         return _dispatcher_class(module)
 
     def test_mirrored_write_reuses_the_slot_minted_ids(self, tmp_path) -> None:
@@ -250,7 +250,7 @@ class TestDiscordMirroredBranchStaysIdempotent:
 class TestTelegramResumedDurability:
     @staticmethod
     def _telegram_cls():
-        module = __import__("kiro_crew.telegram.transport_dispatch", fromlist=["_"])
+        module = __import__("aj_crew.telegram.transport_dispatch", fromlist=["_"])
         return _dispatcher_class(module)
 
     @staticmethod
@@ -266,7 +266,7 @@ class TestTelegramResumedDurability:
     def test_projected_pair_is_exactly_once_under_both_writer_orderings(
         self, tmp_path, save_first
     ) -> None:
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
         state, slot = self._state_and_slot(tmp_path)
         key = "dashboard:chat-1"
@@ -383,10 +383,10 @@ class TestIdentitySurvivesMaterialization:
     def _surface(state, messages, *, user: str):
         return channel_slots.surface_channel_session(
             state,
-            {"key": f"weixin_kirocrew-research_direct_{user}", "title": "t", "modified": 0.0},
+            {"key": f"weixin_ajcrew-research_direct_{user}", "title": "t", "modified": 0.0},
             {},
             [dict(r) for r in messages],
-            session_key=f"weixin:kirocrew-research:direct:{user}",
+            session_key=f"weixin:ajcrew-research:direct:{user}",
         )
 
     @staticmethod

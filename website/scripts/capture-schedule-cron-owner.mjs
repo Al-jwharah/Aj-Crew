@@ -39,13 +39,13 @@ const JOBS = [
   {
     id: 'job-1', name: 'Nightly report', schedule: 'every 1d', timezone: 'America/Los_Angeles',
     message: 'Summarise yesterday\'s CI failures and post the digest to #build-health.',
-    enabled: true, agent: 'kirocrew',
+    enabled: true, agent: 'ajcrew',
     session_key: 'web-4f2a9c81d7e3',
     last_status: 'ok', last_run_ts: now - 3600, next_run_ts: now + 7200, has_result: true,
   },
   {
     id: 'job-2', name: 'Feed poller', schedule: 'every 300s', enabled: true,
-    message: 'Poll the release feed and flag regressions.', agent: 'kirocrew',
+    message: 'Poll the release feed and flag regressions.', agent: 'ajcrew',
     session_key: null,
     last_status: 'ok', last_run_ts: now - 240, next_run_ts: now + 60,
   },
@@ -54,7 +54,7 @@ const JOBS = [
     // the owner line underneath, and that a truncated key stays visually
     // distinct (mono) from the italic empty-state copy.
     id: 'job-3', name: 'Weekly compliance report for the infrastructure team', schedule: '0 9 * * 1',
-    message: 'Compile the weekly compliance digest.', agent: 'kirocrew', enabled: true,
+    message: 'Compile the weekly compliance digest.', agent: 'ajcrew', enabled: true,
     session_key: 'slack:C0AP77JJSN6:1755772677.169219',
     last_status: 'ok', last_run_ts: now - 86400, next_run_ts: now + 6 * 86400,
   },
@@ -126,7 +126,7 @@ async function main() {
     ['/api/crons', { jobs: JOBS }],
     ['/api/cron-folders', []],
     ['/api/crons/history', { runs: [] }],
-    ['/api/agents', { agents: [{ name: 'kirocrew' }], default_agent: 'kirocrew' }],
+    ['/api/agents', { agents: [{ name: 'ajcrew' }], default_agent: 'ajcrew' }],
     ['/api/models', []],
   ])
   await stubDashboardApi(page, {

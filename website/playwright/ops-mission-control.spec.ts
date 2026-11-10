@@ -17,7 +17,7 @@ import { createHmac } from 'node:crypto'
  *
  * Run against a live gateway:
  *   PLAYWRIGHT_BASE_URL=http://localhost:6777 \
- *   PLAYWRIGHT_TOKEN=$(kirocrew token --port 6777 | sed "s/.*token=//") \
+ *   PLAYWRIGHT_TOKEN=$(ajcrew token --port 6777 | sed "s/.*token=//") \
  *   npx playwright test playwright/ops-mission-control.spec.ts --project=chromium
  */
 
@@ -713,7 +713,7 @@ test.describe('Ops Mission Control — modes', () => {
     await expect(channel).not.toHaveAttribute('type', 'password')
 
     // ...and there is NO password/secret input anywhere in this card, because the
-    // app reuses Kiro Crew's Slack client and stores no token of its own. If a
+    // app reuses Aj Crew's Slack client and stores no token of its own. If a
     // future change adds one, this fails — which is the point.
     const card = page.locator('div').filter({ hasText: 'Mirror incidents to Slack' }).last()
     await expect(card.locator('input[type="password"]')).toHaveCount(0)

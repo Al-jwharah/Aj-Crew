@@ -18,12 +18,12 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import agent, member_mate_tools
-from kiro_crew.agent_files import CONDUCTOR_AGENT_FILENAME
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.context_assembly import member as member_ctx
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
-from kiro_crew.members import member_briefing_path
+from aj_crew import agent, member_mate_tools
+from aj_crew.agent_files import CONDUCTOR_AGENT_FILENAME
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.context_assembly import member as member_ctx
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.members import member_briefing_path
 
 CREW = "code-reviewer"
 BRIEFING = "This week: crash issues."
@@ -46,30 +46,30 @@ def agents_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def _install_conductor(monkeypatch: pytest.MonkeyPatch) -> dict:
-    """Run the real ``kirocrew-conductor`` installer and return the spec it wrote.
+    """Run the real ``ajcrew-conductor`` installer and return the spec it wrote.
 
     Stubbed as ``test_conductor_agent`` stubs it. The default spec it derives from
     mounts ``fs_write`` and ``code`` on purpose, so what this reads is the
     installer's own tool list, not a fixture that happens to lack a writer.
     """
     monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version", lambda: SPEC_PERMISSIONS_MIN_VERSION
+        "aj_crew.kiro_cli.installed_kiro_cli_version", lambda: SPEC_PERMISSIONS_MIN_VERSION
     )
     monkeypatch.setattr(
         agent,
         "build_agent_config",
         lambda: {
-            "name": "kirocrew",
+            "name": "ajcrew",
             "prompt": "file://x",
             "mcpServers": {
-                "kirocrew-core": {"command": "/resolved/kirocrew", "args": ["mcp-core"]}
+                "ajcrew-core": {"command": "/resolved/ajcrew", "args": ["mcp-core"]}
             },
-            "tools": ["execute_bash", "fs_read", "fs_write", "code", "@kirocrew-core"],
-            "allowedTools": ["@kirocrew-core"],
+            "tools": ["execute_bash", "fs_read", "fs_write", "code", "@ajcrew-core"],
+            "allowedTools": ["@ajcrew-core"],
         },
     )
     monkeypatch.setattr(
-        agent, "_kirocrew_mcp_invocation", lambda sub: ("/resolved/kirocrew", [sub])
+        agent, "_ajcrew_mcp_invocation", lambda sub: ("/resolved/ajcrew", [sub])
     )
     monkeypatch.setattr(agent, "_may_auto_approve", lambda ref: True)
     assert agent._install_conductor_agent() is True
@@ -90,9 +90,9 @@ def _write_briefing() -> Path:
 
 def _section(kiro_agent: str) -> str:
     """The member section for one crewmate bound to the spec named *kiro_agent*."""
-    cfg = KiroCrewConfig()
-    cfg.agents = {CREW: KiroCrewAgentConfig(kiro_agent=kiro_agent, description="Watches issues")}
-    with patch("kiro_crew.context.KiroCrewConfig.load", return_value=cfg):
+    cfg = AjCrewConfig()
+    cfg.agents = {CREW: AjCrewAgentConfig(kiro_agent=kiro_agent, description="Watches issues")}
+    with patch("aj_crew.context.AjCrewConfig.load", return_value=cfg):
         return member_ctx.build_member_section(CREW)
 
 
@@ -125,7 +125,7 @@ def _section(kiro_agent: str) -> str:
         ({"tools": ["*"], "excludedTools": "*"}, True),
         # The shell and the readers are not file tools.
         ({"tools": ["execute_bash", "shell", "fs_read", "read", "grep", "glob"]}, False),
-        ({"tools": ["@kirocrew-core", "@kirocrew-work"]}, False),
+        ({"tools": ["@ajcrew-core", "@ajcrew-work"]}, False),
         ({"tools": []}, False),
         ({}, False),
         ({"tools": "fs_write"}, False),
@@ -144,8 +144,8 @@ def test_the_writer_names_follow_governance_and_the_alias_table() -> None:
     table then counts exactly when the tool it names writes: ``write`` does, and the
     shell and read aliases do not.
     """
-    from kiro_crew.platform.governance import BUILTIN_TOOL_SCOPES
-    from kiro_crew.platform.tool_names import KIRO_TOOL_ALIASES
+    from aj_crew.platform.governance import BUILTIN_TOOL_SCOPES
+    from aj_crew.platform.tool_names import KIRO_TOOL_ALIASES
 
     writers = {name for name, scopes in BUILTIN_TOOL_SCOPES.items() if "filesystem.write" in scopes}
     assert member_mate_tools._FILE_WRITE_TOOLS == writers
@@ -169,11 +169,11 @@ def test_binding_has_file_write_reads_the_spec_the_member_runs(agents: Path) -> 
 
 
 def test_a_row_that_binds_no_template_is_read_as_the_default_one(agents: Path) -> None:
-    """``member_template_id`` runs ``kirocrew`` for a blank row, so that spec answers."""
-    _write_spec(agents, "kirocrew", {"tools": ["fs_read"], "excludedTools": []})
+    """``member_template_id`` runs ``ajcrew`` for a blank row, so that spec answers."""
+    _write_spec(agents, "ajcrew", {"tools": ["fs_read"], "excludedTools": []})
     for blank in (SimpleNamespace(kiro_agent=""), SimpleNamespace()):
         assert member_mate_tools.binding_has_file_write(blank) is False
-    _write_spec(agents, "kirocrew", {"tools": ["fs_read", "fs_write"]})
+    _write_spec(agents, "ajcrew", {"tools": ["fs_read", "fs_write"]})
     assert member_mate_tools.binding_has_file_write(SimpleNamespace(kiro_agent="")) is True
 
 
@@ -183,7 +183,7 @@ def test_a_conductor_crewmate_is_told_it_cannot_write_its_briefing(
 ) -> None:
     assert member_mate_tools.spec_has_file_write(_install_conductor(monkeypatch)) is False
     path = _write_briefing()
-    section = _section("kirocrew-conductor")
+    section = _section("ajcrew-conductor")
     assert member_ctx._MEMBER_BRIEFING_ITEM_NO_FILE_TOOLS in section
     assert member_ctx._MEMBER_BRIEFING_ITEM not in section
     assert "with your file tools" not in section
@@ -210,7 +210,7 @@ def test_a_briefing_the_member_cannot_write_is_marked_as_possibly_stale(
     """
     _install_conductor(monkeypatch)
     _write_briefing()
-    section = _section("kirocrew-conductor")
+    section = _section("ajcrew-conductor")
     item = " ".join(member_ctx._MEMBER_BRIEFING_ITEM_NO_FILE_TOOLS.split())
     assert "possibly out of date" in item and "the thread wins" in item
     assert "tell the user, who can edit or delete the file it names" in item
@@ -222,7 +222,7 @@ def test_an_empty_briefing_is_not_an_invitation_to_write_one(
     agents: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _install_conductor(monkeypatch)
-    section = _section("kirocrew-conductor")
+    section = _section("ajcrew-conductor")
     assert "(empty — your template cannot write this file; keep your working memory" in section
     assert "write your first briefing" not in section
 
@@ -242,8 +242,8 @@ def test_the_platform_gap_outranks_the_tool_gap(
 ) -> None:
     """Where layer 4 is never injected, that is what the member is told."""
     _install_conductor(monkeypatch)
-    monkeypatch.setattr("kiro_crew.context.member_briefing_supported", lambda: False)
-    section = _section("kirocrew-conductor")
+    monkeypatch.setattr("aj_crew.context.member_briefing_supported", lambda: False)
+    section = _section("ajcrew-conductor")
     assert member_ctx._MEMBER_BRIEFING_ITEM_UNAVAILABLE in section
     assert member_ctx._MEMBER_BRIEFING_ITEM_NO_FILE_TOOLS not in section
     assert "[CURRENT ASSIGNMENT — not available on this platform]" in section
@@ -255,4 +255,4 @@ def test_the_no_write_item_sends_working_memory_only_to_the_thread() -> None:
     assert "DM thread" in item and "any other means" in item
     # No tool is named for writing the file anyway: no shell, and no mate tool,
     # since none of them writes the briefing.
-    assert not any(word in item.lower() for word in ("shell", "bash", "update_self", "@kirocrew"))
+    assert not any(word in item.lower() for word in ("shell", "bash", "update_self", "@ajcrew"))

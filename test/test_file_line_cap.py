@@ -30,7 +30,7 @@ from pathlib import Path
 import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS, git_command_env
+from aj_crew.platform.update_governance import _GIT_LOCATION_VARS, git_command_env
 
 # One xdist worker for the whole module: the checkout scan reads every tracked code
 # file, and the selector pins read the test tree. Grouping keeps each scan to one
@@ -148,7 +148,7 @@ class TestTheCheckout:
         # A scan that silently measured nothing would pass the check above.
         measured = checkout_scan.lines
         assert len(measured) > 5000, len(measured)
-        assert any(p.startswith("src/kiro_crew/") and p.endswith(".py") for p in measured)
+        assert any(p.startswith("src/aj_crew/") and p.endswith(".py") for p in measured)
         assert any(p.startswith("test/") and p.endswith(".py") for p in measured)
         assert any(p.startswith("website/src/") and p.endswith(".tsx") for p in measured)
 
@@ -224,13 +224,13 @@ class TestScope:
         "path",
         [
             "website/src/uiLocations/guidePlans.gen.ts",
-            "src/kiro_crew/docs/ui-index.generated.json",
+            "src/aj_crew/docs/ui-index.generated.json",
             "config-baseline.json",
             "test/link_screen_sites.py",
             "website/package-lock.json",
             "uv.lock",
             "website/src/i18n/locales/de.json",
-            "src/kiro_crew/_vendor/llama_cpp/llama.py",
+            "src/aj_crew/_vendor/llama_cpp/llama.py",
             "website/public/vendor/mermaid.min.js",
             "docs/assets/diagram.png",
             "website/public/fonts/inter.woff2",
@@ -248,14 +248,14 @@ class TestScope:
     @pytest.mark.parametrize(
         "path",
         [
-            "src/kiro_crew/_vendor_shim.py",
+            "src/aj_crew/_vendor_shim.py",
             "website/src/pages/Panel.gen.tsx",
             "test/test_link_screen_sites.py",
             "scripts/docs_lint.py",
             "website/src/i18n/format.ts",
             "website/src/utils/minify.js",
             ".github/scripts/take_away_check.py",
-            "src/kiro_crew/docs/CHANGELOG.md.py",
+            "src/aj_crew/docs/CHANGELOG.md.py",
         ],
     )
     def test_a_near_miss_is_not_exempt(self, path: str) -> None:
@@ -272,7 +272,7 @@ class TestScope:
             "package-lock.json",
             "*.lock",
             "website/src/i18n/locales/*.json",
-            "src/kiro_crew/_vendor/*",
+            "src/aj_crew/_vendor/*",
             "*.min.js",
             "*.png",
             "*.jpg",
@@ -300,10 +300,10 @@ class TestScope:
         assert all(e.reason for e in cap.EXEMPTIONS)
 
     def test_an_exempt_file_is_not_measured(self, tmp_path: Path) -> None:
-        _write_lines(tmp_path, "src/kiro_crew/_vendor/big.py", CAP * 2)
-        scanned = cap.scan(tmp_path, ["src/kiro_crew/_vendor/big.py"])
+        _write_lines(tmp_path, "src/aj_crew/_vendor/big.py", CAP * 2)
+        scanned = cap.scan(tmp_path, ["src/aj_crew/_vendor/big.py"])
         assert scanned.lines == {}
-        assert scanned.skipped["src/kiro_crew/_vendor/big.py"].startswith("exempt (vendored")
+        assert scanned.skipped["src/aj_crew/_vendor/big.py"].startswith("exempt (vendored")
 
 
 class TestVerdicts:
@@ -1107,7 +1107,7 @@ class TestWorkingTarget:
         "website/AGENTS.md",
         "AUTOSDE.yaml",
         "website/AUTOSDE.yaml",
-        "src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/SKILL.md",
+        "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/SKILL.md",
     )
     # Every phrasing the homes use for the target. A figure is \d,\d{3}: the
     # homes write thousands with a comma, as they write the cap.
@@ -1136,7 +1136,7 @@ class TestWorkingTarget:
         # website/AGENTS.md's table row and the skill's checklist line are one line.
         anchor = {
             "website/AGENTS.md": "| a file nearing 2,000 lines",
-            "src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/SKILL.md": (
+            "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/SKILL.md": (
                 "**Split a code file the diff takes past"
             ),
         }[home]

@@ -313,7 +313,7 @@ describe('memory record editing in both lineages', () => {
     await screen.findByText('Contact 0: old@example.com'); fireEvent.click(checkbox(0))
     fireEvent.click(screen.getByRole('button', { name: 'Forget selected memories: 1', exact: true }))
     let dialog = screen.getByRole('dialog', { name: 'Forget selected memories: 1', exact: true })
-    const explanation = 'Forget excludes these memories from search. No direct Undo. Recovery restores the whole store from a backup containing them after a Kiro Crew gateway restart.'
+    const explanation = 'Forget excludes these memories from search. No direct Undo. Recovery restores the whole store from a backup containing them after a Aj Crew gateway restart.'
     await waitFor(() => expect(within(dialog).getByText(explanation)).toBeVisible())
     expect(api.memoryEditApply).not.toHaveBeenCalled()
     fireEvent.click(within(dialog).getByRole('button', { name: 'Preview changes' }))
@@ -362,7 +362,7 @@ it.each([
 })
 
 it('keeps a raw source tag from setting the record card’s minimum width', async () => {
-  const source = 'consolidation:dashboard:member-kiro-crew-rust.memory'
+  const source = 'consolidation:dashboard:member-aj-crew-rust.memory'
   records = [record(0, { source })]
   mount('member-review')
   const body = await screen.findByText(records[0].text)

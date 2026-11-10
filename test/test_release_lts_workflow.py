@@ -85,21 +85,21 @@ class TestOssReleaseIsUnchanged:
         edition = _triggers(doc)["workflow_call"]["inputs"]["edition"]
         assert edition["default"] == "oss" and edition["required"] is False
         # Empty unless lts: setup.py and build-desktop.sh read empty as oss.
-        assert doc["env"]["KIROCREW_BUILD_EDITION"] == _EDITION_ENV
+        assert doc["env"]["AJCREW_BUILD_EDITION"] == _EDITION_ENV
 
     def test_every_lts_only_name_is_gated_on_the_lts_channel(self) -> None:
         linux = _workflow("publish-linux.yml")["jobs"]["publish-linux"]["env"]
         assert linux["PUBLISHED_STEM"] == (
-            "${{ inputs.channel == 'lts' && 'KiroCrew-LTS' || 'KiroCrew' }}"  # brand-ok
+            "${{ inputs.channel == 'lts' && 'AjCrew-LTS' || 'AjCrew' }}"  # brand-ok
         )
         windows = _workflow("publish-windows.yml")["jobs"]["publish-windows"]["env"]
         assert windows["PUBLISHED_BASENAME"] == (
-            "${{ inputs.channel == 'lts' && 'KiroCrew-LTS-Setup' || 'KiroCrew-Setup' }}"  # brand-ok
+            "${{ inputs.channel == 'lts' && 'AjCrew-LTS-Setup' || 'AjCrew-Setup' }}"  # brand-ok
         )
         mac = _workflow("sign-and-notarize.yml")["jobs"]
         for job in ("notarize", "publish"):
             assert mac[job]["env"]["ARTIFACT_BASENAME"] == (
-                "${{ format('KiroCrew{0}{1}', inputs.channel == 'lts' && '-LTS' || '', "  # brand-ok
+                "${{ format('AjCrew{0}{1}', inputs.channel == 'lts' && '-LTS' || '', "  # brand-ok
                 "inputs.mac_variant != '' && format('-{0}', inputs.mac_variant) || '') }}"
             )
         wheel = _workflow("build-wheel.yml")["jobs"]["build-wheel"]["steps"]
@@ -111,7 +111,7 @@ class TestOssReleaseIsUnchanged:
         self, tmp_path: Path
     ) -> None:
         # The voice extra names its own distribution; left alone,
-        # kirocrew-lts[voice] would install the oss kirocrew beside it.
+        # ajcrew-lts[voice] would install the oss ajcrew beside it.
         wheel = _workflow("build-wheel.yml")["jobs"]["build-wheel"]["steps"]
         rename = next(step for step in wheel if step.get("name") == "Name the LTS distribution")
         for name in ("pyproject.toml", "setup.cfg"):
@@ -119,10 +119,10 @@ class TestOssReleaseIsUnchanged:
                 (ROOT / name).read_text(encoding="utf-8"), encoding="utf-8"
             )
         subprocess.run(["bash", "-eo", "pipefail", "-c", rename["run"]], cwd=tmp_path, check=True)
-        assert 'name = "kirocrew-lts"' in (tmp_path / "pyproject.toml").read_text(encoding="utf-8")
+        assert 'name = "ajcrew-lts"' in (tmp_path / "pyproject.toml").read_text(encoding="utf-8")
         cfg = (tmp_path / "setup.cfg").read_text(encoding="utf-8")
-        assert "    kirocrew-lts[voice-aws]" in cfg
-        assert not re.search(r"^\s+kirocrew\[", cfg, re.MULTILINE)
+        assert "    ajcrew-lts[voice-aws]" in cfg
+        assert not re.search(r"^\s+ajcrew\[", cfg, re.MULTILINE)
 
 
 class TestLtsReleaseLegs:
@@ -143,19 +143,19 @@ class TestLtsReleaseLegs:
     def test_the_install_smokes_expect_the_signed_out_lts_refusal(self) -> None:
         # The smokes have no sign-in, so for LTS they assert the refusal. Its text
         # must be the line lts_boot.refuse_boot logs, or every LTS smoke fails.
-        source = (ROOT / "src" / "kiro_crew" / "lts_boot.py").read_text(encoding="utf-8")
+        source = (ROOT / "src" / "aj_crew" / "lts_boot.py").read_text(encoding="utf-8")
         assert 'logger.critical("LTS boot refused: %s. %s"' in source
         mac = (ROOT / "scripts" / "smoke-macos-install.sh").read_text(encoding="utf-8")
         win = (ROOT / "scripts" / "smoke-windows-install.ps1").read_text(encoding="utf-8")
         assert 'LTS_REFUSAL="LTS boot refused"' in mac
-        assert '[ "${KIROCREW_BUILD_EDITION:-}" = lts ]' in mac
+        assert '[ "${AJCREW_BUILD_EDITION:-}" = lts ]' in mac
         assert '$ltsRefusal = "LTS boot refused"' in win
-        assert '$isLts = $env:KIROCREW_BUILD_EDITION -eq "lts"' in win
+        assert '$isLts = $env:AJCREW_BUILD_EDITION -eq "lts"' in win
         # The Windows gateway starts as the desktop app starts it, so a signed-out
         # LTS build refuses instead of serving the sign-in-only screen.
-        assert 'if ($isLts) { $gatewayEnv["KIROCREW_DESKTOP_GATEWAY"] = "1" }' in win
+        assert 'if ($isLts) { $gatewayEnv["AJCREW_DESKTOP_GATEWAY"] = "1" }' in win
         for name in ("build-desktop.yml", "build-windows.yml"):
-            assert _workflow(name)["env"]["KIROCREW_BUILD_EDITION"] == _EDITION_ENV, name
+            assert _workflow(name)["env"]["AJCREW_BUILD_EDITION"] == _EDITION_ENV, name
 
     def test_no_docker_image_and_no_github_release(self) -> None:
         text = (WORKFLOWS / "release-lts.yml").read_text(encoding="utf-8")
@@ -212,18 +212,18 @@ class TestLtsArtifactNames:
         return module
 
     def test_lts_publishes_its_own_wheel_name(self) -> None:
-        from kiro_crew.platform.wheel_engine import wheel_filename
+        from aj_crew.platform.wheel_engine import wheel_filename
 
         manifest = self._manifest_module()
         for helper in (wheel_filename, manifest.wheel_filename):
-            assert helper("lts", "0.13.0") == "kirocrew_lts-0.13.0-py3-none-any.whl"
-            assert helper("stable", "0.13.0") == "kirocrew-0.13.0-py3-none-any.whl"
+            assert helper("lts", "0.13.0") == "ajcrew_lts-0.13.0-py3-none-any.whl"
+            assert helper("stable", "0.13.0") == "ajcrew-0.13.0-py3-none-any.whl"
         assert "lts" in manifest.CHANNELS
 
     @needs_bash
     def test_publish_cli_pairs_the_wheel_stem_with_the_channel(self) -> None:
         steps = _workflow("publish-cli.yml")["jobs"]["publish-cli"]["steps"]
-        run = next(step["run"] for step in steps if "STEM=kirocrew_lts" in str(step.get("run")))
+        run = next(step["run"] for step in steps if "STEM=ajcrew_lts" in str(step.get("run")))
         # The stem choice and the name check, exactly as the step runs them.
         match = re.search(
             r"^ *if \[ \"\$CHANNEL\" = lts \]; then STEM=.*?\n *fi\n", run, re.MULTILINE | re.DOTALL
@@ -231,10 +231,10 @@ class TestLtsArtifactNames:
         assert match, "publish-cli.yml pins the wheel stem to the channel"
         check = match.group(0)
         cases = [
-            ("lts", "kirocrew_lts-0.13.0-py3-none-any.whl", 0),
-            ("lts", "kirocrew-0.13.0-py3-none-any.whl", 1),
-            ("stable", "kirocrew-0.13.0-py3-none-any.whl", 0),
-            ("stable", "kirocrew_lts-0.13.0-py3-none-any.whl", 1),
+            ("lts", "ajcrew_lts-0.13.0-py3-none-any.whl", 0),
+            ("lts", "ajcrew-0.13.0-py3-none-any.whl", 1),
+            ("stable", "ajcrew-0.13.0-py3-none-any.whl", 0),
+            ("stable", "ajcrew_lts-0.13.0-py3-none-any.whl", 1),
         ]
         for channel, wheel, code in cases:
             out = subprocess.run(
@@ -248,9 +248,9 @@ class TestLtsArtifactNames:
             assert out.returncode == code, (channel, wheel, out.stdout, out.stderr)
 
     def test_the_lts_build_reports_its_own_distribution(self, monkeypatch) -> None:
-        from kiro_crew import release_channel
+        from aj_crew import release_channel
 
-        installed: set[str] = {"kirocrew", "kirocrew-lts"}
+        installed: set[str] = {"ajcrew", "ajcrew-lts"}
 
         def distribution(name: str) -> object:
             if name not in installed:
@@ -258,14 +258,14 @@ class TestLtsArtifactNames:
             return object()
 
         monkeypatch.setattr(importlib.metadata, "distribution", distribution)
-        monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
-        assert release_channel.distribution_name() == "kirocrew-lts"
-        # The desktop backend installs the unrenamed source tree as kirocrew.
-        installed.discard("kirocrew-lts")
-        assert release_channel.distribution_name() == "kirocrew"
-        monkeypatch.setattr("kiro_crew.edition.EDITION", "oss")
-        installed.add("kirocrew-lts")
-        assert release_channel.distribution_name() == "kirocrew"
+        monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
+        assert release_channel.distribution_name() == "ajcrew-lts"
+        # The desktop backend installs the unrenamed source tree as ajcrew.
+        installed.discard("ajcrew-lts")
+        assert release_channel.distribution_name() == "ajcrew"
+        monkeypatch.setattr("aj_crew.edition.EDITION", "oss")
+        installed.add("ajcrew-lts")
+        assert release_channel.distribution_name() == "ajcrew"
 
     def test_an_oss_tag_never_holds_the_lts_feed(self, tmp_path) -> None:
         tags = tmp_path / "tags.txt"

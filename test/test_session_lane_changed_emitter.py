@@ -21,10 +21,10 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state, _make_tags_app
 
-from kiro_crew import hooks as H
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
-from kiro_crew.hooks import (
+from aj_crew import hooks as H
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
+from aj_crew.hooks import (
     HOOK_EVENT_SESSION_LANE_CHANGED,
     ScriptHookStore,
     set_global_hook_store,
@@ -47,7 +47,7 @@ def _reset_global_store(_floor_monkeypatch):
     """
     set_global_hook_store(None)  # type: ignore[arg-type]
     _floor_monkeypatch.setattr(
-        "kiro_crew.hooks._script_hooks_capability_denied", lambda sk="": None
+        "aj_crew.hooks._script_hooks_capability_denied", lambda sk="": None
     )
     yield
     set_global_hook_store(None)  # type: ignore[arg-type]
@@ -70,7 +70,7 @@ def _recording_store(tmp_path, monkeypatch, *, mock_spawn=True, matcher=""):
         hook.last_status = "ok"
 
     if mock_spawn:
-        monkeypatch.setattr("kiro_crew.hooks.run_script_hook", _record)
+        monkeypatch.setattr("aj_crew.hooks.run_script_hook", _record)
     # Built through the real write path, not by assigning `_hooks`. That
     # attribute is a dict keyed by id, so a list assigned to it makes every
     # reader iterate ID STRINGS -- which is exactly the production defect these
@@ -121,7 +121,7 @@ class TestTheRouteActuallyFiresTheEvent:
         emitting the whole set difference would put a non-status id into the matcher
         context, letting a hook match a tag the firing contract excludes.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         store, seen = _recording_store(tmp_path, monkeypatch)
@@ -132,7 +132,7 @@ class TestTheRouteActuallyFiresTheEvent:
             label = await (await client.post("/api/chat/tags", json={"name": "plain"})).json()
             slot = _ChatSlot("s1")
             state._slots["s1"] = slot
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.put(
                     "/api/chat/slots/s1/tags",
                     json={"tags": [done["id"], label["id"]]},
@@ -163,14 +163,14 @@ class TestTheRouteActuallyFiresTheEvent:
         firing session's. The module's autouse fixture permits the capability, so
         this overrides it with a recording denial.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         asked: list[str] = []
 
         def _deny(sk: str = "") -> str:
             asked.append(sk)
             return "off"
 
-        monkeypatch.setattr("kiro_crew.hooks._script_hooks_capability_denied", _deny)
+        monkeypatch.setattr("aj_crew.hooks._script_hooks_capability_denied", _deny)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         store, seen = _recording_store(tmp_path, monkeypatch, mock_spawn=False)
@@ -179,7 +179,7 @@ class TestTheRouteActuallyFiresTheEvent:
                 await client.post("/api/chat/tags", json={"name": "Done", "status": True})
             ).json()
             state._slots["s1"] = _ChatSlot("s1")
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.put("/api/chat/slots/s1/tags", json={"tags": [done["id"]]})
             assert resp.status == 200
 
@@ -196,14 +196,14 @@ class TestTheRouteActuallyFiresTheEvent:
         """The control for the test above: without a status tag there is no lane
         change, so the same route must fire nothing. Without this, a dispatcher that
         fired on EVERY tag write would pass the positive test."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         _store, seen = _recording_store(tmp_path, monkeypatch)
         async with TestClient(TestServer(app)) as client:
             label = await (await client.post("/api/chat/tags", json={"name": "plain"})).json()
             state._slots["s1"] = _ChatSlot("s1")
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.put("/api/chat/slots/s1/tags", json={"tags": [label["id"]]})
             assert resp.status == 200
             assert await _fired(seen) == []
@@ -218,7 +218,7 @@ class TestTheRouteActuallyFiresTheEvent:
         a lane change that did not happen -- and for a close-out hook that means an
         irreversible action on a move the board rejected.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         _store, seen = _recording_store(tmp_path, monkeypatch)
@@ -227,7 +227,7 @@ class TestTheRouteActuallyFiresTheEvent:
                 await client.post("/api/chat/tags", json={"name": "Done", "status": True})
             ).json()
             state._slots["s1"] = _ChatSlot("s1")
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop", return_value=False):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop", return_value=False):
                 resp = await client.put("/api/chat/slots/s1/tags", json={"tags": [done["id"]]})
             assert resp.status == 409
             assert await _fired(seen) == []
@@ -244,7 +244,7 @@ class TestTheRouteActuallyFiresTheEvent:
         ``save_slot_off_loop`` raises for every mode, so the test would pass with
         the swallowing default restored.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         _store, seen = _recording_store(tmp_path, monkeypatch)
@@ -254,7 +254,7 @@ class TestTheRouteActuallyFiresTheEvent:
             ).json()
             state._slots["s1"] = _ChatSlot("s1")
             with patch(
-                "kiro_crew.dashboard.chat_persistence._save_slot_to_history",
+                "aj_crew.dashboard.chat_persistence._save_slot_to_history",
                 side_effect=OSError("disk went away"),
             ):
                 resp = await client.put("/api/chat/slots/s1/tags", json={"tags": [done["id"]]})
@@ -272,7 +272,7 @@ class TestTheRouteActuallyFiresTheEvent:
         keyed on entering Done, and a plain label on the slot must survive the
         strip and stay out of the delta.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         _store, seen = _recording_store(tmp_path, monkeypatch)
@@ -293,7 +293,7 @@ class TestTheRouteActuallyFiresTheEvent:
                     json={"tag_ids": [done["id"]], "mode": "any"},
                 )
             ).json()
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.post("/api/chat/slots/s1/drop", json={"column_id": col["id"]})
             assert resp.status == 200
 
@@ -337,7 +337,7 @@ class TestTheRouteActuallyFiresTheEvent:
         the same shared enumeration the two routes use for their own refusals, so
         the dispatcher agrees with the handler rather than deciding identity twice.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         _store, seen = _recording_store(tmp_path, monkeypatch)
@@ -372,7 +372,7 @@ class TestTheRouteActuallyFiresTheEvent:
     ):
         """A `*added:<id>;*` hook runs on entering the lane and a `*removed:<id>;*`
         hook on leaving it, through the real route and the real matcher, never both."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -383,7 +383,7 @@ class TestTheRouteActuallyFiresTheEvent:
                 tmp_path, monkeypatch, matcher=f"*{direction}:{done['id']};*"
             )
             state._slots["s1"] = _ChatSlot("s1")
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 enter = await client.put("/api/chat/slots/s1/tags", json={"tags": [done["id"]]})
                 assert enter.status == 200
                 entered = list(await _fired(seen))
@@ -408,7 +408,7 @@ class TestTheRouteActuallyFiresTheEvent:
         existing gate to do its job, which is why it is asserted here rather than
         left to that gate's own tests.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         _store, seen = _recording_store(tmp_path, monkeypatch)
@@ -417,7 +417,7 @@ class TestTheRouteActuallyFiresTheEvent:
                 await client.post("/api/chat/tags", json={"name": "Done", "status": True})
             ).json()
             state._slots["s1"] = _ChatSlot("s1")
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.put("/api/chat/slots/s1/tags", json={"tags": [done["id"]]})
             assert resp.status == 200
 
@@ -434,7 +434,7 @@ class TestTheRouteActuallyFiresTheEvent:
         the SEL row, so a host that never registers one adds no rows and spawns no
         tasks.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         store = ScriptHookStore(tmp_path)
@@ -444,6 +444,6 @@ class TestTheRouteActuallyFiresTheEvent:
                 await client.post("/api/chat/tags", json={"name": "Done", "status": True})
             ).json()
             state._slots["s1"] = _ChatSlot("s1")
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.put("/api/chat/slots/s1/tags", json={"tags": [done["id"]]})
             assert resp.status == 200

@@ -25,11 +25,11 @@ import pytest
 from apps_backend_coverage_helpers import _isolated_module_state  # noqa: F401
 from apps_backend_coverage_helpers import _fake_proc, _manifest
 
-import kiro_crew.apps.backend as bmod
-import kiro_crew.apps.backend_runtime.restart as rmod
-from kiro_crew import platform_compat
-from kiro_crew.apps.backend import AppProcess
-from kiro_crew.config.loader import config_dir
+import aj_crew.apps.backend as bmod
+import aj_crew.apps.backend_runtime.restart as rmod
+from aj_crew import platform_compat
+from aj_crew.apps.backend import AppProcess
+from aj_crew.config.loader import config_dir
 
 _APP = "app"
 _WAIT = 5.0

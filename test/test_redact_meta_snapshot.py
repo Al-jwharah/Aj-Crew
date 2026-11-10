@@ -10,9 +10,9 @@ iterating ``meta.items()`` directly raised
 That exception propagated out of ``_save_slot_to_history`` and aborted the whole
 slot's save. Observed twice in the gateway log:
 
-    ERROR kiro_crew.dashboard.chat_persistence: Failed to save slot
+    ERROR aj_crew.dashboard.chat_persistence: Failed to save slot
     chat-73-... to history
-    WARNING kiro_crew.dashboard.state: Flush failed for slot chat-73-...
+    WARNING aj_crew.dashboard.state: Flush failed for slot chat-73-...
 
 Scope of the damage, stated precisely: ``_flush_dirty_slots`` clears
 ``slot._dirty`` only on success, so the aborted flush left the slot dirty and the
@@ -31,8 +31,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.dashboard import mcp_oauth_provenance
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard import mcp_oauth_provenance
+from aj_crew.dashboard.chat_utils import (
     _redact_meta,
     _redact_meta_for_role,
     _redact_value,
@@ -146,7 +146,7 @@ def test_flush_file_changes_marks_slot_dirty() -> None:
     flush skips non-dirty slots, so an unflagged in-place mutation can be lost on
     restart."
     """
-    from kiro_crew.dashboard.chat_runner import _flush_file_changes
+    from aj_crew.dashboard.chat_runner import _flush_file_changes
 
     class _Slot:
         key = "chat-1-test"
@@ -171,8 +171,8 @@ def _flush_harness(save_fn):
 
     Returns the slot so a test can assert on `_dirty` after the pass.
     """
-    from kiro_crew.dashboard import chat as chat_mod
-    from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+    from aj_crew.dashboard import chat as chat_mod
+    from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
     class _Slot:
         key = "chat-1-test"

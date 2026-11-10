@@ -13,8 +13,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.slack.agent_sessions import fence, status
-from kiro_crew.slack.agent_sessions.status import (
+from aj_crew.slack.agent_sessions import fence, status
+from aj_crew.slack.agent_sessions.status import (
     PROCESSING_REFRESH_SECS,
     SESSION_STATUS_ACTIVE,
     SESSION_STATUS_PROCESSING,
@@ -24,10 +24,10 @@ from kiro_crew.slack.agent_sessions.status import (
     lifecycle_for_text,
     thread_ts_of,
 )
-from kiro_crew.slack.client import RealSlackClient
-from kiro_crew.testing.wait import await_until
+from aj_crew.slack.client import RealSlackClient
+from aj_crew.testing.wait import await_until
 
-_SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+_SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 
 class SlackApiError(Exception):
@@ -77,7 +77,7 @@ class Clock:
 @pytest.fixture(autouse=True)
 def _caps() -> Any:
     """A clean capability record with both scopes granted; yields latch notices."""
-    from kiro_crew.slack import features
+    from aj_crew.slack import features
 
     seen: list[tuple[str, str]] = []
     features.reset_capabilities()
@@ -203,7 +203,7 @@ class TestToggleOff:
     @pytest.mark.asyncio
     async def test_on_but_the_scope_not_granted_is_identical_to_main(self) -> None:
         """The real gate: the toggle on, the install's grant lacking assistant:write."""
-        from kiro_crew.slack import features
+        from aj_crew.slack import features
 
         client, web = make_client(live=False)
         status.configure(self._orch(client, True))
@@ -441,7 +441,7 @@ class TestQueuedAck:
             pass
 
     async def _ack_for(self, client: RealSlackClient) -> list[str]:
-        from kiro_crew.slack.handler_runtime.reactions import StatusReactionController
+        from aj_crew.slack.handler_runtime.reactions import StatusReactionController
 
         shown = await client.set_thread_status("C1", "1700.1", "is working on your request")
         sink = self._Reactions()
@@ -471,7 +471,7 @@ class TestChannelPolicy:
 
     @pytest.fixture()
     def refused(self, monkeypatch: pytest.MonkeyPatch) -> list[str]:
-        from kiro_crew.slack import channel_policy
+        from aj_crew.slack import channel_policy
 
         asked: list[str] = []
 
@@ -533,7 +533,7 @@ class TestChannelPolicy:
     async def test_a_channel_withdrawn_mid_turn_stops_the_keepalive_and_still_clears(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.slack import channel_policy
+        from aj_crew.slack import channel_policy
 
         withdrawn: set[str] = set()
         monkeypatch.setattr(
@@ -626,7 +626,7 @@ class TestDegrade:
         self, code: str, _caps: list
     ) -> None:
         """The shared latch: one log line, one notification, the settings page sees it."""
-        from kiro_crew.slack import features
+        from aj_crew.slack import features
 
         notes: list = []
         client, web = make_client(notes=notes)
@@ -735,7 +735,7 @@ def test_every_visible_client_write_asks_the_fence() -> None:
     import ast
     import inspect
 
-    from kiro_crew.slack import client as client_mod
+    from aj_crew.slack import client as client_mod
 
     tree = ast.parse(inspect.getsource(client_mod))
     cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == "RealSlackClient")
@@ -894,7 +894,7 @@ class TestWriteFence:
             fence.mute_turns("C1", "1700.1")
         finally:
             fence.exit_turn(reset)
-        caplog.set_level("DEBUG", logger="kiro_crew.slack.agent_sessions.fence")
+        caplog.set_level("DEBUG", logger="aj_crew.slack.agent_sessions.fence")
         gate.set()
         await await_until(child, what="the watcher")
         assert [kw["text"] for _m, kw in web.calls] == ["other thread", "other channel"]
@@ -960,7 +960,7 @@ class TestRendererApprovalPause:
 
     @pytest.mark.asyncio
     async def test_an_approval_prompt_suspends_and_the_next_output_resumes(self) -> None:
-        from kiro_crew.slack.renderer import SlackRenderer
+        from aj_crew.slack.renderer import SlackRenderer
 
         client, web = make_client()
         renderer = SlackRenderer(client, "C1", "1700.1", reactions_enabled=False)
@@ -974,7 +974,7 @@ class TestRendererApprovalPause:
     @pytest.mark.asyncio
     async def test_the_decision_puts_the_session_back_to_processing(self) -> None:
         """The approved tool runs with its loader and Stop button, before any output."""
-        from kiro_crew.slack.renderer import SlackApprovalDecider, SlackRenderer
+        from aj_crew.slack.renderer import SlackApprovalDecider, SlackRenderer
 
         client, web = make_client()
         decider = SlackApprovalDecider("slack:1700.1")
@@ -991,7 +991,7 @@ class TestRendererApprovalPause:
 
     @pytest.mark.asyncio
     async def test_a_click_that_beats_the_registration_still_resumes(self) -> None:
-        from kiro_crew.slack.renderer import SlackApprovalDecider
+        from aj_crew.slack.renderer import SlackApprovalDecider
 
         decider = SlackApprovalDecider("slack:1700.1")
         decider.reserve(9)
@@ -1004,7 +1004,7 @@ class TestRendererApprovalPause:
 
     @pytest.mark.asyncio
     async def test_a_resume_in_flight_lands_before_the_closing_active(self) -> None:
-        from kiro_crew.slack.renderer import SlackApprovalDecider, SlackRenderer
+        from aj_crew.slack.renderer import SlackApprovalDecider, SlackRenderer
 
         client, web = make_client()
         gate = asyncio.Event()
@@ -1038,7 +1038,7 @@ class TestRendererApprovalPause:
     ) -> None:
         """The reply is held until the turn ends: with agent sessions live and an
         approval in the turn, ``on_done`` still delivers it, and before ``active``."""
-        from kiro_crew.slack.renderer import SlackApprovalDecider, SlackRenderer
+        from aj_crew.slack.renderer import SlackApprovalDecider, SlackRenderer
 
         client, web = make_client()
         decider = SlackApprovalDecider("slack:1700.1")
@@ -1066,7 +1066,7 @@ class TestRendererApprovalPause:
     async def test_teardown_waits_for_a_cancelled_resume_before_clearing(self) -> None:
         """A resume still in flight at ``close()`` has finished unwinding before the
         closing clear, so its ``processing`` cannot reach Slack after it."""
-        from kiro_crew.slack.renderer import SlackApprovalDecider, SlackRenderer
+        from aj_crew.slack.renderer import SlackApprovalDecider, SlackRenderer
 
         client, web = make_client()
         gate = asyncio.Event()
@@ -1096,7 +1096,7 @@ class TestRendererApprovalPause:
     async def test_a_late_resume_cannot_overwrite_the_next_approvals_pause(self) -> None:
         """GPT on a5d92c0b75: a fast approved tool whose ``processing`` is still on
         its way, then a second approval. The second ``suspended`` must land last."""
-        from kiro_crew.slack.renderer import SlackApprovalDecider, SlackRenderer
+        from aj_crew.slack.renderer import SlackApprovalDecider, SlackRenderer
 
         client, web = make_client()
         gate = asyncio.Event()
@@ -1130,7 +1130,7 @@ class TestRendererApprovalPause:
 
     @pytest.mark.asyncio
     async def test_a_decision_after_the_turn_ended_changes_nothing(self) -> None:
-        from kiro_crew.slack.renderer import SlackApprovalDecider, SlackRenderer
+        from aj_crew.slack.renderer import SlackApprovalDecider, SlackRenderer
 
         client, web = make_client()
         decider = SlackApprovalDecider("slack:1700.1")
@@ -1147,7 +1147,7 @@ class TestRendererApprovalPause:
 
     @pytest.mark.asyncio
     async def test_the_native_path_resumes_after_the_decision(self) -> None:
-        from kiro_crew.slack.handler_runtime.stream import _AnswerStream
+        from aj_crew.slack.handler_runtime.stream import _AnswerStream
 
         client, web = make_client()
         answer = _AnswerStream.__new__(_AnswerStream)
@@ -1162,7 +1162,7 @@ class TestRendererApprovalPause:
         # The approval flush can fail both the append and the rotation, which
         # drops the turn to message posting; the session must still leave
         # ``suspended`` so the approved tool runs with its native Stop showing.
-        from kiro_crew.slack.handler_runtime.stream import _AnswerStream
+        from aj_crew.slack.handler_runtime.stream import _AnswerStream
 
         client, web = make_client()
         answer = _AnswerStream.__new__(_AnswerStream)
@@ -1174,7 +1174,7 @@ class TestRendererApprovalPause:
 
     @pytest.mark.asyncio
     async def test_no_resume_without_an_approval_status(self) -> None:
-        from kiro_crew.slack.handler_runtime.stream import _AnswerStream
+        from aj_crew.slack.handler_runtime.stream import _AnswerStream
 
         client, web = make_client()
         answer = _AnswerStream.__new__(_AnswerStream)
@@ -1185,7 +1185,7 @@ class TestRendererApprovalPause:
 
     @pytest.mark.asyncio
     async def test_the_native_resume_is_silent_with_the_feature_off(self) -> None:
-        from kiro_crew.slack.handler_runtime.stream import _AnswerStream
+        from aj_crew.slack.handler_runtime.stream import _AnswerStream
 
         client, web = make_client(live=False)
         answer = _AnswerStream.__new__(_AnswerStream)
@@ -1196,7 +1196,7 @@ class TestRendererApprovalPause:
 
     @pytest.mark.asyncio
     async def test_with_the_feature_off_the_prompt_sets_no_status(self) -> None:
-        from kiro_crew.slack.renderer import SlackRenderer
+        from aj_crew.slack.renderer import SlackRenderer
 
         client, web = make_client(live=False)
         renderer = SlackRenderer(client, "C1", "1700.1", reactions_enabled=False)

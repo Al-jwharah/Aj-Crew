@@ -17,16 +17,16 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.dashboard import chat_handlers
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.dashboard import chat_handlers
 
 
 def _state(tmp_path, monkeypatch) -> Any:
-    cfg = KiroCrewConfig()
-    cfg.agents = {"default": KiroCrewAgentConfig(kiro_agent="kirocrew")}
+    cfg = AjCrewConfig()
+    cfg.agents = {"default": AjCrewAgentConfig(kiro_agent="ajcrew")}
     cfg.default_agent = "default"
     state = _make_state(tmp_path)
-    monkeypatch.setattr(chat_handlers, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+    monkeypatch.setattr(chat_handlers, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
     monkeypatch.setattr(chat_handlers, "schedule_eager_spawn", lambda *args, **kwargs: None)
     return state
 
@@ -54,7 +54,7 @@ async def test_a_non_string_title_is_refused_before_any_slot_is_made(
     audit row for a chat that never opened. Now it is a 400, the slot table is
     unchanged and no create is audited.
     """
-    from kiro_crew.shared_crew import audit
+    from aj_crew.shared_crew import audit
 
     audited: list[Any] = []
     monkeypatch.setattr(audit, "schedule_action_audit", lambda *a, **kw: audited.append(a))

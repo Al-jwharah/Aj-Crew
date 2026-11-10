@@ -24,8 +24,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import sel as sel_mod
-from kiro_crew.apps.builtins.pptx_maker.backend import engine, routes
+from aj_crew import sel as sel_mod
+from aj_crew.apps.builtins.pptx_maker.backend import engine, routes
 
 _BASE = "/api/apps/pptx-maker"
 _OWNER = "owner-user"
@@ -70,7 +70,7 @@ def env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
     (user_cfg / "styles" / "owner-brand.html").write_text("<html><body>brand</body></html>")
     (user_cfg / "templates" / "owner-deck.pptx").write_bytes(b"PK\x03\x04owner")
     monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
-    monkeypatch.delenv("KIROCREW_PPTX_DECK_ROOT", raising=False)
+    monkeypatch.delenv("AJCREW_PPTX_DECK_ROOT", raising=False)
     monkeypatch.setattr(routes, "is_app_enabled", lambda _name: True)
     monkeypatch.setattr(routes, "_audit", lambda *a, **k: None)
     denials: list[str] = []

@@ -1,4 +1,4 @@
-"""What ``kirocrew restart`` says when its replacement gateway exits at once.
+"""What ``ajcrew restart`` says when its replacement gateway exits at once.
 
 The replacement is refused when another process still owns the config dir, which
 on a desktop install is the app's own supervisor. That owner's gateway keeps
@@ -19,7 +19,7 @@ from cli_helpers import (  # noqa: F401 -- the autouse fixture registers by impo
     _doctor_reads_the_warm_probe_cache,
 )
 
-from kiro_crew.gateway_lock import LockHolder, LockProbeError
+from aj_crew.gateway_lock import LockHolder, LockProbeError
 
 # A pid no test signals: every process here is a mock or a patched probe.
 _HOLDER_PID = 2**22 + 17
@@ -27,7 +27,7 @@ _HOLDER_PID = 2**22 + 17
 
 def _drive_died(ready_status: int, owner: tuple[int, bool] | None):
     """Run ``_restart`` with a replacement that exits 1 and a probe answering *ready_status*."""
-    with patch("kiro_crew.cli_server._config_dir_owner", return_value=owner):
+    with patch("aj_crew.cli_server._config_dir_owner", return_value=owner):
         return readiness.TestRestartReadinessVerdict()._drive(
             poll=1, ready_status=ready_status, marker_pid=[None, None]
         )
@@ -62,7 +62,7 @@ class TestDiedReplacementWording:
         assert f"pid {_HOLDER_PID} still owns" in out
         assert "so the replacement was refused." in out
         assert "desktop app" not in out
-        assert "kirocrew logs -f" in out
+        assert "ajcrew logs -f" in out
         # Behaviour is unchanged: same exit code, same single denied audit, no token chase.
         assert [c.kwargs["outcome"] for c in mock_sel.log_api_access.call_args_list] == ["denied"]
         assert "reason=replacement_died exit=1" in _audit_resources(mock_sel)[0]
@@ -75,7 +75,7 @@ class TestDiedReplacementWording:
         out = capsys.readouterr().out
         assert "Nothing is serving" not in out
         assert re.search(r"\. Port \d+ still answers HTTP\.\n", out)
-        assert f"The Kiro Crew desktop app (pid {_HOLDER_PID}) owns" in out
+        assert f"The Aj Crew desktop app (pid {_HOLDER_PID}) owns" in out
         assert "Restart it from the app." in out
         assert "reason=replacement_died exit=1" in _audit_resources(mock_sel)[0]
 
@@ -91,11 +91,11 @@ class TestDiedReplacementWording:
         assert "A gateway is still serving port" not in out
         assert "owns" not in out
         assert "refused" not in out
-        assert "kirocrew logs -f" in out
+        assert "ajcrew logs -f" in out
 
     def test_the_owner_is_only_looked_up_again_when_the_port_answers(self, capsys):
         """The one lookup is the up-front desktop check; the wording adds none."""
-        with patch("kiro_crew.cli_server._config_dir_owner", return_value=None) as mock_desktop:
+        with patch("aj_crew.cli_server._config_dir_owner", return_value=None) as mock_desktop:
             code, _sel, _url = readiness.TestRestartReadinessVerdict()._drive(
                 poll=1, ready_status=0, marker_pid=[None, None]
             )
@@ -109,18 +109,18 @@ class TestDiedReplacementWording:
 class TestConfigDirOwner:
     @staticmethod
     def _holder_pid(*, holder=None, exe=None, cmdline="", raises=None):
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         lock = (
-            patch("kiro_crew.cli_server.lock_holder", side_effect=raises)
+            patch("aj_crew.cli_server.lock_holder", side_effect=raises)
             if raises is not None
-            else patch("kiro_crew.cli_server.lock_holder", return_value=holder)
+            else patch("aj_crew.cli_server.lock_holder", return_value=holder)
         )
         with (
             lock,
-            patch("kiro_crew.cli_server.platform_compat.process_executable_path", return_value=exe),
+            patch("aj_crew.cli_server.platform_compat.process_executable_path", return_value=exe),
             patch(
-                "kiro_crew.cli_server.platform_compat.process_command_line", return_value=cmdline
+                "aj_crew.cli_server.platform_compat.process_command_line", return_value=cmdline
             ),
         ):
             return cli_server._config_dir_owner()
@@ -130,15 +130,15 @@ class TestConfigDirOwner:
     @pytest.mark.parametrize(
         "exe",
         [
-            "/Applications/Kiro Crew.app/Contents/Resources/backend-dist/bin/python3.12",
-            "/opt/kiro-crew/resources/backend-dist/bin/python3",
+            "/Applications/Aj Crew.app/Contents/Resources/backend-dist/bin/python3.12",
+            "/opt/aj-crew/resources/backend-dist/bin/python3",
         ],
     )
     def test_a_holder_running_from_the_bundle_is_the_desktop(self, exe):
         assert self._holder_pid(holder=self._LIVE, exe=exe) == (_HOLDER_PID, True)
 
     def test_windows_falls_back_to_the_command_line(self):
-        cmdline = r'"C:\Program Files\Kiro Crew\resources\backend-dist\python.exe" -m kiro_crew'
+        cmdline = r'"C:\Program Files\Aj Crew\resources\backend-dist\python.exe" -m aj_crew'
         assert self._holder_pid(holder=self._LIVE, exe=None, cmdline=cmdline) == (
             _HOLDER_PID,
             True,
@@ -160,7 +160,7 @@ class TestConfigDirOwner:
 
     def test_a_free_lock_names_nobody(self):
         free = LockHolder(pid=None, alive=False, source="none")
-        exe = "/opt/kiro-crew/resources/backend-dist/bin/python3"
+        exe = "/opt/aj-crew/resources/backend-dist/bin/python3"
         assert self._holder_pid(holder=free, exe=exe) is None
 
     @pytest.mark.parametrize(

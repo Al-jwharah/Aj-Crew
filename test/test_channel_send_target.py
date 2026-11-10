@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.dashboard.handlers import messaging as mod
+from aj_crew.dashboard.handlers import messaging as mod
 
 
 class _Caps:
@@ -332,9 +332,9 @@ class TestGovernanceIdentity:
             "webex",
             "user:a@b.com",
             "hi",
-            caller_session="webex:kirocrew:direct:U9",
+            caller_session="webex:ajcrew:direct:U9",
         )
-        assert seen == ["webex:kirocrew:direct:U9"]
+        assert seen == ["webex:ajcrew:direct:U9"]
 
     @pytest.mark.asyncio
     async def test_a_callerless_send_degrades_to_the_host_sentinel(

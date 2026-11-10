@@ -22,7 +22,7 @@ const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 const scene = params.get('scene') === 'after' ? 'after' : 'before'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 /**
  * The shipping container classes, as a list so the delta under test is one

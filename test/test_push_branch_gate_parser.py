@@ -3,13 +3,13 @@
 ``test_push_branch_gate.py`` pins the gate's answers: the feature-branch allow, the
 protected-branch deny, the option and abbreviation readings, and the enforcement
 point's audits. This module pins the machinery those answers rest on in
-``kiro_crew.security``: every branch of the positional/arity parser as a table, the
+``aj_crew.security``: every branch of the positional/arity parser as a table, the
 contract between the tokenizer and the argument scan, the boundary between a proven
 and an unprovable process substitution, the one quote model every push-path reading
 walks, and the nested-payload extractor that spans the proven boundary.
 """
 
-from kiro_crew import security
+from aj_crew import security
 
 
 class TestParserBranchTable:
@@ -137,7 +137,7 @@ class TestTokenizerContractBetweenTheLayers:
     def test_the_argument_scan_is_handed_raw_words(self):
         # The shapes whose identity lives in the operator: cutting them here
         # turned each into a plain word and erased its tag.
-        from kiro_crew.security import _git_push_args
+        from aj_crew.security import _git_push_args
 
         assert _git_push_args("git push origin>/dev/null") == ["origin>/dev/null"]
         assert _git_push_args("git push origin @(main)") == ["origin", "@(main)"]
@@ -148,7 +148,7 @@ class TestTokenizerContractBetweenTheLayers:
         # ``<<-`` is a complete operator, so its delimiter is a SEPARATED word.
         # A second reading of the grammar here read the ``-`` as an attached
         # target and left ``EOF`` behind as a phantom refspec.
-        from kiro_crew.security import _git_push_args
+        from aj_crew.security import _git_push_args
 
         assert _git_push_args("git push origin <<- EOF") == ["origin"]
         # Still stepped over with the shell's arity, and the words behind a
@@ -169,7 +169,7 @@ class TestTokenizerContractBetweenTheLayers:
         # ``<(`` / ``>(`` at the start of a word is process substitution, which
         # bash substitutes as a /dev/fd path WORD. Consuming it as a redirection
         # ate an option's value and shifted the positional split onto the remote.
-        from kiro_crew.security import _git_push_args
+        from aj_crew.security import _git_push_args
 
         assert _git_push_args("git push -o <(echo) origin main") == [
             "-o",
@@ -193,7 +193,7 @@ class TestTokenizerContractBetweenTheLayers:
         # fragment then arrived with the shell state open — which the fragment
         # rule reads as a word fused across the boundary. Legal, unprotected
         # branch names were denied by the protective fallback.
-        from kiro_crew.security import _split_push_command_segments
+        from aj_crew.security import _split_push_command_segments
 
         assert _split_push_command_segments("git push origin 'feature|x'") == [
             "git push origin 'feature|x'"
@@ -224,7 +224,7 @@ class TestTokenizerContractBetweenTheLayers:
         # one this segment cannot reconstruct. It must keep splitting, and the
         # trailing escape must survive into the segment it ends — that escape is
         # the signal the ungated sentinel is drawn from.
-        from kiro_crew.security import _split_push_command_segments
+        from aj_crew.security import _split_push_command_segments
 
         assert _split_push_command_segments("git push origin ma\\\nin") == [
             "git push origin ma\\",
@@ -238,7 +238,7 @@ class TestTokenizerContractBetweenTheLayers:
         # OUTER line — which is not itself a push — parsed as one and its
         # fragmented ref denied ordinary work. The payload is one word; the
         # caller judges it on its own, which is where the denial still comes from.
-        from kiro_crew.security import _git_push_args, _split_shell_words, is_denied
+        from aj_crew.security import _git_push_args, _split_shell_words, is_denied
 
         assert _split_shell_words("bash -c '(cd /tmp && git push origin my-feature)'") == [
             "bash",
@@ -618,7 +618,7 @@ class TestNestedPayloadExtractionSpansTheProvenBoundary:
         )
 
     def test_the_extracted_body_is_the_whole_body(self):
-        from kiro_crew.security import _substitution_bodies
+        from aj_crew.security import _substitution_bodies
 
         assert _substitution_bodies(">(X=')' git push origin main)") == [
             "X=')' git push origin main"
@@ -641,7 +641,7 @@ class TestNestedPayloadExtractionSpansTheProvenBoundary:
         ]
 
     def test_the_span_helper_is_quote_aware_and_reports_proof(self):
-        from kiro_crew.security import _matching_close_paren
+        from aj_crew.security import _matching_close_paren
 
         # offset 2 is just past a ">(" / "$(" opener.
         assert _matching_close_paren(">(a)", 2) == (4, True)
@@ -661,15 +661,15 @@ class TestNestedPayloadExtractionSpansTheProvenBoundary:
         # stopped at a quoted ')', so a name after it was never seen. That is an
         # UNDER-deny for this rule -- correcting an earlier audit note on this
         # line, which had recorded the truncation as over-deny-only.
-        from kiro_crew.security import _protected_name_in_substitution
+        from aj_crew.security import _protected_name_in_substitution
 
         # The quoted ')' must sit in a LATER token to reach the close test: a
         # private str.count walk drove depth to 0 there and BROKE, so the name
         # after it was never seen.
-        tokens = ["$(true", "X=')'", "kirocrew", "token)"]
-        assert _protected_name_in_substitution(tokens, 0) == "kirocrew"
+        tokens = ["$(true", "X=')'", "ajcrew", "token)"]
+        assert _protected_name_in_substitution(tokens, 0) == "ajcrew"
         # Still stops at the REAL closer rather than reading a later command.
-        assert _protected_name_in_substitution(["$(true)", ";", "kirocrew"], 0) == ""
+        assert _protected_name_in_substitution(["$(true)", ";", "ajcrew"], 0) == ""
 
     def test_every_earlier_round_still_holds(self):
         floor = security._git_publish_floor_tags

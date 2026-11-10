@@ -22,10 +22,10 @@ import threading
 
 import pytest
 
-from kiro_crew import session_map_store
-from kiro_crew.messaging.link import ChannelLink
-from kiro_crew.session_map import SessionMap
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import session_map_store
+from aj_crew.messaging.link import ChannelLink
+from aj_crew.session_map import SessionMap
+from aj_crew.testing.wait import async_wait_until
 
 _SEED = {
     "dashboard:alice": {"sid": "sid-ALICE", "slack_thread_ts": None, "slack_channel_id": None},
@@ -35,7 +35,7 @@ _SEED = {
 
 @pytest.fixture()
 def map_dir(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
     (tmp_path / "session_map.json").write_text(json.dumps(_SEED), encoding="utf-8")
     return tmp_path
 
@@ -299,7 +299,7 @@ async def _api_status_body(monkeypatch, map_dir: pathlib.Path, session_map: Sess
     from aiohttp.test_utils import make_mocked_request
     from test_handlers_system_meminfo_unavailable import _status_state
 
-    from kiro_crew.dashboard.handlers_system import api_status
+    from aj_crew.dashboard.handlers_system import api_status
 
     state = _status_state(monkeypatch, map_dir)
     state.sessions._session_map = session_map

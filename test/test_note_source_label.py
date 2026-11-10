@@ -33,12 +33,12 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_note
-from kiro_crew.dashboard.slot_buffers import (
+from aj_crew.dashboard.chat_handlers import api_chat_slot_note
+from aj_crew.dashboard.slot_buffers import (
     sanitize_restored_deferred_notes,
     serialize_deferred_notes,
 )
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.state import DashboardState
 
 
 @web.middleware
@@ -76,7 +76,7 @@ class TestImmediatePath:
     async def test_label_is_the_authenticated_app_identity(self, tmp_path: Path, monkeypatch):
         # An app posts to a slot it owns; the pill reads the app's own
         # authenticated identity, not anything from the body.
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1", app="board-sync")
         slot._titled = True
@@ -96,7 +96,7 @@ class TestImmediatePath:
         # name). The pill must read the AUTHENTICATED identity "app-a" and never
         # the forged body value, so one app can never be presented as the author
         # of another's note.
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s2", app="app-a")
         slot._titled = True
@@ -116,7 +116,7 @@ class TestImmediatePath:
         # A dashboard user carries an empty request_app, even if the body
         # supplies a source. The note is the user's own, so the renderer shows
         # the pill only on a truthy value and the row stays unattributed.
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s3")
         slot._titled = True
@@ -140,7 +140,7 @@ class TestImmediatePath:
         # pill forever. The admit path applies the SAME length bound, so an
         # over-length identity carries no pill here AND persists "" (identical
         # across the round-trip), rather than attributing then silently dropping.
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         long_app = "a" * 100
         slot = state.get_or_create_slot("s9", app=long_app)
@@ -181,7 +181,7 @@ class TestImmediatePath:
         # trusted authenticated identity), while note CONTENT keeps its
         # exfil → credential redaction, so a secret in the body never renders
         # raw in the visible row.
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s4", app="cron")
         slot._titled = True
@@ -201,7 +201,7 @@ class TestImmediatePath:
         # a legitimate ZWJ emoji sequence persists into the visible row intact —
         # content runs through the exfil → credential redaction only,
         # which leaves a non-credential body (here an emoji) byte for byte.
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s5", app="cron")
         slot._titled = True
@@ -225,7 +225,7 @@ class TestImmediatePath:
         # Discord token is anchored by a negative lookbehind for a word char. An
         # ASCII prefix + U+200B + token must not render recoverable in the
         # visible content.
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s6", app="cron")
         slot._titled = True
@@ -247,7 +247,7 @@ class TestDeferredPath:
     async def test_held_note_carries_identity_and_flush_stamps_it(
         self, tmp_path: Path, monkeypatch
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s7", app="cron")
         slot._titled = True
@@ -275,7 +275,7 @@ class TestDeferredPath:
 
     @pytest.mark.asyncio
     async def test_held_dashboard_note_carries_no_identity(self, tmp_path: Path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s8")
         slot._titled = True

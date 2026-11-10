@@ -33,20 +33,20 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import deny_notice_checks
 import pytest
 
-from kiro_crew import llm_helpers, task_executor, task_planner
-from kiro_crew.agent_sdk.spec_hooks import TurnSpecHooks
-from kiro_crew.context import ContextBuilder
-from kiro_crew.hooks import TOOL_ALLOW, TOOL_DENY, HookManager, ToolHookResult
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.task_models import Project, Task
+from aj_crew import llm_helpers, task_executor, task_planner
+from aj_crew.agent_sdk.spec_hooks import TurnSpecHooks
+from aj_crew.context import ContextBuilder
+from aj_crew.hooks import TOOL_ALLOW, TOOL_DENY, HookManager, ToolHookResult
+from aj_crew.providers.base import LLMEvent
+from aj_crew.task_models import Project, Task
 
 _GENERIC = "User denied tool execution"
-_TAG = "[Kiro Crew host notice]"
+_TAG = "[Aj Crew host notice]"
 #: Only the POLICY cause appends class-specific remediation; its guidance line
 #: is the fingerprint that must be absent from every surface-policy notice.
 _POLICY_GUIDANCE = "allowed alternative"
 _SURFACE_CLAUSE = "tool policy of the surface"
-_SRC = pathlib.Path(__file__).resolve().parents[1] / "src/kiro_crew"
+_SRC = pathlib.Path(__file__).resolve().parents[1] / "src/aj_crew"
 
 
 # ── Doubles ──────────────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ async def _run_step(provider, ctx, *, on_tool_approval=None, tmp_path: Path) -> 
     run = Project(spec_path="t.md", spec_content="s", status="running", task_id="tid")
     task = Task(index=1, title="T", description="d")
     run.tasks = [task]
-    with patch.object(task_executor.KiroCrewConfig, "load") as cfg:
+    with patch.object(task_executor.AjCrewConfig, "load") as cfg:
         cfg.return_value.agent.provider = "acp"
         return await task_executor.execute_task(
             run=run,

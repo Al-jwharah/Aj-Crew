@@ -52,7 +52,7 @@ describe('project chip', () => {
 
   it('fires onProjectClick on the press and not again on the release', async () => {
     const onProjectClick = vi.fn()
-    renderWithProviders(<ChatInput value="" onChange={vi.fn()} onSend={vi.fn()} onProjectClick={onProjectClick} project="/home/u/work/KiroCrew" />)
+    renderWithProviders(<ChatInput value="" onChange={vi.fn()} onSend={vi.fn()} onProjectClick={onProjectClick} project="/home/u/work/AjCrew" />)
     await flush()
     press(chip())
     expect(onProjectClick).toHaveBeenCalledTimes(1)
@@ -63,7 +63,7 @@ describe('project chip', () => {
 
   it('still fires on a keyboard click and on a touch tap', async () => {
     const onProjectClick = vi.fn()
-    renderWithProviders(<ChatInput value="" onChange={vi.fn()} onSend={vi.fn()} onProjectClick={onProjectClick} project="/home/u/work/KiroCrew" />)
+    renderWithProviders(<ChatInput value="" onChange={vi.fn()} onSend={vi.fn()} onProjectClick={onProjectClick} project="/home/u/work/AjCrew" />)
     await flush()
     fireEvent.click(chip())
     expect(onProjectClick).toHaveBeenCalledTimes(1)
@@ -73,7 +73,7 @@ describe('project chip', () => {
 
   it('does nothing on a press while the chip is locked', async () => {
     const onProjectClick = vi.fn()
-    renderWithProviders(<ChatInput value="" onChange={vi.fn()} onSend={vi.fn()} onProjectClick={onProjectClick} project="/home/u/work/KiroCrew" isRunning projectLocked onStop={vi.fn()} />)
+    renderWithProviders(<ChatInput value="" onChange={vi.fn()} onSend={vi.fn()} onProjectClick={onProjectClick} project="/home/u/work/AjCrew" isRunning projectLocked onStop={vi.fn()} />)
     await flush()
     const btn = chip()
     expect(btn).toBeDisabled()
@@ -84,7 +84,7 @@ describe('project chip', () => {
 
   it('opens on the press while a response is running and the chip is not locked', async () => {
     const onProjectClick = vi.fn()
-    renderWithProviders(<ChatInput value="" onChange={vi.fn()} onSend={vi.fn()} onProjectClick={onProjectClick} project="/home/u/work/KiroCrew" isRunning onStop={vi.fn()} />)
+    renderWithProviders(<ChatInput value="" onChange={vi.fn()} onSend={vi.fn()} onProjectClick={onProjectClick} project="/home/u/work/AjCrew" isRunning onStop={vi.fn()} />)
     await flush()
     const btn = chip()
     press(btn)
@@ -101,7 +101,7 @@ describe('project chip', () => {
       open = !open
       if (open) { document.body.appendChild(search); search.focus() } else search.remove()
     })
-    renderWithProviders(<ChatInput value="" onChange={vi.fn()} onSend={vi.fn()} onProjectClick={onProjectClick} project="/home/u/work/KiroCrew" />)
+    renderWithProviders(<ChatInput value="" onChange={vi.fn()} onSend={vi.fn()} onProjectClick={onProjectClick} project="/home/u/work/AjCrew" />)
     await flush()
     expect(pressCancelsFocus(chip())).toBe(true)
     expect(document.activeElement).toBe(search)
@@ -112,7 +112,7 @@ describe('project chip', () => {
   })
 
   it('lets the chip take focus when the open has not moved focus by mousedown', async () => {
-    renderWithProviders(<ChatInput value="" onChange={vi.fn()} onSend={vi.fn()} onProjectClick={vi.fn()} project="/home/u/work/KiroCrew" />)
+    renderWithProviders(<ChatInput value="" onChange={vi.fn()} onSend={vi.fn()} onProjectClick={vi.fn()} project="/home/u/work/AjCrew" />)
     await flush()
     expect(pressCancelsFocus(chip())).toBe(false)
   })

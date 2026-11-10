@@ -86,7 +86,7 @@ vi.mock('../../api/client', () => ({
     artifacts: vi.fn(() => Promise.resolve({ artifacts: [] })),
     // `dashboard.crewmate_threads` (reply threads) is read from the shared config
     // query; an empty config is the default -- the flag is OFF.
-    kirocrewConfig: vi.fn(() => Promise.resolve({})),
+    ajcrewConfig: vi.fn(() => Promise.resolve({})),
     // The Schedules chip's count and its tab body read the whole cron list and
     // filter it per crewmate (`wakesCrew`). Resolved-and-empty is the state every
     // case not about schedules wants: the chip reads 0/0, which is an ANSWER of
@@ -96,7 +96,7 @@ vi.mock('../../api/client', () => ({
     // `wakesCrew`'s default-crew fallback needs to know which crew is the default,
     // or every unbound job in the install would be attributed to whichever
     // crewmate happens to be open.
-    defaultAgent: vi.fn(() => Promise.resolve({ default_agent: 'kirocrew' })),
+    defaultAgent: vi.fn(() => Promise.resolve({ default_agent: 'ajcrew' })),
     // The schedule row's own controls (pause / run now), reached through
     // `useCronActions` once the Schedules tab is open.
     toggleCron: vi.fn(() => Promise.resolve({})),
@@ -107,13 +107,13 @@ vi.mock('../../api/client', () => ({
     // create write. Quiet defaults — one custom agent list item and one
     // workspace — so the dialog renders without its own options-failed notice
     // in every case that does not open it.
-    agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'kirocrew' })),
-    // The crew editor's roster read (KiroCrewAgent list), fired when the
+    agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'ajcrew' })),
+    // The crew editor's roster read (AjCrewAgent list), fired when the
     // thread-header pencil opens the in-place editor (CREW-18688).
-    kirocrewAgents: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'kirocrew' })),
+    ajcrewAgents: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'ajcrew' })),
     workspaces: vi.fn(() => Promise.resolve({ workspaces: [{ name: 'default' }] })),
     createWorkspace: vi.fn(() => Promise.resolve({ name: 'staging' })),
-    createKirocrewAgent: vi.fn(() => Promise.resolve({ ok: true })),
+    createAjcrewAgent: vi.fn(() => Promise.resolve({ ok: true })),
     // The guided (embedded Meet CrewMates) flow's reads and its schedule write.
     agentsInstalled: vi.fn(() => Promise.resolve([])),
     getSlackConfig: vi.fn(() => Promise.resolve({ connected: false })),
@@ -757,10 +757,10 @@ describe('MembersPage identity pill and Profile entry', () => {
 
   it('a failed editor roster read surfaces a notice instead of a silent dead click (F1)', async () => {
     // The editor's roster read is gated on the pill click; if GET
-    // /api/kirocrew/agents rejects, the pill would otherwise do nothing forever
+    // /api/ajcrew/agents rejects, the pill would otherwise do nothing forever
     // with no report. The notice near the header is what makes the failure
     // visible (Opus/F1 blocking finding).
-    vi.mocked(api.kirocrewAgents).mockRejectedValue(new Error('roster boom'))
+    vi.mocked(api.ajcrewAgents).mockRejectedValue(new Error('roster boom'))
     await renderPage([row({ bound: true, slot_key: 'member-oncall' })])
     fireEvent.click(await rosterRow('oncall'))
     // Before the click the notice is absent — the read has not fired yet.

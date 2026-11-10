@@ -17,9 +17,9 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import dep_sync, platform_compat
-from kiro_crew.platform import release_apply
-from kiro_crew.testing.wait import await_until
+from aj_crew import dep_sync, platform_compat
+from aj_crew.platform import release_apply
+from aj_crew.testing.wait import await_until
 
 
 def _guards_open():
@@ -48,7 +48,7 @@ def test_a_set_cancel_starts_no_pip_and_reports_nothing_changed(tmp_path, locked
         g[2],
         g[3],
         patch.object(
-            dep_sync, "locked_console_scripts", return_value=["kirocrew"] if locked else []
+            dep_sync, "locked_console_scripts", return_value=["ajcrew"] if locked else []
         ),
         patch.object(dep_sync, "sync", side_effect=_no_pip),
         patch.object(dep_sync.subprocess, "run", side_effect=_no_pip),

@@ -10,8 +10,8 @@
 
 export const RADAR = {
   name: 'Radar', slug: 'radar', bound: true, slot_key: 'member-radar', running: false,
-  kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'radar', memory_version: 2, memory_owner: 'Radar',
-  model: '', description: 'Watches CI and the issue queue', source: 'kirocrew',
+  kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'radar', memory_version: 2, memory_owner: 'Radar',
+  model: '', description: 'Watches CI and the issue queue', source: 'ajcrew',
   last_active_ts: Math.floor(Date.now() / 1000) - 30, last_message: 'Back up since 08:22Z.',
 }
 export const MEMBERS = [RADAR, { ...RADAR, name: 'Fixer', slug: 'fixer', slot_key: 'member-fixer', memory_store: 'fixer', memory_owner: 'Fixer', description: 'Opens the fix PRs', last_message: 'Two PRs opened for the queue.' }]
@@ -34,10 +34,10 @@ const json = (body) => ({ status: 200, contentType: 'application/json', body: JS
 export async function routeRadarDm(page, { thread = THREAD } = {}) {
   await page.route(u => new URL(u).pathname.startsWith('/api/'), route => {
     const path = new URL(route.request().url()).pathname
-    if (path === '/api/members') return route.fulfill(json({ members: MEMBERS, default_agent: 'kirocrew' }))
+    if (path === '/api/members') return route.fulfill(json({ members: MEMBERS, default_agent: 'ajcrew' }))
     if (path === '/api/teams') return route.fulfill(json({ teams: [] }))
     if (path === '/api/autonudge') return route.fulfill(json({ enabled: true, loops: [] }))
-    if (path === '/api/config/default-agent') return route.fulfill(json({ default_agent: 'kirocrew' }))
+    if (path === '/api/config/default-agent') return route.fulfill(json({ default_agent: 'ajcrew' }))
     if (path === '/api/workspaces') return route.fulfill(json({ workspaces: [{ name: 'default' }] }))
     if (/^\/api\/members\/[^/]+\/thread$/.test(path)) return route.fulfill(json({ slot_key: 'member-radar', slug: 'radar', member: 'Radar', created: false }))
     if (/^\/api\/members\/[^/]+\/activity$/.test(path)) return route.fulfill(json({ slug: 'radar', member: 'Radar', capped: false, entries: [] }))
@@ -45,7 +45,7 @@ export async function routeRadarDm(page, { thread = THREAD } = {}) {
     if (/^\/api\/chat\/slots\/[^/]+$/.test(path)) return route.fulfill(json({ key: 'member-radar', title: 'Radar', running: false, messages: thread }))
     if (path === '/api/crons') return route.fulfill(json({ jobs: [] }))
     if (path === '/api/webhooks') return route.fulfill(json({ tokens: [] }))
-    if (path === '/api/agents') return route.fulfill(json({ agents: [], default_agent: 'kirocrew' }))
+    if (path === '/api/agents') return route.fulfill(json({ agents: [], default_agent: 'ajcrew' }))
     if (/\/api\/chat\/(tags|pins|folders|tag-columns)$/.test(path)) return route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
     const isList = /commands|skills|agents$|sessions|files|history|models|artifacts|folders|slots$/.test(path)
     return route.fulfill({ status: 200, contentType: 'application/json', body: isList ? '[]' : '{}' })

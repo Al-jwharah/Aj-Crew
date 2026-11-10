@@ -17,9 +17,9 @@ from subagent_helpers import (
     _mock_sessions,
 )
 
-from kiro_crew.execution_context import execution_for_store
-from kiro_crew.subagent import SubagentManager
-from kiro_crew.testing.wait import await_until
+from aj_crew.execution_context import execution_for_store
+from aj_crew.subagent import SubagentManager
+from aj_crew.testing.wait import await_until
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -40,12 +40,12 @@ class TestSubagentPostToolUseHook:
     @pytest.mark.asyncio
     async def test_post_tool_use_fires_on_tool_result(self) -> None:
         """PostToolUse hook is called with tool_name + tool_response after EVENT_TOOL_RESULT."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_TOOL_CALL,
             EVENT_TOOL_RESULT,
             LLMEvent,
         )
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.subagent import SubagentInfo, SubagentManager
 
         async def _stream(*_a, **_kw):  # type: ignore[no-untyped-def]
             yield LLMEvent(
@@ -84,7 +84,7 @@ class TestSubagentPostToolUseHook:
         )
         manager._log_spawned(info)
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             await manager._run_inner(info, "subagent:t01")
 
         # Hook fired twice total — once for PreToolUse (via fire_tool_hooks),
@@ -113,12 +113,12 @@ class TestSubagentPostToolUseHook:
     @pytest.mark.asyncio
     async def test_post_tool_use_truncates_long_output(self) -> None:
         """PostToolUse output is capped at 2000 chars to bound hook payload size."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_TOOL_CALL,
             EVENT_TOOL_RESULT,
             LLMEvent,
         )
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.subagent import SubagentInfo, SubagentManager
 
         long_output = "x" * 5000
 
@@ -159,7 +159,7 @@ class TestSubagentPostToolUseHook:
         )
         manager._log_spawned(info)
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             await manager._run_inner(info, "subagent:t02")
 
         post_calls = [
@@ -175,12 +175,12 @@ class TestSubagentPostToolUseHook:
     @pytest.mark.asyncio
     async def test_post_tool_use_no_hook_store_is_noop(self) -> None:
         """When hook_store is None, EVENT_TOOL_RESULT does not raise."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_TOOL_CALL,
             EVENT_TOOL_RESULT,
             LLMEvent,
         )
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.subagent import SubagentInfo, SubagentManager
 
         async def _stream(*_a, **_kw):  # type: ignore[no-untyped-def]
             yield LLMEvent(kind=EVENT_TOOL_CALL, title="X", tool_call_id="t-3")
@@ -208,7 +208,7 @@ class TestSubagentPostToolUseHook:
         )
         manager._log_spawned(info)
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             await manager._run_inner(info, "subagent:t03")
 
         # The stream ran through the tool result and the run ended clean.
@@ -218,13 +218,13 @@ class TestSubagentPostToolUseHook:
     @pytest.mark.asyncio
     async def test_post_tool_use_hook_exception_is_swallowed(self) -> None:
         """Hook errors are caught and don't break the subagent stream."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TOOL_CALL,
             EVENT_TOOL_RESULT,
             LLMEvent,
         )
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.subagent import SubagentInfo, SubagentManager
 
         async def _stream(*_a, **_kw):  # type: ignore[no-untyped-def]
             yield LLMEvent(kind=EVENT_TOOL_CALL, title="X", tool_call_id="t-4")
@@ -255,7 +255,7 @@ class TestSubagentPostToolUseHook:
         )
         manager._log_spawned(info)
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             await manager._run_inner(info, "subagent:t04")
 
         post_calls = [
@@ -277,12 +277,12 @@ class TestSubagentParallelToolAttribution:
         turn, the write's completed result first. The wait must remain the
         reaper's in-flight call, and a call the previous turn left open must be
         gone by the time the new prompt streams."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_TOOL_CALL,
             EVENT_TOOL_RESULT,
             LLMEvent,
         )
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.subagent import SubagentInfo, SubagentManager
 
         info = SubagentInfo(
             execution_context=execution_for_store(""),
@@ -301,7 +301,7 @@ class TestSubagentParallelToolAttribution:
                 tool_call_id="wait-1",
                 tool_input='{"seconds": 1800, "reason": "ci"}',
                 tool_name="wait",
-                mcp_server_name="kirocrew-core",
+                mcp_server_name="ajcrew-core",
                 mcp_identity_trusted=True,
             )
             yield LLMEvent(
@@ -335,7 +335,7 @@ class TestSubagentParallelToolAttribution:
         manager.hook_store.fire = AsyncMock()
         manager._log_spawned(info)
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             await manager._run_inner(info, "subagent:t05")
 
         assert seen["stale_at_prompt"] is False
@@ -350,9 +350,9 @@ class TestSubagentUsageRow:
 
     @pytest.mark.asyncio
     async def test_subagent_turn_persists_usage_row_with_surface(self) -> None:
-        from kiro_crew.acp.types import AcpEvent, TurnUsage
-        from kiro_crew.providers.base import EVENT_COMPLETE
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.acp.types import AcpEvent, TurnUsage
+        from aj_crew.providers.base import EVENT_COMPLETE
+        from aj_crew.subagent import SubagentInfo
 
         async def _complete_stream(*_a: object, **_k: object):  # type: ignore[no-untyped-def]
             yield AcpEvent(kind=EVENT_COMPLETE, usage=TurnUsage(credits=0.5))
@@ -378,11 +378,11 @@ class TestSubagentUsageRow:
 
         persist = AsyncMock()
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.dashboard.handlers.usage.persist_token_record_async", persist),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.dashboard.handlers.usage.persist_token_record_async", persist),
             patch(
-                "kiro_crew.dashboard.handlers.usage.read_context_tokens",
+                "aj_crew.dashboard.handlers.usage.read_context_tokens",
                 MagicMock(return_value=(999, 200000)),
                 create=True,
             ),
@@ -400,8 +400,8 @@ class TestSubagentUsageRow:
     @pytest.mark.asyncio
     async def test_failed_attempt_preserves_reported_credits(self) -> None:
         """A failed turn has no completion event, but may already be billed."""
-        from kiro_crew.acp.types import AcpPromptStats
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.acp.types import AcpPromptStats
+        from aj_crew.subagent import SubagentInfo
 
         provider = MagicMock()
         provider.context_usage_pct = lambda: 0.0
@@ -432,9 +432,9 @@ class TestSubagentUsageRow:
         assert info.credits == pytest.approx(0.75)
 
     def test_credit_accounting_uses_shared_billing_walk_and_turn_usage(self) -> None:
-        from kiro_crew.acp.types import AcpEvent, AcpPromptStats, TurnUsage
-        from kiro_crew.providers.base import EVENT_COMPLETE
-        from kiro_crew.subagent import SubagentInfo, _RunCreditAccounting
+        from aj_crew.acp.types import AcpEvent, AcpPromptStats, TurnUsage
+        from aj_crew.providers.base import EVENT_COMPLETE
+        from aj_crew.subagent import SubagentInfo, _RunCreditAccounting
 
         runner = MagicMock(spec=[])
         runner.last_prompt_stats = AcpPromptStats()
@@ -471,9 +471,9 @@ class TestSubagentUsageRow:
 
     @pytest.mark.parametrize("credits", [True, -1.0, float("nan"), float("inf")])
     def test_credit_accounting_rejects_invalid_provider_credits(self, credits: object) -> None:
-        from kiro_crew.acp.types import AcpEvent, TurnUsage
-        from kiro_crew.providers.base import EVENT_COMPLETE
-        from kiro_crew.subagent import SubagentInfo, _RunCreditAccounting
+        from aj_crew.acp.types import AcpEvent, TurnUsage
+        from aj_crew.providers.base import EVENT_COMPLETE
+        from aj_crew.subagent import SubagentInfo, _RunCreditAccounting
 
         info = SubagentInfo(id="usage-invalid", task="reject invalid credits", credits=0.75)
         accounting = _RunCreditAccounting(info)
@@ -486,9 +486,9 @@ class TestSubagentUsageRow:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("interruption_site", ["stream", "consumer"])
     async def test_cancel_preserves_active_attempt_credits(self, interruption_site) -> None:
-        from kiro_crew.acp.types import AcpEvent, AcpPromptStats
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.acp.types import AcpEvent, AcpPromptStats
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK
+        from aj_crew.subagent import SubagentInfo
 
         entered = asyncio.Event()
         blocked = asyncio.Event()
@@ -546,9 +546,9 @@ class TestSubagentUsageRow:
         [("complete", 1.25), ("no_complete", 1.5), ("cancel", 1.5), ("stale", 0.75)],
     )
     async def test_retry_credits_settle_each_attempt_once(self, ending, expected) -> None:
-        from kiro_crew.acp.types import AcpEvent, AcpPromptStats, TurnUsage
-        from kiro_crew.providers.base import EVENT_COMPLETE
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.acp.types import AcpEvent, AcpPromptStats, TurnUsage
+        from aj_crew.providers.base import EVENT_COMPLETE
+        from aj_crew.subagent import SubagentInfo
 
         class TransientError(Exception):
             transient = True
@@ -585,7 +585,7 @@ class TestSubagentUsageRow:
             execution_context=execution_for_store(""),
         )
         manager._log_spawned(info)
-        with patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0):
+        with patch("aj_crew.subagent.transient_retry_delay", return_value=0.0):
             try:
                 if ending == "cancel":
                     with pytest.raises(asyncio.CancelledError):
@@ -607,10 +607,10 @@ class TestSubagentUsageRow:
     async def test_recovery_settles_withheld_usage_before_readmission(
         self, recovery, ending
     ) -> None:
-        from kiro_crew.acp.types import AcpEvent, AcpPromptStats, TurnUsage
-        from kiro_crew.providers.base import EVENT_COMPLETE
-        from kiro_crew.recovery.ladder import InfraError
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.acp.types import AcpEvent, AcpPromptStats, TurnUsage
+        from aj_crew.providers.base import EVENT_COMPLETE
+        from aj_crew.recovery.ladder import InfraError
+        from aj_crew.subagent import SubagentInfo
 
         provider = MagicMock()
         provider.context_usage_pct = lambda: 0.0
@@ -662,10 +662,10 @@ class TestSubagentUsageRow:
 
     @pytest.mark.asyncio
     async def test_turn_limit_preserves_credits_before_tombstoning(self) -> None:
-        from kiro_crew.acp.types import AcpEvent, AcpPromptStats
-        from kiro_crew.hooks import TOOL_DENY, ToolHookResult
-        from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.acp.types import AcpEvent, AcpPromptStats
+        from aj_crew.hooks import TOOL_DENY, ToolHookResult
+        from aj_crew.providers.base import EVENT_PERMISSION_REQUEST
+        from aj_crew.subagent import SubagentInfo
 
         info = SubagentInfo(
             id="usagelimit",
@@ -712,9 +712,9 @@ class TestSubagentUsageRow:
     async def test_shared_runtime_agent_does_not_override_spawn_agent(self) -> None:
         """Session sharing reuses the PARENT's runtime, so the runtime's agent
         must not overwrite the agent this spawn actually asked for."""
-        from kiro_crew.acp.types import AcpEvent, TurnUsage
-        from kiro_crew.providers.base import EVENT_COMPLETE
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.acp.types import AcpEvent, TurnUsage
+        from aj_crew.providers.base import EVENT_COMPLETE
+        from aj_crew.subagent import SubagentInfo
 
         async def _complete_stream(*_a: object, **_k: object):  # type: ignore[no-untyped-def]
             yield AcpEvent(kind=EVENT_COMPLETE, usage=TurnUsage(credits=0.5))
@@ -741,21 +741,21 @@ class TestSubagentUsageRow:
         # assertion reads the usage row the turn would have written.
         written: list[dict] = []
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch(
-                "kiro_crew.dashboard.handlers.usage._write_token_record",
+                "aj_crew.dashboard.handlers.usage._write_token_record",
                 side_effect=lambda record, _now: written.append(record),
             ),
             patch(
-                "kiro_crew.dashboard.handlers.usage.read_context_tokens",
+                "aj_crew.dashboard.handlers.usage.read_context_tokens",
                 MagicMock(return_value=(1, 2)),
                 create=True,
             ),
             patch(
                 # The shared parent runtime reports the parent's agent.
-                "kiro_crew.dashboard.handlers.usage.read_effective_agent",
-                MagicMock(return_value="kirocrew"),
+                "aj_crew.dashboard.handlers.usage.read_effective_agent",
+                MagicMock(return_value="ajcrew"),
                 create=True,
             ),
         ):
@@ -778,8 +778,8 @@ class TestIdentityTrustedChildParentPolicyAuto:
     """
 
     def _manager_and_stream(self, event):
-        from kiro_crew.hooks import ToolHookResult
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.hooks import ToolHookResult
+        from aj_crew.subagent import SubagentInfo, SubagentManager
 
         sessions = _mock_sessions()
         sessions.get_approval_policy = MagicMock(return_value="auto")
@@ -811,7 +811,7 @@ class TestIdentityTrustedChildParentPolicyAuto:
 
     @staticmethod
     def _child_mcp_event(**overrides):
-        from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+        from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
 
         base: dict = dict(
             kind=EVENT_PERMISSION_REQUEST,
@@ -836,10 +836,10 @@ class TestIdentityTrustedChildParentPolicyAuto:
         manager, info, provider = self._manager_and_stream(event)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent.update_state"),
-            patch("kiro_crew.subagent.create_agent_folder", MagicMock(), create=True),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent.update_state"),
+            patch("aj_crew.subagent.create_agent_folder", MagicMock(), create=True),
         ):
             await manager._run_inner(info, "subagent:idmcp01")
 
@@ -855,10 +855,10 @@ class TestIdentityTrustedChildParentPolicyAuto:
         manager, info, provider = self._manager_and_stream(event)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent.update_state"),
-            patch("kiro_crew.subagent.create_agent_folder", MagicMock(), create=True),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent.update_state"),
+            patch("aj_crew.subagent.create_agent_folder", MagicMock(), create=True),
         ):
             await manager._run_inner(info, "subagent:idmcp01")
 
@@ -876,10 +876,10 @@ class TestIdentityTrustedChildParentPolicyAuto:
         manager._sessions.get_approval_policy = MagicMock(return_value="")
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent.update_state"),
-            patch("kiro_crew.subagent.create_agent_folder", MagicMock(), create=True),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent.update_state"),
+            patch("aj_crew.subagent.create_agent_folder", MagicMock(), create=True),
         ):
             await manager._run_inner(info, "subagent:idmcp01")
 
@@ -896,7 +896,7 @@ class TestIdentityTrustedChildHookIdentityGrant:
     """
 
     def _manager_and_stream(self, event, hook_result):
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.subagent import SubagentInfo, SubagentManager
 
         sessions = _mock_sessions()
         # No unconditional grant: only the hook can approve.
@@ -927,7 +927,7 @@ class TestIdentityTrustedChildHookIdentityGrant:
 
     @staticmethod
     def _child_mcp_event(**overrides):
-        from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+        from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
 
         base: dict = dict(
             kind=EVENT_PERMISSION_REQUEST,
@@ -944,15 +944,15 @@ class TestIdentityTrustedChildHookIdentityGrant:
 
     def _patches(self):
         return (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent.update_state"),
-            patch("kiro_crew.subagent.create_agent_folder", MagicMock(), create=True),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent.update_state"),
+            patch("aj_crew.subagent.create_agent_folder", MagicMock(), create=True),
         )
 
     @pytest.mark.asyncio
     async def test_identity_grant_approves_identity_trusted_child(self) -> None:
-        from kiro_crew.hooks import ToolHookResult
+        from aj_crew.hooks import ToolHookResult
 
         event = self._child_mcp_event()
         assert event.child_low_fidelity and event.child_mcp_identity_trusted
@@ -970,7 +970,7 @@ class TestIdentityTrustedChildHookIdentityGrant:
     async def test_title_grant_stays_downgraded_for_child(self) -> None:
         """The same auto-approve WITHOUT identity provenance (a title-keyed
         match) is still fail-closed for the low-fidelity child."""
-        from kiro_crew.hooks import ToolHookResult
+        from aj_crew.hooks import ToolHookResult
 
         event = self._child_mcp_event()
         # The identity IS verified, so the refusal below comes from the grant's provenance.
@@ -987,7 +987,7 @@ class TestIdentityTrustedChildHookIdentityGrant:
     async def test_identity_grant_needs_verified_identity(self) -> None:
         """An identity grant cannot carry a child whose own identity did not
         verify (cache miss): nothing ties the grant to the tool that runs."""
-        from kiro_crew.hooks import ToolHookResult
+        from aj_crew.hooks import ToolHookResult
 
         event = self._child_mcp_event(mcp_identity_trusted=False)
         assert event.child_low_fidelity and not event.child_mcp_identity_trusted
@@ -1011,9 +1011,9 @@ class TestChildEscalationLimit:
 
     @pytest.mark.asyncio
     async def test_escalation_limit_bail_answers_triggering_request(self) -> None:
-        from kiro_crew.hooks import TOOL_AUTO_APPROVE, ToolHookResult
-        from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.hooks import TOOL_AUTO_APPROVE, ToolHookResult
+        from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+        from aj_crew.subagent import SubagentInfo, SubagentManager
 
         sessions = _mock_sessions()
         sessions.get_approval_policy = MagicMock(return_value="")
@@ -1053,10 +1053,10 @@ class TestChildEscalationLimit:
         )
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent.update_state"),
-            patch("kiro_crew.subagent.create_agent_folder", MagicMock(), create=True),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent.update_state"),
+            patch("aj_crew.subagent.create_agent_folder", MagicMock(), create=True),
         ):
             await manager._run_inner(info, "subagent:esc01")
 

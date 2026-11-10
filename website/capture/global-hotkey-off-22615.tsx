@@ -4,7 +4,7 @@
  *
  * WHY ISOLATED, and why this cannot be captured any other way: the "Desktop
  * App" section renders only when `useGlobalHotkey()` returns non-null, which
- * requires BOTH `window.kirocrew.isElectron` (see src/lib/electron.ts) and
+ * requires BOTH `window.ajcrew.isElectron` (see src/lib/electron.ts) and
  * `window.electronAPI.getGlobalHotkey` (see electron/preload.js). A browser
  * visiting the real dashboard has neither, so the whole section is absent — the
  * surface is unreachable from a plain SPA session by construction. A desktop
@@ -13,7 +13,7 @@
  *
  * The desktop bridge is stubbed in the HTML head (global-hotkey-off-22615.html)
  * — it MUST be set before any app module loads because src/lib/electron.ts
- * reads `window.kirocrew` at import time. Everything else is real: the REAL
+ * reads `window.ajcrew` at import time. Everything else is real: the REAL
  * ShortcutsPanel, the REAL stylesheet and theme tokens, and the same
  * `{accelerator, default}` payload shape `global-hotkey:get` returns (see
  * electron/ipc-registrar.js). The one field under test is `accelerator: ""`,

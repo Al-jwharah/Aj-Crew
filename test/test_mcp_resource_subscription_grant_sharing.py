@@ -8,7 +8,7 @@ a grant alive while another stub holds it under an EQUAL ``CallerContext``.
 
 These tests run a real gatewayd, a real stub process standing in for kiro-cli's
 (claimed with its session token, as ``AcpClient`` claims it), and a second
-connection opened from the test process -- which is what a connection the Kiro
+connection opened from the test process -- which is what a connection the Aj
 Crew server opens for itself looks like to the daemon. They pin three things:
 
 * that each route gives that second connection a grant caller equal to the
@@ -42,10 +42,10 @@ from mcp_resource_subscription_helpers import (
     updated_for,
 )
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.mcp_gateway import transport
-from kiro_crew.mcp_gateway.claim import build_claim_frame, mint_stub_session_token, send_claim
-from kiro_crew.testing.wait import async_wait_until, finished
+from aj_crew import platform_compat as pc
+from aj_crew.mcp_gateway import transport
+from aj_crew.mcp_gateway.claim import build_claim_frame, mint_stub_session_token, send_claim
+from aj_crew.testing.wait import async_wait_until, finished
 
 pytestmark = [
     pytest.mark.xdist_group("mcp_gateway"),

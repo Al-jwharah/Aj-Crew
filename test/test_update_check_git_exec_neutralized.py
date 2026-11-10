@@ -1,7 +1,7 @@
 """The update check's git calls cannot run a program the checkout's own config names.
 
 ``_check_git_checkout`` runs on the host at boot, on the 12-hourly poll and on
-the dashboard's Check button, with ``cwd`` set to ``KIROCREW_PROJECT_DIR``. On a
+the dashboard's Check button, with ``cwd`` set to ``AJCREW_PROJECT_DIR``. On a
 source-checkout install that tree is agent-writable, so its ``.git/config`` and
 ``.gitattributes`` are agent input. Each test plants one exec vector that points
 at a marker script and drives the check against a REAL git repository: the
@@ -22,9 +22,9 @@ from dashboard_updates_coverage_helpers import (  # noqa: F401 -- the autouse fi
     _isolated_module_state,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.platform import update_capability, update_governance
+from aj_crew import platform_compat
+from aj_crew.dashboard.handlers import updates
+from aj_crew.platform import update_capability, update_governance
 
 pytestmark = [
     pytest.mark.skipif(sys.platform == "win32", reason="marker programs are POSIX shell scripts"),
@@ -59,8 +59,8 @@ def _checkout(tmp_path: Path) -> Path:
     seed = tmp_path / "seed"
     _git(tmp_path, "init", "-q", "--bare", "-b", "main", str(upstream))
     _git(tmp_path, "init", "-q", "-b", "main", str(seed))
-    (seed / "src" / "kiro_crew").mkdir(parents=True)
-    (seed / "src" / "kiro_crew" / "__init__.py").write_text('__version__ = "0.0.1"\n')
+    (seed / "src" / "aj_crew").mkdir(parents=True)
+    (seed / "src" / "aj_crew" / "__init__.py").write_text('__version__ = "0.0.1"\n')
     (seed / "CHANGELOG.md").write_text("# Changelog\n")
     (seed / ".gitattributes").write_text("CHANGELOG.md diff=pwn\n")
     _git(seed, "add", "-A")
@@ -69,7 +69,7 @@ def _checkout(tmp_path: Path) -> Path:
     _git(seed, "push", "-q", "origin", "main")
     work = tmp_path / "work"
     _git(tmp_path, "clone", "-q", str(upstream), str(work))
-    (seed / "src" / "kiro_crew" / "__init__.py").write_text('__version__ = "999.0.0"\n')
+    (seed / "src" / "aj_crew" / "__init__.py").write_text('__version__ = "999.0.0"\n')
     with (seed / "CHANGELOG.md").open("a") as f:
         f.write("- a new release line\n")
     _git(seed, "commit", "-qam", "second")

@@ -17,14 +17,14 @@ import pytest
 from file_change_snapshots_helpers import short_tmp_dir_fixture  # noqa: F401
 from file_change_snapshots_helpers import _LANDS, _persisted_meta, _snapshot_turn
 
-from kiro_crew.acp._dispatch_parts.session_update_parser import parse_session_update
-from kiro_crew.acp.types import (
+from aj_crew.acp._dispatch_parts.session_update_parser import parse_session_update
+from aj_crew.acp.types import (
     EVENT_TOOL_CALL,
     EVENT_TOOL_CALL_UPDATE,
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.dashboard.chat_runner import _snapshot_write_target
+from aj_crew.dashboard.chat_runner import _snapshot_write_target
 
 BEFORE = "one\ntwo\nthree\n"
 REPLACED = "one\nTWO\nthree\n"

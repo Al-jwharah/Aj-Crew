@@ -1,4 +1,4 @@
-"""Tests for the session search candidate index (``kiro_crew.history_index``).
+"""Tests for the session search candidate index (``aj_crew.history_index``).
 
 The index's contract is narrow and the tests below are written against it
 directly: it must return a SUPERSET of the true content hits, and it must refuse
@@ -14,9 +14,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew._sqlite_compat import fts5_available
-from kiro_crew.history_index import _INDEX_VERSION, SessionSearchIndex, cjk_inventory
-from kiro_crew.history_search import parse_search_query
+from aj_crew._sqlite_compat import fts5_available
+from aj_crew.history_index import _INDEX_VERSION, SessionSearchIndex, cjk_inventory
+from aj_crew.history_search import parse_search_query
 
 pytestmark = pytest.mark.skipif(not fts5_available(), reason="SQLite built without FTS5")
 
@@ -173,8 +173,8 @@ def test_kana_punctuation_needle_does_not_exclude_the_hit(tmp_path, opened, mark
 
 def test_kana_middle_dot_query_matches_scan_after_backfill(tmp_path, monkeypatch):
     """An indexed search returns what a scanning search returns."""
-    from kiro_crew import history_search
-    from kiro_crew.history import ConversationLog
+    from aj_crew import history_search
+    from aj_crew.history import ConversationLog
 
     monkeypatch.setattr(history_search, "_INDEX_QUIET_WINDOW_SECS", 0.0)
     name = "\u30c8\u30e0\u30fb\u30af\u30eb\u30fc\u30ba"

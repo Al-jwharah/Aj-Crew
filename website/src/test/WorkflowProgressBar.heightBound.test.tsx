@@ -22,9 +22,9 @@ const SLOT = 'chat-1'
 
 const run = (over: Partial<WorkflowRunProgress> = {}): WorkflowRunProgress => ({
   run_id: 'wf_000025',
-  name: 'kirocrew-perf-investigation',
+  name: 'ajcrew-perf-investigation',
   phase: 'critique',
-  lastLog: 'Starting Kiro Crew performance investigation',
+  lastLog: 'Starting Aj Crew performance investigation',
   status: 'running',
   sessionKey: `dashboard:${SLOT}`,
   ...over,

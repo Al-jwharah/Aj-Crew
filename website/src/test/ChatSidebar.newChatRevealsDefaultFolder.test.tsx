@@ -69,7 +69,7 @@ function StoreBackedSidebar({ onOpenSlotInNewTab }: { onOpenSlotInNewTab?: (key:
   return (
     <ChatSidebar
       slots={slots} activeSlot={activeSlot} unreadSlots={[]}
-      history={[]} historyHasMore={false} defaultAgent="kirocrew" installedAgents={[]}
+      history={[]} historyHasMore={false} defaultAgent="ajcrew" installedAgents={[]}
       onOpenSlotInNewTab={onOpenSlotInNewTab}
     />
   )

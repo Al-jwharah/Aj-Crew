@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.cron import (
+from aj_crew.cron import (
     _MAX_SKIP_DATE_HORIZON_SECS,
     CronJob,
     CronSchedule,
@@ -78,7 +78,7 @@ class TestIsDueSkipDates:
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         job = self._make_cron_job(skip_dates=[today], timezone="")
 
-        with patch("kiro_crew.cron.KiroCrewConfig.load") as mock_cfg:
+        with patch("aj_crew.cron.AjCrewConfig.load") as mock_cfg:
             mock_cfg.return_value.timezone = "UTC"
             assert not CronService._is_due(job, time.time())
 
@@ -147,13 +147,13 @@ class TestMcpCronSkipDates:
     """Integration tests for skip_dates via MCP tool layer."""
 
     def test_cron_add_with_skip_dates(self, monkeypatch, tmp_path) -> None:
-        from kiro_crew.mcp_cron import _call_tool_locally as _call_tool
+        from aj_crew.mcp_cron import _call_tool_locally as _call_tool
 
         # Isolate the cron store to tmp_path so parallel (xdist) cron tests don't
         # race on the shared default jobs file. _call_tool builds its service from
         # config_dir(), so point that at tmp_path too.
-        monkeypatch.setattr("kiro_crew.mcp_cron.config_dir", lambda: tmp_path)
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setattr("aj_crew.mcp_cron.config_dir", lambda: tmp_path)
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = f"skip-test-{uuid.uuid4().hex[:8]}"
 
         result = _call_tool(
@@ -174,10 +174,10 @@ class TestMcpCronSkipDates:
         assert jobs[0].timezone == "Europe/Luxembourg"
 
     def test_cron_update_skip_dates(self, monkeypatch, tmp_path) -> None:
-        from kiro_crew.mcp_cron import _call_tool_locally as _call_tool
+        from aj_crew.mcp_cron import _call_tool_locally as _call_tool
 
-        monkeypatch.setattr("kiro_crew.mcp_cron.config_dir", lambda: tmp_path)
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setattr("aj_crew.mcp_cron.config_dir", lambda: tmp_path)
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = f"update-skip-{uuid.uuid4().hex[:8]}"
 
         result = _call_tool(
@@ -206,10 +206,10 @@ class TestMcpCronSkipDates:
     @staticmethod
     def _job_skipping_two_dates(monkeypatch, tmp_path):
         """A job that skips two dates, created through the tool's own dispatch."""
-        from kiro_crew.mcp_cron import _call_tool_locally as _call_tool
+        from aj_crew.mcp_cron import _call_tool_locally as _call_tool
 
-        monkeypatch.setattr("kiro_crew.mcp_cron.config_dir", lambda: tmp_path)
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setattr("aj_crew.mcp_cron.config_dir", lambda: tmp_path)
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = f"clear-skip-{uuid.uuid4().hex[:8]}"
         result = _call_tool(
             "cron_add",

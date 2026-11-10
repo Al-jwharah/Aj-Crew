@@ -20,12 +20,12 @@ import React from 'react'
 
 const mockApi = vi.hoisted(() => ({
   skillsPending: vi.fn(),
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
 }))
 vi.mock('../api/client', () => ({ api: mockApi }))
 
 // Tab bodies are irrelevant; the rail is what is under test.
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => <div data-testid="crews-pane" /> }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => <div data-testid="crews-pane" /> }))
 vi.mock('../pages/HooksPage', () => ({ default: () => <div /> }))
 vi.mock('../pages/connections/ConnectionsPage', () => ({ default: () => <div /> }))
 vi.mock('../pages/KnowledgePage', () => ({ default: () => <div /> }))
@@ -52,8 +52,8 @@ const candidate = (slug: string) => ({ slug, name: `auto/${slug}`, description: 
 
 beforeEach(() => {
   mockApi.skillsPending.mockReset()
-  mockApi.kirocrewConfig.mockReset()
-  mockApi.kirocrewConfig.mockResolvedValue({})
+  mockApi.ajcrewConfig.mockReset()
+  mockApi.ajcrewConfig.mockResolvedValue({})
 })
 
 describe('CapabilitiesPage: pending skill count on the Skills row', () => {

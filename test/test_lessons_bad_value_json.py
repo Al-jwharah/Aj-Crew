@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew.vector_memory import VectorMemoryStore
 
 GOOD = "Run the database migration before deploying"
 BAD = "Never force push to a shared branch"
@@ -24,7 +24,7 @@ def test_undecodable_row_is_skipped_and_the_good_lesson_survives(tmp_path: Path,
                 (bad_key,),
             )
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.vector_memory"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.vector_memory"):
             for background in (False, True):
                 block = store.get_lessons_context(background=background)
                 assert GOOD in block

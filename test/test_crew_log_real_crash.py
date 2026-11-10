@@ -23,9 +23,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.testing.wait import wait_until
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.testing.wait import wait_until
 
 CHILD = Path(__file__).parent / "fixtures" / "crew_log_crash_child.py"
 SESSION = "crash-child-session"
@@ -84,14 +84,14 @@ def _kill_at(tmp_path: Path, failpoint: str, marker_value: str) -> Path:
     marker = tmp_path / "marker"
     # A DECLARED environment, not the runner's. Inheriting `os.environ` wholesale
     # makes this child's behaviour depend on whatever else the shard it landed in
-    # exported -- a proxy, a TMPDIR, another test's KIROCREW_* -- so the same test
+    # exported -- a proxy, a TMPDIR, another test's AJCREW_* -- so the same test
     # can pass in one shard and fail in another for reasons that have nothing to do
     # with what it asserts. A crash fixture has to be reproducible above all else,
     # so it names what it needs. PATH is carried because the interpreter's own
     # startup can need it; nothing else is.
     env = {
-        "KIROCREW_HOME": str(home),
-        "KIROCREW_CREW_LOG": "1",
+        "AJCREW_HOME": str(home),
+        "AJCREW_CREW_LOG": "1",
         "PYTHONPATH": str(Path(__file__).resolve().parents[1] / "src"),
         "PATH": os.environ.get("PATH", ""),
         # Keep the child's own temp files inside the test's directory, for the same
@@ -133,17 +133,17 @@ def _kill_at(tmp_path: Path, failpoint: str, marker_value: str) -> Path:
 
 
 def _entries(home: Path) -> "list[dict]":
-    env_home = os.environ.get("KIROCREW_HOME")
-    os.environ["KIROCREW_HOME"] = str(home)
+    env_home = os.environ.get("AJCREW_HOME")
+    os.environ["AJCREW_HOME"] = str(home)
     try:
         path = lg.crew_log_path(lg.KIND_SESSION, SESSION)
         raw = path.read_text(encoding="utf-8").splitlines()
         return [json.loads(line) for line in raw[1:] if line.strip()]
     finally:
         if env_home is None:
-            os.environ.pop("KIROCREW_HOME", None)
+            os.environ.pop("AJCREW_HOME", None)
         else:
-            os.environ["KIROCREW_HOME"] = env_home
+            os.environ["AJCREW_HOME"] = env_home
 
 
 def _repair(home: Path) -> int:
@@ -153,15 +153,15 @@ def _repair(home: Path) -> int:
     during open, which would leave the explicit call below nothing to do and a
     count of zero -- a green test that asserted nothing.
     """
-    env_home = os.environ.get("KIROCREW_HOME")
-    os.environ["KIROCREW_HOME"] = str(home)
+    env_home = os.environ.get("AJCREW_HOME")
+    os.environ["AJCREW_HOME"] = str(home)
     try:
         return CrewLog.open(lg.KIND_SESSION, SESSION).repair_interrupted_turn()
     finally:
         if env_home is None:
-            os.environ.pop("KIROCREW_HOME", None)
+            os.environ.pop("AJCREW_HOME", None)
         else:
-            os.environ["KIROCREW_HOME"] = env_home
+            os.environ["AJCREW_HOME"] = env_home
 
 
 # Windows has no SIGKILL with these semantics and no fork-free equivalent that

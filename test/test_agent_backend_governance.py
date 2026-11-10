@@ -12,12 +12,12 @@ import dataclasses
 
 import pytest
 
-from kiro_crew import agent_backend_governance as abg
-from kiro_crew.agent_sdk import backends as acp_backends
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.governance import SCOPE_CATALOG, parse_policy
+from aj_crew import agent_backend_governance as abg
+from aj_crew.agent_sdk import backends as acp_backends
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.governance import SCOPE_CATALOG, parse_policy
 
 FLOOR = acp_backends.GOVERNANCE_FLOOR_BACKEND
 
@@ -30,7 +30,7 @@ def _isolate(tmp_path, monkeypatch):
     gp.reset_store()
     # Both registry sets are process-global module state; restore them so one test's
     # recompute cannot leak into the next. Reached through ``agent_sdk.backends``,
-    # the module that DEFINES the pair: the ``kiro_crew.acp_backends`` shim
+    # the module that DEFINES the pair: the ``aj_crew.acp_backends`` shim
     # re-exports the public names only, because a second binding to a mutable set
     # is how two views of one registry start disagreeing.
     baseline = set(acp_backends._baseline)
@@ -45,9 +45,9 @@ def _isolate(tmp_path, monkeypatch):
 
 
 def _install(policy_body):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    base = build_default_context(KiroCrewConfig.load())
+    base = build_default_context(AjCrewConfig.load())
     ceiling = parse_policy(policy_body) if policy_body is not None else None
     ctx_mod.set_context(dataclasses.replace(base, governance=ceiling))
 
@@ -229,7 +229,7 @@ class TestAudit:
             def log_governance_decision(self, **kw):
                 records.append(kw)
 
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: _Sel())
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: _Sel())
         abg.narrow_selectable_backends()
         outcomes = {r["item"]: r["outcome"] for r in records}
         # "allowed"/"denied" is the vocabulary log_governance_decision pins and the
@@ -246,7 +246,7 @@ class TestAudit:
         def _boom():
             raise RuntimeError("SEL unavailable")
 
-        monkeypatch.setattr("kiro_crew.sel.sel", _boom)
+        monkeypatch.setattr("aj_crew.sel.sel", _boom)
         assert abg.narrow_selectable_backends() == ["kas"]
 
 
@@ -278,7 +278,7 @@ class TestWhenAPolicyChangeBinds:
     """The contract this scope promises, and the one it deliberately does not.
 
     ``policy_distribution.apply_ceiling`` swaps the ceiling mid-process, but this gate
-    runs inside ``KiroCrewConfig.load()`` (H3), so its state lives in the registry. It is
+    runs inside ``AjCrewConfig.load()`` (H3), so its state lives in the registry. It is
     not re-derived: running sessions would keep a denied harness. Binding from next start.
     """
 
@@ -288,7 +288,7 @@ class TestWhenAPolicyChangeBinds:
         # offering the backend while sessions keep running on it, and an operator reads
         # the disappearance as "it stopped being used". Deleting this test is part of
         # that change, not a way around it.
-        from kiro_crew.platform import policy_distribution as pd
+        from aj_crew.platform import policy_distribution as pd
 
         _registered(monkeypatch, FLOOR, "kas")
         _install(None)
@@ -301,7 +301,7 @@ class TestWhenAPolicyChangeBinds:
     def test_the_ceiling_itself_is_still_installed(self, monkeypatch):
         # Not re-narrowing must not turn into not applying: every other scope reads the
         # new ceiling per decision and gets it immediately.
-        from kiro_crew.platform import policy_distribution as pd
+        from aj_crew.platform import policy_distribution as pd
 
         _registered(monkeypatch, FLOOR, "kas")
         _install(None)
@@ -338,7 +338,7 @@ class TestNoSecondGate:
         # A second derivation here (an intersection with a policy read) is the drift
         # the registry replaced, and it would also put a ceiling read on a request
         # path. The narrowed registry is the whole answer.
-        from kiro_crew.dashboard.handlers import core as core_mod
+        from aj_crew.dashboard.handlers import core as core_mod
 
         _registered(monkeypatch, FLOOR, "kas", "claude")
         _install(_policy({"mode": "deny", "deny": ["claude"]}))
@@ -391,8 +391,8 @@ class TestNoSecondGate:
         import json
         from unittest.mock import patch
 
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.dashboard.handlers.core import _masked_config_dict
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.dashboard.handlers.core import _masked_config_dict
 
         _registered(monkeypatch, FLOOR, "kas")
         _install(_policy({"mode": "deny", "deny": ["kas"]}))
@@ -401,14 +401,14 @@ class TestNoSecondGate:
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text(json.dumps({"agent": {}}), encoding="utf-8")
         with (
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_file),
             patch(
-                "kiro_crew.config.loader.config_local_path",
+                "aj_crew.config.loader.config_local_path",
                 return_value=tmp_path / "config.local.json",
             ),
-            patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
+            patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
         ):
-            cfg = KiroCrewConfig.load()
+            cfg = AjCrewConfig.load()
 
             assert cfg.agent.acp_backend == FLOOR
             # The response speaks the config-file vocabulary: Kiro CLI is "kiro".
@@ -435,12 +435,12 @@ class TestNoSecondGate:
         assert cfg.agent.acp_backend == FLOOR
         assert cfg.agent.member_acp_backend == FLOOR
         with (
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_file),
             patch(
-                "kiro_crew.config.loader.config_local_path",
+                "aj_crew.config.loader.config_local_path",
                 return_value=tmp_path / "config.local.json",
             ),
-            patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
+            patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
         ):
             cfg.save()
         agent = json.loads(cfg_file.read_text(encoding="utf-8"))["agent"]
@@ -454,7 +454,7 @@ class TestNoSecondGate:
         import json
         from unittest.mock import patch
 
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         _registered(monkeypatch, FLOOR, "kas")
         _install(_policy({"mode": "deny", "deny": ["kas"]}))
@@ -463,14 +463,14 @@ class TestNoSecondGate:
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text(json.dumps({"agent": agent}), encoding="utf-8")
         with (
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_file),
             patch(
-                "kiro_crew.config.loader.config_local_path",
+                "aj_crew.config.loader.config_local_path",
                 return_value=tmp_path / "config.local.json",
             ),
-            patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
+            patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
         ):
-            return KiroCrewConfig.load()
+            return AjCrewConfig.load()
 
     def test_a_kiro_member_backend_still_crosses_the_gate(self, monkeypatch, tmp_path, caplog):
         # The member "kiro" reads as KAS before the gate, not instead of it: the
@@ -494,7 +494,7 @@ class TestNoSecondGate:
     def test_no_config_files_load_a_selectable_default(
         self, monkeypatch, tmp_path, caplog, deny_kas, backend_key
     ):
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         _registered(monkeypatch, FLOOR, acp_backends.ACP_BACKEND_KAS)
         monkeypatch.setattr(loader_mod, "config_path", lambda: tmp_path / "config.json")
@@ -506,7 +506,7 @@ class TestNoSecondGate:
         caplog.set_level("WARNING")
 
         for _ in range(2):
-            cfg = loader_mod.KiroCrewConfig.load()
+            cfg = loader_mod.AjCrewConfig.load()
             assert getattr(cfg.agent, backend_key) == expected
         assert "Ignoring agent.acp_backend" not in caplog.text
         assert not loader_mod.config_path().exists()
@@ -523,8 +523,8 @@ class TestNoSecondGate:
     @staticmethod
     def _boot_with_kas_denied(monkeypatch, *, declared):
         """Run ``bootstrap_context`` on a cfg already resolved to KAS, then deny KAS."""
-        from kiro_crew.config import loader as loader_mod
-        from kiro_crew.platform import bootstrap as bootstrap_mod
+        from aj_crew.config import loader as loader_mod
+        from aj_crew.platform import bootstrap as bootstrap_mod
 
         _registered(monkeypatch, FLOOR, "kas")
 
@@ -533,7 +533,7 @@ class TestNoSecondGate:
 
         monkeypatch.setattr(abg, "narrow_selectable_backends", _narrow)
         monkeypatch.setattr(loader_mod, "acp_backend_declared", lambda: declared)
-        cfg = loader_mod.KiroCrewConfig.load()
+        cfg = loader_mod.AjCrewConfig.load()
         cfg.agent.acp_backend = "kas"
         bootstrap_mod.bootstrap_context(cfg)
         return cfg
@@ -559,14 +559,14 @@ class TestNoSecondGate:
         # Asserted on the source because the rule is about the code's shape.
         import inspect
 
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        src = inspect.getsource(KiroCrewConfig.create_provider_factory)
+        src = inspect.getsource(AjCrewConfig.create_provider_factory)
         assert "effective_acp_backend" not in src
         assert "agent_backend_governance" not in src
 
     def test_the_config_load_path_never_reads_the_platform_context(self):
-        # H3: the one gate runs inside KiroCrewConfig.load(); a ceiling read there
+        # H3: the one gate runs inside AjCrewConfig.load(); a ceiling read there
         # re-enters that load. acp_backends must stay a leaf.
         #
         # Parsed rather than grepped: the module's own docstring DISCUSSES
@@ -598,7 +598,7 @@ class TestNoSecondGate:
             if isinstance(node, ast.Import)
             for alias in node.names
         }
-        assert not [m for m in imported if m.startswith("kiro_crew.platform")]
+        assert not [m for m in imported if m.startswith("aj_crew.platform")]
         called = {
             node.func.id
             for node in ast.walk(tree)

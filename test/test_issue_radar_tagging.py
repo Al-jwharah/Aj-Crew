@@ -2,7 +2,7 @@
 
 Lives in the repo-level ``test/`` tree (not the app's in-package ``tests/``)
 because ``setup.cfg`` sets ``testpaths = test transfer`` — a test under
-``src/kiro_crew/apps/builtins/...`` is never collected by CI.
+``src/aj_crew/apps/builtins/...`` is never collected by CI.
 
 Each test covers a control whose removal would be silent: redaction, malformed input on
 every write path, cache locks and repair, settings revisions, citation stripping and
@@ -20,8 +20,8 @@ from unittest.mock import AsyncMock, MagicMock
 from aiohttp.test_utils import make_mocked_request
 from dashboard_owner_helpers import NoConfiguredOwner
 
-from kiro_crew.apps.builtins.issue_radar.backend import github_client as gh
-from kiro_crew.apps.builtins.issue_radar.backend import provider, routes, store
+from aj_crew.apps.builtins.issue_radar.backend import github_client as gh
+from aj_crew.apps.builtins.issue_radar.backend import provider, routes, store
 
 # The route helpers are provider-dispatched now, so they take a repo key
 # rather than a loose owner/repo pair. GitHub is used throughout here, so

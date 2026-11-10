@@ -37,7 +37,7 @@ const slots = [{
   running: false,
   last_message: 'A refused status no longer reads as a clean tree.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

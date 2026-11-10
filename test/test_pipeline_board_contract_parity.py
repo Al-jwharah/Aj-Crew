@@ -1,8 +1,8 @@
 """The board template reads exactly the fields the contract type declares.
 
-mypy checks :func:`build_pipeline_board` but cannot see ``kirocrew-pipeline-conductor.html``.
+mypy checks :func:`build_pipeline_board` but cannot see ``ajcrew-pipeline-conductor.html``.
 This gate parses the real template, extracts the fields it reads, and asserts equality
-with :class:`~kiro_crew.pipeline_board_contract.PipelineBoardPanel`.
+with :class:`~aj_crew.pipeline_board_contract.PipelineBoardPanel`.
 
 It asserts a field EXISTS on both sides, not that its value is right. Comments are
 stripped first, element reads are scoped to their own loop, and :func:`island_keys`
@@ -20,14 +20,14 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import agent_panel
-from kiro_crew.pipeline_board_contract import (
+from aj_crew import agent_panel
+from aj_crew.pipeline_board_contract import (
     BOARD_CREW_NAME,
     BOARD_TEMPLATE_ID,
     CONTRACT_VERSION,
     PipelineBoardPanel,
 )
-from kiro_crew.work_vocab import WORK_ITEM_STATES
+from aj_crew.work_vocab import WORK_ITEM_STATES
 
 # ``BOARD_TEMPLATE_ID`` and ``BOARD_CREW_NAME`` are IMPORTED, not restated here. The
 # reader (``_panel_record``) branches on that id to decide whose data it rebuilds, so a

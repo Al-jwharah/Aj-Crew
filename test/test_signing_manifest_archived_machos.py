@@ -38,7 +38,7 @@ def generator():
 
 
 def _bundle(tmp_path: pathlib.Path) -> pathlib.Path:
-    binaries = tmp_path / "KiroCrew.app" / "Contents" / "Resources" / "binaries"
+    binaries = tmp_path / "AjCrew.app" / "Contents" / "Resources" / "binaries"
     binaries.mkdir(parents=True)
     return binaries
 
@@ -50,7 +50,7 @@ def test_a_clean_bundle_reports_nothing(generator, tmp_path):
     (binaries / "ffmpeg-macos-aarch64-v7.1").write_bytes(MACHO_HEAD + b"\x00" * 64)
     (binaries / "notes.txt.gz").write_bytes(gzip.compress(b"just text", mtime=0))
 
-    assert generator.find_archived_machos(str(tmp_path / "KiroCrew.app")) == []
+    assert generator.find_archived_machos(str(tmp_path / "AjCrew.app")) == []
 
 
 def test_gzip_sealed_macho_is_reported(generator, tmp_path):
@@ -60,7 +60,7 @@ def test_gzip_sealed_macho_is_reported(generator, tmp_path):
         gzip.compress(MACHO_HEAD + b"\x00" * 64, mtime=0)
     )
 
-    errors = generator.find_archived_machos(str(tmp_path / "KiroCrew.app"))
+    errors = generator.find_archived_machos(str(tmp_path / "AjCrew.app"))
 
     assert len(errors) == 1
     assert "ffmpeg-macos-aarch64-v7.1.gz" in errors[0]
@@ -79,7 +79,7 @@ def test_zip_and_tar_members_are_inspected_too(generator, tmp_path):
         archive.add(payload, arcname="tarred-binary")
     payload.unlink()
 
-    reported = " ".join(generator.find_archived_machos(str(tmp_path / "KiroCrew.app")))
+    reported = " ".join(generator.find_archived_machos(str(tmp_path / "AjCrew.app")))
 
     assert "inner-binary" in reported
     assert "tarred-binary" in reported
@@ -91,7 +91,7 @@ def test_unreadable_container_is_not_treated_as_a_finding(generator, tmp_path):
     binaries = _bundle(tmp_path)
     (binaries / "truncated.gz").write_bytes(b"\x1f\x8b\x08truncated-garbage")
 
-    assert generator.find_archived_machos(str(tmp_path / "KiroCrew.app")) == []
+    assert generator.find_archived_machos(str(tmp_path / "AjCrew.app")) == []
 
 
 def test_the_generator_wires_the_tripwire_into_its_fail_closed_path(generator):

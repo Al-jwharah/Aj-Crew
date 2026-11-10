@@ -20,10 +20,10 @@ import pytest
 from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F401 - fixture
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
-from kiro_crew.acp import relaunch_reload
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.transport_errors import AcpError, AcpProcessDied
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.acp import relaunch_reload
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.transport_errors import AcpError, AcpProcessDied
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_PI,
     ACP_BACKEND_STRANDS,
     ACP_BACKENDS_KNOWN,
@@ -31,7 +31,7 @@ from kiro_crew.agent_sdk.backends import (
     ACP_BACKENDS_MCP_RELAUNCH_RELOAD,
     ACP_BACKENDS_MCP_WIRE_REINJECT,
 )
-from kiro_crew.mcp_hot_reload import (
+from aj_crew.mcp_hot_reload import (
     live_sessions_apply_mcp_live,
     live_sessions_hot_reload,
     mark_reinjecting_providers,
@@ -104,7 +104,7 @@ class TestGate:
         assert not relaunch_reload.mcp_config_relaunch_reload(pi)
 
     def test_the_provider_answers_only_for_a_direct_client(self) -> None:
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         assert AcpProvider(acp_backend=ACP_BACKEND_STRANDS).mcp_config_relaunch_reload is True
         assert AcpProvider(acp_backend=ACP_BACKEND_PI).mcp_config_relaunch_reload is False
@@ -114,14 +114,14 @@ class TestGate:
         assert fget(SimpleNamespace(_client=SimpleNamespace(backend=ACP_BACKEND_STRANDS))) is False
 
     def test_the_abc_default_is_false(self) -> None:
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         fget = LLMProvider.mcp_config_relaunch_reload.fget
         assert fget is not None
         assert fget(SimpleNamespace()) is False
 
     def test_a_relaunching_provider_skips_the_reset_and_is_marked(self) -> None:
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         provider = AcpProvider(acp_backend=ACP_BACKEND_STRANDS)
         assert provider_relaunches_for_mcp(provider)
@@ -132,7 +132,7 @@ class TestGate:
         assert provider._client._mcp_relaunch_pending is True
 
     def test_a_provider_outside_the_set_still_forces_the_reset(self) -> None:
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         strands = AcpProvider(acp_backend=ACP_BACKEND_STRANDS)
         pi = AcpProvider(acp_backend=ACP_BACKEND_PI)
@@ -364,7 +364,7 @@ class TestApplyAtTheTurnBoundary:
     async def test_the_provider_applies_it_before_the_confirmation_and_the_prompt(
         self, monkeypatch
     ) -> None:
-        from kiro_crew.providers import acp_turns
+        from aj_crew.providers import acp_turns
 
         order: list[str] = []
         client = MagicMock(spec=AcpClient)
@@ -395,7 +395,7 @@ def test_the_strands_launch_clears_the_mark_right_before_it_reads_the_spec() -> 
     """A mark set before this read is applied by this launch; one set after it survives."""
     import inspect
 
-    from kiro_crew.acp.harness import strands as strands_mod
+    from aj_crew.acp.harness import strands as strands_mod
 
     source = inspect.getsource(strands_mod.StrandsLaunch.resolve_spawn)
     clear = source.index("session._mcp_relaunch_pending = False")

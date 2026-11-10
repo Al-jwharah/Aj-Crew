@@ -19,10 +19,10 @@ import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 from skill_script_helpers import load_skill_script
 
-from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS
+from aj_crew.platform.update_governance import _GIT_LOCATION_VARS
 
 ROOT = Path(__file__).resolve().parent.parent
-PREPARE_PR = ROOT / "src" / "kiro_crew" / "builtin_skills" / "kirocrew-dev" / "kirocrew-prepare-pr"
+PREPARE_PR = ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "ajcrew-prepare-pr"
 PROVE = PREPARE_PR / "scripts" / "prove.py"
 CHECK = ROOT / ".github" / "scripts" / "proof_line_check.py"
 
@@ -525,9 +525,9 @@ def test_frontend_only_means_every_production_path_is_under_website() -> None:
     assert only(["website/src/a.ts", "website/src/a.test.ts"])
     assert only(["website/src/a.test.ts", "website/package.json", "docs/x.md"])
     assert only(["website/src/a.test.ts"])
-    assert not only(["src/kiro_crew/x.py", "website/src/a.test.ts"])
+    assert not only(["src/aj_crew/x.py", "website/src/a.test.ts"])
     assert not only(["website/src/a.ts", "website/src/a.test.ts", "scripts/build.sh"])
-    assert not only(["src/kiro_crew/x.py", "website/src/a.ts", "website/src/a.test.ts"])
+    assert not only(["src/aj_crew/x.py", "website/src/a.ts", "website/src/a.test.ts"])
 
 
 def test_test_only_and_docs_only_changes_print_their_reason(tmp_path: Path) -> None:
@@ -576,7 +576,7 @@ def test_the_frontend_test_shape_is_narrow() -> None:
     assert prove.is_frontend_test_path("website/src/a/b.test.tsx")
     assert prove.is_frontend_test_path("website/src/a/__tests__/b.ts")
     assert not prove.is_frontend_test_path("website/src/a/b.tsx")
-    assert not prove.is_frontend_test_path("src/kiro_crew/x.test.ts")
+    assert not prove.is_frontend_test_path("src/aj_crew/x.test.ts")
 
 
 def test_the_line_names_at_most_five_tests_and_the_record_keeps_all() -> None:
@@ -648,7 +648,7 @@ def test_the_proof_runs_on_the_pinned_commit_not_on_head(tmp_path: Path) -> None
 
 
 def test_a_test_id_with_a_comment_marker_survives_the_body(tmp_path: Path) -> None:
-    ids = ["test_x[<!--kirocrew:docked height=180-->-180]", "test_y"]
+    ids = ["test_x[<!--ajcrew:docked height=180-->-180]", "test_y"]
     line = prove.proof_line({"verdict": "PROVEN", "named": ids}, "a" * 40)
     assert "<!--" not in line and "<&#33;--" in line
     problems, proven = check.check("fix: x", f"## Tests\n\n{line}\n")

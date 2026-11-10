@@ -13,7 +13,7 @@ from model_registry_row_helpers import (
 )
 from named_cases_helpers import named_cases
 
-from kiro_crew import model_registry as mr
+from aj_crew import model_registry as mr
 
 
 class TestModelRegistry:
@@ -159,7 +159,7 @@ class TestModelRegistry:
         # override case: the registry lists auto=200k but kiro serves it at 1M.
         # Manipulate the in-memory cache directly (restored in teardown) to avoid
         # a module reload that would leak state into other tests.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         saved = dict(mr._KIRO_WINDOWS)
         try:
             mr._KIRO_WINDOWS.clear()
@@ -438,7 +438,7 @@ class TestAcpProviderIds:
         # claude-agent-acp's advertised ids for dropdown dedup), and
         # claude-opus-4.6 is an alias of opus-4.8-1m. But kiro-cli serves each as
         # a DISTINCT real model. to_acp_id (unlike to_provider_id) must pass these
-        # through unchanged — otherwise the Haiku-pinned kirocrew-knowledge agent
+        # through unchanged — otherwise the Haiku-pinned ajcrew-knowledge agent
         # (and mcp_core subagents) silently run on Sonnet.
         assert mr.to_acp_id("claude-haiku-4.5") == "claude-haiku-4.5"
         assert mr.to_acp_id("claude-sonnet-4.5") == "claude-sonnet-4.5"
@@ -932,11 +932,11 @@ class TestImportDoesNotCreateTheDataHome:
             "        sys.stderr.write('mkdir %s\\n' % args[0])\n"
             "        sys.stderr.write(''.join(traceback.format_stack(limit=12)[:-1]))\n"
             "sys.addaudithook(hook)\n"
-            "import kiro_crew.model_registry\n"
-            "from kiro_crew.config import paths\n"
+            "import aj_crew.model_registry\n"
+            "from aj_crew.config import paths\n"
             "sys.exit(1 if paths._default_home().exists() else 0)\n"
         )
-        env = {k: v for k, v in os.environ.items() if k != "KIROCREW_HOME"}
+        env = {k: v for k, v in os.environ.items() if k != "AJCREW_HOME"}
         env["HOME"] = str(home)
         env["USERPROFILE"] = str(home)
         proc = subprocess.run(
@@ -956,10 +956,10 @@ class TestImportDoesNotCreateTheDataHome:
     def test_the_sidecar_path_follows_the_data_home_without_creating_it(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         data = tmp_path / "data"
-        monkeypatch.setenv("KIROCREW_HOME", str(data))
+        monkeypatch.setenv("AJCREW_HOME", str(data))
         assert mr._kiro_windows_cache_path() == data.resolve() / "model_windows.json"
         assert mr._advertised_models_cache_path() == data.resolve() / "provider_models.json"
         assert not data.exists(), "resolving a sidecar path must not create the home"

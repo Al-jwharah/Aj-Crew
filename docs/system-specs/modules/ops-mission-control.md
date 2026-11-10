@@ -9,7 +9,7 @@ compounding knowledge ledger, and proposes an action. Read-only by default.
 
 The whole app is meant to leave this repository intact: the package under
 `apps/builtins/ops_mission_control/` and the UI under `website/src/apps/ops-mission-control/`.
-Kiro Crew core does not import either. What the app needs from the core it imports from
+Aj Crew core does not import either. What the app needs from the core it imports from
 the core: the `webhooks` governance gate (`webhook_sources.source_refusal`), the
 notification bus, the redactor, the grapheme-safe cut and the hidden-leaf staging. The
 app's tests of those pins live in its own `tests/` (`test_webhook_governance.py`,
@@ -25,7 +25,7 @@ shrink. Each row is deleted in the change that removes what it names:
 * **The `ops_mission_control_api` agent tool is the app's own.** `app.json` declares it
   in its `agentTools` block (`app-kit-platform.md`, section 30.1) and the app serves it at
   `POST /agent-tools` (see "The agent tool" under Security model), so the core lists it in
-  `kirocrew-core` and forwards each call without naming it. No core module holds its
+  `ajcrew-core` and forwards each call without naming it. No core module holds its
   descriptor, handler, allowlist, schema, internal-secret admission or channel deny. Its
   title row in `data/mcp_tool_titles.json` stays until the app leaves, because the chat's
   tool label and a remote session's whole-server grant read that table by name.
@@ -214,7 +214,7 @@ End to end: two divergent ledgers → real `git merge` → conflicted file → 4
 ### 2a. Record format version (`LedgerEntry.v`, `LEDGER_RECORD_V1 = 1`)
 
 `ledger.jsonl` is the one artifact that **leaves the machine**: `ledger_sync` git-pushes it
-and teammates on *different Kiro Crew builds* pull it, so an older instance can be handed a
+and teammates on *different Aj Crew builds* pull it, so an older instance can be handed a
 row a newer one wrote. Without a version stamp there is no way to notice — the reader
 coerces the fields it recognises and defaults the ones it does not, so a row it only partly
 understands reads as fully understood. This is the nearest thing in the app to a
@@ -238,7 +238,7 @@ remains the single source of truth for readers, and `test_the_field_default_matc
 pins the two equal.
 
 `test_ledger_sync_git` simulates two instances in one process without re-importing anything:
-each instance gets its own `KIROCREW_HOME` and empty `ledger_sync` refusal latches through a
+each instance gets its own `AJCREW_HOME` and empty `ledger_sync` refusal latches through a
 private `MonkeyPatch`, and asserts its ledger really resolves under its own data home.
 
 ### 2b. The fast-path bar, and the track record behind it (persisted, additive)
@@ -815,7 +815,7 @@ agent's AWS access here. `agent.sandbox` defaults to `auto`, which engages OS is
 tier, and that tier leaves `~/.aws` visible by design (`_STANDARD_DIRS` does not hide it), and `security.py` blocks
 credential-file *content reads* (`cat`/`grep` on `~/.aws/`) but not AWS CLI invocation.
 The agent's bash children are isolated by **kiro-cli's own** internal sandbox
-(`~/.kiro/settings/amazon-internal.json` → `{"sandbox": true}`), a layer Kiro Crew
+(`~/.kiro/settings/amazon-internal.json` → `{"sandbox": true}`), a layer Aj Crew
 delegates to rather than controls. Brokering is what makes that irrelevant: the gateway
 holds the credential, so the agent never needs one.
 
@@ -1069,18 +1069,18 @@ denial is SEL-audited. The agent-facing routes are not owner-gated. Pinned by
 `test_provider_secret_owner_gate.py`.
 
 **An owner-only PUT only holds if the agent cannot mint the owner's token.** The dashboard token
-comes from `kirocrew token`, which reads the sensitive-path-fenced `.local_secret` in a SUBPROCESS
+comes from `ajcrew token`, which reads the sensitive-path-fenced `.local_secret` in a SUBPROCESS
 the tool-call fence does not cover, and prints a URL that authenticates every gateway route —
 including this PUT. So the ceiling is only as strong as the deny-command rules that block the
 mint, and those are a generic security control in `security.BUILTIN_DENIED_RULES`, not an ops
-one: every authenticated route shares the exposure. `credential-exfil-kirocrew-token` is the
+one: every authenticated route shares the exposure. `credential-exfil-ajcrew-token` is the
 raw-text half (a command-position pattern that also accepts the `-`/`.` separator, so the
-`python -m kiro_crew token` module form is covered too) and is enforced together with the
+`python -m aj_crew token` module form is covered too) and is enforced together with the
 argv-structural floor `_is_credential_mint` — a union, so neither can fail open alone.
-`credential-exfil-kirocrew-token-argv` covers an interpreter payload that spawns the CLI through a
+`credential-exfil-ajcrew-token-argv` covers an interpreter payload that spawns the CLI through a
 library call. See [security](security.md) for the matcher detail.
 
-The inline-program form needs its own rules, because `python -c "from kiro_crew.cli import
+The inline-program form needs its own rules, because `python -c "from aj_crew.cli import
 main; main()" token` reaches the identical mint with the import name buried in an inline
 program. Two parsing rules apply together, and either alone still permits the mint:
 `_is_self_module_invocation` treats the `-c` payload as a program rather than a script name, and
@@ -1088,25 +1088,25 @@ the verb scan in `_is_credential_mint` does not read a `;` INSIDE the quoted pay
 top-level command separator. Both `-c` spellings (separate and attached operand) are matched.
 On the `-c` path the VERB REQUIREMENT IS NOT ENFORCEABLE: the payload is arbitrary Python with the
 interpreter's full authority, so it can BUILD the verb rather than pass it —
-`python -c "import sys; sys.argv.append('token'); from kiro_crew.cli import main; main()"` names
+`python -c "import sys; sys.argv.append('token'); from aj_crew.cli import main; main()"` names
 no `token` argv word at all, and neither does `main(['token'])`. So a `-c` payload matching
 `_SELF_IMPORT_RE` is denied on the IMPORT alone (`_has_self_importing_inline_program`), while the
-verb stays the trigger everywhere else, because `kirocrew doctor` is legitimate and only
-`kirocrew token` mints.
+verb stays the trigger everywhere else, because `ajcrew doctor` is legitimate and only
+`ajcrew token` mints.
 
 Both rules match the payload RAW rather than through `_normalize_operand`: that helper truncates
 at the first control operator, which is right for an operand the shell will split and wrong for a
 quoted Python program whose `;` is a statement separator — it would reduce
-`"import sys; …; from kiro_crew.cli import main"` to `import sys` and hide the import entirely.
+`"import sys; …; from aj_crew.cli import main"` to `import sys` and hide the import entirely.
 
 The `-c`/`-m` tests pin a blocked set and an allowed set, the latter including `python -c 'print(1)' token` and
-`grep -r kiro_crew src/` to show the deny is scoped to code we are about to run, and a payload
-that imports the package WITHOUT the mint verb (`python -c "import kiro_crew.cli" && echo ok`)
+`grep -r aj_crew src/` to show the deny is scoped to code we are about to run, and a payload
+that imports the package WITHOUT the mint verb (`python -c "import aj_crew.cli" && echo ok`)
 still allowed — the verb is what the rule blocks, not the import.
 
 Obfuscation is where this matcher meets its limit, and the rule draws the line honestly rather
-than pretending to close it. `\bkiro_crew\b` misses a name assembled at runtime —
-`__import__('kiro'+'_crew')`, `importlib.import_module(name)`, `exec(base64.b64decode(...))` — so
+than pretending to close it. `\baj_crew\b` misses a name assembled at runtime —
+`__import__('aj'+'_crew')`, `importlib.import_module(name)`, `exec(base64.b64decode(...))` — so
 an inline-program payload combining an interpreter with any of a NARROW list of dynamic-exec
 primitives (`__import__(`, `importlib`, `exec(`, `eval(`, `compile(`, `b64decode`, `marshal`,
 `getattr(`) is treated as opaque and denied: "I cannot tell what this imports" is the fail-closed
@@ -1143,7 +1143,7 @@ and balancing the count is not decidable. `_python_reads_stdin` consumes redirec
 through the same helper, so the detector and the carrier scope agree on where an operand ends;
 it answers True for `python < prog.py`, which does read its program from that file. Only
 operands are scanned, not the whole frame: a frame is not split on a newline, so a neighbouring
-command naming the package in a FILE PATH (`isort src/kiro_crew/mcp_core.py` followed by any
+command naming the package in a FILE PATH (`isort src/aj_crew/mcp_core.py` followed by any
 harmless heredoc) would otherwise read as a mint with no `token` word present. The pipe
 is detected as a CHARACTER left of or glued into the interpreter token, not as a standalone `|`
 word: the tokenizer splits on whitespace only, so `echo '…'|python -` hands the operator over
@@ -1157,7 +1157,7 @@ as covered — the same residual the written-then-run script form already has.
 and closing tag, and a here-string's operand, read off the raw token because the operand
 normaliser strips a redirection to the empty string; a heredoc's closing tag ENDS the command,
 so a following `echo ok` is not read as this interpreter's script) so `python script.py`,
-`python -c …`, and `cat kiro_crew_notes.txt | python -`
+`python -c …`, and `cat aj_crew_notes.txt | python -`
 do not trip it, and the inline-program scan bails at the interpreter's first positional so the
 ReDoS-resistance budget still holds on spam input.
 
@@ -1921,7 +1921,7 @@ must not quietly change what the agent is allowed to do.
 
 `ops_mission_control_api` is the agent's only credentialed path to this surface, and it
 is this app's own (`app-kit-platform.md`, section 30.1): `app.json` declares it in
-`agentTools`, the core lists it in `kirocrew-core`, checks a call's arguments against the
+`agentTools`, the core lists it in `ajcrew-core`, checks a call's arguments against the
 declaration, and posts it to the gateway's `/api/app-tools/call`, which hands it to the
 route registry. The built-in's other routes are mounted on the gateway router, which that
 handler never dispatches to, so `backend.hooks.routes` names `backend/agent_tool_hook.py`,
@@ -1943,7 +1943,7 @@ schema subset cannot:
 - `POST /rotation/arm` arms this app's crons, which fire unattended after the caller's
   turn, so a caller whose forwarded `X-Session-Key` is a channel agent's is refused with
   403 `channel_agent_refused` and an `agent_tool` / `denied` audit row; every other call of
-  a channel agent stays reachable. That header is the one `kirocrew-core` sent to
+  a channel agent stays reachable. That header is the one `ajcrew-core` sent to
   `/api/app-tools/call`, so the hold is only as strong as the gateway's attestation of it
   (`token_auth`'s `_verify_unix_peer` on the unix socket): loosening that check weakens
   this hold too.
@@ -2723,7 +2723,7 @@ composition test pins that no `http_routes` module matches the guard's pattern).
 ### It stores no Slack credential — by design
 
 The app has **no** bot-token field and adds nothing to its keystone secret store.
-Kiro Crew already holds a Slack token for its own gateway, and the live
+Aj Crew already holds a Slack token for its own gateway, and the live
 `SlackClientOps` is reused. Governance guidance on credential storage puts "prefer
 no secret to rotate" ahead of storing a third-party token, and permits the latter
 only where no such path exists; here one does, so a second copy would be duplicated
@@ -2732,14 +2732,14 @@ for zero capability gain. `test_slack_out.py::TestNoTokenOfItsOwn` pins this aga
 a future "just add a token field" regression.
 
 The consequence is a real dependency rather than a hidden one: with Slack
-unconfigured on Kiro Crew itself, this channel is unavailable, and `status()`
+unconfigured on Aj Crew itself, this channel is unavailable, and `status()`
 distinguishes the three cases (off / no channel / no host Slack) because each has a
 different fix. The channel ID **is** stored in plain app config — it is not a
 credential.
 
 ### Explicit client, no global
 
-There is no module-level gateway-state accessor in Kiro Crew (state is per
+There is no module-level gateway-state accessor in Aj Crew (state is per
 `web.Application`), so the client is threaded in from the route layer:
 `_slack_client(request)` (`backend/http_routes/_shared.py`) → `slack_out.client_from_state(...)` →
 `publish/post_detail/publish_all(..., client)`, and `dispatch.run_cycle(
@@ -2868,7 +2868,7 @@ config alone, so it cannot be answered from the unauthenticated config file). Th
 tab's "Desktop notifications" card owns the app-level on/off and lists the DECLARED
 channels with what each fires on.
 
-It deliberately has **no per-channel mute**: Kiro Crew renders that centrally (`GET
+It deliberately has **no per-channel mute**: Aj Crew renders that centrally (`GET
 /api/notifications/channels` → `pages/settings/NotificationsPanel.tsx`, one row per
 channel with a mute switch and a priority override, grouped under an app-badged header),
 and a second copy would be two controls that can disagree about one stored setting. The
@@ -2983,7 +2983,7 @@ artifact that is blank. `transition` is the only door to a terminal status
 (`sweep_stale` writes only `stale`, and `slot_watch.derive_status` never returns a
 terminal one), so that single call site covers every close there is.
 
-**It is the only thing this app produces for a reader who does not run Kiro Crew** —
+**It is the only thing this app produces for a reader who does not run Aj Crew** —
 attachable to a ticket, pasteable into a review. Its content is sourced from the
 persisted `Incident` (`diagnosis`, `resolution`), never from the closing call's
 kwargs, so an unrelated later field update cannot blank a finished record. The
@@ -3046,7 +3046,7 @@ review time, not to simulate the platform.
 
 ## Files
 
-- `src/kiro_crew/apps/builtins/ops_mission_control/app.json` — manifest
+- `src/aj_crew/apps/builtins/ops_mission_control/app.json` — manifest
 - `.../__init__.py` — **re-exports `register_routes`** (the startup loop checks the
   PACKAGE, not `backend.routes`; without it routes silently never register)
 - `.../backend/models.py` — `Signal`, `Incident`, `LedgerEntry`, transition grammar,
@@ -3097,7 +3097,7 @@ review time, not to simulate the platform.
   an in-gateway app's tool call (the other routes stay on the gateway router).
 - `.../backend/providers/` — the four Protocols + public adapters; the package
   `__init__` also owns config read/merge (`merge_provider_config`, `set_top_level`)
-- `src/kiro_crew/builtin_skills/ops-mission-control/` — the agent skill AND the
+- `src/aj_crew/builtin_skills/ops-mission-control/` — the agent skill AND the
   six SOPs (`sops/dispatch|handover|investigate|reconcile|rotation-check|ledger-hygiene.md`).
   **They live here, not under the app**, because `register_builtin_apps` copies only
   `app.json` + `installed.json` into the data home for a builtin — so a
@@ -3117,7 +3117,7 @@ review time, not to simulate the platform.
 
   A token recipe cannot fix this — the builtin security rules block agents from minting
   gateway tokens, by design. Agent access goes through the `ops_mission_control_api`
-  agent tool instead: the `kirocrew-core` MCP server lists it from this app's manifest and
+  agent tool instead: the `ajcrew-core` MCP server lists it from this app's manifest and
   forwards each call to the gateway, which hands it to this app's `/agent-tools` route;
   the agent never sees a credential. Each SOP names the tool and its paths because a cron
   agent may read **only** its own SOP. Tests pin the planes to one surface: the
@@ -3150,7 +3150,7 @@ review time, not to simulate the platform.
 - The app's development journals (research sweeps, feature ledger, parity report) are
   deliberately NOT in the repository. They lived in the package tree
   (`apps/builtins/ops_mission_control/planning/`) and were pruned from the sdist by a
-  `MANIFEST.in` special case, because `recursive-include src/kiro_crew/apps *.md` — which
+  `MANIFEST.in` special case, because `recursive-include src/aj_crew/apps *.md` — which
   exists to ship ATTRIBUTION/README credit — swept them in as a side effect. They were moved
   out of the package (removing the special case rather than papering over it) and then dropped
   altogether: they carried provenance narrative that does not belong in a public
@@ -3255,12 +3255,12 @@ package* — outside the agent's reach and visible to `pip list`. Mirrors
 `platform/discovery.py`, because a companion silently invisible to discovery is the
 worst failure mode — everything appears to work.
 
-Group is `kirocrew.ops_providers`, deliberately **distinct** from
+Group is `ajcrew.ops_providers`, deliberately **distinct** from
 `platform.discovery.PLUGIN_GROUP`: contributing an ops adapter must not require or
 imply authority over the platform edition seam.
 
 ```toml
-[project.entry-points."kirocrew.ops_providers"]
+[project.entry-points."ajcrew.ops_providers"]
 my-company = "my_pkg.ops:register_adapters"
 ```
 
@@ -3318,7 +3318,7 @@ line-anchored so a genuinely internal reference in that file is still caught.
 
 ## Tests
 
-`src/kiro_crew/apps/builtins/ops_mission_control/tests/` — the app's own suite, including:
+`src/aj_crew/apps/builtins/ops_mission_control/tests/` — the app's own suite, including:
 
 - `test_models.py` — fingerprint stability, normalization fallbacks, transition
   grammar, mode algebra

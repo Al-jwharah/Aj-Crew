@@ -229,7 +229,7 @@ function forceOverCap(fsDouble) {
 
 describe("nativeLogPath / previousNativeLogPath", () => {
   it("sits next to the other launch logs in the logs directory", () => {
-    assert.equal(nativeLogPath("/logs/Kiro Crew"), path.join("/logs/Kiro Crew", NATIVE_LOG_BASENAME));
+    assert.equal(nativeLogPath("/logs/Aj Crew"), path.join("/logs/Aj Crew", NATIVE_LOG_BASENAME));
   });
 
   it("keeps the previous generation beside the live file", () => {

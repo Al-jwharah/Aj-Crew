@@ -292,7 +292,7 @@ export function DevFleetRowActions({
       // Keep the visible text short: the ACTIONS grid column is fixed-width and
       // the Badge pill is whitespace-nowrap, so long text overflows leftward
       // into the UPDATED/BEHIND columns. Full instruction lives in the tooltip.
-      out.push(<Badge key="bp" variant="warn" title={i18nT('pages.devFleetPage.build_pending_restart_gateway_to_apply_kirocrew')}>{i18nT('pages.devFleetPage.build_pending')}</Badge>)
+      out.push(<Badge key="bp" variant="warn" title={i18nT('pages.devFleetPage.build_pending_restart_gateway_to_apply_ajcrew')}>{i18nT('pages.devFleetPage.build_pending')}</Badge>)
     }
     return out
   }

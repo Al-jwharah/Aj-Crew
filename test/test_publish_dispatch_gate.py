@@ -18,9 +18,9 @@ from types import SimpleNamespace
 import pytest
 from publish_sync_helpers import DummyPublishProvider
 
-from kiro_crew import publish_governance, publish_provider, publish_sync
-from kiro_crew.artifacts import ArtifactPublication, ArtifactStore
-from kiro_crew.publish_provider import DEFAULT_PROVIDER, PublishDeniedError
+from aj_crew import publish_governance, publish_provider, publish_sync
+from aj_crew.artifacts import ArtifactPublication, ArtifactStore
+from aj_crew.publish_provider import DEFAULT_PROVIDER, PublishDeniedError
 
 
 class _OtherProvider(DummyPublishProvider):
@@ -53,7 +53,7 @@ def providers_fixture(monkeypatch, store):
 
 @pytest.fixture(name="lts")
 def lts_fixture(monkeypatch):
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 @pytest.fixture(name="denied")
@@ -188,7 +188,7 @@ def test_the_dispatch_decision_reaches_the_governance_ceiling(monkeypatch):
         seen.append((scope, item, session_key, fail_closed))
         return SimpleNamespace(permitted=False, rule="r", layer="ceiling", reason="no")
 
-    monkeypatch.setattr("kiro_crew.platform.governance_profiles.governance_permits", permits)
+    monkeypatch.setattr("aj_crew.platform.governance_profiles.governance_permits", permits)
 
     def check():
         publish_governance.bind_egress_session(_request("s-3"))
@@ -200,7 +200,7 @@ def test_the_dispatch_decision_reaches_the_governance_ceiling(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_every_artifact_write_route_binds_its_session_first():
-    from kiro_crew.dashboard.handlers.artifacts_parts.route_plumbing import (
+    from aj_crew.dashboard.handlers.artifacts_parts.route_plumbing import (
         _non_owner_refusal,
     )
 
@@ -217,7 +217,7 @@ async def test_every_artifact_write_route_binds_its_session_first():
 
 
 def test_a_dispatch_refusal_answers_403():
-    from kiro_crew.dashboard.handlers.artifacts_parts.publish_sharing import (
+    from aj_crew.dashboard.handlers.artifacts_parts.publish_sharing import (
         _sync_error_response,
     )
 

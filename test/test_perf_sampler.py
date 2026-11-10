@@ -1,4 +1,4 @@
-"""Tests for the debug-only performance sampler (kirocrew perf sample)."""
+"""Tests for the debug-only performance sampler (ajcrew perf sample)."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_perf, gateway_lock, perf_sampler
+from aj_crew import cli_perf, gateway_lock, perf_sampler
 
 # ── The debug gate ──
 
@@ -25,7 +25,7 @@ class TestGate:
     @pytest.mark.parametrize("value", ["0", "false", "no", "off", "", "maybe"])
     def test_other_values_stay_disabled(self, value):
         # "0" must read as OFF. Treating mere presence as on would make
-        # KIROCREW_DEBUG=0 silently enable profiling.
+        # AJCREW_DEBUG=0 silently enable profiling.
         assert perf_sampler.profiling_enabled({perf_sampler.DEBUG_ENV_VAR: value}) is False
 
     def test_refusal_message_names_the_switch(self):
@@ -66,7 +66,7 @@ class TestParserWiring:
         dispatch falls through to argparse's help path and the command appears to
         do nothing. Pin it.
         """
-        parser = argparse.ArgumentParser(prog="kirocrew")
+        parser = argparse.ArgumentParser(prog="ajcrew")
         sub = parser.add_subparsers(dest="command")
         cli_perf.register_perf_parser(sub)
 
@@ -77,7 +77,7 @@ class TestParserWiring:
         assert ns.perf_call == "mod:fn"
 
     def test_no_sample_argument_uses_the_command_dest(self):
-        parser = argparse.ArgumentParser(prog="kirocrew")
+        parser = argparse.ArgumentParser(prog="ajcrew")
         sub = parser.add_subparsers(dest="command")
         cli_perf.register_perf_parser(sub)
         ns = parser.parse_args(["perf", "sample"])
@@ -163,7 +163,7 @@ class TestStackSampler:
         # The daemon thread must be gone, not merely idle: a leaked sampler keeps
         # reading frames for the life of the process.
         assert not any(
-            t.name == "kirocrew-perf-sampler" for t in __import__("threading").enumerate()
+            t.name == "ajcrew-perf-sampler" for t in __import__("threading").enumerate()
         )
 
     def test_effective_rate_reports_zero_when_nothing_sampled(self):
@@ -222,12 +222,12 @@ class TestPySpy:
     def test_unavailable_message_explains_macos_and_the_dependency(self):
         message = perf_sampler.pyspy_unavailable_message()
         assert "task_for_pid" in message
-        # Names py-spy itself. `pip install kirocrew[perf]` cannot resolve --
+        # Names py-spy itself. `pip install ajcrew[perf]` cannot resolve --
         # this project is published on no index -- so advising it would send the
         # user to a guaranteed failure.
         assert "py-spy" in message
         assert "pip install" in message
-        assert "kirocrew[" not in message
+        assert "ajcrew[" not in message
 
     def test_candidate_paths_are_probed_before_PATH(self, monkeypatch, tmp_path):
         """A py-spy installed by homebrew/cargo/pip --user must still be found.
@@ -800,8 +800,8 @@ class TestResolveCallable:
 
     def test_rejects_non_callable(self):
         with pytest.raises(TypeError):
-            cli_perf._resolve_callable("kiro_crew.perf_sampler:DEBUG_ENV_VAR")
+            cli_perf._resolve_callable("aj_crew.perf_sampler:DEBUG_ENV_VAR")
 
     def test_resolves_a_dotted_attribute(self):
-        resolved = cli_perf._resolve_callable("kiro_crew.perf_sampler:StackSampler.start")
+        resolved = cli_perf._resolve_callable("aj_crew.perf_sampler:StackSampler.start")
         assert callable(resolved)

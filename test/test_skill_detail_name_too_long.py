@@ -17,8 +17,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew.dashboard.handlers.prompts as prompts_mod
-from kiro_crew.skills import SkillsLoader
+import aj_crew.dashboard.handlers.prompts as prompts_mod
+from aj_crew.skills import SkillsLoader
 
 
 @pytest.fixture(autouse=True)

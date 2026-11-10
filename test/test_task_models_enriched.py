@@ -2,13 +2,13 @@
 
 Preserved from the deleted ``test/test_aidlc_store.py`` (the orphaned aidlc
 package's test file): its ``TestEnrichedDataclasses`` class covered live
-``kiro_crew.task_models`` code, not the deleted store, so the assertions move
+``aj_crew.task_models`` code, not the deleted store, so the assertions move
 here instead of dying with the package.
 """
 
 from __future__ import annotations
 
-from kiro_crew.task_models import Project, Task
+from aj_crew.task_models import Project, Task
 
 
 class TestEnrichedDataclasses:

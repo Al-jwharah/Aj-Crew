@@ -1,10 +1,10 @@
-"""``kirocrew-computer`` and ``kirocrew-dashboard`` resolve the calling session
+"""``ajcrew-computer`` and ``ajcrew-dashboard`` resolve the calling session
 from the injected caller block.
 
-The same failure mode ``kirocrew-cron`` guards against applies here: both servers
+The same failure mode ``ajcrew-cron`` guards against applies here: both servers
 already routed identity through :func:`mcp_core._resolve_session_key_strict`,
 whose FIRST source is the gateway-injected per-call caller block — but neither
-advertised ``kirocrew.caller-identity``, and ``mcp_gateway/backend_stubs.py`` strips
+advertised ``ajcrew.caller-identity``, and ``mcp_gateway/backend_stubs.py`` strips
 any stub-supplied block from every forwarded request and re-injects its own only
 for a backend that advertised. Nothing declines to pool an unadvertised backend
 (``rewriter.UNPOOLABLE_SERVERS`` lists only credential vendors), so not advertising bought a shared
@@ -36,10 +36,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import mcp_computer, mcp_dashboard
-from kiro_crew.mcp_caller import CallerContext, set_current_caller
-from kiro_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import GatewayCaller, ToolContext
+from aj_crew import mcp_computer, mcp_dashboard
+from aj_crew.mcp_caller import CallerContext, set_current_caller
+from aj_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
+from aj_crew.mcp_tools.table import GatewayCaller, ToolContext
 
 
 @pytest.fixture(autouse=True)
@@ -49,8 +49,8 @@ def _no_ambient_identity(monkeypatch):
     Identity is granted per test rather than by a shared fixture: part of this
     module is about what happens when there is none.
     """
-    monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-    monkeypatch.delenv("KIROCREW_HOST_PID", raising=False)
+    monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+    monkeypatch.delenv("AJCREW_HOST_PID", raising=False)
     set_current_caller(None)
     yield
     set_current_caller(None)
@@ -61,7 +61,7 @@ def _as_session(key: str) -> None:
     set_current_caller(CallerContext(session_key=key, session_type="dashboard"))
 
 
-# --- kirocrew-computer ------------------------------------------------------
+# --- ajcrew-computer ------------------------------------------------------
 #
 # The one place identity leaves this server is the ``session_key`` argument of
 # ``_invoke`` (it becomes the gateway request's session header), so that is
@@ -91,7 +91,7 @@ def test_computer_forwards_the_block_identity_over_the_environment(
     environment can only ever name one session (or, in practice, none), so the
     block has to outrank it rather than merely be consulted.
     """
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:from-env")
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:from-env")
     _as_session("dashboard:from-block")
 
     assert mcp_computer._call_tool_inner("computer_get_state", {}) == "ok"
@@ -102,7 +102,7 @@ def test_computer_falls_back_to_the_environment_without_a_block(
     monkeypatch, computer_invocations
 ) -> None:
     """A non-gateway launch has no block to read and must not be regressed."""
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:from-env")
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:from-env")
 
     assert mcp_computer._call_tool_inner("computer_get_state", {}) == "ok"
     assert computer_invocations["session_key"] == "dashboard:from-env"
@@ -122,7 +122,7 @@ def test_computer_still_proceeds_unidentified_under_a_process_namespace(
     assert computer_invocations["session_key"].startswith(mcp_computer.UNRESOLVED_SESSION_PREFIX)
 
 
-# --- kirocrew-dashboard -----------------------------------------------------
+# --- ajcrew-dashboard -----------------------------------------------------
 #
 # Identity decides SCOPE here: which sessions a caller may see, and whether it
 # may reshape the shared folder tree at all. Both go through the production
@@ -154,7 +154,7 @@ def test_dashboard_scopes_the_session_list_by_the_block_identity(
     scope applied to another's call, the co-tenancy failure pooling makes
     possible.
     """
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:from-env")
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:from-env")
     _as_session("dashboard:from-block")
 
     out, _dash = _dashboard_frame(
@@ -174,7 +174,7 @@ def test_dashboard_verifies_tree_writes_against_the_block_identity(
     monkeypatch,
 ) -> None:
     """The verified key handed to every tree write is the block's, not the env's."""
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:from-env")
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:from-env")
     _as_session("dashboard:from-block")
 
     out, dash = _dashboard_frame(
@@ -192,7 +192,7 @@ def test_dashboard_falls_back_to_the_environment_without_a_block(
     monkeypatch,
 ) -> None:
     """A non-gateway launch has no block to read and must not be regressed."""
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:from-env")
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:from-env")
 
     out, dash = _dashboard_frame("chat_folder_create", {"name": "x"}, {"key": "from-env"})
     assert not out.startswith("Error:"), out

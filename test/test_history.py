@@ -25,9 +25,9 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import history_listing_memo, history_search
-from kiro_crew.atomic_write import atomic_write
-from kiro_crew.history import (
+from aj_crew import history_listing_memo, history_search
+from aj_crew.atomic_write import atomic_write
+from aj_crew.history import (
     _SESSION_KEEP_LINES,
     _SESSION_MAX_BYTES,
     ConversationLog,
@@ -593,7 +593,7 @@ class TestRecentFromSource:
                 _tick["n"] += 1
                 return _base + _dt.timedelta(seconds=_tick["n"])
 
-        monkeypatch.setattr("kiro_crew.history.datetime", _IncDateTime)
+        monkeypatch.setattr("aj_crew.history.datetime", _IncDateTime)
 
         log = ConversationLog(base_dir=tmp_path)
         # Append in different sessions — timestamps are strictly ordered.
@@ -607,7 +607,7 @@ class TestRecentFromSource:
 
 class TestSessionManagerCompaction:
     def test_sliding_window_splits_messages(self, tmp_path):
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         log = ConversationLog(base_dir=tmp_path)
         log.init()
@@ -623,7 +623,7 @@ class TestSessionManagerCompaction:
         assert recent[0]["content"] == "msg-6"
 
     def test_sliding_window_all_recent_when_few(self, tmp_path):
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         log = ConversationLog(base_dir=tmp_path)
         log.init()

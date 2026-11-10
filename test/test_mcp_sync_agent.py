@@ -13,12 +13,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from conftest import host_abs
-from kiro_crew.dashboard.handlers.agents import (
+from aj_crew.dashboard.handlers.agents import (
     api_capability_mcp_install,
     api_capability_mcp_uninstall,
 )
-from kiro_crew.dashboard.handlers.mcp import _mcp_hot_reload_active as _REAL_GATE
-from kiro_crew.mcp_provenance import without_marker
+from aj_crew.dashboard.handlers.mcp import _mcp_hot_reload_active as _REAL_GATE
+from aj_crew.mcp_provenance import without_marker
 
 
 @pytest.fixture(autouse=True)
@@ -28,7 +28,7 @@ def _owner_caller(monkeypatch):
     its own enumerate-the-invariant coverage in
     test_agents_endpoints_owner_auth.py."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
@@ -41,7 +41,7 @@ def _no_hot_reload(monkeypatch):
     not carry; failing closed there is the production behaviour too.
     ``TestApiMcpSyncHotReload`` overrides it per test."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.mcp._mcp_hot_reload_active",
+        "aj_crew.dashboard.handlers.mcp._mcp_hot_reload_active",
         lambda request: False,
     )
 
@@ -52,13 +52,13 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 @pytest.fixture()
 def mcp_env(tmp_path: Path):
     """Set up agent config and global mcp.json in tmp_path."""
-    agent_cfg = tmp_path / "kirocrew.json"
+    agent_cfg = tmp_path / "ajcrew.json"
     mcp_json = tmp_path / "mcp.json"
 
     agent_cfg.write_text(
         json.dumps(
             {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "mcpServers": {"builder-mcp": {"command": "builder-mcp"}},
                 "tools": ["@builder-mcp"],
                 "allowedTools": ["@builder-mcp"],
@@ -78,9 +78,9 @@ def mcp_env(tmp_path: Path):
     )
 
     with (
-        patch("kiro_crew.dashboard.handlers.mcp._GLOBAL_MCP_JSON", mcp_json),
+        patch("aj_crew.dashboard.handlers.mcp._GLOBAL_MCP_JSON", mcp_json),
         patch(
-            "kiro_crew.dashboard.handlers.agents._installed_agent_config", return_value=agent_cfg
+            "aj_crew.dashboard.handlers.agents._installed_agent_config", return_value=agent_cfg
         ),
     ):
         yield agent_cfg, mcp_json
@@ -93,13 +93,13 @@ def _load(path: Path) -> dict:
 async def _sync_one_remote(remote, mcp_env, *, owned: bool = True, marked: bool = True) -> dict:
     """Run api_mcp_sync over one remote server and return its written global entry.
 
-    ``owned`` marks the name as managed by Kiro Crew; global writes are gated on it.
+    ``owned`` marks the name as managed by Aj Crew; global writes are gated on it.
     ``marked`` stamps the authorship marker on the existing global entry. Pass
     ``marked=False`` when the marker itself is under test.
     """
-    from kiro_crew.dashboard.handlers.mcp import api_mcp_sync
-    from kiro_crew.mcp_discovery import SCOPE_KIROCREW
-    from kiro_crew.mcp_provenance import stamp
+    from aj_crew.dashboard.handlers.mcp import api_mcp_sync
+    from aj_crew.mcp_discovery import SCOPE_AJCREW
+    from aj_crew.mcp_provenance import stamp
 
     _, mcp_json = mcp_env
     if marked:
@@ -113,18 +113,18 @@ async def _sync_one_remote(remote, mcp_env, *, owned: bool = True, marked: bool 
     req.app = {"state": MagicMock()}
     _store = {remote.name: {"url": "https://store"}} if owned else {}
     with (
-        patch("kiro_crew.mcp_discovery.discover_servers_to_sync", return_value=[remote]),
-        patch("kiro_crew.mcp_discovery.sync_to_agent_config", return_value=True),
-        patch("kiro_crew.mcp_discovery.register_servers_for_cc"),
+        patch("aj_crew.mcp_discovery.discover_servers_to_sync", return_value=[remote]),
+        patch("aj_crew.mcp_discovery.sync_to_agent_config", return_value=True),
+        patch("aj_crew.mcp_discovery.register_servers_for_cc"),
         patch(
-            "kiro_crew.mcp_discovery._load_mcp_json_by_source",
-            return_value={SCOPE_KIROCREW: _store},
+            "aj_crew.mcp_discovery._load_mcp_json_by_source",
+            return_value={SCOPE_AJCREW: _store},
         ),
-        patch("kiro_crew.dashboard.handlers.mcp._get_mcp_lock") as mock_lock,
-        patch("kiro_crew.dashboard.handlers.mcp._write_mcp_json") as mock_write,
-        patch("kiro_crew.dashboard.handlers.mcp._sync_mcp_to_agent_batch"),
+        patch("aj_crew.dashboard.handlers.mcp._get_mcp_lock") as mock_lock,
+        patch("aj_crew.dashboard.handlers.mcp._write_mcp_json") as mock_write,
+        patch("aj_crew.dashboard.handlers.mcp._sync_mcp_to_agent_batch"),
         patch(
-            "kiro_crew.dashboard.handlers.sessions._reset_all_sessions",
+            "aj_crew.dashboard.handlers.sessions._reset_all_sessions",
             new_callable=AsyncMock,
             return_value=1,
         ),
@@ -146,12 +146,12 @@ class TestGlobalWritesAreOwnershipGated:
 
     @staticmethod
     def _own(names: set[str]):
-        """Patch the store scope so ``kirocrew_managed_names`` sees exactly ``names``."""
-        from kiro_crew.mcp_discovery import SCOPE_KIROCREW
+        """Patch the store scope so ``ajcrew_managed_names`` sees exactly ``names``."""
+        from aj_crew.mcp_discovery import SCOPE_AJCREW
 
         return patch(
-            "kiro_crew.mcp_discovery._load_mcp_json_by_source",
-            return_value={SCOPE_KIROCREW: {n: {"url": "https://store"} for n in names}},
+            "aj_crew.mcp_discovery._load_mcp_json_by_source",
+            return_value={SCOPE_AJCREW: {n: {"url": "https://store"} for n in names}},
         )
 
     async def _kiro_global(self, *, managed: bool, mcp_env, marked: bool | None = None) -> dict:
@@ -160,8 +160,8 @@ class TestGlobalWritesAreOwnershipGated:
         ``marked`` defaults to ``managed``. Pass it explicitly for a managed name whose
         global entry we cannot prove we wrote.
         """
-        from kiro_crew.mcp_discovery import McpServerInfo
-        from kiro_crew.mcp_provenance import stamp
+        from aj_crew.mcp_discovery import McpServerInfo
+        from aj_crew.mcp_provenance import stamp
 
         _, mcp_json = mcp_env
         data = _load(mcp_json)
@@ -177,23 +177,23 @@ class TestGlobalWritesAreOwnershipGated:
         mcp_json.write_text(json.dumps(data))
         remote = McpServerInfo(
             name="handmade",
-            url="https://kirocrew.example.com/mcp",
-            scopes=["kirocrew:scope"],
-            client_id="kirocrew-client",
+            url="https://ajcrew.example.com/mcp",
+            scopes=["ajcrew:scope"],
+            client_id="ajcrew-client",
             source="discovered",
         )
         return await _sync_one_remote(remote, mcp_env, owned=managed, marked=False)
 
     def _cc_sidecar(self, *, managed: bool, tmp_path) -> dict:
         """Register a remote into the CC sidecar."""
-        from kiro_crew.mcp_discovery import McpServerInfo, register_servers_for_cc
+        from aj_crew.mcp_discovery import McpServerInfo, register_servers_for_cc
 
         sidecar = tmp_path / "cc.json"
         remote = McpServerInfo(
             name="handmade",
-            url="https://kirocrew.example.com/mcp",
-            scopes=["kirocrew:scope"],
-            client_id="kirocrew-client",
+            url="https://ajcrew.example.com/mcp",
+            scopes=["ajcrew:scope"],
+            client_id="ajcrew-client",
             source="discovered",
         )
         with self._own({"handmade"} if managed else set()):
@@ -224,14 +224,14 @@ class TestGlobalWritesAreOwnershipGated:
     async def test_a_managed_name_still_syncs_at_every_global_write_site(self, mcp_env, tmp_path):
         """The gate must not disable the re-sync of a managed name."""
         entry = await self._kiro_global(managed=True, mcp_env=mcp_env)
-        assert entry["url"] == "https://kirocrew.example.com/mcp"
-        assert entry["oauthScopes"] == ["kirocrew:scope"]
-        assert entry["oauth"]["clientId"] == "kirocrew-client"
+        assert entry["url"] == "https://ajcrew.example.com/mcp"
+        assert entry["oauthScopes"] == ["ajcrew:scope"]
+        assert entry["oauth"]["clientId"] == "ajcrew-client"
         assert entry["oauth"]["issuer"] == "https://user-issuer", "sub-key still survives"
 
         cc = self._cc_sidecar(managed=True, tmp_path=tmp_path)
-        assert cc["scopes"] == ["kirocrew:scope"]
-        assert cc["clientId"] == "kirocrew-client"
+        assert cc["scopes"] == ["ajcrew:scope"]
+        assert cc["clientId"] == "ajcrew-client"
 
     @pytest.mark.asyncio
     async def test_a_managed_name_with_an_unmarked_entry_is_left_to_the_user(self, mcp_env):
@@ -252,20 +252,20 @@ class TestGlobalWritesAreOwnershipGated:
 
     def test_a_malformed_store_value_does_not_make_a_name_managed(self, tmp_path):
         """Same discriminator as the agent-spec path: a non-dict is not ownership."""
-        from kiro_crew.mcp_discovery import SCOPE_KIROCREW, kirocrew_managed_names
+        from aj_crew.mcp_discovery import SCOPE_AJCREW, ajcrew_managed_names
 
         with patch(
-            "kiro_crew.mcp_discovery._load_mcp_json_by_source",
-            return_value={SCOPE_KIROCREW: {"good": {"url": "https://x"}, "bad": "not-a-dict"}},
+            "aj_crew.mcp_discovery._load_mcp_json_by_source",
+            return_value={SCOPE_AJCREW: {"good": {"url": "https://x"}, "bad": "not-a-dict"}},
         ):
-            assert kirocrew_managed_names() == {"good"}
+            assert ajcrew_managed_names() == {"good"}
 
 
 class TestExactNameCollisionIsDecidedByTheMarker:
     """The marker separates "ours, moved" from "the user's, colliding".
 
     Both arrive as the same input (global entry at url A, name in the store, discovered
-    url B), and no content check separates them. Our writes carry ``x-kirocrew``; an
+    url B), and no content check separates them. Our writes carry ``x-ajcrew``; an
     entry without it is the user's.
     """
 
@@ -278,7 +278,7 @@ class TestExactNameCollisionIsDecidedByTheMarker:
         ``entry`` is deliberately untyped: a hand-edited file can hold a string
         or ``null`` under a server name, and that shape has to reach the write.
         """
-        from kiro_crew.mcp_discovery import McpServerInfo
+        from aj_crew.mcp_discovery import McpServerInfo
 
         _, mcp_json = mcp_env
         data = _load(mcp_json)
@@ -290,7 +290,7 @@ class TestExactNameCollisionIsDecidedByTheMarker:
     @pytest.mark.asyncio
     async def test_a_managed_url_move_propagates(self, mcp_env):
         """A marked entry is ours, so a managed url move rewrites it."""
-        from kiro_crew.mcp_provenance import stamp
+        from aj_crew.mcp_provenance import stamp
 
         written = await self._sync_over_global(stamp({"url": "https://a.example.com/mcp"}), mcp_env)
         assert written["url"] == "https://b.example.net/mcp", (
@@ -320,7 +320,7 @@ class TestExactNameCollisionIsDecidedByTheMarker:
         A user may add ``issuer`` to a managed entry (``apply_kiro_oauth_hints`` edits
         ``oauth`` surgically), so treating it as authorship would strand that server.
         """
-        from kiro_crew.mcp_provenance import stamp
+        from aj_crew.mcp_provenance import stamp
 
         written = await self._sync_over_global(
             stamp({"url": "https://a.example.com/mcp", "oauth": {"issuer": "https://i"}}),
@@ -347,7 +347,7 @@ class TestExactNameCollisionIsDecidedByTheMarker:
         entries would take reclaimed ones back. Legacy entries stay unmanaged until
         Disconnect then Connect re-creates them stamped.
         """
-        from kiro_crew.mcp_provenance import is_marked, stamp, without_marker
+        from aj_crew.mcp_provenance import is_marked, stamp, without_marker
 
         settled = await self._sync_over_global(stamp({"url": "https://b.example.net/mcp"}), mcp_env)
         assert is_marked(settled), "precondition: an entry we wrote and re-synced"
@@ -369,7 +369,7 @@ class TestExactNameCollisionIsDecidedByTheMarker:
         The agent spec carries no marker while the shared file does, so a divergence
         check that saw the key would re-write the file on every pass, silently.
         """
-        from kiro_crew.mcp_provenance import is_marked, stamp
+        from aj_crew.mcp_provenance import is_marked, stamp
 
         first = await self._sync_over_global(stamp({"url": "https://b.example.net/mcp"}), mcp_env)
         assert is_marked(first)
@@ -380,14 +380,14 @@ class TestExactNameCollisionIsDecidedByTheMarker:
     @pytest.mark.parametrize("site", ["kiro_global", "cc_sidecar"])
     async def test_a_marked_managed_url_move_reaches_both_surfaces(self, site, mcp_env, tmp_path):
         """Both global surfaces re-sync a marked entry, pinned together so they agree."""
-        from kiro_crew.mcp_provenance import stamp
+        from aj_crew.mcp_provenance import stamp
 
         if site == "kiro_global":
             written = await self._sync_over_global(
                 stamp({"url": "https://a.example.com/mcp"}), mcp_env
             )
         else:
-            from kiro_crew.mcp_discovery import McpServerInfo, register_servers_for_cc
+            from aj_crew.mcp_discovery import McpServerInfo, register_servers_for_cc
 
             sidecar = tmp_path / "cc.json"
             sidecar.write_text(
@@ -407,7 +407,7 @@ class TestExactNameCollisionIsDecidedByTheMarker:
         ``register_servers_for_cc`` rebuilds entries from scratch, so a rewrite would
         lose fields such as the credential header, even though the entry diverges.
         """
-        from kiro_crew import mcp_discovery as md
+        from aj_crew import mcp_discovery as md
 
         agents = tmp_path / "agents"
         agents.mkdir()
@@ -415,7 +415,7 @@ class TestExactNameCollisionIsDecidedByTheMarker:
         (agents / "defaults.json").write_text(
             json.dumps({"mcpServers": {"handmade": {"url": "https://old.example/mcp"}}})
         )
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         user_entry = {
             "url": "https://user.example.com/mcp",
             "headers": {"Authorization": "Bearer user-typed"},
@@ -428,7 +428,7 @@ class TestExactNameCollisionIsDecidedByTheMarker:
             md,
             "_load_mcp_json_by_source",
             lambda: {
-                md.SCOPE_KIROCREW: {},
+                md.SCOPE_AJCREW: {},
                 md.SCOPE_KIRO_GLOBAL: {"handmade": user_entry},
                 md.SCOPE_CC_GLOBAL: {},
             },
@@ -448,15 +448,15 @@ class TestExactNameCollisionIsDecidedByTheMarker:
         This writer replaces an entry rather than merging into it, so only the marker
         makes "our server moved" safe to rewrite; unmarked entries stay add-only.
         """
-        from kiro_crew import mcp_discovery as md
-        from kiro_crew.mcp_provenance import stamp, without_marker
+        from aj_crew import mcp_discovery as md
+        from aj_crew.mcp_provenance import stamp, without_marker
 
         agents = tmp_path / "agents"
         agents.mkdir()
         (agents / "defaults.json").write_text(
             json.dumps({"mcpServers": {"owned": {"url": "https://old.example/mcp"}}})
         )
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         store_entry = {"url": "https://new.example.net/mcp"}
         source = tmp_path / "store_mcp.json"
         source.write_text(json.dumps({"mcpServers": {"owned": store_entry}}))
@@ -465,7 +465,7 @@ class TestExactNameCollisionIsDecidedByTheMarker:
             md,
             "_load_mcp_json_by_source",
             lambda: {
-                md.SCOPE_KIROCREW: {"owned": store_entry},
+                md.SCOPE_AJCREW: {"owned": store_entry},
                 md.SCOPE_KIRO_GLOBAL: {},
                 md.SCOPE_CC_GLOBAL: {},
             },
@@ -499,8 +499,8 @@ class TestExactNameCollisionIsDecidedByTheMarker:
 
         The stamp lets the next sync tell this entry apart from one the user typed.
         """
-        from kiro_crew.mcp_discovery import McpServerInfo, register_servers_for_cc
-        from kiro_crew.mcp_provenance import is_marked, without_marker
+        from aj_crew.mcp_discovery import McpServerInfo, register_servers_for_cc
+        from aj_crew.mcp_provenance import is_marked, without_marker
 
         sidecar = tmp_path / "cc.json"
         sidecar.write_text(json.dumps({"mcpServers": {}}))
@@ -537,7 +537,7 @@ class TestAPresentButUnreadableEntryIsNotACreate:
         assert written == "not-a-dict"
 
     def test_a_malformed_sidecar_entry_survives_a_managed_sync(self, tmp_path):
-        from kiro_crew.mcp_discovery import McpServerInfo, register_servers_for_cc
+        from aj_crew.mcp_discovery import McpServerInfo, register_servers_for_cc
 
         sidecar = tmp_path / "cc.json"
         sidecar.write_text(json.dumps({"mcpServers": {"collide": "not-a-dict"}}))
@@ -548,7 +548,7 @@ class TestAPresentButUnreadableEntryIsNotACreate:
 
     def test_a_null_sidecar_entry_is_not_mistaken_for_absence(self, tmp_path):
         """The shape that made ``None`` unusable as the absence signal."""
-        from kiro_crew.mcp_discovery import McpServerInfo, register_servers_for_cc
+        from aj_crew.mcp_discovery import McpServerInfo, register_servers_for_cc
 
         sidecar = tmp_path / "cc.json"
         sidecar.write_text(json.dumps({"mcpServers": {"collide": None}}))
@@ -569,7 +569,7 @@ class TestSidecarStdioWritesAreGatedToo:
 
     @staticmethod
     def _sync_stdio(sidecar: Path, on_disk: object, managed: bool = True) -> bool:
-        from kiro_crew.mcp_discovery import McpServerInfo, register_servers_for_cc
+        from aj_crew.mcp_discovery import McpServerInfo, register_servers_for_cc
 
         sidecar.write_text(json.dumps({"mcpServers": {"collide": on_disk}}))
         local = McpServerInfo(name="collide", command="/opt/ours", source="discovered")
@@ -579,14 +579,14 @@ class TestSidecarStdioWritesAreGatedToo:
     def test_a_colliding_hand_authored_stdio_entry_is_preserved(self, tmp_path, caplog):
         theirs = {"command": "/usr/local/bin/theirs", "args": ["--their-flag"]}
         sidecar = tmp_path / "cc.json"
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_provenance"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_provenance"):
             assert self._sync_stdio(sidecar, dict(theirs)) is False
         assert json.loads(sidecar.read_text())["mcpServers"]["collide"] == theirs
         assert "collide" in caplog.text
 
     def test_a_marked_stdio_entry_still_re_syncs(self, tmp_path):
         """The propagation the gate must not break."""
-        from kiro_crew.mcp_provenance import stamp, without_marker
+        from aj_crew.mcp_provenance import stamp, without_marker
 
         sidecar = tmp_path / "cc.json"
         assert self._sync_stdio(sidecar, stamp({"command": "/opt/old"})) is True
@@ -594,11 +594,11 @@ class TestSidecarStdioWritesAreGatedToo:
         assert without_marker(written) == {"command": "/opt/ours", "args": [], "type": "stdio"}
 
     def test_an_absent_stdio_name_is_created_stamped(self, tmp_path):
-        from kiro_crew.mcp_provenance import is_marked
+        from aj_crew.mcp_provenance import is_marked
 
         sidecar = tmp_path / "cc.json"
         sidecar.write_text(json.dumps({"mcpServers": {}}))
-        from kiro_crew.mcp_discovery import McpServerInfo, register_servers_for_cc
+        from aj_crew.mcp_discovery import McpServerInfo, register_servers_for_cc
 
         local = McpServerInfo(name="fresh", command="/opt/ours", source="discovered")
         with TestGlobalWritesAreOwnershipGated._own({"fresh"}):
@@ -607,11 +607,11 @@ class TestSidecarStdioWritesAreGatedToo:
 
     def test_an_unmanaged_stdio_name_is_never_stamped(self, tmp_path):
         """Add-only for a name we do not manage, and no marker claiming it."""
-        from kiro_crew.mcp_provenance import is_marked
+        from aj_crew.mcp_provenance import is_marked
 
         sidecar = tmp_path / "cc.json"
         sidecar.write_text(json.dumps({"mcpServers": {}}))
-        from kiro_crew.mcp_discovery import McpServerInfo, register_servers_for_cc
+        from aj_crew.mcp_discovery import McpServerInfo, register_servers_for_cc
 
         local = McpServerInfo(name="theirs", command="/opt/ours", source="discovered")
         with TestGlobalWritesAreOwnershipGated._own(set()):
@@ -624,7 +624,7 @@ class TestSidecarStdioWritesAreGatedToo:
 class TestSyncMcpToAgent:
     def test_enable_adds_server_and_tool_refs(self, mcp_env):
         agent_cfg, _ = mcp_env
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
 
         _sync_mcp_to_agent("slack-mcp", enabled=True)
         cfg = _load(agent_cfg)
@@ -634,7 +634,7 @@ class TestSyncMcpToAgent:
 
     def test_enable_preserves_existing_server(self, mcp_env):
         agent_cfg, _ = mcp_env
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
 
         _sync_mcp_to_agent("builder-mcp", enabled=True)
         cfg = _load(agent_cfg)
@@ -645,7 +645,7 @@ class TestSyncMcpToAgent:
         d = json.loads(mcp_json.read_text(encoding="utf-8"))
         d["mcpServers"]["slack-mcp"]["disabled"] = True
         mcp_json.write_text(json.dumps(d))
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
 
         _sync_mcp_to_agent("slack-mcp", enabled=True)
         cfg = _load(agent_cfg)
@@ -653,7 +653,7 @@ class TestSyncMcpToAgent:
 
     def test_enable_noop_when_already_present(self, mcp_env):
         agent_cfg, _ = mcp_env
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
 
         _sync_mcp_to_agent("builder-mcp", enabled=True)
         cfg = _load(agent_cfg)
@@ -661,7 +661,7 @@ class TestSyncMcpToAgent:
 
     def test_disable_removes_tool_refs(self, mcp_env):
         agent_cfg, _ = mcp_env
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
 
         _sync_mcp_to_agent("builder-mcp", enabled=False)
         cfg = _load(agent_cfg)
@@ -673,7 +673,7 @@ class TestSyncMcpToAgent:
         kiro-cli's live reconcile; ``disabled: true`` on the entry is what stops
         the process — and spares a cold session the spawn."""
         agent_cfg, _ = mcp_env
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
 
         _sync_mcp_to_agent("builder-mcp", enabled=False)
         cfg = _load(agent_cfg)
@@ -686,7 +686,7 @@ class TestSyncMcpToAgent:
         cfg["mcpServers"]["ns/tool-mcp"] = {"command": "legacy"}
         cfg["mcpServers"]["ns-tool-mcp"] = {"command": "alias"}
         agent_cfg.write_text(json.dumps(cfg))
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
 
         _sync_mcp_to_agent("ns/tool-mcp", enabled=False)
         cfg = _load(agent_cfg)
@@ -698,14 +698,14 @@ class TestSyncMcpToAgent:
         cfg = _load(agent_cfg)
         cfg["mcpServers"]["builder-mcp"] = "builder-mcp"
         agent_cfg.write_text(json.dumps(cfg))
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
 
         _sync_mcp_to_agent("builder-mcp", enabled=False)
         assert _load(agent_cfg)["mcpServers"]["builder-mcp"] == "builder-mcp"
 
     def test_reenable_lifts_the_disabled_marker(self, mcp_env):
         agent_cfg, _ = mcp_env
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
 
         _sync_mcp_to_agent("builder-mcp", enabled=False)
         _sync_mcp_to_agent("builder-mcp", enabled=True)
@@ -715,14 +715,14 @@ class TestSyncMcpToAgent:
 
     def test_remove_does_not_leave_a_disabled_ghost(self, mcp_env):
         agent_cfg, _ = mcp_env
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
 
         _sync_mcp_to_agent("builder-mcp", enabled=False, remove=True)
         assert "builder-mcp" not in _load(agent_cfg)["mcpServers"]
 
     def test_remove_deletes_server_entry(self, mcp_env):
         agent_cfg, _ = mcp_env
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
 
         _sync_mcp_to_agent("builder-mcp", enabled=False, remove=True)
         cfg = _load(agent_cfg)
@@ -731,7 +731,7 @@ class TestSyncMcpToAgent:
     def test_enable_returns_early_on_missing_mcp_json(self, mcp_env):
         agent_cfg, mcp_json = mcp_env
         mcp_json.unlink()
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
 
         _sync_mcp_to_agent("slack-mcp", enabled=True)
         cfg = _load(agent_cfg)
@@ -741,7 +741,7 @@ class TestSyncMcpToAgent:
 class TestSyncMcpToAgentBatch:
     def test_enable_adds_multiple_servers(self, mcp_env):
         agent_cfg, _ = mcp_env
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch
 
         _sync_mcp_to_agent_batch(["slack-mcp", "outlook-mcp"], enabled=True)
         cfg = _load(agent_cfg)
@@ -752,7 +752,7 @@ class TestSyncMcpToAgentBatch:
 
     def test_disable_removes_multiple_tool_refs(self, mcp_env):
         agent_cfg, _ = mcp_env
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch
 
         _sync_mcp_to_agent_batch(["builder-mcp"], enabled=False)
         cfg = _load(agent_cfg)
@@ -760,7 +760,7 @@ class TestSyncMcpToAgentBatch:
 
     def test_batch_disable_marks_entries_and_reenable_lifts(self, mcp_env):
         agent_cfg, _ = mcp_env
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch
 
         _sync_mcp_to_agent_batch(["slack-mcp"], enabled=True)
         _sync_mcp_to_agent_batch(["builder-mcp", "slack-mcp"], enabled=False)
@@ -779,7 +779,7 @@ class TestSyncMcpToAgentBatch:
         """Post #15 fix: existing servers get tool refs even when mcp.json missing."""
         agent_cfg, mcp_json = mcp_env
         mcp_json.unlink()
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch
 
         _sync_mcp_to_agent_batch(["builder-mcp"], enabled=True)
         cfg = _load(agent_cfg)
@@ -791,7 +791,7 @@ class TestSyncMcpToAgentBatch:
         d = json.loads(mcp_json.read_text(encoding="utf-8"))
         d["mcpServers"]["bad-server"] = "not-a-dict"
         mcp_json.write_text(json.dumps(d))
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch
 
         _sync_mcp_to_agent_batch(["bad-server"], enabled=True)
         cfg = _load(agent_cfg)
@@ -799,7 +799,7 @@ class TestSyncMcpToAgentBatch:
 
     def test_noop_returns_without_write(self, mcp_env):
         agent_cfg, _ = mcp_env
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch
 
         _sync_mcp_to_agent_batch(["builder-mcp"], enabled=True)
         cfg = _load(agent_cfg)
@@ -810,7 +810,7 @@ class TestAimMcpInstallSync:
 
     @staticmethod
     def _mgr(ok: bool):
-        from kiro_crew.platform.interfaces import CapabilityResult
+        from aj_crew.platform.interfaces import CapabilityResult
 
         m = MagicMock()
         m.available.return_value = True
@@ -829,10 +829,10 @@ class TestAimMcpInstallSync:
         req.app = {"state": MagicMock()}
         with (
             patch(
-                "kiro_crew.dashboard.handlers.agents._capability_manager",
+                "aj_crew.dashboard.handlers.agents._capability_manager",
                 return_value=self._mgr(ok=True),
             ),
-            patch("kiro_crew.dashboard.handlers.mcp._sync_mcp_to_agent") as mock_sync,
+            patch("aj_crew.dashboard.handlers.mcp._sync_mcp_to_agent") as mock_sync,
         ):
             resp = await api_capability_mcp_install(req)
 
@@ -846,10 +846,10 @@ class TestAimMcpInstallSync:
         req.app = {"state": MagicMock()}
         with (
             patch(
-                "kiro_crew.dashboard.handlers.agents._capability_manager",
+                "aj_crew.dashboard.handlers.agents._capability_manager",
                 return_value=self._mgr(ok=False),
             ),
-            patch("kiro_crew.dashboard.handlers.mcp._sync_mcp_to_agent") as mock_sync,
+            patch("aj_crew.dashboard.handlers.mcp._sync_mcp_to_agent") as mock_sync,
         ):
             resp = await api_capability_mcp_install(req)
 
@@ -863,10 +863,10 @@ class TestAimMcpInstallSync:
         req.app = {"state": MagicMock()}
         with (
             patch(
-                "kiro_crew.dashboard.handlers.agents._capability_manager",
+                "aj_crew.dashboard.handlers.agents._capability_manager",
                 return_value=self._mgr(ok=True),
             ),
-            patch("kiro_crew.dashboard.handlers.mcp._sync_mcp_to_agent") as mock_sync,
+            patch("aj_crew.dashboard.handlers.mcp._sync_mcp_to_agent") as mock_sync,
         ):
             resp = await api_capability_mcp_uninstall(req)
 
@@ -880,10 +880,10 @@ class TestAimMcpInstallSync:
         req.app = {"state": MagicMock()}
         with (
             patch(
-                "kiro_crew.dashboard.handlers.agents._capability_manager",
+                "aj_crew.dashboard.handlers.agents._capability_manager",
                 return_value=self._mgr(ok=False),
             ),
-            patch("kiro_crew.dashboard.handlers.mcp._sync_mcp_to_agent") as mock_sync,
+            patch("aj_crew.dashboard.handlers.mcp._sync_mcp_to_agent") as mock_sync,
         ):
             resp = await api_capability_mcp_uninstall(req)
 
@@ -896,7 +896,7 @@ class TestApiMcpSyncToolsUpdate:
     @pytest.mark.asyncio
     async def test_sync_adds_tools_for_discovered_servers(self, mcp_env):
         """api_mcp_sync should call _sync_mcp_to_agent_batch for new servers."""
-        from kiro_crew.dashboard.handlers.mcp import api_mcp_sync
+        from aj_crew.dashboard.handlers.mcp import api_mcp_sync
 
         agent_cfg, _ = mcp_env
 
@@ -912,21 +912,21 @@ class TestApiMcpSyncToolsUpdate:
 
         with (
             patch(
-                "kiro_crew.mcp_discovery.discover_servers_to_sync",
+                "aj_crew.mcp_discovery.discover_servers_to_sync",
                 return_value=[mock_server],
             ),
             patch(
-                "kiro_crew.mcp_discovery.sync_to_agent_config",
+                "aj_crew.mcp_discovery.sync_to_agent_config",
                 return_value=True,
             ),
-            patch("kiro_crew.mcp_discovery.register_servers_for_cc"),
-            patch("kiro_crew.dashboard.handlers.mcp._get_mcp_lock") as mock_lock,
-            patch("kiro_crew.dashboard.handlers.mcp._write_mcp_json"),
+            patch("aj_crew.mcp_discovery.register_servers_for_cc"),
+            patch("aj_crew.dashboard.handlers.mcp._get_mcp_lock") as mock_lock,
+            patch("aj_crew.dashboard.handlers.mcp._write_mcp_json"),
             patch(
-                "kiro_crew.dashboard.handlers.mcp._sync_mcp_to_agent_batch",
+                "aj_crew.dashboard.handlers.mcp._sync_mcp_to_agent_batch",
             ) as mock_batch,
             patch(
-                "kiro_crew.dashboard.handlers.sessions._reset_all_sessions",
+                "aj_crew.dashboard.handlers.sessions._reset_all_sessions",
                 new_callable=AsyncMock,
                 return_value=1,
             ),
@@ -944,7 +944,7 @@ class TestApiMcpSyncToolsUpdate:
         Discovery coerces only a falsy value, so a truthy non-dict reaches the writer; it
         is read as "discovery said nothing" and the on-disk map is preserved.
         """
-        from kiro_crew.mcp_discovery import McpServerInfo
+        from aj_crew.mcp_discovery import McpServerInfo
 
         _, mcp_json = mcp_env
         data = _load(mcp_json)
@@ -968,14 +968,14 @@ class TestApiMcpSyncToolsUpdate:
 
     def test_discovery_can_deliver_a_non_dict_header_map(self, tmp_path: Path):
         """The writer's guard is reachable: discovery does not coerce a truthy non-dict."""
-        from kiro_crew.mcp_discovery import discover_servers_to_sync
+        from aj_crew.mcp_discovery import discover_servers_to_sync
 
         with (
             patch(
-                "kiro_crew.mcp_discovery._load_mcp_json",
+                "aj_crew.mcp_discovery._load_mcp_json",
                 return_value={"remote": {"url": "https://mcp.example.com/v1", "headers": "bad"}},
             ),
-            patch("kiro_crew.mcp_discovery._load_agent_config", return_value={"mcpServers": {}}),
+            patch("aj_crew.mcp_discovery._load_agent_config", return_value={"mcpServers": {}}),
         ):
             out = discover_servers_to_sync()
         assert [s.headers for s in out] == ["bad"], "a truthy non-dict passes through unchanged"
@@ -988,7 +988,7 @@ class TestApiMcpSyncToolsUpdate:
         here; a header present only in the kiro-global file is absent from it.
         Replacing the map wholesale would delete that credential outright.
         """
-        from kiro_crew.mcp_discovery import McpServerInfo
+        from aj_crew.mcp_discovery import McpServerInfo
 
         _, mcp_json = mcp_env
         data = _load(mcp_json)
@@ -1016,7 +1016,7 @@ class TestApiMcpSyncToolsUpdate:
         The bearer was issued for the old origin, so on a ``url`` change it is dropped:
         a re-auth is recoverable, sending the credential to a new host is not.
         """
-        from kiro_crew.mcp_discovery import McpServerInfo
+        from aj_crew.mcp_discovery import McpServerInfo
 
         _, mcp_json = mcp_env
         data = _load(mcp_json)
@@ -1047,7 +1047,7 @@ class TestApiMcpSyncToolsUpdate:
         a path the overlay's guard never sees. The url test has to sit ahead of
         both branches, not inside one.
         """
-        from kiro_crew.mcp_discovery import McpServerInfo
+        from aj_crew.mcp_discovery import McpServerInfo
 
         _, mcp_json = mcp_env
         data = _load(mcp_json)
@@ -1067,7 +1067,7 @@ class TestApiMcpSyncToolsUpdate:
     @pytest.mark.asyncio
     async def test_sync_writes_remote_url_and_headers_to_global_config(self, mcp_env):
         """A remote sync must never be serialized as an empty stdio command."""
-        from kiro_crew.mcp_discovery import McpServerInfo
+        from aj_crew.mcp_discovery import McpServerInfo
 
         _, mcp_json = mcp_env
         data = _load(mcp_json)
@@ -1101,7 +1101,7 @@ class TestApiMcpSyncToolsUpdate:
         unknown keys silently, so asserting the internal ``scopes``/``clientId``
         spellings here would guard the bug instead of the fix.
         """
-        from kiro_crew.mcp_discovery import McpServerInfo
+        from aj_crew.mcp_discovery import McpServerInfo
 
         remote = McpServerInfo(
             name="remote",
@@ -1120,7 +1120,7 @@ class TestApiMcpSyncToolsUpdate:
     @pytest.mark.asyncio
     async def test_sync_removes_oauth_hints_dropped_upstream(self, mcp_env):
         """Absent upstream means REMOVED, so narrowing a scope actually narrows it."""
-        from kiro_crew.mcp_discovery import McpServerInfo
+        from aj_crew.mcp_discovery import McpServerInfo
 
         _, mcp_json = mcp_env
         data = _load(mcp_json)
@@ -1152,7 +1152,7 @@ class TestApiMcpSyncToolsUpdate:
             "headers": {"Authorization": "Bearer user-typed"},
         }
         mcp_json.write_text(json.dumps(data))
-        from kiro_crew.mcp_discovery import McpServerInfo
+        from aj_crew.mcp_discovery import McpServerInfo
 
         remote = McpServerInfo(name="remote", url="https://mcp.example.com/v1", source="discovered")
         written = await _sync_one_remote(remote, mcp_env)
@@ -1173,7 +1173,7 @@ class TestApiMcpSyncToolsUpdate:
             "oauth": {"issuer": "https://issuer.example.com", "clientId": "old-id"},
         }
         mcp_json.write_text(json.dumps(data))
-        from kiro_crew.mcp_discovery import McpServerInfo
+        from aj_crew.mcp_discovery import McpServerInfo
 
         remote = McpServerInfo(
             name="remote",
@@ -1200,11 +1200,11 @@ class TestApiMcpSyncToolsUpdate:
             "scopes": ["read", 7],
         }
         mcp_json.write_text(json.dumps(data))
-        from kiro_crew.mcp_discovery import _spec_scopes
+        from aj_crew.mcp_discovery import _spec_scopes
 
         assert _spec_scopes(data["mcpServers"]["remote"]) == [], "readback must omit, not truncate"
 
-        from kiro_crew.mcp_discovery import McpServerInfo
+        from aj_crew.mcp_discovery import McpServerInfo
 
         remote = McpServerInfo(
             name="remote",
@@ -1219,21 +1219,21 @@ class TestApiMcpSyncToolsUpdate:
     @pytest.mark.asyncio
     async def test_sync_no_tools_update_when_nothing_discovered(self, mcp_env):
         """api_mcp_sync should not call _sync_mcp_to_agent_batch when empty."""
-        from kiro_crew.dashboard.handlers.mcp import api_mcp_sync
+        from aj_crew.dashboard.handlers.mcp import api_mcp_sync
 
         req = MagicMock()
         req.app = {"state": MagicMock()}
 
         with (
             patch(
-                "kiro_crew.mcp_discovery.discover_servers_to_sync",
+                "aj_crew.mcp_discovery.discover_servers_to_sync",
                 return_value=[],
             ),
             patch(
-                "kiro_crew.dashboard.handlers.mcp._sync_mcp_to_agent_batch",
+                "aj_crew.dashboard.handlers.mcp._sync_mcp_to_agent_batch",
             ) as mock_batch,
             patch(
-                "kiro_crew.dashboard.handlers.sessions._reset_all_sessions",
+                "aj_crew.dashboard.handlers.sessions._reset_all_sessions",
                 new_callable=AsyncMock,
                 return_value=0,
             ),
@@ -1260,11 +1260,11 @@ class TestApiMcpSyncHotReload:
     async def _run(
         monkeypatch, *, active: list, warm: list | None = None
     ) -> tuple[dict, AsyncMock]:
-        from kiro_crew.dashboard.handlers.mcp import api_mcp_sync
+        from aj_crew.dashboard.handlers.mcp import api_mcp_sync
 
         # The real gate over the request's session registry; the autouse
         # short-circuit is lifted so this class exercises it.
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.mcp._mcp_hot_reload_active", _REAL_GATE)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.mcp._mcp_hot_reload_active", _REAL_GATE)
         sessions = MagicMock()
         sessions.active_providers.return_value = list(active)
         sessions.warm_providers.return_value = list(warm or [])
@@ -1274,10 +1274,10 @@ class TestApiMcpSyncHotReload:
         req.app = {"state": state}
         reset = AsyncMock(return_value=3)
         with (
-            patch("kiro_crew.mcp_discovery.discover_servers_to_sync", return_value=[]),
-            patch("kiro_crew.mcp_discovery.sync_to_agent_config", return_value=False),
-            patch("kiro_crew.dashboard.handlers.mcp._sync_mcp_to_agent_batch"),
-            patch("kiro_crew.dashboard.handlers.sessions._reset_all_sessions", reset),
+            patch("aj_crew.mcp_discovery.discover_servers_to_sync", return_value=[]),
+            patch("aj_crew.mcp_discovery.sync_to_agent_config", return_value=False),
+            patch("aj_crew.dashboard.handlers.mcp._sync_mcp_to_agent_batch"),
+            patch("aj_crew.dashboard.handlers.sessions._reset_all_sessions", reset),
         ):
             resp = await api_mcp_sync(req)
         assert resp.status == 200
@@ -1303,9 +1303,9 @@ class TestApiMcpSyncHotReload:
         """KAS declares no hot reload; it declares wire re-injection. The gate
         skips the reset for it AND hands it the mark, and bumps the manager's fence
         for a warm-pool fill in flight -- the skip is only correct with both."""
-        from kiro_crew.dashboard.handlers.mcp import api_mcp_sync
+        from aj_crew.dashboard.handlers.mcp import api_mcp_sync
 
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.mcp._mcp_hot_reload_active", _REAL_GATE)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.mcp._mcp_hot_reload_active", _REAL_GATE)
         kas = SimpleNamespace(
             mcp_config_hot_reload=False,
             mcp_config_wire_reinject=True,
@@ -1320,10 +1320,10 @@ class TestApiMcpSyncHotReload:
         req.app = {"state": state}
         reset = AsyncMock(return_value=3)
         with (
-            patch("kiro_crew.mcp_discovery.discover_servers_to_sync", return_value=[]),
-            patch("kiro_crew.mcp_discovery.sync_to_agent_config", return_value=False),
-            patch("kiro_crew.dashboard.handlers.mcp._sync_mcp_to_agent_batch"),
-            patch("kiro_crew.dashboard.handlers.sessions._reset_all_sessions", reset),
+            patch("aj_crew.mcp_discovery.discover_servers_to_sync", return_value=[]),
+            patch("aj_crew.mcp_discovery.sync_to_agent_config", return_value=False),
+            patch("aj_crew.dashboard.handlers.mcp._sync_mcp_to_agent_batch"),
+            patch("aj_crew.dashboard.handlers.sessions._reset_all_sessions", reset),
         ):
             resp = await api_mcp_sync(req)
         assert resp.status == 200
@@ -1369,7 +1369,7 @@ class TestApiMcpSyncHotReload:
 
 
 class TestOffloadedSyncHoldsTheConfigLock:
-    """`_sync_mcp_to_agent*` does a read-modify-write of kirocrew.json. Offloading
+    """`_sync_mcp_to_agent*` does a read-modify-write of ajcrew.json. Offloading
     it to a worker thread means two concurrent MCP requests can interleave, so
     every offloaded call must run inside `_get_config_lock()` — the event loop no
     longer serializes them for free.
@@ -1379,7 +1379,7 @@ class TestOffloadedSyncHoldsTheConfigLock:
 
         import importlib
 
-        from kiro_crew.dashboard.handlers import mcp
+        from aj_crew.dashboard.handlers import mcp
 
         # The handler facade and its owners, each file's lines in turn.
         lines = [
@@ -1399,7 +1399,7 @@ class TestOffloadedSyncHoldsTheConfigLock:
 
 
 class TestSyncSharesTheFileLockWithBridges:
-    """The dashboard sync and bridges' app-MCP registration both RMW kirocrew.json.
+    """The dashboard sync and bridges' app-MCP registration both RMW ajcrew.json.
     They must share ONE file lock; the dashboard's in-process _get_config_lock does
     not coordinate with bridges' cross-process _mcp_lock, so the dashboard paths
     acquire _mcp_lock too."""
@@ -1407,7 +1407,7 @@ class TestSyncSharesTheFileLockWithBridges:
     def test_both_sync_funcs_hold_the_mcp_file_lock(self) -> None:
         import inspect
 
-        from kiro_crew.dashboard.handlers import mcp
+        from aj_crew.dashboard.handlers import mcp
 
         for fn in (mcp._sync_mcp_to_agent, mcp._sync_mcp_to_agent_batch):
             src = inspect.getsource(fn)
@@ -1415,14 +1415,14 @@ class TestSyncSharesTheFileLockWithBridges:
 
 
 class TestSyncStripsGovernedAutoApprove:
-    """Copying a global MCP server into kirocrew.json must not carry a governed
+    """Copying a global MCP server into ajcrew.json must not carry a governed
     `autoApprove`: kiro-cli honours it on the copy and auto-approves the server
     without ever reaching the PreToolUse gate."""
 
     def test_single_sync_strips_autoapprove_when_governed(self) -> None:
         import inspect
 
-        from kiro_crew.dashboard.handlers import mcp
+        from aj_crew.dashboard.handlers import mcp
 
         src = inspect.getsource(mcp._sync_mcp_to_agent_unlocked)
         assert 'entry.pop("autoApprove", None)' in src
@@ -1431,7 +1431,7 @@ class TestSyncStripsGovernedAutoApprove:
     def test_batch_sync_strips_autoapprove_when_governed(self) -> None:
         import inspect
 
-        from kiro_crew.dashboard.handlers import mcp
+        from aj_crew.dashboard.handlers import mcp
 
         src = inspect.getsource(mcp._sync_mcp_to_agent_batch_unlocked)
         assert '_entry.pop("autoApprove", None)' in src
@@ -1439,13 +1439,13 @@ class TestSyncStripsGovernedAutoApprove:
 
 class TestSyncStripsPreExistingGovernedAutoApprove:
     """A governed autoApprove must be stripped even when the alias ALREADY exists
-    in kirocrew.json (re-enable, or a spec written before the ceiling): the copy
+    in ajcrew.json (re-enable, or a spec written before the ceiling): the copy
     branch only runs for a brand-new alias."""
 
     def test_existing_entry_autoapprove_is_stripped(self, mcp_env, monkeypatch):
         agent_cfg, _ = mcp_env
-        import kiro_crew.dashboard.handlers.mcp as mcp
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent, mcp_server_alias
+        import aj_crew.dashboard.handlers.mcp as mcp
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent, mcp_server_alias
 
         alias = mcp_server_alias("slack-mcp")
         cfg = _load(agent_cfg)
@@ -1476,8 +1476,8 @@ class TestGovernedSyncAuditsWithheld:
 
     def test_single_governed_emits_withheld_not_added(self, mcp_env, monkeypatch):
         agent_cfg, _ = mcp_env
-        import kiro_crew.dashboard.handlers.mcp as mcp
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent, mcp_server_alias
+        import aj_crew.dashboard.handlers.mcp as mcp
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent, mcp_server_alias
 
         rec = self._SelRec()
         monkeypatch.setattr(mcp, "sel", lambda: rec)
@@ -1494,8 +1494,8 @@ class TestGovernedSyncAuditsWithheld:
 
     def test_single_ungoverned_still_emits_added(self, mcp_env, monkeypatch):
         agent_cfg, _ = mcp_env
-        import kiro_crew.dashboard.handlers.mcp as mcp
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent, mcp_server_alias
+        import aj_crew.dashboard.handlers.mcp as mcp
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent, mcp_server_alias
 
         rec = self._SelRec()
         monkeypatch.setattr(mcp, "sel", lambda: rec)
@@ -1511,8 +1511,8 @@ class TestGovernedSyncAuditsWithheld:
 
     def test_batch_governed_emits_withheld_not_added(self, mcp_env, monkeypatch):
         agent_cfg, _ = mcp_env
-        import kiro_crew.dashboard.handlers.mcp as mcp
-        from kiro_crew.dashboard.handlers.mcp import (
+        import aj_crew.dashboard.handlers.mcp as mcp
+        from aj_crew.dashboard.handlers.mcp import (
             _sync_mcp_to_agent_batch,
             mcp_server_alias,
         )
@@ -1534,7 +1534,7 @@ class TestGovernedSyncAuditsWithheld:
 
 class TestCapabilityInstallOffloadsTheLockedSync:
     """_sync_mcp_to_agent takes bridges' synchronous _mcp_lock for a full
-    kirocrew.json RMW. Called directly on the event loop it freezes the gateway
+    ajcrew.json RMW. Called directly on the event loop it freezes the gateway
     when a concurrent app registration holds that lock, so every async caller
     MUST offload it to a worker thread."""
 
@@ -1552,13 +1552,13 @@ class TestCapabilityInstallOffloadsTheLockedSync:
         ), f"{fn.__name__} calls _sync_mcp_to_agent on the event loop; offload it"
 
     def test_capability_install_uninstall_offload(self):
-        from kiro_crew.dashboard.handlers import agents
+        from aj_crew.dashboard.handlers import agents
 
         self._assert_offloaded(agents.api_capability_mcp_install)
         self._assert_offloaded(agents.api_capability_mcp_uninstall)
 
     def test_discover_capability_install_offloads(self):
-        from kiro_crew.dashboard.handlers import mcp_discover
+        from aj_crew.dashboard.handlers import mcp_discover
 
         self._assert_offloaded(mcp_discover._install_via_capability)
 
@@ -1567,7 +1567,7 @@ class TestCcSidecarEnvEmission:
     """The sidecar is a consumed surface — a declared PATH must be complete."""
 
     def test_stdio_env_path_is_expanded_on_write(self, tmp_path, monkeypatch):
-        from kiro_crew import mcp_discovery as md
+        from aj_crew import mcp_discovery as md
 
         # Spelled for the host (conftest.host_abs): the declared entry passes
         # through the ``os.path.isabs`` filter in env._spec_path_entries, and from
@@ -1591,7 +1591,7 @@ class TestCcSidecarEnvEmission:
         assert written["env"]["TOKEN"] == "t"
 
     def test_source_env_object_is_not_mutated(self, tmp_path, monkeypatch):
-        from kiro_crew import mcp_discovery as md
+        from aj_crew import mcp_discovery as md
 
         monkeypatch.setenv("PATH", "/usr/bin")
         source_env = {"PATH": "/opt/shims"}
@@ -1608,7 +1608,7 @@ class TestSyncDiscoveredServers:
     def test_runs_full_sequence_when_servers_found(self):
         from unittest.mock import patch
 
-        from kiro_crew import mcp_discovery as md
+        from aj_crew import mcp_discovery as md
 
         fake = md.McpServerInfo(name="srv", command="x")
         with (
@@ -1630,7 +1630,7 @@ class TestSyncDiscoveredServers:
         write is the one thing skipped."""
         from unittest.mock import patch
 
-        from kiro_crew import mcp_discovery as md
+        from aj_crew import mcp_discovery as md
 
         with (
             patch.object(md, "discover_servers_to_sync", return_value=[]),
@@ -1648,7 +1648,7 @@ class TestSyncDiscoveredServers:
         import threading
         from unittest.mock import patch
 
-        from kiro_crew import mcp_discovery as md
+        from aj_crew import mcp_discovery as md
 
         active = []
         overlap = []
@@ -1701,7 +1701,7 @@ class TestRemovalDropsPerToolGrants:
     def test_single_server_path(self, mcp_env, remove):
         agent_cfg, _ = mcp_env
         _seed_per_tool_grants(agent_cfg)
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
 
         _sync_mcp_to_agent("builder-mcp", enabled=False, remove=remove)
         cfg = _load(agent_cfg)
@@ -1712,7 +1712,7 @@ class TestRemovalDropsPerToolGrants:
     def test_batch_path(self, mcp_env):
         agent_cfg, _ = mcp_env
         _seed_per_tool_grants(agent_cfg)
-        from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch
+        from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch
 
         _sync_mcp_to_agent_batch(["builder-mcp"], enabled=False)
         cfg = _load(agent_cfg)
@@ -1722,10 +1722,10 @@ class TestRemovalDropsPerToolGrants:
         agent_cfg, _ = mcp_env
         _seed_per_tool_grants(agent_cfg)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.mcp.may_skip_gate_now",
+            "aj_crew.dashboard.handlers.mcp.may_skip_gate_now",
             lambda ref: not ref.startswith("@builder-mcp") or ref.startswith("@builder-mcp-"),
         )
-        from kiro_crew.dashboard.handlers.mcp import (
+        from aj_crew.dashboard.handlers.mcp import (
             _sync_mcp_to_agent,
             _sync_mcp_to_agent_batch,
         )

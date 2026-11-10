@@ -28,9 +28,9 @@ from session_control_helpers import (  # noqa: F401 -- the autouse fixtures regi
     _slot,
 )
 
-from kiro_crew.config import loader
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.handlers import session_control as handlers_sc
+from aj_crew.config import loader
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.handlers import session_control as handlers_sc
 
 # ── Route authentication ─────────────────────────────────────────────────────
 
@@ -284,7 +284,7 @@ class TestTheRoutesRequireTheInternalSecret:
         async def _fake_run_chat(_state, _slot, _prompt):
             return None
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
 
         resp = asyncio.run(handlers_sc.api_session_control_send(req))
 
@@ -397,7 +397,7 @@ def test_the_switch_is_on_by_default_and_an_explicit_false_still_disables(
 ):
     """``agent.session_control`` defaults ON; the agent config is the real grant.
 
-    An agent gets the tools only by mounting `kirocrew-dashboard`; the switch withdraws
+    An agent gets the tools only by mounting `ajcrew-dashboard`; the switch withdraws
     them everywhere at once. The quoted ``"false"`` must count as off, since
     ``bool("false")`` is ``True``. A present non-bool normalizes to ``False``.
     """
@@ -444,7 +444,7 @@ def test_a_config_read_that_raises_disables_the_feature(monkeypatch):
         def load():
             raise ValueError("malformed knowledge.auto_ingest_artifact_kinds")
 
-    monkeypatch.setattr(sc, "KiroCrewConfig", _Exploding)
+    monkeypatch.setattr(sc, "AjCrewConfig", _Exploding)
     assert _REAL_ENABLED() is False
 
 
@@ -465,7 +465,7 @@ def test_session_control_routes_are_strict_internal():
     """
     from aiohttp import web
 
-    from kiro_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS, _register_mcp_routes
+    from aj_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS, _register_mcp_routes
 
     app = web.Application()
     _register_mcp_routes(app)
@@ -492,7 +492,7 @@ def test_session_control_is_not_imported_on_the_gateway_boot_path():
     """
     from pathlib import Path
 
-    from kiro_crew.dashboard import server as dashboard_server
+    from aj_crew.dashboard import server as dashboard_server
 
     src = Path(dashboard_server.__file__).read_text(encoding="utf-8")
     # The server_runtime owners server.py composes load with it, so their module-level
@@ -501,7 +501,7 @@ def test_session_control_is_not_imported_on_the_gateway_boot_path():
     assert owners, "expected the server_runtime owners beside server.py"
     src += "".join(path.read_text(encoding="utf-8") for path in owners)
     for line in src.splitlines():
-        if line.startswith("from kiro_crew.dashboard.handlers import"):
+        if line.startswith("from aj_crew.dashboard.handlers import"):
             assert "session_control" not in line, (
                 "session_control must not be imported at server module level -- " f"found: {line!r}"
             )

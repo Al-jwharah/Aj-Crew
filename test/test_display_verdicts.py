@@ -14,9 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard import chat_utils, display_battery
-from kiro_crew.dashboard import display_verdicts as dv
-from kiro_crew.dashboard.chat_utils import _prepare_messages
+from aj_crew.dashboard import chat_utils, display_battery
+from aj_crew.dashboard import display_verdicts as dv
+from aj_crew.dashboard.chat_utils import _prepare_messages
 
 KEY = "dashboard_chat-1-1700000000"
 #: Storage is off on a platform with no uid to prove the directory is owned
@@ -33,7 +33,7 @@ def home(tmp_path, monkeypatch):
     h = tmp_path / "home"
     (h / "sessions").mkdir(parents=True)
     (h / "sessions" / f"{KEY}.jsonl").write_text("{}\n", encoding="utf-8")
-    monkeypatch.setenv("KIROCREW_HOME", str(h))
+    monkeypatch.setenv("AJCREW_HOME", str(h))
     monkeypatch.setattr(dv, "rules_version", lambda: b"v" * 16)
     # Read the sidecar on the first miss, so small fixtures exercise it.
     monkeypatch.setattr(dv, "LOAD_AFTER_MISSES", 0)
@@ -248,7 +248,7 @@ def test_a_platform_exempt_host_change_invalidates_its_stored_verdicts(
     monkeypatch.setattr(chat_utils, "_exempt_exact_hosts", lambda: frozenset({HOST}))
     rows = [{"role": "assistant", "content": f"see {LINK}", "cls": "msg msg-a"}]
     with dv.session(KEY):
-        from kiro_crew.security import exfil
+        from aj_crew.security import exfil
 
         monkeypatch.setattr(exfil, "_exempt_exact_hosts", lambda: frozenset({HOST}))
         assert LINK in json.dumps(_prepare_messages(rows, running=False, live_child=""))
@@ -330,7 +330,7 @@ def test_a_hard_linked_sidecar_never_truncates_the_other_file(home, battery, all
 
 
 def test_the_owner_view_bypass_neither_reads_nor_writes(home, battery, allowed):
-    from kiro_crew.security import redaction_switch
+    from aj_crew.security import redaction_switch
 
     assert dv.enable(home)
     redaction_switch.set_enabled(False, changed_at="2026-10-12T00:00:00Z")
@@ -413,7 +413,7 @@ def test_a_batch_past_the_queue_budget_is_left_to_the_read(home, battery, allowe
 
 
 def test_storage_stays_off_without_a_uid(home, monkeypatch):
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "effective_uid", lambda: None)
     assert not dv.enable(home)
@@ -561,7 +561,7 @@ def test_a_failed_save_leaves_nothing_staged(home, tmp_path, monkeypatch):
     """A save whose write raises drops its staged rows instead of keeping them on the thread."""
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard import chat_persistence as cp
+    from aj_crew.dashboard import chat_persistence as cp
 
     assert dv.enable(home)
     state = _make_state(tmp_path / "state")
@@ -648,8 +648,8 @@ def test_a_save_projection_audits_no_allowed_host_use(home, allowed, monkeypatch
     Otherwise the event would record a display that never happened and fill the
     per-process memo, so the reader's real first view would write nothing.
     """
-    from kiro_crew.security import exfil
-    from kiro_crew.security.exfil import redact_exfiltration_urls_with_records
+    from aj_crew.security import exfil
+    from aj_crew.security.exfil import redact_exfiltration_urls_with_records
 
     logged: list = []
 

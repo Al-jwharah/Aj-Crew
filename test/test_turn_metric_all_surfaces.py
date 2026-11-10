@@ -1,4 +1,4 @@
-"""``kirocrew.turn.duration`` is emitted for EVERY dispatch surface.
+"""``ajcrew.turn.duration`` is emitted for EVERY dispatch surface.
 
 The metric powers turn latency (p50/p90) and fault rate on the Telemetry page.
 Emitting it from one call inside ``chat_runner._run_chat`` would make
@@ -27,11 +27,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard.handlers import usage as usage_mod
-from kiro_crew.messaging.link import TELEMETRY_CHANNELS, telemetry_channel_of
-from kiro_crew.metrics import turns as turns_mod
+from aj_crew.dashboard.handlers import usage as usage_mod
+from aj_crew.messaging.link import TELEMETRY_CHANNELS, telemetry_channel_of
+from aj_crew.metrics import turns as turns_mod
 
-SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 
 class _Recorder:
@@ -96,7 +96,7 @@ def test_every_surface_lands_in_the_histogram_under_its_own_source(
 
     assert len(recorder.samples) == 1, f"{slot_key} produced no sample"
     name, value, attrs = recorder.samples[0]
-    assert name == "kirocrew.turn.duration"
+    assert name == "ajcrew.turn.duration"
     assert value == 1234
     assert attrs["session_source"] == expected_source
     assert attrs["outcome"] == "ok"
@@ -143,7 +143,7 @@ def test_the_stall_refinement_travels_on_the_dashboard_emit(recorder) -> None:
     # outside the usage_has_billing gate anyway. An override parameter on the
     # shared boundary was dead code: its only passer also disabled the branch
     # that read it.
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     chat_runner._emit_turn_metric(
         9, "stale_recover", "chat-12-1785445181", elapsed_ms=9, exhausted=True
@@ -166,7 +166,7 @@ def test_a_bare_usage_object_is_unclassified_and_not_a_fault(recorder) -> None:
     sampling them — inventing a fault spike out of a visibility fix. ``ok`` is
     equally wrong in the other direction: it claims a success nobody observed.
     """
-    from kiro_crew.dashboard.handlers.telemetry import _TERMINAL_FAULT_OUTCOMES
+    from aj_crew.dashboard.handlers.telemetry import _TERMINAL_FAULT_OUTCOMES
 
     usage_mod._emit_turn_histogram({"duration_ms": 9}, "_bg", _BareUsage())
     outcome = recorder.samples[0][2]["outcome"]

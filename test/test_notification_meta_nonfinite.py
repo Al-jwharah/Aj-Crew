@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from kiro_crew.notifications.bus import NotificationBus, NotificationPayload
+from aj_crew.notifications.bus import NotificationBus, NotificationPayload
 
 
 def _push(meta: dict[str, Any]) -> dict[str, Any]:

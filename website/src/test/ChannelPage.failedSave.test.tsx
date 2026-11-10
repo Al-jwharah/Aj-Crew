@@ -27,7 +27,7 @@ beforeAll(() => {
 type Raw = Record<string, unknown>
 
 const member = (over: Raw = {}): Raw => ({
-  id: 'a1', role: 'Researcher', agent_name: 'kirocrew',
+  id: 'a1', role: 'Researcher', agent_name: 'ajcrew',
   state: 'listening', listen_mode: 'mention', approval_policy: 'writes', ...over,
 })
 
@@ -36,7 +36,7 @@ const channelOf = (over: Raw = {}): Raw => ({
 })
 
 const ROSTER = [
-  { name: 'kirocrew', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: 'built-in', source: 'kirocrew' },
+  { name: 'ajcrew', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: 'built-in', source: 'ajcrew' },
   { name: 'oncall', kiro_agent: 'oncall-agent', workspace: 'oncall', memory_store: 'oncall-kb', description: 'paging', source: 'package' },
 ]
 
@@ -59,8 +59,8 @@ beforeEach(() => {
   vi.mocked(api).channelGet = vi.fn().mockImplementation((id: string) =>
     Promise.resolve(id === CREATED.id ? CREATED : channels[0]))
   vi.mocked(api).channelPresets = vi.fn().mockResolvedValue({})
-  vi.mocked(api).kirocrewAgents = vi.fn().mockResolvedValue({ agents: ROSTER, default_agent: 'kirocrew' })
-  vi.mocked(api).agentCatalog = vi.fn().mockResolvedValue({ agents: ROSTER, default_agent: 'kirocrew' })
+  vi.mocked(api).ajcrewAgents = vi.fn().mockResolvedValue({ agents: ROSTER, default_agent: 'ajcrew' })
+  vi.mocked(api).agentCatalog = vi.fn().mockResolvedValue({ agents: ROSTER, default_agent: 'ajcrew' })
 })
 
 async function renderPage() {

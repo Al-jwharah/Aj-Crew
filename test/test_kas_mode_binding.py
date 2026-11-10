@@ -18,10 +18,10 @@ import sys
 
 import pytest
 
-from kiro_crew.acp import session_handle as sh
-from kiro_crew.acp import skill_projection  # bound before a fixture patches its paths
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.acp import session_handle as sh
+from aj_crew.acp import skill_projection  # bound before a fixture patches its paths
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
 
 
 @pytest.fixture(autouse=True)
@@ -121,7 +121,7 @@ def mode_stub(tmp_path, monkeypatch):
     async def fake_bin(*, environ=None, home=None) -> str:
         return str(launcher)
 
-    monkeypatch.setattr("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", fake_bin)
+    monkeypatch.setattr("aj_crew.acp.client._resolve_kiro_bin_for_spawn", fake_bin)
     monkeypatch.setenv("KAS_STUB_RECORD", str(record))
     return record
 
@@ -131,23 +131,23 @@ def crew_agent(tmp_path, monkeypatch):
     """A materialized agent spec the projection can read, in an isolated dir."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    (agents_dir / "kirocrew.json").write_text(
+    (agents_dir / "ajcrew.json").write_text(
         json.dumps(
             {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "description": "test crew agent",
                 "prompt": "You are Kiro.",
-                "tools": ["fs_read", "@kirocrew-core"],
+                "tools": ["fs_read", "@ajcrew-core"],
             }
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr("kiro_crew.config.paths.kiro_agents_dir", lambda: agents_dir)
-    monkeypatch.setattr("kiro_crew.agent.ensure_agent_materialized", lambda _a: True)
+    monkeypatch.setattr("aj_crew.config.paths.kiro_agents_dir", lambda: agents_dir)
+    monkeypatch.setattr("aj_crew.agent.ensure_agent_materialized", lambda _a: True)
     # The stub launches no MCP server, so a custom agent's default Crew servers
     # (acp/default_crew_servers.py) would never report ready. These tests pin mode
     # binding; the defaults are pinned in test_default_crew_servers.py.
-    monkeypatch.setattr("kiro_crew.acp.default_crew_servers.DEFAULT_CREW_SERVERS", ())
+    monkeypatch.setattr("aj_crew.acp.default_crew_servers.DEFAULT_CREW_SERVERS", ())
     return agents_dir
 
 
@@ -158,19 +158,19 @@ class TestModeBinding:
         """The whole chain: inject -> advertised as a mode -> activated."""
         runtime = AcpRuntime(
             work_dir=tmp_path / "ws",
-            agent="kirocrew",
+            agent="ajcrew",
             sandbox_mode="off",
             acp_backend=ACP_BACKEND_KAS,
         )
         try:
             await runtime.spawn()
-            handle = await runtime.create_session(cwd=tmp_path / "ws", agent="kirocrew")
+            handle = await runtime.create_session(cwd=tmp_path / "ws", agent="ajcrew")
             assert handle is not None
         finally:
             await runtime.kill()
 
         seen = json.loads(mode_stub.read_text(encoding="utf-8"))
-        assert [a["id"] for a in seen["injected"]] == ["kirocrew"]
+        assert [a["id"] for a in seen["injected"]] == ["ajcrew"]
         assert seen["injected"][0]["prompt"] == "You are Kiro."
         # The spec's kiro-cli name travels with its KAS family beside it; the
         # MCP ref is untouched.
@@ -178,11 +178,11 @@ class TestModeBinding:
             "fs_read",
             "read_file",
             "list_directory",
-            "@kirocrew-core",
+            "@ajcrew-core",
         ]
         # Activation had to happen, and had to name the injected agent — not a
         # built-in that KAS would have run in its place.
-        assert seen["set_mode"] == "kirocrew"
+        assert seen["set_mode"] == "ajcrew"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("backend", [ACP_BACKEND_KAS, ACP_BACKEND_KIRO], ids=["kas", "kiro"])
@@ -190,7 +190,7 @@ class TestModeBinding:
         self, mode_stub, crew_agent, tmp_path, monkeypatch, backend
     ):
         """The projection bookkeeping is KAS-only: a kiro-cli handle keeps the defaults."""
-        from kiro_crew.acp import kas_agents
+        from aj_crew.acp import kas_agents
 
         recorded: list = []
         real = kas_agents.projected_auto_approved
@@ -214,20 +214,20 @@ class TestModeBinding:
         # kiro-cli takes its agent at spawn: the stub's own current mode stands in.
         runtime = AcpRuntime(
             work_dir=tmp_path / "wsp",
-            agent="kirocrew" if kas else "vibe",
+            agent="ajcrew" if kas else "vibe",
             sandbox_mode="off",
             acp_backend=backend,
         )
         try:
             await runtime.spawn()
             handle = await runtime.create_session(
-                cwd=tmp_path / "wsp", agent="kirocrew" if kas else None
+                cwd=tmp_path / "wsp", agent="ajcrew" if kas else None
             )
         finally:
             await runtime.kill()
         if kas:
-            assert recorded == ["kirocrew"]
-            assert handle.kas_projected_agent == "kirocrew"
+            assert recorded == ["ajcrew"]
+            assert handle.kas_projected_agent == "ajcrew"
             assert isinstance(handle.kas_auto_approved, frozenset)
         else:
             assert recorded == []
@@ -239,7 +239,7 @@ class TestModeBinding:
         self, mode_stub, crew_agent, tmp_path, monkeypatch
     ):
         """session/load re-registers the batch, and the resumed handle records it."""
-        from kiro_crew.acp import kas_agents
+        from aj_crew.acp import kas_agents
 
         recorded: list = []
         real = kas_agents.projected_auto_approved
@@ -250,7 +250,7 @@ class TestModeBinding:
 
         runtime = AcpRuntime(
             work_dir=tmp_path / "wsl",
-            agent="kirocrew",
+            agent="ajcrew",
             sandbox_mode="off",
             acp_backend=ACP_BACKEND_KAS,
         )
@@ -260,13 +260,13 @@ class TestModeBinding:
             await runtime.spawn()
             monkeypatch.setattr(kas_agents, "projected_auto_approved", spy)
             handle = await runtime.load_session(
-                str(session_file), "kas-mode-session", cwd=tmp_path / "wsl", agent="kirocrew"
+                str(session_file), "kas-mode-session", cwd=tmp_path / "wsl", agent="ajcrew"
             )
         finally:
             await runtime.kill()
-        assert recorded == ["kirocrew"]
-        assert handle.kas_projected_agent == "kirocrew"
-        assert [a["id"] for a in handle.kas_registered_agents] == ["kirocrew"]
+        assert recorded == ["ajcrew"]
+        assert handle.kas_projected_agent == "ajcrew"
+        assert [a["id"] for a in handle.kas_registered_agents] == ["ajcrew"]
 
     @pytest.mark.asyncio
     async def test_new_and_resumed_sessions_carry_the_notice_their_spawn_recorded(
@@ -274,20 +274,20 @@ class TestModeBinding:
     ):
         """The runtime keeps the harness that spawned its process, so the notice the
         relay spawn recorded for kiro-cli 2.32.0 reaches session/new and session/load."""
-        from kiro_crew.acp.harness import kas as kas_harness
+        from aj_crew.acp.harness import kas as kas_harness
 
         monkeypatch.setattr(kas_harness, "_bundle_route_selected", lambda: False)
         monkeypatch.setattr(kas_harness, "installed_kiro_cli_version", lambda: (2, 32, 0))
         runtime = AcpRuntime(
-            work_dir=tmp_path / "wsn", agent="kirocrew", sandbox_mode="off", acp_backend="kas"
+            work_dir=tmp_path / "wsn", agent="ajcrew", sandbox_mode="off", acp_backend="kas"
         )
         session_file = tmp_path / "prior.jsonl"
         session_file.write_text("", encoding="utf-8")
         try:
             await runtime.spawn()
-            new = await runtime.create_session(cwd=tmp_path / "wsn", agent="kirocrew")
+            new = await runtime.create_session(cwd=tmp_path / "wsn", agent="ajcrew")
             loaded = await runtime.load_session(
-                str(session_file), "kas-mode-session", cwd=tmp_path / "wsn", agent="kirocrew"
+                str(session_file), "kas-mode-session", cwd=tmp_path / "wsn", agent="ajcrew"
             )
         finally:
             await runtime.kill()
@@ -305,19 +305,19 @@ class TestModeBinding:
     ):
         """Only a KAS known to apply a custom agent's prompt holds a copy of it; for
         any other the session records none and the prompt builder keeps its block."""
-        from kiro_crew.acp.harness import kas as kas_harness
+        from aj_crew.acp.harness import kas as kas_harness
 
         monkeypatch.setattr(kas_harness, "_bundle_route_selected", lambda: False)
         monkeypatch.setattr(kas_harness, "installed_kiro_cli_version", lambda: version)
         runtime = AcpRuntime(
-            work_dir=tmp_path / "wsp", agent="kirocrew", sandbox_mode="off", acp_backend="kas"
+            work_dir=tmp_path / "wsp", agent="ajcrew", sandbox_mode="off", acp_backend="kas"
         )
         try:
             await runtime.spawn()
-            handle = await runtime.create_session(cwd=tmp_path / "wsp", agent="kirocrew")
+            handle = await runtime.create_session(cwd=tmp_path / "wsp", agent="ajcrew")
         finally:
             await runtime.kill()
-        assert handle.native_context_documents.get("template://kirocrew#prompt") == recorded
+        assert handle.native_context_documents.get("template://ajcrew#prompt") == recorded
 
     @pytest.mark.asyncio
     async def test_runtime_default_agent_is_activated_without_explicit_request(
@@ -331,7 +331,7 @@ class TestModeBinding:
         """
         runtime = AcpRuntime(
             work_dir=tmp_path / "wsd",
-            agent="kirocrew",
+            agent="ajcrew",
             sandbox_mode="off",
             acp_backend=ACP_BACKEND_KAS,
         )
@@ -344,29 +344,29 @@ class TestModeBinding:
             await runtime.kill()
 
         seen = json.loads(mode_stub.read_text(encoding="utf-8"))
-        assert [a["id"] for a in seen["injected"]] == ["kirocrew"]
-        assert seen["set_mode"] == "kirocrew"
+        assert [a["id"] for a in seen["injected"]] == ["ajcrew"]
+        assert seen["set_mode"] == "ajcrew"
 
     @pytest.mark.asyncio
     async def test_prompt_is_inlined_not_sent_as_a_file_uri(self, mode_stub, crew_agent, tmp_path):
         """KAS rejects ``file://`` here; the client owns the read."""
         prompt_file = tmp_path / "prompt.md"
         prompt_file.write_text("inlined from disk", encoding="utf-8")
-        (crew_agent / "kirocrew.json").write_text(
+        (crew_agent / "ajcrew.json").write_text(
             json.dumps(
-                {"name": "kirocrew", "prompt": f"file://{prompt_file}", "tools": ["fs_read"]}
+                {"name": "ajcrew", "prompt": f"file://{prompt_file}", "tools": ["fs_read"]}
             ),
             encoding="utf-8",
         )
         runtime = AcpRuntime(
             work_dir=tmp_path / "ws2",
-            agent="kirocrew",
+            agent="ajcrew",
             sandbox_mode="off",
             acp_backend=ACP_BACKEND_KAS,
         )
         try:
             await runtime.spawn()
-            await runtime.create_session(cwd=tmp_path / "ws2", agent="kirocrew")
+            await runtime.create_session(cwd=tmp_path / "ws2", agent="ajcrew")
         finally:
             await runtime.kill()
 
@@ -383,19 +383,19 @@ class TestModeBinding:
         which tells the model it has no tools. The tool allowlist still comes
         from the spec.
         """
-        (crew_agent / "kirocrew.json").write_text(
-            json.dumps({"name": "kirocrew", "tools": ["fs_read"], "prompt": ""}),
+        (crew_agent / "ajcrew.json").write_text(
+            json.dumps({"name": "ajcrew", "tools": ["fs_read"], "prompt": ""}),
             encoding="utf-8",
         )
         runtime = AcpRuntime(
             work_dir=tmp_path / "ws3",
-            agent="kirocrew",
+            agent="ajcrew",
             sandbox_mode="off",
             acp_backend=ACP_BACKEND_KAS,
         )
         try:
             await runtime.spawn()
-            await runtime.create_session(cwd=tmp_path / "ws3", agent="kirocrew")
+            await runtime.create_session(cwd=tmp_path / "ws3", agent="ajcrew")
         finally:
             await runtime.kill()
 
@@ -415,10 +415,10 @@ class TestModeBinding:
         allowlist, so nothing broader than the spec runs; only its prompt is
         empty, and the session-start notice says so.
         """
-        (crew_agent / "kirocrew.json").write_text(
+        (crew_agent / "ajcrew.json").write_text(
             json.dumps(
                 {
-                    "name": "kirocrew",
+                    "name": "ajcrew",
                     "tools": ["fs_read"],
                     "prompt": f"file://{tmp_path / 'does-not-exist.md'}",
                 }
@@ -427,13 +427,13 @@ class TestModeBinding:
         )
         runtime = AcpRuntime(
             work_dir=tmp_path / "ws3",
-            agent="kirocrew",
+            agent="ajcrew",
             sandbox_mode="off",
             acp_backend=ACP_BACKEND_KAS,
         )
         try:
             await runtime.spawn()
-            await runtime.create_session(cwd=tmp_path / "ws3", agent="kirocrew")
+            await runtime.create_session(cwd=tmp_path / "ws3", agent="ajcrew")
         finally:
             await runtime.kill()
 
@@ -564,7 +564,7 @@ class TestSavedMemberSpecOnKas:
     @pytest.mark.asyncio
     async def test_a_saved_spec_is_loaded_and_confirmed(self, mode_stub, crew_agent, tmp_path):
         """The whole member chain: provider support, injection, activation, evidence."""
-        from kiro_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew.acp.session_provider import AcpSessionProvider
 
         _write_saved_spec(crew_agent, {"command": "extra-server"})
         runtime = AcpRuntime(
@@ -602,7 +602,7 @@ class TestKiroPathUntouched:
     async def test_no_custom_agents_for_the_kiro_backend(self, mode_stub, crew_agent, tmp_path):
         runtime = AcpRuntime(
             work_dir=tmp_path / "ws4",
-            agent="kirocrew",
+            agent="ajcrew",
             sandbox_mode="off",
         )
-        assert (await runtime._kas_custom_agents("kirocrew")).custom_agents is None
+        assert (await runtime._kas_custom_agents("ajcrew")).custom_agents is None

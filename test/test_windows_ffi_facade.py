@@ -1,6 +1,6 @@
 """``computer_use.windows_ffi`` stays the curated surface it was before its split into owners.
 
-``windows_ffi`` is a :mod:`kiro_crew._facade_mirror` facade: every name its owners define is
+``windows_ffi`` is a :mod:`aj_crew._facade_mirror` facade: every name its owners define is
 read and patched as ``windows_ffi.<name>``. Two parts of its surface are not derived from the
 owners and are pinned here: the hand-written ``__all__``, which keeps ``from windows_ffi import *``
 exporting exactly what it exported before the split rather than every name the owners bind,
@@ -9,7 +9,7 @@ and the logger name the whole family logs under, which operators filter on.
 
 from __future__ import annotations
 
-from kiro_crew.computer_use import windows_ffi
+from aj_crew.computer_use import windows_ffi
 
 #: ``windows_ffi.__all__`` as it stood before the split, frozen.
 _BASE_ALL = frozenset(
@@ -83,4 +83,4 @@ def test_every_name_in_all_resolves_on_the_facade() -> None:
 
 
 def test_the_family_logs_under_the_facade_name() -> None:
-    assert windows_ffi.logger.name == "kiro_crew.computer_use.windows_ffi"
+    assert windows_ffi.logger.name == "aj_crew.computer_use.windows_ffi"

@@ -15,14 +15,14 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_ready_kiro_prerequisite
 
-from kiro_crew.dashboard.chat_pins import (
+from aj_crew.dashboard.chat_pins import (
     api_chat_pins_create,
     api_chat_pins_delete,
     api_chat_pins_delete_by_query,
     api_chat_pins_list,
 )
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.history import ConversationLog
 
 
 def _raise_os_error():

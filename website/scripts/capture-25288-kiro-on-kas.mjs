@@ -10,7 +10,7 @@
  */
 import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
-import { KIROCREW_CONFIG_FIXTURE } from './lib/stub-dashboard-api.mjs'
+import { AJCREW_CONFIG_FIXTURE } from './lib/stub-dashboard-api.mjs'
 
 const base = process.argv[2] || 'http://127.0.0.1:5199'
 const out = process.argv[3] || '../temp-screenshots/25288'
@@ -50,12 +50,12 @@ try {
     page.on('pageerror', error => errors.push(String(error)))
     await page.route(url => new URL(url).pathname.startsWith('/api/'), route => {
       const p = new URL(route.request().url()).pathname
-      if (p === '/api/config/kirocrew') {
+      if (p === '/api/config/ajcrew') {
         if (route.request().method() === 'PATCH') {
           saved = true
-          return json(route, { ...KIROCREW_CONFIG_FIXTURE, agent: { ...KIROCREW_CONFIG_FIXTURE.agent, acp_backend: 'kas' } })
+          return json(route, { ...AJCREW_CONFIG_FIXTURE, agent: { ...AJCREW_CONFIG_FIXTURE.agent, acp_backend: 'kas' } })
         }
-        return json(route, { ...KIROCREW_CONFIG_FIXTURE, agent: { ...KIROCREW_CONFIG_FIXTURE.agent, acp_backend: 'kas' } })
+        return json(route, { ...AJCREW_CONFIG_FIXTURE, agent: { ...AJCREW_CONFIG_FIXTURE.agent, acp_backend: 'kas' } })
       }
       if (p === '/api/config/schema') return json(route, { entries: [{ path: 'agent.acp_backend', type: 'enum', enumValues: ['kiro', 'kas'] }] })
       if (p === '/api/acp-backends') return json(route, { backends, kiro_selection_runs_on_kas: !saved })

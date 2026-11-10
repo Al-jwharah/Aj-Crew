@@ -18,9 +18,9 @@ from types import SimpleNamespace
 import pytest
 
 from conftest import make_dir_link
-from kiro_crew import platform_lock_compat
-from kiro_crew.platform.governance import WORKSPACE_TOOL_KINDS, classify_tool_args
-from kiro_crew.remote_session import workspace_tools as wt
+from aj_crew import platform_lock_compat
+from aj_crew.platform.governance import WORKSPACE_TOOL_KINDS, classify_tool_args
+from aj_crew.remote_session import workspace_tools as wt
 
 
 def _call(ident, name, **arguments):
@@ -178,7 +178,7 @@ def test_guest_entry_points_share_locks_outside_the_project(tmp_path, monkeypatc
     assert wt.main(["--root", str(project), "--write"]) == 0
     assert json.loads(capsys.readouterr().out)["ok"] is True
     assert set(project.iterdir()) == {project / "file.txt"}
-    locks = home / ".kirocrew-worker" / "file-locks"
+    locks = home / ".ajcrew-worker" / "file-locks"
     assert len(list(locks.iterdir())) == 1
     message = _call(1, "edit_file", path="file.txt", old_str="base", new_str="agent")
     monkeypatch.setattr(
@@ -372,12 +372,12 @@ def test_git_status_runs_no_repository_hook(tmp_path, where):
 
 def test_no_write_reaches_the_worker_directory(tmp_path, monkeypatch):
     """Browsing runs the guest script, so a workspace write must never replace it."""
-    worker = tmp_path / ".kirocrew-worker"
+    worker = tmp_path / ".ajcrew-worker"
     worker.mkdir()
     monkeypatch.setattr(wt, "_SELF_DIR", str(worker))
     make_dir_link(tmp_path / "link", worker)
     ws = wt.Workspace(str(tmp_path))
-    for path in (".kirocrew-worker/workspace_tools.py", "link/workspace_tools.py"):
+    for path in (".ajcrew-worker/workspace_tools.py", "link/workspace_tools.py"):
         with pytest.raises(wt.ToolError, match="worker directory"):
             ws.write_file(path, "print('pwned')\n")
         assert "worker directory" in wt.write_request(ws, {"path": path, "content": "x"})["error"]
@@ -399,15 +399,15 @@ def test_write_allowed_when_workspace_is_on_a_different_drive(tmp_path, monkeypa
 
     monkeypatch.setattr(wt.os.path, "splitdrive", ntpath.splitdrive)
     # _SELF_DIR appears to be on D: (the checkout drive on hosted Windows runners).
-    monkeypatch.setattr(wt, "_SELF_DIR", "D:\\kirocrew-worker")
+    monkeypatch.setattr(wt, "_SELF_DIR", "D:\\ajcrew-worker")
     ws = wt.Workspace(str(tmp_path))
-    # Old code: commonpath(["C:\\...", "D:\\kirocrew-worker"]) raised ValueError.
+    # Old code: commonpath(["C:\\...", "D:\\ajcrew-worker"]) raised ValueError.
     # New code: drives differ -> _is_within returns False -> write proceeds.
     result = ws.write_file("ok.txt", "fine\n")
     assert result.startswith("wrote")
     # Confirm the containment check still refuses a same-drive path inside the worker dir.
-    worker = tmp_path / ".kirocrew-worker"
+    worker = tmp_path / ".ajcrew-worker"
     worker.mkdir()
     monkeypatch.setattr(wt, "_SELF_DIR", str(worker))
     with pytest.raises(wt.ToolError, match="worker directory"):
-        ws.write_file(".kirocrew-worker/workspace_tools.py", "x")
+        ws.write_file(".ajcrew-worker/workspace_tools.py", "x")

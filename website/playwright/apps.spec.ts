@@ -8,9 +8,9 @@
  * /apps/:name installed-app catch-all and is a reserved app name server-side.
  *
  * Preconditions provided by the stub gateway:
- * - The gateway runs with `KIROCREW_SKIP_APP_STORE_FETCH=1` (set by
- *   `kiro_crew.testing.harness`), so Discover is the OFFLINE store: the
- *   bundled seed's rows (`src/kiro_crew/apps/app-registry.json`), with no
+ * - The gateway runs with `AJCREW_SKIP_APP_STORE_FETCH=1` (set by
+ *   `aj_crew.testing.harness`), so Discover is the OFFLINE store: the
+ *   bundled seed's rows (`src/aj_crew/apps/app-registry.json`), with no
  *   published catalog and no per-row manifest clone. Discover renders catalog
  *   rows only, never the wheel's installed builtins, so no builtin appears
  *   here; the Updates tab is therefore always all-current.

@@ -25,7 +25,7 @@ const params = new URLSearchParams(location.search)
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 localStorage.setItem('mc-theme', theme)
 localStorage.setItem('mc-color-theme', 'kiro')
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const PAGE = `<!doctype html><html><body style="font:14px system-ui;margin:16px;color:${theme === 'light' ? '#222' : '#ddd'}">
 <h3 style="margin:0 0 8px">Project report</h3><p style="margin:0">Open tasks: 7 &middot; Merged this week: 12</p></body></html>`

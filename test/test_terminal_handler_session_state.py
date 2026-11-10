@@ -21,9 +21,9 @@ from terminal_handler_helpers import (  # noqa: F401 -- the autouse fixture regi
     _make_session,
 )
 
-from kiro_crew.dashboard.handlers import terminal
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.handlers import terminal
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.wait import await_until
 
 # ── _get_registry ──
 
@@ -198,7 +198,7 @@ class TestBashShellReadiness:
         # shell repeats the sequence.
         assert f'-n "${{{terminal._READY_TOKEN_VAR}-}}"' in hook
         assert f"builtin unset {terminal._READY_TOKEN_VAR}" in hook
-        assert "]697;KiroCrewReady;%s" in hook
+        assert "]697;AjCrewReady;%s" in hook
         # Withdraws itself only while PROMPT_COMMAND is still exactly the scalar
         # that was exported: a profile that APPENDED its own command keeps that
         # half, and one that appended as an ARRAY leaves the exported text as
@@ -229,7 +229,7 @@ class TestBashShellReadiness:
         # The inherited command is carried verbatim and runs AFTER the marker,
         # which must be the first thing the prompt writes.
         assert exported.endswith("; history -a")
-        assert exported.index("KiroCrewReady") < exported.index("history -a")
+        assert exported.index("AjCrewReady") < exported.index("history -a")
         # The mirror is the WHOLE exported value, so the ownership test still
         # recognizes an untouched variable now that it has a tail.
         assert env[terminal._READY_HOOK_VAR] == exported

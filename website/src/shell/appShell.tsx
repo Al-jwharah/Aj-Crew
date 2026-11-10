@@ -121,7 +121,7 @@ interface AppListEntry {
 }
 
 // Apps-nav fetch resilience (see refreshAppNav). The dashboard loads
-// `/api/apps` once on mount; right after a `kirocrew update` the gateway is
+// `/api/apps` once on mount; right after a `ajcrew update` the gateway is
 // mid-restart (cold backend, apps-dir scan) and that first request can fail or
 // time out. Retry with bounded backoff so the Apps rail self-heals instead of
 // staying empty until a manual reload or an app enable/disable.
@@ -185,7 +185,7 @@ export function useAppShell() {
   // Track whether the session-expired auth banner is currently injected by
   // api/client.ts. When auth is the real reason the gateway is unreachable,
   // the red top-banner tells the user what to do (paste a fresh
-  // `kirocrew token` URL) and the capsule reddens quietly underneath it --
+  // `ajcrew token` URL) and the capsule reddens quietly underneath it --
   // for a sighted user the tint does not argue with the banner. But the
   // banner is a plain <div> with no role="alert"/aria-live, so it is never
   // announced; the capsule's accessible name and role="status" region are the
@@ -720,7 +720,7 @@ export function useAppShell() {
         // without apps, which is what that caller has.
         if (isPermissionRefusal(e)) return
         // A transient failure (e.g. the gateway mid-restart right after a
-        // `kirocrew update`, or the cold apps-dir scan) used to be swallowed
+        // `ajcrew update`, or the cold apps-dir scan) used to be swallowed
         // here, leaving the Apps rail empty until a manual reload or an app
         // enable/disable. Retry with bounded exponential backoff so it
         // self-heals. The reconnect effect below covers the WS-drop case.
@@ -756,7 +756,7 @@ export function useAppShell() {
     window.addEventListener('mc:apps-changed', handler)
     return () => window.removeEventListener('mc:apps-changed', handler)
   }, [refreshAppNav, queryClient])
-  // An app installed, updated or removed OUTSIDE this tab (`kirocrew app
+  // An app installed, updated or removed OUTSIDE this tab (`ajcrew app
   // install` in a terminal, another tab's App Store) fires no mc:apps-changed
   // here, and the gateway sends no event for it: CLI uninstall does not even go
   // through the gateway. With ['apps'] at staleTime Infinity the nav rail and
@@ -792,7 +792,7 @@ export function useAppShell() {
     }
   }, [refreshAppNav, queryClient])
   // Refetch the Apps nav when the gateway connection is *re*-established after a
-  // drop — e.g. a `kirocrew update` restart disconnects then reconnects the
+  // drop — e.g. a `ajcrew update` restart disconnects then reconnects the
   // WebSocket. Only fires on a connected→disconnected→connected cycle, NOT the
   // initial connect (the mount fetch already covers that), so a normal load
   // never double-fetches.
@@ -814,7 +814,7 @@ export function useAppShell() {
 
   const { kiroUsageOpen, setKiroUsageOpen, kiroUsageState, usageSegmentHidden, kiroAccountEntry } = useKiroUsageReadout()
   // Feature previews live on the gateway; this keeps the browser cache of them in
-  // step. Called beside the credit readout, which already reads ['kirocrewConfig'].
+  // step. Called beside the credit readout, which already reads ['ajcrewConfig'].
   usePreviewFlagServerSync()
   // Both forms use the side groups' container-query ladders. On desktop the
   // measured ladder (`.topbar.tb-measured`, index.css) adds folds when those
@@ -857,7 +857,7 @@ export function useAppShell() {
   // would surface the dashboard with the previous session still on screen: the
   // window comes forward and the notification appears to have opened nothing.
   //
-  // A crew link (`kirocrew://chat?crew=`) is read HERE only, never off the URL.
+  // A crew link (`ajcrew://chat?crew=`) is read HERE only, never off the URL.
   const openCrewLink = useCrewDeepLink()
   usePaneOpenSlot({ navigate, mayLeave: mayLeaveForNavigation })
   useEffect(() => {
@@ -882,7 +882,7 @@ export function useAppShell() {
         )
         return
       }
-      // A Remote Crew add link (`kirocrew://remote-crew/add`) only fills in the
+      // A Remote Crew add link (`ajcrew://remote-crew/add`) only fills in the
       // local Crew's add form; the user still presses Add. Like an app link it
       // brings the local Crew forward first. The values travel in the store and
       // the route is the bare page, so the dashboard's own URL never carries them.

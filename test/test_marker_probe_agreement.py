@@ -19,7 +19,7 @@ import itertools
 
 import pytest
 
-from kiro_crew.constants import (
+from aj_crew.constants import (
     _OPTIONS_TAIL_PREFIX_RE,
     MARKER_CLOSERS,
     MARKER_OPENERS,

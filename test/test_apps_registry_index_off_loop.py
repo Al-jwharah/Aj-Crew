@@ -18,7 +18,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.apps.registry_pipeline.indexes import (
+from aj_crew.apps.registry_pipeline.indexes import (
     _fetch_external_registry_index,
     _load_index_entries_sync,
 )
@@ -60,17 +60,17 @@ def stub_sandbox_and_sel(_floor_monkeypatch):
         return list(argv), None
 
     _floor_monkeypatch.setattr(
-        "kiro_crew.apps.registry_pipeline.indexes.wrap_argv_async", _passthrough_wrap
+        "aj_crew.apps.registry_pipeline.indexes.wrap_argv_async", _passthrough_wrap
     )
     _floor_monkeypatch.setattr(
-        "kiro_crew.apps.registry_pipeline.indexes.cgroup_scope_argv", lambda argv: argv
+        "aj_crew.apps.registry_pipeline.indexes.cgroup_scope_argv", lambda argv: argv
     )
     _floor_monkeypatch.setattr(
-        "kiro_crew.apps.registry_pipeline.indexes.wrap_argv",
+        "aj_crew.apps.registry_pipeline.indexes.wrap_argv",
         lambda argv, **k: (list(argv), None),
     )
     _floor_monkeypatch.setattr(
-        "kiro_crew.apps.registry_pipeline.indexes._sel_fn",
+        "aj_crew.apps.registry_pipeline.indexes._sel_fn",
         MagicMock(),
         raising=False,
     )
@@ -87,7 +87,7 @@ def _clone_proc():
 def _point_clone(monkeypatch, clone_dir: Path, build=None):
     """Point the fetch at ``clone_dir``: stub mkdtemp + the clone subprocess."""
 
-    import kiro_crew.apps.registry_pipeline.indexes as _idx
+    import aj_crew.apps.registry_pipeline.indexes as _idx
 
     # The real mkdtemp hands the fetch an existing directory, so the stub does
     # too: build() -- like git clone -- writes into an existing root.

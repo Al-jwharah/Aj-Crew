@@ -1,4 +1,4 @@
-"""Additional coverage for ``kiro_crew.slack.handler``.
+"""Additional coverage for ``aj_crew.slack.handler``.
 
 Focuses on branches the existing ``test_slack_handler*.py`` files leave
 untouched:
@@ -28,11 +28,11 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.slack.handler as h
-import kiro_crew.voice_reply as voice_reply
+import aj_crew.slack.handler as h
+import aj_crew.voice_reply as voice_reply
 from conftest import MockSlackClient
-from kiro_crew.acp.client import AcpProcessDied, AcpPromptBusy, AcpTimeoutError
-from kiro_crew.acp.types import (
+from aj_crew.acp.client import AcpProcessDied, AcpPromptBusy, AcpTimeoutError
+from aj_crew.acp.types import (
     EVENT_COMPACTION_STATUS,
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
@@ -40,12 +40,12 @@ from kiro_crew.acp.types import (
     EVENT_TOOL_CALL,
     AcpEvent,
 )
-from kiro_crew.cron import CronJob, CronSchedule
-from kiro_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, TOOL_DENY, ToolHookResult
-from kiro_crew.messaging import auto_title
-from kiro_crew.slack.handler import handle_interaction, handle_message
-from kiro_crew.task_models import Project, Task, TaskStatus
-from kiro_crew.task_reporter import build_status
+from aj_crew.cron import CronJob, CronSchedule
+from aj_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, TOOL_DENY, ToolHookResult
+from aj_crew.messaging import auto_title
+from aj_crew.slack.handler import handle_interaction, handle_message
+from aj_crew.task_models import Project, Task, TaskStatus
+from aj_crew.task_reporter import build_status
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).
@@ -307,7 +307,7 @@ class TestResolveAgentNameProject:
         agents = tmp_path / ".kiro" / "agents"
         agents.mkdir(parents=True)
         (agents / "reviewer.json").write_text(json.dumps({"name": "x"}), encoding="utf-8")
-        # No project match and (in an isolated KIROCREW_HOME) no user agent either.
+        # No project match and (in an isolated AJCREW_HOME) no user agent either.
         assert h._resolve_agent_name("nope", str(tmp_path)) is None
 
 
@@ -450,7 +450,7 @@ def _running_status(*, completed: int = 2, total: int = 5, current: int = 3) -> 
             for i, s in enumerate(statuses)
         ],
     )
-    return build_status({"live": run}, {"live": _LiveTask()}, "kirocrew")
+    return build_status({"live": run}, {"live": _LiveTask()}, "ajcrew")
 
 
 class TestRunCommand:
@@ -708,7 +708,7 @@ class TestHandleInteractionAuthReChecks:
 
     @pytest.mark.asyncio
     async def test_late_trust_refused_when_session_map_lookup_fails(self, monkeypatch, owner):
-        import kiro_crew.session as session_mod
+        import aj_crew.session as session_mod
 
         class _BoomMap:
             def __init__(self):
@@ -740,7 +740,7 @@ class TestHandleInteractionAuthReChecks:
     async def test_late_trust_binds_to_the_linked_dashboard_session(self, monkeypatch, owner):
         """A thread linked to a dashboard slot must grant trust on the LINKED
         session key, not the bare thread ts."""
-        import kiro_crew.session as session_mod
+        import aj_crew.session as session_mod
 
         class _Map:
             def get_session_for_thread(self, thread_ts):
@@ -954,7 +954,7 @@ class _Hooks:
         self.tool_calls: list[str] = []
 
     def on_message(self, *a, **kw):
-        from kiro_crew.hooks import HookResult
+        from aj_crew.hooks import HookResult
 
         return HookResult(action="none")
 
@@ -1442,7 +1442,7 @@ class _DashState:
 class TestLinkedThreadRouting:
     @pytest.mark.asyncio
     async def test_idle_slot_starts_a_dashboard_turn(self, monkeypatch, owner):
-        import kiro_crew.dashboard.chat as chat_mod
+        import aj_crew.dashboard.chat as chat_mod
 
         ran: list[str] = []
 

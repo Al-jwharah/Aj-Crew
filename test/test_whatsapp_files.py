@@ -7,15 +7,15 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.messaging.outbound_files import (
+from aj_crew.messaging.outbound_files import (
     REASON_NOT_RASTER,
     REASON_OVER_FILE_BYTES,
     REASON_OVER_FILE_CAP,
     REASON_SENSITIVE,
     Rejection,
 )
-from kiro_crew.whatsapp import files as wa_files
-from kiro_crew.whatsapp.files import (
+from aj_crew.whatsapp import files as wa_files
+from aj_crew.whatsapp.files import (
     REASON_OVER_PIXEL_BUDGET,
     REASON_UNDECODABLE,
     WHATSAPP_MAX_FILE_BYTES,
@@ -247,8 +247,8 @@ def test_upload_failed_is_a_named_reason():
     upload runs, so a silent wire failure leaves the reader with neither the
     picture nor the path nor any hint one existed.
     """
-    from kiro_crew.messaging.outbound_files import Rejection
-    from kiro_crew.whatsapp.files import REASON_UPLOAD_FAILED, rejection_note
+    from aj_crew.messaging.outbound_files import Rejection
+    from aj_crew.whatsapp.files import REASON_UPLOAD_FAILED, rejection_note
 
     note = rejection_note([Rejection("/tmp/chart.png", REASON_UPLOAD_FAILED, "")])
     assert note, "a failed upload must produce a user-visible note"

@@ -24,7 +24,7 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.history import ConversationLog
+from aj_crew.history import ConversationLog
 
 
 def _contents(msgs: list[dict]) -> list[str]:
@@ -34,8 +34,8 @@ def _contents(msgs: list[dict]) -> list[str]:
 @pytest.fixture()
 def rotated_log(tmp_path, monkeypatch):
     """A log whose session 't1' rotated at least once, with 20 known messages."""
-    monkeypatch.setattr("kiro_crew.history._SESSION_MAX_BYTES", 400)
-    monkeypatch.setattr("kiro_crew.history._SESSION_KEEP_LINES", 3)
+    monkeypatch.setattr("aj_crew.history._SESSION_MAX_BYTES", 400)
+    monkeypatch.setattr("aj_crew.history._SESSION_KEEP_LINES", 3)
     log = ConversationLog(base_dir=tmp_path)
     for i in range(20):
         log.append("t1", "user", f"message number {i:02d} with enough text to exceed limits")
@@ -119,8 +119,8 @@ class TestChainMidRotation:
         assert log.chain_mid_rotation("t1") is False
 
     def test_first_member_rotation_is_not_mid_chain(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.history._SESSION_MAX_BYTES", 400)
-        monkeypatch.setattr("kiro_crew.history._SESSION_KEEP_LINES", 3)
+        monkeypatch.setattr("aj_crew.history._SESSION_MAX_BYTES", 400)
+        monkeypatch.setattr("aj_crew.history._SESSION_KEEP_LINES", 3)
         log = ConversationLog(base_dir=tmp_path)
         tab = "tabchain0001"
         k1 = "dashboard:chat-1-100"
@@ -141,8 +141,8 @@ class TestChainMidRotation:
         k2 = "dashboard:chat-2-200"
         for i in range(3):
             log.append(k1, "user", f"head row {i}", tab_id=tab)
-        monkeypatch.setattr("kiro_crew.history._SESSION_MAX_BYTES", 400)
-        monkeypatch.setattr("kiro_crew.history._SESSION_KEEP_LINES", 3)
+        monkeypatch.setattr("aj_crew.history._SESSION_MAX_BYTES", 400)
+        monkeypatch.setattr("aj_crew.history._SESSION_KEEP_LINES", 3)
         for i in range(20):
             log.append(k2, "user", f"second member row {i:02d} padded to rotate", tab_id=tab)
         assert list((tmp_path / "archive").glob("dashboard_chat-2-200__*.jsonl")), "k2 must rotate"
@@ -158,8 +158,8 @@ class TestChainMidRotation:
         k2 = "dashboard:chat-2-200"
         for i in range(3):
             log.append(k1, "user", f"head row {i}", tab_id=tab)
-        monkeypatch.setattr("kiro_crew.history._SESSION_MAX_BYTES", 400)
-        monkeypatch.setattr("kiro_crew.history._SESSION_KEEP_LINES", 3)
+        monkeypatch.setattr("aj_crew.history._SESSION_MAX_BYTES", 400)
+        monkeypatch.setattr("aj_crew.history._SESSION_KEEP_LINES", 3)
         for i in range(20):
             log.append(k2, "user", f"second member row {i:02d} padded to rotate", tab_id=tab)
         full = _contents(log.read_messages_chained_full(k2))
@@ -181,7 +181,7 @@ class TestSlotDetailMidChainRotation:
 
     @pytest.mark.asyncio
     async def test_full_load_serves_true_corpus_on_mid_chain_rotation(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         tab = "tabmidrot001"
@@ -193,8 +193,8 @@ class TestSlotDetailMidChainRotation:
 
         # Current member rotates: its archived head is SANDWICHED after the
         # older member's rows in the true corpus.
-        monkeypatch.setattr("kiro_crew.history._SESSION_MAX_BYTES", 400)
-        monkeypatch.setattr("kiro_crew.history._SESSION_KEEP_LINES", 3)
+        monkeypatch.setattr("aj_crew.history._SESSION_MAX_BYTES", 400)
+        monkeypatch.setattr("aj_crew.history._SESSION_KEEP_LINES", 3)
         cur_slot = "chat-2-200"
         cur_key = f"dashboard:{cur_slot}"
         slot = state.get_or_create_slot(cur_slot)
@@ -230,7 +230,7 @@ class TestForkMidChainRotation:
 
     @pytest.mark.asyncio
     async def test_fork_index_resolves_in_the_interleaved_corpus(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         tab = "tabforkmid01"
@@ -242,8 +242,8 @@ class TestForkMidChainRotation:
 
         # Current member rotates: its archived head lands AFTER the older
         # member's rows in the true corpus (sandwiched).
-        monkeypatch.setattr("kiro_crew.history._SESSION_MAX_BYTES", 400)
-        monkeypatch.setattr("kiro_crew.history._SESSION_KEEP_LINES", 3)
+        monkeypatch.setattr("aj_crew.history._SESSION_MAX_BYTES", 400)
+        monkeypatch.setattr("aj_crew.history._SESSION_KEEP_LINES", 3)
         cur_slot = "chat-2-200"
         cur_key = f"dashboard:{cur_slot}"
         for i in range(12):

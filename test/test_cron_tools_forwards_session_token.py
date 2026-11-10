@@ -17,9 +17,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import mcp_core, mcp_cron, member_memory_auth, session_token_sig
-from kiro_crew.dashboard.handlers import cron
-from kiro_crew.mcp_caller import current_caller
+from aj_crew import mcp_core, mcp_cron, member_memory_auth, session_token_sig
+from aj_crew.dashboard.handlers import cron
+from aj_crew.mcp_caller import current_caller
 
 pytestmark = pytest.mark.asyncio
 
@@ -59,7 +59,7 @@ def seen(monkeypatch: pytest.MonkeyPatch) -> list[dict]:
         "verify_session_token",
         lambda token: _KEY if token == _GOOD else "bob" if token == "token-for-bob" else "",
     )
-    monkeypatch.delenv("KIROCREW_STUB_SESSION_TOKEN", raising=False)
+    monkeypatch.delenv("AJCREW_STUB_SESSION_TOKEN", raising=False)
     return rows
 
 
@@ -115,7 +115,7 @@ async def test_cron_add_carries_the_dashboard_s_person_tab_verdict(
     seen: list[dict], monkeypatch: pytest.MonkeyPatch, verdict: bool
 ) -> None:
     """The verdict is read for the verified caller and reaches ``cron_add``."""
-    from kiro_crew.dashboard import session_control
+    from aj_crew.dashboard import session_control
 
     asked: list[str] = []
 
@@ -134,7 +134,7 @@ async def test_a_card_turn_reads_cron_jobs_but_cannot_schedule_one(
     seen: list[dict], monkeypatch: pytest.MonkeyPatch, tool: str, status: int
 ) -> None:
     """While the caller runs a Dashboard card's turn, only reads and stops reach the tool."""
-    from kiro_crew.dashboard import card_send, chat_handlers
+    from aj_crew.dashboard import card_send, chat_handlers
 
     monkeypatch.setattr(card_send, "_running_card_turns", {_KEY: 1})
     monkeypatch.setattr(chat_handlers, "sel", lambda: MagicMock())

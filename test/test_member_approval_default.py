@@ -14,27 +14,27 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 from test_members_dm_thread import CREW, _fake_config, _make_members_app
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.config.sections import coerce_member_approval_mode
-from kiro_crew.members import member_slot_key
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.config.sections import coerce_member_approval_mode
+from aj_crew.members import member_slot_key
 
 
 @pytest.fixture(autouse=True)
 def _owner_caller(_floor_monkeypatch):
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
 
 def _config_with(mode: str):
     cfg = _fake_config([CREW])
-    cfg.agents[CREW] = KiroCrewAgentConfig(kiro_agent="kirocrew", approval_mode=mode)
+    cfg.agents[CREW] = AjCrewAgentConfig(kiro_agent="ajcrew", approval_mode=mode)
     return cfg
 
 
 async def _open_thread(state, cfg, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
     async with TestClient(TestServer(_make_members_app(state))) as client:
         resp = await client.post(f"/api/members/{CREW}/thread")
         assert resp.status == 200, await resp.text()
@@ -120,7 +120,7 @@ class TestThreadOpenSeedsTheProfileMode:
             reads.append(1)
             return _config_with("" if len(reads) == 1 else "normal")
 
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", load)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", load)
         async with TestClient(TestServer(_make_members_app(state))) as client:
             resp = await client.post(f"/api/members/{CREW}/thread")
             assert resp.status == 200, await resp.text()
@@ -134,7 +134,7 @@ class TestRosterCarriesTheProfileSettings:
     async def test_the_row_names_mode_and_effort(self, tmp_path, monkeypatch):
         cfg = _config_with("trust_reads")
         cfg.agents[CREW].reasoning_effort = "high"
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         state = _make_state(tmp_path)
         async with TestClient(TestServer(_make_members_app(state))) as client:
             resp = await client.get("/api/members")
@@ -154,25 +154,25 @@ class TestTheRecordField:
         assert coerce_member_approval_mode(junk) == ""
 
     def test_a_saved_choice_round_trips_through_the_config_file(self):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["mate"] = KiroCrewAgentConfig(kiro_agent="kirocrew", approval_mode="normal")
+        cfg = AjCrewConfig.load()
+        cfg.agents["mate"] = AjCrewAgentConfig(kiro_agent="ajcrew", approval_mode="normal")
         cfg.save()
-        assert KiroCrewConfig.load().agents["mate"].approval_mode == "normal"
+        assert AjCrewConfig.load().agents["mate"].approval_mode == "normal"
 
 
 def _update_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import api_kirocrew_agent_update
+    from aj_crew.dashboard.handlers import api_ajcrew_agent_update
 
     app = web.Application()
-    app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+    app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
     return app
 
 
 @pytest.fixture()
 def seeded_mate():
-    cfg = KiroCrewConfig.load()
-    cfg.agents["mate"] = KiroCrewAgentConfig(
-        kiro_agent="kirocrew", workspace="default", memory_store="default"
+    cfg = AjCrewConfig.load()
+    cfg.agents["mate"] = AjCrewAgentConfig(
+        kiro_agent="ajcrew", workspace="default", memory_store="default"
     )
     cfg.save()
     return "mate"
@@ -184,7 +184,7 @@ class TestProfileWrite:
         async with TestClient(TestServer(_update_app())) as client:
             resp = await client.put(f"/api/agents/{seeded_mate}", json={"approval_mode": "normal"})
             assert resp.status == 200, await resp.text()
-        assert KiroCrewConfig.load().agents[seeded_mate].approval_mode == "normal"
+        assert AjCrewConfig.load().agents[seeded_mate].approval_mode == "normal"
 
     @pytest.mark.asyncio
     async def test_an_unrelated_edit_keeps_the_stored_choice(self, seeded_mate):
@@ -195,7 +195,7 @@ class TestProfileWrite:
             assert (
                 await client.put(f"/api/agents/{seeded_mate}", json={"description": "hi"})
             ).status == 200
-        assert KiroCrewConfig.load().agents[seeded_mate].approval_mode == "normal"
+        assert AjCrewConfig.load().agents[seeded_mate].approval_mode == "normal"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("bad", ["yolo", "", "TRUST", 1])
@@ -206,7 +206,7 @@ class TestProfileWrite:
             )
             assert resp.status == 400
             assert (await resp.json())["code"] == "invalid_approval_mode"
-        stored = KiroCrewConfig.load().agents[seeded_mate]
+        stored = AjCrewConfig.load().agents[seeded_mate]
         assert stored.approval_mode == ""
         assert stored.workspace == "default"
 
@@ -222,7 +222,7 @@ class TestProfileWriteIsCompareAndSet:
                 json={"approval_mode": "normal", "expected_approval_mode": ""},
             )
             assert resp.status == 200, await resp.text()
-        assert KiroCrewConfig.load().agents[seeded_mate].approval_mode == "normal"
+        assert AjCrewConfig.load().agents[seeded_mate].approval_mode == "normal"
 
     @pytest.mark.asyncio
     async def test_a_stale_write_is_refused_with_the_current_value(self, seeded_mate):
@@ -242,7 +242,7 @@ class TestProfileWriteIsCompareAndSet:
             body = await resp.json()
         assert body["code"] == "approval_mode_conflict"
         assert body["approval_mode"] == "normal"
-        assert KiroCrewConfig.load().agents[seeded_mate].approval_mode == "normal"
+        assert AjCrewConfig.load().agents[seeded_mate].approval_mode == "normal"
 
     @pytest.mark.asyncio
     async def test_a_refused_write_changes_no_other_field(self, seeded_mate):
@@ -256,7 +256,7 @@ class TestProfileWriteIsCompareAndSet:
                 },
             )
             assert resp.status == 409
-        stored = KiroCrewConfig.load().agents[seeded_mate]
+        stored = AjCrewConfig.load().agents[seeded_mate]
         assert stored.approval_mode == ""
         assert stored.workspace == "default"
 
@@ -287,7 +287,7 @@ class TestProfileWriteMovesTheLiveThread:
                 json={"approval_mode": "normal", "expected_approval_mode": ""},
             )
             assert resp.status == 200, await resp.text()
-        assert KiroCrewConfig.load().agents[seeded_mate].approval_mode == "normal"
+        assert AjCrewConfig.load().agents[seeded_mate].approval_mode == "normal"
         assert slot._trust is False
         assert slot._trust_reads is False
 
@@ -303,7 +303,7 @@ class TestProfileWriteMovesTheLiveThread:
                 json={"approval_mode": "normal", "expected_approval_mode": "trust"},
             )
             assert resp.status == 409
-        assert KiroCrewConfig.load().agents[seeded_mate].approval_mode == ""
+        assert AjCrewConfig.load().agents[seeded_mate].approval_mode == ""
         assert slot._trust is True
 
     @pytest.mark.asyncio
@@ -324,12 +324,12 @@ class TestCompareAndSetHoldsAcrossProcesses:
         """Another process sets Normal after the handler loaded its snapshot but
         before it saves. The check runs on the record on disk, under the
         cross-process lock, so the stale Trust is refused and the slot is left."""
-        import kiro_crew.dashboard.handlers.agents as agents_handlers
+        import aj_crew.dashboard.handlers.agents as agents_handlers
 
         real = agents_handlers.persist_member_config
 
         def cli_write_then_persist(*args, **kwargs):
-            other = KiroCrewConfig.load()
+            other = AjCrewConfig.load()
             other.agents[seeded_mate].approval_mode = "normal"
             other.save()
             return real(*args, **kwargs)
@@ -344,5 +344,5 @@ class TestCompareAndSetHoldsAcrossProcesses:
             )
             assert resp.status == 409
             assert (await resp.json())["approval_mode"] == "normal"
-        assert KiroCrewConfig.load().agents[seeded_mate].approval_mode == "normal"
+        assert AjCrewConfig.load().agents[seeded_mate].approval_mode == "normal"
         assert slot._trust is True

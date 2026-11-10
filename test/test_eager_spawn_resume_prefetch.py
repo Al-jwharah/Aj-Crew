@@ -18,9 +18,9 @@ from eager_spawn_helpers import (  # noqa: F401 -- fixtures are used by name
     _stub_factory,
 )
 
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.state import _ChatSlot
 
 
 class TestRemoveIfUnclaimed:
@@ -28,16 +28,16 @@ class TestRemoveIfUnclaimed:
 
     @pytest.fixture
     def cfg(self):
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        c = KiroCrewConfig()
+        c = AjCrewConfig()
         c.agent.provider = "acp"
         c.session.pool_size = 0
         return c
 
     @pytest.mark.asyncio
     async def test_removes_armed_idle_session_and_preserves_map(self, cfg):
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager(cfg, provider_factory=_stub_factory())
         key = "dashboard:ttl-a"
@@ -54,7 +54,7 @@ class TestRemoveIfUnclaimed:
 
     @pytest.mark.asyncio
     async def test_noops_after_real_claim(self, cfg):
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager(cfg, provider_factory=_stub_factory())
         key = "dashboard:ttl-b"
@@ -69,7 +69,7 @@ class TestRemoveIfUnclaimed:
     async def test_noops_while_semaphore_held(self, cfg):
         """A claimant mid-acquire (semaphore held) must never lose the
         session under it."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager(cfg, provider_factory=_stub_factory())
         key = "dashboard:ttl-c"
@@ -80,7 +80,7 @@ class TestRemoveIfUnclaimed:
 
     @pytest.mark.asyncio
     async def test_noops_on_missing_key(self, cfg):
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager(cfg, provider_factory=_stub_factory())
         assert await mgr.remove_if_unclaimed("dashboard:absent") is False
@@ -97,7 +97,7 @@ class TestResumePrefetchWiring:
     async def test_allow_resume_passes_speculative_resume(self):
         slot = _ChatSlot("t1")
         state = _mock_state(slot)
-        with patch.object(chat_runner.KiroCrewConfig, "load", _native_resume_cfg()):
+        with patch.object(chat_runner.AjCrewConfig, "load", _native_resume_cfg()):
             await chat_runner._eager_spawn(state, slot, allow_resume=True)
         kwargs = state.sessions.get_or_create.await_args.kwargs
         assert kwargs["speculative"] is True
@@ -107,7 +107,7 @@ class TestResumePrefetchWiring:
     async def test_default_path_does_not_opt_in(self):
         slot = _ChatSlot("t1")
         state = _mock_state(slot)
-        with patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)):
+        with patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)):
             await chat_runner._eager_spawn(state, slot)
         assert state.sessions.get_or_create.await_args.kwargs["speculative_resume"] is False
 
@@ -116,7 +116,7 @@ class TestResumePrefetchWiring:
         slot = _ChatSlot("t1")
         state = _mock_state(slot)
         state.sessions.get_or_create = AsyncMock(return_value=(MagicMock(), True, True))
-        with patch.object(chat_runner.KiroCrewConfig, "load", _native_resume_cfg()):
+        with patch.object(chat_runner.AjCrewConfig, "load", _native_resume_cfg()):
             await chat_runner._eager_spawn(state, slot, allow_resume=True)
         ttl = getattr(slot, "_prefetch_ttl_task", None)
         assert ttl is not None and not ttl.done()
@@ -130,17 +130,17 @@ class TestResumePrefetchWiring:
         the idle sweep alone owns its lifetime."""
         slot = _ChatSlot("t1")
         state = _mock_state(slot)  # get_or_create returns resumed=False
-        with patch.object(chat_runner.KiroCrewConfig, "load", _native_resume_cfg()):
+        with patch.object(chat_runner.AjCrewConfig, "load", _native_resume_cfg()):
             await chat_runner._eager_spawn(state, slot, allow_resume=True)
         assert getattr(slot, "_prefetch_ttl_task", None) is None
 
     @staticmethod
     async def _unclaimed_prefetch(key: str):
         """A real SessionManager holding one released, never-claimed speculative session."""
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.session import SessionManager
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.provider = "acp"
         cfg.session.pool_size = 0
         mgr = SessionManager(cfg, provider_factory=_stub_factory())
@@ -206,7 +206,7 @@ class TestToolSearchReplayPrefetchGate:
         slot = _ChatSlot("t1")
         state = _mock_state(slot)
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)),
+            patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)),
             caplog.at_level("INFO", logger=chat_runner.logger.name),
         ):
             await chat_runner._eager_spawn(state, slot, allow_resume=True)
@@ -228,7 +228,7 @@ class TestToolSearchReplayPrefetchGate:
         loader = _cfg(True)
         for name, value in native.items():
             setattr(loader.return_value.agent, name, value)
-        with patch.object(chat_runner.KiroCrewConfig, "load", loader):
+        with patch.object(chat_runner.AjCrewConfig, "load", loader):
             await chat_runner._eager_spawn(state, slot, allow_resume=True)
         assert list(chat_runner._armed_prefetches) == ["dashboard:t1"]
         assert state.sessions.get_or_create.await_args.kwargs["speculative_resume"] is True
@@ -239,21 +239,21 @@ class TestSpecResumeFallbackMapGuard:
 
     @pytest.fixture
     def cfg(self):
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        c = KiroCrewConfig()
+        c = AjCrewConfig()
         c.agent.provider = "acp"
         c.session.pool_size = 0
         return c
 
     @pytest.mark.asyncio
     async def test_fallback_keeps_original_sid(self, cfg, tmp_path, monkeypatch):
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         old_sid = "real-transcript-sid"
         sessions_dir = tmp_path / "kiro-sessions"
         sessions_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.session_map._kiro_sessions_dir", lambda: sessions_dir)
+        monkeypatch.setattr("aj_crew.session_map._kiro_sessions_dir", lambda: sessions_dir)
         (sessions_dir / f"{old_sid}.json").write_text("{}")
         (sessions_dir / f"{old_sid}.jsonl").write_text("x" * 32)
 
@@ -270,12 +270,12 @@ class TestSpecResumeFallbackMapGuard:
             m.client._session_id = "empty-fallback-sid"
             return m
 
-        monkeypatch.setattr("kiro_crew.providers.acp.AcpProvider", object)
+        monkeypatch.setattr("aj_crew.providers.acp.AcpProvider", object)
         mgr = SessionManager(cfg, provider_factory=factory)
         key = "dashboard:fallback-a"
         mgr._session_map.set(key, old_sid)
 
-        from kiro_crew.session import SpeculativeResumeRefused
+        from aj_crew.session import SpeculativeResumeRefused
 
         # A failed speculative resume is rejected BEFORE registration: no
         # claimable fallback session may ever exist — a real turn queued
@@ -298,12 +298,12 @@ class TestSpecResumeFallbackMapGuard:
         session (resumed=True) and skip the history replay, losing the prior
         context. Classification must key on the caller's ``speculative_resume``
         opt-in, which no branch mutates."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         old_sid = "real-transcript-sid"
         sessions_dir = tmp_path / "kiro-sessions"
         sessions_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.session_map._kiro_sessions_dir", lambda: sessions_dir)
+        monkeypatch.setattr("aj_crew.session_map._kiro_sessions_dir", lambda: sessions_dir)
         (sessions_dir / f"{old_sid}.json").write_text("{}")
         (sessions_dir / f"{old_sid}.jsonl").write_text("x" * 32)
 
@@ -320,15 +320,15 @@ class TestSpecResumeFallbackMapGuard:
             m.client._session_id = "empty-fallback-sid"
             return m
 
-        monkeypatch.setattr("kiro_crew.providers.acp.AcpProvider", object)
+        monkeypatch.setattr("aj_crew.providers.acp.AcpProvider", object)
         # Force the switch branch: resume_sid is cleared and the stored sid
         # wiped, exactly the mutation the classification must be immune to.
-        monkeypatch.setattr("kiro_crew.session.detect_provider_switch", lambda *a: True)
+        monkeypatch.setattr("aj_crew.session.detect_provider_switch", lambda *a: True)
         mgr = SessionManager(cfg, provider_factory=factory)
         key = "dashboard:fallback-switch"
         mgr._session_map.set(key, old_sid)
 
-        from kiro_crew.session import SpeculativeResumeRefused
+        from aj_crew.session import SpeculativeResumeRefused
 
         # The provider-switch branch clears resume_sid mid-flight; the
         # rejection must key on the caller's opt-in and fire anyway, so the
@@ -349,12 +349,12 @@ class TestSpecResumeFallbackMapGuard:
         through it). It must kill the orphaned provider via the executor
         dispatch, never inline — _sync_kill_provider blocks the event loop
         (os.waitpid / taskkill)."""
-        from kiro_crew.session import SessionManager, SpeculativeResumeRefused
+        from aj_crew.session import SessionManager, SpeculativeResumeRefused
 
         old_sid = "real-transcript-sid"
         sessions_dir = tmp_path / "kiro-sessions"
         sessions_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.session_map._kiro_sessions_dir", lambda: sessions_dir)
+        monkeypatch.setattr("aj_crew.session_map._kiro_sessions_dir", lambda: sessions_dir)
         (sessions_dir / f"{old_sid}.json").write_text("{}")
         (sessions_dir / f"{old_sid}.jsonl").write_text("x" * 32)
 
@@ -371,7 +371,7 @@ class TestSpecResumeFallbackMapGuard:
             m.client._session_id = "empty-fallback-sid"
             return m
 
-        monkeypatch.setattr("kiro_crew.providers.acp.AcpProvider", object)
+        monkeypatch.setattr("aj_crew.providers.acp.AcpProvider", object)
         mgr = SessionManager(cfg, provider_factory=factory)
         key = "dashboard:kill-dispatch"
         mgr._session_map.set(key, old_sid)

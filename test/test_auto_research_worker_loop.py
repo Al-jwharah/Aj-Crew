@@ -1,6 +1,6 @@
 """The auto_research worker loop: arming, titling, pinning and stopping its autonudge
 loop, suspending research loops while the app is disabled, and installing the
-kirocrew-research agent. ``test_auto_research.py`` heads the suite and lists its parts.
+ajcrew-research agent. ``test_auto_research.py`` heads the suite and lists its parts.
 """
 
 from __future__ import annotations
@@ -13,10 +13,10 @@ import pytest
 import pytest_asyncio
 from auto_research_helpers import isolate_fixture  # noqa: F401 - fixture
 
-from kiro_crew.apps.builtins.auto_research import handlers as _h
-from kiro_crew.apps.builtins.auto_research.campaign import LOGGER_NAME
-from kiro_crew.apps.builtins.auto_research.handlers import create_campaign
-from kiro_crew.autonudge import AutoNudgeService
+from aj_crew.apps.builtins.auto_research import handlers as _h
+from aj_crew.apps.builtins.auto_research.campaign import LOGGER_NAME
+from aj_crew.apps.builtins.auto_research.handlers import create_campaign
+from aj_crew.autonudge import AutoNudgeService
 
 
 @pytest_asyncio.fixture
@@ -47,8 +47,8 @@ class TestLoopLaunch:
     async def test_launch_clears_tombstone_before_slow_marker_cleanup(self, monkeypatch):
         """A crash after settlement but before loop removal must not let the
         previous run's source tombstone stop a resumed run again."""
-        from kiro_crew.apps.builtins.auto_research import handlers as h
-        from kiro_crew.autonudge import AUTONUDGE_STOP_REASON
+        from aj_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.autonudge import AUTONUDGE_STOP_REASON
 
         order = []
         svc = MagicMock()
@@ -68,7 +68,7 @@ class TestLoopLaunch:
 
     @pytest.mark.asyncio
     async def test_launch_arms_autonudge(self, monkeypatch):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         c = create_campaign(
             {"question": "Research question about something here", "sources": ["web"]}
@@ -83,7 +83,7 @@ class TestLoopLaunch:
         kw = svc.add.call_args.kwargs
         assert kw["slot_key"] == f"research-{c['id']}"
         assert c["id"] in kw["message"]
-        assert state.get_or_create_slot.call_args.kwargs["agent"] == "kirocrew-research"
+        assert state.get_or_create_slot.call_args.kwargs["agent"] == "ajcrew-research"
         # Worker slot is auto-approved so the loop doesn't stall on tool prompts.
         assert state.get_or_create_slot.return_value._trust is True
 
@@ -92,7 +92,7 @@ class TestLoopLaunch:
         # The campaign's explicit model pick must reach the worker slot both at
         # creation (get_or_create_slot kwarg) and on resume (explicit re-pin:
         # the factory only applies kwargs when it CREATES the slot).
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         c = create_campaign(
             {
@@ -115,7 +115,7 @@ class TestLoopLaunch:
     async def test_launch_defaults_to_inherit_model(self, monkeypatch):
         # No explicit pick -> '' is threaded through, meaning the slot inherits
         # the research agent's / backend's default resolution.
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         c = create_campaign(
             {"question": "Research question about something here", "sources": ["web"]}
@@ -136,7 +136,7 @@ class TestLoopLaunch:
         # "user"), so the LLM auto-titler never fires and the slot would show
         # the "New Session…" placeholder. _launch_loop must title it from the
         # campaign's human name, lock _titled, and push a live update.
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         c = create_campaign(
             {
@@ -164,7 +164,7 @@ class TestLoopLaunch:
     async def test_launch_title_persist_failure_still_arms_worker(self, monkeypatch):
         # Title persistence is best-effort: a set_title I/O failure must NOT
         # propagate and leave the campaign running without its worker armed.
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         c = create_campaign(
             {"question": "Research question about something here", "sources": ["web"]}
@@ -188,7 +188,7 @@ class TestLoopLaunch:
         # The campaign name is user-controlled. If the security redactors are
         # unavailable (_HAS_SECURITY False), the title MUST fall back to the
         # non-user-derived key rather than persisting/broadcasting raw input.
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         c = create_campaign(
             {
@@ -210,7 +210,7 @@ class TestLoopLaunch:
 
     @pytest.mark.asyncio
     async def test_launch_writes_brief(self, monkeypatch):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         c = create_campaign(
             {
@@ -234,7 +234,7 @@ class TestLoopLaunch:
 
     @pytest.mark.asyncio
     async def test_launch_noop_without_service(self, monkeypatch, caplog):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         monkeypatch.setattr(h, "_autonudge_instance", lambda: None)
         with caplog.at_level("WARNING", logger=LOGGER_NAME):
@@ -247,7 +247,7 @@ class TestLoopLaunch:
 
     @pytest.mark.asyncio
     async def test_stop_removes_loop(self, nudges, tmp_path):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         await nudges.add(slot_key="research-a1b2c3d4", message="run", idle_secs=60)
         await h._stop_loop("a1b2c3d4", remove=True)
@@ -257,7 +257,7 @@ class TestLoopLaunch:
 
     @pytest.mark.asyncio
     async def test_pause_deactivates_loop(self, nudges):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         loop = await nudges.add(slot_key="research-a1b2c3d4", message="run", idle_secs=60)
         await h._stop_loop("a1b2c3d4", remove=False)
@@ -272,7 +272,7 @@ class TestSuspendResearchLoopsWhileDisabled:
 
     @pytest.mark.asyncio
     async def test_deactivates_research_loops_and_clears_trust(self, monkeypatch):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         svc = MagicMock()
         svc.update = AsyncMock()
@@ -295,8 +295,8 @@ class TestSuspendResearchLoopsWhileDisabled:
     async def test_clears_the_session_policy_children_read(self, monkeypatch):
         """Turn admission caches ``_trust`` as the session's ``approval_policy``; the
         spawn gate and each child's tool approval read that, not the flag."""
-        from kiro_crew.apps.builtins.auto_research import handlers as h
-        from kiro_crew.dashboard.chat_utils_slots import effective_session_key
+        from aj_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.dashboard.chat_utils_slots import effective_session_key
 
         svc = MagicMock()
         svc.update = AsyncMock()
@@ -315,7 +315,7 @@ class TestSuspendResearchLoopsWhileDisabled:
 
     @pytest.mark.asyncio
     async def test_idempotent_when_already_inactive_and_untrusted(self, monkeypatch):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         svc = MagicMock()
         svc.update = AsyncMock()
@@ -332,29 +332,29 @@ class TestSuspendResearchLoopsWhileDisabled:
 
     @pytest.mark.asyncio
     async def test_no_autonudge_service_is_safe(self, monkeypatch):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         monkeypatch.setattr(h, "_autonudge_instance", lambda: None)
         # Must not raise when the service is unavailable.
         await h._suspend_research_loops_while_disabled(SimpleNamespace(_slots={}))
 
 
-# --- kirocrew-research core agent install ---
+# --- ajcrew-research core agent install ---
 
 
 class TestResearchAgentInstall:
-    def test_installs_kirocrew_research(self, monkeypatch, tmp_path):
-        from kiro_crew import agent
+    def test_installs_ajcrew_research(self, monkeypatch, tmp_path):
+        from aj_crew import agent
 
         monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", tmp_path)
         monkeypatch.setattr(
             agent,
             "build_agent_config",
-            lambda: {"name": "kirocrew", "prompt": "file://x", "mcpServers": {}, "tools": []},
+            lambda: {"name": "ajcrew", "prompt": "file://x", "mcpServers": {}, "tools": []},
         )
         agent._install_research_agent()
-        data = json.loads((tmp_path / "kirocrew-research.json").read_text(encoding="utf-8"))
-        assert data["name"] == "kirocrew-research"
+        data = json.loads((tmp_path / "ajcrew-research.json").read_text(encoding="utf-8"))
+        assert data["name"] == "ajcrew-research"
         assert "research" in data["prompt"].lower()
 
     @staticmethod
@@ -364,7 +364,7 @@ class TestResearchAgentInstall:
         Derived from the governance maps rather than hardcoding the four names,
         so the assertion keeps holding if the template (or the map) changes.
         """
-        from kiro_crew.platform.governance import _FLOOR_GATE_SCOPES, BUILTIN_TOOL_SCOPES
+        from aj_crew.platform.governance import _FLOOR_GATE_SCOPES, BUILTIN_TOOL_SCOPES
 
         return {
             name
@@ -376,11 +376,11 @@ class TestResearchAgentInstall:
         """Install with the REAL build_agent_config — the fix under test lives
         inside it, so stubbing it (as the identity test above does) would
         bypass exactly the path under test."""
-        from kiro_crew import agent
+        from aj_crew import agent
 
         monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", tmp_path)
         agent._install_research_agent()
-        return json.loads((tmp_path / "kirocrew-research.json").read_text(encoding="utf-8"))
+        return json.loads((tmp_path / "ajcrew-research.json").read_text(encoding="utf-8"))
 
     def test_no_floor_scoped_builtin_is_blanket_approved(self, monkeypatch, tmp_path):
         """The installed research spec must not auto-approve a floor builtin.
@@ -404,7 +404,7 @@ class TestResearchAgentInstall:
         hooks AFTER the floor runs — so a stock install gains no new prompt
         and the unattended research loop is not handed a stall.
         """
-        from kiro_crew import agent
+        from aj_crew import agent
 
         data = self._install_real(monkeypatch, tmp_path)
         shipped_tools = set(agent.get_shipped_tools()["tools"])
@@ -416,7 +416,7 @@ class TestResearchAgentInstall:
     def test_withhold_leaves_the_standard_sel_record(self, monkeypatch, tmp_path):
         """Withholding is a permission DECISION — same event, same feed as the
         other ``allowedTools`` writers (``mcp_auto_approve_withheld``)."""
-        from kiro_crew import agent
+        from aj_crew import agent
 
         events: list[dict] = []
         monkeypatch.setattr(
@@ -432,12 +432,12 @@ class TestResearchAgentInstall:
 
     def test_audit_failure_never_fails_the_install(self, monkeypatch, tmp_path):
         """Best-effort audit: SEL being unavailable must not break the install."""
-        from kiro_crew import agent
+        from aj_crew import agent
 
         def _broken_sel():
             raise RuntimeError("SEL unavailable")
 
         monkeypatch.setattr(agent, "sel", _broken_sel)
         data = self._install_real(monkeypatch, tmp_path)
-        assert data["name"] == "kirocrew-research"
+        assert data["name"] == "ajcrew-research"
         assert not self._floor_builtins().intersection(data.get("allowedTools", []))

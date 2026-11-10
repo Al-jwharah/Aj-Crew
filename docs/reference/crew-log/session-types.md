@@ -97,7 +97,7 @@ entry's write is the point the interrupted-turn repair runs.
 
 | Field | Type | Required | Meaning | Enum |
 |---|---|---|---|---|
-| `agent` | string | required | Agent name, defaulted to `kirocrew` when the caller names none. | |
+| `agent` | string | required | Agent name, defaulted to `ajcrew` when the caller names none. | |
 | `slot` | string | required | Slot key. May be empty. | |
 | `model` | string | required | Model the backend confirmed is serving this session. Empty when that id is not known. | |
 | `model_requested` | string | when this process observed the allocation and a tier resolved one | Model the gateway selected for the allocation that produced this session, before the provider decides whether to send it. | |
@@ -185,7 +185,7 @@ header names this slot. A candidate that cannot be verified gets no edge, so a
 reader following one never lands in a crew log the slot never wrote.
 
 ```json
-{"type":"session/opened","seq":1,"time":1789000000000,"src":"gateway","data":{"agent":"kirocrew","slot":"dashboard:3","model":"","cwd":"/home/u/proj","owner":"default","resumed":false}}
+{"type":"session/opened","seq":1,"time":1789000000000,"src":"gateway","data":{"agent":"ajcrew","slot":"dashboard:3","model":"","cwd":"/home/u/proj","owner":"default","resumed":false}}
 ```
 
 ```json
@@ -796,7 +796,7 @@ row.
 | `breakdown` | object | optional | `schema`, `categories` (category name to characters, every category the engine sent), `model_calls`, `total_chars`, `compacted` and `history` (`user`, `assistant`, `thinking`, `compaction_summary`). It describes the turn's LAST model request, not the turn as a whole. `history.user` covers the user text of every turn still in the engine's context. | |
 | `ttft` | object | optional | `total_ms` (turn start to first displayed output), and when the engine captured model timing `setup_ms` and `model_ms`. | |
 
-**Invariants** — Every figure in `breakdown` is in characters and describes the turn's last model request. `history.user` covers the user text of every turn still in the engine's context, which is why the `usage` fold keeps Kiro Crew's share as a running sum rather than reading this turn's composition alone.
+**Invariants** — Every figure in `breakdown` is in characters and describes the turn's last model request. `history.user` covers the user text of every turn still in the engine's context, which is why the `usage` fold keeps Aj Crew's share as a running sum rather than reading this turn's composition alone.
 
 ```json
 {"type":"context/measured","seq":14,"time":1789000004100,"src":"gateway","data":{"turn":3,"turn_id":"e-01","breakdown":{"schema":1,"categories":{"history":4000,"toolSpecs":2865},"model_calls":1,"total_chars":6865,"history":{"user":3990,"assistant":5,"thinking":5,"compaction_summary":0}},"ttft":{"total_ms":2870,"setup_ms":59,"model_ms":1534}}}
@@ -1205,7 +1205,7 @@ for nothing: every log written before the field reads that way too, and a surfac
 no task line for it rather than an empty one.
 
 ```json
-{"type":"subagent/spawned","seq":32,"time":1789000000850,"src":"gateway","data":{"turn":3,"agent_id":"sub-1","agent":"kirocrew","model":"claude","task":"audit the retry path","scope":{"memory":false,"lessons":true,"project":true}}}
+{"type":"subagent/spawned","seq":32,"time":1789000000850,"src":"gateway","data":{"turn":3,"agent_id":"sub-1","agent":"ajcrew","model":"claude","task":"audit the retry path","scope":{"memory":false,"lessons":true,"project":true}}}
 ```
 
 **Reader hint** — A missing `turn` is normal and does not mean the entry is
@@ -1365,7 +1365,7 @@ than a stored document.
 omitted field means "unchanged", which is what lets a partial update be one line. A
 phase change carries its event in the SAME entry, so no reader can observe a phase
 that moved without its logged reason. The ledger therefore DEPENDS on this log: a
-gateway started with `KIROCREW_CREW_LOG=0` records none, and the tool refuses
+gateway started with `AJCREW_CREW_LOG=0` records none, and the tool refuses
 rather than keeping a document of its own.
 
 ```json
@@ -1491,7 +1491,7 @@ ledger therefore DEPENDS on this log: a crew whose session has no crew log canno
 record, and the tool refuses rather than keeping a document of its own.
 
 ```json
-{"type":"radar/recorded","seq":81,"time":1789000002700,"src":"gateway","data":{"crew_id":"c_0a1b2c3d","owner":"kirodotdev","repo":"KiroCrew","number":2251,"phase":"implementing","next":"add the Windows branch to _safe_chmod","tried":{"approach":"hasattr guard","rejected_because":"loses the ACL"},"branch":"fix/safe-chmod-2251","pr_number":2271,"ci_state":{"state":"running","round":3},"event":"entered implementing: the test already fails","event_kind":"implement"}}
+{"type":"radar/recorded","seq":81,"time":1789000002700,"src":"gateway","data":{"crew_id":"c_0a1b2c3d","owner":"kirodotdev","repo":"AjCrew","number":2251,"phase":"implementing","next":"add the Windows branch to _safe_chmod","tried":{"approach":"hasattr guard","rejected_because":"loses the ACL"},"branch":"fix/safe-chmod-2251","pr_number":2271,"ci_state":{"state":"running","round":3},"event":"entered implementing: the test already fails","event_kind":"implement"}}
 ```
 
 **Reader hint** — Fold a crew's entries oldest first across every unit its slot ran

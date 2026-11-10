@@ -25,13 +25,13 @@ from connections_warm_helpers import (
     _Runtime,
 )
 
-from kiro_crew.acp.mcp_session_report import McpSessionReport
-from kiro_crew.acp.types import METHOD_MCP_SERVER_INIT_FAILURE, JsonRpcMessage
-from kiro_crew.connections import warm
-from kiro_crew.connections.mint import _mints
-from kiro_crew.connections.registry import Provider
-from kiro_crew.connections.warm_runtime import shared_rows
-from kiro_crew.testing.wait import async_wait_until, await_until, finished, until_parked
+from aj_crew.acp.mcp_session_report import McpSessionReport
+from aj_crew.acp.types import METHOD_MCP_SERVER_INIT_FAILURE, JsonRpcMessage
+from aj_crew.connections import warm
+from aj_crew.connections.mint import _mints
+from aj_crew.connections.registry import Provider
+from aj_crew.connections.warm_runtime import shared_rows
+from aj_crew.testing.wait import async_wait_until, await_until, finished, until_parked
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _clean_mint_table = connections_warm_helpers._clean_mint_table
@@ -356,7 +356,7 @@ async def test_reaper_audits_the_grant_scan_before_replacement_warm(
     monkeypatch: pytest.MonkeyPatch,
 ):
     """A page-owned re-arm acts on the same credential observation as premint."""
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     assert warm._GRANT_PRESENCE_READ_ID in hooks._AUDIT_ONLY_READ_IDS
     provider = _provider("linear")
@@ -649,7 +649,7 @@ async def test_the_invalidation_rearm_audits_the_grant_scan_it_acts_on(
     monkeypatch: pytest.MonkeyPatch,
 ):
     """It acts on a credential-store observation, so it owes the same SEL record as premint."""
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     assert warm._GRANT_PRESENCE_READ_ID in hooks._AUDIT_ONLY_READ_IDS
     events: list[tuple[Any, ...]] = []

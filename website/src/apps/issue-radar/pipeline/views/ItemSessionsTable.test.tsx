@@ -54,7 +54,7 @@ function session(over: Partial<ItemSession> = {}): ItemSession {
   return {
     slot: 'chat:1',
     model: 'sonnet',
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     surface: 'dashboard',
     current: false,
     startedAt: null,

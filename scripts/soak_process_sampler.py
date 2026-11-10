@@ -154,8 +154,8 @@ def format_row(row: dict[str, object]) -> str:
 def default_home() -> Path | None:
     """The data home the PRODUCT would resolve, or ``None`` if it cannot be asked.
 
-    Resolved through ``kiro_crew.config.paths.peek_data_home`` rather than
-    rebuilt from a literal. The top-level ``~/.kirocrew`` path is the LEGACY home;
+    Resolved through ``aj_crew.config.paths.peek_data_home`` rather than
+    rebuilt from a literal. The top-level ``~/.ajcrew`` path is the LEGACY home;
     the current default nests under kiro-cli's base, so a hand-rolled default
     would point a stock run at a directory nothing writes to and report an empty
     machine forever -- the same false-clean this harness exists to prevent.
@@ -165,7 +165,7 @@ def default_home() -> Path | None:
     check below instead of silently creating an empty directory to measure.
     """
     try:
-        from kiro_crew.config.paths import peek_data_home
+        from aj_crew.config.paths import peek_data_home
     except ImportError:
         return None
     try:
@@ -181,7 +181,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         type=Path,
         default=None,
         help=(
-            "the gateway instance's data home. Defaults to KIROCREW_HOME, else the "
+            "the gateway instance's data home. Defaults to AJCREW_HOME, else the "
             "home the product itself resolves. Required when neither can be resolved."
         ),
     )
@@ -227,12 +227,12 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     home = args.home
     if home is None:
-        env_home = os.environ.get("KIROCREW_HOME")
+        env_home = os.environ.get("AJCREW_HOME")
         home = Path(env_home) if env_home else default_home()
     if home is None:
         print(
-            "could not resolve a data home: pass --home, or set KIROCREW_HOME, or run "
-            "where kiro_crew is importable",
+            "could not resolve a data home: pass --home, or set AJCREW_HOME, or run "
+            "where aj_crew is importable",
             file=sys.stderr,
         )
         return 2

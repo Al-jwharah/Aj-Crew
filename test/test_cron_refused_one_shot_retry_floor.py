@@ -24,14 +24,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from member_memory_helpers import write_member_home
 
-from kiro_crew.config import loader
-from kiro_crew.config.loader import KiroCrewConfig, config_dir
-from kiro_crew.cron import CronJob, CronService
-from kiro_crew.cron_service import schedule
-from kiro_crew.cron_service.schedule import next_wake_secs
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-from kiro_crew.slack.gateway_runtime.cron_dispatch import _defer_cron_before_dispatch
-from kiro_crew.testing.wait import await_until
+from aj_crew.config import loader
+from aj_crew.config.loader import AjCrewConfig, config_dir
+from aj_crew.cron import CronJob, CronService
+from aj_crew.cron_service import schedule
+from aj_crew.cron_service.schedule import next_wake_secs
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+from aj_crew.slack.gateway_runtime.cron_dispatch import _defer_cron_before_dispatch
+from aj_crew.testing.wait import await_until
 
 _ADMITTED = SimpleNamespace(admitted=True, reason="")
 _EMPTY_STEP = "empty agent_sequence step cannot resolve a crew; refusing to dispatch"
@@ -89,7 +89,7 @@ def _wake_after_attempt(service: CronService, job: CronJob) -> float | None:
 @pytest.mark.asyncio
 async def test_a_sustained_refusal_does_not_refire_the_one_shot_in_a_loop(tmp_path):
     gateway = _Gateway()
-    with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+    with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
         service = await _service(tmp_path, gateway)
         try:
             at_ts = time.time() - 1
@@ -114,7 +114,7 @@ async def test_a_refused_one_shot_retries_after_the_floor_and_runs_once_the_refu
     tmp_path,
 ):
     gateway = _Gateway()
-    with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+    with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
         service = await _service(tmp_path, gateway)
         try:
             job = await service.add_job_async("remind-once", "msg", at_ts=time.time() - 1)
@@ -142,7 +142,7 @@ async def test_a_refused_one_shot_retries_after_the_floor_and_runs_once_the_refu
 @pytest.mark.asyncio
 async def test_an_accepted_one_shot_fires_at_its_time(tmp_path):
     gateway = _Gateway(refusing=False)
-    with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+    with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
         service = await _service(tmp_path, gateway)
         try:
             at_ts = time.time() - 1
@@ -185,7 +185,7 @@ async def _gateway_cron_callback(monkeypatch, cfg):
     """The gateway's own cron callback (``GatewayOrchestrator._init_cron``), stopped
     before any provider is reached, set up as ``test_cron_sequence_member_alias.py``
     sets it up."""
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     monkeypatch.setattr(gateway.live, "snapshot", lambda: cfg)
     gw = gateway.GatewayOrchestrator.__new__(gateway.GatewayOrchestrator)
@@ -224,12 +224,12 @@ async def test_a_refusal_a_retry_cannot_clear_parks_a_plain_one_shot(monkeypatch
     runs."""
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     gateway_on_job = await _gateway_cron_callback(monkeypatch, cfg)
     captured = ExecutionContext(
         "alpha", MemoryStoreRef("member-alpha", "alpha"), "member", "alpha", "persistent", "app"
     )
-    with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+    with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
         service = await _service(tmp_path, SimpleNamespace(on_job=gateway_on_job))
         try:
             job = await service.add_job_async("seq-empty-step", "task", at_ts=time.time() - 1)

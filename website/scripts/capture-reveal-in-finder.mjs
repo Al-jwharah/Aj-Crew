@@ -25,7 +25,7 @@ const PREFIX = process.argv[3] || 'after'
 
 mkdirSync(OUT, { recursive: true })
 
-const ROOT = '/Users/kyle/workspace/kirocrew'
+const ROOT = '/Users/kyle/workspace/ajcrew'
 const FILE = `${ROOT}/README.md`
 const FE_API = '/apps/file-explorer/api'
 
@@ -38,14 +38,14 @@ const ENTRIES = [
 ]
 
 const CONTENT = [
-  '# Kiro Crew',
+  '# Aj Crew',
   '',
   'The autonomous agent management layer: persistent memory, scheduled jobs,',
   'background subagents and multi-session orchestration.',
   '',
   '## Install',
   '',
-  '    pipx install kirocrew',
+  '    pipx install ajcrew',
   '',
 ].join('\n')
 

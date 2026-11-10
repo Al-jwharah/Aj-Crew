@@ -30,24 +30,24 @@ peer check on a shared pid ([dashboard-token-auth.md](dashboard-token-auth.md) �
 *Unix-socket transport: kernel-attested `X-Session-Key`*), and the threat model
 ([security.md](security.md)).
 
-`runtime_ownership` imports nothing from `kiro_crew`. It is a leaf on purpose:
+`runtime_ownership` imports nothing from `aj_crew`. It is a leaf on purpose:
 `session_pid` is the pid-bookkeeping leaf and calls the gate, so an import in the
 other direction would close `session_pid → acp → acp.runtime → session_pid`.
 
-`session_pid` is a facade over sibling owners (`kiro_crew._facade_mirror`): every name still
-resolves as `kiro_crew.session_pid.<name>`, and a patch through it reaches the owner that
+`session_pid` is a facade over sibling owners (`aj_crew._facade_mirror`): every name still
+resolves as `aj_crew.session_pid.<name>`, and a patch through it reaches the owner that
 reads the name. New work goes to the owner of its responsibility:
 
 | Module | Owns |
 |---|---|
-| `src/kiro_crew/session_pid.py` | the reaper's passes over the tracking files (`cleanup_orphaned_sessions`, `_sweep_pid_entries`, `_periodic_pid_sweep`, `_kill_confirmed_and_writeback`, `_cleanup_orphaned_mcp_servers`, `cleanup_orphaned_session_roots`), the kill phase of the orphan sweep (`kill_orphan_mcps`), and the two tree kills that walk descendants through the ACP layer (`_kill_pid_tree`, `_kill_orphan_work_tree`) |
-| `src/kiro_crew/session_pid_tracking.py` | `kiro_pids.txt` and `kiro_session_pids.txt`: paths, locks, reads, atomic rewrites, track and untrack; the start-token and age probes; the sweep-protected pid registry |
-| `src/kiro_crew/session_pid_harness.py` | whether a pid is a managed agent runtime, read from its command line (`_is_managed_agent_process` and the marker sets) |
-| `src/kiro_crew/session_pid_orphan_scan.py` | the untracked-orphan predicates, the environ markers they read, the tracked-pid snapshot, the untracked-runtime report, and the find phase (`find_orphan_mcp_candidates`) |
-| `src/kiro_crew/session_pid_provider_kill.py` | the synchronous teardown of a leaked provider (`_sync_kill_provider`: the gate, the commit, the identity-pinned group and descendant signals), the orphaned spawn-group signalling (`signal_orphaned_spawn_group`, `_signal_orphaned_runtime_group`), and `_tracked_child_has_runtime_identity`, the argv check that the vouched members of the ACP runtime's group signalling must pass, and so must a tracked `kiro_pids.txt` child reparented to a `systemd` subreaper in the facade's `_cleanup_orphaned_mcp_servers` |
-| `src/kiro_crew/session_pid_orphan_kill.py` | the unreachable-gatewayd, browser-daemon and MCP-subtree orphan kills, and their security event log records |
-| `src/kiro_crew/session_pid_mappings.py` | pruning stale `session_pid_<pid>` and `session_token_*` identity mappings |
-| `src/kiro_crew/session_pid_rss.py` | a session tree's resident memory, and the leftovers of a runtime's session: processes in it that its live tree does not reach (`find_session_leftovers`), ended only through `platform_compat.terminate_pids_pinned` (`end_session_leftovers`). They are not runtimes, so no lease or tenancy covers them and the runtime gate is not asked; `session_cleanup_leftovers` decides when (after a recycle once the root is gone, or mid-turn behind `session.watchdog_end_leftovers_mid_turn`) |
+| `src/aj_crew/session_pid.py` | the reaper's passes over the tracking files (`cleanup_orphaned_sessions`, `_sweep_pid_entries`, `_periodic_pid_sweep`, `_kill_confirmed_and_writeback`, `_cleanup_orphaned_mcp_servers`, `cleanup_orphaned_session_roots`), the kill phase of the orphan sweep (`kill_orphan_mcps`), and the two tree kills that walk descendants through the ACP layer (`_kill_pid_tree`, `_kill_orphan_work_tree`) |
+| `src/aj_crew/session_pid_tracking.py` | `kiro_pids.txt` and `kiro_session_pids.txt`: paths, locks, reads, atomic rewrites, track and untrack; the start-token and age probes; the sweep-protected pid registry |
+| `src/aj_crew/session_pid_harness.py` | whether a pid is a managed agent runtime, read from its command line (`_is_managed_agent_process` and the marker sets) |
+| `src/aj_crew/session_pid_orphan_scan.py` | the untracked-orphan predicates, the environ markers they read, the tracked-pid snapshot, the untracked-runtime report, and the find phase (`find_orphan_mcp_candidates`) |
+| `src/aj_crew/session_pid_provider_kill.py` | the synchronous teardown of a leaked provider (`_sync_kill_provider`: the gate, the commit, the identity-pinned group and descendant signals), the orphaned spawn-group signalling (`signal_orphaned_spawn_group`, `_signal_orphaned_runtime_group`), and `_tracked_child_has_runtime_identity`, the argv check that the vouched members of the ACP runtime's group signalling must pass, and so must a tracked `kiro_pids.txt` child reparented to a `systemd` subreaper in the facade's `_cleanup_orphaned_mcp_servers` |
+| `src/aj_crew/session_pid_orphan_kill.py` | the unreachable-gatewayd, browser-daemon and MCP-subtree orphan kills, and their security event log records |
+| `src/aj_crew/session_pid_mappings.py` | pruning stale `session_pid_<pid>` and `session_token_*` identity mappings |
+| `src/aj_crew/session_pid_rss.py` | a session tree's resident memory, and the leftovers of a runtime's session: processes in it that its live tree does not reach (`find_session_leftovers`), ended only through `platform_compat.terminate_pids_pinned` (`end_session_leftovers`). They are not runtimes, so no lease or tenancy covers them and the runtime gate is not asked; `session_cleanup_leftovers` decides when (after a recycle once the root is gone, or mid-turn behind `session.watchdog_end_leftovers_mid_turn`) |
 
 ### What the model is made of
 
@@ -164,7 +164,7 @@ refusing an owner.
                                  ▼                              │
                          ┌───────────────┐                      │
                          │ runtime pool  │  one runtime = one process
-                         │  AcpRuntime   │  = one cgroup scope kirocrew-rt-<token>
+                         │  AcpRuntime   │  = one cgroup scope ajcrew-rt-<token>
                          └───────┬───────┘                      │
       every kill path            │                              │
    ─────────────────────────────►│◄─────────────────────────────┘
@@ -437,7 +437,7 @@ backend another process on this data home spawned are not in it.
 
 `session_pid`'s report-only arm finds a managed runtime reparented to init with our marker and in neither pid file. Every pass copies its current hits into the reading as `leaked_untracked`, `leaked_rss_bytes` (each root counted with its descendants) and `leaked`, Linux only. No scheduled arm acts on them.
 
-`RuntimeReconciler.reclaim_untracked` is the one path that may, and its only caller is the owner-only `POST /api/system/leaked-runtimes/reclaim` with `{"confirm": true}`. A candidate must have been reported by a sweep and be detected again on a complete tracked snapshot. Each condition can only withhold: tracked, protected, leased or claimed; not a managed harness; no spawn marker; younger than the age floor; a `KIROCREW_SPAWN_HOME` that is absent or names another data home (the marker is shared by every install on this uid, and a sibling's runtime is tracked only in its own pid files); a live session leader or group leader other than itself (the session id comes from `platform_compat.read_proc_stat`, so a leader whose name is not UTF-8 still reads as live); no readable `KIROCREW_SPAWN_INSTANCE`; or any live process outside its own tree carrying the same instance. The last one is what keeps a live runtime's descendant safe: the stamps are inherited, so that runtime itself holds the instance. The start identity is re-read before `authorize_runtime_kill` and pinned into `_kill_pid_tree`, under the tenancy barrier, at most `min(session.reconcile_max_kills, DEFAULT_MAX_KILLS)` trees per call. At a budget of `0` every candidate is refused "kill budget spent" and audited `refused`.
+`RuntimeReconciler.reclaim_untracked` is the one path that may, and its only caller is the owner-only `POST /api/system/leaked-runtimes/reclaim` with `{"confirm": true}`. A candidate must have been reported by a sweep and be detected again on a complete tracked snapshot. Each condition can only withhold: tracked, protected, leased or claimed; not a managed harness; no spawn marker; younger than the age floor; a `AJCREW_SPAWN_HOME` that is absent or names another data home (the marker is shared by every install on this uid, and a sibling's runtime is tracked only in its own pid files); a live session leader or group leader other than itself (the session id comes from `platform_compat.read_proc_stat`, so a leader whose name is not UTF-8 still reads as live); no readable `AJCREW_SPAWN_INSTANCE`; or any live process outside its own tree carrying the same instance. The last one is what keeps a live runtime's descendant safe: the stamps are inherited, so that runtime itself holds the instance. The start identity is re-read before `authorize_runtime_kill` and pinned into `_kill_pid_tree`, under the tenancy barrier, at most `min(session.reconcile_max_kills, DEFAULT_MAX_KILLS)` trees per call. At a budget of `0` every candidate is refused "kill budget spent" and audited `refused`.
 
 ### Why an unowned process is counted before it is killed
 
@@ -450,7 +450,7 @@ first sight would take a user's live browser out from under them and call it a l
 fixed. Such processes are present on a healthy host at rest and grow under load.
 
 One class leaves the population before any of that, in `_unowned` rather than by a
-condition: a pid carrying the `KIROCREW_SANDBOX_TOOL` marker whose argv0 is **not** a
+condition: a pid carrying the `AJCREW_SANDBOX_TOOL` marker whose argv0 is **not** a
 managed harness. The sandbox chokepoint stamps that marker on every tree it spawns, so
 a build, an `npx` install or a provisioning run is identified as tool work by
 exec-time state a same-uid process cannot forge on another process, rather than by the
@@ -496,12 +496,12 @@ merely counted (`RuntimeReconciler._why_not_yet`, `_reconcile_unowned`):
    inside the seam, each first collects a gate allow and the attribution that allow
    writes. The seam still re-applies it last, because a pid can change hands
    between the two answers;
-4. it carries this install's own spawn marker (`KIROCREW_SPAWNED`, via
+4. it carries this install's own spawn marker (`AJCREW_SPAWNED`, via
    `runtime_reconcile.process_is_ours`), so it is ours to end;
 5. it is older than `runtime_reconcile.DEFAULT_MIN_AGE_SECS` — the same
    registration window seen from the other side;
 6. neither table claims the pid, and an unreadable table counts as claimed;
-7. no live owned pid outside its own tree carries its `KIROCREW_SPAWN_INSTANCE`
+7. no live owned pid outside its own tree carries its `AJCREW_SPAWN_INSTANCE`
    (`RuntimeReconciler._instance_held_by_live_owner`, refusal reason "its spawn
    instance belongs to a live recorded runtime"). The stamp is inherited, so a
    `kiro-cli` an agent's shell tool starts carries its parent runtime's instance
@@ -567,7 +567,7 @@ pass retracted a record or a retraction it owed failed, and the hook's
 `Runtime reconcile: unowned_alive=...` line is WARNING only when the pass killed,
 would have killed or retracted something. A reading made only of permanently
 withheld unowned pids and `not-mine` records repeats every tick, so both lines
-drop to DEBUG; the `kirocrew.session.runtime_reconcile` counter still counts every
+drop to DEBUG; the `ajcrew.session.runtime_reconcile` counter still counts every
 pass, with each reading field as a nonzero flag rather than its raw count, because a
 raw count as an attribute value opens a new series on nearly every pass.
 
@@ -603,8 +603,8 @@ client-side consumer shares, so the rungs cannot drift between files. Strongest
 first: (1) the protected member binding for this process, where an EMPTY string is
 a refusal that must never fall through; (2) the signed per-SESSION token on this
 process's own element, above the env var because a warm-pool rekey makes the env
-stale; (3) `KIROCREW_SESSION_KEY`; (4) the `session_pid_<pid>.txt` mapping, by the
-launcher-exported `KIROCREW_HOST_PID` and then by ancestor walk. Rung 4 is the one
+stale; (3) `AJCREW_SESSION_KEY`; (4) the `session_pid_<pid>.txt` mapping, by the
+launcher-exported `AJCREW_HOST_PID` and then by ancestor walk. Rung 4 is the one
 that cannot express the tree it reads, so it REFUSES on a shared pid rather than
 answering, and every caller that reaches it at all is warned. It never raises: an
 identity source that can raise turns a resolvable session into a crashed tool call.
@@ -701,8 +701,8 @@ only this instance's when the instance has its own data home. And the live PEAK 
 asserted BEFORE the teardown, because "nothing survived" is also what a run
 produces when nothing ever started.
 
-Two switches, for the same reason: `KIROCREW_E2E` lifts the module skip, and
-`KIROCREW_E2E_REQUIRE` turns an unmet precondition from a skip into a failure,
+Two switches, for the same reason: `AJCREW_E2E` lifts the module skip, and
+`AJCREW_E2E_REQUIRE` turns an unmet precondition from a skip into a failure,
 because pytest counts a skip as a pass. The nightly job asserts the suite reported
 its expected passing count rather than trusting a zero-failure exit.
 
@@ -743,7 +743,7 @@ recover.
   when they run in the slice they are unowned on every pass, and what keeps them
   unsignalled is the argv condition rather than an ownership record. A long-lived
   sandboxed subprocess is the other case and answers by identity
-  instead: the sandbox chokepoint stamps `KIROCREW_SANDBOX_TOOL` on its whole tree
+  instead: the sandbox chokepoint stamps `AJCREW_SANDBOX_TOOL` on its whole tree
   and `_unowned` excludes a pid that carries it and is not a managed harness, so
   tool work leaves the candidate population on exec-time evidence rather than on
   its argv0. Both conditions are required because the marker is inherited while the

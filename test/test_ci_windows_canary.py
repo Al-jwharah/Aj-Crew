@@ -84,9 +84,9 @@ def test_all_actual_routes_require_repository_event_and_admitted_actor(
     # reachable, so the hosted image is the only destination that can serve it.
     for name in ("changes", "await-fast-gate"):
         assert _expression(jobs[name]["runs-on"], context) == (
-            "codebuild-kirocrew-gha-linux-100-2"
+            "codebuild-ajcrew-gha-linux-100-2"
             if expected
-            else ("kirocrew-linux-4-core" if repository == _REPO else "ubuntu-latest")
+            else ("ajcrew-linux-4-core" if repository == _REPO else "ubuntu-latest")
         )
 
 
@@ -111,7 +111,7 @@ def test_real_resolver_shell_emits_large_and_hosted_fallback(
         .replace("${{ github.run_id }}", "100")
         .replace("${{ github.run_attempt }}", str(attempt))
     )
-    assert label == f"codebuild-kirocrew-gha-{platform}-100-{attempt}"
+    assert label == f"codebuild-ajcrew-gha-{platform}-100-{attempt}"
     output = tmp_path / "output"
     result = subprocess.run(
         [shell, "-e", "-c", step["run"]],
@@ -135,8 +135,8 @@ def test_real_resolver_shell_emits_large_and_hosted_fallback(
     # fork running its own CI gets the hosted image, because a label no runner
     # there carries would queue every consumer until GitHub cancelled it.
     group_label, hosted = {
-        "linux": ("kirocrew-linux-4-core", "ubuntu-latest"),
-        "windows": ("kirocrew-windows-4-core", "windows-latest"),
+        "linux": ("ajcrew-linux-4-core", "ubuntu-latest"),
+        "windows": ("ajcrew-windows-4-core", "windows-latest"),
     }[platform]
     fallback = group_label if in_repo else hosted
     expected = {
@@ -158,11 +158,11 @@ def test_real_resolver_shell_emits_large_and_hosted_fallback(
     [
         ("", "windows-latest"),
         ("windows-latest", "windows-latest"),
-        ("kirocrew-windows-4-core", "kirocrew-windows-4-core"),
+        ("ajcrew-windows-4-core", "ajcrew-windows-4-core"),
         # Admitted: the label is this job's own attempt's, never the resolver's.
         (
-            "codebuild-kirocrew-gha-windows-100-1 instance-size:large",
-            "codebuild-kirocrew-gha-windows-100-2 instance-size:large",
+            "codebuild-ajcrew-gha-windows-100-1 instance-size:large",
+            "codebuild-ajcrew-gha-windows-100-2 instance-size:large",
         ),
     ],
 )
@@ -229,7 +229,7 @@ def test_shard_selection_and_checks_stay_intact(jobs):
     # VM, so the probe it exists for behaves as it does on the shared pool. The
     # group is pinned by name because a bare `group:` dispatches to any member,
     # and a Linux or macOS member would silently take a Windows job.
-    assert jobs["pod-boot-windows"]["runs-on"] == {"group": "kirocrew-runners-windows"}
+    assert jobs["pod-boot-windows"]["runs-on"] == {"group": "ajcrew-runners-windows"}
 
 
 @pytest.mark.parametrize(

@@ -26,8 +26,8 @@ from vector_memory_coverage_helpers import (
     _store,
 )
 
-from kiro_crew import vector_memory as vm
-from kiro_crew.vector_memory import LessonWriteOutcome, VectorMemoryStore
+from aj_crew import vector_memory as vm
+from aj_crew.vector_memory import LessonWriteOutcome, VectorMemoryStore
 
 # ── Additional coverage: vector-space lifecycle, lesson dedup, ranking ──
 

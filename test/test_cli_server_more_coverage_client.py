@@ -1,4 +1,4 @@
-"""The client side of ``kiro_crew.cli_server``: how the CLI finds and talks to its gateway.
+"""The client side of ``aj_crew.cli_server``: how the CLI finds and talks to its gateway.
 
 Covers port resolution, the health probe, ``token`` refusal reasons, and the owner-minting
 secret going only to this install's own gateway. Shared seams are described in
@@ -17,10 +17,10 @@ from cli_server_more_coverage_helpers import (  # noqa: F401 -- the fixture is r
     sel_rec_fixture,
 )
 
-from kiro_crew import cli_server, platform_compat
-from kiro_crew.config.loader import _DEFAULT_PORT
-from kiro_crew.dashboard.handlers.core import DASHBOARD_HTML_NOT_FOUND_MARKER
-from kiro_crew.testing.wait import wait_until
+from aj_crew import cli_server, platform_compat
+from aj_crew.config.loader import _DEFAULT_PORT
+from aj_crew.dashboard.handlers.core import DASHBOARD_HTML_NOT_FOUND_MARKER
+from aj_crew.testing.wait import wait_until
 
 # Some classes route the owner-verified transport to a stub via an autouse
 # fixture; tests that assert on the real helper restore it from here.
@@ -38,21 +38,21 @@ class TestResolveClientPortExFallThrough:
         _floor_monkeypatch.setattr(cli_server, "_config_url_port", lambda: None)
         _floor_monkeypatch.setattr(cli_server, "_marker_port", lambda: None)
 
-    def test_garbage_kirocrew_port_falls_to_default(self, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_PORT", "not-a-number")
-        monkeypatch.delenv("KIROCREW_BOUND_PORT", raising=False)
+    def test_garbage_ajcrew_port_falls_to_default(self, monkeypatch) -> None:
+        monkeypatch.setenv("AJCREW_PORT", "not-a-number")
+        monkeypatch.delenv("AJCREW_BOUND_PORT", raising=False)
         assert cli_server.resolve_client_port_ex(None) == (_DEFAULT_PORT, False)
 
     def test_garbage_bound_port_falls_to_default(self, monkeypatch) -> None:
-        monkeypatch.delenv("KIROCREW_PORT", raising=False)
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "")
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "12x4")
+        monkeypatch.delenv("AJCREW_PORT", raising=False)
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "12x4")
         assert cli_server.resolve_client_port_ex(None) == (_DEFAULT_PORT, False)
 
-    def test_garbage_kirocrew_port_still_honours_bound_port(self, monkeypatch) -> None:
+    def test_garbage_ajcrew_port_still_honours_bound_port(self, monkeypatch) -> None:
         """The fall-through lands on the NEXT source, not straight on the default."""
-        monkeypatch.setenv("KIROCREW_PORT", "oops")
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "9931")
+        monkeypatch.setenv("AJCREW_PORT", "oops")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "9931")
         assert cli_server.resolve_client_port_ex(None) == (9931, True)
 
 
@@ -134,7 +134,7 @@ class TestTokenRefusal:
         err = capsys.readouterr().err
         assert "HTTP 403" in err and "could not verify this process as the local owner" in err
         assert "Could not reach gateway" not in err
-        assert "kirocrew service install" not in err
+        assert "ajcrew service install" not in err
 
     @pytest.mark.parametrize(
         "code,remedy",
@@ -233,8 +233,8 @@ class TestTokenRefusal:
         # Nothing listening is a state the operator can fix, and this line is
         # what a remote mint carries back verbatim: it must name both ways to
         # get a gateway listening on the host.
-        assert "kirocrew gateway" in err
-        assert "kirocrew service install" in err
+        assert "ajcrew gateway" in err
+        assert "ajcrew service install" in err
         # The stdout contract (cli.md): failure prose never reaches stdout.
         assert out == ""
 
@@ -263,7 +263,7 @@ class TestTokenRefusal:
         err = capsys.readouterr().err
         assert "Gateway on port 5476 is up but did not answer within 20 s (busy)" in err
         assert "Could not reach gateway" not in err
-        assert "kirocrew service install" not in err
+        assert "ajcrew service install" not in err
         assert "status" not in err
         assert seen["timeout"] >= 15
 
@@ -310,7 +310,7 @@ class TestPortOwnershipGuard:
         )
         monkeypatch.setattr(
             cli_server,
-            "KiroCrewConfig",
+            "AjCrewConfig",
             # tailscale.enabled=False keeps _emit_session_urls out of the tailnet
             # branch, which would otherwise shell out to the host `tailscale`
             # binary on a machine that has one -- a real subprocess side effect.
@@ -386,7 +386,7 @@ class TestPortOwnershipGuard:
         # With the owner-only socket present, the shutdown secret must go
         # over it with the connection-bound peer proof -- no port tool needed, so
         # the fallback is not deleted -- and never over plain loopback TCP.
-        from kiro_crew.mcp_gateway.socketsec import PeerCredResult
+        from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
         monkeypatch.setattr(
             cli_server, "_owner_verified_secret_urlopen", _REAL_OWNER_VERIFIED_SECRET_URLOPEN
@@ -527,8 +527,8 @@ class TestPortOwnershipGuard:
         assert "Gateway not running" not in err
 
     def test_logout_failure_writes_only_to_stderr(self, monkeypatch, secret_home, capsys) -> None:
-        # The error stream contract: a failed `kirocrew logout` prints its reason
-        # to stderr and leaves stdout empty, so `kirocrew logout >/dev/null`
+        # The error stream contract: a failed `ajcrew logout` prints its reason
+        # to stderr and leaves stdout empty, so `ajcrew logout >/dev/null`
         # still shows the reason and a script reading stdout never parses a
         # refusal as a result. The success line ("revoked") is the only thing
         # stdout carries, pinned by test_ok_response_reports_success above.
@@ -591,7 +591,7 @@ class TestOwnerVerifiedSecretTransport:
     def test_verify_peer_refuses_a_non_self_socket_peer(self, monkeypatch, tmp_path) -> None:
         # The verify_peer handed to the unix opener must raise unless the kernel
         # confirms the connected peer is this principal (MATCH).
-        from kiro_crew.mcp_gateway.socketsec import PeerCredResult
+        from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
         sock_file = tmp_path / "gw.sock"
         sock_file.write_bytes(b"")
@@ -818,7 +818,7 @@ class TestOwnerVerifiedSecretTransport:
         # is bound to the connected socket: tcp_verified_urlopen gets a
         # verify_peer that passes only when the PEER OF THE ESTABLISHED
         # CONNECTION is our recorded gateway owned by this account.
-        import kiro_crew.cli_server as cs
+        import aj_crew.cli_server as cs
 
         monkeypatch.delattr(cs.socket, "AF_UNIX", raising=False)
         captured: dict = {}
@@ -859,7 +859,7 @@ class TestOwnerVerifiedSecretTransport:
         # the secret is never written to an unverified peer, so
         # removing the netstat sole-owner pre-flight opens no hole: an unproven
         # peer still cannot receive it.
-        import kiro_crew.cli_server as cs
+        import aj_crew.cli_server as cs
 
         monkeypatch.delattr(cs.socket, "AF_UNIX", raising=False)
         monkeypatch.setattr(cs, "unix_socket_urlopen", MagicMock())
@@ -893,8 +893,8 @@ class TestOwnerVerifiedSecretTransport:
         # connection (get_tcp_peer_pid, not a port snapshot) must equal the
         # recorded gateway pid, with a matching token, owned by this account --
         # by uid on POSIX, by access-token owner SID on Windows.
-        import kiro_crew.cli_server as cs
-        from kiro_crew.instances import run_marker
+        import aj_crew.cli_server as cs
+        from aj_crew.instances import run_marker
 
         class _Sock:
             def getsockname(self):
@@ -951,8 +951,8 @@ class TestOwnerVerifiedSecretTransport:
         # Pin the inversion: the gateway is the far end, so its endpoint (our
         # getpeername) is passed as client_endpoint and ours (getsockname) as
         # server_endpoint, so get_tcp_peer_pid resolves the GATEWAY's pid.
-        import kiro_crew.cli_server as cs
-        from kiro_crew.instances import run_marker
+        import aj_crew.cli_server as cs
+        from aj_crew.instances import run_marker
 
         class _Sock:
             def getsockname(self):
@@ -982,7 +982,7 @@ class TestOwnerVerifiedSecretTransport:
         # One fail-closed decision: an unresolvable peer (get_tcp_peer_pid ->
         # None across the retry window) is MISMATCH on every host, whether it
         # could resolve peers in principle or not (lsof-less macOS).
-        import kiro_crew.cli_server as cs
+        import aj_crew.cli_server as cs
 
         class _Sock:
             def getsockname(self):
@@ -1003,8 +1003,8 @@ class TestOwnerVerifiedSecretTransport:
         # process, so MATCH is expected; flipping the recorded pid must refuse.
         import socket
 
-        import kiro_crew.cli_server as cs
-        from kiro_crew.instances import run_marker
+        import aj_crew.cli_server as cs
+        from aj_crew.instances import run_marker
 
         # Real record for THIS process, written by the shipped writer, into a tmp
         # config dir both the writer (run_marker.config_dir) and the reader

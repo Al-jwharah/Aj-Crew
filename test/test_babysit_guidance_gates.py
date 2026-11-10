@@ -21,25 +21,25 @@ from pathlib import Path
 
 from skill_script_helpers import load_skill_script
 
-from kiro_crew.autonudge_authz import authorize_and_add_nudge
-from kiro_crew.monitoring import github_pull_request
-from kiro_crew.monitoring.github_pull_request import _normalize_checks
-from kiro_crew.probes.targets import infer
+from aj_crew.autonudge_authz import authorize_and_add_nudge
+from aj_crew.monitoring import github_pull_request
+from aj_crew.monitoring.github_pull_request import _normalize_checks
+from aj_crew.probes.targets import infer
 
 ROOT = Path(__file__).resolve().parents[1]
-PROMPT = ROOT / "src" / "kiro_crew" / "config" / "prompt.md"
+PROMPT = ROOT / "src" / "aj_crew" / "config" / "prompt.md"
 BABYSIT_SKILL = (
-    ROOT / "src" / "kiro_crew" / "builtin_skills" / "kirocrew-dev" / "babysit" / "SKILL.md"
+    ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "babysit" / "SKILL.md"
 )
 SPEC = ROOT / "docs" / "system-specs" / "modules" / "babysit-pr-watch.md"
 MONITOR_SPEC = ROOT / "docs" / "system-specs" / "modules" / "monitor-architecture.md"
 PR_STATUS_SCRIPT = (
     ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
+    / "ajcrew-dev"
+    / "ajcrew-prepare-pr"
     / "scripts"
     / "pr_status.py"
 )
@@ -56,7 +56,7 @@ def test_the_prompt_teaches_no_monitor_start_example_of_its_own() -> None:
     """The skill's worked example, pinned below, is the only one an agent copies."""
     body = PROMPT.read_text(encoding="utf-8")
     assert "monitor_start(" not in body
-    assert "`kirocrew-dev/babysit`" in body
+    assert "`ajcrew-dev/babysit`" in body
 
 
 def test_the_babysit_example_message_names_its_subject_by_url() -> None:

@@ -1,6 +1,6 @@
 """The Members page's short-name collision notices give the remedy the docs give.
 
-``src/kiro_crew/docs/crew-members.md`` states the rule: renaming changes only
+``src/aj_crew/docs/crew-members.md`` states the rule: renaming changes only
 the name a crewmate shows, never its short name, so a rename cannot clear a
 collision. The two notices repeat that rule where the page is not read, so the
 test reads the shipped copy itself and fails if a notice drifts back to a fix
@@ -12,7 +12,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
-DOC = ROOT / "src" / "kiro_crew" / "docs" / "crew-members.md"
+DOC = ROOT / "src" / "aj_crew" / "docs" / "crew-members.md"
 EN = ROOT / "website" / "src" / "i18n" / "locales" / "en.json"
 
 

@@ -19,7 +19,7 @@ import { serveDist } from './lib/serve-dist.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/default-model'
 const SLOT = 'chat-default-model'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -41,7 +41,7 @@ const slots = [{
   running: false,
   last_message: 'Added limit/offset plus tests.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   model: 'claude-opus-4.8',
@@ -81,13 +81,13 @@ async function main() {
     const method = route.request().method()
 
     // The PATCH the two selects issue — echo success and let the panel refetch.
-    if (path === '/api/config/kirocrew' && method === 'PATCH') {
+    if (path === '/api/config/ajcrew' && method === 'PATCH') {
       const body = JSON.parse(route.request().postData() || '{}')
       if (body.path === 'agent.model') scene.model = body.value
       if (body.path === 'agent.reasoning_effort') scene.effort = body.value
       return json(route, { ok: true })
     }
-    if (path === '/api/config/kirocrew') {
+    if (path === '/api/config/ajcrew') {
       return json(route, {
         agent: {
           model: scene.model,

@@ -24,7 +24,7 @@ import type { Artifact } from '../types'
 vi.mock('../api/client')
 vi.mock('../pages/ChatPage', () => ({
   default: () => <div data-testid="chat-page" />,
-  PREFILL_STORAGE_KEY: 'kirocrew_prefill',
+  PREFILL_STORAGE_KEY: 'ajcrew_prefill',
 }))
 // Replace ONLY the renderer; the module also exports MD_EXTS / extOf / wrapCode /
 // langFor / CodeEditor, which other components import.
@@ -55,7 +55,7 @@ function renderPage() {
 
 function fireDeleted(slug = 'cr-queue') {
   act(() => {
-    window.dispatchEvent(new CustomEvent('kirocrew:artifact-deleted', { detail: { slug } }))
+    window.dispatchEvent(new CustomEvent('ajcrew:artifact-deleted', { detail: { slug } }))
   })
 }
 

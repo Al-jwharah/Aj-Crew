@@ -349,7 +349,7 @@ this leg, so it leaves with it.
 | Phase | Ships | Default |
 |---|---|---|
 | 0 | #23603 (scan window key, `SearchRows`) | merged first |
-| 1 | Query role on the embed call; unused by existing callers; recall harness under `src/kiro_crew/eval/bench/` with a synthetic fixture | no behaviour change |
+| 1 | Query role on the embed call; unused by existing callers; recall harness under `src/aj_crew/eval/bench/` with a synthetic fixture | no behaviour change |
 | 2 | Chunk store, indexer, pending and coverage metrics | off |
 | 3 | Vector leg, routing (including `SEMANTIC_MIN_COVERAGE`), `match`, snippets, labels, tool text, coverage note. Entry condition: open questions 2 and 5 are decided on the harness first, so the routing rule ships once | off |
 | 4 | Default on, after the harness and an operator-run private set measured on the full index show routed R@1 at or above vector R@1 and literal R@1 at or above keyword, and the operator set's index has reached `SEMANTIC_MIN_COVERAGE`, and the resource ceilings below hold | on |

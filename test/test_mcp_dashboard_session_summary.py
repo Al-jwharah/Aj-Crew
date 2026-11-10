@@ -17,14 +17,14 @@ from unittest.mock import MagicMock
 import pytest
 from chat_test_helpers import _make_state, move_transcript_past
 
-from kiro_crew.config.loader import KiroCrewConfig, SessionSummaryConfig
-from kiro_crew.dashboard import chat_summary
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.handlers import session_control as handlers_sc
-from kiro_crew.mcp_dashboard import TABLE, _render_session_summary
-from kiro_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew.config.loader import AjCrewConfig, SessionSummaryConfig
+from aj_crew.dashboard import chat_summary
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.handlers import session_control as handlers_sc
+from aj_crew.mcp_dashboard import TABLE, _render_session_summary
+from aj_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
 
 _VERIFIED = "dashboard:chat-verified"
 
@@ -36,11 +36,11 @@ def _enabled(monkeypatch):
 
 def _pin_summaries(monkeypatch, enabled: bool) -> None:
     def _load():
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.session_summary = SessionSummaryConfig(enabled=enabled)
         return cfg
 
-    monkeypatch.setattr(sc.KiroCrewConfig, "load", staticmethod(_load))
+    monkeypatch.setattr(sc.AjCrewConfig, "load", staticmethod(_load))
 
 
 def _payload(title: str = "get the build green") -> dict:
@@ -241,7 +241,7 @@ def test_the_route_serves_an_internal_caller(tmp_path, monkeypatch):
 
 
 def test_the_route_is_a_strict_internal_path():
-    from kiro_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
+    from aj_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
 
     assert "/api/session-control/summary" in _STRICT_INTERNAL_API_PATHS
 

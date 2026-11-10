@@ -19,8 +19,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.platform import context
-from kiro_crew.platform.context import (
+from aj_crew.platform import context
+from aj_crew.platform.context import (
     PlatformCompositionError,
     binary_content_is_flagged,
     reset_context,

@@ -18,9 +18,9 @@ from unittest.mock import MagicMock
 import pytest
 from pid_lifecycle_helpers import _POSIX_ONLY
 
-from kiro_crew import platform_compat
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
-from kiro_crew.testing.wait import wait_until
+from aj_crew import platform_compat
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.wait import wait_until
 
 # A grandchild that ignores SIGTERM, so only a SIGKILL that actually reaches it
 # can end it. ``{setsid}`` is filled with ``os.setsid()`` for the variant that
@@ -180,7 +180,7 @@ class TestSyncKillProviderTree:
 
     def _await_descendants(self, pid: int, timeout: float = 10.0) -> list[int]:
         """Wait for the root's fork to appear; return the (pinned) descendant pids."""
-        from kiro_crew.acp.client import _get_child_pids
+        from aj_crew.acp.client import _get_child_pids
 
         found = wait_until(
             lambda: _get_child_pids(pid),
@@ -468,11 +468,11 @@ class TestSyncKillProviderTree:
         and would survive it, so this pins the signal being addressed to the
         process GROUP.
         """
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.session_pid import _sync_kill_provider
 
         # The escalation budget is not the behaviour under test; shorten it so
         # the SIGTERM -> SIGKILL path runs without a multi-second wait.
-        monkeypatch.setattr("kiro_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.5)
+        monkeypatch.setattr("aj_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.5)
         root, gc_pid = self._spawn_tree(escape_group=False)
         grandchildren: list[int] = []
         try:
@@ -494,9 +494,9 @@ class TestSyncKillProviderTree:
         The group signal cannot reach it and it ignores SIGTERM, so the only
         thing that ends it is the snapshot-driven descendant sweep.
         """
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.session_pid import _sync_kill_provider
 
-        monkeypatch.setattr("kiro_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.5)
+        monkeypatch.setattr("aj_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.5)
         root, gc_pid = self._spawn_tree(escape_group=True)
         grandchildren: list[int] = []
         try:
@@ -527,10 +527,10 @@ class TestSyncKillProviderTree:
         runtime's own ``_child_pids`` snapshot is the only record that still
         names it, so the sweep has to read that too.
         """
-        from kiro_crew.acp.client import _capture_child_records
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.acp.client import _capture_child_records
+        from aj_crew.session_pid import _sync_kill_provider
 
-        monkeypatch.setattr("kiro_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.5)
+        monkeypatch.setattr("aj_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.5)
         root = self._spawn_isolated()
         stray = self._spawn_isolated()
         try:
@@ -558,11 +558,11 @@ class TestSyncKillProviderTree:
         in no record, so the group is the only thing that covers it. An empty
         snapshot reproduces that state deterministically.
         """
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.session_pid import _sync_kill_provider
 
-        monkeypatch.setattr("kiro_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.5)
+        monkeypatch.setattr("aj_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.5)
         monkeypatch.setattr(
-            "kiro_crew.session_pid._provider_descendant_records", lambda provider, pid, **_kw: {}
+            "aj_crew.session_pid._provider_descendant_records", lambda provider, pid, **_kw: {}
         )
         root, gc_pid = self._spawn_tree(escape_group=False)
         grandchildren: list[int] = []
@@ -590,10 +590,10 @@ class TestSyncKillProviderTree:
         Signal ordering is the deterministic pin; the race itself is not
         reproducible on demand.
         """
-        from kiro_crew import session_pid as sp
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew import session_pid as sp
+        from aj_crew.session_pid import _sync_kill_provider
 
-        monkeypatch.setattr("kiro_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.3)
+        monkeypatch.setattr("aj_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.3)
 
         events: list[str] = []
         real_killpg = os.killpg
@@ -607,8 +607,8 @@ class TestSyncKillProviderTree:
             events.append("reap")
             real_reap(pid, recorded_start, gated=gated)
 
-        monkeypatch.setattr("kiro_crew.session_pid.os.killpg", tracking_killpg)
-        monkeypatch.setattr("kiro_crew.session_pid._reap_provider_root", tracking_reap)
+        monkeypatch.setattr("aj_crew.session_pid.os.killpg", tracking_killpg)
+        monkeypatch.setattr("aj_crew.session_pid._reap_provider_root", tracking_reap)
 
         # The grandchild ignores SIGTERM and stays in the group, so the tree is
         # not gone at the deadline and the SIGKILL escalation actually runs.
@@ -641,9 +641,9 @@ class TestSyncKillProviderTree:
         sent to the root at all. Descendants recorded at spawn are still swept:
         each is verified on its own identity, which is the check the root lacked.
         """
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.session_pid import _sync_kill_provider
 
-        monkeypatch.setattr("kiro_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.2)
+        monkeypatch.setattr("aj_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.2)
         root = self._spawn_isolated()
         stray = self._spawn_isolated()
         try:
@@ -675,9 +675,9 @@ class TestSyncKillProviderTree:
         signalling it would reap a stranger's tree. Descendants recorded
         at spawn are still signalled, because each is named and verified on its own.
         """
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.session_pid import _sync_kill_provider
 
-        monkeypatch.setattr("kiro_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.2)
+        monkeypatch.setattr("aj_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.2)
         root = self._spawn_isolated()
         stray = self._spawn_isolated()
         killpg_calls: list[tuple[int, int]] = []
@@ -692,11 +692,11 @@ class TestSyncKillProviderTree:
             return real_pgroup_of(probe_pid) if seen["n"] == 1 else 999_999
 
         monkeypatch.setattr(
-            "kiro_crew.session_pid.os.killpg",
+            "aj_crew.session_pid.os.killpg",
             lambda pgid, sig: killpg_calls.append((pgid, sig)),
         )
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.pgroup_of", pgroup_of_then_handed_on
+            "aj_crew.session_pid.platform_compat.pgroup_of", pgroup_of_then_handed_on
         )
         try:
             provider = self._provider(
@@ -726,18 +726,18 @@ class TestSyncKillProviderTree:
         confirm. This runs on POSIX by faking the platform flag, because the
         branch it pins is unreachable here.
         """
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.session_pid import _sync_kill_provider
 
         pinned_calls: list[tuple[int, str, int]] = []
         unpinned_calls: list[tuple[int, int]] = []
 
-        monkeypatch.setattr("kiro_crew.session_pid.platform_compat.IS_WINDOWS", True)
+        monkeypatch.setattr("aj_crew.session_pid.platform_compat.IS_WINDOWS", True)
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.kill_process_tree_pinned",
+            "aj_crew.session_pid.platform_compat.kill_process_tree_pinned",
             lambda pid, expected, sig: (pinned_calls.append((pid, expected, sig)), False)[1],
         )
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.kill_process_tree",
+            "aj_crew.session_pid.platform_compat.kill_process_tree",
             lambda pid, sig: unpinned_calls.append((pid, sig)),
         )
 
@@ -764,9 +764,9 @@ class TestSyncKillProviderTree:
         walked entries are dropped, while the spawn-time snapshot, recorded when
         the tree was provably ours, is still signalled.
         """
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.session_pid import _sync_kill_provider
 
-        monkeypatch.setattr("kiro_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.2)
+        monkeypatch.setattr("aj_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.2)
         root, gc_pid = self._spawn_tree(escape_group=False)
         stray = self._spawn_isolated()
         real_start_id = platform_compat.get_process_start_id
@@ -788,12 +788,12 @@ class TestSyncKillProviderTree:
             return real_start_id(probe_pid)
 
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.get_process_start_id", start_id_going_stale
+            "aj_crew.session_pid.platform_compat.get_process_start_id", start_id_going_stale
         )
         signalled: list[int] = []
         real_kill_pid = platform_compat.kill_pid
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.kill_pid",
+            "aj_crew.session_pid.platform_compat.kill_pid",
             lambda p, sig: (signalled.append(p), real_kill_pid(p, sig))[1],
         )
         try:
@@ -819,9 +819,9 @@ class TestSyncKillProviderTree:
         second snapshot is only an intersection filter, so it can shrink the set and
         never add to it.
         """
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.session_pid import _sync_kill_provider
 
-        monkeypatch.setattr("kiro_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.2)
+        monkeypatch.setattr("aj_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.2)
         root = self._spawn_isolated()
         bystander = self._spawn_isolated()
         provider = self._provider(root.pid)
@@ -836,12 +836,12 @@ class TestSyncKillProviderTree:
             return [bystander.pid] if walks["n"] == 1 else []
 
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.process_descendants", walk_then_lose_it
+            "aj_crew.session_pid.platform_compat.process_descendants", walk_then_lose_it
         )
         signalled: list[int] = []
         real_kill_pid = platform_compat.kill_pid
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.kill_pid",
+            "aj_crew.session_pid.platform_compat.kill_pid",
             lambda p, sig: (signalled.append(p), real_kill_pid(p, sig))[1],
         )
         try:
@@ -883,9 +883,9 @@ class TestSyncKillProviderTree:
         Mutation guard: permitting the wait when the live read is None -- reaping on an
         unconfirmable identity -- consumes the status and reddens the last assertion.
         """
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.session_pid import _sync_kill_provider
 
-        monkeypatch.setattr("kiro_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.5)
+        monkeypatch.setattr("aj_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.5)
         root, gc_pid = self._spawn_tree(escape_group=False)
         try:
             grandchildren = self._await_descendants(root.pid)
@@ -898,7 +898,7 @@ class TestSyncKillProviderTree:
                 return real_start_id(probe_pid)
 
             monkeypatch.setattr(
-                "kiro_crew.session_pid.platform_compat.get_process_start_id",
+                "aj_crew.session_pid.platform_compat.get_process_start_id",
                 _unreadable_once_exited,
             )
             _sync_kill_provider(provider)
@@ -939,7 +939,7 @@ class TestSyncKillProviderTree:
         never reports the state this constructs. `_our_child_exited` asks this
         process's own child status instead, which is answerable anywhere.
         """
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
         try:
@@ -1006,9 +1006,9 @@ class TestSyncKillProviderTree:
         is confirmed by the filter and carries the stranger's captured id -- which the
         signal-time re-read then agrees with instead of catching.
         """
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.session_pid import _sync_kill_provider
 
-        monkeypatch.setattr("kiro_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.2)
+        monkeypatch.setattr("aj_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.2)
         root = self._spawn_isolated()
         bystander = self._spawn_isolated()
         real_start_id = platform_compat.get_process_start_id
@@ -1016,7 +1016,7 @@ class TestSyncKillProviderTree:
         # Both scans report the pid, so the intersection keeps it; only the root
         # identity going stale across them can reject it.
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.process_descendants",
+            "aj_crew.session_pid.platform_compat.process_descendants",
             lambda probe: [bystander.pid] if probe == root.pid else [],
         )
         root_reads = {"n": 0}
@@ -1031,12 +1031,12 @@ class TestSyncKillProviderTree:
             return real_start_id(probe_pid)
 
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.get_process_start_id", start_id_going_stale
+            "aj_crew.session_pid.platform_compat.get_process_start_id", start_id_going_stale
         )
         signalled: list[int] = []
         real_kill_pid = platform_compat.kill_pid
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.kill_pid",
+            "aj_crew.session_pid.platform_compat.kill_pid",
             lambda p, sig: (signalled.append(p), real_kill_pid(p, sig))[1],
         )
         try:
@@ -1060,9 +1060,9 @@ class TestSyncKillProviderTree:
         after the snapshot would be reached by neither the group signal nor the
         recorded sweep, and would survive the teardown.
         """
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.session_pid import _sync_kill_provider
 
-        monkeypatch.setattr("kiro_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.2)
+        monkeypatch.setattr("aj_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.2)
         root, gc_pid = self._spawn_tree(escape_group=False)
         real_start_id = platform_compat.get_process_start_id
         self._await_descendants(root.pid)
@@ -1087,10 +1087,10 @@ class TestSyncKillProviderTree:
             return real_start_id(probe_pid)
 
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.process_descendants", counting_descendants
+            "aj_crew.session_pid.platform_compat.process_descendants", counting_descendants
         )
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.get_process_start_id", start_id_after_reap
+            "aj_crew.session_pid.platform_compat.get_process_start_id", start_id_after_reap
         )
         killpg_calls: list[int] = []
         real_killpg = os.killpg
@@ -1099,7 +1099,7 @@ class TestSyncKillProviderTree:
             killpg_calls.append(sig)
             real_killpg(pgid, sig)
 
-        monkeypatch.setattr("kiro_crew.session_pid.os.killpg", tracking_killpg)
+        monkeypatch.setattr("aj_crew.session_pid.os.killpg", tracking_killpg)
         try:
             _sync_kill_provider(provider)
 
@@ -1118,9 +1118,9 @@ class TestSyncKillProviderTree:
         window must not be signalled, so a wrong record is skipped rather than
         used.
         """
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.session_pid import _sync_kill_provider
 
-        monkeypatch.setattr("kiro_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.5)
+        monkeypatch.setattr("aj_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.5)
 
         root = self._spawn_isolated()
         bystander = self._spawn_isolated()
@@ -1253,9 +1253,9 @@ class TestSyncKillProviderTree:
         record names: ``unrecorded`` here is absent from the records and ignores
         SIGTERM, so only the group SIGKILL can end it.
         """
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.session_pid import _sync_kill_provider
 
-        monkeypatch.setattr("kiro_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.2)
+        monkeypatch.setattr("aj_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.2)
         leader_pid, recorded_start, witness_pid, unrecorded_pid = self._spawn_reaped_leader(
             tmp_path
         )
@@ -1289,7 +1289,7 @@ class TestSyncKillProviderTree:
                 killpg_calls.append((pgid, sig))
                 real_killpg(pgid, sig)
 
-            monkeypatch.setattr("kiro_crew.session_pid.os.killpg", tracking_killpg)
+            monkeypatch.setattr("aj_crew.session_pid.os.killpg", tracking_killpg)
 
             _sync_kill_provider(provider)
 
@@ -1313,16 +1313,16 @@ class TestSyncKillProviderTree:
         descendant that called ``setsid`` leads a group of its own, so it says
         nothing about the leader's -- which stays unsignalled, exactly as before.
         """
-        from kiro_crew.session_pid import _group_from_witnessed_descendant
+        from aj_crew.session_pid import _group_from_witnessed_descendant
 
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.pgroup_of_leader", lambda _pid: 4242
+            "aj_crew.session_pid.platform_compat.pgroup_of_leader", lambda _pid: 4242
         )
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.get_process_start_id", lambda _pid: "same"
+            "aj_crew.session_pid.platform_compat.get_process_start_id", lambda _pid: "same"
         )
         # The witness verifies, but it leads its own group.
-        monkeypatch.setattr("kiro_crew.session_pid.platform_compat.pgroup_of", lambda _pid: 4243)
+        monkeypatch.setattr("aj_crew.session_pid.platform_compat.pgroup_of", lambda _pid: 4243)
 
         assert _group_from_witnessed_descendant(4242, "root", {4243: ("same", None)}) is None
 
@@ -1337,17 +1337,17 @@ class TestSyncKillProviderTree:
         tree. Only ``candidate == pid`` stops that, which is why this case exists
         separately from the witness-left-the-group one above.
         """
-        from kiro_crew.session_pid import _group_from_witnessed_descendant
+        from aj_crew.session_pid import _group_from_witnessed_descendant
 
         # A group the recorded leader 4242 does not lead.
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.pgroup_of_leader", lambda _pid: 4243
+            "aj_crew.session_pid.platform_compat.pgroup_of_leader", lambda _pid: 4243
         )
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.get_process_start_id", lambda _pid: "same"
+            "aj_crew.session_pid.platform_compat.get_process_start_id", lambda _pid: "same"
         )
         # The witness is genuinely in 4243, so ownership alone would say yes.
-        monkeypatch.setattr("kiro_crew.session_pid.platform_compat.pgroup_of", lambda _pid: 4243)
+        monkeypatch.setattr("aj_crew.session_pid.platform_compat.pgroup_of", lambda _pid: 4243)
 
         assert _group_from_witnessed_descendant(4242, "same", {4243: ("same", None)}) is None
 
@@ -1363,12 +1363,12 @@ class TestSyncKillProviderTree:
         stranger, so a witness drawn from them proves nothing about our tree. The
         shape also cannot need recovery: its root was alive when the handle was read.
         """
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.session_pid import _sync_kill_provider
 
-        monkeypatch.setattr("kiro_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.1)
+        monkeypatch.setattr("aj_crew.session_pid._PROVIDER_TERM_GRACE_SECONDS", 0.1)
         calls: list[int] = []
         monkeypatch.setattr(
-            "kiro_crew.session_pid._group_from_witnessed_descendant",
+            "aj_crew.session_pid._group_from_witnessed_descendant",
             lambda pid, *a, **k: calls.append(pid) or 4242,
         )
         # A `_proc`-shaped provider: no _client, a live handle with returncode None.
@@ -1380,19 +1380,19 @@ class TestSyncKillProviderTree:
         provider._active_proc = None
         # Not an isolated leader, so _isolated_provider_group yields None and the
         # recovery branch is the only thing that could produce a pgid.
-        monkeypatch.setattr("kiro_crew.session_pid.platform_compat.pgroup_of", lambda _pid: 999)
+        monkeypatch.setattr("aj_crew.session_pid.platform_compat.pgroup_of", lambda _pid: 999)
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.process_descendants", lambda _p: []
+            "aj_crew.session_pid.platform_compat.process_descendants", lambda _p: []
         )
         killpg_calls: list[tuple[int, int]] = []
         monkeypatch.setattr(
-            "kiro_crew.session_pid.os.killpg", lambda pgid, sig: killpg_calls.append((pgid, sig))
+            "aj_crew.session_pid.os.killpg", lambda pgid, sig: killpg_calls.append((pgid, sig))
         )
-        monkeypatch.setattr("kiro_crew.session_pid.platform_compat.kill_pid", lambda _p, _s: None)
+        monkeypatch.setattr("aj_crew.session_pid.platform_compat.kill_pid", lambda _p, _s: None)
         # The fake pid names no process, so the root's reap is observed, not run.
         reaped: list[int] = []
         monkeypatch.setattr(
-            "kiro_crew.session_pid._reap_provider_root", lambda pid, *a, **k: reaped.append(pid)
+            "aj_crew.session_pid._reap_provider_root", lambda pid, *a, **k: reaped.append(pid)
         )
 
         _sync_kill_provider(provider)
@@ -1405,15 +1405,15 @@ class TestSyncKillProviderTree:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A recorded pid whose live identity differs cannot vouch for the group."""
-        from kiro_crew.session_pid import _group_from_witnessed_descendant
+        from aj_crew.session_pid import _group_from_witnessed_descendant
 
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.pgroup_of_leader", lambda _pid: 4242
+            "aj_crew.session_pid.platform_compat.pgroup_of_leader", lambda _pid: 4242
         )
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.get_process_start_id", lambda _pid: "live"
+            "aj_crew.session_pid.platform_compat.get_process_start_id", lambda _pid: "live"
         )
-        monkeypatch.setattr("kiro_crew.session_pid.platform_compat.pgroup_of", lambda _pid: 4242)
+        monkeypatch.setattr("aj_crew.session_pid.platform_compat.pgroup_of", lambda _pid: 4242)
 
         assert _group_from_witnessed_descendant(4242, "root", {4243: ("recorded", None)}) is None
 
@@ -1421,48 +1421,48 @@ class TestSyncKillProviderTree:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A record carrying no start id proves nothing and is skipped."""
-        from kiro_crew.session_pid import _group_from_witnessed_descendant
+        from aj_crew.session_pid import _group_from_witnessed_descendant
 
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.pgroup_of_leader", lambda _pid: 4242
+            "aj_crew.session_pid.platform_compat.pgroup_of_leader", lambda _pid: 4242
         )
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.get_process_start_id", lambda _pid: None
+            "aj_crew.session_pid.platform_compat.get_process_start_id", lambda _pid: None
         )
-        monkeypatch.setattr("kiro_crew.session_pid.platform_compat.pgroup_of", lambda _pid: 4242)
+        monkeypatch.setattr("aj_crew.session_pid.platform_compat.pgroup_of", lambda _pid: 4242)
 
         assert _group_from_witnessed_descendant(4242, "root", {4243: (None, None)}) is None
 
     def test_recovered_group_is_never_our_own(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Our own group is refused: killpg on it would signal the gateway itself."""
-        from kiro_crew.session_pid import _group_from_witnessed_descendant
+        from aj_crew.session_pid import _group_from_witnessed_descendant
 
         own = os.getpgrp()
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.pgroup_of_leader", lambda _pid: own
+            "aj_crew.session_pid.platform_compat.pgroup_of_leader", lambda _pid: own
         )
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.get_process_start_id", lambda _pid: "same"
+            "aj_crew.session_pid.platform_compat.get_process_start_id", lambda _pid: "same"
         )
-        monkeypatch.setattr("kiro_crew.session_pid.platform_compat.pgroup_of", lambda _pid: own)
+        monkeypatch.setattr("aj_crew.session_pid.platform_compat.pgroup_of", lambda _pid: own)
 
         assert _group_from_witnessed_descendant(own, "root", {os.getpid(): ("same", None)}) is None
 
     def test_recovered_group_refuses_a_denied_leader(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """``None`` from the primitive means signalling is denied, so nothing is sent."""
-        from kiro_crew.session_pid import _group_from_witnessed_descendant
+        from aj_crew.session_pid import _group_from_witnessed_descendant
 
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.pgroup_of_leader", lambda _pid: None
+            "aj_crew.session_pid.platform_compat.pgroup_of_leader", lambda _pid: None
         )
 
         assert _group_from_witnessed_descendant(4242, "root", {4243: ("same", None)}) is None
 
     def test_no_group_is_recovered_on_windows(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Windows has no such group; teardown there goes through kill_process_tree."""
-        from kiro_crew.session_pid import _group_from_witnessed_descendant
+        from aj_crew.session_pid import _group_from_witnessed_descendant
 
-        monkeypatch.setattr("kiro_crew.session_pid.platform_compat.IS_WINDOWS", True)
+        monkeypatch.setattr("aj_crew.session_pid.platform_compat.IS_WINDOWS", True)
 
         assert _group_from_witnessed_descendant(4242, "root", {4243: ("start", None)}) is None
 
@@ -1514,7 +1514,7 @@ class TestReapProviderRoot:
         return proc, proc.pid
 
     def _assert_refused(self, live_id: str | None, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         proc, pid = self._zombie()
         try:

@@ -1,4 +1,4 @@
-"""``kiro_crew.dashboard.conditional_get`` -- the one ETag / 304 implementation.
+"""``aj_crew.dashboard.conditional_get`` -- the one ETag / 304 implementation.
 
 Four media routes (appearance media, theme assets, app art, crew avatars) used
 to carry their own copy of the compare and drifted: three (app art
@@ -16,7 +16,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.dashboard.conditional_get import (
+from aj_crew.dashboard.conditional_get import (
     bare_etag_value,
     conditional_response,
     is_not_modified,
@@ -212,9 +212,9 @@ def test_every_media_route_uses_the_shared_helper() -> None:
     import inspect
     from pathlib import Path
 
-    from kiro_crew.apps import routes as apps_routes
-    from kiro_crew.dashboard import agent_admin
-    from kiro_crew.dashboard.handlers import agents, appearances, themes
+    from aj_crew.apps import routes as apps_routes
+    from aj_crew.dashboard import agent_admin
+    from aj_crew.dashboard.handlers import agents, appearances, themes
 
     for mod in (
         apps_routes,

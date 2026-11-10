@@ -49,7 +49,7 @@ if (!['before', 'after'].includes(EXPECT)) throw new Error(`--expect must be bef
 
 const EXISTING = 'chat-existing'
 const FR_SLOT = 'chat-feature-request'
-const FORM_URL = 'https://github.com/kirodotdev/KiroCrew/issues/new?template=feature_request.yml'
+const FORM_URL = 'https://github.com/Al-jwharah/Aj-Crew/issues/new?template=feature_request.yml'
 // Derived from this script's own location (scripts/ -> website/ -> repo root),
 // never hardcoded: this path RENDERS into the captured screenshot.
 const PROJECT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
@@ -62,13 +62,13 @@ mkdirSync(OUT, { recursive: true })
 const now = Date.now() / 1000
 const existingSlot = {
   key: EXISTING, title: 'Parser cleanup', running: false,
-  last_message: 'Done — both call sites updated.', messages: 2, agent: 'kirocrew',
+  last_message: 'Done — both call sites updated.', messages: 2, agent: 'ajcrew',
   memory_mode: 'persistent', project: PROJECT, modified: Math.floor(now),
   source_links: [], source_links_total: 0,
 }
 const featureRequestSlot = {
   key: FR_SLOT, title: 'New chat', running: false, last_message: '', messages: 0,
-  agent: 'kirocrew', memory_mode: 'persistent', project: PROJECT, modified: Math.floor(now),
+  agent: 'ajcrew', memory_mode: 'persistent', project: PROJECT, modified: Math.floor(now),
   source_links: [], source_links_total: 0,
 }
 const existingDetail = {

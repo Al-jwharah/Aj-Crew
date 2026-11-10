@@ -6,10 +6,10 @@ import json
 import pytest
 from member_memory_helpers import env as _member_env
 
-from kiro_crew.config import loader
-from kiro_crew.learn import Lesson, LessonStore
-from kiro_crew.memory_startup import MemoryStartup, MemoryStartupUnavailable
-from kiro_crew.vector_memory import open_member_database
+from aj_crew.config import loader
+from aj_crew.learn import Lesson, LessonStore
+from aj_crew.memory_startup import MemoryStartup, MemoryStartupUnavailable
+from aj_crew.vector_memory import open_member_database
 
 env = _member_env
 
@@ -18,7 +18,7 @@ def _fields(lessons: list[Lesson]) -> list[tuple]:
     """Lessons as field tuples, so the assertion is about DATA not class identity.
 
     Dataclass ``__eq__`` also compares classes, and on macOS under xdist
-    ``kiro_crew.learn`` can import twice (``/tmp`` links to ``/private/tmp``), giving
+    ``aj_crew.learn`` can import twice (``/tmp`` links to ``/private/tmp``), giving
     two ``Lesson`` classes with identical reprs.
     """
     return [dataclasses.astuple(lesson) for lesson in lessons]

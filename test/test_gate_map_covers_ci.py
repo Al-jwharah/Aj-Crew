@@ -20,10 +20,10 @@ ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS = (
     ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
+    / "ajcrew-dev"
+    / "ajcrew-prepare-pr"
     / "scripts"
 )
 WORKFLOWS = ROOT / ".github" / "workflows"

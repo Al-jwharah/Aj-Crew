@@ -56,9 +56,9 @@ class TestTheGateScriptIsWhereTheWorkflowLooks:
 
 class TestWhatCountsAsReachingTheRepoThroughTheCwd:
     def test_a_bare_relative_read_is_a_violation(self) -> None:
-        source = 'from pathlib import Path\nPath("src/kiro_crew/x.py").read_text()\n'
+        source = 'from pathlib import Path\nPath("src/aj_crew/x.py").read_text()\n'
         assert [(line, literal) for line, literal, _ in _flagged(source)] == [
-            (2, "src/kiro_crew/x.py")
+            (2, "src/aj_crew/x.py")
         ]
 
     def test_the_module_qualified_spelling_is_caught_too(self) -> None:
@@ -70,19 +70,19 @@ class TestWhatCountsAsReachingTheRepoThroughTheCwd:
 
     def test_a_literal_bound_to_a_name_first_is_caught(self) -> None:
         """The defect survives being given a name, so the scan has to follow one."""
-        source = 'from pathlib import Path\nSRC = Path("src/kiro_crew/x.py")\nSRC.read_text()\n'
+        source = 'from pathlib import Path\nSRC = Path("src/aj_crew/x.py")\nSRC.read_text()\n'
         assert _flagged(source)
 
     def test_a_join_onto_the_literal_is_caught(self) -> None:
-        source = 'from pathlib import Path\n(Path("src") / "kiro_crew" / "x.py").read_text()\n'
+        source = 'from pathlib import Path\n(Path("src") / "aj_crew" / "x.py").read_text()\n'
         assert _flagged(source)
 
     @pytest.mark.parametrize(
         "binding",
         [
-            'P = Path("src/kiro_crew") / "x.py"',
-            'P = Path("src/kiro_crew/x.py").resolve()',
-            'SRC = Path("src/kiro_crew")\nP = SRC / "x.py"',
+            'P = Path("src/aj_crew") / "x.py"',
+            'P = Path("src/aj_crew/x.py").resolve()',
+            'SRC = Path("src/aj_crew")\nP = SRC / "x.py"',
         ],
         ids=["join", "resolve", "join-onto-a-bound-name"],
     )
@@ -92,7 +92,7 @@ class TestWhatCountsAsReachingTheRepoThroughTheCwd:
         assert [verb for _, _, verb in _flagged(source)] == [".read_text()"]
 
     def test_a_relative_write_into_the_checkout_is_caught(self) -> None:
-        source = 'from pathlib import Path\nPath("src/kiro_crew/x.py").write_text("")\n'
+        source = 'from pathlib import Path\nPath("src/aj_crew/x.py").write_text("")\n'
         assert _flagged(source)
 
     def test_a_non_reading_access_verb_is_caught(self) -> None:
@@ -116,7 +116,7 @@ class TestWhatIsNotAViolation:
         """
         source = (
             "from pathlib import Path\n"
-            'ALLOWED = {Path("src/kiro_crew/x.py"), Path("scripts/y.py")}\n'
+            'ALLOWED = {Path("src/aj_crew/x.py"), Path("scripts/y.py")}\n'
             'assert Path("a/b") in ALLOWED\n'
         )
         assert _flagged(source) == []
@@ -125,7 +125,7 @@ class TestWhatIsNotAViolation:
         source = (
             "from pathlib import Path\n"
             "_REPO = Path(__file__).resolve().parents[1]\n"
-            '(_REPO / "src/kiro_crew/x.py").read_text()\n'
+            '(_REPO / "src/aj_crew/x.py").read_text()\n'
         )
         assert _flagged(source) == []
 
@@ -133,7 +133,7 @@ class TestWhatIsNotAViolation:
         source = (
             "from pathlib import Path\n"
             "_REPO = Path(__file__).resolve().parents[1]\n"
-            'P = _REPO / "src/kiro_crew/x.py"\n'
+            'P = _REPO / "src/aj_crew/x.py"\n'
             "P.read_text()\n"
         )
         assert _flagged(source) == []
@@ -144,7 +144,7 @@ class TestWhatIsNotAViolation:
             'def test_a():\n    p = Path("src") / "x.py"\n'
             'def test_b(tmp_path):\n    p = tmp_path / "y"\n    p.read_text()\n',
             'p = Path("src") / "x.py"\ndef read(p):\n    return p.read_text()\n',
-            'import kiro_crew.x as src\ndef test_a():\n    src = Path("src") / "x.py"\n'
+            'import aj_crew.x as src\ndef test_a():\n    src = Path("src") / "x.py"\n'
             "assert src.exists()\n",
             'def test_a():\n    base = Path("src")\n'
             "def test_b(tmp_path):\n    base = tmp_path\n"
@@ -163,7 +163,7 @@ class TestWhatIsNotAViolation:
         """The form the gate's message recommends must itself pass the gate."""
         source = (
             "from pathlib import Path\n"
-            "from kiro_crew.dashboard import ws\n"
+            "from aj_crew.dashboard import ws\n"
             "Path(ws.__file__).read_text()\n"
         )
         assert _flagged(source) == []
@@ -183,7 +183,7 @@ class TestWhatIsNotAViolation:
             "import os\n"
             "from pathlib import Path\n"
             "os.chdir('/elsewhere')\n"
-            'Path("src/kiro_crew/x.py").read_text()\n'
+            'Path("src/aj_crew/x.py").read_text()\n'
         )
         assert _flagged(source) == []
 
@@ -192,7 +192,7 @@ class TestWhatIsNotAViolation:
             "from pathlib import Path\n"
             "def test_x(monkeypatch, tmp_path):\n"
             "    monkeypatch.chdir(tmp_path)\n"
-            '    Path("src/kiro_crew/x.py").read_text()\n'
+            '    Path("src/aj_crew/x.py").read_text()\n'
         )
         assert _flagged(source) == []
 
@@ -223,17 +223,17 @@ class TestTheScanScope:
         assert gate.is_test_file(Path("test/e2e/scenarios/conftest.py"))
 
     def test_a_test_file_inside_a_source_testpath_is_scanned(self) -> None:
-        assert gate.is_test_file(Path("src/kiro_crew/apps/builtins/x/test_y.py"))
+        assert gate.is_test_file(Path("src/aj_crew/apps/builtins/x/test_y.py"))
 
     def test_production_source_is_not_scanned(self) -> None:
         """Production code resolves relative paths against a user's project on purpose."""
-        assert not gate.is_test_file(Path("src/kiro_crew/dashboard/ws.py"))
+        assert not gate.is_test_file(Path("src/aj_crew/dashboard/ws.py"))
 
     def test_vendored_code_is_excluded(self) -> None:
-        assert not gate.is_test_file(Path("src/kiro_crew/_vendor/test_thing.py"))
+        assert not gate.is_test_file(Path("src/aj_crew/_vendor/test_thing.py"))
 
     def test_a_suffix_named_test_file_is_scanned(self) -> None:
-        assert gate.is_test_file(Path("src/kiro_crew/apps/builtins/x/y_test.py"))
+        assert gate.is_test_file(Path("src/aj_crew/apps/builtins/x/y_test.py"))
 
 
 class TestTheGateFailsClosed:

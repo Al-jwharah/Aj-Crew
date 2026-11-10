@@ -11,11 +11,11 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_mode
+from aj_crew import crew_mode
 
 ROOT = "root"
 CHILD = "child"
-PLAIN = "kirocrew-research"
+PLAIN = "ajcrew-research"
 
 
 @pytest.fixture(autouse=True)
@@ -61,7 +61,7 @@ def test_a_reopened_child_on_its_conductors_template_is_that_conductors_worker()
 def test_a_root_switched_to_a_plain_agent_is_forgotten_and_its_close_frees_its_sessions() -> None:
     """Switching an idle root off every conductor ends its Crew Mode; closing it
     afterwards must not stamp the sessions it created back into Crew Mode."""
-    worker = _row("w", "kirocrew-worker", created_by=ROOT)
+    worker = _row("w", "ajcrew-worker", created_by=ROOT)
     rows = _stamp([_row(ROOT, crew_mode.DEFAULT_CREW_MODE_AGENT), dict(worker)])
     assert rows["w"][crew_mode.WORKER_FIELD] == ROOT
     assert crew_mode.known_roots() == {ROOT}
@@ -78,7 +78,7 @@ def test_a_root_switched_to_a_plain_agent_is_forgotten_and_its_close_frees_its_s
 def test_a_root_that_closes_while_a_root_still_holds_its_workers() -> None:
     """The remembered set shrinks only for a LIVE row that stopped being a root: a
     root whose tab closes stays known, so its workers stay out of the person's list."""
-    worker = _row("w", "kirocrew-worker", created_by=ROOT)
+    worker = _row("w", "ajcrew-worker", created_by=ROOT)
     _stamp([_row(ROOT, crew_mode.DEFAULT_CREW_MODE_AGENT), dict(worker)])
     rows = _stamp([dict(worker)], parents={})
     assert rows["w"][crew_mode.WORKER_FIELD] == ROOT

@@ -17,15 +17,15 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.eval.bench.corpus import (
+from aj_crew.eval.bench.corpus import (
     CAT_SINGLE_HOP,
     BenchInstance,
     BenchSession,
     BenchTurn,
 )
-from kiro_crew.eval.bench.ingest import IngestConfig, IngestError, ingest_instance
-from kiro_crew.eval.bench.retrieval import QueryRetrieval, aggregate
-from kiro_crew.eval.bench.run import compare_reports
+from aj_crew.eval.bench.ingest import IngestConfig, IngestError, ingest_instance
+from aj_crew.eval.bench.retrieval import QueryRetrieval, aggregate
+from aj_crew.eval.bench.run import compare_reports
 
 LME_TS = "2023/04/10 (Mon) 23:07"
 
@@ -62,7 +62,7 @@ def test_the_store_adopts_the_embedders_actual_width(
     a way that breaks the normal case.
     """
     # One fake vector for every text trips FAISS's near-duplicate check.
-    monkeypatch.setattr("kiro_crew.vector_memory._HAS_FAISS", False)
+    monkeypatch.setattr("aj_crew.vector_memory._HAS_FAISS", False)
     loaded = ingest_instance(
         _instance(),
         db_path=tmp_path / f"w{width}.db",
@@ -222,8 +222,8 @@ def test_the_digest_reaches_the_serialized_report() -> None:
     comparison refusing on a missing digest would otherwise be triggered by the
     harness's own reports.
     """
-    from kiro_crew.eval.bench.retrieval import RetrievalAggregate
-    from kiro_crew.eval.bench.run import RunResult
+    from aj_crew.eval.bench.retrieval import RetrievalAggregate
+    from aj_crew.eval.bench.run import RunResult
 
     agg = RetrievalAggregate()
     agg.session = {"recall_all@5": 0.5}

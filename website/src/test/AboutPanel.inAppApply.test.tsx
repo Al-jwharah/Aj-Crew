@@ -29,7 +29,7 @@ const ARMABLE_STATUS = {
   update_can_arm: true,
   update_latest_version: '9.9.9',
   update_channel: 'insider',
-  update_managed_by: 'kirocrew',
+  update_managed_by: 'ajcrew',
   update_command: 'curl -fsSL https://example.invalid/cli.sh | sh',
 } as const
 
@@ -99,11 +99,11 @@ function stubFetch(overrides: Record<string, unknown> = {}) {
         // test below.
         version: (overrides.armVersion as string) ?? '9.9.9',
         version_display: (overrides.armVersionDisplay as string) ?? '9.9.9',
-        expires_in: 600, approve_command: 'kirocrew update approve',
+        expires_in: 600, approve_command: 'ajcrew update approve',
       })
     }
     if (url.includes('/api/update/arm')) {
-      return json({ armed: true, request_id: 'r1', version: '9.9.9', expires_in: 590, approve_command: 'kirocrew update approve' })
+      return json({ armed: true, request_id: 'r1', version: '9.9.9', expires_in: 590, approve_command: 'ajcrew update approve' })
     }
     if (url.includes('/api/update/check')) return json({})
     if (url.includes('/api/changelog')) return json({ content: '' })
@@ -153,7 +153,7 @@ describe('AboutPanel in-app update (arm + approve)', () => {
     expect(armedAction).toBe(btn)
     expect(armedAction).toHaveTextContent(/copy command/i)
     expect(armed).toHaveTextContent(/gateway host/i)
-    expect(screen.getByTestId('approve-command').textContent).toContain('kirocrew update approve')
+    expect(screen.getByTestId('approve-command').textContent).toContain('ajcrew update approve')
     // The countdown renders from expires_in.
     expect(screen.getByTestId('arm-countdown').textContent).toMatch(/10:00|9:5\d/)
     // The arm POST went out; nothing in the DOM carries a nonce-shaped secret.
@@ -480,7 +480,7 @@ describe('AboutPanel in-app update (arm + approve)', () => {
         if (url.includes('/api/update/arm') && init?.method === 'POST') {
           return {
             ok: true, status: 200,
-            json: async () => ({ ok: true, armed: true, request_id: 'r1', version: '9.9.9', expires_in: 600, approve_command: 'kirocrew update approve' }),
+            json: async () => ({ ok: true, armed: true, request_id: 'r1', version: '9.9.9', expires_in: 600, approve_command: 'ajcrew update approve' }),
             text: async () => '', headers: new Headers({ 'content-type': 'application/json' }),
           }
         }

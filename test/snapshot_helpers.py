@@ -17,7 +17,7 @@ def unpinnable_argv() -> list[str]:
     move Linux off the pinned path that ships. A test whose SUBJECT is the pinned guarantee
     skips on such a platform instead.
     """
-    from kiro_crew import pinned_fs
+    from aj_crew import pinned_fs
 
     return [] if pinned_fs.supports_pinned_tree_walk() else ["--allow-unpinned-staging"]
 
@@ -29,4 +29,4 @@ def _no_gateway(_floor_monkeypatch):
     Uses the deterministic env seam (not a function patch) so refusal tests can
     override it with ``=1`` and the result never depends on a real socket probe.
     """
-    _floor_monkeypatch.setenv("KIROCREW_ASSUME_GATEWAY_RUNNING", "0")
+    _floor_monkeypatch.setenv("AJCREW_ASSUME_GATEWAY_RUNNING", "0")

@@ -4,10 +4,10 @@ Pins the per-platform answers of the child-walk, RSS and process-identity helper
 the client and the shared runtime define: the Windows short-circuits, the darwin
 ``ps`` parsing and memoized process table, the Linux ``/proc`` reads, the
 leaf-first escaped-child sweep over the production ``ChildRecord`` shape, and that
-``kiro_crew.acp.runtime`` re-exports the same objects the client defines.
+``aj_crew.acp.runtime`` re-exports the same objects the client defines.
 
-The code is reached only through the ``kiro_crew.acp.client`` /
-``kiro_crew.acp.runtime`` facades. Platform state is faked only through SHARED
+The code is reached only through the ``aj_crew.acp.client`` /
+``aj_crew.acp.runtime`` facades. Platform state is faked only through SHARED
 module attributes (``sys.platform``, ``platform_compat.*``,
 ``subprocess.check_output``) plus names defined on a facade, so these tests hold
 unchanged before and after the definitions move to their owner module. Every such
@@ -29,9 +29,9 @@ from typing import Iterator
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp import runtime as acp_runtime
+from aj_crew import platform_compat
+from aj_crew.acp import client as acp_client
+from aj_crew.acp import runtime as acp_runtime
 
 _MIB = 1024 * 1024
 # Above every supported platform's pid_max (the house spelling is 99_999_999_999).

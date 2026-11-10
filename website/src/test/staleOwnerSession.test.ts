@@ -1,7 +1,7 @@
 /**
  * Tests for the stale pre-owner session re-auth prompt.
  *
- * A session signed in before `KIROCREW_OWNER_ID` was configured carries a
+ * A session signed in before `AJCREW_OWNER_ID` was configured carries a
  * bootstrap token subject forever (refresh re-mints from the incoming subject),
  * so the backend labels its owner-gate denial `401 stale_session_reauth`. On
  * that signal — and ONLY that signal — the client must prompt re-authentication
@@ -67,7 +67,7 @@ describe('stale pre-owner session re-auth prompt', () => {
     // Only a re-sign-in recovers, so call sites must drop retry affordances.
     expect(isAuthExpiredError(apiErr)).toBe(true)
     // The display message is the recovery instruction, not the raw label.
-    expect(apiErr.message).toContain('kirocrew token')
+    expect(apiErr.message).toContain('ajcrew token')
     expect(apiErr.message.toLowerCase()).toContain('owner')
 
     // The banner names the stale-owner cause, not plain expiry.

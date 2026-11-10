@@ -13,22 +13,22 @@ import logging
 import pytest
 from kas_agents_helpers import _spec
 
-from kiro_crew import agent as agent_mod
-from kiro_crew.acp._dispatch import attach_kas_custom_agents
-from kiro_crew.acp.kas_agents import KasAgentTranslationError, to_client_custom_agent
-from kiro_crew.acp.kas_permissions import CREW_SETTINGS_MCP_KEY
-from kiro_crew.acp.kas_settings_mcp import (
+from aj_crew import agent as agent_mod
+from aj_crew.acp._dispatch import attach_kas_custom_agents
+from aj_crew.acp.kas_agents import KasAgentTranslationError, to_client_custom_agent
+from aj_crew.acp.kas_permissions import CREW_SETTINGS_MCP_KEY
+from aj_crew.acp.kas_settings_mcp import (
     finish_settings_mcp,
     stamp_settings_mcp,
     without_excluded_stubs,
 )
-from kiro_crew.acp.kas_tool_limits import (
+from aj_crew.acp.kas_tool_limits import (
     kas_globs,
     unmatched_disabled_globs,
     unmatched_globs_notice,
     with_switched_off_tools,
 )
-from kiro_crew.agent_materialization.auto_approve import govern_spec
+from aj_crew.agent_materialization.auto_approve import govern_spec
 
 
 @pytest.fixture
@@ -86,7 +86,7 @@ class TestUndeclaredFileServers:
         monkeypatch.setenv("ASBX_KIRO_MANDATORY_MCPS", "must")
         _write(
             home / "mcp.json",
-            {"mcpServers": {"hoisted": {}, "kirocrew-core": {}, "must": {"disabledTools": ["x*"]}}},
+            {"mcpServers": {"hoisted": {}, "ajcrew-core": {}, "must": {"disabledTools": ["x*"]}}},
         )
         out = _finish(_agent(), work, [{"name": "hoisted"}], declared=["hoisted"])
         assert out["excludedTools"] == ["@must/x*"]
@@ -139,7 +139,7 @@ class TestUndeclaredFileServers:
     def test_an_unreadable_workspace_file_keeps_the_global_exclusions(
         self, home, work, monkeypatch
     ):
-        from kiro_crew.acp import session_mcp
+        from aj_crew.acp import session_mcp
 
         _write(home / "mcp.json", {"mcpServers": {"pooled": {}}})
         real = session_mcp.native_settings_sources
@@ -162,8 +162,8 @@ class TestUndeclaredFileServers:
         notices: list[str] = []
         stamp_settings_mcp([_agent()], "a", work, notices=notices)
         assert [line.split(" (")[0] for line in notices] == [
-            "⚠ Kiro Crew could not read the project's MCP settings",
-            "⚠ Kiro Crew could not read the global MCP settings",
+            "⚠ Aj Crew could not read the project's MCP settings",
+            "⚠ Aj Crew could not read the global MCP settings",
         ]
         assert all("saved as UTF-16; re-save it as UTF-8" in line for line in notices)
 
@@ -199,16 +199,16 @@ class TestUndeclaredFileServers:
 
     def test_the_pooled_stub_of_an_excluded_server_is_dropped(self, home, work):
         _write(home / "mcp.json", {"mcpServers": {"pooled": {}, "hoisted": {}}})
-        session = [{"name": "pooled"}, {"name": "hoisted"}, {"name": "kirocrew-core"}]
+        session = [{"name": "pooled"}, {"name": "hoisted"}, {"name": "ajcrew-core"}]
         stamped = stamp_settings_mcp([_agent()], "a", work, declared=["own", "hoisted"])
         kept = without_excluded_stubs(session, stamped)
-        assert [e["name"] for e in kept] == ["hoisted", "kirocrew-core"]
+        assert [e["name"] for e in kept] == ["hoisted", "ajcrew-core"]
 
     def test_a_dropped_stub_name_cannot_forge_a_log_line(self, home, work, caplog):
         forged = "x\nERROR forged"
         _write(home / "mcp.json", {"mcpServers": {forged: {}}})
         stamped = stamp_settings_mcp([_agent()], "a", work)
-        with caplog.at_level(logging.INFO, logger="kiro_crew.acp.kas_settings_mcp"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.acp.kas_settings_mcp"):
             assert without_excluded_stubs([{"name": forged}], stamped) == []
         lines = [r.getMessage() for r in caplog.records if "pooled stub" in r.getMessage()]
         assert lines and all("\n" not in line for line in lines)

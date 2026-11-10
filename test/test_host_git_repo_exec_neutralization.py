@@ -127,7 +127,7 @@ def _prove_planted_vector_fires(repo: Path, marker: Path, *args: str) -> None:
 
 class TestRepoExecDriverReason:
     def test_names_a_planted_filter_and_is_clean_otherwise(self, tmp_path):
-        from kiro_crew.platform.update_governance import repo_exec_driver_reason
+        from aj_crew.platform.update_governance import repo_exec_driver_reason
 
         _, prog = _marker_programs(tmp_path)
         repo = _repo(tmp_path / "r")
@@ -142,8 +142,8 @@ class TestRepoExecDriverReason:
 
     def test_an_empty_named_filter_is_refused_too(self, tmp_path):
         # Git accepts `[filter ""]` (key `filter..clean`) bound by `filter=`.
-        from kiro_crew.dashboard.handlers.worktree import _FILTER_KEY_RE
-        from kiro_crew.platform.update_governance import (
+        from aj_crew.dashboard.handlers.worktree import _FILTER_KEY_RE
+        from aj_crew.platform.update_governance import (
             repo_exec_config_reason,
             repo_exec_driver_reason,
         )
@@ -173,7 +173,7 @@ class TestRepoExecDriverReason:
         assert _ran(marker) == ""
 
     def test_url_rewrite_is_not_a_read_only_refusal(self, tmp_path):
-        from kiro_crew.platform.update_governance import (
+        from aj_crew.platform.update_governance import (
             repo_exec_config_reason,
             repo_exec_driver_reason,
         )
@@ -213,7 +213,7 @@ def _with_nested_filter_repo(repo: Path, prog: Path) -> Path:
 
 class TestNestedRepoDrivers:
     def test_probes_see_a_driver_declared_in_a_nested_repo(self, tmp_path):
-        from kiro_crew.platform.update_governance import (
+        from aj_crew.platform.update_governance import (
             nested_repo_exec_driver_reason,
             repo_exec_config_reason,
             repo_exec_driver_reason,
@@ -245,7 +245,7 @@ class TestNestedRepoDrivers:
         # THERE, not under the directory the caller named.
         import shutil as _shutil
 
-        from kiro_crew.platform.update_governance import repo_exec_driver_reason
+        from aj_crew.platform.update_governance import repo_exec_driver_reason
 
         _, prog = _marker_programs(tmp_path)
         real = _repo(tmp_path / "real")
@@ -259,7 +259,7 @@ class TestNestedRepoDrivers:
         assert "filter.pwn.clean" in repo_exec_driver_reason(str(named))
 
     def test_fingerprint_falls_back_instead_of_reaching_the_nested_filter(self, tmp_path):
-        from kiro_crew import code_fingerprint
+        from aj_crew import code_fingerprint
 
         marker, prog = _marker_programs(tmp_path)
         repo = _repo(tmp_path / "r")
@@ -280,7 +280,7 @@ class TestTransportPins:
     def test_upload_pack_pins_are_the_bare_names_an_ssh_server_accepts(self):
         # Over ssh the value is the REMOTE command; GitHub/GitLab accept only the
         # bare name, so an absolute local path broke every ssh fetch.
-        from kiro_crew.platform.update_governance import git_command_env
+        from aj_crew.platform.update_governance import git_command_env
 
         pins = dict(self._pins(git_command_env()))
         # Every signature verifier is pinned, not only OpenPGP: `archive`'s
@@ -294,7 +294,7 @@ class TestTransportPins:
         # For a human-run update the two transport keys are not pinned, so git
         # reads the operator's config natively: plain entries, an include, an
         # includeIf on this checkout, an empty reset and a per-URL helper.
-        from kiro_crew.platform.update_governance import git_command_env
+        from aj_crew.platform.update_governance import git_command_env
 
         repo = _repo(tmp_path / "r")
         extra = tmp_path / "extra.gitconfig"
@@ -334,7 +334,7 @@ class TestTransportPins:
         "key,value", [("credential.helper", "repo-planted"), ("core.sshCommand", "evil-ssh")]
     )
     def test_human_transport_refuses_the_repos_own_transport_keys(self, tmp_path, key, value):
-        from kiro_crew.platform.update_governance import repo_exec_config_reason
+        from aj_crew.platform.update_governance import repo_exec_config_reason
 
         repo = _repo(tmp_path / "r")
         _g(repo, "config", key, value)
@@ -345,8 +345,8 @@ class TestTransportPins:
     def test_probes_run_the_callers_git_when_no_trusted_git_exists(self, monkeypatch, tmp_path):
         # A host whose git is outside the trusted dirs: the probe runs the same bare
         # `git` the caller does, so a clean repo is clean and a driver is still found.
-        from kiro_crew import platform_compat
-        from kiro_crew.platform.update_governance import (
+        from aj_crew import platform_compat
+        from aj_crew.platform.update_governance import (
             repo_exec_config_reason,
             repo_exec_driver_reason,
         )
@@ -366,7 +366,7 @@ class TestTransportPins:
 
 class TestCodeFingerprint:
     def test_worktree_diff_runs_no_fixed_key_program(self, tmp_path):
-        from kiro_crew import code_fingerprint
+        from aj_crew import code_fingerprint
 
         marker, prog = _marker_programs(tmp_path)
         repo = _repo(tmp_path / "r")
@@ -379,7 +379,7 @@ class TestCodeFingerprint:
         assert _ran(marker) == ""
 
     def test_repo_named_filter_falls_back_without_running_it(self, tmp_path):
-        from kiro_crew import code_fingerprint
+        from aj_crew import code_fingerprint
 
         marker, prog = _marker_programs(tmp_path)
         repo = _repo(tmp_path / "r")
@@ -398,12 +398,12 @@ class TestCodeFingerprint:
 class TestBuildSourceFingerprint:
     @staticmethod
     def _dist(repo: Path) -> Path:
-        dist = repo / "src" / "kiro_crew" / "static" / "dist"
+        dist = repo / "src" / "aj_crew" / "static" / "dist"
         dist.mkdir(parents=True)
         return dist
 
     def test_status_runs_no_fixed_key_program(self, tmp_path):
-        from kiro_crew import frontend
+        from aj_crew import frontend
 
         marker, prog = _marker_programs(tmp_path)
         repo = _repo(tmp_path / "r")
@@ -418,7 +418,7 @@ class TestBuildSourceFingerprint:
         assert _ran(marker) == ""
 
     def test_repo_named_filter_skips_the_stamp(self, tmp_path):
-        from kiro_crew import frontend
+        from aj_crew import frontend
 
         marker, prog = _marker_programs(tmp_path)
         repo = _repo(tmp_path / "r")
@@ -439,7 +439,7 @@ class TestBuildSourceFingerprint:
 
 class TestCloudSourceTarball:
     def test_fixed_key_programs_do_not_run(self, tmp_path):
-        from kiro_crew.cloud import source
+        from aj_crew.cloud import source
 
         marker, prog = _marker_programs(tmp_path)
         repo = _repo(tmp_path / "r")
@@ -461,7 +461,7 @@ class TestCloudSourceTarball:
         # now taken as plain tar and compressed in Python.
         import tarfile
 
-        from kiro_crew.cloud import source
+        from aj_crew.cloud import source
 
         marker, prog = _marker_programs(tmp_path)
         repo = _repo(tmp_path / "r")
@@ -481,7 +481,7 @@ class TestCloudSourceTarball:
         # ship raw blobs; such a tree packages the checked-out working files.
         import tarfile
 
-        from kiro_crew.cloud import source
+        from aj_crew.cloud import source
 
         repo = _repo(tmp_path / "r")
         (repo / ".gitattributes").write_text("*.bin filter=lfsish\n")
@@ -499,7 +499,7 @@ class TestCloudSourceTarball:
         # The filtered-tree path must leave out what `git archive` would.
         import tarfile
 
-        from kiro_crew.cloud import source
+        from aj_crew.cloud import source
 
         repo = _repo(tmp_path / "r")
         # `private export-ignore` names the DIRECTORY; check-attr does not pass it to
@@ -523,7 +523,7 @@ class TestCloudSourceTarball:
         # `private/ export-ignore` matches only the slashed form in check-attr.
         import tarfile
 
-        from kiro_crew.cloud import source
+        from aj_crew.cloud import source
 
         repo = _repo(tmp_path / "r")
         (repo / ".gitattributes").write_text("*.bin filter=lfsish\nprivate/ export-ignore\n")
@@ -548,7 +548,7 @@ class TestCloudSourceTarball:
     def test_repo_named_filter_skips_archive_and_status(self, tmp_path):
         import tarfile
 
-        from kiro_crew.cloud import source
+        from aj_crew.cloud import source
 
         marker, prog = _marker_programs(tmp_path)
         repo = _repo(tmp_path / "r")
@@ -577,14 +577,14 @@ class TestDashboardFileDiff:
         from aiohttp.test_utils import make_mocked_request
         from dashboard_owner_helpers import as_owner
 
-        from kiro_crew.dashboard.handlers.files import api_file_diff
+        from aj_crew.dashboard.handlers.files import api_file_diff
 
         req = make_mocked_request(
             "GET", f"/api/file-diff?path={path}", app=as_owner(web.Application())
         )
         req["user"] = "local-app"
         req["app"] = ""
-        with patch("kiro_crew.dashboard.handlers.files._sel", return_value=MagicMock()):
+        with patch("aj_crew.dashboard.handlers.files._sel", return_value=MagicMock()):
             resp = await api_file_diff(req)
         assert resp.status == 200
         return json.loads(resp.body)
@@ -691,23 +691,23 @@ def _behind_checkout(tmp_path: Path) -> Path:
 class TestDashboardUpdateApply:
     @staticmethod
     def _arm(monkeypatch, proj: Path) -> None:
-        from kiro_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers import updates
 
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(proj))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(proj))
         monkeypatch.setattr(
-            "kiro_crew.platform.update_capability.running_from_checkout",
+            "aj_crew.platform.update_capability.running_from_checkout",
             lambda root, **kw: True,
         )
 
         async def _no_provider():
             return None
 
-        monkeypatch.setattr("kiro_crew.platform.update_provider.apply_policy_update", _no_provider)
+        monkeypatch.setattr("aj_crew.platform.update_provider.apply_policy_update", _no_provider)
         monkeypatch.setattr(updates, "update_blocked_reason", lambda url: None)
 
     @staticmethod
     def _post():
-        from kiro_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers import updates
 
         class _State:
             def push_refresh(self, kind: str) -> None:
@@ -759,7 +759,7 @@ class TestDashboardUpdateApply:
         assert _ran(marker) == ""
 
         # ...and with the probe bypassed, `--upload-pack` on the fetch still wins.
-        from kiro_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers import updates
 
         monkeypatch.setattr(updates, "repo_exec_config_reason", lambda _p, **_k: "")
         resp = self._post()
@@ -792,7 +792,7 @@ class TestDashboardUpdateApply:
         assert json.loads(resp.body)["code"] == "checkout_diverged", resp.body
 
     def test_repo_named_driver_is_refused_before_any_git_runs(self, monkeypatch, tmp_path):
-        from kiro_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers import updates
 
         marker, prog = _marker_programs(tmp_path)
         proj = _diverged_checkout(tmp_path)
@@ -815,7 +815,7 @@ class TestDashboardUpdateApply:
     ):
         # The first probe runs before `fetch`, which can take its whole timeout.
         # A driver that appears after it must still be refused before the merge.
-        from kiro_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers import updates
 
         proj = _behind_checkout(tmp_path)
         before = _g(proj, "rev-parse", "HEAD")
@@ -839,22 +839,22 @@ class TestCliUpdate:
         pass
 
     def _arm(self, monkeypatch, proj: Path) -> None:
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(proj))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(proj))
         monkeypatch.setattr(
             cli_server, "derive_capability", lambda **_kw: SimpleNamespace(managed_by="git")
         )
         monkeypatch.setattr(
-            "kiro_crew.platform.update_provider.resolve_provider", lambda *a, **k: None
+            "aj_crew.platform.update_provider.resolve_provider", lambda *a, **k: None
         )
 
         async def _no_provider():
             return None
 
-        monkeypatch.setattr("kiro_crew.platform.update_provider.apply_policy_update", _no_provider)
+        monkeypatch.setattr("aj_crew.platform.update_provider.apply_policy_update", _no_provider)
         monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.update_blocked_reason", lambda url: None
+            "aj_crew.platform.update_governance.update_blocked_reason", lambda url: None
         )
         monkeypatch.setattr(cli_server, "_snapshot_memory_or_exit", lambda: None)
 
@@ -862,10 +862,10 @@ class TestCliUpdate:
             raise self._Stop
 
         # The first step after `git reset --hard`: stop there, the git work is done.
-        monkeypatch.setattr("kiro_crew.agent_sdk.kas_bundle.kas_bundle_route", _stop)
+        monkeypatch.setattr("aj_crew.agent_sdk.kas_bundle.kas_bundle_route", _stop)
 
     def test_fetch_status_and_reset_run_no_planted_program(self, monkeypatch, tmp_path):
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         marker, prog = _marker_programs(tmp_path)
         proj = _behind_checkout(tmp_path)
@@ -879,7 +879,7 @@ class TestCliUpdate:
         assert _ran(marker) == ""
 
     def test_repo_named_driver_is_refused_before_fetch(self, monkeypatch, tmp_path, capsys):
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         marker, prog = _marker_programs(tmp_path)
         proj = _behind_checkout(tmp_path)
@@ -897,7 +897,7 @@ class TestCliUpdate:
     def test_planted_origin_upload_pack_does_not_run(self, monkeypatch, tmp_path):
         # Git takes the FIRST uploadpack it reads -- the repository's -- so the env
         # pin alone does not win. The probe refuses it before the fetch.
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         marker, _ = _marker_programs(tmp_path)
         prog = tmp_path / "planted-upload-pack.sh"
@@ -914,7 +914,7 @@ class TestCliUpdate:
 
     def test_fetch_overrides_upload_pack_even_without_the_probe(self, monkeypatch, tmp_path):
         # Belt and braces: with the probe bypassed, `--upload-pack` still wins.
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         marker, _ = _marker_programs(tmp_path)
         prog = tmp_path / "planted-upload-pack.sh"
@@ -924,7 +924,7 @@ class TestCliUpdate:
         _g(proj, "config", "remote.origin.uploadpack", str(prog))
         self._arm(monkeypatch, proj)
         monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.repo_exec_config_reason",
+            "aj_crew.platform.update_governance.repo_exec_config_reason",
             lambda _p, **_k: "",
         )
 
@@ -937,7 +937,7 @@ class TestCliUpdate:
     ):
         # The reset strips GIT_DIR; the divergence guard must judge the same repo,
         # or a behind-only decoy approves resetting a diverged checkout.
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         proj = _diverged_checkout(tmp_path)
         decoy = tmp_path / "decoy"
@@ -958,14 +958,14 @@ class TestCliUpdate:
     ):
         # The fetch and the local-changes prompt leave an unbounded gap before
         # the reset; the probe is repeated right before it.
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         proj = _behind_checkout(tmp_path)
         before = _g(proj, "rev-parse", "HEAD")
         self._arm(monkeypatch, proj)
         answers = ["", "repository declares filter.late.smudge"]
         monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.repo_exec_config_reason",
+            "aj_crew.platform.update_governance.repo_exec_config_reason",
             lambda _p, **_k: answers.pop(0),
         )
 
@@ -979,7 +979,7 @@ class TestCliUpdate:
     def test_up_to_date_diff_runs_no_textconv_planted_during_the_fetch(self, monkeypatch, tmp_path):
         # The `HEAD..target` diff runs before the post-fetch re-check, so a
         # textconv planted while the fetch ran must not reach it.
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         marker, prog = _marker_programs(tmp_path)
         proj = _behind_checkout(tmp_path)
@@ -990,7 +990,7 @@ class TestCliUpdate:
         _prove_planted_vector_fires(proj, marker, "diff", "HEAD", "origin/main", "--quiet")
         self._arm(monkeypatch, proj)
         monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.repo_exec_config_reason",
+            "aj_crew.platform.update_governance.repo_exec_config_reason",
             lambda _p, **_k: "",
         )
 
@@ -1003,7 +1003,7 @@ class TestNestedProbeFailures:
     """A skipping nested walk passes over only an unreadable nested CONFIG."""
 
     def test_a_nested_repo_whose_later_probe_fails_is_refused(self, monkeypatch, tmp_path):
-        from kiro_crew.platform import update_governance as ug
+        from aj_crew.platform import update_governance as ug
 
         _, prog = _marker_programs(tmp_path)
         repo = _repo(tmp_path / "r")
@@ -1022,7 +1022,7 @@ class TestNestedProbeFailures:
     def test_a_nested_repo_with_its_config_deleted_is_refused(self, monkeypatch, tmp_path):
         # The child git still runs there, and runs a GLOBAL driver the nested
         # attributes bind, so an unlistable nested config is not skipped.
-        from kiro_crew.platform import update_governance as ug
+        from aj_crew.platform import update_governance as ug
 
         marker, prog = _marker_programs(tmp_path)
         repo = _repo(tmp_path / "r")
@@ -1041,7 +1041,7 @@ class TestNestedProbeFailures:
         assert ug.nested_repo_exec_driver_reason(str(repo)) == ug._NESTED_REPO_INCOMPLETE
 
     def test_a_timed_out_top_level_listing_is_refused(self, monkeypatch, tmp_path):
-        from kiro_crew.platform import update_governance as ug
+        from aj_crew.platform import update_governance as ug
 
         repo = _repo(tmp_path / "r")
         real_run = ug.subprocess.run
@@ -1055,7 +1055,7 @@ class TestNestedProbeFailures:
         assert ug.nested_repo_exec_driver_reason(str(repo)) == ug._NESTED_REPO_INCOMPLETE
 
     def test_an_unreadable_top_level_index_is_still_passed_over(self, monkeypatch, tmp_path):
-        from kiro_crew.platform import update_governance as ug
+        from aj_crew.platform import update_governance as ug
 
         repo = _repo(tmp_path / "r")
         (repo / ".git" / "index").write_bytes(b"garbage")
@@ -1072,7 +1072,7 @@ class TestNestedProbeFailures:
 )
 def test_refusal_reasons_do_not_carry_url_credentials(tmp_path, key):
     # The reason reaches the gateway log and the 409 body.
-    from kiro_crew.platform.update_governance import repo_exec_config_reason
+    from aj_crew.platform.update_governance import repo_exec_config_reason
 
     repo = _repo(tmp_path / "r")
     _g(repo, "config", key, "false" if key.endswith("sslVerify") else "https://x.invalid/")
@@ -1093,7 +1093,7 @@ def test_refusal_reasons_do_not_carry_url_credentials(tmp_path, key):
 def test_transport_keys_refuse_read_only_callers_too(tmp_path, key, value):
     # A partial clone's `archive`/`diff`/`show` lazy-fetches a missing blob over
     # the transport, so read-only callers refuse these keys like the fetch does.
-    from kiro_crew.platform.update_governance import (
+    from aj_crew.platform.update_governance import (
         repo_exec_config_reason,
         repo_exec_driver_reason,
     )
@@ -1107,7 +1107,7 @@ def test_transport_keys_refuse_read_only_callers_too(tmp_path, key, value):
 def test_human_transport_probe_sees_includes_that_depend_on_global_remotes(monkeypatch, tmp_path):
     # A repo-local `includeIf "hasconfig:remote.*.url:..."` matches only on a URL
     # from GLOBAL config; the fetch reads global config, so the probe must too.
-    from kiro_crew.platform.update_governance import repo_exec_config_reason
+    from aj_crew.platform.update_governance import repo_exec_config_reason
 
     repo = _repo(tmp_path / "r")
     inc = tmp_path / "inc.gitconfig"
@@ -1124,7 +1124,7 @@ def test_file_diff_builds_its_git_env_off_the_event_loop(monkeypatch, tmp_path):
     # `git_command_env` can shell out; the handler builds it in its worker thread.
     import threading
 
-    from kiro_crew.dashboard.handlers import files
+    from aj_crew.dashboard.handlers import files
 
     loop_thread = threading.get_ident()
     seen: list[int] = []

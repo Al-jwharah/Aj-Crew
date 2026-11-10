@@ -21,20 +21,20 @@ import pytest
 from aiohttp import WSMsgType, web
 from aiohttp.test_utils import TestServer
 
-from kiro_crew.boxd_session import cli as boxd_cli
-from kiro_crew.boxd_session.cli import BoxdCLI, BoxdError
-from kiro_crew.coder.remote_worker import RemoteWorkerError
-from kiro_crew.session_environment import SessionEnvironmentUnavailable
-from kiro_crew.sprites_session import terminal
-from kiro_crew.sprites_session.client import SpritesClient, SpritesError, _ws_base
-from kiro_crew.sprites_session.shell import SpritesShell, SpritesWorkerLaunch
-from kiro_crew.testing.wait import await_until
+from aj_crew.boxd_session import cli as boxd_cli
+from aj_crew.boxd_session.cli import BoxdCLI, BoxdError
+from aj_crew.coder.remote_worker import RemoteWorkerError
+from aj_crew.session_environment import SessionEnvironmentUnavailable
+from aj_crew.sprites_session import terminal
+from aj_crew.sprites_session.client import SpritesClient, SpritesError, _ws_base
+from aj_crew.sprites_session.shell import SpritesShell, SpritesWorkerLaunch
+from aj_crew.testing.wait import await_until
 
 
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments are reachable only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="POSIX fakes")
@@ -216,7 +216,7 @@ async def test_the_bridge_opens_nothing_on_a_sprite_that_is_not_the_recorded_one
     try:
         with pytest.raises(SessionEnvironmentUnavailable, match="nothing was opened"):
             await terminal.run(
-                "kirocrew-0123456789abcdef",
+                "ajcrew-0123456789abcdef",
                 TOKEN,
                 "",
                 sprite_id="sprite-1",
@@ -261,8 +261,8 @@ async def test_http_failures_carry_the_status_and_detail_never_the_token():
     try:
         client = SpritesClient(TOKEN, base_url=str(server.make_url("")).rstrip("/"))
         for call in (
-            client.list_sprites(prefix="kirocrew-"),
-            client.create_sprite("kirocrew-x"),
+            client.list_sprites(prefix="ajcrew-"),
+            client.create_sprite("ajcrew-x"),
             client.get_sprite("broken"),
             client.get_sprite("html"),
             client.delete_sprite("broken"),
@@ -407,7 +407,7 @@ async def test_the_bridge_relays_bytes_until_the_panel_closes():
     try:
         bridge = asyncio.ensure_future(
             terminal.run(
-                "kirocrew-0123456789abcdef",
+                "ajcrew-0123456789abcdef",
                 TOKEN,
                 "",
                 sprite_id="sprite-1",
@@ -443,9 +443,9 @@ def test_window_size_falls_back_off_a_terminal():
 
 
 def test_the_bridge_entry_point_refuses_bad_input_and_a_missing_token(monkeypatch, capsys):
-    from kiro_crew.sprites_session import launch
+    from aj_crew.sprites_session import launch
 
-    good = ["--sprite", "kirocrew-0123456789abcdef", "--sprite-id", "sprite-1"]
+    good = ["--sprite", "ajcrew-0123456789abcdef", "--sprite-id", "sprite-1"]
     assert terminal.main(["--sprite", "other", "--sprite-id", "s", "--token-secret", "X"]) == 2
     assert terminal.main([*good[:2], "--sprite-id=-x", "--token-secret", "X"]) == 2
     monkeypatch.setattr(launch, "_vault_token", lambda name: "")
@@ -514,7 +514,7 @@ async def test_the_bridge_returns_the_remote_shells_exit_code():
     out_r, out_w = os.pipe()
     try:
         code = await terminal.run(
-            "kirocrew-0123456789abcdef",
+            "ajcrew-0123456789abcdef",
             TOKEN,
             "/workspace",
             sprite_id="sprite-1",

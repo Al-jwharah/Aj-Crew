@@ -1,4 +1,4 @@
-"""Coverage tests for :mod:`kiro_crew.cli_commands`: agent, workspace, security, policy.
+"""Coverage tests for :mod:`aj_crew.cli_commands`: agent, workspace, security, policy.
 
 The agent and workspace subcommands write locked deltas into ``config.json``; the
 security and policy subcommands read the governance state back: the deny list, the
@@ -21,21 +21,21 @@ from unittest.mock import MagicMock, patch
 import pytest
 from cli_commands_coverage_helpers import _ns
 
-from kiro_crew import cli_commands as cc
-from kiro_crew import sel as sel_mod
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, WorkspaceConfig
-from kiro_crew.security import BUILTIN_DENIED_RULES
+from aj_crew import cli_commands as cc
+from aj_crew import sel as sel_mod
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, WorkspaceConfig
+from aj_crew.security import BUILTIN_DENIED_RULES
 
 
 def _cfg_with(
     *,
-    agents: dict[str, KiroCrewAgentConfig] | None = None,
+    agents: dict[str, AjCrewAgentConfig] | None = None,
     workspaces: dict[str, WorkspaceConfig] | None = None,
     default_agent: str = "default",
     default_workspace: str = "default",
-) -> KiroCrewConfig:
+) -> AjCrewConfig:
     """An in-memory config whose ``save()`` is a no-op recorder."""
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = agents if agents is not None else {}
     cfg.workspaces = workspaces if workspaces is not None else {}
     cfg.default_agent = default_agent
@@ -44,7 +44,7 @@ def _cfg_with(
     return cfg
 
 
-def _seed_doc_file(tmp_path: Path, cfg: KiroCrewConfig) -> Path:
+def _seed_doc_file(tmp_path: Path, cfg: AjCrewConfig) -> Path:
     """Materialize *cfg* as a real config.json for the locked-delta writers.
 
     The CLI CRUD commands do not mutate the loaded snapshot and ``save()``
@@ -74,11 +74,11 @@ class TestAgentCli:
     def test_list_marks_default(self, capsys: pytest.CaptureFixture[str]) -> None:
         cfg = _cfg_with(
             agents={
-                "default": KiroCrewAgentConfig(kiro_agent="kirocrew"),
-                "other": KiroCrewAgentConfig(kiro_agent="alt"),
+                "default": AjCrewAgentConfig(kiro_agent="ajcrew"),
+                "other": AjCrewAgentConfig(kiro_agent="alt"),
             }
         )
-        with patch.object(KiroCrewConfig, "load", return_value=cfg):
+        with patch.object(AjCrewConfig, "load", return_value=cfg):
             cc._handle_agent(_ns(agent_action="list"))
         out = capsys.readouterr().out
         assert "default *" in out and "other" in out and "alt" in out
@@ -89,14 +89,14 @@ class TestAgentCli:
         cfg = _cfg_with(agents={})
         cfg_path = _seed_doc_file(tmp_path, cfg)
         with (
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
         ):
             cc._handle_agent(
                 _ns(
                     agent_action="create",
                     name="new",
-                    kiro_agent="kirocrew",
+                    kiro_agent="ajcrew",
                     workspace="ws",
                     memory_store="",
                 )
@@ -114,9 +114,9 @@ class TestAgentCli:
     def test_create_duplicate_exits_1_without_saving(
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        cfg = _cfg_with(agents={"dup": KiroCrewAgentConfig()})
+        cfg = _cfg_with(agents={"dup": AjCrewAgentConfig()})
         with (
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
             pytest.raises(SystemExit) as exc,
         ):
             cc._handle_agent(
@@ -134,12 +134,12 @@ class TestAgentCli:
 
     def test_update_applies_only_provided_fields(self, tmp_path: Path) -> None:
         cfg = _cfg_with(
-            agents={"a": KiroCrewAgentConfig(kiro_agent="old", workspace="ws0", memory_store="m0")}
+            agents={"a": AjCrewAgentConfig(kiro_agent="old", workspace="ws0", memory_store="m0")}
         )
         cfg_path = _seed_doc_file(tmp_path, cfg)
         with (
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
         ):
             cc._handle_agent(
                 _ns(
@@ -156,14 +156,14 @@ class TestAgentCli:
         assert agent["memory_store"] == "m0"
 
     def test_update_template_and_workspace_preserves_private_memory(self, tmp_path: Path) -> None:
-        from kiro_crew.memory_stores import provision_member_memory
+        from aj_crew.memory_stores import provision_member_memory
 
-        cfg = _cfg_with(agents={"a": KiroCrewAgentConfig()})
+        cfg = _cfg_with(agents={"a": AjCrewAgentConfig()})
         store = provision_member_memory(cfg, "a")
         cfg_path = _seed_doc_file(tmp_path, cfg)
         with (
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
         ):
             cc._handle_agent(
                 _ns(
@@ -184,7 +184,7 @@ class TestAgentCli:
     def test_update_missing_exits_1(self, capsys: pytest.CaptureFixture[str]) -> None:
         cfg = _cfg_with(agents={})
         with (
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
             pytest.raises(SystemExit) as exc,
         ):
             cc._handle_agent(
@@ -203,12 +203,12 @@ class TestAgentCli:
     def test_update_with_nothing_to_change_warns_and_writes_nothing(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str], workspace: str | None
     ) -> None:
-        cfg = _cfg_with(agents={"a": KiroCrewAgentConfig(kiro_agent="k", workspace="ws0")})
+        cfg = _cfg_with(agents={"a": AjCrewAgentConfig(kiro_agent="k", workspace="ws0")})
         cfg_path = _seed_doc_file(tmp_path, cfg)
         before = cfg_path.read_bytes()
         with (
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             patch.object(cc, "persist_member_config") as persist,
         ):
             cc._handle_agent(
@@ -232,12 +232,12 @@ class TestAgentCli:
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         cfg = _cfg_with(
-            agents={"default": KiroCrewAgentConfig(), "spare": KiroCrewAgentConfig()},
+            agents={"default": AjCrewAgentConfig(), "spare": AjCrewAgentConfig()},
         )
         cfg_path = _seed_doc_file(tmp_path, cfg)
         with (
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
         ):
             cc._handle_agent(_ns(agent_action="delete", name="spare"))
         assert "spare" not in _read_doc(cfg_path)["agents"]
@@ -249,16 +249,16 @@ class TestAgentCli:
         """Same contract as the dashboard delete: the crew is dropped from its
         team, and a store that cannot even be locked never refuses the delete
         (the recreate-inherits harm is closed on the create path instead)."""
-        from kiro_crew import crew_teams
+        from aj_crew import crew_teams
 
         cfg = _cfg_with(
-            agents={"default": KiroCrewAgentConfig(), "spare": KiroCrewAgentConfig()},
+            agents={"default": AjCrewAgentConfig(), "spare": AjCrewAgentConfig()},
         )
         cfg_path = _seed_doc_file(tmp_path, cfg)
         dropped: list[str] = []
         with (
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             patch.object(crew_teams, "drop_member", lambda name: dropped.append(name)),
         ):
             cc._handle_agent(_ns(agent_action="delete", name="spare"))
@@ -274,12 +274,12 @@ class TestAgentCli:
                 return False
 
         cfg = _cfg_with(
-            agents={"default": KiroCrewAgentConfig(), "other": KiroCrewAgentConfig()},
+            agents={"default": AjCrewAgentConfig(), "other": AjCrewAgentConfig()},
         )
         cfg_path = _seed_doc_file(tmp_path, cfg)
         with (
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             patch.object(crew_teams, "document_lock", lambda: _Broken()),
         ):
             cc._handle_agent(_ns(agent_action="delete", name="other"))
@@ -291,21 +291,21 @@ class TestAgentCli:
     ) -> None:
         """A name a deleted crew left on a team is purged BEFORE the new crew
         is registered, so it never inherits the old membership."""
-        from kiro_crew import crew_teams
+        from aj_crew import crew_teams
 
         cfg = _cfg_with(agents={})
         cfg_path = _seed_doc_file(tmp_path, cfg)
         released: list[str] = []
         with (
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             patch.object(crew_teams, "release_name", lambda name: released.append(name)),
         ):
             cc._handle_agent(
                 _ns(
                     agent_action="create",
                     name="new",
-                    kiro_agent="kirocrew",
+                    kiro_agent="ajcrew",
                     workspace="ws",
                     memory_store="",
                 )
@@ -319,7 +319,7 @@ class TestAgentCli:
         """Registering the name while its old team entry cannot be removed is
         exactly what would expose that entry, so the create is refused with
         the registry untouched."""
-        from kiro_crew import crew_teams
+        from aj_crew import crew_teams
 
         cfg = _cfg_with(agents={})
         cfg_path = _seed_doc_file(tmp_path, cfg)
@@ -328,8 +328,8 @@ class TestAgentCli:
             raise OSError("crew-teams: disk full")
 
         with (
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             patch.object(crew_teams, "release_name", _boom),
             pytest.raises(SystemExit) as exc,
         ):
@@ -337,7 +337,7 @@ class TestAgentCli:
                 _ns(
                     agent_action="create",
                     name="new",
-                    kiro_agent="kirocrew",
+                    kiro_agent="ajcrew",
                     workspace="ws",
                     memory_store="",
                 )
@@ -349,9 +349,9 @@ class TestAgentCli:
         assert "cannot create agent 'new'" in out.err
 
     def test_delete_default_is_refused(self, capsys: pytest.CaptureFixture[str]) -> None:
-        cfg = _cfg_with(agents={"default": KiroCrewAgentConfig()})
+        cfg = _cfg_with(agents={"default": AjCrewAgentConfig()})
         with (
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
             pytest.raises(SystemExit) as exc,
         ):
             cc._handle_agent(_ns(agent_action="delete", name="default"))
@@ -362,7 +362,7 @@ class TestAgentCli:
     def test_delete_missing_exits_1(self) -> None:
         cfg = _cfg_with(agents={})
         with (
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
             pytest.raises(SystemExit),
         ):
             cc._handle_agent(_ns(agent_action="delete", name="ghost"))
@@ -373,12 +373,12 @@ class TestAgentCli:
         # A missing or unknown sub-action is a usage error: usage to stderr,
         # exit 2 (argparse convention), not a 0 on stdout.
         with (
-            patch.object(KiroCrewConfig, "load", return_value=_cfg_with()),
+            patch.object(AjCrewConfig, "load", return_value=_cfg_with()),
             pytest.raises(SystemExit) as exited,
         ):
             cc._handle_agent(_ns(agent_action=None))
         assert exited.value.code == 2
-        assert "Usage: kirocrew agent" in capsys.readouterr().err
+        assert "Usage: ajcrew agent" in capsys.readouterr().err
 
 
 # ── workspace create --copy-from ──
@@ -390,10 +390,10 @@ class TestWorkspaceCopyFrom:
         """The copy source comes from ``workspace_dir_from_entry``, which reads its
         own ``config_dir`` binding; point it at the data home each test patches.
         """
-        with patch("kiro_crew.config.loader.config_dir", return_value=tmp_path):
+        with patch("aj_crew.config.loader.config_dir", return_value=tmp_path):
             yield
 
-    def _base(self) -> KiroCrewConfig:
+    def _base(self) -> AjCrewConfig:
         return _cfg_with(
             workspaces={
                 "default": WorkspaceConfig(dir="workspace"),
@@ -403,9 +403,9 @@ class TestWorkspaceCopyFrom:
 
     def test_copy_from_unknown_source_exits_1(self, tmp_path: Path) -> None:
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch.object(KiroCrewConfig, "load", return_value=self._base()),
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch.object(AjCrewConfig, "load", return_value=self._base()),
+            patch("aj_crew.cli_commands.sel"),
             pytest.raises(SystemExit) as exc,
         ):
             cc._handle_workspace(
@@ -422,10 +422,10 @@ class TestWorkspaceCopyFrom:
         cfg = self._base()
         cfg_path = _seed_doc_file(tmp_path, cfg)
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            patch("aj_crew.cli_commands.sel"),
         ):
             cc._handle_workspace(
                 _ns(workspace_action="create", name="copy1", dir=None, copy_from="src")
@@ -441,10 +441,10 @@ class TestWorkspaceCopyFrom:
         cfg_path = _seed_doc_file(tmp_path, cfg)
         assert not (tmp_path / "workspace-src").exists()
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            patch("aj_crew.cli_commands.sel"),
         ):
             cc._handle_workspace(
                 _ns(workspace_action="create", name="copy2", dir=None, copy_from="src")
@@ -467,10 +467,10 @@ class TestWorkspaceCopyFrom:
         )
         cfg_path = _seed_doc_file(tmp_path, cfg)
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            patch("aj_crew.cli_commands.sel"),
             pytest.raises(SystemExit) as exc,
         ):
             cc._handle_workspace(
@@ -487,10 +487,10 @@ class TestWorkspaceCopyFrom:
         cfg = self._base()
         cfg_path = _seed_doc_file(tmp_path, cfg)
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            patch("aj_crew.cli_commands.sel"),
             patch("shutil.copytree", side_effect=PermissionError(13, "denied")),
         ):
             cc._handle_workspace(
@@ -520,11 +520,11 @@ class TestWorkspaceCopyFrom:
         )
         cfg_path = _seed_doc_file(home, cfg)
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=home),
-            patch("kiro_crew.config.loader.config_dir", return_value=home),
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.config_dir", return_value=home),
+            patch("aj_crew.config.loader.config_dir", return_value=home),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            patch("aj_crew.cli_commands.sel"),
             pytest.raises(SystemExit) as exc,
         ):
             cc._handle_workspace(
@@ -549,10 +549,10 @@ class TestWorkspaceCopyFrom:
         )
         cfg_path = _seed_doc_file(tmp_path, cfg)
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            patch("aj_crew.cli_commands.sel"),
         ):
             cc._handle_workspace(
                 _ns(workspace_action="create", name="copy3", dir=None, copy_from="src")
@@ -568,10 +568,10 @@ class TestWorkspaceCopyFrom:
         cfg_path = _seed_doc_file(tmp_path, cfg)
         before = cfg_path.read_bytes()
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            patch("kiro_crew.cli_commands.sel") as sel,
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            patch("aj_crew.cli_commands.sel") as sel,
         ):
             cc._handle_workspace(_ns(workspace_action="update", name="src", dir=None))
         out = capsys.readouterr()
@@ -590,10 +590,10 @@ class TestWorkspaceCopyFrom:
             return p.endswith("secret.env")
 
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch.object(KiroCrewConfig, "load", return_value=self._base()),
-            patch("kiro_crew.cli_commands.is_sensitive_path", side_effect=_sensitive),
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch.object(AjCrewConfig, "load", return_value=self._base()),
+            patch("aj_crew.cli_commands.is_sensitive_path", side_effect=_sensitive),
+            patch("aj_crew.cli_commands.sel"),
         ):
             cc._handle_workspace(
                 _ns(workspace_action="create", name="copy2", dir=None, copy_from="src")
@@ -604,9 +604,9 @@ class TestWorkspaceCopyFrom:
 
     def test_copy_from_escaping_dir_is_refused(self, tmp_path: Path) -> None:
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch.object(KiroCrewConfig, "load", return_value=self._base()),
-            patch("kiro_crew.cli_commands.sel") as sel,
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch.object(AjCrewConfig, "load", return_value=self._base()),
+            patch("aj_crew.cli_commands.sel") as sel,
             pytest.raises(SystemExit),
         ):
             cc._handle_workspace(
@@ -618,9 +618,9 @@ class TestWorkspaceCopyFrom:
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch.object(KiroCrewConfig, "load", return_value=self._base()),
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch.object(AjCrewConfig, "load", return_value=self._base()),
+            patch("aj_crew.cli_commands.sel"),
             pytest.raises(SystemExit),
         ):
             cc._handle_workspace(
@@ -644,10 +644,10 @@ class TestWorkspaceCopyFrom:
         cfg = self._base()
         cfg_path = _seed_doc_file(tmp_path, cfg)
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            patch("aj_crew.cli_commands.sel"),
         ):
             cc._handle_workspace(
                 _ns(workspace_action="create", name="copy3", dir=None, copy_from="src")
@@ -668,7 +668,7 @@ def _spelled(spelling: str, home: Path) -> str:
 class TestWorkspaceDirInUseResolved:
     """The "already used" check compares resolved folders, not raw strings."""
 
-    def _base(self) -> KiroCrewConfig:
+    def _base(self) -> AjCrewConfig:
         return _cfg_with(
             workspaces={
                 "default": WorkspaceConfig(dir="workspace"),
@@ -676,14 +676,14 @@ class TestWorkspaceDirInUseResolved:
             }
         )
 
-    def _run(self, home: Path, cfg: KiroCrewConfig, cfg_path: Path, **ns: Any) -> None:
+    def _run(self, home: Path, cfg: AjCrewConfig, cfg_path: Path, **ns: Any) -> None:
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=home),
+            patch("aj_crew.cli_commands.config_dir", return_value=home),
             # The copy source is placed by ``workspace_dir_from_entry``.
-            patch("kiro_crew.config.loader.config_dir", return_value=home),
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.config.loader.config_dir", return_value=home),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            patch("aj_crew.cli_commands.sel"),
             pytest.raises(SystemExit) as exc,
         ):
             cc._handle_workspace(_ns(**ns))
@@ -772,13 +772,13 @@ class TestWorkspaceDirInUseResolved:
         self, tmp_path: Path
     ) -> None:
         """Equal paths, two directories (a case-sensitive Windows folder): identity decides."""
-        from kiro_crew import cli_commands_workspace as ws_mod
+        from aj_crew import cli_commands_workspace as ws_mod
 
         home = tmp_path.resolve()
         (home / "workspace-src").mkdir()
         identities = iter([(1, 100), (1, 200)])  # candidate first, then the stored dir
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=home),
+            patch("aj_crew.cli_commands.config_dir", return_value=home),
             patch.object(ws_mod, "_dir_identity", side_effect=lambda _p: next(identities)),
         ):
             assert ws_mod._ws_dir_in_use(home / "workspace-src", ["workspace-src"]) is False
@@ -821,22 +821,22 @@ class TestWorkspaceDirInUseResolved:
         cfg = _cfg_with(
             workspaces={
                 "default": WorkspaceConfig(dir="workspace"),
-                "gone": WorkspaceConfig(dir="~no_such_user_kirocrew_test/ws"),
+                "gone": WorkspaceConfig(dir="~no_such_user_ajcrew_test/ws"),
             }
         )
         cfg_path = _seed_doc_file(home, cfg)
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=home),
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.config_dir", return_value=home),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            patch("aj_crew.cli_commands.sel"),
         ):
             cc._handle_workspace(
                 _ns(workspace_action="create", name="fresh", dir=None, copy_from=None)
             )
         doc = _read_doc(cfg_path)["workspaces"]
         assert doc["fresh"]["dir"] == "workspace-fresh"
-        assert doc["gone"]["dir"] == "~no_such_user_kirocrew_test/ws"
+        assert doc["gone"]["dir"] == "~no_such_user_ajcrew_test/ws"
 
 
 # ── security subcommands ──
@@ -849,7 +849,7 @@ class TestSecurityCli:
         (tmp_path / "config.json").write_text(
             json.dumps({"hooks": {"auto_deny_tools": ["my-custom-pattern"]}}), encoding="utf-8"
         )
-        with patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path):
+        with patch("aj_crew.cli_commands.config_dir", return_value=tmp_path):
             cc._security(_ns(sec_action="deny-list"))
         out = capsys.readouterr().out
         assert "Built-in deny patterns" in out
@@ -858,7 +858,7 @@ class TestSecurityCli:
     def test_deny_list_without_config_file(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        with patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path):
+        with patch("aj_crew.cli_commands.config_dir", return_value=tmp_path):
             cc._security(_ns(sec_action="deny-list"))
         out = capsys.readouterr().out
         assert "Built-in deny patterns" in out
@@ -871,9 +871,9 @@ class TestSecurityCli:
         deliberately suppressed (the ``elif not findings: pass`` branch), so a fully
         clean audit says nothing about vector memory."""
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_commands.scan_history", return_value=([], 3)),
-            patch("kiro_crew.cli_commands.scan_memory", return_value=[]),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_commands.scan_history", return_value=([], 3)),
+            patch("aj_crew.cli_commands.scan_memory", return_value=[]),
         ):
             cc._security(_ns(sec_action="audit"))
         out = capsys.readouterr().out
@@ -886,9 +886,9 @@ class TestSecurityCli:
         history = [{"file": "s.jsonl", "warning": "exfil", "snippet": "curl evil"}]
         memory = [{"type": "semantic", "key": "k", "warning": "odd", "value": "v"}]
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_commands.scan_history", return_value=(history, 3)),
-            patch("kiro_crew.cli_commands.scan_memory", return_value=memory),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_commands.scan_history", return_value=(history, 3)),
+            patch("aj_crew.cli_commands.scan_memory", return_value=memory),
             pytest.raises(SystemExit) as exc,
         ):
             cc._security(_ns(sec_action="audit"))
@@ -902,9 +902,9 @@ class TestSecurityCli:
     ) -> None:
         memory = [{"type": "semantic", "key": "k", "warning": "odd", "value": "v"}]
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_commands.scan_history", return_value=([], 3)),
-            patch("kiro_crew.cli_commands.scan_memory", return_value=memory),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_commands.scan_history", return_value=([], 3)),
+            patch("aj_crew.cli_commands.scan_memory", return_value=memory),
             pytest.raises(SystemExit) as exc,
         ):
             cc._security(_ns(sec_action="audit"))
@@ -917,9 +917,9 @@ class TestSecurityCli:
     ) -> None:
         history = [{"file": "s.jsonl", "warning": "w", "snippet": "x"}]
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_commands.scan_history", return_value=(history, 3)),
-            patch("kiro_crew.cli_commands.scan_memory", return_value=[]),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_commands.scan_history", return_value=(history, 3)),
+            patch("aj_crew.cli_commands.scan_memory", return_value=[]),
             pytest.raises(SystemExit) as exc,
         ):
             cc._security(_ns(sec_action="audit"))
@@ -945,8 +945,8 @@ class TestSecurityCli:
             "".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8"
         )
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_commands.scan_memory", return_value=[]),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_commands.scan_memory", return_value=[]),
             pytest.raises(SystemExit) as exc,
         ):
             cc._security(_ns(sec_action="audit"))
@@ -960,8 +960,8 @@ class TestSecurityCli:
     ) -> None:
         """An empty data home is not a clean scan: no green check is printed."""
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_commands.scan_memory", return_value=[]),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_commands.scan_memory", return_value=[]),
         ):
             cc._security(_ns(sec_action="audit"))
         out = capsys.readouterr().out
@@ -976,8 +976,8 @@ class TestSecurityCli:
         sessions.mkdir()
         (sessions / "empty.jsonl").write_text('{"_type": "metadata"}\n', encoding="utf-8")
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_commands.scan_memory", return_value=[]),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_commands.scan_memory", return_value=[]),
         ):
             cc._security(_ns(sec_action="audit"))
         out = capsys.readouterr().out
@@ -985,7 +985,7 @@ class TestSecurityCli:
         assert "none found" not in out
 
     def test_events_empty(self, capsys: pytest.CaptureFixture[str]) -> None:
-        with patch("kiro_crew.cli_commands.sel") as sel:
+        with patch("aj_crew.cli_commands.sel") as sel:
             sel.return_value.recent.return_value = []
             cc._security(_ns(sec_action="events", limit=5))
         assert "No security events recorded." in capsys.readouterr().out
@@ -1000,7 +1000,7 @@ class TestSecurityCli:
         owner-only and there is no audit UI. Printing operation and outcome alone
         says a refusal happened and never says what was refused.
         """
-        with patch("kiro_crew.cli_commands.sel") as sel:
+        with patch("aj_crew.cli_commands.sel") as sel:
             sel.return_value.recent.return_value = [
                 {
                     "timestamp": "2026-09-24T12:00:00Z",
@@ -1021,7 +1021,7 @@ class TestSecurityCli:
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         """The negative: an empty field must print no line, not a bare label."""
-        with patch("kiro_crew.cli_commands.sel") as sel:
+        with patch("aj_crew.cli_commands.sel") as sel:
             sel.return_value.recent.return_value = [
                 {
                     "timestamp": "2026-09-24T12:00:00Z",
@@ -1044,7 +1044,7 @@ class TestSecurityCli:
         A POSIX name may carry ESC/OSC bytes, and upstream redaction only polices
         credentials and length, so both untrusted fields go through the one-line policy.
         """
-        with patch("kiro_crew.cli_commands.sel") as sel:
+        with patch("aj_crew.cli_commands.sel") as sel:
             sel.return_value.recent.return_value = [
                 {
                     "timestamp": "2026-09-24T12:00:00Z",
@@ -1073,7 +1073,7 @@ class TestSecurityCli:
         An installed app sets both through ``ctx.audit``, so the summary line needs the
         same sanitizing as the detail lines below it.
         """
-        with patch("kiro_crew.cli_commands.sel") as sel:
+        with patch("aj_crew.cli_commands.sel") as sel:
             sel.return_value.recent.return_value = [
                 {
                     "timestamp": "2026-09-24T12:00:00Z",
@@ -1102,7 +1102,7 @@ class TestSecurityCli:
         or a list. Handing that straight to ``re.sub`` would raise ``TypeError`` and
         take the whole listing down -- one bad row would hide every good one.
         """
-        with patch("kiro_crew.cli_commands.sel") as sel:
+        with patch("aj_crew.cli_commands.sel") as sel:
             sel.return_value.recent.return_value = [
                 {
                     "timestamp": 1234567890,
@@ -1132,7 +1132,7 @@ class TestSecurityCli:
 
     def test_events_passes_the_time_window_through(self) -> None:
         """``-n`` alone cannot express "the last two hours"."""
-        with patch("kiro_crew.cli_commands.sel") as sel:
+        with patch("aj_crew.cli_commands.sel") as sel:
             sel.return_value.recent.return_value = []
             cc._security(
                 _ns(sec_action="events", limit=5, since="2026-08-21T00:00:00Z", until="2h")
@@ -1143,7 +1143,7 @@ class TestSecurityCli:
 
     def test_events_rejects_an_unreadable_time(self, capsys: pytest.CaptureFixture[str]) -> None:
         """A typo must not read as "no events in that window"."""
-        with patch("kiro_crew.cli_commands.sel") as sel:
+        with patch("aj_crew.cli_commands.sel") as sel:
             with pytest.raises(SystemExit) as exc:
                 cc._security(_ns(sec_action="events", limit=5, since="yesterdayish"))
         assert exc.value.code == 2
@@ -1151,7 +1151,7 @@ class TestSecurityCli:
         sel.return_value.recent.assert_not_called()
 
     def test_events_rejects_an_inverted_window(self, capsys: pytest.CaptureFixture[str]) -> None:
-        with patch("kiro_crew.cli_commands.sel") as sel:
+        with patch("aj_crew.cli_commands.sel") as sel:
             with pytest.raises(SystemExit) as exc:
                 cc._security(
                     _ns(
@@ -1166,7 +1166,7 @@ class TestSecurityCli:
         sel.return_value.recent.assert_not_called()
 
     def test_events_names_the_window_when_empty(self, capsys: pytest.CaptureFixture[str]) -> None:
-        with patch("kiro_crew.cli_commands.sel") as sel:
+        with patch("aj_crew.cli_commands.sel") as sel:
             sel.return_value.recent.return_value = []
             cc._security(_ns(sec_action="events", limit=5, since="2026-08-21T00:00:00Z"))
         out = capsys.readouterr().out
@@ -1185,7 +1185,7 @@ class TestSecurityCli:
                 "downstream_service": "slack",
             }
         ]
-        with patch("kiro_crew.cli_commands.sel") as sel:
+        with patch("aj_crew.cli_commands.sel") as sel:
             sel.return_value.recent.return_value = events
             cc._security(_ns(sec_action="events", limit=20))
         out = capsys.readouterr().out
@@ -1229,7 +1229,7 @@ class TestSecurityCli:
             history_verifiable=verifiable,
             reason="" if verifiable else "segment directory refused to pin (planted link?)",
         )
-        with patch("kiro_crew.cli_commands.sel") as sel:
+        with patch("aj_crew.cli_commands.sel") as sel:
             sel.return_value.verify_integrity.return_value = outcome
             if exit_code:
                 with pytest.raises(SystemExit) as exc:
@@ -1241,7 +1241,7 @@ class TestSecurityCli:
 
     def test_unknown_action_prints_usage(self, capsys: pytest.CaptureFixture[str]) -> None:
         cc._security(_ns(sec_action="nope"))
-        assert "Usage: kirocrew security" in capsys.readouterr().out
+        assert "Usage: ajcrew security" in capsys.readouterr().out
 
 
 # ── policy subcommands ──
@@ -1311,7 +1311,7 @@ class TestParseTimeSelector:
 class TestPolicyCli:
     def test_show_without_policy(self, capsys: pytest.CaptureFixture[str]) -> None:
         with patch(
-            "kiro_crew.platform.context.current_context",
+            "aj_crew.platform.context.current_context",
             return_value=SimpleNamespace(governance=None),
         ):
             cc._policy(_ns(policy_action="show"))
@@ -1321,7 +1321,7 @@ class TestPolicyCli:
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         with patch(
-            "kiro_crew.platform.context.current_context",
+            "aj_crew.platform.context.current_context",
             return_value=SimpleNamespace(governance=_fake_ceiling()),
         ):
             cc._policy(_ns(policy_action="show"))
@@ -1343,7 +1343,7 @@ class TestPolicyCli:
             by_category[rule.category] = by_category.get(rule.category, 0) + 1
         biggest, biggest_n = max(by_category.items(), key=lambda kv: kv[1])
         with patch(
-            "kiro_crew.platform.context.current_context",
+            "aj_crew.platform.context.current_context",
             return_value=SimpleNamespace(governance=None),
         ):
             cc._policy(_ns(policy_action="show"))
@@ -1360,7 +1360,7 @@ class TestPolicyCli:
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         with patch(
-            "kiro_crew.platform.context.current_context",
+            "aj_crew.platform.context.current_context",
             return_value=SimpleNamespace(governance=_fake_ceiling()),
         ):
             cc._policy(_ns(policy_action="show"))
@@ -1372,7 +1372,7 @@ class TestPolicyCli:
         # on this subparser would collide via argparse's parent/subparser
         # default-override gotcha.
         with patch(
-            "kiro_crew.platform.context.current_context",
+            "aj_crew.platform.context.current_context",
             return_value=SimpleNamespace(governance=None),
         ):
             cc._policy(_ns(policy_action="show", ids=True))
@@ -1384,7 +1384,7 @@ class TestPolicyCli:
         ceiling = _fake_ceiling()
         ceiling.controls = {}
         with patch(
-            "kiro_crew.platform.context.current_context",
+            "aj_crew.platform.context.current_context",
             return_value=SimpleNamespace(governance=ceiling),
         ):
             cc._policy(_ns(policy_action="show"))
@@ -1395,11 +1395,11 @@ class TestPolicyCli:
     ) -> None:
         with (
             patch(
-                "kiro_crew.platform.context.current_context",
+                "aj_crew.platform.context.current_context",
                 return_value=SimpleNamespace(governance=None),
             ),
             patch(
-                "kiro_crew.platform.governance_profiles._profiles_dir",
+                "aj_crew.platform.governance_profiles._profiles_dir",
                 return_value=tmp_path / "absent",
             ),
         ):
@@ -1420,13 +1420,13 @@ class TestPolicyCli:
 
         with (
             patch(
-                "kiro_crew.platform.context.current_context",
+                "aj_crew.platform.context.current_context",
                 return_value=SimpleNamespace(governance=_fake_ceiling()),
             ),
-            patch("kiro_crew.platform.governance_profiles._profiles_dir", return_value=pdir),
-            patch("kiro_crew.platform.governance_profiles.get_store_profile", side_effect=_get),
+            patch("aj_crew.platform.governance_profiles._profiles_dir", return_value=pdir),
+            patch("aj_crew.platform.governance_profiles.get_store_profile", side_effect=_get),
             patch(
-                "kiro_crew.platform.governance_profiles.fallback_profile_names",
+                "aj_crew.platform.governance_profiles.fallback_profile_names",
                 return_value=frozenset(),
             ),
             pytest.raises(SystemExit) as exc,
@@ -1449,8 +1449,8 @@ class TestPolicyCli:
         capsys: pytest.CaptureFixture[str],
         declared_fallback: bool,
     ) -> None:
-        from kiro_crew.platform import governance_profiles as gp
-        from kiro_crew.platform.governance_parts.carriers import deny_all_profile
+        from aj_crew.platform import governance_profiles as gp
+        from aj_crew.platform.governance_parts.carriers import deny_all_profile
 
         pdir = tmp_path / "profiles"
         pdir.mkdir()
@@ -1473,7 +1473,7 @@ class TestPolicyCli:
         try:
             with (
                 patch(
-                    "kiro_crew.platform.context.current_context",
+                    "aj_crew.platform.context.current_context",
                     return_value=SimpleNamespace(governance=ceiling),
                 ),
                 pytest.raises(SystemExit) as exc,
@@ -1495,16 +1495,16 @@ class TestPolicyCli:
         (pdir / "good.json").write_text("{}", encoding="utf-8")
         with (
             patch(
-                "kiro_crew.platform.context.current_context",
+                "aj_crew.platform.context.current_context",
                 return_value=SimpleNamespace(governance=_fake_ceiling()),
             ),
-            patch("kiro_crew.platform.governance_profiles._profiles_dir", return_value=pdir),
+            patch("aj_crew.platform.governance_profiles._profiles_dir", return_value=pdir),
             patch(
-                "kiro_crew.platform.governance_profiles.get_store_profile",
+                "aj_crew.platform.governance_profiles.get_store_profile",
                 side_effect=lambda stem: SimpleNamespace(name=stem),
             ),
             patch(
-                "kiro_crew.platform.governance_profiles.fallback_profile_names",
+                "aj_crew.platform.governance_profiles.fallback_profile_names",
                 return_value=frozenset(),
             ),
         ):
@@ -1516,11 +1516,11 @@ class TestPolicyCli:
     def test_explain_unknown_scope_lists_catalog(self, capsys: pytest.CaptureFixture[str]) -> None:
         with (
             patch(
-                "kiro_crew.platform.context.current_context",
+                "aj_crew.platform.context.current_context",
                 return_value=SimpleNamespace(governance=None),
             ),
             patch(
-                "kiro_crew.platform.governance.SCOPE_CATALOG",
+                "aj_crew.platform.governance.SCOPE_CATALOG",
                 {"capabilities.telemetry": object()},
             ),
             pytest.raises(SystemExit) as exc,
@@ -1547,19 +1547,19 @@ class TestPolicyCli:
         gate = SimpleNamespace(permitted=True, reason="title allowed")
         with (
             patch(
-                "kiro_crew.platform.context.current_context",
+                "aj_crew.platform.context.current_context",
                 return_value=SimpleNamespace(governance=_fake_ceiling()),
             ),
             patch(
-                "kiro_crew.platform.governance.SCOPE_CATALOG",
+                "aj_crew.platform.governance.SCOPE_CATALOG",
                 {"capabilities.telemetry": object()},
             ),
             patch(
-                "kiro_crew.platform.governance_profiles.resolve_active_scope",
+                "aj_crew.platform.governance_profiles.resolve_active_scope",
                 return_value=SimpleNamespace(name="prof"),
             ),
-            patch("kiro_crew.platform.governance.resolve", return_value=decision),
-            patch("kiro_crew.platform.governance.gate_decision", return_value=gate),
+            patch("aj_crew.platform.governance.resolve", return_value=decision),
+            patch("aj_crew.platform.governance.gate_decision", return_value=gate),
         ):
             cc._policy(
                 _ns(
@@ -1580,22 +1580,22 @@ class TestPolicyCli:
     def test_explain_without_active_profile(self, capsys: pytest.CaptureFixture[str]) -> None:
         with (
             patch(
-                "kiro_crew.platform.context.current_context",
+                "aj_crew.platform.context.current_context",
                 return_value=SimpleNamespace(governance=None),
             ),
-            patch("kiro_crew.platform.governance.SCOPE_CATALOG", {"s": object()}),
+            patch("aj_crew.platform.governance.SCOPE_CATALOG", {"s": object()}),
             patch(
-                "kiro_crew.platform.governance_profiles.resolve_active_scope",
+                "aj_crew.platform.governance_profiles.resolve_active_scope",
                 return_value=None,
             ),
             patch(
-                "kiro_crew.platform.governance.resolve",
+                "aj_crew.platform.governance.resolve",
                 return_value=SimpleNamespace(
                     permitted=True, rule="allow", layer=None, reason="default"
                 ),
             ),
             patch(
-                "kiro_crew.platform.governance.gate_decision",
+                "aj_crew.platform.governance.gate_decision",
                 return_value=SimpleNamespace(permitted=True, reason="ok"),
             ),
         ):
@@ -1615,10 +1615,10 @@ class TestPolicyCli:
     def test_profile_missing(self, capsys: pytest.CaptureFixture[str]) -> None:
         with (
             patch(
-                "kiro_crew.platform.context.current_context",
+                "aj_crew.platform.context.current_context",
                 return_value=SimpleNamespace(governance=None),
             ),
-            patch("kiro_crew.platform.governance_profiles.get_store_profile", return_value=None),
+            patch("aj_crew.platform.governance_profiles.get_store_profile", return_value=None),
             pytest.raises(SystemExit) as exc,
         ):
             cc._policy(_ns(policy_action="profile", name="ghost"))
@@ -1630,11 +1630,11 @@ class TestPolicyCli:
     def test_source_misconfigured_exits_nonzero(self, capsys: pytest.CaptureFixture[str]) -> None:
         with (
             patch(
-                "kiro_crew.platform.context.current_context",
+                "aj_crew.platform.context.current_context",
                 return_value=SimpleNamespace(governance=None),
             ),
             patch(
-                "kiro_crew.platform.policy_distribution.distribution_posture",
+                "aj_crew.platform.policy_distribution.distribution_posture",
                 return_value={"error_code": "bad_url"},
             ),
             pytest.raises(SystemExit) as exc,
@@ -1648,11 +1648,11 @@ class TestPolicyCli:
     def test_source_not_configured_exits_zero(self, capsys: pytest.CaptureFixture[str]) -> None:
         with (
             patch(
-                "kiro_crew.platform.context.current_context",
+                "aj_crew.platform.context.current_context",
                 return_value=SimpleNamespace(governance=None),
             ),
             patch(
-                "kiro_crew.platform.policy_distribution.distribution_posture",
+                "aj_crew.platform.policy_distribution.distribution_posture",
                 return_value={"configured": False},
             ),
         ):
@@ -1672,20 +1672,20 @@ class TestPolicyCli:
         expected: str,
     ) -> None:
         """file:// is refused on Windows, so it is not listed as plainly available."""
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         monkeypatch.setattr(platform_compat, "IS_POSIX", is_posix)
         with (
             patch(
-                "kiro_crew.platform.context.current_context",
+                "aj_crew.platform.context.current_context",
                 return_value=SimpleNamespace(governance=None),
             ),
             patch(
-                "kiro_crew.platform.policy_distribution.distribution_posture",
+                "aj_crew.platform.policy_distribution.distribution_posture",
                 return_value={"configured": False},
             ),
             patch(
-                "kiro_crew.platform.policy_distribution.registered_policy_schemes",
+                "aj_crew.platform.policy_distribution.registered_policy_schemes",
                 return_value=("file", "http", "https"),
             ),
         ):
@@ -1698,30 +1698,30 @@ class TestPolicyCli:
     def test_profile_prints_bind_and_scopes(self, capsys: pytest.CaptureFixture[str]) -> None:
         prof = SimpleNamespace(
             name="team",
-            bind=SimpleNamespace(type="agent", id="kirocrew"),
+            bind=SimpleNamespace(type="agent", id="ajcrew"),
             extends="base",
             controls={"capabilities.telemetry": "off"},
         )
         with (
             patch(
-                "kiro_crew.platform.context.current_context",
+                "aj_crew.platform.context.current_context",
                 return_value=SimpleNamespace(governance=None),
             ),
-            patch("kiro_crew.platform.governance_profiles.get_store_profile", return_value=prof),
+            patch("aj_crew.platform.governance_profiles.get_store_profile", return_value=prof),
         ):
             cc._policy(_ns(policy_action="profile", name="team"))
         out = capsys.readouterr().out
-        assert "bind=agent:kirocrew" in out and "extends=base" in out
+        assert "bind=agent:ajcrew" in out and "extends=base" in out
         assert "capabilities.telemetry: off" in out
 
     def test_profile_unbound_with_no_controls(self, capsys: pytest.CaptureFixture[str]) -> None:
         prof = SimpleNamespace(name="empty", bind=None, extends=None, controls={})
         with (
             patch(
-                "kiro_crew.platform.context.current_context",
+                "aj_crew.platform.context.current_context",
                 return_value=SimpleNamespace(governance=None),
             ),
-            patch("kiro_crew.platform.governance_profiles.get_store_profile", return_value=prof),
+            patch("aj_crew.platform.governance_profiles.get_store_profile", return_value=prof),
         ):
             cc._policy(_ns(policy_action="profile", name="empty"))
         out = capsys.readouterr().out
@@ -1729,8 +1729,8 @@ class TestPolicyCli:
 
     def test_unknown_action_prints_usage(self, capsys: pytest.CaptureFixture[str]) -> None:
         with patch(
-            "kiro_crew.platform.context.current_context",
+            "aj_crew.platform.context.current_context",
             return_value=SimpleNamespace(governance=None),
         ):
             cc._policy(_ns(policy_action=None))
-        assert "Usage: kirocrew policy" in capsys.readouterr().out
+        assert "Usage: ajcrew policy" in capsys.readouterr().out

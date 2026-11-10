@@ -25,9 +25,9 @@ const PREFIX = process.argv[3] || 'after'
 mkdirSync(OUT, { recursive: true })
 
 const CREWS = [
-  { name: 'kirocrew', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default' },
+  { name: 'ajcrew', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default' },
   { name: 'oncall', kiro_agent: 'oncall', workspace: 'oncall', memory_store: 'default' },
-  { name: 'research', kiro_agent: 'kirocrew', workspace: 'research', memory_store: 'research' },
+  { name: 'research', kiro_agent: 'ajcrew', workspace: 'research', memory_store: 'research' },
 ]
 
 async function main() {
@@ -41,7 +41,7 @@ async function main() {
   logPageProblems(page)
 
   await stubDashboardApi(page, {
-    extra: crewsApi({ crews: CREWS, defaultAgent: 'kirocrew' }),
+    extra: crewsApi({ crews: CREWS, defaultAgent: 'ajcrew' }),
   })
 
   await page.goto(base + '/capabilities', { waitUntil: 'domcontentloaded' })

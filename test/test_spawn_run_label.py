@@ -15,11 +15,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from test_handlers_messaging_coverage import _info, _mgr, _Req, _run, _state
 
-import kiro_crew.dashboard.handlers.messaging as messaging
-from kiro_crew.execution_context import execution_for_store
-from kiro_crew.spawn_label import SPAWN_LABEL_MAX_CHARS, normalize_spawn_label
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.validation import SPAWN_RUN_SCHEMA, ValidationError, validate_tool_args
+import aj_crew.dashboard.handlers.messaging as messaging
+from aj_crew.execution_context import execution_for_store
+from aj_crew.spawn_label import SPAWN_LABEL_MAX_CHARS, normalize_spawn_label
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.validation import SPAWN_RUN_SCHEMA, ValidationError, validate_tool_args
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -33,7 +33,7 @@ def _close_subagent_managers(close_subagent_managers):
 
 def _run_tool(args: dict[str, Any]) -> tuple[list[dict], str]:
     """Run spawn_run against a fake gateway; return (POSTed bodies, result text)."""
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     bodies: list[dict] = []
 
@@ -193,9 +193,9 @@ class TestManager:
             await orig_fire(kind, agent, extra, **kw)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent.update_state", return_value=True),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent.update_state", return_value=True),
             patch.object(manager, "_fire_event", _spy_fire),
         ):
             await manager._run_inner(info, f"subagent:{info.id}")
@@ -203,7 +203,7 @@ class TestManager:
         assert frames["subagent_spawn"]["task"] == _LONG_TASK
 
     def test_the_reconnect_snapshot_carries_the_label(self) -> None:
-        from kiro_crew.dashboard.ws import build_subagent_snapshot
+        from aj_crew.dashboard.ws import build_subagent_snapshot
 
         info = SubagentInfo(
             execution_context=execution_for_store(""),

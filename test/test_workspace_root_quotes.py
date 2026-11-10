@@ -8,8 +8,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.config import loader
-from kiro_crew.config.loader import normalize_workspace_path, workspace_root
+from aj_crew.config import loader
+from aj_crew.config.loader import normalize_workspace_path, workspace_root
 
 
 @pytest.mark.parametrize("raw", ['"~/x y"', "'~/x y'", '  "~/x y"  '])
@@ -33,7 +33,7 @@ def test_unknown_user_tilde_falls_back_instead_of_raising(
 ) -> None:
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(loader, "_default_workspace_base", lambda: tmp_path / "base")
-    monkeypatch.setenv("KIROCREW_WORKSPACE", "~no-such-user-7701/ws")
+    monkeypatch.setenv("AJCREW_WORKSPACE", "~no-such-user-7701/ws")
 
     assert workspace_root() == (tmp_path / "base" / loader._WORKSPACE_DIR_NAME).resolve()
 
@@ -48,7 +48,7 @@ def test_quoted_windows_drive_path_stays_absolute() -> None:
 def test_saved_quoted_root_resolves_to_the_real_directory(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.delenv("KIROCREW_WORKSPACE", raising=False)
+    monkeypatch.delenv("AJCREW_WORKSPACE", raising=False)
     monkeypatch.chdir(tmp_path)
     target = tmp_path / "AI prompting" / "ws"
     saved = tmp_path / "workspace_dir"
@@ -63,7 +63,7 @@ def test_a_saved_root_with_a_byte_order_mark_is_still_the_root(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """An editor's "UTF-8 with BOM" must not turn the saved path relative."""
-    monkeypatch.delenv("KIROCREW_WORKSPACE", raising=False)
+    monkeypatch.delenv("AJCREW_WORKSPACE", raising=False)
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(loader, "_default_workspace_base", lambda: tmp_path / "base")
     target = tmp_path / "ws"
@@ -77,7 +77,7 @@ def test_a_saved_root_with_a_byte_order_mark_is_still_the_root(
 def test_a_saved_root_that_is_not_utf8_falls_back_instead_of_raising(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.delenv("KIROCREW_WORKSPACE", raising=False)
+    monkeypatch.delenv("AJCREW_WORKSPACE", raising=False)
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(loader, "_default_workspace_base", lambda: tmp_path / "base")
     saved = tmp_path / "workspace_dir"
@@ -91,7 +91,7 @@ def test_a_saved_root_that_cannot_be_created_falls_back_to_the_default(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A component that is a file must not stop startup: the default is used."""
-    monkeypatch.delenv("KIROCREW_WORKSPACE", raising=False)
+    monkeypatch.delenv("AJCREW_WORKSPACE", raising=False)
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(loader, "_default_workspace_base", lambda: tmp_path / "base")
     blocker = tmp_path / "blocker"
@@ -106,13 +106,13 @@ def test_a_saved_root_that_cannot_be_created_falls_back_to_the_default(
 def test_the_wizard_reads_a_saved_root_with_a_byte_order_mark(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from kiro_crew import cli_setup
+    from aj_crew import cli_setup
 
     target = tmp_path / "ws"
     saved = tmp_path / "workspace_dir"
     saved.write_bytes(b"\xef\xbb\xbf" + str(target).encode("utf-8") + b"\n")
-    monkeypatch.setattr("kiro_crew.cli_setup._workspace_dir_file", lambda: saved)
-    monkeypatch.setattr("kiro_crew.cli_setup._input_or_skip", lambda _prompt: "")
+    monkeypatch.setattr("aj_crew.cli_setup._workspace_dir_file", lambda: saved)
+    monkeypatch.setattr("aj_crew.cli_setup._input_or_skip", lambda _prompt: "")
 
     cli_setup._setup_workspace_dir()
 
@@ -126,7 +126,7 @@ def test_relative_root_falls_back_to_the_default(
     cwd.mkdir()
     monkeypatch.chdir(cwd)
     monkeypatch.setattr(loader, "_default_workspace_base", lambda: tmp_path / "base")
-    monkeypatch.setenv("KIROCREW_WORKSPACE", "relative-ws")
+    monkeypatch.setenv("AJCREW_WORKSPACE", "relative-ws")
 
     root = workspace_root()
 
@@ -137,12 +137,12 @@ def test_relative_root_falls_back_to_the_default(
 def test_wizard_quoted_answer_writes_the_unquoted_path(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.cli_setup import _setup_workspace_dir
+    from aj_crew.cli_setup import _setup_workspace_dir
 
     monkeypatch.chdir(tmp_path)
     target = tmp_path / "AI prompting"
     ws_file = tmp_path / "cfg" / "workspace_dir"
-    monkeypatch.setattr("kiro_crew.cli_setup._workspace_dir_file", lambda: ws_file)
+    monkeypatch.setattr("aj_crew.cli_setup._workspace_dir_file", lambda: ws_file)
     with patch("builtins.input", return_value=f'"{target}"'):
         _setup_workspace_dir()
 
@@ -152,11 +152,11 @@ def test_wizard_quoted_answer_writes_the_unquoted_path(
 
 
 def test_wizard_refuses_a_relative_answer(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.cli_setup import _setup_workspace_dir
+    from aj_crew.cli_setup import _setup_workspace_dir
 
     monkeypatch.chdir(tmp_path)
     ws_file = tmp_path / "cfg" / "workspace_dir"
-    monkeypatch.setattr("kiro_crew.cli_setup._workspace_dir_file", lambda: ws_file)
+    monkeypatch.setattr("aj_crew.cli_setup._workspace_dir_file", lambda: ws_file)
     with patch("builtins.input", return_value="relative-ws"):
         _setup_workspace_dir()
 
@@ -167,13 +167,13 @@ def test_wizard_refuses_a_relative_answer(tmp_path: Path, monkeypatch: pytest.Mo
 def test_wizard_keeps_a_previously_saved_quoted_default(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.cli_setup import _setup_workspace_dir
+    from aj_crew.cli_setup import _setup_workspace_dir
 
     monkeypatch.chdir(tmp_path)
     target = tmp_path / "AI prompting"
     ws_file = tmp_path / "workspace_dir"
     ws_file.write_text(f'"{target}"\n', encoding="utf-8")
-    monkeypatch.setattr("kiro_crew.cli_setup._workspace_dir_file", lambda: ws_file)
+    monkeypatch.setattr("aj_crew.cli_setup._workspace_dir_file", lambda: ws_file)
     with patch("builtins.input", return_value=""):
         _setup_workspace_dir()
 

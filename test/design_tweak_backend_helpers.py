@@ -9,7 +9,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps.builtins.design_tweak.backend import server
+from aj_crew.apps.builtins.design_tweak.backend import server
 
 
 class _JsonHandler(server.Handler):

@@ -2,7 +2,7 @@
 
 ``precompile_macos_backend`` in ``packaging/desktop-bytecode.sh`` is run here, as
 the build runs it, against a small venv laid out like a bundled backend: the
-standard library and the ``kiro_crew`` package are compiled whole, third-party
+standard library and the ``aj_crew`` package are compiled whole, third-party
 modules only when a traced entry point imports them, and a ``.pth`` bars the
 interpreter from writing any other cache. The signing service reads every file in
 the app on every request, so a cache this lane did not mean to ship is signing
@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 pytestmark = [
     pytest.mark.skipif(os.name == "nt", reason="the macOS lane is a POSIX bash function"),
@@ -32,21 +32,21 @@ REPO = Path(__file__).resolve().parent.parent
 _SOURCES = {
     # The standard library half: compiled whole, traced or not.
     "lib/python3.12/bundled_stdlib_module.py": "",
-    "lib/python3.12/site-packages/kiro_crew/__init__.py": "",
-    # Run by every `-m kiro_crew` launch, so a trace must never import it.
-    "lib/python3.12/site-packages/kiro_crew/__main__.py": "raise SystemExit('ran the CLI')\n",
-    "lib/python3.12/site-packages/kiro_crew/cli_server.py": "import traced_dependency\n",
-    "lib/python3.12/site-packages/kiro_crew/cli.py": "",
+    "lib/python3.12/site-packages/aj_crew/__init__.py": "",
+    # Run by every `-m aj_crew` launch, so a trace must never import it.
+    "lib/python3.12/site-packages/aj_crew/__main__.py": "raise SystemExit('ran the CLI')\n",
+    "lib/python3.12/site-packages/aj_crew/cli_server.py": "import traced_dependency\n",
+    "lib/python3.12/site-packages/aj_crew/cli.py": "",
     # Imported later by a running gateway, never by the trace: compiled because
-    # kiro_crew is compiled whole, while its own dependency is not.
-    "lib/python3.12/site-packages/kiro_crew/lazy_feature.py": "import lazy_dependency\n",
-    "lib/python3.12/site-packages/kiro_crew/mcp_entry.py": (
-        'SLIM_SERVERS = {"mcp-sample": ("kiro_crew.mcp_sample", "run")}\n'
+    # aj_crew is compiled whole, while its own dependency is not.
+    "lib/python3.12/site-packages/aj_crew/lazy_feature.py": "import lazy_dependency\n",
+    "lib/python3.12/site-packages/aj_crew/mcp_entry.py": (
+        'SLIM_SERVERS = {"mcp-sample": ("aj_crew.mcp_sample", "run")}\n'
     ),
-    "lib/python3.12/site-packages/kiro_crew/mcp_sample.py": "import server_dependency\n",
-    "lib/python3.12/site-packages/kiro_crew/mcp_gateway/__init__.py": "",
-    "lib/python3.12/site-packages/kiro_crew/mcp_gateway/gatewayd.py": "",
-    "lib/python3.12/site-packages/kiro_crew/mcp_gateway/stub.py": "",
+    "lib/python3.12/site-packages/aj_crew/mcp_sample.py": "import server_dependency\n",
+    "lib/python3.12/site-packages/aj_crew/mcp_gateway/__init__.py": "",
+    "lib/python3.12/site-packages/aj_crew/mcp_gateway/gatewayd.py": "",
+    "lib/python3.12/site-packages/aj_crew/mcp_gateway/stub.py": "",
     "lib/python3.12/site-packages/traced_dependency.py": "",
     "lib/python3.12/site-packages/server_dependency.py": "",
     "lib/python3.12/site-packages/lazy_dependency.py": "",
@@ -55,23 +55,23 @@ _SOURCES = {
 
 _SHIPPED = {
     "lib/python3.12/bundled_stdlib_module.py",
-    "lib/python3.12/site-packages/kiro_crew/__init__.py",
-    "lib/python3.12/site-packages/kiro_crew/__main__.py",
-    "lib/python3.12/site-packages/kiro_crew/cli_server.py",
-    "lib/python3.12/site-packages/kiro_crew/cli.py",
-    "lib/python3.12/site-packages/kiro_crew/lazy_feature.py",
-    "lib/python3.12/site-packages/kiro_crew/mcp_entry.py",
-    "lib/python3.12/site-packages/kiro_crew/mcp_sample.py",
-    "lib/python3.12/site-packages/kiro_crew/mcp_gateway/__init__.py",
-    "lib/python3.12/site-packages/kiro_crew/mcp_gateway/gatewayd.py",
-    "lib/python3.12/site-packages/kiro_crew/mcp_gateway/stub.py",
+    "lib/python3.12/site-packages/aj_crew/__init__.py",
+    "lib/python3.12/site-packages/aj_crew/__main__.py",
+    "lib/python3.12/site-packages/aj_crew/cli_server.py",
+    "lib/python3.12/site-packages/aj_crew/cli.py",
+    "lib/python3.12/site-packages/aj_crew/lazy_feature.py",
+    "lib/python3.12/site-packages/aj_crew/mcp_entry.py",
+    "lib/python3.12/site-packages/aj_crew/mcp_sample.py",
+    "lib/python3.12/site-packages/aj_crew/mcp_gateway/__init__.py",
+    "lib/python3.12/site-packages/aj_crew/mcp_gateway/gatewayd.py",
+    "lib/python3.12/site-packages/aj_crew/mcp_gateway/stub.py",
     "lib/python3.12/site-packages/traced_dependency.py",
     "lib/python3.12/site-packages/server_dependency.py",
 }
 
 
 def _backend(tmp_path: Path) -> Path:
-    out = tmp_path / "kirocrew-backend-arm64"
+    out = tmp_path / "ajcrew-backend-arm64"
     subprocess.run(
         [sys.executable, "-m", "venv", "--without-pip", str(out)],
         check=True,

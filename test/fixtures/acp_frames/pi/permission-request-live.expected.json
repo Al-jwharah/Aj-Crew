@@ -87,10 +87,10 @@
       {
         "is_shell": true,
         "kind": "tool_call",
-        "title": "echo kirocrew-probe-1",
+        "title": "echo ajcrew-probe-1",
         "tool_call_id": "call_bash_2",
         "tool_kind": "execute",
-        "wire_title": "echo kirocrew-probe-1"
+        "wire_title": "echo ajcrew-probe-1"
       }
     ],
     "frame": "session/update",
@@ -102,10 +102,10 @@
       {
         "is_shell": true,
         "kind": "tool_call_update",
-        "title": "echo kirocrew-probe-1",
+        "title": "echo ajcrew-probe-1",
         "tool_call_id": "call_bash_2",
         "tool_kind": "execute",
-        "wire_title": "echo kirocrew-probe-1"
+        "wire_title": "echo ajcrew-probe-1"
       }
     ],
     "frame": "session/update",
@@ -130,12 +130,12 @@
         ],
         "raw_params_trusted": true,
         "raw_tool_params": {
-          "command": "echo kirocrew-probe-1"
+          "command": "echo ajcrew-probe-1"
         },
         "shell_classified": true,
         "title": "bash",
         "tool_call_id": "call_bash_2",
-        "tool_input": "{\n  \"command\": \"echo kirocrew-probe-1\"\n}",
+        "tool_input": "{\n  \"command\": \"echo ajcrew-probe-1\"\n}",
         "tool_kind": "execute"
       }
     ],
@@ -177,10 +177,10 @@
       {
         "is_shell": true,
         "kind": "tool_call",
-        "title": "echo kirocrew-probe-2",
+        "title": "echo ajcrew-probe-2",
         "tool_call_id": "call_bash_4",
         "tool_kind": "execute",
-        "wire_title": "echo kirocrew-probe-2"
+        "wire_title": "echo ajcrew-probe-2"
       }
     ],
     "frame": "session/update",
@@ -192,10 +192,10 @@
       {
         "is_shell": true,
         "kind": "tool_call_update",
-        "title": "echo kirocrew-probe-2",
+        "title": "echo ajcrew-probe-2",
         "tool_call_id": "call_bash_4",
         "tool_kind": "execute",
-        "wire_title": "echo kirocrew-probe-2"
+        "wire_title": "echo ajcrew-probe-2"
       }
     ],
     "frame": "session/update",
@@ -220,13 +220,13 @@
         ],
         "raw_params_trusted": true,
         "raw_tool_params": {
-          "command": "echo kirocrew-probe-2"
+          "command": "echo ajcrew-probe-2"
         },
         "request_id": 1,
         "shell_classified": true,
         "title": "bash",
         "tool_call_id": "call_bash_4",
-        "tool_input": "{\n  \"command\": \"echo kirocrew-probe-2\"\n}",
+        "tool_input": "{\n  \"command\": \"echo ajcrew-probe-2\"\n}",
         "tool_kind": "execute"
       }
     ],
@@ -267,13 +267,13 @@
     "events": [
       {
         "kind": "text_chunk",
-        "text": "Both commands ran: kirocrew-probe-1, kirocrew-probe-2."
+        "text": "Both commands ran: ajcrew-probe-1, ajcrew-probe-2."
       }
     ],
     "frame": "session/update",
     "session_update": "agent_message_chunk",
     "text_chunk": {
-      "text": "Both commands ran: kirocrew-probe-1, kirocrew-probe-2.",
+      "text": "Both commands ran: ajcrew-probe-1, ajcrew-probe-2.",
       "thinking": false
     }
   },

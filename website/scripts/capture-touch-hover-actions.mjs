@@ -23,7 +23,7 @@ import { json } from './lib/boot-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/touch-hover-actions-3584'
 const SLOT = 'chat-touch-3584'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -67,7 +67,7 @@ const slots = [{
   running: false,
   last_message: 'Rendered the three block types.',
   messages: 6,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: now,

@@ -7,7 +7,7 @@ import sys
 
 import pytest
 
-from kiro_crew.user_json import copy_json_document, strict_json_equal
+from aj_crew.user_json import copy_json_document, strict_json_equal
 
 
 @pytest.mark.parametrize(

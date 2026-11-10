@@ -17,10 +17,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 from chat_test_helpers import _make_state, close_before_resume
 
-from kiro_crew.dashboard import create_rate_limit
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard import stop_retry
-from kiro_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard import create_rate_limit
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard import stop_retry
+from aj_crew.dashboard.chat_utils import slot_history_key
 
 
 @pytest.fixture(autouse=True)
@@ -524,7 +524,7 @@ def _none_async():
 
 
 def test_route_forwards_folder_limit_and_fence_to_the_core(monkeypatch):
-    from kiro_crew.dashboard.handlers import session_control as handlers_sc
+    from aj_crew.dashboard.handlers import session_control as handlers_sc
 
     seen: dict = {}
 
@@ -552,7 +552,7 @@ def test_route_forwards_folder_limit_and_fence_to_the_core(monkeypatch):
 
 
 def test_route_refuses_a_non_integer_limit(monkeypatch):
-    from kiro_crew.dashboard.handlers import session_control as handlers_sc
+    from aj_crew.dashboard.handlers import session_control as handlers_sc
 
     monkeypatch.setattr(handlers_sc, "_require_internal", _none_async())
     request = MagicMock()
@@ -565,7 +565,7 @@ def test_route_refuses_a_non_integer_limit(monkeypatch):
 
 
 def test_route_is_registered_and_strict():
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     assert "/api/session-control/history" in server._STRICT_INTERNAL_API_PATHS
 
@@ -578,9 +578,9 @@ _FOLDERS = "GET /api/chat/folders"
 
 def _history_tool(args: dict, routes: dict, caller=None):
     """One ``session_history_list`` frame through the dashboard table, in memory."""
-    from kiro_crew.mcp_dashboard import TABLE
-    from kiro_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
-    from kiro_crew.mcp_tools.table import Caller, ToolContext
+    from aj_crew.mcp_dashboard import TABLE
+    from aj_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
+    from aj_crew.mcp_tools.table import Caller, ToolContext
 
     dash = InMemoryDashboardClient(routes)
     ctx = ToolContext(dash, caller or Caller.strict("dashboard:chat-1"))
@@ -654,7 +654,7 @@ def test_mcp_tool_names_a_refused_listing():
 
 
 def test_mcp_tool_refuses_a_caller_without_a_strict_key():
-    from kiro_crew.mcp_tools.table import Caller
+    from aj_crew.mcp_tools.table import Caller
 
     out, requests = _history_tool(
         {},

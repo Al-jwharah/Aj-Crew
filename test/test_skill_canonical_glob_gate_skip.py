@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import skills as sk
-from kiro_crew.skill_runtime.catalog import _with_canonical_globs
+from aj_crew import skills as sk
+from aj_crew.skill_runtime.catalog import _with_canonical_globs
 
 needs_posix_symlinks = pytest.mark.skipif(
     not hasattr(os, "symlink") or os.name == "nt", reason="needs POSIX symlinks"

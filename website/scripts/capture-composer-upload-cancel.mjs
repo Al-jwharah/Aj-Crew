@@ -47,7 +47,7 @@ const now = Math.floor(Date.now() / 1000)
 
 const slot = (key, title, last) => ({
   key, title, running: false, last_message: last, messages: 2,
-  agent: 'kirocrew', memory_mode: 'persistent', project: '', folder_id: '',
+  agent: 'ajcrew', memory_mode: 'persistent', project: '', folder_id: '',
   modified: now, source_links: [], source_links_total: 0,
 })
 

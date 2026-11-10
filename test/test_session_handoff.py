@@ -19,8 +19,8 @@ from session_control_helpers import (  # noqa: F401 -- autouse fixtures apply by
     _slot,
 )
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard import session_managers
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard import session_managers
 
 #: Spelled out rather than read from the production set, so a change to it fails here.
 WIDENED = ("send", "read", "summary", "stop", "close", "adopt", "release", "handoff")
@@ -30,7 +30,7 @@ CREATOR_ONLY = ("fork", "rename", "set_model")
 
 @pytest.fixture(autouse=True)
 def _home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crewhome"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crewhome"))
     _floor_monkeypatch.setattr(sc, "manager_chain_enabled", lambda: False)
     asyncio.run(sc.refresh_manager_chain())
     session_managers.reset_cache()
@@ -145,7 +145,7 @@ def test_a_refused_handoff_writes_no_note(tmp_path):
 
 
 def test_a_handoff_moves_the_target_under_the_new_manager_in_the_tree(tmp_path, monkeypatch):
-    from kiro_crew.crew_log import emit
+    from aj_crew.crew_log import emit
 
     state = _make_state(tmp_path)
     lead, conductor, worker = _team(state)
@@ -364,7 +364,7 @@ def test_with_the_chain_on_the_lead_reaches_the_line_under_it(tmp_path, monkeypa
 def test_the_synchronous_close_recheck_never_loads_config(tmp_path, monkeypatch):
     """``close_target``'s ``pre_pop_check`` re-runs the gate with no suspension, so
     the chain switch must come from the off-loop snapshot, never a config load."""
-    from kiro_crew.dashboard.session_control_parts import caller_access
+    from aj_crew.dashboard.session_control_parts import caller_access
 
     _chain_on(monkeypatch)
     state = _make_state(tmp_path)
@@ -372,9 +372,9 @@ def test_the_synchronous_close_recheck_never_loads_config(tmp_path, monkeypatch)
     _hand(state, lead, worker, conductor)
 
     def _no_load(*_a, **_k):
-        raise AssertionError("KiroCrewConfig.load ran inside the synchronous re-check")
+        raise AssertionError("AjCrewConfig.load ran inside the synchronous re-check")
 
-    monkeypatch.setattr(caller_access.KiroCrewConfig, "load", _no_load)
+    monkeypatch.setattr(caller_access.AjCrewConfig, "load", _no_load)
     admitted = sc.authorize_target(
         state,
         caller_session_key=_key(lead),
@@ -481,8 +481,8 @@ def test_crossing_handoffs_cannot_both_pass_and_save_a_loop(tmp_path, monkeypatc
     """
     import threading
 
-    from kiro_crew.dashboard.session_control_parts import session_handoff
-    from kiro_crew.testing import wait
+    from aj_crew.dashboard.session_control_parts import session_handoff
+    from aj_crew.testing import wait
 
     _chain_on(monkeypatch)
     state = _make_state(tmp_path)
@@ -540,7 +540,7 @@ def test_a_handoff_to_a_receiver_at_the_slot_cap_is_refused(tmp_path, monkeypatc
 
 
 def test_a_conductors_default_broadcast_audience_includes_the_workers_handed_to_it(tmp_path):
-    from kiro_crew.dashboard.session_control_parts.session_messaging import broadcast_audience
+    from aj_crew.dashboard.session_control_parts.session_messaging import broadcast_audience
 
     state = _make_state(tmp_path)
     lead, conductor, worker = _team(state)
@@ -574,7 +574,7 @@ def test_a_revived_handed_over_session_keeps_its_creator_from_the_creation_recor
     the creation record, so the revived worker is still the lead's, and fenced."""
     from session_control_revive_helpers import _archive, _revive
 
-    from kiro_crew.dashboard.session_control_parts.caller_access import (
+    from aj_crew.dashboard.session_control_parts.caller_access import (
         _caller_is_ownership_fenced,
     )
 
@@ -599,7 +599,7 @@ def test_reopening_a_handed_over_session_from_history_keeps_its_manager(tmp_path
     """The History tab's resume mints a new tab id; the record follows it."""
     from session_control_revive_helpers import _archive
 
-    from kiro_crew.dashboard.chat_handlers import resume_slot_from_history
+    from aj_crew.dashboard.chat_handlers import resume_slot_from_history
 
     state = _make_state(tmp_path)
     lead, conductor, worker = _team(state)
@@ -621,8 +621,8 @@ def test_a_handed_over_session_reopened_from_history_stays_fenced(tmp_path):
     person's tab, so the manager would drive a session that runs unfenced."""
     from session_control_revive_helpers import _archive
 
-    from kiro_crew.dashboard.chat_handlers import resume_slot_from_history
-    from kiro_crew.dashboard.session_control_parts.caller_access import (
+    from aj_crew.dashboard.chat_handlers import resume_slot_from_history
+    from aj_crew.dashboard.session_control_parts.caller_access import (
         _caller_is_ownership_fenced,
     )
 

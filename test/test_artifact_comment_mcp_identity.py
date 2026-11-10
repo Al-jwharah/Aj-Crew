@@ -20,11 +20,11 @@ from unittest.mock import MagicMock
 import pytest
 from body_stream_helpers import attach_json_body
 
-from kiro_crew import artifacts as art_mod
-from kiro_crew import mcp_core
-from kiro_crew.artifacts import ArtifactStore
-from kiro_crew.dashboard.handlers import artifacts as h
-from kiro_crew.mcp_tools import artifacts as mcp_artifacts
+from aj_crew import artifacts as art_mod
+from aj_crew import mcp_core
+from aj_crew.artifacts import ArtifactStore
+from aj_crew.dashboard.handlers import artifacts as h
+from aj_crew.mcp_tools import artifacts as mcp_artifacts
 
 _POST = re.compile(r"/api/artifacts/([^/]+)/comments")
 _REPLY = re.compile(r"/api/artifacts/([^/]+)/comments/([^/]+)/reply")

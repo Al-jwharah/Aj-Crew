@@ -16,16 +16,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.types import ACP_BACKEND_KAS, PROVIDER_LABEL_DEFAULT
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.session_map import UNLANDED_SID_FIELD, SessionMap, canonical_key
+from aj_crew.acp.types import ACP_BACKEND_KAS, PROVIDER_LABEL_DEFAULT
+from aj_crew.config import AjCrewConfig
+from aj_crew.session_map import UNLANDED_SID_FIELD, SessionMap, canonical_key
 
 KEY = "dashboard:chat-1-abc"
 
 
 @pytest.fixture()
 def map_dir(tmp_path):
-    with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+    with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
         yield tmp_path
 
 
@@ -36,7 +36,7 @@ def _restart(sm: SessionMap) -> SessionMap:
 
 
 def _kas_label() -> str:
-    from kiro_crew.providers.acp import AcpProvider, provider_label
+    from aj_crew.providers.acp import AcpProvider, provider_label
 
     p = MagicMock(spec=AcpProvider)
     p.client = MagicMock()
@@ -114,7 +114,7 @@ class TestSessionMapUnlandedSid:
 
 
 def _acp_provider(sid: str, backend: str):
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.providers.acp import AcpProvider
 
     p = MagicMock(spec=AcpProvider)
     p.shutdown = AsyncMock()
@@ -129,9 +129,9 @@ def _acp_provider(sid: str, backend: str):
 class TestFirstTurnDebtSurvivesRestart:
     @pytest.mark.asyncio
     async def test_owed_history_refuses_the_fresh_sid_after_close_all(self, map_dir):
-        from kiro_crew.session import SessionManager, _Session
+        from aj_crew.session import SessionManager, _Session
 
-        mgr = SessionManager(KiroCrewConfig(), provider_factory=MagicMock())
+        mgr = SessionManager(AjCrewConfig(), provider_factory=MagicMock())
         provider = _acp_provider("sid-fresh", ACP_BACKEND_KAS)
         mgr._sessions[KEY] = _Session(provider=provider)
         mgr._session_map.set(KEY, "sid-fresh", provider=_kas_label())
@@ -146,9 +146,9 @@ class TestFirstTurnDebtSurvivesRestart:
         """A ``get`` while the debt is owed (an export resolving the sid mid-turn)
         must not drop the marker, or ``close_all``'s write-back of the same sid
         would make it resumable after the restart."""
-        from kiro_crew.session import SessionManager, _Session
+        from aj_crew.session import SessionManager, _Session
 
-        mgr = SessionManager(KiroCrewConfig(), provider_factory=MagicMock())
+        mgr = SessionManager(AjCrewConfig(), provider_factory=MagicMock())
         provider = _acp_provider("sid-fresh", ACP_BACKEND_KAS)
         mgr._sessions[KEY] = _Session(provider=provider)
         mgr._session_map.set(KEY, "sid-fresh", provider=_kas_label())
@@ -161,9 +161,9 @@ class TestFirstTurnDebtSurvivesRestart:
 
     @pytest.mark.asyncio
     async def test_settled_history_resumes_the_sid_after_close_all(self, map_dir):
-        from kiro_crew.session import SessionManager, _Session
+        from aj_crew.session import SessionManager, _Session
 
-        mgr = SessionManager(KiroCrewConfig(), provider_factory=MagicMock())
+        mgr = SessionManager(AjCrewConfig(), provider_factory=MagicMock())
         provider = _acp_provider("sid-fresh", ACP_BACKEND_KAS)
         mgr._sessions[KEY] = _Session(provider=provider)
         mgr._session_map.set(KEY, "sid-fresh", provider=_kas_label())

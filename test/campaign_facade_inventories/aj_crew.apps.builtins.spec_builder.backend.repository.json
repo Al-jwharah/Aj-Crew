@@ -1,0 +1,31 @@
+{
+ "base_public_names": [
+  "APP_NAME",
+  "RENAME_NOREPLACE_AVAILABLE",
+  "atomic_write",
+  "config_dir",
+  "create_subprocess_limited",
+  "fd_real_path",
+  "is_sensitive_path",
+  "logger",
+  "rename_noreplace",
+  "safe_read_file_bytes_nolink",
+  "sandboxed_spawn_argv",
+  "sel",
+  "shielded_prepare_off_loop"
+ ],
+ "note": "Frozen at the split into the repository_duplicate, repository_sentinel, repository_discovery and repository_git owners; repository.py keeps the state, the index and the safe filesystem, and the in-app importers name each moved function's owner.",
+ "rebound": {
+  "RENAME_NOREPLACE_AVAILABLE": "aj_crew.platform_compat",
+  "atomic_write": "aj_crew.atomic_write",
+  "config_dir": "aj_crew.config.paths",
+  "create_subprocess_limited": "aj_crew.sandbox",
+  "fd_real_path": "aj_crew.pinned_fs",
+  "is_sensitive_path": "aj_crew.apps.builtins.spec_builder.backend.parsers",
+  "rename_noreplace": "aj_crew.platform_compat",
+  "safe_read_file_bytes_nolink": "aj_crew.hooks",
+  "sandboxed_spawn_argv": "aj_crew.sandbox",
+  "sel": "aj_crew.sel",
+  "shielded_prepare_off_loop": "aj_crew.sandbox"
+ }
+}

@@ -1,6 +1,6 @@
 """Contracts the snapshot family must keep whatever module each rule lives in.
 
-``kiro_crew.snapshot`` is the command and API facade; component resolution, archive
+``aj_crew.snapshot`` is the command and API facade; component resolution, archive
 format and staging, restore transactions and merge algorithms live in owner modules
 behind it. These tests pin what a caller of the facade can observe -- the names it
 exports, the CLI surface, the bundle a snapshot writes, and what importing it loads --
@@ -21,16 +21,16 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-from test_snapshot import _setup_fake_kirocrew, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
-from kiro_crew import pinned_fs
-from kiro_crew import snapshot as snap
+from aj_crew import pinned_fs
+from aj_crew import snapshot as snap
 
 REPO_SRC = Path(__file__).resolve().parents[1] / "src"
 
-#: Every attribute a caller may import or patch through ``kiro_crew.snapshot``; portability,
+#: Every attribute a caller may import or patch through ``aj_crew.snapshot``; portability,
 #: the dashboard handlers, the AWS Control backup, the CLI and the tests reach these by this
-#: path. Derived by AST from ``src/kiro_crew/snapshot.py`` at 20ed6a1dc, the facade the
+#: path. Derived by AST from ``src/aj_crew/snapshot.py`` at 20ed6a1dc, the facade the
 #: owner modules were split from, and not chosen by hand: every module-level ``def``,
 #: ``class`` and assignment (the ``try``-bound ``_DASHBOARD_PORT`` included) plus every
 #: name its module-level ``from ... import`` statements bind. Left out are the
@@ -205,7 +205,7 @@ FACADE_NAMES = frozenset(
 
 def test_the_facade_still_answers_every_name_it_exported() -> None:
     missing = sorted(n for n in FACADE_NAMES if not hasattr(snap, n))
-    assert missing == [], f"kiro_crew.snapshot no longer exports: {missing}"
+    assert missing == [], f"aj_crew.snapshot no longer exports: {missing}"
 
 
 def test_the_facade_binds_the_real_stdlib_modules_tests_patch_through() -> None:
@@ -339,7 +339,7 @@ _MANIFEST_KEYS = [
     "created_at",
     "hostname",
     "user",
-    "kirocrew_dir",
+    "ajcrew_dir",
     "purpose",
     "components",
     "staging",
@@ -409,19 +409,19 @@ _PARTIAL_MEMBERS = [
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     d = tmp_path / "home"
     d.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(d))
-    monkeypatch.setenv("KIROCREW_ASSUME_GATEWAY_RUNNING", "0")
-    _setup_fake_kirocrew(d)
+    monkeypatch.setenv("AJCREW_HOME", str(d))
+    monkeypatch.setenv("AJCREW_ASSUME_GATEWAY_RUNNING", "0")
+    _setup_fake_ajcrew(d)
     return d
 
 
 @pytest.mark.parametrize(
     ("extra", "root_prefix", "components", "members"),
     [
-        ([], "kirocrew-snapshot-", list(snap.COMPONENTS), _COMPLETE_MEMBERS),
+        ([], "ajcrew-snapshot-", list(snap.COMPONENTS), _COMPLETE_MEMBERS),
         (
             ["--components", "memory,crons"],
-            "kirocrew-partial-",
+            "ajcrew-partial-",
             ["memory", "crons"],
             _PARTIAL_MEMBERS,
         ),
@@ -434,7 +434,7 @@ def test_the_bundle_a_snapshot_writes_is_unchanged(
     """Layout, member modes and ownership, manifest shape, and file bytes, end to end."""
     out = tmp_path / "out"
     assert snap.snapshot_main([str(out), *extra, *unpinnable_argv()]) == 0
-    (archive,) = out.glob("kirocrew-snapshot-*.tar.gz")
+    (archive,) = out.glob("ajcrew-snapshot-*.tar.gz")
 
     with tarfile.open(archive) as tf:
         infos = tf.getmembers()
@@ -462,11 +462,11 @@ def test_the_bundle_a_snapshot_writes_is_unchanged(
         "pinned" if pinned_fs.supports_pinned_tree_walk() else "unpinned"
     )
     assert manifest["skipped"] == []
-    assert manifest["kirocrew_dir"] == str(home)
+    assert manifest["ajcrew_dir"] == str(home)
 
 
 def test_importing_the_facade_keeps_the_lazy_owners_unloaded(tmp_path: Path) -> None:
-    """``kiro_crew.snapshot`` is on the gateway's boot path; what it defers must stay deferred.
+    """``aj_crew.snapshot`` is on the gateway's boot path; what it defers must stay deferred.
 
     The outbound redaction pass is imported only by a command that prepares an outbound
     copy, and the dashboard's notification worker only by a restore that writes
@@ -475,12 +475,12 @@ def test_importing_the_facade_keeps_the_lazy_owners_unloaded(tmp_path: Path) -> 
     """
     script = textwrap.dedent("""
         import sys
-        import kiro_crew.snapshot
-        deferred = ("kiro_crew.snapshot_redact", "kiro_crew.dashboard.state")
+        import aj_crew.snapshot
+        deferred = ("aj_crew.snapshot_redact", "aj_crew.dashboard.state")
         loaded = [name for name in deferred if name in sys.modules]
         assert loaded == [], loaded
         """)
-    env = dict(os.environ, KIROCREW_HOME=str(tmp_path / "home"), KIRO_HOME=str(tmp_path / "kiro"))
+    env = dict(os.environ, AJCREW_HOME=str(tmp_path / "home"), KIRO_HOME=str(tmp_path / "kiro"))
     env["PYTHONPATH"] = os.pathsep.join([str(REPO_SRC), env.get("PYTHONPATH", "")]).rstrip(
         os.pathsep
     )

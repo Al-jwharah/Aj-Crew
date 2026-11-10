@@ -39,7 +39,7 @@ jobs:
       cancel-in-progress: false
     # Seconds of work on the path a PR author is waiting on, like the gate it
     # re-runs; the label form keeps the hosted fallback for a fork's own copy.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 5
     steps:
       - name: Re-run the failed Issue Gate of each open PR referencing the issue

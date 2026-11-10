@@ -18,16 +18,16 @@ from pathlib import Path
 import pytest
 from theme_install_helpers import _VALID_VARS, _make_theme, _write
 
-import kiro_crew.dashboard.handlers.themes as th_mod
-import kiro_crew.dashboard.theme_validate as tv_mod
+import aj_crew.dashboard.handlers.themes as th_mod
+import aj_crew.dashboard.theme_validate as tv_mod
 from conftest import requires_symlinks
-from kiro_crew.dashboard.theme_validate import (
+from aj_crew.dashboard.theme_validate import (
     _THEME_FILE_CAPS,
     _safe_theme_slug,
     _slugify_theme_name,
     _validate_theme_dir,
 )
-from kiro_crew.slugs import slug_hash_fallback
+from aj_crew.slugs import slug_hash_fallback
 
 # ── _slugify_theme_name hash fallback ──────────────────────────────
 

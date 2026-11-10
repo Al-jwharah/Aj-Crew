@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent import SubagentInfo, SubagentManager
 
 # Subagent-registry isolation is provided globally by the autouse
 # ``_isolate_subagents_dir`` fixture in ``conftest.py``.
@@ -101,41 +101,41 @@ def continuation_runtime(tmp_path, monkeypatch):
     import uuid
     from types import SimpleNamespace
 
-    from kiro_crew import agent, agent_state, session
-    from kiro_crew.agent_capabilities import CapabilityService, prepare_member_capabilities
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, WorkspaceConfig
-    from kiro_crew.history import ConversationLog
-    from kiro_crew.member_memory_auth import (
+    from aj_crew import agent, agent_state, session
+    from aj_crew.agent_capabilities import CapabilityService, prepare_member_capabilities
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, WorkspaceConfig
+    from aj_crew.history import ConversationLog
+    from aj_crew.member_memory_auth import (
         bind_private_session_store,
         private_memory_store_for_session,
     )
-    from kiro_crew.memory_stores import provision_member_memory
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent, LLMProvider
+    from aj_crew.memory_stores import provision_member_memory
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent, LLMProvider
 
     home, specs, project, native = (
         tmp_path / name for name in ("home", "agents", "project", "native")
     )
     for path in (home, specs, project, native):
         path.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.setenv("KIRO_HOME", str(tmp_path / "kiro"))
     monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", specs)
-    monkeypatch.setattr("kiro_crew.agent_discovery._KIRO_AGENTS_DIR", specs)
+    monkeypatch.setattr("aj_crew.agent_discovery._KIRO_AGENTS_DIR", specs)
     # Model resolution and the native provider must read the same agent specs.
-    monkeypatch.setattr("kiro_crew.config.loader.kiro_agents_dir", lambda: specs)
+    monkeypatch.setattr("aj_crew.config.loader.kiro_agents_dir", lambda: specs)
     monkeypatch.setattr(agent_state, "_state_path", lambda: home / "agent_model_state.json")
-    monkeypatch.setattr("kiro_crew.session_map._KIRO_SESSIONS_DIR", native)
+    monkeypatch.setattr("aj_crew.session_map._KIRO_SESSIONS_DIR", native)
     # Keep real V2 provisioning, ownership, delegation and binding checks.
     for name in ("worker", "member-parent"):
         (specs / f"{name}.json").write_text(
             json.dumps({"name": name, "prompt": name, "tools": [], "includeMcpJson": False}),
             encoding="utf-8",
         )
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.workspaces[cfg.default_workspace] = WorkspaceConfig(dir=str(project))
     cfg.session.pool_size = 0
     cfg.agent.subagent_cwd_allowed_roots = [str(project)]
-    cfg.agents["owner"] = KiroCrewAgentConfig(kiro_agent="worker")
+    cfg.agents["owner"] = AjCrewAgentConfig(kiro_agent="worker")
     store = provision_member_memory(cfg, "owner")
     cfg.save()
     history = ConversationLog()
@@ -247,7 +247,7 @@ def continuation_runtime(tmp_path, monkeypatch):
         return provider
 
     def new_manager():
-        sessions = session.SessionManager(KiroCrewConfig.load(), provider_factory=factory)
+        sessions = session.SessionManager(AjCrewConfig.load(), provider_factory=factory)
         managers.append(sessions)
         manager = SubagentManager(sessions=sessions, ctx_builder=_mock_ctx_builder())
         manager._ctx_builder.conversation_log = history
@@ -255,8 +255,8 @@ def continuation_runtime(tmp_path, monkeypatch):
         return sessions, manager
 
     def enroll_collision():
-        cfg = KiroCrewConfig.load()
-        cfg.agents["worker"] = KiroCrewAgentConfig(kiro_agent="member-parent")
+        cfg = AjCrewConfig.load()
+        cfg.agents["worker"] = AjCrewAgentConfig(kiro_agent="member-parent")
         peer_store = provision_member_memory(cfg, "worker")
         cfg.save()
         service = CapabilityService()

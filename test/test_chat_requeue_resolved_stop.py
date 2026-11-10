@@ -23,9 +23,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.acp.transport_errors import AcpProcessDied, AcpPromptBusy
-from kiro_crew.llm_helpers import PromptBusyExhaustedError
+from aj_crew.acp.client import AcpError
+from aj_crew.acp.transport_errors import AcpProcessDied, AcpPromptBusy
+from aj_crew.llm_helpers import PromptBusyExhaustedError
 
 _MESSAGE = "delete the old branches"
 
@@ -53,7 +53,7 @@ _ERRORS = {
 
 
 def _state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     state.push_slots_update = MagicMock()
@@ -110,9 +110,9 @@ def _retry_cards(slot):
 
 
 async def _run(tmp_path, monkeypatch, error, *, stop_resolves_first):
-    from kiro_crew.dashboard import chat_runner
-    from kiro_crew.dashboard.chat import _run_chat
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.dashboard import chat_runner
+    from aj_crew.dashboard.chat import _run_chat
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
     calls: list[str] = []
 
@@ -185,10 +185,10 @@ async def _poisoned_run(tmp_path, monkeypatch, *, stop_resolves_first):
     second reaches the poisoned-conversation reset arm (canary, discard,
     verbatim replay). With ``stop_resolves_first`` the user's Stop lands on the
     second cycle's last attempt and resolves to idle before its error."""
-    from kiro_crew.dashboard import chat_runner
-    from kiro_crew.dashboard.chat import _run_chat
-    from kiro_crew.llm_helpers import TRANSIENT_RETRIES
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.dashboard import chat_runner
+    from aj_crew.dashboard.chat import _run_chat
+    from aj_crew.llm_helpers import TRANSIENT_RETRIES
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
     poisoned_calls = 2 * (TRANSIENT_RETRIES + 1)
     calls: list[str] = []

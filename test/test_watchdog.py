@@ -11,7 +11,7 @@ import logging
 
 import pytest
 
-from kiro_crew.watchdog import CleanupHook, SessionWatchdog
+from aj_crew.watchdog import CleanupHook, SessionWatchdog
 
 
 class TestDispatch:
@@ -81,10 +81,10 @@ class TestFailureIsolation:
 
         wd = SessionWatchdog([CleanupHook("boom", boom)])
         # No exception should escape tick().
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.watchdog"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.watchdog"):
             await wd.tick()
         # The swallowed failure is still recorded, naming the hook and the error.
-        records = [r for r in caplog.records if r.name == "kiro_crew.watchdog"]
+        records = [r for r in caplog.records if r.name == "aj_crew.watchdog"]
         assert [r.getMessage() for r in records] == ["watchdog hook boom raised past its own guard"]
         assert isinstance(records[0].exc_info[1], ValueError)
 

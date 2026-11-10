@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from kiro_crew.history import ConversationLog, metadata_now_iso
+from aj_crew.history import ConversationLog, metadata_now_iso
 
 CHANNEL_KEY = "slack:1785370133.085469"
 
@@ -82,6 +82,6 @@ class TestChannelTranscriptTimezone:
     def test_update_metadata_created_at_is_offset_aware(self, tmp_path):
         """update_metadata's create path also stamps an offset-aware created_at."""
         log = ConversationLog(base_dir=tmp_path)
-        log.update_metadata(CHANNEL_KEY, {"agent": "kirocrew"})
+        log.update_metadata(CHANNEL_KEY, {"agent": "ajcrew"})
 
         _assert_offset_aware(log.get_metadata(CHANNEL_KEY).get("created_at"))

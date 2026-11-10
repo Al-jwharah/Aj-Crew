@@ -1,4 +1,4 @@
-"""``_tool_argv.py`` and the command runners of the kirocrew-prepare-pr scripts that use it.
+"""``_tool_argv.py`` and the command runners of the ajcrew-prepare-pr scripts that use it.
 
 The module resolves a runner's argv[0] from PATH's absolute entries only (so a
 checkout's own ``gh.exe`` and relative PATH entries never win the lookup) and
@@ -22,10 +22,10 @@ from skill_script_helpers import load_skill_script
 SCRIPTS = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
+    / "ajcrew-dev"
+    / "ajcrew-prepare-pr"
     / "scripts"
 )
 

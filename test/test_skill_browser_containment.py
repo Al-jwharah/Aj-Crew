@@ -22,7 +22,7 @@ from skill_browser_helpers import (  # noqa: F401 -- the fixture is requested by
     fake_home_fixture,
 )
 
-from kiro_crew.dashboard.handlers._shared import (
+from aj_crew.dashboard.handlers._shared import (
     _resolve_skill_root,
     enumerate_skill_catalog,
     read_skill_file,
@@ -52,7 +52,7 @@ class TestPackageSkillDetailReadsThroughTheGate:
 
     @staticmethod
     def _wire(monkeypatch, path: Path) -> None:
-        from kiro_crew.dashboard.handlers import prompts
+        from aj_crew.dashboard.handlers import prompts
 
         loader = MagicMock()
         loader.load_skill = lambda _name: None
@@ -69,7 +69,7 @@ class TestPackageSkillDetailReadsThroughTheGate:
 
     @pytest.mark.asyncio
     async def test_a_hardlinked_package_skill_is_not_served(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers import api_skill_detail
+        from aj_crew.dashboard.handlers import api_skill_detail
 
         secret = tmp_path / "credentials"
         secret.write_text("# aws_secret_access_key = SHOULD-NOT-APPEAR\n", encoding="utf-8")
@@ -93,7 +93,7 @@ class TestPackageSkillDetailReadsThroughTheGate:
 
     @pytest.mark.asyncio
     async def test_an_ordinary_package_skill_is_still_served(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers import api_skill_detail
+        from aj_crew.dashboard.handlers import api_skill_detail
 
         real = tmp_path / "pkg" / "SKILL.md"
         real.parent.mkdir(parents=True)
@@ -113,8 +113,8 @@ class TestPackageSkillDetailReadsThroughTheGate:
         line says only THAT bytes were withheld: the gate judges and reads
         through one descriptor and answers a bare ``None``.
         """
-        from kiro_crew.dashboard import handlers as handlers_pkg
-        from kiro_crew.dashboard.handlers import api_skill_detail
+        from aj_crew.dashboard import handlers as handlers_pkg
+        from aj_crew.dashboard.handlers import api_skill_detail
 
         secret = tmp_path / "credentials"
         secret.write_text("# aws_secret_access_key = SHOULD-NOT-APPEAR\n", encoding="utf-8")
@@ -151,7 +151,7 @@ class TestPackageSkillDetailReadsThroughTheGate:
         """
         import threading
 
-        from kiro_crew.dashboard.handlers import api_skill_detail, prompts
+        from aj_crew.dashboard.handlers import api_skill_detail, prompts
 
         real = tmp_path / "pkg" / "SKILL.md"
         real.parent.mkdir(parents=True)
@@ -195,8 +195,8 @@ class TestSymlinkedSkillLeafContainment:
         (outside / "passwd").write_text("root:x:0:0:", encoding="utf-8")
         return outside
 
-    def test_kirocrew_leaf_symlink_escape_refused(self, fake_home, tmp_path):
-        """Default (kirocrew) prefix: the leaf may not point out of the root."""
+    def test_ajcrew_leaf_symlink_escape_refused(self, fake_home, tmp_path):
+        """Default (ajcrew) prefix: the leaf may not point out of the root."""
         outside = self._outside(tmp_path)
         skills_root = fake_home / ".kiro" / "crew" / "skills"
         skills_root.mkdir(parents=True)
@@ -219,7 +219,7 @@ class TestSymlinkedSkillLeafContainment:
 
     def test_edition_root_leaf_symlink_escape_refused(self, fake_home, tmp_path, monkeypatch):
         """An edition skill root is a plain root here — no leaf allowance."""
-        from kiro_crew.dashboard.handlers import _shared
+        from aj_crew.dashboard.handlers import _shared
 
         outside = self._outside(tmp_path)
         edition_root = tmp_path / "edition" / "skills"
@@ -232,7 +232,7 @@ class TestSymlinkedSkillLeafContainment:
 
     def test_extra_path_root_leaf_symlink_escape_refused(self, fake_home, tmp_path, monkeypatch):
         """Same for a user-configured ``skills.extra_paths`` root."""
-        from kiro_crew.dashboard.handlers import _shared
+        from aj_crew.dashboard.handlers import _shared
 
         outside = self._outside(tmp_path)
         extra_root = tmp_path / "extra" / "skills"
@@ -240,7 +240,7 @@ class TestSymlinkedSkillLeafContainment:
         (extra_root / "anything").symlink_to(outside, target_is_directory=True)
         cfg = MagicMock()
         cfg.load.return_value.skills.extra_paths = [str(extra_root)]
-        monkeypatch.setattr(_shared, "KiroCrewConfig", cfg)
+        monkeypatch.setattr(_shared, "AjCrewConfig", cfg)
 
         state = MagicMock(_slots={})
         assert _resolve_skill_root("anything", state) is None
@@ -252,7 +252,7 @@ class TestSymlinkedSkillLeafContainment:
         like any other root, so the same containment applies before the branch
         returns.
         """
-        from kiro_crew.dashboard.handlers import _shared
+        from aj_crew.dashboard.handlers import _shared
 
         outside = self._outside(tmp_path)
         pkg_root = tmp_path / "edition-pkgs"
@@ -266,7 +266,7 @@ class TestSymlinkedSkillLeafContainment:
 
     def test_package_prefix_contained_skill_still_resolves(self, fake_home, tmp_path, monkeypatch):
         """The edition-package path itself keeps working."""
-        from kiro_crew.dashboard.handlers import _shared
+        from aj_crew.dashboard.handlers import _shared
 
         pkg_root = tmp_path / "edition-pkgs"
         skill = pkg_root / "pkg" / "real"
@@ -282,12 +282,12 @@ class TestSymlinkedSkillLeafContainment:
         """``apps.bridges._register_skills`` installs exactly this shape.
 
         An app ships its skills in its own tree and the bridge symlinks each one
-        into the kirocrew skills root twice — flat and namespaced — so both
+        into the ajcrew skills root twice — flat and namespaced — so both
         resolve outside that root by construction. They are admitted because the
         app DECLARES that directory as a skill, read from the same manifest the
         bridge registers from.
         """
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         app_root = fake_home / ".kiro" / "crew" / "apps" / "demo-app"
         app_skill = app_root / "skills" / "appy"
@@ -318,7 +318,7 @@ class TestSymlinkedSkillLeafContainment:
         side must find the app from the package root it resolves into, not by
         treating the directory name as the app name.
         """
-        from kiro_crew.apps.execution import _BUILTINS_DIR
+        from aj_crew.apps.execution import _BUILTINS_DIR
 
         pkg_root = (_BUILTINS_DIR / "auto_improvement").resolve()
         assert json.loads((pkg_root / "app.json").read_text(encoding="utf-8"))["name"] == (
@@ -347,7 +347,7 @@ class TestSymlinkedSkillLeafContainment:
         An app tree also holds that app's data, tokens and rendered configs, so
         admitting the root would turn a planted link into a reader for them.
         """
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         app_root = fake_home / ".kiro" / "crew" / "apps" / "demo-app"
         declared = app_root / "skills" / "appy"
@@ -535,7 +535,7 @@ class TestSkillFileIsReadThroughAPinnedDescriptor:
         """Deterministic check-to-use race: the swap happens inside the
         sensitive-path guard, i.e. after containment was verified and before
         the bytes are read."""
-        from kiro_crew.dashboard.handlers import _shared
+        from aj_crew.dashboard.handlers import _shared
 
         outside = tmp_path / "outside"
         outside.mkdir()
@@ -631,7 +631,7 @@ class TestTheAdmittedSkillRootCannotBeRedefined:
         bytes are read / the entries are returned, which makes the swap land in
         the window under test without depending on timing.
         """
-        from kiro_crew.dashboard.handlers import _shared
+        from aj_crew.dashboard.handlers import _shared
 
         real_guard = _shared.is_sensitive_path
         swapped: list[str] = []

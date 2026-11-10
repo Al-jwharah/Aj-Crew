@@ -12,7 +12,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-SRC = Path(__file__).parent.parent / "src" / "kiro_crew"
+SRC = Path(__file__).parent.parent / "src" / "aj_crew"
 HANDLERS = "".join(
     (SRC / "deploy" / name).read_text(encoding="utf-8")
     for name in ("handlers_guards.py", "handlers_content.py", "handlers_sites.py", "handlers.py")

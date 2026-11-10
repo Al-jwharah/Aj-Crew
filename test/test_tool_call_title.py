@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.tool_call_title import (
+from aj_crew.tool_call_title import (
     classify_tool_call,
     derive_tool_call_title,
     format_raw_command,
@@ -152,9 +152,9 @@ def test_rel_display_path_relative_under_cwd_basename_at_cwd_parent_elsewhere():
 @pytest.mark.parametrize(
     ("title", "server", "tool"),
     [
-        ("@kirocrew-core/session_send", "kirocrew-core", "session_send"),
-        ("Running: @kirocrew-dashboard/chat_folder_tree", "kirocrew-dashboard", "chat_folder_tree"),
-        ("kirocrew-core___wait", "kirocrew-core", "wait"),
+        ("@ajcrew-core/session_send", "ajcrew-core", "session_send"),
+        ("Running: @ajcrew-dashboard/chat_folder_tree", "ajcrew-dashboard", "chat_folder_tree"),
+        ("ajcrew-core___wait", "ajcrew-core", "wait"),
         ("mcp__github__list_prs", "github", "list_prs"),
     ],
 )
@@ -215,9 +215,9 @@ def test_raw_title_keeps_verbatim_command_for_shell_call():
 
 def test_raw_title_keeps_incoming_title_for_non_shell_call():
     d = derive_tool_call_title(
-        kind="other", title="@kirocrew-core/session_send", raw_input={"target": "x"}
+        kind="other", title="@ajcrew-core/session_send", raw_input={"target": "x"}
     )
-    assert d.raw_title == "@kirocrew-core/session_send"
+    assert d.raw_title == "@ajcrew-core/session_send"
 
 
 # -- R0.0: backend description outranks the template (kiro-team/kiro-agent#2753) --

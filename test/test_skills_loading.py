@@ -1,4 +1,4 @@
-"""``SkillsLoader``'s read side (``kiro_crew.skills``).
+"""``SkillsLoader``'s read side (``aj_crew.skills``).
 
 This file pins listing, loading and the context block, bounded and link-refusing body
 reads, which reads credit the usage ledger, skills from extra paths, and the quarantine
@@ -20,9 +20,9 @@ from skills_helpers import (  # noqa: F401 -- the autouse fixtures register by i
     _settled,
 )
 
-from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
-from kiro_crew.skill_usage import SkillUsageLedger
-from kiro_crew.skills import SkillsLoader
+from aj_crew.config.loader import AjCrewConfig, SkillsConfig
+from aj_crew.skill_usage import SkillUsageLedger
+from aj_crew.skills import SkillsLoader
 
 
 class TestNoteToolRead:
@@ -202,7 +202,7 @@ class TestBoundedSkillReads:
         loader = SkillsLoader(
             skills_path=tmp_path / "local" if extra else root,
             install_builtins=False,
-            config=KiroCrewConfig(skills=SkillsConfig(extra_paths=[str(root)] if extra else [])),
+            config=AjCrewConfig(skills=SkillsConfig(extra_paths=[str(root)] if extra else [])),
         )
 
         assert loader.load_skill("alpha", max_bytes=len(raw)) == raw.decode("utf-8")
@@ -219,10 +219,10 @@ class TestBoundedSkillReads:
 
     def test_global_link_to_sensitive_directory_is_refused(self, tmp_path, monkeypatch):
         from conftest import make_dir_link
-        from kiro_crew.hooks import validate_file_path
+        from aj_crew.hooks import validate_file_path
 
         crew_home = tmp_path / "crew"
-        monkeypatch.setenv("KIROCREW_HOME", str(crew_home))
+        monkeypatch.setenv("AJCREW_HOME", str(crew_home))
         secret_dir = crew_home / ".vault"
         secret_dir.mkdir(parents=True)
         secret = secret_dir / "SKILL.md"
@@ -237,10 +237,10 @@ class TestBoundedSkillReads:
 
     def test_extra_directory_swap_after_validation_is_refused(self, tmp_path, monkeypatch):
         from conftest import make_dir_link
-        from kiro_crew import skills
+        from aj_crew import skills
 
         crew_home = tmp_path / "crew"
-        monkeypatch.setenv("KIROCREW_HOME", str(crew_home))
+        monkeypatch.setenv("AJCREW_HOME", str(crew_home))
         secret_dir = crew_home / ".vault"
         secret_dir.mkdir(parents=True)
         (secret_dir / "SKILL.md").write_text("credential sentinel", encoding="utf-8")
@@ -249,7 +249,7 @@ class TestBoundedSkillReads:
         loader = SkillsLoader(
             skills_path=tmp_path / "local",
             install_builtins=False,
-            config=KiroCrewConfig(skills=SkillsConfig(extra_paths=[str(extra)])),
+            config=AjCrewConfig(skills=SkillsConfig(extra_paths=[str(extra)])),
         )
         original_validate = skills.validate_file_path
         swapped = False
@@ -316,7 +316,7 @@ class TestSkillsLoader:
         _create_skill(skills_dir, "tagged", "<html-guide> is a markdown skill\n")
         _create_skill(skills_dir, "weather", "---\n_html: body\n---\n# Weather\n")
         loader = _settled(SkillsLoader(skills_path=skills_dir, install_builtins=False))
-        with caplog.at_level("WARNING", logger="kiro_crew.skills"):
+        with caplog.at_level("WARNING", logger="aj_crew.skills"):
             assert sorted(s["key"] for s in loader.list_skills()) == ["tagged", "weather"]
             loader.list_skills()
         warned = [r.getMessage() for r in caplog.records if "body is HTML" in r.getMessage()]
@@ -329,8 +329,8 @@ class TestSkillsLoader:
     def test_html_skill_in_an_index_warmed_before_the_marker_is_dropped(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew import skill_search_index
-        from kiro_crew.frontmatter import SKILL_LOADER, parse_frontmatter
+        from aj_crew import skill_search_index
+        from aj_crew.frontmatter import SKILL_LOADER, parse_frontmatter
 
         skills_dir = tmp_path / "skills"
         _create_skill(skills_dir, "page", "<!doctype html><p>x</p>")
@@ -392,7 +392,7 @@ class TestSkillsLoader:
             "---\nname: both\ndescription: Both\ninclusion: always\nalways: true\n---\n# Both\n",
         )
         loader = _settled(SkillsLoader(skills_path=skills_dir, install_builtins=False))
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.skills"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.skills"):
             loader.list_skills()
             rows = loader.list_skills()
 
@@ -470,7 +470,7 @@ class TestSkillsLoader:
         when the rewrite lands in the same mtime tick as the priming read."""
         import os
 
-        from kiro_crew.skills import AutoSkillProvenance
+        from aj_crew.skills import AutoSkillProvenance
 
         loader = _settled(SkillsLoader(skills_path=tmp_path / "skills", install_builtins=False))
         prov = AutoSkillProvenance(session_key="s1", created_at="2026-01-01T00:00:00Z")
@@ -502,7 +502,7 @@ class TestSkillsLoader:
 
 
 class TestRelocatedSkillCleanup:
-    """Skills moved into skills/kirocrew-dev/ must have their old FLAT copies
+    """Skills moved into skills/ajcrew-dev/ must have their old FLAT copies
     removed from loader discovery on existing installs — otherwise an upgrade
     leaves two divergent copies matched nondeterministically by trigger overlap
     (the dual-copy drift this prevents). The flat copy may carry
@@ -512,17 +512,17 @@ class TestRelocatedSkillCleanup:
     nested replacement is verifiably present."""
 
     def test_flat_copy_quarantined_when_nested_present(self, tmp_path: Path) -> None:
-        from kiro_crew.skills import _ensure_builtin_skills
+        from aj_crew.skills import _ensure_builtin_skills
 
         base = tmp_path / "skills"
         old = base / "prepare-pr"
         old.mkdir(parents=True)
-        (old / "SKILL.md").write_text("---\nname: kirocrew-prepare-pr\n---\nUSER-EDITED flat copy")
+        (old / "SKILL.md").write_text("---\nname: ajcrew-prepare-pr\n---\nUSER-EDITED flat copy")
         (old / "scripts").mkdir()
         (old / "scripts" / "helper.py").write_text("# user script")
-        new = base / "kirocrew-dev" / "kirocrew-prepare-pr"
+        new = base / "ajcrew-dev" / "ajcrew-prepare-pr"
         new.mkdir(parents=True)
-        (new / "SKILL.md").write_text("---\nname: kirocrew-prepare-pr\n---\nnested copy")
+        (new / "SKILL.md").write_text("---\nname: ajcrew-prepare-pr\n---\nnested copy")
 
         _ensure_builtin_skills(base)
 
@@ -535,18 +535,18 @@ class TestRelocatedSkillCleanup:
         assert (new / "SKILL.md").exists()
 
     def test_renamed_nested_copy_quarantined_when_new_name_present(self, tmp_path):
-        """An install that already holds ``kirocrew-dev/prepare-pr`` gets the
-        renamed ``kirocrew-dev/kirocrew-prepare-pr``; the old nested copy is
+        """An install that already holds ``ajcrew-dev/prepare-pr`` gets the
+        renamed ``ajcrew-dev/ajcrew-prepare-pr``; the old nested copy is
         quarantined so the loader never sees two copies of the same skill."""
-        from kiro_crew.skills import _ensure_builtin_skills
+        from aj_crew.skills import _ensure_builtin_skills
 
         base = tmp_path / "skills"
-        old = base / "kirocrew-dev" / "prepare-pr"
+        old = base / "ajcrew-dev" / "prepare-pr"
         old.mkdir(parents=True)
         (old / "SKILL.md").write_text("---\nname: prepare-pr\n---\nold nested copy")
-        new = base / "kirocrew-dev" / "kirocrew-prepare-pr"
+        new = base / "ajcrew-dev" / "ajcrew-prepare-pr"
         new.mkdir(parents=True)
-        (new / "SKILL.md").write_text("---\nname: kirocrew-prepare-pr\n---\nrenamed copy")
+        (new / "SKILL.md").write_text("---\nname: ajcrew-prepare-pr\n---\nrenamed copy")
 
         _ensure_builtin_skills(base)
 
@@ -559,23 +559,23 @@ class TestRelocatedSkillCleanup:
         assert (new / "SKILL.md").exists()
 
     def test_linked_old_dir_is_never_quarantined_through_the_link(self, tmp_path: Path) -> None:
-        """An operator who linked ``kirocrew-dev/prepare-pr`` to an outside
+        """An operator who linked ``ajcrew-dev/prepare-pr`` to an outside
         provider keeps that provider's ``SKILL.md``: the relocation must not
         rename a file through the link."""
-        from kiro_crew.skills import _ensure_builtin_skills
+        from aj_crew.skills import _ensure_builtin_skills
 
         provider = tmp_path / "provider" / "prepare-pr"
         provider.mkdir(parents=True)
         (provider / "SKILL.md").write_text("---\nname: prepare-pr\n---\nprovider copy")
         base = tmp_path / "skills"
-        (base / "kirocrew-dev").mkdir(parents=True)
+        (base / "ajcrew-dev").mkdir(parents=True)
         try:
-            (base / "kirocrew-dev" / "prepare-pr").symlink_to(provider, target_is_directory=True)
+            (base / "ajcrew-dev" / "prepare-pr").symlink_to(provider, target_is_directory=True)
         except OSError:
             pytest.skip("directory symlinks unavailable on this host")
-        new = base / "kirocrew-dev" / "kirocrew-prepare-pr"
+        new = base / "ajcrew-dev" / "ajcrew-prepare-pr"
         new.mkdir(parents=True)
-        (new / "SKILL.md").write_text("---\nname: kirocrew-prepare-pr\n---\nrenamed copy")
+        (new / "SKILL.md").write_text("---\nname: ajcrew-prepare-pr\n---\nrenamed copy")
 
         _ensure_builtin_skills(base)
 
@@ -587,23 +587,23 @@ class TestRelocatedSkillCleanup:
         # SKILL.md AFTER a prior migration quarantined a user-edited copy.
         # The second migration must NOT os.replace over the first quarantine
         # — both preserved copies must survive under distinct names.
-        from kiro_crew.skills import _ensure_builtin_skills
+        from aj_crew.skills import _ensure_builtin_skills
 
         base = tmp_path / "skills"
         old = base / "prepare-pr"
         old.mkdir(parents=True)
-        new = base / "kirocrew-dev" / "kirocrew-prepare-pr"
+        new = base / "ajcrew-dev" / "ajcrew-prepare-pr"
         new.mkdir(parents=True)
-        (new / "SKILL.md").write_text("---\nname: kirocrew-prepare-pr\n---\nnested copy")
+        (new / "SKILL.md").write_text("---\nname: ajcrew-prepare-pr\n---\nnested copy")
 
         # First migration quarantines the user's original edits.
-        (old / "SKILL.md").write_text("---\nname: kirocrew-prepare-pr\n---\nFIRST user edit")
+        (old / "SKILL.md").write_text("---\nname: ajcrew-prepare-pr\n---\nFIRST user edit")
         _ensure_builtin_skills(base)
         first = old / "SKILL.md.pre-relocation"
         assert first.read_text(encoding="utf-8").endswith("FIRST user edit")
 
         # Rollback recreates SKILL.md with different content; migration re-runs.
-        (old / "SKILL.md").write_text("---\nname: kirocrew-prepare-pr\n---\nSECOND rollback copy")
+        (old / "SKILL.md").write_text("---\nname: ajcrew-prepare-pr\n---\nSECOND rollback copy")
         _ensure_builtin_skills(base)
 
         # Both preserved copies survive; nothing was overwritten.
@@ -621,8 +621,8 @@ class TestRelocatedSkillCleanup:
         # The empty source dir is what makes "never synced" real. Relying on a
         # relocated skill simply not being packaged would stop testing this the
         # moment that skill ships.
-        from kiro_crew import skills as skills_mod
-        from kiro_crew.skills import _ensure_builtin_skills
+        from aj_crew import skills as skills_mod
+        from aj_crew.skills import _ensure_builtin_skills
 
         monkeypatch.setattr(skills_mod, "_BUILTIN_SKILLS_DIR", tmp_path / "no-builtins")
 
@@ -638,7 +638,7 @@ class TestRelocatedSkillCleanup:
 
 def _cfg_with_extra(paths):
     """Build a config with skills.extra_paths set (isolated, no disk read)."""
-    return KiroCrewConfig(skills=SkillsConfig(extra_paths=paths))
+    return AjCrewConfig(skills=SkillsConfig(extra_paths=paths))
 
 
 class TestSkillsLoaderExtraPaths:
@@ -793,7 +793,7 @@ class TestSkillsLoaderExtraPaths:
     def test_sensitive_extra_path_skipped(self, tmp_path, monkeypatch):
         extra = tmp_path / "extra"
         extra.mkdir()
-        monkeypatch.setattr("kiro_crew.skills.is_sensitive_path", lambda p: True)
+        monkeypatch.setattr("aj_crew.skills.is_sensitive_path", lambda p: True)
         loader = SkillsLoader(
             skills_path=tmp_path / "local",
             install_builtins=False,
@@ -811,7 +811,7 @@ class TestSkillsLoaderExtraPaths:
         # Both listing (_iter) and load_skill route extra-path reads through
         # validate_file_path — flagging it there blocks both.
         monkeypatch.setattr(
-            "kiro_crew.skills.validate_file_path",
+            "aj_crew.skills.validate_file_path",
             lambda p, **_kw: None if str(p).endswith("SKILL.md") else p,
         )
         loader = _settled(

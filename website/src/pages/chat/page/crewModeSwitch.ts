@@ -169,7 +169,7 @@ export function useCrewModeSwitch({ currentSlot, defaultAgent, hasUserMessage, s
     // switch (shown as its own notice) leaves the chat in Ultra Mode, and it
     // keeps its tabs. The panel closes only if this chat is still the one on
     // screen, since the panel is shared by every chat.
-    void switchAgent(defaultAgent || 'kirocrew', 'template').then(ok => {
+    void switchAgent(defaultAgent || 'ajcrew', 'template').then(ok => {
       if (!ok) return
       if (panelWasClosed.current.delete(key) && shownKey.current === key) dispatch(closeActivityPanel())
       dropPanelViews(key, BOARD_VIEWS)

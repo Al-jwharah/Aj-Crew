@@ -35,24 +35,24 @@ const crewWork = {
 }
 
 const slot = (key, title, over) => ({
-  key, title, messages: 4, running: false, agent: 'kirocrew-worker', agent_kind: 'template', mode: '', origin: 'agent',
+  key, title, messages: 4, running: false, agent: 'ajcrew-worker', agent_kind: 'template', mode: '', origin: 'agent',
   memory_mode: 'persistent', created: T0, last_ts: ago(3), last_turn_ts: ago(3), folder_id: '', workspace: 'default', ...over,
 })
 
 const slots = [
-  slot(ROOT, 'Ship the login fix', { agent: 'kirocrew-conductor', origin: 'user', crew_mode_root: true, crew_work: crewWork }),
+  slot(ROOT, 'Ship the login fix', { agent: 'ajcrew-conductor', origin: 'user', crew_mode_root: true, crew_work: crewWork }),
   slot('chat-w1', 'Fix login redirect', { crew_root: ROOT, created_by: ROOT, last_message: 'Waiting on PR #31770 CI; monitor armed.' }),
   slot('chat-w2', 'Add the retry test', { crew_root: ROOT, created_by: ROOT, last_message: 'Waiting on PR #31857 CI; monitor armed.' }),
 ]
 
 const CATALOG = {
   agents: [
-    { name: 'kirocrew', selection_kind: 'template', kiro_agent: '', workspace: 'default', memory_store: 'default', source: 'builtin' },
-    { name: 'kirocrew-conductor', selection_kind: 'template', kiro_agent: '', workspace: 'default', memory_store: 'default', source: 'builtin' },
+    { name: 'ajcrew', selection_kind: 'template', kiro_agent: '', workspace: 'default', memory_store: 'default', source: 'builtin' },
+    { name: 'ajcrew-conductor', selection_kind: 'template', kiro_agent: '', workspace: 'default', memory_store: 'default', source: 'builtin' },
   ],
-  default_agent: 'kirocrew',
-  crew_mode_agent: 'kirocrew-conductor',
-  conductor_agents: ['kirocrew-conductor'],
+  default_agent: 'ajcrew',
+  crew_mode_agent: 'ajcrew-conductor',
+  conductor_agents: ['ajcrew-conductor'],
 }
 
 const item = (id, title, worker, pr) => ({
@@ -71,7 +71,7 @@ const BOARD = {
 }
 
 const worker = (key, title, ledger) => ({
-  key, title, agent: 'kirocrew-worker', status: 'idle', group: LOOPING ? 'working' : 'waiting', last_activity: ago(3),
+  key, title, agent: 'ajcrew-worker', status: 'idle', group: LOOPING ? 'working' : 'waiting', last_activity: ago(3),
   ledger_item: ledger, summary: title, created_by: ROOT, dispatched_by: ROOT,
 })
 
@@ -128,7 +128,7 @@ try {
   }
   // The goal-board dashboard page, rendered the way its test mounts it: the
   // template's body, the host's fields, then its script.
-  const raw = readFileSync(resolve('../src/kiro_crew/dashboard_templates/builtin/goal-board/template.html'), 'utf-8')
+  const raw = readFileSync(resolve('../src/aj_crew/dashboard_templates/builtin/goal-board/template.html'), 'utf-8')
   const page = await browser.newPage({ viewport: { width: 760, height: 420 }, deviceScaleFactor: 2 })
   const items = BOARD.items.map(i => ({ item_id: i.item_id, title: i.title, state: 'open', status: 'progress', summary: i.summary, pr: i.pr, reason: null, worker: 'idle', stale: false, ...(LOOPING ? { looping: true } : {}) }))
   await page.evaluate(({ fields, raw }) => {
@@ -139,7 +139,7 @@ try {
     script?.remove()
     document.head.replaceChildren(...Array.from(doc.head.childNodes))
     document.body.replaceChildren(...Array.from(doc.body.childNodes))
-    window.kirocrew = { fields, agentic: [], locale: 'en', missing: [], written_at: {} }
+    window.ajcrew = { fields, agentic: [], locale: 'en', missing: [], written_at: {} }
     for (const node of document.querySelectorAll('[data-dashboard-field]')) {
       const value = fields[node.getAttribute('data-dashboard-field') ?? '']
       if (value !== undefined) node.textContent = typeof value === 'string' ? value : JSON.stringify(value)

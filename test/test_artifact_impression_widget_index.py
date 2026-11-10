@@ -22,10 +22,10 @@ from unittest.mock import MagicMock
 import pytest
 from body_stream_helpers import attach_json_body
 
-from kiro_crew import artifacts as art_mod
-from kiro_crew.artifacts import ArtifactStore
-from kiro_crew.dashboard.handlers import artifacts as art_handlers
-from kiro_crew.dashboard.handlers.artifacts import api_artifact_record_event
+from aj_crew import artifacts as art_mod
+from aj_crew.artifacts import ArtifactStore
+from aj_crew.dashboard.handlers import artifacts as art_handlers
+from aj_crew.dashboard.handlers.artifacts import api_artifact_record_event
 
 
 @pytest.fixture

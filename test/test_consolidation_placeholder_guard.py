@@ -18,7 +18,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from consolidation_lease_helpers import lease_aware_log
 
-from kiro_crew.history import HistoryConsolidator, _is_plausible_memory_file
+from aj_crew.history import HistoryConsolidator, _is_plausible_memory_file
 
 _PREFS_HEADER = "# User Preferences"
 _PROJECTS_HEADER = "# Active Projects"
@@ -131,7 +131,7 @@ def _make_memory(prefs: str, projects: str) -> MagicMock:
 
 
 def _real_memory(tmp_path, prefs: str, projects: str):
-    from kiro_crew.memory import MemoryStore
+    from aj_crew.memory import MemoryStore
 
     memory = MemoryStore(workspace=tmp_path, index_db=tmp_path / "memory_index.db")
     memory.init()
@@ -228,17 +228,17 @@ async def test_only_v1_legacy_consolidation_can_replace_core_documents(
     tmp_path, monkeypatch, version, include_history
 ):
     """A real V2 store retains its anchors while still admitting new facts."""
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.memory import MemoryStore
-    from kiro_crew.memory_stores import memory_store_dir_for, provision_member_memory
-    from kiro_crew.vector_memory import VectorMemoryStore, open_member_database
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+    from aj_crew.context import ContextBuilder
+    from aj_crew.memory import MemoryStore
+    from aj_crew.memory_stores import memory_store_dir_for, provision_member_memory
+    from aj_crew.vector_memory import VectorMemoryStore, open_member_database
 
     store_name = None
     directory = tmp_path / "global"
     if version == 2:
-        cfg = KiroCrewConfig.load()
-        cfg.agents["writer"] = KiroCrewAgentConfig()
+        cfg = AjCrewConfig.load()
+        cfg.agents["writer"] = AjCrewAgentConfig()
         store_name = provision_member_memory(cfg, "writer")
         cfg.save()
         directory = memory_store_dir_for(store_name)
@@ -260,7 +260,7 @@ async def test_only_v1_legacy_consolidation_can_replace_core_documents(
     try:
         c = _make_consolidator(memory)
         c._vector_store = vectors
-        monkeypatch.setattr("kiro_crew.context.store_of_session", lambda *_: store_name)
+        monkeypatch.setattr("aj_crew.context.store_of_session", lambda *_: store_name)
         monkeypatch.setattr(ContextBuilder, "ensure_store", AsyncMock(return_value=vectors))
         monkeypatch.setattr(ContextBuilder, "get_memory_for", lambda *a, **kw: memory)
         monkeypatch.setattr(ContextBuilder, "get_lessons_for", lambda *a, **kw: None)

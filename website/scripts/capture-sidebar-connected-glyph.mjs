@@ -33,7 +33,7 @@ mkdirSync(OUT, { recursive: true })
 const link = (channel, direction, paused) => ({
   channel, label: 'Slack', target: 'DM · redacted', direction, live: true, paused,
 })
-const base = { messages: 3, running: false, agent: 'kirocrew', created: '2026-09-14T17:00:00Z', folder_id: '' }
+const base = { messages: 3, running: false, agent: 'ajcrew', created: '2026-09-14T17:00:00Z', folder_id: '' }
 const ago = (min) => new Date(Date.now() - min * 60_000).toISOString()
 
 // Slack-born keys are `slack_<ts>`: the row must NOT read that prefix for a mark.

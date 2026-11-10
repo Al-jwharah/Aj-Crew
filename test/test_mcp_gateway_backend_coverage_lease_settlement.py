@@ -45,7 +45,7 @@ from mcp_gateway_backend_coverage_helpers import (
     _settle_lease,
 )
 
-from kiro_crew.mcp_gateway import backend as backend_mod
+from aj_crew.mcp_gateway import backend as backend_mod
 
 # --- subscription response hardening ----------------------------------------
 
@@ -554,7 +554,7 @@ class TestSubscriptionResponseHardeningLeaseSettlement:
         await backend.attach_stub("s1")
         secret_uri = "https://bucket/object?sig=TOPSECRET"
         backend._orphaned_leases.add(secret_uri)
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.mcp_gateway.backend"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.mcp_gateway.backend"):
             await backend._route_backend_line(
                 _line(
                     {
@@ -582,7 +582,7 @@ class TestSubscriptionResponseHardeningLeaseSettlement:
             "_write_json_line",
             AsyncMock(side_effect=RuntimeError("pipe gone")),
         )
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.mcp_gateway.backend"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.mcp_gateway.backend"):
             with pytest.raises(backend_mod.BackendGone):
                 await backend.replay_resource_subscriptions("s1", [secret_uri])
             await backend._release_upstream_subscriptions([secret_uri])

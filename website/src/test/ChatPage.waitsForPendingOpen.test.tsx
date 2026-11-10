@@ -53,7 +53,7 @@ vi.mock('../api/client', () => ({
      'chatSlotWorkspace', 'models', 'planFromChat', 'renameSlot',
      'resolveApproval', 'screenshot', 'slackChannels', 'slackLink', 'spawnList',
      'stopChatSlot', 'uploadFiles', 'voiceSynthesize', 'workspaces', 'chatSlots',
-     'notifications', 'status', 'generateTitle', 'kirocrewConfig', 'agentResolvedModel',
+     'notifications', 'status', 'generateTitle', 'ajcrewConfig', 'agentResolvedModel',
      'chatSlotsUnrestored', 'sessionsNamed', 'setSlotColor'].map(k => [k, vi.fn().mockResolvedValue(
       k === 'chatSlotDetail' ? { messages: [], has_more: false, total: 0 } : {}
     )])

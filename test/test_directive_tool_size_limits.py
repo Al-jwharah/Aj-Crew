@@ -15,10 +15,10 @@ import re
 
 import pytest
 
-from kiro_crew import mcp_core, session_directive
-from kiro_crew.constants import MAX_BANNER_CHARS
-from kiro_crew.mcp_tools import control
-from kiro_crew.mcp_tools.control_parts.schemas import schemas
+from aj_crew import mcp_core, session_directive
+from aj_crew.constants import MAX_BANNER_CHARS
+from aj_crew.mcp_tools import control
+from aj_crew.mcp_tools.control_parts.schemas import schemas
 
 # Instruction-shaped text. Naming one pull request once makes monitor_start gate the
 # loop, which has the longest confirmation; quotes and newlines each encode to two

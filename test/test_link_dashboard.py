@@ -13,13 +13,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.sel import sel
-from kiro_crew.slack.format import (
+from aj_crew.sel import sel
+from aj_crew.slack.format import (
     LINK_DASHBOARD_ACTION,
     build_link_dashboard_button,
     split_message,
 )
-from kiro_crew.slack.handler import _append_footer_actions
+from aj_crew.slack.handler import _append_footer_actions
 
 # ═══════════════════════════════════════════════════════════════════════════
 # 1. format.py — LINK_DASHBOARD_ACTION + build_link_dashboard_button
@@ -139,7 +139,7 @@ def _link_audit() -> list[tuple[str, str]]:
 
 @pytest.fixture
 def link_orch(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
-    from kiro_crew.slack import interactions
+    from aj_crew.slack import interactions
 
     orch = _make_orch_for_link()
     monkeypatch.setattr(interactions, "_orch", orch)
@@ -151,7 +151,7 @@ def link_orch(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
 async def test_link_dashboard_creates_slot_and_imports(
     link_orch: MagicMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.slack import interactions
+    from aj_crew.slack import interactions
 
     mock_sel_inst = MagicMock()
     monkeypatch.setattr(interactions, "sel", lambda: mock_sel_inst)
@@ -165,7 +165,7 @@ async def test_link_dashboard_creates_slot_and_imports(
         "response_url": "",
     }
 
-    with patch("kiro_crew.dashboard.chat._save_slot_to_history"):
+    with patch("aj_crew.dashboard.chat._save_slot_to_history"):
         await interactions.dispatch(payload)
 
     ds = link_orch.dashboard_state
@@ -182,7 +182,7 @@ async def test_link_dashboard_creates_slot_and_imports(
 @pytest.mark.asyncio
 async def test_link_dashboard_null_slot_returns(link_orch: MagicMock, sel_private_root) -> None:
     """When _import_thread_to_slot returns None, handler should return without crash."""
-    from kiro_crew.slack import interactions
+    from aj_crew.slack import interactions
 
     link_orch.slack.fetch_thread_replies = AsyncMock(return_value=[])
 
@@ -208,8 +208,8 @@ async def test_link_dashboard_anchor_refusal_posts_its_notice(
 ) -> None:
     """The button on a code channel's anchor is refused: the thread gets the
     refusal's own notice and nothing is linked."""
-    from kiro_crew.slack import interactions
-    from kiro_crew.slack.code_channels.binding import AnchorHandoffRefused
+    from aj_crew.slack import interactions
+    from aj_crew.slack.code_channels.binding import AnchorHandoffRefused
 
     async def _refuse(*_a, **_k):
         raise AnchorHandoffRefused("100.0")
@@ -235,7 +235,7 @@ async def test_link_dashboard_anchor_refusal_posts_its_notice(
 
 @pytest.mark.asyncio
 async def test_link_dashboard_no_thread_ts_returns(link_orch: MagicMock, sel_private_root) -> None:
-    from kiro_crew.slack import interactions
+    from aj_crew.slack import interactions
 
     payload = {
         "type": "block_actions",
@@ -254,7 +254,7 @@ async def test_link_dashboard_no_thread_ts_returns(link_orch: MagicMock, sel_pri
 async def test_link_dashboard_no_dashboard_state_returns(
     monkeypatch: pytest.MonkeyPatch, sel_private_root
 ) -> None:
-    from kiro_crew.slack import interactions
+    from aj_crew.slack import interactions
 
     orch = MagicMock()
     orch.slack = MagicMock()
@@ -278,8 +278,8 @@ async def test_link_dashboard_skips_link_command_messages(
     link_orch: MagicMock, sel_private_root
 ) -> None:
     """Messages starting with '!link-to-dashboard' should be skipped."""
-    from kiro_crew.dashboard.state import _ChatSlot
-    from kiro_crew.slack import interactions
+    from aj_crew.dashboard.state import _ChatSlot
+    from aj_crew.slack import interactions
 
     slot = _ChatSlot("slot_abc")
     link_orch.dashboard_state.get_or_create_slot = MagicMock(return_value=slot)
@@ -298,7 +298,7 @@ async def test_link_dashboard_skips_link_command_messages(
         "actions": [{"action_id": "mc_link_dashboard", "value": ""}],
         "response_url": "",
     }
-    with patch("kiro_crew.dashboard.chat._save_slot_to_history"):
+    with patch("aj_crew.dashboard.chat._save_slot_to_history"):
         await interactions.dispatch(payload)
 
     # Only the "real message" is imported, not the !link-to-dashboard command.
@@ -311,7 +311,7 @@ async def test_link_dashboard_skips_link_command_messages(
 async def test_link_dashboard_unauthorized_user(
     monkeypatch: pytest.MonkeyPatch, sel_private_root
 ) -> None:
-    from kiro_crew.slack import interactions
+    from aj_crew.slack import interactions
 
     orch = _make_orch_for_link()
     monkeypatch.setattr(interactions, "_orch", orch)

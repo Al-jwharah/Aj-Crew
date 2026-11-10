@@ -22,16 +22,16 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from test_update_provider import _UNALLOCATABLE_PID
 
-from kiro_crew.acp import kas_profile
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp import kas_profile
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     EVENT_COMPLETE,
     JsonRpcMessage,
 )
-from kiro_crew.testing.wait import finished
+from aj_crew.testing.wait import finished
 
 FRAMES = Path(__file__).parent / "fixtures" / "acp_frames" / "kas" / "profile"
 

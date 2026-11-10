@@ -176,11 +176,11 @@ class TestCodeReviewGreps:
         (
             "open(Path.home() / '.kiro/crew/.env')",
             "open(os.path.expanduser('~/.kiro/crew/security_policy.json'))",
-            "open('.kirocrew/.env')",
+            "open('.ajcrew/.env')",
         ),
     )
     def test_backend_sensitive_path_grep_knows_the_data_home(self, tmp_path: Path, line: str):
-        result = self._run_backend(tmp_path, "src/kiro_crew/thing.py", line)
+        result = self._run_backend(tmp_path, "src/aj_crew/thing.py", line)
         assert result.returncode != 0, _proc_log(result)
         assert "Sensitive credential/keystone paths" in result.stdout, _proc_log(result)
 
@@ -191,8 +191,8 @@ class TestCodeReviewGreps:
         # two files it greps so only the check under test decides the outcome.
         repo = tmp_path / "repo"
         for seed, text in (
-            ("src/kiro_crew/security/paths.py", '"denied_commands.json"\n'),
-            ("src/kiro_crew/platform/governance.py", '".kiro/crew/denied_commands.json"\n'),
+            ("src/aj_crew/security/paths.py", '"denied_commands.json"\n'),
+            ("src/aj_crew/platform/governance.py", '".kiro/crew/denied_commands.json"\n'),
         ):
             (repo / seed).parent.mkdir(parents=True, exist_ok=True)
             (repo / seed).write_text(text, encoding="utf-8")
@@ -201,7 +201,7 @@ class TestCodeReviewGreps:
     def test_bool_tripwire_covers_the_security_handler(self, tmp_path: Path):
         result = self._run_backend(
             tmp_path,
-            "src/kiro_crew/dashboard/handlers/security.py",
+            "src/aj_crew/dashboard/handlers/security.py",
             "x = bool(denied.get('disable_all'))",
         )
         assert result.returncode != 0, _proc_log(result)

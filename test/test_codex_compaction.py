@@ -34,12 +34,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp import _dispatch
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.acp.types import (
+from aj_crew.acp import _dispatch
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.acp.types import (
     EVENT_COMPACTION_STATUS,
     EVENT_COMPLETE,
     EVENT_TOOL_CALL,
@@ -50,7 +50,7 @@ from kiro_crew.acp.types import (
     AcpPromptStats,
     JsonRpcMessage,
 )
-from kiro_crew.acp_backends import (
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_COPILOT,
@@ -65,13 +65,13 @@ from kiro_crew.acp_backends import (
     ACP_BACKENDS_INLINE_COMPACTION,
     ACP_BACKENDS_KNOWN,
 )
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.messaging.commands import compact_unsupported_backend
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.session import SessionManager
-from kiro_crew.session_compaction import CompactionCoordinator, _compact_unsupported_backend
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS, await_until
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.config import AjCrewConfig
+from aj_crew.messaging.commands import compact_unsupported_backend
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.session import SessionManager
+from aj_crew.session_compaction import CompactionCoordinator, _compact_unsupported_backend
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS, await_until
 
 
 def parse_codex_compaction_update(update: dict[str, Any]) -> str | None:
@@ -733,7 +733,7 @@ def _autocompact_provider_factory(backend: str, *, stream_status: str | None) ->
 
 @contextlib.asynccontextmanager
 async def _managed_manager(factory: Any) -> Any:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session.timeout_secs = 2
     mgr = SessionManager(cfg, provider_factory=factory)
     try:
@@ -1004,7 +1004,7 @@ def test_native_compaction_cancel_gives_no_verdict(transport: str) -> None:
 
 
 def test_native_compaction_state_is_bounded() -> None:
-    from kiro_crew.acp._dispatch import (
+    from aj_crew.acp._dispatch import (
         NATIVE_COMPACTION_STATES_MAX,
         TOOL_CALL_CACHE_MAX_KEY_CHARS,
         NativeCompactionStates,
@@ -1034,7 +1034,7 @@ def test_native_compaction_state_is_bounded() -> None:
 
 @pytest.mark.parametrize("backend", [ACP_BACKEND_CLAUDE, ACP_BACKEND_CODEX])
 def test_compaction_negotiation_does_not_enable_air(backend: str) -> None:
-    from kiro_crew.acp.client_native_children import client_capabilities_for
+    from aj_crew.acp.client_native_children import client_capabilities_for
 
     capabilities = client_capabilities_for(backend)
     assert capabilities["session"]["compaction"] == {}
@@ -1043,11 +1043,11 @@ def test_compaction_negotiation_does_not_enable_air(backend: str) -> None:
 
 def test_native_compaction_is_advertised_only_where_translated() -> None:
     """Only Claude and Codex opt into the native compaction frames they translate."""
-    from kiro_crew.acp.client import AcpClient
-    from kiro_crew.acp.client_native_children import client_capabilities_for
-    from kiro_crew.acp.harness.codex import CodexHarness
-    from kiro_crew.acp.harness.kiro import KiroHarness
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.client import AcpClient
+    from aj_crew.acp.client_native_children import client_capabilities_for
+    from aj_crew.acp.harness.codex import CodexHarness
+    from aj_crew.acp.harness.kiro import KiroHarness
+    from aj_crew.acp.types import (
         ACP_BACKENDS_INLINE_COMPACTION,
         ACP_CLIENT_CAPABILITIES,
         KAS_CLIENT_CAPABILITIES,

@@ -23,7 +23,7 @@ import { logPageProblems, stubDashboardApi, json } from './lib/stub-dashboard-ap
 
 const OUT = process.argv[2] || '../temp-screenshots/sidebar-chip-budget'
 const ACTIVE = 'chat-a'
-const REPO = 'https://github.com/kirodotdev/KiroCrew'
+const REPO = 'https://github.com/Al-jwharah/Aj-Crew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -37,14 +37,14 @@ const PRS = [pr(19258, { state: 'merged' }), pr(19274, { state: 'open', ci: 'pas
 const ISSUES = [issue(19594), issue(19581), issue(19587), issue(19503)]
 
 const row = (key, title, links, total, minutesAgo, lastMessage) => ({
-  key, title, running: false, messages: 12, agent: 'kirocrew',
+  key, title, running: false, messages: 12, agent: 'ajcrew',
   modified: now - minutesAgo * 60, last_ts: '2026-10-12T20:00:00Z', folder_id: '',
   last_message: lastMessage, source_links: links, source_links_total: total,
 })
 
 const active = {
   key: ACTIVE, title: 'Draft the release notes', running: false, messages: 4,
-  agent: 'kirocrew', modified: now, last_ts: '2026-10-12T22:10:00Z', folder_id: '',
+  agent: 'ajcrew', modified: now, last_ts: '2026-10-12T22:10:00Z', folder_id: '',
   last_message: 'Grouped the entries by area.',
 }
 

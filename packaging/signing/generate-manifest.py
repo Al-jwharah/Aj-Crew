@@ -47,7 +47,7 @@ import zipfile
 
 # Fallback identifier prefix when the app bundle's own CFBundleIdentifier
 # cannot be read (never expected for a real electron-builder output).
-APP_ID = "com.amazon.kiro.crew"
+APP_ID = "io.github.al-jwharah.ajcrew"
 
 _ENTITLEMENTS = {"entitlements_path": "SIGNING_METADATA/Entitlements.entitlements"}
 
@@ -244,7 +244,7 @@ def find_archived_machos(app_path: str) -> "list[str]":
             "    Nothing signs a binary stored compressed, and the Apple notary "
             "service decompresses archive members and rejects the submission "
             "over it. Ship the executable UNCOMPRESSED so it is signed with the "
-            "other nested binaries (see kiro_crew.transcribe for how the runtime "
+            "other nested binaries (see aj_crew.transcribe for how the runtime "
             "authenticates a payload whose bytes signing rewrote)."
         )
 

@@ -18,9 +18,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import create_rate_limit
-from kiro_crew.dashboard.chat_folders import MAX_CHAT_FOLDERS, api_chat_folder_create
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard import create_rate_limit
+from aj_crew.dashboard.chat_folders import MAX_CHAT_FOLDERS, api_chat_folder_create
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 
 def _folders(count: int) -> list[dict[str, Any]]:
@@ -116,7 +116,7 @@ async def test_an_internal_caller_is_rate_limited_at_the_endpoint() -> None:
         headers = {
             "X-Session-Key": "dashboard:chat-1-100",
             "X-Internal-Secret": "s3cret",
-            "X-Internal-Caller": "kirocrew-dashboard",
+            "X-Internal-Caller": "ajcrew-dashboard",
         }
         async with TestClient(TestServer(_make_app(state))) as client:
             allowed = 0

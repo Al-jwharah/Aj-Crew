@@ -14,9 +14,9 @@ import json
 import struct
 from pathlib import Path
 
-from kiro_crew import subagent
-from kiro_crew import vector_memory as vm
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import subagent
+from aj_crew import vector_memory as vm
+from aj_crew.vector_memory import VectorMemoryStore
 
 _DIM = 1024  # shipped embedding width; one blob is _DIM * 4 bytes
 

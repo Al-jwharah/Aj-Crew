@@ -16,17 +16,17 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from test_local_turn_restart_marker import _client_streaming, _state_for_run_chat
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.session import SessionManager
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
+from aj_crew.dashboard.handlers import updates
+from aj_crew.session import SessionManager
 
 _RESTART_KIND = "gateway_restart_interruption"
 
 
 def _blocking_client(release: asyncio.Event, *, lands: bool):
-    from kiro_crew.acp.types import STOP_REASON_CANCELLED, STOP_REASON_END_TURN
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.acp.types import STOP_REASON_CANCELLED, STOP_REASON_END_TURN
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
     client = _client_streaming([])
     stop_reason = STOP_REASON_END_TURN if lands else STOP_REASON_CANCELLED
@@ -43,8 +43,8 @@ def _blocking_client(release: asyncio.Event, *, lands: bool):
 
 async def _restart_mid_turn(tmp_path, monkeypatch, key: str, *, lands: bool):
     """Run one turn, then drive the real in-app restart while it is in flight."""
-    from kiro_crew.dashboard import restart_resume
-    from kiro_crew.dashboard.chat import _run_chat
+    from aj_crew.dashboard import restart_resume
+    from aj_crew.dashboard.chat import _run_chat
 
     state = _state_for_run_chat(tmp_path, monkeypatch)
     state._gateway_restart_in_progress = False
@@ -135,7 +135,7 @@ class _FakeProvider:
 
 @pytest.mark.asyncio
 async def test_final_drain_started_is_set_by_close_all_only(tmp_path, monkeypatch):
-    mgr = SessionManager(KiroCrewConfig(), provider_factory=lambda **k: _FakeProvider())
+    mgr = SessionManager(AjCrewConfig(), provider_factory=lambda **k: _FakeProvider())
     assert mgr.final_drain_started is False
 
     # An update pause closes admission but can still resume: not final.

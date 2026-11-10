@@ -1,6 +1,6 @@
 """A sign-out in one process stops a login pending in another from re-filling the vault.
 
-The gateway's in-memory epoch covers its own pending logins. ``kirocrew kas logout``
+The gateway's in-memory epoch covers its own pending logins. ``ajcrew kas logout``
 runs in a shell, in a second process, with a second ``KasLoginService`` over the same
 vault; its sign-out must still stop a dashboard login that was pending in the gateway
 from persisting once the user approves the code. The store carries a sign-out
@@ -16,10 +16,10 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from kiro_crew.auth.refresh import ensure_fresh
-from kiro_crew.auth.service import KasLoginService
-from kiro_crew.auth.store import KasToken, TokenStore
-from kiro_crew.auth.whoami import START_URL_EXTRA_KEY, resolve_signed_in
+from aj_crew.auth.refresh import ensure_fresh
+from aj_crew.auth.service import KasLoginService
+from aj_crew.auth.store import KasToken, TokenStore
+from aj_crew.auth.whoami import START_URL_EXTRA_KEY, resolve_signed_in
 
 
 class _FakeResp:
@@ -56,7 +56,7 @@ class _FakeSession:
 
 
 def _device_auth():
-    from kiro_crew.auth.login import device
+    from aj_crew.auth.login import device
 
     return device.DeviceAuthorization(
         device_code="dc-1",
@@ -69,7 +69,7 @@ def _device_auth():
 
 
 async def _begin_social(service: KasLoginService, monkeypatch) -> str:
-    from kiro_crew.auth.login import device
+    from aj_crew.auth.login import device
 
     async def _fake_initiate(provider, *, session):
         return _device_auth()
@@ -115,7 +115,7 @@ async def test_a_sign_out_in_another_process_stops_a_pending_login_from_persisti
     assert result == {"status": "error", "code": "signed_out_during_login"}
     assert store.resolve() is None
     # Terminal for that login: it is gone from the pending table.
-    from kiro_crew.auth.service import UnknownLoginError
+    from aj_crew.auth.service import UnknownLoginError
 
     with pytest.raises(UnknownLoginError):
         await gateway.poll_device(login_id)
@@ -197,7 +197,7 @@ def test_a_sign_out_whose_fence_cannot_be_written_reports_failure(tmp_path, monk
     while a pending approval elsewhere could still re-fill the vault."""
     import asyncio
 
-    from kiro_crew.auth.store import TokenStoreError
+    from aj_crew.auth.store import TokenStoreError
 
     store = TokenStore(tmp_path)
     store.save(
@@ -224,9 +224,9 @@ async def test_a_loopback_login_that_fails_leaves_no_generation_row(tmp_path, mo
     in ``_signout_gen`` after the entry drops out of ``_pending`` is never swept."""
     import asyncio
 
-    from kiro_crew.auth.login import portal
-    from kiro_crew.auth.service import _PendingLoopbackLogin
-    from kiro_crew.auth.store import SocialProvider
+    from aj_crew.auth.login import portal
+    from aj_crew.auth.service import _PendingLoopbackLogin
+    from aj_crew.auth.store import SocialProvider
 
     store = TokenStore(tmp_path)
     service = KasLoginService(store)
@@ -274,7 +274,7 @@ async def test_a_second_sign_in_with_the_same_profile_arn_moves_the_fingerprint(
 ):
     # Account A then account B of one kind, answered with one profileArn: every
     # fingerprinted claim matches, so only the sign-in marker can tell them apart.
-    from kiro_crew.auth import bridge
+    from aj_crew.auth import bridge
 
     monkeypatch.setattr(bridge, "data_home", lambda: tmp_path)
     store = TokenStore(tmp_path)
@@ -290,7 +290,7 @@ async def test_a_second_sign_in_with_the_same_profile_arn_moves_the_fingerprint(
 
 def test_a_refresh_write_does_not_move_the_fingerprint(tmp_path, monkeypatch):
     # A refresh saves the token again but completes no sign-in.
-    from kiro_crew.auth import bridge
+    from aj_crew.auth import bridge
 
     monkeypatch.setattr(bridge, "data_home", lambda: tmp_path)
     store = TokenStore(tmp_path)
@@ -321,7 +321,7 @@ def test_a_refresh_write_does_not_move_the_fingerprint(tmp_path, monkeypatch):
 def test_an_unmarked_vault_keeps_the_fingerprint_it_had(tmp_path, monkeypatch):
     # A vault no sign-in has marked yet (signed in before the marker existed)
     # must not read as an account change on upgrade.
-    from kiro_crew.auth import bridge
+    from aj_crew.auth import bridge
 
     monkeypatch.setattr(bridge, "data_home", lambda: tmp_path)
     store = TokenStore(tmp_path)
@@ -341,7 +341,7 @@ def test_an_unmarked_vault_keeps_the_fingerprint_it_had(tmp_path, monkeypatch):
 async def test_a_sign_in_whose_marker_cannot_be_written_saves_nothing(tmp_path, monkeypatch):
     # A saved sign-in the fingerprint cannot see would keep serving the previous
     # account's model catalog and sessions, so the login fails before the save.
-    from kiro_crew.auth.store import TokenStoreError
+    from aj_crew.auth.store import TokenStoreError
 
     store = TokenStore(tmp_path)
 
@@ -367,9 +367,9 @@ def test_the_fingerprint_read_waits_for_a_sign_in_between_its_marker_and_its_sav
     # so the read must wait for the lock and see the saved sign-in.
     import threading
 
-    from kiro_crew.auth import bridge
-    from kiro_crew.auth import store as store_module
-    from kiro_crew.testing.wait import wait_until
+    from aj_crew.auth import bridge
+    from aj_crew.auth import store as store_module
+    from aj_crew.testing.wait import wait_until
 
     monkeypatch.setattr(bridge, "data_home", lambda: tmp_path)
     store = TokenStore(tmp_path)

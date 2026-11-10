@@ -21,8 +21,8 @@ from telegram_parity_helpers import (  # noqa: F401 -- the autouse fixture regis
 )
 from test_telegram import FakeClient, _dispatcher
 
-from kiro_crew.telegram.renderer import TelegramApprovalDecider, TelegramRenderer
-from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES
+from aj_crew.telegram.renderer import TelegramApprovalDecider, TelegramRenderer
+from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
 
 
 def _trust_press(nonce: str = "") -> SimpleNamespace:
@@ -69,14 +69,14 @@ class TestSessionTrust:
         # The grant has to cover the tool THIS prompt is asking about: resolving
         # first would approve this one by the button and let the next tool race
         # the write.
-        from kiro_crew.messaging import session_trust as trust
+        from aj_crew.messaging import session_trust as trust
 
         trust.clear_trusted_sessions()
         dispatcher, client, sessions = _dispatcher({1})
         order: list[str] = []
         with pytest.MonkeyPatch.context() as mp:
             mp.setattr(
-                "kiro_crew.telegram.transport_dispatch.add_trusted_session",
+                "aj_crew.telegram.transport_dispatch.add_trusted_session",
                 lambda k, s=None: order.append("granted"),
             )
             mp.setattr(
@@ -102,14 +102,14 @@ class TestSessionTrust:
         # it — so a dead key must grant nothing at all. Granting while replying
         # "expired" is strictly worse than either outcome alone: the operator is
         # told the press did nothing, and standing authority is handed out anyway.
-        from kiro_crew.messaging import session_trust as trust
+        from aj_crew.messaging import session_trust as trust
 
         trust.clear_trusted_sessions()
         dispatcher, client, _ = _dispatcher({1})
         audits: list[dict] = []
         with pytest.MonkeyPatch.context() as mp:
             mp.setattr(
-                "kiro_crew.telegram.transport_dispatch.sel",
+                "aj_crew.telegram.transport_dispatch.sel",
                 lambda: SimpleNamespace(log_api_access=lambda **kw: audits.append(kw)),
             )
             await dispatcher.on_callback(_trust_press())
@@ -124,7 +124,7 @@ class TestSessionTrust:
     async def test_a_live_trust_press_really_reaches_the_shared_set(self) -> None:
         # The unstubbed path, so the two tests above cannot both pass against a
         # grant that never lands anywhere.
-        from kiro_crew.messaging import session_trust as trust
+        from aj_crew.messaging import session_trust as trust
 
         trust.clear_trusted_sessions()
         dispatcher, _, _ = _dispatcher({1})
@@ -145,7 +145,7 @@ class TestSessionTrust:
 
     @pytest.mark.asyncio
     async def test_a_trusted_conversation_auto_approves_the_rest(self) -> None:
-        from kiro_crew.messaging import session_trust as trust
+        from aj_crew.messaging import session_trust as trust
 
         trust.clear_trusted_sessions()
         dispatcher, _, _ = _dispatcher({1})
@@ -160,7 +160,7 @@ class TestSessionTrust:
         # A subagent reads its PARENT's approval policy, never the in-memory set,
         # so without the policy write a trusted conversation's children still stop
         # to ask.
-        from kiro_crew.messaging import session_trust as trust
+        from aj_crew.messaging import session_trust as trust
 
         trust.clear_trusted_sessions()
         sessions = MagicMock()
@@ -177,7 +177,7 @@ class TestSessionTrust:
         ``auto`` from a grant that had been revoked. The empty string is what the
         dashboard's own untrust toggle writes, so the two paths agree.
         """
-        from kiro_crew.messaging import session_trust as trust
+        from aj_crew.messaging import session_trust as trust
 
         trust.clear_trusted_sessions()
         sessions = MagicMock()
@@ -191,7 +191,7 @@ class TestSessionTrust:
 
     def test_a_revoke_that_raises_still_drops_every_other_grant(self) -> None:
         """One unhappy manager must not leave the rest of the grants standing."""
-        from kiro_crew.messaging import session_trust as trust
+        from aj_crew.messaging import session_trust as trust
 
         trust.clear_trusted_sessions()
         angry, calm = MagicMock(), MagicMock()
@@ -215,9 +215,9 @@ class TestSessionTrust:
         rather than the container, so a later spawn inherited a trust that had just
         been revoked. Asserted through the real function so an alias cannot dodge it.
         """
-        from kiro_crew.messaging import session_trust as trust
-        from kiro_crew.safety_override import safety_override
-        from kiro_crew.slack import handler as h
+        from aj_crew.messaging import session_trust as trust
+        from aj_crew.safety_override import safety_override
+        from aj_crew.slack import handler as h
 
         trust.clear_trusted_sessions()
         sessions = MagicMock()
@@ -246,7 +246,7 @@ class TestSessionTrust:
         import re
         from pathlib import Path
 
-        from kiro_crew.dashboard import server as dash_server
+        from aj_crew.dashboard import server as dash_server
 
         src = inspect.getsource(dash_server)
         # With the server_runtime owners server.py composes, which hold the rest of
@@ -286,7 +286,7 @@ class TestSessionTrust:
         this shared grant, so a blanket revoke here would reset a policy nobody
         expired. The GRANT still goes: only the policy write is skipped.
         """
-        from kiro_crew.messaging import session_trust as trust
+        from aj_crew.messaging import session_trust as trust
 
         trust.clear_trusted_sessions()
         kept, dropped = MagicMock(), MagicMock()
@@ -306,7 +306,7 @@ class TestSessionTrust:
 
     def test_omitting_the_exclusion_revokes_everything(self) -> None:
         """A forgotten argument must err toward MORE revocation, not less."""
-        from kiro_crew.messaging import session_trust as trust
+        from aj_crew.messaging import session_trust as trust
 
         trust.clear_trusted_sessions()
         sessions = MagicMock()
@@ -319,7 +319,7 @@ class TestSessionTrust:
 
     def test_a_grant_with_no_manager_needs_no_manager_to_revoke(self) -> None:
         """The channel paths pass one; the predicate-only callers do not."""
-        from kiro_crew.messaging import session_trust as trust
+        from aj_crew.messaging import session_trust as trust
 
         trust.clear_trusted_sessions()
         trust.add_trusted_session("telegram:k", None)
@@ -327,7 +327,7 @@ class TestSessionTrust:
         assert trust.is_session_trusted("telegram:k") is False
 
     def test_a_failed_policy_write_still_grants_locally(self) -> None:
-        from kiro_crew.messaging import session_trust as trust
+        from aj_crew.messaging import session_trust as trust
 
         trust.clear_trusted_sessions()
         sessions = MagicMock()
@@ -339,8 +339,8 @@ class TestSessionTrust:
     def test_slack_and_the_channels_read_ONE_grant(self) -> None:
         # Slack keeps its own names for its callers; both must resolve to the same
         # set, or a Trust press in one surface leaves the other still asking.
-        from kiro_crew.messaging import session_trust as trust
-        from kiro_crew.slack import handler as h
+        from aj_crew.messaging import session_trust as trust
+        from aj_crew.slack import handler as h
 
         trust.clear_trusted_sessions()
         trust.add_trusted_session("shared:key", None)
@@ -380,7 +380,7 @@ class TestApprovalDetail:
     async def test_the_driver_carries_the_redacted_input_to_the_renderer(self) -> None:
         # The field is additive on OutputEvent with a safe default, and dispatch
         # passes it unconditionally — no capability probe on the shared path.
-        from kiro_crew.messaging.renderer import PROMPT_CHOICE, OutputEvent
+        from aj_crew.messaging.renderer import PROMPT_CHOICE, OutputEvent
 
         seen: list[str] = []
 
@@ -422,7 +422,7 @@ class TestGatewayWiring:
         # register_channel_transport reads transport.dispatcher to inject the
         # dashboard state; the base MessagingTransport already provides it, so a
         # per-channel override would be a second copy of one fact.
-        from kiro_crew.telegram.transport import TelegramTransport
+        from aj_crew.telegram.transport import TelegramTransport
 
         assert "dispatcher" not in vars(TelegramTransport)
         dispatcher, _, _ = _dispatcher({1})
@@ -445,7 +445,7 @@ class TestNoChannelLocalGrantOrRedirectSeam:
       how a channel ends up with a second SOURCE. A grant is global by nature: the
       operator who turns auto-approve off expects it off everywhere, not off in the
       surface they happened to type it in.
-    * a **`!cmd` -> `/kirocrew cmd` redirect map** (`_BANG_TO_SLASH`). Three of its
+    * a **`!cmd` -> `/ajcrew cmd` redirect map** (`_BANG_TO_SLASH`). Three of its
       entries point at sub-commands that are not registered, so it tells the user to
       run something that falls through to help. A redirect table is a promise to keep
       two grammars working, and it rots the moment one of them moves.
@@ -466,8 +466,8 @@ class TestNoChannelLocalGrantOrRedirectSeam:
         """
         import inspect
 
-        from kiro_crew.messaging import commands as shared_commands
-        from kiro_crew.telegram.transport_dispatch import TelegramDispatcher
+        from aj_crew.messaging import commands as shared_commands
+        from aj_crew.telegram.transport_dispatch import TelegramDispatcher
 
         src = inspect.getsource(TelegramDispatcher._handle_yolo)
         assert "run_yolo_command(" in src, "the grant ladder must stay shared"
@@ -482,9 +482,9 @@ class TestNoChannelLocalGrantOrRedirectSeam:
         # restart and disagree with the shared grant.
         from dataclasses import fields
 
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        names = {f.name for f in fields(KiroCrewConfig().telegram)}
+        names = {f.name for f in fields(AjCrewConfig().telegram)}
         offenders = {n for n in names if "yolo" in n or "auto_approve" in n}
         assert not offenders, f"telegram must not own an approval grant: {offenders}"
 
@@ -499,7 +499,7 @@ class TestNoChannelLocalGrantOrRedirectSeam:
         # is a second grammar to keep alive.
         import inspect
 
-        from kiro_crew.telegram import commands as tc
+        from aj_crew.telegram import commands as tc
 
         src = inspect.getsource(tc)
         for marker in ("BANG_TO_SLASH", "_REDIRECTS", "DEPRECATED_COMMANDS"):
@@ -509,8 +509,8 @@ class TestNoChannelLocalGrantOrRedirectSeam:
         # different parser and would read as broken against `parse_command`:
         #   /queue, /steer  -> parse_mid_turn_override; they need a message body, and
         #                      a bare token answers with usage rather than acting.
-        #   /kirocrew       -> requires the explicit `dashboard` subcommand, so a bare
-        #                      "/kirocrew" falls through as ordinary chat text on
+        #   /ajcrew       -> requires the explicit `dashboard` subcommand, so a bare
+        #                      "/ajcrew" falls through as ordinary chat text on
         #                      purpose (a typo or a menu tap must not mint a token).
         mid_turn = {"/queue", "/steer"}
         unresolved: list[str] = []
@@ -521,7 +521,7 @@ class TestNoChannelLocalGrantOrRedirectSeam:
                 if spelling in mid_turn:
                     cmd, _rest = tc.parse_mid_turn_override(f"{spelling} a message")
                     ok = cmd is not None
-                elif spelling == "/kirocrew":
+                elif spelling == "/ajcrew":
                     ok = tc.parse_command(f"{spelling} dashboard") == "dashboard"
                 else:
                     ok = tc.parse_command(spelling) is not None
@@ -553,7 +553,7 @@ class TestApprovalNonceBindsThePress:
         # The reviewer's exact scenario, as a unit: prompt A is rendered and its
         # nonce retired; the provider restarts and prompt B reuses request id 1 in
         # the SAME conversation generation; the stale A button is pressed.
-        key = "telegram:kirocrew:direct:7:1"
+        key = "telegram:ajcrew:direct:7:1"
         stale_nonce = "stale-nonce-aaa"
         TelegramApprovalDecider.arm(key, stale_nonce)
         TelegramApprovalDecider._NONCES.pop(key, None)  # prompt A finished
@@ -566,7 +566,7 @@ class TestApprovalNonceBindsThePress:
 
     @pytest.mark.asyncio
     async def test_a_stale_press_resolves_nothing_and_grants_nothing(self) -> None:
-        from kiro_crew.messaging import session_trust as trust
+        from aj_crew.messaging import session_trust as trust
 
         trust.clear_trusted_sessions()
         d, client, _ = _dispatcher({1})
@@ -606,7 +606,7 @@ class TestApprovalNonceBindsThePress:
         # A button rendered by an older process has no nonce segment at all, so the
         # parse leaves part of the request id where the nonce should be. That must
         # fail closed rather than parse into something that matches.
-        key = "telegram:kirocrew:direct:7:r1"
+        key = "telegram:ajcrew:direct:7:r1"
         TelegramApprovalDecider.arm(key, "n1")
         assert TelegramApprovalDecider.nonce_matches(key, "") is False
         assert TelegramApprovalDecider.nonce_matches(key, "r1") is False
@@ -618,7 +618,7 @@ class TestApprovalNonceBindsThePress:
             decider = TelegramApprovalDecider(session_key="telegram:1:0")
             task = asyncio.ensure_future(decider(SimpleNamespace(request_id="rq5")))
             # flake-ok: pre-existing 20 ms yield so the decider registers its prompt, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing 20 ms yield so the decider registers its prompt, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing 20 ms yield so the decider registers its prompt, moved verbatim; tracked for a de-flake pass
             await asyncio.sleep(0.02)
             key = "telegram:1:0:rq5"
             nonce = "n1"

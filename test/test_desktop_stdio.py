@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import desktop_stdio
-from kiro_crew.desktop_stdio import DESKTOP_STDIO_LOG_ENV, redirect_desktop_stdio
+from aj_crew import desktop_stdio
+from aj_crew.desktop_stdio import DESKTOP_STDIO_LOG_ENV, redirect_desktop_stdio
 
 
 @pytest.fixture

@@ -16,17 +16,17 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew import crewmate_worktree
-from kiro_crew.agent_discovery import AgentInfo
-from kiro_crew.config import config_dir
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.crewmate_prune_migration import PruneReport
-from kiro_crew.cron import CronService
-from kiro_crew.dashboard import goal_reminder
-from kiro_crew.dashboard.agent_admin import avatars
-from kiro_crew.member_goals import CADENCES
-from kiro_crew.members import member_slug, member_thread_session_alias
-from kiro_crew.session_map import SessionMap
+from aj_crew import crewmate_worktree
+from aj_crew.agent_discovery import AgentInfo
+from aj_crew.config import config_dir
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.crewmate_prune_migration import PruneReport
+from aj_crew.cron import CronService
+from aj_crew.dashboard import goal_reminder
+from aj_crew.dashboard.agent_admin import avatars
+from aj_crew.member_goals import CADENCES
+from aj_crew.members import member_slug, member_thread_session_alias
+from aj_crew.session_map import SessionMap
 
 GONE = "omni-old"
 STAYS = "omni-live"
@@ -55,9 +55,9 @@ def _job_names() -> list[str]:
 
 def _seed(names: list[str], *, keep_rows: list[str]) -> CronService:
     """Rows for *keep_rows*; a staged avatar and goal check-ins for every name."""
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     for name in names:
-        cfg.agents[name] = KiroCrewAgentConfig(kiro_agent=name, source="package")
+        cfg.agents[name] = AjCrewAgentConfig(kiro_agent=name, source="package")
     slugs = {name: member_slug(name, cfg) for name in names}
     for name in names:
         if name not in keep_rows:
@@ -86,7 +86,7 @@ class _Sessions:
 
 
 def _expected_jobs(kept: str) -> list[str]:
-    slug = member_slug(kept, KiroCrewConfig.load())
+    slug = member_slug(kept, AjCrewConfig.load())
     return sorted(["unrelated", *(f"{slug} {c}" for c in CADENCES)])
 
 
@@ -94,7 +94,7 @@ def _expected_jobs(kept: str) -> list[str]:
 async def test_agent_sync_prune_removes_the_pruned_crews_leftovers(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.dashboard.handlers import agents
+    from aj_crew.dashboard.handlers import agents
 
     svc = _seed([GONE, STAYS], keep_rows=[GONE, STAYS])
     worktree_calls: list[str] = []
@@ -123,8 +123,8 @@ async def test_agent_sync_prune_removes_the_pruned_crews_leftovers(
         response = await agents._do_agents_sync(request)
 
     assert response.status == 200
-    assert GONE not in KiroCrewConfig.load().agents
-    assert STAYS in KiroCrewConfig.load().agents
+    assert GONE not in AjCrewConfig.load().agents
+    assert STAYS in AjCrewConfig.load().agents
     assert avatars._pending_avatar_path(GONE) is None
     assert avatars._pending_avatar_path(STAYS) is not None
     assert _job_names() == _expected_jobs(STAYS)
@@ -136,7 +136,7 @@ async def test_agent_sync_prune_removes_the_pruned_crews_leftovers(
 async def test_startup_prune_removes_the_removed_crewmates_leftovers(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     # The pass has already deleted GONE's row; STAYS was kept.
     svc = _seed([GONE, STAYS], keep_rows=[STAYS])
@@ -173,7 +173,7 @@ async def test_startup_prune_removes_the_removed_crewmates_leftovers(
 async def test_startup_teardown_skips_a_name_made_again_since_the_pass(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     # The pass removed GONE, and a new crewmate took the name before the teardown.
     svc = _seed([GONE], keep_rows=[GONE])
@@ -208,11 +208,11 @@ async def test_a_slug_a_live_crew_still_derives_keeps_its_worktrees(
 ) -> None:
     """The pruned crew and a surviving one resolve the same slug: the worktrees
     under it are the survivor's, so they stay. The avatar is keyed by name and goes."""
-    from kiro_crew.dashboard.handlers import agents
-    from kiro_crew.members_parts.member_space import slug_for_name
+    from aj_crew.dashboard.handlers import agents
+    from aj_crew.members_parts.member_space import slug_for_name
 
     svc = _seed([GONE, STAYS], keep_rows=[GONE, STAYS])
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents[STAYS].member_id = slug_for_name(GONE)
     cfg.save()
     worktree_calls: list[str] = []
@@ -235,6 +235,6 @@ async def test_a_slug_a_live_crew_still_derives_keeps_its_worktrees(
         response = await agents._do_agents_sync(request)
 
     assert response.status == 200
-    assert GONE not in KiroCrewConfig.load().agents
+    assert GONE not in AjCrewConfig.load().agents
     assert avatars._pending_avatar_path(GONE) is None
     assert worktree_calls == []

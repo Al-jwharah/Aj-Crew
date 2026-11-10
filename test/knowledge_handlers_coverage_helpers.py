@@ -15,11 +15,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import knowledge as kh
-from kiro_crew.embeddings import PRIORITY_NORMAL
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.dashboard.handlers import knowledge as kh
+from aj_crew.embeddings import PRIORITY_NORMAL
+from aj_crew.knowledge.store import KnowledgeStore
 
-MODULE = "kiro_crew.dashboard.handlers.knowledge"
+MODULE = "aj_crew.dashboard.handlers.knowledge"
 
 
 @pytest.fixture(name="store")

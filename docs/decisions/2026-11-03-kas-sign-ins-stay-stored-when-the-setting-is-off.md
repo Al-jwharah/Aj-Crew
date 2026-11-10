@@ -12,7 +12,7 @@ Supersedes: 2026-11-02-kas-keeps-remote-mcp-sign-ins-by-default.md
 
 - Silently wiping sign-ins when the setting reads off would confuse users: every remote MCP server would ask to sign in again with no visible cause.
 - With the setting off, the vault is not read at all (the handshake declares no `secretStorage`), so grants left on disk change nothing a user sees until the setting is turned back on.
-- This entry also corrects the superseded entry's reason for the one-time move. That entry says every settings save since v0.11.0 wrote `false`; in the code, the Settings page's save and `kirocrew config set` write only the key being set. The key was added in #22625 (first in v0.11.0-rc.1) with default `false` and is not in the Settings UI, and the one whole-config write, `kirocrew config edit` on a home with no `config.json`, writes every field with its default. A stored `false` is that written-out default or a manual edit, and almost never a choice made in the UI, so the one-time move stays.
+- This entry also corrects the superseded entry's reason for the one-time move. That entry says every settings save since v0.11.0 wrote `false`; in the code, the Settings page's save and `ajcrew config set` write only the key being set. The key was added in #22625 (first in v0.11.0-rc.1) with default `false` and is not in the Settings UI, and the one whole-config write, `ajcrew config edit` on a home with no `config.json`, writes every field with its default. A stored `false` is that written-out default or a manual edit, and almost never a choice made in the UI, so the one-time move stays.
 
 ## Evidence
 

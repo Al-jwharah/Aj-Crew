@@ -53,7 +53,7 @@ const actions = []
 const extra = (path, route) => {
   const method = route.request().method()
   // The nav dock's roster; the generic [] guess raises its load-failed notice.
-  if (path === '/api/members') return json(route, { members: [], default_agent: 'kirocrew' }), true
+  if (path === '/api/members') return json(route, { members: [], default_agent: 'ajcrew' }), true
   if (path === '/api/apps/auto-research/campaigns') return json(route, campaigns), true
   if (path === `/api/apps/auto-research/campaigns/${ready.id}`) {
     if (method === 'PATCH') {

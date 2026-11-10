@@ -40,7 +40,7 @@ export const SCAN_BUDGET_MS = 250
 export const WORKER_START_TIMEOUT_MS = 5000
 /** Flags an entry may carry, besides the implied `g`. Mirrors `_TEXT_PATTERN_FLAGS_RE`. */
 const FLAGS_RE = /^(?!.*(.).*\1)[giu]*$/
-const STORE_PREFIX = 'kirocrew:link-preview-text-off:'
+const STORE_PREFIX = 'ajcrew:link-preview-text-off:'
 /** Answers kept. Past this no new text is scanned (it stays plain): clearing the
  *  cache instead would make every mounted message ask again, forever. */
 export const MAX_CACHED_TEXTS = 20000

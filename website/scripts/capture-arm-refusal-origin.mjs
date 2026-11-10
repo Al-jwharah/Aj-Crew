@@ -13,7 +13,7 @@ import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/19721-arm-refusal-origin'
 const SLOT = 'chat-arm-refusal'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 mkdirSync(OUT, { recursive: true })
 
 // Verbatim from session_directive_apply.ARM_REFUSAL_NOTICE_PREFIX + _origin_arm_refusal.
@@ -30,7 +30,7 @@ const slots = [{
   running: false,
   last_message: 'Patrol cycle done.',
   messages: 5,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

@@ -2,7 +2,7 @@
  * The `connections_ui` flag — one predicate, every surface that needs it.
  *
  * The Connections gallery ships ON. The flag survives as an escape hatch: set
- * `connections_ui: false` in the running instance's `$KIROCREW_HOME/config.json`
+ * `connections_ui: false` in the running instance's `$AJCREW_HOME/config.json`
  * and every Connections surface goes away again — the gallery offers no cards,
  * and chat is once more the only authorize prompt. Config is read live, so no
  * gateway restart is needed in either direction.
@@ -15,7 +15,7 @@
  * Chat needs the same answer as the gallery. A card-owned OAuth request is worth
  * hiding from chat only when the card that owns it is actually on screen; with
  * the hatch pulled there is no card, so chat is the user's only authorize
- * prompt. Deriving both from one predicate and one `['kirocrewConfig']` cache
+ * prompt. Deriving both from one predicate and one `['ajcrewConfig']` cache
  * entry is what keeps them from disagreeing about whether Connections exists.
  */
 import { useQuery } from '@tanstack/react-query'
@@ -43,8 +43,8 @@ export function connectionsUiEnabled(config: unknown): boolean {
   return value === undefined || value === true
 }
 
-/** Live flag value, off the shared `['kirocrewConfig']` query cache. */
+/** Live flag value, off the shared `['ajcrewConfig']` query cache. */
 export function useConnectionsUiEnabled(): boolean {
-  const { data } = useQuery({ queryKey: ['kirocrewConfig'], queryFn: () => api.kirocrewConfig() })
+  const { data } = useQuery({ queryKey: ['ajcrewConfig'], queryFn: () => api.ajcrewConfig() })
   return connectionsUiEnabled(data)
 }

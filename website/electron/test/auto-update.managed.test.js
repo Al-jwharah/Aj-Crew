@@ -35,11 +35,11 @@ test("externally-managed BARE marker returns disabled:'externally-managed' and n
 test("externally-managed getInfo carries the marker metadata and kills the switcher", () => {
   const { deps } = makeDeps({
     appVersion: "1.0.0", // bare semver stamps as 'stable' -> switchable on a normal install
-    externallyManaged: { managedBy: "internal-registry", updateCommand: "pkgtool update kirocrew" },
+    externallyManaged: { managedBy: "internal-registry", updateCommand: "pkgtool update ajcrew" },
   });
   const info = initAutoUpdate(deps).getInfo();
   assert.strictEqual(info.managedBy, "internal-registry");
-  assert.strictEqual(info.updateCommand, "pkgtool update kirocrew");
+  assert.strictEqual(info.updateCommand, "pkgtool update ajcrew");
   assert.strictEqual(info.channelSwitchable, false,
     "a managed install has no lane the marker's owner reads");
 });
@@ -110,8 +110,8 @@ test("managed check() with updateCommand+checkCommand emits found with the print
     osPlatform: "win32",
     externallyManaged: {
       managedBy: "internal-registry",
-      updateCommand: "pkgtool update kirocrew",
-      checkCommand: "pkgtool check kirocrew",
+      updateCommand: "pkgtool update ajcrew",
+      checkCommand: "pkgtool check ajcrew",
     },
   });
   // Sibling contract: exit 0 and stdout IS the version (the packager authors
@@ -121,7 +121,7 @@ test("managed check() with updateCommand+checkCommand emits found with the print
   const u = initAutoUpdate(deps);
   assert.strictEqual(u.disabled, undefined, "a marker with an updateCommand is NOT disabled");
   await u.check();
-  assert.deepStrictEqual(commands, ["pkgtool check kirocrew"], "check must shell the checkCommand");
+  assert.deepStrictEqual(commands, ["pkgtool check ajcrew"], "check must shell the checkCommand");
   const found = states.find((s) => s.state === "found");
   assert.ok(found, "an available update must surface a 'found' state");
   assert.strictEqual(found.version, "0.5.0.5", "trimmed stdout is the version");
@@ -141,8 +141,8 @@ test("a managed edition build stamped -N reports stable bytes, after a check too
     appVersion: "0.13.0-11",
     externallyManaged: {
       managedBy: "toolbox",
-      updateCommand: "toolbox update kirocrew",
-      checkCommand: "toolbox check kirocrew",
+      updateCommand: "toolbox update ajcrew",
+      checkCommand: "toolbox check ajcrew",
     },
   });
   const { restore } = stubSpawn({ code: 1, out: "" });
@@ -260,16 +260,16 @@ test("managed install() runs updateCommand then relaunch+exit", async (t) => {
   const relaunches = [];
   const exits = [];
   const { deps, states } = makeDeps({
-    externallyManaged: { managedBy: "m", updateCommand: "pkgtool update kirocrew", checkCommand: "check" },
+    externallyManaged: { managedBy: "m", updateCommand: "pkgtool update ajcrew", checkCommand: "check" },
   });
   deps.app.relaunch = () => relaunches.push(true);
   deps.app.exit = (c) => exits.push(c);
-  const { commands, restore } = stubSpawn(installsOnApply("pkgtool update kirocrew"));
+  const { commands, restore } = stubSpawn(installsOnApply("pkgtool update ajcrew"));
   t.after(restore);
   const u = initAutoUpdate(deps);
   await u.check();
   await u.install();
-  assert.ok(commands.includes("pkgtool update kirocrew"), "install must shell the updateCommand");
+  assert.ok(commands.includes("pkgtool update ajcrew"), "install must shell the updateCommand");
   assert.ok(states.some((s) => s.state === "installing"));
   assert.strictEqual(relaunches.length, 1, "a successful install relaunches");
   assert.deepStrictEqual(exits, [0], "a successful install exits(0)");
@@ -297,12 +297,12 @@ test("managed auto-on-restart: pref true + found arms before-quit that runs upda
   const relaunches = [];
   const exits = [];
   const { deps, appOnce } = makeDeps({
-    externallyManaged: { managedBy: "m", updateCommand: "pkgtool update kirocrew", checkCommand: "check" },
+    externallyManaged: { managedBy: "m", updateCommand: "pkgtool update ajcrew", checkCommand: "check" },
   });
   deps.getAutoDownloadPreference = () => true;
   deps.app.relaunch = () => relaunches.push(true);
   deps.app.exit = (c) => exits.push(c);
-  const { commands, restore } = stubSpawn(installsOnApply("pkgtool update kirocrew"));
+  const { commands, restore } = stubSpawn(installsOnApply("pkgtool update ajcrew"));
   t.after(restore);
   const u = initAutoUpdate(deps);
   await u.check();
@@ -311,7 +311,7 @@ test("managed auto-on-restart: pref true + found arms before-quit that runs upda
   const event = { preventDefault: () => {} };
   quit.fn(event);
   await untilExited(exits);
-  assert.ok(commands.includes("pkgtool update kirocrew"), "before-quit must run the updateCommand");
+  assert.ok(commands.includes("pkgtool update ajcrew"), "before-quit must run the updateCommand");
   assert.strictEqual(relaunches.length, 1);
   assert.deepStrictEqual(exits, [0]);
 });
@@ -691,7 +691,7 @@ test("readExternallyManaged: JSON marker carries metadata", (t) => {
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   fs.writeFileSync(
     path.join(dir, "EXTERNALLY-MANAGED"),
-    JSON.stringify({ managedBy: "internal-registry", updateCommand: "pkgtool update kirocrew" }),
+    JSON.stringify({ managedBy: "internal-registry", updateCommand: "pkgtool update ajcrew" }),
   );
   // probeMarkerRewritable: this test is about PARSING a trusted marker; the
   // integrity gate itself is covered by the writability tests below.
@@ -701,7 +701,7 @@ test("readExternallyManaged: JSON marker carries metadata", (t) => {
     probeMarkerRewritable: () => false,
   }), {
     managedBy: "internal-registry",
-    updateCommand: "pkgtool update kirocrew",
+    updateCommand: "pkgtool update ajcrew",
     checkCommand: "",
     relaunchPath: "",
   });
@@ -798,7 +798,7 @@ test("readExternallyManaged: env override points at a marker file", (t) => {
   const marker = path.join(dir, "custom-marker.json");
   fs.writeFileSync(marker, JSON.stringify({ managedBy: "harness", updateCommand: "" }));
   const got = readExternallyManaged({
-    env: { KIROCREW_EXTERNALLY_MANAGED: marker },
+    env: { AJCREW_EXTERNALLY_MANAGED: marker },
     resourcesPath: "/nonexistent",
     probeMarkerRewritable: () => false,
   });
@@ -928,8 +928,8 @@ test("baked marker: trusted as code -- the ownership probe is never consulted", 
   // in the app, main.js included. Baked, it is honored anyway.
   const { baked, resources } = bakedFixture(t, JSON.stringify({
     managedBy: "Builder Toolbox",
-    updateCommand: "/opt/toolbox/bin/toolbox update kirocrew",
-    checkCommand: "/opt/toolbox/bin/kirocrew-update-check",
+    updateCommand: "/opt/toolbox/bin/toolbox update ajcrew",
+    checkCommand: "/opt/toolbox/bin/ajcrew-update-check",
     relaunchPath: "",
   }));
   let probed = 0;
@@ -940,8 +940,8 @@ test("baked marker: trusted as code -- the ownership probe is never consulted", 
     probeMarkerRewritable: () => { probed += 1; return true; },
   }), {
     managedBy: "Builder Toolbox",
-    updateCommand: "/opt/toolbox/bin/toolbox update kirocrew",
-    checkCommand: "/opt/toolbox/bin/kirocrew-update-check",
+    updateCommand: "/opt/toolbox/bin/toolbox update ajcrew",
+    checkCommand: "/opt/toolbox/bin/ajcrew-update-check",
     relaunchPath: "",
   });
   assert.strictEqual(probed, 0, "a baked marker is not subject to the loose-marker provenance probe");
@@ -1042,7 +1042,7 @@ test("baked marker: degenerate bodies still mean managed, with nothing to run", 
 });
 
 test("baked marker: the dev/test env seam still wins, and stays a LOOSE read", (t) => {
-  // KIROCREW_EXTERNALLY_MANAGED (unpackaged only) names the file the harness
+  // AJCREW_EXTERNALLY_MANAGED (unpackaged only) names the file the harness
   // wants exercised; a baked marker must not pre-empt it, and the env-named
   // file keeps the provenance probe -- the seam exercises the loose path.
   const fs = require("node:fs");
@@ -1052,7 +1052,7 @@ test("baked marker: the dev/test env seam still wins, and stays a LOOSE read", (
   fs.writeFileSync(envMarker, JSON.stringify({ managedBy: "env", updateCommand: "/usr/bin/x" }));
   let probedPath = "";
   assert.deepStrictEqual(readExternallyManaged({
-    env: { KIROCREW_EXTERNALLY_MANAGED: envMarker },
+    env: { AJCREW_EXTERNALLY_MANAGED: envMarker },
     isPackaged: false,
     resourcesPath: resources,
     bakedMarkerPath: baked,
@@ -1135,7 +1135,7 @@ test("canRewriteMarker: Windows is fail-closed by declaration", () => {
   }
 });
 
-test("readExternallyManaged: a PACKAGED app ignores KIROCREW_EXTERNALLY_MANAGED", (t) => {
+test("readExternallyManaged: a PACKAGED app ignores AJCREW_EXTERNALLY_MANAGED", (t) => {
   const fs = require("node:fs");
   const os = require("node:os");
   const path = require("node:path");
@@ -1151,7 +1151,7 @@ test("readExternallyManaged: a PACKAGED app ignores KIROCREW_EXTERNALLY_MANAGED"
   // not consult it at all: the launch environment is user-writable.
   assert.strictEqual(
     readExternallyManaged({
-      env: { KIROCREW_EXTERNALLY_MANAGED: marker },
+      env: { AJCREW_EXTERNALLY_MANAGED: marker },
       resourcesPath: empty,
       isPackaged: true,
       probeMarkerRewritable: () => false,
@@ -1162,7 +1162,7 @@ test("readExternallyManaged: a PACKAGED app ignores KIROCREW_EXTERNALLY_MANAGED"
   // Unpackaged (the harness case) still honors it.
   assert.deepStrictEqual(
     readExternallyManaged({
-      env: { KIROCREW_EXTERNALLY_MANAGED: marker },
+      env: { AJCREW_EXTERNALLY_MANAGED: marker },
       resourcesPath: empty,
       isPackaged: false,
       probeMarkerRewritable: () => false,
@@ -1293,7 +1293,7 @@ test("managed command env is CONSTRUCTED: nothing the shell reads as code is inh
     "the app's COMSPEC is not inherited (cmd.exe sets the child's own to the pinned shell)");
   // Derived, not inherited: the launching executable's absolute path, from
   // process.execPath (kernel command line), never from process.env.
-  assert.strictEqual(env.KIROCREW_MANAGED_ARGV0, process.execPath);
+  assert.strictEqual(env.AJCREW_MANAGED_ARGV0, process.execPath);
   // The managed lane owns the executor: its spawn and its pinned shell live together.
   const src = require("node:fs").readFileSync(require.resolve("../runtime/update/managed-lane"), "utf8");
   assert.match(src, /shell: managedShell\(\)/, "spawn must take its shell from managedShell()");
@@ -1340,22 +1340,22 @@ test("readExternallyManaged: relaunchPath keeps absolute and ~/ paths, drops the
   const path = require("node:path");
   const home = path.resolve("/home/someone");
   const homeDir = () => home;
-  const abs = path.resolve("/opt/kc/KiroCrew.app/Contents/MacOS/KiroCrew");
+  const abs = path.resolve("/opt/kc/AjCrew.app/Contents/MacOS/AjCrew");
   assert.strictEqual(readRelaunchPath(t, abs, homeDir), abs);
   assert.strictEqual(readRelaunchPath(t, `  ${abs}  `, homeDir), abs, "trimmed like every other field");
   assert.strictEqual(
-    readRelaunchPath(t, "~/Library/KC/KiroCrew.app/Contents/MacOS/KiroCrew", homeDir),
-    path.join(home, "Library/KC/KiroCrew.app/Contents/MacOS/KiroCrew"),
+    readRelaunchPath(t, "~/Library/KC/AjCrew.app/Contents/MacOS/AjCrew", homeDir),
+    path.join(home, "Library/KC/AjCrew.app/Contents/MacOS/AjCrew"),
     "~/ is the account's home",
   );
-  assert.strictEqual(readRelaunchPath(t, "relative/KiroCrew", homeDir), "");
-  assert.strictEqual(readRelaunchPath(t, "~other/KiroCrew", homeDir), "", "only ~/ expands");
+  assert.strictEqual(readRelaunchPath(t, "relative/AjCrew", homeDir), "");
+  assert.strictEqual(readRelaunchPath(t, "~other/AjCrew", homeDir), "", "only ~/ expands");
   assert.strictEqual(readRelaunchPath(t, `${abs}\0x`, homeDir), "");
   assert.strictEqual(readRelaunchPath(t, path.resolve("/" + "x".repeat(1100)), homeDir), "",
     "over the cap is dropped, never cut into another path");
   assert.strictEqual(readRelaunchPath(t, 7, homeDir), "", "a non-string is ignored");
-  assert.strictEqual(readRelaunchPath(t, "~/KiroCrew", () => ""), "", "no home, no path");
-  assert.strictEqual(readRelaunchPath(t, "~/KiroCrew", () => { throw new Error("no passwd"); }), "");
+  assert.strictEqual(readRelaunchPath(t, "~/AjCrew", () => ""), "", "no home, no path");
+  assert.strictEqual(readRelaunchPath(t, "~/AjCrew", () => { throw new Error("no passwd"); }), "");
 });
 
 test("readExternallyManaged: a trusted marker carries relaunchPath; a rewritable one does not", (t) => {
@@ -1364,7 +1364,7 @@ test("readExternallyManaged: a trusted marker carries relaunchPath; a rewritable
   const path = require("node:path");
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "kc-ext-"));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
-  const exe = path.resolve("/opt/kc/KiroCrew.app/Contents/MacOS/KiroCrew");
+  const exe = path.resolve("/opt/kc/AjCrew.app/Contents/MacOS/AjCrew");
   fs.writeFileSync(path.join(dir, "EXTERNALLY-MANAGED"), JSON.stringify({
     managedBy: "m", updateCommand: "/usr/bin/u", checkCommand: "/usr/bin/c", relaunchPath: exe,
   }));
@@ -1381,11 +1381,11 @@ test("managed install(): a relaunchPath on disk is what relaunches, with the sam
   const relaunches = [];
   const exits = [];
   const { deps } = makeDeps({
-    externallyManaged: { managedBy: "m", updateCommand: "pkgtool update kirocrew", checkCommand: "check", relaunchPath: exe },
+    externallyManaged: { managedBy: "m", updateCommand: "pkgtool update ajcrew", checkCommand: "check", relaunchPath: exe },
   });
   deps.app.relaunch = (opts) => relaunches.push(opts);
   deps.app.exit = (c) => exits.push(c);
-  const { restore } = stubSpawn(installsOnApply("pkgtool update kirocrew"));
+  const { restore } = stubSpawn(installsOnApply("pkgtool update ajcrew"));
   t.after(restore);
   const u = initAutoUpdate(deps);
   await u.check();
@@ -1399,11 +1399,11 @@ test("managed install(): a relaunchPath that is not on disk falls back to the ba
   const { missing } = relaunchFixture(t);
   const relaunches = [];
   const { deps } = makeDeps({
-    externallyManaged: { managedBy: "m", updateCommand: "pkgtool update kirocrew", checkCommand: "check", relaunchPath: missing },
+    externallyManaged: { managedBy: "m", updateCommand: "pkgtool update ajcrew", checkCommand: "check", relaunchPath: missing },
   });
   deps.app.relaunch = (...a) => relaunches.push(a);
   deps.app.exit = () => {};
-  const { restore } = stubSpawn(installsOnApply("pkgtool update kirocrew"));
+  const { restore } = stubSpawn(installsOnApply("pkgtool update ajcrew"));
   t.after(restore);
   const u = initAutoUpdate(deps);
   await u.check();
@@ -1416,12 +1416,12 @@ test("managed auto-on-restart: the quit-time apply relaunches through relaunchPa
   const relaunches = [];
   const exits = [];
   const { deps, appOnce } = makeDeps({
-    externallyManaged: { managedBy: "m", updateCommand: "pkgtool update kirocrew", checkCommand: "check", relaunchPath: exe },
+    externallyManaged: { managedBy: "m", updateCommand: "pkgtool update ajcrew", checkCommand: "check", relaunchPath: exe },
   });
   deps.getAutoDownloadPreference = () => true;
   deps.app.relaunch = (opts) => relaunches.push(opts);
   deps.app.exit = (c) => exits.push(c);
-  const { restore } = stubSpawn(installsOnApply("pkgtool update kirocrew"));
+  const { restore } = stubSpawn(installsOnApply("pkgtool update ajcrew"));
   t.after(restore);
   const u = initAutoUpdate(deps);
   await u.check();
@@ -1449,8 +1449,8 @@ function sessionEndRig({ osPlatform = "win32", pref = () => true, checkCode = 0 
     osPlatform,
     externallyManaged: {
       managedBy: "internal-registry",
-      updateCommand: "pkgtool update kirocrew",
-      checkCommand: "pkgtool check kirocrew",
+      updateCommand: "pkgtool update ajcrew",
+      checkCommand: "pkgtool check ajcrew",
     },
   });
   made.deps.getMainWindow = () => win;
@@ -1458,7 +1458,7 @@ function sessionEndRig({ osPlatform = "win32", pref = () => true, checkCode = 0 
   made.deps.getAutoDownloadPreference = pref;
   const result = { code: checkCode };
   const spawned = stubSpawn((command) => (
-    command === "pkgtool check kirocrew"
+    command === "pkgtool check ajcrew"
       ? { code: result.code, out: result.code === 0 ? "9.9.9\n" : "" }
       : { code: 1, out: "" }
   ));
@@ -1474,10 +1474,10 @@ test("managed session-end on win32 shows one pending-update notice and runs no u
   assert.ok(appOnce.some((r) => r.ev === "before-quit"), "before-quit stays armed beside it");
   win.emit("session-end");
   assert.deepStrictEqual(notices, [{
-    title: "Kiro Crew update ready",
-    body: "An update (version 9.9.9) was found but not installed, because Windows was closing. Quit Kiro Crew from the tray to install it.",
+    title: "Aj Crew update ready",
+    body: "An update (version 9.9.9) was found but not installed, because Windows was closing. Quit Aj Crew from the tray to install it.",
   }]);
-  assert.deepStrictEqual(commands, ["pkgtool check kirocrew"], "session-end must never run the updateCommand");
+  assert.deepStrictEqual(commands, ["pkgtool check ajcrew"], "session-end must never run the updateCommand");
   assert.strictEqual(win.listenerCount("session-end"), 0, "the listener fires once");
 });
 

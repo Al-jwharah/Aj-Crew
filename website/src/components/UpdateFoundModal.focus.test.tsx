@@ -21,7 +21,7 @@ vi.mock('../api/client', () => {
   return {
     ApiError: MockApiError,
     api: {
-      kirocrewConfig: vi.fn(),
+      ajcrewConfig: vi.fn(),
       patchConfig: vi.fn(),
       checkUpdate: vi.fn(),
       applyUpdate: vi.fn(),
@@ -47,10 +47,10 @@ beforeEach(() => {
     configurable: true,
     get() { return (this as HTMLElement).parentElement },
   })
-  mockedApi.kirocrewConfig.mockReset()
+  mockedApi.ajcrewConfig.mockReset()
   mockedApi.patchConfig.mockReset()
   mockedApi.checkUpdate.mockReset()
-  mockedApi.kirocrewConfig.mockResolvedValue({ dashboard: { update_nudge: {} } } as never)
+  mockedApi.ajcrewConfig.mockResolvedValue({ dashboard: { update_nudge: {} } } as never)
   mockedApi.patchConfig.mockResolvedValue({} as never)
   mockedApi.checkUpdate.mockResolvedValue({ changes: '' } as never)
   ;(window as unknown as { updateAPI?: object }).updateAPI = { download: vi.fn().mockResolvedValue(undefined) }

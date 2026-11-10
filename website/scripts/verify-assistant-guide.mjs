@@ -7,9 +7,9 @@ import { mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { chromium } from 'playwright'
 import { serveDist } from './lib/serve-dist.mjs'
-import { stubDashboardApi, json, KIROCREW_CONFIG_FIXTURE } from './lib/stub-dashboard-api.mjs'
+import { stubDashboardApi, json, AJCREW_CONFIG_FIXTURE } from './lib/stub-dashboard-api.mjs'
 
-const out = process.argv[2] || process.env.KIROCREW_SCRATCH
+const out = process.argv[2] || process.env.AJCREW_SCRATCH
 if (!out) throw new Error('Provide an output directory')
 mkdirSync(out, { recursive: true })
 const { srv, base } = await serveDist()
@@ -31,8 +31,8 @@ try {
     // Both built-ins: the reserved `default` member (ordinary, untouched) and
     // the separate Assistant member the guide was offered in.
     const members = [
-      { name: 'default', slug: 'default', bound: true, slot_key: 'chat-default', kiro_agent: 'kirocrew', source: 'builtin', workspace: 'default', memory_store: 'default' },
-      { name: 'assistant', slug: 'assistant', bound: true, slot_key: 'chat-assistant', kiro_agent: 'kirocrew-assistant', source: 'builtin', workspace: 'default', memory_store: 'default' },
+      { name: 'default', slug: 'default', bound: true, slot_key: 'chat-default', kiro_agent: 'ajcrew', source: 'builtin', workspace: 'default', memory_store: 'default' },
+      { name: 'assistant', slug: 'assistant', bound: true, slot_key: 'chat-assistant', kiro_agent: 'ajcrew-assistant', source: 'builtin', workspace: 'default', memory_store: 'default' },
     ]
     const threadReads = []
     const sockets = []
@@ -53,7 +53,7 @@ try {
         extra: async (path, route) => {
           const reply = async (v, status = 200) => { await json(route, v, status); return true }
           if (path === '/api/theme/boot') return reply({ mode: 'light', onboarded: true, import_onboarded: true, privacy_acked: true })
-          if (path === '/api/config/kirocrew') return reply({ ...KIROCREW_CONFIG_FIXTURE, dashboard: { crewmate_threads: false } })
+          if (path === '/api/config/ajcrew') return reply({ ...AJCREW_CONFIG_FIXTURE, dashboard: { crewmate_threads: false } })
           if (path === '/api/members') return reply({ members })
           if (path === '/api/teams') return reply({ teams: [] })
           if (path === '/api/members/assistant/thread') { threadReads.push('assistant'); return reply({ member: 'assistant', slot_key: 'chat-assistant' }) }
@@ -64,7 +64,7 @@ try {
           if (path.endsWith('/greet')) return reply({ outcome: 'not_owed' })
           if (path.endsWith('/projections')) return reply({ asOfSeq: 0, values: {} })
           if (path === '/api/chat/slots/chat-assistant') return reply({ key: 'chat-assistant', messages: [], running: false, has_more: false, total: 0 })
-          if (path === '/api/agents/installed') return reply([{ name: 'kirocrew', source: 'kirocrew' }])
+          if (path === '/api/agents/installed') return reply([{ name: 'ajcrew', source: 'ajcrew' }])
           if (path.startsWith('/api/mcp') && route.request().method() !== 'GET') {
             mcpWrites.push(`${route.request().method()} ${path}`)
             return reply({ error: 'the guide must never write MCP configuration' }, 500)
@@ -103,7 +103,7 @@ try {
             // `crewmate.create` has a single step: the Create commit.
             assert.equal(guide.action_index, 0)
             assert.equal(guide.step_index, 0)
-            members.push({ ...members[1], kiro_agent: 'kirocrew', source: 'kirocrew', name: data.name, slug: data.name.toLowerCase(), slot_key: '', bound: false })
+            members.push({ ...members[1], kiro_agent: 'ajcrew', source: 'ajcrew', name: data.name, slug: data.name.toLowerCase(), slot_key: '', bound: false })
             await reply({ ok: true, name: data.name, member_id: 'fixture-scout' })
             guide.actions[0].result = { name: data.name, member_id: 'fixture-scout' }
             guide = { ...guide, action_index: 1, step_index: 0, revision: guide.revision + 1 }

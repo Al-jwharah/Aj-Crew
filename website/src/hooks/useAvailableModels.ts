@@ -18,7 +18,7 @@ const PLACEHOLDER: ModelInfo[] = [{ name: 'auto', description: '' }]
  * ## Why a hook and not six `useQuery` calls
  *
  * Six surfaces render a model picker (ChatPage, ChatPane, chat-sidebar/bulkModelSwitch.tsx's bulk
- * switcher, AgentsPage, Settings ▸ Chat, KiroCrewAgentsPage) and all six used
+ * switcher, AgentsPage, Settings ▸ Chat, AjCrewAgentsPage) and all six used
  * the SAME query key — deliberately, so kiro-cli's `--list-models` is spawned
  * once — while each declared its own `queryFn`. React Query stores one cache
  * entry per key and the fetching observer's options win, so with divergent
@@ -28,7 +28,7 @@ const PLACEHOLDER: ModelInfo[] = [{ name: 'auto', description: '' }]
  * That was not theoretical. Three shapes were live at once: four surfaces
  * returned `withAutoFirst(models)`, Settings ▸ Chat returned a hand-built
  * `[{name:'auto',description:'Default'}, ...rest]` that discarded everything
- * the live Auto row carried, and KiroCrewAgentsPage returned the raw list with
+ * the live Auto row carried, and AjCrewAgentsPage returned the raw list with
  * no Auto-first ordering at all. Opening Settings ▸ Chat replaced the shared
  * cache with the stripped shape, so Auto's credit-multiplier badge vanished
  * from every other picker until one of them refetched — a flicker whose cause

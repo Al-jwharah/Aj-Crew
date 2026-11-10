@@ -1,4 +1,4 @@
-"""The ``kirocrew-computer`` action verbs, driven through the gateway dispatcher.
+"""The ``ajcrew-computer`` action verbs, driven through the gateway dispatcher.
 
 Covers click and drag validation, ``auto`` never resolving to ``global``, the action
 header's redaction, the keyboard element-index contract, and the snapshot budget.
@@ -16,12 +16,12 @@ from mcp_computer_helpers import home_fixture  # noqa: F401
 from mcp_computer_helpers import keystone_fixture  # noqa: F401
 from mcp_computer_helpers import _SESSION, _dispatch, _enable, _get_state
 
-from kiro_crew import mcp_computer
-from kiro_crew.computer_use import index as cu_index
-from kiro_crew.computer_use import policy as cu_policy
-from kiro_crew.computer_use import service as cu_service
-from kiro_crew.computer_use import tools as cu_tools
-from kiro_crew.computer_use.types import (
+from aj_crew import mcp_computer
+from aj_crew.computer_use import index as cu_index
+from aj_crew.computer_use import policy as cu_policy
+from aj_crew.computer_use import service as cu_service
+from aj_crew.computer_use import tools as cu_tools
+from aj_crew.computer_use.types import (
     CLICK_METHOD_GLOBAL,
     CLICK_METHOD_SKY_CLICK,
     CLICK_METHODS,
@@ -36,12 +36,12 @@ from kiro_crew.computer_use.types import (
     TOOL_TYPE_TEXT,
     AppRef,
 )
-from kiro_crew.testing.fake_computer_use import (
+from aj_crew.testing.fake_computer_use import (
     FAKE_CREDENTIAL_FIXTURE,
     FAKE_FILES_APP,
     FakeComputerUseBackend,
 )
-from kiro_crew.validation import ValidationError
+from aj_crew.validation import ValidationError
 
 # ──────────────────────────────────────────────────────────────────────────
 # Coordinate clicking + drag: the one-of rule, the enums, and `auto`
@@ -304,7 +304,7 @@ class TestCursorMotionIsWiredToThePointerPath:
     @pytest.fixture
     def motions(self, monkeypatch) -> list:
         """Record ``show_pointer_motion`` calls instead of drawing anything."""
-        from kiro_crew.computer_use import overlay as overlay_mod
+        from aj_crew.computer_use import overlay as overlay_mod
 
         seen: list = []
         monkeypatch.setattr(
@@ -391,7 +391,7 @@ class TestCursorMotionIsWiredToThePointerPath:
         ``require_pointer_move`` is a no-op, but its CALL marks which gestures move the
         cursor; an ``app_post`` click asking for it means that tracking is lost.
         """
-        from kiro_crew.computer_use import gate as cu_gate
+        from aj_crew.computer_use import gate as cu_gate
 
         asked: list[str] = []
         monkeypatch.setattr(
@@ -425,7 +425,7 @@ class TestCursorMotionIsWiredToThePointerPath:
             def log_governance_decision(self, **kwargs):
                 pass
 
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: _Sel())
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: _Sel())
         _enable(keystone)
         _get_state()
         _dispatch(TOOL_CLICK, app=FAKE_FILES_APP.name, x=1, y=2, click_method="global")
@@ -445,7 +445,7 @@ class TestCursorMotionIsWiredToThePointerPath:
             def log_governance_decision(self, **kwargs):
                 pass
 
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: _Sel())
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: _Sel())
         _enable(keystone)
         _get_state()
         _dispatch(TOOL_CLICK, app=FAKE_FILES_APP.name, element_index=_pressable_index())
@@ -511,12 +511,12 @@ class TestDragTool:
     ):
         """The one retained refusal applies to the new verb like every other one.
 
-        Retargeted from a terminal (not refused) onto Kiro Crew's own window,
+        Retargeted from a terminal (not refused) onto Aj Crew's own window,
         which stays refused because driving our own Settings UI would route around
         the keystone that holds the primary enable.
         """
         _enable(keystone)
-        result = _dispatch(TOOL_DRAG, app="Kiro Crew", from_x=1, from_y=2, to_x=3, to_y=4)
+        result = _dispatch(TOOL_DRAG, app="Aj Crew", from_x=1, from_y=2, to_x=3, to_y=4)
         assert result.startswith(ERROR_PREFIX)
         assert not [args for name, args in fake_backend.calls if name == "drag"]
 
@@ -596,7 +596,7 @@ class TestTheSkillContractMatchesTheRuntime:
     """
 
     _SKILL = (
-        Path(__file__).resolve().parents[1] / "src/kiro_crew/builtin_skills/computer-use/SKILL.md"
+        Path(__file__).resolve().parents[1] / "src/aj_crew/builtin_skills/computer-use/SKILL.md"
     )
 
     _SPEC = Path(__file__).resolve().parents[1] / "docs/system-specs/modules/computer-use.md"
@@ -677,7 +677,7 @@ class TestTheSkillContractMatchesTheRuntime:
         A screenshot suppressed on a truncated walk is routine for browsers; the skill must
         quote ``TRUNCATED_WINDOW_NOTE`` so the model reads it as an answer, not a fault.
         """
-        from kiro_crew.computer_use.types import TRUNCATED_WINDOW_NOTE
+        from aj_crew.computer_use.types import TRUNCATED_WINDOW_NOTE
 
         text = self._SKILL.read_text(encoding="utf-8")
         # The distinctive opening clause, not the whole sentence: the table wraps it.
@@ -696,7 +696,7 @@ class TestTheDriftWalkHonoursTheSnapshotBudget:
 
     @staticmethod
     def _wide_tree(count: int = 1500):
-        from kiro_crew.testing.fake_computer_use import FakeNode
+        from aj_crew.testing.fake_computer_use import FakeNode
 
         return FakeNode(
             role="AXWindow",

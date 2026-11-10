@@ -143,9 +143,9 @@ proves nothing about the host.
 
 ## 3. Task model
 
-### 3.1 One durable store: `$KIROCREW_HOME/tasks/tasks.db`
+### 3.1 One durable store: `$AJCREW_HOME/tasks/tasks.db`
 
-Decision: introduce one SQLite store owned by a new package `kiro_crew/taskq/`
+Decision: introduce one SQLite store owned by a new package `aj_crew/taskq/`
 (`store.py`, `state.py`, `scheduler.py`, `budget.py`, `controller.py`,
 `recovery.py`). TaskRunner `runs.json`, the workflow `RunRegistry`, and subagent
 `state.json`/`tombstone.json`/`result.txt` folders stay as **artifact and
@@ -188,7 +188,7 @@ CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT);  -- schema_version, incarn
 ```
 
 `task_events` is append-only and is the source for §10 "recent progress" and
-"retry count"; it uses the envelope shape of `kiro_crew.events` so it can later be
+"retry count"; it uses the envelope shape of `aj_crew.events` so it can later be
 projected into the append-only ledger without a second writer.
 
 ### 3.3 State machine
@@ -593,7 +593,7 @@ by id when it next runs (§10).
   max and the current pressure reason.
 - **Health.** `session_health.py` reads task + runtime state instead of scraping
   `gateway.log`; the regex path remains only as a fallback for pre-migration
-  logs. `kirocrew doctor` prints queue depth, oldest wait, effective caps,
+  logs. `ajcrew doctor` prints queue depth, oldest wait, effective caps,
   pressure reason.
 - **Metrics** (bounded cardinality; labels are enums, never ids):
   `taskq_depth{state}`, `taskq_oldest_wait_secs`, `taskq_completion_rate`,
@@ -698,7 +698,7 @@ crew workspace; this section is the design-level summary of it.
 | Wave | Area | Scope | Size | Config (all `restart=True` unless noted) | Specs updated |
 |---|---|---|---|---|---|
 | 1 (slice 0, supervisor half superseded upstream) | — | The supervisor's "overload is not death" gate LANDED ON `main` as #10455's escalated probe: one further probe at `_LIVENESS_ESCALATED_TIMEOUT_SECS` (20s, a whole-round-trip bound) after the fast ping misses, answering either means alive, and the three-strike grace counts only cycles where neither answered. This branch's own answer to the same incident — a supervisor-side reader of the daemon's `is_serving` self-report (`mcp_gateway/self_report.py` + `GatewayManager._alive_but_overloaded`) — is therefore SUBTRACTED, not shipped: under fan-out the record is the strictly later and weaker signal, and it keeps vouching for a daemon whose accept path is dead. The record WRITER (`gatewayd._zombie_diagnostic`) pre-dates both and stays as a post-mortem log. Stub reconnect budget 600s stands. | small | — | mcp-gateway-daemon-lifecycle |
-| 1 | A `taskq` | `kiro_crew/taskq/` store + state machine (15 states in `taskq/model.py` `STATES`, including `unknown_side_effect`) + lease/generation + migration + reconcile-first boot + network-FS detection; subagent entry writes-before-ack; memory pressure defers instead of refusing; `spawn_sub_agents` `still_running` | ~1.5k lines + tests | `agent.task_queue_enabled=true` (live), `agent.task_dispatch_window=64`, `agent.admit_wait_secs=30`, `agent.start_collect_timeout_secs=300`, `agent.task_store_journal_mode="auto"`, proposed `taskrunner.auto_resume=false` (not shipped) | subagent, taskrunner, workflows, config, new `taskq.md` |
+| 1 | A `taskq` | `aj_crew/taskq/` store + state machine (15 states in `taskq/model.py` `STATES`, including `unknown_side_effect`) + lease/generation + migration + reconcile-first boot + network-FS detection; subagent entry writes-before-ack; memory pressure defers instead of refusing; `spawn_sub_agents` `still_running` | ~1.5k lines + tests | `agent.task_queue_enabled=true` (live), `agent.task_dispatch_window=64`, `agent.admit_wait_secs=30`, `agent.start_collect_timeout_secs=300`, `agent.task_store_journal_mode="auto"`, proposed `taskrunner.auto_resume=false` (not shipped) | subagent, taskrunner, workflows, config, new `taskq.md` |
 | 1 | B `gateway-admission` | `HostBudget`; gatewayd `SpawnGate` with FIXED capacity and a `set_capacity()` seam; FIFO wait + `spawn_queue` capability + `queued` keepalive; `BackendPool.reserve` before spawn; rejection classes; fallback only for `compat`/`isolation`; prewarm through the gate; exactly-once permit settle; drain cancels waiters; all three stub paths queue-aware | ~1.2k lines + tests | `mcp_gateway.spawn_concurrency_initial=4`, `spawn_concurrency_min=1`, `spawn_concurrency_max=8`, `spawn_queue_wait_secs=600`, `initialize_timeout_secs` (constructor arg, not module setter; shipped default 10) | mcp-gateway-daemon-lifecycle, mcp-gateway-backend-replacement, architecture/mcp, config |
 | 1 | C `rfc` | this document on the branch, §13 as decisions, index row | docs | — | request-for-change index |
 | 2 | D `SessionStartGate` | `SessionStartGate` + `StartCollector` + `AcpRuntime._pending_requests.adopt` with harness-parity tests for both backends | ~0.4k | `agent.session_start_concurrency=2` | acp-client, subagent |
@@ -707,7 +707,7 @@ crew workspace; this section is the design-level summary of it.
 | 1 (starts now, independent) | N `stop-reason` | regression test on the real `run.py` event path for `EVENT_COMPLETE` + `error: tool stall`; `classify_stop_reason()` in `acp/types.py`; one stop-reason → state mapping across `chat_runner.py`, `run.py`, nested runs, `taskrunner.py` (§14.7) | ~0.3k | — | subagent, acp-client, taskq |
 | 2 (after A) | K `wait-states+yield` | `WaitRecord`, `waiting_dependency` / `waiting_input` states, lane-slot release with residency kept, S→A→B propagation, re-admission on wake (§14.1–14.3) | ~0.5k | none (the wait deadline is the per-task `deadline_at` plus `agent.dependency_wait_deadline_secs`; the child-failure policy is the per-call `on_child_failure` parameter; runtime residency during a wait is bounded by the existing idle reclaim, not a key) | taskq, subagent |
 | 2 | L `dependency-coordinator` | `taskq/dependency.py`: `DependencySignal`, per-scope `DependencyCoordinator`, GitHub/HTTP-429 adapter as the first sample (§14.4) | ~0.4k | `agent.dependency_max_attempts=20`, `agent.dependency_wake_per_tick=0` (0 = `effective` cap) | taskq, architecture/mcp |
-| 2/3 | M `status-protocol+interactive` | versioned `kirocrew/status` over ACP `session/update` and MCP `notifications/progress` with origin validation; interactive-command classifier → `waiting_input`; platform degradation declared in `acp/liveness.py` (§14.5, 14.6, 14.9) | ~0.5k | `agent.interactive_command_policy="cancel"` (today's non-lethal cancel of that call; `"wait"` keeps the turn open for real input); tool-stall recovery is bounded by the ladder constant `SESSION_RECOVERY_MAX_ATTEMPTS` (`recovery/ladder.py`, re-exported as `STOP_RECOVERY_MAX_RETRIES`), not a key | acp-client, taskq, session |
+| 2/3 | M `status-protocol+interactive` | versioned `ajcrew/status` over ACP `session/update` and MCP `notifications/progress` with origin validation; interactive-command classifier → `waiting_input`; platform degradation declared in `acp/liveness.py` (§14.5, 14.6, 14.9) | ~0.5k | `agent.interactive_command_policy="cancel"` (today's non-lethal cancel of that call; `"wait"` keeps the turn open for real input); tool-stall recovery is bounded by the ladder constant `SESSION_RECOVERY_MAX_ATTEMPTS` (`recovery/ladder.py`, re-exported as `STOP_RECOVERY_MAX_RETRIES`), not a key | acp-client, taskq, session |
 | 3 | O `native-subagent boundary` | per-backend inventory (kiro-cli `use_subagent`, Claude), integrate the controllable ones, declared minimal recovery boundary for the rest with counting and tests (§14.8) | ~0.3k | — | subagent, harness-parity |
 | 3 | G fairness | lanes (`system` lane for cron/hook), `child_reserve` | ~0.4k | `agent.child_reserve` (see `taskq.md` § Configuration; no interactive reserve key ships), `agent.lane_weights={}` | taskq, subagent |
 | 3 | H adapters | TaskRunner and workflow entries on the store | ~0.4k | — | taskrunner, workflows |
@@ -803,10 +803,10 @@ Question text is kept as asked; the decision below it is final for this PR.
   robin with the `system` lane at weight 1. Reversal:
   `agent.lane_weights["system"]` (default 1) raises the automation share; per-job
   lanes would be a new lane-key policy, not a flag.
-- **Q6.** SQLite on network home directories (`KIROCREW_HOME` on NFS/SMB): WAL is
+- **Q6.** SQLite on network home directories (`AJCREW_HOME` on NFS/SMB): WAL is
   unsafe there — fall back or refuse?
   **Decision:** detect (statfs / mount-type heuristics via `platform_compat`),
-  switch to `journal_mode=DELETE`, and emit a `kirocrew doctor` warning; never
+  switch to `journal_mode=DELETE`, and emit a `ajcrew doctor` warning; never
   refuse. Reversal: `agent.task_store_journal_mode="wal"|"delete"|"auto"`
   (default `auto`) forces either mode.
 - **Q7 (integration).** Four keys the §12 table first proposed have no consumer
@@ -1137,7 +1137,7 @@ sub-agent identity and status; MCP `notifications/progress` with
 condition, so one extension is added:
 
 ```text
-notification "kirocrew/status" (version 1) params:
+notification "ajcrew/status" (version 1) params:
   task_id, session_key, parent_id, tool_call_id, generation,
   phase: starting|running|waiting|recovering,
   wait: WaitRecord?,                       # present iff phase == waiting
@@ -1147,8 +1147,8 @@ notification "kirocrew/status" (version 1) params:
 ```
 
 Carried on ACP as a `session/update` extension frame and on MCP as a
-`notifications/progress` sibling under `_meta.kirocrew_status`. Origin
-validation: the runtime accepts a `kirocrew/status` frame only from the
+`notifications/progress` sibling under `_meta.ajcrew_status`. Origin
+validation: the runtime accepts a `ajcrew/status` frame only from the
 execution layer of the session it names (the ACP connection or the gatewayd
 backend bound to that `tool_call_id`); a frame arriving as model text, or naming
 a `generation` other than the task's current one, is logged as
@@ -1174,7 +1174,7 @@ never re-run a command whose side effects may have happened (class `unknown`,
 §9.6); a non-interactive retry stays inside the already-granted approval scope
 and the original parameters. This change ships only that classifier -- it
 yields the lane slot into `waiting_input` -- while the PTY-driving controlled
-terminal (Kiro Crew as the child's parent, answering the prompt over stdin) is
+terminal (Aj Crew as the child's parent, answering the prompt over stdin) is
 not built.
 
 ### 14.7 Stop-reason → state classifier
@@ -1206,13 +1206,13 @@ the main chat (`_on_complete` in `dashboard/chat_turn/turn_stats.py`), workflow 
 it instead of reading `stop_reason` ad hoc. Recovery continues from the stored
 result and checkpoint, never by re-submitting the original task text.
 
-### 14.8 Subtasks managed by Kiro Crew vs harness-native subtasks
+### 14.8 Subtasks managed by Aj Crew vs harness-native subtasks
 
 | Backend | Native subtask surface | Identity | Tool events | Cancel | Resume | Scheduler treatment |
 |---|---|---|---|---|---|---|
 | kiro-cli (`ACP_BACKEND_KIRO`) `use_subagent` | `_kiro.dev/subagent/list_update` (per-sub-agent `sessionId`, status); stream events carry `AcpEvent.sub_session_id` (`acp/types.py` L599) | yes (session id) | attributable only via `sub_session_id`; approvals surface on the parent (`subagent_manager/run_turn.py` `_run_inner_impl` counts them separately) | only the parent session (`session/cancel` on the parent) | none independent of the parent | **not** a task row; counted as residency under the parent task; recovery boundary = parent session; the parent's `WaitRecord` lists native child ids for display only |
 | Claude backend (`ACP_BACKEND_CLAUDE`) | in-harness task tool; no per-child ACP identity today | no | no | parent only | none | same boundary as above; declared in `harness-parity.md` as a capability gap, not a defect |
-| `spawn_run` / `spawn_sub_agents` (all backends) | Kiro Crew task rows | yes | yes | per task | per task (continuable) | full scheduling (§3–§9) |
+| `spawn_run` / `spawn_sub_agents` (all backends) | Aj Crew task rows | yes | yes | per task | per task (continuable) | full scheduling (§3–§9) |
 
 A backend that later exposes per-child cancel/resume is integrated by adding a
 row adapter; until then the UI showing native cards never implies the scheduler
@@ -1234,8 +1234,8 @@ never marks the child failed.
 | blocked on stdin (`STUCK_INPUT`) | `wchan` in `n_tty_read` / `pipe_read` / `wait_woken` | absent by design (`liveness.py` module docstring) | absent | W4 on macOS/Windows relies on the tool-layer classifier (§14.6); a matched shell that is alive is `WORKING`, so the no-progress budget is the only bound — "alive" is never "forever" |
 | CPU progress | `/proc/<pid>/stat` ticks | libproc CPU time | none | flat → `UNKNOWN`, never `DEAD` |
 | socket / LLM wait | `/proc/net` established-flat | absent | absent | a flat model wait is `UNKNOWN`, never `DEAD` |
-| business progress | stream events, `kirocrew/status` progress | same | same | platform-independent; outranks all of the above |
+| business progress | stream events, `ajcrew/status` progress | same | same | platform-independent; outranks all of the above |
 
 Every degradation above is a declared row in the wave M spec update, a
-`kirocrew doctor` line, and a `liveness_evidence{platform,kind}` metric — not a
+`ajcrew doctor` line, and a `liveness_evidence{platform,kind}` metric — not a
 silent `UNKNOWN`.

@@ -2,7 +2,7 @@
 
 ``mcp_core`` resolves lazily via ``port_resolution.resolve_client_port_ex`` (env →
 config port → live run-marker → default), patched through ``cli_server``'s namespace.
-The dashboard exports ``KIROCREW_BOUND_PORT`` once its TCP site listens.
+The dashboard exports ``AJCREW_BOUND_PORT`` once its TCP site listens.
 """
 
 from __future__ import annotations
@@ -15,46 +15,46 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import kiro_crew
-import kiro_crew.mcp_core as mcp_core
-from kiro_crew.dashboard.server import _export_bound_port
+import aj_crew
+import aj_crew.mcp_core as mcp_core
+from aj_crew.dashboard.server import _export_bound_port
 
 #: Source root of the tree under test, pinned onto the probe subprocess's
-#: PYTHONPATH. Without it the child interpreter resolves whatever kiro_crew
+#: PYTHONPATH. Without it the child interpreter resolves whatever aj_crew
 #: happens to be installed for it (pytest's ``pythonpath = src`` does not
 #: propagate to subprocesses) — a stale editable install would make the
 #: leaf-purity assertion pass vacuously against old code, and a non-editable
 #: install would fail it spuriously. Same pattern as test_perf_boot_path._probe.
-_SRC = str(Path(kiro_crew.__file__).resolve().parents[1])
+_SRC = str(Path(aj_crew.__file__).resolve().parents[1])
 
 
 @pytest.fixture(autouse=True)
 def _fresh_caches(monkeypatch: pytest.MonkeyPatch):
     """Reset the lazy caches and neutralise ambient env for every test.
 
-    ``_API`` / ``_API_UNIX_SOCKET`` memoise per process. ``KIROCREW_PORT`` is deleted
+    ``_API`` / ``_API_UNIX_SOCKET`` memoise per process. ``AJCREW_PORT`` is deleted
     because a dev box may carry it and it outranks every other step.
     """
     monkeypatch.setattr(mcp_core, "_API_PORT", None)
     monkeypatch.setattr(mcp_core, "_API", None)
     monkeypatch.setattr(mcp_core, "_API_UNIX_SOCKET", None)
-    monkeypatch.delenv("KIROCREW_PORT", raising=False)
-    monkeypatch.delenv("KIROCREW_BOUND_PORT", raising=False)
+    monkeypatch.delenv("AJCREW_PORT", raising=False)
+    monkeypatch.delenv("AJCREW_BOUND_PORT", raising=False)
 
 
 def _cfg(url: object):
     cfg = MagicMock()
     cfg.dashboard.url = url
-    return patch("kiro_crew.cli_server.KiroCrewConfig.load", return_value=cfg)
+    return patch("aj_crew.cli_server.AjCrewConfig.load", return_value=cfg)
 
 
 def _markers(ports: list[int]):
-    return patch("kiro_crew.cli_server.run_marker.marker_ports", return_value=ports)
+    return patch("aj_crew.cli_server.run_marker.marker_ports", return_value=ports)
 
 
 def _owned(ports: list[int]):
-    """Pretend a verified Kiro Crew gateway listens on each of *ports*."""
-    return patch("kiro_crew.cli_server._gateway_owns_port", side_effect=lambda p: p in set(ports))
+    """Pretend a verified Aj Crew gateway listens on each of *ports*."""
+    return patch("aj_crew.cli_server._gateway_owns_port", side_effect=lambda p: p in set(ports))
 
 
 class TestApiBaseResolution:
@@ -81,17 +81,17 @@ class TestApiBaseResolution:
         A crashed gateway leaves its marker behind. Runs the real ``_gateway_owns_port``
         chain; only the marker reads and the listener lookup are stubbed.
         """
-        monkeypatch.setattr("kiro_crew.cli_server.run_marker.read_pid", lambda port: 999999999)
+        monkeypatch.setattr("aj_crew.cli_server.run_marker.read_pid", lambda port: 999999999)
         # A dead pid holds no sockets — the listener set for the port is empty.
         monkeypatch.setattr(
-            "kiro_crew.cli_server.platform_compat.find_listening_pids", lambda port: []
+            "aj_crew.cli_server.platform_compat.find_listening_pids", lambda port: []
         )
         with _cfg(""), _markers([6776]):
             assert mcp_core._api_base() == "http://127.0.0.1:5476"
 
     def test_env_var_beats_marker(self, monkeypatch: pytest.MonkeyPatch):
-        """The exported ``KIROCREW_PORT`` (gateway truth) sits above discovery."""
-        monkeypatch.setenv("KIROCREW_PORT", "6777")
+        """The exported ``AJCREW_PORT`` (gateway truth) sits above discovery."""
+        monkeypatch.setenv("AJCREW_PORT", "6777")
         with _cfg(""), _markers([6776]), _owned([6776]):
             assert mcp_core._api_base() == "http://127.0.0.1:6777"
 
@@ -147,7 +147,7 @@ class TestApiBaseResolution:
         port deliberately re-resolves per call; see
         ``test_marker_port_is_reverified_on_every_call``.)
         """
-        monkeypatch.setenv("KIROCREW_PORT", "6777")
+        monkeypatch.setenv("AJCREW_PORT", "6777")
         with _cfg(""), _markers([]) as markers:
             assert mcp_core._api_base() == "http://127.0.0.1:6777"
             assert mcp_core._api_base() == "http://127.0.0.1:6777"
@@ -175,19 +175,19 @@ class TestApiBaseResolution:
         self, monkeypatch: pytest.MonkeyPatch
     ):
         """The parent gateway's exported bound port is observed truth."""
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "7891")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "7891")
         with _cfg("http://my.host.example"), _markers([6776]), _owned([6776]):
             assert mcp_core._api_base() == "http://127.0.0.1:7891"
 
     def test_operator_port_beats_bound_port(self, monkeypatch: pytest.MonkeyPatch):
-        """An explicit KIROCREW_PORT is how a caller retargets a child at a
+        """An explicit AJCREW_PORT is how a caller retargets a child at a
         DIFFERENT gateway: pod exec builds a client env with
-        KIROCREW_PORT=<pod-port> while the inherited KIROCREW_BOUND_PORT still
+        AJCREW_PORT=<pod-port> while the inherited AJCREW_BOUND_PORT still
         names the spawning LIVE gateway. If the bound value outranked it, pod
         token/status/logout would walk their credentials into the live
         gateway — a cross-plane isolation break."""
-        monkeypatch.setenv("KIROCREW_PORT", "7891")
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "5476")
+        monkeypatch.setenv("AJCREW_PORT", "7891")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "5476")
         with _cfg(""), _markers([]):
             assert mcp_core._api_base() == "http://127.0.0.1:7891"
 
@@ -201,29 +201,29 @@ class TestExportBoundPort:
     """``dashboard.server._export_bound_port`` — the gateway-side half."""
 
     def test_explicit_port_is_exported(self, monkeypatch: pytest.MonkeyPatch):
-        monkeypatch.delenv("KIROCREW_BOUND_PORT", raising=False)
+        monkeypatch.delenv("AJCREW_BOUND_PORT", raising=False)
         _export_bound_port(_StubRunner([("127.0.0.1", 6776)]), 6776)
-        assert os.environ["KIROCREW_BOUND_PORT"] == "6776"
-        monkeypatch.delenv("KIROCREW_BOUND_PORT", raising=False)
+        assert os.environ["AJCREW_BOUND_PORT"] == "6776"
+        monkeypatch.delenv("AJCREW_BOUND_PORT", raising=False)
 
     def test_ephemeral_bind_reads_port_back_from_runner(self, monkeypatch: pytest.MonkeyPatch):
         """``--port auto`` requests port 0; the OS-assigned port is the truth."""
-        monkeypatch.delenv("KIROCREW_BOUND_PORT", raising=False)
+        monkeypatch.delenv("AJCREW_BOUND_PORT", raising=False)
         _export_bound_port(_StubRunner([("127.0.0.1", 54321)]), 0)
-        assert os.environ["KIROCREW_BOUND_PORT"] == "54321"
-        monkeypatch.delenv("KIROCREW_BOUND_PORT", raising=False)
+        assert os.environ["AJCREW_BOUND_PORT"] == "54321"
+        monkeypatch.delenv("AJCREW_BOUND_PORT", raising=False)
 
     def test_no_readable_address_leaves_env_untouched(self, monkeypatch: pytest.MonkeyPatch):
         """Best-effort: an unreadable address list must not export garbage."""
-        monkeypatch.delenv("KIROCREW_BOUND_PORT", raising=False)
+        monkeypatch.delenv("AJCREW_BOUND_PORT", raising=False)
         _export_bound_port(_StubRunner(["/tmp/some.sock"]), 0)
-        assert "KIROCREW_BOUND_PORT" not in os.environ
+        assert "AJCREW_BOUND_PORT" not in os.environ
 
     def test_export_overwrites_stale_env(self, monkeypatch: pytest.MonkeyPatch):
         """The bound port is the truth even when an older value is inherited."""
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "1111")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "1111")
         _export_bound_port(_StubRunner([]), 6776)
-        assert os.environ["KIROCREW_BOUND_PORT"] == "6776"
+        assert os.environ["AJCREW_BOUND_PORT"] == "6776"
 
 
 class TestPortResolutionStaysLeaf:
@@ -233,13 +233,13 @@ class TestPortResolutionStaysLeaf:
     """
 
     @pytest.mark.parametrize(
-        "module", ["kiro_crew.port_resolution", "kiro_crew.mcp_core"]
+        "module", ["aj_crew.port_resolution", "aj_crew.mcp_core"]
     )
     def test_import_does_not_pull_cli_server(self, module: str) -> None:
         code = (
             "import importlib, sys; "
             f"importlib.import_module({module!r}); "
-            "assert 'kiro_crew.cli_server' not in sys.modules, "
+            "assert 'aj_crew.cli_server' not in sys.modules, "
             f"'importing {module} pulled in the heavy cli_server graph'"
         )
         env = dict(os.environ)

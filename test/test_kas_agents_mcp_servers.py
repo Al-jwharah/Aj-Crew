@@ -1,4 +1,4 @@
-"""Kiro Crew agent spec -> KAS ``ClientCustomAgent`` projection: the agent's MCP servers.
+"""Aj Crew agent spec -> KAS ``ClientCustomAgent`` projection: the agent's MCP servers.
 
 Covers which declared servers, and which fields of each entry, the ``mcpServers``
 block forwards or withholds (credential-bearing ``env`` and ``headers``,
@@ -19,14 +19,14 @@ from pathlib import Path
 import pytest
 from kas_agents_helpers import _spec
 
-from kiro_crew.acp import kas_agents
-from kiro_crew.acp.kas_agents import hoist_servers_for_session, to_client_custom_agent
+from aj_crew.acp import kas_agents
+from aj_crew.acp.kas_agents import hoist_servers_for_session, to_client_custom_agent
 
 
 @pytest.fixture
 def relayed_names(monkeypatch):
     """An edition that relays ``LAUNCHER_BROKER_URL`` through the seam."""
-    from kiro_crew.platform.defaults import DefaultMcpToolingProvider
+    from aj_crew.platform.defaults import DefaultMcpToolingProvider
 
     monkeypatch.setattr(
         DefaultMcpToolingProvider,
@@ -42,12 +42,12 @@ class TestMcpServersProjection:
     KAS honouring an agent-declared block is not an assumption here: it was
     verified with an A/B probe against a live session using a uniquely-named
     witness server, twice per arm. Without the block a stock KAS session gets
-    ``tools: ["@kirocrew-core", ...]`` and no definition of what that names.
+    ``tools: ["@ajcrew-core", ...]`` and no definition of what that names.
     """
 
     def test_declared_server_is_projected(self):
         out = to_client_custom_agent("a", _spec(), "p")
-        assert out["mcpServers"] == {"kirocrew-core": {"command": "x"}}
+        assert out["mcpServers"] == {"ajcrew-core": {"command": "x"}}
 
     def test_absent_or_malformed_block_emits_nothing(self):
         assert "mcpServers" not in to_client_custom_agent("a", _spec(mcpServers={}), "p")
@@ -68,15 +68,15 @@ class TestMcpServersProjection:
         block was originally omitted to avoid."""
         out = to_client_custom_agent(
             "a",
-            _spec(mcpServers={"kirocrew-core": {"command": "x"}, "other": {"command": "y"}}),
+            _spec(mcpServers={"ajcrew-core": {"command": "x"}, "other": {"command": "y"}}),
             "p",
-            stub_server_names=frozenset({"kirocrew-core"}),
+            stub_server_names=frozenset({"ajcrew-core"}),
         )
         assert out["mcpServers"] == {"other": {"command": "y"}}
 
     def test_all_names_stubbed_emits_nothing(self):
         out = to_client_custom_agent(
-            "a", _spec(), "p", stub_server_names=frozenset({"kirocrew-core"})
+            "a", _spec(), "p", stub_server_names=frozenset({"ajcrew-core"})
         )
         assert "mcpServers" not in out
 
@@ -94,47 +94,47 @@ class TestMcpServersProjection:
     def test_auto_approve_is_stripped_from_a_managed_server_too(self):
         out = to_client_custom_agent(
             "a",
-            _spec(mcpServers={"kirocrew-core": {"command": "x", "autoApprove": ["t"]}}),
+            _spec(mcpServers={"ajcrew-core": {"command": "x", "autoApprove": ["t"]}}),
             "p",
         )
-        assert "autoApprove" not in out["mcpServers"]["kirocrew-core"]
+        assert "autoApprove" not in out["mcpServers"]["ajcrew-core"]
 
     def test_managed_server_keeps_the_one_env_key_it_needs(self):
-        """Crew's own env pins KIROCREW_HOME; dropping it would have the shims
+        """Crew's own env pins AJCREW_HOME; dropping it would have the shims
         read a different data home than the gateway."""
         out = to_client_custom_agent(
             "a",
-            _spec(mcpServers={"kirocrew-core": {"command": "x", "env": {"KIROCREW_HOME": "/h"}}}),
+            _spec(mcpServers={"ajcrew-core": {"command": "x", "env": {"AJCREW_HOME": "/h"}}}),
             "p",
         )
-        assert out["mcpServers"]["kirocrew-core"]["env"] == {"KIROCREW_HOME": "/h"}
+        assert out["mcpServers"]["ajcrew-core"]["env"] == {"AJCREW_HOME": "/h"}
 
     def test_a_hand_added_env_key_under_a_managed_name_is_withheld(self):
         """A managed entry still lives in a user-editable agent file, so being
         managed cannot mean "every key now in this env is Crew's". Only
-        KIROCREW_HOME survives; the neighbouring secret does not reach the wire.
+        AJCREW_HOME survives; the neighbouring secret does not reach the wire.
         """
         out = to_client_custom_agent(
             "a",
             _spec(
                 mcpServers={
-                    "kirocrew-core": {
+                    "ajcrew-core": {
                         "command": "x",
-                        "env": {"KIROCREW_HOME": "/h", "OPENAI_API_KEY": "sk-live"},
+                        "env": {"AJCREW_HOME": "/h", "OPENAI_API_KEY": "sk-live"},
                     }
                 }
             ),
             "p",
         )
-        assert out["mcpServers"]["kirocrew-core"]["env"] == {"KIROCREW_HOME": "/h"}
+        assert out["mcpServers"]["ajcrew-core"]["env"] == {"AJCREW_HOME": "/h"}
 
     def test_a_managed_env_of_only_secrets_leaves_no_env_at_all(self):
         out = to_client_custom_agent(
             "a",
-            _spec(mcpServers={"kirocrew-cron": {"command": "x", "env": {"T": "s"}}}),
+            _spec(mcpServers={"ajcrew-cron": {"command": "x", "env": {"T": "s"}}}),
             "p",
         )
-        entry = out["mcpServers"]["kirocrew-cron"]
+        entry = out["mcpServers"]["ajcrew-cron"]
         assert "env" not in entry
         assert entry == {"command": "x"}
 
@@ -145,7 +145,7 @@ class TestMcpServersProjection:
             "a",
             _spec(
                 mcpServers={
-                    "kirocrew-core": {
+                    "ajcrew-core": {
                         "command": "x",
                         "headers": {"Authorization": "Bearer live"},
                     }
@@ -153,17 +153,17 @@ class TestMcpServersProjection:
             ),
             "p",
         )
-        assert out["mcpServers"]["kirocrew-core"] == {"command": "x"}
+        assert out["mcpServers"]["ajcrew-core"] == {"command": "x"}
 
     def test_a_malformed_managed_env_is_dropped_not_filtered(self):
         """A non-dict env cannot be filtered key-by-key, so it fails toward
         withholding rather than forwarding an unknown shape."""
         out = to_client_custom_agent(
             "a",
-            _spec(mcpServers={"kirocrew-core": {"command": "x", "env": "TOKEN=s"}}),
+            _spec(mcpServers={"ajcrew-core": {"command": "x", "env": "TOKEN=s"}}),
             "p",
         )
-        assert out["mcpServers"]["kirocrew-core"] == {"command": "x"}
+        assert out["mcpServers"]["ajcrew-core"] == {"command": "x"}
 
     def test_a_relayed_reference_reaches_a_third_party_server(self, relayed_names):
         """KAS starts an MCP child with a minimal environment of its own, so a
@@ -215,10 +215,10 @@ class TestMcpServersProjection:
             "a",
             _spec(
                 mcpServers={
-                    "kirocrew-core": {
+                    "ajcrew-core": {
                         "command": "x",
                         "env": {
-                            "KIROCREW_HOME": "/h",
+                            "AJCREW_HOME": "/h",
                             "REF": "${LAUNCHER_BROKER_URL}",
                             "LIT": "v",
                         },
@@ -227,8 +227,8 @@ class TestMcpServersProjection:
             ),
             "p",
         )
-        assert out["mcpServers"]["kirocrew-core"]["env"] == {
-            "KIROCREW_HOME": "/h",
+        assert out["mcpServers"]["ajcrew-core"]["env"] == {
+            "AJCREW_HOME": "/h",
             "REF": "${LAUNCHER_BROKER_URL}",
         }
 
@@ -240,7 +240,7 @@ class TestMcpServersProjection:
             "${LAUNCHER_BROKER_URL}${LAUNCHER_BROKER_URL}",
             " ${LAUNCHER_BROKER_URL}",
             "${KIRO_API_KEY}",
-            "${KIROCREW_SESSION_KEY}",
+            "${AJCREW_SESSION_KEY}",
             "${GITHUB_TOKEN}",
             7,
             None,
@@ -266,15 +266,15 @@ class TestMcpServersProjection:
         ],
     )
     def test_a_managed_kept_key_cannot_carry_a_reference(self, value, relayed_names):
-        """``KIROCREW_HOME`` survives on a managed server only as a literal; KAS
+        """``AJCREW_HOME`` survives on a managed server only as a literal; KAS
         expands a reference anywhere in the value, so one here would hand the
         CLI credential to whatever command the hand-edited entry names."""
         out = to_client_custom_agent(
             "a",
-            _spec(mcpServers={"kirocrew-core": {"command": "x", "env": {"KIROCREW_HOME": value}}}),
+            _spec(mcpServers={"ajcrew-core": {"command": "x", "env": {"AJCREW_HOME": value}}}),
             "p",
         )
-        assert "KIROCREW_HOME" not in out["mcpServers"]["kirocrew-core"].get("env", {})
+        assert "AJCREW_HOME" not in out["mcpServers"]["ajcrew-core"].get("env", {})
 
     def test_a_server_that_lost_a_literal_is_still_logged(self, caplog, relayed_names):
         with caplog.at_level("INFO"):
@@ -299,9 +299,9 @@ class TestMcpServersProjection:
                 "a",
                 _spec(
                     mcpServers={
-                        "kirocrew-core": {
+                        "ajcrew-core": {
                             "command": "x",
-                            "env": {"KIROCREW_HOME": "/h", "SECRET_TOKEN": "sekrit"},
+                            "env": {"AJCREW_HOME": "/h", "SECRET_TOKEN": "sekrit"},
                         }
                     }
                 ),
@@ -343,7 +343,7 @@ class TestMcpServersProjection:
             "a",
             _spec(
                 mcpServers={
-                    "srv": {"command": "x", "_kirocrew_mcp_gateway_wrapped": True},
+                    "srv": {"command": "x", "_ajcrew_mcp_gateway_wrapped": True},
                 }
             ),
             "p",
@@ -358,9 +358,9 @@ class TestMcpServersProjection:
     def test_the_managed_name_set_is_the_shared_one(self):
         """Not a third spelling of the four names: this is the set
         ``mcp_cleanup`` already ratchet-pins to ``agent._MANAGED_MCP_SERVERS``."""
-        from kiro_crew.mcp_cleanup import KIROCREW_BIN_MCP_SERVERS
+        from aj_crew.mcp_cleanup import AJCREW_BIN_MCP_SERVERS
 
-        assert kas_agents.MANAGED_MCP_SERVER_NAMES == frozenset(KIROCREW_BIN_MCP_SERVERS)
+        assert kas_agents.MANAGED_MCP_SERVER_NAMES == frozenset(AJCREW_BIN_MCP_SERVERS)
 
 
 def _kas_wire_maps(entry: dict) -> dict:
@@ -470,9 +470,9 @@ class TestMutedServersAreNotDeclared:
     def test_crews_own_managed_server_is_not_exempt(self):
         """The mute is about a server the user can un-mute, so it costs nothing to
         honour -- and honouring it for third parties only would mean a user who
-        silenced ``kirocrew-work`` still got it."""
+        silenced ``ajcrew-work`` still got it."""
         out = to_client_custom_agent(
-            "a", _spec(mcpServers={"kirocrew-core": {"command": "x", "disabled": True}}), "p"
+            "a", _spec(mcpServers={"ajcrew-core": {"command": "x", "disabled": True}}), "p"
         )
         assert "mcpServers" not in out
 
@@ -494,17 +494,17 @@ class TestMutedServersAreNotDeclared:
         assert out["mcpServers"]["live"]["command"] == "x"
 
     def test_the_withhold_is_explained(self, caplog):
-        with caplog.at_level("INFO", logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level("INFO", logger="aj_crew.acp.kas_agents"):
             to_client_custom_agent(
-                "kirocrew", _spec(mcpServers={"muted": {"command": "x", "disabled": True}}), "p"
+                "ajcrew", _spec(mcpServers={"muted": {"command": "x", "disabled": True}}), "p"
             )
         assert "muted" in caplog.text
         assert "would launch the server anyway" in caplog.text
 
     def test_a_bad_type_is_explained_as_a_bad_type(self, caplog):
-        with caplog.at_level("INFO", logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level("INFO", logger="aj_crew.acp.kas_agents"):
             to_client_custom_agent(
-                "kirocrew", _spec(mcpServers={"odd": {"command": "x", "disabled": "yes"}}), "p"
+                "ajcrew", _spec(mcpServers={"odd": {"command": "x", "disabled": "yes"}}), "p"
             )
         assert "is not a boolean" in caplog.text
 
@@ -528,7 +528,7 @@ class TestAMuteInAConfigScopeWithholdsAnAgentDeclaredServer:
     @pytest.fixture
     def scopes(self, tmp_path, monkeypatch):
         """The two core scopes, pinned to this test's own files."""
-        from kiro_crew import mcp_discovery
+        from aj_crew import mcp_discovery
 
         store = tmp_path / "crew" / "mcp.json"
         kiro_global = tmp_path / "kiro" / "settings" / "mcp.json"
@@ -537,7 +537,7 @@ class TestAMuteInAConfigScopeWithholdsAnAgentDeclaredServer:
         monkeypatch.setattr(
             mcp_discovery,
             "_MCP_SOURCES",
-            ((store, "kirocrew"), (kiro_global, "kiroGlobal")),
+            ((store, "ajcrew"), (kiro_global, "kiroGlobal")),
         )
         monkeypatch.setattr(mcp_discovery, "_MCP_JSON_PATHS", None)
         return store, kiro_global
@@ -545,7 +545,7 @@ class TestAMuteInAConfigScopeWithholdsAnAgentDeclaredServer:
     @staticmethod
     def _declared(name="oauth-server", key=None):
         return to_client_custom_agent(
-            "kirocrew", _spec(mcpServers={key or name: {"command": "x"}}), "p"
+            "ajcrew", _spec(mcpServers={key or name: {"command": "x"}}), "p"
         ).get("mcpServers", {})
 
     @pytest.mark.parametrize("scope", [0, 1], ids=["crew-store", "kiro-global"])
@@ -604,7 +604,7 @@ class TestAMuteInAConfigScopeWithholdsAnAgentDeclaredServer:
         """The scope set is whatever the shared reader scans, which includes the
         provider globals the platform seam contributes -- so the gate and the
         listing stay on one set of files when an edition ships one."""
-        from kiro_crew import mcp_discovery_config, mcp_discovery_server_info
+        from aj_crew import mcp_discovery_config, mcp_discovery_server_info
 
         provider = tmp_path / "provider.json"
         provider.write_text(
@@ -622,7 +622,7 @@ class TestAMuteInAConfigScopeWithholdsAnAgentDeclaredServer:
         scopes[1].write_text(
             json.dumps({"mcpServers": {"oauth-server": {"disabled": True}}}), encoding="utf-8"
         )
-        with caplog.at_level("INFO", logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level("INFO", logger="aj_crew.acp.kas_agents"):
             self._declared()
         assert "an MCP config scope disables it" in caplog.text
         assert "is not a boolean" not in caplog.text
@@ -646,7 +646,7 @@ class TestAMutedServerCannotArriveThroughThePoolingStub:
         from the wrapper marker the rewriter leaves -- so a change in what the
         rewriter wraps changes this answer.
         """
-        from kiro_crew.mcp_gateway import rewriter
+        from aj_crew.mcp_gateway import rewriter
 
         rewritten, _ = rewriter._rewrite_single_spec(
             dict(spec),
@@ -671,7 +671,7 @@ class TestAMutedServerCannotArriveThroughThePoolingStub:
         stubbed = self._stub_names(spec, tmp_path)
 
         assert stubbed == frozenset(), "a muted server must not become a live stub"
-        out = to_client_custom_agent("kirocrew", spec, "p", stub_server_names=stubbed)
+        out = to_client_custom_agent("ajcrew", spec, "p", stub_server_names=stubbed)
         assert "mcpServers" not in out
 
     def test_a_registry_governed_poolable_server_is_never_stubbed_either(self, tmp_path: Path):
@@ -689,7 +689,7 @@ class TestAMutedServerCannotArriveThroughThePoolingStub:
         stubbed = self._stub_names(spec, tmp_path)
 
         assert stubbed == frozenset(), "a catalog-governed server must not become a stub"
-        out = to_client_custom_agent("kirocrew", spec, "p", stub_server_names=stubbed)
+        out = to_client_custom_agent("ajcrew", spec, "p", stub_server_names=stubbed)
         assert "mcpServers" not in out
 
     def test_a_withhold_outranks_the_stub_subtraction(self, caplog):
@@ -708,9 +708,9 @@ class TestAMutedServerCannotArriveThroughThePoolingStub:
                 "governed": {"command": "y", "type": "registry"},
             }
         )
-        with caplog.at_level("INFO", logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level("INFO", logger="aj_crew.acp.kas_agents"):
             out = to_client_custom_agent(
-                "kirocrew", spec, "p", stub_server_names=frozenset({"muted", "governed"})
+                "ajcrew", spec, "p", stub_server_names=frozenset({"muted", "governed"})
             )
 
         assert "mcpServers" not in out
@@ -723,7 +723,7 @@ class TestAMutedServerCannotArriveThroughThePoolingStub:
         stubbed = self._stub_names(spec, tmp_path)
 
         assert stubbed == frozenset({"live"})
-        out = to_client_custom_agent("kirocrew", spec, "p", stub_server_names=stubbed)
+        out = to_client_custom_agent("ajcrew", spec, "p", stub_server_names=stubbed)
         assert "mcpServers" not in out, "a stubbed name is declared by the injection, not here"
 
 
@@ -746,7 +746,7 @@ class TestRegistryGovernedEntries:
         could answer differently, and a ceiling that disagrees with itself is not
         a ceiling.
         """
-        from kiro_crew.acp import session_mcp
+        from aj_crew.acp import session_mcp
 
         monkeypatch.setattr(session_mcp, "_registry_mode", lambda: on)
 
@@ -789,25 +789,25 @@ class TestRegistryGovernedEntries:
             "a",
             _spec(
                 mcpServers={
-                    "kirocrew-core": {"command": "x", "type": "registry"},
+                    "ajcrew-core": {"command": "x", "type": "registry"},
                     "third-party": {"command": "y", "type": "registry"},
                 }
             ),
             "p",
         )
-        assert set(out["mcpServers"]) == {"kirocrew-core"}
-        assert out["mcpServers"]["kirocrew-core"]["type"] == "registry"
+        assert set(out["mcpServers"]) == {"ajcrew-core"}
+        assert out["mcpServers"]["ajcrew-core"]["type"] == "registry"
 
     def test_the_withhold_names_the_direction_it_fired_in(self, monkeypatch, caplog):
-        with caplog.at_level("INFO", logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level("INFO", logger="aj_crew.acp.kas_agents"):
             to_client_custom_agent(
-                "kirocrew", _spec(mcpServers={"g": {"command": "x", "type": "registry"}}), "p"
+                "ajcrew", _spec(mcpServers={"g": {"command": "x", "type": "registry"}}), "p"
             )
         assert "registry mode is off" in caplog.text
         caplog.clear()
         self._governed(monkeypatch)
-        with caplog.at_level("INFO", logger="kiro_crew.acp.kas_agents"):
-            to_client_custom_agent("kirocrew", _spec(mcpServers={"g": {"command": "x"}}), "p")
+        with caplog.at_level("INFO", logger="aj_crew.acp.kas_agents"):
+            to_client_custom_agent("ajcrew", _spec(mcpServers={"g": {"command": "x"}}), "p")
         assert "registry mode is on" in caplog.text
 
     def test_the_marker_gap_is_warned_about_not_left_silent(self, monkeypatch, caplog):
@@ -815,9 +815,9 @@ class TestRegistryGovernedEntries:
         error from the host, which is why this one is a WARNING: it is the only
         local signal that the control plane was dropped."""
         self._governed(monkeypatch)
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level("WARNING", logger="aj_crew.acp.kas_agents"):
             to_client_custom_agent(
-                "kirocrew", _spec(mcpServers={"kirocrew-core": {"command": "x"}}), "p"
+                "ajcrew", _spec(mcpServers={"ajcrew-core": {"command": "x"}}), "p"
             )
         assert "no slot for" in caplog.text
         assert "spawn_run" in caplog.text
@@ -828,22 +828,22 @@ class TestRegistryGovernedEntries:
         entries, and that install loses its control plane identically. Requiring
         the stamp would silence the one case that cannot self-diagnose."""
         self._governed(monkeypatch)
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level("WARNING", logger="aj_crew.acp.kas_agents"):
             to_client_custom_agent(
-                "kirocrew", _spec(mcpServers={"kirocrew-cron": {"command": "x"}}), "p"
+                "ajcrew", _spec(mcpServers={"ajcrew-cron": {"command": "x"}}), "p"
             )
         assert "no slot for" in caplog.text
 
     def test_it_warns_once_per_projection_not_once_per_server(self, monkeypatch, caplog):
         self._governed(monkeypatch)
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level("WARNING", logger="aj_crew.acp.kas_agents"):
             to_client_custom_agent(
-                "kirocrew",
+                "ajcrew",
                 _spec(
                     mcpServers={
-                        "kirocrew-core": {"command": "x"},
-                        "kirocrew-cron": {"command": "y"},
-                        "kirocrew-work": {"command": "z"},
+                        "ajcrew-core": {"command": "x"},
+                        "ajcrew-cron": {"command": "y"},
+                        "ajcrew-work": {"command": "z"},
                     }
                 ),
                 "p",
@@ -851,8 +851,8 @@ class TestRegistryGovernedEntries:
         assert len([r for r in caplog.records if r.levelname == "WARNING"]) == 1
 
     def test_an_ungoverned_install_is_silent(self, caplog):
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.kas_agents"):
-            to_client_custom_agent("kirocrew", _spec(), "p")
+        with caplog.at_level("WARNING", logger="aj_crew.acp.kas_agents"):
+            to_client_custom_agent("ajcrew", _spec(), "p")
         assert caplog.text.strip() == ""
 
     def test_the_registry_type_matches_the_spec_writer(self):
@@ -863,9 +863,9 @@ class TestRegistryGovernedEntries:
         filter. All three have to agree or a governed entry stops being
         recognized as one.
         """
-        from kiro_crew import agent as agent_mod
-        from kiro_crew.acp import session_mcp
-        from kiro_crew.mcp_cleanup import MCP_REGISTRY_TYPE
+        from aj_crew import agent as agent_mod
+        from aj_crew.acp import session_mcp
+        from aj_crew.mcp_cleanup import MCP_REGISTRY_TYPE
 
         assert MCP_REGISTRY_TYPE == agent_mod._MCP_REGISTRY_TYPE
         assert MCP_REGISTRY_TYPE == session_mcp._KIRO_REGISTRY_TYPE
@@ -879,9 +879,9 @@ class TestDiscardedRestrictionsAreReported:
     """
 
     def test_a_discarded_restriction_is_named(self, caplog):
-        with caplog.at_level("DEBUG", logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level("DEBUG", logger="aj_crew.acp.kas_agents"):
             to_client_custom_agent(
-                "kirocrew",
+                "ajcrew",
                 _spec(mcpServers={"srv": {"command": "x", "cwd": "/elsewhere"}}),
                 "p",
             )
@@ -890,9 +890,9 @@ class TestDiscardedRestrictionsAreReported:
     def test_a_restriction_carried_elsewhere_is_not_named(self, caplog):
         """``disabledTools`` reaches the engine as ``excludedTools``, so the log
         must not say it had no effect."""
-        with caplog.at_level("DEBUG", logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level("DEBUG", logger="aj_crew.acp.kas_agents"):
             out = to_client_custom_agent(
-                "kirocrew",
+                "ajcrew",
                 _spec(mcpServers={"srv": {"command": "x", "disabledTools": ["learn_add"]}}),
                 "p",
             )
@@ -902,17 +902,17 @@ class TestDiscardedRestrictionsAreReported:
     def test_a_key_crew_itself_removed_is_not_blamed_on_the_backend(self, caplog):
         """``autoApprove`` never reaches the wire, so naming it here would report
         Crew's own subtraction as the backend's discard."""
-        with caplog.at_level("DEBUG", logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level("DEBUG", logger="aj_crew.acp.kas_agents"):
             to_client_custom_agent(
-                "kirocrew",
+                "ajcrew",
                 _spec(mcpServers={"srv": {"command": "x", "autoApprove": ["t"]}}),
                 "p",
             )
         assert "autoApprove" not in caplog.text
 
     def test_an_entry_with_no_restrictions_says_nothing(self, caplog):
-        with caplog.at_level("DEBUG", logger="kiro_crew.acp.kas_agents"):
-            to_client_custom_agent("kirocrew", _spec(), "p")
+        with caplog.at_level("DEBUG", logger="aj_crew.acp.kas_agents"):
+            to_client_custom_agent("ajcrew", _spec(), "p")
         assert "discards" not in caplog.text
 
 
@@ -928,7 +928,7 @@ class TestRuntimeSuppliesTheStubbedSet:
     @staticmethod
     def _overlay_with_a_stub(root: Path, agent: str) -> Path:
         """A user-level overlay holding one broker stub for *agent*."""
-        from kiro_crew.mcp_gateway.rewriter import _WRAPPER_MARKER
+        from aj_crew.mcp_gateway.rewriter import _WRAPPER_MARKER
 
         overlay = root / "overlay"
         overlay.mkdir(parents=True, exist_ok=True)
@@ -960,23 +960,23 @@ class TestRuntimeSuppliesTheStubbedSet:
         would run outside the pool, outside caller-identity attribution and outside
         broker governance, with the operator believing the gateway applies.
         """
-        import kiro_crew.mcp_gateway.session_servers as session_servers_mod
+        import aj_crew.mcp_gateway.session_servers as session_servers_mod
 
-        overlay = self._overlay_with_a_stub(tmp_path, "kirocrew")
+        overlay = self._overlay_with_a_stub(tmp_path, "ajcrew")
         # A checkout that DOES declare the same name, which is the trigger.
         agents = tmp_path / "checkout" / ".kiro" / "agents"
         agents.mkdir(parents=True)
-        (agents / "kirocrew.json").write_text(
-            json.dumps({"name": "kirocrew", "mcpServers": {}}), encoding="utf-8"
+        (agents / "ajcrew.json").write_text(
+            json.dumps({"name": "ajcrew", "mcpServers": {}}), encoding="utf-8"
         )
 
-        assert session_servers_mod.injection_server_names(overlay, "kirocrew") == frozenset(
+        assert session_servers_mod.injection_server_names(overlay, "ajcrew") == frozenset(
             {"pooled"}
         )
         # And the scoped answer is the one the KAS path must NOT take.
         assert (
             session_servers_mod.injection_server_names(
-                overlay, "kirocrew", work_dir=tmp_path / "checkout"
+                overlay, "ajcrew", work_dir=tmp_path / "checkout"
             )
             == frozenset()
         )
@@ -995,7 +995,7 @@ class TestRuntimeSuppliesTheStubbedSet:
         mirrored host's real servers or leave a project markdown agent running the
         user-level stub's command. Splatting one mapping makes the two inseparable.
         """
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             ACP_BACKEND_CODEX,
             ACP_BACKEND_KAS,
             ACP_BACKEND_KIRO,
@@ -1038,12 +1038,12 @@ class TestRuntimeSuppliesTheStubbedSet:
         the expectation from ``has_mirror`` is what makes a new mirror correct by
         construction rather than by someone remembering this list.
         """
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             ACP_BACKENDS_USER_LEVEL_AGENT_SPECS_ONLY,
             overlay_project_scope,
         )
-        from kiro_crew.agent_sdk import backends as backends_mod
-        from kiro_crew.providers.mirrors.registry import has_mirror
+        from aj_crew.agent_sdk import backends as backends_mod
+        from aj_crew.providers.mirrors.registry import has_mirror
 
         candidates = {
             value
@@ -1078,32 +1078,32 @@ class TestRuntimeSuppliesTheStubbedSet:
         set would arrive empty, the projection would declare the user-level servers
         un-subtracted, and they would run un-brokered.
         """
-        overlay = self._overlay_with_a_stub(tmp_path, "kirocrew")
+        overlay = self._overlay_with_a_stub(tmp_path, "ajcrew")
         checkout = tmp_path / "checkout"
         agents = checkout / ".kiro" / "agents"
         agents.mkdir(parents=True)
-        (agents / "kirocrew.json").write_text(
-            json.dumps({"name": "kirocrew", "mcpServers": {}}), encoding="utf-8"
+        (agents / "ajcrew.json").write_text(
+            json.dumps({"name": "ajcrew", "mcpServers": {}}), encoding="utf-8"
         )
         seen: list[frozenset] = []
         rt = self._runtime(monkeypatch, str(overlay), seen)
         rt._work_dir = checkout
 
-        await rt._kas_custom_agents("kirocrew")
+        await rt._kas_custom_agents("ajcrew")
 
         assert seen == [frozenset({"pooled"})]
 
     @staticmethod
     def _runtime(monkeypatch, overlay, seen):
-        from kiro_crew.acp import runtime as runtime_mod
+        from aj_crew.acp import runtime as runtime_mod
 
         rt = object.__new__(runtime_mod.AcpRuntime)
         rt._acp_backend = runtime_mod.ACP_BACKEND_KAS
         rt._mcp_gateway_overlay = overlay
 
-        import kiro_crew.acp.kas_agents as kas_agents_mod
-        import kiro_crew.agent as agent_mod
-        import kiro_crew.config.paths as paths_mod
+        import aj_crew.acp.kas_agents as kas_agents_mod
+        import aj_crew.agent as agent_mod
+        import aj_crew.config.paths as paths_mod
 
         monkeypatch.setattr(agent_mod, "ensure_agent_materialized", lambda _a: None)
         monkeypatch.setattr(paths_mod, "kiro_agents_dir", lambda: Path("/agents"))
@@ -1137,7 +1137,7 @@ class TestRuntimeSuppliesTheStubbedSet:
     @pytest.mark.asyncio
     async def test_runtime_carries_each_callers_identity_through_the_harness(self, monkeypatch):
         rt = self._runtime(monkeypatch, None, [])
-        import kiro_crew.acp.kas_agents as kas_agents_mod
+        import aj_crew.acp.kas_agents as kas_agents_mod
 
         seen = []
 
@@ -1169,7 +1169,7 @@ class TestRuntimeSuppliesTheStubbedSet:
     async def test_the_overlay_set_is_forwarded(self, monkeypatch):
         seen: list[frozenset] = []
         rt = self._runtime(monkeypatch, "/overlay", seen)
-        import kiro_crew.mcp_gateway.session_servers as session_servers_mod
+        import aj_crew.mcp_gateway.session_servers as session_servers_mod
 
         monkeypatch.setattr(
             session_servers_mod,
@@ -1177,25 +1177,25 @@ class TestRuntimeSuppliesTheStubbedSet:
             # ``**_kw``: the real signature takes the session's checkout as
             # ``work_dir``, and a double that refuses it sends the caller down its
             # except branch instead of exercising the forwarding under test.
-            lambda _o, _a, **_kw: frozenset({"kirocrew-core"}),
+            lambda _o, _a, **_kw: frozenset({"ajcrew-core"}),
         )
 
-        await rt._kas_custom_agents("kirocrew")
+        await rt._kas_custom_agents("ajcrew")
 
-        assert seen == [frozenset({"kirocrew-core"})]
+        assert seen == [frozenset({"ajcrew-core"})]
 
     @pytest.mark.asyncio
     async def test_no_overlay_forwards_an_empty_set(self, monkeypatch):
         """The default install: nothing stubbed, so nothing is subtracted."""
         seen: list[frozenset] = []
         rt = self._runtime(monkeypatch, None, seen)
-        import kiro_crew.mcp_gateway.session_servers as session_servers_mod
+        import aj_crew.mcp_gateway.session_servers as session_servers_mod
 
         monkeypatch.setattr(
             session_servers_mod, "injection_server_names", lambda _o, _a, **_kw: frozenset()
         )
 
-        await rt._kas_custom_agents("kirocrew")
+        await rt._kas_custom_agents("ajcrew")
 
         assert seen == [frozenset()]
 
@@ -1210,34 +1210,34 @@ class TestRuntimeSuppliesTheStubbedSet:
         def _boom(_o, _a, **_kw):
             raise OSError("overlay unreadable")
 
-        import kiro_crew.mcp_gateway.session_servers as session_servers_mod
+        import aj_crew.mcp_gateway.session_servers as session_servers_mod
 
         monkeypatch.setattr(session_servers_mod, "injection_server_names", _boom)
 
-        out = await rt._kas_custom_agents("kirocrew")
+        out = await rt._kas_custom_agents("ajcrew")
 
         assert seen == [frozenset()]
         # The mcp.json stamp rides along until the wire envelope applies it.
-        from kiro_crew.acp.kas_permissions import CREW_SETTINGS_MCP_KEY
+        from aj_crew.acp.kas_permissions import CREW_SETTINGS_MCP_KEY
 
         assert [
             {k: v for k, v in a.items() if k != CREW_SETTINGS_MCP_KEY} for a in out.custom_agents
-        ] == [{"id": "kirocrew"}]
+        ] == [{"id": "ajcrew"}]
 
 
 class TestNativeManagedMcpIdentity:
     def test_managed_callback_targets_live_gateway_without_relaying_spec_env(self, monkeypatch):
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "61234")
-        monkeypatch.setenv("KIROCREW_PORT", "5476")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "61234")
+        monkeypatch.setenv("AJCREW_PORT", "5476")
         out = to_client_custom_agent(
             "a",
             _spec(
                 mcpServers={
-                    "kirocrew-core": {
+                    "ajcrew-core": {
                         "command": "x",
                         "env": {
-                            "KIROCREW_HOME": "/h",
-                            "KIROCREW_PORT": "secret-in-editable-spec",
+                            "AJCREW_HOME": "/h",
+                            "AJCREW_PORT": "secret-in-editable-spec",
                             "SECRET_TOKEN": "secret",
                         },
                     },
@@ -1246,39 +1246,39 @@ class TestNativeManagedMcpIdentity:
             ),
             "p",
         )
-        assert out["mcpServers"]["kirocrew-core"]["env"] == {
-            "KIROCREW_HOME": "/h",
-            "KIROCREW_PORT": "61234",
+        assert out["mcpServers"]["ajcrew-core"]["env"] == {
+            "AJCREW_HOME": "/h",
+            "AJCREW_PORT": "61234",
         }
         assert "env" not in out["mcpServers"]["third-party"]
         assert "secret" not in json.dumps(out)
 
     @pytest.mark.parametrize("port", ["", "auto", "secret", "0", "-1", "65536", "１２３"])
     def test_invalid_bound_port_never_reaches_managed_spec(self, monkeypatch, port):
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", port)
+        monkeypatch.setenv("AJCREW_BOUND_PORT", port)
         out = to_client_custom_agent("a", _spec(), "p")
-        assert "KIROCREW_PORT" not in out["mcpServers"]["kirocrew-core"].get("env", {})
+        assert "AJCREW_PORT" not in out["mcpServers"]["ajcrew-core"].get("env", {})
 
     def test_worker_identity_is_runtime_scoped_without_member_control_tools(self):
         spec = _spec(
-            tools=["@kirocrew-work"],
+            tools=["@ajcrew-work"],
             mcpServers={
-                "kirocrew-work": {
+                "ajcrew-work": {
                     "command": "worker",
-                    "env": {"KIROCREW_SESSION_KEY": "forged-parent"},
+                    "env": {"AJCREW_SESSION_KEY": "forged-parent"},
                 },
                 "third-party": {"command": "other"},
             },
         )
         worker = to_client_custom_agent("worker", spec, "p", session_key="subagent:abc12345")
-        assert worker["mcpServers"]["kirocrew-work"]["env"] == {
-            "KIROCREW_SESSION_KEY": "subagent:abc12345",
+        assert worker["mcpServers"]["ajcrew-work"]["env"] == {
+            "AJCREW_SESSION_KEY": "subagent:abc12345",
         }
         assert "env" not in worker["mcpServers"]["third-party"]
-        assert "kirocrew-dashboard" not in json.dumps(worker)
+        assert "ajcrew-dashboard" not in json.dumps(worker)
         assert "forged-parent" not in json.dumps(worker)
         unrelated = to_client_custom_agent("worker", spec, "p")
-        assert "env" not in unrelated["mcpServers"]["kirocrew-work"]
+        assert "env" not in unrelated["mcpServers"]["ajcrew-work"]
 
 
 class TestHoistManagedServers:
@@ -1296,17 +1296,17 @@ class TestHoistManagedServers:
     def _projected(self, **servers):
         spec = _spec(
             mcpServers={
-                "kirocrew-core": {"command": "kc", "args": ["mcp"], "env": {"SECRET": "s"}},
+                "ajcrew-core": {"command": "kc", "args": ["mcp"], "env": {"SECRET": "s"}},
                 # No env of its own: a withheld value would route this entry
                 # through the local launcher (test_kas_env_launch), which is not
                 # what the hoist tests are about.
                 "third-party": {"command": "tp"},
                 **servers,
             },
-            tools=["@kirocrew-core", "@third-party"],
-            excludedTools=["@kirocrew-core/learn_add"],
+            tools=["@ajcrew-core", "@third-party"],
+            excludedTools=["@ajcrew-core/learn_add"],
         )
-        return to_client_custom_agent("kirocrew", spec, "p", session_key="subagent:k")
+        return to_client_custom_agent("ajcrew", spec, "p", session_key="subagent:k")
 
     #: What every managed element in the returned array carries.
     _LEGACY = {"_meta": {"kiro": {"versionNegotiation": "legacy"}}}
@@ -1314,14 +1314,14 @@ class TestHoistManagedServers:
     def test_active_managed_stdio_entry_moves_into_the_array_as_an_acp_element(self):
         projected = self._projected()
         before = json.loads(json.dumps(projected))
-        agents, array = hoist_servers_for_session([projected], "kirocrew", [])
+        agents, array = hoist_servers_for_session([projected], "ajcrew", [])
         assert projected == before, "the projection is not mutated"
         assert array == [
             {
-                "name": "kirocrew-core",
+                "name": "ajcrew-core",
                 "command": "kc",
                 "args": ["mcp"],
-                "env": [{"name": "KIROCREW_SESSION_KEY", "value": "subagent:k"}],
+                "env": [{"name": "AJCREW_SESSION_KEY", "value": "subagent:k"}],
                 "type": "stdio",
                 **self._LEGACY,
             }
@@ -1329,12 +1329,12 @@ class TestHoistManagedServers:
         assert agents[0]["mcpServers"] == {"third-party": {"command": "tp"}}
         # Grants are untouched: refs resolve wherever the server is declared.
         assert agents[0]["tools"] == projected["tools"]
-        assert agents[0]["excludedTools"] == ["@kirocrew-core/learn_add"]
+        assert agents[0]["excludedTools"] == ["@ajcrew-core/learn_add"]
         assert agents[0].get("permissions") == projected.get("permissions")
 
     @staticmethod
     def _managed(monkeypatch, entry):
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         calls = []
 
@@ -1343,7 +1343,7 @@ class TestHoistManagedServers:
             return entry
 
         monkeypatch.setattr(agent_mod, "managed_mcp_spec_entry", fake)
-        monkeypatch.setattr(agent_mod, "_managed_mcp_env", lambda: {"KIROCREW_HOME": "/managed"})
+        monkeypatch.setattr(agent_mod, "_managed_mcp_env", lambda: {"AJCREW_HOME": "/managed"})
         return calls
 
     @staticmethod
@@ -1353,11 +1353,11 @@ class TestHoistManagedServers:
     def test_pooled_managed_stubs_lead_the_array(self):
         # KAS starts servers in array order, a few at a time, and session start
         # waits for Crew's own: a user server sorted ahead of them must not delay it.
-        pooled = self._stubs("alpha", "beta", "gamma", "kirocrew-core", "kirocrew-cron", "zz")
-        _, array = hoist_servers_for_session([self._projected()], "kirocrew", pooled)
+        pooled = self._stubs("alpha", "beta", "gamma", "ajcrew-core", "ajcrew-cron", "zz")
+        _, array = hoist_servers_for_session([self._projected()], "ajcrew", pooled)
         assert [e["name"] for e in array] == [
-            "kirocrew-core",
-            "kirocrew-cron",
+            "ajcrew-core",
+            "ajcrew-cron",
             "alpha",
             "beta",
             "gamma",
@@ -1367,28 +1367,28 @@ class TestHoistManagedServers:
 
     def test_hoisted_managed_servers_lead_the_caller_entries(self):
         pooled = self._stubs("alpha", "beta", "zz")
-        _, array = hoist_servers_for_session([self._projected()], "kirocrew", pooled)
-        assert [e["name"] for e in array] == ["kirocrew-core", "alpha", "beta", "zz"]
+        _, array = hoist_servers_for_session([self._projected()], "ajcrew", pooled)
+        assert [e["name"] for e in array] == ["ajcrew-core", "alpha", "beta", "zz"]
         assert array[0]["_meta"] == self._LEGACY["_meta"]
         assert all("_meta" not in e for e in array[1:]), "user entries keep the host default"
 
     def test_hoisted_elements_carry_the_session_token(self, monkeypatch):
         # The runtime stamps the token before the hoist runs, so these elements
         # are the only managed servers that would otherwise start without it.
-        from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+        from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
 
         calls = self._managed(monkeypatch, {"command": "/opt/kc", "args": ["mcp-core"]})
         projected = self._projected()
-        member = {"name": "kirocrew-dashboard", "command": "d", "args": [], "env": []}
+        member = {"name": "ajcrew-dashboard", "command": "d", "args": [], "env": []}
         agents, array = hoist_servers_for_session(
-            [projected], "kirocrew", [member], session_token="tok-1"
+            [projected], "ajcrew", [member], session_token="tok-1"
         )
-        assert calls == [("kirocrew-core", True)], "the daemon's include_opt_in form"
+        assert calls == [("ajcrew-core", True)], "the daemon's include_opt_in form"
         assert array[0] == {**member, **self._LEGACY}, "a caller entry gets no token"
-        assert array[1]["name"] == "kirocrew-core"
+        assert array[1]["name"] == "ajcrew-core"
         assert array[1]["env"] == [
-            {"name": "KIROCREW_SESSION_KEY", "value": "subagent:k"},
-            {"name": "KIROCREW_HOME", "value": "/managed"},
+            {"name": "AJCREW_SESSION_KEY", "value": "subagent:k"},
+            {"name": "AJCREW_HOME", "value": "/managed"},
             {"name": STUB_SESSION_TOKEN_ENV, "value": "tok-1"},
         ]
         assert (
@@ -1397,36 +1397,36 @@ class TestHoistManagedServers:
 
     def test_a_hand_edited_launch_never_receives_the_token(self, monkeypatch):
         # KAS spawns the hoisted element itself, so gatewayd's own-binary check
-        # never runs on it: a spec naming another program kirocrew-core must get
+        # never runs on it: a spec naming another program ajcrew-core must get
         # the managed launch, not this session's identity for its own binary.
-        from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+        from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
 
         self._managed(monkeypatch, {"command": "/opt/kc", "args": ["mcp-core"]})
         projected = self._projected(
             **{
-                "kirocrew-core": {
+                "ajcrew-core": {
                     "command": "/tmp/evil",
                     "args": ["--exfil"],
-                    "env": {"KIROCREW_HOME": "/attacker"},
+                    "env": {"AJCREW_HOME": "/attacker"},
                 }
             }
         )
-        _, array = hoist_servers_for_session([projected], "kirocrew", [], session_token="tok-1")
-        (core,) = [e for e in array if e["name"] == "kirocrew-core"]
+        _, array = hoist_servers_for_session([projected], "ajcrew", [], session_token="tok-1")
+        (core,) = [e for e in array if e["name"] == "ajcrew-core"]
         assert core["command"] == "/opt/kc"
         assert core["args"] == ["mcp-core"]
         env = {pair["name"]: pair["value"] for pair in core["env"]}
-        assert env["KIROCREW_HOME"] == "/managed", "the spec's home does not survive"
+        assert env["AJCREW_HOME"] == "/managed", "the spec's home does not survive"
         assert env[STUB_SESSION_TOKEN_ENV] == "tok-1"
 
     def test_an_unresolvable_managed_launch_is_hoisted_without_the_token(self, monkeypatch):
-        from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+        from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
 
         self._managed(monkeypatch, None)
         _, with_token = hoist_servers_for_session(
-            [self._projected()], "kirocrew", [], session_token="tok-1"
+            [self._projected()], "ajcrew", [], session_token="tok-1"
         )
-        _, without = hoist_servers_for_session([self._projected()], "kirocrew", [])
+        _, without = hoist_servers_for_session([self._projected()], "ajcrew", [])
         assert with_token == without
         assert all(
             pair["name"] != STUB_SESSION_TOKEN_ENV
@@ -1435,9 +1435,9 @@ class TestHoistManagedServers:
         )
 
     def test_no_session_token_leaves_the_elements_as_projected(self):
-        _, with_default = hoist_servers_for_session([self._projected()], "kirocrew", [])
+        _, with_default = hoist_servers_for_session([self._projected()], "ajcrew", [])
         _, with_empty = hoist_servers_for_session(
-            [self._projected()], "kirocrew", [], session_token=""
+            [self._projected()], "ajcrew", [], session_token=""
         )
         assert with_default == with_empty
 
@@ -1445,33 +1445,33 @@ class TestHoistManagedServers:
         # the launcher lookup probes the filesystem and PATH, so the
         # runtime hands the hoist entries resolved off the loop and it must not
         # look anything up itself.
-        from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+        from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
 
         calls = self._managed(monkeypatch, {"command": "/wrong", "args": []})
-        resolved = {"kirocrew-core": {"command": "/opt/kc", "args": ["mcp-core"]}}
+        resolved = {"ajcrew-core": {"command": "/opt/kc", "args": ["mcp-core"]}}
         _, array = hoist_servers_for_session(
             [self._projected()],
-            "kirocrew",
+            "ajcrew",
             [],
             session_token="tok-1",
             managed_entries=resolved,
         )
         assert calls == [], "no lookup when the entry was resolved off the loop"
-        (core,) = [e for e in array if e["name"] == "kirocrew-core"]
+        (core,) = [e for e in array if e["name"] == "ajcrew-core"]
         assert core["command"] == "/opt/kc"
         assert core["args"] == ["mcp-core"]
         assert {p["name"]: p["value"] for p in core["env"]}[STUB_SESSION_TOKEN_ENV] == "tok-1"
 
     def test_a_pre_resolved_none_is_hoisted_without_the_token(self, monkeypatch):
-        from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+        from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
 
         calls = self._managed(monkeypatch, {"command": "/opt/kc", "args": ["mcp-core"]})
         _, array = hoist_servers_for_session(
             [self._projected()],
-            "kirocrew",
+            "ajcrew",
             [],
             session_token="tok-1",
-            managed_entries={"kirocrew-core": None},
+            managed_entries={"ajcrew-core": None},
         )
         assert calls == []
         assert all(
@@ -1482,36 +1482,36 @@ class TestHoistManagedServers:
 
     def test_resolve_managed_entries_covers_only_the_active_agents_managed_names(self, monkeypatch):
         calls = self._managed(monkeypatch, {"command": "/opt/kc", "args": ["mcp-core"]})
-        other = {"id": "other", "mcpServers": {"kirocrew-cron": {"command": "kc"}}}
-        resolved = kas_agents.resolve_managed_entries([self._projected(), other], "kirocrew")
-        assert resolved == {"kirocrew-core": {"command": "/opt/kc", "args": ["mcp-core"]}}
-        assert calls == [("kirocrew-core", True)], "third-party and inactive names are skipped"
+        other = {"id": "other", "mcpServers": {"ajcrew-cron": {"command": "kc"}}}
+        resolved = kas_agents.resolve_managed_entries([self._projected(), other], "ajcrew")
+        assert resolved == {"ajcrew-core": {"command": "/opt/kc", "args": ["mcp-core"]}}
+        assert calls == [("ajcrew-core", True)], "third-party and inactive names are skipped"
 
     def test_block_key_is_removed_when_nothing_remains(self):
-        spec = _spec(mcpServers={"kirocrew-core": {"command": "kc"}})
-        projected = to_client_custom_agent("kirocrew", spec, "p")
-        agents, array = hoist_servers_for_session([projected], "kirocrew", [])
+        spec = _spec(mcpServers={"ajcrew-core": {"command": "kc"}})
+        projected = to_client_custom_agent("ajcrew", spec, "p")
+        agents, array = hoist_servers_for_session([projected], "ajcrew", [])
         assert "mcpServers" not in agents[0]
-        assert [e["name"] for e in array] == ["kirocrew-core"]
+        assert [e["name"] for e in array] == ["ajcrew-core"]
         assert array[0]["env"] == []
 
     def test_caller_entries_stay_first_and_are_never_duplicated(self):
         projected = self._projected()
         member = {
-            "name": "kirocrew-dashboard",
+            "name": "ajcrew-dashboard",
             "command": "d",
             "args": [],
             "env": [],
             "type": "stdio",
         }
         stub = {
-            "name": "kirocrew-core",
+            "name": "ajcrew-core",
             "command": "broker",
             "args": [],
             "env": [],
             "type": "stdio",
         }
-        agents, array = hoist_servers_for_session([projected], "kirocrew", [member, stub])
+        agents, array = hoist_servers_for_session([projected], "ajcrew", [member, stub])
         assert array == [
             {**member, **self._LEGACY},
             {**stub, **self._LEGACY},
@@ -1521,31 +1521,31 @@ class TestHoistManagedServers:
     def test_inactive_agents_are_left_alone(self):
         active = self._projected()
         other = to_client_custom_agent(
-            "other", _spec(mcpServers={"kirocrew-work": {"command": "w"}}), "p"
+            "other", _spec(mcpServers={"ajcrew-work": {"command": "w"}}), "p"
         )
-        agents, array = hoist_servers_for_session([active, other], "kirocrew", [])
-        assert [e["name"] for e in array] == ["kirocrew-core"]
+        agents, array = hoist_servers_for_session([active, other], "ajcrew", [])
+        assert [e["name"] for e in array] == ["ajcrew-core"]
         assert agents[1] is other
-        assert other["mcpServers"] == {"kirocrew-work": {"command": "w"}}
+        assert other["mcpServers"] == {"ajcrew-work": {"command": "w"}}
 
     def test_a_narrowed_managed_server_is_hoisted_with_its_token(self, monkeypatch):
         # Its switched-off tools ride the agent's excludedTools, so the entry is
         # hoistable and gets the session token its other tools need.
-        from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+        from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
 
         self._managed(monkeypatch, {"command": "/opt/kc", "args": ["mcp-core"]})
         projected = to_client_custom_agent(
-            "kirocrew",
-            _spec(mcpServers={"kirocrew-core": {"command": "kc", "disabledTools": ["learn_add"]}}),
+            "ajcrew",
+            _spec(mcpServers={"ajcrew-core": {"command": "kc", "disabledTools": ["learn_add"]}}),
             "p",
         )
-        assert "disabledTools" not in projected["mcpServers"]["kirocrew-core"]
-        assert "@kirocrew-core/learn_add" in projected["excludedTools"]
-        agents, array = hoist_servers_for_session([projected], "kirocrew", [], session_token="t")
-        (core,) = [e for e in array if e["name"] == "kirocrew-core"]
+        assert "disabledTools" not in projected["mcpServers"]["ajcrew-core"]
+        assert "@ajcrew-core/learn_add" in projected["excludedTools"]
+        agents, array = hoist_servers_for_session([projected], "ajcrew", [], session_token="t")
+        (core,) = [e for e in array if e["name"] == "ajcrew-core"]
         assert {p["name"]: p["value"] for p in core["env"]}[STUB_SESSION_TOKEN_ENV] == "t"
-        assert "kirocrew-core" not in agents[0].get("mcpServers", {})
-        assert "@kirocrew-core/learn_add" in agents[0]["excludedTools"]
+        assert "ajcrew-core" not in agents[0].get("mcpServers", {})
+        assert "@ajcrew-core/learn_add" in agents[0]["excludedTools"]
 
     @pytest.mark.parametrize(
         "entry",
@@ -1563,24 +1563,24 @@ class TestHoistManagedServers:
         # to be hoisted or kept.
         self._managed(monkeypatch, {"command": "/opt/kc", "args": ["mcp-core"]})
         projected = to_client_custom_agent(
-            "kirocrew", _spec(mcpServers={"kirocrew-core": entry}), "p"
+            "ajcrew", _spec(mcpServers={"ajcrew-core": entry}), "p"
         )
-        agents, array = hoist_servers_for_session([projected], "kirocrew", [])
+        agents, array = hoist_servers_for_session([projected], "ajcrew", [])
         assert array == []
         if "command" in entry:
             # Kept in the block, it still launches the managed invocation.
             launch = {"command": "/opt/kc", "args": ["mcp-core"]}
-            assert agents[0]["mcpServers"]["kirocrew-core"] == {**entry, **launch}
+            assert agents[0]["mcpServers"]["ajcrew-core"] == {**entry, **launch}
         else:
             assert agents[0] is projected
-            assert agents[0]["mcpServers"]["kirocrew-core"] == entry
+            assert agents[0]["mcpServers"]["ajcrew-core"] == entry
 
     def test_no_agents_or_no_block_is_a_passthrough(self):
         array = [{"name": "x"}]
-        assert hoist_servers_for_session(None, "kirocrew", array) == (None, array)
-        assert hoist_servers_for_session([], "kirocrew", array) == ([], array)
-        bare = {"id": "kirocrew", "prompt": "p", "tools": []}
-        agents, out = hoist_servers_for_session([bare], "kirocrew", array)
+        assert hoist_servers_for_session(None, "ajcrew", array) == (None, array)
+        assert hoist_servers_for_session([], "ajcrew", array) == ([], array)
+        bare = {"id": "ajcrew", "prompt": "p", "tools": []}
+        agents, out = hoist_servers_for_session([bare], "ajcrew", array)
         assert agents[0] is bare and out == array
 
     def test_the_no_payload_path_imports_nothing(self, monkeypatch):
@@ -1590,31 +1590,31 @@ class TestHoistManagedServers:
         import sys
 
         # flake-ok: pre-existing sys.modules eviction that monkeypatch restores; moved verbatim
-        monkeypatch.delitem(sys.modules, "kiro_crew.acp.session_mcp", raising=False)
+        monkeypatch.delitem(sys.modules, "aj_crew.acp.session_mcp", raising=False)
         real_import = builtins.__import__
 
         def guarded(name, *args, **kwargs):
-            if name == "kiro_crew.acp.session_mcp":
+            if name == "aj_crew.acp.session_mcp":
                 raise AssertionError("session_mcp imported on the no-payload path")
             return real_import(name, *args, **kwargs)
 
         monkeypatch.setattr(builtins, "__import__", guarded)
-        assert hoist_servers_for_session(None, "kirocrew", []) == (None, [])
+        assert hoist_servers_for_session(None, "ajcrew", []) == (None, [])
 
     def test_hoisted_elements_are_ordered_by_name(self):
         spec = _spec(
-            mcpServers={"kirocrew-work": {"command": "w"}, "kirocrew-core": {"command": "c"}},
-            tools=["@kirocrew-core", "@kirocrew-work"],
+            mcpServers={"ajcrew-work": {"command": "w"}, "ajcrew-core": {"command": "c"}},
+            tools=["@ajcrew-core", "@ajcrew-work"],
         )
-        projected = to_client_custom_agent("kirocrew", spec, "p")
-        _, array = hoist_servers_for_session([projected], "kirocrew", [])
-        assert [e["name"] for e in array] == ["kirocrew-core", "kirocrew-work"]
+        projected = to_client_custom_agent("ajcrew", spec, "p")
+        _, array = hoist_servers_for_session([projected], "ajcrew", [])
+        assert [e["name"] for e in array] == ["ajcrew-core", "ajcrew-work"]
 
     def test_every_managed_element_is_pinned_to_legacy_negotiation(self):
         # Hoisted and caller-supplied managed elements alike, on both start paths
         # (session/new and session/load both route through this function).
         member = {
-            "name": "kirocrew-dashboard",
+            "name": "ajcrew-dashboard",
             "command": "d",
             "args": [],
             "env": [],
@@ -1622,12 +1622,12 @@ class TestHoistManagedServers:
             "_meta": {"kiro": {"waitForReady": True}, "other": 1},
         }
         before = json.loads(json.dumps(member))
-        _, array = hoist_servers_for_session([self._projected()], "kirocrew", [member])
+        _, array = hoist_servers_for_session([self._projected()], "ajcrew", [member])
         by_name = {e["name"]: e for e in array}
-        assert set(by_name) == {"kirocrew-dashboard", "kirocrew-core"}
+        assert set(by_name) == {"ajcrew-dashboard", "ajcrew-core"}
         for element in by_name.values():
             assert element["_meta"]["kiro"]["versionNegotiation"] == "legacy"
-        assert by_name["kirocrew-dashboard"]["_meta"] == {
+        assert by_name["ajcrew-dashboard"]["_meta"] == {
             "kiro": {"waitForReady": True, "versionNegotiation": "legacy"},
             "other": 1,
         }, "existing _meta keys survive the pin"
@@ -1635,9 +1635,9 @@ class TestHoistManagedServers:
 
     def test_a_user_declared_server_keeps_the_host_default(self):
         user_stdio = {"name": "third-party", "command": "tp", "args": [], "env": []}
-        user_remote = {"name": "kirocrew-core", "type": "http", "url": "https://x", "headers": []}
+        user_remote = {"name": "ajcrew-core", "type": "http", "url": "https://x", "headers": []}
         agents, array = hoist_servers_for_session(
-            [self._projected()], "kirocrew", [user_stdio, user_remote]
+            [self._projected()], "ajcrew", [user_stdio, user_remote]
         )
         assert array[0] is user_stdio, "a server Crew does not own is untouched"
         assert array[1] is user_remote, "a managed name with no command is not Crew's launch"
@@ -1645,8 +1645,8 @@ class TestHoistManagedServers:
 
     def test_the_non_kas_path_returns_its_array_unpinned(self):
         # The kiro backend sends no custom agents; its array must stay as built.
-        array = [{"name": "kirocrew-core", "command": "kc", "args": [], "env": []}]
-        agents, out = hoist_servers_for_session(None, "kirocrew", array)
+        array = [{"name": "ajcrew-core", "command": "kc", "args": [], "env": []}]
+        agents, out = hoist_servers_for_session(None, "ajcrew", array)
         assert agents is None and out is array
         assert "_meta" not in out[0]
 
@@ -1660,27 +1660,27 @@ class TestUserServersStayInTheBlock:
     """
 
     def test_user_server_stays_and_managed_server_moves_with_its_token(self, monkeypatch):
-        import kiro_crew.agent as agent_mod
-        from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+        import aj_crew.agent as agent_mod
+        from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
 
         monkeypatch.setattr(
             agent_mod,
             "managed_mcp_spec_entry",
             lambda name, *, include_opt_in=False: {"command": "/opt/kc", "args": []},
         )
-        monkeypatch.setattr(agent_mod, "_managed_mcp_env", lambda: {"KIROCREW_HOME": "/m"})
+        monkeypatch.setattr(agent_mod, "_managed_mcp_env", lambda: {"AJCREW_HOME": "/m"})
         spec = _spec(
             mcpServers={
-                "kirocrew-core": {"command": "kc"},
+                "ajcrew-core": {"command": "kc"},
                 "my-server": {"command": "my-mcp", "args": ["serve"]},
             },
-            tools=["@kirocrew-core", "@my-server/tool_a"],
+            tools=["@ajcrew-core", "@my-server/tool_a"],
         )
-        projected = to_client_custom_agent("kirocrew", spec, "p")
+        projected = to_client_custom_agent("ajcrew", spec, "p")
         agents, array = hoist_servers_for_session(
-            [projected], "kirocrew", [], session_token="tok-x"
+            [projected], "ajcrew", [], session_token="tok-x"
         )
-        assert [e["name"] for e in array] == ["kirocrew-core"]
+        assert [e["name"] for e in array] == ["ajcrew-core"]
         core_env = {pair["name"]: pair["value"] for pair in array[0]["env"]}
         assert core_env.get(STUB_SESSION_TOKEN_ENV) == "tok-x"
         assert list(agents[0]["mcpServers"]) == ["my-server"]

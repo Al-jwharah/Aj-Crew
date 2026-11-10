@@ -10,12 +10,12 @@ import pytest
 
 @pytest.fixture
 def tmp_config(tmp_path):
-    with patch("kiro_crew.context_management.config_dir", return_value=tmp_path):
+    with patch("aj_crew.context_management.config_dir", return_value=tmp_path):
         yield tmp_path
 
 
 def test_cap_result_bytes_keeps_an_answer_within_the_budget():
-    from kiro_crew.context_management import cap_result_bytes
+    from aj_crew.context_management import cap_result_bytes
 
     assert cap_result_bytes(b"short content") == b"short content"
 
@@ -36,7 +36,7 @@ def test_cap_result_bytes_cuts_bytes_at_character_boundaries(text):
     repeated, and its marker counts the bytes actually dropped."""
     import re
 
-    from kiro_crew.context_management import RESULT_FILE_MAX_BYTES, cap_result_bytes
+    from aj_crew.context_management import RESULT_FILE_MAX_BYTES, cap_result_bytes
 
     original = text.encode("utf-8")
     capped = cap_result_bytes(original)
@@ -52,7 +52,7 @@ def test_cap_result_bytes_cuts_bytes_at_character_boundaries(text):
 def test_cap_result_file_caps_a_streamed_file_as_the_bytes_cap_would(tmp_path, monkeypatch):
     """A partial that streamed to disk is capped in place to exactly what the
     in-memory cap gives, reading only the two ends it keeps."""
-    import kiro_crew.context_management as cm
+    import aj_crew.context_management as cm
 
     original = ("a" * 99 + "\u2014") * 6_000
     path = tmp_path / "result.txt"
@@ -79,7 +79,7 @@ def test_cap_result_file_caps_a_streamed_file_as_the_bytes_cap_would(tmp_path, m
 
 
 def test_cap_result_file_leaves_a_small_or_missing_file_alone(tmp_path):
-    from kiro_crew.context_management import cap_result_file
+    from aj_crew.context_management import cap_result_file
 
     small = tmp_path / "small.txt"
     small.write_text("short content", encoding="utf-8")
@@ -90,13 +90,13 @@ def test_cap_result_file_leaves_a_small_or_missing_file_alone(tmp_path):
 
 
 def test_cap_streaming_text_short():
-    from kiro_crew.context_management import cap_streaming_text
+    from aj_crew.context_management import cap_streaming_text
 
     assert cap_streaming_text("short") == "short"
 
 
 def test_cap_streaming_text_long():
-    from kiro_crew.context_management import STREAMING_TEXT_MAX_CHARS, cap_streaming_text
+    from aj_crew.context_management import STREAMING_TEXT_MAX_CHARS, cap_streaming_text
 
     text = "a" * (STREAMING_TEXT_MAX_CHARS + 1000)
     result = cap_streaming_text(text)
@@ -105,7 +105,7 @@ def test_cap_streaming_text_long():
 
 
 def test_cap_history():
-    from kiro_crew.context_management import HISTORY_MAX_ENTRIES, cap_history
+    from aj_crew.context_management import HISTORY_MAX_ENTRIES, cap_history
 
     entries = [{"i": i} for i in range(HISTORY_MAX_ENTRIES + 100)]
     result = cap_history(entries)
@@ -114,21 +114,21 @@ def test_cap_history():
 
 
 def test_check_session_budget_under(tmp_path):
-    from kiro_crew.context_management import check_session_budget
+    from aj_crew.context_management import check_session_budget
 
     (tmp_path / "agent-a.md").write_text("small")
     assert check_session_budget(tmp_path) is False
 
 
 def test_check_session_budget_over(tmp_path):
-    from kiro_crew.context_management import SESSION_MAX_BYTES, check_session_budget
+    from aj_crew.context_management import SESSION_MAX_BYTES, check_session_budget
 
     (tmp_path / "agent-a.md").write_bytes(b"x" * (SESSION_MAX_BYTES + 1))
     assert check_session_budget(tmp_path) is True
 
 
 def test_evict_completed_agents():
-    from kiro_crew.context_management import evict_completed_agents
+    from aj_crew.context_management import evict_completed_agents
 
     agents = {}
     for i in range(60):
@@ -141,7 +141,7 @@ def test_evict_completed_agents():
 
 
 def test_evict_skips_running():
-    from kiro_crew.context_management import evict_completed_agents
+    from aj_crew.context_management import evict_completed_agents
 
     agents = {
         "running": SimpleNamespace(done=False, started=0.0),
@@ -154,7 +154,7 @@ def test_evict_skips_running():
 def test_cleanup_stale_sessions(tmp_config):
     import time
 
-    from kiro_crew.context_management import cleanup_stale_sessions
+    from aj_crew.context_management import cleanup_stale_sessions
 
     sessions_dir = tmp_config / "sessions"
     sessions_dir.mkdir()

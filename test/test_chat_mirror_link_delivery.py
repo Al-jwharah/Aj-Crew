@@ -19,7 +19,7 @@ from chat_mirror_helpers import (
     _real_caps_transport,
 )
 
-from kiro_crew.messaging.link import ChannelLink
+from aj_crew.messaging.link import ChannelLink
 
 
 class TestMirrorLinkEdgeCases:
@@ -43,7 +43,7 @@ class TestMirrorLinkEdgeCases:
     async def test_reminder_delivery_failure_returns_502(self, tmp_path, monkeypatch):
         """When reminder send fails, 502 is returned."""
         monkeypatch.setattr(
-            "kiro_crew.platform.governance_profiles.governance_permits",
+            "aj_crew.platform.governance_profiles.governance_permits",
             lambda *args, **kwargs: SimpleNamespace(permitted=True),
         )
         state = _prep(tmp_path, monkeypatch)
@@ -62,7 +62,7 @@ class TestMirrorLinkEdgeCases:
     async def test_reminder_mirror_not_live_returns_503(self, tmp_path, monkeypatch):
         """When mirror target cannot be resolved but link exists, 503."""
         monkeypatch.setattr(
-            "kiro_crew.platform.governance_profiles.governance_permits",
+            "aj_crew.platform.governance_profiles.governance_permits",
             lambda *args, **kwargs: SimpleNamespace(permitted=False),
         )
         state = _prep(tmp_path, monkeypatch)
@@ -109,7 +109,7 @@ class TestMirrorLinkEdgeCases:
     @pytest.mark.asyncio
     async def test_ownership_conflict_race_returns_409(self, tmp_path, monkeypatch):
         """ConversationOwnershipConflict during set_mirror_link returns 409."""
-        from kiro_crew.session_map import ConversationOwnershipConflict
+        from aj_crew.session_map import ConversationOwnershipConflict
 
         state = _prep(tmp_path, monkeypatch)
         transport = _fake_transport("telegram")
@@ -169,7 +169,7 @@ class TestMirrorLinkEdgeCases:
             # (the send-boundary recheck).
             return SimpleNamespace(permitted=call_count["n"] <= 1)
 
-        monkeypatch.setattr("kiro_crew.platform.governance_profiles.governance_permits", _permits)
+        monkeypatch.setattr("aj_crew.platform.governance_profiles.governance_permits", _permits)
         state = _prep(tmp_path, monkeypatch)
         transport = _fake_transport("telegram")
         state.register_channel_transport(transport)
@@ -572,7 +572,7 @@ class TestMirrorBackfillFidelity:
         transport = _fake_transport("telegram", session_resume=True)
         state.register_channel_transport(transport)
 
-        from kiro_crew.session_map import ConversationOwnershipConflict
+        from aj_crew.session_map import ConversationOwnershipConflict
 
         state.sessions.set_mirror_link = MagicMock(
             side_effect=ConversationOwnershipConflict("taken")
@@ -817,7 +817,7 @@ class TestInboundClaimFollowsTheCapability:
                 reason="",
             )
 
-        monkeypatch.setattr("kiro_crew.platform.governance_profiles.governance_permits", _permits)
+        monkeypatch.setattr("aj_crew.platform.governance_profiles.governance_permits", _permits)
         state = _prep(tmp_path, monkeypatch)
         state.register_channel_transport(transport)
         slot = state.get_or_create_slot("s1")

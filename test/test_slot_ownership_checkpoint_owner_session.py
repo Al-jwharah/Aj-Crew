@@ -39,9 +39,9 @@ from slot_ownership_checkpoint_helpers import (  # noqa: F401 -- fixtures are re
     state_fixture,
 )
 
-from kiro_crew.dashboard import slot_ownership
-from kiro_crew.dashboard.state import SlotOrigin, _ChatSlot
-from kiro_crew.testing.wait import LoopHop
+from aj_crew.dashboard import slot_ownership
+from aj_crew.dashboard.state import SlotOrigin, _ChatSlot
+from aj_crew.testing.wait import LoopHop
 
 # ── owner session, own conflicts, resume and mode pins ──────────────────────
 
@@ -67,7 +67,7 @@ class TestTheOwnersSessionIsTheOneMintedForIt:
         assert not slot_ownership.app_owns_slot_session(APP, slot)
 
     def test_the_taskrunner_mints_the_shape_the_checkpoint_reads(self) -> None:
-        from kiro_crew.dashboard.handlers import taskrunner
+        from aj_crew.dashboard.handlers import taskrunner
 
         src = Path(taskrunner.__file__).read_text(encoding="utf-8")
         assert "task_review_session_key(task_id, token)" in src
@@ -199,7 +199,7 @@ class TestResumeAnswersAnAppLikeEveryOtherRoute:
         self, state, sel_spy, monkeypatch
     ) -> None:
         """Another build of the key starting inside the reads refuses with no write."""
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         await _persist_and_close(state, state.get_or_create_slot("a1", app=APP))
         log = state.conversation_log
@@ -271,8 +271,8 @@ class TestHandlersOutsideTheChainAnswerOneBody:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("route", ["delete", "side-open"])
     async def test_missing_and_foreign(self, state, route) -> None:
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_delete
-        from kiro_crew.dashboard.handlers.side import api_side_open
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_delete
+        from aj_crew.dashboard.handlers.side import api_side_open
 
         state.get_or_create_slot("theirs", origin=SlotOrigin.USER)
         app = web.Application(middlewares=[_as(APP)])

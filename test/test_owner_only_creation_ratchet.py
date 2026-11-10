@@ -1,6 +1,6 @@
 """Ratchet: creation calls that leave a data-home file or directory to the umask.
 
-``kiro_crew.owner_only_files`` states the policy: every file Kiro Crew creates in
+``aj_crew.owner_only_files`` states the policy: every file Aj Crew creates in
 the data home is ``0600`` and every directory ``0700``, set at creation. Four
 call shapes break it without looking wrong:
 
@@ -20,7 +20,7 @@ The owner-only spellings are ``touch(mode=OWNER_ONLY_FILE_MODE, ...)``,
 Some sites are deliberately left: a target outside the data home (the kiro-cli
 settings lock, a source-tree lock, a tempfile scratch dir), or a directory whose
 pre-existing mode must not change. :data:`BASELINE_FILE` holds, per file under
-``src/kiro_crew``, the count it had when this gate landed. A count may go down
+``src/aj_crew``, the count it had when this gate landed. A count may go down
 and never up; a file not listed starts at zero. A new site that is genuinely
 outside the data home says so on its line with ``# owner-only-ok: <reason>``.
 
@@ -40,13 +40,13 @@ from collections import Counter
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SRC_ROOT = REPO_ROOT / "src" / "kiro_crew"
+SRC_ROOT = REPO_ROOT / "src" / "aj_crew"
 BASELINE_FILE = Path(__file__).resolve().parent / "owner_only_creation_baseline.txt"
 
 _HEADER = """\
-# Umask-mode creation sites per file under src/kiro_crew when the owner-only
+# Umask-mode creation sites per file under src/aj_crew when the owner-only
 # creation ratchet landed. Read by test/test_owner_only_creation_ratchet.py;
-# one "<count> <path under src/kiro_crew/>" per line.
+# one "<count> <path under src/aj_crew/>" per line.
 # RATCHET: a count may only go down (delete the line at zero); never raise or add one.
 # `python test/test_owner_only_creation_ratchet.py --write-baseline` lowers every
 # line to its real count and drops files that are gone; it never raises or adds.
@@ -201,7 +201,7 @@ def test_no_file_gains_a_umask_mode_creation_site() -> None:
     }
     if risen:
         detail = "\n".join(
-            f"  src/kiro_crew/{rel}: {len(sites)} > baseline {was}: "
+            f"  src/aj_crew/{rel}: {len(sites)} > baseline {was}: "
             + ", ".join(f"{line}:{kind}" for line, kind in sites)
             for rel, (was, sites) in sorted(risen.items())
         )
@@ -210,7 +210,7 @@ def test_no_file_gains_a_umask_mode_creation_site() -> None:
             f"{detail}\n"
             "Use touch(mode=OWNER_ONLY_FILE_MODE, ...), open(..., opener=owner_only_opener"
             "[_for]), 0o600, or mkdirs_owner_only / ensure_directory from "
-            "kiro_crew.owner_only_files. A target outside the data home says so with "
+            "aj_crew.owner_only_files. A target outside the data home says so with "
             "`# owner-only-ok: <reason>` on its line."
         )
 
@@ -278,4 +278,4 @@ if __name__ == "__main__":
     if sys.argv[1:] == ["--write-baseline"]:
         sys.exit(_write_baseline())
     for rel, sites in sorted(scan().items()):
-        print(f"{len(sites):>3} src/kiro_crew/{rel}")
+        print(f"{len(sites):>3} src/aj_crew/{rel}")

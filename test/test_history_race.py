@@ -7,8 +7,8 @@ entries before role filtering; _turn_build_prompt passes 1 (one append per turn)
 """
 from __future__ import annotations
 
-from kiro_crew.context import build_session_replay
-from kiro_crew.history import ConversationLog
+from aj_crew.context import build_session_replay
+from aj_crew.history import ConversationLog
 
 
 class TestRecentExcludeLastN:
@@ -163,7 +163,7 @@ class TestBuildSessionReplayMesh1726:
         count is bounded before any budgeting runs, so without a separate quota a
         tail of inject rows is all the replay would contain.
         """
-        from kiro_crew.context import _REPLAY_CONVERSATION_MAX_ROWS
+        from aj_crew.context import _REPLAY_CONVERSATION_MAX_ROWS
 
         log = ConversationLog(base_dir=tmp_path)
         log.append("k", "user", "first question")
@@ -181,7 +181,7 @@ class TestBuildSessionReplayMesh1726:
         """The inject quota is enforced, so a chatty producer contributes at most
         its share of rows however many it wrote.
         """
-        from kiro_crew.context import _REPLAY_INJECT_MAX_ROWS
+        from aj_crew.context import _REPLAY_INJECT_MAX_ROWS
 
         log = ConversationLog(base_dir=tmp_path)
         log.append("k", "user", "first question")
@@ -201,7 +201,7 @@ class TestBuildSessionReplayMesh1726:
         without a reservation a run of maximum-sized inject rows exhausts it and
         the loop breaks before reaching any user or assistant row.
         """
-        from kiro_crew.context import _REPLAY_INJECT_CAP_CHARS, _REPLAY_INJECT_MAX_ROWS
+        from aj_crew.context import _REPLAY_INJECT_CAP_CHARS, _REPLAY_INJECT_MAX_ROWS
 
         log = ConversationLog(base_dir=tmp_path)
         log.append("k", "user", "first question")
@@ -217,7 +217,7 @@ class TestBuildSessionReplayMesh1726:
 
     def test_inject_rows_stay_within_their_reserved_share(self, tmp_path):
         """The inject share is bounded, so breadcrumbs cannot crowd the budget."""
-        from kiro_crew.context import (
+        from aj_crew.context import (
             _REPLAY_BUDGET_CHARS,
             _REPLAY_INJECT_BUDGET_DIVISOR,
             _REPLAY_INJECT_CAP_CHARS,
@@ -242,7 +242,7 @@ class TestBuildSessionReplayMesh1726:
         """RECALL_ROLES is the single source of truth for which roles survive
         session replay and compression. Verify inject is present so /note
         breadcrumbs and cron results are recalled."""
-        from kiro_crew.context import RECALL_ROLES
+        from aj_crew.context import RECALL_ROLES
 
         assert "inject" in RECALL_ROLES
         assert "user" in RECALL_ROLES
@@ -269,7 +269,7 @@ class TestBuildSessionReplayMesh1726:
 
     def test_replay_caps_oversized_inject_row(self, tmp_path):
         """A chatty producer's inject row is clipped to a breadcrumb in replay."""
-        from kiro_crew.context import _REPLAY_INJECT_CAP_CHARS
+        from aj_crew.context import _REPLAY_INJECT_CAP_CHARS
 
         log = ConversationLog(base_dir=tmp_path)
         log.append("k", "user", "kick off the job")
@@ -315,7 +315,7 @@ class TestBuildSessionReplayMesh1726:
         row at the newest end. Uncapped, that row spends budget the conversation
         needs and the oldest turns fall out of the replay.
         """
-        from kiro_crew.context import _REPLAY_BUDGET_CHARS
+        from aj_crew.context import _REPLAY_BUDGET_CHARS
 
         log = ConversationLog(base_dir=tmp_path)
         turn = "z" * 800
@@ -345,10 +345,10 @@ class TestBoundedRecallQuotas:
         """
         import inspect
 
-        from kiro_crew import context as ctx
-        from kiro_crew.history import ConversationLog as _CL
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew import context as ctx
+        from aj_crew.history import ConversationLog as _CL
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         # Pin the bound this test relies on rather than hard-coding 20 blindly.
         assert inspect.signature(_CL.recent).parameters["max_messages"].default == 20
@@ -379,10 +379,10 @@ class TestBoundedRecallQuotas:
         ones exhaust it before any user or assistant turn is reached. Notes get a
         reserved share and a per-row ceiling, as in the replay path.
         """
-        from kiro_crew import context as ctx
-        from kiro_crew.history import ConversationLog as _CL
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew import context as ctx
+        from aj_crew.history import ConversationLog as _CL
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         log = _CL(base_dir=tmp_path / "hist")
         key = "fallback-large-notes"

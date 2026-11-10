@@ -25,7 +25,7 @@ import string
 
 import pytest
 
-from kiro_crew.security import (
+from aj_crew.security import (
     _B64_CHUNK_RE,
     _BARE_SECRET_RUN_RE,
     _CREDENTIAL_PATTERNS,
@@ -41,7 +41,7 @@ from kiro_crew.security import (
     _might_contain_credential,
     redact_credentials,
 )
-from kiro_crew.security.redaction import (
+from aj_crew.security.redaction import (
     _HTML_REF_AMP,
     _HTML_REF_EQUALS,
     _HTML_REF_QUEST,
@@ -931,7 +931,7 @@ def test_differential_test_detects_a_dropped_pattern_branch(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Break redaction by deleting a branch; the oracle comparison must notice."""
-    import kiro_crew.security as security
+    import aj_crew.security as security
 
     crippled = _rebuild([b for i, b in enumerate(BRANCHES) if i != 8])  # drop gh[opsur]_
     monkeypatch.setattr(security, "_CREDENTIAL_PATTERNS", crippled)
@@ -953,8 +953,8 @@ def test_differential_test_detects_a_too_narrow_prefilter(
     above is capable of failing when the optimisation is wrong, rather than
     passing because both sides share a defect.
     """
-    import kiro_crew.security as security
-    from kiro_crew.security import redaction
+    import aj_crew.security as security
+    from aj_crew.security import redaction
 
     # The anchors below disarm the Python gate; the native gate does not read
     # them, so switch it off for this control.
@@ -1484,7 +1484,7 @@ def test_differential_test_detects_a_too_narrow_decoded_blob_gate(
     diverge. Without this control the gate could be arbitrarily narrow and the
     differential test would still pass.
     """
-    import kiro_crew.security as security
+    import aj_crew.security as security
 
     monkeypatch.setattr(security, "_might_contain_credential", lambda text: False)
 

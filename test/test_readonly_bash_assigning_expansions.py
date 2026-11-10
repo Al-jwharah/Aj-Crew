@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from kiro_crew.security.readonly_bash import is_read_only_bash
+from aj_crew.security.readonly_bash import is_read_only_bash
 
 
 @pytest.mark.parametrize(

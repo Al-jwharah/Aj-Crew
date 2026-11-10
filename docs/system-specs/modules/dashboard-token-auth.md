@@ -2,11 +2,11 @@
 
 ## Overview
 
-Token authentication for the Kiro Crew dashboard. The owner mints a time-limited, HMAC-SHA256 signed URL from the CLI (`kirocrew token`) or via direct-message commands on Slack (`!dashboard` or `/kirocrew dashboard`), Telegram and Webex (`/kirocrew dashboard`), and Teams (`/dashboard`). An aiohttp middleware validates the token on every GATED request (query param or cookie fallback) and sets a session cookie on first use. A bypass route returns before validation, and that set is wider than static assets — see the bypass inventory below. The token is pinned to a peer key: the client address by default, or a `ts:node:` / `ts:login:` identity on a Tailscale path (`token_auth.TokenStateManager.bind_peer()`), so the pin is not always an IP. Ordinary loopback requests require token authentication (`token_auth.token_auth_middleware()`; `test_loopback_requires_token`). Internal routes have separate loopback-plus-`X-Internal-Secret` and mixed-route cookie-authentication branches. SEL coverage of token GENERATION is per caller, not intrinsic to minting: `generate_token()` itself logs only `nonce_evicted`, an eviction side effect, so a caller that does not log leaves its mint unaudited. The gateway's `--json-ready` startup path is that case — it calls `generate_token()` directly with no accompanying generation event.
+Token authentication for the Aj Crew dashboard. The owner mints a time-limited, HMAC-SHA256 signed URL from the CLI (`ajcrew token`) or via direct-message commands on Slack (`!dashboard` or `/ajcrew dashboard`), Telegram and Webex (`/ajcrew dashboard`), and Teams (`/dashboard`). An aiohttp middleware validates the token on every GATED request (query param or cookie fallback) and sets a session cookie on first use. A bypass route returns before validation, and that set is wider than static assets — see the bypass inventory below. The token is pinned to a peer key: the client address by default, or a `ts:node:` / `ts:login:` identity on a Tailscale path (`token_auth.TokenStateManager.bind_peer()`), so the pin is not always an IP. Ordinary loopback requests require token authentication (`token_auth.token_auth_middleware()`; `test_loopback_requires_token`). Internal routes have separate loopback-plus-`X-Internal-Secret` and mixed-route cookie-authentication branches. SEL coverage of token GENERATION is per caller, not intrinsic to minting: `generate_token()` itself logs only `nonce_evicted`, an eviction side effect, so a caller that does not log leaves its mint unaudited. The gateway's `--json-ready` startup path is that case — it calls `generate_token()` directly with no accompanying generation event.
 
-`TokenStateManager` bounds concurrently valid link nonces with FIFO eviction, allowing multiple browser tabs and CLI sessions without unbounded link-state growth (`token_auth.TokenStateManager`). All in-memory link-session state is managed by that thread-safe component. Auth is **not** purely in memory: the persistent HMAC signing key `token_signing.key` and persisted revoked access-cookie nonces in `token_revoked_nonces.json` let signed cookies and per-session logouts survive a gateway restart. `POST /api/auth/logout` revokes one access cookie and its refresh chain; `kirocrew logout` advances the persisted revocation generation embedded in both token kinds, ending all established browser sessions and refresh chains (`token_secret`, `RevokedNonceStore`, `revocation_gen.py`).
+`TokenStateManager` bounds concurrently valid link nonces with FIFO eviction, allowing multiple browser tabs and CLI sessions without unbounded link-state growth (`token_auth.TokenStateManager`). All in-memory link-session state is managed by that thread-safe component. Auth is **not** purely in memory: the persistent HMAC signing key `token_signing.key` and persisted revoked access-cookie nonces in `token_revoked_nonces.json` let signed cookies and per-session logouts survive a gateway restart. `POST /api/auth/logout` revokes one access cookie and its refresh chain; `ajcrew logout` advances the persisted revocation generation embedded in both token kinds, ending all established browser sessions and refresh chains (`token_secret`, `RevokedNonceStore`, `revocation_gen.py`).
 
-The dashboard also issues a paired **refresh cookie** (`mc_refresh_{port}`, HttpOnly, path-restricted to `/api/auth`) alongside the access cookie on initial token-URL use. The SPA calls `POST /api/auth/refresh` before the access cookie expires to rotate both cookies, so an active browser can continue without another `!dashboard` / `kirocrew token` link. Refresh tokens are HMAC-signed with the persistent `token_signing.key`; `RefreshStateManager` permits only the chain-head replay under its source-IP grace conditions, and any other consumed-`jti` replay revokes the chain (`test_tr_u_22a_grace_accepts_only_chain_head`).
+The dashboard also issues a paired **refresh cookie** (`mc_refresh_{port}`, HttpOnly, path-restricted to `/api/auth`) alongside the access cookie on initial token-URL use. The SPA calls `POST /api/auth/refresh` before the access cookie expires to rotate both cookies, so an active browser can continue without another `!dashboard` / `ajcrew token` link. Refresh tokens are HMAC-signed with the persistent `token_signing.key`; `RefreshStateManager` permits only the chain-head replay under its source-IP grace conditions, and any other consumed-`jti` replay revokes the chain (`test_tr_u_22a_grace_accepts_only_chain_head`).
 
 An existing dashboard session can recover another browser with `POST /api/auth/mobile-link`. The endpoint requires the normal access-cookie session and an allowed same-origin request; it refuses unauthenticated and app-scoped callers. It returns a normal signed URL token plus `Cache-Control: no-store`. The response may also carry `image`, a PNG data-URI QR code of that same URL that the Connect-your-phone dialog shows; the encode runs off the event loop, a failed encode drops the field and still returns the link, and the URL is never logged on either path; the browser uses that token through the ordinary link-to-cookie exchange, which establishes a separate access cookie and a refresh chain. The dashboard presents this as **Settings → Security → Sign in on mobile**, so a mobile browser whose storage was cleared can be restored without exposing a raw token prompt. The returned link has the normal five-minute click window, is built only from the configured external dashboard origin, and must be transferred only to the intended device.
 
@@ -16,7 +16,7 @@ therefore rotate its refresh cookie even while the main dashboard tree is not
 yet mounted, rather than being trapped behind the setup screen.
 
 The first-run Kiro CLI routes (`GET /api/kiro-prerequisite` and
-`POST /api/kiro-prerequisite/repair-specs` — Kiro Crew neither installs the CLI
+`POST /api/kiro-prerequisite/repair-specs` — Aj Crew neither installs the CLI
 nor signs in, so there is no install or login route) are deliberately **not**
 token-bypass or internal-secret routes. They inherit normal dashboard-user authentication,
 Host validation, POST CSRF protection, app-token deny-by-default scoping, and
@@ -169,10 +169,10 @@ while the gate is closed denies everything but the login routes. It RAISES its
 
 ### 1. `token_auth.py` — Token Generator, Validator & Middleware
 
-Location: `src/kiro_crew/dashboard/token_auth.py`
+Location: `src/aj_crew/dashboard/token_auth.py`
 
 `token_auth.py` keeps the middleware and is the import path for every name below: a
-mirror facade (`kiro_crew._facade_mirror`) that serves what its owners bind and sends a
+mirror facade (`aj_crew._facade_mirror`) that serves what its owners bind and sends a
 patch of `token_auth.<name>` to every owner holding it. Owners never import it. New work
 goes to the owner of its responsibility:
 
@@ -204,8 +204,8 @@ It is reserved, so `extra` can neither set nor strip it
 
 `owner_mint` (`token_auth_tokens.OWNER_MINT_CLAIM`, value `"1"`) marks a token
 minted FOR the owner: the desktop `/api/token/local` bootstrap, the startup and
-`KIROCREW_READY` links, the owner's Slack session deep link
-(`messaging_api/proactive_send.py`), and the `/kirocrew dashboard` / `!dashboard`
+`AJCREW_READY` links, the owner's Slack session deep link
+(`messaging_api/proactive_send.py`), and the `/ajcrew dashboard` / `!dashboard`
 link when the caller is the owner loaded into the Slack handler. A
 messaging-allowlist user's link never carries it. The link→session exchange
 copies it onto the session token, the refresh token carries it through every
@@ -293,7 +293,7 @@ Three properties bound the change:
   shape one credential over, re-pinned to whichever allowed node presented it
   first after a restart — and an access cookie carrying `require_peer` fails
   closed when no peer resolves. So a session bound this way needs one re-mint via
-  the `kirocrew token` URL after identity trust is switched off. This is the same
+  the `ajcrew token` URL after identity trust is switched off. This is the same
   fail-closed posture the `require_peer` QR shape already has, and the reason the
   claim is carried rather than confined to the refresh cookie.
 
@@ -350,7 +350,7 @@ def try_consume(token: str) -> bool: ...
 def revoke_all_sessions() -> None: ...
     # Clears all nonces, IP bindings, and consumed tokens AND bumps the
     # persisted revocation-generation counter, so every outstanding cookie
-    # (for all users) is rejected. Used by `kirocrew logout`. The counter is
+    # (for all users) is rejected. Used by `ajcrew logout`. The counter is
     # authoritative over BOTH cookie types: validate_token() AND
     # validate_refresh_token() reject a token whose embedded gen is stale, so
     # the bump ends established access cookies and refresh chains alike.
@@ -460,7 +460,7 @@ it before step 1, and no other request is affected: loopback, the unix socket an
    (`owner_id`, else `local-app`) with `auth_owner_whois`, so owner-gated routes
    answer it (`dashboard.tailnet_owner`); `DELETE
    /api/shared-crew/tailscale/credential` and `DELETE /api/sessions` from it also
-   need `X-Kirocrew-Confirm: irreversible`, else 428 `confirm_required`. Anyone
+   need `X-Ajcrew-Confirm: irreversible`, else 428 `confirm_required`. Anyone
    else is the dashboard user `tailnet:uid:<id>`, which never matches the owner
    subject, so owner-gated routes refuse it. Either way `auth_tailnet_direct` is
    set, `auth_token` is empty, no cookie is minted, the Shared Crew actor is the
@@ -607,15 +607,15 @@ class TokenStateManager:
     _consumed: dict[str, float]            # token -> exp
 ```
 
-`TokenStateManager` bounds concurrent link nonces and evicts the oldest through `OrderedDict.popitem(last=False)`; a successful nonce check refreshes that nonce's eviction position. This allows multiple browser tabs and `kirocrew token` invocations without unbounded link-state growth (`token_auth.TokenStateManager`).
+`TokenStateManager` bounds concurrent link nonces and evicts the oldest through `OrderedDict.popitem(last=False)`; a successful nonce check refreshes that nonce's eviction position. This allows multiple browser tabs and `ajcrew token` invocations without unbounded link-state growth (`token_auth.TokenStateManager`).
 
-The in-memory `TokenStateManager` (link nonces, IP bindings, consumed set) is cleared on restart, but this does **not** log users out: an established session cookie is validated on the cookie path (`use_session_exp=True`), which needs only a valid HMAC signature (persistent key) + unexpired `session_exp` + a current revocation generation + a nonce not on the persisted denylist + `kind=session` or a non-empty `app` claim — it never consults the in-memory link-nonce set. Identity-persistent `require_peer` cookies additionally prove the original device with their signed `peer_key` before the hot pin is reconstructed; the deliberately fail-closed exception is a legacy claimless `require_peer` cookie, which must re-scan once because its original device cannot be recovered safely. Revoked-session state is durable: `RevokedNonceStore` persists to `token_revoked_nonces.json` (mode `0600`) and the revocation generation persists to `token_revocation.gen`, so a logged-out cookie stays dead across restarts while a restart alone (generation reloaded unchanged) logs nobody out. When `token_revoked_nonces.json` or `refresh_chains.json` exists but cannot be read (for example a Windows handle held without read sharing), the store does not read it as empty: access cookies or refresh rotations are refused, the file is not rewritten, a logout in that window answers 503 because its record is held in memory only, and the next check re-reads it, so the store recovers once the file reads again (`test_auth_store_unreadable.py`). A missing file still starts empty. Users can revoke a single session via `POST /api/auth/logout` (`revoke_access_cookie()`) or all sessions — access cookies and refresh chains — via `kirocrew logout` (`revoke_all_sessions()`, which bumps the generation both token kinds embed and check).
+The in-memory `TokenStateManager` (link nonces, IP bindings, consumed set) is cleared on restart, but this does **not** log users out: an established session cookie is validated on the cookie path (`use_session_exp=True`), which needs only a valid HMAC signature (persistent key) + unexpired `session_exp` + a current revocation generation + a nonce not on the persisted denylist + `kind=session` or a non-empty `app` claim — it never consults the in-memory link-nonce set. Identity-persistent `require_peer` cookies additionally prove the original device with their signed `peer_key` before the hot pin is reconstructed; the deliberately fail-closed exception is a legacy claimless `require_peer` cookie, which must re-scan once because its original device cannot be recovered safely. Revoked-session state is durable: `RevokedNonceStore` persists to `token_revoked_nonces.json` (mode `0600`) and the revocation generation persists to `token_revocation.gen`, so a logged-out cookie stays dead across restarts while a restart alone (generation reloaded unchanged) logs nobody out. When `token_revoked_nonces.json` or `refresh_chains.json` exists but cannot be read (for example a Windows handle held without read sharing), the store does not read it as empty: access cookies or refresh rotations are refused, the file is not rewritten, a logout in that window answers 503 because its record is held in memory only, and the next check re-reads it, so the store recovers once the file reads again (`test_auth_store_unreadable.py`). A missing file still starts empty. Users can revoke a single session via `POST /api/auth/logout` (`revoke_access_cookie()`) or all sessions — access cookies and refresh chains — via `ajcrew logout` (`revoke_all_sessions()`, which bumps the generation both token kinds embed and check).
 
 If `token_revocation.gen` exists but cannot be read as an integer, both token
 validators fail closed until the state is repaired. The gateway warning names
 the exact file and advises deleting only that file to reset revocation state;
 the warning also states the security consequence: resetting the counter can
-re-enable unexpired sessions previously revoked by `kirocrew logout`.
+re-enable unexpired sessions previously revoked by `ajcrew logout`.
 
 #### App-token scope confinement (CWE-269)
 
@@ -627,8 +627,8 @@ An **app token** (payload carries a non-empty `app` claim, minted by the `X-App-
 
 ### 2. `urls.py` / `origin.py` — Dashboard URL & Bind Address Resolution
 
-Location: `src/kiro_crew/dashboard/urls.py` (the request-independent helpers, a
-stdlib-only leaf) and `src/kiro_crew/dashboard/origin.py` (the per-request origin
+Location: `src/aj_crew/dashboard/urls.py` (the request-independent helpers, a
+stdlib-only leaf) and `src/aj_crew/dashboard/origin.py` (the per-request origin
 checks, which also re-exports the `urls.py` helpers so existing imports keep
 working).
 
@@ -641,7 +641,7 @@ Key functions (in `urls.py`):
 ```python
 def parse_dashboard_url(url: str) -> tuple[str, int]: ...
     # Parses 'dashboard.url' config into (hostname, port)
-    # KIROCREW_PORT env var always overrides port
+    # AJCREW_PORT env var always overrides port
 
 def is_local_only(dashboard_host: str, slack_connected: bool) -> bool: ...
     # Determines bind address and CSRF origins (not token auth; ordinary loopback requests remain token-gated by token_auth_middleware, as test_loopback_requires_token verifies)
@@ -650,7 +650,7 @@ def is_local_only(dashboard_host: str, slack_connected: bool) -> bool: ...
 
 def bind_address_for(local_only: bool) -> str: ...
     # "127.0.0.1" if local_only, "0.0.0.0" otherwise
-    # KIROCREW_BIND (env) overrides the bind ADDRESS only, e.g. 0.0.0.0 inside a container
+    # AJCREW_BIND (env) overrides the bind ADDRESS only, e.g. 0.0.0.0 inside a container
 
 def resolve_dashboard_host(local_only: bool, configured_host: str = "") -> str: ...
     # Returns hostname for URL construction: the configured host if set,
@@ -663,7 +663,7 @@ def build_allowed_origins(port: int, local_only: bool, configured_host: str = ""
 
 ### 3. `!dashboard` Command Handler
 
-Location: `src/kiro_crew/slack/handler_runtime/commands.py` → `_bang_dashboard`, dispatched by `_handle_slash_command` (re-exported by `slack/handler.py`)
+Location: `src/aj_crew/slack/handler_runtime/commands.py` → `_bang_dashboard`, dispatched by `_handle_slash_command` (re-exported by `slack/handler.py`)
 
 Parses `!dashboard [duration]`, delegates to `allowlist.send_dashboard_link()`
 (abbreviated body of `_bang_dashboard`):
@@ -688,14 +688,14 @@ return ""
 
 ### 4. `send_dashboard_link()` — Token URL Generation & DM Delivery
 
-Location: `src/kiro_crew/slack/allowlist.py`
+Location: `src/aj_crew/slack/allowlist.py`
 
 Generates the token, constructs the URL using the `urls.py` helpers, and DMs it to the owner (never posted in channels to prevent token leakage). Abbreviated; the real function also handles the opt-in tunnel URL (`slack.use_tunnel_url`):
 
 ```python
 async def send_dashboard_link(slack, user_id, ttl=3600) -> str:
     session_ttl = min(ttl, MAX_SESSION_TTL_SECS)
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     configured_host, port = parse_dashboard_url(cfg.dashboard.url)
     local_only = is_local_only(configured_host, True)
     host = resolve_dashboard_host(local_only, configured_host)
@@ -764,7 +764,7 @@ reject_compressed_body_middleware → csrf_middleware → token_auth_middleware(
 internal_paths=_STRICT_INTERNAL_API_PATHS,
 mixed_internal_paths=_mixed_internal_api_paths(), spa_shell_handler=None) →
 sel_audit_middleware → slot_ownership_middleware`, then `_workflow_ready`. It generates and persists the same
-`~/.kiro/crew/.local_secret` (or the explicit `KIROCREW_HOME`), sets
+`~/.kiro/crew/.local_secret` (or the explicit `AJCREW_HOME`), sets
 `app["local_secret"]`, and builds
 `app["allowed_origins"]`. `spa_shell_handler=None` because there is no UI — a
 request with no token is denied outright. Every in-repo caller (mcp-core, cron)
@@ -1103,7 +1103,7 @@ Tests: `test/test_kiro_relay_caller_identity.py`, `test/test_kiro_relay_teammate
 
 ## Configuration
 
-Single `dashboard.url` field on `KiroCrewConfig` (default: `""`), loaded from `config.json → dashboard.url`.
+Single `dashboard.url` field on `AjCrewConfig` (default: `""`), loaded from `config.json → dashboard.url`.
 
 ```json
 {
@@ -1118,14 +1118,14 @@ In the public build it always answers local-only, so the gateway binds
 `127.0.0.1` whatever `dashboard.url` names; it answers otherwise only behind a
 managed proxy, and there is none in OSS. To reach the dashboard from elsewhere,
 run your own reverse proxy and add its origin through `dashboard.url` or
-`KIROCREW_CORS_ORIGINS`. `KIROCREW_BIND` (env) overrides only the bind address
+`AJCREW_CORS_ORIGINS`. `AJCREW_BIND` (env) overrides only the bind address
 (`bind_address_for`): the container image sets `0.0.0.0` so a published port is
 reachable, and URLs, CSRF origins and host canonicalization still follow
 local-only.
 
 Note: Loopback is accepted by `origin.check_origin()`'s no-Origin CSRF branch, supporting local POST clients. Ordinary loopback requests remain token-gated (`token_auth.token_auth_middleware()`; `test_loopback_requires_token`); internal routes use their separate secret or mixed cookie-authentication branches.
 
-`KIROCREW_PORT` env var overrides the port (dev mode).
+`AJCREW_PORT` env var overrides the port (dev mode).
 
 ## Cookies
 
@@ -1161,7 +1161,7 @@ Note: Loopback is accepted by `origin.check_origin()`'s no-Origin CSRF branch, s
 
 HTML 403 page directs users to create a mobile sign-in link from an existing
 dashboard session; if no other device is signed in, it restores the
-`kirocrew token` CLI recovery path. The middleware never raises unhandled exceptions.
+`ajcrew token` CLI recovery path. The middleware never raises unhandled exceptions.
 
 The dashboard client reads a refusal by its shape. A 403 carrying
 `X-Auth-Required: true` is this middleware's own denial (JSON with `error` and
@@ -1190,15 +1190,15 @@ already names where to sign in.
 
 ## Security Properties
 
-1. Persistent HMAC secret (`token_signing.key`, owner-restricted) — signed access and refresh cookies survive a process restart; `token_secret` supplies an ephemeral fallback only when the key cannot be persisted. A persisted key that exists but is shorter than 32 bytes is never accepted and is not repaired in place: the gateway boot preflight (`slack.gateway.signing_key_preflight`, backed by `token_secret.signing_key_health` and, for the bytes actually loaded, `token_secret.load_boot_secret`) refuses to start, logs CRITICAL and prints manual repair steps (stop the gateway and any restore, check the length, delete the file by hand, restart), and `kirocrew doctor` reports the same state, so a truncated key is a loud operator action instead of an ephemeral secret that logs every session out at each restart (#13221).
+1. Persistent HMAC secret (`token_signing.key`, owner-restricted) — signed access and refresh cookies survive a process restart; `token_secret` supplies an ephemeral fallback only when the key cannot be persisted. A persisted key that exists but is shorter than 32 bytes is never accepted and is not repaired in place: the gateway boot preflight (`slack.gateway.signing_key_preflight`, backed by `token_secret.signing_key_health` and, for the bytes actually loaded, `token_secret.load_boot_secret`) refuses to start, logs CRITICAL and prints manual repair steps (stop the gateway and any restore, check the length, delete the file by hand, restart), and `ajcrew doctor` reports the same state, so a truncated key is a loud operator action instead of an ephemeral secret that logs every session out at each restart (#13221).
 2. Dual expiry: link click expiry plus configured cookie-session expiry, enforced by `validate_token()`
-3. Peer-keyed session pinning on first use — prevents token theft across networks. The pin binds to the client address (`ip:<addr>`), or — when the operator opted into `dashboard.tailscale.trust_identity`, the kernel proved the loopback client socket belongs to `tailscaled` (`tailnet_proxy_proof.loopback_client_is_daemon`: on Linux the `/proc/net/tcp{,6}` owner uid of the client end is root's and a `tailscaled` runs as root; every other platform proves nothing), and the local daemon verified the forwarded peer — to the tailnet identity (`ts:node:<login>|<node>` or `ts:login:<login>` per `pin_scope`, ACL-tagged nodes always node-scoped). A verified login outside `allowed_logins` is denied outright. Without the Shared Crew preview an unresolved peer falls through to the token+IP path (fail-closed on identity, fail-open on availability, `rfc-tailnet-dashboard-access`). Under the preview (`KIROCREW_SHARED_CREW_PREVIEW=1`) the allowlist fails closed when no peer resolves (`tailnet.forwarded_peer_refusal`): a forwarded tailnet request (loopback peer, a tailnet address in `X-Forwarded-For`) is admitted only when the daemon's `whois` of its single forwarded address names an allowlisted login and no `Tailscale-User-Login` header disagrees; a chain, an address the daemon cannot name, a disagreeing header or a login off the list is refused (`tailnet identity unverified` or `tailnet login not allowed`). A loopback client the kernel does not prove is the daemon (every platform but Linux, a same-user daemon, a proof that raised) is such a case: its forwarded address can only refuse the request or admit it as Unknown with the address pin, never name a person, so a local token holder cannot name a tailnet person (`test_shared_crew_identity_spoof.py`, `test_shared_crew_allowlist_fail_closed.py`). A request with no forwarding header is never refused here. A `require_peer` QR link instead fails closed, enrolls one verified allowed peer on its main exchange path, and carries that HMAC-signed original `peer_key` through access cookies, refresh rotation/grace replay, and child mints. A session pinned to a tailnet identity is denied (`tailnet identity unverified`) while the daemon cannot answer and denied on signed-key mismatch after restart — never satisfiable by an unverified proxied request or whichever allowed node presents a stolen cookie first. Transient daemon failures are cached briefly. Behind a non-Tailscale tunnel the pin binds to the tunnel's loopback address and is therefore shared (reported by Security Posture).
+3. Peer-keyed session pinning on first use — prevents token theft across networks. The pin binds to the client address (`ip:<addr>`), or — when the operator opted into `dashboard.tailscale.trust_identity`, the kernel proved the loopback client socket belongs to `tailscaled` (`tailnet_proxy_proof.loopback_client_is_daemon`: on Linux the `/proc/net/tcp{,6}` owner uid of the client end is root's and a `tailscaled` runs as root; every other platform proves nothing), and the local daemon verified the forwarded peer — to the tailnet identity (`ts:node:<login>|<node>` or `ts:login:<login>` per `pin_scope`, ACL-tagged nodes always node-scoped). A verified login outside `allowed_logins` is denied outright. Without the Shared Crew preview an unresolved peer falls through to the token+IP path (fail-closed on identity, fail-open on availability, `rfc-tailnet-dashboard-access`). Under the preview (`AJCREW_SHARED_CREW_PREVIEW=1`) the allowlist fails closed when no peer resolves (`tailnet.forwarded_peer_refusal`): a forwarded tailnet request (loopback peer, a tailnet address in `X-Forwarded-For`) is admitted only when the daemon's `whois` of its single forwarded address names an allowlisted login and no `Tailscale-User-Login` header disagrees; a chain, an address the daemon cannot name, a disagreeing header or a login off the list is refused (`tailnet identity unverified` or `tailnet login not allowed`). A loopback client the kernel does not prove is the daemon (every platform but Linux, a same-user daemon, a proof that raised) is such a case: its forwarded address can only refuse the request or admit it as Unknown with the address pin, never name a person, so a local token holder cannot name a tailnet person (`test_shared_crew_identity_spoof.py`, `test_shared_crew_allowlist_fail_closed.py`). A request with no forwarding header is never refused here. A `require_peer` QR link instead fails closed, enrolls one verified allowed peer on its main exchange path, and carries that HMAC-signed original `peer_key` through access cookies, refresh rotation/grace replay, and child mints. A session pinned to a tailnet identity is denied (`tailnet identity unverified`) while the daemon cannot answer and denied on signed-key mismatch after restart — never satisfiable by an unverified proxied request or whichever allowed node presents a stolen cookie first. Transient daemon failures are cached briefly. Behind a non-Tailscale tunnel the pin binds to the tunnel's loopback address and is therefore shared (reported by Security Posture).
 4. Link re-exchange is allowed during the signed link window; each query-param use mints a distinct session cookie (`test_link_token_still_reusable_via_query_param_after_exchange`; `test_url_token_exchanged_for_distinct_session_cookie`)
 5. Dashboard link sent via DM only — never posted in channels
 6. Ordinary loopback routes require token authentication (`token_auth.token_auth_middleware()`; `test_loopback_requires_token`); internal routes have separate secret and mixed-cookie branches
 7. CSRF middleware also trusts loopback — local POST requests (mcp-core API calls) bypass origin checks
 8. Static assets bypass auth — error pages render correctly
 9. Bounded concurrent nonces (`TokenStateManager`) — prevents unbounded memory growth while allowing active link nonces to refresh their eviction position
-10. Explicit revocation via `kirocrew logout` — clears all nonces, IP bindings, and consumed tokens, and bumps the persisted revocation generation, ending every outstanding access cookie and refresh chain
+10. Explicit revocation via `ajcrew logout` — clears all nonces, IP bindings, and consumed tokens, and bumps the persisted revocation generation, ending every outstanding access cookie and refresh chain
 11. App-token scope confinement (CWE-269) — an `app`-claim token is confined deny-by-default to its own namespace (`/apps/<name>`, `/api/apps/<name>`) + its manifest `permissions.api` allowlist, enforced at every grant point; no-op for dashboard-user tokens
 12. Headless (`--slack-only`) auth parity — `start_api_server()` serves the same MCP route surface as the dashboard and mounts the same `route_latency → relay_ingress → deny_audit → host_validation → csrf → token_auth → sel_audit → slot_ownership` chain (then `_workflow_ready`) against the shared `_STRICT_INTERNAL_API_PATHS`/`_MIXED_INTERNAL_API_PATHS` sets. Internal MCP routes require loopback **plus** `X-Internal-Secret` (loopback alone is not sufficient for these paths — port forwarders can spoof `127.0.0.1`); `sel_audit_middleware` alone only logs and is never a substitute for the token-auth chain

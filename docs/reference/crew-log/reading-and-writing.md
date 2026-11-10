@@ -3,7 +3,7 @@
 **Local page, not a mirror.** Part of the [crew log reference](README.md), which is
 marked as a named exception in [the Reference index](../README.md).
 
-Every name here is from `kiro_crew.crew_log`. Each refusal names a code from
+Every name here is from `aj_crew.crew_log`. Each refusal names a code from
 [errors.md](errors.md).
 
 ## Opening and creating
@@ -283,7 +283,7 @@ is checked across every boundary. A pruned front — an oldest segment starting 
 1 — is a supported state that `iter_from` reads and that `resolve` reports as
 `pruned`.
 
-The write side creates one segment. No code in `kiro_crew.crew_log` rolls a new
+The write side creates one segment. No code in `aj_crew.crew_log` rolls a new
 segment or prunes an old one, so `log.jsonl` is the only segment a writer
 produces. A front gap is legal for a reader; a mid-chain gap is
 [`segment_gap`](errors.md#segment_gap).

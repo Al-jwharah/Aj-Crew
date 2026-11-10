@@ -4,7 +4,7 @@
 //
 // An LTS build follows `lts`, the edition's own channel (RFC
 // crew-lts-edition, D11 and appendix row "Update channel"), the same
-// channel the backend's update paths follow (kiro_crew/platform/update_layout.py
+// channel the backend's update paths follow (aj_crew/platform/update_layout.py
 // policy_release_channel). `lts` is not a channel an oss build offers, so neither
 // edition reads the other's feed. The Settings preference cannot widen it, so it
 // replaces the preference (auto-update.js resolveChannel) and the switcher

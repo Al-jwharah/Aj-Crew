@@ -26,9 +26,9 @@ import logging
 
 import pytest
 
-from kiro_crew.acp import child_env_defaults as ced
-from kiro_crew.acp.child_env_defaults import apply_child_env_defaults
-from kiro_crew.config.sections import AgentConfig, coerce_child_env_defaults
+from aj_crew.acp import child_env_defaults as ced
+from aj_crew.acp.child_env_defaults import apply_child_env_defaults
+from aj_crew.config.sections import AgentConfig, coerce_child_env_defaults
 
 _CAPS = {"TOKIO_WORKER_THREADS": "4", "RAYON_NUM_THREADS": "4"}
 
@@ -52,10 +52,10 @@ def configured(monkeypatch):
 def quiet_credentials(monkeypatch):
     """The harness hooks also inject/strip the API key, which reads the data home."""
     monkeypatch.setattr(
-        "kiro_crew.config.loader.inject_kiro_cli_api_key", lambda _env: None, raising=True
+        "aj_crew.config.loader.inject_kiro_cli_api_key", lambda _env: None, raising=True
     )
     monkeypatch.setattr(
-        "kiro_crew.config.loader.strip_kiro_cli_api_key", lambda _env: None, raising=True
+        "aj_crew.config.loader.strip_kiro_cli_api_key", lambda _env: None, raising=True
     )
 
 
@@ -75,7 +75,7 @@ class TestTheConfigKey:
         [
             "NODE_OPTIONS",
             "LD_PRELOAD",
-            "KIROCREW_SESSION_KEY",
+            "AJCREW_SESSION_KEY",
             "KIRO_API_KEY",
             "OPENBLAS_NUM_THREADS",
             "tokio_worker_threads",
@@ -138,7 +138,7 @@ class TestTheConfigKey:
         assert cfg.child_env_defaults == {"RAYON_NUM_THREADS": "2"}
 
     def test_loader_reads_it_from_config_json(self) -> None:
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         agent = loader._build_agent_config({"child_env_defaults": dict(_CAPS)})
         assert agent.child_env_defaults == _CAPS
@@ -181,7 +181,7 @@ class TestOnlyWhenUnset:
         def _boom():
             raise RuntimeError("config broken")
 
-        monkeypatch.setattr("kiro_crew.config.KiroCrewConfig.load", _boom, raising=True)
+        monkeypatch.setattr("aj_crew.config.AjCrewConfig.load", _boom, raising=True)
         monkeypatch.setattr(ced, "_host_defaults", dict, raising=True)
         env = {"PATH": "/bin"}
         apply_child_env_defaults(env)
@@ -190,7 +190,7 @@ class TestOnlyWhenUnset:
 
 class TestEveryKiroCliSpawnPath:
     def test_the_kiro_host_applies_it(self, configured, quiet_credentials) -> None:
-        from kiro_crew.acp.harness.kiro import KiroHarness
+        from aj_crew.acp.harness.kiro import KiroHarness
 
         configured(_CAPS)
         env: dict[str, str] = {}
@@ -198,7 +198,7 @@ class TestEveryKiroCliSpawnPath:
         assert {k: env[k] for k in _CAPS} == _CAPS
 
     def test_the_kas_host_applies_it(self, configured, quiet_credentials) -> None:
-        from kiro_crew.acp.harness.kas import KasHarness
+        from aj_crew.acp.harness.kas import KasHarness
 
         configured(_CAPS)
         env: dict[str, str] = {}
@@ -206,7 +206,7 @@ class TestEveryKiroCliSpawnPath:
         assert {k: env[k] for k in _CAPS} == _CAPS
 
     def test_the_kiro_host_keeps_an_inherited_value(self, configured, quiet_credentials) -> None:
-        from kiro_crew.acp.harness.kiro import KiroHarness
+        from aj_crew.acp.harness.kiro import KiroHarness
 
         configured(_CAPS)
         env = {"TOKIO_WORKER_THREADS": "32"}
@@ -214,7 +214,7 @@ class TestEveryKiroCliSpawnPath:
         assert env["TOKIO_WORKER_THREADS"] == "32"
 
     def test_a_foreign_host_does_not_get_it(self, configured) -> None:
-        from kiro_crew.acp.harness.codex import CodexHarness
+        from aj_crew.acp.harness.codex import CodexHarness
 
         configured(_CAPS)
         env: dict[str, str] = {}
@@ -222,14 +222,14 @@ class TestEveryKiroCliSpawnPath:
         assert not set(_CAPS) & set(env)
 
     def test_acp_client_kiro_spawn_hop_applies_it(self, configured, quiet_credentials) -> None:
-        from kiro_crew.acp.client import _resolve_spawn_env
+        from aj_crew.acp.client import _resolve_spawn_env
 
         configured(_CAPS)
         env = _resolve_spawn_env({}, kiro_api_key=True)
         assert {k: env[k] for k in _CAPS} == _CAPS
 
     def test_acp_client_foreign_hop_does_not(self, configured, quiet_credentials) -> None:
-        from kiro_crew.acp.client import _resolve_spawn_env
+        from aj_crew.acp.client import _resolve_spawn_env
 
         configured(_CAPS)
         env = _resolve_spawn_env({}, kiro_api_key=False)

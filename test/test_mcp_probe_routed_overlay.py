@@ -15,10 +15,10 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.dashboard.handlers import mcp as mcp_mod
-from kiro_crew.mcp_discovery import McpServerInfo, _probe_cache
+from aj_crew.dashboard.handlers import mcp as mcp_mod
+from aj_crew.mcp_discovery import McpServerInfo, _probe_cache
 
-_ROUTED_NAMES = "kiro_crew.agent_materialization.mcp_sources._gateway_routed_names"
+_ROUTED_NAMES = "aj_crew.agent_materialization.mcp_sources._gateway_routed_names"
 
 
 def _request(state) -> object:
@@ -42,11 +42,11 @@ class _State:
 
 
 def _arrange(monkeypatch, tmp_path, servers, cache):
-    import kiro_crew.mcp_discovery as disc
+    import aj_crew.mcp_discovery as disc
 
     monkeypatch.setattr(disc, "list_servers", lambda *a, **k: list(servers))
     monkeypatch.setattr(mcp_mod, "_GLOBAL_MCP_JSON", tmp_path / "absent.json")
-    monkeypatch.setattr(mcp_mod, "_kirocrew_mcp_json", lambda: tmp_path / "absent-kc.json")
+    monkeypatch.setattr(mcp_mod, "_ajcrew_mcp_json", lambda: tmp_path / "absent-kc.json")
     monkeypatch.setattr(mcp_mod, "_mcp_probe_cache", list(cache))
     monkeypatch.setattr(mcp_mod, "_mcp_probe_ts", time.time())
     monkeypatch.setattr(mcp_mod, "_mcp_probe_in_progress", False)

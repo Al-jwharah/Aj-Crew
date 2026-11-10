@@ -13,11 +13,11 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_runner import _attach_turn_stats
-from kiro_crew.dashboard.handlers import usage
-from kiro_crew.dashboard.state import _ChatSlot
+import aj_crew
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_runner import _attach_turn_stats
+from aj_crew.dashboard.handlers import usage
+from aj_crew.dashboard.state import _ChatSlot
 
 
 def _make_slot_with_assistant_message() -> _ChatSlot:
@@ -185,7 +185,7 @@ class TestAttachTurnStats:
     def test_lands_on_the_recorded_reply_not_a_row_another_writer_appended(self):
         # A workflow completion is appended into the shared window by another
         # writer after this turn's reply: newer, assistant-role, and not the reply.
-        from kiro_crew.dashboard.chat_turn.file_changes import _note_reply_row
+        from aj_crew.dashboard.chat_turn.file_changes import _note_reply_row
 
         slot = _ChatSlot("test-recorded-reply")
         slot.append("user", "hello", "msg msg-u", broadcast=False)
@@ -323,10 +323,10 @@ async def test_steer_cut_of_a_withheld_first_chunk_still_records_ttft(tmp_path, 
     the clock must stop there rather than leave ``ttft_ms`` out."""
     from test_dashboard_chat import TestRunChatTransientRetry as _Suite
 
-    from kiro_crew.acp.types import TurnUsage
-    from kiro_crew.dashboard.chat import _run_chat
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-    from kiro_crew.security import StreamRedactor
+    from aj_crew.acp.types import TurnUsage
+    from aj_crew.dashboard.chat import _run_chat
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.security import StreamRedactor
 
     assert StreamRedactor().feed("Hello") == "", "precondition: the chunk is withheld"
     state = _Suite._make_state(tmp_path, monkeypatch)
@@ -358,9 +358,9 @@ async def test_recovery_turn_without_a_carried_clock_stores_no_ttft(tmp_path, mo
     dispatch: the user message it answers belongs to an earlier turn."""
     from test_dashboard_chat import TestRunChatTransientRetry as _Suite
 
-    from kiro_crew.acp.types import TurnUsage
-    from kiro_crew.dashboard.chat import _run_chat
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.acp.types import TurnUsage
+    from aj_crew.dashboard.chat import _run_chat
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
     state = _Suite._make_state(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -490,7 +490,7 @@ def _turn_stats_writes(tree: ast.Module) -> tuple[list[tuple[str, int, str | Non
 
 
 def test_turn_stats_lands_only_on_the_row_the_two_selectors_chose() -> None:
-    root = Path(kiro_crew.__file__).resolve().parent
+    root = Path(aj_crew.__file__).resolve().parent
     writes: list[tuple[str, str, int, str | None]] = []
     builders: set[tuple[str, str]] = set()
     for path in sorted(root.rglob("*.py")):

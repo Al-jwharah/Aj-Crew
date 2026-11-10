@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew.config.loader import config_path
+from aj_crew.config.loader import config_path
 
 
 def _req(
@@ -68,7 +68,7 @@ def fake_sel_fixture(monkeypatch) -> MagicMock:
     """
     recorder = MagicMock()
     recorder.dropped_events = 0
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.sel", lambda: recorder)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.sel", lambda: recorder)
     return recorder
 
 

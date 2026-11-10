@@ -22,7 +22,7 @@ vi.mock('../api/client', () => ({
 }))
 
 const roster = [
-  { name: 'kirocrew', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: 'built-in', source: 'kirocrew' },
+  { name: 'ajcrew', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: 'built-in', source: 'ajcrew' },
   { name: 'oncall', kiro_agent: 'oncall-agent', workspace: 'oncall', memory_store: 'oncall-kb', description: 'paging', source: 'package' },
 ]
 
@@ -51,16 +51,16 @@ describe('useAgents roster failure is reportable and retryable (#5990)', () => {
 
     // The retry the schedule form offers. `refreshTrigger` cannot do this: it is
     // the literal 0 there, so the effect would never run again.
-    agentsApi.mockResolvedValue({ agents: roster, default_agent: 'kirocrew' } as never)
+    agentsApi.mockResolvedValue({ agents: roster, default_agent: 'ajcrew' } as never)
     act(() => { result.current.reload() })
 
     await waitFor(() => expect(result.current.agents).toHaveLength(2))
     expect(result.current.error).toBe(false)
-    expect(result.current.defaultAgent).toBe('kirocrew')
+    expect(result.current.defaultAgent).toBe('ajcrew')
   })
 
   it('keeps the roster it already holds when a later refresh fails', async () => {
-    agentsApi.mockResolvedValue({ agents: roster, default_agent: 'kirocrew' } as never)
+    agentsApi.mockResolvedValue({ agents: roster, default_agent: 'ajcrew' } as never)
 
     const { result } = renderHookWithProviders(() => useAgents(0))
     await waitFor(() => expect(result.current.agents).toHaveLength(2))

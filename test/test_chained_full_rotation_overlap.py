@@ -15,7 +15,7 @@ at a rendered row lands on a different message.
 
 from __future__ import annotations
 
-from kiro_crew.history_projection import drop_persisted_tail_prefix
+from aj_crew.history_projection import drop_persisted_tail_prefix
 
 
 def _m(mid: str, content: str = "", ts: str = "2026-09-04T00:00:00Z") -> dict:
@@ -58,7 +58,7 @@ def test_rows_without_a_stable_id_need_ts_role_and_content() -> None:
 def test_the_identity_rule_is_shared_with_the_fork_path() -> None:
     # The fork rebuild reaches for the same rule through its own module. If these
     # ever diverge, one of the two duplication windows loses its guard silently.
-    from kiro_crew.dashboard import chat_fork
+    from aj_crew.dashboard import chat_fork
 
     rotated = [_m("1"), _m("2")]
     live = [_m("2"), _m("3")]
@@ -75,7 +75,7 @@ def test_read_messages_chained_full_applies_the_rule() -> None:
     report the crash-window overlap, so the assertion is about what the corpus
     serves rather than about disk layout.
     """
-    from kiro_crew.history_projection import TranscriptReadProjection
+    from aj_crew.history_projection import TranscriptReadProjection
 
     rotated = [_m("1"), _m("2"), _m("3")]
     live = [_m("2"), _m("3"), _m("4")]
@@ -114,7 +114,7 @@ def test_the_fork_flat_prepend_branch_is_also_guarded() -> None:
     """
     from pathlib import Path
 
-    src = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard" / "chat_fork.py"
+    src = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard" / "chat_fork.py"
     body = src.read_text(encoding="utf-8")
     assert "_rotated_head + drop_persisted_tail_prefix(" in body, (
         "the fork handler's flat prepend must dedupe the live prefix against the "
@@ -139,8 +139,8 @@ class TestSegmentBoundaryDedupe:
     def _projection(tmp_path):
         import pathlib
 
-        from kiro_crew import history as history_mod
-        from kiro_crew.history_projection import TranscriptReadProjection
+        from aj_crew import history as history_mod
+        from aj_crew.history_projection import TranscriptReadProjection
 
         class _Log:
             def __init__(self, d: pathlib.Path) -> None:
@@ -162,7 +162,7 @@ class TestSegmentBoundaryDedupe:
         (adir / f"{stem}{stamp}.jsonl").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     def _read(self, proj) -> list:
-        from kiro_crew.history_projection import TranscriptReadProjection
+        from aj_crew.history_projection import TranscriptReadProjection
 
         return TranscriptReadProjection.read_rotated_messages(proj, "slot-a")
 

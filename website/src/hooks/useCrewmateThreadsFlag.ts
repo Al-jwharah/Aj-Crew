@@ -1,7 +1,7 @@
 /**
  * `dashboard.crewmate_threads` -- whether reply threads on crewmate chat messages
  * are on for this gateway. A server-side config flag (`config/sections.py`),
- * off by default, read from the shared `['kirocrewConfig']` cache so the Members
+ * off by default, read from the shared `['ajcrewConfig']` cache so the Members
  * page and the Settings toggle agree without a second request.
  *
  * Three readings, kept apart so a failed read cannot pass for "off":
@@ -21,7 +21,7 @@ import { api } from '../api/client'
 
 export const CREWMATE_THREADS_CONFIG_KEY = 'dashboard.crewmate_threads'
 
-type KirocrewConfigThreads = { dashboard?: { crewmate_threads?: boolean } }
+type AjcrewConfigThreads = { dashboard?: { crewmate_threads?: boolean } }
 
 export type CrewmateThreadsFlag = {
   /** The flag is known to be on (last successful read said `true`). */
@@ -35,9 +35,9 @@ export type CrewmateThreadsFlag = {
 }
 
 export function useCrewmateThreadsFlag(): CrewmateThreadsFlag {
-  const q = useQuery<KirocrewConfigThreads, Error, boolean>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+  const q = useQuery<AjcrewConfigThreads, Error, boolean>({
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
     select: (c) => c?.dashboard?.crewmate_threads === true,
   })
   return {

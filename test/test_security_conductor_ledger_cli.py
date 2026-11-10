@@ -42,7 +42,7 @@ class TestExportRoe:
             "--field",
             "scope",
             "--value",
-            "src/kiro_crew/security.py",
+            "src/aj_crew/security.py",
             "--reason",
             "surface 1",
             "--approved-by",
@@ -187,7 +187,7 @@ class TestDbFlagPosition:
 
 class TestDefaultDbPath:
     def test_the_default_path_follows_the_data_home(self, mod, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew"))
         assert mod.default_db_path() == tmp_path / "crew" / "security-conductor" / "findings.db"
 
     def test_the_parent_directory_is_created_on_demand(self, mod, tmp_path, capsys):

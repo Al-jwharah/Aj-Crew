@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-from kiro_crew.dashboard.chat_turn.recovery import _current_turn_carries_image_ref
+from aj_crew.dashboard.chat_turn.recovery import _current_turn_carries_image_ref
 
 # An absolute path on the running OS: ``/tmp/...`` is not one on Windows.
 SHOT = os.path.abspath(os.path.join(os.sep, "tmp", "shot.png"))

@@ -1,4 +1,4 @@
-"""Unit coverage for :mod:`kiro_crew.apps.backend`: supervising a running backend.
+"""Unit coverage for :mod:`aj_crew.apps.backend`: supervising a running backend.
 
 When the proxy port is published, the pidfile helpers' error paths,
 ``_proc_start_time``, the MCP registration gate and the health-check loop, and the
@@ -21,10 +21,10 @@ import pytest
 from apps_backend_coverage_helpers import _isolated_module_state  # noqa: F401
 from apps_backend_coverage_helpers import _fake_proc, _FakeResp, _manifest
 
-import kiro_crew.apps.backend as bmod
-import kiro_crew.apps.backend_runtime.supervision as smod
-from kiro_crew.apps.backend import AppProcess
-from kiro_crew.testing.clock import ManualClock
+import aj_crew.apps.backend as bmod
+import aj_crew.apps.backend_runtime.supervision as smod
+from aj_crew.apps.backend import AppProcess
+from aj_crew.testing.clock import ManualClock
 
 
 class _SweepClock(ManualClock):
@@ -133,7 +133,7 @@ class TestGateMcpRegistration:
     ) -> None:
         seen: list[tuple[str, int]] = []
         monkeypatch.setattr(
-            "kiro_crew.apps.bridges.reregister_app_mcp_servers",
+            "aj_crew.apps.bridges.reregister_app_mcp_servers",
             lambda name, live_port, io_failures=None: seen.append((name, live_port)),
         )
         bmod._gate_mcp_registration("app", 9133, healthy=True)
@@ -144,7 +144,7 @@ class TestGateMcpRegistration:
     ) -> None:
         """A dead MCP url breaks every kiro-cli session, not just this app."""
 
-        monkeypatch.setattr("kiro_crew.apps.bridges._deregister_mcp_servers", lambda _n: 2)
+        monkeypatch.setattr("aj_crew.apps.bridges._deregister_mcp_servers", lambda _n: 2)
         with caplog.at_level(logging.WARNING):
             bmod._gate_mcp_registration("app", 9133, healthy=False)
         assert any("Scrubbed 2 MCP server(s)" in r.getMessage() for r in caplog.records)
@@ -155,7 +155,7 @@ class TestGateMcpRegistration:
         def _boom(*_a: Any, **_k: Any) -> None:
             raise RuntimeError("mcp.json locked")
 
-        monkeypatch.setattr("kiro_crew.apps.bridges.reregister_app_mcp_servers", _boom)
+        monkeypatch.setattr("aj_crew.apps.bridges.reregister_app_mcp_servers", _boom)
         with caplog.at_level(logging.WARNING):
             bmod._gate_mcp_registration("app", 9133, healthy=True)
         assert any("Health-gated MCP registration failed" in r.message for r in caplog.records)
@@ -291,7 +291,7 @@ class TestRestartExitedBackend:
     def test_restart_revet_reads_origin_without_syncing_installed_metadata(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.apps import manager
+        from aj_crew.apps import manager
 
         stored = manager.InstalledApp(
             name="app",
@@ -324,10 +324,10 @@ class TestRestartExitedBackend:
         monkeypatch.setattr(bmod, "_forget_app_pid_if", lambda *_args: None)
         monkeypatch.setattr(bmod, "sel", lambda: audit)
         monkeypatch.setattr(
-            "kiro_crew.apps.backend._app_activation_denied", lambda _name, **_kwargs: None
+            "aj_crew.apps.backend._app_activation_denied", lambda _name, **_kwargs: None
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.backend._read_installed",
+            "aj_crew.apps.backend._read_installed",
             lambda _name: SimpleNamespace(origin="registry"),
         )
         monkeypatch.setattr(
@@ -455,7 +455,7 @@ class TestRestartExitedBackend:
             return replacement
 
         monkeypatch.setattr(
-            "kiro_crew.platform.governance_profiles.governance_permits",
+            "aj_crew.platform.governance_profiles.governance_permits",
             _evaluate,
         )
         monkeypatch.setattr(
@@ -504,10 +504,10 @@ class TestRestartExitedBackend:
         monkeypatch.setattr(bmod, "_app_enabled_state", lambda _name: True)
         monkeypatch.setattr(bmod, "_forget_app_pid_if", lambda *_args: None)
         monkeypatch.setattr(
-            "kiro_crew.apps.backend._app_activation_denied", lambda _name, **_kwargs: None
+            "aj_crew.apps.backend._app_activation_denied", lambda _name, **_kwargs: None
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.backend._read_installed",
+            "aj_crew.apps.backend._read_installed",
             lambda _name: SimpleNamespace(origin="builtin"),
         )
         monkeypatch.setattr(
@@ -570,11 +570,11 @@ class TestRestartExitedBackend:
         monkeypatch.setattr(bmod, "_app_enabled_state", lambda _name: True)
         monkeypatch.setattr(bmod, "_forget_app_pid_if", lambda *_args: None)
         monkeypatch.setattr(
-            "kiro_crew.apps.backend._app_activation_denied",
+            "aj_crew.apps.backend._app_activation_denied",
             lambda _name, **_kwargs: "not in apps allowlist",
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.backend._read_installed",
+            "aj_crew.apps.backend._read_installed",
             lambda _name: SimpleNamespace(origin="builtin"),
         )
         monkeypatch.setattr(

@@ -9,8 +9,8 @@ from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F4
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 from acp_client_helpers import _POSIX_ONLY
 
-from kiro_crew.acp.client import AcpClient, AcpProcessDied
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.acp.client import AcpClient, AcpProcessDied
+from aj_crew.testing.ids import UNALLOCATABLE_PID
 
 # ── Process tree cleanup tests ──
 
@@ -21,22 +21,22 @@ class TestGetChildPids:
         [pytest.param(999999, id="nonexistent_pid"), pytest.param(None, id="none_pid")],
     )
     def test_no_children(self, pid):
-        from kiro_crew.acp.client import _get_child_pids
+        from aj_crew.acp.client import _get_child_pids
 
         assert _get_child_pids(pid) == []
 
     def test_own_pid_returns_list(self):
         import os
 
-        from kiro_crew.acp.client import _get_child_pids
+        from aj_crew.acp.client import _get_child_pids
 
         # May or may not have children, but should not raise
         result = _get_child_pids(os.getpid())
         assert isinstance(result, list)
 
     def test_recursive_children(self, monkeypatch):
-        import kiro_crew.acp.client as client_mod
-        from kiro_crew.acp.client import _get_child_pids
+        import aj_crew.acp.client as client_mod
+        from aj_crew.acp.client import _get_child_pids
 
         # _direct_children tries /proc first, falls back to pgrep.
         # Mock _direct_children directly to avoid platform-specific /proc behavior.
@@ -49,7 +49,7 @@ class TestGetChildPids:
 @_POSIX_ONLY
 class TestIsOurChild:
     def test_nonexistent_pid(self):
-        from kiro_crew.acp.client import _is_our_child
+        from aj_crew.acp.client import _is_our_child
 
         assert _is_our_child(999999) is False
 
@@ -73,10 +73,10 @@ class TestIsOurChild:
     def test_basename_check(self, monkeypatch, live, recorded, expected):
         import sys
 
-        import kiro_crew.acp.client as client_mod
-        from kiro_crew.acp.client import _is_our_child
+        import aj_crew.acp.client as client_mod
+        from aj_crew.acp.client import _is_our_child
 
-        monkeypatch.setattr("kiro_crew.platform_compat.get_process_start_id", lambda pid: 42)
+        monkeypatch.setattr("aj_crew.platform_compat.get_process_start_id", lambda pid: 42)
         monkeypatch.setattr(sys, "platform", "darwin")
         monkeypatch.setattr(client_mod.subprocess_mod, "check_output", lambda cmd, **kw: live)
         assert _is_our_child(999, expected_start=42, expected_basename=recorded) is expected
@@ -84,7 +84,7 @@ class TestIsOurChild:
     def test_no_start_time_rejects(self):
         import os
 
-        from kiro_crew.acp.client import _is_our_child
+        from aj_crew.acp.client import _is_our_child
 
         # No expected_start → fail-closed
         assert _is_our_child(os.getpid()) is False
@@ -92,16 +92,16 @@ class TestIsOurChild:
     def test_start_time_mismatch_rejects(self):
         import os
 
-        from kiro_crew.acp.client import _is_our_child
+        from aj_crew.acp.client import _is_our_child
 
         # Our own PID with a wrong start time → should reject (recycled)
         assert _is_our_child(os.getpid(), expected_start=-999) is False
 
     def test_none_basename_denied_fail_closed(self, monkeypatch):
         """When no basename was recorded, deny (fail-closed)."""
-        from kiro_crew.acp.client import _is_our_child
+        from aj_crew.acp.client import _is_our_child
 
-        monkeypatch.setattr("kiro_crew.platform_compat.get_process_start_id", lambda pid: 42)
+        monkeypatch.setattr("aj_crew.platform_compat.get_process_start_id", lambda pid: 42)
         # No expected_basename → deny-by-default even with matching start id
         assert _is_our_child(999, expected_start=42, expected_basename=None) is False
 
@@ -111,8 +111,8 @@ class TestKillEscapedChildren:
     @staticmethod
     def _record_sweep(monkeypatch, alive: bool) -> dict[str, list]:
         """Route the sweep's liveness, ownership and kill seams into one record."""
-        from kiro_crew import platform_compat
-        from kiro_crew.acp import runtime_process_tree
+        from aj_crew import platform_compat
+        from aj_crew.acp import runtime_process_tree
 
         seen: dict[str, list] = {"probed": [], "owned": [], "killed": []}
 
@@ -132,14 +132,14 @@ class TestKillEscapedChildren:
         return seen
 
     def test_empty_dict(self, monkeypatch):
-        from kiro_crew.acp.client import _kill_escaped_children
+        from aj_crew.acp.client import _kill_escaped_children
 
         seen = self._record_sweep(monkeypatch, alive=True)
         _kill_escaped_children({})
         assert seen == {"probed": [], "owned": [], "killed": []}
 
     def test_dead_pids_skipped(self, monkeypatch):
-        from kiro_crew.acp.client import _kill_escaped_children
+        from aj_crew.acp.client import _kill_escaped_children
 
         seen = self._record_sweep(monkeypatch, alive=False)
         _kill_escaped_children({999998: None, 999999: None})
@@ -147,8 +147,8 @@ class TestKillEscapedChildren:
         assert seen == {"probed": [999999, 999998], "owned": [], "killed": []}
 
     def test_reverse_order_and_allowlist(self, monkeypatch):
-        import kiro_crew.acp.client as client_mod
-        from kiro_crew.acp.client import _kill_escaped_children
+        import aj_crew.acp.client as client_mod
+        from aj_crew.acp.client import _kill_escaped_children
 
         killed: list[int] = []
 
@@ -185,8 +185,8 @@ class TestReadBasename:
     def test_reads_basename_from_ps(self, monkeypatch):
         import sys
 
-        import kiro_crew.acp.client as client_mod
-        from kiro_crew.acp.client import _read_basename
+        import aj_crew.acp.client as client_mod
+        from aj_crew.acp.client import _read_basename
 
         monkeypatch.setattr(sys, "platform", "darwin")
         monkeypatch.setattr(
@@ -200,8 +200,8 @@ class TestReadBasename:
         import subprocess
         import sys
 
-        import kiro_crew.acp.client as client_mod
-        from kiro_crew.acp.client import _read_basename
+        import aj_crew.acp.client as client_mod
+        from aj_crew.acp.client import _read_basename
 
         def raise_error(cmd, **kw):
             raise subprocess.CalledProcessError(1, cmd)
@@ -279,7 +279,7 @@ class TestSendPipeErrors:
     @pytest.mark.asyncio
     async def test_stale_turn_synthesizes_complete_after_text(self):
         """When text is streamed but no complete arrives, synthesize EVENT_COMPLETE."""
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             STOP_REASON_END_TURN,
@@ -320,8 +320,8 @@ class TestSendPipeErrors:
     @pytest.mark.asyncio
     async def test_stale_eligible_cleared_by_tool_call(self):
         """Tool call after text clears _stale_eligible — no synthetic complete."""
-        from kiro_crew.acp.client import AcpTimeoutError
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.client import AcpTimeoutError
+        from aj_crew.acp.types import (
             UPDATE_AGENT_MESSAGE_CHUNK,
             UPDATE_TOOL_CALL,
             JsonRpcMessage,
@@ -368,8 +368,8 @@ class TestSendPipeErrors:
     @pytest.mark.asyncio
     async def test_stale_eligible_cleared_by_permission(self):
         """Permission request after text clears _stale_eligible."""
-        from kiro_crew.acp.client import AcpTimeoutError
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.client import AcpTimeoutError
+        from aj_crew.acp.types import (
             UPDATE_AGENT_MESSAGE_CHUNK,
             JsonRpcMessage,
         )
@@ -413,7 +413,7 @@ class TestSendPipeErrors:
     @pytest.mark.asyncio
     async def test_stale_eligible_re_enabled_after_completed_tool_then_text(self):
         """Text after a completed tool permits synthetic completion."""
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -499,7 +499,7 @@ class TestSendPipeErrors:
         but never sends complete. The blanket _stale_eligible=False on every event
         disabled the 90s timeout, causing the session to hang until the 2h deadline.
         """
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             STOP_REASON_END_TURN,
@@ -568,7 +568,7 @@ class TestKillProcess:
         client = AcpClient()
         client._process = None
         with patch(
-            "kiro_crew.platform_compat.kill_process_tree_async", new=AsyncMock()
+            "aj_crew.platform_compat.kill_process_tree_async", new=AsyncMock()
         ) as tree_kill:
             await client._kill_process()
         tree_kill.assert_not_awaited()
@@ -581,7 +581,7 @@ class TestKillProcess:
         proc.returncode = 0
         client._process = proc
         with patch(
-            "kiro_crew.platform_compat.kill_process_tree_async", new=AsyncMock()
+            "aj_crew.platform_compat.kill_process_tree_async", new=AsyncMock()
         ) as tree_kill:
             await client._kill_process()
         tree_kill.assert_not_awaited()
@@ -605,14 +605,14 @@ class TestKillProcess:
         with (
             patch("os.killpg") as mock_killpg,
             patch("os.getpgid", return_value=12345),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children") as mock_esc,
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children") as mock_esc,
         ):
             await client._kill_process()
             assert mock_killpg.call_args_list == [call(12345, signal.SIGTERM)]
             assert mock_esc.call_count == 1
         # A clean exit on SIGTERM never escalates to SIGKILL.
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         assert client._kill_sent == (int(platform_compat.SIGTERM), "stop requested")
         assert proc.kill.call_count == 0
@@ -640,8 +640,8 @@ class TestKillProcess:
         with (
             patch("os.killpg", side_effect=fake_killpg),
             patch("os.getpgid", return_value=99),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
         ):
             await client._kill_process()
 
@@ -671,8 +671,8 @@ class TestKillProcess:
         with (
             patch("os.killpg", side_effect=fake_killpg),
             patch("os.getpgid", return_value=55),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
         ):
             await client._kill_process(force=True)
 
@@ -697,13 +697,13 @@ class TestKillProcess:
         with (
             patch("os.killpg", side_effect=ProcessLookupError()),
             patch("os.getpgid", return_value=77),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
         ):
             await client._kill_process(force=True)
 
         proc.kill.assert_called_once()
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         assert client._kill_sent == (int(platform_compat.SIGKILL), "forced stop")
 
@@ -715,7 +715,7 @@ class TestKillProcess:
         event-loop offload. A test that patches only kill_process_tree would
         silently pass if someone regresses the await back to sync, so pin
         both symbols and hard-fail if the sync one is ever called."""
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         client = AcpClient()
         proc = MagicMock()
@@ -733,15 +733,15 @@ class TestKillProcess:
         # SIGTERM path
         with (
             patch(
-                "kiro_crew.platform_compat.kill_process_tree_async",
+                "aj_crew.platform_compat.kill_process_tree_async",
                 new_callable=AsyncMock,
             ) as mock_async,
             patch(
-                "kiro_crew.platform_compat.kill_process_tree",
+                "aj_crew.platform_compat.kill_process_tree",
                 side_effect=_sync_forbidden,
             ),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
         ):
             await client._kill_process(force=False)
 
@@ -758,15 +758,15 @@ class TestKillProcess:
 
         with (
             patch(
-                "kiro_crew.platform_compat.kill_process_tree_async",
+                "aj_crew.platform_compat.kill_process_tree_async",
                 new_callable=AsyncMock,
             ) as mock_async_kill,
             patch(
-                "kiro_crew.platform_compat.kill_process_tree",
+                "aj_crew.platform_compat.kill_process_tree",
                 side_effect=_sync_forbidden,
             ),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
         ):
             await client._kill_process(force=True)
 
@@ -815,10 +815,10 @@ class TestResetStateExtended:
         client._child_pids = {5678: None, 9012: None}
 
         with (
-            patch("kiro_crew.session_pid._pid_gone_or_unmanaged", return_value=True),
-            patch("kiro_crew.session._untrack_child_pids") as mock_uc,
-            patch("kiro_crew.session._untrack_pid") as mock_up,
-            patch("kiro_crew.session._untrack_session_pid") as mock_usp,
+            patch("aj_crew.session_pid._pid_gone_or_unmanaged", return_value=True),
+            patch("aj_crew.session._untrack_child_pids") as mock_uc,
+            patch("aj_crew.session._untrack_pid") as mock_up,
+            patch("aj_crew.session._untrack_session_pid") as mock_usp,
         ):
             client._reset_state()
 
@@ -839,9 +839,9 @@ class TestResetStateExtended:
         client._child_pids = {}
 
         with (
-            patch("kiro_crew.session_pid._pid_gone_or_unmanaged", return_value=False),
-            patch("kiro_crew.session._untrack_pid") as mock_up,
-            patch("kiro_crew.session._untrack_session_pid") as mock_usp,
+            patch("aj_crew.session_pid._pid_gone_or_unmanaged", return_value=False),
+            patch("aj_crew.session._untrack_pid") as mock_up,
+            patch("aj_crew.session._untrack_session_pid") as mock_usp,
         ):
             client._reset_state()
 
@@ -861,14 +861,14 @@ class TestResetStateExtended:
             return pid == 5678  # 5678 dead -> untrack; 9012 alive -> retain
 
         with (
-            patch("kiro_crew.session_pid._pid_gone_or_unmanaged", side_effect=_gone),
-            patch("kiro_crew.session._untrack_child_pids") as mock_uc,
-            caplog.at_level("WARNING", logger="kiro_crew.acp.client"),
+            patch("aj_crew.session_pid._pid_gone_or_unmanaged", side_effect=_gone),
+            patch("aj_crew.session._untrack_child_pids") as mock_uc,
+            caplog.at_level("WARNING", logger="aj_crew.acp.client"),
         ):
             client._reset_state()
 
         assert mock_uc.call_args_list == [call({5678: None})]
-        warnings = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.acp.client"]
+        warnings = [r.getMessage() for r in caplog.records if r.name == "aj_crew.acp.client"]
         assert any("Retained tracking for 1 live child" in m and "9012" in m for m in warnings)
 
     def test_cancels_stderr_task(self):
@@ -910,8 +910,8 @@ class TestKillProcessPipeClose:
         with (
             patch("os.killpg", side_effect=lambda _pg, _sig: order.append("killpg")),
             patch("os.getpgid", return_value=100),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
         ):
             await client._kill_process()
 
@@ -935,13 +935,13 @@ class TestKillProcessPipeClose:
         with (
             patch("os.killpg"),
             patch("os.getpgid", return_value=101),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
         ):
             await client._kill_process()
 
         # The failed stdin close neither stops the other pipes closing nor the kill.
         proc.stdout.close.assert_called_once_with()
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         assert client._kill_sent == (int(platform_compat.SIGTERM), "stop requested")

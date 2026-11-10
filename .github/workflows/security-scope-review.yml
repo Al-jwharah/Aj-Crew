@@ -91,7 +91,7 @@ jobs:
     # Targeted by LABEL, not `group:`: this workflow fires on `pull_request`,
     # so a contributor's own fork runs it in a repository no organization
     # group admits.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     # OIDC for Bedrock, and read-only on the PR: this stage proposes candidates and
     # posts nothing.
     permissions:
@@ -240,13 +240,13 @@ jobs:
           # fork lane would then scope a narrower surface than this one.
           # SCOPE-SURFACE-BEGIN
           surface=(
-            'src/kiro_crew/security/'
-            'src/kiro_crew/deny_guidance.py'
-            'src/kiro_crew/platform/security_authority.py'
-            'src/kiro_crew/hooks.py'
-            'src/kiro_crew/hook_runtime/'
-            'src/kiro_crew/builtin_skills/security-conductor/rules-of-engagement.json'
-            'src/kiro_crew/builtin_skills/security-conductor/golden-paths.json'
+            'src/aj_crew/security/'
+            'src/aj_crew/deny_guidance.py'
+            'src/aj_crew/platform/security_authority.py'
+            'src/aj_crew/hooks.py'
+            'src/aj_crew/hook_runtime/'
+            'src/aj_crew/builtin_skills/security-conductor/rules-of-engagement.json'
+            'src/aj_crew/builtin_skills/security-conductor/golden-paths.json'
             'scripts/deny_diff.py'
             'scripts/scope_candidates.py'
             'scripts/scope_redact.py'
@@ -624,7 +624,7 @@ jobs:
 
             Read the committed corpus for the STYLE of a row, and to avoid
             re-proposing rows it already holds -- the BASE copy, at this checkout:
-                src/kiro_crew/builtin_skills/security-conductor/golden-paths.json
+                src/aj_crew/builtin_skills/security-conductor/golden-paths.json
 
             Emit the review as your LAST message. The workflow captures it
             verbatim from the run transcript, so do NOT call any tool to post it,
@@ -756,7 +756,7 @@ jobs:
     # Keeps its `_PERMANENT_EXCEPTIONS` entry: this change does not argue this
     # job onto the CodeBuild fleet, and the larger-runner group is not the
     # fleet. Label rather than `group:` for the reason `generate` gives.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     # `contents: read` and NOTHING else. This job can execute the pull request's own
     # harness, so it must hold nothing worth reaching: no `id-token`, so no AWS
     # assume is even possible here, and no scope that could post or patch this
@@ -1098,7 +1098,7 @@ jobs:
           # contracts the moment another file appeared would hand coverage over with
           # nobody's PR showing the handover. From the BASE ref for the same reason
           # the harness is -- the change must not choose what it is deduped against.
-          corpus_path="src/kiro_crew/builtin_skills/security-conductor/golden-paths.json"
+          corpus_path="src/aj_crew/builtin_skills/security-conductor/golden-paths.json"
           rm -f base-corpus.json
           base_corpus=""
           if git cat-file -e "$BASE_SHA:$corpus_path" 2>/dev/null; then
@@ -1261,11 +1261,11 @@ jobs:
     # Keep `matrix.os` stable: the job name above uses it and so do the per-leg
     # artifact names, so neither the rendered check names nor the fold's report
     # lookup change. In THIS repository the Linux and Windows legs take the
-    # `kirocrew-linux-4-core` / `kirocrew-windows-4-core` larger-runner labels
+    # `ajcrew-linux-4-core` / `ajcrew-windows-4-core` larger-runner labels
     # instead of the shared standard pool; the macOS leg stays hosted. Label
     # rather than `group:` for the reason `generate` gives. The same expression
     # `fork-security-scope-review.yml`'s `adjudicate` already carries.
-    runs-on: ${{ matrix.os == 'ubuntu-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest') || matrix.os == 'windows-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-windows-4-core' || 'windows-latest') || matrix.os }}
+    runs-on: ${{ matrix.os == 'ubuntu-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest') || matrix.os == 'windows-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-windows-4-core' || 'windows-latest') || matrix.os }}
     # Runs the pull request's OWN classifier at both refs, so it gets the floor: no
     # id-token, no write scope. Nothing here is worth stealing.
     permissions:
@@ -1292,7 +1292,7 @@ jobs:
       #
       # This is not merely stricter -- it costs the comparison nothing. The
       # HARNESS comes from the base ref; the PRODUCT under test is each ref's OWN
-      # `kiro_crew.security`, which `deny_diff.py` materializes itself from the two
+      # `aj_crew.security`, which `deny_diff.py` materializes itself from the two
       # SHAs into its own temp directory and runs as a child process. So both
       # sides are still the real classifier at their own ref, and all that moves
       # is which copy of the code does the comparing.
@@ -1320,7 +1320,7 @@ jobs:
       # package's own modules, and the child reaches them through PYTHONPATH at a
       # materialized checkout. Installing the package would add three
       # platform-dependent minutes and a resolution failure mode, and an editable
-      # install would put a SECOND copy of `kiro_crew` on the path -- which the
+      # install would put a SECOND copy of `aj_crew` on the path -- which the
       # script's own tree check would then refuse.
       - name: Classify the candidates at both refs
         id: classify
@@ -1492,7 +1492,7 @@ jobs:
     # fleet. On the label alongside `validate`, since this required check
     # always runs downstream of it. Label rather than `group:` for the reason
     # `generate` gives.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     # Posts, and holds the ONLY write scope in this lane. On a `pull_request`
     # event a bare checkout resolves to the PR MERGE REF, so the workspace below
     # IS the change under review -- which makes `scripts/` a path the change can
@@ -2156,7 +2156,7 @@ jobs:
           #
           # A marker comment is the ONLY thing a freshness verifier reads. A
           # write that does not land therefore leaves the PR indistinguishable
-          # from one no lane ever reviewed: kirocrew-prepare-pr's pr_status.py refuses a
+          # from one no lane ever reviewed: ajcrew-prepare-pr's pr_status.py refuses a
           # PR whose check-runs, readiness status and mergeable state all pass,
           # and the only way out is manufacturing a new head -- which re-rolls
           # the non-deterministic review lanes and discards the verdicts they
@@ -2412,7 +2412,7 @@ jobs:
             # would invent a BLOCK nobody judged out of an infrastructure fault.
             # The annotation is what says so: the required readiness status reads
             # check-run CONCLUSIONS and has no stamp-freshness read, so the reader
-            # that catches a head with no verdict is kirocrew-prepare-pr's own marker
+            # that catches a head with no verdict is ajcrew-prepare-pr's own marker
             # evaluation, run before a PR is called ready.
             if [ -n "$slot" ]; then
               occupied=""

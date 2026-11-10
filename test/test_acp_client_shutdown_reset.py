@@ -31,7 +31,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.acp.client import ACP_BACKEND_CLAUDE, AcpClient
+from aj_crew.acp.client import ACP_BACKEND_CLAUDE, AcpClient
 
 
 def _claude_client(tmp_path):

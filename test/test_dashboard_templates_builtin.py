@@ -21,9 +21,9 @@ from typing import Any, Iterator
 
 import pytest
 
-from kiro_crew.crew_log.projection import PROJECTION_NAMES, SLOT_PROJECTION_NAMES
-from kiro_crew.dashboard_templates import instance
-from kiro_crew.dashboard_templates.manifest import (
+from aj_crew.crew_log.projection import PROJECTION_NAMES, SLOT_PROJECTION_NAMES
+from aj_crew.dashboard_templates import instance
+from aj_crew.dashboard_templates.manifest import (
     FIELD_TYPES,
     MAX_FIELDS,
     FieldSpec,
@@ -31,9 +31,9 @@ from kiro_crew.dashboard_templates.manifest import (
     TemplateManifest,
     load_template,
 )
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
-BUILTIN = Path(__file__).resolve().parents[1] / "src/kiro_crew/dashboard_templates/builtin"
+BUILTIN = Path(__file__).resolve().parents[1] / "src/aj_crew/dashboard_templates/builtin"
 FIXTURES = Path(__file__).resolve().parent / "fixtures/dashboard_templates"
 FIXTURE = FIXTURES / "pod_folds.json"
 
@@ -56,7 +56,7 @@ EXPECTED_IDS = frozenset(
     {
         "flow",
         "goal-board",
-        "kirocrew-conductor",
+        "ajcrew-conductor",
         "office",
         "org-chart",
         "pr-watch",
@@ -281,15 +281,15 @@ class TestEachBuiltinLoads:
             ), f"{directory.name}: reaches the network via {forbidden!r}"
 
     def test_its_script_reads_the_hosts_own_field_bag(self, directory: Path) -> None:
-        """A page drawing a chart must read ``window.kirocrew.fields``.
+        """A page drawing a chart must read ``window.ajcrew.fields``.
 
         The bound elements are filled by the host whether or not any script runs, so a
         page could pass parity while its charts drew from nothing. Every built-in here
         draws, so every one of them reads the bag.
         """
         _, html = load_template(directory)
-        assert "window.kirocrew" in html, (
-            f"{directory.name}: no script reads window.kirocrew, so whatever it draws "
+        assert "window.ajcrew" in html, (
+            f"{directory.name}: no script reads window.ajcrew, so whatever it draws "
             "is not drawn from the host's values"
         )
 
@@ -367,7 +367,7 @@ class TestTheyActuallyShip:
     def _package_data_globs() -> list[str]:
         config = ConfigParser()
         config.read(Path(__file__).resolve().parents[1] / "setup.cfg")
-        raw = config.get("options.package_data", "kiro_crew", fallback="")
+        raw = config.get("options.package_data", "aj_crew", fallback="")
         return [
             line.strip()
             for line in raw.splitlines()
@@ -395,7 +395,7 @@ class TestTheyActuallyShip:
         """The wheel is built from the sdist, so a file missing from MANIFEST.in is
         missing everywhere even with the package_data glob above in place."""
         text = (Path(__file__).resolve().parents[1] / "MANIFEST.in").read_text(encoding="utf-8")
-        assert "recursive-include src/kiro_crew/dashboard_templates/builtin *.json" in text, (
+        assert "recursive-include src/aj_crew/dashboard_templates/builtin *.json" in text, (
             "MANIFEST.in does not include the built-in manifests, so the sdist ships "
             "pages without them and load_template refuses every built-in"
         )
@@ -463,7 +463,7 @@ class TestEveryBuiltinSurvivesPreviewAndApply:
         A fixture template would test the machinery against a page this test wrote,
         and the claim is about the pages that SHIP.
         """
-        _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         yield
 
     def test_the_instance_ceiling_is_the_frames_own_constant(self) -> None:
@@ -474,7 +474,7 @@ class TestEveryBuiltinSurvivesPreviewAndApply:
         literal: a test carrying its own copy of the number would pass while the two
         drifted apart again.
         """
-        from kiro_crew import dashboard_frame
+        from aj_crew import dashboard_frame
 
         assert instance.MAX_INSTANCE_HTML_BYTES == dashboard_frame.MAX_PAGE_BYTES
 
@@ -642,7 +642,7 @@ def _flow_tiles(html: str, fields: dict[str, Any]) -> list[dict[str, Any]]:
     script = html.split("<script>")[1].split("</script>")[0]
     program = "\n".join(
         (
-            f"globalThis.kirocrew = {{ fields: {json.dumps(fields)} }};",
+            f"globalThis.ajcrew = {{ fields: {json.dumps(fields)} }};",
             _FLOW_DOM,
             script,
             _FLOW_PROBE,

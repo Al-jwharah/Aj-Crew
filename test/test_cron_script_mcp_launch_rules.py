@@ -2,7 +2,7 @@
 
 ``_resolve_mcp_server`` turns a server name into what ``McpToolClient`` spawns, and
 ``KeptMcpServers.call_tool`` is the one door both ``ScriptContext.call_tool`` and
-``kirocrew cron preview`` go through. The rules pinned here are the ones the
+``ajcrew cron preview`` go through. The rules pinned here are the ones the
 session, gateway and KAS paths already apply: a server the user muted is not
 launched, a registry or remote entry is not started as a local process, a tool the
 user switched off is not called, and ``${VAR}`` in a server's ``env`` is resolved
@@ -19,15 +19,15 @@ from typing import Any
 
 import pytest
 
-import kiro_crew.agent as agent_mod
-import kiro_crew.cron_script as cron_script
-from kiro_crew.cron_script import KeptMcpServers, McpToolError, _resolve_mcp_server
+import aj_crew.agent as agent_mod
+import aj_crew.cron_script as cron_script
+from aj_crew.cron_script import KeptMcpServers, McpToolError, _resolve_mcp_server
 
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
     """Crew's agent spec and the crew-store and Kiro-global scopes, all under tmp."""
-    from kiro_crew import mcp_discovery
+    from aj_crew import mcp_discovery
 
     agents = tmp_path / "agents"
     store = tmp_path / "crew" / "mcp.json"
@@ -36,13 +36,13 @@ def home(tmp_path, monkeypatch):
         directory.mkdir(parents=True)
     monkeypatch.setattr(cron_script, "kiro_agents_dir", lambda: agents)
     monkeypatch.setattr(
-        mcp_discovery, "_MCP_SOURCES", ((store, "kirocrew"), (kiro_global, "kiroGlobal"))
+        mcp_discovery, "_MCP_SOURCES", ((store, "ajcrew"), (kiro_global, "kiroGlobal"))
     )
     monkeypatch.setattr(mcp_discovery, "_MCP_JSON_PATHS", None)
     # The file a chat session's switched-off tools are read from.
     monkeypatch.setattr(agent_mod, "_KIRO_MCP_JSON", kiro_global)
     _resolve_mcp_server.cache_clear()
-    yield {"spec": agents / "kirocrew.json", "store": store, "kiro_global": kiro_global}
+    yield {"spec": agents / "ajcrew.json", "store": store, "kiro_global": kiro_global}
     _resolve_mcp_server.cache_clear()
 
 
@@ -161,7 +161,7 @@ def test_a_granted_or_cron_denied_variable_is_never_dereferenced(home, monkeypat
     variable still resolves."""
     monkeypatch.setattr(cron_script, "_GRANTED_ENV_KEYS", {"GITHUB_TOKEN"})
     monkeypatch.setenv("GITHUB_TOKEN", "vault-value")
-    monkeypatch.setenv("KIROCREW_INTERNAL_SECRET", "internal-value")
+    monkeypatch.setenv("AJCREW_INTERNAL_SECRET", "internal-value")
     monkeypatch.setenv("CRON_T", "v")
     _write_servers(
         home["spec"],
@@ -170,7 +170,7 @@ def test_a_granted_or_cron_denied_variable_is_never_dereferenced(home, monkeypat
                 "command": "node",
                 "env": {
                     "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}",
-                    "S": "${env:KIROCREW_INTERNAL_SECRET}",
+                    "S": "${env:AJCREW_INTERNAL_SECRET}",
                     "A": "${CRON_T}",
                 },
             }
@@ -181,7 +181,7 @@ def test_a_granted_or_cron_denied_variable_is_never_dereferenced(home, monkeypat
         ("node",),
         {
             "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}",
-            "S": "${KIROCREW_INTERNAL_SECRET}",
+            "S": "${AJCREW_INTERNAL_SECRET}",
             "A": "v",
         },
     )

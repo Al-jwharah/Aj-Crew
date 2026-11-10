@@ -21,8 +21,8 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import pinned_fs
-from kiro_crew.apps.builtins.aws_control.backend import backup
+from aj_crew import pinned_fs
+from aj_crew.apps.builtins.aws_control.backend import backup
 
 ACCOUNT = "111122223333"
 
@@ -158,14 +158,14 @@ class TestTreeFingerprint:
         )
 
     def test_volatile_root_ignores_the_timestamped_bundle_root(self, tmp_path):
-        # The snapshot bundle's root directory is named `kirocrew-snapshot-<stamp>`,
+        # The snapshot bundle's root directory is named `ajcrew-snapshot-<stamp>`,
         # so it changes every run. Left in the digest it would defeat the comparison
         # on its own, which is what `volatile_root=True` exists to prevent.
         first = _pack(
-            tmp_path / "one.tar.gz", {"kirocrew-snapshot-20260101T000000Z/a.txt": b"hello"}
+            tmp_path / "one.tar.gz", {"ajcrew-snapshot-20260101T000000Z/a.txt": b"hello"}
         )
         second = _pack(
-            tmp_path / "two.tar.gz", {"kirocrew-snapshot-20260102T111111Z/a.txt": b"hello"}
+            tmp_path / "two.tar.gz", {"ajcrew-snapshot-20260102T111111Z/a.txt": b"hello"}
         )
         assert backup._tree_fingerprint(first, volatile_root=True) == backup._tree_fingerprint(
             second, volatile_root=True
@@ -181,8 +181,8 @@ class TestTreeFingerprint:
         # Stripping the root must not strip the tree. A blanket "ignore the first
         # segment" that also swallowed what sits under it would make every snapshot
         # look unchanged forever, which is the dangerous direction.
-        first = _pack(tmp_path / "one.tar.gz", {"kirocrew-snapshot-20260101T000000Z/a.txt": b"x"})
-        second = _pack(tmp_path / "two.tar.gz", {"kirocrew-snapshot-20260102T111111Z/a.txt": b"y"})
+        first = _pack(tmp_path / "one.tar.gz", {"ajcrew-snapshot-20260101T000000Z/a.txt": b"x"})
+        second = _pack(tmp_path / "two.tar.gz", {"ajcrew-snapshot-20260102T111111Z/a.txt": b"y"})
         assert backup._tree_fingerprint(first, volatile_root=True) != backup._tree_fingerprint(
             second, volatile_root=True
         )
@@ -309,7 +309,7 @@ def _build_real_bundle(out: Path) -> Path:
     if not pinned_fs.supports_pinned_tree_walk():
         argv.append("--allow-unpinned-staging")
     assert backup.snapshot_main(argv) == 0
-    return sorted(out.glob("kirocrew-snapshot-*.tar.gz"))[-1]
+    return sorted(out.glob("ajcrew-snapshot-*.tar.gz"))[-1]
 
 
 class TestRealBundleAssumption:
@@ -325,7 +325,7 @@ class TestRealBundleAssumption:
         home = tmp_path / "home"
         (home / "workspace").mkdir(parents=True)
         (home / "workspace" / "note.md").write_text("hello\n", encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
 
         def build(out: Path) -> Path:
             return _build_real_bundle(out)
@@ -353,7 +353,7 @@ class TestRealBundleAssumption:
         home = tmp_path / "home"
         (home / "workspace").mkdir(parents=True)
         (home / "workspace" / "note.md").write_text("hello\n", encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
 
         def build(out: Path) -> Path:
             return _build_real_bundle(out)
@@ -380,7 +380,7 @@ class TestRealBundleAssumption:
         home = tmp_path / "home"
         (home / "workspace").mkdir(parents=True)
         (home / "workspace" / "note.md").write_text("hello\n", encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
 
         first = _build_real_bundle(tmp_path / "one")
         time.sleep(1.1)
@@ -869,7 +869,7 @@ def _fake_snapshot(body: bytes):
     def build(argv):
         counter["n"] += 1
         out = Path(argv[0])
-        root = f"kirocrew-snapshot-2026010{counter['n']}T000000Z"
+        root = f"ajcrew-snapshot-2026010{counter['n']}T000000Z"
         _pack(out / f"{root}.tar.gz", {f"{root}/a.txt": body})
         return 0
 
@@ -1253,7 +1253,7 @@ class TestRetentionComposition:
     def _build(self, argv) -> int:
         self._builds += 1
         out = Path(argv[0])
-        root = f"kirocrew-snapshot-2026010{self._builds}T000000Z"
+        root = f"ajcrew-snapshot-2026010{self._builds}T000000Z"
         _pack(out / f"{root}.tar.gz", {f"{root}/a.txt": self.snapshot_body})
         return 0
 

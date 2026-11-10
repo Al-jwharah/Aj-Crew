@@ -1,4 +1,4 @@
-"""The first crewmate (``kirocrew-mate``, shown as Mate) is an ordinary crewmate.
+"""The first crewmate (``ajcrew-mate``, shown as Mate) is an ordinary crewmate.
 
 Every path that renames, rebinds or removes a crew member treats it like any
 other: the dashboard and the CLI delete it, a rename writes its label, it can
@@ -16,34 +16,34 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew import cli_commands as cc
-from kiro_crew.agent_files import ASSISTANT_MEMBER_NAME
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.dashboard.handlers.agents import (
-    api_kirocrew_agent_delete,
-    api_kirocrew_agent_update,
+from aj_crew import change_card_catalog as catalog
+from aj_crew import cli_commands as cc
+from aj_crew.agent_files import ASSISTANT_MEMBER_NAME
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.dashboard.handlers.agents import (
+    api_ajcrew_agent_delete,
+    api_ajcrew_agent_update,
 )
-from kiro_crew.members import key_new_crew
+from aj_crew.members import key_new_crew
 
 ORDINARY = "scout"
-DEFAULT = "kirocrew"
+DEFAULT = "ajcrew"
 
 
 @pytest.fixture(autouse=True)
 def _owner_caller(_floor_monkeypatch):
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
 
 def _seed(label: str = "") -> None:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        DEFAULT: KiroCrewAgentConfig(kiro_agent=DEFAULT),
-        ASSISTANT_MEMBER_NAME: KiroCrewAgentConfig(kiro_agent=DEFAULT, display_name=label),
-        ORDINARY: KiroCrewAgentConfig(kiro_agent="oncall-agent"),
+        DEFAULT: AjCrewAgentConfig(kiro_agent=DEFAULT),
+        ASSISTANT_MEMBER_NAME: AjCrewAgentConfig(kiro_agent=DEFAULT, display_name=label),
+        ORDINARY: AjCrewAgentConfig(kiro_agent="oncall-agent"),
     }
     cfg.default_agent = DEFAULT
     cfg.save()
@@ -66,44 +66,44 @@ def _request(method: str, name: str, body: dict | None = None):
 @pytest.mark.asyncio
 async def test_the_dashboard_deletes_the_first_crewmate():
     _seed()
-    resp = await api_kirocrew_agent_delete(_request("DELETE", ASSISTANT_MEMBER_NAME))
+    resp = await api_ajcrew_agent_delete(_request("DELETE", ASSISTANT_MEMBER_NAME))
     assert resp.status == 200
-    assert ASSISTANT_MEMBER_NAME not in KiroCrewConfig.load().agents
+    assert ASSISTANT_MEMBER_NAME not in AjCrewConfig.load().agents
 
 
 def test_the_cli_deletes_the_first_crewmate(capsys):
     _seed()
     cc._handle_agent(argparse.Namespace(agent_action="delete", name=ASSISTANT_MEMBER_NAME))
     assert f"Deleted agent: {ASSISTANT_MEMBER_NAME}" in capsys.readouterr().out
-    assert ASSISTANT_MEMBER_NAME not in KiroCrewConfig.load().agents
+    assert ASSISTANT_MEMBER_NAME not in AjCrewConfig.load().agents
 
 
 @pytest.mark.asyncio
 async def test_renaming_the_first_crewmate_writes_its_label():
     _seed()
-    resp = await api_kirocrew_agent_update(
+    resp = await api_ajcrew_agent_update(
         _request("PUT", ASSISTANT_MEMBER_NAME, {"display_name": "Skipper"})
     )
     assert resp.status == 200
-    assert KiroCrewConfig.load().agents[ASSISTANT_MEMBER_NAME].display_name == "Skipper"
+    assert AjCrewConfig.load().agents[ASSISTANT_MEMBER_NAME].display_name == "Skipper"
 
 
 @pytest.mark.asyncio
 async def test_the_first_crewmate_can_move_to_another_template():
     _seed()
-    resp = await api_kirocrew_agent_update(
+    resp = await api_ajcrew_agent_update(
         _request("PUT", ASSISTANT_MEMBER_NAME, {"kiro_agent": "oncall-agent"})
     )
     assert resp.status == 200
-    assert KiroCrewConfig.load().agents[ASSISTANT_MEMBER_NAME].kiro_agent == "oncall-agent"
+    assert AjCrewConfig.load().agents[ASSISTANT_MEMBER_NAME].kiro_agent == "oncall-agent"
 
 
 @pytest.mark.asyncio
 async def test_another_crewmate_may_take_the_first_crewmates_label():
     _seed("Mate")
-    resp = await api_kirocrew_agent_update(_request("PUT", ORDINARY, {"display_name": "Mate"}))
+    resp = await api_ajcrew_agent_update(_request("PUT", ORDINARY, {"display_name": "Mate"}))
     assert resp.status == 200
-    assert KiroCrewConfig.load().agents[ORDINARY].display_name == "Mate"
+    assert AjCrewConfig.load().agents[ORDINARY].display_name == "Mate"
 
 
 def test_the_key_and_the_label_are_free_once_it_is_gone():
@@ -126,7 +126,7 @@ def test_a_card_creates_and_undoes_any_crewmate_name():
 
 
 def test_no_code_path_refers_to_the_removed_guards():
-    import kiro_crew.agent_files as files
+    import aj_crew.agent_files as files
 
     for gone in (
         "ASSISTANT_MEMBER_PROTECTED",

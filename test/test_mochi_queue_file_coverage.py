@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps.builtins.mochi import queue_file as qf
+from aj_crew.apps.builtins.mochi import queue_file as qf
 
 NOW = 1_800_000_000_000  # epoch milliseconds, on a whole second
 

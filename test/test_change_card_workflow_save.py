@@ -20,19 +20,19 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from guide_route_helpers import in_dashboard_turn
 
-import kiro_crew.dashboard.handlers.workflows as workflow_handlers
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew.dashboard import change_cards as cards
-from kiro_crew.dashboard import change_cards_readers as readers
-from kiro_crew.dashboard.change_cards import CardStore
-from kiro_crew.dashboard.handlers import change_cards as routes
-from kiro_crew.dashboard.handlers.workflows import (
+import aj_crew.dashboard.handlers.workflows as workflow_handlers
+from aj_crew import change_card_catalog as catalog
+from aj_crew.dashboard import change_cards as cards
+from aj_crew.dashboard import change_cards_readers as readers
+from aj_crew.dashboard.change_cards import CardStore
+from aj_crew.dashboard.handlers import change_cards as routes
+from aj_crew.dashboard.handlers.workflows import (
     api_workflow_definition_update,
     api_workflow_definitions_create,
 )
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.workflows.library import WorkflowDefinitionLibrary, WorkflowSlugTakenError
-from kiro_crew.workflows.validate import validate
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.workflows.library import WorkflowDefinitionLibrary, WorkflowSlugTakenError
+from aj_crew.workflows.validate import validate
 
 SAVE = "workflow.save"
 UPDATE = "workflow.update"
@@ -783,7 +783,7 @@ def test_no_card_without_the_workflow_service(monkeypatch):
 
 
 def test_a_crewmate_cannot_propose_a_saved_workflow(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import mate_thread_wakes
+    from aj_crew.dashboard import mate_thread_wakes
 
     monkeypatch.setattr(mate_thread_wakes, "is_crewmate_thread", lambda slot: True)
     library = WorkflowDefinitionLibrary(tmp_path)

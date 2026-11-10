@@ -16,11 +16,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import hooks
-from kiro_crew.apps import bridges as bridges_mod
-from kiro_crew.apps import execution as execution_mod
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
-from kiro_crew.apps.manifest import (
+from aj_crew import hooks
+from aj_crew.apps import bridges as bridges_mod
+from aj_crew.apps import execution as execution_mod
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
+from aj_crew.apps.manifest import (
     PATH_SCREEN_REFUSAL,
     PATH_UNVERIFIED_REFUSAL,
     AppManifest,
@@ -30,7 +30,7 @@ from kiro_crew.apps.manifest import (
     file_entry_point_refusal,
     screen_app_path,
 )
-from kiro_crew.security import UNVERIFIABLE_PATH_PREFIX
+from aj_crew.security import UNVERIFIABLE_PATH_PREFIX
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _AGENT_FILE = "my-agent.json"
@@ -56,9 +56,9 @@ def _make_app_source(tmp_path: Path, name: str = "test-app") -> Path:
 
 @pytest.fixture()
 def app_env(tmp_path, monkeypatch):
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     kiro_agents = tmp_path / "kiro-agents"
     kiro_agents.mkdir()
     monkeypatch.setattr(bridges_mod, "KIRO_AGENTS_DIR", kiro_agents)
@@ -165,7 +165,7 @@ def test_app_root_containment_follows_the_root_screen(tmp_path, monkeypatch):
 
 
 def test_every_builtin_manifest_passes_containment_against_its_own_root():
-    manifests = sorted((_REPO_ROOT / "src/kiro_crew/apps/builtins").glob("*/app.json"))
+    manifests = sorted((_REPO_ROOT / "src/aj_crew/apps/builtins").glob("*/app.json"))
     assert manifests, "no built-in manifests found"
     offenders = {}
     for app_json in manifests:
@@ -231,7 +231,7 @@ def _builtins_with_one_app(tmp_path: Path) -> Path:
 
 
 def test_discovery_keeps_a_builtin_whose_paths_the_screen_did_not_check(tmp_path, monkeypatch):
-    from kiro_crew.apps.discovery import discover_builtin_apps
+    from aj_crew.apps.discovery import discover_builtin_apps
 
     builtins = _builtins_with_one_app(tmp_path)
     assert [a["name"] for a in discover_builtin_apps(builtins)] == ["shipped-app"]
@@ -241,7 +241,7 @@ def test_discovery_keeps_a_builtin_whose_paths_the_screen_did_not_check(tmp_path
 
 
 def test_discovery_still_skips_a_builtin_whose_path_leaves_its_root(tmp_path):
-    from kiro_crew.apps.discovery import discover_builtin_apps
+    from aj_crew.apps.discovery import discover_builtin_apps
 
     builtins = _builtins_with_one_app(tmp_path)
     app_json = builtins / "shipped-app" / APP_MANIFEST_FILENAME
@@ -253,7 +253,7 @@ def test_discovery_still_skips_a_builtin_whose_path_leaves_its_root(tmp_path):
 
 
 def test_an_unchecked_builtin_is_not_reported_orphaned(tmp_path, app_env, monkeypatch):
-    from kiro_crew.apps import discovery, manager
+    from aj_crew.apps import discovery, manager
 
     builtins = _builtins_with_one_app(tmp_path)
     monkeypatch.setattr(discovery, "_get_builtins_dir", lambda: builtins)
@@ -269,7 +269,7 @@ def test_an_unchecked_builtin_is_not_reported_orphaned(tmp_path, app_env, monkey
 
 
 def test_discovery_skips_a_builtin_whose_error_only_quotes_the_unchecked_wording(tmp_path):
-    from kiro_crew.apps.discovery import discover_builtin_apps
+    from aj_crew.apps.discovery import discover_builtin_apps
 
     builtins = _builtins_with_one_app(tmp_path)
     app_json = builtins / "shipped-app" / APP_MANIFEST_FILENAME
@@ -373,7 +373,7 @@ def test_prune_still_runs_past_a_lasting_screen_refusal(tmp_path, app_env, monke
 
 
 def test_discovery_skips_a_builtin_the_screen_refuses(tmp_path, monkeypatch):
-    from kiro_crew.apps.discovery import discover_builtin_apps
+    from aj_crew.apps.discovery import discover_builtin_apps
 
     builtins = _builtins_with_one_app(tmp_path)
     _refuse_agent_file(monkeypatch, stalled=False)
@@ -498,7 +498,7 @@ def _bind_a_command_to_the_agent(app_json: Path) -> None:
 
 
 def test_discovery_keeps_a_builtin_whose_command_agent_path_was_not_checked(tmp_path, monkeypatch):
-    from kiro_crew.apps.discovery import discover_builtin_apps
+    from aj_crew.apps.discovery import discover_builtin_apps
 
     builtins = _builtins_with_one_app(tmp_path)
     _bind_a_command_to_the_agent(builtins / "shipped-app" / APP_MANIFEST_FILENAME)

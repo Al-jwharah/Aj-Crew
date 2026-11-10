@@ -21,14 +21,14 @@ import pytest
 
 @pytest.fixture
 def manual_clock():
-    """A fresh ``kiro_crew.testing.clock.ManualClock`` (Determinism contract D2, D3).
+    """A fresh ``aj_crew.testing.clock.ManualClock`` (Determinism contract D2, D3).
 
     Nothing is installed until the test asks:
     ``manual_clock.install(monkeypatch, subject_module)`` replaces that module's own
     ``time`` binding through the test's ``monkeypatch``, so the stdlib clock, the event
     loop and pytest-timeout keep real time.
     """
-    from kiro_crew.testing.clock import ManualClock
+    from aj_crew.testing.clock import ManualClock
 
     return ManualClock()
 
@@ -39,9 +39,9 @@ def seeded_rng(request):
 
     The seed is the same in every run and on every host, and it is printed in the
     report of a failing test, so the draws that failed can be replayed with
-    ``kiro_crew.testing.ids.seeded_rng(nodeid, seed=<printed seed>)``.
+    ``aj_crew.testing.ids.seeded_rng(nodeid, seed=<printed seed>)``.
     """
-    from kiro_crew.testing import ids
+    from aj_crew.testing import ids
 
     nodeid = _nodeid_without_xdist_group(request.node)
     seed = ids.seed_for(nodeid)
@@ -141,10 +141,10 @@ _host_time = time
 
 #: Turns the network floor from a report into a refusal: an off-loopback connect,
 #: send or name lookup raises at the call and fails the test at teardown.
-_NET_STRICT_ENV = "KIROCREW_NET_STRICT"
+_NET_STRICT_ENV = "AJCREW_NET_STRICT"
 
 #: Turns the package-attribute floor from restore-and-report into restore-and-fail.
-_PKG_ATTR_STRICT_ENV = "KIROCREW_PKG_ATTR_STRICT"
+_PKG_ATTR_STRICT_ENV = "AJCREW_PKG_ATTR_STRICT"
 
 
 # The process time zone. Nothing pins it (a pinned zone would hide every test that reads
@@ -170,14 +170,14 @@ def pytest_report_header(config: pytest.Config) -> str:
     )
 
 
-# The shared ``kiro_crew.executors`` pools. Work a test hands one and does not wait for
+# The shared ``aj_crew.executors`` pools. Work a test hands one and does not wait for
 # runs inside whichever test comes next on the worker, against that test's home.
 _POOL_STATE = pytest.StashKey[dict]()
 
 
 def _pool_activity() -> dict[str, tuple[int, int]]:
     """``name -> (busy, queued)`` for every loaded shared pool that has work."""
-    executors = sys.modules.get("kiro_crew.executors")
+    executors = sys.modules.get("aj_crew.executors")
     if executors is None:
         return {}
     from concurrent.futures import ThreadPoolExecutor
@@ -198,14 +198,14 @@ def _pool_activity() -> dict[str, tuple[int, int]]:
     return active
 
 
-# ``kiro_crew`` package attributes. ``monkeypatch.setattr("kiro_crew.mod.name", ...)``
+# ``aj_crew`` package attributes. ``monkeypatch.setattr("aj_crew.mod.name", ...)``
 # resolves each dotted component as an ATTRIBUTE of its parent package, so a test that
-# evicts ``kiro_crew.mod`` from ``sys.modules`` and imports it again without putting the
+# evicts ``aj_crew.mod`` from ``sys.modules`` and imports it again without putting the
 # parent's attribute back, or that replaces a module the others already hold, breaks
 # later tests far from the cause (2,167 setup errors on one Windows worker). The floor
 # restores what the test inherited and names the test that changed it.
 class _PackageTable:
-    """The inherited ``kiro_crew`` module graph: one row per bound submodule."""
+    """The inherited ``aj_crew`` module graph: one row per bound submodule."""
 
     __slots__ = ("modules_len", "root", "root_items", "names", "objs", "parent_dicts", "childs")
 
@@ -220,7 +220,7 @@ class _PackageTable:
 
     def rebuild(self) -> None:
         modules = sys.modules
-        self.root = modules.get("kiro_crew")
+        self.root = modules.get("aj_crew")
         self.root_items = (
             [(k, v) for k, v in vars(self.root).items() if not k.startswith("__")]
             if self.root is not None
@@ -228,7 +228,7 @@ class _PackageTable:
         )
         names, objs, parent_dicts, childs = [], [], [], []
         for name, module in list(modules.items()):
-            if module is None or not name.startswith("kiro_crew."):
+            if module is None or not name.startswith("aj_crew."):
                 continue
             parent_name, _, child = name.rpartition(".")
             parent_dict = getattr(modules.get(parent_name), "__dict__", None)
@@ -245,7 +245,7 @@ class _PackageTable:
 
     def intact(self) -> bool:
         modules = sys.modules
-        if modules.get("kiro_crew") is not self.root:
+        if modules.get("aj_crew") is not self.root:
             return False
         if list(map(modules.get, self.names)) != self.objs:
             return False
@@ -258,9 +258,9 @@ class _PackageTable:
         """Put back every inherited binding, and return what had changed."""
         changed: list[str] = []
         modules = sys.modules
-        if self.root is not None and modules.get("kiro_crew") is not self.root:
-            changed.append("sys.modules['kiro_crew'] replaced")
-            modules["kiro_crew"] = self.root
+        if self.root is not None and modules.get("aj_crew") is not self.root:
+            changed.append("sys.modules['aj_crew'] replaced")
+            modules["aj_crew"] = self.root
         for name, obj, parent_dict, child in zip(
             self.names, self.objs, self.parent_dicts, self.childs
         ):
@@ -277,7 +277,7 @@ class _PackageTable:
         if root_dict is not None:
             for key, value in self.root_items:
                 if root_dict.get(key) is not value:
-                    changed.append(f"kiro_crew.{key} rebound")
+                    changed.append(f"aj_crew.{key} rebound")
                     root_dict[key] = value
         return changed
 
@@ -285,12 +285,12 @@ class _PackageTable:
 _PACKAGE_TABLE = _PackageTable()
 
 
-def _bind_unbound_kiro_crew_modules() -> list[str]:
-    """Bind back a loaded ``kiro_crew`` submodule its parent package lost."""
+def _bind_unbound_aj_crew_modules() -> list[str]:
+    """Bind back a loaded ``aj_crew`` submodule its parent package lost."""
     bound: list[str] = []
     modules = sys.modules
     for name, module in list(modules.items()):
-        if module is None or not name.startswith("kiro_crew."):
+        if module is None or not name.startswith("aj_crew."):
             continue
         parent_name, _, child = name.rpartition(".")
         parent_dict = getattr(modules.get(parent_name), "__dict__", None)
@@ -312,7 +312,7 @@ class _AuditState:
     def __init__(self) -> None:
         self.active = False
         self.nodeid = ""
-        # nosemgrep: kirocrew.mock-pid-allocatable -- the audit state's own pid slot that setup fills from os.getpid() and not a mock pid
+        # nosemgrep: ajcrew.mock-pid-allocatable -- the audit state's own pid slot that setup fills from os.getpid() and not a mock pid
         self.pid = 0
         self.parent_pid = 0
         self.network_ok = False
@@ -344,7 +344,7 @@ _HOOKED_EVENTS = _AUDITED_EVENTS | _TMP_AUDITED_EVENTS
 
 
 class OffLoopbackNetworkRefused(ConnectionRefusedError):
-    """Raised under ``KIROCREW_NET_STRICT=1`` when a test reaches past loopback."""
+    """Raised under ``AJCREW_NET_STRICT=1`` when a test reaches past loopback."""
 
 
 def _is_loopback_host(host) -> bool:

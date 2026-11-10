@@ -15,10 +15,10 @@ from member_memory_helpers import document_store
 from member_memory_helpers import env as _member_env
 from member_memory_helpers import request
 
-from kiro_crew import vector_memory
-from kiro_crew.dashboard.handlers import memory
-from kiro_crew.hooks import FileTooLargeError
-from kiro_crew.memory import MemoryStore
+from aj_crew import vector_memory
+from aj_crew.dashboard.handlers import memory
+from aj_crew.hooks import FileTooLargeError
+from aj_crew.memory import MemoryStore
 
 env = _member_env
 pytestmark = pytest.mark.xdist_group("member_memory_api")

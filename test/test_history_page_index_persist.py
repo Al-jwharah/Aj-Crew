@@ -17,7 +17,7 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     yield
 
 
@@ -26,7 +26,7 @@ ROWS = 3_000
 
 @pytest.fixture
 def transcript(tmp_path, monkeypatch) -> tuple[Any, str]:
-    from kiro_crew import history
+    from aj_crew import history
 
     monkeypatch.setattr(history, "_SESSION_MAX_BYTES", 10**12)
     key = "dashboard:bounded-history"
@@ -47,7 +47,7 @@ def transcript(tmp_path, monkeypatch) -> tuple[Any, str]:
 
 class _FrameMeter:
     def __init__(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew import history_projection
+        from aj_crew import history_projection
 
         self.framed = 0
         real = history_projection.strict_raw_records_with_offsets
@@ -62,7 +62,7 @@ class _FrameMeter:
 
 
 def _bound() -> int:
-    from kiro_crew.history_projection_contract import _TRANSCRIPT_PAGE_INDEX_STRIDE
+    from aj_crew.history_projection_contract import _TRANSCRIPT_PAGE_INDEX_STRIDE
 
     return 50 + 2 * _TRANSCRIPT_PAGE_INDEX_STRIDE + 8
 
@@ -74,7 +74,7 @@ def _contents(page: Any) -> list[str]:
 def test_a_first_history_page_in_a_new_process_frames_the_page_not_the_file(
     transcript, monkeypatch
 ):
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     base_dir, key = transcript
     meter = _FrameMeter(monkeypatch)
@@ -89,7 +89,7 @@ def test_a_first_history_page_in_a_new_process_frames_the_page_not_the_file(
 
 
 def test_a_metadata_rewrite_does_not_reframe_the_transcript(transcript, monkeypatch):
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     base_dir, key = transcript
     log = ConversationLog(base_dir=base_dir)
@@ -108,7 +108,7 @@ def test_a_metadata_rewrite_does_not_reframe_the_transcript(transcript, monkeypa
 
 
 def test_a_consolidation_marker_rewrite_does_not_reframe_the_transcript(transcript, monkeypatch):
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     base_dir, key = transcript
     log = ConversationLog(base_dir=base_dir)
@@ -121,7 +121,7 @@ def test_a_consolidation_marker_rewrite_does_not_reframe_the_transcript(transcri
 
 
 def test_a_bounded_page_matches_the_full_read_after_appends_and_rewrites(transcript):
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     base_dir, key = transcript
     log = ConversationLog(base_dir=base_dir)
@@ -140,7 +140,7 @@ def test_a_bounded_page_matches_the_full_read_after_appends_and_rewrites(transcr
 def test_a_body_rewrite_is_never_served_from_the_carried_index(transcript):
     """A rewrite that changes rows (not only the first line) must not reuse offsets:
     the persisted base does not match the new file and the page is rebuilt."""
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     base_dir, key = transcript
     log = ConversationLog(base_dir=base_dir)
@@ -154,8 +154,8 @@ def test_a_body_rewrite_is_never_served_from_the_carried_index(transcript):
 
 
 def test_a_damaged_sidecar_is_ignored(transcript):
-    from kiro_crew.history import ConversationLog
-    from kiro_crew.history_page_index import sidecar_path
+    from aj_crew.history import ConversationLog
+    from aj_crew.history_page_index import sidecar_path
 
     base_dir, key = transcript
     log = ConversationLog(base_dir=base_dir)
@@ -171,8 +171,8 @@ def test_a_damaged_sidecar_is_ignored(transcript):
 
 
 def test_deleting_a_transcript_removes_its_sidecar(transcript):
-    from kiro_crew.history import ConversationLog
-    from kiro_crew.history_page_index import sidecar_path
+    from aj_crew.history import ConversationLog
+    from aj_crew.history_page_index import sidecar_path
 
     base_dir, key = transcript
     log = ConversationLog(base_dir=base_dir)
@@ -188,7 +188,7 @@ def test_a_rewrite_in_a_process_that_never_paged_carries_the_persisted_index(
 ):
     """A restart, then a metadata rewrite by a process holding no in-memory base (a
     resume that clears the close), then a page read: the sidecar is carried."""
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     base_dir, key = transcript
     ConversationLog(base_dir=base_dir).read_messages_chained_page(key, limit=50)
@@ -205,7 +205,7 @@ def test_a_copied_data_home_resumes_from_the_copied_sidecar(transcript, tmp_path
     inode; the sidecar still names the same rows, so the first page frames the page."""
     import shutil
 
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     base_dir, key = transcript
     ConversationLog(base_dir=base_dir).read_messages_chained_page(key, limit=50)
@@ -224,7 +224,7 @@ def test_a_whole_file_save_behind_a_new_first_line_resumes(transcript, monkeypat
     index follows the rows rather than the inode."""
     import os
 
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     base_dir, key = transcript
     log = ConversationLog(base_dir=base_dir)
@@ -249,7 +249,7 @@ def test_a_middle_row_rewritten_to_another_length_is_rescanned(transcript):
     shift explains, so the saved base is refused and the page is built afresh."""
     import os
 
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     base_dir, key = transcript
     log = ConversationLog(base_dir=base_dir)
@@ -272,7 +272,7 @@ def test_interior_row_length_changes_that_cancel_out_are_rescanned(transcript):
     head, the end and the file length; the checkpoints between them still move."""
     import os
 
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     base_dir, key = transcript
     log = ConversationLog(base_dir=base_dir)

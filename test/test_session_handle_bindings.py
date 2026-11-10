@@ -1,6 +1,6 @@
 """``AcpSessionHandle`` keeps every member it had, and each is bound from the module that owns it.
 
-The class's behaviour lives in the ``kiro_crew.acp.session_handle_*`` owner modules: each
+The class's behaviour lives in the ``aj_crew.acp.session_handle_*`` owner modules: each
 moved member's body is a module-level function there whose first parameter is ``self``, and
 the class binds it by name (``m = _owner.m``, or ``staticmethod(_owner.f)``). The instance
 state stays on the instance, so tests, ``AcpSessionHandle.__new__`` builds and the runtime
@@ -16,7 +16,7 @@ see the same members they always did. This file pins the binding contract:
 * each owner's docstring names the instance fields its members write and read;
 * owners log under the facade's logger, and the moved exception classes keep the facade
   as their module;
-* a write through ``kiro_crew.acp.session_handle`` reaches every owner that reads the name,
+* a write through ``aj_crew.acp.session_handle`` reaches every owner that reads the name,
   for every name the test trees patch there (the facade's mirror, ``_facade_mirror``), and
   the facade reads no name it serves as a bare global;
 * the facade imports nothing beyond its frozen inventory, the check ``setup.cfg``'s F401
@@ -39,8 +39,8 @@ from typing import Any
 import pytest
 from facade_mirror_scan import needs_syntax_tree, patched_names, text_patched_names
 
-from kiro_crew.acp import session_handle
-from kiro_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp import session_handle
+from aj_crew.acp.session_handle import AcpSessionHandle
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_session_handle_bindings")
 
@@ -365,27 +365,27 @@ _DECLARED = frozenset({"_compaction_terminal_seen", "_kas_compact_turn"})
 
 #: The owner modules, lowest layer first.
 _OWNERS = (
-    "kiro_crew.acp.session_handle_runtime_contract",
-    "kiro_crew.acp.session_handle_watchdog",
-    "kiro_crew.acp.session_handle_mcp",
-    "kiro_crew.acp.session_handle_kas",
-    "kiro_crew.acp.session_handle_native_children",
-    "kiro_crew.acp.session_handle_model_selection",
-    "kiro_crew.acp.session_handle_steering",
-    "kiro_crew.acp.session_handle_lifecycle",
-    "kiro_crew.acp.session_handle_compaction",
-    "kiro_crew.acp.session_handle_permissions",
-    "kiro_crew.acp.session_handle_elicitation",
-    "kiro_crew.acp.session_handle_updates",
-    "kiro_crew.acp.session_handle_turn",
-    "kiro_crew.acp.session_handle_dispatch",
-    "kiro_crew.acp.session_handle_class",
+    "aj_crew.acp.session_handle_runtime_contract",
+    "aj_crew.acp.session_handle_watchdog",
+    "aj_crew.acp.session_handle_mcp",
+    "aj_crew.acp.session_handle_kas",
+    "aj_crew.acp.session_handle_native_children",
+    "aj_crew.acp.session_handle_model_selection",
+    "aj_crew.acp.session_handle_steering",
+    "aj_crew.acp.session_handle_lifecycle",
+    "aj_crew.acp.session_handle_compaction",
+    "aj_crew.acp.session_handle_permissions",
+    "aj_crew.acp.session_handle_elicitation",
+    "aj_crew.acp.session_handle_updates",
+    "aj_crew.acp.session_handle_turn",
+    "aj_crew.acp.session_handle_dispatch",
+    "aj_crew.acp.session_handle_class",
 )
 
 #: The module that holds the class statement and its class-resident members.
 _CLASS_HOME = "session_handle_class"
 
-_PACKAGE = "kiro_crew.acp"
+_PACKAGE = "aj_crew.acp"
 _FACADE = session_handle.__name__
 
 #: Every name the facade's import statements bound before the owners existed. They stay
@@ -589,7 +589,7 @@ def test_no_bound_function_needs_its_class_body(owner: str) -> None:
 
 
 def _runtime_facade_imports(tree: ast.Module) -> list[int]:
-    """Lines that import the facade (``kiro_crew.acp.session_handle``) outside a
+    """Lines that import the facade (``aj_crew.acp.session_handle``) outside a
     ``TYPE_CHECKING`` block."""
     guarded: set[int] = set()
     for node in ast.walk(tree):
@@ -613,11 +613,11 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
 def test_the_facade_import_scan_can_fail() -> None:
     tree = ast.parse(
         "from typing import TYPE_CHECKING\n"
-        "if TYPE_CHECKING:\n    from kiro_crew.acp.session_handle import AcpSessionHandle\n"
-        "def f():\n    from kiro_crew.acp.session_handle import x\n"
-        "import kiro_crew.acp.session_handle\n"
-        "from kiro_crew.acp import session_handle\n"
-        "from kiro_crew.acp import session_handle_turn\n"
+        "if TYPE_CHECKING:\n    from aj_crew.acp.session_handle import AcpSessionHandle\n"
+        "def f():\n    from aj_crew.acp.session_handle import x\n"
+        "import aj_crew.acp.session_handle\n"
+        "from aj_crew.acp import session_handle\n"
+        "from aj_crew.acp import session_handle_turn\n"
     )
     assert sorted(_runtime_facade_imports(tree)) == [5, 6, 7]
 
@@ -692,7 +692,7 @@ def test_each_owner_names_the_fields_it_writes_and_reads(owner: str) -> None:
 def test_owners_log_under_the_session_handle_logger(owner: str) -> None:
     logger = vars(sys.modules[owner]).get("logger", session_handle.logger)
     assert logger is session_handle.logger
-    assert session_handle.logger.name == "kiro_crew.acp.session_handle"
+    assert session_handle.logger.name == "aj_crew.acp.session_handle"
 
 
 def _owner_imports(tree: ast.Module) -> set[str]:
@@ -717,14 +717,14 @@ def _owner_imports(tree: ast.Module) -> set[str]:
 
 def test_the_owner_import_scan_can_fail() -> None:
     tree = ast.parse(
-        "from kiro_crew.acp.session_handle_turn import X\n"
-        "from kiro_crew.acp import session_handle_watchdog as _w, kas_wire\n"
-        "import kiro_crew.acp.session_handle_dispatch\n"
+        "from aj_crew.acp.session_handle_turn import X\n"
+        "from aj_crew.acp import session_handle_watchdog as _w, kas_wire\n"
+        "import aj_crew.acp.session_handle_dispatch\n"
     )
     assert _owner_imports(tree) == {
-        "kiro_crew.acp.session_handle_turn",
-        "kiro_crew.acp.session_handle_watchdog",
-        "kiro_crew.acp.session_handle_dispatch",
+        "aj_crew.acp.session_handle_turn",
+        "aj_crew.acp.session_handle_watchdog",
+        "aj_crew.acp.session_handle_dispatch",
     }
 
 
@@ -757,8 +757,8 @@ _FACADE_MODULE_CLASSES = (
 
 #: Moved classes no reader names by module: they keep the module that defines them.
 _OWNER_MODULE_CLASSES = {
-    "AcpRuntimeProtocol": "kiro_crew.acp.session_handle_runtime_contract",
-    "WatchdogSettings": "kiro_crew.acp.session_handle_watchdog",
+    "AcpRuntimeProtocol": "aj_crew.acp.session_handle_runtime_contract",
+    "WatchdogSettings": "aj_crew.acp.session_handle_watchdog",
 }
 
 
@@ -770,7 +770,7 @@ def test_a_moved_exception_keeps_the_facade_as_its_module(name: str) -> None:
 
 
 def test_a_moved_exception_names_the_facade_in_an_error_chain() -> None:
-    from kiro_crew.subagent import _describe_exception
+    from aj_crew.subagent import _describe_exception
 
     try:
         try:
@@ -779,7 +779,7 @@ def test_a_moved_exception_names_the_facade_in_an_error_chain() -> None:
             raise session_handle.AcpRuntimeDead("gone") from cause
     except session_handle.AcpRuntimeDead as exc:
         text = _describe_exception(exc)
-    assert "kiro_crew.acp.session_handle.AcpRuntimeDead" in text
+    assert "aj_crew.acp.session_handle.AcpRuntimeDead" in text
     assert "session_handle_runtime_contract" not in text
 
 
@@ -797,7 +797,7 @@ def test_a_moved_class_without_a_module_reader_keeps_its_owner_module(name: str)
 _TEST_TREE = Path(__file__).resolve().parents[1] / "test"
 _SPELLINGS = {_FACADE: _FACADE}
 #: The test trees: ``test/`` and the builtin apps' own test packages under ``src/``.
-_CORPUS_ROOTS = (_TEST_TREE, _TEST_TREE.parent / "src" / "kiro_crew" / "apps")
+_CORPUS_ROOTS = (_TEST_TREE, _TEST_TREE.parent / "src" / "aj_crew" / "apps")
 
 #: Names a test patches through the facade in a shape the scan cannot read: an f-string
 #: target over a loop of module names (``test_hang_resilience_metrics.py``).
@@ -805,7 +805,7 @@ _HAND_PATCHED = frozenset({"emit_counter"})
 
 
 def _patched_through_the_facade() -> set[str]:
-    """Every name a test file patches through ``kiro_crew.acp.session_handle``: the regular
+    """Every name a test file patches through ``aj_crew.acp.session_handle``: the regular
     expressions read every file, and the syntax tree the files holding a patch shape the
     expressions cannot read."""
     names: set[str] = set()
@@ -864,7 +864,7 @@ def test_every_name_patched_through_the_facade_reaches_the_owners_reading_it() -
 
 def test_the_reach_scan_can_fail() -> None:
     index = session_handle._MIRROR
-    owner = "kiro_crew.acp.session_handle_dispatch"
+    owner = "aj_crew.acp.session_handle_dispatch"
     holders = dict(index.holders)
     holders["time"] = tuple(h for h in holders["time"] if h != owner)
     blind = dataclasses.replace(index, holders=holders)
@@ -922,8 +922,8 @@ def test_the_bare_global_scan_can_fail() -> None:
 def test_a_patch_through_the_facade_lands_on_every_owner_and_is_undone(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    mcp = sys.modules["kiro_crew.acp.session_handle_mcp"]
-    dispatch = sys.modules["kiro_crew.acp.session_handle_dispatch"]
+    mcp = sys.modules["aj_crew.acp.session_handle_mcp"]
+    dispatch = sys.modules["aj_crew.acp.session_handle_dispatch"]
     before = session_handle._MCP_DRAIN_NO_REPORT_CEILING
     yield_before = session_handle.DRAIN_YIELD_AFTER_S
     with monkeypatch.context() as patch:
@@ -940,7 +940,7 @@ def test_a_patch_through_the_facade_lands_on_every_owner_and_is_undone(
 def test_a_patch_of_a_served_helper_lands_on_its_reader_and_is_undone(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    turn = sys.modules["kiro_crew.acp.session_handle_turn"]
+    turn = sys.modules["aj_crew.acp.session_handle_turn"]
     before = turn._DRAIN_CLOSED_STOP_REASONS
     sentinel = frozenset({"patched"})
     with monkeypatch.context() as patch:
@@ -957,7 +957,7 @@ def test_a_patch_of_a_served_helper_lands_on_its_reader_and_is_undone(
 
 
 def test_the_class_keeps_the_facade_as_its_module_name_and_pickle_path() -> None:
-    from kiro_crew.acp import runtime, session_handle_class
+    from aj_crew.acp import runtime, session_handle_class
 
     assert AcpSessionHandle is session_handle_class.AcpSessionHandle is runtime.AcpSessionHandle
     assert (AcpSessionHandle.__module__, AcpSessionHandle.__qualname__) == (
@@ -1005,9 +1005,9 @@ def _imports_the_class_home(tree: ast.Module) -> bool:
 
 
 def test_the_class_home_import_scan_can_fail() -> None:
-    assert _imports_the_class_home(ast.parse("from kiro_crew.acp.session_handle_class import X\n"))
-    assert _imports_the_class_home(ast.parse("from kiro_crew.acp import session_handle_class\n"))
-    assert not _imports_the_class_home(ast.parse("from kiro_crew.acp import session_handle\n"))
+    assert _imports_the_class_home(ast.parse("from aj_crew.acp.session_handle_class import X\n"))
+    assert _imports_the_class_home(ast.parse("from aj_crew.acp import session_handle_class\n"))
+    assert not _imports_the_class_home(ast.parse("from aj_crew.acp import session_handle\n"))
 
 
 def test_the_model_parsers_normalize_through_the_function_the_class_binds(
@@ -1015,7 +1015,7 @@ def test_the_model_parsers_normalize_through_the_function_the_class_binds(
 ) -> None:
     """``parse_advertised_models`` calls its owner's ``_normalize_models`` (it read the class
     attribute before the class moved), and the class binds that same function."""
-    models = sys.modules["kiro_crew.acp.session_handle_model_selection"]
+    models = sys.modules["aj_crew.acp.session_handle_model_selection"]
     assert vars(AcpSessionHandle)["_normalize_models"].__func__ is models._normalize_models
     normalized: list[dict[str, str]] = [{"modelId": "normalized"}]
     monkeypatch.setattr(models, "_normalize_models", lambda raw: normalized)
@@ -1035,7 +1035,7 @@ def _is_type_checking(node: ast.stmt) -> bool:
 
 def _defined_by(module_name: str) -> set[str]:
     """Names *module_name* defines at its top level (a def, class or assignment)."""
-    from kiro_crew import _facade_mirror
+    from aj_crew import _facade_mirror
 
     return _facade_mirror._defined_names(_tree(importlib.import_module(module_name)))
 
@@ -1086,11 +1086,11 @@ def test_the_inventory_check_reports_a_planted_import() -> None:
     name that owner does not define, are both reported."""
     source = Path(session_handle.__file__ or "").read_text(encoding="utf-8")
     planted = source + (
-        "\nimport json\nfrom kiro_crew.acp.session_handle_turn import AcpRuntimeDead\n"
+        "\nimport json\nfrom aj_crew.acp.session_handle_turn import AcpRuntimeDead\n"
     )
     assert unexpected_imports(planted, _owner_names()) == [
         "json",
-        "kiro_crew.acp.session_handle_turn.AcpRuntimeDead",
+        "aj_crew.acp.session_handle_turn.AcpRuntimeDead",
     ]
 
 

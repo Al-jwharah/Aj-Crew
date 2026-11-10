@@ -23,9 +23,9 @@ from pathlib import Path
 import pytest
 from test_sandbox_launcher_program import RecordingLibc, launch, refusal
 
-from kiro_crew import sandbox as sb
-from kiro_crew import sandbox_launcher
-from kiro_crew import sandbox_launcher_program as program
+from aj_crew import sandbox as sb
+from aj_crew import sandbox_launcher
+from aj_crew import sandbox_launcher_program as program
 
 #: The exact line a container under its runtime's default AppArmor profile
 #: produces: both unshares succeed, the launcher's first mount is refused.
@@ -353,14 +353,14 @@ class TestOneOwnerForTheLauncherPrefixes:
     def test_the_clone_probe_classifier_reads_the_sandbox_tuple(self) -> None:
         # Two spellings of what the launcher says would drift apart the first time
         # the launcher changed; the module that generates the launcher owns the one.
-        from kiro_crew.apps.builtins.auto_improvement.backend import clone_setup
+        from aj_crew.apps.builtins.auto_improvement.backend import clone_setup
 
         assert clone_setup._LAUNCHER_EXIT_PREFIXES is sb.LAUNCHER_EXIT_PREFIXES
 
     def test_the_worktree_reader_matches_the_sandbox_exec_failure_pattern(self) -> None:
         # With a second spelling of the failed-exec line, the worktree handler and
         # launcher_refusal can drift apart, and a git that did not start reads as 503.
-        from kiro_crew.dashboard.handlers import worktree
+        from aj_crew.dashboard.handlers import worktree
 
         assert worktree.LAUNCHER_EXEC_FAILURE_RE is sb.LAUNCHER_EXEC_FAILURE_RE
 
@@ -479,8 +479,8 @@ class TestAFailedExecIsOneLauncherLine:
         # The newline would start a second line that opens like a mount refusal, the
         # terminal escape would reach whatever prints the line, and U+2028 is a line
         # break to str.splitlines.
-        from kiro_crew.acp.transport_errors import is_sandbox_init_failure_output
-        from kiro_crew.dashboard.handlers import worktree
+        from aj_crew.acp.transport_errors import is_sandbox_init_failure_output
+        from aj_crew.dashboard.handlers import worktree
 
         forged = "/x/a\nsandbox: BLOCKED — mount(/) failed: errno 13\x1b[2J\u2028b"
         run = launch(tmp_path)
@@ -519,9 +519,9 @@ class TestAFailedExecIsOneLauncherLine:
         # failure, a launcher failure to the clone probe, whose surfaced detail is the
         # line that names the command, and no refusal to the worktree handler, which
         # reports the failed call as git's own.
-        from kiro_crew.acp.transport_errors import is_sandbox_init_failure_output
-        from kiro_crew.apps.builtins.auto_improvement.backend import clone_setup
-        from kiro_crew.dashboard.handlers import worktree
+        from aj_crew.acp.transport_errors import is_sandbox_init_failure_output
+        from aj_crew.apps.builtins.auto_improvement.backend import clone_setup
+        from aj_crew.dashboard.handlers import worktree
 
         def missing(file: str, args: list[str]) -> None:
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT))

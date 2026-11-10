@@ -200,7 +200,7 @@ describe('useNativeNotification and quiet replacements', () => {
     function wrapper({ children }: { children: React.ReactNode }) {
       return createElement(Provider, { store }, children)
     }
-    renderHook(() => useNativeNotification('Kiro Crew', '/avatar.png'), { wrapper })
+    renderHook(() => useNativeNotification('Aj Crew', '/avatar.png'), { wrapper })
 
     act(() => { store.dispatch(addNotification(agentNote({ ts: '1', key: 'cr:1', title: 'Pushed' }))) })
     act(() => { store.dispatch(ackNotificationByTs('1')) })
@@ -217,7 +217,7 @@ describe('useNativeNotification and quiet replacements', () => {
     function wrapper({ children }: { children: React.ReactNode }) {
       return createElement(Provider, { store }, children)
     }
-    renderHook(() => useNativeNotification('Kiro Crew', '/avatar.png'), { wrapper })
+    renderHook(() => useNativeNotification('Aj Crew', '/avatar.png'), { wrapper })
 
     act(() => { store.dispatch(addNotification(agentNote({ ts: '1', key: 'poller:ci', title: 'Poller slow' }))) })
     act(() => {
@@ -235,7 +235,7 @@ describe('useNativeNotification and quiet replacements', () => {
     function wrapper({ children }: { children: React.ReactNode }) {
       return createElement(Provider, { store }, children)
     }
-    renderHook(() => useNativeNotification('Kiro Crew', '/avatar.png'), { wrapper })
+    renderHook(() => useNativeNotification('Aj Crew', '/avatar.png'), { wrapper })
 
     const unrelated = agentNote({ ts: '2', title: 'Unrelated' })
     act(() => { store.dispatch(addNotification(unrelated)) })
@@ -257,7 +257,7 @@ describe('useNativeNotification and quiet replacements', () => {
     function wrapper({ children }: { children: React.ReactNode }) {
       return createElement(Provider, { store }, children)
     }
-    renderHook(() => useNativeNotification('Kiro Crew', '/avatar.png'), { wrapper })
+    renderHook(() => useNativeNotification('Aj Crew', '/avatar.png'), { wrapper })
 
     act(() => { store.dispatch(addNotification(agentNote({ ts: '1', title: 'First' }))) })
     act(() => { store.dispatch(addNotification(agentNote({ ts: '2', title: 'Second' }))) })

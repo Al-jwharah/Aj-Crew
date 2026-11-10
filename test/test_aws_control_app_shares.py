@@ -16,13 +16,13 @@ from aws_control_app_helpers import (  # noqa: F401 -- fixtures are used by name
 class TestShares:
     @pytest.fixture(autouse=True)
     def _isolated_store(self, tmp_path, _floor_monkeypatch):
-        from kiro_crew.apps.builtins.aws_control.backend import shares
+        from aj_crew.apps.builtins.aws_control.backend import shares
 
         _floor_monkeypatch.setattr(shares, "_store_path", lambda: tmp_path / "shares.json")
         yield
 
     def test_ledger_records_metadata_never_the_url(self, tmp_path):
-        from kiro_crew.apps.builtins.aws_control.backend import shares
+        from aj_crew.apps.builtins.aws_control.backend import shares
 
         record = shares.record_share(
             account=ACCOUNT,
@@ -45,7 +45,7 @@ class TestShares:
         import contextlib
         from pathlib import Path
 
-        from kiro_crew.apps.builtins.aws_control.backend import shares
+        from aj_crew.apps.builtins.aws_control.backend import shares
 
         kept = shares.record_share(
             account=ACCOUNT, section="drive", key="live.txt", expires_secs=3600
@@ -76,7 +76,7 @@ class TestShares:
         # A mint that cannot be recorded must not answer as though it were.
         from pathlib import Path
 
-        from kiro_crew.apps.builtins.aws_control.backend import shares
+        from aj_crew.apps.builtins.aws_control.backend import shares
 
         shares.record_share(account=ACCOUNT, section="drive", key="live.txt", expires_secs=3600)
         store = tmp_path / "shares.json"
@@ -93,7 +93,7 @@ class TestShares:
 
     def test_a_missing_share_store_is_still_a_first_write(self, tmp_path):
         # Absent is the one failure where [] is the truth.
-        from kiro_crew.apps.builtins.aws_control.backend import shares
+        from aj_crew.apps.builtins.aws_control.backend import shares
 
         assert not (tmp_path / "shares.json").exists()
         shares.record_share(account=ACCOUNT, section="drive", key="first.txt", expires_secs=3600)
@@ -106,7 +106,7 @@ class TestShares:
         # record of live presigned URLs, which are unrevokable bearer grants.
         import json as _json
 
-        from kiro_crew.apps.builtins.aws_control.backend import shares
+        from aj_crew.apps.builtins.aws_control.backend import shares
 
         corrupt = '[{"id": "recoverable-share", "key": "live.txt"}'  # truncated
         (tmp_path / "shares.json").write_text(corrupt, encoding="utf-8")
@@ -128,7 +128,7 @@ class TestShares:
         # it would slip past every corruption clause at the callers.
         import json as _json
 
-        from kiro_crew.apps.builtins.aws_control.backend import shares
+        from aj_crew.apps.builtins.aws_control.backend import shares
 
         (tmp_path / "shares.json").write_bytes(b"\xff\xfe not utf8")
         with pytest.raises(_json.JSONDecodeError):
@@ -144,7 +144,7 @@ class TestShares:
         # to [] would let the rewrite destroy a document nobody could read.
         import json as _json
 
-        from kiro_crew.apps.builtins.aws_control.backend import shares
+        from aj_crew.apps.builtins.aws_control.backend import shares
 
         (tmp_path / "shares.json").write_text('{"not": "a list"}', encoding="utf-8")
         with pytest.raises(_json.JSONDecodeError):
@@ -161,7 +161,7 @@ class TestShares:
         # shape must refuse; the deliberate expiry drop stays retention.
         import json as _json
 
-        from kiro_crew.apps.builtins.aws_control.backend import shares
+        from aj_crew.apps.builtins.aws_control.backend import shares
 
         for damaged in (
             "a-damaged-row-that-is-not-an-object",
@@ -186,7 +186,7 @@ class TestShares:
         # crosses into responses and logs.
         import json as _json
 
-        from kiro_crew.apps.builtins.aws_control.backend import shares
+        from aj_crew.apps.builtins.aws_control.backend import shares
 
         (tmp_path / "shares.json").write_text(
             _json.dumps([{"id": "x", "key": "leakable-object-key.pdf"}]), encoding="utf-8"
@@ -201,7 +201,7 @@ class TestShares:
         # parseable stamp in the past is the deliberate drop, not a refusal.
         import json as _json
 
-        from kiro_crew.apps.builtins.aws_control.backend import shares
+        from aj_crew.apps.builtins.aws_control.backend import shares
 
         (tmp_path / "shares.json").write_text(
             _json.dumps([{"id": "dead", "key": "old.txt", "expiresAt": "2000-01-01T00:00:00"}]),
@@ -211,7 +211,7 @@ class TestShares:
         assert [e["key"] for e in shares.list_shares(ACCOUNT)] == ["new.txt"]
 
     def test_expired_shares_are_pruned_and_forget_removes(self):
-        from kiro_crew.apps.builtins.aws_control.backend import shares
+        from aj_crew.apps.builtins.aws_control.backend import shares
 
         dead = shares.record_share(account=ACCOUNT, section="drive", key="old.txt", expires_secs=60)
         # Backdate the expiry.
@@ -232,7 +232,7 @@ class TestShares:
         # only exit was the user pressing forget per row. The row STAYS -- the
         # ledger records that an unexpired URL was minted, which a delete does
         # not undo -- and gains the flag the Access section renders.
-        from kiro_crew.apps.builtins.aws_control.backend import shares
+        from aj_crew.apps.builtins.aws_control.backend import shares
 
         shares.record_share(account=ACCOUNT, section="drive", key="gone.txt", expires_secs=3600)
         shares.record_share(
@@ -255,7 +255,7 @@ class TestShares:
         # The row stores a SECTION plus a key; the object is at the section's
         # prefix. Matching on the bare key would find nothing in a listing of
         # real keys and mark every row missing.
-        from kiro_crew.apps.builtins.aws_control.backend import shares
+        from aj_crew.apps.builtins.aws_control.backend import shares
 
         row = {"id": "sh-1", "section": "drive", "key": "a.txt"}
         # Compared as WHOLE LISTS rather than indexed and subscripted. A
@@ -269,7 +269,7 @@ class TestShares:
     def test_a_row_naming_no_real_section_is_marked(self):
         # A section with no prefix cannot address an object, so no listing can
         # ever back the row. Reporting that beats rendering it as reachable.
-        from kiro_crew.apps.builtins.aws_control.backend import shares
+        from aj_crew.apps.builtins.aws_control.backend import shares
 
         row = {"id": "sh-1", "section": "nowhere", "key": "a.txt"}
         assert shares.mark_missing_objects([row], {"nowhere/a.txt"}) == [

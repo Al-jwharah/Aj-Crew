@@ -26,7 +26,7 @@ from pathlib import Path
 import pytest
 
 SCRIPT = Path(__file__).parent.parent / "packaging" / "build-desktop.sh"
-PRODUCTION = "KiroCrew"  # brand-ok: electron-builder productName identifier
+PRODUCTION = "AjCrew"  # brand-ok: electron-builder productName identifier
 
 runs_the_block = pytest.mark.skipif(
     os.name == "nt" or shutil.which("bash") is None,
@@ -46,15 +46,15 @@ def _extract_block() -> str:
 
 def _run(tmp_path: Path, core: str, stamped: str) -> tuple[subprocess.CompletedProcess, str, str]:
     root = tmp_path / "root"
-    (root / "src" / "kiro_crew").mkdir(parents=True)
-    (root / "src" / "kiro_crew" / "__init__.py").write_text(
-        f'"""Kiro Crew."""\n\n__version__ = "{core}"\n', encoding="utf-8"
+    (root / "src" / "aj_crew").mkdir(parents=True)
+    (root / "src" / "aj_crew" / "__init__.py").write_text(
+        f'"""Aj Crew."""\n\n__version__ = "{core}"\n', encoding="utf-8"
     )
     electron = root / "website" / "electron"
     electron.mkdir(parents=True)
     # The shape the edition's stamp writes: JSON.stringify(p, null, 2). A nested
     # "version" ahead of the top-level one must not be read in its place.
-    pkg = {"build": {"version": "0.0.1-9"}, "name": "kirocrew-desktop", "version": stamped}
+    pkg = {"build": {"version": "0.0.1-9"}, "name": "ajcrew-desktop", "version": stamped}
     (electron / "package.json").write_text(json.dumps(pkg, indent=2) + "\n", encoding="utf-8")
     script = (
         "set -euo pipefail\n"
@@ -121,7 +121,7 @@ def test_a_stamp_that_is_not_a_build_of_the_core_is_ignored(tmp_path: Path, stam
 @pytest.mark.parametrize(
     "core, product",
     [
-        ("0.13.0-nightly.20261107", "KiroCrew Nightly"),
+        ("0.13.0-nightly.20261107", "AjCrew Nightly"),
         ("0.13.0-insider.4", PRODUCTION),
         ("0.13.0rc7", PRODUCTION),
     ],

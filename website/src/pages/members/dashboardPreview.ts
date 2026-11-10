@@ -7,7 +7,7 @@
  * page instead of the live record, under a band that says nothing has changed yet.
  *
  * The two literals are mirrored by `PREVIEW_PAGE_PARAM` / `PREVIEW_PAGE_VALUE` in
- * `src/kiro_crew/dashboard_templates/instance.py`, which builds the link;
+ * `src/aj_crew/dashboard_templates/instance.py`, which builds the link;
  * `test_dashboard_tools.py` pins the pair against this file.
  */
 export const DASHBOARD_PREVIEW_PARAM = 'dashboard'

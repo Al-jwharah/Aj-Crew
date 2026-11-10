@@ -46,14 +46,14 @@ from remote_crew_chaining_helpers import (
     _relay_mint,
 )
 
-from kiro_crew.instances.registry import (
+from aj_crew.instances.registry import (
     Instance,
     InstancesRegistry,
     InvalidInstanceError,
     ancestor_ids,
     descendant_ids,
 )
-from kiro_crew.testing.wait import finished
+from aj_crew.testing.wait import finished
 
 # ── the data model ───────────────────────────────────────────────────────
 
@@ -327,7 +327,7 @@ class TestChainedForward:
         )
 
         async def silent_mint(_inst, _params):
-            from kiro_crew.instances.ssh_tunnel_manager import _Mint
+            from aj_crew.instances.ssh_tunnel_manager import _Mint
 
             return _Mint(token="CHAINED_TOKEN", hop=0, ttl="20h")  # reports no port
 
@@ -397,7 +397,7 @@ class TestChainedForward:
         assert params.ssh_host == "b-host"
 
     def test_a_chained_crew_cannot_be_restarted_from_here(self, tmp_path, monkeypatch):
-        """`kirocrew restart` would be dispatched at the PARENT's shell, which
+        """`ajcrew restart` would be dispatched at the PARENT's shell, which
         restarts the wrong machine."""
         reg, mgr = _mgr(tmp_path, monkeypatch)
         reg.add(name="B", ssh_host="b-host", instance_id="b")
@@ -480,7 +480,7 @@ class TestChainedToken:
         builds a payload, the hub parses one, and nothing compared them. So this drives
         the parent for real and then feeds its own payload to the hub's parser.
         """
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         # The parent end: mint for a crew IT holds, for a hub on port 9191.
         reg, mgr = _mgr(tmp_path, monkeypatch)
@@ -630,7 +630,7 @@ class TestChainedToken:
         async def mint_that_loses_the_forward(host, *, embed_parent_port=None, **_kw):
             mgr_ = holder[0]
             if host == "c-host" and embed_parent_port == 9191:
-                from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+                from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
                 mgr_._tunnels["c"].status.state = TunnelState.ERROR
             return f"TOKEN_FOR_{host}"
@@ -666,7 +666,7 @@ class TestChainedToken:
         a refresh scheduled from our row's 20h default would run after a shorter
         token has already expired.
         """
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         reg, mgr = _mgr(tmp_path, monkeypatch)
         reg.add(name="B", ssh_host="b-host", instance_id="b")
@@ -720,7 +720,7 @@ class TestChainedToken:
         """Read at THIS level because every connect test doubles the mint, so the
         reply-parsing itself is only reachable here -- a mutation removing it stays
         green against those tests."""
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         reg, mgr = _mgr(tmp_path, monkeypatch)
         reg.add(name="B", ssh_host="b-host", instance_id="b")
@@ -757,7 +757,7 @@ class TestChainedToken:
         """Dropped, so the caller refuses the dial. Adopting a malformed value would
         put it straight into an `ssh -L` target, and `True` is in the list because
         `isinstance(True, int)` is True and it would otherwise read as port 1."""
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         reg, mgr = _mgr(tmp_path, monkeypatch)
         reg.add(name="B", ssh_host="b-host", instance_id="b")
@@ -804,8 +804,8 @@ class TestChainedToken:
         AFTER the token is already dead. Refused instead, the same as a reply we
         cannot read -- every gateway that answers this endpoint reports its TTL.
         """
-        from kiro_crew.instances import ssh_tunnel_manager as stm
-        from kiro_crew.instances.ssh_tunnel_manager import TokenMintError
+        from aj_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances.ssh_tunnel_manager import TokenMintError
 
         reg, mgr = _mgr(tmp_path, monkeypatch)
         reg.add(name="B", ssh_host="b-host", instance_id="b")
@@ -876,8 +876,8 @@ class TestChainedToken:
         by hand or by an agent can carry any id string. Unchecked, an id like
         `victim/disconnect?x=` interpolates into a DIFFERENT authenticated route on
         the parent and spends our credential for it there."""
-        from kiro_crew.instances.registry import Instance
-        from kiro_crew.instances.ssh_tunnel_manager import TokenMintError
+        from aj_crew.instances.registry import Instance
+        from aj_crew.instances.ssh_tunnel_manager import TokenMintError
 
         reg, mgr = _mgr(tmp_path, monkeypatch)
         reg.add(name="B", ssh_host="b-host", instance_id="b")
@@ -941,7 +941,7 @@ class TestChainedToken:
         import inspect
         import textwrap
 
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         def calls_in(fn):
             tree = ast.parse(textwrap.dedent(inspect.getsource(fn)))
@@ -979,7 +979,7 @@ class TestOwnPageMint:
     _AGREEING = {"hop": 53999, "ttl": "30m", "hop_id": VIA_ID, "hop_gen": 1}
 
     def _parent_mint(self, token, changes=None):
-        from kiro_crew.instances.ssh_tunnel_manager import _Mint
+        from aj_crew.instances.ssh_tunnel_manager import _Mint
 
         return _Mint(token=token, **{**self._AGREEING, **(changes or {})})
 
@@ -1070,7 +1070,7 @@ class TestOwnPageMint:
         """The parent answers that the crew is not one it holds: terminal for our
         forward, exactly as on the refresh, so it is retired rather than left
         dialling a port the parent may give to another crew."""
-        from kiro_crew.instances.token_mint import HopRetiredError
+        from aj_crew.instances.token_mint import HopRetiredError
 
         def disowned(_port):
             raise HopRetiredError("crew 'b' does not hold the hop (instance_not_found)")
@@ -1121,7 +1121,7 @@ class TestOwnPageMint:
     def test_the_parent_is_asked_by_its_one_field_with_the_named_port(self, tmp_path, monkeypatch):
         """Over the real carrier: the page's port replaces ours in the only body
         field, so the parent's own depth refusal still sees us as the hub asking."""
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         reg, mgr = _mgr(tmp_path, monkeypatch)
         reg.add(name="B", ssh_host="b-host", instance_id="b")
@@ -1169,7 +1169,7 @@ class TestCycleGuard:
         return reg, mgr
 
     def test_a_hop_that_lands_back_on_us_is_refused_and_torn_down(self, tmp_path, monkeypatch):
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         reg, mgr = self._chained(tmp_path, monkeypatch)
         monkeypatch.setattr(stm, "gateway_id", lambda *_a, **_k: "OURS")
@@ -1188,7 +1188,7 @@ class TestCycleGuard:
         assert reg is not None
 
     def test_a_hop_that_lands_on_an_ancestor_is_refused(self, tmp_path, monkeypatch):
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         _reg, mgr = self._chained(tmp_path, monkeypatch)
         monkeypatch.setattr(stm, "gateway_id", lambda *_a, **_k: "OURS")
@@ -1223,7 +1223,7 @@ class TestCycleGuard:
         """A top-level crew pointing back at this gateway is what the product
         already allows. Refusing it here would break a working setup over an
         arrangement chaining does not introduce."""
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         reg, mgr = _mgr(tmp_path, monkeypatch)
         reg.add(name="Self", ssh_host="localhost", instance_id="self")

@@ -16,7 +16,7 @@ import pytest
 from denied_commands_security_helpers import _own_address_probe_stays_local  # noqa: F401
 from denied_commands_security_helpers import _denied_by
 
-from kiro_crew import security
+from aj_crew import security
 
 pytestmark = pytest.mark.usefixtures("fresh_darwin_libc_handles")
 
@@ -39,7 +39,7 @@ def _refused(cmd: str) -> bool:
         f"{_CM} +x build/usr/bin/tool",
         # The verb as data.
         f"git commit -m '{_CM} 777 is bad'",
-        f"grep -n '{_CM} 777' src/kiro_crew/security/denied_rules.py",
+        f"grep -n '{_CM} 777' src/aj_crew/security/denied_rules.py",
         f"git show origin/main:src/x.py | grep -nE '{_CM}|{_CO}|/etc/' | head -50",
         f"rg -n '{_CM}|{_CO}' /etc/profile.d",
         f"sed -n '/{_CM}/p' /etc/passwd",
@@ -67,7 +67,7 @@ def test_no_longer_refused(cmd):
 
 def test_ssh_batchmode_is_not_refused(monkeypatch):
     # ``BatchMode`` folds to the verb's letters; it is an ssh option.
-    from kiro_crew.security import argv_floor
+    from aj_crew.security import argv_floor
 
     monkeypatch.setattr(argv_floor, "_resolved_host_verdict", lambda host, **kwargs: False)
     cmd = "ssh -o BatchMode=yes host ls /usr/lib"
@@ -205,7 +205,7 @@ def test_dd_writing_a_raw_disk_is_refused(cmd, refused):
 
 
 def test_a_disabled_row_stays_disabled():
-    from kiro_crew.security import argv_rules
+    from aj_crew.security import argv_rules
 
     pattern = argv_rules.ARGV_RULE_BY_ID["local-destructive-chmod-etc"]
     enabled = [r.pattern for r in security.BUILTIN_DENIED_RULES if r.pattern != pattern]
@@ -215,7 +215,7 @@ def test_a_disabled_row_stays_disabled():
 
 
 def test_the_refusal_names_the_rule_and_the_argv_match():
-    from kiro_crew.security import argv_rules
+    from aj_crew.security import argv_rules
 
     reason = security.is_denied(f"{_CM} 600 /etc/shadow")
     assert reason is not None
@@ -224,7 +224,7 @@ def test_the_refusal_names_the_rule_and_the_argv_match():
 
 
 def test_every_argv_rule_is_a_catalog_row():
-    from kiro_crew.security import argv_rules
+    from aj_crew.security import argv_rules
 
     ids = {r.id for r in security.BUILTIN_DENIED_RULES}
     assert set(argv_rules.ARGV_RULE_BY_ID) <= ids
@@ -232,7 +232,7 @@ def test_every_argv_rule_is_a_catalog_row():
 
 
 def test_a_command_that_cannot_name_the_programs_is_not_read(monkeypatch):
-    from kiro_crew.security import argv_rules
+    from aj_crew.security import argv_rules
 
     calls = []
     monkeypatch.setattr(argv_rules, "_commands", lambda c: calls.append(c) or [])

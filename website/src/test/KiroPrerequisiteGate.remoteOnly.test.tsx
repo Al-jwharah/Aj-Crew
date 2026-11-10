@@ -18,7 +18,7 @@ vi.mock('../api/client', async () => ({
   api: {
     kiroPrerequisite: vi.fn(),
     repairKiroPrerequisiteSpecs: vi.fn(),
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
     acpBackends: vi.fn(),
     acpBackendRecheck: vi.fn(),
     patchConfig: vi.fn(),
@@ -84,7 +84,7 @@ describe('KiroPrerequisiteGate remote-only exit', () => {
     vi.clearAllMocks()
     localStorage.clear()
     vi.mocked(api.kiroPrerequisite).mockReset().mockResolvedValue(status())
-    vi.mocked(api.kirocrewConfig).mockReset().mockResolvedValue({ agent: { acp_backend: 'kiro' } })
+    vi.mocked(api.ajcrewConfig).mockReset().mockResolvedValue({ agent: { acp_backend: 'kiro' } })
     vi.mocked(api.acpBackends).mockReset().mockResolvedValue({ backends: [] })
   })
 
@@ -147,7 +147,7 @@ describe('KiroPrerequisiteGate remote-only exit', () => {
     await screen.findByRole('heading', { name: heading }, SETUP_CHAIN_WAIT)
     expect(screen.queryByRole('button', { name: CONNECT })).toBeNull()
     expect(bridge.available).not.toHaveBeenCalled()
-    expect(api.kirocrewConfig).not.toHaveBeenCalled()
+    expect(api.ajcrewConfig).not.toHaveBeenCalled()
   })
 
   it.each(FAILURE_SCREENS)('never offers the exit to a non-owner with $name', async ({ overrides }) => {
@@ -190,7 +190,7 @@ describe('KiroPrerequisiteGate remote-only exit', () => {
       // prerequisite -> config query chain to settle before asserting absence.
       await waitFor(() => {
         expect(queryClient.getQueryData<KiroPrerequisiteStatus>(['kiro-prerequisite'])?.initial_setup_complete).toBe(true)
-        expect(queryClient.getQueryState(['kirocrewConfig'])?.status).toBe('success')
+        expect(queryClient.getQueryState(['ajcrewConfig'])?.status).toBe('success')
       }, SETUP_CHAIN_WAIT)
       expect(screen.queryByRole('button', { name: CONNECT })).toBeNull()
       expect(bridge.available).not.toHaveBeenCalled()

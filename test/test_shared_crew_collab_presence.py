@@ -12,21 +12,21 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.shared_crew import presence as presence_mod
-from kiro_crew.shared_crew.collab import (
+from aj_crew.shared_crew import presence as presence_mod
+from aj_crew.shared_crew.collab import (
     ACTIVITY_MIN_INTERVAL_SECONDS,
     FRAME_PRESENCE,
     PRESENCE_TTL_SECONDS,
     Activity,
 )
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew.contracts import (
     DisplaySnapshot,
     Principal,
     PrincipalKind,
     Provenance,
     principal_id_for,
 )
-from kiro_crew.shared_crew.presence import (
+from aj_crew.shared_crew.presence import (
     REFUSED_FULL,
     REFUSED_MALFORMED,
     REFUSED_RATE,
@@ -248,11 +248,11 @@ def test_release_and_sweep_push_the_emptied_session(monkeypatch):
 def test_presence_is_never_written_to_disk(tmp_path: Path, monkeypatch):
     """No draft or keystroke can reach storage: the registry holds no text field.
 
-    The whole lifecycle runs with KIROCREW_HOME at an empty temp dir and leaves
+    The whole lifecycle runs with AJCREW_HOME at an empty temp dir and leaves
     it empty, and a frame's text fields do not appear in anything the registry
     exposes.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _State()
     frame = {"session_key": "s1", "activity": "typing", "draft": "TOP-SECRET-DRAFT"}
     handle_activity_frame(state, "ws:1", ALICE, frame, dashboard_user=True)

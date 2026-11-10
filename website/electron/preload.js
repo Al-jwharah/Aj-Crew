@@ -8,7 +8,7 @@ let navigateReadySent = false;
 // channels `assertLocalDashboard` refuses are then withheld, not exposed.
 const REMOTE_GATEWAY = process.argv.includes("--kc-remote-gateway");
 
-contextBridge.exposeInMainWorld("kirocrew", {
+contextBridge.exposeInMainWorld("ajcrew", {
   platform: process.platform,
   isElectron: true,
   // True when this window is a frameless Linux window (a runtime decision --
@@ -137,7 +137,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     const handler = (_e, path) => cb(path);
     ipcRenderer.on("navigate", handler);
     // Tell the main process this document now has a `navigate` listener, so a
-    // kirocrew:// link it is holding goes to a listener instead of to nobody.
+    // ajcrew:// link it is holding goes to a listener instead of to nobody.
     // Once per document: the SPA re-subscribes whenever its router callbacks
     // change identity, and only the first subscription is news.
     if (!navigateReadySent) {

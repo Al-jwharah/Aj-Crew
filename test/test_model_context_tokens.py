@@ -21,13 +21,13 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew import context as ctx
-from kiro_crew import model_registry
-from kiro_crew.config import live
-from kiro_crew.config import sections as config_sections
-from kiro_crew.config.live import ConfigChange, ConfigDeferred
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.sections import AgentConfig
+from aj_crew import context as ctx
+from aj_crew import model_registry
+from aj_crew.config import live
+from aj_crew.config import sections as config_sections
+from aj_crew.config.live import ConfigChange, ConfigDeferred
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.sections import AgentConfig
 
 MODEL = "server-a/org/model-7b"
 SIBLING = "server-b/org/model-7b"
@@ -124,8 +124,8 @@ class TestAgentConfigField:
             json.dumps({"agent": {"model_context_tokens": {**declared, "bad": 12}}}),
             encoding="utf-8",
         )
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: cfg_file)
-        cfg = KiroCrewConfig.load()
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: cfg_file)
+        cfg = AjCrewConfig.load()
         assert cfg.agent.model_context_tokens == declared
         assert cfg.to_dict()["agent"]["model_context_tokens"] == declared
 
@@ -211,19 +211,19 @@ class _FreshClient:
         return 0
 
 
-def _config(tmp_path, monkeypatch, windows: dict[str, object]) -> KiroCrewConfig:
+def _config(tmp_path, monkeypatch, windows: dict[str, object]) -> AjCrewConfig:
     cfg_file = tmp_path / "config.json"
     cfg_file.write_text(
         json.dumps({"agent": {"model": MODEL, "model_context_tokens": windows}}),
         encoding="utf-8",
     )
-    monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: cfg_file)
-    return KiroCrewConfig.load()
+    monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: cfg_file)
+    return AjCrewConfig.load()
 
 
-def _boot(initial: KiroCrewConfig | None) -> None:
+def _boot(initial: AjCrewConfig | None) -> None:
     """Arm the dashboard's config watch the way both server modes do at boot."""
-    from kiro_crew.dashboard.server import _register_config_watch
+    from aj_crew.dashboard.server import _register_config_watch
 
     state = SimpleNamespace(
         workflow_service=None, channel_manager=None, set_dynamic_cards_enabled=MagicMock()
@@ -231,15 +231,15 @@ def _boot(initial: KiroCrewConfig | None) -> None:
     _register_config_watch(web.Application(), state, initial)
 
 
-def _reload(old: KiroCrewConfig, new: KiroCrewConfig) -> None:
+def _reload(old: AjCrewConfig, new: AjCrewConfig) -> None:
     """Hand the registered applier the change a config watcher tick would report."""
     applier = {s.name: s for s in live.watch().subscriptions()}[_APPLIER].callback()
     assert applier is not None
     applier(ConfigChange(old=old, new=new, changed=frozenset({"agent.model_context_tokens"})))
 
 
-def _with_windows(windows: dict[str, int]) -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
+def _with_windows(windows: dict[str, int]) -> AjCrewConfig:
+    cfg = AjCrewConfig()
     cfg.agent.model_context_tokens = windows
     return cfg
 
@@ -288,7 +288,7 @@ class TestFirstPromptBudget:
         """A torn document holds the DEFAULT map; applying it would drop every declaration."""
         booted = _config(tmp_path, monkeypatch, {MODEL: WINDOW})
         _boot(booted)
-        torn = replace(KiroCrewConfig(), _degraded_sections=frozenset({"agent"}))
+        torn = replace(AjCrewConfig(), _degraded_sections=frozenset({"agent"}))
         with pytest.raises(ConfigDeferred):
             _reload(booted, torn)
         assert ctx.window_for_provider_client(_FreshClient(MODEL)) == WINDOW

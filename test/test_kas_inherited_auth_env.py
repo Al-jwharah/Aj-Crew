@@ -3,7 +3,7 @@
 kiro-cli's MCP children inherit its environment, so they see the ``KRB5CCNAME`` and
 ``SSH_AUTH_SOCK`` the gateway armed for it. KAS starts a stdio server with a fixed
 minimal environment instead, so the projection hands the server the same two
-pointers through Crew's launcher (``kiro_crew.kas_env_shim``) and its owner-only
+pointers through Crew's launcher (``aj_crew.kas_env_shim``) and its owner-only
 snapshot. These tests pin that both pointers reach the server's process and never
 the wire, that the socket follows the KAS spawn's own forward verdict, that a
 value the server declares wins, and that a server which starts today still starts
@@ -23,10 +23,10 @@ import pytest
 from kas_agents_helpers import _spec
 from test_kas_env_launch import _run_entry, _snapshot, _wire_text
 
-from kiro_crew import env as env_mod
-from kiro_crew import kas_env_shim, platform_compat, sandbox
-from kiro_crew.acp import kas_env_launch
-from kiro_crew.acp.kas_agents import to_client_custom_agent
+from aj_crew import env as env_mod
+from aj_crew import kas_env_shim, platform_compat, sandbox
+from aj_crew.acp import kas_env_launch
+from aj_crew.acp.kas_agents import to_client_custom_agent
 
 SESSION = "dashboard_chat-kas-auth-1"
 SOCK_LEAF = "agent.kas-auth-sock-4242"
@@ -53,7 +53,7 @@ for line in sys.stdin:
 def home(tmp_path, monkeypatch):
     data_home = tmp_path / "crew-home"
     data_home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(data_home))
+    monkeypatch.setenv("AJCREW_HOME", str(data_home))
     return data_home
 
 
@@ -98,9 +98,9 @@ def _bare(script) -> dict:
 def _project(
     servers: dict, session_key: str = SESSION, forward_ssh_auth_sock: bool = True, **kwargs
 ) -> dict:
-    spec = _spec(mcpServers={"kirocrew-core": {"command": "x"}, **servers})
+    spec = _spec(mcpServers={"ajcrew-core": {"command": "x"}, **servers})
     return to_client_custom_agent(
-        "kirocrew",
+        "ajcrew",
         spec,
         "p",
         session_key=session_key,
@@ -154,7 +154,7 @@ class TestProjection:
         }
 
     def test_a_reference_the_wire_keeps_is_not_overridden(self, home, script, relay, monkeypatch):
-        from kiro_crew.platform.defaults import DefaultMcpToolingProvider
+        from aj_crew.platform.defaults import DefaultMcpToolingProvider
 
         monkeypatch.setattr(
             DefaultMcpToolingProvider,
@@ -170,7 +170,7 @@ class TestProjection:
     def test_a_managed_and_a_pooled_server_get_nothing(self, home, script, relay):
         agent = _project({"pooled": _bare(script)}, stub_server_names=frozenset({"pooled"}))
         assert "pooled" not in agent["mcpServers"], "declared by the session, not here"
-        core = agent["mcpServers"]["kirocrew-core"]
+        core = agent["mcpServers"]["ajcrew-core"]
         assert core["command"] == "x"
         assert not {"KRB5CCNAME", "SSH_AUTH_SOCK"} & set(core.get("env") or {})
         assert not (home / kas_env_shim.SNAPSHOT_LEAF).exists()
@@ -254,8 +254,8 @@ async def test_the_runtime_hands_the_harness_its_launch_verdict(forwarded):
     runtime that never launched (no attribute) hands False."""
     from types import SimpleNamespace
 
-    from kiro_crew.acp import runtime_session_setup
-    from kiro_crew.acp.harness import SessionExtras
+    from aj_crew.acp import runtime_session_setup
+    from aj_crew.acp.harness import SessionExtras
 
     seen: dict = {}
 
@@ -298,16 +298,16 @@ def test_the_kas_harness_relays_the_socket_only_when_both_verdicts_agree(
 
     from test_worker_agent_spawn_gate import _DEFAULT_SPEC_ON_DISK, AGENT_FILENAME
 
-    from kiro_crew import agent, agent_state
-    from kiro_crew.acp import kas_agents as kas_agents_mod
-    from kiro_crew.acp.harness import harness_for
-    from kiro_crew.acp.types import ACP_BACKEND_KAS
+    from aj_crew import agent, agent_state
+    from aj_crew.acp import kas_agents as kas_agents_mod
+    from aj_crew.acp.harness import harness_for
+    from aj_crew.acp.types import ACP_BACKEND_KAS
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(agent_state, "config_dir", lambda: tmp_path)
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(_DEFAULT_SPEC_ON_DISK), encoding="utf-8")
     agent._install_worker_agent()
-    import kiro_crew.config.paths as paths_mod
+    import aj_crew.config.paths as paths_mod
 
     monkeypatch.setattr(paths_mod, "kiro_agents_dir", lambda: tmp_path)
     monkeypatch.setattr(agent, "require_fork_governance", lambda a, w: None)
@@ -327,7 +327,7 @@ def test_the_kas_harness_relays_the_socket_only_when_both_verdicts_agree(
     harness.spawn_sandbox_mode = spawn_mode
     asyncio.run(
         harness.session_extras(
-            "kirocrew-worker", work_dir=str(tmp_path / "wd"), ssh_auth_sock_forwarded=launch
+            "ajcrew-worker", work_dir=str(tmp_path / "wd"), ssh_auth_sock_forwarded=launch
         )
     )
     assert seen == [relayed]

@@ -1,19 +1,19 @@
-"""GATE: Kiro Crew core does not depend on the Code Review Sage app's code.
+"""GATE: Aj Crew core does not depend on the Code Review Sage app's code.
 
 Code Review Sage is to leave this repository whole. That is only possible while
-nothing outside ``src/kiro_crew/apps/builtins/`` imports it or names it. The app
+nothing outside ``src/aj_crew/apps/builtins/`` imports it or names it. The app
 already reaches core only through public surfaces it imports itself (the ACP worker
 pool, ``github_runner``, the dashboard's pull-request panel), so no seam carries
 anything for it today; a core feature that ever needs something from it asks a seam
-in :mod:`kiro_crew.apps.seams`, and the app answers from its own ``seams.py``. The
+in :mod:`aj_crew.apps.seams`, and the app answers from its own ``seams.py``. The
 scans are the shared ones in ``test/core_app_independence.py``.
 
 Two properties are pinned:
 
 1. **No core module or script imports the app.** Every module under
-   ``src/kiro_crew`` outside ``apps/builtins/``, and every script under
+   ``src/aj_crew`` outside ``apps/builtins/``, and every script under
    ``scripts/``, is parsed. ``import``, ``from ... import`` (relative ones
-   resolved), ``from kiro_crew.apps.builtins import code_review_sage``,
+   resolved), ``from aj_crew.apps.builtins import code_review_sage``,
    ``importlib.import_module`` and ``__import__`` with a literal name are all in
    scope, and the probes below fail if any of those forms stops being caught.
 2. **The strings that still name the app are a pinned, shrinking list.** A path
@@ -40,11 +40,11 @@ import pytest
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_test_core_code_review_sage_decoupling")
 
-APP_PACKAGE = "kiro_crew.apps.builtins.code_review_sage"
+APP_PACKAGE = "aj_crew.apps.builtins.code_review_sage"
 #: The package directory name and the app id: every spelling that addresses the app.
 APP_NAMES = ("code_review_sage", "code-review-sage")
 
-#: (path relative to ``src/kiro_crew``, or to the repository root for a script; the
+#: (path relative to ``src/aj_crew``, or to the repository root for a script; the
 #: literal): the core strings that still name the app, each with why it is not a seam.
 #:
 #: - ``security_posture.py``: the redaction rows that classify the app's modules as the
@@ -87,7 +87,7 @@ def test_no_core_module_or_script_imports_the_app(core_trees):
     offenders = independence.core_app_imports(core_trees, APP_PACKAGE)
     assert not offenders, (
         "core imports the Code Review Sage app; ask a seam in "
-        "kiro_crew.apps.seams instead:\n" + "\n".join(offenders)
+        "aj_crew.apps.seams instead:\n" + "\n".join(offenders)
     )
 
 
@@ -104,27 +104,27 @@ def test_the_strings_naming_the_app_are_the_pinned_list(core_trees):
     ("source", "importer", "is_package"),
     [
         (
-            "from kiro_crew.apps.builtins.code_review_sage.sage_lib import review_driver",
-            "kiro_crew.dashboard.x",
+            "from aj_crew.apps.builtins.code_review_sage.sage_lib import review_driver",
+            "aj_crew.dashboard.x",
             False,
         ),
-        ("import kiro_crew.apps.builtins.code_review_sage.backend.routes", "kiro_crew.x", False),
-        ("from kiro_crew.apps.builtins import code_review_sage", "kiro_crew.x", False),
-        ("from ..apps.builtins.code_review_sage import sage_lib", "kiro_crew.dashboard.y", False),
-        ("from .builtins.code_review_sage.backend import routes", "kiro_crew.apps.y", False),
-        ("from .builtins import code_review_sage", "kiro_crew.apps", True),
+        ("import aj_crew.apps.builtins.code_review_sage.backend.routes", "aj_crew.x", False),
+        ("from aj_crew.apps.builtins import code_review_sage", "aj_crew.x", False),
+        ("from ..apps.builtins.code_review_sage import sage_lib", "aj_crew.dashboard.y", False),
+        ("from .builtins.code_review_sage.backend import routes", "aj_crew.apps.y", False),
+        ("from .builtins import code_review_sage", "aj_crew.apps", True),
         (
             "import importlib\n"
-            "importlib.import_module('kiro_crew.apps.builtins.code_review_sage.sage_lib.store')",
-            "kiro_crew.x",
+            "importlib.import_module('aj_crew.apps.builtins.code_review_sage.sage_lib.store')",
+            "aj_crew.x",
             False,
         ),
-        ("__import__('kiro_crew.apps.builtins.code_review_sage')", "kiro_crew.x", False),
+        ("__import__('aj_crew.apps.builtins.code_review_sage')", "aj_crew.x", False),
         (
             "from typing import TYPE_CHECKING\n"
             "if TYPE_CHECKING:\n"
-            "    from kiro_crew.apps.builtins.code_review_sage.sage_lib import store",
-            "kiro_crew.x",
+            "    from aj_crew.apps.builtins.code_review_sage.sage_lib import store",
+            "aj_crew.x",
             False,
         ),
     ],
@@ -136,14 +136,14 @@ def test_the_scan_catches_every_import_form(source, importer, is_package):
 @pytest.mark.parametrize(
     "source",
     [
-        "from kiro_crew.apps import seams",
-        "from kiro_crew.apps.builtins import BUILTIN_NAMES",
-        "import kiro_crew.apps.builtins.code_review_sage_other",
-        "from kiro_crew.acp import worker_pool",
+        "from aj_crew.apps import seams",
+        "from aj_crew.apps.builtins import BUILTIN_NAMES",
+        "import aj_crew.apps.builtins.code_review_sage_other",
+        "from aj_crew.acp import worker_pool",
     ],
 )
 def test_the_scan_leaves_other_imports_alone(source):
-    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "kiro_crew.x", False)
+    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "aj_crew.x", False)
 
 
 def test_the_string_scan_skips_docstrings_but_not_paths_ids_or_urls():

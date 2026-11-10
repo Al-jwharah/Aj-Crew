@@ -13,7 +13,7 @@ from typing import Any, Callable
 
 import pytest
 
-from kiro_crew.artifacts import ArtifactStore
+from aj_crew.artifacts import ArtifactStore
 
 
 def _two_artifacts(tmp_path: Path) -> tuple[ArtifactStore, str, str]:
@@ -34,7 +34,7 @@ def _edit_meta(store: ArtifactStore, slug: str, edit: Callable[[dict[str, Any]],
     ("block", "value"),
     [
         ("publication", {"artifact_id": "p1", "version_map": {"1": "INF", "2": 3}}),
-        ("publication", {"artifact_id": "p1", "last_synced_kirocrew_version": "INF"}),
+        ("publication", {"artifact_id": "p1", "last_synced_ajcrew_version": "INF"}),
         ("publication", {"artifact_id": "p1", "wrapper_revision": "INF"}),
         ("fork_metadata", {"upstream_artifact_id": "u1", "upstream_version": "INF"}),
     ],
@@ -50,7 +50,7 @@ def test_an_infinite_sub_field_falls_back_and_the_artifact_still_loads(
     art = store.get(bad)
     if block == "publication":
         assert art.publication is not None
-        assert art.publication.last_synced_kirocrew_version == 0
+        assert art.publication.last_synced_ajcrew_version == 0
         assert art.publication.wrapper_revision == 0
         assert art.publication.version_map == ({"2": 3} if "version_map" in value else {})
     else:

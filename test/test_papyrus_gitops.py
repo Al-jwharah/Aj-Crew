@@ -2,7 +2,7 @@
 
 Lives in the repo-level ``test/`` tree (not the app's in-package ``tests/``)
 because ``setup.cfg`` sets ``testpaths = test transfer`` — a test under
-``src/kiro_crew/apps/builtins/...`` is never collected by CI.
+``src/aj_crew/apps/builtins/...`` is never collected by CI.
 
 Every ``git`` invocation is mocked at the ``_git`` chokepoint, so no repository is
 created and no network is touched.
@@ -35,10 +35,10 @@ import pytest
 from git_maintenance_helpers import GIT_MAINTENANCE_OFF_CONFIG
 
 from conftest import make_dir_link, requires_symlinks
-from kiro_crew import atomic_write, platform_compat, sandbox
-from kiro_crew.apps.builtins.papyrus.backend import gitops, store
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
-from kiro_crew.testing.wait import await_until
+from aj_crew import atomic_write, platform_compat, sandbox
+from aj_crew.apps.builtins.papyrus.backend import gitops, store
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.wait import await_until
 
 
 def _hermetic_git_env() -> dict[str, str]:
@@ -743,7 +743,7 @@ class TestGitOutputIsBounded:
         """One implementation, so a fix to the drain logic cannot land in one caller
         and miss the other — which is exactly how this bug survived in `gitops` after
         being fixed in `latex`."""
-        from kiro_crew.apps.builtins.papyrus.backend import latex, procio
+        from aj_crew.apps.builtins.papyrus.backend import latex, procio
 
         assert gitops.procio.read_capped is procio.read_capped
         assert latex.MAX_CAPTURED_OUTPUT_BYTES == procio.MAX_CAPTURED_OUTPUT_BYTES

@@ -28,13 +28,13 @@ const params = new URLSearchParams(location.search)
 const scene = params.get('scene') || 'setup'
 const theme = params.get('theme') || 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const FLEET = scene === 'error'
   ? {
     worktrees: [],
-    error: 'main checkout not found: /opt/checkouts/kirocrew is missing or not a git '
-      + 'checkout. It is set by the KIROCREW_DEVFLEET_REPO environment variable.',
+    error: 'main checkout not found: /opt/checkouts/ajcrew is missing or not a git '
+      + 'checkout. It is set by the AJCREW_DEVFLEET_REPO environment variable.',
   }
   : { worktrees: [], needs_setup: true }
 

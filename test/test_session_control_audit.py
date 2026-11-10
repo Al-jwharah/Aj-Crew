@@ -1,6 +1,6 @@
 """Session-control audit tests: refusal outcomes, off-loop writes and redaction.
 
-Covers the ``kirocrew-dashboard`` refusal audit: a tool call refused by its route,
+Covers the ``ajcrew-dashboard`` refusal audit: a tool call refused by its route,
 or by an unverified caller, replies with an ``Error:`` prefix and is logged with
 ``outcome="failed"``. A source scan pins that no line of the ``mcp_dashboard*.py``
 files pairs ``return`` with an escaped cross mark.
@@ -26,14 +26,14 @@ from session_control_helpers import (  # noqa: F401 -- the autouse fixtures regi
     _slot,
 )
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.testing.wait import wait_until
+from aj_crew.dashboard import session_control as sc
+from aj_crew.testing.wait import wait_until
 
-#: One valid call per kirocrew-dashboard tool, for the refusal-audit sweep below.
+#: One valid call per ajcrew-dashboard tool, for the refusal-audit sweep below.
 _DASHBOARD_TOOL_CALLS = {
     "chat_folder_tree": {},
     "chat_folder_create": {"name": "New"},
-    "chat_folder_move": {"folder": "Travel", "new_parent": "kirocrew"},
+    "chat_folder_move": {"folder": "Travel", "new_parent": "ajcrew"},
     "chat_folder_update": {"folder": "Travel", "name": "Trips"},
     "chat_folder_move_session": {"session": "chat-3", "folder": "Travel"},
     "chat_folder_delete": {"folder": "Travel"},
@@ -78,13 +78,13 @@ def test_every_session_control_refusal_is_audited_as_failed(monkeypatch, refusal
     """A refused tool call must not be recorded as a completed one.
 
     `call_tool_with_logging` records `outcome="failed"` only for a result starting
-    "Error:". Swept over every `kirocrew-dashboard` tool for both refusal routes; the
+    "Error:". Swept over every `ajcrew-dashboard` tool for both refusal routes; the
     list is checked against the server's rows, so a new tool must be added here.
     """
-    from kiro_crew import mcp_shared
-    from kiro_crew.mcp_dashboard import SESSION_CONTROL_TOOLS, TABLE
-    from kiro_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
-    from kiro_crew.mcp_tools.table import Caller, ToolContext
+    from aj_crew import mcp_shared
+    from aj_crew.mcp_dashboard import SESSION_CONTROL_TOOLS, TABLE
+    from aj_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
+    from aj_crew.mcp_tools.table import Caller, ToolContext
 
     assert set(_DASHBOARD_TOOL_CALLS) == set(TABLE.names())
     assert set(SESSION_CONTROL_TOOLS) <= set(_DASHBOARD_TOOL_CALLS)

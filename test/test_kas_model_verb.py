@@ -13,8 +13,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     METHOD_SET_CONFIG_OPTION,

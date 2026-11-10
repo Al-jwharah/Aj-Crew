@@ -16,9 +16,9 @@ from dynamic_dashboard_cards_helpers import _seeded_session_tree  # noqa: F401
 from dynamic_dashboard_cards_helpers import lifecycle_fixture  # noqa: F401
 from dynamic_dashboard_cards_helpers import _parked, _worker_done
 
-from kiro_crew.crew_main_contract import CARD_FIELDS, PHRASES_FIELD
-from kiro_crew.dashboard.dynamic_cards import CardBudget, CardPublisher, normalize_card
-from kiro_crew.testing.wait import await_until
+from aj_crew.crew_main_contract import CARD_FIELDS, PHRASES_FIELD
+from aj_crew.dashboard.dynamic_cards import CardBudget, CardPublisher, normalize_card
+from aj_crew.testing.wait import await_until
 
 
 def test_layout_can_be_reused_but_first_publication_needs_one():
@@ -109,7 +109,7 @@ async def test_cooldown_global_budget_and_failures_count_attempts():
 async def test_default_budget_enforces_the_config_help_limits():
     from dataclasses import fields
 
-    from kiro_crew.config.sections import DashboardConfig
+    from aj_crew.config.sections import DashboardConfig
 
     setting = next(f for f in fields(DashboardConfig) if f.name == "dynamic_dashboard_cards")
     assert setting.default is False
@@ -316,7 +316,7 @@ def test_pending_and_cache_are_bounded_and_rebinding_discards_content():
 
 @pytest.mark.asyncio
 async def test_real_slot_events_ignore_replay_and_stream_reader_does_not_hide_events():
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("one")
     events = []
@@ -352,7 +352,7 @@ def test_same_key_empty_replacement_invalidates_the_previous_card(lifecycle, mon
 
 @pytest.mark.parametrize("source", ["scratch", "previous-owner"])
 def test_unregistered_slot_callback_cannot_invalidate_live_card(lifecycle, monkeypatch, source):
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.state import _ChatSlot
 
     service, _, state = lifecycle
     live = _ChatSlot("one")
@@ -391,7 +391,7 @@ def test_unregistered_slot_callback_cannot_invalidate_live_card(lifecycle, monke
 def test_retired_callback_forgets_only_its_own_card(
     lifecycle, monkeypatch, registered, cached_owner
 ):
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.state import _ChatSlot
 
     service, _, state = lifecycle
     retired = _ChatSlot("one")
@@ -431,7 +431,7 @@ def test_slot_removal_evicts_a_predecessor_card_under_a_registered_replacement(
     judges the cached card by owner: the retired slot's card goes, so the
     replacement never presents it. Negative control: a card the replacement
     already owns stays, and nothing is broadcast for it."""
-    from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+    from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
     service, _, state = lifecycle
     state._dynamic_cards = service
@@ -464,7 +464,7 @@ def test_slot_removal_evicts_a_predecessor_card_under_a_registered_replacement(
 async def test_cancelled_turn_invalidates_old_card_after_same_key_recreation(
     lifecycle, monkeypatch
 ):
-    from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+    from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
     service, _, state = lifecycle
     state._dynamic_cards = service
@@ -548,8 +548,8 @@ async def test_edit_boundary_preserves_card_until_real_rewrite(
     from aiohttp.test_utils import TestClient, TestServer
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard import chat_regenerate, chat_rewind
-    from kiro_crew.dashboard.card_lifecycle import CardLifecycle
+    from aj_crew.dashboard import chat_regenerate, chat_rewind
+    from aj_crew.dashboard.card_lifecycle import CardLifecycle
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("one")
@@ -603,7 +603,7 @@ async def test_edit_boundary_preserves_card_until_real_rewrite(
 
 @pytest.mark.asyncio
 async def test_generation_is_session_scoped_bounded_and_get_is_free(lifecycle, monkeypatch):
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     service, slot, state = lifecycle
     calls = []
@@ -633,7 +633,7 @@ async def test_model_input_and_published_output_cross_the_registered_redaction_s
 ):
     import json
 
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     service, slot, state = lifecycle
     credential = "ghp_" + "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef12"
@@ -666,7 +666,7 @@ async def test_model_input_and_published_output_cross_the_registered_redaction_s
 async def test_decoded_card_output_is_redacted(lifecycle, monkeypatch, field, secret):
     import json
 
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     service, slot, _ = lifecycle
     sensitive = (
@@ -711,7 +711,7 @@ async def test_decoded_card_output_is_redacted(lifecycle, monkeypatch, field, se
 def test_decoded_card_output_retains_contextual_credential_checks():
     import json
 
-    from kiro_crew.dashboard.card_lifecycle import _redact, _redact_card_output
+    from aj_crew.dashboard.card_lifecycle import _redact, _redact_card_output
 
     # This family is identified by its field label, not by the value alone.
     raw = {"html": "<p>Safe</p>", "data": {"aws_secret_access_key": "A" * 40}}
@@ -731,7 +731,7 @@ async def test_html_entities_cannot_publish_decoded_secrets(
     import html
     import json
 
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     sensitive = (
         "ghp_" + "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef1234"
@@ -772,7 +772,7 @@ async def test_html_entities_cannot_publish_decoded_secrets(
 def test_safe_html_entities_and_literal_data_survive_without_reserialization():
     import json
 
-    from kiro_crew.dashboard.card_lifecycle import _redact_card_output
+    from aj_crew.dashboard.card_lifecycle import _redact_card_output
 
     markup = (
         '<p title="A &amp; B">&#65; &#x42; &copy; &unknown;</p><b data-dashboard-field="x"></b>'
@@ -794,7 +794,7 @@ def test_markup_cannot_hold_a_labelled_credential_apart_from_its_label():
     by the raw scan, and a layout that names the label with no value publishes."""
     import json
 
-    from kiro_crew.dashboard.card_lifecycle import _redact, _redact_card_output
+    from aj_crew.dashboard.card_lifecycle import _redact, _redact_card_output
 
     # The raw scan takes the closing tag for the value: label gone, value kept.
     assert "A" * 40 in _redact(_SPLIT_LABEL_MARKUP)
@@ -825,7 +825,7 @@ def test_markup_cannot_hide_a_split_credential_behind_a_character_reference(refe
     import html
     import json
 
-    from kiro_crew.dashboard.card_lifecycle import _hides_secret, _redact, _redact_card_output
+    from aj_crew.dashboard.card_lifecycle import _hides_secret, _redact, _redact_card_output
 
     encoded = reference + "A" * 39
     markup = "<p><b>aws_secret_access_key:</b> <code>" + encoded + "</code></p>"
@@ -856,7 +856,7 @@ def test_markup_cannot_split_a_credential_token_across_tags(split):
     credential when joined publish untouched."""
     import json
 
-    from kiro_crew.dashboard.card_lifecycle import _hides_secret, _redact, _redact_card_output
+    from aj_crew.dashboard.card_lifecycle import _hides_secret, _redact, _redact_card_output
 
     token = "AKIAIOSFODNN7EXAMPLE"
     assert _redact("<p>" + token + "</p>") != "<p>" + token + "</p>"
@@ -882,7 +882,7 @@ def test_markup_cannot_split_a_suspicious_url_across_tags():
     published without it."""
     import json
 
-    from kiro_crew.dashboard.card_lifecycle import _hides_secret, _redact, _redact_card_output
+    from aj_crew.dashboard.card_lifecycle import _hides_secret, _redact, _redact_card_output
 
     url = "https://collect.attacker.example/?payload=" + "aB3" * 70 + "&host=corp-laptop"
     cut = url.index("?") + 1
@@ -910,7 +910,7 @@ async def test_model_input_omits_a_message_whose_markup_splits_a_labelled_creden
     message without the split is delivered."""
     import json
 
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     service, slot, state = lifecycle
     slot.messages = [
@@ -938,8 +938,8 @@ async def test_maximum_previous_card_leaves_room_for_escaped_recent_evidence(
 ):
     import json
 
-    from kiro_crew.dashboard import card_lifecycle
-    from kiro_crew.dashboard.dynamic_cards import MAX_DATA_BYTES, MAX_HTML_BYTES, MAX_INPUT_CHARS
+    from aj_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard.dynamic_cards import MAX_DATA_BYTES, MAX_HTML_BYTES, MAX_INPUT_CHARS
 
     service, slot, state = lifecycle
     service.publisher.budget = CardBudget(debounce=0, per_session=0)
@@ -988,7 +988,7 @@ async def test_invalid_data_only_result_preserves_publication_and_charges_attemp
 ):
     import json
 
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     service, slot, state = lifecycle
     service.publisher.budget = CardBudget(debounce=0, per_session=0)
@@ -1026,7 +1026,7 @@ async def test_invalid_data_only_result_preserves_publication_and_charges_attemp
 async def test_source_invalidation_and_failed_update_never_republish_old_content(
     lifecycle, monkeypatch, invalidate
 ):
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     service, slot, state = lifecycle
     service.publisher.budget = CardBudget(debounce=0, per_session=0)
@@ -1061,7 +1061,7 @@ async def test_source_invalidation_and_failed_update_never_republish_old_content
 @pytest.mark.asyncio
 @pytest.mark.parametrize("revoke", ["memory", "disk", "delete", "rebind"])
 async def test_derivation_guards_before_and_after_model_call(lifecycle, monkeypatch, revoke):
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     service, slot, state = lifecycle
 
@@ -1126,7 +1126,7 @@ async def test_remote_executor_never_admits_local_generation(lifecycle, complete
 async def test_remote_executor_revokes_completed_and_read_cards(
     lifecycle, monkeypatch, complete_binding, transition
 ):
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     service, slot, state = lifecycle
 
@@ -1156,7 +1156,7 @@ async def test_remote_executor_revokes_completed_and_read_cards(
 
 
 def test_a_stray_text_lt_before_a_tag_cannot_hide_a_split_credential():
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     # A browser shows "x < AKIAIOSFODNN7EXAMPLE": the "< " is text, and the
     # stray </b> inside the paragraph is ignored.
@@ -1198,7 +1198,7 @@ def test_a_stray_text_lt_before_a_tag_cannot_hide_a_split_credential():
 
 
 def test_scalar_card_data_is_bound_as_text_not_refused():
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     payload = card_lifecycle._redact_card_output(
         json.dumps(
@@ -1219,7 +1219,7 @@ def test_scalar_card_data_is_bound_as_text_not_refused():
 
 
 def test_injected_automation_rows_reach_the_model_as_automation():
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     rows = card_lifecycle._evidence_rows(
         [
@@ -1233,7 +1233,7 @@ def test_injected_automation_rows_reach_the_model_as_automation():
 
 @pytest.mark.asyncio
 async def test_a_long_run_of_tool_rows_does_not_empty_the_evidence_window(lifecycle, monkeypatch):
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     service, slot, state = lifecycle
     state.conversation_log.rows = [
@@ -1258,7 +1258,7 @@ async def test_a_long_run_of_tool_rows_does_not_empty_the_evidence_window(lifecy
 async def test_card_scanning_runs_off_the_gateway_loop(lifecycle, monkeypatch):
     import threading
 
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     service, slot, _ = lifecycle
     loop_thread = threading.current_thread()
@@ -1323,7 +1323,7 @@ async def test_a_throwaway_api_slot_and_a_replaying_slot_queue_no_card(lifecycle
 
 @pytest.mark.asyncio
 async def test_a_queued_card_reads_queued_before_its_transcript_exists_or_while_busy(lifecycle):
-    from kiro_crew.history import TranscriptBusy
+    from aj_crew.history import TranscriptBusy
 
     service, slot, state = lifecycle
     service.publisher.budget = CardBudget(debounce=60)
@@ -1349,7 +1349,7 @@ async def test_a_queued_card_reads_queued_before_its_transcript_exists_or_while_
 
 @pytest.mark.asyncio
 async def test_a_published_card_read_under_a_busy_lock_is_unavailable_not_blank(lifecycle):
-    from kiro_crew.history import TranscriptBusy
+    from aj_crew.history import TranscriptBusy
 
     service, slot, state = lifecycle
     service.publisher.notify(slot.key, slot._dashboard_card_identity, "dashboard:one", "done")
@@ -1398,14 +1398,14 @@ _BROWSER_TEXT = {
 
 @pytest.mark.parametrize("markup", sorted(_BROWSER_TEXT))
 def test_the_projection_shows_what_the_browser_shows(markup):
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     assert card_lifecycle._html_texts(markup)[1] == _BROWSER_TEXT[markup]
 
 
 def test_cdata_is_kept_as_text_where_the_browser_would_hide_it():
     """Showing more than the browser hides nothing; showing less could split a key."""
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     # Chromium renders "AKIAX" here (a bogus comment inside a MathML text point).
     assert (
@@ -1416,7 +1416,7 @@ def test_cdata_is_kept_as_text_where_the_browser_would_hide_it():
 def test_card_prompt_leaves_pending_questions_to_the_host():
     """The card is a model-written summary; a "Needs you" copy of an ask goes
     stale on answer and disagrees with the Questions tab, which is the source."""
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     prompt = " ".join(card_lifecycle._ROOT_PROMPT.split())
     assert "Do not restate questions, choices or decisions waiting for the user" in prompt
@@ -1426,7 +1426,7 @@ def test_card_prompt_leaves_pending_questions_to_the_host():
 
 async def _card_context(service, slot, monkeypatch):
     """The JSON evidence the card model is given for *slot*'s next card."""
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     prompts = []
 
@@ -1471,10 +1471,10 @@ async def test_card_language_ignores_a_previous_card_in_another_language(lifecyc
 
 @pytest.mark.asyncio
 async def test_configured_ui_language_wins_over_the_user_text(lifecycle, monkeypatch):
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     service, slot, _state = lifecycle
-    card_lifecycle.KiroCrewConfig.load().dashboard.language = "zh-CN"
+    card_lifecycle.AjCrewConfig.load().dashboard.language = "zh-CN"
     context = await _card_context(service, slot, monkeypatch)
     assert context["language"] == {"tag": "zh-CN"}
 
@@ -1488,7 +1488,7 @@ async def test_no_language_signal_sends_no_language(lifecycle, monkeypatch):
 
 
 def test_root_prompt_names_the_language_rule():
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     prompt = card_lifecycle._ROOT_PROMPT
     assert '"language"' in prompt and '"tag"' in prompt and '"user_wrote"' in prompt

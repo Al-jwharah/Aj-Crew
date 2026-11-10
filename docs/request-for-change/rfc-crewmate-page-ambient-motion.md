@@ -1,7 +1,7 @@
 ---
 title: Crewmate page ambient motion -- a crewmate's own Dashboard page may run subtle, constant ambient motion by default, held still only for a reader who set reduced motion
 status: accepted
-author: rayrayxu, with kirocrew-worker
+author: rayrayxu, with ajcrew-worker
 created: 2026-10-21
 last-audited: 2026-10-21
 audited-at: 4533b1eb5b

@@ -19,9 +19,9 @@ from uuid import uuid4
 
 from knowledge_helpers import store_fixture  # noqa: F401
 
-from kiro_crew._sqlite_compat import sqlite3
-from kiro_crew.knowledge import retrieval as retrieval_mod
-from kiro_crew.knowledge.retrieval import HybridRetriever
+from aj_crew._sqlite_compat import sqlite3
+from aj_crew.knowledge import retrieval as retrieval_mod
+from aj_crew.knowledge.retrieval import HybridRetriever
 
 # The oldest SQLite default SQLITE_MAX_VARIABLE_NUMBER (pre-3.32); 32766 from
 # 3.32 on. The over-limit tests pin the store's connection to this floor so a

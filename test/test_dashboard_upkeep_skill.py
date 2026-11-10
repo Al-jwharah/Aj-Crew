@@ -22,9 +22,9 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import dashboard_agentic, dashboard_upkeep
-from kiro_crew.dashboard_templates import instance
-from kiro_crew.dashboard_templates.manifest import (
+from aj_crew import dashboard_agentic, dashboard_upkeep
+from aj_crew.dashboard_templates import instance
+from aj_crew.dashboard_templates.manifest import (
     MAX_UPKEEP_CHARS,
     ManifestError,
     load_template,
@@ -32,14 +32,14 @@ from kiro_crew.dashboard_templates.manifest import (
 )
 
 SLUG = "code-reviewer"
-BUILTIN = Path(__file__).resolve().parents[1] / "src/kiro_crew/dashboard_templates/builtin"
+BUILTIN = Path(__file__).resolve().parents[1] / "src/aj_crew/dashboard_templates/builtin"
 UPKEEP = {"means": "the lanes", "when": "once per round", "how": "write them"}
 
 
 @pytest.fixture(autouse=True)
 def _home(tmp_path, _floor_monkeypatch):
     """Own data home, so an adopt and the scripts land in this test's tree only."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
 
 
 @pytest.fixture
@@ -89,12 +89,12 @@ def _rows(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
 
 
 def _member_section() -> str:
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-    from kiro_crew.context_assembly.member import build_member_section
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+    from aj_crew.context_assembly.member import build_member_section
 
-    cfg = KiroCrewConfig()
-    cfg.agents = {SLUG: KiroCrewAgentConfig(kiro_agent="kirocrew-autofix")}
-    with patch("kiro_crew.context.KiroCrewConfig.load", return_value=cfg):
+    cfg = AjCrewConfig()
+    cfg.agents = {SLUG: AjCrewAgentConfig(kiro_agent="ajcrew-autofix")}
+    with patch("aj_crew.context.AjCrewConfig.load", return_value=cfg):
         return build_member_section(SLUG)
 
 
@@ -173,7 +173,7 @@ class TestTheUpkeepRows:
         assert "helper" not in _rows(_fields())["verdict"]["upkeep"]
 
     def test_the_tool_text_shows_means_when_how_and_the_helper(self) -> None:
-        from kiro_crew.mcp_panel import _render_fields
+        from aj_crew.mcp_panel import _render_fields
 
         text = _render_fields(_fields())
         spec = _shipped("project-report").fields["ci"]
@@ -200,7 +200,7 @@ class TestTheUpkeepRows:
         assert _scripts() == ["project_report_ci.py"] and "ci" in _rows(_fields())
 
     def test_a_page_with_nothing_to_write_gets_the_one_line_note(self) -> None:
-        from kiro_crew.mcp_panel import _render_fields
+        from aj_crew.mcp_panel import _render_fields
 
         instance.adopt(SLUG, "work-kanban")
         payload = _fields()
@@ -238,7 +238,7 @@ class TestTheUpkeepRows:
 
     def test_the_scripts_are_out_of_the_skills_index(self) -> None:
         dashboard_upkeep.sync(SLUG)
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         names = [row["name"] for row in SkillsLoader().list_skills()]
         assert not [n for n in names if "dashboard-upkeep" in n], names
@@ -249,7 +249,7 @@ class TestTheSessionGuard:
 
     def test_a_session_dashboard_commit_writes_no_scripts(self, tmp_path) -> None:
         key = instance.session_instance_key("chat-7")
-        with patch("kiro_crew.dashboard_upkeep._write", side_effect=AssertionError("wrote")):
+        with patch("aj_crew.dashboard_upkeep._write", side_effect=AssertionError("wrote")):
             instance.adopt(key, "project-report")
         assert dashboard_upkeep.sync(key) is None
         assert not (tmp_path / "home" / "skills").exists()
@@ -280,18 +280,18 @@ class TestThePointer:
     def test_the_member_section_carries_it_and_a_turn_off_the_desk_does_not(self) -> None:
         # An ADOPTED page: an unadopted one shows the suggestions page and offers no fields.
         instance.adopt(SLUG, "project-report")
-        from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-        from kiro_crew.context_assembly.member import build_member_section
+        from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+        from aj_crew.context_assembly.member import build_member_section
 
         assert dashboard_upkeep.POINTER in _member_section()
-        cfg = KiroCrewConfig()
-        cfg.agents = {SLUG: KiroCrewAgentConfig(kiro_agent="kirocrew-autofix")}
-        with patch("kiro_crew.context.KiroCrewConfig.load", return_value=cfg):
+        cfg = AjCrewConfig()
+        cfg.agents = {SLUG: AjCrewAgentConfig(kiro_agent="ajcrew-autofix")}
+        with patch("aj_crew.context.AjCrewConfig.load", return_value=cfg):
             withheld = build_member_section(SLUG, desk_withheld=True)
         assert "Upkeep:" not in withheld
 
     def test_an_unreadable_page_costs_only_the_block(self) -> None:
-        with patch("kiro_crew.dashboard_templates.instance.read", side_effect=RuntimeError("x")):
+        with patch("aj_crew.dashboard_templates.instance.read", side_effect=RuntimeError("x")):
             assert dashboard_agentic.turn_block(SLUG) == ""
             assert dashboard_upkeep.view(SLUG) is None
 

@@ -1306,7 +1306,7 @@ export default function PullRequestPanel({
                 title={queryError.loginCommand.startsWith('gh ')
                   ? i18nT('components.pullRequestPanel.github_cli_login_required')
                   : i18nT('components.pullRequestPanel.gitlab_cli_login_required')}
-                message={i18nT('components.pullRequestPanel.kiro_crew_uses_your_local_provider_cli_to_load_p')}
+                message={i18nT('components.pullRequestPanel.aj_crew_uses_your_local_provider_cli_to_load_p')}
                 footer={<code className="inline-block mt-2 px-2 py-1 rounded bg-bg-hover text-[12px] text-text break-all">{queryError.loginCommand}</code>}
                 actionPlacement="below"
                 askAgent

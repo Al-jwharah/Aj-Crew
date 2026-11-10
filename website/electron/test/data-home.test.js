@@ -6,7 +6,7 @@ const path = require("node:path");
 const { findConfiguredDashboardPort } = require("../data-home");
 
 function withTempHome(run) {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), "kirocrew-desktop-home-"));
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), "ajcrew-desktop-home-"));
   try {
     return run(home);
   } finally {

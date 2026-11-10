@@ -126,7 +126,7 @@ def _self_test() -> int:
         return "conflict_markers"
 
     def plant_phantom_ref(root: Path) -> str:
-        pkg = root / "src" / "kiro_crew"
+        pkg = root / "src" / "aj_crew"
         pkg.mkdir(parents=True)
         (pkg / "mod.py").write_text(
             '"""Spec: ``docs/system-specs/modules/ghost.md``."""\n', encoding="utf-8"
@@ -137,7 +137,7 @@ def _self_test() -> int:
         spec = root / _HARNESS_INVARIANT_DOC
         spec.parent.mkdir(parents=True)
         spec.write_text("| Id | Rule |\n|---|---|\n| H1 | One |\n", encoding="utf-8")
-        source = root / "src" / "kiro_crew"
+        source = root / "src" / "aj_crew"
         source.mkdir(parents=True)
         (source / "harness.py").write_text("# H99: missing invariant\n", encoding="utf-8")
         return "unknown_harness_invariants"
@@ -145,7 +145,7 @@ def _self_test() -> int:
     def plant_phantom_source_path(root: Path) -> str:
         # A module spec naming a file that exists nowhere -- the case the class
         # reports. The doc has to sit in the scoped tree to be checked at all.
-        pkg = root / "src" / "kiro_crew" / "acp"
+        pkg = root / "src" / "aj_crew" / "acp"
         pkg.mkdir(parents=True)
         (pkg / "real.py").write_text("x = 1\n", encoding="utf-8")
         spec_dir = root / "docs" / "system-specs" / "modules"
@@ -164,7 +164,7 @@ def _self_test() -> int:
         # it is never indexed -- which makes a citation naming it UNRESOLVABLE, and
         # in a module spec that is a finding. Pointed at a real file in-tree, so
         # the probe proves the exclusion rather than the hazard.
-        pkg = root / "src" / "kiro_crew"
+        pkg = root / "src" / "aj_crew"
         pkg.mkdir(parents=True)
         (pkg / "real.py").write_text("a = 1\nb = 2\n", encoding="utf-8")
         try:
@@ -181,12 +181,12 @@ def _self_test() -> int:
             encoding="utf-8",
         )
         (spec_dir / "thing.md").write_text(
-            "# Thing\n\nSee `kiro_crew/linked.py:900`.\n", encoding="utf-8"
+            "# Thing\n\nSee `aj_crew/linked.py:900`.\n", encoding="utf-8"
         )
         return "phantom_source_paths"
 
     def plant_stale_line_cite(root: Path) -> str:
-        pkg = root / "src" / "kiro_crew"
+        pkg = root / "src" / "aj_crew"
         pkg.mkdir(parents=True)
         (pkg / "small.py").write_text("a = 1\nb = 2\n", encoding="utf-8")
         (root / "docs" / "ok.md").write_text("# Ok\n\nSee `small.py:900`.\n", encoding="utf-8")
@@ -195,7 +195,7 @@ def _self_test() -> int:
     def plant_absurd_line_number(root: Path) -> str:
         # 4301 digits: past CPython's int(str) cap, so converting it raises and
         # would abort the whole gate on input a fork PR controls.
-        pkg = root / "src" / "kiro_crew"
+        pkg = root / "src" / "aj_crew"
         pkg.mkdir(parents=True)
         (pkg / "small.py").write_text("a = 1\n", encoding="utf-8")
         (root / "docs" / "ok.md").write_text(
@@ -205,7 +205,7 @@ def _self_test() -> int:
 
     def plant_line_zero(root: Path) -> str:
         # Files are 1-indexed, so `:0` reads as precise and points at nothing.
-        pkg = root / "src" / "kiro_crew"
+        pkg = root / "src" / "aj_crew"
         pkg.mkdir(parents=True)
         (pkg / "small.py").write_text("a = 1\n", encoding="utf-8")
         (root / "docs" / "ok.md").write_text("# Ok\n\nSee `small.py:0`.\n", encoding="utf-8")
@@ -214,7 +214,7 @@ def _self_test() -> int:
     def plant_stale_line_cite_in_an_uncurated_tree(root: Path) -> str:
         # An archive is exempt from CURATION -- indexes, style -- but a reader who
         # opens it still follows its line numbers, so the line check applies.
-        pkg = root / "src" / "kiro_crew"
+        pkg = root / "src" / "aj_crew"
         pkg.mkdir(parents=True)
         (pkg / "small.py").write_text("a = 1\nb = 2\n", encoding="utf-8")
         archive = root / "docs" / "archive"
@@ -226,7 +226,7 @@ def _self_test() -> int:
         # The ``_PATH_CITE_DOC_PREFIXES`` exemption must NOT carry the line check with
         # it: a line number is a claim about code that exists now, even inside a
         # proposal.
-        pkg = root / "src" / "kiro_crew"
+        pkg = root / "src" / "aj_crew"
         pkg.mkdir(parents=True)
         (pkg / "small.py").write_text("a = 1\nb = 2\n", encoding="utf-8")
         rfc = root / "docs" / "request-for-change"
@@ -240,14 +240,14 @@ def _self_test() -> int:
     def plant_stale_line_range(root: Path) -> str:
         # The END of a range is what must be inside the file: a range whose start
         # is valid and whose end is past EOF is still a citation into nothing.
-        pkg = root / "src" / "kiro_crew"
+        pkg = root / "src" / "aj_crew"
         pkg.mkdir(parents=True)
         (pkg / "small.py").write_text("a = 1\nb = 2\n", encoding="utf-8")
         (root / "docs" / "ok.md").write_text("# Ok\n\nSee `small.py:1-40`.\n", encoding="utf-8")
         return "stale_line_cites"
 
     def plant_coupling(root: Path) -> str:
-        pkg = root / "src" / "kiro_crew"
+        pkg = root / "src" / "aj_crew"
         pkg.mkdir(parents=True)
         (pkg / "tips_allowlist.py").write_text(
             'TIP_DOC_ALLOWLIST = frozenset({"vanished.md"})\n', encoding="utf-8"
@@ -348,7 +348,7 @@ def _self_test() -> int:
         return "unreachable"
 
     def allow_fenced_sample(root: Path) -> str:
-        pkg = root / "src" / "kiro_crew"
+        pkg = root / "src" / "aj_crew"
         pkg.mkdir(parents=True)
         (pkg / "small.py").write_text("a = 1\n", encoding="utf-8")
         (root / "docs" / "ok.md").write_text(
@@ -357,7 +357,7 @@ def _self_test() -> int:
         return "stale_line_cites"
 
     def allow_in_range_cite(root: Path) -> str:
-        pkg = root / "src" / "kiro_crew"
+        pkg = root / "src" / "aj_crew"
         pkg.mkdir(parents=True)
         (pkg / "small.py").write_text("a = 1\nb = 2\nc = 3\n", encoding="utf-8")
         (root / "docs" / "ok.md").write_text(
@@ -401,23 +401,23 @@ def _self_test() -> int:
 
     def plant_missing_repo_path(root: Path) -> str:
         (root / "docs" / "ok.md").write_text(
-            "# Ok\n\nThe entry point is `src/kiro_crew/ghost.py`.\n", encoding="utf-8"
+            "# Ok\n\nThe entry point is `src/aj_crew/ghost.py`.\n", encoding="utf-8"
         )
-        return "src/kiro_crew/ghost.py"
+        return "src/aj_crew/ghost.py"
 
     def allow_repo_path_that_exists(root: Path) -> None:
-        pkg = root / "src" / "kiro_crew"
+        pkg = root / "src" / "aj_crew"
         pkg.mkdir(parents=True)
         (pkg / "real.py").write_text("a = 1\n", encoding="utf-8")
         (root / "docs" / "ok.md").write_text(
-            "# Ok\n\nThe entry point is `src/kiro_crew/real.py`.\n", encoding="utf-8"
+            "# Ok\n\nThe entry point is `src/aj_crew/real.py`.\n", encoding="utf-8"
         )
 
     def allow_repo_path_resolvable_one_root_down(root: Path) -> None:
         # A skill's own `scripts/reaper.sh` reads as repo-anchored and is not; the
         # suffix index is what tells the two apart, and dropping this exemption
         # re-reports 33 correct citations (measured).
-        skill = root / "src" / "kiro_crew" / "builtin_skills" / "demo" / "scripts"
+        skill = root / "src" / "aj_crew" / "builtin_skills" / "demo" / "scripts"
         skill.mkdir(parents=True)
         (skill / "reaper.sh").write_text("#!/bin/sh\n", encoding="utf-8")
         (root / "docs" / "ok.md").write_text(
@@ -432,20 +432,20 @@ def _self_test() -> int:
             "# Docs\n\n- [Ok](ok.md)\n- [Rfc](request-for-change/rfc-x.md)\n", encoding="utf-8"
         )
         (rfc / "rfc-x.md").write_text(
-            "# Rfc\n\nThis adds `src/kiro_crew/planned.py`.\n", encoding="utf-8"
+            "# Rfc\n\nThis adds `src/aj_crew/planned.py`.\n", encoding="utf-8"
         )
 
     def plant_line_ref_inside_the_file(root: Path) -> str:
         # Inside the file, so the beyond-EOF check stays silent and only the shape
         # check fires -- which is the citation that is about to rot unnoticed.
-        pkg = root / "src" / "kiro_crew"
+        pkg = root / "src" / "aj_crew"
         pkg.mkdir(parents=True)
         (pkg / "small.py").write_text("a = 1\nb = 2\nc = 3\n", encoding="utf-8")
         (root / "docs" / "ok.md").write_text("# Ok\n\nSee `small.py:2`.\n", encoding="utf-8")
         return "small.py:2"
 
     def allow_symbol_cite_without_a_line(root: Path) -> None:
-        pkg = root / "src" / "kiro_crew"
+        pkg = root / "src" / "aj_crew"
         pkg.mkdir(parents=True)
         (pkg / "small.py").write_text("a = 1\n", encoding="utf-8")
         (root / "docs" / "ok.md").write_text(
@@ -454,16 +454,16 @@ def _self_test() -> int:
 
     def plant_dead_fenced_task_spec(root: Path) -> str:
         (root / "docs" / "ok.md").write_text(
-            "# Ok\n\n```bash\nkirocrew run docs/task-specs/2026/01/gone/spec.md\n```\n",
+            "# Ok\n\n```bash\najcrew run docs/task-specs/2026/01/gone/spec.md\n```\n",
             encoding="utf-8",
         )
         return "docs/task-specs/2026/01/gone/spec.md"
 
-    def allow_bare_filename_after_kirocrew_run(root: Path) -> None:
+    def allow_bare_filename_after_ajcrew_run(root: Path) -> None:
         # `TASK.md` is a file the READER creates; only a path with a directory
         # component is a claim about this tree.
         (root / "docs" / "ok.md").write_text(
-            "# Ok\n\n```bash\nkirocrew run TASK.md\n```\n", encoding="utf-8"
+            "# Ok\n\n```bash\najcrew run TASK.md\n```\n", encoding="utf-8"
         )
 
     def plant_glued_table_row(root: Path) -> str:
@@ -483,27 +483,27 @@ def _self_test() -> int:
         )
 
     def plant_unrecorded_coupling(root: Path) -> str:
-        packaged = root / "src" / "kiro_crew" / "docs"
+        packaged = root / "src" / "aj_crew" / "docs"
         packaged.mkdir(parents=True)
         (packaged / "ghost-integration.md").write_text("# Ghost\n", encoding="utf-8")
         panel = root / "website" / "src" / "pages" / "settings"
         panel.mkdir(parents=True)
         (panel / "GhostPanel.tsx").write_text(
             "const SETUP_GUIDE = 'https://example.invalid/"
-            "src/kiro_crew/docs/ghost-integration.md'\n",
+            "src/aj_crew/docs/ghost-integration.md'\n",
             encoding="utf-8",
         )
         return "ghost-integration.md"
 
     def allow_coupling_named_only_in_a_comment(root: Path) -> None:
         # A comment is a CITATION, which check_code_citations already owns.
-        packaged = root / "src" / "kiro_crew" / "docs"
+        packaged = root / "src" / "aj_crew" / "docs"
         packaged.mkdir(parents=True)
         (packaged / "iframe-hosts.md").write_text("# Hosts\n", encoding="utf-8")
         page = root / "website" / "src" / "pages"
         page.mkdir(parents=True)
         (page / "ChatPage.tsx").write_text(
-            "// See `src/kiro_crew/docs/iframe-hosts.md` for the host list.\n"
+            "// See `src/aj_crew/docs/iframe-hosts.md` for the host list.\n"
             "export const x = 1\n",
             encoding="utf-8",
         )
@@ -512,7 +512,7 @@ def _self_test() -> int:
         # ``apps.mdNotebook.sort.nameAZ`` is an i18n key, not a reference to the
         # packaged ``apps.md``. Without the regex's trailing guard every module
         # using that key namespace read as a consumer of the doc.
-        packaged = root / "src" / "kiro_crew" / "docs"
+        packaged = root / "src" / "aj_crew" / "docs"
         packaged.mkdir(parents=True)
         (packaged / "apps.md").write_text("# Apps\n", encoding="utf-8")
         page = root / "website" / "src" / "apps"
@@ -522,7 +522,7 @@ def _self_test() -> int:
         )
 
     def allow_coupling_named_only_in_a_test(root: Path) -> None:
-        packaged = root / "src" / "kiro_crew" / "docs"
+        packaged = root / "src" / "aj_crew" / "docs"
         packaged.mkdir(parents=True)
         (packaged / "fixture-doc.md").write_text("# Fixture\n", encoding="utf-8")
         tests = root / "website" / "src" / "test"
@@ -530,7 +530,7 @@ def _self_test() -> int:
         (tests / "Panel.test.tsx").write_text("const f = 'fixture-doc.md'\n", encoding="utf-8")
 
     def plant_dead_identifier(root: Path) -> str:
-        pkg = root / "src" / "kiro_crew"
+        pkg = root / "src" / "aj_crew"
         pkg.mkdir(parents=True)
         (pkg / "real.py").write_text("def live_handler():\n    return 1\n", encoding="utf-8")
         (root / "docs" / "ok.md").write_text(
@@ -539,7 +539,7 @@ def _self_test() -> int:
         return "vanished_handler"
 
     def allow_live_identifier(root: Path) -> None:
-        pkg = root / "src" / "kiro_crew"
+        pkg = root / "src" / "aj_crew"
         pkg.mkdir(parents=True)
         (pkg / "real.py").write_text("def live_handler_name():\n    return 1\n", encoding="utf-8")
         (root / "docs" / "ok.md").write_text(
@@ -547,8 +547,8 @@ def _self_test() -> int:
         )
 
     def allow_placeholder_identifier(root: Path) -> None:
-        (root / "src" / "kiro_crew").mkdir(parents=True)
-        (root / "src" / "kiro_crew" / "real.py").write_text("a = 1\n", encoding="utf-8")
+        (root / "src" / "aj_crew").mkdir(parents=True)
+        (root / "src" / "aj_crew" / "real.py").write_text("a = 1\n", encoding="utf-8")
         (root / "docs" / "ok.md").write_text(
             "# Ok\n\nName it `MyOwnWidget` in your app.\n", encoding="utf-8"
         )
@@ -589,7 +589,7 @@ def _self_test() -> int:
             (root / "docs").mkdir(parents=True)
             (root / "docs" / "README.md").write_text("# Docs\n\n- [Ok](ok.md)\n", encoding="utf-8")
             (root / "docs" / "ok.md").write_text(
-                "# Ok\n\nThe entry point is `src/kiro_crew/ghost.py`.\n", encoding="utf-8"
+                "# Ok\n\nThe entry point is `src/aj_crew/ghost.py`.\n", encoding="utf-8"
             )
             unfiltered = run(root)
             if not unfiltered.facts_for(CHECK_PATH_EXISTS):
@@ -673,9 +673,9 @@ def _self_test() -> int:
     )
     fact_probe("dead pasteable path in a fence", CHECK_FENCED_PATH, plant_dead_fenced_task_spec)
     fact_immunity_probe(
-        "bare filename after `kirocrew run`",
+        "bare filename after `ajcrew run`",
         CHECK_FENCED_PATH,
-        allow_bare_filename_after_kirocrew_run,
+        allow_bare_filename_after_ajcrew_run,
     )
     fact_probe("glued table row", CHECK_TABLE_ROW_MERGE, plant_glued_table_row)
     fact_immunity_probe(

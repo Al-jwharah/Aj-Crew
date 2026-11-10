@@ -17,9 +17,9 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew.dashboard import boot_id, refresh_tokens, token_auth
+from aj_crew.dashboard import boot_id, refresh_tokens, token_auth
 
-_MOD = "kiro_crew.dashboard.boot_id"
+_MOD = "aj_crew.dashboard.boot_id"
 
 
 def _claims(token: str) -> dict:
@@ -48,7 +48,7 @@ class TestBootId:
         module for a path constant, which a future refactor could satisfy while
         writing through some other helper.
         """
-        monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path, raising=False)
+        monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path, raising=False)
         before = set(tmp_path.iterdir())
         boot_id.current_boot_id()
         assert set(tmp_path.iterdir()) == before

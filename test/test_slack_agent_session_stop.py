@@ -14,13 +14,13 @@ from typing import Any
 import pytest
 from test_slack_agent_session_status import _caps, make_client  # noqa: F401 - autouse fixture
 
-from kiro_crew.config.loader import KiroCrewConfig, MessagingConfig, SlackConfig
-from kiro_crew.session_lifecycle import STOP_DECLINED_COMPACTING_TEXT
-from kiro_crew.slack import events
-from kiro_crew.slack.agent_sessions import fence, session_events
-from kiro_crew.slack.agent_sessions.status import SESSION_STATUS_PROCESSING
-from kiro_crew.slack.events_inbound import SeenCache
-from kiro_crew.testing.wait import await_until
+from aj_crew.config.loader import AjCrewConfig, MessagingConfig, SlackConfig
+from aj_crew.session_lifecycle import STOP_DECLINED_COMPACTING_TEXT
+from aj_crew.slack import events
+from aj_crew.slack.agent_sessions import fence, session_events
+from aj_crew.slack.agent_sessions.status import SESSION_STATUS_PROCESSING
+from aj_crew.slack.events_inbound import SeenCache
+from aj_crew.testing.wait import await_until
 
 
 class FakeSessions:
@@ -88,7 +88,7 @@ class Orch:
         live: bool = True,
         code_channels: bool = False,
     ) -> None:
-        self._cfg = KiroCrewConfig(
+        self._cfg = AjCrewConfig(
             slack=SlackConfig(
                 dm_single_session=flat, agent_sessions=live, code_channels=code_channels
             ),
@@ -654,7 +654,7 @@ class TestFeatureGate:
     async def test_on_but_unavailable_session_events_are_ignored(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.slack import features
+        from aj_crew.slack import features
 
         sessions = FakeSessions(live={"slack:1700.1"})
         orch = Orch(sessions)
@@ -680,8 +680,8 @@ class TestFeatureGate:
         """``_run_turn`` opens the fence; ``handle_message`` closes it after delivery."""
         import inspect
 
-        from kiro_crew.slack import handler
-        from kiro_crew.slack.handler_runtime import turn
+        from aj_crew.slack import handler
+        from aj_crew.slack.handler_runtime import turn
 
         run_src = inspect.getsource(turn._run_turn)
         enter = run_src.index("turn._turn_scope = enter_turn(channel, reply_ts)")
@@ -760,7 +760,7 @@ class TestTitleChanged:
 
     @pytest.mark.asyncio
     async def test_a_rename_titles_the_dashboard_session(self, _env: SelRecorder) -> None:
-        from kiro_crew.messaging import auto_title
+        from aj_crew.messaging import auto_title
 
         orch = Orch(FakeSessions(live={"slack:1700.1"}))
         orch.conv_log = TitleLog()
@@ -819,7 +819,7 @@ class TestTitleChanged:
 
     @pytest.mark.asyncio
     async def test_a_failed_title_write_leaves_auto_titling_on(self) -> None:
-        from kiro_crew.messaging import auto_title
+        from aj_crew.messaging import auto_title
 
         class Broken:
             def set_title(self, key: str, title: str) -> None:
@@ -834,7 +834,7 @@ class TestTitleChanged:
     @pytest.mark.asyncio
     async def test_a_write_the_log_skipped_reports_failed_and_marks_nothing(self) -> None:
         """A legacy message-first transcript skips the metadata write silently."""
-        from kiro_crew.messaging import auto_title
+        from aj_crew.messaging import auto_title
 
         log = TitleLog(writes=False)
         orch = Orch(FakeSessions(live={"slack:1700.8"}))
@@ -850,7 +850,7 @@ class TestTitleChanged:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The in-memory trackers are empty; the durable record must be read first."""
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         restored: list[str] = []
 
@@ -872,7 +872,7 @@ class TestTitleChanged:
     async def test_a_thread_claimed_during_the_read_is_not_renamed(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         sessions = FakeSessions(live={"slack:1700.6"})
 
@@ -893,7 +893,7 @@ class TestTitleChanged:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The slot is authoritative: a transcript-only write would be saved over."""
-        from kiro_crew.dashboard import channel_slots
+        from aj_crew.dashboard import channel_slots
 
         renamed: list[tuple[Any, str, str]] = []
 
@@ -1100,7 +1100,7 @@ class TestTitleChanged:
     async def test_a_restricted_session_records_nothing(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         monkeypatch.setattr(privacy_mode, "is_restricted", lambda key: True)
         orch = Orch(FakeSessions(live={"slack:1700.1"}))
@@ -1157,7 +1157,7 @@ async def _raise(**kwargs: Any) -> Any:
 
 
 def _pending(text: str, sender: str, channel: str = "C1") -> tuple[str, str, dict[str, Any]]:
-    from kiro_crew.slack.events_queue import _queue_tags
+    from aj_crew.slack.events_queue import _queue_tags
 
     return (
         f"ts-{text}",
@@ -1184,7 +1184,7 @@ def _record_dispatch(
 
 async def _drain_tasks(orch: Orch) -> None:
     """Run the release's dispatches and the drains each one chains, to quiet."""
-    from kiro_crew.slack import events_queue
+    from aj_crew.slack import events_queue
 
     for _ in range(10):
         pending = [t for t in (*orch._handler_tasks, *events_queue._bg_tasks) if not t.done()]
@@ -1268,7 +1268,7 @@ class TestDashboardLinkedDmThread:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """GPT F3: a DM thread a dashboard send moved to its own session is not the flat DM."""
-        from kiro_crew.dashboard import channel_slots
+        from aj_crew.dashboard import channel_slots
 
         renamed: list[tuple[Any, str, str]] = []
 
@@ -1354,7 +1354,7 @@ class TestStopParityWithBangStop:
     async def test_an_overlapping_bang_stop_does_not_bring_back_the_pressers_messages(
         self,
     ) -> None:
-        from kiro_crew.slack import events_queue
+        from aj_crew.slack import events_queue
 
         sessions = FakeSessions(live={"slack:1700.1"})
         orch = Orch(sessions)
@@ -1462,7 +1462,7 @@ async def test_a_stop_drops_the_pressers_entry_an_earlier_stop_detached(
     """Another member's ``!stop``, pressed first and still in flight, detached U1's
     message. U1's native Stop drops it whether it ends soft or escalates to a reset:
     the stronger outcome never keeps more of the presser's work."""
-    from kiro_crew.slack import events_queue
+    from aj_crew.slack import events_queue
 
     sessions = FakeSessions(live={"slack:1700.1"}, outcome=outcome)
     orch = Orch(sessions)
@@ -1507,7 +1507,7 @@ class TestLinkedThreadOfAFlatDm:
     async def test_its_stop_holds_the_flat_key_and_cancels_its_own_router_task(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.slack import events_queue
+        from aj_crew.slack import events_queue
 
         sessions, orch = self._orch()
         await _working(orch, channel="D1", thread="1700.9")
@@ -1584,7 +1584,7 @@ class TestLinkedThreadOfAFlatDm:
     async def test_its_stop_spares_a_router_task_started_for_another_thread(self) -> None:
         sessions, orch = self._orch()
         await _working(orch, channel="D1", thread="1700.9")
-        from kiro_crew.slack import events_queue
+        from aj_crew.slack import events_queue
 
         other_turn = asyncio.ensure_future(asyncio.Event().wait())
         events_queue._track_router_task(orch, "slack:D1", other_turn, "1700.2")
@@ -1620,7 +1620,7 @@ class TestLinkedThreadOfAFlatDm:
     ) -> None:
         """The reverse direction: a Stop in an unlinked DM thread is the flat DM's,
         and a linked thread is another session it does not address."""
-        from kiro_crew.slack import events_queue
+        from aj_crew.slack import events_queue
 
         sessions, orch = self._orch()
         await _working(orch, channel="D1", thread="1700.2")
@@ -1739,7 +1739,7 @@ class TestLinkedThreadOfAFlatDm:
 
     @pytest.mark.asyncio
     async def test_a_thread_bound_to_the_dms_own_session_is_the_dm(self) -> None:
-        from kiro_crew.slack import events_queue
+        from aj_crew.slack import events_queue
 
         sessions = FakeSessions(live={"slack:D1"}, owners={"1700.5": "slack:D1"})
         orch = Orch(sessions, flat=True)
@@ -1766,8 +1766,8 @@ def test_every_router_task_registration_records_its_thread() -> None:
     thread's, so a linked-thread Stop could not cancel it."""
     import inspect
 
-    from kiro_crew.slack import events as events_facade
-    from kiro_crew.slack import events_queue
+    from aj_crew.slack import events as events_facade
+    from aj_crew.slack import events_queue
 
     for module in (inspect.getmodule(events_facade._route_message), events_queue):
         source = inspect.getsource(module)
@@ -1777,7 +1777,7 @@ def test_every_router_task_registration_records_its_thread() -> None:
 
 @pytest.mark.asyncio
 async def test_the_queue_drain_records_the_entrys_thread(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.slack import events_queue
+    from aj_crew.slack import events_queue
 
     sessions = FakeSessions(live={"slack:D1"})
     orch = Orch(sessions, flat=True)
@@ -1802,7 +1802,7 @@ async def test_the_queue_drain_records_the_entrys_thread(monkeypatch: pytest.Mon
 @pytest.mark.asyncio
 async def test_a_raising_detach_does_not_leave_the_key_busy(_env: Any) -> None:
     """A detach that raises still releases the hold, or every later message queues."""
-    from kiro_crew.slack import events_queue
+    from aj_crew.slack import events_queue
 
     _env.expect_release_failure = True
     sessions = FakeSessions(live={"slack:1700.1"})

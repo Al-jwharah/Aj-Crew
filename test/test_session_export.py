@@ -20,17 +20,17 @@ from types import SimpleNamespace
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import session_export as se
-from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.session_transfer import (
+from aj_crew.dashboard import session_export as se
+from aj_crew.dashboard.chat_persistence import save_slot_off_loop
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.session_transfer import (
     _SUPPORTED_BUNDLE_VERSIONS,
     BUNDLE_VERSION,
     _validate_bundle,
     build_source_record,
     build_transfer_bundle_async,
 )
-from kiro_crew.history import (
+from aj_crew.history import (
     ConversationLog,
     TranscriptBusy,
     TranscriptWithheld,
@@ -224,7 +224,7 @@ async def test_source_record_carries_what_the_session_ran_under():
     # redacted at the egress boundary rather than shipped in a shareable file.
     assert source["project"] == "[redacted-path]"
     assert source["exported_at"]
-    assert source["producer"].startswith("kirocrew/")
+    assert source["producer"].startswith("ajcrew/")
     # origin and agent already live at the top level; duplicating them would give
     # a reader two places to look and a way for the two to disagree.
     assert "origin" not in source
@@ -289,11 +289,11 @@ def test_an_unreadable_registry_does_not_fail_the_export():
             raise RuntimeError("registry is wedged")
 
     state = _state(MSGS, sessions=_Boom())
-    from kiro_crew.dashboard.session_transfer import _snapshot_source_record
+    from aj_crew.dashboard.session_transfer import _snapshot_source_record
 
     source = _snapshot_source_record(state, _slot(MSGS), "dashboard:slot-1")
     assert "approval_policy" not in source
-    assert source["producer"].startswith("kirocrew/")
+    assert source["producer"].startswith("ajcrew/")
 
 
 def test_the_policy_is_read_for_the_pinned_session_not_the_slots_current_one():
@@ -318,7 +318,7 @@ def test_the_policy_is_read_for_the_pinned_session_not_the_slots_current_one():
     # The rebind that a cron injection performs, landing after the pin.
     slot.linked_session_key = "cron:job-7"
 
-    from kiro_crew.dashboard.session_transfer import _snapshot_source_record
+    from aj_crew.dashboard.session_transfer import _snapshot_source_record
 
     source = _snapshot_source_record(state, slot, "dashboard:slot-1")
 
@@ -333,7 +333,7 @@ def test_the_slug_comes_from_the_redacted_title():
     """A filename is displayed by whatever holds the file, so a credential in a
     title must not reach it. The bundle's title is already redacted; this pins
     that the slug is built from that copy and not from a raw one."""
-    from kiro_crew.security import redact_credentials
+    from aj_crew.security import redact_credentials
 
     raw = "debug ghp_0123456789abcdefghijklmnopqrstuvwxyz now"
     redacted, _ = redact_credentials(raw)
@@ -513,7 +513,7 @@ async def test_a_line_tightened_at_commit_leaves_only_the_denied_audit(monkeypat
 
 @pytest.mark.asyncio
 async def test_a_busy_commit_leaves_only_the_failure_audit(monkeypatch, tmp_path):
-    import kiro_crew.dashboard.session_transfer as st
+    import aj_crew.dashboard.session_transfer as st
 
     out = tmp_path / "egress"
     out.mkdir()
@@ -559,8 +559,8 @@ async def test_export_carries_no_host_or_login_provenance():
     login = "somelogin"
     slot = _slot(
         MSGS,
-        title=f"Fixing /local/home/{login}/.kirocrew/workspace/foo.py",
-        project=f"/local/home/{login}/.kirocrew/workspace",
+        title=f"Fixing /local/home/{login}/.ajcrew/workspace/foo.py",
+        project=f"/local/home/{login}/.ajcrew/workspace",
         workspace=f"/local/home/{login}/workplace/_bg",
     )
     state = _state(MSGS, sessions=_FakeSessions({SESSION_KEY: "auto"}), slots={"slot-1": slot})
@@ -715,7 +715,7 @@ async def test_an_empty_session_is_refused_rather_than_handed_over():
 
 @pytest.mark.asyncio
 async def test_an_unstable_snapshot_is_a_retryable_503(monkeypatch):
-    from kiro_crew.dashboard.session_transfer import SnapshotUnstable
+    from aj_crew.dashboard.session_transfer import SnapshotUnstable
 
     async def _unstable(*_a, **_k):
         raise SnapshotUnstable("a pending rewrite means the on-disk transcript is stale")
@@ -760,7 +760,7 @@ async def test_the_export_withholds_layer_b_by_default(monkeypatch):
     default) and a per-request flag (rfc-s3-backup.md:317-319). With neither, the export
     sets ``layer_b_skipped`` and the resolved sid never rides along.
     """
-    import kiro_crew.dashboard.session_transfer as st
+    import aj_crew.dashboard.session_transfer as st
 
     # A session that genuinely HAS resumable context; a withhold is a real choice.
     monkeypatch.setattr(st, "_resolve_layer_b_sid", lambda *_a, **_k: "a-real-sid")
@@ -794,7 +794,7 @@ async def test_an_export_carries_layer_b_on_explicit_opt_in(monkeypatch):
     Layer B rides byte-exact so the import resumes via ``session/load``. It must not set
     ``layer_b_skipped``, or the importer would mark the copy "transcript only".
     """
-    import kiro_crew.dashboard.session_transfer as st
+    import aj_crew.dashboard.session_transfer as st
 
     monkeypatch.setattr(st, "_resolve_layer_b_sid", lambda *_a, **_k: "a-real-sid")
     monkeypatch.setattr(
@@ -825,7 +825,7 @@ async def test_an_export_carries_layer_b_on_explicit_opt_in(monkeypatch):
 @pytest.mark.asyncio
 async def test_an_export_withholds_layer_b_for_a_non_operator_caller(monkeypatch):
     """An app cannot turn the operator's twofold opt-in into its own authority."""
-    import kiro_crew.dashboard.session_transfer as st
+    import aj_crew.dashboard.session_transfer as st
 
     monkeypatch.setattr(st, "_resolve_layer_b_sid", lambda *_a, **_k: "a-real-sid")
     monkeypatch.setattr(
@@ -855,7 +855,7 @@ async def test_an_export_withholds_when_permitted_but_not_requested(monkeypatch)
     The config permission alone is not enough: without ``?include_layer_b=true`` the
     export still withholds.
     """
-    import kiro_crew.dashboard.session_transfer as st
+    import aj_crew.dashboard.session_transfer as st
 
     monkeypatch.setattr(st, "_resolve_layer_b_sid", lambda *_a, **_k: "a-real-sid")
     monkeypatch.setattr(
@@ -880,7 +880,7 @@ def test_the_export_layer_b_permission_defaults_to_off(monkeypatch):
     """The standing permission is OFF by default: an absent or garbage key reads
     False, and only an explicit true grants it. Read through the same
     ``_raw_config`` route the other dashboard tunables use."""
-    import kiro_crew.dashboard.session_export as se_mod
+    import aj_crew.dashboard.session_export as se_mod
 
     monkeypatch.setattr(se_mod, "_raw_config", lambda: {})
     assert se_mod._export_layer_b_permitted() is False
@@ -917,7 +917,7 @@ def test_the_export_layer_b_permission_defaults_to_off(monkeypatch):
 def test_the_export_layer_b_request_flag_needs_an_explicit_yes():
     """The per-invocation flag reads truthy strings only; absent or anything else
     is "did not ask"."""
-    import kiro_crew.dashboard.session_export as se_mod
+    import aj_crew.dashboard.session_export as se_mod
 
     for yes in ("true", "True", "1", "yes", "on", " TRUE "):
         assert se_mod._export_layer_b_requested(_request(None, query={"include_layer_b": yes}))
@@ -931,7 +931,7 @@ def test_the_export_layer_b_request_flag_needs_an_explicit_yes():
 
 @pytest.mark.asyncio
 async def test_the_builder_refuses_layer_b_when_asked(monkeypatch):
-    import kiro_crew.dashboard.session_transfer as st
+    import aj_crew.dashboard.session_transfer as st
 
     monkeypatch.setattr(st, "_resolve_layer_b_sid", lambda *_a, **_k: "a-real-sid")
     # Faithful to the real reader, which returns None for an empty sid -- a stub
@@ -974,7 +974,7 @@ def test_the_free_text_provenance_fields_are_redacted():
     """``workspace`` and ``project`` are the only free text in the record, and the
     document is an egress boundary, so they go through the same scan as the
     title."""
-    from kiro_crew.security import redact_credentials
+    from aj_crew.security import redact_credentials
 
     raw = "/home/me/ghp_0123456789abcdefghijklmnopqrstuvwxyz/checkout"
     assert redact_credentials(raw)[0] != raw, "the fixture must actually be redactable"
@@ -1113,7 +1113,7 @@ async def test_a_pending_line_tightening_is_applied_before_export(tmp_path, monk
 async def test_an_export_streams_layer_b_from_its_snapshot_and_removes_it(monkeypatch, tmp_path):
     """Layer B rides out of its snapshot file, never read whole, and the
     snapshot is gone once the response is built."""
-    import kiro_crew.dashboard.session_transfer as st
+    import aj_crew.dashboard.session_transfer as st
 
     out = tmp_path / "egress"
     out.mkdir()
@@ -1148,7 +1148,7 @@ async def test_a_sent_export_streams_its_staged_file_and_removes_it(tmp_path, mo
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    import kiro_crew.dashboard.session_transfer as st
+    import aj_crew.dashboard.session_transfer as st
 
     out = tmp_path / "egress"
     out.mkdir()
@@ -1249,7 +1249,7 @@ async def test_a_refused_commit_cancelled_while_its_cleanup_waits_still_removes_
     """A commit that never hands the staged file to a response removes it
     itself. When the handler is cancelled while that removal is queued but not
     yet started, the removal still runs."""
-    import kiro_crew.dashboard.session_transfer as st
+    import aj_crew.dashboard.session_transfer as st
 
     out = tmp_path / "egress"
     out.mkdir()
@@ -1324,7 +1324,7 @@ async def test_a_staging_failure_is_an_audited_coded_500_and_releases_the_snapsh
 ):
     """A full staging volume fails the serialisation; the answer is the handler's
     own coded failure, audited, with the Layer B snapshot removed."""
-    import kiro_crew.dashboard.session_transfer as st
+    import aj_crew.dashboard.session_transfer as st
 
     out = tmp_path / "egress"
     out.mkdir()
@@ -1405,7 +1405,7 @@ async def test_a_message_the_parse_cannot_settle_degrades_alone_and_the_export_s
     """
     from markdown_it import MarkdownIt
 
-    from kiro_crew.dashboard import session_markdown as sm
+    from aj_crew.dashboard import session_markdown as sm
 
     monkeypatch.setattr(sm, "_MAX_CLOSERS", 0)
     events = _capture_audit(monkeypatch)
@@ -1440,7 +1440,7 @@ async def test_the_markdown_export_never_reads_layer_b(monkeypatch):
     both opt-ins. Asserted on the read: the renderer never emits ``layer_b`` anyway, so a
     text assertion would pin nothing.
     """
-    import kiro_crew.dashboard.session_transfer as st
+    import aj_crew.dashboard.session_transfer as st
 
     reads: list[str] = []
 
@@ -1530,7 +1530,7 @@ def test_the_format_query_accepts_only_md_and_defaults_to_json():
 
 def test_the_two_formats_share_the_kcsession_middle():
     """So a directory of exports from one conversation still sorts together."""
-    from kiro_crew.dashboard.session_markdown import MARKDOWN_FILE_SUFFIX
+    from aj_crew.dashboard.session_markdown import MARKDOWN_FILE_SUFFIX
 
     json_name = se.export_filename("Design chat", stamp="S")
     md_name = se.export_filename("Design chat", stamp="S", suffix=MARKDOWN_FILE_SUFFIX)

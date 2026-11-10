@@ -3,7 +3,7 @@
 asyncio reports unretrieved task exceptions at GC time, which can be long after
 the owning process (or test) tore its environment down. If the crash-log path
 were resolved lazily at write time, such a record could land in whichever
-``KIROCREW_HOME`` happened to be in effect then — including a developer's live
+``AJCREW_HOME`` happened to be in effect then — including a developer's live
 data home while the suite runs. ``install_loop_handler`` therefore pins the path
 to the config dir that was active when the handler was installed.
 """
@@ -18,7 +18,7 @@ import sys
 
 import pytest
 
-from kiro_crew import crash_guard
+from aj_crew import crash_guard
 
 
 @pytest.fixture(autouse=True)
@@ -31,7 +31,7 @@ def _restore_crash_log():
 
 class TestInstallLoopHandler:
     def test_pins_crash_log_to_current_config_dir(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home_a"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home_a"))
         crash_guard._CRASH_LOG = None
         loop = asyncio.new_event_loop()
         try:
@@ -44,7 +44,7 @@ class TestInstallLoopHandler:
 
     def test_write_uses_pinned_path_after_home_changes(self, tmp_path, monkeypatch):
         """A late (GC-time) write must not follow a since-changed home."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home_a"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home_a"))
         crash_guard._CRASH_LOG = None
         loop = asyncio.new_event_loop()
         try:
@@ -54,7 +54,7 @@ class TestInstallLoopHandler:
 
         # Simulate the environment being restored (monkeypatch teardown, home
         # switch) before the deferred write happens.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home_b"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home_b"))
         crash_guard._write_crash("ASYNCIO UNHANDLED: late report")
 
         pinned = tmp_path / "home_a" / "logs" / "crash.log"
@@ -80,7 +80,7 @@ class TestUnclosedConnectionDowngrade:
     """Unclosed-connection GC noise is downgraded to WARNING, not ERROR."""
 
     def test_unclosed_connection_logged_at_warning(self, tmp_path, monkeypatch, caplog):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         crash_guard._CRASH_LOG = None
         loop = asyncio.new_event_loop()
         try:
@@ -90,7 +90,7 @@ class TestUnclosedConnectionDowngrade:
 
         import logging
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.crash_guard"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.crash_guard"):
             crash_guard._asyncio_exception_handler(
                 loop, {"message": "Unclosed connection"}
             )
@@ -102,7 +102,7 @@ class TestUnclosedConnectionDowngrade:
         assert not crash_log.exists()
 
     def test_unclosed_client_session_also_downgraded(self, tmp_path, monkeypatch, caplog):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         crash_guard._CRASH_LOG = None
         loop = asyncio.new_event_loop()
         try:
@@ -112,7 +112,7 @@ class TestUnclosedConnectionDowngrade:
 
         import logging
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.crash_guard"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.crash_guard"):
             crash_guard._asyncio_exception_handler(
                 loop, {"message": "Unclosed client session"}
             )
@@ -122,7 +122,7 @@ class TestUnclosedConnectionDowngrade:
 
     def test_non_unclosed_message_still_errors(self, tmp_path, monkeypatch, caplog):
         """Other no-exception messages must still go to ERROR + crash.log."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         crash_guard._CRASH_LOG = None
         loop = asyncio.new_event_loop()
         try:
@@ -132,7 +132,7 @@ class TestUnclosedConnectionDowngrade:
 
         import logging
 
-        with caplog.at_level(logging.ERROR, logger="kiro_crew.crash_guard"):
+        with caplog.at_level(logging.ERROR, logger="aj_crew.crash_guard"):
             crash_guard._asyncio_exception_handler(
                 loop, {"message": "Some other problem"}
             )
@@ -147,7 +147,7 @@ class TestWindowsProactorShutdownDowngrade:
     """A reset repeated by Proactor's close callback is disconnect noise."""
 
     def test_connection_lost_callback_reset_is_warning_only(self, tmp_path, monkeypatch, caplog):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         crash_guard._CRASH_LOG = None
         loop = asyncio.new_event_loop()
         try:
@@ -157,7 +157,7 @@ class TestWindowsProactorShutdownDowngrade:
 
         import logging
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.crash_guard"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.crash_guard"):
             crash_guard._asyncio_exception_handler(
                 loop,
                 {
@@ -175,7 +175,7 @@ class TestWindowsProactorShutdownDowngrade:
 
     def test_other_connection_reset_stays_an_error(self, tmp_path, monkeypatch, caplog):
         """A task-level reset may be a real defect and must retain crash evidence."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         crash_guard._CRASH_LOG = None
         loop = asyncio.new_event_loop()
         try:
@@ -185,7 +185,7 @@ class TestWindowsProactorShutdownDowngrade:
 
         import logging
 
-        with caplog.at_level(logging.ERROR, logger="kiro_crew.crash_guard"):
+        with caplog.at_level(logging.ERROR, logger="aj_crew.crash_guard"):
             crash_guard._asyncio_exception_handler(
                 loop,
                 {
@@ -226,7 +226,7 @@ class TestInstallIdempotent:
         atexit and faulthandler side effects need no rollback because both are
         monkeypatched away before any ``install()`` call in this class.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         saved_installed = crash_guard._INSTALLED
         saved_hook = sys.excepthook
         yield

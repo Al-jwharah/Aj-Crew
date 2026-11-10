@@ -90,8 +90,8 @@ def test_script_exists_and_self_test_passes() -> None:
 @pytest.mark.parametrize(
     "path",
     [
-        "src/kiro_crew/session.py",
-        "src/kiro_crew/dashboard/server.py",
+        "src/aj_crew/session.py",
+        "src/aj_crew/dashboard/server.py",
         "docs/architecture/overview.md",
         "README.md",
         "setup.cfg",
@@ -103,7 +103,7 @@ def test_any_non_test_path_escalates(path: str) -> None:
 
 
 def test_a_leaf_mixed_with_source_escalates(clean_leaf: str) -> None:
-    assert _resolved([clean_leaf, "src/kiro_crew/agent.py"]) is None
+    assert _resolved([clean_leaf, "src/aj_crew/agent.py"]) is None
 
 
 # ── shared test input is never a leaf ─────────────────────────────────────────
@@ -486,7 +486,7 @@ def test_rel_posix_normalises_a_windows_style_path() -> None:
     `validated_targets` refuses outright. Asserting on real `Path` objects would
     pass on Linux either way, so drive the helper with an explicitly Windows path.
     """
-    win_root = PureWindowsPath(r"D:\a\KiroCrew\KiroCrew")
+    win_root = PureWindowsPath(r"D:\a\AjCrew\AjCrew")
     win_file = win_root / "test" / "test_ai_agent_runner_coverage.py"
     assert str(win_file.relative_to(win_root)) == r"test\test_ai_agent_runner_coverage.py"
     assert mod._rel_posix(win_file, win_root) == "test/test_ai_agent_runner_coverage.py"

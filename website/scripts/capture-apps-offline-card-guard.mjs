@@ -34,7 +34,7 @@ const I = (name, displayName, manifestExtra = {}) => ({
   lifecycle: 'gateway',
   manifest: {
     name, version: '1.0.0', displayName,
-    description: `${displayName} fixture app.`, author: 'kirocrew', tags: [],
+    description: `${displayName} fixture app.`, author: 'ajcrew', tags: [],
     ...manifestExtra,
   },
 })

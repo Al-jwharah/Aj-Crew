@@ -30,9 +30,9 @@ from aiohttp.test_utils import TestClient, TestServer
 from test_browser_live_routes import _app, _live, _post
 from test_browser_ops_route import _install, _no_stream, _request, _Supervisor
 
-from kiro_crew.browser_harness import live_hub as lh
-from kiro_crew.dashboard.handlers import browser_ops as ops_mod
-from kiro_crew.mcp_tools import browser as tool
+from aj_crew.browser_harness import live_hub as lh
+from aj_crew.dashboard.handlers import browser_ops as ops_mod
+from aj_crew.mcp_tools import browser as tool
 
 pytestmark = pytest.mark.asyncio
 

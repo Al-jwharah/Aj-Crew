@@ -22,7 +22,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import updates
+from aj_crew.dashboard.handlers import updates
 
 pytestmark = pytest.mark.asyncio
 
@@ -82,7 +82,7 @@ def _stub_channel(monkeypatch: pytest.MonkeyPatch, reached: list[str]) -> None:
     monkeypatch.setattr(updates, "_do_update_check", _noop_check)
     monkeypatch.setattr(updates, "_invalidate_update_check", lambda ch: None)
     monkeypatch.setattr(
-        updates, "KiroCrewConfig", SimpleNamespace(load=lambda: SimpleNamespace(auto_update=True))
+        updates, "AjCrewConfig", SimpleNamespace(load=lambda: SimpleNamespace(auto_update=True))
     )
 
 

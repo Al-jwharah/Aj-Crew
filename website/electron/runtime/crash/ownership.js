@@ -13,7 +13,7 @@
  * `path.basename` follows the HOST platform, but a module name inside a
  * minidump follows the platform that PRODUCED it. A Windows dump opened for
  * inspection on a posix host would otherwise come back as the whole
- * `C:\...\KiroCrew.exe` string and never match the app name.
+ * `C:\...\AjCrew.exe` string and never match the app name.
  */
 function anyBasename(value) {
   const text = String(value || "");
@@ -37,21 +37,21 @@ function normalizeName(value) {
  * enumeration happens. It exists because the two names an Electron app has are
  * different strings that neither derives from the other:
  *
- * - the DISPLAY name, `app.getName()` — `Kiro Crew`, or `Kiro Crew Nightly`;
+ * - the DISPLAY name, `app.getName()` — `Aj Crew`, or `Aj Crew Nightly`;
  * - the EXECUTABLE name, `path.basename(process.execPath)` — on macOS that is
  *   the bundle binary and happens to match, but `electron/package.json` sets
- *   `executableName: "kirocrew-desktop"` for Linux and Windows, and
+ *   `executableName: "ajcrew-desktop"` for Linux and Windows, and
  *   `packaging/build-desktop.sh` overrides the nightly channel to
- *   `kirocrew-desktop-nightly`.
+ *   `ajcrew-desktop-nightly`.
  *
- * So a rule anchored on the display name alone reads `kirocrew-desktop` as a
+ * So a rule anchored on the display name alone reads `ajcrew-desktop` as a
  * foreign process and throws away every Linux crash of our own app — and off
  * darwin a minidump is the ONLY crash channel we have, because `main.js` passes
  * no `diagnosticReportsDir` there. Worse than thrown away: a dump we classify
  * as proven-foreign joins the seen-set, so the artifact is written off for good
  * and a later fix never revisits it. Guessing one name from the other cannot
- * work either — `kirocrew-desktop-nightly` is not a prefix-extension of
- * `kirocrewnightly` in any direction.
+ * work either — `ajcrew-desktop-nightly` is not a prefix-extension of
+ * `ajcrewnightly` in any direction.
  */
 function ownNames(value) {
   const names = [];
@@ -74,7 +74,7 @@ function ownNames(value) {
  *
  * A bare prefix/substring test was the earlier spelling of both branches, and
  * it claimed any process whose name merely BEGINS with one of ours: a sibling
- * release channel (`KiroCrew Nightly`), or an unrelated vendor's `KiroCrewX`.
+ * release channel (`AjCrew Nightly`), or an unrelated vendor's `AjCrewX`.
  * The helper arm had the same flaw one level down — matching a bare
  * `<name>helper` PREFIX also claims a foreign `<name> HelperX`, a different
  * program that merely begins with our helper name — so it must match the base
@@ -166,8 +166,8 @@ const IPS_STAMP_RE = /-\d{4}-\d{2}-\d{2}-\d{6}(\.\d+)?$/;
  * The stamp is stripped FIRST so there is a boundary to anchor against, and the
  * process name that remains has to satisfy `nameIsOurs` outright. Testing the
  * whole filename for our prefix instead — which is what this did — makes
- * `KiroCrew Nightly-2026-09-03-101530.ips` read as a stable-channel crash,
- * because "kirocrew" is a prefix of "kirocrewnightly-2026-...".
+ * `AjCrew Nightly-2026-09-03-101530.ips` read as a stable-channel crash,
+ * because "ajcrew" is a prefix of "ajcrewnightly-2026-...".
  *
  * A name carrying no stamp is therefore refused, and the asymmetry is
  * deliberate: skipping a report of ours costs the banner one launch and leaves

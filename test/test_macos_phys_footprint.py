@@ -24,8 +24,8 @@ import time
 
 import pytest
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.acp import runtime as rt
+from aj_crew import platform_compat as pc
+from aj_crew.acp import runtime as rt
 
 # This file replaces ctypes.CDLL, find_library or a cached libc handle for a test,
 # so the shared macOS handle caches are put back after each one (see conftest.py).

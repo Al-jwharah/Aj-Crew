@@ -14,7 +14,7 @@ import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/subagent-completion-card'
 const SLOT = 'chat-completion'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -24,7 +24,7 @@ const slots = [{
   running: false,
   last_message: 'All ten locales are updated.',
   messages: 8,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),
@@ -37,7 +37,7 @@ const t = Date.now() / 1000
 /** A per-agent completion event, exactly as gateway._subagent_done composes it. */
 const single = [
   '[Subagent completion event]',
-  'Agent `53e3e5eb` (kirocrew) completed ✅',
+  'Agent `53e3e5eb` (ajcrew) completed ✅',
   'Task: Add TWO short UI labels to the GERMAN (de) catalog',
   '',
   'Added `copy_command` and `copied` to de.json and re-ran the parity check — 8340 keys, no strays.',
@@ -46,7 +46,7 @@ const single = [
 /** A failed per-agent completion: the danger state and its inline error detail. */
 const failed = [
   '[Subagent completion event]',
-  'Agent `7654e2b3` (kirocrew) failed ❌',
+  'Agent `7654e2b3` (ajcrew) failed ❌',
   'Task: Add TWO short UI labels to the FRENCH (fr) catalog',
   '',
   'Error: catalog parity check failed — fr.json is missing `copied`.',
@@ -90,7 +90,7 @@ const singleMeta = {
   subagentCompletion: {
     kind: 'single',
     agentId: '53e3e5eb',
-    agentName: 'kirocrew',
+    agentName: 'ajcrew',
     outcome: 'ok',
     task: 'Add TWO short UI labels to the GERMAN (de) catalog',
     note: '',
@@ -100,7 +100,7 @@ const failedMeta = {
   subagentCompletion: {
     kind: 'single',
     agentId: '7654e2b3',
-    agentName: 'kirocrew',
+    agentName: 'ajcrew',
     outcome: 'failed',
     task: 'Add TWO short UI labels to the FRENCH (fr) catalog',
     note: '',

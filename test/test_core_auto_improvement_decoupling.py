@@ -1,7 +1,7 @@
-"""GATE: Kiro Crew core does not depend on the Auto-Improvement app's code.
+"""GATE: Aj Crew core does not depend on the Auto-Improvement app's code.
 
 Auto-Improvement is to leave this repository whole. That is only possible while
-nothing outside ``src/kiro_crew/apps/builtins/`` imports it. The app already reaches
+nothing outside ``src/aj_crew/apps/builtins/`` imports it. The app already reaches
 the core only through the core's public surfaces (the app imports core, never the
 other way round), so no seam is needed for it today: what this gate keeps is that
 direction. The scans are the shared ones in ``test/core_app_independence.py``.
@@ -9,9 +9,9 @@ direction. The scans are the shared ones in ``test/core_app_independence.py``.
 Two properties are pinned:
 
 1. **No core module or script imports the app.** Every module under
-   ``src/kiro_crew`` outside ``apps/builtins/``, and every script under
+   ``src/aj_crew`` outside ``apps/builtins/``, and every script under
    ``scripts/``, is parsed. ``import``, ``from ... import`` (relative ones
-   resolved), ``from kiro_crew.apps.builtins import auto_improvement``,
+   resolved), ``from aj_crew.apps.builtins import auto_improvement``,
    ``importlib.import_module`` and ``__import__`` with a literal name are all in
    scope, and the probes below fail if any of those forms stops being caught.
 2. **The strings that still name the app are a pinned, shrinking list.** A path
@@ -25,7 +25,7 @@ Two properties are pinned:
 The dashboard half is ``website/src/apps/auto-improvement/autoImprovementBoundary.test.ts``.
 
 If this goes red because core reached for the app, add a generic, app-keyed seam in
-:mod:`kiro_crew.apps.seams` the app fills instead. Do not add an exemption.
+:mod:`aj_crew.apps.seams` the app fills instead. Do not add an exemption.
 """
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ import pytest
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_test_core_auto_improvement_decoupling")
 
-APP_PACKAGE = "kiro_crew.apps.builtins.auto_improvement"
+APP_PACKAGE = "aj_crew.apps.builtins.auto_improvement"
 #: The package directory name and the app id: every spelling that addresses the app.
 APP_NAMES = ("auto_improvement", "auto-improvement")
 
@@ -71,7 +71,7 @@ _SECURITY_POSTURE_ROWS: frozenset[tuple[str, str]] = frozenset(
     )
 )
 
-#: (path relative to ``src/kiro_crew``, or to the repository root for a script; the
+#: (path relative to ``src/aj_crew``, or to the repository root for a script; the
 #: literal): every core string still naming the app, each deleted with what it names.
 KNOWN_NAME_REFERENCES: frozenset[tuple[str, str]] = _SECURITY_POSTURE_ROWS | {
     # The docs linter's table of docs that describe a run against ANOTHER repository,
@@ -91,7 +91,7 @@ def test_no_core_module_or_script_imports_the_app(core_trees):
     offenders = independence.core_app_imports(core_trees, APP_PACKAGE)
     assert not offenders, (
         "core imports the Auto-Improvement app; add a generic seam in "
-        "kiro_crew.apps.seams the app fills instead:\n" + "\n".join(offenders)
+        "aj_crew.apps.seams the app fills instead:\n" + "\n".join(offenders)
     )
 
 
@@ -108,29 +108,29 @@ def test_the_strings_naming_the_app_are_the_pinned_list(core_trees):
     ("source", "importer", "is_package"),
     [
         (
-            "from kiro_crew.apps.builtins.auto_improvement.spine.git_safety import git_argv",
-            "kiro_crew.x",
+            "from aj_crew.apps.builtins.auto_improvement.spine.git_safety import git_argv",
+            "aj_crew.x",
             False,
         ),
-        ("import kiro_crew.apps.builtins.auto_improvement.backend.routes", "kiro_crew.x", False),
-        ("from kiro_crew.apps.builtins import auto_improvement", "kiro_crew.x", False),
-        ("from ..apps.builtins.auto_improvement import spine", "kiro_crew.dashboard.y", False),
-        ("from .builtins.auto_improvement.backend import store", "kiro_crew.apps.y", False),
-        ("from .builtins import auto_improvement", "kiro_crew.apps", True),
+        ("import aj_crew.apps.builtins.auto_improvement.backend.routes", "aj_crew.x", False),
+        ("from aj_crew.apps.builtins import auto_improvement", "aj_crew.x", False),
+        ("from ..apps.builtins.auto_improvement import spine", "aj_crew.dashboard.y", False),
+        ("from .builtins.auto_improvement.backend import store", "aj_crew.apps.y", False),
+        ("from .builtins import auto_improvement", "aj_crew.apps", True),
         (
             "import importlib\n"
-            "importlib.import_module('kiro_crew.apps.builtins.auto_improvement.backend.crew')",
-            "kiro_crew.x",
+            "importlib.import_module('aj_crew.apps.builtins.auto_improvement.backend.crew')",
+            "aj_crew.x",
             False,
         ),
-        ("__import__('kiro_crew.apps.builtins.auto_improvement')", "kiro_crew.x", False),
+        ("__import__('aj_crew.apps.builtins.auto_improvement')", "aj_crew.x", False),
         (
             "from typing import TYPE_CHECKING\n"
             "if TYPE_CHECKING:\n"
-            "    from kiro_crew.apps.builtins.auto_improvement.spine.agent_runner import (\n"
+            "    from aj_crew.apps.builtins.auto_improvement.spine.agent_runner import (\n"
             "        SessionAgentRunner,\n"
             "    )",
-            "kiro_crew.x",
+            "aj_crew.x",
             False,
         ),
     ],
@@ -142,13 +142,13 @@ def test_the_scan_catches_every_import_form(source, importer, is_package):
 @pytest.mark.parametrize(
     "source",
     [
-        "from kiro_crew.apps import seams",
-        "from kiro_crew.apps.builtins import BUILTIN_NAMES",
-        "import kiro_crew.apps.builtins.auto_improvement_other",
+        "from aj_crew.apps import seams",
+        "from aj_crew.apps.builtins import BUILTIN_NAMES",
+        "import aj_crew.apps.builtins.auto_improvement_other",
     ],
 )
 def test_the_scan_leaves_other_imports_alone(source):
-    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "kiro_crew.x", False)
+    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "aj_crew.x", False)
 
 
 def test_the_string_scan_skips_docstrings_but_not_paths_or_ids():

@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.security: the git-publish floor over nested shell payloads.
+"""Tests for aj_crew.security: the git-publish floor over nested shell payloads.
 
 The floor descends into nested and glued ``-c`` payloads and reads ``(`` / ``)`` as shell
 operators, so no wrapper or subshell hides a push to a protected branch.
@@ -31,7 +31,7 @@ class TestPublishFloorNestedPayloads:
     )
 
     def test_wrapped_protected_push_denied(self) -> None:
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         for cmd in self.WRAPPED_PROTECTED:
             assert is_denied(cmd) is not None, cmd
@@ -43,7 +43,7 @@ class TestPublishFloorNestedPayloads:
         characters, so the glued spelling was never yielded and the publish
         floor -- whose ONLY enforcement is this walk -- never judged it.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         for cmd in (
             "bash -c'git push origin main'",
@@ -60,7 +60,7 @@ class TestPublishFloorNestedPayloads:
         real script was never walked and the push executed. The ``-c`` branch
         already skipped the terminator; the verb branch did not.
         """
-        from kiro_crew.security import _shell_payload_sources, is_denied
+        from aj_crew.security import _shell_payload_sources, is_denied
 
         assert "git push origin main" in _shell_payload_sources("eval -- 'git push origin main'")
         for cmd in (
@@ -80,7 +80,7 @@ class TestPublishFloorNestedPayloads:
         program alone in one word and the whole verb-and-args tail glued into the
         next.
         """
-        from kiro_crew.security import _shell_payload_sources, is_denied
+        from aj_crew.security import _shell_payload_sources, is_denied
 
         assert "git push origin main" in _shell_payload_sources("eval 'git' 'push origin main'")
         for cmd in (
@@ -92,7 +92,7 @@ class TestPublishFloorNestedPayloads:
             assert is_denied(cmd) is not None, cmd
 
     def test_eval_join_does_not_over_block_ordinary_multi_word_eval(self) -> None:
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         for cmd in (
             "eval 'ls' '-la'",
@@ -113,7 +113,7 @@ class TestPublishFloorNestedPayloads:
         obfuscation, which a quoted payload is not, so a FEATURE-branch push
         inside a subshell inside a wrapper was refused.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         for cmd in (
             "bash -c '(git push origin my-feature)'",
@@ -130,7 +130,7 @@ class TestPublishFloorNestedPayloads:
         These need the payload descent AND the quote-aware operator cut
         together: the ref is quoted inside a subshell inside a wrapper.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         for cmd in (
             "bash -c '(git push origin main)'",
@@ -152,7 +152,7 @@ class TestPublishFloorNestedPayloads:
         the outer line deferred to was the bare word ``main``, which is not a
         publish and answers nothing.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         for cmd in (
             '"git" push eval main',
@@ -175,7 +175,7 @@ class TestPublishFloorNestedPayloads:
         floor checked before it learned to descend -- so a broken walk costs the
         nested coverage and nothing else.
         """
-        import kiro_crew.security as sec
+        import aj_crew.security as sec
 
         def boom(*_a: object, **_k: object) -> object:
             raise RuntimeError("payload walk exploded")
@@ -200,7 +200,7 @@ class TestPublishFloorNestedPayloads:
         path went from denied to allowed. Both spellings are consulted now, so
         the widen-only property actually holds.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         for cmd in (
             '"/opt/my(dir)/git" push origin main',
@@ -222,7 +222,7 @@ class TestPublishFloorNestedPayloads:
         The outer reading defers only when a nested payload exists to defer TO.
         Glue-evasion carries no payload, so it must still be denied on the spot.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         for cmd in (
             "git$(echo ' ')push origin main",
@@ -256,7 +256,7 @@ class TestPublishFloorNestedPayloads:
         ``test_only_one_joined_payload_is_produced_per_walk`` (one join per call)
         and ``test_a_join_produced_frame_does_not_join_again`` (no join chain).
         """
-        from kiro_crew.security import _nested_shell_payloads
+        from aj_crew.security import _nested_shell_payloads
 
         def payload_chars(n: int) -> int:
             tokens = ["eval", "a", "b"] * n
@@ -268,7 +268,7 @@ class TestPublishFloorNestedPayloads:
 
     def test_only_one_joined_payload_is_produced_per_walk(self) -> None:
         """The bound above is what keeps it linear, so pin the bound itself."""
-        from kiro_crew.security import _nested_shell_payloads
+        from aj_crew.security import _nested_shell_payloads
 
         tokens = ["eval", "git", "push origin main", "eval", "x", "y"]
         payloads = _nested_shell_payloads(list(tokens))
@@ -288,7 +288,7 @@ class TestPublishFloorNestedPayloads:
         0.13 s before the join existed. Frame counts are pinned instead of timings
         because they are exact: they do not grow with N at all.
         """
-        from kiro_crew.security import _deny_segment_views, _shell_payload_walk
+        from aj_crew.security import _deny_segment_views, _shell_payload_walk
 
         counts = {
             n: (len(_shell_payload_walk("eval " * n)), len(_deny_segment_views("eval " * n)))
@@ -304,7 +304,7 @@ class TestPublishFloorNestedPayloads:
         'push origin main'`` is fused to ``git push origin main`` by the first join
         and the chain only re-derived suffixes of an answer already in hand.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         for cmd in (
             "eval 'git' 'push origin main'",
@@ -333,7 +333,7 @@ class TestPublishFloorNestedPayloads:
         Joining them would invent a command line bash never runs, so the
         concatenation is scoped to ``eval`` alone.
         """
-        from kiro_crew.security import _nested_shell_payloads, normalize_shell_command
+        from aj_crew.security import _nested_shell_payloads, normalize_shell_command
 
         for cmd in ("source setup.sh arg1 arg2", ". setup.sh arg1 arg2"):
             payloads = _nested_shell_payloads(normalize_shell_command(cmd))
@@ -346,7 +346,7 @@ class TestPublishFloorNestedPayloads:
         and silently broke all five of these, so the walk deliberately still
         scans every token.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         for cmd in (
             "/usr/bin/git push origin main",
@@ -359,7 +359,7 @@ class TestPublishFloorNestedPayloads:
             assert is_denied(cmd) is not None, cmd
 
     def test_wrapped_feature_push_still_allowed(self) -> None:
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         # The floor decides protected-vs-feature, so widening DETECTION must not
         # turn ordinary work into a denial.
@@ -370,7 +370,7 @@ class TestPublishFloorNestedPayloads:
             assert is_denied(cmd) is None, cmd
 
     def test_wrapped_benign_not_overblocked(self) -> None:
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         for cmd in (
             "bash -c 'echo remember to push later'",
@@ -381,19 +381,19 @@ class TestPublishFloorNestedPayloads:
             assert is_denied(cmd) is None, cmd
 
     def test_self_protection_floor_shares_the_walk(self) -> None:
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         # Same walk now feeds both floors; the self-protection side must not
         # regress when the publish side starts consuming it.
         for cmd in (
-            "bash -c 'kirocrew token'",
-            "bash -c 'kirocrew restart'",
-            "cat <(kirocrew token)",
+            "bash -c 'ajcrew token'",
+            "bash -c 'ajcrew restart'",
+            "cat <(ajcrew token)",
         ):
             assert is_denied(cmd) is not None, cmd
 
     def test_payload_sources_and_frames_agree(self) -> None:
-        from kiro_crew.security import _self_token_frames, _shell_payload_sources
+        from aj_crew.security import _self_token_frames, _shell_payload_sources
 
         # The two views are projections of ONE walk, so they must stay the same
         # length -- a drift here is the class of bug this refactor removes.
@@ -418,7 +418,7 @@ class TestGluedShellCommandPayloadExtraction:
 
     def test_every_glued_spelling_yields_the_spaced_payload(self) -> None:
         """Glued single-quoted, double-quoted, and clustered spellings agree."""
-        from kiro_crew.security import _nested_shell_payloads, _shell_tokens
+        from aj_crew.security import _nested_shell_payloads, _shell_tokens
 
         spaced = _nested_shell_payloads(_shell_tokens("sh -c 'rg . /fenced/root'"))
         assert spaced == ["rg . /fenced/root"], spaced
@@ -433,7 +433,7 @@ class TestGluedShellCommandPayloadExtraction:
 
     def test_glued_unquoted_payload_is_extracted(self) -> None:
         """No quotes at all: ``-cwhoami`` runs ``whoami`` in a real shell."""
-        from kiro_crew.security import _nested_shell_payloads, _shell_tokens
+        from aj_crew.security import _nested_shell_payloads, _shell_tokens
 
         payloads = _nested_shell_payloads(_shell_tokens("bash -cwhoami"))
         assert "whoami" in payloads, payloads
@@ -444,7 +444,7 @@ class TestGluedShellCommandPayloadExtraction:
         The script is the NEXT token, exactly as before -- the glued reading must
         not invent a second payload out of a bare flag cluster.
         """
-        from kiro_crew.security import _nested_shell_payloads, _shell_tokens
+        from aj_crew.security import _nested_shell_payloads, _shell_tokens
 
         payloads = _nested_shell_payloads(_shell_tokens("bash -lc 'git status'"))
         assert payloads == ["git status"], payloads
@@ -459,7 +459,7 @@ class TestGluedShellCommandPayloadExtraction:
         other a bypass; extraction over-approximates instead, which this module
         documents as the safe direction.
         """
-        from kiro_crew.security import _nested_shell_payloads, _shell_tokens
+        from aj_crew.security import _nested_shell_payloads, _shell_tokens
 
         payloads = _nested_shell_payloads(_shell_tokens("bash -ecfoo bar"))
         assert "foo" in payloads, payloads
@@ -472,7 +472,7 @@ class TestGluedShellCommandPayloadExtraction:
         decoy consume the stop through which a later spaced ``-c``'s payload was
         found, turning the independent scan itself into a bypass.
         """
-        from kiro_crew.security import _nested_shell_payloads, _shell_tokens
+        from aj_crew.security import _nested_shell_payloads, _shell_tokens
 
         payloads = _nested_shell_payloads(_shell_tokens("bash -cx.sh -c 'rg . /fenced/root'"))
         assert "x.sh" in payloads, payloads
@@ -482,7 +482,7 @@ class TestGluedShellCommandPayloadExtraction:
         """The herestring stop is independent of the ``-c`` stop for the same
         reason: sharing one table let ``bash <<<'x' -c '<script>'`` yield only
         ``x`` while a real shell runs the script."""
-        from kiro_crew.security import _nested_shell_payloads, _shell_tokens
+        from aj_crew.security import _nested_shell_payloads, _shell_tokens
 
         payloads = _nested_shell_payloads(_shell_tokens("bash <<<'x' -c 'rg . /fenced/root'"))
         assert "x" in payloads, payloads
@@ -491,7 +491,7 @@ class TestGluedShellCommandPayloadExtraction:
     def test_uppercase_cluster_letters_still_carry_the_payload(self) -> None:
         """``-C`` (noclobber) clusters like any other flag, and the alt pass
         feeds case-PRESERVING tokens -- a lowercase-only class dropped these."""
-        from kiro_crew.security import _nested_shell_payloads, _shell_tokens
+        from aj_crew.security import _nested_shell_payloads, _shell_tokens
 
         for cmd in (
             "bash -Cc'rg . /fenced/root'",
@@ -512,7 +512,7 @@ class TestGluedShellCommandPayloadExtraction:
         instead: the run's last ``c`` (all flags) and second-to-last (a payload
         whose program starts with one ``c``, like ``cat``).
         """
-        from kiro_crew.security import (
+        from aj_crew.security import (
             _nested_shell_payloads,
             _shell_c_carrier_payloads,
             _shell_tokens,
@@ -559,7 +559,7 @@ class TestGluedShellCommandPayloadExtraction:
         ``--command`` residual remains -- pre-existing there, and out of this
         pattern's reach.
         """
-        from kiro_crew.security import _nested_shell_payloads, _shell_tokens
+        from aj_crew.security import _nested_shell_payloads, _shell_tokens
 
         payloads = _nested_shell_payloads(_shell_tokens("bash -Cc --command 'rg . /fenced/root'"))
         assert "rg . /fenced/root" in payloads, payloads
@@ -571,7 +571,7 @@ class TestGluedShellCommandPayloadExtraction:
         local extractor yielded: a payload for EVERY ``-c`` carrier, under the
         loose recognition (any prefix before the first lowercase ``c``).
         """
-        from kiro_crew.security import _nested_shell_payloads, _shell_tokens
+        from aj_crew.security import _nested_shell_payloads, _shell_tokens
 
         # A glued decoy before a glued carrier (both satisfy the glued predicate).
         payloads = _nested_shell_payloads(_shell_tokens("ksh -onoclobber -c'rg . /fenced/root'"))
@@ -592,7 +592,7 @@ class TestGluedShellCommandPayloadExtraction:
     def test_non_alpha_cluster_prefixes_still_carry_the_payload(self) -> None:
         """The deleted local extractor tolerated ANY prefix before the first
         lowercase ``c`` (``-1c``); the loose sweep preserves that recognition."""
-        from kiro_crew.security import _nested_shell_payloads, _shell_tokens
+        from aj_crew.security import _nested_shell_payloads, _shell_tokens
 
         payloads = _nested_shell_payloads(_shell_tokens("bash -1c 'rg . /fenced/root'"))
         assert "rg . /fenced/root" in payloads, payloads
@@ -611,7 +611,7 @@ class TestGluedShellCommandPayloadExtraction:
         """
         import time
 
-        from kiro_crew.security import _nested_shell_payloads
+        from aj_crew.security import _nested_shell_payloads
 
         def elapsed(n: int) -> float:
             tokens = ["bash"] * n + ["-c" + "x" * n]
@@ -632,7 +632,7 @@ class TestGluedShellCommandPayloadExtraction:
 
     def test_glued_payload_reaches_the_regex_tier_views(self) -> None:
         """Consumer: the deny-view pass judges the glued payload's own text."""
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         spaced = "bash -c 'dd \"if=/dev/zero\" of=/dev/sda'"
         glued = "bash -c'dd \"if=/dev/zero\" of=/dev/sda'"
@@ -662,13 +662,13 @@ class TestGitPublishSubshellGluing:
     )
 
     def test_glued_subshell_protected_push_denied(self) -> None:
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         for cmd in self.GLUED_PROTECTED_PUSHES:
             assert is_denied(cmd) is not None, cmd
 
     def test_glued_subshell_push_reaches_protected_branch_check(self) -> None:
-        from kiro_crew.security import _is_push_to_protected_branch
+        from aj_crew.security import _is_push_to_protected_branch
 
         # Not merely denied: the branch check must SEE the protected target, or
         # the allow-audit records a protected push as a feature-branch push.
@@ -697,14 +697,14 @@ class TestGitPublishSubshellGluing:
         redirection glued mid-token (``mainline)>log``) is why this cuts at the
         first operator instead of stripping the ends.
         """
-        from kiro_crew.security import _is_push_to_protected_branch, is_denied
+        from aj_crew.security import _is_push_to_protected_branch, is_denied
 
         for cmd in self.GLUED_OPERATOR_PUSHES:
             assert _is_push_to_protected_branch(cmd.lower()) is True, cmd
             assert is_denied(cmd) is not None, cmd
 
     def test_cut_at_operator_preserves_a_quoted_ref(self) -> None:
-        from kiro_crew.security import _cut_at_operator
+        from aj_crew.security import _cut_at_operator
 
         # Unquoted: operators are structure, so cut.
         assert _cut_at_operator("(git") == "git"
@@ -716,7 +716,7 @@ class TestGitPublishSubshellGluing:
         assert _cut_at_operator('"(main)"') == '"(main)"'
 
     def test_quoted_paren_ref_is_not_a_protected_branch(self) -> None:
-        from kiro_crew.security import _is_push_to_protected_branch
+        from aj_crew.security import _is_push_to_protected_branch
 
         # Grouping parens are stripped BEFORE the quotes come off, so a paren the
         # user QUOTED as part of the ref name survives: a branch literally named
@@ -745,14 +745,14 @@ class TestGitPublishSubshellGluing:
         was allowed AND audited as ``feature_branch_push``. One quote character
         was the whole bypass.
         """
-        from kiro_crew.security import _is_push_to_protected_branch, is_denied
+        from aj_crew.security import _is_push_to_protected_branch, is_denied
 
         for cmd in self.QUOTED_REF_GLUED_OPERATOR_PUSHES:
             assert _is_push_to_protected_branch(cmd.lower()) is True, cmd
             assert is_denied(cmd) is not None, cmd
 
     def test_cut_at_operator_cuts_outside_quotes_only(self) -> None:
-        from kiro_crew.security import _cut_at_operator
+        from aj_crew.security import _cut_at_operator
 
         # Operator OUTSIDE the quotes is structure -> cut.
         assert _cut_at_operator("'main')") == "'main'"
@@ -774,7 +774,7 @@ class TestGitPublishSubshellGluing:
         second push therefore hid the first one's protected ref completely and
         turned a fail-closed segment into an allow.
         """
-        from kiro_crew.security import _git_push_args, is_denied
+        from aj_crew.security import _git_push_args, is_denied
 
         assert _git_push_args('"git" push eval main git push origin my-feature') == [
             "eval",
@@ -806,7 +806,7 @@ class TestGitPublishSubshellGluing:
         closed because the current branch may be protected -- inherited a branch
         it never named.
         """
-        from kiro_crew.security import _git_push_args, is_denied
+        from aj_crew.security import _git_push_args, is_denied
 
         # The anchor is the leading program, whatever its spelling.
         assert _git_push_args("/usr/bin/git push origin main") == ["origin", "main"]
@@ -839,7 +839,7 @@ class TestGitPublishSubshellGluing:
         a force push to the current branch answered for by the nested feature push
         it redirected into.
         """
-        from kiro_crew.security import _git_push_args, is_denied
+        from aj_crew.security import _git_push_args, is_denied
 
         assert _git_push_args("git push --force origin 2> >(cmd)") == ["--force", "origin"]
         assert _git_push_args("git push origin my-feature 2> err.log") == [
@@ -879,7 +879,7 @@ class TestGitPublishSubshellGluing:
         glued or spaced, and a process substitution target is a whole command
         line skipped to its matching ``)``.
         """
-        from kiro_crew.security import _git_push_args, is_denied
+        from aj_crew.security import _git_push_args, is_denied
 
         # Stepped over, so the trailing refspec survives.
         assert _git_push_args("git push origin feature 2>/dev/null main") == [
@@ -927,7 +927,7 @@ class TestGitPublishSubshellGluing:
         were refused only because the reader could not resolve a path-qualified
         or quoted program and fell through to the fail-closed branch.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         for cmd in (
             "/usr/bin/git push origin my-feature",
@@ -945,14 +945,14 @@ class TestGitPublishSubshellGluing:
         and deny a branch that is legitimately pushable. That is why the
         dequoting is done on a separate anchor view rather than on the tokens.
         """
-        from kiro_crew.security import _git_push_args, _is_push_to_protected_branch
+        from aj_crew.security import _git_push_args, _is_push_to_protected_branch
 
         assert _git_push_args("git push origin '(main)'") == ["origin", "'(main)'"]
         assert _is_push_to_protected_branch("git push origin '(main)'") is False
 
     def test_quoted_operator_ref_names_stay_pushable(self) -> None:
         """The no-over-block half: these are legal, unprotected branch names."""
-        from kiro_crew.security import _is_push_to_protected_branch, is_denied
+        from aj_crew.security import _is_push_to_protected_branch, is_denied
 
         for cmd in (
             "git push origin '(main)'",
@@ -973,6 +973,6 @@ class TestGitPublishSubshellGluing:
             "(cd /tmp; git push origin my-feature)",
             "(git push origin fix/imds-encodings)",
         ):
-            from kiro_crew.security import _is_push_to_protected_branch
+            from aj_crew.security import _is_push_to_protected_branch
 
             assert _is_push_to_protected_branch(cmd.lower()) is False, cmd

@@ -18,12 +18,12 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent_state
-from kiro_crew.agent import _claim_propagated_model, _refresh_dynamic_fields
-from kiro_crew.config import config_path
-from kiro_crew.config.loader import DEFAULT_MODEL, KiroCrewConfig, resolve_effective_model
+from aj_crew import agent_state
+from aj_crew.agent import _claim_propagated_model, _refresh_dynamic_fields
+from aj_crew.config import config_path
+from aj_crew.config.loader import DEFAULT_MODEL, AjCrewConfig, resolve_effective_model
 
-_AGENT = "kirocrew"
+_AGENT = "ajcrew"
 _PINNED = "claude-opus-5"
 
 
@@ -37,7 +37,7 @@ def shipped(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
             payload["model"] = model
         path = tmp_path / "shipped-defaults.json"
         path.write_text(json.dumps(payload), encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.agent._shipped_defaults", lambda: path)
+        monkeypatch.setattr("aj_crew.agent._shipped_defaults", lambda: path)
         return path
 
     return _write
@@ -251,7 +251,7 @@ class TestTheClaimFollowsPublication:
     """``rebuild_agent_config`` claims ownership only once the spec write returned."""
 
     def _legacy_spec(self, agents_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew import agent
+        from aj_crew import agent
 
         agents_dir.mkdir()
         (agents_dir / agent.AGENT_FILENAME).write_text(
@@ -264,8 +264,8 @@ class TestTheClaimFollowsPublication:
     def test_a_failed_spec_write_leaves_a_legacy_spec_unclaimed(
         self, shipped, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import agent
-        from kiro_crew.agent_materialization import default_spec_commit
+        from aj_crew import agent
+        from aj_crew.agent_materialization import default_spec_commit
 
         shipped(None)
         self._legacy_spec(tmp_path / "agents", monkeypatch)
@@ -283,7 +283,7 @@ class TestTheClaimFollowsPublication:
     def test_a_published_spec_write_claims_a_legacy_spec(
         self, shipped, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import agent
+        from aj_crew import agent
 
         shipped(None)
         self._legacy_spec(tmp_path / "agents", monkeypatch)
@@ -305,7 +305,7 @@ class TestResolverOracle:
         agent_state.set_model_managed(_AGENT, True)
         specs = tmp_path / "agents"
         specs.mkdir()
-        monkeypatch.setattr("kiro_crew.config.loader.kiro_agents_dir", lambda: specs)
+        monkeypatch.setattr("aj_crew.config.loader.kiro_agents_dir", lambda: specs)
 
         # Global set to a concrete model: the spec carries it, and the resolver
         # reports it.
@@ -321,7 +321,7 @@ class TestResolverOracle:
         assert resolve_effective_model(_load_config(), _AGENT) == ""
 
 
-def _load_config() -> KiroCrewConfig:
+def _load_config() -> AjCrewConfig:
     """Load a config whose global ``agent.model`` is the one just written."""
     data = json.loads(config_path().read_text(encoding="utf-8"))
     data.setdefault("agents", {_AGENT: {"kiro_agent": _AGENT}})
@@ -330,7 +330,7 @@ def _load_config() -> KiroCrewConfig:
         json.dump(data, f)
         tmp = Path(f.name)
     try:
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
-            return KiroCrewConfig.load()
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
+            return AjCrewConfig.load()
     finally:
         tmp.unlink(missing_ok=True)

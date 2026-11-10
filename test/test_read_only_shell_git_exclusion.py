@@ -25,8 +25,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, HookManager, ToolCall
-from kiro_crew.security.readonly_bash import command_invokes_git, is_read_only_bash
+from aj_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, HookManager, ToolCall
+from aj_crew.security.readonly_bash import command_invokes_git, is_read_only_bash
 
 GIT_COMMANDS = [
     "git status",
@@ -138,10 +138,10 @@ async def _resolve_headless(command: str, approver: object = None) -> _Recording
     import json
     from unittest.mock import MagicMock, patch
 
-    import kiro_crew.sel as sel_mod
-    from kiro_crew import name_grant
-    from kiro_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
-    from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+    import aj_crew.sel as sel_mod
+    from aj_crew import name_grant
+    from aj_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
+    from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
 
     async def _clean(_event: object) -> None:
         return None
@@ -198,7 +198,7 @@ def test_the_heartbeat_approver_refuses_the_same_git_commands(command: str) -> N
     it refuses every shape the shared helper refuses."""
     from test_heartbeat_safe_tools import _shell
 
-    from kiro_crew.slack.gateway import _is_heartbeat_safe_tool
+    from aj_crew.slack.gateway import _is_heartbeat_safe_tool
 
     assert not _is_heartbeat_safe_tool(_shell(command))
 
@@ -207,6 +207,6 @@ def test_the_heartbeat_approver_refuses_the_same_git_commands(command: str) -> N
 def test_the_heartbeat_approver_still_approves_plain_reads(command: str) -> None:
     from test_heartbeat_safe_tools import _shell
 
-    from kiro_crew.slack.gateway import _is_heartbeat_safe_tool
+    from aj_crew.slack.gateway import _is_heartbeat_safe_tool
 
     assert _is_heartbeat_safe_tool(_shell(command))

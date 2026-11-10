@@ -1,4 +1,4 @@
-"""``kirocrew stop --port N --expect-pid P`` stops P only while it is provably this home's gateway.
+"""``ajcrew stop --port N --expect-pid P`` stops P only while it is provably this home's gateway.
 
 Every seam the stop reads is faked: the listener lookup, the argv identity check,
 the gateway-lock oracle, the pidfd and the signal itself. A refusal must send no signal at all, and the plain ``--port`` path must
@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli, cli_server, platform_compat
-from kiro_crew.gateway_lock import LockHolder, LockProbeError
+from aj_crew import cli, cli_server, platform_compat
+from aj_crew.gateway_lock import LockHolder, LockProbeError
 
 
 class _SelRecorder:
@@ -36,7 +36,7 @@ def host(monkeypatch):
     state = {
         "listeners": [4242],
         "lock": LockHolder(pid=4242, alive=True, source="flock_owner"),
-        "kirocrew": True,
+        "ajcrew": True,
         "signals": [],
         "kill_error": None,
         "closed": [],
@@ -57,7 +57,7 @@ def host(monkeypatch):
     monkeypatch.setattr(
         platform_compat, "find_listening_pids", lambda port: list(state["listeners"])
     )
-    monkeypatch.setattr(cli_server, "_is_kirocrew_process", lambda pid: state["kirocrew"])
+    monkeypatch.setattr(cli_server, "_is_ajcrew_process", lambda pid: state["ajcrew"])
     monkeypatch.setattr(cli_server, "lock_holder", holder)
     monkeypatch.delattr(os, "pidfd_open", raising=False)
     monkeypatch.setattr(os, "kill", kill)
@@ -162,9 +162,9 @@ def test_an_indeterminate_lock_probe_is_refused(pidfd_host, sel_rec, capsys) -> 
     _assert_refused(pidfd_host, sel_rec, capsys, "lock_probe_indeterminate")
 
 
-def test_a_non_kirocrew_process_is_refused(pidfd_host, sel_rec, capsys) -> None:
-    pidfd_host["kirocrew"] = False
-    _assert_refused(pidfd_host, sel_rec, capsys, "not_kirocrew")
+def test_a_non_ajcrew_process_is_refused(pidfd_host, sel_rec, capsys) -> None:
+    pidfd_host["ajcrew"] = False
+    _assert_refused(pidfd_host, sel_rec, capsys, "not_ajcrew")
 
 
 def test_a_pid_that_exits_before_the_signal_is_reported_not_stopped(
@@ -223,6 +223,6 @@ def test_the_cli_passes_expect_pid_through(monkeypatch) -> None:
         "_stop",
         lambda port, expect_pid=None: seen.update(port=port, expect_pid=expect_pid),
     )
-    monkeypatch.setattr("sys.argv", ["kirocrew", "stop", "--port", "5476", "--expect-pid", "4242"])
+    monkeypatch.setattr("sys.argv", ["ajcrew", "stop", "--port", "5476", "--expect-pid", "4242"])
     cli.main()
     assert seen == {"port": 5476, "expect_pid": 4242}

@@ -2,7 +2,7 @@
 
 What this closes. A v3 dashboard block binds a fold NAME plus a dotted path. The tree
 placement rules lived in
-:func:`~kiro_crew.crew_log.session_tree.fold_citations`, a pure function, so however
+:func:`~aj_crew.crew_log.session_tree.fold_citations`, a pure function, so however
 correct they were no block could reach a tree: a block has no way to call a function.
 This fold is a registered name over those same rules, and the tests below are in three
 groups for the three things that had to be true at once.
@@ -15,7 +15,7 @@ groups for the three things that had to be true at once.
    wrong answer. So the partition is pinned in both directions, at every consumer.
 
 2. THE MEASURED ROW COST. The data line stopped at this fold for one reason: a key kind
-   with no measured row cost charges :data:`~kiro_crew.crew_log.projection.
+   with no measured row cost charges :data:`~aj_crew.crew_log.projection.
    _UNMEASURED_ROW_BYTES`, which is not a measurement, so any ceiling stated over it is
    unbounded in practice. The cost here is RE-DERIVED from a driven fold rather than
    asserted, both row kinds, with the same two bounds the slot table's own test applies.
@@ -34,14 +34,14 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import dashboard_feed
-from kiro_crew import dashboard_types as dt
-from kiro_crew.crew_log import projection
-from kiro_crew.crew_log.entry_types import WORK_ENTRY_TYPE
-from kiro_crew.crew_log.errors import CrewLogError
-from kiro_crew.crew_log.schema import Entry
-from kiro_crew.crew_log.session_tree import fold_citations
-from kiro_crew.dashboard_templates import manifest
+from aj_crew import dashboard_feed
+from aj_crew import dashboard_types as dt
+from aj_crew.crew_log import projection
+from aj_crew.crew_log.entry_types import WORK_ENTRY_TYPE
+from aj_crew.crew_log.errors import CrewLogError
+from aj_crew.crew_log.schema import Entry
+from aj_crew.crew_log.session_tree import fold_citations
+from aj_crew.dashboard_templates import manifest
 
 FOLD = projection.WORKTREE_FOLD_NAME
 ROOT = "chat-1-root"
@@ -217,8 +217,8 @@ def test_a_v3_package_block_binding_the_tree_validates() -> None:
     fold does not render is still refused, which is what proves the acceptance is about
     THIS fold's shape rather than about any string getting through.
     """
-    from kiro_crew.artifact_store import dashboard_package as dp
-    from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+    from aj_crew.artifact_store import dashboard_package as dp
+    from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
     # THROUGH THE PACKAGE'S OWN GATE, which is the one a package goes through: a package
     # never reaches ``parse_manifest`` (it has no template id, version or registry
@@ -275,9 +275,9 @@ def test_the_template_catalogue_still_withholds_the_fold() -> None:
         (
             Path(__file__).resolve().parents[1]
             / "src"
-            / "kiro_crew"
+            / "aj_crew"
             / "builtin_skills"
-            / "kirocrew-dev"
+            / "ajcrew-dev"
             / "dashboard-template"
             / "folds.json"
         ).read_text(encoding="utf-8")

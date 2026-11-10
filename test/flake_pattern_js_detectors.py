@@ -32,7 +32,7 @@ def _j_lines(pattern: re.Pattern[str]) -> Callable[[str, str], list[int]]:
 
 
 def _j1_electron_promise_sleep(rel: str, text: str) -> list[int]:
-    """Promise-sleeps in the Electron tests: ``kirocrew.test-promise-sleep`` reads
+    """Promise-sleeps in the Electron tests: ``ajcrew.test-promise-sleep`` reads
     only TypeScript under ``website/src``, ``integration`` and ``playwright``."""
     if not rel.startswith("website/electron/"):
         return []

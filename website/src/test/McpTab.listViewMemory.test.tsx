@@ -15,7 +15,7 @@ const mockApi = vi.hoisted(() => ({
   mcpApply: vi.fn(),
   mcpGlobalScopes: vi.fn(),
   mcpResetProbeFailures: vi.fn(),
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
 }))
 vi.mock('../api/client', () => ({ api: mockApi }))
 
@@ -30,7 +30,7 @@ vi.mock('../components/McpBrowserModal', () => ({
 import McpTab from '../pages/overview/McpTab'
 
 const server = (name: string): McpServer => ({
-  name, command: `${name}-cmd`, status: 'ok', source: 'kirocrew', enabled: true, tools: [`${name}_search`],
+  name, command: `${name}-cmd`, status: 'ok', source: 'ajcrew', enabled: true, tools: [`${name}_search`],
 })
 
 function renderTab() {
@@ -49,7 +49,7 @@ beforeEach(() => {
   Object.values(mockApi).forEach(m => m.mockReset())
   mockApi.mcpServers.mockResolvedValue([server('alpha'), server('beta')])
   mockApi.mcpGlobalScopes.mockResolvedValue({ scopes: [] })
-  mockApi.kirocrewConfig.mockResolvedValue({})
+  mockApi.ajcrewConfig.mockResolvedValue({})
 })
 
 describe('McpTab list view across a leave and return', () => {
@@ -81,7 +81,7 @@ describe('McpTab list view across a leave and return', () => {
   })
 
   it('ignores a saved view it cannot read', async () => {
-    sessionStorage.setItem('kirocrew:mcp-servers-list-view', '{not json')
+    sessionStorage.setItem('ajcrew:mcp-servers-list-view', '{not json')
     renderTab()
     await screen.findByText('beta', { selector: 'code' })
     expect(filterBox().value).toBe('')

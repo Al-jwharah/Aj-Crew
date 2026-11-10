@@ -1,7 +1,7 @@
-"""Tests for where ``kiro_crew.transcribe`` finds its ffmpeg decoder.
+"""Tests for where ``aj_crew.transcribe`` finds its ffmpeg decoder.
 
 Covers the pinned decoder a desktop release carries in
-``site-packages/kirocrew_ffmpeg/bin`` and how its image is authenticated before
+``site-packages/ajcrew_ffmpeg/bin`` and how its image is authenticated before
 it runs, the fixed system directories on Windows and elsewhere, and never the
 ambient PATH.
 """
@@ -22,11 +22,11 @@ from unittest.mock import patch
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew import platform_compat as _pc
-from kiro_crew import transcribe
-from kiro_crew.stt import decoder
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import platform_compat as _pc
+from aj_crew import transcribe
+from aj_crew.stt import decoder
+from aj_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.testing.wait import async_wait_until
 
 # Lost-run bound for a cancelled task that never finishes. The cancel path
 # takes milliseconds, so this only names a hang.
@@ -59,7 +59,7 @@ _RELEASE_SHA256SUMS_TAG = "ffmpeg-decoder-7.1.1-r1"
 
 
 def _packaged_binaries_dir(site_packages):
-    """``<site_packages>/kirocrew_ffmpeg/bin``, the directory a release carries."""
+    """``<site_packages>/ajcrew_ffmpeg/bin``, the directory a release carries."""
     return site_packages.joinpath(*decoder.PACKAGED_DIR)
 
 
@@ -209,7 +209,7 @@ class TestBundledFfmpeg:
         binary = self._fake_package(monkeypatch, tmp_path)
         binary.write_bytes(b"changed decoder")
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.transcribe"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.transcribe"):
             assert transcribe._bundled_ffmpeg() is None
 
         assert "do not match the digest" in caplog.text
@@ -237,7 +237,7 @@ class TestBundledFfmpeg:
 
         monkeypatch.setattr(transcribe, "_new_executable_snapshot", _denied_snapshot)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.transcribe"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.transcribe"):
             assert transcribe._bundled_ffmpeg() is None
 
         assert "could not be read or staged for execution (Operation not permitted)" in caplog.text
@@ -521,7 +521,7 @@ class TestBundledFfmpeg:
 
         assert transcribe._new_executable_snapshot() == (41, -1, True, None)
         assert len(calls) == 1
-        assert calls[0][0] == "kirocrew-ffmpeg"
+        assert calls[0][0] == "ajcrew-ffmpeg"
         assert calls[0][1] & getattr(transcribe.os, "MFD_EXEC", 0x0010)
 
     def test_linux_memfd_exec_flag_falls_back_on_old_kernels(self, monkeypatch):
@@ -594,7 +594,7 @@ class TestBundledFfmpeg:
         os.close(writer)
         opened = transcribe._AuthenticatedFfmpeg("source", reader, path, cleanup_path=path)
         try:
-            assert calls == [(f".kirocrew-ffmpeg-{os.getpid()}-", str(root))]
+            assert calls == [(f".ajcrew-ffmpeg-{os.getpid()}-", str(root))]
         finally:
             opened.close()
 
@@ -603,7 +603,7 @@ class TestBundledFfmpeg:
         root.mkdir(mode=0o755)
         cleanup_calls = []
         monkeypatch.setattr(
-            "kiro_crew.sandbox.prime_voice_runtime_sandbox_paths",
+            "aj_crew.sandbox.prime_voice_runtime_sandbox_paths",
             lambda: str(root),
         )
         monkeypatch.setattr(transcribe, "_ffmpeg_snapshot_roots_cleaned", set())
@@ -624,7 +624,7 @@ class TestBundledFfmpeg:
         root = tmp_path / "not-a-directory"
         root.write_bytes(b"not a runtime root")
         monkeypatch.setattr(
-            "kiro_crew.sandbox.prime_voice_runtime_sandbox_paths",
+            "aj_crew.sandbox.prime_voice_runtime_sandbox_paths",
             lambda: str(root),
         )
 
@@ -658,13 +658,13 @@ class TestBundledFfmpeg:
     def test_stale_macos_snapshots_are_pruned_without_following_unknown_entries(
         self, monkeypatch, tmp_path
     ):
-        stale = tmp_path / ".kirocrew-ffmpeg-123-dead"
+        stale = tmp_path / ".ajcrew-ffmpeg-123-dead"
         stale.mkdir()
         (stale / "ffmpeg").write_bytes(b"stale")
-        active = tmp_path / f".kirocrew-ffmpeg-{os.getpid()}-active"
+        active = tmp_path / f".ajcrew-ffmpeg-{os.getpid()}-active"
         active.mkdir()
         (active / "ffmpeg").write_bytes(b"active")
-        unknown = tmp_path / ".kirocrew-ffmpeg-not-a-pid"
+        unknown = tmp_path / ".ajcrew-ffmpeg-not-a-pid"
         unknown.mkdir()
         monkeypatch.setattr(
             transcribe.platform_compat,
@@ -1054,8 +1054,8 @@ class TestFfmpegCandidateDirsWindows:
     """
 
     def test_windows_dirs_appended(self, monkeypatch):
-        from kiro_crew import platform_compat as pc
-        from kiro_crew import transcribe as tr
+        from aj_crew import platform_compat as pc
+        from aj_crew import transcribe as tr
 
         monkeypatch.setattr(pc, "IS_WINDOWS", True)
         pf = r"C:\Program Files"
@@ -1069,8 +1069,8 @@ class TestFfmpegCandidateDirsWindows:
         assert "/usr/local/bin" in dirs
 
     def test_non_windows_omits_windows_dirs(self, monkeypatch):
-        from kiro_crew import platform_compat as pc
-        from kiro_crew import transcribe as tr
+        from aj_crew import platform_compat as pc
+        from aj_crew import transcribe as tr
 
         monkeypatch.setattr(pc, "IS_WINDOWS", False)
         dirs = tr._ffmpeg_candidate_dirs()
@@ -1084,7 +1084,7 @@ class TestFfmpegCandidateDirsWindows:
         Regression: the prior implementation called ``os.path.isfile(<d>/ffmpeg)``
         which is blind to the ``.exe`` suffix.
         """
-        from kiro_crew import transcribe as tr
+        from aj_crew import transcribe as tr
 
         target_dir = tmp_path / "ffbin"
         target_dir.mkdir()
@@ -1106,7 +1106,7 @@ class TestFfmpegCandidateDirsWindows:
         assert os.environ["PATH"].startswith(str(target_dir))
 
     def test_ensure_ffmpeg_skips_dirs_already_on_path(self, tmp_path, monkeypatch):
-        from kiro_crew import transcribe as tr
+        from aj_crew import transcribe as tr
 
         target_dir = tmp_path / "ffbin"
         target_dir.mkdir()
@@ -1137,7 +1137,7 @@ class TestFfmpegDiscoveryWindowsOnly:
         reason="Windows-only: exercises PATHEXT-driven .exe suffix resolution.",
     )
     def test_ffmpeg_exe_discovered(self, tmp_path, monkeypatch):
-        from kiro_crew import transcribe as tr
+        from aj_crew import transcribe as tr
 
         ffbin = tmp_path / "ffbin"
         ffbin.mkdir()
@@ -1162,7 +1162,7 @@ class TestFfmpegIsNotResolvedFromPath:
     """
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture moved verbatim; no test of the class calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture moved verbatim; no test of the class calls monkeypatch.undo()
     def _without_the_optional_bundle(self, monkeypatch):
         """Keep these fallback tests independent of installed optional extras."""
         monkeypatch.setattr(transcribe, "_bundled_ffmpeg", lambda: None)

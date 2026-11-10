@@ -32,10 +32,10 @@ from cron_reaper_helpers import (
     _within_the_ceiling,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.cron import _JOB_TIMEOUT_SECS, CronService, _RunClaim
-from kiro_crew.cron_history import CronHistoryStore
-from kiro_crew.testing.wait import async_wait_until, finished
+from aj_crew import platform_compat
+from aj_crew.cron import _JOB_TIMEOUT_SECS, CronService, _RunClaim
+from aj_crew.cron_history import CronHistoryStore
+from aj_crew.testing.wait import async_wait_until, finished
 
 #: Every cron reaper suite pins a healthy free-memory reading (see
 #: ``ample_host_free_memory``): ``test_cron_reaper.py`` fires cron jobs through the
@@ -66,7 +66,7 @@ def _assert_the_reset_completed(caplog: pytest.LogCaptureFixture, elapsed: float
     hung = [
         r.getMessage()
         for r in caplog.records
-        if r.name == "kiro_crew.cron" and "reset hung" in r.getMessage()
+        if r.name == "aj_crew.cron" and "reset hung" in r.getMessage()
     ]
     assert hung == [], (
         f"the reset outlived the {_COMPLETED_RESET_CEILING_SECS:.0f}s lost-run ceiling "
@@ -121,12 +121,12 @@ class TestARegistrationAfterThePopIsNamedNotChased:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             await svc._force_reap("chase1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -155,12 +155,12 @@ class TestARegistrationAfterThePopIsNamedNotChased:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             await svc._force_reap("chase3", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -178,8 +178,8 @@ class TestARegistrationAfterThePopIsNamedNotChased:
         The completion's ``get_or_create`` waits at the fence and lands only once the
         run is recorded.
         """
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
         def _factory(
             session_key: Any = None, agent: Any = None, channel_id: Any = None, **_: Any
@@ -195,7 +195,7 @@ class TestARegistrationAfterThePopIsNamedNotChased:
             provider.shutdown = AsyncMock()
             return provider
 
-        mgr = SessionManager(KiroCrewConfig(), provider_factory=_factory)
+        mgr = SessionManager(AjCrewConfig(), provider_factory=_factory)
         first_pid = 2**22 + 9090
 
         provider, _, _ = await mgr.get_or_create("cron:chase4")
@@ -232,17 +232,17 @@ class TestARegistrationAfterThePopIsNamedNotChased:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             patch.object(mgr, "reset", side_effect=_reset_then_late_cold_start),
             door,
-            patch("kiro_crew.cron._REAPER_RESET_TIMEOUT", _COMPLETED_RESET_CEILING_SECS),
+            patch("aj_crew.cron._REAPER_RESET_TIMEOUT", _COMPLETED_RESET_CEILING_SECS),
             children,
             start_id,
             sweep,
             # The first process is gone once its reset completed: no survivor.
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             reap_started = asyncio.get_running_loop().time()
             await svc._force_reap("chase4", _JOB_TIMEOUT_SECS + 60, claim=claim)
@@ -311,12 +311,12 @@ class TestEveryKeyOfTheRunIsEnded:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             await svc._force_reap("seq1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -350,12 +350,12 @@ class TestEveryKeyOfTheRunIsEnded:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             await svc._force_reap("older1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -385,12 +385,12 @@ class TestEveryKeyOfTheRunIsEnded:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             await svc._force_reap("late1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -419,12 +419,12 @@ class TestEveryKeyOfTheRunIsEnded:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             await svc._force_reap("late2", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -474,12 +474,12 @@ class TestEveryKeyOfTheRunIsEnded:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             # The 5 s bound only names a serial reap: the concurrent resets finish
             # in a few loop steps, while ending the keys one after another keeps the
@@ -505,18 +505,18 @@ class TestEveryKeyOfTheRunIsEnded:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 side_effect=ValueError(
                     "kill_process_group: refusing broadcast/self process group 7040"
                 ),
             ),
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock()),
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock()),
         ):
             await svc._force_reap("keep1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -546,13 +546,13 @@ class TestEveryKeyOfTheRunIsEnded:
             return True
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", side_effect=_refuse_agent_a),
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock()),
+            patch("aj_crew.platform_compat.kill_process_group", side_effect=_refuse_agent_a),
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock()),
         ):
             await svc._force_reap("mixed1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -586,8 +586,8 @@ class TestAColdStartInFlightWhenTheRunEndsIsFenced:
     async def test_through_the_real_manager_a_start_in_flight_is_named_refused_hard_killed_and_lands_after(
         self, tmp_path: object
     ) -> None:
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
         inside_start = asyncio.Event()
         gate = asyncio.Event()
@@ -614,7 +614,7 @@ class TestAColdStartInFlightWhenTheRunEndsIsFenced:
             provider.start = AsyncMock(side_effect=_gated_start)
             return provider
 
-        mgr = SessionManager(KiroCrewConfig(), provider_factory=_factory)
+        mgr = SessionManager(AjCrewConfig(), provider_factory=_factory)
         cold_start = asyncio.create_task(mgr.get_or_create("cron:fence1"))
         await _settle(inside_start.is_set, "the cold start reached the provider start")
         assert not mgr.has_session("cron:fence1"), "nothing is published while start() runs"
@@ -630,15 +630,15 @@ class TestAColdStartInFlightWhenTheRunEndsIsFenced:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             patch.object(mgr, "_dispatch_hard_kill") as hard_kill,
-            patch("kiro_crew.cron._REAPER_RESET_TIMEOUT", 0.2),
+            patch("aj_crew.cron._REAPER_RESET_TIMEOUT", 0.2),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             assert svc._session_process_handles("cron:fence1") == []
             await svc._force_reap("fence1", _JOB_TIMEOUT_SECS + 60, claim=claim)
@@ -677,8 +677,8 @@ class TestAColdStartInFlightWhenTheRunEndsIsFenced:
         dispatched kill. The receipt survives until the fence lifts, so the audit says
         ``failed``.
         """
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
         inside_start = asyncio.Event()
         gate = asyncio.Event()
@@ -706,7 +706,7 @@ class TestAColdStartInFlightWhenTheRunEndsIsFenced:
             provider.start = AsyncMock(side_effect=_gated_start)
             return provider
 
-        mgr = SessionManager(KiroCrewConfig(), provider_factory=_factory)
+        mgr = SessionManager(AjCrewConfig(), provider_factory=_factory)
         cold_start = asyncio.create_task(mgr.get_or_create("cron:fence7"))
         await _settle(inside_start.is_set, "the cold start reached the provider start")
         refused_during_passes: list[bool] = []
@@ -746,16 +746,16 @@ class TestAColdStartInFlightWhenTheRunEndsIsFenced:
             return result
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             patch.object(mgr, "_dispatch_hard_kill") as hard_kill,
             patch.object(svc, "_reset_and_kill_once", _pass_then_let_the_start_return),
-            patch("kiro_crew.cron._REAPER_RESET_TIMEOUT", 0.2),
+            patch("aj_crew.cron._REAPER_RESET_TIMEOUT", 0.2),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             await svc._force_reap("fence7", _JOB_TIMEOUT_SECS + 60, claim=claim)
             assert settle_failures == [], settle_failures
@@ -793,8 +793,8 @@ class TestAColdStartInFlightWhenTheRunEndsIsFenced:
         The store merge, history row and audit are written while the key is fenced, so
         runtime and durable state never disagree during the write.
         """
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
         def _factory(
             session_key: Any = None, agent: Any = None, channel_id: Any = None, **_: Any
@@ -810,7 +810,7 @@ class TestAColdStartInFlightWhenTheRunEndsIsFenced:
             provider.shutdown = AsyncMock()
             return provider
 
-        mgr = SessionManager(KiroCrewConfig(), provider_factory=_factory)
+        mgr = SessionManager(AjCrewConfig(), provider_factory=_factory)
         provider, _, _ = await mgr.get_or_create("cron:fence5")
         mgr.release("cron:fence5")
         client = MagicMock()
@@ -859,18 +859,18 @@ class TestAColdStartInFlightWhenTheRunEndsIsFenced:
             await real_append(record)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             patch.object(svc._history, "append", AsyncMock(side_effect=_append)),
             patch.object(boundary, "end_ending", side_effect=_end_ending),
             patch.object(mgr, "reset", side_effect=_reset_then_race),
             door,
-            patch("kiro_crew.cron._REAPER_RESET_TIMEOUT", _COMPLETED_RESET_CEILING_SECS),
+            patch("aj_crew.cron._REAPER_RESET_TIMEOUT", _COMPLETED_RESET_CEILING_SECS),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             mock_sel().log_tool_invocation.side_effect = lambda **_: events.append("audit")
             reap_started = asyncio.get_running_loop().time()
@@ -900,8 +900,8 @@ class TestAColdStartInFlightWhenTheRunEndsIsFenced:
         The waiter on the parent's turn semaphore started no provider; naming it would
         record ``failed`` over a clean reap. Only a reservation past its spawn door is named.
         """
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
         def _factory(
             session_key: Any = None, agent: Any = None, channel_id: Any = None, **_: Any
@@ -917,7 +917,7 @@ class TestAColdStartInFlightWhenTheRunEndsIsFenced:
             provider.shutdown = AsyncMock()
             return provider
 
-        mgr = SessionManager(KiroCrewConfig(), provider_factory=_factory)
+        mgr = SessionManager(AjCrewConfig(), provider_factory=_factory)
         # The run's own turn: the permit stays HELD -- the busy parent.
         provider, _, _ = await mgr.get_or_create("cron:fence6")
         client = MagicMock()
@@ -953,14 +953,14 @@ class TestAColdStartInFlightWhenTheRunEndsIsFenced:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.cron._REAPER_RESET_TIMEOUT", _COMPLETED_RESET_CEILING_SECS),
+            patch("aj_crew.cron._REAPER_RESET_TIMEOUT", _COMPLETED_RESET_CEILING_SECS),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             reap_started = asyncio.get_running_loop().time()
             await svc._force_reap("fence6", _JOB_TIMEOUT_SECS + 60, claim=claim)
@@ -1021,10 +1021,10 @@ class TestAColdStartInFlightWhenTheRunEndsIsFenced:
         )
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             patch.object(svc._history, "append", AsyncMock(side_effect=_append)),
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
         ):
             mock_sel().log_tool_invocation.side_effect = lambda **_: events.append("audit")
             await svc._force_reap("fence2", _JOB_TIMEOUT_SECS + 60, claim=claim)
@@ -1062,7 +1062,7 @@ class TestAColdStartInFlightWhenTheRunEndsIsFenced:
         )
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
         ):
             await svc._force_reap("fence3", _JOB_TIMEOUT_SECS + 60, claim=claim)
@@ -1080,8 +1080,8 @@ class TestAColdStartInFlightWhenTheRunEndsIsFenced:
         seen by none of the three. The fence holds it at the door until the record and
         audit land. Disable it by making ``process_identity.ending_fence`` a ``nullcontext()``.
         """
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
         def _factory(
             session_key: Any = None, agent: Any = None, channel_id: Any = None, **_: Any
@@ -1097,7 +1097,7 @@ class TestAColdStartInFlightWhenTheRunEndsIsFenced:
             provider.shutdown = AsyncMock()
             return provider
 
-        mgr = SessionManager(KiroCrewConfig(), provider_factory=_factory)
+        mgr = SessionManager(AjCrewConfig(), provider_factory=_factory)
         provider, _, _ = await mgr.get_or_create("cron:fence7")
         mgr.release("cron:fence7")
         parked, door = _parks_at_the_fence_door(mgr)
@@ -1136,15 +1136,15 @@ class TestAColdStartInFlightWhenTheRunEndsIsFenced:
             await real_append(record)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             patch.object(svc._history, "append", AsyncMock(side_effect=_append)),
             door,
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             mock_sel().log_tool_invocation.side_effect = lambda **_: events.append("audit")
             await svc._force_reap("fence7", _JOB_TIMEOUT_SECS + 60, claim=claim)

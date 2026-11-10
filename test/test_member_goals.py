@@ -47,16 +47,16 @@ from member_goals_helpers import (  # noqa: F401 -- the autouse fixtures registe
     _thread,
 )
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew import mcp_mate, member_goals
-from kiro_crew import members as members_mod
-from kiro_crew.agent_files import ASSISTANT_MEMBER_NAME
-from kiro_crew.config.paths import data_home
-from kiro_crew.cron import CronService
-from kiro_crew.dashboard import goal_reminder, mate_welcome
-from kiro_crew.dashboard.handlers import guide as guide_routes
-from kiro_crew.dashboard.handlers import member_goals as goal_routes
-from kiro_crew.dashboard.handlers import member_self as self_routes
+from aj_crew import change_card_catalog as catalog
+from aj_crew import mcp_mate, member_goals
+from aj_crew import members as members_mod
+from aj_crew.agent_files import ASSISTANT_MEMBER_NAME
+from aj_crew.config.paths import data_home
+from aj_crew.cron import CronService
+from aj_crew.dashboard import goal_reminder, mate_welcome
+from aj_crew.dashboard.handlers import guide as guide_routes
+from aj_crew.dashboard.handlers import member_goals as goal_routes
+from aj_crew.dashboard.handlers import member_self as self_routes
 
 # ── the record ──
 
@@ -212,7 +212,7 @@ def test_a_symlinked_goal_directory_never_redirects_the_gateways_write(
 
 def test_the_fallback_treats_a_junction_as_a_link(monkeypatch: pytest.MonkeyPatch) -> None:
     """Windows junctions are not symlinks to ``is_symlink``; the fallback must refuse them."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(member_goals, "_PINNED", False)
     _seed()
@@ -536,7 +536,7 @@ def test_the_crewmate_records_a_reading_directly(_floor_monkeypatch) -> None:
 def test_a_report_is_filed_under_the_crewmates_reports_folder_and_linked(
     _floor_monkeypatch,
 ) -> None:
-    from kiro_crew import artifacts as artifacts_mod
+    from aj_crew import artifacts as artifacts_mod
 
     _seed()
     state = FakeState()
@@ -587,7 +587,7 @@ def test_the_reminders_hidden_turn_may_record_a_reading_and_only_its_goal_cards(
 
 
 def _capture_proposals(monkeypatch) -> list[dict]:
-    from kiro_crew.dashboard.handlers import change_cards as card_routes
+    from aj_crew.dashboard.handlers import change_cards as card_routes
 
     seen: list[dict] = []
 
@@ -722,10 +722,10 @@ def test_hidden_turn_language_reads_the_configured_dashboard_language(
 ) -> None:
     from types import SimpleNamespace
 
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     cfg = SimpleNamespace(dashboard=SimpleNamespace(language="zh-CN"))
-    _floor_monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    _floor_monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
     assert mate_welcome.hidden_turn_language() == "zh-CN"
 
 
@@ -782,7 +782,7 @@ def test_a_turn_the_user_did_not_send_cannot_raise_a_card_for_another_crewmate_b
     _floor_monkeypatch,
 ) -> None:
     """``propose_change`` names its member in the body, so it stays user-turn only."""
-    from kiro_crew.dashboard.handlers import change_cards as card_routes
+    from aj_crew.dashboard.handlers import change_cards as card_routes
 
     seen = _capture_proposals(_floor_monkeypatch)
     _seed()
@@ -799,7 +799,7 @@ def test_a_turn_the_user_did_not_send_cannot_raise_a_card_for_another_crewmate_b
 
 
 def test_set_goal_becomes_a_card_for_the_callers_own_member(_floor_monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers import change_cards as card_routes
+    from aj_crew.dashboard.handlers import change_cards as card_routes
 
     seen: list[dict] = []
 
@@ -963,7 +963,7 @@ def test_the_key_results_card_replaces_the_set_with_a_compare_and_set() -> None:
 
 
 def test_set_key_results_becomes_a_card_for_the_callers_own_member(_floor_monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers import change_cards as card_routes
+    from aj_crew.dashboard.handlers import change_cards as card_routes
 
     seen: list[dict] = []
 
@@ -1266,7 +1266,7 @@ def test_the_schedule_list_leaves_out_goal_check_ins_and_keeps_other_jobs(tmp_pa
 
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import cron as cron_routes
+    from aj_crew.dashboard.handlers import cron as cron_routes
 
     svc = CronService(base_dir=tmp_path / "crons")
     slug = "scout"
@@ -1327,7 +1327,7 @@ def test_the_owner_long_term_route_refuses_a_stale_expected(tmp_path: Path) -> N
 
 
 def test_the_short_term_and_undo_routes_are_gone() -> None:
-    from kiro_crew.dashboard.server_runtime import mcp_routes
+    from aj_crew.dashboard.server_runtime import mcp_routes
 
     assert not hasattr(goal_routes, "api_member_goals_undo")
     assert not hasattr(goal_routes, "api_member_self_short_goal")
@@ -1386,7 +1386,7 @@ def test_the_daily_wake_reads_the_page_tools_from_the_crew_panel_switch(
 ) -> None:
     """The daily wake sends status to the page only while ``agent.crew_panel`` mounts
     the page tools; an unreadable switch counts as off."""
-    from kiro_crew import members
+    from aj_crew import members
 
     _floor_monkeypatch.setattr(members, "crew_panel_enabled", lambda: True)
     assert goal_reminder._page_tools_on() is True
@@ -1435,7 +1435,7 @@ def test_the_daily_reminder_asks_for_a_page_only_while_there_is_none(
 ) -> None:
     """A crewmate whose tab shows nothing of its own, with a goal and milestones, is told
     to write a page; once it has one, not."""
-    from kiro_crew import dashboard_agentic
+    from aj_crew import dashboard_agentic
 
     _seed()
     slug = _slug(ORDINARY)
@@ -1482,7 +1482,7 @@ def test_the_build_line_is_an_html_page_saved_and_applied() -> None:
 
 
 def _ledger_item(title: str, state: str, closed_at: str | None, summary: str = ""):
-    from kiro_crew import work_ledger
+    from aj_crew import work_ledger
 
     return work_ledger.WorkItem(
         item_id="it_0000000" + str(len(title) % 10),
@@ -1497,7 +1497,7 @@ def test_a_report_prompt_lists_the_tasks_finished_in_its_window(_floor_monkeypat
     """The weekly report reads finished work-ledger tasks, not a short-term list."""
     from datetime import datetime, timedelta, timezone
 
-    from kiro_crew import work_ledger
+    from aj_crew import work_ledger
 
     now = datetime.now(timezone.utc)
     recent = (now - timedelta(days=2)).isoformat()
@@ -1535,7 +1535,7 @@ def test_a_report_prompt_lists_the_tasks_finished_in_its_window(_floor_monkeypat
 
 
 def test_a_thread_with_no_ledger_has_finished_nothing(_floor_monkeypatch) -> None:
-    from kiro_crew import work_ledger
+    from aj_crew import work_ledger
 
     def refuse(_key: str):
         raise work_ledger.WorkLedgerError("no such slot", code=work_ledger.CODE_INVALID_VALUE)
@@ -1567,7 +1567,7 @@ def test_each_check_in_prompt_is_written_as_principles(cadence: str, marker: str
 
 
 def test_the_goal_is_injected_after_the_rules_and_before_the_briefing() -> None:
-    from kiro_crew.context_assembly.member import build_member_section
+    from aj_crew.context_assembly.member import build_member_section
 
     _seed()
     slug = _slug(ORDINARY)
@@ -1587,7 +1587,7 @@ def test_the_goal_is_injected_after_the_rules_and_before_the_briefing() -> None:
 
 def test_the_goal_section_carries_no_reading_so_progress_does_not_resend_it() -> None:
     """A reading must not change the per-turn section; the check-in prompt has it."""
-    from kiro_crew.context_assembly.member import build_member_section
+    from aj_crew.context_assembly.member import build_member_section
 
     _seed()
     slug = _slug(ORDINARY)

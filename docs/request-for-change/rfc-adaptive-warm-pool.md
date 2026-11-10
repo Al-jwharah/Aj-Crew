@@ -1,7 +1,7 @@
 ---
 title: Adaptive warm session pool -- hold one pre-started session while the user is active, return it when idle, and check fit at claim
 status: draft
-author: iamwhatever, with kirocrew-worker
+author: iamwhatever, with ajcrew-worker
 created: 2026-10-24
 last-audited: 2026-10-24
 audited-at: 24d4604c45
@@ -90,7 +90,7 @@ being used for another, so safety comes first in this document.
 ### 3.2 Who skips the pool
 
 The decision is the `pool_decision` chain in `_get_or_create_impl` (`session_allocation_parts/get_or_create.py`). The
-first matching arm wins and is counted on `kirocrew.session.pool.decision`:
+first matching arm wins and is counted on `ajcrew.session.pool.decision`:
 
 | Outcome | Request |
 |---|---|
@@ -112,7 +112,7 @@ first matching arm wins and is counted on `kirocrew.session.pool.decision`:
 
 Then the claim itself (`_claim_from_pool`) returns nothing unless the
 requested agent equals the pool agent. A dispatched
-worker running `kirocrew-worker`, or any chat that picked a non-default agent,
+worker running `ajcrew-worker`, or any chat that picked a non-default agent,
 misses here. `_drain_and_claim` then discards any entry
 that predates an identity change, is past the TTL, or whose process died.
 
@@ -171,7 +171,7 @@ Not goals:
 
 | Who | Today | Recommendation |
 |---|---|---|
-| Dispatched worker (`session_create`) | G8 #23246 starts its agent at create (`create_session` in `dashboard/session_control_parts/session_create.py`). Create to first send: p50 38.9 s, only 3 of 156 under 10.5 s (14 days) | No pool. G8 already hides the start; a pool would duplicate it and must also match `kirocrew-worker` |
+| Dispatched worker (`session_create`) | G8 #23246 starts its agent at create (`create_session` in `dashboard/session_control_parts/session_create.py`). Create to first send: p50 38.9 s, only 3 of 156 under 10.5 s (14 days) | No pool. G8 already hides the start; a pool would duplicate it and must also match `ajcrew-worker` |
 | Crewmate DM | `bypass_member`: a pooled child has no member route (dispatch-tool mount, member backend) | No pool. A DM's new session comes from a context trim; the lever is R8 item 4, starting the trimmed session at the end of the previous turn |
 | Crewmate's own worker | `bypass_member`, same reason | No pool |
 
@@ -180,7 +180,7 @@ Not goals:
 Script: `research/dynpool/analyze.py` in the operator's workspace (reads
 `~/.kiro/crew/sessions/dashboard_chat-*.jsonl` only; output in
 `out_14d.txt`). A chat is pool-eligible when its first user row is a human
-dashboard message, its agent is the default (`kirocrew`), and its project is
+dashboard message, its agent is the default (`ajcrew`), and its project is
 the default workspace. Chats titled `perf-*` are benchmark runs and are counted
 separately. A claim is modelled at slot create + 1.5 s (the eager-spawn
 debounce); a claim helps only if the first send came within 10.5 s of the

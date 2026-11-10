@@ -187,9 +187,9 @@ describe('ArtifactDeployPage — navigation, disclosure, and copy affordances', 
     installFetch()
     renderPage()
     await profilesLoaded()
-    expect(screen.queryByText('Your credentials never touch Kiro Crew.')).toBeNull()
+    expect(screen.queryByText('Your credentials never touch Aj Crew.')).toBeNull()
     fireEvent.click(screen.getByText(/How this is secured/))
-    expect(screen.getByText('Your credentials never touch Kiro Crew.')).toBeInTheDocument()
+    expect(screen.getByText('Your credentials never touch Aj Crew.')).toBeInTheDocument()
   })
 
   it('copies a setup command verbatim, comment and all', async () => {

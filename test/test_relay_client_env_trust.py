@@ -20,10 +20,10 @@ from relay_client_helpers import (
     stop,
 )
 
-from kiro_crew.relay_client.client import STATE_CONNECTED
-from kiro_crew.relay_client.connection import HostConnection, RelayTimings, env_proxy_for
-from kiro_crew.relay_client.token_source import HostCredential
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.relay_client.client import STATE_CONNECTED
+from aj_crew.relay_client.connection import HostConnection, RelayTimings, env_proxy_for
+from aj_crew.relay_client.token_source import HostCredential
+from aj_crew.testing.wait import async_wait_until
 
 _PROXY_VARS = ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY")
 

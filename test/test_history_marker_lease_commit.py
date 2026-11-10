@@ -12,10 +12,10 @@ import json
 
 import pytest
 
-from kiro_crew import history as history_mod
-from kiro_crew import history_rewrite
-from kiro_crew.history import ConversationLog, HistoryConsolidator
-from kiro_crew.history_consolidation import _LEASE_TOKEN, _LeaseLostMidRun
+from aj_crew import history as history_mod
+from aj_crew import history_rewrite
+from aj_crew.history import ConversationLog, HistoryConsolidator
+from aj_crew.history_consolidation import _LEASE_TOKEN, _LeaseLostMidRun
 
 KEY = "dashboard:chat-lease-commit"
 

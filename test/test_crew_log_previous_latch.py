@@ -42,9 +42,9 @@ from crew_log_drain import assert_drained
 from test_chat_runner_coverage import _drive, _runner_state, _slot
 from test_chat_send_agent_model_default import _config, _pin_sync_accessors, _turn_state
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.crew_log import crew_log_path, emit, session_tree, store
-from kiro_crew.crew_log.session_tree import (
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.crew_log import crew_log_path, emit, session_tree, store
+from aj_crew.crew_log.session_tree import (
     EDGE_LEGACY,
     EDGE_NAMED,
     EDGE_NONE,
@@ -57,10 +57,10 @@ from kiro_crew.crew_log.session_tree import (
     fold_slot_head,
     slot_chain_head,
 )
-from kiro_crew.crew_log.store import crew_log_dir
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_runner import _eager_spawn, _slot_predecessor_store
-from kiro_crew.dashboard.state import CrewLogPrevious, _ChatSlot
+from aj_crew.crew_log.store import crew_log_dir
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_runner import _eager_spawn, _slot_predecessor_store
+from aj_crew.dashboard.state import CrewLogPrevious, _ChatSlot
 
 #: The eager-prefetch tests need a pre-warm allowance, which is zero while the
 #: host's memory posture is critical (see ``ample_host_free_memory``).
@@ -115,7 +115,7 @@ def _strip_edge_keys(sid: str) -> None:
 
 @pytest.fixture
 def _runner_config():
-    """Serve one real config object to every ``KiroCrewConfig.load()`` in the turn.
+    """Serve one real config object to every ``AjCrewConfig.load()`` in the turn.
 
     Defined here rather than imported: an imported fixture is never referenced by
     name in this module, so it reads as an unused import that each test's
@@ -123,9 +123,9 @@ def _runner_config():
     """
     patchers: list[unittest.mock._patch] = []
 
-    def _use(cfg: KiroCrewConfig) -> None:
+    def _use(cfg: AjCrewConfig) -> None:
         patcher = unittest.mock.patch.object(
-            chat_runner.KiroCrewConfig, "load", unittest.mock.MagicMock(return_value=cfg)
+            chat_runner.AjCrewConfig, "load", unittest.mock.MagicMock(return_value=cfg)
         )
         patcher.start()
         patchers.append(patcher)
@@ -143,7 +143,7 @@ def _store(tmp_path, monkeypatch):
     the same call the turn path makes, so the units on disk are the units a gateway
     writes rather than a fixture's idea of them.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     emit.reset_caches()
 
@@ -1240,12 +1240,12 @@ class TestTheStoreReader:
 _RESTART_PROBE = """
 import asyncio, json, os, sys
 
-os.environ["KIROCREW_HOME"] = sys.argv[1]
-os.environ["KIROCREW_CREW_LOG"] = "1"
+os.environ["AJCREW_HOME"] = sys.argv[1]
+os.environ["AJCREW_CREW_LOG"] = "1"
 SLOT, MAPPED = sys.argv[2], sys.argv[3]
 
-from kiro_crew.dashboard.chat_runner import _slot_predecessor_store
-from kiro_crew.dashboard.state import CrewLogPrevious, _ChatSlot
+from aj_crew.dashboard.chat_runner import _slot_predecessor_store
+from aj_crew.dashboard.state import CrewLogPrevious, _ChatSlot
 
 
 class Sessions:
@@ -1282,7 +1282,7 @@ def _after_restart(home: Path, slot: str, mapped: str) -> str:
         "PYTHONPATH": str(Path(__file__).resolve().parents[1] / "src"),
         "PATH": os.environ.get("PATH", ""),
         "TMPDIR": str(home.parent),
-        "KIROCREW_HOME": str(home),
+        "AJCREW_HOME": str(home),
     }
     if sys.platform == "win32":  # pragma: no cover - parity with the boot probe
         env["SYSTEMROOT"] = os.environ.get("SYSTEMROOT", "")

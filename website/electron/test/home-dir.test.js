@@ -19,9 +19,9 @@ describe("resolveHome", () => {
     assert.equal(resolveHome({ env: {}, os: fakeOs, path }), CANONICAL);
   });
 
-  it("returns a valid KIROCREW_HOME override", () => {
+  it("returns a valid AJCREW_HOME override", () => {
     assert.equal(
-      resolveHome({ env: { KIROCREW_HOME: OVERRIDE }, os: fakeOs, path }),
+      resolveHome({ env: { AJCREW_HOME: OVERRIDE }, os: fakeOs, path }),
       OVERRIDE,
     );
   });
@@ -34,7 +34,7 @@ describe("resolveHome", () => {
     // only portable way to name the root of the volume this test runs on.
     const root = path.parse(path.resolve(path.sep)).root;
     assert.equal(
-      resolveHome({ env: { KIROCREW_HOME: root }, os: fakeOs, path }),
+      resolveHome({ env: { AJCREW_HOME: root }, os: fakeOs, path }),
       CANONICAL,
       `override ${root} should be rejected`,
     );
@@ -49,7 +49,7 @@ describe("resolveHome", () => {
   it("rejects POSIX system-dir overrides and falls back to canonical -- parity with paths.py", { skip: process.platform === "win32" ? "POSIX-only rule (backend guards /usr, /System, /etc)" : false }, () => {
     for (const bad of ["/etc", "/usr", "/System"]) {
       assert.equal(
-        resolveHome({ env: { KIROCREW_HOME: bad }, os: fakeOs, path }),
+        resolveHome({ env: { AJCREW_HOME: bad }, os: fakeOs, path }),
         CANONICAL,
         `override ${bad} should be rejected`,
       );
@@ -60,15 +60,15 @@ describe("resolveHome", () => {
     // Python _valid_override_home returns Path(override).expanduser().resolve();
     // Electron must NOT read a literal "~/foo" or the two diverge (GPT 5.6 MEDIUM).
     assert.equal(
-      resolveHome({ env: { KIROCREW_HOME: "~/foo" }, os: fakeOs, path }),
+      resolveHome({ env: { AJCREW_HOME: "~/foo" }, os: fakeOs, path }),
       path.join(HOME, "foo"),
     );
     assert.equal(
-      resolveHome({ env: { KIROCREW_HOME: "~" }, os: fakeOs, path }),
+      resolveHome({ env: { AJCREW_HOME: "~" }, os: fakeOs, path }),
       HOME,
     );
     // secretCandidates uses the same expanded, absolute override.
-    assert.deepEqual(secretCandidates({ env: { KIROCREW_HOME: "~/foo" }, os: fakeOs, path }), [
+    assert.deepEqual(secretCandidates({ env: { AJCREW_HOME: "~/foo" }, os: fakeOs, path }), [
       path.join(HOME, "foo", ".local_secret"),
     ]);
   });
@@ -76,7 +76,7 @@ describe("resolveHome", () => {
 
 describe("secretCandidates (post-spawn, call-time resolution)", () => {
   it("env override is authoritative and sole", () => {
-    const env = { KIROCREW_HOME: OVERRIDE };
+    const env = { AJCREW_HOME: OVERRIDE };
     assert.deepEqual(secretCandidates({ env, os: fakeOs, path }), [
       path.join(OVERRIDE, ".local_secret"),
     ]);
@@ -90,7 +90,7 @@ describe("secretCandidates (post-spawn, call-time resolution)", () => {
   });
 
   it("ignores an invalid (root) override and uses the default home -- parity", () => {
-    assert.deepEqual(secretCandidates({ env: { KIROCREW_HOME: "/" }, os: fakeOs, path }), [
+    assert.deepEqual(secretCandidates({ env: { AJCREW_HOME: "/" }, os: fakeOs, path }), [
       path.join(CANONICAL, ".local_secret"),
     ]);
   });

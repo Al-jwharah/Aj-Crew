@@ -25,7 +25,7 @@ import pytest
 #: this module, and it failed in CI for exactly that reason. Loading the package
 #: under a name nothing else uses removes the question, and the harness's own
 #: modules import each other relatively so they do not care what it is called.
-_HARNESS = "kirocrew_microvm_harness"
+_HARNESS = "ajcrew_microvm_harness"
 _HARNESS_DIR = Path(__file__).resolve().parent / "microvm_harness"
 
 

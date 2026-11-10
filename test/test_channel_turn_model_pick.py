@@ -17,16 +17,16 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.acp.types import ACP_BACKEND_KIRO
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import effective_session_key
-from kiro_crew.llm_helpers import slot_switch_session_lock
+from aj_crew.acp.types import ACP_BACKEND_KIRO
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import effective_session_key
+from aj_crew.llm_helpers import slot_switch_session_lock
 
 
 def _live_provider(*, active_turn: bool = False):
     """An idle kiro-cli AcpProvider double whose live ``set_model`` succeeds."""
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.providers.acp import AcpProvider
 
     provider = MagicMock(spec=AcpProvider)
     provider.capabilities = capabilities_for(ACP_BACKEND_KIRO)
@@ -74,7 +74,7 @@ class TestTheReleaseObserver:
 
     @staticmethod
     def _manager_holding(key: str):
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         cfg = MagicMock()
         cfg.default_agent = ""
@@ -411,7 +411,7 @@ class TestTheWiredListener:
     def test_every_gateway_start_wires_the_listener(self):
         from pathlib import Path
 
-        src = Path(__file__).parents[1] / "src" / "kiro_crew"
+        src = Path(__file__).parents[1] / "src" / "aj_crew"
         for path in sorted(src.rglob("*.py")):
             text = path.read_text(encoding="utf-8")
             bind = text.count("wire_session_bind_listener()")

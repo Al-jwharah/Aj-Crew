@@ -1,6 +1,6 @@
 """Apps learn that the global lesson store changed through ``lessons.changed``.
 
-``kiro_crew.lesson_events`` owns the signal and its closed vocabulary. The
+``aj_crew.lesson_events`` owns the signal and its closed vocabulary. The
 ``/api/lessons`` routes and consolidation raise it only after the default store
 actually changed, never for a write into a named store, and the payload carries no
 lesson text. The gateway observer marshals it onto the serving loop and broadcasts the
@@ -23,12 +23,12 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from body_stream_helpers import attach_body
 
-from kiro_crew import lesson_events
-from kiro_crew.history import ConversationLog
-from kiro_crew.history_consolidation import HistoryConsolidator
-from kiro_crew.learn import LessonStore
-from kiro_crew.lesson_validation import LESSON_APPLIES_ON_TOPIC
-from kiro_crew.vector_memory import (
+from aj_crew import lesson_events
+from aj_crew.history import ConversationLog
+from aj_crew.history_consolidation import HistoryConsolidator
+from aj_crew.learn import LessonStore
+from aj_crew.lesson_validation import LESSON_APPLIES_ON_TOPIC
+from aj_crew.vector_memory import (
     LessonWriteOutcome,
     LessonWriteResult,
     VectorMemoryStore,
@@ -105,7 +105,7 @@ class TestRoutes:
         return request, state
 
     async def _create(self, result, silo: str = ""):
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         request, state = self._request({"rule": "pin every dependency", "category": "tool"})
         vs = MagicMock()
@@ -152,7 +152,7 @@ class TestRoutes:
         assert "pin every dependency" not in json.dumps(frames)
 
     async def test_a_refused_session_announces_nothing(self, frames):
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         request, _ = self._request({"rule": "pin every dependency"})
         with (
@@ -164,8 +164,8 @@ class TestRoutes:
         assert frames == []
 
     async def _delete(self, tmp_path, rule: str, silo: str = ""):
-        from kiro_crew.dashboard.handlers import cron
-        from kiro_crew.learn import Lesson
+        from aj_crew.dashboard.handlers import cron
+        from aj_crew.learn import Lesson
 
         store = LessonStore(base_dir=tmp_path)
         store.save(
@@ -288,7 +288,7 @@ class TestConsolidation:
 
 @pytest.mark.asyncio
 async def test_the_gateway_observer_broadcasts_on_the_serving_loop() -> None:
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     state = MagicMock()
     state.serving_loop = asyncio.get_running_loop()
@@ -311,7 +311,7 @@ class TestWebSocketScope:
 
     @pytest.fixture(autouse=True)
     def _caches(self):
-        from kiro_crew.dashboard import ws_event_scope
+        from aj_crew.dashboard import ws_event_scope
 
         for cache in (ws_event_scope._declared_cache, ws_event_scope._sel_last_audit):
             cache.clear()
@@ -320,7 +320,7 @@ class TestWebSocketScope:
             cache.clear()
 
     def _allowed(self, declared: list[str]) -> bool:
-        from kiro_crew.dashboard import ws_event_scope
+        from aj_crew.dashboard import ws_event_scope
 
         allowed = ws_event_scope.build_allowed_event_set(declared)
         # An installed, enabled app, so the decision is the scope and not cache timing.
@@ -357,8 +357,8 @@ class TestAppTokenReachesTheLessonAndSkillReads:
     APP = "commons-under-test"
 
     async def _get(self, monkeypatch, declared: tuple[str, ...], path: str) -> tuple[int, dict]:
-        from kiro_crew.dashboard import token_auth
-        from kiro_crew.dashboard.server_internal_paths import _MIXED_INTERNAL_API_PATHS
+        from aj_crew.dashboard import token_auth
+        from aj_crew.dashboard.server_internal_paths import _MIXED_INTERNAL_API_PATHS
 
         monkeypatch.setattr(
             token_auth, "_app_api_allowlist", lambda name: declared if name == self.APP else ()
@@ -394,14 +394,14 @@ class TestAppTokenReachesTheLessonAndSkillReads:
         assert status == 403
 
     async def test_the_lessons_route_resolves_an_app_token_to_the_global_store(self):
-        from kiro_crew.dashboard.handlers._shared import resolve_lesson_memory_store
+        from aj_crew.dashboard.handlers._shared import resolve_lesson_memory_store
 
         request = MagicMock()
         request.headers = {}
         request.get = {"app": self.APP, "is_dashboard_user": False}.get
         state = SimpleNamespace(conversation_log=ConversationLog())
         with patch(
-            "kiro_crew.dashboard.handlers._shared_memory_stores.memory_startup_refusal",
+            "aj_crew.dashboard.handlers._shared_memory_stores.memory_startup_refusal",
             return_value=None,
         ):
             store, refusal = await resolve_lesson_memory_store(request, state, "lessons.list")

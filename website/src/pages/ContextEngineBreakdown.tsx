@@ -176,7 +176,7 @@ export interface Row {
 
 /**
  * The newest turn as one tree. `measured`: every part the engine counted, shares
- * are the engine's own percent of the request's characters. `crew`: only Kiro
+ * are the engine's own percent of the request's characters. `crew`: only Aj
  * Crew's blocks and the user's own messages have a size; the rest is one row.
  */
 export interface Breakdown {
@@ -189,7 +189,7 @@ export interface Breakdown {
   windowTokens: number
   /** Tokens in use: the window share times its size, or the harness's own count. */
   usedTokens: number
-  /** Characters by which Kiro Crew's blocks exceed the engine's history; Messages
+  /** Characters by which Aj Crew's blocks exceed the engine's history; Messages
    *  is then shown as 0. Zero when they fit, which is the normal case. */
   overlap: number
 }
@@ -256,9 +256,9 @@ export function remainderTokens(total: number, estimate: number): { tokens: numb
 }
 
 /**
- * The newest turn as one flat list, zero rows hidden. Row 1 is always Kiro Crew
+ * The newest turn as one flat list, zero rows hidden. Row 1 is always Aj Crew
  * (rules, memory, skills, other). Then, largest first: Messages (the engine's
- * history less Kiro Crew's blocks: Your messages, Replies, Reasoning, Summary, Other
+ * history less Aj Crew's blocks: Your messages, Replies, Reasoning, Summary, Other
  * user text) and every other category the engine counted.
  */
 export function breakdownOf(
@@ -287,7 +287,7 @@ export function breakdownOf(
       // No token total: the rows stay in characters, and nothing else is claimed.
       return { mode: 'crew', rows: [crew, msg].filter(r => size(r) > 0), chars: null, filled, windowTokens, usedTokens: 0, overlap: 0 }
     }
-    // Every row in tokens, so the rows add up to the total above: Kiro Crew's blocks
+    // Every row in tokens, so the rows add up to the total above: Aj Crew's blocks
     // and the user's words at the composer's ratio, and the rest is what is left.
     const tag = (r: Row): Row => {
       const tokens = Math.round(size(r) / Math.max(0.1, charsPerToken))
@@ -338,11 +338,11 @@ export function breakdownOf(
   // as that part's real share, so the row says <0.1% rather than 0%.
   const wire = (id: string, n: number) => (typeof pct[id] === 'number' && (pct[id] > 0 || n === 0) ? pct[id] / 100 : share(n))
 
-  // Kiro Crew's blocks are part of the engine's history; they get their own row, and
+  // Aj Crew's blocks are part of the engine's history; they get their own row, and
   // Messages is what the history holds besides them, so every character is counted once.
   const crew = crewRow(latest, share)
   const historyChars = engine.categories.history ?? 0
-  // Your messages sits on its own row, right after Kiro Crew, on every turn.
+  // Your messages sits on its own row, right after Aj Crew, on every turn.
   const rawMessages = historyChars - size(crew) - message
   const messagesChars = Math.max(0, rawMessages)
   const messageKids: Row[] = []
@@ -393,7 +393,7 @@ export function breakdownOf(
   const filled = typeof win?.usage_percent === 'number' && windowTokens > 0 ? Math.min(1, Math.max(0, win.usage_percent / 100)) : null
   return {
     mode: 'measured',
-    // Kiro Crew is always row 1; everything else follows by size.
+    // Aj Crew is always row 1; everything else follows by size.
     rows: [...[crew, yours(share(message))].filter(r => size(r) > 0), ...kept(others).map(simplify)],
     chars: total,
     filled,
@@ -403,7 +403,7 @@ export function breakdownOf(
   }
 }
 
-/** The bar's parts: Kiro Crew's blocks first (the last one marks the end of the
+/** The bar's parts: Aj Crew's blocks first (the last one marks the end of the
  *  group), then every other top-level row as one part, in list order. */
 export function barSegments(rows: Row[]): Row[] {
   const out: Row[] = []

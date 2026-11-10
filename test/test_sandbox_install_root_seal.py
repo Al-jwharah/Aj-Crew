@@ -1,7 +1,7 @@
 """The gateway's packaged install tree is sealed read-only for every sandboxed child.
 
 A packaged install (a wheel, the desktop bundle's embedded interpreter) imports
-``kiro_crew`` from below ``site-packages``; every byte under that package directory --
+``aj_crew`` from below ``site-packages``; every byte under that package directory --
 the sources and the served ``static/dist`` bundle with its ``.br``/``.gz`` siblings -- is
 what the gateway executes on its next start. The seal rides the same read-only floor as
 the crew-home ceilings and the kiro agents tree, so it holds for every write primitive a
@@ -21,10 +21,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import sandbox, sandbox_plan, sandbox_seatbelt, sandbox_tiers
-from kiro_crew.constants import BUNDLED_KAS_DIR_ENV
-from kiro_crew.kiro_cli_bundle import BUNDLED_KIRO_DIR_ENV
-from kiro_crew.sandbox_plan import (
+from aj_crew import sandbox, sandbox_plan, sandbox_seatbelt, sandbox_tiers
+from aj_crew.constants import BUNDLED_KAS_DIR_ENV
+from aj_crew.kiro_cli_bundle import BUNDLED_KIRO_DIR_ENV
+from aj_crew.sandbox_plan import (
     BACKEND_NAMESPACE,
     BACKEND_SEATBELT,
     PlanHost,
@@ -35,7 +35,7 @@ from kiro_crew.sandbox_plan import (
 _POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="POSIX paths only")
 
 HOME = "/srv/u"
-INSTALL = "/opt/kirocrew/lib/python3.12/site-packages/kiro_crew"
+INSTALL = "/opt/ajcrew/lib/python3.12/site-packages/aj_crew"
 
 
 def _host(**overrides: object) -> PlanHost:
@@ -62,10 +62,10 @@ def _host(**overrides: object) -> PlanHost:
     "package_dir",
     [
         INSTALL,
-        "/usr/lib/python3/dist-packages/kiro_crew",
+        "/usr/lib/python3/dist-packages/aj_crew",
         # The desktop bundle's layout: an embedded interpreter's own site-packages.
-        "/Apps/KiroCrew/resources/backend-dist/kirocrew-backend/Lib/site-packages/kiro_crew",
-        f"{HOME}/.venv/lib/python3.12/site-packages/kiro_crew/",
+        "/Apps/AjCrew/resources/backend-dist/ajcrew-backend/Lib/site-packages/aj_crew",
+        f"{HOME}/.venv/lib/python3.12/site-packages/aj_crew/",
     ],
 )
 def test_a_package_below_site_packages_is_sealed(package_dir: str) -> None:
@@ -77,13 +77,13 @@ def test_a_package_below_site_packages_is_sealed(package_dir: str) -> None:
     "package_dir",
     [
         # ``pip install -e`` / install.sh: the package is imported from the checkout.
-        f"{HOME}/KiroCrew/src/kiro_crew",
+        f"{HOME}/AjCrew/src/aj_crew",
         # A Dev Fleet worktree of the same checkout.
-        f"{HOME}/KiroCrew/.worktrees/feature/src/kiro_crew",
+        f"{HOME}/AjCrew/.worktrees/feature/src/aj_crew",
         # A directory merely NAMED like one is not the package's parent.
-        f"{HOME}/site-packages-notes/kiro_crew",
+        f"{HOME}/site-packages-notes/aj_crew",
         # A source checkout that happens to live below a site-packages directory.
-        "/x/site-packages/proj/src/kiro_crew",
+        "/x/site-packages/proj/src/aj_crew",
         "/",
     ],
 )
@@ -134,7 +134,7 @@ def test_the_bundled_kas_root_is_sealed_in_both_spellings(
 
 @_POSIX_ONLY
 def test_the_bundled_kas_root_is_read_only_on_both_launchers() -> None:
-    kas_root = "/Applications/Kiro Crew.app/Contents/Resources/backend-dist/kas"
+    kas_root = "/Applications/Aj Crew.app/Contents/Resources/backend-dist/kas"
     host = _host(install_root_targets=(INSTALL, kas_root))
     for backend in (BACKEND_NAMESPACE, BACKEND_SEATBELT):
         plan = plan_confinement(SandboxRequest(tier="standard", backend=backend), host)
@@ -152,9 +152,9 @@ def test_the_bundled_kas_root_is_read_only_on_both_launchers() -> None:
 
 def test_the_kiro_cli_module_reads_the_same_env_name() -> None:
     # One name, defined in ``kiro_cli_bundle``: the resolver and the seal cannot drift.
-    from kiro_crew import kiro_cli
+    from aj_crew import kiro_cli
 
-    assert kiro_cli.BUNDLED_KIRO_DIR_ENV == BUNDLED_KIRO_DIR_ENV == "KIROCREW_BUNDLED_KIRO_DIR"
+    assert kiro_cli.BUNDLED_KIRO_DIR_ENV == BUNDLED_KIRO_DIR_ENV == "AJCREW_BUNDLED_KIRO_DIR"
 
 
 @_POSIX_ONLY
@@ -186,7 +186,7 @@ def test_the_bundled_kiro_cli_dir_is_sealed_in_both_spellings(
 
 @_POSIX_ONLY
 def test_the_bundled_kiro_cli_dir_is_read_only_on_both_launchers() -> None:
-    cli_root = "/Applications/Kiro Crew.app/Contents/Resources/backend-dist/kiro-cli"
+    cli_root = "/Applications/Aj Crew.app/Contents/Resources/backend-dist/kiro-cli"
     host = _host(install_root_targets=(INSTALL, cli_root))
     for backend in (BACKEND_NAMESPACE, BACKEND_SEATBELT):
         plan = plan_confinement(SandboxRequest(tier="standard", backend=backend), host)
@@ -209,11 +209,11 @@ def test_the_resolver_survives_a_failing_kiro_cli_read(monkeypatch: pytest.Monke
     "package_dir, sealed",
     [
         (
-            r"C:\Users\u\AppData\Local\Programs\KiroCrew\resources\backend-dist"
-            r"\kirocrew-backend\Lib\site-packages\kiro_crew",
+            r"C:\Users\u\AppData\Local\Programs\AjCrew\resources\backend-dist"
+            r"\ajcrew-backend\Lib\site-packages\aj_crew",
             True,
         ),
-        (r"C:\Users\u\src\KiroCrew\src\kiro_crew", False),
+        (r"C:\Users\u\src\AjCrew\src\aj_crew", False),
     ],
 )
 def test_windows_layouts_are_classified(package_dir: str, sealed: bool) -> None:
@@ -224,17 +224,17 @@ def test_windows_layouts_are_classified(package_dir: str, sealed: bool) -> None:
 
 @_POSIX_ONLY
 def test_the_resolved_targets_carry_both_spellings(tmp_path: Path) -> None:
-    real = tmp_path / "real" / "site-packages" / "kiro_crew"
+    real = tmp_path / "real" / "site-packages" / "aj_crew"
     real.mkdir(parents=True)
     link_parent = tmp_path / "link" / "site-packages"
     link_parent.parent.mkdir()
     link_parent.symlink_to(real.parent, target_is_directory=True)
     sandbox._install_root_targets_cached.cache_clear()
     try:
-        targets = sandbox._install_root_targets_cached(str(link_parent / "kiro_crew"))
+        targets = sandbox._install_root_targets_cached(str(link_parent / "aj_crew"))
     finally:
         sandbox._install_root_targets_cached.cache_clear()
-    assert targets == (str(link_parent / "kiro_crew"), os.path.realpath(real))
+    assert targets == (str(link_parent / "aj_crew"), os.path.realpath(real))
 
 
 def test_the_resolver_never_raises(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -304,10 +304,10 @@ def test_the_live_adapter_reads_the_resolver(monkeypatch: pytest.MonkeyPatch) ->
 
 
 _INSTALL_ANCESTORS = (
-    "/opt/kirocrew/lib/python3.12/site-packages",
-    "/opt/kirocrew/lib/python3.12",
-    "/opt/kirocrew/lib",
-    "/opt/kirocrew",
+    "/opt/ajcrew/lib/python3.12/site-packages",
+    "/opt/ajcrew/lib/python3.12",
+    "/opt/ajcrew/lib",
+    "/opt/ajcrew",
     "/opt",
 )
 
@@ -355,7 +355,7 @@ def test_the_seatbelt_profile_denies_renaming_a_parent_of_the_install_root() -> 
 
 @pytest.fixture
 def install_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    install = tmp_path / "Lib" / "site-packages" / "kiro_crew"
+    install = tmp_path / "Lib" / "site-packages" / "aj_crew"
     install.mkdir(parents=True)
     monkeypatch.setattr(sandbox, "_resolved_install_root_targets", lambda: [str(install)])
     monkeypatch.setattr(sandbox, "_resolved_kiro_agents_targets", lambda: [])
@@ -402,7 +402,7 @@ def test_a_delegated_workspace_whose_spelling_resolves_elsewhere_is_refused_by_i
     # A case-insensitive volume reaches the install directory under a spelling that
     # neither ``normcase`` nor ``realpath`` rewrites; a link with ``realpath`` held
     # lexical stands in for it here.
-    link = tmp_path / "KIRO_CREW"
+    link = tmp_path / "AJ_CREW"
     link.symlink_to(install_dir, target_is_directory=True)
     monkeypatch.setattr(os.path, "realpath", lambda p, **_: os.path.abspath(p))
     for workspace in (link, link / "static", link / "not-yet-created" / "deeper"):
@@ -467,7 +467,7 @@ def test_the_sandbox_import_does_not_touch_the_install_root(tmp_path: Path) -> N
     """Planning the seal reads paths and nothing else: resolving the targets of a real
     packaged layout leaves it writable for the planning process, which is the process
     the updater runs in."""
-    install = tmp_path / "site-packages" / "kiro_crew"
+    install = tmp_path / "site-packages" / "aj_crew"
     (install / "static" / "dist").mkdir(parents=True)
     sandbox._install_root_targets_cached.cache_clear()
     try:

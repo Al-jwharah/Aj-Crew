@@ -8,8 +8,8 @@ steer the turn never took, which runs as its own turn.
 
 from __future__ import annotations
 
-from kiro_crew.context import build_interrupted_turn_preamble
-from kiro_crew.dashboard.state import TURN_OPENING_INJECT_KINDS
+from aj_crew.context import build_interrupted_turn_preamble
+from aj_crew.dashboard.state import TURN_OPENING_INJECT_KINDS
 
 
 def _steer(text: str) -> dict:
@@ -242,8 +242,8 @@ def test_a_taken_back_steer_is_not_replayed_on_a_cold_start(tmp_path):
     # took back never reached the turn; if its row kept its text (a transcript
     # written before the take-back cleared it, or a pending row), the replay would
     # still present it as something the person said.
-    from kiro_crew import context as ctx
-    from kiro_crew.history import ConversationLog
+    from aj_crew import context as ctx
+    from aj_crew.history import ConversationLog
 
     log = ConversationLog(base_dir=tmp_path / "hist")
     key = "dashboard:replay-retracted"
@@ -273,8 +273,8 @@ def test_a_taken_back_steer_is_not_replayed_on_a_cold_start(tmp_path):
 
 
 def test_the_not_taken_states_match_the_dashboard_lifecycle():
-    from kiro_crew.context_assembly import replay
-    from kiro_crew.dashboard.chat_delivery import (
+    from aj_crew.context_assembly import replay
+    from aj_crew.dashboard.chat_delivery import (
         STEER_STATE_REQUEUED,
         STEER_STATE_RETRACTED,
         STEER_STATE_SUPERSEDED,
@@ -289,8 +289,8 @@ def test_the_not_taken_states_match_the_dashboard_lifecycle():
 
 
 def test_the_continuing_inject_kinds_match_the_dashboard_transcript():
-    from kiro_crew.context_assembly import replay
-    from kiro_crew.dashboard.state_parts.transcript_rows import _TURN_CONTINUING_INJECT_KINDS
+    from aj_crew.context_assembly import replay
+    from aj_crew.dashboard.state_parts.transcript_rows import _TURN_CONTINUING_INJECT_KINDS
 
     assert replay._CONTINUING_INJECT_KINDS == _TURN_CONTINUING_INJECT_KINDS
 

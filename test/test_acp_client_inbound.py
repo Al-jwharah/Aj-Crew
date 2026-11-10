@@ -9,7 +9,7 @@ import pytest
 from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F401 - fixture
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
-from kiro_crew.acp.client import AcpClient, AcpError
+from aj_crew.acp.client import AcpClient, AcpError
 
 
 class TestAcpClientReadMessage:
@@ -150,7 +150,7 @@ class TestAcpClientReadMessage:
 class TestAcpClientExtractChunk:
     def test_extract_text_chunk(self, tmp_path):
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             method="session/update",
@@ -165,7 +165,7 @@ class TestAcpClientExtractChunk:
 
     def test_extract_thinking_chunk(self, tmp_path):
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             method="session/update",
@@ -180,7 +180,7 @@ class TestAcpClientExtractChunk:
 
     def test_extract_non_text_chunk(self, tmp_path):
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             method="session/update",
@@ -194,7 +194,7 @@ class TestAcpClientExtractChunk:
         raised AttributeError on update.get() inside the prompt-turn dispatch
         path, tearing down the whole turn."""
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(method="session/update", params={"update": bad_update})
         assert client._extract_text_chunk(msg) == (None, False)  # must not raise
@@ -203,7 +203,7 @@ class TestAcpClientExtractChunk:
 class TestAcpClientTrackToolCall:
     def test_tracks_tool_call(self, tmp_path):
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             method="session/update",
@@ -223,7 +223,7 @@ class TestAcpClientTrackToolCall:
         """Same boundary as _extract_text_chunk: non-dict update must be a
         no-op, not an AttributeError in the dispatch path."""
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(method="session/update", params={"update": bad_update})
         client._track_tool_call(msg)  # must not raise
@@ -233,7 +233,7 @@ class TestAcpClientTrackToolCall:
 class TestAcpClientTrackMetadata:
     def test_tracks_context_pct(self, tmp_path):
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(
             method="_kiro.dev/metadata",
@@ -245,8 +245,8 @@ class TestAcpClientTrackMetadata:
     def test_backfill_clamps_malformed_pct(self, tmp_path, monkeypatch):
         """A degenerate metadata percentage (huge finite / inf / NaN) must not
         overflow round() and abort the turn; derived used stays in [0, window]."""
-        import kiro_crew.acp.client as c
-        from kiro_crew.acp.types import JsonRpcMessage
+        import aj_crew.acp.client as c
+        from aj_crew.acp.types import JsonRpcMessage
 
         monkeypatch.setattr(c.model_registry, "has_known_window", lambda mid: True)
         monkeypatch.setattr(c.model_registry, "model_window", lambda mid, **kw: 200000)
@@ -272,7 +272,7 @@ class TestAcpClientTrackUsageUpdate:
     records the raw token counts for the dashboard token text."""
 
     def _usage_msg(self, used, size):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         return JsonRpcMessage(
             method="session/update",
@@ -294,7 +294,7 @@ class TestAcpClientTrackUsageUpdate:
         kiro metadata contextUsagePercentage=73 must NOT leave the headline pct
         at 73 while the token text still reads 408K/1000K (the desync the user
         saw in the context-window popover). usage_update wins for BOTH."""
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient(work_dir=tmp_path)
         client._track_usage_update(self._usage_msg(408_000, 1_000_000))
@@ -314,7 +314,7 @@ class TestAcpClientTrackUsageUpdate:
     def test_metadata_credits_still_captured_when_tokens_authoritative(self, tmp_path):
         """The pct guard must not drop kiro billing credits — those accumulate
         regardless of whether token counts are authoritative."""
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient(work_dir=tmp_path)
         client._track_usage_update(self._usage_msg(408_000, 1_000_000))
@@ -379,7 +379,7 @@ class TestAcpClientTrackUsageUpdate:
         prev_used = client.last_prompt_stats.context_used_tokens
         prev_window = client.last_prompt_stats.context_window_tokens
         prev_from_usage = client.last_prompt_stats.context_tokens_from_usage
-        from kiro_crew.acp.types import AcpPromptStats
+        from aj_crew.acp.types import AcpPromptStats
 
         # Mirror the reset sites (send_message_stream / _dispatch_events / etc.)
         client.last_prompt_stats = AcpPromptStats(
@@ -418,7 +418,7 @@ class TestProcessMessage:
 
     def test_compaction_status_classified(self):
         client = self._make_client()
-        from kiro_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
 
         msg = JsonRpcMessage(
             method=METHOD_COMPACTION_STATUS, params={"status": {"type": "completed"}}
@@ -427,42 +427,42 @@ class TestProcessMessage:
 
     def test_clear_status_classified(self):
         client = self._make_client()
-        from kiro_crew.acp.types import METHOD_CLEAR_STATUS, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_CLEAR_STATUS, JsonRpcMessage
 
         msg = JsonRpcMessage(method=METHOD_CLEAR_STATUS, params={"sessionId": "s1"})
         assert client._process_message(msg, req_id=99) == "clear"
 
     def test_agent_switched_classified(self):
         client = self._make_client()
-        from kiro_crew.acp.types import METHOD_AGENT_SWITCHED, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_AGENT_SWITCHED, JsonRpcMessage
 
         msg = JsonRpcMessage(method=METHOD_AGENT_SWITCHED, params={"agentName": "planner"})
         assert client._process_message(msg, req_id=99) == "agent_switched"
 
     def test_subagent_list_update_classified(self):
         client = self._make_client()
-        from kiro_crew.acp.types import METHOD_SUBAGENT_LIST_UPDATE, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_SUBAGENT_LIST_UPDATE, JsonRpcMessage
 
         msg = JsonRpcMessage(method=METHOD_SUBAGENT_LIST_UPDATE, params={"subagents": []})
         assert client._process_message(msg, req_id=99) == "subagent_list"
 
     def test_kiro_session_update_classified(self):
         client = self._make_client()
-        from kiro_crew.acp.types import METHOD_KIRO_SESSION_UPDATE, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_KIRO_SESSION_UPDATE, JsonRpcMessage
 
         msg = JsonRpcMessage(method=METHOD_KIRO_SESSION_UPDATE, params={"sessionId": "s1"})
         assert client._process_message(msg, req_id=99) == "subagent_activity"
 
     def test_unknown_method_skipped(self):
         client = self._make_client()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(method="_kiro.dev/unknown/thing")
         assert client._process_message(msg, req_id=99) == "skip"
 
     def test_mcp_oauth_request_classified(self):
         client = self._make_client()
-        from kiro_crew.acp.types import METHOD_MCP_OAUTH_REQUEST, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_MCP_OAUTH_REQUEST, JsonRpcMessage
 
         msg = JsonRpcMessage(
             method=METHOD_MCP_OAUTH_REQUEST,
@@ -477,7 +477,7 @@ class TestProcessMessage:
         # req_id must classify as "permission", NOT "complete" — otherwise the
         # turn ends early and the tool blocks forever (stuck Claude Code turn).
         client = self._make_client()
-        from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_REQUEST_PERMISSION, JsonRpcMessage
 
         msg = JsonRpcMessage(
             id=4,
@@ -489,7 +489,7 @@ class TestProcessMessage:
     def test_real_response_with_matching_id_completes(self):
         # The genuine prompt response (id + result, no method) still completes.
         client = self._make_client()
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(id=4, result={"stopReason": "end_turn"})
         assert client._process_message(msg, req_id=4) == "complete"
@@ -501,7 +501,7 @@ class TestStreamEventsExtension:
     @pytest.mark.asyncio
     async def test_agent_switched_event_fields(self):
         """stream_events extracts agentName from params and yields correct AcpEvent."""
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_AGENT_SWITCHED,
             EVENT_COMPLETE,
             METHOD_AGENT_SWITCHED,
@@ -536,7 +536,7 @@ class TestStreamEventsExtension:
     @pytest.mark.asyncio
     async def test_compaction_event_fields(self):
         """stream_events extracts status.type and summary from compaction params."""
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_COMPACTION_STATUS,
             METHOD_COMPACTION_STATUS,
             AcpEvent,
@@ -571,7 +571,7 @@ class TestStreamEventsExtension:
     @pytest.mark.asyncio
     async def test_clear_event_fields(self):
         """stream_events yields EVENT_CLEAR_STATUS with no extra fields."""
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_CLEAR_STATUS,
             METHOD_CLEAR_STATUS,
             AcpEvent,
@@ -602,7 +602,7 @@ class TestStreamEventsExtension:
     @pytest.mark.asyncio
     async def test_mcp_oauth_request_event_fields(self):
         """stream_events extracts serverName + oauthUrl and yields EVENT_MCP_OAUTH_REQUEST."""
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_COMPLETE,
             EVENT_MCP_OAUTH_REQUEST,
             METHOD_MCP_OAUTH_REQUEST,
@@ -639,7 +639,7 @@ class TestStreamEventsExtension:
     @pytest.mark.asyncio
     async def test_mcp_oauth_request_missing_url_skipped(self):
         """Notifications without oauthUrl are dropped (no event yielded)."""
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_COMPLETE,
             EVENT_MCP_OAUTH_REQUEST,
             METHOD_MCP_OAUTH_REQUEST,
@@ -680,7 +680,7 @@ class TestStreamEventsExtension:
         never sends a session/prompt response. Detect the marker and synthesize a
         complete event so the caller exits cleanly.
         """
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             UPDATE_AGENT_MESSAGE_CHUNK,
@@ -725,7 +725,7 @@ class TestStreamEventsExtension:
     @pytest.mark.asyncio
     async def test_tool_interrupted_marker_send_message_stream_returns(self):
         """send_message_stream returns cleanly (no hang) when kiro-cli cancels tools."""
-        from kiro_crew.acp.types import UPDATE_AGENT_MESSAGE_CHUNK, JsonRpcMessage
+        from aj_crew.acp.types import UPDATE_AGENT_MESSAGE_CHUNK, JsonRpcMessage
 
         client = AcpClient()
         interrupt_msg = JsonRpcMessage(
@@ -760,7 +760,7 @@ class TestStreamEventsExtension:
     @pytest.mark.asyncio
     async def test_tool_interrupted_marker_send_message_returns(self):
         """send_message returns accumulated text instead of raising AcpTimeoutError."""
-        from kiro_crew.acp.types import UPDATE_AGENT_MESSAGE_CHUNK, JsonRpcMessage
+        from aj_crew.acp.types import UPDATE_AGENT_MESSAGE_CHUNK, JsonRpcMessage
 
         client = AcpClient()
         interrupt_msg = JsonRpcMessage(
@@ -795,7 +795,7 @@ class TestStreamEventsExtension:
 
         Protects against false positives when the model quotes the marker text.
         """
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             UPDATE_AGENT_MESSAGE_CHUNK,
@@ -853,7 +853,7 @@ class TestStreamEventsExtension:
         it must not be treated as kiro-cli's interrupt signal — only top-level
         agent_message_chunk with non-thinking content type is the real signal.
         """
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_COMPLETE,
             EVENT_THINKING_CHUNK,
             UPDATE_AGENT_MESSAGE_CHUNK,
@@ -901,10 +901,10 @@ class TestStreamEventsExtension:
 
         The other marker tests mock _emit_tool_interrupted_sel itself, which only
         asserts it's invoked — not that the audit event carries the right fields.
-        This test patches kiro_crew.sel.sel so the real helper runs, protecting
+        This test patches aj_crew.sel.sel so the real helper runs, protecting
         against silent regressions in the security-audit contract.
         """
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             UPDATE_AGENT_MESSAGE_CHUNK,
             JsonRpcMessage,
         )
@@ -931,7 +931,7 @@ class TestStreamEventsExtension:
         client._prompt_loop = fake_prompt_loop
         client._read_new_tool_results_sync = lambda: []
 
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             async for _ in client.stream_events("test"):
                 pass
 
@@ -966,7 +966,7 @@ class TestStreamEventsExtension:
         import logging
         import time
 
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             UPDATE_AGENT_MESSAGE_CHUNK,
             JsonRpcMessage,
         )
@@ -996,10 +996,10 @@ class TestStreamEventsExtension:
         client._prompt_loop = fake_prompt_loop
         client._read_new_tool_results_sync = lambda: []
 
-        caplog.set_level(logging.WARNING, logger="kiro_crew.acp.client")
+        caplog.set_level(logging.WARNING, logger="aj_crew.acp.client")
 
         t0 = time.monotonic()
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             if entry_point == "stream_events":
                 async for _ in client.stream_events("test"):
                     pass
@@ -1042,7 +1042,7 @@ class TestDrainStderrRedaction:
         reader = AsyncMock(spec=["readline"])
         reader.readline = AsyncMock(side_effect=[raw.encode() + b"\n", b""])
 
-        with patch("kiro_crew.acp.client.logger") as mock_logger:
+        with patch("aj_crew.acp.client.logger") as mock_logger:
             await client._drain_stderr(reader)
 
         # Raw stored
@@ -1072,7 +1072,7 @@ class TestDrainStderrSuppression:
         )
         reader = self._reader([marker] * 5)
 
-        with patch("kiro_crew.acp.client.logger") as mock_logger:
+        with patch("aj_crew.acp.client.logger") as mock_logger:
             await client._drain_stderr(reader)
 
         # No per-line WARNING for suppressed markers.
@@ -1086,7 +1086,7 @@ class TestDrainStderrSuppression:
         client._last_activity = 0.0  # force a detectable advance
         reader = self._reader(["estimated thinking_tokens delta"])
 
-        with patch("kiro_crew.acp.client.logger"):
+        with patch("aj_crew.acp.client.logger"):
             await client._drain_stderr(reader)
 
         # Liveness must advance for suppressed lines so the idle watchdog
@@ -1099,7 +1099,7 @@ class TestDrainStderrSuppression:
         raw = "Error: adapter crashed in handler"
         reader = self._reader([raw])
 
-        with patch("kiro_crew.acp.client.logger") as mock_logger:
+        with patch("aj_crew.acp.client.logger") as mock_logger:
             await client._drain_stderr(reader)
 
         assert list(client._stderr_lines) == [raw]
@@ -1114,7 +1114,7 @@ class TestDrainStderrSuppression:
         burst = ["system subtype thinking_tokens delta"] * 50
         reader = self._reader([real_before] + burst + [real_after])
 
-        with patch("kiro_crew.acp.client.logger") as mock_logger:
+        with patch("aj_crew.acp.client.logger") as mock_logger:
             await client._drain_stderr(reader)
 
         # Only the two real lines are logged and buffered; the 50-line burst
@@ -1151,7 +1151,7 @@ class TestTrackMetadataCredits:
 
     @staticmethod
     def _metadata_msg(credit_values, *, pct=17.1):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         return JsonRpcMessage(
             method="_kiro.dev/metadata",
@@ -1187,7 +1187,7 @@ class TestTrackMetadataCredits:
         assert client.last_prompt_stats.credits == pytest.approx(0.4)
 
     def test_metadata_without_metering_usage_leaves_credits_zero(self):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient()
         client._track_metadata(
@@ -1206,7 +1206,7 @@ class TestTrackMetadataWindowResolution:
 
     @staticmethod
     def _metadata_msg(pct):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         return JsonRpcMessage(
             method="_kiro.dev/metadata",
@@ -1278,7 +1278,7 @@ class TestTrackMetadataWindowResolution:
         # with a non-Anthropic model's real window, the backfill SHOULD report it
         # (it is now a "known" window), instead of the old no-op. This is what
         # lets GPT/DeepSeek sessions show their real window before a usage_update.
-        import kiro_crew.model_registry as mr
+        import aj_crew.model_registry as mr
 
         saved = dict(mr._KIRO_WINDOWS)
         try:
@@ -1293,7 +1293,7 @@ class TestTrackMetadataWindowResolution:
             mr._KIRO_WINDOWS.update(saved)
 
     def test_malformed_pct_does_not_raise_or_update_stats(self):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient()
         client._resolved_model_id = "claude-opus-4.6"

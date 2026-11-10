@@ -24,9 +24,9 @@ from md_notebook_helpers import _seed_template  # noqa: F401 - fixture
 from md_notebook_helpers import fixtures_fixture  # noqa: F401 - fixture
 from md_notebook_helpers import _BARRIER_LOST_RUN_SEC, _clone, _git, _wait_for, signed_client
 
-from kiro_crew.apps.builtins.md_notebook import git_ops
-from kiro_crew.loop_lock import LoopBoundLock
-from kiro_crew.testing.wait import await_until, until_parked
+from aj_crew.apps.builtins.md_notebook import git_ops
+from aj_crew.loop_lock import LoopBoundLock
+from aj_crew.testing.wait import await_until, until_parked
 
 
 def _parking_vault_lock(server_mod, monkeypatch: pytest.MonkeyPatch) -> list[str]:
@@ -66,7 +66,7 @@ async def test_creating_writes_wait_for_a_running_sync(fixtures, monkeypatch) ->
     move into `.trash`): a note created while a sync is in flight is created
     AFTER the merge, against the tree the merge produced."""
     _mod, remote, _seed = fixtures
-    from kiro_crew.apps.builtins.md_notebook import syncer as syncer_mod
+    from aj_crew.apps.builtins.md_notebook import syncer as syncer_mod
 
     async with signed_client(_mod) as client:
         vault = await _clone(client, remote)
@@ -158,7 +158,7 @@ async def test_a_symlink_landing_while_a_writer_waits_on_the_lock_is_refused(
     the write at the stale target and passed the in-lock lexical walk.
     """
     _mod, remote, _seed = fixtures
-    from kiro_crew.apps.builtins.md_notebook import syncer as syncer_mod
+    from aj_crew.apps.builtins.md_notebook import syncer as syncer_mod
 
     async with signed_client(_mod) as client:
         vault = await _clone(client, remote)
@@ -915,7 +915,7 @@ async def test_an_external_edit_during_the_retry_window_still_wins(fixtures) -> 
                 raise PermissionError(32, "The process cannot access the file")
             return real_replace(src, dst, *args, **kwargs)
 
-        from kiro_crew import atomic_write as aw
+        from aj_crew import atomic_write as aw
 
         with pytest.MonkeyPatch.context() as mp:
             # Both backoff knobs are zeroed, both with raising=False, so this test
@@ -1180,7 +1180,7 @@ async def test_a_tokenless_save_stages_inside_the_note_lock(fixtures) -> None:
 @pytest.mark.asyncio
 async def test_the_vault_registry_write_also_retries(fixtures) -> None:
     """The registry is re-read by every later request, so it has the same window."""
-    from kiro_crew import atomic_write as aw
+    from aj_crew import atomic_write as aw
 
     server_mod, _remote, _seed = fixtures
 

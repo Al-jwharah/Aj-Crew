@@ -7,7 +7,7 @@ import os
 import pytest
 from instances_helpers import _FakeTunnel
 
-from kiro_crew.testing.ids import unallocatable_pids
+from aj_crew.testing.ids import unallocatable_pids
 
 
 class TestForwarderPidHints:
@@ -19,12 +19,12 @@ class TestForwarderPidHints:
         """Every port probe reads free, so no test binds a real loopback port.
 
         A write to the ``ssh_tunnel_manager`` facade reaches the lifecycle and ports
-        copies (``kiro_crew._facade_mirror``), so the two patches cover every probe.
+        copies (``aj_crew._facade_mirror``), so the two patches cover every probe.
         They run in a private context, leaving the shared ``monkeypatch`` alone.
         """
-        import kiro_crew.instances.port_allocator as pa
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        import kiro_crew.instances.ssh_tunnel_manager_lifecycle as lifecycle
+        import aj_crew.instances.port_allocator as pa
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        import aj_crew.instances.ssh_tunnel_manager_lifecycle as lifecycle
 
         def always_free(port, host="127.0.0.1"):
             return True
@@ -40,8 +40,8 @@ class TestForwarderPidHints:
             yield
 
     def _mgr(self, tmp_path, *, factory=_FakeTunnel):
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
 
@@ -61,7 +61,7 @@ class TestForwarderPidHints:
         )
 
     def test_registry_field_default_roundtrip_and_validation(self, tmp_path):
-        from kiro_crew.instances.registry import Instance, InvalidInstanceError
+        from aj_crew.instances.registry import Instance, InvalidInstanceError
 
         # Older registry files have no keys -> sentinel defaults.
         old = Instance.from_dict({"id": "a", "name": "A"})
@@ -89,9 +89,9 @@ class TestForwarderPidHints:
 
     @pytest.mark.asyncio
     async def test_connect_persists_forwarder_identity(self, tmp_path, monkeypatch):
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         # A REAL pid (our own), so the recorded start-time identity is the
         # genuine platform value rather than "".
@@ -151,7 +151,7 @@ class TestForwarderPidHints:
     async def test_mark_recovered_refreshes_forwarder_identity(self, tmp_path):
         """A rebuild replaces the child; the recorded identity must move with
         it, or the replacement leaks unrecorded at the next hard-kill."""
-        from kiro_crew import platform_compat as pc
+        from aj_crew import platform_compat as pc
 
         # A pid no OS can allocate, so it is dead by construction and never a
         # live process whose start time would make the identity non-empty.
@@ -184,8 +184,8 @@ class TestForwarderPidHints:
         A stale ``local_port`` points the pane URL at no listener and desyncs
         ``forwarder_sig`` (a MAC over the port), so the reclaim would refuse the child.
         """
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
 
         my_pid = os.getpid()
         key = b"k" * 32
@@ -228,8 +228,8 @@ class TestForwarderPidHints:
         A field missing from one write (e.g. the ``local_port`` ``forwarder_sig``
         signs) fails verification. Value checks can miss that; KEY SETS cannot.
         """
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
 
         monkeypatch.setattr(stm, "_reclaim_identity_key", lambda: b"k" * 32)
         # Pin the start time: on a host where reading it fails (a sandbox that
@@ -292,7 +292,7 @@ class TestForwarderOrphanState:
     START = "1000"
 
     def _patch(self, monkeypatch, *, windows, ppid, parent_start=None, parent_exists=True):
-        from kiro_crew import platform_compat as pc
+        from aj_crew import platform_compat as pc
 
         seen: list = []
         monkeypatch.setattr(pc, "IS_WINDOWS", windows)
@@ -312,7 +312,7 @@ class TestForwarderOrphanState:
 
     @pytest.mark.parametrize(("ppid", "orphaned"), [(1, True), (777, False), (-1, False)])
     def test_posix_is_exactly_reparented_to_init(self, monkeypatch, ppid, orphaned):
-        from kiro_crew.instances.ssh_tunnel_manager import _forwarder_orphan_state
+        from aj_crew.instances.ssh_tunnel_manager import _forwarder_orphan_state
 
         seen = self._patch(
             monkeypatch, windows=False, ppid=ppid, parent_start="1", parent_exists=False
@@ -323,7 +323,7 @@ class TestForwarderOrphanState:
         assert seen == []
 
     def test_windows_parent_gone_is_orphaned(self, monkeypatch):
-        from kiro_crew.instances.ssh_tunnel_manager import _forwarder_orphan_state
+        from aj_crew.instances.ssh_tunnel_manager import _forwarder_orphan_state
 
         self._patch(
             monkeypatch, windows=True, ppid=self.PARENT, parent_start=None, parent_exists=False
@@ -332,14 +332,14 @@ class TestForwarderOrphanState:
         assert _forwarder_orphan_state(self.FWD, self.START) == (True, self.PARENT)
 
     def test_windows_parent_alive_and_older_is_refused(self, monkeypatch):
-        from kiro_crew.instances.ssh_tunnel_manager import _forwarder_orphan_state
+        from aj_crew.instances.ssh_tunnel_manager import _forwarder_orphan_state
 
         self._patch(monkeypatch, windows=True, ppid=self.PARENT, parent_start="999")
 
         assert _forwarder_orphan_state(self.FWD, self.START) == (False, self.PARENT)
 
     def test_windows_parent_pid_reused_by_later_process_is_orphaned(self, monkeypatch):
-        from kiro_crew.instances.ssh_tunnel_manager import _forwarder_orphan_state
+        from aj_crew.instances.ssh_tunnel_manager import _forwarder_orphan_state
 
         self._patch(monkeypatch, windows=True, ppid=self.PARENT, parent_start="1001")
 
@@ -347,14 +347,14 @@ class TestForwarderOrphanState:
 
     @pytest.mark.parametrize("parent_start", ["1000", "garbage", "Mon Oct  5 05:56:00 2026"])
     def test_windows_unsettled_order_is_refused(self, monkeypatch, parent_start):
-        from kiro_crew.instances.ssh_tunnel_manager import _forwarder_orphan_state
+        from aj_crew.instances.ssh_tunnel_manager import _forwarder_orphan_state
 
         self._patch(monkeypatch, windows=True, ppid=self.PARENT, parent_start=parent_start)
 
         assert _forwarder_orphan_state(self.FWD, self.START) == (False, self.PARENT)
 
     def test_windows_parent_exists_but_unreadable_is_refused(self, monkeypatch):
-        from kiro_crew.instances.ssh_tunnel_manager import _forwarder_orphan_state
+        from aj_crew.instances.ssh_tunnel_manager import _forwarder_orphan_state
 
         self._patch(
             monkeypatch, windows=True, ppid=self.PARENT, parent_start=None, parent_exists=True
@@ -364,7 +364,7 @@ class TestForwarderOrphanState:
 
     @pytest.mark.parametrize("ppid", [-1, 0])
     def test_windows_unreadable_parent_pid_is_refused(self, monkeypatch, ppid):
-        from kiro_crew.instances.ssh_tunnel_manager import _forwarder_orphan_state
+        from aj_crew.instances.ssh_tunnel_manager import _forwarder_orphan_state
 
         seen = self._patch(monkeypatch, windows=True, ppid=ppid, parent_exists=False)
 

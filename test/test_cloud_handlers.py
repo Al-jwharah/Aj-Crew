@@ -16,8 +16,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.cloud import launch_job as lj
-from kiro_crew.dashboard import handlers_cloud as hc
+from aj_crew.cloud import launch_job as lj
+from aj_crew.dashboard import handlers_cloud as hc
 
 
 @pytest.fixture(autouse=True)
@@ -32,7 +32,7 @@ def _posix_host(monkeypatch):
     first under the real platform.
     """
     try:
-        import kiro_crew.stt.engine  # noqa: F401
+        import aj_crew.stt.engine  # noqa: F401
     except ImportError:
         pass
     monkeypatch.setattr(hc.sys, "platform", "linux")
@@ -330,7 +330,7 @@ class TestReadEndpoints:
         """On a host with no sandbox backend, ``run_aws`` -> ``wrap_argv``
         raises before any AWS call. The route answers a coded 503, not aiohttp's bare
         500 page."""
-        from kiro_crew.sandbox import SandboxUnavailableError
+        from aj_crew.sandbox import SandboxUnavailableError
 
         def _refused(p, r):
             raise SandboxUnavailableError(
@@ -346,7 +346,7 @@ class TestReadEndpoints:
         assert body["code"] == "sandbox_unavailable"
         assert body["kind"] == "no_backend"
         assert body["detail"] == "unshare EPERM"
-        assert "kirocrew doctor" in body["error"]
+        assert "ajcrew doctor" in body["error"]
         assert "credentials were not checked" in body["error"]
 
     @pytest.mark.parametrize(
@@ -357,8 +357,8 @@ class TestReadEndpoints:
         self, tmp_path, monkeypatch, kind, says
     ):
         """Only ``no_backend`` means this host has no sandbox; the other kinds must
-        not send the operator to ``kirocrew doctor``."""
-        from kiro_crew.sandbox import SandboxUnavailableError
+        not send the operator to ``ajcrew doctor``."""
+        from aj_crew.sandbox import SandboxUnavailableError
 
         def _refused(p, r):
             raise SandboxUnavailableError("refused", kind=kind, detail="probe")
@@ -371,7 +371,7 @@ class TestReadEndpoints:
         body = _body(resp)
         assert body["kind"] == kind
         assert says in body["error"]
-        assert "kirocrew doctor" not in body["error"]
+        assert "ajcrew doctor" not in body["error"]
         assert "no sandbox" not in body["error"]
 
 
@@ -380,7 +380,7 @@ class TestPluginInstallCommand:
     wrong for every Linux host — and Linux is the common case for a remote crew."""
 
     def _cmd(self, monkeypatch, system, arch, present):
-        from kiro_crew.cloud import ssm
+        from aj_crew.cloud import ssm
 
         monkeypatch.setattr(ssm.platform, "system", lambda: system)
         monkeypatch.setattr(ssm, "_normalized_arch", lambda: arch)
@@ -1058,7 +1058,7 @@ class TestInstanceMutations:
     async def test_invalid_cloud_parameter_is_a_coded_400_not_a_500(self, tmp_path, monkeypatch):
         """ec2.* validates tag/profile/region and raises ValidationError, which is
         NOT an AWSError — without its own arm a malformed tag becomes a 500."""
-        from kiro_crew.validation import ValidationError
+        from aj_crew.validation import ValidationError
 
         def _boom(tag, p, r, **kw):
             raise ValidationError("tag", "required")
@@ -1075,7 +1075,7 @@ class TestInstanceMutations:
     async def test_a_sandbox_refusal_is_a_coded_503_not_a_500(self, tmp_path, monkeypatch):
         """Every verb reaches the CLI through run_aws -> wrap_argv, which raises on a
         host with no sandbox backend; the route names it instead of a 500."""
-        from kiro_crew.sandbox import SandboxUnavailableError
+        from aj_crew.sandbox import SandboxUnavailableError
 
         def _refused(tag, p, r, **kw):
             raise SandboxUnavailableError("no sandbox", kind="no_backend", detail="EPERM")
@@ -1162,7 +1162,7 @@ class TestInstanceMutations:
         state.cloud_launch_store.save(job)
 
         def _gone(*a, **k):
-            raise hc.AWSError("Stack with id kirocrew-kc-3f9a does not exist")
+            raise hc.AWSError("Stack with id ajcrew-kc-3f9a does not exist")
 
         monkeypatch.setattr(hc.ec2, "describe", _gone)
         monkeypatch.setattr(hc.ec2, "destroy", lambda tag, p, r, **kw: {"destroyed": True})
@@ -1182,7 +1182,7 @@ class TestInstanceMutations:
         assert calls["unregistered"] == "i-fromjob"
 
     async def test_destroy_denied_maps_403(self, tmp_path, monkeypatch):
-        from kiro_crew.cloud.aws import CloudActionDenied
+        from aj_crew.cloud.aws import CloudActionDenied
 
         def _boom(tag, p, r, **kw):
             raise CloudActionDenied("nope")
@@ -1237,7 +1237,7 @@ class RecordingEngine(FakeEngine):
 
 def _compose(monkeypatch, provider):
     """Install *provider* as ``current_context().remote_provisioners``."""
-    from kiro_crew.platform import context as ctx_mod
+    from aj_crew.platform import context as ctx_mod
 
     monkeypatch.setattr(
         ctx_mod, "current_context", lambda: SimpleNamespace(remote_provisioners=provider)
@@ -1525,7 +1525,7 @@ class TestProvisionerSeam:
         as something they can fix -- the message names the file and the remedy -- rather than
         as a gateway fault.
         """
-        from kiro_crew.sandbox import SandboxCeilingUnsealable
+        from aj_crew.sandbox import SandboxCeilingUnsealable
 
         row = _Provisioner("aliased_lane")
 
@@ -1565,7 +1565,7 @@ class TestProvisionerSeam:
         """The lane's config changed after the operator confirmed its recipient. The engine
         build refuses, nothing launches, and the answer is the operator's to act on -- not
         a 500 that reads as a gateway fault."""
-        from kiro_crew.platform.defaults import RecipientMoved
+        from aj_crew.platform.defaults import RecipientMoved
 
         row = _Provisioner("moved_lane")
 
@@ -1609,7 +1609,7 @@ class TestProvisionerSeam:
         Folding a host-setup refusal into ``unknown_provisioner`` would tell someone whose
         configuration is symlinked that the lane does not exist.
         """
-        from kiro_crew.sandbox import SandboxCeilingUnsealable
+        from aj_crew.sandbox import SandboxCeilingUnsealable
 
         row = _Provisioner("aliased_lane")
 
@@ -1910,7 +1910,7 @@ class TestIamPolicyHostPolicies:
     def edition(self):
         import dataclasses
 
-        from kiro_crew.platform.context import current_context, reset_context, set_context
+        from aj_crew.platform.context import current_context, reset_context, set_context
 
         def _install(policy):
             class _Fixed:
@@ -1931,8 +1931,8 @@ class TestIamPolicyHostPolicies:
         assert set(body) == {"policy"}
 
     async def test_addendum_is_returned_beside_the_policy(self, tmp_path, edition):
-        from kiro_crew.cloud import iam
-        from kiro_crew.platform.interfaces import CloudInstancePolicy
+        from aj_crew.cloud import iam
+        from aj_crew.platform.interfaces import CloudInstancePolicy
 
         edition(CloudInstancePolicy(managed_policy_arns=("arn:aws:iam::{account}:policy/H",)))
         resp = await hc.api_cloud_iam_policy(
@@ -1945,7 +1945,7 @@ class TestIamPolicyHostPolicies:
         assert "iam-policy --host-policies" in body["host_policies_notice"]
 
     async def test_an_invalid_descriptor_is_reported_not_a_500(self, tmp_path, edition):
-        from kiro_crew.platform.interfaces import CloudInstancePolicy
+        from aj_crew.platform.interfaces import CloudInstancePolicy
 
         edition(CloudInstancePolicy(managed_policy_arns=("arn:aws:iam::*:policy/H",)))
         resp = await hc.api_cloud_iam_policy(

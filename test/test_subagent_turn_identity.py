@@ -17,16 +17,16 @@ from test_subagent_turn_resilience import (
     _TransientError,
 )
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.member_memory_auth import (
+from aj_crew.config import AjCrewConfig
+from aj_crew.member_memory_auth import (
     bind_private_session_store,
 )
-from kiro_crew.messaging.identity import publish_turn_identity
-from kiro_crew.session import SessionManager
-from kiro_crew.session_pid_sig import verify_session_pid
-from kiro_crew.subagent import SubagentInfo
-from kiro_crew.testing.wait import finished
-from kiro_crew.testing.workflow_memory_scenario import (
+from aj_crew.messaging.identity import publish_turn_identity
+from aj_crew.session import SessionManager
+from aj_crew.session_pid_sig import verify_session_pid
+from aj_crew.subagent import SubagentInfo
+from aj_crew.testing.wait import finished
+from aj_crew.testing.workflow_memory_scenario import (
     spawn_progress_summary,
     wait_for_spawn_result,
 )
@@ -61,7 +61,7 @@ def _child(stack, tmp_path):
 @pytest.mark.parametrize("shared", [False, True])
 async def test_stream_publishes_each_dedicated_attempt_not_shared(tmp_path, monkeypatch, shared):
     """First prompt, same-PID retry and replaced PID use the real registry/writer."""
-    from kiro_crew.sel import sel
+    from aj_crew.sel import sel
 
     sel()  # Normal gateway trust-root initialization in the fixture-owned directory.
     key = "subagent:identity-run"
@@ -69,13 +69,13 @@ async def test_stream_publishes_each_dedicated_attempt_not_shared(tmp_path, monk
     payload = '{"recall": "完整 JSON", "write": {"ok": true}}\n'
     with ExitStack() as stack:
         first, replacement = _child(stack, tmp_path), _child(stack, tmp_path)
-        registry = SessionManager(KiroCrewConfig())
+        registry = SessionManager(AjCrewConfig())
 
         async def stream(message):
             pid = registry.get_pid(key)
             expected = "dashboard:parent" if shared else key
             assert verify_session_pid(pid) == expected
-            from kiro_crew.execution_context import read_session_execution
+            from aj_crew.execution_context import read_session_execution
 
             execution = read_session_execution(key, required=True)
             assert execution.store.store_id == "default"
@@ -97,27 +97,27 @@ async def test_stream_publishes_each_dedicated_attempt_not_shared(tmp_path, monk
         registry._sessions[key] = SimpleNamespace(provider=provider)
         sessions.get_pid = registry.get_pid
         manager = _manager(sessions)
-        from kiro_crew.execution_context import execution_for_store
+        from aj_crew.execution_context import execution_for_store
 
         info = SubagentInfo(
             id="identity-run",
             task="return JSON",
-            agent="kirocrew",
-            execution_context=execution_for_store("", template_id="kirocrew"),
+            agent="ajcrew",
+            execution_context=execution_for_store("", template_id="ajcrew"),
         )
         manager._log_spawned(info)
         if shared:
             # The registered parent PID is deliberately visible to get_pid:
             # a shared child must not overwrite it even in that shape.
-            from kiro_crew.config.loader import KiroCrewAgentConfig
-            from kiro_crew.memory_stores import persist_member_config, provision_member_memory
-            from kiro_crew.session_pid_sig import publish_session_pid
+            from aj_crew.config.loader import AjCrewAgentConfig
+            from aj_crew.memory_stores import persist_member_config, provision_member_memory
+            from aj_crew.session_pid_sig import publish_session_pid
 
-            cfg = KiroCrewConfig.load()
-            cfg.agents["parent-member"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+            cfg = AjCrewConfig.load()
+            cfg.agents["parent-member"] = AjCrewAgentConfig(kiro_agent="ajcrew")
             store = provision_member_memory(cfg, "parent-member")
             persist_member_config(cfg, "parent-member", create=True)
-            from kiro_crew.history import ConversationLog
+            from aj_crew.history import ConversationLog
 
             bind_private_session_store("dashboard:parent", store)
             ConversationLog().update_metadata("dashboard:parent", {"memory_store": store})
@@ -129,7 +129,7 @@ async def test_stream_publishes_each_dedicated_attempt_not_shared(tmp_path, monk
                 return provider
 
             manager._create_shared_session = shared_provider
-        monkeypatch.setattr("kiro_crew.subagent.transient_retry_delay", lambda _attempt: 0)
+        monkeypatch.setattr("aj_crew.subagent.transient_retry_delay", lambda _attempt: 0)
         await finished(manager._run_inner(info, key), "the run completing", timeout=10)
         assert calls == [first.pid, first.pid, replacement.pid]
         assert Path(info.result_path).read_text(encoding="utf-8") == payload
@@ -139,12 +139,12 @@ async def test_stream_publishes_each_dedicated_attempt_not_shared(tmp_path, monk
 @pytest.mark.asyncio
 async def test_member_turn_publishes_ordinary_signed_pid_and_keeps_execution(tmp_path):
     """Process replacement changes transport identity, not the member snapshot."""
-    from kiro_crew.config.loader import KiroCrewAgentConfig
-    from kiro_crew.memory_stores import persist_member_config, provision_member_memory
-    from kiro_crew.subagent_persistence import create_agent_folder
+    from aj_crew.config.loader import AjCrewAgentConfig
+    from aj_crew.memory_stores import persist_member_config, provision_member_memory
+    from aj_crew.subagent_persistence import create_agent_folder
 
-    cfg = KiroCrewConfig.load()
-    cfg.agents["identity-member"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+    cfg = AjCrewConfig.load()
+    cfg.agents["identity-member"] = AjCrewAgentConfig(kiro_agent="ajcrew")
     store = provision_member_memory(cfg, "identity-member")
     persist_member_config(cfg, "identity-member", create=True)
     create_agent_folder("private-identity", memory_store=store)
@@ -159,7 +159,7 @@ async def test_member_turn_publishes_ordinary_signed_pid_and_keeps_execution(tmp
             )
             await publish_turn_identity(registry, key)
             assert verify_session_pid(child.pid) == key
-            from kiro_crew.execution_context import read_session_execution
+            from aj_crew.execution_context import read_session_execution
 
             assert read_session_execution(key).store.store_id == store
 

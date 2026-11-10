@@ -17,19 +17,19 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.config import loader as loader_mod
-from kiro_crew.config.loader import DiscordConfig, KiroCrewConfig, SlackConfig
-from kiro_crew.discord import renderer as renderer_mod
-from kiro_crew.discord.client import (
+from aj_crew.config import loader as loader_mod
+from aj_crew.config.loader import DiscordConfig, AjCrewConfig, SlackConfig
+from aj_crew.discord import renderer as renderer_mod
+from aj_crew.discord.client import (
     DISCORD_OK,
     DISCORD_TRANSIENT,
     EDIT_FAILED,
     EDIT_OK,
     DiscordApiResult,
 )
-from kiro_crew.discord.renderer import DiscordRenderer
-from kiro_crew.discord.transport import DISCORD_CAPABILITIES
-from kiro_crew.messaging.status_reactions import LadderTimings, PhaseReactionLadder
+from aj_crew.discord.renderer import DiscordRenderer
+from aj_crew.discord.transport import DISCORD_CAPABILITIES
+from aj_crew.messaging.status_reactions import LadderTimings, PhaseReactionLadder
 
 _CHANNEL = "chan1"
 _MSG = "msg1"
@@ -489,7 +489,7 @@ class TestDiscordConfigToggles:
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text(json.dumps({"discord": data}), encoding="utf-8")
         monkeypatch.setattr(loader_mod, "config_path", lambda: cfg_file)
-        return KiroCrewConfig.load().discord
+        return AjCrewConfig.load().discord
 
     def test_defaults_are_reactions_on_and_thinking_off(self) -> None:
         cfg = DiscordConfig()
@@ -522,7 +522,7 @@ class TestDiscordConfigToggles:
 
     def test_both_toggles_reach_the_schema_registry(self) -> None:
         """The dashboard panel and config-baseline.json read the registry."""
-        from kiro_crew.config.schema import SCHEMA_REGISTRY
+        from aj_crew.config.schema import SCHEMA_REGISTRY
 
         paths = {entry.path: entry for entry in SCHEMA_REGISTRY}
         assert paths["discord.reactions_enabled"].default_value is True

@@ -143,11 +143,11 @@ export const SETTINGS_TURN_TIME_LIMIT_HIGHLIGHT = `key:${SETTINGS_TURN_TIME_LIMI
  */
 export const KIRO_SIGN_IN_HIGHLIGHT_ANCHOR = 'kiro-sign-in'
 /** `data-setting-key` of the Default crewmate row on Developer → Config
- *  (`KiroCrewCfgTab`), the one control that changes which crewmate a new
+ *  (`AjCrewCfgTab`), the one control that changes which crewmate a new
  *  session starts as. The Crewmates roster's `default` badge links here. */
 export const DEFAULT_CREWMATE_HIGHLIGHT_ANCHOR = 'default-crewmate'
 /** `data-setting-key` of the Sandbox select on Developer → Config
- *  (`KiroCrewCfgTab`), keyed on the config path it writes. Settings → Session
+ *  (`AjCrewCfgTab`), keyed on the config path it writes. Settings → Session
  *  Environments links here when the strict tier withholds git logins. */
 export const AGENT_SANDBOX_HIGHLIGHT_ANCHOR = 'agent.sandbox'
 /** Anchors whose card mounts AFTER its page: the sign-in card waits on the

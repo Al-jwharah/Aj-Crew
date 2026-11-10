@@ -23,7 +23,7 @@ const mockApi = vi.hoisted(() => ({
   mcpGatewayStatus: vi.fn(),
   mcpServers: vi.fn(),
   mcpGlobalScopes: vi.fn(),
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
   acpBackends: vi.fn(),
 }))
 vi.mock('../api/client', () => ({ api: mockApi }))
@@ -74,7 +74,7 @@ beforeEach(() => {
   Object.values(mockApi).forEach(m => m.mockReset())
   mockApi.mcpServers.mockResolvedValue([])
   mockApi.mcpGlobalScopes.mockResolvedValue({ scopes: [] })
-  mockApi.kirocrewConfig.mockResolvedValue({})
+  mockApi.ajcrewConfig.mockResolvedValue({})
   mockApi.acpBackends.mockResolvedValue({ backends: [] })
 })
 afterEach(cleanup)

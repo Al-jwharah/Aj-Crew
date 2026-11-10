@@ -23,12 +23,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-import kiro_crew.slack.gateway as gw
-from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
-from kiro_crew.context import ContextBuilder
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.subagent import SubagentInfo
+import aj_crew.slack.gateway as gw
+from aj_crew.config.loader import AjCrewConfig, SkillsConfig
+from aj_crew.context import ContextBuilder
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
+from aj_crew.subagent import SubagentInfo
 
 pytestmark = pytest.mark.usefixtures("close_skills_loaders")
 
@@ -97,7 +97,7 @@ async def _route_call(monkeypatch: pytest.MonkeyPatch, route: str) -> _Recorder:
         inject = gateway._finish_subagent_cron_or_notify
     else:
         inject = gateway._inject_subagent_into_channel_parent
-    with patch("kiro_crew.slack.gateway._MAX_INJECT_ATTEMPTS", 1):
+    with patch("aj_crew.slack.gateway._MAX_INJECT_ATTEMPTS", 1):
         await asyncio.wait_for(
             inject(
                 info,
@@ -126,7 +126,7 @@ def _builder(tmp_path: Path) -> ContextBuilder:
     loader = SkillsLoader(
         skills_path=skills,
         install_builtins=False,
-        config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+        config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
     )
     return ContextBuilder(memory=MemoryStore(workspace=tmp_path / "ws"), skills=loader)
 

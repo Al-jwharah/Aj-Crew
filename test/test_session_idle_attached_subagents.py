@@ -15,13 +15,13 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.session import SessionManager
+from aj_crew.config import AjCrewConfig
+from aj_crew.session import SessionManager
 
 
 @pytest.fixture
 def cfg():
-    c = KiroCrewConfig()
+    c = AjCrewConfig()
     c.session.timeout_secs = 2
     return c
 
@@ -367,7 +367,7 @@ class TestProbeFailureVisibility:
 
         mgr.set_subagent_probe(probe)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session"):
             await mgr._expire_idle(timeout_secs=1)
             await mgr._expire_idle(timeout_secs=1)
 
@@ -388,7 +388,7 @@ class TestProbeFailureVisibility:
 
         mgr.set_subagent_probe(probe)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session"):
             await mgr._expire_idle(timeout_secs=1)
             state = mgr._cleanup_state_boundary()
             assert state.probe_failure_warned_at is not None
@@ -406,7 +406,7 @@ class TestProbeFailureVisibility:
         mgr = await _idle_parent(cfg)
         mgr.set_subagent_probe(lambda key: True)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session"):
             await mgr._expire_idle(timeout_secs=1)
 
         assert not [r for r in caplog.records if "work probe failed" in r.message]

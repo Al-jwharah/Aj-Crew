@@ -56,7 +56,7 @@ describe('CrewApprovalCards (owner decision B)', () => {
     // Trust reaches past this request: its scope is written beside it, not only
     // in a tooltip, and the button is described by that line.
     const trust = within(card).getByRole('button', { name: 'Trust this crew member' })
-    const scope = within(card).getByText('Approves this and lets this crew member run tools without asking until Kiro Crew restarts.')
+    const scope = within(card).getByText('Approves this and lets this crew member run tools without asking until Aj Crew restarts.')
     expect(trust).toHaveAttribute('aria-describedby', scope.id)
     expect(within(screen.getByTestId('crew-approval-trust-row')).getAllByRole('button')).toHaveLength(1)
     // Another root's worker, and a plain session, get no card here.

@@ -28,7 +28,7 @@ const BASE = 'http://127.0.0.1:5199'
 const now = Math.floor(Date.now() / 1000)
 const JOBS = [
   {
-    id: 'job-1', name: 'Nightly report', schedule: 'every 1d', enabled: true, agent: 'kirocrew',
+    id: 'job-1', name: 'Nightly report', schedule: 'every 1d', enabled: true, agent: 'ajcrew',
     message: 'Summarise CI failures.', last_status: 'ok', last_run_ts: now - 3600, next_run_ts: now + 7200,
   },
 ]
@@ -53,8 +53,8 @@ for (const theme of ['dark', 'light']) {
     }
     if (path === '/api/crons') return json(route, { jobs: JOBS })
     if (path === '/api/cron-folders') return json(route, [])
-    if (path === '/api/agents') return json(route, { agents: [{ name: 'kirocrew', description: '' }], default_agent: 'kirocrew' })
-    if (path === '/api/config/default-agent') return json(route, { default_agent: 'kirocrew' })
+    if (path === '/api/agents') return json(route, { agents: [{ name: 'ajcrew', description: '' }], default_agent: 'ajcrew' })
+    if (path === '/api/config/default-agent') return json(route, { default_agent: 'ajcrew' })
     if (path === '/api/models') return json(route, [])
     if (path === '/api/crons/history') return json(route, { runs: [] })
     return json(route, {})

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('../api/client', () => ({
   api: {
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
     kiroHooks: vi.fn(),
     capabilityAgentsList: vi.fn(),
     capabilitySkillsList: vi.fn(),
@@ -30,24 +30,24 @@ describe('AcpAdapter.resolveAgentTemplate', () => {
     expect(new AcpAdapter().resolveAgentTemplate({ name: 'oncall', kiro_agent: 'sre-template' } as never)).toBe('sre-template')
   })
 
-  it('falls back to the Kiro Crew agent name when no template is bound', () => {
+  it('falls back to the Aj Crew agent name when no template is bound', () => {
     expect(new AcpAdapter().resolveAgentTemplate({ name: 'oncall' } as never)).toBe('oncall')
   })
 })
 
 describe('AcpAdapter.resolveDefaultModel', () => {
   it('returns the configured default model', async () => {
-    m(api.kirocrewConfig).mockResolvedValue({ agent: { model: 'claude-opus-5' } })
+    m(api.ajcrewConfig).mockResolvedValue({ agent: { model: 'claude-opus-5' } })
     expect(await new AcpAdapter().resolveDefaultModel()).toBe('claude-opus-5')
   })
 
   it('treats "auto" as no explicit default', async () => {
-    m(api.kirocrewConfig).mockResolvedValue({ agent: { model: 'auto' } })
+    m(api.ajcrewConfig).mockResolvedValue({ agent: { model: 'auto' } })
     expect(await new AcpAdapter().resolveDefaultModel()).toBe('')
   })
 
   it('returns an empty default when the config read fails', async () => {
-    m(api.kirocrewConfig).mockRejectedValue(new Error('gateway down'))
+    m(api.ajcrewConfig).mockRejectedValue(new Error('gateway down'))
     expect(await new AcpAdapter().resolveDefaultModel()).toBe('')
   })
 })

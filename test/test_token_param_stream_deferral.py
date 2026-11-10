@@ -19,8 +19,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-from kiro_crew.security import redact_credentials
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.security import redact_credentials
 
 _PREFIX = "https://approve.example.com/auth"
 _TOKEN = "eyJ3b3JrZmxvd0lkIjoiMDAwMDAwMDAtMDAwMC00MDAwLTgwMDAtMDAwMDAwMDAwMDAwIn0%3D"
@@ -52,7 +52,7 @@ class _StubCredentialPolicy:
         self._prefixes = prefixes
 
     def redact(self, text: str) -> str:
-        from kiro_crew.security import redact
+        from aj_crew.security import redact
 
         return redact(text)
 
@@ -64,17 +64,17 @@ class _StubCredentialPolicy:
 
 
 def _install(prefixes: frozenset[str]) -> None:
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.platform.bootstrap import build_default_context
-    from kiro_crew.platform.context import set_context
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.platform.bootstrap import build_default_context
+    from aj_crew.platform.context import set_context
 
-    base = build_default_context(KiroCrewConfig())
+    base = build_default_context(AjCrewConfig())
     set_context(dataclasses.replace(base, credentials=_StubCredentialPolicy(prefixes)))
 
 
 @pytest.fixture(autouse=True)
 def _reset_platform_context():
-    from kiro_crew.platform.context import reset_context
+    from aj_crew.platform.context import reset_context
 
     yield
     reset_context()
@@ -115,7 +115,7 @@ async def _stream_turn(
     Returns ``(stored, wire)``: the assistant row the slot persisted and the
     concatenated ``chat_chunk`` broadcasts.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     state.push_slots_update = MagicMock()
@@ -129,7 +129,7 @@ async def _stream_turn(
     events.append(LLMEvent(kind=EVENT_COMPLETE))
     state.sessions.get_or_create = AsyncMock(return_value=(_client_streaming(events), True, False))
 
-    from kiro_crew.dashboard.chat import _run_chat
+    from aj_crew.dashboard.chat import _run_chat
 
     await _run_chat(state, slot, "show me the link")
 

@@ -40,11 +40,11 @@ const CHANNEL = {
   topic: 'Release notes for 0.5.0',
   members: {
     a1: {
-      id: 'a1', role: 'Researcher', agent_name: 'kirocrew', state: 'listening',
+      id: 'a1', role: 'Researcher', agent_name: 'ajcrew', state: 'listening',
       listen_mode: 'mention', approval_policy: 'writes', session_key: 'k1',
     },
     a2: {
-      id: 'a2', role: 'Scribe', agent_name: 'kirocrew', state: 'listening',
+      id: 'a2', role: 'Scribe', agent_name: 'ajcrew', state: 'listening',
       listen_mode: 'mention', approval_policy: 'writes', session_key: 'k2',
     },
   },

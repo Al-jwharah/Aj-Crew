@@ -1,7 +1,7 @@
 """A pod stop is waited on for as long as systemd may take to finish it.
 
 ``systemctl --user stop`` returns when the stop job ends. The pod unit sets
-``TimeoutStopSec``, and each wait above it (``systemctl``, ``kirocrew pod down``
+``TimeoutStopSec``, and each wait above it (``systemctl``, ``ajcrew pod down``
 from Dev Fleet, the ``pod_down`` MCP call) is longer than the one below, so a
 pod that is still stopping is never reported as a failed stop.
 """
@@ -22,14 +22,14 @@ from pod_helpers import (  # noqa: F401 -- the fixtures register by import
     requires_posix_pod_lifecycle,
 )
 
-from kiro_crew.apps.builtins.dev_fleet import repository as repository_mod
-from kiro_crew.apps.builtins.dev_fleet import runtime as runtime_mod
-from kiro_crew.apps.builtins.dev_fleet import worktree_ops_pods
-from kiro_crew.apps.manifest import AppManifest
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod import unit as unit_mod
-from kiro_crew.pod.config import POD_STOP_TIMEOUT_SECS, SYSTEMCTL_STOP_WAIT_SECS, PodConfig
-from kiro_crew.pod.runtime_lifecycle import DRAIN_TIMEOUT_SECS
+from aj_crew.apps.builtins.dev_fleet import repository as repository_mod
+from aj_crew.apps.builtins.dev_fleet import runtime as runtime_mod
+from aj_crew.apps.builtins.dev_fleet import worktree_ops_pods
+from aj_crew.apps.manifest import AppManifest
+from aj_crew.pod import runtime as rt
+from aj_crew.pod import unit as unit_mod
+from aj_crew.pod.config import POD_STOP_TIMEOUT_SECS, SYSTEMCTL_STOP_WAIT_SECS, PodConfig
+from aj_crew.pod.runtime_lifecycle import DRAIN_TIMEOUT_SECS
 
 
 def test_the_unit_sets_its_own_stop_timeout(cfg: PodConfig) -> None:
@@ -141,7 +141,7 @@ async def test_dev_fleet_gives_pod_down_its_whole_bound(tmp_path) -> None:
         patch.object(worktree_ops_pods, "_pod_env", return_value={}),
         patch.object(repository_mod, "_repo", return_value=str(tmp_path)),
         patch.object(runtime_mod, "_warm_build_path", AsyncMock()),
-        patch.object(runtime_mod, "_find_cli", return_value=["kirocrew"]),
+        patch.object(runtime_mod, "_find_cli", return_value=["ajcrew"]),
         patch.object(runtime_mod, "_run_cmd", run_cmd),
         patch.object(runtime_mod, "_load_cfg", return_value=SimpleNamespace()),
         patch.object(runtime_mod, "_POD_AVAILABLE", False),

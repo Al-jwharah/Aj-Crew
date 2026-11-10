@@ -24,7 +24,7 @@ vi.mock('../../api/client', () => ({
     // The drawer's wake block reads the default crew through the shared
     // ['default-agent'] query (defaultAgentQuery), not the whole registry.
     defaultAgent: vi.fn(() => Promise.resolve({ default_agent: '' })),
-    updateKirocrewAgent: vi.fn(() => Promise.resolve({ ok: true })),
+    updateAjcrewAgent: vi.fn(() => Promise.resolve({ ok: true })),
     autonudgeList: vi.fn(() => Promise.resolve({ enabled: true, loops: [] })),
     autonudgeForSlot: vi.fn(() => Promise.resolve({ enabled: true, loop: null })),
     monitorForSlot: vi.fn(() => Promise.resolve({ enabled: true, monitor: null })),
@@ -82,8 +82,8 @@ function row(name: string, overrides: Record<string, unknown> = {}) {
 /** A roster shaped like a real host: one hand-made crew, one shipped crew, and
  *  a package-installed majority — the mix the filters exist to tame. */
 const ROSTER = [
-  row('conductor', { source: 'kirocrew', starred: true }),
-  row('kirocrew', { source: 'builtin' }),
+  row('conductor', { source: 'ajcrew', starred: true }),
+  row('ajcrew', { source: 'builtin' }),
   row('pkg-a'),
   row('pkg-b'),
   row('legacy-aim', { source: 'aim' }),
@@ -121,14 +121,14 @@ beforeEach(() => {
 
 describe('matchesSource', () => {
   it('buckets the two known origins and treats everything else as package', () => {
-    expect(matchesSource({ source: 'kirocrew' }, 'mine')).toBe(true)
+    expect(matchesSource({ source: 'ajcrew' }, 'mine')).toBe(true)
     expect(matchesSource({ source: 'builtin' }, 'builtin')).toBe(true)
     expect(matchesSource({ source: 'package' }, 'package')).toBe(true)
     // Legacy spelling older configs still carry, and a missing field.
     expect(matchesSource({ source: 'aim' }, 'package')).toBe(true)
     expect(matchesSource({}, 'package')).toBe(true)
-    expect(matchesSource({ source: 'kirocrew' }, 'package')).toBe(false)
-    expect(matchesSource({ source: 'kirocrew' }, 'all')).toBe(true)
+    expect(matchesSource({ source: 'ajcrew' }, 'package')).toBe(false)
+    expect(matchesSource({ source: 'ajcrew' }, 'all')).toBe(true)
   })
 
   it('parseSourceFilter rejects junk from storage', () => {
@@ -141,7 +141,7 @@ describe('matchesSource', () => {
 describe('MembersPage filters', () => {
   it('shows every member with no filter active', async () => {
     await renderPage()
-    expect(names()).toEqual(['conductor', 'kirocrew', 'legacy-aim', 'pkg-a', 'pkg-b'])
+    expect(names()).toEqual(['conductor', 'ajcrew', 'legacy-aim', 'pkg-a', 'pkg-b'])
   })
 
   it('shows per-bucket counts on the origin rows, as a separate node from the label', async () => {
@@ -231,7 +231,7 @@ describe('MembersPage filters', () => {
     fireEvent.click(screen.getByTestId('member-filter-source-mine'))
     expect(names()).toEqual(['conductor'])
     fireEvent.click(screen.getByTestId('member-filter-source-mine'))
-    expect(names()).toEqual(['conductor', 'kirocrew', 'legacy-aim', 'pkg-a', 'pkg-b'])
+    expect(names()).toEqual(['conductor', 'ajcrew', 'legacy-aim', 'pkg-a', 'pkg-b'])
     expect(localStorage.getItem('mc-members-source')).toBe('all')
   })
 
@@ -262,8 +262,8 @@ describe('MembersPage filters', () => {
     // `running` is the roster snapshot's cold-start value; with no slot frame
     // for these members it is what isRunning reads.
     await renderPage([
-      row('conductor', { source: 'kirocrew', starred: true, running: true }),
-      row('kirocrew', { source: 'builtin' }),
+      row('conductor', { source: 'ajcrew', starred: true, running: true }),
+      row('ajcrew', { source: 'builtin' }),
       row('pkg-a', { running: true }),
       row('pkg-b'),
     ])
@@ -343,7 +343,7 @@ describe('MembersPage star', () => {
     // The write goes through useMutation: its onMutate first cancels any
     // in-flight roster refetch (so a stale row cannot land on the optimistic
     // one), which puts the flip and the PUT a microtask after the click.
-    await waitFor(() => expect(api.updateKirocrewAgent).toHaveBeenCalledWith('pkg-a', { starred: true }))
+    await waitFor(() => expect(api.updateAjcrewAgent).toHaveBeenCalledWith('pkg-a', { starred: true }))
     expect(screen.getByTestId('member-star-pkg-a')).toHaveAttribute('aria-pressed', 'true')
     // Does not open the member's thread — the star is a sibling of the row.
     // (A fresh visit opens no one now (#11763), so starring pkg-a must not be
@@ -356,7 +356,7 @@ describe('MembersPage star', () => {
     // built from the key said "Star mate" after the Mates to Bots rename.
     await renderPage([
       row('pkg-b', { starred: true }),
-      row('mate', { source: 'kirocrew' }),
+      row('mate', { source: 'ajcrew' }),
       row('pkg-a', { display_name: 'Ada' }),
     ])
     const first = screen.getByTestId('member-star-mate')
@@ -368,7 +368,7 @@ describe('MembersPage star', () => {
 
   it('disables the star while its write is pending, so rapid toggles cannot race', async () => {
     let settle: (v: unknown) => void = () => {}
-    ;(api.updateKirocrewAgent as ReturnType<typeof vi.fn>).mockImplementationOnce(
+    ;(api.updateAjcrewAgent as ReturnType<typeof vi.fn>).mockImplementationOnce(
       () => new Promise((res) => { settle = res }),
     )
     await renderPage()
@@ -379,7 +379,7 @@ describe('MembersPage star', () => {
     await waitFor(() => expect(screen.getByTestId('member-star-pkg-a')).toHaveAttribute('aria-disabled', 'true'))
     // A second click while pending is a no-op: exactly one write in flight.
     fireEvent.click(screen.getByTestId('member-star-pkg-a'))
-    expect(api.updateKirocrewAgent).toHaveBeenCalledTimes(1)
+    expect(api.updateAjcrewAgent).toHaveBeenCalledTimes(1)
     settle({ ok: true })
     await waitFor(() => expect(screen.getByTestId('member-star-pkg-a')).not.toHaveAttribute('aria-disabled'))
     expect(screen.getByTestId('member-star-pkg-a')).toHaveAttribute('aria-pressed', 'true')
@@ -388,7 +388,7 @@ describe('MembersPage star', () => {
   })
 
   it('reverts the optimistic flip AND surfaces the failure when the write fails', async () => {
-    ;(api.updateKirocrewAgent as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Forbidden'))
+    ;(api.updateAjcrewAgent as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Forbidden'))
     await renderPage()
     expect(screen.queryByTestId('member-star-error')).toBeNull()
     fireEvent.click(screen.getByTestId('member-star-pkg-a'))
@@ -426,8 +426,8 @@ describe('MembersPage star', () => {
 describe('MembersPage hides unlisted mates', () => {
   const NO = { dashboard_created: false, has_dm_message: false }
   const MIXED = [
-    row('kirocrew', { source: 'builtin', ...NO, has_dm_message: true, last_active_ts: 20 }),
-    row('radar', { source: 'kirocrew', ...NO, dashboard_created: true, display_name: 'Issue Radar', has_dm_message: true, last_active_ts: 30 }),
+    row('ajcrew', { source: 'builtin', ...NO, has_dm_message: true, last_active_ts: 20 }),
+    row('radar', { source: 'ajcrew', ...NO, dashboard_created: true, display_name: 'Issue Radar', has_dm_message: true, last_active_ts: 30 }),
     row('oncall', { source: 'radar-app', ...NO, starred: true, last_active_ts: 10 }),
     row('legacy-aim', { source: 'aim', ...NO }),
     row('pkg-tool', { ...NO }),
@@ -435,7 +435,7 @@ describe('MembersPage hides unlisted mates', () => {
 
   it('lists rows whose thread holds a message and starred rows; the count says how many are listed', async () => {
     await renderPage(MIXED)
-    await waitFor(() => expect(names()).toEqual(['radar', 'kirocrew', 'oncall']))
+    await waitFor(() => expect(names()).toEqual(['radar', 'ajcrew', 'oncall']))
     expect(screen.getByTestId('member-count')).toHaveTextContent('3 bots')
     // Not "filtered out": hidden rows are unlisted, so no chip and no notice.
     expect(screen.queryByTestId('member-filter-chips')).toBeNull()
@@ -445,7 +445,7 @@ describe('MembersPage hides unlisted mates', () => {
   it('lists a mate the person created with an empty, never-opened chat, and still hides an auto-made one', async () => {
     await renderPage([
       ...MIXED,
-      row('nova-sky', { source: 'kirocrew', ...NO, dashboard_created: true, display_name: 'Nova Sky' }),
+      row('nova-sky', { source: 'ajcrew', ...NO, dashboard_created: true, display_name: 'Nova Sky' }),
     ])
     await waitFor(() => expect(names()).toContain('nova-sky'))
     expect(names()).not.toContain('pkg-tool')
@@ -458,17 +458,17 @@ describe('MembersPage hides unlisted mates', () => {
       ...MIXED,
       row('default', { source: 'builtin', ...NO, has_dm_message: true, has_user_dm_message: false }),
     ])
-    await waitFor(() => expect(names()).toEqual(['radar', 'kirocrew', 'oncall']))
+    await waitFor(() => expect(names()).toEqual(['radar', 'ajcrew', 'oncall']))
   })
 
   it('the search reaches a hidden row, and the count grows to include it', async () => {
     await renderPage(MIXED)
-    await waitFor(() => expect(names()).toEqual(['radar', 'kirocrew', 'oncall']))
+    await waitFor(() => expect(names()).toEqual(['radar', 'ajcrew', 'oncall']))
     fireEvent.change(screen.getByTestId('member-search'), { target: { value: 'pkg' } })
     expect(names()).toEqual(['pkg-tool'])
     expect(screen.getByTestId('member-count')).toHaveTextContent('4 bots')
     fireEvent.click(screen.getByTestId('member-search-clear'))
-    expect(names()).toEqual(['radar', 'kirocrew', 'oncall'])
+    expect(names()).toEqual(['radar', 'ajcrew', 'oncall'])
   })
 
   // #21852: "2 crewmates" over a crew of three read as the whole crew, and the
@@ -477,7 +477,7 @@ describe('MembersPage hides unlisted mates', () => {
   // leaves them out, and how to reach them.
   it('ends the list by naming the mates the rule hides and saying the search finds them', async () => {
     await renderPage(MIXED)
-    await waitFor(() => expect(names()).toEqual(['radar', 'kirocrew', 'oncall']))
+    await waitFor(() => expect(names()).toEqual(['radar', 'ajcrew', 'oncall']))
     expect(screen.getByTestId('member-count')).toHaveTextContent('3 bots')
     expect(screen.getByTestId('member-hidden-hint')).toHaveTextContent(
       "legacy-aim and pkg-tool are hidden because you haven't used them yet, and aren't counted above. Search to find them.",
@@ -499,7 +499,7 @@ describe('MembersPage hides unlisted mates', () => {
       ...MIXED.filter((m) => m.name !== 'pkg-tool' && m.name !== 'legacy-aim'),
       row('nova-sky', { source: 'radar-app', ...NO, display_name: 'Nova Sky' }),
     ])
-    await waitFor(() => expect(names()).toEqual(['radar', 'kirocrew', 'oncall']))
+    await waitFor(() => expect(names()).toEqual(['radar', 'ajcrew', 'oncall']))
     expect(screen.getByTestId('member-hidden-hint')).toHaveTextContent(
       "Nova Sky is hidden because you haven't used it yet, and isn't counted above. Search to find it.",
     )
@@ -511,7 +511,7 @@ describe('MembersPage hides unlisted mates', () => {
       row('pkg-two', { ...NO }),
       row('pkg-three', { ...NO }),
     ])
-    await waitFor(() => expect(names()).toEqual(['radar', 'kirocrew', 'oncall']))
+    await waitFor(() => expect(names()).toEqual(['radar', 'ajcrew', 'oncall']))
     // The whole line: the counted form names no action.
     expect(screen.getByTestId('member-hidden-hint').textContent).toBe(
       "legacy-aim, pkg-three, pkg-tool and 1 more bot you haven't used yet are hidden and aren't counted above.",
@@ -519,16 +519,16 @@ describe('MembersPage hides unlisted mates', () => {
   })
 
   it('names the mates the user made ahead of package and app rows', async () => {
-    // A legacy crewmate the user made (source kirocrew, no member id yet)
+    // A legacy crewmate the user made (source ajcrew, no member id yet)
     // sorts last by name here, behind four package rows; it is still one of
     // the three named, and named first.
     await renderPage([
       ...MIXED,
       row('pkg-two', { ...NO }),
       row('pkg-three', { ...NO }),
-      row('zebra-notes', { source: 'kirocrew', ...NO, display_name: 'Zebra Notes' }),
+      row('zebra-notes', { source: 'ajcrew', ...NO, display_name: 'Zebra Notes' }),
     ])
-    await waitFor(() => expect(names()).toEqual(['radar', 'kirocrew', 'oncall']))
+    await waitFor(() => expect(names()).toEqual(['radar', 'ajcrew', 'oncall']))
     expect(screen.getByTestId('member-hidden-hint').textContent).toBe(
       "Zebra Notes, legacy-aim, pkg-three and 2 more bots you haven't used yet are hidden and aren't counted above.",
     )
@@ -541,7 +541,7 @@ describe('MembersPage hides unlisted mates', () => {
       row('pkg-three', { ...NO }),
       row('pkg-four', { ...NO }),
     ])
-    await waitFor(() => expect(names()).toEqual(['radar', 'kirocrew', 'oncall']))
+    await waitFor(() => expect(names()).toEqual(['radar', 'ajcrew', 'oncall']))
     expect(screen.getByTestId('member-hidden-hint').textContent).toBe(
       "legacy-aim, pkg-four, pkg-three and 2 more bots you haven't used yet are hidden and aren't counted above.",
     )
@@ -549,13 +549,13 @@ describe('MembersPage hides unlisted mates', () => {
 
   it('says nothing when the rule hides no mate', async () => {
     await renderPage(MIXED.filter((m) => m.name !== 'pkg-tool' && m.name !== 'legacy-aim'))
-    await waitFor(() => expect(names()).toEqual(['radar', 'kirocrew', 'oncall']))
+    await waitFor(() => expect(names()).toEqual(['radar', 'ajcrew', 'oncall']))
     expect(screen.queryByTestId('member-hidden-hint')).toBeNull()
   })
 
   it('says nothing while a filter narrows the list', async () => {
     await renderPage(MIXED)
-    await waitFor(() => expect(names()).toEqual(['radar', 'kirocrew', 'oncall']))
+    await waitFor(() => expect(names()).toEqual(['radar', 'ajcrew', 'oncall']))
     await openFilters()
     fireEvent.click(screen.getByTestId('member-filter-starred'))
     expect(names()).toEqual(['oncall'])
@@ -564,7 +564,7 @@ describe('MembersPage hides unlisted mates', () => {
 
   it('filter tallies count listed rows only, and "N of M" reads M from them', async () => {
     await renderPage(MIXED)
-    await waitFor(() => expect(names()).toEqual(['radar', 'kirocrew', 'oncall']))
+    await waitFor(() => expect(names()).toEqual(['radar', 'ajcrew', 'oncall']))
     await openFilters()
     // Three package-bucket rows exist; only the starred app row is listed, so
     // the tally says 1, and the built-in row with a message is the one builtin.
@@ -602,7 +602,7 @@ describe('MembersPage hides unlisted mates', () => {
   it('with every thread empty, the newest hidden mate opens and is listed while open', async () => {
     ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({
       members: [
-        row('kirocrew', { source: 'builtin', ...NO }),
+        row('ajcrew', { source: 'builtin', ...NO }),
         row('default', { source: 'builtin', ...NO }),
         row('pkg-tool', { ...NO, last_active_ts: 5 }),
         row('pkg-old', { ...NO, last_active_ts: 1 }),

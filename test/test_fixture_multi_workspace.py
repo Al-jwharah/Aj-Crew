@@ -6,20 +6,20 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps import manager
-from kiro_crew.config.loader import KiroCrewConfig, workspace_dir_for
-from kiro_crew.history import ConversationLog
-from kiro_crew.memory import MemoryStore
-from kiro_crew.testing.fixtures import seeded_home
+from aj_crew.apps import manager
+from aj_crew.config.loader import AjCrewConfig, workspace_dir_for
+from aj_crew.history import ConversationLog
+from aj_crew.memory import MemoryStore
+from aj_crew.testing.fixtures import seeded_home
 
-pytest_plugins = ["kiro_crew.testing.fixtures"]
+pytest_plugins = ["aj_crew.testing.fixtures"]
 
 
 @pytest.mark.parametrize("seeded_home_fixture", ["multi-workspace"], indirect=True)
 def test_multi_workspace_fixture_routes_sessions_and_memory(
     seeded_home_fixture: Path,
 ) -> None:
-    config = KiroCrewConfig.load()
+    config = AjCrewConfig.load()
     assert config.default_workspace == "default"
     assert set(config.workspaces) == {"default", "review", "research"}
     assert config.instances.enabled is True
@@ -52,7 +52,7 @@ def test_multi_workspace_fixture_routes_sessions_and_memory(
     assert len(metadata) == 3
     assert {(item["workspace"], item["agent"]) for item in metadata} == {
         ("default", "default"),
-        ("review", "kirocrew"),
+        ("review", "ajcrew"),
         ("research", "orchestrator"),
     }
 

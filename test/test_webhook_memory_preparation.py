@@ -16,9 +16,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew import memory_startup
-from kiro_crew.memory_startup import MemoryStartup
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew import memory_startup
+from aj_crew.memory_startup import MemoryStartup
+from aj_crew.testing.wait import await_until, finished
 
 SESSION_KEY = "hook:default:1791000000"
 
@@ -27,10 +27,10 @@ SESSION_KEY = "hook:default:1791000000"
 def _pin_home(tmp_path, _floor_monkeypatch):
     # The isolation floor's own patch stack, so a test body's ``monkeypatch``
     # is undone independently of these pins.
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
-    _floor_monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    _floor_monkeypatch.setattr("kiro_crew.webhooks.config_dir", lambda: tmp_path)
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
+    _floor_monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    _floor_monkeypatch.setattr("aj_crew.webhooks.config_dir", lambda: tmp_path)
 
 
 @pytest.fixture
@@ -44,8 +44,8 @@ def closed_barrier():
 
 
 def _hook_state(tmp_path, monkeypatch) -> tuple[object, list[str]]:
-    from kiro_crew import context
-    from kiro_crew.dashboard.handlers import hooks
+    from aj_crew import context
+    from aj_crew.dashboard.handlers import hooks
 
     state = _make_state(tmp_path)
     state.sessions.record_failure = AsyncMock()
@@ -74,7 +74,7 @@ async def _run(state) -> None:
     The runner's ``finally`` releases the session key and a semaphore permit, so both are
     taken first; a spare permit would break later tests that fill it to get a 429.
     """
-    from kiro_crew.dashboard.handlers import hooks
+    from aj_crew.dashboard.handlers import hooks
 
     hooks._hook_inflight_sessions.add(SESSION_KEY)
     await hooks._hook_semaphore.acquire()
@@ -87,7 +87,7 @@ async def _run(state) -> None:
 
 @pytest.fixture(autouse=True)
 def _hook_capacity_is_balanced():
-    from kiro_crew.dashboard.handlers import hooks
+    from aj_crew.dashboard.handlers import hooks
 
     permits_before = hooks._hook_semaphore._value
     yield
@@ -100,7 +100,7 @@ def _hook_capacity_is_balanced():
 async def test_a_hook_accepted_before_memory_is_ready_runs_once_it_is(
     tmp_path, monkeypatch, closed_barrier
 ):
-    from kiro_crew.dashboard.handlers import hooks
+    from aj_crew.dashboard.handlers import hooks
 
     state, sent_to_model = _hook_state(tmp_path, monkeypatch)
     waiting = asyncio.Event()

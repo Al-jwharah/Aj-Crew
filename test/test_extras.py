@@ -1,6 +1,6 @@
 """The optional-extra install advice must never name an unresolvable project.
 
-``kirocrew`` is not published on any index, so ``pip install "kirocrew[feishu]"``
+``ajcrew`` is not published on any index, so ``pip install "ajcrew[feishu]"``
 fails with *No matching distribution found* for every user. These tests pin the
 properties that keep the advice runnable: it names the extra's real
 distributions, and every copy of a pin -- the Python map and the specifiers
@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import extras
+from aj_crew import extras
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 SETUP_CFG = _REPO_ROOT / "setup.cfg"
@@ -46,7 +46,7 @@ def _expand(
     seen = seen | {name}
     out: list[str] = []
     for req in declared[name]:
-        nested = re.match(r"^kirocrew\s*\[([^\]]+)\]$", req, re.IGNORECASE)
+        nested = re.match(r"^ajcrew\s*\[([^\]]+)\]$", req, re.IGNORECASE)
         if nested is not None:
             for inner in nested.group(1).split(","):
                 for spec in _expand(inner.strip(), declared, seen):
@@ -63,19 +63,19 @@ def _expand(
 
 @pytest.mark.parametrize("extra", USER_FACING)
 def test_no_surface_ever_names_this_project(extra: str) -> None:
-    """Nothing the user is asked to run may mention ``kirocrew[...]``.
+    """Nothing the user is asked to run may mention ``ajcrew[...]``.
 
     Covers both renderings, because each reaches a different surface: the short
     hint used in logs and CLI output, and the copy-to-clipboard command in the
     dashboard. A regression in either hands the user a command that cannot
-    resolve. The interpreter path itself may legitimately contain "kirocrew" (a
+    resolve. The interpreter path itself may legitimately contain "ajcrew" (a
     venv inside a checkout), so the assertion targets the extras form -- what
     pip would try, and fail, to resolve.
     """
     reqs = extras.requirements_for_extra(extra)
     assert reqs, f"{extra} resolved to nothing"
     rendered = " ".join(reqs) + extras.install_hint(extra) + extras.pip_install_command(extra)
-    assert "kirocrew[" not in rendered.lower()
+    assert "ajcrew[" not in rendered.lower()
 
 
 @pytest.mark.parametrize("extra", USER_FACING)
@@ -219,7 +219,7 @@ def test_the_dashboard_guard_delegates_to_this_one(monkeypatch: pytest.MonkeyPat
     point in ``test_dashboard_handlers_core_coverage.py``; this pins the seam
     those tests now reach through.
     """
-    from kiro_crew.dashboard.handlers import _shared
+    from aj_crew.dashboard.handlers import _shared
 
     monkeypatch.setattr(extras, "pip_install_channel_available", lambda: False)
     assert _shared._pip_install_channel_available() is False

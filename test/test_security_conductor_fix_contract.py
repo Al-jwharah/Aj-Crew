@@ -2,7 +2,7 @@
 
 The gap this closes is one real round. A fix for a cron seam also added a name to
 ``sandbox._AGENT_DENIED_ENV_KEYS``, which stripped the OPERATOR's own
-``KIROCREW_SECURITY_POLICY`` from every agent child. The proof of concept stopped
+``AJCREW_SECURITY_POLICY`` from every agent child. The proof of concept stopped
 reproducing. Every ``shell`` row in the golden-path corpus was still permitted,
 because none of them is a bash command that can notice an env var going missing. So
 ``verify_fix.py`` exited 0 on a change that made the product worse, and a human
@@ -33,7 +33,7 @@ import pytest
 from skill_script_helpers import load_skill_script
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SKILL_DIR = REPO_ROOT / "src" / "kiro_crew" / "builtin_skills" / "security-conductor"
+SKILL_DIR = REPO_ROOT / "src" / "aj_crew" / "builtin_skills" / "security-conductor"
 SCRIPT = SKILL_DIR / "scripts" / "check_fix_contract.py"
 
 CONTRACT_FILENAME = "fix-contract.json"
@@ -47,8 +47,8 @@ EXIT_INVALID = 2
 #: thing, so what a case is about is the difference rather than the whole document.
 CONTRACT = {
     "finding_ids": [16],
-    "allowed_paths": ["src/kiro_crew/slack/gateway.py", "test/"],
-    "forbidden_paths": ["src/kiro_crew/sandbox.py"],
+    "allowed_paths": ["src/aj_crew/slack/gateway.py", "test/"],
+    "forbidden_paths": ["src/aj_crew/sandbox.py"],
     "max_changed_files": 3,
     "no_new_refusal_statement": "No command a maintainer runs today starts being refused.",
 }
@@ -176,14 +176,14 @@ class TestAFixInsideTheRadiusIsHonoured:
     def test_allowed_paths_pass(self, repo) -> None:
         worktree = repo(
             "inside",
-            committed=("src/kiro_crew/slack/gateway.py", "test/test_cron_env.py"),
+            committed=("src/aj_crew/slack/gateway.py", "test/test_cron_env.py"),
             contract=CONTRACT,
         )
         result = run(worktree)
         assert result.returncode == EXIT_HONOURED, result.stderr
         body = payload(result)
         assert body["verdict"] == "honoured"
-        assert body["changed"] == ["src/kiro_crew/slack/gateway.py", "test/test_cron_env.py"]
+        assert body["changed"] == ["src/aj_crew/slack/gateway.py", "test/test_cron_env.py"]
         assert body["violations"] == {"forbidden": [], "outside_allowed": [], "count": None}
 
     def test_the_payload_echoes_the_contract_it_enforced(self, repo) -> None:
@@ -197,7 +197,7 @@ class TestAFixInsideTheRadiusIsHonoured:
         body = payload(run(worktree))
         assert body["contract"]["finding_ids"] == [16]
         assert body["contract"]["max_changed_files"] == 3
-        assert body["contract"]["forbidden_paths"] == ["src/kiro_crew/sandbox.py"]
+        assert body["contract"]["forbidden_paths"] == ["src/aj_crew/sandbox.py"]
         assert body["contract"]["no_new_refusal_statement"] == (
             CONTRACT["no_new_refusal_statement"]
         )
@@ -211,7 +211,7 @@ class TestAFixInsideTheRadiusIsHonoured:
         """
         worktree = repo(
             "segment",
-            committed=("src/kiro_crew/sandbox_pod.py",),
+            committed=("src/aj_crew/sandbox_pod.py",),
             contract={**CONTRACT, "allowed_paths": ["src/"]},
         )
         result = run(worktree)
@@ -238,15 +238,15 @@ class TestAFixInsideTheRadiusIsHonoured:
         """
         worktree = repo(
             "poc",
-            committed=("src/kiro_crew/slack/gateway.py",),
+            committed=("src/aj_crew/slack/gateway.py",),
             staged=("test/test_s10_cron_env_governance_escape.py",),
-            contract={**CONTRACT, "allowed_paths": ["src/kiro_crew/slack/gateway.py"]},
+            contract={**CONTRACT, "allowed_paths": ["src/aj_crew/slack/gateway.py"]},
         )
         result = run(worktree)
         assert result.returncode == EXIT_HONOURED, result.stderr
         body = payload(result)
         assert "test/test_s10_cron_env_governance_escape.py" in body["ignored"]
-        assert body["changed"] == ["src/kiro_crew/slack/gateway.py"]
+        assert body["changed"] == ["src/aj_crew/slack/gateway.py"]
 
     def test_a_tracked_poc_shaped_file_is_judged_even_when_only_edited(self, repo) -> None:
         """The exemption is for an UNTRACKED scaffolding copy, not for the name's shape.
@@ -259,8 +259,8 @@ class TestAFixInsideTheRadiusIsHonoured:
         worktree = repo(
             "tracked-poc",
             base_files=("test/test_s10_cron_env_governance_escape.py",),
-            committed=("src/kiro_crew/slack/gateway.py",),
-            contract={**CONTRACT, "allowed_paths": ["src/kiro_crew/slack/gateway.py"]},
+            committed=("src/aj_crew/slack/gateway.py",),
+            contract={**CONTRACT, "allowed_paths": ["src/aj_crew/slack/gateway.py"]},
         )
         (worktree / "test" / "test_s10_cron_env_governance_escape.py").write_text(
             "edited out of scope\n", encoding="utf-8"
@@ -278,7 +278,7 @@ class TestAFixInsideTheRadiusIsHonoured:
         worktree = repo(
             "committed-poc",
             committed=("test/test_s10_cron_env_governance_escape.py",),
-            contract={**CONTRACT, "allowed_paths": ["src/kiro_crew/slack/gateway.py"]},
+            contract={**CONTRACT, "allowed_paths": ["src/aj_crew/slack/gateway.py"]},
         )
         result = run(worktree)
         assert result.returncode == EXIT_VIOLATED
@@ -298,17 +298,17 @@ class TestARenameShowsBothOfItsEnds:
     def test_a_forbidden_file_renamed_under_an_allowed_prefix_is_still_rejected(self, repo) -> None:
         worktree = repo(
             "renamed",
-            base_files=("src/kiro_crew/sandbox.py",),
-            contract={**CONTRACT, "allowed_paths": ["src/kiro_crew/allowed/"]},
+            base_files=("src/aj_crew/sandbox.py",),
+            contract={**CONTRACT, "allowed_paths": ["src/aj_crew/allowed/"]},
         )
-        (worktree / "src" / "kiro_crew" / "allowed").mkdir(parents=True)
-        git(worktree, "mv", "src/kiro_crew/sandbox.py", "src/kiro_crew/allowed/sandbox.py")
+        (worktree / "src" / "aj_crew" / "allowed").mkdir(parents=True)
+        git(worktree, "mv", "src/aj_crew/sandbox.py", "src/aj_crew/allowed/sandbox.py")
         git(worktree, "commit", "-q", "-m", "move the forbidden file somewhere allowed")
         result = run(worktree)
         assert result.returncode == EXIT_VIOLATED, result.stdout
         body = payload(result)
-        assert body["violations"]["forbidden"] == ["src/kiro_crew/sandbox.py"]
-        assert "src/kiro_crew/allowed/sandbox.py" in body["changed"]
+        assert body["violations"]["forbidden"] == ["src/aj_crew/sandbox.py"]
+        assert "src/aj_crew/allowed/sandbox.py" in body["changed"]
 
     def test_both_diffs_disable_rename_detection(self) -> None:
         """Pinned in the source, because the failure is silent when the flag is dropped."""
@@ -320,21 +320,21 @@ class TestLeavingTheRadiusIsARejection:
         """THE ROUND: the fix reached into the file it was told to leave alone."""
         worktree = repo(
             "forbidden",
-            committed=("src/kiro_crew/slack/gateway.py", "src/kiro_crew/sandbox.py"),
+            committed=("src/aj_crew/slack/gateway.py", "src/aj_crew/sandbox.py"),
             contract=CONTRACT,
         )
         result = run(worktree)
         assert result.returncode == EXIT_VIOLATED
         body = payload(result)
         assert body["verdict"] == "violated"
-        assert body["violations"]["forbidden"] == ["src/kiro_crew/sandbox.py"]
-        assert "src/kiro_crew/sandbox.py" in result.stderr
+        assert body["violations"]["forbidden"] == ["src/aj_crew/sandbox.py"]
+        assert "src/aj_crew/sandbox.py" in result.stderr
 
     def test_a_path_outside_the_allowed_set_is_thirty(self, repo) -> None:
-        worktree = repo("outside", committed=("src/kiro_crew/security.py",), contract=CONTRACT)
+        worktree = repo("outside", committed=("src/aj_crew/security.py",), contract=CONTRACT)
         result = run(worktree)
         assert result.returncode == EXIT_VIOLATED
-        assert payload(result)["violations"]["outside_allowed"] == ["src/kiro_crew/security.py"]
+        assert payload(result)["violations"]["outside_allowed"] == ["src/aj_crew/security.py"]
 
     def test_too_many_files_is_thirty_even_when_each_is_allowed(self, repo) -> None:
         """A fix that stayed inside ``test/`` but rewrote nine files is not minimal."""
@@ -354,27 +354,27 @@ class TestLeavingTheRadiusIsARejection:
         worktree = repo(
             "staged-violation",
             committed=("test/test_x.py",),
-            staged=("src/kiro_crew/sandbox.py",),
+            staged=("src/aj_crew/sandbox.py",),
             contract=CONTRACT,
         )
         result = run(worktree)
         assert result.returncode == EXIT_VIOLATED
-        assert payload(result)["violations"]["forbidden"] == ["src/kiro_crew/sandbox.py"]
+        assert payload(result)["violations"]["forbidden"] == ["src/aj_crew/sandbox.py"]
 
     def test_every_violation_is_reported_in_one_run(self, repo) -> None:
         """A partial report costs a round, and every fixer round is a human's yes."""
         worktree = repo(
             "all-three",
             committed=(
-                "src/kiro_crew/sandbox.py",
-                "src/kiro_crew/security.py",
+                "src/aj_crew/sandbox.py",
+                "src/aj_crew/security.py",
                 "docs/notes.md",
                 "README.md",
             ),
             contract={**CONTRACT, "max_changed_files": 2},
         )
         body = payload(run(worktree))
-        assert body["violations"]["forbidden"] == ["src/kiro_crew/sandbox.py"]
+        assert body["violations"]["forbidden"] == ["src/aj_crew/sandbox.py"]
         assert len(body["violations"]["outside_allowed"]) == 4
         assert body["violations"]["count"] == {"changed": 4, "max": 2}
 
@@ -482,13 +482,13 @@ class TestTheBaseIsTheCallersAlone:
     """
 
     def test_a_base_key_in_the_contract_changes_nothing(self, repo) -> None:
-        worktree = repo("stray-base", committed=("src/kiro_crew/security.py",))
+        worktree = repo("stray-base", committed=("src/aj_crew/security.py",))
         write_contract(worktree, {**CONTRACT, "base": "HEAD"})
         result = run(worktree)
         assert result.returncode == EXIT_VIOLATED, result.stdout
         body = payload(result)
         assert body["base"] == "origin/main"
-        assert body["violations"]["outside_allowed"] == ["src/kiro_crew/security.py"]
+        assert body["violations"]["outside_allowed"] == ["src/aj_crew/security.py"]
         assert "base" not in body["contract"]
 
     def test_an_explicit_base_is_used(self, repo) -> None:
@@ -534,7 +534,7 @@ class TestThePathComparisonHasNoStringEdges:
         assert mod.under_prefix("test", "test") is True
         assert mod.under_prefix("testdata/secret", "test") is False
         assert (
-            mod.under_prefix("src/kiro_crew/sandbox.py.orig", "src/kiro_crew/sandbox.py") is False
+            mod.under_prefix("src/aj_crew/sandbox.py.orig", "src/aj_crew/sandbox.py") is False
         )
 
     def test_an_empty_prefix_matches_nothing(self, mod) -> None:
@@ -542,7 +542,7 @@ class TestThePathComparisonHasNoStringEdges:
         assert mod.under_prefix("anything", "") is False
 
     def test_a_windows_spelling_normalises_to_the_paths_git_reports(self, mod) -> None:
-        assert mod.normalise_path("src\\kiro_crew\\sandbox.py") == "src/kiro_crew/sandbox.py"
+        assert mod.normalise_path("src\\aj_crew\\sandbox.py") == "src/aj_crew/sandbox.py"
         assert mod.normalise_path("./test/") == "test"
 
 
@@ -571,21 +571,21 @@ class TestAnUnstagedEditIsStillTheFix:
         assert payload(result)["changed"] == ["test/test_x.py"]
 
     def test_only_the_named_test_run_residue_is_exempt(self, repo) -> None:
-        """A Kiro Crew test run drops a data home and a breadcrumb into the tree.
+        """A Aj Crew test run drops a data home and a breadcrumb into the tree.
 
         Refusing those would reject every fixer that ran the suite, which is the false
         rejection this gate exists to avoid one level up -- so they are exempt BY NAME,
         and the skip is reported rather than silent.
         """
         worktree = repo("residue", committed=("test/test_x.py",), contract=CONTRACT)
-        (worktree / ".kirocrew.breadcrumb").write_text("test-run residue\n", encoding="utf-8")
+        (worktree / ".ajcrew.breadcrumb").write_text("test-run residue\n", encoding="utf-8")
         (worktree / ".kiro" / "crew").mkdir(parents=True)
         (worktree / ".kiro" / "crew" / "state.json").write_text("{}\n", encoding="utf-8")
         result = run(worktree)
         assert result.returncode == EXIT_HONOURED, result.stderr
         body = payload(result)
         assert body["changed"] == ["test/test_x.py"]
-        assert ".kirocrew.breadcrumb" in body["ignored"]
+        assert ".ajcrew.breadcrumb" in body["ignored"]
         assert ".kiro/crew/state.json" in body["ignored"]
 
     @pytest.mark.parametrize(
@@ -593,8 +593,8 @@ class TestAnUnstagedEditIsStillTheFix:
         [
             # A module the fix imports, and a data asset it loads: the merged checkout
             # carries neither, and the extension makes no difference to the crash.
-            "src/kiro_crew/new_helper.py",
-            "src/kiro_crew/lookup_table.json",
+            "src/aj_crew/new_helper.py",
+            "src/aj_crew/lookup_table.json",
         ],
     )
     def test_an_untracked_dependency_is_judged_whatever_its_extension(self, repo, relative) -> None:

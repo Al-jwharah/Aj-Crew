@@ -23,36 +23,36 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.config.paths import config_dir
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.config.paths import config_dir
 
 
 @pytest.fixture(autouse=True)
 def _owner_caller(monkeypatch):
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
 
 class TestConfigField:
     def test_defaults_to_unstarred(self):
-        assert KiroCrewAgentConfig(kiro_agent="x").starred is False
+        assert AjCrewAgentConfig(kiro_agent="x").starred is False
 
     def test_round_trips_through_save_and_load(self):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["fav"] = KiroCrewAgentConfig(kiro_agent="kirocrew", starred=True)
-        cfg.agents["plain"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg = AjCrewConfig.load()
+        cfg.agents["fav"] = AjCrewAgentConfig(kiro_agent="ajcrew", starred=True)
+        cfg.agents["plain"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         cfg.save()
-        again = KiroCrewConfig.load()
+        again = AjCrewConfig.load()
         assert again.agents["fav"].starred is True
         assert again.agents["plain"].starred is False
 
     @pytest.mark.parametrize("junk", ["true", "yes", 1, [True], {"on": 1}, None])
     def test_non_bool_in_config_reads_as_unstarred(self, junk):
         """config.json is hand-editable: only a real bool may star a crew."""
-        cfg = KiroCrewConfig.load()
-        cfg.agents["weird"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg = AjCrewConfig.load()
+        cfg.agents["weird"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         cfg.save()
         # Write the junk value straight into the file the loader reads, the
         # way a hand edit would — the dataclass itself cannot hold it.
@@ -60,22 +60,22 @@ class TestConfigField:
         data = json.loads(path.read_text(encoding="utf-8"))
         data["agents"]["weird"]["starred"] = junk
         path.write_text(json.dumps(data), encoding="utf-8")
-        assert KiroCrewConfig.load().agents["weird"].starred is False
+        assert AjCrewConfig.load().agents["weird"].starred is False
 
 
 def _crud_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import api_kirocrew_agent_update
+    from aj_crew.dashboard.handlers import api_ajcrew_agent_update
 
     app = web.Application()
-    app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+    app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
     return app
 
 
 @pytest.fixture()
 def seeded_agent():
-    cfg = KiroCrewConfig.load()
-    cfg.agents["existing"] = KiroCrewAgentConfig(
-        kiro_agent="kirocrew", workspace="default", memory_store="default"
+    cfg = AjCrewConfig.load()
+    cfg.agents["existing"] = AjCrewAgentConfig(
+        kiro_agent="ajcrew", workspace="default", memory_store="default"
     )
     cfg.save()
     return "existing"
@@ -88,11 +88,11 @@ class TestUpdateEndpoint:
             assert (
                 await client.put(f"/api/agents/{seeded_agent}", json={"starred": True})
             ).status == 200
-            assert KiroCrewConfig.load().agents[seeded_agent].starred is True
+            assert AjCrewConfig.load().agents[seeded_agent].starred is True
             assert (
                 await client.put(f"/api/agents/{seeded_agent}", json={"starred": False})
             ).status == 200
-        assert KiroCrewConfig.load().agents[seeded_agent].starred is False
+        assert AjCrewConfig.load().agents[seeded_agent].starred is False
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("junk", ["true", "false", 1, 0, None])
@@ -103,7 +103,7 @@ class TestUpdateEndpoint:
             )
             assert resp.status == 400
             assert (await resp.json())["code"] == "invalid_starred"
-        stored = KiroCrewConfig.load().agents[seeded_agent]
+        stored = AjCrewConfig.load().agents[seeded_agent]
         assert stored.starred is False
         # The refused request is a no-op as a whole, not just for the bad field.
         assert stored.workspace == "default"
@@ -115,7 +115,7 @@ class TestUpdateEndpoint:
         staged picture and then 400 without rolling it back. Pinned by asserting
         the config is never loaded on the rejection path."""
         with patch(
-            "kiro_crew.dashboard.handlers.agents.KiroCrewConfig.load",
+            "aj_crew.dashboard.handlers.agents.AjCrewConfig.load",
             side_effect=AssertionError("config loaded on a rejected request"),
         ):
             async with TestClient(TestServer(_crud_app())) as client:
@@ -128,7 +128,7 @@ class TestUpdateEndpoint:
 
 
 def _members_app(state) -> web.Application:
-    from kiro_crew.dashboard.handlers.members import api_members
+    from aj_crew.dashboard.handlers.members import api_members
 
     @web.middleware
     async def _auth(request: web.Request, handler):
@@ -147,49 +147,49 @@ class TestRosterExposesFilterKeys:
     async def test_roster_rows_carry_source_and_starred(self, tmp_path):
         fake = SimpleNamespace(
             agents={
-                "conductor": KiroCrewAgentConfig(kiro_agent="conductor", starred=True),
-                "pkg": KiroCrewAgentConfig(kiro_agent="pkg", source="package"),
+                "conductor": AjCrewAgentConfig(kiro_agent="conductor", starred=True),
+                "pkg": AjCrewAgentConfig(kiro_agent="pkg", source="package"),
             },
             default_agent="conductor",
             memory_stores={},
             degraded_sections=frozenset(),
         )
         state = _make_state(tmp_path)
-        with patch("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", return_value=fake):
+        with patch("aj_crew.dashboard.handlers.members.AjCrewConfig.load", return_value=fake):
             async with TestClient(TestServer(_members_app(state))) as client:
                 resp = await client.get("/api/members")
                 assert resp.status == 200
                 rows = {r["name"]: r for r in (await resp.json())["members"]}
         assert rows["conductor"]["starred"] is True
-        assert rows["conductor"]["source"] == "kirocrew"
+        assert rows["conductor"]["source"] == "ajcrew"
         assert rows["pkg"]["starred"] is False
         assert rows["pkg"]["source"] == "package"
 
     @pytest.mark.asyncio
     async def test_roster_rows_carry_the_listing_facts(self, tmp_path):
-        """`dashboard_created` (source kirocrew AND a member id) and
+        """`dashboard_created` (source ajcrew AND a member id) and
         `has_dm_message` (the DM thread holds a non-metadata row) are the two
         booleans the page lists rows on. The member id itself never joins the
         allowlist; a created member's slug is its id already."""
-        from kiro_crew import members as members_mod
+        from aj_crew import members as members_mod
 
         member_id = "m-0123456789abcdef"
         fake = SimpleNamespace(
             agents={
-                "made": KiroCrewAgentConfig(kiro_agent="made", member_id=member_id),
-                "legacy": KiroCrewAgentConfig(kiro_agent="legacy"),
-                "stamped": KiroCrewAgentConfig(
+                "made": AjCrewAgentConfig(kiro_agent="made", member_id=member_id),
+                "legacy": AjCrewAgentConfig(kiro_agent="legacy"),
+                "stamped": AjCrewAgentConfig(
                     kiro_agent="stamped", source="radar-app", member_id="m-feedfacefeedface"
                 ),
-                "chatted": KiroCrewAgentConfig(kiro_agent="chatted", source="radar-app"),
-                "opened": KiroCrewAgentConfig(kiro_agent="opened", source="package"),
+                "chatted": AjCrewAgentConfig(kiro_agent="chatted", source="radar-app"),
+                "opened": AjCrewAgentConfig(kiro_agent="opened", source="package"),
             },
             default_agent="legacy",
             memory_stores={},
             degraded_sections=frozenset(),
         )
         state = _make_state(tmp_path)
-        with patch("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", return_value=fake):
+        with patch("aj_crew.dashboard.handlers.members.AjCrewConfig.load", return_value=fake):
             # `chatted` has a real message; `opened` has only a metadata line
             # (its thread was opened, nothing was said).
             for name in ("chatted", "opened"):
@@ -221,16 +221,16 @@ class TestRosterExposesFilterKeys:
         """The message probe runs before the mtime gate: a bound thread whose
         file cannot be stat'd is unreadable, and an unreadable thread must
         never hide its row."""
-        from kiro_crew import members as members_mod
+        from aj_crew import members as members_mod
 
         fake = SimpleNamespace(
-            agents={"chatted": KiroCrewAgentConfig(kiro_agent="chatted", source="radar-app")},
+            agents={"chatted": AjCrewAgentConfig(kiro_agent="chatted", source="radar-app")},
             default_agent="",
             memory_stores={},
             degraded_sections=frozenset(),
         )
         state = _make_state(tmp_path)
-        with patch("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", return_value=fake):
+        with patch("aj_crew.dashboard.handlers.members.AjCrewConfig.load", return_value=fake):
             slug = members_mod.member_slug("chatted", fake)
             members_mod.write_dm_binding(slug, member="chatted", slot_key=f"member-{slug}")
             state.conversation_log.append(
@@ -245,29 +245,29 @@ class TestRosterExposesFilterKeys:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "raw",
-        ["aim", "", "Package", "AKIAIOSFODNN7EXAMPLE", "kirocrew ", "https://evil.example/x?k=v"],
+        ["aim", "", "Package", "AKIAIOSFODNN7EXAMPLE", "ajcrew ", "https://evil.example/x?k=v"],
     )
     async def test_roster_never_ships_a_raw_source_string(self, tmp_path, raw):
         """`source` is free text in an agent-writable config. Anything but the
         two known non-package origins collapses to 'package' on the wire, so a
         credential- or URL-shaped value planted there cannot reach the browser."""
         fake = SimpleNamespace(
-            agents={"weird": KiroCrewAgentConfig(kiro_agent="weird", source=raw)},
+            agents={"weird": AjCrewAgentConfig(kiro_agent="weird", source=raw)},
             default_agent="weird",
             memory_stores={},
             degraded_sections=frozenset(),
         )
         state = _make_state(tmp_path)
-        with patch("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", return_value=fake):
+        with patch("aj_crew.dashboard.handlers.members.AjCrewConfig.load", return_value=fake):
             async with TestClient(TestServer(_members_app(state))) as client:
                 body = await (await client.get("/api/members")).json()
         assert body["members"][0]["source"] == "package"
         assert raw not in json.dumps(body) or raw == ""
 
     def test_normalize_member_source_vocabulary(self):
-        from kiro_crew.dashboard.handlers.members import normalize_member_source
+        from aj_crew.dashboard.handlers.members import normalize_member_source
 
-        assert normalize_member_source("kirocrew") == "kirocrew"
+        assert normalize_member_source("ajcrew") == "ajcrew"
         assert normalize_member_source("builtin") == "builtin"
         assert normalize_member_source("package") == "package"
         assert normalize_member_source("aim") == "package"

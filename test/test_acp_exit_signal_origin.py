@@ -20,9 +20,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-import kiro_crew.acp.client as client_mod
-from kiro_crew.acp.client import AcpClient, AcpError
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
+import aj_crew.acp.client as client_mod
+from aj_crew.acp.client import AcpClient, AcpError
+from aj_crew.testing.ids import UNALLOCATABLE_PID
 
 IS_POSIX = hasattr(signal, "SIGKILL")
 posix_only = pytest.mark.skipif(not IS_POSIX, reason="needs POSIX signal numbers")
@@ -131,11 +131,11 @@ async def test_a_respawn_does_not_credit_the_previous_childs_kill(tmp_path: Path
     client = AcpClient(work_dir=tmp_path, session_key="k")
     client._kill_sent = (int(signal.SIGKILL), "forced stop")
     with (
-        patch("kiro_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
-        patch("kiro_crew.acp.client.wrap_argv", return_value=(["/usr/bin/kiro-cli", "acp"], None)),
+        patch("aj_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
+        patch("aj_crew.acp.client.wrap_argv", return_value=(["/usr/bin/kiro-cli", "acp"], None)),
         patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec,
-        patch("kiro_crew.session._track_pid"),
-        patch("kiro_crew.session._track_session_pid"),
+        patch("aj_crew.session._track_pid"),
+        patch("aj_crew.session._track_session_pid"),
     ):
         mock_proc = MagicMock()
         mock_proc.pid = UNALLOCATABLE_PID

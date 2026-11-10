@@ -131,7 +131,7 @@ function renderSidebar(slots: ChatSlot[], opts: RenderOpts = {}) {
 }
 
 const slot = (over: Partial<ChatSlot> = {}): ChatSlot =>
-  ({ key: 'k1', title: 'a-session', running: false, messages: 2, agent: 'kirocrew', ...over }) as ChatSlot
+  ({ key: 'k1', title: 'a-session', running: false, messages: 2, agent: 'ajcrew', ...over }) as ChatSlot
 
 function rowOf(container: HTMLElement): HTMLElement {
   const row = container.querySelector('.session-row')
@@ -177,7 +177,7 @@ describe('chat sidebar — live dot on the session name', () => {
 
   it('lights for started sub-agents after the parent turn ended', () => {
     const { container } = renderSidebar([slot()], {
-      prepare: store => { store.dispatch(sseSubagentSpawn({ slot: 'k1', id: 'a1', task: 't', agent: 'kirocrew' })) },
+      prepare: store => { store.dispatch(sseSubagentSpawn({ slot: 'k1', id: 'a1', task: 't', agent: 'ajcrew' })) },
     })
     expect(dotOf(container)).toBeTruthy()
   })

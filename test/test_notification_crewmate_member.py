@@ -12,12 +12,12 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers.messaging import (
+from aj_crew.dashboard.handlers.messaging import (
     api_notification_agent_push,
     api_send_message,
 )
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.members import (
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.members import (
     MEMBER_NAME_MAX_CHARS,
     attributable_session_key,
     member_identity_for_session,
@@ -25,13 +25,13 @@ from kiro_crew.members import (
     slug_for_name,
     write_dm_binding,
 )
-from kiro_crew.notifications.bus import (
+from aj_crew.notifications.bus import (
     NotificationBus,
     NotificationPayload,
     NotificationValidationError,
     payload_from_legacy,
 )
-from kiro_crew.session_token_sig import publish_session_token, verify_session_token
+from aj_crew.session_token_sig import publish_session_token, verify_session_token
 
 ADA = {"slug": "ada", "name": "Ada"}
 
@@ -44,8 +44,8 @@ def _bind_ada() -> str:
 
 
 def _make_state(monkeypatch, tmp_path) -> DashboardState:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
     return DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(),
@@ -169,7 +169,7 @@ UNATTESTED_CALLERS = [
     pytest.param({}, id="internal-secret-only"),
 ]
 
-#: A signed per-session token, as Kiro Crew's own pooled tool backends send it
+#: A signed per-session token, as Aj Crew's own pooled tool backends send it
 #: on a TCP loopback call: it verifies back to the session it was minted for.
 ADA_TOKEN = "tok-ada-17993"
 OTHER_TOKEN = "tok-other-17993"
@@ -189,7 +189,7 @@ def _signing_root(tmp_path):
     key loader with ``session_pid_sig``, so patching one view leaves the loader
     reading the real trust root.
     """
-    from kiro_crew import session_pid_sig, session_token_sig
+    from aj_crew import session_pid_sig, session_token_sig
 
     key_path = tmp_path / "sel_hmac.key"
     key_path.write_bytes(b"\x02" * 32)
@@ -367,7 +367,7 @@ class TestSendMessageRouteAttribution:
 class TestSendMessageBellFallback:
     @pytest.mark.asyncio
     async def test_fallback_note_attributes_the_declared_crewmate(self, monkeypatch, tmp_path):
-        from kiro_crew.dashboard.messaging_api import proactive_send
+        from aj_crew.dashboard.messaging_api import proactive_send
 
         slot = _bind_ada()
         state = _make_state(monkeypatch, tmp_path)

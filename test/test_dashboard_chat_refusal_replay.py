@@ -8,8 +8,8 @@ import pytest
 from chat_test_helpers import await_successor, chat_done_frames, run_as_slot_task
 from test_dashboard_chat_refusal import TestRunChatRefusalFallback as _RefusalFallbackSuite
 
-from kiro_crew.dashboard.recovery_replays import LiveSlot, ReplayFamily
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.recovery_replays import LiveSlot, ReplayFamily
+from aj_crew.testing.wait import await_until
 
 
 class TestRunChatRefusalFallbackReplay:
@@ -24,8 +24,8 @@ class TestRunChatRefusalFallbackReplay:
     async def test_drain_purges_replay_after_stop(self, tmp_path, monkeypatch):
         """A Stop landing between the replay's enqueue and the drain kills the
         replay: the index-0 entry must never dispatch superseded work."""
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat_runner import (
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat_runner import (
             SYNTHETIC_RECOVERY_KIND,
             _start_next_queued_turn,
         )
@@ -59,8 +59,8 @@ class TestRunChatRefusalFallbackReplay:
     async def test_drain_purges_replay_when_user_correction_queued(self, tmp_path, monkeypatch):
         """A user correction queued behind the index-0 replay supersedes it:
         the correction dispatches, the replay dies."""
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat_runner import (
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat_runner import (
             SYNTHETIC_RECOVERY_KIND,
             _start_next_queued_turn,
         )
@@ -101,10 +101,10 @@ class TestRunChatRefusalFallbackReplay:
     async def test_replay_carries_original_turn_attachments(self, tmp_path, monkeypatch):
         """The replay is the SAME turn again: a refused message with files
         retries with its files riding the queue entry's meta."""
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -124,7 +124,7 @@ class TestRunChatRefusalFallbackReplay:
 
         monkeypatch.setattr(_ChatSlot, "queue_insert", _spy_insert)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello", _attachments=["/tmp/evidence.png"])
         if slot.task is not None:
@@ -140,10 +140,10 @@ class TestRunChatRefusalFallbackReplay:
         """A folder attachment replays under ``dirs``: rebucketing the flat
         list under ``files`` would retype it and resolve its
         ``[attached_dir N]`` marker against the wrong list."""
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -163,7 +163,7 @@ class TestRunChatRefusalFallbackReplay:
 
         monkeypatch.setattr(_ChatSlot, "queue_insert", _spy_insert)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(
             state,
@@ -194,8 +194,8 @@ class TestRunChatRefusalFallbackReplay:
         unbound->bound case is already dropped by the admission sweep's
         fail-closed booleans; a bound->bound relink is invisible to them —
         this branch is what catches it and clears the episode record.)"""
-        from kiro_crew.dashboard import chat_runner, session_control
-        from kiro_crew.dashboard.chat_runner import (
+        from aj_crew.dashboard import chat_runner, session_control
+        from aj_crew.dashboard.chat_runner import (
             SYNTHETIC_RECOVERY_KIND,
             _start_next_queued_turn,
         )
@@ -245,8 +245,8 @@ class TestRunChatRefusalFallbackReplay:
         dispatch-gate text with it: otherwise an identical later resend
         matches as the retry — running on the fallback with the restore
         probe skipped and the one-retry allowance kept spent."""
-        from kiro_crew.dashboard import chat_runner, session_control
-        from kiro_crew.dashboard.chat_runner import _start_next_queued_turn
+        from aj_crew.dashboard import chat_runner, session_control
+        from aj_crew.dashboard.chat_runner import _start_next_queued_turn
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -282,8 +282,8 @@ class TestRunChatRefusalFallbackReplay:
         lock domain."""
         import asyncio as _asyncio
 
-        from kiro_crew.dashboard.chat_runner import _refusal_fallback_swap
-        from kiro_crew.llm_helpers import slot_switch_session_lock
+        from aj_crew.dashboard.chat_runner import _refusal_fallback_swap
+        from aj_crew.llm_helpers import slot_switch_session_lock
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -325,8 +325,8 @@ class TestRunChatRefusalFallbackReplay:
         lock domains."""
         import asyncio as _asyncio
 
-        from kiro_crew.dashboard.chat_runner import _restore_refusal_fallback
-        from kiro_crew.llm_helpers import slot_switch_session_lock
+        from aj_crew.dashboard.chat_runner import _restore_refusal_fallback
+        from aj_crew.llm_helpers import slot_switch_session_lock
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -371,7 +371,7 @@ class TestRunChatRefusalFallbackReplay:
         exactly one swap, no second 'retrying once' notice, no restore probe
         running the replay back on the primary that just refused."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
         events = self._refusal_events(category="CYBER")
@@ -380,7 +380,7 @@ class TestRunChatRefusalFallbackReplay:
         client = self._make_refusing_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         secret_msg = "use token ghp_" + "A" * 36 + " to fetch the repo"
         await _run_chat(state, slot, secret_msg)
@@ -406,7 +406,7 @@ class TestRunChatRefusalFallbackReplay:
     @staticmethod
     def _arm_refusal_replay(slot, *, session_key: str | None = None) -> None:
         """The slot state a refusal swap leaves behind before its replay runs."""
-        from kiro_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.dashboard.chat_utils import effective_session_key
 
         slot._refusal_fallback_primary = "fable-5"
         slot._refusal_fallback_candidate = "opus-test"
@@ -434,7 +434,7 @@ class TestRunChatRefusalFallbackReplay:
         client = self._make_refusing_client([])
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         # Snapshot taken at enqueue…
         self._arm_refusal_replay(slot)
@@ -473,7 +473,7 @@ class TestRunChatRefusalFallbackReplay:
         client = self._make_refusing_client([])
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         # The binding the swap recorded differs from the slot's live binding.
         self._arm_refusal_replay(slot, session_key="dash:old-session")
@@ -497,14 +497,14 @@ class TestRunChatRefusalFallbackReplay:
         turn retried, not a genuine new message: it must not re-arm the
         one-retry allowance (re-arming lets a crashing fallback replay cycle
         primary-refusal → swap → crash indefinitely)."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
         client = self._make_refusing_client([LLMEvent(kind=EVENT_COMPLETE)])
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         slot._refusal_fallback_attempted = True
 
@@ -522,7 +522,7 @@ class TestRunChatRefusalFallbackReplay:
         turn start must not move the session back to the primary mid-recovery.
         The fixed-text membership check cannot recognize a requeued user
         message, so the gate needs the structural signal."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -530,8 +530,8 @@ class TestRunChatRefusalFallbackReplay:
         client.served_model = "opus-test"  # still on the fallback candidate
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat_utils import effective_session_key
 
         slot._refusal_fallback_primary = "fable-5"
         slot._refusal_fallback_candidate = "opus-test"
@@ -566,7 +566,7 @@ class TestRunChatRefusalFallbackReplay:
         # Swap recorded session A; the slot has since rebound elsewhere.
         slot._refusal_fallback_session_key = "dash:session-a"
 
-        from kiro_crew.dashboard.chat_runner import _restore_refusal_fallback
+        from aj_crew.dashboard.chat_runner import _restore_refusal_fallback
 
         await _restore_refusal_fallback(slot, client)
 
@@ -584,7 +584,7 @@ class TestRunChatRefusalFallbackReplay:
         the new entry — otherwise the requeued entry escapes the drain's
         refusal-specific validation, and a correction queued in the
         requeue-to-dispatch window loses to superseded work."""
-        from kiro_crew.acp.client import AcpError
+        from aj_crew.acp.client import AcpError
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -605,9 +605,9 @@ class TestRunChatRefusalFallbackReplay:
         async def _no_drain(_state, _slot, **_kwargs) -> bool:
             return False
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._start_next_queued_turn", _no_drain)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._start_next_queued_turn", _no_drain)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         self._arm_refusal_replay(slot)
 
@@ -653,8 +653,8 @@ class TestRunChatRefusalFallbackReplay:
         slot._active_fallback_model = "haiku-throttle"
         slot._fallback_primary_model = "fable-5"
 
-        from kiro_crew.dashboard.chat_runner import _refusal_fallback_swap
-        from kiro_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.dashboard.chat_runner import _refusal_fallback_swap
+        from aj_crew.dashboard.chat_utils import effective_session_key
 
         result = await _refusal_fallback_swap(
             slot, client, "opus-test", session_key=effective_session_key(slot)
@@ -678,7 +678,7 @@ class TestRunChatRefusalFallbackReplay:
         stream opens. A correction queued in that window must abort the
         replay before any model call — a stale replay dispatching first could
         run destructive tools the correction cancelled."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -699,7 +699,7 @@ class TestRunChatRefusalFallbackReplay:
 
         state.sessions.get_or_create = _acquire_and_inject
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         self._arm_refusal_replay(slot)
 
@@ -719,7 +719,7 @@ class TestRunChatRefusalFallbackReplay:
 
     @staticmethod
     def _arm_model_access_replay(slot, entry_id: str = "q-replay") -> None:
-        from kiro_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.dashboard.chat_utils import effective_session_key
 
         slot.replays.arm(
             ReplayFamily.MODEL_ACCESS,
@@ -731,7 +731,7 @@ class TestRunChatRefusalFallbackReplay:
 
     @staticmethod
     def _arm_image_recovery(slot) -> None:
-        from kiro_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.dashboard.chat_utils import effective_session_key
 
         slot.replays.arm(
             ReplayFamily.IMAGE_HISTORY,
@@ -784,7 +784,7 @@ class TestRunChatRefusalFallbackReplay:
         client = self._make_refusing_client(self._answering_events(), prompts)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         getattr(self, self._ARM[family])(slot)
         slot.queue_insert(0, "actually do the other thing", kind="")
@@ -809,12 +809,12 @@ class TestRunChatRefusalFallbackReplay:
         """End to end through the real refuse -> swap -> enqueue path: a relink that
         lands before the drain moves the replay's session away, so the drain drops
         it with the move notice instead of dispatching it onto the new binding."""
-        from kiro_crew.acp.types import STOP_REASON_REFUSAL
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_REFUSAL
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -839,7 +839,7 @@ class TestRunChatRefusalFallbackReplay:
 
         monkeypatch.setattr(chat_runner, "_start_next_queued_turn", _relink_then_drain)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -861,11 +861,11 @@ class TestRunChatRefusalFallbackReplay:
         """End to end through the real refuse -> swap -> enqueue -> drain path: a
         correction queued after the drain spawned the replay cancels it at the
         consume seam, and the correction runs next."""
-        from kiro_crew.acp.types import STOP_REASON_REFUSAL
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_REFUSAL
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -886,7 +886,7 @@ class TestRunChatRefusalFallbackReplay:
         client.stream_command = _stream
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
         replay = slot.task
@@ -909,21 +909,21 @@ class TestRunChatRefusalFallbackReplay:
         synthesis starts, as it would after any finished turn, and the cycle's
         chat_done is left to it."""
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
-        from kiro_crew.dashboard.chat_utils import SYNTHESIS_CLEAR
+        from aj_crew.dashboard.chat_utils import SYNTHESIS_CLEAR
 
         state.subagents = MagicMock()
         slot = state.get_or_create_slot("s1")
         state.sessions.get_or_create = AsyncMock()
         synthesis = AsyncMock()
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._run_pending_synthesis", synthesis)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._run_pending_synthesis", synthesis)
         # No child holds the synthesis back (the fire gate's own reads are
         # covered by its tests).
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.synthesis_fire_verdict",
+            "aj_crew.dashboard.chat_runner.synthesis_fire_verdict",
             AsyncMock(return_value=SYNTHESIS_CLEAR),
         )
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         self._arm_refusal_replay(slot)
         slot._stop_generation = getattr(slot, "_stop_generation", 0) + 1
@@ -942,7 +942,7 @@ class TestRunChatRefusalFallbackReplay:
         """The swap records its replay's queue id, and the drain passes the
         replay identity only for that entry: the replay keeps the spent one-shot,
         while an ordinary entry queued behind it refreshes it."""
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -992,7 +992,7 @@ class TestRunChatRefusalFallbackReplay:
         client = self._make_refusing_client(self._answering_events(), prompts)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         self._arm_model_access_replay(slot, "q-cleared-by-the-kill")
         slot._stop_generation = getattr(slot, "_stop_generation", 0) + 1
@@ -1014,14 +1014,14 @@ class TestRunChatRefusalFallbackReplay:
         """A swap during a synthetic recovery turn replays the synthetic text. The
         replay is still recognized (by queue id, not text), so it consumes the
         record instead of leaving it for the next turn."""
-        from kiro_crew.dashboard.chat_runner import _CONN_RECOVER_MSG
+        from aj_crew.dashboard.chat_runner import _CONN_RECOVER_MSG
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
         client = self._make_refusing_client(self._answering_events())
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         self._arm_model_access_replay(slot)
 

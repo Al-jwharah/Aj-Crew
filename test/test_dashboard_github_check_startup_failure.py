@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.dashboard.source_providers.github import _github_check
+from aj_crew.dashboard.source_providers.github import _github_check
 
 
 def test_completed_startup_failure_is_failed() -> None:

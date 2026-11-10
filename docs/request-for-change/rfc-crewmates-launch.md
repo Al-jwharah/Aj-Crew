@@ -29,7 +29,7 @@ superseded-by: []
 
 ## 1. Summary
 
-Kiro Crew has three things a person can shape and talk to, and until now the
+Aj Crew has three things a person can shape and talk to, and until now the
 product called them by overlapping names: an *agent* was sometimes the thing
 you chat with, sometimes the template it was made from, and sometimes the
 persistent teammate with its own memory. The launch review fixed one
@@ -94,7 +94,7 @@ commit; "Decided" is the shape the product owner accepted.
 ### 01 Customize page
 
 Today: the sidebar and page title read "Agent Capabilities"
-(`pages.kiroCrewAgentsPage.agent_capabilities` in `website/src/i18n/locales/en.json`),
+(`pages.ajCrewAgentsPage.agent_capabilities` in `website/src/i18n/locales/en.json`),
 with rail tabs "Agents" and "Agent templates".
 
 Decided:
@@ -179,8 +179,8 @@ Decided:
 - No user-facing step. A one-time migration runs at gateway startup: a
   crewmate that an earlier sync generated (empty `member_id`, the shared
   `default` store, bound to an installed spec of the person's own or of a
-  package — never one of the runtime's own agents (a Kiro Crew-owned spec, or
-  a row stamped `kirocrew`), a private copy, or a spec that is no longer
+  package — never one of the runtime's own agents (a Aj Crew-owned spec, or
+  a row stamped `ajcrew`), a private copy, or a spec that is no longer
   installed) and that was never chatted with is removed from
   the roster. Only the config row goes; the agent file and any transcript
   stay.
@@ -209,7 +209,7 @@ stays, and one click re-enrols any of them. A package-installed agent is
 enrolled by the same sync as a person's own, so its generated row is the
 same leftover state; the runtime's own agents and uninstalled specs are left
 out because nothing re-enrols them in one click. A row the sync wrote for a
-skill-view alias (`kirocrew-skill-view-*`) is not an uninstalled spec: the
+skill-view alias (`ajcrew-skill-view-*`) is not an uninstalled spec: the
 runtime writes that file to project another agent's skills, nobody installs
 or picks it, and it is removed under the same rule as any generated row. Only a turn on the crewmate's
 own page counts as chatting, because that thread is the crewmate: another
@@ -458,7 +458,7 @@ this document:
 - The startup prune is gated by a marker file in the config directory, written
   once a pass completes; it removes only never-chatted rows with no `member_id`
   on the shared store bound to an installed spec of the person's own or of a
-  package, or to a skill-view alias (`kirocrew-skill-view-*`), and touches no
+  package, or to a skill-view alias (`ajcrew-skill-view-*`), and touches no
   agent file or transcript. Other spec-less rows are untouched.
 - Threads and teams add new storage beside the existing transcript and roster;
   nothing existing changes shape.
@@ -481,7 +481,7 @@ The launch is complete when, on main:
   start and once, exactly the rows § 03 names: never chatted with on the
   Crewmates page, no `member_id`, the shared store, bound to an installed spec
   of the person's own or of a package, or bound to a skill-view alias
-  (`kirocrew-skill-view-*`). Chatted rows, created crewmates, runtime-owned
+  (`ajcrew-skill-view-*`). Chatted rows, created crewmates, runtime-owned
   rows, other spec-less rows and every agent file are untouched.
 - A crewmate's chat contains no auto-nudge, cron or sub-agent envelope rows.
 
@@ -545,12 +545,12 @@ detail page stays the full "HR file" surface; the modal is the in-context edit
 for "edit the bot I am looking at".
 
 Implementation: the shared editor (hook + dialog) and the Crewmates-page wiring
-ship first. Folding the crew manager (`KiroCrewAgentsPage`) onto the same shared
+ship first. Folding the crew manager (`AjCrewAgentsPage`) onto the same shared
 component, so "one editor" is literally true in code, is the committed follow-up.
 
 Status: the follow-up has landed. The one editor is `CrewEditorNextDialog`
 driven by `useCrewEditor` (it replaced `CrewEditorDialog` in #19257), and
-`KiroCrewAgentsPage` (Customize > Crewmates) now opens that same editor rather
+`AjCrewAgentsPage` (Customize > Crewmates) now opens that same editor rather
 than an edit sheet of its own, so one editor is literally true in code and
 there is nothing to mirror. Its **Built from** section is read-only: a
 crewmate's agent definition is edited on the Custom agents tab, not on the

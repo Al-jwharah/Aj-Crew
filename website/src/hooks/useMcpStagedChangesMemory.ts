@@ -10,7 +10,7 @@ import { safeGetSessionItem, safeSetSessionItem } from '../utils/safeStorage'
  * `sessionStorage`, not `localStorage`: a staged change belongs to the tab that
  * made it, and a second tab must not inherit an uninstall it never chose.
  */
-export const MCP_STAGED_CHANGES_KEY = 'kirocrew:mcp-servers-staged-changes'
+export const MCP_STAGED_CHANGES_KEY = 'ajcrew:mcp-servers-staged-changes'
 
 export type StagedScopeChange = { scopes?: Partial<Record<string, boolean>>; uninstall?: boolean }
 export type StagedChanges = {

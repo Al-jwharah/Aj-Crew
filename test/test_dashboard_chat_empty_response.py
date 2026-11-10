@@ -10,15 +10,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.recovery_replays import LiveSlot, ReplayFamily
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.recovery_replays import LiveSlot, ReplayFamily
+from aj_crew.dashboard.state import _ChatSlot
 
 
 class TestEmptyResponseRetry:
     """Verify _run_chat retries once on empty model response, then shows error."""
 
     def _make_state_and_slot(self, tmp_path):
-        from kiro_crew.dashboard.chat_runner import _run_chat
+        from aj_crew.dashboard.chat_runner import _run_chat
 
         state = _make_state(tmp_path)
         state.sessions.get_or_create = AsyncMock(return_value=(MagicMock(), False, False))
@@ -44,8 +44,8 @@ class TestEmptyResponseRetry:
 
     def _make_empty_stream(self, mock_client):
         """Stream that completes immediately with no text."""
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         async def _stream(msg):
             yield LLMEvent(kind=EVENT_COMPLETE, stop_reason=STOP_REASON_END_TURN)
@@ -72,12 +72,12 @@ class TestEmptyResponseRetry:
         self, tmp_path: Path, resumed: bool
     ) -> None:
         """A false blocker after a read replays only the authenticated request."""
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.dashboard.chat_utils import (
             FALSE_TOOL_BLOCKER_REPLAY_KIND,
             RecoveryPayload,
         )
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -140,7 +140,7 @@ class TestEmptyResponseRetry:
             meta={"files": [file_path], "dirs": [dir_path]},
         )
         with patch(
-            "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+            "aj_crew.dashboard.chat_runner._start_next_queued_turn",
             new=AsyncMock(return_value=False),
         ):
             await _run_chat(
@@ -169,8 +169,8 @@ class TestEmptyResponseRetry:
         self, tmp_path: Path, result_shape: str
     ) -> None:
         """Canonical read identity is insufficient without completed result proof."""
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import (
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -209,7 +209,7 @@ class TestEmptyResponseRetry:
         client.stream_command = _stream
 
         with patch(
-            "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+            "aj_crew.dashboard.chat_runner._start_next_queued_turn",
             new=AsyncMock(return_value=False),
         ):
             await _run_chat(
@@ -236,8 +236,8 @@ class TestEmptyResponseRetry:
         kiro_backend: bool,
     ) -> None:
         """A familiar name needs extractor provenance and a Kiro backend."""
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import (
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -276,7 +276,7 @@ class TestEmptyResponseRetry:
         client.stream_command = _stream
 
         with patch(
-            "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+            "aj_crew.dashboard.chat_runner._start_next_queued_turn",
             new=AsyncMock(return_value=False),
         ):
             await _run_chat(
@@ -294,8 +294,8 @@ class TestEmptyResponseRetry:
     @pytest.mark.asyncio
     async def test_kiro_blocker_near_miss_logs_without_replay(self, tmp_path: Path, caplog) -> None:
         """Wording drift is observable but never grants replay authority."""
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import (
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -328,9 +328,9 @@ class TestEmptyResponseRetry:
         client.stream_command = _stream
 
         with (
-            caplog.at_level("WARNING", logger="kiro_crew.dashboard.chat_runner"),
+            caplog.at_level("WARNING", logger="aj_crew.dashboard.chat_runner"),
             patch(
-                "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+                "aj_crew.dashboard.chat_runner._start_next_queued_turn",
                 new=AsyncMock(return_value=False),
             ),
         ):
@@ -351,8 +351,8 @@ class TestEmptyResponseRetry:
     @pytest.mark.asyncio
     async def test_yolo_read_then_false_blocker_stays_notice_only(self, tmp_path: Path) -> None:
         """Auto-approve never dispatches even an authenticated blocker replay."""
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import (
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -392,7 +392,7 @@ class TestEmptyResponseRetry:
         client.stream_command = _stream
 
         with patch(
-            "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+            "aj_crew.dashboard.chat_runner._start_next_queued_turn",
             new=AsyncMock(return_value=False),
         ):
             await _run_chat(
@@ -412,8 +412,8 @@ class TestEmptyResponseRetry:
     @pytest.mark.asyncio
     async def test_non_user_read_then_false_blocker_does_not_replay(self, tmp_path: Path) -> None:
         """App/system text cannot acquire authenticated-user replay provenance."""
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import (
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -452,7 +452,7 @@ class TestEmptyResponseRetry:
         client.stream_command = _stream
 
         with patch(
-            "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+            "aj_crew.dashboard.chat_runner._start_next_queued_turn",
             new=AsyncMock(return_value=False),
         ):
             await _run_chat(state, slot, "Untrusted app injection")
@@ -468,8 +468,8 @@ class TestEmptyResponseRetry:
         self, tmp_path: Path, intervention: str
     ) -> None:
         """A revocation landing after enqueue still wins at dispatch time."""
-        from kiro_crew.dashboard.chat_runner import _start_next_queued_turn
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_runner import _start_next_queued_turn
+        from aj_crew.dashboard.chat_utils import (
             FALSE_TOOL_BLOCKER_REPLAY_KIND,
             RecoveryPayload,
         )
@@ -506,7 +506,7 @@ class TestEmptyResponseRetry:
         cfg = MagicMock()
         cfg.dashboard.merge_queued_messages = False
         with patch(
-            "kiro_crew.dashboard.chat_runner.KiroCrewConfig.load",
+            "aj_crew.dashboard.chat_runner.AjCrewConfig.load",
             return_value=cfg,
         ):
             started = await _start_next_queued_turn(state, slot)
@@ -534,13 +534,13 @@ class TestEmptyResponseRetry:
         A Stop on a linked channel moves only the session count, not the slot's
         ``_stop_generation``; without the snapshot the replay dispatches over that Stop.
         """
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.dashboard.chat_runner import _start_next_queued_turn
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.dashboard.chat_runner import _start_next_queued_turn
+        from aj_crew.dashboard.chat_utils import (
             FALSE_TOOL_BLOCKER_REPLAY_KIND,
             effective_session_key,
         )
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -598,7 +598,7 @@ class TestEmptyResponseRetry:
         request = "Publish and deploy the demo"
         slot.append("user", request, "msg msg-u")
         with patch(
-            "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+            "aj_crew.dashboard.chat_runner._start_next_queued_turn",
             new=AsyncMock(return_value=False),
         ):
             await _run_chat(state, slot, request, _directive_user_origin=True)
@@ -625,7 +625,7 @@ class TestEmptyResponseRetry:
         cfg = MagicMock()
         cfg.dashboard.merge_queued_messages = False
         with patch(
-            "kiro_crew.dashboard.chat_runner.KiroCrewConfig.load",
+            "aj_crew.dashboard.chat_runner.AjCrewConfig.load",
             return_value=cfg,
         ):
             started = await _start_next_queued_turn(state, slot)
@@ -671,8 +671,8 @@ class TestProductiveTurnNeverReplaysVerbatim:
         ``executed`` counts dispatches so a replay of the original message would
         be observable as a second execution rather than only as a queue entry.
         """
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import (
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -696,8 +696,8 @@ class TestProductiveTurnNeverReplaysVerbatim:
 
     @staticmethod
     def _tool_only_stream(client):
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import (
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TOOL_CALL,
             EVENT_TOOL_RESULT,
@@ -714,8 +714,8 @@ class TestProductiveTurnNeverReplaysVerbatim:
 
     @staticmethod
     def _thinking_only_stream(client):
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_THINKING_CHUNK, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_THINKING_CHUNK, LLMEvent
 
         async def _stream(msg):
             yield LLMEvent(kind=EVENT_THINKING_CHUNK, text="hmm")
@@ -729,7 +729,7 @@ class TestProductiveTurnNeverReplaysVerbatim:
         """The incident's own shape: preamble + a completed tool call, clean
         end_turn. The original message must NOT be re-queued; exactly one
         synthetic continuation may be, and the completed tool must not re-run."""
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             _ACTIVITY_NO_REPLY_CONTINUE_MSG,
             _EMPTY_AUTO_CONTINUE_MSG,
         )
@@ -769,7 +769,7 @@ class TestProductiveTurnNeverReplaysVerbatim:
     @pytest.mark.asyncio
     async def test_tool_only_turn_does_not_replay_verbatim(self, tmp_path: Path) -> None:
         """A turn with tool calls and no text at all still counts as productive."""
-        from kiro_crew.dashboard.chat_utils import _ACTIVITY_NO_REPLY_CONTINUE_MSG
+        from aj_crew.dashboard.chat_utils import _ACTIVITY_NO_REPLY_CONTINUE_MSG
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         self._tool_only_stream(client)
@@ -785,7 +785,7 @@ class TestProductiveTurnNeverReplaysVerbatim:
     @pytest.mark.asyncio
     async def test_thinking_only_turn_does_not_replay_verbatim(self, tmp_path: Path) -> None:
         """Thinking is work the replay would discard and re-charge for."""
-        from kiro_crew.dashboard.chat_utils import _ACTIVITY_NO_REPLY_CONTINUE_MSG
+        from aj_crew.dashboard.chat_utils import _ACTIVITY_NO_REPLY_CONTINUE_MSG
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         self._thinking_only_stream(client)
@@ -812,7 +812,7 @@ class TestProductiveTurnNeverReplaysVerbatim:
         with (
             patch.object(_ChatSlot, "queue_insert", spy),
             patch(
-                "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+                "aj_crew.dashboard.chat_runner._start_next_queued_turn",
                 new=AsyncMock(return_value=False),
             ),
         ):
@@ -866,7 +866,7 @@ class TestEmptyTurnDiagnostics:
         that can regress silently, and a stream fixture cannot express
         'synthesized terminal AND tool activity' as cleanly as the snapshot can.
         """
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             EMPTY_CAUSE_NO_TERMINAL,
             EMPTY_CAUSE_OTHER,
             EMPTY_CAUSE_PROVIDER_EMPTY,
@@ -923,15 +923,15 @@ class TestEmptyTurnDiagnostics:
     def test_normalize_stop_reason_never_returns_a_raw_backend_string(self) -> None:
         """Closed output set, and the ACP spellings it mirrors are pinned.
 
-        The agent-SDK boundary gate stops ``chat_utils`` importing ``kiro_crew.acp.types``,
+        The agent-SDK boundary gate stops ``chat_utils`` importing ``aj_crew.acp.types``,
         so it spells the stop reasons as literals and the pin lives here.
         """
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             STOP_REASON_CANCELLED,
             STOP_REASON_END_TURN,
             STOP_REASON_REFUSAL,
         )
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             _STOP_CANCELLED_REASON,
             _STOP_END_TURN,
             _STOP_REFUSAL,
@@ -957,12 +957,12 @@ class TestEmptyTurnDiagnostics:
         self, tmp_path: Path, caplog
     ) -> None:
         """Two turns that look identical to the old log line must not any more."""
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.dashboard.chat_utils import (
             EMPTY_CAUSE_NO_TERMINAL,
             EMPTY_CAUSE_PROVIDER_EMPTY,
         )
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         # A clean end_turn with nothing in it.
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
@@ -972,7 +972,7 @@ class TestEmptyTurnDiagnostics:
 
         client.stream = _clean
         client.stream_command = _clean
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.chat_runner"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.chat_runner"):
             await _run_chat(state, slot, "a", _prompt_depth=1)
         await self._cancel_background_tasks(state)
         assert self._causes(caplog) == [EMPTY_CAUSE_PROVIDER_EMPTY]
@@ -987,7 +987,7 @@ class TestEmptyTurnDiagnostics:
 
         client2.stream = _no_terminal
         client2.stream_command = _no_terminal
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.chat_runner"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.chat_runner"):
             await _run_chat2(state2, slot2, "a", _prompt_depth=1)
         await self._cancel_background_tasks(state2)
         assert self._causes(caplog) == [EMPTY_CAUSE_NO_TERMINAL]
@@ -997,11 +997,11 @@ class TestEmptyTurnDiagnostics:
         self, tmp_path: Path, caplog
     ) -> None:
         """A terminal with no stopReason is its own observation."""
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             EMPTY_CAUSE_OTHER,
             STOP_REASON_ABSENT,
         )
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
 
@@ -1010,7 +1010,7 @@ class TestEmptyTurnDiagnostics:
 
         client.stream = _stream
         client.stream_command = _stream
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.chat_runner"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.chat_runner"):
             await _run_chat(state, slot, "a", _prompt_depth=1)
         await self._cancel_background_tasks(state)
 
@@ -1026,7 +1026,7 @@ class TestEmptyTurnDiagnostics:
         Asserting the rung is what makes the diagnostic answer 'what did the
         runner DO', not only 'what did it see'.
         """
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             EMPTY_CAUSE_VISIBLE_PARTIAL,
             EMPTY_RUNG_CONTINUE,
         )
@@ -1034,7 +1034,7 @@ class TestEmptyTurnDiagnostics:
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         TestProductiveTurnNeverReplaysVerbatim._text_then_tool_stream(client, [])
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.chat_runner"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.chat_runner"):
             await _run_chat(state, slot, "send the summary")
             await self._cancel_background_tasks(state)
 
@@ -1054,8 +1054,8 @@ class TestEmptyTurnDiagnostics:
         the streamed text, the tool title and the billed amounts must be absent
         from the line even though the turn carried all of them.
         """
-        from kiro_crew.acp.types import STOP_REASON_END_TURN, TurnUsage
-        from kiro_crew.providers.base import (
+        from aj_crew.acp.types import STOP_REASON_END_TURN, TurnUsage
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -1075,7 +1075,7 @@ class TestEmptyTurnDiagnostics:
 
         client.stream = _stream
         client.stream_command = _stream
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.chat_runner"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.chat_runner"):
             await _run_chat(state, slot, "SECRETPROMPT")
             await self._cancel_background_tasks(state)
 

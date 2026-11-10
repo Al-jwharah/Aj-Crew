@@ -255,10 +255,10 @@ describe('anchors and the tool-row test', () => {
     expect(isBrowserToolMessage({ role: 'tool', content: '🔧 @browser', cls: '' })).toBe(true)
     // The real wire form: the gateway's managed-MCP tool arrives as @server/tool
     // (regression: the card never mounted for a live turn because this read false).
-    expect(isBrowserToolMessage({ role: 'tool', content: '🔧 @kirocrew-core/browser', cls: '', meta: { mcp_server: 'kirocrew-core' } })).toBe(true)
-    expect(isBrowserToolMessage({ role: 'tool', content: '🔧 @kirocrew-core/browser', cls: '', meta: { tool_name: 'kirocrew-core___browser' } })).toBe(true)
-    expect(isBrowserToolMessage({ role: 'tool', content: '🔧 @kirocrew-core/browser_history', cls: '' })).toBe(false)
-    expect(isBrowserToolMessage({ role: 'tool', content: '🔧 @kirocrew-core/open_browser', cls: '' })).toBe(false)
+    expect(isBrowserToolMessage({ role: 'tool', content: '🔧 @ajcrew-core/browser', cls: '', meta: { mcp_server: 'ajcrew-core' } })).toBe(true)
+    expect(isBrowserToolMessage({ role: 'tool', content: '🔧 @ajcrew-core/browser', cls: '', meta: { tool_name: 'ajcrew-core___browser' } })).toBe(true)
+    expect(isBrowserToolMessage({ role: 'tool', content: '🔧 @ajcrew-core/browser_history', cls: '' })).toBe(false)
+    expect(isBrowserToolMessage({ role: 'tool', content: '🔧 @ajcrew-core/open_browser', cls: '' })).toBe(false)
     expect(isBrowserToolMessage({ role: 'tool', content: '🔧 browser_harness_x', cls: '' })).toBe(false)
     expect(isBrowserToolMessage({ role: 'tool', content: '🔧 browser', cls: '', meta: { tool_name: 'shell' } })).toBe(false)
     expect(isBrowserToolMessage({ role: 'assistant', content: '🔧 browser', cls: '' })).toBe(false)

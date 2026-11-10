@@ -3,7 +3,7 @@
  * second (the confirmation, naming the crew) starts it.
  *
  * The click calls `POST /api/instances/{id}/update`, which runs the crew's own
- * `kirocrew update`, waits for the crew's running work to finish, restarts
+ * `ajcrew update`, waits for the crew's running work to finish, restarts
  * it, then reads the crew's version back, as a background job. A job that
  * stopped short of the restart (still busy, or a crew too old to wait) offers
  * "Restart now", which confirms first and restarts without waiting; this control polls `GET` on the same path and shows the
@@ -256,7 +256,7 @@ export default function RemoteUpdateControl({ instanceId, name }: { instanceId: 
                 ? i18nT('components.remoteUpdate.failed_restart_next_step', {
                   name,
                   // The CLI command, from the catalog entry the instances panel shows it with.
-                  command: i18nT('pages.settings.instancesPanel.kirocrew_restart'),
+                  command: i18nT('pages.settings.instancesPanel.ajcrew_restart'),
                 })
                 : i18nT('components.remoteUpdate.failed_next_step', { name })}
             </span>

@@ -18,8 +18,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import runtime_ownership as ro
-from kiro_crew import runtime_reconcile as rr
+from aj_crew import runtime_ownership as ro
+from aj_crew import runtime_reconcile as rr
 
 #: Cgroup members the scope-reaper tests fabricate, above 2**32 so no platform can
 #: allocate one. ``session_scope_reap._reclaim_scope`` drops ``os.getpid()`` from a
@@ -69,7 +69,7 @@ def _reconciler(
     about identity build their own reconciler and pass their own seam.
 
     The spawn-instance and process-table seams are faked for the same reason:
-    *instances* maps a pid to its ``KIROCREW_SPAWN_INSTANCE`` (absent reads as
+    *instances* maps a pid to its ``AJCREW_SPAWN_INSTANCE`` (absent reads as
     unreadable) and *table* is ``{pid: (ppid, rss)}``; *spawn_instance_of* and
     *process_table* replace either seam outright.
     """
@@ -203,8 +203,8 @@ def _cleanup(
     service, as a raw object rather than an int: the hook reads it off a config file
     an agent can write, so the tests need to hand it the values a hand edit produces.
     """
-    from kiro_crew.session_cleanup import CleanupDeps, CleanupState, SessionCleanup
-    from kiro_crew.watchdog import SessionWatchdog
+    from aj_crew.session_cleanup import CleanupDeps, CleanupState, SessionCleanup
+    from aj_crew.watchdog import SessionWatchdog
 
     recorded: dict[str, list[int]] = {"pid_kills": [], "mcp_kills": []}
     executor = ThreadPoolExecutor(max_workers=1)
@@ -327,5 +327,5 @@ def agent_root_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Point subagent persistence at a registry below this test's temp directory."""
     root = tmp_path / "subagents"
     root.mkdir()
-    monkeypatch.setattr("kiro_crew.subagent_persistence._SUBAGENTS_DIR", root)
+    monkeypatch.setattr("aj_crew.subagent_persistence._SUBAGENTS_DIR", root)
     return root

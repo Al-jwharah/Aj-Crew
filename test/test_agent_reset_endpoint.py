@@ -14,15 +14,15 @@ from unittest.mock import MagicMock, patch
 import pytest
 from aiohttp import web
 
-from kiro_crew import agent_state
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.dashboard.handlers.agents import api_agent_reset
+from aj_crew import agent_state
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.dashboard.handlers.agents import api_agent_reset
 
 
 @pytest.fixture(autouse=True)
 def _owner_caller(monkeypatch):
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
@@ -47,13 +47,13 @@ def _write_template(agents_dir, stem: str, **extra) -> None:
 
 
 def _seed(agents_dir, *, origin_exists: bool = True) -> None:
-    """Crew 'design-crew' bound to private copy 'design-crew' forked from 'kirocrew'."""
+    """Crew 'design-crew' bound to private copy 'design-crew' forked from 'ajcrew'."""
     if origin_exists:
-        _write_template(agents_dir, "kirocrew")
+        _write_template(agents_dir, "ajcrew")
     _write_template(agents_dir, "design-crew")
-    agent_state.set_fork_info("design-crew", forked_from="kirocrew", private_to="design-crew")
-    cfg = KiroCrewConfig()
-    cfg.agents = {"design-crew": KiroCrewAgentConfig(kiro_agent="design-crew")}
+    agent_state.set_fork_info("design-crew", forked_from="ajcrew", private_to="design-crew")
+    cfg = AjCrewConfig()
+    cfg.agents = {"design-crew": AjCrewAgentConfig(kiro_agent="design-crew")}
     cfg.default_agent = "design-crew"
     cfg.save()
 
@@ -64,13 +64,13 @@ async def test_reset_happy_path(tmp_path):
     agents_dir.mkdir()
     _seed(agents_dir)
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_reset(_reset_request("design-crew", {"crew": "design-crew"}))
 
     assert resp.status == 200
-    assert json.loads(resp.text)["template"] == "kirocrew"
+    assert json.loads(resp.text)["template"] == "ajcrew"
     # Rebound to the origin, copy removed, lineage pruned.
-    assert KiroCrewConfig.load().agents["design-crew"].kiro_agent == "kirocrew"
+    assert AjCrewConfig.load().agents["design-crew"].kiro_agent == "ajcrew"
     assert not (agents_dir / "design-crew.json").exists()
     assert agent_state.get_fork_info("design-crew") is None
 
@@ -83,12 +83,12 @@ async def test_reset_refuses_when_origin_missing_and_keeps_copy(tmp_path):
     agents_dir.mkdir()
     _seed(agents_dir, origin_exists=False)
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_reset(_reset_request("design-crew", {"crew": "design-crew"}))
 
     assert resp.status == 409
     assert json.loads(resp.text)["code"] == "origin_missing"
-    assert KiroCrewConfig.load().agents["design-crew"].kiro_agent == "design-crew"
+    assert AjCrewConfig.load().agents["design-crew"].kiro_agent == "design-crew"
     assert (agents_dir / "design-crew.json").exists()
     assert agent_state.get_fork_info("design-crew") is not None
 
@@ -98,12 +98,12 @@ async def test_reset_refuses_non_private_copy(tmp_path):
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
     _write_template(agents_dir, "shared-template")
-    cfg = KiroCrewConfig()
-    cfg.agents = {"design-crew": KiroCrewAgentConfig(kiro_agent="shared-template")}
+    cfg = AjCrewConfig()
+    cfg.agents = {"design-crew": AjCrewAgentConfig(kiro_agent="shared-template")}
     cfg.default_agent = "design-crew"
     cfg.save()
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_reset(_reset_request("shared-template", {"crew": "design-crew"}))
 
     assert resp.status == 409
@@ -117,11 +117,11 @@ async def test_reset_refuses_stale_binding(tmp_path):
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
     _seed(agents_dir)
-    cfg = KiroCrewConfig.load()
-    cfg.agents["design-crew"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+    cfg = AjCrewConfig.load()
+    cfg.agents["design-crew"] = AjCrewAgentConfig(kiro_agent="ajcrew")
     cfg.save()
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_reset(_reset_request("design-crew", {"crew": "design-crew"}))
 
     assert resp.status == 409
@@ -136,23 +136,23 @@ async def test_reset_removes_copy_whose_file_stem_differs_from_name(tmp_path):
     the file yet pruned lineage, leaving the customized file to appear shared."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _write_template(agents_dir, "kirocrew")
+    _write_template(agents_dir, "ajcrew")
     # File stem 'odd-stem' carries declared name 'design-copy'.
     (agents_dir / "odd-stem.json").write_text(
         json.dumps({"name": "design-copy", "model": "claude-x", "tools": ["ReadFile"]}),
         encoding="utf-8",
     )
-    agent_state.set_fork_info("design-copy", forked_from="kirocrew", private_to="design-crew")
-    cfg = KiroCrewConfig()
-    cfg.agents = {"design-crew": KiroCrewAgentConfig(kiro_agent="design-copy")}
+    agent_state.set_fork_info("design-copy", forked_from="ajcrew", private_to="design-crew")
+    cfg = AjCrewConfig()
+    cfg.agents = {"design-crew": AjCrewAgentConfig(kiro_agent="design-copy")}
     cfg.default_agent = "design-crew"
     cfg.save()
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_reset(_reset_request("design-copy", {"crew": "design-crew"}))
 
     assert resp.status == 200
-    assert KiroCrewConfig.load().agents["design-crew"].kiro_agent == "kirocrew"
+    assert AjCrewConfig.load().agents["design-crew"].kiro_agent == "ajcrew"
     # The ACTUAL file is gone — and only then is lineage pruned.
     assert not (agents_dir / "odd-stem.json").exists()
     assert agent_state.get_fork_info("design-copy") is None
@@ -165,15 +165,15 @@ async def test_reset_keeps_copy_bound_by_another_crew(tmp_path):
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
     _seed(agents_dir)
-    cfg = KiroCrewConfig.load()
-    cfg.agents["other-crew"] = KiroCrewAgentConfig(kiro_agent="design-crew")
+    cfg = AjCrewConfig.load()
+    cfg.agents["other-crew"] = AjCrewAgentConfig(kiro_agent="design-crew")
     cfg.save()
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_reset(_reset_request("design-crew", {"crew": "design-crew"}))
 
     assert resp.status == 200
-    assert KiroCrewConfig.load().agents["design-crew"].kiro_agent == "kirocrew"
+    assert AjCrewConfig.load().agents["design-crew"].kiro_agent == "ajcrew"
     # The copy survives with lineage intact — other-crew still resolves it.
     assert (agents_dir / "design-crew.json").exists()
     assert agent_state.get_fork_info("design-crew") is not None
@@ -185,22 +185,22 @@ async def test_reset_keeps_copy_bound_by_file_stem(tmp_path):
     file, so it too must block the reset cleanup's unlink."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _write_template(agents_dir, "kirocrew")
+    _write_template(agents_dir, "ajcrew")
     _write_template(agents_dir, "design-crew-file", name="design-crew")
-    agent_state.set_fork_info("design-crew", forked_from="kirocrew", private_to="design-crew")
-    cfg = KiroCrewConfig()
+    agent_state.set_fork_info("design-crew", forked_from="ajcrew", private_to="design-crew")
+    cfg = AjCrewConfig()
     cfg.agents = {
-        "design-crew": KiroCrewAgentConfig(kiro_agent="design-crew"),
-        "other-crew": KiroCrewAgentConfig(kiro_agent="design-crew-file"),
+        "design-crew": AjCrewAgentConfig(kiro_agent="design-crew"),
+        "other-crew": AjCrewAgentConfig(kiro_agent="design-crew-file"),
     }
     cfg.default_agent = "design-crew"
     cfg.save()
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_reset(_reset_request("design-crew", {"crew": "design-crew"}))
 
     assert resp.status == 200
-    assert KiroCrewConfig.load().agents["design-crew"].kiro_agent == "kirocrew"
+    assert AjCrewConfig.load().agents["design-crew"].kiro_agent == "ajcrew"
     assert (agents_dir / "design-crew-file.json").exists()
     assert agent_state.get_fork_info("design-crew") is not None
 
@@ -212,17 +212,17 @@ async def test_reset_ambiguous_origin_refusal_names_the_claimant_files(tmp_path)
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
     _seed(agents_dir)
-    _write_template(agents_dir, "SomePkg-kirocrew", name="kirocrew")
+    _write_template(agents_dir, "SomePkg-ajcrew", name="ajcrew")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_reset(_reset_request("design-crew", {"crew": "design-crew"}))
 
     assert resp.status == 409, resp.text
     assert json.loads(resp.text) == {
-        "error": "'kirocrew' matches more than one template file in ~/.kiro/agents/ "
-        "(SomePkg-kirocrew.json, kirocrew.json); rename one first.",
+        "error": "'ajcrew' matches more than one template file in ~/.kiro/agents/ "
+        "(SomePkg-ajcrew.json, ajcrew.json); rename one first.",
         "code": "ambiguous_template_name",
     }
     assert str(agents_dir) not in resp.text
     assert (agents_dir / "design-crew.json").exists()
-    assert KiroCrewConfig.load().agents["design-crew"].kiro_agent == "design-crew"
+    assert AjCrewConfig.load().agents["design-crew"].kiro_agent == "design-crew"

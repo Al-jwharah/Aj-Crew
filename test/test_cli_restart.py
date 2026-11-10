@@ -1,4 +1,4 @@
-"""``kirocrew restart`` (``_restart``): the service-aware dispatch, the stop and the spawn.
+"""``ajcrew restart`` (``_restart``): the service-aware dispatch, the stop and the spawn.
 
 What restart waits for after the spawn, and what it reports, is in
 ``test_cli_restart_readiness.py``.
@@ -16,9 +16,9 @@ from cli_helpers import (  # noqa: F401 -- the autouse fixture registers by impo
     _doctor_reads_the_warm_probe_cache,
 )
 
-from kiro_crew.gateway_lock import LockHolder
-from kiro_crew.service.common import RestartReport
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.gateway_lock import LockHolder
+from aj_crew.service.common import RestartReport
+from aj_crew.testing.ids import UNALLOCATABLE_PID
 
 
 class TestRestart:
@@ -52,11 +52,11 @@ class TestRestart:
         :class:`TestRestartReadinessVerdict` and :class:`TestWaitGatewayReady`,
         which deliberately do NOT inherit this fixture.
         """
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
-        _floor_monkeypatch.setattr("kiro_crew.cli_server._RESTART_TOKEN_WAIT", 0)
+        _floor_monkeypatch.setattr("aj_crew.cli_server._RESTART_TOKEN_WAIT", 0)
         _floor_monkeypatch.setattr(
-            "kiro_crew.cli_server._wait_gateway_ready",
+            "aj_crew.cli_server._wait_gateway_ready",
             lambda *a, **kw: (cli_server._READY_OK, None),
         )
 
@@ -70,10 +70,10 @@ class TestRestart:
         # The denied-service branch consults ``is_service_active()`` after a
         # refused ``restart_service()``. The real implementation shells out to
         # systemctl/launchctl, so an unmocked call would make these tests
-        # depend on whether the BUILD HOST runs a kirocrew service. Pin it
+        # depend on whether the BUILD HOST runs a ajcrew service. Pin it
         # False; the denied-branch tests override it per-test.
         with patch(
-            "kiro_crew.cli_server.service_controller.is_service_active",
+            "aj_crew.cli_server.service_controller.is_service_active",
             return_value=False,
         ):
             yield
@@ -85,7 +85,7 @@ class TestRestart:
         # real call shells out to systemctl, so pin it None here; the alias
         # refusal test overrides it.
         with patch(
-            "kiro_crew.cli_server.service_controller.service_alias_holder",
+            "aj_crew.cli_server.service_controller.service_alias_holder",
             return_value=None,
         ):
             yield
@@ -96,7 +96,7 @@ class TestRestart:
         # but not running. The real lookup reads the host's unit files and asks
         # systemctl, so pin "nothing installed"; the refusal tests override it.
         with patch(
-            "kiro_crew.cli_server.service_controller.installed_unit_path",
+            "aj_crew.cli_server.service_controller.installed_unit_path",
             return_value=None,
         ):
             yield
@@ -110,36 +110,36 @@ class TestRestart:
         # pin availability True instead of depending on whether ``lsof`` is
         # installed on the build host.
         with patch(
-            "kiro_crew.cli_server.platform_compat.listening_pid_tool_available",
+            "aj_crew.cli_server.platform_compat.listening_pid_tool_available",
             return_value=True,
         ):
             yield
 
     def _mock_sel(self):
-        return patch("kiro_crew.cli_server.sel", return_value=MagicMock())
+        return patch("aj_crew.cli_server.sel", return_value=MagicMock())
 
     def _lock_file(self, tmp_path, *, mode=0o600):
         """A real ``gateway.lock`` in a patched config dir (see ``TestStop``)."""
         path = tmp_path / "gateway.lock"
         path.write_text("50519\n")
         path.chmod(mode)
-        return patch("kiro_crew.cli_server.config_dir", return_value=tmp_path)
+        return patch("aj_crew.cli_server.config_dir", return_value=tmp_path)
 
     def _lock_private(self, answer):
         """Pin the lock-permission seam (see ``TestStop._lock_private``)."""
-        return patch("kiro_crew.cli_server._lock_file_is_account_private", return_value=answer)
+        return patch("aj_crew.cli_server._lock_file_is_account_private", return_value=answer)
 
     def test_service_active_restarts_via_controller(self, capsys):
-        from kiro_crew.cli_server import _restart
+        from aj_crew.cli_server import _restart
 
         with (
             self._mock_sel(),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=True,
             ) as mock_restart,
-            patch("kiro_crew.cli_server._spawn_detached_gateway") as mock_spawn,
-            patch("kiro_crew.cli_server.platform_compat.find_listening_pids") as mock_ports,
+            patch("aj_crew.cli_server._spawn_detached_gateway") as mock_spawn,
+            patch("aj_crew.cli_server.platform_compat.find_listening_pids") as mock_ports,
         ):
             _restart(None)
         mock_restart.assert_called_once()
@@ -158,8 +158,8 @@ class TestRestart:
         # reads like a restart. The command must instead fail loudly and name
         # the privileged command the operator has to run themselves — the one
         # for the scope that refused, carried in the restart report.
-        from kiro_crew import cli_server
-        from kiro_crew.service.common import RESTART_REFUSED, RestartReport, ScopeRestart
+        from aj_crew import cli_server
+        from aj_crew.service.common import RESTART_REFUSED, RestartReport, ScopeRestart
 
         mock_sel = MagicMock()
         refused = RestartReport(
@@ -172,24 +172,24 @@ class TestRestart:
                         "Interactive authentication required"
                     ),
                     kind=RESTART_REFUSED,
-                    hint="sudo systemctl restart kirocrew",
+                    hint="sudo systemctl restart ajcrew",
                 ),
             )
         )
 
         with (
-            patch("kiro_crew.cli_server.sel", return_value=mock_sel),
+            patch("aj_crew.cli_server.sel", return_value=mock_sel),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=refused,
             ),
             patch(
-                "kiro_crew.cli_server.service_controller.is_service_active",
+                "aj_crew.cli_server.service_controller.is_service_active",
                 return_value=True,
             ),
-            patch("kiro_crew.cli_server.platform_compat.find_listening_pids") as mock_ports,
-            patch("kiro_crew.cli_server._stop") as mock_stop,
-            patch("kiro_crew.cli_server._spawn_detached_gateway") as mock_spawn,
+            patch("aj_crew.cli_server.platform_compat.find_listening_pids") as mock_ports,
+            patch("aj_crew.cli_server._stop") as mock_stop,
+            patch("aj_crew.cli_server._spawn_detached_gateway") as mock_spawn,
         ):
             with pytest.raises(SystemExit) as exc:
                 cli_server._restart(None)
@@ -204,7 +204,7 @@ class TestRestart:
         assert "NOT restarted" in out
         assert "system scope: the system manager refused the restart" in out
         assert "Interactive authentication required" in out
-        assert "Run the restart yourself:  sudo systemctl restart kirocrew" in out
+        assert "Run the restart yourself:  sudo systemctl restart ajcrew" in out
         assert "journalctl" not in out
         audit = mock_sel.log_api_access.call_args.kwargs
         assert audit["outcome"] == "denied"
@@ -216,10 +216,10 @@ class TestRestart:
         # unit sits in `activating (auto-restart)` — reachable to `is_active()`,
         # so this branch is taken. The report says the unit did not stay up, and
         # the command must print THAT and point at the user journal. It must not
-        # claim a privilege problem nor hint `sudo systemctl restart kirocrew`,
-        # which on this host answers "Unit kirocrew.service not found".
-        from kiro_crew import cli_server
-        from kiro_crew.service.common import RESTART_NOT_UP, RestartReport, ScopeRestart
+        # claim a privilege problem nor hint `sudo systemctl restart ajcrew`,
+        # which on this host answers "Unit ajcrew.service not found".
+        from aj_crew import cli_server
+        from aj_crew.service.common import RESTART_NOT_UP, RestartReport, ScopeRestart
 
         mock_sel = MagicMock()
         not_up = RestartReport(
@@ -228,27 +228,27 @@ class TestRestart:
                     "user",
                     False,
                     reason=(
-                        "kirocrew.service is activating (auto-restart) (last result: "
+                        "ajcrew.service is activating (auto-restart) (last result: "
                         "exit-code) after the restart — the gateway exits as soon as it starts"
                     ),
                     kind=RESTART_NOT_UP,
-                    hint="journalctl --user -u kirocrew.service -n 50 --no-pager",
+                    hint="journalctl --user -u ajcrew.service -n 50 --no-pager",
                 ),
             )
         )
 
         with (
-            patch("kiro_crew.cli_server.sel", return_value=mock_sel),
+            patch("aj_crew.cli_server.sel", return_value=mock_sel),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=not_up,
             ),
             patch(
-                "kiro_crew.cli_server.service_controller.is_service_active",
+                "aj_crew.cli_server.service_controller.is_service_active",
                 return_value=True,
             ),
-            patch("kiro_crew.cli_server.platform_compat.find_listening_pids") as mock_ports,
-            patch("kiro_crew.cli_server._spawn_detached_gateway") as mock_spawn,
+            patch("aj_crew.cli_server.platform_compat.find_listening_pids") as mock_ports,
+            patch("aj_crew.cli_server._spawn_detached_gateway") as mock_spawn,
         ):
             with pytest.raises(SystemExit) as exc:
                 cli_server._restart(None)
@@ -258,9 +258,9 @@ class TestRestart:
         mock_spawn.assert_not_called()
         out = capsys.readouterr().out
         assert "NOT restarted" in out
-        assert "user scope: kirocrew.service is activating (auto-restart)" in out
+        assert "user scope: ajcrew.service is activating (auto-restart)" in out
         assert "last result: exit-code" in out
-        assert "Read why it exits:  journalctl --user -u kirocrew.service" in out
+        assert "Read why it exits:  journalctl --user -u ajcrew.service" in out
         assert "sudo" not in out
         assert "privileges" not in out
         audit = mock_sel.log_api_access.call_args.kwargs
@@ -270,8 +270,8 @@ class TestRestart:
     def test_unit_not_up_on_a_truncated_key_prints_the_repair_steps(self, capsys, tmp_path):
         # A service gateway's refusal lands in the journal. The restart names
         # the journal command and, when the key is short, the steps themselves.
-        from kiro_crew import cli_server
-        from kiro_crew.service.common import RESTART_NOT_UP, RestartReport, ScopeRestart
+        from aj_crew import cli_server
+        from aj_crew.service.common import RESTART_NOT_UP, RestartReport, ScopeRestart
 
         key = tmp_path / "token_signing.key"
         not_up = RestartReport(
@@ -279,31 +279,31 @@ class TestRestart:
                 ScopeRestart(
                     "user",
                     False,
-                    reason="kirocrew.service is activating (auto-restart)",
+                    reason="ajcrew.service is activating (auto-restart)",
                     kind=RESTART_NOT_UP,
-                    hint="journalctl --user -u kirocrew.service -n 50 --no-pager",
+                    hint="journalctl --user -u ajcrew.service -n 50 --no-pager",
                 ),
             )
         )
         with (
-            patch("kiro_crew.cli_server.sel", return_value=MagicMock()),
+            patch("aj_crew.cli_server.sel", return_value=MagicMock()),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=not_up,
             ),
             patch(
-                "kiro_crew.cli_server.service_controller.is_service_active",
+                "aj_crew.cli_server.service_controller.is_service_active",
                 return_value=True,
             ),
-            patch("kiro_crew.cli_server._spawn_detached_gateway") as mock_spawn,
-            patch("kiro_crew.sandbox.agent_confinement_evidence", return_value=None),
+            patch("aj_crew.cli_server._spawn_detached_gateway") as mock_spawn,
+            patch("aj_crew.sandbox.agent_confinement_evidence", return_value=None),
             patch(
-                "kiro_crew.dashboard.token_secret.signing_key_health",
+                "aj_crew.dashboard.token_secret.signing_key_health",
                 return_value=("short", key),
             ),
             patch(
-                "kiro_crew.service.common.restart_command_hint",
-                return_value="systemctl --user restart kirocrew",
+                "aj_crew.service.common.restart_command_hint",
+                return_value="systemctl --user restart ajcrew",
             ),
         ):
             with pytest.raises(SystemExit) as exc:
@@ -312,14 +312,14 @@ class TestRestart:
         assert exc.value.code == 1
         mock_spawn.assert_not_called()
         out = capsys.readouterr().out
-        assert "Read why it exits:  journalctl --user -u kirocrew.service" in out
+        assert "Read why it exits:  journalctl --user -u ajcrew.service" in out
         assert f"token signing key at {key} is shorter than 32 bytes" in out
-        assert "systemctl --user restart kirocrew" in out
+        assert "systemctl --user restart ajcrew" in out
 
     def test_unit_the_manager_refused_to_restart_gets_no_key_steps(self, capsys, tmp_path):
         # A refused verb never ran the gateway, so its boot cannot be the cause.
-        from kiro_crew import cli_server
-        from kiro_crew.service.common import RESTART_REFUSED, RestartReport, ScopeRestart
+        from aj_crew import cli_server
+        from aj_crew.service.common import RESTART_REFUSED, RestartReport, ScopeRestart
 
         refused = RestartReport(
             (
@@ -328,23 +328,23 @@ class TestRestart:
                     False,
                     reason="Interactive authentication required",
                     kind=RESTART_REFUSED,
-                    hint="sudo systemctl restart kirocrew",
+                    hint="sudo systemctl restart ajcrew",
                 ),
             )
         )
         with (
-            patch("kiro_crew.cli_server.sel", return_value=MagicMock()),
+            patch("aj_crew.cli_server.sel", return_value=MagicMock()),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=refused,
             ),
             patch(
-                "kiro_crew.cli_server.service_controller.is_service_active",
+                "aj_crew.cli_server.service_controller.is_service_active",
                 return_value=True,
             ),
-            patch("kiro_crew.cli_server._spawn_detached_gateway"),
+            patch("aj_crew.cli_server._spawn_detached_gateway"),
             patch(
-                "kiro_crew.dashboard.token_secret.signing_key_health",
+                "aj_crew.dashboard.token_secret.signing_key_health",
                 return_value=("short", tmp_path / "token_signing.key"),
             ) as mock_health,
         ):
@@ -362,8 +362,8 @@ class TestRestart:
         # installed, enabled definition. Falling through would spawn an
         # unmanaged gateway beside it; the attempted report must win over the
         # live reach check.
-        from kiro_crew import cli_server
-        from kiro_crew.service.common import RESTART_NOT_UP, RestartReport, ScopeRestart
+        from aj_crew import cli_server
+        from aj_crew.service.common import RESTART_NOT_UP, RestartReport, ScopeRestart
 
         mock_sel = MagicMock()
         failed = RestartReport(
@@ -372,28 +372,28 @@ class TestRestart:
                     "system",
                     False,
                     reason=(
-                        "kirocrew.service is failed (failed) (last result: "
+                        "ajcrew.service is failed (failed) (last result: "
                         "start-limit-hit) after the restart — the gateway exits as soon as it starts"
                     ),
                     kind=RESTART_NOT_UP,
-                    hint="sudo journalctl -u kirocrew.service -n 50 --no-pager",
+                    hint="sudo journalctl -u ajcrew.service -n 50 --no-pager",
                 ),
             )
         )
 
         with (
-            patch("kiro_crew.cli_server.sel", return_value=mock_sel),
+            patch("aj_crew.cli_server.sel", return_value=mock_sel),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=failed,
             ),
             patch(
-                "kiro_crew.cli_server.service_controller.is_service_active",
+                "aj_crew.cli_server.service_controller.is_service_active",
                 return_value=False,
             ) as mock_active,
-            patch("kiro_crew.cli_server.platform_compat.find_listening_pids") as mock_ports,
-            patch("kiro_crew.cli_server._stop") as mock_stop,
-            patch("kiro_crew.cli_server._spawn_detached_gateway") as mock_spawn,
+            patch("aj_crew.cli_server.platform_compat.find_listening_pids") as mock_ports,
+            patch("aj_crew.cli_server._stop") as mock_stop,
+            patch("aj_crew.cli_server._spawn_detached_gateway") as mock_spawn,
         ):
             with pytest.raises(SystemExit) as exc:
                 cli_server._restart(None)
@@ -404,9 +404,9 @@ class TestRestart:
         mock_stop.assert_not_called()
         mock_spawn.assert_not_called()
         out = capsys.readouterr().out
-        assert "system scope: kirocrew.service is failed (failed)" in out
+        assert "system scope: ajcrew.service is failed (failed)" in out
         assert "start-limit-hit" in out
-        assert "Read why it exits:  sudo journalctl -u kirocrew.service" in out
+        assert "Read why it exits:  sudo journalctl -u ajcrew.service" in out
 
     def test_a_unit_in_both_scopes_is_reported_per_scope_never_as_not_restarted(self, capsys):
         # A stale crash-looping system unit beside the working per-user one:
@@ -416,8 +416,8 @@ class TestRestart:
         # was NOT restarted", which is false for the gateway the operator uses.
         # Exit 1 all the same: a scope still needs a hand, the shape `service
         # uninstall` gives a teardown that finished in one scope only.
-        from kiro_crew import cli_server
-        from kiro_crew.service.common import RESTART_NOT_UP, RestartReport, ScopeRestart
+        from aj_crew import cli_server
+        from aj_crew.service.common import RESTART_NOT_UP, RestartReport, ScopeRestart
 
         mock_sel = MagicMock()
         mixed = RestartReport(
@@ -426,28 +426,28 @@ class TestRestart:
                     "system",
                     False,
                     reason=(
-                        "kirocrew.service is activating (auto-restart) (last result: "
+                        "ajcrew.service is activating (auto-restart) (last result: "
                         "exit-code) after the restart — the gateway exits as soon as it starts"
                     ),
                     kind=RESTART_NOT_UP,
-                    hint="sudo journalctl -u kirocrew.service -n 50 --no-pager",
+                    hint="sudo journalctl -u ajcrew.service -n 50 --no-pager",
                 ),
                 ScopeRestart("user", True),
             )
         )
 
         with (
-            patch("kiro_crew.cli_server.sel", return_value=mock_sel),
+            patch("aj_crew.cli_server.sel", return_value=mock_sel),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=mixed,
             ),
             patch(
-                "kiro_crew.cli_server.service_controller.is_service_active",
+                "aj_crew.cli_server.service_controller.is_service_active",
                 return_value=True,
             ),
-            patch("kiro_crew.cli_server.platform_compat.find_listening_pids") as mock_ports,
-            patch("kiro_crew.cli_server._spawn_detached_gateway") as mock_spawn,
+            patch("aj_crew.cli_server.platform_compat.find_listening_pids") as mock_ports,
+            patch("aj_crew.cli_server._spawn_detached_gateway") as mock_spawn,
         ):
             with pytest.raises(SystemExit) as exc:
                 cli_server._restart(None)
@@ -458,12 +458,12 @@ class TestRestart:
         out = capsys.readouterr().out
         assert "NOT restarted" not in out
         assert out.startswith(
-            "⚠️ Restarted kirocrew service in the user scope; the restart did not "
+            "⚠️ Restarted ajcrew service in the user scope; the restart did not "
             "take in the system scope:\n"
         )
         assert "\n   user scope: restarted.\n" in out
-        assert "\n   ⚠️ system scope: kirocrew.service is activating (auto-restart)" in out
-        assert "Read why it exits:  sudo journalctl -u kirocrew.service" in out
+        assert "\n   ⚠️ system scope: ajcrew.service is activating (auto-restart)" in out
+        assert "Read why it exits:  sudo journalctl -u ajcrew.service" in out
         audit = mock_sel.log_api_access.call_args.kwargs
         assert audit["outcome"] == "partial"
         assert "restarted=user" in audit["resources"]
@@ -473,8 +473,8 @@ class TestRestart:
         # The manager stopped answering while the unit was re-read: its health is
         # unknown, so neither "exits on start" nor a restart command is honest —
         # the remedy is to look.
-        from kiro_crew import cli_server
-        from kiro_crew.service.common import RESTART_UNCONFIRMED, RestartReport, ScopeRestart
+        from aj_crew import cli_server
+        from aj_crew.service.common import RESTART_UNCONFIRMED, RestartReport, ScopeRestart
 
         mock_sel = MagicMock()
         unconfirmed = RestartReport(
@@ -484,26 +484,26 @@ class TestRestart:
                     False,
                     reason=(
                         "the user manager stopped answering after the restart (Failed to "
-                        "connect to bus: No medium found); whether kirocrew.service is up "
+                        "connect to bus: No medium found); whether ajcrew.service is up "
                         "could not be read"
                     ),
                     kind=RESTART_UNCONFIRMED,
-                    hint="kirocrew service status",
+                    hint="ajcrew service status",
                 ),
             )
         )
 
         with (
-            patch("kiro_crew.cli_server.sel", return_value=mock_sel),
+            patch("aj_crew.cli_server.sel", return_value=mock_sel),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=unconfirmed,
             ),
             patch(
-                "kiro_crew.cli_server.service_controller.is_service_active",
+                "aj_crew.cli_server.service_controller.is_service_active",
                 return_value=False,
             ),
-            patch("kiro_crew.cli_server._spawn_detached_gateway") as mock_spawn,
+            patch("aj_crew.cli_server._spawn_detached_gateway") as mock_spawn,
         ):
             with pytest.raises(SystemExit) as exc:
                 cli_server._restart(None)
@@ -512,7 +512,7 @@ class TestRestart:
         mock_spawn.assert_not_called()
         out = capsys.readouterr().out
         assert "stopped answering after the restart" in out
-        assert "Check its state:  kirocrew service status" in out
+        assert "Check its state:  ajcrew service status" in out
         assert "exits" not in out.split("stopped answering")[1].split("\n")[0]
         audit = mock_sel.log_api_access.call_args.kwargs
         assert "reason=service_restart_unconfirmed" in audit["resources"]
@@ -521,24 +521,24 @@ class TestRestart:
         # ``restart_service()`` returning False because NO service is active
         # must keep taking the foreground path — the denied diagnostic is only
         # for a unit that is active right now yet refused the restart.
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         with (
             self._mock_sel(),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=RestartReport(),
             ),
             patch(
-                "kiro_crew.cli_server.service_controller.is_service_active",
+                "aj_crew.cli_server.service_controller.is_service_active",
                 return_value=False,
             ),
             patch(
-                "kiro_crew.cli_server.platform_compat.find_listening_pids",
+                "aj_crew.cli_server.platform_compat.find_listening_pids",
                 return_value=[],
             ),
             patch(
-                "kiro_crew.cli_server._spawn_detached_gateway",
+                "aj_crew.cli_server._spawn_detached_gateway",
                 return_value=self._fake_proc(4321),
             ) as mock_spawn,
         ):
@@ -554,36 +554,36 @@ class TestRestart:
     def test_installed_but_stopped_service_is_refused_not_bypassed(
         self, tmp_path, capsys, unit_kind, scope
     ):
-        # After `kirocrew stop` the unit is installed but inactive. Restart must
+        # After `ajcrew stop` the unit is installed but inactive. Restart must
         # not start a detached gateway outside it; it names the unit and scope.
-        from kiro_crew import cli_server
-        from kiro_crew.service import linux as svc_linux
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew import cli_server
+        from aj_crew.service import linux as svc_linux
+        from aj_crew.service import macos as svc_macos
 
-        system_unit = tmp_path / "kirocrew.service"
+        system_unit = tmp_path / "ajcrew.service"
         plist = tmp_path / "agent.plist"
         unit = {"system": system_unit, "user": tmp_path / "user.service", "plist": plist}
         mock_sel = MagicMock()
         with (
-            patch("kiro_crew.cli_server.sel", return_value=mock_sel),
+            patch("aj_crew.cli_server.sel", return_value=mock_sel),
             patch.object(svc_linux, "UNIT_PATH", system_unit),
             patch.object(svc_macos, "PLIST_PATH", plist),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=RestartReport(),
             ),
             patch(
-                "kiro_crew.cli_server.service_controller.installed_unit_path",
+                "aj_crew.cli_server.service_controller.installed_unit_path",
                 return_value=unit[unit_kind],
             ),
-            patch("kiro_crew.service.linux.system_unit_is_ours", return_value=True, create=True),
-            patch("kiro_crew.cli_server.platform_compat.find_listening_pids", return_value=[]),
+            patch("aj_crew.service.linux.system_unit_is_ours", return_value=True, create=True),
+            patch("aj_crew.cli_server.platform_compat.find_listening_pids", return_value=[]),
             patch(
-                "kiro_crew.cli_server.lock_holder",
+                "aj_crew.cli_server.lock_holder",
                 return_value=LockHolder(pid=None, alive=False, source="none"),
             ),
-            patch("kiro_crew.cli_server._stop") as mock_stop,
-            patch("kiro_crew.cli_server._spawn_detached_gateway") as mock_spawn,
+            patch("aj_crew.cli_server._stop") as mock_stop,
+            patch("aj_crew.cli_server._spawn_detached_gateway") as mock_spawn,
         ):
             with pytest.raises(SystemExit) as exc:
                 cli_server._restart(None)
@@ -591,7 +591,7 @@ class TestRestart:
         mock_spawn.assert_not_called()
         mock_stop.assert_not_called()
         out = capsys.readouterr().out
-        assert f"kirocrew {scope} service is installed ({unit[unit_kind]})" in out
+        assert f"ajcrew {scope} service is installed ({unit[unit_kind]})" in out
         assert "start it with your service manager" in out
         # No exact command: each one failed in some environment (sudo, bus, domain).
         assert "systemctl" not in out and "launchctl" not in out
@@ -604,31 +604,31 @@ class TestRestart:
         # per-user unit of ours is installed: the manager's canonical Id is not
         # ours, so restart keeps today's path instead of printing a start
         # command that would start that other unit.
-        from kiro_crew import cli_server
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew import cli_server
+        from aj_crew.service import linux as svc_linux
 
-        system_unit = tmp_path / "kirocrew.service"
+        system_unit = tmp_path / "ajcrew.service"
         mock_sel = MagicMock()
         with (
-            patch("kiro_crew.cli_server.sel", return_value=mock_sel),
+            patch("aj_crew.cli_server.sel", return_value=mock_sel),
             patch.object(svc_linux, "UNIT_PATH", system_unit),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=RestartReport(),
             ),
             patch(
-                "kiro_crew.cli_server.service_controller.installed_unit_path",
+                "aj_crew.cli_server.service_controller.installed_unit_path",
                 return_value=system_unit,
             ),
-            patch("kiro_crew.service.linux.system_unit_is_ours", return_value=False, create=True),
-            patch("kiro_crew.service.linux.user_unit_path", return_value=None),
-            patch("kiro_crew.cli_server.platform_compat.find_listening_pids", return_value=[]),
+            patch("aj_crew.service.linux.system_unit_is_ours", return_value=False, create=True),
+            patch("aj_crew.service.linux.user_unit_path", return_value=None),
+            patch("aj_crew.cli_server.platform_compat.find_listening_pids", return_value=[]),
             patch(
-                "kiro_crew.cli_server.lock_holder",
+                "aj_crew.cli_server.lock_holder",
                 return_value=LockHolder(pid=None, alive=False, source="none"),
             ),
             patch(
-                "kiro_crew.cli_server._spawn_detached_gateway",
+                "aj_crew.cli_server._spawn_detached_gateway",
                 return_value=self._fake_proc(4321),
             ) as mock_spawn,
         ):
@@ -644,10 +644,10 @@ class TestRestart:
         # instead of starting a gateway outside it.
         from service_helpers import _DEAD, _fake_systemctl
 
-        from kiro_crew import cli_server
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew import cli_server
+        from aj_crew.service import linux as svc_linux
 
-        system_unit = tmp_path / "kirocrew.service"
+        system_unit = tmp_path / "ajcrew.service"
         user_unit = tmp_path / "user.service"
         user_unit.write_text("[Service]\n")
         run = _fake_systemctl(
@@ -655,29 +655,29 @@ class TestRestart:
         )
         mock_sel = MagicMock()
         with (
-            patch("kiro_crew.cli_server.sel", return_value=mock_sel),
+            patch("aj_crew.cli_server.sel", return_value=mock_sel),
             patch.object(svc_linux, "UNIT_PATH", system_unit),
-            patch("kiro_crew.service.linux.subprocess.run", side_effect=run),
+            patch("aj_crew.service.linux.subprocess.run", side_effect=run),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=RestartReport(),
             ),
             patch(
-                "kiro_crew.cli_server.service_controller.installed_unit_path",
+                "aj_crew.cli_server.service_controller.installed_unit_path",
                 return_value=system_unit,
             ),
-            patch("kiro_crew.cli_server.platform_compat.find_listening_pids", return_value=[]),
+            patch("aj_crew.cli_server.platform_compat.find_listening_pids", return_value=[]),
             patch(
-                "kiro_crew.cli_server.lock_holder",
+                "aj_crew.cli_server.lock_holder",
                 return_value=LockHolder(pid=None, alive=False, source="none"),
             ),
-            patch("kiro_crew.cli_server._spawn_detached_gateway") as mock_spawn,
+            patch("aj_crew.cli_server._spawn_detached_gateway") as mock_spawn,
         ):
             with pytest.raises(SystemExit) as exc:
                 cli_server._restart(None)
         assert exc.value.code == 1
         mock_spawn.assert_not_called()
-        assert f"kirocrew user service is installed ({user_unit})" in capsys.readouterr().out
+        assert f"ajcrew user service is installed ({user_unit})" in capsys.readouterr().out
         audit = mock_sel.log_api_access.call_args.kwargs
         assert "reason=service_installed_not_running" in audit["resources"]
 
@@ -686,30 +686,30 @@ class TestRestart:
         # refuse with a start command; it keeps the foreground path, as on main.
         from service_helpers import _DEAD, _fake_systemctl
 
-        from kiro_crew import cli_server
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew import cli_server
+        from aj_crew.service import linux as svc_linux
 
-        system_unit = tmp_path / "kirocrew.service"
+        system_unit = tmp_path / "ajcrew.service"
         run = _fake_systemctl(system=_DEAD, system_load="bad-setting")
         with (
             self._mock_sel(),
             patch.object(svc_linux, "UNIT_PATH", system_unit),
-            patch("kiro_crew.service.linux.subprocess.run", side_effect=run),
+            patch("aj_crew.service.linux.subprocess.run", side_effect=run),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=RestartReport(),
             ),
             patch(
-                "kiro_crew.cli_server.service_controller.installed_unit_path",
+                "aj_crew.cli_server.service_controller.installed_unit_path",
                 return_value=system_unit,
             ),
-            patch("kiro_crew.cli_server.platform_compat.find_listening_pids", return_value=[]),
+            patch("aj_crew.cli_server.platform_compat.find_listening_pids", return_value=[]),
             patch(
-                "kiro_crew.cli_server.lock_holder",
+                "aj_crew.cli_server.lock_holder",
                 return_value=LockHolder(pid=None, alive=False, source="none"),
             ),
             patch(
-                "kiro_crew.cli_server._spawn_detached_gateway",
+                "aj_crew.cli_server._spawn_detached_gateway",
                 return_value=self._fake_proc(4321),
             ) as mock_spawn,
         ):
@@ -722,26 +722,26 @@ class TestRestart:
     def test_running_foreground_gateway_beside_a_stopped_unit_still_restarts(self, capsys):
         # A gateway already listens: the refusal is only for the `stop` then
         # `restart` case where nothing runs, so this keeps today's restart.
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         mock_sel = MagicMock()
         with (
-            patch("kiro_crew.cli_server.sel", return_value=mock_sel),
+            patch("aj_crew.cli_server.sel", return_value=mock_sel),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=RestartReport(),
             ),
             patch(
-                "kiro_crew.cli_server.service_controller.installed_unit_path",
-                return_value=Path("/etc/systemd/system/kirocrew.service"),
+                "aj_crew.cli_server.service_controller.installed_unit_path",
+                return_value=Path("/etc/systemd/system/ajcrew.service"),
             ),
-            patch("kiro_crew.service.linux.system_unit_is_ours", return_value=True, create=True),
-            patch("kiro_crew.cli_server.platform_compat.find_listening_pids", return_value=[1234]),
-            patch("kiro_crew.cli_server._is_kirocrew_process", return_value=True),
-            patch("kiro_crew.cli_server._wait_for_pids_exit", return_value=[]),
-            patch("kiro_crew.cli_server._stop") as mock_stop,
+            patch("aj_crew.service.linux.system_unit_is_ours", return_value=True, create=True),
+            patch("aj_crew.cli_server.platform_compat.find_listening_pids", return_value=[1234]),
+            patch("aj_crew.cli_server._is_ajcrew_process", return_value=True),
+            patch("aj_crew.cli_server._wait_for_pids_exit", return_value=[]),
+            patch("aj_crew.cli_server._stop") as mock_stop,
             patch(
-                "kiro_crew.cli_server._spawn_detached_gateway",
+                "aj_crew.cli_server._spawn_detached_gateway",
                 return_value=self._fake_proc(5678),
             ) as mock_spawn,
         ):
@@ -756,17 +756,17 @@ class TestRestart:
         # No TCP listener, but gateway.lock names a live gateway (unix socket):
         # a gateway IS running, so the stopped-unit refusal must not fire; the
         # existing lock-holder path decides, unchanged.
-        from kiro_crew.cli_server import _restart
+        from aj_crew.cli_server import _restart
 
         mock_sel = MagicMock()
         with (
-            patch("kiro_crew.cli_server.sel", return_value=mock_sel),
+            patch("aj_crew.cli_server.sel", return_value=mock_sel),
             patch(
-                "kiro_crew.cli_server.service_controller.installed_unit_path",
-                return_value=Path("/etc/systemd/system/kirocrew.service"),
+                "aj_crew.cli_server.service_controller.installed_unit_path",
+                return_value=Path("/etc/systemd/system/ajcrew.service"),
             ),
-            patch("kiro_crew.service.linux.system_unit_is_ours", return_value=True, create=True),
-            self._probe_missed_gateway(4242, kirocrew=True),
+            patch("aj_crew.service.linux.system_unit_is_ours", return_value=True, create=True),
+            self._probe_missed_gateway(4242, ajcrew=True),
         ):
             with pytest.raises(SystemExit):
                 _restart(None)
@@ -774,20 +774,20 @@ class TestRestart:
         assert "pid 4242" in out
         assert "start it with your service manager" not in out
         audit = mock_sel.log_api_access.call_args.kwargs
-        assert "reason=lock_holder_kirocrew" in audit["resources"]
+        assert "reason=lock_holder_ajcrew" in audit["resources"]
 
     def test_explicit_port_bypasses_the_stopped_service_refusal(self, capsys):
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         with (
             self._mock_sel(),
             patch(
-                "kiro_crew.cli_server.service_controller.installed_unit_path",
-                return_value=Path("/etc/systemd/system/kirocrew.service"),
+                "aj_crew.cli_server.service_controller.installed_unit_path",
+                return_value=Path("/etc/systemd/system/ajcrew.service"),
             ),
-            patch("kiro_crew.cli_server.platform_compat.find_listening_pids", return_value=[]),
+            patch("aj_crew.cli_server.platform_compat.find_listening_pids", return_value=[]),
             patch(
-                "kiro_crew.cli_server._spawn_detached_gateway",
+                "aj_crew.cli_server._spawn_detached_gateway",
                 return_value=self._fake_proc(4321),
             ) as mock_spawn,
         ):
@@ -795,34 +795,34 @@ class TestRestart:
         mock_spawn.assert_called_once()
 
     @contextlib.contextmanager
-    def _probe_missed_gateway(self, holder_pid: int, *, kirocrew: bool):
+    def _probe_missed_gateway(self, holder_pid: int, *, ajcrew: bool):
         """Patches for the tool-present path where the port probe finds nothing
         and no gateway answers the authenticated shutdown, yet gateway.lock is
         held by the live ``holder_pid``. Every way the command could signal a
         pid is recorded so the tests can assert that none was used."""
-        from kiro_crew.gateway_lock import LockHolder
+        from aj_crew.gateway_lock import LockHolder
 
         with (
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=RestartReport(),
             ),
             patch(
-                "kiro_crew.cli_server.platform_compat.find_listening_pids",
+                "aj_crew.cli_server.platform_compat.find_listening_pids",
                 return_value=[],
             ),
-            patch("kiro_crew.cli_server.platform_compat.IS_WINDOWS", False),
-            patch("kiro_crew.cli_server._report_authenticated_shutdown", return_value=False),
+            patch("aj_crew.cli_server.platform_compat.IS_WINDOWS", False),
+            patch("aj_crew.cli_server._report_authenticated_shutdown", return_value=False),
             patch(
-                "kiro_crew.cli_server.lock_holder",
+                "aj_crew.cli_server.lock_holder",
                 return_value=LockHolder(pid=holder_pid, alive=True, source="flock_owner"),
             ),
-            patch("kiro_crew.cli_server._is_kirocrew_process", return_value=kirocrew),
-            patch("kiro_crew.cli_server.os.kill") as mock_kill,
-            patch("kiro_crew.cli_server.platform_compat.kill_process_tree") as mock_tree,
-            patch("kiro_crew.cli_server._stop_mcp_gateway_daemon") as mock_daemon,
-            patch("kiro_crew.cli_server._wait_for_pids_exit") as mock_wait,
-            patch("kiro_crew.cli_server._spawn_detached_gateway") as mock_spawn,
+            patch("aj_crew.cli_server._is_ajcrew_process", return_value=ajcrew),
+            patch("aj_crew.cli_server.os.kill") as mock_kill,
+            patch("aj_crew.cli_server.platform_compat.kill_process_tree") as mock_tree,
+            patch("aj_crew.cli_server._stop_mcp_gateway_daemon") as mock_daemon,
+            patch("aj_crew.cli_server._wait_for_pids_exit") as mock_wait,
+            patch("aj_crew.cli_server._spawn_detached_gateway") as mock_spawn,
         ):
             yield {
                 "kill": mock_kill,
@@ -832,20 +832,20 @@ class TestRestart:
                 "spawn": mock_spawn,
             }
 
-    def test_lock_holder_alive_kirocrew_refuses_to_restart_and_names_the_pid(self, capsys):
+    def test_lock_holder_alive_ajcrew_refuses_to_restart_and_names_the_pid(self, capsys):
         """The split-brain this fixes: the port probe finds nothing (a
         unix-socket-only gateway, or a blind spot) but gateway.lock is held by
-        a live Kiro Crew pid. Restart must not report "nothing running" and
+        a live Aj Crew pid. Restart must not report "nothing running" and
         must not spawn a replacement the lock would refuse -- and it must not
         signal through the lock either: a gateway neither the port nor the
         API could reach is refused and NAMED, with the manual command, so the
         operator stops it by hand and retries."""
-        from kiro_crew.cli_server import _restart
+        from aj_crew.cli_server import _restart
 
         mock_sel = MagicMock()
         with (
-            patch("kiro_crew.cli_server.sel", return_value=mock_sel),
-            self._probe_missed_gateway(4242, kirocrew=True) as mocks,
+            patch("aj_crew.cli_server.sel", return_value=mock_sel),
+            self._probe_missed_gateway(4242, ajcrew=True) as mocks,
         ):
             with pytest.raises(SystemExit) as exc:
                 _restart(None)
@@ -865,19 +865,19 @@ class TestRestart:
         assert audit["operation"] == "gateway_restart"
         assert audit["outcome"] == "denied"
         assert "pids=[4242]" in audit["resources"]
-        assert "reason=lock_holder_kirocrew" in audit["resources"]
+        assert "reason=lock_holder_ajcrew" in audit["resources"]
 
     def test_lock_holder_alive_but_foreign_refuses_without_stopping_it(self, capsys):
-        """A live holder that is not a Kiro Crew process must never be signaled
-        -- refuse with the same wording ``kirocrew gateway`` would give for this
+        """A live holder that is not a Aj Crew process must never be signaled
+        -- refuse with the same wording ``ajcrew gateway`` would give for this
         holder, audited as denied, rather than silently spawning a competitor
         the lock refuses."""
-        from kiro_crew.cli_server import _restart
+        from aj_crew.cli_server import _restart
 
         mock_sel = MagicMock()
         with (
-            patch("kiro_crew.cli_server.sel", return_value=mock_sel),
-            self._probe_missed_gateway(99, kirocrew=False) as mocks,
+            patch("aj_crew.cli_server.sel", return_value=mock_sel),
+            self._probe_missed_gateway(99, ajcrew=False) as mocks,
         ):
             with pytest.raises(SystemExit) as exc:
                 _restart(None)
@@ -886,7 +886,7 @@ class TestRestart:
         mocks["tree"].assert_not_called()
         mocks["spawn"].assert_not_called()
         out = capsys.readouterr().out
-        assert "does not look like a Kiro Crew gateway" in out
+        assert "does not look like a Aj Crew gateway" in out
         assert "kill -TERM 99" in out
         mock_sel.log_api_access.assert_called_once()
         audit = mock_sel.log_api_access.call_args.kwargs
@@ -901,7 +901,7 @@ class TestRestart:
         lock_probe_error=None,
         *,
         acknowledged: bool = True,
-        kirocrew: bool = True,
+        ajcrew: bool = True,
     ):
         """Patches for the port-tool-absent path with an acknowledged shutdown.
 
@@ -912,10 +912,10 @@ class TestRestart:
         unless ``lock_probe_error`` is given, in which case the probe raises it.
         ``acknowledged=False`` drives the same entry with NO gateway answering
         the API, so ``_stop`` reaches the lock holder instead.
-        ``kirocrew=False`` makes the argv check decline every pid, as it does
+        ``ajcrew=False`` makes the argv check decline every pid, as it does
         for a gateway spawned in a shape the patterns do not know.
         """
-        from kiro_crew.gateway_lock import LockHolder
+        from aj_crew.gateway_lock import LockHolder
 
         holder_kwargs = (
             {"side_effect": lock_probe_error}
@@ -924,25 +924,25 @@ class TestRestart:
         )
         with (
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=RestartReport(),
             ),
             patch(
-                "kiro_crew.cli_server.platform_compat.listening_pid_tool_available",
+                "aj_crew.cli_server.platform_compat.listening_pid_tool_available",
                 return_value=False,
             ),
             patch(
-                "kiro_crew.cli_server.platform_compat.find_listening_pids",
+                "aj_crew.cli_server.platform_compat.find_listening_pids",
                 return_value=[],
             ),
-            patch("kiro_crew.cli_server.platform_compat.IS_WINDOWS", False),
-            patch("kiro_crew.cli_server.service_controller.stop_service", return_value=False),
+            patch("aj_crew.cli_server.platform_compat.IS_WINDOWS", False),
+            patch("aj_crew.cli_server.service_controller.stop_service", return_value=False),
             patch(
-                "kiro_crew.cli_server._report_authenticated_shutdown",
+                "aj_crew.cli_server._report_authenticated_shutdown",
                 return_value=acknowledged,
             ),
-            patch("kiro_crew.cli_server.lock_holder", **holder_kwargs),
-            patch("kiro_crew.cli_server._is_kirocrew_process", return_value=kirocrew),
+            patch("aj_crew.cli_server.lock_holder", **holder_kwargs),
+            patch("aj_crew.cli_server._is_ajcrew_process", return_value=ajcrew),
         ):
             yield
 
@@ -952,8 +952,8 @@ class TestRestart:
         app's bare interpreter). Restart must still wait on that pid and then
         spawn, not strand the user with no gateway. The pid is only waited
         on: nothing is signalled."""
-        from kiro_crew.cli_server import _restart
-        from kiro_crew.gateway_lock import LockHolder
+        from aj_crew.cli_server import _restart
+        from aj_crew.gateway_lock import LockHolder
 
         order: list[str] = []
 
@@ -969,16 +969,16 @@ class TestRestart:
 
         with (
             self._mock_sel(),
-            self._tool_absent_acked_shutdown(4242, kirocrew=False),
-            patch("kiro_crew.cli_server.lock_holder", side_effect=_probe),
+            self._tool_absent_acked_shutdown(4242, ajcrew=False),
+            patch("aj_crew.cli_server.lock_holder", side_effect=_probe),
             # The up-front desktop-app check reads the lock too; these tests
             # count the reads the stop-and-wait path makes.
-            patch("kiro_crew.cli_server._config_dir_owner", return_value=None),
-            patch("kiro_crew.cli_server.os.kill") as mock_kill,
-            patch("kiro_crew.cli_server.platform_compat.kill_process_tree") as mock_tree,
-            patch("kiro_crew.cli_server._wait_for_pids_exit", side_effect=_wait),
+            patch("aj_crew.cli_server._config_dir_owner", return_value=None),
+            patch("aj_crew.cli_server.os.kill") as mock_kill,
+            patch("aj_crew.cli_server.platform_compat.kill_process_tree") as mock_tree,
+            patch("aj_crew.cli_server._wait_for_pids_exit", side_effect=_wait),
             patch(
-                "kiro_crew.cli_server._spawn_detached_gateway",
+                "aj_crew.cli_server._spawn_detached_gateway",
                 side_effect=lambda port: (order.append("spawn"), self._fake_proc(4321))[1],
             ),
         ):
@@ -991,15 +991,15 @@ class TestRestart:
         """With NO acknowledged shutdown there is no
         second proof, so an unrecognised lock holder keeps today's refusal --
         no signal, no wait, no spawn."""
-        from kiro_crew.cli_server import _restart
+        from aj_crew.cli_server import _restart
 
         with (
             self._mock_sel(),
-            self._tool_absent_acked_shutdown(4242, acknowledged=False, kirocrew=False),
-            patch("kiro_crew.cli_server.os.kill") as mock_kill,
-            patch("kiro_crew.cli_server.platform_compat.kill_process_tree") as mock_tree,
-            patch("kiro_crew.cli_server._wait_for_pids_exit") as mock_wait,
-            patch("kiro_crew.cli_server._spawn_detached_gateway") as mock_spawn,
+            self._tool_absent_acked_shutdown(4242, acknowledged=False, ajcrew=False),
+            patch("aj_crew.cli_server.os.kill") as mock_kill,
+            patch("aj_crew.cli_server.platform_compat.kill_process_tree") as mock_tree,
+            patch("aj_crew.cli_server._wait_for_pids_exit") as mock_wait,
+            patch("aj_crew.cli_server._spawn_detached_gateway") as mock_spawn,
         ):
             with pytest.raises(SystemExit) as exc:
                 _restart(None)
@@ -1008,23 +1008,23 @@ class TestRestart:
         mock_tree.assert_not_called()
         mock_wait.assert_not_called()
         mock_spawn.assert_not_called()
-        assert "does not look like a Kiro Crew gateway" in capsys.readouterr().out
+        assert "does not look like a Aj Crew gateway" in capsys.readouterr().out
 
     def test_tool_absent_unacked_shutdown_live_holder_refuses_to_restart(self, capsys):
         """Port tool absent, no gateway answers the API, yet the lock is held by
-        a live Kiro Crew pid: ``_stop`` refuses (its exit is swallowed, as for
+        a live Aj Crew pid: ``_stop`` refuses (its exit is swallowed, as for
         "nothing running") and restart must NOT read that as a free lock --
         it re-reads the holder, refuses too, waits on nothing and spawns
         nothing. Both refusals are audited under their own operation."""
-        from kiro_crew.cli_server import _restart
+        from aj_crew.cli_server import _restart
 
         mock_sel = MagicMock()
         with (
-            patch("kiro_crew.cli_server.sel", return_value=mock_sel),
+            patch("aj_crew.cli_server.sel", return_value=mock_sel),
             self._tool_absent_acked_shutdown(4242, acknowledged=False),
-            patch("kiro_crew.cli_server.os.kill") as mock_kill,
-            patch("kiro_crew.cli_server._wait_for_pids_exit") as mock_wait,
-            patch("kiro_crew.cli_server._spawn_detached_gateway") as mock_spawn,
+            patch("aj_crew.cli_server.os.kill") as mock_kill,
+            patch("aj_crew.cli_server._wait_for_pids_exit") as mock_wait,
+            patch("aj_crew.cli_server._spawn_detached_gateway") as mock_spawn,
         ):
             with pytest.raises(SystemExit) as exc:
                 _restart(None)
@@ -1040,7 +1040,7 @@ class TestRestart:
             ("gateway_stop", "denied"),
             ("gateway_restart", "denied"),
         ]
-        assert all("reason=lock_holder_kirocrew" in a["resources"] for a in audits)
+        assert all("reason=lock_holder_ajcrew" in a["resources"] for a in audits)
 
     def test_tool_absent_acked_shutdown_waits_for_lock_holder_before_spawning(self):
         """Port tool absent + graceful shutdown acknowledged: the port lookup
@@ -1048,7 +1048,7 @@ class TestRestart:
         on an empty list and the replacement spawns while the exiting gateway
         still owns gateway.lock -- it loses the race and NO gateway remains.
         The spawn must happen only after the lock holder's pid is gone."""
-        from kiro_crew.cli_server import _restart
+        from aj_crew.cli_server import _restart
 
         order: list[str] = []
 
@@ -1056,7 +1056,7 @@ class TestRestart:
             order.append(f"wait:{pids}")
             return []
 
-        from kiro_crew.gateway_lock import LockHolder
+        from aj_crew.gateway_lock import LockHolder
 
         def _probe(_home):
             # The holder is named before the wait; once it has exited, the
@@ -1069,13 +1069,13 @@ class TestRestart:
         with (
             self._mock_sel(),
             self._tool_absent_acked_shutdown(4242),
-            patch("kiro_crew.cli_server.lock_holder", side_effect=_probe),
+            patch("aj_crew.cli_server.lock_holder", side_effect=_probe),
             # The up-front desktop-app check reads the lock too; these tests
             # count the reads the stop-and-wait path makes.
-            patch("kiro_crew.cli_server._config_dir_owner", return_value=None),
-            patch("kiro_crew.cli_server._wait_for_pids_exit", side_effect=_wait),
+            patch("aj_crew.cli_server._config_dir_owner", return_value=None),
+            patch("aj_crew.cli_server._wait_for_pids_exit", side_effect=_wait),
             patch(
-                "kiro_crew.cli_server._spawn_detached_gateway",
+                "aj_crew.cli_server._spawn_detached_gateway",
                 side_effect=lambda port: (order.append("spawn"), self._fake_proc(4321))[1],
             ),
         ):
@@ -1086,14 +1086,14 @@ class TestRestart:
         """Same entry, holder never exits within the wait: refuse with the same
         'still running' message the port-lookup path prints, non-zero exit, no
         spawn -- a replacement the lock would refuse is worse than none."""
-        from kiro_crew.cli_server import _restart
+        from aj_crew.cli_server import _restart
 
         mock_sel = MagicMock()
         with (
-            patch("kiro_crew.cli_server.sel", return_value=mock_sel),
+            patch("aj_crew.cli_server.sel", return_value=mock_sel),
             self._tool_absent_acked_shutdown(4242),
-            patch("kiro_crew.cli_server._wait_for_pids_exit", return_value=[4242]) as mock_wait,
-            patch("kiro_crew.cli_server._spawn_detached_gateway") as mock_spawn,
+            patch("aj_crew.cli_server._wait_for_pids_exit", return_value=[4242]) as mock_wait,
+            patch("aj_crew.cli_server._spawn_detached_gateway") as mock_spawn,
         ):
             with pytest.raises(SystemExit) as exc:
                 _restart(None)
@@ -1112,8 +1112,8 @@ class TestRestart:
         """Port tool absent and the lock probe cannot say who holds the lock:
         neither signal a guessed pid nor spawn a replacement the lock may
         refuse -- print the existing indeterminate message and exit 1."""
-        from kiro_crew.cli_server import _restart
-        from kiro_crew.gateway_lock import LockProbeError
+        from aj_crew.cli_server import _restart
+        from aj_crew.gateway_lock import LockProbeError
 
         with (
             self._mock_sel(),
@@ -1123,8 +1123,8 @@ class TestRestart:
                     Path("/nowhere/gateway.lock"), OSError("probe failed")
                 ),
             ),
-            patch("kiro_crew.cli_server._wait_for_pids_exit") as mock_wait,
-            patch("kiro_crew.cli_server._spawn_detached_gateway") as mock_spawn,
+            patch("aj_crew.cli_server._wait_for_pids_exit") as mock_wait,
+            patch("aj_crew.cli_server._spawn_detached_gateway") as mock_spawn,
         ):
             with pytest.raises(SystemExit) as exc:
                 _restart(None)
@@ -1137,25 +1137,25 @@ class TestRestart:
 
     def test_no_service_no_running_gateway_spawns_fresh(self, capsys):
         # Restart should be tolerant of a crashed gateway: if the user runs
-        # ``kirocrew restart`` after the gateway died, they should still
+        # ``ajcrew restart`` after the gateway died, they should still
         # end up with a running gateway, not an error.
-        from kiro_crew.cli_server import _restart
+        from aj_crew.cli_server import _restart
 
         with (
             self._mock_sel(),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=RestartReport(),
             ),
             patch(
-                "kiro_crew.cli_server.platform_compat.find_listening_pids",
+                "aj_crew.cli_server.platform_compat.find_listening_pids",
                 return_value=[],
             ),
             patch(
-                "kiro_crew.cli_server._spawn_detached_gateway",
+                "aj_crew.cli_server._spawn_detached_gateway",
                 return_value=self._fake_proc(4321),
             ) as mock_spawn,
-            patch("kiro_crew.cli_server._stop") as mock_stop,
+            patch("aj_crew.cli_server._stop") as mock_stop,
         ):
             _restart(None)
         mock_stop.assert_not_called()
@@ -1165,27 +1165,27 @@ class TestRestart:
         assert "detached" in out.lower()
 
     def test_no_service_with_running_gateway_stops_then_spawns(self, capsys):
-        from kiro_crew.cli_server import _restart
+        from aj_crew.cli_server import _restart
 
         with (
             self._mock_sel(),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=RestartReport(),
             ),
             patch(
-                "kiro_crew.cli_server.platform_compat.find_listening_pids",
+                "aj_crew.cli_server.platform_compat.find_listening_pids",
                 return_value=[1234],
             ),
             # A RUNNING gateway, per this test's name: argv classifies it, so it
             # is the incumbent by that route and the endpoint path is not
             # involved. The wait is stubbed so the assertion never depends on
             # whether pid 1234 happens to exist on the host.
-            patch("kiro_crew.cli_server._is_kirocrew_process", return_value=True),
-            patch("kiro_crew.cli_server._wait_for_pids_exit", return_value=[]),
-            patch("kiro_crew.cli_server._stop") as mock_stop,
+            patch("aj_crew.cli_server._is_ajcrew_process", return_value=True),
+            patch("aj_crew.cli_server._wait_for_pids_exit", return_value=[]),
+            patch("aj_crew.cli_server._stop") as mock_stop,
             patch(
-                "kiro_crew.cli_server._spawn_detached_gateway",
+                "aj_crew.cli_server._spawn_detached_gateway",
                 return_value=self._fake_proc(5678),
             ) as mock_spawn,
         ):
@@ -1203,21 +1203,21 @@ class TestRestart:
         # the user asked for a restart, not a stop, and an exit here would
         # leave them with no running gateway at all. Verify we swallow
         # SystemExit and still spawn the replacement.
-        from kiro_crew.cli_server import _restart
+        from aj_crew.cli_server import _restart
 
         with (
             self._mock_sel(),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=RestartReport(),
             ),
             patch(
-                "kiro_crew.cli_server.platform_compat.find_listening_pids",
+                "aj_crew.cli_server.platform_compat.find_listening_pids",
                 return_value=[1234],
             ),
-            patch("kiro_crew.cli_server._stop", side_effect=SystemExit(1)) as mock_stop,
+            patch("aj_crew.cli_server._stop", side_effect=SystemExit(1)) as mock_stop,
             patch(
-                "kiro_crew.cli_server._spawn_detached_gateway",
+                "aj_crew.cli_server._spawn_detached_gateway",
                 return_value=self._fake_proc(9999),
             ) as mock_spawn,
         ):
@@ -1229,13 +1229,13 @@ class TestRestart:
     def test_waits_for_incumbent_to_exit_before_spawning(self):
         """The replacement must not be spawned while the old gateway is alive.
 
-        The incumbent holds the ``KIROCREW_HOME`` flock for its whole graceful
+        The incumbent holds the ``AJCREW_HOME`` flock for its whole graceful
         shutdown, and ``_stop`` waits only ~1s for exit without reporting back.
         A replacement spawned inside that window is refused by the lock and exits
         1, leaving NO gateway running. Assert the spawn happens strictly after
         the incumbent pid is observed gone.
         """
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         # Alive for the first two probes, gone from the third.
         exited = iter([False, False, True, True, True])
@@ -1249,19 +1249,19 @@ class TestRestart:
         with (
             self._mock_sel(),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=RestartReport(),
             ),
             patch(
-                "kiro_crew.cli_server.platform_compat.find_listening_pids",
+                "aj_crew.cli_server.platform_compat.find_listening_pids",
                 return_value=[1234],
             ),
-            patch("kiro_crew.cli_server._is_kirocrew_process", return_value=True),
-            patch("kiro_crew.cli_server._stop"),
-            patch("kiro_crew.cli_server._pid_exited", side_effect=fake_pid_exited),
-            patch("kiro_crew.cli_server._print_token_url"),
+            patch("aj_crew.cli_server._is_ajcrew_process", return_value=True),
+            patch("aj_crew.cli_server._stop"),
+            patch("aj_crew.cli_server._pid_exited", side_effect=fake_pid_exited),
+            patch("aj_crew.cli_server._print_token_url"),
             patch(
-                "kiro_crew.cli_server._spawn_detached_gateway",
+                "aj_crew.cli_server._spawn_detached_gateway",
                 return_value=self._fake_proc(5678),
             ) as mock_spawn,
         ):
@@ -1279,23 +1279,23 @@ class TestRestart:
         so the user ends up with nothing. Aborting leaves the (slow) gateway up
         and names the pid to force.
         """
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         with (
             self._mock_sel(),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=RestartReport(),
             ),
             patch(
-                "kiro_crew.cli_server.platform_compat.find_listening_pids",
+                "aj_crew.cli_server.platform_compat.find_listening_pids",
                 return_value=[1234],
             ),
-            patch("kiro_crew.cli_server._is_kirocrew_process", return_value=True),
-            patch("kiro_crew.cli_server._stop"),
-            patch("kiro_crew.cli_server._pid_exited", return_value=False),
-            patch("kiro_crew.cli_server._RESTART_STOP_TIMEOUT", 0),
-            patch("kiro_crew.cli_server._spawn_detached_gateway") as mock_spawn,
+            patch("aj_crew.cli_server._is_ajcrew_process", return_value=True),
+            patch("aj_crew.cli_server._stop"),
+            patch("aj_crew.cli_server._pid_exited", return_value=False),
+            patch("aj_crew.cli_server._RESTART_STOP_TIMEOUT", 0),
+            patch("aj_crew.cli_server._spawn_detached_gateway") as mock_spawn,
         ):
             with pytest.raises(SystemExit) as exc:
                 cli_server._restart(None)
@@ -1307,7 +1307,7 @@ class TestRestart:
         assert "did not exit" in out
 
     def test_unrelated_port_listener_is_not_waited_on(self, capsys):
-        """A non-KiroCrew listener must never gate the restart.
+        """A non-AjCrew listener must never gate the restart.
 
         ``find_listening_pids`` reports whatever holds the port. Blocking on a
         foreign process would make restart hang for the full timeout and then
@@ -1320,30 +1320,30 @@ class TestRestart:
         ``unrecognized_listener`` refusal. A stub that returned normally would
         model a stop that neither stopped nor refused.
         """
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         with (
             self._mock_sel(),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=RestartReport(),
             ),
             patch(
-                "kiro_crew.cli_server.platform_compat.find_listening_pids",
+                "aj_crew.cli_server.platform_compat.find_listening_pids",
                 return_value=[1234],
             ),
-            patch("kiro_crew.cli_server._is_kirocrew_process", return_value=False),
-            patch("kiro_crew.cli_server._stop", side_effect=SystemExit(1)) as mock_stop,
-            patch("kiro_crew.cli_server._pid_exited", return_value=False) as mock_exited,
-            patch("kiro_crew.cli_server._print_token_url"),
+            patch("aj_crew.cli_server._is_ajcrew_process", return_value=False),
+            patch("aj_crew.cli_server._stop", side_effect=SystemExit(1)) as mock_stop,
+            patch("aj_crew.cli_server._pid_exited", return_value=False) as mock_exited,
+            patch("aj_crew.cli_server._print_token_url"),
             patch(
-                "kiro_crew.cli_server._spawn_detached_gateway",
+                "aj_crew.cli_server._spawn_detached_gateway",
                 return_value=self._fake_proc(5678),
             ) as mock_spawn,
         ):
             cli_server._restart(None)
 
-        # _stop still runs (it owns the "not a Kiro Crew gateway" diagnostic)...
+        # _stop still runs (it owns the "not a Aj Crew gateway" diagnostic)...
         mock_stop.assert_called_once_with(None)
         # ...but nothing is waited on, and the spawn proceeds.
         mock_exited.assert_not_called()
@@ -1361,18 +1361,18 @@ class TestRestart:
         just did), an unparameterised spawn lets the replacement bind 5476 while
         the parent waits on 6776 and prints a 6776 URL.
         """
-        from kiro_crew.cli_server import _spawn_detached_gateway
+        from aj_crew.cli_server import _spawn_detached_gateway
 
-        monkeypatch.setattr("kiro_crew.cli_server.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.cli_server.config_dir", lambda: tmp_path)
         proc = MagicMock(pid=UNALLOCATABLE_PID)
         with (
-            patch("shutil.which", return_value="/usr/local/bin/kirocrew"),
-            patch("kiro_crew.cli_server.subprocess.Popen", return_value=proc) as mock_popen,
+            patch("shutil.which", return_value="/usr/local/bin/ajcrew"),
+            patch("aj_crew.cli_server.subprocess.Popen", return_value=proc) as mock_popen,
         ):
             spawned = _spawn_detached_gateway(6776)
         assert spawned is proc
         assert mock_popen.call_args.args[0] == [
-            "/usr/local/bin/kirocrew",
+            "/usr/local/bin/ajcrew",
             "gateway",
             "--port",
             "6776",
@@ -1380,46 +1380,46 @@ class TestRestart:
 
     def test_restart_passes_resolved_port_to_spawn(self, tmp_path, monkeypatch, capsys):
         """`restart` with no --port must hand its resolved port to the child."""
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
-        monkeypatch.setattr("kiro_crew.cli_server.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.cli_server.config_dir", lambda: tmp_path)
         with (
-            patch("kiro_crew.cli_server.resolve_client_port", return_value=6776),
+            patch("aj_crew.cli_server.resolve_client_port", return_value=6776),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=RestartReport(),
             ),
-            patch("kiro_crew.cli_server.platform_compat.find_listening_pids", return_value=[]),
+            patch("aj_crew.cli_server.platform_compat.find_listening_pids", return_value=[]),
             patch(
-                "kiro_crew.cli_server.platform_compat.listening_pid_tool_available",
+                "aj_crew.cli_server.platform_compat.listening_pid_tool_available",
                 return_value=True,
             ),
             patch(
-                "kiro_crew.cli_server._spawn_detached_gateway",
+                "aj_crew.cli_server._spawn_detached_gateway",
                 return_value=self._fake_proc(1234),
             ) as mock_spawn,
-            patch("kiro_crew.cli_server._print_token_url"),
+            patch("aj_crew.cli_server._print_token_url"),
         ):
             cli_server._restart(None)
         assert mock_spawn.call_args.args[0] == 6776
         assert "Started detached gateway (pid 1234)" in capsys.readouterr().out
 
-    def test_spawn_detached_gateway_uses_kirocrew_bin(self, tmp_path, monkeypatch):
-        # When ``kirocrew`` is on PATH, the detached child must invoke it
+    def test_spawn_detached_gateway_uses_ajcrew_bin(self, tmp_path, monkeypatch):
+        # When ``ajcrew`` is on PATH, the detached child must invoke it
         # directly (not via ``python -m``). This exercises the production
         # path on installed hosts.
-        from kiro_crew.cli_server import _spawn_detached_gateway
+        from aj_crew.cli_server import _spawn_detached_gateway
 
-        monkeypatch.setattr("kiro_crew.cli_server.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.cli_server.config_dir", lambda: tmp_path)
         # The Windows flag values, pinned on every OS so the choice of flags is
         # checked on POSIX runners too (there the real names resolve to 0).
-        monkeypatch.setattr("kiro_crew.platform_compat.DETACHED_PROCESS", 0x8)
-        monkeypatch.setattr("kiro_crew.platform_compat.CREATE_NEW_PROCESS_GROUP", 0x200)
-        monkeypatch.setattr("kiro_crew.platform_compat._SUBPROCESS_NO_WINDOW", 0x08000000)
+        monkeypatch.setattr("aj_crew.platform_compat.DETACHED_PROCESS", 0x8)
+        monkeypatch.setattr("aj_crew.platform_compat.CREATE_NEW_PROCESS_GROUP", 0x200)
+        monkeypatch.setattr("aj_crew.platform_compat._SUBPROCESS_NO_WINDOW", 0x08000000)
         proc = MagicMock(pid=UNALLOCATABLE_PID)
         with (
-            patch("shutil.which", return_value="/usr/local/bin/kirocrew"),
-            patch("kiro_crew.cli_server.subprocess.Popen", return_value=proc) as mock_popen,
+            patch("shutil.which", return_value="/usr/local/bin/ajcrew"),
+            patch("aj_crew.cli_server.subprocess.Popen", return_value=proc) as mock_popen,
         ):
             spawned = _spawn_detached_gateway()
         # The Popen HANDLE is returned, not a bare pid: restart must be able to
@@ -1428,7 +1428,7 @@ class TestRestart:
         assert spawned is proc
         assert spawned.pid == UNALLOCATABLE_PID
         argv = mock_popen.call_args.args[0]
-        assert argv == ["/usr/local/bin/kirocrew", "gateway"]
+        assert argv == ["/usr/local/bin/ajcrew", "gateway"]
         # Must detach from the controlling terminal — otherwise the detached
         # process would die when the calling shell exits. POSIX: start_new_session;
         # Windows: CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP creationflags, and
@@ -1447,86 +1447,86 @@ class TestRestart:
         assert kw["stdin"] == subprocess.DEVNULL
 
     def test_spawn_detached_gateway_prefers_own_console_script(self, tmp_path, monkeypatch):
-        # Two `kirocrew` scripts can exist at once — an edition composes this
+        # Two `ajcrew` scripts can exist at once — an edition composes this
         # core behind an entry point of the same name, and a stock editable
         # install in another interpreter puts a second one on PATH. A restart
         # must respawn the one that was invoked, not whichever which() finds
         # first, or the replacement gateway composes different providers than
         # the one just stopped.
-        from kiro_crew.cli_server import _spawn_detached_gateway
+        from aj_crew.cli_server import _spawn_detached_gateway
 
-        monkeypatch.setattr("kiro_crew.cli_server.config_dir", lambda: tmp_path)
-        own = tmp_path / "kirocrew"
+        monkeypatch.setattr("aj_crew.cli_server.config_dir", lambda: tmp_path)
+        own = tmp_path / "ajcrew"
         own.write_text("#!/bin/sh\n")
         own.chmod(0o755)
         monkeypatch.setattr(sys, "argv", [str(own), "restart"])
         proc = MagicMock(pid=UNALLOCATABLE_PID)
         with (
-            patch("shutil.which", return_value="/usr/local/bin/kirocrew"),
-            patch("kiro_crew.cli_server.subprocess.Popen", return_value=proc) as mock_popen,
+            patch("shutil.which", return_value="/usr/local/bin/ajcrew"),
+            patch("aj_crew.cli_server.subprocess.Popen", return_value=proc) as mock_popen,
         ):
             spawned = _spawn_detached_gateway()
         assert spawned is proc
         assert mock_popen.call_args.args[0] == [str(own), "gateway"]
 
-    def test_spawn_detached_gateway_ignores_non_kirocrew_argv0(self, tmp_path, monkeypatch):
-        # argv[0] is only trusted when it names the kirocrew console script.
-        # Anything else (a test runner, a wrapper, `python -m kiro_crew restart`)
+    def test_spawn_detached_gateway_ignores_non_ajcrew_argv0(self, tmp_path, monkeypatch):
+        # argv[0] is only trusted when it names the ajcrew console script.
+        # Anything else (a test runner, a wrapper, `python -m aj_crew restart`)
         # must fall through to the documented which()/module resolution.
-        from kiro_crew.cli_server import _spawn_detached_gateway
+        from aj_crew.cli_server import _spawn_detached_gateway
 
-        monkeypatch.setattr("kiro_crew.cli_server.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.cli_server.config_dir", lambda: tmp_path)
         other = tmp_path / "pytest"
         other.write_text("#!/bin/sh\n")
         other.chmod(0o755)
         monkeypatch.setattr(sys, "argv", [str(other), "restart"])
         proc = MagicMock(pid=UNALLOCATABLE_PID)
         with (
-            patch("shutil.which", return_value="/usr/local/bin/kirocrew"),
-            patch("kiro_crew.cli_server.subprocess.Popen", return_value=proc) as mock_popen,
+            patch("shutil.which", return_value="/usr/local/bin/ajcrew"),
+            patch("aj_crew.cli_server.subprocess.Popen", return_value=proc) as mock_popen,
         ):
             spawned = _spawn_detached_gateway()
         assert spawned is proc
-        assert mock_popen.call_args.args[0] == ["/usr/local/bin/kirocrew", "gateway"]
+        assert mock_popen.call_args.args[0] == ["/usr/local/bin/ajcrew", "gateway"]
 
     def test_spawn_detached_gateway_ignores_missing_argv0_path(self, tmp_path, monkeypatch):
         # Fails closed on a correctly-named but non-existent argv[0] (frozen
         # bundles and some launchers rewrite it), rather than handing Popen a
         # path that cannot be executed.
-        from kiro_crew.cli_server import _spawn_detached_gateway
+        from aj_crew.cli_server import _spawn_detached_gateway
 
-        monkeypatch.setattr("kiro_crew.cli_server.config_dir", lambda: tmp_path)
-        monkeypatch.setattr(sys, "argv", [str(tmp_path / "ghost" / "kirocrew"), "restart"])
+        monkeypatch.setattr("aj_crew.cli_server.config_dir", lambda: tmp_path)
+        monkeypatch.setattr(sys, "argv", [str(tmp_path / "ghost" / "ajcrew"), "restart"])
         proc = MagicMock(pid=UNALLOCATABLE_PID)
         with (
-            patch("shutil.which", return_value="/usr/local/bin/kirocrew"),
-            patch("kiro_crew.cli_server.subprocess.Popen", return_value=proc) as mock_popen,
+            patch("shutil.which", return_value="/usr/local/bin/ajcrew"),
+            patch("aj_crew.cli_server.subprocess.Popen", return_value=proc) as mock_popen,
         ):
             spawned = _spawn_detached_gateway()
         assert spawned is proc
-        assert mock_popen.call_args.args[0] == ["/usr/local/bin/kirocrew", "gateway"]
+        assert mock_popen.call_args.args[0] == ["/usr/local/bin/ajcrew", "gateway"]
 
     def test_spawn_detached_gateway_absolutizes_relative_argv0(self, tmp_path, monkeypatch):
-        # Regression: `cd ~/checkout && .venv/bin/kirocrew restart`. shutil.which()
+        # Regression: `cd ~/checkout && .venv/bin/ajcrew restart`. shutil.which()
         # returns an argument that already has a directory component *unchanged*,
         # so it stays relative — and Popen gets cwd=$HOME, which chdirs the child
         # before exec, so a relative program path resolves under $HOME and raises
         # FileNotFoundError with no gateway running (_stop() already killed it).
         # Deliberately exercises the real which() rather than patching it.
-        from kiro_crew.cli_server import _spawn_detached_gateway
+        from aj_crew.cli_server import _spawn_detached_gateway
 
-        monkeypatch.setattr("kiro_crew.cli_server.config_dir", lambda: tmp_path)
-        # Use the real per-platform venv console-script layout: `bin/kirocrew` on
-        # POSIX, `Scripts\kirocrew.exe` on Windows. shutil.which() only accepts a
+        monkeypatch.setattr("aj_crew.cli_server.config_dir", lambda: tmp_path)
+        # Use the real per-platform venv console-script layout: `bin/ajcrew` on
+        # POSIX, `Scripts\ajcrew.exe` on Windows. shutil.which() only accepts a
         # directory-qualified argument on Windows with a PATHEXT extension
         # attached, so an extensionless name there would miss and fall through to
         # the which()/module chain instead of exercising this path.
         if sys.platform == "win32":
             venv_bin = tmp_path / ".venv" / "Scripts"
-            script_name = "kirocrew.exe"
+            script_name = "ajcrew.exe"
         else:
             venv_bin = tmp_path / ".venv" / "bin"
-            script_name = "kirocrew"
+            script_name = "ajcrew"
         venv_bin.mkdir(parents=True)
         own = venv_bin / script_name
         own.write_text("#!/bin/sh\n")
@@ -1535,7 +1535,7 @@ class TestRestart:
         rel = os.path.join(".venv", venv_bin.name, script_name)
         monkeypatch.setattr(sys, "argv", [rel, "restart"])
         proc = MagicMock(pid=UNALLOCATABLE_PID)
-        with patch("kiro_crew.cli_server.subprocess.Popen", return_value=proc) as mock_popen:
+        with patch("aj_crew.cli_server.subprocess.Popen", return_value=proc) as mock_popen:
             _spawn_detached_gateway()
         spawned = Path(mock_popen.call_args.args[0][0])
         assert spawned.is_absolute()
@@ -1544,42 +1544,42 @@ class TestRestart:
     def test_spawn_detached_gateway_falls_back_to_python_m(
         self, tmp_path, monkeypatch, nonbundled_python_without_user_site
     ):
-        # Dev/Brazil-workspace installs may not have ``kirocrew`` on
-        # PATH globally. Fall back to ``python -s -P -m kiro_crew`` so the
+        # Dev/Brazil-workspace installs may not have ``ajcrew`` on
+        # PATH globally. Fall back to ``python -s -P -m aj_crew`` so the
         # command works regardless of install layout without loading user site
         # and without the spawn cwd (the home directory) ahead of the stdlib.
-        from kiro_crew.cli_server import _spawn_detached_gateway
+        from aj_crew.cli_server import _spawn_detached_gateway
 
-        monkeypatch.setattr("kiro_crew.cli_server.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.cli_server.config_dir", lambda: tmp_path)
         proc = MagicMock(pid=UNALLOCATABLE_PID)
         with (
             patch("shutil.which", return_value=None),
-            patch("kiro_crew.cli_server.subprocess.Popen", return_value=proc) as mock_popen,
+            patch("aj_crew.cli_server.subprocess.Popen", return_value=proc) as mock_popen,
         ):
             _spawn_detached_gateway()
         argv = mock_popen.call_args.args[0]
         # First arg is sys.executable (path to current Python). Just check
         # the invocation form, not the absolute path.
-        assert argv[1:] == ["-s", "-P", "-m", "kiro_crew", "gateway"]
+        assert argv[1:] == ["-s", "-P", "-m", "aj_crew", "gateway"]
 
     def test_explicit_port_bypasses_service_short_circuit(self, capsys):
         # When cli_port is not None, bypass systemd: the service unit is not
         # bound to a specific port, so short-circuiting through it would
         # target the wrong gateway.
-        from kiro_crew.cli_server import _restart
+        from aj_crew.cli_server import _restart
 
         with (
             self._mock_sel(),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=True,
             ) as mock_restart_service,
             patch(
-                "kiro_crew.cli_server._spawn_detached_gateway",
+                "aj_crew.cli_server._spawn_detached_gateway",
                 return_value=self._fake_proc(4321),
             ) as mock_spawn,
             patch(
-                "kiro_crew.cli_server.platform_compat.find_listening_pids",
+                "aj_crew.cli_server.platform_compat.find_listening_pids",
                 return_value=[],
             ),
         ):
@@ -1597,35 +1597,35 @@ class TestRestart:
         answered by who is listening, so the enumerated pid is used and the
         replacement spawns only after it is gone.
         """
-        from kiro_crew.cli_server import _restart
+        from aj_crew.cli_server import _restart
 
         app_argv = (
-            "/Applications/KiroCrew.app/Contents/Resources/backend-dist/"
-            "kirocrew-backend-arm64/bin/python3.12 /Applications/KiroCrew.app/"
-            "Contents/Resources/backend-dist/kirocrew-backend-arm64/serve.py"
+            "/Applications/AjCrew.app/Contents/Resources/backend-dist/"
+            "ajcrew-backend-arm64/bin/python3.12 /Applications/AjCrew.app/"
+            "Contents/Resources/backend-dist/ajcrew-backend-arm64/serve.py"
         )
         with (
             self._mock_sel(),
             patch(
-                "kiro_crew.cli_server.platform_compat.find_listening_pids",
+                "aj_crew.cli_server.platform_compat.find_listening_pids",
                 return_value=[50519],
             ),
             patch(
-                "kiro_crew.cli_server.platform_compat.process_command_line",
+                "aj_crew.cli_server.platform_compat.process_command_line",
                 return_value=app_argv,
             ),
             patch(
-                "kiro_crew.cli_server._verified_loopback_gateway_pids",
+                "aj_crew.cli_server._verified_loopback_gateway_pids",
                 return_value=[50519],
             ),
-            patch("kiro_crew.cli_server._request_gateway_shutdown", return_value=True),
-            patch("kiro_crew.cli_server.platform_compat.IS_WINDOWS", False),
-            patch("kiro_crew.cli_server.os.kill") as mock_kill,
-            patch("kiro_crew.cli_server._refuse_if_lock_held"),
-            patch("kiro_crew.cli_server._wait_for_pids_exit", return_value=[]) as mock_wait,
-            patch("kiro_crew.cli_server.run_marker.read_pid", return_value=None),
+            patch("aj_crew.cli_server._request_gateway_shutdown", return_value=True),
+            patch("aj_crew.cli_server.platform_compat.IS_WINDOWS", False),
+            patch("aj_crew.cli_server.os.kill") as mock_kill,
+            patch("aj_crew.cli_server._refuse_if_lock_held"),
+            patch("aj_crew.cli_server._wait_for_pids_exit", return_value=[]) as mock_wait,
+            patch("aj_crew.cli_server.run_marker.read_pid", return_value=None),
             patch(
-                "kiro_crew.cli_server._spawn_detached_gateway",
+                "aj_crew.cli_server._spawn_detached_gateway",
                 return_value=self._fake_proc(60815),
             ) as mock_spawn,
         ):
@@ -1634,32 +1634,32 @@ class TestRestart:
         mock_kill.assert_not_called()
         assert mock_wait.call_args.args[0] == [50519]
         mock_spawn.assert_called_once()
-        assert "does not look like a Kiro Crew gateway" not in capsys.readouterr().out
+        assert "does not look like a Aj Crew gateway" not in capsys.readouterr().out
 
     def test_an_alias_holding_the_name_is_refused_before_the_foreground_path(self, capsys):
-        """When ``kirocrew.service`` is an alias of another unit, ``restart_service()``
+        """When ``ajcrew.service`` is an alias of another unit, ``restart_service()``
         returns an empty report and ``is_service_active()`` is False, but the
         foreground fallback must NOT then SIGTERM the alias target's managed
         process and spawn a replacement beside it: refuse, exit 1, signal and
         spawn nothing."""
-        from kiro_crew.cli_server import _restart
-        from kiro_crew.service.common import RestartReport
-        from kiro_crew.service.linux import AliasHolder
+        from aj_crew.cli_server import _restart
+        from aj_crew.service.common import RestartReport
+        from aj_crew.service.linux import AliasHolder
 
         mock_sel = MagicMock()
         holder = AliasHolder("system", "other.service")
         with (
-            patch("kiro_crew.cli_server.sel", return_value=mock_sel),
+            patch("aj_crew.cli_server.sel", return_value=mock_sel),
             patch(
-                "kiro_crew.cli_server.service_controller.restart_service",
+                "aj_crew.cli_server.service_controller.restart_service",
                 return_value=RestartReport(),
             ),
             patch(
-                "kiro_crew.cli_server.service_controller.service_alias_holder",
+                "aj_crew.cli_server.service_controller.service_alias_holder",
                 return_value=holder,
             ),
-            patch("kiro_crew.cli_server._spawn_detached_gateway") as mock_spawn,
-            patch("kiro_crew.cli_server.platform_compat.find_listening_pids") as mock_ports,
+            patch("aj_crew.cli_server._spawn_detached_gateway") as mock_spawn,
+            patch("aj_crew.cli_server.platform_compat.find_listening_pids") as mock_ports,
         ):
             with pytest.raises(SystemExit) as exc:
                 _restart(None)

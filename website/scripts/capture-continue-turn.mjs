@@ -43,7 +43,7 @@ import { json, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 const BASE = process.argv[2] || 'http://127.0.0.1:6802'
 const OUT = process.argv[3] || '../temp-screenshots/continue-turn'
 const SLOT = 'chat-continue'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -55,7 +55,7 @@ const slots = [{
   running: false,
   last_message: 'Wire the diagnostics collector into the /logs page',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

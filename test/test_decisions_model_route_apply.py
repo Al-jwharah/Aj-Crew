@@ -31,16 +31,16 @@ import pytest
 from test_decisions_strip_rides_message import _quiet_sel, _runner_state, _settle, _slot
 from turn_harness import ScriptedProvider, SlotSpec, TurnContext, TurnScript, run_turn
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
-from kiro_crew.config.sections import DECISION_PROVIDER_ENDPOINT_DEFAULT, DecisionsConfig
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.decisions import gate as gate_mod
-from kiro_crew.decisions import log as log_mod
-from kiro_crew.decisions import outcomes
-from kiro_crew.decisions.points import model_route as mr
-from kiro_crew.decisions.types import Answer
-from kiro_crew.hooks import HOOK_EVENT_USER_PROMPT_SUBMIT
-from kiro_crew.providers.base import LLMEvent
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
+from aj_crew.config.sections import DECISION_PROVIDER_ENDPOINT_DEFAULT, DecisionsConfig
+from aj_crew.dashboard import chat_runner
+from aj_crew.decisions import gate as gate_mod
+from aj_crew.decisions import log as log_mod
+from aj_crew.decisions import outcomes
+from aj_crew.decisions.points import model_route as mr
+from aj_crew.decisions.types import Answer
+from aj_crew.hooks import HOOK_EVENT_USER_PROMPT_SUBMIT
+from aj_crew.providers.base import LLMEvent
 
 ADVERTISED = ["model-a", "model-b", "model-c"]
 
@@ -69,7 +69,7 @@ def consented(tmp_path, monkeypatch):
         json.dumps({"enabled": True, "endpoint": DECISION_PROVIDER_ENDPOINT_DEFAULT}),
         encoding="utf-8",
     )
-    monkeypatch.setattr("kiro_crew.config.loader.decisions_consent_path", lambda: path)
+    monkeypatch.setattr("aj_crew.config.loader.decisions_consent_path", lambda: path)
     monkeypatch.setattr(log_mod, "log_dir", lambda: tmp_path / "decisions")
     monkeypatch.setattr(
         gate_mod,
@@ -81,7 +81,7 @@ def consented(tmp_path, monkeypatch):
 @pytest.fixture
 def answers(monkeypatch):
     """Install an oracle answering a fixed tier; returns a setter."""
-    import kiro_crew.decisions.impl_systemone as impl_mod
+    import aj_crew.decisions.impl_systemone as impl_mod
 
     state = {"tier": "complex"}
 
@@ -251,7 +251,7 @@ class TestRefusalsKeepTheCurrentModel:
     async def test_an_unconsented_keystone_routes_nothing(self, tmp_path, answers, monkeypatch):
         answers("complex")
         monkeypatch.setattr(
-            "kiro_crew.config.loader.decisions_consent_path", lambda: tmp_path / "absent.json"
+            "aj_crew.config.loader.decisions_consent_path", lambda: tmp_path / "absent.json"
         )
         client = await _run(tmp_path, _routed_slot())
 
@@ -391,9 +391,9 @@ class TestWhatTextIsClassified:
         assertion holds whichever variable the hook read. The first argument of
         ``routed_model`` is the whole egress.
         """
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.context import ContextBuilder
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         answers("complex")
         seen: list[str] = []
@@ -435,10 +435,10 @@ class TestWhatTextIsClassified:
         through the consented ``history_budget_chars`` ceiling (shipped value 0). All
         three prepends are present at once so no single empty one can hide a leak.
         """
-        import kiro_crew.context as context_mod
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        import aj_crew.context as context_mod
+        from aj_crew.context import ContextBuilder
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         answers("complex")
         seen: list[str] = []
@@ -498,10 +498,10 @@ class TestTheRoutingFlag:
         import importlib
         import pkgutil
 
-        import kiro_crew.dashboard.channel_slots as channel_slots
-        import kiro_crew.dashboard.chat_persistence as persistence
-        import kiro_crew.dashboard.chat_persistence_parts as persistence_parts
-        import kiro_crew.dashboard.slot_persistence as slot_persistence
+        import aj_crew.dashboard.channel_slots as channel_slots
+        import aj_crew.dashboard.chat_persistence as persistence
+        import aj_crew.dashboard.chat_persistence_parts as persistence_parts
+        import aj_crew.dashboard.slot_persistence as slot_persistence
 
         # The facade composes the metadata-line writer and the restore checks from
         # these owners, and its save and restore code from these parts, so they are
@@ -541,7 +541,7 @@ class TestTheRoutingFlag:
         ``_rollback_pick`` covers."""
         import re
 
-        import kiro_crew.dashboard.chat_handlers as handlers
+        import aj_crew.dashboard.chat_handlers as handlers
 
         source = (Path(handlers.__file__).parent / "chat_api" / "slot_model.py").read_text(
             encoding="utf-8"
@@ -569,7 +569,7 @@ class TestTheRoutingFlag:
     def test_the_sentinel_is_not_a_provider_model_id(self):
         """`slot.model` reaches `session/set_model`, the session allocation and the
         composer chip. The sentinel therefore never lands in it."""
-        from kiro_crew.dashboard.chat_handlers import JEV_ROUTE_MODEL, _is_jev_route_pick
+        from aj_crew.dashboard.chat_handlers import JEV_ROUTE_MODEL, _is_jev_route_pick
 
         assert JEV_ROUTE_MODEL == "auto:jev"
         assert _is_jev_route_pick("auto:jev") is True
@@ -592,7 +592,7 @@ def _owner_app(state):
     from aiohttp import web
     from dashboard_owner_helpers import _identity
 
-    from kiro_crew.dashboard.chat import api_chat_slot_model
+    from aj_crew.dashboard.chat import api_chat_slot_model
 
     app = web.Application(middlewares=[_identity])
     app["state"] = state
@@ -635,7 +635,7 @@ class TestArmingIsAnOwnerAction:
         ownership, which the same non-owner passes for a slot the owner armed, so the
         copy carries the owner predicate itself. Asserted on the source because the
         defect is an ABSENT condition on one assignment."""
-        import kiro_crew.dashboard.chat_fork as fork
+        import aj_crew.dashboard.chat_fork as fork
 
         source = Path(fork.__file__).read_text(encoding="utf-8")
         # The wrapper answers the owner predicate; the shared core applies it.
@@ -660,7 +660,7 @@ class TestAManualPickDuringTheAwaitWins:
         are checked (served model, and still armed); the `pin` case moves `model` only.
         A cleared `jev_route` is not a case: plain `Auto` mid-await still means "let
         Jev pick"."""
-        import kiro_crew.decisions.impl_systemone as impl_mod
+        import aj_crew.decisions.impl_systemone as impl_mod
 
         for moved in ("served_model", "pin"):
             state, client = _runner_state(tmp_path)
@@ -783,7 +783,7 @@ def windows(monkeypatch):
     An id a test removes is one the registry has not met, which is the state both
     rules have to refuse nothing on.
     """
-    from kiro_crew import model_registry
+    from aj_crew import model_registry
 
     live = dict(WINDOWS)
     monkeypatch.setattr(model_registry, "has_known_window", lambda name: name in live)
@@ -794,7 +794,7 @@ def windows(monkeypatch):
 @pytest.fixture
 def answered(monkeypatch):
     """An oracle answering a chosen tier at a chosen probability."""
-    import kiro_crew.decisions.impl_systemone as impl_mod
+    import aj_crew.decisions.impl_systemone as impl_mod
 
     held = {"tier": "simple", "p": 0.41}
 
@@ -1067,7 +1067,7 @@ class TestAHistoryThatWouldNotFit:
         but the 200k-character message adds ~50k tokens and the turn would end at 75%.
 
         The scan bound is raised so the gate does not refuse the message first."""
-        monkeypatch.setattr("kiro_crew.decisions.gate.MAX_UNCLIPPED_SCAN_CHARS", 300_000)
+        monkeypatch.setattr("aj_crew.decisions.gate.MAX_UNCLIPPED_SCAN_CHARS", 300_000)
         answered("simple", 0.95)
         slot = _routed_slot("chat-fit-prompt")
         state, client = _wired(tmp_path, serves="model-c", used=100_000, limit=70.0)
@@ -1116,8 +1116,8 @@ class TestTheFitReadingSizesTheAssembledPrompt:
         the sync would measure one turn against two different numbers, and the rule
         would clear a shrink the ladder then compacts on. Asked of the ANSWER each
         reader gives, so a reader that stops syncing fails here."""
-        from kiro_crew import session as session_mod
-        from kiro_crew.session import SessionManager
+        from aj_crew import session as session_mod
+        from aj_crew.session import SessionManager
 
         monkeypatch.setattr(session_mod, "published_autocompact_pct", lambda: 55.0)
 
@@ -1417,7 +1417,7 @@ class TestARefusalNothingActedOn:
         and never rewritten -- so a refusal recorded before that guard describes a
         decision nothing acted on and nobody can clear. Driven through the oracle,
         which is the only place inside the await window."""
-        import kiro_crew.decisions.impl_systemone as impl_mod
+        import aj_crew.decisions.impl_systemone as impl_mod
 
         slot = _routed_slot("chat-repick-refused")
         state, client = _wired(tmp_path, serves="model-c")
@@ -1449,7 +1449,7 @@ class TestARefusalNothingActedOn:
                 )
             ),
         )
-        import kiro_crew.decisions.impl_systemone as impl_mod
+        import aj_crew.decisions.impl_systemone as impl_mod
 
         slot = _routed_slot("chat-empty-landing-repick")
         state, client = _wired(tmp_path, serves="model-c")

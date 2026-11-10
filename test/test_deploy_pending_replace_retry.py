@@ -29,9 +29,9 @@ import json
 import pytest
 from windows_sim import replace_sharing_violation
 
-from kiro_crew import atomic_write as aw
-from kiro_crew import platform_compat
-from kiro_crew.deploy import pending
+from aj_crew import atomic_write as aw
+from aj_crew import platform_compat
+from aj_crew.deploy import pending
 
 
 @pytest.fixture(autouse=True)

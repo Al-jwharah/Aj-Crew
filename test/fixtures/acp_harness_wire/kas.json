@@ -23,7 +23,7 @@
               }
             },
             "command": "pinned-core",
-            "name": "kirocrew-core"
+            "name": "ajcrew-core"
           },
           {
             "_meta": {
@@ -32,7 +32,7 @@
               }
             },
             "command": "pinned-cron",
-            "name": "kirocrew-cron"
+            "name": "ajcrew-cron"
           }
         ]
       }
@@ -75,11 +75,11 @@
             "command": "pinned-core",
             "env": [
               {
-                "name": "KIROCREW_STUB_SESSION_TOKEN",
+                "name": "AJCREW_STUB_SESSION_TOKEN",
                 "value": "pinned-session-token"
               }
             ],
-            "name": "kirocrew-core"
+            "name": "ajcrew-core"
           },
           {
             "_meta": {
@@ -90,11 +90,11 @@
             "command": "pinned-cron",
             "env": [
               {
-                "name": "KIROCREW_STUB_SESSION_TOKEN",
+                "name": "AJCREW_STUB_SESSION_TOKEN",
                 "value": "pinned-session-token"
               }
             ],
-            "name": "kirocrew-cron"
+            "name": "ajcrew-cron"
           }
         ],
         "sessionId": "pinned-resume-sid"

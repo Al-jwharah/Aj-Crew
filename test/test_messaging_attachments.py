@@ -19,8 +19,8 @@ import time
 
 import pytest
 
-from kiro_crew.messaging import attachments
-from kiro_crew.messaging.attachments import (
+from aj_crew.messaging import attachments
+from aj_crew.messaging.attachments import (
     AUDIO,
     DOCUMENT,
     IMAGE,
@@ -118,7 +118,7 @@ class TestParameterizedDocumentReachesTheParser:
     @pytest.mark.asyncio
     async def test_the_parser_gets_the_same_base_type_the_classifier_read(self, monkeypatch):
         """``application/pdf; charset=binary`` on a name with no extension is parsed as a PDF."""
-        import kiro_crew.messaging.attachments as mod
+        import aj_crew.messaging.attachments as mod
 
         seen: list[str] = []
 
@@ -594,7 +594,7 @@ class TestClassifyOverride:
         Imported here, not in ``messaging/attachments.py``, so the production
         dependency surface stays stdlib + the shared helpers.
         """
-        from kiro_crew.acp.prompt_blocks import IMAGE_MEDIA_TYPES
+        from aj_crew.acp.prompt_blocks import IMAGE_MEDIA_TYPES
 
         assert attachments._INLINEABLE_IMAGE_SUFFIXES == frozenset(IMAGE_MEDIA_TYPES)
 
@@ -771,7 +771,7 @@ class TestAppendAttachmentContext:
         # the bare path line into an image block leaves the note readable.
         import io
 
-        from kiro_crew.acp.prompt_blocks import build_prompt_blocks
+        from aj_crew.acp.prompt_blocks import build_prompt_blocks
 
         pil = pytest.importorskip("PIL.Image")
         buf = io.BytesIO()
@@ -790,7 +790,7 @@ class TestAppendAttachmentContext:
         assert "is saved in the folder" not in out
 
     def test_slack_uses_the_same_note(self):
-        from kiro_crew.slack import files as slack_files
+        from aj_crew.slack import files as slack_files
 
         assert slack_files.image_location_note is attachments.image_location_note
 
@@ -831,7 +831,7 @@ class TestAppendAttachmentContext:
 
     def test_reexport_from_discord(self):
         """discord/attachments re-exports the same function."""
-        from kiro_crew.discord.attachments import append_attachment_context as discord_fn
+        from aj_crew.discord.attachments import append_attachment_context as discord_fn
 
         assert discord_fn is append_attachment_context
 
@@ -917,14 +917,14 @@ class TestChannelReadsNoAttachments:
     """
 
     def test_it_names_the_kind_when_known(self) -> None:
-        from kiro_crew.messaging.attachments import channel_reads_no_attachments
+        from aj_crew.messaging.attachments import channel_reads_no_attachments
 
         out = channel_reads_no_attachments("image")
         assert out.startswith("[Attachment (image) — ")
         assert out.endswith("]")
 
     def test_it_omits_an_empty_kind_rather_than_printing_brackets(self) -> None:
-        from kiro_crew.messaging.attachments import channel_reads_no_attachments
+        from aj_crew.messaging.attachments import channel_reads_no_attachments
 
         out = channel_reads_no_attachments("")
         assert out.startswith("[Attachment — ")
@@ -935,7 +935,7 @@ class TestChannelReadsNoAttachments:
         ``ingest`` rejection already uses, so a channel that later gains real
         ingestion changes which function builds the string and not how it
         reads."""
-        from kiro_crew.messaging.attachments import channel_reads_no_attachments
+        from aj_crew.messaging.attachments import channel_reads_no_attachments
 
         out = channel_reads_no_attachments("file")
         assert out.count("[") == 1
@@ -945,21 +945,21 @@ class TestChannelReadsNoAttachments:
     def test_a_platform_kind_cannot_forge_a_second_segment(self) -> None:
         """The kind is platform-supplied and echoed to the sender, so brackets
         and dashes -- what a rejection line is made of -- are stripped."""
-        from kiro_crew.messaging.attachments import channel_reads_no_attachments
+        from aj_crew.messaging.attachments import channel_reads_no_attachments
 
         out = channel_reads_no_attachments("x] — [injected")
         assert out.count("[") == 1
         assert out.count("]") == 1
 
     def test_a_long_kind_is_capped(self) -> None:
-        from kiro_crew.messaging.attachments import channel_reads_no_attachments
+        from aj_crew.messaging.attachments import channel_reads_no_attachments
 
         out = channel_reads_no_attachments("a" * 500)
         assert len(out) < 200
 
     def test_it_carries_no_emoji(self) -> None:
         """AGENTS.md: never an emoji in a user-facing surface."""
-        from kiro_crew.messaging.attachments import channel_reads_no_attachments
+        from aj_crew.messaging.attachments import channel_reads_no_attachments
 
         out = channel_reads_no_attachments("image")
         assert all(ord(ch) < 0x2500 or ch == "\u2014" for ch in out)
@@ -968,7 +968,7 @@ class TestChannelReadsNoAttachments:
         """Feishu's ``post`` is a rich-text message, not a file, so the reply
         must not tell the sender a "file was not opened" -- a wrong reason.
         Still one bracketed, em-dash-separated segment."""
-        from kiro_crew.messaging.attachments import channel_reads_no_attachments
+        from aj_crew.messaging.attachments import channel_reads_no_attachments
 
         out = channel_reads_no_attachments("post")
         assert "file was not opened" not in out

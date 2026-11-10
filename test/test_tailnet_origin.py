@@ -26,8 +26,8 @@ from unittest.mock import patch
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.dashboard import tailnet
-from kiro_crew.dashboard.urls import build_allowed_hosts, build_allowed_origins
+from aj_crew.dashboard import tailnet
+from aj_crew.dashboard.urls import build_allowed_hosts, build_allowed_origins
 
 _GOOD = "desk.tail1a2b3c.ts.net"
 _SUFFIX = "tail1a2b3c.ts.net"
@@ -295,7 +295,7 @@ class TestSpawnHardening:
         monkeypatch.setattr(tailnet.os.path, "isfile", lambda _path: True)
         monkeypatch.setattr(tailnet.os, "access", lambda _path, _mode: True)
         with patch(
-            "kiro_crew.github_runner.validate_provider_executable",
+            "aj_crew.github_runner.validate_provider_executable",
             side_effect=ValueError("executable can be replaced by Everyone"),
         ) as validate:
             assert tailnet._cli_path() is None

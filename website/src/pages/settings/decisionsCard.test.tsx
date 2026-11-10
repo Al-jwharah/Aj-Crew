@@ -55,7 +55,7 @@ describe('Decisions (Jev) preview card', () => {
     // asserted on the first frame, because the card is not drawn until the
     // governance read says it may be.
     vi.spyOn(api, 'dashboardConfig').mockResolvedValue({ decisions_enabled: true } as never)
-    vi.spyOn(api, 'kirocrewConfig').mockResolvedValue({} as never)
+    vi.spyOn(api, 'ajcrewConfig').mockResolvedValue({} as never)
     vi.spyOn(api, 'getDecisionsConsent').mockReturnValue(new Promise(() => {}) as never)
     renderSection()
     await waitFor(() => {
@@ -170,7 +170,7 @@ describe('Decisions (Jev) preview card', () => {
     let releaseRefetch: (value: unknown) => void = () => {}
     let reads = 0
     vi.spyOn(api, 'dashboardConfig').mockResolvedValue({ decisions_enabled: true } as never)
-    vi.spyOn(api, 'kirocrewConfig').mockResolvedValue({ decisions: { bucket: 100 } } as never)
+    vi.spyOn(api, 'ajcrewConfig').mockResolvedValue({ decisions: { bucket: 100 } } as never)
     vi.spyOn(api, 'getDecisionsConsent').mockImplementation((() => {
       reads += 1
       if (reads === 1) return Promise.resolve(consentOf(false))
@@ -838,7 +838,7 @@ describe('Decisions (Jev) preview card', () => {
       // set" about a key that exists and offered Save under it -- an invitation to
       // overwrite a credential the reader had just been told was absent.
       vi.spyOn(api, 'dashboardConfig').mockResolvedValue({ decisions_enabled: true } as never)
-      vi.spyOn(api, 'kirocrewConfig').mockResolvedValue({ decisions: { bucket: 100 } } as never)
+      vi.spyOn(api, 'ajcrewConfig').mockResolvedValue({ decisions: { bucket: 100 } } as never)
       vi.spyOn(api, 'getDecisionsConsent').mockResolvedValue(consentOf(true))
       vi.spyOn(api, 'secretsList').mockRejectedValue(new Error('gateway busy'))
       const save = vi.spyOn(api, 'secretsSave')
@@ -870,7 +870,7 @@ describe('Decisions (Jev) preview card', () => {
     // for its owner to turn it off -- the vault being unreachable is not a reason to
     // keep conversation leaving the machine. Neither read is needed to write `false`.
     vi.spyOn(api, 'dashboardConfig').mockResolvedValue({ decisions_enabled: true } as never)
-    vi.spyOn(api, 'kirocrewConfig').mockResolvedValue({ decisions: { bucket: 100 } } as never)
+    vi.spyOn(api, 'ajcrewConfig').mockResolvedValue({ decisions: { bucket: 100 } } as never)
     vi.spyOn(api, 'getDecisionsConsent').mockResolvedValue(consentOf(true))
     vi.spyOn(api, 'secretsList').mockRejectedValue(new Error('vault unreachable'))
     vi.spyOn(api, 'models').mockRejectedValue(new Error('no model list'))
@@ -897,7 +897,7 @@ describe('Decisions (Jev) preview card', () => {
     // whether work is lost. The wording is the button's TEXT, and then it is the
     // button's only accessible name: a second one over a visible one is a duplicate.
     vi.spyOn(api, 'dashboardConfig').mockResolvedValue({ decisions_enabled: true } as never)
-    vi.spyOn(api, 'kirocrewConfig').mockResolvedValue({ decisions: { bucket: 100 } } as never)
+    vi.spyOn(api, 'ajcrewConfig').mockResolvedValue({ decisions: { bucket: 100 } } as never)
     vi.spyOn(api, 'getDecisionsConsent').mockResolvedValue(consentOf(true))
     vi.spyOn(api, 'secretsList').mockResolvedValue({ names: ['TYPESAFE_API_KEY'] } as never)
     renderSection()
@@ -917,7 +917,7 @@ describe('Decisions (Jev) preview card', () => {
   describe('removing the credential asks before it writes', () => {
     const stubSetKey = (held?: Promise<unknown>) => {
       vi.spyOn(api, 'dashboardConfig').mockResolvedValue({ decisions_enabled: true } as never)
-      vi.spyOn(api, 'kirocrewConfig').mockResolvedValue({ decisions: { bucket: 100 } } as never)
+      vi.spyOn(api, 'ajcrewConfig').mockResolvedValue({ decisions: { bucket: 100 } } as never)
       vi.spyOn(api, 'getDecisionsConsent').mockResolvedValue(consentOf(true))
       vi.spyOn(api, 'secretsList').mockResolvedValue({ names: ['TYPESAFE_API_KEY'] } as never)
       const del = vi.spyOn(api, 'secretsDelete')

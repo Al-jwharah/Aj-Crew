@@ -1,4 +1,4 @@
-"""Agent-record free text must leave GET /api/config/kirocrew masked.
+"""Agent-record free text must leave GET /api/config/ajcrew masked.
 
 ``description`` and ``triggers`` on an agent record are agent- and
 package-writable: an agent can edit ``config.json`` directly, and agent sync
@@ -29,10 +29,10 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config import loader as L
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.sections import KiroCrewAgentConfig
-from kiro_crew.dashboard.handlers.core import (
+from aj_crew.config import loader as L
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.sections import AjCrewAgentConfig
+from aj_crew.dashboard.handlers.core import (
     _AGENT_UNTRUSTED_TEXT_FIELDS,
     _SENSITIVE_MASK,
     _mask_agent_free_text,
@@ -48,12 +48,12 @@ _BENIGN_DESCRIPTION = "Reviews pull requests and summarizes diffs."
 _BENIGN_TRIGGERS = "use for code review, PR summaries, 代码审查"
 
 
-def _cfg_with_agents() -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
-    cfg.agents["shady"] = KiroCrewAgentConfig(
+def _cfg_with_agents() -> AjCrewConfig:
+    cfg = AjCrewConfig()
+    cfg.agents["shady"] = AjCrewAgentConfig(
         description=_CRED_DESCRIPTION, triggers=_EXFIL_TRIGGERS
     )
-    cfg.agents["plain"] = KiroCrewAgentConfig(
+    cfg.agents["plain"] = AjCrewAgentConfig(
         description=_BENIGN_DESCRIPTION, triggers=_BENIGN_TRIGGERS
     )
     return cfg
@@ -65,7 +65,7 @@ def test_payload_preconditions_pin_the_redactor():
     Localizes a detector regression: without these, a redactor change makes the
     masking tests fail with no signal whether the rule or the detector moved.
     """
-    from kiro_crew.dashboard.handlers.discover import _redact_external
+    from aj_crew.dashboard.handlers.discover import _redact_external
 
     assert _redact_external(_CRED_DESCRIPTION) != _CRED_DESCRIPTION
     assert _redact_external(_EXFIL_TRIGGERS) != _EXFIL_TRIGGERS
@@ -112,7 +112,7 @@ def test_carries_str_matches_optional_str_annotation_forms():
 
 def test_every_unguarded_str_field_is_in_the_masked_set():
     """INVARIANT: the masked tuple plus the shape-guarded exceptions must
-    cover every ``str`` field of ``KiroCrewAgentConfig``.
+    cover every ``str`` field of ``AjCrewAgentConfig``.
 
     A new free-text field fails here instead of reaching the browser unmasked. Each
     exception names the load-time guard that pins its shape.
@@ -125,9 +125,9 @@ def test_every_unguarded_str_field_is_in_the_masked_set():
         "approval_mode",  # coerce_member_approval_mode: one of three modes or ""
         "session_color",  # _safe_color: pinned to #rrggbb or ""
     }
-    hints = typing.get_type_hints(KiroCrewAgentConfig)
+    hints = typing.get_type_hints(AjCrewAgentConfig)
     str_fields = {
-        f.name for f in dataclasses.fields(KiroCrewAgentConfig) if _carries_str(hints[f.name])
+        f.name for f in dataclasses.fields(AjCrewAgentConfig) if _carries_str(hints[f.name])
     }
     assert str_fields, "field-type introspection returned nothing — check _carries_str"
     covered = set(_AGENT_UNTRUSTED_TEXT_FIELDS) | shape_guarded
@@ -197,8 +197,8 @@ class TestMaskedConfigDict:
         # The wider field set: every unguarded record string is
         # covered, not just the two the issue named. A credential-shaped
         # workspace/kiro_agent must mask; the benign defaults must not.
-        cfg = KiroCrewConfig()
-        cfg.agents["odd"] = KiroCrewAgentConfig(
+        cfg = AjCrewConfig()
+        cfg.agents["odd"] = AjCrewAgentConfig(
             member_id=_CRED_DESCRIPTION,
             kiro_agent=_CRED_DESCRIPTION,
             workspace=_EXFIL_TRIGGERS,
@@ -210,15 +210,15 @@ class TestMaskedConfigDict:
         assert record["workspace"] == _SENSITIVE_MASK
         # Untouched benign defaults keep rendering in the Settings UI.
         assert record["memory_store"] == "default"
-        assert record["source"] == "kirocrew"
+        assert record["source"] == "ajcrew"
 
     def test_suspicious_record_key_is_removed_not_leaked(self):
         # Agent sync stores a discovered agent's NAME as the map key, so a
         # credential-shaped package name would ship verbatim as a key. Removal,
         # not masking: masking a key would collide two suspicious records.
-        cfg = KiroCrewConfig()
-        cfg.agents[_CRED_DESCRIPTION] = KiroCrewAgentConfig(description="x")
-        cfg.agents["plain"] = KiroCrewAgentConfig(description=_BENIGN_DESCRIPTION)
+        cfg = AjCrewConfig()
+        cfg.agents[_CRED_DESCRIPTION] = AjCrewAgentConfig(description="x")
+        cfg.agents["plain"] = AjCrewAgentConfig(description=_BENIGN_DESCRIPTION)
         masked = _masked_config_dict(cfg)
         assert _CRED_DESCRIPTION not in masked["agents"]
         assert "plain" in masked["agents"]
@@ -229,8 +229,8 @@ class TestMaskedConfigDict:
     def test_name_references_to_removed_record_are_masked(self):
         # default_agent / session.pool_agent spell an agent name verbatim, so a
         # removed record's name must not survive through them.
-        cfg = KiroCrewConfig()
-        cfg.agents[_CRED_DESCRIPTION] = KiroCrewAgentConfig()
+        cfg = AjCrewConfig()
+        cfg.agents[_CRED_DESCRIPTION] = AjCrewAgentConfig()
         cfg.default_agent = _CRED_DESCRIPTION
         cfg.session.pool_agent = _CRED_DESCRIPTION
         masked = _masked_config_dict(cfg)
@@ -239,8 +239,8 @@ class TestMaskedConfigDict:
         assert "AKIAIOSFODNN7EXAMPLE" not in json.dumps(masked)
 
     def test_benign_name_references_are_untouched(self):
-        cfg = KiroCrewConfig()
-        cfg.agents["plain"] = KiroCrewAgentConfig()
+        cfg = AjCrewConfig()
+        cfg.agents["plain"] = AjCrewAgentConfig()
         cfg.default_agent = "plain"
         cfg.session.pool_agent = "plain"
         masked = _masked_config_dict(cfg)
@@ -268,15 +268,15 @@ def _point_loader_at(tmp_path, monkeypatch, data: dict) -> None:
 def _seed_config() -> dict:
     return {
         "agents": {
-            "kirocrew": {
-                "kiro_agent": "kirocrew",
+            "ajcrew": {
+                "kiro_agent": "ajcrew",
                 "workspace": "default",
                 "memory_store": "default",
                 "description": _CRED_DESCRIPTION,
                 "triggers": _EXFIL_TRIGGERS,
             }
         },
-        "default_agent": "kirocrew",
+        "default_agent": "ajcrew",
         "auto_update": False,
     }
 
@@ -286,40 +286,40 @@ class TestConfigEndpointWire:
 
     @pytest.mark.asyncio
     async def test_get_response_masks_agent_free_text(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers import core as core_mod
+        from aj_crew.dashboard.handlers import core as core_mod
 
         _point_loader_at(tmp_path, monkeypatch, _seed_config())
         app = web.Application()
-        app.router.add_route("*", "/api/config/kirocrew", core_mod.api_kirocrew_config)
+        app.router.add_route("*", "/api/config/ajcrew", core_mod.api_ajcrew_config)
         async with TestClient(TestServer(app)) as client:
-            resp = await client.get("/api/config/kirocrew")
+            resp = await client.get("/api/config/ajcrew")
             assert resp.status == 200
             body = await resp.json()
-        assert body["agents"]["kirocrew"]["description"] == _SENSITIVE_MASK
-        assert body["agents"]["kirocrew"]["triggers"] == _SENSITIVE_MASK
+        assert body["agents"]["ajcrew"]["description"] == _SENSITIVE_MASK
+        assert body["agents"]["ajcrew"]["triggers"] == _SENSITIVE_MASK
         assert "AKIAIOSFODNN7EXAMPLE" not in json.dumps(body)
 
     @pytest.mark.asyncio
     async def test_patch_echo_masks_agent_free_text(self, tmp_path, monkeypatch):
         """The PATCH handler's config echo is the second response site."""
-        from kiro_crew.dashboard.handlers import api_kirocrew_config_patch
+        from aj_crew.dashboard.handlers import api_ajcrew_config_patch
 
         cfg_path = tmp_path / "config.json"
         cfg_path.write_text(json.dumps(_seed_config()), encoding="utf-8")
         app = web.Application()
-        app.router.add_patch("/api/config/kirocrew", api_kirocrew_config_patch)
+        app.router.add_patch("/api/config/ajcrew", api_ajcrew_config_patch)
         app["state"] = SimpleNamespace(subagents=MagicMock(spec=["update_completion_keep"]))
         as_owner(app)
-        with patch("kiro_crew.config.loader.config_path", return_value=cfg_path):
+        with patch("aj_crew.config.loader.config_path", return_value=cfg_path):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.patch(
-                    "/api/config/kirocrew", json={"path": "auto_update", "value": True}
+                    "/api/config/ajcrew", json={"path": "auto_update", "value": True}
                 )
                 assert resp.status == 200
                 body = await resp.json()
-        assert body["agents"]["kirocrew"]["description"] == _SENSITIVE_MASK
-        assert body["agents"]["kirocrew"]["triggers"] == _SENSITIVE_MASK
+        assert body["agents"]["ajcrew"]["description"] == _SENSITIVE_MASK
+        assert body["agents"]["ajcrew"]["triggers"] == _SENSITIVE_MASK
         assert "AKIAIOSFODNN7EXAMPLE" not in json.dumps(body)
         # The PATCH wrote only its own path; the stored free text is untouched.
         stored = json.loads(cfg_path.read_text(encoding="utf-8"))
-        assert stored["agents"]["kirocrew"]["description"] == _CRED_DESCRIPTION
+        assert stored["agents"]["ajcrew"]["description"] == _CRED_DESCRIPTION

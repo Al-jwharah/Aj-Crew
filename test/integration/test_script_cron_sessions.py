@@ -46,7 +46,7 @@ from typing import Iterator
 
 import pytest
 
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 pytestmark = pytest.mark.timeout(120)
 
@@ -63,7 +63,7 @@ def _register_script_job(gw, job_id: str = _JOB_ID) -> None:
     ``cron_service.schedule.is_due`` answers False for that shape, so the
     scheduler never runs ``dispatch.py``.
     """
-    from kiro_crew.cron import CronJob
+    from aj_crew.cron import CronJob
 
     gw.state.crons._jobs.append(
         CronJob(id=job_id, name=job_id.replace("-", " "), message="", script="dispatch.py:run")
@@ -85,27 +85,27 @@ def _switch_session_control_off(home: Path) -> None:
 def _script_context(gw, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[object]:
     """A ``ScriptContext`` built from the runner's env contract, in this process.
 
-    The secret sits in a 0600 file named by ``_KIROCREW_SECRET_FILE``, the dial
+    The secret sits in a 0600 file named by ``_AJCREW_SECRET_FILE``, the dial
     port is the one the runner resolved, and the run's signed token names
     ``cron:<job id>``. The token is retracted when the block ends.
     """
-    from kiro_crew.cron_script import ScriptContext
-    from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV, mint_stub_session_token
-    from kiro_crew.session_token_sig import publish_session_token, retract_session_token
+    from aj_crew.cron_script import ScriptContext
+    from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV, mint_stub_session_token
+    from aj_crew.session_token_sig import publish_session_token, retract_session_token
 
-    secret_file = tmp_path / "kirocrew_secret_run"
+    secret_file = tmp_path / "ajcrew_secret_run"
     secret_file.write_text(gw.app["local_secret"], encoding="utf-8")
     secret_file.chmod(0o600)
     token = mint_stub_session_token()
     publish_session_token(token, f"cron:{_JOB_ID}")
-    monkeypatch.setenv("_KIROCREW_SECRET_FILE", str(secret_file))
-    monkeypatch.setenv("_KIROCREW_DIAL_PORT", str(gw.port))
+    monkeypatch.setenv("_AJCREW_SECRET_FILE", str(secret_file))
+    monkeypatch.setenv("_AJCREW_DIAL_PORT", str(gw.port))
     monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, token)
     try:
         ctx = ScriptContext(job=SimpleNamespace(id=_JOB_ID, message=""))
         # __post_init__ consumed the file and the env, as it does in a run.
         assert not secret_file.exists()
-        assert "_KIROCREW_SECRET_FILE" not in os.environ
+        assert "_AJCREW_SECRET_FILE" not in os.environ
         yield ctx
     finally:
         retract_session_token(token)
@@ -282,7 +282,7 @@ async def test_a_switched_off_gateway_refusal_reaches_a_script_context(
 
 @pytest.mark.asyncio
 async def test_a_cron_key_opens_a_slot_labelled_cron_created(gateway_boot) -> None:
-    from kiro_crew.dashboard.state import SlotOrigin
+    from aj_crew.dashboard.state import SlotOrigin
 
     async with gateway_boot() as gw:
         _register_script_job(gw)
@@ -316,7 +316,7 @@ async def test_a_cron_key_opens_a_slot_labelled_cron_created(gateway_boot) -> No
 async def test_a_cron_key_seeding_a_new_name_opens_a_slot_labelled_cron_created(
     gateway_boot,
 ) -> None:
-    from kiro_crew.dashboard.state import SlotOrigin
+    from aj_crew.dashboard.state import SlotOrigin
 
     async with gateway_boot() as gw:
         _register_script_job(gw)
@@ -339,7 +339,7 @@ async def test_a_cron_key_seeding_a_new_name_opens_a_slot_labelled_cron_created(
 
 @pytest.mark.asyncio
 async def test_an_owner_opened_slot_stays_user_origin(gateway_boot) -> None:
-    from kiro_crew.dashboard.state import SlotOrigin
+    from aj_crew.dashboard.state import SlotOrigin
 
     async with gateway_boot() as gw:
         made = await gw.post_json("/api/chat/slots", {"name": "Owner tab"})
@@ -400,7 +400,7 @@ async def _seed_and_settle(gw, key: str, message: str, job_id: str = "") -> None
 
 async def _persisted_meta(gw, key: str) -> dict:
     """The metadata line the gateway persisted for slot *key*, read off the loop."""
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
 
     log = gw.state.conversation_log
     transcript = slot_transcript_key(key)
@@ -481,7 +481,7 @@ async def test_the_owner_can_seed_a_cron_opened_slot(gateway_boot) -> None:
 async def test_a_switched_off_gateway_still_lets_the_owner_seed_a_cron_slot(
     gateway_boot, integration_home: Path
 ) -> None:
-    from kiro_crew.dashboard.state import SlotOrigin
+    from aj_crew.dashboard.state import SlotOrigin
 
     _switch_session_control_off(integration_home)
     async with gateway_boot() as gw:
@@ -552,7 +552,7 @@ async def _owner_sets_mode(gw, key: str, mode: str) -> None:
 
 def _cron_slot_without_the_routes(gw, key: str, job_id: str = _JOB_ID):
     """A slot the cron owns, minted directly: for a gateway whose switch is off."""
-    from kiro_crew.dashboard.state import SlotOrigin
+    from aj_crew.dashboard.state import SlotOrigin
 
     slot = gw.state.get_or_create_slot(key, origin=SlotOrigin.CRON)
     slot._created_by = f"cron:{job_id}"
@@ -571,7 +571,7 @@ def _posture(slot) -> tuple[bool, bool]:
 
 async def _audit_rows(gw, *, operation_prefix: str) -> list[dict]:
     """SEL access rows whose operation starts with *operation_prefix*, newest first."""
-    from kiro_crew.sel import sel
+    from aj_crew.sel import sel
 
     rows = await asyncio.to_thread(sel().recent, 200)
     return [
@@ -586,7 +586,7 @@ async def _audit_rows(gw, *, operation_prefix: str) -> list[dict]:
 async def test_a_script_context_sets_trust_and_trust_reads_on_its_own_session(
     gateway_boot, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.safety_override import safety_override
+    from aj_crew.safety_override import safety_override
 
     async with gateway_boot() as gw:
         _register_script_job(gw)
@@ -618,7 +618,7 @@ async def test_a_script_context_sets_trust_and_trust_reads_on_its_own_session(
 async def test_a_script_context_is_refused_every_other_mode(
     gateway_boot, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mode: str
 ) -> None:
-    from kiro_crew.safety_override import safety_override
+    from aj_crew.safety_override import safety_override
 
     async with gateway_boot() as gw:
         _register_script_job(gw)

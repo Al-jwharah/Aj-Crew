@@ -14,14 +14,14 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.transport_errors import AcpError
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.transport_errors import AcpError
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_DEEPSEEK,
     ACP_BACKEND_KIRO,
 )
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.providers.acp import AcpProvider
 
 
 def _provider(calls: list[str], *, confirms: bool) -> AcpProvider:
@@ -110,7 +110,7 @@ def test_every_send_path_is_covered():
     import ast
     import inspect
 
-    from kiro_crew.providers import acp_turns
+    from aj_crew.providers import acp_turns
 
     tree = ast.parse(inspect.getsource(acp_turns))
     senders = set()

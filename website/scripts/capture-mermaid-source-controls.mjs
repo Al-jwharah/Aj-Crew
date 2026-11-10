@@ -34,7 +34,7 @@ import { join } from 'node:path'
 import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 
 const OUT = process.argv[2] || process.env.PROBE_OUT || '../temp-screenshots/mermaid-source-5902'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -61,10 +61,10 @@ function scene(slot, title, lead, src) {
   return {
     slots: [{
       key: slot, title, running: false, last_message: 'Rendered the booking flow.',
-      messages: 2, agent: 'kirocrew', project: PROJECT, updated: now,
+      messages: 2, agent: 'ajcrew', project: PROJECT, updated: now,
     }],
     detail: {
-      key: slot, title, agent: 'kirocrew', project: PROJECT, running: false,
+      key: slot, title, agent: 'ajcrew', project: PROJECT, running: false,
       messages: [
         { role: 'user', content: 'Draw the booking flow.', ts: now - 60 },
         { role: 'assistant', content: md, ts: now - 30 },

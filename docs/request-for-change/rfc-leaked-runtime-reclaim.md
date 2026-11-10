@@ -18,7 +18,7 @@ superseded-by: []
 - Status: draft. Acceptance requested from a maintainer; the status flips to `accepted` when one records it here. Step A of the rollout is on main as #15755 (reading and reclaim) and #15764 (dashboard card) and needed no record because it adds no default kill authority. Steps B and C extend what the gateway kills by default, and the First Principles lane reads that decision from the base branch, so this document lands on its own first.
 - Author: iamwhatever
 - Created: 2026-10-01
-- Related: #14510 (the reconciler's kill arm, which predates this RFC), `src/kiro_crew/runtime_reconcile.py`, `src/kiro_crew/runtime_ownership.py` (`authorize_runtime_kill`), `src/kiro_crew/session_pid_orphan_scan.py` (`_is_untracked_managed_agent_orphan`), `src/kiro_crew/session_scope_reap.py` (`instance_slice_pids`, `reap_abandoned_agent_scopes`)
+- Related: #14510 (the reconciler's kill arm, which predates this RFC), `src/aj_crew/runtime_reconcile.py`, `src/aj_crew/runtime_ownership.py` (`authorize_runtime_kill`), `src/aj_crew/session_pid_orphan_scan.py` (`_is_untracked_managed_agent_orphan`), `src/aj_crew/session_scope_reap.py` (`instance_slice_pids`, `reap_abandoned_agent_scopes`)
 
 ## Summary
 
@@ -36,11 +36,11 @@ Three arms look at the unowned population.
 |---|---|---|---|
 | Reconciler | `runtime_reconcile.py` | pids in this install's agent cgroup slice (`instance_slice_pids`) | kills, default budget `DEFAULT_MAX_KILLS = 5` per pass |
 | Scope reaper | `session_scope_reap.py`, `reap_abandoned_agent_scopes` (every cleanup tick, through `reap_agent_scopes` in `session_parts/sweeps.py`) | whole transient scopes in the same slice | stops a scope that passes its four-part check (the module docstring of `session_scope_reap.py`) |
-| Untracked report | `session_pid_orphan_scan.py`, `_is_untracked_managed_agent_orphan` | init-reparented runtimes with `KIROCREW_SPAWNED` and no PID-file row, POSIX only (`_our_orphan_pids` returns `[]` on Windows) | logs; since #15755 also feeds the reconciler reading and the confirmed reclaim (Linux only, `RECLAIM_PLATFORM` in `runtime_reconcile.py`) |
+| Untracked report | `session_pid_orphan_scan.py`, `_is_untracked_managed_agent_orphan` | init-reparented runtimes with `AJCREW_SPAWNED` and no PID-file row, POSIX only (`_our_orphan_pids` returns `[]` on Windows) | logs; since #15755 also feeds the reconciler reading and the confirmed reclaim (Linux only, `RECLAIM_PLATFORM` in `runtime_reconcile.py`) |
 
 The reconciler requires five conditions before a signal: this install's spawn marker, unowned on the previous pass too, older than `DEFAULT_MIN_AGE_SECS` (300 s), an argv naming a managed harness, and `authorize_runtime_kill` allowing it. `session.reconcile_max_kills` can only lower the budget; at `0` it audits each would-be kill as `would_kill` and signals nothing.
 
-Each `AcpRuntime` spawn mints a `KIROCREW_SPAWN_INSTANCE` token (`acp/runtime_spawn_launch.py`, held as `_process_instance`) and, since #15755, stamps it beside `KIROCREW_SPAWN_HOME` (this data home) on the child's environment. `AcpClient._spawn` (`acp/client_start.py`) is a second live spawn path, used by `providers/acp.py` and `knowledge/llm_pool.py`, and stamps only `KIROCREW_SPAWNED`; the reclaim refuses every runtime it spawns. Neither value is persisted by the gateway for either path. App backends already persist the same token beside pid and start time in their pid file (`apps/backend_runtime/pidfile.py`, `_record_app_pid`), which is the precedent this RFC follows.
+Each `AcpRuntime` spawn mints a `AJCREW_SPAWN_INSTANCE` token (`acp/runtime_spawn_launch.py`, held as `_process_instance`) and, since #15755, stamps it beside `AJCREW_SPAWN_HOME` (this data home) on the child's environment. `AcpClient._spawn` (`acp/client_start.py`) is a second live spawn path, used by `providers/acp.py` and `knowledge/llm_pool.py`, and stamps only `AJCREW_SPAWNED`; the reclaim refuses every runtime it spawns. Neither value is persisted by the gateway for either path. App backends already persist the same token beside pid and start time in their pid file (`apps/backend_runtime/pidfile.py`, `_record_app_pid`), which is the precedent this RFC follows.
 
 ### Problems
 
@@ -81,7 +81,7 @@ Reason: a leak that nothing ends grows until the host fails, so a default of off
 
 ### 3. Ownership proof is install-scoped and subtractive
 
-A runtime counts as "ours" only through a persisted spawn record written per data home. The record is keyed by runtime root, not by session: one row per spawn, holding the root pid, the root's start id and the minted `KIROCREW_SPAWN_INSTANCE` token. With chat runtime sharing one root serves many sessions, and the lease and tenancy tables already key by pid and start id, so one row per root is the shape the kill gate reads. A candidate qualifies when its environ token matches a row and its current start id equals the row's.
+A runtime counts as "ours" only through a persisted spawn record written per data home. The record is keyed by runtime root, not by session: one row per spawn, holding the root pid, the root's start id and the minted `AJCREW_SPAWN_INSTANCE` token. With chat runtime sharing one root serves many sessions, and the lease and tenancy tables already key by pid and start id, so one row per root is the shape the kill gate reads. A candidate qualifies when its environ token matches a row and its current start id equals the row's.
 
 The row's lifecycle is the decision, not its file format. It is written at spawn, before `session/new`. It is removed only once the root is confirmed gone: the pid is absent, or its start id no longer matches. It is never removed on session release or lease drop. A leak is a runtime that has already dropped out of the tracked records, so a row that followed those records would be gone exactly when it is needed. Step B therefore must not inherit the teardown of `kiro_pids.txt` (`_untrack_pid` removes a row on tracked teardown, and the root row there is a bare pid). The signed `session_pid_<pid>` mapping is closer: `_prune_stale_session_pid_files` removes a mapping only when its pid is dead or no longer that session, and the mapping is keyed on the runtime root pid. It carries no spawn instance or data home today (Open question 1).
 
@@ -99,8 +99,8 @@ The reconciler refuses a pid-level candidate when any of these hold. On main `_w
 | Session leader alive | the candidate's sid names a live process, other than the candidate, that is still that session's leader |
 | Group leader alive | the candidate's pgid names a live process, other than the candidate, that is still that group's leader |
 | Tracked or protected | the pid is in a PID file or `register_protected_pid` |
-| No readable spawn instance | the candidate's environ has no `KIROCREW_SPAWN_INSTANCE` |
-| Spawn instance still live | a live process outside the candidate's own tree carries the same `KIROCREW_SPAWN_INSTANCE` |
+| No readable spawn instance | the candidate's environ has no `AJCREW_SPAWN_INSTANCE` |
+| Spawn instance still live | a live process outside the candidate's own tree carries the same `AJCREW_SPAWN_INSTANCE` |
 
 The lease veto comes first and the spawn record second. A root that a new gateway adopts or re-leases after a restart is refused by the lease gate even though its spawn row was written by the previous gateway: a row says the process was ours, never that nobody holds it now.
 
@@ -117,7 +117,7 @@ Reason: every real bug the lanes found in #12612 had one shape. The env stamp is
 | macOS | report arm log (`KERN_PROCARGS2` marker read) | report only |
 | Windows | none | no reading |
 
-macOS stays report-only until it has a native proof of ownership that does not rest on `KERN_PROCARGS2` environ reads in a fast-wrapping pid space. Windows has no reading at all: `_our_orphan_pids` returns `[]` there and `_env_has_kirocrew_marker` has no environ oracle there. It gets a reading only once it has a native candidate source (job objects), and reclaim after that.
+macOS stays report-only until it has a native proof of ownership that does not rest on `KERN_PROCARGS2` environ reads in a fast-wrapping pid space. Windows has no reading at all: `_our_orphan_pids` returns `[]` there and `_env_has_ajcrew_marker` has no environ oracle there. It gets a reading only once it has a native candidate source (job objects), and reclaim after that.
 
 Reason: the Linux proof uses `/proc/<pid>/environ`, sid and pgid. Neither other platform offers the same reads at the same cost, and a port that guesses would trade a missed reclaim for a wrong kill.
 
@@ -131,13 +131,13 @@ Reason: the user can decide that a leak should end now. They cannot vouch that i
 
 | Step | Ships | New default authority | Exit criterion |
 |---|---|---|---|
-| A (#15755, merged) | report arm hits feed the reconciler reading (count, tree RSS); owner-only, confirm-required `POST /api/system/leaked-runtimes/reclaim`; `GET /api/system/leaked-runtimes` authenticated but not owner-gated; dashboard card (#15764); Linux only | none | a confirmed reclaim ends only a candidate whose `KIROCREW_SPAWN_HOME` equals this data home, and refuses one with no stamp or another home |
-| B | persisted per-data-home spawn record (Decision 3) for ACP runtimes; `AcpClient._spawn` stamps `KIROCREW_SPAWN_INSTANCE` and `KIROCREW_SPAWN_HOME` as `AcpRuntime` does | none | after a gateway restart the reconciler reading still names the previous process's leaked runtimes as ours, a row with a mismatched start id yields no kill, a root a new gateway adopts or re-leases after the restart is refused by the lease gate despite its old row, and a row survives session release and lease drop and is removed only once its root is gone |
+| A (#15755, merged) | report arm hits feed the reconciler reading (count, tree RSS); owner-only, confirm-required `POST /api/system/leaked-runtimes/reclaim`; `GET /api/system/leaked-runtimes` authenticated but not owner-gated; dashboard card (#15764); Linux only | none | a confirmed reclaim ends only a candidate whose `AJCREW_SPAWN_HOME` equals this data home, and refuses one with no stamp or another home |
+| B | persisted per-data-home spawn record (Decision 3) for ACP runtimes; `AcpClient._spawn` stamps `AJCREW_SPAWN_INSTANCE` and `AJCREW_SPAWN_HOME` as `AcpRuntime` does | none | after a gateway restart the reconciler reading still names the previous process's leaked runtimes as ours, a row with a mismatched start id yields no kill, a root a new gateway adopts or re-leases after the restart is refused by the lease gate despite its old row, and a row survives session release and lease drop and is removed only once its root is gone |
 | C | default reclaim on non-cgroup Linux using the step B record | yes, under this RFC | a non-cgroup host's leaked runtimes from stamped spawn paths are reclaimed within the budget with no manual pass, and `reconcile_max_kills=0` turns it into `would_kill` only |
 
 Each step is its own PR and can be abandoned without the next.
 
-Step A as merged already limits a confirmed reclaim to install-stamped candidates. `RuntimeReconciler.reclaim_untracked` refuses through `_why_not_reclaimable` when the candidate's `KIROCREW_SPAWN_HOME` is absent or differs from this data home. It also refuses when a live session or group leader remains, when the candidate has no readable spawn instance, and when a live process outside the candidate's tree holds the same spawn instance. A runtime spawned before the stamp existed, or by an unstamped path such as `AcpClient._spawn`, reads as not ours and stays report-only.
+Step A as merged already limits a confirmed reclaim to install-stamped candidates. `RuntimeReconciler.reclaim_untracked` refuses through `_why_not_reclaimable` when the candidate's `AJCREW_SPAWN_HOME` is absent or differs from this data home. It also refuses when a live session or group leader remains, when the candidate has no readable spawn instance, and when a live process outside the candidate's tree holds the same spawn instance. A runtime spawned before the stamp existed, or by an unstamped path such as `AcpClient._spawn`, reads as not ours and stays report-only.
 
 ## Backward compatibility
 
@@ -151,7 +151,7 @@ Step A as merged already limits a confirmed reclaim to install-stamped candidate
 | PID reuse | start time recorded at spawn and rechecked before each signal; mismatch retracts the row and never signals |
 | Same-uid-writable record | record is subtractive (Decision 3); a forged row can only mark a process the agent could already signal, and still faces every refusal |
 | Shared data home across installs | observe switch `0` refuses the scheduled arm and the confirmed reclaim alike |
-| Same uid, different data home | `KIROCREW_SPAWNED` is shared by every install on the uid, so it never proves ours. The confirmed reclaim refuses unless `KIROCREW_SPAWN_HOME` equals this data home (`_why_not_reclaimable`); step B's persisted record keeps that refusal |
+| Same uid, different data home | `AJCREW_SPAWNED` is shared by every install on the uid, so it never proves ours. The confirmed reclaim refuses unless `AJCREW_SPAWN_HOME` equals this data home (`_why_not_reclaimable`); step B's persisted record keeps that refusal |
 | Population misjudged | per-pass budget `DEFAULT_MAX_KILLS`, two-pass confirmation, 300 s age floor |
 
 ## Alternatives considered

@@ -109,9 +109,9 @@ describe('agent switch failure feedback', () => {
       JSON.stringify({ error: 'Open a new conversation to choose member memory.', code: 'member_memory_requires_new_conversation' }),
     )
     expect(isMemberNeedsNewChatError(error)).toBe(true)
-    expect(agentSwitchFailureNotice(error, 'kirocrew-contributor')).toEqual({
-      message: 'kirocrew-contributor has its own memory, so it can only start a new chat. This chat keeps its current agent.',
-      newChatAgent: 'kirocrew-contributor',
+    expect(agentSwitchFailureNotice(error, 'ajcrew-contributor')).toEqual({
+      message: 'ajcrew-contributor has its own memory, so it can only start a new chat. This chat keeps its current agent.',
+      newChatAgent: 'ajcrew-contributor',
       error: true,
     })
   })

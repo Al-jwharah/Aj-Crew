@@ -31,6 +31,6 @@ if (!process.env.ELECTRON_OVERRIDE_DIST_PATH) {
   const path = require("path");
   process.env.ELECTRON_OVERRIDE_DIST_PATH = path.join(
     os.tmpdir(),
-    "kirocrew-electron-test-stub"
+    "ajcrew-electron-test-stub"
   );
 }

@@ -30,7 +30,7 @@ delete process.env.LD_LIBRARY_PATH
 
 const OUT = process.argv[2] || '../temp-screenshots/folder-suggestion-expiry'
 const SLOT = 'chat-foldersug'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 const MAX_TURNS = 3 // mirrors FOLDER_SUGGESTION_MAX_TURNS in store/chat/composerCards.ts
 
 mkdirSync(OUT, { recursive: true })
@@ -56,7 +56,7 @@ const slots = [{
   running: false,
   last_message: 'Root-caused it to the SegmentedControl width spring.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   folder_id: '',
@@ -78,7 +78,7 @@ const detail = {
 }
 
 const folders = [
-  { id: 'f-kc', name: 'Kiro Crew', order: 0, parent_id: '' },
+  { id: 'f-kc', name: 'Aj Crew', order: 0, parent_id: '' },
   { id: 'f-i18n', name: 'i18n', order: 1, parent_id: 'f-kc' },
 ]
 
@@ -133,7 +133,7 @@ async function main() {
     // Push the card exactly as the backend broadcasts it.
     wsServer.send(JSON.stringify({
       type: 'slot_folder_suggestion',
-      data: { slot: SLOT, folder_id: 'f-i18n', folder_name: 'i18n', breadcrumb: 'Kiro Crew › i18n', ts: Date.now() / 1000 },
+      data: { slot: SLOT, folder_id: 'f-i18n', folder_name: 'i18n', breadcrumb: 'Aj Crew › i18n', ts: Date.now() / 1000 },
     }))
     await page.waitForTimeout(900)
 

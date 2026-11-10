@@ -14,9 +14,9 @@ import pytest
 from telegram_helpers import _drop_live_config_snapshot  # noqa: F401
 from telegram_helpers import _dispatcher, _origin, _prime_live, _tg_origin
 
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.telegram.transport import TelegramInboundMessage
-from kiro_crew.telegram.transport_dispatch import (
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.telegram.transport import TelegramInboundMessage
+from aj_crew.telegram.transport_dispatch import (
     _NOT_A_SENDER,
     _inbound_origin,
     _origin_kwargs,
@@ -28,8 +28,8 @@ from kiro_crew.telegram.transport_dispatch import (
 def test_receipt_text_caps_displayed_items() -> None:
     # A large mid-turn burst must not grow the rendered receipt unbounded: only
     # the first _RECEIPT_MAX_ITEMS are listed verbatim; the count stays true.
-    from kiro_crew.messaging.queue_receipt import RECEIPT_MAX_ITEMS as _RECEIPT_MAX_ITEMS
-    from kiro_crew.messaging.queue_receipt import receipt_text as _receipt_text
+    from aj_crew.messaging.queue_receipt import RECEIPT_MAX_ITEMS as _RECEIPT_MAX_ITEMS
+    from aj_crew.messaging.queue_receipt import receipt_text as _receipt_text
 
     texts = [f"msg number {i}" for i in range(_RECEIPT_MAX_ITEMS + 3)]
     out = _receipt_text(texts)
@@ -49,7 +49,7 @@ class TestDrainSenderIdentity:
     messages that share one.
     """
 
-    _KEY = "unified:kirocrew"
+    _KEY = "unified:ajcrew"
 
     @staticmethod
     def _msg(user: int, chat: int, text: str = "", *, message_id: int = 0) -> Any:
@@ -132,7 +132,7 @@ class TestDrainSenderIdentity:
 
     def test_a_senders_own_surplus_is_still_counted(self) -> None:
         """The guard against fixing the count by always reporting zero."""
-        from kiro_crew.telegram.transport_dispatch import _MAX_COLLAPSE
+        from aj_crew.telegram.transport_dispatch import _MAX_COLLAPSE
 
         d, _cli, sess = _dispatcher({7}, dm_scope="unified")
         deferred: list[int] = []
@@ -392,7 +392,7 @@ class TestQueuedOriginRecord:
     """
 
     def test_origin_kwargs_has_the_exact_shape(self) -> None:
-        from kiro_crew.messaging.queue_drain import (
+        from aj_crew.messaging.queue_drain import (
             QUEUED_CHANNEL_KEY,
             QUEUED_OWNER_KEY,
             owner_token,
@@ -412,8 +412,8 @@ class TestQueuedOriginRecord:
         assert _origin_kwargs(origin) is not first, "each entry gets its own dict"
 
     def test_the_owner_token_is_the_sender_key_without_the_handle(self) -> None:
-        from kiro_crew.messaging.queue_drain import owner_token
-        from kiro_crew.telegram.transport_dispatch import _entry_owner
+        from aj_crew.messaging.queue_drain import owner_token
+        from aj_crew.telegram.transport_dispatch import _entry_owner
 
         assert _entry_owner(_tg_origin(7, 70, username="ray")) == owner_token(
             "telegram", ("7", "70", "", "private")
@@ -461,7 +461,7 @@ class TestPartialDrainInAForumTopic:
     """
 
     _CHAT = -1001234567890
-    _KEY = "telegram:kirocrew:forum:-1001234567890:5"
+    _KEY = "telegram:ajcrew:forum:-1001234567890:5"
 
     def _member(self, user: int) -> _QueuedOrigin:
         return _tg_origin(user, self._CHAT, thread="5", chat_type="supergroup")
@@ -478,7 +478,7 @@ class TestPartialDrainInAForumTopic:
         asyncio.run(_go())
 
     def test_one_members_drain_leaves_the_other_members_line(self) -> None:
-        from kiro_crew.messaging.queue_receipt import receipt_text
+        from aj_crew.messaging.queue_receipt import receipt_text
 
         d, cli, sess = _dispatcher({7, 8})
         self._queue_in_topic(d, sess, (7, "alice asked"), (8, "bob asked"))
@@ -497,7 +497,7 @@ class TestPartialDrainInAForumTopic:
         assert not d._queue.has_receipt(self._KEY)
 
     def test_own_deferred_decides_which_of_a_members_lines_drop(self) -> None:
-        from kiro_crew.messaging.queue_receipt import receipt_text
+        from aj_crew.messaging.queue_receipt import receipt_text
 
         d, cli, sess = _dispatcher({7, 8})
         self._queue_in_topic(d, sess, (7, "a"), (8, "b"), (7, "c"))
@@ -514,7 +514,7 @@ class TestPartialDrainInAForumTopic:
         ]
 
     def test_each_iteration_flips_with_its_own_owner_and_chat(self) -> None:
-        from kiro_crew.telegram.transport_dispatch import _entry_owner
+        from aj_crew.telegram.transport_dispatch import _entry_owner
 
         d, _cli, sess = _dispatcher({7, 8}, dm_scope="unified")
         key = TestDrainSenderIdentity._KEY
@@ -546,7 +546,7 @@ class TestPartialDrainInAForumTopic:
         # A queued reply's receipt must show what the user typed, matching the
         # "⏳ Queued" bubble — never the internal reply-context framing that only
         # the agent-facing replayed turn carries.
-        from kiro_crew.context_assembly import markers as _markers
+        from aj_crew.context_assembly import markers as _markers
 
         d, _cli, sess = _dispatcher({7})
 
@@ -588,7 +588,7 @@ class TestPartialDrainInAForumTopic:
 class TestDrainReplayContract:
     """What the drain hands ``handle_message`` for each collapsed turn."""
 
-    _KEY = "telegram:kirocrew:direct:7"
+    _KEY = "telegram:ajcrew:direct:7"
 
     @staticmethod
     def _replays(d: Any, key: str) -> list[tuple[Any, dict[str, Any]]]:

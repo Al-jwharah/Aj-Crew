@@ -1,5 +1,5 @@
 /**
- * The page-side walker (`src/kiro_crew/browser_harness/snapshot_walker.js`) and
+ * The page-side walker (`src/aj_crew/browser_harness/snapshot_walker.js`) and
  * the screencast's password-mask expression (`screencast.py`, `_MASK_JS`), run in
  * a DOM with an OPEN SHADOW ROOT holding a focused password input.
  *
@@ -16,7 +16,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { readSource } from './readSource'
 
-const HARNESS_DIR = join(__dirname, '../../../src/kiro_crew/browser_harness')
+const HARNESS_DIR = join(__dirname, '../../../src/aj_crew/browser_harness')
 
 function walkerSource(): string {
   const lines = readSource(join(HARNESS_DIR, 'snapshot_walker.js')).split('\n')

@@ -26,20 +26,20 @@ from mcp_shared_helpers import (  # noqa: F401 -- the autouse fixture registers 
     _tools_call_with_caller,
 )
 
-import kiro_crew.mcp_shared as mcp_shared
+import aj_crew.mcp_shared as mcp_shared
 
 # --- Caller-identity extension through the stdio loop -----------------------
 
 
 #: What the loop advertises under ``capabilities.experimental`` when it is
-#: started with ``reports_inflight=True`` (only ``kirocrew-core``), independent
+#: started with ``reports_inflight=True`` (only ``ajcrew-core``), independent
 #: of the caller-identity opt-in: the in-flight report.
 _LOOP_OWN_CAPABILITIES: dict = {mcp_shared.INFLIGHT_CAPABILITY_KEY: {}}
 
 
 def _tools_call_with_tenant(req_id, tool_name: str, nonce: str) -> dict:
     """A forwarded call as an UNNAMED co-tenant receives it: nonce, no identity."""
-    from kiro_crew.mcp_caller import build_tenant_meta
+    from aj_crew.mcp_caller import build_tenant_meta
 
     msg = _tools_call(req_id, tool_name)
     msg["params"]["_meta"] = build_tenant_meta(nonce)
@@ -48,7 +48,7 @@ def _tools_call_with_tenant(req_id, tool_name: str, nonce: str) -> dict:
 
 class TestStdioLoopCallerIdentity:
     def test_tool_policy_uses_only_the_current_request_identity(self, monkeypatch):
-        from kiro_crew.mcp_caller import CallerContext, build_caller_meta
+        from aj_crew.mcp_caller import CallerContext, build_caller_meta
 
         seen = []
         harness = _LoopHarness(monkeypatch, lambda _name, _args: "ok")
@@ -85,7 +85,7 @@ class TestStdioLoopCallerIdentity:
         control-plane backend's only copy of the per-session token is the caller
         block gatewayd injected; the dispatch must hand it to the resolver, or the
         gateway answers the read as an unattested caller and refuses every call."""
-        from kiro_crew.mcp_caller import CallerContext, build_caller_meta, current_caller
+        from aj_crew.mcp_caller import CallerContext, build_caller_meta, current_caller
 
         seen: list[tuple[str, str, object]] = []
         harness = _LoopHarness(monkeypatch, lambda _name, _args: "ok")
@@ -185,7 +185,7 @@ class TestStdioLoopCallerIdentity:
             harness.close()
 
     def test_identity_unattested_explains_an_externally_spawned_server(self, monkeypatch):
-        """The editor-config report: ``KIROCREW_SESSION_KEY`` copied into an
+        """The editor-config report: ``AJCREW_SESSION_KEY`` copied into an
         editor's own MCP config, no token, no launcher pid, no gateway caller. The
         decision is the same refusal; the text gains the one explanation the
         reader can act on, shared verbatim with the strict-identity refusals."""
@@ -196,9 +196,9 @@ class TestStdioLoopCallerIdentity:
             "_resolve_tool_policy",
             lambda *a, **k: mcp_shared.ToolPolicy(frozenset(), "identity_unattested"),
         )
-        monkeypatch.delenv("KIROCREW_STUB_SESSION_TOKEN", raising=False)
-        monkeypatch.delenv("KIROCREW_HOST_PID", raising=False)
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:chat-copied-by-hand")
+        monkeypatch.delenv("AJCREW_STUB_SESSION_TOKEN", raising=False)
+        monkeypatch.delenv("AJCREW_HOST_PID", raising=False)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:chat-copied-by-hand")
         try:
             harness.send(_tools_call(54, "echo"))
             assert harness.wait_for(lambda: len(harness.responses) >= 1)
@@ -228,9 +228,9 @@ class TestStdioLoopCallerIdentity:
             "_resolve_tool_policy",
             lambda *a, **k: mcp_shared.ToolPolicy(frozenset(), "identity_unattested"),
         )
-        monkeypatch.setenv("KIROCREW_STUB_SESSION_TOKEN", "tok")
-        monkeypatch.delenv("KIROCREW_HOST_PID", raising=False)
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:chat-12")
+        monkeypatch.setenv("AJCREW_STUB_SESSION_TOKEN", "tok")
+        monkeypatch.delenv("AJCREW_HOST_PID", raising=False)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:chat-12")
         try:
             harness.send(_tools_call(55, "echo"))
             assert harness.wait_for(lambda: len(harness.responses) >= 1)
@@ -249,7 +249,7 @@ class TestStdioLoopCallerIdentity:
         token and the spec instead. When the caller block carries the daemon's
         ``identityDenial``, the refusal says it; without it, the text is unchanged
         (the previous test)."""
-        from kiro_crew.mcp_caller import CallerContext, build_caller_meta
+        from aj_crew.mcp_caller import CallerContext, build_caller_meta
 
         harness = _LoopHarness(monkeypatch, lambda n, a: "ok")
         monkeypatch.setattr(
@@ -257,7 +257,7 @@ class TestStdioLoopCallerIdentity:
             "_resolve_tool_policy",
             lambda *a, **k: mcp_shared.ToolPolicy(frozenset(), "identity_unattested"),
         )
-        reason = "spawned '/opt/local/bin/kirocrew' is not the spec's '/tb/0.7.0.8/bin/kirocrew'"
+        reason = "spawned '/opt/local/bin/ajcrew' is not the spec's '/tb/0.7.0.8/bin/ajcrew'"
         try:
             msg = _tools_call(52, "echo")
             msg["params"]["_meta"] = build_caller_meta(
@@ -270,8 +270,8 @@ class TestStdioLoopCallerIdentity:
             body = json.dumps(harness.responses[0][1])
             assert "identity_unattested" in body
             assert "spawned this server without a token because" in body
-            assert "/opt/local/bin/kirocrew" in body
-            assert "/tb/0.7.0.8/bin/kirocrew" in body
+            assert "/opt/local/bin/ajcrew" in body
+            assert "/tb/0.7.0.8/bin/ajcrew" in body
         finally:
             harness.close()
 
@@ -280,8 +280,8 @@ class TestStdioLoopCallerIdentity:
         refusal answers through ``_tool_response`` without the tool path's scrubber,
         so a directive sentinel smuggled into a spec's ``args`` must not reach the
         consumer intact."""
-        from kiro_crew.mcp_caller import CallerContext, build_caller_meta
-        from kiro_crew.session_directive import SENTINEL
+        from aj_crew.mcp_caller import CallerContext, build_caller_meta
+        from aj_crew.session_directive import SENTINEL
 
         harness = _LoopHarness(monkeypatch, lambda n, a: "ok")
         monkeypatch.setattr(
@@ -308,7 +308,7 @@ class TestStdioLoopCallerIdentity:
     def test_the_quoted_denial_is_credential_redacted(self, monkeypatch):
         """A denial reason that carries a token (a hand-authored reserved entry
         whose argv the gate quoted) must not hand that token to the session."""
-        from kiro_crew.mcp_caller import CallerContext, build_caller_meta
+        from aj_crew.mcp_caller import CallerContext, build_caller_meta
 
         harness = _LoopHarness(monkeypatch, lambda n, a: "ok")
         monkeypatch.setattr(
@@ -334,7 +334,7 @@ class TestStdioLoopCallerIdentity:
             harness.close()
 
     def test_listing_while_busy_does_not_borrow_the_running_members_identity(self, monkeypatch):
-        from kiro_crew.mcp_caller import CallerContext, build_caller_meta
+        from aj_crew.mcp_caller import CallerContext, build_caller_meta
 
         call, started, release = _slow_then_echo()
         seen = []
@@ -376,7 +376,7 @@ class TestStdioLoopCallerIdentity:
             harness.send(_initialize(1))
             assert harness.wait_for(lambda: len(harness.responses) >= 1)
             caps = harness.responses[0][1]["capabilities"]
-            assert caps["experimental"] == {"kirocrew.caller-identity": {"schemaVersion": 1}}
+            assert caps["experimental"] == {"ajcrew.caller-identity": {"schemaVersion": 1}}
         finally:
             harness.close()
 
@@ -394,14 +394,14 @@ class TestStdioLoopCallerIdentity:
             assert harness.wait_for(lambda: len(harness.responses) >= 1)
             caps = harness.responses[0][1]["capabilities"]
             assert caps["experimental"] == {
-                "kirocrew.caller-identity": {"schemaVersion": 1},
+                "ajcrew.caller-identity": {"schemaVersion": 1},
                 **_LOOP_OWN_CAPABILITIES,
             }
         finally:
             harness.close()
 
     def test_initialize_omits_capability_by_default(self, monkeypatch):
-        # kirocrew-cron does NOT consume per-call identity — it must stay
+        # ajcrew-cron does NOT consume per-call identity — it must stay
         # single-session (gatewayd refuses to pool non-advertising backends).
         # Nor does it park calls, so it does not opt into the in-flight report.
         harness = _LoopHarness(monkeypatch, lambda n, a: "ok")
@@ -415,7 +415,7 @@ class TestStdioLoopCallerIdentity:
     def test_tool_sees_current_caller_from_meta(self, monkeypatch):
         # The dispatch loop must install the gateway-injected caller for the
         # duration of the call and clear it afterwards.
-        from kiro_crew import mcp_caller
+        from aj_crew import mcp_caller
 
         seen: list = []
 
@@ -439,7 +439,7 @@ class TestStdioLoopCallerIdentity:
         An unnamed co-tenant gets the nonce (per-tenant state keys on it) and no caller
         (a connection name is not an identity); both clear after the dispatch.
         """
-        from kiro_crew import mcp_caller
+        from aj_crew import mcp_caller
 
         seen: list = []
 
@@ -462,7 +462,7 @@ class TestStdioLoopCallerIdentity:
         An empty nonce is the signal to keep using the backend's own per-process
         fallback, so it must not be a stale value from a previous call.
         """
-        from kiro_crew import mcp_caller
+        from aj_crew import mcp_caller
 
         seen: list = []
 
@@ -595,7 +595,7 @@ class TestStdioLoopCallerIdentity:
 
     def test_the_gateway_reason_is_defanged_and_bounded(self, monkeypatch):
         """A filename can carry the directive sentinel or a token; neither survives."""
-        from kiro_crew import session_directive
+        from aj_crew import session_directive
 
         harness = _LoopHarness(monkeypatch, lambda n, a: "ok")
         sentinel = session_directive.SENTINEL

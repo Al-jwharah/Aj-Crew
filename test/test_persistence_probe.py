@@ -16,8 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.platform_compat import probe_file_persistence
+from aj_crew import platform_compat
+from aj_crew.platform_compat import probe_file_persistence
 
 
 class TestProbeFilePersistence:
@@ -145,7 +145,7 @@ class TestProbeFilePersistence:
         ) -> None:
             raise OSError(errno.EPERM, "Operation not permitted")
 
-        monkeypatch.setattr("kiro_crew.atomic_write.replace_with_retry", _no_replace)
+        monkeypatch.setattr("aj_crew.atomic_write.replace_with_retry", _no_replace)
         msg = probe_file_persistence(tmp_path)
         assert msg is not None
         assert "cannot atomically replace files in" in msg
@@ -158,7 +158,7 @@ class TestProbeFilePersistence:
         ) -> None:
             raise OSError(errno.EPERM, "Operation not permitted")
 
-        monkeypatch.setattr("kiro_crew.atomic_write.replace_with_retry", _no_replace)
+        monkeypatch.setattr("aj_crew.atomic_write.replace_with_retry", _no_replace)
         probe_file_persistence(tmp_path)
         assert list(tmp_path.iterdir()) == []
 
@@ -170,7 +170,7 @@ class TestProbeFilePersistence:
         os.replace — otherwise a healthy Windows data home can fail preflight
         over an AV/indexer touch."""
         calls: list[tuple[str, str]] = []
-        from kiro_crew import atomic_write
+        from aj_crew import atomic_write
 
         real = atomic_write.replace_with_retry
 
@@ -180,7 +180,7 @@ class TestProbeFilePersistence:
             calls.append((str(src), str(dst)))
             real(src, dst, **kwargs)
 
-        monkeypatch.setattr("kiro_crew.atomic_write.replace_with_retry", _spy)
+        monkeypatch.setattr("aj_crew.atomic_write.replace_with_retry", _spy)
         assert probe_file_persistence(tmp_path) is None
         assert len(calls) == 1
         assert ".persistence-probe-" in calls[0][0]
@@ -200,7 +200,7 @@ class TestProbeFilePersistence:
 
 
 class TestGatewayCommandPreflight:
-    """``kirocrew gateway`` must refuse an unwritable data home with one line."""
+    """``ajcrew gateway`` must refuse an unwritable data home with one line."""
 
     @pytest.mark.parametrize("missing", [False, True], ids=["read-only home", "missing home"])
     def test_unwritable_home_exits_before_the_first_write(
@@ -214,17 +214,17 @@ class TestGatewayCommandPreflight:
         first; on an unwritable one neither may raise before the one-line refusal."""
         if os.name != "posix" or os.geteuid() == 0:
             pytest.skip("needs a POSIX non-root user for chmod-based denial")
-        from kiro_crew import cli
+        from aj_crew import cli
 
         sealed = tmp_path / "sealed"
         sealed.mkdir()
         home = (sealed / "home" if missing else sealed).resolve()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
-        monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(home))
+        monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
         # A service starts outside a checkout, so project-dir detection reads the
         # saved path from the home: pin a marker-free cwd, never assume tmp_path's.
         monkeypatch.setattr(Path, "cwd", classmethod(lambda cls: cls("/kc-no-markers/cwd")))
-        monkeypatch.setattr(cli.sys, "argv", ["kirocrew", "gateway"])
+        monkeypatch.setattr(cli.sys, "argv", ["ajcrew", "gateway"])
         monkeypatch.setattr(
             cli.platform_compat, "limit_malloc_arenas", cli.platform_compat.MallocArenaCap
         )

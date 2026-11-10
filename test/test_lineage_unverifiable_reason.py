@@ -44,20 +44,20 @@ def _owner_caller(_floor_monkeypatch):
     """Run as the dashboard owner: the owner gate has its own coverage in
     test_agents_endpoints_owner_auth.py."""
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
 
 def _crud_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import (
-        api_kirocrew_agent_update,
-        api_kirocrew_agents_create,
+    from aj_crew.dashboard.handlers import (
+        api_ajcrew_agent_update,
+        api_ajcrew_agents_create,
     )
 
     app = web.Application()
-    app.router.add_post("/api/agents", api_kirocrew_agents_create)
-    app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+    app.router.add_post("/api/agents", api_ajcrew_agents_create)
+    app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
     return app
 
 
@@ -68,11 +68,11 @@ def _seed_config(tmp_path: Path) -> Path:
             {
                 "agents": {
                     "default": {
-                        "kiro_agent": "kirocrew",
+                        "kiro_agent": "ajcrew",
                         "workspace": "default",
                         "memory_store": "default",
                     },
-                    "test-agent": {"kiro_agent": "kirocrew"},
+                    "test-agent": {"kiro_agent": "ajcrew"},
                 },
                 "default_agent": "default",
                 "workspaces": {"default": {"dir": "workspace"}},
@@ -91,7 +91,7 @@ def _package_twins(name: str) -> list[Path]:
     """What a package installer writes for one agent two packages ship: a copy
     per dependent package plus a ``local-`` twin, all declaring *name*, each
     with its own prompt and hooks."""
-    from kiro_crew.config.paths import kiro_agents_dir
+    from aj_crew.config.paths import kiro_agents_dir
 
     agents_dir = kiro_agents_dir()
     agents_dir.mkdir(parents=True, exist_ok=True)
@@ -115,14 +115,14 @@ def _claimants_of_two_names(name: str, package: str = "somepkg") -> list[Path]:
     declaring *name*. A binding to *name* can run either file (the backend
     matches the file stem too), and one of them is another crew's copy, so the
     ownership read cannot answer."""
-    from kiro_crew import agent_state
-    from kiro_crew.config.paths import kiro_agents_dir
+    from aj_crew import agent_state
+    from aj_crew.config.paths import kiro_agents_dir
 
     agents_dir = kiro_agents_dir()
     agents_dir.mkdir(parents=True, exist_ok=True)
     stem_claimant = agents_dir / f"{name}.json"
     stem_claimant.write_text(json.dumps({"name": "design-copy", "prompt": "p"}), encoding="utf-8")
-    agent_state.set_fork_info("design-copy", forked_from="kirocrew", private_to="design-crew")
+    agent_state.set_fork_info("design-copy", forked_from="ajcrew", private_to="design-crew")
     declarer = agents_dir / f"{package}-{name}.json"
     declarer.write_text(json.dumps({"name": name, "prompt": "p"}), encoding="utf-8")
     return [stem_claimant, declarer]
@@ -140,7 +140,7 @@ async def test_two_specs_for_one_name_name_both_files_and_drop_the_retry(
     files = _claimants_of_two_names("sh-eval")
     cfg = _seed_config(tmp_path)
     try:
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg):
             async with TestClient(TestServer(_crud_app())) as client:
                 # Named after the template: the one non-default template a
                 # create admits, so the lineage check is what answers it.
@@ -166,7 +166,7 @@ async def test_a_credential_shaped_spec_filename_is_masked(tmp_path: Path) -> No
     files = _claimants_of_two_names("sh-eval", package=probe)
     cfg = _seed_config(tmp_path)
     try:
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg):
             async with TestClient(TestServer(_crud_app())) as client:
                 status, body = await _create(client, "sh-eval", name="sh-eval")
         assert status == 409
@@ -189,15 +189,15 @@ async def test_a_credential_shaped_spec_filename_is_masked(tmp_path: Path) -> No
 async def test_an_unreadable_ownership_record_names_the_file_and_the_repair(
     tmp_path: Path, contents: str
 ) -> None:
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
     sidecar = agent_state._state_path()
     sidecar.parent.mkdir(parents=True, exist_ok=True)
     sidecar.write_text(contents, encoding="utf-8")
     cfg = _seed_config(tmp_path)
-    with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg):
+    with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg):
         async with TestClient(TestServer(_crud_app())) as client:
-            status, body = await _create(client, "kirocrew")
+            status, body = await _create(client, "ajcrew")
     assert status == 409
     assert body["code"] == "lineage_unverifiable"
     assert _UNREADABLE in body["error"]
@@ -210,16 +210,16 @@ async def test_an_unreadable_ownership_record_names_the_file_and_the_repair(
 
 @pytest.mark.asyncio
 async def test_a_permission_denied_ownership_record_is_permanent(tmp_path: Path) -> None:
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
     denied = PermissionError(errno.EACCES, "Permission denied")
     cfg = _seed_config(tmp_path)
     with (
-        unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg),
+        unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg),
         unittest.mock.patch.object(agent_state, "get_fork_info", side_effect=denied),
     ):
         async with TestClient(TestServer(_crud_app())) as client:
-            status, body = await _create(client, "kirocrew")
+            status, body = await _create(client, "ajcrew")
     assert status == 409
     assert _UNREADABLE in body["error"]
     assert "Permission denied" in body["error"]
@@ -228,17 +228,17 @@ async def test_a_permission_denied_ownership_record_is_permanent(tmp_path: Path)
 
 @pytest.mark.asyncio
 async def test_a_transient_read_error_keeps_the_retry_hint(tmp_path: Path) -> None:
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
     cfg = _seed_config(tmp_path)
     with (
-        unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg),
+        unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg),
         unittest.mock.patch.object(
             agent_state, "get_fork_info", side_effect=OSError(errno.EIO, "I/O error")
         ),
     ):
         async with TestClient(TestServer(_crud_app())) as client:
-            status, body = await _create(client, "kirocrew")
+            status, body = await _create(client, "ajcrew")
     assert status == 409
     assert body["code"] == "lineage_unverifiable"
     assert body["error"].endswith(_GENERIC_RETRY)
@@ -251,7 +251,7 @@ def test_a_windows_sharing_or_lock_violation_is_transient(winerror: int) -> None
     sidecar open surfaces as a ``PermissionError`` with a sharing or lock
     violation code. The file is fine and the next read succeeds, so the
     refusal keeps the retry hint instead of asking for a repair."""
-    from kiro_crew.dashboard.handlers import agents
+    from aj_crew.dashboard.handlers import agents
 
     held = PermissionError(errno.EACCES, "The process cannot access the file")
     held.winerror = winerror  # type: ignore[attr-defined]
@@ -271,7 +271,7 @@ async def test_the_rebind_path_names_the_same_cause(tmp_path: Path) -> None:
     files = _claimants_of_two_names("sh-eval")
     cfg = _seed_config(tmp_path)
     try:
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg):
             async with TestClient(TestServer(_crud_app())) as client:
                 resp = await client.put("/api/agents/test-agent", json={"kiro_agent": "sh-eval"})
                 body = await resp.json()
@@ -280,7 +280,7 @@ async def test_the_rebind_path_names_the_same_cause(tmp_path: Path) -> None:
         assert _AMBIGUOUS in body["error"]
         assert all(str(f) in body["error"] for f in files)
         on_disk = json.loads(cfg.read_text(encoding="utf-8"))
-        assert on_disk["agents"]["test-agent"]["kiro_agent"] == "kirocrew"
+        assert on_disk["agents"]["test-agent"]["kiro_agent"] == "ajcrew"
     finally:
         for f in files:
             f.unlink(missing_ok=True)
@@ -294,7 +294,7 @@ async def test_package_twins_of_one_agent_can_be_bound(tmp_path: Path) -> None:
     files = _package_twins(_SHARED)
     cfg = _seed_config(tmp_path)
     try:
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg):
             async with TestClient(TestServer(_crud_app())) as client:
                 resp = await client.put("/api/agents/test-agent", json={"kiro_agent": _SHARED})
                 body = await resp.json()
@@ -316,7 +316,7 @@ async def test_a_crew_bound_to_package_twins_can_save_its_editor(tmp_path: Path)
     seeded["agents"]["test-agent"]["kiro_agent"] = _SHARED
     cfg.write_text(json.dumps(seeded), encoding="utf-8")
     try:
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg):
             async with TestClient(TestServer(_crud_app())) as client:
                 resp = await client.put(
                     "/api/agents/test-agent",
@@ -333,7 +333,7 @@ async def test_a_crew_bound_to_package_twins_can_save_its_editor(tmp_path: Path)
 
 
 def test_the_ownership_read_finds_no_owner_for_package_twins() -> None:
-    from kiro_crew.dashboard.handlers import agents
+    from aj_crew.dashboard.handlers import agents
 
     files = _package_twins(_SHARED)
     try:
@@ -346,11 +346,11 @@ def test_the_ownership_read_finds_no_owner_for_package_twins() -> None:
 def test_package_twins_of_a_private_copy_still_name_its_owner() -> None:
     """A recorded private copy is refused before any file is read, however
     many files declare it."""
-    from kiro_crew import agent_state
-    from kiro_crew.dashboard.handlers import agents
+    from aj_crew import agent_state
+    from aj_crew.dashboard.handlers import agents
 
     files = _package_twins(_SHARED)
-    agent_state.set_fork_info(_SHARED, forked_from="kirocrew", private_to="design-crew")
+    agent_state.set_fork_info(_SHARED, forked_from="ajcrew", private_to="design-crew")
     try:
         assert agents._foreign_private_copy_owner("c", _SHARED) == "design-crew"
     finally:
@@ -362,7 +362,7 @@ def _lineage_bodies() -> list[tuple[str, int, ast.Dict]]:
     """Every dict literal in the agent-admin owners whose ``code`` is
     ``lineage_unverifiable``."""
     root = (
-        Path(__file__).resolve().parent.parent / "src" / "kiro_crew" / "dashboard" / "agent_admin"
+        Path(__file__).resolve().parent.parent / "src" / "aj_crew" / "dashboard" / "agent_admin"
     )
     found = []
     for path in sorted(root.glob("*.py")):
@@ -399,7 +399,7 @@ def test_every_lineage_refusal_builds_its_sentence_from_the_cause() -> None:
 
 
 def test_the_sentence_matches_each_reason() -> None:
-    from kiro_crew.dashboard.handlers import agents
+    from aj_crew.dashboard.handlers import agents
 
     listed = (Path("/a/t.json"), Path("/a/pkg-t.json"))
     exc = agents._UnverifiableLineage("t", "ambiguous_template_name", paths=listed)
@@ -425,8 +425,8 @@ def test_a_wrong_kind_or_oversized_record_gets_a_remedy_that_covers_it(sentinel:
     with a bare sentinel. The remedy names those states and the reader's
     actual size cap, so the operator is not sent to fix a syntax error that
     is not there."""
-    from kiro_crew import agent_state
-    from kiro_crew.dashboard.handlers import agents
+    from aj_crew import agent_state
+    from aj_crew.dashboard.handlers import agents
 
     exc = agents._sidecar_unverifiable("t", ValueError(sentinel))
     assert exc.reason == "ownership_record_unreadable"

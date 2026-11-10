@@ -52,7 +52,7 @@ const GROW_SETTLE_MS = 400
 
 /** The `browser` tool row: the trusted name when the gateway stamped one, else the pill text.
  *
- * The tool is a managed-MCP tool, so a real row reads `🔧 @kirocrew-core/browser`
+ * The tool is a managed-MCP tool, so a real row reads `🔧 @ajcrew-core/browser`
  * (the `@server/tool` form every MCP call arrives in) and a stamped name may carry
  * the server too. Both spellings are the one tool; a bare `browser` is kept for the
  * built-in shape and the fixtures. */
@@ -255,7 +255,7 @@ function BrowserLiveCard({ sessionKey, anchorKey, anchorTs, running, goTo, polic
   )
 }
 
-/** The Allow card's "use Kiro's own browser" goes to Settings -> Browser. The
+/** The Allow card's "use Aj's own browser" goes to Settings -> Browser. The
  *  router is optional here (the app-sdk embed has none), so the navigation is
  *  resolved once, above, and handed down as a plain function. */
 function BrowserLiveCardWithRouter(props: Omit<BrowserLiveCardProps, 'goTo'>) {

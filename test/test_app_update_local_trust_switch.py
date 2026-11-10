@@ -23,14 +23,14 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from apps_routes_coverage_helpers import APP, _deregister_into, _install, _make_app, _setup_env
 
-import kiro_crew.apps.registry as registry_mod
-import kiro_crew.apps.routes as routes_mod
-import kiro_crew.sel as sel_mod
-from kiro_crew.apps.bridges import RegistrationResult
-from kiro_crew.apps.manager import enable_app, set_app_provenance
-from kiro_crew.apps.routes import register_app_routes
-from kiro_crew.config.loader import _invalidate_config_cache
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS, await_until
+import aj_crew.apps.registry as registry_mod
+import aj_crew.apps.routes as routes_mod
+import aj_crew.sel as sel_mod
+from aj_crew.apps.bridges import RegistrationResult
+from aj_crew.apps.manager import enable_app, set_app_provenance
+from aj_crew.apps.routes import register_app_routes
+from aj_crew.config.loader import _invalidate_config_cache
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS, await_until
 
 #: The clone URL the registry row names, and its normalized consent form.
 CLONE_URL = "https://clone.example.test/Owner/cov-test-app.git"
@@ -291,7 +291,7 @@ async def test_a_grant_revoked_between_the_check_and_the_write_is_not_put_back(
     The locked write re-reads the file, so it refuses instead of appending the
     name again, which would undo the operator's revocation.
     """
-    from kiro_crew.apps import local_trust_switch
+    from aj_crew.apps import local_trust_switch
 
     revoked = {"apps_allow_third_party": False, "apps_trusted": [], "apps_trusted_local": []}
     real_check = local_trust_switch._check_switch_sync
@@ -324,7 +324,7 @@ async def test_a_request_cancelled_mid_write_reverts_the_grant_that_landed(
     """The write runs in a thread, so it can land after the request is cancelled."""
     import asyncio
 
-    from kiro_crew.apps import local_trust_switch
+    from aj_crew.apps import local_trust_switch
 
     writing = asyncio.Event()
     release = asyncio.Event()
@@ -380,7 +380,7 @@ async def test_a_failed_revert_still_restores_the_old_app(
     home: Path, calls: list[str], audit: MagicMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A trust write that fails during the revert must not skip the app restore."""
-    from kiro_crew.apps import agent_config_writer
+    from aj_crew.apps import agent_config_writer
 
     async def _install_from_registry(name: str, **kwargs: Any) -> dict[str, Any]:
         async def _disk_full(mutate: Any) -> None:
@@ -516,7 +516,7 @@ async def test_an_app_token_cannot_switch_its_own_trust(
     home: Path, calls: list[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The route is owner-only, so an app cannot consent to a repository for itself."""
-    from kiro_crew.dashboard.token_auth import generate_token, token_auth_middleware
+    from aj_crew.dashboard.token_auth import generate_token, token_auth_middleware
 
     token = generate_token(APP, ttl_seconds=300, app=APP)  # flake-ok: token lifetime, no wait
     app = web.Application(middlewares=[token_auth_middleware()])

@@ -13,10 +13,10 @@ from unittest.mock import patch
 import pytest
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.dashboard.handlers import crew_log as routes
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.dashboard.handlers import crew_log as routes
 
 SESSION = "s-subagents"
 GATEWAY = "gateway"
@@ -25,19 +25,19 @@ GATEWAY = "gateway"
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
     """Every test writes into its own data home, never the live one."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     yield
 
 
 def _log(unit_id: str = SESSION, slot: str = "dashboard:1") -> CrewLog:
-    return CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="kirocrew", slot=slot)
+    return CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="ajcrew", slot=slot)
 
 
 def _opened(handle: CrewLog) -> None:
     handle.append(
         "session/opened",
         {
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "slot": "dashboard:1",
             "model": "opus",
             "cwd": "/w",
@@ -53,7 +53,7 @@ def _spawned(
     agent_id: str,
     *,
     turn: int = 1,
-    agent: str = "kirocrew-worker",
+    agent: str = "ajcrew-worker",
     model: str = "opus",
     task: str | None = None,
     scope: dict | None = None,
@@ -105,7 +105,7 @@ def _fold(unit_id: str = SESSION) -> dict:
 def test_a_child_that_finished_lands_its_outcome_duration_and_cost_on_its_own_row():
     handle = _log()
     _opened(handle)
-    _spawned(handle, "a-1", agent="kirocrew-worker", model="opus")
+    _spawned(handle, "a-1", agent="ajcrew-worker", model="opus")
     _completed(handle, "a-1", ms=1200, credits=2.0)
 
     value = _fold()
@@ -113,7 +113,7 @@ def test_a_child_that_finished_lands_its_outcome_duration_and_cost_on_its_own_ro
     assert row["outcome"] == "completed"
     assert row["ms"] == 1200
     assert row["credits"] == 2.0
-    assert row["agent"] == "kirocrew-worker"
+    assert row["agent"] == "ajcrew-worker"
     assert row["model"] == "opus"
     assert value["totals"]["completed"] == 1
     # Nothing is still open, so the count reads 0 rather than inheriting a floor.
@@ -193,7 +193,7 @@ async def test_the_route_serves_the_fold_with_no_route_change():
     request.match_info["id"] = SESSION
     request.match_info["name"] = "subagents"
     with patch(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         return_value=True,
     ):
         response = await routes.api_session_crew_log_projection(request)
@@ -665,7 +665,7 @@ def test_an_entry_this_fold_does_not_read_moves_nothing():
             ("step/completed", {"turn": 1, "step": 1, "ms": 120}),
             ("background/completed", {"kind": "title", "credits": 0.5, "ms": 20}),
             ("tool/completed", {"name": "fs_read", "call_id": "c-1", "status": "ok"}),
-            ("session/opened", {"agent": "kirocrew", "model": "opus"}),
+            ("session/opened", {"agent": "ajcrew", "model": "opus"}),
         ),
         start=1,
     ):
@@ -715,7 +715,7 @@ class TestTheRowCarriesWhatACardNeeds:
         assert row["task"] == ""
         # And the row is otherwise WHOLE, so the absence costs the card only the one
         # line: an older log still rebuilds its outcome, duration and agent.
-        assert (row["outcome"], row["ms"], row["agent"]) == ("completed", 1000, "kirocrew-worker")
+        assert (row["outcome"], row["ms"], row["agent"]) == ("completed", 1000, "ajcrew-worker")
 
     def test_a_non_string_task_is_not_published_as_one(self):
         """The declaration refuses one at APPEND, so the fold is tested directly.

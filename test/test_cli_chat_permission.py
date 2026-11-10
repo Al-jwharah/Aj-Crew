@@ -1,4 +1,4 @@
-"""``kirocrew chat`` answering a permission request, and two neighbours of that turn.
+"""``ajcrew chat`` answering a permission request, and two neighbours of that turn.
 
 ``TestChatPermissionRequest`` holds the security gate, the audit record, the human's
 decision, the shell command the prompt shows and the stdin reader's lifecycle; it runs on
@@ -23,11 +23,11 @@ from cli_helpers import (  # noqa: F401 -- the autouse fixture registers by impo
     _TestChatPermissionRequestHarness,
 )
 
-from kiro_crew.testing.wait import async_wait_until, default_timeout
+from aj_crew.testing.wait import async_wait_until, default_timeout
 
 
 class TestChatPermissionRequest(_TestChatPermissionRequestHarness):
-    """`kirocrew chat` must ANSWER a permission request, and answering one is an
+    """`ajcrew chat` must ANSWER a permission request, and answering one is an
     authorization decision.
 
     Every case drives the real ``_send_and_print`` against a provider whose
@@ -211,7 +211,7 @@ class TestChatPermissionRequest(_TestChatPermissionRequestHarness):
     async def test_only_the_trust_key_prints_the_trust_notice(self, monkeypatch, capsys):
         for answer in ("trust", "n", "y"):
             await self._drive(monkeypatch, answer=answer)
-            assert "not available in kirocrew chat" not in capsys.readouterr().out
+            assert "not available in ajcrew chat" not in capsys.readouterr().out
 
     @pytest.mark.asyncio
     async def test_no_answer_grants_a_persistent_approval(self, monkeypatch):
@@ -308,7 +308,7 @@ class TestChatPermissionRequest(_TestChatPermissionRequestHarness):
         so a synchronous implementation deadlocks and this times out rather than
         passing quietly.
         """
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         ticks, released = {"n": 0}, threading.Event()
 
@@ -344,7 +344,7 @@ class TestChatPermissionRequest(_TestChatPermissionRequestHarness):
     async def test_a_poisoned_session_never_starts_a_second_reader(self, monkeypatch):
         """No later entry point may race the abandoned reader for keystrokes --
         not a second permission prompt, and not the REPL."""
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         self._patch_env(monkeypatch)
         monkeypatch.setattr(cli_chat, "_stdin_poisoned", True)
@@ -369,7 +369,7 @@ class TestChatPermissionRequest(_TestChatPermissionRequestHarness):
         The parked reader takes the user's next line, so stdin is marked unusable. A
         ``reject_tool`` that never returns must not swallow the Ctrl-C's cancellation.
         """
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         entered = threading.Event()
         # What the two stubs below park on. The test's cleanup sets both, so the
@@ -419,7 +419,7 @@ class TestChatPermissionRequest(_TestChatPermissionRequestHarness):
         Cold ``sel()`` replays the audit log, which would freeze the loop that still owns
         the ACP reader. ``session_aborted`` tells an unanswered turn from a user's no.
         """
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         entered = threading.Event()
         # The reader thread parks on this until the test's cleanup sets it, so it
@@ -474,7 +474,7 @@ class TestChatPermissionRequest(_TestChatPermissionRequestHarness):
         The consent was a keystroke, so nothing else records it. Refused, not raised: an
         unanswered request would hang the turn.
         """
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         trace: list = []
 
@@ -513,7 +513,7 @@ class TestChatPermissionRequest(_TestChatPermissionRequestHarness):
         alternative is EXECUTION: a deny is already refusing, so a lost record
         cannot authorize anything, and making it audit-or-deny would turn a
         refusal into an error for no security gain."""
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         seen: dict = {}
 
@@ -541,7 +541,7 @@ class TestChatPermissionRequest(_TestChatPermissionRequestHarness):
     async def test_approval_audit_records_pending_then_transport_result(
         self, monkeypatch, approval_sent
     ):
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         trace: list = []
 
@@ -602,7 +602,7 @@ class TestChatPermissionRequest(_TestChatPermissionRequestHarness):
 
         Two refusal reasons, because every refusal path shares one helper.
         """
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         trace: list = []
 
@@ -636,7 +636,7 @@ class TestChatPermissionRequest(_TestChatPermissionRequestHarness):
         """The gate-deny path is the one a prompt-injected agent is most likely to
         reach, so it must not be the one where a broken audit sink turns a refusal
         into an abandoned turn."""
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         trace: list = []
 
@@ -669,7 +669,7 @@ class TestChatPermissionRequest(_TestChatPermissionRequestHarness):
     @pytest.mark.asyncio
     async def test_a_gate_exception_is_explicitly_rejected(self, monkeypatch, capsys):
         """A broken authorization gate cannot become an unanswered request."""
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         trace: list = []
         event = self._event(title="Check it", tool_name="fs_read")
@@ -697,8 +697,8 @@ class TestChatPermissionRequest(_TestChatPermissionRequestHarness):
 
     @pytest.mark.asyncio
     async def test_stream_without_a_permission_request_is_unchanged(self, capsys):
-        import kiro_crew.cli_chat as cli_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        import aj_crew.cli_chat as cli_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         class _PlainProvider(self._GatedProvider):
             async def stream(self, message):
@@ -724,8 +724,8 @@ class TestDenialNoticeEncoding:
 
     _CHILD = """
 import asyncio, json, sys
-import kiro_crew.cli_chat as cli_chat
-from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+import aj_crew.cli_chat as cli_chat
+from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
 
 print(f"encoding={sys.stderr.encoding}")
 print(f"errors={sys.stderr.errors}")
@@ -760,7 +760,7 @@ print("survived")
         env = dict(os.environ)
         env["PYTHONIOENCODING"] = io_encoding
         # Keep the SEL audit write inside the test's own tree.
-        env["KIROCREW_HOME"] = str(tmp_path / "home")
+        env["AJCREW_HOME"] = str(tmp_path / "home")
         out_path = tmp_path / "child.out"
         err_path = tmp_path / "child.err"
         with open(out_path, "wb") as out, open(err_path, "wb") as err:
@@ -818,14 +818,14 @@ class TestChatProviderShutdown:
             return 0.0
 
     def _patch(self, monkeypatch, provider):
-        import kiro_crew.cli_chat as cli_chat
-        from kiro_crew.config import KiroCrewConfig
+        import aj_crew.cli_chat as cli_chat
+        from aj_crew.config import AjCrewConfig
 
-        monkeypatch.setattr(KiroCrewConfig, "load", staticmethod(lambda: KiroCrewConfig()))
+        monkeypatch.setattr(AjCrewConfig, "load", staticmethod(lambda: AjCrewConfig()))
         monkeypatch.setattr(
             cli_chat, "build_provider_factory", lambda cfg: (lambda *a, **k: provider)
         )
-        from kiro_crew.hooks import HookManager
+        from aj_crew.hooks import HookManager
 
         # A real gate, as production always builds one: _chat hands its hooks
         # to the context builder before the backend starts.
@@ -838,7 +838,7 @@ class TestChatProviderShutdown:
         # A permission prompt cancelled at the terminal raises through the turn
         # by design. The backend must still be torn down, and the cancellation
         # must still reach the caller.
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         provider = self._FakeProvider()
         self._patch(monkeypatch, provider)
@@ -853,7 +853,7 @@ class TestChatProviderShutdown:
 
     @pytest.mark.asyncio
     async def test_shutdown_runs_when_the_turn_raises(self, monkeypatch):
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         provider = self._FakeProvider()
         self._patch(monkeypatch, provider)
@@ -873,7 +873,7 @@ class TestChatProviderShutdown:
         _chat must opt in -- and BEFORE start(), or an early child permission
         frame races the handle's fail-close gate and is rejected as
         `child_low_fidelity_unaware_consumer`, the auto-deny this fix ends."""
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         provider = self._FakeProvider()
         self._patch(monkeypatch, provider)
@@ -887,7 +887,7 @@ class TestChatProviderShutdown:
 
     @pytest.mark.asyncio
     async def test_shutdown_runs_exactly_once_on_the_normal_path(self, monkeypatch):
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         provider = self._FakeProvider()
         self._patch(monkeypatch, provider)
@@ -904,7 +904,7 @@ class TestChatProviderShutdown:
         # gc.collect() collects the subprocess transports while the loop is
         # still open; a failing shutdown must not skip it, and must not replace
         # the exception already propagating.
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         class _BadShutdown(self._FakeProvider):
             async def shutdown(self):

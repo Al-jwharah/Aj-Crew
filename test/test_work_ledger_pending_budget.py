@@ -21,9 +21,9 @@ import pytest
 import work_ledger_helpers
 from work_ledger_helpers import CONDUCTOR, _new_item
 
-from kiro_crew import mcp_work
-from kiro_crew import work_ledger as wl
-from kiro_crew.crew_log import entry_types, projection, schema
+from aj_crew import mcp_work
+from aj_crew import work_ledger as wl
+from aj_crew.crew_log import entry_types, projection, schema
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _isolated_home = work_ledger_helpers._isolated_home
@@ -201,8 +201,8 @@ def test_the_tool_the_skill_and_the_doc_quote_the_real_budget():
     hours = f"{int(wl.PENDING_BUDGET_SECS // 3600)} hours on end"
     read = next(t for t in mcp_work._list_tools() if t["name"] == "work_ledger_read")
     assert hours in read["description"] and "pending_overdue" in read["description"]
-    skill = _REPO_ROOT / "src/kiro_crew/builtin_skills/goal-conductor/SKILL.md"
-    doc = _REPO_ROOT / "src/kiro_crew/docs/work-ledger.md"
+    skill = _REPO_ROOT / "src/aj_crew/builtin_skills/goal-conductor/SKILL.md"
+    doc = _REPO_ROOT / "src/aj_crew/docs/work-ledger.md"
     for page in (skill, doc):
         text = " ".join(page.read_text(encoding="utf-8").split())
         assert hours in text and "pending_overdue" in text, page.name

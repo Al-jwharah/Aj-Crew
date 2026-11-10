@@ -70,11 +70,11 @@ jobs:
     # the guard is on every step, so a step added later cannot quietly run
     # against fork content.
     name: "${{ github.event.pull_request.head.repo.full_name == github.repository && 'GPT 6.1 Review' || 'GPT 6.1 Review (same-repo lane, not applicable to forks)' }}"
-    # `kirocrew-runners` larger-runner group, targeted by GROUP not label; see
+    # `ajcrew-runners` larger-runner group, targeted by GROUP not label; see
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     # Runaway/hang backstop only, NOT a per-review budget: each pass carries its
     # own PASS_WALL and self-terminates first. This wall MUST therefore stay
     # above the sum of the pass walls plus setup -- otherwise it, not the named
@@ -652,7 +652,7 @@ jobs:
           budget_prompt=".review-prompts-gpt/gpt-push-budget.md"
           git show "$BASE_SHA:.github/review-prompts/gpt-push-budget.md" \
             > "$budget_prompt" 2>/dev/null || true
-          counter_tree="src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/scripts"
+          counter_tree="src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts"
           counter_dir="${RUNNER_TEMP:-/tmp}/push-budget-count"
           push_budget_count() {
             case "$PR" in ''|*[!0-9]*) return 1 ;; esac
@@ -1711,7 +1711,7 @@ jobs:
           #
           # A marker comment is the ONLY thing a freshness verifier reads. A
           # write that does not land therefore leaves the PR indistinguishable
-          # from one no lane ever reviewed: kirocrew-prepare-pr's pr_status.py refuses a
+          # from one no lane ever reviewed: ajcrew-prepare-pr's pr_status.py refuses a
           # PR whose check-runs, readiness status and mergeable state all pass,
           # and the only way out is manufacturing a new head -- which re-rolls
           # the non-deterministic review lanes and discards the verdicts they
@@ -1953,7 +1953,7 @@ jobs:
             # would invent a BLOCK nobody judged out of an infrastructure fault.
             # The annotation is what says so: the required readiness status reads
             # check-run CONCLUSIONS and has no stamp-freshness read, so the reader
-            # that catches a head with no verdict is kirocrew-prepare-pr's own marker
+            # that catches a head with no verdict is ajcrew-prepare-pr's own marker
             # evaluation, run before a PR is called ready.
             if [ -n "$slot" ]; then
               occupied=""

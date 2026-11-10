@@ -59,7 +59,7 @@ const slots = [{
   running: false,
   last_message: 'Cycle 23 done — two retry paths left to fold.',
   messages: 4,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   folder_id: '',

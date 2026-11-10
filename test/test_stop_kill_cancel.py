@@ -19,13 +19,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.mcp_gateway import abort as abort_mod
-from kiro_crew.mcp_gateway import gatewayd as gw
-from kiro_crew.mcp_gateway import transport
-from kiro_crew.mcp_gateway.backend import Backend, _PendingRequest
-from kiro_crew.mcp_gateway.pool import BackendPool, PoolKey
-from kiro_crew.testing.wait import finished
+from aj_crew import platform_compat as pc
+from aj_crew.mcp_gateway import abort as abort_mod
+from aj_crew.mcp_gateway import gatewayd as gw
+from aj_crew.mcp_gateway import transport
+from aj_crew.mcp_gateway.backend import Backend, _PendingRequest
+from aj_crew.mcp_gateway.pool import BackendPool, PoolKey
+from aj_crew.testing.wait import finished
 
 pytestmark = pytest.mark.xdist_group("mcp_gateway")
 
@@ -98,7 +98,7 @@ class TestCancelInFlight:
         async def fake_write(writer, msg):
             written.append(msg)
 
-        with patch("kiro_crew.mcp_gateway.backend._write_json_line", new=fake_write):
+        with patch("aj_crew.mcp_gateway.backend._write_json_line", new=fake_write):
             cancelled = await backend.cancel_in_flight_for_stub("stub-A")
 
         assert len(cancelled) == 2
@@ -115,7 +115,7 @@ class TestCancelInFlight:
             "gw-1-3": _PendingRequest(stub_uuid="stub-B", original_id=3, method="tools/call"),
         }
 
-        with patch("kiro_crew.mcp_gateway.backend._write_json_line", new=AsyncMock()):
+        with patch("aj_crew.mcp_gateway.backend._write_json_line", new=AsyncMock()):
             cancelled = await backend.cancel_in_flight_for_stub("stub-A")
 
         assert cancelled == []
@@ -137,7 +137,7 @@ class TestCancelInFlight:
             if call_count == 1:
                 raise BrokenPipeError("backend dead")
 
-        with patch("kiro_crew.mcp_gateway.backend._write_json_line", new=failing_write):
+        with patch("aj_crew.mcp_gateway.backend._write_json_line", new=failing_write):
             cancelled = await backend.cancel_in_flight_for_stub("stub-A")
 
         # Only gets 0 or partial depending on ordering, but should not crash
@@ -152,7 +152,7 @@ class TestCancelInFlight:
             "gw-1-1": _PendingRequest(stub_uuid="stub-A", original_id=1, method="tools/call"),
         }
 
-        with patch("kiro_crew.mcp_gateway.backend._write_json_line", new=AsyncMock()) as mock_write:
+        with patch("aj_crew.mcp_gateway.backend._write_json_line", new=AsyncMock()) as mock_write:
             cancelled = await backend.cancel_in_flight_for_stub("stub-A")
 
         assert cancelled == []
@@ -197,7 +197,7 @@ class TestRecycleIfIdle:
         backend.refcount = 2
 
         with patch(
-            "kiro_crew.platform_compat.kill_process_tree_async",
+            "aj_crew.platform_compat.kill_process_tree_async",
             new_callable=AsyncMock,
         ) as mock_kill_tree:
             result = await backend.recycle_if_idle()
@@ -264,11 +264,11 @@ class TestKillPathIsPlatformCorrect:
 
         with (
             patch(
-                "kiro_crew.platform_compat.kill_process_tree_async",
+                "aj_crew.platform_compat.kill_process_tree_async",
                 new_callable=AsyncMock,
             ) as mock_async,
             patch(
-                "kiro_crew.platform_compat.kill_process_tree",
+                "aj_crew.platform_compat.kill_process_tree",
                 side_effect=self._forbid_sync,
             ),
             # os.killpg/os.getpgid must not be reached directly any more.
@@ -289,11 +289,11 @@ class TestKillPathIsPlatformCorrect:
 
         with (
             patch(
-                "kiro_crew.platform_compat.kill_process_tree_async",
+                "aj_crew.platform_compat.kill_process_tree_async",
                 new_callable=AsyncMock,
             ) as mock_async,
             patch(
-                "kiro_crew.platform_compat.kill_process_tree",
+                "aj_crew.platform_compat.kill_process_tree",
                 side_effect=self._forbid_sync,
             ),
             patch("os.getpgid", side_effect=self._forbid_sync, create=True),
@@ -318,7 +318,7 @@ class TestKillPathIsPlatformCorrect:
         backend.process.wait = AsyncMock(side_effect=asyncio.TimeoutError())
 
         with patch(
-            "kiro_crew.platform_compat.kill_process_tree_async",
+            "aj_crew.platform_compat.kill_process_tree_async",
             new_callable=AsyncMock,
             side_effect=OSError("taskkill: access denied"),
         ):
@@ -357,7 +357,7 @@ class TestTeardownUsesPortableSignalConstant:
         backend.refcount = 0
 
         with patch(
-            "kiro_crew.platform_compat.kill_process_tree_async",
+            "aj_crew.platform_compat.kill_process_tree_async",
             new_callable=AsyncMock,
         ) as mock_async:
             result = await backend.recycle_if_idle()
@@ -375,7 +375,7 @@ class TestTeardownUsesPortableSignalConstant:
         backend.process.wait = AsyncMock(side_effect=asyncio.TimeoutError())
 
         with patch(
-            "kiro_crew.platform_compat.kill_process_tree_async",
+            "aj_crew.platform_compat.kill_process_tree_async",
             new_callable=AsyncMock,
         ) as mock_async:
             await backend.shutdown(timeout=0.01)
@@ -387,7 +387,7 @@ class TestTeardownUsesPortableSignalConstant:
     async def test_orphan_reap_survives_without_signal_sigkill(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path
     ) -> None:
-        from kiro_crew.mcp_gateway import manager as mgr
+        from aj_crew.mcp_gateway import manager as mgr
 
         self._hide_sigkill(monkeypatch)
         socket_path = tmp_path / "gateway.sock"
@@ -398,13 +398,13 @@ class TestTeardownUsesPortableSignalConstant:
         manager._spec.socket_path = str(socket_path)
 
         with (
-            patch("kiro_crew.platform_compat.IS_WINDOWS", False),
+            patch("aj_crew.platform_compat.IS_WINDOWS", False),
             patch(
-                "kiro_crew.process_identity.isolated_group_of",
+                "aj_crew.process_identity.isolated_group_of",
                 side_effect=lambda pid, start: pid,
             ),
             patch(
-                "kiro_crew.platform_compat.kill_process_group", return_value=True
+                "aj_crew.platform_compat.kill_process_group", return_value=True
             ) as mock_group,
         ):
             await manager._reap_orphaned_backends("test")
@@ -424,7 +424,7 @@ class TestOrphanReapIsPlatformCorrect:
     async def test_reap_runs_the_pinned_tree_kill_off_the_loop_for_each_pid(self, tmp_path):
         import threading
 
-        from kiro_crew.mcp_gateway import manager as mgr
+        from aj_crew.mcp_gateway import manager as mgr
 
         socket_path = tmp_path / "gateway.sock"
         (tmp_path / "gateway.sock.backends").write_text("111 7\n222 8\n", encoding="utf-8")
@@ -444,10 +444,10 @@ class TestOrphanReapIsPlatformCorrect:
             return True
 
         with (
-            patch("kiro_crew.platform_compat.IS_WINDOWS", True),
-            patch("kiro_crew.platform_compat.kill_process_tree_pinned", side_effect=_pinned),
-            patch("kiro_crew.platform_compat.kill_process_tree", side_effect=_forbid),
-            patch("kiro_crew.platform_compat.kill_process_group", side_effect=_forbid),
+            patch("aj_crew.platform_compat.IS_WINDOWS", True),
+            patch("aj_crew.platform_compat.kill_process_tree_pinned", side_effect=_pinned),
+            patch("aj_crew.platform_compat.kill_process_tree", side_effect=_forbid),
+            patch("aj_crew.platform_compat.kill_process_group", side_effect=_forbid),
             patch("os.getpgid", side_effect=_forbid, create=True),
             patch("os.killpg", side_effect=_forbid, create=True),
         ):
@@ -466,7 +466,7 @@ class TestDetachOnCancelFailure:
     async def test_detach_still_called_when_cancel_raises(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.mcp_gateway import socketsec
+        from aj_crew.mcp_gateway import socketsec
 
         monkeypatch.setattr(socketsec, "PEER_IDENTITY_SUPPORTED", True)
         monkeypatch.setattr(
@@ -678,7 +678,7 @@ class TestConservativeShutdown:
     @pytest.mark.asyncio
     async def test_session_sharing_never_kills_runtime(self):
         """Session-sharing subagent reap → conservative shutdown only, NEVER SIGKILL."""
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.subagent import SubagentInfo, SubagentManager
 
         info = SubagentInfo(
             id="agent-001",
@@ -714,8 +714,8 @@ class TestConservativeShutdown:
         mgr._fire_event = noop_fire
 
         with patch("os.kill") as mock_kill, \
-             patch("kiro_crew.subagent.sel") as mock_sel, \
-             patch("kiro_crew.subagent.Stats") as mock_stats:
+             patch("aj_crew.subagent.sel") as mock_sel, \
+             patch("aj_crew.subagent.Stats") as mock_stats:
             mock_sel.return_value = MagicMock()
             mock_sel.return_value.log_tool_invocation = MagicMock()
             mock_stats.return_value = MagicMock()
@@ -737,7 +737,7 @@ class TestConservativeShutdown:
     @pytest.mark.asyncio
     async def test_session_sharing_with_co_tenants_still_conservative(self):
         """Even with co-tenants, session-sharing → conservative shutdown (same path)."""
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.subagent import SubagentInfo, SubagentManager
 
         shared_pid = 2**22 + 88888
         info_a = SubagentInfo(
@@ -780,8 +780,8 @@ class TestConservativeShutdown:
         mgr._fire_event = noop_fire
 
         with patch("os.kill") as mock_kill, \
-             patch("kiro_crew.subagent.sel") as mock_sel, \
-             patch("kiro_crew.subagent.Stats") as mock_stats:
+             patch("aj_crew.subagent.sel") as mock_sel, \
+             patch("aj_crew.subagent.Stats") as mock_stats:
             mock_sel.return_value = MagicMock()
             mock_sel.return_value.log_tool_invocation = MagicMock()
             mock_stats.return_value = MagicMock()

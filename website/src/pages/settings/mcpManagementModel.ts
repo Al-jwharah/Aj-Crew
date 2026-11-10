@@ -15,7 +15,7 @@ import {
 
 /** The user guide section that explains this page in its own labels. */
 export const DOCS_URL =
-  'https://github.com/kirodotdev/KiroCrew/blob/main/src/kiro_crew/docs/connections.md#sharing-mcp-servers-across-chats'
+  'https://github.com/Al-jwharah/Aj-Crew/blob/main/src/aj_crew/docs/connections.md#sharing-mcp-servers-across-chats'
 
 export type GatewayStatus = {
   enabled: boolean
@@ -491,8 +491,8 @@ export function envKeyNames(envs?: readonly (readonly string[])[]): string[] {
 
 /**
  * Split the names the stub writes skipped by whether they ended up stubbed anyway.
- * Kiro Crew's own servers follow `kirocrew-core`'s stub decision, so one whose own
- * write was skipped is stubbed once `kirocrew-core` is. `inEffect` is the latest
+ * Aj Crew's own servers follow `ajcrew-core`'s stub decision, so one whose own
+ * write was skipped is stubbed once `ajcrew-core` is. `inEffect` is the latest
  * write's `stub_servers` (the set in effect after it); without one, every skip stands.
  */
 export function settleSkipped(

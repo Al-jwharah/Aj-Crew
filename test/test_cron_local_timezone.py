@@ -1,7 +1,7 @@
 """A cron job whose zone is ``local`` (or unset) follows the zone of the computer it runs on.
 
 A laptop that travels switches its system zone; a job set for 09:00 should run at
-09:00 wherever the laptop is. The host zone is published by ``kiro_crew.host_timezone``
+09:00 wherever the laptop is. The host zone is published by ``aj_crew.host_timezone``
 (the conftest floor keeps it undetected, so each test publishes the zones it needs),
 and every instant is built from a wall time with an explicit ``ZoneInfo``, so no test
 depends on the zone of the machine running the suite. Synthetic data only.
@@ -21,10 +21,10 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-import kiro_crew.cron as cron
-from kiro_crew import host_timezone, platform_compat
-from kiro_crew.cron import CronJob, CronSchedule, CronService
-from kiro_crew.testing.wait import await_until
+import aj_crew.cron as cron
+from aj_crew import host_timezone, platform_compat
+from aj_crew.cron import CronJob, CronSchedule, CronService
+from aj_crew.testing.wait import await_until
 
 SHANGHAI = ZoneInfo("Asia/Shanghai")
 LOS_ANGELES = ZoneInfo("America/Los_Angeles")
@@ -276,7 +276,7 @@ _EVERY = {"kind": "every", "every_secs": 3600}
 
 
 def _config_unreadable(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.cron_service import zone_default_migration
+    from aj_crew.cron_service import zone_default_migration
 
     def _unknown() -> str:
         raise zone_default_migration.ConfigZoneUnknown("config.json did not parse")
@@ -295,13 +295,13 @@ class TestTheConfigZoneTheUpgradeReads:
     ) -> None:
         """A config that did not parse loads as defaults; its empty zone is not the
         zone the jobs inherited, so it is refused rather than read as "none"."""
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.cron_service import zone_default_migration
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.cron_service import zone_default_migration
 
         loaded = SimpleNamespace(
             timezone="Asia/Tokyo", _base_unreadable=base, _overlay_unreadable=overlay
         )
-        monkeypatch.setattr(KiroCrewConfig, "load", lambda *a, **k: loaded)
+        monkeypatch.setattr(AjCrewConfig, "load", lambda *a, **k: loaded)
         if base or overlay:
             with pytest.raises(zone_default_migration.ConfigZoneUnknown):
                 zone_default_migration.configured_default_zone()
@@ -312,7 +312,7 @@ class TestTheConfigZoneTheUpgradeReads:
 class TestAStoreFromBeforeLocalKeepsItsJobsOnUtc:
     @pytest.fixture(autouse=True)
     def _configured_empty(self, _floor_monkeypatch) -> None:
-        from kiro_crew.cron_service import zone_default_migration
+        from aj_crew.cron_service import zone_default_migration
 
         _floor_monkeypatch.setattr(zone_default_migration, "configured_default_zone", lambda: "")
 
@@ -362,7 +362,7 @@ class TestAStoreFromBeforeLocalKeepsItsJobsOnUtc:
         assert CronService(base_dir=tmp_path).list_jobs(True)[0].timezone == ""
 
     def test_a_configured_zone_is_left_to_be_inherited(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.cron_service import zone_default_migration
+        from aj_crew.cron_service import zone_default_migration
 
         monkeypatch.setattr(zone_default_migration, "configured_default_zone", lambda: "Asia/Tokyo")
         _write_store(tmp_path, 2, [_record("cron", _CRON)])
@@ -375,7 +375,7 @@ class TestAStoreFromBeforeLocalKeepsItsJobsOnUtc:
         a readable config settles the jobs; the store stays readable throughout.
         Meanwhile the older job keeps its UTC time, in memory only, rather than
         running at the host's (Shanghai's) as the defaults-only config would."""
-        from kiro_crew.cron_service import zone_default_migration
+        from aj_crew.cron_service import zone_default_migration
 
         def _unknown() -> str:
             raise zone_default_migration.ConfigZoneUnknown("config.json did not parse")
@@ -404,7 +404,7 @@ class TestAStoreFromBeforeLocalKeepsItsJobsOnUtc:
     ) -> None:
         """Version 2 cannot tell a job added during the wait from an older one, so the
         save lists it: neither a reload nor the later upgrade holds or stamps it."""
-        from kiro_crew.cron_service import zone_default_migration
+        from aj_crew.cron_service import zone_default_migration
 
         key = zone_default_migration.FOLLOWS_DEFAULT_KEY
         _config_unreadable(monkeypatch)
@@ -430,7 +430,7 @@ class TestAStoreFromBeforeLocalKeepsItsJobsOnUtc:
         """A save while the upgrade waits keeps the listing of a record it could not
         load, so once the record is fixed by hand the upgrade does not stamp it. An
         unlisted one stays unlisted, and one with a list id does not fail the save."""
-        from kiro_crew.cron_service import zone_default_migration
+        from aj_crew.cron_service import zone_default_migration
 
         key = zone_default_migration.FOLLOWS_DEFAULT_KEY
         _config_unreadable(monkeypatch)
@@ -453,7 +453,7 @@ class TestAStoreFromBeforeLocalKeepsItsJobsOnUtc:
 
     def test_a_kept_record_sharing_a_jobs_id_is_listed_once(self) -> None:
         """A kept record with a loaded job's id must not double the listing."""
-        from kiro_crew.cron_service import zone_default_migration
+        from aj_crew.cron_service import zone_default_migration
 
         key = zone_default_migration.FOLLOWS_DEFAULT_KEY
         job = _daily_nine("")
@@ -469,7 +469,7 @@ class TestAStoreFromBeforeLocalKeepsItsJobsOnUtc:
         """A zone set and then cleared during the wait leaves the job on the default,
         not on UTC, and the save lists it so the upgrade does not stamp it later. An
         update that leaves the zone alone keeps the hold."""
-        from kiro_crew.cron_service import zone_default_migration
+        from aj_crew.cron_service import zone_default_migration
 
         _config_unreadable(monkeypatch)
         _write_store(tmp_path, 2, [_record("cron", _CRON), _record("kept", _CRON)])
@@ -487,7 +487,7 @@ class TestTheScheduleApiSaysWhereLocalIs:
     async def test_it_reports_the_host_zone_the_default_and_each_jobs_zone(
         self, no_configured_zone
     ) -> None:
-        from kiro_crew.dashboard.handlers.cron import api_crons
+        from aj_crew.dashboard.handlers.cron import api_crons
 
         host_timezone.publish_host_timezone("Asia/Shanghai", at=_SEEN_IN_SHANGHAI)
         jobs = [_daily_nine("local"), _daily_nine("America/New_York"), _daily_nine("")]
@@ -516,7 +516,7 @@ class TestTheScheduleApiSaysWhereLocalIs:
     async def test_a_configured_zone_that_cannot_load_is_reported_as_utc(self, monkeypatch) -> None:
         """The page formats with ``effective_tz``, so it is the zone the scheduler
         uses (UTC for a name that cannot load), never a typo the browser refuses."""
-        from kiro_crew.dashboard.handlers.cron import api_crons
+        from aj_crew.dashboard.handlers.cron import api_crons
 
         monkeypatch.setattr(cron, "published_config_timezone", lambda: "America/NewYork")
         state = MagicMock()
@@ -534,7 +534,7 @@ class TestTheScheduleApiSaysWhereLocalIs:
 
     @pytest.mark.asyncio
     async def test_a_configured_zone_is_the_default_the_form_offers(self, monkeypatch) -> None:
-        from kiro_crew.dashboard.handlers.cron import api_crons
+        from aj_crew.dashboard.handlers.cron import api_crons
 
         monkeypatch.setattr(cron, "published_config_timezone", lambda: "Europe/London")
         state = MagicMock()
@@ -567,7 +567,7 @@ class TestAZoneChangeWhileAJobRuns:
     def test_a_zone_it_cannot_load_or_a_cron_it_cannot_step_holds_nothing_back(
         self, no_configured_zone
     ) -> None:
-        from kiro_crew.cron_service import schedule
+        from aj_crew.cron_service import schedule
 
         ran = _at(SHANGHAI, 2026, 11, 3, 9, 0) + 20
         host_timezone.publish_host_timezone("Not/A_Zone", at=_SEEN_IN_SHANGHAI)
@@ -636,7 +636,7 @@ class TestAZoneChangeWhileAJobRuns:
         """A */15 job has no jitter, so its look-back is only its time limit; after a
         westward change every slot that did not run still runs, and the preview names
         the very next one."""
-        from kiro_crew.cron_service import schedule
+        from aj_crew.cron_service import schedule
 
         ran = _at(SHANGHAI, 2026, 11, 3, 10, 0) + 30
         quarterly = CronJob(
@@ -657,7 +657,7 @@ class TestAZoneChangeWhileAJobRuns:
         assert cron.compute_next_run_ts(quarterly, now=landed + 60) == first
 
     def test_the_look_back_uses_the_jobs_own_jitter_band(self) -> None:
-        from kiro_crew.cron_service import schedule
+        from aj_crew.cron_service import schedule
 
         def job(expr: str, strict: bool = False) -> CronJob:
             return CronJob(
@@ -720,8 +720,8 @@ class TestOtherWritersAndReadersOfTheDefault:
     def test_a_schedule_card_names_the_zone_the_browser_can_format(
         self, no_configured_zone
     ) -> None:
-        from kiro_crew import change_card_catalog as catalog
-        from kiro_crew.dashboard import change_cards as cards
+        from aj_crew import change_card_catalog as catalog
+        from aj_crew.dashboard import change_cards as cards
 
         host_timezone.publish_host_timezone("Asia/Shanghai", at=_SEEN_IN_SHANGHAI)
         for zone in ("local", ""):
@@ -734,7 +734,7 @@ class TestOtherWritersAndReadersOfTheDefault:
     def test_a_goal_check_in_keeps_following_the_computer(
         self, no_configured_zone, tmp_path
     ) -> None:
-        from kiro_crew.dashboard import goal_reminder
+        from aj_crew.dashboard import goal_reminder
 
         host_timezone.publish_host_timezone("Asia/Shanghai", at=_SEEN_IN_SHANGHAI)
         svc = CronService(base_dir=tmp_path)
@@ -748,7 +748,7 @@ class TestOtherWritersAndReadersOfTheDefault:
     ) -> None:
         """An older build saved check-ins on UTC; saving the Goals tab again keeps each
         untouched one, id and zone, instead of recreating it on the new default."""
-        from kiro_crew.dashboard import goal_reminder
+        from aj_crew.dashboard import goal_reminder
 
         svc = CronService(base_dir=tmp_path)
         schedules = {"daily": True, "weekly": True, "time": "09:00", "weekday": 1}
@@ -769,7 +769,7 @@ class TestOtherWritersAndReadersOfTheDefault:
     def test_clearing_a_check_ins_zone_moves_it_to_the_default(
         self, no_configured_zone, tmp_path
     ) -> None:
-        from kiro_crew.dashboard import goal_reminder
+        from aj_crew.dashboard import goal_reminder
 
         svc = CronService(base_dir=tmp_path)
         schedules = {"daily": True, "time": "09:00"}
@@ -782,7 +782,7 @@ class TestOtherWritersAndReadersOfTheDefault:
         assert [j.timezone for j in svc.list_jobs(True)] == ["local"]
 
     def test_a_configured_zone_change_moves_every_check_in(self, monkeypatch, tmp_path) -> None:
-        from kiro_crew.dashboard import goal_reminder
+        from aj_crew.dashboard import goal_reminder
 
         svc = CronService(base_dir=tmp_path)
         schedules = {"daily": True, "weekly": True, "time": "09:00", "weekday": 1}
@@ -799,7 +799,7 @@ class TestOtherWritersAndReadersOfTheDefault:
         """A typo in the config zone is stored as UTC, the zone the scheduler runs it
         in; stored as is, the replacement would be refused after the old check-in
         was already removed."""
-        from kiro_crew.dashboard import goal_reminder
+        from aj_crew.dashboard import goal_reminder
 
         monkeypatch.setattr(cron, "published_config_timezone", lambda: "America/NewYork")
         svc = CronService(base_dir=tmp_path)
@@ -816,7 +816,7 @@ class TestOtherWritersAndReadersOfTheDefault:
     def test_a_goal_check_in_takes_a_zone_the_record_names(
         self, no_configured_zone, tmp_path
     ) -> None:
-        from kiro_crew.dashboard import goal_reminder
+        from aj_crew.dashboard import goal_reminder
 
         svc = CronService(base_dir=tmp_path)
         schedules = {"daily": True, "time": "09:00"}
@@ -831,7 +831,7 @@ class TestOtherWritersAndReadersOfTheDefault:
         assert [j.timezone for j in svc.list_jobs(True)] == ["Asia/Tokyo"]
 
     def test_a_goal_check_in_takes_a_configured_zone_by_name(self, monkeypatch, tmp_path) -> None:
-        from kiro_crew.dashboard import goal_reminder
+        from aj_crew.dashboard import goal_reminder
 
         monkeypatch.setattr(cron, "published_config_timezone", lambda: "Europe/London")
         svc = CronService(base_dir=tmp_path)
@@ -844,12 +844,12 @@ class TestOtherWritersAndReadersOfTheDefault:
 class TestMergingABackupIntoTheLiveStore:
     @pytest.fixture(autouse=True)
     def _configured_empty(self, _floor_monkeypatch) -> None:
-        from kiro_crew.cron_service import zone_default_migration
+        from aj_crew.cron_service import zone_default_migration
 
         _floor_monkeypatch.setattr(zone_default_migration, "configured_default_zone", lambda: "")
 
     def _merge(self, tmp_path, src_doc: dict, dst_doc: dict) -> dict:
-        from kiro_crew import snapshot_merge
+        from aj_crew import snapshot_merge
 
         src, dst = tmp_path / "backup.json", tmp_path / "crons.json"
         src.write_text(json.dumps(src_doc), encoding="utf-8")
@@ -870,8 +870,8 @@ class TestMergingABackupIntoTheLiveStore:
     def test_with_the_config_unreadable_an_older_backup_is_not_merged(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew import snapshot_merge
-        from kiro_crew.cron_service import zone_default_migration
+        from aj_crew import snapshot_merge
+        from aj_crew.cron_service import zone_default_migration
 
         def _unknown() -> str:
             raise zone_default_migration.ConfigZoneUnknown("config.json did not parse")
@@ -899,7 +899,7 @@ class TestMergingABackupIntoTheLiveStore:
     def test_a_job_an_older_store_lists_as_following_the_default_is_not_stamped(
         self, tmp_path
     ) -> None:
-        from kiro_crew.cron_service import zone_default_migration
+        from aj_crew.cron_service import zone_default_migration
 
         key = zone_default_migration.FOLLOWS_DEFAULT_KEY
         merged = self._merge(
@@ -977,7 +977,7 @@ class TestAColdGatewayReadsTheHostZoneBeforeSavingAnInstant:
         not read a "local" clock as UTC: the instant it saves is never corrected."""
         from body_stream_helpers import attach_body
 
-        from kiro_crew.dashboard.handlers import api_crons_create
+        from aj_crew.dashboard.handlers import api_crons_create
 
         tokyo = ZoneInfo("Asia/Tokyo")
         monkeypatch.setattr(host_timezone, "detect_host_timezone", lambda: "Asia/Tokyo")

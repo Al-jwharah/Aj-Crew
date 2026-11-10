@@ -38,9 +38,9 @@ exports[`CrewLogTab > draws the subagents table 1`] = `
     <tr>
       <td
         class="py-[3px] border-b border-border text-text truncate max-w-[110px]"
-        title="kirocrew-worker"
+        title="ajcrew-worker"
       >
-        kirocrew-worker
+        ajcrew-worker
       </td>
       <td
         class="py-[3px] border-b border-border text-muted truncate max-w-[80px]"
@@ -71,9 +71,9 @@ exports[`CrewLogTab > draws the subagents table 1`] = `
     <tr>
       <td
         class="py-[3px] border-b border-border text-text truncate max-w-[110px]"
-        title="kirocrew-worker"
+        title="ajcrew-worker"
       >
-        kirocrew-worker
+        ajcrew-worker
       </td>
       <td
         class="py-[3px] border-b border-border text-muted truncate max-w-[80px]"
@@ -180,9 +180,9 @@ exports[`CrewLogTab > draws the subagents table 1`] = `
     <tr>
       <td
         class="py-[3px] border-b border-border text-text truncate max-w-[110px]"
-        title="kirocrew-knowledge"
+        title="ajcrew-knowledge"
       >
-        kirocrew-knowledge
+        ajcrew-knowledge
       </td>
       <td
         class="py-[3px] border-b border-border text-muted truncate max-w-[80px]"

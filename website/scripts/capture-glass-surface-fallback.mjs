@@ -49,7 +49,7 @@ const SLOTS = [{
   running: false,
   last_message: 'The notifications panel floats over this content.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: '',
   folder_id: '',

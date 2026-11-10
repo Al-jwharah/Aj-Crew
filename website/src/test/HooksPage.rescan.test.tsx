@@ -31,7 +31,7 @@ vi.mock('../providers', () => ({
   useProvider: () => ({
     id: 'acp',
     capabilities: { hooks: true },
-    labels: { hooksSection: 'Provider hooks', configFile: '~/.kiro/agents/kirocrew.json' },
+    labels: { hooksSection: 'Provider hooks', configFile: '~/.kiro/agents/ajcrew.json' },
     fetchProviderHooks: () => Promise.resolve(sent),
     rescanProviderHooks: rescan,
   }),

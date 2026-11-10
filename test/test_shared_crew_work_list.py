@@ -10,15 +10,15 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
-from kiro_crew.shared_crew import admission_entry as entry
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import routes_admission, turn_gate, wiring, work_store
-from kiro_crew.shared_crew.admission import (
+from aj_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
+from aj_crew.shared_crew import admission_entry as entry
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import routes_admission, turn_gate, wiring, work_store
+from aj_crew.shared_crew.admission import (
     Liveness,
 )
-from kiro_crew.shared_crew.containment import ContainmentReport, SliceManager
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew.containment import ContainmentReport, SliceManager
+from aj_crew.shared_crew.contracts import (
     DisplaySnapshot,
     EnforcementLevel,
     Principal,
@@ -26,10 +26,10 @@ from kiro_crew.shared_crew.contracts import (
     Provenance,
     principal_id_for,
 )
-from kiro_crew.shared_crew.work_store import WorkStore
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.shared_crew.work_store import WorkStore
+from aj_crew.taskq.store import TaskStore
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 def _person(login: str) -> Principal:
@@ -94,7 +94,7 @@ def service(tmp_path, monkeypatch):
 
     monkeypatch.setattr(ag, "current_service", _current)
     monkeypatch.setattr(ag, "_SERVICE", svc)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_slack.slot_is_live", lambda _s, _slot: True)
+    monkeypatch.setattr("aj_crew.dashboard.chat_slack.slot_is_live", lambda _s, _slot: True)
     yield svc
     entry._PENDING_SLOTS.clear()
     work_store.set_change_listener(None)
@@ -178,7 +178,7 @@ async def test_every_work_write_reaches_tabs_as_a_frame_naming_the_tab(service, 
     sent: list[dict] = []
     state = SimpleNamespace(broadcast_ws=lambda kind, frame: sent.append(frame))
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_utils.dashboard_slot_key",
+        "aj_crew.dashboard.chat_utils.dashboard_slot_key",
         lambda key: key.removeprefix("dashboard:"),
     )
     wiring.install(state)
@@ -201,7 +201,7 @@ async def test_every_work_write_reaches_tabs_as_a_frame_naming_the_tab(service, 
 
 @pytest.mark.asyncio
 async def test_open_work_is_listed_before_a_long_finished_history(service):
-    from kiro_crew.shared_crew.admission import OperationState as S
+    from aj_crew.shared_crew.admission import OperationState as S
 
     pool = [SimpleNamespace(work_id=f"d{i}", state=S.COMPLETED) for i in range(3)]
     pool.append(SimpleNamespace(work_id="q", state=S.QUEUED))

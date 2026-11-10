@@ -22,10 +22,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import channel as channel_mod
-from kiro_crew.acp.client import AcpError, AcpPromptBusy
-from kiro_crew.acp.types import STOP_REASON_STALE_RECOVER
-from kiro_crew.channel import (
+from aj_crew import channel as channel_mod
+from aj_crew.acp.client import AcpError, AcpPromptBusy
+from aj_crew.acp.types import STOP_REASON_STALE_RECOVER
+from aj_crew.channel import (
     Channel,
     _reacquire_cleared_session,
     _recover_busy_agent,
@@ -33,10 +33,10 @@ from kiro_crew.channel import (
     _stream_task,
     run_channel_agent,
 )
-from kiro_crew.llm_helpers import is_prompt_busy
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.session import SessionManager
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.llm_helpers import is_prompt_busy
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.session import SessionManager
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 def _make_agent():

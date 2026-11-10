@@ -32,17 +32,17 @@ from pathlib import Path
 
 def _setup(home: Path) -> None:
     # The data home is fixed at process start, so it is the caller's to set.
-    if os.environ.get("KIROCREW_HOME") != str(home):
-        raise SystemExit(f"run with KIROCREW_HOME={home}")
+    if os.environ.get("AJCREW_HOME") != str(home):
+        raise SystemExit(f"run with AJCREW_HOME={home}")
 
 
 def _counted():
     # The battery's home: dashboard.display_battery on this branch, chat_utils
     # on a base tree that predates it.
     try:
-        from kiro_crew.dashboard import display_battery as home
+        from aj_crew.dashboard import display_battery as home
     except ImportError:
-        from kiro_crew.dashboard import chat_utils as home
+        from aj_crew.dashboard import chat_utils as home
 
     calls = {"n": 0}
     orig_u = home.redact_exfiltration_urls
@@ -71,11 +71,11 @@ def _save(path: str, res: dict) -> None:
 def cmd_render(a: argparse.Namespace) -> None:
     home = Path(a.home)
     _setup(home)
-    from kiro_crew.dashboard import chat_utils
-    from kiro_crew.history import ConversationLog
+    from aj_crew.dashboard import chat_utils
+    from aj_crew.history import ConversationLog
 
     try:
-        from kiro_crew.dashboard import display_verdicts as dv
+        from aj_crew.dashboard import display_verdicts as dv
     except ImportError:
         dv = None
     if a.persist:
@@ -122,7 +122,7 @@ def cmd_render(a: argparse.Namespace) -> None:
 def cmd_write(a: argparse.Namespace) -> None:
     home = Path(a.home)
     _setup(home)
-    from kiro_crew.dashboard import display_verdicts as dv
+    from aj_crew.dashboard import display_verdicts as dv
 
     assert dv.enable(home), "persistence did not enable"
     keys = _keys(a.keys)

@@ -12,7 +12,7 @@ import codecs
 import json
 from pathlib import Path
 
-from kiro_crew.acp import client as acp_client
+from aj_crew.acp import client as acp_client
 
 _BOM = codecs.BOM_UTF8
 

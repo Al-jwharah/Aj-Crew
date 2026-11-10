@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from unittest.mock import patch
 
-from kiro_crew.config.loader import DEFAULT_MODEL, KiroCrewConfig
+from aj_crew.config.loader import DEFAULT_MODEL, AjCrewConfig
 
 
 class TestAcpPerAgentModel:
@@ -21,15 +21,15 @@ class TestAcpPerAgentModel:
 
     @staticmethod
     def _acp_cfg():
-        # KiroCrew is KiroACP-only, so the factory is always acp; a plain
+        # AjCrew is KiroACP-only, so the factory is always acp; a plain
         # instance keeps construction side-effect-free (AcpProvider.__init__
         # builds an AcpClient without spawning kiro-cli).
-        return KiroCrewConfig()
+        return AjCrewConfig()
 
     def test_custom_agent_threads_its_declared_model(self):
         cfg = self._acp_cfg()
         with patch.object(
-            KiroCrewConfig, "_resolve_named_agent_model", return_value="gpt-5.6-sol"
+            AjCrewConfig, "_resolve_named_agent_model", return_value="gpt-5.6-sol"
         ):
             provider = cfg.create_provider_factory()(
                 session_key="cron:job:run", agent="smle-triage-canary"
@@ -42,7 +42,7 @@ class TestAcpPerAgentModel:
     def test_model_override_wins_over_agent_model(self):
         cfg = self._acp_cfg()
         with patch.object(
-            KiroCrewConfig, "_resolve_named_agent_model", return_value="gpt-5.6-sol"
+            AjCrewConfig, "_resolve_named_agent_model", return_value="gpt-5.6-sol"
         ):
             provider = cfg.create_provider_factory()(
                 session_key="cron:job:run",
@@ -59,7 +59,7 @@ class TestAcpPerAgentModel:
         # cli.json instead — the global would not really be a global.
         cfg = self._acp_cfg()
         cfg.agent.model = "claude-sonnet-4.6"
-        with patch.object(KiroCrewConfig, "_resolve_named_agent_model", return_value=""):
+        with patch.object(AjCrewConfig, "_resolve_named_agent_model", return_value=""):
             provider = cfg.create_provider_factory()(
                 session_key="cron:job:run", agent="no-model-agent"
             )
@@ -70,12 +70,12 @@ class TestAcpPerAgentModel:
         # installed agent file declares nothing either, so no session/set_model
         # is sent and kiro resolves from its own config. _resolve_agent_model is
         # patched because the unpatched call reads the HOST's real
-        # ~/.kiro/agents/kirocrew.json, which pins a model on a dev machine.
+        # ~/.kiro/agents/ajcrew.json, which pins a model on a dev machine.
         cfg = self._acp_cfg()
         cfg.agent.model = DEFAULT_MODEL
         with (
-            patch.object(KiroCrewConfig, "_resolve_named_agent_model", return_value=""),
-            patch.object(KiroCrewConfig, "_resolve_agent_model", return_value=DEFAULT_MODEL),
+            patch.object(AjCrewConfig, "_resolve_named_agent_model", return_value=""),
+            patch.object(AjCrewConfig, "_resolve_agent_model", return_value=DEFAULT_MODEL),
         ):
             provider = cfg.create_provider_factory()(
                 session_key="cron:job:run", agent="no-model-agent"
@@ -87,7 +87,7 @@ class TestAcpPerAgentModel:
         cfg = self._acp_cfg()
         cfg.agent.model = "claude-sonnet-4.6"
         with patch.object(
-            KiroCrewConfig, "_resolve_named_agent_model", return_value="gpt-5.6-sol"
+            AjCrewConfig, "_resolve_named_agent_model", return_value="gpt-5.6-sol"
         ):
             provider = cfg.create_provider_factory()(
                 session_key="cron:job:run", agent="pinned-agent"
@@ -103,6 +103,6 @@ class TestAcpPerAgentModel:
             json.dumps({"name": "kiro-cc", "model": "gpt-5.6-sol",
                         "cc_model": "claude-opus-4.6"})
         )
-        assert KiroCrewConfig._resolve_named_agent_model(
+        assert AjCrewConfig._resolve_named_agent_model(
             "kiro-cc", agents_dir=tmp_path
         ) == "gpt-5.6-sol"

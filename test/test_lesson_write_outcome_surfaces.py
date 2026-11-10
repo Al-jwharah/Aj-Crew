@@ -19,13 +19,13 @@ from lesson_write_outcome_helpers import (
     _store,
 )
 
-from kiro_crew.history import ConversationLog
-from kiro_crew.testing.wait import await_until
-from kiro_crew.vector_memory import LessonWriteOutcome, LessonWriteResult
+from aj_crew.history import ConversationLog
+from aj_crew.testing.wait import await_until
+from aj_crew.vector_memory import LessonWriteOutcome, LessonWriteResult
 
 
 class TestCliLearnAddReportsTheOutcome:
-    """``kirocrew learn add`` writes no second record on a decline.
+    """``ajcrew learn add`` writes no second record on a decline.
 
     A falsy return is not "the vector store did not take it". For a REFUSAL a JSONL
     write would bypass validation: that store validates no content and is read
@@ -35,7 +35,7 @@ class TestCliLearnAddReportsTheOutcome:
     def _run(self, tmp_path, negative=None, rule="prefer ruff over flake8", pre=None):
         import argparse
 
-        from kiro_crew import cli_commands
+        from aj_crew import cli_commands
 
         store = _store(tmp_path)
         if pre is not None:
@@ -46,7 +46,7 @@ class TestCliLearnAddReportsTheOutcome:
             closing(store),
             patch.object(cli_commands, "VectorMemoryStore", return_value=store),
             patch.object(cli_commands, "LessonStore", return_value=jsonl),
-            patch.object(cli_commands.KiroCrewConfig, "load", return_value=MagicMock()),
+            patch.object(cli_commands.AjCrewConfig, "load", return_value=MagicMock()),
         ):
             try:
                 cli_commands._learn(args)
@@ -178,7 +178,7 @@ class TestLessonsRouteReportsTheOutcome:
         return request, state
 
     async def _post(self, result):
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         request, state = self._request()
         vs = MagicMock()
@@ -212,7 +212,7 @@ class TestLessonsRouteReportsTheOutcome:
         }
 
     async def test_dashboard_post_refuses_volatile_identity(self, tmp_path) -> None:
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         request, state = self._request("The active model identity is gpt-5.6-sol.")
         store = _store(tmp_path)
@@ -246,8 +246,8 @@ class TestLessonsRouteReportsTheOutcome:
         """
         import json as _json
 
-        from kiro_crew.dashboard.handlers import cron
-        from kiro_crew.embeddings import PRIORITY_BULK
+        from aj_crew.dashboard.handlers import cron
+        from aj_crew.embeddings import PRIORITY_BULK
 
         legacy_rule = "prefer tabs over spaces in makefiles"
         store = _store(tmp_path)
@@ -289,8 +289,8 @@ class TestLessonsRouteReportsTheOutcome:
     async def test_jsonl_fallback_refuses_volatile_negative_clause(self, tmp_path) -> None:
         import json as _json
 
-        from kiro_crew.dashboard.handlers import cron
-        from kiro_crew.learn import LessonStore
+        from aj_crew.dashboard.handlers import cron
+        from aj_crew.learn import LessonStore
 
         request, state = self._request(
             "use automatic model selection",
@@ -324,8 +324,8 @@ class TestLessonsRouteReportsTheOutcome:
         """
         import json as _json
 
-        from kiro_crew.dashboard.handlers import cron
-        from kiro_crew.lesson_validation import LESSON_APPLIES_ON_TOPIC
+        from aj_crew.dashboard.handlers import cron
+        from aj_crew.lesson_validation import LESSON_APPLIES_ON_TOPIC
 
         store = _store(tmp_path)
         try:
@@ -389,9 +389,9 @@ class TestLessonsRouteReportsTheOutcome:
         """
         import json as _json
 
-        from kiro_crew.dashboard.handlers import cron
-        from kiro_crew.learn import _MAX_LESSONS_TOTAL, Lesson, LessonStore
-        from kiro_crew.lesson_validation import (
+        from aj_crew.dashboard.handlers import cron
+        from aj_crew.learn import _MAX_LESSONS_TOTAL, Lesson, LessonStore
+        from aj_crew.lesson_validation import (
             LESSON_APPLIES_ALWAYS,
             LESSON_REFUSED_AT_CAPACITY,
             contains_volatile_lesson_fact,
@@ -438,8 +438,8 @@ class TestLessonsRouteReportsTheOutcome:
     async def test_list_marks_legacy_volatile_jsonl_row_withheld(self, tmp_path) -> None:
         import json as _json
 
-        from kiro_crew.dashboard.handlers import cron
-        from kiro_crew.learn import LessonStore
+        from aj_crew.dashboard.handlers import cron
+        from aj_crew.learn import LessonStore
 
         (tmp_path / "lessons.jsonl").write_text(
             _json.dumps(
@@ -483,7 +483,7 @@ class TestLessonsRouteReportsTheOutcome:
     async def test_list_marks_legacy_string_vector_row_withheld(self, tmp_path) -> None:
         import json as _json
 
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         store = _store(tmp_path)
         try:
@@ -525,7 +525,7 @@ class TestLessonsRouteReportsTheOutcome:
     async def test_list_marks_legacy_mapping_negative_pin_withheld(self, tmp_path) -> None:
         import json as _json
 
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         store = _store(tmp_path)
         try:
@@ -604,7 +604,7 @@ class TestLessonsRouteReportsTheOutcome:
 
     async def test_jsonl_branch_reports_that_store_own_outcome(self):
         """The JSONL store's three words reach the body unchanged."""
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         request, state = self._request()
         state.lessons.save_or_enrich.return_value = "unchanged"
@@ -670,7 +670,7 @@ class TestLessonsRouteReportsTheOutcome:
 
     async def test_the_winner_is_redacted_before_it_leaves_the_process(self):
         """The winner is stored user text, so it rides the same redaction chain."""
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         with patch.object(
             cron, "_redact_memory_field", side_effect=lambda v: "[REDACTED]" if v else v
@@ -699,7 +699,7 @@ class TestLearnAddVolatileSessionFactBoundary:
 
     @staticmethod
     def _call(rule: str, response: dict | None = None):
-        from kiro_crew.mcp_tools import learn
+        from aj_crew.mcp_tools import learn
 
         with (
             patch.object(learn.mcp_core, "_post", return_value=response or {"ok": True}) as post,
@@ -750,7 +750,7 @@ class TestLearnAddVolatileSessionFactBoundary:
         )
 
     def test_descriptor_warns_before_the_model_calls_the_tool(self) -> None:
-        from kiro_crew.mcp_tools import learn
+        from aj_crew.mcp_tools import learn
 
         descriptor = next(item for item in learn.schemas() if item["name"] == "learn_add")
         description = descriptor["description"]
@@ -761,7 +761,7 @@ class TestLearnAddVolatileSessionFactBoundary:
 
 class TestLearnListWithheldRows:
     def test_withheld_reason_is_visible(self) -> None:
-        from kiro_crew.mcp_tools import learn
+        from aj_crew.mcp_tools import learn
 
         with patch.object(
             learn.mcp_core,
@@ -785,7 +785,7 @@ class TestLearnAddToolReportsTheOutcome:
     """The MCP tool never says "Saved lesson" for a write that did not land."""
 
     def _call(self, response):
-        from kiro_crew.mcp_tools import learn
+        from aj_crew.mcp_tools import learn
 
         with (
             patch.object(learn.mcp_core, "_post", return_value=response),
@@ -963,7 +963,7 @@ class TestSupersedeReachesTheSurfacesAHumanReads:
         assert body["superseded"] == ["never force push to a shared branch"]
 
     def _tool_call(self, response):
-        from kiro_crew.mcp_tools import learn
+        from aj_crew.mcp_tools import learn
 
         with (
             patch.object(learn.mcp_core, "_post", return_value=response),
@@ -1039,7 +1039,7 @@ class TestASupersededRuleIsSanitizedBeforeItIsShown:
         """
         import argparse
 
-        from kiro_crew import cli_commands
+        from aj_crew import cli_commands
 
         store = _store(tmp_path)
         # A stored general rule carrying an OSC window-title payload and a CSI clear.
@@ -1056,7 +1056,7 @@ class TestASupersededRuleIsSanitizedBeforeItIsShown:
             self._report_superseded(store, evil),
             patch.object(cli_commands, "VectorMemoryStore", return_value=store),
             patch.object(cli_commands, "LessonStore", return_value=MagicMock()),
-            patch.object(cli_commands.KiroCrewConfig, "load", return_value=MagicMock()),
+            patch.object(cli_commands.AjCrewConfig, "load", return_value=MagicMock()),
         ):
             import io
             from contextlib import redirect_stdout
@@ -1086,7 +1086,7 @@ class TestASupersededRuleIsSanitizedBeforeItIsShown:
         import io
         from contextlib import redirect_stdout
 
-        from kiro_crew import cli_commands
+        from aj_crew import cli_commands
 
         secret = "AKIAIOSFODNN7EXAMPLE"
         store = _store(tmp_path)
@@ -1101,7 +1101,7 @@ class TestASupersededRuleIsSanitizedBeforeItIsShown:
             closing(store),
             patch.object(cli_commands, "VectorMemoryStore", return_value=store),
             patch.object(cli_commands, "LessonStore", return_value=MagicMock()),
-            patch.object(cli_commands.KiroCrewConfig, "load", return_value=MagicMock()),
+            patch.object(cli_commands.AjCrewConfig, "load", return_value=MagicMock()),
         ):
             buf = io.StringIO()
             with redirect_stdout(buf):
@@ -1122,7 +1122,7 @@ class TestASupersededRuleIsSanitizedBeforeItIsShown:
         import io
         from contextlib import redirect_stdout
 
-        from kiro_crew import cli_commands
+        from aj_crew import cli_commands
 
         secret = "AKIAIOSFODNN7EXAMPLE"
         split = "AKIA\x1b[0mIOSFODNN7EXAMPLE"
@@ -1138,7 +1138,7 @@ class TestASupersededRuleIsSanitizedBeforeItIsShown:
             closing(store),
             patch.object(cli_commands, "VectorMemoryStore", return_value=store),
             patch.object(cli_commands, "LessonStore", return_value=MagicMock()),
-            patch.object(cli_commands.KiroCrewConfig, "load", return_value=MagicMock()),
+            patch.object(cli_commands.AjCrewConfig, "load", return_value=MagicMock()),
         ):
             buf = io.StringIO()
             with redirect_stdout(buf):
@@ -1200,7 +1200,7 @@ class TestASupersededRuleIsSanitizedBeforeItIsShown:
             try:
                 store.write_lesson(stored, "tool")
                 caplog.clear()
-                with caplog.at_level(logging.DEBUG, logger="kiro_crew.vector_memory"):
+                with caplog.at_level(logging.DEBUG, logger="aj_crew.vector_memory"):
                     result = store.write_lesson(submitted, "tool")
                 emitted = [r.getMessage() for r in caplog.records]
                 assert emitted, f"{label}: no log record, so this asserts nothing"

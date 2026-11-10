@@ -9,7 +9,7 @@
  * WHAT IS FAITHFUL: the component is the real `AppListRow`, and both row shapes
  * carry values taken VERBATIM from the two real sources —
  *   - "before" = what local synthesis produces from this wheel's
- *     `src/kiro_crew/apps/builtins/<name>/app.json`
+ *     `src/aj_crew/apps/builtins/<name>/app.json`
  *   - "after"  = what the live catalog publishes for the same app
  *     (https://apps.crew.kiro.dev/official-registry.json)
  * Nothing here is invented: artwork, tags and version are byte-identical across
@@ -75,7 +75,7 @@ const shared = {
  * across the two sources (measured against the live catalog).
  *
  * `catalogAuthor` is what the published document states AFTER
- * KiroCrewApps PR #21 restored the four person-authored built-ins: the org
+ * AjCrewApps PR #21 restored the four person-authored built-ins: the org
  * spelling is corrected for org-authored apps, and an individual's attribution
  * is preserved rather than flattened.
  */
@@ -88,7 +88,7 @@ const ROWS: {
 }[] = [
   // `iconUrl` is each app's own value, copied from its app.json — the same
   // string the store serves, so the tile in the frame is the tile in the UI.
-  { name: 'projects', displayName: 'Projects', iconUrl: '/app-assets/projects/icon.svg', localAuthor: 'kirocrew', catalogAuthor: 'Kiro Crew' },
+  { name: 'projects', displayName: 'Projects', iconUrl: '/app-assets/projects/icon.svg', localAuthor: 'ajcrew', catalogAuthor: 'Aj Crew' },
   { name: 'meetings', displayName: 'Meetings', iconUrl: '/app-assets/meetings/icon.svg', localAuthor: 'adunuthu', catalogAuthor: 'adunuthu' },
   { name: 'papyrus', displayName: 'Papyrus', iconUrl: '/app-assets/papyrus/icon.svg', localAuthor: 'tricatte', catalogAuthor: 'tricatte' },
   { name: 'pptx-maker', displayName: 'PPTX Maker', iconUrl: '/app-assets/pptx-maker/icon.svg', localAuthor: 'sktok', catalogAuthor: 'sktok' },

@@ -13,9 +13,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.whatsapp.jids import OwnIdentity
-from kiro_crew.whatsapp.transport import WhatsAppTransport
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.whatsapp.jids import OwnIdentity
+from aj_crew.whatsapp.transport import WhatsAppTransport
 
 OWN_JID = "447700900000@s.whatsapp.net"
 OWN_LID = "111222333@lid"
@@ -367,7 +367,7 @@ class TestGroupSenderAllowlist:
         return [{"jid": GROUP, "name": "G", "mode": mode, "rules": rules, "cooldown_s": 0}]
 
     def _audit(self, monkeypatch):
-        import kiro_crew.whatsapp.transport as mod
+        import aj_crew.whatsapp.transport as mod
 
         seen: list[dict] = []
         monkeypatch.setattr(
@@ -540,7 +540,7 @@ class TestPerGroupAllowlist:
         assert h.transport._may_fetch_media(self._msg("447700900111", GROUP), is_group=True)
 
     async def test_coercion_keeps_the_key_only_when_the_entry_has_it(self):
-        from kiro_crew.config.sections import _coerce_whatsapp_groups
+        from aj_crew.config.sections import _coerce_whatsapp_groups
 
         absent, listed, malformed = _coerce_whatsapp_groups(
             [
@@ -637,7 +637,7 @@ class TestGovernanceDenyStopsTheDownload:
     """
 
     async def _deny(self, monkeypatch):
-        import kiro_crew.messaging.dispatch as mod
+        import aj_crew.messaging.dispatch as mod
 
         async def deny(_ct):
             return False
@@ -648,7 +648,7 @@ class TestGovernanceDenyStopsTheDownload:
         monkeypatch.setattr(mod, "channel_inbound_permitted", deny)
 
     async def test_a_denied_channel_never_reaches_the_fetch(self, harness, monkeypatch):
-        import kiro_crew.whatsapp.transport as mod
+        import aj_crew.whatsapp.transport as mod
 
         calls = []
 
@@ -679,7 +679,7 @@ class TestGovernanceDenyStopsTheDownload:
         exemption keyed on it would admit a policy-denied media message whose
         caption happens to be `/stop`, and the download would already have run.
         """
-        import kiro_crew.whatsapp.transport as mod
+        import aj_crew.whatsapp.transport as mod
 
         async def spy(*a, **kw):
             raise AssertionError("a denied channel must not download media")
@@ -826,8 +826,8 @@ class TestPreIngestionOriginalIsCapturedForTheSpool:
     """
 
     async def test_the_original_caption_survives_ingestion(self, harness, monkeypatch, tmp_path):
-        import kiro_crew.whatsapp.transport as mod
-        from kiro_crew.messaging.attachments import IngestResult
+        import aj_crew.whatsapp.transport as mod
+        from aj_crew.messaging.attachments import IngestResult
 
         # ``receive`` hands the ingested paths to ``attachments.cleanup`` after
         # dispatch, which unlinks them. A literal ``/tmp/...`` here made that
@@ -860,8 +860,8 @@ class TestPreIngestionOriginalIsCapturedForTheSpool:
         assert not image.exists(), "receive did not hand the temp path to cleanup"
 
     async def test_a_voice_note_is_flagged_for_the_dispatch_only(self, harness, monkeypatch):
-        import kiro_crew.whatsapp.transport as mod
-        from kiro_crew.messaging.attachments import IngestResult
+        import aj_crew.whatsapp.transport as mod
+        from aj_crew.messaging.attachments import IngestResult
 
         async def fake_ingest(*a, **kw):
             return IngestResult()
@@ -888,8 +888,8 @@ class TestPreIngestionOriginalIsCapturedForTheSpool:
         assert harness.transport.pending_voice_note == set(), "the flag leaked past dispatch"
 
     async def test_a_document_records_the_name_its_sender_gave_it(self, harness, monkeypatch):
-        import kiro_crew.whatsapp.transport as mod
-        from kiro_crew.messaging.attachments import IngestResult
+        import aj_crew.whatsapp.transport as mod
+        from aj_crew.messaging.attachments import IngestResult
 
         async def fake_ingest(*a, **kw):
             return IngestResult()
@@ -941,9 +941,9 @@ class TestAttachmentCleanupRunsOffTheLoop:
     async def test_cleanup_runs_in_a_worker_thread(self, harness, monkeypatch, tmp_path):
         import threading
 
-        import kiro_crew.whatsapp.transport as mod
-        from kiro_crew.messaging.attachments import IngestResult
-        from kiro_crew.messaging.attachments import cleanup as real_cleanup
+        import aj_crew.whatsapp.transport as mod
+        from aj_crew.messaging.attachments import IngestResult
+        from aj_crew.messaging.attachments import cleanup as real_cleanup
 
         image = tmp_path / "kc-att" / "img-1.jpg"
         image.parent.mkdir()
@@ -974,8 +974,8 @@ class TestAttachmentCleanupRunsOffTheLoop:
 
     async def test_a_refused_offload_still_deletes_inline(self, harness, monkeypatch, tmp_path):
         """A loop whose executor is gone must not leave decrypted media on disk."""
-        import kiro_crew.whatsapp.transport as mod
-        from kiro_crew.messaging.attachments import IngestResult
+        import aj_crew.whatsapp.transport as mod
+        from aj_crew.messaging.attachments import IngestResult
 
         image = tmp_path / "kc-att" / "img-1.jpg"
         image.parent.mkdir()
@@ -1003,7 +1003,7 @@ class TestOwnerDmDedup:
     refuse the DM as ambiguous, silently downgrading it to a dashboard notice."""
 
     def test_own_number_in_the_allowlist_is_not_a_second_target(self) -> None:
-        from kiro_crew.messaging.transport import sole_direct_target
+        from aj_crew.messaging.transport import sole_direct_target
 
         own = OWN_JID.split("@")[0]
         h = Harness(dm_policy="allowlist", allowed_wa_ids=[own])
@@ -1012,7 +1012,7 @@ class TestOwnerDmDedup:
         assert sole_direct_target(h.transport.configured_targets()) == f"user:{own}"
 
     def test_a_genuinely_second_person_is_still_ambiguous(self) -> None:
-        from kiro_crew.messaging.transport import sole_direct_target
+        from aj_crew.messaging.transport import sole_direct_target
 
         own = OWN_JID.split("@")[0]
         friend = FRIEND.split("@")[0]

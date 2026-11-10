@@ -22,10 +22,10 @@ from subagent_panel_durable_replay_helpers import (  # noqa: F401 -- the fixture
     write_record,
 )
 
-from kiro_crew.dashboard import ws_event_scope as scope_module
-from kiro_crew.dashboard.chat_utils import subagent_event_slot
-from kiro_crew.dashboard.handlers import messaging
-from kiro_crew.dashboard.ws_event_scope import (
+from aj_crew.dashboard import ws_event_scope as scope_module
+from aj_crew.dashboard.chat_utils import subagent_event_slot
+from aj_crew.dashboard.handlers import messaging
+from aj_crew.dashboard.ws_event_scope import (
     persisted_precap_denial_reason,
     persisted_precap_readings,
     persisted_replay_denial_reason,
@@ -33,7 +33,7 @@ from kiro_crew.dashboard.ws_event_scope import (
     slot_owner_snapshot,
     visible_subagent_slot_keys,
 )
-from kiro_crew.subagent_persistence import _PANEL_RESULT_CAP, _PANEL_TASK_CAP, read_panel_records
+from aj_crew.subagent_persistence import _PANEL_RESULT_CAP, _PANEL_TASK_CAP, read_panel_records
 
 
 class TestAGrantIsAuditedNotOnlyARefusal:
@@ -657,7 +657,7 @@ class TestTheCallersFilterRunsBeforeTheCap:
         assert ids(result.records) == ["any001"]
 
     def test_the_result_read_is_still_skipped_past_the_cap(self, agent_root, monkeypatch):
-        from kiro_crew import subagent_persistence
+        from aj_crew import subagent_persistence
 
         moment = time.time()
         for index in range(3):

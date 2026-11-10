@@ -1,4 +1,4 @@
-"""``kirocrew snapshot`` over a ``memory_stores/`` this process sees read-only.
+"""``ajcrew snapshot`` over a ``memory_stores/`` this process sees read-only.
 
 A script cron's sandbox binds the stores tree read-only while the gateway keeps writing
 through its own view. Reading it must still serialize against those writers, through
@@ -31,11 +31,11 @@ from contextlib import closing, contextmanager
 from pathlib import Path
 
 import pytest
-from test_snapshot import _setup_fake_kirocrew, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
-from kiro_crew import member_memory_backup, memory_stores, platform_compat
-from kiro_crew import snapshot as snap
-from kiro_crew.memory_stores import MEMBER_BACKUPS_DIR_NAME, MEMORY_DB_FILE, MEMORY_STORES_DIR_NAME
+from aj_crew import member_memory_backup, memory_stores, platform_compat
+from aj_crew import snapshot as snap
+from aj_crew.memory_stores import MEMBER_BACKUPS_DIR_NAME, MEMORY_DB_FILE, MEMORY_STORES_DIR_NAME
 
 pytestmark = pytest.mark.skipif(
     not platform_compat.IS_POSIX, reason="flock locks and a read-only mount flag are POSIX-only"
@@ -52,15 +52,15 @@ MOUNT_FLAG_CONFIRMED = sys.platform == "linux"
 
 @pytest.fixture(autouse=True)
 def _no_gateway(_floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_ASSUME_GATEWAY_RUNNING", "0")
+    _floor_monkeypatch.setenv("AJCREW_ASSUME_GATEWAY_RUNNING", "0")
 
 
 @pytest.fixture
 def home(tmp_path, monkeypatch) -> Path:
     home = tmp_path / "home"
     home.mkdir()
-    _setup_fake_kirocrew(home)
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    _setup_fake_ajcrew(home)
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     return home
 
 
@@ -158,7 +158,7 @@ def _snapshot(home: Path, out: Path) -> int:
 
 
 def _archived_rows(out: Path, tmp_path: Path) -> int:
-    (tarball,) = out.glob("kirocrew-snapshot-*.tar.gz")
+    (tarball,) = out.glob("ajcrew-snapshot-*.tar.gz")
     extract = tmp_path / "extract"
     with tarfile.open(tarball) as tar:
         tar.extractall(extract, filter="data")
@@ -253,7 +253,7 @@ def test_a_read_only_view_with_no_lock_file_reads_without_it(home, view, caplog)
     assert not (stores_root / MEMBER_BACKUPS_DIR_NAME).exists()
     view.seal(stores_root)
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.memory_stores"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.memory_stores"):
         with member_memory_backup.hold_stores_for_read(stores_root):
             pass
     assert "reading the stores without it" in caplog.text
@@ -291,7 +291,7 @@ def test_a_read_only_view_with_no_use_lock_file_reads_the_store_with_a_warning(h
     (stores_root / USE_LOCK).unlink()
     view.seal(stores_root)
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.member_memory_backup"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.member_memory_backup"):
         with member_memory_backup.hold_stores_for_read(stores_root):
             pass
     assert "reading the store without it" in caplog.text
@@ -339,7 +339,7 @@ def test_a_lock_the_read_refuses_ends_the_snapshot_with_its_reason(
 
     assert rc == 1
     assert "not a private regular file" in capsys.readouterr().out
-    assert not list((tmp_path / "out").glob("kirocrew-snapshot-*"))
+    assert not list((tmp_path / "out").glob("ajcrew-snapshot-*"))
 
 
 # Holds the store open the way the gateway does: WAL, no automatic checkpoint, so the

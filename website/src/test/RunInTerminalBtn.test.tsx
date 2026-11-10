@@ -215,13 +215,13 @@ describe('RunInTerminalBtn', () => {
   // replies copied:true). The confirm dialog must say Copy, not Run, so it does
   // not promise an action it will not take.
   describe('reuse-current (copy) path', () => {
-    /** Pre-seed the kirocrewConfig cache BEFORE mount so willCopy is settled on
+    /** Pre-seed the ajcrewConfig cache BEFORE mount so willCopy is settled on
      *  the first render (no post-mount state churn), then open the dialog. The
      *  suite runs on fake timers, so async findBy* would stall — everything is
      *  synchronous. */
     function openDialogWithReuse(reuse: boolean) {
       const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-      queryClient.setQueryData(['kirocrewConfig'], { dashboard: { terminal: { reuse_current: reuse } } })
+      queryClient.setQueryData(['ajcrewConfig'], { dashboard: { terminal: { reuse_current: reuse } } })
       render(
         <QueryClientProvider client={queryClient}>
           <RunInTerminalBtn code="echo hi" />

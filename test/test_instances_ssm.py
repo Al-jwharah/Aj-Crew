@@ -13,7 +13,7 @@ class TestSsmValidation:
     """Injection-safe validation of the SSM-transport inputs."""
 
     def test_valid_targets(self):
-        from kiro_crew.instances.validation import validate_ssm_target
+        from aj_crew.instances.validation import validate_ssm_target
 
         assert validate_ssm_target("i-0123456789abcdef0") == "i-0123456789abcdef0"
         assert validate_ssm_target("mi-0123456789abcdef0") == "mi-0123456789abcdef0"
@@ -34,14 +34,14 @@ class TestSsmValidation:
         ],
     )
     def test_rejects_bad_targets(self, bad):
-        from kiro_crew.instances.validation import SsmValidationError, validate_ssm_target
+        from aj_crew.instances.validation import SsmValidationError, validate_ssm_target
 
         with pytest.raises(SsmValidationError):
             validate_ssm_target(bad)
 
     def test_profile_and_region(self):
 
-        from kiro_crew.instances.validation import (
+        from aj_crew.instances.validation import (
             SsmValidationError,
             validate_aws_profile,
             validate_aws_region,
@@ -67,14 +67,14 @@ class TestSsmValidation:
     @pytest.mark.parametrize("region", ["us-east-\uff11", "us-east-\u0661", "eu-west-\u0662\u0663"])
     def test_region_refuses_non_ascii_digits(self, region):
         """Python's ``\\d`` matches any Unicode digit; AWS region names are ASCII."""
-        from kiro_crew.instances.validation import SsmValidationError, validate_aws_region
+        from aj_crew.instances.validation import SsmValidationError, validate_aws_region
 
         with pytest.raises(SsmValidationError):
             validate_aws_region(region)
 
     def test_ssm_run_as_accepts_unix_usernames_and_defaults_when_empty(self):
         """Empty means "the default user", never an empty ``sudo -u``."""
-        from kiro_crew.instances.validation import validate_ssm_run_as
+        from aj_crew.instances.validation import validate_ssm_run_as
 
         assert validate_ssm_run_as("ubuntu") == "ubuntu"
         assert validate_ssm_run_as("ec2-user") == "ec2-user"
@@ -86,7 +86,7 @@ class TestSsmValidation:
 
     def test_ssm_run_as_rejects_injection_and_bad_usernames(self):
         """It is interpolated into `sudo -u <user> -i` on the remote box."""
-        from kiro_crew.instances.validation import SsmValidationError, validate_ssm_run_as
+        from aj_crew.instances.validation import SsmValidationError, validate_ssm_run_as
 
         for bad in (
             "root; rm -rf /",
@@ -127,7 +127,7 @@ class TestEcsTargetValidation:
         ],
     )
     def test_accepts_well_formed_ecs_targets(self, good):
-        from kiro_crew.instances.validation import validate_ssm_target
+        from aj_crew.instances.validation import validate_ssm_target
 
         assert validate_ssm_target(good) == good
 
@@ -138,13 +138,13 @@ class TestEcsTargetValidation:
         stripped form passes, so returning the caller's original instead of the
         stripped one would hand back the newline the pattern just refused.
         """
-        from kiro_crew.instances.validation import validate_ssm_target
+        from aj_crew.instances.validation import validate_ssm_target
 
         assert validate_ssm_target(f"  {_ECS_OK}\n") == _ECS_OK
 
     def test_ec2_ids_still_accepted_after_widening(self):
         """Widening for Fargate must not disturb the EC2/SSM-managed lane."""
-        from kiro_crew.instances.validation import validate_ssm_target
+        from aj_crew.instances.validation import validate_ssm_target
 
         assert validate_ssm_target("i-0123456789abcdef0") == "i-0123456789abcdef0"
         assert validate_ssm_target("mi-0123456789abcdef0") == "mi-0123456789abcdef0"
@@ -156,7 +156,7 @@ class TestEcsTargetValidation:
         Python's ``\\d`` matches any Unicode decimal digit, so a ``\\d{1,20}``
         suffix would accept Arabic-Indic digits.
         """
-        from kiro_crew.instances.validation import SsmValidationError, validate_ssm_target
+        from aj_crew.instances.validation import SsmValidationError, validate_ssm_target
 
         vector = f"ecs:c_{_ECS_TASK_ID}_{_ECS_TASK_ID}-\u0661234567890"
         with pytest.raises(SsmValidationError):
@@ -164,7 +164,7 @@ class TestEcsTargetValidation:
 
     def test_ecs_target_rejects_trailing_newline_via_z_anchor(self):
         """``\\Z`` not ``$``: ``$`` also matches just before a trailing newline."""
-        from kiro_crew.instances.validation import (
+        from aj_crew.instances.validation import (
             _ECS_TARGET_RE,
             SsmValidationError,
             validate_ssm_target,
@@ -177,7 +177,7 @@ class TestEcsTargetValidation:
             validate_ssm_target(f"{_ECS_OK}\nwhoami")
 
     def test_rejects_values_over_the_length_bound(self):
-        from kiro_crew.instances.validation import (
+        from aj_crew.instances.validation import (
             _MAX_SSM_TARGET_LEN,
             SsmValidationError,
             validate_ssm_target,
@@ -195,7 +195,7 @@ class TestEcsTargetValidation:
         The pattern accepts a 1-to-20 digit runtime suffix; a bound computed from a
         10-digit suffix would false-reject the 11-to-20 digit ones.
         """
-        from kiro_crew.instances.validation import (
+        from aj_crew.instances.validation import (
             _ECS_TARGET_RE,
             ssm_target_matches,
             validate_ssm_target,
@@ -209,7 +209,7 @@ class TestEcsTargetValidation:
 
     def test_the_bound_is_the_longest_value_the_pattern_accepts(self):
         """Derivation check: the constant equals the longest legal target's length."""
-        from kiro_crew.instances.validation import (
+        from aj_crew.instances.validation import (
             _ECS_TARGET_RE,
             _MAX_SSM_TARGET_LEN,
             ssm_target_matches,
@@ -228,7 +228,7 @@ class TestEcsTargetValidation:
         NFKC-normalising first would fold fullwidth ``ｃ`` to ``c`` and turn a
         rejected value into an accepted one, so the validator does no normalisation.
         """
-        from kiro_crew.instances.validation import SsmValidationError, validate_ssm_target
+        from aj_crew.instances.validation import SsmValidationError, validate_ssm_target
 
         fullwidth = f"ecs:\uff43luster_{_ECS_TASK_ID}_{_ECS_RUNTIME_ID}"
         with pytest.raises(SsmValidationError):
@@ -288,7 +288,7 @@ class TestEcsTargetValidation:
         Surrounding-whitespace variants are absent: the validator strips them by
         design (see :meth:`test_pattern_rejects_surrounding_whitespace`).
         """
-        from kiro_crew.instances.validation import SsmValidationError, validate_ssm_target
+        from aj_crew.instances.validation import SsmValidationError, validate_ssm_target
 
         with pytest.raises(SsmValidationError):
             validate_ssm_target(vector)
@@ -303,7 +303,7 @@ class TestEcsTargetValidation:
         The anchoring is what makes the strip sufficient: under ``$`` a trailing
         newline would match for any caller reaching the pattern without the strip.
         """
-        from kiro_crew.instances.validation import ssm_target_matches, validate_ssm_target
+        from aj_crew.instances.validation import ssm_target_matches, validate_ssm_target
 
         assert not ssm_target_matches(whitespace_variant)
         assert validate_ssm_target(whitespace_variant) == _ECS_OK
@@ -315,7 +315,7 @@ class TestEcsTargetValidation:
         """
         import re
 
-        from kiro_crew.instances.validation import ssm_target_matches
+        from aj_crew.instances.validation import ssm_target_matches
 
         naive = re.compile(r"^ecs:.+_.+_.+$")
         dangerous = {
@@ -351,7 +351,7 @@ class TestSsmTargetShapeHasOneDefinition:
         """
         from pathlib import Path
 
-        from kiro_crew.instances import registry
+        from aj_crew.instances import registry
 
         source = Path(registry.__file__).read_text(encoding="utf-8")
         # The EC2/SSM-managed shape's hex class, and the ECS shape's cluster bound.
@@ -362,7 +362,7 @@ class TestSsmTargetShapeHasOneDefinition:
         assert "ssm_target_matches" in source
 
     def test_registry_and_validator_agree_on_every_shape(self):
-        from kiro_crew.instances.validation import (
+        from aj_crew.instances.validation import (
             SsmValidationError,
             ssm_target_matches,
             validate_ssm_target,
@@ -381,7 +381,7 @@ class TestSsmTargetShapeHasOneDefinition:
 
     def test_registry_accepts_an_ecs_target_for_a_fargate_record(self, tmp_path):
         """End of the seam: a record carrying an ECS target must persist."""
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
         inst = reg.add(name="Fargate crew", connection_method="fargate", ssm_target=_ECS_OK)
@@ -391,7 +391,7 @@ class TestSsmTargetShapeHasOneDefinition:
         assert reloaded is not None and reloaded.ssm_target == _ECS_OK
 
     def test_registry_still_refuses_a_malformed_target(self, tmp_path):
-        from kiro_crew.instances.registry import InstancesRegistry, InvalidInstanceError
+        from aj_crew.instances.registry import InstancesRegistry, InvalidInstanceError
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
         with pytest.raises(InvalidInstanceError):
@@ -406,7 +406,7 @@ class TestSsmRegistry:
     """Registry support for connection_method + the SSM coordinate fields."""
 
     def _reg(self, tmp_path):
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         return InstancesRegistry(path=tmp_path / "instances.json")
 
@@ -458,7 +458,7 @@ class TestSsmRegistry:
         assert reloaded.provisioner_id == "aws_ec2"
 
     def test_ssm_requires_target_and_ssh_requires_host(self, tmp_path):
-        from kiro_crew.instances.registry import InvalidInstanceError
+        from aj_crew.instances.registry import InvalidInstanceError
 
         reg = self._reg(tmp_path)
         # ssm without a target is invalid...
@@ -473,7 +473,7 @@ class TestSsmRegistry:
 
     def test_add_refuses_a_region_with_non_ascii_digits(self, tmp_path):
         """The record check agrees with ``validate_aws_region``: ASCII digits only."""
-        from kiro_crew.instances.registry import InvalidInstanceError
+        from aj_crew.instances.registry import InvalidInstanceError
 
         reg = self._reg(tmp_path)
         with pytest.raises(InvalidInstanceError):
@@ -507,7 +507,7 @@ class TestSsmRegistry:
     def test_aws_profile_allows_plus_and_rejects_metacharacters(self, tmp_path):
         """The record check accepts '+' (SSO-derived profile names) but still
         refuses whitespace and shell metacharacters, mirroring validation.py."""
-        from kiro_crew.instances.registry import InvalidInstanceError
+        from aj_crew.instances.registry import InvalidInstanceError
 
         reg = self._reg(tmp_path)
         inst = reg.add(
@@ -536,7 +536,7 @@ class TestSsmRegistry:
         pattern accepts a leading '-' by design: option injection is blocked by the
         startswith('-') guard in validation.validate_aws_profile.
         """
-        from kiro_crew.instances import registry, validation
+        from aj_crew.instances import registry, validation
 
         assert registry._AWS_PROFILE_RE is validation._AWS_PROFILE_RE
 
@@ -548,7 +548,7 @@ class TestSsmRegistry:
         file has no key at all, and a file with an explicit empty string would
         fail validation, so BOTH must resolve to the default.
         """
-        from kiro_crew.instances.registry import Instance
+        from aj_crew.instances.registry import Instance
 
         assert Instance.from_dict({"id": "a", "name": "A"}).ssm_run_as == "ec2-user"
         assert Instance.from_dict({"id": "a", "ssm_run_as": ""}).ssm_run_as == "ec2-user"
@@ -568,7 +568,7 @@ class TestSsmRegistry:
 
     def test_ssm_run_as_is_validated_on_add(self, tmp_path):
         """User input reaches `sudo -u` on the remote box, so it is validated."""
-        from kiro_crew.instances.registry import InvalidInstanceError
+        from aj_crew.instances.registry import InvalidInstanceError
 
         reg = self._reg(tmp_path)
         with pytest.raises(InvalidInstanceError):
@@ -585,7 +585,7 @@ class TestSsmRegistry:
 
         The message is shown verbatim in the Settings form.
         """
-        from kiro_crew.instances.registry import InvalidInstanceError
+        from aj_crew.instances.registry import InvalidInstanceError
 
         reg = self._reg(tmp_path)
         with pytest.raises(InvalidInstanceError) as e:
@@ -605,11 +605,11 @@ class TestSsmTunnelArgv:
 
     @pytest.fixture(autouse=True)
     # flake-ok: pre-existing autouse aws-CLI resolver pin on the shared monkeypatch, moved verbatim; no test here calls undo()
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
     def _bare_resolver(self, monkeypatch):
         """Pin the shared aws-CLI resolver to the bare name so the
         argv-shape assertions stay deterministic across hosts."""
-        from kiro_crew.cloud import ssm
+        from aj_crew.cloud import ssm
 
         monkeypatch.setattr(ssm, "resolve_aws_bin", lambda: "aws")
 
@@ -618,8 +618,8 @@ class TestSsmTunnelArgv:
         probes the filesystem — start() must run it in a worker thread, never
         on the gateway event loop (a stalled network mount on PATH would
         otherwise freeze every request)."""
-        from kiro_crew.instances import ssh_tunnel_manager as stm
-        from kiro_crew.instances.ssh_tunnel_manager import _SshTunnel
+        from aj_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances.ssh_tunnel_manager import _SshTunnel
 
         seen: dict = {}
 
@@ -687,7 +687,7 @@ class TestSsmTunnelArgv:
         assert seen["on_loop"] is False  # built in a worker thread, not on the loop
 
     def test_argv_shape(self):
-        from kiro_crew.instances.ssh_tunnel_manager import _build_ssm_tunnel_argv
+        from aj_crew.instances.ssh_tunnel_manager import _build_ssm_tunnel_argv
 
         argv = _build_ssm_tunnel_argv(
             "i-0123456789abcdef0", 7777, 7777, profile="dev", region="eu-west-2"
@@ -702,14 +702,14 @@ class TestSsmTunnelArgv:
         assert all(isinstance(a, str) for a in argv)
 
     def test_omits_empty_profile_and_region(self):
-        from kiro_crew.instances.ssh_tunnel_manager import _build_ssm_tunnel_argv
+        from aj_crew.instances.ssh_tunnel_manager import _build_ssm_tunnel_argv
 
         argv = _build_ssm_tunnel_argv("i-0123456789abcdef0", 7777, 7777)
         assert "--profile" not in argv and "--region" not in argv
 
     def test_ssh_argv_unchanged_for_ssh_instances(self):
         """Regression guard: the SSH argv must not gain SSM flags."""
-        from kiro_crew.instances.ssh_tunnel_manager import _build_ssh_tunnel_argv
+        from aj_crew.instances.ssh_tunnel_manager import _build_ssh_tunnel_argv
 
         argv = _build_ssh_tunnel_argv("dev-1", 7777, 7777)
         assert argv[0] == "ssh" and "-N" in argv
@@ -728,7 +728,7 @@ class TestSsmTunnelProcessGroup:
     """
 
     def _tunnel(self, transport):
-        from kiro_crew.instances.ssh_tunnel_manager import _SshTunnel
+        from aj_crew.instances.ssh_tunnel_manager import _SshTunnel
 
         return _SshTunnel(
             instance_id="i1",
@@ -742,7 +742,7 @@ class TestSsmTunnelProcessGroup:
     @pytest.mark.asyncio
     async def test_ssm_spawn_passes_both_isolation_kwargs(self, monkeypatch):
         """POSIX gets setsid; Windows gets CREATE_NEW_PROCESS_GROUP."""
-        import kiro_crew.instances.ssh_tunnel_manager as mod
+        import aj_crew.instances.ssh_tunnel_manager as mod
 
         seen = {}
 
@@ -768,7 +768,7 @@ class TestSsmTunnelProcessGroup:
     @pytest.mark.asyncio
     async def test_ssh_spawn_gets_no_process_group(self, monkeypatch):
         """Regression guard: the SSH transport's spawn is unchanged."""
-        import kiro_crew.instances.ssh_tunnel_manager as mod
+        import aj_crew.instances.ssh_tunnel_manager as mod
 
         seen = {}
 
@@ -792,8 +792,8 @@ class TestSsmTunnelProcessGroup:
         launchd one under a GUI gateway). The ssh child has the same gap through a
         ``ProxyCommand`` SSM helper, so it gets the same appended dirs.
         """
-        import kiro_crew.instances.ssh_tunnel_manager as mod
-        from kiro_crew.deploy import engine
+        import aj_crew.instances.ssh_tunnel_manager as mod
+        from aj_crew.deploy import engine
 
         seen = {}
 
@@ -823,7 +823,7 @@ class TestSsmTunnelProcessGroup:
         # The PATH wiring is under test here, not the directory check, which has
         # its own tests in test_deploy_web_engine.py and refuses the Windows CI
         # runner's temp directory.
-        from kiro_crew import github_runner
+        from aj_crew import github_runner
 
         monkeypatch.setattr(
             github_runner, "validate_provider_directory", lambda candidate: candidate
@@ -851,7 +851,7 @@ class TestSsmTunnelProcessGroup:
 
     def test_teardown_routes_through_the_platform_shim(self, monkeypatch):
         """Not raw os.killpg — that leaves the plugin alive on Windows."""
-        import kiro_crew.instances.ssh_tunnel_manager as mod
+        import aj_crew.instances.ssh_tunnel_manager as mod
 
         calls = []
         monkeypatch.setattr(
@@ -864,7 +864,7 @@ class TestSsmTunnelProcessGroup:
 
     def test_teardown_reports_undelivered_instead_of_raising(self, monkeypatch):
         """The shim propagates; a failure must degrade to the single-proc kill."""
-        import kiro_crew.instances.ssh_tunnel_manager as mod
+        import aj_crew.instances.ssh_tunnel_manager as mod
 
         for exc in (ProcessLookupError, PermissionError, OSError, ValueError):
 
@@ -880,7 +880,7 @@ class TestSsmTransportSelection:
 
     @pytest.fixture(autouse=True)
     # flake-ok: pre-existing autouse stub of both port probes on the shared monkeypatch; moved verbatim, no test calls undo()
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
     def _free_ports(self, monkeypatch):
         # These tests assert which TRANSPORT the manager selects (ssh vs ssm) via
         # _FakeTunnel; they are not about real local-port availability. connect()
@@ -893,8 +893,8 @@ class TestSsmTransportSelection:
         _patch_port_probe(monkeypatch)
 
     def _mgr(self, tmp_path, *, mint=None, connect_timeout_secs=None):
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         async def ok_mint(
             host,
@@ -930,8 +930,8 @@ class TestSsmTransportSelection:
         ],
     )
     def test_connect_timeout_matrix(self, tmp_path, configured, ssh_expected, ssm_expected):
-        from kiro_crew.config.loader import InstancesConfig
-        from kiro_crew.instances.constants import (
+        from aj_crew.config.loader import InstancesConfig
+        from aj_crew.instances.constants import (
             CONNECT_TIMEOUT_CEILING_SECS,
             DEFAULT_CONNECT_TIMEOUT_SECS,
             DEFAULT_SSM_CONNECT_TIMEOUT_SECS,
@@ -962,8 +962,8 @@ class TestSsmTransportSelection:
 
     @pytest.mark.asyncio
     async def test_ssm_instance_uses_ssm_transport_and_ssm_mint(self, tmp_path, monkeypatch):
-        import kiro_crew.instances.ssh_tunnel_manager as mod
-        from kiro_crew.instances.constants import DEFAULT_SSM_CONNECT_TIMEOUT_SECS
+        import aj_crew.instances.ssh_tunnel_manager as mod
+        from aj_crew.instances.constants import DEFAULT_SSM_CONNECT_TIMEOUT_SECS
 
         seen = {}
 
@@ -974,7 +974,7 @@ class TestSsmTransportSelection:
 
         monkeypatch.setattr(mod, "mint_remote_token_ssm", fake_ssm_mint)
         # The plugin presence check must not gate the unit test.
-        monkeypatch.setattr("kiro_crew.cloud.ssm.session_manager_plugin_installed", lambda: True)
+        monkeypatch.setattr("aj_crew.cloud.ssm.session_manager_plugin_installed", lambda: True)
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(
@@ -1002,8 +1002,8 @@ class TestSsmTransportSelection:
     @pytest.mark.asyncio
     async def test_mint_timeout_threads_to_ssh_mint(self, tmp_path):
         """A configured instances.mint_timeout_secs reaches the ssh mint call."""
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         seen = {}
 
@@ -1035,10 +1035,10 @@ class TestSsmTransportSelection:
     @pytest.mark.asyncio
     async def test_mint_timeout_ssm_default_and_override(self, tmp_path, monkeypatch):
         """SSM mint keeps its higher default; an explicit override wins for it too."""
-        import kiro_crew.instances.ssh_tunnel_manager as mod
-        from kiro_crew.instances.constants import DEFAULT_SSM_MINT_TIMEOUT_SECS
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        import aj_crew.instances.ssh_tunnel_manager as mod
+        from aj_crew.instances.constants import DEFAULT_SSM_MINT_TIMEOUT_SECS
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         seen = {}
 
@@ -1047,7 +1047,7 @@ class TestSsmTransportSelection:
             return "SSM_TOKEN"
 
         monkeypatch.setattr(mod, "mint_remote_token_ssm", fake_ssm_mint)
-        monkeypatch.setattr("kiro_crew.cloud.ssm.session_manager_plugin_installed", lambda: True)
+        monkeypatch.setattr("aj_crew.cloud.ssm.session_manager_plugin_installed", lambda: True)
 
         def add_ssm(reg, iid, port):
             reg.add(
@@ -1087,7 +1087,7 @@ class TestSsmTransportSelection:
         """
         import threading
 
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         loop_thread = threading.get_ident()
         ran_on: dict = {}
@@ -1096,8 +1096,8 @@ class TestSsmTransportSelection:
             ran_on["thread"] = threading.get_ident()
             return False  # short-circuit: no tunnel spawn, error status asserted
 
-        monkeypatch.setattr("kiro_crew.cloud.ssm.session_manager_plugin_installed", _probe)
-        monkeypatch.setattr("kiro_crew.cloud.ssm.session_manager_plugin_refusal", lambda: None)
+        monkeypatch.setattr("aj_crew.cloud.ssm.session_manager_plugin_installed", _probe)
+        monkeypatch.setattr("aj_crew.cloud.ssm.session_manager_plugin_refusal", lambda: None)
         reg, mgr = self._mgr(tmp_path)
         reg.add(
             name="EC2",
@@ -1115,10 +1115,10 @@ class TestSsmTransportSelection:
 
     @pytest.mark.asyncio
     async def test_ssm_connect_fails_clean_without_plugin(self, tmp_path, monkeypatch):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
-        monkeypatch.setattr("kiro_crew.cloud.ssm.session_manager_plugin_installed", lambda: False)
-        monkeypatch.setattr("kiro_crew.cloud.ssm.session_manager_plugin_refusal", lambda: None)
+        monkeypatch.setattr("aj_crew.cloud.ssm.session_manager_plugin_installed", lambda: False)
+        monkeypatch.setattr("aj_crew.cloud.ssm.session_manager_plugin_refusal", lambda: None)
         reg, mgr = self._mgr(tmp_path)
         reg.add(
             name="EC2",
@@ -1137,16 +1137,16 @@ class TestSsmTransportSelection:
     @pytest.mark.asyncio
     async def test_ssm_connect_names_a_refused_plugin_not_missing(self, tmp_path, monkeypatch):
         """Remote Crew says why an installed plugin was refused."""
-        from kiro_crew.cloud import ssm as cloud_ssm
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.cloud import ssm as cloud_ssm
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         refusal = cloud_ssm.PluginRefusal(
             path="/usr/local/bin/session-manager-plugin",
             reason="executable is owned by another user (uid 1501)",
             remedy_command="",
         )
-        monkeypatch.setattr("kiro_crew.cloud.ssm.session_manager_plugin_installed", lambda: False)
-        monkeypatch.setattr("kiro_crew.cloud.ssm.session_manager_plugin_refusal", lambda: refusal)
+        monkeypatch.setattr("aj_crew.cloud.ssm.session_manager_plugin_installed", lambda: False)
+        monkeypatch.setattr("aj_crew.cloud.ssm.session_manager_plugin_refusal", lambda: refusal)
         reg, mgr = self._mgr(tmp_path)
         reg.add(
             name="EC2",
@@ -1167,7 +1167,7 @@ class TestSsmTransportSelection:
         """A registry record hand-edited to a bad target must not reach argv."""
         import dataclasses
 
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(
@@ -1200,7 +1200,7 @@ class TestSsmMintOutputRedaction:
     # short payload and signature so it clears neither of the bounds
     # `security`'s own two-segment link-token pattern keys on. A real token is
     # already redacted by that pattern; this value stands in for the shapes that
-    # are not -- a remote of a different Kiro Crew vintage, or a truncated write.
+    # are not -- a remote of a different Aj Crew vintage, or a truncated write.
     _SYNTHETIC_TOKEN = "eyJzdWIiOiJzeW50aGV0aWMiLCJleHAiOjF9.c3ludGhldGljLXNpZ25hdHVyZQ"
 
     # SYNTHETIC opaque bearer value: no `eyJ` prefix and no dot, so no token-SHAPE
@@ -1226,7 +1226,7 @@ class TestSsmMintOutputRedaction:
     @staticmethod
     def _patch_failing_mint(monkeypatch, stdout: str):
         """Make the send-command chokepoint report a partially-successful mint."""
-        from kiro_crew.cloud import ssm as cloud_ssm
+        from aj_crew.cloud import ssm as cloud_ssm
 
         def fake_run_command(target, command, profile, region, **kwargs):
             return cloud_ssm.CommandResult(status="Failed", stdout=stdout, stderr="", exit_code=1)
@@ -1244,7 +1244,7 @@ class TestSsmMintOutputRedaction:
         assertion is on the real boundary (the exception text), not on the helper
         in isolation.
         """
-        from kiro_crew.instances import ssm_token_mint as sm
+        from aj_crew.instances import ssm_token_mint as sm
 
         stdout = f"starting mint\n{stdout_template.format(token=secret)}\n"
         self._patch_failing_mint(monkeypatch, stdout)
@@ -1269,8 +1269,8 @@ class TestSsmMintOutputRedaction:
         new token shape, the SSM side cannot silently stay behind: this fails
         instead of a leak going unnoticed.
         """
-        from kiro_crew.instances import ssm_token_mint as sm
-        from kiro_crew.instances import token_mint as tm
+        from aj_crew.instances import ssm_token_mint as sm
+        from aj_crew.instances import token_mint as tm
 
         text = f"starting mint\n{stdout_template.format(token=secret)}\n"
         assert secret not in tm._redacted_output_tail(
@@ -1290,7 +1290,7 @@ class TestSsmMintOutputRedaction:
         At the ceiling the setting cannot go higher, so the message points at the
         target's reachability instead of telling the user to raise it.
         """
-        from kiro_crew.instances import ssm_token_mint as sm
+        from aj_crew.instances import ssm_token_mint as sm
 
         async def _times_out(*a, **k):
             raise asyncio.TimeoutError
@@ -1311,7 +1311,7 @@ class TestSsmDiagnostics:
 
     @pytest.mark.asyncio
     async def test_unreachable_node_is_first_rung(self, monkeypatch):
-        import kiro_crew.instances.diagnostics as diag
+        import aj_crew.instances.diagnostics as diag
 
         async def no_node(*a, **k):
             return diag._NODE_UNREACHABLE
@@ -1333,8 +1333,8 @@ class TestSsmDiagnostics:
         with its "check the SSM agent" advice. Driven through the real ``cloud.ssm`` read with a fake
         ``run_aws``, so the whole first rung is exercised without AWS.
         """
-        import kiro_crew.instances.diagnostics as diag
-        from kiro_crew.cloud import aws, ssm
+        import aj_crew.instances.diagnostics as diag
+        from aj_crew.cloud import aws, ssm
 
         calls: list[list[str]] = []
 
@@ -1370,8 +1370,8 @@ class TestSsmDiagnostics:
         read that failed (credentials, IAM denial, bad region) establish nothing
         about the node's existence, so they keep ``ssm_unreachable``.
         """
-        import kiro_crew.instances.diagnostics as diag
-        from kiro_crew.cloud import aws
+        import aj_crew.instances.diagnostics as diag
+        from aj_crew.cloud import aws
 
         monkeypatch.setattr(aws, "run_aws", lambda *a, **k: (rc, out, "err"))
         res = await diag.diagnose_instance_ssm("i-0123456789abcdef0", 7777, 7777)
@@ -1390,7 +1390,7 @@ class TestSsmDiagnostics:
         ],
     )
     def test_managed_node_ping_status_answers(self, monkeypatch, rc, out, expected):
-        from kiro_crew.cloud import aws, ssm
+        from aj_crew.cloud import aws, ssm
 
         monkeypatch.setattr(aws, "run_aws", lambda *a, **k: (rc, out, ""))
         assert ssm.managed_node_ping_status("i-0123456789abcdef0") == expected
@@ -1398,8 +1398,8 @@ class TestSsmDiagnostics:
 
     @pytest.mark.asyncio
     async def test_probe_exception_is_unreachable(self, monkeypatch):
-        import kiro_crew.instances.diagnostics as diag
-        from kiro_crew.cloud import ssm
+        import aj_crew.instances.diagnostics as diag
+        from aj_crew.cloud import ssm
 
         def boom(*a, **k):
             raise RuntimeError("dispatch failed")
@@ -1409,7 +1409,7 @@ class TestSsmDiagnostics:
 
     @pytest.mark.asyncio
     async def test_remote_down_then_not_connected_then_ok(self, monkeypatch):
-        import kiro_crew.instances.diagnostics as diag
+        import aj_crew.instances.diagnostics as diag
 
         async def node_ok(*a, **k):
             return diag._NODE_ONLINE
@@ -1440,7 +1440,7 @@ class TestSsmDiagnostics:
 
     @pytest.mark.asyncio
     async def test_invalid_target_short_circuits(self):
-        import kiro_crew.instances.diagnostics as diag
+        import aj_crew.instances.diagnostics as diag
 
         res = await diag.diagnose_instance_ssm("-oProxyCommand=evil", 7777, 7777)
         assert res.code == diag.UNKNOWN
@@ -1457,7 +1457,7 @@ class TestSsmExitErrorClassification:
     """SSM stderr must be classified with SSM vocabulary, not ssh's."""
 
     def _tunnel(self, stderr):
-        from kiro_crew.instances.ssh_tunnel_manager import _SshTunnel
+        from aj_crew.instances.ssh_tunnel_manager import _SshTunnel
 
         t = _SshTunnel("ec2", "", 7777, 7777, transport="ssm", ssm_target="i-0123456789abcdef0")
         t._stderr_buf = stderr
@@ -1496,7 +1496,7 @@ class TestSsmExitErrorClassification:
 
     def test_ssh_classification_unchanged(self):
         """Regression guard: the ssh classifier still owns ssh instances."""
-        from kiro_crew.instances.ssh_tunnel_manager import _SshTunnel
+        from aj_crew.instances.ssh_tunnel_manager import _SshTunnel
 
         t = _SshTunnel("dev", "dev-1", 7777, 7777)
         t._stderr_buf = "Permission denied (publickey)."

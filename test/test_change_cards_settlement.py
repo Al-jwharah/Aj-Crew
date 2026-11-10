@@ -39,11 +39,11 @@ from change_cards_helpers import (
 )
 from crew_log_drain import assert_drained, settle, unsync_appends
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew.dashboard import change_cards as cards
-from kiro_crew.dashboard.change_cards import CardError, CardStore
-from kiro_crew.dashboard.handlers import change_cards as routes
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew import change_card_catalog as catalog
+from aj_crew.dashboard import change_cards as cards
+from aj_crew.dashboard.change_cards import CardError, CardStore
+from aj_crew.dashboard.handlers import change_cards as routes
+from aj_crew.dashboard.state import _ChatSlot
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 world = change_cards_helpers.world
@@ -66,7 +66,7 @@ def test_a_step_whose_admission_cannot_be_saved_changes_nothing(world, tmp_path,
     async def go(c):
         card = await _propose_setting(c)
         r = await c.patch(
-            "/api/config/kirocrew",
+            "/api/config/ajcrew",
             json=card["plan"]["apply"][0]["body"],
             headers=_card_headers(card),
         )
@@ -95,7 +95,7 @@ def test_a_step_whose_result_cannot_be_saved_never_publishes_success(world, tmp_
         state_holder.append(c.server.app["state"])
         card = await _propose_setting(c)
         r = await c.patch(
-            "/api/config/kirocrew",
+            "/api/config/ajcrew",
             json=card["plan"]["apply"][0]["body"],
             headers=_card_headers(card),
         )
@@ -130,17 +130,17 @@ def crew_log(tmp_path, monkeypatch):
     """
     from types import SimpleNamespace
 
-    from kiro_crew.crew_log import CrewLog
-    from kiro_crew.crew_log import emit as crew_log_emit
-    from kiro_crew.crew_log.schema import KIND_SESSION
-    from kiro_crew.dashboard import chat_cards
+    from aj_crew.crew_log import CrewLog
+    from aj_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log.schema import KIND_SESSION
+    from aj_crew.dashboard import chat_cards
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(crew_log_emit.CREW_LOG_ENV, "1")
     unsync_appends(monkeypatch)
     crew_log_emit.reset_caches()
     chat_cards.reset()
-    CrewLog.create(KIND_SESSION, SID, owner="owner", agent="kirocrew", slot=SLOT)
+    CrewLog.create(KIND_SESSION, SID, owner="owner", agent="ajcrew", slot=SLOT)
     original = _ChatSlot.__init__
 
     def _with_client(self, *a, **kw):
@@ -221,11 +221,11 @@ def test_an_outcome_updates_the_row_in_place_and_is_logged_once(world, tmp_path,
     async def go(c, state):
         card = await _propose_setting(c)
         step = card["plan"]["apply"][0]
-        await c.patch("/api/config/kirocrew", json=step["body"], headers=_card_headers(card))
+        await c.patch("/api/config/ajcrew", json=step["body"], headers=_card_headers(card))
         applied = store.public(store.get(card["id"]))
         row_after_apply = json.loads(json.dumps(_card_rows(state)[0]))
         await c.patch(
-            "/api/config/kirocrew",
+            "/api/config/ajcrew",
             json=applied["plan"]["undo"][0]["body"],
             headers=_card_headers(applied, op="undo"),
         )
@@ -274,8 +274,8 @@ def test_the_log_is_read_back_from_a_writer_slower_than_the_default_flush_budget
     that default fails on any host, and one that waits while the writer lands bytes
     passes.
     """
-    from kiro_crew.crew_log import emit as crew_log_emit
-    from kiro_crew.crew_log import store
+    from aj_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import store
 
     class _SlowFsyncOs:
         @staticmethod
@@ -327,15 +327,15 @@ def test_a_typed_secret_never_reaches_the_conversation_or_the_crew_log(world, tm
     for frame in getattr(state, "ws_frames", []):
         assert SECRET_VALUE not in json.dumps(frame)
     assert crew_log("card/")  # the card was logged...
-    from kiro_crew.crew_log import crew_log_dir
-    from kiro_crew.crew_log.schema import KIND_SESSION
+    from aj_crew.crew_log import crew_log_dir
+    from aj_crew.crew_log.schema import KIND_SESSION
 
     for path in crew_log_dir(KIND_SESSION, SID).glob("*.jsonl"):
         assert SECRET_VALUE not in path.read_text(encoding="utf-8")  # ...and never its value
 
 
 def test_a_card_row_is_display_only_and_never_model_context():
-    from kiro_crew.history_projection import DISPLAY_ONLY_ROLES
+    from aj_crew.history_projection import DISPLAY_ONLY_ROLES
 
     assert "card" in DISPLAY_ONLY_ROLES
 
@@ -344,7 +344,7 @@ def test_a_row_outcome_after_a_restart_goes_to_the_slots_live_session(world, tmp
     """The proposing session is held in process; once it is forgotten (a gateway
     restart), the slot's live session receives the outcome -- never an id read
     back out of the agent-writable row."""
-    from kiro_crew.dashboard import chat_cards
+    from aj_crew.dashboard import chat_cards
 
     store = CardStore(tmp_path / "c.json")
 
@@ -361,7 +361,7 @@ def test_a_row_outcome_after_a_restart_goes_to_the_slots_live_session(world, tmp
 
 
 def test_the_emitter_refuses_a_finished_status_the_stores_do_not_have(crew_log):
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import emit as crew_log_emit
 
     crew_log_emit.on_card_finished(SID, card_id="cc_0a1b2c3d4e5f", status="approved")
     crew_log_emit.on_guide_finished(SID, guide_id="g_0a1b2c3d4e5f", status="applied")
@@ -386,7 +386,7 @@ def test_a_save_landing_between_the_write_and_the_read_leaves_no_undo(world, tmp
     async def go(c):
         card = await _propose_setting(c)
         body = card["plan"]["apply"][0]["body"]
-        r = await c.patch("/api/config/kirocrew", json=body, headers=_card_headers(card))
+        r = await c.patch("/api/config/ajcrew", json=body, headers=_card_headers(card))
         return r.status, store.get(card["id"])
 
     status, rec = _run(world, store, go)
@@ -419,13 +419,13 @@ def _apply_once_then_again(world, store, after_write):
         card = await _propose_setting(c)
         body = card["plan"]["apply"][0]["body"]
         try:
-            first = await c.patch("/api/config/kirocrew", json=body, headers=_card_headers(card))
+            first = await c.patch("/api/config/ajcrew", json=body, headers=_card_headers(card))
             first_status = first.status
         except Exception:  # a cancelled handler drops the connection
             first_status = None
         await asyncio.sleep(0)
         world.after_write = None
-        again = await c.patch("/api/config/kirocrew", json=body, headers=_card_headers(card))
+        again = await c.patch("/api/config/ajcrew", json=body, headers=_card_headers(card))
         frames = [
             p["card"]["status"] for k, p in c.server.app["state"].frames if k == "card_update"
         ]
@@ -444,7 +444,7 @@ def test_a_route_that_raises_after_writing_is_settled_for_review(world, tmp_path
     assert first == 500
     assert rec["status"] == "partial" and rec["error"]["code"] == cards.CODE_INTERRUPTED
     assert again["card_replay"] is True  # answered with the record; the route never re-ran
-    assert world.calls == [("PATCH", "/api/config/kirocrew")]
+    assert world.calls == [("PATCH", "/api/config/ajcrew")]
     assert frames[-1] == "partial"
     loaded = _reload(tmp_path / "c.json").get(rec["id"])
     assert loaded["status"] == "partial" and loaded["error"]["code"] == cards.CODE_INTERRUPTED
@@ -459,7 +459,7 @@ def test_a_route_cancelled_mid_write_is_settled_for_review(world, tmp_path):
     _first, again, rec, _frames = _apply_once_then_again(world, store, shutdown)
     assert rec["status"] == "partial" and rec["error"]["code"] == cards.CODE_INTERRUPTED
     assert again["card_replay"] is True
-    assert world.calls == [("PATCH", "/api/config/kirocrew")]
+    assert world.calls == [("PATCH", "/api/config/ajcrew")]
     loaded = _reload(tmp_path / "c.json").get(rec["id"])
     assert loaded["status"] == "partial" and not loaded.get("inflight")
 
@@ -495,7 +495,7 @@ def test_a_check_that_raises_before_the_route_leaves_the_step_retryable(
     first, again, rec, _frames = _apply_once_then_again(world, store, None)
     assert first == 500
     assert again.get("card_replay") is None and rec["status"] == "applied"
-    assert world.calls == [("PATCH", "/api/config/kirocrew")]  # only the retry wrote
+    assert world.calls == [("PATCH", "/api/config/ajcrew")]  # only the retry wrote
 
 
 # ── every other transition is on disk before any tab hears of it ──
@@ -661,7 +661,7 @@ def _fresh_home(tmp_path, monkeypatch) -> Path:
     """A crew home as a first install has it: no vault, no key, no store yet."""
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     return home
 
 
@@ -732,7 +732,7 @@ def test_a_read_whose_settlement_cannot_be_saved_publishes_nothing(world, tmp_pa
         card = await _propose_setting(c)
         del state._slots[SLOT]
         state.open_slots_restored = True
-        from kiro_crew.dashboard.channel_slots import note_slot_closed
+        from aj_crew.dashboard.channel_slots import note_slot_closed
 
         note_slot_closed(state, SLOT)
         broken["on"] = True
@@ -882,7 +882,7 @@ def _base_build_create_apply(*, first_greeting: bool) -> list[dict]:
         "name": "scout",
         "kiro_agent": catalog.DEFAULT_CREWMATE_TEMPLATE,
         "description": "Watch the queue",
-        "source": "kirocrew",
+        "source": "ajcrew",
     }
     if first_greeting:
         agent["first_greeting"] = True
@@ -990,7 +990,7 @@ def test_a_create_cards_after_read_finds_its_schedule_at_its_own_step(
 def test_a_dismissed_card_tells_the_crewmate_feed(world, tmp_path, monkeypatch):
     """A dismiss keeps the card's status, so it writes no log entry: the route tells a
     crewmate page's waiting list itself, or a dismissed failed card stays listed."""
-    from kiro_crew.dashboard import crewmate_feed
+    from aj_crew.dashboard import crewmate_feed
 
     told: list[str] = []
     monkeypatch.setattr(crewmate_feed, "question_retired", told.append)
@@ -1000,7 +1000,7 @@ def test_a_dismissed_card_tells_the_crewmate_feed(world, tmp_path, monkeypatch):
         card = await _propose_setting(c)
         told.clear()
         step = card["plan"]["apply"][0]
-        await c.patch("/api/config/kirocrew", json=step["body"], headers=_card_headers(card))
+        await c.patch("/api/config/ajcrew", json=step["body"], headers=_card_headers(card))
         told.clear()
         r = await c.post(f"/api/cards/{card['id']}/dismiss", headers=OWNER)
         return r.status

@@ -16,7 +16,7 @@ import { MemoryRouter } from 'react-router-dom'
 import React from 'react'
 
 // Tab bodies are irrelevant; only the two Suspense fallbacks are under test.
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => <div /> }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => <div /> }))
 vi.mock('../pages/HooksPage', () => ({ default: () => <div /> }))
 vi.mock('../pages/connections/ConnectionsPage', () => ({ default: () => <div /> }))
 vi.mock('../pages/overview', () => ({

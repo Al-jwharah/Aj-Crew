@@ -11,7 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import patch
 
-from kiro_crew.cron import _TIMER_POLL_SECS, CronService
+from aj_crew.cron import _TIMER_POLL_SECS, CronService
 
 
 class TestCronWakesOnBoundary:
@@ -23,7 +23,7 @@ class TestCronWakesOnBoundary:
 
         # 45s past a minute boundary -> the next boundary is 15s away, under the poll.
         pinned = 1_800_000_045.0
-        with patch("kiro_crew.cron.time.time", return_value=pinned):
+        with patch("aj_crew.cron.time.time", return_value=pinned):
             delay = svc._next_wake_secs()
 
         assert delay is not None
@@ -43,7 +43,7 @@ class TestCronWakesOnBoundary:
 
         # A Thursday 00:00:00 UTC: the next Wed 10:30 is ~6 days away, far above the poll.
         pinned = 1_789_603_200.0
-        with patch("kiro_crew.cron.time.time", return_value=pinned):
+        with patch("aj_crew.cron.time.time", return_value=pinned):
             delay = svc._next_wake_secs()
 
         assert delay is not None
@@ -74,7 +74,7 @@ class TestCronWakesOnBoundary:
         # now = an exact minute boundary; last_run_ts sits 0.5s back in this minute.
         pinned = 1_800_000_060.0  # divisible by 60 -> top of a minute
         job.last_run_ts = pinned - 0.5
-        with patch("kiro_crew.cron.time.time", return_value=pinned):
+        with patch("aj_crew.cron.time.time", return_value=pinned):
             delay = svc._next_wake_secs()
 
         assert delay is not None
@@ -98,7 +98,7 @@ class TestCronWakesOnBoundary:
         start = _dt.datetime.fromtimestamp(pinned, _dt.timezone.utc).date()
         job.skip_dates = [(start + _dt.timedelta(days=n)).strftime("%Y-%m-%d") for n in range(366)]
 
-        with patch("kiro_crew.cron.time.time", return_value=pinned):
+        with patch("aj_crew.cron.time.time", return_value=pinned):
             delay = svc._next_wake_secs()
 
         # Arms at the immediate next boundary (~15s), unaffected by skip_dates.

@@ -14,8 +14,8 @@ import pytest
 from chat_test_helpers import _make_state
 from steer_requeue_helpers import _running_slot
 
-from kiro_crew.dashboard import session_deliver as sd
-from kiro_crew.dashboard.chat_utils import CRON_NOTIFICATION_KIND, MCP_APP_MESSAGE_KIND
+from aj_crew.dashboard import session_deliver as sd
+from aj_crew.dashboard.chat_utils import CRON_NOTIFICATION_KIND, MCP_APP_MESSAGE_KIND
 
 CRON_TEXT = '[Cron notification from "nightly"]\nstill red\n[End of cron notification]'
 APP_TEXT = '[MCP app message from "srv/tool"]\nhello\n[End of MCP app message]'
@@ -24,7 +24,7 @@ WAKE_TEXT = "[work-ledger wake] item=it_1 status=done"
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     return st
@@ -51,8 +51,8 @@ class TestIdle:
         run_chat = MagicMock(return_value=MagicMock())
         turn = MagicMock(name="turn")
         with (
-            patch("kiro_crew.dashboard.chat_runner._run_chat", run_chat),
-            patch("kiro_crew.dashboard.chat_runner.spawn_guarded_turn", return_value=turn),
+            patch("aj_crew.dashboard.chat_runner._run_chat", run_chat),
+            patch("aj_crew.dashboard.chat_runner.spawn_guarded_turn", return_value=turn),
         ):
             assert await sd.deliver(state, slot, text, origin) == sd.DELIVERED_TURN
 
@@ -86,7 +86,7 @@ class TestIdle:
         slot = state.get_or_create_slot("idle")
         setattr(slot, field, value)
         spawn = MagicMock()
-        with patch("kiro_crew.dashboard.chat_runner.spawn_guarded_turn", spawn):
+        with patch("aj_crew.dashboard.chat_runner.spawn_guarded_turn", spawn):
             assert await sd.deliver(state, slot, CRON_TEXT, sd.cron("nightly")) == (
                 sd.DELIVERED_QUEUED
             )
@@ -101,8 +101,8 @@ class TestIdle:
         slot.queue_append("parked earlier")
         run_chat = MagicMock(return_value=MagicMock())
         with (
-            patch("kiro_crew.dashboard.chat_runner._run_chat", run_chat),
-            patch("kiro_crew.dashboard.chat_runner.spawn_guarded_turn", return_value=MagicMock()),
+            patch("aj_crew.dashboard.chat_runner._run_chat", run_chat),
+            patch("aj_crew.dashboard.chat_runner.spawn_guarded_turn", return_value=MagicMock()),
         ):
             assert await sd.deliver(state, slot, CRON_TEXT, sd.cron("nightly")) == (
                 sd.DELIVERED_TURN
@@ -125,7 +125,7 @@ class TestIdle:
         """An idle cron falls back because an in-memory queue cannot survive shutdown."""
         shutdown = MagicMock()
         shutdown.is_set.return_value = True
-        monkeypatch.setattr("kiro_crew.session.shutdown_event", shutdown)
+        monkeypatch.setattr("aj_crew.session.shutdown_event", shutdown)
         slot = state.get_or_create_slot("idle")
 
         assert await sd.deliver(state, slot, CRON_TEXT, sd.cron("nightly")) == sd.NOT_DELIVERED
@@ -143,7 +143,7 @@ class TestIdle:
         slot = _running_slot(state) if running else state.get_or_create_slot("idle")
         start = AsyncMock(return_value="the starter's answer")
         steer = AsyncMock()
-        with patch("kiro_crew.dashboard.chat_delivery.steer_into_running_turn", steer):
+        with patch("aj_crew.dashboard.chat_delivery.steer_into_running_turn", steer):
             out = await sd.deliver(state, slot, WAKE_TEXT, sd.automation(3, "l1"), start_turn=start)
         assert out == (sd.NOT_DELIVERED if running else "the starter's answer")
         assert start.await_count == (0 if running else 1)
@@ -164,7 +164,7 @@ class TestRunning:
     async def test_a_full_queue_drops_its_oldest_entry_only_when_asked(self, state, evict):
         slot = _running_slot(state)
         await sd.deliver(state, slot, "old report", sd.cron("nightly"))
-        with patch("kiro_crew.dashboard.slot_queue_repository.MAX_LIVE_QUEUE_ENTRIES", 1):
+        with patch("aj_crew.dashboard.slot_queue_repository.MAX_LIVE_QUEUE_ENTRIES", 1):
             out = await sd.deliver(
                 state, slot, "new report", sd.cron("nightly"), evict_oldest=evict
             )
@@ -188,7 +188,7 @@ class TestRunning:
     @pytest.mark.asyncio
     async def test_a_full_queue_writes_nothing(self, state):
         slot = _running_slot(state)
-        with patch("kiro_crew.dashboard.slot_queue_repository.MAX_LIVE_QUEUE_ENTRIES", 0):
+        with patch("aj_crew.dashboard.slot_queue_repository.MAX_LIVE_QUEUE_ENTRIES", 0):
             assert await sd.deliver(state, slot, APP_TEXT, sd.app("srv/tool")) == sd.QUEUE_FULL
         assert slot._queue == [] and slot.messages == []
 
@@ -216,7 +216,7 @@ class TestRunning:
     async def test_a_wake_steer_outcome_maps_to_a_delivery(self, state, steer_outcome, expected):
         slot = _running_slot(state)
         steer = AsyncMock(return_value=steer_outcome)
-        with patch("kiro_crew.dashboard.chat_delivery.steer_into_running_turn", steer):
+        with patch("aj_crew.dashboard.chat_delivery.steer_into_running_turn", steer):
             out = await sd.deliver(state, slot, WAKE_TEXT, sd.automation(3, "l1"))
         assert out == expected
         assert steer.await_args.kwargs["nudge_meta"] == {"cycle": 3, "loop_id": "l1"}
@@ -228,7 +228,7 @@ class TestPeer:
 
     @pytest.mark.asyncio
     async def test_an_idle_slot_runs_a_peer_send_as_a_user_row(self, state):
-        from kiro_crew.history import HUMAN_TURN_META_KEY
+        from aj_crew.history import HUMAN_TURN_META_KEY
 
         slot = state.get_or_create_slot("idle")
         ran: list[str] = []
@@ -236,7 +236,7 @@ class TestPeer:
         async def _fake_run_chat(_state, _slot, prompt, **_kw):
             ran.append(prompt)
 
-        with patch("kiro_crew.dashboard.chat_runner._run_chat", _fake_run_chat):
+        with patch("aj_crew.dashboard.chat_runner._run_chat", _fake_run_chat):
             out = await sd.deliver(state, slot, "peer text", sd.peer(steer=False))
             await slot.task
         assert out == sd.DELIVERED_TURN
@@ -250,7 +250,7 @@ class TestPeer:
         """The steer arm alone: the caller's fallback is the one delivery."""
         slot = state.get_or_create_slot("idle")
         steer = AsyncMock()
-        with patch("kiro_crew.dashboard.chat_delivery.steer_into_running_turn", steer):
+        with patch("aj_crew.dashboard.chat_delivery.steer_into_running_turn", steer):
             out = await sd.deliver(state, slot, "late", sd.peer(steer=True), admission={})
         assert out == sd.NOT_DELIVERED
         steer.assert_not_awaited()
@@ -260,7 +260,7 @@ class TestPeer:
     async def test_a_running_slot_queues_a_peer_send_that_did_not_ask_to_steer(self, state):
         slot = _running_slot(state)
         steer = AsyncMock()
-        with patch("kiro_crew.dashboard.chat_delivery.steer_into_running_turn", steer):
+        with patch("aj_crew.dashboard.chat_delivery.steer_into_running_turn", steer):
             out = await sd.deliver(
                 state, slot, "later", sd.peer(steer=False), queue_meta={"sendOrigin": "x"}
             )
@@ -293,7 +293,7 @@ class TestPeer:
     async def test_a_peer_steer_outcome_maps_to_a_delivery(self, state, steer_outcome, expected):
         slot = _running_slot(state)
         steer = AsyncMock(return_value=steer_outcome)
-        with patch("kiro_crew.dashboard.chat_delivery.steer_into_running_turn", steer):
+        with patch("aj_crew.dashboard.chat_delivery.steer_into_running_turn", steer):
             out = await sd.deliver(state, slot, "now", sd.peer(steer=True), admission={"a": 1})
         assert out == expected
         assert steer.await_args.kwargs["user_origin"] is False
@@ -346,7 +346,7 @@ class TestCallersRouteThroughDeliver:
         deliver = AsyncMock(side_effect=[sd.NOT_DELIVERED, sd.DELIVERED_STEERED])
         with (
             patch.object(sd, "deliver", deliver),
-            patch("kiro_crew.dashboard.session_control.containment_meta", return_value={}),
+            patch("aj_crew.dashboard.session_control.containment_meta", return_value={}),
             patch.object(orch, "_work_ledger_wake_text", AsyncMock(return_value=WAKE_TEXT)),
         ):
             assert await orch._fire_dashboard_nudge(loop) is True
@@ -363,7 +363,7 @@ class TestCallersRouteThroughDeliver:
     async def test_the_session_picks_whether_a_nudge_fire_starts_its_turn(self, running):
         from test_work_ledger_wake_delivery import _ledger_loop, _orchestrator, _slot
 
-        from kiro_crew.monitoring.models import MonitorDispatchResult
+        from aj_crew.monitoring.models import MonitorDispatchResult
 
         orch = _orchestrator()
         loop = _ledger_loop()

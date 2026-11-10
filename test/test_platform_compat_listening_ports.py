@@ -17,7 +17,7 @@ import pytest
 from named_cases_helpers import named_cases
 from platform_compat_helpers import _fake_windows_bins
 
-from kiro_crew import platform_compat as pc
+from aj_crew import platform_compat as pc
 
 # Each test starts with the macOS libc and libproc handle caches unbuilt and puts them
 # back after, as every test of the test_platform_compat family does (see conftest.py).
@@ -304,7 +304,7 @@ class TestFindListeningPidsErrors:
         # Regression:. Windows netstat -ano prints IPv6 LISTEN rows
         # with proto column "TCP" (NOT "TCP6") and address form [::1]:<port>.
         # Before this fix `-p tcp` on the netstat argv dropped these entirely,
-        # so `kirocrew stop` / `kirocrew restart` silently no-op'd when the
+        # so `ajcrew stop` / `ajcrew restart` silently no-op'd when the
         # gateway bound v6. This canned blob mirrors what real Windows netstat
         # actually prints (verified on Windows 11 24H2 with an AF_INET6
         # loopback listener) — regression-guards without a Windows CI lane.

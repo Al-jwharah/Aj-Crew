@@ -16,16 +16,16 @@ import pytest
 from aiohttp import web
 from sidecar_fault_helpers import fail_one_sidecar_read
 
-from kiro_crew import agent_state
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.dashboard.handlers.agents import api_agent_publish
+from aj_crew import agent_state
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.dashboard.handlers.agents import api_agent_publish
 
 
 @pytest.fixture(autouse=True)
 def _owner_caller(monkeypatch):
     """Run past the owner boundary; owner-auth has its own coverage elsewhere."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
@@ -52,8 +52,8 @@ def _write_template(agents_dir, stem: str, **extra) -> None:
 
 
 def _seed_config(crew: str, kiro_agent: str) -> None:
-    cfg = KiroCrewConfig()
-    cfg.agents = {crew: KiroCrewAgentConfig(kiro_agent=kiro_agent)}
+    cfg = AjCrewConfig()
+    cfg.agents = {crew: AjCrewAgentConfig(kiro_agent=kiro_agent)}
     cfg.default_agent = crew
     cfg.save()
 
@@ -74,17 +74,17 @@ async def test_publish_rejects_a_name_a_crew_binding_dangles_at(tmp_path):
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
     _write_template(agents_dir, "design-crew")
-    agent_state.set_fork_info("design-crew", forked_from="kirocrew", private_to="design-crew")
+    agent_state.set_fork_info("design-crew", forked_from="ajcrew", private_to="design-crew")
     # other-crew's binding dangles at the requested publish name.
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        "design-crew": KiroCrewAgentConfig(kiro_agent="design-crew"),
-        "other-crew": KiroCrewAgentConfig(kiro_agent="reviewer-v2"),
+        "design-crew": AjCrewAgentConfig(kiro_agent="design-crew"),
+        "other-crew": AjCrewAgentConfig(kiro_agent="reviewer-v2"),
     }
     cfg.default_agent = "design-crew"
     cfg.save()
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(
             _publish_request("design-crew", {"crew": "design-crew", "name": "reviewer-v2"})
         )
@@ -101,11 +101,11 @@ async def test_publish_rejects_a_name_a_crew_binding_dangles_at(tmp_path):
 async def test_publish_rejects_the_legacy_default_agent_fallback_name(tmp_path):
     """`agent.default_agent` is a resolvable reference like any crew binding —
     publishing under a name it dangles at is refused."""
-    from kiro_crew.config.loader import config_path, update_config_locked
+    from aj_crew.config.loader import config_path, update_config_locked
 
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "design-crew", "design-crew", "kirocrew")
+    _seed_private_copy(agents_dir, "design-crew", "design-crew", "ajcrew")
 
     def _inject_fallback(data: dict) -> dict:
         data.setdefault("agent", {})["default_agent"] = "reviewer-v2"
@@ -113,7 +113,7 @@ async def test_publish_rejects_the_legacy_default_agent_fallback_name(tmp_path):
 
     update_config_locked(config_path(), mutate=_inject_fallback)
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(
             _publish_request("design-crew", {"crew": "design-crew", "name": "reviewer-v2"})
         )
@@ -127,7 +127,7 @@ def test_rebind_refuses_a_vanished_target_file(tmp_path):
     """`require_path` rechecks the target file INSIDE the critical section: a
     cross-process delete between a handler's validation and the rebind must
     not persist a binding to nothing."""
-    from kiro_crew.dashboard.handlers.agents import _rebind_crew_locked
+    from aj_crew.dashboard.handlers.agents import _rebind_crew_locked
 
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
@@ -136,7 +136,7 @@ def test_rebind_refuses_a_vanished_target_file(tmp_path):
     with pytest.raises(FileNotFoundError):
         _rebind_crew_locked("design-crew", ("design-crew",), "origin", agents_dir / "origin.json")
     # The binding is unchanged — nothing was persisted.
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg.agents["design-crew"].kiro_agent == "design-crew"
 
 
@@ -144,9 +144,9 @@ def test_rebind_refuses_a_vanished_target_file(tmp_path):
 async def test_publish_happy_path(tmp_path):
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "design-crew", "design-crew", "kirocrew")
+    _seed_private_copy(agents_dir, "design-crew", "design-crew", "ajcrew")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(
             _publish_request("design-crew", {"crew": "design-crew", "name": "reviewer-v2"})
         )
@@ -165,7 +165,7 @@ async def test_publish_happy_path(tmp_path):
     assert not (agents_dir / "design-crew.json").exists()
     assert agent_state.get_fork_info("design-crew") is None
     # Crew rebound to the published template.
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg.agents["design-crew"].kiro_agent == "reviewer-v2"
 
 
@@ -173,10 +173,10 @@ async def test_publish_happy_path(tmp_path):
 async def test_publish_copies_model_tracking(tmp_path):
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "c", "c", "kirocrew")
+    _seed_private_copy(agents_dir, "c", "c", "ajcrew")
     agent_state.set_model_managed("c", False)
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(_publish_request("c", {"crew": "c", "name": "published"}))
 
     assert resp.status == 200
@@ -190,17 +190,17 @@ async def test_publish_a_failed_model_read_fails_and_unwinds(tmp_path, monkeypat
     bookkeeping_failed and leaves no shared template behind."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "c", "c", "kirocrew")
+    _seed_private_copy(agents_dir, "c", "c", "ajcrew")
     agent_state.set_model_managed("c", True)
     fail_one_sidecar_read(monkeypatch, "get_model_managed", "c")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(_publish_request("c", {"crew": "c", "name": "published"}))
 
     assert resp.status == 500
     assert json.loads(resp.text)["code"] == "bookkeeping_failed"
     assert not (agents_dir / "published.json").exists()
-    assert KiroCrewConfig.load().agents["c"].kiro_agent == "c"
+    assert AjCrewConfig.load().agents["c"].kiro_agent == "c"
 
 
 @pytest.mark.asyncio
@@ -208,16 +208,16 @@ async def test_publish_refuses_name_collision(tmp_path):
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
     _write_template(agents_dir, "taken")
-    _seed_private_copy(agents_dir, "c", "c", "kirocrew")
+    _seed_private_copy(agents_dir, "c", "c", "ajcrew")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(_publish_request("c", {"crew": "c", "name": "taken"}))
 
     assert resp.status == 409
     assert json.loads(resp.text)["code"] == "name_taken"
     # Nothing changed: copy still present and bound.
     assert (agents_dir / "c.json").exists()
-    assert KiroCrewConfig.load().agents["c"].kiro_agent == "c"
+    assert AjCrewConfig.load().agents["c"].kiro_agent == "c"
 
 
 @pytest.mark.asyncio
@@ -228,7 +228,7 @@ async def test_publish_refuses_non_private_source(tmp_path):
     _write_template(agents_dir, "shared")
     _seed_config("c", "shared")  # bound, but NO fork lineage
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(_publish_request("shared", {"crew": "c", "name": "newname"}))
 
     assert resp.status == 409
@@ -239,12 +239,12 @@ async def test_publish_refuses_non_private_source(tmp_path):
 async def test_publish_refuses_another_crews_copy(tmp_path):
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "owner-crew", "owner-crew", "kirocrew")
-    cfg = KiroCrewConfig.load()
-    cfg.agents["intruder"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+    _seed_private_copy(agents_dir, "owner-crew", "owner-crew", "ajcrew")
+    cfg = AjCrewConfig.load()
+    cfg.agents["intruder"] = AjCrewAgentConfig(kiro_agent="ajcrew")
     cfg.save()
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(
             _publish_request("owner-crew", {"crew": "intruder", "name": "stolen"})
         )
@@ -261,9 +261,9 @@ async def test_publish_refuses_another_crews_copy(tmp_path):
 async def test_publish_rejects_invalid_names(tmp_path, name):
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "c", "c", "kirocrew")
+    _seed_private_copy(agents_dir, "c", "c", "ajcrew")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(_publish_request("c", {"crew": "c", "name": name}))
 
     assert resp.status == 400
@@ -275,7 +275,7 @@ async def test_publish_rejects_invalid_names(tmp_path, name):
     ("crew", "name", "code"),
     [
         pytest.param(
-            "c", "kirocrew", "template_name_reserved", id="test_publish_rejects_reserved_name"
+            "c", "ajcrew", "template_name_reserved", id="test_publish_rejects_reserved_name"
         ),
         # CON/NUL/COM1... are filesystem-reserved on Windows: creating CON.json
         # raises there, so the name is refused up front.
@@ -290,9 +290,9 @@ async def test_publish_rejects_invalid_names(tmp_path, name):
 async def test_publish_rejects_a_reserved_template_name(tmp_path, crew, name, code):
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, crew, crew, "kirocrew")
+    _seed_private_copy(agents_dir, crew, crew, "ajcrew")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(_publish_request(crew, {"crew": crew, "name": name}))
 
     assert resp.status == 400
@@ -308,9 +308,9 @@ async def test_publish_rejects_the_kas_reserved_ids(tmp_path, name):
     a template published under one never runs there."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "c", "c", "kirocrew")
+    _seed_private_copy(agents_dir, "c", "c", "ajcrew")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(_publish_request("c", {"crew": "c", "name": name}))
 
     assert resp.status == 400
@@ -324,9 +324,9 @@ async def test_publish_accepts_the_case_variant_of_a_reserved_id(tmp_path):
     engine check is exact-case: a fold to ``.lower()`` would refuse it here."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "c", "c", "kirocrew")
+    _seed_private_copy(agents_dir, "c", "c", "ajcrew")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(_publish_request("c", {"crew": "c", "name": "Default"}))
 
     assert resp.status == 200, resp.text
@@ -338,9 +338,9 @@ async def test_publish_accepts_the_case_variant_of_a_reserved_id(tmp_path):
 async def test_publish_404_on_unknown_template_and_crew(tmp_path):
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "c", "c", "kirocrew")
+    _seed_private_copy(agents_dir, "c", "c", "ajcrew")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         missing_template = await api_agent_publish(
             _publish_request("ghost", {"crew": "c", "name": "x1"})
         )
@@ -357,7 +357,7 @@ async def test_publish_400_on_bad_body(tmp_path):
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         bad_json = await api_agent_publish(_publish_request("c", None, bad_json=True))
         not_object = await api_agent_publish(_publish_request("c", ["crew"]))
         no_crew = await api_agent_publish(_publish_request("c", {"name": "x"}))
@@ -373,11 +373,11 @@ async def test_publish_stale_binding_409(tmp_path):
     so a stale publish cannot rebind over the newer binding."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "design-crew", "design-crew", "kirocrew")
+    _seed_private_copy(agents_dir, "design-crew", "design-crew", "ajcrew")
     _write_template(agents_dir, "elsewhere")
     _seed_config("design-crew", "elsewhere")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(
             _publish_request("design-crew", {"crew": "design-crew", "name": "reviewer-v2"})
         )
@@ -385,7 +385,7 @@ async def test_publish_stale_binding_409(tmp_path):
     assert resp.status == 409
     assert json.loads(resp.text)["code"] == "stale_binding"
     assert not (agents_dir / "reviewer-v2.json").exists()
-    assert KiroCrewConfig.load().agents["design-crew"].kiro_agent == "elsewhere"
+    assert AjCrewConfig.load().agents["design-crew"].kiro_agent == "elsewhere"
 
 
 @pytest.mark.asyncio
@@ -394,10 +394,10 @@ async def test_publish_keeps_lineage_when_delete_fails(tmp_path):
     it would surface the private customization as a shared template."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "design-crew", "design-crew", "kirocrew")
+    _seed_private_copy(agents_dir, "design-crew", "design-crew", "ajcrew")
 
     with (
-        patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir),
+        patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir),
         patch("pathlib.Path.unlink", side_effect=OSError("locked")),
     ):
         resp = await api_agent_publish(
@@ -406,11 +406,11 @@ async def test_publish_keeps_lineage_when_delete_fails(tmp_path):
 
     assert resp.status == 200
     # The publish itself succeeded and the crew was rebound...
-    assert KiroCrewConfig.load().agents["design-crew"].kiro_agent == "reviewer-v2"
+    assert AjCrewConfig.load().agents["design-crew"].kiro_agent == "reviewer-v2"
     # ...but the undeletable copy stays recorded as private, not shared.
     assert (agents_dir / "design-crew.json").exists()
     assert agent_state.get_fork_info("design-crew") == {
-        "forked_from": "kirocrew",
+        "forked_from": "ajcrew",
         "private_to": "design-crew",
     }
 
@@ -425,7 +425,7 @@ async def test_publish_reports_committed_binding_when_marking_shared_fails(tmp_p
     template remains recorded as this crew's private copy."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "design-crew", "design-crew", "kirocrew")
+    _seed_private_copy(agents_dir, "design-crew", "design-crew", "ajcrew")
 
     real_clear = agent_state.clear_fork_info
 
@@ -435,7 +435,7 @@ async def test_publish_reports_committed_binding_when_marking_shared_fails(tmp_p
         real_clear(name)
 
     with (
-        patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir),
+        patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir),
         patch.object(agent_state, "clear_fork_info", side_effect=_clear_unless_new),
     ):
         resp = await api_agent_publish(
@@ -448,7 +448,7 @@ async def test_publish_reports_committed_binding_when_marking_shared_fails(tmp_p
     assert body["template"] == "reviewer-v2"
     assert body["warning"] == "publish_incomplete"
     # Committed: the crew runs the published name...
-    assert KiroCrewConfig.load().agents["design-crew"].kiro_agent == "reviewer-v2"
+    assert AjCrewConfig.load().agents["design-crew"].kiro_agent == "reviewer-v2"
     assert (agents_dir / "reviewer-v2.json").exists()
     # ...which is still recorded as its private copy rather than shared (the
     # create step's lineage names the source copy it was published from).
@@ -467,9 +467,9 @@ async def test_publish_refuses_differing_case_collision(tmp_path):
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
     _write_template(agents_dir, "reviewer")
-    _seed_private_copy(agents_dir, "design-crew", "design-crew", "kirocrew")
+    _seed_private_copy(agents_dir, "design-crew", "design-crew", "ajcrew")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(
             _publish_request("design-crew", {"crew": "design-crew", "name": "Reviewer"})
         )
@@ -489,15 +489,15 @@ async def test_publish_sanitizes_governance_before_write(tmp_path):
     those two routes skip the PreToolUse gate (security-class regression)."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "design-crew", "design-crew", "kirocrew")
+    _seed_private_copy(agents_dir, "design-crew", "design-crew", "ajcrew")
 
     def fake_sanitize(config):
         config["allowedTools"] = ["governance-filtered"]
 
     with (
-        patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir),
+        patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir),
         patch(
-            "kiro_crew.dashboard.handlers.agents.sanitize_agent_config_governance",
+            "aj_crew.dashboard.handlers.agents.sanitize_agent_config_governance",
             fake_sanitize,
         ),
     ):
@@ -517,14 +517,14 @@ async def test_publish_sanitizes_governance_before_write(tmp_path):
         # A rebind failure that is NOT a stale binding (e.g. the config write
         # itself fails): a leaked orphan would block every retry with name_taken.
         pytest.param(
-            "kiro_crew.dashboard.handlers.agents._rebind_crew_locked",
+            "aj_crew.dashboard.handlers.agents._rebind_crew_locked",
             "rebind_failed",
             id="test_publish_generic_rebind_failure_compensates",
         ),
         # A sidecar failure AFTER the spec is created: an unbound published spec
         # would surface as a shared template.
         pytest.param(
-            "kiro_crew.dashboard.handlers.agents.agent_state.get_model_managed",
+            "aj_crew.dashboard.handlers.agents.agent_state.get_model_managed",
             "bookkeeping_failed",
             id="test_publish_bookkeeping_failure_compensates",
         ),
@@ -535,10 +535,10 @@ async def test_publish_failure_after_the_create_compensates(tmp_path, failing, c
     lineage, then answers 500 with a code."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "design-crew", "design-crew", "kirocrew")
+    _seed_private_copy(agents_dir, "design-crew", "design-crew", "ajcrew")
 
     with (
-        patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir),
+        patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir),
         patch(failing, side_effect=RuntimeError("write failed")),
     ):
         resp = await api_agent_publish(
@@ -559,9 +559,9 @@ async def test_publish_copies_in_lock_reread_not_stale_snapshot(tmp_path):
     otherwise be lost when the source is deleted."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "design-crew", "design-crew", "kirocrew")
+    _seed_private_copy(agents_dir, "design-crew", "design-crew", "ajcrew")
 
-    from kiro_crew.dashboard.handlers import agents as agents_mod
+    from aj_crew.dashboard.handlers import agents as agents_mod
 
     real_read = agents_mod._read_agent_spec
     src = agents_dir / "design-crew.json"
@@ -578,8 +578,8 @@ async def test_publish_copies_in_lock_reread_not_stale_snapshot(tmp_path):
         return result
 
     with (
-        patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir),
-        patch("kiro_crew.dashboard.handlers.agents._read_agent_spec", side_effect=racing_read),
+        patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir),
+        patch("aj_crew.dashboard.handlers.agents._read_agent_spec", side_effect=racing_read),
     ):
         resp = await api_agent_publish(
             _publish_request("design-crew", {"crew": "design-crew", "name": "published"})
@@ -597,7 +597,7 @@ async def test_publish_succeeds_when_post_commit_prune_fails(tmp_path):
     whose retry then 404s."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "design-crew", "design-crew", "kirocrew")
+    _seed_private_copy(agents_dir, "design-crew", "design-crew", "ajcrew")
 
     # Scoped to the SUPERSEDED copy's post-commit prune: the destination's
     # PRE-commit clean-slate prune has the opposite contract (failure rolls
@@ -608,9 +608,9 @@ async def test_publish_succeeds_when_post_commit_prune_fails(tmp_path):
             raise RuntimeError("sidecar unavailable")
 
     with (
-        patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir),
+        patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir),
         patch(
-            "kiro_crew.dashboard.handlers.agents.agent_state.prune",
+            "aj_crew.dashboard.handlers.agents.agent_state.prune",
             side_effect=_post_commit_failing_prune,
         ),
     ):
@@ -633,10 +633,10 @@ async def test_publish_cleanup_removes_resolved_file_not_declared_name(tmp_path)
     # File STEM 'renamed-fork' declares name 'design-crew' — resolution goes
     # by declared name, cleanup must go by the resolved file.
     _write_template(agents_dir, "renamed-fork", name="design-crew")
-    agent_state.set_fork_info("design-crew", forked_from="kirocrew", private_to="design-crew")
+    agent_state.set_fork_info("design-crew", forked_from="ajcrew", private_to="design-crew")
     _seed_config("design-crew", "design-crew")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(
             _publish_request("design-crew", {"crew": "design-crew", "name": "published"})
         )
@@ -655,7 +655,7 @@ async def test_publish_rolls_back_when_the_clean_slate_prune_fails(tmp_path, mon
     silent corruption. (The fork recorder follows the same rule.)"""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "design-crew", "design-crew", "kirocrew")
+    _seed_private_copy(agents_dir, "design-crew", "design-crew", "ajcrew")
 
     real_prune = agent_state.prune
 
@@ -666,7 +666,7 @@ async def test_publish_rolls_back_when_the_clean_slate_prune_fails(tmp_path, mon
 
     monkeypatch.setattr(agent_state, "prune", _failing_prune)
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(
             _publish_request("design-crew", {"crew": "design-crew", "name": "reviewer-v2"})
         )
@@ -676,7 +676,7 @@ async def test_publish_rolls_back_when_the_clean_slate_prune_fails(tmp_path, mon
     # Rolled back: no published file, the private copy and its binding survive.
     assert not (agents_dir / "reviewer-v2.json").exists()
     assert (agents_dir / "design-crew.json").exists()
-    assert KiroCrewConfig.load().agents["design-crew"].kiro_agent == "design-crew"
+    assert AjCrewConfig.load().agents["design-crew"].kiro_agent == "design-crew"
 
 
 @pytest.mark.asyncio
@@ -686,12 +686,12 @@ async def test_publish_keeps_copy_bound_by_another_crew(tmp_path):
     with "Mode not found". The publish itself still commits."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "design-crew", "design-crew", "kirocrew")
-    cfg = KiroCrewConfig.load()
-    cfg.agents["other-crew"] = KiroCrewAgentConfig(kiro_agent="design-crew")
+    _seed_private_copy(agents_dir, "design-crew", "design-crew", "ajcrew")
+    cfg = AjCrewConfig.load()
+    cfg.agents["other-crew"] = AjCrewAgentConfig(kiro_agent="design-crew")
     cfg.save()
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(
             _publish_request("design-crew", {"crew": "design-crew", "name": "reviewer-v2"})
         )
@@ -699,7 +699,7 @@ async def test_publish_keeps_copy_bound_by_another_crew(tmp_path):
     assert resp.status == 200
     # The publish committed: new template exists, publishing crew rebound.
     assert (agents_dir / "reviewer-v2.json").exists()
-    assert KiroCrewConfig.load().agents["design-crew"].kiro_agent == "reviewer-v2"
+    assert AjCrewConfig.load().agents["design-crew"].kiro_agent == "reviewer-v2"
     # The superseded copy survives, lineage intact, because other-crew still
     # resolves it — pruning lineage alone would surface it as shared.
     assert (agents_dir / "design-crew.json").exists()
@@ -713,16 +713,16 @@ async def test_publish_keeps_copy_bound_by_file_stem(tmp_path):
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
     _write_template(agents_dir, "design-crew-file", name="design-crew")
-    agent_state.set_fork_info("design-crew", forked_from="kirocrew", private_to="design-crew")
-    cfg = KiroCrewConfig()
+    agent_state.set_fork_info("design-crew", forked_from="ajcrew", private_to="design-crew")
+    cfg = AjCrewConfig()
     cfg.agents = {
-        "design-crew": KiroCrewAgentConfig(kiro_agent="design-crew"),
-        "other-crew": KiroCrewAgentConfig(kiro_agent="design-crew-file"),
+        "design-crew": AjCrewAgentConfig(kiro_agent="design-crew"),
+        "other-crew": AjCrewAgentConfig(kiro_agent="design-crew-file"),
     }
     cfg.default_agent = "design-crew"
     cfg.save()
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(
             _publish_request("design-crew", {"crew": "design-crew", "name": "reviewer-v2"})
         )
@@ -738,11 +738,11 @@ async def test_publish_cleanup_checks_and_unlinks_under_config_lock(tmp_path, mo
     section under the config advisory lock, so a binding writer queued on the
     lock cannot land between them. Observed by wrapping the locked mutate and
     recording the copy file's existence on entry and exit."""
-    import kiro_crew.dashboard.handlers.agents as handlers
+    import aj_crew.dashboard.handlers.agents as handlers
 
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "design-crew", "design-crew", "kirocrew")
+    _seed_private_copy(agents_dir, "design-crew", "design-crew", "ajcrew")
 
     real = handlers.update_config_locked
     events: list[tuple[str, bool]] = []
@@ -761,7 +761,7 @@ async def test_publish_cleanup_checks_and_unlinks_under_config_lock(tmp_path, mo
 
     monkeypatch.setattr(handlers, "update_config_locked", _recording)
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(
             _publish_request("design-crew", {"crew": "design-crew", "name": "reviewer-v2"})
         )
@@ -781,23 +781,23 @@ async def test_publish_rollback_keeps_destination_bound_by_another_crew(tmp_path
     created destination must keep the file AS A SHARED TEMPLATE — deleting it
     breaks that crew's sessions, and marking it private misattributes a
     template in live use."""
-    import kiro_crew.dashboard.handlers.agents as handlers
+    import aj_crew.dashboard.handlers.agents as handlers
 
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "design-crew", "design-crew", "kirocrew")
+    _seed_private_copy(agents_dir, "design-crew", "design-crew", "ajcrew")
 
     # Force the rollback path: the rebind raises after dest was created, and
     # by then another crew has bound the destination name.
     def _failing_rebind(crew, expected, new_target):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["other-crew"] = KiroCrewAgentConfig(kiro_agent="reviewer-v2")
+        cfg = AjCrewConfig.load()
+        cfg.agents["other-crew"] = AjCrewAgentConfig(kiro_agent="reviewer-v2")
         cfg.save()
         raise RuntimeError("simulated rebind failure")
 
     monkeypatch.setattr(handlers, "_rebind_crew_locked", _failing_rebind)
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(
             _publish_request("design-crew", {"crew": "design-crew", "name": "reviewer-v2"})
         )
@@ -817,7 +817,7 @@ async def test_publish_rollback_retained_destination_is_never_shared(tmp_path):
     create and rebind can expose it as a shared template."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "design-crew", "design-crew", "kirocrew")
+    _seed_private_copy(agents_dir, "design-crew", "design-crew", "ajcrew")
 
     real_set_fork_info = agent_state.set_fork_info
     calls = {"n": 0}
@@ -829,14 +829,14 @@ async def test_publish_rollback_retained_destination_is_never_shared(tmp_path):
         real_set_fork_info(name, forked_from=forked_from, private_to=private_to)
 
     with (
-        patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir),
+        patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir),
         patch("pathlib.Path.unlink", side_effect=OSError("locked")),
         patch(
-            "kiro_crew.dashboard.handlers.agents.agent_state.get_model_managed",
+            "aj_crew.dashboard.handlers.agents.agent_state.get_model_managed",
             side_effect=RuntimeError("sidecar unavailable"),
         ),
         patch(
-            "kiro_crew.dashboard.handlers.agents.agent_state.set_fork_info",
+            "aj_crew.dashboard.handlers.agents.agent_state.set_fork_info",
             side_effect=_fail_on_reassert,
         ),
     ):
@@ -854,7 +854,7 @@ async def test_publish_rollback_retained_destination_is_never_shared(tmp_path):
         "private_to": "design-crew",
     }
     # The crew's binding never moved.
-    assert KiroCrewConfig.load().agents["design-crew"].kiro_agent == "design-crew"
+    assert AjCrewConfig.load().agents["design-crew"].kiro_agent == "design-crew"
 
 
 @pytest.mark.asyncio
@@ -863,10 +863,10 @@ async def test_publish_ambiguous_refusal_names_the_claimant_files(tmp_path):
     inside ~/.kiro/agents/, never the absolute path, and keeps its code."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _seed_private_copy(agents_dir, "c", "c", "kirocrew")
+    _seed_private_copy(agents_dir, "c", "c", "ajcrew")
     _write_template(agents_dir, "SomePkg-c", name="c")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_publish(_publish_request("c", {"crew": "c", "name": "published"}))
 
     assert resp.status == 409, resp.text

@@ -60,7 +60,7 @@ def _runtime(lines):
     `_saw_auth_failure` is seeded unconditionally so this helper works against a
     tree that has no such attribute; the unfixed `saw_not_logged_in` ignores it.
     """
-    from kiro_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.runtime import AcpRuntime
 
     runtime = AcpRuntime.__new__(AcpRuntime)
     runtime.recording_allowed = True
@@ -151,14 +151,14 @@ def test_the_banner_wording_is_absent_from_the_real_corpus():
 @pytest.mark.parametrize("line", [EXPIRED_TOKEN_STDERR[0], EXPIRED_TOKEN_STDERR[2]])
 def test_each_auth_bearing_line_is_recognised(line):
     """Per-line coverage of the shared detector."""
-    from kiro_crew.acp.client import is_auth_failure_output
+    from aj_crew.acp.client import is_auth_failure_output
 
     assert is_auth_failure_output(line) is True, f"not recognised: {line!r}"
 
 
 def test_the_legacy_banner_still_classifies():
     """Widening must not drop what the narrow detector already caught."""
-    from kiro_crew.acp.client import is_auth_failure_output
+    from aj_crew.acp.client import is_auth_failure_output
 
     assert is_auth_failure_output("kiro-cli: not logged in") is True
     assert is_auth_failure_output("Not Logged In") is True
@@ -172,7 +172,7 @@ def test_the_kas_engine_not_signed_in_wording_classifies():
     fails ``-32000`` with this sentence. It must land on the sign-in prompt,
     not be shown as a raw backend error.
     """
-    from kiro_crew.acp.client import is_auth_failure_output
+    from aj_crew.acp.client import is_auth_failure_output
 
     assert (
         is_auth_failure_output(
@@ -185,7 +185,7 @@ def test_the_kas_engine_not_signed_in_wording_classifies():
 
 def test_noise_lines_are_not_flagged_individually():
     """Each healthy line must be silent on its own, not merely in aggregate."""
-    from kiro_crew.acp.client import is_auth_failure_output
+    from aj_crew.acp.client import is_auth_failure_output
 
     for line in HEALTHY_STDERR:
         assert is_auth_failure_output(line) is False, f"false positive on {line!r}"

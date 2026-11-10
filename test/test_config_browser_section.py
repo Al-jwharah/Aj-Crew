@@ -1,7 +1,7 @@
 """The ``browser`` config section (``config/sections_browser.py``) and its write path.
 
 Settings -> Browser is the one writer of every key here, through the generic
-``PATCH /api/config/kirocrew``; ``browser_harness`` reads them with these defaults.
+``PATCH /api/config/ajcrew``; ``browser_harness`` reads them with these defaults.
 Pinned:
 
 * the shipped defaults, which are what the RFC promises a fresh install (auto
@@ -26,12 +26,12 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config import loader as L
-from kiro_crew.config import sections_browser as SB
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.resolution import _KNOWN_CONFIG_SECTIONS
-from kiro_crew.config.schema import SCHEMA_REGISTRY
-from kiro_crew.config.sections import (
+from aj_crew.config import loader as L
+from aj_crew.config import sections_browser as SB
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.resolution import _KNOWN_CONFIG_SECTIONS
+from aj_crew.config.schema import SCHEMA_REGISTRY
+from aj_crew.config.sections import (
     BROWSER_CHOICES,
     LIVE_MAX_FPS_CHOICES,
     LIVE_QUALITIES,
@@ -39,7 +39,7 @@ from kiro_crew.config.sections import (
     BrowserLiveConfig,
     coerce_browser_local_origins,
 )
-from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
 SETTINGS_CONTRACT_KEYS = (
     "browser.choice",
@@ -71,7 +71,7 @@ def cfg_home(tmp_path, monkeypatch):
 
 class TestDefaults:
     def test_a_fresh_config_matches_the_rfc(self):
-        cfg = KiroCrewConfig().browser
+        cfg = AjCrewConfig().browser
         assert cfg.choice == "auto"
         assert cfg.live == BrowserLiveConfig(
             enabled=True, quality="auto", max_fps=60, mask_passwords=True
@@ -96,7 +96,7 @@ class TestDefaults:
 
     def test_browser_is_a_known_section(self):
         assert "browser" in _KNOWN_CONFIG_SECTIONS
-        assert KiroCrewConfig().to_dict()["browser"] == asdict(BrowserConfig())
+        assert AjCrewConfig().to_dict()["browser"] == asdict(BrowserConfig())
 
 
 class TestNormalization:
@@ -122,7 +122,7 @@ class TestNormalization:
         )
 
     def test_unknown_values_degrade_with_one_warning_each(self, caplog):
-        caplog.set_level(logging.WARNING, logger="kiro_crew.config.loader")
+        caplog.set_level(logging.WARNING, logger="aj_crew.config.loader")
         raw = {"choice": "firefox", "live": {"quality": "ultra", "max_fps": 144}}
         cfg = BrowserConfig.from_raw(raw)
         again = BrowserConfig.from_raw(raw)
@@ -140,7 +140,7 @@ class TestNormalization:
         [("30", 30), (" 15 ", 15), (True, 60), (60.0, 60), ("fast", 60), (None, 60)],
     )
     def test_max_fps_spellings(self, raw, expected, caplog):
-        caplog.set_level(logging.WARNING, logger="kiro_crew.config.loader")
+        caplog.set_level(logging.WARNING, logger="aj_crew.config.loader")
         assert BrowserLiveConfig.from_raw({"max_fps": raw}).max_fps == expected
         warned = any("browser.live.max_fps" in r.getMessage() for r in caplog.records)
         # A digit string is an accepted spelling and an absent key says nothing;
@@ -153,7 +153,7 @@ class TestNormalization:
         assert cfg.live.mask_passwords is True
 
     def test_null_values_are_the_absent_key(self, caplog):
-        caplog.set_level(logging.WARNING, logger="kiro_crew.config.loader")
+        caplog.set_level(logging.WARNING, logger="aj_crew.config.loader")
         cfg = BrowserConfig.from_raw({"choice": None, "live": {"quality": None, "max_fps": None}})
         assert cfg == BrowserConfig()
         assert not caplog.records
@@ -172,7 +172,7 @@ class TestRoundTrip:
             ),
             encoding="utf-8",
         )
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert cfg.browser.choice == "kiro_chromium"
         assert cfg.browser.live.max_fps == 30
         assert cfg.browser.live.quality == "medium"
@@ -194,7 +194,7 @@ class TestRoundTrip:
             json.dumps({"browser": {"choice": "auto", "first_run_dismissed": True}}),
             encoding="utf-8",
         )
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert not hasattr(cfg.browser, "first_run_dismissed")
         cfg.save()
         after = json.loads(cfg_home.read_text(encoding="utf-8"))
@@ -202,7 +202,7 @@ class TestRoundTrip:
 
     def test_an_absent_section_loads_the_defaults(self, cfg_home):
         cfg_home.write_text(json.dumps({"dashboard": {}}), encoding="utf-8")
-        assert KiroCrewConfig.load().browser == BrowserConfig()
+        assert AjCrewConfig.load().browser == BrowserConfig()
 
 
 class TestLocalOrigins:
@@ -231,16 +231,16 @@ class TestLocalOrigins:
 
 
 def SB_MAX() -> int:
-    from kiro_crew.config.sections import BROWSER_LOCAL_ORIGINS_MAX
+    from aj_crew.config.sections import BROWSER_LOCAL_ORIGINS_MAX
 
     return BROWSER_LOCAL_ORIGINS_MAX
 
 
 def _app() -> web.Application:
-    from kiro_crew.dashboard.handlers import api_kirocrew_config_patch
+    from aj_crew.dashboard.handlers import api_ajcrew_config_patch
 
     app = web.Application()
-    app.router.add_patch("/api/config/kirocrew", api_kirocrew_config_patch)
+    app.router.add_patch("/api/config/ajcrew", api_ajcrew_config_patch)
     return as_owner(app)
 
 
@@ -269,7 +269,7 @@ class TestPatchRoute:
     async def test_a_contract_value_is_written(self, cfg_home, path, value) -> None:
         cfg_home.write_text(json.dumps({"dashboard": {}}), encoding="utf-8")
         async with TestClient(TestServer(_app())) as c:
-            resp = await c.patch("/api/config/kirocrew", json={"path": path, "value": value})
+            resp = await c.patch("/api/config/ajcrew", json={"path": path, "value": value})
             assert resp.status == 200, await resp.text()
         written = json.loads(cfg_home.read_text(encoding="utf-8"))
         node = written
@@ -300,7 +300,7 @@ class TestPatchRoute:
     async def test_a_value_outside_the_contract_is_refused(self, cfg_home, path, value) -> None:
         cfg_home.write_text(json.dumps({"dashboard": {}}), encoding="utf-8")
         async with TestClient(TestServer(_app())) as c:
-            resp = await c.patch("/api/config/kirocrew", json={"path": path, "value": value})
+            resp = await c.patch("/api/config/ajcrew", json={"path": path, "value": value})
             assert resp.status == 400, await resp.text()
         written = json.loads(cfg_home.read_text(encoding="utf-8"))
         assert "browser" not in written
@@ -316,11 +316,11 @@ class TestRetiredBrowserKeysOnDashboardSaves:
 
     @staticmethod
     def _put_patch_app() -> web.Application:
-        from kiro_crew.dashboard.handlers import api_kirocrew_config, api_kirocrew_config_patch
+        from aj_crew.dashboard.handlers import api_ajcrew_config, api_ajcrew_config_patch
 
         app = web.Application()
-        app.router.add_patch("/api/config/kirocrew", api_kirocrew_config_patch)
-        app.router.add_put("/api/config/kirocrew", api_kirocrew_config)
+        app.router.add_patch("/api/config/ajcrew", api_ajcrew_config_patch)
+        app.router.add_put("/api/config/ajcrew", api_ajcrew_config)
         return as_owner(app)
 
     def _seed(self, cfg_home) -> None:
@@ -349,7 +349,7 @@ class TestRetiredBrowserKeysOnDashboardSaves:
         self._seed(cfg_home)
         async with TestClient(TestServer(self._put_patch_app())) as c:
             resp = await c.patch(
-                "/api/config/kirocrew", json={"path": "browser.choice", "value": "headless"}
+                "/api/config/ajcrew", json={"path": "browser.choice", "value": "headless"}
             )
             assert resp.status == 200, await resp.text()
         assert self._assert_dropped(cfg_home)["browser"]["choice"] == "headless"
@@ -358,12 +358,12 @@ class TestRetiredBrowserKeysOnDashboardSaves:
     async def test_a_put_drops_them(self, cfg_home) -> None:
         self._seed(cfg_home)
         async with TestClient(TestServer(self._put_patch_app())) as c:
-            resp = await c.put("/api/config/kirocrew", json={"agent": {"max_subagents": 8}})
+            resp = await c.put("/api/config/ajcrew", json={"agent": {"max_subagents": 8}})
             assert resp.status == 200, await resp.text()
         assert self._assert_dropped(cfg_home)["agent"]["max_subagents"] == 8
 
     def test_the_helper_keeps_renamed_spellings(self) -> None:
-        from kiro_crew.config.resolution import drop_retired_section_keys
+        from aj_crew.config.resolution import drop_retired_section_keys
 
         data = {
             "dashboard": {**self._RETIRED, "browser_local_origins": []},
@@ -382,7 +382,7 @@ class TestRetiredBrowserKeysOnDashboardSaves:
 
 class TestCredentials:
     def test_unset_is_none_and_a_list_is_kept_lowercase_and_unique(self) -> None:
-        from kiro_crew.config.sections_browser import BrowserConfig
+        from aj_crew.config.sections_browser import BrowserConfig
 
         assert BrowserConfig.from_raw({}).credentials.enabled is None
         cfg = BrowserConfig.from_raw(

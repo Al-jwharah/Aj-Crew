@@ -7,7 +7,7 @@ the pid, so a forwarder left running still names the gateway as its parent:
 the new image refuses to reclaim it, allocates around its port, and the old
 ``ssh -N -L`` stays alive unused for the life of the process.
 
-Owners that supervise a child register its stop with ``kiro_crew.pre_exec_stops``
+Owners that supervise a child register its stop with ``aj_crew.pre_exec_stops``
 and both restarts call ``run_pre_exec_stops()``. These tests pin the seam itself
 (registration, concurrency under one bound, a hung or raising stop), that both
 paths call it after the sessions close and before the exec, that the instances
@@ -35,13 +35,13 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from kiro_crew import platform_compat, pre_exec_stops
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.pre_exec_stops import register_pre_exec_stop, run_pre_exec_stops
-from kiro_crew.slack import gateway as slack_gateway
-from kiro_crew.slack.gateway import GatewayOrchestrator
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
-from kiro_crew.testing.wait import await_until
+from aj_crew import platform_compat, pre_exec_stops
+from aj_crew.dashboard.handlers import updates
+from aj_crew.pre_exec_stops import register_pre_exec_stop, run_pre_exec_stops
+from aj_crew.slack import gateway as slack_gateway
+from aj_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.wait import await_until
 
 #: Bound on reaping a test's own child after a signal. It only names a hang: a
 #: child that ignores SIGTERM is killed at it, and one that outlives the kill
@@ -183,7 +183,7 @@ class TestTheSeam:
         register_pre_exec_stop("Hung", _hang(cancelled))
         register_pre_exec_stop("Quick", _recorder(seen, "quick"))
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.pre_exec_stops"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.pre_exec_stops"):
             await run_pre_exec_stops(timeout=0.05)
 
         assert cancelled.is_set(), "the hung stop was not cancelled at the bound"
@@ -211,7 +211,7 @@ class TestTheSeam:
         register_pre_exec_stop("Sync", _sync_raise)
         register_pre_exec_stop("Fine", _recorder(seen, "fine"))
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.pre_exec_stops"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.pre_exec_stops"):
             await run_pre_exec_stops()  # must not raise
 
         assert seen == ["fine"]
@@ -329,7 +329,7 @@ class TestTheSkillUsageLedgerJoinsTheSeam:
     def _debounced_ledger(monkeypatch, tmp_path):
         import weakref
 
-        from kiro_crew import skill_usage
+        from aj_crew import skill_usage
 
         monkeypatch.setattr(skill_usage, "_live_ledgers", weakref.WeakSet())
         path = tmp_path / "skill-usage.json"
@@ -373,14 +373,14 @@ class TestTheSkillUsageLedgerJoinsTheSeam:
     async def test_a_failed_flush_is_logged_and_the_exec_still_runs(
         self, monkeypatch, tmp_path, caplog
     ):
-        from kiro_crew import skill_usage
+        from aj_crew import skill_usage
 
         seen: list[str] = []
         _dashboard_exec_seams(monkeypatch, seen)
         monkeypatch.setattr(skill_usage, "flush_all_for_shutdown", lambda: False)
         register_pre_exec_stop("Skill-usage ledger", skill_usage.flush_all_before_exec)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.skill_usage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.skill_usage"):
             restarted = await updates._restart_gateway(
                 _dashboard_state(seen), resolver=lambda: _executable(tmp_path)
             )
@@ -480,7 +480,7 @@ class TestTheSleepInhibitorJoinsTheSeam:
     @staticmethod
     @contextlib.asynccontextmanager
     async def _armed(monkeypatch):
-        from kiro_crew.dashboard import server
+        from aj_crew.dashboard import server
 
         inhibitor = _Inhibitor()
         engaged = asyncio.Event()
@@ -574,11 +574,11 @@ class TestTheInstancesHooksRegisterTheTeardown:
     async def test_startup_registers_shutdown_and_cleanup_drops_it(self, tmp_path, monkeypatch):
         from aiohttp import web
 
-        from kiro_crew.config import loader
-        from kiro_crew.dashboard import server
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.config import loader
+        from aj_crew.dashboard import server
+        from aj_crew.dashboard.state import DashboardState
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / "config.json").write_text('{"instances": {"enabled": true}}', encoding="utf-8")
         loader._invalidate_config_cache()
 
@@ -607,11 +607,11 @@ class TestTheInstancesHooksRegisterTheTeardown:
     async def test_disabled_instances_register_nothing(self, tmp_path, monkeypatch):
         from aiohttp import web
 
-        from kiro_crew.config import loader
-        from kiro_crew.dashboard import server
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.config import loader
+        from aj_crew.dashboard import server
+        from aj_crew.dashboard.state import DashboardState
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / "config.json").write_text('{"instances": {"enabled": false}}', encoding="utf-8")
         loader._invalidate_config_cache()
         state = DashboardState(sessions=Mock(), crons=Mock(), lessons=Mock(), start_time=0.0)
@@ -629,8 +629,8 @@ class TestTheInstancesHooksRegisterTheTeardown:
 
 def _pin_port_probe(monkeypatch) -> None:
     """Loopback probes answer "free" in both namespaces that probe."""
-    import kiro_crew.instances.port_allocator as pa
-    import kiro_crew.instances.ssh_tunnel_manager as stm
+    import aj_crew.instances.port_allocator as pa
+    import aj_crew.instances.ssh_tunnel_manager as stm
 
     monkeypatch.setattr(stm, "_is_port_free", lambda port, host="127.0.0.1": True)
     monkeypatch.setattr(pa, "_is_port_free", lambda port, host="127.0.0.1": True)
@@ -640,7 +640,7 @@ class _FakeTunnel:
     """A forwarder that starts and stops without spawning anything."""
 
     def __init__(self, iid, ssh_host, lp, rp, *, transport="ssh", **_kw):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelStatus
+        from aj_crew.instances.ssh_tunnel_manager import TunnelStatus
 
         self.pid = None
         self.transport = transport
@@ -648,13 +648,13 @@ class _FakeTunnel:
         self.status = TunnelStatus(instance_id=iid, local_port=lp, remote_port=rp)
 
     async def start(self):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         self.status.state = TunnelState.CONNECTED
         return True
 
     async def stop(self):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         self.stopped = True
         self.status.state = TunnelState.STOPPED
@@ -702,8 +702,8 @@ class TestARealForwarderChildIsReaped:
         _pin_port_probe(_floor_monkeypatch)
 
     async def _connected_child(self, tmp_path):
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
         reg.add(name="A", ssh_host="a-alias", instance_id="a")
@@ -782,7 +782,7 @@ class TestTheTreeKillDoesNotBlockTheLoop:
 
     @pytest.mark.asyncio
     async def test_the_bound_fires_and_the_loop_keeps_running(self, monkeypatch):
-        from kiro_crew.instances.ssh_tunnel_manager import _SshTunnel
+        from aj_crew.instances.ssh_tunnel_manager import _SshTunnel
 
         sync_calls: list[int] = []
         kill_started = asyncio.Event()
@@ -853,7 +853,7 @@ class TestTheNewImageReconnectsOnTheRecordedPort:
         _pin_port_probe(_floor_monkeypatch)
 
     def _manager(self, reg, base_port):
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         return SshTunnelManager(
             reg, base_port=base_port, mint_token=_mint, tunnel_factory=_FakeTunnel
@@ -861,8 +861,8 @@ class TestTheNewImageReconnectsOnTheRecordedPort:
 
     @pytest.mark.asyncio
     async def test_revive_after_the_pre_exec_teardown_reuses_the_port(self, tmp_path):
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
         reg.add(name="A", ssh_host="a-alias", instance_id="a")

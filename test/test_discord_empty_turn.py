@@ -33,16 +33,16 @@ from test_discord import (
     _prime_live,
 )
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_STEER_CONSUMED,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
 )
-from kiro_crew.discord.renderer import DiscordRenderer
-from kiro_crew.discord.transport import DISCORD_CAPABILITIES
-from kiro_crew.discord.transport_dispatch import DiscordDispatcher
-from kiro_crew.history import ConversationLog
+from aj_crew.discord.renderer import DiscordRenderer
+from aj_crew.discord.transport import DISCORD_CAPABILITIES
+from aj_crew.discord.transport_dispatch import DiscordDispatcher
+from aj_crew.history import ConversationLog
 
 FOOTER_MARK = "\n\n-# "
 
@@ -229,7 +229,7 @@ class TestEmptyTurnIsNeverAFinishedReply:
         the client cuts one payload at ``DISCORD_MAX_TEXT``. A burst of steers
         (each already capped by ``_neutralize_md``) must be bounded so the notice
         and the footer -- the sentence this path exists to deliver -- survive."""
-        from kiro_crew.discord.client import DISCORD_MAX_TEXT
+        from aj_crew.discord.client import DISCORD_MAX_TEXT
 
         cli = FakeClient()
         r = DiscordRenderer(cli, "chan1", DISCORD_CAPABILITIES, session_key="sk")  # type: ignore[arg-type]
@@ -486,13 +486,13 @@ class TestLiveWindowAndDiskAgree:
     def test_the_notice_lands_exactly_once_and_no_assistant_row_appears(
         self, tmp_path: Path, save_first: bool
     ) -> None:
-        from kiro_crew.dashboard.channel_slots import (
+        from aj_crew.dashboard.channel_slots import (
             project_channel_row_live,
             project_channel_turn_live,
         )
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-        from kiro_crew.dashboard.state import row_mid
-        from kiro_crew.messaging.driver import EMPTY_TURN_NOTICE
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.state import row_mid
+        from aj_crew.messaging.driver import EMPTY_TURN_NOTICE
 
         state, slot = self._state_and_slot(tmp_path)
         key = "dashboard:chat-1"
@@ -516,7 +516,7 @@ class TestLiveWindowAndDiskAgree:
             "hello",
             "",
             False,
-            agent="kirocrew",
+            agent="ajcrew",
             mirror_mids=mids,
             extra_row=("notice", EMPTY_TURN_NOTICE, "msg msg-info", notice_mid),
         )
@@ -536,7 +536,7 @@ class TestEmptyTurnVerdict:
 
         from test_messaging_driver import _RecordingRenderer, _ScriptedProvider
 
-        from kiro_crew.messaging.driver import TurnDriver
+        from aj_crew.messaging.driver import TurnDriver
 
         renderer = _RecordingRenderer()
         driver = TurnDriver(_ScriptedProvider(events), renderer)
@@ -544,8 +544,8 @@ class TestEmptyTurnVerdict:
         return driver, renderer, accumulated
 
     def test_a_textless_end_turn_is_an_empty_reply(self) -> None:
-        from kiro_crew.acp.types import AcpEvent
-        from kiro_crew.messaging.driver import EMPTY_TURN_NOTICE
+        from aj_crew.acp.types import AcpEvent
+        from aj_crew.messaging.driver import EMPTY_TURN_NOTICE
 
         driver, renderer, accumulated = self._run(
             [AcpEvent(kind=EVENT_COMPLETE, stop_reason="end_turn")]
@@ -556,7 +556,7 @@ class TestEmptyTurnVerdict:
         assert renderer.empty_turn_notice == EMPTY_TURN_NOTICE
 
     def test_a_turn_that_produced_text_has_no_notice(self) -> None:
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         driver, renderer, _ = self._run(
             [
@@ -568,14 +568,14 @@ class TestEmptyTurnVerdict:
         assert renderer.empty_turn_notice == ""
 
     def test_a_cancelled_turn_is_not_an_empty_reply(self) -> None:
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         driver, _renderer, _ = self._run([AcpEvent(kind=EVENT_COMPLETE, stop_reason="cancelled")])
         assert driver.empty_turn_notice == ""
 
     def test_a_tool_only_turn_takes_the_after_work_wording(self) -> None:
-        from kiro_crew.acp.types import AcpEvent
-        from kiro_crew.messaging.driver import EMPTY_TURN_NOTICE_AFTER_WORK
+        from aj_crew.acp.types import AcpEvent
+        from aj_crew.messaging.driver import EMPTY_TURN_NOTICE_AFTER_WORK
 
         driver, _renderer, _ = self._run(
             [
@@ -586,7 +586,7 @@ class TestEmptyTurnVerdict:
         assert driver.empty_turn_notice == EMPTY_TURN_NOTICE_AFTER_WORK
 
     def test_an_error_family_terminal_names_its_reason(self) -> None:
-        from kiro_crew.acp.types import STOP_REASON_TOOL_STALL, AcpEvent
+        from aj_crew.acp.types import STOP_REASON_TOOL_STALL, AcpEvent
 
         driver, _renderer, _ = self._run(
             [AcpEvent(kind=EVENT_COMPLETE, stop_reason=STOP_REASON_TOOL_STALL)]
@@ -601,7 +601,7 @@ class TestEmptyTurnVerdict:
         rides an unredacted notice into the channel and the transcript. The
         fixture is a made-up detail, not a credential shape: what the test
         proves is that the wire string is dropped WHOLE, whatever it holds."""
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         wire = "error: backend-detail-7f3c9e at /srv/secret/path"
         driver, _renderer, _ = self._run([AcpEvent(kind=EVENT_COMPLETE, stop_reason=wire)])
@@ -611,8 +611,8 @@ class TestEmptyTurnVerdict:
         assert "/srv/" not in driver.empty_turn_notice
 
     def test_a_stream_that_never_closed_the_turn_is_an_empty_reply(self) -> None:
-        from kiro_crew.acp.types import AcpEvent
-        from kiro_crew.messaging.driver import EMPTY_TURN_NOTICE_UNCLOSED
+        from aj_crew.acp.types import AcpEvent
+        from aj_crew.messaging.driver import EMPTY_TURN_NOTICE_UNCLOSED
 
         driver, renderer, _ = self._run([AcpEvent(kind=EVENT_TEXT_CHUNK, text="")])
         assert driver.completion_observed is False
@@ -624,7 +624,7 @@ class TestEmptyTurnVerdict:
     def test_a_stream_that_never_closed_still_flushes_the_text_it_carried(self) -> None:
         """The redactor withholds a trailing word until a flush; the terminal path
         flushes, and so must the exhausted one, or the verdict reads a buffer."""
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         driver, _renderer, accumulated = self._run([AcpEvent(kind=EVENT_TEXT_CHUNK, text="Done")])
         assert driver.completion_observed is False
@@ -634,8 +634,8 @@ class TestEmptyTurnVerdict:
 
     def test_a_productive_turn_whose_stream_never_closed_is_not_told_to_resend(self) -> None:
         """The tool already ran. "Send your message again" would run it twice."""
-        from kiro_crew.acp.types import AcpEvent
-        from kiro_crew.messaging.empty_turn_copy import EMPTY_TURN_CONTINUE, EMPTY_TURN_RESEND
+        from aj_crew.acp.types import AcpEvent
+        from aj_crew.messaging.empty_turn_copy import EMPTY_TURN_CONTINUE, EMPTY_TURN_RESEND
 
         driver, _renderer, _ = self._run(
             [AcpEvent(kind=EVENT_TOOL_CALL, tool_call_id="t1", title="Send the report")]
@@ -650,8 +650,8 @@ class TestEmptyTurnVerdict:
         """``STOP_REASON_TOOL_STALL`` is synthesised only after a tool ran, so the
         error wording for it can never be the resend wording; it still names
         the failure."""
-        from kiro_crew.acp.types import STOP_REASON_TOOL_STALL, AcpEvent
-        from kiro_crew.messaging.empty_turn_copy import EMPTY_TURN_CONTINUE, EMPTY_TURN_RESEND
+        from aj_crew.acp.types import STOP_REASON_TOOL_STALL, AcpEvent
+        from aj_crew.messaging.empty_turn_copy import EMPTY_TURN_CONTINUE, EMPTY_TURN_RESEND
 
         driver, _renderer, _ = self._run(
             [
@@ -671,8 +671,8 @@ class TestEmptyTurnVerdict:
     ) -> None:
         """The split is on work done, not on the terminal: a textless turn that
         ran nothing can be resent safely, whichever way it ended."""
-        from kiro_crew.acp.types import STOP_REASON_TOOL_STALL, AcpEvent
-        from kiro_crew.messaging.empty_turn_copy import EMPTY_TURN_RESEND
+        from aj_crew.acp.types import STOP_REASON_TOOL_STALL, AcpEvent
+        from aj_crew.messaging.empty_turn_copy import EMPTY_TURN_RESEND
 
         for events in (
             [AcpEvent(kind=EVENT_TEXT_CHUNK, text="")],
@@ -690,8 +690,8 @@ class TestOneStoryAcrossSurfaces:
     spelled in exactly one place."""
 
     def test_both_surfaces_read_the_sentences_from_the_shared_module(self) -> None:
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.messaging import driver, empty_turn_copy
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.messaging import driver, empty_turn_copy
 
         # ``is``, not ``==``: an identical literal re-spelled in either file
         # would compare equal and still be the drift this pins against.
@@ -708,8 +708,8 @@ class TestOneStoryAcrossSurfaces:
         import importlib
         import pkgutil
 
-        from kiro_crew.dashboard import chat_runner, chat_turn
-        from kiro_crew.messaging import driver, empty_turn_copy
+        from aj_crew.dashboard import chat_runner, chat_turn
+        from aj_crew.messaging import driver, empty_turn_copy
 
         # The runner's empty-turn copy is composed into it from these owners.
         owners = [
@@ -726,7 +726,7 @@ class TestOneStoryAcrossSurfaces:
         """A productive turn's sentence continues; a non-productive one resends;
         the refusal rephrases. No sentence asks for both, and none asks for
         neither -- a verdict with no remedy leaves the user waiting."""
-        from kiro_crew.messaging import empty_turn_copy as c
+        from aj_crew.messaging import empty_turn_copy as c
 
         resend = {
             c.EMPTY_TURN_NOTICE,

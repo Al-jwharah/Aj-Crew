@@ -47,7 +47,7 @@ async function shot(name, url, viewport, settle = 1800) {
         await json(route, {
           connected: false, connect_error: '', configured: false, read_only: false,
           bot_token_set: false, app_token_set: false, bot_token_preview: '', app_token_preview: '',
-          owner_id: '', command: 'kirocrew', allowed_enterprise_ids: [],
+          owner_id: '', command: 'ajcrew', allowed_enterprise_ids: [],
           reactions_enabled: true, show_thinking: false, session_folder: '',
         })
         return true

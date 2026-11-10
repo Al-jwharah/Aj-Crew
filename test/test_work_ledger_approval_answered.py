@@ -24,11 +24,11 @@ from test_work_ledger_tools import (  # noqa: F401 - the autouse fixtures ride a
     two_by_two,
 )
 
-from kiro_crew import work_ledger as wl
-from kiro_crew.dashboard import crew_work
-from kiro_crew.dashboard.handlers import work_ledger as routes
-from kiro_crew.dashboard.handlers import work_ledger_worker as worker_routes
-from kiro_crew.dashboard.handlers.work_ledger_board import awaits_person, with_worker_facts
+from aj_crew import work_ledger as wl
+from aj_crew.dashboard import crew_work
+from aj_crew.dashboard.handlers import work_ledger as routes
+from aj_crew.dashboard.handlers import work_ledger_worker as worker_routes
+from aj_crew.dashboard.handlers.work_ledger_board import awaits_person, with_worker_facts
 
 
 @pytest.fixture(autouse=True)
@@ -107,7 +107,7 @@ async def test_one_event_per_ask_and_a_new_report_asks_again(monkeypatch):
     # the two asks apart, as they are in real use.
     from datetime import datetime, timedelta, timezone
 
-    from kiro_crew import work_ledger_store, work_ledger_writes
+    from aj_crew import work_ledger_store, work_ledger_writes
 
     start = datetime(2026, 11, 4, 7, 0, tzinfo=timezone.utc)
     ticks = iter(range(10_000))
@@ -138,7 +138,7 @@ async def test_one_event_per_ask_and_a_new_report_asks_again(monkeypatch):
 async def test_two_answers_in_the_same_second_stay_two_events(monkeypatch):
     """Event ids are the stamp plus the text, and the answer text is fixed: the id of
     the report each answer meets keeps two same-second answers apart."""
-    from kiro_crew import work_ledger_store, work_ledger_writes
+    from aj_crew import work_ledger_store, work_ledger_writes
 
     for module in (work_ledger_store, work_ledger_writes):
         monkeypatch.setattr(module, "_now_iso", lambda: "2026-11-04T07:00:00+00:00")
@@ -195,7 +195,7 @@ async def test_a_newer_approval_report_is_not_answered_by_an_older_answer(monkey
     it was matched to, so the newer one still waits."""
     from datetime import datetime, timedelta, timezone
 
-    from kiro_crew import work_ledger_store, work_ledger_writes
+    from aj_crew import work_ledger_store, work_ledger_writes
 
     start = datetime(2026, 11, 4, 7, 0, tzinfo=timezone.utc)
     ticks = iter(range(10_000))

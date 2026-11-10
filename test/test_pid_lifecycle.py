@@ -23,18 +23,18 @@ from pid_lifecycle_helpers import (  # noqa: F401 -- fixtures are requested by n
     session_pid_file_fixture,
 )
 
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
 
 class TestTrackUntrack:
     def test_track_pid_creates_file(self, pid_file: Path) -> None:
-        from kiro_crew.session_pid import _track_pid
+        from aj_crew.session_pid import _track_pid
 
         _track_pid(12345)
         assert "12345" in pid_file.read_text(encoding="utf-8")
 
     def test_track_multiple(self, pid_file: Path) -> None:
-        from kiro_crew.session_pid import _track_pid
+        from aj_crew.session_pid import _track_pid
 
         _track_pid(111)
         _track_pid(222)
@@ -42,7 +42,7 @@ class TestTrackUntrack:
         assert lines == ["111", "222"]
 
     def test_untrack_pid(self, pid_file: Path) -> None:
-        from kiro_crew.session_pid import _track_pid, _untrack_pid
+        from aj_crew.session_pid import _track_pid, _untrack_pid
 
         _track_pid(111)
         _track_pid(222)
@@ -51,7 +51,7 @@ class TestTrackUntrack:
         assert lines == ["222"]
 
     def test_untrack_nonexistent(self, pid_file: Path) -> None:
-        from kiro_crew.session_pid import _track_pid, _untrack_pid
+        from aj_crew.session_pid import _track_pid, _untrack_pid
 
         _track_pid(111)
         _untrack_pid(999)  # should not crash
@@ -71,9 +71,9 @@ class TestTrackUntrack:
         3-field ``gw:pid:token``) and absent on others (2-field ``gw:pid``),
         which would otherwise make the expected value host-dependent.
         """
-        from kiro_crew.session_pid import _track_session_pid, _untrack_session_pid
+        from aj_crew.session_pid import _track_session_pid, _untrack_session_pid
 
-        monkeypatch.setattr("kiro_crew.session_pid._pid_start_token", lambda p: token)
+        monkeypatch.setattr("aj_crew.session_pid._pid_start_token", lambda p: token)
         _track_session_pid(111)
         _track_session_pid(222)
         _untrack_session_pid(111)
@@ -83,14 +83,14 @@ class TestTrackUntrack:
         assert lines == [f"{gw}:222{suffix}"]
 
     def test_untrack_session_pid_missing_file(self, session_pid_file: Path) -> None:
-        from kiro_crew.session_pid import _untrack_session_pid
+        from aj_crew.session_pid import _untrack_session_pid
 
         _untrack_session_pid(999)  # should not crash on missing file
         assert not session_pid_file.exists()
 
     def test_untrack_session_pid_other_gateway_untouched(self, session_pid_file: Path) -> None:
         """Untracking our PID must NOT remove other gateways' entries for same child PID."""
-        from kiro_crew.session_pid import _track_session_pid, _untrack_session_pid
+        from aj_crew.session_pid import _track_session_pid, _untrack_session_pid
 
         _track_session_pid(111)
         # Simulate another gateway's entry for the same child PID
@@ -101,27 +101,27 @@ class TestTrackUntrack:
         assert lines == ["99999:111"]
 
     def test_track_child_pids_with_parent(self, pid_file: Path) -> None:
-        from kiro_crew.session_pid import _track_child_pids
+        from aj_crew.session_pid import _track_child_pids
 
-        with patch("kiro_crew.session_pid._pid_start_token", return_value=None):
+        with patch("aj_crew.session_pid._pid_start_token", return_value=None):
             _track_child_pids({100: None, 200: None, 300: None}, parent_pid=999)
         lines = pid_file.read_text(encoding="utf-8").strip().splitlines()
         assert set(lines) == {"100:999", "200:999", "300:999"}
 
     def test_track_child_pids_dedup(self, pid_file: Path) -> None:
         """Duplicate child:parent entries should not be written."""
-        from kiro_crew.session_pid import _track_child_pids
+        from aj_crew.session_pid import _track_child_pids
 
-        with patch("kiro_crew.session_pid._pid_start_token", return_value=None):
+        with patch("aj_crew.session_pid._pid_start_token", return_value=None):
             _track_child_pids({100: None, 200: None}, parent_pid=999)
             _track_child_pids({100: None, 300: None}, parent_pid=999)
         lines = pid_file.read_text(encoding="utf-8").strip().splitlines()
         assert sorted(lines) == ["100:999", "200:999", "300:999"]
 
     def test_untrack_child_pids(self, pid_file: Path) -> None:
-        from kiro_crew.session_pid import _track_child_pids, _untrack_child_pids
+        from aj_crew.session_pid import _track_child_pids, _untrack_child_pids
 
-        with patch("kiro_crew.session_pid._pid_start_token", return_value=None):
+        with patch("aj_crew.session_pid._pid_start_token", return_value=None):
             _track_child_pids({100: None, 200: None, 300: None}, parent_pid=999)
         _untrack_child_pids({100: None, 300: None})
         lines = pid_file.read_text(encoding="utf-8").strip().splitlines()
@@ -129,10 +129,10 @@ class TestTrackUntrack:
 
     def test_untrack_child_pids_preserves_bare_pid(self, pid_file: Path) -> None:
         """Untracking child PIDs must not remove bare PID lines (kiro-cli parents)."""
-        from kiro_crew.session_pid import _track_child_pids, _track_pid, _untrack_child_pids
+        from aj_crew.session_pid import _track_child_pids, _track_pid, _untrack_child_pids
 
         _track_pid(100)  # bare parent line
-        with patch("kiro_crew.session_pid._pid_start_token", return_value=None):
+        with patch("aj_crew.session_pid._pid_start_token", return_value=None):
             _track_child_pids({100: None}, parent_pid=999)  # child line with same PID
         _untrack_child_pids({100: None})
         lines = pid_file.read_text(encoding="utf-8").strip().splitlines()
@@ -152,7 +152,7 @@ class TestTrackUntrack:
 
     @staticmethod
     def _pid_is(monkeypatch: pytest.MonkeyPatch, alive: bool) -> None:
-        import kiro_crew.session_pid as sp
+        import aj_crew.session_pid as sp
 
         monkeypatch.setattr(sp.platform_compat, "pid_exists", lambda p: alive)
 
@@ -160,13 +160,13 @@ class TestTrackUntrack:
         self, pid_file: Path, session_pid_file: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Dead pid, our token: both lines go, an unrelated root stays."""
-        from kiro_crew.session_pid import (
+        from aj_crew.session_pid import (
             _track_pid,
             _track_session_pid,
             _untrack_root_by_identity,
         )
 
-        monkeypatch.setattr("kiro_crew.session_pid._pid_start_token", lambda p: "tok-a")
+        monkeypatch.setattr("aj_crew.session_pid._pid_start_token", lambda p: "tok-a")
         self._pid_is(monkeypatch, alive=False)
         _track_pid(4242)
         _track_session_pid(4242)
@@ -181,13 +181,13 @@ class TestTrackUntrack:
         """THE finding: the dead root's number was handed to a fresh root this
         gateway already tracked, and its session line carries a different token.
         A token mismatch retains everything -- the bare line is never reached."""
-        from kiro_crew.session_pid import (
+        from aj_crew.session_pid import (
             _track_pid,
             _track_session_pid,
             _untrack_root_by_identity,
         )
 
-        monkeypatch.setattr("kiro_crew.session_pid._pid_start_token", lambda p: "tok-new")
+        monkeypatch.setattr("aj_crew.session_pid._pid_start_token", lambda p: "tok-new")
         # Even a probe that says DEAD must not reach the bare line here: the
         # session line is not ours, so nothing this call owns is on disk.
         self._pid_is(monkeypatch, alive=False)
@@ -205,13 +205,13 @@ class TestTrackUntrack:
         The session file cannot tell the number has a new holder; the kernel can.
         Our session line is retired, the bare line the two share stays because the
         number is alive, and that is a settled result."""
-        from kiro_crew.session_pid import (
+        from aj_crew.session_pid import (
             _track_pid,
             _track_session_pid,
             _untrack_root_by_identity,
         )
 
-        monkeypatch.setattr("kiro_crew.session_pid._pid_start_token", lambda p: "tok-a")
+        monkeypatch.setattr("aj_crew.session_pid._pid_start_token", lambda p: "tok-a")
         _track_pid(4242)
         _track_session_pid(4242)
         # The successor holds 4242 now: its own _track_pid dedups against the
@@ -228,7 +228,7 @@ class TestTrackUntrack:
         appends under: a successor cannot be mid-append when the answer is read,
         so a live answer means its bare line is either already there or is the
         one it is about to write itself -- retaining is never wrong."""
-        import kiro_crew.session_pid as sp
+        import aj_crew.session_pid as sp
 
         monkeypatch.setattr(sp, "_pid_start_token", lambda p: "tok-a")
         sp._track_pid(4242)
@@ -263,14 +263,14 @@ class TestTrackUntrack:
         retirement this call owes; when the bare `kiro_pids.txt` rewrite is refused
         the dead root's line survives, so a true answer would have the caller log a
         clean retirement over a registry that still names it."""
-        from kiro_crew import session_pid as session_pid_module
-        from kiro_crew.session_pid import (
+        from aj_crew import session_pid as session_pid_module
+        from aj_crew.session_pid import (
             _track_pid,
             _track_session_pid,
             _untrack_root_by_identity,
         )
 
-        monkeypatch.setattr("kiro_crew.session_pid._pid_start_token", lambda p: "tok-a")
+        monkeypatch.setattr("aj_crew.session_pid._pid_start_token", lambda p: "tok-a")
         self._pid_is(monkeypatch, alive=False)
         _track_pid(4242)
         _track_session_pid(4242)
@@ -283,7 +283,7 @@ class TestTrackUntrack:
                 return False
             return real_rewrite(path, text)
 
-        monkeypatch.setattr("kiro_crew.session_pid._rewrite_pid_file", refuse_the_bare_file)
+        monkeypatch.setattr("aj_crew.session_pid._rewrite_pid_file", refuse_the_bare_file)
         assert _untrack_root_by_identity(4242, "tok-a") is False
         # The half that did commit stays committed -- this is about the REPORT.
         assert session_pid_file.read_text(encoding="utf-8").strip() == ""
@@ -295,20 +295,20 @@ class TestTrackUntrack:
         """The FIRST write refused: the session line survives, so the bare line
         must not be touched either (the two are retired together or not at all)
         and the answer is False."""
-        from kiro_crew import session_pid as session_pid_module
-        from kiro_crew.session_pid import (
+        from aj_crew import session_pid as session_pid_module
+        from aj_crew.session_pid import (
             _track_pid,
             _track_session_pid,
             _untrack_root_by_identity,
         )
 
-        monkeypatch.setattr("kiro_crew.session_pid._pid_start_token", lambda p: "tok-a")
+        monkeypatch.setattr("aj_crew.session_pid._pid_start_token", lambda p: "tok-a")
         self._pid_is(monkeypatch, alive=False)
         _track_pid(4242)
         _track_session_pid(4242)
         real_rewrite = session_pid_module._rewrite_pid_file
         monkeypatch.setattr(
-            "kiro_crew.session_pid._rewrite_pid_file",
+            "aj_crew.session_pid._rewrite_pid_file",
             lambda path, text: False if path == session_pid_file else real_rewrite(path, text),
         )
         assert _untrack_root_by_identity(4242, "tok-a") is False
@@ -324,12 +324,12 @@ class TestTrackUntrack:
         file is THAT token. On the plain-append path no probe is made at all, and
         on the replacement path the probe is an occupancy check whose value is
         never written (see the test below)."""
-        from kiro_crew.session_pid import _track_session_pid
+        from aj_crew.session_pid import _track_session_pid
 
         def _no_probe(pid: int) -> str:
             raise AssertionError("the tracker re-probed a token it was handed")
 
-        monkeypatch.setattr("kiro_crew.session_pid._pid_start_token", _no_probe)
+        monkeypatch.setattr("aj_crew.session_pid._pid_start_token", _no_probe)
         _track_session_pid(4242, "tok-spawn")
         assert (
             session_pid_file.read_text(encoding="utf-8").strip() == f"{os.getpid()}:4242:tok-spawn"
@@ -344,11 +344,11 @@ class TestTrackUntrack:
         live root's only record -- and the number names the successor, not the
         process this token belongs to. Re-reading the identity under the lock says
         so; nothing is written."""
-        from kiro_crew.session_pid import _track_session_pid
+        from aj_crew.session_pid import _track_session_pid
 
         session_pid_file.write_text(f"{os.getpid()}:4242:tok-succ\n")
         # The number is the successor's now: the live identity is ITS token.
-        monkeypatch.setattr("kiro_crew.session_pid._pid_start_token", lambda p: "tok-succ")
+        monkeypatch.setattr("aj_crew.session_pid._pid_start_token", lambda p: "tok-succ")
         _track_session_pid(4242, "tok-old")
         assert (
             session_pid_file.read_text(encoding="utf-8").strip() == f"{os.getpid()}:4242:tok-succ"
@@ -362,11 +362,11 @@ class TestTrackUntrack:
         Keeping the stale line is the hole identity-bound retirement fell through
         (the successor never got a line, so nothing about it was in this file);
         the line is replaced, and the file holds one line for the number."""
-        from kiro_crew.session_pid import _track_session_pid
+        from aj_crew.session_pid import _track_session_pid
 
         session_pid_file.write_text(f"{os.getpid()}:4242:tok-old\n{os.getpid()}:7:tok-x\n")
         # The number still names OUR process: the occupancy re-read agrees.
-        monkeypatch.setattr("kiro_crew.session_pid._pid_start_token", lambda p: "tok-new")
+        monkeypatch.setattr("aj_crew.session_pid._pid_start_token", lambda p: "tok-new")
         _track_session_pid(4242, "tok-new")
         lines = session_pid_file.read_text(encoding="utf-8").strip().splitlines()
         assert lines == [f"{os.getpid()}:7:tok-x", f"{os.getpid()}:4242:tok-new"]
@@ -377,10 +377,10 @@ class TestTrackUntrack:
         """One line per number holds whatever order the file lists them in. A
         stale predecessor line ahead of our own exact entry must not make the
         re-track return early and leave both standing."""
-        from kiro_crew.session_pid import _track_session_pid
+        from aj_crew.session_pid import _track_session_pid
 
         session_pid_file.write_text(f"{os.getpid()}:4242:tok-old\n{os.getpid()}:4242:tok-new\n")
-        monkeypatch.setattr("kiro_crew.session_pid._pid_start_token", lambda p: "tok-new")
+        monkeypatch.setattr("aj_crew.session_pid._pid_start_token", lambda p: "tok-new")
         _track_session_pid(4242, "tok-new")
         lines = session_pid_file.read_text(encoding="utf-8").strip().splitlines()
         assert lines == [f"{os.getpid()}:4242:tok-new"]
@@ -388,7 +388,7 @@ class TestTrackUntrack:
     def test_track_session_pid_exact_retrack_is_a_no_op(
         self, session_pid_file: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.session_pid import _track_session_pid
+        from aj_crew.session_pid import _track_session_pid
 
         _track_session_pid(4242, "tok-a")
         _track_session_pid(4242, "tok-a")
@@ -400,10 +400,10 @@ class TestTrackUntrack:
     ) -> None:
         """No identity to offer proves nothing about who holds the number, so a
         token-less track leaves a line that does carry one exactly as it is."""
-        from kiro_crew.session_pid import _track_session_pid
+        from aj_crew.session_pid import _track_session_pid
 
         session_pid_file.write_text(f"{os.getpid()}:4242:tok-a\n")
-        monkeypatch.setattr("kiro_crew.session_pid._pid_start_token", lambda p: None)
+        monkeypatch.setattr("aj_crew.session_pid._pid_start_token", lambda p: None)
         _track_session_pid(4242)
         assert session_pid_file.read_text(encoding="utf-8").strip() == f"{os.getpid()}:4242:tok-a"
 
@@ -413,11 +413,11 @@ class TestTrackUntrack:
         """Failing to record a live root is the unrecoverable direction: a root
         in neither file is unreachable by every reaper. A refused rewrite must
         surface, not read as recorded."""
-        from kiro_crew.session_pid import _track_session_pid
+        from aj_crew.session_pid import _track_session_pid
 
         session_pid_file.write_text(f"{os.getpid()}:4242:tok-old\n")
-        monkeypatch.setattr("kiro_crew.session_pid._pid_start_token", lambda p: "tok-new")
-        monkeypatch.setattr("kiro_crew.session_pid._rewrite_pid_file", lambda path, text: False)
+        monkeypatch.setattr("aj_crew.session_pid._pid_start_token", lambda p: "tok-new")
+        monkeypatch.setattr("aj_crew.session_pid._rewrite_pid_file", lambda path, text: False)
         with pytest.raises(OSError):
             _track_session_pid(4242, "tok-new")
 
@@ -428,26 +428,26 @@ class TestTrackUntrack:
         touched -- not even a bare line whose pid the probe would call dead. The
         sweep reaps a dead entry by liveness; erasing a live one by number is the
         failure this guard exists to prevent."""
-        from kiro_crew.session_pid import (
+        from aj_crew.session_pid import (
             _track_pid,
             _track_session_pid,
             _untrack_root_by_identity,
         )
 
-        monkeypatch.setattr("kiro_crew.session_pid._pid_start_token", lambda p: None)
+        monkeypatch.setattr("aj_crew.session_pid._pid_start_token", lambda p: None)
         self._pid_is(monkeypatch, alive=False)
         _track_pid(4242)
         _track_session_pid(4242)  # legacy token-less line
         # "Touches nothing" means the registries are not even opened: with no
         # identity to compare there is no line this call could own.
         monkeypatch.setattr(
-            "kiro_crew.session_pid._session_pid_file_path",
+            "aj_crew.session_pid._session_pid_file_path",
             lambda: pytest.fail("no token: the session registry must not be read"),
         )
         assert _untrack_root_by_identity(4242, None) is False
         assert _untrack_root_by_identity(4242, "") is False
         monkeypatch.setattr(
-            "kiro_crew.session_pid._session_pid_file_path", lambda: session_pid_file
+            "aj_crew.session_pid._session_pid_file_path", lambda: session_pid_file
         )
         assert _untrack_root_by_identity(4242, "tok-a") is False
         assert session_pid_file.read_text(encoding="utf-8").strip() == f"{os.getpid()}:4242"
@@ -455,10 +455,10 @@ class TestTrackUntrack:
 
     def test_replace_child_pids_rewrites_only_the_children_it_names(self, pid_file: Path) -> None:
         """A whole-set write for the caller's OWN children, nothing else."""
-        from kiro_crew.session_pid import _replace_child_pids, _track_child_pids, _track_pid
+        from aj_crew.session_pid import _replace_child_pids, _track_child_pids, _track_pid
 
         _track_pid(100)  # bare root line, another owner's business
-        with patch("kiro_crew.session_pid._pid_start_token", return_value=None):
+        with patch("aj_crew.session_pid._pid_start_token", return_value=None):
             _track_child_pids({200: None, 300: None}, parent_pid=999)
             _track_child_pids({400: None}, parent_pid=888)  # a different parent
 
@@ -480,9 +480,9 @@ class TestTrackUntrack:
         still tracked under it. Wiping the block by owner alone would untrack
         that survivor permanently — the leak this file exists to prevent.
         """
-        from kiro_crew.session_pid import _replace_child_pids, _track_child_pids
+        from aj_crew.session_pid import _replace_child_pids, _track_child_pids
 
-        with patch("kiro_crew.session_pid._pid_start_token", return_value=None):
+        with patch("aj_crew.session_pid._pid_start_token", return_value=None):
             _track_child_pids({777: None}, parent_pid=999)  # an older runtime's survivor
 
         assert _replace_child_pids({300: ("t300", b"x")}, parent_pid=999) is True
@@ -500,13 +500,13 @@ class TestTrackUntrack:
         token, and the sweep compares live against recorded — both the
         stranger's, so they agree and it kills an unrelated process.
         """
-        from kiro_crew.session_pid import _replace_child_pids, _track_child_pids
+        from aj_crew.session_pid import _replace_child_pids, _track_child_pids
 
-        with patch("kiro_crew.session_pid._pid_start_token", return_value="old"):
+        with patch("aj_crew.session_pid._pid_start_token", return_value="old"):
             _track_child_pids({200: None}, parent_pid=999)
         assert pid_file.read_text(encoding="utf-8").strip() == "200:999:old"
 
-        with patch("kiro_crew.session_pid._pid_start_token", return_value="live-stranger") as live:
+        with patch("aj_crew.session_pid._pid_start_token", return_value="live-stranger") as live:
             assert _replace_child_pids({200: ("recorded", b"x")}, parent_pid=999) is True
 
         live.assert_not_called()
@@ -514,7 +514,7 @@ class TestTrackUntrack:
 
     def test_replace_child_pids_falls_back_to_two_fields(self, pid_file: Path) -> None:
         """An identity that cannot be a field leaves the sweep nothing to match."""
-        from kiro_crew.session_pid import _replace_child_pids
+        from aj_crew.session_pid import _replace_child_pids
 
         assert _replace_child_pids({200: (None, b"x"), 300: ("has:colon", b"y")}, 999) is True
 
@@ -522,18 +522,18 @@ class TestTrackUntrack:
         assert lines == {"200:999", "300:999"}
 
     def test_replace_child_pids_drops_a_parents_last_child(self, pid_file: Path) -> None:
-        from kiro_crew.session_pid import _replace_child_pids, _track_child_pids
+        from aj_crew.session_pid import _replace_child_pids, _track_child_pids
 
-        with patch("kiro_crew.session_pid._pid_start_token", return_value=None):
+        with patch("aj_crew.session_pid._pid_start_token", return_value=None):
             _track_child_pids({200: None}, parent_pid=999)
 
         assert _replace_child_pids({}, parent_pid=999, drop=(200,)) is True
         assert pid_file.read_text(encoding="utf-8").strip() == ""
 
     def test_replace_child_pids_with_nothing_named_writes_nothing(self, pid_file: Path) -> None:
-        from kiro_crew.session_pid import _replace_child_pids, _track_child_pids
+        from aj_crew.session_pid import _replace_child_pids, _track_child_pids
 
-        with patch("kiro_crew.session_pid._pid_start_token", return_value=None):
+        with patch("aj_crew.session_pid._pid_start_token", return_value=None):
             _track_child_pids({200: None}, parent_pid=999)
 
         assert _replace_child_pids({}, parent_pid=999) is True
@@ -541,14 +541,14 @@ class TestTrackUntrack:
 
     def test_replace_child_pids_reports_a_failed_write(self, pid_file: Path) -> None:
         """The caller publishes nothing on False, so the answer must be truthful."""
-        from kiro_crew.session_pid import _replace_child_pids
+        from aj_crew.session_pid import _replace_child_pids
 
-        with patch("kiro_crew.session_pid._rewrite_pid_file", return_value=False):
+        with patch("aj_crew.session_pid._rewrite_pid_file", return_value=False):
             assert _replace_child_pids({200: ("t", b"x")}, parent_pid=999) is False
 
     def test_replace_child_pids_refuses_a_parentless_call(self, pid_file: Path) -> None:
         """parent_pid=0 names no owner's block, so there is nothing to replace."""
-        from kiro_crew.session_pid import _replace_child_pids
+        from aj_crew.session_pid import _replace_child_pids
 
         assert _replace_child_pids({200: ("t", b"x")}, parent_pid=0) is False
 
@@ -561,12 +561,12 @@ class TestFindOrphanMcpCandidates:
 
     def test_excludes_pids_in_active_set(self) -> None:
         """PIDs present in active_pids are never returned as candidates."""
-        from kiro_crew.session_pid import find_orphan_mcp_candidates
+        from aj_crew.session_pid import find_orphan_mcp_candidates
 
         with (
-            patch("kiro_crew.session_pid._our_orphan_pids", return_value=[100, 200]),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
-            patch.object(Path, "read_bytes", return_value=b"kirocrew_sandbox_abc.py"),
+            patch("aj_crew.session_pid._our_orphan_pids", return_value=[100, 200]),
+            patch("aj_crew.session_pid.sys") as mock_sys,
+            patch.object(Path, "read_bytes", return_value=b"ajcrew_sandbox_abc.py"),
         ):
             mock_sys.platform = "linux"
             result = find_orphan_mcp_candidates(active_pids={100, 200})
@@ -581,18 +581,18 @@ class TestFindOrphanMcpCandidates:
         The candidate is already gone, which is what the sweep wants, so the
         expected TOCTOU race must not emit exc_info.
         """
-        from kiro_crew.session_pid import find_orphan_mcp_candidates
+        from aj_crew.session_pid import find_orphan_mcp_candidates
 
         with (
-            patch("kiro_crew.session_pid._our_orphan_pids", return_value=[22620]),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid._our_orphan_pids", return_value=[22620]),
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(
                 Path,
                 "read_bytes",
                 side_effect=FileNotFoundError(2, "No such file or directory"),
             ),
             patch("os.getpid", return_value=1),
-            caplog.at_level("DEBUG", logger="kiro_crew.session_pid"),
+            caplog.at_level("DEBUG", logger="aj_crew.session_pid"),
         ):
             mock_sys.platform = "linux"
             result = find_orphan_mcp_candidates(active_pids=set())
@@ -607,17 +607,17 @@ class TestFindOrphanMcpCandidates:
         self, caplog: pytest.LogCaptureFixture
     ) -> None:
         """`ps -p <dead-pid>` exits non-zero — same race, same quiet handling."""
-        from kiro_crew.session_pid import find_orphan_mcp_candidates
+        from aj_crew.session_pid import find_orphan_mcp_candidates
 
         with (
-            patch("kiro_crew.session_pid._our_orphan_pids", return_value=[9140]),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid._our_orphan_pids", return_value=[9140]),
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch(
-                "kiro_crew.session_pid.subprocess.check_output",
+                "aj_crew.session_pid.subprocess.check_output",
                 side_effect=subprocess.CalledProcessError(1, "ps"),
             ),
             patch("os.getpid", return_value=1),
-            caplog.at_level("DEBUG", logger="kiro_crew.session_pid"),
+            caplog.at_level("DEBUG", logger="aj_crew.session_pid"),
         ):
             mock_sys.platform = "darwin"
             result = find_orphan_mcp_candidates(active_pids=set())
@@ -629,14 +629,14 @@ class TestFindOrphanMcpCandidates:
 
     def test_unexpected_probe_error_keeps_traceback(self, caplog: pytest.LogCaptureFixture) -> None:
         """A genuinely unexpected probe failure still logs exc_info."""
-        from kiro_crew.session_pid import find_orphan_mcp_candidates
+        from aj_crew.session_pid import find_orphan_mcp_candidates
 
         with (
-            patch("kiro_crew.session_pid._our_orphan_pids", return_value=[555]),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid._our_orphan_pids", return_value=[555]),
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(Path, "read_bytes", side_effect=PermissionError(13, "denied")),
             patch("os.getpid", return_value=1),
-            caplog.at_level("DEBUG", logger="kiro_crew.session_pid"),
+            caplog.at_level("DEBUG", logger="aj_crew.session_pid"),
         ):
             mock_sys.platform = "linux"
             result = find_orphan_mcp_candidates(active_pids=set())
@@ -646,18 +646,18 @@ class TestFindOrphanMcpCandidates:
         assert len(records) == 1
         assert records[0].exc_info is not None
 
-    def test_excludes_non_kirocrew_processes(self) -> None:
+    def test_excludes_non_ajcrew_processes(self) -> None:
         """Orphans without known MCP entrypoint markers are skipped."""
-        from kiro_crew.session_pid import find_orphan_mcp_candidates
+        from aj_crew.session_pid import find_orphan_mcp_candidates
 
         with (
-            patch("kiro_crew.session_pid._our_orphan_pids", return_value=[300]),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid._our_orphan_pids", return_value=[300]),
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(
                 Path, "read_bytes", return_value=b"/usr/bin/python3\x00some_other_script.py"
             ),
             patch("os.getpid", return_value=1),
-            patch("kiro_crew.session_pid._linux_pid_age", return_value=300.0),
+            patch("aj_crew.session_pid._linux_pid_age", return_value=300.0),
         ):
             mock_sys.platform = "linux"
             result = find_orphan_mcp_candidates(active_pids=set())
@@ -665,15 +665,15 @@ class TestFindOrphanMcpCandidates:
         assert result == []
 
     def test_excludes_non_entrypoint_vim_grep(self) -> None:
-        """Non-Python processes mentioning kirocrew in args (e.g. vim, grep) are skipped."""
-        from kiro_crew.session_pid import find_orphan_mcp_candidates
+        """Non-Python processes mentioning ajcrew in args (e.g. vim, grep) are skipped."""
+        from aj_crew.session_pid import find_orphan_mcp_candidates
 
         with (
-            patch("kiro_crew.session_pid._our_orphan_pids", return_value=[350]),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
-            patch.object(Path, "read_bytes", return_value=b"vim\x00/tmp/kirocrew_sandbox_abc.log"),
+            patch("aj_crew.session_pid._our_orphan_pids", return_value=[350]),
+            patch("aj_crew.session_pid.sys") as mock_sys,
+            patch.object(Path, "read_bytes", return_value=b"vim\x00/tmp/ajcrew_sandbox_abc.log"),
             patch("os.getpid", return_value=1),
-            patch("kiro_crew.session_pid._linux_pid_age", return_value=300.0),
+            patch("aj_crew.session_pid._linux_pid_age", return_value=300.0),
         ):
             mock_sys.platform = "linux"
             result = find_orphan_mcp_candidates(active_pids=set())
@@ -689,40 +689,40 @@ class TestFindOrphanMcpCandidates:
         must exist on disk: a gatewayd whose socket is GONE is deliberately
         sweepable via the reachability path (_is_sweepable_orphan_gatewayd).
         """
-        from kiro_crew.session_pid import find_orphan_mcp_candidates
+        from aj_crew.session_pid import find_orphan_mcp_candidates
 
         live_sock = tmp_path / "gw.sock"
         live_sock.write_text("")
         cmdline = (
-            b"python3\x00-m\x00kiro_crew.mcp_gateway.gatewayd"
+            b"python3\x00-m\x00aj_crew.mcp_gateway.gatewayd"
             b"\x00--socket\x00" + os.fsencode(str(live_sock))
         )
         with (
-            patch("kiro_crew.session_pid._our_orphan_pids", return_value=[360]),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid._our_orphan_pids", return_value=[360]),
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(Path, "read_bytes", return_value=cmdline),
             patch("os.getpid", return_value=1),
-            patch("kiro_crew.session_pid._linux_pid_age", return_value=300.0),
+            patch("aj_crew.session_pid._linux_pid_age", return_value=300.0),
         ):
             mock_sys.platform = "linux"
             result = find_orphan_mcp_candidates(active_pids=set())
 
         assert result == []
 
-    def test_includes_kirocrew_orphan_not_in_active(self) -> None:
+    def test_includes_ajcrew_orphan_not_in_active(self) -> None:
         """Orphaned process with sandbox wrapper entrypoint and not in active set is a candidate."""
-        from kiro_crew.session_pid import find_orphan_mcp_candidates
+        from aj_crew.session_pid import find_orphan_mcp_candidates
 
         with (
-            patch("kiro_crew.session_pid._our_orphan_pids", return_value=[400]),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid._our_orphan_pids", return_value=[400]),
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(
                 Path,
                 "read_bytes",
-                return_value=b"python3\x00/tmp/kirocrew_sandbox_xyz.py",
+                return_value=b"python3\x00/tmp/ajcrew_sandbox_xyz.py",
             ),
             patch("os.getpid", return_value=1),
-            patch("kiro_crew.session_pid._linux_pid_age", return_value=300.0),
+            patch("aj_crew.session_pid._linux_pid_age", return_value=300.0),
         ):
             mock_sys.platform = "linux"
             result = find_orphan_mcp_candidates(active_pids=set())
@@ -731,10 +731,10 @@ class TestFindOrphanMcpCandidates:
 
     def test_excludes_own_pid(self) -> None:
         """The gateway's own PID is never returned."""
-        from kiro_crew.session_pid import find_orphan_mcp_candidates
+        from aj_crew.session_pid import find_orphan_mcp_candidates
 
         with (
-            patch("kiro_crew.session_pid._our_orphan_pids", return_value=[999]),
+            patch("aj_crew.session_pid._our_orphan_pids", return_value=[999]),
             patch("os.getpid", return_value=999),
         ):
             result = find_orphan_mcp_candidates(active_pids=set())
@@ -742,7 +742,7 @@ class TestFindOrphanMcpCandidates:
         assert result == []
 
     def test_does_not_match_builder_mcp(self) -> None:
-        """builder-mcp is NOT a process Kiro Crew spawns in this public fork.
+        """builder-mcp is NOT a process Aj Crew spawns in this public fork.
 
         Regression guard: the upstream project's reaper lists ``builder-mcp`` (an
         internal server it manages), but the de-Amazoned fork never spawns
@@ -750,14 +750,14 @@ class TestFindOrphanMcpCandidates:
         ``builder-mcp`` orphan would SIGKILL an unrelated process, so the marker
         is deliberately absent here.
         """
-        from kiro_crew.session_pid import find_orphan_mcp_candidates
+        from aj_crew.session_pid import find_orphan_mcp_candidates
 
         with (
-            patch("kiro_crew.session_pid._our_orphan_pids", return_value=[410]),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid._our_orphan_pids", return_value=[410]),
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(Path, "read_bytes", return_value=b"builder-mcp\x00--stdio"),
             patch("os.getpid", return_value=1),
-            patch("kiro_crew.session_pid._linux_pid_age", return_value=300.0),
+            patch("aj_crew.session_pid._linux_pid_age", return_value=300.0),
         ):
             mock_sys.platform = "linux"
             result = find_orphan_mcp_candidates(active_pids=set())
@@ -766,17 +766,17 @@ class TestFindOrphanMcpCandidates:
 
     def test_matches_macos_space_separated_cmdline(self) -> None:
         """macOS ps output (space-separated) is correctly parsed."""
-        from kiro_crew.session_pid import find_orphan_mcp_candidates
+        from aj_crew.session_pid import find_orphan_mcp_candidates
 
         def mock_check_output(cmd, **kwargs):
             # Single combined ps call returns "<etime> <command...>"
             if "etime=" in cmd and "command=" in cmd:
-                return b"   05:00 python3 /tmp/kirocrew_sandbox_xyz.py"
+                return b"   05:00 python3 /tmp/ajcrew_sandbox_xyz.py"
             return b""
 
         with (
-            patch("kiro_crew.session_pid._our_orphan_pids", return_value=[420]),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid._our_orphan_pids", return_value=[420]),
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch(
                 "subprocess.check_output",
                 side_effect=mock_check_output,
@@ -790,18 +790,18 @@ class TestFindOrphanMcpCandidates:
 
     def test_skips_young_processes(self) -> None:
         """Processes younger than _ORPHAN_MIN_AGE_SECONDS are never candidates."""
-        from kiro_crew.session_pid import find_orphan_mcp_candidates
+        from aj_crew.session_pid import find_orphan_mcp_candidates
 
         with (
-            patch("kiro_crew.session_pid._our_orphan_pids", return_value=[450]),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid._our_orphan_pids", return_value=[450]),
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(
                 Path,
                 "read_bytes",
-                return_value=b"python3\x00/tmp/kirocrew_sandbox_new.py",
+                return_value=b"python3\x00/tmp/ajcrew_sandbox_new.py",
             ),
             patch("os.getpid", return_value=1),
-            patch("kiro_crew.session_pid._linux_pid_age", return_value=50.0),
+            patch("aj_crew.session_pid._linux_pid_age", return_value=50.0),
         ):
             mock_sys.platform = "linux"
             result = find_orphan_mcp_candidates(active_pids=set())
@@ -836,7 +836,7 @@ class TestReclaimOwnsEveryHarnessItTracked:
         mode is silent — the entry is dropped and the process spared. So the omission
         has to be a red test rather than something an operator finds later.
         """
-        from kiro_crew.agent_sdk.backends import (
+        from aj_crew.agent_sdk.backends import (
             ACP_BACKEND_PROCESS_NAMES,
             ACP_BACKENDS_KNOWN,
             agent_process_markers,
@@ -855,7 +855,7 @@ class TestReclaimOwnsEveryHarnessItTracked:
 
     def test_the_self_served_names_come_from_the_launch_table(self) -> None:
         """The three harnesses with a launch row are not spelled twice."""
-        from kiro_crew.agent_sdk.backends import (
+        from aj_crew.agent_sdk.backends import (
             ACP_BACKEND_LAUNCH,
             ACP_BACKEND_PROCESS_NAMES,
         )
@@ -871,26 +871,26 @@ class TestReclaimOwnsEveryHarnessItTracked:
 
         The names are declared once, in the registry, and ``acp.client`` indexes it --
         the import direction that is allowed, since ``agent_sdk.backends`` is a
-        stdlib-only leaf while ``session_pid`` may not import ``kiro_crew.acp`` at all
+        stdlib-only leaf while ``session_pid`` may not import ``aj_crew.acp`` at all
         (``check_agent_sdk_boundary`` forbids it, ``test_agent_lifecycle_cycle`` pins the
         absence). This asserts the equality a re-spelling would break, so a literal
         reintroduced in either place is caught here rather than by a reclaim sweep
         failing to recognise the process the adapter spawns.
         """
-        from kiro_crew.acp import runtime as acp_runtime
-        from kiro_crew.acp.client import (
+        from aj_crew.acp import runtime as acp_runtime
+        from aj_crew.acp.client import (
             CLAUDE_ACP_BIN,
             CODEX_ACP_BIN,
             KIRO_CLI_BIN,
             PI_ACP_BIN,
         )
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             ACP_BACKEND_CLAUDE,
             ACP_BACKEND_CODEX,
             ACP_BACKEND_KIRO,
             ACP_BACKEND_PI,
         )
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_PROCESS_NAMES
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_PROCESS_NAMES
 
         assert ACP_BACKEND_PROCESS_NAMES[ACP_BACKEND_CLAUDE] == CLAUDE_ACP_BIN
         assert ACP_BACKEND_PROCESS_NAMES[ACP_BACKEND_CODEX] == CODEX_ACP_BIN
@@ -922,7 +922,7 @@ class TestReclaimOwnsEveryHarnessItTracked:
         substring test over the whole cmdline on Linux and macOS, so this is the
         question the reclaim actually asks.
         """
-        from kiro_crew.session_pid import _MANAGED_AGENT_MARKERS
+        from aj_crew.session_pid import _MANAGED_AGENT_MARKERS
 
         assert any(marker in cmdline for marker in _MANAGED_AGENT_MARKERS), (
             f"{backend}'s orphan reads as unmanaged, so the reclaim would drop its "
@@ -946,7 +946,7 @@ class TestReclaimOwnsEveryHarnessItTracked:
         the whole command line, a recycled PID landing on any of these passes the
         recycle guard and is signalled.
         """
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
         assert _cmdline_names_a_harness(cmdline) is False
 
@@ -983,7 +983,7 @@ class TestReclaimOwnsEveryHarnessItTracked:
         missed reclaim -- the orphan is SPARED, not wrongly killed -- which is the direction
         this module fails in everywhere else.
         """
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
         assert _cmdline_names_a_harness(cmdline) is True
 
@@ -1009,7 +1009,7 @@ class TestReclaimOwnsEveryHarnessItTracked:
         the script slot opens, and what closes the hole is that only the FIRST non-flag
         token after argv0 is read.
         """
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
         assert _cmdline_names_a_harness(cmdline) is False
 
@@ -1031,7 +1031,7 @@ class TestReclaimOwnsEveryHarnessItTracked:
         REAL adapter is treated as unmanaged -- the leak this module exists to close,
         reintroduced by the tokenizer.
         """
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
         assert _cmdline_names_a_harness(cmdline) is True
 
@@ -1090,7 +1090,7 @@ class TestReclaimOwnsEveryHarnessItTracked:
         them made an unrelated application answer for a harness. Comparing a path this
         repository publishes closes the axis, because the set is one we own.
         """
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
         assert _cmdline_names_a_harness(cmdline) is expected
 
@@ -1102,11 +1102,11 @@ class TestReclaimOwnsEveryHarnessItTracked:
         authority to signal a process Crew did not start. Derived from one table so
         neither can happen, and asserted here so the derivation cannot quietly stop.
         """
-        from kiro_crew.agent_sdk.backends import (
+        from aj_crew.agent_sdk.backends import (
             ACP_BACKEND_NODE_ADAPTER_PACKAGES,
             node_adapter_entry_relpaths,
         )
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
         relpaths = node_adapter_entry_relpaths()
         assert len(relpaths) == len(ACP_BACKEND_NODE_ADAPTER_PACKAGES), (
@@ -1168,7 +1168,7 @@ class TestReclaimOwnsEveryHarnessItTracked:
         boolean one needs a table of Node's flags, which is an open set and a moving one;
         index 1 is neither.
         """
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
         assert _cmdline_names_a_harness(cmdline) is expected
 
@@ -1179,7 +1179,7 @@ class TestReclaimOwnsEveryHarnessItTracked:
         widens the slot in which a harness name is accepted, so one added on speculation
         grants authority for a shape nothing produces.
         """
-        from kiro_crew.session_pid import _HARNESS_INTERPRETERS
+        from aj_crew.session_pid import _HARNESS_INTERPRETERS
 
         assert {name.decode() for name in _HARNESS_INTERPRETERS} == {
             "node",
@@ -1197,14 +1197,14 @@ class TestReclaimOwnsEveryHarnessItTracked:
         excludes a process from being swept; on the untracked-runtime report it names
         something that is not a harness at all.
         """
-        from kiro_crew.session_pid import _MANAGED_AGENT_BASENAMES
+        from aj_crew.session_pid import _MANAGED_AGENT_BASENAMES
 
         assert basename.encode() not in _MANAGED_AGENT_BASENAMES
 
     def test_every_harness_basename_matches_exactly(self) -> None:
         """The exact set still covers every harness, plus the two legacy spellings."""
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_PROCESS_NAMES
-        from kiro_crew.session_pid import _MANAGED_AGENT_BASENAMES
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_PROCESS_NAMES
+        from aj_crew.session_pid import _MANAGED_AGENT_BASENAMES
 
         for name in ACP_BACKEND_PROCESS_NAMES.values():
             assert name.encode() in _MANAGED_AGENT_BASENAMES, name
@@ -1222,7 +1222,7 @@ class TestReclaimOwnsEveryHarnessItTracked:
         set is strictly more collision-prone than the two-name pair it replaced, so
         tightening only Linux would leave macOS worse off than before.
         """
-        import kiro_crew.session_pid as sp
+        import aj_crew.session_pid as sp
 
         monkeypatch.setattr(sp.sys, "platform", "darwin")
         monkeypatch.setattr(sp, "_pid_cmdline", lambda pid, proc_root=None: b"")
@@ -1255,7 +1255,7 @@ class TestReclaimOwnsEveryHarnessItTracked:
         this pins that the narrowness is a selection rather than a stale copy. An empty
         selection would silently disarm the reaper, so that is checked too.
         """
-        from kiro_crew.session_pid import (
+        from aj_crew.session_pid import (
             _MANAGED_AGENT_BASENAMES,
             _MANAGED_AGENT_RUNTIME_BASENAMES,
             _SCOPE_REAP_ANCHOR_NAMES,
@@ -1293,7 +1293,7 @@ class TestReclaimOwnsEveryHarnessItTracked:
         entry recorded, so dropping the record would spare the process and then make it
         unfindable by every sweep. A token-less entry has no such proof and is pruned.
         """
-        from kiro_crew.session_pid import cleanup_orphaned_session_roots
+        from aj_crew.session_pid import cleanup_orphaned_session_roots
 
         settled = "999999:99998:sometoken"
         tokenless = "999999:99997"
@@ -1301,16 +1301,16 @@ class TestReclaimOwnsEveryHarnessItTracked:
         kills: list[tuple[int, int]] = []
 
         with (
-            patch("kiro_crew.session_pid._is_managed_agent_process", return_value=False),
-            patch("kiro_crew.session_pid._pid_start_token", return_value="sometoken"),
+            patch("aj_crew.session_pid._is_managed_agent_process", return_value=False),
+            patch("aj_crew.session_pid._pid_start_token", return_value="sometoken"),
             patch(
-                "kiro_crew.session_pid.platform_compat.pid_liveness",
+                "aj_crew.session_pid.platform_compat.pid_liveness",
                 side_effect=self._dead_gateway_liveness(999999),
             ),
-            patch("kiro_crew.session_pid.platform_compat.get_ppid", return_value=1),
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.session_pid.platform_compat.get_ppid", return_value=1),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", return_value=True),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda p, s: kills.append((p, s)),
             ),
         ):
@@ -1335,7 +1335,7 @@ class TestReclaimOwnsEveryHarnessItTracked:
         is covered for the sandboxed shape as well as the periodic sweep -- an entry that
         takes the retain branch here survives a gateway restart too.
         """
-        from kiro_crew.session_pid import cleanup_orphaned_session_roots
+        from aj_crew.session_pid import cleanup_orphaned_session_roots
 
         entry = "999999:99998:sometoken"
         session_pid_file.write_text(entry + "\n")
@@ -1343,17 +1343,17 @@ class TestReclaimOwnsEveryHarnessItTracked:
         kills: list[tuple[int, int]] = []
 
         with (
-            patch("kiro_crew.session_pid._pid_cmdline", return_value=cmdline),
-            patch("kiro_crew.session_pid._pid_start_token", return_value="sometoken"),
+            patch("aj_crew.session_pid._pid_cmdline", return_value=cmdline),
+            patch("aj_crew.session_pid._pid_start_token", return_value="sometoken"),
             patch(
-                "kiro_crew.session_pid.platform_compat.pid_liveness",
+                "aj_crew.session_pid.platform_compat.pid_liveness",
                 side_effect=self._dead_gateway_liveness(999999),
             ),
-            patch("kiro_crew.session_pid.platform_compat.get_ppid", return_value=1),
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.session_pid.platform_compat.get_ppid", return_value=1),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda p, s: kills.append((p, s)),
             ),
         ):
@@ -1367,24 +1367,24 @@ class TestReclaimOwnsEveryHarnessItTracked:
 
     def test_a_recognised_orphan_is_killed(self, session_pid_file: Path) -> None:
         """The whole point: a harness the marker set now covers gets reaped."""
-        from kiro_crew.session_pid import cleanup_orphaned_session_roots
+        from aj_crew.session_pid import cleanup_orphaned_session_roots
 
         entry = "999999:99998:sometoken"
         session_pid_file.write_text(entry + "\n")
         kills: list[tuple[int, int]] = []
 
         with (
-            patch("kiro_crew.session_pid._is_managed_agent_process", return_value=True),
-            patch("kiro_crew.session_pid._pid_start_token", return_value="sometoken"),
+            patch("aj_crew.session_pid._is_managed_agent_process", return_value=True),
+            patch("aj_crew.session_pid._pid_start_token", return_value="sometoken"),
             patch(
-                "kiro_crew.session_pid.platform_compat.pid_liveness",
+                "aj_crew.session_pid.platform_compat.pid_liveness",
                 side_effect=self._dead_gateway_liveness(999999),
             ),
-            patch("kiro_crew.session_pid.platform_compat.get_ppid", return_value=1),
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.session_pid.platform_compat.get_ppid", return_value=1),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda p, s: kills.append((p, s)),
             ),
         ):
@@ -1402,7 +1402,7 @@ class TestReclaimOwnsEveryHarnessItTracked:
         process's entry survived in the file and every later pass met a dead PID
         there.
         """
-        from kiro_crew.session_pid import _kill_confirmed_and_writeback
+        from aj_crew.session_pid import _kill_confirmed_and_writeback
 
         my_gw = os.getpid()
         entry = f"{my_gw}:99998:sometoken"
@@ -1410,13 +1410,13 @@ class TestReclaimOwnsEveryHarnessItTracked:
         kills: list[int] = []
 
         with (
-            patch("kiro_crew.session_pid.platform_compat.IS_WINDOWS", False),
-            patch("kiro_crew.session_pid._is_managed_agent_process", return_value=True),
-            patch("kiro_crew.session_pid._pid_start_token", return_value="sometoken"),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.session_pid.platform_compat.IS_WINDOWS", False),
+            patch("aj_crew.session_pid._is_managed_agent_process", return_value=True),
+            patch("aj_crew.session_pid._pid_start_token", return_value="sometoken"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", return_value=True),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda p, s: kills.append(p),
             ),
         ):
@@ -1441,23 +1441,23 @@ class TestReclaimOwnsEveryHarnessItTracked:
         sweep could find it by. That is the unreclaimable state: spared, then forgotten,
         which is the exact failure this change exists to remove.
         """
-        from kiro_crew.session_pid import _sweep_pid_entries
+        from aj_crew.session_pid import _sweep_pid_entries
 
         my_gw = os.getpid()
         entry = f"{my_gw}:99998:recorded"
         kills: list[int] = []
 
         with (
-            patch("kiro_crew.session_pid.platform_compat.IS_WINDOWS", False),
+            patch("aj_crew.session_pid.platform_compat.IS_WINDOWS", False),
             patch(
-                "kiro_crew.session_pid.platform_compat.pid_liveness",
+                "aj_crew.session_pid.platform_compat.pid_liveness",
                 return_value=platform_compat.PID_ALIVE,
             ),
-            patch("kiro_crew.session_pid._pid_start_token", return_value="recorded"),
-            patch("kiro_crew.session_pid._is_managed_agent_process", return_value=False),
-            patch("kiro_crew.session_pid._pid_in_spawn_grace", return_value=False),
+            patch("aj_crew.session_pid._pid_start_token", return_value="recorded"),
+            patch("aj_crew.session_pid._is_managed_agent_process", return_value=False),
+            patch("aj_crew.session_pid._pid_in_spawn_grace", return_value=False),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda p, s: kills.append(p),
             ),
         ):
@@ -1487,19 +1487,19 @@ class TestReclaimOwnsEveryHarnessItTracked:
         arm returns an empty index, so the same default made a transient read failure
         kill every candidate un-vouched.
         """
-        from kiro_crew.session_pid import _kill_confirmed_and_writeback
+        from aj_crew.session_pid import _kill_confirmed_and_writeback
 
         my_gw = os.getpid()
         session_pid_file.write_text("")
         kills: list[int] = []
 
         with (
-            patch("kiro_crew.session_pid.platform_compat.IS_WINDOWS", False),
-            patch("kiro_crew.session_pid._is_managed_agent_process", return_value=True),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.session_pid.platform_compat.IS_WINDOWS", False),
+            patch("aj_crew.session_pid._is_managed_agent_process", return_value=True),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", return_value=True),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda p, s: kills.append(p),
             ),
         ):
@@ -1516,7 +1516,7 @@ class TestReclaimOwnsEveryHarnessItTracked:
         Without it the kill phase signalled whatever held the PID by then; the token
         is subtractive evidence and this is where it subtracts.
         """
-        from kiro_crew.session_pid import _kill_confirmed_and_writeback
+        from aj_crew.session_pid import _kill_confirmed_and_writeback
 
         my_gw = os.getpid()
         entry = f"{my_gw}:99998:recorded"
@@ -1524,9 +1524,9 @@ class TestReclaimOwnsEveryHarnessItTracked:
         kills: list[int] = []
 
         with (
-            patch("kiro_crew.session_pid._pid_start_token", return_value="different"),
+            patch("aj_crew.session_pid._pid_start_token", return_value="different"),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda p, s: kills.append(p),
             ),
         ):

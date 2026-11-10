@@ -16,11 +16,11 @@ from types import SimpleNamespace
 import pytest
 
 from conftest import requires_symlinks
-from kiro_crew import hooks as hooks_mod
-from kiro_crew.hooks import safe_read_file_bytes_nolink
+from aj_crew import hooks as hooks_mod
+from aj_crew.hooks import safe_read_file_bytes_nolink
 
 REPO = Path(__file__).resolve().parents[1]
-HANDLERS = (REPO / "src" / "kiro_crew" / "deploy" / "handlers_content.py").read_text(
+HANDLERS = (REPO / "src" / "aj_crew" / "deploy" / "handlers_content.py").read_text(
     encoding="utf-8"
 )
 

@@ -1,10 +1,10 @@
 # Slack Setup Guide
 
-How to create a Slack app for Kiro Crew and connect it.
+How to create a Slack app for Aj Crew and connect it.
 
-> **Slack is optional**: If you don't need Slack, skip this entirely. The default `kirocrew setup` configures no messaging channels, and the gateway runs the web dashboard without any. When you are ready to connect Slack, run `kirocrew setup --slack` to enter the tokens created below.
+> **Slack is optional**: If you don't need Slack, skip this entirely. The default `ajcrew setup` configures no messaging channels, and the gateway runs the web dashboard without any. When you are ready to connect Slack, run `ajcrew setup --slack` to enter the tokens created below.
 
-Kiro Crew connects to Slack using **Socket Mode**, so it runs entirely from your own machine over an outbound WebSocket: no public URL, no inbound webhooks, and no hosting required. You just need a Slack workspace where you can install an app.
+Aj Crew connects to Slack using **Socket Mode**, so it runs entirely from your own machine over an outbound WebSocket: no public URL, no inbound webhooks, and no hosting required. You just need a Slack workspace where you can install an app.
 
 ---
 
@@ -24,7 +24,7 @@ Both paths require a Slack workspace where you can install apps (see [Prerequisi
 ## Prerequisites
 
 - A **Slack workspace** where you have permission to install apps. If you don't have one, create a free workspace at <https://slack.com/get-started>. You can install your own apps in a workspace you own.
-- Python and Kiro Crew installed through a [supported install path](install.md#install-paths), so you can run the `kirocrew` CLI.
+- Python and Aj Crew installed through a [supported install path](install.md#install-paths), so you can run the `ajcrew` CLI.
 
 > **Tip**: Use a personal or test workspace for your first run. You can always export the app manifest and recreate the app in another workspace later (see [Reusing the App in Another Workspace](#reusing-the-app-in-another-workspace)).
 
@@ -35,7 +35,7 @@ Both paths require a Slack workspace where you can install apps (see [Prerequisi
 ### Step 1. Generate the Manifest
 
 ```bash
-kirocrew manifest --url
+ajcrew manifest --url
 ```
 
 This prints a one-click URL that opens Slack's "Create New App" page with all scopes, events, and permissions pre-filled:
@@ -44,11 +44,11 @@ This prints a one-click URL that opens Slack's "Create New App" page with all sc
 🔗 Click to create your Slack app:
 https://api.slack.com/apps?new_app=1&manifest_yaml=...
 
-   Slash command: /kirocrew-<alias> — the gateway answers it once slack.command matches:
-   kirocrew config set slack.command kirocrew-<alias>
+   Slash command: /ajcrew-<alias> — the gateway answers it once slack.command matches:
+   ajcrew config set slack.command ajcrew-<alias>
 ```
 
-The app's slash command is `/kirocrew-<alias>` (lowercase, cut to Slack's 32-character limit), so people with different aliases in one Enterprise Grid org register different commands. Two aliases that differ only in case, or only after their first 22 characters, still collide; pass `--alias` to pick another. Run the printed `kirocrew config set slack.command` line so the gateway answers it; `kirocrew setup --slack` keeps offering `kirocrew` (or your configured command) as its default.
+The app's slash command is `/ajcrew-<alias>` (lowercase, cut to Slack's 32-character limit), so people with different aliases in one Enterprise Grid org register different commands. Two aliases that differ only in case, or only after their first 22 characters, still collide; pass `--alias` to pick another. Run the printed `ajcrew config set slack.command` line so the gateway answers it; `ajcrew setup --slack` keeps offering `ajcrew` (or your configured command) as its default.
 
 ### Step 2. Create the App from the Link
 
@@ -62,7 +62,7 @@ The app's slash command is `/kirocrew-<alias>` (lowercase, cut to Slack's 32-cha
 If the URL doesn't work, generate the raw YAML instead:
 
 ```bash
-kirocrew manifest -o ~/.kiro/crew/slack-manifest.yaml
+ajcrew manifest -o ~/.kiro/crew/slack-manifest.yaml
 ```
 
 Then:
@@ -91,25 +91,25 @@ Then:
 
 > **Workspace admin approval?** Some workspaces restrict who can install apps. If your install needs approval, an admin of that workspace must approve it. In a workspace you own, you can self-approve.
 
-### Step 5. Configure Kiro Crew
+### Step 5. Configure Aj Crew
 
 Run the Slack-specific interactive setup, which prompts for both tokens:
 
 ```bash
-kirocrew setup --slack
+ajcrew setup --slack
 ```
 
 Paste your App Token (`xapp-...`), Bot Token (`xoxb-...`), and your Slack Member ID when prompted.
 
 To find your Slack Member ID: open your workspace in Slack → click your profile picture → **Profile** → **⋮** → **Copy member ID**.
 
-> ⚠️ **Your Member ID is per-workspace.** If you install the app in a different workspace, your Member ID changes, so use the ID from the workspace where Kiro Crew is installed.
+> ⚠️ **Your Member ID is per-workspace.** If you install the app in a different workspace, your Member ID changes, so use the ID from the workspace where Aj Crew is installed.
 
 ### Step 6. Verify & Run
 
 ```bash
-kirocrew doctor    # verify tokens and config
-kirocrew gateway   # start Kiro Crew
+ajcrew doctor    # verify tokens and config
+ajcrew gateway   # start Aj Crew
 ```
 
 Open your workspace in Slack, find your app in the Apps section, and send it a DM. The app only lives in the workspace where you installed it.
@@ -125,7 +125,7 @@ Use this path if you want to configure each scope and event individually, or if 
 ### Step 1. Create the App
 
 1. Go to <https://api.slack.com/apps> → **Create New App** → **From scratch**
-2. Name: something unique (e.g. `kirocrew`). Generic names may conflict with existing apps in the same workspace
+2. Name: something unique (e.g. `ajcrew`). Generic names may conflict with existing apps in the same workspace
 3. Workspace: **select your workspace**
 
 ### Step 2. Enable Socket Mode & Get App Token
@@ -162,9 +162,9 @@ Add it only if you want custom workspace emojis to appear in the emoji picker.
 > retroactively grant it: Slack only grants new scopes when the app is
 > **reinstalled** to the workspace. After adding scopes (or importing an
 > updated manifest), go to **Settings → Install App → Reinstall to Workspace**
-> and copy the new Bot Token. Importing a manifest from `kirocrew manifest`
-> renames the app's slash command to `/kirocrew-<alias>`: run the
-> `kirocrew config set slack.command` line it prints, then restart the gateway.
+> and copy the new Bot Token. Importing a manifest from `ajcrew manifest`
+> renames the app's slash command to `/ajcrew-<alias>`: run the
+> `ajcrew config set slack.command` line it prints, then restart the gateway.
 
 ### Step 4. Add User Scopes
 
@@ -174,7 +174,7 @@ Under **User Token Scopes**, add:
 `im:history`, `im:read`, `mpim:history`, `mpim:read`, `search:read`, and
 `users:read`.
 
-These scopes belong to the installing user's `xoxp-...` token. The Kiro Crew
+These scopes belong to the installing user's `xoxp-...` token. The Aj Crew
 gateway itself uses the bot token; the user token is for a separately configured
 Slack MCP/search integration that lets an agent search Slack as that user. Store
 and configure that token only in the integration that consumes it.
@@ -198,16 +198,16 @@ and configure that token only in the integration that consumes it.
 
 | Field | Value |
 |-------|-------|
-| Command | `/kirocrew` |
+| Command | `/ajcrew` |
 | Short Description | Dashboard access, agent, session, and channel controls |
 | Usage Hint | `dashboard [duration] \| agent [name] \| sessions \| #channel` |
 
-The command name you choose here must match the `slack.command` value in `~/.kiro/crew/config.json` (default: `kirocrew`):
+The command name you choose here must match the `slack.command` value in `~/.kiro/crew/config.json` (default: `ajcrew`):
 
 ```json
 {
   "slack": {
-    "command": "kirocrew"
+    "command": "ajcrew"
   }
 }
 ```
@@ -238,9 +238,9 @@ the session Resume / End buttons.
 
 > **"Install App" button greyed out?** Use **Features → OAuth & Permissions → Install to Workspace** instead (known Slack UI bug).
 
-### Step 10. Configure Kiro Crew
+### Step 10. Configure Aj Crew
 
-Same as [Path A, Step 5](#step-5-configure-kiro-crew).
+Same as [Path A, Step 5](#step-5-configure-aj-crew).
 
 ### Step 11. Verify & Run
 
@@ -256,27 +256,27 @@ tokens from an older installation.
 
 ### Manual Token Configuration
 
-If you prefer to configure tokens manually instead of using `kirocrew setup --slack`:
+If you prefer to configure tokens manually instead of using `ajcrew setup --slack`:
 
 ```bash
 mkdir -p ~/.kiro/crew
 cat > ~/.kiro/crew/.env << 'EOF'
 SLACK_APP_TOKEN=xapp-your-app-token-here
 SLACK_BOT_TOKEN=xoxb-your-bot-token-here
-KIROCREW_OWNER_ID=your-slack-member-id
+AJCREW_OWNER_ID=your-slack-member-id
 EOF
 chmod 600 ~/.kiro/crew/.env
 ```
 
 ### Owner-Only Access
 
-Only the owner (`KIROCREW_OWNER_ID`) can interact with Kiro Crew via Slack.
+Only the owner (`AJCREW_OWNER_ID`) can interact with Aj Crew via Slack.
 Multi-user access is disabled at the authorization predicate itself, not by
 configuration: `is_allowed_user` resolves to an owner check, `is_open_channel`
 always returns false, and the channel-join allowlist prompt is a no-op. A
 `/<command> @user` invocation replies that multi-user access is disabled.
 
-> **Setting or changing `KIROCREW_OWNER_ID` invalidates existing dashboard
+> **Setting or changing `AJCREW_OWNER_ID` invalidates existing dashboard
 > sessions.** The value is not just the Slack DM routing target — it is also the
 > dashboard's authorization principal and the subject baked into every dashboard
 > token at mint time. A dashboard session signed in before the value was set (or
@@ -286,14 +286,14 @@ always returns false, and the channel-join allowlist prompt is a no-op. A
 > session from before an owner was FIRST configured, the dashboard detects the
 > case and shows a sign-in banner; a session signed in under a PREVIOUS owner
 > value is denied with the generic response and likewise needs a fresh sign-in.
-> Either way, run `kirocrew token` and open the fresh link to re-authenticate
+> Either way, run `ajcrew token` and open the fresh link to re-authenticate
 > under the new owner.
 
 ### Reaction Emojis
 
-Kiro Crew shows that it picked up your message without a trail of reactions:
+Aj Crew shows that it picked up your message without a trail of reactions:
 
-- Where Slack shows the bot's native thread status ("Kiro Crew is working on your request…", e.g. in the assistant DM), that status is the progress signal and your message gets no reaction.
+- Where Slack shows the bot's native thread status ("Aj Crew is working on your request…", e.g. in the assistant DM), that status is the progress signal and your message gets no reaction.
 - Where it does not, your message gets a single 👀 while it is being answered. It is removed when the reply lands: the reply itself is the done signal.
 - A turn that fails gets 😱, on either surface.
 
@@ -365,14 +365,14 @@ To update an existing app:
 5. Select **Check again**. The panel reads **Up to date**, and the line under the switch
    reads **Slack app prepared**. No gateway restart is needed.
 
-`kirocrew manifest` renders the same manifest for the switches saved in `config.json`.
+`ajcrew manifest` renders the same manifest for the switches saved in `config.json`.
 If the panel reads **Workspace not enabled**, the app has the scopes but Slack has not
 turned code channels on for your workspace; a workspace admin has to enable it.
 
 For code channels you can also set a default folder, agent, model and reasoning effort for
-new code channels; see [Slack integration](../../src/kiro_crew/docs/slack-integration.md#slack-code-agent-sessions-and-code-channels).
+new code channels; see [Slack integration](../../src/aj_crew/docs/slack-integration.md#slack-code-agent-sessions-and-code-channels).
 With nothing set, code channels go into a **Code channels** sidebar folder, created the first
-time one is needed and set to run `kirocrew-conductor`. To use another folder, pick it, or
+time one is needed and set to run `ajcrew-conductor`. To use another folder, pick it, or
 choose **New folder…** in the folder list to create one there.
 
 ---
@@ -384,7 +384,7 @@ To install your app in a different Slack workspace, export the manifest and recr
 1. Export your app manifest: **App Config → App Manifest → Copy to Clipboard** (YAML)
 2. Go to <https://api.slack.com/apps> → **Create New App** → **From a manifest**
 3. Select the new workspace and paste the YAML
-4. Re-generate the App Token (Socket Mode) and Bot Token, then re-run `kirocrew setup --slack` with the new tokens and your Member ID for that workspace
+4. Re-generate the App Token (Socket Mode) and Bot Token, then re-run `ajcrew setup --slack` with the new tokens and your Member ID for that workspace
 
 ---
 
@@ -401,8 +401,8 @@ Any of these work:
 ```
 !dashboard              # DM: 1-hour session (default)
 !dashboard 2h           # DM: 2-hour session
-/kirocrew dashboard     # Slash command: 1-hour session
-/kirocrew dashboard 30m # Slash command: 30-minute session
+/ajcrew dashboard     # Slash command: 1-hour session
+/ajcrew dashboard 30m # Slash command: 30-minute session
 ```
 
 Durations are `<N>h` or `<N>m` and are capped at **20 hours**; anything longer
@@ -429,7 +429,7 @@ instead of a link.
    arrive on loopback. Loopback is not an exemption: a local port forwarder
    (`socat`, `ssh -R`, a helper script) makes remote traffic appear to come from
    `127.0.0.1`, so exempting it would be an auth bypass. The only loopback
-   carve-out is a small set of internal API paths reserved for Kiro Crew's own
+   carve-out is a small set of internal API paths reserved for Aj Crew's own
    processes (doctor, the MCP servers), and those additionally require a
    matching `X-Internal-Secret` read from `~/.kiro/crew/.local_secret`
 
@@ -446,16 +446,16 @@ the dashboard on:
 }
 ```
 
-From this single URL, Kiro Crew derives:
+From this single URL, Aj Crew derives:
 - **Port** to bind on (8080 in this example)
 - **Allowed origins** for the CSRF / WebSocket checks
-- **Dashboard link hostname** for `!dashboard` and `/kirocrew dashboard`
+- **Dashboard link hostname** for `!dashboard` and `/ajcrew dashboard`
 
 When omitted, it defaults to port 5476 and the `localhost` hostname.
 
 The gateway itself always binds loopback in this build: publishing it is your
-reverse proxy's or tunnel's job, not the gateway's. `KIROCREW_BIND` widens the
-bind address only (the container image sets `KIROCREW_BIND=0.0.0.0` so a
+reverse proxy's or tunnel's job, not the gateway's. `AJCREW_BIND` widens the
+bind address only (the container image sets `AJCREW_BIND=0.0.0.0` so a
 published `-p` port is reachable from the host) and changes nothing about token
 auth, which is mounted unconditionally on both server paths.
 
@@ -504,7 +504,7 @@ message being forwarded to the linked session.
 
 ### Slash Commands
 
-The slash command name is configurable via `slack.command` in config (default: `kirocrew`). It must match the command in your Slack app: `kirocrew manifest` registers `/kirocrew-<alias>` and prints the matching `kirocrew config set slack.command` line.
+The slash command name is configurable via `slack.command` in config (default: `ajcrew`). It must match the command in your Slack app: `ajcrew manifest` registers `/ajcrew-<alias>` and prints the matching `ajcrew config set slack.command` line.
 
 | Command | Purpose |
 |---------|---------|
@@ -528,8 +528,8 @@ match falls through to it.
 
 ### Owner-Only Bang Commands
 
-These `!`-prefixed commands are restricted to `KIROCREW_OWNER_ID`. Most of them
-are deprecated in favour of `/kirocrew` sub-commands: `!yolo`, `!stop`, `!voice`,
+These `!`-prefixed commands are restricted to `AJCREW_OWNER_ID`. Most of them
+are deprecated in favour of `/ajcrew` sub-commands: `!yolo`, `!stop`, `!voice`,
 `!agent`, `!ta`, `!dashboard`, `!channel`, `!link-to-dashboard` and `!restart`
 still run, and the reply carries a deprecation notice naming the slash command
 to use instead.
@@ -574,11 +574,11 @@ Dashboard tokens grant full session access, so treat them like passwords.
 | ✅ Do | ❌ Don't |
 |-------|----------|
 | Keep the dashboard behind your own tunnel or reverse proxy | Share dashboard URLs, which carry the token in `?token=` |
-| If a token is exposed, run `kirocrew logout` (ends all sessions, refresh chains included) and revoke at your tunnel or reverse-proxy auth layer | Paste tokens in Slack channels, shared docs, or wikis |
+| If a token is exposed, run `ajcrew logout` (ends all sessions, refresh chains included) and revoke at your tunnel or reverse-proxy auth layer | Paste tokens in Slack channels, shared docs, or wikis |
 | Avoid showing the browser URL bar during screen shares | Leave dashboard links in screen-share recordings |
-| Leave the built-in `kirocrew token` deny rules enabled | Trust an AI agent that asks to run `kirocrew token` |
+| Leave the built-in `ajcrew token` deny rules enabled | Trust an AI agent that asks to run `ajcrew token` |
 
-`kirocrew logout` ends every issued session, not just in-memory state: it bumps
+`ajcrew logout` ends every issued session, not just in-memory state: it bumps
 a persisted revocation generation that both access cookies and
 `mc_refresh_<port>` refresh tokens embed, so cookies handed out before the
 logout — refresh chains included — are rejected on their next request. See
@@ -589,9 +589,9 @@ to end just one browser's session, sign out in that browser
 (`POST /api/auth/logout`), which revokes its chain alone.
 
 > ⚠️ **Prompt injection risk**: an attacker can hide instructions in a webpage or
-> document that trick your agent into running `kirocrew token` and exfiltrating
-> the output. Kiro Crew ships built-in denied-command rules covering that mint,
-> including nested shell payloads and the `kiro-crew` spelling, enforced at the
+> document that trick your agent into running `ajcrew token` and exfiltrating
+> the output. Aj Crew ships built-in denied-command rules covering that mint,
+> including nested shell payloads and the `aj-crew` spelling, enforced at the
 > PreToolUse gate (`hooks.py`) rather than injected into any agent config file.
 > They are on by default; leave them on. See
 > [../architecture/security-deep-dive.md](../architecture/security-deep-dive.md).
@@ -606,8 +606,8 @@ to end just one browser's session, sign out in that browser
 | App created in wrong workspace | Delete the app on api.slack.com, then recreate it in the correct workspace |
 | No events received | Verify Socket Mode is ON, events are subscribed, App Home Chat Tab is enabled. Reinstall app after changes |
 | Home tab is blank | Add `app_home_opened` event, enable Home Tab, reinstall app |
-| `missing_scope` error | Add the scope in OAuth & Permissions, reinstall app, re-run `kirocrew setup --slack` |
-| Bot doesn't respond | Check `kirocrew doctor` output. Ensure gateway is running (`kirocrew gateway`) |
+| `missing_scope` error | Add the scope in OAuth & Permissions, reinstall app, re-run `ajcrew setup --slack` |
+| Bot doesn't respond | Check `ajcrew doctor` output. Ensure gateway is running (`ajcrew gateway`) |
 | Install needs approval | Your workspace restricts app installs, so a workspace admin must approve, or use a workspace you own |
 | Dashboard shows 403 | Token expired, IP changed, or the link was opened more than 5 minutes after it was issued. Run `!dashboard` for a new link |
 

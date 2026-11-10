@@ -19,10 +19,10 @@ from eager_spawn_helpers import (  # noqa: F401 -- fixtures are used by name
     _prime,
 )
 
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_runner import _eager_spawn
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_runner import _eager_spawn
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.testing.wait import await_until
 
 
 class TestArmedPrefetchCap:
@@ -112,7 +112,7 @@ class TestFreshSpawnPopulationCap:
         state = _mock_state(slot)
         bindings = _bindings()
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)),
+            patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)),
             patch.object(chat_runner, "resolve_agent_bindings", return_value=bindings),
         ):
             await _eager_spawn(state, slot)
@@ -130,7 +130,7 @@ class TestFreshSpawnPopulationCap:
         bindings = _bindings()
         keys: list[str] = []
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)),
+            patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)),
             patch.object(chat_runner, "resolve_agent_bindings", return_value=bindings),
         ):
             for i in range(chat_runner._RESUME_PREFETCH_MAX_LIVE + 1):
@@ -147,7 +147,7 @@ class TestFreshSpawnPopulationCap:
     async def test_the_cap_is_the_shared_resource_status_ceiling(self):
         """One number, owned by resource_status: the ample-host allowance IS the
         fixed cap, so the two cannot drift apart."""
-        from kiro_crew import resource_status
+        from aj_crew import resource_status
 
         assert chat_runner._RESUME_PREFETCH_MAX_LIVE == resource_status.PREWARM_MAX_LIVE
         assert resource_status.prewarm_allowance(64.0) == chat_runner._RESUME_PREFETCH_MAX_LIVE
@@ -164,7 +164,7 @@ class TestFreshSpawnPopulationCap:
         state.sessions.get_or_create = AsyncMock(return_value=(MagicMock(), False, False))
         bindings = _bindings()
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)),
+            patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)),
             patch.object(chat_runner, "resolve_agent_bindings", return_value=bindings),
         ):
             await _eager_spawn(state, slot)
@@ -205,7 +205,7 @@ class TestPrewarmAdmission:
         slot = _ChatSlot("t1")
         state = _mock_state(slot)
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)),
+            patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)),
             patch.object(chat_runner, "resolve_agent_bindings", return_value=self._bindings()),
         ):
             await _eager_spawn(state, slot)
@@ -226,7 +226,7 @@ class TestPrewarmAdmission:
         state.sessions.remove_if_unclaimed = AsyncMock(return_value=True)
         state.subagents = SimpleNamespace(memory_pressure_hold_active=lambda: held)
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)),
+            patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)),
             patch.object(chat_runner, "resolve_agent_bindings", return_value=self._bindings()),
         ):
             await _eager_spawn(state, slot)
@@ -282,7 +282,7 @@ class TestPrewarmAdmission:
         shared_sessions.get_or_create = AsyncMock(side_effect=_get_or_create)
         keys: list[str] = []
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)),
+            patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)),
             patch.object(chat_runner, "resolve_agent_bindings", return_value=self._bindings()),
         ):
             for i in range(2):
@@ -347,7 +347,7 @@ class TestPrewarmAdmission:
         state = _mock_state(slot)
         state.sessions.remove_if_unclaimed = AsyncMock(side_effect=RuntimeError("provider hung"))
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)),
+            patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)),
             patch.object(chat_runner, "resolve_agent_bindings", return_value=self._bindings()),
         ):
             await _eager_spawn(state, slot)
@@ -368,7 +368,7 @@ class TestPrewarmAdmission:
         state = _mock_state(slot)
         state.sessions.remove_if_unclaimed = AsyncMock(return_value=True)
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)),
+            patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)),
             patch.object(chat_runner, "resolve_agent_bindings", return_value=self._bindings()),
         ):
             await _eager_spawn(state, slot)
@@ -393,7 +393,7 @@ class TestPrewarmAdmission:
         state = _mock_state(slot)
         state.sessions.remove_if_unclaimed = AsyncMock(return_value=True)
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)),
+            patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)),
             patch.object(chat_runner, "resolve_agent_bindings", return_value=self._bindings()),
         ):
             await _eager_spawn(state, slot)
@@ -463,7 +463,7 @@ class TestPrewarmAdmission:
             state.sessions = shared_sessions
             states.append(state)
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)),
+            patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)),
             patch.object(chat_runner, "resolve_agent_bindings", return_value=self._bindings()),
         ):
             first = asyncio.create_task(_eager_spawn(states[0], slots[0]))
@@ -592,7 +592,7 @@ class TestPrewarmAdmission:
             side_effect=chat_runner.SpeculativeResumeRefused("resumable")
         )
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)),
+            patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)),
             patch.object(chat_runner, "resolve_agent_bindings", return_value=self._bindings()),
         ):
             await _eager_spawn(state, slot)
@@ -606,7 +606,7 @@ class TestPrewarmAdmission:
         state = _mock_state(slot)
         state.sessions.get_or_create = AsyncMock(side_effect=RuntimeError("spawn failed"))
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)),
+            patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)),
             patch.object(chat_runner, "resolve_agent_bindings", return_value=self._bindings()),
         ):
             await _eager_spawn(state, slot)
@@ -626,7 +626,7 @@ class TestPrewarmAdmission:
 
         state.sessions.get_or_create = AsyncMock(side_effect=_hang)
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)),
+            patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)),
             patch.object(chat_runner, "resolve_agent_bindings", return_value=self._bindings()),
         ):
             task = asyncio.create_task(_eager_spawn(state, slot))
@@ -660,7 +660,7 @@ class TestPrewarmAdmission:
         slot = _ChatSlot("t1")
         state = _mock_state(slot)
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)),
+            patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)),
             patch.object(chat_runner, "resolve_agent_bindings", return_value=self._bindings()),
         ):
             await _eager_spawn(state, slot)

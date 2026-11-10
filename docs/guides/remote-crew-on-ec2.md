@@ -1,12 +1,12 @@
 # Setting up Remote Crew on an EC2 instance
 
-You run the Kiro Crew gateway on an EC2 box and drive it from your laptop. The
+You run the Aj Crew gateway on an EC2 box and drive it from your laptop. The
 gateway binds **loopback by default**, so you reach it through a tunnel — either
-an **SSH tunnel** or an **AWS SSM Session Manager** tunnel. (`KIROCREW_BIND` is
+an **SSH tunnel** or an **AWS SSM Session Manager** tunnel. (`AJCREW_BIND` is
 the explicit, container-oriented bind override described in the linked remote
 guide.)
 This page covers both, plus the EC2-specific gotchas people actually hit (from
-`kirocrew doctor`).
+`ajcrew doctor`).
 
 > Installing the gateway itself (host requirements, packages, running it as a
 > service, moving your state over) is covered in
@@ -36,7 +36,7 @@ registered in **Settings → Remote Crew**.
    ssh -N -L 5476:localhost:5476 <user>@<ec2-host>
    ```
 
-   Then open `http://localhost:5476`. Run `kirocrew token` on the box to mint the
+   Then open `http://localhost:5476`. Run `ajcrew token` on the box to mint the
    sign-in URL. (Full details, including a non-default port, in
    [remote-and-mobile.md](remote-and-mobile.md#ssh-tunnel-laptop).)
 2. To let the dashboard manage it, add it in **Settings → Remote Crew → Add remote
@@ -61,7 +61,7 @@ No inbound port, no SSH key.
 
 ### The AWS profile for a box you already have
 
-Do not use the profile that holds the launcher policy (`kirocrew cloud iam-policy`)
+Do not use the profile that holds the launcher policy (`ajcrew cloud iam-policy`)
 here. That policy denies `ssm:StartSession` on purpose for every session except an
 `AWS-StartPortForwardingSession` port-forward to an EC2 instance or to a crew's
 Fargate task, so the launcher can never open a shell. A profile holding it cannot:
@@ -70,7 +70,7 @@ Fargate task, so the launcher can never open a shell. A profile holding it canno
   document), which is how you install the gateway on a box with no SSH;
 - reach an `mi-…` managed-instance target at all, not even with a port-forward;
 - start a shared-crew session with the
-  [`Kiro-Crew-Shared-Crew-<port>` document](remote-and-mobile.md#the-session-document).
+  [`Aj-Crew-Shared-Crew-<port>` document](remote-and-mobile.md#the-session-document).
 
 The refusal says `with an explicit deny in an identity-based policy`. An explicit
 Deny wins over any Allow, so adding permissions to that profile cannot fix it. Use a
@@ -112,11 +112,11 @@ ARN; a shared-crew teammate uses the policy in the linked section instead):
 `ssm:StartSession` opens the shell and the tunnel. **Connect** mints its dashboard
 token over `ssm:SendCommand` and `ssm:GetCommandInvocation`, and a failed connection
 reads `ssm:DescribeInstanceInformation` to check that the box's SSM agent is online.
-Keep the launcher profile for `kirocrew cloud` commands.
+Keep the launcher profile for `ajcrew cloud` commands.
 
 ## EC2 gotchas / troubleshooting
 
-These map to warnings in `kirocrew doctor`.
+These map to warnings in `ajcrew doctor`.
 
 ### MCP tools all fail: "Sandbox backend unavailable … `allow_unsandboxed_exec` is not set"
 
@@ -137,8 +137,8 @@ spawn — fails closed. Pick one:
 
   Then restart the gateway.
 - **Or opt into unsandboxed execution (trades isolation — only on a box you
-  trust).** Run `kirocrew setup` (it offers this interactively), or run
-  `kirocrew config set agent.sandbox_allow_unsandboxed_exec true`, then restart
+  trust).** Run `ajcrew setup` (it offers this interactively), or run
+  `ajcrew config set agent.sandbox_allow_unsandboxed_exec true`, then restart
   the gateway. This lets agent subprocesses run without any sandbox.
 
 ### Gateway/pods die on logout: "linger disabled"
@@ -155,18 +155,18 @@ survives logout; linger still matters for pods and for user-level installs.)
 
 ### "kiro login: not logged in"
 
-kiro-cli must be authenticated **on the box**. Run `kirocrew cloud login` from
+kiro-cli must be authenticated **on the box**. Run `ajcrew cloud login` from
 your laptop and complete the device-code flow in the browser it opens. Chat errors
 like "not logged in" mean this step was skipped on the remote.
 
 ### Signing in as a different Kiro account
 
-`kirocrew cloud login` short-circuits when the box already has a session ("already
+`ajcrew cloud login` short-circuits when the box already has a session ("already
 signed in"), so switching accounts is a sign-out first:
 
 ```bash
-kirocrew cloud logout    # drops the kiro-cli session on the instance
-kirocrew cloud login     # device-code flow for the new account
+ajcrew cloud logout    # drops the kiro-cli session on the instance
+ajcrew cloud login     # device-code flow for the new account
 ```
 
 `logout` also kills any background login still polling on the box — otherwise it
@@ -177,14 +177,14 @@ would quietly re-authenticate the account you just dropped.
 A managed crew is "your Kiro running elsewhere", so its sign-in identity is a
 property of the launch, not of whichever `kiro-cli login` happens to run:
 
-- **Inherited by default.** `kirocrew setup`'s cloud step, `kirocrew cloud launch`
+- **Inherited by default.** `ajcrew setup`'s cloud step, `ajcrew cloud launch`
   and the dashboard's Remote Crew launch read your local `kiro-cli whoami`. If you
   are signed in through **IAM Identity Center** (Kiro Pro), the crew is signed in
   through the same organization portal — you are asked for the **Identity Center
   region** (the AWS Region your Identity Center instance lives in, *not* the EC2
   region the crew runs in) because `whoami` does not report it. Builder ID users
   get the Builder ID flow, exactly as before.
-- **Overridable.** `kirocrew cloud launch --identity-provider https://example.awsapps.com/start --license pro --idp-region us-east-1`
+- **Overridable.** `ajcrew cloud launch --identity-provider https://example.awsapps.com/start --license pro --idp-region us-east-1`
   names the identity explicitly; `--no-inherit-identity` forces Builder ID. The
   dashboard form offers the same choice. If `kiro-cli whoami` fails to run on the
   launching computer (it hangs, errors out, or the binary cannot be resolved), the
@@ -200,22 +200,22 @@ property of the launch, not of whichever `kiro-cli login` happens to run:
   be on your organization's Identity Center) is reported as a mismatch with the
   `cloud logout` / `cloud login` commands to switch — not as success.
 
-The same three flags exist on `kirocrew cloud login` for an already-launched crew;
-with a wrong-but-valid session present, run `kirocrew cloud logout` first.
+The same three flags exist on `ajcrew cloud login` for an already-launched crew;
+with a wrong-but-valid session present, run `ajcrew cloud logout` first.
 
 ### Port/tunnel mismatch (the common one)
 
-`kirocrew doctor`'s "Remote access" hint and its `dashboard: http://localhost:5476`
-line pick the port in this order: the `KIROCREW_PORT` of the shell you run `doctor`
+`ajcrew doctor`'s "Remote access" hint and its `dashboard: http://localhost:5476`
+line pick the port in this order: the `AJCREW_PORT` of the shell you run `doctor`
 in, then a port written in `dashboard.url`, then 5476. If your service sets
-`KIROCREW_PORT` (e.g. `7777`) but your shell does not, the gateway listens on
+`AJCREW_PORT` (e.g. `7777`) but your shell does not, the gateway listens on
 **7777** while `doctor` prints the `dashboard.url` port or 5476.
-Run `doctor` with the service's value (`KIROCREW_PORT=7777 kirocrew doctor`) to see
+Run `doctor` with the service's value (`AJCREW_PORT=7777 ajcrew doctor`) to see
 the real port. Your tunnel, browser, and token must all use the **same, real**
 port:
 
 ```bash
-# service has KIROCREW_PORT=7777 → tunnel 7777, not 5476:
+# service has AJCREW_PORT=7777 → tunnel 7777, not 5476:
 ssh -N -L 7777:localhost:7777 <ec2-host>
 # then open http://localhost:7777
 ```
@@ -247,24 +247,24 @@ gateway started from the Dock or Finder has a minimal `PATH`.
   that binary. If you did not install the plugin from AWS yourself, or are not
   sure, reinstall it from
   [AWS's install page](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
-  first, then run the command. `kirocrew cloud doctor` reports the same.
+  first, then run the command. `ajcrew cloud doctor` reports the same.
 - **"Your AWS credentials were not checked. Found at `<path>`, but … will not
   run it: `<reason>`."** The same check refused the `aws` binary at the path the row names,
   so the credentials row says why instead of "not found", and reinstalling the CLI
   the same way does not help. No command is offered. For a root gateway, start it
   from a regular account. For any other reason except "belongs to another user
   account", fix the ownership or permissions the reason names, then re-check.
-  `kirocrew cloud doctor` reports it on its `aws CLI` line.
+  `ajcrew cloud doctor` reports it on its `aws CLI` line.
 - **"… belongs to another user account …"** (either row). The file, or a folder
   above it, belongs to an account on that computer that is neither root nor the
-  account Kiro Crew runs as, for example a Homebrew managed by a second account
+  account Aj Crew runs as, for example a Homebrew managed by a second account
   (Workbrew). Do not make that file root-owned: that account could have replaced it.
   Install a separate copy with AWS's own installer
   ([AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html),
   [Session Manager plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)),
-  then re-check: Kiro Crew looks in `/opt/homebrew/bin` and then `/usr/local/bin`,
+  then re-check: Aj Crew looks in `/opt/homebrew/bin` and then `/usr/local/bin`,
   and runs the first copy that, with every folder above it, belongs to root or to
-  Kiro Crew's own account. If the plugin row then offers the `chown` command above,
+  Aj Crew's own account. If the plugin row then offers the `chown` command above,
   run it. If the new copy's reason starts `executable parent`, a folder above it
   belongs to the other account (on an Intel Mac whose Homebrew a second account
   runs, that is `/usr/local/bin`). An administrator must make root its owner and
@@ -276,11 +276,11 @@ gateway started from the Dock or Finder has a minimal `PATH`.
 ### Non-fatal warnings you can ignore
 
 - **`ffmpeg: not found`**: only needed for speech-to-text. Install ffmpeg into
-  `/usr/local/bin` (a location Kiro Crew searches; it's not in the AL2023 repos),
+  `/usr/local/bin` (a location Aj Crew searches; it's not in the AL2023 repos),
   or fetch a decoder from the dashboard Speech-to-Text card
   (Settings → Voice, then Download decoder).
-- **`source dir: not set`** — cosmetic. It is set from a Kiro Crew source
-  checkout by `kirocrew setup`; wheel installs do not need it.
+- **`source dir: not set`** — cosmetic. It is set from a Aj Crew source
+  checkout by `ajcrew setup`; wheel installs do not need it.
 
 ### A warning doctor counts as an issue
 
@@ -288,7 +288,7 @@ gateway started from the Dock or Finder has a minimal `PATH`.
   runtime couldn't load its shared library on this host. Doctor counts this as an
   issue. Memory keeps working through the keyword-search fallback, without vector
   recall. If doctor also names missing native libs, the install is incomplete:
-  reinstall Kiro Crew from a current release.
+  reinstall Aj Crew from a current release.
 
 ## Related
 

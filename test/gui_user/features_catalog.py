@@ -230,7 +230,7 @@ def render(doc: dict[str, Any]) -> str:
         "  runs on the lane's target (Xvfb + Chromium, fake ACP backend, no login, no network);",
         "  `native-only` = needs the Electron shell; `needs-secret` = needs a real external account",
         "  or credential; `excluded` = not observable through pixels or would take the target down.",
-        "- **Seed**: the `KIROCREW_HOME` fixture the target boots from (`kirocrew gateway --seed`).",
+        "- **Seed**: the `AJCREW_HOME` fixture the target boots from (`ajcrew gateway --seed`).",
         "- **Steps**: estimated model actions; the scenario's `max_steps` should sit a little above.",
         "",
         "## Counts",

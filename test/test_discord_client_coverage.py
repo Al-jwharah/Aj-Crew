@@ -16,8 +16,8 @@ from typing import Any
 import aiohttp
 import pytest
 
-from kiro_crew.discord import client as dc
-from kiro_crew.discord.client import (
+from aj_crew.discord import client as dc
+from aj_crew.discord.client import (
     _API_BASE,
     _APP_COMMAND_DESC_LIMIT,
     _CALLBACK_DEFERRED_UPDATE_MESSAGE,
@@ -37,7 +37,7 @@ from kiro_crew.discord.client import (
     DiscordInteraction,
     _resolve_proxy,
 )
-from kiro_crew.messaging.outbound_files import OutboundFile
+from aj_crew.messaging.outbound_files import OutboundFile
 
 _PROXY_VARS = (
     "HTTPS_PROXY",
@@ -888,8 +888,8 @@ class TestHandleFrame:
         assert ws.sent[0]["d"]["intents"] == client._intents
         assert ws.sent[0]["d"]["properties"] == {
             "os": "linux",
-            "browser": "kirocrew",
-            "device": "kirocrew",
+            "browser": "ajcrew",
+            "device": "ajcrew",
         }
 
     @pytest.mark.asyncio
@@ -1314,7 +1314,7 @@ class TestHandlerIsolation:
             raise RuntimeError("handler blew up")
 
         client = _make_client(on_message=_boom)
-        with caplog.at_level(logging.ERROR, logger="kiro_crew.discord.client"):
+        with caplog.at_level(logging.ERROR, logger="aj_crew.discord.client"):
             await client._invoke_message(DiscordInbound(channel_id="c", user_id="u9"))
         assert "on_message handler raised" in caplog.text
 
@@ -1339,7 +1339,7 @@ class TestHandlerIsolation:
             raise RuntimeError("handler blew up")
 
         client = _make_client(on_interaction=_boom)
-        with caplog.at_level(logging.ERROR, logger="kiro_crew.discord.client"):
+        with caplog.at_level(logging.ERROR, logger="aj_crew.discord.client"):
             await client._invoke_interaction(
                 DiscordInteraction(
                     interaction_id="i",
@@ -1457,7 +1457,7 @@ class TestApi:
             responses=[FakeResponse(403, {"code": 50013, "message": "Missing Permissions"})]
         )
         _bind_session(client, session, monkeypatch)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.discord.client"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.discord.client"):
             assert await client._api("POST", "/channels/c1/messages", {}) is None
         assert "50013" in caplog.text
         assert "Missing Permissions" in caplog.text
@@ -1497,7 +1497,7 @@ class TestApi:
         # patched sleep keeps the back-off from waiting in real seconds.
         _bind_session(client, FakeSession(responses=[exc] * 4), monkeypatch)
         _patch_sleep(monkeypatch)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.discord.client"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.discord.client"):
             assert await client._api("POST", "/p", {}) is None
         assert "transport error" in caplog.text
         assert "bot-secret" not in caplog.text

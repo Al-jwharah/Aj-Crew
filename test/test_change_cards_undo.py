@@ -33,10 +33,10 @@ from change_cards_helpers import (
     _propose_capability,
 )
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew.dashboard import change_cards as cards
-from kiro_crew.dashboard.change_cards import CardStore
-from kiro_crew.dashboard.handlers import change_cards as routes
+from aj_crew import change_card_catalog as catalog
+from aj_crew.dashboard import change_cards as cards
+from aj_crew.dashboard.change_cards import CardStore
+from aj_crew.dashboard.handlers import change_cards as routes
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 world = change_cards_helpers.world
@@ -46,8 +46,8 @@ world = change_cards_helpers.world
 
 
 def test_a_replaced_secret_makes_an_earlier_snapshot_stale(tmp_path, monkeypatch):
-    from kiro_crew.config import loader
-    from kiro_crew.secrets import SecretVault
+    from aj_crew.config import loader
+    from aj_crew.secrets import SecretVault
 
     monkeypatch.setattr(loader, "config_dir", lambda: tmp_path)
     vault = SecretVault(tmp_path)
@@ -65,7 +65,7 @@ def test_a_replaced_secret_makes_an_earlier_snapshot_stale(tmp_path, monkeypatch
 def test_an_edited_crewmate_makes_an_earlier_snapshot_stale(monkeypatch):
     from dataclasses import dataclass
 
-    from kiro_crew.dashboard.handlers import agents as agents_handlers
+    from aj_crew.dashboard.handlers import agents as agents_handlers
 
     @dataclass
     class Agent:
@@ -97,7 +97,7 @@ def test_an_interrupted_apply_publishes_where_it_resumes(tmp_path):
 
 
 def test_a_schedule_fingerprint_sees_edits_not_runs():
-    from kiro_crew.cron_service.model import CronJob, CronSchedule
+    from aj_crew.cron_service.model import CronJob, CronSchedule
 
     job = CronJob(
         id="j1",
@@ -379,7 +379,7 @@ def test_schedule_undo_compare_and_delete_refuses_a_job_edited_in_the_window(tmp
     job under the same lock as the delete, using the digest the card recorded at
     apply. A job edited after that digest was taken fails the match and the
     delete is refused, so the edit survives."""
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     service = CronService(base_dir=tmp_path)
     job = service.add_job("daily", "run", cron_expr="0 9 * * *")
@@ -388,7 +388,7 @@ def test_schedule_undo_compare_and_delete_refuses_a_job_edited_in_the_window(tmp
     service.update_job(job.id, name="renamed by another tab")
 
     audited: list[dict] = []
-    from kiro_crew import sel as sel_mod
+    from aj_crew import sel as sel_mod
 
     class _Sel:
         def log_api_access(self, **kw):
@@ -415,7 +415,7 @@ def test_schedule_undo_compare_and_delete_refuses_a_job_edited_in_the_window(tmp
 def test_schedule_undo_compare_and_delete_removes_a_still_matching_job(tmp_path):
     """When nothing changed in the window, the compare-and-delete removes the
     card's own schedule exactly as the plain delete would."""
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     service = CronService(base_dir=tmp_path)
     job = service.add_job("daily", "run", cron_expr="0 9 * * *")
@@ -437,7 +437,7 @@ def test_schedule_undo_compare_and_delete_removes_a_still_matching_job(tmp_path)
 def test_schedule_card_undo_through_the_hook_refuses_a_delete_raced_by_another_tab(tmp_path):
     """Another tab edits the schedule while the hook flushes the Undo's admission;
     the real ``api_cron_delete`` refuses with ``changed_since_apply``."""
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     service = CronService(base_dir=tmp_path / "crons")
     job = service.add_job("daily", "run", cron_expr="0 9 * * *")
@@ -500,7 +500,7 @@ def test_schedule_card_undo_through_the_hook_refuses_a_delete_raced_by_another_t
         }
 
     def _app() -> web.Application:
-        from kiro_crew.dashboard.handlers.cron import api_cron_delete
+        from aj_crew.dashboard.handlers.cron import api_cron_delete
 
         app = web.Application(middlewares=[_fake_auth, routes.change_card_middleware])
         app["state"] = state
@@ -594,7 +594,7 @@ def test_a_card_whose_undo_would_delete_by_name_offers_no_undo(kind, raw, snapsh
 
 
 def test_mcp_scope_fingerprints_see_each_scope_not_secret_values(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.handlers import mcp as mcp_handlers
+    from aj_crew.dashboard.handlers import mcp as mcp_handlers
 
     crew, glob, agent = tmp_path / "crew.json", tmp_path / "global.json", tmp_path / "agent.json"
 
@@ -604,14 +604,14 @@ def test_mcp_scope_fingerprints_see_each_scope_not_secret_values(tmp_path, monke
     monkeypatch.setattr(
         mcp_handlers,
         "_uninstall_scope_files",
-        lambda: [("kirocrew", crew), ("kiroGlobal", glob), ("agent", agent)],
+        lambda: [("ajcrew", crew), ("kiroGlobal", glob), ("agent", agent)],
     )
     monkeypatch.setattr(cards, "_mcp_value_key", lambda: b"k" * 32)
     write(crew, {"command": "node", "args": ["s.js"], "env": {"API_KEY": SECRET_VALUE}})
     write(glob, None)
     write(agent, {"command": "rendered"})
     first = cards._mcp_scopes("srv")
-    assert set(first) == {"kirocrew"}  # the rendered agent file is not a scope
+    assert set(first) == {"ajcrew"}  # the rendered agent file is not a scope
     assert SECRET_VALUE not in json.dumps(first)
     write(crew, {"command": "node", "args": ["s.js"], "env": {"API_KEY": "another-value"}})
     assert cards._mcp_scopes("srv") != first  # an edited env value is an edit
@@ -628,7 +628,7 @@ def test_mcp_scope_fingerprints_see_each_scope_not_secret_values(tmp_path, monke
     gone = {"exists": {"srv": False}, "scopes": {"srv": {}}}
     assert not cards.undo_snapshot_changed("mcp.add_custom", gone, after)
     # Removed from one scope, unchanged in the other: the retry may go on.
-    both = {"kirocrew": "d1", "kiroGlobal": "d2"}
+    both = {"ajcrew": "d1", "kiroGlobal": "d2"}
     assert not cards.undo_snapshot_changed(
         "mcp.install", {"scopes": {"kiroGlobal": "d2"}}, {"scopes": both}
     )
@@ -649,8 +649,8 @@ def test_memory_names_only_what_an_mcp_undo_removed():
 
 
 def test_a_template_skill_card_snapshots_the_mapping_and_undo_restores_it(monkeypatch):
-    from kiro_crew.dashboard.handlers import _shared
-    from kiro_crew.dashboard.handlers import agents as agents_handlers
+    from aj_crew.dashboard.handlers import _shared
+    from aj_crew.dashboard.handlers import agents as agents_handlers
 
     spec = {"name": "t", "resources": ["skill://a/SKILL.md", "skill://b/SKILL.md"]}
     monkeypatch.setattr(agents_handlers, "_agent_detail_candidates", lambda name: [("p", spec)])
@@ -839,7 +839,7 @@ def test_connection_undo_refuses_a_reauthorized_grant_after_partial_disconnect(
 
 
 def test_connection_read_state_carries_the_grant_fingerprint(monkeypatch):
-    import kiro_crew.connections.status as status
+    import aj_crew.connections.status as status
 
     async def statuses():
         return [{"slug": "github", "grantPresent": True}]
@@ -853,8 +853,8 @@ def test_connection_read_state_carries_the_grant_fingerprint(monkeypatch):
 
 
 def test_connection_grant_fingerprint_reads_the_provider_token_artifact(monkeypatch):
-    from kiro_crew import mcp_grant
-    from kiro_crew.connections import registry
+    from aj_crew import mcp_grant
+    from aj_crew.connections import registry
 
     seen = []
     monkeypatch.setattr(

@@ -80,7 +80,7 @@ class GitHubApi:
         request.add_header("Authorization", f"Bearer {self._token}")
         request.add_header("Accept", "application/vnd.github+json")
         request.add_header("X-GitHub-Api-Version", "2022-11-28")
-        request.add_header("User-Agent", "kirocrew-ci-runner-watchdog")
+        request.add_header("User-Agent", "ajcrew-ci-runner-watchdog")
         # A read is retried once on any transient failure. A mutation is NOT,
         # whatever the failure: once the request may be on the wire its effect
         # is unknown, and a repeat can only turn "it landed" into a conflict;

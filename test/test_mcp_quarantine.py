@@ -17,7 +17,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew import mcp_quarantine
+from aj_crew import mcp_quarantine
 
 
 @pytest.fixture
@@ -583,7 +583,7 @@ class TestClear:
 
 @pytest.fixture
 def endpoint(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     monkeypatch.setattr(mcp_quarantine, "_STORE_PATH", tmp_path / "q.json")
     monkeypatch.setattr(mcp_quarantine, "threshold", lambda: 3)
@@ -708,7 +708,7 @@ class TestAnnotation:
         """
         import inspect
 
-        from kiro_crew.dashboard.handlers import mcp as mcp_mod
+        from aj_crew.dashboard.handlers import mcp as mcp_mod
 
         for fn in (
             mcp_mod.api_mcp_servers,
@@ -726,7 +726,7 @@ class TestAnnotation:
         """Both halves of the record step must be inside ONE ``to_thread``."""
         import inspect
 
-        from kiro_crew.dashboard.handlers import mcp as mcp_mod
+        from aj_crew.dashboard.handlers import mcp as mcp_mod
 
         for fn in (mcp_mod.api_mcp_probe, mcp_mod._run_mcp_probe):
             src = inspect.getsource(fn)
@@ -741,7 +741,7 @@ class TestAnnotation:
         """
         import inspect
 
-        from kiro_crew.dashboard.handlers import mcp as mcp_mod
+        from aj_crew.dashboard.handlers import mcp as mcp_mod
 
         for fn in (mcp_mod.api_mcp_servers, mcp_mod.api_mcp_probe_cached):
             src = inspect.getsource(fn)
@@ -760,14 +760,14 @@ class TestAnnotation:
             )
 
     def test_healthy_rows_are_left_byte_identical(self, store):
-        from kiro_crew.dashboard.handlers import mcp as mcp_mod
+        from aj_crew.dashboard.handlers import mcp as mcp_mod
 
         rows: list[dict] = [{"name": "healthy", "status": "ok"}]
         mcp_mod._annotate_quarantine(rows)
         assert rows == [{"name": "healthy", "status": "ok"}]
 
     def test_a_failing_row_carries_the_count_before_the_threshold(self, store):
-        from kiro_crew.dashboard.handlers import mcp as mcp_mod
+        from aj_crew.dashboard.handlers import mcp as mcp_mod
 
         mcp_quarantine.record_verdicts(_fail("airbnb"))
         rows: list[dict] = [{"name": "airbnb", "status": "error"}]
@@ -776,7 +776,7 @@ class TestAnnotation:
         assert rows[0]["probeFailing"] is False
 
     def test_a_row_over_the_threshold_says_so(self, store):
-        from kiro_crew.dashboard.handlers import mcp as mcp_mod
+        from aj_crew.dashboard.handlers import mcp as mcp_mod
 
         for _ in range(3):
             mcp_quarantine.record_verdicts(_fail("airbnb"))
@@ -786,23 +786,23 @@ class TestAnnotation:
         assert rows[0]["probeFailures"] == 3
 
     def test_every_server_is_counted(self, store):
-        """Including Kiro Crew's own. An earlier revision filtered these out so no
+        """Including Aj Crew's own. An earlier revision filtered these out so no
         badge could claim an unmount that did not happen; nothing is unmounted
         now, so withholding the count would only hide information.
         """
-        from kiro_crew.dashboard.handlers import mcp as mcp_mod
+        from aj_crew.dashboard.handlers import mcp as mcp_mod
 
         rows = [
-            {"name": "kirocrew-core", "status": "error", "error": "x"},
+            {"name": "ajcrew-core", "status": "error", "error": "x"},
             {"name": "airbnb", "status": "error", "error": "x"},
         ]
         assert mcp_mod._quarantine_verdicts(rows) == [
-            ("kirocrew-core", "error", "x"),
+            ("ajcrew-core", "error", "x"),
             ("airbnb", "error", "x"),
         ]
 
     def test_verdict_extraction_tolerates_missing_keys(self, store):
-        from kiro_crew.dashboard.handlers import mcp as mcp_mod
+        from aj_crew.dashboard.handlers import mcp as mcp_mod
 
         assert mcp_mod._quarantine_verdicts([{}]) == []
         assert mcp_mod._quarantine_verdicts([{"name": "a", "status": "ok", "error": None}]) == [
@@ -816,7 +816,7 @@ class TestAnnotation:
         letting that ``ok`` through would clear a real failure streak without a
         single successful handshake.
         """
-        from kiro_crew.dashboard.handlers import mcp as mcp_mod
+        from aj_crew.dashboard.handlers import mcp as mcp_mod
 
         rows = [
             {"name": "declared-srv", "status": "ok", "error": "", "probeMode": "declared"},
@@ -826,7 +826,7 @@ class TestAnnotation:
 
     def test_a_declared_ok_does_not_erase_a_failure_streak(self, store):
         """End to end, through the store rather than just the filter."""
-        from kiro_crew.dashboard.handlers import mcp as mcp_mod
+        from aj_crew.dashboard.handlers import mcp as mcp_mod
 
         for _ in range(3):
             mcp_quarantine.record_verdicts(_fail("srv"))
@@ -848,7 +848,7 @@ class TestAnnotation:
 class TestShutdownRounds:
     @pytest.fixture
     def probe_env(self, store, monkeypatch, tmp_path):
-        from kiro_crew.dashboard.handlers import mcp as mcp_mod
+        from aj_crew.dashboard.handlers import mcp as mcp_mod
 
         monkeypatch.setattr(mcp_mod, "_mcp_probe_cache", [])
         monkeypatch.setattr(mcp_mod, "_mcp_probe_ts", 0.0)
@@ -856,7 +856,7 @@ class TestShutdownRounds:
         monkeypatch.setattr(mcp_mod, "_mcp_probe_task", None)
         monkeypatch.setattr(mcp_mod, "_GLOBAL_MCP_JSON", tmp_path / "absent" / "mcp.json")
         monkeypatch.setattr(
-            "kiro_crew.session.shutdown_event", SimpleNamespace(is_set=lambda: False)
+            "aj_crew.session.shutdown_event", SimpleNamespace(is_set=lambda: False)
         )
         for _ in range(2):
             mcp_quarantine.record_verdicts(_fail("srv", "error", "timeout"))
@@ -879,7 +879,7 @@ class TestShutdownRounds:
                 on_round()
             return [_Row()]
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.probe_all", _probe_all)
+        monkeypatch.setattr("aj_crew.mcp_discovery.probe_all", _probe_all)
 
     @staticmethod
     def _sessions():
@@ -907,7 +907,7 @@ class TestShutdownRounds:
         self, probe_env, monkeypatch
     ):
         monkeypatch.setattr(
-            "kiro_crew.session.shutdown_event", SimpleNamespace(is_set=lambda: True)
+            "aj_crew.session.shutdown_event", SimpleNamespace(is_set=lambda: True)
         )
 
         self._install_round(monkeypatch, "error")

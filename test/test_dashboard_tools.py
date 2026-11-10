@@ -14,9 +14,9 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import dashboard_agentic
-from kiro_crew.dashboard_templates import catalog, instance
-from kiro_crew.mcp_panel import _call_tool_inner, _list_tools, _render_fields
+from aj_crew import dashboard_agentic
+from aj_crew.dashboard_templates import catalog, instance
+from aj_crew.mcp_panel import _call_tool_inner, _list_tools, _render_fields
 
 SLUG = "fleet"
 SESSION = "acp-dash-tools-1"
@@ -90,7 +90,7 @@ def _home(tmp_path, _floor_monkeypatch):
     A body calling ``monkeypatch.undo()`` would lift a shared-stack patch and expose the
     real data home. Two templates because staging and rollback swap one page for another.
     """
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     root = tmp_path / "builtin"
     for manifest, page in (
         (_builtin_manifest(), PAGE),
@@ -106,7 +106,7 @@ def _home(tmp_path, _floor_monkeypatch):
 
 @pytest.fixture
 def _verified_caller() -> Any:
-    with patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value=GOOD_KEY):
+    with patch("aj_crew.mcp_core._resolve_session_key_strict", return_value=GOOD_KEY):
         yield
 
 
@@ -427,7 +427,7 @@ class TestDashboardTemplatesTool:
             "query": "",
             "problems": [],
         }
-        with patch("kiro_crew.mcp_panel._get", return_value=body) as mock_get:
+        with patch("aj_crew.mcp_panel._get", return_value=body) as mock_get:
             out = _call_tool_inner("dashboard_templates", {})
         assert "fixture-board" in out and "ON NOW" in out
         # The next step is named in the answer, because an agent that lists and then
@@ -436,14 +436,14 @@ class TestDashboardTemplatesTool:
         assert mock_get.call_args[0][0] == "/api/agent-panel/dashboard/templates"
 
     def test_a_query_is_passed_through_url_encoded(self, _verified_caller: Any) -> None:
-        with patch("kiro_crew.mcp_panel._get", return_value={"templates": []}) as mock_get:
+        with patch("aj_crew.mcp_panel._get", return_value={"templates": []}) as mock_get:
             _call_tool_inner("dashboard_templates", {"query": "shows cost"})
         assert mock_get.call_args[0][0].endswith("?query=shows%20cost")
 
     def test_an_empty_result_tells_the_agent_what_to_do_instead(
         self, _verified_caller: Any
     ) -> None:
-        with patch("kiro_crew.mcp_panel._get", return_value={"templates": [], "query": "cost"}):
+        with patch("aj_crew.mcp_panel._get", return_value={"templates": [], "query": "cost"}):
             out = _call_tool_inner("dashboard_templates", {"query": "cost"})
         assert "No dashboard template matches" in out
         # Fewer words, or none at all -- NOT "write the page yourself", which this
@@ -451,7 +451,7 @@ class TestDashboardTemplatesTool:
         assert "fewer" in out and "no `query`" in out
 
     def test_a_non_string_query_is_refused_before_the_gateway(self, _verified_caller: Any) -> None:
-        with patch("kiro_crew.mcp_panel._get") as mock_get:
+        with patch("aj_crew.mcp_panel._get") as mock_get:
             out = _call_tool_inner("dashboard_templates", {"query": 7})
         assert out.startswith("Error:")
         mock_get.assert_not_called()
@@ -478,18 +478,18 @@ class TestTemplateSearchMatching:
         exactly the thing the person asked for, because the author never put the word
         in the title.
         """
-        from kiro_crew.dashboard.handlers.agent_panel import _template_matches
+        from aj_crew.dashboard.handlers.agent_panel import _template_matches
 
         assert _template_matches(self._listing(), "cost")
 
     def test_every_word_has_to_match(self) -> None:
-        from kiro_crew.dashboard.handlers.agent_panel import _template_matches
+        from aj_crew.dashboard.handlers.agent_panel import _template_matches
 
         assert _template_matches(self._listing(), "cost usage")
         assert not _template_matches(self._listing(), "cost latency")
 
     def test_matching_is_case_folded(self) -> None:
-        from kiro_crew.dashboard.handlers.agent_panel import _template_matches
+        from aj_crew.dashboard.handlers.agent_panel import _template_matches
 
         assert _template_matches(self._listing(), "COST")
 
@@ -508,7 +508,7 @@ class TestDashboardPreviewTool:
                 "preview_url": "/members?member=fleet&dashboard=preview",
             },
         }
-        with patch("kiro_crew.mcp_panel._post", return_value=body):
+        with patch("aj_crew.mcp_panel._post", return_value=body):
             out = _call_tool_inner("dashboard_preview", {"template_id": "fixture-board"})
         assert "NOTHING has changed" in out
         # A markdown link, because the chat links a root-relative href only in that
@@ -540,14 +540,14 @@ class TestDashboardPreviewTool:
         this tool does not phrase its own; and refusing before the post means an agent
         that wrote a page learns why without spending a round trip on it.
         """
-        with patch("kiro_crew.mcp_panel._post") as mock_post:
+        with patch("aj_crew.mcp_panel._post") as mock_post:
             out = _call_tool_inner("dashboard_preview", args)
         assert out == f"Error: {instance.AUTHORED_PAGE_REFUSAL}"
         assert "dashboard_save" in out
         mock_post.assert_not_called()
 
     def test_previewing_nothing_is_refused_locally(self, _verified_caller: Any) -> None:
-        with patch("kiro_crew.mcp_panel._post") as mock_post:
+        with patch("aj_crew.mcp_panel._post") as mock_post:
             out = _call_tool_inner("dashboard_preview", {})
         assert out.startswith("Error:") and "nothing to preview" in out
         mock_post.assert_not_called()
@@ -573,7 +573,7 @@ class TestDashboardPreviewTool:
             "this page and manifest do not load: template.html binds 'ghost', which "
             "the manifest does not declare"
         )
-        with patch("kiro_crew.mcp_panel._post", return_value={"error": refusal}):
+        with patch("aj_crew.mcp_panel._post", return_value={"error": refusal}):
             out = _call_tool_inner("dashboard_preview", {"template_id": "fixture-broken"})
         assert "ghost" in out and "does not declare" in out
 
@@ -581,7 +581,7 @@ class TestDashboardPreviewTool:
 class TestDashboardApplyTool:
     def test_it_reports_the_new_version(self, _verified_caller: Any) -> None:
         body = {"ok": True, "instance_version": 4, "template_id": "fixture-board"}
-        with patch("kiro_crew.mcp_panel._post", return_value=body) as mock_post:
+        with patch("aj_crew.mcp_panel._post", return_value=body) as mock_post:
             out = _call_tool_inner("dashboard_apply", {})
         assert "version 4" in out and "fixture-board" in out
         # NO BODY, which is the property the tool's description advertises.
@@ -595,13 +595,13 @@ class TestDashboardApplyTool:
         tool = next(t for t in _list_tools() if t["name"] == "dashboard_apply")
         assert "reusable template" not in tool["description"]
         body = {"ok": True, "instance_version": 1, "template_id": "fixture-other"}
-        with patch("kiro_crew.mcp_panel._post", return_value=body):
+        with patch("aj_crew.mcp_panel._post", return_value=body):
             out = _call_tool_inner("dashboard_apply", {})
         assert "saved" not in out
 
     def test_a_refusal_with_nothing_staged_comes_back(self, _verified_caller: Any) -> None:
         refusal = "there is no page staged to keep; preview one first"
-        with patch("kiro_crew.mcp_panel._post", return_value={"error": refusal}):
+        with patch("aj_crew.mcp_panel._post", return_value={"error": refusal}):
             out = _call_tool_inner("dashboard_apply", {})
         assert out.startswith("Error:") and "preview one first" in out
 
@@ -615,14 +615,14 @@ class TestTheRepliesNameNoFeaturePreview:
 
     def test_apply_names_no_switch(self, _verified_caller: Any) -> None:
         body = {"ok": True, "instance_version": 4, "template_id": "fixture-board"}
-        with patch("kiro_crew.mcp_panel._post", return_value=body):
+        with patch("aj_crew.mcp_panel._post", return_value=body):
             out = _call_tool_inner("dashboard_apply", {})
         assert "version 4" in out
         assert "Feature Preview" not in out
 
     def test_write_names_no_switch(self, _verified_caller: Any) -> None:
         body = {"ok": True, "written": {"field": "credits", "type": "number"}}
-        with patch("kiro_crew.mcp_panel._post", return_value=body):
+        with patch("aj_crew.mcp_panel._post", return_value=body):
             out = _call_tool_inner("dashboard_write", {"field": "credits", "value": 3})
         assert "credits" in out
         assert "Feature Preview" not in out
@@ -638,7 +638,7 @@ class TestTheRepliesNameNoFeaturePreview:
             assert "Feature Preview" not in tool["description"], tool["name"]
 
     def test_the_old_note_is_gone(self) -> None:
-        import kiro_crew.mcp_panel as mcp_panel
+        import aj_crew.mcp_panel as mcp_panel
 
         assert getattr(mcp_panel, "DASHBOARD_PREVIEW_NOTE", None) is None
 
@@ -653,12 +653,12 @@ class TestDashboardRollbackTool:
         version nobody is on.
         """
         body = {"ok": True, "instance_version": 3, "restored_from": 1, "template_id": "x"}
-        with patch("kiro_crew.mcp_panel._post", return_value=body):
+        with patch("aj_crew.mcp_panel._post", return_value=body):
             out = _call_tool_inner("dashboard_rollback", {"to_version": 1})
         assert "Restored version 1 as version 3" in out
 
     def test_version_zero_is_refused_before_the_gateway(self, _verified_caller: Any) -> None:
-        with patch("kiro_crew.mcp_panel._post") as mock_post:
+        with patch("aj_crew.mcp_panel._post") as mock_post:
             out = _call_tool_inner("dashboard_rollback", {"to_version": 0})
         assert out.startswith("Error:") and "dashboard_fields" in out
         mock_post.assert_not_called()
@@ -667,7 +667,7 @@ class TestDashboardRollbackTool:
         self, _verified_caller: Any
     ) -> None:
         refusal = "instance version 2 is no longer kept; kept versions: [7, 8, 9]"
-        with patch("kiro_crew.mcp_panel._post", return_value={"error": refusal}):
+        with patch("aj_crew.mcp_panel._post", return_value={"error": refusal}):
             out = _call_tool_inner("dashboard_rollback", {"to_version": 2})
         assert "[7, 8, 9]" in out
 

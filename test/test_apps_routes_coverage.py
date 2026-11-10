@@ -1,4 +1,4 @@
-"""Coverage tests for kiro_crew.apps.routes — validation, denial and error paths.
+"""Coverage tests for aj_crew.apps.routes — validation, denial and error paths.
 
 Complements ``test_app_routes.py`` (happy-path lifecycle) by exercising the
 branches a normal install/enable/uninstall never reaches: input validation,
@@ -7,7 +7,7 @@ and SSE-stream endpoints, the git-blob proxy's SSRF gate, and the app-backend
 reverse proxy's authorization gates.
 
 Everything runs in-process against ``aiohttp``'s ``TestServer`` with
-``KIROCREW_HOME`` pointed at ``tmp_path``. No git, no network egress, no
+``AJCREW_HOME`` pointed at ``tmp_path``. No git, no network egress, no
 subprocesses: the few handlers that genuinely shell out are reached only on
 branches that return before the spawn, and the paths that cannot avoid it
 (``_run_lifecycle_script``, ``_fetch_git_blob``, the real ``openCommand``
@@ -47,21 +47,21 @@ from apps_routes_coverage_helpers import (
 )
 from dashboard_owner_helpers import as_owner
 
-import kiro_crew.apps.backend as backend_mod
-import kiro_crew.apps.routes as routes_mod
-from kiro_crew.apps.manager import (
+import aj_crew.apps.backend as backend_mod
+import aj_crew.apps.routes as routes_mod
+from aj_crew.apps.manager import (
     APP_MANIFEST_FILENAME,
     AppResult,
     enable_app,
     register_external_app,
 )
-from kiro_crew.apps.routes import (
+from aj_crew.apps.routes import (
     _notify_builtin_service,
     _sync_builtin_config,
     _unregister_notification_channels,
     register_app_routes,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 
 async def _no_op_executor(*args: Any, **kwargs: Any) -> None:
@@ -193,7 +193,7 @@ class TestBuiltinServiceHelpers:
 class TestUnregisterNotificationChannels:
     def test_noop_without_state_or_bus(self, caplog: pytest.LogCaptureFixture) -> None:
         # No state at all, and state without a bus, must both be silent.
-        caplog.set_level("INFO", logger="kiro_crew.apps.routes")
+        caplog.set_level("INFO", logger="aj_crew.apps.routes")
         _unregister_notification_channels(
             make_mocked_request("POST", "/x", app=web.Application()), APP
         )
@@ -202,10 +202,10 @@ class TestUnregisterNotificationChannels:
         _unregister_notification_channels(
             make_mocked_request("POST", "/x", app=app), APP
         )
-        assert [r for r in caplog.records if r.name == "kiro_crew.apps.routes"] == []
+        assert [r for r in caplog.records if r.name == "aj_crew.apps.routes"] == []
 
     def test_unregisters_via_bus(self, caplog: pytest.LogCaptureFixture) -> None:
-        caplog.set_level("INFO", logger="kiro_crew.apps.routes")
+        caplog.set_level("INFO", logger="aj_crew.apps.routes")
         bus = MagicMock()
         bus.unregister_app_channels.return_value = 2
         app = web.Application()
@@ -214,7 +214,7 @@ class TestUnregisterNotificationChannels:
             make_mocked_request("POST", "/x", app=app), APP
         )
         bus.unregister_app_channels.assert_called_once_with(APP)
-        messages = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.apps.routes"]
+        messages = [r.getMessage() for r in caplog.records if r.name == "aj_crew.apps.routes"]
         assert messages == [f"Unregistered 2 notification channel(s) for app {APP}"]
 
 
@@ -514,7 +514,7 @@ async def test_list_apps_resolves_legacy_registry_trust_repository(
     )
     monkeypatch.setattr(routes_mod, "list_app_processes", lambda: [])
     monkeypatch.setattr(
-        "kiro_crew.apps.registry.get_registry_app",
+        "aj_crew.apps.registry.get_registry_app",
         lambda name: {"name": name, "gitUrl": f"{clone_target}.git"},
     )
 
@@ -546,7 +546,7 @@ async def test_get_app_keeps_genuinely_local_app_repositoryless(
     def _must_not_resolve(_name: str):
         pytest.fail("a local install must not fall through to the registry")
 
-    monkeypatch.setattr("kiro_crew.apps.registry.get_registry_app", _must_not_resolve)
+    monkeypatch.setattr("aj_crew.apps.registry.get_registry_app", _must_not_resolve)
 
     async with TestClient(TestServer(_make_app())) as client:
         resp = await client.get(f"/api/apps/{APP}")
@@ -629,7 +629,7 @@ class TestInstallValidation:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         home = _setup_env(tmp_path, monkeypatch)
-        src = _make_app_source(tmp_path, minKiroCrewVersion="999.0.0")
+        src = _make_app_source(tmp_path, minAjCrewVersion="999.0.0")
         async with TestClient(TestServer(_make_app(dashboard_user="owner"))) as client:
             resp = await client.post("/api/apps/install", json={"source": str(src)})
             assert resp.status == 400
@@ -677,7 +677,7 @@ class TestInstallValidation:
         # launcher) backend with the None of "no backend declared". The install
         # lands disabled and starts nothing; the enable that follows starts the
         # backend and names the refusal in ``backend_refused``.
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         _setup_env(tmp_path, monkeypatch)
         src = _make_app_source(
@@ -935,7 +935,7 @@ class TestRegisterExternal:
     async def test_public_registration_cannot_mint_registry_provenance(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.apps.manager import _read_installed
+        from aj_crew.apps.manager import _read_installed
 
         _setup_env(tmp_path, monkeypatch)
         async with TestClient(TestServer(_make_app(dashboard_user="owner"))) as client:
@@ -961,7 +961,7 @@ class TestRegisterExternal:
     async def test_public_registration_cannot_mint_builtin_ownership(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.apps.manager import _builtin_owns_install, _read_installed
+        from aj_crew.apps.manager import _builtin_owns_install, _read_installed
 
         _setup_env(tmp_path, monkeypatch)
         async with TestClient(TestServer(_make_app(dashboard_user="owner"))) as client:
@@ -998,7 +998,7 @@ class TestRegisterExternal:
     async def test_registration_never_persists_or_returns_source_credentials(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.apps.manager import INSTALLED_META_FILENAME, app_dir
+        from aj_crew.apps.manager import INSTALLED_META_FILENAME, app_dir
 
         _setup_env(tmp_path, monkeypatch)
         credential = "register-source-secret"
@@ -1080,7 +1080,7 @@ class TestRegisterExternal:
         safe_source: str,
         secret: str,
     ) -> None:
-        from kiro_crew.apps.manager import INSTALLED_META_FILENAME, app_dir
+        from aj_crew.apps.manager import INSTALLED_META_FILENAME, app_dir
 
         _setup_env(tmp_path, monkeypatch)
         async with TestClient(TestServer(_make_app(dashboard_user="owner"))) as client:
@@ -1121,11 +1121,11 @@ class TestRegisterExternal:
         reads them from a snapshot install and update republish; registering must
         republish it too, or the app's section reads as an unrecognized key until a
         restart. The refresh scans the apps directory, so it runs off the loop."""
-        from kiro_crew.config import validation
+        from aj_crew.config import validation
 
         _setup_env(tmp_path, monkeypatch)
         refresh_threads: list[int] = []
-        from kiro_crew.apps.manager import refresh_app_config_keys as real_refresh
+        from aj_crew.apps.manager import refresh_app_config_keys as real_refresh
 
         def _observed_refresh() -> frozenset[str]:
             refresh_threads.append(threading.get_ident())
@@ -1167,8 +1167,8 @@ class TestRegisterExternal:
         monkeypatch: pytest.MonkeyPatch,
         repository_bound: bool,
     ) -> None:
-        from kiro_crew.apps.manager import _read_installed, set_app_provenance
-        from kiro_crew.config.loader import _invalidate_config_cache
+        from aj_crew.apps.manager import _read_installed, set_app_provenance
+        from aj_crew.config.loader import _invalidate_config_cache
 
         home = _setup_env(tmp_path, monkeypatch)
         _invalidate_config_cache()
@@ -1238,7 +1238,7 @@ class TestRegisterExternal:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The route lock prevents a stale pre-transition snapshot write-back."""
-        from kiro_crew.apps.manager import (
+        from aj_crew.apps.manager import (
             _read_installed,
             app_lifecycle_lock,
             set_app_provenance,
@@ -1369,7 +1369,7 @@ class TestLifecycleRoutesAreOwnerOnly:
     async def test_app_token_cannot_register_over_another_app(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.apps.manager import app_dir
+        from aj_crew.apps.manager import app_dir
 
         _setup_env(tmp_path, monkeypatch)
         _install(tmp_path)

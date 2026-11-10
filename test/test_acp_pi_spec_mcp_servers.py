@@ -21,16 +21,16 @@ from acp_session_mcp_helpers import agents_dir_fixture  # noqa: F401
 from acp_session_mcp_helpers import isolated_seed_provenance  # noqa: F401
 from acp_session_mcp_helpers import _by_name, _write_spec
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_OPENCODE, ACP_BACKEND_PI
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_OPENCODE, ACP_BACKEND_PI
 
-_MEMBER_KEY = "dashboard:member-kirocrew"
+_MEMBER_KEY = "dashboard:member-ajcrew"
 
 
 def _member_client(tmp_path, backend):
     client = AcpClient(
         work_dir=tmp_path,
-        agent="kirocrew",
+        agent="ajcrew",
         acp_backend=backend,
         session_key=_MEMBER_KEY,
     )
@@ -40,50 +40,50 @@ def _member_client(tmp_path, backend):
 
 class TestPiCarriesSpecDeclaredServers:
     def test_a_spec_declared_server_reaches_the_pi_session(self, tmp_path, agents_dir):
-        # The spec declares its OWN server (foo ~ gitlab) and kirocrew-core, with a
+        # The spec declares its OWN server (foo ~ gitlab) and ajcrew-core, with a
         # tools allowlist referencing both. mcp_gateway off (fixture default): no
         # broker stubs, so the spec translation is the only channel for these names.
         _write_spec(
             agents_dir,
             servers={
                 "foo": {"command": "/bin/foo", "args": ["serve"]},
-                "kirocrew-core": {"command": "/opt/kirocrew", "args": ["mcp-core"]},
+                "ajcrew-core": {"command": "/opt/ajcrew", "args": ["mcp-core"]},
             },
-            tools=["@foo", "@kirocrew-core"],
+            tools=["@foo", "@ajcrew-core"],
         )
         client = _member_client(tmp_path, ACP_BACKEND_PI)
         names = _by_name(client._session_mcp_servers())
         assert "foo" in names
-        assert "kirocrew-core" in names
+        assert "ajcrew-core" in names
 
     def test_pi_carries_the_same_spec_set_as_opencode(self, tmp_path, agents_dir):
         _write_spec(
             agents_dir,
             servers={
                 "foo": {"command": "/bin/foo", "args": ["serve"]},
-                "kirocrew-core": {"command": "/opt/kirocrew", "args": ["mcp-core"]},
+                "ajcrew-core": {"command": "/opt/ajcrew", "args": ["mcp-core"]},
             },
-            tools=["@foo", "@kirocrew-core"],
+            tools=["@foo", "@ajcrew-core"],
         )
         pi_names = set(_by_name(_member_client(tmp_path, ACP_BACKEND_PI)._session_mcp_servers()))
         oc_names = set(
             _by_name(_member_client(tmp_path, ACP_BACKEND_OPENCODE)._session_mcp_servers())
         )
         # The spec-declared servers pi now carries match the mirrored harness's.
-        assert {"foo", "kirocrew-core"} <= pi_names
-        assert {"foo", "kirocrew-core"} <= oc_names
+        assert {"foo", "ajcrew-core"} <= pi_names
+        assert {"foo", "ajcrew-core"} <= oc_names
 
-    def test_kirocrew_core_carries_this_session_identity(self, tmp_path, agents_dir):
+    def test_ajcrew_core_carries_this_session_identity(self, tmp_path, agents_dir):
         # Crew's control plane rides the live session identity, not the spec's env.
         _write_spec(
             agents_dir,
-            servers={"kirocrew-core": {"command": "/opt/kirocrew", "args": ["mcp-core"]}},
-            tools=["@kirocrew-core"],
+            servers={"ajcrew-core": {"command": "/opt/ajcrew", "args": ["mcp-core"]}},
+            tools=["@ajcrew-core"],
         )
         client = _member_client(tmp_path, ACP_BACKEND_PI)
-        core = _by_name(client._session_mcp_servers())["kirocrew-core"]
+        core = _by_name(client._session_mcp_servers())["ajcrew-core"]
         env = {p["name"]: p["value"] for p in core.get("env") or []}
-        assert env.get("KIROCREW_SESSION_KEY") == _MEMBER_KEY
+        assert env.get("AJCREW_SESSION_KEY") == _MEMBER_KEY
 
 
 class TestSpecRestrictionsAreHonoured:
@@ -128,5 +128,5 @@ class TestNoSpecServersIsUnchanged:
         names = set(_by_name(client._session_mcp_servers()))
         # No agent-spec server was invented; the control plane also stays out,
         # because an empty tools list grants nothing.
-        assert "kirocrew-core" not in names
-        assert names <= {"kirocrew-dashboard", "kirocrew-panel"}
+        assert "ajcrew-core" not in names
+        assert names <= {"ajcrew-dashboard", "ajcrew-panel"}

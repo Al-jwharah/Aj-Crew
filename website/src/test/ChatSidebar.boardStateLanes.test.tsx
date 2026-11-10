@@ -345,7 +345,7 @@ describe('board state lanes: queued children', () => {
 
   it('keeps a session with a started child in Working while more are queued', async () => {
     const { container } = await renderSidebar([queuedOnly], store => {
-      store.dispatch(sseSubagentSpawn({ slot: 'chat-queued', id: 'a1', task: 't', agent: 'kirocrew' }))
+      store.dispatch(sseSubagentSpawn({ slot: 'chat-queued', id: 'a1', task: 't', agent: 'ajcrew' }))
       store.dispatch(sseSubagentQueued({ slot: 'chat-queued', queued: 2 }))
     })
     expect(slotKeysIn(container, 'lane-working')).toEqual(['chat-queued'])

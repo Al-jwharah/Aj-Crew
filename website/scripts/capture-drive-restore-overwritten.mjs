@@ -52,7 +52,7 @@ const ACCOUNTS = {
   generatedAt: '2026-09-11T00:00:00Z',
 }
 const DRIVE = {
-  exists: true, bucket: `kirocrew-drive-${ACC}-usw2`, region: PROFILE.region,
+  exists: true, bucket: `ajcrew-drive-${ACC}-usw2`, region: PROFILE.region,
   usage: {
     bytes: 1_181_116_006, objects: 42,
     sections: {
@@ -72,7 +72,7 @@ const CONSENT = {
 }
 
 const SELF_ID = 'a'.repeat(32)
-const KEY = 'kirocrew/backups/snapshot/2026-09-10T00-00-00Z.tar.zst'
+const KEY = 'ajcrew/backups/snapshot/2026-09-10T00-00-00Z.tar.zst'
 /** The ledger attributes the archive to this install; the drive's bytes disagree. */
 const BACKUP = {
   nightly: false, runs: {}, install: { id: SELF_ID, label: 'this box' },

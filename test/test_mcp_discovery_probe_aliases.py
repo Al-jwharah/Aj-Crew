@@ -23,12 +23,12 @@ from mcp_discovery_helpers import (  # noqa: F401 -- the autouse fixture registe
     _stub_remote_probe_ssrf_vet,
 )
 
-from kiro_crew.mcp_discovery import (
+from aj_crew.mcp_discovery import (
     PROBE_MAX_CONCURRENCY,
     McpServerInfo,
     _spawn_fingerprint,
 )
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 HEAVY = ("npx", ["-y", "@azure-devops/mcp", "contoso"])
 
@@ -85,7 +85,7 @@ class _Tracker:
 
     async def run_pass(self, first_wave: int) -> list[McpServerInfo]:
         """One ``probe_all`` pass, opened once *first_wave* probes are parked."""
-        from kiro_crew.mcp_discovery import probe_all
+        from aj_crew.mcp_discovery import probe_all
 
         self.gate.clear()
         self.peak.clear()
@@ -101,8 +101,8 @@ class _Tracker:
 
 @pytest.fixture(autouse=True)
 def _no_quarantine(tmp_path, _floor_monkeypatch):
-    from kiro_crew import mcp_quarantine
-    from kiro_crew.mcp_discovery import _quarantine_warned
+    from aj_crew import mcp_quarantine
+    from aj_crew.mcp_discovery import _quarantine_warned
 
     _floor_monkeypatch.setattr(mcp_quarantine, "_STORE_PATH", tmp_path / "quarantine.json")
     _floor_monkeypatch.setattr(mcp_quarantine, "threshold", lambda: 3)
@@ -114,8 +114,8 @@ def _no_quarantine(tmp_path, _floor_monkeypatch):
 
 
 def _configure(monkeypatch, rows: list[McpServerInfo], probe) -> None:
-    monkeypatch.setattr("kiro_crew.mcp_discovery.list_servers", lambda: list(rows))
-    monkeypatch.setattr("kiro_crew.mcp_discovery.probe_server", probe)
+    monkeypatch.setattr("aj_crew.mcp_discovery.list_servers", lambda: list(rows))
+    monkeypatch.setattr("aj_crew.mcp_discovery.probe_server", probe)
 
 
 class TestAliasesDoNotOverlap:
@@ -191,7 +191,7 @@ class TestStormTimeoutDoesNotQuarantine:
         Three passes reach the threshold of three. The server answers whenever it
         runs alone, so no row may end up ``probeFailing``.
         """
-        from kiro_crew import mcp_quarantine
+        from aj_crew import mcp_quarantine
 
         tracker = _Tracker(verdict=_times_out_when_crowded)
         _configure(monkeypatch, _aliases(4), tracker)
@@ -207,7 +207,7 @@ class TestStormTimeoutDoesNotQuarantine:
     @pytest.mark.asyncio
     async def test_a_server_that_really_fails_is_still_quarantined(self, monkeypatch) -> None:
         """The quarantine rule is unchanged for a server that fails on its own."""
-        from kiro_crew import mcp_quarantine
+        from aj_crew import mcp_quarantine
 
         tracker = _Tracker(verdict=lambda overlap: ("timeout", "probe timed out after 15s"))
         _configure(monkeypatch, _aliases(2), tracker)
@@ -243,7 +243,7 @@ class TestSpawnFingerprint:
 
     def test_windows_spellings_of_one_launcher_share_a_key(self, monkeypatch) -> None:
         """Windows ignores case and the PATHEXT suffix, and a path names the same file."""
-        from kiro_crew import mcp_discovery
+        from aj_crew import mcp_discovery
 
         monkeypatch.setattr(mcp_discovery.platform_compat, "IS_WINDOWS", True)
         # Joined with the host's separator, as ``_win_exec_suffixes`` splits it.
@@ -265,7 +265,7 @@ class TestSpawnFingerprint:
         assert _spawn_fingerprint(script) == ("srv.py",)
 
     def test_posix_keeps_the_command_as_written(self, monkeypatch) -> None:
-        from kiro_crew import mcp_discovery
+        from aj_crew import mcp_discovery
 
         monkeypatch.setattr(mcp_discovery.platform_compat, "IS_WINDOWS", False)
         a = McpServerInfo(name="a", command="tool", args=[])
@@ -309,7 +309,7 @@ class _CrowdedHost:
             self.active.remove(me)
 
     async def run_pass(self, first_wave: int) -> list[McpServerInfo]:
-        from kiro_crew.mcp_discovery import probe_all
+        from aj_crew.mcp_discovery import probe_all
 
         self.gate.clear()
         task = asyncio.ensure_future(probe_all())
@@ -341,7 +341,7 @@ class TestTimedOutProbeIsRetriedAlone:
 
     @pytest.mark.asyncio
     async def test_the_burst_adds_no_quarantine_strike(self, monkeypatch) -> None:
-        from kiro_crew import mcp_quarantine
+        from aj_crew import mcp_quarantine
 
         host = _CrowdedHost()
         _configure(monkeypatch, _distinct(3), host)
@@ -357,7 +357,7 @@ class TestTimedOutProbeIsRetriedAlone:
     async def test_a_server_that_hangs_alone_is_retried_once_and_still_quarantined(
         self, monkeypatch
     ) -> None:
-        from kiro_crew import mcp_quarantine
+        from aj_crew import mcp_quarantine
 
         host = _CrowdedHost(hangs=frozenset({"srv-0"}))
         _configure(monkeypatch, _distinct(2), host)

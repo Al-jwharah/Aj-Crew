@@ -32,7 +32,7 @@ import '../src/index.css'
 
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const OWNER = 'kirodotdev'
 const REPO = 'Kiro'
@@ -49,7 +49,7 @@ const PAYLOAD: CrewDetailResponse = {
     name: 'Andromeda',
     avatar_seed: CREW,
     avatar_variant: 2,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     model: 'claude-opus-5',
     extra_prompt: '',
     labels: ['area: apps'],

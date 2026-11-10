@@ -87,7 +87,7 @@ on:
       build_channel:
         description: >-
           Release lane baked into the backend's _build_info.BUILD_CHANNEL
-          (scripts/stamp-distribution.sh, read by kiro_crew.build_channel).
+          (scripts/stamp-distribution.sh, read by aj_crew.build_channel).
           nightly.yml passes nightly, which makes a nightly build default
           agent.kas_bundle on. Empty (the default) stamps no lane.
         required: false
@@ -96,7 +96,7 @@ on:
       ui_index_strict:
         description: >-
           Fail the frontend build when the committed find_ui index
-          (src/kiro_crew/docs/ui-index.generated.json, guidePlans.gen.ts) is
+          (src/aj_crew/docs/ui-index.generated.json, guidePlans.gen.ts) is
           stale, instead of warning. Sets KC_UI_INDEX_STRICT=1 for
           `npm run build`. release.yml passes true so a stale release branch
           fails before any lane publishes; nightly.yml leaves it false, so a
@@ -167,7 +167,7 @@ on:
       build_channel:
         description: >-
           Release lane baked into the backend's _build_info.BUILD_CHANNEL
-          (scripts/stamp-distribution.sh, read by kiro_crew.build_channel).
+          (scripts/stamp-distribution.sh, read by aj_crew.build_channel).
           nightly.yml passes nightly, which makes a nightly build default
           agent.kas_bundle on. Empty (the default) stamps no lane.
         required: false
@@ -176,7 +176,7 @@ on:
       ui_index_strict:
         description: >-
           Fail the frontend build when the committed find_ui index
-          (src/kiro_crew/docs/ui-index.generated.json, guidePlans.gen.ts) is
+          (src/aj_crew/docs/ui-index.generated.json, guidePlans.gen.ts) is
           stale, instead of warning. Sets KC_UI_INDEX_STRICT=1 for
           `npm run build`. release.yml passes true so a stale release branch
           fails before any lane publishes; nightly.yml leaves it false, so a
@@ -194,7 +194,7 @@ env:
   KC_UI_INDEX_STRICT: ${{ inputs.ui_index_strict && '1' || '' }}
   # The edition stamp (setup.py build_py, packaging/build-desktop.sh). Empty for
   # every caller but release-lts.yml, which both readers take as oss.
-  KIROCREW_BUILD_EDITION: ${{ inputs.edition == 'lts' && 'lts' || '' }}
+  AJCREW_BUILD_EDITION: ${{ inputs.edition == 'lts' && 'lts' || '' }}
   # Read by scripts/stamp-distribution.sh: the lane baked into _build_info.py.
   KC_BUILD_CHANNEL: ${{ inputs.build_channel }}
 
@@ -206,8 +206,8 @@ jobs:
     # trigger does not declare the input, and GitHub rejects the workflow at
     # startup. Comparing to true always produces a boolean.
     continue-on-error: ${{ inputs.soft_fail == true }}
-    # The `kirocrew-runners-windows` larger-runner group, targeted by its
-    # `kirocrew-windows-4-core` LABEL rather than by `group:`; see "The Windows
+    # The `ajcrew-runners-windows` larger-runner group, targeted by its
+    # `ajcrew-windows-4-core` LABEL rather than by `group:`; see "The Windows
     # larger-runner group" in docs/ci/ci-and-reviews.md. The group belongs to
     # the kirodotdev organization, and this workflow's two triggers --
     # workflow_call and workflow_dispatch -- are both ones a fork can fire on
@@ -215,7 +215,7 @@ jobs:
     # leave such a run queued with no runner that can ever claim it, so the
     # repository test picks the group here and leaves every other repository on
     # the shared pool.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-windows-4-core' || 'windows-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-windows-4-core' || 'windows-latest' }}
     timeout-minutes: 60
     # Set only by the step that runs AFTER the artifact upload succeeded, so a
     # consumer job can tell "built and uploaded" from "soft-failed": under
@@ -297,8 +297,8 @@ jobs:
         # sed -i.bak / rm -f are bash-isms.
         shell: bash
         run: |
-          sed -i.bak "s/__version__ = \".*\"/__version__ = \"${STAMP_VERSION}\"/" src/kiro_crew/__init__.py
-          rm -f src/kiro_crew/__init__.py.bak
+          sed -i.bak "s/__version__ = \".*\"/__version__ = \"${STAMP_VERSION}\"/" src/aj_crew/__init__.py
+          rm -f src/aj_crew/__init__.py.bak
           # Stamp the Electron app: app.getVersion() (from package.json via
           # electron-builder) must equal the feed version for the
           # auto-updater's compare gate.
@@ -308,7 +308,7 @@ jobs:
       # Scoped as tightly as the role allows: 1-hour session, assumable only
       # from main / environment:prod, and its only permission is sts:AssumeRole
       # onto the artifact role behind an ExternalId gate. Declared in
-      # KiroCrewPublishCDK lib/windows-signer-stack.ts.
+      # AjCrewPublishCDK lib/windows-signer-stack.ts.
       #
       # Skips on a fork or when the secret is absent, which -- together with
       # the env gate on the WINDOWS_SIGNING_* values below -- leaves the
@@ -348,13 +348,13 @@ jobs:
           # ungated partial set would make it try to sign without credentials
           # and fail the build instead of skipping. The values themselves are
           # not secret (bucket and role names); only the role ARN is a secret.
-          WINDOWS_SIGNING_UNSIGNED_BUCKET: ${{ env.HAS_WINDOWS_SIGNING && 'kirocrew-windows-unsigned-116101834266' || '' }}
-          WINDOWS_SIGNING_SIGNED_BUCKET: ${{ env.HAS_WINDOWS_SIGNING && 'kirocrew-windows-signed-116101834266' || '' }}
-          WINDOWS_SIGNING_PROFILE_ID: ${{ env.HAS_WINDOWS_SIGNING && 'KiroCrewWindowsExe' || '' }}
-          WINDOWS_SIGNING_ARTIFACT_ROLE: ${{ env.HAS_WINDOWS_SIGNING && 'arn:aws:iam::116101834266:role/KiroCrewWindows-ArtifactAccessRole' || '' }}
+          WINDOWS_SIGNING_UNSIGNED_BUCKET: ${{ env.HAS_WINDOWS_SIGNING && 'ajcrew-windows-unsigned-116101834266' || '' }}
+          WINDOWS_SIGNING_SIGNED_BUCKET: ${{ env.HAS_WINDOWS_SIGNING && 'ajcrew-windows-signed-116101834266' || '' }}
+          WINDOWS_SIGNING_PROFILE_ID: ${{ env.HAS_WINDOWS_SIGNING && 'AjCrewWindowsExe' || '' }}
+          WINDOWS_SIGNING_ARTIFACT_ROLE: ${{ env.HAS_WINDOWS_SIGNING && 'arn:aws:iam::116101834266:role/AjCrewWindows-ArtifactAccessRole' || '' }}
           # Equals the Signer application name; ArtifactAccessRole's trust
           # policy requires it as sts:ExternalId.
-          WINDOWS_SIGNING_EXTERNAL_ID: ${{ env.HAS_WINDOWS_SIGNING && 'KiroCrewWindows' || '' }}
+          WINDOWS_SIGNING_EXTERNAL_ID: ${{ env.HAS_WINDOWS_SIGNING && 'AjCrewWindows' || '' }}
 
       # The installer and its blockmap are one artifact in two files: without
       # the .blockmap, electron-updater silently falls back to a FULL download
@@ -469,7 +469,7 @@ jobs:
     if: needs.build-windows.outputs.artifact_uploaded == 'true'
     # Same group, same label form, and for the same fork reason as the build
     # job above.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-windows-4-core' || 'windows-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-windows-4-core' || 'windows-latest' }}
     # The install has a 300s ceiling and the gateway boot 180s, both enforced
     # inside the script. 30 minutes covers those plus checkout and download with
     # room for a cold runner, and is not a substitute for either ceiling.
@@ -500,9 +500,9 @@ jobs:
         with:
           name: windows-install-smoke-evidence
           path: |
-            ${{ runner.temp }}/kirocrew-smoke-*/gateway-stdout.log
-            ${{ runner.temp }}/kirocrew-smoke-*/gateway-stderr.log
-            ${{ runner.temp }}/kirocrew-smoke-*/cli-version.out
-            ${{ runner.temp }}/kirocrew-smoke-*/cli-version.err
+            ${{ runner.temp }}/ajcrew-smoke-*/gateway-stdout.log
+            ${{ runner.temp }}/ajcrew-smoke-*/gateway-stderr.log
+            ${{ runner.temp }}/ajcrew-smoke-*/cli-version.out
+            ${{ runner.temp }}/ajcrew-smoke-*/cli-version.err
           if-no-files-found: warn
           retention-days: 14

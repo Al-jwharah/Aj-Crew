@@ -9,17 +9,17 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import autonudge_authz
-from kiro_crew import autonudge_provider_trust as trust
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.autonudge_service import monitor_records
-from kiro_crew.monitoring.models import (
+from aj_crew import autonudge_authz
+from aj_crew import autonudge_provider_trust as trust
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.autonudge_service import monitor_records
+from aj_crew.monitoring.models import (
     MonitorBudgets,
     MonitorCreationSurface,
     MonitorOutcome,
     MonitorState,
 )
-from kiro_crew.testing.wait import until_parked
+from aj_crew.testing.wait import until_parked
 
 # Bound a broken handshake below pytest's 120s worker-kill timeout, not the
 # throughput of the real fsync/replace and credential writes between barriers.

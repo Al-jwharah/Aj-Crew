@@ -9,10 +9,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
-from kiro_crew.dashboard import server
-from kiro_crew.shared_crew import access, admission_gate, containment, turn_gate, wiring
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
+from aj_crew.dashboard import server
+from aj_crew.shared_crew import access, admission_gate, containment, turn_gate, wiring
+from aj_crew.shared_crew.contracts import (
     ACTOR_REQUEST_KEY,
     ActorContext,
     Principal,
@@ -27,7 +27,7 @@ from kiro_crew.shared_crew.contracts import (
 def _preview(_floor_monkeypatch):
     # The boot installs Shared Crew's hooks only under the preview
     # (no-new-work-on-gateway-boot-path); these tests drive that boot.
-    _floor_monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    _floor_monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
 
 
 class _BeforeBind(Exception):

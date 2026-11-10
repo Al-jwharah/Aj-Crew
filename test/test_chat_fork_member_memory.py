@@ -11,22 +11,22 @@ from aiohttp.streams import EMPTY_PAYLOAD
 from aiohttp.test_utils import TestClient, TestServer, make_mocked_request
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew import execution_context as execution
-from kiro_crew import memory_stores
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.config.sections import MemoryStoreConfig
-from kiro_crew.dashboard import chat_fork, chat_persistence
-from kiro_crew.dashboard.chat_utils import effective_session_key
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.history import ConversationLog
-from kiro_crew.testing.wait import await_until
+from aj_crew import execution_context as execution
+from aj_crew import memory_stores
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.config.sections import MemoryStoreConfig
+from aj_crew.dashboard import chat_fork, chat_persistence
+from aj_crew.dashboard.chat_utils import effective_session_key
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.history import ConversationLog
+from aj_crew.testing.wait import await_until
 
 
 @pytest.fixture
 def fork_source(tmp_path, monkeypatch):
-    cfg = KiroCrewConfig.load()
-    cfg.agents["writer"] = KiroCrewAgentConfig()
-    cfg.agents["peer"] = KiroCrewAgentConfig()
+    cfg = AjCrewConfig.load()
+    cfg.agents["writer"] = AjCrewAgentConfig()
+    cfg.agents["peer"] = AjCrewAgentConfig()
     store = memory_stores.provision_member_memory(cfg, "writer")
     peer_store = memory_stores.provision_member_memory(cfg, "peer")
     cfg.save()
@@ -138,7 +138,7 @@ async def test_member_fork_carries_only_the_vouch_its_source_holds(fork_source, 
     # authority only where the gateway already vouches the source for that
     # member and store. The durable copy follows the in-memory vouch, so the
     # child keeps it across a restart.
-    from kiro_crew._durable_vouch import read_durable_vouch
+    from aj_crew._durable_vouch import read_durable_vouch
 
     _cfg, state, parent, _store, _peer_store = fork_source
     parent_key = effective_session_key(parent)
@@ -279,8 +279,8 @@ async def test_cancelled_private_fork_drains_binding_and_keeps_landed_proof(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("store", ["default", "legacy-store"])
 async def test_existing_v1_forks_keep_their_unprotected_memory_contract(tmp_path, store):
-    cfg = KiroCrewConfig.load()
-    cfg.agents["legacy"] = KiroCrewAgentConfig(memory_store=store)
+    cfg = AjCrewConfig.load()
+    cfg.agents["legacy"] = AjCrewAgentConfig(memory_store=store)
     if store != "default":
         cfg.memory_stores[store] = MemoryStoreConfig()
         (memory_stores.memory_stores_root() / store).mkdir(parents=True)
@@ -310,17 +310,17 @@ async def test_legacy_fork_keeps_the_identity_the_parent_ran_as(tmp_path):
     make kiro-cli look for ``default`` and fail. A template-stamped slot or a non-alias
     name stays a template session under the name as written.
     """
-    from kiro_crew.config.loader import resolve_agent_bindings
-    from kiro_crew.session_agent_selection import resolve_session_agent_bindings
+    from aj_crew.config.loader import resolve_agent_bindings
+    from aj_crew.session_agent_selection import resolve_session_agent_bindings
 
-    cfg = KiroCrewConfig.load()
-    cfg.agents["default"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
-    cfg.agents["builder"] = KiroCrewAgentConfig(kiro_agent="amzn-builder", model="sonnet")
+    cfg = AjCrewConfig.load()
+    cfg.agents["default"] = AjCrewAgentConfig(kiro_agent="ajcrew")
+    cfg.agents["builder"] = AjCrewAgentConfig(kiro_agent="amzn-builder", model="sonnet")
     cfg.save()
     state = _make_state(tmp_path / "sessions")
     state.conversation_log = ConversationLog()
     for alias, agent_kind, kind, template, model in (
-        ("default", "", "member", "kirocrew", ""),
+        ("default", "", "member", "ajcrew", ""),
         ("builder", "", "member", "amzn-builder", "sonnet"),
         ("builder", "member", "member", "amzn-builder", "sonnet"),
         ("builder", "template", "template", "builder", ""),
@@ -342,7 +342,7 @@ async def test_legacy_fork_keeps_the_identity_the_parent_ran_as(tmp_path):
         if kind == "member":
             assert carrier.selection_name == alias
             bindings = resolve_session_agent_bindings(
-                resolve_agent_bindings, KiroCrewConfig.load(), child_key, child.agent
+                resolve_agent_bindings, AjCrewConfig.load(), child_key, child.agent
             )
             assert bindings.requested_resolved
             assert (bindings.kiro_agent, bindings.resolved_alias) == (template, alias)
@@ -358,15 +358,15 @@ async def test_legacy_fork_of_a_skill_view_name_resolves_its_source_agent(tmp_pa
     that crewmate. The fork makes the same mapping and records the crewmate,
     instead of a template carrier the child would launch without its pin.
     """
-    from kiro_crew.agent_sdk.drivers import acp as acp_driver
-    from kiro_crew.agent_spec_format import NATIVE_SKILL_ALIAS_PREFIX
+    from aj_crew.agent_sdk.drivers import acp as acp_driver
+    from aj_crew.agent_spec_format import NATIVE_SKILL_ALIAS_PREFIX
 
     view = f"{NATIVE_SKILL_ALIAS_PREFIX}0123abcd"
     monkeypatch.setattr(
         acp_driver, "skill_view_source_agent", lambda name: "builder" if name == view else name
     )
-    cfg = KiroCrewConfig.load()
-    cfg.agents["builder"] = KiroCrewAgentConfig(kiro_agent="amzn-builder", model="sonnet")
+    cfg = AjCrewConfig.load()
+    cfg.agents["builder"] = AjCrewAgentConfig(kiro_agent="amzn-builder", model="sonnet")
     cfg.save()
     state = _make_state(tmp_path / "sessions")
     state.conversation_log = ConversationLog()

@@ -19,8 +19,8 @@ import time
 import pytest
 from test_gate_tiers import gate_world  # noqa: F401
 
-from kiro_crew import name_grant, platform_compat
-from kiro_crew.hooks import TOOL_AUTO_APPROVE, HookManager, HooksConfig
+from aj_crew import name_grant, platform_compat
+from aj_crew.hooks import TOOL_AUTO_APPROVE, HookManager, HooksConfig
 
 pytestmark = pytest.mark.skipif(
     platform_compat.IS_WINDOWS,
@@ -260,7 +260,7 @@ class TestLoopSafety:
         assert inspect.iscoroutinefunction(entry)
         assert "asyncio.to_thread(name_grant_refusal" in inspect.getsource(entry)
         # And it is the only thread dispatch in the module and its owners.
-        from kiro_crew import name_grant_lookup, name_grant_refusals, name_grant_tables
+        from aj_crew import name_grant_lookup, name_grant_refusals, name_grant_tables
 
         family = (name_grant, name_grant_refusals, name_grant_tables, name_grant_lookup)
         source = "".join(inspect.getsource(module) for module in family)
@@ -284,9 +284,9 @@ class TestLoopSafety:
                 assert (verdict.action, verdict.tier) == (scenario.action, scenario.tier), param.id
 
         # One pass BEFORE the stubs go in. A row may import a module lazily (the
-        # read-only tier imports ``kiro_crew.slack.gateway``, which loads the
+        # read-only tier imports ``aj_crew.slack.gateway``, which loads the
         # dashboard chat runner), and a module first imported while a stub is
-        # installed binds it by name for good -- ``from kiro_crew.name_grant import
+        # installed binds it by name for good -- ``from aj_crew.name_grant import
         # ...`` -- where the undo never reaches, so every later test that module
         # serves would call the stub.
         judge_all()
@@ -315,7 +315,7 @@ class TestLoopSafety:
             if value is resolves
         )
         assert kept == []
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         assert chat_runner._name_grant_refusal_off_loop is name_grant.refusal_for_command_off_loop
 
@@ -403,7 +403,7 @@ class TestShadowedResolution:
         assert name_grant.name_grant_refusal("cat a | grep x") is not None
 
     def test_user_installed_program_with_no_system_twin_shadows_nothing(self, world):
-        # `gh`, `node`, `kirocrew`: nothing in the system directories answers to
+        # `gh`, `node`, `ajcrew`: nothing in the system directories answers to
         # the name, so the shadowing rule has no opinion. Such a name is gated by
         # the witnessed pin instead (see TestIdentityPin) -- here the point is
         # only that it is not refused AS A SHADOW.
@@ -1401,7 +1401,7 @@ class TestDowngradePath:
     def test_clean_name_is_not_downgraded(self, world):
         system_dir, _ = world
         _program(system_dir, "head")
-        from kiro_crew.dashboard.chat_runner import _name_grant_refusal_for
+        from aj_crew.dashboard.chat_runner import _name_grant_refusal_for
 
         assert asyncio.run(_name_grant_refusal_for(self._event("head x"))) is None
 
@@ -1409,14 +1409,14 @@ class TestDowngradePath:
         system_dir, user_dir = world
         _program(system_dir, "head")
         _program(user_dir, "head")
-        from kiro_crew.dashboard.chat_runner import _name_grant_refusal_for
+        from aj_crew.dashboard.chat_runner import _name_grant_refusal_for
 
         refusal = asyncio.run(_name_grant_refusal_for(self._event("head x")))
         assert refusal is not None
         assert refusal.code == name_grant.SHADOWED
 
     def test_non_shell_and_commandless_events_are_left_alone(self, world):
-        from kiro_crew.dashboard.chat_runner import _name_grant_refusal_for
+        from aj_crew.dashboard.chat_runner import _name_grant_refusal_for
 
         assert asyncio.run(_name_grant_refusal_for(self._event("head x", is_shell=False))) is None
         assert asyncio.run(_name_grant_refusal_for(self._event(None))) is None
@@ -1591,7 +1591,7 @@ class TestPlatformScopeDeclineNotice:
         self, monkeypatch, tmp_path
     ):
         # Derived from `windows_environment_refusal`, like `name_grant_refusal`,
-        # so `kirocrew doctor` cannot describe a posture this module does not
+        # so `ajcrew doctor` cannot describe a posture this module does not
         # hold. Off Windows there is no notice; on Windows there is one only
         # when the profile check cannot run at all.
         monkeypatch.setattr(name_grant.platform_compat, "IS_WINDOWS", False)

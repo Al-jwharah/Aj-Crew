@@ -1,11 +1,11 @@
-"""Choosing KAS runs Kiro Crew's own engine when kiro-cli's relay cannot run.
+"""Choosing KAS runs Aj Crew's own engine when kiro-cli's relay cannot run.
 
 Pins the route rule in ``acp/kas_route.py`` and the harness's use of it: the
 automatic switch to the bundle route (no kiro-cli, or a kiro-cli with no sign-in
 Crew's sign-in cannot stand in for), the stored Kiro CLI pick that never leaves
 kiro-cli, the switch being logged and published, and the gateway's one-at-a-time
 engine install with its sandbox refusal and retry text. The decision is the
-``docs/decisions/`` entry "Choosing KAS runs Kiro Crew's own engine and sign-in".
+``docs/decisions/`` entry "Choosing KAS runs Aj Crew's own engine and sign-in".
 """
 
 from __future__ import annotations
@@ -18,14 +18,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp import kas_bundle, kas_engine_install, kas_route
-from kiro_crew.acp.harness.base import SpawnContext
-from kiro_crew.acp.harness.kas import KAS_BUNDLE_SPAWN_LABEL, KasHarness
-from kiro_crew.acp.kas_transport import build_kas_argv, build_kas_bundle_argv
-from kiro_crew.acp.kiro_cli_missing import AcpKiroCliMissing
-from kiro_crew.acp.session_handle import AcpRuntimeError
-from kiro_crew.kiro_cli import find_kiro_cli_candidates
-from kiro_crew.testing.links import make_dir_link
+from aj_crew.acp import kas_bundle, kas_engine_install, kas_route
+from aj_crew.acp.harness.base import SpawnContext
+from aj_crew.acp.harness.kas import KAS_BUNDLE_SPAWN_LABEL, KasHarness
+from aj_crew.acp.kas_transport import build_kas_argv, build_kas_bundle_argv
+from aj_crew.acp.kiro_cli_missing import AcpKiroCliMissing
+from aj_crew.acp.session_handle import AcpRuntimeError
+from aj_crew.kiro_cli import find_kiro_cli_candidates
+from aj_crew.testing.links import make_dir_link
 
 #: The real rule-2 predicate, read at import: the conftest floor replaces the
 #: module attribute for every test, so a test of the rule itself calls this.
@@ -36,7 +36,7 @@ def _ctx(
     tmp_path: Path, environ: dict[str, str] | None = None, *, harness_pin: str = ""
 ) -> SpawnContext:
     return SpawnContext(
-        agent="kirocrew",
+        agent="ajcrew",
         work_dir=tmp_path,
         model=None,
         environ=environ or {},
@@ -109,12 +109,12 @@ class TestRelayUnusableReason:
         assert reason == kas_route.REASON_KIRO_CLI_SIGNED_OUT
 
     def test_an_operator_kiro_bin_is_never_second_guessed(self, tmp_path, monkeypatch):
-        """``KIROCREW_KIRO_BIN`` names a binary that may sign in some other way (a
+        """``AJCREW_KIRO_BIN`` names a binary that may sign in some other way (a
         wrapper, the E2E fake backend), so an empty kiro-cli store moves nothing."""
         monkeypatch.setattr(kas_route, "kiro_cli_signed_out", lambda **k: True)
         reason = kas_route.relay_unusable_reason(
             kiro_bin="/opt/fake/acp-backend",
-            environ={"KIROCREW_KIRO_BIN": "/opt/fake/acp-backend"},
+            environ={"AJCREW_KIRO_BIN": "/opt/fake/acp-backend"},
             home=tmp_path,
             vault_identity=False,
             crew_entry_skips_launcher=False,
@@ -134,7 +134,7 @@ class TestRelayUnusableReason:
         (long_dir / "fake-acp-backend.cmd").write_text("@echo off\n")
         make_dir_link(tmp_path / "short-alias", long_dir)
         override = str(tmp_path / "short-alias" / "fake-acp-backend.cmd")
-        environ = {"KIROCREW_KIRO_BIN": override, "PATH": ""}
+        environ = {"AJCREW_KIRO_BIN": override, "PATH": ""}
         resolved = find_kiro_cli_candidates("win32", tmp_path, environ)[0]
         assert resolved != override, "the resolver no longer canonicalises on Windows"
 
@@ -161,7 +161,7 @@ class TestRelayUnusableReason:
         make_dir_link(tmp_path / "named", real_dir)
         link = tmp_path / "named" / "kiro-cli"
         monkeypatch.setattr(kas_route.sys, "platform", "linux")
-        environ = {"KIROCREW_KIRO_BIN": str(link)}
+        environ = {"AJCREW_KIRO_BIN": str(link)}
         assert kas_route.is_operator_override(str(link), environ) is True
         assert kas_route.is_operator_override(str(target), environ) is False
 
@@ -195,21 +195,21 @@ class TestKiroCliSignedOut:
 
         definitive_value = definitive
         monkeypatch.setattr(
-            "kiro_crew.config.loader.read_env_file_credential", lambda *a, **k: None
+            "aj_crew.config.loader.read_env_file_credential", lambda *a, **k: None
         )
-        monkeypatch.setattr("kiro_crew.kiro_prerequisite.identity_fingerprint", fake_fingerprint)
+        monkeypatch.setattr("aj_crew.kiro_prerequisite.identity_fingerprint", fake_fingerprint)
         assert kas_route.kiro_cli_signed_out(environ={}, home=tmp_path) is expected
 
     def test_a_relocated_store_proves_nothing(self, tmp_path, monkeypatch):
         """The fixed anchor is not the store a relocated kiro-cli signs in to."""
         monkeypatch.setattr(
-            "kiro_crew.config.loader.read_env_file_credential", lambda *a, **k: None
+            "aj_crew.config.loader.read_env_file_credential", lambda *a, **k: None
         )
         monkeypatch.setattr(
-            "kiro_crew.kiro_prerequisite.identity_store_is_relocated", lambda *a: True
+            "aj_crew.kiro_prerequisite.identity_store_is_relocated", lambda *a: True
         )
         monkeypatch.setattr(
-            "kiro_crew.kiro_prerequisite.identity_fingerprint",
+            "aj_crew.kiro_prerequisite.identity_fingerprint",
             lambda *a, **k: pytest.fail("read the fixed anchor of a relocated store"),
         )
         assert kas_route.kiro_cli_signed_out(environ={}, home=tmp_path) is False
@@ -219,9 +219,9 @@ class TestKiroCliSignedOut:
             raise OSError("store unreadable")
 
         monkeypatch.setattr(
-            "kiro_crew.config.loader.read_env_file_credential", lambda *a, **k: None
+            "aj_crew.config.loader.read_env_file_credential", lambda *a, **k: None
         )
-        monkeypatch.setattr("kiro_crew.kiro_prerequisite.identity_fingerprint", boom)
+        monkeypatch.setattr("aj_crew.kiro_prerequisite.identity_fingerprint", boom)
         assert kas_route.kiro_cli_signed_out(environ={}, home=tmp_path) is False
 
 
@@ -240,8 +240,8 @@ class TestRuleTwoReadsTheSessionsPin:
         monkeypatch.setattr(kas_route, "automatic_switch_allowed", _REAL_SWITCH_ALLOWED)
         monkeypatch.setattr(kas_route, "_stored_as_kiro_pick", lambda: False)
         with (
-            patch("kiro_crew.acp.harness.kas._bundle_route_selected", return_value=False),
-            patch("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", _no_bin),
+            patch("aj_crew.acp.harness.kas._bundle_route_selected", return_value=False),
+            patch("aj_crew.acp.client._resolve_kiro_bin_for_spawn", _no_bin),
             patch.object(
                 kas_bundle,
                 "installed_bundle",
@@ -259,8 +259,8 @@ class TestRuleTwoReadsTheSessionsPin:
         monkeypatch.setattr(kas_route, "automatic_switch_allowed", _REAL_SWITCH_ALLOWED)
         monkeypatch.setattr(kas_route, "_stored_as_kiro_pick", lambda: True)
         with (
-            patch("kiro_crew.acp.harness.kas._bundle_route_selected", return_value=False),
-            patch("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", _no_bin),
+            patch("aj_crew.acp.harness.kas._bundle_route_selected", return_value=False),
+            patch("aj_crew.acp.client._resolve_kiro_bin_for_spawn", _no_bin),
             patch.object(kas_bundle, "installed_bundle", return_value=installed),
         ):
             plan = await KasHarness().resolve_spawn(_ctx(tmp_path, harness_pin="kas"))
@@ -273,13 +273,13 @@ class TestCrewEntrySkipsLauncher:
         in; a vault sign-in still reaches the engine through it."""
         monkeypatch.setattr(kas_route.sys, "platform", "linux")
         monkeypatch.setattr(
-            "kiro_crew.kiro_cli.chat_sibling", lambda *a, **k: pytest.fail("no swap needed")
+            "aj_crew.kiro_cli.chat_sibling", lambda *a, **k: pytest.fail("no swap needed")
         )
         assert kas_route.crew_entry_skips_launcher("/app/kiro-cli/kiro-cli-chat", {}) is True
 
     def test_a_launcher_without_a_sibling_does_not(self, monkeypatch):
         monkeypatch.setattr(kas_route.sys, "platform", "linux")
-        monkeypatch.setattr("kiro_crew.kiro_cli.chat_sibling", lambda *a, **k: None)
+        monkeypatch.setattr("aj_crew.kiro_cli.chat_sibling", lambda *a, **k: None)
         assert kas_route.crew_entry_skips_launcher("/opt/kiro/kiro-cli", {}) is False
 
 
@@ -288,7 +288,7 @@ class TestRouteText:
         route = kas_route.KasRoute(bundle=True, reason=kas_route.REASON_KIRO_CLI_SIGNED_OUT)
         assert route.automatic is True
         assert route.describe() == (
-            "KAS runs on Kiro Crew's own engine because kiro-cli is not signed in"
+            "KAS runs on Aj Crew's own engine because kiro-cli is not signed in"
         )
 
     def test_the_configured_route_is_not_automatic(self):
@@ -330,8 +330,8 @@ class TestHarnessRoute:
     async def test_no_kiro_cli_spawns_crews_own_engine(self, tmp_path, switch_open):
         installed = _installed(tmp_path)
         with (
-            patch("kiro_crew.acp.harness.kas._bundle_route_selected", return_value=False),
-            patch("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", _no_bin),
+            patch("aj_crew.acp.harness.kas._bundle_route_selected", return_value=False),
+            patch("aj_crew.acp.client._resolve_kiro_bin_for_spawn", _no_bin),
             patch.object(kas_bundle, "installed_bundle", return_value=installed),
         ):
             plan = await KasHarness().resolve_spawn(_ctx(tmp_path))
@@ -349,14 +349,14 @@ class TestHarnessRoute:
         self, tmp_path, switch_open, monkeypatch
     ):
         """The toolbox layout: kiro-cli with no ``kiro-cli-chat`` beside it, signed out,
-        and the user signed in through Kiro Crew. The launcher would refuse."""
+        and the user signed in through Aj Crew. The launcher would refuse."""
         installed = _installed(tmp_path)
         monkeypatch.setattr(kas_route, "kiro_cli_signed_out", lambda **k: True)
         monkeypatch.setattr(kas_route, "crew_entry_skips_launcher", lambda *a: False)
         with (
-            patch("kiro_crew.acp.harness.kas._bundle_route_selected", return_value=False),
-            patch("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", _a_bin),
-            patch("kiro_crew.acp.harness.kas.vault_holds_identity_off_loop", return_value=True),
+            patch("aj_crew.acp.harness.kas._bundle_route_selected", return_value=False),
+            patch("aj_crew.acp.client._resolve_kiro_bin_for_spawn", _a_bin),
+            patch("aj_crew.acp.harness.kas.vault_holds_identity_off_loop", return_value=True),
             patch.object(kas_bundle, "installed_bundle", return_value=installed),
         ):
             plan = await KasHarness().resolve_spawn(_ctx(tmp_path))
@@ -368,10 +368,10 @@ class TestHarnessRoute:
         monkeypatch.setattr(kas_route, "kiro_cli_signed_out", lambda **k: False)
         monkeypatch.setattr(kas_route, "crew_entry_skips_launcher", lambda *a: False)
         with (
-            patch("kiro_crew.acp.harness.kas._bundle_route_selected", return_value=False),
-            patch("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", _a_bin),
-            patch("kiro_crew.acp.harness.kas.vault_holds_identity_off_loop", return_value=False),
-            patch("kiro_crew.acp.harness.kas.installed_kiro_cli_version", return_value=None),
+            patch("aj_crew.acp.harness.kas._bundle_route_selected", return_value=False),
+            patch("aj_crew.acp.client._resolve_kiro_bin_for_spawn", _a_bin),
+            patch("aj_crew.acp.harness.kas.vault_holds_identity_off_loop", return_value=False),
+            patch("aj_crew.acp.harness.kas.installed_kiro_cli_version", return_value=None),
             patch.object(
                 kas_bundle,
                 "installed_bundle",
@@ -389,8 +389,8 @@ class TestHarnessRoute:
         monkeypatch.setattr(kas_route, "_stored_as_kiro_pick", lambda: True)
         monkeypatch.setattr(kas_route, "automatic_switch_allowed", _REAL_SWITCH_ALLOWED)
         with (
-            patch("kiro_crew.acp.harness.kas._bundle_route_selected", return_value=False),
-            patch("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", _no_bin),
+            patch("aj_crew.acp.harness.kas._bundle_route_selected", return_value=False),
+            patch("aj_crew.acp.client._resolve_kiro_bin_for_spawn", _no_bin),
             patch.object(
                 kas_bundle,
                 "installed_bundle",
@@ -404,16 +404,16 @@ class TestHarnessRoute:
     async def test_an_operator_launcher_names_kiro_cli_login(
         self, tmp_path, switch_open, monkeypatch
     ):
-        """``KIROCREW_KIRO_BIN`` keeps the relay through the launcher, which only
+        """``AJCREW_KIRO_BIN`` keeps the relay through the launcher, which only
         kiro-cli's own sign-in starts, so the messages name ``kiro-cli login``."""
-        from kiro_crew.agent_sdk import host_auth
+        from aj_crew.agent_sdk import host_auth
 
-        environ = {"KIROCREW_KIRO_BIN": "/opt/kiro/kiro-cli", "PATH": "/usr/bin"}
+        environ = {"AJCREW_KIRO_BIN": "/opt/kiro/kiro-cli", "PATH": "/usr/bin"}
         with (
-            patch("kiro_crew.acp.harness.kas._bundle_route_selected", return_value=False),
-            patch("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", _a_bin),
-            patch("kiro_crew.acp.harness.kas.vault_holds_identity_off_loop", return_value=False),
-            patch("kiro_crew.acp.harness.kas.installed_kiro_cli_version", return_value=None),
+            patch("aj_crew.acp.harness.kas._bundle_route_selected", return_value=False),
+            patch("aj_crew.acp.client._resolve_kiro_bin_for_spawn", _a_bin),
+            patch("aj_crew.acp.harness.kas.vault_holds_identity_off_loop", return_value=False),
+            patch("aj_crew.acp.harness.kas.installed_kiro_cli_version", return_value=None),
         ):
             plan = await KasHarness().resolve_spawn(_ctx(tmp_path, environ))
         assert plan.argv[0] == "/opt/kiro/kiro-cli"
@@ -433,8 +433,8 @@ class TestHarnessRoute:
             return installed
 
         with (
-            patch("kiro_crew.acp.harness.kas._bundle_route_selected", return_value=False),
-            patch("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", _no_bin),
+            patch("aj_crew.acp.harness.kas._bundle_route_selected", return_value=False),
+            patch("aj_crew.acp.client._resolve_kiro_bin_for_spawn", _no_bin),
             patch.object(kas_bundle, "installed_bundle", return_value=None),
             patch.object(kas_bundle, "install_pinned", side_effect=fake_install),
         ):
@@ -452,8 +452,8 @@ class TestHarnessRoute:
             raise kas_bundle.KasBundleError("could not fetch https://h.test: network unreachable")
 
         with (
-            patch("kiro_crew.acp.harness.kas._bundle_route_selected", return_value=False),
-            patch("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", _no_bin),
+            patch("aj_crew.acp.harness.kas._bundle_route_selected", return_value=False),
+            patch("aj_crew.acp.client._resolve_kiro_bin_for_spawn", _no_bin),
             patch.object(kas_bundle, "installed_bundle", return_value=None),
             patch.object(kas_bundle, "install_pinned", side_effect=offline),
         ):
@@ -461,10 +461,10 @@ class TestHarnessRoute:
                 await KasHarness().resolve_spawn(_ctx(tmp_path))
         text = str(caught.value)
         assert text.startswith(
-            "KAS runs on Kiro Crew's own engine because kiro-cli is not installed."
+            "KAS runs on Aj Crew's own engine because kiro-cli is not installed."
         )
         assert "network unreachable" in text
-        assert "`kirocrew kas install`" in text
+        assert "`ajcrew kas install`" in text
         assert "kiro-cli login" not in text
         assert kas_engine_install.install_snapshot()["error"]
 
@@ -485,24 +485,24 @@ class TestThePinReachesTheSpawn:
         """A Bot pinned ``"kiro"`` carries its pin to the runtime; ``spawn_run(backend="kas")``
         for it does not: the override chose the harness, so rule 2 reads the
         installation's pick, not the pin."""
-        from kiro_crew.agent_sdk import backends
-        from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
+        from aj_crew.agent_sdk import backends
+        from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
 
         member_id = "atlas-0123456789ab"
         key = f"dashboard:member-{member_id}"
-        cfg = KiroCrewConfig()
-        cfg.agents["atlas"] = KiroCrewAgentConfig(
+        cfg = AjCrewConfig()
+        cfg.agents["atlas"] = AjCrewAgentConfig(
             member_id=member_id, kiro_agent="atlas", acp_backend="kiro"
         )
         monkeypatch.setattr(backends, "selectable_backends", lambda: frozenset({"", "kas"}))
-        monkeypatch.setattr("kiro_crew.providers.acp.AcpProvider", lambda **kwargs: kwargs)
+        monkeypatch.setattr("aj_crew.providers.acp.AcpProvider", lambda **kwargs: kwargs)
         factory = cfg.create_provider_factory()
         assert factory(session_key=key, agent="atlas")["harness_pin"] == "kiro"
         assert factory(session_key=key, agent="atlas", backend_override="kas")["harness_pin"] == ""
 
     @pytest.mark.asyncio
     async def test_the_provider_builds_its_runtime_with_the_sessions_pin(self, monkeypatch):
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         captured: dict = {}
 
@@ -510,8 +510,8 @@ class TestThePinReachesTheSpawn:
             captured.update(kwargs)
             raise _Stop
 
-        monkeypatch.setattr("kiro_crew.providers.acp.AcpRuntime", runtime)
-        with patch("kiro_crew.providers.acp.AcpClient"):
+        monkeypatch.setattr("aj_crew.providers.acp.AcpRuntime", runtime)
+        with patch("aj_crew.providers.acp.AcpClient"):
             provider = AcpProvider(acp_backend="kas", harness_pin="kas")
         provider._client = MagicMock(backend="kas", _session_key="k", _resume_session_id="")
         assert provider.harness_pin == "kas"
@@ -521,7 +521,7 @@ class TestThePinReachesTheSpawn:
 
     @pytest.mark.asyncio
     async def test_the_runtime_hands_its_pin_to_the_harness(self, monkeypatch):
-        from kiro_crew.acp.runtime import AcpRuntime
+        from aj_crew.acp.runtime import AcpRuntime
 
         seen: list[SpawnContext] = []
 
@@ -535,7 +535,7 @@ class TestThePinReachesTheSpawn:
         assert seen[0].harness_pin == "kiro"
 
     def test_a_companion_runtime_takes_its_parents_pin(self):
-        from kiro_crew.session_allocation_parts import companions
+        from aj_crew.session_allocation_parts import companions
 
         providers = {
             key: SimpleNamespace(
@@ -592,14 +592,14 @@ class TestEngineInstaller:
         assert results == [installed, installed]
 
     def test_inside_an_agent_sandbox_it_refuses_with_the_command(self, monkeypatch):
-        from kiro_crew.sandbox_launch_mark import SANDBOX_MARKER
+        from aj_crew.sandbox_launch_mark import SANDBOX_MARKER
 
         monkeypatch.setenv(SANDBOX_MARKER, "1")
         monkeypatch.setattr(kas_bundle, "installed_bundle", lambda **k: None)
         monkeypatch.setattr(
             kas_bundle, "install_pinned", lambda *a, **k: pytest.fail("installed in a sandbox")
         )
-        with pytest.raises(kas_bundle.KasBundleError, match="kirocrew kas install"):
+        with pytest.raises(kas_bundle.KasBundleError, match="ajcrew kas install"):
             kas_engine_install.install_pinned_engine("https://h.test", caller="spawn")
 
     def test_an_overridden_version_is_never_swapped_for_the_pin(self, monkeypatch):
@@ -633,14 +633,14 @@ class TestSharedPredicate:
     ):
         """doctor, diagnostics and the install probe read one predicate, so they all
         see the switch."""
-        from kiro_crew.agent_sdk import kas_bundle as facade
+        from aj_crew.agent_sdk import kas_bundle as facade
 
         agent = SimpleNamespace(acp_backend="kas", kas_bundle=False)
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             classmethod(lambda cls: SimpleNamespace(agent=agent)),
         )
-        monkeypatch.setattr("kiro_crew.acp.client._resolve_kiro_bin", lambda **k: None)
+        monkeypatch.setattr("aj_crew.acp.client._resolve_kiro_bin", lambda **k: None)
         assert facade.kas_route() == kas_route.KasRoute(
             bundle=True, reason=kas_route.REASON_NO_KIRO_CLI
         )

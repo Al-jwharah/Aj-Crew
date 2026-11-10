@@ -15,12 +15,12 @@ from typing import Any
 import pytest
 from slack_code_channels_helpers import OWNER, Env, make_env, mention
 
-from kiro_crew.config.loader import ACTIVATION_REVIEW
-from kiro_crew.slack.code_channels import routing
-from kiro_crew.slack.code_channels.creation import ORIGIN_CONTEXT_BLOCK_ID
-from kiro_crew.slack.code_channels.routing import Gate
-from kiro_crew.slack.code_channels.store import Binding, StoreWriteError
-from kiro_crew.testing.wait import await_until, until_parked
+from aj_crew.config.loader import ACTIVATION_REVIEW
+from aj_crew.slack.code_channels import routing
+from aj_crew.slack.code_channels.creation import ORIGIN_CONTEXT_BLOCK_ID
+from aj_crew.slack.code_channels.routing import Gate
+from aj_crew.slack.code_channels.store import Binding, StoreWriteError
+from aj_crew.testing.wait import await_until, until_parked
 
 pytestmark = pytest.mark.asyncio
 
@@ -226,7 +226,7 @@ async def test_revocation_unbind_is_audited(env: Env) -> None:
 async def test_a_refused_message_gets_only_the_refusal_as_its_answer(env: Env) -> None:
     """The linked-slot route refused it (a session on the wrong agent) and
     posted why: no second "not supported" answer is stacked on that."""
-    from kiro_crew.slack.handler import LinkedRoute
+    from aj_crew.slack.handler import LinkedRoute
 
     _bind(env)
     env.info("C0CODE")
@@ -310,7 +310,7 @@ async def test_seed_fence_lookalikes_are_neutralized(env: Env, forged: str) -> N
 async def test_an_unsaved_route_answers_in_place_instead_of_risking_a_duplicate(
     env: Env, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.slack.code_channels import store as store_mod
+    from aj_crew.slack.code_channels import store as store_mod
 
     def boom(*_a: Any, **_k: Any) -> None:
         raise OSError("disk full")
@@ -366,7 +366,7 @@ async def test_a_lost_destination_write_never_delivers_the_first_turn_twice(
 
 @pytest.mark.parametrize("own", ["review", "off"])
 async def test_the_code_channels_own_review_or_off_drops_its_messages(env: Env, own: str) -> None:
-    from kiro_crew.config.loader import ACTIVATION_OFF
+    from aj_crew.config.loader import ACTIVATION_OFF
 
     _bind(env)
     env.info("C0CODE")
@@ -389,8 +389,8 @@ async def test_the_code_channels_own_review_mode_refuses_the_native_stop(
         stopped.append(slot.key)
         return {"info": "stopping"}
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.stop_slot_turn", stop_slot_turn)
-    monkeypatch.setattr("kiro_crew.slack.handler.is_allowed_user", lambda u: u == OWNER)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.stop_slot_turn", stop_slot_turn)
+    monkeypatch.setattr("aj_crew.slack.handler.is_allowed_user", lambda u: u == OWNER)
     event = {"type": "agent_session_stopped", "channel": "C0CODE", "user": OWNER}
     assert await routing.handle_session_stopped(env.orch, event, OWNER) == "denied"
     assert stopped == []
@@ -425,7 +425,7 @@ async def test_the_receipt_check_loads_a_lazy_window_off_the_loop(
 ) -> None:
     from types import SimpleNamespace
 
-    import kiro_crew.dashboard.state as transcript
+    import aj_crew.dashboard.state as transcript
 
     loaded: list[str] = []
     slot = SimpleNamespace(key="chat-9-1", running=False, messages=None)
@@ -466,7 +466,7 @@ async def test_the_receipt_is_the_request_identity_never_its_text(
     slot._queue = [{"id": "q1", "content": CLEAN, "meta": {"slack_request": request_id}}]
     assert await routing._session_took_request(binding, request_id) is True
     # Only this routing writes the stamp: a dashboard send's row meta drops it.
-    from kiro_crew.dashboard.chat_handlers import RESERVED_ROW_META_KEYS
+    from aj_crew.dashboard.chat_handlers import RESERVED_ROW_META_KEYS
 
     assert routing.REQUEST_META_KEY in RESERVED_ROW_META_KEYS
     # Another opener's identity, or an assistant row, never counts.

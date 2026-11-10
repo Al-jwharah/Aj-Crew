@@ -14,8 +14,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.taskrunner import TaskRunner
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.taskrunner import TaskRunner
 
 
 def _sessions() -> MagicMock:
@@ -28,36 +28,36 @@ def _sessions() -> MagicMock:
 
 def _runner(tmp_path: Path, **kw) -> TaskRunner:
     with (
-        patch("kiro_crew.taskrunner.compute_memory_sized_parallel_cap", return_value=9),
-        patch("kiro_crew.taskrunner.KiroCrewConfig.load", return_value=KiroCrewConfig()),
+        patch("aj_crew.taskrunner.compute_memory_sized_parallel_cap", return_value=9),
+        patch("aj_crew.taskrunner.AjCrewConfig.load", return_value=AjCrewConfig()),
     ):
         return TaskRunner(sessions=_sessions(), auto_test=False, work_dir=tmp_path, **kw)
 
 
-def _snapshot(cfg: KiroCrewConfig):
-    return patch("kiro_crew.taskrunner.live.snapshot", return_value=cfg)
+def _snapshot(cfg: AjCrewConfig):
+    return patch("aj_crew.taskrunner.live.snapshot", return_value=cfg)
 
 
 class TestPerRunReRead:
     def test_changed_max_parallel_steps_is_adopted(self, tmp_path: Path) -> None:
         runner = _runner(tmp_path, max_parallel_steps=0)
         assert runner._max_parallel_steps == 9
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.taskrunner.max_parallel_steps = 2
         with (
             _snapshot(cfg),
-            patch("kiro_crew.taskrunner.compute_memory_sized_parallel_cap", return_value=9),
+            patch("aj_crew.taskrunner.compute_memory_sized_parallel_cap", return_value=9),
         ):
             runner._refresh_from_config()
         assert runner._max_parallel_steps == 2
 
     def test_adopted_value_is_still_clamped_to_the_host_ceiling(self, tmp_path: Path) -> None:
         runner = _runner(tmp_path, max_parallel_steps=0)
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.taskrunner.max_parallel_steps = 50
         with (
             _snapshot(cfg),
-            patch("kiro_crew.taskrunner.compute_memory_sized_parallel_cap", return_value=9),
+            patch("aj_crew.taskrunner.compute_memory_sized_parallel_cap", return_value=9),
         ):
             runner._refresh_from_config()
         assert runner._max_parallel_steps == 9
@@ -67,8 +67,8 @@ class TestPerRunReRead:
         runner = _runner(tmp_path, max_parallel_steps=2)
         assert runner._max_parallel_steps == 2
         with (
-            _snapshot(KiroCrewConfig()),
-            patch("kiro_crew.taskrunner.compute_memory_sized_parallel_cap", return_value=9),
+            _snapshot(AjCrewConfig()),
+            patch("aj_crew.taskrunner.compute_memory_sized_parallel_cap", return_value=9),
         ):
             runner._refresh_from_config()
         assert runner._max_parallel_steps == 2
@@ -78,11 +78,11 @@ class TestPerRunReRead:
         assert runner._workspace_dir == ""
         target = tmp_path / "ws"
         target.mkdir()
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.taskrunner.workspace_dir = str(target)
         with (
             _snapshot(cfg),
-            patch("kiro_crew.taskrunner.compute_memory_sized_parallel_cap", return_value=9),
+            patch("aj_crew.taskrunner.compute_memory_sized_parallel_cap", return_value=9),
         ):
             runner._refresh_from_config()
         assert Path(runner._workspace_dir) == target.resolve()
@@ -91,8 +91,8 @@ class TestPerRunReRead:
         # Writing the field back to what the runner was constructed against
         # restores the constructor's target exactly.
         with (
-            _snapshot(KiroCrewConfig()),
-            patch("kiro_crew.taskrunner.compute_memory_sized_parallel_cap", return_value=9),
+            _snapshot(AjCrewConfig()),
+            patch("aj_crew.taskrunner.compute_memory_sized_parallel_cap", return_value=9),
         ):
             runner._refresh_from_config()
         assert runner._workspace_dir == ""
@@ -100,12 +100,12 @@ class TestPerRunReRead:
 
     def test_rejected_workspace_dir_keeps_the_current_target(self, tmp_path: Path) -> None:
         runner = _runner(tmp_path)
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.taskrunner.workspace_dir = "/somewhere/new"
         with (
             _snapshot(cfg),
-            patch("kiro_crew.taskrunner._resolve_workspace_dir", side_effect=ValueError("no")),
-            patch("kiro_crew.taskrunner.compute_memory_sized_parallel_cap", return_value=9),
+            patch("aj_crew.taskrunner._resolve_workspace_dir", side_effect=ValueError("no")),
+            patch("aj_crew.taskrunner.compute_memory_sized_parallel_cap", return_value=9),
         ):
             runner._refresh_from_config()
         assert runner._workspace_dir == ""
@@ -120,9 +120,9 @@ class TestPerRunReRead:
         runner = _runner(tmp_path, max_parallel_steps=0)
         assert runner._max_parallel_steps == 9
         with (
-            patch("kiro_crew.taskrunner.live.snapshot", return_value=None),
-            patch("kiro_crew.taskrunner.KiroCrewConfig.load") as load,
-            patch("kiro_crew.taskrunner.compute_memory_sized_parallel_cap", return_value=9),
+            patch("aj_crew.taskrunner.live.snapshot", return_value=None),
+            patch("aj_crew.taskrunner.AjCrewConfig.load") as load,
+            patch("aj_crew.taskrunner.compute_memory_sized_parallel_cap", return_value=9),
         ):
             runner._refresh_from_config()
         load.assert_not_called()
@@ -150,7 +150,7 @@ class TestEntryPointsRefresh:
     @pytest.mark.asyncio
     async def test_a_running_execution_keeps_its_cap(self, tmp_path: Path) -> None:
         """``_execute_tasks`` binds the cap once; a later refresh does not resize it."""
-        from kiro_crew.task_models import Project, Task, TaskStatus
+        from aj_crew.task_models import Project, Task, TaskStatus
 
         runner = _runner(tmp_path, max_parallel_steps=0)
         run = Project(spec_path="s", spec_content="c", status="running")
@@ -171,13 +171,13 @@ class TestEntryPointsRefresh:
 
         with (
             patch(
-                "kiro_crew.taskrunner.group_parallel_tasks",
+                "aj_crew.taskrunner.group_parallel_tasks",
                 return_value=[[run.tasks[0], run.tasks[1]]],
             ),
             patch.object(runner, "_execute_single_task", AsyncMock(return_value=True)),
             patch.object(runner, "_notify", AsyncMock()),
             patch.object(runner, "_apersist_runs", AsyncMock()),
-            patch("kiro_crew.taskrunner.asyncio.Semaphore", side_effect=_sem),
+            patch("aj_crew.taskrunner.asyncio.Semaphore", side_effect=_sem),
         ):
             await runner._execute_tasks(run, "hk")
 

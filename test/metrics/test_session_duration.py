@@ -1,4 +1,4 @@
-"""``kirocrew.session.duration`` + ``kirocrew.session.started``.
+"""``ajcrew.session.duration`` + ``ajcrew.session.started``.
 
 Drives the REAL production helpers in ``metrics/sessions.py`` with a patched
 recorder and a redirected data home, so the crumb lifecycle, the exactly-once
@@ -18,7 +18,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.metrics import sessions as sess
+from aj_crew.metrics import sessions as sess
 
 
 class _CapturingRecorder:
@@ -52,14 +52,14 @@ def clean_live_registry():
 @pytest.fixture
 def home(tmp_path, monkeypatch):
     """Point the crumb directory and transcript store at a temp data home."""
-    monkeypatch.setattr("kiro_crew.config.paths.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.paths.config_dir", lambda: tmp_path)
     return tmp_path
 
 
 @pytest.fixture
 def rec():
     r = _CapturingRecorder()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=r):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=r):
         yield r
 
 
@@ -157,7 +157,7 @@ def _write_crumb(home, key, started_at, *, owner_pid=None):
 
 
 def _duration_calls(rec):
-    return [c for c in rec.hist if c["name"] == "kirocrew.session.duration"]
+    return [c for c in rec.hist if c["name"] == "ajcrew.session.duration"]
 
 
 #: Two generations of one key, explicit instants rather than two wall-clock reads
@@ -190,12 +190,12 @@ class TestStart:
     def test_start_counts_and_leaves_a_crumb(self, home, rec):
         _start("dashboard:chat-1")
         names = [c["name"] for c in rec.counters]
-        assert "kirocrew.session.started" in names
+        assert "ajcrew.session.started" in names
         assert len(_crumbs(home)) == 1
 
     def test_start_labels_the_surface(self, home, rec):
         _start("dashboard:chat-1")
-        started = [c for c in rec.counters if c["name"] == "kirocrew.session.started"][-1]
+        started = [c for c in rec.counters if c["name"] == "ajcrew.session.started"][-1]
         assert started["attrs"]["session_source"] == "dashboard"
 
     def test_crumb_is_named_by_digest_not_by_the_key(self, home, rec):
@@ -621,7 +621,7 @@ class TestEnd:
 
 class TestCrashedBackfill:
     def _transcript(self, home, key, mtime):
-        from kiro_crew.history import SESSIONS_DIR_NAME, transcript_stem
+        from aj_crew.history import SESSIONS_DIR_NAME, transcript_stem
 
         d = home / SESSIONS_DIR_NAME
         d.mkdir(parents=True, exist_ok=True)
@@ -729,7 +729,7 @@ class TestWriterSelfCorrection:
         still registered DURING the predecessor's write, the interleaving that used
         to reach the broken post-write check.
         """
-        import kiro_crew.atomic_write as aw
+        import aj_crew.atomic_write as aw
 
         key = "dashboard:chat-1"
         predecessor = time.time() - 3600
@@ -760,7 +760,7 @@ class TestWriterSelfCorrection:
         """The premise the round-4 through round-9 findings all rested on.
 
         A session key is not unique across processes -- ``BACKGROUND_KEY`` is a
-        fixed constant, so a ``kirocrew run`` and the gateway hold the same key at
+        fixed constant, so a ``ajcrew run`` and the gateway hold the same key at
         once, each with a live session behind it. While the filename was the key's
         digest alone they shared one file, and whichever ended first unlinked the
         other's record.
@@ -815,7 +815,7 @@ class TestWriterSelfCorrection:
 class TestCrossProcessOwnership:
     """A crumb with no owner cannot say WHOSE session it is.
 
-    ``kirocrew run`` and the eval runner each build their own SessionManager
+    ``ajcrew run`` and the eval runner each build their own SessionManager
     against the same data home, so a gateway boot sees their crumbs too. The
     start-time cutoff only ever protected THIS process's own crumbs, so a sibling's
     live session -- started before the gateway booted -- was read as a crash: it
@@ -851,7 +851,7 @@ class TestCrossProcessOwnership:
         self._restamp(home, "the-process-that-crashed")
         TestCrashedBackfill()._transcript(home, "dashboard:chat-1", started + 3600)
         with patch(
-            "kiro_crew.platform_compat.get_process_start_id",
+            "aj_crew.platform_compat.get_process_start_id",
             side_effect=lambda pid: "this-process",
         ):
             assert sess.backfill_crashed_sessions() == 1
@@ -863,7 +863,7 @@ class TestCrossProcessOwnership:
         _write_crumb(home, "dashboard:chat-1", time.time() - 7200, owner_pid=os.getpid())
         self._restamp(home, "this-process")
         with patch(
-            "kiro_crew.platform_compat.get_process_start_id",
+            "aj_crew.platform_compat.get_process_start_id",
             side_effect=lambda pid: "this-process",
         ):
             assert sess.backfill_crashed_sessions() == 0
@@ -874,7 +874,7 @@ class TestCrossProcessOwnership:
         _write_crumb(home, "dashboard:chat-1", time.time() - 7200, owner_pid=os.getpid())
         self._restamp(home, "written-where-it-could-be-read")
         with patch(
-            "kiro_crew.platform_compat.get_process_start_id",
+            "aj_crew.platform_compat.get_process_start_id",
             side_effect=lambda pid: None,
         ):
             assert sess.backfill_crashed_sessions() == 0
@@ -885,7 +885,7 @@ class TestCrossProcessOwnership:
         _write_crumb(home, "dashboard:chat-1", started, owner_pid=424242)
         TestCrashedBackfill()._transcript(home, "dashboard:chat-1", started + 3600)
         with patch(
-            "kiro_crew.platform_compat.get_process_start_id",
+            "aj_crew.platform_compat.get_process_start_id",
             side_effect=lambda pid: None if pid == 424242 else "self",
         ):
             assert sess.backfill_crashed_sessions() == 1
@@ -904,8 +904,8 @@ class TestCrossProcessOwnership:
         the population this instrument exists to report.
         """
         _write_crumb(home, "dashboard:chat-1", time.time() - 7200, owner_pid=424242)
-        with patch("kiro_crew.platform_compat.pid_exists", return_value=True):
-            with patch("kiro_crew.platform_compat.get_process_start_id", return_value=None):
+        with patch("aj_crew.platform_compat.pid_exists", return_value=True):
+            with patch("aj_crew.platform_compat.get_process_start_id", return_value=None):
                 assert sess.backfill_crashed_sessions() == 0
         assert _crumbs(home), "an ambiguous crumb waits for a later boot"
 
@@ -917,9 +917,9 @@ class TestCrossProcessOwnership:
         payload["start_id"] = "the-original-process"
         _crumbs(home)[0].write_text(json.dumps(payload))
         TestCrashedBackfill()._transcript(home, "dashboard:chat-1", started + 3600)
-        with patch("kiro_crew.platform_compat.pid_exists", return_value=True):
+        with patch("aj_crew.platform_compat.pid_exists", return_value=True):
             with patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 return_value="a-different-process",
             ):
                 assert sess.backfill_crashed_sessions() == 1
@@ -944,7 +944,7 @@ class TestContract:
 
     def test_the_lifecycle_module_uses_only_enum_members(self):
         """The teardown paths import their labels rather than spelling them."""
-        from kiro_crew import session_lifecycle
+        from aj_crew import session_lifecycle
 
         for name in (
             "END_REASON_RESET",
@@ -957,7 +957,7 @@ class TestContract:
             assert getattr(session_lifecycle, name) in sess.END_REASONS
 
     def test_the_duration_histogram_has_registered_bounds(self):
-        from kiro_crew.metrics.provider import _HISTOGRAM_BUCKETS_MS
+        from aj_crew.metrics.provider import _HISTOGRAM_BUCKETS_MS
 
         bounds = _HISTOGRAM_BUCKETS_MS[sess.SESSION_DURATION_METRIC]
         # Minutes to days: a week-long dashboard tab must not land in +Inf, and
@@ -1102,7 +1102,7 @@ class TestReviewFixes:
         assert sess.END_REASON_RECYCLED != sess.END_REASON_RESET
 
     def test_the_identity_retire_path_records_an_end(self):
-        from kiro_crew import session_lifecycle
+        from aj_crew import session_lifecycle
 
         found = TestTeardownPathsAreWired._reasons_recorded_by("retire_kiro_identity_sessions")
         # The retire path has exactly TWO commit points, each recording
@@ -1117,7 +1117,7 @@ class TestReviewFixes:
         import ast
         import inspect
 
-        from kiro_crew import session_compaction
+        from aj_crew import session_compaction
 
         tree = ast.parse(inspect.getsource(session_compaction))
         found = []
@@ -1177,7 +1177,7 @@ class TestReviewFixes:
     def test_no_crumb_is_written_without_telemetry_consent(self, home):
         """An unopted install must write nothing.
 
-        The crumb feeds only ``kirocrew.session.duration``, which is a no-op
+        The crumb feeds only ``ajcrew.session.duration``, which is a no-op
         without consent -- so writing one on an unopted host persists state that
         nothing can ever read, against a documented default of collecting nothing.
         """
@@ -1191,13 +1191,13 @@ class TestReviewFixes:
             def counter(self, *a, **k):
                 pass
 
-        with patch("kiro_crew.metrics.provider.get_recorder", return_value=_Off()):
+        with patch("aj_crew.metrics.provider.get_recorder", return_value=_Off()):
             _start("dashboard:chat-1")
         assert not _crumbs(home), "consent is off, so no crumb may reach the disk"
 
     def test_the_consent_check_fails_closed(self, home):
         """An unreadable consent state must not default to writing."""
-        with patch("kiro_crew.metrics.provider.get_recorder", side_effect=RuntimeError("boom")):
+        with patch("aj_crew.metrics.provider.get_recorder", side_effect=RuntimeError("boom")):
             _start("dashboard:chat-1")
         assert not _crumbs(home)
 
@@ -1248,11 +1248,11 @@ class TestEveryRegistryRemovalRecordsAnEnd:
         import importlib
         import inspect
 
-        return inspect.getsource(importlib.import_module(f"kiro_crew.{module_name}"))
+        return inspect.getsource(importlib.import_module(f"aj_crew.{module_name}"))
 
     @staticmethod
     def _owning_modules():
-        """Every module under ``src/kiro_crew`` that mutates the session registry.
+        """Every module under ``src/aj_crew`` that mutates the session registry.
 
         DISCOVERED, not listed. Design review's objection to a hardcoded list was
         exact: session-metric correctness depends on every current AND FUTURE
@@ -1261,9 +1261,9 @@ class TestEveryRegistryRemovalRecordsAnEnd:
         it lands, which is the only version of this gate that stays true as the
         lifecycle grows.
         """
-        import kiro_crew
+        import aj_crew
 
-        root = Path(kiro_crew.__file__).resolve().parent
+        root = Path(aj_crew.__file__).resolve().parent
         found = []
         for path in sorted(root.rglob("*.py")):
             if "__pycache__" in path.parts:
@@ -1271,7 +1271,7 @@ class TestEveryRegistryRemovalRecordsAnEnd:
             rel_parts = path.relative_to(root).parts
             # A container image's build context, under ``apps/builtins/<app>/crew/runtime/**``.
             # This walk hands each hit to ``importlib.import_module``, and that tree is the
-            # one place under ``src/kiro_crew`` that must never be imported from here:
+            # one place under ``src/aj_crew`` that must never be imported from here:
             # ``test_spawn_audit.py::test_container_image_assets_are_not_imported`` forbids
             # it, and the tree could not satisfy the import anyway, since it assumes the
             # image's installed layout and its modules import the image's own runtime
@@ -1313,7 +1313,7 @@ class TestEveryRegistryRemovalRecordsAnEnd:
         import importlib
         import inspect
 
-        module = importlib.import_module(f"kiro_crew.{module_name}")
+        module = importlib.import_module(f"aj_crew.{module_name}")
         tree = ast.parse(inspect.getsource(module))
         out: dict[str, bool] = {}
         consumers = {"record_session_ended", "record_sessions_ended", "discard_session_start"}
@@ -1381,9 +1381,9 @@ class TestEveryRegistryRemovalRecordsAnEnd:
         on, and none of them reached the discovered list, where ``import_module`` would
         have tried to import a tree that cannot be imported from this process.
         """
-        import kiro_crew
+        import aj_crew
 
-        root = Path(kiro_crew.__file__).resolve().parent
+        root = Path(aj_crew.__file__).resolve().parent
         image_root = root / "apps" / "builtins" / "aws_control" / "crew" / "runtime"
         matching = [
             p
@@ -1434,7 +1434,7 @@ class TestTeardownPathsAreWired:
         import inspect
         import sys
 
-        from kiro_crew import session_lifecycle
+        from aj_crew import session_lifecycle
 
         recorders = {"record_session_ended", "record_sessions_ended"}
         tree = ast.parse(

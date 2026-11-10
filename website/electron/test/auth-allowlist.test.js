@@ -118,6 +118,6 @@ test("the baked allowlist is packed into app.asar and staged by build-desktop.sh
   const { BUILD_TIME_INPUTS } = require("./build-time-inputs");
   assert.ok(BUILD_TIME_INPUTS.has(BAKED_ALLOWLIST_NAME));
   const script = fs.readFileSync(path.join(__dirname, "..", "..", "..", "packaging", "build-desktop.sh"), "utf8");
-  assert.match(script, /KIROCREW_AUTH_SERVER_ALLOWLIST/);
+  assert.match(script, /AJCREW_AUTH_SERVER_ALLOWLIST/);
   assert.match(script, /\$ELECTRON_DIR\/AUTH-SERVER-ALLOWLIST/);
 });

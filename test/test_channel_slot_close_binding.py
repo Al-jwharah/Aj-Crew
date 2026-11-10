@@ -17,14 +17,14 @@ from unittest.mock import MagicMock
 
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import channel_slots
-from kiro_crew.dashboard.chat_persistence import (
+from aj_crew.dashboard import channel_slots
+from aj_crew.dashboard.chat_persistence import (
     _rehydrate_slot_from_history,
     restore_open_slots,
     save_slot_off_loop,
 )
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.history import _safe_key
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.history import _safe_key
 
 CHANNEL_KEY = "slack:1783733803.877979"
 STEM = _safe_key(CHANNEL_KEY)  # "slack_1783733803.877979" — the slot name too
@@ -275,7 +275,7 @@ class TestCloseLandsOnTheTranscriptTheRestorePathReads:
 class TestClosedChannelTabStaysClosedAcrossRestart:
     def test_closed_unbound_channel_tab_is_not_restored(self, tmp_path, monkeypatch):
         """End-to-end of the reported symptom: close, restart, stays gone."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         state = _state(tmp_path)
         _seed_channel_transcript(state)
         slot = _restored_tab(state)
@@ -294,7 +294,7 @@ class TestClosedChannelTabStaysClosedAcrossRestart:
 
     def test_open_channel_tab_is_still_restored(self, tmp_path, monkeypatch):
         """Guard the inverse: an un-closed tab must still come back."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         state = _state(tmp_path)
         _seed_channel_transcript(state)
         (tmp_path / "open_slots.json").write_text(

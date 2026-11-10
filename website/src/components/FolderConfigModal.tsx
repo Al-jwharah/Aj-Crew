@@ -282,7 +282,7 @@ export default function FolderConfigModal({
   // The default agent inherits the same way, so the empty option has to name the
   // agent an empty selection would ACTUALLY run: the nearest ancestor that pins
   // one, and only then the global default. Naming the global default
-  // unconditionally reads "Inherit (kirocrew)" on a subfolder of an
+  // unconditionally reads "Inherit (ajcrew)" on a subfolder of an
   // agent-pinned folder whose chats will in fact run that ancestor's agent.
   const inheritedAgent = useMemo(() => {
     const from = mode === 'edit' ? folder?.parent_id : parentId

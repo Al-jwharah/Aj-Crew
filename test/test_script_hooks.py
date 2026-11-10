@@ -13,8 +13,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.hooks import (
+from aj_crew import platform_compat
+from aj_crew.hooks import (
     HOOK_EVENT_AGENT_SPAWN,
     HOOK_EVENT_PRE_TOOL_USE,
     HOOK_EVENT_USER_PROMPT_SUBMIT,
@@ -29,7 +29,7 @@ _IS_WINDOWS = platform.system() == "Windows"
 # Reading an env var is the one hook-command shape that is inherently
 # shell-specific: POSIX sh expands ``$VAR``, cmd.exe expands ``%VAR%`` and
 # leaves ``$VAR`` as a literal.
-_ECHO_HOOK_EVENT = "echo %KIROCREW_HOOK_EVENT%" if _IS_WINDOWS else "echo $KIROCREW_HOOK_EVENT"
+_ECHO_HOOK_EVENT = "echo %AJCREW_HOOK_EVENT%" if _IS_WINDOWS else "echo $AJCREW_HOOK_EVENT"
 
 
 def _script_command(script: Path, body: str) -> str:
@@ -203,7 +203,7 @@ class TestScriptHookStore:
 class TestCappedScriptHookOutput:
     @pytest.mark.asyncio
     async def test_reader_keeps_only_the_cap_but_drains_to_eof(self):
-        from kiro_crew.hooks import _read_capped_stream
+        from aj_crew.hooks import _read_capped_stream
 
         reader = asyncio.StreamReader()
         reader.feed_data(b"abcdefgh")
@@ -216,7 +216,7 @@ class TestCappedScriptHookOutput:
         assert await reader.read() == b""
 
     def test_decode_marks_a_multibyte_boundary(self):
-        from kiro_crew.hooks import _HOOK_TRUNCATION_MARKER, _decode_capped
+        from aj_crew.hooks import _HOOK_TRUNCATION_MARKER, _decode_capped
 
         raw = ("€" * 2).encode("utf-8")[:4]
         decoded = _decode_capped(raw, truncated=True)
@@ -227,7 +227,7 @@ class TestCappedScriptHookOutput:
 
     @pytest.mark.asyncio
     async def test_cancellation_observes_both_reader_tasks(self):
-        from kiro_crew.hooks import _communicate_capped
+        from aj_crew.hooks import _communicate_capped
 
         class BlockingReader:
             def __init__(self):
@@ -263,13 +263,13 @@ class TestCappedScriptHookOutput:
 
     @pytest.mark.asyncio
     async def test_real_hook_caps_and_marks_both_streams(self, tmp_path, monkeypatch):
-        from kiro_crew.hooks import _HOOK_STREAM_CAP_BYTES, _HOOK_TRUNCATION_MARKER
+        from aj_crew.hooks import _HOOK_STREAM_CAP_BYTES, _HOOK_TRUNCATION_MARKER
 
         # This test exercises real pipe draining, not host sandbox discovery.
         # Keep the subprocess real while making its isolation wrappers stable
         # across Linux, namespace-sandbox, and Windows CI environments.
-        monkeypatch.setattr("kiro_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
-        monkeypatch.setattr("kiro_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
+        monkeypatch.setattr("aj_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
+        monkeypatch.setattr("aj_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
 
         command = _script_command(
             tmp_path / "large_output.py",
@@ -313,10 +313,10 @@ class TestCappedScriptHookOutput:
     async def test_max_output_size_cuts_stdout_in_utf8_bytes(
         self, tmp_path, monkeypatch, body, limit, expected
     ):
-        from kiro_crew.hooks import _HOOK_TRUNCATION_MARKER
+        from aj_crew.hooks import _HOOK_TRUNCATION_MARKER
 
-        monkeypatch.setattr("kiro_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
-        monkeypatch.setattr("kiro_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
+        monkeypatch.setattr("aj_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
+        monkeypatch.setattr("aj_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
         command = _script_command(tmp_path / "limited_output.py", "import sys\n" + body)
         hook = ScriptHook(
             id="limited-output",
@@ -333,14 +333,14 @@ class TestCappedScriptHookOutput:
 
     @pytest.mark.asyncio
     async def test_max_output_size_cuts_after_redaction(self, tmp_path, monkeypatch):
-        from kiro_crew.hooks import _HOOK_TRUNCATION_MARKER
+        from aj_crew.hooks import _HOOK_TRUNCATION_MARKER
 
         # The limit falls inside the key. Cut first, the key's first ten
         # characters would reach the caller unredacted, as no pattern matches a
         # fragment; cut after redaction, only the redaction text is cut.
         secret = "AKIAIOSFODNN7EXAMPLE"
-        monkeypatch.setattr("kiro_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
-        monkeypatch.setattr("kiro_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
+        monkeypatch.setattr("aj_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
+        monkeypatch.setattr("aj_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
         command = _script_command(
             tmp_path / "leaky_output.py", f"import sys\nsys.stdout.write('o' * 90 + {secret!r})\n"
         )
@@ -361,8 +361,8 @@ class TestCappedScriptHookOutput:
 
     @pytest.mark.asyncio
     async def test_output_within_max_output_size_is_returned_whole(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
-        monkeypatch.setattr("kiro_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
+        monkeypatch.setattr("aj_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
+        monkeypatch.setattr("aj_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
         command = _script_command(tmp_path / "small_output.py", "print('o' * 100)\n")
         hook = ScriptHook(
             id="small-output",
@@ -387,9 +387,9 @@ class TestRunScriptHook:
 
     @pytest.fixture(autouse=True)
     def _passthrough_sandbox(self, monkeypatch):
-        # run_script_hook uses a lazy `from kiro_crew.sandbox import wrap_argv`
+        # run_script_hook uses a lazy `from aj_crew.sandbox import wrap_argv`
         # inside the function. Patch the source module so macOS 26 doesn't raise.
-        monkeypatch.setattr("kiro_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
+        monkeypatch.setattr("aj_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
 
     @pytest.mark.asyncio
     async def test_successful_execution(self):
@@ -493,7 +493,7 @@ class TestRunScriptHook:
         assert HOOK_EVENT_USER_PROMPT_SUBMIT in result.stdout
 
     def test_subprocess_env_excludes_gateway_credentials(self, monkeypatch):
-        from kiro_crew.hooks import _hook_subprocess_env
+        from aj_crew.hooks import _hook_subprocess_env
 
         secret = "AKIAIOSFODNN7EXAMPLE"
         proxy_secret = "http://svc:pa55word@proxy.example.com"
@@ -501,7 +501,7 @@ class TestRunScriptHook:
         monkeypatch.setenv("HTTPS_PROXY", proxy_secret)
         monkeypatch.setenv("http_proxy", proxy_secret)
         monkeypatch.setenv("PATH", os.environ.get("PATH", ""))
-        monkeypatch.setenv("KIROCREW_HOME", "/custom/data/home")
+        monkeypatch.setenv("AJCREW_HOME", "/custom/data/home")
         hook = ScriptHook(
             id="env-safe",
             name="env-safe",
@@ -515,15 +515,15 @@ class TestRunScriptHook:
         assert "AWS_ACCESS_KEY_ID" not in env
         assert "HTTPS_PROXY" not in env
         assert "http_proxy" not in env
-        # The data-home override must survive so a hook invoking the kirocrew
+        # The data-home override must survive so a hook invoking the ajcrew
         # CLI resolves the gateway's home, not the default (it is a path, not a
         # credential).
-        assert env["KIROCREW_HOME"] == "/custom/data/home"
-        assert env["KIROCREW_HOOK_EVENT"] == HOOK_EVENT_USER_PROMPT_SUBMIT
-        assert env["KIROCREW_HOOK_CONTEXT"] == "prompt text"
+        assert env["AJCREW_HOME"] == "/custom/data/home"
+        assert env["AJCREW_HOOK_EVENT"] == HOOK_EVENT_USER_PROMPT_SUBMIT
+        assert env["AJCREW_HOOK_CONTEXT"] == "prompt text"
 
     def test_subprocess_env_caps_context_on_all_events(self):
-        from kiro_crew.hooks import _hook_subprocess_env
+        from aj_crew.hooks import _hook_subprocess_env
 
         big = "x" * 200_000
         for event in (
@@ -538,7 +538,7 @@ class TestRunScriptHook:
                 command="echo ok",
             )
             env = _hook_subprocess_env(hook, big)
-            assert env["KIROCREW_HOOK_CONTEXT"] == big[:500]
+            assert env["AJCREW_HOOK_CONTEXT"] == big[:500]
 
     @pytest.mark.skipif(_IS_WINDOWS, reason="systemd user-bus wrapping is POSIX-only")
     @pytest.mark.asyncio
@@ -571,9 +571,9 @@ class TestRunScriptHook:
         proc.stdin.close = MagicMock()
         proc.wait = AsyncMock(return_value=0)
         proc.returncode = 0
-        monkeypatch.setattr("kiro_crew.sandbox.sandboxed_spawn_argv", safe_spawn)
+        monkeypatch.setattr("aj_crew.sandbox.sandboxed_spawn_argv", safe_spawn)
         create = AsyncMock(return_value=proc)
-        monkeypatch.setattr("kiro_crew.sandbox.create_subprocess_limited", create)
+        monkeypatch.setattr("aj_crew.sandbox.create_subprocess_limited", create)
 
         hook = ScriptHook(
             id="safe-funnel",
@@ -628,7 +628,7 @@ class TestRunScriptHook:
         )
 
         with patch(
-            "kiro_crew.sandbox.wrap_argv",
+            "aj_crew.sandbox.wrap_argv",
             side_effect=RuntimeError(f"spawn failed for {secret}"),
         ):
             result = await run_script_hook(hook, "ctx")
@@ -662,7 +662,7 @@ class TestScriptHookStoreFire:
 
     @pytest.fixture(autouse=True)
     def _passthrough_sandbox(self, monkeypatch):
-        monkeypatch.setattr("kiro_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
+        monkeypatch.setattr("aj_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
 
     @pytest.mark.asyncio
     async def test_fire_enabled_hooks(self, hook_store: ScriptHookStore):
@@ -823,10 +823,10 @@ class TestScriptHookStoreFire:
         self, hook_store: ScriptHookStore, tmp_path: Path, monkeypatch, model, expected
     ):
         """A stored hook and a spec hook both read it; unknown, it is unset, never the ambient one."""
-        monkeypatch.setenv("KIROCREW_SESSION_MODEL", "ambient")
+        monkeypatch.setenv("AJCREW_SESSION_MODEL", "ambient")
         command = _script_command(
             tmp_path / "model_hook.py",
-            "import os; print(os.environ.get('KIROCREW_SESSION_MODEL', '<unset>'))\n",
+            "import os; print(os.environ.get('AJCREW_SESSION_MODEL', '<unset>'))\n",
         )
         hook_store.create(
             {"name": "stored", "event": HOOK_EVENT_USER_PROMPT_SUBMIT, "command": command}
@@ -850,8 +850,8 @@ class TestRunScriptHookSpawnForm:
 
     @pytest.fixture(autouse=True)
     def _passthrough_sandbox(self, monkeypatch):
-        monkeypatch.setattr("kiro_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
-        monkeypatch.setattr("kiro_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
+        monkeypatch.setattr("aj_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
+        monkeypatch.setattr("aj_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
 
     @staticmethod
     def _hook(command: str) -> ScriptHook:
@@ -898,9 +898,9 @@ class TestRunScriptHookSpawnForm:
         # offers. Patching asyncio.create_subprocess_exec instead made the
         # assertion host-dependent: green where no backend exists (Windows, this
         # box) and red on the namespace-sandbox job, which has all three.
-        monkeypatch.setattr("kiro_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
-        monkeypatch.setattr("kiro_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
-        monkeypatch.setattr("kiro_crew.sandbox.create_subprocess_limited", fake_exec)
+        monkeypatch.setattr("aj_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
+        monkeypatch.setattr("aj_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
+        monkeypatch.setattr("aj_crew.sandbox.create_subprocess_limited", fake_exec)
         monkeypatch.setattr("asyncio.create_subprocess_shell", fake_shell)
         monkeypatch.setattr("asyncio.create_subprocess_exec", fake_exec)
 
@@ -928,12 +928,12 @@ class TestRunScriptHookSpawnForm:
         wrapper — so the code must fall back to the argv path instead.
         """
         monkeypatch.setattr(
-            "kiro_crew.sandbox.wrap_argv", lambda argv, **k: (["sandbox-exec", *argv], None)
+            "aj_crew.sandbox.wrap_argv", lambda argv, **k: (["sandbox-exec", *argv], None)
         )
         # cgroup_scope_argv runs AFTER wrap_argv and prepends its own launcher on
         # a cgroup-v2 host. Pin it to a no-op so only the shared env-unset shim
         # may precede the wrapper this test installed.
-        monkeypatch.setattr("kiro_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
+        monkeypatch.setattr("aj_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
         seen: dict[str, object] = {}
 
         fake_proc = MagicMock()
@@ -950,7 +950,7 @@ class TestRunScriptHookSpawnForm:
 
         # Capture at create_subprocess_limited so its RLIMIT shim cannot alter
         # the argv built by the shared spawn funnel (see the sibling test above).
-        monkeypatch.setattr("kiro_crew.sandbox.create_subprocess_limited", fake_exec)
+        monkeypatch.setattr("aj_crew.sandbox.create_subprocess_limited", fake_exec)
         monkeypatch.setattr("asyncio.create_subprocess_shell", fake_shell)
         monkeypatch.setattr("asyncio.create_subprocess_exec", fake_exec)
 
@@ -980,7 +980,7 @@ class TestRunScriptHookSpawnForm:
         event-JSON pipe. The runner is given the platform view it has on win32, so
         a POSIX CI catches a regression too.
         """
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         win_no_window = 0x08000000  # winbase.h CREATE_NO_WINDOW
         win_new_group = 0x00000200  # winbase.h CREATE_NEW_PROCESS_GROUP
@@ -1000,7 +1000,7 @@ class TestRunScriptHookSpawnForm:
         async def spawn_funnel(argv, *, env=None, **_kwargs):
             return [*prefix, *argv], env, None
 
-        monkeypatch.setattr("kiro_crew.sandbox.sandboxed_spawn_argv_async", spawn_funnel)
+        monkeypatch.setattr("aj_crew.sandbox.sandboxed_spawn_argv_async", spawn_funnel)
 
         stdin_seen = bytearray()
         spawns: list[tuple[str, dict]] = []
@@ -1037,7 +1037,7 @@ class TestRunScriptHookSpawnForm:
             return _finished_proc()
 
         monkeypatch.setattr("asyncio.create_subprocess_shell", fake_shell)
-        monkeypatch.setattr("kiro_crew.sandbox.create_subprocess_limited", fake_limited)
+        monkeypatch.setattr("aj_crew.sandbox.create_subprocess_limited", fake_limited)
 
         result = await run_script_hook(self._hook("echo hi"), "ctx")
 
@@ -1054,7 +1054,7 @@ class TestLastError:
 
     @pytest.fixture(autouse=True)
     def _passthrough_sandbox(self, monkeypatch):
-        monkeypatch.setattr("kiro_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
+        monkeypatch.setattr("aj_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
 
     @pytest.mark.asyncio
     async def test_last_error_cleared_on_success(self):
@@ -1190,9 +1190,9 @@ class TestRunScriptHookShellDenyList:
         # spawn here, and the deny gate (which runs BEFORE wrap_argv) is what every
         # assertion turns on.
         _floor_monkeypatch.setattr(
-            "kiro_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None)
+            "aj_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None)
         )
-        _floor_monkeypatch.setattr("kiro_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
+        _floor_monkeypatch.setattr("aj_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
 
     @pytest.mark.asyncio
     async def test_a_denylisted_command_is_refused_before_it_runs(self, tmp_path: Path):
@@ -1295,14 +1295,14 @@ class TestRunScriptHookShellDenyList:
         # ``chmod 777`` matches a disableable built-in rule (unlike the always-on
         # git-publish floor); with the effective set empty (opted out of
         # everything) the gate must let it through.
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         command = f"chmod 777 {tmp_path / 'probe'}"
         # Precondition: this command IS denied by default, so the pass below is the
         # opt-out at work and not a command the gate never matched.
         assert is_denied(command), "precondition: chmod 777 is a default deny rule"
 
-        monkeypatch.setattr("kiro_crew.hooks.effective_denied_regexes_from_config", lambda: [])
+        monkeypatch.setattr("aj_crew.hooks.effective_denied_regexes_from_config", lambda: [])
         hook = ScriptHook(
             id="optout-1",
             name="optout",
@@ -1322,9 +1322,9 @@ class TestRunScriptHookShellDenyList:
 def test_the_saved_hooks_snapshot_keeps_a_hook_saved_while_one_ran(tmp_path: Path, monkeypatch):
     """A process with no hook store fires a snapshot of the saved hooks; a hook the
     Hooks page saves meanwhile stays saved."""
-    import kiro_crew.hooks as hooks_mod
-    from kiro_crew.config import loader
-    from kiro_crew.hooks import ScriptHookResult
+    import aj_crew.hooks as hooks_mod
+    from aj_crew.config import loader
+    from aj_crew.hooks import ScriptHookResult
 
     monkeypatch.setattr(loader, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(hooks_mod, "_global_script_hook_store", None)

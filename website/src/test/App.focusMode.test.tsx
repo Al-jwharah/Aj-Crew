@@ -26,7 +26,7 @@ vi.mock('../pages/LogsPage', () => ({ default: () => null }))
 vi.mock('../pages/NotificationsPage', () => ({ default: () => null }))
 vi.mock('../pages/SchedulePage', () => ({ default: () => null }))
 vi.mock('../hooks/useWebSocket', () => ({ useWebSocket: () => ({ subscribeLogs: () => {} }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'kirocrew' }], defaultAgent: 'kirocrew' })) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'ajcrew' }], defaultAgent: 'ajcrew' })) }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span>, Lightbox: () => null }))
 

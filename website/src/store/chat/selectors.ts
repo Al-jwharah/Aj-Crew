@@ -141,8 +141,8 @@ const TURN_INJECT_KINDS: ReadonlySet<unknown> = new Set<string>(
   (Object.keys(TURN_INJECT_DISPATCHED) as InjectKind[]).filter((k) => TURN_INJECT_DISPATCHED[k]),
 )
 /** Roles the continue scans walk past: they are not the conversation's floor.
- *  Mirrors `_is_interrupted` (`src/kiro_crew/dashboard/chat_api/continue_turn.py`) /
- *  `_has_conversation` (`src/kiro_crew/dashboard/chat_handlers.py`), which likewise only read
+ *  Mirrors `_is_interrupted` (`src/aj_crew/dashboard/chat_api/continue_turn.py`) /
+ *  `_has_conversation` (`src/aj_crew/dashboard/chat_handlers.py`), which likewise only read
  *  `user` / `assistant` / `error` rows. Keep them in sync — these predicates
  *  decide whether to OFFER Continue and what to call it, those decide whether to
  *  authorize it and what to tell the model. */
@@ -167,7 +167,7 @@ export const selectActiveSlotProject = (state: RootState): string | undefined =>
  * NOT limited to turns that visibly died, because a transcript cannot reliably
  * show that they did: a force-quit or force-exit runs no cleanup, so no error
  * row is ever written and a killed turn reads exactly like a finished one (see
- * ``_has_conversation`` in `src/kiro_crew/dashboard/chat_handlers.py`, which
+ * ``_has_conversation`` in `src/aj_crew/dashboard/chat_handlers.py`, which
  * authorizes the press under the slot lock). Offering it on every idle slot
  * covers those invisible interruptions, and doubles as a plain "keep going"
  * nudge — the one thing an empty composer's dead send button could never do.
@@ -251,7 +251,7 @@ const PYTHON_WHITESPACE_RE = /[\t\n\v\f\r\u001c-\u001f \u0085\u00a0\u1680\u2000-
 
 /** First whitespace-separated token by PYTHON's splitting rule, or undefined
  *  for all-whitespace content. Mirrors `content.split()[:1]` in
- *  `src/kiro_crew/dashboard/state_parts/transcript_rows.py`. */
+ *  `src/aj_crew/dashboard/state_parts/transcript_rows.py`. */
 const firstPythonToken = (content: string): string | undefined =>
   content.split(PYTHON_WHITESPACE_RE).find(Boolean)
 
@@ -262,7 +262,7 @@ const firstPythonToken = (content: string): string | undefined =>
  *
  * Gates the composer's Resume button (composed with `selectContinuable` in
  * ChatPage) and selects the continuation body handed to the model. Mirrors
- * `_is_interrupted` in `src/kiro_crew/dashboard/chat_api/continue_turn.py` — the two must
+ * `_is_interrupted` in `src/aj_crew/dashboard/chat_api/continue_turn.py` — the two must
  * agree, or the button promises one thing and the agent is told another.
  *
  * A false result means "nothing in the transcript proves an interruption", never
@@ -274,7 +274,7 @@ const firstPythonToken = (content: string): string | undefined =>
  * automatic compaction can write the same tagged row inside an ordinary turn
  * whose real reply never arrived, and that tail is a genuine interruption --
  * so the rule needs BOTH halves, matching `is_turn_interrupted` in
- * `src/kiro_crew/dashboard/state_parts/transcript_rows.py`.
+ * `src/aj_crew/dashboard/state_parts/transcript_rows.py`.
  */
 /**
  * The tool row a turn ends on when the agent called `nothing_to_do`: a quiet
@@ -284,10 +284,10 @@ const firstPythonToken = (content: string): string | undefined =>
  * cannot close a turn. The backend's identity halves (`meta.tool_name` /
  * `meta.mcp_server`) are checked when present and may be absent: KAS names no
  * tool on its frame and opencode sends no identity at all. Mirrors
- * `is_quiet_end_row` in `src/kiro_crew/dashboard/state_parts/transcript_rows.py`.
+ * `is_quiet_end_row` in `src/aj_crew/dashboard/state_parts/transcript_rows.py`.
  */
 export const QUIET_END_TOOL = 'nothing_to_do'
-export const QUIET_END_SERVER = 'kirocrew-core'
+export const QUIET_END_SERVER = 'ajcrew-core'
 const absentOr = (v: unknown, want: string): boolean => v === undefined || v === null || v === '' || v === want
 export const isQuietEndRow = (m: ChatMessage): boolean => {
   if (m.role !== 'tool') return false

@@ -24,13 +24,13 @@ import pytest
 from discord_helpers import FakeClient as DiscordFakeClient
 from telegram_helpers import FakeClient as TelegramFakeClient
 
-from kiro_crew.discord import renderer as discord_renderer
-from kiro_crew.discord.renderer import DiscordRenderer
-from kiro_crew.discord.transport import DISCORD_CAPABILITIES
-from kiro_crew.messaging.split import fence_line_safe_offset, rebalance_fenced_cuts
-from kiro_crew.telegram import renderer as telegram_renderer
-from kiro_crew.telegram.renderer import TelegramRenderer
-from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES
+from aj_crew.discord import renderer as discord_renderer
+from aj_crew.discord.renderer import DiscordRenderer
+from aj_crew.discord.transport import DISCORD_CAPABILITIES
+from aj_crew.messaging.split import fence_line_safe_offset, rebalance_fenced_cuts
+from aj_crew.telegram import renderer as telegram_renderer
+from aj_crew.telegram.renderer import TelegramRenderer
+from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
 
 _CODE = "".join(f"line {i:03d}\n" for i in range(60))
 _SOURCE = "Here is the code:\n\n```python\n" + _CODE + "```\n\nAfter the block."
@@ -168,7 +168,7 @@ class TestDiscordRecutInsideAFence:
         cli = DiscordFakeClient()
         r = DiscordRenderer(cli, "chan1", DISCORD_CAPABILITIES, session_key="sk")  # type: ignore[arg-type]
         monkeypatch.setattr(r, "_limit", lambda: self._LIMIT)
-        monkeypatch.setattr("kiro_crew.discord.renderer._EDIT_THROTTLE_S", 1e9)
+        monkeypatch.setattr("aj_crew.discord.renderer._EDIT_THROTTLE_S", 1e9)
         return r, cli
 
     @pytest.mark.asyncio

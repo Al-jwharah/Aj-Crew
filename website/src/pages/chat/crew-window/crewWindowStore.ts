@@ -17,7 +17,7 @@ export interface CrewWindowTarget {
   key: string
 }
 
-const STORAGE_KEY = 'kirocrew.crewWindow'
+const STORAGE_KEY = 'ajcrew.crewWindow'
 const listeners = new Set<() => void>()
 
 function read(): CrewWindowTarget | null {
@@ -91,7 +91,7 @@ export function useCrewWindow(): CrewWindowTarget | null {
 // switching sessions, or reloading this tab, keeps it. Keyed by machine and
 // peer slot: a peer key can equal a local one.
 const draftStore = createSlotDraftStore<string>({
-  key: 'kirocrew.crewDrafts',
+  key: 'ajcrew.crewDrafts',
   storage: 'session',
   maxEntries: 50,
   sanitize: (v: unknown) => (typeof v === 'string' && v ? v : null),

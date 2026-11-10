@@ -24,7 +24,7 @@ from taskrunner_v2_scenarios_helpers import _passthrough_sandbox  # noqa: F401
 from taskrunner_v2_scenarios_helpers import _llm_event, _make_provider, _mock_sessions
 
 from conftest import requires_git
-from kiro_crew.taskrunner import (
+from aj_crew.taskrunner import (
     MAX_TOTAL_TASKS,
     Step,
     StepStatus,
@@ -106,7 +106,7 @@ class TestBug2RevertOnFailedStep:
     @pytest.mark.asyncio
     async def test_no_revert_when_step_never_committed(self, tmp_path: Path) -> None:
         """Failed step that never committed should NOT trigger revert."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         sessions = _mock_sessions()
 
@@ -123,7 +123,7 @@ class TestBug2RevertOnFailedStep:
 
         runner = TaskRunner(sessions=sessions, auto_test=False, work_dir=tmp_path)
         run = TaskRun(spec_path=str(tmp_path / "t.md"), spec_content="s", status="running")
-        run.branch_name = "kirocrew/task/test"
+        run.branch_name = "ajcrew/task/test"
         # Simulate a previous step's commit
         run.commit_hashes = ["abc123"]
 
@@ -149,7 +149,7 @@ class TestBug3DoubleCommitOnReviewRetry:
 
     @pytest.mark.asyncio
     async def test_revert_before_retry_on_review_failure(self, tmp_path: Path) -> None:
-        from kiro_crew import git_coord  # noqa: F401
+        from aj_crew import git_coord  # noqa: F401
 
         sessions = _mock_sessions()
         provider = _make_provider("done")
@@ -157,7 +157,7 @@ class TestBug3DoubleCommitOnReviewRetry:
 
         runner = TaskRunner(sessions=sessions, auto_test=False, work_dir=tmp_path)
         run = TaskRun(spec_path=str(tmp_path / "t.md"), spec_content="s", status="running")
-        run.branch_name = "kirocrew/task/test"
+        run.branch_name = "ajcrew/task/test"
         step = Step(index=1, title="Test", description="d")
         run.tasks = [step]
 
@@ -185,9 +185,9 @@ class TestBug3DoubleCommitOnReviewRetry:
             return True
 
         with (
-            patch("kiro_crew.task_executor.git_coord.commit_step", side_effect=_mock_commit),
-            patch("kiro_crew.task_executor.git_coord.revert_step", side_effect=_mock_revert),
-            patch("kiro_crew.task_executor.self_review", side_effect=_review_fail_then_pass),
+            patch("aj_crew.task_executor.git_coord.commit_step", side_effect=_mock_commit),
+            patch("aj_crew.task_executor.git_coord.revert_step", side_effect=_mock_revert),
+            patch("aj_crew.task_executor.self_review", side_effect=_review_fail_then_pass),
         ):
             success = await runner._execute_single_task(run, step, "key")
 
@@ -276,7 +276,7 @@ class TestScenarioGitCoordinationE2E:
 
     @pytest.mark.asyncio
     async def test_full_git_workflow(self, tmp_path: Path) -> None:
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         # Set up a real git repo
         work_dir = tmp_path / "repo"
@@ -332,7 +332,7 @@ class TestScenarioGitCoordinationE2E:
         run.work_dir = str(work_dir)
 
         await git_coord.init_workspace(run)
-        assert run.branch_name == "kirocrew/task/e2e_test"
+        assert run.branch_name == "ajcrew/task/e2e_test"
         assert run.worktree_path != ""
         wt = Path(run.work_dir)
 
@@ -358,7 +358,7 @@ class TestScenarioGitCoordinationE2E:
         assert "bar.py" in diff
 
         branch = await git_coord.finalize(run)
-        assert branch == "kirocrew/task/e2e_test"
+        assert branch == "ajcrew/task/e2e_test"
 
 
 # ── Scenario: Step fails mid-task, revert preserves earlier work ──
@@ -368,7 +368,7 @@ class TestScenarioGitCoordinationE2E:
 class TestScenarioRevertPreservesEarlierWork:
     @pytest.mark.asyncio
     async def test_revert_only_affects_last_commit(self, tmp_path: Path) -> None:
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         repo = tmp_path / "repo"
         repo.mkdir()
@@ -426,7 +426,7 @@ class TestScenarioNonGitFallback:
     @pytest.mark.asyncio
     async def test_build_task_prompt_with_git(self, tmp_path: Path) -> None:
         """With git, prompt includes git state."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         repo = tmp_path / "repo"
         repo.mkdir()
@@ -473,7 +473,7 @@ class TestScenarioReviewWithDiff:
         step = Step(index=1, title="Test", description="d")
         run.tasks = [step]
 
-        with patch("kiro_crew.task_executor.stream_and_collect_json", return_value={"ok": True}):
+        with patch("aj_crew.task_executor.stream_and_collect_json", return_value={"ok": True}):
             result = await runner.self_review(run, step, "taskrunner:rev_test")
 
         assert result is True
@@ -487,7 +487,7 @@ class TestScenarioReviewWithDiff:
     @pytest.mark.asyncio
     async def test_review_includes_diff_when_git_available(self, tmp_path: Path) -> None:
         """When git diff is available, review prompt includes actual diff."""
-        from kiro_crew import git_coord  # noqa: F401
+        from aj_crew import git_coord  # noqa: F401
 
         sessions = _mock_sessions()
         sessions.get_or_create = AsyncMock(return_value=(_make_provider(), True, False))
@@ -495,7 +495,7 @@ class TestScenarioReviewWithDiff:
         runner = TaskRunner(sessions=sessions, auto_test=False, work_dir=tmp_path)
         run = TaskRun(spec_path=str(tmp_path / "t.md"), spec_content="s")
         run.task_id = "diff_rev"
-        run.branch_name = "kirocrew/task/diff_rev"
+        run.branch_name = "ajcrew/task/diff_rev"
         step = Step(index=1, title="Add handler", description="Create request handler")
         run.tasks = [step]
 
@@ -507,10 +507,10 @@ class TestScenarioReviewWithDiff:
 
         with (
             patch(
-                "kiro_crew.task_executor.git_coord.get_step_diff",
+                "aj_crew.task_executor.git_coord.get_step_diff",
                 return_value="diff --git a/handler.py\n+def handle():",
             ),
-            patch("kiro_crew.task_executor.stream_and_collect_json", side_effect=_capture_json),
+            patch("aj_crew.task_executor.stream_and_collect_json", side_effect=_capture_json),
         ):
             await runner.self_review(run, step)
 
@@ -522,7 +522,7 @@ class TestScenarioReviewWithDiff:
     @pytest.mark.asyncio
     async def test_review_fallback_without_diff(self, tmp_path: Path) -> None:
         """A run without git has no diff, so review uses the generic prompt."""
-        from kiro_crew import git_coord  # noqa: F401
+        from aj_crew import git_coord  # noqa: F401
 
         sessions = _mock_sessions()
         sessions.get_or_create = AsyncMock(return_value=(_make_provider(), True, False))
@@ -541,8 +541,8 @@ class TestScenarioReviewWithDiff:
             return {"ok": True}
 
         with (
-            patch("kiro_crew.task_executor.git_coord.get_step_diff", return_value=""),
-            patch("kiro_crew.task_executor.stream_and_collect_json", side_effect=_capture_json),
+            patch("aj_crew.task_executor.git_coord.get_step_diff", return_value=""),
+            patch("aj_crew.task_executor.stream_and_collect_json", side_effect=_capture_json),
         ):
             await runner.self_review(run, step)
 
@@ -557,7 +557,7 @@ class TestScenarioReplanWithGitState:
     @pytest.mark.asyncio
     async def test_replan_includes_git_context(self, tmp_path: Path) -> None:
         """When git is active, _try_replan uses git state summary."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         sessions = _mock_sessions()
 
@@ -575,7 +575,7 @@ class TestScenarioReplanWithGitState:
 
         runner = TaskRunner(sessions=sessions, auto_test=False, work_dir=tmp_path)
         run = TaskRun(spec_path=str(tmp_path / "t.md"), spec_content="s", status="running")
-        run.branch_name = "kirocrew/task/test"
+        run.branch_name = "ajcrew/task/test"
         # A git run always records its own worktree; a path that does not exist keeps
         # every git call failing here, so no test step can reach a real repository.
         run.work_dir = run.worktree_path = str(tmp_path / "no-such-worktree")
@@ -719,7 +719,7 @@ class TestScenarioWorktreeIsolation:
     @pytest.mark.asyncio
     async def test_worktree_does_not_modify_original(self, tmp_path: Path) -> None:
         """Changes in worktree don't affect the original repo."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         repo = tmp_path / "repo"
         repo.mkdir()
@@ -787,15 +787,15 @@ class TestScenarioCompletionNotification:
         )
 
         async def _mock_init(run):
-            run.branch_name = "kirocrew/task/test_branch"
+            run.branch_name = "ajcrew/task/test_branch"
 
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         with (
             patch.object(git_coord, "init_workspace", side_effect=_mock_init),
             patch.object(git_coord, "commit_step", return_value="sha123"),
-            patch.object(git_coord, "finalize", return_value="kirocrew/task/test_branch"),
-            patch("kiro_crew.task_executor.self_review", return_value=True),
+            patch.object(git_coord, "finalize", return_value="ajcrew/task/test_branch"),
+            patch("aj_crew.task_executor.self_review", return_value=True),
         ):
             result = await runner.run(spec)
 
@@ -837,7 +837,7 @@ class TestScenarioGitInitFailureNonFatal:
 
         sessions.get_or_create = _get_or_create
 
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         runner = TaskRunner(sessions=sessions, auto_test=False, work_dir=tmp_path)
         with (
@@ -921,7 +921,7 @@ class TestScenarioGitRevertReplanE2E:
     @pytest.mark.asyncio
     async def test_fail_revert_replan_commit(self, tmp_path: Path) -> None:
         """Task  passes → commit. Step 2 fails → revert. Replan → new step commits."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -1008,7 +1008,7 @@ class TestScenarioProcessCrashWithGit:
     @pytest.mark.asyncio
     async def test_acp_crash_recovery_keeps_branch(self, tmp_path: Path) -> None:
         """AcpProcessDied during git-enabled run → recovery continues on same branch."""
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         sessions = _mock_sessions()
         call_count = 0
@@ -1030,7 +1030,7 @@ class TestScenarioProcessCrashWithGit:
 
         runner = TaskRunner(sessions=sessions, auto_test=False, work_dir=tmp_path)
         run = TaskRun(spec_path=str(tmp_path / "t.md"), spec_content="s", status="running")
-        run.branch_name = "kirocrew/task/crash_test"
+        run.branch_name = "ajcrew/task/crash_test"
         # A git run always records its own worktree; a nonexistent path keeps git off
         # any real repository.
         run.work_dir = run.worktree_path = str(tmp_path / "no-such-worktree")
@@ -1041,7 +1041,7 @@ class TestScenarioProcessCrashWithGit:
         assert success
         assert step.status == StepStatus.PASSED
         # Branch should still be set (not cleared by crash recovery)
-        assert run.branch_name == "kirocrew/task/crash_test"
+        assert run.branch_name == "ajcrew/task/crash_test"
 
 
 # ── Scenario: Global timeout during step execution ──
@@ -1111,7 +1111,7 @@ class TestScenarioNonGitInitWorkspace:
     @pytest.mark.asyncio
     async def test_init_creates_repo_and_branch(self, tmp_path: Path, monkeypatch) -> None:
         """init_workspace on a plain non-git dir sets git_enabled=False and returns immediately."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = _non_git_dir(tmp_path, monkeypatch, "plain")
         (work_dir / "file.txt").write_text("hello")
@@ -1138,7 +1138,7 @@ class TestBug5ReviewFailRevertBeforeRetry:
 
     @pytest.mark.asyncio
     async def test_review_fail_reverts_before_retry(self, tmp_path: Path) -> None:
-        from kiro_crew import git_coord  # noqa: F401
+        from aj_crew import git_coord  # noqa: F401
 
         sessions = _mock_sessions()
         provider = _make_provider("done")
@@ -1146,7 +1146,7 @@ class TestBug5ReviewFailRevertBeforeRetry:
 
         runner = TaskRunner(sessions=sessions, auto_test=False, work_dir=tmp_path)
         run = TaskRun(spec_path=str(tmp_path / "t.md"), spec_content="s", status="running")
-        run.branch_name = "kirocrew/task/test"
+        run.branch_name = "ajcrew/task/test"
         step = Step(index=1, title="Test", description="d")
         run.tasks = [step]
 
@@ -1171,9 +1171,9 @@ class TestBug5ReviewFailRevertBeforeRetry:
             return review_count > 1  # fail first, pass second
 
         with (
-            patch("kiro_crew.task_executor.git_coord.commit_step", side_effect=_mock_commit),
-            patch("kiro_crew.task_executor.git_coord.revert_step", side_effect=_mock_revert),
-            patch("kiro_crew.task_executor.self_review", side_effect=_review_fail_once),
+            patch("aj_crew.task_executor.git_coord.commit_step", side_effect=_mock_commit),
+            patch("aj_crew.task_executor.git_coord.revert_step", side_effect=_mock_revert),
+            patch("aj_crew.task_executor.self_review", side_effect=_review_fail_once),
         ):
             success = await runner._execute_single_task(run, step, "key")
 

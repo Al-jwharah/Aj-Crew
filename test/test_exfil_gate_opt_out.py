@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.security import (
+from aj_crew.security import (
     BUILTIN_DENIED_RULES,
     _check_imds_access,
     audit_bash_exfiltration,
@@ -161,7 +161,7 @@ def test_imds_gate_is_not_keyed_to_the_curl_wget_rows() -> None:
 def test_every_gated_branch_names_a_real_catalog_rule() -> None:
     """A branch keyed to a nonexistent id would be permanently un-disableable and
     would map to no rule in the audit trail — the defect this change fixes."""
-    from kiro_crew.security import _BASH_EXFIL_RULE_BY_LABEL, _BASH_EXFIL_RULE_BY_PATTERN
+    from aj_crew.security import _BASH_EXFIL_RULE_BY_LABEL, _BASH_EXFIL_RULE_BY_PATTERN
 
     named = set(_BASH_EXFIL_RULE_BY_PATTERN.values())
     for ids in _BASH_EXFIL_RULE_BY_LABEL.values():
@@ -185,7 +185,7 @@ class TestTheGateActuallyThreadsTheEnabledSet:
     """
 
     def _deny_reason(self, command: str, disabled: list[str]) -> str | None:
-        from kiro_crew.hooks import TOOL_DENY, HookManager, HooksConfig
+        from aj_crew.hooks import TOOL_DENY, HookManager, HooksConfig
 
         mgr = HookManager(HooksConfig.from_dict({"denied_commands": {"disabled_ids": disabled}}))
         res = mgr.on_tool_call(command, is_shell=True, command=command)
@@ -226,7 +226,7 @@ def test_prepare_pr_rest_fallback_uses_stdin() -> None:
 
     skill = (
         Path(__file__).resolve().parents[1]
-        / "src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/references/ci.md"
+        / "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/references/ci.md"
     ).read_text(encoding="utf-8")
     assert "-X PATCH --input -\n" in skill
     assert "--input /tmp/" not in skill
@@ -238,7 +238,7 @@ def test_code_review_sage_poster_streams_its_payload_on_stdin() -> None:
 
     src = (
         Path(__file__).resolve().parents[1]
-        / "src/kiro_crew/apps/builtins/code_review_sage/sage_lib/review_driver.py"
+        / "src/aj_crew/apps/builtins/code_review_sage/sage_lib/review_driver.py"
     ).read_text(encoding="utf-8")
     assert "--input <tmpfile>" not in src
     assert "reviews --input -" in src

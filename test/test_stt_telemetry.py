@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.stt import telemetry
+from aj_crew.stt import telemetry
 
 
 @pytest.fixture

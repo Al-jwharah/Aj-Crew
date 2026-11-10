@@ -32,7 +32,7 @@ const args = process.argv.slice(2)
 const WANT_GIF = args.includes('--gif')
 const OUT = args.find(a => !a.startsWith('--')) || '../temp-screenshots/memory-recall-strip-toggle'
 const SLOT = 'chat-memory-recall'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -74,7 +74,7 @@ const slots = [
     running: false,
     last_message: 'us-west-2, and the rollback runbook is in the ops repo.',
     messages: 2,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     memory_mode: 'persistent',
     project: PROJECT,
     modified: Math.floor(Date.now() / 1000),

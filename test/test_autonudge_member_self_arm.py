@@ -33,21 +33,21 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import autonudge_authz
-from kiro_crew.autonudge import (
+from aj_crew import autonudge_authz
+from aj_crew.autonudge import (
     AutoNudgeService,
     MonitorUpdateConflict,
     NudgeAdmissionRefused,
     NudgeLoop,
 )
-from kiro_crew.autonudge_authz import (
+from aj_crew.autonudge_authz import (
     authorize_and_add_nudge,
     authorize_and_update_monitor,
     external_arm_refusal,
     is_self_arm,
 )
-from kiro_crew.dashboard import session_directive_apply as sda
-from kiro_crew.monitoring.models import MonitorBudgets, MonitorState
+from aj_crew.dashboard import session_directive_apply as sda
+from aj_crew.monitoring.models import MonitorBudgets, MonitorState
 
 # ── fixtures ────────────────────────────────────────────────────────────────
 
@@ -434,7 +434,7 @@ async def test_monitor_start_from_a_human_started_member_turn_writes_self_arm_tr
     )
     state = _state({"member-conductor": slot})
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=svc),
+        patch("aj_crew.autonudge.get_instance", return_value=svc),
         patch.object(sda, "_audit"),
         patch.object(sda, "_surface_arm_success"),
     ):
@@ -464,8 +464,8 @@ async def test_monitor_watch_directive_passes_its_own_binding_as_initiator() -> 
         return SimpleNamespace(id="monitor-1"), None, 200
 
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=object()),
-        patch("kiro_crew.autonudge_authz.authorize_and_add_nudge", _authz),
+        patch("aj_crew.autonudge.get_instance", return_value=object()),
+        patch("aj_crew.autonudge_authz.authorize_and_add_nudge", _authz),
         patch.object(sda, "_audit"),
     ):
         result = await sda.apply_session_directive(
@@ -516,9 +516,9 @@ async def test_refused_arm_writes_a_notice_row_into_the_session(kind: str) -> No
             "max_provider_errors": 3,
         }
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=object()),
-        patch("kiro_crew.autonudge_authz.authorize_and_add_nudge", _refuse),
-        patch("kiro_crew.dashboard.state.append_and_surface", surfaced),
+        patch("aj_crew.autonudge.get_instance", return_value=object()),
+        patch("aj_crew.autonudge_authz.authorize_and_add_nudge", _refuse),
+        patch("aj_crew.dashboard.state.append_and_surface", surfaced),
         patch.object(sda, "_audit") as audit,
     ):
         result = await sda.apply_session_directive(
@@ -546,9 +546,9 @@ async def test_refused_arm_without_a_slot_returns_the_reason_and_writes_no_row()
 
     surfaced = MagicMock()
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=object()),
-        patch("kiro_crew.autonudge_authz.authorize_and_add_nudge", _refuse),
-        patch("kiro_crew.dashboard.state.append_and_surface", surfaced),
+        patch("aj_crew.autonudge.get_instance", return_value=object()),
+        patch("aj_crew.autonudge_authz.authorize_and_add_nudge", _refuse),
+        patch("aj_crew.dashboard.state.append_and_surface", surfaced),
         patch.object(sda, "_audit"),
     ):
         result = await sda.apply_session_directive(
@@ -564,10 +564,10 @@ async def test_notice_failure_never_masks_the_denial() -> None:
         return None, external_arm_refusal("crew"), 409
 
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=object()),
-        patch("kiro_crew.autonudge_authz.authorize_and_add_nudge", _refuse),
+        patch("aj_crew.autonudge.get_instance", return_value=object()),
+        patch("aj_crew.autonudge_authz.authorize_and_add_nudge", _refuse),
         patch(
-            "kiro_crew.dashboard.state.append_and_surface",
+            "aj_crew.dashboard.state.append_and_surface",
             side_effect=RuntimeError("transcript unavailable"),
         ),
         patch.object(sda, "_audit"),
@@ -595,17 +595,17 @@ class TestFireTimeModeRecheck:
     def _trust_entry(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Default: the keystone-gated record vouches for the loop. Subclasses
         override this fixture to model a missing entry."""
-        from kiro_crew import autonudge_selfarm
+        from aj_crew import autonudge_selfarm
 
         monkeypatch.setattr(autonudge_selfarm, "is_recorded_self_arm", lambda _i, _s: True)
 
     @staticmethod
     def _orchestrator() -> Any:
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.slack import gateway as gw
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.slack import gateway as gw
 
-        cfg = KiroCrewConfig()
-        with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U"}):
+        cfg = AjCrewConfig()
+        with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U"}):
             orch = gw.GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
         orch.dashboard_state = SimpleNamespace(
             get_slot=MagicMock(return_value=None),
@@ -655,8 +655,8 @@ class TestFireTimeModeRecheck:
         The completion hook is pre-checked BEFORE ``_run_chat``, so a refused wake is
         ``UNAVAILABLE`` with no runner call; an admitted one is ``DISPATCHED``.
         """
-        from kiro_crew.monitoring.models import MonitorDispatchResult
-        from kiro_crew.slack import gateway as gw
+        from aj_crew.monitoring.models import MonitorDispatchResult
+        from aj_crew.slack import gateway as gw
 
         orch = self._orchestrator()
         live = self._slot(mode)
@@ -680,7 +680,7 @@ class TestFireTimeModeRecheck:
         with (
             patch.object(gw, "spawn_guarded_turn", _spawn),
             patch.object(gw, "sel", return_value=sel_mock),
-            patch("kiro_crew.dashboard.chat._run_chat", new=_run_chat),
+            patch("aj_crew.dashboard.chat._run_chat", new=_run_chat),
         ):
             result = await orch._fire_dashboard_nudge(structured, "[Monitor wake]")
             for task in spawned:
@@ -734,9 +734,9 @@ async def test_successful_monitor_start_writes_a_notice_and_names_loop_and_first
     state = SimpleNamespace()
     slot = SimpleNamespace(key="member-conductor", _app="", messages=[])
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=object()),
-        patch("kiro_crew.autonudge_authz.authorize_and_add_nudge", _authz),
-        patch("kiro_crew.dashboard.state.append_and_surface", surfaced),
+        patch("aj_crew.autonudge.get_instance", return_value=object()),
+        patch("aj_crew.autonudge_authz.authorize_and_add_nudge", _authz),
+        patch("aj_crew.dashboard.state.append_and_surface", surfaced),
         patch.object(sda, "_audit"),
     ):
         result = await sda.apply_session_directive(
@@ -763,9 +763,9 @@ async def test_refused_monitor_start_carries_the_status_code() -> None:
         return None, external_arm_refusal("member"), 409
 
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=object()),
-        patch("kiro_crew.autonudge_authz.authorize_and_add_nudge", _refuse),
-        patch("kiro_crew.dashboard.state.append_and_surface", MagicMock()),
+        patch("aj_crew.autonudge.get_instance", return_value=object()),
+        patch("aj_crew.autonudge_authz.authorize_and_add_nudge", _refuse),
+        patch("aj_crew.dashboard.state.append_and_surface", MagicMock()),
         patch.object(sda, "_audit"),
     ):
         result = await sda.apply_session_directive(
@@ -793,8 +793,8 @@ async def test_an_origin_refused_self_arm_says_why_and_stays_refused(
     svc = RecordingSvc()
     surfaced = MagicMock()
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=svc),
-        patch("kiro_crew.dashboard.state.append_and_surface", surfaced),
+        patch("aj_crew.autonudge.get_instance", return_value=svc),
+        patch("aj_crew.dashboard.state.append_and_surface", surfaced),
         patch.object(sda, "_audit"),
     ):
         result = await sda.apply_session_directive(
@@ -899,9 +899,9 @@ def test_only_the_session_directive_consumer_passes_initiator_slot_key() -> None
     injection boundary; this test goes red when such a call site appears."""
     import re
 
-    import kiro_crew
+    import aj_crew
 
-    root = Path(kiro_crew.__file__).resolve().parent
+    root = Path(aj_crew.__file__).resolve().parent
     allowed = {root / "dashboard" / "session_directive_apply_monitor.py"}
     definers = {root / "autonudge_authz.py"}
     offenders: list[str] = []
@@ -944,7 +944,7 @@ async def test_a_directive_with_no_positive_producer_mark_keeps_the_outside_arm_
     )
     state = _state({"member-conductor": slot})
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=svc),
+        patch("aj_crew.autonudge.get_instance", return_value=svc),
         patch.object(sda, "_audit"),
         patch.object(sda, "_surface_arm_refusal"),
     ):
@@ -989,8 +989,8 @@ async def test_a_headless_turn_in_a_member_session_gets_no_self_arm_provenance(k
             "max_provider_errors": 3,
         }
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=object()),
-        patch("kiro_crew.autonudge_authz.authorize_and_add_nudge", _authz),
+        patch("aj_crew.autonudge.get_instance", return_value=object()),
+        patch("aj_crew.autonudge_authz.authorize_and_add_nudge", _authz),
         patch.object(sda, "_audit"),
     ):
         await sda.apply_session_directive(
@@ -1019,9 +1019,9 @@ async def test_structured_update_provenance_also_requires_a_human_turn() -> None
     )
     svc = SimpleNamespace(get_by_slot=lambda _k: structured_loop)
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=svc),
-        patch("kiro_crew.autonudge.is_structured_monitor_loop", return_value=True),
-        patch("kiro_crew.autonudge_authz.authorize_and_update_monitor", _authz),
+        patch("aj_crew.autonudge.get_instance", return_value=svc),
+        patch("aj_crew.autonudge.is_structured_monitor_loop", return_value=True),
+        patch("aj_crew.autonudge_authz.authorize_and_update_monitor", _authz),
         patch.object(sda, "_audit"),
     ):
         await sda.apply_session_directive(
@@ -1142,7 +1142,7 @@ def test_service_refuses_a_pre_minted_id_already_in_use(tmp_path: Path) -> None:
     """The authorizer's pre-minted id names the loop in the trust record, so a
     collision must be refused rather than silently re-minted -- the record
     would otherwise name the wrong loop."""
-    from kiro_crew.autonudge import MonitorUpdateConflict as Conflict
+    from aj_crew.autonudge import MonitorUpdateConflict as Conflict
 
     svc = AutoNudgeService(base_dir=tmp_path)
     try:
@@ -1253,8 +1253,8 @@ async def test_the_slots_own_wake_turn_may_re_arm_its_loop(kind: str) -> None:
 
     live_row = SimpleNamespace(id="loop-1", active=True, monitor=None, stopped_reason="")
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=_wake_svc(live_row)),
-        patch("kiro_crew.autonudge_authz.authorize_and_add_nudge", _authz),
+        patch("aj_crew.autonudge.get_instance", return_value=_wake_svc(live_row)),
+        patch("aj_crew.autonudge_authz.authorize_and_add_nudge", _authz),
         patch.object(sda, "_audit"),
     ):
         await sda.apply_session_directive(
@@ -1281,8 +1281,8 @@ async def test_a_wake_whose_loop_row_is_gone_cannot_arm_a_replacement(kind: str)
         return SimpleNamespace(id="loop-2", monitor=None, gate=False, next_due_ts=0.0), None, 200
 
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=_wake_svc(None)),
-        patch("kiro_crew.autonudge_authz.authorize_and_add_nudge", _authz),
+        patch("aj_crew.autonudge.get_instance", return_value=_wake_svc(None)),
+        patch("aj_crew.autonudge_authz.authorize_and_add_nudge", _authz),
         patch.object(sda, "_audit"),
     ):
         result = await sda.apply_session_directive(
@@ -1304,7 +1304,7 @@ async def test_a_wake_whose_loop_a_person_stopped_cannot_arm_a_replacement(kind:
     """A structured stop RETAINS the row as ``USER_STOP``; a manual pause keeps
     a legacy row with reason ``manual``. Both are a person's decision, so the
     wake that outlived them is refused before the authorizer is consulted."""
-    from kiro_crew.monitoring.models import MonitorOutcome
+    from aj_crew.monitoring.models import MonitorOutcome
 
     captured: dict[str, Any] = {}
 
@@ -1323,8 +1323,8 @@ async def test_a_wake_whose_loop_a_person_stopped_cannot_arm_a_replacement(kind:
     ]
     for row in stopped_rows:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=_wake_svc(row)),
-            patch("kiro_crew.autonudge_authz.authorize_and_add_nudge", _authz),
+            patch("aj_crew.autonudge.get_instance", return_value=_wake_svc(row)),
+            patch("aj_crew.autonudge_authz.authorize_and_add_nudge", _authz),
             patch.object(sda, "_audit"),
         ):
             result = await sda.apply_session_directive(
@@ -1359,8 +1359,8 @@ async def test_a_wake_whose_loop_hit_its_own_bound_may_arm_a_replacement(kind: s
 
         spent_row = SimpleNamespace(id="loop-1", active=False, stopped_reason=reason, monitor=None)
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=_wake_svc(spent_row)),
-            patch("kiro_crew.autonudge_authz.authorize_and_add_nudge", _authz),
+            patch("aj_crew.autonudge.get_instance", return_value=_wake_svc(spent_row)),
+            patch("aj_crew.autonudge_authz.authorize_and_add_nudge", _authz),
             patch.object(sda, "_audit"),
         ):
             await sda.apply_session_directive(
@@ -1393,11 +1393,11 @@ async def test_the_slots_own_wake_turn_may_revise_its_structured_monitor() -> No
     )
     with (
         patch(
-            "kiro_crew.autonudge.get_instance",
+            "aj_crew.autonudge.get_instance",
             return_value=SimpleNamespace(get_by_slot=lambda _k: structured_loop),
         ),
-        patch("kiro_crew.autonudge.is_structured_monitor_loop", return_value=True),
-        patch("kiro_crew.autonudge_authz.authorize_and_update_monitor", _authz),
+        patch("aj_crew.autonudge.is_structured_monitor_loop", return_value=True),
+        patch("aj_crew.autonudge_authz.authorize_and_update_monitor", _authz),
         patch.object(sda, "_audit"),
     ):
         await sda.apply_session_directive(
@@ -1445,9 +1445,9 @@ class TestLegacyLoopUpdateOnAMemberSlotKeepsTheSelfArmRule:
 
         loop = self._legacy_loop()
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=self._svc(loop)),
-            patch("kiro_crew.autonudge.is_structured_monitor_loop", return_value=False),
-            patch("kiro_crew.autonudge_authz.authorize_and_update_nudge", _authz),
+            patch("aj_crew.autonudge.get_instance", return_value=self._svc(loop)),
+            patch("aj_crew.autonudge.is_structured_monitor_loop", return_value=False),
+            patch("aj_crew.autonudge_authz.authorize_and_update_nudge", _authz),
             patch.object(sda, "_audit"),
         ):
             result = await sda.apply_session_directive(
@@ -1473,8 +1473,8 @@ class TestLegacyLoopUpdateOnAMemberSlotKeepsTheSelfArmRule:
         with patch.object(sda, "_audit") as audit:
             loop = self._legacy_loop()
             with (
-                patch("kiro_crew.autonudge.get_instance", return_value=self._svc(loop)),
-                patch("kiro_crew.autonudge.is_structured_monitor_loop", return_value=False),
+                patch("aj_crew.autonudge.get_instance", return_value=self._svc(loop)),
+                patch("aj_crew.autonudge.is_structured_monitor_loop", return_value=False),
             ):
                 result = await sda.apply_session_directive(
                     _state({"member-conductor": _member_slot("member")}),
@@ -1538,7 +1538,7 @@ class TestWakeTurnCarriesTheSelfWakeMark:
 
     @pytest.mark.asyncio
     async def test_plain_loop_wake_is_marked(self) -> None:
-        from kiro_crew.slack import gateway as gw
+        from aj_crew.slack import gateway as gw
 
         orch = TestFireTimeModeRecheck._orchestrator()
         live = TestFireTimeModeRecheck._slot("")
@@ -1560,7 +1560,7 @@ class TestWakeTurnCarriesTheSelfWakeMark:
         )
         with (
             patch.object(gw, "spawn_guarded_turn", _spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=_run_chat),
+            patch("aj_crew.dashboard.chat._run_chat", new=_run_chat),
         ):
             assert await orch._fire_dashboard_nudge(loop) is True
             for task in spawned:
@@ -1574,13 +1574,13 @@ class TestSelfArmTrustRecord:
 
     @pytest.fixture(autouse=True)
     def _home(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
-        from kiro_crew import autonudge_selfarm
+        from aj_crew import autonudge_selfarm
 
         monkeypatch.setattr(autonudge_selfarm, "data_home", lambda: tmp_path)
         return tmp_path
 
     def test_record_lives_under_trust_and_round_trips(self, tmp_path: Path) -> None:
-        from kiro_crew import autonudge_selfarm as sa
+        from aj_crew import autonudge_selfarm as sa
 
         sa.record_self_arm("abc12345", "member-conductor")
         assert sa.self_arm_record_path() == tmp_path / "trust" / sa.SELF_ARM_RECORD_NAME
@@ -1600,7 +1600,7 @@ class TestSelfArmTrustRecord:
         but commits last would prune the sibling's entry, refusing that loop at
         every fire. Only revocation removes entries now.
         """
-        from kiro_crew import autonudge_selfarm as sa
+        from aj_crew import autonudge_selfarm as sa
 
         sa.record_self_arm("old00001", "member-a")
         sa.record_self_arm("new00002", "member-b")
@@ -1618,7 +1618,7 @@ class TestSelfArmTrustRecord:
         ``asyncio.to_thread`` in arbitrary lock order all end up recorded."""
         from concurrent.futures import ThreadPoolExecutor
 
-        from kiro_crew import autonudge_selfarm as sa
+        from aj_crew import autonudge_selfarm as sa
 
         ids = [f"loop{i:04d}" for i in range(12)]
         with ThreadPoolExecutor(max_workers=6) as pool:
@@ -1626,7 +1626,7 @@ class TestSelfArmTrustRecord:
         assert all(sa.is_recorded_self_arm(i, f"member-{i}") for i in ids)
 
     def test_readers_are_total_on_a_malformed_file(self) -> None:
-        from kiro_crew import autonudge_selfarm as sa
+        from aj_crew import autonudge_selfarm as sa
 
         path = sa.self_arm_record_path()
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -1643,7 +1643,7 @@ class TestFireTimeGuardRequiresTheTrustRecord(TestFireTimeModeRecheck):
 
     @pytest.fixture(autouse=True)
     def _trust_entry(self, monkeypatch: pytest.MonkeyPatch) -> None:  # type: ignore[override]
-        from kiro_crew import autonudge_selfarm
+        from aj_crew import autonudge_selfarm
 
         monkeypatch.setattr(autonudge_selfarm, "is_recorded_self_arm", lambda _i, _s: False)
 
@@ -1678,8 +1678,8 @@ class TestPromptLoopsAreGatedAtFireTime:
         )
 
     async def _fire(self, *, self_armed: bool, recorded: bool) -> tuple[Any, MagicMock, Any]:
-        from kiro_crew import autonudge_selfarm
-        from kiro_crew.slack import gateway as gw
+        from aj_crew import autonudge_selfarm
+        from aj_crew.slack import gateway as gw
 
         orch = self._orchestrator()
         live = TestFireTimeModeRecheck._slot("member")
@@ -1690,7 +1690,7 @@ class TestPromptLoopsAreGatedAtFireTime:
             patch.object(gw, "spawn_guarded_turn", spawn),
             patch.object(gw, "sel", return_value=sel_mock),
             patch.object(autonudge_selfarm, "is_recorded_self_arm", lambda _i, _s: recorded),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
         ):
             result = await orch._fire_dashboard_nudge(self._plain(self_armed=self_armed))
         return result, sel_mock, spawn
@@ -1731,7 +1731,7 @@ def test_removing_any_loop_revokes_its_trust_entry_after_the_commit(
     But only once the store has COMMITTED the removal: a loop whose durable row
     survives a failed save must keep the entry it needs to fire, or a
     persistence hiccup would silently strand a member's own loop."""
-    from kiro_crew import autonudge_selfarm
+    from aj_crew import autonudge_selfarm
 
     revoked: list[str] = []
     monkeypatch.setattr(autonudge_selfarm, "forget_self_arm", revoked.append)

@@ -18,13 +18,13 @@ from unittest.mock import MagicMock, patch
 import ws_event_scoping_helpers
 from ws_event_scoping_helpers import _allowed, _make_slot, _make_state
 
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.dashboard.ws_event_scope import build_allowed_event_set, ws_event_allowed
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.dashboard.ws_event_scope import build_allowed_event_set, ws_event_allowed
 
 
 def _state_source() -> str:
     """state.py and the state_parts owners it composes, as one text."""
-    import kiro_crew.dashboard.state as _st
+    import aj_crew.dashboard.state as _st
 
     facade = Path(_st.__file__)
     owners = sorted((facade.parent / "state_parts").glob("[!_]*.py"))
@@ -57,7 +57,7 @@ class TestSlotsRepushFilter:
         # Wrap into a state that mimics DashboardState._serialize_for_client's
         # required surface.  We bind the real method to a MagicMock so it
         # runs against our slot map instead of a live DashboardState.
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.state import DashboardState
 
         state = MagicMock(spec=DashboardState)
         state._slots = slot_map
@@ -142,7 +142,7 @@ class TestSlotsRepushFilter:
 
 class TestLiveScopeNarrowing:
     def setup_method(self):
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         mod._declared_cache.clear()
         mod._declared_refreshing.clear()
@@ -151,7 +151,7 @@ class TestLiveScopeNarrowing:
         return _allowed("slots:all", "notification")
 
     def test_narrowed_manifest_takes_effect_without_a_reconnect(self):
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         mod._declared_cache["mochi-pet"] = (time.monotonic(), True, _allowed("slots:own"))
         eff = mod.effective_allowed_events("mochi-pet", self._snapshot())
@@ -160,7 +160,7 @@ class TestLiveScopeNarrowing:
 
     def test_deleted_manifest_collapses_to_tier0_only(self):
         """`app disable` / uninstall leaves the socket open; scopes must go."""
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         mod._declared_cache["mochi-pet"] = (time.monotonic(), False, frozenset())
         assert mod.effective_allowed_events("mochi-pet", self._snapshot()) == frozenset()
@@ -172,7 +172,7 @@ class TestLiveScopeNarrowing:
         Otherwise editing a manifest would grant a LIVE session scopes it was
         never authenticated for.
         """
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         mod._declared_cache["mochi-pet"] = (time.monotonic(), True, _allowed("slots:own", "log"))
         eff = mod.effective_allowed_events("mochi-pet", _allowed("slots:own"))
@@ -184,7 +184,7 @@ class TestLiveScopeNarrowing:
         event from every app on the first broadcast after a restart. The snapshot
         is itself an authenticated read, so leaning on it briefly widens nothing.
         """
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         snap = self._snapshot()
         with patch.object(mod, "_schedule_declared_refresh") as sched:
@@ -192,7 +192,7 @@ class TestLiveScopeNarrowing:
             sched.assert_called_once_with("mochi-pet")
 
     def test_stale_entry_is_applied_and_refresh_scheduled(self):
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         mod._declared_cache["mochi-pet"] = (
             time.monotonic() - (mod._MANIFEST_EXPOSE_TTL_SECS + 5),
@@ -205,7 +205,7 @@ class TestLiveScopeNarrowing:
         assert eff == _allowed("notification"), "stale-but-narrower still narrows"
 
     def test_never_reads_the_disk_on_the_decision_path(self):
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         with (
             patch.object(mod, "get_app_manifest") as gm,
@@ -216,7 +216,7 @@ class TestLiveScopeNarrowing:
         assert eff == self._snapshot(), "a cold cache falls back to the connect snapshot"
 
     def test_refresh_is_coalesced(self):
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         loop = MagicMock()
         with patch.object(mod.asyncio, "get_running_loop", return_value=loop):
@@ -231,7 +231,7 @@ class TestLiveScopeNarrowing:
         Reading the manifest alone reports a disabled app's declarations
         unchanged, so the intersection would keep honouring them.
         """
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         fake = MagicMock()
         fake.permissions.events = ["slots:all", "log"]
@@ -242,7 +242,7 @@ class TestLiveScopeNarrowing:
             assert mod._read_declared_events("mochi-pet") == (False, frozenset())
 
     def test_enabled_app_declares_its_manifest_events(self):
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         fake = MagicMock()
         fake.permissions.events = ["slots:own"]
@@ -254,7 +254,7 @@ class TestLiveScopeNarrowing:
 
     def test_enablement_is_checked_before_the_manifest_read(self):
         """A disabled app must not even cost a manifest parse."""
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         with (
             patch.object(mod, "is_app_enabled", return_value=False),
@@ -271,7 +271,7 @@ class TestLiveScopeNarrowing:
         for a refresh interval over a filesystem hiccup. Revocation requires
         positive evidence from ``installed.json``.
         """
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         with (
             patch.object(mod, "is_app_enabled", return_value=True),
@@ -291,9 +291,9 @@ class TestLiveScopeNarrowing:
         """
         import asyncio as _aio
 
-        from kiro_crew.dashboard import ws_event_scope as mod
-        from kiro_crew.dashboard.handlers import updates as upd
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard.handlers import updates as upd
+        from aj_crew.dashboard.state import DashboardState
 
         # Declaration set does not contain `log` (revoked).
         mod._declared_cache["mochi-pet"] = (time.monotonic(), True, _allowed("slots:own"))
@@ -322,9 +322,9 @@ class TestLiveScopeNarrowing:
     def test_log_subscriber_send_still_delivers_while_declared(self):
         import asyncio as _aio
 
-        from kiro_crew.dashboard import ws_event_scope as mod
-        from kiro_crew.dashboard.handlers import updates as upd
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard.handlers import updates as upd
+        from aj_crew.dashboard.state import DashboardState
 
         mod._declared_cache["mochi-pet"] = (time.monotonic(), True, _allowed("log"))
         ws = MagicMock()
@@ -356,9 +356,9 @@ class TestLiveScopeNarrowing:
         """
         import asyncio as _aio
 
-        from kiro_crew.dashboard import ws_event_scope as mod
-        from kiro_crew.dashboard.handlers import updates as upd
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard.handlers import updates as upd
+        from aj_crew.dashboard.state import DashboardState
 
         mod._sel_last_audit.clear()
         ws = MagicMock()
@@ -375,7 +375,7 @@ class TestLiveScopeNarrowing:
         state._slots = {}
         state._ws_client_allowed = DashboardState._ws_client_allowed.__get__(state)
         state._ws_log_subscribers = {ws}
-        with patch("kiro_crew.sel.sel") as sel_mock:
+        with patch("aj_crew.sel.sel") as sel_mock:
             _aio.run(upd._safe_ws_send(ws, '{"type":"log"}', state))
         assert sent == ['{"type":"log"}'], "the owner must still receive the line"
         assert ws in state._ws_log_subscribers
@@ -400,7 +400,7 @@ class TestLiveScopeNarrowing:
         reload across a gateway upgrade.
         """
         src = (
-            Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard" / "ws.py"
+            Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard" / "ws.py"
         ).read_text(encoding="utf-8")
         assert (
             'for _owner_only in ("branch", "commit", "update_policy_file")' in src
@@ -427,7 +427,7 @@ class TestLiveScopeNarrowing:
         that half was missed.
         """
         src = (
-            Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard" / "ws.py"
+            Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard" / "ws.py"
         ).read_text(encoding="utf-8")
         assert (
             "effective_allowed_events(ws_app, allowed_events)" in src
@@ -455,12 +455,12 @@ class TestDisabledAppLosesTheOwnSlotDefault:
     APP = "mochi-pet"
 
     def _revoke(self):
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         mod._declared_cache[self.APP] = (time.monotonic(), False, frozenset())
 
     def _enable(self, events: frozenset[str] = frozenset()):
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         mod._declared_cache[self.APP] = (time.monotonic(), True, events)
 
@@ -513,7 +513,7 @@ class TestDisabledAppLosesTheOwnSlotDefault:
         empty envelopes instead of nothing. Denying at the gate is what makes
         "revocation collapses the socket to Tier 0" literally true.
         """
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         state = self._own_slot_state()
         batch = sorted(mod._SUBAGENT_BATCH_EVENTS)[0]
@@ -546,7 +546,7 @@ class TestDisabledAppLosesTheOwnSlotDefault:
 
     def test_slots_repush_filter_drops_own_slot_when_disabled(self):
         """Entry point 2: ``filter_slots_for_app`` never calls the gate."""
-        from kiro_crew.dashboard.ws_event_scope import filter_slots_for_app
+        from aj_crew.dashboard.ws_event_scope import filter_slots_for_app
 
         state = self._own_slot_state()
         rows = [{"key": "s1"}]
@@ -562,7 +562,7 @@ class TestDisabledAppLosesTheOwnSlotDefault:
 
     def test_subagent_batch_filter_drops_own_items_when_disabled(self):
         """Entry point 3: ``filter_subagent_batch_for_app`` never calls the gate."""
-        from kiro_crew.dashboard.ws_event_scope import filter_subagent_batch_for_app
+        from aj_crew.dashboard.ws_event_scope import filter_subagent_batch_for_app
 
         state = self._own_slot_state()
         items = [{"slot": "s1", "id": "a"}]
@@ -579,7 +579,7 @@ class TestDisabledAppLosesTheOwnSlotDefault:
         -- it needs an SEL record of its own for the same reason every other
         decision in this module does.
         """
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         self._enable()
         own = _make_slot(owner_app=self.APP, origin=SlotOrigin.APP, key="s1")
@@ -598,7 +598,7 @@ class TestDisabledAppLosesTheOwnSlotDefault:
         ), "the foreign slot must be audited as a denial"
 
     def test_subagent_batch_filter_audits_each_item_decision(self):
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         self._enable()
         own = _make_slot(owner_app=self.APP, origin=SlotOrigin.APP, key="s1")
@@ -622,7 +622,7 @@ class TestDisabledAppLosesTheOwnSlotDefault:
         """
         self._revoke()
         state = self._own_slot_state()
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         tier0 = sorted(mod._TIER0_ALWAYS)[0]
         assert (
@@ -645,7 +645,7 @@ class TestDisabledAppLosesTheOwnSlotDefault:
         real by PRIMING the cache -- see
         ``test_connect_load_primes_the_cache_so_the_first_frame_is_authoritative``.
         """
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         with patch.object(mod, "_schedule_declared_refresh") as sched:
             assert mod.app_events_revoked("never-seen") is False
@@ -658,7 +658,7 @@ class TestDisabledAppLosesTheOwnSlotDefault:
         fallback (not revoked) for the initial slots push and the log replay --
         both of which run before any background refresh.
         """
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         fake = MagicMock()
         fake.permissions.events = ["slots:all"]
@@ -677,7 +677,7 @@ class TestDisabledAppLosesTheOwnSlotDefault:
         )
 
     def test_connect_load_reports_an_enabled_app_and_its_scopes(self):
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         fake = MagicMock()
         fake.permissions.events = ["slots:own", "log"]
@@ -698,7 +698,7 @@ class TestDisabledAppLosesTheOwnSlotDefault:
         ``allowed_events`` -- and they must be treated differently, since the
         latter still gets its own slots.
         """
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         snap = _allowed("slots:own")
 
@@ -729,7 +729,7 @@ class TestDisabledAppLosesTheOwnSlotDefault:
 class TestSendWsAllComposition:
     def _sockets_and_state(self, *, app_events: frozenset[str]):
         """A state with one dashboard socket and one app socket, real methods."""
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.state import DashboardState
 
         own = _make_slot(owner_app="mochi-pet", origin=SlotOrigin.APP, key="own")
         other = _make_slot(owner_app="other-app", origin=SlotOrigin.APP, key="foreign")
@@ -841,7 +841,7 @@ class TestSendWsAllComposition:
 
 class TestSlotsEnvelopePosture:
     def _state(self):
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.state import DashboardState
 
         slot = _make_slot(owner_app="mochi-pet", origin=SlotOrigin.APP, key="a")
         state = MagicMock(spec=DashboardState)
@@ -914,7 +914,7 @@ class TestSlotsEnvelopePosture:
         re-push would leave the first frame after connect leaking.
         """
         src = (
-            Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard" / "ws.py"
+            Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard" / "ws.py"
         ).read_text(encoding="utf-8")
         assert (
             "slots_envelope_extras(" in src
@@ -925,7 +925,7 @@ class TestSlotsEnvelopePosture:
 
     def test_source_guard_yolo_scope_is_not_a_parallel_name(self):
         """The scope reuses the one that already gates ``yolo_expired``."""
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         assert mod._YOLO_SCOPE == mod._GLOBAL_EVENT_DECLARATIONS["yolo_expired"]
 
@@ -939,13 +939,13 @@ class TestSlotsEnvelopePosture:
 
 class TestExposeToCacheNeverBlocksTheLoop:
     def setup_method(self):
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         mod._exposeto_cache.clear()
         mod._exposeto_refreshing.clear()
 
     def test_cold_miss_does_not_read_from_the_hot_path(self):
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         with (
             patch.object(mod, "get_app_manifest") as gm,
@@ -957,13 +957,13 @@ class TestExposeToCacheNeverBlocksTheLoop:
 
     def test_cold_miss_fails_closed(self):
         """Withholding one frame is the safe direction; granting is not."""
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         with patch.object(mod, "_schedule_expose_to_refresh"):
             assert mod._load_expose_to("other-app") == frozenset()
 
     def test_stale_entry_is_served_not_reloaded(self):
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         stale = frozenset({"mochi-pet"})
         mod._exposeto_cache["other-app"] = (
@@ -979,7 +979,7 @@ class TestExposeToCacheNeverBlocksTheLoop:
             sched.assert_called_once_with("other-app")
 
     def test_fresh_entry_schedules_nothing(self):
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         fresh = frozenset({"mochi-pet"})
         mod._exposeto_cache["other-app"] = (time.monotonic(), fresh)
@@ -989,7 +989,7 @@ class TestExposeToCacheNeverBlocksTheLoop:
 
     def test_refresh_is_coalesced_across_a_broadcast_burst(self):
         """One frame x many clients must not queue one thread job each."""
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         loop = MagicMock()
         with patch.object(mod.asyncio, "get_running_loop", return_value=loop):
@@ -1001,7 +1001,7 @@ class TestExposeToCacheNeverBlocksTheLoop:
     def test_no_running_loop_falls_back_to_sync_load(self):
         """Off the loop (tests, CLI) blocking is fine -- and refusing to load
         at all would leave the cache permanently cold."""
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         with patch.object(mod, "_read_expose_to", return_value=frozenset({"x"})):
             mod._schedule_expose_to_refresh("other-app")
@@ -1018,17 +1018,17 @@ class TestExposeToCacheNeverBlocksTheLoop:
         correct. A guard that pins a spelling resists the refactor instead of
         catching the regression.
         """
-        from kiro_crew.dashboard import ws_event_scope as mod  # noqa: F401
+        from aj_crew.dashboard import ws_event_scope as mod  # noqa: F401
 
         src = (
-            Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard" / "ws.py"
+            Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard" / "ws.py"
         ).read_text(encoding="utf-8")
 
         # Drop the import block: a loader NAME appearing in an import is not a
         # call. Then collapse whitespace so a multi-line
         # ``to_thread(\n    loader, arg\n)`` reads the same as the one-line form --
         # line-by-line matching would miss exactly that shape.
-        body = re.sub(r"from kiro_crew[^)]*?\)", "", src, flags=re.S)
+        body = re.sub(r"from aj_crew[^)]*?\)", "", src, flags=re.S)
         norm = re.sub(r"\s+", " ", body)
 
         blocking_loaders = ("get_app_manifest", "load_declared_events_for_connect")
@@ -1056,7 +1056,7 @@ class TestExposeToCacheNeverBlocksTheLoop:
         manifest.
         """
         src = (
-            Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard" / "ws.py"
+            Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard" / "ws.py"
         ).read_text(encoding="utf-8")
         assert "if not app_enabled:" in src and "ws.close(" in src, (
             "ws.py must close the socket when the connect read reports the app " "disabled"
@@ -1079,7 +1079,7 @@ class TestExposeToCacheNeverBlocksTheLoop:
         """
         import inspect
 
-        from kiro_crew.apps import manager
+        from aj_crew.apps import manager
 
         src = inspect.getsource(manager.get_app_manifest)
         assert "from_json_file" in src and "cache" not in src.lower()
@@ -1100,7 +1100,7 @@ class TestSubscribeHandlerGates:
     """
 
     def _ws_source(self) -> str:
-        import kiro_crew.dashboard.ws as _ws
+        import aj_crew.dashboard.ws as _ws
 
         # encoding is explicit on every source read in this file: Path.read_text()
         # defaults to the LOCALE codepage, so on Windows (cp1252) reading a module
@@ -1165,9 +1165,9 @@ class TestSubscribeHandlerGates:
         # in-process aiohttp WS.  Instead, we exercise _audit_deny directly
         # with the two reasons the handlers use, and confirm the SEL call
         # is made.
-        from kiro_crew.dashboard import ws_event_scope as _wes
+        from aj_crew.dashboard import ws_event_scope as _wes
 
-        with patch("kiro_crew.sel.sel") as sel_mock:
+        with patch("aj_crew.sel.sel") as sel_mock:
             _wes._audit_deny("mochi-pet", "subscribe_logs", "log_scope_not_declared")
             outcomes = [
                 c.kwargs.get("outcome", "")
@@ -1189,12 +1189,12 @@ class TestExposeToAppsCache:
     """
 
     def test_repeated_calls_hit_cache_and_do_not_reread_manifest(self):
-        from kiro_crew.dashboard import ws_event_scope as _wes
+        from aj_crew.dashboard import ws_event_scope as _wes
 
         manifest = MagicMock()
         manifest.permissions.exposeToApps = ["monitor-app"]
         with patch(
-            "kiro_crew.dashboard.ws_event_scope.get_app_manifest",
+            "aj_crew.dashboard.ws_event_scope.get_app_manifest",
             return_value=manifest,
         ) as m:
             state = MagicMock()
@@ -1205,10 +1205,10 @@ class TestExposeToAppsCache:
             assert m.call_count == 1
 
     def test_cache_denies_when_manifest_missing(self):
-        from kiro_crew.dashboard import ws_event_scope as _wes
+        from aj_crew.dashboard import ws_event_scope as _wes
 
         with patch(
-            "kiro_crew.dashboard.ws_event_scope.get_app_manifest",
+            "aj_crew.dashboard.ws_event_scope.get_app_manifest",
             return_value=None,
         ):
             state = MagicMock()
@@ -1216,10 +1216,10 @@ class TestExposeToAppsCache:
             assert _wes._target_exposes_to("ghost", "monitor-app", state) is False
 
     def test_cache_denies_on_manifest_load_failure(self):
-        from kiro_crew.dashboard import ws_event_scope as _wes
+        from aj_crew.dashboard import ws_event_scope as _wes
 
         with patch(
-            "kiro_crew.dashboard.ws_event_scope.get_app_manifest",
+            "aj_crew.dashboard.ws_event_scope.get_app_manifest",
             side_effect=RuntimeError("boom"),
         ):
             state = MagicMock()
@@ -1231,16 +1231,16 @@ class TestExposeToAppsCache:
         disabled app's slots -- the cross-app mirror of the check
         ``app_events_revoked`` already applies to the target's own socket.
         """
-        from kiro_crew.dashboard import ws_event_scope as _wes
+        from aj_crew.dashboard import ws_event_scope as _wes
 
         manifest = MagicMock()
         manifest.permissions.exposeToApps = ["monitor-app"]
         with (
             patch(
-                "kiro_crew.dashboard.ws_event_scope.get_app_manifest",
+                "aj_crew.dashboard.ws_event_scope.get_app_manifest",
                 return_value=manifest,
             ) as m,
-            patch("kiro_crew.dashboard.ws_event_scope.is_app_enabled", return_value=False),
+            patch("aj_crew.dashboard.ws_event_scope.is_app_enabled", return_value=False),
         ):
             state = MagicMock()
             assert _wes._target_exposes_to("mochi-pet", "monitor-app", state) is False

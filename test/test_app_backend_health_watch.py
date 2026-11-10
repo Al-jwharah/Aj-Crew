@@ -14,7 +14,7 @@ from typing import Any
 import pytest
 from app_backend_helpers import _FakeHealthResp, _FakeProc, _probe_outcome
 
-from kiro_crew.apps.backend import AppProcess
+from aj_crew.apps.backend import AppProcess
 
 # Post-startup liveness watch
 
@@ -35,7 +35,7 @@ class TestBackendLivenessWatch:
         result list — the watch stops by untracking the record once the script runs out,
         which is the same guard ``stop_app_backend`` exits it through in production.
         """
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -188,7 +188,7 @@ class TestHealthSupervisorHandoff:
     """The startup poll must hand the watch its record, or the whole watch is dead wiring."""
 
     def test_watch_runs_when_the_backend_came_up(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -207,7 +207,7 @@ class TestHealthSupervisorHandoff:
 
     def test_no_watch_when_the_backend_never_came_up(self, monkeypatch):
         # Nothing to watch: the startup path already scrubbed the MCP entry and gave up.
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -232,7 +232,7 @@ class TestHealthTransitionsRefuseAStaleRecord:
 
     @pytest.fixture
     def gate_calls(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         calls: list[tuple[str, int, bool]] = []
         monkeypatch.setattr(
@@ -277,7 +277,7 @@ class TestStartupProbeCannotPromoteAReplacement:
     """
 
     def test_a_successor_installed_mid_probe_is_not_promoted(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -328,7 +328,7 @@ class TestStartupPollBelongsToOneGeneration:
 
     @pytest.fixture
     def wired(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -412,7 +412,7 @@ class TestHealthProbeSecurity:
     def test_ordinary_paths_preserve_the_loopback_authority(self, path):
         import urllib.parse
 
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         url = bmod._health_probe_url(9101, path)
         assert url == f"http://127.0.0.1:9101{path}"
@@ -436,20 +436,20 @@ class TestHealthProbeSecurity:
         ],
     )
     def test_authority_smuggling_and_ambiguous_paths_are_refused(self, path):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         assert bmod._health_probe_url(9101, path) is None
 
     @pytest.mark.parametrize("port", [0, -1, 65536, 99999])
     def test_impossible_ports_are_refused(self, port):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         assert bmod._health_probe_url(port, "/health") is None
 
     def test_the_userinfo_payload_would_otherwise_leave_loopback(self):
         import urllib.parse
 
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         naive = "http://127.0.0.1:9101@example.com/"
         assert urllib.parse.urlsplit(naive).hostname == "example.com"
@@ -458,7 +458,7 @@ class TestHealthProbeSecurity:
     def test_an_invalid_path_never_reaches_http_and_warns_only_once(self, monkeypatch, caplog):
         import logging
 
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         monkeypatch.setattr(bmod, "_warned_health_paths", set())
         monkeypatch.setattr(
@@ -475,7 +475,7 @@ class TestHealthProbeSecurity:
         assert "@example.com/" in warnings[0]
 
     def test_a_valid_path_uses_the_hardened_opener_with_the_exact_url(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         seen = {}
 
@@ -495,7 +495,7 @@ class TestHealthProbeSecurity:
         assert seen == {"url": "http://127.0.0.1:9101/health?q=1", "timeout": 1.5}
 
     def test_adoption_startup_and_watch_share_the_same_probe_contract(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         calls = []
 
@@ -576,7 +576,7 @@ class TestProbeSurvivesAMalformedHttpResponse:
         # Drives a REAL socket rather than a stubbed exception: the whole finding is
         # about which concrete exception urllib lets through, so faking it would beg
         # the question.
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         port = self._serve_garbage(b"NOT-HTTP garbage\r\n\r\n")
 
@@ -586,7 +586,7 @@ class TestProbeSurvivesAMalformedHttpResponse:
         # The first line off the socket belongs to the app backend, which is arbitrary
         # third-party code, and `BadStatusLine` carries it verbatim. Printed raw into the
         # log it could forge an entry, so the detail escapes it.
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         port = self._serve_garbage(b"NOT-HTTP \x1b[2Jforged WARNING line\r\n")
 
@@ -598,7 +598,7 @@ class TestProbeSurvivesAMalformedHttpResponse:
 
     def test_an_enormous_status_line_does_not_fill_the_log(self):
         # A status line may be 64 KB; one failed probe must not write a screenful.
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         port = self._serve_garbage(b"NOT-HTTP " + b"A" * 5000 + b"\r\n")
 
@@ -610,7 +610,7 @@ class TestProbeSurvivesAMalformedHttpResponse:
     def test_the_adoption_probe_survives_it_too(self):
         # Same class of bug in the sibling probe — fixed together so one does not sit
         # next to the other still wrong.
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         port = self._serve_garbage(b"\x00\x01binary noise\r\n\r\n")
 
@@ -658,7 +658,7 @@ class TestAFailedHealthCheckNamesWhatItObserved:
     @pytest.fixture
     def exhausts_at_once(self, monkeypatch):
         """One attempt, no sleeping, and a recording MCP gate — nothing else stubbed."""
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         monkeypatch.setattr(bmod, "_app_enabled_state", lambda _name: True)
         monkeypatch.setattr(bmod, "_HEALTH_CHECK_INTERVAL", 0)
@@ -764,7 +764,7 @@ class TestAFailedHealthCheckNamesWhatItObserved:
         # by the watch, whose reason was equally silent about why.
         import logging
 
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         monkeypatch.setattr(bmod, "_app_enabled_state", lambda _name: True)
         monkeypatch.setattr(bmod, "_HEALTH_WATCH_INTERVAL", 0)
@@ -802,7 +802,7 @@ class TestWatchSurvivesAnUnexpectedSweepFault:
     """A dying watch silently restores write-once, so a sweep fault must not kill it."""
 
     def test_the_watch_restarts_after_an_unexpected_exception(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -834,7 +834,7 @@ class TestWatchSurvivesAnUnexpectedSweepFault:
                 bmod._processes.clear()
 
     def test_it_does_not_restart_once_the_record_is_gone(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -872,7 +872,7 @@ class TestSupervisorIsBoundAtSpawn:
     """
 
     def test_the_starter_hands_over_the_record_itself(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         captured: list[object] = []
         monkeypatch.setattr(
@@ -890,7 +890,7 @@ class TestSupervisorIsBoundAtSpawn:
         # Simulates the window: the successor is installed before the supervisor's first
         # statement. Binding to the record means the poll retires instead of acting on a
         # generation it never probed.
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by

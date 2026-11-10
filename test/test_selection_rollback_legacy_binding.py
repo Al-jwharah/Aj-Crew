@@ -15,23 +15,23 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import execution_context as execution
-from kiro_crew.config.sections import MemoryStoreConfig
-from kiro_crew.history import ConversationLog
-from kiro_crew.history_listing_index import SessionListingIndex
-from kiro_crew.session_agent_selection import (
+from aj_crew import execution_context as execution
+from aj_crew.config.sections import MemoryStoreConfig
+from aj_crew.history import ConversationLog
+from aj_crew.history_listing_index import SessionListingIndex
+from aj_crew.session_agent_selection import (
     SelectionChange,
     record_agent_selection,
     restore_agent_selection,
 )
 
-TEMPLATE = "kirocrew-worker"
+TEMPLATE = "ajcrew-worker"
 
 
 @pytest.fixture
 def legacy_store(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    from kiro_crew.config import loader
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    from aj_crew.config import loader
 
     loader._invalidate_config_cache()
     execution._LIVE_EXECUTIONS.clear()
@@ -39,7 +39,7 @@ def legacy_store(tmp_path, monkeypatch):
     cfg = SimpleNamespace(
         agents={}, memory_stores={"legacy-v1": MemoryStoreConfig(memory_version=1)}
     )
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(lambda cls: cfg))
     yield cfg
     execution._LIVE_EXECUTIONS.clear()
     execution._VOUCHED_EXECUTIONS.clear()
@@ -72,9 +72,9 @@ def _publish(key):
 @pytest.mark.parametrize(
     "line",
     [
-        {"agent": "kirocrew", "memory_store": "legacy-v1", "memory_mode": "persistent"},
-        {"agent": "kirocrew", "memory_store": "legacy-v1"},
-        {"agent": "kirocrew", "memory_mode": "persistent"},
+        {"agent": "ajcrew", "memory_store": "legacy-v1", "memory_mode": "persistent"},
+        {"agent": "ajcrew", "memory_store": "legacy-v1"},
+        {"agent": "ajcrew", "memory_mode": "persistent"},
     ],
     ids=["store-and-mode", "store-only", "mode-only"],
 )
@@ -98,7 +98,7 @@ def test_rollback_restores_the_lines_own_binding(legacy_store, line):
 def test_rollback_of_a_line_with_no_binding_leaves_none(legacy_store):
     key = "dashboard_unbound_line"
     log = ConversationLog()
-    log.update_metadata(key, {"agent": "kirocrew"})
+    log.update_metadata(key, {"agent": "ajcrew"})
     before = log.get_metadata(key)
 
     restore_agent_selection(key, _publish(key))
@@ -116,7 +116,7 @@ def test_the_listing_index_shows_the_restored_line_at_once(legacy_store):
     jobs: list = []
     # A clock that never reaches the reconcile interval: only the journal can show it.
     log._listing_index = SessionListingIndex(log, clock=lambda: 0.0, submit=jobs.append)
-    log.update_metadata(key, {"agent": "kirocrew", "memory_mode": "ephemeral"})
+    log.update_metadata(key, {"agent": "ajcrew", "memory_mode": "ephemeral"})
 
     def mode() -> str:
         return {r["key"]: r["memory_mode"] for r in log.list_sessions_indexed()}[key]

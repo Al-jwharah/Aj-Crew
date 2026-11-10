@@ -18,13 +18,13 @@ superseded-by: []
   adapters, `monitor_watch` / `monitor_update` / `monitor_stop`, dashboard
   controls and the babysit migration all ship. Current behaviour is owned by
   [`../system-specs/modules/monitor-architecture.md`](../system-specs/modules/monitor-architecture.md)
-  and the implementation under `src/kiro_crew/monitoring/`.
+  and the implementation under `src/aj_crew/monitoring/`.
 
 ## Summary
 
 Replace babysit's repeated full-agent turns with a durable, typed monitor that
 checks external state before deciding whether the owning session needs to run.
-The agent calls one session-scoped MCP tool to create the monitor. Kiro Crew then
+The agent calls one session-scoped MCP tool to create the monitor. Aj Crew then
 performs deterministic, inexpensive probes on schedule and wakes the session only
 when the observation is new and actionable.
 
@@ -44,7 +44,7 @@ skill. PR 7 adds the three source-provider adapters behind the proven controller
 
 ## Decision
 
-Kiro Crew will provide a structured, session-scoped monitor capability:
+Aj Crew will provide a structured, session-scoped monitor capability:
 
 ```text
 monitor_watch(
@@ -105,7 +105,7 @@ context, but it cannot make unchanged polling free.
 
 The desired invariant is stricter:
 
-> If the monitored external state has not materially changed, Kiro Crew performs
+> If the monitored external state has not materially changed, Aj Crew performs
 > no model turn.
 
 That requires the state comparison to happen before the model is invoked.
@@ -576,8 +576,8 @@ Suggested title: `feat: add durable monitor decisions`
 
 Primary areas:
 
-- `src/kiro_crew/monitoring/` for typed observations, outcomes, and pure policy;
-- `src/kiro_crew/autonudge.py` for optional versioned monitor persistence;
+- `src/aj_crew/monitoring/` for typed observations, outcomes, and pure policy;
+- `src/aj_crew/autonudge.py` for optional versioned monitor persistence;
 - `test/test_monitor_decision.py` and persistence compatibility tests;
 - the AutoNudge system specification.
 
@@ -754,7 +754,7 @@ Suggested title: `feat: monitor pull requests across source providers`
 Primary areas:
 
 - provider-neutral probe result, readiness facts, classifier, and adapter
-  registry under `src/kiro_crew/monitoring/`;
+  registry under `src/aj_crew/monitoring/`;
 - GitLab, Azure DevOps Services, and Bitbucket Cloud target parsers and probes;
 - hardened provider execution, protected credentials, redaction, and security
   posture registration;
@@ -876,7 +876,7 @@ Provider adapters normalize native state into one reviewed contract instead.
 
 ### Replace every provider CLI with direct REST clients
 
-A uniform HTTP layer would require Kiro Crew to duplicate the established GitHub
+A uniform HTTP layer would require Aj Crew to duplicate the established GitHub
 and GitLab login/configuration experience and hold more credential material. The
 extension reuses `gh` and `glab`, uses the supported Azure CLI authentication
 path, and adds a direct client only where Bitbucket Cloud has no established
@@ -910,7 +910,7 @@ invariants:
 
 ## Provenance
 
-This RFC was audited against Kiro Crew commit `6ce882d5b`. The current behavior
+This RFC was audited against Aj Crew commit `6ce882d5b`. The current behavior
 is distributed across the babysit skill, AutoNudge service, MCP control tools,
 session directive applier, dashboard and channel delivery paths, and dashboard
 goal-loop components. The implementation PRs must update the relevant system

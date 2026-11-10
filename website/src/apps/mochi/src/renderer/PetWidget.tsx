@@ -164,7 +164,7 @@ const BubbleOverlay: React.FC<{
   // A retired theme id from stored settings (e.g. pre-consolidation 'mocha')
   // must fall back, not crash: bc.bg on undefined unmounted the entire pet
   // tree on the first bubble render.
-  const bc = BUBBLE_COLORS[themeId] ?? BUBBLE_COLORS.kirocrew
+  const bc = BUBBLE_COLORS[themeId] ?? BUBBLE_COLORS.ajcrew
 
   // Deliberately dependency-LESS: the bubble carries no ResizeObserver, so
   // re-measuring on every commit is the only thing that notices a text or layout
@@ -251,7 +251,7 @@ export const PetWidget: React.FC = () => {
   const lastRenderShapeRef = useRef('')
   // Theme ids collapsed to one when overall themes were removed; the stored
   // value is still read, so the state stays a plain string.
-  const [themeId, setThemeId] = useState<string>('kirocrew')
+  const [themeId, setThemeId] = useState<string>('ajcrew')
 
   // AnimationResolver state — null means using hardcoded fallbacks
   const [resolver, setResolver] = useState<AnimationResolver | null>(null)

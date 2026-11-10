@@ -1,7 +1,7 @@
 """``AcpRuntime`` keeps every member it had, and each is bound from the module that owns it.
 
-The runtime's behaviour lives in the ``kiro_crew.acp.runtime_*`` owner modules listed in
-``kiro_crew.acp.runtime._RUNTIME_OWNERS``: each moved member's body is a module-level function
+The runtime's behaviour lives in the ``aj_crew.acp.runtime_*`` owner modules listed in
+``aj_crew.acp.runtime._RUNTIME_OWNERS``: each moved member's body is a module-level function
 there whose first parameter is ``self``, and the class binds it by name (``m = _owner.m``, or
 ``staticmethod(_owner.f)``). The instance state stays on the instance, so tests,
 ``AcpRuntime.__new__`` builds and every caller see the same members they always did. This file
@@ -18,7 +18,7 @@ pins the binding contract:
 * each owner's docstring names the instance fields its members write and read;
 * owners log under the facade's logger, and the moved exception classes keep the facade
   as their module;
-* a write through ``kiro_crew.acp.runtime`` reaches every owner that reads the name, for every
+* a write through ``aj_crew.acp.runtime`` reaches every owner that reads the name, for every
   name the test trees patch there (the facade's mirror, ``_facade_mirror``), and the facade's
   forward table is the mirror's;
 * every import the facade binds is accounted for (a BASE name, the glue's, owner-defined, or
@@ -42,8 +42,8 @@ from typing import Any
 import pytest
 from facade_mirror_scan import needs_syntax_tree, patched_names, text_patched_names
 
-from kiro_crew.acp import runtime
-from kiro_crew.acp.runtime import AcpRuntime
+from aj_crew.acp import runtime
+from aj_crew.acp.runtime import AcpRuntime
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_runtime_bindings")
 
@@ -266,37 +266,37 @@ _MEMBERS: dict[str, tuple[str, object, str, str]] = {
 
 #: The owner modules, lowest layer first.
 _OWNERS = (
-    "kiro_crew.acp.runtime_tree_kill",
-    "kiro_crew.acp.runtime_spawn_launch",
-    "kiro_crew.acp.runtime_spawn_entry",
-    "kiro_crew.acp.runtime_session_setup",
-    "kiro_crew.acp.runtime_session_create",
-    "kiro_crew.acp.runtime_session_load",
-    "kiro_crew.acp.runtime_session_registry",
-    "kiro_crew.acp.runtime_mode_activation",
-    "kiro_crew.acp.runtime_wire",
-    "kiro_crew.acp.runtime_liveness",
-    "kiro_crew.acp.runtime_host_requests",
-    "kiro_crew.acp.runtime_frame_accounting",
-    "kiro_crew.acp.runtime_reader_loop",
-    "kiro_crew.acp.runtime_remote_workspace",
-    "kiro_crew.acp.runtime_class",
+    "aj_crew.acp.runtime_tree_kill",
+    "aj_crew.acp.runtime_spawn_launch",
+    "aj_crew.acp.runtime_spawn_entry",
+    "aj_crew.acp.runtime_session_setup",
+    "aj_crew.acp.runtime_session_create",
+    "aj_crew.acp.runtime_session_load",
+    "aj_crew.acp.runtime_session_registry",
+    "aj_crew.acp.runtime_mode_activation",
+    "aj_crew.acp.runtime_wire",
+    "aj_crew.acp.runtime_liveness",
+    "aj_crew.acp.runtime_host_requests",
+    "aj_crew.acp.runtime_frame_accounting",
+    "aj_crew.acp.runtime_reader_loop",
+    "aj_crew.acp.runtime_remote_workspace",
+    "aj_crew.acp.runtime_class",
 )
 
 #: Sibling modules named ``runtime_*`` that are not owners of the class: module-level code
 #: that moved out of the facade before the class split, forwarded through ``_EXPORTS``.
 _NOT_OWNERS = frozenset(
     {
-        "kiro_crew.acp.runtime_models",
-        "kiro_crew.acp.runtime_process_tree",
-        "kiro_crew.acp.runtime_start",
+        "aj_crew.acp.runtime_models",
+        "aj_crew.acp.runtime_process_tree",
+        "aj_crew.acp.runtime_start",
     }
 )
 
 #: The module that holds the class statement and its class-resident members.
 _CLASS_HOME = "runtime_class"
 
-_PACKAGE = "kiro_crew.acp"
+_PACKAGE = "aj_crew.acp"
 _FACADE = runtime.__name__
 
 #: Every name the facade's import statements bound before the owners existed. They stay
@@ -308,8 +308,8 @@ _BASE_IMPORTS = frozenset("""
     AcpRuntimeProtocol AcpSessionHandle Any Awaitable BoundWorkspaceMismatch
     CHILD_PERMISSION_DENIED CHILD_PERMISSION_ROUTED CLIENT_NAME CLIENT_VERSION Callable
     ChildRecord DROPPED_FRAMES HarnessAdapter HostAuthCallbackError INITIALIZE_TIMEOUT_SECS
-    JsonRpcMessage JsonRpcRequest KAS_AUTH_CALLBACK_ERROR_CODE KIROCREW_RUNTIME_AGENT_ENV
-    KIROCREW_SPAWN_HOME_ENV KIROCREW_SPAWN_INSTANCE_ENV KIRO_CLI_BIN KIRO_CLI_SUBCMD
+    JsonRpcMessage JsonRpcRequest KAS_AUTH_CALLBACK_ERROR_CODE AJCREW_RUNTIME_AGENT_ENV
+    AJCREW_SPAWN_HOME_ENV AJCREW_SPAWN_INSTANCE_ENV KIRO_CLI_BIN KIRO_CLI_SUBCMD
     LaunchRequest LaunchTools MAX_ACP_SESSION_ID_LEN MCP_ROSTER_COMPLETE_NOTE
     METHOD_AGENT_SWITCHED METHOD_KAS_AUTH_GET_ACCESS_TOKEN METHOD_KAS_MCP_RESET_SERVER
     METHOD_KAS_OPEN_EXTERNAL_URL METHOD_MCP_OAUTH_REQUEST METHOD_MCP_SERVER_INITIALIZED
@@ -586,7 +586,7 @@ def test_no_bound_function_needs_its_class_body(owner: str) -> None:
 
 
 def _runtime_facade_imports(tree: ast.Module) -> list[int]:
-    """Lines that import the facade (``kiro_crew.acp.runtime``) outside a ``TYPE_CHECKING``
+    """Lines that import the facade (``aj_crew.acp.runtime``) outside a ``TYPE_CHECKING``
     block."""
     guarded: set[int] = set()
     for node in ast.walk(tree):
@@ -610,11 +610,11 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
 def test_the_facade_import_scan_can_fail() -> None:
     tree = ast.parse(
         "from typing import TYPE_CHECKING\n"
-        "if TYPE_CHECKING:\n    from kiro_crew.acp.runtime import AcpRuntime\n"
-        "def f():\n    from kiro_crew.acp.runtime import x\n"
-        "import kiro_crew.acp.runtime\n"
-        "from kiro_crew.acp import runtime\n"
-        "from kiro_crew.acp import runtime_start\n"
+        "if TYPE_CHECKING:\n    from aj_crew.acp.runtime import AcpRuntime\n"
+        "def f():\n    from aj_crew.acp.runtime import x\n"
+        "import aj_crew.acp.runtime\n"
+        "from aj_crew.acp import runtime\n"
+        "from aj_crew.acp import runtime_start\n"
     )
     assert sorted(_runtime_facade_imports(tree)) == [5, 6, 7]
 
@@ -689,7 +689,7 @@ def test_each_owner_names_the_fields_it_writes_and_reads(owner: str) -> None:
 def test_owners_log_under_the_runtime_logger(owner: str) -> None:
     logger = vars(sys.modules[owner]).get("logger", runtime.logger)
     assert logger is runtime.logger
-    assert runtime.logger.name == "kiro_crew.acp.runtime"
+    assert runtime.logger.name == "aj_crew.acp.runtime"
 
 
 def _owner_imports(tree: ast.Module) -> set[str]:
@@ -746,8 +746,8 @@ _FACADE_MODULE_CLASSES = (
 
 #: Moved classes no reader names by module: they keep the module that defines them.
 _OWNER_MODULE_CLASSES = {
-    "_MirroredSessionMcp": "kiro_crew.acp.runtime_session_setup",
-    "_PendingRequests": "kiro_crew.acp.runtime_wire",
+    "_MirroredSessionMcp": "aj_crew.acp.runtime_session_setup",
+    "_PendingRequests": "aj_crew.acp.runtime_wire",
 }
 
 
@@ -759,7 +759,7 @@ def test_a_moved_exception_keeps_the_facade_as_its_module(name: str) -> None:
 
 
 def test_a_moved_exception_names_the_facade_in_an_error_chain() -> None:
-    from kiro_crew.subagent import _describe_exception
+    from aj_crew.subagent import _describe_exception
 
     error = runtime.AcpWorkspaceBindingError
     try:
@@ -769,8 +769,8 @@ def test_a_moved_exception_names_the_facade_in_an_error_chain() -> None:
             raise error("gone") from cause
     except error as exc:
         text = _describe_exception(exc)
-    assert f"kiro_crew.acp.runtime.{error.__qualname__}" in text
-    assert "kiro_crew.acp.runtime_" not in text
+    assert f"aj_crew.acp.runtime.{error.__qualname__}" in text
+    assert "aj_crew.acp.runtime_" not in text
 
 
 @pytest.mark.parametrize("name", sorted(_OWNER_MODULE_CLASSES))
@@ -787,7 +787,7 @@ def test_a_moved_class_without_a_module_reader_keeps_its_owner_module(name: str)
 _TEST_TREE = Path(__file__).resolve().parents[1] / "test"
 _SPELLINGS = {_FACADE: _FACADE}
 #: The test trees: ``test/`` and the builtin apps' own test packages under ``src/``.
-_CORPUS_ROOTS = (_TEST_TREE, _TEST_TREE.parent / "src" / "kiro_crew" / "apps")
+_CORPUS_ROOTS = (_TEST_TREE, _TEST_TREE.parent / "src" / "aj_crew" / "apps")
 
 #: Names a test patches through the facade in a shape the scan cannot read: an f-string
 #: target over a loop of module names (``test_hang_resilience_metrics.py``).
@@ -795,7 +795,7 @@ _HAND_PATCHED = frozenset({"emit_counter"})
 
 
 def _patched_through_the_facade() -> set[str]:
-    """Every name a test file patches through ``kiro_crew.acp.runtime``: the regular
+    """Every name a test file patches through ``aj_crew.acp.runtime``: the regular
     expressions read every file, and the syntax tree the files holding a patch shape the
     expressions cannot read."""
     names: set[str] = set()
@@ -858,7 +858,7 @@ def test_every_name_patched_through_the_facade_reaches_the_owners_reading_it() -
 
 def test_the_reach_scan_can_fail() -> None:
     index = runtime._MIRROR
-    owner = "kiro_crew.acp.runtime_spawn_entry"
+    owner = "aj_crew.acp.runtime_spawn_entry"
     holders = dict(index.holders)
     holders["time"] = tuple(h for h in holders["time"] if h != owner)
     blind = dataclasses.replace(index, holders=holders)
@@ -882,7 +882,7 @@ def test_the_mirror_indexes_one_object_per_name_and_forwards_the_legacy_table() 
 def test_a_patch_through_the_facade_lands_on_every_owner_and_is_undone(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    launch_owner = sys.modules["kiro_crew.acp.runtime_spawn_launch"]
+    launch_owner = sys.modules["aj_crew.acp.runtime_spawn_launch"]
     before = runtime._INITIALIZE_TIMEOUT
     with monkeypatch.context() as patch:
         patch.setattr(runtime, "_INITIALIZE_TIMEOUT", 1.5)
@@ -903,7 +903,7 @@ def _is_type_checking(node: ast.stmt) -> bool:
 
 def _defined_by(module_name: str) -> set[str]:
     """Names *module_name* defines at its top level (a def, class or assignment)."""
-    from kiro_crew import _facade_mirror
+    from aj_crew import _facade_mirror
 
     return _facade_mirror._defined_names(_tree(importlib.import_module(module_name)))
 
@@ -966,12 +966,12 @@ def test_the_import_check_reports_only_what_nothing_accounts_for() -> None:
     source = Path(runtime.__file__ or "").read_text(encoding="utf-8")
     planted = source + (
         "\nimport zipapp\nimport csv\nimport shlex\n_PLANTED_READ = csv.writer\n"
-        "from kiro_crew.acp.runtime_spawn_launch import AcpRuntimeDead\n"
+        "from aj_crew.acp.runtime_spawn_launch import AcpRuntimeDead\n"
     )
     assert "zipapp" not in _owner_reads()
     assert unexpected_imports(planted, _owner_names(), _owner_reads() | {"shlex"}) == [
         "zipapp",
-        "kiro_crew.acp.runtime_spawn_launch.AcpRuntimeDead",
+        "aj_crew.acp.runtime_spawn_launch.AcpRuntimeDead",
     ]
 
 
@@ -998,7 +998,7 @@ _INIT_HINTS = {
     "sandbox_mode": "<class 'str'>",
     "shared_scratch": "pathlib.Path | None",
     "launch_agent": "<class 'str'>",
-    "tool_search": "kiro_crew.agent_sdk.tool_search.ToolSearchSettings | None",
+    "tool_search": "aj_crew.agent_sdk.tool_search.ToolSearchSettings | None",
     "work_dir": "str | pathlib.Path | None",
 }
 

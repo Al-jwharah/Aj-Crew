@@ -5,11 +5,11 @@ production ``_run_chat``) and asserts on what it recorded, so the three
 dashboard wirings are pinned by behaviour rather than by reading the turn's
 source:
 
-* the finished turn is counted on ``kirocrew.turn.completed`` with a closed
+* the finished turn is counted on ``ajcrew.turn.completed`` with a closed
   ``trigger_source``;
 * the turn entry declares that trigger for the session the turn opens
   (``usage_attrs.current_trigger`` inside the turn);
-* the admitted turn's composition records ``kirocrew.memory.recalled``
+* the admitted turn's composition records ``ajcrew.memory.recalled``
   ``{path=context}`` exactly once.
 """
 
@@ -20,10 +20,10 @@ from unittest.mock import patch
 import pytest
 from turn_harness import Do, TurnScript, run_turn
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN, AcpEvent
-from kiro_crew.metrics import feature_usage as fu
-from kiro_crew.metrics import turn_completed as tc
-from kiro_crew.metrics.usage_attrs import TRIGGER_SOURCE_VALUES, current_trigger
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN, AcpEvent
+from aj_crew.metrics import feature_usage as fu
+from aj_crew.metrics import turn_completed as tc
+from aj_crew.metrics.usage_attrs import TRIGGER_SOURCE_VALUES, current_trigger
 
 
 class _Recorder:

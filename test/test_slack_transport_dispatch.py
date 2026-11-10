@@ -1,8 +1,8 @@
 """Unit tests for ``handle_message_transport`` agent resolution (Stage 3).
 
-The transport session needs an agent carrying the ``kirocrew-core`` MCP server (for
+The transport session needs an agent carrying the ``ajcrew-core`` MCP server (for
 ``spawn_run``). Checking the loaded tool would need a real kiro-cli, so this pins the
-agent name passed to ``get_or_create``: ``"kirocrew"`` by default, a thread override
+agent name passed to ``get_or_create``: ``"ajcrew"`` by default, a thread override
 wins. Turn outcomes and the flat-DM key are in the ``_turn_outcomes`` and ``_flat_dm``
 siblings.
 """
@@ -23,7 +23,7 @@ from slack_transport_dispatch_helpers import (
     make_event,
 )
 
-from kiro_crew.acp.client import (
+from aj_crew.acp.client import (
     AcpError,
     AcpProcessDied,
     AcpPromptBusy,
@@ -31,7 +31,7 @@ from kiro_crew.acp.client import (
     AcpTimeoutError,
     _raise_acp_error,
 )
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPACTION_STATUS,
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
@@ -40,9 +40,9 @@ from kiro_crew.acp.types import (
     STOP_REASON_END_TURN,
     STOP_REASON_STALE_RECOVER,
 )
-from kiro_crew.messaging.link import canonical_key
-from kiro_crew.slack import handler as slack_handler
-from kiro_crew.slack import transport_dispatch
+from aj_crew.messaging.link import canonical_key
+from aj_crew.slack import handler as slack_handler
+from aj_crew.slack import transport_dispatch
 
 
 def _run_transport(monkeypatch, thread_agent=None, agent_override=None, **extra):
@@ -91,16 +91,16 @@ def _run_transport(monkeypatch, thread_agent=None, agent_override=None, **extra)
 
 
 class TestTransportAgentResolution:
-    def test_falls_back_to_kirocrew_agent(self, monkeypatch):
+    def test_falls_back_to_ajcrew_agent(self, monkeypatch):
         sessions = _run_transport(monkeypatch)
         # Empty default_agent must NOT pass None (kiro built-in, no
-        # kirocrew-core -> no spawn_run); it resolves to canonical "kirocrew".
-        assert sessions.agents == [transport_dispatch._DEFAULT_KIROCREW_AGENT]
-        assert sessions.agents == ["kirocrew"]
+        # ajcrew-core -> no spawn_run); it resolves to canonical "ajcrew".
+        assert sessions.agents == [transport_dispatch._DEFAULT_AJCREW_AGENT]
+        assert sessions.agents == ["ajcrew"]
 
     def test_thread_override_wins(self, monkeypatch):
-        sessions = _run_transport(monkeypatch, thread_agent="kirocrew-research")
-        assert sessions.agents == ["kirocrew-research"]
+        sessions = _run_transport(monkeypatch, thread_agent="ajcrew-research")
+        assert sessions.agents == ["ajcrew-research"]
 
     def test_channel_override_used_when_no_thread_override(self, monkeypatch):
         # Per-channel agent (slack.channels.<id>.agent) is honored on transport.
@@ -109,9 +109,9 @@ class TestTransportAgentResolution:
 
     def test_thread_override_beats_channel_override(self, monkeypatch):
         sessions = _run_transport(
-            monkeypatch, thread_agent="kirocrew-research", agent_override="ops-agent"
+            monkeypatch, thread_agent="ajcrew-research", agent_override="ops-agent"
         )
-        assert sessions.agents == ["kirocrew-research"]
+        assert sessions.agents == ["ajcrew-research"]
 
     def test_channels_deny_drops_transport_message_before_session(self, monkeypatch, tmp_path):
         # A channels policy that denies slack must stop
@@ -120,7 +120,7 @@ class TestTransportAgentResolution:
         # transport call site (distinct from the native handle_message gate).
         import json
 
-        from kiro_crew.platform import governance_profiles as gp
+        from aj_crew.platform import governance_profiles as gp
 
         pdir = tmp_path / "profiles"
         pdir.mkdir()
@@ -147,7 +147,7 @@ class TestTransportAgentResolution:
 
 class TestTransportAdmissionSpool:
     def test_session_closing_spools_the_unopened_slack_turn(self, monkeypatch):
-        from kiro_crew.session_allocation import SessionClosingError
+        from aj_crew.session_allocation import SessionClosingError
 
         async def reject_turn(*_args, **_kwargs):
             raise SessionClosingError("automatic update owns admission")
@@ -178,7 +178,7 @@ class TestTransportAdmissionSpool:
         dispatch -- must record what the user sent and how many files it had,
         never the turn's prompt.
         """
-        from kiro_crew.session_allocation import SessionClosingError
+        from aj_crew.session_allocation import SessionClosingError
 
         routes: list = []
         if site == "admission":
@@ -255,7 +255,7 @@ class TestTransportAdmissionSpool:
         assert routes[0].attachments_dropped == dropped
 
     def test_session_closing_does_not_spool_restricted_slack_turn(self, monkeypatch, caplog):
-        from kiro_crew.session_allocation import SessionClosingError
+        from aj_crew.session_allocation import SessionClosingError
 
         async def reject_turn(*_args, **_kwargs):
             raise SessionClosingError("automatic update owns admission")
@@ -301,7 +301,7 @@ class TestTransportBookkeepingIsolation:
             return obj
 
         monkeypatch.setattr(transport_dispatch, "sel", _sel_factory)
-        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
         monkeypatch.setattr(
             transport_dispatch,
             "_hydrate_thread_overrides",
@@ -381,7 +381,7 @@ class TestTransportUnfinishedTurn:
     """
 
     def _run(self, monkeypatch, stop_reason, *, breaker_trips=False):
-        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
         monkeypatch.setattr(
             transport_dispatch,
             "_hydrate_thread_overrides",
@@ -444,7 +444,7 @@ class TestTransportUnfinishedTurn:
 
 
 # ── Keyword commands on the transport path (spawn/run/cron/sessions) ──
-from kiro_crew.slack import handler as _handler  # noqa: E402
+from aj_crew.slack import handler as _handler  # noqa: E402
 
 
 class _FakeSubagentMgr:
@@ -485,7 +485,7 @@ def _run_transport_text(
     command and no LLM turn ran. A non-empty ``agents`` means the message fell
     through to the normal LLM turn.
     """
-    monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+    monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
     monkeypatch.setattr(
         transport_dispatch,
         "_hydrate_thread_overrides",
@@ -529,7 +529,7 @@ def _posts(slack):
 def test_member_memory_refusal_redacts_before_posting(monkeypatch):
     from unittest.mock import AsyncMock
 
-    from kiro_crew.memory_stores import UnknownMemoryStore
+    from aj_crew.memory_stores import UnknownMemoryStore
 
     private_path = "/home/alice/.kiro/crew/memory_stores/member-one/memory.db"
     credential = "AKIAIOSFODNN7EXAMPLE"
@@ -788,7 +788,7 @@ class TestTransportKeywordCommands:
             task_runner=_FakeTaskRunner(),
             cron_service=_FakeCronService(),
         )
-        assert sessions.agents == ["kirocrew"]  # LLM session WAS acquired
+        assert sessions.agents == ["ajcrew"]  # LLM session WAS acquired
 
 
 # ── Privacy modifiers (!temporary / !incognito) on the transport path ──
@@ -834,7 +834,7 @@ class TestTransportPrivacyModifiers:
             class hooks:  # noqa: N801 - stub attribute, not a real class use
                 @staticmethod
                 def on_message(text):
-                    from kiro_crew.hooks import HookResult
+                    from aj_crew.hooks import HookResult
 
                     return HookResult.passthrough()
 
@@ -842,7 +842,7 @@ class TestTransportPrivacyModifiers:
                 captured["text"] = text
                 return text, {}
 
-        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
         monkeypatch.setattr(
             transport_dispatch,
             "_hydrate_thread_overrides",
@@ -875,7 +875,7 @@ class TestTransportPrivacyModifiers:
         )
         # Flag applied, LLM turn ran, and the token was stripped from the prompt.
         assert _handler.is_thread_incognito(self._KEY) is True
-        assert sessions.agents == ["kirocrew"]
+        assert sessions.agents == ["ajcrew"]
         assert "!incognito" not in captured["text"]
         assert "summarize the logs" in captured["text"]
         self._clear_flags(self._KEY)
@@ -890,7 +890,7 @@ class TestTransportReactionsEnabled:
     so no add_reaction calls are emitted."""
 
     def _run(self, monkeypatch, reactions_enabled):
-        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
         monkeypatch.setattr(
             transport_dispatch,
             "_hydrate_thread_overrides",
@@ -944,7 +944,7 @@ class _RecordingConsolidator:
 
 class TestTransportNativeParity:
     def _prep(self, monkeypatch):
-        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
         monkeypatch.setattr(
             transport_dispatch,
             "_hydrate_thread_overrides",
@@ -962,7 +962,7 @@ class TestTransportNativeParity:
         )
 
     def test_hook_reply_short_circuits_no_llm_turn(self, monkeypatch):
-        from kiro_crew.hooks import HookResult
+        from aj_crew.hooks import HookResult
 
         self._prep(monkeypatch)
         cb = _CapturingCtxBuilder(hook_result=HookResult.reply("canned answer"))
@@ -1059,7 +1059,7 @@ class TestTransportCompactionReinjection:
     """
 
     def _prep(self, monkeypatch):
-        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
         monkeypatch.setattr(
             transport_dispatch,
             "_hydrate_thread_overrides",
@@ -1203,7 +1203,7 @@ class TestTransportTemporaryBlocksMemoryReads:
     _KEY = canonical_key(_MSG_TS)
 
     def _prep(self, monkeypatch):
-        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
         monkeypatch.setattr(
             transport_dispatch,
             "_hydrate_thread_overrides",
@@ -1297,7 +1297,7 @@ class TestTransportStatusIdentitySeam:
         assert sessions.agents == []
 
     def test_no_direct_sso_stub_import(self):
-        import kiro_crew.slack.transport_dispatch as td
+        import aj_crew.slack.transport_dispatch as td
 
         assert not hasattr(td, "get_sso_status_line")
 
@@ -1309,9 +1309,9 @@ class TestTransportToolGateWiring:
     even though the default gate mode is interactive."""
 
     def test_hook_deny_rejects_tool_without_prompt(self, monkeypatch):
-        from kiro_crew.hooks import HookResult, ToolHookResult
+        from aj_crew.hooks import HookResult, ToolHookResult
 
-        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
         monkeypatch.setattr(
             transport_dispatch,
             "_hydrate_thread_overrides",
@@ -1414,7 +1414,7 @@ class TestHydrationBeforeHook:
             class hooks:  # noqa: N801 - stub attribute, not a real class use
                 @staticmethod
                 def on_message(text):
-                    from kiro_crew.hooks import HookResult
+                    from aj_crew.hooks import HookResult
 
                     return HookResult.reply("canned answer")
 
@@ -1456,7 +1456,7 @@ class TestTeardownReleasesSessionOnCancel:
     """
 
     def _run(self, monkeypatch, *, close_raises):
-        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
         monkeypatch.setattr(
             transport_dispatch,
             "_hydrate_thread_overrides",

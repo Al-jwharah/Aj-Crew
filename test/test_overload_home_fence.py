@@ -33,10 +33,10 @@ from pathlib import Path
 import pytest
 from test_sandbox_launcher_program import CoveringLibc, launch, payload, refusal, rendered_payload
 
-from kiro_crew import sandbox
-from kiro_crew import sandbox_launcher_program as program
-from kiro_crew import security
-from kiro_crew.taskq.store import TaskStore
+from aj_crew import sandbox
+from aj_crew import sandbox_launcher_program as program
+from aj_crew import security
+from aj_crew.taskq.store import TaskStore
 
 _HOME = os.path.expanduser("~")
 _CREW = os.path.join(_HOME, ".kiro", "crew")
@@ -80,7 +80,7 @@ class TestToolGateFence:
 class TestSandboxDisposition:
     def test_tasks_is_hidden(self) -> None:
         assert "tasks" in set(sandbox._CREW_HIDDEN_LEAVES)
-        for prefix in (".kiro/crew", ".kirocrew"):
+        for prefix in (".kiro/crew", ".ajcrew"):
             assert f"{prefix}/tasks" in sandbox._CREW_HIDDEN_DIRS
 
     @pytest.mark.skipif(os.name == "nt", reason="POSIX launcher only")
@@ -95,7 +95,7 @@ class TestScratchConfidentiality:
 
     def test_scratch_root_is_hidden_from_every_sandboxed_process(self) -> None:
         assert "scratch" in sandbox._CREW_HIDDEN_LEAVES
-        for prefix in (".kiro/crew", ".kirocrew"):
+        for prefix in (".kiro/crew", ".ajcrew"):
             assert f"{prefix}/scratch" in sandbox._CREW_HIDDEN_DIRS
 
     @staticmethod
@@ -154,8 +154,8 @@ class TestScratchConfidentiality:
 
         import acp_launch_capture as capture_mod
 
-        from kiro_crew.acp import client, runtime
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_CODEX, ACP_BACKEND_KIRO
+        from aj_crew.acp import client, runtime
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_CODEX, ACP_BACKEND_KIRO
 
         for module, backend in ((client, ACP_BACKEND_KIRO), (runtime, ACP_BACKEND_CODEX)):
             allocated: list[Path] = []
@@ -190,16 +190,16 @@ class TestPrivateWindowDoesNotCostDelegation:
         self, monkeypatch
     ) -> None:
         """Every session spawn now carries its scratch window. A window relaxes
-        a mask owned by Kiro Crew the delegated sandbox never applies, so it must
+        a mask owned by Aj Crew the delegated sandbox never applies, so it must
         not be read as an extra path policy (which sends Windows to the
         fail-closed no-backend path)."""
         from unittest.mock import MagicMock, patch
 
-        monkeypatch.setattr("kiro_crew.sandbox.sys.platform", "win32")
+        monkeypatch.setattr("aj_crew.sandbox.sys.platform", "win32")
         launch = r"C:\Program Files\Kiro\kiro-cli.exe"
         with (
-            patch("kiro_crew.sel.sel", return_value=MagicMock()),
-            patch("kiro_crew.sandbox.detect_backend") as mock_detect,
+            patch("aj_crew.sel.sel", return_value=MagicMock()),
+            patch("aj_crew.sandbox.detect_backend") as mock_detect,
         ):
             argv, cleanup = sandbox.wrap_argv(
                 [launch, "acp"],
@@ -214,16 +214,16 @@ class TestPrivateWindowDoesNotCostDelegation:
 
 
 def _outside_any_sandbox(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Run the routing as a gateway does: not already inside a Kiro Crew sandbox.
+    """Run the routing as a gateway does: not already inside a Aj Crew sandbox.
 
     ``wrap_argv`` passes argv through untouched -- no launcher, no profile, no
     backend probe -- when the process carries the launcher-only
-    ``KIROCREW_SANDBOX_ACTIVE`` marker, because nested OS sandboxing is impossible
+    ``AJCREW_SANDBOX_ACTIVE`` marker, because nested OS sandboxing is impossible
     by design. A test process spawned by a sandboxed agent inherits that marker,
     so the routing these tests pin would never be reached. The marker is the one
     seam that decision reads.
     """
-    monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+    monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
 
 
 _MS_BIND = 4096
@@ -271,16 +271,16 @@ class TestThePrivateWindowSurvivesTheRoutingItDependsOn:
         _outside_any_sandbox(monkeypatch)
         own = os.path.join(_CREW, "scratch", "session-aaaa")
         with (
-            patch("kiro_crew.sel.sel", return_value=MagicMock()),
-            patch("kiro_crew.sandbox.detect_backend", return_value="namespace"),
+            patch("aj_crew.sel.sel", return_value=MagicMock()),
+            patch("aj_crew.sandbox.detect_backend", return_value="namespace"),
             # A kiro-cli spawn on macOS is handed to kiro-cli's OWN sandbox when the
-            # internal edition's settings ask for it, and then Kiro Crew writes no
+            # internal edition's settings ask for it, and then Aj Crew writes no
             # launcher at all -- so on a machine carrying that setting this test
             # read `cleanup is None` and failed, while every CI runner passed. The
             # decision is the host's, not this test's subject, so it is pinned:
             # ``is_kiro_cli=True`` is what reaches it, which is why the sibling
             # seatbelt case (``is_kiro_cli=False``) never saw it.
-            patch("kiro_crew.sandbox.kiro_internal_sandbox_enabled", return_value=False),
+            patch("aj_crew.sandbox.kiro_internal_sandbox_enabled", return_value=False),
         ):
             argv, cleanup = sandbox.wrap_argv(
                 ["/usr/bin/kiro-cli", "acp"],
@@ -320,9 +320,9 @@ class TestThePrivateWindowSurvivesTheRoutingItDependsOn:
             return list(argv), None
 
         with (
-            patch("kiro_crew.sel.sel", return_value=MagicMock()),
-            patch("kiro_crew.sandbox.detect_backend", return_value="sandbox-exec"),
-            patch("kiro_crew.sandbox.sandbox_exec_argv", side_effect=_spy),
+            patch("aj_crew.sel.sel", return_value=MagicMock()),
+            patch("aj_crew.sandbox.detect_backend", return_value="sandbox-exec"),
+            patch("aj_crew.sandbox.sandbox_exec_argv", side_effect=_spy),
         ):
             sandbox.wrap_argv(
                 ["/usr/bin/kiro-cli", "acp"],

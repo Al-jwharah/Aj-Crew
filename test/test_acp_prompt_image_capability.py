@@ -17,9 +17,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.prompt_blocks import IMAGE_UNSUPPORTED_NOTE, build_prompt_blocks
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_DEEPSEEK
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.prompt_blocks import IMAGE_UNSUPPORTED_NOTE, build_prompt_blocks
+from aj_crew.agent_sdk.backends import ACP_BACKEND_DEEPSEEK
 
 _FRAMES = pathlib.Path(__file__).parent / "fixtures" / "acp_frames"
 

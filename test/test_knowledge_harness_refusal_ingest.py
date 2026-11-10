@@ -15,12 +15,12 @@ import json
 
 import pytest
 
-from kiro_crew.knowledge.chunker import HeadingAwareChunker
-from kiro_crew.knowledge.extractor import EntityExtractor
-from kiro_crew.knowledge.ingestion import IngestionPipeline
-from kiro_crew.knowledge.llm_pool import KnowledgeHarnessUnavailable, LLMPool, _kiro_fallback
-from kiro_crew.knowledge.readers import FileReader
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge.chunker import HeadingAwareChunker
+from aj_crew.knowledge.extractor import EntityExtractor
+from aj_crew.knowledge.ingestion import IngestionPipeline
+from aj_crew.knowledge.llm_pool import KnowledgeHarnessUnavailable, LLMPool, _kiro_fallback
+from aj_crew.knowledge.readers import FileReader
+from aj_crew.knowledge.store import KnowledgeStore
 
 _REPLY = json.dumps(
     {"title": "t", "entities": [], "relations": [], "category": "document", "summary": "s"}
@@ -29,7 +29,7 @@ _REPLY = json.dumps(
 
 @pytest.fixture
 def lts(monkeypatch):
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 @pytest.fixture()

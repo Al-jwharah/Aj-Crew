@@ -1,6 +1,6 @@
 """Agentic "real user" GUI tests: a pixel-only agent driving the dashboard in CI.
 
-The packages here are NOT part of ``kiro_crew``. They are the CI-side harness
+The packages here are NOT part of ``aj_crew``. They are the CI-side harness
 described in ``docs/build/gui-user-test.md``:
 
 * ``x11``       -- screenshot + input backend (Pillow ImageGrab, xdotool) with the

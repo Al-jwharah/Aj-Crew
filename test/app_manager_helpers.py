@@ -1,6 +1,6 @@
 """Shared fixtures and builders for the app manager suite (``test_app_manager.py`` and
 its ``test_app_manager_<topic>.py`` parts): a minimal app source, the install's
-root-``data`` refusal sentences, and an isolated ``KIROCREW_HOME``.
+root-``data`` refusal sentences, and an isolated ``AJCREW_HOME``.
 """
 
 from __future__ import annotations
@@ -9,7 +9,7 @@ import json
 
 import pytest
 
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -19,7 +19,7 @@ from kiro_crew.apps.manager import APP_MANIFEST_FILENAME
 #: beside -- the one explanation the install log, the AppResult and the audit
 #: record carry, so the tests pin the sentence, not a fragment of it.
 _DATA_IS_A_FILE = (
-    "`data` in the app tree is a file; Kiro Crew creates the app's data directory at "
+    "`data` in the app tree is a file; Aj Crew creates the app's data directory at "
     "that path and cannot install beside it."
 )
 
@@ -45,10 +45,10 @@ def _make_app_source(tmp_path, name="test-app", **manifest_overrides):
 
 @pytest.fixture(name="app_home")
 def app_home_fixture(tmp_path, monkeypatch):
-    """Set KIROCREW_HOME to a temp directory for isolated testing."""
-    home = tmp_path / "kirocrew-home"
+    """Set AJCREW_HOME to a temp directory for isolated testing."""
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     # Lifecycle success tests explicitly admit their synthetic third-party apps.
     (home / "config.json").write_text(
         json.dumps({"agent": {"apps_allow_third_party": True}}), encoding="utf-8"

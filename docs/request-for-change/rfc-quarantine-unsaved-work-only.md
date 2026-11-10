@@ -40,8 +40,8 @@ Measured against main at `6432cad9e`. Nothing here is built.
 
 ### Current state
 
-`sweep_dead_scratch` in `src/kiro_crew/agent_scratch.py` runs hourly from
-the gateway (called from `src/kiro_crew/slack/gateway_runtime/process_entry.py`).
+`sweep_dead_scratch` in `src/aj_crew/agent_scratch.py` runs hourly from
+the gateway (called from `src/aj_crew/slack/gateway_runtime/process_entry.py`).
 A tree whose owners are all dead and which has been idle for
 `_UNOWNED_GRACE_SECONDS` (one hour) is deleted, unless `holds_git_repository`
 says it holds a repository. Then `_quarantine` renames the whole tree into
@@ -58,7 +58,7 @@ The quarantine keeps every byte of every dead clone for 14 days.
 
 - On one host, `.quarantine` reached **28 GB over 24 trees in about one day**,
   and the 80 GB disk reached **99%**.
-- One Kiro Crew clone is about **4.2 GB**: `.git` 1.8 GB, `node_modules`
+- One Aj Crew clone is about **4.2 GB**: `.git` 1.8 GB, `node_modules`
   0.95 GB, `.venv` 0.63 GB, source 0.8 GB.
 - The work that is actually unsaved in such a clone is usually a few local
   commits and a few edited files: kilobytes to a few megabytes.
@@ -68,7 +68,7 @@ long before anything expires.
 
 A sibling PR (branch `fix/scratch-delete-clean-trees`) removes the regenerable
 directories (`node_modules`, `.venv` and similar) before a tree is quarantined.
-That takes a Kiro Crew clone from about 4.2 GB to about 2.6 GB. The rest is
+That takes a Aj Crew clone from about 4.2 GB to about 2.6 GB. The rest is
 `.git` plus the checked-out source, and that is what this RFC covers.
 
 ### Why #19897 did not just ask git
@@ -150,7 +150,7 @@ exact git commands are Phase 1b's to choose and its reviewers' to check.
 the data home, for example `<data home>/git-mirrors/<host>/<owner>/<repo>.git`.
 Being outside the scratch root is not enough: the sandbox hides a fixed list
 of paths, not everything else. So `git-mirrors` is a new top-level leaf added
-to `_CREW_HIDDEN_LEAVES` in `src/kiro_crew/sandbox_leaves.py`, which every
+to `_CREW_HIDDEN_LEAVES` in `src/aj_crew/sandbox_leaves.py`, which every
 sandbox mode masks. The one exception is the verify helper below: its launch
 names that one mirror in `extra_visible_dirs`, which lifts the mask for that
 one fixed-argv child only, the way the `aws-control-staging` leaf is already
@@ -186,12 +186,12 @@ the saving on by default therefore needs a trusted store that exists without
 setup, which is open question 9 and an entry condition of Phase 3.
 
 **For default hosts, the fix is the sibling PR**, which drops the regenerable
-directories with no setup and takes a Kiro Crew clone from ~4.2 GB to ~2.6 GB.
+directories with no setup and takes a Aj Crew clone from ~4.2 GB to ~2.6 GB.
 This RFC accepts that trade. Phases 1a, 1b and 2 ship **only for operators
 who opt in** by configuring a mirror (or, after Phase 2, a provider
 credential). A default host gains nothing from them until open question 9 is
 answered. They are still worth shipping first, because the hosts that fill
-their disk this way are the ones that develop Kiro Crew itself, where a
+their disk this way are the ones that develop Aj Crew itself, where a
 mirror of one repository is a one-line setup.
 
 **Hash strength.** Object ids are compared as full SHAs: 40 hex digits for
@@ -232,8 +232,8 @@ Requirements on what goes in:
 ### Where git runs
 
 Git runs in a helper process the gateway starts through the same sandbox
-wrapper as agent spawns (`wrap_argv` in `src/kiro_crew/sandbox_wrap.py`, re-exported as
-`kiro_crew.sandbox.wrap_argv`). The sandbox is the safety.
+wrapper as agent spawns (`wrap_argv` in `src/aj_crew/sandbox_wrap.py`, re-exported as
+`aj_crew.sandbox.wrap_argv`). The sandbox is the safety.
 
 **Invariant: the helper runs only inside an enforcing sandbox.** The wrapper
 must confirm, for this launch, that sandboxing is on (sandbox mode is not
@@ -245,10 +245,10 @@ risk #19897 avoided.
 
 Two of the properties below **do not exist in the wrapper today**, and Phase 1a
 has to add them. `wrap_argv` never enters a network namespace (the network
-egress note in `src/kiro_crew/security_posture_sinks_gateway.py` says so: agent commands need
+egress note in `src/aj_crew/security_posture_sinks_gateway.py` says so: agent commands need
 the network), and it has no parameter to mount a directory read-only. The
 Linux launcher already has a read-only bind (`seal_readonly` in
-`src/kiro_crew/sandbox_launcher_parts/mask_stages.py`), which is the likely base. Until
+`src/aj_crew/sandbox_launcher_parts/mask_stages.py`), which is the likely base. Until
 both exist on a host, that host always takes the whole-tree fallback.
 
 - The tree is mounted **read-only**. One fresh output directory is writable.
@@ -376,12 +376,12 @@ read and act on by hand, and the same goes for names inside `changed/` and
 `untracked/`.
 
 A whole-tree fallback keeps today's log line and today's recovery steps in
-`src/kiro_crew/docs/troubleshooting.md`. A `kirocrew scratch restore` command
+`src/aj_crew/docs/troubleshooting.md`. A `ajcrew scratch restore` command
 is left as an open question.
 
 ### Worked sizes
 
-One Kiro Crew clone with 3 local commits and 2 edited files:
+One Aj Crew clone with 3 local commits and 2 edited files:
 
 | Stage | Size |
 |---|---|
@@ -523,7 +523,7 @@ The phase exit criteria above are the main tests. Beyond them:
 ## Open questions
 
 1. Is the gateway-owned mirror acceptable disk-wise? One full mirror per
-   configured repository (about 1.8 GB for Kiro Crew) is paid once, against
+   configured repository (about 1.8 GB for Aj Crew) is paid once, against
    ~4.2 GB per quarantined clone today, or ~2.6 GB after the sibling PR.
 2. Should Phase 1b ship the provider kind instead of the mirror kind, because it
    needs no extra disk?
@@ -535,7 +535,7 @@ The phase exit criteria above are the main tests. Beyond them:
 5. Are dangling commits (not on any ref or reflog) worth a `git fsck` pass, or
    is "the agent hid it" a fair line?
 6. Do SHA-256 repositories need anything extra?
-7. Is a `kirocrew scratch restore <path>` command wanted, or are `RESCUE.md`
+7. Is a `ajcrew scratch restore <path>` command wanted, or are `RESCUE.md`
    commands enough?
 8. Which config key and default name the opt-in flag?
 9. How does a host get a trusted store without setup? See "With nothing

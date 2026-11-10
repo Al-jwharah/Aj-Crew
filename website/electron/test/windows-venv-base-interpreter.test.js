@@ -3,13 +3,13 @@
 const { test } = require("node:test");
 const assert = require("node:assert");
 const { windowsVenvBaseInterpreterLaunches } = require("../windows-port");
-const { classifyPortOwner, isKirocrewCommand, isKirocrewGatewayCommand } = require("../gateway-stop");
+const { classifyPortOwner, isAjcrewCommand, isAjcrewGatewayCommand } = require("../gateway-stop");
 
 // A source or pip venv on Windows: `Scripts\python.exe` is a redirector that
 // starts the base interpreter `pyvenv.cfg` names, so the gateway's listener
 // runs C:\Python312\python.exe with this venv's console launcher as its script.
 const VENV = "D:\\src\\kc\\.venv";
-const LAUNCHER = `${VENV}\\Scripts\\kirocrew.exe`;
+const LAUNCHER = `${VENV}\\Scripts\\ajcrew.exe`;
 const REDIRECTOR = `${VENV}\\Scripts\\python.exe`;
 const BASE = "C:\\Python312\\python.exe";
 const PYVENV = `${VENV}\\pyvenv.cfg`;
@@ -42,7 +42,7 @@ function launchesFor(bin, files = { [PYVENV]: PYVENV_TEXT }) {
 }
 
 function trusts(command, launches = launchesFor(LAUNCHER)) {
-  return isKirocrewCommand(command, {
+  return isAjcrewCommand(command, {
     trustedExecutablePaths: [LAUNCHER, REDIRECTOR, `${VENV}\\python.exe`],
     trustedVenvLaunches: launches,
     canonicalizePath: identityRealpath,
@@ -73,8 +73,8 @@ test("no venv launch is derived where nothing names a venv base interpreter", ()
   // No pyvenv.cfg: a global install's Scripts launcher, already trusted by path.
   assert.deepStrictEqual(launchesFor(LAUNCHER, {}), []);
   // The bundled .cmd shim and a bare executable are not console launchers.
-  assert.deepStrictEqual(launchesFor("C:\\App\\backend-dist\\kirocrew-backend\\bin\\kirocrew.cmd"), []);
-  assert.deepStrictEqual(launchesFor(`${VENV}\\kirocrew.exe`), []);
+  assert.deepStrictEqual(launchesFor("C:\\App\\backend-dist\\ajcrew-backend\\bin\\ajcrew.cmd"), []);
+  assert.deepStrictEqual(launchesFor(`${VENV}\\ajcrew.exe`), []);
   // A pyvenv.cfg naming no drive-letter python*.exe is not evidence.
   for (const text of [
     "home = \\\\server\\share\\py\n",
@@ -96,7 +96,7 @@ test("the venv's base interpreter running its own launcher with a server subcomm
   ]) {
     assert.strictEqual(trusts(command), true, command);
     assert.strictEqual(
-      isKirocrewGatewayCommand(command, { trustedVenvLaunches: launchesFor(LAUNCHER) }),
+      isAjcrewGatewayCommand(command, { trustedVenvLaunches: launchesFor(LAUNCHER) }),
       true,
       command,
     );
@@ -104,17 +104,17 @@ test("the venv's base interpreter running its own launcher with a server subcomm
 });
 
 test("the shared base interpreter running anything else stays foreign", () => {
-  const otherVenvLauncher = "D:\\other\\.venv\\Scripts\\kirocrew.exe";
+  const otherVenvLauncher = "D:\\other\\.venv\\Scripts\\ajcrew.exe";
   for (const command of [
     // Another Python program on the same interpreter.
     `"${BASE}" "${BASE}" C:\\tools\\serve.py --port 5599`,
     `"${BASE}" "${BASE}" -m http.server 5599`,
     `"${BASE}" "${BASE}" -c "import socket" "${LAUNCHER}" gateway`,
-    `"${BASE}" "${BASE}" -m kiro_crew gateway --port 5599`,
-    // A kirocrew-named script that is not this venv's launcher.
-    listener(BASE, "C:\\Users\\x\\Downloads\\kirocrew.exe"),
+    `"${BASE}" "${BASE}" -m aj_crew gateway --port 5599`,
+    // A ajcrew-named script that is not this venv's launcher.
+    listener(BASE, "C:\\Users\\x\\Downloads\\ajcrew.exe"),
     listener(BASE, otherVenvLauncher),
-    listener(BASE, "D:\\src\\kc\\.venv\\Scripts\\kirocrew.py"),
+    listener(BASE, "D:\\src\\kc\\.venv\\Scripts\\ajcrew.py"),
     // An option between argv0 and the launcher.
     `"${BASE}" "${BASE}" -X dev "${LAUNCHER}" gateway`,
     // Not a server subcommand: the gateway's own MCP children.
@@ -153,7 +153,7 @@ test("a different interpreter, or a launch derived from another venv, is not tru
   assert.strictEqual(trusts(`"C:\\Python311\\python.exe" "${LAUNCHER}" gateway`), false);
   // The resolver selected another venv: this venv's listener is not its launch.
   const otherVenv = "D:\\other\\.venv";
-  const otherLaunches = launchesFor(`${otherVenv}\\Scripts\\kirocrew.exe`, {
+  const otherLaunches = launchesFor(`${otherVenv}\\Scripts\\ajcrew.exe`, {
     [`${otherVenv}\\pyvenv.cfg`]: PYVENV_TEXT,
   });
   assert.strictEqual(trusts(listener(BASE), otherLaunches), false);
@@ -171,7 +171,7 @@ test("a junction-reached base interpreter matches by its resolved spelling", () 
   assert.deepStrictEqual(launches[0].interpreters, [BASE, "C:\\Py\\3.12.10\\python.exe"]);
   const command = `"C:\\Py\\3.12.10\\python.exe" "${BASE}" "${LAUNCHER}" gateway --port 5599`;
   assert.strictEqual(
-    isKirocrewCommand(command, { trustedVenvLaunches: launches, canonicalizePath: junction }),
+    isAjcrewCommand(command, { trustedVenvLaunches: launches, canonicalizePath: junction }),
     true,
   );
 });
@@ -181,13 +181,13 @@ test("the port-owner probe classifies the venv listener as ours and everything e
   const classify = (command) => classifyPortOwner(5599, {
     getListenPids: async () => [4242],
     getCommand: async () => command,
-    isKirocrew: (cmd) => isKirocrewCommand(cmd, {
+    isAjcrew: (cmd) => isAjcrewCommand(cmd, {
       trustedExecutablePaths: [LAUNCHER, REDIRECTOR],
       trustedVenvLaunches: launches,
       canonicalizePath: identityRealpath,
     }),
   });
-  assert.strictEqual(await classify(listener(BASE)), "kirocrew");
+  assert.strictEqual(await classify(listener(BASE)), "ajcrew");
   assert.strictEqual(await classify(`"${BASE}" "${BASE}" C:\\tools\\serve.py`), "foreign");
-  assert.strictEqual(await classify(listener(BASE, "D:\\other\\.venv\\Scripts\\kirocrew.exe")), "foreign");
+  assert.strictEqual(await classify(listener(BASE, "D:\\other\\.venv\\Scripts\\ajcrew.exe")), "foreign");
 });

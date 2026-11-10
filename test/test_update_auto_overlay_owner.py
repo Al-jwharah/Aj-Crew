@@ -2,7 +2,7 @@
 
 The core cannot tell a person's own ``auto_update`` entry from one an edition writes
 back on every boot: both go through the same writer. An edition that enforces the key
-registers an owner (:mod:`kiro_crew.config.overlay_owners`), and every answer that
+registers an owner (:mod:`aj_crew.config.overlay_owners`), and every answer that
 reports the pin says whose it is (``overlay_source``) and, for a policy, which one
 (``overlay_policy``), so About names the policy instead of advising a removal the
 edition undoes. With no owner registered, every pin is the person's own.
@@ -23,9 +23,9 @@ from dashboard_updates_coverage_helpers import (  # noqa: F401 -- the autouse fi
     _request,
 )
 
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.platform import update_layout
-from kiro_crew.platform.update_layout import InstallLayout
+from aj_crew.dashboard.handlers import updates
+from aj_crew.platform import update_layout
+from aj_crew.platform.update_layout import InstallLayout
 
 _POLICY = {"label": "Example update policy", "detail": "Example installs updates for you."}
 
@@ -40,7 +40,7 @@ def overlay_owners(_floor_monkeypatch) -> ModuleType:
     the floor's own ``MonkeyPatch``, so a test that calls ``monkeypatch.undo()``
     cannot lift it and leak an owner into the real registry.
     """
-    module = importlib.import_module("kiro_crew.config.overlay_owners")
+    module = importlib.import_module("aj_crew.config.overlay_owners")
     _floor_monkeypatch.setattr(module, "_OWNERS", {})
     return module
 
@@ -48,7 +48,7 @@ def overlay_owners(_floor_monkeypatch) -> ModuleType:
 @pytest.fixture
 def overlay(monkeypatch, tmp_path):
     """Write ``config.local.json`` (``None`` removes it) where the loader reads it."""
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     path = tmp_path / "config.local.json"
     monkeypatch.setattr(loader, "config_local_path", lambda: path)

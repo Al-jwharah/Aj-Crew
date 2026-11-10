@@ -71,7 +71,7 @@ const REQUIRED_STDLIB_PARTS = [
  *
  * @param {{existsSync: Function, readdirSync: Function}} fs
  * @param {typeof import("path")} path
- * @param {string} backendRoot  the `…/backend-dist/kirocrew-backend` directory
+ * @param {string} backendRoot  the `…/backend-dist/ajcrew-backend` directory
  * @returns {string|null} absolute stdlib dir, or null if none is present yet
  */
 function resolveStdlibDir(fs, path, backendRoot) {
@@ -122,7 +122,7 @@ function hasBundledInterpreter(fs, path, backendRoot) {
  *
  * @param {{existsSync: Function, readdirSync: Function}} fs
  * @param {typeof import("path")} path
- * @param {string} backendRoot  the `…/backend-dist/kirocrew-backend` directory
+ * @param {string} backendRoot  the `…/backend-dist/ajcrew-backend` directory
  * @returns {string[]} missing part names ([] = complete or not applicable).
  *   `["Lib"]` means the stdlib root itself is not there yet, i.e. extraction has
  *   barely begun.
@@ -162,7 +162,7 @@ function describeIncompleteBundle(missing, { autoRetry = false } = {}) {
   const count = Array.isArray(missing) ? missing.length : 0;
   const detail = count === 1 ? "1 component is" : `${count || "Some"} components are`;
   const next = autoRetry
-    ? "Kiro Crew starts on its own once the install finishes, or click Retry to check now."
+    ? "Aj Crew starts on its own once the install finishes, or click Retry to check now."
     : "Wait, then retry.";
   // The reinstall advice carries an explicit time anchor. Extraction can run for
   // minutes, so an unqualified "if this persists" reads as satisfied by two Retry
@@ -170,22 +170,22 @@ function describeIncompleteBundle(missing, { autoRetry = false } = {}) {
   // message exists to prevent.
   // The remedy names the control on screen: the dialog has a Quit button and
   // nothing labelled "restart".
-  return `Kiro Crew's bundled Python runtime is still being installed — ${detail} `
+  return `Aj Crew's bundled Python runtime is still being installed — ${detail} `
     + `not on disk yet. This can take a few minutes. ${next} If the install is `
-    + "still unfinished after five minutes, quit and reopen Kiro Crew (the Quit "
-    + "button below); if that does not help, reinstall the Kiro Crew app.";
+    + "still unfinished after five minutes, quit and reopen Aj Crew (the Quit "
+    + "button below); if that does not help, reinstall the Aj Crew app.";
 }
 
 // The installing dialog's title while parts are still arriving, and once the
 // probe finds every part on disk. Both live here so the title and the message
 // under it can never say opposite things: the completion paint swaps both.
-const INSTALLING_DIALOG_TITLE = "Kiro Crew — installation still finishing";
-const INSTALLED_DIALOG_TITLE = "Kiro Crew — installation finished";
+const INSTALLING_DIALOG_TITLE = "Aj Crew — installation still finishing";
+const INSTALLED_DIALOG_TITLE = "Aj Crew — installation finished";
 // Painted into the dialog the moment the probe finds every part on disk; the
 // window lingers on it briefly before closing and the boot retries. It exists so
 // a user watching the count fall sees the transition land rather than the
 // dialog vanishing mid-sentence.
-const BUNDLE_COMPLETE_MESSAGE = "Installation finished — starting Kiro Crew…";
+const BUNDLE_COMPLETE_MESSAGE = "Installation finished — starting Aj Crew…";
 
 // The dialog's copy when the backend tree this app was running from is gone
 // after a stale-bundle incident: an install manager pruned the running
@@ -196,12 +196,12 @@ const BUNDLE_COMPLETE_MESSAGE = "Installation finished — starting Kiro Crew…
 // tell which to do. "App files" rather than "backend": the reader is a user.
 // The reinstall names the user's own route because the app ships through more
 // than one (the installer, an install manager), and says the data survives:
-// chats and settings live in the Kiro Crew home, outside the app's install
+// chats and settings live in the Aj Crew home, outside the app's install
 // directory, so a reinstall does not touch them.
-const PRUNED_DIALOG_TITLE = "Kiro Crew — app files missing";
-const PRUNED_BACKEND_MESSAGE = "Some of Kiro Crew's app files were removed, likely "
-  + "by an update. Quit and reopen Kiro Crew. If it still doesn't start after "
-  + "reopening, reinstall Kiro Crew the same way you installed it; your chats and "
+const PRUNED_DIALOG_TITLE = "Aj Crew — app files missing";
+const PRUNED_BACKEND_MESSAGE = "Some of Aj Crew's app files were removed, likely "
+  + "by an update. Quit and reopen Aj Crew. If it still doesn't start after "
+  + "reopening, reinstall Aj Crew the same way you installed it; your chats and "
   + "settings are kept.";
 
 /**
@@ -215,7 +215,7 @@ const PRUNED_BACKEND_MESSAGE = "Some of Kiro Crew's app files were removed, like
  * other every probe tick. Two conditions refuse:
  *   - a bundled interpreter tree missing required stdlib packages
  *     (findMissingBundleParts);
- *   - the Windows `bin\kirocrew.cmd` shim present while `python.exe` beside it
+ *   - the Windows `bin\ajcrew.cmd` shim present while `python.exe` beside it
  *     has not landed (findMissingBundleParts is silent there by design -- no
  *     interpreter means "not a tree it understands" -- so the interpreter is
  *     named as a part of its own, ahead of whichever required packages are
@@ -223,7 +223,7 @@ const PRUNED_BACKEND_MESSAGE = "Some of Kiro Crew's app files were removed, like
  *
  * @param {{existsSync: Function, readdirSync: Function}} fs
  * @param {typeof import("path")} path
- * @param {string} bin  the launcher findKirocrewBin resolved
+ * @param {string} bin  the launcher findAjcrewBin resolved
  * @returns {string[]|null} part names still to arrive ([] = the launcher would
  *   spawn); null when `bin` is not inside a bundled tree at all -- the bundled
  *   launcher itself has not been written yet, or a non-bundled install is in
@@ -233,7 +233,7 @@ function launchBlockingBundleParts(fs, path, bin) {
   if (typeof bin !== "string" || !bin.includes("backend-dist")) return null;
   const backendRoot = path.resolve(path.dirname(bin), "..");
   if (
-    bin.endsWith("kirocrew.cmd")
+    bin.endsWith("ajcrew.cmd")
     && !fs.existsSync(path.resolve(backendRoot, "python.exe"))
   ) {
     // Count the stdlib too: reporting the interpreter alone would paint "1
@@ -328,7 +328,7 @@ const STDLIB_MODULE_NAMES = new Set([
  *
  * Deliberately narrow in two ways. The module must belong to the stdlib set, so a
  * missing THIRD-PARTY or first-party dependency (a genuine packaging defect, e.g.
- * `aiohttp` or `kiro_crew.foo`) is never excused as "still installing". And only
+ * `aiohttp` or `aj_crew.foo`) is never excused as "still installing". And only
  * the CURRENT launch attempt is read: the log is append-only across launches, so
  * a traceback from an earlier attempt must not relabel this attempt's unrelated
  * failure (a SIGKILL, a bound port) as an unfinished install, which would show a
@@ -409,7 +409,7 @@ function shouldReclassifyAsInstalling({
   // Already labelled by the pre-spawn refusal — nothing to re-derive.
   if (failure.incompleteBundle) return false;
   // Only OUR bundled interpreter can be half-extracted. A user's own install or
-  // a PATH `kirocrew` failing on a stdlib import is a broken environment, not an
+  // a PATH `ajcrew` failing on a stdlib import is a broken environment, not an
   // unfinished download, and telling that user to "wait for the installer" would
   // be actively misleading. Taken from the caller, which knows which binary it
   // chose, rather than re-parsed out of the log.

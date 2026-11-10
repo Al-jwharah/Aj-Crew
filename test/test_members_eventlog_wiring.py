@@ -9,7 +9,7 @@ the ordering and durability of queued appends in
 ``test_members_eventlog_wiring_append_ordering.py``. The fixtures they share
 live in ``members_eventlog_wiring_helpers.py``.
 
-Isolation: the ``_fresh_eventlog`` fixture re-roots ``kiro_crew.members.data_home``
+Isolation: the ``_fresh_eventlog`` fixture re-roots ``aj_crew.members.data_home``
 at ``tmp_path`` and calls ``set_service(None)``, so no test sees another's log.
 """
 
@@ -22,11 +22,11 @@ from chat_test_helpers import _make_state
 from members_eventlog_wiring_helpers import _fresh_eventlog  # noqa: F401
 from members_eventlog_wiring_helpers import CREW, FAKE_CONFIG_DIGEST, _agent, _fake_config
 
-from kiro_crew import eventlog_hooks, members
-from kiro_crew.dashboard.handlers import members as handlers_members
-from kiro_crew.dashboard.handlers.core import _SENSITIVE_MASK
-from kiro_crew.eventlog import types
-from kiro_crew.eventlog.service import get_service, set_service
+from aj_crew import eventlog_hooks, members
+from aj_crew.dashboard.handlers import members as handlers_members
+from aj_crew.dashboard.handlers.core import _SENSITIVE_MASK
+from aj_crew.eventlog import types
+from aj_crew.eventlog.service import get_service, set_service
 
 
 @pytest.fixture
@@ -37,7 +37,7 @@ def live_config_stamp_matches(monkeypatch):
     reconcile refuses on a mismatch and a test that means to exercise it silently does
     not.
     """
-    from kiro_crew.config import loader as loader_mod
+    from aj_crew.config import loader as loader_mod
 
     monkeypatch.setattr(loader_mod, "config_content_stamp", lambda: FAKE_CONFIG_DIGEST)
     return FAKE_CONFIG_DIGEST
@@ -45,7 +45,7 @@ def live_config_stamp_matches(monkeypatch):
 
 # 1. api_members: projections + idempotent lazy config reconcile
 def _members_app(state) -> web.Application:
-    from kiro_crew.dashboard.handlers.members import api_members
+    from aj_crew.dashboard.handlers.members import api_members
 
     @web.middleware
     async def _auth(request, handler):
@@ -70,7 +70,7 @@ class TestApiMembersProjections:
         self, tmp_path, monkeypatch, live_config_stamp_matches
     ):
         cfg = _fake_config({CREW: _agent(model="claude-x")})
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         state = _make_state(tmp_path)
         app = _members_app(state)
 
@@ -115,8 +115,8 @@ class TestApiMembersProjections:
         in that gap is already in the fold. Only checking that the config is still the
         bytes the request read tells the two apart, since the fold did not move.
         """
-        from kiro_crew.config import loader as loader_mod
-        from kiro_crew.dashboard.handlers import members as handlers
+        from aj_crew.config import loader as loader_mod
+        from aj_crew.dashboard.handlers import members as handlers
 
         cfg = _fake_config({CREW: _agent(model="sonnet")})
         # Provenance rides on the config object: a real load records the digest of the
@@ -125,7 +125,7 @@ class TestApiMembersProjections:
         # matching and the baseline below is free to be written.
         live = {"stamp": "stamp-as-this-request-read-it"}
         cfg._content_digest = live["stamp"]
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         monkeypatch.setattr(loader_mod, "config_content_stamp", lambda: live["stamp"])
         state = _make_state(tmp_path)
         app = _members_app(state)
@@ -184,8 +184,8 @@ class TestApiMembersProjections:
         correcting write rather than append unguarded, and the rows still render. The
         sweep's exemption is reached by its own name, so a failed load cannot borrow it.
         """
-        from kiro_crew.config import loader as loader_mod
-        from kiro_crew.dashboard.handlers import members as handlers
+        from aj_crew.config import loader as loader_mod
+        from aj_crew.dashboard.handlers import members as handlers
 
         cfg = _fake_config({CREW: _agent(model="sonnet")})
         live = {"stamp": "stamp-as-the-file-actually-is"}
@@ -194,7 +194,7 @@ class TestApiMembersProjections:
         # digest exercises the currency refusal instead, and this test is about the
         # absence of one.
         del cfg._content_digest
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         monkeypatch.setattr(loader_mod, "config_content_stamp", lambda: live["stamp"])
         state = _make_state(tmp_path)
         app = _members_app(state)
@@ -255,7 +255,7 @@ class TestApiMembersProjections:
         """
         cfg = _fake_config({CREW: _agent(model="sonnet")})
         cfg.degraded_sections = frozenset({"agent"})
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         state = _make_state(tmp_path)
         app = _members_app(state)
 
@@ -291,11 +291,11 @@ class TestApiMembersProjections:
     ):
         """The stamp must describe the bytes the returned object was parsed from.
 
-        `KiroCrewConfig.load` caches on stat metadata, so a same-size replacement can be
+        `AjCrewConfig.load` caches on stat metadata, so a same-size replacement can be
         served the earlier document; the digest comes from the load's own entry. Here the
         live content moved past the served entry, so the reconcile writes nothing.
         """
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         cfg = _fake_config({CREW: _agent(model="sonnet")})
         state = _make_state(tmp_path)
@@ -318,7 +318,7 @@ class TestApiMembersProjections:
         # The load is served a cached document whose bytes are stale: it reports the
         # digest of what it was parsed from, and the live content differs.
         cfg._content_digest = "digest-of-the-bytes-this-entry-was-parsed-from"
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         monkeypatch.setattr(loader_mod, "config_content_stamp", lambda: "digest-of-the-live-bytes")
 
         seq_before = svc.last_seq(slug)
@@ -343,14 +343,14 @@ class TestApiMembersProjections:
         are newer. The direct call passes no stamp, so only the conditional append can
         refuse it.
         """
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         cfg = _fake_config({CREW: _agent(model="sonnet")})
         # A real load names the bytes it parsed, and the baseline read below depends on
         # that: a config of unknown provenance is reconciled by no read at all.
         cfg._content_digest = "the-bytes-this-request-read"
         monkeypatch.setattr(loader_mod, "config_content_stamp", lambda: cfg._content_digest)
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         state = _make_state(tmp_path)
         app = _members_app(state)
 
@@ -397,7 +397,7 @@ class TestApiMembersProjections:
         state as the other's. The row is served empty; the header tells the two apart.
         """
         cfg = _fake_config({CREW: _agent(model="claude-x")})
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         state = _make_state(tmp_path)
         app = _members_app(state)
 
@@ -426,7 +426,7 @@ class TestApiMembersProjections:
         cfg = _fake_config(
             {CREW: _agent(model="claude-x"), other: _agent(model="claude-y")},
         )
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         state = _make_state(tmp_path)
         app = _members_app(state)
 
@@ -463,7 +463,7 @@ class TestApiMembersProjections:
         # Phase 1: the member is not in the config, so the header keeps the slug.
         empty = _fake_config({})
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: empty
+            "aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: empty
         )
         svc = get_service()
         svc.ensure(slug, slug)
@@ -472,7 +472,7 @@ class TestApiMembersProjections:
 
         # Phase 2: the member now exists under a name the slug does not equal.
         cfg = _fake_config({named: _agent(model="claude-x")}, default=named)
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         state = _make_state(tmp_path)
         app = _members_app(state)
 
@@ -494,7 +494,7 @@ class TestApiMembersProjections:
         slug = members.slug_for_name(named)
         empty = _fake_config({})
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: empty
+            "aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: empty
         )
         svc = get_service()
         svc.ensure(slug, slug)
@@ -503,7 +503,7 @@ class TestApiMembersProjections:
         before = svc.last_seq(slug)
 
         cfg = _fake_config({named: _agent(model="claude-x")}, default=named)
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         state = _make_state(tmp_path)
         async with TestClient(TestServer(_members_app(state))) as client:
             data = await (await client.get("/api/members")).json()
@@ -523,7 +523,7 @@ class TestApiMembersProjections:
         """
         named = "Code_Reviewer"
         cfg = _fake_config({named: _agent(model="claude-x")}, default=named)
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         svc = get_service()
         slug = members.slug_for_name(named)
         assert slug != named, "this test needs a name its slug does not equal"
@@ -545,7 +545,7 @@ class TestApiMembersProjections:
 
         secret_url = "https://evil.example/x?token=AKIAIOSFODNN7EXAMPLE"
         cfg = _fake_config({CREW: _agent(avatar=secret_url)})
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         slug = members.slug_for_name(CREW)
         svc = get_service()
         svc.ensure(slug, CREW)
@@ -581,7 +581,7 @@ class TestApiMembersProjections:
 
         leaf = "https://h.example/v1?api_key=abc123"
         cfg = _fake_config({CREW: _agent(model=leaf)})
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         slug = members.slug_for_name(CREW)
         svc = get_service()
         svc.ensure(slug, CREW)
@@ -621,14 +621,14 @@ class TestApiMembersProjections:
         own save: an operator editing the file with the gateway up. Nothing is
         remembered between requests, so the next read is the one that corrects it.
         """
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         cfg = _fake_config({CREW: _agent(model="claude-x")})
         # A real load names the bytes it parsed; a hand edit changes the file, so the
         # digest moves with it and the live stamp keeps agreeing with what was read.
         cfg._content_digest = "the-bytes-holding-claude-x"
         monkeypatch.setattr(loader_mod, "config_content_stamp", lambda: cfg._content_digest)
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         state = _make_state(tmp_path)
         app = _members_app(state)
         slug = members.slug_for_name(CREW)
@@ -659,7 +659,7 @@ class TestApiMembersProjections:
 # 2. The roster is a READ: no creates, one view per row, the rest per member
 def _projections_app(state) -> web.Application:
     """The per-member projections route, mounted the way the roster app above is."""
-    from kiro_crew.dashboard.handlers.members import api_member_projections
+    from aj_crew.dashboard.handlers.members import api_member_projections
 
     @web.middleware
     async def _auth(request, handler):
@@ -680,10 +680,10 @@ def _member_log_root():
     """The directory a member log is actually written into.
 
     Not ``members_root()``: logs live under the crew-log root for the member kind, so
-    a count anywhere else proves nothing. The conftest pins ``KIROCREW_HOME`` per test.
+    a count anywhere else proves nothing. The conftest pins ``AJCREW_HOME`` per test.
     """
-    from kiro_crew.crew_log.store import crew_log_root
-    from kiro_crew.eventlog.service import KIND_MEMBER
+    from aj_crew.crew_log.store import crew_log_root
+    from aj_crew.eventlog.service import KIND_MEMBER
 
     return crew_log_root(KIND_MEMBER)
 
@@ -706,7 +706,7 @@ class TestRosterIsAPureRead:
         there is nothing for the read to correct and nothing for it to create.
         """
         cfg = _fake_config({CREW: _agent(model="claude-x")})
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         state = _make_state(tmp_path)
 
         before = _log_files()
@@ -746,7 +746,7 @@ class TestRosterIsAPureRead:
         the refusal sentinel clears the slug instead.
         """
         cfg = _fake_config({CREW: _agent(model="claude-x")})
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         state = _make_state(tmp_path)
         slug = members.slug_for_name(CREW)
         svc = get_service()
@@ -788,7 +788,7 @@ class TestRosterIsAPureRead:
         takes the route's failure path and the error notice the page already has.
         """
         cfg = _fake_config({CREW: _agent(model="claude-x")})
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         state = _make_state(tmp_path)
         slug = members.slug_for_name(CREW)
         svc = get_service()
@@ -819,7 +819,7 @@ class TestRosterIsAPureRead:
         Refusing it would clear the row and drop that frame, so the store is re-asked.
         """
         cfg = _fake_config({CREW: _agent(model="claude-x")})
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         state = _make_state(tmp_path)
         slug = members.slug_for_name(CREW)
         svc = get_service()
@@ -861,7 +861,7 @@ class TestRosterIsAPureRead:
     ):
         """The drawer must not 500 on a member whose log has only just appeared."""
         cfg = _fake_config({CREW: _agent(model="claude-x")})
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         state = _make_state(tmp_path)
         slug = members.slug_for_name(CREW)
         svc = get_service()
@@ -899,7 +899,7 @@ class TestRosterIsAPureRead:
         read; a second writer here would reopen that window for one member's correction.
         """
         cfg = _fake_config({CREW: _agent(model="claude-x")})
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         state = _make_state(tmp_path)
         slug = members.slug_for_name(CREW)
         svc = get_service()
@@ -933,7 +933,7 @@ class TestRosterIsAPureRead:
         whole set arrives for the member that is open.
         """
         cfg = _fake_config({CREW: _agent(model="claude-x")})
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         slug = members.slug_for_name(CREW)
         svc = get_service()
         svc.ensure(slug, CREW)
@@ -964,7 +964,7 @@ class TestRosterIsAPureRead:
         sequence, which is what decides whether later frames are applied or muted.
         """
         cfg = _fake_config({CREW: _agent(model="claude-x")})
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         slug = members.slug_for_name(CREW)
         state = _make_state(tmp_path)
         before = _log_files()
@@ -990,7 +990,7 @@ class TestRosterIsAPureRead:
         import json
 
         cfg = _fake_config({CREW: _agent(avatar=SECRET_URL)})
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         slug = members.slug_for_name(CREW)
         svc = get_service()
         svc.ensure(slug, CREW)
@@ -1035,7 +1035,7 @@ class TestRosterIsAPureRead:
         of any size costs one fold each rather than four.
         """
         cfg = _fake_config({CREW: _agent(model="claude-x")})
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         slug = members.slug_for_name(CREW)
         svc = get_service()
         svc.ensure(slug, CREW)
@@ -1066,7 +1066,7 @@ class TestRosterIsAPureRead:
         """
         other = "other-crew"
         cfg = _fake_config({CREW: _agent(model="claude-x"), other: _agent(model="claude-y")})
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         slug = members.slug_for_name(CREW)
         svc = get_service()
         # Header holds the SLUG, the placeholder a writer with no name in hand
@@ -1093,10 +1093,10 @@ class TestRosterIsAPureRead:
         ``slugs()`` is uncached and reads a header per member, so a second call doubles
         the cost for the same answer.
         """
-        from kiro_crew.eventlog.service import get_service as _get
+        from aj_crew.eventlog.service import get_service as _get
 
         cfg = _fake_config({CREW: _agent(model="claude-x")})
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.members.AjCrewConfig.load", lambda: cfg)
         slug = members.slug_for_name(CREW)
         svc = _get()
         svc.ensure(slug, CREW)
@@ -1143,9 +1143,9 @@ class TestRosterIsAPureRead:
         conf.write_text(
             json.dumps({"agents": {name: {"kiro_agent": "reviewer"}}}), encoding="utf-8"
         )
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: conf)
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: conf)
         monkeypatch.setattr(
-            "kiro_crew.config.loader.config_local_path", lambda: tmp_path / "config.local.json"
+            "aj_crew.config.loader.config_local_path", lambda: tmp_path / "config.local.json"
         )
         monkeypatch.setattr(members, "data_home", lambda: tmp_path)
 

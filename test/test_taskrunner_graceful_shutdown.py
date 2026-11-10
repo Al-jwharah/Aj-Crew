@@ -23,9 +23,9 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from taskrunner_helpers import _make_mock_sessions
 
-from kiro_crew import shutdown_event
-from kiro_crew.slack.gateway_runtime import exit_path
-from kiro_crew.taskrunner import Step, StepStatus, TaskRun, TaskRunner
+from aj_crew import shutdown_event
+from aj_crew.slack.gateway_runtime import exit_path
+from aj_crew.taskrunner import Step, StepStatus, TaskRun, TaskRunner
 
 
 def _runner(work_dir: Path) -> TaskRunner:
@@ -77,9 +77,9 @@ async def _drive(
 
     spies["finalize"] = AsyncMock(return_value="task/r1")
     with (
-        patch("kiro_crew.git_coord.init_workspace", _init),
-        patch("kiro_crew.git_coord.finalize", spies["finalize"]),
-        patch("kiro_crew.git_coord.get_state_summary", AsyncMock(return_value="")),
+        patch("aj_crew.git_coord.init_workspace", _init),
+        patch("aj_crew.git_coord.finalize", spies["finalize"]),
+        patch("aj_crew.git_coord.get_state_summary", AsyncMock(return_value="")),
     ):
         run = await runner.run(spec)
     return runner, run, spies
@@ -198,7 +198,7 @@ async def test_a_stop_after_the_checkpoint_is_settled_when_the_operator_asks(
     """The driver already exited at the stop; a later cancel or pause still lands."""
     runner, run, spies = await _drive(tmp_path, _broken_by_the_stop)
     assert _stored_status(tmp_path, run.task_id) == "running"
-    with patch("kiro_crew.git_coord.finalize", spies["finalize"]):
+    with patch("aj_crew.git_coord.finalize", spies["finalize"]):
         if ask == "cancel":
             runner.cancel(run.task_id, exact=True)
             runner.cancel(run.task_id, exact=True)  # a second request must not undo it
@@ -224,8 +224,8 @@ async def test_a_workflow_runs_cancel_settles_a_run_the_stop_froze(
     tmp_path: Path, driver: str, ended: str
 ) -> None:
     """Workflow Runs cancels through the registry; a TaskRunner run still reaches the settlement."""
-    from kiro_crew.workflows.registry import RunHandle
-    from kiro_crew.workflows.service import WorkflowService
+    from aj_crew.workflows.registry import RunHandle
+    from aj_crew.workflows.service import WorkflowService
 
     runner, run, spies = await _drive(tmp_path, _broken_by_the_stop)
     svc = WorkflowService(sessions=_make_mock_sessions(), persist=False, task_runner=runner)
@@ -235,7 +235,7 @@ async def test_a_workflow_runs_cancel_settles_a_run_the_stop_froze(
         RunHandle("wr1", "run", driver=driver, task_id=run.task_id, task=finished_driver),
         persist=False,
     )
-    with patch("kiro_crew.git_coord.finalize", spies["finalize"]):
+    with patch("aj_crew.git_coord.finalize", spies["finalize"]):
         assert await svc.cancel("wr1") is True
         settle = runner._stop_settles.get(run.task_id)
         if settle is not None:
@@ -335,7 +335,7 @@ async def test_a_resume_after_a_replan_runs_only_the_revised_plan(tmp_path: Path
     restarted._load_runs()
     resumed = restarted._runs["r1"]
     assert [t.superseded for t in resumed.tasks] == [True, True, False, False]
-    with patch("kiro_crew.taskrunner.git_coord"):
+    with patch("aj_crew.taskrunner.git_coord"):
         await restarted.execute_plan("r1")
         driver = restarted._tasks["r1"]
         try:

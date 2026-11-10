@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 _WORKFLOW = Path(__file__).resolve().parents[1] / ".github" / "workflows" / "dependency-review.yml"
 _ACTION = "actions/dependency-review-action@"

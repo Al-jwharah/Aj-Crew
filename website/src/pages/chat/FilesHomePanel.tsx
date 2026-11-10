@@ -149,8 +149,8 @@ export default function FilesHomePanel({ projectDir, slot, title, onFileOpen, on
   const shellCapable = appsQ.data?.capable === true
   const shellRefused = appsQ.data?.capable === false
   const cfgQ = useQuery<{ dashboard?: { terminal?: { external_app?: unknown } } }>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
     enabled: externalWanted && shellCapable && active,
   })
   // Either read failing means the row's absence says nothing, so it is said

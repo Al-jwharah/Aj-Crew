@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps.bridges import load_app_cron_defs, register_app
-from kiro_crew.apps.manager import (
+from aj_crew.apps.bridges import load_app_cron_defs, register_app
+from aj_crew.apps.manager import (
     APP_MANIFEST_FILENAME,
     _read_installed,
     get_app_manifest,
@@ -23,12 +23,12 @@ from kiro_crew.apps.manager import (
     register_external_app,
     update_app,
 )
-from kiro_crew.apps.manifest import (
+from aj_crew.apps.manifest import (
     CRON_PERMISSION_REQUIRED_ERROR,
     AppManifest,
     cron_permission_error,
 )
-from kiro_crew.apps.scaffold import scaffold_app
+from aj_crew.apps.scaffold import scaffold_app
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _CRON = {"name": "refresh", "every": 3600, "message": "go"}
@@ -62,14 +62,14 @@ def _drop_cron_grant(manifest_path: Path) -> None:
 
 @pytest.fixture()
 def app_home(tmp_path, monkeypatch):
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     (home / "config.json").write_text(
         json.dumps({"agent": {"apps_allow_third_party": True}}), encoding="utf-8"
     )
-    import kiro_crew.apps.bridges as bridges_mod
-    import kiro_crew.apps.execution as execution_mod
+    import aj_crew.apps.bridges as bridges_mod
+    import aj_crew.apps.execution as execution_mod
 
     kiro_agents = tmp_path / "kiro-agents"
     kiro_agents.mkdir()
@@ -252,7 +252,7 @@ class TestShippedManifests:
         assert cron_permission_error(m) == ""
 
     def test_every_builtin_that_ships_crons_declares_the_grant(self):
-        builtins = _REPO_ROOT / "src" / "kiro_crew" / "apps" / "builtins"
+        builtins = _REPO_ROOT / "src" / "aj_crew" / "apps" / "builtins"
         with_crons = []
         for path in sorted(builtins.glob(f"*/{APP_MANIFEST_FILENAME}")):
             m = AppManifest.from_json_file(path)

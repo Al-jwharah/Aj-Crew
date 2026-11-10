@@ -18,10 +18,10 @@ from aiohttp.test_utils import TestClient, TestServer
 from browser_live_helpers import FakeRelay
 from test_browser_live_hub import FakeStream, Wire
 
-from kiro_crew.browser_harness import live_hub as lh
-from kiro_crew.dashboard import routes as routes_pkg
-from kiro_crew.dashboard.handlers import browser_live as mod
-from kiro_crew.dashboard.routes import browser_live as route_slice
+from aj_crew.browser_harness import live_hub as lh
+from aj_crew.dashboard import routes as routes_pkg
+from aj_crew.dashboard.handlers import browser_live as mod
+from aj_crew.dashboard.routes import browser_live as route_slice
 
 pytestmark = pytest.mark.asyncio
 
@@ -45,7 +45,7 @@ RECORDING_ROUTES = (
 
 @pytest.fixture(autouse=True)
 def _home(tmp_path: Path, _floor_monkeypatch: pytest.MonkeyPatch) -> None:
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _floor_monkeypatch.setattr(
         mod, "_sel", lambda: SimpleNamespace(log_api_access=lambda **_: None)
     )
@@ -305,7 +305,7 @@ async def test_reopen_restarts_the_finished_cards_stream_and_close_folds_it(
 
 
 async def test_the_current_relay_never_starts_a_browser(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.browser_harness import ops as harness_ops
+    from aj_crew.browser_harness import ops as harness_ops
 
     monkeypatch.setattr(harness_ops, "browsing_available", lambda _home: False)
     assert mod._current_relay() is None

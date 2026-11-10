@@ -35,7 +35,7 @@ CODE_REVIEW = ROOT / ".github" / "workflows" / "code-review.yml"
 HISTORY_SCRIPT = ROOT / ".github" / "scripts" / "code-review-history.sh"
 UNALLOCATABLE_PID_SUITE = ROOT / "test" / "test_update_provider.py"
 
-RULE_ID = "kirocrew.mock-pid-allocatable"
+RULE_ID = "ajcrew.mock-pid-allocatable"
 # Every supported platform allocates pids below this, so a literal at or above
 # it cannot name a live process.
 PID_FLOOR = 2**32
@@ -83,7 +83,7 @@ class TestTheRuleAndItsFixturesStayPaired:
         """
         include = _rule_body()["paths"]["include"]
         assert "test/**" in include
-        assert "src/kiro_crew/apps/builtins/**/tests/**" in include, include
+        assert "src/aj_crew/apps/builtins/**/tests/**" in include, include
 
 
 class TestTheCeilingHasOneValueRepoWide:

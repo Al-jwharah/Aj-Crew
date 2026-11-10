@@ -14,18 +14,18 @@ from typing import Any, Iterator
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.dashboard import tailnet_live_allowlist
-from kiro_crew.shared_crew import host_power as hp
-from kiro_crew.shared_crew.admission import OperationState
-from kiro_crew.shared_crew.contracts import (
+from aj_crew import platform_compat
+from aj_crew.dashboard import tailnet_live_allowlist
+from aj_crew.shared_crew import host_power as hp
+from aj_crew.shared_crew.admission import OperationState
+from aj_crew.shared_crew.contracts import (
     ActorContext,
     Principal,
     Provenance,
     Transport,
 )
-from kiro_crew.shared_crew.identity import local_operator_principal, tailnet_principal
-from kiro_crew.shared_crew.routes_invites import WS_ACTOR_KEY
+from aj_crew.shared_crew.identity import local_operator_principal, tailnet_principal
+from aj_crew.shared_crew.routes_invites import WS_ACTOR_KEY
 
 
 @pytest.fixture(autouse=True)
@@ -137,7 +137,7 @@ def test_reported_is_not_checked_until_note_host(monkeypatch: pytest.MonkeyPatch
 async def test_probe_after_start_survives_both_probes_failing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.dashboard import tailnet_proxy_proof
+    from aj_crew.dashboard import tailnet_proxy_proof
 
     def broken(*_a: Any) -> Any:
         raise RuntimeError("probe failed")
@@ -154,7 +154,7 @@ async def test_probe_after_start_survives_both_probes_failing(
 @pytest.fixture(autouse=True)
 def _shared_crew_preview_on(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
     """The keep-awake reason is the preview's; one test turns it off itself."""
-    _floor_monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    _floor_monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
 
 
 def _person(login: str, *, tagged: bool = False) -> Principal:
@@ -186,7 +186,7 @@ class _Ws(dict):
 def test_only_an_open_collaborator_socket_keeps_the_host_awake(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
     owner_ws = _Ws(_person("owner@example.com"))
     teammate = _person("bob@example.com")
     local = local_operator_principal("local-app")
@@ -203,7 +203,7 @@ def test_with_the_preview_off_no_socket_keeps_the_host_awake(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Preview off: a tailscale serve socket, owner or not, never keeps the host awake."""
-    monkeypatch.delenv("KIROCREW_SHARED_CREW_PREVIEW", raising=False)
+    monkeypatch.delenv("AJCREW_SHARED_CREW_PREVIEW", raising=False)
     monkeypatch.setattr(tailnet_live_allowlist, "snapshot", lambda: None)
     state = _state_with([_Ws(_person("owner@example.com")), _Ws(_person("bob@example.com"))])
     assert hp.collaborator_connected(state) is False
@@ -216,13 +216,13 @@ def test_with_the_preview_off_no_socket_keeps_the_host_awake(
 async def test_both_keep_awake_switches_off_never_keep_the_host_awake(
     monkeypatch: pytest.MonkeyPatch, preview: bool
 ) -> None:
-    from kiro_crew.config import live
-    from kiro_crew.dashboard.server_runtime import prevent_sleep
+    from aj_crew.config import live
+    from aj_crew.dashboard.server_runtime import prevent_sleep
 
     if preview:
-        monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+        monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
     else:
-        monkeypatch.delenv("KIROCREW_SHARED_CREW_PREVIEW", raising=False)
+        monkeypatch.delenv("AJCREW_SHARED_CREW_PREVIEW", raising=False)
     cfg = SimpleNamespace(
         dashboard=SimpleNamespace(
             tailscale=SimpleNamespace(enabled=True, keep_awake=False), prevent_sleep=False
@@ -244,7 +244,7 @@ def _service(*works: tuple[str, str]) -> Any:
 def test_collaborator_work_keeps_the_host_awake_until_it_ends(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.shared_crew import access_set, admission_gate
+    from aj_crew.shared_crew import access_set, admission_gate
 
     monkeypatch.setattr(
         tailnet_live_allowlist,
@@ -274,7 +274,7 @@ def test_collaborator_work_keeps_the_host_awake_until_it_ends(
 def test_an_unadmitted_collaborator_turn_keeps_the_host_awake(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.shared_crew import access_set, admission_gate, turn_gate
+    from aj_crew.shared_crew import access_set, admission_gate, turn_gate
 
     monkeypatch.setattr(
         tailnet_live_allowlist,
@@ -292,7 +292,7 @@ def test_an_unadmitted_collaborator_turn_keeps_the_host_awake(
 def test_a_network_admitted_collaborator_turn_keeps_the_host_awake(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.shared_crew import access_set, admission_gate, turn_gate
+    from aj_crew.shared_crew import access_set, admission_gate, turn_gate
 
     tailnet_live_allowlist.reset_for_tests()
     tailnet_live_allowlist.note_login("42", "eve@example.com")
@@ -312,7 +312,7 @@ def test_a_network_admitted_collaborator_turn_keeps_the_host_awake(
 
 
 def test_no_service_or_no_collaborators_means_no_work(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.shared_crew import admission_gate
+    from aj_crew.shared_crew import admission_gate
 
     monkeypatch.setattr(admission_gate, "installed_service", lambda: None)
     monkeypatch.setattr(tailnet_live_allowlist, "snapshot", lambda: _snapshot())

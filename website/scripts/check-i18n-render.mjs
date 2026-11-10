@@ -227,7 +227,7 @@ const die = msg => {
  *
  * Anything word-shaped in a fixture renders into the page and is indistinguishable
  * from a hardcoded English string, so it would show up as a leak the branch cannot
- * fix. The shared stub's defaults (`user: 'owner'`, agents `kirocrew`/`oncall`) are
+ * fix. The shared stub's defaults (`user: 'owner'`, agents `ajcrew`/`oncall`) are
  * overridden below for exactly that reason.
  *
  * The two non-obvious shapes are load-bearing, and both error-boundary the WHOLE
@@ -442,9 +442,9 @@ const FIXTURE_OVERRIDES = async (language, path, route) => {
   if (path.startsWith('/api/apps/code-review-sage/runs')) return done({ runs: [] })
   // Two more panels read nested collections off a config payload with no optional
   // chaining, so the `{}` an objectish path falls back to is not enough:
-  // `KiroCrewCfgTab` does `Object.entries(cfg.agents)` and `VoicePanel`'s provider
+  // `AjCrewCfgTab` does `Object.entries(cfg.agents)` and `VoicePanel`'s provider
   // row does `Object.keys` on its own config. Same class as the two apps above.
-  if (path === '/api/config/kirocrew') {
+  if (path === '/api/config/ajcrew') {
     return done({
       agents: {}, workspaces: {}, memory_stores: {}, session: {}, memory: {},
       agent: {}, auto_update: {},
@@ -677,7 +677,7 @@ function resolveBaseScope() {
  *
  * The WHOLE commit is exported, not just `website/`. The frontend's build graph is
  * not confined to that directory — `src/pages/connections/registry.ts` imports
- * `../../../../src/kiro_crew/connections/registry.json` — and an allowlist of the
+ * `../../../../src/aj_crew/connections/registry.json` — and an allowlist of the
  * paths that escape it is the shape that already rotted: `website` WAS the
  * allowlist, and the moment a PR with no reason to know this script exists added a
  * cross-tree import, every base build died with `Could not resolve …` and the gate
@@ -705,9 +705,9 @@ function buildBaseBundle(sha) {
   try {
     // The WHOLE commit, not just `website`. The frontend's build graph is not
     // confined to `website/`: `src/pages/connections/registry.ts` imports
-    // `../../../../src/kiro_crew/connections/registry.json` (#1229/#1287), so a
+    // `../../../../src/aj_crew/connections/registry.json` (#1229/#1287), so a
     // `website`-only archive produced a base tree whose vite build died with
-    // `Could not resolve "../../../../src/kiro_crew/connections/registry.json"`
+    // `Could not resolve "../../../../src/aj_crew/connections/registry.json"`
     // — the gate then exited 2 on EVERY pull request, because the breakage lives
     // in the base tree rather than in anyone's diff.
     //

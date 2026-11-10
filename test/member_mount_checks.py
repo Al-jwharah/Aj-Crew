@@ -12,7 +12,7 @@ from __future__ import annotations
 import sys
 from types import ModuleType
 
-from kiro_crew.acp.types import ACP_BACKEND_KIRO
+from aj_crew.acp.types import ACP_BACKEND_KIRO
 
 
 def _file_module(test: object) -> ModuleType:

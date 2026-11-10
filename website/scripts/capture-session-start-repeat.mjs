@@ -55,7 +55,7 @@ const now = Date.now() / 1000
 
 const slotRow = {
   key: SLOT, title: 'Parser cleanup', running: false,
-  last_message: TIMEOUT_ROW, messages: 4, agent: 'kirocrew',
+  last_message: TIMEOUT_ROW, messages: 4, agent: 'ajcrew',
   memory_mode: 'persistent', project: PROJECT, modified: Math.floor(now),
   source_links: [], source_links_total: 0,
 }
@@ -179,7 +179,7 @@ async function main() {
     // theirs, so the refused viewer is not also told to run it.
     const refusedHint = card.locator('[data-testid="error-card-restart-refused-hint"]')
     const refusedText = await refusedHint.innerText()
-    assert(`${theme}: the refusal says who can restart, with the command they run`, /whoever runs this gateway/i.test(refusedText) && /kirocrew restart/.test(refusedText))
+    assert(`${theme}: the refusal says who can restart, with the command they run`, /whoever runs this gateway/i.test(refusedText) && /ajcrew restart/.test(refusedText))
     assert(`${theme}: the refused viewer is not told to run the command`, await card.locator('[data-testid="error-card-session-start-repeat-hint"]').count() === 0)
     assert(`${theme}: the card explains itself once (no restart hint beside the refusal)`, await card.locator('[data-testid="error-card-session-start-restart-hint"]').count() === 0)
     const copy = card.locator('[data-testid="error-card-restart-command-copy"] button')

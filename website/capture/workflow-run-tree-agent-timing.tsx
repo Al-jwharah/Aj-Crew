@@ -46,7 +46,7 @@ const params = new URLSearchParams(location.search)
 const scene = params.get('scene') === 'before' ? 'before' : 'after'
 const theme = params.get('theme') || 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 /** Start instant every span below is measured from. */
 const T0 = Date.parse('2026-09-18T10:00:00.000Z')

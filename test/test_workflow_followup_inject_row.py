@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from chat_runner_coverage_helpers import _slot, _state
 
-from kiro_crew.dashboard import chat_runner
+from aj_crew.dashboard import chat_runner
 
 PROMPT = "[Workflow `nightly` finished: finished] Its result was just posted above."
 

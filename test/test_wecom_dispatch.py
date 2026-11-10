@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.wecom.transport_dispatch (WeComDispatcher) + commands."""
+"""Tests for aj_crew.wecom.transport_dispatch (WeComDispatcher) + commands."""
 
 from __future__ import annotations
 
@@ -9,13 +9,13 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
-from kiro_crew.messaging.attachments import Attachment
-from kiro_crew.messaging.commands import COMPACT_ACCOUNT_CHANGED_REPLY_ZH
-from kiro_crew.session_allocation import SessionClosingError
-from kiro_crew.wecom.client import WeComInbound
-from kiro_crew.wecom.commands import ConversationState, parse_command
-from kiro_crew.wecom.transport_dispatch import WeComDispatcher
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
+from aj_crew.messaging.attachments import Attachment
+from aj_crew.messaging.commands import COMPACT_ACCOUNT_CHANGED_REPLY_ZH
+from aj_crew.session_allocation import SessionClosingError
+from aj_crew.wecom.client import WeComInbound
+from aj_crew.wecom.commands import ConversationState, parse_command
+from aj_crew.wecom.transport_dispatch import WeComDispatcher
 
 # ------------------------------------------------------------------
 # Fakes
@@ -299,7 +299,7 @@ def _inbound(text: str = "hello", userid: str = "Wei") -> WeComInbound:
 def _deny_wecom_profile(monkeypatch, tmp_path):
     import json
 
-    from kiro_crew.platform import governance_profiles as gp
+    from aj_crew.platform import governance_profiles as gp
 
     pdir = tmp_path / "profiles"
     pdir.mkdir(exist_ok=True)
@@ -321,7 +321,7 @@ class TestTurn:
     async def test_channels_deny_drops_inbound_message(self, tmp_path, monkeypatch) -> None:
         # A channels DENY must stop handle_message from driving a turn. This
         # locks the WeCom inbound chokepoint.
-        from kiro_crew.platform import governance_profiles as gp
+        from aj_crew.platform import governance_profiles as gp
 
         _deny_wecom_profile(monkeypatch, tmp_path)
         provider = FakeProvider([AcpEvent(kind=EVENT_COMPLETE)])
@@ -355,12 +355,12 @@ class TestTurn:
         assert (key, "assistant", "hi there") in conv.appended
 
     @pytest.mark.asyncio
-    async def test_agent_resolves_to_kirocrew_when_unset(self) -> None:
+    async def test_agent_resolves_to_ajcrew_when_unset(self) -> None:
         provider = FakeProvider([AcpEvent(kind=EVENT_COMPLETE)])
         sessions = FakeSessions(provider)
         d = _dispatcher(sessions, FakeCtx(), FakeClient(), cfg=_cfg(default_agent=""))
         await d.handle_message(_inbound("hi"))
-        assert sessions.last_agent == "kirocrew"
+        assert sessions.last_agent == "ajcrew"
 
     @pytest.mark.asyncio
     async def test_cold_start_failure_finalizes_and_skips_release(self) -> None:
@@ -380,8 +380,8 @@ class TestTurn:
 
     @pytest.mark.asyncio
     async def test_a_shutdown_refusal_spools_the_attachment_names(self, monkeypatch) -> None:
-        import kiro_crew.messaging.dispatch as dispatch
-        from kiro_crew.wecom.attachments import to_attachments
+        import aj_crew.messaging.dispatch as dispatch
+        from aj_crew.wecom.attachments import to_attachments
 
         spooled: list = []
 
@@ -622,7 +622,7 @@ class TestCommands:
         d = _dispatcher(sessions, FakeCtx(), client)
         await d.handle_message(_inbound("/link"))
 
-        key = "wecom:kirocrew:direct:Wei"
+        key = "wecom:ajcrew:direct:Wei"
         assert sessions.mirror_links[key].channel_type == "wecom"
         assert sessions.mirror_links[key].channel_id == "Wei"
         assert sessions.opted_out[key] is False
@@ -637,7 +637,7 @@ class TestCommands:
         d = _dispatcher(sessions, FakeCtx(), client)
         await d.handle_message(_inbound("/unlink"))
 
-        key = "wecom:kirocrew:direct:Wei"
+        key = "wecom:ajcrew:direct:Wei"
         assert sessions.opted_out[key] is True
         assert sessions.successes == []  # a command runs no LLM turn
 
@@ -892,7 +892,7 @@ class TestInlineImage:
         # the transport's send_document (WeCom's image message) after the text,
         # and the sealed bubble does not print the path. A session that may not
         # ship local files keeps the path and sends nothing.
-        monkeypatch.setattr("kiro_crew.wecom.renderer._STREAM_THROTTLE_S", 0.0)
+        monkeypatch.setattr("aj_crew.wecom.renderer._STREAM_THROTTLE_S", 0.0)
         monkeypatch.setattr(
             WeComDispatcher, "_uploads_restricted", AsyncMock(return_value=restricted)
         )

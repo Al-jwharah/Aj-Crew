@@ -26,8 +26,8 @@ from issue_radar_routes_ai_coverage_helpers import (
     _key,
 )
 
-from kiro_crew.apps.builtins.issue_radar.backend import github_client as gh
-from kiro_crew.apps.builtins.issue_radar.backend import provider, routes, store
+from aj_crew.apps.builtins.issue_radar.backend import github_client as gh
+from aj_crew.apps.builtins.issue_radar.backend import provider, routes, store
 
 # ── progressive first paint (read-only fast paths) ───────────────────────────
 

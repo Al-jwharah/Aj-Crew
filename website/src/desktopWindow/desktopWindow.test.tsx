@@ -108,16 +108,16 @@ describe('desktopWindowBridge', () => {
 
   it('accepts the shell bridge describing this window', () => {
     const b = bridge()
-    expect(desktopWindowBridge(target, { kirocrewDesktopWindow: b })).toBe(b)
+    expect(desktopWindowBridge(target, { ajcrewDesktopWindow: b })).toBe(b)
   })
 
   it('refuses a missing, foreign, partial or level-0 bridge', () => {
     expect(desktopWindowBridge(target, {})).toBeNull()
-    expect(desktopWindowBridge(target, { kirocrewDesktopWindow: bridge({ app: 'other' }) })).toBeNull()
-    expect(desktopWindowBridge(target, { kirocrewDesktopWindow: bridge({ window: 'panel' }) })).toBeNull()
-    expect(desktopWindowBridge(target, { kirocrewDesktopWindow: bridge({ level: 0 }) })).toBeNull()
+    expect(desktopWindowBridge(target, { ajcrewDesktopWindow: bridge({ app: 'other' }) })).toBeNull()
+    expect(desktopWindowBridge(target, { ajcrewDesktopWindow: bridge({ window: 'panel' }) })).toBeNull()
+    expect(desktopWindowBridge(target, { ajcrewDesktopWindow: bridge({ level: 0 }) })).toBeNull()
     const partial = { ...bridge(), ready: undefined }
-    expect(desktopWindowBridge(target, { kirocrewDesktopWindow: partial })).toBeNull()
+    expect(desktopWindowBridge(target, { ajcrewDesktopWindow: partial })).toBeNull()
   })
 })
 
@@ -192,12 +192,12 @@ describe('DesktopWindowRoot', () => {
 
   afterEach(() => {
     window.history.replaceState(null, '', prevPath)
-    delete (window as { kirocrewDesktopWindow?: unknown }).kirocrewDesktopWindow
+    delete (window as { ajcrewDesktopWindow?: unknown }).ajcrewDesktopWindow
   })
 
   it("keeps the document on the window's own path when the app navigates", async () => {
     const b = bridge()
-    ;(window as { kirocrewDesktopWindow?: unknown }).kirocrewDesktopWindow = b
+    ;(window as { ajcrewDesktopWindow?: unknown }).ajcrewDesktopWindow = b
     const { findByRole } = render(<DesktopWindowRoot target={{ app: 'pets', window: 'pet' }} />)
     fireEvent.click(await findByRole('button', { name: 'go' }, { timeout: APP_LIST_TIMEOUT_MS }))
     expect(window.location.pathname).toBe(PATH)

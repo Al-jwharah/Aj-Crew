@@ -17,8 +17,8 @@ from mcp_discovery_helpers import (  # noqa: F401 -- the autouse fixture registe
 
 # Bound at import, before the autouse fixture swaps the module attribute out, so the
 # live loopback case can put the real connector back.
-from kiro_crew.link_unfurl import pinned_connector as _real_pinned_connector
-from kiro_crew.mcp_discovery import McpServerInfo, _probe_cache, _probe_remote, _redirect_error
+from aj_crew.link_unfurl import pinned_connector as _real_pinned_connector
+from aj_crew.mcp_discovery import McpServerInfo, _probe_cache, _probe_remote, _redirect_error
 
 _BASE = "https://mcp.example.com/mcp"
 
@@ -102,7 +102,7 @@ class TestProbeRemoteRedirectAgainstALoopbackStub:
         """Starlette answers ``POST /mcp`` with a 307 to ``/mcp/``. The probe, through
         the real vet and pinned connector, sends exactly one request and names the
         slashed url on the row."""
-        from kiro_crew import link_unfurl as lu
+        from aj_crew import link_unfurl as lu
 
         monkeypatch.setattr(lu, "pinned_connector", _real_pinned_connector)
         reached: list[str] = []

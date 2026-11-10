@@ -1,4 +1,4 @@
-"""``kirocrew doctor`` reports Claude Code as a real optional agent backend.
+"""``ajcrew doctor`` reports Claude Code as a real optional agent backend.
 
 The old behaviour printed the adapter ONLY when it happened to be present, and
 labelled it "dormant seam -- not used by the public core". Both halves were wrong once
@@ -21,10 +21,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import cli_doctor
-from kiro_crew.acp.types import ACP_BACKEND_KAS
-from kiro_crew.agent_sdk import INSTALLED, MISSING, UNKNOWN, BackendInstallState
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
+from aj_crew import cli_doctor
+from aj_crew.acp.types import ACP_BACKEND_KAS
+from aj_crew.agent_sdk import INSTALLED, MISSING, UNKNOWN, BackendInstallState
+from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
 
 
 def _state(installed: str, **over) -> BackendInstallState:
@@ -65,11 +65,11 @@ def _report(
             raise RuntimeError("probe blew up")
         return state
 
-    monkeypatch.setattr("kiro_crew.agent_sdk.probe_backend", _probe)
+    monkeypatch.setattr("aj_crew.agent_sdk.probe_backend", _probe)
     # The installed version is read off the host's npm manifest; stub it so the
     # row does not depend on what this machine has installed.
     monkeypatch.setattr(
-        "kiro_crew.agent_sdk.drivers.acp.claude_adapter_disk_version",
+        "aj_crew.agent_sdk.drivers.acp.claude_adapter_disk_version",
         lambda: version,
         raising=False,
     )
@@ -115,7 +115,7 @@ def test_an_installed_adapter_row_names_its_version(monkeypatch):
 def test_an_adapter_below_the_floor_warns_with_the_update_command(monkeypatch):
     """Below the floor doctor names the version, the floor and the command, as a
     warning only: sessions still start, so it is not an issue."""
-    from kiro_crew.agent_sdk.drivers.acp import (
+    from aj_crew.agent_sdk.drivers.acp import (
         claude_adapter_install_command,
         claude_adapter_min_version,
     )
@@ -128,7 +128,7 @@ def test_an_adapter_below_the_floor_warns_with_the_update_command(monkeypatch):
 
 
 def test_an_adapter_at_the_floor_does_not_warn(monkeypatch):
-    from kiro_crew.agent_sdk.drivers.acp import claude_adapter_min_version
+    from aj_crew.agent_sdk.drivers.acp import claude_adapter_min_version
 
     out = _report(monkeypatch, _state(INSTALLED), version=claude_adapter_min_version())
     assert "⚠️" not in out
@@ -145,8 +145,8 @@ def test_an_unreadable_version_neither_shows_nor_warns(monkeypatch, version):
 def test_the_version_comes_from_the_package_manifest(tmp_path, monkeypatch):
     """Read from package.json beside the entry script, never by running the
     adapter: old releases ignore ``--version`` and wait on stdin."""
-    from kiro_crew.acp import client as acp_client
-    from kiro_crew.agent_sdk.drivers import acp as drivers_acp
+    from aj_crew.acp import client as acp_client
+    from aj_crew.agent_sdk.drivers import acp as drivers_acp
 
     pkg = tmp_path / "node_modules" / acp_client.CLAUDE_ACP_NPM_PKG
     entry = pkg / "dist" / "index.js"
@@ -168,8 +168,8 @@ def test_the_version_comes_from_the_package_manifest(tmp_path, monkeypatch):
 
 
 def test_an_unresolved_adapter_has_no_version(monkeypatch):
-    from kiro_crew.acp import client as acp_client
-    from kiro_crew.agent_sdk.drivers import acp as drivers_acp
+    from aj_crew.acp import client as acp_client
+    from aj_crew.agent_sdk.drivers import acp as drivers_acp
 
     monkeypatch.setattr(acp_client, "_resolve_claude_acp_bin", lambda: (None, ""))
     assert drivers_acp.claude_adapter_disk_version() == ""

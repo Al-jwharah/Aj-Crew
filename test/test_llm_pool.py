@@ -25,9 +25,9 @@ from llm_pool_helpers import (  # noqa: F401 -- the autouse fixture registers by
     _zero_tool_client,
 )
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.runtime_models import DEFAULT_MODEL
-from kiro_crew.acp_backends import (
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.runtime_models import DEFAULT_MODEL
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_DEEPSEEK,
@@ -37,7 +37,7 @@ from kiro_crew.acp_backends import (
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_PI,
 )
-from kiro_crew.knowledge.llm_pool import (
+from aj_crew.knowledge.llm_pool import (
     AcpWorker,
     LLMPool,
     Worker,
@@ -247,7 +247,7 @@ class TestAcpWorkerFailureRetiresClient:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("error", ["timeout", "acp"])
     async def test_failure_shuts_down_so_next_send_gets_fresh_worker(self, error):
-        from kiro_crew.acp.client import AcpError, AcpTimeoutError
+        from aj_crew.acp.client import AcpError, AcpTimeoutError
 
         exc = AcpTimeoutError() if error == "timeout" else AcpError("boom")
         stuck = MagicMock()
@@ -333,21 +333,21 @@ class TestProviderDetection:
             assert _get_provider_type() == "acp"
 
     def test_reads_claude_code_from_config(self, tmp_path):
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text('{"agent": {"provider": "claude_code"}}')
         with patch("pathlib.Path.home", return_value=tmp_path):
             assert _get_provider_type() == "claude_code"
 
     def test_reads_acp_from_config(self, tmp_path):
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text('{"agent": {"provider": "acp"}}')
         with patch("pathlib.Path.home", return_value=tmp_path):
             assert _get_provider_type() == "acp"
 
     def test_handles_malformed_config(self, tmp_path):
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text("not json")
         with patch("pathlib.Path.home", return_value=tmp_path):
@@ -370,7 +370,7 @@ class TestSandboxMode:
             assert _get_sandbox_mode() == "auto"
 
     def test_reads_sandbox_from_config(self, tmp_path):
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text('{"agent": {"sandbox": "off"}}')
         with patch("pathlib.Path.home", return_value=tmp_path):
@@ -379,7 +379,7 @@ class TestSandboxMode:
     def test_unparseable_config_defaults_auto(self, tmp_path):
         # A file that isn't valid JSON parses to {} → sandbox UNSET → the
         # intended default "auto" (OS-level isolation engaged).
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text("not json")
         with patch("pathlib.Path.home", return_value=tmp_path):
@@ -389,7 +389,7 @@ class TestSandboxMode:
         """A PRESENT but unrecognised value is a config error → fail SECURE to
         'auto' (never silently unsandboxed). Distinct from an absent value, which
         takes the intended 'off' default."""
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text('{"agent": {"sandbox": "bogus"}}')
         with patch("pathlib.Path.home", return_value=tmp_path):
@@ -397,7 +397,7 @@ class TestSandboxMode:
 
     @pytest.mark.parametrize("mode", ["auto", "standard", "strict", "cc", "off"])
     def test_all_valid_modes_pass_through(self, mode, tmp_path):
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text(json.dumps({"agent": {"sandbox": mode}}))
         with patch("pathlib.Path.home", return_value=tmp_path):
@@ -424,21 +424,21 @@ class TestReadConfig:
             assert _read_config() == {}
 
     def test_reads_dict(self, tmp_path):
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text('{"agent": {"provider": "claude_code"}}')
         with patch("pathlib.Path.home", return_value=tmp_path):
             assert _read_config() == {"agent": {"provider": "claude_code"}}
 
     def test_malformed_returns_empty(self, tmp_path):
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text("not json")
         with patch("pathlib.Path.home", return_value=tmp_path):
             assert _read_config() == {}
 
     def test_non_dict_json_returns_empty(self, tmp_path):
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text("[1, 2, 3]")
         with patch("pathlib.Path.home", return_value=tmp_path):
@@ -474,7 +474,7 @@ class TestReadConfig:
     def test_read_config_coerces_non_dict_sections(self, tmp_path):
         """``_read_config`` normalises non-dict ``agent``/``knowledge`` to ``{}``
         so downstream ``.get(...).get(...)`` chains are always dict-safe."""
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text('{"agent": "acp", "knowledge": 7}')
         with patch("pathlib.Path.home", return_value=tmp_path):
@@ -485,7 +485,7 @@ class TestReadConfig:
     @pytest.mark.asyncio
     async def test_start_passes_configured_sandbox_to_client(self, tmp_path):
         """AcpWorker.start wires the configured sandbox mode into AcpClient."""
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text('{"agent": {"sandbox": "off"}}')
         with patch("pathlib.Path.home", return_value=tmp_path), _real_client_without_io():
@@ -540,13 +540,13 @@ class TestReadConfig:
         """The resolved backend must reach ``AcpClient`` explicitly, not ride
         the client's own default -- the pool's zero-tool restriction has to be
         decided HERE, once, rather than re-derived at the spawn site."""
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text(json.dumps({"agent": {"acp_backend": ACP_BACKEND_KIRO}}))
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
             _real_client_without_io(),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", wraps=AcpClient) as mk,
+            patch("aj_crew.knowledge.llm_pool.AcpClient", wraps=AcpClient) as mk,
         ):
             worker = AcpWorker()
             await worker.start()
@@ -563,7 +563,7 @@ class TestReadConfig:
         pool's zero-tool guarantee holds on opencode too -- both capabilities
         ``_get_acp_backend`` checks (``honors_zero_tool_ban``,
         ``acp_client_spawnable``) answer True for it."""
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text(json.dumps({"agent": {"acp_backend": ACP_BACKEND_OPENCODE}}))
         with patch("pathlib.Path.home", return_value=tmp_path), _real_client_without_io():
@@ -580,9 +580,9 @@ class TestReadConfig:
         reaches the client explicitly, the model kiro-cli reads from the spec;
         without it extraction silently ran on the harness default."""
         with (
-            patch("kiro_crew.knowledge.llm_pool._get_acp_backend", return_value=backend),
+            patch("aj_crew.knowledge.llm_pool._get_acp_backend", return_value=backend),
             patch(
-                "kiro_crew.knowledge.llm_pool._knowledge_spec_model",
+                "aj_crew.knowledge.llm_pool._knowledge_spec_model",
                 return_value="local/extract-small",
             ),
             _real_client_without_io(),
@@ -596,9 +596,9 @@ class TestReadConfig:
     async def test_a_kiro_worker_reads_the_pin_from_its_spec(self, tmp_path):
         """kiro-cli reads the spec's own model, so its construction is unchanged."""
         with (
-            patch("kiro_crew.knowledge.llm_pool._get_acp_backend", return_value=ACP_BACKEND_KIRO),
+            patch("aj_crew.knowledge.llm_pool._get_acp_backend", return_value=ACP_BACKEND_KIRO),
             patch(
-                "kiro_crew.knowledge.llm_pool._knowledge_spec_model",
+                "aj_crew.knowledge.llm_pool._knowledge_spec_model",
                 side_effect=AssertionError("kiro must not read the pin here"),
             ),
             _real_client_without_io(),
@@ -617,15 +617,15 @@ class TestReadConfig:
         ],
     )
     def test_the_pin_is_the_installers_rule(self, pin, expected):
-        from kiro_crew.knowledge.llm_pool import _knowledge_spec_model
+        from aj_crew.knowledge.llm_pool import _knowledge_spec_model
 
-        with patch("kiro_crew.agent.knowledge_agent_model", return_value=pin):
+        with patch("aj_crew.agent.knowledge_agent_model", return_value=pin):
             assert _knowledge_spec_model() == expected
 
     def test_an_unreadable_pin_is_no_pin(self):
-        from kiro_crew.knowledge.llm_pool import _knowledge_spec_model
+        from aj_crew.knowledge.llm_pool import _knowledge_spec_model
 
-        with patch("kiro_crew.agent.knowledge_agent_model", side_effect=OSError("boom")):
+        with patch("aj_crew.agent.knowledge_agent_model", side_effect=OSError("boom")):
             assert _knowledge_spec_model() is None
 
     @pytest.mark.asyncio
@@ -634,7 +634,7 @@ class TestReadConfig:
         pool: codex needs ``AcpRuntime``, which ``AcpClient`` doesn't drive, so
         it would fall through to a bare kiro-cli spawn under the wrong identity
         -- ``acp_client_spawnable`` answers False for it."""
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text(json.dumps({"agent": {"acp_backend": ACP_BACKEND_CODEX}}))
         with patch("pathlib.Path.home", return_value=tmp_path), _real_client_without_io():
@@ -647,10 +647,10 @@ class TestReadConfig:
         naming the configured backend and which capability failed, and does so
         ONCE per backend per process -- this pool's workers are recreated
         often, so a warning on every ``start()`` would spam the log."""
-        from kiro_crew.knowledge import llm_pool as llm_pool_mod
+        from aj_crew.knowledge import llm_pool as llm_pool_mod
 
         llm_pool_mod._WARNED_UNSAFE_BACKENDS.clear()
-        with caplog.at_level("WARNING", logger="kiro_crew.knowledge.llm_pool"):
+        with caplog.at_level("WARNING", logger="aj_crew.knowledge.llm_pool"):
             # codex fails honors_zero_tool_ban (AcpRuntime carries no zero-tool
             # refusal).
             assert _get_acp_backend({"agent": {"acp_backend": ACP_BACKEND_CODEX}}) == (
@@ -677,15 +677,15 @@ class TestReadConfig:
         is not ``acp_client_spawnable``. The pool still uses Kiro, but the user
         chose nothing, so no WARNING names a backend they never configured; a
         later declared ``kas`` still warns once."""
-        from kiro_crew.knowledge import llm_pool as llm_pool_mod
+        from aj_crew.knowledge import llm_pool as llm_pool_mod
 
         llm_pool_mod._WARNED_UNSAFE_BACKENDS.clear()
-        with caplog.at_level("WARNING", logger="kiro_crew.knowledge.llm_pool"):
+        with caplog.at_level("WARNING", logger="aj_crew.knowledge.llm_pool"):
             assert _get_acp_backend({"agent": agent}) == ACP_BACKEND_KIRO
             assert _get_acp_backend({}) == ACP_BACKEND_KIRO
         assert [r for r in caplog.records if r.levelname == "WARNING"] == []
 
-        with caplog.at_level("WARNING", logger="kiro_crew.knowledge.llm_pool"):
+        with caplog.at_level("WARNING", logger="aj_crew.knowledge.llm_pool"):
             assert _get_acp_backend({"agent": {"acp_backend": ACP_BACKEND_KAS}}) == (
                 ACP_BACKEND_KIRO
             )
@@ -708,7 +708,7 @@ class TestReadConfig:
 
     @pytest.mark.asyncio
     async def test_pool_worker_resolves_backend_through_get_acp_backend(self, tmp_path):
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text(json.dumps({"agent": {"acp_backend": ACP_BACKEND_KIRO}}))
         with patch("pathlib.Path.home", return_value=tmp_path), _real_client_without_io():
@@ -727,7 +727,7 @@ class TestReadConfig:
 class TestLLMPoolStart:
     @pytest.mark.asyncio
     async def test_start_creates_workers(self, tmp_path):
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text('{"agent": {"provider": "acp"}}')
 
@@ -752,7 +752,7 @@ class TestLLMPoolStart:
 
     @pytest.mark.asyncio
     async def test_start_idempotent(self, tmp_path):
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text('{"agent": {"provider": "acp"}}')
 
@@ -782,7 +782,7 @@ class TestLLMPoolStart:
 class TestLLMPoolContextManager:
     @pytest.mark.asyncio
     async def test_async_context_manager(self, tmp_path):
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text('{"agent": {"provider": "acp"}}')
 
@@ -858,7 +858,7 @@ class TestAcpWorker:
         fresh.is_ready = True
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=fresh),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=fresh),
         ):
             worker = AcpWorker()
             worker._client = stale
@@ -875,7 +875,7 @@ class TestAcpWorker:
         fresh.is_ready = True
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=fresh),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=fresh),
         ):
             worker = AcpWorker()
             worker._client = stale
@@ -895,13 +895,13 @@ class TestAcpWorker:
         unregistered: list[int] = []
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=fresh),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=fresh),
             patch(
-                "kiro_crew.knowledge.llm_pool.register_protected_pid",
+                "aj_crew.knowledge.llm_pool.register_protected_pid",
                 side_effect=registered.append,
             ),
             patch(
-                "kiro_crew.knowledge.llm_pool.unregister_protected_pid",
+                "aj_crew.knowledge.llm_pool.unregister_protected_pid",
                 side_effect=unregistered.append,
             ),
         ):
@@ -925,13 +925,13 @@ class TestAcpWorker:
         unregistered: list[int] = []
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", side_effect=[first, second]),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", side_effect=[first, second]),
             patch(
-                "kiro_crew.knowledge.llm_pool.register_protected_pid",
+                "aj_crew.knowledge.llm_pool.register_protected_pid",
                 side_effect=registered.append,
             ),
             patch(
-                "kiro_crew.knowledge.llm_pool.unregister_protected_pid",
+                "aj_crew.knowledge.llm_pool.unregister_protected_pid",
                 side_effect=unregistered.append,
             ),
         ):
@@ -951,7 +951,7 @@ class TestAcpWorkerZeroToolConfirmation:
 
     @pytest.mark.asyncio
     async def test_unconfirmed_opencode_falls_back_to_kiro_and_warns(self, tmp_path, caplog):
-        from kiro_crew.knowledge import llm_pool as llm_pool_mod
+        from aj_crew.knowledge import llm_pool as llm_pool_mod
 
         llm_pool_mod._WARNED_UNSAFE_BACKENDS.clear()
         first = _zero_tool_client()
@@ -964,8 +964,8 @@ class TestAcpWorkerZeroToolConfirmation:
         second.spec_zero_tools = False
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", side_effect=[first, second]) as mk,
-            caplog.at_level("WARNING", logger="kiro_crew.knowledge.llm_pool"),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", side_effect=[first, second]) as mk,
+            caplog.at_level("WARNING", logger="aj_crew.knowledge.llm_pool"),
         ):
             worker = AcpWorker(acp_backend=ACP_BACKEND_OPENCODE)
             await worker.start()
@@ -990,7 +990,7 @@ class TestAcpWorkerZeroToolConfirmation:
         second.spec_zero_tools = False
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", side_effect=[first, second]),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", side_effect=[first, second]),
         ):
             worker = AcpWorker(acp_backend=ACP_BACKEND_OPENCODE)
             await worker.start()
@@ -1000,7 +1000,7 @@ class TestAcpWorkerZeroToolConfirmation:
 
     @pytest.mark.asyncio
     async def test_confirmed_opencode_stays_on_opencode_no_warning(self, tmp_path, caplog):
-        from kiro_crew.knowledge import llm_pool as llm_pool_mod
+        from aj_crew.knowledge import llm_pool as llm_pool_mod
 
         llm_pool_mod._WARNED_UNSAFE_BACKENDS.clear()
         client = _zero_tool_client()
@@ -1009,8 +1009,8 @@ class TestAcpWorkerZeroToolConfirmation:
         client.spec_zero_tools = True
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client) as mk,
-            caplog.at_level("WARNING", logger="kiro_crew.knowledge.llm_pool"),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client) as mk,
+            caplog.at_level("WARNING", logger="aj_crew.knowledge.llm_pool"),
         ):
             worker = AcpWorker(acp_backend=ACP_BACKEND_OPENCODE)
             await worker.start()
@@ -1032,8 +1032,8 @@ class TestAcpWorkerZeroToolConfirmation:
         client.spec_zero_tools = False
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client) as mk,
-            caplog.at_level("WARNING", logger="kiro_crew.knowledge.llm_pool"),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client) as mk,
+            caplog.at_level("WARNING", logger="aj_crew.knowledge.llm_pool"),
         ):
             worker = AcpWorker(acp_backend=ACP_BACKEND_KIRO)
             await worker.start()
@@ -1051,7 +1051,7 @@ class TestAcpWorkerZeroToolConfirmation:
         client.spec_zero_tools = False
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client),
         ):
             worker = AcpWorker(acp_backend=ACP_BACKEND_KIRO)
             await worker.start()
@@ -1069,7 +1069,7 @@ class TestAcpWorkerZeroToolConfirmation:
         client.spec_zero_tools = True
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client),
         ):
             worker = AcpWorker(acp_backend=ACP_BACKEND_OPENCODE)
             await worker.start()
@@ -1091,8 +1091,8 @@ class TestAcpWorkerZeroToolConfirmation:
         client.spec_zero_tools = False
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client) as mk,
-            caplog.at_level("WARNING", logger="kiro_crew.knowledge.llm_pool"),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client) as mk,
+            caplog.at_level("WARNING", logger="aj_crew.knowledge.llm_pool"),
         ):
             worker = AcpWorker(acp_backend=ACP_BACKEND_KIRO)
             with pytest.raises(RuntimeError, match="zero-tool spec"):
@@ -1102,7 +1102,7 @@ class TestAcpWorkerZeroToolConfirmation:
         client.send_message.assert_not_awaited()
         assert worker._client is None
         assert any(
-            "does not declare" in r.getMessage() and "kirocrew-knowledge" in r.getMessage()
+            "does not declare" in r.getMessage() and "ajcrew-knowledge" in r.getMessage()
             for r in caplog.records
         )
 
@@ -1115,7 +1115,7 @@ class TestAcpWorkerZeroToolConfirmation:
         client.shutdown.side_effect = RuntimeError("boom")
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client),
         ):
             worker = AcpWorker(acp_backend=ACP_BACKEND_KIRO)
             with pytest.raises(RuntimeError, match="zero-tool spec"):
@@ -1136,7 +1136,7 @@ class TestAcpWorkerZeroToolConfirmation:
         second.spec_zero_tools = False
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", side_effect=[first, second]) as mk,
+            patch("aj_crew.knowledge.llm_pool.AcpClient", side_effect=[first, second]) as mk,
         ):
             worker = AcpWorker(acp_backend=ACP_BACKEND_OPENCODE)
             with pytest.raises(RuntimeError, match="zero-tool spec"):
@@ -1163,7 +1163,7 @@ class TestAcpWorkerZeroToolConfirmation:
         )
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client),
         ):
             worker = AcpWorker(acp_backend=ACP_BACKEND_KIRO)
             await worker.start()
@@ -1186,7 +1186,7 @@ class TestAcpWorkerZeroToolConfirmation:
         )
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client),
         ):
             worker = AcpWorker(acp_backend=ACP_BACKEND_KIRO)
             with pytest.raises(RuntimeError, match="could not be confirmed"):
@@ -1214,7 +1214,7 @@ class TestAcpWorkerZeroToolConfirmation:
         )
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=client),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=client),
         ):
             await AcpWorker(acp_backend=ACP_BACKEND_KIRO).start()
         assert calls == ["authored", "ready", "effective"]
@@ -1245,7 +1245,7 @@ class TestAcpWorkerZeroToolConfirmation:
         )
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", side_effect=[first, second]),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", side_effect=[first, second]),
         ):
             await AcpWorker(acp_backend=ACP_BACKEND_OPENCODE).start()
         assert calls == ["first-ready", "second-authored", "second-ready", "second-effective"]
@@ -1274,7 +1274,7 @@ class TestAcpWorkerZeroToolConfirmation:
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
             patch(
-                "kiro_crew.knowledge.llm_pool.AcpClient",
+                "aj_crew.knowledge.llm_pool.AcpClient",
                 side_effect=[first, second, third],
             ) as mk,
         ):

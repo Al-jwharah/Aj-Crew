@@ -67,7 +67,7 @@ function WakeRow({ job, onChanged, dense = false, hideKindBadge = false }: { job
           )}
           <div className="min-w-0 flex-1">
             <div className="truncate text-[12.5px] text-text-strong">{job.name}</div>
-            {!job.member_id && <span className="text-[11px] text-muted">{i18nT('pages.kiroCrewAgentsPage.uses_global_memory_v1')}</span>}
+            {!job.member_id && <span className="text-[11px] text-muted">{i18nT('pages.ajCrewAgentsPage.uses_global_memory_v1')}</span>}
             {(last || next) && (
               <div className="text-[10.5px] text-muted">
                 {[last, next].filter(Boolean).join(' · ')}

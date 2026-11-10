@@ -9,7 +9,7 @@ mode against a real descriptor from ``pinned_fs.open_dir_pinned``.
 
 They run offline: the parameter, the temp create, the ``renameat`` publish, the
 byte-exact write, and the failure cleanup are all pure filesystem behaviour on
-``kiro_crew.atomic_write`` + ``kiro_crew.pinned_fs``, both leaf modules. The ACL
+``aj_crew.atomic_write`` + ``aj_crew.pinned_fs``, both leaf modules. The ACL
 carry is asserted by monkeypatching ``os.listxattr``/``getxattr``/``setxattr``
 exactly as ``test/test_atomic_write_acl_preservation.py`` does. Each test fails if
 the pinning is reverted.
@@ -26,8 +26,8 @@ import os
 
 import pytest
 
-from kiro_crew import pinned_fs
-from kiro_crew.atomic_write import atomic_write, pinned_parent_replace_supported
+from aj_crew import pinned_fs
+from aj_crew.atomic_write import atomic_write, pinned_parent_replace_supported
 
 
 def _needs_pinned_parent() -> None:
@@ -205,7 +205,7 @@ def test_a_pinned_write_stages_through_the_descriptor_not_mkstemp(tmp_path, monk
     called and ``mkstemp`` is, so this test goes red.
     """
     _needs_pinned_parent()
-    import kiro_crew.atomic_write as aw
+    import aj_crew.atomic_write as aw
 
     target = tmp_path / "doc.md"
     target.write_text("ORIGINAL", encoding="utf-8")
@@ -321,7 +321,7 @@ def test_a_descriptor_the_platform_cannot_publish_through_is_refused(tmp_path, m
     or log reports it. Callers ask both probes; this is the alarm for the case they
     disagree.
     """
-    import kiro_crew.atomic_write as aw
+    import aj_crew.atomic_write as aw
 
     target = tmp_path / "doc.md"
     target.write_text("ORIGINAL", encoding="utf-8")

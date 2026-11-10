@@ -16,7 +16,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.mcp_gateway import resolve_once as R
+from aj_crew.mcp_gateway import resolve_once as R
 
 # Spec parsing
 
@@ -393,8 +393,8 @@ class TestLaunchSpecs:
         # for the same launch; resolving twice would install the same tree twice.
         out = R.launch_specs(
             {
-                "KIROCREW_MCP_TARGET_FOO": "npx -y foo@1.0.0",
-                "KIROCREW_MCP_TARGET_FOO__deadbeef": "npx -y foo@1.0.0",
+                "AJCREW_MCP_TARGET_FOO": "npx -y foo@1.0.0",
+                "AJCREW_MCP_TARGET_FOO__deadbeef": "npx -y foo@1.0.0",
             }
         )
         assert out == [("npx", ["-y", "foo@1.0.0"])]
@@ -409,8 +409,8 @@ class TestLaunchSpecs:
         assert out == [("npx", ["-y", "old@1.0.0"])]
 
     def test_unparsable_and_empty_are_skipped(self) -> None:
-        assert R.launch_specs({"KIROCREW_MCP_TARGET_A": '"unterminated'}) == []
-        assert R.launch_specs({"KIROCREW_MCP_TARGET_B": "   "}) == []
+        assert R.launch_specs({"AJCREW_MCP_TARGET_A": '"unterminated'}) == []
+        assert R.launch_specs({"AJCREW_MCP_TARGET_B": "   "}) == []
 
 
 # Installing (npm stubbed)
@@ -671,7 +671,7 @@ class TestInstall:
         unbounded background process.
         """
         killed: list[tuple[int, int]] = []
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         real_kill = platform_compat.kill_process_tree_async
 
@@ -866,8 +866,8 @@ class TestEnsureAndPrefetch:
         outcomes = await R.prefetch(
             home,
             {
-                "KIROCREW_MCP_TARGET_A": "npx -y foo@1.0.0",
-                "KIROCREW_MCP_TARGET_B": "uvx not-npm",
+                "AJCREW_MCP_TARGET_A": "npx -y foo@1.0.0",
+                "AJCREW_MCP_TARGET_B": "uvx not-npm",
             },
         )
         # The npm target is reported unresolved; the non-npm one is not reported
@@ -879,7 +879,7 @@ class TestEnsureAndPrefetch:
             raise RuntimeError("registry on fire")
 
         monkeypatch.setattr(R, "install", boom)
-        outcomes = await R.prefetch(str(tmp_path), {"KIROCREW_MCP_TARGET_A": "npx -y foo@latest"})
+        outcomes = await R.prefetch(str(tmp_path), {"AJCREW_MCP_TARGET_A": "npx -y foo@latest"})
         assert outcomes == {"foo@latest": "error"}
 
 
@@ -895,7 +895,7 @@ class TestSubstitutionActuallyHappens:
     """
 
     def test_a_realistic_inherited_env_still_gets_the_store(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.mcp_gateway import gatewayd as G
+        from aj_crew.mcp_gateway import gatewayd as G
 
         monkeypatch.setattr(G, "_resolve_once_home", lambda: str(tmp_path))
         monkeypatch.setattr(G, "resolved_launch", lambda *_a, **_k: ("node", ["/store/cli.js"]))
@@ -913,7 +913,7 @@ class TestSubstitutionActuallyHappens:
         assert work_dir == "/tmp"
 
     def test_a_miss_passes_the_original_target_through(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.mcp_gateway import gatewayd as G
+        from aj_crew.mcp_gateway import gatewayd as G
 
         monkeypatch.setattr(G, "_resolve_once_home", lambda: str(tmp_path))
         monkeypatch.setattr(G, "resolved_launch", lambda *_a, **_k: None)
@@ -922,7 +922,7 @@ class TestSubstitutionActuallyHappens:
         assert resolver(SimpleNamespace(server_name="s")) == inner
 
     def test_a_raising_store_read_never_breaks_a_launch(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.mcp_gateway import gatewayd as G
+        from aj_crew.mcp_gateway import gatewayd as G
 
         def boom(*_a, **_k):
             raise RuntimeError("store on fire")
@@ -967,7 +967,7 @@ class TestReapInstallTree:
     async def test_reaps_via_communicate_not_wait(self, monkeypatch) -> None:
         """The reap must go through the bounded, pipe-draining ``kill_and_reap``,
         never a bare ``await proc.wait()`` that a full pipe can hang."""
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         proc = _ReapProbe()
         tree_kills: "list[tuple[int, int]]" = []

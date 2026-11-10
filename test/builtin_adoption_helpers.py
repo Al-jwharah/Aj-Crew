@@ -26,16 +26,16 @@ from typing import Any
 import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from kiro_crew.apps import builtin_adoption_fetch as fetch_mod
-from kiro_crew.apps import builtin_adoption_pins as pins_mod
-from kiro_crew.apps import execution as exec_mod
-from kiro_crew.apps import manager
-from kiro_crew.apps.builtin_adoption_fetch import adoption_tree_digest
+from aj_crew.apps import builtin_adoption_fetch as fetch_mod
+from aj_crew.apps import builtin_adoption_pins as pins_mod
+from aj_crew.apps import execution as exec_mod
+from aj_crew.apps import manager
+from aj_crew.apps.builtin_adoption_fetch import adoption_tree_digest
 
 NAME = "fixture-former"
 PACKAGE = "fixture_former"
 OWNER = "FixtureOrg"
-REPO = "kirocrew-app-fixture-former"
+REPO = "ajcrew-app-fixture-former"
 REPOSITORY = f"https://github.com/{OWNER}/{REPO}"
 VERSION = "0.1.0"
 
@@ -76,7 +76,7 @@ def shipped_manifest(**overrides: Any) -> dict[str, Any]:
         "version": VERSION,
         "displayName": "Fixture Former",
         "description": "A former built-in used by the adoption tests.",
-        "author": "kirocrew",
+        "author": "ajcrew",
         "defaultEnabled": False,
         "platform": {"os": ["macos", "linux", "windows"]},
         "permissions": {"api": [f"/api/apps/{NAME}", f"/api/apps/{NAME}/*"], "storage": True},
@@ -176,7 +176,7 @@ def pin_row(head: str, tree_sha: str, archive_sha: str, **overrides: Any) -> dic
 
 def host_with_seams(monkeypatch: pytest.MonkeyPatch, level: int = 1) -> None:
     """Report the App Kit seam level a pinned app needs (``app_sdk_level.APP_SDK_LEVEL``)."""
-    from kiro_crew.apps import app_sdk_level
+    from aj_crew.apps import app_sdk_level
 
     monkeypatch.setattr(app_sdk_level, "APP_SDK_LEVEL", level)
 
@@ -278,7 +278,7 @@ def build_world(
     *wheel_manifest* replaces the wheel's :func:`shipped_manifest`; *tree_files* adds
     files (relative path to text) to the repository tree.
     """
-    home = Path(os.environ["KIROCREW_HOME"])
+    home = Path(os.environ["AJCREW_HOME"])
     wheel_root = tmp_path / "wheel"
     shipped = shipped_manifest() if wheel_manifest is None else wheel_manifest
     wheel = write_tree(wheel_root / PACKAGE, shipped)
@@ -296,7 +296,7 @@ def build_world(
     )
     monkeypatch.setattr(fetch_mod, "_git_fetch", world.git_fetch)
     monkeypatch.setattr(fetch_mod, "_open_archive", world.open_archive)
-    from kiro_crew.apps import builtin_adoption_apply as apply_mod
+    from aj_crew.apps import builtin_adoption_apply as apply_mod
 
     monkeypatch.setattr(apply_mod, "_git_available", lambda: True)
     host_with_seams(monkeypatch)
@@ -311,7 +311,7 @@ def agent_section(home: Path) -> dict[str, Any]:
 
 
 def seed_agent(home: Path, agent: dict[str, Any]) -> None:
-    from kiro_crew.config.loader import _invalidate_config_cache
+    from aj_crew.config.loader import _invalidate_config_cache
 
     path = home / "config.json"
     raw = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}

@@ -15,7 +15,7 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 
 @pytest.mark.asyncio
@@ -27,7 +27,7 @@ async def test_fork_sees_the_tail_when_a_flush_clears_dirty_mid_read(tmp_path, m
     stale snapshot, the tail is absent from its index space and forking at the
     tail's index fails as out of range.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:forkrace"
@@ -101,7 +101,7 @@ async def test_a_reread_does_not_duplicate_a_tail_the_flush_already_persisted(
     in-memory tail from ``_resumed_count`` -- an offset the flush never advances --
     so the tail the re-read already holds would be appended a second time.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:dupe"
@@ -184,7 +184,7 @@ async def test_fork_does_not_duplicate_when_an_append_re_dirties_during_the_read
     that as "never flushed", so no correction fires and the tail the read already
     picked up off disk is reconciled in a second time.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:redirty"
@@ -276,7 +276,7 @@ async def test_a_boundary_ahead_of_the_window_does_not_duplicate_persisted_turns
     ``_resumed_count`` a momentarily-correct nonzero value -- the one arrangement
     in which the fallback looks benign. This covers the other side.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:ahead"
@@ -314,7 +314,7 @@ async def test_a_boundary_ahead_of_the_window_does_not_duplicate_persisted_turns
         s._dirty = False
         return True
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_fork.save_slot_off_loop", fake_flush)
+    monkeypatch.setattr("aj_crew.dashboard.chat_fork.save_slot_off_loop", fake_flush)
 
     async with TestClient(TestServer(_make_app(state))) as client:
         resp = await client.post(
@@ -354,7 +354,7 @@ async def test_a_capped_restore_boundary_is_merged_not_flushed(tmp_path, monkeyp
     do not represent. This asserts the resulting transcript AND that disk is
     still intact, because a count alone would not catch the truncation.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     key = "dashboard:capped"
 
@@ -362,7 +362,7 @@ async def test_a_capped_restore_boundary_is_merged_not_flushed(tmp_path, monkeyp
     for i in range(250):
         slot.append("user" if i % 2 == 0 else "assistant", f"m{i}", "msg")
     slot.drain()
-    from kiro_crew.dashboard.chat import _save_slot_to_history
+    from aj_crew.dashboard.chat import _save_slot_to_history
 
     _save_slot_to_history(state, slot)
     on_disk_before = len(state.conversation_log.read_messages_chained(key))
@@ -435,7 +435,7 @@ async def test_a_pending_rewrite_does_not_fork_discarded_turns(tmp_path, monkeyp
     lock does not help -- ``fork_slot`` is its only acquirer, so no rewind path
     takes it.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:rewindfork"
@@ -510,7 +510,7 @@ async def test_a_pending_rewrite_arriving_during_the_read_forces_a_retry(tmp_pat
     that the handler trusts a snapshot it was told not to, not that these particular
     bytes differ.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:midread"
@@ -599,7 +599,7 @@ async def test_the_fork_does_not_mutate_the_shared_message_cache(tmp_path, monke
     Asserted against the RAW file rather than a count, because the corruption is
     invisible to any probe that reads through the same cache.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:cachemut"
@@ -608,7 +608,7 @@ async def test_the_fork_does_not_mutate_the_shared_message_cache(tmp_path, monke
     for i in range(250):
         slot.append("user" if i % 2 == 0 else "assistant", f"m{i}", "msg")
     slot.drain()
-    from kiro_crew.dashboard.chat import _save_slot_to_history
+    from aj_crew.dashboard.chat import _save_slot_to_history
 
     _save_slot_to_history(state, slot)
 
@@ -702,7 +702,7 @@ async def test_a_tid_session_whose_index_resolves_is_unaffected(tmp_path, monkey
     list, so there was never anything shared to corrupt. Copying before the merge
     must not change what the fork produces here.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:tidfork"
@@ -711,7 +711,7 @@ async def test_a_tid_session_whose_index_resolves_is_unaffected(tmp_path, monkey
     for i in range(6):
         slot.append("user" if i % 2 == 0 else "assistant", f"t{i}", "msg")
     slot.drain()
-    from kiro_crew.dashboard.chat import _save_slot_to_history
+    from aj_crew.dashboard.chat import _save_slot_to_history
 
     _save_slot_to_history(state, slot)
     log.update_metadata(key, {"tab_id": "abc123def456"})
@@ -753,7 +753,7 @@ async def test_a_slot_that_legitimately_saves_still_reaches_disk(tmp_path, monke
     with disk and the durable write is the correct action. If the tail stops
     reaching disk, this goes red.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:savesfine"
@@ -762,7 +762,7 @@ async def test_a_slot_that_legitimately_saves_still_reaches_disk(tmp_path, monke
     slot.append("user", "s0", "msg")
     slot.append("assistant", "s1", "msg")
     slot.drain()
-    from kiro_crew.dashboard.chat import _save_slot_to_history
+    from aj_crew.dashboard.chat import _save_slot_to_history
 
     _save_slot_to_history(state, slot)
     before = len(_raw_disk_rows(log, key))
@@ -811,7 +811,7 @@ async def test_a_rewind_landing_during_the_pending_rewrite_save_is_not_erased(
     a fork returning 200, or ``_pending_rewrite`` reading False after the save,
     are both true with or without the fix.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:rewindrace"
@@ -820,8 +820,8 @@ async def test_a_rewind_landing_during_the_pending_rewrite_save_is_not_erased(
     for i in range(10):
         slot.append("user" if i % 2 == 0 else "assistant", f"m{i}", "msg")
     slot.drain()
-    from kiro_crew.dashboard import chat_fork as chat_fork_mod
-    from kiro_crew.dashboard.chat import _save_slot_to_history
+    from aj_crew.dashboard import chat_fork as chat_fork_mod
+    from aj_crew.dashboard.chat import _save_slot_to_history
 
     _save_slot_to_history(state, slot)
     assert len(_raw_disk_rows(log, key)) == 10, "fixture expected 10 rows persisted"
@@ -897,14 +897,14 @@ async def test_a_pending_rewrite_fork_without_a_concurrent_rewind_still_succeeds
     every pending-rewrite fork would spend its attempt budget and refuse -- turning
     the recoverable path into a refusal.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
 
     slot = state.get_or_create_slot("pendok")
     for i in range(8):
         slot.append("user" if i % 2 == 0 else "assistant", f"p{i}", "msg")
     slot.drain()
-    from kiro_crew.dashboard.chat import _save_slot_to_history
+    from aj_crew.dashboard.chat import _save_slot_to_history
 
     _save_slot_to_history(state, slot)
     slot._pending_rewrite = True
@@ -943,21 +943,21 @@ async def test_the_pending_rewrite_flush_pins_its_slot_identity(tmp_path, monkey
     that then republishes the file it wrote, so an unrefused commit here is
     copied under a fresh key.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
 
     slot = state.get_or_create_slot("pendpin")
     for i in range(8):
         slot.append("user" if i % 2 == 0 else "assistant", f"p{i}", "msg")
     slot.drain()
-    from kiro_crew.dashboard.chat import _save_slot_to_history
+    from aj_crew.dashboard.chat import _save_slot_to_history
 
     _save_slot_to_history(state, slot)
     slot._pending_rewrite = True
     slot._dirty = True
 
     seen: list[dict] = []
-    from kiro_crew.dashboard import chat_fork as chat_fork_mod
+    from aj_crew.dashboard import chat_fork as chat_fork_mod
 
     real_save = chat_fork_mod.save_slot_off_loop
 
@@ -984,14 +984,14 @@ async def test_a_fork_with_no_pending_rewrite_is_untouched(tmp_path, monkeypatch
     The carry flag starts False and the arm is never entered, so this exercises the
     path the guard must leave completely alone.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
 
     slot = state.get_or_create_slot("nopend")
     for i in range(5):
         slot.append("user" if i % 2 == 0 else "assistant", f"n{i}", "msg")
     slot.drain()
-    from kiro_crew.dashboard.chat import _save_slot_to_history
+    from aj_crew.dashboard.chat import _save_slot_to_history
 
     _save_slot_to_history(state, slot)
     assert slot._pending_rewrite is False, "fixture expects NO pending rewrite"
@@ -1016,7 +1016,7 @@ def _archived_contents(log):
     """
     import json as _json
 
-    from kiro_crew.history import _archive_dir
+    from aj_crew.history import _archive_dir
 
     adir = _archive_dir(log._dir)
     if not adir.exists():
@@ -1056,7 +1056,7 @@ async def test_the_pending_rewrite_retry_still_archives_the_discarded_turns(tmp_
     Asserted on the ARCHIVE, not on the transcript: the sibling test already covers
     the transcript, and it passes whether or not the dropped turns were archived.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:archiverace"
@@ -1065,8 +1065,8 @@ async def test_the_pending_rewrite_retry_still_archives_the_discarded_turns(tmp_
     for i in range(10):
         slot.append("user" if i % 2 == 0 else "assistant", f"a{i}", "msg")
     slot.drain()
-    from kiro_crew.dashboard import chat_fork as chat_fork_mod
-    from kiro_crew.dashboard.chat import _save_slot_to_history
+    from aj_crew.dashboard import chat_fork as chat_fork_mod
+    from aj_crew.dashboard.chat import _save_slot_to_history
 
     _save_slot_to_history(state, slot)
     assert len(_raw_disk_rows(log, key)) == 10, "fixture expected 10 rows persisted"
@@ -1131,7 +1131,7 @@ async def test_a_first_entry_pending_rewrite_save_archives_as_before(tmp_path, m
     already happens. This pins that, so passing ``rewrite=True`` explicitly at the
     call site is provably a no-op here rather than a behaviour change.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:firstentry"
@@ -1140,7 +1140,7 @@ async def test_a_first_entry_pending_rewrite_save_archives_as_before(tmp_path, m
     for i in range(8):
         slot.append("user" if i % 2 == 0 else "assistant", f"f{i}", "msg")
     slot.drain()
-    from kiro_crew.dashboard.chat import _save_slot_to_history
+    from aj_crew.dashboard.chat import _save_slot_to_history
 
     _save_slot_to_history(state, slot)
     assert len(_raw_disk_rows(log, key)) == 8, "fixture expected 8 rows persisted"
@@ -1184,7 +1184,7 @@ async def test_a_save_completing_mid_read_does_not_fork_a_superseded_variant(tmp
     (see ``test_fork_sees_the_tail_when_a_flush_clears_dirty_mid_read``, which pins
     that a cleared ``_dirty`` must never skip the reconciliation).
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
 
@@ -1192,7 +1192,7 @@ async def test_a_save_completing_mid_read_does_not_fork_a_superseded_variant(tmp
     for i in range(6):
         slot.append("user" if i % 2 == 0 else "assistant", f"v{i}-OLD", "msg")
     slot.drain()
-    from kiro_crew.dashboard.chat import _save_slot_to_history
+    from aj_crew.dashboard.chat import _save_slot_to_history
 
     _save_slot_to_history(state, slot)
 

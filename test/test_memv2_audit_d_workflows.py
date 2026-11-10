@@ -8,16 +8,16 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.config.loader import KiroCrewAgentConfig
-from kiro_crew.execution_context import bind_session_execution, resolve_member_execution
-from kiro_crew.history import ConversationLog
-from kiro_crew.memory_stores import persist_member_config, provision_member_memory
-from kiro_crew.testing.wait import await_until
-from kiro_crew.workflow_memory import capture_execution
-from kiro_crew.workflows import agent_exec, agent_pool, service
-from kiro_crew.workflows.library import WorkflowDefinitionLibrary
-from kiro_crew.workflows.registry import RunHandle
+from aj_crew.config import AjCrewConfig
+from aj_crew.config.loader import AjCrewAgentConfig
+from aj_crew.execution_context import bind_session_execution, resolve_member_execution
+from aj_crew.history import ConversationLog
+from aj_crew.memory_stores import persist_member_config, provision_member_memory
+from aj_crew.testing.wait import await_until
+from aj_crew.workflow_memory import capture_execution
+from aj_crew.workflows import agent_exec, agent_pool, service
+from aj_crew.workflows.library import WorkflowDefinitionLibrary
+from aj_crew.workflows.registry import RunHandle
 
 SCRIPT = 'META = {"name": "lease"}\nasync def workflow(ctx):\n    return await ctx.agent("work")\n'
 PARENT = "dashboard:private-workflow-parent"
@@ -154,8 +154,8 @@ async def test_cancelled_waiter_cannot_release_another_calls_lease(monkeypatch, 
 
 @pytest.fixture
 def private_parent(monkeypatch):
-    cfg = KiroCrewConfig.load()
-    cfg.agents["workflow-owner"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+    cfg = AjCrewConfig.load()
+    cfg.agents["workflow-owner"] = AjCrewAgentConfig(kiro_agent="ajcrew")
     store = provision_member_memory(cfg, "workflow-owner")
     persist_member_config(cfg, "workflow-owner", create=True)
     bind_session_execution(PARENT, resolve_member_execution(cfg, "workflow-owner"))
@@ -311,7 +311,7 @@ async def test_author_identity_cannot_be_hidden_by_global_result_route(private_p
 
 @pytest.mark.asyncio
 async def test_restored_private_run_cannot_resume_on_global_workers(tmp_path, private_parent):
-    from kiro_crew.workflows.store import WorkflowRunStore
+    from aj_crew.workflows.store import WorkflowRunStore
 
     store = WorkflowRunStore(tmp_path / "workflows")
     before = service.WorkflowService(sessions=LeaseSessions(), store=store)

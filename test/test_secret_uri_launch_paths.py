@@ -19,15 +19,15 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.agent_materialization import mcp_sources
-from kiro_crew.mcp_gateway import stub as stub_mod
-from kiro_crew.mcp_gateway.hashing import expand_stub_flags
-from kiro_crew.mcp_gateway.rewriter import (
+from aj_crew.agent_materialization import mcp_sources
+from aj_crew.mcp_gateway import stub as stub_mod
+from aj_crew.mcp_gateway.hashing import expand_stub_flags
+from aj_crew.mcp_gateway.rewriter import (
     _WRAPPER_MARKER,
     _injectable_settings_servers,
     _rewrite_single_spec,
 )
-from kiro_crew.mcp_gateway.secret_uri import routed_for_secret_reference, secret_reference_keys
+from aj_crew.mcp_gateway.secret_uri import routed_for_secret_reference, secret_reference_keys
 
 REF = "secret://ATLASSIAN_TOKEN"
 
@@ -54,7 +54,7 @@ def _project(
     spec = {"command": "atlassian-mcp", "env": env}
     config = {"mcpServers": {"atlassian": dict(spec)}}
     sources = mcp_sources.McpSources(
-        kirocrew={"atlassian": spec}, kiro_global={}, provider_global={}, managed_names=set()
+        ajcrew={"atlassian": spec}, kiro_global={}, provider_global={}, managed_names=set()
     )
     monkeypatch.setattr(mcp_sources, "_gateway_routed_names", lambda: routed)
     monkeypatch.setattr(mcp_sources, "_app_owned_mcp_keys", dict)
@@ -87,7 +87,7 @@ def test_a_withheld_scope_server_keeps_its_spec_only_fields(
     scope = {"command": "atlassian-mcp", "env": {"API_TOKEN": REF}}
     config = {"mcpServers": {"atlassian": {**scope, "disabledTools": ["delete_page"]}}}
     sources = mcp_sources.McpSources(
-        kirocrew={"atlassian": scope}, kiro_global={}, provider_global={}, managed_names=set()
+        ajcrew={"atlassian": scope}, kiro_global={}, provider_global={}, managed_names=set()
     )
     monkeypatch.setattr(mcp_sources, "_app_owned_mcp_keys", dict)
     monkeypatch.setattr(mcp_sources, "_gateway_routed_names", frozenset)
@@ -112,7 +112,7 @@ def test_the_shared_ref_sync_keeps_a_withheld_server_muted() -> None:
         "allowedTools": ["@atlassian"],
     }
     sources = mcp_sources.McpSources(
-        kirocrew={"atlassian": scope}, kiro_global={}, provider_global={}, managed_names=set()
+        ajcrew={"atlassian": scope}, kiro_global={}, provider_global={}, managed_names=set()
     )
     mcp_sources.sync_shared_server_refs(config, sources, {"atlassian": "atlassian"})
     assert config["mcpServers"]["atlassian"]["disabled"] is True
@@ -131,7 +131,7 @@ def test_a_mount_only_server_is_mounted_without_a_grant() -> None:
         "allowedTools": ["@atlassian", "@atlassian/search"],
     }
     sources = mcp_sources.McpSources(
-        kirocrew={"atlassian": scope}, kiro_global={}, provider_global={}, managed_names=set()
+        ajcrew={"atlassian": scope}, kiro_global={}, provider_global={}, managed_names=set()
     )
     mcp_sources.sync_shared_server_refs(
         config, sources, {"atlassian": "atlassian"}, mount_only=frozenset({"atlassian"})
@@ -150,7 +150,7 @@ def test_a_mount_only_record_leaves_a_suffixed_sibling_s_grant_alone() -> None:
         "allowedTools": [],
     }
     sources = mcp_sources.McpSources(
-        kirocrew={"time": scope, "time-2": scope},
+        ajcrew={"time": scope, "time-2": scope},
         kiro_global={},
         provider_global={},
         managed_names=set(),
@@ -167,7 +167,7 @@ def test_a_mount_only_server_under_the_ceiling_takes_the_ceilings_stricter_arm(
 ) -> None:
     """When the governance ceiling has an opinion about the server, mount-only
     does not soften it: the ceiling strips per-tool grants too."""
-    from kiro_crew.agent_materialization import auto_approve
+    from aj_crew.agent_materialization import auto_approve
 
     monkeypatch.setattr(auto_approve, "_may_auto_approve", lambda ref: False)
     scope = {"command": "/opt/bin/atlassian-mcp"}
@@ -177,7 +177,7 @@ def test_a_mount_only_server_under_the_ceiling_takes_the_ceilings_stricter_arm(
         "allowedTools": ["@atlassian", "@atlassian/search"],
     }
     sources = mcp_sources.McpSources(
-        kirocrew={"atlassian": scope}, kiro_global={}, provider_global={}, managed_names=set()
+        ajcrew={"atlassian": scope}, kiro_global={}, provider_global={}, managed_names=set()
     )
     mcp_sources.sync_shared_server_refs(
         config, sources, {"atlassian": "atlassian"}, mount_only=frozenset({"atlassian"})
@@ -196,7 +196,7 @@ def test_a_withheld_mute_keeps_the_users_per_tool_grants() -> None:
         "allowedTools": ["@atlassian", "@atlassian/search"],
     }
     sources = mcp_sources.McpSources(
-        kirocrew={"atlassian": scope}, kiro_global={}, provider_global={}, managed_names=set()
+        ajcrew={"atlassian": scope}, kiro_global={}, provider_global={}, managed_names=set()
     )
     mcp_sources.sync_shared_server_refs(config, sources, {"atlassian": "atlassian"})
     assert config["tools"] == ["@atlassian/search"]
@@ -211,7 +211,7 @@ def test_a_user_mute_still_strips_per_tool_grants() -> None:
         "allowedTools": ["@atlassian/search"],
     }
     sources = mcp_sources.McpSources(
-        kirocrew={"atlassian": scope}, kiro_global={}, provider_global={}, managed_names=set()
+        ajcrew={"atlassian": scope}, kiro_global={}, provider_global={}, managed_names=set()
     )
     mcp_sources.sync_shared_server_refs(config, sources, {"atlassian": "atlassian"})
     assert config["allowedTools"] == []
@@ -224,17 +224,17 @@ def test_the_next_start_lifts_the_mute_without_the_post_overlay_rebuild(
     post-overlay rebuild that failed, still ends served at the next start: the
     overlay persists on disk, so the next start's boot rebuild reads the stub
     the previous start wrote and lifts the mute on its own."""
-    import kiro_crew.config.loader as loader
-    import kiro_crew.mcp_gateway as gw
+    import aj_crew.config.loader as loader
+    import aj_crew.mcp_gateway as gw
 
     monkeypatch.setattr(gw, "is_gateway_supported", lambda: True)
     monkeypatch.setattr(mcp_sources, "_app_owned_mcp_keys", dict)
     cfg = _routing_config(["atlassian"], tmp_path)
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", staticmethod(lambda: cfg))
     spec = {"command": "atlassian-mcp", "env": {"API_TOKEN": REF}}
     config = {"mcpServers": {"atlassian": dict(spec)}}
     sources = mcp_sources.McpSources(
-        kirocrew={"atlassian": spec}, kiro_global={}, provider_global={}, managed_names=set()
+        ajcrew={"atlassian": spec}, kiro_global={}, provider_global={}, managed_names=set()
     )
 
     def _rebuild() -> dict:
@@ -251,7 +251,7 @@ def test_the_next_start_lifts_the_mute_without_the_post_overlay_rebuild(
 def test_the_warning_on_a_host_without_a_gateway_does_not_point_at_routing(
     monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    import kiro_crew.mcp_gateway as gw
+    import aj_crew.mcp_gateway as gw
 
     monkeypatch.setattr(gw, "is_gateway_supported", lambda: False)
     with caplog.at_level(logging.WARNING):
@@ -271,17 +271,17 @@ def test_the_rebuild_is_a_function_of_config_and_overlay_alone(
 ) -> None:
     """Same config and same overlay give a byte-identical spec, whatever the spec
     held before (live, or muted by an earlier pass) and however many passes ran."""
-    import kiro_crew.config.loader as loader
-    import kiro_crew.mcp_gateway as gw
+    import aj_crew.config.loader as loader
+    import aj_crew.mcp_gateway as gw
 
     monkeypatch.setattr(gw, "is_gateway_supported", lambda: True)
     monkeypatch.setattr(mcp_sources, "_app_owned_mcp_keys", dict)
     cfg = _routing_config(["atlassian"], tmp_path)
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", staticmethod(lambda: cfg))
     _write_overlay(tmp_path, ["atlassian"] if served else [])
     scope = {"command": "atlassian-mcp", "env": {"API_TOKEN": REF}}
     sources = mcp_sources.McpSources(
-        kirocrew={"atlassian": scope}, kiro_global={}, provider_global={}, managed_names=set()
+        ajcrew={"atlassian": scope}, kiro_global={}, provider_global={}, managed_names=set()
     )
 
     def _rebuild(config: dict) -> str:
@@ -311,21 +311,21 @@ def _routing_config(stub_servers: list[str], overlay_dir: Path) -> object:
 def _write_overlay(overlay_dir: Path, stubbed: list[str]) -> None:
     """The overlay a running gateway wrote at its start, with a stub per name."""
     overlay_dir.mkdir(parents=True, exist_ok=True)
-    servers = {n: {"command": "kirocrew-mcp-stub", _WRAPPER_MARKER: True} for n in stubbed}
-    (overlay_dir / "kirocrew.json").write_text(
-        json.dumps({"name": "kirocrew", "mcpServers": servers}), encoding="utf-8"
+    servers = {n: {"command": "ajcrew-mcp-stub", _WRAPPER_MARKER: True} for n in stubbed}
+    (overlay_dir / "ajcrew.json").write_text(
+        json.dumps({"name": "ajcrew", "mcpServers": servers}), encoding="utf-8"
     )
 
 
 def test_routing_on_a_host_without_a_gateway_routes_nothing(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    import kiro_crew.config.loader as loader
-    import kiro_crew.mcp_gateway as gw
+    import aj_crew.config.loader as loader
+    import aj_crew.mcp_gateway as gw
 
     _write_overlay(tmp_path, ["atlassian"])
     routed_cfg = _routing_config(["atlassian"], tmp_path)
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", staticmethod(lambda: routed_cfg))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", staticmethod(lambda: routed_cfg))
     monkeypatch.setattr(gw, "is_gateway_supported", lambda: True)
     assert mcp_sources._gateway_routed_names() == frozenset({"atlassian"})
     monkeypatch.setattr(gw, "is_gateway_supported", lambda: False)
@@ -338,13 +338,13 @@ def test_saved_routing_is_not_routed_until_the_gateway_serves_it(
     """The routing switch records intent for the NEXT gateway start. Until then
     the running gateway's overlay has no stub, so a session launches the agent
     spec's own entry -- the server must stay withheld in that window."""
-    import kiro_crew.config.loader as loader
-    import kiro_crew.mcp_gateway as gw
+    import aj_crew.config.loader as loader
+    import aj_crew.mcp_gateway as gw
 
     monkeypatch.setattr(gw, "is_gateway_supported", lambda: True)
     _write_overlay(tmp_path, [])  # the overlay from before routing was saved
     cfg = _routing_config(["atlassian"], tmp_path)
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", staticmethod(lambda: cfg))
     assert mcp_sources._gateway_routed_names() == frozenset()
 
     _write_overlay(tmp_path, ["atlassian"])  # the gateway restarted with it
@@ -354,36 +354,36 @@ def test_saved_routing_is_not_routed_until_the_gateway_serves_it(
 def test_a_stale_stub_does_not_count_once_routing_is_off(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    import kiro_crew.config.loader as loader
-    import kiro_crew.mcp_gateway as gw
+    import aj_crew.config.loader as loader
+    import aj_crew.mcp_gateway as gw
 
     monkeypatch.setattr(gw, "is_gateway_supported", lambda: True)
     _write_overlay(tmp_path, ["atlassian"])
     cfg = _routing_config([], tmp_path)
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", staticmethod(lambda: cfg))
     assert mcp_sources._gateway_routed_names() == frozenset()
 
 
 def test_a_missing_overlay_routes_nothing(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    import kiro_crew.config.loader as loader
-    import kiro_crew.mcp_gateway as gw
+    import aj_crew.config.loader as loader
+    import aj_crew.mcp_gateway as gw
 
     monkeypatch.setattr(gw, "is_gateway_supported", lambda: True)
     cfg = _routing_config(["atlassian"], tmp_path / "no-overlay")
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", staticmethod(lambda: cfg))
     assert mcp_sources._gateway_routed_names() == frozenset()
 
 
 def test_a_raw_routed_name_matches_its_alias_stub(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    import kiro_crew.config.loader as loader
-    import kiro_crew.mcp_gateway as gw
+    import aj_crew.config.loader as loader
+    import aj_crew.mcp_gateway as gw
 
     monkeypatch.setattr(gw, "is_gateway_supported", lambda: True)
     _write_overlay(tmp_path, ["acme-mcp"])
     cfg = _routing_config(["npm:@acme/mcp"], tmp_path)
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", staticmethod(lambda: cfg))
     assert mcp_sources._gateway_routed_names() == frozenset({"acme-mcp"})
 
 
@@ -407,7 +407,7 @@ def _project_one(
     spec = {"command": "some-mcp", "env": {"API_TOKEN": REF}}
     config = {"mcpServers": {name: dict(spec)}}
     sources = mcp_sources.McpSources(
-        kirocrew={name: spec} if in_scope else {},
+        ajcrew={name: spec} if in_scope else {},
         kiro_global={},
         provider_global={},
         managed_names=set(),
@@ -454,7 +454,7 @@ def test_a_server_only_in_the_agent_spec_is_kept_but_muted(
     assert "atlassian" not in resolved.unresolved
 
     sources = mcp_sources.McpSources(
-        kirocrew={}, kiro_global={}, provider_global={}, managed_names=set()
+        ajcrew={}, kiro_global={}, provider_global={}, managed_names=set()
     )
     monkeypatch.setattr(mcp_sources, "_gateway_routed_names", lambda: frozenset({"atlassian"}))
     mcp_sources.resolve_mcp_servers(config, sources, lambda cmd, _env: (cmd, ""))
@@ -467,7 +467,7 @@ def test_a_user_written_mute_is_never_lifted(monkeypatch: pytest.MonkeyPatch) ->
     spec = {"command": "some-mcp", "env": {"API_TOKEN": REF}, "disabled": True}
     config = {"mcpServers": {"atlassian": dict(spec)}}
     sources = mcp_sources.McpSources(
-        kirocrew={}, kiro_global={}, provider_global={}, managed_names=set()
+        ajcrew={}, kiro_global={}, provider_global={}, managed_names=set()
     )
     monkeypatch.setattr(mcp_sources, "_gateway_routed_names", lambda: frozenset({"atlassian"}))
     monkeypatch.setattr(mcp_sources, "_app_owned_mcp_keys", dict)
@@ -484,7 +484,7 @@ def test_a_non_boolean_user_mute_never_gains_the_withheld_record(
     spec = {"command": "some-mcp", "env": {"API_TOKEN": REF}, "disabled": flag}
     config = {"mcpServers": {"atlassian": dict(spec)}}
     sources = mcp_sources.McpSources(
-        kirocrew={}, kiro_global={}, provider_global={}, managed_names=set()
+        ajcrew={}, kiro_global={}, provider_global={}, managed_names=set()
     )
     monkeypatch.setattr(mcp_sources, "_gateway_routed_names", frozenset)
     monkeypatch.setattr(mcp_sources, "_app_owned_mcp_keys", dict)
@@ -508,7 +508,7 @@ def test_a_server_without_a_reference_does_not_read_the_routing(
     spec = {"command": "plain-mcp", "env": {"MODE": "fast"}}
     config = {"mcpServers": {"plain": dict(spec)}}
     sources = mcp_sources.McpSources(
-        kirocrew={"plain": spec}, kiro_global={}, provider_global={}, managed_names=set()
+        ajcrew={"plain": spec}, kiro_global={}, provider_global={}, managed_names=set()
     )
     monkeypatch.setattr(mcp_sources, "_gateway_routed_names", _boom)
     mcp_sources.resolve_mcp_servers(config, sources, lambda cmd, _env: (f"/opt/bin/{cmd}", ""))
@@ -521,9 +521,9 @@ def test_an_unreadable_routing_withholds_the_server(monkeypatch: pytest.MonkeyPa
     def _broken_load() -> None:
         raise OSError("config unreadable")
 
-    import kiro_crew.config.loader as loader
+    import aj_crew.config.loader as loader
 
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", staticmethod(_broken_load))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", staticmethod(_broken_load))
     assert mcp_sources._gateway_routed_names() == frozenset()
 
 
@@ -772,11 +772,11 @@ def dashboard_spec(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     from unittest.mock import patch
 
     declared = {"command": "atl-mcp", "env": {"API_TOKEN": REF}}
-    agent_cfg = tmp_path / "kirocrew.json"
+    agent_cfg = tmp_path / "ajcrew.json"
     agent_cfg.write_text(
         json.dumps(
             {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "mcpServers": {
                     "atl": {**declared, "disabled": True, mcp_sources.WITHHELD_KEY: True}
                 },
@@ -793,9 +793,9 @@ def dashboard_spec(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(mcp_sources, "_gateway_routed_names", frozenset)
     monkeypatch.setattr(mcp_sources, "_app_owned_mcp_keys", dict)
     with (
-        patch("kiro_crew.dashboard.handlers.mcp._GLOBAL_MCP_JSON", mcp_json),
+        patch("aj_crew.dashboard.handlers.mcp._GLOBAL_MCP_JSON", mcp_json),
         patch(
-            "kiro_crew.dashboard.handlers.agents._installed_agent_config", return_value=agent_cfg
+            "aj_crew.dashboard.handlers.agents._installed_agent_config", return_value=agent_cfg
         ),
     ):
         yield agent_cfg
@@ -809,7 +809,7 @@ def test_enable_all_keeps_the_rebuilds_withheld_mute(dashboard_spec: Path) -> No
     """Popping ``disabled`` and leaving the record would let kiro-cli start the
     unrouted server with the literal reference, and the "Enable all" switch runs
     no rebuild that would put the mute back."""
-    from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch_unlocked
+    from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch_unlocked
 
     _sync_mcp_to_agent_batch_unlocked(["atl"], True)
     entry = _spec_entry(dashboard_spec, "atl")
@@ -818,7 +818,7 @@ def test_enable_all_keeps_the_rebuilds_withheld_mute(dashboard_spec: Path) -> No
 
 
 def test_the_single_enable_keeps_the_rebuilds_withheld_mute(dashboard_spec: Path) -> None:
-    from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_unlocked
+    from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_unlocked
 
     _sync_mcp_to_agent_unlocked("atl", True)
     entry = _spec_entry(dashboard_spec, "atl")
@@ -828,7 +828,7 @@ def test_the_single_enable_keeps_the_rebuilds_withheld_mute(dashboard_spec: Path
 
 def test_an_enable_copy_of_an_unrouted_reference_is_withheld(dashboard_spec: Path) -> None:
     """The copy branch brings the server in from mcp.json; it is muted at once."""
-    from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch_unlocked
+    from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch_unlocked
 
     _sync_mcp_to_agent_batch_unlocked(["fresh"], True)
     entry = _spec_entry(dashboard_spec, "fresh")
@@ -839,7 +839,7 @@ def test_an_enable_copy_of_an_unrouted_reference_is_withheld(dashboard_spec: Pat
 def test_an_enable_lifts_the_mute_once_the_gateway_serves_the_server(
     dashboard_spec: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch_unlocked
+    from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_batch_unlocked
 
     monkeypatch.setattr(mcp_sources, "_gateway_routed_names", lambda: frozenset({"atl"}))
     _sync_mcp_to_agent_batch_unlocked(["atl"], True)
@@ -849,7 +849,7 @@ def test_an_enable_lifts_the_mute_once_the_gateway_serves_the_server(
 
 def test_a_dashboard_disable_makes_the_mute_the_users(dashboard_spec: Path) -> None:
     """Otherwise the rebuild would lift the user's switch-off once it is routed."""
-    from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_unlocked
+    from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_unlocked
 
     _sync_mcp_to_agent_unlocked("atl", False)
     entry = _spec_entry(dashboard_spec, "atl")
@@ -860,7 +860,7 @@ def test_a_dashboard_disable_makes_the_mute_the_users(dashboard_spec: Path) -> N
 def test_an_enable_without_a_reference_still_lifts_the_mute(
     dashboard_spec: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_unlocked
+    from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent_unlocked
 
     def _boom() -> frozenset[str]:
         raise AssertionError("routing read for a server with no secret reference")
@@ -879,8 +879,8 @@ def test_an_enable_without_a_reference_still_lifts_the_mute(
 def _agents_dir_with(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, servers: dict) -> None:
     agents = tmp_path / "agents"
     agents.mkdir()
-    (agents / "kirocrew.json").write_text(
-        json.dumps({"name": "kirocrew", "mcpServers": servers}), encoding="utf-8"
+    (agents / "ajcrew.json").write_text(
+        json.dumps({"name": "ajcrew", "mcpServers": servers}), encoding="utf-8"
     )
     monkeypatch.setattr(mcp_sources.agent_mod, "kiro_agents_dir_path", lambda: agents)
 
@@ -916,12 +916,12 @@ def test_the_gateway_start_rebuilds_after_readiness_when_a_withheld_server_is_se
     import asyncio
     from unittest.mock import AsyncMock, MagicMock, patch
 
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.slack import gateway as gw
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.slack import gateway as gw
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.mcp_gateway.stub_servers = ["atl"]
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U"}):
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U"}):
         orch = gw.GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
     manager = MagicMock()
     manager.start = AsyncMock(return_value=False)
@@ -935,12 +935,12 @@ def test_the_gateway_start_rebuilds_after_readiness_when_a_withheld_server_is_se
         await lift
 
     with (
-        patch("kiro_crew.slack.gateway.is_gateway_supported", return_value=True),
-        patch("kiro_crew.slack.gateway.rewrite_agents", return_value=(None, {})),
-        patch("kiro_crew.slack.gateway.GatewayManager", return_value=manager),
+        patch("aj_crew.slack.gateway.is_gateway_supported", return_value=True),
+        patch("aj_crew.slack.gateway.rewrite_agents", return_value=(None, {})),
+        patch("aj_crew.slack.gateway.GatewayManager", return_value=manager),
         patch.object(mcp_sources, "withheld_servers_now_routed", return_value=due),
         patch(
-            "kiro_crew.agent.rebuild_agent_config",
+            "aj_crew.agent.rebuild_agent_config",
             side_effect=lambda *_a, **kw: rebuilds.append(kw),
         ),
     ):
@@ -965,7 +965,7 @@ def test_a_source_mute_makes_a_withheld_mute_the_users() -> None:
         "allowedTools": [],
     }
     sources = mcp_sources.McpSources(
-        kirocrew={}, kiro_global={"atl": scope}, provider_global={}, managed_names=set()
+        ajcrew={}, kiro_global={"atl": scope}, provider_global={}, managed_names=set()
     )
     mcp_sources.sync_shared_server_refs(config, sources, {"atl": "atl"})
     entry = config["mcpServers"]["atl"]
@@ -985,7 +985,7 @@ def test_a_routed_rewrite_honours_a_source_mute_on_a_formerly_withheld_server(
         "allowedTools": [],
     }
     sources = mcp_sources.McpSources(
-        kirocrew={}, kiro_global={"atl": scope}, provider_global={}, managed_names=set()
+        ajcrew={}, kiro_global={"atl": scope}, provider_global={}, managed_names=set()
     )
     mcp_sources.sync_shared_server_refs(config, sources, {"atl": "atl"})
     out, wrapped = _rewrite(

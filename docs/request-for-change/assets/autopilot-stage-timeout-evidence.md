@@ -12,7 +12,7 @@ This appendix supports
 [`rfc-autopilot-stage-budgets.md`](../rfc-autopilot-stage-budgets.md) and the
 remaining lifecycle defect tracked by
 [#14058](https://github.com/kirodotdev/KiroCrew/issues/14058). It contains
-sanitized lifecycle evidence from the incident owner's local Kiro Crew records.
+sanitized lifecycle evidence from the incident owner's local Aj Crew records.
 Raw transcripts are deliberately not committed: they contain unrelated prompts,
 local paths, tool arguments, and project content that are unnecessary to verify
 the defect.
@@ -20,7 +20,7 @@ the defect.
 ## Scope and method
 
 - Evidence collected: 2026-09-26.
-- Code baseline: Kiro Crew `main` at `7f1f4fb1d`.
+- Code baseline: Aj Crew `main` at `7f1f4fb1d`.
 - Dashboard corpus: the incident owner's `dashboard_*.jsonl` session records.
 - Search signature: exact assistant text matching
   `Stage [0-9]+ timed out after 30m`.
@@ -130,16 +130,16 @@ They remain local.
 ## Code-path correlation on `main` at `7f1f4fb1d`
 
 1. `OrchestrationTracker.start_stage` in
-   `src/kiro_crew/context_management.py` starts an absolute stage clock.
-2. `_stage_loop` in `src/kiro_crew/dashboard/chat_orchestrator.py` checks the
+   `src/aj_crew/context_management.py` starts an absolute stage clock.
+2. `_stage_loop` in `src/aj_crew/dashboard/chat_orchestrator.py` checks the
    clock at a stage boundary.
 3. The same loop wraps the active `_run_chat` turn through `_bounded_turn` using
    the configured 30-minute value.
-4. `_bounded_turn` in `src/kiro_crew/dashboard/turn_dispatch.py` cancels the
+4. `_bounded_turn` in `src/aj_crew/dashboard/turn_dispatch.py` cancels the
    inner task when its timer fires and records the fact even if the inner
    coroutine absorbs cancellation.
 5. `_run_chat`'s `CancelledError` branch in
-   `src/kiro_crew/dashboard/chat_runner.py` persists partial dashboard text, but
+   `src/aj_crew/dashboard/chat_runner.py` persists partial dashboard text, but
    does not call native `session/cancel`.
 6. The native ACP turn therefore retains execution authority after the dashboard
    controller has emitted a terminal-looking card.
@@ -211,4 +211,4 @@ separate change request.
   made the first incident harder to reconstruct after dashboard ownership was
   lost.
 - It does not claim a particular model caused the defect. The timer and
-  cancellation ownership live in the Kiro Crew host.
+  cancellation ownership live in the Aj Crew host.

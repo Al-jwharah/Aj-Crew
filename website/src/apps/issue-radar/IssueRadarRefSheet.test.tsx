@@ -47,7 +47,7 @@ const RefMarkdown = (await import('./components/RefMarkdown')).default
 const RefSheet = (await import('./components/RefSheet')).default
 
 const OWNER = 'kirodotdev'
-const REPO = 'KiroCrew'  // brand-ok: the repository name
+const REPO = 'AjCrew'  // brand-ok: the repository name
 
 function summary(over: Record<string, unknown> = {}) {
   return {

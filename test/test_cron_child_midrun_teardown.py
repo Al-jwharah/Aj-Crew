@@ -19,16 +19,16 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cron_script
-from kiro_crew.cron_script import CHILD_PERSISTENCE_PREFIX, ScriptContext, run_script_sandboxed
-from kiro_crew.sandbox import CRON_SCRIPT_CHILD_ENV, UnauditedSpawnRefused
+from aj_crew import cron_script
+from aj_crew.cron_script import CHILD_PERSISTENCE_PREFIX, ScriptContext, run_script_sandboxed
+from aj_crew.sandbox import CRON_SCRIPT_CHILD_ENV, UnauditedSpawnRefused
 
 
 @pytest.fixture
 def cron_home(tmp_path, monkeypatch):
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     crons = home / "crons"
     crons.mkdir()
     return crons
@@ -40,17 +40,17 @@ def spawns_real_child(monkeypatch, tmp_path):
     src_dir = str(Path(__file__).resolve().parents[1] / "src")
     existing = os.environ.get("PYTHONPATH", "")
     monkeypatch.setenv("PYTHONPATH", src_dir + (os.pathsep + existing if existing else ""))
-    monkeypatch.setattr("kiro_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
+    monkeypatch.setattr("aj_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
     monkeypatch.chdir(tmp_path)
 
 
 def _child_home(monkeypatch, home: Path) -> None:
-    """Point only the CHILD's ``KIROCREW_HOME`` at *home*."""
+    """Point only the CHILD's ``AJCREW_HOME`` at *home*."""
     real = cron_script._clean_cron_env
 
     def _with_home() -> dict[str, str]:
         env = real()
-        env["KIROCREW_HOME"] = str(home)
+        env["AJCREW_HOME"] = str(home)
         return env
 
     monkeypatch.setattr(cron_script, "_clean_cron_env", _with_home)
@@ -71,7 +71,7 @@ _PERSISTENCE_TEXT = CHILD_PERSISTENCE_PREFIX.split(" ", 1)[1]
 _TEARDOWN = (
     "import os, shutil\n"
     "def _teardown():\n"
-    "    home = os.environ['KIROCREW_HOME']\n"
+    "    home = os.environ['AJCREW_HOME']\n"
     "    shutil.rmtree(home)\n"
     "    with open(home, 'w') as f:\n"
     "        f.write('gone')\n"
@@ -83,11 +83,11 @@ class TestMidRunTeardown:
         "body",
         [
             "def run(ctx):\n    _teardown()\n",
-            "from kiro_crew.cron_script import Skip\n"
+            "from aj_crew.cron_script import Skip\n"
             "def run(ctx):\n    _teardown()\n    raise Skip()\n",
-            "from kiro_crew.cron_script import Done\n"
+            "from aj_crew.cron_script import Done\n"
             "def run(ctx):\n    _teardown()\n    raise Done('banked')\n",
-            "from kiro_crew.cron_script import Report\n"
+            "from aj_crew.cron_script import Report\n"
             "def run(ctx):\n    _teardown()\n    raise Report('banked')\n",
         ],
         ids=["ok", "skip", "done", "report"],

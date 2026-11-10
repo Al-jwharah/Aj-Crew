@@ -10,18 +10,18 @@ from copy import deepcopy
 
 import pytest
 
-from kiro_crew.acp.types import TurnUsage
-from kiro_crew.autonudge import (
+from aj_crew.acp.types import TurnUsage
+from aj_crew.autonudge import (
     AutoNudgeService,
     NudgeAdmissionRefused,
     NudgeLoop,
 )
-from kiro_crew.autonudge_service import monitor_records as monitor_records_mod
-from kiro_crew.monitoring import models
-from kiro_crew.monitoring.completion import MonitorCompletionHook
-from kiro_crew.monitoring.decision import monitor_budget_reason
-from kiro_crew.monitoring.models import MonitorBudgets, MonitorOutcome, MonitorState
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.autonudge_service import monitor_records as monitor_records_mod
+from aj_crew.monitoring import models
+from aj_crew.monitoring.completion import MonitorCompletionHook
+from aj_crew.monitoring.decision import monitor_budget_reason
+from aj_crew.monitoring.models import MonitorBudgets, MonitorOutcome, MonitorState
+from aj_crew.testing.wait import async_wait_until
 
 #: Lost-run ceiling for synchronization the test itself must release.
 _LOST_RUN_SECS = 30.0
@@ -352,7 +352,7 @@ async def test_completion_cancellation_stops_waiting_on_a_wedged_write_after_the
     post-cancellation window. Past it the CancelledError reaches the caller while the
     owned transaction keeps running, still registered, so shutdown drains what the
     caller has stopped waiting for and the write lands when the thread frees."""
-    from kiro_crew import autonudge as _an
+    from aj_crew import autonudge as _an
 
     monkeypatch.setattr(_an, "_DRAIN_CANCEL_GRACE_SECS", 0.05)
     service = AutoNudgeService(base_dir=tmp_path)
@@ -962,8 +962,8 @@ def test_restart_fails_closed_when_completion_evidence_is_unavailable(tmp_path) 
 @pytest.mark.asyncio
 async def test_completion_hook_delivers_one_typed_record_with_explicit_unknown_usage() -> None:
     """A credits-only usage result must not fabricate authoritative token counts."""
-    assert importlib.util.find_spec("kiro_crew.monitoring.completion") is not None
-    from kiro_crew.monitoring.completion import MonitorCompletionHook
+    assert importlib.util.find_spec("aj_crew.monitoring.completion") is not None
+    from aj_crew.monitoring.completion import MonitorCompletionHook
 
     completions: list[models.MonitorActionCompletion] = []
 

@@ -60,7 +60,7 @@ function completedAfterFailedCheck(
 }
 
 /** The Services search text, kept in `sessionStorage` for the browser tab. */
-const SERVICES_SEARCH_KEY = 'kirocrew:connections-services-search'
+const SERVICES_SEARCH_KEY = 'ajcrew:connections-services-search'
 
 /** Authorization-status poll cadence. A grant changes rarely and the read is a
  *  local stat, so this is slow relative to the mint poll — it only has to notice
@@ -447,15 +447,15 @@ export default function ConnectionsPage({ servicesEnabled = false }: { servicesE
       await api.mcpCustomUpdate(existing.name, { ...stored.spec, url: provider.mcp_url })
       // Editing a spec deliberately preserves the disabled flag ("editing is
       // not consent to run") — but Reconnect IS consent, so re-enable the
-      // KiroCrew-managed scope. mcpToggle would write the GLOBAL mcp.json
-      // (creating an empty stub for kirocrew-scoped names), so use the
-      // scope-preserving apply instead: kirocrew on, every observed global
+      // AjCrew-managed scope. mcpToggle would write the GLOBAL mcp.json
+      // (creating an empty stub for ajcrew-scoped names), so use the
+      // scope-preserving apply instead: ajcrew on, every observed global
       // scope passed through unchanged (the backend defaults kiroGlobal to
       // false when omitted).
       if (!existing.enabled) {
-        const reenable: McpApplyChange = { name: existing.name, kirocrew: true }
+        const reenable: McpApplyChange = { name: existing.name, ajcrew: true }
         for (const [scope, present] of Object.entries(existing.presence ?? {})) {
-          if (scope !== 'kirocrew' && scope.endsWith('Global')) reenable[scope as `${string}Global`] = !!present
+          if (scope !== 'ajcrew' && scope.endsWith('Global')) reenable[scope as `${string}Global`] = !!present
         }
         await api.mcpApply([reenable])
       }

@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.monitoring.models import MonitorObservationStatus, ProviderErrorKind
-from kiro_crew.monitoring.pull_request import (
+from aj_crew.monitoring.models import MonitorObservationStatus, ProviderErrorKind
+from aj_crew.monitoring.pull_request import (
     PullRequestCheck,
     PullRequestFacts,
     build_pull_request_probe_result,
     classify_provider_error_text,
 )
-from kiro_crew.monitoring.registry import PULL_REQUEST_MONITOR_KINDS
+from aj_crew.monitoring.registry import PULL_REQUEST_MONITOR_KINDS
 
 _HEAD = "0123456789abcdef0123456789abcdef01234567"
 

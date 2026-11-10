@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to KiroCrew are documented in this file.
+All notable changes to AjCrew are documented in this file.
 
 ## [0.12.0] - 2026-11-05
 
@@ -10,7 +10,7 @@ Bots (the new name for Mates) are now on for everyone, the agent can drive a bro
 
 - **Bots without a preview switch**: Mates are now called Bots in every screen, prompt and language, the Bots row in the left rail, the `/members` page and the Bot rows in the command bar are always shown, and starred Bots gather in a Bots group in the rail that you can drag to reorder.
 - **A desk of its own**: each Bot keeps the chats and folders it opens in one sidebar folder named after it, and works in its own git worktree per repository, so two Bots on one repo no longer commit each other's edits.
-- **Take a Bot with you**: the Bot profile card's "Export as file" writes a `.kirobot` file with an editable lessons draft, and Bots > Import from file reads it back (older `.crewjam` and `.crewmate` files still import).
+- **Take a Bot with you**: the Bot profile card's "Export as file" writes a `.ajbot` file with an editable lessons draft, and Bots > Import from file reads it back (older `.crewjam` and `.crewmate` files still import).
 
 ### Bots that keep track of their work
 
@@ -28,7 +28,7 @@ Bots (the new name for Mates) are now on for everyone, the agent can drive a bro
 
 - **Strands**: Settings > Agent Harness lists Strands once the Strands CLI is installed, its setup card stores the model provider keys in Settings > Secrets, and changing the model or effort in the picker relaunches it on the same session.
 - **GitHub Copilot CLI**: pick it under Settings > Agent Harness (a session on any Copilot CLI release other than 1.0.100 is refused with the install command), and every harness's model picker now shows that backend's own model names.
-- **KAS on its own**: choosing KAS uses your Kiro Crew sign-in, falls back to the account from `kiro-cli login`, and runs Kiro Crew's own engine when kiro-cli is missing, while `/agent`, `/context`, `/help`, `/mcp`, `/model`, `/tools` and `/usage` answer locally on the default KAS backend.
+- **KAS on its own**: choosing KAS uses your Aj Crew sign-in, falls back to the account from `kiro-cli login`, and runs Aj Crew's own engine when kiro-cli is missing, while `/agent`, `/context`, `/help`, `/mcp`, `/model`, `/tools` and `/usage` answer locally on the default KAS backend.
 
 ### Connections and sign-ins
 
@@ -78,13 +78,13 @@ Bots (the new name for Mates) are now on for everyone, the agent can drive a bro
 
 ### Notifications that reach you
 
-- **Push when closed**: Settings > Notifications > Push notifications > "Notify me even when Kiro Crew is closed" delivers to an installed PWA, including iOS after Add to Home Screen.
+- **Push when closed**: Settings > Notifications > Push notifications > "Notify me even when Aj Crew is closed" delivers to an installed PWA, including iOS after Add to Home Screen.
 - **Your own sounds**: Settings > Notifications > Custom sounds takes a short MP3, WAV or OGG file for any category.
 - **Missed approvals**: an approval that expires unanswered leaves a bell note naming the tool, a chat that stops on an error you must act on leaves a "Chat errors" bell entry linking to it, and on phones the live banner swipes away.
 
 ### Slack and other channels
 
-- **Slack code channels**: with `slack.code_channels` on (it is off by default, and needs your workspace's Slack code channels feature, an updated app manifest and a reinstall), mentioning Kiro Crew in a thread with multi-step work opens a code channel backed by a dashboard session that you can stop with its button or `!stop`.
+- **Slack code channels**: with `slack.code_channels` on (it is off by default, and needs your workspace's Slack code channels feature, an updated app manifest and a reinstall), mentioning Aj Crew in a thread with multi-step work opens a code channel backed by a dashboard session that you can stop with its button or `!stop`.
 - **Feishu commands**: Feishu gains `/stop` (alias `/cancel`) and `/help`, like the other channels.
 - **Discord choices**: pressing a long choice answers with its full text instead of the cut label.
 
@@ -96,8 +96,8 @@ Bots (the new name for Mates) are now on for everyone, the agent can drive a bro
 
 ### Schedules and apps
 
-- **Quieter failures**: the job dialog's "Send the failure message after N failures in a row" (and `kirocrew cron add --alert-after N`) rings only the bell for earlier failures, and a run the security gate partly refused shows "Partial" (creating a job over the REST API now keeps the limits you send).
-- **More ways to say when**: one-shot times for `kirocrew cron add --at` accept days and weeks ("in 2 days", "in 1 week"), a cron job with no zone follows the default time zone setting, which is the computer's current zone shown as "Local" in the job form (or "Local (zone not detected, runs in UTC)"), and `kirocrew cron add --project-path <dir>` runs the job's agent session in that directory so the repo's steering files load.
+- **Quieter failures**: the job dialog's "Send the failure message after N failures in a row" (and `ajcrew cron add --alert-after N`) rings only the bell for earlier failures, and a run the security gate partly refused shows "Partial" (creating a job over the REST API now keeps the limits you send).
+- **More ways to say when**: one-shot times for `ajcrew cron add --at` accept days and weeks ("in 2 days", "in 1 week"), a cron job with no zone follows the default time zone setting, which is the computer's current zone shown as "Local" in the job form (or "Local (zone not detected, runs in UTC)"), and `ajcrew cron add --project-path <dir>` runs the job's agent session in that directory so the repo's steering files load.
 - **Apps in their own window**: an app page's "Pop out app to its own window" control opens it separately, right-clicking an app row in the sidebar opens Details or Unpin with an update badge, and Apps > Library lists enabled apps first.
 
 ### Apps that reach into chat
@@ -108,15 +108,15 @@ Bots (the new name for Mates) are now on for everyone, the agent can drive a bro
 
 ### Desktop and command line
 
-- **Desktop app**: Settings > Display > View > Desktop app turns off "Keep running in the background after closing the window", and `kirocrew://chat?sid=<key>` or `kirocrew open` opens a session in the desktop app.
+- **Desktop app**: Settings > Display > View > Desktop app turns off "Keep running in the background after closing the window", and `ajcrew://chat?sid=<key>` or `ajcrew open` opens a session in the desktop app.
 - **Phone sign-in**: the session-expired banner can scan the sign-in QR with the phone camera in the page, and Connect your phone shows a QR for any external address.
-- **Update an app from a folder**: `kirocrew app update <name> --source <dir>` updates an installed app from another directory and remembers it as the app's source, and the command now prints how many agents and skills it re-registered.
+- **Update an app from a folder**: `ajcrew app update <name> --source <dir>` updates an installed app from another directory and remembers it as the app's source, and the command now prints how many agents and skills it re-registered.
 
 ### Updates and scripts
 
-- **Safer updates**: if the dashboard build fails, an update stops before restarting and tells you why, every update path installs the KAS engine the release pins, `kirocrew doctor` names the installed and needed engine versions, and a second gateway started while the first is still booting no longer shuts it down.
-- **Scripts can trust exit codes**: `kirocrew knowledge stats` and `dedup`, `kirocrew app`, `agent` and `workspace` with a missing or unknown sub-action, and `cron update` with nothing to write now exit non-zero.
-- **Platform touches**: the Linux AppImage adds its own launcher entry and icons the first time it starts, a Windows desktop build with managed updates shows a "Kiro Crew update ready" notice at shutdown, and the installers say so when a host cannot run the built-in KAS engine instead of telling you to retry.
+- **Safer updates**: if the dashboard build fails, an update stops before restarting and tells you why, every update path installs the KAS engine the release pins, `ajcrew doctor` names the installed and needed engine versions, and a second gateway started while the first is still booting no longer shuts it down.
+- **Scripts can trust exit codes**: `ajcrew knowledge stats` and `dedup`, `ajcrew app`, `agent` and `workspace` with a missing or unknown sub-action, and `cron update` with nothing to write now exit non-zero.
+- **Platform touches**: the Linux AppImage adds its own launcher entry and icons the first time it starts, a Windows desktop build with managed updates shows a "Aj Crew update ready" notice at shutdown, and the installers say so when a host cannot run the built-in KAS engine instead of telling you to retry.
 
 ### Lighter and faster
 
@@ -130,7 +130,7 @@ The dashboard stays responsive while many sessions stream, the gateway no longer
 
 ### More previews you can turn on (Preview)
 
-- **Session Environments**: Settings > Session Environments connects Coder, Fly.io Sprites or boxd workspaces, with an environment chip in the composer and a remote Files panel, Git panel and terminal; the gateway also needs `KIROCREW_DEV_MODE` set.
+- **Session Environments**: Settings > Session Environments connects Coder, Fly.io Sprites or boxd workspaces, with an environment chip in the composer and a remote Files panel, Git panel and terminal; the gateway also needs `AJCREW_DEV_MODE` set.
 - **Shared Crew**: the Shared Crew card (owner only, applied after a gateway restart) turns on People, where a two-step card shares this machine over Tailscale and copies an invite message, and teammates appear from your Tailscale peers.
 - **Remote dispatch**: the Remote dispatch switch lets an Ultra Mode chat run tasks on machines connected under Remote Crew, and a task whose machine stays unreachable for 30 minutes is released and shown as due for redispatch, which you start with a new message.
 
@@ -142,11 +142,11 @@ The dashboard stays responsive while many sessions stream, the gateway no longer
 
 **Schedules, memory and desktop.** A cron's wall-clock time holds across a daylight saving change, and a memory backup folder with an extra file no longer deletes real backups. Memory search finds markdown you edited directly on disk, an update you put off is never installed behind your back, fewer ordinary commands are wrongly denied, and an agent adding a schedule into a folder that does not exist yet creates the folder instead of failing. The job form's schedule fields and the Vector Memory card's text boxes now have labels, a selected weekday is announced as pressed, screen readers hear whether cron run history rows, review comment collapse buttons and Knowledge file groups are open, and one corrupt line in a job's run history no longer breaks the history pages.
 
-**Your files stay put.** A settings or data file that cannot be read is kept aside instead of being overwritten with defaults, including the notifications, tips, folders, pins, tags, global MCP list and meeting task files. Files saved with a leading byte order mark by some Windows editors load again, and `kirocrew setup` leaves a global MCP list that is not valid UTF-8 untouched instead of stopping with an error.
+**Your files stay put.** A settings or data file that cannot be read is kept aside instead of being overwritten with defaults, including the notifications, tips, folders, pins, tags, global MCP list and meeting task files. Files saved with a leading byte order mark by some Windows editors load again, and `ajcrew setup` leaves a global MCP list that is not valid UTF-8 untouched instead of stopping with an error.
 
 **Windows and Linux.** On Windows the gateway no longer freezes on slow process starts, Claude Code starts reliably, and files saved while another program holds them are retried. On Linux the background service finds Node versions installed by mise, and the installer raises a distro Node below the supported floor.
 
-**Sign-in and tools.** A Builder ID sign-in made in Kiro Crew works for model calls and shows its email and type in the account panel, and a hook naming one MCP tool asks only for that tool. `kirocrew doctor` stops asking for Node on the bundled KAS route and accepts a standalone kiro-cli 3.0.0 install, a mistake in the security policy file prints one clear line with a doctor hint instead of a traceback, the Task Runner page runs one action per run at a time, and skills that a second package also ships are found again. A stdio MCP server whose command or environment value uses `${HOME}` now starts instead of timing out, and with Kiro CLI 3.0.0 a usage-limit error shows the provider's own sentence and a temporarily unavailable model is retried again.
+**Sign-in and tools.** A Builder ID sign-in made in Aj Crew works for model calls and shows its email and type in the account panel, and a hook naming one MCP tool asks only for that tool. `ajcrew doctor` stops asking for Node on the bundled KAS route and accepts a standalone kiro-cli 3.0.0 install, a mistake in the security policy file prints one clear line with a doctor hint instead of a traceback, the Task Runner page runs one action per run at a time, and skills that a second package also ships are found again. A stdio MCP server whose command or environment value uses `${HOME}` now starts instead of timing out, and with Kiro CLI 3.0.0 a usage-limit error shows the provider's own sentence and a temporarily unavailable model is retried again.
 
 **Apps.** In an app's embedded chat, a message the app's page posts to the chat shows at once instead of after the next refresh, and the message box keeps keyboard focus after you send.
 
@@ -193,8 +193,8 @@ for human-only actions. A deny rule that wrongly refused commands such as
 models install a `filelock` with its published advisory fixed.
 
 **Desktop and CLI.** The one-line and `install.sh` installers download Crew's
-built-in KAS engine by default (`--no-kas` skips it), `kirocrew restart` says
-when another gateway still serves the port, and `kirocrew stop` and `kirocrew
+built-in KAS engine by default (`--no-kas` skips it), `ajcrew restart` says
+when another gateway still serves the port, and `ajcrew stop` and `ajcrew
 restart` refuse a gateway the desktop app supervises. Quitting the desktop app
 while it starts no longer leaves a gateway running behind it, and Windows
 recovery retries a failed network check before it gives up. A new terminal
@@ -281,9 +281,9 @@ list of security and platform fixes lands.
   backoff, and a Runs as switch picks Custom agent or Mate, with a mate's jobs
   listed as Mate with a by-mate filter; an `app.json` cron can set
   `strict_schedule` to start on the minute.
-- **Command line**: `kirocrew spawn run` takes `--model`, `--agent` and
-  `--crew`, `kirocrew agent create` and `update` take `--model`,
-  `kirocrew cron add` and `update` take `--auto-pause-after`, and a chat
+- **Command line**: `ajcrew spawn run` takes `--model`, `--agent` and
+  `--crew`, `ajcrew agent create` and `update` take `--model`,
+  `ajcrew cron add` and `update` take `--auto-pause-after`, and a chat
   permission prompt accepts a typed reply; `spawn_run` tasks can carry a short
   label.
 
@@ -412,7 +412,7 @@ the sidebar and every backend get faster ways to move, steer and recover.
 
 ### Agents that lead and hand off
 
-- **A team lead agent**: `kirocrew-team-lead` ships as a default agent that
+- **A team lead agent**: `ajcrew-team-lead` ships as a default agent that
   splits a goal into work items, opens a session for each, and does the small
   ones itself.
 - **Pick the backend per task**: `spawn_run` takes a backend for each task, and
@@ -481,7 +481,7 @@ the sidebar and every backend get faster ways to move, steer and recover.
 
 ### Memory you control
 
-- **Forget on purpose**: `kirocrew memory forget` removes a memory, and the
+- **Forget on purpose**: `ajcrew memory forget` removes a memory, and the
   Memory page shows where each lesson came from.
 - **Switches for what is kept**: `memory.writes_enabled` and
   `memory.lesson_extraction_enabled` turn off memory writes and lesson
@@ -678,9 +678,9 @@ run out.
   that run's trace.
 - **Restore a memory**: the memory records editor offers Restore an earlier
   version with a Now and After restoring preview, and
-  `kirocrew memory create-store` creates a declared store.
-- **CLI and export additions**: `kirocrew cron add --managed-by` lets a tool own
-  a cron by key, `kirocrew cloud launch` takes `--ami` and `--extra-packages`,
+  `ajcrew memory create-store` creates a declared store.
+- **CLI and export additions**: `ajcrew cron add --managed-by` lets a tool own
+  a cron by key, `ajcrew cloud launch` takes `--ami` and `--extra-packages`,
   and Settings → Import / Export can include persistent chat history in an
   export.
 
@@ -732,7 +732,7 @@ checkout's agent spec hooks no longer reach the turn loop, config-defined git
 hooks are disabled for host-side git, and the dashboard serves its fonts
 locally.
 
-**Updates and agents.** The dashboard's Update and `kirocrew update` no longer
+**Updates and agents.** The dashboard's Update and `ajcrew update` no longer
 fail with "could not fetch latest-cli.json" when they download a new version. A
 crewmate (a working name, final name TBD) whose template uses a name the KAS
 engine reserves, such as `default`,
@@ -741,7 +741,7 @@ up the other tools of its session.
 
 ## [0.8.0] - 2026-10-08
 
-Kiro Crew spends less of your attention. A monitoring loop now screens what it
+Aj Crew spends less of your attention. A monitoring loop now screens what it
 finds and wakes you only for a tick that needs a decision, a removed credential
 explains itself instead of leaving a blank, and a fresh desktop install runs the
 agent after sign-in alone because it carries its own agent CLI. Folders can steer
@@ -886,7 +886,7 @@ one bar.
   without setting anything, so session ledgers, the conductor work board and the
   Issue Radar crew ledger work on a fresh install. Deleting or trashing a
   conversation takes its crew log with it, the storage screen counts the log with
-  the session, and `KIROCREW_CREW_LOG=0` switches the whole thing off.
+  the session, and `AJCREW_CREW_LOG=0` switches the whole thing off.
 
 ### Crewmates grow into teams (Preview, name TBD)
 
@@ -973,7 +973,7 @@ one bar.
 ### The sandbox, on your terms
 
 - **A strict sandbox tier**: set `agent.sandbox` to strict, in `config.json`,
-  with `kirocrew config set`, or on the Developer page's Config tab, to hide the
+  with `ajcrew config set`, or on the Developer page's Config tab, to hide the
   cloud, ssh, kube and gh credential directories from every agent subprocess.
 - **Fewer false refusals**: a command that only mentions a dangerous verb as
   data, and an ordinary command or file read while the host is under load, now go
@@ -1043,9 +1043,9 @@ one bar.
 
 ### From the command line
 
-- **`kirocrew cron add` registers every kind of job**: script, command and
+- **`ajcrew cron add` registers every kind of job**: script, command and
   one-shot jobs take the same options the dashboard offers.
-- **`kirocrew doctor` reports skills out of step with the build**: it also counts
+- **`ajcrew doctor` reports skills out of step with the build**: it also counts
   the skill-view alias backlog waiting to be reclaimed.
 - **The Browser panel works over a tunnel**: it is served through the dashboard's
   own address, so a remote dashboard reached over SSH needs no second forwarded
@@ -1069,7 +1069,7 @@ first instead of burying it under long transcripts that repeat the digit,
 finishing a rename in the header returns focus to the title, the effort popover
 under the composer's model chip stays on screen beside the right edge, and
 switching a session's model in place keeps the effort level you chose. A
-tool-call row for one of Kiro Crew's own tools reads as what the call does,
+tool-call row for one of Aj Crew's own tools reads as what the call does,
 Start sub-agent or Pause schedule, rather than a spaced-out tool name.
 
 **Replies, queues and watches.** Inline code looks like code rather than a link
@@ -1113,7 +1113,7 @@ on every command-line start is gone.
 **Agents, skills and apps.** An agent spec's hooks and permissions now take
 effect on the KAS backend, a sub-agent spawn there reaches the approval card
 instead of being denied outright, and an older agent CLI no longer refuses the
-generated spec and loses every Kiro Crew tool with it. The Skills queue says why
+generated spec and loses every Aj Crew tool with it. The Skills queue says why
 an approval was refused and flags a candidate that will fail before you click,
 and Settings links straight to that queue. Disabling or uninstalling an app
 really stops it, scheduled jobs included, the store no longer offers a built-in
@@ -1138,7 +1138,7 @@ a queued spawn's chip says whether it is waiting on memory, a paused cap or the
 concurrency limit. A run you stopped is recorded as stopped rather than as a
 runtime death, a run cut off by a gateway restart is delivered as cut off rather
 than as its answer, and the notice names the resume handle when the conversation
-is still on disk. Disabling one Kiro Crew tool no longer breaks every session of
+is still on disk. Disabling one Aj Crew tool no longer breaks every session of
 the default agent, a refusal names the unreadable spec or the unreachable
 gateway, and a project path with a Windows drive letter is accepted. An agent may
 hand off a single task again, because the refusal that demanded a reason for a
@@ -1200,7 +1200,7 @@ scheduled job keeps apply while the gateway runs instead of only at start, and o
 Linux the service commands see a gateway installed as your own user's systemd
 unit, naming the scope they act on. A hostname that merely begins with the letters
 a token header begins with is left alone in chat, history and channel output, and
-on the KAS backend every Kiro Crew tool call had been refused as unattested and
+on the KAS backend every Aj Crew tool call had been refused as unattested and
 answers again.
 
 **Sessions that start and resume.** A session start on a slow host gets ninety
@@ -1215,7 +1215,7 @@ cleanup removed, or to a generated skill view, resume on their agent, the
 Crewmates roster drops the generated rows you never chatted with, and a
 crewmate's own chat keeps dispatching workers after a restart.
 
-**Kiro Crew's own tools.** Kiro Crew's tools stay available after an update
+**Aj Crew's own tools.** Aj Crew's tools stay available after an update
 prunes the previous install, across an in-app restart, and when a shared MCP
 backend falls back to running per session, instead of refusing every call as
 unattested until the gateway restarts. With kiro-cli 2.27 or later those tools
@@ -1230,7 +1230,7 @@ would remain after it, where it used to want 4.5 GB free, it is priced by
 whether it shares its parent's runtime, and on a Mac it also waits while the
 kernel reports memory pressure, with the queued chip naming that reason. A
 concurrency cap cut under load climbs back once the host sits idle,
-`kirocrew spawn run` works from the host's own command line, and a Claude
+`ajcrew spawn run` works from the host's own command line, and a Claude
 session running a background command or workflow is not recycled while that
 work runs. Chats accept messages a few seconds after a restart instead of about
 two minutes later, guide files over a crewmate's budget or behind a symlinked
@@ -1280,7 +1280,7 @@ move between them.
 
 ### Notable fixes
 
-**Sessions and subagents.** The per agent view files Kiro Crew publishes for its agent
+**Sessions and subagents.** The per agent view files Aj Crew publishes for its agent
 backend are now reclaimed as soon as no running session holds one, so that directory no
 longer grows without bound. On hosts where it had reached thousands of entries every new
 chat and every background subagent paid several seconds before its first reply, and past a
@@ -1293,7 +1293,7 @@ and a message read again reuses the redaction already computed for it.
 
 ## [0.7.0] - 2026-09-15
 
-Kiro Crew stops asking you to restart it: almost every setting now reaches the
+Aj Crew stops asking you to restart it: almost every setting now reaches the
 running gateway the moment you save it, updates check on a schedule and wait for
 your work to finish, and queued work survives a gateway restart. Long chats get
 a minimap, readable tool-call titles, a model picker that no longer hides
@@ -1386,7 +1386,7 @@ well as GitHub, and a Fargate crew is reachable from your laptop.
 
 ### Isolated pods, on Windows and from the agent
 
-- **Isolated pods run on Windows**: `kirocrew pod up` and its down, ls, status,
+- **Isolated pods run on Windows**: `ajcrew pod up` and its down, ls, status,
   token, url, logs, prune and provision verbs work through Task Scheduler, for a
   git worktree of a source checkout on a host where your own user may create a
   scheduled task, while `pod api` is the one verb refused there because Windows
@@ -1529,7 +1529,7 @@ well as GitHub, and a Fargate crew is reachable from your laptop.
   execution mode and never applies a change on its own.
 - **Knowledge takes four more languages and reports what it holds**: C#, Kotlin,
   Swift and Scala files are ingested by a folder scan that used to skip them,
-  `local_knowledge_search` can be scoped to one namespace, and `kirocrew
+  `local_knowledge_search` can be scoped to one namespace, and `ajcrew
   knowledge stats` reports how many sources, documents and items the library
   holds.
 
@@ -1539,7 +1539,7 @@ well as GitHub, and a Fargate crew is reachable from your laptop.
   Developer Mode under Settings → Developer and install the `opencode` binary on
   the gateway host, then pick the opencode option on the Developer page's Agent
   Backend tab.
-- **Kiro Crew's own tools now reach OpenCode and Codex sessions** the same way
+- **Aj Crew's own tools now reach OpenCode and Codex sessions** the same way
   they already reached Claude, except that an OpenCode session withholds one of
   Crew's own servers whole when any of that server's tools is switched off.
 - **A policy-blocked tool call on Codex no longer silently ends the chat**, and
@@ -1550,9 +1550,9 @@ well as GitHub, and a Fargate crew is reachable from your laptop.
 
 - **Pi is another choice on the Developer page's Agent Backend tab once Developer
   Mode is on under Settings → Developer**: install both `pi` and `pi-acp` on the
-  gateway, with the selector naming missing components and Kiro Crew refusing a
+  gateway, with the selector naming missing components and Aj Crew refusing a
   session whose tool-permission gate cannot be verified.
-- **Pi sessions do not carry Kiro Crew's own MCP tools**, which `kirocrew doctor`
+- **Pi sessions do not carry Aj Crew's own MCP tools**, which `ajcrew doctor`
   reports, so choose another backend when you need its subagents, scheduling or
   memory tools.
 
@@ -1581,8 +1581,8 @@ well as GitHub, and a Fargate crew is reachable from your laptop.
 - **A per-session record of what happened**: each session keeps an append-only
   log of what it actually did, so long-horizon work survives compaction; a Crew
   log view in the chat right panel folds it into status, usage, timeline, tools
-  and approvals when the gateway runs with `KIROCREW_CREW_LOG` on, and a
-  read-only `kirocrew-crew-log` MCP server lets an agent verify the trail.
+  and approvals when the gateway runs with `AJCREW_CREW_LOG` on, and a
+  read-only `ajcrew-crew-log` MCP server lets an agent verify the trail.
 - **Sessions release what they held**: ending a session tears down its whole
   process tree, its subagents and its per-session MCP servers, so a long-running
   host stops accumulating hundreds of megabytes per ended session.
@@ -1664,7 +1664,7 @@ well as GitHub, and a Fargate crew is reachable from your laptop.
 - **Filter the store by source**: the Apps page filters by where an app comes
   from, and a pinned registry shows its label and review tier so you can judge
   how vetted a source is before installing.
-- **Bring a plugin in**: `kirocrew app import <dir>` converts a plugin package
+- **Bring a plugin in**: `ajcrew app import <dir>` converts a plugin package
   written for another agent harness into an installable app, reporting what does
   not map, without executing anything from the package.
 - **Apps that act**: an app can start, steer and stop sessions once you grant it
@@ -1711,7 +1711,7 @@ well as GitHub, and a Fargate crew is reachable from your laptop.
 
 - **Approve a flagged file**: the owner can allow delivery of a file the
   credential scanner flagged, armed in Settings → Security and completed with
-  `kirocrew file-delivery approve` on the host, and the Denied Commands card
+  `ajcrew file-delivery approve` on the host, and the Denied Commands card
   states what that tier cannot see: the command line, not the body of a script.
 - **SSH agent forwarding, by consent**: git commit signing and git over SSH work
   inside the sandbox when the operator writes `ssh_auth_sock_consent.json` from
@@ -1727,7 +1727,7 @@ well as GitHub, and a Fargate crew is reachable from your laptop.
   keeps Cmd+,.
 - **Installs that say why**: the installer takes prebuilt wheels only and, when
   no release publishes one for the host, stops with a message naming the host
-  and the packages (`KIROCREW_ALLOW_SOURCE_BUILDS=1` opts back in), and the
+  and the packages (`AJCREW_ALLOW_SOURCE_BUILDS=1` opts back in), and the
   Linux AppImage starts on distributions without the older FUSE library.
 - **A desktop app that recovers**: on a host whose GPU process cannot start the
   app relaunches in software rendering instead of exiting with no window, the
@@ -1915,7 +1915,7 @@ process is reaped, a Homebrew `mise` is found without the shell's PATH, and the
 desktop View menu's zoom items work again.
 
 **Apps and the terminal.** An enabled app whose backend exits unexpectedly is
-restarted, `kirocrew app enable` and `disable` take effect in the running
+restarted, `ajcrew app enable` and `disable` take effect in the running
 gateway, the uninstall dialog shows what else depends on the app, and a slow
 reader can no longer stop every app UI from loading. A failed Run in terminal
 cleans up the tab it created, and dock tabs whose shells are gone do not come
@@ -1925,10 +1925,10 @@ back on reload.
 instead of as advice to enable a billed fallback that spends credits failing,
 company SSO sign-in completes instead of reporting the auth service
 unreachable, and a crew that registered without finishing its sign-in offers
-its device code on its own row. `kirocrew doctor` finds the AWS CLI where AWS's
+its device code on its own row. `ajcrew doctor` finds the AWS CLI where AWS's
 installer puts it, names the sandbox that really confines a delegated spawn, and
 reports that it cannot verify user namespaces inside a confined shell rather
-than claiming the host lacks them. `kirocrew stop` and `restart` work against a
+than claiming the host lacks them. `ajcrew stop` and `restart` work against a
 gateway the desktop app spawned.
 
 **Privacy and safety.** A bearer token carried in a `?token=` URL is redacted
@@ -1942,7 +1942,7 @@ it could not verify the path rather than claiming a match.
 
 ## [0.6.0] - 2026-09-05
 
-Kiro Crew stops being one agent on one machine: choose the harness that runs
+Aj Crew stops being one agent on one machine: choose the harness that runs
 your sessions, start a chat on another crew you are connected to, and let crew
 members dispatch workers of their own. Chat gets quieter, with folded diffs,
 resumed sessions that stop re-reading their own context, and refused commands
@@ -2067,7 +2067,7 @@ that tell the agent what it may do instead. Python 3.12 is the new floor.
   and project chips.
 - **Dev mode for a UI folder outside an app's install now needs the terminal**:
   the dashboard and the API refuse it, and only
-  `kirocrew app dev <name> --confirm-out-of-install-root` grants it.
+  `ajcrew app dev <name> --confirm-out-of-install-root` grants it.
 
 ### Your cloud drive, inside the app
 
@@ -2107,7 +2107,7 @@ that tell the agent what it may do instead. Python 3.12 is the new floor.
 ### A gate that explains itself
 
 - **A blocked tool call now explains the way forward**, so the agent stops
-  retrying the same blocked shape, and `kirocrew doctor` prints a Credentials
+  retrying the same blocked shape, and `ajcrew doctor` prints a Credentials
   section that lists your AWS profiles without opening a secret.
 - **Deny rules survive re-spelling, and ordinary work stops being refused**:
   quoting, escapes, command substitution and wildcard-spelled program names
@@ -2138,7 +2138,7 @@ that tell the agent what it may do instead. Python 3.12 is the new floor.
   name, logo and favicon included, once you add a pack that declares branding
   at Settings → Display → Install Theme.
 - **Saving an artifact warns when its colours are hardcoded**, in the agent's
-  tool result and on `kirocrew artifact save`, which now takes `--slug` for an
+  tool result and on `ajcrew artifact save`, which now takes `--slug` for an
   exact handle and refuses a taken one instead of renaming it.
 
 ### Faster, lighter, and measured
@@ -2159,7 +2159,7 @@ that tell the agent what it may do instead. Python 3.12 is the new floor.
 - **Setup catches a Kiro CLI too old for agent sessions**: the startup gate
   shows Kiro CLI update needed with an Update Kiro CLI button that runs the
   update for you.
-- **Answer a default that changed under you**: `kirocrew config defaults`
+- **Answer a default that changed under you**: `ajcrew config defaults`
   lists stored values still holding a superseded default, `--adopt` takes the
   new defaults and `--keep` records yours as intentional.
 - **The desktop app raises OS notifications for alerts and approvals** with
@@ -2247,7 +2247,7 @@ wiping all daily memory.
 
 **Windows, desktop and CLI.** A non-ASCII account name or path no longer breaks
 diagnostics, the service install or a network-drive permission check. The
-signed macOS app no longer reports itself as damaged on a managed Mac. Kiro Crew
+signed macOS app no longer reports itself as damaged on a managed Mac. Aj Crew
 imports on Python 3.13 and 3.14, and setup finishes under a C or POSIX locale.
 
 ## [0.5.0] — 2026-08-29
@@ -2256,7 +2256,7 @@ Your AWS account gets a control room and your whole fleet gets one centrally
 published security policy. Chat grows up: sessions open as tabs, an idle
 sidebar folds itself away, and approvals can be answered in bulk or refused
 one call at a time. Dictation now works out of the box with no install, agents
-can seed and steer other agents' sessions, and a script-installed Kiro Crew
+can seed and steer other agents' sessions, and a script-installed Aj Crew
 updates itself atomically instead of asking you to re-run the installer.
 
 ### Before you upgrade
@@ -2267,9 +2267,9 @@ updates itself atomically instead of asking you to re-run the installer.
   which downloads its own model on first use and needs no external binary.
   The default model is now `base` (a 148 MB download; a stored `turbo` still
   resolves but pulls 1.6 GB), and live streaming text is on by default for
-  new installs. `kirocrew doctor` now reports stored defaults that an earlier
+  new installs. `ajcrew doctor` now reports stored defaults that an earlier
   build materialized, so you can decide which to adopt.
-- **Snapshot-to-S3 is retired** — `kirocrew snapshot --to s3://…`,
+- **Snapshot-to-S3 is retired** — `ajcrew snapshot --to s3://…`,
   `--aws-profile`, and the `s3://` fetch path are gone; cloud backup moves to
   the AWS Control app. Snapshots gain restore-into-live-state (replace or
   merge, with a rollback ledger) in exchange.
@@ -2282,7 +2282,7 @@ updates itself atomically instead of asking you to re-run the installer.
   version probe no longer counts as approval, a command name that resolves to
   something other than the trusted system program falls back to a prompt, and
   durable "always allow" grants no longer cover structured non-shell tools.
-- **Kiro CLI is reached through its published relay** — Kiro Crew no longer
+- **Kiro CLI is reached through its published relay** — Aj Crew no longer
   probes kiro-cli's internal bundle layout or mints access tokens itself; the
   two bundle-path environment overrides are gone.
 - **A misspelled security-policy `sandbox` key now fails validation** instead
@@ -2305,7 +2305,7 @@ updates itself atomically instead of asking you to re-run the installer.
   spec goes through the hardened path: an oversized file, a symlink into a
   sensitive location, or a non-object spec is refused with a clear error
   instead of being silently skipped or half-applied.
-- **`kirocrew gateway --no-tunnel`** — A gateway started with the new flag
+- **`ajcrew gateway --no-tunnel`** — A gateway started with the new flag
   refuses to publish a tunnel for its whole lifetime, regardless of
   `tunnel.enabled`. Dev Fleet pods pass the flag whenever the target checkout
   understands it — an older checkout keeps its previous behavior — and pods
@@ -2334,7 +2334,7 @@ updates itself atomically instead of asking you to re-run the installer.
 - **Enterprise MCP governance** — On an enterprise Kiro account with an
   admin-configured MCP registry, org-level MCP controls (including a version
   pin) now take effect. Personal accounts are unaffected.
-- **A tamper-evident audit log under concurrency** — Two Kiro Crew processes
+- **A tamper-evident audit log under concurrency** — Two Aj Crew processes
   writing at once no longer break the audit chain's verification.
 
 ### Dictation that just works
@@ -2385,7 +2385,7 @@ updates itself atomically instead of asking you to re-run the installer.
 - **Commands you can read** — A long shell call with no stated purpose shows
   a short readable digest of what it does; the verbatim command stays one
   hover away.
-- **Approvals in the CLI** — `kirocrew chat` now shows tool permission
+- **Approvals in the CLI** — `ajcrew chat` now shows tool permission
   prompts and lets you answer them, so a turn no longer hangs silently until
   it times out.
 - **The approval bar teaches the modes** — It now points at the
@@ -2424,9 +2424,9 @@ updates itself atomically instead of asking you to re-run the installer.
 
 ### Update itself, anywhere
 
-- **Atomic self-update** — `kirocrew update` installs the new version into a
+- **Atomic self-update** — `ajcrew update` installs the new version into a
   fresh, signature-verified tree and switches to it atomically, so a
-  script-installed Kiro Crew updates itself.
+  script-installed Aj Crew updates itself.
 - **Windows updates install in place** — "Restart & Update" shows installer
   progress and relaunches the new build instead of nesting a copy and
   reopening the old one; kept Start Menu and Desktop shortcuts are repointed,
@@ -2442,7 +2442,7 @@ updates itself atomically instead of asking you to re-run the installer.
 
 ### Secrets leave more files
 
-- **`kirocrew secrets import`** — Move plaintext credentials out of `.env`
+- **`ajcrew secrets import`** — Move plaintext credentials out of `.env`
   into the encrypted vault, leaving a `secret://` reference behind; dry-run
   by default, `--apply` to commit.
 - **Redaction happens before truncation** — Credentials near a truncation
@@ -2680,12 +2680,12 @@ turns into a place to edit code, not just discuss it.
 
 - **Signed Windows installer** — Windows ships a signed installer with in-app auto-updates, published on the stable channel alongside macOS and Linux.
 - **Linux deb and rpm packages** — The desktop app installs from `.deb` or `.rpm` with a fixed install path, a desktop entry, and per-format in-app updates. The Linux desktop app needs glibc 2.34 or newer; on an older host use the one-line CLI install.
-- **Computer use on Windows** — Kiro Crew can read and drive native Windows applications through UI Automation, so desktop work is no longer macOS-only.
+- **Computer use on Windows** — Aj Crew can read and drive native Windows applications through UI Automation, so desktop work is no longer macOS-only.
 - **A resource ceiling for Windows agents** — The Windows agent tree now runs under a Job-object process and memory limit, mirroring the Linux cgroup control that previously had no Windows equivalent.
 - **Provider CLI trust on Windows** — Issue Radar and Code Review Sage now work on Windows, because `gh` and `glab` trust is established by reading ACLs.
 - **Managed Python for old distros** — The installer can provision a pinned interpreter into a user directory with `--managed-python`, which works on hosts whose system Python is too old, and stays on that interpreter across updates.
 - **Bring your existing setup** — First-run setup imports from Gemini CLI and Antigravity, including their MCP servers and workspaces.
-- **Switch Kiro accounts from the CLI** — `kirocrew cloud logout` ends the current sign-in so you can log back in as someone else.
+- **Switch Kiro accounts from the CLI** — `ajcrew cloud logout` ends the current sign-in so you can log back in as someone else.
 
 ### Every messaging channel catches up, and three new ones arrive
 
@@ -2701,7 +2701,7 @@ turns into a place to edit code, not just discuss it.
 - **An encrypted vault** — Secrets are stored encrypted and can be withheld from agents on a denylist, managed from a new Settings → Secrets page where values stay masked and are never sent to the browser.
 - **Reference secrets from MCP servers** — An MCP server's environment can name a secret as `secret://NAME`, resolved from the vault at spawn time so the value never sits in on-disk config.
 - **Share pooled servers safely** — An operator can declare which environment keys carry per-session identity, which lets MCP servers that use per-session credentials be pooled instead of relaunched.
-- **Read what is blocked** — `kirocrew policy show` prints the built-in denied-command rules grouped by category, so the agent can read the list instead of discovering it by refusal.
+- **Read what is blocked** — `ajcrew policy show` prints the built-in denied-command rules grouped by category, so the agent can read the list instead of discovering it by refusal.
 
 ### The dashboard becomes a place to edit code
 
@@ -2754,7 +2754,7 @@ turns into a place to edit code, not just discuss it.
 - **Scope a lesson to one repository** — A lesson no longer has to apply to every session, and the scope option that previously did nothing now works.
 - **Tune how memories age** — Episodic memory decay is configurable per tag, so different kinds of memory fade at different speeds.
 - **Search one knowledge source** — Knowledge search takes a source filter with source discovery, and the graph view gains a source dropdown, physics layout, community clustering, and adjustable depth.
-- **Project-local skills** — Kiro Crew can load a project's own skills, gated behind per-directory consent.
+- **Project-local skills** — Aj Crew can load a project's own skills, gated behind per-directory consent.
 - **Hooks explain themselves** — Hooks gain regex and contains matcher modes plus declarative skill injection, and the UI shows why a hook last failed as a badge tooltip.
 - **A guided five-whys mode** — A built-in skill walks a dive-deep investigation one question at a time and folds the log into a report.
 
@@ -2772,7 +2772,7 @@ turns into a place to edit code, not just discuss it.
 - **Sandboxed spawns are ~1.45s faster each** — A needless credential and hardlink scan on every sandboxed spawn is gone.
 - **Graphs and grids load instantly** — The Issue Radar dependency graph serves from cache and refreshes in the background instead of blocking its tab for about eleven seconds, and the multi-session grid loads a bounded slice of each pane instead of full history.
 - **Long chats stop leaking** — An abandoned streamed turn no longer holds its entire token stream for the life of the process.
-- **CLI commands start more than twice as fast** — `kirocrew` startup drops from 1.3s and 112 MB of imports to 0.5s and 54 MB.
+- **CLI commands start more than twice as fast** — `ajcrew` startup drops from 1.3s and 112 MB of imports to 0.5s and 54 MB.
 
 ### Notable fixes
 
@@ -2790,7 +2790,7 @@ turns into a place to edit code, not just discuss it.
 
 **Windows and the desktop app.** Settings survive the package rename instead of silently resetting, a failed app clone actually removes its partial checkout, and starting a task no longer briefly freezes while the memory store initializes. Signing runs once per artifact rather than twice, shortening builds.
 
-**Updates and install.** `kirocrew update` refuses to discard local commits on a diverged checkout and tells you how to override it. `kirocrew doctor` gained a stored-defaults view, detection of agent specs pointing at removed virtualenvs or relocated tools with repair for managed ones, and a warning when an editable-install checkout is stale or on the wrong branch.
+**Updates and install.** `ajcrew update` refuses to discard local commits on a diverged checkout and tells you how to override it. `ajcrew doctor` gained a stored-defaults view, detection of agent specs pointing at removed virtualenvs or relocated tools with repair for managed ones, and a warning when an editable-install checkout is stale or on the wrong branch.
 
 **Localization.** Product names stay in English across every locale and are interpolated through a shared placeholder, so the application name renders consistently, and a CI gate now flags catalog entries left untranslated.
 
@@ -2808,7 +2808,7 @@ first-class builds, and you can talk to it by holding a key.
 - **Multi-account Telegram is withdrawn.** Only a single bot token is accepted;
   move the token you want served to `telegram.bot_token`. Existing config is
   still parsed and preserved, but nothing reads the account map.
-- **`kirocrew logout` now revokes refresh tokens**, not just access tokens, so
+- **`ajcrew logout` now revokes refresh tokens**, not just access tokens, so
   logging out actually ends the session everywhere.
 - **The terminal no longer scans its output for credentials.** That scan was
   corrupting CJK text and emoji in the PTY stream, and it swallowed secrets you
@@ -2911,7 +2911,7 @@ first-class builds, and you can talk to it by holding a key.
   Alt+Shift+K elsewhere) raises the dashboard. Reconfigurable, or off.
 - **Change release channel without reinstalling** — Move between Stable, Insider,
   and Nightly from About, and the gateway restarts in place after an update.
-- **Publish it on your tailnet** — `kirocrew tailnet up` puts the dashboard on
+- **Publish it on your tailnet** — `ajcrew tailnet up` puts the dashboard on
   your Tailscale network, reachable from your other devices.
 - **Launch a cloud crew from the dashboard** — Remote EC2 provisioning, device
   sign-in included, as a restartable job rather than a CLI session you must not
@@ -2955,7 +2955,7 @@ first-class builds, and you can talk to it by holding a key.
 - **Connecting takes one click** — Connect mints the provider's approval link
   immediately and consent finishes on the card, instead of waiting for a later
   chat to trigger the challenge.
-- **Pooling works itself out** — Kiro Crew probes which MCP servers can safely
+- **Pooling works itself out** — Aj Crew probes which MCP servers can safely
   share a process. A per-server choice replaces the old global switch and its
   guesswork.
 - **Per-agent tool sets** — Assign servers to particular agents so each sees its
@@ -2965,7 +2965,7 @@ first-class builds, and you can talk to it by holding a key.
   until they are needed, trading context for immediacy.
 - **Authenticated custom servers** — Supply request headers when adding a remote
   MCP server, instead of hand-editing a file.
-- **`kirocrew policy show` lists the denied-command catalog**, so you can read
+- **`ajcrew policy show` lists the denied-command catalog**, so you can read
   what is blocked without going to the source.
 
 ### Autonomy with a governor
@@ -3046,13 +3046,13 @@ agent until restart, and an agent spec Kiro CLI rejects is reported instead of
 silently degraded. The settings tab strip shows scroll cues and scrolls the active
 tab into view. Deep links highlight the right control in every language. An app
 installed from a path or from git reports honestly, runs its MCP server on its own
-interpreter, and starts its crons on `kirocrew app enable` without a restart. The
+interpreter, and starts its crons on `ajcrew app enable` without a restart. The
 skill browser serves the skill you asked for rather than another of the same leaf
 name. A folder knowledge source added from the dashboard can now actually be
 started. Speech-to-text settings stop offering to install Whisper on a machine
 that cannot run it. Notes render markdown tables, follow the active theme, and
 remember collapsed folders. Dev Fleet discovers your clone instead of assuming
-`~/kirocrew`, reattaches to an in-flight Pull and Build, and can force-remove kept
+`~/ajcrew`, reattaches to an in-flight Pull and Build, and can force-remove kept
 worktrees.
 
 **Channels and notifications.** A Teams answer is no longer silently truncated
@@ -3065,11 +3065,11 @@ a code fence open across message rotation. Notifications deep-link to the item,
 stay dismissed when a stale fetch resolves, clear across every open window, and
 retire themselves when the skill they refer to is handled.
 
-**Desktop, install, and CLI.** `kirocrew stop` and `restart` find a macOS
-framework Python. Ctrl+C exits `kirocrew chat` cleanly. Ctrl+Cmd+F toggles full
+**Desktop, install, and CLI.** `ajcrew stop` and `restart` find a macOS
+framework Python. Ctrl+C exits `ajcrew chat` cleanly. Ctrl+Cmd+F toggles full
 screen instead of opening the find bar. The macOS tray icon follows the menu bar's
 theme. A failed update's card survives a reload. The installer's probe cannot hang
-forever. `kirocrew` commands start up to about 0.8 s faster. A remote instance's
+forever. `ajcrew` commands start up to about 0.8 s faster. A remote instance's
 token-mint timeout is configurable for a slow network. A proxy-only host gets its
 proxy variables forwarded to the identity check, and a slow SSO refresh no longer
 parks you at the first-run gate. The frontend builds against a private npm
@@ -3173,7 +3173,7 @@ weeks in the open.
 - **Agent Templates became a two-pane inspector**, and agents defined in the
   project you are working in are discovered alongside your user-level ones.
 - **Send a copy of a session to another instance** — hand a conversation, with
-  its context, to a different Kiro Crew you run.
+  its context, to a different Aj Crew you run.
 - Jira issue URLs and setting references render as **link chips** you can click
   straight through.
 - Stale auto-titles refresh in the background, the command palette tells a
@@ -3186,10 +3186,10 @@ weeks in the open.
 
 ### Channels, and setup that no longer assumes Slack
 
-- **`kirocrew setup` stops asking for Slack tokens.** The wizard finishes on the
+- **`ajcrew setup` stops asking for Slack tokens.** The wizard finishes on the
   dashboard and points at the full set of chat channels; walk through the Slack
-  credentials only when you ask for them with `kirocrew setup --slack`. Docs and
-  in-app copy describe Kiro Crew as multi-channel rather than Slack-first.
+  credentials only when you ask for them with `ajcrew setup --slack`. Docs and
+  in-app copy describe Aj Crew as multi-channel rather than Slack-first.
 - **Telegram** accepts inbound attachments — images for vision, documents, and
   audio that is transcribed on arrival. Serving **multiple bot accounts per
   gateway** was withdrawn before this release: a second bot is a second inbound
@@ -3228,7 +3228,7 @@ weeks in the open.
 - Loopback requests no longer leak the internal secret to a proxy; sensitive
   paths and credential redaction got faster without getting looser.
 - The ACP runtime survives oversize output frames, worker sessions are no longer
-  reaped as orphans, and `kirocrew update` works for wheel and `cli.sh` installs.
+  reaped as orphans, and `ajcrew update` works for wheel and `cli.sh` installs.
 - A refusal from one of **your own** deny patterns can carry your note
   explaining it, and the seven always-on git-publish rules now render locked in
   Settings instead of offering a toggle that never took effect.
@@ -3249,7 +3249,7 @@ or a raw JSON-RPC dump.
 
 ## [0.1.2] — 2026-07-30
 
-First public release of KiroCrew — an open-source personal AI agent that runs on
+First public release of AjCrew — an open-source personal AI agent that runs on
 your own machine, driving [kiro-cli](https://kiro.dev) over the Agent Client
 Protocol. Install it, sign in once, and it is yours: no server to rent, no
 account to create, and your conversations, memory, and files stay on your disk.
@@ -3257,7 +3257,7 @@ account to create, and your conversations, memory, and files stay on your disk.
 ### Chat from wherever you already are
 
 - **One agent, ten ways in** — A web dashboard, a native desktop app, a terminal
-  CLI (`kirocrew chat`, plus a full TUI), and bots for **Slack, Discord,
+  CLI (`ajcrew chat`, plus a full TUI), and bots for **Slack, Discord,
   Telegram, Microsoft Teams, Webex, WeCom (企业微信), and WeChat** all drive the
   same gateway with the same memory and the same tools. Start
   something at your desk, follow up from your phone. Each Slack thread or
@@ -3280,7 +3280,7 @@ account to create, and your conversations, memory, and files stay on your disk.
 ### Work that continues while you are away
 
 - **Unattended multi-step tasks** — Hand it a spec and it decomposes, executes,
-  tests, and retries (`kirocrew run TASK.md`), designed for 10+ hour runs. It
+  tests, and retries (`ajcrew run TASK.md`), designed for 10+ hour runs. It
   checkpoints to disk, so a crash or Ctrl+C resumes where it stopped; if
   kiro-cli dies it rebuilds the session and carries on; a watchdog catches
   stalls; and an LLM reviewer checks the result against the spec before calling
@@ -3293,7 +3293,7 @@ account to create, and your conversations, memory, and files stay on your disk.
   whether it remembers the previous run. A job that finds a broken build at 3am
   can fix it and tell you over breakfast.
 - **Parallel subagents** — Split one job across background agents
-  (`kirocrew spawn run`), blocking or fire-and-forget, with progress visible in
+  (`ajcrew spawn run`), blocking or fire-and-forget, with progress visible in
   the chat header and completions delivered back into the conversation.
 - **Dynamic workflows** — For work too structured for one agent, an authored
   Python script drives many agents through fan-out, pipelines, and
@@ -3330,7 +3330,7 @@ account to create, and your conversations, memory, and files stay on your disk.
   automatically when a message matches or on demand when it decides it needs
   one. Twelve ship built in; write your own with no code and no rebuild.
 - **Any MCP server** — Discover, probe, enable, and disable MCP servers from the
-  dashboard. KiroCrew's own capabilities are exposed the same way, so the agent
+  dashboard. AjCrew's own capabilities are exposed the same way, so the agent
   calls structured tools instead of shelling out.
 - **Artifacts** — Documents, code files, and interactive widgets with a stable
   identity, version history, and a dashboard library. Deploy a webapp artifact
@@ -3361,13 +3361,13 @@ account to create, and your conversations, memory, and files stay on your disk.
   Linux namespaces or macOS Seatbelt, with three modes controlling which
   credential directories are even visible. This ships **opt-in**: the default
   (`agent.sandbox: "off"`) defers to whatever sandboxing kiro-cli applies itself,
-  so set `agent.sandbox` to `"auto"` to have KiroCrew wrap the subprocess.
+  so set `agent.sandbox` to `"auto"` to have AjCrew wrap the subprocess.
 - **Layered controls** — 137 built-in denied-command patterns that hold even in
   YOLO mode, credential redaction scanning everything the model emits, blocked
   access to `~/.aws` and `~/.ssh`, XSS sanitization with CSP, and an audit log of
   every command.
 - **A ceiling the agent cannot raise** — A two-level governance model
-  (`POLICY ∩ PROFILE`, tightest-wins) enforced at KiroCrew's own tool gate. The
+  (`POLICY ∩ PROFILE`, tightest-wins) enforced at AjCrew's own tool gate. The
   policy files live where the agent can neither read nor write them, so a
   prompt-injected agent cannot widen its own limits. Tool calls are auto-approved
   by default (`agent.approval_mode: "auto"`) with the deny and governance gates
@@ -3405,11 +3405,11 @@ account to create, and your conversations, memory, and files stay on your disk.
 
 ### Notes
 
-- **kiro-cli is required** — KiroCrew orchestrates it. `kirocrew setup` walks you
-  through installing and signing in; `kirocrew doctor` verifies the whole wiring.
-- **Data lives in `~/.kiro/crew`** — override with `KIROCREW_HOME`. Installs
-  using the earlier `~/.kirocrew` layout migrate automatically on first launch.
+- **kiro-cli is required** — AjCrew orchestrates it. `ajcrew setup` walks you
+  through installing and signing in; `ajcrew doctor` verifies the whole wiring.
+- **Data lives in `~/.kiro/crew`** — override with `AJCREW_HOME`. Installs
+  using the earlier `~/.ajcrew` layout migrate automatically on first launch.
 - **The dashboard defaults to `http://localhost:5476`** — override with
-  `KIROCREW_PORT`.
-- **Optional extras** — speech-to-text needs `pip install kirocrew[voice]`; the
+  `AJCREW_PORT`.
+- **Optional extras** — speech-to-text needs `pip install ajcrew[voice]`; the
   OS sandbox is POSIX-only; computer use is macOS-only in this release.

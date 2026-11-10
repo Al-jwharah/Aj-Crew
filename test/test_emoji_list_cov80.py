@@ -1,4 +1,4 @@
-"""Coverage for ``kiro_crew.emoji_list`` — the standard Slack shortcode table.
+"""Coverage for ``aj_crew.emoji_list`` — the standard Slack shortcode table.
 
 The list is merged with custom workspace emojis fetched from Slack at runtime
 and fed to the composer's autocomplete, so the invariants that matter are:
@@ -8,7 +8,7 @@ non-empty. A colon-wrapped or duplicated entry silently corrupts autocomplete.
 
 from __future__ import annotations
 
-from kiro_crew.emoji_list import STANDARD_EMOJIS
+from aj_crew.emoji_list import STANDARD_EMOJIS
 
 
 def test_table_is_populated_and_all_strings() -> None:

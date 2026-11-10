@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ──────────────────────────────────────────────────────────────────────
-# Kiro Crew from-source installer (contributor layout)
+# Aj Crew from-source installer (contributor layout)
 # Builds the git clone it sits in, on macOS and Linux. Public build — no Brazil
 # workspace, no internal tooling required. Uses python3/pip (backend) +
 # npm/vite (frontend).
@@ -12,14 +12,14 @@
 #   curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
 #
 # Usage (from a local clone):
-#   git clone https://github.com/kirodotdev/KiroCrew.git
-#   cd kirocrew
+#   git clone https://github.com/Al-jwharah/Aj-Crew.git
+#   cd ajcrew
 #   bash install.sh
 #
 # Options:
 #   --voice   Install optional voice extras (pip install -e .[voice])
 #   --no-kas  Skip downloading the KAS engine this release pins. By default
-#             the installer runs `kirocrew kas install` after installing, so
+#             the installer runs `ajcrew kas install` after installing, so
 #             the built-in engine route can be turned on with no download; a
 #             failed download only warns and prints the command to retry.
 #             The switch (agent.kas_bundle) is NOT turned on: the route is in
@@ -31,7 +31,7 @@
 #             global mise config.
 #
 # Env:
-#   KIROCREW_ALLOW_SOURCE_BUILDS=1
+#   AJCREW_ALLOW_SOURCE_BUILDS=1
 #             Let pip compile a dependency that has no prebuilt wheel for this
 #             host (needs a C toolchain and -dev headers). By default the
 #             install uses prebuilt wheels only and refuses instead of building.
@@ -63,13 +63,13 @@ done
 
 # ── Constants ──
 # Repo root = directory containing this script (run from a local clone).
-KIROCREW_APP_DIR="$(cd "$(dirname "$0")" && pwd)"
-# Data home: honor KIROCREW_HOME, else the current default ~/.kiro/crew (NOT the
-# pre-move ~/.kirocrew, which is not the data home).
-KIROCREW_DATA_DIR="${KIROCREW_HOME:-$HOME/.kiro/crew}"
+AJCREW_APP_DIR="$(cd "$(dirname "$0")" && pwd)"
+# Data home: honor AJCREW_HOME, else the current default ~/.kiro/crew (NOT the
+# pre-move ~/.ajcrew, which is not the data home).
+AJCREW_DATA_DIR="${AJCREW_HOME:-$HOME/.kiro/crew}"
 NODE_VERSION="24"
-# Minimum Node version (major.minor.patch) Kiro Crew supports -- the same
-# floor as MIN_NODE_VERSION in src/kiro_crew/constants.py and ensure-node.sh.
+# Minimum Node version (major.minor.patch) Aj Crew supports -- the same
+# floor as MIN_NODE_VERSION in src/aj_crew/constants.py and ensure-node.sh.
 # A full version, not a major: an early 22.x lacks APIs the code needs
 # (worker_threads.markAsUncloneable landed in 22.10.0) and is below the
 # bundler's declared ">=22.12.0". Defined here (not just at the post-install
@@ -77,10 +77,10 @@ NODE_VERSION="24"
 # not short-circuit the install ladder.
 NODE_MIN_VERSION="22.12.0"
 PYTHON_VERSION="3.12"
-KIROCREW_PORT="${KIROCREW_PORT:-5476}"
+AJCREW_PORT="${AJCREW_PORT:-5476}"
 # ACP_NPM_PKG and acp_adapter_spec (the exact pinned version).
 # shellcheck source=scripts/lib/acp-adapter-pin.sh
-. "$KIROCREW_APP_DIR/scripts/lib/acp-adapter-pin.sh"
+. "$AJCREW_APP_DIR/scripts/lib/acp-adapter-pin.sh"
 
 # ── Colors & Formatting ──
 if [ -t 1 ] && command -v tput >/dev/null 2>&1; then
@@ -157,10 +157,10 @@ has() { command -v "$1" >/dev/null 2>&1; }
 # or `unknown` (no git, or not a work tree). A from-source install follows
 # exactly this, so it decides which lane the box ends up on.
 source_checkout_ref() {
-    _ref="$(git -C "$KIROCREW_APP_DIR" symbolic-ref --short -q HEAD 2>/dev/null)" \
+    _ref="$(git -C "$AJCREW_APP_DIR" symbolic-ref --short -q HEAD 2>/dev/null)" \
         && [ -n "$_ref" ] && { printf 'branch:%s\n' "$_ref"; return 0; }
-    _ref="$(git -C "$KIROCREW_APP_DIR" describe --tags --exact-match HEAD 2>/dev/null \
-        || git -C "$KIROCREW_APP_DIR" rev-parse --short HEAD 2>/dev/null)" \
+    _ref="$(git -C "$AJCREW_APP_DIR" describe --tags --exact-match HEAD 2>/dev/null \
+        || git -C "$AJCREW_APP_DIR" rev-parse --short HEAD 2>/dev/null)" \
         && [ -n "$_ref" ] && { printf 'detached:%s\n' "$_ref"; return 0; }
     printf 'unknown\n'
 }
@@ -176,7 +176,7 @@ source_lane_notice() {
         branch:*)
             warn "This clone is on branch ${BOLD}${_lane_ref#branch:}${RESET}: the install follows that branch, not a release lane." ;;
         detached:*)
-            warn "This clone is pinned at ${BOLD}${_lane_ref#detached:}${RESET} (detached HEAD): git pull and kirocrew update cannot update it." ;;
+            warn "This clone is pinned at ${BOLD}${_lane_ref#detached:}${RESET} (detached HEAD): git pull and ajcrew update cannot update it." ;;
         *)
             warn "This is a from-source install: it follows the clone, not a release lane." ;;
     esac
@@ -212,9 +212,9 @@ node_supported() {
 # mise or glibc-217 build; an existing nvm is reused), then put the node it
 # recorded on this shell's PATH. Never pipes a remote installer into a shell.
 install_node_via_ensure() {
-    bash "$KIROCREW_APP_DIR/ensure-node.sh" || true
-    if [ -s "$KIROCREW_DATA_DIR/node-bin-dir" ]; then
-        PATH="$(cat "$KIROCREW_DATA_DIR/node-bin-dir"):$PATH"
+    bash "$AJCREW_APP_DIR/ensure-node.sh" || true
+    if [ -s "$AJCREW_DATA_DIR/node-bin-dir" ]; then
+        PATH="$(cat "$AJCREW_DATA_DIR/node-bin-dir"):$PATH"
         export PATH
     fi
 }
@@ -241,14 +241,14 @@ node_to_floor() {
 
 banner
 
-echo "  ${DIM}Repo directory:${RESET}     $KIROCREW_APP_DIR"
-echo "  ${DIM}Data directory:${RESET}     $KIROCREW_DATA_DIR"
+echo "  ${DIM}Repo directory:${RESET}     $AJCREW_APP_DIR"
+echo "  ${DIM}Data directory:${RESET}     $AJCREW_DATA_DIR"
 echo "  ${DIM}Platform:${RESET}           $(uname -s) $(uname -m)"
 echo ""
 
-if [ ! -f "$KIROCREW_APP_DIR/pyproject.toml" ]; then
-    die "Run this from inside a KiroCrew clone (pyproject.toml not found in $KIROCREW_APP_DIR).
-     git clone https://github.com/kirodotdev/KiroCrew.git && cd kirocrew && bash install.sh"
+if [ ! -f "$AJCREW_APP_DIR/pyproject.toml" ]; then
+    die "Run this from inside a AjCrew clone (pyproject.toml not found in $AJCREW_APP_DIR).
+     git clone https://github.com/Al-jwharah/Aj-Crew.git && cd ajcrew && bash install.sh"
 fi
 
 source_lane_notice
@@ -265,7 +265,7 @@ if [ "$USE_MISE" -eq 1 ]; then
         info "Installing mise…"
         # A pinned release checked against a recorded sha256, never a piped script.
         # shellcheck source=scripts/lib/pinned-mise.sh
-        . "$KIROCREW_APP_DIR/scripts/lib/pinned-mise.sh"
+        . "$AJCREW_APP_DIR/scripts/lib/pinned-mise.sh"
         MISE_INSTALL_PATH="$HOME/.local/bin/mise" install_pinned_mise || true
         export PATH="$HOME/.local/bin:$PATH"
         has mise || die "mise installation failed. Install manually: https://mise.jdx.dev/installing-mise.html"
@@ -482,7 +482,7 @@ step "Optional Agent Backend"
 if has claude-agent-acp; then
     ok "claude-agent-acp ($( which claude-agent-acp ))"
 elif has npm; then
-    if ! ACP_NPM_SPEC="$(acp_adapter_spec "$KIROCREW_APP_DIR")"; then
+    if ! ACP_NPM_SPEC="$(acp_adapter_spec "$AJCREW_APP_DIR")"; then
         warn "Could not read the pinned $ACP_NPM_PKG version (packaging/acp-adapters/package.json) — skipping"
         detail "npm i -g $ACP_NPM_PKG@<version>"
     else
@@ -503,7 +503,7 @@ if [ "$WITH_KAS" -eq 1 ]; then
 else
     warn "The default Kiro agent requires Kiro CLI; this installer does not install or sign in to it."
     detail "Install it separately from https://kiro.dev/cli/ and run: kiro-cli login"
-    detail "Or run kirocrew kas install after install to download the built-in engine instead (no kiro-cli)."
+    detail "Or run ajcrew kas install after install to download the built-in engine instead (no kiro-cli)."
 fi
 
 # ══════════════════════════════════════════════════════════════════════
@@ -511,16 +511,16 @@ fi
 # ══════════════════════════════════════════════════════════════════════
 step "Build"
 
-cd "$KIROCREW_APP_DIR"
+cd "$AJCREW_APP_DIR"
 
 # ── Frontend (npm + vite) ──
-# Vite emits to website/dist; we stage it into src/kiro_crew/static/dist
+# Vite emits to website/dist; we stage it into src/aj_crew/static/dist
 # where setup.py copies it into the package at install time.
-if has node && [ -d "$KIROCREW_APP_DIR/website" ]; then
+if has node && [ -d "$AJCREW_APP_DIR/website" ]; then
     info "Building frontend (website/)…"
     _fe_log="$(mktemp)"
     (
-        cd "$KIROCREW_APP_DIR/website" &&
+        cd "$AJCREW_APP_DIR/website" &&
         # Raise V8's heap ceiling for the bundle build. The default (~2 GB on
         # 64-bit) is not enough for this app's 6k+ module graph, and the OOM
         # surfaces as a build that dies without a clear cause -- leaving no
@@ -579,13 +579,13 @@ if has node && [ -d "$KIROCREW_APP_DIR/website" ]; then
     spinner $! "Installing npm packages & building React app…"
     _fe_ok=0
     if wait $!; then
-        _dist_src="$KIROCREW_APP_DIR/website/dist"
-        _dist_dst="$KIROCREW_APP_DIR/src/kiro_crew/static/dist"
+        _dist_src="$AJCREW_APP_DIR/website/dist"
+        _dist_dst="$AJCREW_APP_DIR/src/aj_crew/static/dist"
         if [ -d "$_dist_src" ]; then
             rm -rf "$_dist_dst"
             mkdir -p "$(dirname "$_dist_dst")"
             cp -R "$_dist_src" "$_dist_dst"
-            ok "Frontend built and staged → src/kiro_crew/static/dist"
+            ok "Frontend built and staged → src/aj_crew/static/dist"
             _fe_ok=1
         fi
     fi
@@ -593,7 +593,7 @@ if has node && [ -d "$KIROCREW_APP_DIR/website" ]; then
         # The build did not produce a usable bundle. For a local CLI install this is
         # non-fatal — the dashboard falls back to a legacy page and the CLI still
         # works. For a cloud crew the dashboard IS the product, so
-        # KIROCREW_REQUIRE_FRONTEND=1 makes it FATAL: dump the build log and exit
+        # AJCREW_REQUIRE_FRONTEND=1 makes it FATAL: dump the build log and exit
         # non-zero. That lets the cloud bootstrap RETRY the whole install on the warm
         # box (first-boot contention — the common cause — self-heals), and if it still
         # fails the real npm/vite error reaches the failure reason instead of being
@@ -604,8 +604,8 @@ if has node && [ -d "$KIROCREW_APP_DIR/website" ]; then
             echo "-------------------------------------"
         fi
         rm -f "$_fe_log"
-        if [ "${KIROCREW_REQUIRE_FRONTEND:-0}" = "1" ]; then
-            die "Frontend build failed and KIROCREW_REQUIRE_FRONTEND=1 — no static/dist produced (see the build log above)"
+        if [ "${AJCREW_REQUIRE_FRONTEND:-0}" = "1" ]; then
+            die "Frontend build failed and AJCREW_REQUIRE_FRONTEND=1 — no static/dist produced (see the build log above)"
         fi
         warn "Frontend build failed — dashboard will use legacy fallback"
     else
@@ -618,9 +618,9 @@ fi
 
 # ── Python virtual environment & package ──
 info "Creating virtual environment…"
-_venv="$KIROCREW_APP_DIR/.venv"
-# Build the venv under a umask that masks group/other WRITE so bin/kirocrew
-# and its dirs are born non-group-writable -- `kirocrew service install`
+_venv="$AJCREW_APP_DIR/.venv"
+# Build the venv under a umask that masks group/other WRITE so bin/ajcrew
+# and its dirs are born non-group-writable -- `ajcrew service install`
 # refuses to attach its AppArmor profile to a group/world-writable launcher
 # (see the matching block in cli.sh for the full rationale). OR-ing with 022
 # only ADDS write-mask bits, so a stricter caller umask is preserved.
@@ -660,36 +660,36 @@ fi
 # Dependencies come from prebuilt wheels only, as in cli.sh: without this pip
 # builds any dependency that lacks a wheel for this host from its sdist, and a
 # native one (numpy, Pillow) then needs a compiler and -dev headers the host
-# was never required to have. The editable kirocrew install itself is a local
+# was never required to have. The editable ajcrew install itself is a local
 # source tree, which pip builds regardless of the flag; only the dependency
-# resolution is restricted. KIROCREW_ALLOW_SOURCE_BUILDS=1 opts back in for a
+# resolution is restricted. AJCREW_ALLOW_SOURCE_BUILDS=1 opts back in for a
 # host that has the toolchain.
 _pip_binary_only="--only-binary=:all:"
-if [ "${KIROCREW_ALLOW_SOURCE_BUILDS:-0}" = "1" ]; then
+if [ "${AJCREW_ALLOW_SOURCE_BUILDS:-0}" = "1" ]; then
     _pip_binary_only=""
 fi
 
 _pip_log="$(mktemp)"
 (
     "$_venv/bin/pip" install --upgrade pip setuptools wheel 2>&1 | tail -5 > "$_pip_log"
-    cd "$KIROCREW_APP_DIR"
+    cd "$AJCREW_APP_DIR"
     # Frontend already built and staged above; skip rebuild in setup.py.
     # shellcheck disable=SC2086
-    KIROCREW_SKIP_FRONTEND=1 "$_venv/bin/pip" install $_pip_binary_only -e "$_pip_target" 2>&1 | tail -20 >> "$_pip_log"
+    AJCREW_SKIP_FRONTEND=1 "$_venv/bin/pip" install $_pip_binary_only -e "$_pip_target" 2>&1 | tail -20 >> "$_pip_log"
 ) &
-spinner $! "Installing kirocrew and dependencies…"
+spinner $! "Installing ajcrew and dependencies…"
 if wait $!; then
     if "$_venv/bin/python" -c "import aiohttp" 2>/dev/null; then
         ok "Python package installed (isolated venv)"
     else
         die "Package installed but dependencies missing (aiohttp not importable).
-     Try manually: $_venv/bin/pip install -e $KIROCREW_APP_DIR"
+     Try manually: $_venv/bin/pip install -e $AJCREW_APP_DIR"
     fi
-    if [ ! -x "$_venv/bin/kirocrew" ]; then
-        die "Install incomplete: entry point $_venv/bin/kirocrew missing or not executable."
+    if [ ! -x "$_venv/bin/ajcrew" ]; then
+        die "Install incomplete: entry point $_venv/bin/ajcrew missing or not executable."
     fi
-    if ! "$_venv/bin/python" -I -c "import kiro_crew" 2>/dev/null; then
-        die "Install incomplete: kiro_crew not importable."
+    if ! "$_venv/bin/python" -I -c "import aj_crew" 2>/dev/null; then
+        die "Install incomplete: aj_crew not importable."
     fi
 else
     if [ -s "$_pip_log" ]; then
@@ -708,12 +708,12 @@ else
             | sed 's/.*No matching distribution found for //' | head -n 5 | tr '\n' ' ')"
         _libc="$(getconf GNU_LIBC_VERSION 2>/dev/null || true)"
         die "pip found no prebuilt wheel it may install on this platform ($(uname -s) $(uname -m)${_libc:+, $_libc}) for: ${_missing}
-     Kiro Crew installs prebuilt wheels only and never compiles a dependency. Usually this
+     Aj Crew installs prebuilt wheels only and never compiles a dependency. Usually this
      means the host is older than the wheels' floor: use a newer Linux (Amazon Linux 2023,
      RHEL/Rocky 8+, Ubuntu 22.04+, Debian 12+) or macOS. It can also mean the package index
      could not be reached or does not carry these releases (see pip's output above). To
      compile on this host instead, install a C/C++ toolchain plus the -dev headers those
-     packages need and re-run with KIROCREW_ALLOW_SOURCE_BUILDS=1."
+     packages need and re-run with AJCREW_ALLOW_SOURCE_BUILDS=1."
     fi
     die "pip install failed. Check: $_venv/bin/pip --version"
 fi
@@ -721,37 +721,37 @@ rm -f "$_pip_log"
 # Venv fully built and born non-group-writable; restore the caller's umask.
 umask "$_KC_PREV_UMASK"
 
-# Record install method so `kirocrew update` uses the right rebuild strategy
-echo "pip" > "$KIROCREW_APP_DIR/.install-method"
+# Record install method so `ajcrew update` uses the right rebuild strategy
+echo "pip" > "$AJCREW_APP_DIR/.install-method"
 ok "Install method recorded (.install-method=pip)"
 
-# Symlink the kirocrew entry point to ~/.local/bin for PATH access
+# Symlink the ajcrew entry point to ~/.local/bin for PATH access
 mkdir -p "$HOME/.local/bin"
-ln -sf "$_venv/bin/kirocrew" "$HOME/.local/bin/kirocrew"
-ok "Symlinked kirocrew → ~/.local/bin/kirocrew"
+ln -sf "$_venv/bin/ajcrew" "$HOME/.local/bin/ajcrew"
+ok "Symlinked ajcrew → ~/.local/bin/ajcrew"
 
 # ── Desktop App (macOS only) ──
-if [ "$(uname)" = "Darwin" ] && has node && [ -d "$KIROCREW_APP_DIR/electron" ]; then
-    printf "\n  Install KiroCrew desktop app to ~/Applications? [Y/n] "
+if [ "$(uname)" = "Darwin" ] && has node && [ -d "$AJCREW_APP_DIR/electron" ]; then
+    printf "\n  Install AjCrew desktop app to ~/Applications? [Y/n] "
     read -r _install_app < /dev/tty
     case "${_install_app:-Y}" in
         [Yy]*)
             info "Building desktop app…"
             (
-                cd "$KIROCREW_APP_DIR/electron"
+                cd "$AJCREW_APP_DIR/electron"
                 npm install --no-audit --no-fund --loglevel=error 2>/dev/null
                 npx electron-builder --mac --dir 2>/dev/null
             ) &
             spinner $! "Building Electron app…"
             if wait $!; then
-                _app_src="$KIROCREW_APP_DIR/electron/dist/mac-arm64/KiroCrew.app"
-                [ ! -d "$_app_src" ] && _app_src="$KIROCREW_APP_DIR/electron/dist/mac/KiroCrew.app"
+                _app_src="$AJCREW_APP_DIR/electron/dist/mac-arm64/AjCrew.app"
+                [ ! -d "$_app_src" ] && _app_src="$AJCREW_APP_DIR/electron/dist/mac/AjCrew.app"
                 if [ -d "$_app_src" ]; then
                     mkdir -p "$HOME/Applications"
-                    rm -rf "$HOME/Applications/KiroCrew.app" 2>/dev/null
-                    cp -R "$_app_src" "$HOME/Applications/KiroCrew.app"
-                    ok "KiroCrew.app installed to ~/Applications"
-                    detail "Launch via Spotlight (⌘+Space → KiroCrew) or Finder → ~/Applications"
+                    rm -rf "$HOME/Applications/AjCrew.app" 2>/dev/null
+                    cp -R "$_app_src" "$HOME/Applications/AjCrew.app"
+                    ok "AjCrew.app installed to ~/Applications"
+                    detail "Launch via Spotlight (⌘+Space → AjCrew) or Finder → ~/Applications"
                 else
                     warn "Electron build succeeded but .app not found"
                 fi
@@ -761,7 +761,7 @@ if [ "$(uname)" = "Darwin" ] && has node && [ -d "$KIROCREW_APP_DIR/electron" ];
             ;;
         *)
             info "Skipping desktop app"
-            detail "Install later: cd $KIROCREW_APP_DIR/electron && npm install && npm run dist"
+            detail "Install later: cd $AJCREW_APP_DIR/electron && npm install && npm run dist"
             ;;
     esac
 fi
@@ -771,12 +771,12 @@ fi
 # ══════════════════════════════════════════════════════════════════════
 step "PATH Configuration"
 
-# The kirocrew entry point is symlinked to ~/.local/bin/kirocrew.
-export PATH="$HOME/.local/bin:$KIROCREW_APP_DIR/bin:$PATH"
+# The ajcrew entry point is symlinked to ~/.local/bin/ajcrew.
+export PATH="$HOME/.local/bin:$AJCREW_APP_DIR/bin:$PATH"
 
 # Persist to shell rc files
 _path_line="export PATH=\"\$HOME/.local/bin:\$PATH\""
-_marker="# KiroCrew"
+_marker="# AjCrew"
 
 _add_to_rc() {
     local rc="$1"
@@ -792,21 +792,21 @@ _add_to_rc() {
     ok "Added to $(basename "$rc")"
 }
 
-# Also persist KIROCREW_PROJECT_DIR so kirocrew works from any directory
-_proj_line="export KIROCREW_PROJECT_DIR=\"$KIROCREW_APP_DIR\""
+# Also persist AJCREW_PROJECT_DIR so ajcrew works from any directory
+_proj_line="export AJCREW_PROJECT_DIR=\"$AJCREW_APP_DIR\""
 
 _add_proj_to_rc() {
     local rc="$1"
     [ ! -f "$rc" ] && return
-    if grep -qF "KIROCREW_PROJECT_DIR" "$rc" 2>/dev/null; then
+    if grep -qF "AJCREW_PROJECT_DIR" "$rc" 2>/dev/null; then
         local _tmp
         _tmp="$(mktemp)"
-        grep -v "KIROCREW_PROJECT_DIR" "$rc" > "$_tmp" && mv "$_tmp" "$rc"
+        grep -v "AJCREW_PROJECT_DIR" "$rc" > "$_tmp" && mv "$_tmp" "$rc"
     fi
     echo "$_proj_line" >> "$rc"
 }
 
-export KIROCREW_PROJECT_DIR="$KIROCREW_APP_DIR"
+export AJCREW_PROJECT_DIR="$AJCREW_APP_DIR"
 
 for _rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
     if [ -f "$_rc" ]; then
@@ -821,28 +821,28 @@ if [ -f "$_fish_config" ] || [ "$(basename "${SHELL:-}")" = "fish" ]; then
     mkdir -p "$HOME/.config/fish"
     if grep -qF "$_marker" "$_fish_config" 2>/dev/null; then
         _tmp="$(mktemp)"
-        awk -v marker="$_marker" 'BEGIN{s=0} $0==marker{s=1;next} s&&/^(fish_add_path|set -gx KIROCREW)/{next} {s=0;print}' "$_fish_config" > "$_tmp" && mv "$_tmp" "$_fish_config"
+        awk -v marker="$_marker" 'BEGIN{s=0} $0==marker{s=1;next} s&&/^(fish_add_path|set -gx AJCREW)/{next} {s=0;print}' "$_fish_config" > "$_tmp" && mv "$_tmp" "$_fish_config"
     fi
     {
         echo "$_marker"
         echo "fish_add_path -g ~/.local/bin"
-        echo "set -gx KIROCREW_PROJECT_DIR $KIROCREW_APP_DIR"
+        echo "set -gx AJCREW_PROJECT_DIR $AJCREW_APP_DIR"
     } >> "$_fish_config"
     ok "Added to config.fish"
 fi
 
-# Save project dir for kirocrew to find
-mkdir -p "$KIROCREW_DATA_DIR"
-echo "$KIROCREW_APP_DIR" > "$KIROCREW_DATA_DIR/project_dir"
+# Save project dir for ajcrew to find
+mkdir -p "$AJCREW_DATA_DIR"
+echo "$AJCREW_APP_DIR" > "$AJCREW_DATA_DIR/project_dir"
 
-# Verify kirocrew is accessible
-if has kirocrew; then
-    ok "kirocrew command available"
-elif [ -x "$HOME/.local/bin/kirocrew" ]; then
-    ok "kirocrew symlinked to ~/.local/bin/kirocrew"
+# Verify ajcrew is accessible
+if has ajcrew; then
+    ok "ajcrew command available"
+elif [ -x "$HOME/.local/bin/ajcrew" ]; then
+    ok "ajcrew symlinked to ~/.local/bin/ajcrew"
     detail "You may need to restart your shell for it to be in PATH"
 else
-    warn "kirocrew not in PATH — restart your shell or run:"
+    warn "ajcrew not in PATH — restart your shell or run:"
     detail "source ~/.$(basename "$SHELL")rc"
 fi
 
@@ -851,50 +851,50 @@ fi
 # ══════════════════════════════════════════════════════════════════════
 step "Agent Config"
 
-# Install agent config via kirocrew setup
-if has kirocrew; then
-    _kirocrew=kirocrew
-elif [ -x "$HOME/.local/bin/kirocrew" ]; then
-    _kirocrew="$HOME/.local/bin/kirocrew"
+# Install agent config via ajcrew setup
+if has ajcrew; then
+    _ajcrew=ajcrew
+elif [ -x "$HOME/.local/bin/ajcrew" ]; then
+    _ajcrew="$HOME/.local/bin/ajcrew"
 else
-    _kirocrew=""
+    _ajcrew=""
 fi
-if [ -n "$_kirocrew" ]; then
+if [ -n "$_ajcrew" ]; then
     info "Installing agent config…"
-    KIROCREW_PROJECT_DIR="$KIROCREW_APP_DIR" "$_kirocrew" setup --agent-only \
+    AJCREW_PROJECT_DIR="$AJCREW_APP_DIR" "$_ajcrew" setup --agent-only \
         && ok "Agent config installed" \
-        || warn "kirocrew setup --agent-only failed (run manually after install)"
+        || warn "ajcrew setup --agent-only failed (run manually after install)"
     if [ "$WITH_KAS" -eq 1 ]; then
         # The engine this release pins, fetched from the project's CDN and
         # verified against the pin baked into this checkout. The switch is left
         # alone on purpose: the route is in shadow testing, so turning it on is
-        # the user's own step (Settings → Agent Harness, or `kirocrew config set
+        # the user's own step (Settings → Agent Harness, or `ajcrew config set
         # agent.kas_bundle true`), never the installer's. A failed download
         # (offline host, CDN outage) leaves a working install, so it only warns.
-        info "Downloading the built-in KAS engine (kirocrew kas install)…"
+        info "Downloading the built-in KAS engine (ajcrew kas install)…"
         # Exit 3 is `kas install`'s "this host cannot run the engine"
         # (cli_kas.py HOST_UNSUPPORTED_EXIT): it already printed why, and a
         # retry cannot help, so no retry advice follows it.
         _kas_rc=0
-        "$_kirocrew" kas install || _kas_rc=$?
+        "$_ajcrew" kas install || _kas_rc=$?
         if [ "$_kas_rc" -eq 0 ]; then
-            ok "Built-in KAS engine installed (switch it on: kirocrew config set agent.kas_bundle true)"
+            ok "Built-in KAS engine installed (switch it on: ajcrew config set agent.kas_bundle true)"
         elif [ "$_kas_rc" -eq 3 ]; then
             KAS_HOST_UNSUPPORTED=1
-            warn "This host cannot run the built-in KAS engine (see above); Kiro Crew is installed without it."
+            warn "This host cannot run the built-in KAS engine (see above); Aj Crew is installed without it."
         else
             KAS_DOWNLOAD_FAILED=1
-            warn "Could not download the built-in KAS engine; Kiro Crew is installed without it."
-            detail "Retry when online: kirocrew kas install"
+            warn "Could not download the built-in KAS engine; Aj Crew is installed without it."
+            detail "Retry when online: ajcrew kas install"
         fi
     fi
 elif [ "$WITH_KAS" -eq 1 ]; then
     KAS_DOWNLOAD_FAILED=1
-    warn "kirocrew not in PATH — the built-in KAS engine was not downloaded."
-    detail "After reloading your shell, run: kirocrew kas install"
+    warn "ajcrew not in PATH — the built-in KAS engine was not downloaded."
+    detail "After reloading your shell, run: ajcrew kas install"
 fi
 
-ok "Run ${CYAN}kirocrew setup${RESET} to configure agent, workspace, and integrations"
+ok "Run ${CYAN}ajcrew setup${RESET} to configure agent, workspace, and integrations"
 
 # ── Embeddings (optional) ──
 info "Optional: local vector memory via Ollama"
@@ -907,7 +907,7 @@ detail "Install ollama (https://ollama.com), then: ollama pull qwen3-embedding:0
 
 echo ""
 echo ""
-echo "  ${GREEN}${BOLD}👻 KiroCrew installed successfully!${RESET}"
+echo "  ${GREEN}${BOLD}👻 AjCrew installed successfully!${RESET}"
 echo ""
 echo "  ${DIM}────────────────────────────────────────${RESET}"
 echo ""
@@ -926,18 +926,18 @@ echo "       ${GREEN}kiro-cli login${RESET}"
 if [ "$WITH_KAS" -eq 1 ] && [ "$KAS_HOST_UNSUPPORTED" -eq 0 ]; then
 echo "       To try the built-in KAS engine instead (shadow testing, off by default):"
 if [ "$KAS_DOWNLOAD_FAILED" -eq 1 ]; then
-echo "       ${GREEN}kirocrew kas install${RESET}  (the download failed during install; retry it first)"
+echo "       ${GREEN}ajcrew kas install${RESET}  (the download failed during install; retry it first)"
 fi
-echo "       ${GREEN}kirocrew config set agent.kas_bundle true${RESET}  then sign in from the dashboard"
+echo "       ${GREEN}ajcrew config set agent.kas_bundle true${RESET}  then sign in from the dashboard"
 fi
 echo ""
 echo "    ${CYAN}3.${RESET} Run the setup wizard:"
-echo "       ${GREEN}kirocrew setup${RESET}"
+echo "       ${GREEN}ajcrew setup${RESET}"
 echo ""
 echo "    ${CYAN}4.${RESET} Start the dashboard:"
-echo "       ${GREEN}kirocrew gateway${RESET}"
+echo "       ${GREEN}ajcrew gateway${RESET}"
 echo ""
-echo "    ${CYAN}5.${RESET} Open ${CYAN}http://localhost:${KIROCREW_PORT}${RESET} in your browser"
+echo "    ${CYAN}5.${RESET} Open ${CYAN}http://localhost:${AJCREW_PORT}${RESET} in your browser"
 echo ""
 # SSH tunnel tip for remote Linux users
 if [ "$(uname)" != "Darwin" ]; then
@@ -947,9 +947,9 @@ if [ "$(uname)" != "Darwin" ]; then
     echo "  ${BOLD}Remote access:${RESET}"
     echo "    Run this on your ${CYAN}local machine${RESET} to forward the dashboard:"
     echo ""
-    echo "    ${GREEN}ssh -N -L ${KIROCREW_PORT}:localhost:${KIROCREW_PORT} $_hostname${RESET}"
+    echo "    ${GREEN}ssh -N -L ${AJCREW_PORT}:localhost:${AJCREW_PORT} $_hostname${RESET}"
     echo ""
-    echo "    Then open ${CYAN}http://localhost:${KIROCREW_PORT}${RESET} in your local browser."
+    echo "    Then open ${CYAN}http://localhost:${AJCREW_PORT}${RESET} in your local browser."
     echo ""
 fi
 echo "  ${DIM}────────────────────────────────────────${RESET}"
@@ -959,7 +959,7 @@ echo ""
 case "$(source_checkout_ref)" in
     branch:*)
         echo "  ${DIM}Update anytime:${RESET}  ${GREEN}git pull && bash install.sh${RESET}"
-        detail "The dashboard Update (kirocrew update) resets this clone to its origin branch"
+        detail "The dashboard Update (ajcrew update) resets this clone to its origin branch"
         detail "when it is only behind; a clone both ahead and behind is refused, and --force"
         detail "discards its local commits." ;;
     detached:*)

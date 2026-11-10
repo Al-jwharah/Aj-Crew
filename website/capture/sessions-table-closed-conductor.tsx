@@ -41,7 +41,7 @@ const params = new URLSearchParams(location.search)
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 localStorage.setItem('mc-theme', theme)
 localStorage.setItem('mc-color-theme', 'kiro')
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const LEAD = 'chat-2548'
 const CONDUCTOR = 'chat-2552'
@@ -87,12 +87,12 @@ const cite = reparented
 
 const PAYLOAD = {
   sessions: [
-    row(LEAD, 'Remote crew lane: drive the three PRs to green', 'kirocrew-lead', 780),
-    row('chat-2554', 'I1: MicroVM boot path and the lease', 'kirocrew-worker', 430, { parent: cite }),
-    row('chat-2555', 'I2: Fargate task definition', 'kirocrew-worker', 388, { parent: cite }),
-    row('chat-2556', 'I3: token handoff to the remote crew', 'kirocrew-worker', 402, { parent: cite }),
+    row(LEAD, 'Remote crew lane: drive the three PRs to green', 'ajcrew-lead', 780),
+    row('chat-2554', 'I1: MicroVM boot path and the lease', 'ajcrew-worker', 430, { parent: cite }),
+    row('chat-2555', 'I2: Fargate task definition', 'ajcrew-worker', 388, { parent: cite }),
+    row('chat-2556', 'I3: token handoff to the remote crew', 'ajcrew-worker', 402, { parent: cite }),
     // Nobody opened this one: a top-level row with no citation in either frame.
-    row('chat-2531', 'Crew log retention sweep', 'kirocrew', 240),
+    row('chat-2531', 'Crew log retention sweep', 'ajcrew', 240),
   ],
   tasks: [],
   totals: {

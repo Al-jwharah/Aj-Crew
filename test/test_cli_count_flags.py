@@ -18,12 +18,12 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_parser_admin, cli_parser_agent, cli_parser_gateway, cli_server
-from kiro_crew.service.common import Platform
+from aj_crew import cli_parser_admin, cli_parser_agent, cli_parser_gateway, cli_server
+from aj_crew.service.common import Platform
 
 
 def _parser() -> argparse.ArgumentParser:
-    root = argparse.ArgumentParser(prog="kirocrew")
+    root = argparse.ArgumentParser(prog="ajcrew")
     sub = root.add_subparsers(dest="command")
     cli_parser_gateway.register_logs_parser(sub)
     cli_parser_admin.register_pod_parser(sub)
@@ -122,7 +122,7 @@ def test_logs_zero_lines_reaches_tail_as_zero(
 
 def test_the_parser_modules_share_one_positive_int_type() -> None:
     """A second copy would refuse the same bad count with different wording."""
-    from kiro_crew import cli_arg_types
+    from aj_crew import cli_arg_types
 
     assert not hasattr(cli_parser_agent, "_positive_int")
     assert cli_parser_agent.positive_int is cli_arg_types.positive_int

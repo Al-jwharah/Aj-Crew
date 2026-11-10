@@ -20,9 +20,9 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from apps_routes_coverage_helpers import APP, _make_app, _make_app_source, _setup_env
 
-import kiro_crew.apps.bridges as bridges_mod
-import kiro_crew.apps.routes as routes_mod
-from kiro_crew.apps.manager import enable_app, install_app
+import aj_crew.apps.bridges as bridges_mod
+import aj_crew.apps.routes as routes_mod
+from aj_crew.apps.manager import enable_app, install_app
 
 
 def _source_with_agent(tmp_path: Path) -> Path:

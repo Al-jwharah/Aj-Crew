@@ -2,7 +2,7 @@
 
 ``selectable`` is a build/policy fact and cannot say whether the harness would start.
 
-1. The probe answers through the spawn's resolvers (``kiro_crew.acp.client``), which
+1. The probe answers through the spawn's resolvers (``aj_crew.acp.client``), which
    every case monkeypatches; a private PATH search would agree only by coincidence.
 2. ``kas`` tracks ``kiro`` exactly: KAS is served by kiro-cli's ACP relay.
 3. A resolver that raises yields ``unknown``, never ``missing``.
@@ -21,7 +21,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.acp_backends import (
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_DEEPSEEK,
@@ -33,9 +33,9 @@ from kiro_crew.acp_backends import (
     ACP_BACKENDS_KNOWN,
     ACP_BACKENDS_SELF_SERVED_ACP,
 )
-from kiro_crew.agent_sdk import backend_cards
-from kiro_crew.agent_sdk import backend_install as probe
-from kiro_crew.agent_sdk import host_auth
+from aj_crew.agent_sdk import backend_cards
+from aj_crew.agent_sdk import backend_install as probe
+from aj_crew.agent_sdk import host_auth
 
 #: The stand-in resolution for a self-served harness that is meant to be present.
 #: One value for all of them: what these cases assert is the VERDICT the probe
@@ -73,12 +73,12 @@ def _stub_resolvers(
 ):
     """Patch the spawn resolvers on the module the driver imports from.
 
-    Patched on ``kiro_crew.acp.client`` -- the DEFINING module -- because the
+    Patched on ``aj_crew.acp.client`` -- the DEFINING module -- because the
     driver imports them function-locally at call time, so that is the namespace
     the lookup actually reaches. A value of ``None`` (or ``(None, path)``) is the
     resolvers' own "not found" answer, not an error.
     """
-    from kiro_crew.acp import client
+    from aj_crew.acp import client
 
     monkeypatch.setattr(client, "_resolve_kiro_bin", lambda **_kw: kiro)
     monkeypatch.setattr(client, "_resolve_claude_acp_bin", lambda: adapter)
@@ -106,7 +106,7 @@ def _stub_resolvers(
     monkeypatch.setattr(client, "_self_served_bin_caches", {})
     # The Strands probe also reads its Python environment and its release, each a
     # host fact, so both answer "ready" here like the binaries above.
-    from kiro_crew.agent_sdk.drivers import acp as acp_driver
+    from aj_crew.agent_sdk.drivers import acp as acp_driver
 
     monkeypatch.setattr(acp_driver, "strands_python_env_missing", lambda: ("", ""))
     monkeypatch.setattr(acp_driver, "strands_wrong_version", lambda: "")
@@ -125,14 +125,14 @@ class TestSelfServedDriverSeams:
 
     @pytest.mark.parametrize("backend", sorted(ACP_BACKENDS_SELF_SERVED_ACP))
     def test_a_resolved_binary_is_a_yes(self, backend, monkeypatch):
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         _stub_resolvers(monkeypatch, self_served={backend: _PRESENT})
         assert driver.self_served_resolves(backend) is True
 
     @pytest.mark.parametrize("backend", sorted(ACP_BACKENDS_SELF_SERVED_ACP))
     def test_an_absent_binary_is_a_no(self, backend, monkeypatch):
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         _stub_resolvers(monkeypatch, self_served={backend: _ABSENT})
         assert driver.self_served_resolves(backend) is False
@@ -144,8 +144,8 @@ class TestSelfServedDriverSeams:
         Compared against the record rather than a literal: a literal here would pin
         the WORDING of operator advice, when the contract is that the two agree.
         """
-        from kiro_crew.agent_sdk.backends import launch_for
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.agent_sdk.backends import launch_for
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         assert driver.self_served_install_command(backend) == launch_for(backend).install_command
         assert launch_for(backend).install_command
@@ -162,24 +162,24 @@ class TestSelfServedCachedNegative:
 
     @pytest.mark.parametrize("backend", sorted(ACP_BACKENDS_SELF_SERVED_ACP))
     def test_an_absent_key_is_not_a_negative(self, backend, monkeypatch):
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(client, "_self_served_bin_caches", {})
         assert driver.self_served_cached_negative(backend) is False
 
     @pytest.mark.parametrize("backend", sorted(ACP_BACKENDS_SELF_SERVED_ACP))
     def test_a_cached_absence_is_a_negative(self, backend, monkeypatch):
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(client, "_self_served_bin_caches", {backend: (None, "/usr/bin")})
         assert driver.self_served_cached_negative(backend) is True
 
     @pytest.mark.parametrize("backend", sorted(ACP_BACKENDS_SELF_SERVED_ACP))
     def test_a_cached_path_is_not_a_negative(self, backend, monkeypatch):
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(
             client, "_self_served_bin_caches", {backend: ("/opt/harness", "/usr/bin")}
@@ -188,8 +188,8 @@ class TestSelfServedCachedNegative:
 
     def test_one_harnesss_absence_is_not_anothers(self, monkeypatch):
         """The cache is shared, so a miss must stay keyed to the harness that missed."""
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(
             client,
@@ -201,15 +201,15 @@ class TestSelfServedCachedNegative:
         assert driver.self_served_cached_negative(ACP_BACKEND_DEEPSEEK) is False
 
     def test_an_unparseable_cache_fails_safe(self, monkeypatch):
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(client, "_self_served_bin_caches", {ACP_BACKEND_OPENCODE: 42})
         assert driver.self_served_cached_negative(ACP_BACKEND_OPENCODE) is False
 
     def test_a_non_mapping_cache_fails_safe(self, monkeypatch):
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(client, "_self_served_bin_caches", 42)
         assert driver.self_served_cached_negative(ACP_BACKEND_OPENCODE) is False
@@ -217,7 +217,7 @@ class TestSelfServedCachedNegative:
     @pytest.mark.parametrize("backend", sorted(ACP_BACKENDS_SELF_SERVED_ACP))
     def test_installed_after_a_cached_miss_reports_restart_required(self, backend, monkeypatch):
         """The divergence the flag exists for: on disk now, absent in this process."""
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         _stub_resolvers(monkeypatch, self_served={backend: _PRESENT})
         monkeypatch.setattr(client, "_self_served_bin_caches", {backend: (None, "/usr/bin")})
@@ -231,7 +231,7 @@ class TestSelfServedVerdicts:
 
     @pytest.mark.parametrize("backend", sorted(ACP_BACKENDS_SELF_SERVED_ACP))
     def test_a_resolved_binary_is_installed_and_names_nothing(self, backend, monkeypatch):
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         _stub_resolvers(monkeypatch, self_served={backend: _PRESENT})
         monkeypatch.setattr(client, "_self_served_bin_caches", {})
@@ -250,8 +250,8 @@ class TestSelfServedVerdicts:
         these harnesses ships its ACP support as a PLUGIN, so naming the plugin here
         would send an operator to install something that still would not run.
         """
-        from kiro_crew.agent_sdk.backends import launch_for
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.agent_sdk.backends import launch_for
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         _stub_resolvers(monkeypatch, self_served={backend: _ABSENT})
         state = probe.probe_backend(backend)
@@ -283,15 +283,15 @@ class TestCopilotWrongVersion:
     """
 
     def _probe(self, monkeypatch, binary: str):
-        from kiro_crew.acp import client
-        from kiro_crew.acp_backends import ACP_BACKEND_COPILOT
+        from aj_crew.acp import client
+        from aj_crew.acp_backends import ACP_BACKEND_COPILOT
 
         _stub_resolvers(monkeypatch, self_served={ACP_BACKEND_COPILOT: (binary, "/usr/bin")})
         monkeypatch.setattr(client, "_self_served_bin_caches", {})
         return probe.probe_backend(ACP_BACKEND_COPILOT)
 
     def test_another_release_is_missing_the_verified_one(self, monkeypatch, tmp_path):
-        from kiro_crew.agent_sdk.backends import COPILOT_VERIFIED_VERSION
+        from aj_crew.agent_sdk.backends import COPILOT_VERIFIED_VERSION
 
         state = self._probe(monkeypatch, _npm_copilot(tmp_path, "1.0.103"))
         assert state.installed == probe.MISSING
@@ -300,7 +300,7 @@ class TestCopilotWrongVersion:
         assert state.install_command == f"npm i -g @github/copilot@{COPILOT_VERIFIED_VERSION}"
 
     def test_the_verified_release_is_installed(self, monkeypatch, tmp_path):
-        from kiro_crew.agent_sdk.backends import COPILOT_VERIFIED_VERSION
+        from aj_crew.agent_sdk.backends import COPILOT_VERIFIED_VERSION
 
         state = self._probe(monkeypatch, _npm_copilot(tmp_path, COPILOT_VERIFIED_VERSION))
         assert state.installed == probe.INSTALLED
@@ -317,7 +317,7 @@ class TestCopilotWrongVersion:
         assert state.installed == probe.INSTALLED
 
     def test_a_windows_shim_reads_the_prefix_package(self, tmp_path):
-        from kiro_crew.acp.harness.copilot import copilot_installed_version
+        from aj_crew.acp.harness.copilot import copilot_installed_version
 
         package = tmp_path / "node_modules" / "@github" / "copilot"
         package.mkdir(parents=True)
@@ -329,15 +329,15 @@ class TestCopilotWrongVersion:
 
     @pytest.mark.parametrize("backend", sorted(ACP_BACKENDS_SELF_SERVED_ACP - {"copilot"}))
     def test_no_other_harness_reads_a_version(self, backend, monkeypatch):
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(
-            "kiro_crew.acp.client._resolve_self_served_bin", MagicMock(side_effect=AssertionError)
+            "aj_crew.acp.client._resolve_self_served_bin", MagicMock(side_effect=AssertionError)
         )
         assert driver.self_served_wrong_version(backend) == ""
 
     def test_the_status_row_carries_the_release_on_a_missing_verdict_only(self):
-        from kiro_crew.dashboard.handlers.acp_backend_status import _row
+        from aj_crew.dashboard.handlers.acp_backend_status import _row
 
         wrong = probe.BackendInstallState(
             "copilot",
@@ -358,7 +358,7 @@ class TestPiVerdicts:
     """Two components, one installer: the probe names whichever half is absent."""
 
     def test_both_resolved_is_installed_and_names_nothing(self, monkeypatch):
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         _stub_resolvers(monkeypatch)
         monkeypatch.setattr(client, "_pi_acp_argv_cache", client._UNRESOLVED)
@@ -371,7 +371,7 @@ class TestPiVerdicts:
         assert state.policy_id == "pi"
 
     def test_an_absent_adapter_names_the_adapter(self, monkeypatch):
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         _stub_resolvers(monkeypatch, pi_acp=(None, "/usr/bin"))
         state = probe.probe_backend(ACP_BACKEND_PI)
@@ -393,7 +393,7 @@ class TestPiVerdicts:
         assert state.missing_components == (probe.COMPONENT_PI_ACP_ADAPTER, probe.COMPONENT_PI_CLI)
 
     def test_a_cached_miss_on_either_component_reports_restart_required(self, monkeypatch):
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         _stub_resolvers(monkeypatch)
         monkeypatch.setattr(client, "_pi_acp_argv_cache", (["node", "/n/pi-acp.js"], "/usr/bin"))
@@ -415,16 +415,16 @@ class TestCodexDriverSeams:
 
     def test_resolves_reports_a_runnable_argv(self, monkeypatch):
         """One component, unlike claude's two: the adapter ships its own Codex binary."""
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(client, "_resolve_codex_acp_bin", lambda: (["node", "/n/c.js"], "/p"))
         assert driver.codex_adapter_resolves() is True
 
     def test_resolves_reports_absence(self, monkeypatch):
         """``(None, searched_path)`` is the resolver's own "not found", not an error."""
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(client, "_resolve_codex_acp_bin", lambda: (None, "/searched"))
         assert driver.codex_adapter_resolves() is False
@@ -435,16 +435,16 @@ class TestCodexDriverSeams:
         Reading the sentinel as a negative would report ``restart_required`` on a
         gateway that has simply never spawned codex.
         """
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(client, "_codex_acp_argv_cache", client._UNRESOLVED)
         assert driver.codex_adapter_cached_negative() is False
 
     def test_absent_cache_attribute_is_not_a_negative(self, monkeypatch):
         """A build without the global must not read as a cached failure."""
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.delattr(client, "_codex_acp_argv_cache", raising=False)
         assert driver.codex_adapter_cached_negative() is False
@@ -455,16 +455,16 @@ class TestCodexDriverSeams:
         The adapter may be on disk NOW while this process still refuses to spawn
         it, so the row has to say "restart" rather than "installed".
         """
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(client, "_codex_acp_argv_cache", (None, "/searched"))
         assert driver.codex_adapter_cached_negative() is True
 
     def test_cached_positive_is_not_a_negative(self, monkeypatch):
         """A cached runnable argv means spawns work; nothing to disclose."""
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(client, "_codex_acp_argv_cache", (["node", "/n/c.js"], "/p"))
         assert driver.codex_adapter_cached_negative() is False
@@ -475,8 +475,8 @@ class TestCodexDriverSeams:
         Fails toward "no disclosure" rather than toward an exception: the row is
         built on a read-only path that must degrade, not 500.
         """
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(client, "_codex_acp_argv_cache", object())
         assert driver.codex_adapter_cached_negative() is False
@@ -488,8 +488,8 @@ class TestCodexDriverSeams:
         which is what the ladder looks for -- so the command is built from the same
         constant rather than restated, and cannot drift from what satisfies it.
         """
-        from kiro_crew.acp.client import CODEX_ACP_NPM_PKG
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp.client import CODEX_ACP_NPM_PKG
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         command = driver.codex_adapter_install_command()
         assert command == f"npm i -g {CODEX_ACP_NPM_PKG}"
@@ -569,7 +569,7 @@ class TestMissingVerdicts:
         still stay green, which is how an operator ends up running an install
         that produces nothing the resolver looks for.
         """
-        from kiro_crew.acp.client import CLAUDE_ACP_NPM_PKG
+        from aj_crew.acp.client import CLAUDE_ACP_NPM_PKG
 
         _stub_resolvers(monkeypatch, adapter=(None, "/usr/bin"))
         state = probe.probe_backend(ACP_BACKEND_CLAUDE)
@@ -597,7 +597,7 @@ class TestKasTracksKiro:
         stops, something else is answering for a binary that is never spawned.
         """
         calls: list[int] = []
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         monkeypatch.setattr(
             client,
@@ -625,7 +625,7 @@ class TestKasBundleRouteAnswersFromTheInstalledEngine:
 
     @pytest.mark.parametrize("kiro_bin", ["/usr/local/bin/kiro-cli", None])
     def test_installed_engine_is_installed_whatever_kiro_cli_says(self, monkeypatch, kiro_bin):
-        from kiro_crew.agent_sdk import kas_bundle
+        from aj_crew.agent_sdk import kas_bundle
 
         _stub_resolvers(monkeypatch, kiro=kiro_bin)
         monkeypatch.setattr(kas_bundle, "installed_bundle", lambda *a, **k: object())
@@ -640,7 +640,7 @@ class TestKasBundleRouteAnswersFromTheInstalledEngine:
     ):
         """The first spawn lays the pinned engine down, so the setup gate lets KAS
         through instead of sending the user to kiro-cli."""
-        from kiro_crew.agent_sdk import kas_bundle
+        from aj_crew.agent_sdk import kas_bundle
 
         _stub_resolvers(monkeypatch, kiro=kiro_bin)
         monkeypatch.setattr(kas_bundle, "installed_bundle", lambda *a, **k: None)
@@ -650,7 +650,7 @@ class TestKasBundleRouteAnswersFromTheInstalledEngine:
         assert kas.missing_components == ()
 
     def test_a_platform_the_pin_publishes_nothing_for_is_not_installable(self, monkeypatch):
-        from kiro_crew.acp import kas_bundle as acp_kas_bundle
+        from aj_crew.acp import kas_bundle as acp_kas_bundle
 
         monkeypatch.setattr(acp_kas_bundle, "host_platform_key", lambda *a: "win32-arm64")
         monkeypatch.setattr(acp_kas_bundle, "host_node_key", lambda *a: "win32-arm64")
@@ -660,7 +660,7 @@ class TestKasBundleRouteAnswersFromTheInstalledEngine:
     @pytest.mark.parametrize("kiro_bin", ["/usr/local/bin/kiro-cli", None])
     def test_no_engine_is_missing_the_bundle_not_kiro_cli(self, monkeypatch, kiro_bin):
         """A host that cannot run the engine at all names the bundle, not kiro-cli."""
-        from kiro_crew.agent_sdk import kas_bundle
+        from aj_crew.agent_sdk import kas_bundle
 
         _stub_resolvers(monkeypatch, kiro=kiro_bin)
         monkeypatch.setattr(kas_bundle, "installed_bundle", lambda *a, **k: None)
@@ -672,8 +672,8 @@ class TestKasBundleRouteAnswersFromTheInstalledEngine:
         assert probe.COMPONENT_KIRO_CLI not in kas.missing_components
 
     def test_kiro_resolver_is_not_consulted_on_the_bundle_route(self, monkeypatch):
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk import kas_bundle
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk import kas_bundle
 
         monkeypatch.setattr(kas_bundle, "installed_bundle", lambda *a, **k: object())
         monkeypatch.setattr(
@@ -707,7 +707,7 @@ class TestUnknownIsNeverMissing:
         def _boom(**_kw):
             raise OSError("trust snapshot failed")
 
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         monkeypatch.setattr(client, "_resolve_kiro_bin", _boom)
         state = probe.probe_backend(backend)
@@ -717,7 +717,7 @@ class TestUnknownIsNeverMissing:
     def test_a_raising_claude_resolver_yields_unknown(self, monkeypatch):
         """The Claude probe spawns mise, so a raise here is a routine failure."""
         _stub_resolvers(monkeypatch)
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         def _boom():
             raise RuntimeError("mise exploded")
@@ -747,7 +747,7 @@ class TestProbeCache:
 
     def test_two_probes_resolve_once(self, monkeypatch):
         calls: list[str] = []
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         monkeypatch.setattr(
             client,
@@ -760,7 +760,7 @@ class TestProbeCache:
 
     def test_clearing_the_cache_re_probes(self, monkeypatch):
         calls: list[str] = []
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         monkeypatch.setattr(
             client,
@@ -781,7 +781,7 @@ class TestProbeCache:
         """
         monkeypatch.setattr(probe, "CACHE_TTL_SECONDS", 0.0)
         calls: list[str] = []
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         monkeypatch.setattr(
             client,
@@ -799,7 +799,7 @@ class TestProbeCache:
         rather than calling the kiro probe directly.
         """
         calls: list[str] = []
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         # ``probe_backends`` probes EVERY backend, and the pi/codex/self-served resolvers
         # reach ``_mise_which`` -- the host's ``mise``. Stub the whole table through the
@@ -823,7 +823,7 @@ class TestSpawnCacheDivergence:
     """
 
     def _cache(self, monkeypatch, value):
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         monkeypatch.setattr(client, "_claude_acp_argv_cache", value, raising=False)
 
@@ -850,7 +850,7 @@ class TestSpawnCacheDivergence:
         started gateway to restart it, which is the false positive that would make
         the flag ignorable.
         """
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         _stub_resolvers(monkeypatch)
         self._cache(monkeypatch, client._UNRESOLVED)
@@ -885,7 +885,7 @@ class TestSpawnCacheDivergence:
         The disclosure costs one restart; the mutation costs a side effect on a
         concurrent path.
         """
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         _stub_resolvers(monkeypatch)
         sentinel = (None, "/usr/bin")
@@ -956,7 +956,7 @@ class TestEndpointOwnerGate:
     """Host install state is host configuration, so it is the owner's to read."""
 
     def test_a_non_owner_is_refused_with_a_machine_readable_code(self, monkeypatch):
-        from kiro_crew.dashboard.handlers import acp_backend_status as handler
+        from aj_crew.dashboard.handlers import acp_backend_status as handler
 
         # SEL is stubbed because a denial must land even when the audit log is
         # unwritable, and because a test must not write the real event log.
@@ -979,7 +979,7 @@ class TestEndpointOwnerGate:
 
     def test_an_app_token_is_not_the_dashboard_owner(self, monkeypatch):
         """``app`` non-empty means an App Kit caller, not the human owner."""
-        from kiro_crew.dashboard.handlers import acp_backend_status as handler
+        from aj_crew.dashboard.handlers import acp_backend_status as handler
 
         monkeypatch.setattr(handler, "sel", lambda: MagicMock())
         response = asyncio.run(handler.api_acp_backend_status(_request(app="some-app")))
@@ -990,7 +990,7 @@ class TestEndpointPayloadShape:
     """The pinned contract: the dashboard branches on these exact keys."""
 
     def test_owner_gets_one_row_per_backend_in_the_pinned_shape(self, monkeypatch):
-        from kiro_crew.dashboard.handlers import acp_backend_status as handler
+        from aj_crew.dashboard.handlers import acp_backend_status as handler
 
         # codex's resolver is stubbed NOT-FOUND alongside claude's, because the row
         # assertion below pins it as ``missing``: reaching the real resolver would read
@@ -1005,7 +1005,7 @@ class TestEndpointPayloadShape:
         # ``selectable`` is pinned rather than read live: this assertion is about
         # the payload carrying the governance answer, not about what this
         # deployment's policy happens to permit today.
-        import kiro_crew.dashboard.handlers.core as core
+        import aj_crew.dashboard.handlers.core as core
 
         monkeypatch.setattr(core, "_selectable_acp_backends", lambda: ["", "kas"])
 
@@ -1143,18 +1143,18 @@ class TestEndpointPayloadShape:
         ``missing_components`` is non-empty only for ``missing``, so a row whose
         check failed cannot suggest an install the probe never justified.
         """
-        from kiro_crew.dashboard.handlers import acp_backend_status as handler
+        from aj_crew.dashboard.handlers import acp_backend_status as handler
 
         def _boom(**_kw):
             raise OSError("trust snapshot failed")
 
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         # The handler probes EVERY backend; the pi/codex/self-served resolvers would reach
         # the host's ``mise``. Stub the whole table, then make only kiro's resolver raise.
         _stub_resolvers(monkeypatch, adapter=(None, "/usr/bin"), claude_cli=None)
         monkeypatch.setattr(client, "_resolve_kiro_bin", _boom)
-        import kiro_crew.dashboard.handlers.core as core
+        import aj_crew.dashboard.handlers.core as core
 
         monkeypatch.setattr(core, "_selectable_acp_backends", lambda: ["", "kas"])
 
@@ -1367,16 +1367,16 @@ class TestForgetCachedResolution:
     """
 
     def test_it_returns_the_claude_adapter_cache_to_unresolved(self, monkeypatch):
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(client, "_claude_acp_argv_cache", (None, "/usr/bin"), raising=False)
         driver.forget_cached_resolution(ACP_BACKEND_CLAUDE)
         assert client._claude_acp_argv_cache is client._UNRESOLVED
 
     def test_it_returns_the_codex_adapter_cache_to_unresolved(self, monkeypatch):
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(client, "_codex_acp_argv_cache", (None, "/usr/bin"), raising=False)
         driver.forget_cached_resolution(ACP_BACKEND_CODEX)
@@ -1384,8 +1384,8 @@ class TestForgetCachedResolution:
 
     def test_it_clears_BOTH_pi_caches(self, monkeypatch):
         """Either half cached absent kills the next spawn, so both have to go."""
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(client, "_pi_acp_argv_cache", (None, "/usr/bin"), raising=False)
         monkeypatch.setattr(client, "_pi_bin_cache", (None, "/usr/bin"), raising=False)
@@ -1396,8 +1396,8 @@ class TestForgetCachedResolution:
     @pytest.mark.parametrize("backend", sorted(ACP_BACKENDS_SELF_SERVED_ACP))
     def test_it_drops_one_self_served_key_and_keeps_the_siblings(self, backend, monkeypatch):
         """These harnesses share ONE dict, so forgetting one is a key deletion."""
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         caches = {other: _ABSENT for other in ACP_BACKENDS_SELF_SERVED_ACP}
         monkeypatch.setattr(client, "_self_served_bin_caches", caches)
@@ -1408,8 +1408,8 @@ class TestForgetCachedResolution:
 
     def test_clearing_one_adapter_leaves_the_other_alone(self, monkeypatch):
         """A re-check of codex must not make the next claude spawn re-resolve."""
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         kept = (None, "/usr/bin")
         monkeypatch.setattr(client, "_claude_acp_argv_cache", kept, raising=False)
@@ -1419,8 +1419,8 @@ class TestForgetCachedResolution:
 
     def test_a_harness_with_no_cache_of_its_own_is_silent(self, monkeypatch):
         """kiro resolves per spawn and KAS shares its answer: nothing to forget."""
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         caches = {other: _ABSENT for other in ACP_BACKENDS_SELF_SERVED_ACP}
         monkeypatch.setattr(client, "_self_served_bin_caches", caches)
@@ -1439,7 +1439,7 @@ class TestForgetCachedResolution:
         A read that mutated would be the thing those docstrings forbid, and the
         endpoint pair only makes sense while this stays true.
         """
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         _stub_resolvers(monkeypatch)
         sentinel = (None, "/usr/bin")
@@ -1457,7 +1457,7 @@ class TestRecheckClearsWhatTheGetCouldOnlyReport:
         The middle step is the one a test usually skips: the process cache is
         populated by a FAILED spawn, not by the probe, so it is set explicitly.
         """
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         # 1. The component is absent, and the probe says so.
         _stub_resolvers(monkeypatch, adapter=(None, "/usr/bin"))
@@ -1488,7 +1488,7 @@ class TestRecheckClearsWhatTheGetCouldOnlyReport:
 
     @pytest.mark.parametrize("backend", sorted(ACP_BACKENDS_SELF_SERVED_ACP))
     def test_the_same_sequence_holds_for_a_self_served_harness(self, backend, monkeypatch):
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         _stub_resolvers(monkeypatch, self_served={backend: _PRESENT})
         caches = {backend: _ABSENT}
@@ -1505,7 +1505,7 @@ class TestRecheckClearsWhatTheGetCouldOnlyReport:
 
     def test_a_recheck_cannot_fake_a_green(self, monkeypatch):
         """No parameter writes a verdict, so a still-absent component still says so."""
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         monkeypatch.setattr(client, "_claude_acp_argv_cache", client._UNRESOLVED, raising=False)
         _stub_resolvers(monkeypatch, adapter=(None, "/usr/bin"))
@@ -1521,7 +1521,7 @@ class TestRecheckClearsWhatTheGetCouldOnlyReport:
         The flag is read after the clear, so a cache negative again by then (a resolver
         that began before the install) keeps the panel asking for a restart.
         """
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         _stub_resolvers(monkeypatch)
         monkeypatch.setattr(client, "_claude_acp_argv_cache", client._UNRESOLVED, raising=False)
@@ -1542,7 +1542,7 @@ class TestRecheckEndpoint:
         This endpoint clears state on the spawn path. A non-owner reaching that
         even to have the result discarded would be the mutation happening.
         """
-        from kiro_crew.dashboard.handlers import acp_backend_status as handler
+        from aj_crew.dashboard.handlers import acp_backend_status as handler
 
         monkeypatch.setattr(handler, "sel", lambda: MagicMock())
         called: list[str] = []
@@ -1565,7 +1565,7 @@ class TestRecheckEndpoint:
         attempts filed as ``acp_backend_status_access``, which is the one question
         the record exists to answer.
         """
-        from kiro_crew.dashboard.handlers import acp_backend_status as handler
+        from aj_crew.dashboard.handlers import acp_backend_status as handler
 
         recorder = MagicMock()
         monkeypatch.setattr(handler, "sel", lambda: recorder)
@@ -1582,7 +1582,7 @@ class TestRecheckEndpoint:
         assert kwargs["outcome"] == "denied"
 
     def test_an_app_token_is_not_the_dashboard_owner(self, monkeypatch):
-        from kiro_crew.dashboard.handlers import acp_backend_status as handler
+        from aj_crew.dashboard.handlers import acp_backend_status as handler
 
         monkeypatch.setattr(handler, "sel", lambda: MagicMock())
         monkeypatch.setattr(handler, "_recheck", lambda backend: {})
@@ -1611,7 +1611,7 @@ class TestRecheckEndpoint:
         cache on every request, so this is what keeps that dict to the ids the
         build knows rather than defensive tidying.
         """
-        from kiro_crew.dashboard.handlers import acp_backend_status as handler
+        from aj_crew.dashboard.handlers import acp_backend_status as handler
 
         monkeypatch.setattr(handler, "sel", lambda: MagicMock())
         called: list[str] = []
@@ -1625,7 +1625,7 @@ class TestRecheckEndpoint:
 
     def test_a_body_that_is_not_json_is_refused(self, monkeypatch):
         """aiohttp raises rather than answering, and that is a 400 not a 500."""
-        from kiro_crew.dashboard.handlers import acp_backend_status as handler
+        from aj_crew.dashboard.handlers import acp_backend_status as handler
 
         monkeypatch.setattr(handler, "sel", lambda: MagicMock())
         called: list[str] = []
@@ -1643,7 +1643,7 @@ class TestRecheckEndpoint:
         A truthiness check would refuse the shipped default, which is the one
         harness every install has.
         """
-        from kiro_crew.dashboard.handlers import acp_backend_status as handler
+        from aj_crew.dashboard.handlers import acp_backend_status as handler
 
         monkeypatch.setattr(handler, "sel", lambda: MagicMock())
         seen: list[str] = []
@@ -1662,7 +1662,7 @@ class TestRecheckEndpoint:
 
     def test_the_row_id_kiro_rechecks_the_kiro_cli_backend(self, monkeypatch):
         """The panel re-checks by row id, and the Kiro CLI row id is "kiro"."""
-        from kiro_crew.dashboard.handlers import acp_backend_status as handler
+        from aj_crew.dashboard.handlers import acp_backend_status as handler
 
         monkeypatch.setattr(handler, "sel", lambda: MagicMock())
         seen: list[str] = []
@@ -1685,8 +1685,8 @@ class TestRecheckEndpoint:
         against a literal: a hand-written expected shape is a third place the
         contract lives.
         """
-        from kiro_crew.acp import client
-        from kiro_crew.dashboard.handlers import acp_backend_status as handler
+        from aj_crew.acp import client
+        from aj_crew.dashboard.handlers import acp_backend_status as handler
 
         monkeypatch.setattr(handler, "sel", lambda: MagicMock())
         _stub_resolvers(monkeypatch)
@@ -1694,7 +1694,7 @@ class TestRecheckEndpoint:
         # spawn path's cache by direct assignment.
         monkeypatch.setattr(client, "_claude_acp_argv_cache", client._UNRESOLVED, raising=False)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.core._selectable_acp_backends",
+            "aj_crew.dashboard.handlers.core._selectable_acp_backends",
             lambda: sorted(ACP_BACKENDS_KNOWN),
         )
 
@@ -1714,7 +1714,7 @@ class TestRecheckEndpoint:
         Refusing here would make an unwritable log break the panel's only way out
         of the restart prompt, which is a worse failure than a missing record.
         """
-        from kiro_crew.dashboard.handlers import acp_backend_status as handler
+        from aj_crew.dashboard.handlers import acp_backend_status as handler
 
         broken = MagicMock()
         broken.log_api_access.side_effect = OSError("read-only")
@@ -1728,7 +1728,7 @@ class TestRecheckEndpoint:
 
     def test_the_successful_mutation_is_audited(self, monkeypatch):
         """Unlike the GET beside it, the record of who cleared what is the point."""
-        from kiro_crew.dashboard.handlers import acp_backend_status as handler
+        from aj_crew.dashboard.handlers import acp_backend_status as handler
 
         recorder = MagicMock()
         monkeypatch.setattr(handler, "sel", lambda: recorder)
@@ -1750,7 +1750,7 @@ class TestRecheckEndpoint:
         Auditing first would hand the caller a 500 while the log said the re-probe
         worked -- the one direction an audit record must not be wrong in.
         """
-        from kiro_crew.dashboard.handlers import acp_backend_status as handler
+        from aj_crew.dashboard.handlers import acp_backend_status as handler
 
         recorder = MagicMock()
         monkeypatch.setattr(handler, "sel", lambda: recorder)
@@ -1774,7 +1774,7 @@ class TestRecheckEndpoint:
         spawn-path readers are atomic only against loop tasks, and a clear from a thread
         can raise ``KeyError`` mid-spawn. Asserted structurally, since timing cannot.
         """
-        from kiro_crew.dashboard.handlers import acp_backend_status as handler
+        from aj_crew.dashboard.handlers import acp_backend_status as handler
 
         monkeypatch.setattr(handler, "sel", lambda: MagicMock())
         monkeypatch.setattr(handler, "_recheck", lambda backend: {"id": backend})
@@ -1790,18 +1790,18 @@ class TestRecheckEndpoint:
             handler.api_acp_backend_recheck(_request(json_body={"backend": ACP_BACKEND_CLAUDE}))
         )
         assert handler._recheck in offloaded
-        from kiro_crew.agent_sdk import forget_for_recheck
+        from aj_crew.agent_sdk import forget_for_recheck
 
         assert forget_for_recheck not in offloaded
 
     def test_the_clear_runs_before_the_probe(self, monkeypatch):
         """Order matters: probing first would measure through the cache being dropped."""
-        from kiro_crew.dashboard.handlers import acp_backend_status as handler
+        from aj_crew.dashboard.handlers import acp_backend_status as handler
 
         monkeypatch.setattr(handler, "sel", lambda: MagicMock())
         order: list[str] = []
         monkeypatch.setattr(
-            "kiro_crew.agent_sdk.forget_for_recheck",
+            "aj_crew.agent_sdk.forget_for_recheck",
             lambda backend: order.append("clear"),
         )
         monkeypatch.setattr(
@@ -1814,12 +1814,12 @@ class TestRecheckEndpoint:
 
     def test_a_refused_recheck_clears_nothing(self, monkeypatch):
         """The mutation must sit behind the gate, not merely have its result discarded."""
-        from kiro_crew.dashboard.handlers import acp_backend_status as handler
+        from aj_crew.dashboard.handlers import acp_backend_status as handler
 
         monkeypatch.setattr(handler, "sel", lambda: MagicMock())
         cleared: list[str] = []
         monkeypatch.setattr(
-            "kiro_crew.agent_sdk.forget_for_recheck",
+            "aj_crew.agent_sdk.forget_for_recheck",
             lambda backend: cleared.append(backend),
         )
         monkeypatch.setattr(handler, "_recheck", lambda backend: {"id": backend})
@@ -1841,7 +1841,7 @@ class TestRouteIsRegistered:
     def test_the_get_route_is_registered_on_the_agent_config_slice(self):
         from aiohttp import web
 
-        from kiro_crew.dashboard.routes import agent_config
+        from aj_crew.dashboard.routes import agent_config
 
         app = web.Application()
         agent_config.register(app)
@@ -1861,7 +1861,7 @@ class TestRouteIsRegistered:
         """
         from aiohttp import web
 
-        from kiro_crew.dashboard.routes import agent_config
+        from aj_crew.dashboard.routes import agent_config
 
         app = web.Application()
         agent_config.register(app)
@@ -1881,7 +1881,7 @@ def test_the_probe_is_offloaded_off_the_event_loop(monkeypatch):
     ``asyncio.to_thread`` -- because a wall-clock assertion on a blocking call
     is a stopwatch reading, not a statement about the code.
     """
-    from kiro_crew.dashboard.handlers import acp_backend_status as handler
+    from aj_crew.dashboard.handlers import acp_backend_status as handler
 
     seen: list[object] = []
     real_to_thread = asyncio.to_thread
@@ -1898,7 +1898,7 @@ def test_the_probe_is_offloaded_off_the_event_loop(monkeypatch):
 
 
 def test_the_boot_path_does_not_import_acp_at_module_scope():
-    """``kiro_crew/acp/__init__`` pulls in the client AND the runtime.
+    """``aj_crew/acp/__init__`` pulls in the client AND the runtime.
 
     The route table imports the handler on the boot path, so the driver may import ACP
     only inside functions. Read from source because the rule is the statement's position.
@@ -1908,15 +1908,15 @@ def test_the_boot_path_does_not_import_acp_at_module_scope():
 
     _REPO_ROOT = Path(__file__).resolve().parents[1]
     for relative in (
-        "src/kiro_crew/agent_sdk/__init__.py",
-        "src/kiro_crew/agent_sdk/backend_install.py",
-        "src/kiro_crew/agent_sdk/drivers/acp.py",
-        "src/kiro_crew/dashboard/handlers/acp_backend_status.py",
+        "src/aj_crew/agent_sdk/__init__.py",
+        "src/aj_crew/agent_sdk/backend_install.py",
+        "src/aj_crew/agent_sdk/drivers/acp.py",
+        "src/aj_crew/dashboard/handlers/acp_backend_status.py",
     ):
         tree = ast.parse((_REPO_ROOT / relative).read_text(encoding="utf-8"))
         for node in tree.body:
             if isinstance(node, ast.ImportFrom):
-                assert not (node.module or "").startswith("kiro_crew.acp."), relative
+                assert not (node.module or "").startswith("aj_crew.acp."), relative
             if isinstance(node, ast.Import):
                 for alias in node.names:
-                    assert not alias.name.startswith("kiro_crew.acp."), relative
+                    assert not alias.name.startswith("aj_crew.acp."), relative

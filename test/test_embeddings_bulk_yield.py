@@ -15,8 +15,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import embeddings as emb
-from kiro_crew.testing.wait import wait_until
+from aj_crew import embeddings as emb
+from aj_crew.testing.wait import wait_until
 
 
 @pytest.fixture

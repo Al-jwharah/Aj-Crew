@@ -18,9 +18,9 @@ import threading
 import pytest
 from eventlog_helpers import _isolated_home  # noqa: F401 - autouse fixture
 
-from kiro_crew.eventlog import types
-from kiro_crew.eventlog.log import MemberLog
-from kiro_crew.eventlog.service import MemberEventLogService
+from aj_crew.eventlog import types
+from aj_crew.eventlog.log import MemberLog
+from aj_crew.eventlog.service import MemberEventLogService
 
 
 def test_a_migration_interrupted_after_create_resumes(tmp_path, monkeypatch):
@@ -33,7 +33,7 @@ def test_a_migration_interrupted_after_create_resumes(tmp_path, monkeypatch):
     version of ensure that returns without doing anything cannot satisfy it no
     matter what the log happens to contain.
     """
-    import kiro_crew.members as members
+    import aj_crew.members as members
 
     monkeypatch.setattr(members, "data_home", lambda: tmp_path)
     root = tmp_path / "members"
@@ -92,7 +92,7 @@ def test_activity_migration_resumes_row_by_row(tmp_path, monkeypatch):
     """
     import json as _json
 
-    import kiro_crew.members as members
+    import aj_crew.members as members
 
     monkeypatch.setattr(members, "data_home", lambda: tmp_path)
     root = tmp_path / "members"
@@ -151,7 +151,7 @@ def test_identical_legacy_activity_rows_all_survive_a_resumed_migration(tmp_path
     """
     import json as _json
 
-    import kiro_crew.members as members
+    import aj_crew.members as members
 
     monkeypatch.setattr(members, "data_home", lambda: tmp_path)
     root = tmp_path / "members"
@@ -189,7 +189,7 @@ def test_identical_legacy_activity_rows_all_survive_a_resumed_migration(tmp_path
 
 
 def test_service_migrates_legacy(tmp_path, monkeypatch):
-    import kiro_crew.members as members
+    import aj_crew.members as members
 
     monkeypatch.setattr(members, "data_home", lambda: tmp_path)
     root = tmp_path / "members"
@@ -223,8 +223,8 @@ class TestLegacyRetirementMemoRequiresDurableMarker:
     """
 
     def test_transient_marker_write_failure_retries_in_same_process(self, tmp_path, monkeypatch):
-        import kiro_crew.members as members
-        from kiro_crew.eventlog import service as service_mod
+        import aj_crew.members as members
+        from aj_crew.eventlog import service as service_mod
 
         monkeypatch.setattr(members, "data_home", lambda: tmp_path)
         root = tmp_path / "members"
@@ -271,8 +271,8 @@ def test_an_activity_row_migrated_from_a_legacy_file_is_not_recorded_twice(tmp_p
     """
     import json as _json
 
-    import kiro_crew.members as members
-    from kiro_crew.eventlog.service import get_service
+    import aj_crew.members as members
+    from aj_crew.eventlog.service import get_service
 
     svc = get_service()
     slug = members.slug_for_name("Gale")
@@ -313,7 +313,7 @@ class TestTheLegacyActivitySourceIsRetiredOnceFolded:
 
     @staticmethod
     def _legacy(home, slug, rows):
-        from kiro_crew import members
+        from aj_crew import members
 
         d = members.member_dir(slug)
         d.mkdir(parents=True, exist_ok=True)
@@ -325,9 +325,9 @@ class TestTheLegacyActivitySourceIsRetiredOnceFolded:
         return path
 
     def test_a_row_written_after_the_fold_is_not_imported(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.eventlog.types import ACTIVITY_RECORD
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog.types import ACTIVITY_RECORD
 
         svc_mod.set_service(None)
         slug = "alice"
@@ -353,9 +353,9 @@ class TestTheLegacyActivitySourceIsRetiredOnceFolded:
     def test_an_unfolded_source_is_still_imported(self, tmp_path, monkeypatch):
         # CONTROL. Without this, refusing to read the legacy file at all would satisfy
         # the test above while losing every member's history on upgrade.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.eventlog.types import ACTIVITY_RECORD
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog.types import ACTIVITY_RECORD
 
         svc_mod.set_service(None)
         self._legacy(tmp_path, "bob", [{"ts": 1, "via": "cli", "project": "p"}])
@@ -366,8 +366,8 @@ class TestTheLegacyActivitySourceIsRetiredOnceFolded:
         svc_mod.set_service(None)
 
     def test_the_fold_stops_reading_past_its_byte_budget(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.eventlog import service as svc_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.eventlog import service as svc_mod
 
         rows = [{"ts": i, "via": "cli", "project": "p"} for i in range(200)]
         self._legacy(tmp_path, "carol", rows)
@@ -390,10 +390,10 @@ class TestTheForgeryPathClosesEvenWithNothingToMigrate:
     """
 
     def test_a_member_with_no_legacy_file_is_still_retired(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import members
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.eventlog.types import ACTIVITY_RECORD
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import members
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog.types import ACTIVITY_RECORD
 
         svc_mod.set_service(None)
         svc = svc_mod.get_service()
@@ -422,10 +422,10 @@ class TestTheForgeryPathClosesEvenWithNothingToMigrate:
         is not a guard, so the fact is recorded in the FENCED log directory and the
         member-side rename is hygiene only.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import members
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.eventlog.types import ACTIVITY_RECORD
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import members
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog.types import ACTIVITY_RECORD
 
         d = members.member_dir("frank")
         d.mkdir(parents=True, exist_ok=True)
@@ -474,9 +474,9 @@ class TestTheForgeryPathClosesEvenWithNothingToMigrate:
         budget goes negative once the line is already in memory -- so an
         outcome-only assertion passes against the very bug this pins.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import members
-        from kiro_crew.eventlog import service as svc_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import members
+        from aj_crew.eventlog import service as svc_mod
 
         d = members.member_dir("erin")
         d.mkdir(parents=True, exist_ok=True)
@@ -529,9 +529,9 @@ class TestTheForgeryPathClosesEvenWithNothingToMigrate:
     def test_a_row_within_the_cap_is_still_read(self, tmp_path, monkeypatch):
         # CONTROL. Without this, capping every read at zero would satisfy both tests
         # above while migrating nothing at all.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import members
-        from kiro_crew.eventlog import service as svc_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import members
+        from aj_crew.eventlog import service as svc_mod
 
         d = members.member_dir("frank")
         d.mkdir(parents=True, exist_ok=True)
@@ -553,7 +553,7 @@ class TestOnlyARegularFileIsReadAtTheLegacyPath:
 
     @staticmethod
     def _member_dir(slug):
-        from kiro_crew import members
+        from aj_crew import members
 
         d = members.member_dir(slug)
         d.mkdir(parents=True, exist_ok=True)
@@ -561,9 +561,9 @@ class TestOnlyARegularFileIsReadAtTheLegacyPath:
 
     @pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="no FIFO on this platform")
     def test_a_planted_fifo_does_not_hang_the_fold(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import members
-        from kiro_crew.eventlog import service as svc_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import members
+        from aj_crew.eventlog import service as svc_mod
 
         d = self._member_dir("gail")
         os.mkfifo(d / members.ACTIVITY_FILE_NAME)
@@ -589,9 +589,9 @@ class TestOnlyARegularFileIsReadAtTheLegacyPath:
     @pytest.mark.skipif(not hasattr(os, "symlink"), reason="no symlinks on this platform")
     @pytest.mark.skipif(not hasattr(os, "O_NOFOLLOW"), reason="O_NOFOLLOW unavailable")
     def test_a_symlink_at_the_legacy_path_is_not_followed(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import members
-        from kiro_crew.eventlog import service as svc_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import members
+        from aj_crew.eventlog import service as svc_mod
 
         outside = tmp_path / "outside.jsonl"
         outside.write_text(
@@ -607,9 +607,9 @@ class TestOnlyARegularFileIsReadAtTheLegacyPath:
     def test_a_regular_file_is_still_read(self, tmp_path, monkeypatch):
         # CONTROL. Without this, refusing every open would satisfy both tests above
         # while losing every member's history on upgrade.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import members
-        from kiro_crew.eventlog import service as svc_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import members
+        from aj_crew.eventlog import service as svc_mod
 
         d = self._member_dir("iris")
         (d / members.ACTIVITY_FILE_NAME).write_text(
@@ -626,11 +626,11 @@ class TestOnlyARegularFileIsReadAtTheLegacyPath:
         one transient EMFILE or permission blip on an EXISTING legacy file would retire
         the member's rows UNREAD, permanently, with no recovery path.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         import errno
 
-        from kiro_crew import members, platform_compat
-        from kiro_crew.eventlog import service as svc_mod
+        from aj_crew import members, platform_compat
+        from aj_crew.eventlog import service as svc_mod
 
         d = self._member_dir("jade")
         (d / members.ACTIVITY_FILE_NAME).write_text(
@@ -653,8 +653,8 @@ class TestOnlyARegularFileIsReadAtTheLegacyPath:
         # CONTROL for the test above. Treating every miss as a FAILURE would leave the
         # fold permanently incomplete for members who simply never had a legacy file,
         # so the migration would never finish and never retire.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.eventlog import service as svc_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.eventlog import service as svc_mod
 
         self._member_dir("kira")  # exists, but holds no activity file
         rows, complete = svc_mod._read_legacy_activity_files("kira")
@@ -678,7 +678,7 @@ class TestTheCompletionMarkerIsDurableBeforeTheNameIsFreed:
 
     @staticmethod
     def _legacy(slug, rows):
-        from kiro_crew import members
+        from aj_crew import members
 
         d = members.member_dir(slug)
         d.mkdir(parents=True, exist_ok=True)
@@ -707,8 +707,8 @@ class TestTheCompletionMarkerIsDurableBeforeTheNameIsFreed:
         """Faults os.replace, which is the instant the live name would be freed. Any
         state the marker reaches only AFTER that call is a state a crash can skip.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.eventlog import service as svc_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.eventlog import service as svc_mod
 
         svc_mod.set_service(None)
         legacy = self._legacy("ivy", [{"ts": 1, "via": "cli", "project": "p"}])
@@ -729,9 +729,9 @@ class TestTheCompletionMarkerIsDurableBeforeTheNameIsFreed:
 
     def test_a_forged_row_after_that_crash_is_still_refused(self, tmp_path, monkeypatch):
         """The consequence the order exists to prevent, driven end to end."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.eventlog.types import ACTIVITY_RECORD
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog.types import ACTIVITY_RECORD
 
         svc_mod.set_service(None)
         self._legacy("jane", [{"ts": 1, "via": "cli", "project": "p"}])
@@ -754,8 +754,8 @@ class TestTheCompletionMarkerIsDurableBeforeTheNameIsFreed:
     def test_the_marker_is_fsynced_not_only_written(self, tmp_path, monkeypatch):
         # CONTROL on the barrier itself: the ordering is worthless if the directory
         # entry is still only in the page cache when the rename lands.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.eventlog import service as svc_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.eventlog import service as svc_mod
 
         svc_mod.set_service(None)
         self._legacy("kara", [{"ts": 1, "via": "cli", "project": "p"}])
@@ -784,9 +784,9 @@ class TestAnIncompleteFoldIsNotFinalised:
     """
 
     def test_a_budget_truncated_fold_leaves_the_source_in_place(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import members
-        from kiro_crew.eventlog import service as svc_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import members
+        from aj_crew.eventlog import service as svc_mod
 
         svc_mod.set_service(None)
         d = members.member_dir("gina")
@@ -810,9 +810,9 @@ class TestAnIncompleteFoldIsNotFinalised:
     def test_a_complete_fold_is_still_finalised(self, tmp_path, monkeypatch):
         # CONTROL. Without this, never finalising would satisfy the test above while
         # leaving the forgery path open for every member.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import members
-        from kiro_crew.eventlog import service as svc_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import members
+        from aj_crew.eventlog import service as svc_mod
 
         svc_mod.set_service(None)
         d = members.member_dir("hank")
@@ -841,7 +841,7 @@ class TestTheFoldIsSerializedAcrossProcesses:
 
     @staticmethod
     def _legacy(slug, rows):
-        from kiro_crew import members
+        from aj_crew import members
 
         d = members.member_dir(slug)
         d.mkdir(parents=True, exist_ok=True)
@@ -853,8 +853,8 @@ class TestTheFoldIsSerializedAcrossProcesses:
         """Asserted on the lease being HELD while the fold runs, not on it being
         taken: a lease acquired and released around each append is exactly the
         state that already existed and that duplicates rows."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.eventlog import service as svc_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.eventlog import service as svc_mod
 
         svc_mod.set_service(None)
         self._legacy("nadia", [{"ts": 1, "via": "cli", "project": "p"}])
@@ -866,7 +866,7 @@ class TestTheFoldIsSerializedAcrossProcesses:
             # A SECOND acquire from this process succeeds by reference count, so it
             # cannot answer "is it held". Asked of the lease module's own registry
             # instead, which is what another process's acquire consults.
-            from kiro_crew.crew_log import lease as lease_mod
+            from aj_crew.crew_log import lease as lease_mod
 
             held_during_fold.append(bool(getattr(lease_mod, "_held", {})))
             return real_locked(self, slug, name, log)
@@ -885,14 +885,14 @@ class TestTheFoldIsSerializedAcrossProcesses:
         """The refusal path, which is the half that must not lose rows: another
         process holds the log, so this pass writes nothing -- and must leave the
         source under its live name so the next ensure folds it."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.eventlog.types import ACTIVITY_RECORD
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog.types import ACTIVITY_RECORD
 
         svc_mod.set_service(None)
         legacy = self._legacy("orla", [{"ts": 1, "via": "cli", "project": "p"}])
         # The refusal is scoped to this block: the patch restores itself on exit,
-        # and KIROCREW_HOME stays pinned for the control pass below.
+        # and AJCREW_HOME stays pinned for the control pass below.
         with monkeypatch.context() as refused:
             refused.setattr(
                 svc_mod.MemberEventLogService, "_hold_unit", staticmethod(lambda _s: None)
@@ -926,9 +926,9 @@ class TestOneBadByteCannotBlockEveryLaterActivityWrite:
     """
 
     def test_invalid_utf8_skips_its_line_and_the_rest_still_folds(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import members
-        from kiro_crew.eventlog import service as svc_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import members
+        from aj_crew.eventlog import service as svc_mod
 
         svc_mod.set_service(None)
         d = members.member_dir("bea")
@@ -958,8 +958,8 @@ class TestOneBadByteCannotBlockEveryLaterActivityWrite:
 
     def test_a_later_activity_write_still_lands(self, tmp_path, monkeypatch):
         # This is the loss the finding names: not the fold, the writes AFTER it.
-        from kiro_crew import members
-        from kiro_crew.eventlog import service as svc_mod
+        from aj_crew import members
+        from aj_crew.eventlog import service as svc_mod
 
         monkeypatch.setattr(members, "data_home", lambda: tmp_path)
         (tmp_path / "members").mkdir(exist_ok=True)
@@ -979,7 +979,7 @@ class TestAnImportedLegacyRowIsMarkedAndDoesNotDuplicate:
     """
 
     def _write_legacy(self, monkeypatch, tmp_path, rows):
-        from kiro_crew import members
+        from aj_crew import members
 
         d = members.member_dir("pam")
         d.mkdir(parents=True, exist_ok=True)
@@ -988,8 +988,8 @@ class TestAnImportedLegacyRowIsMarkedAndDoesNotDuplicate:
         )
 
     def test_an_imported_row_carries_the_provenance_marker(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.eventlog import service as svc_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.eventlog import service as svc_mod
 
         svc_mod.set_service(None)
         row = {"member": "Pam", "ts": "2026-01-01T00:00:00Z", "via": "cli", "project": "p"}
@@ -1012,8 +1012,8 @@ class TestAnImportedLegacyRowIsMarkedAndDoesNotDuplicate:
     def test_the_marker_does_not_make_a_second_fold_duplicate_the_row(self, tmp_path, monkeypatch):
         # The marker is inside the row, and migration identity IS the row -- so
         # without the strip in _activity_key every later pass re-appends the file.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.eventlog import service as svc_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.eventlog import service as svc_mod
 
         svc_mod.set_service(None)
         row = {"member": "Pam", "ts": "2026-01-01T00:00:00Z", "via": "cli", "project": "p"}
@@ -1038,9 +1038,9 @@ class TestAnImportedLegacyRowIsMarkedAndDoesNotDuplicate:
     def test_a_row_this_service_appends_carries_no_marker(self, tmp_path, monkeypatch):
         # CONTROL. Marking everything would satisfy the first test and destroy the
         # distinction the marker exists to draw.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import members
-        from kiro_crew.eventlog import service as svc_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import members
+        from aj_crew.eventlog import service as svc_mod
 
         monkeypatch.setattr(members, "data_home", lambda: tmp_path)
         (tmp_path / "members").mkdir(exist_ok=True)
@@ -1062,7 +1062,7 @@ def test_a_legacy_row_with_an_out_of_range_ts_does_not_break_the_fold(tmp_path, 
     view while the fold appended the row, so ``ensure`` failed -- and failed again
     on every later call, because the row now sits in the log. The row is kept
     and skipped by the view like any unreadable timestamp; the other rows serve."""
-    import kiro_crew.members as members
+    import aj_crew.members as members
 
     monkeypatch.setattr(members, "data_home", lambda: tmp_path)
     root = tmp_path / "members"

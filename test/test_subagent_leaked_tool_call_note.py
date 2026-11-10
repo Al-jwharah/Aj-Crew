@@ -32,10 +32,10 @@ from subagent_stop_reason_helpers import (
 )
 from test_subagent_no_tool_calls_note import TestCompletionEventNote as _CompletionHarness
 
-from kiro_crew.acp.types import STOP_REASON_CANCELLED, STOP_REASON_END_TURN
-from kiro_crew.constants import LEAKED_TOOL_CALL_NOTE, NO_TOOL_CALLS_NOTE
-from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, EVENT_TOOL_CALL, LLMEvent
-from kiro_crew.subagent import SubagentInfo
+from aj_crew.acp.types import STOP_REASON_CANCELLED, STOP_REASON_END_TURN
+from aj_crew.constants import LEAKED_TOOL_CALL_NOTE, NO_TOOL_CALLS_NOTE
+from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, EVENT_TOOL_CALL, LLMEvent
+from aj_crew.subagent import SubagentInfo
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -193,7 +193,7 @@ class TestStatusAndBlockingWave:
         import json
         from unittest.mock import MagicMock
 
-        from kiro_crew.dashboard.messaging_api.run_views import api_spawn_status
+        from aj_crew.dashboard.messaging_api.run_views import api_spawn_status
 
         info = SubagentInfo(id="a1", task="t")
         info.done = True

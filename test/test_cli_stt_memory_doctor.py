@@ -1,4 +1,4 @@
-"""The Speech-to-Text and Vector Memory sections of ``kirocrew doctor``, and its stale project dir.
+"""The Speech-to-Text and Vector Memory sections of ``ajcrew doctor``, and its stale project dir.
 
 The full report (``TestDoctor``) is in ``test_cli.py``; the MCP section is in
 ``test_cli_mcp_doctor.py``.
@@ -18,8 +18,8 @@ from cli_helpers import (  # noqa: F401 -- the autouse fixture registers by impo
     _pin_default_config,
 )
 
-from kiro_crew.cli_doctor import _doctor
-from kiro_crew.stt import decoder as stt_decoder
+from aj_crew.cli_doctor import _doctor
+from aj_crew.stt import decoder as stt_decoder
 
 
 class TestDoctorStaleProjectDir:
@@ -33,31 +33,31 @@ class TestDoctorStaleProjectDir:
     def test_doctor_detects_stale_project_dir(self, tmp_path, capsys):
         proj_file = tmp_path / "project_dir"
         proj_file.write_text("/nonexistent/deleted\n")
-        agent_file = tmp_path / "kirocrew.json"
+        agent_file = tmp_path / "ajcrew.json"
         agent_data = {
-            "tools": ["@kirocrew-core", "@kirocrew-cron"],
-            "allowedTools": ["@kirocrew-core", "@kirocrew-cron"],
+            "tools": ["@ajcrew-core", "@ajcrew-cron"],
+            "allowedTools": ["@ajcrew-core", "@ajcrew-cron"],
             "mcpServers": {
-                "kirocrew-core": {"command": "/usr/local/bin/kirocrew", "args": ["mcp-core"]},
-                "kirocrew-cron": {"command": "/usr/local/bin/kirocrew", "args": ["mcp-cron"]},
+                "ajcrew-core": {"command": "/usr/local/bin/ajcrew", "args": ["mcp-core"]},
+                "ajcrew-cron": {"command": "/usr/local/bin/ajcrew", "args": ["mcp-cron"]},
             },
         }
         agent_file.write_text(json.dumps(agent_data))
         mock_run = MagicMock(returncode=0, stdout="kiro-cli 1.0.0", stderr="")
         with (
             patch(
-                "kiro_crew.cli_doctor.shutil.which",
+                "aj_crew.cli_doctor.shutil.which",
                 side_effect=lambda b, **_kw: f"/usr/local/bin/{b}",
             ),
-            patch("kiro_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
-            patch("kiro_crew.cli_doctor.subprocess.run", return_value=mock_run),
+            patch("aj_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
+            patch("aj_crew.cli_doctor.subprocess.run", return_value=mock_run),
             patch("urllib.request.urlopen"),
-            patch("kiro_crew.cli_doctor.is_local_only", return_value=True),
-            patch("kiro_crew.cli_doctor.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
+            patch("aj_crew.cli_doctor.is_local_only", return_value=True),
+            patch("aj_crew.cli_doctor.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
             patch.dict(
                 "os.environ",
-                {"KIROCREW_PROJECT_DIR": "", "SLACK_APP_TOKEN": "", "SLACK_BOT_TOKEN": ""},
+                {"AJCREW_PROJECT_DIR": "", "SLACK_APP_TOKEN": "", "SLACK_BOT_TOKEN": ""},
                 clear=False,
             ),
         ):
@@ -68,14 +68,14 @@ class TestDoctorStaleProjectDir:
         assert "source dir:  ⚠️  not set" not in out  # should NOT show fallback message
 
     def test_an_unreadable_project_dir_file_is_a_row_not_a_traceback(self, tmp_path, capsys):
-        from kiro_crew.doctor_checks import install
+        from aj_crew.doctor_checks import install
 
         # Not UTF-8; a root-owned 0600 file takes the same path as a PermissionError.
         (tmp_path / "project_dir").write_bytes(b"/home/\xff\xfe/clone\n")
         issues: list[str] = []
         with (
-            patch("kiro_crew.cli_doctor.config_dir", return_value=tmp_path),
-            patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": ""}, clear=False),
+            patch("aj_crew.cli_doctor.config_dir", return_value=tmp_path),
+            patch.dict("os.environ", {"AJCREW_PROJECT_DIR": ""}, clear=False),
         ):
             assert install._doctor_project(issues) == ""
         out = capsys.readouterr().out
@@ -83,14 +83,14 @@ class TestDoctorStaleProjectDir:
         assert issues == ["unreadable project_dir"]
 
     def test_the_unreadable_row_quotes_a_home_with_spaces(self, tmp_path, capsys):
-        from kiro_crew.doctor_checks import install
+        from aj_crew.doctor_checks import install
 
         home = tmp_path / "my home"
         home.mkdir()
         (home / "project_dir").write_bytes(b"\xff\n")
         with (
-            patch("kiro_crew.cli_doctor.config_dir", return_value=home),
-            patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": ""}, clear=False),
+            patch("aj_crew.cli_doctor.config_dir", return_value=home),
+            patch.dict("os.environ", {"AJCREW_PROJECT_DIR": ""}, clear=False),
         ):
             install._doctor_project([])
         assert f"rm '{home / 'project_dir'}'" in capsys.readouterr().out
@@ -101,7 +101,7 @@ class TestDoctorStt:
 
     Every arm goes through the real entry point rather than a unit call, because
     what is being pinned is both halves of the contract: the report a user reads
-    and the exit status their ``kirocrew doctor && kirocrew gateway`` chain
+    and the exit status their ``ajcrew doctor && ajcrew gateway`` chain
     depends on.
     """
 
@@ -114,8 +114,8 @@ class TestDoctorStt:
         machine that lacks it, which would make an exit-status assertion here report
         the runner instead of the STT arm under test.
         """
-        import kiro_crew.cli_doctor as _doc
-        from kiro_crew.doctor_checks import confinement
+        import aj_crew.cli_doctor as _doc
+        from aj_crew.doctor_checks import confinement
 
         _pin_default_config(_floor_monkeypatch)
         _floor_monkeypatch.setattr(_doc, "_load_llama_class", lambda: object)
@@ -139,11 +139,11 @@ class TestDoctorStt:
         Applied last, so a test that wants the off arm asks for it explicitly
         (``enabled=False``) rather than relying on what the autouse pin left behind.
         """
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_KIRO
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_KIRO
+        from aj_crew.config.loader import AjCrewConfig
 
-        def _cfg() -> KiroCrewConfig:
-            cfg = KiroCrewConfig()
+        def _cfg() -> AjCrewConfig:
+            cfg = AjCrewConfig()
             # kiro-cli, like ``_pin_default_config``: the KAS engine row is not
             # the subject here.
             cfg.agent.acp_backend = ACP_BACKEND_KIRO
@@ -152,12 +152,12 @@ class TestDoctorStt:
                 setattr(cfg.stt, name, value)
             return cfg
 
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: _cfg()))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: _cfg()))
 
     @staticmethod
     def _engine(monkeypatch, availability):
         """Answer the recogniser probe without depending on the optional wheel."""
-        import kiro_crew.cli_doctor as _doc
+        import aj_crew.cli_doctor as _doc
 
         monkeypatch.setattr(_doc, "availability_detail", lambda cfg=None: availability)
 
@@ -165,11 +165,11 @@ class TestDoctorStt:
     def _model_on_disk(monkeypatch, present):
         """Say whether the resolved catalog model is downloaded.
 
-        Patched on the ``kiro_crew.stt`` namespace the doctor actually reads. The
+        Patched on the ``aj_crew.stt`` namespace the doctor actually reads. The
         real predicate compares the file's size to the catalog's, and the smallest
         entry is 77 MB, so writing one is not an option a test has.
         """
-        import kiro_crew.cli_doctor as _doc
+        import aj_crew.cli_doctor as _doc
 
         monkeypatch.setattr(_doc.stt, "is_present", lambda model: present)
 
@@ -188,7 +188,7 @@ class TestDoctorStt:
         Returns the captured report and the exit status, so a test can assert that
         an STT gap does or does not fail the run.
         """
-        _healthy_agent_file(tmp_path / "kirocrew.json")
+        _healthy_agent_file(tmp_path / "ajcrew.json")
         mock_run = MagicMock(returncode=0, stdout="kiro-cli 1.0.0", stderr="")
 
         def _which(binary, **_kw):
@@ -202,30 +202,30 @@ class TestDoctorStt:
         # bundled arm left unpinned reports the test environment's decoder instead of
         # the arrangement it asked for -- and reports it as PRESENT, the permissive
         # answer. The value is unused: the report prints availability, not a path.
-        packaged_decoder = "/kirocrew-bundle/Resources/ffmpeg" if ffmpeg else None
+        packaged_decoder = "/ajcrew-bundle/Resources/ffmpeg" if ffmpeg else None
 
         code = 0
         with (
-            patch("kiro_crew.cli_doctor.shutil.which", side_effect=_which),
+            patch("aj_crew.cli_doctor.shutil.which", side_effect=_which),
             patch(
-                "kiro_crew.transcribe._packaged_ffmpeg_resource",
+                "aj_crew.transcribe._packaged_ffmpeg_resource",
                 return_value=packaged_decoder,
             ),
-            patch("kiro_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
-            patch("kiro_crew.cli_doctor.subprocess.run", return_value=mock_run),
+            patch("aj_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
+            patch("aj_crew.cli_doctor.subprocess.run", return_value=mock_run),
             patch("urllib.request.urlopen", side_effect=urllib.error.URLError("no gateway")),
-            patch("kiro_crew.cli_doctor.is_local_only", return_value=True),
-            patch("kiro_crew.cli_doctor.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
-            patch("kiro_crew.slack.enterprise.validate_enterprise", return_value=True),
+            patch("aj_crew.cli_doctor.is_local_only", return_value=True),
+            patch("aj_crew.cli_doctor.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
+            patch("aj_crew.slack.enterprise.validate_enterprise", return_value=True),
             pytest.MonkeyPatch.context() as _mp,
         ):
             # Fake ONLY the named sys.modules keys, each restored to its exact prior
             # state (present, absent or None) on exit. A whole-dict
             # patch.dict("sys.modules", ...) would instead evict a submodule this
             # run imports for the first time inside the block
-            # (kiro_crew.acp.skill_projection, reached lazily via the ACP driver),
-            # leaving the kiro_crew.acp package attribute pointing at a now-orphan
+            # (aj_crew.acp.skill_projection, reached lazily via the ACP driver),
+            # leaving the aj_crew.acp package attribute pointing at a now-orphan
             # module object -- cross-test pollution a co-runner then trips over.
             # setitem is the scoped restore testing-conventions D11 mandates.
             for _name, _mod in (modules or {}).items():
@@ -241,16 +241,16 @@ class TestDoctorStt:
     ):
         """``_report``'s ``modules=`` faking must not corrupt a co-runner's module identity.
 
-        On a cold worker ``kiro_crew.acp.skill_projection`` is first imported inside the
+        On a cold worker ``aj_crew.acp.skill_projection`` is first imported inside the
         faking block. A whole-dict ``patch.dict("sys.modules", ...)`` would evict it on
         exit, so a later test would patch a second copy the runtime never imports.
         """
         import importlib
 
-        name = "kiro_crew.acp.skill_projection"
+        name = "aj_crew.acp.skill_projection"
         # Drop every trace so the doctor's import is a genuine first import, the
         # window a cold xdist worker hits. monkeypatch puts both back at teardown.
-        acp_pkg = importlib.import_module("kiro_crew.acp")
+        acp_pkg = importlib.import_module("aj_crew.acp")
         monkeypatch.delitem(sys.modules, name, raising=False)
         monkeypatch.delattr(acp_pkg, "skill_projection", raising=False)
 
@@ -279,7 +279,7 @@ class TestDoctorStt:
     def test_doctor_stt_local_engine_and_model_ready(self, tmp_path, capsys, monkeypatch):
         """The ready state names the resolved catalog model AND where it sits, so
         an operator can see which weights a dictation will actually use."""
-        import kiro_crew.cli_doctor as _doc
+        import aj_crew.cli_doctor as _doc
 
         self._stt(monkeypatch, provider="local", model="small")
         self._engine(monkeypatch, _doc.stt.Availability(True))
@@ -299,7 +299,7 @@ class TestDoctorStt:
         """The weights are fetched on first use, so "not downloaded" is the normal
         first-run state and never an issue. Naming the size is the useful part,
         because that transfer is what a first dictation waits on."""
-        import kiro_crew.cli_doctor as _doc
+        import aj_crew.cli_doctor as _doc
 
         self._stt(monkeypatch, provider="local", model="base")
         self._engine(monkeypatch, _doc.stt.Availability(True))
@@ -325,7 +325,7 @@ class TestDoctorStt:
         STT is on by default, so this is the normal state of a fresh install, not
         a fault: both lines are a warning with the fix, and doctor still passes.
         """
-        import kiro_crew.cli_doctor as _doc
+        import aj_crew.cli_doctor as _doc
 
         self._stt(monkeypatch, provider="local")
         # The fix hint follows the host OS; pin Linux so a Windows runner prints it too.
@@ -350,7 +350,7 @@ class TestDoctorStt:
     ):
         """Only "not installed" is optional. A recogniser that is installed but
         cannot import or load will never transcribe, so it still fails doctor."""
-        import kiro_crew.cli_doctor as _doc
+        import aj_crew.cli_doctor as _doc
 
         self._stt(monkeypatch, provider="local")
         self._engine(
@@ -372,7 +372,7 @@ class TestDoctorStt:
         """A macOS/Linux desktop release ships the recogniser (build-gated), so its
         absence there is a damaged install: a hard issue whose summary carries the
         machine-readable code that tells the user which fix applies."""
-        import kiro_crew.cli_doctor as _doc
+        import aj_crew.cli_doctor as _doc
 
         self._stt(monkeypatch, provider="local")
         monkeypatch.setattr(_doc.platform_compat, "is_bundled_interpreter", lambda: True)
@@ -400,7 +400,7 @@ class TestDoctorStt:
         section = self._stt_section(out)
         assert "status:      ⏹ disabled" in section
         # Wired to the constant pinned against the dashboard's own labels.
-        from kiro_crew.doctor_checks import features
+        from aj_crew.doctor_checks import features
 
         assert f"enable from dashboard → {features._STT_SETTINGS_PATH}" in section
         assert "ffmpeg:      ⏭  not installed (not needed)" in section
@@ -415,7 +415,7 @@ class TestDoctorStt:
         """Reported for a cloud provider too. A Slack voice memo arrives as
         ogg/Opus and the dashboard records webm, so the only input that reaches
         any recogniser without ffmpeg is a 16 kHz mono WAV."""
-        import kiro_crew.cli_doctor as _doc
+        import aj_crew.cli_doctor as _doc
 
         self._stt(monkeypatch, provider="transcribe")
         monkeypatch.setattr(_doc._plat, "system", lambda: "Linux")
@@ -437,7 +437,7 @@ class TestDoctorStt:
         # resolvable-hint tests hold against the resolver's candidate list, so
         # nobody can inline a literal back into the _os_fix_hint call.
         assert _doc._FFMPEG_LINUX_HINT in out
-        assert "reinstall Kiro Crew" not in out
+        assert "reinstall Aj Crew" not in out
         assert "Fix these issues" not in out
         assert code == 0
 
@@ -446,7 +446,7 @@ class TestDoctorStt:
     ):
         """A corrupt desktop payload is repaired by reinstalling the app, not by
         asking its user to manage brew, winget, apt, or a loose executable."""
-        import kiro_crew.cli_doctor as _doc
+        import aj_crew.cli_doctor as _doc
 
         self._stt(monkeypatch, provider="transcribe")
         monkeypatch.setattr(_doc.platform_compat, "is_bundled_interpreter", lambda: True)
@@ -465,7 +465,7 @@ class TestDoctorStt:
         )
 
         section = self._stt_section(out)
-        assert "reinstall Kiro Crew (the bundled audio decoder is missing)" in section
+        assert "reinstall Aj Crew (the bundled audio decoder is missing)" in section
         # The release ships the decoder, so its absence fails the run on macOS/Linux.
         assert "ffmpeg:      ❌ not found" in section
         assert "ffmpeg" in out.split("❌ Fix these issues: ", 1)[1]
@@ -475,8 +475,8 @@ class TestDoctorStt:
 
     def _confined_release_without_its_decoder(self, tmp_path, capsys, monkeypatch, *, macos):
         """Doctor's report from a sandboxed shell of a release whose decoder is not found."""
-        import kiro_crew.cli_doctor as _doc
-        from kiro_crew.doctor_checks import confinement
+        import aj_crew.cli_doctor as _doc
+        from aj_crew.doctor_checks import confinement
 
         self._stt(monkeypatch, provider="transcribe")
         monkeypatch.setattr(_doc.platform_compat, "is_bundled_interpreter", lambda: True)
@@ -509,7 +509,7 @@ class TestDoctorStt:
             tmp_path, capsys, monkeypatch, macos=True
         )
         assert "ffmpeg:      ⏭  not checkable from this shell" in section
-        assert "reinstall Kiro Crew" not in section
+        assert "reinstall Aj Crew" not in section
         assert "ffmpeg" not in issues
 
     def test_doctor_in_a_confined_linux_shell_still_reports_the_decoder_missing(
@@ -531,7 +531,7 @@ class TestDoctorStt:
         Its only decoder is a system one, the same as a source install's, and the
         remedy line has to say so instead of blaming a payload that never shipped.
         """
-        import kiro_crew.cli_doctor as _doc
+        import aj_crew.cli_doctor as _doc
 
         self._stt(monkeypatch, provider="transcribe")
         monkeypatch.setattr(_doc.platform_compat, "is_bundled_interpreter", lambda: True)
@@ -551,7 +551,7 @@ class TestDoctorStt:
 
         section = self._stt_section(out)
         assert "ffmpeg:      ⚠️  not found" in section
-        assert "reinstall Kiro Crew" not in section
+        assert "reinstall Aj Crew" not in section
         assert "Fix: " in section
         # Like a source install, this release never shipped the part, so it is a note.
         assert code == 0
@@ -592,11 +592,11 @@ class TestDoctorStt:
         out, code = self._report(tmp_path, capsys, modules={"amazon_transcribe.client": None})
 
         assert "transcribe:  ⏹ optional cloud STT not installed" in out
-        # The cloud dependencies by name: `pip install kirocrew[voice]` resolves
+        # The cloud dependencies by name: `pip install ajcrew[voice]` resolves
         # nowhere (this project is on no index), and it would also drag in the
         # local recogniser this provider does not use.
         assert "amazon-transcribe" in out
-        assert "kirocrew[" not in out
+        assert "ajcrew[" not in out
         assert code == 0
 
     def test_doctor_stt_transcribe_boto3_missing(self, tmp_path, capsys, monkeypatch):
@@ -615,19 +615,19 @@ class TestDoctorStt:
         )
 
         assert "boto3:       ⏹ optional AWS SDK not installed" in out
-        # The cloud dependencies by name: `pip install kirocrew[voice]` resolves
+        # The cloud dependencies by name: `pip install ajcrew[voice]` resolves
         # nowhere (this project is on no index), and it would also drag in the
         # local recogniser this provider does not use.
         assert "amazon-transcribe" in out
-        assert "kirocrew[" not in out
+        assert "ajcrew[" not in out
         assert code == 0
 
     def test_doctor_stt_apple_unsupported_host_names_its_code(self, tmp_path, capsys, monkeypatch):
         """Reaching a not-ok state here means the operator selected a provider this
         machine does not support, which is a real configuration fault rather than a
         first-run state, so it carries its code into the summary."""
-        import kiro_crew.cli_doctor as _doc
-        from kiro_crew.transcribe import CODE_APPLE_UNSUPPORTED
+        import aj_crew.cli_doctor as _doc
+        from aj_crew.transcribe import CODE_APPLE_UNSUPPORTED
 
         self._stt(monkeypatch, provider="apple")
         self._engine(
@@ -649,7 +649,7 @@ class TestDoctorStt:
         assert code == 1
 
     def test_doctor_stt_apple_available(self, tmp_path, capsys, monkeypatch):
-        import kiro_crew.cli_doctor as _doc
+        import aj_crew.cli_doctor as _doc
 
         self._stt(monkeypatch, provider="apple")
         self._engine(monkeypatch, _doc.stt.Availability(True))
@@ -689,9 +689,9 @@ class TestDoctorEmbeddings:
         ``lib_path_override`` controls the live environment. ``dropped_lib_path``
         controls the startup record used when the variable is absent.
         """
-        agent_file = tmp_path / "kirocrew.json"
+        agent_file = tmp_path / "ajcrew.json"
         _healthy_agent_file(agent_file)
-        import kiro_crew.cli_doctor as doc
+        import aj_crew.cli_doctor as doc
 
         if lib_path_override is None:
             # The setenv+delenv pair records absence for teardown even when the
@@ -710,12 +710,12 @@ class TestDoctorEmbeddings:
         monkeypatch.setattr(doc, "model_file_present", lambda path=None: model_present)
         default_run = MagicMock(returncode=0, stdout="kiro-cli 1.0.0", stderr="")
         with (
-            patch("kiro_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
-            patch("kiro_crew.cli_doctor.subprocess.run", return_value=default_run),
+            patch("aj_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
+            patch("aj_crew.cli_doctor.subprocess.run", return_value=default_run),
             patch("urllib.request.urlopen", side_effect=urllib.error.URLError("no")),
-            patch("kiro_crew.cli_doctor.is_local_only", return_value=True),
-            patch("kiro_crew.cli_doctor.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
+            patch("aj_crew.cli_doctor.is_local_only", return_value=True),
+            patch("aj_crew.cli_doctor.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
         ):
             with contextlib.suppress(SystemExit):
                 _doctor()
@@ -764,7 +764,7 @@ class TestDoctorEmbeddings:
     ):
         """Under LLAMA_CPP_LIB_PATH, point at the override — not a reinstall.
 
-        The libs load from the operator's directory, so "reinstall Kiro Crew"
+        The libs load from the operator's directory, so "reinstall Aj Crew"
         would send them to replace a package they are deliberately not loading
         from, while saying nothing about the dir that actually failed. Mirrors
         the loader's exemption so the two diagnostics cannot disagree.
@@ -781,7 +781,7 @@ class TestDoctorEmbeddings:
         out = capsys.readouterr().out
         assert "/opt/my-gpu-llama" in out
         assert "Missing native libs" not in out
-        assert "reinstall Kiro Crew" not in out
+        assert "reinstall Aj Crew" not in out
 
     @pytest.mark.parametrize("value_source", ["environment", "startup-record"])
     def test_doctor_does_not_mistake_an_inherited_bundled_path_for_an_override(
@@ -789,7 +789,7 @@ class TestDoctorEmbeddings:
     ):
         """The live and recorded forms both diagnose this install's bundled tree."""
         inherited = (
-            "/opt/kirocrew/0.7.9/lib/python3.12/site-packages/kiro_crew/_vendor/"
+            "/opt/ajcrew/0.7.9/lib/python3.12/site-packages/aj_crew/_vendor/"
             "llama_cpp_libs/macos_arm64"
         )
         self._run_doctor(
@@ -807,7 +807,7 @@ class TestDoctorEmbeddings:
         assert "Missing native libs for macos_arm64: libllama.dylib" in out
         assert f"LLAMA_CPP_LIB_PATH={inherited}" in out
         if value_source == "startup-record":
-            assert "inherited from another Kiro Crew process and removed at startup" in out
+            assert "inherited from another Aj Crew process and removed at startup" in out
         else:
             assert "is ignored; this install uses its own bundled tree" in out
         assert "point it at a directory of your own" in out
@@ -820,7 +820,7 @@ class TestDoctorEmbeddings:
 
         The startup record only establishes that the variable was empty and
         removed; a live empty value is simply treated as unset. Neither may
-        claim it came from another Kiro Crew process.
+        claim it came from another Aj Crew process.
         """
         self._run_doctor(
             tmp_path,
@@ -833,7 +833,7 @@ class TestDoctorEmbeddings:
         out = capsys.readouterr().out
 
         assert "lib path:    ⏹ LLAMA_CPP_LIB_PATH=(empty)" in out
-        assert "inherited from another Kiro Crew process" not in out
+        assert "inherited from another Aj Crew process" not in out
         if value_source == "startup-record":
             assert "was empty and removed at startup; treated as unset." in out
             assert "is empty, so it is treated as unset." not in out
@@ -863,7 +863,7 @@ class TestDoctorEmbeddings:
 
     def test_doctor_probes_model_url_when_model_absent(self, tmp_path, capsys, monkeypatch):
         """Fork-added: with the model absent, doctor probes the resolved model URL."""
-        import kiro_crew.cli_doctor as doc
+        import aj_crew.cli_doctor as doc
 
         probed: list[str] = []
 
@@ -878,19 +878,19 @@ class TestDoctorEmbeddings:
                 return cm
             raise urllib.error.URLError("no")
 
-        agent_file = tmp_path / "kirocrew.json"
+        agent_file = tmp_path / "ajcrew.json"
         _healthy_agent_file(agent_file)
         monkeypatch.setattr(doc, "_load_llama_class", lambda: object)
         monkeypatch.setattr(doc, "model_file_present", lambda path=None: False)
         monkeypatch.setattr(doc, "_resolve_model_url", lambda: "https://mirror.example/m.gguf")
         default_run = MagicMock(returncode=0, stdout="kiro-cli 1.0.0", stderr="")
         with (
-            patch("kiro_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
-            patch("kiro_crew.cli_doctor.subprocess.run", return_value=default_run),
+            patch("aj_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
+            patch("aj_crew.cli_doctor.subprocess.run", return_value=default_run),
             patch("urllib.request.urlopen", side_effect=_fake_urlopen),
-            patch("kiro_crew.cli_doctor.is_local_only", return_value=True),
-            patch("kiro_crew.cli_doctor.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
+            patch("aj_crew.cli_doctor.is_local_only", return_value=True),
+            patch("aj_crew.cli_doctor.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
         ):
             with contextlib.suppress(SystemExit):
                 _doctor()
@@ -900,21 +900,21 @@ class TestDoctorEmbeddings:
 
     def test_doctor_reports_unreachable_model_url(self, tmp_path, capsys, monkeypatch):
         """Fork-added: an unreachable model URL is flagged with a fix hint."""
-        import kiro_crew.cli_doctor as doc
+        import aj_crew.cli_doctor as doc
 
-        agent_file = tmp_path / "kirocrew.json"
+        agent_file = tmp_path / "ajcrew.json"
         _healthy_agent_file(agent_file)
         monkeypatch.setattr(doc, "_load_llama_class", lambda: object)
         monkeypatch.setattr(doc, "model_file_present", lambda path=None: False)
         monkeypatch.setattr(doc, "_resolve_model_url", lambda: "https://mirror.example/m.gguf")
         default_run = MagicMock(returncode=0, stdout="kiro-cli 1.0.0", stderr="")
         with (
-            patch("kiro_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
-            patch("kiro_crew.cli_doctor.subprocess.run", return_value=default_run),
+            patch("aj_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
+            patch("aj_crew.cli_doctor.subprocess.run", return_value=default_run),
             patch("urllib.request.urlopen", side_effect=urllib.error.URLError("no")),
-            patch("kiro_crew.cli_doctor.is_local_only", return_value=True),
-            patch("kiro_crew.cli_doctor.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
+            patch("aj_crew.cli_doctor.is_local_only", return_value=True),
+            patch("aj_crew.cli_doctor.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
         ):
             with contextlib.suppress(SystemExit):
                 _doctor()

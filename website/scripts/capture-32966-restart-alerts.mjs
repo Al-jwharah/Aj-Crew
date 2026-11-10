@@ -18,7 +18,7 @@ import { execFileSync } from 'node:child_process'
 import { chromiumExecutable } from './lib/chromium-executable.mjs'
 import { DEFAULT_DIST, serveDist } from './lib/serve-dist.mjs'
 import {
-  KIROCREW_CONFIG_FIXTURE,
+  AJCREW_CONFIG_FIXTURE,
   json,
   logPageProblems,
   stubDashboardApi,
@@ -29,8 +29,8 @@ const PREFIX = process.argv[3] || 'after'
 const DIST = process.env.DIST || DEFAULT_DIST
 
 const CONFIG = {
-  ...KIROCREW_CONFIG_FIXTURE,
-  agent: { ...KIROCREW_CONFIG_FIXTURE.agent, acp_backend: 'kas' },
+  ...AJCREW_CONFIG_FIXTURE,
+  agent: { ...AJCREW_CONFIG_FIXTURE.agent, acp_backend: 'kas' },
 }
 
 /** Long enough for both chained status reads to fail and render. */
@@ -60,7 +60,7 @@ async function main() {
       // `return json(...), true` -- the comma marks the request handled.
       extra: async (path, route) => {
         if (path === '/api/theme/boot') return json(route, { mode: theme, theme: '' }), true
-        if (path === '/api/config/kirocrew') return json(route, CONFIG), true
+        if (path === '/api/config/ajcrew') return json(route, CONFIG), true
         if (path === '/api/kas-login' || path === '/api/kas-bundle') {
           return json(route, { error: 'gateway restarting' }, 503), true
         }

@@ -1,4 +1,4 @@
-"""``kirocrew pod --help`` names only mechanisms the host actually runs.
+"""``ajcrew pod --help`` names only mechanisms the host actually runs.
 
 Only Linux has the systemd ``--user`` template unit and a journal. launchd and
 Task Scheduler route a pod's stdout/stderr to files and have nothing to install
@@ -13,7 +13,7 @@ import argparse
 
 import pytest
 
-from kiro_crew import cli_parser_admin, platform_compat
+from aj_crew import cli_parser_admin, platform_compat
 
 
 def _pod_parser(
@@ -21,7 +21,7 @@ def _pod_parser(
 ) -> argparse.ArgumentParser:
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", windows)
     monkeypatch.setattr(platform_compat, "IS_MACOS", macos)
-    root = argparse.ArgumentParser(prog="kirocrew")
+    root = argparse.ArgumentParser(prog="ajcrew")
     cli_parser_admin.register_pod_parser(root.add_subparsers(dest="command"))
     sub = next(a for a in root._actions if isinstance(a, argparse._SubParsersAction))
     return sub.choices["pod"]

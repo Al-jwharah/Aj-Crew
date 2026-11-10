@@ -31,7 +31,7 @@ mkdirSync(OUT, { recursive: true })
 
 const now = Math.floor(Date.now() / 1000)
 const slot = (key, title, msg) => ({
-  key, title, running: false, messages: 2, agent: 'kirocrew', modified: now,
+  key, title, running: false, messages: 2, agent: 'ajcrew', modified: now,
   last_ts: new Date().toISOString(), folder_id: '', last_message: msg,
   source_links: [], source_links_total: 0, tags: [],
 })

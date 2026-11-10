@@ -13,16 +13,16 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestServer
 
-from kiro_crew import platform_log_append
-from kiro_crew.config import live
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.sections import DecisionProviderConfig, DecisionsConfig
-from kiro_crew.context import ContextBuilder
-from kiro_crew.decisions import gate, log
-from kiro_crew.decisions.points import skills_select
-from kiro_crew.learn import LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew import platform_log_append
+from aj_crew.config import live
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.sections import DecisionProviderConfig, DecisionsConfig
+from aj_crew.context import ContextBuilder
+from aj_crew.decisions import gate, log
+from aj_crew.decisions.points import skills_select
+from aj_crew.learn import LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 #: Provider timeout and outer-wait ceiling used in tests against the loopback
 #: TestServer.  The loopback call itself takes under 1 ms; 30 s is a
@@ -110,7 +110,7 @@ async def test_jev_response_reaches_the_assembled_message(
     app = web.Application()
     app.router.add_post("/judge", judge)
     async with TestServer(app) as server:
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.skills.max_triggered = 2
         # Consent is the keystone, not the config: written where the gate reads it.
         keystone = tmp_path / "decisions_consent.json"
@@ -118,7 +118,7 @@ async def test_jev_response_reaches_the_assembled_message(
             json.dumps({"enabled": enabled, "endpoint": str(server.make_url("/judge"))}),
             encoding="utf-8",
         )
-        monkeypatch.setattr("kiro_crew.config.loader.decisions_consent_path", lambda: keystone)
+        monkeypatch.setattr("aj_crew.config.loader.decisions_consent_path", lambda: keystone)
         cfg.decisions = DecisionsConfig(
             bucket=bucket,
             provider=DecisionProviderConfig(
@@ -129,7 +129,7 @@ async def test_jev_response_reaches_the_assembled_message(
         )
         monkeypatch.setattr(live, "snapshot", lambda: cfg)
         # The vault is the only key source; the loopback judge accepts any bearer.
-        import kiro_crew.secrets.vault as vault_mod
+        import aj_crew.secrets.vault as vault_mod
 
         class _Value:
             def reveal(self):

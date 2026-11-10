@@ -23,8 +23,8 @@ from session_storage_helpers import (  # noqa: F401 -- fixtures are requested by
     stores_fixture,
 )
 
-from kiro_crew import platform_compat, session_storage
-from kiro_crew.session_storage import SessionStorageError
+from aj_crew import platform_compat, session_storage
+from aj_crew.session_storage import SessionStorageError
 
 
 def _locked_unlink(self: platform_compat.PinnedDirectory, name: str) -> None:
@@ -549,7 +549,7 @@ class TestEmptyTrashRemoval:
 
         skips: list[str] = []
         # A scoped context, NOT monkeypatch.undo(): the `stores` fixture takes the same
-        # function-scoped monkeypatch, so undoing here also reverts its KIROCREW_HOME /
+        # function-scoped monkeypatch, so undoing here also reverts its AJCREW_HOME /
         # KIRO_HOME isolation - after which `list_trash()` reads the real data home
         # instead of the temporary one, and the assertion below silently measures
         # someone's actual trash.

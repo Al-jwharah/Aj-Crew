@@ -1,12 +1,12 @@
 /**
- * Coverage-focused tests for EmbedTabStrip — the tab bar the Kiro Crew IDE
+ * Coverage-focused tests for EmbedTabStrip — the tab bar the Aj Crew IDE
  * plugin renders above the embedded chat.
  *
  * EmbedComponents.test.tsx already exercises the render + click paths, so this
  * file aims at the cold half of the component:
  *   - loadTabs() fallbacks (window injection, malformed storage, no active slot)
  *   - the shift+click "create a chat directly" mutation and its onSuccess
- *   - the plugin-pushed `kirocrew-tab-state` event landing on a Sessions tab
+ *   - the plugin-pushed `ajcrew-tab-state` event landing on a Sessions tab
  *   - the activeSlot-sync effect (all four of its outcomes)
  *   - the slot-deletion effect collapsing back to a Sessions tab
  *   - keyboard activation, wheel scrolling, and the pointer drag-reorder
@@ -33,13 +33,13 @@ vi.mock('../store/chatSlice', async () => {
 import EmbedTabStrip from '../components/EmbedTabStrip'
 import { createSlot, setActiveSlot } from '../store/chatSlice'
 
-const STORAGE_KEY = 'kirocrew-embed-tabs'
-const STORAGE_INDEX_KEY = 'kirocrew-embed-active-index'
+const STORAGE_KEY = 'ajcrew-embed-tabs'
+const STORAGE_INDEX_KEY = 'ajcrew-embed-active-index'
 
 /** Tab state the host plugin injects onto `window`. */
 interface EmbedTabsWindow extends Window {
-  __kirocrewTabs?: string[]
-  __kirocrewActiveTabIndex?: number
+  __ajcrewTabs?: string[]
+  __ajcrewActiveTabIndex?: number
 }
 const tabsWindow = window as EmbedTabsWindow
 
@@ -131,20 +131,20 @@ beforeEach(() => {
   vi.clearAllMocks()
   queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   sessionStorage.clear()
-  delete tabsWindow.__kirocrewTabs
-  delete tabsWindow.__kirocrewActiveTabIndex
+  delete tabsWindow.__ajcrewTabs
+  delete tabsWindow.__ajcrewActiveTabIndex
 })
 
 afterEach(() => {
   sessionStorage.clear()
-  delete tabsWindow.__kirocrewTabs
-  delete tabsWindow.__kirocrewActiveTabIndex
+  delete tabsWindow.__ajcrewTabs
+  delete tabsWindow.__ajcrewActiveTabIndex
 })
 
 describe('EmbedTabStrip — initial tab resolution', () => {
   it('adopts tabs injected on window by the host plugin', () => {
-    tabsWindow.__kirocrewTabs = ['chat-2', 'chat-3']
-    tabsWindow.__kirocrewActiveTabIndex = 1
+    tabsWindow.__ajcrewTabs = ['chat-2', 'chat-3']
+    tabsWindow.__ajcrewActiveTabIndex = 1
     wrap(makeStore({ activeSlot: null }))
     expect(tabTitles()).toEqual(['Second Chat', 'Third Chat'])
     expect(mockNavigate).toHaveBeenCalledWith('/embed/chat/chat-3?sid=chat-3', { replace: true })
@@ -152,8 +152,8 @@ describe('EmbedTabStrip — initial tab resolution', () => {
 
   it('labels an untitled tab "Untitled session" and keeps its key only in the hover (#23084)', () => {
     // The stored title of an untitled session can equal its key.
-    tabsWindow.__kirocrewTabs = ['chat-u', 'chat-2']
-    tabsWindow.__kirocrewActiveTabIndex = 0
+    tabsWindow.__ajcrewTabs = ['chat-u', 'chat-2']
+    tabsWindow.__ajcrewActiveTabIndex = 0
     wrap(makeStore({
       activeSlot: null,
       slots: [{ key: 'chat-u', title: 'chat-u' }, { key: 'chat-2', title: 'Second Chat' }] as unknown as Slots,
@@ -167,8 +167,8 @@ describe('EmbedTabStrip — initial tab resolution', () => {
   it('shows the slug of a tab with no slot row, not "Untitled session" (#23084)', () => {
     // A missing row means the title is unknown, not that the session has none.
     // Before the slot list hydrates every restored tab is in that state.
-    tabsWindow.__kirocrewTabs = ['chat-gone']
-    tabsWindow.__kirocrewActiveTabIndex = 0
+    tabsWindow.__ajcrewTabs = ['chat-gone']
+    tabsWindow.__ajcrewActiveTabIndex = 0
     wrap(makeStore({ activeSlot: null, slots: [] as unknown as Slots }))
     expect(tabTitles()).toEqual(['chat-gone'])
     expect(screen.getByRole('tab').getAttribute('title')).toBe('chat-gone')
@@ -223,7 +223,7 @@ describe('EmbedTabStrip — opened on a chat link', () => {
   })
 
   it('adds the linked chat as a new active tab when no restored tab can take it', () => {
-    tabsWindow.__kirocrewTabs = ['chat-1']
+    tabsWindow.__ajcrewTabs = ['chat-1']
     wrap(makeStore(), '/embed/chat/chat-3')
     expect(tabTitles()).toEqual(['First Chat', 'Third Chat'])
     expect(selectedTabs()).toEqual([false, true])
@@ -232,8 +232,8 @@ describe('EmbedTabStrip — opened on a chat link', () => {
   })
 
   it('keeps host-injected tabs in order when the link names one of them', () => {
-    tabsWindow.__kirocrewTabs = ['chat-1', 'chat-3']
-    tabsWindow.__kirocrewActiveTabIndex = 0
+    tabsWindow.__ajcrewTabs = ['chat-1', 'chat-3']
+    tabsWindow.__ajcrewActiveTabIndex = 0
     wrap(makeStore(), '/embed/chat/chat-3')
     expect(tabTitles()).toEqual(['First Chat', 'Third Chat'])
     expect(selectedTabs()).toEqual([false, true])
@@ -245,14 +245,14 @@ describe('EmbedTabStrip — opened on a chat link', () => {
     })
     const events: unknown[] = []
     const onUpdate = (e: Event) => events.push((e as CustomEvent).detail)
-    window.addEventListener('kirocrew-tab-update', onUpdate)
+    window.addEventListener('ajcrew-tab-update', onUpdate)
     try {
       wrap(makeStore({ activeSlot: null }), '/embed/chat/chat-2')
       expect(tabTitles()).toEqual(['Second Chat'])
       expect(mockNavigate).toHaveBeenCalledWith('/embed/chat/chat-2?sid=chat-2', { replace: true })
       expect(events).toEqual([{ tabs: ['chat-2'], activeIndex: 0 }])
     } finally {
-      window.removeEventListener('kirocrew-tab-update', onUpdate)
+      window.removeEventListener('ajcrew-tab-update', onUpdate)
       setItem.mockRestore()
     }
   })
@@ -286,7 +286,7 @@ describe('EmbedTabStrip — plugin-pushed tab state', () => {
     wrap(makeStore())
     mockNavigate.mockClear()
     act(() => {
-      window.dispatchEvent(new CustomEvent('kirocrew-tab-state', { detail: { tabs: ['', 'chat-2'], activeIndex: 0 } }))
+      window.dispatchEvent(new CustomEvent('ajcrew-tab-state', { detail: { tabs: ['', 'chat-2'], activeIndex: 0 } }))
     })
     expect(mockNavigate).toHaveBeenCalledWith('/embed/sessions')
     expect(tabTitles()).toEqual(['Sessions', 'Second Chat'])
@@ -297,7 +297,7 @@ describe('EmbedTabStrip — plugin-pushed tab state', () => {
     seed(['chat-1'], 0)
     wrap(makeStore())
     act(() => {
-      window.dispatchEvent(new CustomEvent('kirocrew-tab-state', { detail: { tabs: ['chat-3', 'chat-2'] } }))
+      window.dispatchEvent(new CustomEvent('ajcrew-tab-state', { detail: { tabs: ['chat-3', 'chat-2'] } }))
     })
     expect(sessionStorage.getItem(STORAGE_INDEX_KEY)).toBe('0')
     expect(mockNavigate).toHaveBeenCalledWith('/embed/chat/chat-3?sid=chat-3')
@@ -307,7 +307,7 @@ describe('EmbedTabStrip — plugin-pushed tab state', () => {
     seed(['chat-1'], 0)
     wrap(makeStore())
     act(() => {
-      window.dispatchEvent(new CustomEvent('kirocrew-tab-state', { detail: { tabs: 'chat-2' } }))
+      window.dispatchEvent(new CustomEvent('ajcrew-tab-state', { detail: { tabs: 'chat-2' } }))
     })
     expect(tabTitles()).toEqual(['First Chat'])
   })

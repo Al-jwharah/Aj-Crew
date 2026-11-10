@@ -9,9 +9,9 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from kiro_crew.cron import CronJob, CronSchedule, CronService, format_schedule
-from kiro_crew.mcp_cron import _call_tool_locally as _call_tool
-from kiro_crew.slack.handler import _handle_cron_command
+from aj_crew.cron import CronJob, CronSchedule, CronService, format_schedule
+from aj_crew.mcp_cron import _call_tool_locally as _call_tool
+from aj_crew.slack.handler import _handle_cron_command
 
 #: The session the MCP ``cron_list`` tests call as, and the owner stamped on every
 #: fixture job. ``cron_list`` scopes to the caller's own rows, so a job left at the
@@ -54,7 +54,7 @@ class TestDashboardCronsTimezone:
 
     @pytest.mark.asyncio
     async def test_api_crons_uses_job_timezone(self, monkeypatch, tmp_path) -> None:
-        from kiro_crew.dashboard.handlers.cron import api_crons
+        from aj_crew.dashboard.handlers.cron import api_crons
 
         job = _make_job(timezone="UTC")
         mock_state = MagicMock()
@@ -68,7 +68,7 @@ class TestDashboardCronsTimezone:
         request.app = {"state": mock_state}
 
         with patch(
-            "kiro_crew.cron.get_local_tz",
+            "aj_crew.cron.get_local_tz",
             return_value=("America/New_York", ZoneInfo("America/New_York")),
         ):
             resp = await api_crons(request)
@@ -81,7 +81,7 @@ class TestDashboardCronsTimezone:
 
     @pytest.mark.asyncio
     async def test_api_crons_falls_back_to_server_tz(self, monkeypatch, tmp_path) -> None:
-        from kiro_crew.dashboard.handlers.cron import api_crons
+        from aj_crew.dashboard.handlers.cron import api_crons
 
         job = _make_job(timezone="")
         mock_state = MagicMock()
@@ -95,7 +95,7 @@ class TestDashboardCronsTimezone:
         request.app = {"state": mock_state}
 
         with patch(
-            "kiro_crew.cron.get_local_tz",
+            "aj_crew.cron.get_local_tz",
             return_value=("America/New_York", ZoneInfo("America/New_York")),
         ):
             resp = await api_crons(request)
@@ -114,14 +114,14 @@ class TestMcpCronListTimezone:
     @pytest.fixture(autouse=True)
     def _calls_as_the_fixture_owner(self, monkeypatch) -> None:
         """Call as the session ``_make_job`` stamps as owner; see _TZ_OWNER."""
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", _TZ_OWNER)
-        monkeypatch.delenv("KIROCREW_CLI", raising=False)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", _TZ_OWNER)
+        monkeypatch.delenv("AJCREW_CLI", raising=False)
 
     def test_cron_list_uses_job_timezone(self, tmp_path) -> None:
         job = _make_job(timezone="UTC")
         mock_tz = ("America/New_York", ZoneInfo("America/New_York"))
-        with patch("kiro_crew.mcp_cron.CronService") as mock_cls, \
-                patch("kiro_crew.mcp_cron.get_local_tz", return_value=mock_tz):
+        with patch("aj_crew.mcp_cron.CronService") as mock_cls, \
+                patch("aj_crew.mcp_cron.get_local_tz", return_value=mock_tz):
             mock_cls.return_value.list_jobs.return_value = [job]
             result = _call_tool("cron_list", {})
         assert "UTC" in result
@@ -129,8 +129,8 @@ class TestMcpCronListTimezone:
     def test_cron_list_falls_back_to_local_tz(self, tmp_path) -> None:
         job = _make_job(timezone="")
         mock_tz = ("America/New_York", ZoneInfo("America/New_York"))
-        with patch("kiro_crew.mcp_cron.CronService") as mock_cls, \
-                patch("kiro_crew.mcp_cron.get_local_tz", return_value=mock_tz):
+        with patch("aj_crew.mcp_cron.CronService") as mock_cls, \
+                patch("aj_crew.mcp_cron.get_local_tz", return_value=mock_tz):
             mock_cls.return_value.list_jobs.return_value = [job]
             result = _call_tool("cron_list", {})
         assert "EDT" in result or "EST" in result
@@ -141,13 +141,13 @@ class TestMcpCronMutationTimezone:
 
     @pytest.fixture(autouse=True)
     def _calls_as_the_fixture_owner(self, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", _TZ_OWNER)
-        monkeypatch.delenv("KIROCREW_CLI", raising=False)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", _TZ_OWNER)
+        monkeypatch.delenv("AJCREW_CLI", raising=False)
 
     def test_cron_add_uses_job_timezone(self, tmp_path) -> None:
         with (
-            patch("kiro_crew.mcp_cron.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cron.published_config_timezone", return_value="America/New_York"),
+            patch("aj_crew.mcp_cron.config_dir", return_value=tmp_path),
+            patch("aj_crew.cron.published_config_timezone", return_value="America/New_York"),
         ):
             result = _call_tool(
                 "cron_add",
@@ -171,8 +171,8 @@ class TestMcpCronMutationTimezone:
             session_key=_TZ_OWNER,
         )
         with (
-            patch("kiro_crew.mcp_cron.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cron.published_config_timezone", return_value="America/New_York"),
+            patch("aj_crew.mcp_cron.config_dir", return_value=tmp_path),
+            patch("aj_crew.cron.published_config_timezone", return_value="America/New_York"),
         ):
             result = _call_tool(
                 "cron_update",
@@ -183,8 +183,8 @@ class TestMcpCronMutationTimezone:
 
     def test_cron_add_job_in_host_timezone_is_unchanged(self, tmp_path) -> None:
         with (
-            patch("kiro_crew.mcp_cron.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cron.published_config_timezone", return_value="America/New_York"),
+            patch("aj_crew.mcp_cron.config_dir", return_value=tmp_path),
+            patch("aj_crew.cron.published_config_timezone", return_value="America/New_York"),
         ):
             result = _call_tool(
                 "cron_add",
@@ -204,12 +204,12 @@ class TestCliCronTimezone:
     def test_cron_list_uses_job_timezone(self, capsys) -> None:
         from argparse import Namespace
 
-        from kiro_crew import cli_commands
+        from aj_crew import cli_commands
 
         job = _make_job(timezone="Asia/Seoul")
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_cls,
-            patch("kiro_crew.cron.published_config_timezone", return_value="America/New_York"),
+            patch("aj_crew.cli_commands.CronService") as mock_cls,
+            patch("aj_crew.cron.published_config_timezone", return_value="America/New_York"),
         ):
             mock_cls.return_value.list_jobs.return_value = [job]
             cli_commands._cron_dispatch(Namespace(cron_action="list"))
@@ -220,7 +220,7 @@ class TestCliCronTimezone:
     def test_cron_add_uses_returned_job_timezone(self, capsys) -> None:
         from argparse import Namespace
 
-        from kiro_crew import cli_commands
+        from aj_crew import cli_commands
 
         job = _make_job(timezone="Asia/Seoul")
         args = Namespace(
@@ -236,8 +236,8 @@ class TestCliCronTimezone:
             message=job.message,
         )
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_cls,
-            patch("kiro_crew.cron.published_config_timezone", return_value="America/New_York"),
+            patch("aj_crew.cli_commands.CronService") as mock_cls,
+            patch("aj_crew.cron.published_config_timezone", return_value="America/New_York"),
         ):
             mock_cls.return_value.add_job.return_value = job
             cli_commands._cron_dispatch(args)
@@ -252,7 +252,7 @@ class TestCronTimezoneDst:
     def test_fall_back_boundary_uses_the_next_runs_abbreviation(self) -> None:
         from datetime import datetime as real_datetime
 
-        from kiro_crew.cron import compute_next_run_ts
+        from aj_crew.cron import compute_next_run_ts
 
         zone = ZoneInfo("America/New_York")
         fixed_now = real_datetime(2026, 11, 1, 0, 30, tzinfo=zone)
@@ -271,7 +271,7 @@ class TestCronTimezoneDst:
                     return fixed_now.replace(tzinfo=None)
                 return fixed_now.astimezone(tz)
 
-        with patch("kiro_crew.cron.datetime", FrozenDateTime):
+        with patch("aj_crew.cron.datetime", FrozenDateTime):
             rendered = format_schedule(job.schedule, tz_name=job.timezone)
 
         assert next_local.hour == 1 and next_local.minute == 0
@@ -326,7 +326,7 @@ class TestCronTimezoneDst:
                     return fixed_now.replace(tzinfo=None)
                 return fixed_now.astimezone(tz)
 
-        with patch("kiro_crew.cron.datetime", FrozenDateTime):
+        with patch("aj_crew.cron.datetime", FrozenDateTime):
             rendered = format_schedule(CronSchedule(kind="cron", cron_expr=expr), tz_name=zone)
 
         assert rendered == expected
@@ -339,9 +339,9 @@ class TestSlackCronListTimezone:
         svc = CronService(base_dir=tmp_path)
         svc._jobs = [_make_job(timezone="UTC")]
         with patch(
-            "kiro_crew.messaging.commands.get_local_tz",
+            "aj_crew.messaging.commands.get_local_tz",
             return_value=("America/New_York", ZoneInfo("America/New_York")),
-        ), patch("kiro_crew.messaging.commands.compute_next_run_ts", return_value=None):
+        ), patch("aj_crew.messaging.commands.compute_next_run_ts", return_value=None):
             result = asyncio.run(_handle_cron_command("cron list", svc, "C123", "t123"))
         assert result is not None
         assert "UTC" in result
@@ -350,9 +350,9 @@ class TestSlackCronListTimezone:
         svc = CronService(base_dir=tmp_path)
         svc._jobs = [_make_job(timezone="")]
         with patch(
-            "kiro_crew.messaging.commands.get_local_tz",
+            "aj_crew.messaging.commands.get_local_tz",
             return_value=("America/New_York", ZoneInfo("America/New_York")),
-        ), patch("kiro_crew.messaging.commands.compute_next_run_ts", return_value=None):
+        ), patch("aj_crew.messaging.commands.compute_next_run_ts", return_value=None):
             result = asyncio.run(_handle_cron_command("cron list", svc, "C123", "t123"))
         assert result is not None
         assert "EDT" in result or "EST" in result

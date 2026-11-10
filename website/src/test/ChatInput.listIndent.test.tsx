@@ -140,11 +140,11 @@ describe('ChatInput: Tab indents list lines', () => {
     // A pointer press must not blur the textarea, or the button unmounts first.
     expect(fireEvent.mouseDown(dismiss)).toBe(false)
     // Nothing is stored before the click, so no mount default can reach the host backup.
-    expect(localStorage.getItem('kirocrew:list-indent-hint-dismissed')).toBeNull()
+    expect(localStorage.getItem('ajcrew:list-indent-hint-dismissed')).toBeNull()
     fireEvent.click(dismiss)
-    expect(localStorage.getItem('kirocrew:list-indent-hint-dismissed')).toBe('1')
+    expect(localStorage.getItem('ajcrew:list-indent-hint-dismissed')).toBe('1')
     // Marked as an explicit choice, so a host restore cannot overwrite it.
-    expect(JSON.parse(localStorage.getItem('mc-ui-prefs-plain-dirty') ?? '[]')).toContain('kirocrew:list-indent-hint-dismissed')
+    expect(JSON.parse(localStorage.getItem('mc-ui-prefs-plain-dirty') ?? '[]')).toContain('ajcrew:list-indent-hint-dismissed')
     expect(document.activeElement).toBe(ta)
     expect(screen.getByTestId('list-indent-hint').className).toContain('sr-only')
     expect(screen.queryByTestId('list-indent-hint-dismiss')).toBeNull()
@@ -184,7 +184,7 @@ describe('ChatInput: Tab indents list lines', () => {
       expect(screen.getByTestId('list-indent-hint').className).not.toContain('sr-only')
       expect(screen.getByTestId('list-indent-hint-dismiss')).toBeInTheDocument()
       expect(screen.getByTestId('list-indent-hint-save-error')).toHaveTextContent(/not saved/i)
-      expect(localStorage.getItem('kirocrew:list-indent-hint-dismissed')).toBeNull()
+      expect(localStorage.getItem('ajcrew:list-indent-hint-dismissed')).toBeNull()
     } finally {
       setItem.mockRestore()
     }

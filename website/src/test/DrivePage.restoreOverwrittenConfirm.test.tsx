@@ -37,7 +37,7 @@ function renderSection() {
 }
 
 const SELF_ID = 'a'.repeat(32)
-const KEY = 'kirocrew/backups/snapshot/2026-09-10T00-00-00Z.tar.zst'
+const KEY = 'ajcrew/backups/snapshot/2026-09-10T00-00-00Z.tar.zst'
 
 /** GET /backup/{account}: one archive the ledger attributes to this install. */
 const backupStatus = {

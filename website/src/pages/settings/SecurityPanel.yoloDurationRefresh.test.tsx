@@ -4,7 +4,7 @@ vi.mock('../../api/client', () => ({
     deniedCommands: vi.fn(),
     governancePolicy: vi.fn(),
     securityPosture: vi.fn(),
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
     patchConfig: vi.fn(),
     tailnetStatus: vi.fn(),
     status: vi.fn(),
@@ -47,7 +47,7 @@ describe('YoloDurationCard save updates dashboard.status.yolo_duration', () => {
     mocked(api.securityPosture).mockRejectedValue(new Error('no posture'))
     mocked(api.tailnetStatus).mockRejectedValue(new Error('no tailnet'))
     mocked(api.status).mockRejectedValue(new Error('probe off'))
-    mocked(api.kirocrewConfig).mockResolvedValue({ agent: { yolo_duration: '30m' } })
+    mocked(api.ajcrewConfig).mockResolvedValue({ agent: { yolo_duration: '30m' } })
     mocked(api.patchConfig).mockResolvedValue({})
   })
 
@@ -84,7 +84,7 @@ describe('YoloDurationCard save updates dashboard.status.yolo_duration', () => {
     renderWithProviders(<SecurityPanel />, { route: '/?section=approval', store })
 
     await saveDuration(/24 hours/, '24h')
-    mocked(api.kirocrewConfig).mockResolvedValue({ agent: { yolo_duration: '24h' } })
+    mocked(api.ajcrewConfig).mockResolvedValue({ agent: { yolo_duration: '24h' } })
     await saveDuration(/12 hours/, '12h')
     act(() => {
       store.dispatch(sseStatus(httpStatus('24h')))

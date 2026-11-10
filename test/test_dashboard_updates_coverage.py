@@ -27,11 +27,11 @@ from dashboard_updates_coverage_helpers import (  # noqa: F401 -- the autouse fi
     _sequence_procs,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.config.loader import ConfigReadError
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.platform import update_fetch, update_governance
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import platform_compat
+from aj_crew.config.loader import ConfigReadError
+from aj_crew.dashboard.handlers import updates
+from aj_crew.platform import update_fetch, update_governance
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 def _git_capability():
@@ -41,7 +41,7 @@ def _git_capability():
     under test do not also depend on a real git binary answering about this
     host's own tree.
     """
-    from kiro_crew.platform import update_capability
+    from aj_crew.platform import update_capability
 
     return update_capability.UpdateCapability(
         supported=True,
@@ -69,7 +69,7 @@ class TestUpdateCheckEndpoint:
         async def _fake_check() -> None:
             checked.append(None)
             updates._set_update_info(
-                managed_by="kirocrew",
+                managed_by="ajcrew",
                 latest_version="9.9.9",
                 update_available=True,
                 check_status="succeeded",
@@ -101,7 +101,7 @@ _HELPER_GIT = """#!{python}
 import os, subprocess, sys, time
 sys.dont_write_bytecode = True  # the import below writes nothing into the checkout
 sys.path.insert(0, {src!r})
-from kiro_crew.platform_compat import get_process_start_id
+from aj_crew.platform_compat import get_process_start_id
 
 
 def record(path, pid):
@@ -508,7 +508,7 @@ class TestGitCheckoutFailurePaths:
             platform_compat.trusted_git_bin(),
             "show",
             "--no-textconv",
-            f"{self._FETCH_OID}:src/kiro_crew/__init__.py",
+            f"{self._FETCH_OID}:src/aj_crew/__init__.py",
         )
 
     @pytest.mark.asyncio
@@ -626,7 +626,7 @@ class TestAutoUpdateToggle:
         # The writer above is a stand-in, so pin what a reload would now see.
         cfg = MagicMock()
         cfg.auto_update = False
-        monkeypatch.setattr(updates.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+        monkeypatch.setattr(updates.AjCrewConfig, "load", staticmethod(lambda: cfg))
 
         resp = await updates.api_update_auto(_request({"enabled": False}))
 
@@ -679,7 +679,7 @@ class TestAutoUpdateToggle:
         back, so the write is refused with the reason, like the other
         overlay-owned settings.
         """
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         local = tmp_path / "config.local.json"
         local.write_text(json.dumps({"auto_update": True}), encoding="utf-8")
@@ -707,7 +707,7 @@ class TestAutoUpdateToggle:
         monkeypatch.setattr(updates, "update_config_locked", lambda _p, *, mutate: mutate({}))
         cfg = MagicMock()
         cfg.auto_update = True  # what a concurrent writer left, say
-        monkeypatch.setattr(updates.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+        monkeypatch.setattr(updates.AjCrewConfig, "load", staticmethod(lambda: cfg))
 
         resp = await updates.api_update_auto(_request({"enabled": False}))
 
@@ -759,7 +759,7 @@ class TestAutoUpdateToggle:
 
         It reads the overlay alone: no update check, no config write.
         """
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         local = tmp_path / "config.local.json"
         if overlay is not None:
@@ -787,7 +787,7 @@ class TestAutoUpdateToggle:
     def test_the_pin_read_is_routed_beside_the_write(self):
         from aiohttp import web
 
-        from kiro_crew.dashboard.routes import system
+        from aj_crew.dashboard.routes import system
 
         app = web.Application()
         system.register(app)
@@ -805,7 +805,7 @@ class TestAutoUpdateToggle:
     )
     def test_an_unreadable_overlay_reports_not_pinned(self, monkeypatch, tmp_path, raw):
         """Best-effort, like the loader: a bad overlay must not 500 a committed write."""
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         local = tmp_path / "config.local.json"
         local.write_bytes(raw)
@@ -814,7 +814,7 @@ class TestAutoUpdateToggle:
         assert loader.overlay_pins("auto_update") is False
 
     def test_a_nested_key_is_found_by_path(self, monkeypatch, tmp_path):
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         local = tmp_path / "config.local.json"
         local.write_text(json.dumps({"telemetry": {"enabled": False}}), encoding="utf-8")
@@ -834,7 +834,7 @@ class TestChangelogCache:
         path = proj / "CHANGELOG.md"
         # newline="\n" so the byte count and content match on Windows too.
         path.write_text(body, encoding="utf-8", newline="\n")
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(proj))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(proj))
         return path
 
     def test_an_unchanged_file_is_read_once(self, monkeypatch, tmp_path):
@@ -882,7 +882,7 @@ class TestChangelogCache:
     def test_no_changelog_anywhere_yields_empty(self, monkeypatch, tmp_path):
         empty = tmp_path / "no-changelog"
         empty.mkdir()
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(empty))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(empty))
         monkeypatch.setattr(updates, "_changelog_path", lambda: None)
         assert updates._read_changelog() == ""
 
@@ -900,7 +900,7 @@ class TestChangelogCache:
 
         monkeypatch.setattr(Path, "is_file", _only_bundled)
         # A project dir with no CHANGELOG.md of its own must not short-circuit.
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
 
         resolved = updates._changelog_path()
 
@@ -914,7 +914,7 @@ class TestUpdateInfoAccessors:
 
     def test_get_update_info_cannot_be_mutated_through_the_caller(self):
         updates._set_update_info(
-            managed_by="kirocrew", latest_version="1.2.3", check_status="succeeded"
+            managed_by="ajcrew", latest_version="1.2.3", check_status="succeeded"
         )
         snapshot = updates.get_update_info()
         snapshot["latest_version"] = "tampered"
@@ -947,7 +947,7 @@ class TestUpdateInfoAccessors:
         A second copy of the list is the drift this contract removed: the
         capability now answers for every stamp, including the Linux packages.
         """
-        from kiro_crew.platform import update_capability
+        from aj_crew.platform import update_capability
 
         for stamp in ("dmg", "appimage", "deb", "rpm"):
             capability = update_capability.derive_capability(install_root="", dist=stamp)
@@ -957,7 +957,7 @@ class TestUpdateInfoAccessors:
 
     def test_a_cdn_override_moves_the_feed_and_the_artifact_together(self, monkeypatch):
         """Splitting them would check one host and recommend an install from another."""
-        monkeypatch.setenv("KIROCREW_CDN_BASE", "https://cdn.example.invalid/")
+        monkeypatch.setenv("AJCREW_CDN_BASE", "https://cdn.example.invalid/")
         assert updates._cdn_bases() == (
             "https://cdn.example.invalid",
             "https://cdn.example.invalid",
@@ -967,7 +967,7 @@ class TestUpdateInfoAccessors:
         # Asserts the invariants, not an exact string: the builder is shared with
         # the gateway's unattended path, so its shape may change (it stopped
         # piping curl into sh, which hid download failures) while these must hold.
-        monkeypatch.setenv("KIROCREW_CDN_BASE", "https://download.example.invalid")
+        monkeypatch.setenv("AJCREW_CDN_BASE", "https://download.example.invalid")
         command = updates.wheel_update_command("insider")
         assert "--proto '=https'" in command, "must refuse a plaintext override"
         assert "https://download.example.invalid/cli.sh" in command
@@ -988,9 +988,9 @@ class TestExternallyManagedCheck:
         Answering with a CLI verdict here would compare against the wrong version
         stream and then recommend an installer that does not apply to a bundle.
         """
-        from kiro_crew.platform import update_capability
+        from aj_crew.platform import update_capability
 
-        monkeypatch.setattr("kiro_crew.platform.update_capability.distribution", lambda: "dmg")
+        monkeypatch.setattr("aj_crew.platform.update_capability.distribution", lambda: "dmg")
         await updates._do_update_check()
         assert updates._update_info["managed_by"] == update_capability.MANAGED_BY_ELECTRON
         assert updates._update_info["can_apply"] is False
@@ -1004,7 +1004,7 @@ class TestExternallyManagedCheck:
     async def test_an_unexpected_crash_records_an_error_rather_than_a_verdict(
         self, monkeypatch, tmp_path
     ):
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
 
         async def _boom(_proj: str, _capability) -> None:
             raise RuntimeError("git is not installed")
@@ -1031,7 +1031,7 @@ class TestExternallyManagedCheck:
             started.set()
             await release.wait()
 
-        monkeypatch.setattr("kiro_crew.platform.update_capability.distribution", lambda: "wheel")
+        monkeypatch.setattr("aj_crew.platform.update_capability.distribution", lambda: "wheel")
         monkeypatch.setattr(updates, "_check_release_feed", _count)
         leader = asyncio.create_task(updates._do_update_check())
         await await_until(started, what="the leader's check starting")
@@ -1040,7 +1040,7 @@ class TestExternallyManagedCheck:
         assert not follower.done()
         release.set()
         await asyncio.gather(leader, follower)
-        assert calls == ["kirocrew"]
+        assert calls == ["ajcrew"]
 
 
 class TestAnUnexpectedCheckFailureKeepsTheInstallsShape:
@@ -1054,23 +1054,23 @@ class TestAnUnexpectedCheckFailureKeepsTheInstallsShape:
 
     @pytest.mark.asyncio
     async def test_can_arm_and_the_effect_survive_the_failure(self, monkeypatch):
-        from kiro_crew.platform import update_capability, wheel_engine
+        from aj_crew.platform import update_capability, wheel_engine
 
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         monkeypatch.setattr(update_capability, "_source_checkout_root", lambda: None)
         monkeypatch.setattr(update_capability, "_runs_from_managed_venv", lambda: True)
         monkeypatch.setattr(update_capability, "_installer_runs_here", lambda: True)
-        monkeypatch.setattr("kiro_crew.platform_compat.trusted_system_bin", lambda _n: "/bin/sh")
-        monkeypatch.setattr("kiro_crew.platform.update_layout.cdn_bases_are_safe", lambda: True)
+        monkeypatch.setattr("aj_crew.platform_compat.trusted_system_bin", lambda _n: "/bin/sh")
+        monkeypatch.setattr("aj_crew.platform.update_layout.cdn_bases_are_safe", lambda: True)
         monkeypatch.setattr(
-            "kiro_crew.platform.update_layout.cdn_bases", lambda: ("https://a", "https://b")
+            "aj_crew.platform.update_layout.cdn_bases", lambda: ("https://a", "https://b")
         )
         monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.update_blocked_reason", lambda _u: ""
+            "aj_crew.platform.update_governance.update_blocked_reason", lambda _u: ""
         )
         monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.update_required", lambda _v: False
+            "aj_crew.platform.update_governance.update_required", lambda _v: False
         )
 
         def _boom():
@@ -1102,7 +1102,7 @@ class TestTheManualCheckRecordsTheEffect:
 
     @pytest.mark.asyncio
     async def test_the_check_derives_and_publishes_it(self, monkeypatch):
-        from kiro_crew.platform.update_capability import AutoUpdateEffect
+        from aj_crew.platform.update_capability import AutoUpdateEffect
 
         monkeypatch.setattr(updates, "_auto_effect", None)
         monkeypatch.setattr(updates, "_auto_effect_task", None)

@@ -1,7 +1,7 @@
-diff --git a/src/kiro_crew/channel_transcript_migration.py b/src/kiro_crew/channel_transcript_migration.py
+diff --git a/src/aj_crew/channel_transcript_migration.py b/src/aj_crew/channel_transcript_migration.py
 index c6e1f37cf4d..dea578420d7 100644
---- a/src/kiro_crew/channel_transcript_migration.py
-+++ b/src/kiro_crew/channel_transcript_migration.py
+--- a/src/aj_crew/channel_transcript_migration.py
++++ b/src/aj_crew/channel_transcript_migration.py
 @@ -240,7 +240,9 @@ def _write_merged(path: Path, meta: dict, messages: list[dict]) -> None:
      atomic_write(path, "".join(lines))
  
@@ -77,11 +77,11 @@ index c6e1f37cf4d..dea578420d7 100644
                  migrated += 1
                  logger.info(
                      "channel transcript migration: merged %s into %s",
-diff --git a/src/kiro_crew/crewmate_prune_migration.py b/src/kiro_crew/crewmate_prune_migration.py
+diff --git a/src/aj_crew/crewmate_prune_migration.py b/src/aj_crew/crewmate_prune_migration.py
 new file mode 100644
 index 00000000000..41ffe7e81fb
 --- /dev/null
-+++ b/src/kiro_crew/crewmate_prune_migration.py
++++ b/src/aj_crew/crewmate_prune_migration.py
 @@ -0,0 +1,983 @@
 +                current = _current_spec_description(_file)
 +                if current != _desc:

@@ -21,28 +21,28 @@ from aiohttp.test_utils import TestClient, TestServer
 from shared_crew_host_isolation import host_isolation  # noqa: F401
 from token_auth_helpers import clear_nonces  # noqa: F401 -- the autouse fixture registers by import
 
-from kiro_crew.dashboard.kiro_relay.caller import (
+from aj_crew.dashboard.kiro_relay.caller import (
     CrewKind,
     HostBinding,
     RelayCaller,
     RelayCallerKind,
 )
-from kiro_crew.dashboard.kiro_relay.ingress import (
+from aj_crew.dashboard.kiro_relay.ingress import (
     RELAY_INGRESS_APP_KEY,
     RelayIngress,
     relay_ingress_middleware,
 )
-from kiro_crew.dashboard.relay_headers import relay_header_strip_middleware
-from kiro_crew.dashboard.server_internal_paths import _STRICT_INTERNAL_API_PATHS
-from kiro_crew.dashboard.token_auth import generate_token, token_auth_middleware
-from kiro_crew.shared_crew import identity, owner, people
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.dashboard.relay_headers import relay_header_strip_middleware
+from aj_crew.dashboard.server_internal_paths import _STRICT_INTERNAL_API_PATHS
+from aj_crew.dashboard.token_auth import generate_token, token_auth_middleware
+from aj_crew.shared_crew import identity, owner, people
+from aj_crew.shared_crew.contracts import (
     PrincipalKind,
     Provenance,
     Transport,
     principal_id_for,
 )
-from kiro_crew.shared_crew.identity import (
+from aj_crew.shared_crew.identity import (
     actor_of,
     local_operator_principal,
     tailnet_principal,
@@ -67,17 +67,17 @@ EMAIL = "renee@example.com"
 
 @pytest.fixture(autouse=True)
 def _fresh(_floor_monkeypatch: pytest.MonkeyPatch):
-    _floor_monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    _floor_monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
     people.reset_for_tests()
     yield
     people.reset_for_tests()
 
 
 async def _whoami(request: web.Request) -> web.Response:
-    from kiro_crew.shared_crew import routes_invites
-    from kiro_crew.shared_crew.admission_gate import actor_budget
-    from kiro_crew.shared_crew.attribution import with_request_author
-    from kiro_crew.shared_crew.collaborators import is_collaborator_actor
+    from aj_crew.shared_crew import routes_invites
+    from aj_crew.shared_crew.admission_gate import actor_budget
+    from aj_crew.shared_crew.attribution import with_request_author
+    from aj_crew.shared_crew.collaborators import is_collaborator_actor
 
     actor = actor_of(request)
     refusal = await routes_invites._owner_refusal_decision(request)
@@ -166,10 +166,10 @@ async def test_the_id_is_the_kiro_user_id_alone_never_the_labels() -> None:
 
 @pytest.mark.asyncio
 async def test_two_teammates_are_two_people_with_two_budgets_and_one_typing_lease() -> None:
-    from kiro_crew.shared_crew.collab import Activity
-    from kiro_crew.shared_crew.contracts import Principal
-    from kiro_crew.shared_crew.presence import PresenceRegistry
-    from kiro_crew.shared_crew.typing_lease import TypingLeaseRegistry, can_hold
+    from aj_crew.shared_crew.collab import Activity
+    from aj_crew.shared_crew.contracts import Principal
+    from aj_crew.shared_crew.presence import PresenceRegistry
+    from aj_crew.shared_crew.typing_lease import TypingLeaseRegistry, can_hold
 
     ACTIVITY_TYPING = Activity.TYPING
 
@@ -251,21 +251,21 @@ def test_the_relayed_label_trims_only_a_handle_domain_address(
 def test_the_handle_domains_setting_is_empty_by_default_and_parsed_narrowly(
     tmp_path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    assert KiroCrewConfig().tunnel.relay_handle_email_domains == []
+    assert AjCrewConfig().tunnel.relay_handle_email_domains == []
     config_file = tmp_path / "config.json"
     stored = [" Example.COM ", "example.com", "", 7, "a@example.org", "example.org"]
     config_file.write_text(
         json.dumps({"tunnel": {"relay_handle_email_domains": stored}}), encoding="utf-8"
     )
-    monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: config_file)
-    domains = KiroCrewConfig.load().tunnel.relay_handle_email_domains
+    monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: config_file)
+    domains = AjCrewConfig.load().tunnel.relay_handle_email_domains
     assert domains == ["example.com", "example.org"]
     config_file.write_text(
         json.dumps({"tunnel": {"relay_handle_email_domains": "example.com"}}), encoding="utf-8"
     )
-    assert KiroCrewConfig.load().tunnel.relay_handle_email_domains == []
+    assert AjCrewConfig.load().tunnel.relay_handle_email_domains == []
 
 
 @pytest.mark.parametrize("email", ["renee@example.com", "renee@example.org"])
@@ -366,7 +366,7 @@ def test_is_owner_principal_and_viewer_ids_name_the_relayed_owner() -> None:
 
 
 def test_the_mine_filter_finds_the_owners_machine_sessions_for_the_relayed_owner() -> None:
-    from kiro_crew.shared_crew.contracts import SessionQuery
+    from aj_crew.shared_crew.contracts import SessionQuery
 
     relayed = _relayed_owner()
     machine = local_operator_principal("local-app")
@@ -377,7 +377,7 @@ def test_the_mine_filter_finds_the_owners_machine_sessions_for_the_relayed_owner
 
 
 def test_people_marks_the_relayed_owner_as_owner_and_lists_sharees_as_over_tailscale() -> None:
-    from kiro_crew.shared_crew.tailscale_sharees import Sharee
+    from aj_crew.shared_crew.tailscale_sharees import Sharee
 
     relayed = _relayed_owner()
     sharee_principal = tailnet_principal("bob@example.com", "bob", Provenance.TAILSCALE_SERVE)
@@ -397,8 +397,8 @@ def test_people_marks_the_relayed_owner_as_owner_and_lists_sharees_as_over_tails
 
 
 def test_the_prompt_reads_the_relayed_owners_message_as_the_owners() -> None:
-    from kiro_crew.shared_crew.attribution import author_meta, sender_line
-    from kiro_crew.shared_crew.contracts import ActorContext
+    from aj_crew.shared_crew.attribution import author_meta, sender_line
+    from aj_crew.shared_crew.contracts import ActorContext
 
     relayed = _relayed_owner()
     meta = author_meta(
@@ -412,7 +412,7 @@ def test_the_prompt_reads_the_relayed_owners_message_as_the_owners() -> None:
 
 
 def test_the_typing_lease_is_one_holder_for_the_owners_two_tabs() -> None:
-    from kiro_crew.shared_crew.typing_lease import TypingLeaseRegistry, same_person
+    from aj_crew.shared_crew.typing_lease import TypingLeaseRegistry, same_person
 
     relayed = _relayed_owner()
     machine = local_operator_principal("local-app")
@@ -424,7 +424,7 @@ def test_the_typing_lease_is_one_holder_for_the_owners_two_tabs() -> None:
 
 def test_the_operator_id_expansion_needs_the_local_operator() -> None:
     """The local-operator fold of every bootstrap subject is not opened by the relay."""
-    from kiro_crew.shared_crew.crew_mode import operator_ids
+    from aj_crew.shared_crew.crew_mode import operator_ids
 
     relayed = _relayed_owner()
     assert operator_ids(relayed) == frozenset({relayed.id})
@@ -433,8 +433,8 @@ def test_the_operator_id_expansion_needs_the_local_operator() -> None:
 
 def test_a_relayed_owner_counts_as_a_network_path() -> None:
     """Provenance gates read the relay as remote: stricter, never wider."""
-    from kiro_crew.shared_crew.crew_mode import others_observed
-    from kiro_crew.shared_crew.memory_changes import crew_is_shared
+    from aj_crew.shared_crew.crew_mode import others_observed
+    from aj_crew.shared_crew.memory_changes import crew_is_shared
 
     relayed = _relayed_owner()
     assert others_observed(local_operator_principal("local-app"), [relayed]) is True
@@ -460,7 +460,7 @@ def _marked(kind: RelayCallerKind, user: str):
 def test_a_relayed_principals_audit_login_is_blank_and_its_id_is_kept(
     kind: RelayCallerKind, user: str
 ) -> None:
-    from kiro_crew.shared_crew.audit import audit_principal
+    from aj_crew.shared_crew.audit import audit_principal
 
     principal = _marked(kind, user)
     audited = audit_principal(principal)
@@ -472,10 +472,10 @@ def test_a_relayed_principals_audit_login_is_blank_and_its_id_is_kept(
 
 def test_a_tailnet_principal_keeps_its_audit_login() -> None:
     """Guard: only the relay's display labels are kept out of the audit, live or read back."""
-    from kiro_crew.shared_crew.attribution import author_meta
-    from kiro_crew.shared_crew.audit import audit_principal
-    from kiro_crew.shared_crew.contracts import ActorContext
-    from kiro_crew.shared_crew.decisions import turn_initiator
+    from aj_crew.shared_crew.attribution import author_meta
+    from aj_crew.shared_crew.audit import audit_principal
+    from aj_crew.shared_crew.contracts import ActorContext
+    from aj_crew.shared_crew.decisions import turn_initiator
 
     peer = tailnet_principal("alice@example.com", "alice-laptop", Provenance.TAILSCALE_SERVE)
     audited = audit_principal(peer)
@@ -495,8 +495,8 @@ def test_an_action_audit_record_as_written_holds_no_relayed_email_or_name(
 ) -> None:
     import dataclasses
 
-    from kiro_crew.shared_crew.audit import new_action_record, security_event
-    from kiro_crew.shared_crew.contracts import ActionOutcome, ActionType, ActorContext
+    from aj_crew.shared_crew.audit import new_action_record, security_event
+    from aj_crew.shared_crew.contracts import ActionOutcome, ActionType, ActorContext
 
     principal = _marked(kind, user)
     actor = ActorContext(
@@ -532,10 +532,10 @@ def test_an_audit_record_from_a_relayed_turn_holds_no_relayed_email_or_name(
     """
     import dataclasses
 
-    from kiro_crew.shared_crew.attribution import author_meta
-    from kiro_crew.shared_crew.audit import new_action_record, security_event
-    from kiro_crew.shared_crew.contracts import ActionOutcome, ActionType, ActorContext
-    from kiro_crew.shared_crew.decisions import turn_initiator
+    from aj_crew.shared_crew.attribution import author_meta
+    from aj_crew.shared_crew.audit import new_action_record, security_event
+    from aj_crew.shared_crew.contracts import ActionOutcome, ActionType, ActorContext
+    from aj_crew.shared_crew.decisions import turn_initiator
 
     name = MARK_NAME if labels == "both" else ""
     caller = RelayCaller(
@@ -574,19 +574,19 @@ def test_an_audit_record_from_a_relayed_turn_holds_no_relayed_email_or_name(
 async def test_alternating_relayed_and_local_requests_keep_the_owners_people_entry(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.shared_crew import access_set
-    from kiro_crew.shared_crew import tailscale_invite_store as store
-    from kiro_crew.shared_crew import tailscale_invites as invites
-    from kiro_crew.shared_crew.crew_mode import others_observed
-    from kiro_crew.shared_crew.routes_invites import decorate_people
+    from aj_crew.shared_crew import access_set
+    from aj_crew.shared_crew import tailscale_invite_store as store
+    from aj_crew.shared_crew import tailscale_invites as invites
+    from aj_crew.shared_crew.crew_mode import others_observed
+    from aj_crew.shared_crew.routes_invites import decorate_people
 
     monkeypatch.setattr(access_set, "owner_user_id", lambda: "u-owner-tail")
     monkeypatch.setattr(invites, "members_by_login", lambda: {})
     monkeypatch.setattr(
         store, "display_overrides", lambda: {"u-owner-tail": {"alias": "Boss", "avatar_id": ""}}
     )
-    from kiro_crew.shared_crew.contracts import Principal
-    from kiro_crew.shared_crew.crew_mode import operator_ids
+    from aj_crew.shared_crew.contracts import Principal
+    from aj_crew.shared_crew.crew_mode import operator_ids
 
     machine = local_operator_principal("local-app")
     async with TestClient(TestServer(_app(_ingress(CrewKind.PERSONAL)))) as c:
@@ -623,8 +623,8 @@ async def test_alternating_relayed_and_local_requests_keep_the_owners_people_ent
 
 def test_the_relayed_owners_lease_is_the_owners_on_the_startup_tab() -> None:
     """No owner id configured: the startup tab is ``local-startup``, the relay tab ``local-app``."""
-    from kiro_crew.shared_crew.crew_mode import operator_ids
-    from kiro_crew.shared_crew.typing_lease import TypingLeaseRegistry
+    from aj_crew.shared_crew.crew_mode import operator_ids
+    from aj_crew.shared_crew.typing_lease import TypingLeaseRegistry
 
     relayed = _relayed_owner("local-app")
     startup = local_operator_principal("local-startup")
@@ -644,7 +644,7 @@ def test_the_relayed_owners_lease_is_the_owners_on_the_startup_tab() -> None:
 
 def test_a_relayed_teammates_lease_names_only_them() -> None:
     """Guard: the lease fold widens for the relayed owner only."""
-    from kiro_crew.shared_crew.typing_lease import TypingLeaseRegistry
+    from aj_crew.shared_crew.typing_lease import TypingLeaseRegistry
 
     teammate = relay_principal(RelayCaller(kiro_user_id=ANA, kind=RelayCallerKind.TEAMMATE), "")
     leases = TypingLeaseRegistry()
@@ -667,9 +667,9 @@ async def test_a_request_with_a_relay_caller_and_an_ssm_guest_resolves_to_the_re
     """
     from aiohttp.test_utils import make_mocked_request
 
-    from kiro_crew.dashboard.kiro_relay.caller import RELAY_CALLER_KEY
-    from kiro_crew.shared_crew.contracts import SSM_GUEST_REQUEST_KEY, SsmGuest
-    from kiro_crew.shared_crew.identity import publish_actor
+    from aj_crew.dashboard.kiro_relay.caller import RELAY_CALLER_KEY
+    from aj_crew.shared_crew.contracts import SSM_GUEST_REQUEST_KEY, SsmGuest
+    from aj_crew.shared_crew.identity import publish_actor
 
     request = make_mocked_request("GET", "/api/whoami")
     request[RELAY_CALLER_KEY] = RelayCaller(

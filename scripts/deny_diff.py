@@ -4,7 +4,7 @@
 Stdlib only, no third-party deps, cross-platform. Run from the repo root::
 
     python3 scripts/deny_diff.py --base origin/main --head HEAD \\
-        --corpus src/kiro_crew/builtin_skills/security-conductor/golden-paths.json
+        --corpus src/aj_crew/builtin_skills/security-conductor/golden-paths.json
 
 Exit 0 = no regressions, exit 1 = regressions, exit 2 = corpus/ref error.
 
@@ -50,21 +50,21 @@ re-implementation of the rules in this script would agree with itself forever
 and catch nothing.
 
 *Each side proves which tree it loaded.* The child re-reports the file
-``kiro_crew.security`` actually resolved to and refuses when it sits outside the
+``aj_crew.security`` actually resolved to and refuses when it sits outside the
 checkout it was pointed at. Without that check an installed copy of the package
 shadowing the path could serve BOTH sides from one tree, and the gate would
 report zero regressions forever while looking like it ran.
 
 *The parent never imports the product.* Two reasons, one of them empirical: the
 classifier is the thing under test, so importing it here would pin the harness
-to one side of the comparison; and an inline ``python -c "import kiro_crew..."``
+to one side of the comparison; and an inline ``python -c "import aj_crew..."``
 is itself refused by the argv floor this gate exists to keep honest. The child
 is this same file re-executed with :data:`_WORKER_FLAG`, which imports the
 product only in that mode. The tier table is read as TEXT
 (``ast.literal_eval`` of ``hooks.SHELL_DENY_TIERS``), for the same reason.
 
-*The child is hermetic.* Every ``KIROCREW_*`` variable is stripped from the
-child's environment, and both the OS home and ``KIROCREW_HOME`` are repointed
+*The child is hermetic.* Every ``AJCREW_*`` variable is stripped from the
+child's environment, and both the OS home and ``AJCREW_HOME`` are repointed
 at a throwaway directory. The verdict therefore depends on the checkout alone,
 the sensitive-path target set never probes the operator's real home, and the
 classifier's best-effort SEL audit writes land somewhere disposable instead of
@@ -120,13 +120,13 @@ _PLATFORMS = frozenset({"any", "posix", "windows"})
 
 #: Where the deny checks this gate measures are declared, relative to a tree: the
 #: tool gate's own ``SHELL_DENY_TIERS`` -- (tier name, attribute of
-#: ``kiro_crew.security``) in the order the gate applies them to a shell command.
+#: ``aj_crew.security``) in the order the gate applies them to a shell command.
 #:
 #: Read from the gate rather than restated here, because the gate's whole claim is
 #: that a green means "no golden path is newly refused AT THE TOOL GATE", and that
 #: holds only while the measured checks are the gate's: a check added to the gate's
 #: table is measured on the next run, with no second copy to forget.
-_TIER_TABLE_FILE = Path("src") / "kiro_crew" / "hooks.py"
+_TIER_TABLE_FILE = Path("src") / "aj_crew" / "hooks.py"
 _TIER_TABLE_NAME = "SHELL_DENY_TIERS"
 
 
@@ -140,7 +140,7 @@ _WORKER_TIMEOUT = 600
 #: operator note, and a job summary with 40 of those is unreadable.
 _REASON_CHARS = 300
 
-# Home-root overrides that do not carry the KIROCREW_ prefix scrubbed below.
+# Home-root overrides that do not carry the AJCREW_ prefix scrubbed below.
 # This parent script cannot import the product it is comparing; the source test
 # pins the harness entries against agent_sdk.host_auth's declarations instead.
 _INHERITED_HOME_OVERRIDE_ENV_VARS = (
@@ -357,8 +357,8 @@ def resolve_checkout(repo_root: Path, ref: str, dest: Path) -> Path:
         raise DenyDiffError(f"cannot unpack archive of ref {ref!r}: {exc}") from exc
     finally:
         archive.unlink(missing_ok=True)
-    if not (dest / "src" / "kiro_crew").is_dir():
-        raise DenyDiffError(f"ref {ref!r} has no src/kiro_crew tree")
+    if not (dest / "src" / "aj_crew").is_dir():
+        raise DenyDiffError(f"ref {ref!r} has no src/aj_crew tree")
     return dest
 
 
@@ -443,10 +443,10 @@ def load_shell_deny_tiers(repo_root: Path) -> tuple[tuple[str, str], ...]:
 def _child_env(checkout: Path, home: Path) -> dict[str, str]:
     """Environment for a classification child: hermetic, and pointed at *checkout*.
 
-    Every ``KIROCREW_*`` variable is dropped. The caller's sandbox and port
+    Every ``AJCREW_*`` variable is dropped. The caller's sandbox and port
     variables leak into any child by default, and a classifier that read them would
     make the verdict a function of who ran the gate. The OS home and
-    ``KIROCREW_HOME`` are then set to *home* so the sensitive-path target set never
+    ``AJCREW_HOME`` are then set to *home* so the sensitive-path target set never
     resolves the operator's real home and the classifier's best-effort audit writes
     land in a throwaway directory rather than the operator's real security log.
     """
@@ -454,14 +454,14 @@ def _child_env(checkout: Path, home: Path) -> dict[str, str]:
     env = {
         k: v
         for k, v in os.environ.items()
-        if not k.startswith("KIROCREW_") and k not in _INHERITED_HOME_OVERRIDE_ENV_VARS
+        if not k.startswith("AJCREW_") and k not in _INHERITED_HOME_OVERRIDE_ENV_VARS
     }
     # pathlib reads HOME on POSIX and USERPROFILE on Windows. Set both so a child
     # materialized for either platform stays hermetic even when this helper is
     # inspected or exercised from the other one.
     env["HOME"] = str(home)
     env["USERPROFILE"] = str(home)
-    env["KIROCREW_HOME"] = str(home)
+    env["AJCREW_HOME"] = str(home)
     env["PYTHONPATH"] = str(checkout / "src")
     # A .pyc for a tree deleted at the end of the run is pure cost, and writing
     # into the archive dir muddies "the checkout is exactly the ref".
@@ -561,9 +561,9 @@ def _worker_main() -> int:
         print(f"worker: unreadable request: {exc}", file=sys.stderr)
         return 2
     try:
-        import kiro_crew.security as security
+        import aj_crew.security as security
     except Exception as exc:
-        print(f"worker: cannot import kiro_crew.security: {exc}", file=sys.stderr)
+        print(f"worker: cannot import aj_crew.security: {exc}", file=sys.stderr)
         return 2
 
     # Which tree actually answered. An installed copy of the package that shadowed
@@ -576,7 +576,7 @@ def _worker_main() -> int:
     root = Path(os.path.normcase(str(expect_root)))
     if not loaded.is_relative_to(root):
         print(
-            f"worker: kiro_crew.security resolved to {loaded}, outside {root}",
+            f"worker: aj_crew.security resolved to {loaded}, outside {root}",
             file=sys.stderr,
         )
         return 2

@@ -14,8 +14,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from slack_wire_helpers import slack_wire
 
-from kiro_crew.slack import interactions, outbound
-from kiro_crew.slack.format import (
+from aj_crew.slack import interactions, outbound
+from aj_crew.slack.format import (
     OPTIONS_ACTION_PREFIX,
     OPTIONS_SEVERAL_ACTION,
     OPTIONS_SEVERAL_BLOCK,
@@ -23,7 +23,7 @@ from kiro_crew.slack.format import (
     OPTIONS_SEVERAL_INPUT,
     build_options_blocks,
 )
-from kiro_crew.slack.outbound import decode_options_token, encode_options_token
+from aj_crew.slack.outbound import decode_options_token, encode_options_token
 
 _LONG = ("Rebase onto main, rerun the whole focused suite and then push with a lease " * 2).strip()
 
@@ -61,7 +61,7 @@ def world(monkeypatch):
 @pytest.fixture
 def audit(tmp_path, monkeypatch):
     """A real, synchronous security event log under tmp_path, read back by the tests."""
-    from kiro_crew import sel as sel_mod
+    from aj_crew import sel as sel_mod
 
     monkeypatch.setattr(sel_mod.SecurityEventLog, "_instance", None)
     monkeypatch.setattr(sel_mod.SecurityEventLog, "_initialized", False)
@@ -267,7 +267,7 @@ class TestReviewEdges:
         assert "expired" in notice.get("text")
 
     def test_a_long_answered_line_keeps_its_time_stamp(self):
-        from kiro_crew.slack.format import build_options_answered_blocks
+        from aj_crew.slack.format import build_options_answered_blocks
 
         text = build_options_answered_blocks("U1", ["&" * 74] * 10, 1_760_000_000)[0]["elements"][
             0

@@ -100,7 +100,7 @@ class TestWindowsSmokeEvidence:
         runner_temp = tmp_path / "runner temp"
         paths = _log_paths(tmp_path, runner_temp)
         assert paths["root"].parent == runner_temp
-        assert paths["root"].name.startswith("kirocrew-smoke-")
+        assert paths["root"].name.startswith("ajcrew-smoke-")
         paths["root"].mkdir()
         logs = {path for name, path in paths.items() if name != "root"}
         assert {path.name for path in logs} == LOG_NAMES

@@ -1,6 +1,6 @@
 """The packaged Apps page's shipped-app catalogue is pinned to ``apps/builtins/``.
 
-``src/kiro_crew/docs/apps.md`` carries a user-facing table of every app that ships
+``src/aj_crew/docs/apps.md`` carries a user-facing table of every app that ships
 inside the wheel. That kind of list has one failure mode and it is silent: an app is
 added, removed or renamed, and the catalogue keeps reading as complete while it no
 longer is. ``scripts/docs_lint.py`` cannot catch it — the page's links and symbols all
@@ -13,7 +13,7 @@ keep in sync: adding a builtin fails the test until the page gains a row, and it
 resource contributions must reach the agents, skills, MCP and scheduled-jobs bullets.
 
 The slug is what is matched in catalogue rows, not the display name, because the slug
-is the identity the CLI takes (``kirocrew app enable md-notebook``). The resource
+is the identity the CLI takes (``ajcrew app enable md-notebook``). The resource
 bullets name apps by their manifest display names instead.
 
 Both directions are asserted for every claim: the manifests decide what the truth is,
@@ -32,10 +32,10 @@ from typing import cast
 import pytest
 
 REPO = Path(__file__).resolve().parent.parent
-DOCS = REPO / "src" / "kiro_crew" / "docs"
+DOCS = REPO / "src" / "aj_crew" / "docs"
 DOC = DOCS / "apps.md"
 INDEX = DOCS / "index.md"
-BUILTINS = REPO / "src" / "kiro_crew" / "apps" / "builtins"
+BUILTINS = REPO / "src" / "aj_crew" / "apps" / "builtins"
 
 #: A catalogue cell names its app as ``**Display Name** (`slug`)``. Anchored on the
 #: bolded-name-then-backticked-slug pair so a slug mentioned in running prose or in a
@@ -162,7 +162,7 @@ def test_both_pages_state_the_shipped_count(doc_text: str, index_text: str) -> N
         "and update both pages."
     )
     assert (
-        f"{expected} apps ship inside the Kiro Crew package" in doc_text
+        f"{expected} apps ship inside the Aj Crew package" in doc_text
     ), f"apps.md's lead paragraph must say {expected!r} — {total} apps ship today."
     assert (
         f"{expected} apps ship in the package" in index_text
@@ -210,7 +210,7 @@ def test_the_page_names_the_apps_that_need_the_desktop_app(doc_text: str) -> Non
         f"the set of desktop-app-only shipped apps changed to {desktop}; update the "
         "desktop-app sentence in apps.md and this expectation"
     )
-    sentence = [ln for ln in doc_text.splitlines() if "need the Kiro Crew **desktop app**" in ln]
+    sentence = [ln for ln in doc_text.splitlines() if "need the Aj Crew **desktop app**" in ln]
     assert sentence, "apps.md no longer states which shipped apps need the desktop app"
     for name in desktop:
         assert (
@@ -237,7 +237,7 @@ def test_the_agents_bullet_names_every_app_and_its_count(doc_text: str) -> None:
     }
     assert stated == expected, (
         "Update the Agents bullet under 'Agents, skills and MCP tools an app brings' "
-        "in src/kiro_crew/docs/apps.md to match each app.json agents roster "
+        "in src/aj_crew/docs/apps.md to match each app.json agents roster "
         f"(extend _AGENT_COUNT_WORDS if needed): stated={stated}, expected={expected}"
     )
 
@@ -260,6 +260,6 @@ def test_resource_bullet_names_exactly_the_contributing_apps(
     expected = {str(m["displayName"]) for m in _manifests().values() if m.get(field)}
     assert stated == expected, (
         f"Update the {label} bullet under 'Agents, skills and MCP tools an app brings' "
-        f"in src/kiro_crew/docs/apps.md to name exactly the apps with non-empty {field} "
+        f"in src/aj_crew/docs/apps.md to name exactly the apps with non-empty {field} "
         f"in app.json: stated={sorted(stated)}, expected={sorted(expected)}"
     )

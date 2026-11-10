@@ -28,8 +28,8 @@ from token_auth_helpers import (  # noqa: F401 -- the autouse fixture registers 
     clear_nonces,
 )
 
-from kiro_crew.dashboard.refresh_tokens import REFRESH_COOKIE_PREFIX, refresh_cookie_name
-from kiro_crew.dashboard.token_auth import (
+from aj_crew.dashboard.refresh_tokens import REFRESH_COOKIE_PREFIX, refresh_cookie_name
+from aj_crew.dashboard.token_auth import (
     MAX_CONCURRENT_NONCES,
     MAX_SESSION_TTL_SECS,
     RevokedNonceStore,
@@ -46,7 +46,7 @@ from kiro_crew.dashboard.token_auth import (
 
 def test_evict_expired_removes_old_entries() -> None:
     """Verify evict_expired removes expired IP bindings, consumed tokens, and nonces."""
-    from kiro_crew.dashboard.token_auth import _state, _token_pin_key
+    from aj_crew.dashboard.token_auth import _state, _token_pin_key
 
     # Generate a token and bind IP / mark consumed
     token = generate_token("evict_user")
@@ -143,7 +143,7 @@ async def test_non_local_accepts_valid_token() -> None:
 )
 async def test_dashboard_url_host_selection(dashboard_url: str, expected_host: str) -> None:
     """!dashboard sends presigned link via DM, never in channel."""
-    from kiro_crew.slack.handler import _handle_slash_command
+    from aj_crew.slack.handler import _handle_slash_command
 
     slack = MagicMock()
     slack.post_message = AsyncMock(return_value=None)
@@ -157,15 +157,15 @@ async def test_dashboard_url_host_selection(dashboard_url: str, expected_host: s
 
     expected_port = 8080 if dashboard_url else 5476
 
-    # Unset KIROCREW_PORT so parse_dashboard_url (which reads os.environ at
+    # Unset AJCREW_PORT so parse_dashboard_url (which reads os.environ at
     # call time) uses the port from the URL or the hard-coded default.
     with (
-        patch("kiro_crew.slack.allowlist.KiroCrewConfig.load", return_value=mock_cfg),
-        patch("kiro_crew.dashboard.origin.socket.gethostname", return_value="myhostname"),
-        patch("kiro_crew.dashboard.origin.socket.gethostbyname", return_value="10.0.0.1"),
-        patch("kiro_crew.dashboard.origin.socket.getaddrinfo", side_effect=socket.gaierror),
-        patch.dict(os.environ, {}, KIROCREW_PORT=""),
-        patch("kiro_crew.slack.allowlist.sel") as mock_sel,
+        patch("aj_crew.slack.allowlist.AjCrewConfig.load", return_value=mock_cfg),
+        patch("aj_crew.dashboard.origin.socket.gethostname", return_value="myhostname"),
+        patch("aj_crew.dashboard.origin.socket.gethostbyname", return_value="10.0.0.1"),
+        patch("aj_crew.dashboard.origin.socket.getaddrinfo", side_effect=socket.gaierror),
+        patch.dict(os.environ, {}, AJCREW_PORT=""),
+        patch("aj_crew.slack.allowlist.sel") as mock_sel,
     ):
         mock_sel.return_value.log_api_access = MagicMock()
         await _handle_slash_command(
@@ -191,7 +191,7 @@ async def test_api_logout_success_from_loopback() -> None:
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import api_logout
+    from aj_crew.dashboard.handlers import api_logout
 
     app = web.Application()
     app["local_secret"] = "test-secret-123"
@@ -219,7 +219,7 @@ async def test_api_logout_rejects_non_loopback() -> None:
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import api_logout
+    from aj_crew.dashboard.handlers import api_logout
 
     app = web.Application()
     app["local_secret"] = "test-secret-123"
@@ -227,7 +227,7 @@ async def test_api_logout_rejects_non_loopback() -> None:
 
     async with TestClient(TestServer(app)) as client:
         # Patch is_loopback to return False (simulating non-loopback request)
-        with patch("kiro_crew.dashboard.handlers.is_loopback", return_value=False):
+        with patch("aj_crew.dashboard.handlers.is_loopback", return_value=False):
             resp = await client.post(
                 "/api/logout",
                 json={},
@@ -244,7 +244,7 @@ async def test_api_logout_rejects_invalid_secret() -> None:
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import api_logout
+    from aj_crew.dashboard.handlers import api_logout
 
     app = web.Application()
     app["local_secret"] = "correct-secret"
@@ -267,7 +267,7 @@ async def test_api_logout_rejects_missing_secret() -> None:
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import api_logout
+    from aj_crew.dashboard.handlers import api_logout
 
     app = web.Application()
     app["local_secret"] = "correct-secret"
@@ -292,13 +292,13 @@ async def test_api_logout_success_revokes_sessions() -> None:
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import api_logout
+    from aj_crew.dashboard.handlers import api_logout
 
     app = web.Application()
     app["local_secret"] = "correct-secret"
     app.router.add_post("/api/logout", api_logout)
 
-    with patch("kiro_crew.dashboard.token_auth.revoke_all_sessions") as mock_revoke:
+    with patch("aj_crew.dashboard.token_auth.revoke_all_sessions") as mock_revoke:
         async with TestClient(TestServer(app)) as client:
             resp = await client.post(
                 "/api/logout",
@@ -319,8 +319,8 @@ async def test_dashboard_sel_log(
     """!dashboard logs SEL with operation='slack.dashboard_token', caller, and ttl."""
     import json
 
-    from kiro_crew.sel import SecurityEventLog
-    from kiro_crew.slack.handler import _handle_slash_command
+    from aj_crew.sel import SecurityEventLog
+    from aj_crew.slack.handler import _handle_slash_command
 
     monkeypatch.setattr(SecurityEventLog, "_instance", None)
     monkeypatch.setattr(SecurityEventLog, "_initialized", False)
@@ -339,10 +339,10 @@ async def test_dashboard_sel_log(
     cmd_text = f"!dashboard {duration_arg}".strip()
 
     with (
-        patch("kiro_crew.slack.allowlist.KiroCrewConfig.load", return_value=mock_cfg),
-        patch("kiro_crew.dashboard.origin.socket.gethostname", return_value="myhostname"),
-        patch("kiro_crew.dashboard.origin.socket.gethostbyname", return_value="10.0.0.1"),
-        patch("kiro_crew.slack.allowlist.sel") as mock_sel,
+        patch("aj_crew.slack.allowlist.AjCrewConfig.load", return_value=mock_cfg),
+        patch("aj_crew.dashboard.origin.socket.gethostname", return_value="myhostname"),
+        patch("aj_crew.dashboard.origin.socket.gethostbyname", return_value="10.0.0.1"),
+        patch("aj_crew.slack.allowlist.sel") as mock_sel,
     ):
         mock_log = MagicMock(wraps=real_log.log_api_access)
         mock_sel.return_value.log_api_access = mock_log
@@ -471,7 +471,7 @@ def test_revoked_cookie_survives_store_reload(tmp_path) -> None:
     reloaded = RevokedNonceStore(state_path=tmp_path / "token_revoked_nonces.json")
     import json
 
-    from kiro_crew.dashboard.token_auth import _b64url_decode
+    from aj_crew.dashboard.token_auth import _b64url_decode
 
     nonce = json.loads(_b64url_decode(token.split(".")[0]))["nonce"]
     assert reloaded.is_revoked(nonce) is True
@@ -487,8 +487,8 @@ def test_revoked_store_locks_the_file_down_to_its_owner(tmp_path, monkeypatch) -
     that applies an owner-only DACL there and raises when it cannot — the same
     one the app-token secret in this module and ``token_secret.py`` already use.
     """
-    from kiro_crew import platform_compat
-    from kiro_crew.dashboard import token_auth as token_auth_mod
+    from aj_crew import platform_compat
+    from aj_crew.dashboard import token_auth as token_auth_mod
 
     locked: list[tuple[str, int]] = []
     real_restrict = platform_compat.restrict_to_owner
@@ -577,7 +577,7 @@ async def test_url_token_exchanged_for_distinct_session_cookie() -> None:
     # … and the two tokens carry different nonces (independent sessions).
     import json as _json
 
-    from kiro_crew.dashboard.token_auth import _b64url_decode
+    from aj_crew.dashboard.token_auth import _b64url_decode
 
     url_nonce = _json.loads(_b64url_decode(url_token.split(".")[0]))["nonce"]
     cookie_nonce = _json.loads(_b64url_decode(cookie.value.split(".")[0]))["nonce"]
@@ -589,8 +589,8 @@ async def test_url_token_exchanged_for_distinct_session_cookie() -> None:
 async def test_exchange_carries_owner_mint_claim_to_both_cookies(owner_minted) -> None:
     """The owner-mint claim survives the link→session exchange on the access
     cookie AND the refresh cookie, and is never added to a link without it."""
-    from kiro_crew.dashboard.refresh_tokens import refresh_token_owner_minted
-    from kiro_crew.dashboard.token_auth_tokens import (
+    from aj_crew.dashboard.refresh_tokens import refresh_token_owner_minted
+    from aj_crew.dashboard.token_auth_tokens import (
         owner_mint_extra,
         token_owner_minted_unverified,
     )
@@ -614,7 +614,7 @@ async def test_exchange_carries_owner_mint_claim_to_both_cookies(owner_minted) -
 async def test_exchanged_cookie_preserves_app_claim() -> None:
     """If an app token ever arrives via the URL flow, the exchanged cookie must
     keep the ``app`` claim so app-scope enforcement continues to apply."""
-    import kiro_crew.dashboard.token_auth as _ta
+    import aj_crew.dashboard.token_auth as _ta
 
     monkeypatch_allow = lambda name: ("/api/anything/*",)  # noqa: E731
     _ta._app_perms_cache.clear()
@@ -722,7 +722,7 @@ def test_extract_numeric_claim_returns_float_session_exp() -> None:
     """session_exp is a float claim; the string-only extract_claims_from_token
     dropped it (api_auth_me always saw 0.0, disabling frontend refresh). The
     numeric extractor must return the real float."""
-    from kiro_crew.dashboard.token_auth import extract_numeric_claim
+    from aj_crew.dashboard.token_auth import extract_numeric_claim
 
     tok = generate_token("alice", ttl_seconds=3600)
     exp = extract_numeric_claim(tok, "session_exp")
@@ -731,13 +731,13 @@ def test_extract_numeric_claim_returns_float_session_exp() -> None:
     assert exp > time.time()  # a real future epoch, not 0.0
 
     # The string extractor still drops it (documents why the numeric one exists).
-    from kiro_crew.dashboard.token_auth import extract_claims_from_token
+    from aj_crew.dashboard.token_auth import extract_claims_from_token
 
     assert extract_claims_from_token(tok, ("session_exp",)) == {}
 
 
 def test_extract_numeric_claim_rejects_invalid_missing_and_bool() -> None:
-    from kiro_crew.dashboard.token_auth import extract_numeric_claim
+    from aj_crew.dashboard.token_auth import extract_numeric_claim
 
     tok = generate_token("bob", ttl_seconds=3600)
     assert extract_numeric_claim("garbage.sig", "session_exp") is None  # invalid token
@@ -753,7 +753,7 @@ def test_cookie_session_mint_does_not_evict_link_nonce() -> None:
     rotation; if it registered nonces it would churn/evict the bounded 50-slot
     set and drop pending Slack-challenge links. Mint > the 50-slot bound and
     assert the link token still validates on the link path."""
-    from kiro_crew.dashboard.token_auth import MAX_CONCURRENT_NONCES, validate_token
+    from aj_crew.dashboard.token_auth import MAX_CONCURRENT_NONCES, validate_token
 
     # A real one-time link token (registers a nonce, validated on the link path).
     link = generate_token("carol", ttl_seconds=3600)
@@ -783,7 +783,7 @@ def test_api_auth_refresh_mints_session_token_without_nonce_registration() -> No
     nonces). Asserts against the handler source so a revert is caught."""
     import inspect
 
-    from kiro_crew.dashboard.handlers.auth_refresh import api_auth_refresh
+    from aj_crew.dashboard.handlers.auth_refresh import api_auth_refresh
 
     src = inspect.getsource(api_auth_refresh)
     assert "register_nonce=False" in src

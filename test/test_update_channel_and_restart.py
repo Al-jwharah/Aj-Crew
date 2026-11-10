@@ -17,11 +17,11 @@ from unittest.mock import DEFAULT, MagicMock, patch
 import pytest
 from aiohttp import web
 
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.platform import update_layout
-from kiro_crew.platform.update_layout import InstallLayout
+from aj_crew.dashboard.handlers import updates
+from aj_crew.platform import update_layout
+from aj_crew.platform.update_layout import InstallLayout
 
-_UPDATES_LOGGER = "kiro_crew.dashboard.handlers.updates"
+_UPDATES_LOGGER = "aj_crew.dashboard.handlers.updates"
 
 
 @pytest.fixture(autouse=True)
@@ -164,7 +164,7 @@ class TestChannelEndpoint:
     def test_the_switch_never_reads_the_channel_file_on_the_event_loop(
         self, _isolated_channel_home
     ):
-        """The invalidation must not re-read ``$KIROCREW_HOME/channel``.
+        """The invalidation must not re-read ``$AJCREW_HOME/channel``.
 
         ``release_channel()`` is a sync ``read_text`` on a data home that may be on
         NFS, so it can freeze the loop; the validated channel is already in hand.
@@ -411,7 +411,7 @@ class TestChannelEndpoint:
                     started.set()
                     await release.wait()
                 updates._set_update_info(
-                    managed_by="kirocrew",
+                    managed_by="ajcrew",
                     channel=channel,
                     update_available=channel == "stable",
                     latest_version="1.2.3" if channel == "stable" else "",
@@ -470,7 +470,7 @@ class TestChannelEndpoint:
         shell-out, because a command-managed host owes the caller the same
         answer regardless of what the install tree happens to look like.
         """
-        from kiro_crew.platform.update_provider import CommandProvider
+        from aj_crew.platform.update_provider import CommandProvider
 
         provider = CommandProvider(check_command="check-cmd")
         with (
@@ -574,7 +574,7 @@ class TestUpdateRevalidate:
         """The CLI's owner-verified send prefers the owner-only AF_UNIX socket,
         where ``request.remote`` is empty; a same-user peer the kernel confirms
         (``check_peer_is_self`` MATCH) is admitted, the secret still required."""
-        from kiro_crew.mcp_gateway.socketsec import PeerCredResult
+        from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
         called: list[str] = []
 
@@ -582,9 +582,9 @@ class TestUpdateRevalidate:
             called.append("recheck")
 
         with (
-            patch("kiro_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True),
+            patch("aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True),
             patch(
-                "kiro_crew.dashboard.handlers.core.check_peer_is_self",
+                "aj_crew.dashboard.handlers.core.check_peer_is_self",
                 lambda _s: PeerCredResult.MATCH,
             ),
             patch.object(updates, "_invalidate_update_check", lambda ch: called.append("inv")),
@@ -597,13 +597,13 @@ class TestUpdateRevalidate:
         assert called == ["inv", "recheck"]
 
     def test_foreign_unix_peer_is_refused(self, _isolated_channel_home):
-        from kiro_crew.mcp_gateway.socketsec import PeerCredResult
+        from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
         called: list[str] = []
         with (
-            patch("kiro_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True),
+            patch("aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True),
             patch(
-                "kiro_crew.dashboard.handlers.core.check_peer_is_self",
+                "aj_crew.dashboard.handlers.core.check_peer_is_self",
                 lambda _s: PeerCredResult.MISMATCH,
             ),
             patch.object(updates, "_invalidate_update_check", lambda ch: called.append("inv")),
@@ -792,7 +792,7 @@ class TestRestartEndpoint:
         platform_compat = MagicMock()
         platform_compat.execv_target_available.return_value = False
         with (
-            patch("kiro_crew.platform.wheel_engine.respawn_executable", lambda: "/gone/python"),
+            patch("aj_crew.platform.wheel_engine.respawn_executable", lambda: "/gone/python"),
             patch.object(updates.update_ownership, "clear_restart_deferral") as cleared,
         ):
             resp, state = self._refused(

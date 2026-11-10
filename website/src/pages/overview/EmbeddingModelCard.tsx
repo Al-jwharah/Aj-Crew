@@ -355,7 +355,7 @@ export default function EmbeddingModelCard() {
           testId="embed-model-check-error"
           message={checked && !checking && !checked.ok ? checked.msg : null}
           footer={checked?.code === 'env_override_active'
-            ? <SettingRef kind="env" configKey="KIROCREW_EMBED_MODEL_PATH" valuePlaceholder="path" envIntent="unset" />
+            ? <SettingRef kind="env" configKey="AJCREW_EMBED_MODEL_PATH" valuePlaceholder="path" envIntent="unset" />
             : undefined}
           variant={checked?.code === 'env_override_active' ? 'block' : 'inline'}
           className="mt-1.5"

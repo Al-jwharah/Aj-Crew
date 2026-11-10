@@ -26,7 +26,7 @@ function visualCards() {
 describe('all session dashboards', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
-    vi.spyOn(api, 'kirocrewConfig').mockResolvedValue({ dashboard: { dynamic_dashboard_cards: false } })
+    vi.spyOn(api, 'ajcrewConfig').mockResolvedValue({ dashboard: { dynamic_dashboard_cards: false } })
     vi.spyOn(api, 'dashboardCard').mockResolvedValue({ card: null, status: 'waiting', published_at: null, content_event_at: null, stale: false })
     vi.spyOn(api, 'pendingQuestions').mockResolvedValue([{ slot: 'slot-1', ask_id: 'question-1', questions: [{ question: 'Which release?', options: [{ label: 'Stable' }] }] }])
     vi.spyOn(api, 'approvals').mockResolvedValue([{ id: 'approval-2', instance: 'inst-2', slot: 'slot-2', tool: 'shell', tool_input: 'git status' }])

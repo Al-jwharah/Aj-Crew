@@ -1,13 +1,13 @@
-"""The ``kirocrew-worker`` agent spec, and the conductor side of the same server.
+"""The ``ajcrew-worker`` agent spec, and the conductor side of the same server.
 
 Pins the Phase 2 exit criteria about specs: the worker spec is the default agent's
-SUPERSET plus ``@kirocrew-work``, and the conductor specs that mount the server
+SUPERSET plus ``@ajcrew-work``, and the conductor specs that mount the server
 auto-approve the two conductor tools while auto-approving neither worker tool.
 
-Which conductors those are is the other half. ``kirocrew-conductor`` mounts it —
-it IS the ledger conductor — and so does its deprecated ``kirocrew-ledger-conductor``
+Which conductors those are is the other half. ``ajcrew-conductor`` mounts it —
+it IS the ledger conductor — and so does its deprecated ``ajcrew-ledger-conductor``
 alias, which emits the same spec under the old name for one release.
-``kirocrew-pipeline-conductor`` does not: its children report through the
+``ajcrew-pipeline-conductor`` does not: its children report through the
 ``pipeline-conductor`` skill's own scripts, so the mount would grant a flow whose
 procedure it does not run.
 
@@ -30,8 +30,8 @@ from worker_agent_helpers import (
     _stale_worker_spec,
 )
 
-from kiro_crew import agent
-from kiro_crew.agent_files import (
+from aj_crew import agent
+from aj_crew.agent_files import (
     AGENT_FILENAME,
     CONDUCTOR_AGENT_FILENAME,
     LEDGER_CONDUCTOR_AGENT_FILENAME,
@@ -41,8 +41,8 @@ from kiro_crew.agent_files import (
     SECURITY_CONDUCTOR_AGENT_FILENAME,
     WORKER_AGENT_FILENAME,
 )
-from kiro_crew.agent_materialization.worker_agent import worker_prompt
-from kiro_crew.agent_sdk.drivers.acp import derived_agent_permissions
+from aj_crew.agent_materialization.worker_agent import worker_prompt
+from aj_crew.agent_sdk.drivers.acp import derived_agent_permissions
 
 _INHERITED_PERMISSIONS = {"rules": [{"capability": "web_fetch", "effect": "deny"}]}
 
@@ -81,7 +81,7 @@ def test_the_worker_spec_carries_every_default_tool(specs):
     """The whole of v2's reversal. A worker writes files, runs builds and drives
     git, so anything a NARROWED spec withheld would be something some work item
     needs — the same defect an omitted ``agent`` produces by handing the child
-    ``kirocrew-conductor``, which has no ``fs_write``."""
+    ``ajcrew-conductor``, which has no ``fs_write``."""
     worker = specs[WORKER_AGENT_FILENAME]
     default_tools = set(agent.build_agent_config().get("tools") or [])
     assert default_tools, "the default template resolved no tools at all"
@@ -93,8 +93,8 @@ def test_the_worker_spec_carries_every_default_tool(specs):
 
 def test_the_worker_spec_mounts_the_work_server(specs):
     worker = specs[WORKER_AGENT_FILENAME]
-    assert "@kirocrew-work" in worker["tools"]
-    entry = worker["mcpServers"]["kirocrew-work"]
+    assert "@ajcrew-work" in worker["tools"]
+    entry = worker["mcpServers"]["ajcrew-work"]
     assert entry["args"][-1] == "mcp-work"
     assert "autoApprove" not in entry
 
@@ -104,10 +104,10 @@ def test_the_worker_spec_auto_approves_both_worker_tools_and_neither_conductor_o
     worker holding a conductor grant would be auto-approving a tool whose only
     answer to it is a refusal."""
     allowed = specs[WORKER_AGENT_FILENAME]["allowedTools"]
-    assert "@kirocrew-work/work_brief" in allowed
-    assert "@kirocrew-work/work_report" in allowed
-    assert "@kirocrew-work/work_ledger_read" not in allowed
-    assert "@kirocrew-work/work_ledger_record" not in allowed
+    assert "@ajcrew-work/work_brief" in allowed
+    assert "@ajcrew-work/work_report" in allowed
+    assert "@ajcrew-work/work_ledger_read" not in allowed
+    assert "@ajcrew-work/work_ledger_record" not in allowed
 
 
 def test_the_worker_spec_keeps_the_default_grants_it_inherited(specs):
@@ -163,7 +163,7 @@ def test_the_worker_spec_derives_its_kas_permissions_from_the_filtered_grants(sp
     assert worker.get("permissions"), "no KAS policy derived"
     rendered = json.dumps(worker["permissions"])
     for ref in worker["allowedTools"]:
-        if ref.startswith("@kirocrew-work/"):
+        if ref.startswith("@ajcrew-work/"):
             assert ref.split("/", 1)[1] in rendered, ref
 
 
@@ -207,10 +207,10 @@ def test_the_worker_permissions_field_is_gated_on_the_installed_kiro_cli(tmp_pat
 
 
 def test_the_worker_filename_is_owned_and_wired(specs, tmp_path):
-    assert WORKER_AGENT_FILENAME == "kirocrew-worker.json"
+    assert WORKER_AGENT_FILENAME == "ajcrew-worker.json"
     assert WORKER_AGENT_FILENAME in OWNED_KIRO_AGENT_FILES
     assert (tmp_path / WORKER_AGENT_FILENAME).is_file()
-    assert specs[WORKER_AGENT_FILENAME]["name"] == "kirocrew-worker"
+    assert specs[WORKER_AGENT_FILENAME]["name"] == "ajcrew-worker"
 
 
 def test_the_worker_install_runs_on_the_rebuild_path():
@@ -225,7 +225,7 @@ def test_the_worker_install_runs_on_the_rebuild_path():
     """
     import inspect
 
-    from kiro_crew.agent_files import REQUIRED_KIRO_AGENT_FILES
+    from aj_crew.agent_files import REQUIRED_KIRO_AGENT_FILES
 
     src = inspect.getsource(agent.rebuild_agent_config)
     assert "_install_sibling_specs(refresh_forks, gated_off, clean=clean)" in src
@@ -244,24 +244,24 @@ def test_a_lazily_written_spec_would_not_resolve_for_session_create(tmp_path, mo
     lazily leaves the feature unusable on a clean install: the conductor's very first
     dispatch is refused.
     """
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     agents = tmp_path / "agents"
     agents.mkdir()
-    (agents / "kirocrew.json").write_text('{"name": "kirocrew"}', encoding="utf-8")
+    (agents / "ajcrew.json").write_text('{"name": "ajcrew"}', encoding="utf-8")
     monkeypatch.setattr(loader, "kiro_agents_dir", lambda: agents)
     loader.refresh_materialized_agents()
 
     # The default is in the boot snapshot; a not-yet-written worker spec is not.
-    assert bool(loader._materialized_kiro_agent("kirocrew", None)) is True
-    assert bool(loader._materialized_kiro_agent("kirocrew-worker", None)) is False
+    assert bool(loader._materialized_kiro_agent("ajcrew", None)) is True
+    assert bool(loader._materialized_kiro_agent("ajcrew-worker", None)) is False
 
     # Writing it later does not publish it either — the snapshot is not refreshed by
     # a write, which is why the boot install is the only moment that works.
-    (agents / WORKER_AGENT_FILENAME).write_text('{"name": "kirocrew-worker"}', encoding="utf-8")
-    assert bool(loader._materialized_kiro_agent("kirocrew-worker", None)) is False
+    (agents / WORKER_AGENT_FILENAME).write_text('{"name": "ajcrew-worker"}', encoding="utf-8")
+    assert bool(loader._materialized_kiro_agent("ajcrew-worker", None)) is False
     loader.refresh_materialized_agents()
-    assert bool(loader._materialized_kiro_agent("kirocrew-worker", None)) is True
+    assert bool(loader._materialized_kiro_agent("ajcrew-worker", None)) is True
 
 
 def test_every_boot_re_filters_the_worker_grants_through_the_ceiling(tmp_path, monkeypatch):
@@ -271,7 +271,7 @@ def test_every_boot_re_filters_the_worker_grants_through_the_ceiling(tmp_path, m
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     agent._install_worker_agent()
     granted = json.loads((tmp_path / WORKER_AGENT_FILENAME).read_text(encoding="utf-8"))
-    assert "@kirocrew-work/work_report" in granted["allowedTools"]
+    assert "@ajcrew-work/work_report" in granted["allowedTools"]
 
     monkeypatch.setattr(agent, "_may_auto_approve", lambda ref: False)
     agent._install_worker_agent()
@@ -279,7 +279,7 @@ def test_every_boot_re_filters_the_worker_grants_through_the_ceiling(tmp_path, m
     assert regranted["allowedTools"] == []
     assert regranted["permissions"] == {"rules": []}
     # Still MOUNTED — the ceiling removes auto-approve, not the tool.
-    assert "@kirocrew-work" in regranted["tools"]
+    assert "@ajcrew-work" in regranted["tools"]
 
 
 # ── exactly ONE conductor mounts it, per tool ─────────────────────────────
@@ -295,19 +295,19 @@ def test_a_ledger_conductor_mounts_the_server_and_grants_only_its_own_half(specs
     running under the old name pays the same approval costs, so the alias losing a
     grant would strand it on a prompt nobody is there to answer."""
     spec = specs[filename]
-    assert "@kirocrew-work" in spec["tools"]
-    entry = spec["mcpServers"]["kirocrew-work"]
+    assert "@ajcrew-work" in spec["tools"]
+    entry = spec["mcpServers"]["ajcrew-work"]
     assert entry["args"][-1] == "mcp-work"
     assert "autoApprove" not in entry
     allowed = spec["allowedTools"]
-    assert "@kirocrew-work/work_ledger_read" in allowed
-    assert "@kirocrew-work/work_ledger_record" in allowed
+    assert "@ajcrew-work/work_ledger_read" in allowed
+    assert "@ajcrew-work/work_ledger_record" in allowed
     # The worker pair a nested conductor needs, both scoped to its OWN bound item:
     # the brief is its mandated first call, the report wakes its parent.
-    assert "@kirocrew-work/work_brief" in allowed
-    assert "@kirocrew-work/work_report" in allowed
+    assert "@ajcrew-work/work_brief" in allowed
+    assert "@ajcrew-work/work_report" in allowed
     # Whole-server auto-approve would grant more than the named verbs.
-    assert "@kirocrew-work" not in allowed
+    assert "@ajcrew-work" not in allowed
 
 
 @pytest.mark.parametrize(
@@ -319,13 +319,13 @@ def test_a_conductor_with_its_own_store_mounts_the_base_half(specs, filename):
     the KAS rule, and the worker half left gated. ``work_brief`` is not theirs:
     neither procedure is dispatched as a ledger item's worker."""
     spec = specs[filename]
-    assert "@kirocrew-work" in spec["tools"]
-    assert spec["mcpServers"]["kirocrew-work"]["args"][-1] == "mcp-work"
-    work = [ref for ref in spec["allowedTools"] if "kirocrew-work" in ref]
-    assert work == ["@kirocrew-work/work_ledger_read", "@kirocrew-work/work_ledger_record"]
+    assert "@ajcrew-work" in spec["tools"]
+    assert spec["mcpServers"]["ajcrew-work"]["args"][-1] == "mcp-work"
+    work = [ref for ref in spec["allowedTools"] if "ajcrew-work" in ref]
+    assert work == ["@ajcrew-work/work_ledger_read", "@ajcrew-work/work_ledger_record"]
     match = spec["permissions"]["rules"][0]["match"]
-    assert "kirocrew-work/work_ledger_record" in match
-    assert "kirocrew-work/work_report" not in match
+    assert "ajcrew-work/work_ledger_record" in match
+    assert "ajcrew-work/work_report" not in match
 
 
 @pytest.mark.parametrize(
@@ -343,22 +343,22 @@ def test_a_conductor_still_has_no_file_writing_tool(specs, filename):
 
 def test_the_grant_tuples_cover_the_server_and_share_the_worker_pair():
     assert agent._LEDGER_CONDUCTOR_WORK_GRANTS == (
-        "@kirocrew-work/work_ledger_read",
-        "@kirocrew-work/work_ledger_record",
-        "@kirocrew-work/work_ledger_rebuild",
-        "@kirocrew-work/work_brief",
-        "@kirocrew-work/work_report",
-        "@kirocrew-work/accept_eval",
+        "@ajcrew-work/work_ledger_read",
+        "@ajcrew-work/work_ledger_record",
+        "@ajcrew-work/work_ledger_rebuild",
+        "@ajcrew-work/work_brief",
+        "@ajcrew-work/work_report",
+        "@ajcrew-work/accept_eval",
     )
     assert agent._WORKER_WORK_GRANTS == (
-        "@kirocrew-work/work_brief",
-        "@kirocrew-work/work_report",
+        "@ajcrew-work/work_brief",
+        "@ajcrew-work/work_report",
     )
     # Together they cover the server's whole surface. The overlap is the whole
     # worker pair: a nested conductor is also a worker, so its first call and its
     # round-boundary reports must not be approval stalls.
     assert set(agent._WORKER_WORK_GRANTS) <= set(agent._LEDGER_CONDUCTOR_WORK_GRANTS)
-    from kiro_crew import mcp_work
+    from aj_crew import mcp_work
 
     granted = {
         ref.split("/", 1)[1]
@@ -371,10 +371,10 @@ def test_the_hand_built_entry_carries_the_registry_and_home_pins(monkeypatch):
     """Without ``type: registry`` a registry-mode client silently DROPS the entry, so
     the granted tools never launch and the grant is dead with no local error."""
     monkeypatch.setattr(agent, "_mcp_registry_mode", lambda: True)
-    monkeypatch.setattr(agent, "_managed_mcp_env", lambda: {"KIROCREW_HOME": "/tmp/home"})
+    monkeypatch.setattr(agent, "_managed_mcp_env", lambda: {"AJCREW_HOME": "/tmp/home"})
     entry = agent._managed_opt_in_entry("mcp-work")
     assert entry["type"] == agent._MCP_REGISTRY_TYPE
-    assert entry["env"] == {"KIROCREW_HOME": "/tmp/home"}
+    assert entry["env"] == {"AJCREW_HOME": "/tmp/home"}
     assert entry["args"][-1] == "mcp-work"
 
 
@@ -404,7 +404,7 @@ def worker_from_installed_default(tmp_path, monkeypatch):
 def test_the_worker_mirrors_the_servers_the_user_mounted_on_the_default(
     worker_from_installed_default,
 ):
-    """The gap this closes. A user's servers live in ``kirocrew.json``, not in the
+    """The gap this closes. A user's servers live in ``ajcrew.json``, not in the
     template, so a worker built from the template alone is dispatched without the
     tools its dispatcher holds — and a work item that needs one has no way to ask."""
     worker = worker_from_installed_default()
@@ -436,7 +436,7 @@ def test_the_worker_keeps_a_model_the_user_pinned_on_the_worker_itself(
     monkeypatch.setattr(
         agent.agent_state,
         "get_model_managed",
-        lambda name, strict=False: False if name == "kirocrew-worker" else None,
+        lambda name, strict=False: False if name == "ajcrew-worker" else None,
     )
     assert worker_from_installed_default()["model"] == "claude-haiku-4.5"
 
@@ -457,7 +457,7 @@ def test_a_model_pin_that_is_not_a_string_loses_to_the_mirrored_default(
     monkeypatch.setattr(
         agent.agent_state,
         "get_model_managed",
-        lambda name, strict=False: False if name == "kirocrew-worker" else None,
+        lambda name, strict=False: False if name == "ajcrew-worker" else None,
     )
 
     with caplog.at_level(logging.WARNING, logger=agent.logger.name):
@@ -489,7 +489,7 @@ def test_a_string_model_pin_is_still_preserved_verbatim(
     monkeypatch.setattr(
         agent.agent_state,
         "get_model_managed",
-        lambda name, strict=False: False if name == "kirocrew-worker" else None,
+        lambda name, strict=False: False if name == "ajcrew-worker" else None,
     )
 
     with caplog.at_level(logging.WARNING, logger=agent.logger.name):
@@ -501,23 +501,23 @@ def test_a_string_model_pin_is_still_preserved_verbatim(
 
 def test_the_worker_kas_policy_covers_the_mirrored_servers(worker_from_installed_default):
     """``allowedTools`` is not read on the KAS backend, so a mirrored grant with no
-    rule beside it is a grant that does nothing there. ``kirocrew-cron`` is asserted
+    rule beside it is a grant that does nothing there. ``ajcrew-cron`` is asserted
     per verb rather than whole because scheduling is subtracted from it — see
     ``test_the_kas_policy_carries_no_scheduling_match``."""
     rendered = json.dumps(worker_from_installed_default()["permissions"])
     for server in ("builder-mcp", "pdf"):
         assert f"{server}/*" in rendered, server
-    assert "kirocrew-cron/cron_list" in rendered
+    assert "ajcrew-cron/cron_list" in rendered
 
 
 def test_the_work_server_survives_the_mirror(worker_from_installed_default):
     """The mirror replaces ``mcpServers`` wholesale, and the default never carries
     this server — an opt-in set belongs to the agents whose spec names it."""
     worker = worker_from_installed_default()
-    assert worker["mcpServers"]["kirocrew-work"]["args"][-1] == "mcp-work"
-    assert "@kirocrew-work" in worker["tools"]
-    assert "@kirocrew-work/work_brief" in worker["allowedTools"]
-    assert "@kirocrew-work/work_report" in worker["allowedTools"]
+    assert worker["mcpServers"]["ajcrew-work"]["args"][-1] == "mcp-work"
+    assert "@ajcrew-work" in worker["tools"]
+    assert "@ajcrew-work/work_brief" in worker["allowedTools"]
+    assert "@ajcrew-work/work_report" in worker["allowedTools"]
 
 
 # ── the worker inherits the default's skill:// mappings ────────────────────
@@ -658,28 +658,28 @@ def test_a_worker_with_no_skill_mapping_keeps_only_the_shipped_steering_glob(
 def test_a_skill_mapped_on_the_default_re_derives_the_worker_at_spawn(tmp_path, monkeypatch):
     """A ``skill://`` mapped on the default while the gateway runs reaches the worker at
     its NEXT spawn, not only after a restart. ``apply_skill_mapping`` rewrites
-    ``kirocrew.json`` without re-deriving the worker, so the worker file is left stale;
+    ``ajcrew.json`` without re-deriving the worker, so the worker file is left stale;
     the spawn gate (`_require_fresh_worker_spec`) must notice and re-derive it. That
     only works if the freshness surface includes the default's ``skill://`` resources,
     so this drives the real gate rather than the fingerprint alone."""
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(_DEFAULT_SPEC_ON_DISK), encoding="utf-8")
     agent._install_worker_agent()
-    assert agent._derived_spec_matches_default("kirocrew-worker") is True
+    assert agent._derived_spec_matches_default("ajcrew-worker") is True
 
     # Operator maps a skill on the default (as apply_skill_mapping would) -- no installer
     # re-derives the worker, so its file is now stale.
     mapped = _default_with_resources(["skill://~/.kiro/crew/skills/newly-mapped/SKILL.md"])
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(mapped), encoding="utf-8")
     assert (
-        agent._derived_spec_matches_default("kirocrew-worker") is False
+        agent._derived_spec_matches_default("ajcrew-worker") is False
     ), "a skill mapped on the default did not move the worker's freshness fingerprint"
 
     # The spawn gate re-derives the stale mirror in place; the worker now has the skill.
     agent._require_fresh_worker_spec(None)
     worker = json.loads((tmp_path / WORKER_AGENT_FILENAME).read_text(encoding="utf-8"))
     assert "skill://~/.kiro/crew/skills/newly-mapped/SKILL.md" in worker["resources"]
-    assert agent._derived_spec_matches_default("kirocrew-worker") is True
+    assert agent._derived_spec_matches_default("ajcrew-worker") is True
 
 
 def test_a_skill_unmapped_on_the_default_re_derives_the_worker_at_spawn(tmp_path, monkeypatch):
@@ -692,19 +692,19 @@ def test_a_skill_unmapped_on_the_default_re_derives_the_worker_at_spawn(tmp_path
     agent._install_worker_agent()
     worker = json.loads((tmp_path / WORKER_AGENT_FILENAME).read_text(encoding="utf-8"))
     assert "skill://~/.kiro/crew/skills/to-remove/SKILL.md" in worker["resources"]
-    assert agent._derived_spec_matches_default("kirocrew-worker") is True
+    assert agent._derived_spec_matches_default("ajcrew-worker") is True
 
     # Operator unmaps the skill on the default; the worker file is left stale with it.
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(_DEFAULT_SPEC_ON_DISK), encoding="utf-8")
     assert (
-        agent._derived_spec_matches_default("kirocrew-worker") is False
+        agent._derived_spec_matches_default("ajcrew-worker") is False
     ), "unmapping a skill on the default did not move the worker's freshness fingerprint"
 
     # The spawn gate re-derives; the worker drops the removed skill.
     agent._require_fresh_worker_spec(None)
     worker = json.loads((tmp_path / WORKER_AGENT_FILENAME).read_text(encoding="utf-8"))
     assert "skill://~/.kiro/crew/skills/to-remove/SKILL.md" not in worker.get("resources", [])
-    assert agent._derived_spec_matches_default("kirocrew-worker") is True
+    assert agent._derived_spec_matches_default("ajcrew-worker") is True
 
 
 def test_a_default_file_glob_change_does_not_force_a_worker_rederive(tmp_path, monkeypatch):
@@ -714,11 +714,11 @@ def test_a_default_file_glob_change_does_not_force_a_worker_rederive(tmp_path, m
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(_DEFAULT_SPEC_ON_DISK), encoding="utf-8")
     agent._install_worker_agent()
-    assert agent._derived_spec_matches_default("kirocrew-worker") is True
+    assert agent._derived_spec_matches_default("ajcrew-worker") is True
 
     changed = _default_with_resources(["file://.kiro/project-steering/**/*.md"])
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(changed), encoding="utf-8")
-    assert agent._derived_spec_matches_default("kirocrew-worker") is True
+    assert agent._derived_spec_matches_default("ajcrew-worker") is True
 
 
 # ── the refresh heals a spec an older build wrote ──────────────────────────
@@ -749,7 +749,7 @@ def test_a_refresh_restores_the_worker_prompt_and_description(
     healed = worker_from_installed_default()
     assert healed["prompt"] == worker_prompt()
     assert "reports status against that item" in healed["description"]
-    assert healed["name"] == "kirocrew-worker"
+    assert healed["name"] == "ajcrew-worker"
 
 
 def test_a_refresh_carries_nothing_but_a_frozen_model_off_the_previous_file(
@@ -788,7 +788,7 @@ def test_a_mirrored_grant_still_faces_the_ceiling(
     assert healed["allowedTools"] == []
     assert healed["permissions"] == {"rules": []}
     # Still MOUNTED — the ceiling removes auto-approve, not the tool.
-    assert "@kirocrew-work" in healed["tools"]
+    assert "@ajcrew-work" in healed["tools"]
 
 
 def test_the_mirror_is_authoritative_over_a_stale_same_named_entry(
@@ -830,13 +830,13 @@ def test_the_worker_falls_back_to_the_template_with_no_default_spec_on_disk(tmp_
     worker = json.loads((tmp_path / WORKER_AGENT_FILENAME).read_text(encoding="utf-8"))
     template = agent.build_agent_config()
     assert set(template["tools"]) <= set(worker["tools"])
-    assert "@kirocrew-work" in worker["tools"]
+    assert "@ajcrew-work" in worker["tools"]
 
 
 def test_the_research_agent_does_not_mirror_the_default_spec_on_disk(tmp_path, monkeypatch):
-    """The worker mirror above is the worker's alone. ``kirocrew-research``
+    """The worker mirror above is the worker's alone. ``ajcrew-research``
     runs an unattended, auto-approved loop, so a server or model the user added to
-    ``kirocrew.json`` stays off it; widening that is a governance call, not drift."""
+    ``ajcrew.json`` stays off it; widening that is a governance call, not drift."""
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(_DEFAULT_SPEC_ON_DISK), encoding="utf-8")
     agent._install_research_agent()
@@ -855,12 +855,12 @@ def test_the_research_agent_does_not_mirror_the_default_spec_on_disk(tmp_path, m
 def test_the_worker_never_gains_cron_add_from_a_whole_server_grant(
     worker_from_installed_default,
 ):
-    """The default carries ``@kirocrew-cron`` whole once a rebuild has widened it, and
+    """The default carries ``@ajcrew-cron`` whole once a rebuild has widened it, and
     a whole-server grant covers ``cron_add`` too. Mirroring it verbatim would grant
     scheduling by the back door while the exclusion list read as honoured."""
     worker = worker_from_installed_default()
-    assert "@kirocrew-cron" in _DEFAULT_SPEC_ON_DISK["allowedTools"]  # noqa: E501 - fixture pin
-    assert "@kirocrew-cron" not in worker["allowedTools"]
+    assert "@ajcrew-cron" in _DEFAULT_SPEC_ON_DISK["allowedTools"]  # noqa: E501 - fixture pin
+    assert "@ajcrew-cron" not in worker["allowedTools"]
     for ref in agent._WORKER_EXCLUDED_GRANTS:
         assert ref not in worker["allowedTools"], ref
 
@@ -877,19 +877,19 @@ def test_the_narrowed_cron_surface_survives_the_substitution(worker_from_install
         "cron_remove",
         "cron_remove_all",
     ):
-        assert f"@kirocrew-cron/{verb}" in allowed, verb
+        assert f"@ajcrew-cron/{verb}" in allowed, verb
 
 
 def test_an_explicit_cron_add_grant_on_the_default_is_dropped(tmp_path, monkeypatch):
     """The other shape the exclusion meets — an exact ref rather than a whole server."""
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     spec = dict(_DEFAULT_SPEC_ON_DISK)
-    spec["allowedTools"] = ["fs_read", "@kirocrew-cron/cron_list", "@kirocrew-cron/cron_add"]
+    spec["allowedTools"] = ["fs_read", "@ajcrew-cron/cron_list", "@ajcrew-cron/cron_add"]
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(spec), encoding="utf-8")
     agent._install_worker_agent()
     worker = json.loads((tmp_path / WORKER_AGENT_FILENAME).read_text(encoding="utf-8"))
-    assert "@kirocrew-cron/cron_list" in worker["allowedTools"]
-    assert "@kirocrew-cron/cron_add" not in worker["allowedTools"]
+    assert "@ajcrew-cron/cron_list" in worker["allowedTools"]
+    assert "@ajcrew-cron/cron_add" not in worker["allowedTools"]
 
 
 def test_a_cron_add_grant_in_the_previous_worker_file_does_not_survive(
@@ -899,24 +899,24 @@ def test_a_cron_add_grant_in_the_previous_worker_file_does_not_survive(
     one fires: the file contributes no grants at all, and the exclusion would drop it
     anyway."""
     stale = _stale_worker_spec()
-    stale["allowedTools"].append("@kirocrew-cron/cron_add")
+    stale["allowedTools"].append("@ajcrew-cron/cron_add")
     (tmp_path / WORKER_AGENT_FILENAME).write_text(json.dumps(stale), encoding="utf-8")
-    assert "@kirocrew-cron/cron_add" not in worker_from_installed_default()["allowedTools"]
+    assert "@ajcrew-cron/cron_add" not in worker_from_installed_default()["allowedTools"]
 
 
 def test_the_excluded_cron_verbs_stay_mounted(worker_from_installed_default):
     """AUTO-APPROVE is withheld, not the tool. An item that genuinely needs a schedule
     can still ask a human through the approval gate rather than failing silently."""
     worker = worker_from_installed_default()
-    assert "@kirocrew-cron" in worker["tools"]
-    assert "kirocrew-cron" in worker["mcpServers"]
+    assert "@ajcrew-cron" in worker["tools"]
+    assert "ajcrew-cron" in worker["mcpServers"]
 
 
 def test_the_kas_policy_carries_no_scheduling_match(worker_from_installed_default):
     """``allowedTools`` is not read on the KAS backend, so a subtraction that stopped
     at the grant list would leave scheduling auto-approved there."""
     rules = json.dumps(worker_from_installed_default()["permissions"])
-    assert "kirocrew-cron/*" not in rules
+    assert "ajcrew-cron/*" not in rules
     assert "cron_add" not in rules
     assert "cron_list" in rules
 
@@ -927,9 +927,9 @@ def test_the_exclusion_set_is_pinned_and_disjoint_from_the_template_grants():
     substitution above draws the worker's cron surface FROM those template grants."""
     assert agent._WORKER_EXCLUDED_GRANTS == frozenset(
         {
-            "@kirocrew-cron/cron_add",
-            "@kirocrew-cron/cron_update",
-            "@kirocrew-cron/cron_secret_request",
+            "@ajcrew-cron/cron_add",
+            "@ajcrew-cron/cron_update",
+            "@ajcrew-cron/cron_secret_request",
         }
     )
     template = set(agent.build_agent_config().get("allowedTools") or [])
@@ -941,10 +941,10 @@ def test_a_whole_server_grant_with_no_template_grants_fails_closed(tmp_path, mon
     prompts for cron rather than inheriting the whole-server grant."""
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     (tmp_path / AGENT_FILENAME).write_text(
-        json.dumps({"name": "kirocrew", "allowedTools": ["@kirocrew-cron", "fs_read"]}),
+        json.dumps({"name": "ajcrew", "allowedTools": ["@ajcrew-cron", "fs_read"]}),
         encoding="utf-8",
     )
-    kept = agent._apply_worker_exclusions(["@kirocrew-cron", "fs_read"], template_grants=[])
+    kept = agent._apply_worker_exclusions(["@ajcrew-cron", "fs_read"], template_grants=[])
     assert kept == ["fs_read"]
 
 
@@ -1071,7 +1071,7 @@ def test_the_withheld_cron_grants_are_sel_audited(tmp_path, monkeypatch):
         r
         for r in records
         if r.get("operation") == "mcp_auto_approve_withheld"
-        and "kirocrew-cron" in str(r.get("resources"))
+        and "ajcrew-cron" in str(r.get("resources"))
     ]
     assert withheld, f"no withhold event names the cron narrowing: {records}"
     assert "narrowed to" in str(withheld[0]["resources"])
@@ -1098,67 +1098,67 @@ def test_an_audit_failure_never_breaks_the_install(tmp_path, monkeypatch):
 def test_an_opt_in_set_mounted_on_the_default_does_not_reach_the_worker(
     worker_from_installed_default,
 ):
-    """``kirocrew-dashboard`` carries ``session_send``, and a worker's inability to
+    """``ajcrew-dashboard`` carries ``session_send``, and a worker's inability to
     reach it is STRUCTURAL rather than withheld: the ledger is a worker's only channel
     to its conductor. Mirroring the server would make that guarantee conditional on
     what the operator happens to have mounted on their own agent."""
     worker = worker_from_installed_default()
-    assert "kirocrew-dashboard" in _DEFAULT_SPEC_ON_DISK["mcpServers"]
-    assert "kirocrew-dashboard" not in worker["mcpServers"]
-    assert "@kirocrew-dashboard" not in worker["tools"]
-    assert not [ref for ref in worker["allowedTools"] if "kirocrew-dashboard" in ref]
-    assert "kirocrew-dashboard" not in json.dumps(worker["permissions"])
+    assert "ajcrew-dashboard" in _DEFAULT_SPEC_ON_DISK["mcpServers"]
+    assert "ajcrew-dashboard" not in worker["mcpServers"]
+    assert "@ajcrew-dashboard" not in worker["tools"]
+    assert not [ref for ref in worker["allowedTools"] if "ajcrew-dashboard" in ref]
+    assert "ajcrew-dashboard" not in json.dumps(worker["permissions"])
 
 
 def test_the_work_server_is_exempt_from_that_exclusion(worker_from_installed_default):
-    """``kirocrew-work`` is opt-in too, and this installer ASSIGNS it — which is the
+    """``ajcrew-work`` is opt-in too, and this installer ASSIGNS it — which is the
     one way an opt-in set is meant to arrive. An exclusion that ate it would leave the
     worker unable to report at all."""
     worker = worker_from_installed_default()
-    assert "kirocrew-work" not in agent._worker_unassignable_servers()
-    assert worker["mcpServers"]["kirocrew-work"]["args"][-1] == "mcp-work"
-    assert "@kirocrew-work" in worker["tools"]
+    assert "ajcrew-work" not in agent._worker_unassignable_servers()
+    assert worker["mcpServers"]["ajcrew-work"]["args"][-1] == "mcp-work"
+    assert "@ajcrew-work" in worker["tools"]
 
 
 def test_the_unassignable_set_is_derived_from_the_registry(monkeypatch):
     """Derived rather than listed, so an opt-in server added tomorrow is withheld by
     default instead of reaching the worker until somebody notices.
 
-    ``kirocrew-crew-log`` is the case that exercised it: a read-only opt-in server
+    ``ajcrew-crew-log`` is the case that exercised it: a read-only opt-in server
     added later, withheld from the mirror with no edit here beyond widening this
     assertion. A worker has no use for another session's crew log -- its own channel
     to its conductor is the work ledger.
 
-    ``kirocrew-debug`` is withheld on the same derivation. Its host-wide views are
+    ``ajcrew-debug`` is withheld on the same derivation. Its host-wide views are
     gated in the route to the owner's own dashboard tab, so a worker would reach
     only refusals; granting it would spend the worker's context on tools that
     cannot answer it.
 
-    ``kirocrew-secrets`` is withheld on the same derivation. Its one tool sends a
+    ``ajcrew-secrets`` is withheld on the same derivation. Its one tool sends a
     request carrying an owner's stored credential and runs only from a member
     conversation the owner approves it in, so a worker has no call it could make."""
     assert agent._worker_unassignable_servers() == frozenset(
         {
-            "kirocrew-dashboard",
-            "kirocrew-crew-log",
-            "kirocrew-debug",
-            "kirocrew-panel",
-            "kirocrew-secrets",
+            "ajcrew-dashboard",
+            "ajcrew-crew-log",
+            "ajcrew-debug",
+            "ajcrew-panel",
+            "ajcrew-secrets",
         }
     )
     monkeypatch.setitem(
         agent._MANAGED_MCP_SERVERS,
-        "kirocrew-hypothetical",
-        {"invocation_fn": lambda: ("kirocrew", ["mcp-hypothetical"]), "opt_in": True},
+        "ajcrew-hypothetical",
+        {"invocation_fn": lambda: ("ajcrew", ["mcp-hypothetical"]), "opt_in": True},
     )
-    assert "kirocrew-hypothetical" in agent._worker_unassignable_servers()
+    assert "ajcrew-hypothetical" in agent._worker_unassignable_servers()
 
 
 def test_dropping_a_server_leaves_the_always_on_ones_alone(worker_from_installed_default):
     """The subtraction is opt-in sets and nothing else: an always-on managed server and
     a user's own server are inherited exactly as the default has them."""
     worker = worker_from_installed_default()
-    assert "kirocrew-core" in worker["mcpServers"]
+    assert "ajcrew-core" in worker["mcpServers"]
     assert "builder-mcp" in worker["mcpServers"]
     assert "@builder-mcp" in worker["allowedTools"]
 
@@ -1179,7 +1179,7 @@ def test_the_unmirrored_set_is_sel_audited(tmp_path, monkeypatch):
 
     unmirrored = [r for r in records if "not mirrored onto the worker" in str(r.get("resources"))]
     assert unmirrored, f"no record names the unmirrored set: {records}"
-    assert "kirocrew-dashboard" in str(unmirrored[0]["resources"])
+    assert "ajcrew-dashboard" in str(unmirrored[0]["resources"])
 
 
 # ── an unreadable sidecar must not clobber a pin ───────────────────────────
@@ -1222,27 +1222,27 @@ def test_the_strict_read_reaches_the_sidecar_module(tmp_path, monkeypatch):
     """Pinned against the real getter rather than a stub, because the fix is the
     ``strict`` keyword existing there at all: ``agent_state._read`` already states this
     rule for its mutators, and this caller's answer feeds a write."""
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
     monkeypatch.setattr(agent_state, "config_dir", lambda: tmp_path)
     (tmp_path / agent_state._STATE_FILENAME).write_text("{not json", encoding="utf-8")
-    assert agent_state.get_model_managed("kirocrew-worker") is None
+    assert agent_state.get_model_managed("ajcrew-worker") is None
     with pytest.raises(ValueError):
-        agent_state.get_model_managed("kirocrew-worker", strict=True)
+        agent_state.get_model_managed("ajcrew-worker", strict=True)
 
 
 # ── the default spec's own writer lock, and the second gate-skip channel ───
 
 
 def test_the_default_specs_own_writer_lock_is_held_too(tmp_path, monkeypatch):
-    """``kirocrew.json`` has two independent-locked writers, and the app MCP
+    """``ajcrew.json`` has two independent-locked writers, and the app MCP
     registration path takes ``bridges._mcp_lock`` for its read-modify-write of that
     file rather than ``agents_spec_lock``. So holding only the agents lock leaves the
     mirror racing a deregistration: a server removed from the default after the
     snapshot keeps its auto-approved grant on the worker."""
     import contextlib
 
-    from kiro_crew.apps import bridges
+    from aj_crew.apps import bridges
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(_DEFAULT_SPEC_ON_DISK), encoding="utf-8")
@@ -1287,7 +1287,7 @@ def test_a_mirrored_auto_approve_cannot_carry_an_excluded_cron_verb(tmp_path, mo
     _pin_honour_auto_approve(monkeypatch, True)
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     spec = json.loads(json.dumps(_DEFAULT_SPEC_ON_DISK))
-    spec["mcpServers"]["kirocrew-cron"]["autoApprove"] = [
+    spec["mcpServers"]["ajcrew-cron"]["autoApprove"] = [
         "cron_list",
         "cron_add",
         "cron_update",
@@ -1299,7 +1299,7 @@ def test_a_mirrored_auto_approve_cannot_carry_an_excluded_cron_verb(tmp_path, mo
 
     # Per VERB, not per key: the reading verb the default auto-approves survives, which
     # is the same line the grant exclusion draws.
-    assert worker["mcpServers"]["kirocrew-cron"]["autoApprove"] == ["cron_list"]
+    assert worker["mcpServers"]["ajcrew-cron"]["autoApprove"] == ["cron_list"]
 
 
 def test_an_auto_approve_of_nothing_but_excluded_verbs_loses_the_key(tmp_path, monkeypatch):
@@ -1307,11 +1307,11 @@ def test_an_auto_approve_of_nothing_but_excluded_verbs_loses_the_key(tmp_path, m
     honest one."""
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     spec = json.loads(json.dumps(_DEFAULT_SPEC_ON_DISK))
-    spec["mcpServers"]["kirocrew-cron"]["autoApprove"] = ["cron_add"]
+    spec["mcpServers"]["ajcrew-cron"]["autoApprove"] = ["cron_add"]
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(spec), encoding="utf-8")
     agent._install_worker_agent()
     worker = json.loads((tmp_path / WORKER_AGENT_FILENAME).read_text(encoding="utf-8"))
-    assert "autoApprove" not in worker["mcpServers"]["kirocrew-cron"]
+    assert "autoApprove" not in worker["mcpServers"]["ajcrew-cron"]
 
 
 def test_an_unrelated_servers_auto_approve_is_left_alone(tmp_path, monkeypatch):
@@ -1341,13 +1341,13 @@ def test_the_withheld_auto_approve_verbs_are_sel_audited(tmp_path, monkeypatch):
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(agent, "sel", lambda: _Recorder())
     spec = json.loads(json.dumps(_DEFAULT_SPEC_ON_DISK))
-    spec["mcpServers"]["kirocrew-cron"]["autoApprove"] = ["cron_add"]
+    spec["mcpServers"]["ajcrew-cron"]["autoApprove"] = ["cron_add"]
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(spec), encoding="utf-8")
     agent._install_worker_agent()
 
     hits = [r for r in records if "mirrored autoApprove" in str(r.get("resources"))]
     assert hits, f"no record names the withheld autoApprove: {records}"
-    assert "kirocrew-cron/cron_add" in str(hits[0]["resources"])
+    assert "ajcrew-cron/cron_add" in str(hits[0]["resources"])
 
 
 # ── the mirror validates shape and mirrors restrictions, not just grants ───
@@ -1368,29 +1368,29 @@ def test_a_restriction_on_the_default_is_mirrored_with_the_grants(tmp_path, monk
 
 
 def test_a_wildcard_cron_grant_is_narrowed_like_a_whole_server_one(tmp_path, monkeypatch):
-    """``@kirocrew-cron/*`` and ``@kirocrew-cron`` grant the same thing, and only one of
+    """``@ajcrew-cron/*`` and ``@ajcrew-cron`` grant the same thing, and only one of
     them looks like it. A subtraction matching one spelling leaves the other as a back
     door to everything it withheld."""
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     spec = json.loads(json.dumps(_DEFAULT_SPEC_ON_DISK))
-    spec["allowedTools"] = ["fs_read", "@kirocrew-cron/*"]
+    spec["allowedTools"] = ["fs_read", "@ajcrew-cron/*"]
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(spec), encoding="utf-8")
     agent._install_worker_agent()
     allowed = json.loads((tmp_path / WORKER_AGENT_FILENAME).read_text(encoding="utf-8"))[
         "allowedTools"
     ]
-    assert "@kirocrew-cron/*" not in allowed
-    assert "@kirocrew-cron" not in allowed
-    assert "@kirocrew-cron/cron_list" in allowed
+    assert "@ajcrew-cron/*" not in allowed
+    assert "@ajcrew-cron" not in allowed
+    assert "@ajcrew-cron/cron_list" in allowed
     assert not [ref for ref in allowed if ref.endswith("/cron_add")]
 
 
 def test_the_whole_server_notion_covers_every_spelling_and_nothing_else():
     """Three spellings mean the whole server, and it stays a named notion because a
     whole-server grant is the one case the subtraction can NARROW rather than drop."""
-    for ref in ("@kirocrew-cron", "@kirocrew-cron/", "@kirocrew-cron/*"):
-        assert agent._whole_server_ref(ref) == "kirocrew-cron", ref
-    for ref in ("@kirocrew-cron/cron_list", "@kirocrew-cron/cron_*", "fs_read", "@", "@/cron_add"):
+    for ref in ("@ajcrew-cron", "@ajcrew-cron/", "@ajcrew-cron/*"):
+        assert agent._whole_server_ref(ref) == "ajcrew-cron", ref
+    for ref in ("@ajcrew-cron/cron_list", "@ajcrew-cron/cron_*", "fs_read", "@", "@/cron_add"):
         assert agent._whole_server_ref(ref) is None, ref
 
 
@@ -1401,11 +1401,11 @@ def test_a_wildcard_auto_approve_on_an_excluded_server_loses_the_key(tmp_path, m
     substitute: the tools stay mounted and reach the approval gate."""
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     spec = json.loads(json.dumps(_DEFAULT_SPEC_ON_DISK))
-    spec["mcpServers"]["kirocrew-cron"]["autoApprove"] = ["*"]
+    spec["mcpServers"]["ajcrew-cron"]["autoApprove"] = ["*"]
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(spec), encoding="utf-8")
     agent._install_worker_agent()
     worker = json.loads((tmp_path / WORKER_AGENT_FILENAME).read_text(encoding="utf-8"))
-    assert "autoApprove" not in worker["mcpServers"]["kirocrew-cron"]
+    assert "autoApprove" not in worker["mcpServers"]["ajcrew-cron"]
 
 
 def test_a_malformed_mirrored_key_is_not_mirrored_at_all(tmp_path, monkeypatch):
@@ -1426,8 +1426,8 @@ def test_a_malformed_mirrored_key_is_not_mirrored_at_all(tmp_path, monkeypatch):
     assert isinstance(worker["allowedTools"], list)
     # The template's own value stood, so the work server still landed and the spec is
     # usable rather than a copy of a spec kiro-cli would reject.
-    assert worker["mcpServers"]["kirocrew-work"]["args"][-1] == "mcp-work"
-    assert "@kirocrew-work/work_brief" in worker["allowedTools"]
+    assert worker["mcpServers"]["ajcrew-work"]["args"][-1] == "mcp-work"
+    assert "@ajcrew-work/work_brief" in worker["allowedTools"]
 
 
 def test_a_boolean_model_is_not_mirrored_as_a_string(tmp_path, monkeypatch):
@@ -1450,11 +1450,11 @@ def test_a_boolean_model_is_not_mirrored_as_a_string(tmp_path, monkeypatch):
 @pytest.mark.parametrize(
     "entry",
     [
-        "@kirocrew-cron/cron_*",
-        "@kirocrew-cron/*add*",
-        "@kirocrew-cron/cron_?dd",
-        "@kirocrew-cron/CRON_ADD",
-        "@kirocrew-cron/cron_add",
+        "@ajcrew-cron/cron_*",
+        "@ajcrew-cron/*add*",
+        "@ajcrew-cron/cron_?dd",
+        "@ajcrew-cron/CRON_ADD",
+        "@ajcrew-cron/cron_add",
     ],
 )
 def test_any_grant_pattern_that_reaches_an_excluded_verb_is_withheld(entry, tmp_path, monkeypatch):
@@ -1499,7 +1499,7 @@ def test_a_bare_glob_that_reaches_an_excluded_verb_is_dropped(entry, tmp_path, m
     # Dropped, not narrowed: there is no spelling for "everything except cron_add".
     assert entry not in worker["allowedTools"], worker["allowedTools"]
     # Fail-CLOSED, never fail-open: the tool stays mounted and its calls reach the gate.
-    assert "@kirocrew-cron" in worker["tools"]
+    assert "@ajcrew-cron" in worker["tools"]
     # An unrelated grant in the same list is untouched -- the subtraction is cron
     # scheduling, not a general narrowing of what the default granted.
     assert "@pdf" in worker["allowedTools"]
@@ -1511,7 +1511,7 @@ def test_a_bare_entry_that_cannot_reach_an_excluded_verb_survives():
     whether a builtin grant survives the governance CEILING is a property of the host's
     policy and would make this assertion say something about the machine instead of about
     the subtraction."""
-    survivors = ["fs_read", "fs_*", "@kirocrew-cron/cron_list", "@pdf"]
+    survivors = ["fs_read", "fs_*", "@ajcrew-cron/cron_list", "@pdf"]
     assert agent._apply_worker_exclusions(survivors, template_grants=[]) == survivors
 
 
@@ -1534,7 +1534,7 @@ def test_a_dropped_bare_glob_is_reported_with_the_refs_it_reached(tmp_path, monk
     withheld = [r for r in records if "not auto-approved on the worker" in str(r.get("resources"))]
     assert withheld, f"a dropped namespace-wide glob must be recorded: {records}"
     resources = str(withheld[0]["resources"])
-    assert "@kirocrew-cron/cron_add" in resources
+    assert "@ajcrew-cron/cron_add" in resources
     assert "reaches" in resources
 
 
@@ -1546,19 +1546,19 @@ def test_the_grant_predicate_answers_for_every_entry_shape():
         "**",
         "fs_read",
         "cron_add",
-        "@kirocrew-cron",
-        "@kirocrew-cron/cron_list",
+        "@ajcrew-cron",
+        "@ajcrew-cron/cron_list",
         "@",
         "@/cron_add",
         "",
-        "@kirocrew-cron/*",
+        "@ajcrew-cron/*",
     ):
         answer = agent._grant_reaches_excluded(entry)
         assert isinstance(answer, list), entry
     assert agent._grant_reaches_excluded("*") == sorted(agent._WORKER_EXCLUDED_GRANTS)
-    assert agent._grant_reaches_excluded("*add*") == ["@kirocrew-cron/cron_add"]
+    assert agent._grant_reaches_excluded("*add*") == ["@ajcrew-cron/cron_add"]
     assert agent._grant_reaches_excluded("fs_read") == []
-    assert agent._grant_reaches_excluded("@kirocrew-cron/cron_list") == []
+    assert agent._grant_reaches_excluded("@ajcrew-cron/cron_list") == []
 
 
 def test_the_grant_predicate_has_no_early_exit_that_skips_classification():
@@ -1586,34 +1586,34 @@ def test_a_glob_that_cannot_reach_an_excluded_verb_passes_through(tmp_path, monk
     it."""
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     spec = json.loads(json.dumps(_DEFAULT_SPEC_ON_DISK))
-    spec["allowedTools"] = ["@builder-mcp", "@kirocrew-cron/cron_l*"]
+    spec["allowedTools"] = ["@builder-mcp", "@ajcrew-cron/cron_l*"]
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(spec), encoding="utf-8")
     agent._install_worker_agent()
     worker = json.loads((tmp_path / WORKER_AGENT_FILENAME).read_text(encoding="utf-8"))
-    assert "@kirocrew-cron/cron_l*" in worker["allowedTools"]
+    assert "@ajcrew-cron/cron_l*" in worker["allowedTools"]
 
 
 def test_the_predicate_answers_which_excluded_refs_a_pattern_reaches():
     """Asserted directly, because it is the one place the subtraction's completeness
     lives and every caller trusts it."""
-    assert agent._pattern_reaches_excluded("@kirocrew-cron/*") == [
-        "@kirocrew-cron/cron_add",
-        "@kirocrew-cron/cron_secret_request",
-        "@kirocrew-cron/cron_update",
+    assert agent._pattern_reaches_excluded("@ajcrew-cron/*") == [
+        "@ajcrew-cron/cron_add",
+        "@ajcrew-cron/cron_secret_request",
+        "@ajcrew-cron/cron_update",
     ]
-    assert agent._pattern_reaches_excluded("@kirocrew-cron/cron_a*") == ["@kirocrew-cron/cron_add"]
-    assert agent._pattern_reaches_excluded("@kirocrew-cron/cron_l*") == []
-    assert agent._pattern_reaches_excluded("@kirocrew-core/*") == []
+    assert agent._pattern_reaches_excluded("@ajcrew-cron/cron_a*") == ["@ajcrew-cron/cron_add"]
+    assert agent._pattern_reaches_excluded("@ajcrew-cron/cron_l*") == []
+    assert agent._pattern_reaches_excluded("@ajcrew-core/*") == []
     # Case-folded too: matching MORE is the safe direction, since a match only ever
     # withholds a grant.
-    assert agent._pattern_reaches_excluded("@KIROCREW-CRON/CRON_ADD") == ["@kirocrew-cron/cron_add"]
+    assert agent._pattern_reaches_excluded("@AJCREW-CRON/CRON_ADD") == ["@ajcrew-cron/cron_add"]
 
 
 def test_the_canonical_form_collapses_the_whole_server_spellings():
-    assert agent._canonical_grant_pattern("@kirocrew-cron") == "@kirocrew-cron/*"
-    assert agent._canonical_grant_pattern("@kirocrew-cron/") == "@kirocrew-cron/*"
-    assert agent._canonical_grant_pattern("@kirocrew-cron/*") == "@kirocrew-cron/*"
-    assert agent._canonical_grant_pattern("@kirocrew-cron/cron_*") == "@kirocrew-cron/cron_*"
+    assert agent._canonical_grant_pattern("@ajcrew-cron") == "@ajcrew-cron/*"
+    assert agent._canonical_grant_pattern("@ajcrew-cron/") == "@ajcrew-cron/*"
+    assert agent._canonical_grant_pattern("@ajcrew-cron/*") == "@ajcrew-cron/*"
+    assert agent._canonical_grant_pattern("@ajcrew-cron/cron_*") == "@ajcrew-cron/cron_*"
     assert agent._canonical_grant_pattern("fs_read") is None
     assert agent._canonical_grant_pattern("@") is None
 
@@ -1626,19 +1626,19 @@ def test_an_auto_approve_pattern_that_reaches_an_excluded_verb_is_dropped(
     pattern over that server's verbs, so the same globs reach the same verbs."""
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     spec = json.loads(json.dumps(_DEFAULT_SPEC_ON_DISK))
-    spec["mcpServers"]["kirocrew-cron"]["autoApprove"] = list(approved)
+    spec["mcpServers"]["ajcrew-cron"]["autoApprove"] = list(approved)
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(spec), encoding="utf-8")
     agent._install_worker_agent()
     worker = json.loads((tmp_path / WORKER_AGENT_FILENAME).read_text(encoding="utf-8"))
-    assert "autoApprove" not in worker["mcpServers"]["kirocrew-cron"], approved
+    assert "autoApprove" not in worker["mcpServers"]["ajcrew-cron"], approved
 
 
 def _pin_honour_auto_approve(monkeypatch, honour: bool) -> None:
     """Pin ``mcp.honour_auto_approve`` for a grant no spec declares."""
-    from kiro_crew.config import live
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config import live
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.mcp.honour_auto_approve = honour
     monkeypatch.setattr(live, "snapshot", lambda: cfg)
 
@@ -1654,11 +1654,11 @@ def test_an_auto_approve_naming_only_reading_verbs_survives(tmp_path, monkeypatc
     _pin_honour_auto_approve(monkeypatch, True)
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     spec = json.loads(json.dumps(_DEFAULT_SPEC_ON_DISK))
-    spec["mcpServers"]["kirocrew-cron"]["autoApprove"] = ["cron_list", "cron_pause"]
+    spec["mcpServers"]["ajcrew-cron"]["autoApprove"] = ["cron_list", "cron_pause"]
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(spec), encoding="utf-8")
     agent._install_worker_agent()
     worker = json.loads((tmp_path / WORKER_AGENT_FILENAME).read_text(encoding="utf-8"))
-    assert worker["mcpServers"]["kirocrew-cron"]["autoApprove"] == ["cron_list", "cron_pause"]
+    assert worker["mcpServers"]["ajcrew-cron"]["autoApprove"] == ["cron_list", "cron_pause"]
 
 
 def test_a_withheld_pattern_says_which_verbs_it_reached(tmp_path, monkeypatch):
@@ -1673,7 +1673,7 @@ def test_a_withheld_pattern_says_which_verbs_it_reached(tmp_path, monkeypatch):
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(agent, "sel", lambda: _Recorder())
     spec = json.loads(json.dumps(_DEFAULT_SPEC_ON_DISK))
-    spec["allowedTools"] = ["@kirocrew-cron/cron_*"]
+    spec["allowedTools"] = ["@ajcrew-cron/cron_*"]
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(spec), encoding="utf-8")
     agent._install_worker_agent()
 
@@ -1684,9 +1684,9 @@ def test_a_withheld_pattern_says_which_verbs_it_reached(tmp_path, monkeypatch):
 
 
 def test_both_workers_carry_the_same_coding_rules() -> None:
-    """kirocrew-worker and a crewmate's worker read one text, so they cannot drift."""
-    from kiro_crew import crewmate_prompts
-    from kiro_crew.mate_worker import MATE_WORKER_PROMPT
+    """ajcrew-worker and a crewmate's worker read one text, so they cannot drift."""
+    from aj_crew import crewmate_prompts
+    from aj_crew.mate_worker import MATE_WORKER_PROMPT
 
     rules = crewmate_prompts.text("worker.coding_rules")
     assert "smallest complete change" in rules

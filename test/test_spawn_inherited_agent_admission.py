@@ -9,10 +9,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.agent_discovery import clear_project_agent_cache, project_agent_names
-from kiro_crew.config.loader import KIRO_CLI_BUILTIN_AGENTS, KiroCrewConfig
-from kiro_crew.config.sections import KiroCrewAgentConfig
-from kiro_crew.subagent import (
+from aj_crew.agent_discovery import clear_project_agent_cache, project_agent_names
+from aj_crew.config.loader import KIRO_CLI_BUILTIN_AGENTS, AjCrewConfig
+from aj_crew.config.sections import AjCrewAgentConfig
+from aj_crew.subagent import (
     AGENT_NOT_FOUND_CODE,
     SubagentManager,
     _inherited_member_agent,
@@ -40,9 +40,9 @@ def _project_agent(root: Path, name: str) -> Path:
     return root
 
 
-def _config_with_member(kiro_agent: str) -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
-    cfg.agents = {"alice": KiroCrewAgentConfig(kiro_agent=kiro_agent)}
+def _config_with_member(kiro_agent: str) -> AjCrewConfig:
+    cfg = AjCrewConfig()
+    cfg.agents = {"alice": AjCrewAgentConfig(kiro_agent=kiro_agent)}
     return cfg
 
 
@@ -73,10 +73,10 @@ class TestInheritedMemberAgentAdmission:
         sessions = _sessions(("member", "alice"))
         manager = SubagentManager(sessions=sessions, ctx_builder=None)
         with (
-            patch.object(KiroCrewConfig, "load", return_value=_config_with_member("gone")),
-            patch("kiro_crew.subagent.list_agents", return_value=[]),
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch.object(AjCrewConfig, "load", return_value=_config_with_member("gone")),
+            patch("aj_crew.subagent.list_agents", return_value=[]),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
         ):
             info = manager.spawn("task", parent_session_key="dashboard:chat-1")
         assert info is not None
@@ -92,10 +92,10 @@ class TestInheritedMemberAgentAdmission:
         sessions = _sessions(("member", "alice"))
         manager = SubagentManager(sessions=sessions, ctx_builder=None)
         with (
-            patch.object(KiroCrewConfig, "load", return_value=_config_with_member("gone")),
-            patch("kiro_crew.subagent.list_agents", return_value=[]),
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch.object(AjCrewConfig, "load", return_value=_config_with_member("gone")),
+            patch("aj_crew.subagent.list_agents", return_value=[]),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
         ):
             info = await manager.spawn_async("task", parent_session_key="dashboard:chat-1")
         assert info is not None
@@ -115,10 +115,10 @@ class TestInheritedMemberAgentAdmission:
             return []
 
         with (
-            patch.object(KiroCrewConfig, "load", return_value=_config_with_member("gone")),
-            patch("kiro_crew.subagent.list_agents", side_effect=_scan),
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch.object(AjCrewConfig, "load", return_value=_config_with_member("gone")),
+            patch("aj_crew.subagent.list_agents", side_effect=_scan),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
         ):
             info = await manager.spawn_async("task", parent_session_key="dashboard:chat-1")
         assert info is not None
@@ -152,10 +152,10 @@ class TestInheritedMemberAgentAdmission:
             return check
 
         with (
-            patch.object(KiroCrewConfig, "load", return_value=_config_with_member("gone")),
-            patch("kiro_crew.subagent.list_agents", side_effect=_scan),
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch.object(AjCrewConfig, "load", return_value=_config_with_member("gone")),
+            patch("aj_crew.subagent.list_agents", side_effect=_scan),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(manager, "_check_agent_off_loop", side_effect=_cold_then_warm),
         ):
             info = await manager.spawn_async("task", parent_session_key="dashboard:chat-1")
@@ -165,7 +165,7 @@ class TestInheritedMemberAgentAdmission:
     @pytest.mark.asyncio
     async def test_checkAgentOffLoop_noAgentMemberContext_checksInheritedTemplate(self) -> None:
         manager = SubagentManager(sessions=_sessions(("template", "")), ctx_builder=None)
-        with patch("kiro_crew.subagent.list_agents", return_value=[]):
+        with patch("aj_crew.subagent.list_agents", return_value=[]):
             check = await manager._check_agent_off_loop(
                 "",
                 "",
@@ -183,10 +183,10 @@ class TestInheritedMemberAgentAdmission:
         sessions._pool_cwd = str(project)
         manager = SubagentManager(sessions=sessions, ctx_builder=None)
         with (
-            patch.object(KiroCrewConfig, "load", return_value=_config_with_member("repobot")),
-            patch("kiro_crew.subagent.list_agents", return_value=[]),
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch.object(AjCrewConfig, "load", return_value=_config_with_member("repobot")),
+            patch("aj_crew.subagent.list_agents", return_value=[]),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
         ):
             info = manager.spawn("task", parent_session_key="dashboard:chat-1")
         assert info is not None
@@ -198,10 +198,10 @@ class TestInheritedMemberAgentAdmission:
         sessions = _sessions(("member", "alice"))
         manager = SubagentManager(sessions=sessions, ctx_builder=None)
         with (
-            patch.object(KiroCrewConfig, "load", return_value=_config_with_member(builtin)),
-            patch("kiro_crew.subagent.list_agents", return_value=[]),
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch.object(AjCrewConfig, "load", return_value=_config_with_member(builtin)),
+            patch("aj_crew.subagent.list_agents", return_value=[]),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
         ):
             info = manager.spawn("task", parent_session_key="dashboard:chat-1")
         assert info is not None
@@ -220,8 +220,8 @@ class TestInheritedMemberAgentAdmission:
         manager = SubagentManager(sessions=_sessions(("member", "alice")), ctx_builder=None)
         clear_project_agent_cache()
         with (
-            patch.object(KiroCrewConfig, "load", return_value=config),
-            patch("kiro_crew.subagent.list_agents", return_value=[]),
+            patch.object(AjCrewConfig, "load", return_value=config),
+            patch("aj_crew.subagent.list_agents", return_value=[]),
         ):
             cold = await manager._check_agent_off_loop("", str(project), execution_context=context)
             project_agent_names(resolved, operation="test_inherited_admission", source="unknown")
@@ -232,7 +232,7 @@ class TestInheritedMemberAgentAdmission:
         assert warm[4:] == ("repobot", "", "")
 
     def test_spawn_memberContinuationWithNoAgent_notRefusedAtAdmission(self) -> None:
-        from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+        from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
         record = ExecutionContext(
             member_id=None,
@@ -244,11 +244,11 @@ class TestInheritedMemberAgentAdmission:
         sessions = _sessions(("member", "alice"))
         manager = SubagentManager(sessions=sessions, ctx_builder=None)
         with (
-            patch.object(KiroCrewConfig, "load", return_value=_config_with_member("gone")),
-            patch("kiro_crew.subagent_persistence.read_run_execution", return_value=record),
-            patch("kiro_crew.subagent.list_agents", return_value=[]),
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch.object(AjCrewConfig, "load", return_value=_config_with_member("gone")),
+            patch("aj_crew.subagent_persistence.read_run_execution", return_value=record),
+            patch("aj_crew.subagent.list_agents", return_value=[]),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
         ):
             info = manager.spawn(
                 "task",
@@ -263,9 +263,9 @@ class TestInheritedMemberAgentAdmission:
         sessions = _sessions(("template", "parent-agent"))
         manager = SubagentManager(sessions=sessions, ctx_builder=None)
         with (
-            patch("kiro_crew.subagent.list_agents", return_value=[]),
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.list_agents", return_value=[]),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
         ):
             info = manager.spawn("task", parent_session_key="dashboard:chat-1")
         assert info is not None

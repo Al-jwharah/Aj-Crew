@@ -6,10 +6,10 @@ from unittest.mock import ANY, Mock
 import pytest
 from test_member_essential_context import env as _member_env
 
-from kiro_crew.context import CONTEXT_GROUP_LESSONS, ContextBuilder
-from kiro_crew.learn import LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew.context import CONTEXT_GROUP_LESSONS, ContextBuilder
+from aj_crew.learn import LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 env = _member_env
 
@@ -134,8 +134,8 @@ def test_v1_new_session_bounds_pref_rows_at_the_startup_cap(tmp_path, opened):
     """The cap must reach the store through the real plumbing
     (context._ResolvedCaps -> memory.get_context -> get_preferences_context).
     Mocks cannot see a dropped keyword argument; a real store over the cap can."""
-    from kiro_crew.context import _PREFS_STARTUP_CAP
-    from kiro_crew.vector_memory import VectorMemoryStore
+    from aj_crew.context import _PREFS_STARTUP_CAP
+    from aj_crew.vector_memory import VectorMemoryStore
 
     vectors = opened(VectorMemoryStore(db_path=tmp_path / "mem.db"))
     vectors.init()
@@ -162,8 +162,8 @@ def test_v1_new_session_records_the_pref_cut_beside_its_notice(tmp_path, opened)
     through the real build rather than recomputed."""
     import re
 
-    from kiro_crew import context_omissions
-    from kiro_crew.vector_memory import VectorMemoryStore
+    from aj_crew import context_omissions
+    from aj_crew.vector_memory import VectorMemoryStore
 
     vectors = opened(VectorMemoryStore(db_path=tmp_path / "mem.db"))
     vectors.init()

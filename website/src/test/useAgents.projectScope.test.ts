@@ -36,11 +36,11 @@ vi.mock('../api/client', () => ({
     agentCatalog: vi.fn(),
     // useAgents reads dashboard.crewmates_in_agent_picker from the shared
     // config query; an empty config keeps the default templates-only picker.
-    kirocrewConfig: vi.fn(() => Promise.resolve({})),
+    ajcrewConfig: vi.fn(() => Promise.resolve({})),
   },
 }))
 
-// useAgents reads the shared ['kirocrewConfig'] query, so every render needs a
+// useAgents reads the shared ['ajcrewConfig'] query, so every render needs a
 // QueryClient. Same call shape as RTL's renderHook.
 const renderHook = ((cb: never, opts?: Record<string, unknown>) => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -57,8 +57,8 @@ const mockApi = api as unknown as {
 beforeEach(() => {
   vi.clearAllMocks()
   mockApi.agentCatalog.mockResolvedValue({
-    agents: [{ name: 'kirocrew', scope: 'global' }],
-    default_agent: 'kirocrew',
+    agents: [{ name: 'ajcrew', scope: 'global' }],
+    default_agent: 'ajcrew',
   })
 })
 
@@ -74,10 +74,10 @@ describe('useAgents project scoping', () => {
 
     mockApi.agentCatalog.mockResolvedValue({
       agents: [
-        { name: 'kirocrew', scope: 'global' },
+        { name: 'ajcrew', scope: 'global' },
         { name: 'project-agent', scope: 'project' },
       ],
-      default_agent: 'kirocrew',
+      default_agent: 'ajcrew',
     })
     rerender({ dir: '/repo/service' })
 
@@ -93,10 +93,10 @@ describe('useAgents project scoping', () => {
 
     mockApi.agentCatalog.mockResolvedValue({
       agents: [
-        { name: 'kirocrew', scope: 'global' },
+        { name: 'ajcrew', scope: 'global' },
         { name: 'project-agent', scope: 'project' },
       ],
-      default_agent: 'kirocrew',
+      default_agent: 'ajcrew',
     })
     rerender({ dir: '/repo/service' })
 
@@ -148,7 +148,7 @@ describe('useAgents project scoping', () => {
 
     expect(result.current.agents).toHaveLength(0)
 
-    resolveSecond({ agents: [{ name: 'two-agent', scope: 'project' }], default_agent: 'kirocrew' })
+    resolveSecond({ agents: [{ name: 'two-agent', scope: 'project' }], default_agent: 'ajcrew' })
     await waitFor(() => expect(result.current.agents).toHaveLength(1))
     expect(result.current.agents[0].name).toBe('two-agent')
   })
@@ -160,7 +160,7 @@ describe('useAgents project scoping', () => {
     // clear (picker safety, above); `displayAgents` must not.
     mockApi.agentCatalog.mockResolvedValue({
       agents: [{ name: 'drs-daily', scope: 'global', source: 'package' }],
-      default_agent: 'kirocrew',
+      default_agent: 'ajcrew',
     })
     let resolveSecond: (v: unknown) => void = () => {}
     const { result, rerender } = renderHook(
@@ -177,7 +177,7 @@ describe('useAgents project scoping', () => {
     expect(result.current.agents).toHaveLength(0)
     expect(result.current.displayAgents.map(a => a.name)).toEqual(['drs-daily'])
 
-    resolveSecond({ agents: [{ name: 'other', scope: 'global' }], default_agent: 'kirocrew' })
+    resolveSecond({ agents: [{ name: 'other', scope: 'global' }], default_agent: 'ajcrew' })
     await waitFor(() => expect(result.current.displayAgents.map(a => a.name)).toEqual(['other']))
     expect(result.current.agents.map(a => a.name)).toEqual(['other'])
   })
@@ -211,7 +211,7 @@ describe('useAgents project scoping', () => {
     // so the client object is given NO sync method: reaching for one would throw.
     const { result } = renderHook(() => useAgents(0, 'chat-1', '/repo/service'))
     await waitFor(() => expect(result.current.agents).toHaveLength(1))
-    expect('syncKirocrewAgents' in mockApi).toBe(false)
+    expect('syncAjcrewAgents' in mockApi).toBe(false)
     expect(mockApi.agentCatalog).toHaveBeenCalledTimes(1)
   })
 })

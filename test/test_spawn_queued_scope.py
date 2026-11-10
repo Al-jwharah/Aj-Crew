@@ -10,9 +10,9 @@ import pytest
 from member_memory_helpers import env as _member_env
 from member_memory_helpers import make_request
 
-from kiro_crew.dashboard.handlers import messaging
-from kiro_crew.mcp_tools import spawn as spawn_tools
-from kiro_crew.subagent import SubagentManager
+from aj_crew.dashboard.handlers import messaging
+from aj_crew.mcp_tools import spawn as spawn_tools
+from aj_crew.subagent import SubagentManager
 
 pytestmark = [
     pytest.mark.xdist_group("member_memory_api"),

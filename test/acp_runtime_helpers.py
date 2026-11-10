@@ -11,14 +11,14 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION, JsonRpcMessage
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.types import METHOD_REQUEST_PERMISSION, JsonRpcMessage
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 @pytest.fixture(autouse=True)
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- the autouse pin of test_acp_runtime.py and the modules split out of it, moved verbatim; none of them calls monkeypatch.undo()
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- the autouse pin of test_acp_runtime.py and the modules split out of it, moved verbatim; none of them calls monkeypatch.undo()
 def _pinned_kiro_cli_version(monkeypatch):
     """Pin the kiro-cli release the spec ``permissions`` gate believes is installed.
 
@@ -27,13 +27,13 @@ def _pinned_kiro_cli_version(monkeypatch):
     ``test_agent.py``.
     """
     monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version",
+        "aj_crew.kiro_cli.installed_kiro_cli_version",
         lambda: SPEC_PERMISSIONS_MIN_VERSION,
     )
 
 
 @pytest.fixture(autouse=True)
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- the autouse ceiling of test_acp_runtime.py and the modules split out of it, moved verbatim; none of them calls monkeypatch.undo()
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- the autouse ceiling of test_acp_runtime.py and the modules split out of it, moved verbatim; none of them calls monkeypatch.undo()
 def _fast_no_report_ceiling(monkeypatch):
     """Shrink drain_init()'s no-report ceiling for every test in this module.
 
@@ -41,7 +41,7 @@ def _fast_no_report_ceiling(monkeypatch):
     would stall each session start for seconds. drain_init() reads the constant at
     call time; tests of the ceiling pass an explicit value.
     """
-    import kiro_crew.acp.session_handle as sh
+    import aj_crew.acp.session_handle as sh
 
     monkeypatch.setattr(sh, "_MCP_DRAIN_NO_REPORT_CEILING", 0.05, raising=False)
 
@@ -53,7 +53,7 @@ def _spawn_client_mod():
     module's re-export would leave the real filesystem search running while the
     test believed it was stubbed.
     """
-    import kiro_crew.acp.client as client_mod
+    import aj_crew.acp.client as client_mod
 
     return client_mod
 
@@ -109,7 +109,7 @@ def _make_runtime(reader: "asyncio.StreamReader | None" = None):
     proc.stdin.write = MagicMock()
     proc.stdin.drain = AsyncMock()
     proc.returncode = None
-    # nosemgrep: kirocrew.mock-pid-allocatable -- pre-existing literal pid on the fake process, moved verbatim; tracked for a de-flake pass
+    # nosemgrep: ajcrew.mock-pid-allocatable -- pre-existing literal pid on the fake process, moved verbatim; tracked for a de-flake pass
     proc.pid = 4242
     rt._process = proc
     rt._pid = 4242
@@ -283,7 +283,7 @@ def _last_written_frame(proc) -> dict:
 
 
 @pytest.fixture(autouse=True)
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- the unroutable-permission tests' SEL stub, moved verbatim; no module split out of test_acp_runtime.py calls monkeypatch.undo()
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- the unroutable-permission tests' SEL stub, moved verbatim; no module split out of test_acp_runtime.py calls monkeypatch.undo()
 def _stub_sel_for_permission_tests(request, monkeypatch):
     """Stub the SEL for the auto-reject tests in this section.
 
@@ -295,7 +295,7 @@ def _stub_sel_for_permission_tests(request, monkeypatch):
     ):
         yield
         return
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     class _StubSel:
         def log_tool_invocation(self, **kwargs):  # noqa: D401 - stub

@@ -33,11 +33,11 @@ from test_remote_dispatch_hub_ingest import (
 )
 from work_ledger_projection_helpers import CONDUCTOR
 
-from kiro_crew import work_ledger
-from kiro_crew.dashboard.handlers import remote_dispatch_routes as crew_routes
-from kiro_crew.dashboard.handlers import remote_ingest
-from kiro_crew.dashboard.handlers import work_ledger as routes
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import work_ledger
+from aj_crew.dashboard.handlers import remote_dispatch_routes as crew_routes
+from aj_crew.dashboard.handlers import remote_ingest
+from aj_crew.dashboard.handlers import work_ledger as routes
+from aj_crew.testing.wait import async_wait_until, await_until
 
 _isolated = helpers._isolated
 recorded = helpers.recorded
@@ -67,7 +67,7 @@ def clock(monkeypatch) -> _Clock:
 def _no_background_puller(_floor_monkeypatch):
     """These tests drive the read path's own pull; a background puller started by
     the read would race it (its own tests are ``test_remote_dispatch_puller``)."""
-    from kiro_crew.dashboard.handlers import remote_puller
+    from aj_crew.dashboard.handlers import remote_puller
 
     _floor_monkeypatch.setattr(remote_puller, "ensure_running", lambda state: None)
 
@@ -76,7 +76,7 @@ def _no_background_puller(_floor_monkeypatch):
 def peer(monkeypatch, clock) -> StubCrew:
     stub = StubCrew()
     stub.clock = clock  # type: ignore[attr-defined]
-    monkeypatch.setattr("kiro_crew.remote_dispatch.remote_dispatch_enabled", lambda: True)
+    monkeypatch.setattr("aj_crew.remote_dispatch.remote_dispatch_enabled", lambda: True)
     return stub
 
 
@@ -102,13 +102,13 @@ def test_switch_off_never_retires_and_calls_no_peer(recorded, monkeypatch, clock
     peer = StubCrew()
 
     async def go() -> None:
-        monkeypatch.setattr("kiro_crew.remote_dispatch.remote_dispatch_enabled", lambda: True)
+        monkeypatch.setattr("aj_crew.remote_dispatch.remote_dispatch_enabled", lambda: True)
         item_id = await _remote_item(peer)
         peer.state = "disconnected"
         await _read(peer)
         _age_down_since(item_id, 31)
         clock.now += 31 * 60
-        monkeypatch.setattr("kiro_crew.remote_dispatch.remote_dispatch_enabled", lambda: False)
+        monkeypatch.setattr("aj_crew.remote_dispatch.remote_dispatch_enabled", lambda: False)
         peer.calls.clear()
         row = _row(await _read(peer), item_id)
         item = work_ledger.read_work_item(CONDUCTOR, item_id)
@@ -242,8 +242,8 @@ def test_a_stale_down_record_never_retires_a_crew_connected_now(recorded, peer, 
 
 
 def test_a_rebuild_keeps_the_history_and_the_unbound_pair(peer, monkeypatch):
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog, projection
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog, projection
 
     monkeypatch.setattr(routes.crew_log_emit, "enabled", lambda: True)
     monkeypatch.setattr(routes, "unit_for_session_key", lambda sessions, key: "u-conductor")
@@ -251,7 +251,7 @@ def test_a_rebuild_keeps_the_history_and_the_unbound_pair(peer, monkeypatch):
         lg.KIND_SESSION,
         "u-conductor",
         owner="raymond",
-        agent="kirocrew",
+        agent="ajcrew",
         slot=CONDUCTOR,
     )
 
@@ -289,7 +289,7 @@ def test_a_rebuild_keeps_the_history_and_the_unbound_pair(peer, monkeypatch):
 def test_the_create_reply_names_the_branch_to_resume(resp_extra, says):
     from unittest.mock import MagicMock
 
-    from kiro_crew.mcp_session_crew import run_crew_create
+    from aj_crew.mcp_session_crew import run_crew_create
 
     ctx = MagicMock()
     ctx.client.post.return_value = {
@@ -516,7 +516,7 @@ def test_a_record_naming_another_binding_files_nothing(recorded, peer):
 
 
 def test_the_retire_clock_is_the_awake_clock():
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     # The helper stands still while the host is suspended, Windows included
     # (QueryUnbiasedInterruptTime); time.monotonic counts a Windows sleep. That
@@ -689,7 +689,7 @@ def test_switch_off_never_closes_a_retired_slot_or_records_destroy(recorded, pee
         item_id = await _remote_item(peer)
         state = _state(peer)
         await _retire_on(state, peer, item_id)  # retired with the switch on
-        monkeypatch.setattr("kiro_crew.remote_dispatch.remote_dispatch_enabled", lambda: False)
+        monkeypatch.setattr("aj_crew.remote_dispatch.remote_dispatch_enabled", lambda: False)
         peer.state = "connected"
         peer.calls.clear()
         # The ledger read: no ingest, no retire, no close, no destroy.
@@ -738,8 +738,8 @@ def test_a_background_retire_needs_no_live_conductor_runtime(recorded, peer, mon
 
 
 def test_a_retire_cancelled_after_it_commits_still_drops_the_dispatch(recorded, peer, monkeypatch):
-    from kiro_crew.dashboard.handlers import work_ledger as wl_routes
-    from kiro_crew.dashboard.handlers.work_ledger_recording import _drain_before_cancelling
+    from aj_crew.dashboard.handlers import work_ledger as wl_routes
+    from aj_crew.dashboard.handlers.work_ledger_recording import _drain_before_cancelling
 
     async def go() -> None:
         item_id = await _remote_item(peer)
@@ -778,7 +778,7 @@ def test_a_retire_cancelled_after_it_commits_still_drops_the_dispatch(recorded, 
 
 
 def test_a_retire_still_settling_admits_no_send_through_the_cache(recorded, peer, monkeypatch):
-    from kiro_crew.dashboard.handlers import work_ledger as wl_routes
+    from aj_crew.dashboard.handlers import work_ledger as wl_routes
 
     async def go() -> None:
         item_id = await _remote_item(peer)
@@ -808,7 +808,7 @@ def test_a_retire_still_settling_admits_no_send_through_the_cache(recorded, peer
 def test_a_retire_that_does_not_land_restores_the_dispatch_entry(
     recorded, peer, monkeypatch, failure
 ):
-    from kiro_crew.dashboard.handlers import work_ledger as wl_routes
+    from aj_crew.dashboard.handlers import work_ledger as wl_routes
 
     async def go() -> None:
         item_id = await _remote_item(peer)
@@ -840,7 +840,7 @@ def test_a_retire_that_does_not_land_restores_the_dispatch_entry(
 
 
 def test_a_create_racing_a_refused_retire_never_ends_above_the_cap(recorded, peer, monkeypatch):
-    from kiro_crew.dashboard.handlers import work_ledger as wl_routes
+    from aj_crew.dashboard.handlers import work_ledger as wl_routes
 
     async def go() -> None:
         item_id = await _remote_item(peer)
@@ -884,7 +884,7 @@ def test_a_create_racing_a_refused_retire_never_ends_above_the_cap(recorded, pee
 
 
 def test_a_close_during_a_refused_retire_is_not_undone_by_the_restore(recorded, peer, monkeypatch):
-    from kiro_crew.dashboard.handlers import work_ledger as wl_routes
+    from aj_crew.dashboard.handlers import work_ledger as wl_routes
 
     async def go() -> None:
         item_id = await _remote_item(peer)

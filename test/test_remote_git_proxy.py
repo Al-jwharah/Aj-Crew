@@ -22,15 +22,15 @@ from urllib.parse import urlsplit
 import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from kiro_crew.remote_session import git_gateway, git_proxy, workspace_tools
-from kiro_crew.remote_session.git_gateway import (
+from aj_crew.remote_session import git_gateway, git_proxy, workspace_tools
+from aj_crew.remote_session.git_gateway import (
     HOSTS,
     GitProxyChannel,
     GitProxyRefusal,
     host_credential,
     parse_request,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 PROXY_SECRET = "a" * 64
 TOKEN = "gho_" + "t" * 36
@@ -288,9 +288,9 @@ def clis(tmp_path, monkeypatch):
     # The `git credential fill` path; the Windows direct path has its own tests
     # (test_remote_git_windows_lending).
     monkeypatch.setattr(git_gateway, "_runs_helpers_directly", lambda: False)
-    monkeypatch.setattr("kiro_crew.platform_compat.trusted_git_bin", lambda: planted.get("git"))
+    monkeypatch.setattr("aj_crew.platform_compat.trusted_git_bin", lambda: planted.get("git"))
     monkeypatch.setattr(
-        "kiro_crew.github_runner.validate_provider_executable",
+        "aj_crew.github_runner.validate_provider_executable",
         lambda path, *, require_protected: path,
     )
 
@@ -785,7 +785,7 @@ def _refs(bare: Path) -> str:
 
 
 def _protected_names() -> list[str]:
-    from kiro_crew.security import _PROTECTED_BRANCHES
+    from aj_crew.security import _PROTECTED_BRANCHES
 
     return sorted(_PROTECTED_BRANCHES)
 
@@ -827,7 +827,7 @@ async def test_a_push_to_a_protected_branch_is_refused_whole_and_changes_nothing
             _git, "push", "origin", *refspecs, cwd=clone, env=env, check=False
         )
         assert pushed.returncode != 0
-        assert "remote: Kiro Crew: the push to github.com/acme/widgets was refused" in (
+        assert "remote: Aj Crew: the push to github.com/acme/widgets was refused" in (
             pushed.stderr
         ), pushed.stderr
         assert "is a protected branch" in pushed.stderr
@@ -905,7 +905,7 @@ async def test_a_host_with_no_gateway_login_is_not_routed_at_all(tmp_path, upstr
     root, _bares = upstream_repo
 
     async def signed_out(host):
-        raise GitProxyRefusal(502, f"Kiro Crew: no {host} login found")
+        raise GitProxyRefusal(502, f"Aj Crew: no {host} login found")
 
     upstream = HttpBackendUpstream(root)
     process, serve, port_file, _link = await _run_channel(
@@ -930,7 +930,7 @@ async def test_only_the_hosts_the_gateway_can_lend_for_are_routed(tmp_path, upst
 
     async def github_only(host):
         if host != "github.com":
-            raise GitProxyRefusal(502, f"Kiro Crew: no {host} login found")
+            raise GitProxyRefusal(502, f"Aj Crew: no {host} login found")
         return HEADER
 
     upstream = HttpBackendUpstream(root)
@@ -1048,7 +1048,7 @@ async def test_egress_is_judged_per_host_before_any_credential_is_read():
         await async_wait_until(lambda: link.frames, describe=lambda: "egress refusal frame")
         assert link.frames[0]["t"] == "err" and link.frames[0]["status"] == 403
         assert link.frames[0]["message"] == (
-            "Kiro Crew: governance does not allow dev.azure.com here"
+            "Aj Crew: governance does not allow dev.azure.com here"
         )
         assert judged == ["dev.azure.com"] and reads == []
     finally:
@@ -1181,7 +1181,7 @@ def test_an_endless_command_list_is_refused_at_the_cap():
     ],
 )
 def test_the_proxy_protects_exactly_what_the_local_git_publish_check_does(ref, protected):
-    from kiro_crew.security import _is_push_to_protected_branch
+    from aj_crew.security import _is_push_to_protected_branch
 
     assert git_gateway.is_protected_ref(ref) is protected
     local = _is_push_to_protected_branch(f"git push origin head:{ref}".lower())
@@ -1213,7 +1213,7 @@ def test_a_rejection_stays_inside_the_negotiated_packet_size(band, limit, length
     ref = f"refs/remotes/{'r' * length}/main"
     reader = git_gateway.PushCommands()
     assert reader.feed(_commands(ref, "refs/heads/feat/a", caps=f"report-status {band}".encode()))
-    message = f"Kiro Crew: {ref} is a protected branch"
+    message = f"Aj Crew: {ref} is a protected branch"
     bands = _demux(reader.rejection([ref], message), limit)
     assert bands[2] == message.encode() + b"\n"
     assert bands[1] == (
@@ -1331,7 +1331,7 @@ async def test_the_channel_forwards_a_feature_push_byte_for_byte_and_refuses_the
 
 @pytest.mark.asyncio
 async def test_every_push_decision_writes_one_sel_row(monkeypatch):
-    import kiro_crew.sel as sel_module
+    import aj_crew.sel as sel_module
 
     rows: list[dict] = []
 
@@ -1414,7 +1414,7 @@ def test_the_rejection_report_looks_refs_up_in_a_set_not_the_callers_list():
 async def test_a_request_refused_before_the_egress_check_writes_a_sel_row(
     monkeypatch, path, agent, rule
 ):
-    import kiro_crew.sel as sel_module
+    import aj_crew.sel as sel_module
 
     rows: list[dict] = []
 
@@ -1454,7 +1454,7 @@ async def test_a_request_refused_before_the_egress_check_writes_a_sel_row(
 async def test_a_strict_push_refusal_writes_a_sel_row_and_a_failed_write_changes_nothing(
     monkeypatch,
 ):
-    import kiro_crew.sel as sel_module
+    import aj_crew.sel as sel_module
 
     rows: list[dict] = []
 
@@ -1493,7 +1493,7 @@ async def test_the_gateway_publishes_only_the_hosts_it_can_lend_for(lent, logins
     async def credential(host):
         reads.append(host)
         if host not in logins:
-            raise GitProxyRefusal(502, f"Kiro Crew: no {host} login found")
+            raise GitProxyRefusal(502, f"Aj Crew: no {host} login found")
         return HEADER
 
     channel = GitProxyChannel(
@@ -1535,7 +1535,7 @@ async def test_a_slow_lookup_does_not_withhold_another_hosts_login(monkeypatch):
         if host == "github.com":
             return HEADER
         await release.wait()  # every other host's lookup hangs until released
-        raise GitProxyRefusal(502, f"Kiro Crew: no {host} login found")
+        raise GitProxyRefusal(502, f"Aj Crew: no {host} login found")
 
     channel = GitProxyChannel(
         link,
@@ -1678,7 +1678,7 @@ async def test_login_status_reads_exit_codes_and_never_asks_the_credential_helpe
     ],
 )
 def test_gateway_logins_follow_the_sandbox_tier(monkeypatch, tier, floor, lent):
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     _set_tier(tier)
     monkeypatch.setattr(sandbox, "_governance_sandbox_floor", lambda: floor)
@@ -1686,7 +1686,7 @@ def test_gateway_logins_follow_the_sandbox_tier(monkeypatch, tier, floor, lent):
 
 
 def _set_tier(tier: str) -> None:
-    from kiro_crew.config.loader import config_dir
+    from aj_crew.config.loader import config_dir
 
     (config_dir() / "config.json").write_text(
         json.dumps({"agent": {"sandbox": tier}}), encoding="utf-8"
@@ -1696,30 +1696,30 @@ def _set_tier(tier: str) -> None:
 def test_the_tier_and_its_readability_come_from_one_config_load(monkeypatch):
     """Two loads could pair a readable first snapshot with a defaulted second
     one (a save landing between them); one load answers both."""
-    from kiro_crew import sandbox
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew import sandbox
+    from aj_crew.config.loader import AjCrewConfig
 
     _set_tier("strict")
     monkeypatch.setattr(sandbox, "_governance_sandbox_floor", lambda: None)
     loads = []
-    real = KiroCrewConfig.load.__func__
+    real = AjCrewConfig.load.__func__
 
     def counted(cls, *args, **kwargs):
         loads.append(1)
         return real(cls, *args, **kwargs)
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(counted))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(counted))
     assert git_gateway.gateway_logins_lent() is False
     assert len(loads) == 1
 
 
 def test_an_unreadable_sandbox_tier_lends_nothing(monkeypatch):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     def broken(*args, **kwargs):
         raise RuntimeError("config unreadable")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", broken)
+    monkeypatch.setattr(AjCrewConfig, "load", broken)
     assert git_gateway.gateway_logins_lent() is False
 
 
@@ -1734,8 +1734,8 @@ def test_an_unreadable_sandbox_tier_lends_nothing(monkeypatch):
 def test_a_config_that_cannot_be_read_lends_nothing(monkeypatch, document, lent):
     """The loader stands defaults in for an unreadable config instead of raising,
     and the default tier is not strict: the proxy must not read that as a tier."""
-    from kiro_crew import sandbox
-    from kiro_crew.config.loader import config_dir
+    from aj_crew import sandbox
+    from aj_crew.config.loader import config_dir
 
     monkeypatch.setattr(sandbox, "_governance_sandbox_floor", lambda: None)
     (config_dir() / "config.json").write_text(document, encoding="utf-8")
@@ -1744,7 +1744,7 @@ def test_a_config_that_cannot_be_read_lends_nothing(monkeypatch, document, lent)
 
 async def _tiered_channel(monkeypatch, tier, upstream):
     """A channel on the default tier reader, the configured tier set to ``tier``."""
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     _set_tier(tier)
     monkeypatch.setattr(sandbox, "_governance_sandbox_floor", lambda: None)
@@ -1849,7 +1849,7 @@ async def test_an_unverifiable_windows_gateway_lends_no_login_and_runs_no_source
     """A Windows gateway that cannot read its own SID or file ACLs lends nothing:
     every lend path refuses before any credential source runs, with one actionable
     message, and a push is refused whole. Fails if the refusal is undone."""
-    import kiro_crew.sel as sel_module
+    import aj_crew.sel as sel_module
 
     monkeypatch.setattr(git_gateway, "lending_unverifiable", lambda: True)
     _set_tier("standard")  # a tier that would lend everywhere else
@@ -1875,7 +1875,7 @@ async def test_an_unverifiable_windows_gateway_lends_no_login_and_runs_no_source
         ran.append("git")
         return None
 
-    monkeypatch.setattr("kiro_crew.platform_compat.trusted_git_bin", no_git)
+    monkeypatch.setattr("aj_crew.platform_compat.trusted_git_bin", no_git)
 
     assert git_gateway.gateway_logins_lent() is False
     assert await git_gateway.git_readiness() == {host: "unsupported" for host in HOSTS}

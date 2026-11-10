@@ -7,9 +7,9 @@ from typing import Iterator
 
 import pytest
 
-from kiro_crew.platform_compat import IS_POSIX
-from kiro_crew.security import redaction_allow
-from kiro_crew.security.exfil import redact_exfiltration_urls_with_records
+from aj_crew.platform_compat import IS_POSIX
+from aj_crew.security import redaction_allow
+from aj_crew.security.exfil import redact_exfiltration_urls_with_records
 
 _LONG = "https://reviews.corp.example/reviews?filter=" + "a" * 260
 
@@ -88,7 +88,7 @@ def test_a_dropped_entry_left_in_the_file_is_logged_and_audited_once(
 ) -> None:
     import json
 
-    from kiro_crew.security import exfil
+    from aj_crew.security import exfil
 
     logged: list = []
 
@@ -121,7 +121,7 @@ def test_a_dropped_entry_left_in_the_file_is_logged_and_audited_once(
 def test_restoring_an_allowed_link_is_audited_once_per_host(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.security import exfil
+    from aj_crew.security import exfil
 
     logged: list = []
 
@@ -167,7 +167,7 @@ def test_a_render_whose_snapshot_predates_a_revoke_is_not_remembered(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A render in flight across a revoke must not hide the first use after a re-allow."""
-    from kiro_crew.security import exfil
+    from aj_crew.security import exfil
 
     logged: list = []
 
@@ -203,7 +203,7 @@ def test_a_render_whose_snapshot_predates_a_revoke_is_not_remembered(
 
 
 def test_the_audit_memo_stops_growing_at_its_ceiling(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.security import exfil
+    from aj_crew.security import exfil
 
     logged: list = []
 
@@ -230,7 +230,7 @@ def test_a_render_audit_waits_for_a_revoke_holding_the_memo(
     """A revoke iterates the memo; a render adding to it mid-iteration would raise."""
     import threading
 
-    from kiro_crew.security import exfil
+    from aj_crew.security import exfil
 
     class _Quiet:
         def log(self, event) -> None:
@@ -270,7 +270,7 @@ def test_a_render_audit_waits_for_a_revoke_holding_the_memo(
 
 
 def test_a_failing_audit_does_not_stop_the_restore(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.security import exfil
+    from aj_crew.security import exfil
 
     class _Broken:
         def log(self, event) -> None:
@@ -308,11 +308,11 @@ def test_an_allowed_host_still_loses_a_credential() -> None:
 
 
 def test_display_pass_keeps_an_allowed_link_only_inside_its_scope() -> None:
-    from kiro_crew.dashboard.chat_utils import (
+    from aj_crew.dashboard.chat_utils import (
         _clear_display_redaction_cache,
         redact_display_content,
     )
-    from kiro_crew.security.exfil import scoped_exempt_hosts
+    from aj_crew.security.exfil import scoped_exempt_hosts
 
     _clear_display_redaction_cache()
     assert _LONG not in redact_display_content(_LONG)
@@ -323,7 +323,7 @@ def test_display_pass_keeps_an_allowed_link_only_inside_its_scope() -> None:
 
 
 def test_prepare_messages_relaxes_the_slot_workspace_hosts() -> None:
-    from kiro_crew.dashboard.chat_utils import _clear_display_redaction_cache, _prepare_messages
+    from aj_crew.dashboard.chat_utils import _clear_display_redaction_cache, _prepare_messages
 
     _clear_display_redaction_cache()
     rows = [{"role": "assistant", "content": _LONG, "ts": "1"}]
@@ -334,7 +334,7 @@ def test_prepare_messages_relaxes_the_slot_workspace_hosts() -> None:
 
 
 def test_a_variant_shows_an_allowed_link_like_its_row() -> None:
-    from kiro_crew.dashboard.chat_utils import _clear_display_redaction_cache, _prepare_messages
+    from aj_crew.dashboard.chat_utils import _clear_display_redaction_cache, _prepare_messages
 
     _clear_display_redaction_cache()
     saved, _warnings, records = redact_exfiltration_urls_with_records(_LONG)
@@ -356,7 +356,7 @@ def test_what_is_saved_never_depends_on_the_allow_list() -> None:
     import inspect
     import pkgutil
 
-    from kiro_crew.dashboard import (
+    from aj_crew.dashboard import (
         chat_persistence,
         chat_persistence_parts,
         chat_runner,
@@ -389,7 +389,7 @@ def test_what_is_saved_never_depends_on_the_allow_list() -> None:
 def test_the_live_frame_restores_an_allowed_link(monkeypatch) -> None:
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.state import DashboardState
+    from aj_crew.dashboard.state import DashboardState
 
     row = _saved_row()
     sent: list[dict] = []
@@ -413,7 +413,7 @@ def _saved_row() -> dict:
 
 
 def test_a_saved_placeholder_shows_its_link_once_the_host_is_allowed() -> None:
-    from kiro_crew.dashboard.chat_utils import _clear_display_redaction_cache, _prepare_messages
+    from aj_crew.dashboard.chat_utils import _clear_display_redaction_cache, _prepare_messages
 
     _clear_display_redaction_cache()
     row = _saved_row()
@@ -430,7 +430,7 @@ def test_a_saved_placeholder_shows_its_link_once_the_host_is_allowed() -> None:
 
 
 def test_restore_keeps_links_the_allow_does_not_cover() -> None:
-    from kiro_crew.security.exfil import restore_allowed_links
+    from aj_crew.security.exfil import restore_allowed_links
 
     text, _, records = redact_exfiltration_urls_with_records(f"a {_LONG} b")
     assert len(records) == 1
@@ -448,7 +448,7 @@ def test_restore_leaves_a_host_when_a_repeat_hides_which_placeholder_is_which() 
     """A repeated address yields one record, so three placeholders over two
     records cannot say which placeholder is the repeat: none is restored rather
     than one landing where the other stood."""
-    from kiro_crew.security.exfil import restore_allowed_links
+    from aj_crew.security.exfil import restore_allowed_links
 
     second = _LONG.replace("filter=", "sort=")
     text, _, records = redact_exfiltration_urls_with_records(f"a {_LONG} b {_LONG} c {second}")
@@ -462,7 +462,7 @@ def test_restore_leaves_a_host_when_a_repeat_hides_which_placeholder_is_which() 
 def test_restore_puts_back_two_different_links_on_one_host_each_in_its_place() -> None:
     """Two addresses on one allowed host that differ only in their query (two
     dashboard links in one reply) each come back where they stood."""
-    from kiro_crew.security.exfil import restore_allowed_links
+    from aj_crew.security.exfil import restore_allowed_links
 
     second = _LONG.replace("filter=", "sort=")
     raw = f"First [one]({_LONG}) then [two]({second})."
@@ -482,7 +482,7 @@ def test_restore_puts_back_two_different_links_on_one_host_each_in_its_place() -
 
 
 def test_restore_of_two_links_leaves_an_unallowed_host_and_a_withheld_record() -> None:
-    from kiro_crew.security.exfil import restore_allowed_links
+    from aj_crew.security.exfil import restore_allowed_links
 
     second = _LONG.replace("filter=", "sort=")
     other = "https://sink.example-other.net/x?d=" + "b" * 260
@@ -508,7 +508,7 @@ def test_restore_never_puts_an_address_where_only_part_of_it_stood() -> None:
     """A record whose address does not read back whole at the placeholder's
     position is not the address that stood there: the host keeps its
     placeholders."""
-    from kiro_crew.security.exfil import (
+    from aj_crew.security.exfil import (
         EXFILTRATION_REDACTION_TAG_PREFIX,
         restore_allowed_links,
     )
@@ -545,7 +545,7 @@ def test_restore_pairs_different_links_only_on_a_row_that_vouches_their_order() 
     """A row saved before records were kept in reply order can hold them as
     [second, first]; pairing by order would show each address in the other's
     place, so without the row's marker a host with different addresses stays."""
-    from kiro_crew.dashboard.chat_utils import (
+    from aj_crew.dashboard.chat_utils import (
         BLOCKED_LINKS_ORDERED_KEY,
         _clear_display_redaction_cache,
         _prepare_messages,
@@ -571,7 +571,7 @@ def test_restore_pairs_different_links_only_on_a_row_that_vouches_their_order() 
 
 
 def test_the_order_marker_moves_with_the_records_it_describes() -> None:
-    from kiro_crew.dashboard.chat_utils import (
+    from aj_crew.dashboard.chat_utils import (
         BLOCKED_LINKS_ORDERED_KEY,
         adopt_variant_text,
         variant_from_row,
@@ -595,7 +595,7 @@ def test_restore_never_puts_an_address_inside_another_url() -> None:
     it would show a link the reply never wrote, so the host keeps its
     placeholders. The redactor replaces the longer address first, so its own
     output for the same reply is two whole placeholders, and both come back."""
-    from kiro_crew.security.exfil import (
+    from aj_crew.security.exfil import (
         EXFILTRATION_REDACTION_TAG_PREFIX,
         restore_allowed_links,
     )
@@ -622,7 +622,7 @@ def test_an_allowed_host_is_neither_redacted_nor_reported() -> None:
 
 def test_the_allow_list_lives_in_a_sealed_read_only_leaf(monkeypatch) -> None:
     """An agent that could write the list could allow its own exfiltration host."""
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     monkeypatch.setattr(redaction_allow, "_path_override", None)
     leaf = redaction_allow._path().parent.name
@@ -686,7 +686,7 @@ def test_the_settings_list_reads_the_file_even_before_the_load_lands() -> None:
 def test_restore_leaves_a_host_with_a_placeholder_no_record_stands_behind() -> None:
     """A placeholder the model echoed in prose has no record, so it must not
     become a link to an address that never stood there."""
-    from kiro_crew.security.exfil import restore_allowed_links
+    from aj_crew.security.exfil import restore_allowed_links
 
     text, _, records = redact_exfiltration_urls_with_records(f"a {_LONG}")
     echoed = text + " and again " + text.split("a ", 1)[1]
@@ -697,7 +697,7 @@ def test_restore_leaves_a_host_with_a_placeholder_no_record_stands_behind() -> N
 def test_the_file_edit_tool_cannot_write_the_allow_list(monkeypatch) -> None:
     """The sandbox seal covers a shell; the write gate covers the file-edit tool
     on a host with no OS sandbox."""
-    from kiro_crew.security import is_sensitive_write_path
+    from aj_crew.security import is_sensitive_write_path
 
     monkeypatch.setattr(redaction_allow, "_path_override", None)
     assert is_sensitive_write_path(str(redaction_allow._path()))

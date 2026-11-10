@@ -18,17 +18,17 @@ from pathlib import Path
 import pytest
 from wake_judge_feedback_helpers import _delivered, _suppressed, _verdict
 
-from kiro_crew import autonudge_judge as judge
-from kiro_crew import irq
-from kiro_crew.autonudge import (
+from aj_crew import autonudge_judge as judge
+from aj_crew import irq
+from aj_crew.autonudge import (
     _MAX_QUIET_STREAK,
     AutoNudgeService,
     NudgeLoop,
     _bounded_judge_recent,
 )
-from kiro_crew.decisions import log as decisions_log
-from kiro_crew.monitoring.models import MonitorState
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.decisions import log as decisions_log
+from aj_crew.monitoring.models import MonitorState
+from aj_crew.testing.wait import async_wait_until
 
 
 async def _drain_inflight_adds(service: AutoNudgeService) -> None:
@@ -54,18 +54,18 @@ class TestTheStoredPullRequestBaselineIsBoundOnLoad:
 
     @staticmethod
     def _bound(raw):
-        from kiro_crew.autonudge import _bounded_judge_pr_seen
+        from aj_crew.autonudge import _bounded_judge_pr_seen
 
         return _bounded_judge_pr_seen(raw)
 
     def test_an_oversized_id_list_is_capped(self):
-        from kiro_crew import autonudge as _an
+        from aj_crew import autonudge as _an
 
         loaded = self._bound({"digest": "a" * 16, "remarks": [f"c{i}" for i in range(5_000)]})
         assert len(loaded["remarks"]) == _an._JUDGE_PR_SEEN_REMARKS
 
     def test_a_long_id_and_a_long_digest_are_clipped(self):
-        from kiro_crew import autonudge as _an
+        from aj_crew import autonudge as _an
 
         loaded = self._bound({"digest": "d" * 9_000, "remarks": ["x" * 9_000]})
         assert len(loaded["digest"]) == _an._JUDGE_PR_SEEN_DIGEST_CHARS
@@ -224,8 +224,8 @@ class TestStoredHistoryLoader:
             built.append(item["at"])
             return dict(item)
 
-        monkeypatch.setattr("kiro_crew.autonudge._bounded_judge_verdict", _build)
-        with caplog.at_level("DEBUG", logger="kiro_crew.autonudge"):
+        monkeypatch.setattr("aj_crew.autonudge._bounded_judge_verdict", _build)
+        with caplog.at_level("DEBUG", logger="aj_crew.autonudge"):
             loaded = _bounded_judge_recent(rows)
 
         assert len(built) == judge.MAX_STORED_VERDICTS
@@ -250,7 +250,7 @@ class TestTurnCompleteLabelling:
         runner_path = (
             Path(__file__).resolve().parents[1]
             / "src"
-            / "kiro_crew"
+            / "aj_crew"
             / "dashboard"
             / "chat_runner.py"
         )
@@ -706,7 +706,7 @@ class TestProbeFloorFiresAJudgedTick:
         row is skipped by the delivery stamp and takes ``missed`` from the retroactive
         pass of the next delivery -- a wrong row in the one log this feature produces.
         """
-        monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+        monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
         monkeypatch.setattr(
             irq,
             "poll",
@@ -798,7 +798,7 @@ class TestProbeFloorFiresAJudgedTick:
         undecided state, where the fire path stamps it delivered and the finished turn
         credits it with a delivery it never produced.
         """
-        monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+        monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
         monkeypatch.setattr(
             irq,
             "poll",

@@ -34,7 +34,7 @@ the chat that started it: `workflow_memory.inherited_step_agent` reads the
 captured carrier, and a `template` record not bound to a member gives its
 `template_id`. So a `task_run` or `/task run` from a custom agent's chat keeps
 that agent's MCP servers, tools, hooks and prompt, and a resume, retry or restart
-keeps it too, because the carrier is persisted. The `kirocrew` floor (a default
+keeps it too, because the carrier is persisted. The `ajcrew` floor (a default
 chat, or a dashboard start with no origin), a carrier bound to a member, an app's
 own agent (`apps.manager_lookup.owning_app_for_agent`: its chat runs the app's
 registered spec through a launch copy no step session carries), a template with
@@ -65,7 +65,7 @@ allow/deny rules, application permissions and owner-only aggregate controls rema
 independent. Cancellation resolves a canonical task ID once and operates on that
 same task. Member scope itself is not a confidentiality permission.
 
-The task runner is split into an orchestrator, whose `TaskRunner` binds its members from the `taskrunner_parts/` owners (§ TaskRunner owner modules), plus 4 focused helper modules under `src/kiro_crew/`:
+The task runner is split into an orchestrator, whose `TaskRunner` binds its members from the `taskrunner_parts/` owners (§ TaskRunner owner modules), plus 4 focused helper modules under `src/aj_crew/`:
 
 ```
 taskrunner.py        (orchestrator: the TaskRunner class)
@@ -98,14 +98,14 @@ instance reaches every caller, a `TaskRunner.__new__` build works, and the run s
 stays on the instance; each owner's docstring names the instance fields its members
 write and read. A bound member's `__qualname__` and `__module__` name its owner
 (nothing reads them); a class an owner defines (`WorkflowInitializing`,
-`WorkflowRunPublisher`, `_MonotonicAge`) keeps `kiro_crew.taskrunner` as its
+`WorkflowRunPublisher`, `_MonotonicAge`) keeps `aj_crew.taskrunner` as its
 `__module__`, so error chains and tracebacks name the path callers import it from.
-Owners log under the `kiro_crew.taskrunner` logger, never import `taskrunner.py` at
+Owners log under the `aj_crew.taskrunner` logger, never import `taskrunner.py` at
 run time, and import only owners listed before them in `_OWNERS`. `taskrunner.py`
 keeps every project import it had and every name the tests patch through it (stdlib
 imports that only moved code uses live in its owners) and serves the module-level
 names it defined from their owners; a write through it reaches every owner binding the
-same object (`kiro_crew._facade_mirror`). `test/test_taskrunner_bindings.py` pins the
+same object (`aj_crew._facade_mirror`). `test/test_taskrunner_bindings.py` pins the
 member inventory, the binding and the reach.
 
 | TaskRunner owner | Owns |
@@ -277,8 +277,8 @@ The domain model was renamed `Step` → `Task`, `StepStatus` → `TaskStatus`, a
 `TaskRun` → `Project`. `taskrunner.py` re-exports the real symbols from
 `task_models` and also defines back-compat aliases so existing imports keep working:
 ```python
-from kiro_crew.task_models import Task, TaskStatus, WorkingMemory, Project  # noqa: F401
-from kiro_crew.task_reporter import NotifyCallback  # noqa: F401
+from aj_crew.task_models import Task, TaskStatus, WorkingMemory, Project  # noqa: F401
+from aj_crew.task_reporter import NotifyCallback  # noqa: F401
 
 # ── Backward-compat re-exports ──
 Step = Task
@@ -288,7 +288,7 @@ TaskRun = Project
 
 `taskrunner.py` therefore re-exports `Task`, `TaskStatus`, `WorkingMemory`,
 `Project` and `NotifyCallback` (which `task_reporter` owns) and keeps the
-`Step` / `StepStatus` / `TaskRun` aliases, so an import from `kiro_crew.taskrunner`
+`Step` / `StepStatus` / `TaskRun` aliases, so an import from `aj_crew.taskrunner`
 needs no change.
 
 ## Public API
@@ -362,7 +362,7 @@ visible_sources = {"text", "spec", "file", "chat", "dashboard", "mcp", "yaml"}
 | Dashboard UI | `"dashboard"` | ✅ |
 | Chat `task run <spec>` / `/task run <spec>` | `"chat"` | ✅ |
 | MCP `task_run` tool | `"mcp"` | ✅ |
-| CLI `kirocrew run` | `""` (`runner.run` without `source`, in a process-local runner) | ❌ (not the gateway's runner) |
+| CLI `ajcrew run` | `""` (`runner.run` without `source`, in a process-local runner) | ❌ (not the gateway's runner) |
 | `plan()` API | `"text"`, `"spec"`, `"file"` | ✅ |
 | Cron job | must pass `source="cron"` | ❌ (filtered out) |
 
@@ -448,7 +448,7 @@ class Project:
     agent: str             # the agent every session of the run opens with ("" = default); persisted
     work_dir: str
     last_task_time: float  # tracks activity for watchdog
-    branch_name: str       # git branch for task (e.g. kirocrew/task/{task_id})
+    branch_name: str       # git branch for task (e.g. ajcrew/task/{task_id})
     base_branch: str       # original branch before task started
     commit_hashes: list[str]  # per-step commit SHAs
     worktree_path: str     # git worktree path (empty for a non-git folder)
@@ -680,7 +680,7 @@ A graceful gateway stop or restart ends active runs the same way a crash does. `
 
 - With an `on_approval` callback, either `requires_approval` or `force_approval` prompts the owning surface; a denial pauses the project for editing.
 - Without that callback, `requires_approval` logs a warning and continues, while `force_approval` fails closed and prevents replanning around the gate: it fails the run, and `_try_replan` plans nothing for a run that is already `failed`.
-- `cli_server.py` constructs the standalone `kirocrew run TASK.md` runner without an approval callback. Use `force_approval`, not `requires_approval`, for an action that must not execute unattended.
+- `cli_server.py` constructs the standalone `ajcrew run TASK.md` runner without an approval callback. Use `force_approval`, not `requires_approval`, for an action that must not execute unattended.
 - The dashboard supplies the callback and renders Approve/Deny controls in the project detail view.
 
 ## Parallel Execution
@@ -772,7 +772,7 @@ privacy exclusions, failure handling, and ordering contract.
 
 The default workspace root is one folder per OS user (see
 [config](config.md#workspace-root)), so every data home with no workspace of its
-own shares one work dir. There a `KIROCREW_HOME` override names its registry
+own shares one work dir. There a `AJCREW_HOME` override names its registry
 `runs-<data_home_id>.json` (the `session_work_dir.data_home_id()` a run-dir marker
 records), so a gateway lists and rewrites only its own home's runs. The name
 depends only on the data home and the folder: a configured
@@ -802,7 +802,7 @@ workspace is never removed.
 
 | Path | Entry Point | Behavior |
 |------|-------------|----------|
-| CLI | `kirocrew run TASK.md` | Blocking, stdout progress, `--no-test` flag (each step reports verification `skipped`) |
+| CLI | `ajcrew run TASK.md` | Blocking, stdout progress, `--no-test` flag (each step reports verification `skipped`) |
 | Slack | `task run <spec>`, `task run status`, `task run cancel` (alias `project run`), and the `/task run …` slash form | Keyword interception (`messaging/commands.py:task_command_reply`); a bare `run <path>` is not matched |
 | Dashboard | REST API + Tasks UI panel | See API Endpoints below |
 
@@ -884,14 +884,14 @@ A partial example; each run also carries `name`, `auto_approve`,
       "status": "passed", "verification": "not_configured", "error": "", "result": "...(bounded)...", "attempts": 1
     }],
     "work_dir": "/path/to/work/dir",
-    "branch_name": "kirocrew/task/my-task_1771822344"
+    "branch_name": "ajcrew/task/my-task_1771822344"
   }]
 }
 ```
 
 ## Execution Limits
 
-`task_models.py` owns retry, recovery, replan, total-task, timeout, token-budget, progress-file, and session-prefix constants; `TaskRunner` owns the persistence filename (`_RUNS_FILE`); the concurrent-run fallback (`_MAX_CONCURRENT_TASKS`) lives in `taskrunner_parts/run_lifecycle.py` and the parallel-step fallback (`_MAX_PARALLEL_TASKS`) in `taskrunner_parts/run_inputs.py`, both still importable from `kiro_crew.taskrunner`. `task_executor.execute_task()`, `TaskRunner._try_replan()`, `TaskRunner._watchdog_loop()`, and `task_executor.run_tests()` consume those bounds. `test_scenarios_v2_logic.py` pins retry exhaustion and `test_taskrunner_planning.py::test_replan_blocked_by_step_limit` pins the total-task boundary, so documentation names the enforcement seams instead of copying tunables.
+`task_models.py` owns retry, recovery, replan, total-task, timeout, token-budget, progress-file, and session-prefix constants; `TaskRunner` owns the persistence filename (`_RUNS_FILE`); the concurrent-run fallback (`_MAX_CONCURRENT_TASKS`) lives in `taskrunner_parts/run_lifecycle.py` and the parallel-step fallback (`_MAX_PARALLEL_TASKS`) in `taskrunner_parts/run_inputs.py`, both still importable from `aj_crew.taskrunner`. `task_executor.execute_task()`, `TaskRunner._try_replan()`, `TaskRunner._watchdog_loop()`, and `task_executor.run_tests()` consume those bounds. `test_scenarios_v2_logic.py` pins retry exhaustion and `test_taskrunner_planning.py::test_replan_blocked_by_step_limit` pins the total-task boundary, so documentation names the enforcement seams instead of copying tunables.
 
 The global timeout and the watchdog's stall bounds compare a run's AGE, not two wall-clock readings. `started_at` and `last_task_time` stay wall-clock for display and `runs.json`; `_MonotonicAge` keeps a monotonic reading of each. The one for `started_at` is taken where the run is stamped (a new run, a restart, a retry) and shared by `_execute_tasks` and `_watchdog_loop`, so the executor and the watchdog cannot disagree, and a wall-clock step neither times out or stall-cancels a healthy run nor spares one past its bound. The age is awake time, like the steps' own `asyncio` deadlines: `time.monotonic()` stops while the host is suspended on Linux and macOS, so a suspend there is neither timeout nor stall time, and it keeps counting on Windows. `test_taskrunner_run_steps.py::TestGlobalTimeoutClock` and `TestWatchdog::test_watchdog_measures_stalls_on_the_monotonic_clock` pin the step cases; a suspend on Linux or macOS reads as their forward step, the wall clock moving while the monotonic clock does not.
 
@@ -956,7 +956,7 @@ list, run without a shell through the same sandboxed, process-group-reaped
 spawn as before (`task_executor.run_tests`). Nothing infers a command from the
 project, and an in-sandbox agent cannot write one, because `config.json` is a
 read-only sandbox leaf (security.md). Both keys are `restart=True`: the gateway
-and `kirocrew run` pass them to `TaskRunner(test_cmd=..., require_verification=...)`
+and `ajcrew run` pass them to `TaskRunner(test_cmd=..., require_verification=...)`
 at construction. Where the agent sandbox is off, `config.json` is writable by the
 agent, as it is for every other setting; the key is read only at startup. A
 malformed list loads as empty, never trimmed, since dropping one element would run
@@ -1290,7 +1290,7 @@ rule mandates, with no independent approval state living on the run:
 
 ### Scope limitation (cron / MCP unattended runs)
 
-Per-run trust is reachable only through the dashboard launch endpoints' `_gate_auto_approve()` check. `cli_server.py` does not request it when it constructs the standalone runner, so `kirocrew run TASK.md` cannot turn on run-scoped tool approval. With no `on_tool_approval` callback, the step's permission ladder rejects every tool request that lacks explicit hook approval; `test_taskrunner_autoapprove.py::test_headless_no_authorization_rejects` pins this fail-closed posture.
+Per-run trust is reachable only through the dashboard launch endpoints' `_gate_auto_approve()` check. `cli_server.py` does not request it when it constructs the standalone runner, so `ajcrew run TASK.md` cannot turn on run-scoped tool approval. With no `on_tool_approval` callback, the step's permission ladder rejects every tool request that lacks explicit hook approval; `test_taskrunner_autoapprove.py::test_headless_no_authorization_rejects` pins this fail-closed posture.
 
 This tool-authorization default does not convert `requires_approval` into an unattended task gate: `execute_single_task()` continues a `requires_approval` task when no `on_approval` callback exists. A spec that needs an attended task boundary uses `force_approval`; the standalone CLI then stops as failed rather than proceeding.
 

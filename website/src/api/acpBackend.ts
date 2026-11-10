@@ -4,7 +4,7 @@ import type { AcpBackendProbe } from './client/config'
 
 /**
  * Which agent harness the gateway runs, read off `agent.acp_backend` in the
- * `/api/config/kirocrew` body (the `['kirocrewConfig']` query).
+ * `/api/config/ajcrew` body (the `['ajcrewConfig']` query).
  *
  * Stated POSITIVELY, mirroring the gateway's `is_kiro_backend`: a call site that
  * means "kiro" says so, rather than inferring it from "not claude" — an inference
@@ -82,7 +82,7 @@ export function reportsCredits(cfg: AcpBackendConfig | undefined): boolean {
  * True only when a LOADED config runs one of the Kiro harnesses: the Kiro
  * account is behind the turn, so its credit balance is the one the top bar
  * shows, and the user's app.kiro.dev model fallbacks apply inside the turn
- * before any of Kiro Crew's own. Separate from `reportsCredits` because the
+ * before any of Aj Crew's own. Separate from `reportsCredits` because the
  * two answer different questions that happen to name the same harnesses today.
  */
 export function isKiroHarness(cfg: AcpBackendConfig | undefined): boolean {

@@ -2,7 +2,7 @@
 // ``immutable`` of an ordinary hashed chunk) because a same-origin worker takes
 // its CSP from its OWN cached response header, so a header-only build must reach
 // it promptly. See ``_asset_cache_control`` in
-// ``src/kiro_crew/dashboard/server.py`` for the server side.
+// ``src/aj_crew/dashboard/server.py`` for the server side.
 //
 // The short-lived policy only governs a FRESH fetch, though. A browser that
 // holds a worker in cache under the year-long ``immutable`` policy keeps that

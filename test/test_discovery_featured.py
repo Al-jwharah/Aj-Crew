@@ -15,8 +15,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import discovery_featured
-from kiro_crew.dashboard.handlers.mcp_discover import _derive_install_name
+from aj_crew import discovery_featured
+from aj_crew.dashboard.handlers.mcp_discover import _derive_install_name
 
 
 @pytest.fixture(autouse=True)
@@ -118,8 +118,8 @@ class _FakeSkillProvider:
 
 
 async def _skills_client(tmp_path, monkeypatch, provider, installed=()):
-    from kiro_crew.dashboard.handlers import discover as mod
-    from kiro_crew.skill_providers.base import ProviderRegistry
+    from aj_crew.dashboard.handlers import discover as mod
+    from aj_crew.skill_providers.base import ProviderRegistry
 
     registry = ProviderRegistry()
     registry.register(provider)
@@ -223,8 +223,8 @@ class _FakeMcpProvider:
 
 
 async def _mcp_client(monkeypatch, provider, configured=()):
-    from kiro_crew.dashboard.handlers import mcp_discover as mod
-    from kiro_crew.mcp_providers.base import ProviderRegistry
+    from aj_crew.dashboard.handlers import mcp_discover as mod
+    from aj_crew.mcp_providers.base import ProviderRegistry
 
     registry = ProviderRegistry()
     registry.register(provider)
@@ -314,7 +314,7 @@ class _FeaturingEditionManager:
 async def test_mcp_featured_lists_the_editions_own_featured_packages(monkeypatch):
     # An edition that withholds the official registry admits only its own
     # provider, so none of the bundled rows can show; its marked rows do.
-    from kiro_crew.mcp_providers.capability import CapabilityProvider
+    from aj_crew.mcp_providers.capability import CapabilityProvider
 
     manager = _FeaturingEditionManager()
     client = await _mcp_client(monkeypatch, CapabilityProvider(lambda: manager))
@@ -334,7 +334,7 @@ async def test_mcp_featured_lists_the_editions_own_featured_packages(monkeypatch
 
 @pytest.mark.asyncio
 async def test_mcp_featured_survives_an_edition_registry_that_fails(monkeypatch):
-    from kiro_crew.mcp_providers.capability import CapabilityProvider
+    from aj_crew.mcp_providers.capability import CapabilityProvider
 
     manager = _FeaturingEditionManager(fail=True)
     client = await _mcp_client(monkeypatch, CapabilityProvider(lambda: manager))

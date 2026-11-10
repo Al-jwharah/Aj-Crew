@@ -18,17 +18,17 @@ from unittest.mock import AsyncMock
 import pytest
 from test_cleared_project_not_resurrected import _make_state
 
-from kiro_crew.dashboard.chat_api.slot_guards import _CommitToken
-from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+from aj_crew.dashboard.chat_api.slot_guards import _CommitToken
+from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
 # Names this change adds are imported inside the tests that need them, so the file still
 # collects against the code before the change and its assertions are what fail there.
 KEY = "dashboard:shared"
-_SRC = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+_SRC = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 
 
 def _state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     # A metadata line must exist so a message-less forced save reaches the merge.
     state.conversation_log.update_metadata(KEY, {"folder_id": "f1"})
@@ -36,7 +36,7 @@ def _state(tmp_path, monkeypatch):
 
 
 def _rollback(slot, token, prior):
-    from kiro_crew.dashboard.transcript_binding import rollback_project
+    from aj_crew.dashboard.transcript_binding import rollback_project
 
     rollback_project(slot, token, prior)
 
@@ -143,7 +143,7 @@ def test_a_slot_on_its_own_transcript_keeps_its_own_directory(tmp_path, monkeypa
 
 
 def test_a_slot_leaving_an_alias_group_keeps_its_value_and_stops_sharing(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.transcript_binding import bind_transcript
+    from aj_crew.dashboard.transcript_binding import bind_transcript
 
     state = _state(tmp_path, monkeypatch)
     a = state.get_or_create_slot("a", linked_session_key=KEY)
@@ -162,7 +162,7 @@ def test_a_slot_leaving_an_alias_group_keeps_its_value_and_stops_sharing(tmp_pat
 
 
 def test_rebinding_a_lone_slot_keeps_its_binding(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.transcript_binding import bind_transcript
+    from aj_crew.dashboard.transcript_binding import bind_transcript
 
     state = _state(tmp_path, monkeypatch)
     a = state.get_or_create_slot("a")
@@ -205,8 +205,8 @@ def test_a_rollback_with_no_peer_write_restores_the_group(tmp_path, monkeypatch)
 
 
 def test_a_fresh_slot_holds_a_private_binding():
-    from kiro_crew.dashboard.state import _ChatSlot
-    from kiro_crew.dashboard.transcript_binding import TranscriptBinding
+    from aj_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.transcript_binding import TranscriptBinding
 
     one, two = _ChatSlot("one"), _ChatSlot("two")
     assert isinstance(one._binding, TranscriptBinding)
@@ -235,7 +235,7 @@ def test_the_shallow_copy_paths_never_write_project():
 
 
 def test_copy_copy_shares_the_binding():
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("k")
     slot.project = "/p"
@@ -247,7 +247,7 @@ CHANNEL_KEY = "slack:1.1"
 
 def test_surfacing_a_channel_alias_keeps_the_live_peers_directory(tmp_path, monkeypatch):
     """The disk seed writes only a private binding; a live alias's newer value wins."""
-    from kiro_crew.dashboard import channel_slots
+    from aj_crew.dashboard import channel_slots
 
     state = _state(tmp_path, monkeypatch)
     live = state.get_or_create_slot("w", linked_session_key=CHANNEL_KEY)
@@ -273,8 +273,8 @@ def test_a_stored_threshold_never_replaces_a_live_aliases(tmp_path, monkeypatch,
     Both disk readers run on a slot that already joined the live alias: channel
     surfacing, and a restore whose slot was built with the channel link.
     """
-    from kiro_crew.dashboard import channel_slots
-    from kiro_crew.dashboard.slot_persistence import metadata_codec as codec
+    from aj_crew.dashboard import channel_slots
+    from aj_crew.dashboard.slot_persistence import metadata_codec as codec
 
     state = _state(tmp_path, monkeypatch)
     live = state.get_or_create_slot("w", linked_session_key=CHANNEL_KEY)
@@ -300,7 +300,7 @@ def test_a_stored_threshold_never_replaces_a_live_aliases(tmp_path, monkeypatch,
 
 
 def test_surfacing_a_lone_channel_session_seeds_its_directory(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import channel_slots
+    from aj_crew.dashboard import channel_slots
 
     state = _state(tmp_path, monkeypatch)
     slot = channel_slots.surface_channel_session(
@@ -317,7 +317,7 @@ def test_surfacing_a_lone_channel_session_seeds_its_directory(tmp_path, monkeypa
 def test_a_restore_read_does_not_overwrite_a_shared_binding(tmp_path, monkeypatch):
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.slot_persistence.metadata_codec import _read_project
+    from aj_crew.dashboard.slot_persistence.metadata_codec import _read_project
 
     state = _state(tmp_path, monkeypatch)
     a = state.get_or_create_slot("a", linked_session_key=KEY)
@@ -334,7 +334,7 @@ def test_a_restore_read_does_not_overwrite_a_shared_binding(tmp_path, monkeypatc
 
 def test_a_project_change_arms_the_reset_on_every_alias(tmp_path, monkeypatch):
     """One session, one process: the peer's next turn must not reuse the old cwd."""
-    from kiro_crew.dashboard.transcript_binding import arm_project_reset
+    from aj_crew.dashboard.transcript_binding import arm_project_reset
 
     state = _state(tmp_path, monkeypatch)
     a = state.get_or_create_slot("a", linked_session_key=KEY)
@@ -351,7 +351,7 @@ def test_a_project_change_arms_the_reset_on_every_alias(tmp_path, monkeypatch):
 def test_the_set_project_directive_arms_the_peer(tmp_path, monkeypatch):
     import asyncio
 
-    from kiro_crew.dashboard.session_directive_apply_slot import _set_project
+    from aj_crew.dashboard.session_directive_apply_slot import _set_project
 
     state = _state(tmp_path, monkeypatch)
     a = state.get_or_create_slot("a", linked_session_key=KEY)
@@ -368,7 +368,7 @@ def test_the_set_project_directive_arms_the_peer(tmp_path, monkeypatch):
 
 def test_a_clear_marks_every_alias_so_any_of_them_retracts_the_cwd(tmp_path, monkeypatch):
     """Whichever alias consumes the shared reset must know a clear armed it."""
-    from kiro_crew.dashboard.transcript_binding import arm_project_reset
+    from aj_crew.dashboard.transcript_binding import arm_project_reset
 
     state = _state(tmp_path, monkeypatch)
     a = state.get_or_create_slot("a", linked_session_key=KEY)
@@ -387,7 +387,7 @@ def test_a_clear_marks_every_alias_so_any_of_them_retracts_the_cwd(tmp_path, mon
 
 def test_an_alias_joining_after_the_reset_was_armed_inherits_it(tmp_path, monkeypatch):
     """Teardown can wait on attached sub-agents; a slot joining meanwhile needs the flag."""
-    from kiro_crew.dashboard.transcript_binding import arm_project_reset
+    from aj_crew.dashboard.transcript_binding import arm_project_reset
 
     state = _state(tmp_path, monkeypatch)
     a = state.get_or_create_slot("a", linked_session_key=KEY)
@@ -407,7 +407,7 @@ def test_an_unseeded_live_alias_does_not_suppress_the_stored_directory(tmp_path,
     Resurfacing the channel tab beside it must still seed the stored directory, or the
     next save writes the blank over it.
     """
-    from kiro_crew.dashboard import channel_slots
+    from aj_crew.dashboard import channel_slots
 
     state = _state(tmp_path, monkeypatch)
     fallback = state.get_or_create_slot("workflow-r1", linked_session_key=CHANNEL_KEY)
@@ -427,7 +427,7 @@ def test_an_unseeded_live_alias_does_not_suppress_the_stored_directory(tmp_path,
 def test_an_unseeded_live_alias_takes_the_restored_directory(tmp_path, monkeypatch):
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.slot_persistence.metadata_codec import _read_project
+    from aj_crew.dashboard.slot_persistence.metadata_codec import _read_project
 
     state = _state(tmp_path, monkeypatch)
     a = state.get_or_create_slot("a", linked_session_key=KEY)
@@ -440,7 +440,7 @@ def test_an_unseeded_live_alias_takes_the_restored_directory(tmp_path, monkeypat
 
 def test_a_live_explicit_clear_outranks_stale_disk(tmp_path, monkeypatch):
     """A clear is a choice: a peer surfacing from older metadata must not undo it."""
-    from kiro_crew.dashboard import channel_slots
+    from aj_crew.dashboard import channel_slots
 
     state = _state(tmp_path, monkeypatch)
     live = state.get_or_create_slot("w", linked_session_key=CHANNEL_KEY)
@@ -461,7 +461,7 @@ def test_a_live_explicit_clear_outranks_stale_disk(tmp_path, monkeypatch):
 
 def test_a_blank_default_over_blank_is_not_a_choice():
     """A computed default that found no directory must not lock out the stored one."""
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("k")
     slot.project = ""
@@ -472,7 +472,7 @@ def test_a_blank_default_over_blank_is_not_a_choice():
 
 
 def test_a_rolled_back_commit_restores_the_unchosen_state():
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("k")
     token = _CommitToken("/new")
@@ -482,7 +482,7 @@ def test_a_rolled_back_commit_restores_the_unchosen_state():
 
 
 def test_a_rolled_back_commit_keeps_an_earlier_choice():
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("k")
     slot.project = "/old"
@@ -495,7 +495,7 @@ def test_a_rolled_back_commit_keeps_an_earlier_choice():
 
 def test_a_clear_during_a_pending_commit_is_a_choice():
     """A peer's clear replaces the token; the rollback then does nothing."""
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("k")
     token = _CommitToken("/new")
@@ -508,7 +508,7 @@ def test_a_clear_during_a_pending_commit_is_a_choice():
 def test_a_rolled_back_switch_on_an_unseeded_alias_still_takes_the_stored_directory(
     tmp_path, monkeypatch
 ):
-    from kiro_crew.dashboard import channel_slots
+    from aj_crew.dashboard import channel_slots
 
     state = _state(tmp_path, monkeypatch)
     fallback = state.get_or_create_slot("workflow-r1", linked_session_key=CHANNEL_KEY)
@@ -529,7 +529,7 @@ def test_a_rolled_back_switch_on_an_unseeded_alias_still_takes_the_stored_direct
 
 def test_restored_aliases_rejoin_one_binding(tmp_path, monkeypatch):
     """A restore links the slot after creating it; the join must follow the link."""
-    from kiro_crew.dashboard.slot_persistence import metadata_codec as codec
+    from aj_crew.dashboard.slot_persistence import metadata_codec as codec
 
     state = _state(tmp_path, monkeypatch)
     a = state.get_or_create_slot("a")
@@ -554,7 +554,7 @@ def test_restored_aliases_rejoin_one_binding(tmp_path, monkeypatch):
 
 
 def test_a_restored_tab_seeds_an_unseeded_live_alias(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.slot_persistence import metadata_codec as codec
+    from aj_crew.dashboard.slot_persistence import metadata_codec as codec
 
     state = _state(tmp_path, monkeypatch)
     fallback = state.get_or_create_slot("workflow-r1", linked_session_key=KEY)
@@ -571,7 +571,7 @@ def test_a_restored_tab_seeds_an_unseeded_live_alias(tmp_path, monkeypatch):
 
 
 def test_a_restored_tab_gives_an_unseeded_live_alias_its_threshold(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.slot_persistence import metadata_codec as codec
+    from aj_crew.dashboard.slot_persistence import metadata_codec as codec
 
     state = _state(tmp_path, monkeypatch)
     fallback = state.get_or_create_slot("workflow-r1", linked_session_key=KEY)
@@ -587,7 +587,7 @@ def test_a_restored_tab_gives_an_unseeded_live_alias_its_threshold(tmp_path, mon
 
 
 def test_a_restored_tab_keeps_a_live_aliases_threshold(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.slot_persistence import metadata_codec as codec
+    from aj_crew.dashboard.slot_persistence import metadata_codec as codec
 
     state = _state(tmp_path, monkeypatch)
     live = state.get_or_create_slot("w", linked_session_key=KEY)
@@ -604,7 +604,7 @@ def test_a_restored_tab_keeps_a_live_aliases_threshold(tmp_path, monkeypatch):
 
 
 def test_a_restored_tab_keeps_a_live_aliases_clear(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.slot_persistence import metadata_codec as codec
+    from aj_crew.dashboard.slot_persistence import metadata_codec as codec
 
     state = _state(tmp_path, monkeypatch)
     live = state.get_or_create_slot("w", linked_session_key=KEY)
@@ -625,7 +625,7 @@ def test_seeding_a_running_alias_arms_its_reset(tmp_path, monkeypatch):
     """The live process keeps its old cwd; the group must reset before trusting the new one."""
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard.slot_persistence import metadata_codec as codec
+    from aj_crew.dashboard.slot_persistence import metadata_codec as codec
 
     state = _state(tmp_path, monkeypatch)
     fallback = state.get_or_create_slot("workflow-r1", linked_session_key=KEY)
@@ -645,7 +645,7 @@ def test_seeding_a_running_alias_arms_its_reset(tmp_path, monkeypatch):
 def test_apply_on_a_slot_stand_in_does_not_crash():
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.transcript_binding import live_project_outranks_disk
+    from aj_crew.dashboard.transcript_binding import live_project_outranks_disk
 
     assert live_project_outranks_disk(SimpleNamespace(_slots={}), SimpleNamespace()) is False
 
@@ -654,7 +654,7 @@ def test_surfacing_beside_a_running_unseeded_alias_arms_the_reset(tmp_path, monk
     """Surfacing joins the binding before it seeds, so the seed itself must arm it."""
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard import channel_slots
+    from aj_crew.dashboard import channel_slots
 
     state = _state(tmp_path, monkeypatch)
     fallback = state.get_or_create_slot("workflow-r1", linked_session_key=CHANNEL_KEY)

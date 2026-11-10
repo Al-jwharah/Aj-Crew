@@ -13,8 +13,8 @@ import os
 
 import pytest
 
-from kiro_crew.chat_attachments import attachments_dir
-from kiro_crew.history import ConversationLog
+from aj_crew.chat_attachments import attachments_dir
+from aj_crew.history import ConversationLog
 
 PNG_BYTES = bytes.fromhex(
     "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4"
@@ -156,7 +156,7 @@ def test_the_copy_runs_under_the_session_lock(tmp_path, png, monkeypatch):
     persisting a row that names a file already gone, which is the defect the
     feature exists to remove.
     """
-    import kiro_crew.history as history_mod
+    import aj_crew.history as history_mod
 
     log = ConversationLog(base_dir=tmp_path)
     real = history_mod.ConversationLog._persist_inline_attachments
@@ -175,7 +175,7 @@ def test_the_copy_runs_under_the_session_lock(tmp_path, png, monkeypatch):
 def test_delete_is_refused_when_attachments_cannot_be_moved_aside(tmp_path, png):
     """Step 1 fails -> nothing has changed: transcript and images both intact,
     and the ordinary delete still works afterwards."""
-    import kiro_crew.history_projection as projection
+    import aj_crew.history_projection as projection
 
     log = ConversationLog(base_dir=tmp_path)
     log.append("thread1", "assistant", f"![shot]({png})")
@@ -221,7 +221,7 @@ def test_a_failed_transcript_unlink_puts_the_attachments_back(tmp_path, png, mon
 def test_a_purge_residue_does_not_fail_the_delete(tmp_path, png, monkeypatch):
     """Step 3 fails -> the transcript is gone and nothing references the bytes, so
     the delete is reported as done and the orphan is left for an operator."""
-    import kiro_crew.chat_attachments as mod
+    import aj_crew.chat_attachments as mod
 
     log = ConversationLog(base_dir=tmp_path)
     log.append("thread1", "assistant", f"![shot]({png})")

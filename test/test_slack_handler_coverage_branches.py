@@ -1,4 +1,4 @@
-"""Failure-branch coverage for :mod:`kiro_crew.slack.handler`.
+"""Failure-branch coverage for :mod:`aj_crew.slack.handler`.
 
 ``test_slack_handler.py`` and ``test_slack_handler_coverage.py`` drive the happy
 paths of the Slack command surface. This module deliberately targets what they
@@ -22,12 +22,12 @@ import pytest
 from slack_wire_helpers import SlackWire, slack_wire
 
 from conftest import MockSlackClient
-from kiro_crew import agent_discovery
-from kiro_crew.config.loader import ConfigReadError
-from kiro_crew.messaging import auto_title
-from kiro_crew.messaging import commands as mc
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.slack import handler as h
+from aj_crew import agent_discovery
+from aj_crew.config.loader import ConfigReadError
+from aj_crew.messaging import auto_title
+from aj_crew.messaging import commands as mc
+from aj_crew.providers.base import LLMEvent
+from aj_crew.slack import handler as h
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).
@@ -208,7 +208,7 @@ class TestConfigWriteFailures:
 
         monkeypatch.setattr(h, "update_config_locked", _boom)
         with pytest.raises(ValueError, match="Failed to read config"):
-            h._set_default_agent("kirocrew")
+            h._set_default_agent("ajcrew")
         assert h._cached_default_agent is None
 
     def test_set_default_agent_write_error(self, monkeypatch):
@@ -217,7 +217,7 @@ class TestConfigWriteFailures:
 
         monkeypatch.setattr(h, "update_config_locked", _boom)
         with pytest.raises(ValueError, match="Failed to write config"):
-            h._set_default_agent("kirocrew")
+            h._set_default_agent("ajcrew")
         # Cache must NOT advance past a failed write.
         assert h._cached_default_agent is None
 
@@ -235,7 +235,7 @@ class TestConfigWriteFailures:
 
         monkeypatch.setattr(h, "update_config_locked", _boom)
         with pytest.raises(ValueError, match="Failed to write config"):
-            h._persist_channel_config("C1", agent="kirocrew")
+            h._persist_channel_config("C1", agent="ajcrew")
 
     def test_persist_channel_config_merges_both_fields(self, monkeypatch, tmp_path):
         # Real file through the real locked primitive: the write must merge
@@ -243,10 +243,10 @@ class TestConfigWriteFailures:
         cfg = tmp_path / "config.json"
         cfg.write_text(json.dumps({"slack": {"bot": "x"}}), encoding="utf-8", newline="\n")
         monkeypatch.setattr(h, "config_path", lambda: cfg)
-        h._persist_channel_config("C9", activation="always", agent="kirocrew")
+        h._persist_channel_config("C9", activation="always", agent="ajcrew")
         written = json.loads(cfg.read_text(encoding="utf-8"))
         ch = written["slack"]["channels"]["C9"]
-        assert ch == {"activation": "always", "agent": "kirocrew"}
+        assert ch == {"activation": "always", "agent": "ajcrew"}
         # Sibling keys survive the merge.
         assert written["slack"]["bot"] == "x"
 
@@ -256,7 +256,7 @@ class TestSensitivePathRefusal:
         monkeypatch.setattr(h, "config_path", lambda: tmp_path / "config.json")
         monkeypatch.setattr(h, "is_sensitive_path", lambda _p: True)
         with pytest.raises(ValueError, match="sensitive path"):
-            h._set_default_agent("kirocrew")
+            h._set_default_agent("ajcrew")
         with pytest.raises(ValueError, match="sensitive path"):
             h._persist_channel_config("C1", activation="mention")
 
@@ -639,7 +639,7 @@ class TestHandleMessageKeywordDispatch:
         [
             pytest.param("!compact", id="test_compact_keyword_dispatches_for_the_owner"),
             pytest.param(
-                "<@UBOT|kirocrew> !compact",
+                "<@UBOT|ajcrew> !compact",
                 id="test_mention_prefix_is_stripped_before_command_matching",
             ),
         ],
@@ -673,7 +673,7 @@ class TestHandleMessageKeywordDispatch:
                 id="test_allowed_user_command_denied_for_a_stranger",
             ),
             pytest.param(
-                "!agent kirocrew",
+                "!agent ajcrew",
                 "Owner-only command.",
                 id="test_owner_only_command_denied_for_a_stranger",
             ),
@@ -746,13 +746,13 @@ class TestListAllAgentNames:
     def test_union_dedups_and_hides_the_internal_variant(self, monkeypatch, tmp_path):
         agents = tmp_path / "agents"
         agents.mkdir()
-        for stem in ("alpha", "shared", "kirocrew-lite"):
+        for stem in ("alpha", "shared", "ajcrew-lite"):
             (agents / f"{stem}.json").write_text(
                 json.dumps({"name": stem}), encoding="utf-8", newline="\n"
             )
         monkeypatch.setattr(h, "kiro_agents_dir", lambda: agents)
         monkeypatch.setattr(
-            h, "_iter_cc_agent_names", lambda _d=None: iter(["shared", "beta", "kirocrew-lite"])
+            h, "_iter_cc_agent_names", lambda _d=None: iter(["shared", "beta", "ajcrew-lite"])
         )
         out = h._list_all_agent_names()
         names = [n.strip() for n in out.split(",")]

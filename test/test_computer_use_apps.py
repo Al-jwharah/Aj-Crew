@@ -31,9 +31,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.computer_use import apps_macos, macos_ffi, policy
-from kiro_crew.computer_use.types import AppRef, ComputerUseError, PolicyConfig
-from kiro_crew.platform_compat import IS_POSIX
+from aj_crew.computer_use import apps_macos, macos_ffi, policy
+from aj_crew.computer_use.types import AppRef, ComputerUseError, PolicyConfig
+from aj_crew.platform_compat import IS_POSIX
 
 # The live finding, as a fixture. Both entries claim the same owner name; only the
 # layer distinguishes them, and only the layer-0 one has a populated AX tree.
@@ -100,7 +100,7 @@ def test_resolve_app_prefers_layer_zero_window_owner_over_decoy_helper(
                 window_id=2,
                 pid=_REAL_CHROME_PID,
                 owner="Google Chrome",
-                title="KiroCrew — GitHub",
+                title="AjCrew — GitHub",
                 layer=0,
             ),
         ],
@@ -108,7 +108,7 @@ def test_resolve_app_prefers_layer_zero_window_owner_over_decoy_helper(
     app = apps_macos.resolve_app("Google Chrome")
     assert app.pid == _REAL_CHROME_PID
     assert app.window_id == 2
-    assert app.window_title == "KiroCrew — GitHub"
+    assert app.window_title == "AjCrew — GitHub"
 
 
 def test_list_apps_drops_every_non_zero_layer(monkeypatch: pytest.MonkeyPatch, no_identity):
@@ -437,7 +437,7 @@ def test_a_plist_on_the_sensitive_path_floor_is_never_read(
     ``$HOME`` redirected at the tmp dir) rather than by patching
     ``is_sensitive_path``: the read now goes through ``hooks.safe_read_prefix``,
     which resolves the name through its own import, so a patch of the
-    ``kiro_crew.security`` attribute would not be observed and the test would pass
+    ``aj_crew.security`` attribute would not be observed and the test would pass
     against a bypassed floor.
     """
     home = tmp_path / "home"
@@ -592,7 +592,7 @@ def test_identity_for_falls_back_to_the_process_name(monkeypatch: pytest.MonkeyP
     with no bundle id is still nameable — and therefore still deniable.
     """
     monkeypatch.setattr(apps_macos, "resolve_identity", lambda pid: apps_macos.AppIdentity())
-    from kiro_crew.computer_use.types import AppRef
+    from aj_crew.computer_use.types import AppRef
 
     identity = apps_macos.identity_for(AppRef(name="somebinary", pid=99))
     assert identity.display_name == "somebinary"
@@ -606,7 +606,7 @@ def test_identity_for_prefers_the_freshly_resolved_display_name(monkeypatch: pyt
         "resolve_identity",
         lambda pid: apps_macos.AppIdentity(bundle_id="com.apple.Preview", display_name="Preview"),
     )
-    from kiro_crew.computer_use.types import AppRef
+    from aj_crew.computer_use.types import AppRef
 
     identity = apps_macos.identity_for(AppRef(name="stale name", pid=99))
     assert identity.display_name == "Preview"
@@ -636,9 +636,9 @@ if __name__ == "__main__":  # pragma: no cover
 class TestBrowserHostedDashboardIsRefused:
     """The self-target rule must survive the dashboard being a BROWSER TAB.
 
-    KiroCrew's own Settings page is where the computer-use enable lives, and that
+    AjCrew's own Settings page is where the computer-use enable lives, and that
     enable sits on the keystone precisely so the agent cannot reach it. Driving our
-    own window would route around it — which is why ``kirocrew_self`` is the one
+    own window would route around it — which is why ``ajcrew_self`` is the one
     denylist entry the scope change kept.
 
     A bundle/name rule cannot see the browser case: the dashboard served at
@@ -656,11 +656,11 @@ class TestBrowserHostedDashboardIsRefused:
     @pytest.mark.parametrize(
         "title",
         [
-            "Kiro Crew",  # the plain tab title
-            "(3) Kiro Crew",  # the unread-badge prefix (App.tsx)
-            "Artifacts — Kiro Crew",  # a popout frame's suffix
-            "kirocrew",  # the no-space spelling
-            "KIRO CREW",  # case must not matter
+            "Aj Crew",  # the plain tab title
+            "(3) Aj Crew",  # the unread-badge prefix (App.tsx)
+            "Artifacts — Aj Crew",  # a popout frame's suffix
+            "ajcrew",  # the no-space spelling
+            "AJ CREW",  # case must not matter
         ],
     )
     def test_a_browser_window_titled_like_the_dashboard_is_refused(self, title):
@@ -678,7 +678,7 @@ class TestBrowserHostedDashboardIsRefused:
         title-only rule would have let the native app through.
         """
         native = AppRef(
-            name="Kiro Crew", pid=1, bundle_id="dev.kiro.crew", window_title="Settings"
+            name="Aj Crew", pid=1, bundle_id="io.github.al-jwharah.ajcrew", window_title="Settings"
         )
         assert policy.check_app(native, PolicyConfig()) is not None
 
@@ -723,10 +723,10 @@ class TestMultiWindowHostPrefersTheDeniedTitle:
     @pytest.mark.parametrize(
         "titles",
         [
-            ("Hacker News", "Kiro Crew"),  # dashboard in a BACKGROUND window
-            ("Kiro Crew", "Hacker News"),  # dashboard first
-            ("", "Kiro Crew"),  # untitled window listed first
-            ("Hacker News", "GitHub", "Kiro Crew"),  # third of three
+            ("Hacker News", "Aj Crew"),  # dashboard in a BACKGROUND window
+            ("Aj Crew", "Hacker News"),  # dashboard first
+            ("", "Aj Crew"),  # untitled window listed first
+            ("Hacker News", "GitHub", "Aj Crew"),  # third of three
         ],
     )
     def test_any_dashboard_window_refuses_the_whole_process(self, titles, monkeypatch):

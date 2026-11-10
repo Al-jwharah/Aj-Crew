@@ -21,14 +21,14 @@ import { Dialog, DialogBody, DialogContent, DialogTitle } from '../components/ui
 // Long enough to overflow the popup's capped height, and no filler name contains
 // "prep", so the filter narrows to exactly one row.
 const CATALOG = [
-  { key: 'babysit', name: 'babysit', description: 'Monitor a PR', source: 'kirocrew' },
+  { key: 'babysit', name: 'babysit', description: 'Monitor a PR', source: 'ajcrew' },
   { key: 'kiro-user/prepare-pr', name: 'prepare-pr', description: 'Ship a PR', source: 'kiro-user' },
-  { key: 'widgets', name: 'widgets', description: 'Render HTML', source: 'kirocrew' },
+  { key: 'widgets', name: 'widgets', description: 'Render HTML', source: 'ajcrew' },
   ...Array.from({ length: 12 }, (_, i) => ({
     key: `filler-${i}`,
     name: `filler-${String(i).padStart(2, '0')}`,
     description: `Filler skill ${i}`,
-    source: 'kirocrew',
+    source: 'ajcrew',
   })),
 ]
 

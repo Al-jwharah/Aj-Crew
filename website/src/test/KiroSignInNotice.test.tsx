@@ -25,13 +25,13 @@ vi.mock('../api/client', async importOriginal => {
     api: {
       ...mod.api,
       kasLoginStatus: vi.fn(),
-      kirocrewConfig: vi.fn(),
+      ajcrewConfig: vi.fn(),
     },
   }
 })
 
 const kasLoginStatus = vi.mocked(api.kasLoginStatus)
-const kirocrewConfig = vi.mocked(api.kirocrewConfig)
+const ajcrewConfig = vi.mocked(api.ajcrewConfig)
 
 // Token-free status bodies, exactly the fields `/api/kas-login` returns.
 const HEALTHY: KasLoginStatus = {
@@ -69,7 +69,7 @@ const findRefused = () => screen.findByTestId('kiro-sign-in-refused', {}, chain(
 const findFailure = () => screen.findByTestId('kiro-sign-in-status-error', {}, chain())
 
 function backend(id: string) {
-  kirocrewConfig.mockResolvedValue({ agent: { acp_backend: id } } as Awaited<ReturnType<typeof api.kirocrewConfig>>)
+  ajcrewConfig.mockResolvedValue({ agent: { acp_backend: id } } as Awaited<ReturnType<typeof api.ajcrewConfig>>)
 }
 
 /** A page below the notice that answers the leave guard (holds a draft, or not). */
@@ -84,7 +84,7 @@ const settle = () => act(async () => { await Promise.resolve() })
 beforeEach(() => {
   navigate.mockReset()
   kasLoginStatus.mockReset()
-  kirocrewConfig.mockReset()
+  ajcrewConfig.mockReset()
 })
 
 // Unmount first so no query timer fires on the fake clock, then restore real
@@ -218,7 +218,7 @@ describe('KiroSignInNotice', () => {
   })
 
   it('says a backend-setting read that failed before any good read could not be read, with no sign-in claim', async () => {
-    kirocrewConfig.mockRejectedValue(new Error('config read failed'))
+    ajcrewConfig.mockRejectedValue(new Error('config read failed'))
     kasLoginStatus.mockResolvedValue(EXPIRED)
     const store = createTestStore()
     store.dispatch(sseConnected())
@@ -240,11 +240,11 @@ describe('KiroSignInNotice', () => {
   })
 
   it('leaves a failed first backend-setting read to the offline and token surfaces while they show', async () => {
-    kirocrewConfig.mockRejectedValue(new Error('config read failed'))
+    ajcrewConfig.mockRejectedValue(new Error('config read failed'))
     const store = createTestStore()
     // Offline: the gateway's transport has not connected.
     renderWithProviders(<KiroSignInNotice />, { store })
-    await waitFor(() => expect(kirocrewConfig).toHaveBeenCalled(), chain())
+    await waitFor(() => expect(ajcrewConfig).toHaveBeenCalled(), chain())
     await settle()
     expect(screen.queryByTestId('kiro-sign-in-config-error')).not.toBeInTheDocument()
 
@@ -268,10 +268,10 @@ describe('KiroSignInNotice', () => {
     backend(id)
     kasLoginStatus.mockResolvedValue(EXPIRED)
     const { queryClient } = renderWithProviders(<KiroSignInNotice />)
-    await waitFor(() => expect(kirocrewConfig).toHaveBeenCalled(), chain())
-    kirocrewConfig.mockRejectedValue(new Error('config read failed'))
-    await act(async () => { await queryClient.refetchQueries({ queryKey: ['kirocrewConfig'] }) })
-    expect(queryClient.getQueryState(['kirocrewConfig'])?.status).toBe('error')
+    await waitFor(() => expect(ajcrewConfig).toHaveBeenCalled(), chain())
+    ajcrewConfig.mockRejectedValue(new Error('config read failed'))
+    await act(async () => { await queryClient.refetchQueries({ queryKey: ['ajcrewConfig'] }) })
+    expect(queryClient.getQueryState(['ajcrewConfig'])?.status).toBe('error')
     await settle()
     expect(screen.queryByTestId('kiro-sign-in-config-error')).not.toBeInTheDocument()
     expect(failure()).not.toBeInTheDocument()
@@ -300,9 +300,9 @@ describe('KiroSignInNotice', () => {
     kasLoginStatus.mockResolvedValue(EXPIRED)
     const { queryClient } = renderWithProviders(<KiroSignInNotice />)
     await findNotice()
-    kirocrewConfig.mockRejectedValue(new Error('config read failed'))
-    await act(async () => { await queryClient.refetchQueries({ queryKey: ['kirocrewConfig'] }) })
-    expect(queryClient.getQueryState(['kirocrewConfig'])?.status).toBe('error')
+    ajcrewConfig.mockRejectedValue(new Error('config read failed'))
+    await act(async () => { await queryClient.refetchQueries({ queryKey: ['ajcrewConfig'] }) })
+    expect(queryClient.getQueryState(['ajcrewConfig'])?.status).toBe('error')
     expect(notice()).toBeInTheDocument()
     expect(failure()).not.toBeInTheDocument()
   })
@@ -406,7 +406,7 @@ describe('KiroSignInNotice', () => {
     backend(id)
     kasLoginStatus.mockResolvedValue(EXPIRED)
     renderWithProviders(<KiroSignInNotice />)
-    await waitFor(() => expect(kirocrewConfig).toHaveBeenCalled(), chain())
+    await waitFor(() => expect(ajcrewConfig).toHaveBeenCalled(), chain())
     // Let the config land and any status read that would follow it run.
     await settle()
     expect(kasLoginStatus).not.toHaveBeenCalled()

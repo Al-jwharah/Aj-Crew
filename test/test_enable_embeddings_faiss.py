@@ -20,11 +20,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-import kiro_crew.dashboard.handlers.memory as mem_mod
-from kiro_crew.embeddings import DOWNLOAD_ATTEMPTS_INTERACTIVE
+import aj_crew.dashboard.handlers.memory as mem_mod
+from aj_crew.embeddings import DOWNLOAD_ATTEMPTS_INTERACTIVE
 
-_MOD = "kiro_crew.dashboard.handlers.memory"
-_EMB = "kiro_crew.embeddings"
+_MOD = "aj_crew.dashboard.handlers.memory"
+_EMB = "aj_crew.embeddings"
 
 
 @web.middleware
@@ -93,7 +93,7 @@ def _common_patches(cfg_path, faiss_available=False, proc_rc=0, proc_stderr=b"",
     patches = {
         "mgr": patch(f"{_MOD}.model_download_manager", return_value=mgr),
         "model_present": patch(f"{_MOD}.model_file_present", return_value=model_present),
-        "cfg_load": patch(f"{_MOD}.KiroCrewConfig.load", return_value=MagicMock()),
+        "cfg_load": patch(f"{_MOD}.AjCrewConfig.load", return_value=MagicMock()),
         "cfg_path": patch(f"{_MOD}.config_path", return_value=cfg_path),
         "subprocess": patch("asyncio.create_subprocess_exec", return_value=proc),
         "embed_fn": patch(f"{_MOD}.make_sync_embed_fn", return_value=lambda t: [0.0]),
@@ -109,7 +109,7 @@ def _common_patches(cfg_path, faiss_available=False, proc_rc=0, proc_stderr=b"",
 class TestFaissInstallSuccess:
     @pytest.mark.asyncio
     async def test_pip_install_runs_when_faiss_missing(self, tmp_path: Path) -> None:
-        cfg_path = tmp_path / "kirocrew.json"
+        cfg_path = tmp_path / "ajcrew.json"
         cfg_path.write_text("{}", encoding="utf-8")
         patches, store, proc, mgr = _common_patches(cfg_path, faiss_available=False, proc_rc=0)
 
@@ -141,7 +141,7 @@ class TestFaissInstallFailure:
     ) -> None:
         _pin_active_embedder.model_id = "qwen3-embedding:0.6b"
         _pin_active_embedder.is_ready.return_value = True
-        cfg_path = tmp_path / "kirocrew.json"
+        cfg_path = tmp_path / "ajcrew.json"
         cfg_path.write_text("{}", encoding="utf-8")
         patches, store, proc, mgr = _common_patches(cfg_path, faiss_available=False)
         spawned: list[tuple] = []
@@ -166,7 +166,7 @@ class TestFaissInstallFailure:
                 assert resp.status == 200
                 assert (await resp.json())["ok"] is True
 
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=MagicMock()), \
+        with patch("aj_crew.config.loader.AjCrewConfig.load", return_value=MagicMock()), \
              patch(f"{_MOD}.model_download_manager", return_value=mgr), \
              patch(f"{_MOD}.model_file_present", return_value=True):
             async with TestClient(TestServer(_make_app())) as c:
@@ -187,7 +187,7 @@ class TestFaissInstallFailure:
 class TestFaissAlreadyInstalled:
     @pytest.mark.asyncio
     async def test_skips_pip_when_faiss_importable(self, tmp_path: Path) -> None:
-        cfg_path = tmp_path / "kirocrew.json"
+        cfg_path = tmp_path / "ajcrew.json"
         cfg_path.write_text("{}", encoding="utf-8")
         patches, store, proc, mgr = _common_patches(cfg_path, faiss_available=True)
 
@@ -211,9 +211,9 @@ class TestFaissSandboxUnavailableDoesNotWedge:
 
     @pytest.mark.asyncio
     async def test_returns_200_and_status_not_wedged(self, tmp_path: Path) -> None:
-        from kiro_crew.sandbox import SandboxUnavailableError
+        from aj_crew.sandbox import SandboxUnavailableError
 
-        cfg_path = tmp_path / "kirocrew.json"
+        cfg_path = tmp_path / "ajcrew.json"
         cfg_path.write_text("{}", encoding="utf-8")
         patches, store, proc, mgr = _common_patches(cfg_path, faiss_available=False)
 
@@ -250,7 +250,7 @@ class TestModelDownloadFlow:
 
     @pytest.mark.asyncio
     async def test_downloads_model_when_absent(self, tmp_path: Path) -> None:
-        cfg_path = tmp_path / "kirocrew.json"
+        cfg_path = tmp_path / "ajcrew.json"
         cfg_path.write_text("{}", encoding="utf-8")
         patches, store, proc, mgr = _common_patches(
             cfg_path, faiss_available=True, model_present=False, ensure_ok=True
@@ -284,7 +284,7 @@ class TestModelDownloadFlow:
     @pytest.mark.asyncio
     async def test_download_in_flight_returns_without_new_task(self, tmp_path: Path) -> None:
         """A download already in flight is adopted — no second ensure_model task."""
-        cfg_path = tmp_path / "kirocrew.json"
+        cfg_path = tmp_path / "ajcrew.json"
         cfg_path.write_text("{}", encoding="utf-8")
         patches, store, proc, mgr = _common_patches(
             cfg_path, faiss_available=True, model_present=False, ensure_ok=True
@@ -310,7 +310,7 @@ class TestModelDownloadFlow:
 class TestLoadFaissIndexCalled:
     @pytest.mark.asyncio
     async def test_called_after_successful_setup(self, tmp_path: Path) -> None:
-        cfg_path = tmp_path / "kirocrew.json"
+        cfg_path = tmp_path / "ajcrew.json"
         cfg_path.write_text("{}", encoding="utf-8")
         patches, store, proc, mgr = _common_patches(cfg_path, faiss_available=True)
 
@@ -325,7 +325,7 @@ class TestLoadFaissIndexCalled:
 
     @pytest.mark.asyncio
     async def test_persists_llama_cpp_provider(self, tmp_path: Path) -> None:
-        cfg_path = tmp_path / "kirocrew.json"
+        cfg_path = tmp_path / "ajcrew.json"
         cfg_path.write_text("{}", encoding="utf-8")
         patches, store, proc, mgr = _common_patches(cfg_path, faiss_available=True)
 
@@ -354,7 +354,7 @@ class TestPersistedEmbeddingDim:
     async def test_a_non_bundled_active_width_is_what_gets_persisted(
         self, tmp_path: Path, _pin_active_embedder
     ) -> None:
-        cfg_path = tmp_path / "kirocrew.json"
+        cfg_path = tmp_path / "ajcrew.json"
         cfg_path.write_text("{}", encoding="utf-8")
         _pin_active_embedder.dim = 768
         patches, store, proc, mgr = _common_patches(cfg_path, faiss_available=True)
@@ -372,7 +372,7 @@ class TestPersistedEmbeddingDim:
     async def test_an_unreadable_width_fails_loudly_and_persists_nothing(
         self, tmp_path: Path
     ) -> None:
-        cfg_path = tmp_path / "kirocrew.json"
+        cfg_path = tmp_path / "ajcrew.json"
         cfg_path.write_text("{}", encoding="utf-8")
         patches, store, proc, mgr = _common_patches(cfg_path, faiss_available=True)
 
@@ -396,7 +396,7 @@ class TestPersistedEmbeddingDim:
     async def test_a_non_positive_width_fails_loudly_and_persists_nothing(
         self, tmp_path: Path, _pin_active_embedder
     ) -> None:
-        cfg_path = tmp_path / "kirocrew.json"
+        cfg_path = tmp_path / "ajcrew.json"
         cfg_path.write_text("{}", encoding="utf-8")
         _pin_active_embedder.dim = 0
         patches, store, proc, mgr = _common_patches(cfg_path, faiss_available=True)
@@ -415,7 +415,7 @@ class TestPersistedEmbeddingDim:
 class TestLoadFaissIndexFailure:
     @pytest.mark.asyncio
     async def test_returns_500_when_load_faiss_raises(self, tmp_path: Path) -> None:
-        cfg_path = tmp_path / "kirocrew.json"
+        cfg_path = tmp_path / "ajcrew.json"
         cfg_path.write_text("{}", encoding="utf-8")
         patches, store, proc, mgr = _common_patches(cfg_path, faiss_available=True)
         store.load_faiss_index.side_effect = RuntimeError("corrupted index")
@@ -436,7 +436,7 @@ class TestLoadFaissIndexFailure:
 class TestFaissInstallTimeout:
     @pytest.mark.asyncio
     async def test_returns_500_on_timeout(self, tmp_path: Path) -> None:
-        cfg_path = tmp_path / "kirocrew.json"
+        cfg_path = tmp_path / "ajcrew.json"
         cfg_path.write_text("{}", encoding="utf-8")
         patches, store, proc, mgr = _common_patches(cfg_path, faiss_available=False, proc_rc=0)
         proc.kill = MagicMock()
@@ -480,7 +480,7 @@ class TestEmbeddingStatusEndpoint:
         mgr = MagicMock()
         mgr.status = {"step": "downloading", "error": "", "attempt": 2}
 
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=cfg), \
+        with patch("aj_crew.config.loader.AjCrewConfig.load", return_value=cfg), \
              patch(f"{_MOD}.get_shared_embedder", return_value=embedder), \
              patch(f"{_MOD}.model_download_manager", return_value=mgr), \
              patch(f"{_MOD}.model_file_present", return_value=False):
@@ -491,7 +491,7 @@ class TestEmbeddingStatusEndpoint:
 
         assert body["enabled"] is True
         # Legacy token: the shipped frontend hard-checks provider === "ollama"
-        # to render the healthy state; kept until KiroCrewWebsite ships its
+        # to render the healthy state; kept until AjCrewWebsite ships its
         # companion change.
         assert body["provider"] == "ollama"
         assert body["model_available"] is False
@@ -521,7 +521,7 @@ class TestEmbeddingStatusEndpoint:
         mgr = MagicMock()
         mgr.status = {"step": "failed", "error": "sha256 mismatch", "attempt": 6}
 
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=cfg), \
+        with patch("aj_crew.config.loader.AjCrewConfig.load", return_value=cfg), \
              patch(f"{_MOD}.get_shared_embedder", return_value=embedder), \
              patch(f"{_MOD}.model_download_manager", return_value=mgr), \
              patch(f"{_MOD}.model_file_present", return_value=False):
@@ -583,7 +583,7 @@ class TestEnsurePipBootstrap:
     async def test_enable_returns_500_when_pip_bootstrap_fails(self, tmp_path: Path) -> None:
         # End-to-end: faiss missing AND pip bootstrap fails -> handler 500s
         # before attempting the faiss install, with status reset to idle.
-        cfg_path = tmp_path / "kirocrew.json"
+        cfg_path = tmp_path / "ajcrew.json"
         cfg_path.write_text("{}", encoding="utf-8")
         # faiss_available=False, but do NOT inject a fake pip -> force the
         # bootstrap path; make ensurepip (the only subprocess) fail.
@@ -594,7 +594,7 @@ class TestEnsurePipBootstrap:
 
         with patch(f"{_MOD}.model_download_manager", return_value=_mock_mgr()), \
              patch(f"{_MOD}.model_file_present", return_value=True), \
-             patch(f"{_MOD}.KiroCrewConfig.load", return_value=MagicMock()), \
+             patch(f"{_MOD}.AjCrewConfig.load", return_value=MagicMock()), \
              patch(f"{_MOD}.config_path", return_value=cfg_path), \
              patch("asyncio.create_subprocess_exec", return_value=proc), \
              patch.dict("sys.modules", {"faiss": None, "pip": None}), \
@@ -672,7 +672,7 @@ class TestPipStderrRedaction:
     async def test_faiss_install_failure_log_masks_userinfo_credential(
         self, tmp_path: Path, caplog: pytest.LogCaptureFixture
     ) -> None:
-        cfg_path = tmp_path / "kirocrew.json"
+        cfg_path = tmp_path / "ajcrew.json"
         cfg_path.write_text("{}", encoding="utf-8")
         patches, store, proc, mgr = _common_patches(
             cfg_path, faiss_available=False, proc_rc=1, proc_stderr=self._auth_failure_stderr()
@@ -769,7 +769,7 @@ class TestAppTokenRefused:
     async def test_app_token_gets_403_and_setup_not_reached(
         self, tmp_path: Path, model_present: bool
     ) -> None:
-        cfg_path = tmp_path / "kirocrew.json"
+        cfg_path = tmp_path / "ajcrew.json"
         cfg_path.write_text("{}", encoding="utf-8")
         patches, _store, _proc, mgr = _common_patches(cfg_path, model_present=model_present)
 

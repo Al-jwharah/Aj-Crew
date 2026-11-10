@@ -18,16 +18,16 @@ from unittest.mock import MagicMock
 import pytest
 from body_stream_helpers import attach_body
 
-from kiro_crew.cron import CronService
-from kiro_crew.dashboard.handlers import api_cron_update
-from kiro_crew.validation import MAX_SHORT_STRING
+from aj_crew.cron import CronService
+from aj_crew.dashboard.handlers import api_cron_update
+from aj_crew.validation import MAX_SHORT_STRING
 
 OVERSIZE_NAME = "x" * (MAX_SHORT_STRING + 1)
 
 
 @pytest.fixture(autouse=True)
 def _isolate_cron_store(monkeypatch, tmp_path):
-    monkeypatch.setattr("kiro_crew.cron._DEFAULT_DIR", tmp_path)
+    monkeypatch.setattr("aj_crew.cron._DEFAULT_DIR", tmp_path)
     yield
 
 

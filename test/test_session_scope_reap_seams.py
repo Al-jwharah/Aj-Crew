@@ -36,8 +36,8 @@ from session_scope_reap_helpers import (  # noqa: F401 -- the autouse fixture re
     _scope_errors_fail_the_test_fixture,
 )
 
-from kiro_crew import session_scope_reap as r
-from kiro_crew.testing.wait import finished
+from aj_crew import session_scope_reap as r
+from aj_crew.testing.wait import finished
 
 pytestmark = pytest.mark.skipif(sys.platform != "linux", reason="Agent scope reaping is Linux-only")
 
@@ -50,7 +50,7 @@ def test_non_linux_is_no_op(monkeypatch):
 
 
 def test_instance_dir_none_when_token_unavailable(monkeypatch):
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     monkeypatch.setattr(sandbox, "_agents_slice_cgroup_dir", lambda: Path("/nonexistent-parent"))
     # Degraded token: child name equals the shared parent -> not attributable.
@@ -234,7 +234,7 @@ def test_old_skips_emit_one_categorized_info_summary(tmp_path, caplog):
 
 
 def test_incomplete_tracking_snapshot_aborts_before_scan(monkeypatch, tmp_path, caplog):
-    from kiro_crew import sandbox, session_pid
+    from aj_crew import sandbox, session_pid
 
     monkeypatch.setattr(r.sys, "platform", "linux")
     monkeypatch.setattr(sandbox, "_probe_cgroup_scope", lambda: (True, ""))
@@ -256,7 +256,7 @@ def test_incomplete_tracking_snapshot_aborts_before_scan(monkeypatch, tmp_path, 
 
 
 def test_complete_tracking_snapshot_proceeds(monkeypatch, tmp_path):
-    from kiro_crew import sandbox, session_pid
+    from aj_crew import sandbox, session_pid
 
     expected = r.ReapSummary(scanned=2, reclaimed=1, skipped=1)
     seen = {}
@@ -314,7 +314,7 @@ def _own_stat(proc_root: Path, raw: bytes) -> None:
 
 
 def test_gateway_boot_reads_a_non_utf8_own_comm_from_bytes(tmp_path, monkeypatch):
-    _own_stat(tmp_path, b"7 (kirocrew\xe2\x9c) S 1 7 " + b"0 " * 16 + b"4242 0")
+    _own_stat(tmp_path, b"7 (ajcrew\xe2\x9c) S 1 7 " + b"0 " * 16 + b"4242 0")
     _pin_boot_clock(monkeypatch, now=100.0)
     monkeypatch.setattr(r, "time", _ModuleProxy(r.time, clock_gettime=lambda _clock: 50.0))
 
@@ -325,7 +325,7 @@ def test_gateway_boot_reads_a_non_utf8_own_comm_from_bytes(tmp_path, monkeypatch
 def test_gateway_boot_reads_monotonic_before_the_boot_clock(tmp_path, monkeypatch):
     # A stall between the two reads must lengthen the elapsed time, moving the
     # derived start EARLIER (toward not reaping), never later than the truth.
-    _own_stat(tmp_path, b"7 (kirocrew) S 1 7 " + b"0 " * 16 + b"4242 0")
+    _own_stat(tmp_path, b"7 (ajcrew) S 1 7 " + b"0 " * 16 + b"4242 0")
     order: list[str] = []
     _pin_tick_rate(monkeypatch, 100)
     monkeypatch.setattr(
@@ -343,7 +343,7 @@ def test_gateway_boot_reads_monotonic_before_the_boot_clock(tmp_path, monkeypatc
 
 
 @pytest.mark.parametrize(
-    "raw", [b"malformed", b"7 (kirocrew) S 1 7", b"7 (kirocrew) S 1 7 " + b"0 " * 16 + b"x"]
+    "raw", [b"malformed", b"7 (ajcrew) S 1 7", b"7 (ajcrew) S 1 7 " + b"0 " * 16 + b"x"]
 )
 def test_gateway_boot_returns_none_for_a_malformed_own_stat(tmp_path, raw):
     _own_stat(tmp_path, raw)
@@ -356,7 +356,7 @@ def test_gateway_boot_monotonic_us_returns_none_on_proc_read_error(tmp_path):
 
 
 def test_gateway_boot_monotonic_us_rejects_zero_clock_ticks(tmp_path, monkeypatch):
-    _own_stat(tmp_path, b"7 (kirocrew) S 1 7 " + b"0 " * 16 + b"4242 0")
+    _own_stat(tmp_path, b"7 (ajcrew) S 1 7 " + b"0 " * 16 + b"4242 0")
     _pin_tick_rate(monkeypatch, 0)
 
     assert r.gateway_boot_monotonic_us(tmp_path) is None
@@ -407,12 +407,12 @@ def test_scope_age_fallback_returns_none_without_readable_member(tmp_path):
 
 
 def test_instance_dir_reports_missing_per_instance_cgroup(tmp_path, monkeypatch):
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     parent = tmp_path / "agents.slice"
     parent.mkdir()
     monkeypatch.setattr(sandbox, "_agents_slice_cgroup_dir", lambda: parent)
-    monkeypatch.setattr(sandbox, "_agents_slice_name", lambda: "kirocrew-agents-test.slice")
+    monkeypatch.setattr(sandbox, "_agents_slice_name", lambda: "ajcrew-agents-test.slice")
 
     slice_dir, why = r._instance_scope_dir()
 
@@ -499,8 +499,8 @@ async def test_periodic_ticks_reclaim_successive_runtime_trees_without_gateway_r
     from types import SimpleNamespace
     from unittest.mock import AsyncMock
 
-    from kiro_crew import sandbox, session, session_pid
-    from kiro_crew.config import KiroCrewConfig
+    from aj_crew import sandbox, session, session_pid
+    from aj_crew.config import AjCrewConfig
 
     proc, slice_dir = tmp_path / "proc", tmp_path / "slice"
     rec = _Recorder()
@@ -516,7 +516,7 @@ async def test_periodic_ticks_reclaim_successive_runtime_trees_without_gateway_r
         entered[unit] = _enter_us_for_age(1000)
         protected[scope / "cgroup.procs"] = (scope / "cgroup.procs").read_bytes()
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session.pool_size = 0
     cfg.session.timeout_secs = 60
     cfg.session.watchdog_rss_max_mb = 0
@@ -526,7 +526,7 @@ async def test_periodic_ticks_reclaim_successive_runtime_trees_without_gateway_r
     manager._sessions["test:active"] = SimpleNamespace(provider=SimpleNamespace(client=client))
     manager._warm_pool.put_nowait((SimpleNamespace(client=SimpleNamespace(_pid=702)), 0.0))
     manager._starting_pids.add(703)
-    # nosemgrep: kirocrew.mock-pid-allocatable -- a fake companion runtime's pid, read only into the active-pid shield through _companion_runtime_pids and never signalled; moved verbatim
+    # nosemgrep: ajcrew.mock-pid-allocatable -- a fake companion runtime's pid, read only into the active-pid shield through _companion_runtime_pids and never signalled; moved verbatim
     manager._subagent_runtimes["test:companion"] = SimpleNamespace(pid=704, is_alive=lambda: True)
     monkeypatch.setattr(session_pid, "_protected_pids", lambda: set())
     monkeypatch.setattr(session_pid, "_read_tracked_agent_pids", lambda: ({705}, True))

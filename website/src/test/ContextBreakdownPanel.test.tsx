@@ -185,22 +185,22 @@ describe('ContextBreakdownPanel rendering, from the fold\'s bounded state', () =
     expect(container.querySelectorAll('button[data-turn]:not([data-start-row])')).toHaveLength(5)
   })
 
-  it('heads an unsplit newest turn with its own token total, not Kiro Crew blocks alone', () => {
+  it('heads an unsplit newest turn with its own token total, not Aj Crew blocks alone', () => {
     render(<ContextBreakdownPanel trace={fiveTurns()} chartWidth={600} />)
     const detail = screen.getByTestId('selected-turn-detail')
     expect(within(detail).getByText(/Turn 6 · latest/)).toBeInTheDocument()
     expect(screen.getByTestId('whole-total').textContent).not.toMatch(/^2,160/)
-    // Kiro Crew is the first row, with its total.
+    // Aj Crew is the first row, with its total.
     const crew = detail.querySelector('[data-engine-row="crew"]') as HTMLElement
-    expect(crew.textContent).toMatch(/Kiro Crew.*2,080/)
+    expect(crew.textContent).toMatch(/Aj Crew.*2,080/)
   })
 
   it('lists only the chart parts that are non-zero in the plotted turns', () => {
     const rows = [2, 3].map(n => ({ ...rowOf(n), ours: { ...rowOf(n).ours, memory: 0 } }))
     render(<ContextBreakdownPanel trace={trace({ latest: latestOf({ turn: 3 }), trend: rows })} chartWidth={600} />)
     const legend = screen.getByTestId('trend').textContent ?? ''
-    expect(legend).not.toContain('Kiro Crew memory')
-    expect(legend).toContain('Kiro Crew rules')
+    expect(legend).not.toContain('Aj Crew memory')
+    expect(legend).toContain('Aj Crew rules')
     expect(legend).toContain('Rest of the context')
   })
 
@@ -233,7 +233,7 @@ describe('ContextBreakdownPanel rendering, from the fold\'s bounded state', () =
 
   it('does not promise data while recording is switched off', () => {
     render(<ContextBreakdownPanel trace={trace({ turns: [], recording: false, env_file: '/srv/crew/.env' })} />)
-    expect(screen.getByText(/Context breakdown is not recorded while the crew log is off\. Remove KIROCREW_CREW_LOG from \/srv\/crew\/\.env/)).toBeInTheDocument()
+    expect(screen.getByText(/Context breakdown is not recorded while the crew log is off\. Remove AJCREW_CREW_LOG from \/srv\/crew\/\.env/)).toBeInTheDocument()
     expect(screen.queryByText(/yet/)).toBeNull()
   })
 
@@ -411,7 +411,7 @@ describe('picking a past turn shows that turn whole, as the newest one is shown'
     const latest = latestOf({ blocks, blocks_omitted: 6 })
     render(<ContextBreakdownPanel trace={trace({ latest, trend: [rowOf(2), rowOf(3)] })} chartWidth={600} />)
     // A disclosure that looks like one: right chevron while shut, down once open.
-    const toggle = screen.getByRole('button', { name: '10 Kiro Crew blocks sent this turn' })
+    const toggle = screen.getByRole('button', { name: '10 Aj Crew blocks sent this turn' })
     expect(toggle.getAttribute('aria-expanded')).toBe('false')
     expect(toggle.querySelector('[data-testid="blocks-chevron"]')!.getAttribute('class')).toMatch(/chevron-right/)
     fireEvent.click(toggle)
@@ -490,7 +490,7 @@ describe('picking a past turn shows that turn whole, as the newest one is shown'
     const t = trace({ latest: latestOf({ turn: 4, context_used: 49_000 }), trend: [flat(2), flat(3), flat(4)] })
     render(<ContextBreakdownPanel trace={t} chartWidth={600} />)
     expect(screen.getByTestId('chart-unit').textContent).toBe('Unit: tokens (estimated)')
-    // Turn 3 holds 1,260 characters of Kiro Crew blocks: about 315 tokens at 4 a token.
+    // Turn 3 holds 1,260 characters of Aj Crew blocks: about 315 tokens at 4 a token.
     expect(screen.getByRole('button', { name: /^Turn 3:/ }).getAttribute('aria-label')).toBe('Turn 3: about 315 tokens')
     cleanup()
     // A measured ring stays in characters.
@@ -509,7 +509,7 @@ describe('picking a past turn shows that turn whole, as the newest one is shown'
     const aria = (n: number) => screen.getByRole('button', { name: new RegExp(`^Turn ${n}:`) }).getAttribute('aria-label')
     expect(aria(4)).toBe('Turn 4: about 84,000 tokens')
     expect(aria(2)).toBe('Turn 2: about 80,000 tokens')
-    // No total: Kiro Crew's own estimate only (1,260 characters, about 315 tokens).
+    // No total: Aj Crew's own estimate only (1,260 characters, about 315 tokens).
     expect(aria(3)).toBe('Turn 3: about 315 tokens')
     expect(document.querySelector('[data-category="loop"]')).not.toBeNull()
     expect(document.querySelector('[data-legend="loop"]')!.textContent).toBe('Rest of the context')

@@ -49,7 +49,7 @@ def test_every_opt_in_is_found_parses_and_names_known_checks() -> None:
 @_each("save_rejects_non_numeric_user_ids")
 def test_save_rejects_non_numeric_user_ids(contract: str, tmp_path: Path, monkeypatch) -> None:
     subject = _load(contract)
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     subject._accept_token(monkeypatch, mod)
     status_body, _ = subject._client_put(
@@ -63,7 +63,7 @@ def test_save_rejects_non_numeric_user_ids(contract: str, tmp_path: Path, monkey
 @_each("soft_threshold_bounds")
 def test_soft_threshold_bounds(contract: str, tmp_path: Path, monkeypatch) -> None:
     subject = _load(contract)
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     subject._accept_token(monkeypatch, mod)
     for bad in (0, 101, "80", True):
@@ -80,7 +80,7 @@ def test_soft_threshold_bounds(contract: str, tmp_path: Path, monkeypatch) -> No
 def test_save_rejects_whitespace_credentials(contract: str, tmp_path: Path, monkeypatch) -> None:
     """A secret carrying inner whitespace fails before any write."""
     subject = _load(contract)
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     status_body, env = subject._client_put(mod, monkeypatch, tmp_path, {"bot_token": "two words"})
     status, body = status_body

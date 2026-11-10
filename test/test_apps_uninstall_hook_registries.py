@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from dashboard_owner_helpers import owner_claims
 
-import kiro_crew.apps.teardown as teardown
+import aj_crew.apps.teardown as teardown
 
 APP = "test-app"
 
@@ -111,30 +111,30 @@ class TestUninstallDropsTheHooks:
         request.json = AsyncMock(return_value={})
 
         with (
-            patch("kiro_crew.apps.routes.get_app", return_value=fake_app),
+            patch("aj_crew.apps.routes.get_app", return_value=fake_app),
             patch(
-                "kiro_crew.apps.routes.uninstall_app",
+                "aj_crew.apps.routes.uninstall_app",
                 return_value=MagicMock(ok=True, to_dict=lambda: {"ok": True}),
             ),
-            patch("kiro_crew.apps.routes.stop_app_backend", return_value=None),
-            patch("kiro_crew.apps.routes.deregister_app", return_value=None),
+            patch("aj_crew.apps.routes.stop_app_backend", return_value=None),
+            patch("aj_crew.apps.routes.deregister_app", return_value=None),
             patch(
-                "kiro_crew.apps.teardown.on_app_disable",
+                "aj_crew.apps.teardown.on_app_disable",
                 new_callable=AsyncMock,
                 return_value=None,
             ),
-            patch("kiro_crew.apps.routes.sel", return_value=MagicMock()),
+            patch("aj_crew.apps.routes.sel", return_value=MagicMock()),
             patch(
-                "kiro_crew.apps.routes.classify_and_clean_for_uninstall",
+                "aj_crew.apps.routes.classify_and_clean_for_uninstall",
                 return_value={"removable": [], "shared": [], "userInstalled": []},
             ),
             patch(
-                "kiro_crew.apps.routes.clean_dependencies",
+                "aj_crew.apps.routes.clean_dependencies",
                 new_callable=AsyncMock,
                 return_value=[],
             ),
         ):
-            from kiro_crew.apps.routes import handle_uninstall_app
+            from aj_crew.apps.routes import handle_uninstall_app
 
             resp = await handle_uninstall_app(request)
         assert resp.status < 400, f"uninstall failed with {resp.status}"

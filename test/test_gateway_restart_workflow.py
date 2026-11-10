@@ -7,8 +7,8 @@ from e2e.test_gateway_boot_matrix import _booted, _Client
 from e2e.test_private_workflow_memory import _finished
 
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("KIROCREW_E2E"),
-    reason="Set KIROCREW_E2E=1 for real gateway process supervision",
+    not os.environ.get("AJCREW_E2E"),
+    reason="Set AJCREW_E2E=1 for real gateway process supervision",
 )
 
 

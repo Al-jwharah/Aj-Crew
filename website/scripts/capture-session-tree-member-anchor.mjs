@@ -21,7 +21,7 @@ import { openSessionTreeHarness } from './lib/session-tree-harness.mjs'
 
 const BASE = process.argv[2] || 'http://127.0.0.1:6181'
 const OUT = process.argv[3] || '../temp-screenshots/session-tree-member-anchor'
-const MEMBER = 'member-kirocrew-pipeline-conductor'
+const MEMBER = 'member-ajcrew-pipeline-conductor'
 const WORKERS = ['chat-2124', 'chat-2125', 'chat-2130']
 
 const { page, check, keys, rowOf, settleTheme, shot, finish } = await openSessionTreeHarness(OUT)

@@ -23,9 +23,9 @@ from unittest.mock import patch
 
 import pytest
 
-import kiro_crew.cron as cron_mod
-from kiro_crew.cron import CronJob, CronService, CronStoreBusy
-from kiro_crew.testing.wait import await_until
+import aj_crew.cron as cron_mod
+from aj_crew.cron import CronJob, CronService, CronStoreBusy
+from aj_crew.testing.wait import await_until
 
 _ADMITTED = SimpleNamespace(admitted=True, reason="")
 
@@ -118,7 +118,7 @@ async def test_one_shot_runs_once_when_its_result_merge_hits_a_busy_store(tmp_pa
     )
     store = _BusyStore(service, merges_only=True)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             store.on = True
             await _tick(service, job.id)  # fires; its merge cannot lock the store
             store.on = False
@@ -142,7 +142,7 @@ async def test_one_shot_does_not_refire_while_the_store_stays_busy(tmp_path, rec
     )
     store = _BusyStore(service, merges_only=False)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             store.on = True
             for _ in range(3):  # three ticks, at most 30 s apart in production
                 await _tick(service, job.id)
@@ -175,7 +175,7 @@ async def test_busy_merge_keeps_a_one_shot_that_owes_no_delete(
     )
     store = _BusyStore(service, merges_only=True)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             store.on = True
             await _tick(service, job.id)
     finally:
@@ -208,7 +208,7 @@ async def test_busy_merge_parks_a_failed_one_shot_on_disk(tmp_path, recorder):
     )
     store = _BusyStore(service, merges_only=True)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             store.on = True
             await _tick(service, job.id)  # fires and fails; its merge cannot lock
             store.on = False
@@ -235,7 +235,7 @@ async def test_busy_merge_park_survives_another_writers_reload(tmp_path, recorde
     )
     store = _BusyStore(service, merges_only=True)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             store.on = True
             await _tick(service, job.id)
             store.on = False
@@ -279,7 +279,7 @@ async def test_failed_save_in_the_merge_parks_a_failed_one_shot(tmp_path, record
     service._save = save  # type: ignore[method-assign]
     service._merge_job_result = merge  # type: ignore[method-assign]
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             await _tick(service, job.id)  # fires and fails; the merge's save fails
             await _tick(service, job.id)
             assert job.id not in service._pending_removals

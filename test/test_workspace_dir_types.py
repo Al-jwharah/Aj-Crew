@@ -15,7 +15,7 @@ from unittest.mock import patch
 import pytest
 from test_workspace_crud_handlers import _CFGDIR, _DATAHOME, _LOAD, _cfg, _req
 
-from kiro_crew.dashboard.handlers import api_workspaces_create, api_workspaces_update
+from aj_crew.dashboard.handlers import api_workspaces_create, api_workspaces_update
 
 _NOT_STRINGS = [5, 1.5, True, None, ["a"], {"a": 1}]
 

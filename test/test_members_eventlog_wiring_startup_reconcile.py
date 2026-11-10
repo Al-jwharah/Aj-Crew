@@ -15,9 +15,9 @@ import pytest
 from members_eventlog_wiring_helpers import _fresh_eventlog  # noqa: F401
 from members_eventlog_wiring_helpers import CREW, _agent, _fake_config
 
-from kiro_crew import eventlog_hooks, members
-from kiro_crew.eventlog import types
-from kiro_crew.eventlog.service import get_service
+from aj_crew import eventlog_hooks, members
+from aj_crew.eventlog import types
+from aj_crew.eventlog.service import get_service
 
 
 def _seed_config_baseline(svc, slug, agent_cfg):
@@ -47,7 +47,7 @@ class TestStartupReconcile:
         from bytes it cannot name. Pinned together because accepting a falsy stamp would
         open an exemption silently.
         """
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         cfg = _fake_config({CREW: _agent(model="sonnet")})
         slug = members.slug_for_name(CREW)
@@ -109,7 +109,7 @@ class TestStartupReconcile:
         writing the boot-time config would regress the projection, which has no
         compaction. So the sweep reloads config itself.
         """
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         boot_cfg = _fake_config({CREW: _agent(model="sonnet")})
         live_cfg = _fake_config({CREW: _agent(model="opus")})
@@ -150,7 +150,7 @@ class TestStartupReconcile:
         wrote, so the config write is withheld. The closers come from live process
         state, not config, so they still land.
         """
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         cfg = _fake_config({CREW: _agent(model="sonnet")})
         live_cfg = _fake_config({CREW: _agent(model="opus")})
@@ -220,7 +220,7 @@ class TestStartupReconcile:
         exhaustion would skip every slot closer in both passes. Only the patrol closer is
         starved here, so a green run means the slot closer was reached.
         """
-        from kiro_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog import service as svc_mod
 
         cfg = _fake_config({CREW: _agent()})
         slug = members.slug_for_name(CREW)
@@ -267,7 +267,7 @@ class TestStartupReconcile:
         A lease refusal, like a lost tail, must not starve the closers below it. The
         refusal guarantees nothing was written, which makes another attempt safe.
         """
-        from kiro_crew.crew_log.errors import CODE_ALREADY_OWNED, CrewLogError
+        from aj_crew.crew_log.errors import CODE_ALREADY_OWNED, CrewLogError
 
         cfg = _fake_config({CREW: _agent()})
         slug = members.slug_for_name(CREW)
@@ -318,8 +318,8 @@ class TestStartupReconcile:
         stops, and the sweep's own second pass places the closers -- without which the
         interrupted slot reads open and the patrol reads armed until the next restart.
         """
-        from kiro_crew.eventlog import log as log_mod
-        from kiro_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog import log as log_mod
+        from aj_crew.eventlog import service as svc_mod
 
         cfg = _fake_config({CREW: _agent()})
         slug = members.slug_for_name(CREW)
@@ -388,7 +388,7 @@ class TestStartupReconcile:
         exception, and the retry pass rightly declines the landed closer, so the count
         must be kept outside the return value.
         """
-        from kiro_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog import service as svc_mod
 
         cfg = _fake_config({CREW: _agent()})
         slug = members.slug_for_name(CREW)
@@ -455,7 +455,7 @@ class TestStartupReconcile:
         assert [
             record.getMessage()
             for record in caplog.records
-            if record.name == "kiro_crew.eventlog_hooks" and record.levelname == "WARNING"
+            if record.name == "aj_crew.eventlog_hooks" and record.levelname == "WARNING"
         ] == ["member event-log startup reconcile skipped ambiguous slug='dr-eggbot' (2 members)"]
 
     def test_a_malformed_colliding_claimant_blocks_reconciliation(self, caplog):
@@ -480,7 +480,7 @@ class TestStartupReconcile:
         warnings = [
             record.getMessage()
             for record in caplog.records
-            if record.name == "kiro_crew.eventlog_hooks" and record.levelname == "WARNING"
+            if record.name == "aj_crew.eventlog_hooks" and record.levelname == "WARNING"
         ]
         assert warnings == [
             "member event-log startup reconcile skipped 1 non-dispatchable name(s) and 0 unresolved slug(s)",
@@ -505,7 +505,7 @@ class TestStartupReconcile:
         assert [
             record.getMessage()
             for record in caplog.records
-            if record.name == "kiro_crew.eventlog_hooks" and record.levelname == "WARNING"
+            if record.name == "aj_crew.eventlog_hooks" and record.levelname == "WARNING"
         ] == ["member event-log startup reconcile skipped slug='dr-eggbot' with foreign header"]
 
     def test_invalid_names_and_unresolved_slugs_are_counted_without_values(
@@ -533,7 +533,7 @@ class TestStartupReconcile:
         messages = [
             record.getMessage()
             for record in caplog.records
-            if record.name == "kiro_crew.eventlog_hooks" and record.levelname == "WARNING"
+            if record.name == "aj_crew.eventlog_hooks" and record.levelname == "WARNING"
         ]
         assert messages == [
             "member event-log startup reconcile skipped 1 non-dispatchable name(s) and 1 unresolved slug(s)"
@@ -553,7 +553,7 @@ class TestStartupReconcile:
             raise RuntimeError(private_header)
 
         monkeypatch.setattr(svc, "logged_name", _fail_logged_name)
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.eventlog_hooks"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.eventlog_hooks"):
             eventlog_hooks.reconcile_members_at_startup(
                 cfg, SimpleNamespace(_slots={}), SimpleNamespace(get_by_slot=lambda key: None)
             )
@@ -562,7 +562,7 @@ class TestStartupReconcile:
         assert [
             record.getMessage()
             for record in caplog.records
-            if record.name == "kiro_crew.eventlog_hooks" and record.levelname == "WARNING"
+            if record.name == "aj_crew.eventlog_hooks" and record.levelname == "WARNING"
         ] == ["member event-log startup reconcile failed for slug='dr-eggbot'"]
 
     def test_a_placeholder_log_header_is_ambiguous_and_never_reconciled(self, caplog):
@@ -588,7 +588,7 @@ class TestStartupReconcile:
         assert [
             record.getMessage()
             for record in caplog.records
-            if record.name == "kiro_crew.eventlog_hooks" and record.levelname == "WARNING"
+            if record.name == "aj_crew.eventlog_hooks" and record.levelname == "WARNING"
         ] == ["member event-log startup reconcile skipped slug='dr-eggbot' with placeholder header"]
 
     def test_a_recreated_member_handed_a_retired_slug_never_inherits_the_old_log(self, caplog):
@@ -630,7 +630,7 @@ class TestStartupReconcile:
         assert [
             record.getMessage()
             for record in caplog.records
-            if record.name == "kiro_crew.eventlog_hooks" and record.levelname == "WARNING"
+            if record.name == "aj_crew.eventlog_hooks" and record.levelname == "WARNING"
         ] == [
             "member event-log startup reconcile skipped slug='issue-radar' with placeholder header"
         ]
@@ -643,7 +643,7 @@ class TestStartupReconcile:
         sweep that folds the name instead creates and reconciles a SECOND log,
         so the member's history splits and their real log is never corrected.
         """
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         # No space: the sweep skips any name failing _AGENT_NAME_RE, so a
         # two-word fixture would be skipped and the test would pass vacuously.

@@ -1,11 +1,11 @@
 """``agent.native_skill_projection``: a config switch for the native skill views.
 
-With projection on, every spawn writes a ``kirocrew-skill-view-*`` view of every
+With projection on, every spawn writes a ``ajcrew-skill-view-*`` view of every
 agent it lists -- the operator's own kiro-cli agents included -- into the kiro
 agents directory kiro-cli shares, and overlays
 ``chat.disableInheritingDefaultResources: true`` onto the workspace
 ``.kiro/settings/cli.json``, which a standalone kiro-cli then reads too.
-``KIROCREW_NATIVE_SKILL_PROJECTION=0`` disables the same projection, but a
+``AJCREW_NATIVE_SKILL_PROJECTION=0`` disables the same projection, but a
 GUI-launched gateway never sees it. These tests pin what projection does to the
 shared files and that ``agent.native_skill_projection: false`` takes the same
 rollback path the environment variable does.
@@ -19,9 +19,9 @@ from types import SimpleNamespace
 import native_skill_projection_helpers
 import pytest
 
-from kiro_crew.acp import skill_projection as projection
-from kiro_crew.agent_spec_format import NATIVE_SKILL_ALIAS_PREFIX
-from kiro_crew.config import loader as config_loader
+from aj_crew.acp import skill_projection as projection
+from aj_crew.agent_spec_format import NATIVE_SKILL_ALIAS_PREFIX
+from aj_crew.config import loader as config_loader
 
 _no_eager_prune = native_skill_projection_helpers._no_eager_prune
 _prune_on_every_spawn = native_skill_projection_helpers._prune_on_every_spawn
@@ -34,9 +34,9 @@ _INHERIT = "chat.disableInheritingDefaultResources"
 
 
 def _configure(monkeypatch, value):
-    """Answer ``KiroCrewConfig.load()`` with *value* for the projection switch."""
+    """Answer ``AjCrewConfig.load()`` with *value* for the projection switch."""
     config = SimpleNamespace(agent=SimpleNamespace(native_skill_projection=value))
-    monkeypatch.setattr(config_loader.KiroCrewConfig, "load", classmethod(lambda cls: config))
+    monkeypatch.setattr(config_loader.AjCrewConfig, "load", classmethod(lambda cls: config))
 
 
 def _views(agents):
@@ -44,7 +44,7 @@ def _views(agents):
 
 
 def _operator_agent(agents):
-    """An agent the operator wrote for kiro-cli, unrelated to Kiro Crew."""
+    """An agent the operator wrote for kiro-cli, unrelated to Aj Crew."""
     (agents / "custom.json").write_text(
         json.dumps({"name": "custom", "prompt": "You advise."}), encoding="utf-8"
     )
@@ -105,7 +105,7 @@ def test_environment_disable_wins_over_config_on(native_tree, monkeypatch):
     _home, agents, project = native_tree
     _configure(monkeypatch, True)
     _operator_agent(agents)
-    monkeypatch.setenv("KIROCREW_NATIVE_SKILL_PROJECTION", "0")
+    monkeypatch.setenv("AJCREW_NATIVE_SKILL_PROJECTION", "0")
 
     assert projection.prepare_native_skill_projection(project) is None
     assert _views(agents) == []
@@ -119,7 +119,7 @@ def test_a_config_load_that_raises_turns_projection_off(native_tree, monkeypatch
     def broken(cls):
         raise RuntimeError("config loader failed")
 
-    monkeypatch.setattr(config_loader.KiroCrewConfig, "load", classmethod(broken))
+    monkeypatch.setattr(config_loader.AjCrewConfig, "load", classmethod(broken))
 
     assert projection.prepare_native_skill_projection(project) is None
     assert _views(agents) == []

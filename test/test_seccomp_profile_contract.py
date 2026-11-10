@@ -23,7 +23,7 @@ _SECCOMP_DIR = Path(__file__).resolve().parent.parent / "docker" / "seccomp"
 
 #: The shipped profile, exactly what a container downloads per Option A in
 #: docs/guides/docker.md.
-PROFILE_PATH = _SECCOMP_DIR / "kirocrew-seccomp.json"
+PROFILE_PATH = _SECCOMP_DIR / "ajcrew-seccomp.json"
 
 #: The private-window syscall set: clone the child, unshare
 #: CLONE_NEWUSER|CLONE_NEWNS, mount --bind the staging dir, then
@@ -38,7 +38,7 @@ def _load_profile() -> dict:
 
 def _load_generator():
     spec = importlib.util.spec_from_file_location(
-        "kirocrew_seccomp_gen_profile", _SECCOMP_DIR / "gen_profile.py"
+        "ajcrew_seccomp_gen_profile", _SECCOMP_DIR / "gen_profile.py"
     )
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -84,7 +84,7 @@ def test_private_window_syscall_is_allowed_without_capabilities(syscall: str) ->
 
 
 def test_profile_adds_nothing_beyond_the_private_window_set() -> None:
-    """The Kiro Crew additions are exactly the private-window syscalls.
+    """The Aj Crew additions are exactly the private-window syscalls.
 
     The legacy one-argument ``umount`` stays behind CAP_SYS_ADMIN: the
     launcher never calls it, so granting it would widen the profile for no

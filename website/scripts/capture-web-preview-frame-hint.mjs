@@ -58,7 +58,7 @@ const slots = SEED.map(s => ({
   running: false,
   last_message: '',
   messages: 4,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   created: '2026-09-01T01:00:00Z',
   last_ts: new Date(NOW - s.hoursAgo * 3600_000).toISOString(),

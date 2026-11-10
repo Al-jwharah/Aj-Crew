@@ -28,11 +28,11 @@ from gateway_appkit_endpoints_helpers import (  # noqa: F401 -- the fixture is r
     app_env_fixture,
 )
 
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME
-from kiro_crew.apps.routes import register_app_routes
-from kiro_crew.dashboard.chat import api_chat_slot_context
-from kiro_crew.dashboard.handlers import api_mcp_server_detail
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME
+from aj_crew.apps.routes import register_app_routes
+from aj_crew.dashboard.chat import api_chat_slot_context
+from aj_crew.dashboard.handlers import api_mcp_server_detail
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -46,15 +46,15 @@ def mcp_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     mcp_json.parent.mkdir(parents=True)
     mcp_json.write_text('{"mcpServers": {}}')
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.mcp._GLOBAL_MCP_JSON", mcp_json
+        "aj_crew.dashboard.handlers.mcp._GLOBAL_MCP_JSON", mcp_json
     )
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.mcp._MCP_LOCK_PATH",
+        "aj_crew.dashboard.handlers.mcp._MCP_LOCK_PATH",
         mcp_json.with_suffix(".lock"),
     )
     # Stub _sync_mcp_to_agent to avoid touching real agent config
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.mcp._sync_mcp_to_agent",
+        "aj_crew.dashboard.handlers.mcp._sync_mcp_to_agent",
         lambda *a, **kw: None,
     )
     return mcp_json
@@ -452,7 +452,7 @@ class TestContextDrain:
         frame changed underneath it — e.g. the silent-consumption
         contract line would never have shown up here).
         """
-        from kiro_crew.dashboard.chat_runner import (
+        from aj_crew.dashboard.chat_runner import (
             _CONTEXT_FRAME_CONTRACT,
             drain_pending_context,
         )
@@ -544,9 +544,9 @@ class TestReverseProxy:
     @pytest.fixture(autouse=True)
     def _proxy_env(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         """Set up a temp environment for proxy tests."""
-        home = tmp_path / "kirocrew-home"
+        home = tmp_path / "ajcrew-home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         # Create a test app with a secret
         app_dir = home / "apps" / "proxy-app"
         app_dir.mkdir(parents=True)
@@ -572,15 +572,15 @@ class TestReverseProxy:
         }
         (app_dir / "installed.json").write_text(json.dumps(installed))
         # Stub bridges
-        import kiro_crew.apps.bridges as bridges_mod
+        import aj_crew.apps.bridges as bridges_mod
         kiro_agents = tmp_path / "kiro-agents"
         kiro_agents.mkdir()
         monkeypatch.setattr(bridges_mod, "KIRO_AGENTS_DIR", kiro_agents)
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
         bmod._processes.clear()
         bmod._allocated_ports.clear()
         # Clear secret cache
-        from kiro_crew.apps.routes import _app_secret_cache
+        from aj_crew.apps.routes import _app_secret_cache
         _app_secret_cache.clear()
         self._home = home
 
@@ -601,7 +601,7 @@ class TestReverseProxy:
         """
         from unittest.mock import MagicMock
 
-        from kiro_crew.apps.routes import handle_app_api_proxy
+        from aj_crew.apps.routes import handle_app_api_proxy
 
         request = MagicMock()
         request.match_info = {"name": "proxy-app", "path": "foo/../etc/passwd"}
@@ -626,7 +626,7 @@ class TestReverseProxy:
         """
         from unittest.mock import MagicMock, patch
 
-        from kiro_crew.apps.routes import handle_app_api_proxy
+        from aj_crew.apps.routes import handle_app_api_proxy
 
         # Flip the fixture's app to disabled; everything else stays valid.
         installed_path = self._home / "apps" / "proxy-app" / "installed.json"
@@ -639,7 +639,7 @@ class TestReverseProxy:
         request.match_info = {"name": "proxy-app", "path": "health"}
         request.get = lambda key, default="": default   # dashboard caller, not an app
 
-        with patch("kiro_crew.apps.routes.sel") as mock_sel:
+        with patch("aj_crew.apps.routes.sel") as mock_sel:
             resp = await handle_app_api_proxy(request)
 
         assert resp.status == 403, f"expected 403, got {resp.status}"
@@ -669,7 +669,7 @@ class TestReverseProxy:
         """
         from unittest.mock import MagicMock
 
-        from kiro_crew.apps.routes import handle_app_api_proxy
+        from aj_crew.apps.routes import handle_app_api_proxy
 
         meta = json.loads((self._home / "apps" / "proxy-app" / "installed.json").read_text())
         assert meta["enabled"] is True
@@ -689,7 +689,7 @@ class TestReverseProxy:
         (CWE-269 cross-app guard). Called directly with a crafted request."""
         from unittest.mock import MagicMock
 
-        from kiro_crew.apps.routes import handle_app_api_proxy
+        from aj_crew.apps.routes import handle_app_api_proxy
 
         request = MagicMock()
         request.match_info = {"name": "proxy-app", "path": "health"}
@@ -707,8 +707,8 @@ class TestReverseProxy:
         PAST the 403 guard without exercising the header-forwarding path."""
         from unittest.mock import MagicMock
 
-        import kiro_crew.apps.routes as rmod
-        from kiro_crew.apps.routes import handle_app_api_proxy
+        import aj_crew.apps.routes as rmod
+        from aj_crew.apps.routes import handle_app_api_proxy
 
         monkeypatch.setattr(rmod, "_resolve_app_backend_url", lambda name: "")
         request = MagicMock()
@@ -736,7 +736,7 @@ class TestReverseProxy:
             "schemaVersion": 2,
         }
         (app_dir / "installed.json").write_text(json.dumps(installed))
-        import kiro_crew.apps.routes as rmod
+        import aj_crew.apps.routes as rmod
         monkeypatch.setattr(rmod, "_resolve_app_backend_url", lambda name: "http://127.0.0.1:19999")
         # Clear cache so the missing secret is detected
         rmod._app_secret_cache.clear()
@@ -750,7 +750,7 @@ class TestReverseProxy:
     @pytest.mark.asyncio
     async def test_backend_unreachable_returns_502(self, monkeypatch):
         """Proxy to unreachable backend returns 502."""
-        import kiro_crew.apps.routes as rmod
+        import aj_crew.apps.routes as rmod
 
         # Point to a port that's definitely not listening
         monkeypatch.setattr(rmod, "_resolve_app_backend_url", lambda name: "http://127.0.0.1:19999")
@@ -763,7 +763,7 @@ class TestReverseProxy:
 
     @pytest.mark.asyncio
     async def test_hmac_header_present_and_valid(self, monkeypatch):
-        """Proxy request includes X-KiroCrew-Proxy with valid HMAC."""
+        """Proxy request includes X-AjCrew-Proxy with valid HMAC."""
         import hashlib
         import hmac as _hmac
 
@@ -783,7 +783,7 @@ class TestReverseProxy:
         await site.start()
         port = runner.addresses[0][1]
 
-        import kiro_crew.apps.routes as rmod
+        import aj_crew.apps.routes as rmod
         monkeypatch.setattr(rmod, "_resolve_app_backend_url", lambda name: f"http://127.0.0.1:{port}")
 
         try:
@@ -791,8 +791,8 @@ class TestReverseProxy:
                 resp = await client.get("/apps/proxy-app/api/test-path")
                 assert resp.status == 200
 
-            proxy_header = received_headers.get("x-kirocrew-proxy", "")
-            assert proxy_header, "X-KiroCrew-Proxy header missing"
+            proxy_header = received_headers.get("x-ajcrew-proxy", "")
+            assert proxy_header, "X-AjCrew-Proxy header missing"
             assert ":" in proxy_header
 
             ts, sig = proxy_header.split(":", 1)
@@ -831,7 +831,7 @@ class TestReverseProxy:
         await site.start()
         port = runner.addresses[0][1]
 
-        import kiro_crew.apps.routes as rmod
+        import aj_crew.apps.routes as rmod
         monkeypatch.setattr(rmod, "_resolve_app_backend_url", lambda name: f"http://127.0.0.1:{port}")
 
         try:
@@ -844,7 +844,7 @@ class TestReverseProxy:
 
             # Verify HMAC includes query string — proxy preserves /api/
             # prefix in forwarded path, so msg includes it.
-            proxy_header = received_headers.get("x-kirocrew-proxy", "")
+            proxy_header = received_headers.get("x-ajcrew-proxy", "")
             ts, sig = proxy_header.split(":", 1)
             empty_body_hash = hashlib.sha256(b"").hexdigest()
             msg = f"{ts}:GET:/api/data?user=alice&limit=10:" + empty_body_hash
@@ -865,14 +865,14 @@ class TestReverseProxy:
     @pytest.mark.asyncio
     async def test_hmac_includes_percent_encoded_query_string_with_spaces(self, monkeypatch):
         """HMAC signature correctly signs percent-encoded query parameters (spaces, #, non-ASCII)."""
-        from kiro_crew.apps.proxy_auth import verify_proxy_request
+        from aj_crew.apps.proxy_auth import verify_proxy_request
 
         received_headers: dict[str, str] = {}
 
         async def echo_handler(request: web.Request) -> web.Response:
             for k, v in request.headers.items():
                 received_headers[k.lower()] = v
-            auth_hdr = request.headers.get("x-kirocrew-proxy", "")
+            auth_hdr = request.headers.get("x-ajcrew-proxy", "")
             verified = verify_proxy_request(
                 auth_hdr,
                 method=request.method,
@@ -892,7 +892,7 @@ class TestReverseProxy:
         await site.start()
         port = runner.addresses[0][1]
 
-        import kiro_crew.apps.routes as rmod
+        import aj_crew.apps.routes as rmod
         monkeypatch.setattr(rmod, "_resolve_app_backend_url", lambda name: f"http://127.0.0.1:{port}")
 
         try:
@@ -928,7 +928,7 @@ class TestReverseProxy:
         await site.start()
         port = runner.addresses[0][1]
 
-        import kiro_crew.apps.routes as rmod
+        import aj_crew.apps.routes as rmod
         monkeypatch.setattr(rmod, "_resolve_app_backend_url", lambda name: f"http://127.0.0.1:{port}")
 
         body_bytes = b'{"hello": "world", "n": 42}'
@@ -937,8 +937,8 @@ class TestReverseProxy:
                 resp = await client.post("/apps/proxy-app/api/echo", data=body_bytes)
                 assert resp.status == 200
 
-            proxy_header = received_headers.get("x-kirocrew-proxy", "")
-            assert proxy_header, "X-KiroCrew-Proxy header missing"
+            proxy_header = received_headers.get("x-ajcrew-proxy", "")
+            assert proxy_header, "X-AjCrew-Proxy header missing"
             ts, sig = proxy_header.split(":", 1)
 
             # Signature binds sha256 of the actual (non-empty) body.
@@ -974,10 +974,10 @@ class TestSSRFGuard:
 
     def test_rejects_gateway_own_port(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         """Backend URL pointing to gateway's own port is rejected."""
-        home = tmp_path / "kirocrew-home"
+        home = tmp_path / "ajcrew-home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
-        monkeypatch.setenv("KIROCREW_PORT", "5476")
+        monkeypatch.setenv("AJCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_PORT", "5476")
 
         app_dir = home / "apps" / "evil-app"
         app_dir.mkdir(parents=True)
@@ -997,20 +997,20 @@ class TestSSRFGuard:
         }
         (app_dir / "installed.json").write_text(json.dumps(installed))
 
-        import kiro_crew.apps.bridges as bridges_mod
+        import aj_crew.apps.bridges as bridges_mod
         kiro_agents = tmp_path / "kiro-agents"
         kiro_agents.mkdir(exist_ok=True)
         monkeypatch.setattr(bridges_mod, "KIRO_AGENTS_DIR", kiro_agents)
 
-        from kiro_crew.apps.routes import _resolve_app_backend_url
+        from aj_crew.apps.routes import _resolve_app_backend_url
         result = _resolve_app_backend_url("evil-app")
         assert result is None, f"Expected None for self-referential URL, got {result}"
 
     def test_rejects_non_loopback(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         """Backend URL pointing to external host is rejected."""
-        home = tmp_path / "kirocrew-home"
+        home = tmp_path / "ajcrew-home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
 
         app_dir = home / "apps" / "ext-app"
         app_dir.mkdir(parents=True)
@@ -1030,21 +1030,21 @@ class TestSSRFGuard:
         }
         (app_dir / "installed.json").write_text(json.dumps(installed))
 
-        import kiro_crew.apps.bridges as bridges_mod
+        import aj_crew.apps.bridges as bridges_mod
         kiro_agents = tmp_path / "kiro-agents"
         kiro_agents.mkdir(exist_ok=True)
         monkeypatch.setattr(bridges_mod, "KIRO_AGENTS_DIR", kiro_agents)
 
-        from kiro_crew.apps.routes import _resolve_app_backend_url
+        from aj_crew.apps.routes import _resolve_app_backend_url
         result = _resolve_app_backend_url("ext-app")
         assert result is None, f"Expected None for non-loopback URL, got {result}"
 
     def test_allows_valid_loopback(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         """Backend URL on loopback with non-gateway port is allowed."""
-        home = tmp_path / "kirocrew-home"
+        home = tmp_path / "ajcrew-home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
-        monkeypatch.setenv("KIROCREW_PORT", "5476")
+        monkeypatch.setenv("AJCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_PORT", "5476")
 
         app_dir = home / "apps" / "good-app"
         app_dir.mkdir(parents=True)
@@ -1064,12 +1064,12 @@ class TestSSRFGuard:
         }
         (app_dir / "installed.json").write_text(json.dumps(installed))
 
-        import kiro_crew.apps.bridges as bridges_mod
+        import aj_crew.apps.bridges as bridges_mod
         kiro_agents = tmp_path / "kiro-agents"
         kiro_agents.mkdir(exist_ok=True)
         monkeypatch.setattr(bridges_mod, "KIRO_AGENTS_DIR", kiro_agents)
 
-        from kiro_crew.apps.routes import _resolve_app_backend_url
+        from aj_crew.apps.routes import _resolve_app_backend_url
         result = _resolve_app_backend_url("good-app")
         assert result == "http://127.0.0.1:8080"
 

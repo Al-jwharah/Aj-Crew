@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.auth.store import (
+from aj_crew.auth.store import (
     REFRESH_MARGIN_SECS,
     KasToken,
     TokenStore,
@@ -121,7 +121,7 @@ def test_delete_waits_for_the_identity_refresh_lock(tmp_path: Path):
     import os
     import threading
 
-    from kiro_crew.platform_compat import acquire_lock, release_lock
+    from aj_crew.platform_compat import acquire_lock, release_lock
 
     store = TokenStore(tmp_path)
     store.save(_token())
@@ -148,7 +148,7 @@ def test_save_waits_for_the_identity_refresh_lock(tmp_path: Path):
     import os
     import threading
 
-    from kiro_crew.platform_compat import acquire_lock, release_lock
+    from aj_crew.platform_compat import acquire_lock, release_lock
 
     store = TokenStore(tmp_path)
     store.save(_token())

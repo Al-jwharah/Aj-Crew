@@ -13,9 +13,9 @@ import errno
 
 import pytest
 
-from kiro_crew import platform_compat as pc
-from kiro_crew import platform_compat_kill as kill
-from kiro_crew.platform_compat_proctable import DarwinKinfoProc
+from aj_crew import platform_compat as pc
+from aj_crew import platform_compat_kill as kill
+from aj_crew.platform_compat_proctable import DarwinKinfoProc
 
 PGID = kill._OWN_PGID + 1000
 PID = PGID

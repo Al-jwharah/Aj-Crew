@@ -15,11 +15,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.crew_log import bus
-from kiro_crew.dashboard import crew_work
-from kiro_crew.dashboard.handlers.crew_log import CrewLogPublisher
-from kiro_crew.dashboard.state_parts import slots_frame
-from kiro_crew.work_ledger import DEFAULT_STALE_WINDOW_SECS
+from aj_crew.crew_log import bus
+from aj_crew.dashboard import crew_work
+from aj_crew.dashboard.handlers.crew_log import CrewLogPublisher
+from aj_crew.dashboard.state_parts import slots_frame
+from aj_crew.work_ledger import DEFAULT_STALE_WINDOW_SECS
 
 NOW = datetime(2026, 11, 1, 6, 0, tzinfo=timezone.utc)
 NOW_MS = int(NOW.timestamp() * 1000)
@@ -155,7 +155,7 @@ def _fold_event(key: str, value, revision: int = 3):
 
 
 def test_a_followed_board_s_fold_pushes_one_row_patch_when_it_moves(monkeypatch):
-    from kiro_crew.crew_log import slot_prime
+    from aj_crew.crew_log import slot_prime
 
     monkeypatch.setattr(slot_prime, "schedule", lambda *a, **k: True)
     state = MagicMock()
@@ -184,7 +184,7 @@ def test_a_followed_board_s_fold_pushes_one_row_patch_when_it_moves(monkeypatch)
 
 
 def test_following_keeps_other_boards_on_demand_and_retain_releases(monkeypatch):
-    from kiro_crew.crew_log import slot_prime
+    from aj_crew.crew_log import slot_prime
 
     monkeypatch.setattr(slot_prime, "schedule", lambda *a, **k: True)
     crew_work.follow("chat-7", ("chat-7", "dashboard:chat-7"))
@@ -198,7 +198,7 @@ def test_following_keeps_other_boards_on_demand_and_retain_releases(monkeypatch)
 
 
 def test_a_closed_root_gives_its_follow_place_back(monkeypatch):
-    from kiro_crew.crew_log import slot_prime
+    from aj_crew.crew_log import slot_prime
 
     monkeypatch.setattr(slot_prime, "schedule", lambda *a, **k: True)
     for n in range(crew_work.CREW_WORK_FOLLOW_LIMIT):
@@ -213,7 +213,7 @@ def test_a_closed_root_gives_its_follow_place_back(monkeypatch):
 
 
 def test_a_delta_event_s_whole_value_is_read_from_the_publish(monkeypatch):
-    from kiro_crew.crew_log import eager
+    from aj_crew.crew_log import eager
 
     monkeypatch.setattr(eager, "published_value", lambda key, fold, rev: {"items": [_item("a")]})
     crew_work._on_fold(SimpleNamespace(key="chat-9", fold="work", revision=2, value=None))
@@ -221,14 +221,14 @@ def test_a_delta_event_s_whole_value_is_read_from_the_publish(monkeypatch):
 
 
 def test_slot_frame_follows_each_root_and_primes_it_once(monkeypatch):
-    from kiro_crew.crew_log import slot_prime
+    from aj_crew.crew_log import slot_prime
 
     primed: list[tuple[str, str]] = []
     monkeypatch.setattr(
         slot_prime, "schedule", lambda slot, name, **_: primed.append((slot, name)) or True
     )
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_utils.effective_session_key",
+        "aj_crew.dashboard.chat_utils.effective_session_key",
         lambda slot: f"dashboard:{slot.key}",
     )
     crew_work.remember("chat-1", {"items": [_item("a")]})
@@ -254,11 +254,11 @@ def test_slot_frame_follows_each_root_and_primes_it_once(monkeypatch):
 
 
 def test_slot_frame_follows_a_sub_conductor_and_not_a_plain_worker(monkeypatch):
-    from kiro_crew.crew_log import slot_prime
+    from aj_crew.crew_log import slot_prime
 
     monkeypatch.setattr(slot_prime, "schedule", lambda *_a, **_k: True)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_utils.effective_session_key",
+        "aj_crew.dashboard.chat_utils.effective_session_key",
         lambda slot: f"dashboard:{slot.key}",
     )
     crew_work.remember("chat-sub", {"items": [_item("g")]})
@@ -289,7 +289,7 @@ def test_slot_frame_follows_a_sub_conductor_and_not_a_plain_worker(monkeypatch):
 
 
 def test_a_channel_board_s_fold_lands_on_the_slot_it_is_shown_under(monkeypatch):
-    from kiro_crew.crew_log import slot_prime
+    from aj_crew.crew_log import slot_prime
 
     primed: list[str] = []
     monkeypatch.setattr(slot_prime, "schedule", lambda slot, name, **_: primed.append(slot) or True)
@@ -361,7 +361,7 @@ def test_a_steer_before_a_new_question_in_the_same_second_does_not_answer_it():
 
 
 def _loop(cycle_count: int, max_cycles: int = 24, kind: str = "work-ledger"):
-    from kiro_crew.monitoring.models import MONITOR_STATE_VERSION
+    from aj_crew.monitoring.models import MONITOR_STATE_VERSION
 
     return SimpleNamespace(
         id="loop-1",
@@ -389,7 +389,7 @@ def _loop(cycle_count: int, max_cycles: int = 24, kind: str = "work-ledger"):
     ],
 )
 def test_the_row_says_whether_the_conductor_holds_a_live_loop(monkeypatch, loop, expected):
-    import kiro_crew.autonudge as autonudge
+    import aj_crew.autonudge as autonudge
 
     loops = {"chat-7": loop}
     monkeypatch.setattr(autonudge, "get_instance", lambda: SimpleNamespace(get_by_slot=loops.get))
@@ -409,7 +409,7 @@ def test_a_conductor_s_own_loop_change_refreshes_its_board():
 def test_a_channel_conductor_s_own_loop_change_refreshes_the_slot_it_is_shown_under(
     monkeypatch,
 ):
-    from kiro_crew.crew_log import slot_prime
+    from aj_crew.crew_log import slot_prime
 
     monkeypatch.setattr(slot_prime, "schedule", lambda *a, **k: True)
     heard: list[str] = []
@@ -424,8 +424,8 @@ def test_a_channel_conductor_s_own_loop_change_refreshes_the_slot_it_is_shown_un
 
 @pytest.mark.parametrize(("loop", "expected"), [(_loop(cycle_count=3), True), (None, False)])
 def test_a_channel_conductor_s_loop_is_found_under_its_session_key(monkeypatch, loop, expected):
-    import kiro_crew.autonudge as autonudge
-    from kiro_crew.crew_log import slot_prime
+    import aj_crew.autonudge as autonudge
+    from aj_crew.crew_log import slot_prime
 
     monkeypatch.setattr(slot_prime, "schedule", lambda *a, **k: True)
     # The loop is bound under the channel session key, never the dashboard slot name.

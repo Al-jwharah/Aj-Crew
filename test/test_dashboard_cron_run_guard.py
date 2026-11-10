@@ -19,9 +19,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.cron import CronJob, CronSchedule, CronService, _RunClaim
-from kiro_crew.dashboard.handlers.cron import api_cron_run
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.cron import CronJob, CronSchedule, CronService, _RunClaim
+from aj_crew.dashboard.handlers.cron import api_cron_run
+from aj_crew.testing.wait import async_wait_until
 
 
 def _make_job(job_id: str = "j1", name: str = "etl job") -> CronJob:

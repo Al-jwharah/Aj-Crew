@@ -97,7 +97,7 @@ export function readSessionSendResult(message: ChatMessage): { outcome: SessionS
 
 /** The MCP server that serves the gateway's own `session_send`
  *  (`SERVER_NAME` in `mcp_dashboard_caller_scope.py`). */
-export const SESSION_SEND_SERVER = 'kirocrew-dashboard'
+export const SESSION_SEND_SERVER = 'ajcrew-dashboard'
 
 /** True when a tool row's meta names the gateway's own `session_send`. */
 export function isGatewaySessionSendMeta(meta: Record<string, unknown> | undefined): boolean {

@@ -19,7 +19,7 @@ function withTool() {
       content: '🔧 Session send',
       cls: '',
       ts: 't1',
-      meta: { mid: 'm1', tool_call_id: 'tc-1', tool_name: 'session_send', mcp_server: 'kirocrew-dashboard', input: '{"target":"Planner","message":"go"}' },
+      meta: { mid: 'm1', tool_call_id: 'tc-1', tool_name: 'session_send', mcp_server: 'ajcrew-dashboard', input: '{"target":"Planner","message":"go"}' },
     }],
   }
 }

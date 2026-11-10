@@ -2,12 +2,12 @@
 
 Amazon Linux 2 ships glibc 2.26 and the official Node 18+ builds need 2.28, so
 ``nvm install 22`` leaves a ``node`` that does not load. An operator who unpacks
-a glibc-2.17 build and points ``KIROCREW_NODE_BIN_DIR`` at it must get that Node
+a glibc-2.17 build and points ``AJCREW_NODE_BIN_DIR`` at it must get that Node
 for an ``npx`` MCP server, whose ``#!/usr/bin/env node`` resolves against the
 same PATH. With no override, the glibc-2.17 tree ``ensure-node.sh`` unpacks into
 the data home must still outrank every nvm version dir.
 
-The data home is the conftest's per-test ``KIROCREW_HOME`` pin; ``~`` is a
+The data home is the conftest's per-test ``AJCREW_HOME`` pin; ``~`` is a
 ``tmp_path`` dir through a patched ``expanduser``, so no real version manager or
 ``npx`` on the runner can reach the verdict.
 """
@@ -22,9 +22,9 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.env as env_mod
-from kiro_crew.config.paths import peek_data_home
-from kiro_crew.env import augmented_path, mcp_runtime_path, mcp_search_path
+import aj_crew.env as env_mod
+from aj_crew.config.paths import peek_data_home
+from aj_crew.env import augmented_path, mcp_runtime_path, mcp_search_path
 
 _POSIX_ONLY = pytest.mark.skipif(
     sys.platform == "win32",
@@ -57,7 +57,7 @@ def home(tmp_path, monkeypatch):
     h = tmp_path / "home"
     h.mkdir()
     monkeypatch.setattr(os.path, "expanduser", lambda p: str(h) if p == "~" else p)
-    for var in ("KIROCREW_NODE_BIN_DIR", "MISE_DATA_DIR", "XDG_DATA_HOME", "XDG_CONFIG_HOME"):
+    for var in ("AJCREW_NODE_BIN_DIR", "MISE_DATA_DIR", "XDG_DATA_HOME", "XDG_CONFIG_HOME"):
         monkeypatch.delenv(var, raising=False)
     monkeypatch.setattr(env_mod, "_config_path_dirs", ())
     monkeypatch.setattr(env_mod, "_registered_path_dirs", ())
@@ -99,12 +99,12 @@ def _service_style_base(home: Path) -> str:
 @_POSIX_ONLY
 @pytest.mark.usefixtures("only_test_executables")
 class TestOverrideLeads:
-    """``KIROCREW_NODE_BIN_DIR`` is the Node every ``npx`` resolution reaches first."""
+    """``AJCREW_NODE_BIN_DIR`` is the Node every ``npx`` resolution reaches first."""
 
     @pytest.fixture
     def override(self, home, monkeypatch):
         d = _node_bin(home / "node22" / "bin")
-        monkeypatch.setenv("KIROCREW_NODE_BIN_DIR", str(d))
+        monkeypatch.setenv("AJCREW_NODE_BIN_DIR", str(d))
         return d
 
     def test_npx_resolves_to_the_override_not_nvms_newest(self, home, override):
@@ -155,11 +155,11 @@ class TestOverrideLeads:
     ):
         """A script cron's child augments the PATH the gateway already augmented.
 
-        The override may hold an npm-installed ``kirocrew`` of its own, so this
+        The override may hold an npm-installed ``ajcrew`` of its own, so this
         install's dir must stay ahead of it on the second pass as on the first.
         """
         own = _node_bin(home / "own" / "bin")
-        monkeypatch.setattr(env_mod, "_own_kirocrew_dirs", lambda: [str(own)])
+        monkeypatch.setattr(env_mod, "_own_ajcrew_dirs", lambda: [str(own)])
         once = augmented_path(_service_style_base(home))
         twice = augmented_path(once).split(os.pathsep)
         assert _index(twice, own) < _index(twice, override) < _index(twice, _nvm22(home))
@@ -178,7 +178,7 @@ def test_an_unusable_override_changes_nothing(home, monkeypatch):
     empty = home / "empty" / "bin"
     empty.mkdir(parents=True)
     for value in ("node22/bin", os.pathsep.join([str(empty), str(_nvm22(home))]), str(empty)):
-        monkeypatch.setenv("KIROCREW_NODE_BIN_DIR", value)
+        monkeypatch.setenv("AJCREW_NODE_BIN_DIR", value)
         assert augmented_path(base) == want, value
 
 
@@ -202,7 +202,7 @@ def test_glibc217_tree_ranks_ahead_of_every_nvm_version(home):
 def test_neither_present_leaves_the_composition_unchanged(home):
     """Own dir, the fixed guesses, every version dir, then the interpreter: no new entry."""
     want = [
-        *env_mod._own_kirocrew_dirs(),
+        *env_mod._own_ajcrew_dirs(),
         *env_mod.user_tool_bin_dirs(str(home)),
         *env_mod.node_all_bin_dirs(),
         *env_mod._interpreter_script_dirs(),

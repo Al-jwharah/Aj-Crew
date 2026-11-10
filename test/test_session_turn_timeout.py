@@ -27,15 +27,15 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.acp import client as acp_client
-from kiro_crew.config.loader import CHAT_TURN_TIMEOUT_MAX, CHAT_TURN_TIMEOUT_MIN
-from kiro_crew.dashboard import turn_dispatch as td
-from kiro_crew.dashboard.chat import api_chat_slot_turn_timeout
-from kiro_crew.dashboard.chat_persistence import _validate_turn_timeout_secs
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.session_surface import set_dashboard_surfaced
-from kiro_crew.turn_limit import TURN_LIMIT_SECS, current_turn_limit_secs
+from aj_crew.acp import client as acp_client
+from aj_crew.config.loader import CHAT_TURN_TIMEOUT_MAX, CHAT_TURN_TIMEOUT_MIN
+from aj_crew.dashboard import turn_dispatch as td
+from aj_crew.dashboard.chat import api_chat_slot_turn_timeout
+from aj_crew.dashboard.chat_persistence import _validate_turn_timeout_secs
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.session_surface import set_dashboard_surfaced
+from aj_crew.turn_limit import TURN_LIMIT_SECS, current_turn_limit_secs
 
 
 @pytest.fixture(autouse=True)
@@ -77,12 +77,12 @@ def _global_limit(monkeypatch, secs: float) -> None:
 
 def _transport_config(monkeypatch, *, turn: int = 14400, subagent: int = 600) -> None:
     """Give ``resolve_prompt_timeout`` a known config without touching disk."""
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     cfg = MagicMock()
     cfg.agent.chat_turn_timeout_secs = turn
     cfg.agent.subagent_timeout_secs = subagent
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(lambda cls: cfg))
 
 
 class TestResolution:
@@ -205,7 +205,7 @@ class TestDispatch:
         _global_limit(monkeypatch, 14400.0)
         holder = MagicMock()
         holder.load.return_value.agent.tool_approval_timeout_secs = 7200
-        monkeypatch.setattr(td, "KiroCrewConfig", holder)
+        monkeypatch.setattr(td, "AjCrewConfig", holder)
         with _running_turn_limit(900.0):
             window = td.tool_approval_timeout_secs()
         assert window <= 900.0 - td.APPROVAL_TURN_MARGIN_SECS
@@ -229,12 +229,12 @@ class TestTransportFollowsTheTurnLimit:
         assert wait == acp_client._DEFAULT_PROMPT_TIMEOUT
 
     def test_unreadable_config_still_honours_the_turn_limit(self, monkeypatch) -> None:
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         def _boom(cls):  # type: ignore[no-untyped-def]
             raise RuntimeError("no config here")
 
-        monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(_boom))
+        monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(_boom))
         with _running_turn_limit(28800.0):
             wait = acp_client.resolve_prompt_timeout()
         assert wait == 28800.0 + acp_client._PROMPT_TIMEOUT_MARGIN_SECS
@@ -259,9 +259,9 @@ class TestStagedSave:
     """The endpoint's staged value is what a save writes, whatever the slot holds."""
 
     def _slot(self, tmp_path, monkeypatch):
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = DashboardState(
             sessions=MagicMock(count=0),
             crons=MagicMock(
@@ -274,7 +274,7 @@ class TestStagedSave:
         return state.get_or_create_slot("staged")
 
     def test_a_staged_limit_reaches_both_save_forms(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.dashboard.slot_persistence import metadata_codec as codec
+        from aj_crew.dashboard.slot_persistence import metadata_codec as codec
 
         slot = self._slot(tmp_path, monkeypatch)
         folds = codec.SaveFolds(memory_mode="persistent", turn_timeout_secs=(28800,))
@@ -283,7 +283,7 @@ class TestStagedSave:
         assert slot.turn_timeout_secs is None
 
     def test_a_staged_clear_overrides_the_live_limit(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.dashboard.slot_persistence import metadata_codec as codec
+        from aj_crew.dashboard.slot_persistence import metadata_codec as codec
 
         slot = self._slot(tmp_path, monkeypatch)
         slot.turn_timeout_secs = 28800
@@ -292,7 +292,7 @@ class TestStagedSave:
         assert codec.encode(slot, merge=True, folds=folds)["turn_timeout_secs"] is None
 
     def test_nothing_staged_writes_the_live_limit(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.dashboard.slot_persistence import metadata_codec as codec
+        from aj_crew.dashboard.slot_persistence import metadata_codec as codec
 
         slot = self._slot(tmp_path, monkeypatch)
         slot.turn_timeout_secs = 7200
@@ -325,7 +325,7 @@ def _mock_state(*slots: _ChatSlot) -> DashboardState:
     return state
 
 
-_SAVE = "kiro_crew.dashboard.chat_handlers.save_slot_off_loop"
+_SAVE = "aj_crew.dashboard.chat_handlers.save_slot_off_loop"
 
 
 async def _committing_save(*args, **kwargs):  # type: ignore[no-untyped-def]
@@ -334,7 +334,7 @@ async def _committing_save(*args, **kwargs):  # type: ignore[no-untyped-def]
     return True
 
 
-_GLOBAL = "kiro_crew.dashboard.chat_handlers.chat_turn_timeout_secs"
+_GLOBAL = "aj_crew.dashboard.chat_handlers.chat_turn_timeout_secs"
 
 
 class TestEndpoint:
@@ -491,7 +491,7 @@ class TestEndpoint:
         state = _mock_state(slot, alias)
         with (
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key", return_value="one-transcript"
+                "aj_crew.dashboard.chat_handlers.slot_history_key", return_value="one-transcript"
             ),
             patch(_SAVE, new=AsyncMock(side_effect=OSError("disk full"))),
         ):
@@ -508,7 +508,7 @@ class TestEndpoint:
         state = _mock_state(slot, alias)
         with (
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key", return_value="one-transcript"
+                "aj_crew.dashboard.chat_handlers.slot_history_key", return_value="one-transcript"
             ),
             patch(_SAVE, new=AsyncMock(side_effect=_committing_save)),
             patch(_GLOBAL, return_value=14400.0),
@@ -536,7 +536,7 @@ class TestEndpoint:
 
         with (
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key", return_value="one-transcript"
+                "aj_crew.dashboard.chat_handlers.slot_history_key", return_value="one-transcript"
             ),
             patch(_SAVE, new=AsyncMock(side_effect=_alias_appears_then_commit)),
             patch(_GLOBAL, return_value=14400.0),
@@ -627,10 +627,10 @@ class TestRestore:
         assert _validate_turn_timeout_secs(raw) == want
 
     def test_channel_surfacing_restores_the_limit(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.dashboard import channel_slots
-        from kiro_crew.history import ConversationLog
+        from aj_crew.dashboard import channel_slots
+        from aj_crew.history import ConversationLog
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         sessions = MagicMock(count=0)
         sessions.channel_key_for_stem = lambda stem: ""
         state = DashboardState(
@@ -668,10 +668,10 @@ class TestCronReopen:
     """A cron tab closed with its own limit gets it back when it reopens."""
 
     def _closed_tab(self, tmp_path, monkeypatch, secs: int = 28800) -> DashboardState:
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-        from kiro_crew.history import ConversationLog
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.history import ConversationLog
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = DashboardState(
             sessions=MagicMock(count=0),
             crons=MagicMock(
@@ -694,7 +694,7 @@ class TestCronReopen:
     async def test_a_reopened_tab_runs_under_its_own_limit_again(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.dashboard.cron_inject import ensure_cron_slot
+        from aj_crew.dashboard.cron_inject import ensure_cron_slot
 
         state = self._closed_tab(tmp_path, monkeypatch)
         await ensure_cron_slot(state, _cron_job())
@@ -707,8 +707,8 @@ class TestCronReopen:
     async def test_a_save_before_the_limit_is_read_keeps_it_on_disk(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-        from kiro_crew.dashboard.cron_inject import _bind_cron_slot, restore_cron_turn_timeout
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.cron_inject import _bind_cron_slot, restore_cron_turn_timeout
 
         state = self._closed_tab(tmp_path, monkeypatch)
         log = state.conversation_log
@@ -726,7 +726,7 @@ class TestCronReopen:
     async def test_an_unreadable_line_leaves_the_tab_carrying_the_limit(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.dashboard.cron_inject import _bind_cron_slot, restore_cron_turn_timeout
+        from aj_crew.dashboard.cron_inject import _bind_cron_slot, restore_cron_turn_timeout
 
         state = self._closed_tab(tmp_path, monkeypatch)
         log = state.conversation_log
@@ -738,7 +738,7 @@ class TestCronReopen:
         assert slot.turn_timeout_secs is None and slot._turn_timeout_hydrated is False
 
     def test_the_save_fold_prefers_a_staged_value_then_the_slot_once_read(self) -> None:
-        from kiro_crew.dashboard.slot_persistence.metadata_line import _turn_timeout_fold
+        from aj_crew.dashboard.slot_persistence.metadata_line import _turn_timeout_fold
 
         on_disk = {"turn_timeout_secs": 28800}
         slot = MagicMock(_turn_timeout_hydrated=False)

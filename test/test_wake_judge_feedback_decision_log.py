@@ -21,14 +21,14 @@ import pytest
 from test_decisions_gate import _STALLED_APPEND_CEILING_SECS
 from wake_judge_feedback_helpers import _verdict
 
-from kiro_crew import autonudge_judge as judge
-from kiro_crew import irq
-from kiro_crew.autonudge import _MAX_QUIET_STREAK
-from kiro_crew.config.sections import DecisionProviderConfig, DecisionsConfig, NudgeWakeConfig
-from kiro_crew.decisions import gate as decisions_gate
-from kiro_crew.decisions import log as decisions_log
-from kiro_crew.decisions.points import nudge_wake as point
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import autonudge_judge as judge
+from aj_crew import irq
+from aj_crew.autonudge import _MAX_QUIET_STREAK
+from aj_crew.config.sections import DecisionProviderConfig, DecisionsConfig, NudgeWakeConfig
+from aj_crew.decisions import gate as decisions_gate
+from aj_crew.decisions import log as decisions_log
+from aj_crew.decisions.points import nudge_wake as point
+from aj_crew.testing.wait import async_wait_until
 
 
 class TestJudgeTickReportsWhetherItAsked:
@@ -686,8 +686,8 @@ class TestQuietStreakBound:
     def test_the_point_does_not_import_the_loop_engine(self):
         # A cycle deferred by a function-local import is still a cycle.
         source = Path(point.__file__).read_text(encoding="utf-8")
-        assert "from kiro_crew.autonudge import" not in source
-        assert "import kiro_crew.autonudge" not in source
+        assert "from aj_crew.autonudge import" not in source
+        assert "import aj_crew.autonudge" not in source
 
 
 class TestVerdictIdBound:

@@ -1,5 +1,5 @@
 /**
- * KiroCrewCfgTab — the Kiro Crew config table on the developer page.
+ * AjCrewCfgTab — the Aj Crew config table on the developer page.
  *
  * The file sat at ~3% before this suite: only its module-level constants ran.
  * Everything below aims at the cold paths — the query error/loading boundaries,
@@ -9,7 +9,7 @@
  */
 import { describe, it, expect, vi, beforeEach, onTestFinished } from 'vitest'
 import { screen, waitFor, fireEvent, within, act } from '@testing-library/react'
-import KiroCrewCfgTab, { AgentRunSettings } from '../pages/overview/KiroCrewCfgTab'
+import AjCrewCfgTab, { AgentRunSettings } from '../pages/overview/AjCrewCfgTab'
 import { renderWithProviders } from './helpers'
 import { api } from '../api/client'
 import { AGENT_SANDBOX_HIGHLIGHT_ANCHOR } from '../hooks/useSettingHighlight'
@@ -95,9 +95,9 @@ const clone = (): typeof CFG => JSON.parse(JSON.stringify(CFG))
 
 function seed(cfg: Cfg = CFG, patched: Cfg = CFG) {
   const m = vi.mocked(api)
-  m.kirocrewConfig = vi.fn().mockResolvedValue(cfg)
+  m.ajcrewConfig = vi.fn().mockResolvedValue(cfg)
   m.patchConfig = vi.fn().mockResolvedValue(patched)
-  m.saveKirocrewConfig = vi.fn().mockResolvedValue({ ok: true })
+  m.saveAjcrewConfig = vi.fn().mockResolvedValue({ ok: true })
   // ThemeProvider (installed by renderWithProviders) boots its own query; the
   // automock would resolve undefined, which React Query rejects out loud.
   m.themeBoot = vi.fn().mockResolvedValue({})
@@ -106,7 +106,7 @@ function seed(cfg: Cfg = CFG, patched: Cfg = CFG) {
 
 /** Render and wait for the first table to replace the skeleton. */
 async function renderTab() {
-  const view = renderWithProviders(<KiroCrewCfgTab />)
+  const view = renderWithProviders(<AjCrewCfgTab />)
   expect(await screen.findByRole('heading', { name: /Bots/ })).toBeInTheDocument()
   return view
 }
@@ -120,7 +120,7 @@ async function renderRun() {
 
 /** Both surfaces on one query cache, for edits that cross from one to the other. */
 async function renderBoth() {
-  const view = renderWithProviders(<><KiroCrewCfgTab /><AgentRunSettings /></>)
+  const view = renderWithProviders(<><AjCrewCfgTab /><AgentRunSettings /></>)
   expect(await screen.findByRole('heading', { name: /Bots/ })).toBeInTheDocument()
   expect(await screen.findByRole('heading', { name: /Subagent Settings/ })).toBeInTheDocument()
   return view
@@ -159,13 +159,13 @@ beforeEach(() => {
 })
 
 // ── Query boundaries ─────────────────────────────────────────────────────
-describe('KiroCrewCfgTab — query boundaries', () => {
+describe('AjCrewCfgTab — query boundaries', () => {
   it('shows a skeleton until the config resolves', async () => {
     const m = vi.mocked(api)
     let release: (v: unknown) => void = () => {}
-    m.kirocrewConfig = vi.fn().mockReturnValue(new Promise((res) => { release = res }))
+    m.ajcrewConfig = vi.fn().mockReturnValue(new Promise((res) => { release = res }))
 
-    const { container } = renderWithProviders(<KiroCrewCfgTab />)
+    const { container } = renderWithProviders(<AjCrewCfgTab />)
     expect(container.querySelector('.skeleton')).not.toBeNull()
     expect(screen.queryByRole('heading', { name: /Bots/ })).toBeNull()
 
@@ -176,24 +176,24 @@ describe('KiroCrewCfgTab — query boundaries', () => {
 
   it('renders an Error rejection by its message', async () => {
     const m = vi.mocked(api)
-    m.kirocrewConfig = vi.fn().mockRejectedValue(new Error('config file unreadable'))
+    m.ajcrewConfig = vi.fn().mockRejectedValue(new Error('config file unreadable'))
 
-    renderWithProviders(<KiroCrewCfgTab />)
+    renderWithProviders(<AjCrewCfgTab />)
     expect(await screen.findByText('config file unreadable')).toBeInTheDocument()
     expect(screen.queryByText('Config Summary')).toBeNull()
   })
 
   it('stringifies a non-Error rejection', async () => {
     const m = vi.mocked(api)
-    m.kirocrewConfig = vi.fn().mockRejectedValue('gateway offline')
+    m.ajcrewConfig = vi.fn().mockRejectedValue('gateway offline')
 
-    renderWithProviders(<KiroCrewCfgTab />)
+    renderWithProviders(<AjCrewCfgTab />)
     expect(await screen.findByText('gateway offline')).toBeInTheDocument()
   })
 })
 
 // ── The three read-only tables ───────────────────────────────────────────
-describe('KiroCrewCfgTab — tables', () => {
+describe('AjCrewCfgTab — tables', () => {
   it('lists agents, badges the default one, and em-dashes a blank template', async () => {
     await renderTab()
     const agents = tables()[0]
@@ -259,7 +259,7 @@ describe('KiroCrewCfgTab — tables', () => {
 })
 
 // ── CfgNumber validation + commit ────────────────────────────────────────
-describe('KiroCrewCfgTab — numeric rows', () => {
+describe('AjCrewCfgTab — numeric rows', () => {
   it('rejects a non-numeric value without patching', async () => {
     await renderTab()
 
@@ -346,7 +346,7 @@ describe('KiroCrewCfgTab — numeric rows', () => {
 })
 
 // ── CfgSelect + CfgToggle ────────────────────────────────────────────────
-describe('KiroCrewCfgTab — select and toggle rows', () => {
+describe('AjCrewCfgTab — select and toggle rows', () => {
   it('patches the selected option for the row that owns it', async () => {
     const updated = clone()
     updated.agent.sandbox = 'off'
@@ -421,11 +421,11 @@ describe('KiroCrewCfgTab — select and toggle rows', () => {
     await waitFor(() => expect(m.setDefaultAgent).toHaveBeenCalledWith('crew-beta'))
     // Not a raw config PATCH: the default-agent route validates the name.
     expect(m.patchConfig).not.toHaveBeenCalled()
-    await waitFor(() => expect(m.kirocrewConfig).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(m.ajcrewConfig).toHaveBeenCalledTimes(2))
     expect(screen.queryByTestId('cfg-default-crewmate-error')).not.toBeInTheDocument()
     // The composer's catalog and the shared roster/default queries must learn
     // the new default too, or the next new session still binds to the old one.
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['kirocrew-agents'] })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['ajcrew-agents'] })
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['default-agent'] })
     expect(view.store.getState().dashboard.refreshTrigger).toBe(before + 1)
   })
@@ -475,7 +475,7 @@ describe('KiroCrewCfgTab — select and toggle rows', () => {
     // A refused write does not refetch; the table keeps the previous default —
     // and so does the select, remounted on the config's value rather than
     // left showing the pick the server refused.
-    expect(m.kirocrewConfig).toHaveBeenCalledTimes(1)
+    expect(m.ajcrewConfig).toHaveBeenCalledTimes(1)
     expect(optionIn('Default bot', 'crew-alpha')).toHaveAttribute('aria-selected', 'true')
   })
 
@@ -493,7 +493,7 @@ describe('KiroCrewCfgTab — select and toggle rows', () => {
     fireEvent.click(optionIn('Default bot', 'crew-beta'))
 
     await waitFor(() => expect(m.setDefaultAgent).toHaveBeenCalledWith('crew-beta'))
-    await waitFor(() => expect(m.kirocrewConfig).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(m.ajcrewConfig).toHaveBeenCalledTimes(2))
     // Uncommitted (no Enter, no blur): still the typed draft, never PATCHed.
     expect(screen.getByRole('spinbutton', { name: 'Kept Ready' })).toHaveValue(7)
     expect(m.patchConfig).not.toHaveBeenCalled()
@@ -503,7 +503,7 @@ describe('KiroCrewCfgTab — select and toggle rows', () => {
     const m = seed()
     m.setDefaultAgent = vi.fn().mockResolvedValue({ ok: true })
     // The refetch after the PUT returns the ACCEPTED default, as the server does.
-    m.kirocrewConfig = vi.fn()
+    m.ajcrewConfig = vi.fn()
       .mockResolvedValueOnce(CFG)
       .mockResolvedValue({ ...CFG, default_agent: 'crew-beta' })
 
@@ -511,7 +511,7 @@ describe('KiroCrewCfgTab — select and toggle rows', () => {
     const beta = optionIn('Default bot', 'crew-beta')
     fireEvent.click(beta)
     await waitFor(() => expect(m.setDefaultAgent).toHaveBeenCalledWith('crew-beta'))
-    await waitFor(() => expect(m.kirocrewConfig).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(m.ajcrewConfig).toHaveBeenCalledTimes(2))
     await waitFor(() => expect(optionIn('Default bot', 'crew-beta')).toHaveAttribute('aria-selected', 'true'))
     // Same DOM node before and after the refetch: the select was updated in
     // place, not remounted — a remount (a key carrying the stored value) would
@@ -596,7 +596,7 @@ describe('KiroCrewCfgTab — select and toggle rows', () => {
       expect(screen.getAllByText('read-only config')).toHaveLength(1)
     })
     // onError also invalidates the config query, so it refetches.
-    await waitFor(() => expect(m.kirocrewConfig).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(m.ajcrewConfig).toHaveBeenCalledTimes(2))
   })
 
   it('surfaces a failed warm-pool patch in its own card and refetches', async () => {
@@ -609,7 +609,7 @@ describe('KiroCrewCfgTab — select and toggle rows', () => {
 
     // Shown through ErrorNotice, so it is announced as an alert.
     expect(await screen.findByRole('alert')).toHaveTextContent('read-only config')
-    await waitFor(() => expect(m.kirocrewConfig).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(m.ajcrewConfig).toHaveBeenCalledTimes(2))
   })
 
   it('applies defaults for the keys an older config file omits', async () => {
@@ -651,7 +651,7 @@ describe('KiroCrewCfgTab — select and toggle rows', () => {
 })
 
 // ── SubagentSettings ─────────────────────────────────────────────────────
-describe('KiroCrewCfgTab — subagent settings', () => {
+describe('AjCrewCfgTab — subagent settings', () => {
   const saveBtn = () => screen.getByRole('button', { name: 'Save' })
 
   it('keeps Save disabled until something actually differs', async () => {
@@ -691,18 +691,18 @@ describe('KiroCrewCfgTab — subagent settings', () => {
     fireEvent.click(saveBtn())
 
     expect(await screen.findByText('Saved')).toBeInTheDocument()
-    expect(m.saveKirocrewConfig).toHaveBeenCalledWith({
+    expect(m.saveAjcrewConfig).toHaveBeenCalledWith({
       subagent_max_turns: 150,
       max_subagents: 3,
       subagent_auto_max: 16,
     })
     // onSaved invalidates the config query.
-    await waitFor(() => expect(m.kirocrewConfig).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(m.ajcrewConfig).toHaveBeenCalledTimes(2))
   })
 
   it('shows a rejection returned in the payload', async () => {
     const m = vi.mocked(api)
-    m.saveKirocrewConfig = vi.fn().mockResolvedValue({ error: 'value out of range' })
+    m.saveAjcrewConfig = vi.fn().mockResolvedValue({ error: 'value out of range' })
 
     await renderRun()
     fireEvent.change(num('Max Turns per Subagent'), { target: { value: '7' } })
@@ -710,12 +710,12 @@ describe('KiroCrewCfgTab — subagent settings', () => {
 
     expect(await screen.findByText('value out of range')).toBeInTheDocument()
     // A rejected save must not refetch as if it had landed.
-    expect(m.kirocrewConfig).toHaveBeenCalledTimes(1)
+    expect(m.ajcrewConfig).toHaveBeenCalledTimes(1)
   })
 
   it('shows a thrown save error and re-enables the button', async () => {
     const m = vi.mocked(api)
-    m.saveKirocrewConfig = vi.fn().mockRejectedValue(new Error('socket hang up'))
+    m.saveAjcrewConfig = vi.fn().mockRejectedValue(new Error('socket hang up'))
 
     await renderRun()
     fireEvent.change(num('Max Concurrent Subagents'), { target: { value: '5' } })
@@ -727,7 +727,7 @@ describe('KiroCrewCfgTab — subagent settings', () => {
 
   it('stringifies a non-Error thrown by the save call', async () => {
     const m = vi.mocked(api)
-    m.saveKirocrewConfig = vi.fn().mockRejectedValue('gateway went away')
+    m.saveAjcrewConfig = vi.fn().mockRejectedValue('gateway went away')
 
     await renderRun()
     fireEvent.change(num('Max Turns per Subagent'), { target: { value: '9' } })
@@ -818,7 +818,7 @@ describe('KiroCrewCfgTab — subagent settings', () => {
   })
 })
 
-describe('KiroCrewCfgTab workspace actions', () => {
+describe('AjCrewCfgTab workspace actions', () => {
   const row = (name: string) => screen.getByTestId(`workspace-row-${name}`)
   const form = (name: string) => screen.getByTestId(`workspace-form-${name}`)
 
@@ -842,7 +842,7 @@ describe('KiroCrewCfgTab workspace actions', () => {
     fireEvent.change(within(form('ws-idle')).getByRole('textbox', { name: 'Directory' }), { target: { value: ' /data/idle ' } })
     fireEvent.click(within(form('ws-idle')).getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(api.updateWorkspace).toHaveBeenCalledWith('ws-idle', { dir: '/data/idle' }))
-    await waitFor(() => expect(api.kirocrewConfig).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(api.ajcrewConfig).toHaveBeenCalledTimes(2))
   })
 
   it('enables Delete only once the exact name is typed', async () => {

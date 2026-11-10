@@ -23,10 +23,10 @@ from test_warm_task_brief import (
     _State,
 )
 
-from kiro_crew.dashboard import warm_task_brief
-from kiro_crew.dashboard import warm_task_brief_facts as facts
-from kiro_crew.dashboard import warm_task_brief_inputs as inputs
-from kiro_crew.session_summary import TranscriptTurn
+from aj_crew.dashboard import warm_task_brief
+from aj_crew.dashboard import warm_task_brief_facts as facts
+from aj_crew.dashboard import warm_task_brief_inputs as inputs
+from aj_crew.session_summary import TranscriptTurn
 
 _LIVE = (
     {

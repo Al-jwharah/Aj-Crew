@@ -1,6 +1,6 @@
 import { test, expect, type APIRequestContext } from '@playwright/test'
 
-const HARNESS_GATEWAY = !!process.env.KIROCREW_E2E_EPHEMERAL
+const HARNESS_GATEWAY = !!process.env.AJCREW_E2E_EPHEMERAL
 
 // ─── Seed helpers ──────────────────────────────────────────────────────────
 
@@ -89,11 +89,11 @@ test.describe('Popout route tree — /popout/*', () => {
   test('popout artifact shows seeded artifact content', async ({ page, request }) => {
     const slug = await seedArtifact(request, 'popout-content')
     await page.goto(`/popout/artifact/${slug}`, { waitUntil: 'domcontentloaded' })
-    // ArtifactPopoutFrame sets document.title to include "Kiro Crew"
+    // ArtifactPopoutFrame sets document.title to include "Aj Crew"
     await expect.poll(
       () => page.title(),
       { timeout: 10000 }
-    ).toContain('Kiro Crew')
+    ).toContain('Aj Crew')
   })
 
   test('popout wildcard redirects SPA navigation back to initial path', async ({ page, request }) => {

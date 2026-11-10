@@ -34,19 +34,19 @@ import logging
 
 import pytest
 
-import kiro_crew.mcp_core as mcp_core
-from kiro_crew import autonudge_authz, session_directive
-from kiro_crew.autonudge import (
+import aj_crew.mcp_core as mcp_core
+from aj_crew import autonudge_authz, session_directive
+from aj_crew.autonudge import (
     APPROVAL_STALL_REASON,
     AUTONUDGE_STOP_REASON,
     MONITOR_TERMINAL_REASON,
     AutoNudgeService,
     binding_key_for,
 )
-from kiro_crew.dashboard.session_directive_apply import apply_session_directive
-from kiro_crew.mcp_core import _call_tool, _call_tool_inner
-from kiro_crew.mcp_tools._limits import _MONITOR_DEFAULT_MAX_CYCLES
-from kiro_crew.validation import ValidationError
+from aj_crew.dashboard.session_directive_apply import apply_session_directive
+from aj_crew.mcp_core import _call_tool, _call_tool_inner
+from aj_crew.mcp_tools._limits import _MONITOR_DEFAULT_MAX_CYCLES
+from aj_crew.validation import ValidationError
 
 # ── Tool-contract fixtures ────────────────────────────────────────────────────
 
@@ -254,7 +254,7 @@ def test_autonudge_stop_short_circuits_for_non_nudgeable_session(monkeypatch, ga
 # the loop by ``svc.get_by_slot(binding_key_for(session_key))`` and calls the
 # authz cores; the fakes below record those calls without touching a real
 # AutoNudge service. The authz helpers are imported LAZILY inside the applier
-# from ``kiro_crew.autonudge`` / ``kiro_crew.autonudge_authz``, so they are
+# from ``aj_crew.autonudge`` / ``aj_crew.autonudge_authz``, so they are
 # patched on those modules (not on session_directive_apply).
 
 
@@ -350,7 +350,7 @@ def _fake_slot(*, key="chat-3-1700000000", app=""):
 
 
 def _install_svc(monkeypatch, svc):
-    monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: svc)
+    monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: svc)
 
 
 def _record_add(monkeypatch, *, loop=None, error=None):
@@ -360,7 +360,7 @@ def _record_add(monkeypatch, *, loop=None, error=None):
         calls.append(kwargs)
         return (loop or _FakeLoop("loop-new"), error, "ok")
 
-    monkeypatch.setattr("kiro_crew.autonudge_authz.authorize_and_add_nudge", _fake)
+    monkeypatch.setattr("aj_crew.autonudge_authz.authorize_and_add_nudge", _fake)
     return calls
 
 
@@ -371,7 +371,7 @@ def _record_update(monkeypatch, *, loop=None, error=None):
         calls.append(kwargs)
         return (loop or _FakeLoop("loop-updated"), error, "ok")
 
-    monkeypatch.setattr("kiro_crew.autonudge_authz.authorize_and_update_nudge", _fake)
+    monkeypatch.setattr("aj_crew.autonudge_authz.authorize_and_update_nudge", _fake)
     return calls
 
 
@@ -385,7 +385,7 @@ def test_applier_ack_discloses_the_gated_cadence(monkeypatch):
     A quiet tick on a gated loop (this applier's default) spends no turn. The cadence is
     read off the ARMED loop, which knows whether a monitor was actually attached.
     """
-    from kiro_crew.monitoring.models import MonitorState
+    from aj_crew.monitoring.models import MonitorState
 
     armed = _FakeLoop("loop-gated")
     armed.monitor = MonitorState(
@@ -714,7 +714,7 @@ def test_a_probe_state_double_is_a_legacy_loop_only_while_it_carries_the_gate():
     The paused-loop tests below rely on ``gate=True`` putting the double on the LEGACY
     side; if the predicate changes, this failure names the cause.
     """
-    from kiro_crew.autonudge import is_structured_monitor_loop
+    from aj_crew.autonudge import is_structured_monitor_loop
 
     gated_prompt_loop = _FakeLoop("loop-gated", monitor=_FakeMonitor(), gate=True)
     controller_record = _FakeLoop("loop-structured", monitor=_FakeMonitor())
@@ -799,7 +799,7 @@ def test_applier_owed_blocked_turn_is_not_reported_as_a_merge(monkeypatch, pendi
 def test_applier_settled_terminal_loop_is_not_reported_as_a_manual_pause(monkeypatch):
     """A SETTLED terminal loop had no branch here either, so it fell to the
     generic wording and was announced as if a human had pressed Stop."""
-    from kiro_crew.monitoring.models import MonitorOutcome
+    from aj_crew.monitoring.models import MonitorOutcome
 
     loop = _FakeLoop(
         "loop-settled",
@@ -834,7 +834,7 @@ def test_applier_a_settled_outcome_outranks_a_stale_owed_turn(monkeypatch):
     clears the debt in the same pass — so a reader that preferred the debt could
     announce a stale classification.
     """
-    from kiro_crew.monitoring.models import MonitorOutcome
+    from aj_crew.monitoring.models import MonitorOutcome
 
     loop = _FakeLoop(
         "loop-both",
@@ -1163,7 +1163,7 @@ def test_applier_autonudge_stop_miss_logs_caller_binding_and_active_slot_keys(mo
     ]
     svc = _FakeSvc(None, all_loops=loops)
     _install_svc(monkeypatch, svc)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.session_directive_apply"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.session_directive_apply"):
         result = asyncio.run(
             apply_session_directive(
                 _fake_state(), _fake_slot(), _SESSION, "autonudge_stop", {"reason": "done"}
@@ -1173,7 +1173,7 @@ def test_applier_autonudge_stop_miss_logs_caller_binding_and_active_slot_keys(mo
     warnings = [
         r
         for r in caplog.records
-        if r.levelno >= logging.WARNING and r.name == "kiro_crew.dashboard.session_directive_apply"
+        if r.levelno >= logging.WARNING and r.name == "aj_crew.dashboard.session_directive_apply"
     ]
     assert len(warnings) == 1
     logged = warnings[0].getMessage()
@@ -1197,7 +1197,7 @@ def test_applier_autonudge_stop_logs_nothing_when_no_loop_exists(monkeypatch, ca
     """
     svc = _FakeSvc(None)
     _install_svc(monkeypatch, svc)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.session_directive_apply"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.session_directive_apply"):
         result = asyncio.run(
             apply_session_directive(
                 _fake_state(), _fake_slot(), _SESSION, "autonudge_stop", {"reason": "done"}
@@ -1205,7 +1205,7 @@ def test_applier_autonudge_stop_logs_nothing_when_no_loop_exists(monkeypatch, ca
         )
     assert "nothing to stop" in result.lower()
     assert [
-        r for r in caplog.records if r.name == "kiro_crew.dashboard.session_directive_apply"
+        r for r in caplog.records if r.name == "aj_crew.dashboard.session_directive_apply"
     ] == []
 
 
@@ -1231,7 +1231,7 @@ def test_autonudge_stop_directive_does_not_read_as_confirmation(default_install)
 
 def _schema_for(tool_name: str) -> dict:
     """One tool's model-facing inputSchema, as advertised to the agent."""
-    from kiro_crew.mcp_tools import control
+    from aj_crew.mcp_tools import control
 
     entry = next(s for s in control.schemas() if s["name"] == tool_name)
     return entry["inputSchema"]

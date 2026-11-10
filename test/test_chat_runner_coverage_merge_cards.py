@@ -1,4 +1,4 @@
-"""Coverage tests for ``kiro_crew.dashboard.chat_runner``: the merge cards a turn carries.
+"""Coverage tests for ``aj_crew.dashboard.chat_runner``: the merge cards a turn carries.
 
 Covers ``adopt_alias_note_context``, which hands a turn the merge-card context queued on
 another slot of its session, ``take_turn_context``, and the verbatim replays (after an
@@ -28,12 +28,12 @@ from chat_runner_coverage_helpers import (
     _state,
 )
 
-from kiro_crew.acp.client import AcpConversationBindingMismatch
-from kiro_crew.acp.types import EVENT_TEXT_CHUNK
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.client import AcpConversationBindingMismatch
+from aj_crew.acp.types import EVENT_TEXT_CHUNK
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.providers.base import LLMEvent
+from aj_crew.testing.wait import await_until
 
 
 def _adopt(slot: _ChatSlot, slots: list[_ChatSlot]) -> int:
@@ -476,7 +476,7 @@ class TestTakeTurnContext:
         once a replacement file exists its ``created_at`` is a new one."""
         state = _state(tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:00+00:00"
+            "aj_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:00+00:00"
         )
         first, twin, key = self._twins_with_a_transcript(state)
         card = self._card("deleted chat", chat_runner.effective_session_key(first))
@@ -495,7 +495,7 @@ class TestTakeTurnContext:
         assert first._pending_context == [card]
 
         monkeypatch.setattr(
-            "kiro_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:01+00:00"
+            "aj_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:01+00:00"
         )
         state.conversation_log.append(key, "user", "new conversation")
         replacement_identity = state.conversation_log.thread_transcript_identity(key)
@@ -656,9 +656,9 @@ class TestTakeTurnContext:
         worker thread, not on the loop. Inside the read ``asyncio.get_running_loop()``
         raises and the reading thread is not the loop's, and the card it admits
         reaches the prompt."""
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.context import ContextBuilder
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         builder = ContextBuilder(
             memory=MemoryStore(workspace=tmp_path / "ws"),
@@ -772,9 +772,9 @@ class TestVerbatimReplayMergeCards:
     @classmethod
     def _state_with_context_builder(cls, tmp_path):
         """The pending-context drain runs on the context-builder prompt path only."""
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.context import ContextBuilder
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         builder = ContextBuilder(
             memory=MemoryStore(workspace=tmp_path / "ws"),
@@ -913,7 +913,7 @@ class TestVerbatimReplayMergeCards:
         """The no-activity image-poison recovery re-queues the turn's text; the
         turn raised before its card's context was consumed, so the recovery turn drains the
         restored card and the replayed text must not carry its frame as well."""
-        from kiro_crew.acp.client import AcpError
+        from aj_crew.acp.client import AcpError
 
         state, client, slot = self._state_with_context_builder(tmp_path)
         poisoned = AcpError("The model could not process an image", transient=False)
@@ -957,7 +957,7 @@ class TestVerbatimReplayMergeCards:
         """A sub-agent completion rejected for a retained image is queued again as
         the completion it is. The turn raised before its card's context was consumed, so the
         completion's replay must not carry the card's frame as well."""
-        from kiro_crew.acp.client import AcpError
+        from aj_crew.acp.client import AcpError
 
         state, client, slot = self._state_with_context_builder(tmp_path)
         poisoned = AcpError("The model could not process an image", transient=False)
@@ -990,7 +990,7 @@ class TestVerbatimReplayMergeCards:
         """A provider reset after the prompt-busy retries ran out re-queues the
         turn's text verbatim. The reset turn put its card back, so the text must
         not carry the card's frame as well."""
-        from kiro_crew.llm_helpers import PromptBusyExhaustedError
+        from aj_crew.llm_helpers import PromptBusyExhaustedError
 
         state, client, slot = self._state_with_context_builder(tmp_path)
         self._script(
@@ -1014,7 +1014,7 @@ class TestVerbatimReplayMergeCards:
         """A signed-out CLI holds the popped completion at the queue head for after
         sign-in, and the failed turn put its card back. The held text carries no
         card frame and is still marked as replaying the completion."""
-        from kiro_crew.acp.transport_errors import AcpAuthRequired
+        from aj_crew.acp.transport_errors import AcpAuthRequired
 
         state, client, slot = self._state_with_context_builder(tmp_path)
         self._script(client, AcpAuthRequired("Please sign in"))
@@ -1040,7 +1040,7 @@ class TestVerbatimReplayMergeCards:
         """A refused turn lands, so it consumes its merge card's context instead of
         putting it back on the queue. The verbatim replay to the fallback model is then
         the card's only delivery: its prompt must carry the frame, exactly once."""
-        from kiro_crew.acp.types import STOP_REASON_REFUSAL, RefusalInfo
+        from aj_crew.acp.types import STOP_REASON_REFUSAL, RefusalInfo
 
         monkeypatch.setattr(chat_runner, "_configured_refusal_fallback", lambda: "opus-test")
         state, client, slot = self._state_with_context_builder(tmp_path)

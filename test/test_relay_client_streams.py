@@ -16,10 +16,10 @@ from unittest.mock import MagicMock
 import pytest
 from relay_client_helpers import OWNER, TOKEN, ready_frame, valid_message
 
-from kiro_crew.relay_client.connection import HostConnection, RelayTimings
-from kiro_crew.relay_client.streams import HttpStream, WsStream
-from kiro_crew.relay_client.token_source import HostCredential
-from kiro_crew.testing.wait import await_until
+from aj_crew.relay_client.connection import HostConnection, RelayTimings
+from aj_crew.relay_client.streams import HttpStream, WsStream
+from aj_crew.relay_client.token_source import HostCredential
+from aj_crew.testing.wait import await_until
 
 pytestmark = pytest.mark.asyncio
 
@@ -99,7 +99,7 @@ async def test_done_is_reported_once_for_a_stream_that_ran() -> None:
 
     class _Unreachable(_NeverIngress):
         async def open_http(self, request: Any, body: Any) -> Any:
-            from kiro_crew.relay_client.ingress import IngressUnreachable
+            from aj_crew.relay_client.ingress import IngressUnreachable
 
             raise IngressUnreachable("nothing listens")
 
@@ -126,7 +126,7 @@ async def test_done_is_reported_once_for_a_stream_that_ran() -> None:
 
 
 async def test_one_full_size_ws_message_always_fits_an_empty_queue() -> None:
-    from kiro_crew.relay_client.protocol import (
+    from aj_crew.relay_client.protocol import (
         REQUEST_BUFFER_MAX_BYTES,
         WS_MESSAGE_MAX_BYTES,
         FrameError,
@@ -149,8 +149,8 @@ async def test_one_full_size_ws_message_always_fits_an_empty_queue() -> None:
 
 
 def test_the_connection_budget_bounds_every_stream_together() -> None:
-    from kiro_crew.relay_client.protocol import FrameError
-    from kiro_crew.relay_client.streams import BufferBudget
+    from aj_crew.relay_client.protocol import FrameError
+    from aj_crew.relay_client.streams import BufferBudget
 
     budget = BufferBudget(ceiling=100)
     budget.take(60, 1)
@@ -164,7 +164,7 @@ def test_the_connection_budget_bounds_every_stream_together() -> None:
 
 
 async def test_a_released_http_stream_gives_its_bytes_back() -> None:
-    from kiro_crew.relay_client.streams import BufferBudget
+    from aj_crew.relay_client.streams import BufferBudget
 
     budget = BufferBudget(ceiling=10_000)
     stream = HttpStream(
@@ -186,7 +186,7 @@ async def test_a_released_http_stream_gives_its_bytes_back() -> None:
 
 
 async def test_a_ws_message_stays_in_the_budget_until_the_crew_takes_it() -> None:
-    from kiro_crew.relay_client.streams import BufferBudget
+    from aj_crew.relay_client.streams import BufferBudget
 
     taken = asyncio.Event()
     release = asyncio.Event()
@@ -235,8 +235,8 @@ async def test_a_ws_message_stays_in_the_budget_until_the_crew_takes_it() -> Non
 
 
 async def test_empty_partial_pieces_have_a_count_cap(monkeypatch) -> None:
-    from kiro_crew.relay_client import streams
-    from kiro_crew.relay_client.protocol import FrameError
+    from aj_crew.relay_client import streams
+    from aj_crew.relay_client.protocol import FrameError
 
     # raising=False also lets this regression run against the uncapped parent.
     monkeypatch.setattr(streams, "WS_REASSEMBLY_MAX_PIECES", 4, raising=False)
@@ -253,8 +253,8 @@ async def test_empty_partial_pieces_have_a_count_cap(monkeypatch) -> None:
 
 
 async def test_empty_partial_pieces_are_charged_and_do_not_refresh_timeout() -> None:
-    from kiro_crew.relay_client.protocol import WS_REASSEMBLY_PIECE_TIMEOUT_SECONDS
-    from kiro_crew.relay_client.streams import WsReassembler
+    from aj_crew.relay_client.protocol import WS_REASSEMBLY_PIECE_TIMEOUT_SECONDS
+    from aj_crew.relay_client.streams import WsReassembler
 
     now = 0.0
     assembler = WsReassembler(monotonic=lambda: now)
@@ -283,7 +283,7 @@ async def test_empty_http_chunks_are_not_queued() -> None:
     stream.end_body()
     assert [piece async for piece in stream._iter_body()] == []
     # Empty data must not bypass the existing after-end rejection.
-    from kiro_crew.relay_client.protocol import FrameError
+    from aj_crew.relay_client.protocol import FrameError
 
     with pytest.raises(FrameError):
         stream.feed(b"")
@@ -291,8 +291,8 @@ async def test_empty_http_chunks_are_not_queued() -> None:
 
 @pytest.mark.parametrize("message", ["", b""])
 async def test_ws_message_count_includes_the_inflight_send(monkeypatch, message) -> None:
-    from kiro_crew.relay_client import streams
-    from kiro_crew.relay_client.protocol import FrameError
+    from aj_crew.relay_client import streams
+    from aj_crew.relay_client.protocol import FrameError
 
     monkeypatch.setattr(streams, "WS_QUEUE_MAX_MESSAGES", 4, raising=False)
     entered = asyncio.Event()
@@ -339,7 +339,7 @@ async def test_ws_message_count_includes_the_inflight_send(monkeypatch, message)
 
 
 async def test_backoff_delay_history_is_bounded(monkeypatch) -> None:
-    from kiro_crew.relay_client import client as client_mod
+    from aj_crew.relay_client import client as client_mod
 
     monkeypatch.setattr(client_mod, "BACKOFF_HISTORY_MAX_ENTRIES", 4, raising=False)
 
@@ -363,8 +363,8 @@ async def test_backoff_delay_history_is_bounded(monkeypatch) -> None:
 async def test_binary_reassembly_accepts_exactly_ten_mib(lone_padding) -> None:
     import base64
 
-    from kiro_crew.relay_client.protocol import WS_MESSAGE_MAX_BYTES, split_ws_data
-    from kiro_crew.relay_client.streams import WsReassembler
+    from aj_crew.relay_client.protocol import WS_MESSAGE_MAX_BYTES, split_ws_data
+    from aj_crew.relay_client.streams import WsReassembler
 
     payload = b"x" * WS_MESSAGE_MAX_BYTES
     pieces = split_ws_data(base64.b64encode(payload).decode("ascii"))
@@ -395,8 +395,8 @@ async def test_binary_reassembly_accepts_exactly_ten_mib(lone_padding) -> None:
 async def test_binary_reassembly_refuses_one_byte_over_the_limit(monkeypatch, piece_size) -> None:
     import base64
 
-    from kiro_crew.relay_client import streams
-    from kiro_crew.relay_client.protocol import WS_MESSAGE_MAX_BYTES, FrameError, split_ws_data
+    from aj_crew.relay_client import streams
+    from aj_crew.relay_client.protocol import WS_MESSAGE_MAX_BYTES, FrameError, split_ws_data
 
     limit = WS_MESSAGE_MAX_BYTES if piece_size is None else 10
     monkeypatch.setattr(streams, "WS_MESSAGE_MAX_BYTES", limit)
@@ -529,8 +529,8 @@ async def test_a_stream_this_side_ended_ignores_the_relays_later_frames(
 
 async def test_the_frames_email_and_name_reach_the_ingress() -> None:
     """A checked head's display labels travel beside the request, never as copied headers."""
-    from kiro_crew.relay_client.ingress import IngressUnreachable
-    from kiro_crew.relay_client.protocol import parse_inbound
+    from aj_crew.relay_client.ingress import IngressUnreachable
+    from aj_crew.relay_client.protocol import parse_inbound
 
     seen: List[Any] = []
 

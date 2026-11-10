@@ -11,10 +11,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.autonudge import NudgeLoop
-from kiro_crew.validation import ValidationError
-from kiro_crew.validation_parts.core_agent_schemas import MONITOR_START_SCHEMA
-from kiro_crew.validation_parts.field_engine import validate_tool_args
+from aj_crew.autonudge import NudgeLoop
+from aj_crew.validation import ValidationError
+from aj_crew.validation_parts.core_agent_schemas import MONITOR_START_SCHEMA
+from aj_crew.validation_parts.field_engine import validate_tool_args
 
 
 def _owner_dashboard_identity():
@@ -42,7 +42,7 @@ def _svc():
 def _app(monkeypatch, svc):
     from aiohttp import web
 
-    from kiro_crew.dashboard.handlers import autonudge as _handler
+    from aj_crew.dashboard.handlers import autonudge as _handler
 
     monkeypatch.setattr(_handler, "_autonudge_get", lambda: svc)
     state = MagicMock()

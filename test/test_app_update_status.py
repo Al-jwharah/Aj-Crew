@@ -18,7 +18,7 @@ from typing import Any
 import pytest
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.apps import official_catalog, routes, update_status
+from aj_crew.apps import official_catalog, routes, update_status
 
 # A fixed instant, so ``checkedAt`` is asserted against a value this test set
 # rather than against whatever the clock said while it ran.
@@ -261,7 +261,7 @@ class TestRecordedSource:
     def test_a_move_between_pinned_registries_is_answered_from_the_new_one(
         self, monkeypatch, no_catalog
     ):
-        from kiro_crew.apps import registry
+        from aj_crew.apps import registry
 
         monkeypatch.setattr(
             registry,
@@ -338,7 +338,7 @@ class TestRecordedSource:
         assert rows[0]["update"]["latestVersion"] == "1.2.0"
 
     def test_with_no_records_given_the_installed_ones_are_read(self, monkeypatch, no_catalog):
-        import kiro_crew.apps.manager as manager_mod
+        import aj_crew.apps.manager as manager_mod
 
         _registries(
             monkeypatch,

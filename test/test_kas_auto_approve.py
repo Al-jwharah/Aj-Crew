@@ -16,10 +16,10 @@ import types
 import pytest
 from kas_agents_helpers import _spec
 
-from kiro_crew.acp import kas_agents, kas_auto_approve
-from kiro_crew.acp.kas_agents import to_client_custom_agent
-from kiro_crew.acp.kas_auto_approve import auto_approve_refs
-from kiro_crew.platform import governance
+from aj_crew.acp import kas_agents, kas_auto_approve
+from aj_crew.acp.kas_agents import to_client_custom_agent
+from aj_crew.acp.kas_auto_approve import auto_approve_refs
+from aj_crew.platform import governance
 
 _DOCS = {"command": "docs-mcp", "autoApprove": ["read_page"]}
 
@@ -43,7 +43,7 @@ def ungoverned(monkeypatch):
 
 
 def _project(**servers) -> dict:
-    spec = _spec(mcpServers={"kirocrew-core": {"command": "x"}, **servers})
+    spec = _spec(mcpServers={"ajcrew-core": {"command": "x"}, **servers})
     return to_client_custom_agent("a", spec, "p")
 
 
@@ -108,7 +108,7 @@ def test_it_does_not_count_as_an_allowlist_for_an_authored_block(ungoverned):
         "a",
         _spec(
             permissions=authored,
-            mcpServers={"kirocrew-core": {"command": "x"}, "docs-mcp": dict(_DOCS)},
+            mcpServers={"ajcrew-core": {"command": "x"}, "docs-mcp": dict(_DOCS)},
         ),
         "p",
     )

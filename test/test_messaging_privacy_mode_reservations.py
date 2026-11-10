@@ -22,8 +22,8 @@ from messaging_privacy_mode_helpers import audits_fixture  # noqa: F401
 from messaging_privacy_mode_helpers import session_map_fixture  # noqa: F401
 from messaging_privacy_mode_helpers import _TG_KEY, _land_on_disk, _Recorder, _Sessions
 
-from kiro_crew.messaging import privacy_mode
-from kiro_crew.testing.wait import (
+from aj_crew.messaging import privacy_mode
+from aj_crew.testing.wait import (
     async_wait_until,
     await_until,
     default_timeout,
@@ -51,8 +51,8 @@ class TestReservations:
 
     @staticmethod
     def _seed_header():
-        from kiro_crew import history as history_mod
-        from kiro_crew.history import ConversationLog
+        from aj_crew import history as history_mod
+        from aj_crew.history import ConversationLog
 
         log = ConversationLog()
         log.init()
@@ -279,7 +279,7 @@ class TestReservations:
         """Reserve incognito (row, header and mark all standing), then release with
         the header restore replaced by *writer*; hand back the release's verdict
         and the state the assertions read."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         log = self._seed_header()
         sm = session_map()
@@ -364,7 +364,7 @@ class TestReservations:
         clear is never reached, the row stands, and the restart hydrates the
         mode. Mutation: clear the row ahead of the header (the earlier order) --
         red: ``hydrated=False, row=False, header='incognito'``."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         log = self._seed_header()
         sm = session_map()
@@ -472,7 +472,7 @@ class TestReservations:
         """The first holder's application is refused (the map cannot write the row);
         the joiner does not ride a failed application -- it attempts its own, which
         the same map refuses too, and no pending state is left behind."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         sm = session_map()
         sessions = _Sessions(sm)
@@ -615,7 +615,7 @@ class TestReservations:
         then ``gate`` awaited -- and then runs the real write (or raises
         *then_raise*) and sets ``done``; every other write runs untouched.
         Returns ``(stand_in, in_write, gate, done)``."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         real = ConversationLog.update_metadata_if
         in_write, gate, done = threading.Event(), threading.Event(), threading.Event()
@@ -678,7 +678,7 @@ class TestReservations:
         header nothing claims. Under the session's lock the second release waits
         for the first's whole sequence. Mutation: drop the lock -- red, the header
         reads ``incognito`` and ``inco_done_early`` is True."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         log, sm, sessions, temp, inco = await self._reserve_both_modes(session_map)
         gated, in_write, gate, _done = self._gate_the_restore_to("incognito")
@@ -721,7 +721,7 @@ class TestReservations:
         outcome. The premise pins the ORDER: while the header restore is in
         flight the row still says the mode -- the record a restart hydrates from
         is loosened last."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         log = self._seed_header()
         sm = session_map()
@@ -779,7 +779,7 @@ class TestReservations:
         off the mark, returns at once, and the release then drops row, header
         and mark under it (``marked=False, row=False, applied=False``).
         """
-        from kiro_crew.history import transcript_privacy_mode
+        from aj_crew.history import transcript_privacy_mode
 
         log = self._seed_header()
         sm = session_map()

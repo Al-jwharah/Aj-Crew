@@ -14,9 +14,9 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
-from kiro_crew.testing.channel_fixtures import load_fixture
-from kiro_crew.testing.fake_channel_wire import FakeWireSession, WireResponse
-from kiro_crew.webex.client import WebexClient
+from aj_crew.testing.channel_fixtures import load_fixture
+from aj_crew.testing.fake_channel_wire import FakeWireSession, WireResponse
+from aj_crew.webex.client import WebexClient
 
 CHANNEL_FIXTURES = Path(__file__).resolve().parent / "fixtures" / "channels"
 

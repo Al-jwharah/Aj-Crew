@@ -15,12 +15,12 @@ import itertools
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.crew_log import emit
-from kiro_crew.crew_log import session_tree_projection as stp
-from kiro_crew.crew_log.session_tree import EdgeRecord, OpenedRecord
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.crew_log import emit
+from aj_crew.crew_log import session_tree_projection as stp
+from aj_crew.crew_log.session_tree import EdgeRecord, OpenedRecord
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 @pytest.fixture(autouse=True)
@@ -38,10 +38,10 @@ def _tree_on(tmp_path, monkeypatch):
     for THIS home. The projection is dropped on both sides because it is bound to one
     store.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crewhome"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crewhome"))
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     monkeypatch.setattr(
-        "kiro_crew.executors.maintenance_executor",
+        "aj_crew.executors.maintenance_executor",
         lambda: type("_NoPool", (), {"submit": staticmethod(lambda *a, **k: None)}),
     )
     stp.reset_for_tests()
@@ -432,7 +432,7 @@ def test_adopting_refuses_while_the_tree_cannot_be_read(tmp_path, monkeypatch):
     caller = _live(state, _slot(state, "chat-1"), "sid-caller")
     _live(state, _slot(state, "chat-2"), "sid-target")
     monkeypatch.setattr(
-        "kiro_crew.crew_log.session_tree_projection.SessionTreeProjection."
+        "aj_crew.crew_log.session_tree_projection.SessionTreeProjection."
         "seeded_for_current_store",
         property(lambda _self: False),
     )
@@ -452,7 +452,7 @@ def test_releasing_refuses_while_the_tree_cannot_be_read(tmp_path, monkeypatch):
     _live(state, _slot(state, "chat-2"), "sid-target")
     _hold(state, "chat-2", "chat-1", sid="sid-target")
     monkeypatch.setattr(
-        "kiro_crew.crew_log.session_tree_projection.SessionTreeProjection."
+        "aj_crew.crew_log.session_tree_projection.SessionTreeProjection."
         "seeded_for_current_store",
         property(lambda _self: False),
     )
@@ -708,7 +708,7 @@ def test_a_spawn_edge_in_flight_is_seen_by_an_overlapping_adoptions_loop_guard(
     close the cycle ``child -> creator -> child``. The spawn registers its queued edge for
     the in-flight window so the adoption's guard sees it.
     """
-    from kiro_crew.dashboard.session_control_parts import session_create as scc
+    from aj_crew.dashboard.session_control_parts import session_create as scc
 
     state = _make_state(tmp_path)
     creator = _live(state, _slot(state, "chat-creator"), "sid-creator")
@@ -780,7 +780,7 @@ def test_a_spawn_settle_from_the_writer_thread_resolves_the_fence_on_the_loop(
     """
     import threading
 
-    from kiro_crew.dashboard.session_control_parts import session_create as scc
+    from aj_crew.dashboard.session_control_parts import session_create as scc
 
     state = _make_state(tmp_path)
     creator = _live(state, _slot(state, "chat-creator"), "sid-creator")
@@ -853,7 +853,7 @@ def test_a_spawn_whose_commit_times_out_keeps_its_edge_until_the_write_settles(
     Dropping the edge on that False would let the adoption commit creator -> child and close
     a cycle once the slow append lands. Same rule as adopt's fence on a timeout.
     """
-    from kiro_crew.dashboard.session_control_parts import session_create as scc
+    from aj_crew.dashboard.session_control_parts import session_create as scc
 
     state = _make_state(tmp_path)
     creator = _live(state, _slot(state, "chat-creator"), "sid-creator")
@@ -932,8 +932,8 @@ def test_a_spawn_whose_commit_times_out_keeps_its_edge_until_the_write_settles(
 def test_both_verbs_are_gated_and_blocked_like_the_other_session_control_tools():
     """Three places must agree on the tool set, and spelling it out per site is how
     ``session_create`` came to be identity-gated and reachable from a channel."""
-    from kiro_crew.channel import CHANNEL_AGENT_BLOCKED_TOOLS
-    from kiro_crew.mcp_dashboard import SESSION_CONTROL_TOOLS, _tool_definitions
+    from aj_crew.channel import CHANNEL_AGENT_BLOCKED_TOOLS
+    from aj_crew.mcp_dashboard import SESSION_CONTROL_TOOLS, _tool_definitions
 
     advertised = {d["name"] for d in _tool_definitions()}
     for tool in ("session_adopt", "session_release"):
@@ -946,18 +946,18 @@ def test_neither_verb_is_auto_granted_to_an_unattended_conductor():
     """The grant invariant: a granted verb may CREATE or READ, never MUTATE workspace
     state that already exists and is not the agent's own. An adoption moves where
     another session sits in the person's sidebar, and takes its subtree along."""
-    from kiro_crew.agent import _CONDUCTOR_DASHBOARD_GRANTS, _MEMBER_DASHBOARD_GRANTS
+    from aj_crew.agent import _CONDUCTOR_DASHBOARD_GRANTS, _MEMBER_DASHBOARD_GRANTS
 
     for tool in ("session_adopt", "session_release"):
-        assert f"@kirocrew-dashboard/{tool}" not in _CONDUCTOR_DASHBOARD_GRANTS
-        assert f"@kirocrew-dashboard/{tool}" not in _MEMBER_DASHBOARD_GRANTS
+        assert f"@ajcrew-dashboard/{tool}" not in _CONDUCTOR_DASHBOARD_GRANTS
+        assert f"@ajcrew-dashboard/{tool}" not in _MEMBER_DASHBOARD_GRANTS
 
 
 def test_the_routes_are_registered_and_carry_the_internal_secret():
     """A path missing from the internal-auth set falls through to the general branch,
     which honors only cookie/query tokens -- so the MCP caller's header is ignored and
     the tool is unreachable in production while handler tests still pass."""
-    from kiro_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
+    from aj_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
 
     assert "/api/session-control/adopt" in _STRICT_INTERNAL_API_PATHS
     assert "/api/session-control/release" in _STRICT_INTERNAL_API_PATHS

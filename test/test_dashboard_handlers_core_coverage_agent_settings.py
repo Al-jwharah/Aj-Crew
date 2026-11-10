@@ -1,6 +1,6 @@
 """Coverage for ``dashboard/handlers/core.py``: agent settings writes and session sub-agent routes.
 
-The agent-settings PUT (``/api/config/kirocrew``) validators, the PATCH validators the
+The agent-settings PUT (``/api/config/ajcrew``) validators, the PATCH validators the
 editable-field table does not reach, and the session sub-agent list / result routes
 with their path-id validation.
 
@@ -22,14 +22,14 @@ from dashboard_handlers_core_coverage_helpers import fake_sel_fixture  # noqa: F
 from dashboard_handlers_core_coverage_helpers import seeded_config_fixture  # noqa: F401
 from dashboard_handlers_core_coverage_helpers import _req
 
-from kiro_crew.config.loader import (
+from aj_crew.config.loader import (
     MAX_SUBAGENTS_FIXED_FLOOR,
     SUBAGENT_AUTO_MAX_CEILING,
     SUBAGENT_MAX_TURNS_CEILING,
 )
-from kiro_crew.dashboard.handlers import core as core_mod
+from aj_crew.dashboard.handlers import core as core_mod
 
-# ── Agent settings PUT (/api/config/kirocrew) ───────────────────────────
+# ── Agent settings PUT (/api/config/ajcrew) ───────────────────────────
 
 
 @web.middleware
@@ -47,19 +47,19 @@ def _agent_cfg_app() -> web.Application:
     state = MagicMock()
     state.owner_id = ""
     app["state"] = state
-    app.router.add_route("*", "/api/config/kirocrew", core_mod.api_kirocrew_config)
+    app.router.add_route("*", "/api/config/ajcrew", core_mod.api_ajcrew_config)
     return app
 
 
 async def _put_agent(client, settings: dict):
-    return await client.put("/api/config/kirocrew", json={"agent": settings})
+    return await client.put("/api/config/ajcrew", json={"agent": settings})
 
 
 class TestAgentSettingsPut:
     @pytest.mark.asyncio
     async def test_malformed_body_is_denied_and_audited(self, seeded_config, fake_sel) -> None:
         async with TestClient(TestServer(_agent_cfg_app())) as client:
-            resp = await client.put("/api/config/kirocrew", data=b"{{{")
+            resp = await client.put("/api/config/ajcrew", data=b"{{{")
             assert resp.status == 400
             assert (await resp.json())["error"] == "invalid JSON"
         assert fake_sel.log_api_access.call_args.kwargs["outcome"] == "denied"
@@ -67,7 +67,7 @@ class TestAgentSettingsPut:
     @pytest.mark.asyncio
     async def test_missing_agent_object_is_denied(self, seeded_config, fake_sel) -> None:
         async with TestClient(TestServer(_agent_cfg_app())) as client:
-            resp = await client.put("/api/config/kirocrew", json={"agent": "nope"})
+            resp = await client.put("/api/config/ajcrew", json={"agent": "nope"})
             assert resp.status == 400
             assert (await resp.json())["error"] == "agent must be an object"
 
@@ -110,8 +110,8 @@ class TestAgentSettingsPut:
         ``ValueError``. The field is not editable through this surface today, so the
         refusal is raised the way the floor raises it rather than provoked through
         the body."""
-        from kiro_crew.config import loader as loader_mod
-        from kiro_crew.config.loader import ConfigWriteRefused
+        from aj_crew.config import loader as loader_mod
+        from aj_crew.config.loader import ConfigWriteRefused
 
         message = (
             "agent.deepseek_env entry 'DEEPSEEK_API_KEY' holds a literal value, so the "
@@ -233,7 +233,7 @@ class TestAgentSettingsPut:
             newline="\n",
         )
         async with TestClient(TestServer(_agent_cfg_app())) as client:
-            body = await (await client.get("/api/config/kirocrew")).json()
+            body = await (await client.get("/api/config/ajcrew")).json()
         assert "some_edition" not in body
         assert "s3cret" not in json.dumps(body)
         assert "agent" in body
@@ -273,7 +273,7 @@ class TestAgentSettingsPutLockOffload:
         """The write path must call ``update_config_locked``, not a bare
         ``write_text`` / ``os.replace``.  Patching the helper to a spy lets us
         assert it was invoked while still allowing the real write to complete."""
-        import kiro_crew.config.loader as _loader
+        import aj_crew.config.loader as _loader
 
         calls: list[str] = []
         _real = _loader.update_config_locked
@@ -307,10 +307,10 @@ class TestPatchGuards:
         side effects the generic write cannot reproduce."""
         app = web.Application(middlewares=[_owner_identity])
         app["state"] = SimpleNamespace(owner_id="")
-        app.router.add_patch("/api/config/kirocrew", core_mod.api_kirocrew_config_patch)
+        app.router.add_patch("/api/config/ajcrew", core_mod.api_ajcrew_config_patch)
         async with TestClient(TestServer(app)) as client:
             resp = await client.patch(
-                "/api/config/kirocrew",
+                "/api/config/ajcrew",
                 json={"path": "agent.apps_allow_third_party", "value": False},
             )
             assert resp.status == 400
@@ -320,10 +320,10 @@ class TestPatchGuards:
     async def test_unknown_field_is_refused(self, seeded_config, fake_sel) -> None:
         app = web.Application(middlewares=[_owner_identity])
         app["state"] = SimpleNamespace(owner_id="")
-        app.router.add_patch("/api/config/kirocrew", core_mod.api_kirocrew_config_patch)
+        app.router.add_patch("/api/config/ajcrew", core_mod.api_ajcrew_config_patch)
         async with TestClient(TestServer(app)) as client:
             resp = await client.patch(
-                "/api/config/kirocrew", json={"path": "agent.nope", "value": 1}
+                "/api/config/ajcrew", json={"path": "agent.nope", "value": 1}
             )
             assert resp.status == 400
             assert (await resp.json())["error"] == "field not editable: agent.nope"
@@ -333,18 +333,18 @@ class TestFallbackModelPatch:
     """agent.fallback_model — single-value str spec with role-model validation."""
 
     def _app(self) -> web.Application:
-        # PATCH /api/config/kirocrew is owner-gated: supply the same signed
+        # PATCH /api/config/ajcrew is owner-gated: supply the same signed
         # local-owner identity the sibling patch tests use.
         app = web.Application(middlewares=[_owner_identity])
         app["state"] = SimpleNamespace(owner_id="")
-        app.router.add_patch("/api/config/kirocrew", core_mod.api_kirocrew_config_patch)
+        app.router.add_patch("/api/config/ajcrew", core_mod.api_ajcrew_config_patch)
         return app
 
     @pytest.mark.asyncio
     async def test_accepts_a_model_id(self, seeded_config, fake_sel) -> None:
         async with TestClient(TestServer(self._app())) as client:
             resp = await client.patch(
-                "/api/config/kirocrew",
+                "/api/config/ajcrew",
                 json={"path": "agent.fallback_model", "value": "claude-opus-4.8"},
             )
             assert resp.status == 200
@@ -358,7 +358,7 @@ class TestFallbackModelPatch:
         # "auto" always allows — _validate_role_model's defer-to-default case.
         async with TestClient(TestServer(self._app())) as client:
             resp = await client.patch(
-                "/api/config/kirocrew",
+                "/api/config/ajcrew",
                 json={"path": "agent.fallback_model", "value": "auto"},
             )
             assert resp.status == 200
@@ -367,7 +367,7 @@ class TestFallbackModelPatch:
     async def test_accepts_empty_feature_off(self, seeded_config, fake_sel) -> None:
         async with TestClient(TestServer(self._app())) as client:
             resp = await client.patch(
-                "/api/config/kirocrew",
+                "/api/config/ajcrew",
                 json={"path": "agent.fallback_model", "value": ""},
             )
             assert resp.status == 200
@@ -376,7 +376,7 @@ class TestFallbackModelPatch:
     async def test_rejects_non_string(self, seeded_config, fake_sel) -> None:
         async with TestClient(TestServer(self._app())) as client:
             resp = await client.patch(
-                "/api/config/kirocrew",
+                "/api/config/ajcrew",
                 json={"path": "agent.fallback_model", "value": ["claude-opus-5"]},
             )
             assert resp.status == 400
@@ -385,7 +385,7 @@ class TestFallbackModelPatch:
     async def test_rejects_bad_grammar(self, seeded_config, fake_sel) -> None:
         async with TestClient(TestServer(self._app())) as client:
             resp = await client.patch(
-                "/api/config/kirocrew",
+                "/api/config/ajcrew",
                 json={"path": "agent.fallback_model", "value": "model; rm -rf /"},
             )
             assert resp.status == 400
@@ -396,7 +396,7 @@ class TestFallbackModelPatch:
         app["state"] = SimpleNamespace(
             owner_id="", sessions=SimpleNamespace(active_providers=lambda: [provider])
         )
-        app.router.add_patch("/api/config/kirocrew", core_mod.api_kirocrew_config_patch)
+        app.router.add_patch("/api/config/ajcrew", core_mod.api_ajcrew_config_patch)
         return app
 
     @pytest.mark.asyncio
@@ -420,7 +420,7 @@ class TestFallbackModelPatch:
 
         async with TestClient(TestServer(self._app_with_session(_Healing()))) as client:
             resp = await client.patch(
-                "/api/config/kirocrew",
+                "/api/config/ajcrew",
                 json={"path": "agent.fallback_model", "value": "claude-opus-5"},
             )
             assert resp.status == 200
@@ -429,7 +429,7 @@ class TestFallbackModelPatch:
     async def test_pin_is_refused_while_its_revalidation_is_in_flight(
         self, seeded_config, fake_sel
     ) -> None:
-        from kiro_crew.agent_sdk.drivers.acp import EntitlementRevalidating
+        from aj_crew.agent_sdk.drivers.acp import EntitlementRevalidating
 
         class _Pending:
             client = SimpleNamespace(backend="")
@@ -442,7 +442,7 @@ class TestFallbackModelPatch:
 
         async with TestClient(TestServer(self._app_with_session(_Pending()))) as client:
             resp = await client.patch(
-                "/api/config/kirocrew",
+                "/api/config/ajcrew",
                 json={"path": "agent.fallback_model", "value": "claude-opus-5"},
             )
             assert resp.status == 400
@@ -474,10 +474,10 @@ class TestFallbackModelPatch:
             owner_id="",
             sessions=SimpleNamespace(active_providers=lambda: [kiro, claude_member]),
         )
-        app.router.add_patch("/api/config/kirocrew", core_mod.api_kirocrew_config_patch)
+        app.router.add_patch("/api/config/ajcrew", core_mod.api_ajcrew_config_patch)
         async with TestClient(TestServer(app)) as client:
             resp = await client.patch(
-                "/api/config/kirocrew",
+                "/api/config/ajcrew",
                 json={"path": "agent.fallback_model", "value": "claude-opus-5"},
             )
             assert resp.status == 200, await resp.text()
@@ -522,21 +522,21 @@ class TestAdvertisedModelGuards:
 
     def test_provider_rejection_is_surfaced(self, monkeypatch) -> None:
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._model_rejected_reason",
+            "aj_crew.dashboard.chat_handlers._model_rejected_reason",
             lambda _v, provider=None: "display-only key",
         )
         assert core_mod._validate_role_model("fable-5-1m", _req()) == "display-only key"
 
     def test_unknown_entitlement_does_not_accuse(self, monkeypatch) -> None:
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._model_rejected_reason",
+            "aj_crew.dashboard.chat_handlers._model_rejected_reason",
             lambda _v, provider=None: None,
         )
         assert core_mod._validate_role_model("some-model", _req(app={})) is None
 
     def test_unentitled_model_lists_usable_alternatives(self, monkeypatch) -> None:
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._model_rejected_reason",
+            "aj_crew.dashboard.chat_handlers._model_rejected_reason",
             lambda _v, provider=None: None,
         )
         state = SimpleNamespace(
@@ -561,7 +561,7 @@ class TestSessionAgentRoutes:
     @pytest.mark.asyncio
     async def test_list_returns_workspace_results(self, monkeypatch, fake_sel) -> None:
         monkeypatch.setattr(
-            "kiro_crew.session_workspace.list_results",
+            "aj_crew.session_workspace.list_results",
             lambda _s: [{"agent_id": "a1", "bytes": 12}],
         )
         resp = await core_mod.api_session_agents_list(_req(match_info={"id": "s1"}))
@@ -570,7 +570,7 @@ class TestSessionAgentRoutes:
 
     @pytest.mark.asyncio
     async def test_missing_result_is_404(self, monkeypatch, fake_sel) -> None:
-        monkeypatch.setattr("kiro_crew.session_workspace.read_result", lambda *_a: "")
+        monkeypatch.setattr("aj_crew.session_workspace.read_result", lambda *_a: "")
         resp = await core_mod.api_session_agent_result(
             _req(match_info={"id": "s1", "agent_id": "a1"})
         )
@@ -580,7 +580,7 @@ class TestSessionAgentRoutes:
     @pytest.mark.asyncio
     async def test_result_is_returned_after_redaction(self, monkeypatch, fake_sel) -> None:
         monkeypatch.setattr(
-            "kiro_crew.session_workspace.read_result", lambda *_a: "finished the audit"
+            "aj_crew.session_workspace.read_result", lambda *_a: "finished the audit"
         )
         resp = await core_mod.api_session_agent_result(
             _req(match_info={"id": "s1", "agent_id": "a1"})
@@ -594,7 +594,7 @@ class TestSessionAgentRoutes:
     ) -> None:
         result = tmp_path / "agent-a1.md"
         result.write_text("partial output\n", encoding="utf-8", newline="\n")
-        monkeypatch.setattr("kiro_crew.session_workspace.result_path", lambda *_a: result)
+        monkeypatch.setattr("aj_crew.session_workspace.result_path", lambda *_a: result)
 
         app = web.Application()
         app["state"] = SimpleNamespace(
@@ -618,8 +618,8 @@ class TestSessionAgentRoutes:
         def _reset(_self):
             raise ConnectionResetError("peer went away")
 
-        monkeypatch.setattr("kiro_crew.session_workspace.result_path", lambda *_a: Path("unused"))
-        monkeypatch.setattr("kiro_crew.session_workspace_tail.ResultTail.read_new", _reset)
+        monkeypatch.setattr("aj_crew.session_workspace.result_path", lambda *_a: Path("unused"))
+        monkeypatch.setattr("aj_crew.session_workspace_tail.ResultTail.read_new", _reset)
         app = web.Application()
         app["state"] = SimpleNamespace(subagents=None)
         app.router.add_get(
@@ -695,6 +695,6 @@ class TestSessionAgentPathIdValidation:
         keys use them (``dashboard:slot-3``). A guard that rejected any of these
         would break working URLs, so pin the accepted set rather than only the
         refused one."""
-        monkeypatch.setattr("kiro_crew.session_workspace.list_results", lambda _s: [])
+        monkeypatch.setattr("aj_crew.session_workspace.list_results", lambda _s: [])
         resp = await core_mod.api_session_agents_list(_req(match_info={"id": good}))
         assert resp.status == 200

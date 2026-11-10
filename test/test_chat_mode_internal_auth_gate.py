@@ -1,7 +1,7 @@
 """F150 — internal-auth bypass fix on POST /api/chat/mode and siblings.
 
 Verifies that ``deny_session_approval_caller`` in
-``src/kiro_crew/dashboard/chat_api/slot_approval.py`` now gates internal-auth callers:
+``src/aj_crew/dashboard/chat_api/slot_approval.py`` now gates internal-auth callers:
 
 * Bare internal-auth (no session key) is refused on every operation.
 * A verified ``cron:`` key is admitted only on ``chat_mode``; refused on every
@@ -31,8 +31,8 @@ def _run(coro):
 
 
 def _make_state(tmp_path):
-    from kiro_crew.dashboard.state import DashboardState
-    from kiro_crew.history import ConversationLog
+    from aj_crew.dashboard.state import DashboardState
+    from aj_crew.history import ConversationLog
 
     sessions = MagicMock(count=0)
     sessions.get_pid = MagicMock(return_value=None)
@@ -88,16 +88,16 @@ def _owner_req(path: str = "/api/chat/mode") -> web.Request:
 
 @pytest.fixture(autouse=True)
 def _hermetic_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
 
 
 @pytest.fixture(autouse=True)
 def _mock_sel(_floor_monkeypatch):
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     recorder = SimpleNamespace(log_api_access=lambda **kw: None)
     _floor_monkeypatch.setattr(chat_handlers, "sel", lambda: recorder)
-    _floor_monkeypatch.setattr("kiro_crew.sel.sel", lambda: recorder)
+    _floor_monkeypatch.setattr("aj_crew.sel.sel", lambda: recorder)
 
 
 # ---------------------------------------------------------------------------
@@ -107,7 +107,7 @@ def _mock_sel(_floor_monkeypatch):
 
 def test_bare_internal_auth_refused_on_chat_mode() -> None:
     """deny_session_approval_caller refuses internal_auth=True with no session key."""
-    from kiro_crew.dashboard.chat_handlers import deny_session_approval_caller
+    from aj_crew.dashboard.chat_handlers import deny_session_approval_caller
 
     req = _internal_req()
     result = _run(deny_session_approval_caller(req, "chat_mode"))
@@ -122,7 +122,7 @@ def test_bare_internal_auth_refused_on_chat_mode() -> None:
 
 def test_bare_internal_auth_refused_on_chat_slot_approve() -> None:
     """deny_session_approval_caller refuses bare internal-auth on chat_slot_approve."""
-    from kiro_crew.dashboard.chat_handlers import deny_session_approval_caller
+    from aj_crew.dashboard.chat_handlers import deny_session_approval_caller
 
     req = _internal_req()
     result = _run(deny_session_approval_caller(req, "chat_slot_approve"))
@@ -137,7 +137,7 @@ def test_bare_internal_auth_refused_on_chat_slot_approve() -> None:
 
 def test_bare_internal_auth_refused_on_approval_resolve() -> None:
     """deny_session_approval_caller refuses bare internal-auth on approval_resolve."""
-    from kiro_crew.dashboard.chat_handlers import deny_session_approval_caller
+    from aj_crew.dashboard.chat_handlers import deny_session_approval_caller
 
     req = _internal_req()
     result = _run(deny_session_approval_caller(req, "approval_resolve"))
@@ -152,8 +152,8 @@ def test_bare_internal_auth_refused_on_approval_resolve() -> None:
 
 def test_non_owner_refused_on_chat_mode() -> None:
     """deny_session_approval_caller refuses a caller with no owner identity."""
-    from kiro_crew.dashboard.chat_handlers import deny_session_approval_caller
-    from kiro_crew.dashboard.state import DashboardState
+    from aj_crew.dashboard.chat_handlers import deny_session_approval_caller
+    from aj_crew.dashboard.state import DashboardState
 
     app = web.Application()
     state_mock = MagicMock(spec=DashboardState)
@@ -174,7 +174,7 @@ def test_non_owner_refused_on_chat_mode() -> None:
 
 def test_verified_cron_key_passes_on_chat_mode() -> None:
     """A verified cron: key passes deny_session_approval_caller on chat_mode."""
-    from kiro_crew.dashboard.chat_handlers import deny_session_approval_caller
+    from aj_crew.dashboard.chat_handlers import deny_session_approval_caller
 
     req = _cron_req()
     result = _run(deny_session_approval_caller(req, "chat_mode"))
@@ -191,7 +191,7 @@ def test_verified_cron_key_passes_on_chat_mode() -> None:
 
 def test_verified_cron_key_refused_on_chat_slot_approve() -> None:
     """A cron: key is NOT admitted on chat_slot_approve — only chat_mode."""
-    from kiro_crew.dashboard.chat_handlers import deny_session_approval_caller
+    from aj_crew.dashboard.chat_handlers import deny_session_approval_caller
 
     req = _cron_req()
     result = _run(deny_session_approval_caller(req, "chat_slot_approve"))
@@ -206,7 +206,7 @@ def test_verified_cron_key_refused_on_chat_slot_approve() -> None:
 
 def test_verified_cron_key_refused_on_approval_resolve() -> None:
     """A cron: key is NOT admitted on approval_resolve — only chat_mode."""
-    from kiro_crew.dashboard.chat_handlers import deny_session_approval_caller
+    from aj_crew.dashboard.chat_handlers import deny_session_approval_caller
 
     req = _cron_req()
     result = _run(deny_session_approval_caller(req, "approval_resolve"))
@@ -221,8 +221,8 @@ def test_verified_cron_key_refused_on_approval_resolve() -> None:
 
 def test_owner_passes_on_chat_mode() -> None:
     """The dashboard owner is admitted on chat_mode."""
-    from kiro_crew.dashboard.chat_handlers import deny_session_approval_caller
-    from kiro_crew.dashboard.state import DashboardState
+    from aj_crew.dashboard.chat_handlers import deny_session_approval_caller
+    from aj_crew.dashboard.state import DashboardState
 
     app = web.Application()
     state_mock = MagicMock(spec=DashboardState)
@@ -243,8 +243,8 @@ def test_owner_passes_on_chat_mode() -> None:
 
 def test_owner_passes_on_chat_slot_approve() -> None:
     """The dashboard owner is admitted on chat_slot_approve."""
-    from kiro_crew.dashboard.chat_handlers import deny_session_approval_caller
-    from kiro_crew.dashboard.state import DashboardState
+    from aj_crew.dashboard.chat_handlers import deny_session_approval_caller
+    from aj_crew.dashboard.state import DashboardState
 
     app = web.Application()
     state_mock = MagicMock(spec=DashboardState)
@@ -298,11 +298,11 @@ async def test_cron_set_session_mode_still_works(tmp_path, monkeypatch) -> None:
     for a cron caller with a verified cron: key on chat_mode, after the F150
     fix that refuses bare internal-auth.
     """
-    from kiro_crew.dashboard.chat_handlers import api_chat_mode
-    from kiro_crew.dashboard.state import SlotOrigin
-    from kiro_crew.safety_override import reset_singleton
+    from aj_crew.dashboard.chat_handlers import api_chat_mode
+    from aj_crew.dashboard.state import SlotOrigin
+    from aj_crew.safety_override import reset_singleton
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     reset_singleton()
 
     state = _make_state(tmp_path)
@@ -315,7 +315,7 @@ async def test_cron_set_session_mode_still_works(tmp_path, monkeypatch) -> None:
     slot._created_by = _CRON_KEY
 
     # Stand in for cron_slot_creator so it reads from the header (no token sig).
-    from kiro_crew.dashboard import chat_handlers as ch
+    from aj_crew.dashboard import chat_handlers as ch
 
     monkeypatch.setattr(ch, "cron_slot_creator", _cron_slot_from_header_async)
 

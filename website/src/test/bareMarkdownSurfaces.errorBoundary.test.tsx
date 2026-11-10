@@ -45,7 +45,7 @@ describe('ChannelPage — message bodies are wrapped in MessageErrorBoundary', (
     id: 'ch1',
     topic: 'Test Channel',
     members: {
-      a1: { id: 'a1', role: 'Researcher', agent_name: 'kirocrew', state: 'listening', listen_mode: 'mention', approval_policy: 'writes', session_key: 'k1' },
+      a1: { id: 'a1', role: 'Researcher', agent_name: 'ajcrew', state: 'listening', listen_mode: 'mention', approval_policy: 'writes', session_key: 'k1' },
     },
     messages: [
       { id: 'm1', from_id: 'a1', from_role: 'Researcher', content: 'healthy message before', msg_type: 'progress', timestamp: 1 },

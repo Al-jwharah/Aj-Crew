@@ -49,7 +49,7 @@ def _make_mock_sessions() -> MagicMock:
 
 def _make_mock_provider(text: str = "done") -> MagicMock:
     """Create a mock provider that yields a text chunk + complete event."""
-    from kiro_crew.providers.base import LLMEvent
+    from aj_crew.providers.base import LLMEvent
 
     provider = MagicMock()
 

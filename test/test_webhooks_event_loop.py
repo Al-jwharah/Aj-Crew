@@ -23,8 +23,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from body_stream_helpers import attach_json_body
 
-from kiro_crew import webhooks
-from kiro_crew.dashboard.handlers import hooks as hooks_handlers
+from aj_crew import webhooks
+from aj_crew.dashboard.handlers import hooks as hooks_handlers
 
 
 class _LoopGuard:
@@ -176,7 +176,7 @@ class TestManagementRoutesOffloadStoreIo:
         delete = _LoopGuard(webhooks.WebhookTokenStore.delete, "token_store.delete")
 
         req = MagicMock()
-        attach_json_body(req, json.dumps({"label": "ci", "agent": "kirocrew"}).encode())
+        attach_json_body(req, json.dumps({"label": "ci", "agent": "ajcrew"}).encode())
         req.get = lambda *a, **k: "dashboard"
         req.match_info = {}
         # The mint route is owner-gated (``require_owner_dashboard_request``), and
@@ -192,7 +192,7 @@ class TestManagementRoutesOffloadStoreIo:
         req.__getitem__ = lambda _self, key: {"user": "dashboard", "app": ""}[key]
 
         with patch.object(webhooks.WebhookTokenStore, "create", create), \
-                patch.object(hooks_handlers, "_installed_agent_names", lambda: {"kirocrew"}), \
+                patch.object(hooks_handlers, "_installed_agent_names", lambda: {"ajcrew"}), \
                 patch.object(hooks_handlers, "_sel", MagicMock()):
             resp = asyncio.run(hooks_handlers.api_webhook_token_create(req))
         assert resp.status == 201

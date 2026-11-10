@@ -21,8 +21,8 @@ from taskrunner_helpers import (
     _make_mock_sessions,
 )
 
-import kiro_crew.taskrunner as taskrunner_module
-from kiro_crew.taskrunner import (
+import aj_crew.taskrunner as taskrunner_module
+from aj_crew.taskrunner import (
     _STALL_CANCEL_TIMEOUT,
     _STALL_TIMEOUT,
     Step,
@@ -30,7 +30,7 @@ from kiro_crew.taskrunner import (
     TaskRun,
     TaskRunner,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until, finished
+from aj_crew.testing.wait import async_wait_until, await_until, finished
 
 
 class _SteppedClock:
@@ -102,7 +102,7 @@ async def _run_watchdog(
 
 class TestWatchdog:
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- class-scoped autouse fixture moved verbatim; no test in its class calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- class-scoped autouse fixture moved verbatim; no test in its class calls monkeypatch.undo()
     def _passthrough_sandbox(self, monkeypatch):
         """TestWatchdog runs the real ``TaskRunner.run()`` which reaches
         ``git_coord.init_workspace`` → ``sandboxed_spawn_argv`` → ``wrap_argv``,
@@ -112,7 +112,7 @@ class TestWatchdog:
         TestGitCoord)."""
         import os as _os
 
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         monkeypatch.setattr(
             git_coord,
@@ -503,7 +503,7 @@ class TestTokenBudget:
 
         sessions = _make_mock_sessions()
 
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         step_json = json.dumps(
             [
@@ -639,7 +639,7 @@ class TestParallelGroups:
 
         sessions = _make_mock_sessions()
 
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         # 3 independent steps (no deps → single parallel group)
         step_json = json.dumps(
@@ -685,7 +685,7 @@ class TestParallelGroups:
 
         runner = TaskRunner(sessions=sessions, auto_test=False, work_dir=tmp_path)
 
-        with patch("kiro_crew.task_executor.self_review", return_value=True):
+        with patch("aj_crew.task_executor.self_review", return_value=True):
             result = await runner.run(spec)
 
         assert result.status == "completed"
@@ -771,7 +771,7 @@ class TestSemaphoreParallelScheduling:
         without this the test proves nothing.
         """
         monkeypatch.setattr(
-            "kiro_crew.taskrunner.compute_memory_sized_parallel_cap", lambda _cfg: 64
+            "aj_crew.taskrunner.compute_memory_sized_parallel_cap", lambda _cfg: 64
         )
         sessions = _make_mock_sessions()
         runner = TaskRunner(
@@ -797,7 +797,7 @@ class TestSemaphoreParallelScheduling:
         guard still wins — the property those tests deliberately stop covering.
         """
         monkeypatch.setattr(
-            "kiro_crew.taskrunner.compute_memory_sized_parallel_cap", lambda _cfg: 2
+            "aj_crew.taskrunner.compute_memory_sized_parallel_cap", lambda _cfg: 2
         )
         runner = TaskRunner(
             sessions=_make_mock_sessions(),
@@ -821,7 +821,7 @@ class TestSemaphoreParallelScheduling:
         ``test_host_ceiling_still_caps_the_knob``.
         """
         monkeypatch.setattr(
-            "kiro_crew.taskrunner.compute_memory_sized_parallel_cap", lambda _cfg: 64
+            "aj_crew.taskrunner.compute_memory_sized_parallel_cap", lambda _cfg: 64
         )
         sessions = _make_mock_sessions()
         runner = TaskRunner(

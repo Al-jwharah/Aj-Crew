@@ -28,12 +28,12 @@ from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 from off_loop_helpers import off_loop
 
-from kiro_crew.apps.builtins.issue_radar.backend import crew_runtime as cr
-from kiro_crew.apps.builtins.issue_radar.backend import crew_store as cs
-from kiro_crew.apps.builtins.issue_radar.backend import github_client as gh
-from kiro_crew.apps.builtins.issue_radar.backend import gitlab_queries as glq
-from kiro_crew.apps.builtins.issue_radar.backend import provider, routes, store
-from kiro_crew.crew_log import projection as crew_log_projection
+from aj_crew.apps.builtins.issue_radar.backend import crew_runtime as cr
+from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs
+from aj_crew.apps.builtins.issue_radar.backend import github_client as gh
+from aj_crew.apps.builtins.issue_radar.backend import gitlab_queries as glq
+from aj_crew.apps.builtins.issue_radar.backend import provider, routes, store
+from aj_crew.crew_log import projection as crew_log_projection
 
 OWNER, REPO = "o", "r"
 
@@ -925,7 +925,7 @@ class DepsHandlerTest(unittest.TestCase):
     def test_a_non_github_key_gets_an_empty_graph_without_a_fetch(self):
         # GitLab now fetches real edges via gitlab_queries.fetch_dependency_edges.
         # Azure (and unknown providers) return an empty graph without a fetch.
-        from kiro_crew.apps.builtins.issue_radar.backend import gitlab_queries
+        from aj_crew.apps.builtins.issue_radar.backend import gitlab_queries
 
         with (
             mock.patch.object(store, "is_repo_connected", return_value=True),
@@ -948,7 +948,7 @@ class DepsHandlerTest(unittest.TestCase):
 
     def test_azure_key_gets_empty_graph_without_a_fetch(self):
         # Azure DevOps: no fetch, empty graph (same as the old "non-GitHub" behavior).
-        from kiro_crew.apps.builtins.issue_radar.backend import gitlab_queries
+        from aj_crew.apps.builtins.issue_radar.backend import gitlab_queries
 
         with (
             mock.patch.object(store, "is_repo_connected", return_value=True),
@@ -1385,12 +1385,12 @@ class SweepDepUnblockTest(unittest.IsolatedAsyncioTestCase):
         self.key = provider.key_from_parts(OWNER, REPO)
         # A crew's ledger is the fold of its own crew log, so seeding a work item
         # records into the unit its slot runs on, as the write route does.
-        from kiro_crew.crew_log import emit as crew_log_emit
+        from aj_crew.crew_log import emit as crew_log_emit
 
-        # The crew log lands in the rootdir conftest's per-test KIROCREW_HOME pin, not
+        # The crew log lands in the rootdir conftest's per-test AJCREW_HOME pin, not
         # in a home of this test's own. The eager fold worker resolves the home when it
         # folds, and the conftest stops that worker before its pin lifts.
-        env = mock.patch.dict(os.environ, {"KIROCREW_CREW_LOG": "1"})
+        env = mock.patch.dict(os.environ, {"AJCREW_CREW_LOG": "1"})
         env.start()
         self.addCleanup(env.stop)
         crew_log_emit.reset_caches()
@@ -1400,12 +1400,12 @@ class SweepDepUnblockTest(unittest.IsolatedAsyncioTestCase):
         self.addCleanup(crew_log_emit.drain_for_shutdown, 2.0)
 
     def _seed_item(self, crew_id: str, number: int, phase: str) -> None:
-        from kiro_crew.crew_log.schema import KIND_SESSION
-        from kiro_crew.crew_log.store import CrewLog
+        from aj_crew.crew_log.schema import KIND_SESSION
+        from aj_crew.crew_log.store import CrewLog
 
         sid = f"acp-{crew_id}"
         CrewLog.create(
-            KIND_SESSION, sid, owner="owner", agent="kirocrew", slot=cs.slot_key_for(crew_id)
+            KIND_SESSION, sid, owner="owner", agent="ajcrew", slot=cs.slot_key_for(crew_id)
         )
         # Off the event loop, as production makes it (``off_loop`` says why).
         off_loop(

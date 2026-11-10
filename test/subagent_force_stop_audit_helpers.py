@@ -16,8 +16,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew import platform_compat
+from aj_crew.subagent import SubagentInfo, SubagentManager
 
 # The start id the fake client records at spawn (``platform_compat.get_process_start_id``
 # reads ``/proc/<pid>/stat`` field 22 on Linux); the kill re-reads it before signalling.
@@ -46,8 +46,8 @@ def _no_tree_behind_the_leader() -> Iterator[None]:
     patch wins).
     """
     with (
-        patch("kiro_crew.platform_compat.pgroup_exists", return_value=False),
-        patch("kiro_crew.platform_compat.windows_tree_cleanup_pending", return_value=False),
+        patch("aj_crew.platform_compat.pgroup_exists", return_value=False),
+        patch("aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=False),
     ):
         yield
 
@@ -159,10 +159,10 @@ def _kill_path_stubs() -> tuple[Any, Any, Any, Any]:
     recorded one, so the root is this run's and the signal is reached.
     """
     return (
-        patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-        patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-        patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID),
-        patch("kiro_crew.acp.client._kill_escaped_children"),
+        patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+        patch("aj_crew.platform_compat.pid_exists", return_value=True),
+        patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID),
+        patch("aj_crew.acp.client._kill_escaped_children"),
     )
 
 

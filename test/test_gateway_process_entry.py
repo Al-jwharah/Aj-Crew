@@ -23,11 +23,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew import agent_scratch
-from kiro_crew.agent_sdk.drivers import acp as acp_driver
-from kiro_crew.dashboard import side_readonly_spec
-from kiro_crew.slack import gateway as gw
+from aj_crew import agent as agent_mod
+from aj_crew import agent_scratch
+from aj_crew.agent_sdk.drivers import acp as acp_driver
+from aj_crew.dashboard import side_readonly_spec
+from aj_crew.slack import gateway as gw
 
 _TASK_GLOBALS = (
     "_KAS_CLI_FLOOR_TASK",

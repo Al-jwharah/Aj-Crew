@@ -18,8 +18,8 @@ from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
 from conftest import requires_symlinks
-from kiro_crew.dashboard.handlers import api_browse_files
-from kiro_crew.dashboard.handlers.files import _browse_files_sync
+from aj_crew.dashboard.handlers import api_browse_files
+from aj_crew.dashboard.handlers.files import _browse_files_sync
 
 
 def _make_app() -> web.Application:
@@ -30,7 +30,7 @@ def _make_app() -> web.Application:
 
 @pytest.fixture()
 def mock_sel():
-    with patch("kiro_crew.dashboard.handlers.sel") as m:
+    with patch("aj_crew.dashboard.handlers.sel") as m:
         m.return_value = MagicMock()
         yield m.return_value
 
@@ -120,7 +120,7 @@ class TestBrowseFiles:
             return os.path.realpath(p) == str(secret_target)
 
         with patch(
-            "kiro_crew.dashboard.handlers.files.is_sensitive_canonical_path",
+            "aj_crew.dashboard.handlers.files.is_sensitive_canonical_path",
             side_effect=is_sens,
         ):
             async with TestClient(TestServer(_make_app())) as client:
@@ -139,7 +139,7 @@ class TestBrowseFiles:
             return os.path.realpath(p) == os.path.realpath(secret)
 
         with patch(
-            "kiro_crew.dashboard.handlers.files.is_sensitive_canonical_path", side_effect=is_sens
+            "aj_crew.dashboard.handlers.files.is_sensitive_canonical_path", side_effect=is_sens
         ):
             async with TestClient(TestServer(_make_app())) as client:
                 resp = await client.get(f"/api/browse-files?path={tmp_path}")
@@ -148,7 +148,7 @@ class TestBrowseFiles:
 
     @pytest.mark.asyncio
     async def test_build_artifact_dirs_skipped(self, tmp_path, mock_sel):
-        for d in ["node_modules", "__pycache__", ".cache", "build", "dist", ".next", ".kirocrew"]:
+        for d in ["node_modules", "__pycache__", ".cache", "build", "dist", ".next", ".ajcrew"]:
             (tmp_path / d).mkdir()
         (tmp_path / "src").mkdir()
         async with TestClient(TestServer(_make_app())) as client:
@@ -166,15 +166,15 @@ class TestBrowseFiles:
     async def test_drive_root_reports_empty_parent_on_windows(self, tmp_path, mock_sel):
         # Same contract as /api/browse-dirs: a Windows drive root has no directory
         # above it, so the parent is "" rather than the root itself.
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         with (
             patch.object(platform_compat, "IS_WINDOWS", True),
             patch(
-                "kiro_crew.dashboard.handlers.files._resolve_search_root",
+                "aj_crew.dashboard.handlers.files._resolve_search_root",
                 return_value=("C:\\", True),
             ),
-            patch("kiro_crew.dashboard.handlers.files._browse_files_sync", return_value=([], [])),
+            patch("aj_crew.dashboard.handlers.files._browse_files_sync", return_value=([], [])),
         ):
             async with TestClient(TestServer(_make_app())) as client:
                 resp = await client.get("/api/browse-files?path=C:%5C")
@@ -196,7 +196,7 @@ class TestBrowseFiles:
     async def test_sensitive_base_path_returns_403(self, tmp_path, mock_sel):
         # is_sensitive_path should reject the base path and never list contents.
         (tmp_path / "secret.txt").write_text("AKIA...")
-        with patch("kiro_crew.dashboard.handlers.files.is_sensitive_path", return_value=True):
+        with patch("aj_crew.dashboard.handlers.files.is_sensitive_path", return_value=True):
             async with TestClient(TestServer(_make_app())) as client:
                 resp = await client.get(f"/api/browse-files?path={tmp_path}")
                 assert resp.status == 403
@@ -205,7 +205,7 @@ class TestBrowseFiles:
     async def test_sensitive_base_path_403_names_its_cause(self, tmp_path, mock_sel):
         # `access_denied` is the code the shared classifier already reads, so without it a
         # refusal degraded to the generic retryable copy — the defect on the listing arm.
-        with patch("kiro_crew.dashboard.handlers.files.is_sensitive_path", return_value=True):
+        with patch("aj_crew.dashboard.handlers.files.is_sensitive_path", return_value=True):
             async with TestClient(TestServer(_make_app())) as client:
                 resp = await client.get(f"/api/browse-files?path={tmp_path}")
                 assert (await resp.json())["code"] == "access_denied"
@@ -238,7 +238,7 @@ class TestBrowseFiles:
             return os.path.realpath(p) == str(secret_target)
 
         with patch(
-            "kiro_crew.dashboard.handlers.files.is_sensitive_canonical_path",
+            "aj_crew.dashboard.handlers.files.is_sensitive_canonical_path",
             side_effect=is_sens,
         ):
             async with TestClient(TestServer(_make_app())) as client:
@@ -301,7 +301,7 @@ class TestBrowseFiles:
                 raise OSError("stat raced (entry removed mid-scan)")
 
         with patch(
-            "kiro_crew.dashboard.handlers.files.os.scandir",
+            "aj_crew.dashboard.handlers.files.os.scandir",
             return_value=[_OSErrorEntry()],
         ):
             async with TestClient(TestServer(_make_app())) as client:
@@ -342,7 +342,7 @@ class TestBrowseFiles:
 
         entries = [_Entry("alpha", True), _Entry("docker", True), _Entry("readme.md", False)]
         with patch(
-            "kiro_crew.dashboard.handlers.files.os.scandir",
+            "aj_crew.dashboard.handlers.files.os.scandir",
             return_value=entries,
         ):
             async with TestClient(TestServer(_make_app())) as client:
@@ -379,7 +379,7 @@ class TestBrowseFiles:
 
         entries = [_Entry("alpha", True), _Entry("aardvark", False), _Entry("readme.md", False)]
         with patch(
-            "kiro_crew.dashboard.handlers.files.os.scandir",
+            "aj_crew.dashboard.handlers.files.os.scandir",
             return_value=entries,
         ):
             async with TestClient(TestServer(_make_app())) as client:
@@ -401,7 +401,7 @@ class TestBrowseFiles:
             ran_on.append(threading.get_ident())
             return _browse_files_sync(base, skip, show_hidden)
 
-        with patch("kiro_crew.dashboard.handlers.files._browse_files_sync", spy):
+        with patch("aj_crew.dashboard.handlers.files._browse_files_sync", spy):
             async with TestClient(TestServer(_make_app())) as client:
                 resp = await client.get(f"/api/browse-files?path={tmp_path}")
                 assert resp.status == 200

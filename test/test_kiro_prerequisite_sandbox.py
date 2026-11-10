@@ -21,9 +21,9 @@ from kiro_prerequisite_helpers import _agents_dir_never_the_real_home  # noqa: F
 from kiro_prerequisite_helpers import _isolate_agent_specs  # noqa: F401
 from kiro_prerequisite_helpers import _make_executable, _no_audit
 
-from kiro_crew import kiro_prerequisite as prerequisite_module
-from kiro_crew import platform_compat
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService, ProcessResult, _run_process
+from aj_crew import kiro_prerequisite as prerequisite_module
+from aj_crew import platform_compat
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService, ProcessResult, _run_process
 
 
 class TestKiroPrerequisiteWorkflowSandbox:
@@ -66,7 +66,7 @@ class TestKiroPrerequisiteWorkflowSandbox:
             return _Process()
 
         monkeypatch.setattr(
-            "kiro_crew.kiro_prerequisite.sandboxed_spawn_argv",
+            "aj_crew.kiro_prerequisite.sandboxed_spawn_argv",
             sandbox,
         )
         monkeypatch.setattr(asyncio, "create_subprocess_exec", spawn)
@@ -717,7 +717,7 @@ class TestSandboxUnavailableIsNotAMissingBinary:
             return _Process()
 
         monkeypatch.setattr(
-            "kiro_crew.kiro_prerequisite.sandboxed_spawn_argv",
+            "aj_crew.kiro_prerequisite.sandboxed_spawn_argv",
             lambda argv, **_k: (list(argv), {}, None),
         )
         monkeypatch.setattr(asyncio, "create_subprocess_exec", spawn)
@@ -746,7 +746,7 @@ class TestSandboxUnavailableIsNotAMissingBinary:
             return verdict
 
         monkeypatch.setattr(
-            "kiro_crew.kiro_prerequisite.corroborate_launcher_refusal", fake_corroborate
+            "aj_crew.kiro_prerequisite.corroborate_launcher_refusal", fake_corroborate
         )
         self._fake_spawn(monkeypatch, self._LAUNCHER_MOUNT_REFUSED.encode(), 1)
 
@@ -778,7 +778,7 @@ class TestSandboxUnavailableIsNotAMissingBinary:
             return None
 
         monkeypatch.setattr(
-            "kiro_crew.kiro_prerequisite.corroborate_launcher_refusal", fake_corroborate
+            "aj_crew.kiro_prerequisite.corroborate_launcher_refusal", fake_corroborate
         )
         self._fake_spawn(monkeypatch, self._LAUNCHER_MOUNT_REFUSED.encode(), 1)
 
@@ -810,7 +810,7 @@ class TestSandboxUnavailableIsNotAMissingBinary:
             return None
 
         monkeypatch.setattr(
-            "kiro_crew.kiro_prerequisite.corroborate_launcher_refusal", fake_corroborate
+            "aj_crew.kiro_prerequisite.corroborate_launcher_refusal", fake_corroborate
         )
         self._fake_spawn(monkeypatch, self._LAUNCHER_MOUNT_REFUSED.encode(), 1)
 
@@ -858,7 +858,7 @@ class TestSandboxUnavailableIsNotAMissingBinary:
         Linux-only launcher run would refuse for reasons of its own -- so the
         corroborator runs nothing and sets no verdict.
         """
-        from kiro_crew import sandbox as sandbox_module
+        from aj_crew import sandbox as sandbox_module
 
         ran: list[int] = []
         monkeypatch.setattr(sandbox_module.sys, "platform", "darwin")
@@ -1067,7 +1067,7 @@ class TestTimedOutProbeIsNotAMissingBinary:
         _make_executable(tmp_path / ".local" / "bin" / "kiro-cli")
         service = self._service(tmp_path, self._timed_out)
 
-        with caplog.at_level("DEBUG", logger="kiro_crew.kiro_prerequisite"):
+        with caplog.at_level("DEBUG", logger="aj_crew.kiro_prerequisite"):
             for _ in range(6):
                 status = await service.snapshot(force=True)
 
@@ -1105,7 +1105,7 @@ class TestTimedOutProbeIsNotAMissingBinary:
 
         service = self._service(tmp_path, flapping)
 
-        with caplog.at_level("DEBUG", logger="kiro_crew.kiro_prerequisite"):
+        with caplog.at_level("DEBUG", logger="aj_crew.kiro_prerequisite"):
             await service.snapshot(force=True)  # outage 1 -> WARNING
             await service.snapshot(force=True)  # same outage -> DEBUG
             healthy_calls["n"] = 2
@@ -1232,7 +1232,7 @@ class TestFailedProbeCarriesItsOwnDiagnostic:
         assert status["probe_status"] is None
 
     def test_failure_text_is_bounded_to_the_tail(self) -> None:
-        from kiro_crew.kiro_prerequisite import _PROBE_ERROR_MAX_CHARS, _probe_failure_text
+        from aj_crew.kiro_prerequisite import _PROBE_ERROR_MAX_CHARS, _probe_failure_text
 
         long = "x" * 1000 + "the actual complaint"
         text = _probe_failure_text(ProcessResult(ok=False, returncode=1, output=long))
@@ -1245,7 +1245,7 @@ class TestFailedProbeCarriesItsOwnDiagnostic:
         """Probe stdout/stderr can echo a token or an exfiltration-shaped URL; the
         text reaches the status payload and the setup screen, so both redactors
         run before the tail cut, and the cut cannot leave half a secret."""
-        from kiro_crew.kiro_prerequisite import _PROBE_ERROR_MAX_CHARS, _probe_failure_text
+        from aj_crew.kiro_prerequisite import _PROBE_ERROR_MAX_CHARS, _probe_failure_text
 
         payload = "A" * 80
         result = ProcessResult(
@@ -1264,7 +1264,7 @@ class TestFailedProbeCarriesItsOwnDiagnostic:
         )
 
     def test_failure_text_prefers_the_cli_output_over_the_generic_exit_error(self) -> None:
-        from kiro_crew.kiro_prerequisite import _probe_failure_text
+        from aj_crew.kiro_prerequisite import _probe_failure_text
 
         result = ProcessResult(
             ok=False,
@@ -1286,7 +1286,7 @@ class TestSandboxUnavailableErrorIsTyped:
     """The sandbox refusal must be catchable structurally, not by prose match."""
 
     def test_error_carries_kind_and_detail_and_is_a_runtime_error(self) -> None:
-        from kiro_crew.sandbox import SandboxUnavailableError
+        from aj_crew.sandbox import SandboxUnavailableError
 
         exc = SandboxUnavailableError("refused", kind="no_backend", detail="EPERM at NEWNS")
 

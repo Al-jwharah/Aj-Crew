@@ -45,11 +45,11 @@ from crew_log_fold_eager_helpers import (  # noqa: F401 -- the autouse fixture r
     _work_entry,
 )
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, bus
-from kiro_crew.crew_log import checkpoint as savepoints
-from kiro_crew.crew_log import eager, emit
-from kiro_crew.crew_log import projection as crew_log
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, bus
+from aj_crew.crew_log import checkpoint as savepoints
+from aj_crew.crew_log import eager, emit
+from aj_crew.crew_log import projection as crew_log
 
 SESSION = "s-eager"
 
@@ -59,7 +59,7 @@ _EARNING_TURNS = savepoints.MIN_ADVANCE_ENTRIES // 2 + 4
 
 def _log(unit_id: str = SESSION, **fields) -> CrewLog:
     fields.setdefault("owner", "raymond")
-    fields.setdefault("agent", "kirocrew")
+    fields.setdefault("agent", "ajcrew")
     return CrewLog.create(lg.KIND_SESSION, unit_id, **fields)
 
 
@@ -422,14 +422,14 @@ def test_the_real_append_path_wakes_the_eager_fold(monkeypatch):
     every ordinary entry type takes -- so the hook inside it is what is under test, and
     the entry is written by the writer thread rather than by this one.
     """
-    # The suite runs with the emitter switched OFF (``KIROCREW_CREW_LOG=0``), so a test
+    # The suite runs with the emitter switched OFF (``AJCREW_CREW_LOG=0``), so a test
     # of the append path has to switch it on for itself; with it off, ``_handle``
     # answers None and nothing is appended at all.
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     emit.reset_caches()
     slot = WORK_SLOT
     emit.on_session_opened(
-        "s-emitted", agent="kirocrew", slot=slot, model="opus", cwd="/w", owner="raymond"
+        "s-emitted", agent="ajcrew", slot=slot, model="opus", cwd="/w", owner="raymond"
     )
     assert_drained()
 
@@ -568,7 +568,7 @@ def test_the_real_emitter_sends_a_worker_report_to_the_conductors_board(monkeypa
     A worker's report names the conductor's board while its header names the worker's slot,
     so only this case tells whether the emitter passes the board or the folder guesses it.
     """
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     emit.reset_caches()
     conductor_slot = WORK_SLOT
     worker_slot = "dashboard:61"
@@ -587,7 +587,7 @@ def test_the_real_emitter_sends_a_worker_report_to_the_conductors_board(monkeypa
         src=GATEWAY,
     )
     emit.on_session_opened(
-        "s-e2e-w", agent="kirocrew", slot=worker_slot, model="opus", cwd="/w", owner="raymond"
+        "s-e2e-w", agent="ajcrew", slot=worker_slot, model="opus", cwd="/w", owner="raymond"
     )
     assert_drained()
 
@@ -824,7 +824,7 @@ def test_an_entry_after_the_closer_leaves_its_fold_warm(monkeypatch):
     eager._fold_batch(batch, closers)
     # The drop left the cell cold, so the advance handed its fold to one background
     # prime rather than folding every unit on the eager worker; wait for that prime.
-    from kiro_crew.crew_log import slot_prime
+    from aj_crew.crew_log import slot_prime
 
     assert slot_prime.drain(timeout=30.0), "the background prime never finished"
 
@@ -868,7 +868,7 @@ def test_a_later_entry_of_another_type_does_not_hide_a_slot_folds_advance(monkey
     batch, closers, _taken = eager._coalesce(queued.get_nowait())
     eager._fold_batch(batch, closers)
     # The cell was cold, so its fold went to one background prime.
-    from kiro_crew.crew_log import slot_prime
+    from aj_crew.crew_log import slot_prime
 
     assert slot_prime.drain(timeout=30.0), "the background prime never finished"
 
@@ -903,7 +903,7 @@ def test_a_closer_in_the_same_batch_as_an_earlier_entry_still_drops_the_slot(mon
     batch, closers, _taken = eager._coalesce(queued.get_nowait())
     eager._fold_batch(batch, closers)
     # A cold cell's fold goes to one background prime; wait for it.
-    from kiro_crew.crew_log import slot_prime
+    from aj_crew.crew_log import slot_prime
 
     assert slot_prime.drain(timeout=30.0), "the background prime never finished"
 
@@ -968,7 +968,7 @@ def test_a_workers_last_report_still_reaches_the_conductors_board_when_the_worke
     batch, closers, _taken = eager._coalesce(queued.get_nowait())
     eager._fold_batch(batch, closers)
     # The board's cell was cold, so its fold went to one background prime.
-    from kiro_crew.crew_log import slot_prime
+    from aj_crew.crew_log import slot_prime
 
     assert slot_prime.drain(timeout=30.0), "the background prime never finished"
 
@@ -1300,7 +1300,7 @@ def test_a_burst_pushes_once_per_board_rather_than_once_per_entry(pushed, monkey
     batch, closers, _taken = eager._coalesce(queued.get_nowait())
     eager._fold_batch(batch, closers)
     # A cold cell's fold goes to one background prime; wait for it.
-    from kiro_crew.crew_log import slot_prime
+    from aj_crew.crew_log import slot_prime
 
     assert slot_prime.drain(timeout=30.0), "the background prime never finished"
 

@@ -18,10 +18,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.connections import crew_oauth
-from kiro_crew.connections.crew_oauth import CrewOAuthError, Tokens, TokenStore
-from kiro_crew.secrets import SecretVault
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.connections import crew_oauth
+from aj_crew.connections.crew_oauth import CrewOAuthError, Tokens, TokenStore
+from aj_crew.secrets import SecretVault
+from aj_crew.testing.wait import async_wait_until
 
 
 @pytest.fixture(autouse=True)
@@ -29,12 +29,12 @@ def _pinned_modules(_floor_monkeypatch):
     """The code under test imports ``crew_oauth`` at call time; pin it to this file's."""
     import sys
 
-    import kiro_crew.connections as connections_pkg
+    import aj_crew.connections as connections_pkg
 
-    _floor_monkeypatch.setitem(sys.modules, "kiro_crew.connections.crew_oauth", crew_oauth)
+    _floor_monkeypatch.setitem(sys.modules, "aj_crew.connections.crew_oauth", crew_oauth)
     _floor_monkeypatch.setattr(connections_pkg, "crew_oauth", crew_oauth, raising=False)
     # Projection runs in the gateway unless a test says otherwise.
-    _floor_monkeypatch.setenv("KIROCREW_BOUND_PORT", "8765")
+    _floor_monkeypatch.setenv("AJCREW_BOUND_PORT", "8765")
 
 
 def _client_ns(**over):
@@ -58,10 +58,10 @@ def _client_ns(**over):
     ],
 )
 def test_the_chat_backend_decides_custody(monkeypatch, backend, expected):
-    import kiro_crew.config as config
+    import aj_crew.config as config
 
     monkeypatch.setattr(
-        config.KiroCrewConfig,
+        config.AjCrewConfig,
         "load",
         classmethod(
             lambda cls: types.SimpleNamespace(agent=types.SimpleNamespace(acp_backend=backend))
@@ -71,15 +71,15 @@ def test_the_chat_backend_decides_custody(monkeypatch, backend, expected):
 
 
 def test_an_unreadable_config_keeps_todays_custody(monkeypatch):
-    import kiro_crew.config as config
+    import aj_crew.config as config
 
     def _boom(cls):
         raise OSError("unreadable")
 
-    monkeypatch.setattr(config.KiroCrewConfig, "load", classmethod(_boom))
+    monkeypatch.setattr(config.AjCrewConfig, "load", classmethod(_boom))
     assert crew_oauth._chat_backend_bridged() is False
 
-    import kiro_crew.config.loader as loader
+    import aj_crew.config.loader as loader
 
     def _bad():
         raise ValueError("bad json")
@@ -101,7 +101,7 @@ def test_an_unreadable_vault_is_unknown_not_absent(monkeypatch):
 
 
 def test_the_sign_in_uses_the_products_one_pkce_implementation():
-    from kiro_crew.auth.login import portal
+    from aj_crew.auth.login import portal
 
     assert not hasattr(crew_oauth, "pkce_pair")
     import asyncio
@@ -122,7 +122,7 @@ def test_a_malformed_stored_pair_reads_as_nothing(raw):
 
 
 def test_a_stored_pair_round_trips_and_the_default_store_uses_the_data_home(tmp_path, monkeypatch):
-    import kiro_crew.config.paths as paths
+    import aj_crew.config.paths as paths
 
     monkeypatch.setattr(paths, "config_dir", lambda: tmp_path)
     store = TokenStore()
@@ -138,9 +138,9 @@ def test_a_stored_pair_round_trips_and_the_default_store_uses_the_data_home(tmp_
 
 
 def test_the_operator_client_needs_a_secret(tmp_path, monkeypatch):
-    import kiro_crew.config.loader as loader
-    import kiro_crew.config.paths as paths
-    import kiro_crew.connections.oauth_clients as oauth_clients
+    import aj_crew.config.loader as loader
+    import aj_crew.config.paths as paths
+    import aj_crew.connections.oauth_clients as oauth_clients
 
     monkeypatch.setattr(loader, "read_config_for_update", lambda: {})
     monkeypatch.setattr(paths, "config_dir", lambda: tmp_path)
@@ -266,13 +266,13 @@ async def test_a_failed_revoke_still_deletes_the_pair(tmp_path, monkeypatch):
 
 @pytest.fixture
 def github_on_port_zero(monkeypatch):
-    from kiro_crew.connections import registry
+    from aj_crew.connections import registry
 
     provider = dict(registry.get_provider("github"))
     provider["auth"] = {**provider["auth"], "redirect_port": 0}
     monkeypatch.setattr(registry, "get_provider", lambda slug: provider)
     monkeypatch.setattr(crew_oauth, "_client", lambda slug: _client_ns())
-    from kiro_crew.connections import mint
+    from aj_crew.connections import mint
 
     monkeypatch.setattr(mint, "_mints", {})
     monkeypatch.setattr(crew_oauth, "_startup_locks", {})
@@ -388,7 +388,7 @@ async def test_a_busy_callback_port_fails_the_row(monkeypatch, github_on_port_ze
 
 @pytest.mark.asyncio
 async def test_a_superseding_connect_waits_for_the_first_listener(monkeypatch, github_on_port_zero):
-    from kiro_crew import security
+    from aj_crew import security
 
     mint = github_on_port_zero
     gate = asyncio.Event()
@@ -433,10 +433,10 @@ def _no_tcp(*_a, **_k):
 
 
 def test_the_bridge_talks_to_the_gateway_socket_only(monkeypatch, tmp_path):
-    import kiro_crew.config.loader_locations as loader_locations
-    import kiro_crew.config.paths as paths
-    import kiro_crew.loopback_http as loopback_http
-    from kiro_crew import kas_connection_bridge, platform_compat
+    import aj_crew.config.loader_locations as loader_locations
+    import aj_crew.config.paths as paths
+    import aj_crew.loopback_http as loopback_http
+    from aj_crew import kas_connection_bridge, platform_compat
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
     monkeypatch.setattr(loader_locations, "read_local_secret", lambda port: "s3cret")
@@ -466,9 +466,9 @@ def test_the_bridge_talks_to_the_gateway_socket_only(monkeypatch, tmp_path):
 
 
 def test_the_bridge_on_windows_talks_to_the_gateway_over_verified_tcp(monkeypatch):
-    import kiro_crew.cli_server_peer as cli_server_peer
-    import kiro_crew.loopback_http as loopback_http
-    from kiro_crew import kas_connection_bridge, platform_compat
+    import aj_crew.cli_server_peer as cli_server_peer
+    import aj_crew.loopback_http as loopback_http
+    from aj_crew import kas_connection_bridge, platform_compat
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
     monkeypatch.setattr(loopback_http, "unix_socket_urlopen", _no_tcp)
@@ -495,9 +495,9 @@ def test_the_bridge_on_windows_talks_to_the_gateway_over_verified_tcp(monkeypatc
 
 
 def test_the_bridge_refuses_a_socket_not_answered_by_the_gateway(monkeypatch):
-    import kiro_crew.cli_server_peer as cli_server_peer
-    import kiro_crew.mcp_gateway.socketsec as socketsec
-    from kiro_crew import kas_connection_bridge, platform_compat
+    import aj_crew.cli_server_peer as cli_server_peer
+    import aj_crew.mcp_gateway.socketsec as socketsec
+    from aj_crew import kas_connection_bridge, platform_compat
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
     opener = kas_connection_bridge._GatewayOpener(8123)
@@ -518,7 +518,7 @@ def test_the_bridge_refuses_a_socket_not_answered_by_the_gateway(monkeypatch):
 def test_the_bridge_serves_stdio_until_it_closes(monkeypatch):
     import sys
 
-    from kiro_crew import kas_connection_bridge
+    from aj_crew import kas_connection_bridge
 
     built: list = []
 
@@ -536,7 +536,7 @@ def test_the_bridge_serves_stdio_until_it_closes(monkeypatch):
 def test_an_unparsable_gateway_refusal_still_names_its_status():
     import urllib.error
 
-    from kiro_crew.kas_connection_bridge import ConnectionBridge
+    from aj_crew.kas_connection_bridge import ConnectionBridge
 
     bridge = ConnectionBridge("http://x/", {}, server="github", out=io.BytesIO(), err=io.StringIO())
     exc = urllib.error.HTTPError(
@@ -546,7 +546,7 @@ def test_an_unparsable_gateway_refusal_still_names_its_status():
         {"X-Crew-Proxy-Refusal": "provider_unreachable"},
         io.BytesIO(b"<html>"),
     )
-    assert bridge._http_error_reason(exc) == "was refused by Kiro Crew (HTTP 502)"
+    assert bridge._http_error_reason(exc) == "was refused by Aj Crew (HTTP 502)"
 
 
 # --- the route's handler module ---------------------------------------------
@@ -554,7 +554,7 @@ def test_an_unparsable_gateway_refusal_still_names_its_status():
 
 @pytest.mark.asyncio
 async def test_the_route_handler_refuses_a_non_internal_caller():
-    from kiro_crew.dashboard.handlers.connection_proxy import api_connection_proxy
+    from aj_crew.dashboard.handlers.connection_proxy import api_connection_proxy
 
     app = web.Application()
     app.router.add_post("/api/connection-proxy", api_connection_proxy)
@@ -571,9 +571,9 @@ async def test_an_internal_tcp_caller_is_taken_on_windows_only(monkeypatch, wind
     with the peer pid from the kernel table, and pins it like the Unix arm."""
     import os
 
-    import kiro_crew.member_memory_auth as member_memory_auth
-    from kiro_crew import platform_compat
-    from kiro_crew.connections import crew_oauth_proxy
+    import aj_crew.member_memory_auth as member_memory_auth
+    from aj_crew import platform_compat
+    from aj_crew.connections import crew_oauth_proxy
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", windows)
     monkeypatch.setattr(member_memory_auth, "_request_peer_pid", lambda request: os.getpid())
@@ -624,9 +624,9 @@ async def test_a_windows_tcp_peer_this_user_does_not_own_is_refused(monkeypatch,
     another account's peer, or an unreadable owner, is refused and never pinned."""
     import os
 
-    import kiro_crew.member_memory_auth as member_memory_auth
-    from kiro_crew import platform_compat
-    from kiro_crew.connections import crew_oauth_proxy
+    import aj_crew.member_memory_auth as member_memory_auth
+    from aj_crew import platform_compat
+    from aj_crew.connections import crew_oauth_proxy
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
     monkeypatch.setattr(member_memory_auth, "_request_peer_pid", lambda request: os.getpid())
@@ -681,9 +681,9 @@ async def test_only_a_dead_grant_asks_the_user_to_reconnect(monkeypatch, code, s
     """A provider outage during refresh is a temporary failure, not a lost sign-in."""
     import os
 
-    import kiro_crew.dashboard.origin as origin
-    import kiro_crew.mcp_gateway.socketsec as socketsec
-    from kiro_crew.connections import crew_oauth_proxy
+    import aj_crew.dashboard.origin as origin
+    import aj_crew.mcp_gateway.socketsec as socketsec
+    from aj_crew.connections import crew_oauth_proxy
 
     monkeypatch.setattr(origin, "request_is_unix_socket", lambda request: True)
     monkeypatch.setattr(socketsec, "get_peer_pid", lambda sock: os.getpid())
@@ -779,8 +779,8 @@ async def test_disconnect_waits_for_a_refresh_holding_the_lock(tmp_path, monkeyp
 )
 def test_test_is_refused_only_for_an_entry_routed_through_crew(monkeypatch, headers, routed):
     """A real PAT entry is tested as before; only a Crew-routed entry gets the 409."""
-    import kiro_crew.mcp_discovery as mcp_discovery
-    from kiro_crew.dashboard.handlers import connections
+    import aj_crew.mcp_discovery as mcp_discovery
+    from aj_crew.dashboard.handlers import connections
 
     monkeypatch.setattr(crew_oauth, "manages", lambda slug: True)
     monkeypatch.setattr(crew_oauth, "custody_on", lambda slug: True)
@@ -798,9 +798,9 @@ def test_test_is_refused_only_for_an_entry_routed_through_crew(monkeypatch, head
 )
 def test_status_custody_matches_routing(monkeypatch, headers):
     """The card reads the grant the bridge will use: Crew's only for a Crew-routed entry."""
-    import kiro_crew.mcp_discovery as mcp_discovery
-    from kiro_crew.acp import kas_env_launch
-    from kiro_crew.connections import registry, status
+    import aj_crew.mcp_discovery as mcp_discovery
+    from aj_crew.acp import kas_env_launch
+    from aj_crew.connections import registry, status
 
     monkeypatch.setattr(crew_oauth, "manages", lambda slug: True)
     monkeypatch.setattr(crew_oauth, "custody_on", lambda slug: True)
@@ -815,12 +815,12 @@ def test_status_custody_matches_routing(monkeypatch, headers):
 @pytest.mark.asyncio
 async def test_the_card_shows_no_sharing_hint_for_a_crew_held_grant(tmp_path, monkeypatch):
     """Option B: a Crew-held grant is never described as shared or kept."""
-    from kiro_crew.connections import ownership, status
+    from aj_crew.connections import ownership, status
 
     # A temporary data home: never the developer's real config or MCP inventory.
     data_home = tmp_path / "crew-home"
     data_home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(data_home))
+    monkeypatch.setenv("AJCREW_HOME", str(data_home))
     called: list = []
 
     async def _sharers(present, _dirs):
@@ -844,11 +844,11 @@ async def test_the_card_shows_no_sharing_hint_for_a_crew_held_grant(tmp_path, mo
 @pytest.mark.asyncio
 async def test_a_native_grant_is_not_marked_crew_held(tmp_path, monkeypatch):
     """Flag off (or kiro-cli backend): no row carries ``crewHeld``, so Test stays."""
-    from kiro_crew.connections import status
+    from aj_crew.connections import status
 
     data_home = tmp_path / "crew-home"
     data_home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(data_home))
+    monkeypatch.setenv("AJCREW_HOME", str(data_home))
     monkeypatch.setattr(crew_oauth, "manages", lambda slug: False)
     monkeypatch.setattr(crew_oauth, "custody_on", lambda slug: False)
     monkeypatch.setattr(status, "_provider_grant_presence", lambda url: False)

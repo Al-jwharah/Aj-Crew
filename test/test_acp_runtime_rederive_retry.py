@@ -20,12 +20,12 @@ import sys
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew import platform_compat, runtime_death
-from kiro_crew.acp import skill_projection
-from kiro_crew.acp.harness.base import SpawnPlan
-from kiro_crew.acp.runtime import AcpRuntime, AcpRuntimeError
-from kiro_crew.testing import fake_acp_backend
+from aj_crew import agent as agent_mod
+from aj_crew import platform_compat, runtime_death
+from aj_crew.acp import skill_projection
+from aj_crew.acp.harness.base import SpawnPlan
+from aj_crew.acp.runtime import AcpRuntime, AcpRuntimeError
+from aj_crew.testing import fake_acp_backend
 
 posix_only = pytest.mark.skipif(
     not platform_compat.IS_POSIX, reason="the fake backend is launched as a POSIX child here"
@@ -33,13 +33,13 @@ posix_only = pytest.mark.skipif(
 
 
 def _runtime(tmp_path, monkeypatch) -> AcpRuntime:
-    rt = AcpRuntime(work_dir=tmp_path / "wd", agent="kirocrew", sandbox_mode="off")
+    rt = AcpRuntime(work_dir=tmp_path / "wd", agent="ajcrew", sandbox_mode="off")
     rt._KILL_TERM_TIMEOUT = 1.0
     rt._KILL_REAP_TIMEOUT = 1.0
 
     async def _plan() -> SpawnPlan:
         return SpawnPlan(
-            argv=[sys.executable, fake_acp_backend.__file__, "acp", "--agent", "kirocrew"]
+            argv=[sys.executable, fake_acp_backend.__file__, "acp", "--agent", "ajcrew"]
         )
 
     monkeypatch.setattr(rt, "_resolve_spawn_plan", _plan)
@@ -147,7 +147,7 @@ async def test_no_retry_when_the_reap_did_not_confirm_the_tree_gone(tmp_path, mo
 
     monkeypatch.setattr(AcpRuntime, "kill", _reap_with_survivor)
     try:
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.runtime"):
+        with caplog.at_level("WARNING", logger="aj_crew.acp.runtime"):
             with pytest.raises(AcpRuntimeError) as excinfo:
                 await rt.spawn()
         assert calls == [1]
@@ -165,7 +165,7 @@ async def test_no_retry_when_the_reap_did_not_confirm_the_tree_gone(tmp_path, mo
 
 def _failed_start(tmp_path) -> AcpRuntime:
     """A runtime in the state ``_failed_start_cleanup`` leaves after a confirmed reap."""
-    rt = AcpRuntime(work_dir=tmp_path / "wd", agent="kirocrew", sandbox_mode="off")
+    rt = AcpRuntime(work_dir=tmp_path / "wd", agent="ajcrew", sandbox_mode="off")
     rt._stderr_lines.extend(["auth failed", "sandbox refused"])
     rt._saw_auth_failure = True
     rt._saw_sandbox_init_failure = True

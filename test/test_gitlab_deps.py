@@ -21,18 +21,18 @@ from unittest import mock
 
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.apps.builtins.issue_radar.backend import github_client as gh
-from kiro_crew.apps.builtins.issue_radar.backend import (
+from aj_crew.apps.builtins.issue_radar.backend import github_client as gh
+from aj_crew.apps.builtins.issue_radar.backend import (
     gitlab_queries,
     provider,
     routes,
     store,
 )
-from kiro_crew.apps.builtins.issue_radar.backend.errors import (
+from aj_crew.apps.builtins.issue_radar.backend.errors import (
     ProviderCliError,
     ProviderSetupError,
 )
-from kiro_crew.apps.builtins.issue_radar.backend.gitlab_queries import (
+from aj_crew.apps.builtins.issue_radar.backend.gitlab_queries import (
     _MAX_DEPS_EDGES,
     _MAX_LINKS_PER_ISSUE,
     _MAX_TITLE_CHARS,
@@ -87,7 +87,7 @@ def _edges(owner, repo, open_issues, *, host=HOST, run_api):
     it over. ``host`` and ``timeout`` are passed through as keywords for fakes that
     want them.
     """
-    from kiro_crew.apps.builtins.issue_radar.backend import gitlab_client
+    from aj_crew.apps.builtins.issue_radar.backend import gitlab_client
 
     def fake_list_issue_links(o, r, iid, *, host, timeout):
         path = f"projects/{gitlab_client.project_path(o, r)}/issues/{int(iid)}/links"
@@ -233,7 +233,7 @@ class TestFreshLinkPayloadWins(unittest.TestCase):
             # Issue 1 links to a NEW node (99) while the cap is full (2 seeded):
             # the node is refused and its edge dropped with it.
             new_node = _make_run_api({1: [_link(99, "blocks", "closed")], 2: []})
-            with self.assertLogs("kirocrew.app.issue-radar", level="WARNING") as captured:
+            with self.assertLogs("ajcrew.app.issue-radar", level="WARNING") as captured:
                 edges, nodes = _edges(OWNER, REPO, issues, run_api=new_node)
             self.assertEqual(set(nodes), {"1", "2"})
             self.assertNotIn("99", nodes)
@@ -246,7 +246,7 @@ class TestFreshLinkPayloadWins(unittest.TestCase):
             # Issue 1 is BLOCKED BY a new node the cap refuses: its blocker is now
             # missing from the graph, so 1 must not read as ready.
             refused_blocker = _make_run_api({1: [_link(99, "is_blocked_by", "open")], 2: []})
-            with self.assertLogs("kirocrew.app.issue-radar", level="WARNING"):
+            with self.assertLogs("ajcrew.app.issue-radar", level="WARNING"):
                 edges, nodes = _edges(OWNER, REPO, issues, run_api=refused_blocker)
             self.assertEqual(edges, [])
             self.assertTrue(nodes["1"].get("blockers_unknown"))
@@ -270,7 +270,7 @@ class TestFreshLinkPayloadWins(unittest.TestCase):
             run_api = _make_run_api(
                 {n: [_link(100 + n, "is_blocked_by", "closed")] for n in range(1, 4)}
             )
-            with self.assertLogs("kirocrew.app.issue-radar", level="WARNING"):
+            with self.assertLogs("ajcrew.app.issue-radar", level="WARNING"):
                 edges, nodes = _edges(OWNER, REPO, issues, run_api=run_api)
         # The three walked issues are seeded; exactly one blocker fit the last node
         # slot. Every retained edge names two numbers both present as nodes.
@@ -346,7 +346,7 @@ class TestRetentionBounds(unittest.TestCase):
             def link_free(path: str, **_kw) -> list[dict]:
                 return []
 
-            with self.assertLogs("kirocrew.app.issue-radar", level="WARNING") as captured:
+            with self.assertLogs("ajcrew.app.issue-radar", level="WARNING") as captured:
                 edges, nodes = _edges(OWNER, REPO, issues, run_api=link_free)
 
         self.assertEqual(edges, [])
@@ -361,7 +361,7 @@ class TestRetentionBounds(unittest.TestCase):
     def test_one_issue_over_the_link_row_limit_keeps_the_first_rows(self):
         links = [_link(2, "blocks")] * (_MAX_LINKS_PER_ISSUE + 1)
 
-        with self.assertLogs("kirocrew.app.issue-radar", level="WARNING") as captured:
+        with self.assertLogs("ajcrew.app.issue-radar", level="WARNING") as captured:
             edges, nodes = _edges(
                 OWNER,
                 REPO,
@@ -391,7 +391,7 @@ class TestRetentionBounds(unittest.TestCase):
             for _ in range(_MAX_LINKS_PER_ISSUE + 1)
         ]
 
-        from kiro_crew.apps.builtins.issue_radar.backend import gitlab_client
+        from aj_crew.apps.builtins.issue_radar.backend import gitlab_client
 
         with mock.patch.object(gitlab_client, "list_issue_links", return_value=links):
             result = gitlab_queries._fetch_issue_links(OWNER, REPO, 1, host=HOST, timeout=1.0)
@@ -424,7 +424,7 @@ class TestRetentionBounds(unittest.TestCase):
         self.assertEqual(len(edges), _MAX_DEPS_EDGES)
 
         issues, run_api = graph_with_edges(_MAX_DEPS_EDGES + 1)
-        with self.assertLogs("kirocrew.app.issue-radar", level="WARNING") as captured:
+        with self.assertLogs("ajcrew.app.issue-radar", level="WARNING") as captured:
             edges, nodes = _edges(OWNER, REPO, issues, run_api=run_api)
         self.assertEqual(len(edges), _MAX_DEPS_EDGES)
         self.assertIn("edges_over_max=1", captured.output[0])
@@ -439,7 +439,7 @@ class TestRetentionBounds(unittest.TestCase):
             run_api = _make_run_api(
                 {1: [_link(2, "blocks", "open")], 2: [_link(3, "is_blocked_by", "open")], 3: []}
             )
-            with self.assertLogs("kirocrew.app.issue-radar", level="WARNING") as captured:
+            with self.assertLogs("ajcrew.app.issue-radar", level="WARNING") as captured:
                 edges, nodes = _edges(OWNER, REPO, issues, run_api=run_api)
         self.assertEqual(len(edges), 1)
         self.assertEqual(edges[0]["blocked"], 2)
@@ -453,7 +453,7 @@ class TestRetentionBounds(unittest.TestCase):
         overflow = 3
         links = [_link(2, "blocks")] * (_MAX_LINKS_PER_ISSUE + overflow)
 
-        with self.assertLogs("kirocrew.app.issue-radar", level="WARNING") as captured:
+        with self.assertLogs("ajcrew.app.issue-radar", level="WARNING") as captured:
             _edges(
                 OWNER,
                 REPO,
@@ -530,7 +530,7 @@ class TestOneIssueLinksFail(unittest.TestCase):
             {"number": 1, "title": "a", "state": "open"},
             {"number": 2, "title": "b", "state": "open"},
         ]
-        with self.assertLogs("kirocrew.app.issue-radar", level="WARNING") as captured:
+        with self.assertLogs("ajcrew.app.issue-radar", level="WARNING") as captured:
             with self.assertRaises(ProviderCliError) as raised:
                 _edges(OWNER, REPO, issues, run_api=run_api)
         self.assertNotIsInstance(raised.exception, ProviderSetupError)
@@ -544,7 +544,7 @@ class TestOneIssueLinksFail(unittest.TestCase):
         # majority threshold the fetcher raises exactly as the all-failed case does.
         issues = [{"number": n, "title": "t", "state": "open"} for n in range(1, 11)]
         run_api = _make_run_api({10: [_link(1, "blocks")], 9: [], 8: []})  # 7 of 10 fail
-        with self.assertLogs("kirocrew.app.issue-radar", level="WARNING") as captured:
+        with self.assertLogs("ajcrew.app.issue-radar", level="WARNING") as captured:
             with self.assertRaises(ProviderCliError) as raised:
                 _edges(OWNER, REPO, issues, run_api=run_api)
         self.assertNotIsInstance(raised.exception, ProviderSetupError)
@@ -559,7 +559,7 @@ class TestOneIssueLinksFail(unittest.TestCase):
         # than left edgeless, which buildNodes would draw as "ready".
         issues = [{"number": n, "title": "t", "state": "open"} for n in range(1, 11)]
         run_api = _make_run_api({n: [_link(n + 100, "blocks")] for n in range(1, 6)})
-        with self.assertLogs("kirocrew.app.issue-radar", level="WARNING") as captured:
+        with self.assertLogs("ajcrew.app.issue-radar", level="WARNING") as captured:
             edges, nodes = _edges(OWNER, REPO, issues, run_api=run_api)
         self.assertEqual(sorted(e["blocked"] for e in edges), [101, 102, 103, 104, 105])
         # Survivors 1-5 and their blockers 101-105 remain; the 5 failed-and-unlinked
@@ -598,7 +598,7 @@ class TestOneIssueLinksFail(unittest.TestCase):
         with mock.patch.object(gitlab_queries, "_MAX_LINKS_CALLS", 2):
             issues = [{"number": n, "title": "t", "state": "open"} for n in (1, 2, 3)]
             run_api = _make_run_api({1: [_link(3, "is_blocked_by", "open")], 2: []})
-            with self.assertLogs("kirocrew.app.issue-radar", level="WARNING"):
+            with self.assertLogs("ajcrew.app.issue-radar", level="WARNING"):
                 edges, nodes = _edges(OWNER, REPO, issues, run_api=run_api)
         self.assertEqual(edges, [{"blocked": 1, "blocker": 3, "source": "native"}])
         self.assertEqual(sorted(int(k) for k in nodes), [1, 2, 3])
@@ -800,7 +800,7 @@ class TestProductionSeam(unittest.TestCase):
     """Without ``run_api`` the fetcher goes through the client's PUBLIC read."""
 
     def test_production_path_uses_list_issue_links(self):
-        from kiro_crew.apps.builtins.issue_radar.backend import gitlab_client
+        from aj_crew.apps.builtins.issue_radar.backend import gitlab_client
 
         calls: list[tuple] = []
 
@@ -822,7 +822,7 @@ class TestProductionSeam(unittest.TestCase):
         # Walking pages never sees a short page for an issue with >= 100 links, so it
         # would spawn _MAX_PAGES identical glab calls per issue; one request is the
         # whole answer. The int() on iid is what keeps a path segment out of the URL.
-        from kiro_crew.apps.builtins.issue_radar.backend import gitlab_client
+        from aj_crew.apps.builtins.issue_radar.backend import gitlab_client
 
         seen: list[tuple[str, dict]] = []
 
@@ -841,7 +841,7 @@ class TestProductionSeam(unittest.TestCase):
 
     def test_list_issue_links_with_an_empty_body_is_an_empty_list(self):
         # Non-paginated transport returns {} for an empty body; _rows turns that into [].
-        from kiro_crew.apps.builtins.issue_radar.backend import gitlab_client
+        from aj_crew.apps.builtins.issue_radar.backend import gitlab_client
 
         with mock.patch.object(gitlab_client, "_glab_api", return_value={}):
             self.assertEqual(gitlab_client.list_issue_links("o", "r", 1, host="gitlab.com"), [])
@@ -862,7 +862,7 @@ class TestCallCap(unittest.TestCase):
 
         numbers = list(range(1, cap + 50))
         issues = [{"number": n, "title": "t", "state": "open"} for n in numbers]
-        with self.assertLogs("kirocrew.app.issue-radar", level="WARNING") as captured:
+        with self.assertLogs("ajcrew.app.issue-radar", level="WARNING") as captured:
             _edges(OWNER, REPO, issues, run_api=counting_api)
         self.assertEqual(len(calls), cap)
         self.assertEqual(sorted(calls), numbers[:cap])
@@ -871,7 +871,7 @@ class TestCallCap(unittest.TestCase):
 
     def test_under_the_cap_nothing_is_said(self):
         issues = [{"number": n, "title": "t", "state": "open"} for n in range(1, 4)]
-        with self.assertNoLogs("kirocrew.app.issue-radar", level="WARNING"):
+        with self.assertNoLogs("ajcrew.app.issue-radar", level="WARNING"):
             _edges(OWNER, REPO, issues, run_api=lambda path, **_kw: [])
 
 

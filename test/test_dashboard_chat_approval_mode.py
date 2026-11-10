@@ -18,7 +18,7 @@ class TestApiChatModePropagation:
 
     @pytest.mark.asyncio
     async def test_yolo_mode_propagates_auto_policy(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         state.get_or_create_slot("s1")
@@ -38,8 +38,8 @@ class TestApiChatModePropagation:
 
     @pytest.mark.asyncio
     async def test_normal_mode_clears_policy(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.safety_override import safety_override
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.safety_override import safety_override
 
         safety_override().activate("test")
         state = _make_state(tmp_path)
@@ -59,10 +59,10 @@ class TestApiChatModePropagation:
     @pytest.mark.parametrize("mode", ["trust_reads", "trust"])
     async def test_a_slot_pick_ends_gateway_approval_yolo(self, tmp_path, monkeypatch, mode):
         """Narrowing one slot ends ``gateway --approval yolo``'s grant, as it ends a declared one."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.safety_override import safety_override
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.safety_override import safety_override
 
-        monkeypatch.setattr("kiro_crew.safety_override.sel", MagicMock())
+        monkeypatch.setattr("aj_crew.safety_override.sel", MagicMock())
         safety_override().activate_declared("cli")
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
@@ -77,7 +77,7 @@ class TestApiChatModePropagation:
     @pytest.mark.asyncio
     async def test_trust_mode_scoped_to_slot_channel(self, tmp_path, monkeypatch):
         """Trust with slot_key only trusts that slot's linked channel."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         slot = state.get_or_create_slot("s1")
@@ -100,7 +100,7 @@ class TestApiChatModePropagation:
     @pytest.mark.asyncio
     async def test_trust_mode_all_channels_when_no_slot(self, tmp_path, monkeypatch):
         """Trust without slot_key trusts all channels."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         state.get_or_create_slot("s1")
@@ -119,7 +119,7 @@ class TestApiChatModePropagation:
     @pytest.mark.asyncio
     async def test_normal_mode_scoped_resets_only_linked_channel(self, tmp_path, monkeypatch):
         """Normal mode with slot_key should only reset that slot's linked channel."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         slot = state.get_or_create_slot("s1")
@@ -143,7 +143,7 @@ class TestApiChatModePropagation:
     @pytest.mark.asyncio
     async def test_normal_mode_resets_all_channels_when_no_slot(self, tmp_path, monkeypatch):
         """Normal mode without slot_key resets all channel trust."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         state.get_or_create_slot("s1")
@@ -162,7 +162,7 @@ class TestApiChatModePropagation:
     @pytest.mark.asyncio
     async def test_trust_mode_unknown_slot_returns_400(self, tmp_path, monkeypatch):
         """Trust with unknown slot_key must return 400, not trust all."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
 
@@ -176,7 +176,7 @@ class TestApiChatModePropagation:
     @pytest.mark.asyncio
     async def test_normal_mode_unknown_slot_returns_400(self, tmp_path, monkeypatch):
         """Normal with unknown slot_key must return 400, not reset all."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
 
@@ -190,7 +190,7 @@ class TestApiChatModePropagation:
     @pytest.mark.asyncio
     async def test_trust_slot_preserves_other_slot_trust(self, tmp_path, monkeypatch):
         """trusting slot B must not wipe trust from slot A."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         s1 = state.get_or_create_slot("s1")
@@ -207,7 +207,7 @@ class TestApiChatModePropagation:
     @pytest.mark.asyncio
     async def test_yolo_restores_per_slot_trust(self, tmp_path, monkeypatch):
         """YOLO does not mutate per-slot trust; disabling preserves it."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         s1 = state.get_or_create_slot("s1")
@@ -233,7 +233,7 @@ class TestApiChatModePropagation:
 
     def test_yolo_auto_expires_and_clears_untrusted_policies(self, tmp_path, monkeypatch):
         """YOLO expiry clears policies for untrusted slots only."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         state.broadcast_ws = MagicMock()
@@ -243,7 +243,7 @@ class TestApiChatModePropagation:
 
         from unittest.mock import patch
 
-        from kiro_crew.safety_override import safety_override
+        from aj_crew.safety_override import safety_override
 
         # Wire the on_expired callback (as server.py does at startup)
         def _on_expired(source: str) -> None:
@@ -252,7 +252,7 @@ class TestApiChatModePropagation:
                     if not slot._trust and not slot._trust_reads:
                         state.sessions.set_approval_policy(f"dashboard:{slot.key}", "")
 
-        with patch("kiro_crew.safety_override.sel"):
+        with patch("aj_crew.safety_override.sel"):
             safety_override().activate("dashboard")
         safety_override().on_expired = _on_expired
         safety_override()._expires_at = 0  # already expired
@@ -269,8 +269,8 @@ class TestApiChatModePropagation:
     @pytest.mark.asyncio
     async def test_trust_mode_propagates_approval_policy_to_session(self, tmp_path, monkeypatch):
         """Trust mode must set session approval_policy='auto' so subagents inherit."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.slack.handler.is_yolo_mode", lambda: False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.slack.handler.is_yolo_mode", lambda: False)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         slot = state.get_or_create_slot("s1")
@@ -285,8 +285,8 @@ class TestApiChatModePropagation:
     @pytest.mark.asyncio
     async def test_normal_mode_resets_approval_policy(self, tmp_path, monkeypatch):
         """Normal mode must reset session approval_policy so subagents require approval."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.slack.handler.is_yolo_mode", lambda: False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.slack.handler.is_yolo_mode", lambda: False)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         slot = state.get_or_create_slot("s1")
@@ -302,8 +302,8 @@ class TestApiChatModePropagation:
     @pytest.mark.asyncio
     async def test_trust_reads_mode_resets_approval_policy(self, tmp_path, monkeypatch):
         """trust_reads must reset approval_policy (not auto-approve writes)."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.slack.handler.is_yolo_mode", lambda: False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.slack.handler.is_yolo_mode", lambda: False)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         slot = state.get_or_create_slot("s1")
@@ -319,8 +319,8 @@ class TestApiChatModePropagation:
     @pytest.mark.asyncio
     async def test_trust_mode_all_slots_propagates_approval_policy(self, tmp_path, monkeypatch):
         """Trust without slot_key must set approval_policy on all slots."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.slack.handler.is_yolo_mode", lambda: False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.slack.handler.is_yolo_mode", lambda: False)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         s1 = state.get_or_create_slot("s1")
@@ -346,8 +346,8 @@ class TestApiChatModeGlobalOverrideScope:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("mode", ["trust", "trust_reads"])
     async def test_slot_scoped_trust_preserves_global_grant(self, mode, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.safety_override import safety_override
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.safety_override import safety_override
 
         safety_override().activate("dashboard")
         state = _make_state(tmp_path)
@@ -367,8 +367,8 @@ class TestApiChatModeGlobalOverrideScope:
     @pytest.mark.parametrize("mode", ["trust", "trust_reads"])
     async def test_global_trust_revokes_global_grant(self, mode, tmp_path, monkeypatch):
         """Without a slot the request IS global, so it may end the grant."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.safety_override import safety_override
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.safety_override import safety_override
 
         safety_override().activate("dashboard")
         state = _make_state(tmp_path)
@@ -387,8 +387,8 @@ class TestApiChatModeGlobalOverrideScope:
         This is the dashboard picker's YOLO off-switch: the picker always names
         the slot it is attached to.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.safety_override import safety_override
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.safety_override import safety_override
 
         safety_override().activate("dashboard")
         state = _make_state(tmp_path)
@@ -404,8 +404,8 @@ class TestApiChatModeGlobalOverrideScope:
     @pytest.mark.parametrize("mode", ["trust", "trust_reads"])
     async def test_declared_grant_is_revoked_at_any_scope(self, mode, tmp_path, monkeypatch):
         """A declared grant has no TTL, so any mode selection is its off-switch."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.safety_override import safety_override
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.safety_override import safety_override
 
         safety_override().activate_declared()
         assert safety_override().is_declared is True
@@ -423,10 +423,10 @@ class TestApiChatModeGlobalOverrideScope:
         """`until_shutdown` is permanent but AD HOC, so the scope rule applies.
 
         Classifying it by permanence instead of source would revoke the grant of
-        every operator who picked "until Kiro Crew restarts".
+        every operator who picked "until Aj Crew restarts".
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.safety_override import safety_override
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.safety_override import safety_override
 
         so = safety_override()
         so.adhoc_until_shutdown = True
@@ -445,7 +445,7 @@ class TestApiChatModeGlobalOverrideScope:
     @pytest.mark.asyncio
     async def test_non_string_mode_does_not_raise(self, tmp_path, monkeypatch):
         """The membership test must answer for an unhashable body value."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         state.get_or_create_slot("s1")
@@ -462,7 +462,7 @@ class TestApproveYoloPropagation:
 
     @pytest.mark.asyncio
     async def test_yolo_approve_propagates_to_all_slots(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         s1 = state.get_or_create_slot("s1")
@@ -483,7 +483,7 @@ class TestApproveYoloPropagation:
 
     @pytest.mark.asyncio
     async def test_trust_approve_propagates_to_slot(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         slot = state.get_or_create_slot("s1")
@@ -520,8 +520,8 @@ class TestBulkApproveBroadcast:
 
     @pytest.mark.asyncio
     async def test_mode_yolo_broadcasts_for_pending(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.chat.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat.sel", lambda: MagicMock())
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         state.broadcast_ws = MagicMock()
@@ -550,8 +550,8 @@ class TestBulkApproveBroadcast:
         Sweeping every slot would make other chats look approved while their ``_trust``
         stays False. Other slots keep their pending future and their untrusted state.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.chat.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat.sel", lambda: MagicMock())
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         state.broadcast_ws = MagicMock()
@@ -586,8 +586,8 @@ class TestBulkApproveBroadcast:
     @pytest.mark.asyncio
     async def test_unscoped_trust_still_sweeps_all_slots(self, tmp_path, monkeypatch):
         """An all-slots ``trust`` (no slot named) keeps sweeping every slot."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.chat.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat.sel", lambda: MagicMock())
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         state.broadcast_ws = MagicMock()
@@ -621,7 +621,7 @@ class TestMultiPendingApproval:
 
     @pytest.mark.asyncio
     async def test_multi_pending_returns_400(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         loop = asyncio.get_running_loop()
@@ -637,7 +637,7 @@ class TestMultiPendingApproval:
 
     @pytest.mark.asyncio
     async def test_approve_with_request_id(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         loop = asyncio.get_running_loop()

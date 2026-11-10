@@ -33,7 +33,7 @@ from pathlib import Path
 import pytest
 from loopback_servers import LoopbackHTTPServer
 
-from kiro_crew.loopback_http import build_loopback_opener, loopback_urlopen
+from aj_crew.loopback_http import build_loopback_opener, loopback_urlopen
 
 CANARY = "canary-not-a-real-secret"
 SECRET_HEADER = "X-Internal-Secret"
@@ -228,7 +228,7 @@ class TestNoNewBareLoopbackSender:
     SECRET_HEADERS = ("X-Internal-Secret", "X-Local-Secret")
 
     def test_no_bare_urlopen_in_a_secret_sending_module(self):
-        src = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+        src = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
         assert src.is_dir(), f"source tree not found at {src}"
 
         offenders: list[str] = []
@@ -251,7 +251,7 @@ class TestNoNewBareLoopbackSender:
 
         assert offenders == [], (
             "these call sites send a secret header from a module that also uses a bare "
-            "urlopen; route them through kiro_crew.loopback_http.loopback_urlopen, or add "
+            "urlopen; route them through aj_crew.loopback_http.loopback_urlopen, or add "
             "an EXTERNAL_MARKERS entry if the target is genuinely external:\n  "
             + "\n  ".join(offenders)
         )
@@ -298,7 +298,7 @@ class TestTcpVerifiedUrlopen:
         return fake_sock
 
     def test_connect_runs_verify_peer_on_the_connected_socket(self, monkeypatch):
-        from kiro_crew.loopback_http import _TCPVerifyHTTPConnection
+        from aj_crew.loopback_http import _TCPVerifyHTTPConnection
 
         fake_sock = self._patch_connect(monkeypatch)
         seen = {}
@@ -312,7 +312,7 @@ class TestTcpVerifiedUrlopen:
         assert seen["sock"] is fake_sock
 
     def test_connect_closes_the_fd_and_propagates_when_verify_refuses(self, monkeypatch):
-        from kiro_crew.loopback_http import _TCPVerifyHTTPConnection
+        from aj_crew.loopback_http import _TCPVerifyHTTPConnection
 
         self._patch_connect(monkeypatch)
         closed = {"n": 0}
@@ -337,7 +337,7 @@ class TestTcpVerifiedUrlopen:
         assert closed["n"] == 1
 
     def test_connect_without_a_verifier_just_connects(self, monkeypatch):
-        from kiro_crew.loopback_http import _TCPVerifyHTTPConnection
+        from aj_crew.loopback_http import _TCPVerifyHTTPConnection
 
         fake_sock = self._patch_connect(monkeypatch)
         conn = _TCPVerifyHTTPConnection("127.0.0.1:5476", timeout=3, verify_peer=None)
@@ -345,7 +345,7 @@ class TestTcpVerifiedUrlopen:
         assert conn.sock is fake_sock
 
     def test_connect_defaults_timeout_when_none(self, monkeypatch):
-        from kiro_crew.loopback_http import _TCPVerifyHTTPConnection
+        from aj_crew.loopback_http import _TCPVerifyHTTPConnection
 
         self._patch_connect(monkeypatch)
         # timeout=None exercises the no-timeout super().__init__ arm.
@@ -356,7 +356,7 @@ class TestTcpVerifiedUrlopen:
     def test_tcp_verified_urlopen_wires_the_verifier_through_http_open(self, monkeypatch):
         import urllib.request
 
-        from kiro_crew.loopback_http import (
+        from aj_crew.loopback_http import (
             _TCPVerifyHTTPConnection,
             tcp_verified_urlopen,
         )

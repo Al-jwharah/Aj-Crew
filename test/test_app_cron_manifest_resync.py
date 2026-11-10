@@ -21,16 +21,16 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.apps.execution as execution_mod
-from kiro_crew import cron as seams
-from kiro_crew.apps.bridges import (
+import aj_crew.apps.execution as execution_mod
+from aj_crew import cron as seams
+from aj_crew.apps.bridges import (
     _register_crons,
     app_cron_manifest_digest,
     load_app_cron_defs,
     register_app_crons_with_service,
 )
-from kiro_crew.apps.manifest import AppManifest
-from kiro_crew.cron import CronService
+from aj_crew.apps.manifest import AppManifest
+from aj_crew.cron import CronService
 
 pytestmark = pytest.mark.usefixtures("command_crons_run_here")
 
@@ -66,11 +66,11 @@ def _command_cron(**extra) -> dict:
 @pytest.fixture()
 def home(tmp_path, monkeypatch):
     """An isolated crew home with one installed app bundle."""
-    root = tmp_path / "kirocrew-home"
+    root = tmp_path / "ajcrew-home"
     bundle = root / "apps" / APP
     bundle.mkdir(parents=True)
     (root / "crons").mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(root))
+    monkeypatch.setenv("AJCREW_HOME", str(root))
     (bundle / "app.json").write_text(
         json.dumps(
             {
@@ -83,7 +83,7 @@ def home(tmp_path, monkeypatch):
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr("kiro_crew.apps.bridges._registration_denied", lambda *a, **k: False)
+    monkeypatch.setattr("aj_crew.apps.bridges._registration_denied", lambda *a, **k: False)
     monkeypatch.setattr(execution_mod, "third_party_execution_allowed", lambda: True)
     return root
 
@@ -216,7 +216,7 @@ class TestChangedManifestReachesTheJob:
             assert await svc.update_job_async(job.id, app_manifest_digest="", timeout_secs=600)
             assert _job(svc).app_manifest_digest == ""
 
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.bridges"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.apps.bridges"):
                 await register_app_crons_with_service(APP, svc)
             first = _snapshot(svc)
             # A hand edit after the stamp landed must survive the next pass.
@@ -270,7 +270,7 @@ class TestOnlyTheChangedFieldsAreApplied:
             _register_crons(APP, _manifest(_agent_cron()))
             await register_app_crons_with_service(APP, svc)
             _register_crons(APP, _manifest({"name": SHORT, "every": 600, "message": ""}))
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.bridges"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.apps.bridges"):
                 await register_app_crons_with_service(APP, svc)
                 await register_app_crons_with_service(APP, svc)
             return _job(svc)
@@ -348,7 +348,7 @@ class TestCreateOnlyFieldsWaitForAReenable:
             before = _snapshot(svc)
 
             _register_crons(APP, _manifest(_command_cron(command="echo world", timeout_secs=900)))
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.bridges"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.apps.bridges"):
                 created = await register_app_crons_with_service(APP, svc)
             return before, _job(svc), created
 
@@ -386,7 +386,7 @@ class TestCreateOnlyFieldsWaitForAReenable:
             # Only the two passes below are counted; the first report, emitted by
             # the pass that stamped the drift, is not under test here.
             caplog.clear()
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.bridges"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.apps.bridges"):
                 await register_app_crons_with_service(APP, svc)
                 await register_app_crons_with_service(APP, svc)
             return _job(svc), stamped
@@ -419,7 +419,7 @@ class TestCreateOnlyFieldsWaitForAReenable:
             # The pass before the re-enable reported the drift; only the pass
             # after it must be quiet.
             caplog.clear()
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.bridges"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.apps.bridges"):
                 await register_app_crons_with_service(APP, svc)
             return _job(svc)
 

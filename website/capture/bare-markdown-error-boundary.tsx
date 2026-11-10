@@ -37,7 +37,7 @@ initI18n('en')
 const params = new URLSearchParams(location.search)
 const scene = params.get('scene') || 'channel'
 const theme = params.get('theme') || 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // Same marker the crash stand-in throws on. Spelled here rather than imported
 // so this entry compiles unchanged against the real renderer too.
@@ -47,8 +47,8 @@ const CHANNEL = {
   id: 'ch-incident',
   topic: 'Incident 4412 — checkout latency',
   members: {
-    a1: { id: 'a1', role: 'Orchestrator', agent_name: 'kirocrew', state: 'listening', listen_mode: 'mention', approval_policy: 'writes', session_key: 'k1' },
-    a2: { id: 'a2', role: 'Logs Agent', agent_name: 'kirocrew', state: 'done', listen_mode: 'mention', approval_policy: 'writes', session_key: 'k2' },
+    a1: { id: 'a1', role: 'Orchestrator', agent_name: 'ajcrew', state: 'listening', listen_mode: 'mention', approval_policy: 'writes', session_key: 'k1' },
+    a2: { id: 'a2', role: 'Logs Agent', agent_name: 'ajcrew', state: 'done', listen_mode: 'mention', approval_policy: 'writes', session_key: 'k2' },
   },
   messages: [
     { id: 'm1', from_id: 'human', from_role: 'You', content: 'Checkout p99 doubled at 14:02. @Logs Agent what changed?', msg_type: 'mention', timestamp: 1_757_950_920 },
@@ -74,7 +74,7 @@ window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   if (url.includes('/api/channels/presets')) return json({ presets: [] })
   if (url.includes('/api/channels/')) return json(CHANNEL)
   if (url.includes('/api/channels')) return json({ channels: [CHANNEL] })
-  if (url.includes('/api/agents')) return json({ agents: [{ name: 'kirocrew' }], default: 'kirocrew' })
+  if (url.includes('/api/agents')) return json({ agents: [{ name: 'ajcrew' }], default: 'ajcrew' })
   if (url.includes('/api/')) return json({})
   return realFetch(input, init)
 }) as typeof window.fetch

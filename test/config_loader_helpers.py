@@ -1,7 +1,7 @@
 """Load helpers and hypothesis strategies the config loader test modules share.
 
 ``_load_from_dict`` writes a document to a temporary JSON file, points
-``config_path`` at it and loads it through ``KiroCrewConfig.load()``;
+``config_path`` at it and loads it through ``AjCrewConfig.load()``;
 ``_load_from_dict_with_logs`` does the same while capturing the loader's warnings.
 The ``_*_st`` strategies generate names and valid config sections for the property
 tests. The ``test_config_loader*.py`` modules that need them import them from here.
@@ -17,26 +17,26 @@ from pathlib import Path
 
 from hypothesis import strategies as st
 
-from kiro_crew.config.loader import (
+from aj_crew.config.loader import (
     AgentConfig,
     DashboardConfig,
-    KiroCrewAgentConfig,
-    KiroCrewConfig,
+    AjCrewAgentConfig,
+    AjCrewConfig,
     MemoryConfig,
     MemoryStoreConfig,
     SessionConfig,
     SlackConfig,
     WorkspaceConfig,
 )
-from kiro_crew.memory_stores import memory_store_name_defect
+from aj_crew.memory_stores import memory_store_name_defect
 
 # ---------------------------------------------------------------------------
 # Helpers / Strategies
 # ---------------------------------------------------------------------------
 
 
-def _load_from_dict(data: object) -> KiroCrewConfig:
-    """Write *data* to a temp config file and load via KiroCrewConfig.load()."""
+def _load_from_dict(data: object) -> AjCrewConfig:
+    """Write *data* to a temp config file and load via AjCrewConfig.load()."""
     with tempfile.NamedTemporaryFile(
         mode="w",
         suffix=".json",
@@ -50,15 +50,15 @@ def _load_from_dict(data: object) -> KiroCrewConfig:
 
     try:
         with unittest.mock.patch(
-            "kiro_crew.config.loader.config_path",
+            "aj_crew.config.loader.config_path",
             return_value=tmp,
         ):
-            return KiroCrewConfig.load()
+            return AjCrewConfig.load()
     finally:
         tmp.unlink(missing_ok=True)
 
 
-def _load_from_dict_with_logs(data: object) -> tuple[KiroCrewConfig, list[str]]:
+def _load_from_dict_with_logs(data: object) -> tuple[AjCrewConfig, list[str]]:
     """Load config and capture warning log messages."""
     with tempfile.NamedTemporaryFile(
         mode="w",
@@ -73,10 +73,10 @@ def _load_from_dict_with_logs(data: object) -> tuple[KiroCrewConfig, list[str]]:
 
     try:
         with unittest.mock.patch(
-            "kiro_crew.config.loader.config_path",
+            "aj_crew.config.loader.config_path",
             return_value=tmp,
         ):
-            logger = logging.getLogger("kiro_crew.config.loader")
+            logger = logging.getLogger("aj_crew.config.loader")
             messages: list[str] = []
             original_warning = logger.warning
 
@@ -88,7 +88,7 @@ def _load_from_dict_with_logs(data: object) -> tuple[KiroCrewConfig, list[str]]:
                 original_warning(msg, *args)
 
             with unittest.mock.patch.object(logger, "warning", capture_warning):
-                result = KiroCrewConfig.load()
+                result = AjCrewConfig.load()
             return result, messages
     finally:
         tmp.unlink(missing_ok=True)
@@ -114,9 +114,9 @@ _store_name_st = st.text(
     max_size=15,
 ).filter(lambda n: memory_store_name_defect(n) is None)
 
-# Strategy for KiroCrewAgentConfig instances
-_kirocrew_agent_config_st = st.builds(
-    KiroCrewAgentConfig,
+# Strategy for AjCrewAgentConfig instances
+_ajcrew_agent_config_st = st.builds(
+    AjCrewAgentConfig,
     kiro_agent=st.text(min_size=0, max_size=20),
     workspace=_safe_name_st,
     memory_store=_safe_name_st,
@@ -135,7 +135,7 @@ _memory_store_config_st = st.builds(
     embedding_provider=st.sampled_from(["", "none", "llama_cpp"]),
 )
 
-# Hypothesis strategy for generating valid KiroCrewConfig instances
+# Hypothesis strategy for generating valid AjCrewConfig instances
 _agent_config_st = st.builds(
     AgentConfig,
     approval_mode=st.sampled_from(["auto", "interactive"]),
@@ -181,8 +181,8 @@ _dashboard_config_st = st.builds(
     url=st.text(min_size=0, max_size=50),
 )
 
-_kirocrew_config_st = st.builds(
-    KiroCrewConfig,
+_ajcrew_config_st = st.builds(
+    AjCrewConfig,
     agent=_agent_config_st,
     session=_session_config_st,
     memory=_memory_config_st,
@@ -191,7 +191,7 @@ _kirocrew_config_st = st.builds(
     hooks=st.just({}),
     agents=st.dictionaries(
         keys=_safe_name_st,
-        values=_kirocrew_agent_config_st,
+        values=_ajcrew_agent_config_st,
         min_size=0,
         max_size=3,
     ),

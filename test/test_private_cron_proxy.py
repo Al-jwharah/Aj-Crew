@@ -10,30 +10,30 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import mcp_core, mcp_cron, member_memory_auth, platform_compat
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.cron import CronService
-from kiro_crew.dashboard.server import _register_mcp_routes
-from kiro_crew.history import ConversationLog
-from kiro_crew.mcp_caller import CallerContext, current_caller, set_current_caller
-from kiro_crew.memory_stores import provision_member_memory
-from kiro_crew.testing.wait import default_timeout
+from aj_crew import mcp_core, mcp_cron, member_memory_auth, platform_compat
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.cron import CronService
+from aj_crew.dashboard.server import _register_mcp_routes
+from aj_crew.history import ConversationLog
+from aj_crew.mcp_caller import CallerContext, current_caller, set_current_caller
+from aj_crew.memory_stores import provision_member_memory
+from aj_crew.testing.wait import default_timeout
 
 pytestmark = pytest.mark.usefixtures("command_crons_run_here")
 
 
 @pytest.fixture
 def env(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:alice")
-    monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:alice")
+    monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
     monkeypatch.setattr(platform_compat, "get_process_start_id", lambda pid: f"test-{pid}")
     monkeypatch.setattr(platform_compat, "get_ppid", lambda pid: 0)
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     log = ConversationLog()
     identities = {}
     for pid, member in enumerate(("alice", "bob"), start=70001):
-        cfg.agents[member] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg.agents[member] = AjCrewAgentConfig(kiro_agent="ajcrew")
         store = provision_member_memory(cfg, member)
         cfg.save()
         key = f"dashboard:{member}"
@@ -199,7 +199,7 @@ async def test_proxy_preserves_validation_governance_and_member_scope(env, monke
         assert CronService(base_dir=env.home).get_job(jobs["bob"].id) is not None
         status, body = await invoke(client, env, "cron_add", {"name": 7, "every": 120})
         assert status == 200 and body["result"].startswith("Error:")
-        from kiro_crew.platform import governance_profiles
+        from aj_crew.platform import governance_profiles
 
         def deny(*args, **kwargs):
             assert kwargs["session_key"] == env.identities["alice"].key
@@ -270,7 +270,7 @@ def test_proxy_failure_never_falls_back_or_retries(env, monkeypatch, response):
 
 
 def test_private_proxy_retains_direct_channel_default(env, monkeypatch):
-    monkeypatch.setenv("KIROCREW_CHANNEL_ID", "C0ABC123")
+    monkeypatch.setenv("AJCREW_CHANNEL_ID", "C0ABC123")
     post = mock.Mock(return_value={"result": "Added job"})
     monkeypatch.setattr(mcp_core, "_post", post)
     mcp_cron._call_tool("cron_add", {"name": "channel", "message": "go", "every": 120})
@@ -278,7 +278,7 @@ def test_private_proxy_retains_direct_channel_default(env, monkeypatch):
 
 
 def test_unidentified_direct_runtime_refuses_writes(env, monkeypatch):
-    monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
+    monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
     post = mock.Mock(side_effect=AssertionError("unidentified caller must not forward"))
     monkeypatch.setattr(mcp_core, "_post", post)
     result = mcp_cron._call_tool("cron_add", {"name": "global", "message": "go", "every": 120})
@@ -331,12 +331,12 @@ def _app_without_peer_attestation(env):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("forwarded", [True, False])
 async def test_pooled_backend_carries_the_gateway_forwarded_token(env, monkeypatch, forwarded):
-    """A pooled ``kirocrew-cron`` backend is spawned from gatewayd's own environment,
-    so ``KIROCREW_STUB_SESSION_TOKEN`` is never in its ``os.environ``. The token
+    """A pooled ``ajcrew-cron`` backend is spawned from gatewayd's own environment,
+    so ``AJCREW_STUB_SESSION_TOKEN`` is never in its ``os.environ``. The token
     it proves the session with is the one gatewayd forwards inside the per-call
     caller block; without it the request is (correctly) refused."""
-    from kiro_crew.mcp_caller import build_caller_meta
-    from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+    from aj_crew.mcp_caller import build_caller_meta
+    from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
 
     monkeypatch.delenv(STUB_SESSION_TOKEN_ENV, raising=False)
     identity = env.identities["alice"]
@@ -386,11 +386,11 @@ async def test_pooled_backend_carries_the_gateway_forwarded_token(env, monkeypat
 
 
 def test_no_gateway_with_cli_identity_dispatches_locally(env, monkeypatch):
-    """``kirocrew chat`` with no gateway: the identity is the CLI's own
+    """``ajcrew chat`` with no gateway: the identity is the CLI's own
     ``cli_chat`` key, nothing was executed (connection refused), so the direct
     host store this runtime always had is used rather than an error about a
     gateway that was never part of the picture."""
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "cli_chat")
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "cli_chat")
     post = mock.Mock(return_value={"error": "gateway not reachable", "refused": True})
     monkeypatch.setattr(mcp_core, "_post", post)
     result = mcp_cron._call_tool("cron_add", {"name": "local", "message": "go", "every": 120})

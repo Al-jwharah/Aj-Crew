@@ -27,19 +27,19 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import credential_patterns as _cred
-from kiro_crew.config.sections import (
+from aj_crew import credential_patterns as _cred
+from aj_crew.config.sections import (
     DECISION_PROVIDER_ENDPOINT_DEFAULT,
     DecisionProviderConfig,
     DecisionsConfig,
     NudgeWakeConfig,
 )
-from kiro_crew.decisions import consent as consent_mod
-from kiro_crew.decisions import gate as gate_mod
-from kiro_crew.decisions import log as log_mod
-from kiro_crew.decisions.gate import DECISION_POINT_NAMES, decide, in_bucket, is_enabled
-from kiro_crew.decisions.types import Answer, Choice, Noul, Score
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.decisions import consent as consent_mod
+from aj_crew.decisions import gate as gate_mod
+from aj_crew.decisions import log as log_mod
+from aj_crew.decisions.gate import DECISION_POINT_NAMES, decide, in_bucket, is_enabled
+from aj_crew.decisions.types import Answer, Choice, Noul, Score
+from aj_crew.testing.wait import async_wait_until
 
 # Fixtures and doubles
 
@@ -80,7 +80,7 @@ def _config(
 ):
     """A config object shaped like the one ``decide`` reads off the live snapshot.
 
-    A real ``KiroCrewConfig`` would work too, but constructing one loads the whole
+    A real ``AjCrewConfig`` would work too, but constructing one loads the whole
     config module for a two-field read; the gate only ever touches ``.decisions``,
     so a stand-in with that attribute is the honest surface. Consent is NOT here:
     it is the keystone, patched by the ``consent`` fixture. An empty *endpoint*
@@ -110,7 +110,7 @@ def consent(tmp_path, monkeypatch):
     identity) is part of what these tests pin.
     """
     path = tmp_path / "decisions_consent.json"
-    monkeypatch.setattr("kiro_crew.config.loader.decisions_consent_path", lambda: path)
+    monkeypatch.setattr("aj_crew.config.loader.decisions_consent_path", lambda: path)
 
     def _set(value, endpoint=DECISION_PROVIDER_ENDPOINT_DEFAULT):
         if value is None:
@@ -179,7 +179,7 @@ def install_impl(monkeypatch):
     hot path's import graph), so the patch lands on the module the import
     resolves against, not on a name in ``gate``.
     """
-    import kiro_crew.decisions.impl_systemone as impl_mod
+    import aj_crew.decisions.impl_systemone as impl_mod
 
     def _install(oracle):
         monkeypatch.setattr(impl_mod, "SystemOneProvider", lambda provider: oracle)
@@ -323,7 +323,7 @@ class TestEnablingIsExplicit:
         monkeypatch.setattr(gate_mod, "_unconsented_warned", set())
         oracle = install_impl(_ExplodingOracle())
         moved = _config(endpoint="https://attacker.example/v1/systemone")
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.decisions.gate"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.decisions.gate"):
             assert is_enabled(POINT, config=moved) is False
             assert asyncio.run(decide(POINT, "hi", QUESTIONS, config=moved)) is None
             assert is_enabled(POINT, config=moved) is False
@@ -430,7 +430,7 @@ class TestGovernanceWithdrawsTheSeam:
         call log records the key rather than a tally, so a caller that stops passing
         the turn's own surface is visible here instead of merely counted.
         """
-        from kiro_crew.decisions import capability
+        from aj_crew.decisions import capability
 
         calls: list[str] = []
 
@@ -450,7 +450,7 @@ class TestGovernanceWithdrawsTheSeam:
 
         calls = self._deny(monkeypatch, True)
         oracle = install_impl(_ExplodingOracle())
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.decisions.gate"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.decisions.gate"):
             assert is_enabled(POINT, config=_config()) is False
             assert asyncio.run(decide(POINT, "hi", QUESTIONS, config=_config())) is None
             assert is_enabled(POINT, config=_config()) is False
@@ -513,10 +513,10 @@ class TestGovernanceWithdrawsTheSeam:
         default (used by the config route and the consent PUT) still permits, so a
         blanket denial cannot pass.
         """
-        from kiro_crew.decisions.capability import is_decisions_denied
-        from kiro_crew.platform import context as pc
-        from kiro_crew.platform import governance_profiles as gp
-        from kiro_crew.platform.governance import parse_policy
+        from aj_crew.decisions.capability import is_decisions_denied
+        from aj_crew.platform import context as pc
+        from aj_crew.platform import governance_profiles as gp
+        from aj_crew.platform.governance import parse_policy
 
         profiles = tmp_path / "profiles"
         profiles.mkdir()
@@ -565,7 +565,7 @@ class TestGovernanceWithdrawsTheSeam:
     def test_an_unevaluable_ceiling_fails_closed(self, install_impl, consent, monkeypatch):
         """The probe itself is fail-closed; the gate must not re-open it by treating
         a raising probe as "no opinion"."""
-        from kiro_crew.decisions import capability
+        from aj_crew.decisions import capability
 
         monkeypatch.setattr(
             capability,
@@ -892,7 +892,7 @@ class TestScrub:
         sees, the same credential-bearing question reaches the provider. So the
         green of the test above is load-bearing on the criteria line, not incidental
         to the prompt or options -- which are clean here."""
-        from kiro_crew.decisions import types as types_mod
+        from aj_crew.decisions import types as types_mod
 
         real_question_texts = types_mod.question_texts
 
@@ -937,7 +937,7 @@ class TestScrub:
     def test_a_scanner_that_itself_fails_refuses(self, install_impl, log_home, monkeypatch):
         """An external request cannot be cleared by a scan that did not complete."""
         oracle = install_impl(_ExplodingOracle())
-        import kiro_crew.security.redaction as redaction_mod
+        import aj_crew.security.redaction as redaction_mod
 
         def _boom(_text):
             raise RuntimeError("scanner exploded")
@@ -1297,7 +1297,7 @@ class TestLoggingCannotCostTheResult:
                 release.set()
                 await async_wait_until(landed.is_set)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.decisions.gate"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.decisions.gate"):
             answers = asyncio.run(_drive())
 
         assert answers is not None
@@ -1364,7 +1364,7 @@ class TestLoggingCannotCostTheResult:
                 for event in commit_events:
                     event.set()
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.decisions.gate"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.decisions.gate"):
             answers = asyncio.run(_drive())
 
         assert answers is not None
@@ -1376,7 +1376,7 @@ class TestLoggingCannotCostTheResult:
     def test_no_provider_message_reaches_the_application_log(self, install_impl, log_home, caplog):
         """Not the row and not the logger: a provider can quote the request back."""
         install_impl(_RaisingOracle(RuntimeError("rejected body: my-secret-payload")))
-        with caplog.at_level("DEBUG", logger="kiro_crew.decisions.gate"):
+        with caplog.at_level("DEBUG", logger="aj_crew.decisions.gate"):
             asyncio.run(decide(POINT, "hi", QUESTIONS, config=_config()))
         assert "my-secret-payload" not in caplog.text
         assert "RuntimeError" in caplog.text, "the exception class is the diagnostic"
@@ -1561,7 +1561,7 @@ class TestDecisionLists:
     def quiet(self, _floor_monkeypatch):
         from unittest.mock import MagicMock
 
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         _floor_monkeypatch.setattr(gate_mod, "_capability_denied_warned", False)
         self.sel = MagicMock()
@@ -1569,8 +1569,8 @@ class TestDecisionLists:
 
     @staticmethod
     def _policy(monkeypatch, body: dict | None) -> None:
-        from kiro_crew.platform import context as pc
-        from kiro_crew.platform.governance import parse_policy
+        from aj_crew.platform import context as pc
+        from aj_crew.platform.governance import parse_policy
 
         doc = None
         if body is not None:
@@ -1645,7 +1645,7 @@ class TestDecisionLists:
         assert oracle.entered is False
 
     def test_the_llm_lane_is_asked_about_its_point_only(self, monkeypatch):
-        from kiro_crew.decisions import capability
+        from aj_crew.decisions import capability
 
         seen: list[dict] = []
 
@@ -1658,7 +1658,7 @@ class TestDecisionLists:
         assert seen == [{"point": POINT, "model": None, "endpoint": None}]
 
     def test_an_error_in_the_check_denies(self, monkeypatch):
-        from kiro_crew.decisions import capability
+        from aj_crew.decisions import capability
 
         def _boom(*_a, **_k):
             raise RuntimeError("boom")
@@ -1669,7 +1669,7 @@ class TestDecisionLists:
     def test_a_policy_swap_between_items_denies(self, monkeypatch):
         """Each item permits under some policy, but the answers span two, so the
         request is refused and the refusal is audited."""
-        from kiro_crew.decisions import capability
+        from aj_crew.decisions import capability
 
         self._policy(monkeypatch, None)
         generations = iter([1, 2])
@@ -1693,7 +1693,7 @@ class TestDecisionLists:
         ids=["root-dot", "backslash", "ideographic-dot", "percent", "unicode"],
     )
     def test_an_endpoint_spelling_cannot_dodge_a_deny(self, monkeypatch, endpoint):
-        from kiro_crew.decisions import capability
+        from aj_crew.decisions import capability
 
         self._policy(
             monkeypatch,

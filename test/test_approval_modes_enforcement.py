@@ -37,14 +37,14 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import safety_override as so_mod
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.history import ConversationLog
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.governance import parse_policy
-from kiro_crew.testing.wait import await_until
+from aj_crew import safety_override as so_mod
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.history import ConversationLog
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.governance import parse_policy
+from aj_crew.testing.wait import await_until
 
 
 @pytest.fixture(autouse=True)
@@ -71,10 +71,10 @@ def _isolate(tmp_path, monkeypatch):
 
 def _install_no_policy() -> None:
     """Install a context with NO governance ceiling: every mode permitted."""
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     ctx_mod.set_context(
-        dataclasses.replace(build_default_context(KiroCrewConfig.load()), governance=None)
+        dataclasses.replace(build_default_context(AjCrewConfig.load()), governance=None)
     )
 
 
@@ -84,9 +84,9 @@ def _deny(*modes: str) -> None:
     This is the push: ``set_context`` resolves the verdict and revokes live grants
     before it returns, so nothing in a case needs to nudge a cache afterwards.
     """
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    base = build_default_context(KiroCrewConfig.load())
+    base = build_default_context(AjCrewConfig.load())
     ceiling = parse_policy(
         {
             "version": 1,
@@ -103,9 +103,9 @@ def _install_unrelated_ceiling() -> None:
     Names a real scope rather than another mode, so an install that changes something
     without touching any approval-mode verdict has to change a different scope.
     """
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    base = build_default_context(KiroCrewConfig.load())
+    base = build_default_context(AjCrewConfig.load())
     ceiling = parse_policy(
         {
             "version": 1,
@@ -130,7 +130,7 @@ def _make_state(tmp_path) -> DashboardState:
 
 
 def _make_app(state: DashboardState) -> web.Application:
-    from kiro_crew.dashboard.chat import api_chat_mode, api_chat_slot_approve
+    from aj_crew.dashboard.chat import api_chat_mode, api_chat_slot_approve
 
     @web.middleware
     async def _test_auth(request: web.Request, handler):
@@ -150,12 +150,12 @@ def _make_app(state: DashboardState) -> web.Application:
 class TestChatModeEndpointRefusalIsAudited:
     @pytest.mark.asyncio
     async def test_mode_switch_refusal_is_sel_audited(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         _deny("yolo")
         recorded: list[dict] = []
         fake_sel = MagicMock()
         fake_sel.log_api_access = lambda **kw: recorded.append(kw)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: fake_sel)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: fake_sel)
         state = _make_state(tmp_path)
         state.get_or_create_slot("s1")
 
@@ -178,7 +178,7 @@ class TestChatModeEndpointRefusalIsAudited:
         time and an error there fails CLOSED, so the honest answer at request time
         is the same refusal a real deny gets.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
         def _boom(mode: str) -> bool:
             raise RuntimeError("governance unavailable")
@@ -198,7 +198,7 @@ class TestChatModeEndpointRefusalIsAudited:
 
 class TestSafetyOverrideRefusalIsAudited:
     def test_denied_yolo_arming_is_audited_and_refused(self, monkeypatch):
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _deny("yolo")
         so.reset_singleton()
@@ -216,7 +216,7 @@ class TestSafetyOverrideRefusalIsAudited:
 
     def test_scoped_arming_is_refused_and_audited_too(self, monkeypatch):
         """A narrow scoped grant is still an auto-approve grant."""
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _deny("yolo")
         so.reset_singleton()
@@ -242,7 +242,7 @@ class TestTheVerdictIsResolvedAtCeilingInstall:
     """
 
     def test_a_deny_install_revokes_a_live_grant_and_fires_the_callback_once(self, monkeypatch):
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -272,7 +272,7 @@ class TestTheVerdictIsResolvedAtCeilingInstall:
         change nothing. Tearing a grant down on any install would make an unattended
         run lose its authority on an unrelated poll.
         """
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -291,7 +291,7 @@ class TestTheVerdictIsResolvedAtCeilingInstall:
 
     def test_a_raising_governance_layer_resolves_to_denied(self, monkeypatch):
         """Fail CLOSED. The alternative is auto-approving against unreadable policy."""
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         def _boom(mode: str) -> bool:
             raise RuntimeError("governance unavailable")
@@ -325,14 +325,14 @@ class TestTheVerdictIsResolvedAtCeilingInstall:
         """
         import logging
 
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         def _boom(mode: str) -> bool:
             raise RuntimeError("governance unavailable")
 
         monkeypatch.setattr(so, "approval_mode_permitted", _boom)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.safety_override"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.safety_override"):
             _install_no_policy()
 
         warnings = [r for r in caplog.records if r.levelno >= logging.WARNING]
@@ -343,7 +343,7 @@ class TestTheVerdictIsResolvedAtCeilingInstall:
         assert so.yolo_policy_permits() is False
 
     def test_a_raising_governance_layer_still_revokes_a_live_grant(self, monkeypatch):
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -370,7 +370,7 @@ class TestTheVerdictIsResolvedAtCeilingInstall:
         ceiling installed has to resolve one (``current_context`` composes and
         installs the standalone default) rather than serve that initial value.
         """
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         ctx_mod.reset_context()
         so.reset_yolo_policy_state()
@@ -396,8 +396,8 @@ class TestTheVerdictIsResolvedAtCeilingInstall:
         pushes after composing. Nothing can hold a grant earlier than that, since
         arming reads the same verdict.
         """
-        from kiro_crew import safety_override as so
-        from kiro_crew.platform import bootstrap as bs
+        from aj_crew import safety_override as so
+        from aj_crew.platform import bootstrap as bs
 
         denying = parse_policy(
             {
@@ -423,7 +423,7 @@ class TestTheVerdictIsResolvedAtCeilingInstall:
         the first read has to cope with a context that is already in place and has no
         pending install to announce.
         """
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _deny("yolo")
         # Exactly the state a late import leaves behind: the ceiling is installed,
@@ -439,7 +439,7 @@ class TestTheVerdictIsResolvedAtCeilingInstall:
         which in this suite reads as yolo being refused in a file that never
         configured a policy.
         """
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _deny("yolo")
         assert so.yolo_policy_permits() is False
@@ -478,7 +478,7 @@ class TestADenyLandingMidArmDoesNotLeaveAGrantBehind:
         return fired
 
     def test_a_session_wide_arm_is_refused(self, monkeypatch):
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -511,7 +511,7 @@ class TestADenyLandingMidArmDoesNotLeaveAGrantBehind:
         Driven through ``_sync_breadcrumb``, which runs in the real gap between the
         commit and the return.
         """
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -545,7 +545,7 @@ class TestADenyLandingMidArmDoesNotLeaveAGrantBehind:
         scoped branch cannot be driven by a mid-flight deny the way the session-wide
         one can. Its logic is asserted directly instead -- the branch, not the race.
         """
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -576,7 +576,7 @@ class TestADenyLandingMidArmDoesNotLeaveAGrantBehind:
         survive -- the same orphan, reached by the interleaving instead of by the gap.
         No single-threaded case can observe that, so the invariant is asserted here.
         """
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -602,7 +602,7 @@ class TestADenyLandingMidArmDoesNotLeaveAGrantBehind:
         )
 
     def test_a_scoped_arm_is_refused(self, monkeypatch):
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -635,7 +635,7 @@ class TestTheVerdictFailsClosedWhileANewCeilingIsBeingResolved:
     """
 
     def test_a_reader_inside_the_resolve_window_is_denied(self, monkeypatch):
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -675,7 +675,7 @@ class TestTheVerdictFailsClosedWhileANewCeilingIsBeingResolved:
         what leaves no moment where the incoming one is in force and the previous
         permit is still being served.
         """
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         before = ctx_mod.installed_context()
@@ -704,7 +704,7 @@ class TestTheVerdictFailsClosedWhileANewCeilingIsBeingResolved:
         install masks too. If the install hook then failed to write the true answer
         back, auto-approve would be off for the life of the process.
         """
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -723,7 +723,7 @@ class TestTheVerdictFailsClosedWhileANewCeilingIsBeingResolved:
         Revoking on the mask would destroy a live grant on every unrelated ceiling
         refresh -- central distribution re-installs constantly.
         """
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -761,7 +761,7 @@ class TestInheritedTrustIsSuspendedWhileANewCeilingResolves:
     """
 
     def _armed_with_inherited_trust(self, monkeypatch):
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         policies: dict[str, str] = {"dashboard:s1": "auto", "dashboard:standing": "auto"}
         standing = {"dashboard:standing"}
@@ -824,7 +824,7 @@ class TestInheritedTrustIsSuspendedWhileANewCeilingResolves:
         puts ``"auto"`` back on the slots for a moment, on a ceiling already resolved
         to deny -- exactly the read ``parent_trusted`` makes.
         """
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -889,7 +889,7 @@ class TestInheritedTrustIsSuspendedWhileANewCeilingResolves:
 
     def test_the_epoch_moves_on_deactivate_not_only_on_activate(self, monkeypatch):
         """``_activation_count`` alone cannot see a revoke; the epoch has to."""
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -904,7 +904,7 @@ class TestInheritedTrustIsSuspendedWhileANewCeilingResolves:
         assert override.grant_epoch() not in (e1, e2)
 
     def test_nothing_is_suspended_without_a_grant(self, monkeypatch):
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -942,7 +942,7 @@ class TestTheDashboardInheritedTrustHandlers:
 
     @staticmethod
     def _state_with_slots(tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         policies: dict[str, str] = {}
         state = _make_state(tmp_path)
         state.sessions.get_approval_policy = lambda key: policies.get(key, "")
@@ -950,8 +950,8 @@ class TestTheDashboardInheritedTrustHandlers:
         return state, policies
 
     def test_suspend_blanks_inherited_auto_and_restore_puts_it_back(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_utils import effective_session_key
-        from kiro_crew.dashboard.server import _suspend_override_derived_trust
+        from aj_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.dashboard.server import _suspend_override_derived_trust
 
         state, policies = self._state_with_slots(tmp_path, monkeypatch)
         plain = state.get_or_create_slot("plain")
@@ -978,8 +978,8 @@ class TestTheDashboardInheritedTrustHandlers:
         ``"auto"`` over a ``trust_reads`` slot would upgrade read-only trust to full
         auto-approve on the read ``parent_trusted`` makes.
         """
-        from kiro_crew.dashboard.chat_utils import effective_session_key
-        from kiro_crew.dashboard.server import _suspend_override_derived_trust
+        from aj_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.dashboard.server import _suspend_override_derived_trust
 
         state, policies = self._state_with_slots(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -998,8 +998,8 @@ class TestTheDashboardInheritedTrustHandlers:
     def test_restore_skips_a_slot_whose_policy_changed_or_that_was_removed(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.dashboard.chat_utils import effective_session_key
-        from kiro_crew.dashboard.server import _suspend_override_derived_trust
+        from aj_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.dashboard.server import _suspend_override_derived_trust
 
         state, policies = self._state_with_slots(tmp_path, monkeypatch)
         changed = state.get_or_create_slot("changed")
@@ -1026,8 +1026,8 @@ class TestTheDashboardInheritedTrustHandlers:
         A restore that finds anything but the empty string it wrote leaves it alone --
         somebody else owns that value now.
         """
-        from kiro_crew.dashboard.chat_utils import effective_session_key
-        from kiro_crew.dashboard.server import _suspend_override_derived_trust
+        from aj_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.dashboard.server import _suspend_override_derived_trust
 
         state, policies = self._state_with_slots(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -1043,7 +1043,7 @@ class TestTheDashboardInheritedTrustHandlers:
         assert policies[key] == "reads", "restore must not overwrite a policy it did not leave"
 
     def test_suspend_returns_none_when_nothing_carried_inherited_auto(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.server import _suspend_override_derived_trust
+        from aj_crew.dashboard.server import _suspend_override_derived_trust
 
         state, _ = self._state_with_slots(tmp_path, monkeypatch)
         state.get_or_create_slot("s1")
@@ -1055,8 +1055,8 @@ class TestTheDashboardInheritedTrustHandlers:
         Iterating the live dict would raise "dictionary changed size during iteration"
         and leave every unreached slot at ``"auto"`` -- a partial revocation.
         """
-        from kiro_crew.dashboard.chat_utils import effective_session_key
-        from kiro_crew.dashboard.server import _clear_override_derived_trust
+        from aj_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.dashboard.server import _clear_override_derived_trust
 
         state, policies = self._state_with_slots(tmp_path, monkeypatch)
         slots = [state.get_or_create_slot(f"s{i}") for i in range(4)]
@@ -1073,7 +1073,7 @@ class TestTheDashboardInheritedTrustHandlers:
 
         state.sessions.set_approval_policy = _set_and_churn
         monkeypatch.setattr(
-            "kiro_crew.messaging.session_trust.clear_trusted_sessions", lambda **kw: None
+            "aj_crew.messaging.session_trust.clear_trusted_sessions", lambda **kw: None
         )
 
         _clear_override_derived_trust(state, "policy")
@@ -1089,7 +1089,7 @@ class TestTheDashboardInheritedTrustHandlers:
         src = (
             _pl.Path(__file__).resolve().parents[1]
             / "src"
-            / "kiro_crew"
+            / "aj_crew"
             / "dashboard"
             / "server.py"
         ).read_text(encoding="utf-8")
@@ -1126,7 +1126,7 @@ class TestTheRevocationNoticeReachesTheLoopItWasInstalledOn:
         afterwards. So the inherited half runs inline, on the installing thread, before
         anything is scheduled.
         """
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -1190,7 +1190,7 @@ class TestTheRevocationNoticeReachesTheLoopItWasInstalledOn:
         import pathlib as _pl
 
         repo_root = _pl.Path(__file__).resolve().parents[1]
-        src = (repo_root / "src" / "kiro_crew" / "dashboard" / "server.py").read_text(
+        src = (repo_root / "src" / "aj_crew" / "dashboard" / "server.py").read_text(
             encoding="utf-8"
         )
         body = src.split("def _on_override_expired(source: str) -> None:", 1)
@@ -1210,7 +1210,7 @@ class TestTheRevocationNoticeReachesTheLoopItWasInstalledOn:
         un-spawns it. Inherited-first inverts that: the spawn path is already closed
         while only the grant flag trails, which is recoverable.
         """
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -1244,7 +1244,7 @@ class TestTheRevocationNoticeReachesTheLoopItWasInstalledOn:
         independent Trust press on an unrelated channel session -- trust this override
         never handed out. The scoped grant itself is still revoked.
         """
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -1270,7 +1270,7 @@ class TestTheRevocationNoticeReachesTheLoopItWasInstalledOn:
         The clear also revokes the shared channel-trust mapping, so running it when no
         grant ever existed would revoke trust this override never handed out.
         """
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -1286,7 +1286,7 @@ class TestTheRevocationNoticeReachesTheLoopItWasInstalledOn:
 
     def test_a_raising_sync_teardown_does_not_stop_the_notification(self, monkeypatch):
         """The two halves are independent; neither may swallow the other."""
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -1308,7 +1308,7 @@ class TestTheRevocationNoticeReachesTheLoopItWasInstalledOn:
 
     @pytest.mark.asyncio
     async def test_an_off_thread_install_schedules_the_callback_onto_the_loop(self, monkeypatch):
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -1342,7 +1342,7 @@ class TestTheRevocationNoticeReachesTheLoopItWasInstalledOn:
 
     def test_no_recorded_loop_means_the_callback_runs_inline(self, monkeypatch):
         """A sync CLI or test has no loop to schedule onto; dropping it is not an option."""
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -1371,7 +1371,7 @@ class TestInheritedSlotTrustIsClearedOnADenyInstall:
     """
 
     def test_the_admission_predicate_stops_reading_auto_after_a_deny_install(self, monkeypatch):
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         policies: dict[str, str] = {}
 
@@ -1428,9 +1428,9 @@ class TestTheApprovalCardDoesNotRestoreTrustAfterADeny:
     async def test_a_deny_during_the_policy_write_leaves_no_inherited_auto(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         _install_no_policy()
         so.reset_singleton()
         monkeypatch.setattr(so, "sel", lambda: MagicMock())
@@ -1468,7 +1468,7 @@ class TestTheApprovalCardDoesNotRestoreTrustAfterADeny:
         assert fired, "the deny must have landed during the policy write"
         assert body.get("ok") is True, "the operator's click still approves that tool"
         assert so.safety_override().has_grant() is False, "the deny revoked the grant"
-        from kiro_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.dashboard.chat_utils import effective_session_key
 
         plain_key = effective_session_key(slot)
         trusted_key = effective_session_key(trusted)
@@ -1499,7 +1499,7 @@ class TestOnlyOneSurfaceWritesGrantDerivedTrust:
     forcing function, not a proof.
     """
 
-    #: ``<path under src/kiro_crew>`` -> why its grant-derived write is safe.
+    #: ``<path under src/aj_crew>`` -> why its grant-derived write is safe.
     WRITERS = {
         "dashboard/chat_api/slot_approval.py": (
             "api_chat_slot_approve's action=yolo branch writes approval_policy='auto' "
@@ -1512,7 +1512,7 @@ class TestOnlyOneSurfaceWritesGrantDerivedTrust:
     def test_the_declared_set_is_exactly_the_files_that_pair_the_two(self):
         import pathlib as _pl
 
-        src = _pl.Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+        src = _pl.Path(__file__).resolve().parents[1] / "src" / "aj_crew"
         # dashboard/server.py composes its server_runtime owners into one namespace,
         # so the two are read as one file.
         runtime = src / "dashboard" / "server_runtime"
@@ -1558,7 +1558,7 @@ class TestOnlyOneSurfaceWritesGrantDerivedTrust:
         """The declaration is a claim; this checks the code still backs it."""
         import pathlib as _pl
 
-        src = _pl.Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+        src = _pl.Path(__file__).resolve().parents[1] / "src" / "aj_crew"
         for rel in self.WRITERS:
             text = (src / rel).read_text(encoding="utf-8")
             assert "if not yolo_policy_permits():" in text, (
@@ -1578,7 +1578,7 @@ class TestNothingResolvesGovernanceOffTheInstallPath:
 
     @pytest.fixture()
     def _tripwire(self, monkeypatch):
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         # Singleton reset FIRST: it forgets the pushed verdict, so installing the
         # ceiling afterwards is what leaves a resolved flag behind for the tripwire
@@ -1596,7 +1596,7 @@ class TestNothingResolvesGovernanceOffTheInstallPath:
         return calls
 
     def test_the_hot_predicate_does_not_resolve(self, _tripwire):
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         so.safety_override().activate("dashboard")
         for _ in range(20):
@@ -1609,7 +1609,7 @@ class TestNothingResolvesGovernanceOffTheInstallPath:
 
         They keep one anyway: the fail-closed SEL audit is still a filesystem write.
         """
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         assert so.safety_override().activate("dashboard").active is True
         assert so.safety_override().activate_scoped("run:abc", "dashboard").active is True
@@ -1617,7 +1617,7 @@ class TestNothingResolvesGovernanceOffTheInstallPath:
         assert _tripwire == [], "arming must not walk the profiles dir"
 
     def test_the_scoped_consult_points_do_not_resolve(self, _tripwire):
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         so.safety_override().activate_scoped("run:abc", "dashboard")
         for _ in range(20):
@@ -1627,7 +1627,7 @@ class TestNothingResolvesGovernanceOffTheInstallPath:
         assert _tripwire == []
 
     def test_the_status_reader_does_not_resolve(self, _tripwire):
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         for _ in range(20):
             assert so.cached_disabled_approval_modes() == []
@@ -1640,7 +1640,7 @@ class TestNothingResolvesGovernanceOffTheInstallPath:
         Two caches of one question is what let the picker disagree with the gate.
         Whatever ``yolo_policy_permits`` says, the reported list must say.
         """
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         assert so.yolo_policy_permits() is True
@@ -1652,9 +1652,9 @@ class TestNothingResolvesGovernanceOffTheInstallPath:
 
     @pytest.mark.asyncio
     async def test_status_snapshot_reports_the_pushed_verdict(self, tmp_path, monkeypatch):
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         _deny("yolo")
         state = _make_state(tmp_path)
 
@@ -1678,7 +1678,7 @@ class TestArmingIsStillOffloadedByItsAsyncCallers:
     async def test_taskrunner_grant_run_trust_is_a_coroutine(self):
         import inspect
 
-        from kiro_crew.taskrunner import TaskRunner
+        from aj_crew.taskrunner import TaskRunner
 
         assert inspect.iscoroutinefunction(TaskRunner._grant_run_trust), (
             "_grant_run_trust is reached from two async methods; a sync body puts "
@@ -1702,8 +1702,8 @@ class TestArmingIsStillOffloadedByItsAsyncCallers:
         src = "\n".join(
             path.read_text(encoding="utf-8")
             for path in [
-                repo_root / "src" / "kiro_crew" / "taskrunner.py",
-                *sorted((repo_root / "src" / "kiro_crew" / "taskrunner_parts").glob("*.py")),
+                repo_root / "src" / "aj_crew" / "taskrunner.py",
+                *sorted((repo_root / "src" / "aj_crew" / "taskrunner_parts").glob("*.py")),
             ]
         )
         bare = [
@@ -1732,7 +1732,7 @@ class TestEveryGrantBranchHonoursAMidSessionDeny:
     """
 
     def _armed_scope(self, monkeypatch):
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -1771,7 +1771,7 @@ class TestEveryGrantBranchHonoursAMidSessionDeny:
 
     def test_a_declared_grant_is_revoked_too(self, monkeypatch):
         """A permanent grant has no deadline, so policy is its ONLY off-switch."""
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -1792,7 +1792,7 @@ class TestEveryGrantBranchHonoursAMidSessionDeny:
         relaxation resurrected the grant the operator had explicitly revoked. A fresh
         arm after the policy relaxes is the honest outcome.
         """
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -1819,7 +1819,7 @@ class TestAnExplicitOffIsNotPolicyFiltered:
     """
 
     def test_has_grant_ignores_policy_entirely(self, monkeypatch):
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()
@@ -1835,8 +1835,8 @@ class TestAnExplicitOffIsNotPolicyFiltered:
 
     @pytest.mark.asyncio
     async def test_an_off_under_a_masked_grant_actually_revokes(self, monkeypatch):
-        from kiro_crew import safety_override as so
-        from kiro_crew.slack import handler as h
+        from aj_crew import safety_override as so
+        from aj_crew.slack import handler as h
 
         _install_no_policy()
         so.reset_singleton()
@@ -1870,8 +1870,8 @@ class TestARefusedScopedArmDoesNotPersistAutoApprove:
 
     @pytest.mark.asyncio
     async def test_a_denied_policy_leaves_auto_approve_false(self, monkeypatch):
-        from kiro_crew import safety_override as so
-        from kiro_crew.taskrunner import TaskRunner
+        from aj_crew import safety_override as so
+        from aj_crew.taskrunner import TaskRunner
 
         _deny("yolo")
         so.reset_singleton()
@@ -1890,8 +1890,8 @@ class TestARefusedScopedArmDoesNotPersistAutoApprove:
     @pytest.mark.asyncio
     async def test_a_permitting_policy_still_enables_it(self, monkeypatch):
         """The fix must not make the flag unreachable."""
-        from kiro_crew import safety_override as so
-        from kiro_crew.taskrunner import TaskRunner
+        from aj_crew import safety_override as so
+        from aj_crew.taskrunner import TaskRunner
 
         _install_no_policy()
         so.reset_singleton()
@@ -1920,7 +1920,7 @@ class TestALapsedGrantIsNotTornDownTwice:
     def test_a_deny_after_a_natural_lapse_fires_no_second_teardown(self, monkeypatch):
         import time as _time
 
-        from kiro_crew import safety_override as so
+        from aj_crew import safety_override as so
 
         _install_no_policy()
         so.reset_singleton()

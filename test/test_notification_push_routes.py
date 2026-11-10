@@ -14,7 +14,7 @@ from aiohttp.test_utils import TestClient, TestServer
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
-from kiro_crew.dashboard.handlers.notifications_push import (
+from aj_crew.dashboard.handlers.notifications_push import (
     api_push_subscribe,
     api_push_unsubscribe,
     api_vapid_public_key,
@@ -33,7 +33,7 @@ def _public_dns(_floor_monkeypatch):
     Requests ``_floor_monkeypatch`` so a test calling ``monkeypatch.undo()``
     cannot lift this stub (testing-conventions D11)."""
     _floor_monkeypatch.setattr(
-        "kiro_crew.link_unfurl._default_resolve", lambda _host, _port: ["93.184.216.34"]
+        "aj_crew.link_unfurl._default_resolve", lambda _host, _port: ["93.184.216.34"]
     )
 
 
@@ -49,13 +49,13 @@ def _fake_subscription() -> dict:
 
 
 def _make_state(monkeypatch, tmp_path):
-    from kiro_crew.dashboard.state import DashboardState
+    from aj_crew.dashboard.state import DashboardState
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.notifications.push_store.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.notifications.vapid_keys.config_dir", lambda: tmp_path)
-    from kiro_crew.notifications import vapid_keys
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.push_store.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.vapid_keys.config_dir", lambda: tmp_path)
+    from aj_crew.notifications import vapid_keys
 
     vapid_keys.reset_cache_for_tests()
     return DashboardState(
@@ -71,7 +71,7 @@ def _make_app(state, *, app_token: str = "", user: str = "local-app") -> web.App
     like the real token-auth middleware (request['app'] / request['user']).
 
     A dashboard user defaults to ``local-app`` — an implicit local owner subject,
-    so is_owner_dashboard_request passes when no KIROCREW_OWNER_ID is set."""
+    so is_owner_dashboard_request passes when no AJCREW_OWNER_ID is set."""
 
     @web.middleware
     async def _identity(request, handler):
@@ -103,7 +103,7 @@ async def test_vapid_public_key_loads_keys_off_the_event_loop(monkeypatch, tmp_p
     that IO must run in a worker thread, never on the gateway's event loop."""
     import threading
 
-    from kiro_crew.notifications import vapid_keys
+    from aj_crew.notifications import vapid_keys
 
     state = _make_state(monkeypatch, tmp_path)
     loop_thread = threading.get_ident()
@@ -187,7 +187,7 @@ async def test_non_owner_dashboard_user_rejected(monkeypatch, tmp_path):
 async def test_vapid_public_key_answers_503_while_the_key_file_cannot_be_read(
     monkeypatch, tmp_path
 ):
-    from kiro_crew.notifications import vapid_keys
+    from aj_crew.notifications import vapid_keys
 
     state = _make_state(monkeypatch, tmp_path)
 

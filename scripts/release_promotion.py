@@ -28,16 +28,16 @@ MANIFEST_NAME = "promotion-manifest.json"
 # Roles every candidate MUST carry. A bundle missing one of these is not a
 # promotable release, so their absence is an error.
 REQUIRED_ARTIFACT_NAMES = {
-    "wheel": re.compile(r"^kirocrew-[A-Za-z0-9_.]+-py3-none-any\.whl$"),
-    "sdist": re.compile(r"^kirocrew-[A-Za-z0-9_.]+\.tar\.gz$"),
-    "appimage": re.compile(r"^KiroCrew-x86_64\.AppImage$"),
-    "appimage_arm64": re.compile(r"^KiroCrew-aarch64\.AppImage$"),
-    "deb": re.compile(r"^KiroCrew-x86_64\.deb$"),
-    "deb_arm64": re.compile(r"^KiroCrew-aarch64\.deb$"),
-    "rpm": re.compile(r"^KiroCrew-x86_64\.rpm$"),
-    "rpm_arm64": re.compile(r"^KiroCrew-aarch64\.rpm$"),
+    "wheel": re.compile(r"^ajcrew-[A-Za-z0-9_.]+-py3-none-any\.whl$"),
+    "sdist": re.compile(r"^ajcrew-[A-Za-z0-9_.]+\.tar\.gz$"),
+    "appimage": re.compile(r"^AjCrew-x86_64\.AppImage$"),
+    "appimage_arm64": re.compile(r"^AjCrew-aarch64\.AppImage$"),
+    "deb": re.compile(r"^AjCrew-x86_64\.deb$"),
+    "deb_arm64": re.compile(r"^AjCrew-aarch64\.deb$"),
+    "rpm": re.compile(r"^AjCrew-x86_64\.rpm$"),
+    "rpm_arm64": re.compile(r"^AjCrew-aarch64\.rpm$"),
     "mac_zip": re.compile(r"^notarized\.zip$"),
-    "dmg": re.compile(r"^KiroCrew\.dmg$"),
+    "dmg": re.compile(r"^AjCrew\.dmg$"),
     # The two single-arch macOS legs (release.yml's sign-and-notarize-arm64 /
     # -x64), under the names their gated artifacts already carry: the arch is in
     # the FILE name because the bundle is one flat directory, and a promote-mode
@@ -47,9 +47,9 @@ REQUIRED_ARTIFACT_NAMES = {
     # promoted the universal DMG alone would leave it on an updater that never
     # advances -- and would burn this version's immutable keys doing so.
     "mac_zip_arm64": re.compile(r"^notarized-arm64\.zip$"),
-    "dmg_arm64": re.compile(r"^KiroCrew-arm64\.dmg$"),
+    "dmg_arm64": re.compile(r"^AjCrew-arm64\.dmg$"),
     "mac_zip_x64": re.compile(r"^notarized-x64\.zip$"),
-    "dmg_x64": re.compile(r"^KiroCrew-x64\.dmg$"),
+    "dmg_x64": re.compile(r"^AjCrew-x64\.dmg$"),
 }
 # Roles a candidate MAY carry. Optional is what keeps per-platform release
 # independence: `build-windows` is soft-fail precisely so a Windows problem
@@ -64,8 +64,8 @@ REQUIRED_ARTIFACT_NAMES = {
 # removed or altered after it is recorded. What optional relaxes is only which
 # roles a manifest is allowed to claim.
 OPTIONAL_ARTIFACT_NAMES = {
-    "windows_installer": re.compile(r"^KiroCrew-Setup\.exe$"),
-    "windows_blockmap": re.compile(r"^KiroCrew-Setup\.exe\.blockmap$"),
+    "windows_installer": re.compile(r"^AjCrew-Setup\.exe$"),
+    "windows_blockmap": re.compile(r"^AjCrew-Setup\.exe\.blockmap$"),
 }
 # Windows' two roles are all-or-nothing: an installer promoted without its
 # blockmap still updates, but every client silently falls back to downloading
@@ -137,11 +137,11 @@ def _artifact_paths(bundle_dir: Path) -> dict[str, Path]:
 
 
 def _require_wheel_version_filename(logical_name: str, filename: str, wheel_version: str) -> None:
-    prefix = f"kirocrew-{wheel_version}"
+    prefix = f"ajcrew-{wheel_version}"
     if logical_name == "wheel":
         # Exact-match the full filename: a prefix check would also accept a
         # longer version (1.2.3rc4 matching 1.2.3rc4.post1) or a build-tag
-        # spelling (kirocrew-1.2.3rc4-1-...), publishing bytes whose version
+        # spelling (ajcrew-1.2.3rc4-1-...), publishing bytes whose version
         # was never the verified candidate's.
         valid = filename == f"{prefix}-py3-none-any.whl"
     elif logical_name == "sdist":
@@ -177,7 +177,7 @@ def create_manifest(
     )
     if not DIGEST_RE.fullmatch(docker_digest):
         raise PromotionError("docker digest must be sha256:<64 lowercase hex>")
-    if not re.fullmatch(r"ghcr\.io/[a-z0-9_.-]+/kirocrew", docker_image):
+    if not re.fullmatch(r"ghcr\.io/[a-z0-9_.-]+/ajcrew", docker_image):
         raise PromotionError("docker image must be the canonical lowercase GHCR image")
     if not re.fullmatch(r"[A-Za-z0-9_.]+", wheel_version):
         raise PromotionError("wheel version contains unsupported characters")
@@ -351,7 +351,7 @@ def validate_manifest(
         raise PromotionError("promotion manifest docker block has unexpected fields")
     image = _require_string(docker["image"], "docker.image")
     digest = _require_string(docker["digest"], "docker.digest")
-    if not re.fullmatch(r"ghcr\.io/[a-z0-9_.-]+/kirocrew", image):
+    if not re.fullmatch(r"ghcr\.io/[a-z0-9_.-]+/ajcrew", image):
         raise PromotionError("promotion manifest has a non-canonical docker image")
     if expected_docker_image is not None and image != expected_docker_image:
         raise PromotionError(
@@ -563,7 +563,7 @@ def resolve_candidate(
     extract_verified_archive(archive_path, output_dir, expected_digest=artifact_digest)
     source_run_id = int(selected_run["id"])
     source_tag = _require_string(selected_run.get("head_branch"), "workflow_run.head_branch")
-    docker_image = f"ghcr.io/{repository.split('/', 1)[0].lower()}/kirocrew"
+    docker_image = f"ghcr.io/{repository.split('/', 1)[0].lower()}/ajcrew"
     manifest = verify_bundle(
         output_dir,
         expected_source_sha=source_sha,

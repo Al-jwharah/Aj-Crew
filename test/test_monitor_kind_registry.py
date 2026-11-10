@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.monitoring import registry
-from kiro_crew.monitoring.registry import (
+from aj_crew.monitoring import registry
+from aj_crew.monitoring.registry import (
     GH_PR,
     GITHUB_PULL_REQUEST,
     PULL_REQUEST_MONITOR_KINDS,
@@ -35,7 +35,7 @@ class TestTheEntryAllowlistsShareOneAuthority:
         assert publicly_armable_objectives() == frozenset({REVIEW_READY})
 
     def test_the_validator_schemas_derive_the_same_values(self) -> None:
-        from kiro_crew.validation import MONITOR_WATCH_SCHEMA
+        from aj_crew.validation import MONITOR_WATCH_SCHEMA
 
         allowed = {
             field.name: field.allowed() if callable(field.allowed) else field.allowed
@@ -216,19 +216,19 @@ class TestTheWakeDescriptorMatchesWhatTheProviderEmits:
         )
 
     def test_pull_request_kinds_render_every_emitted_field_or_omit_it_on_purpose(self) -> None:
-        from kiro_crew.monitoring.models import PULL_REQUEST_OBSERVATION_FIELDS
+        from aj_crew.monitoring.models import PULL_REQUEST_OBSERVATION_FIELDS
 
         emitted = frozenset(PULL_REQUEST_OBSERVATION_FIELDS)
         for kind in PULL_REQUEST_MONITOR_KINDS | {GH_PR}:
             self._assert_covers(kind, emitted, self._PULL_REQUEST_OMITTED)
 
     def test_the_workflow_run_kind_renders_every_emitted_field_or_omits_it_on_purpose(self) -> None:
-        from kiro_crew.monitoring.github_workflow_run import (
+        from aj_crew.monitoring.github_workflow_run import (
             GitHubWorkflowRunResponse,
             GitHubWorkflowRunTarget,
             _canonical_response,
         )
-        from kiro_crew.monitoring.registry import GITHUB_WORKFLOW_RUN
+        from aj_crew.monitoring.registry import GITHUB_WORKFLOW_RUN
 
         response = GitHubWorkflowRunResponse(
             target=GitHubWorkflowRunTarget("github.com", "owner", "repo", 42),
@@ -253,7 +253,7 @@ class TestTheTwoKindVocabulariesAgree:
     """
 
     def test_the_kind_inference_produces_is_registered(self) -> None:
-        from kiro_crew.probes import targets
+        from aj_crew.probes import targets
 
         target = targets.infer("please babysit https://github.com/owner/repo/pull/4137")
 
@@ -265,7 +265,7 @@ class TestTheTwoKindVocabulariesAgree:
 
     def test_that_kind_declares_the_objective_the_inference_path_arms(self) -> None:
         """``infer_monitor`` pairs the inferred kind with ``review_ready``."""
-        from kiro_crew.probes import targets
+        from aj_crew.probes import targets
 
         target = targets.infer("babysit https://github.com/owner/repo/pull/4137")
 
@@ -273,7 +273,7 @@ class TestTheTwoKindVocabulariesAgree:
         assert kind_supports_objective(target.kind, REVIEW_READY)
 
     def test_the_two_modules_spell_it_identically(self) -> None:
-        from kiro_crew.probes import GH_PR as PROBES_GH_PR
+        from aj_crew.probes import GH_PR as PROBES_GH_PR
 
         assert GH_PR == PROBES_GH_PR
 
@@ -286,8 +286,8 @@ async def test_shadow_refuses_a_kind_that_does_not_declare_the_capability() -> N
     whose persistence-only path is not implemented, which is the distinction the
     declared capability exists to carry.
     """
-    from kiro_crew.monitoring.models import MonitorState
-    from kiro_crew.monitoring.shadow import run_shadow_probe
+    from aj_crew.monitoring.models import MonitorState
+    from aj_crew.monitoring.shadow import run_shadow_probe
 
     probes = 0
 
@@ -314,8 +314,8 @@ async def test_shadow_refuses_a_kind_that_does_not_declare_the_capability() -> N
 
 @pytest.mark.asyncio
 async def test_shadow_refuses_an_objective_the_kind_does_not_declare() -> None:
-    from kiro_crew.monitoring.models import MonitorState
-    from kiro_crew.monitoring.shadow import run_shadow_probe
+    from aj_crew.monitoring.models import MonitorState
+    from aj_crew.monitoring.shadow import run_shadow_probe
 
     class Provider:
         def probe(self, subjects: object, **kwargs: object) -> dict[str, object]:
@@ -343,8 +343,8 @@ async def test_arming_refuses_an_unregistered_kind_before_it_is_persisted(tmp_pa
     provider the controller happens to hold, so the refusal belongs at the arming
     boundary rather than at the point of discovery.
     """
-    from kiro_crew.autonudge import AutoNudgeService
-    from kiro_crew.monitoring.models import MonitorBudgets, MonitorState
+    from aj_crew.autonudge import AutoNudgeService
+    from aj_crew.monitoring.models import MonitorBudgets, MonitorState
 
     # The record itself is still permissive, which is why the boundary must check.
     MonitorState(
@@ -380,8 +380,8 @@ async def test_updating_an_objective_the_kind_does_not_declare_is_refused(tmp_pa
     is that the pairing holds without the upstream filter's help, which is what will
     still be true once a second kind widens the union.
     """
-    from kiro_crew.autonudge import AutoNudgeService
-    from kiro_crew.monitoring.models import MonitorBudgets
+    from aj_crew.autonudge import AutoNudgeService
+    from aj_crew.monitoring.models import MonitorBudgets
 
     service = AutoNudgeService(base_dir=tmp_path)
     try:

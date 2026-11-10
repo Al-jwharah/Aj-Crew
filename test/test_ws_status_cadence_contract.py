@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard import ws
+from aj_crew.dashboard import ws
 
 _REPO = Path(__file__).resolve().parents[1]
 _WATCHDOG_TS = _REPO / "website" / "src" / "utils" / "socketSilenceWatchdog.ts"

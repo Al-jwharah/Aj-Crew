@@ -33,8 +33,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.messaging.commands import stop_running_turn
-from kiro_crew.messaging.queue_drain import (
+from aj_crew.messaging.commands import stop_running_turn
+from aj_crew.messaging.queue_drain import (
     QUEUED_CHANNEL_KEY,
     QUEUED_OWNER_KEY,
     entries_queued_by,
@@ -42,14 +42,14 @@ from kiro_crew.messaging.queue_drain import (
     owner_token,
     tag_entry,
 )
-from kiro_crew.messaging.queue_receipt import (
+from aj_crew.messaging.queue_receipt import (
     QueueReceipt,
     ReceiptLine,
     ReceiptQueue,
     receipt_address_key,
     receipt_text,
 )
-from kiro_crew.slack import events as slack_events
+from aj_crew.slack import events as slack_events
 
 #: Two allow-listed people on one transport, and a third on another. Under a unified
 #: scope all three land on ONE session key, which is the whole premise.
@@ -77,7 +77,7 @@ def _manager() -> tuple[Any, Any, _Deps]:
     The allocation boundary is exercised through the manager rather than reached into,
     because the manager's signature is what every channel calls.
     """
-    from kiro_crew.session import SessionManager
+    from aj_crew.session import SessionManager
 
     mgr = SessionManager.__new__(SessionManager)
     boundary = mgr._allocation_boundary()
@@ -686,7 +686,7 @@ _STOP_HANDLERS = (
 
 
 def _handler_source(channel: str, module: str, name: str) -> str:
-    path = pathlib.Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / channel / module
+    path = pathlib.Path(__file__).resolve().parents[1] / "src" / "aj_crew" / channel / module
     tree = ast.parse(path.read_text(encoding="utf-8"))
     for node in ast.walk(tree):
         if isinstance(node, ast.AsyncFunctionDef) and node.name == name:

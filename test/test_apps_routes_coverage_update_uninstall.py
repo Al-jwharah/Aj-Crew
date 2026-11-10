@@ -32,9 +32,9 @@ from apps_routes_coverage_helpers import (
     _setup_env,
 )
 
-import kiro_crew.apps.routes as routes_mod
-from kiro_crew.apps.manager import AppResult, disable_app, enable_app, register_external_app
-from kiro_crew.apps.routes import register_app_routes
+import aj_crew.apps.routes as routes_mod
+from aj_crew.apps.manager import AppResult, disable_app, enable_app, register_external_app
+from aj_crew.apps.routes import register_app_routes
 
 # POST /api/apps/{name}/update
 
@@ -618,9 +618,9 @@ class TestUpdateApp:
         home = _setup_env(tmp_path, monkeypatch)
         _install(tmp_path)
 
-        from kiro_crew.apps.manager import get_app, set_app_provenance
-        from kiro_crew.config.loader import _invalidate_config_cache
-        from kiro_crew.dashboard.token_auth import generate_token, token_auth_middleware
+        from aj_crew.apps.manager import get_app, set_app_provenance
+        from aj_crew.config.loader import _invalidate_config_cache
+        from aj_crew.dashboard.token_auth import generate_token, token_auth_middleware
 
         reviewed = "https://clone.example.test/Owner/reviewed-app"
         assert set_app_provenance(
@@ -912,14 +912,14 @@ class TestUninstallRefusals:
 class TestMigrateCleanup:
 
     def _retired(self, tmp_path, monkeypatch):
-        from kiro_crew.apps.manager import InstalledApp, _write_installed, app_dir
+        from aj_crew.apps.manager import InstalledApp, _write_installed, app_dir
 
         home = _setup_env(tmp_path, monkeypatch)
         _install(tmp_path, setup={"onUninstall": "remove-data.sh"})
         _write_installed(APP, InstalledApp(name=APP, origin="builtin", lifecycle="locked"))
         dest = app_dir(APP)
         (dest / "data" / "keep.txt").write_text("keep me", encoding="utf-8")
-        for leaf in (".kirocrew-deps", ".kirocrew-deps-prior", ".kirocrew-deps-staging-1-12345678"):
+        for leaf in (".ajcrew-deps", ".ajcrew-deps-prior", ".ajcrew-deps-staging-1-12345678"):
             (dest / "data" / leaf).mkdir()
         (home / "config.json").write_text(
             json.dumps({"agent": {"apps_trusted": [APP], "apps_trusted_local": [APP]}}),
@@ -983,7 +983,7 @@ class TestMigrateCleanup:
             routes_mod._deregister_app_off_loop.return_value.errors = [
                 "cleanup failed: https://user:secret@example.test/path"
             ]
-        from kiro_crew.apps import manager
+        from aj_crew.apps import manager
 
         monkeypatch.setattr(manager, "_orphaned_builtins_cache", {APP})
         async with TestClient(TestServer(app)) as client:
@@ -995,7 +995,7 @@ class TestMigrateCleanup:
         assert "user:secret" not in body.get("notice", "")
         assert {p.name for p in dest.iterdir()} == {"data"}
         assert (dest / "data" / "keep.txt").read_text(encoding="utf-8") == "keep me"
-        assert {p.name for p in (dest / "data").iterdir()} == {"keep.txt", ".kirocrew-deps.lock"}
+        assert {p.name for p in (dest / "data").iterdir()} == {"keep.txt", ".ajcrew-deps.lock"}
         assert manager._orphaned_builtins_cache is None
         agent = json.loads((home / "config.json").read_text(encoding="utf-8"))["agent"]
         assert APP not in agent["apps_trusted"] and APP not in agent["apps_trusted_local"]
@@ -1012,8 +1012,8 @@ class TestMigrateCleanup:
     async def test_ineligible_builtin_is_untouched(self, tmp_path, monkeypatch, refusal):
         from contextlib import asynccontextmanager
 
-        from kiro_crew.apps import manager
-        from kiro_crew.testing.links import make_dir_link
+        from aj_crew.apps import manager
+        from aj_crew.testing.links import make_dir_link
 
         home, dest = self._retired(tmp_path, monkeypatch)
         before = (dest / "installed.json").read_bytes()

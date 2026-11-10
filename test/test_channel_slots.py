@@ -20,14 +20,14 @@ from typing import Any
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import channel_slots
-from kiro_crew.history import _safe_key
-from kiro_crew.history_projection import METADATA_LINE_READABLE
-from kiro_crew.messaging.link import (
+from aj_crew.dashboard import channel_slots
+from aj_crew.history import _safe_key
+from aj_crew.history_projection import METADATA_LINE_READABLE
+from aj_crew.messaging.link import (
     channel_namespace_of,
     is_channel_session_key,
 )
-from kiro_crew.session_surface import has_dashboard_surface
+from aj_crew.session_surface import has_dashboard_surface
 
 # Shared time origin for session stamps. Captured at import, so any test whose
 # production path reads the LIVE clock must also pin that clock to NOW (see
@@ -79,14 +79,14 @@ class TestChannelKeyPredicates:
     def test_recognizes_every_channel_namespace(self) -> None:
         for key in (
             "slack:1785370133.085469",
-            "discord:kirocrew:direct:U1",
-            "telegram:kirocrew:direct:U1",
-            "whatsapp:kirocrew:direct:U1",
-            "webex:kirocrew:direct:U1",
-            "wecom:kirocrew:direct:U1",
-            "teams:kirocrew:direct:U1",
-            "weixin:kirocrew:direct:U1",
-            "unified:kirocrew",
+            "discord:ajcrew:direct:U1",
+            "telegram:ajcrew:direct:U1",
+            "whatsapp:ajcrew:direct:U1",
+            "webex:ajcrew:direct:U1",
+            "wecom:ajcrew:direct:U1",
+            "teams:ajcrew:direct:U1",
+            "weixin:ajcrew:direct:U1",
+            "unified:ajcrew",
         ):
             assert is_channel_session_key(key), key
 
@@ -97,8 +97,8 @@ class TestChannelKeyPredicates:
         instance while every synthetic ``slack:`` fixture passed.
         """
         assert is_channel_session_key("slack_1785370133.085469")
-        assert is_channel_session_key("discord_kirocrew_direct_U1")
-        assert is_channel_session_key("unified_kirocrew")
+        assert is_channel_session_key("discord_ajcrew_direct_U1")
+        assert is_channel_session_key("unified_ajcrew")
         assert channel_namespace_of("slack_1.1") == "slack"
         assert channel_slots.channel_label("slack_1.1") == "Slack"
 
@@ -192,8 +192,8 @@ class TestEligibility:
 
     def test_slot_name_is_the_channel_key_folded_to_the_filename_charset(self) -> None:
         assert channel_slots.channel_slot_name("slack:1.1") == "slack_1.1"
-        assert channel_slots.channel_slot_name("discord:kirocrew:direct:U1") == (
-            "discord_kirocrew_direct_U1"
+        assert channel_slots.channel_slot_name("discord:ajcrew:direct:U1") == (
+            "discord_ajcrew_direct_U1"
         )
 
     def test_closed_beats_pinned(self) -> None:
@@ -348,7 +348,7 @@ class TestSurfaceChannelSession:
         Parametrised across the reply-token-bound transports as well, because those go
         quiet on the same path and a Slack-only proof leaves them unestablished.
         """
-        from kiro_crew.history import transcript_stem
+        from aj_crew.history import transcript_stem
 
         assert channel_slots.is_channel_session_key(live), f"precondition: {live} is a channel key"
         stem = transcript_stem(live)
@@ -375,7 +375,7 @@ class TestSurfaceChannelSession:
         alone would route that tab's later turns into the channel's conversation, so the
         rebind requires the marker only a channel path sets.
         """
-        from kiro_crew.history import transcript_stem
+        from aj_crew.history import transcript_stem
 
         live = "slack:1785370133.085469"
         stem = transcript_stem(live)
@@ -490,7 +490,7 @@ class TestSurfaceChannelSession:
             dashboard_state,
             _session("slack:1.1"),
             {
-                "agent": "kirocrew",
+                "agent": "ajcrew",
                 "model": "claude-opus-5",
                 "workspace": "default",
                 "project": "p1",
@@ -501,7 +501,7 @@ class TestSurfaceChannelSession:
             [],
         )
         assert slot is not None
-        assert slot.agent == "kirocrew"
+        assert slot.agent == "ajcrew"
         assert slot.model == "claude-opus-5"
         assert slot.project == "p1"
         assert slot.folder_id == "f1"
@@ -950,8 +950,8 @@ class TestReconcilePass:
         derivations must land on the same string or a dismissed tab silently
         reopens on the next pass. Driven through real keys on both sides — a
         hardcoded slot name on each side would agree by construction."""
-        session = _session("discord:kirocrew:direct:U1", modified=NOW - 60)
-        _map_stems(dashboard_state, "discord:kirocrew:direct:U1")
+        session = _session("discord:ajcrew:direct:U1", modified=NOW - 60)
+        _map_stems(dashboard_state, "discord:ajcrew:direct:U1")
         dashboard_state.conversation_log = _FakeLog([session], {})
         dashboard_state.push_slots_update = lambda: None  # type: ignore[method-assign]
 
@@ -1068,7 +1068,7 @@ class TestClosedAtStamp:
     """
 
     def _bound_slot(self, tmp_path: Any, monkeypatch: Any) -> tuple[Any, Any]:
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("slack_1.1", linked_session_key="slack:1.1")
         slot.append("user", "hello")
@@ -1085,7 +1085,7 @@ class TestClosedAtStamp:
     ) -> None:
         """With no caller-supplied instant the save falls back to save time
         (callers with no user gesture to anchor to)."""
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
         state, slot = self._bound_slot(tmp_path, monkeypatch)
 
@@ -1106,7 +1106,7 @@ class TestClosedAtStamp:
         The reconciler compares mtime with ``closed_at``, and writing the close flag
         touches the transcript, so the pre-close mtime must be kept.
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
         state, slot = self._bound_slot(tmp_path, monkeypatch)
         path = tmp_path / "slack_1.1.jsonl"
@@ -1143,7 +1143,7 @@ class TestClosedAtStamp:
         OLDER than the close, hiding a conversation the reactivation rule should
         surface. The persisted closed_at must be the instant the user acted —
         the value note_slot_closed returned — not the (later) save time."""
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
         state, slot = self._bound_slot(tmp_path, monkeypatch)
 
@@ -1165,7 +1165,7 @@ class TestClosedAtStamp:
         assert channel_slots._RECENT_CLOSES[dashboard_state]["slack_1.1"] == returned
 
     def test_open_save_carries_no_close_fields(self, tmp_path: Any, monkeypatch: Any) -> None:
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
         state, slot = self._bound_slot(tmp_path, monkeypatch)
 
@@ -1458,7 +1458,7 @@ class TestReconcileKeepsMarkedEffort:
     async def test_marked_custom_effort_survives_reconcile(
         self, dashboard_state: Any, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.dashboard import chat_persistence
+        from aj_crew.dashboard import chat_persistence
 
         monkeypatch.setattr(
             chat_persistence,

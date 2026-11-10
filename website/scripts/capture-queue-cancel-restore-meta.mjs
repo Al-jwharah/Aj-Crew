@@ -39,7 +39,7 @@ const slots = [{
   running: true,
   last_message: 'Reading the draft now.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: '',
   folder_id: '',

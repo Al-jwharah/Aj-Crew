@@ -1,7 +1,7 @@
 """The loopback hand-off names a Host the gateway's Host check allows, on any loopback bind.
 
 The relay client dials the address the gateway bound, which can be any loopback
-address (``KIROCREW_BIND=127.0.0.2``). The gateway's Host check allows only the
+address (``AJCREW_BIND=127.0.0.2``). The gateway's Host check allows only the
 canonical loopback names plus what ``dashboard.url`` names, so the hand-off sends
 the canonical loopback host of the bound address's family. That Host grants
 nothing: a relayed request keeps its relay identity and stays remote.
@@ -17,17 +17,17 @@ from aiohttp import WSMsgType, web
 from aiohttp.test_utils import TestServer
 from relay_client_helpers import OWNER
 
-from kiro_crew.dashboard.kiro_relay.caller import RELAY_REMOTE, published_relay_caller
-from kiro_crew.dashboard.kiro_relay.ingress import (
+from aj_crew.dashboard.kiro_relay.caller import RELAY_REMOTE, published_relay_caller
+from aj_crew.dashboard.kiro_relay.ingress import (
     RELAY_INGRESS_APP_KEY,
     RelayIngress,
     relay_ingress_middleware,
 )
-from kiro_crew.dashboard.origin import check_host, is_direct_local_request
-from kiro_crew.dashboard.relay_headers import relay_header_strip_middleware
-from kiro_crew.dashboard.urls import build_allowed_origins
-from kiro_crew.relay_client.ingress import LoopbackIngress, RelayedRequest, RelayedWebSocket
-from kiro_crew.relay_client.protocol import WS_MESSAGE_MAX_BYTES
+from aj_crew.dashboard.origin import check_host, is_direct_local_request
+from aj_crew.dashboard.relay_headers import relay_header_strip_middleware
+from aj_crew.dashboard.urls import build_allowed_origins
+from aj_crew.relay_client.ingress import LoopbackIngress, RelayedRequest, RelayedWebSocket
+from aj_crew.relay_client.protocol import WS_MESSAGE_MAX_BYTES
 
 pytestmark = pytest.mark.asyncio
 

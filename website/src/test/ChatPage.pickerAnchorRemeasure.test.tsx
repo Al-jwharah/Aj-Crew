@@ -60,7 +60,7 @@ vi.mock('../api/client', () => ({
 }))
 vi.mock('../hooks/useVoiceInput', () => ({ useVoiceInput: () => ({ recording: false, transcribing: false, toggle: vi.fn() }), voiceInputSupported: false }))
 vi.mock('../hooks/useBranding', () => ({ useBranding: () => ({ botName: 'Test', avatar: '' }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: () => ({ agents: [{ name: 'kirocrew' }, { name: 'researcher' }], defaultAgent: 'kirocrew' }) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: () => ({ agents: [{ name: 'ajcrew' }, { name: 'researcher' }], defaultAgent: 'ajcrew' }) }))
 // One app-contributed session control, so the composer renders its chip and
 // ComposerDockView mounts SessionControlHost against it. The control's bundle does not
 // exist in this harness; the host's own load-failure notice renders inside the
@@ -108,7 +108,7 @@ function makeStore() {
     preloadedState: {
       dashboard: {
         status: null,
-        slots: [{ key: 'slot-a', messages: 0, running: false, mode: '', agent: 'kirocrew', model: 'claude-opus-5', project: '/home/user/old-proj', pending_approval: false, waiting_for_input: false, last_activity_ts: undefined }],
+        slots: [{ key: 'slot-a', messages: 0, running: false, mode: '', agent: 'ajcrew', model: 'claude-opus-5', project: '/home/user/old-proj', pending_approval: false, waiting_for_input: false, last_activity_ts: undefined }],
         unreadSlots: [], refreshTrigger: 0, approvalMode: 'normal',
         subagentRunning: {}, subagentDetails: {}, subagentText: {},
       } as unknown as RootState['dashboard'],
@@ -186,7 +186,7 @@ async function keyboardCloses(anchor: ReturnType<typeof anchorChip>, nextY: numb
 describe('ChatPage composer pickers follow their chip while open (#10616)', { timeout: 15_000 }, () => {
   it('agent dropdown remeasures when the visual viewport changes', async () => {
     await renderChat()
-    const chip = screen.getByTitle(/^Agent: kirocrew(?:\s|$)/)
+    const chip = screen.getByTitle(/^Agent: ajcrew(?:\s|$)/)
     const anchor = anchorChip(chip, 600)
 
     await act(async () => { fireEvent.click(chip) })

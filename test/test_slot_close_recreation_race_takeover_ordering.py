@@ -23,8 +23,8 @@ from slot_close_recreation_race_helpers import (
     _Req,
 )
 
-from kiro_crew.dashboard import chat_handlers as handlers
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.dashboard import chat_handlers as handlers
+from aj_crew.testing.wait import async_wait_until
 
 
 async def _event_fired(event: threading.Event, bound: float) -> bool:
@@ -85,7 +85,7 @@ def _freeze_tombstone_clock(monkeypatch) -> _TombstoneClock:
     """Bind the tombstone stamp and every noter's start to one controllable clock."""
     import time as real_time
 
-    from kiro_crew.dashboard import channel_slots, chat_persistence
+    from aj_crew.dashboard import channel_slots, chat_persistence
 
     clock = _TombstoneClock(real_time)
     for module in (channel_slots, chat_persistence, handlers):
@@ -104,9 +104,9 @@ async def test_close_archive_commits_over_a_delivery_that_begins_mid_teardown(
     """
     import threading
 
-    from kiro_crew.dashboard import chat_persistence
-    from kiro_crew.dashboard.chat_persistence import rehydrate_slot_from_history_async
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard import chat_persistence
+    from aj_crew.dashboard.chat_persistence import rehydrate_slot_from_history_async
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)
@@ -195,9 +195,9 @@ async def test_a_failed_handover_to_an_unpublished_takeover_restores_the_origina
     """
     import threading
 
-    from kiro_crew.dashboard import chat_persistence
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
-    from kiro_crew.history import ConversationLog
+    from aj_crew.dashboard import chat_persistence
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.history import ConversationLog
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)
@@ -281,10 +281,10 @@ async def test_cleanup_restores_the_original_when_its_handover_to_a_takeover_fai
     unsaved tail -- comes back under its key with its close over, reported in
     ``failed`` and never in ``archived``.
     """
-    from kiro_crew.dashboard import chat_persistence
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
-    from kiro_crew.dashboard.slot_registry import SlotRegistry
-    from kiro_crew.history import ConversationLog
+    from aj_crew.dashboard import chat_persistence
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard.slot_registry import SlotRegistry
+    from aj_crew.history import ConversationLog
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)
@@ -343,8 +343,8 @@ async def test_a_reopen_racing_an_edit_never_hydrates_the_truncation_with_the_re
     """
     import threading
 
-    from kiro_crew.dashboard import chat_persistence
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard import chat_persistence
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)
@@ -471,9 +471,9 @@ async def test_deletion_is_only_confirmed_on_definitive_evidence(tmp_path):
     refuse a COPY on True. The close arms DISCARD on True, so they use
     ``session_deletion_confirmed``, which is True only on real evidence.
     """
-    from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
-    from kiro_crew.dashboard.chat_utils import slot_history_key
-    from kiro_crew.dashboard.slot_persistence.write_guards import (
+    from aj_crew.dashboard.chat_persistence import save_slot_off_loop
+    from aj_crew.dashboard.chat_utils import slot_history_key
+    from aj_crew.dashboard.slot_persistence.write_guards import (
         session_deletion_confirmed,
         session_was_deleted,
     )
@@ -533,9 +533,9 @@ async def test_both_delete_witnesses_map_the_one_evidence_verdict(tmp_path, monk
     Every verdict the shared helper returns is pinned against both
     ``session_was_deleted`` and ``session_deletion_confirmed``.
     """
-    from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
-    from kiro_crew.dashboard.chat_utils import slot_history_key
-    from kiro_crew.dashboard.slot_persistence import write_guards
+    from aj_crew.dashboard.chat_persistence import save_slot_off_loop
+    from aj_crew.dashboard.chat_utils import slot_history_key
+    from aj_crew.dashboard.slot_persistence import write_guards
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)
@@ -606,7 +606,7 @@ def test_teardown_drain_basis_follows_the_transcript_not_the_key(tmp_path):
     A linked original writes elsewhere, and a moved watch would refuse a safe write;
     it keeps the watch only when the replacement provably shares that transcript.
     """
-    from kiro_crew.dashboard.slot_registry import TakeoverBasis
+    from aj_crew.dashboard.slot_registry import TakeoverBasis
 
     state = _state_with_slot(tmp_path)
     slot = state._slots.pop(NAME)
@@ -629,8 +629,8 @@ def test_teardown_drain_basis_follows_the_transcript_not_the_key(tmp_path):
     # An UNPUBLISHED resume that declared the linked transcript as its read
     # target keeps it too: the map cannot see a resume whose read is still
     # pending, but its takeover note named the file this drain writes.
-    from kiro_crew.dashboard.chat_utils import slot_history_key
-    from kiro_crew.dashboard.slot_registry import SlotRegistry
+    from aj_crew.dashboard.chat_utils import slot_history_key
+    from aj_crew.dashboard.slot_registry import SlotRegistry
 
     state._slots.pop(NAME)
     open_basis = SlotRegistry.open_takeover_basis(state, NAME)
@@ -649,9 +649,9 @@ async def test_handover_drain_saves_the_tail_a_lost_truncation_rode_with(tmp_pat
     would refuse the new rows too. The drain drops the lost truncation instead and
     saves default-shaped, so the appended tail lands.
     """
-    from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
-    from kiro_crew.dashboard.slot_registry import SlotRegistry
+    from aj_crew.dashboard.chat_persistence import save_slot_off_loop
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard.slot_registry import SlotRegistry
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)
@@ -694,9 +694,9 @@ async def test_handover_append_creates_the_header_under_the_restricted_mode(tmp_
     absent, which every learning reader takes as persistent. The drain settles the
     header first, so the file is born restricted.
     """
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
-    from kiro_crew.dashboard.slot_registry import SlotRegistry
-    from kiro_crew.history import TranscriptWithheld, transcript_withholds_derivation
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard.slot_registry import SlotRegistry
+    from aj_crew.history import TranscriptWithheld, transcript_withholds_derivation
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME, memory_mode="incognito")
@@ -739,10 +739,10 @@ async def test_handover_append_tightens_a_persistent_replacement_line(tmp_path):
     The mode tightens, the store a restricted line must not name is cleared, the
     execution record follows the line, and the replacement's title stays as written.
     """
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
-    from kiro_crew.dashboard.slot_registry import SlotRegistry
-    from kiro_crew.execution_context import EXECUTION_CONTEXT_KEY, ExecutionContext, MemoryStoreRef
-    from kiro_crew.history import transcript_withholds_derivation
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard.slot_registry import SlotRegistry
+    from aj_crew.execution_context import EXECUTION_CONTEXT_KEY, ExecutionContext, MemoryStoreRef
+    from aj_crew.history import transcript_withholds_derivation
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME, memory_mode="incognito")
@@ -794,9 +794,9 @@ async def test_handover_append_refuses_when_the_header_cannot_be_confirmed(tmp_p
     Appending anyway would land private rows under a header whose contract was never
     checked, so the drain fails closed: no row written, failure reported, tail owed.
     """
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
-    from kiro_crew.dashboard.slot_registry import SlotRegistry
-    from kiro_crew.history import ConversationLog
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard.slot_registry import SlotRegistry
+    from aj_crew.history import ConversationLog
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME, memory_mode="incognito")
@@ -852,10 +852,10 @@ async def test_a_cancelled_handover_keeps_its_append_and_its_watch(tmp_path, mon
     """
     import threading
 
-    from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
-    from kiro_crew.dashboard.slot_registry import SlotRegistry
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.dashboard.chat_persistence import save_slot_off_loop
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard.slot_registry import SlotRegistry
+    from aj_crew.testing.wait import async_wait_until
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)
@@ -871,7 +871,7 @@ async def test_a_cancelled_handover_keeps_its_append_and_its_watch(tmp_path, mon
     history_key = slot_transcript_key(NAME)
 
     # Park the append thread at its first step, inside the append lock.
-    from kiro_crew.dashboard.slot_persistence import metadata_line
+    from aj_crew.dashboard.slot_persistence import metadata_line
 
     entered = threading.Event()
     release = threading.Event()
@@ -921,8 +921,8 @@ def _rotation_staged_handover(state, monkeypatch):
     The byte budget and keep count are shrunk so one append rotates older rows into an
     archive while the window still holds them all.
     """
-    monkeypatch.setattr("kiro_crew.history._SESSION_MAX_BYTES", 1200)
-    monkeypatch.setattr("kiro_crew.history._SESSION_KEEP_LINES", 3)
+    monkeypatch.setattr("aj_crew.history._SESSION_MAX_BYTES", 1200)
+    monkeypatch.setattr("aj_crew.history._SESSION_KEEP_LINES", 3)
     slot = state.get_or_create_slot(NAME)
     for i in range(12):
         slot.append("user" if i % 2 == 0 else "assistant", f"ROW-{i:02d} " + "x" * 40)
@@ -941,9 +941,9 @@ async def test_handover_append_does_not_duplicate_rows_rotated_into_archives(tmp
     ``append_if_absent`` judges absence against the live file only, so rotated rows
     would be appended twice. The drain counts the archives too.
     """
-    from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
-    from kiro_crew.dashboard.slot_registry import SlotRegistry
+    from aj_crew.dashboard.chat_persistence import save_slot_off_loop
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard.slot_registry import SlotRegistry
 
     state = _make_state(tmp_path)
     slot = _rotation_staged_handover(state, monkeypatch)
@@ -993,9 +993,9 @@ async def test_handover_append_drops_notes_authorized_for_another_session(tmp_pa
     """
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard import chat_persistence
-    from kiro_crew.dashboard.chat_utils import effective_session_key, slot_history_key
-    from kiro_crew.dashboard.slot_registry import SlotRegistry
+    from aj_crew.dashboard import chat_persistence
+    from aj_crew.dashboard.chat_utils import effective_session_key, slot_history_key
+    from aj_crew.dashboard.slot_registry import SlotRegistry
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)
@@ -1048,7 +1048,7 @@ def test_a_declared_transcript_matches_every_spelling_of_its_file(tmp_path) -> N
     ``slack:<ts>`` and ``slack_<ts>`` name one file, so declared targets are matched by
     stem, as ``replacement_shares_transcript`` compares them.
     """
-    from kiro_crew.dashboard.slot_registry import SlotRegistry
+    from aj_crew.dashboard.slot_registry import SlotRegistry
 
     state = _make_state(tmp_path)
     linked = state.get_or_create_slot(NAME)
@@ -1099,7 +1099,7 @@ async def test_a_divergent_publication_does_not_overtake_a_linked_tabs_rewrite_a
     # Park the archive INSIDE its lock, between its claim registration and its
     # commit gate -- the stretch in which a publication's note finds a claim
     # to mark.
-    from kiro_crew.dashboard.slot_persistence import metadata_line
+    from aj_crew.dashboard.slot_persistence import metadata_line
 
     in_lock = threading.Event()
     go_on = threading.Event()
@@ -1202,7 +1202,7 @@ async def test_a_delete_won_refusal_beside_a_takeover_does_not_resurrect_the_tra
     The drain's append-safe arm has no deletion guard, and ``append`` would recreate the
     deleted file. So the deletion probe runs first and nothing is written.
     """
-    from kiro_crew.dashboard.chat_utils import slot_history_key
+    from aj_crew.dashboard.chat_utils import slot_history_key
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)
@@ -1251,8 +1251,8 @@ async def test_handover_append_arm_does_not_resurrect_a_deleted_transcript(tmp_p
     The witness inside ``atomic_appends`` sees the missing file, writes nothing and
     reports the hand-over complete (the delete disposed of the rows).
     """
-    from kiro_crew.dashboard.chat_utils import slot_history_key
-    from kiro_crew.dashboard.slot_registry import SlotRegistry
+    from aj_crew.dashboard.chat_utils import slot_history_key
+    from aj_crew.dashboard.slot_registry import SlotRegistry
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)

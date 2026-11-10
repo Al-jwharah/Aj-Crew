@@ -27,10 +27,10 @@ from governance_distribution_helpers import profiles_dir_fixture  # noqa: F401
 from governance_distribution_helpers import transport_fixture  # noqa: F401
 from governance_distribution_helpers import _TEST_SOURCE, _body, _cache, _doc, _static_fetcher
 
-from kiro_crew.platform import governance
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform import policy_distribution as pd
-from kiro_crew.platform.context import PlatformCompositionError, current_context
+from aj_crew.platform import governance
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform import policy_distribution as pd
+from aj_crew.platform.context import PlatformCompositionError, current_context
 
 
 class TestTheCacheIsPublishedBeforeTheCeilingIsInstalled:
@@ -45,7 +45,7 @@ class TestTheCacheIsPublishedBeforeTheCeilingIsInstalled:
         install_ceiling(governance.parse_policy(_doc("running", distribution={"source": source})))
         seen_at_install: dict = {}
 
-        import kiro_crew.platform.context as ctx_mod
+        import aj_crew.platform.context as ctx_mod
 
         original = ctx_mod.set_context
 
@@ -636,7 +636,7 @@ class TestAMaterialisedControlIsReDerivedAfterAnInstall:
         )
         pd.register_post_install_hook(lambda: (_ for _ in ()).throw(OSError("disk full")))
 
-        with caplog.at_level(logging.ERROR, logger="kiro_crew.platform.policy_distribution"):
+        with caplog.at_level(logging.ERROR, logger="aj_crew.platform.policy_distribution"):
             assert pd.refresh_now().status == pd.REFRESH_APPLIED
 
         assert any(k == "degraded" and "post_install_hook" in d for k, d in marks)
@@ -665,7 +665,7 @@ class TestAllowedToolsIsReDerivedWhenTheCeilingTightens:
     writers consult the ceiling when they WRITE, and kiro-cli then reads the FILE. So a ceiling
     that comes to deny a tool mid-flight does not narrow a list already on disk, and every
     session started afterwards keeps auto-approving what the fleet now forbids — the tool
-    short-circuits inside the harness and never reaches Kiro Crew's own PreToolUse gate.
+    short-circuits inside the harness and never reaches Aj Crew's own PreToolUse gate.
     """
 
     @pytest.fixture(autouse=True)
@@ -673,7 +673,7 @@ class TestAllowedToolsIsReDerivedWhenTheCeilingTightens:
         """``prime_ceiling_projection`` seeds nothing while the last real rebuild left a
         conductor spec unwritten; these tests pin the seeded baseline, so a hold a test
         elsewhere in this process left behind must not reach them."""
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         _floor_monkeypatch.setattr(agent_mod, "_conductor_spec_held", False, raising=False)
         # Nor may an earlier test's rebuild answer seed the baseline these tests pin.
@@ -682,13 +682,13 @@ class TestAllowedToolsIsReDerivedWhenTheCeilingTightens:
 
     @staticmethod
     def _hook(monkeypatch):
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         rebuilds: list[int] = []
 
         def fake_reporting(**kw):
             rebuilds.append(1)
-            return Path("/shared/agents/kirocrew.json"), True
+            return Path("/shared/agents/ajcrew.json"), True
 
         monkeypatch.setattr(agent_mod, "rebuild_agent_config_reporting", fake_reporting)
         monkeypatch.setattr(agent_mod, "_projected_ceiling_generation", None, raising=False)
@@ -732,7 +732,7 @@ class TestAllowedToolsIsReDerivedWhenTheCeilingTightens:
         """The memo advances only after a SUCCESSFUL rebuild. Marking the generation
         synchronised on failure loses the retry, leaving forbidden auto-approvals on disk for
         the process lifetime."""
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         attempts: list[int] = []
 
@@ -740,7 +740,7 @@ class TestAllowedToolsIsReDerivedWhenTheCeilingTightens:
             attempts.append(1)
             if len(attempts) == 1:
                 raise OSError("could not write the agent config")
-            return Path("/shared/agents/kirocrew.json"), True
+            return Path("/shared/agents/ajcrew.json"), True
 
         monkeypatch.setattr(agent_mod, "rebuild_agent_config_reporting", flaky)
         monkeypatch.setattr(agent_mod, "_projected_ceiling_generation", None, raising=False)
@@ -771,16 +771,16 @@ class TestAllowedToolsIsReDerivedWhenTheCeilingTightens:
         """
         import logging
 
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         rebuilds: list[int] = []
         declined = {"value": True}
 
         def fake_reporting(**kw):
             if declined["value"]:
-                return Path("/shared/agents/kirocrew.json"), False
+                return Path("/shared/agents/ajcrew.json"), False
             rebuilds.append(1)
-            return Path("/shared/agents/kirocrew.json"), True
+            return Path("/shared/agents/ajcrew.json"), True
 
         monkeypatch.setattr(agent_mod, "rebuild_agent_config_reporting", fake_reporting)
         monkeypatch.setattr(agent_mod, "_projected_ceiling_generation", None, raising=False)
@@ -817,7 +817,7 @@ class TestAllowedToolsIsReDerivedWhenTheCeilingTightens:
         forbidden auto-approvals. The hook must consult only the rebuild's own
         verdict.
         """
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         def no_probe(**kw):
             raise AssertionError("reproject pre-probed the guard: probe/rebuild race reopened")
@@ -826,7 +826,7 @@ class TestAllowedToolsIsReDerivedWhenTheCeilingTightens:
         monkeypatch.setattr(
             agent_mod,
             "rebuild_agent_config_reporting",
-            lambda **kw: (Path("/shared/agents/kirocrew.json"), False),
+            lambda **kw: (Path("/shared/agents/ajcrew.json"), False),
         )
         monkeypatch.setattr(agent_mod, "_projected_ceiling_generation", None, raising=False)
         install_ceiling(governance.parse_policy(_doc("tightened")))
@@ -849,7 +849,7 @@ class TestAllowedToolsIsReDerivedWhenTheCeilingTightens:
         revocation, before the poller starts."""
         from pathlib import Path as _Path
 
-        from kiro_crew.slack.gateway_runtime import service_boot
+        from aj_crew.slack.gateway_runtime import service_boot
 
         src = _Path(service_boot.__file__).read_text(encoding="utf-8")
         assert "register_post_install_hook(reproject_for_ceiling_change)" in src

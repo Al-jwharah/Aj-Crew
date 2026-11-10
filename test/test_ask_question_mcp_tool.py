@@ -13,10 +13,10 @@ from __future__ import annotations
 
 import pytest
 
-import kiro_crew.mcp_core as mcp_core
-from kiro_crew import session_directive
-from kiro_crew.mcp_core import _call_tool, _call_tool_inner
-from kiro_crew.validation import ValidationError
+import aj_crew.mcp_core as mcp_core
+from aj_crew import session_directive
+from aj_crew.mcp_core import _call_tool, _call_tool_inner
+from aj_crew.validation import ValidationError
 
 QUESTIONS = [
     {
@@ -65,7 +65,7 @@ def test_non_dashboard_session_is_refused_with_options_hint(monkeypatch, gateway
 
 def test_surfaced_channel_session_is_refused(monkeypatch, gateway_posts):
     """A channel session with an open dashboard tab is still refused: its agent answers to the channel."""
-    import kiro_crew.mcp_tools.control as control
+    import aj_crew.mcp_tools.control as control
 
     monkeypatch.setattr(mcp_core, "_resolve_session_key_strict", lambda: "slack:C1")
     monkeypatch.setattr(control, "has_dashboard_surface", lambda sk: True)

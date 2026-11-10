@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 from typing import Callable
 
-from kiro_crew.vector_memory import VectorMemoryStore, _lesson_display_text
+from aj_crew.vector_memory import VectorMemoryStore, _lesson_display_text
 
 
 def _lesson_texts(store: VectorMemoryStore) -> list[str]:

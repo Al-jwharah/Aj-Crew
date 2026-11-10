@@ -8,7 +8,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers.files import api_reveal_path
+from aj_crew.dashboard.handlers.files import api_reveal_path
 
 
 def _make_app() -> web.Application:
@@ -19,7 +19,7 @@ def _make_app() -> web.Application:
 
 @pytest.fixture
 def mock_sel():
-    with patch("kiro_crew.sel.sel") as m:
+    with patch("aj_crew.sel.sel") as m:
         instance = MagicMock()
         m.return_value = instance
         yield instance

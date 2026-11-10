@@ -56,7 +56,7 @@ const servers = ROWS.map(([name, canStub, inAllowlist, transport, blocked]) => (
   in_allowlist: inAllowlist,
   entry_poolable: false,
   pooling_blocked_by_env: blocked,
-  agents: ['kirocrew'],
+  agents: ['ajcrew'],
   transport,
   denylisted: false,
 }))

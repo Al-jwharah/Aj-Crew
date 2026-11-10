@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.mcp_gateway.secret_uri."""
+"""Tests for aj_crew.mcp_gateway.secret_uri."""
 
 from __future__ import annotations
 
@@ -6,13 +6,13 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.mcp_gateway.secret_uri import resolve_secret_uris
+from aj_crew.mcp_gateway.secret_uri import resolve_secret_uris
 
 
 @pytest.fixture()
 def vault_dir(tmp_path: Path) -> Path:
     """Create a temporary vault with test secrets."""
-    from kiro_crew.secrets import SecretVault
+    from aj_crew.secrets import SecretVault
 
     vault = SecretVault(tmp_path)
     vault._set_sync("MY_API_KEY", "sk-live-abc123")
@@ -142,7 +142,7 @@ class TestResolveSecretUris:
         name, so validation must not be stricter than what the vault can hold —
         only control/format/line-break chars and unstorable shapes are rejected.
         """
-        from kiro_crew.secrets import SecretVault
+        from aj_crew.secrets import SecretVault
 
         vault = SecretVault(tmp_path)
         vault._set_sync("my-api-key", "v-hyphen")
@@ -164,7 +164,7 @@ class TestResolveSecretUris:
         the stored entry unreachable and block MCP spawn for a name the
         product's own write path accepted.
         """
-        from kiro_crew.secrets import SecretVault
+        from aj_crew.secrets import SecretVault
 
         vault = SecretVault(tmp_path)
         vault._set_sync("MY KEY", "v-space")
@@ -182,7 +182,7 @@ class TestResolveSecretUris:
         for a name the product accepted; injection safety comes from never
         echoing names in errors, not from refusing to resolve.
         """
-        from kiro_crew.secrets import SecretVault
+        from aj_crew.secrets import SecretVault
 
         vault = SecretVault(tmp_path)
         vault._set_sync("MY\u200dKEY", "v-zwj")  # zero-width joiner (Cf)
@@ -201,7 +201,7 @@ class TestResolveSecretUris:
 
     def test_valid_underscore_and_digits_name_resolves(self, tmp_path: Path) -> None:
         """A name matching the env-var-key grammar resolves normally."""
-        from kiro_crew.secrets import SecretVault
+        from aj_crew.secrets import SecretVault
 
         vault = SecretVault(tmp_path)
         vault._set_sync("JIRA_TOKEN_9f8e", "tok-123")
@@ -225,8 +225,8 @@ class TestResolveSecretUris:
         internally) to prove the spawn path does not re-read the store and
         key file per reference.
         """
-        from kiro_crew.secrets import SecretVault
-        from kiro_crew.secrets.vault import SecretVault as VaultClass
+        from aj_crew.secrets import SecretVault
+        from aj_crew.secrets.vault import SecretVault as VaultClass
 
         vault = SecretVault(tmp_path)
         vault._set_sync("S1", "v1")
@@ -271,7 +271,7 @@ class TestResolveSecretUris:
         self, empty_vault_dir: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Pass-through-only env never constructs a vault read."""
-        from kiro_crew.secrets.vault import SecretVault as VaultClass
+        from aj_crew.secrets.vault import SecretVault as VaultClass
 
         def boom(self):  # type: ignore[no-untyped-def]
             raise AssertionError("vault must not be read when there are no refs")
@@ -320,14 +320,14 @@ class TestSecretUriPrefixConstant:
     """Single-source-of-truth for the ``secret://`` scheme prefix.
 
     ``SECRET_URI_PREFIX`` is defined once in
-    ``kiro_crew.mcp_gateway.secret_uri`` and imported by
-    ``kiro_crew.secrets.migrate``.  These tests pin that relationship so the
+    ``aj_crew.mcp_gateway.secret_uri`` and imported by
+    ``aj_crew.secrets.migrate``.  These tests pin that relationship so the
     writer (migrate) and the reader (secret_uri) cannot drift.
     """
 
     def test_prefix_value(self) -> None:
         """SECRET_URI_PREFIX equals the expected scheme string."""
-        from kiro_crew.mcp_gateway.secret_uri import SECRET_URI_PREFIX
+        from aj_crew.mcp_gateway.secret_uri import SECRET_URI_PREFIX
 
         assert SECRET_URI_PREFIX == "secret://"
 
@@ -339,7 +339,7 @@ class TestSecretUriPrefixConstant:
         If the import is ever severed and the literal is re-inlined in
         migrate.py, ``is`` fails even though ``==`` would still pass.
         """
-        import kiro_crew.secrets.migrate as _migrate_mod
-        from kiro_crew.mcp_gateway.secret_uri import SECRET_URI_PREFIX
+        import aj_crew.secrets.migrate as _migrate_mod
+        from aj_crew.mcp_gateway.secret_uri import SECRET_URI_PREFIX
 
         assert _migrate_mod._SECRET_URI_PREFIX is SECRET_URI_PREFIX

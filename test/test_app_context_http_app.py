@@ -13,10 +13,10 @@ from pathlib import Path
 import pytest
 from aiohttp import web
 
-from kiro_crew.apps import hooks_integration as hooks_mod
-from kiro_crew.apps.context import build_app_context
-from kiro_crew.apps.lifecycle import LifecycleDispatcher
-from kiro_crew.apps.route_registry import RouteRegistry
+from aj_crew.apps import hooks_integration as hooks_mod
+from aj_crew.apps.context import build_app_context
+from aj_crew.apps.lifecycle import LifecycleDispatcher
+from aj_crew.apps.route_registry import RouteRegistry
 
 
 def _app_info(name: str, hooks: dict[str, str]) -> dict:
@@ -35,7 +35,7 @@ def _app_info(name: str, hooks: dict[str, str]) -> dict:
 @pytest.fixture
 def wired(tmp_path, monkeypatch):
     """A registry on a real Application, with the apps tree under tmp_path."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     gateway_app = web.Application()
     registry = RouteRegistry(gateway_app)
     monkeypatch.setattr(hooks_mod, "_route_registry", registry)
@@ -88,7 +88,7 @@ def test_an_empty_routes_hook_is_not_a_declaration(wired):
 
 def test_no_registry_means_no_handle(tmp_path, monkeypatch):
     """Before the registry is wired there is nothing to hand out, and no crash."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setattr(hooks_mod, "_route_registry", None)
     ctx = hooks_mod._build_app_context_from_info(
         _app_info("early", {"routes": "app.hooks:register_routes"})
@@ -122,10 +122,10 @@ async def test_the_handle_is_the_same_object_a_route_handler_would_see(tmp_path,
     """
     from aiohttp.test_utils import TestClient, TestServer
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     # Same allowance the other hook tests make: loading an app's Python is gated
     # on operator trust, which is not the property under test here.
-    monkeypatch.setattr("kiro_crew.apps.execution.third_party_execution_allowed", lambda: True)
+    monkeypatch.setattr("aj_crew.apps.execution.third_party_execution_allowed", lambda: True)
     gateway_app = web.Application()
     registry = RouteRegistry(gateway_app)
     monkeypatch.setattr(hooks_mod, "_route_registry", registry)
@@ -135,7 +135,7 @@ async def test_the_handle_is_the_same_object_a_route_handler_would_see(tmp_path,
     (app_root / "app" / "__init__.py").write_text("", encoding="utf-8")
     (app_root / "app" / "hooks.py").write_text(
         "from aiohttp import web\n"
-        "from kiro_crew.apps.route_registry import AppRoute\n"
+        "from aj_crew.apps.route_registry import AppRoute\n"
         "\n"
         "\n"
         "async def _ping(request, context):\n"
@@ -203,7 +203,7 @@ class TestTheTwoBuildersAgree:
     """
 
     def test_a_shutdown_context_carries_the_handle(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         gateway_app = web.Application()
         dispatcher = LifecycleDispatcher(http_app=gateway_app)
         ctx = dispatcher._build_context(
@@ -218,7 +218,7 @@ class TestTheTwoBuildersAgree:
         Supplying the Application to the dispatcher would be an easy way to hand
         it to every app; the gate has to apply on this path too.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         dispatcher = LifecycleDispatcher(http_app=web.Application())
         ctx = dispatcher._build_context(
             _app_info("lifecycle-only", {"on_startup": "app.hooks:on_startup"}),
@@ -227,7 +227,7 @@ class TestTheTwoBuildersAgree:
         assert ctx.http_app is None
 
     def test_a_dispatcher_without_the_application_yields_none(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         dispatcher = LifecycleDispatcher()
         ctx = dispatcher._build_context(
             _app_info("with-routes", {"routes": "app.hooks:register_routes"}),
@@ -259,7 +259,7 @@ class TestTheTwoBuildersAgree:
         one case, because the defect this guards is a DIVERGENCE: either builder
         could be changed alone and only a comparison catches it.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         gateway_app = web.Application()
         monkeypatch.setattr(hooks_mod, "_route_registry", RouteRegistry(gateway_app))
         info = _app_info("either-way", hooks)
@@ -279,7 +279,7 @@ def test_the_gate_predicate_is_shared_not_copied():
     again, so the predicate is asserted to be importable and authoritative rather
     than left as a convention.
     """
-    from kiro_crew.apps.context import http_app_for_manifest
+    from aj_crew.apps.context import http_app_for_manifest
 
     gateway_app = web.Application()
     assert (
@@ -296,7 +296,7 @@ def test_the_live_wiring_feeds_both_builders_one_application(tmp_path, monkeypat
     The enable path reads ``_route_registry.http_app`` and the lifecycle path the
     dispatcher's field. Other tests seed both by hand, so only this checks the wiring.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setattr(hooks_mod, "_route_registry", None)
     monkeypatch.setattr(hooks_mod, "_lifecycle_dispatcher", None)
     gateway_app = web.Application()
@@ -328,9 +328,9 @@ class TestTeardownReadsTheEnableItIsTearingDown:
     @pytest.fixture(autouse=True)
     def _clean_caches(self, tmp_path, monkeypatch):
         """Both caches are process-global; a leaked entry would fake a pass here."""
-        from kiro_crew.apps.module_loader import clear_all_shutdown_callables
+        from aj_crew.apps.module_loader import clear_all_shutdown_callables
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         clear_all_shutdown_callables()
         yield
         clear_all_shutdown_callables()
@@ -392,7 +392,7 @@ class TestTeardownReadsTheEnableItIsTearingDown:
 
     def test_a_reload_invalidates_the_recorded_grant(self):
         """A record from enable v1 must not describe the app loaded by enable v2."""
-        from kiro_crew.apps.module_loader import cached_http_app_grant, unload_app_modules
+        from aj_crew.apps.module_loader import cached_http_app_grant, unload_app_modules
 
         gateway_app = web.Application()
         dispatcher = LifecycleDispatcher(http_app=gateway_app)
@@ -432,7 +432,7 @@ class TestTeardownReadsTheEnableItIsTearingDown:
         asserted rather than left to a comment, because dropping one of the two
         lines is exactly the drift this guards.
         """
-        from kiro_crew.apps.module_loader import (
+        from aj_crew.apps.module_loader import (
             cache_http_app_grant,
             cache_shutdown_callable,
             cached_http_app_grant,

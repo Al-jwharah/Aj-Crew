@@ -16,7 +16,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.handlers import source_providers as sp
+from aj_crew.dashboard.handlers import source_providers as sp
 
 _PR = "https://github.com/acme/repo/pull/12"
 

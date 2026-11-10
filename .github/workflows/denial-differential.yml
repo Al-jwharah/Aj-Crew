@@ -56,7 +56,7 @@ name: Denial Differential
 # own modules, and the child reaches them through PYTHONPATH at a materialized
 # checkout. Installing the package would add three platform-dependent minutes and
 # a resolution failure mode, and an editable install would put a SECOND copy of
-# `kiro_crew` on the path -- which the script's own tree check would then refuse.
+# `aj_crew` on the path -- which the script's own tree check would then refuse.
 #
 # Honest red, no continue-on-error: a failing leg shows as failing, and branch
 # protection decides whether that blocks a merge.
@@ -67,14 +67,14 @@ on:
     # is a draft, so leaving draft must start a fresh run on the same head.
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
-      - "src/kiro_crew/security/**"
-      - "src/kiro_crew/deny_guidance.py"
-      - "src/kiro_crew/platform/security_authority.py"
-      - "src/kiro_crew/hooks.py"
-      - "src/kiro_crew/hook_runtime/**"
-      - "src/kiro_crew/builtin_skills/security-conductor/rules-of-engagement.json"
+      - "src/aj_crew/security/**"
+      - "src/aj_crew/deny_guidance.py"
+      - "src/aj_crew/platform/security_authority.py"
+      - "src/aj_crew/hooks.py"
+      - "src/aj_crew/hook_runtime/**"
+      - "src/aj_crew/builtin_skills/security-conductor/rules-of-engagement.json"
       - "scripts/deny_diff.py"
-      - "src/kiro_crew/builtin_skills/security-conductor/golden-paths.json"
+      - "src/aj_crew/builtin_skills/security-conductor/golden-paths.json"
       - ".github/workflows/denial-differential.yml"
 
 permissions:
@@ -92,7 +92,7 @@ jobs:
     if: github.event.pull_request.draft != true
     # Keep matrix.os stable: the job name uses it, so the rendered check names
     # do not change. In THIS repository the Linux and Windows legs take the
-    # `kirocrew-linux-4-core` / `kirocrew-windows-4-core` larger-runner groups
+    # `ajcrew-linux-4-core` / `ajcrew-windows-4-core` larger-runner groups
     # instead of the shared standard pool, whose concurrency is shared
     # enterprise-wide. Targeted by LABEL, not `group:`: a group belongs to the
     # kirodotdev organization, so a fork running this workflow in its own
@@ -102,7 +102,7 @@ jobs:
     # stays hosted: see "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md for why its definition is not a like-for-like
     # swap.
-    runs-on: ${{ matrix.os == 'ubuntu-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest') || matrix.os == 'windows-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-windows-4-core' || 'windows-latest') || matrix.os }}
+    runs-on: ${{ matrix.os == 'ubuntu-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest') || matrix.os == 'windows-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-windows-4-core' || 'windows-latest') || matrix.os }}
     timeout-minutes: 15
     strategy:
       max-parallel: 4
@@ -146,7 +146,7 @@ jobs:
           # of two that can disagree. It stays a named line rather than a lookup: a
           # gate that switched contracts the moment another file appeared would hand
           # coverage over with nobody's PR showing the handover.
-          corpus_path="src/kiro_crew/builtin_skills/security-conductor/golden-paths.json"
+          corpus_path="src/aj_crew/builtin_skills/security-conductor/golden-paths.json"
 
           # Read out of the BASE tree: the corpus is the contract being judged and
           # must not be editable by the change under judgement.

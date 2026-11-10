@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-from kiro_crew.cron import _AUTO_PAUSE_THRESHOLD, CronJob, CronSchedule, CronService, _RunClaim
+from aj_crew.cron import _AUTO_PAUSE_THRESHOLD, CronJob, CronSchedule, CronService, _RunClaim
 
 
 class TestRecordFailureSuccess:
@@ -56,7 +56,7 @@ class TestRecordFailureSuccess:
             schedule=CronSchedule(kind="every", every_secs=60),
             script="x.py:run",
         )
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             for _ in range(_AUTO_PAUSE_THRESHOLD):
                 job.record_failure()
             # Extra failures past the threshold must NOT re-audit (already paused).

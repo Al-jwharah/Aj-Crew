@@ -1,4 +1,4 @@
-"""``kirocrew.session.started`` carries ``session_kind`` and ``trigger_source``.
+"""``ajcrew.session.started`` carries ``session_kind`` and ``trigger_source``.
 
 ``session_kind`` is a rollup of ``session_source`` and so adds no series.
 ``trigger_source`` says who caused the session to open: the key decides it for a
@@ -15,10 +15,10 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.metrics import sessions as sess
-from kiro_crew.metrics import usage_attrs as ua
+from aj_crew.metrics import sessions as sess
+from aj_crew.metrics import usage_attrs as ua
 
-SRC = pathlib.Path(__file__).resolve().parents[2] / "src" / "kiro_crew"
+SRC = pathlib.Path(__file__).resolve().parents[2] / "src" / "aj_crew"
 
 
 class _Rec:
@@ -50,7 +50,7 @@ def _start(key, *, trigger=None, running=None):
             ua.set_current_trigger(running)
         await sess.record_session_started(key, None, trigger=trigger)
 
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=rec):
         asyncio.run(_go())
     (c,) = [c for c in rec.counters if c["name"] == sess.SESSION_STARTED_COUNTER]
     return c["attrs"]

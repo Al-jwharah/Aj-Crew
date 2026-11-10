@@ -1,6 +1,6 @@
 """A data-home read the sandbox denies ends one doctor section, not the report.
 
-Run from an agent's shell, ``kirocrew doctor`` sits inside the agent sandbox, which
+Run from an agent's shell, ``ajcrew doctor`` sits inside the agent sandbox, which
 hides part of the data home on purpose (the task store among it). A section whose
 read is denied must report that one row and let every later section run, and an
 unreadable data home seen from an unconfined shell must still count as an issue.
@@ -16,8 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_doctor
-from kiro_crew.doctor_checks import confinement, render
+from aj_crew import cli_doctor
+from aj_crew.doctor_checks import confinement, render
 
 
 def _denied(path: str = "/data/op/.kiro/crew/tasks/tasks.db") -> PermissionError:
@@ -38,7 +38,7 @@ def test_a_denied_read_inside_the_sandbox_is_a_skip_not_an_issue(capsys) -> None
         "  task store: ⏭  skipped — '/data/op/.kiro/crew/tasks/tasks.db' is not "
         "readable from this shell\n"
     )
-    assert "Run `kirocrew doctor` from your own" in out
+    assert "Run `ajcrew doctor` from your own" in out
     assert issues == []
 
 
@@ -111,7 +111,7 @@ def test_a_section_that_reads_fine_prints_only_its_own_rows(capsys) -> None:
 
 
 def test_a_masked_task_store_no_longer_ends_the_report(tmp_path, monkeypatch, capsys) -> None:
-    import kiro_crew.config.paths as paths
+    import aj_crew.config.paths as paths
 
     monkeypatch.setattr(paths, "data_home", lambda: tmp_path)
     (tmp_path / "tasks").mkdir()

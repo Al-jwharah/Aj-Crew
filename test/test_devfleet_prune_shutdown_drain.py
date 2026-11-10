@@ -36,9 +36,9 @@ import asyncio
 
 import pytest
 
-import kiro_crew.apps.builtins.dev_fleet.server as mod
-from kiro_crew.apps.builtins.dev_fleet import live, repository, runtime, worktree_ops
-from kiro_crew.testing.wait import await_until
+import aj_crew.apps.builtins.dev_fleet.server as mod
+from aj_crew.apps.builtins.dev_fleet import live, repository, runtime, worktree_ops
+from aj_crew.testing.wait import await_until
 
 
 @pytest.fixture(autouse=True)

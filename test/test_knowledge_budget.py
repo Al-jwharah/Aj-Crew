@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config.loader import KnowledgeConfig
+from aj_crew.config.loader import KnowledgeConfig
 
 # Config defaults
 
@@ -50,7 +50,7 @@ class TestKnowledgeConfigBudgetDefaults:
 
 class TestEmbedRateLimiter:
     def test_zero_rate_is_noop(self):
-        from kiro_crew.knowledge.ingestion import EmbedRateLimiter
+        from aj_crew.knowledge.ingestion import EmbedRateLimiter
         limiter = EmbedRateLimiter(rate_limit=0)
         refill_before = limiter._last_refill
         asyncio.run(limiter.acquire())
@@ -59,7 +59,7 @@ class TestEmbedRateLimiter:
         assert limiter._tokens == 0.0
 
     def test_high_rate_does_not_block(self):
-        from kiro_crew.knowledge.ingestion import EmbedRateLimiter
+        from aj_crew.knowledge.ingestion import EmbedRateLimiter
         limiter = EmbedRateLimiter(rate_limit=10000)
         tokens_before = limiter._tokens
         # "Does not block" means the sleeping slow path is never reached:
@@ -70,7 +70,7 @@ class TestEmbedRateLimiter:
         # block; asyncio.run() internals never call asyncio.sleep, and the
         # patch is reverted on exit.
         fake_sleep = AsyncMock()
-        with patch("kiro_crew.knowledge.ingestion.asyncio.sleep", fake_sleep):
+        with patch("aj_crew.knowledge.ingestion.asyncio.sleep", fake_sleep):
             asyncio.run(limiter.acquire())
         fake_sleep.assert_not_awaited()
         # The fast path must still consume exactly one token, proving
@@ -82,8 +82,8 @@ class TestEmbedRateLimiter:
         refill, not all at once after the first wait."""
         from types import SimpleNamespace
 
-        import kiro_crew.knowledge.ingestion as ing_mod
-        from kiro_crew.knowledge.ingestion import EmbedRateLimiter
+        import aj_crew.knowledge.ingestion as ing_mod
+        from aj_crew.knowledge.ingestion import EmbedRateLimiter
 
         # A fake clock and a fake sleep that only the driver below wakes, at
         # the earliest deadline, so the waiters' sleeps overlap as real ones do.
@@ -112,7 +112,7 @@ class TestEmbedRateLimiter:
                 limiter = EmbedRateLimiter(rate_limit=60)  # one token per second
                 limiter._tokens = 0.0
                 with patch(
-                    "kiro_crew.knowledge.ingestion.asyncio.sleep",
+                    "aj_crew.knowledge.ingestion.asyncio.sleep",
                     fake_sleep,  # flake-ok: a driver-woken future, no wall clock is read
                 ):
                     tasks = [asyncio.ensure_future(one(limiter)) for _ in range(5)]
@@ -136,17 +136,17 @@ class TestEmbedRateLimiter:
         assert sorted(times) == [1.0, 2.0, 3.0, 4.0, 5.0]
 
     def test_rate_limit_setter_resets_bucket(self):
-        from kiro_crew.knowledge.ingestion import EmbedRateLimiter
+        from aj_crew.knowledge.ingestion import EmbedRateLimiter
         limiter = EmbedRateLimiter(rate_limit=1)
         limiter.rate_limit = 10000
         assert limiter.rate_limit == 10000
 
     def test_get_embed_rate_limiter_reads_config(self):
-        import kiro_crew.knowledge.ingestion as ing_mod
-        from kiro_crew.knowledge.ingestion import get_embed_rate_limiter
+        import aj_crew.knowledge.ingestion as ing_mod
+        from aj_crew.knowledge.ingestion import get_embed_rate_limiter
 
         ing_mod._embed_rate_limiter = None
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load") as mock_load:
+        with patch("aj_crew.config.loader.AjCrewConfig.load") as mock_load:
             mock_load.return_value.knowledge.embed_rate_limit = 200
             limiter = get_embed_rate_limiter()
             assert limiter.rate_limit == 200
@@ -157,14 +157,14 @@ class TestEmbedRateLimiter:
 
 class TestSweepChunkBudget:
     def test_sweep_budget_read_from_config(self):
-        from kiro_crew.knowledge.watcher import KnowledgeWatcher
-        with patch("kiro_crew.knowledge.watcher.KiroCrewConfig") as mock_cfg:
+        from aj_crew.knowledge.watcher import KnowledgeWatcher
+        with patch("aj_crew.knowledge.watcher.AjCrewConfig") as mock_cfg:
             mock_cfg.load.return_value.knowledge.sweep_chunk_budget = 1000
             assert KnowledgeWatcher._sweep_chunk_budget() == 1000
 
     def test_sweep_budget_zero_means_unbounded(self):
-        from kiro_crew.knowledge.watcher import KnowledgeWatcher
-        with patch("kiro_crew.knowledge.watcher.KiroCrewConfig") as mock_cfg:
+        from aj_crew.knowledge.watcher import KnowledgeWatcher
+        with patch("aj_crew.knowledge.watcher.AjCrewConfig") as mock_cfg:
             mock_cfg.load.return_value.knowledge.sweep_chunk_budget = 0
             assert KnowledgeWatcher._sweep_chunk_budget() == 0
 
@@ -186,7 +186,7 @@ def _single_file_watcher(store, budget: int, chunks_per_file: int = 1, commit: b
     the LLM calls were spent but the pipeline rolled the write back and never
     invoked ``on_committed``.
     """
-    from kiro_crew.knowledge.watcher import KnowledgeWatcher
+    from aj_crew.knowledge.watcher import KnowledgeWatcher
 
     pipeline = MagicMock()
     pipeline.embedder = None
@@ -242,7 +242,7 @@ def _props_of(store, sid: str) -> dict:
 class TestSingleFileSweepBudget:
     @pytest.fixture()
     def store(self, tmp_path):
-        from kiro_crew.knowledge.store import KnowledgeStore
+        from aj_crew.knowledge.store import KnowledgeStore
 
         s = KnowledgeStore(str(tmp_path / "knowledge.db"))
         yield s
@@ -534,21 +534,21 @@ class TestSingleFileSweepBudget:
 
 class TestPoolSizeConfig:
     def test_default_pool_size(self):
-        from kiro_crew.knowledge.llm_pool import DEFAULT_POOL_SIZE, _get_pool_size
+        from aj_crew.knowledge.llm_pool import DEFAULT_POOL_SIZE, _get_pool_size
         assert _get_pool_size({}) == DEFAULT_POOL_SIZE
 
     def test_configured_pool_size(self):
-        from kiro_crew.knowledge.llm_pool import _get_pool_size
+        from aj_crew.knowledge.llm_pool import _get_pool_size
         config = {"knowledge": {"extraction_pool_size": 5}}
         assert _get_pool_size(config) == 5
 
     def test_pool_size_clamped_to_max_10(self):
-        from kiro_crew.knowledge.llm_pool import DEFAULT_POOL_SIZE, _get_pool_size
+        from aj_crew.knowledge.llm_pool import DEFAULT_POOL_SIZE, _get_pool_size
         config = {"knowledge": {"extraction_pool_size": 99}}
         assert _get_pool_size(config) == DEFAULT_POOL_SIZE
 
     def test_pool_size_clamped_to_min_1(self):
-        from kiro_crew.knowledge.llm_pool import DEFAULT_POOL_SIZE, _get_pool_size
+        from aj_crew.knowledge.llm_pool import DEFAULT_POOL_SIZE, _get_pool_size
         config = {"knowledge": {"extraction_pool_size": 0}}
         assert _get_pool_size(config) == DEFAULT_POOL_SIZE
 
@@ -558,26 +558,26 @@ class TestPoolSizeConfig:
 class TestExtractionModelResolution:
     def test_empty_extraction_model_uses_agent_model(self):
         """When extraction_model is empty, _install_knowledge_agent uses agent.model."""
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load") as mock_load:
+        with patch("aj_crew.config.loader.AjCrewConfig.load") as mock_load:
             mock_load.return_value.knowledge.extraction_model = ""
             mock_load.return_value.agent.model = "claude-sonnet-4.5"
-            with patch("kiro_crew.agent._atomic_json_write") as mock_write:
-                with patch("kiro_crew.agent.kiro_agents_dir_path") as mock_path:
+            with patch("aj_crew.agent._atomic_json_write") as mock_write:
+                with patch("aj_crew.agent.kiro_agents_dir_path") as mock_path:
                     mock_path.return_value = Path("/tmp/agents")
-                    from kiro_crew.agent import _install_knowledge_agent
+                    from aj_crew.agent import _install_knowledge_agent
                     _install_knowledge_agent()
                     written = mock_write.call_args[0][1]
                     assert written["model"] == "claude-sonnet-4.5"
 
     def test_explicit_extraction_model_overrides(self):
         """When extraction_model is set, it overrides agent.model."""
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load") as mock_load:
+        with patch("aj_crew.config.loader.AjCrewConfig.load") as mock_load:
             mock_load.return_value.knowledge.extraction_model = "claude-haiku-4.5"
             mock_load.return_value.agent.model = "claude-sonnet-4.5"
-            with patch("kiro_crew.agent._atomic_json_write") as mock_write:
-                with patch("kiro_crew.agent.kiro_agents_dir_path") as mock_path:
+            with patch("aj_crew.agent._atomic_json_write") as mock_write:
+                with patch("aj_crew.agent.kiro_agents_dir_path") as mock_path:
                     mock_path.return_value = Path("/tmp/agents")
-                    from kiro_crew.agent import _install_knowledge_agent
+                    from aj_crew.agent import _install_knowledge_agent
                     _install_knowledge_agent()
                     written = mock_write.call_args[0][1]
                     assert written["model"] == "claude-haiku-4.5"
@@ -611,23 +611,23 @@ class TestImportChunkBudgetConfig:
         import json
         import unittest.mock
 
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.config.sections import IMPORT_CHUNK_BUDGET_MAX
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.config.sections import IMPORT_CHUNK_BUDGET_MAX
 
         (tmp_path / "config.json").write_text(
             json.dumps({"knowledge": {"import_chunk_budget": IMPORT_CHUNK_BUDGET_MAX * 100}}),
             encoding="utf-8",
         )
         with unittest.mock.patch(
-            "kiro_crew.config.loader.config_dir", return_value=tmp_path
+            "aj_crew.config.loader.config_dir", return_value=tmp_path
         ):
-            cfg = KiroCrewConfig.load()
+            cfg = AjCrewConfig.load()
         assert cfg.knowledge.import_chunk_budget == IMPORT_CHUNK_BUDGET_MAX
 
 
 class TestImportChunkBudgetLimiter:
     def test_zero_budget_never_refuses(self):
-        from kiro_crew.knowledge.ingestion import ImportChunkBudget
+        from aj_crew.knowledge.ingestion import ImportChunkBudget
 
         b = ImportChunkBudget(budget=0)
         # Disabled: reserve returns None (no token) and never raises.
@@ -636,8 +636,8 @@ class TestImportChunkBudgetLimiter:
         b.release(None)  # no-op
 
     def test_reserve_refuses_once_window_reaches_budget(self):
-        import kiro_crew.knowledge.ingestion as ing
-        from kiro_crew.knowledge.ingestion import ImportChunkBudget, ImportChunkBudgetError
+        import aj_crew.knowledge.ingestion as ing
+        from aj_crew.knowledge.ingestion import ImportChunkBudget, ImportChunkBudgetError
 
         now = [1000.0]
         with patch.object(ing._time, "monotonic", lambda: now[0]):
@@ -661,8 +661,8 @@ class TestImportChunkBudgetLimiter:
         # time, before settle(), so simultaneous imports see each other. With a
         # budget of 50 and the per-file placeholder of 50, the first reserve books
         # 50 and the second is refused -- N concurrent imports cannot each pass.
-        import kiro_crew.knowledge.ingestion as ing
-        from kiro_crew.knowledge.ingestion import ImportChunkBudget, ImportChunkBudgetError
+        import aj_crew.knowledge.ingestion as ing
+        from aj_crew.knowledge.ingestion import ImportChunkBudget, ImportChunkBudgetError
 
         now = [1000.0]
         with patch.object(ing._time, "monotonic", lambda: now[0]):
@@ -678,8 +678,8 @@ class TestImportChunkBudgetLimiter:
             assert not overran, "a second concurrent reserve must not pass before the first settles"
 
     def test_release_frees_a_failed_reservation(self):
-        import kiro_crew.knowledge.ingestion as ing
-        from kiro_crew.knowledge.ingestion import ImportChunkBudget
+        import aj_crew.knowledge.ingestion as ing
+        from aj_crew.knowledge.ingestion import ImportChunkBudget
 
         now = [1000.0]
         with patch.object(ing._time, "monotonic", lambda: now[0]):
@@ -694,8 +694,8 @@ class TestImportChunkBudgetLimiter:
         # work, so they never settle. A finally-release must reclaim the
         # placeholder or ten no-op re-ingests would strand 10x50=500 chunks and
         # falsely refuse genuine imports at the default budget.
-        import kiro_crew.knowledge.ingestion as ing
-        from kiro_crew.knowledge.ingestion import ImportChunkBudget
+        import aj_crew.knowledge.ingestion as ing
+        from aj_crew.knowledge.ingestion import ImportChunkBudget
 
         now = [1000.0]
         with patch.object(ing._time, "monotonic", lambda: now[0]):
@@ -709,8 +709,8 @@ class TestImportChunkBudgetLimiter:
     def test_release_is_noop_after_settle_no_double_count(self):
         # settle() consumes the token; a following release() (from the wrapper's
         # finally) must NOT drop the settled real count.
-        import kiro_crew.knowledge.ingestion as ing
-        from kiro_crew.knowledge.ingestion import ImportChunkBudget, ImportChunkBudgetError
+        import aj_crew.knowledge.ingestion as ing
+        from aj_crew.knowledge.ingestion import ImportChunkBudget, ImportChunkBudgetError
 
         now = [1000.0]
         with patch.object(ing._time, "monotonic", lambda: now[0]):
@@ -727,8 +727,8 @@ class TestImportChunkBudgetLimiter:
             assert refused, "release after settle must not drop the settled count"
 
     def test_window_rolls_over_and_reopens(self):
-        import kiro_crew.knowledge.ingestion as ing
-        from kiro_crew.knowledge.ingestion import ImportChunkBudget
+        import aj_crew.knowledge.ingestion as ing
+        from aj_crew.knowledge.ingestion import ImportChunkBudget
 
         now = [1000.0]
         with patch.object(ing._time, "monotonic", lambda: now[0]):
@@ -751,8 +751,8 @@ class TestImportChunkBudgetLimiter:
         # A file slower than the window keeps its slot until it settles. If
         # pruning expired a live reservation, a concurrent import would be
         # admitted past the very concurrency ceiling the placeholder enforces.
-        import kiro_crew.knowledge.ingestion as ing
-        from kiro_crew.knowledge.ingestion import ImportChunkBudget, ImportChunkBudgetError
+        import aj_crew.knowledge.ingestion as ing
+        from aj_crew.knowledge.ingestion import ImportChunkBudget, ImportChunkBudgetError
 
         now = [1000.0]
         with patch.object(ing._time, "monotonic", lambda: now[0]):
@@ -771,7 +771,7 @@ class TestImportChunkBudgetLimiter:
             assert b.reserve() is not None
 
     def test_error_message_is_ascii_and_actionable(self):
-        from kiro_crew.knowledge.ingestion import ImportChunkBudgetError
+        from aj_crew.knowledge.ingestion import ImportChunkBudgetError
 
         msg = str(ImportChunkBudgetError(budget=50, window_secs=60.0, spent=60))
         assert msg.isascii()
@@ -784,7 +784,7 @@ class TestImportBudgetPipelineGate:
     def _pipeline(self):
         from unittest.mock import MagicMock
 
-        from kiro_crew.knowledge.ingestion import IngestionPipeline
+        from aj_crew.knowledge.ingestion import IngestionPipeline
 
         return IngestionPipeline(
             store=MagicMock(), extractor=MagicMock(), chunker=MagicMock(),
@@ -794,10 +794,10 @@ class TestImportBudgetPipelineGate:
     def test_enter_budget_refuses_explicit_call_when_exhausted(self):
         import asyncio
 
-        from kiro_crew.knowledge.ingestion import ImportChunkBudgetError
+        from aj_crew.knowledge.ingestion import ImportChunkBudgetError
 
         p = self._pipeline()
-        with patch("kiro_crew.knowledge.ingestion._import_chunk_budget", return_value=50):
+        with patch("aj_crew.knowledge.ingestion._import_chunk_budget", return_value=50):
             p._import_budget.set_budget(50)
             t = p._import_budget.reserve()   # book 50 -> at budget
             assert t is not None
@@ -812,7 +812,7 @@ class TestImportBudgetPipelineGate:
         import asyncio
 
         p = self._pipeline()
-        with patch("kiro_crew.knowledge.ingestion._import_chunk_budget", return_value=50):
+        with patch("aj_crew.knowledge.ingestion._import_chunk_budget", return_value=50):
             p._import_budget.set_budget(50)
             p._import_budget.reserve()  # exhaust
             # count_toward_import_budget=False (watcher/artifact-sync) must not gate.
@@ -823,7 +823,7 @@ class TestImportBudgetPipelineGate:
         import asyncio
 
         p = self._pipeline()
-        with patch("kiro_crew.knowledge.ingestion._import_chunk_budget", return_value=500):
+        with patch("aj_crew.knowledge.ingestion._import_chunk_budget", return_value=500):
             token = asyncio.run(p._enter_import_budget(count_toward_import_budget=True))
         assert token is not None  # a reservation to settle/release later
 
@@ -831,7 +831,7 @@ class TestImportBudgetPipelineGate:
         import asyncio
 
         p = self._pipeline()
-        with patch("kiro_crew.knowledge.ingestion._import_chunk_budget", return_value=0):
+        with patch("aj_crew.knowledge.ingestion._import_chunk_budget", return_value=0):
             token = asyncio.run(p._enter_import_budget(count_toward_import_budget=True))
         assert token is None  # disabled -> nothing to settle
 
@@ -843,9 +843,9 @@ class TestRemoteSyncSurfacesDeferral:
         import asyncio
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.knowledge.ingestion import ImportChunkBudgetError
-        from kiro_crew.knowledge.store import KnowledgeStore
-        from kiro_crew.knowledge.sync import SyncScheduler
+        from aj_crew.knowledge.ingestion import ImportChunkBudgetError
+        from aj_crew.knowledge.store import KnowledgeStore
+        from aj_crew.knowledge.sync import SyncScheduler
 
         store = KnowledgeStore(str(tmp_path / "sync.db"))
         try:
@@ -932,8 +932,8 @@ class TestBackgroundDeferralStaysRetryable:
     def test_local_file_ingest_defers_to_pending(self, tmp_path):
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.handlers import knowledge as kh
-        from kiro_crew.knowledge.ingestion import ImportChunkBudgetError
+        from aj_crew.dashboard.handlers import knowledge as kh
+        from aj_crew.knowledge.ingestion import ImportChunkBudgetError
 
         doc = tmp_path / "doc.md"
         doc.write_text("body", encoding="utf-8")
@@ -948,9 +948,9 @@ class TestBackgroundDeferralStaysRetryable:
     def test_a_deferred_row_says_why_until_a_reasonless_pending_write(self, tmp_path, monkeypatch):
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.handlers import knowledge as kh
-        from kiro_crew.knowledge.ingestion import ImportChunkBudgetError
-        from kiro_crew.knowledge.store import KnowledgeStore
+        from aj_crew.dashboard.handlers import knowledge as kh
+        from aj_crew.knowledge.ingestion import ImportChunkBudgetError
+        from aj_crew.knowledge.store import KnowledgeStore
 
         doc = tmp_path / "doc.md"
         doc.write_text("body", encoding="utf-8")
@@ -982,10 +982,10 @@ class TestBackgroundDeferralStaysRetryable:
     def test_web_page_deferral_says_why(self, tmp_path, monkeypatch):
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.handlers import knowledge as kh
-        from kiro_crew.knowledge.ingestion import ImportChunkBudgetError
-        from kiro_crew.knowledge.store import KnowledgeStore
-        from kiro_crew.knowledge.url_fetch import FetchedPage
+        from aj_crew.dashboard.handlers import knowledge as kh
+        from aj_crew.knowledge.ingestion import ImportChunkBudgetError
+        from aj_crew.knowledge.store import KnowledgeStore
+        from aj_crew.knowledge.url_fetch import FetchedPage
 
         monkeypatch.setattr("tempfile.tempdir", str(tmp_path))
         monkeypatch.setattr(kh, "_doc_ingest_hosts", lambda: ["example.com"])
@@ -1009,9 +1009,9 @@ class TestBackgroundDeferralStaysRetryable:
     def test_research_findings_deferral_says_why(self, tmp_path):
         from types import SimpleNamespace
 
-        from kiro_crew.apps.builtins.auto_research.campaign import publication
-        from kiro_crew.knowledge.ingestion import ImportChunkBudgetError
-        from kiro_crew.knowledge.store import KnowledgeStore
+        from aj_crew.apps.builtins.auto_research.campaign import publication
+        from aj_crew.knowledge.ingestion import ImportChunkBudgetError
+        from aj_crew.knowledge.store import KnowledgeStore
 
         findings = str(tmp_path / "findings.md")
         store = KnowledgeStore(str(tmp_path / "k.db"))
@@ -1030,7 +1030,7 @@ class TestBackgroundDeferralStaysRetryable:
             store.close()
 
     def test_a_bundle_import_does_not_carry_the_reason(self, tmp_path):
-        from kiro_crew.knowledge.store import KnowledgeStore
+        from aj_crew.knowledge.store import KnowledgeStore
 
         exporter = KnowledgeStore(str(tmp_path / "exporter.db"))
         importer = KnowledgeStore(str(tmp_path / "importer.db"))
@@ -1058,7 +1058,7 @@ class TestBackgroundDeferralStaysRetryable:
     def test_local_file_ingest_still_errors_on_a_real_failure(self, tmp_path):
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.handlers import knowledge as kh
+        from aj_crew.dashboard.handlers import knowledge as kh
 
         doc = tmp_path / "doc.md"
         doc.write_text("body", encoding="utf-8")
@@ -1085,7 +1085,7 @@ class TestUploadRefusesBeforeAccepting:
     def _pipeline():
         from unittest.mock import MagicMock
 
-        from kiro_crew.knowledge.ingestion import IngestionPipeline
+        from aj_crew.knowledge.ingestion import IngestionPipeline
 
         return IngestionPipeline(
             store=MagicMock(), extractor=MagicMock(), chunker=MagicMock(),
@@ -1093,10 +1093,10 @@ class TestUploadRefusesBeforeAccepting:
         )
 
     def test_reserve_import_budget_raises_when_the_window_is_exhausted(self):
-        from kiro_crew.knowledge.ingestion import ImportChunkBudgetError
+        from aj_crew.knowledge.ingestion import ImportChunkBudgetError
 
         p = self._pipeline()
-        with patch("kiro_crew.knowledge.ingestion._import_chunk_budget", return_value=50):
+        with patch("aj_crew.knowledge.ingestion._import_chunk_budget", return_value=50):
             p._import_budget.set_budget(50)
             p._import_budget.reserve()          # exhaust the window
             try:
@@ -1108,12 +1108,12 @@ class TestUploadRefusesBeforeAccepting:
 
     def test_reserve_import_budget_returns_none_when_disabled(self):
         p = self._pipeline()
-        with patch("kiro_crew.knowledge.ingestion._import_chunk_budget", return_value=0):
+        with patch("aj_crew.knowledge.ingestion._import_chunk_budget", return_value=0):
             assert asyncio.run(p.reserve_import_budget()) is None
 
     def test_a_handed_over_token_settles_without_booking_a_second_entry(self):
         """`ingest_file` consumes the caller's token rather than booking another."""
-        from kiro_crew.knowledge.ingestion import ImportChunkBudget
+        from aj_crew.knowledge.ingestion import ImportChunkBudget
 
         b = ImportChunkBudget(budget=50)
         token = b.reserve()                      # the route's own admission
@@ -1124,7 +1124,7 @@ class TestUploadRefusesBeforeAccepting:
 
     def test_release_import_budget_reclaims_an_unused_token(self):
         p = self._pipeline()
-        with patch("kiro_crew.knowledge.ingestion._import_chunk_budget", return_value=50):
+        with patch("aj_crew.knowledge.ingestion._import_chunk_budget", return_value=50):
             p._import_budget.set_budget(50)
             token = asyncio.run(p.reserve_import_budget())
             assert token is not None
@@ -1143,11 +1143,11 @@ class TestUploadRefusesBeforeAccepting:
         """
         from unittest.mock import AsyncMock
 
-        from kiro_crew.knowledge.ingestion import ImportChunkBudgetError
+        from aj_crew.knowledge.ingestion import ImportChunkBudgetError
 
         def run(flag, token):
             p = self._pipeline()
-            with patch("kiro_crew.knowledge.ingestion._import_chunk_budget", return_value=50):
+            with patch("aj_crew.knowledge.ingestion._import_chunk_budget", return_value=50):
                 p._import_budget.set_budget(50)
                 p._import_budget.reserve()          # exhaust the window
                 impl = AsyncMock(return_value="job")

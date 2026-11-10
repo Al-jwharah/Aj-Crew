@@ -1,6 +1,6 @@
 """The namespace launcher program, driven through its stages with a stand-in libc.
 
-``kiro_crew.sandbox_launcher_program`` is the program a sandboxed spawn runs first on
+``aj_crew.sandbox_launcher_program`` is the program a sandboxed spawn runs first on
 Linux. This test process cannot create a user namespace (a nested ``unshare`` is
 seccomp-denied inside an agent sandbox), so the stages run in-process against real
 files under ``tmp_path`` with :class:`CoveringLibc` in place of libc: a bind of a fresh
@@ -32,7 +32,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import sandbox_launcher, sandbox_launcher_program, sandbox_plan
+from aj_crew import sandbox_launcher, sandbox_launcher_program, sandbox_plan
 
 try:
     import fcntl
@@ -54,7 +54,7 @@ _MS_REMOUNT = 32
 def payload(**overrides: Any) -> dict[str, Any]:
     """A launcher payload with nothing to mask, plus *overrides*.
 
-    The same keys :func:`kiro_crew.sandbox_plan.namespace_payload` emits, so a test
+    The same keys :func:`aj_crew.sandbox_plan.namespace_payload` emits, so a test
     states only the lists its case is about.
     """
     base: dict[str, Any] = {
@@ -95,7 +95,7 @@ def rendered_payload(script: str) -> dict[str, Any]:
     """The plan data a rendered launcher carries: its one ``_PLAN = {...}`` line.
 
     For a test that reads back the file ``namespace_argv`` wrote; a test that builds the
-    plan itself reads :class:`~kiro_crew.sandbox_plan.ConfinementPlan` fields instead.
+    plan itself reads :class:`~aj_crew.sandbox_plan.ConfinementPlan` fields instead.
     """
     lines = [line for line in script.splitlines() if line.startswith("_PLAN = {")]
     assert len(lines) == 1, "a rendered launcher carries exactly one plan line"
@@ -222,7 +222,7 @@ class CoveringLibc(RecordingLibc):
         if src in self.stages:
             os.rename(self._current(self.stages.pop(src)), tgt)
             return 0
-        if os.path.basename(tgt).startswith("kirocrew_sb_"):
+        if os.path.basename(tgt).startswith("ajcrew_sb_"):
             self.stages[tgt] = src  # a window staged: remember where its tree lives
             return 0
         assert self.aside_root is not None, "launch() sets the aside root"
@@ -248,7 +248,7 @@ def launch(
     libc: RecordingLibc | None = None,
     environ: dict[str, str] | None = None,
 ) -> program.Launch:
-    """A :class:`~kiro_crew.sandbox_launcher_program.Launch` whose stand-ins live in *tmp_path*.
+    """A :class:`~aj_crew.sandbox_launcher_program.Launch` whose stand-ins live in *tmp_path*.
 
     The stand-in root is set directly rather than chosen among ``/run/user`` and
     ``/dev/shm``, so every bind source shares a filesystem with the targets and
@@ -269,7 +269,7 @@ def launch(
         execvp=lambda file, args: execs.append([file, *args]),
     )
     run.tmpfs_src = str(stand_ins)
-    run.src_prefix = "kirocrew_sb_%d_" % os.getpid()
+    run.src_prefix = "ajcrew_sb_%d_" % os.getpid()
     run.execs = execs  # type: ignore[attr-defined]
     return run
 
@@ -358,7 +358,7 @@ def program_on_disk(package: Path | None = None) -> str:
 
     The facade above its end-of-program marker, with each part marker replaced by the text
     below that part's own marker: the program a spawn runs, before its plan. *package* is a
-    ``kiro_crew`` directory, the installed one by default.
+    ``aj_crew`` directory, the installed one by default.
     """
     root = Path(program.__file__).parent if package is None else package
     facade = (root / "sandbox_launcher_program.py").read_text(encoding="utf-8")
@@ -401,7 +401,7 @@ def _renderer_loaded_over(package: Path, monkeypatch: pytest.MonkeyPatch) -> Any
     """A private copy of the renderer module, imported while *package* is the package dir."""
     files = resources.files
     monkeypatch.setattr(
-        resources, "files", lambda name: package if name == "kiro_crew" else files(name)
+        resources, "files", lambda name: package if name == "aj_crew" else files(name)
     )
     spec = importlib.util.spec_from_file_location("renderer_under_test", sandbox_launcher.__file__)
     assert spec is not None and spec.loader is not None
@@ -411,8 +411,8 @@ def _renderer_loaded_over(package: Path, monkeypatch: pytest.MonkeyPatch) -> Any
 
 
 def _package_copy(tmp_path: Path) -> Path:
-    """A ``kiro_crew`` directory holding a copy of the program: its facade and every part."""
-    package = tmp_path / "kiro_crew"
+    """A ``aj_crew`` directory holding a copy of the program: its facade and every part."""
+    package = tmp_path / "aj_crew"
     (package / "sandbox_launcher_parts").mkdir(parents=True)
     installed = Path(program.__file__).parent
     shutil.copyfile(program.__file__, package / "sandbox_launcher_program.py")
@@ -469,7 +469,7 @@ def test_a_renderer_loaded_without_its_program_imports_and_refuses_every_render(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A package assembled without the program still imports: the spawn refuses instead."""
-    package = tmp_path / "kiro_crew"
+    package = tmp_path / "aj_crew"
     package.mkdir()
     renderer = _renderer_loaded_over(package, monkeypatch)
     with pytest.raises(RuntimeError, match="could not be read"):
@@ -596,7 +596,7 @@ def test_a_program_without_exactly_one_plan_placeholder_is_not_rendered(
     placeholders: int, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The plan has one place to go; a program with none or two refuses every spawn."""
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     body = program_on_disk().replace(sandbox_launcher.PLAN_PLACEHOLDER, "")
     monkeypatch.setattr(
@@ -662,7 +662,7 @@ def test_the_parent_maps_the_child_to_its_own_ids_and_exits_with_its_code(
         reaped.append(pid)
         return pid, status
 
-    monkeypatch.setenv("KIROCREW_HOST_PID", "0")
+    monkeypatch.setenv("AJCREW_HOST_PID", "0")
     monkeypatch.setattr(program.os, "pipe", _pipe)
     monkeypatch.setattr(program.os, "fork", lambda: _CHILD_PID)
     monkeypatch.setattr(program.os, "waitpid", _waitpid)
@@ -732,8 +732,8 @@ def test_a_child_run_masks_seals_carves_and_execs(tmp_path: Path) -> None:
     # The environment the agent inherits.
     assert run.environ["KEEP_ME"] == "1"
     assert "AWS_SECRET_ACCESS_KEY" not in run.environ and "SLACK_BOT_TOKEN" not in run.environ
-    assert run.environ["KIROCREW_SANDBOX_ACTIVE"] == "1"
-    assert run.environ["KIROCREW_SANDBOX_LEVEL"] == "strict"
+    assert run.environ["AJCREW_SANDBOX_ACTIVE"] == "1"
+    assert run.environ["AJCREW_SANDBOX_LEVEL"] == "strict"
     assert run.environ["GIT_SSH_COMMAND"] == (
         "ssh -F /dev/null -o IdentityFile=~/.ssh/id_rsa -o IdentityFile=~/.ssh/id_ecdsa"
         " -o IdentityFile=~/.ssh/id_ed25519 -o UserKnownHostsFile=~/.ssh/known_hosts"
@@ -901,7 +901,7 @@ def test_every_stand_in_carries_the_pid_prefix_the_janitor_reclaims(tmp_path: Pa
     staged = [s for s in sources if os.path.dirname(s) == run.tmpfs_src]
     assert staged, "no stand-in was created under the stand-in root"
     assert all(os.path.basename(s).startswith(run.src_prefix) for s in staged)
-    assert run.src_prefix == "kirocrew_sb_%d_" % os.getpid()
+    assert run.src_prefix == "ajcrew_sb_%d_" % os.getpid()
 
 
 #: Every mount a child run over :class:`_Home` makes, in order. The _Home tree's masks
@@ -1032,7 +1032,7 @@ class _ReplacedRoots:
         self._mkstemp = tempfile.mkstemp
 
     def _gate(self, prefix: str | None, where: str | None) -> None:
-        if prefix != "kirocrew_sbprobe_":
+        if prefix != "ajcrew_sbprobe_":
             self.creates += 1
         if where in self.roots and self.creates >= self.from_create:
             raise OSError(self.err, os.strerror(self.err), where)
@@ -1040,7 +1040,7 @@ class _ReplacedRoots:
     def mkdtemp(self, suffix=None, prefix=None, dir=None):  # noqa: ANN001, ANN201
         self._gate(prefix, dir)
         made = self._mkdtemp(suffix, prefix, dir)
-        if prefix != "kirocrew_sbprobe_":
+        if prefix != "ajcrew_sbprobe_":
             self.made_in.append(os.path.dirname(made))
         return made
 
@@ -1531,7 +1531,7 @@ def test_the_rendered_program_runs_isolated_with_no_site_packages(tmp_path: Path
     start on the standard library alone and refuse an empty command before forking."""
     import subprocess
 
-    script = tmp_path / "kirocrew_sandbox_probe.py"
+    script = tmp_path / "ajcrew_sandbox_probe.py"
     script.write_text(sandbox_launcher.render_namespace_launcher(_plan(tmp_path)), encoding="utf-8")
     done = subprocess.run(
         [sys.executable, "-I", "-S", str(script)],

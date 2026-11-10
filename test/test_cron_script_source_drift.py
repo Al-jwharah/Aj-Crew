@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import skills as skills_mod
-from kiro_crew.skills import (
+from aj_crew import skills as skills_mod
+from aj_crew.skills import (
     CRON_SOURCE_DIVERGED,
     CRON_SOURCE_IN_SYNC,
     CRON_SOURCE_UNVERIFIABLE,
@@ -69,7 +69,7 @@ class TestHopTwoVerification:
         inline body.
         """
         _ship_skill_script(
-            data_home, "kirocrew-dev/babysit", "pr_watch.py", "def watch(ctx):\n    pass\n"
+            data_home, "ajcrew-dev/babysit", "pr_watch.py", "def watch(ctx):\n    pass\n"
         )
         _deploy(data_home, "pr_watch.py", "def watch(ctx):\n    return None\n")
 
@@ -77,7 +77,7 @@ class TestHopTwoVerification:
 
     def test_identical_deploy_agrees(self, data_home: Path) -> None:
         body = "def watch(ctx):\n    pass\n"
-        _ship_skill_script(data_home, "kirocrew-dev/babysit", "pr_watch.py", body)
+        _ship_skill_script(data_home, "ajcrew-dev/babysit", "pr_watch.py", body)
         _deploy(data_home, "pr_watch.py", body)
 
         assert _state_for("pr_watch.py") == CRON_SOURCE_IN_SYNC
@@ -168,7 +168,7 @@ class TestDoctorRendersNamesInert:
         capsys: pytest.CaptureFixture[str],
         state: str,
     ) -> str:
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         entry = skills_mod.CronScriptSource(
             name=self.ESC_NAME,
@@ -234,7 +234,7 @@ def test_control_character_name_on_disk_is_enumerated_and_escaped(
     accepted by the filesystem, survives enumeration, and still reaches the
     operator inert.
     """
-    from kiro_crew import cli_doctor
+    from aj_crew import cli_doctor
 
     name = "poller\x1b[31m.py"
     _ship_skill_script(data_home, "pack/skill", name, "def run(ctx):\n    pass\n")
@@ -259,7 +259,7 @@ def test_diverged_hint_names_each_side_and_no_skill_recipe(
     nothing. The hint instead says what each side is, which is the information
     needed to choose which one to keep, and still refuses to pick a direction.
     """
-    from kiro_crew import cli_doctor
+    from aj_crew import cli_doctor
 
     _ship_skill_script(data_home, "pack/skill", "poller.py", "def run(ctx):\n    pass\n")
     _deploy(data_home, "poller.py", "def run(ctx):\n    return 1\n")

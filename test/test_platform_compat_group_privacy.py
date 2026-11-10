@@ -28,7 +28,7 @@ from group_privacy_helpers import (
     _serve_acl,
 )
 
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
 
 class TestGroupSharedWithAnotherAccount:

@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.hooks import (
+from aj_crew.hooks import (
     HOOK_EVENT_AGENT_SPAWN,
     HOOK_EVENT_PRE_TOOL_USE,
     HOOK_EVENT_STOP,
@@ -36,8 +36,8 @@ from kiro_crew.hooks import (
     _context_matches,
     _has_global_inline_flags,
 )
-from kiro_crew.validation import HOOK_CREATE_SCHEMA, HOOK_UPDATE_SCHEMA
-from kiro_crew.webhooks import WebhookStoreUnreadable
+from aj_crew.validation import HOOK_CREATE_SCHEMA, HOOK_UPDATE_SCHEMA
+from aj_crew.webhooks import WebhookStoreUnreadable
 
 HOOKS_PAGE = Path(__file__).resolve().parent.parent / "website" / "src" / "pages" / "HooksPage.tsx"
 

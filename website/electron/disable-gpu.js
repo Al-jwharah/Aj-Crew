@@ -21,7 +21,7 @@
 // from spawning at all — see electron/electron#28164). But a switch the user
 // has to remember to pass is a switch that is never set on the launch that
 // actually crashed, and — critically — the app's single-instance handoff drops
-// argv from a second launch, so `KiroCrew.exe --disable-gpu` does nothing once
+// argv from a second launch, so `AjCrew.exe --disable-gpu` does nothing once
 // an instance already holds the lock. So the decision is made HERE, before the
 // app is ready, from durable inputs (an env var, or argv on the winning
 // instance), and applied through the same `appendSwitch` seam `main.js`
@@ -29,9 +29,9 @@
 //
 // A normal desktop with a real GPU keeps hardware acceleration. The decision,
 // in precedence order (see shouldDisableGpu):
-//   1. force ON  (`KIROCREW_DISABLE_GPU` in 0/false/no/off, or `--enable-gpu`)
-//   2. force OFF (`KIROCREW_DISABLE_GPU` in 1/true/yes/on, or `--disable-gpu`),
-//      mirroring the existing `KIROCREW_*` env conventions
+//   1. force ON  (`AJCREW_DISABLE_GPU` in 0/false/no/off, or `--enable-gpu`)
+//   2. force OFF (`AJCREW_DISABLE_GPU` in 1/true/yes/on, or `--disable-gpu`),
+//      mirroring the existing `AJCREW_*` env conventions
 //   3. auto      (nothing explicit AND a GPU-less host: a Windows RDP session)
 //   4. default   (hardware acceleration ON)
 //
@@ -45,7 +45,7 @@
 // (same pattern as native-logging.js / renderer-recovery.js / perf-metrics.js).
 //
 
-/** Truthy env values, matching how the rest of the shell reads KIROCREW_* flags. */
+/** Truthy env values, matching how the rest of the shell reads AJCREW_* flags. */
 const TRUTHY = new Set(["1", "true", "yes", "on"]);
 /** Falsy env values: an explicit force-ON of hardware acceleration. */
 const FALSY = new Set(["0", "false", "no", "off"]);
@@ -73,7 +73,7 @@ function isGpuLessHost({ env = process.env } = {}) {
  * @returns {boolean}
  */
 function shouldDisableGpu({ env = process.env, argv = process.argv } = {}) {
-  const raw = env && env.KIROCREW_DISABLE_GPU;
+  const raw = env && env.AJCREW_DISABLE_GPU;
   const val = typeof raw === "string" ? raw.trim().toLowerCase() : null;
   if (val !== null && FALSY.has(val)) return false;
   if (Array.isArray(argv) && argv.includes("--enable-gpu")) return false;

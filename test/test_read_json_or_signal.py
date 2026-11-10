@@ -9,7 +9,7 @@ tmp-file-plus-``os.replace`` write -- the read twin of the window
 surfaces on the ``Backend Tests (Windows)`` matrix. Those guards fold that
 transient failure into the SAME silent fallback returned for a genuinely absent
 or malformed file, so a benign miss and a degraded read are indistinguishable
-in ``kirocrew logs``.
+in ``ajcrew logs``.
 
 ``windows_sim.read_sharing_violation`` reproduces the fault deterministically on
 any OS by faulting ``Path.read_bytes`` -- the call ``read_bytes_with_retry``
@@ -27,8 +27,8 @@ import logging
 import pytest
 from windows_sim import read_sharing_violation
 
-from kiro_crew import atomic_write as aw
-from kiro_crew import platform_compat
+from aj_crew import atomic_write as aw
+from aj_crew import platform_compat
 
 
 @pytest.fixture(autouse=True)
@@ -107,14 +107,14 @@ def test_warning_carries_no_path_and_no_file_content(tmp_path, logger, monkeypat
 def test_degrade_is_attributed_to_the_callers_logger(tmp_path, monkeypatch, caplog):
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
     monkeypatch.setattr(aw, "on_event_loop", lambda: True)
-    site_logger = logging.getLogger("kirocrew.some.specific.site")
+    site_logger = logging.getLogger("ajcrew.some.specific.site")
     path = _written(tmp_path / "cfg.json", {"k": 1})
 
     with caplog.at_level(logging.WARNING, logger=site_logger.name):
         with read_sharing_violation(match="cfg.json", times=10_000):
             aw.read_json_or(path, None, logger=site_logger, what="cfg")
 
-    assert any(r.name == "kirocrew.some.specific.site" for r in caplog.records)
+    assert any(r.name == "ajcrew.some.specific.site" for r in caplog.records)
 
 
 # -- criterion 2: absent / malformed / clean -> NO new signal, same fallback ---

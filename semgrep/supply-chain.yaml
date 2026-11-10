@@ -3,7 +3,7 @@ rules:
   # Inspired by COE-358507 / AWS-2025-015: attacker modified build
   # process to download external payload and execute it at startup.
 
-  - id: kirocrew.download-and-exec-subprocess
+  - id: ajcrew.download-and-exec-subprocess
     patterns:
       - pattern-either:
           - pattern: |
@@ -17,7 +17,7 @@ rules:
     paths:
       exclude:
         - test/*
-        - src/kiro_crew/_vendor/*
+        - src/aj_crew/_vendor/*
     message: >
       Subprocess call downloads from an external URL (curl/wget).
       Supply-chain risk: build-time download of external payload can
@@ -31,7 +31,7 @@ rules:
       references:
         - https://aws.amazon.com/security/security-bulletins/AWS-2025-015/
 
-  - id: kirocrew.download-and-exec-urlretrieve
+  - id: ajcrew.download-and-exec-urlretrieve
     patterns:
       - pattern-either:
           - pattern: urllib.request.urlretrieve($URL, ...)
@@ -39,7 +39,7 @@ rules:
     paths:
       exclude:
         - test/*
-        - src/kiro_crew/_vendor/*
+        - src/aj_crew/_vendor/*
     message: >
       urlretrieve downloads a file from an external URL at runtime.
       If this runs during build or startup, it is a supply-chain risk.
@@ -51,14 +51,14 @@ rules:
       subcategory: supply-chain
       cwe: "CWE-829: Inclusion of Functionality from Untrusted Control Sphere"
 
-  - id: kirocrew.download-then-exec
+  - id: ajcrew.download-then-exec
     patterns:
       - pattern: |
           $RESP = requests.get($URL, ...)
           ...
           exec($RESP. ...)
       - pattern-not-inside: |
-          # nosemgrep: kirocrew.download-then-exec
+          # nosemgrep: ajcrew.download-then-exec
           ...
     paths:
       exclude:
@@ -73,7 +73,7 @@ rules:
       subcategory: supply-chain
       cwe: "CWE-94: Code Injection"
 
-  - id: kirocrew.download-then-subprocess
+  - id: ajcrew.download-then-subprocess
     patterns:
       - pattern: |
           $PATH = ...
@@ -85,7 +85,7 @@ rules:
     paths:
       exclude:
         - test/*
-        - src/kiro_crew/_vendor/*
+        - src/aj_crew/_vendor/*
     message: >
       Downloaded file path passed to subprocess execution. Ensure
       the file has verified integrity (SHA-256 check) before execution.
@@ -98,7 +98,7 @@ rules:
 
   # ─── Frontend: script injection via external URL ───────────────────
 
-  - id: kirocrew.frontend-external-script-inject
+  - id: ajcrew.frontend-external-script-inject
     pattern: |
       $EL.src = $URL
     paths:

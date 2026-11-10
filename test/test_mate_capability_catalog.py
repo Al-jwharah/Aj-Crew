@@ -18,24 +18,24 @@ from typing import Any
 import pytest
 from guide_route_helpers import FakeState, agent, run_guide_app
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew import mate_capability_catalog as cat
-from kiro_crew import members as members_mod
-from kiro_crew.dashboard.handlers import guide as guide_routes
-from kiro_crew.dashboard.handlers import member_capability_catalog as routes
-from kiro_crew.dashboard.handlers import member_self as self_routes
+from aj_crew import change_card_catalog as catalog
+from aj_crew import mate_capability_catalog as cat
+from aj_crew import members as members_mod
+from aj_crew.dashboard.handlers import guide as guide_routes
+from aj_crew.dashboard.handlers import member_capability_catalog as routes
+from aj_crew.dashboard.handlers import member_self as self_routes
 
 SLOT = "member-pixel"
 MEMBER = "pixel"
 SKILLS = {"release": "skill://release/SKILL.md", "triage": "skill://triage/SKILL.md"}
 WORKER = {
-    "name": "kirocrew-mate-worker",
-    "tools": ["@kirocrew-core", "@jira"],
-    "allowedTools": ["@kirocrew-core", "@jira/search"],
+    "name": "ajcrew-mate-worker",
+    "tools": ["@ajcrew-core", "@jira"],
+    "allowedTools": ["@ajcrew-core", "@jira/search"],
     "excludedTools": ["@jira/delete_issue", "execute_bash"],
     "resources": ["skill://release/SKILL.md"],
     "mcpServers": {
-        "kirocrew-core": {"command": "kirocrew"},
+        "ajcrew-core": {"command": "ajcrew"},
         "jira": {"command": "jira-mcp", "autoApprove": ["get_issue"]},
     },
 }
@@ -63,7 +63,7 @@ def test_the_worker_is_read_as_it_runs():
             "runs_without_asking": ["get_issue", "search"],
             "switched_off": ["delete_issue"],
         },
-        {"name": "kirocrew-core", "runs_without_asking": "all"},
+        {"name": "ajcrew-core", "runs_without_asking": "all"},
     ]
     assert has["skills"] == ["release"]
     assert has["builtin_tools_left_out"] == ["execute_bash"]
@@ -72,7 +72,7 @@ def test_the_worker_is_read_as_it_runs():
 
 
 def test_the_gateway_lists_only_what_the_worker_lacks(monkeypatch):
-    monkeypatch.setattr("kiro_crew.mcp_discovery.list_servers", lambda: GATEWAY_ROWS)
+    monkeypatch.setattr("aj_crew.mcp_discovery.list_servers", lambda: GATEWAY_ROWS)
     lacks = cat.gateway_lacks(WORKER, SKILLS)
     assert [s["name"] for s in lacks["servers"]] == ["github", "slack"]
     assert lacks["servers"][0] == {
@@ -86,7 +86,7 @@ def test_the_gateway_lists_only_what_the_worker_lacks(monkeypatch):
 
 def test_a_server_declared_but_not_mounted_is_one_the_worker_lacks(monkeypatch):
     """No ``@github`` in ``tools``: the worker cannot call it, so a card may still add it."""
-    monkeypatch.setattr("kiro_crew.mcp_discovery.list_servers", lambda: GATEWAY_ROWS)
+    monkeypatch.setattr("aj_crew.mcp_discovery.list_servers", lambda: GATEWAY_ROWS)
     spec = json.loads(json.dumps(WORKER))
     spec["mcpServers"]["github"] = {"command": "gh-mcp"}
     assert "github" not in [s["name"] for s in cat.worker_has(spec, SKILLS)["servers"]]
@@ -113,9 +113,9 @@ def crewmate(monkeypatch):
     monkeypatch.setattr(
         routes, "_service", lambda _app: SimpleNamespace(_mate_catalog=lambda _m: SKILLS)
     )
-    monkeypatch.setattr("kiro_crew.mcp_discovery.list_servers", lambda: GATEWAY_ROWS)
+    monkeypatch.setattr("aj_crew.mcp_discovery.list_servers", lambda: GATEWAY_ROWS)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.mcp._find_server_spec_anywhere",
+        "aj_crew.dashboard.handlers.mcp._find_server_spec_anywhere",
         lambda name: dict(GITHUB_ENTRY) if name == "github" else None,
     )
 
@@ -160,13 +160,13 @@ def test_find_capabilities_answers_worker_then_gateway_then_registry(crewmate, m
             "provider_outcomes": [],
         }
 
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.mcp_discover.search_registry", search)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.mcp_discover.search_registry", search)
     state = FakeState()
     _thread(state)
     status, body = _post(state, FIND, "/api/member/self/capabilities", {"query": "acme"})
     assert status == 200, body
     assert list(body) == ["worker", "gateway", "registry", "next"]
-    assert [s["name"] for s in body["worker"]["servers"]] == ["jira", "kirocrew-core"]
+    assert [s["name"] for s in body["worker"]["servers"]] == ["jira", "ajcrew-core"]
     assert [s["name"] for s in body["gateway"]["servers"]] == ["github", "slack"]
     assert body["registry"][0]["id"] == "io.github/acme-mcp"
     assert "repo_url" not in body["registry"][0]
@@ -198,7 +198,7 @@ def test_find_capabilities_needs_the_crewmates_own_file(crewmate, monkeypatch):
 def proposed(monkeypatch) -> list[dict[str, Any]]:
     from aiohttp import web
 
-    from kiro_crew.dashboard.handlers import change_cards as card_routes
+    from aj_crew.dashboard.handlers import change_cards as card_routes
 
     seen: list[dict[str, Any]] = []
 
@@ -255,7 +255,7 @@ def test_a_registry_server_takes_the_official_install_plan(crewmate, proposed, m
         calls.append(server_id)
         return "acme-mcp", {"command": "npx", "args": ["-y", "acme-mcp"]}, "npm", []
 
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.mcp_discover.official_install_plan", plan)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.mcp_discover.official_install_plan", plan)
     state = FakeState()
     _thread(state)
     status, body = _ask(
@@ -322,7 +322,7 @@ def test_an_addition_the_gateway_cannot_vouch_for_is_refused(crewmate, proposed,
 
 def test_a_gateway_server_the_user_switched_off_is_not_added(crewmate, proposed, monkeypatch):
     rows = [SimpleNamespace(name="github", status="disabled", tools=[])]
-    monkeypatch.setattr("kiro_crew.mcp_discovery.list_servers", lambda: rows)
+    monkeypatch.setattr("aj_crew.mcp_discovery.list_servers", lambda: rows)
     state = FakeState()
     _thread(state)
     status, body = _ask(state, {"additions": [{"server": "github", "source": "gateway"}]})
@@ -336,7 +336,7 @@ def test_a_gateway_server_with_env_or_headers_is_not_copied_onto_a_card(
     """A card's params reach the crewmate, so a credential must never ride in them."""
     for extra in ({"env": {"GITHUB_TOKEN": "ghp_x"}}, {"headers": {"Authorization": "Basic eA=="}}):
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.mcp._find_server_spec_anywhere",
+            "aj_crew.dashboard.handlers.mcp._find_server_spec_anywhere",
             lambda name, extra=extra: {**GITHUB_ENTRY, **extra} if name == "github" else None,
         )
         state = FakeState()
@@ -362,7 +362,7 @@ def test_a_gateway_server_with_a_credential_argument_is_not_copied(
     """A credential passed as an argument would ride on the card as surely as env."""
     entry = {"command": "npx", "args": args}
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.mcp._find_server_spec_anywhere",
+        "aj_crew.dashboard.handlers.mcp._find_server_spec_anywhere",
         lambda name: entry if name == "github" else None,
     )
     state = FakeState()
@@ -376,7 +376,7 @@ def test_a_gateway_server_with_a_credential_argument_is_not_copied(
 def test_a_gateway_server_with_plain_arguments_is_still_copied(crewmate, proposed, monkeypatch):
     entry = {"command": "uvx", "args": ["mcp-server-git", "--repository", "/r"]}
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.mcp._find_server_spec_anywhere",
+        "aj_crew.dashboard.handlers.mcp._find_server_spec_anywhere",
         lambda name: entry if name == "github" else None,
     )
     state = FakeState()
@@ -390,7 +390,7 @@ def test_propose_change_cannot_supply_where_a_server_comes_from(monkeypatch):
     """Origins are the gateway's record; a caller of the generic path never sets one."""
     import asyncio
 
-    from kiro_crew.dashboard.handlers import change_cards as card_routes
+    from aj_crew.dashboard.handlers import change_cards as card_routes
 
     async def caller(_request, _op):
         return "chat-x", "dashboard:chat-x"
@@ -430,7 +430,7 @@ def test_only_the_gateways_own_entry_as_written_counts_as_the_gateways(crewmate,
     ):
         assert routes.gateway_matches(_server_op(changed)) == set(), changed
     off = [SimpleNamespace(name="github", status="disabled", tools=[])]
-    monkeypatch.setattr("kiro_crew.mcp_discovery.list_servers", lambda: off)
+    monkeypatch.setattr("aj_crew.mcp_discovery.list_servers", lambda: off)
     assert routes.gateway_matches(_server_op(same)) == set()
 
 
@@ -438,7 +438,7 @@ def test_a_registry_name_this_gateway_already_runs_is_refused(crewmate, proposed
     async def plan(_server_id):
         return "github", {"command": "other"}, "npm", []
 
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.mcp_discover.official_install_plan", plan)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.mcp_discover.official_install_plan", plan)
     state = FakeState()
     _thread(state)
     status, body = _ask(
@@ -630,20 +630,20 @@ def test_the_card_engine_refuses_a_malformed_origin(origins):
 
 
 def test_the_worker_does_not_mount_the_conductors_request_tools(tmp_path, monkeypatch):
-    from kiro_crew import agent
-    from kiro_crew.agent_files import MATE_WORKER_AGENT_FILENAME
-    from kiro_crew.agent_materialization import service_agents
+    from aj_crew import agent
+    from aj_crew.agent_files import MATE_WORKER_AGENT_FILENAME
+    from aj_crew.agent_materialization import service_agents
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     service_agents._install_mate_worker_agent()
-    from kiro_crew.config import paths as paths_mod
+    from aj_crew.config import paths as paths_mod
 
     spec = json.loads(
         (paths_mod.mate_agents_dir() / MATE_WORKER_AGENT_FILENAME).read_text(encoding="utf-8")
     )
     assert {
-        "@kirocrew-mate/request_capabilities",
-        "@kirocrew-mate/find_capabilities",
+        "@ajcrew-mate/request_capabilities",
+        "@ajcrew-mate/find_capabilities",
     } <= set(spec["excludedTools"])
 
 
@@ -651,8 +651,8 @@ def test_the_worker_does_not_mount_the_conductors_request_tools(tmp_path, monkey
 
 
 def test_the_press_writes_the_crewmates_file_and_the_next_worker_carries_it(tmp_path, monkeypatch):
-    import kiro_crew.mate_capabilities as mc
-    from kiro_crew import mate_worker
+    import aj_crew.mate_capabilities as mc
+    from aj_crew import mate_worker
 
     mates = tmp_path / "mates"
     mates.mkdir()

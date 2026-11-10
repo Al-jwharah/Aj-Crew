@@ -7,11 +7,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-from kiro_crew.taskrunner import TaskRunner
-from kiro_crew.testing.wait import await_until
-from kiro_crew.workflows.service import WorkflowService
-from kiro_crew.workflows.store import WorkflowRunStore
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+from aj_crew.taskrunner import TaskRunner
+from aj_crew.testing.wait import await_until
+from aj_crew.workflows.service import WorkflowService
+from aj_crew.workflows.store import WorkflowRunStore
 
 
 @pytest.mark.asyncio
@@ -55,11 +55,11 @@ async def test_service_restore_yields_until_complete(tmp_path, monkeypatch):
 
 @pytest.mark.parametrize("failure", ["missing-identity", "bad-context", "oserror"])
 def test_snapshot_read_failure_preserves_original_registry(tmp_path, monkeypatch, caplog, failure):
-    from kiro_crew import workflow_memory
+    from aj_crew import workflow_memory
 
     path = tmp_path / "runs.json"
     execution = ExecutionContext(
-        "alice", MemoryStoreRef("alice-store", "alice"), "member", "kirocrew"
+        "alice", MemoryStoreRef("alice-store", "alice"), "member", "ajcrew"
     )
     member = {
         "task_id": "member-task",
@@ -112,7 +112,7 @@ def test_synchronous_service_restores_before_return(tmp_path):
 
 @pytest.mark.asyncio
 async def test_async_restore_keeps_handles_on_loop_and_eviction_off_loop(tmp_path, monkeypatch):
-    from kiro_crew.workflows.registry import RunHandle, RunRegistry
+    from aj_crew.workflows.registry import RunHandle, RunRegistry
 
     store = WorkflowRunStore(base_dir=tmp_path / "workflows")
     registry = RunRegistry(max_runs=1, store=store)
@@ -154,7 +154,7 @@ def test_bad_project_isolated_in_memory_and_original_snapshot_retained(tmp_path,
         "spec_content": "MEMBER_BODY",
         "task_details": [task],
         "execution_context": ExecutionContext(
-            "alice", MemoryStoreRef("alice-store", "alice"), "member", "kirocrew"
+            "alice", MemoryStoreRef("alice-store", "alice"), "member", "ajcrew"
         ).to_record(),
     }
     if failure == "missing-spec":

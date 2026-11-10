@@ -1,8 +1,8 @@
 """The session-storage facade keeps the patch seams the one module had.
 
-``kiro_crew.session_storage`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the
-``kiro_crew.session_storage_parts`` owners. Callers, tests and documents still reach every
-name as ``kiro_crew.session_storage.<name>``, and the moved code reads its names as plain
+``aj_crew.session_storage`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the
+``aj_crew.session_storage_parts`` owners. Callers, tests and documents still reach every
+name as ``aj_crew.session_storage.<name>``, and the moved code reads its names as plain
 module globals, so a patch through the facade reaches that code only because the mirror
 writes it into every module holding the name.
 
@@ -33,13 +33,13 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror, session_storage
-from kiro_crew.session_storage import SessionIndex
+from aj_crew import _facade_mirror, session_storage
+from aj_crew.session_storage import SessionIndex
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_session_storage_parts")
 
-FACADE = "kiro_crew.session_storage"
-PACKAGE = "kiro_crew.session_storage_parts"
+FACADE = "aj_crew.session_storage"
+PACKAGE = "aj_crew.session_storage_parts"
 PARTS_DIR = Path(session_storage.__file__).resolve().parent / "session_storage_parts"
 _THIS_FILE = Path(__file__).resolve()
 
@@ -215,7 +215,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for path in _owner_paths().values():
         for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module.startswith(PACKAGE):
+                if not node.module.startswith("aj_crew") or node.module.startswith(PACKAGE):
                     continue
                 for alias in node.names:
                     found.setdefault(alias.asname or alias.name, (node.module, alias.name))
@@ -236,7 +236,7 @@ def _manifest() -> dict[str, tuple[str, str]]:
 
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
-    """At BASE the store bound these by import, so ``from kiro_crew.session_storage import
+    """At BASE the store bound these by import, so ``from aj_crew.session_storage import
     ConversationLog`` type-checked. Now an owner holds them, so the facade names each one
     from its home module under ``TYPE_CHECKING``, and exactly those beside the two caches."""
     served = set(_index().exports)
@@ -250,7 +250,7 @@ def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers()
 
 def test_the_store_logs_under_the_facade_name() -> None:
     """One logger, still named for the facade module, held by every module that logs, so
-    a ``caplog.at_level(logger="kiro_crew.session_storage")`` still hears the moved code."""
+    a ``caplog.at_level(logger="aj_crew.session_storage")`` still hears the moved code."""
     assert session_storage.logger is logging.getLogger(FACADE)
     others = [
         m.__name__
@@ -263,7 +263,7 @@ def test_the_store_logs_under_the_facade_name() -> None:
 @pytest.mark.parametrize("name", ["SessionStorageError", "_OversizedManifestRecord"])
 def test_an_exception_is_named_by_the_facade_in_a_traceback(name: str) -> None:
     """A traceback names an exception by its class's dotted name. Both classes moved to
-    owners and still read as ``kiro_crew.session_storage.<name>``."""
+    owners and still read as ``aj_crew.session_storage.<name>``."""
     error_type = getattr(session_storage, name)
     assert error_type.__module__ == FACADE
     shown = "".join(traceback.format_exception_only(error_type("refused")))
@@ -278,7 +278,7 @@ def test_a_facade_write_of_the_scan_cache_is_the_cache_a_cached_scan_reads(
     stores is what the facade reads back: the facade serves the name from its one owner,
     where a copy bound on the facade would read stale. The cache is process state, so the
     test empties it on both sides instead of leaving an undo to restore a live pass."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew"))
     monkeypatch.setenv("KIRO_HOME", str(tmp_path / "crew" / "kiro"))
     assert "_scan_cache" not in vars(session_storage)
     session_storage.invalidate_scan_cache()

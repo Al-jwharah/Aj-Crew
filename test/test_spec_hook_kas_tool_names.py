@@ -17,29 +17,29 @@ import pytest
 from chat_test_helpers import _make_ready_kiro_prerequisite
 from named_cases_helpers import named_cases
 
-import kiro_crew.config.paths as paths_mod
-import kiro_crew.hooks as hooks_mod
-from kiro_crew.acp._dispatch import build_permission_event
-from kiro_crew.acp.kas_permissions import KAS_TOOL_IDS_BY_KIRO_TOOL, kas_tool_match_names
-from kiro_crew.agent_sdk import spec_hooks
-from kiro_crew.agent_sdk.backends import (
+import aj_crew.config.paths as paths_mod
+import aj_crew.hooks as hooks_mod
+from aj_crew.acp._dispatch import build_permission_event
+from aj_crew.acp.kas_permissions import KAS_TOOL_IDS_BY_KIRO_TOOL, kas_tool_match_names
+from aj_crew.agent_sdk import spec_hooks
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     ACP_BACKENDS_CREW_FIRES_SPEC_HOOKS,
 )
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard.chat import _run_chat
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.history import ConversationLog
-from kiro_crew.hooks import (
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard.chat import _run_chat
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.history import ConversationLog
+from aj_crew.hooks import (
     HOOK_EVENT_PRE_TOOL_USE,
     ScriptHook,
     ScriptHookResult,
     ScriptHookStore,
     ToolHookResult,
 )
-from kiro_crew.providers.base import (
+from aj_crew.providers.base import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TOOL_CALL,
@@ -62,7 +62,7 @@ def test_every_backend_crew_fires_spec_hooks_for_has_a_translation_table():
     # this module's table, every other member's is in harness_tool_names. claude
     # is the one table outside that set: Crew fires no spec hooks there, and its
     # table names a call for Hooks-page matchers only.
-    from kiro_crew.acp.harness_tool_names import HARNESS_TOOL_TABLES
+    from aj_crew.acp.harness_tool_names import HARNESS_TOOL_TABLES
 
     assert ACP_BACKEND_KAS in ACP_BACKENDS_CREW_FIRES_SPEC_HOOKS
     assert ACP_BACKEND_CLAUDE not in ACP_BACKENDS_CREW_FIRES_SPEC_HOOKS
@@ -97,8 +97,8 @@ def test_the_hook_rows_are_the_gate_s_policy_table_inverted():
     # entry, and every row entry outside the hook-only tools is a policy-table
     # pair, so a built-in added or renamed in one place cannot go missing in
     # the other.
-    from kiro_crew.acp.kas_permissions import _HOOK_ONLY_ROWS
-    from kiro_crew.platform.tool_names import KIRO_CLI_NAME_BY_KAS_TOOL
+    from aj_crew.acp.kas_permissions import _HOOK_ONLY_ROWS
+    from aj_crew.platform.tool_names import KIRO_CLI_NAME_BY_KAS_TOOL
 
     pairs = {(name, tool_id) for name, ids in KAS_TOOL_IDS_BY_KIRO_TOOL.items() for tool_id in ids}
     hook_only = {(name, tool_id) for name, ids in _HOOK_ONLY_ROWS.items() for tool_id in ids}
@@ -186,7 +186,7 @@ def test_a_matcher_naming_a_tool_kas_runs_is_kept(matcher):
 
 
 def test_a_matcher_the_table_does_not_know_is_kept_and_warned(caplog):
-    with caplog.at_level("WARNING", logger="kiro_crew.agent_sdk.spec_hooks"):
+    with caplog.at_level("WARNING", logger="aj_crew.agent_sdk.spec_hooks"):
         hooks = _pre_tool_hooks("use_aws")
     assert [h.matcher for h in hooks] == ["use_aws"]
     assert any("use_aws" in r.getMessage() for r in caplog.records)
@@ -201,13 +201,13 @@ def test_a_kept_matcher_meets_the_kas_id_it_names(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "matcher", ["@kirocrew-core/monitor_start", "@github/create_issue", "@my.srv-2/*"]
+    "matcher", ["@ajcrew-core/monitor_start", "@github/create_issue", "@my.srv-2/*"]
 )
 def test_an_mcp_server_tool_matcher_is_kept_without_a_warning(matcher, caplog):
     # The form the gate builds for an MCP call, the KAS projection reads as MCP and
     # the agent-host contract documents; the object form's character set alone
     # dropped it as "invalid matcher" and the guard never ran.
-    with caplog.at_level("WARNING", logger="kiro_crew.agent_sdk.spec_hooks"):
+    with caplog.at_level("WARNING", logger="aj_crew.agent_sdk.spec_hooks"):
         hooks = _pre_tool_hooks(matcher)
     assert [h.matcher for h in hooks] == [matcher]
     assert not caplog.records
@@ -234,8 +234,8 @@ def test_a_malformed_mcp_matcher_still_drops_the_hook(matcher):
 def test_an_mcp_server_tool_spec_hook_withholds_mcp_auto_approval(tmp_path, monkeypatch):
     # Without this, KAS auto-approves the MCP call and no permission request reaches
     # the gate, so even an accepted matcher would never see the call.
-    from kiro_crew.acp import kas_agents
-    from kiro_crew.acp.kas_permissions import hook_gated_capabilities
+    from aj_crew.acp import kas_agents
+    from aj_crew.acp.kas_permissions import hook_gated_capabilities
 
     monkeypatch.setattr(kas_agents, "get_global_hook_store", lambda: ScriptHookStore(tmp_path))
     spec = {"hooks": {"preToolUse": [{"matcher": "@github/create_issue", "command": "g.sh"}]}}
@@ -247,7 +247,7 @@ def test_an_mcp_server_tool_spec_hook_withholds_mcp_auto_approval(tmp_path, monk
 def test_a_post_tool_use_matcher_is_read_like_a_pre_tool_use_one(caplog):
     # Both events meet the finished or requested call under its tool id, so a
     # kiro-cli tool name is not warned about and an unknown one is, once.
-    with caplog.at_level("WARNING", logger="kiro_crew.agent_sdk.spec_hooks"):
+    with caplog.at_level("WARNING", logger="aj_crew.agent_sdk.spec_hooks"):
         hooks = spec_hooks.spec_script_hooks(
             "a1",
             {
@@ -356,8 +356,8 @@ def _write_spec(agents_dir: Path, matcher: str) -> None:
     }
     (agents_dir / "a1.json").write_text(json.dumps(spec), encoding="utf-8")
     # The turn resolves the slot's agent through discovery before it prepares hooks.
-    from kiro_crew.agent_discovery import clear_list_agents_cache
-    from kiro_crew.config.loader import refresh_materialized_agents
+    from aj_crew.agent_discovery import clear_list_agents_cache
+    from aj_crew.config.loader import refresh_materialized_agents
 
     clear_list_agents_cache()
     refresh_materialized_agents()
@@ -443,7 +443,7 @@ async def _one_shell_call(state, client) -> None:
     client.context_usage_pct = MagicMock(return_value=0.0)
     slot = _ChatSlot("chat-1-spec-kas")
     slot.agent = "a1"
-    with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+    with patch("aj_crew.dashboard.chat.sel") as mock_sel:
         mock_sel.return_value = MagicMock()
         await _run_chat(state, slot, "hello")
         if slot.task:
@@ -474,7 +474,7 @@ async def _one_turn(state, client, events) -> None:
     client.context_usage_pct = MagicMock(return_value=0.0)
     slot = _ChatSlot("chat-1-spec-kas")
     slot.agent = "a1"
-    with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+    with patch("aj_crew.dashboard.chat.sel") as mock_sel:
         mock_sel.return_value = MagicMock()
         await _run_chat(state, slot, "hello")
         if slot.task:
@@ -606,7 +606,7 @@ async def test_kas_a_gated_chat_call_runs_its_hook_once_on_the_permission_reques
     state, client = _turn_state(tmp_path, ACP_BACKEND_KAS)
     _page_hook(state, "web_fetch")
     informational = AsyncMock()
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.fire_tool_hooks", informational)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.fire_tool_hooks", informational)
     await _one_turn(state, client, _fetch_frames())
     assert ran == ["page"]
     informational.assert_not_awaited()
@@ -618,8 +618,8 @@ async def test_kiro_cli_a_chat_tool_call_still_fires_its_informational_hook(
     tmp_path, agents_dir, monkeypatch
 ):
     # A real Hooks-page PreToolUse hook that writes the event it was sent to a file.
-    monkeypatch.setattr("kiro_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
-    monkeypatch.setattr("kiro_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
+    monkeypatch.setattr("aj_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
+    monkeypatch.setattr("aj_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
     monkeypatch.setattr(hooks_mod, "_script_hooks_capability_denied", lambda sk="": None)
     # The real spawner's default cwd is the test runner's (the checkout), so the
     # child runs in tmp_path instead.

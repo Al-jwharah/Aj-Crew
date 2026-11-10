@@ -6,8 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.mcp_core import _call_tool
-from kiro_crew.validation import SPAWN_RUN_SCHEMA, ValidationError, validate_tool_args
+from aj_crew.mcp_core import _call_tool
+from aj_crew.validation import SPAWN_RUN_SCHEMA, ValidationError, validate_tool_args
 
 
 class TestModelValidation:
@@ -60,8 +60,8 @@ class TestSpawnRunModelParam:
 
     def test_model_passed_in_post_body(self):
         with (
-            patch("kiro_crew.mcp_core._post") as mock_post,
-            patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "sess"}),
+            patch("aj_crew.mcp_core._post") as mock_post,
+            patch.dict("os.environ", {"AJCREW_SESSION_KEY": "sess"}),
         ):
             mock_post.return_value = {"id": "agent1"}
             _call_tool("spawn_run", {"task": "test", "model": "deepseek-3.2"})
@@ -70,8 +70,8 @@ class TestSpawnRunModelParam:
 
     def test_no_model_omits_from_body(self):
         with (
-            patch("kiro_crew.mcp_core._post") as mock_post,
-            patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "sess"}),
+            patch("aj_crew.mcp_core._post") as mock_post,
+            patch.dict("os.environ", {"AJCREW_SESSION_KEY": "sess"}),
         ):
             mock_post.return_value = {"id": "agent1"}
             _call_tool("spawn_run", {"task": "test", "solo_reason": "bulk_data"})

@@ -198,7 +198,7 @@ describe('SkillDirectoryBrowser', () => {
         skill={{
           key: 'demo', name: 'demo',
           description: 'a tested skill',
-          source: 'kirocrew',
+          source: 'ajcrew',
           loaded_by_agents: ['agent-one', 'agent-two'],
         }}
       />,
@@ -239,7 +239,7 @@ describe('SkillDirectoryBrowser', () => {
     renderWithQuery(
       <SkillDirectoryBrowser
         skillKey="demo"
-        skill={{ key: 'demo', name: 'demo', description: 'desc', source: 'kirocrew' }}
+        skill={{ key: 'demo', name: 'demo', description: 'desc', source: 'ajcrew' }}
       />,
     )
 
@@ -282,7 +282,7 @@ describe('SkillDirectoryBrowser', () => {
     renderWithQuery(
       <SkillDirectoryBrowser
         skillKey="demo"
-        skill={{ key: 'demo', name: 'demo', description: 'from-skill-prop', source: 'kirocrew' }}
+        skill={{ key: 'demo', name: 'demo', description: 'from-skill-prop', source: 'ajcrew' }}
       />,
     )
     const strip = await screen.findByTestId('frontmatter-strip')

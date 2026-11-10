@@ -1,6 +1,6 @@
 """Windows-condition simulators for POSIX dev machines.
 
-KiroCrew is developed on macOS/Linux but must pass the ``Backend Tests
+AjCrew is developed on macOS/Linux but must pass the ``Backend Tests
 (Windows)`` matrix. Several classes of Windows-only behaviour never occur on
 POSIX, so the buggy code path is never exercised by a local ``pytest`` run and
 the failure only shows up in CI:
@@ -29,8 +29,8 @@ Guidance:
     from windows_sim import colliding_clock, read_sharing_violation
 
     def test_no_dupe_under_colliding_ts(tmp_path):
-        with colliding_clock("kiro_crew.history"):
-            ...  # every datetime.now() in kiro_crew.history returns ONE instant
+        with colliding_clock("aj_crew.history"):
+            ...  # every datetime.now() in aj_crew.history returns ONE instant
 
 Extending: keep each simulator small, name the real Windows behaviour it mimics
 in its docstring, and add a self-test in ``test_windows_sim.py``.
@@ -104,7 +104,7 @@ def colliding_clock(
     Mimics a burst of operations completing within one coarse Windows clock tick,
     so every ``datetime.now().isoformat()`` stamp COLLIDES — the condition behind
     the history colliding-timestamp bugs. *module_path* is the dotted module that
-    does ``from datetime import datetime`` (e.g. ``"kiro_crew.history"``).
+    does ``from datetime import datetime`` (e.g. ``"aj_crew.history"``).
 
     Yields the fixed instant.
     """
@@ -457,7 +457,7 @@ def readonly_unlink_refused() -> Iterator[dict]:
         return real_unlink(path, *args, dir_fd=dir_fd, **kwargs)
 
     with mock.patch("os.unlink", _refusing), mock.patch("os.remove", _refusing), mock.patch(
-        "kiro_crew.platform_compat.IS_POSIX", False
+        "aj_crew.platform_compat.IS_POSIX", False
     ):
         yield state
 

@@ -7,9 +7,9 @@ neutral sinks must not reach end users as literal text, while tags quoted in
 code (fenced or inline) stay visible.
 """
 
-from kiro_crew.constants import strip_control_comments
-from kiro_crew.messaging.renderer import display_safe, display_safe_for
-from kiro_crew.messaging.transport import TransportCapabilities
+from aj_crew.constants import strip_control_comments
+from aj_crew.messaging.renderer import display_safe, display_safe_for
+from aj_crew.messaging.transport import TransportCapabilities
 
 
 class TestStripControlCommentsTailAnchoredFenceGuarded:
@@ -74,7 +74,7 @@ class TestSharedConformanceCorpus:
         import json
         import pathlib
 
-        from kiro_crew.constants import strip_control_comments
+        from aj_crew.constants import strip_control_comments
 
         corpus = json.loads(
             (pathlib.Path(__file__).parent / "fixtures" / "control_tag_corpus.json").read_text(

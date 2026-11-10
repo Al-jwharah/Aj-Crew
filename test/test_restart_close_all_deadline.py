@@ -1,7 +1,7 @@
 """Every restart reaches its exec or exit when closing the sessions never finishes.
 
 The dashboard restart (``_restart_gateway``), the update restart
-(``_restart_after_update_claimed``) and the Slack ``/kirocrew restart``
+(``_restart_after_update_claimed``) and the Slack ``/ajcrew restart``
 (``_handle_restart``) close every session with ``close_all()`` and then exec or
 exit. ``close_all`` cancels each owned background task and then gathers it, with
 no deadline of its own. Here one such task outlives every cancel, as one whose
@@ -20,12 +20,12 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.dashboard import chat as dashboard_chat
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.slack import events
-from kiro_crew.slack import gateway as slack_gateway
-from kiro_crew.slack.gateway import GatewayOrchestrator
+from aj_crew import platform_compat
+from aj_crew.dashboard import chat as dashboard_chat
+from aj_crew.dashboard.handlers import updates
+from aj_crew.slack import events
+from aj_crew.slack import gateway as slack_gateway
+from aj_crew.slack.gateway import GatewayOrchestrator
 
 #: How long a restart past its session-close cap gets to reach its end. A restart
 #: that waits on the held close never gets there.
@@ -105,7 +105,7 @@ def _slack_restart(close: _HeldClose, monkeypatch) -> Awaitable[object]:
     monkeypatch.setattr(events, "is_owner", lambda _caller: True)
     monkeypatch.setattr(events, "sel", lambda: MagicMock())
     monkeypatch.setenv("INVOCATION_ID", "restart-test")
-    monkeypatch.setattr("kiro_crew.cli.drain_log_queue_before_hard_exit", AsyncMock())
+    monkeypatch.setattr("aj_crew.cli.drain_log_queue_before_hard_exit", AsyncMock())
     monkeypatch.setattr(platform_compat, "hard_exit", close.end("exit"))
     state = close.state()
     orch = SimpleNamespace(sessions=state.sessions, dashboard_state=state)
@@ -132,9 +132,9 @@ async def test_a_restart_whose_session_close_never_finishes_still_ends(
 ):
     # The held close never finishes, so any cap expires; a short one keeps it quick.
     monkeypatch.setattr(
-        "kiro_crew.gateway_shutdown_budget.RESTART_SESSION_CLOSE_SECS", 0.2, raising=False
+        "aj_crew.gateway_shutdown_budget.RESTART_SESSION_CLOSE_SECS", 0.2, raising=False
     )
-    monkeypatch.setattr("kiro_crew.slack.events._RESTART_SESSION_CLOSE_SECS", 0.2, raising=False)
+    monkeypatch.setattr("aj_crew.slack.events._RESTART_SESSION_CLOSE_SECS", 0.2, raising=False)
     caplog.set_level(logging.INFO)
     close = _HeldClose()
     restarting = asyncio.ensure_future(run(close, monkeypatch))
@@ -176,7 +176,7 @@ async def test_the_dashboard_restart_logs_each_step_as_it_starts(
     monkeypatch.setattr(platform_compat, "execv_target_available", lambda _exe: True)
     monkeypatch.setattr(updates, "flush_breadcrumb_writes", lambda _timeout: None)
     monkeypatch.setattr(updates, "reexec_python_module", lambda *_a, **_k: execs.append("exec"))
-    caplog.set_level(logging.INFO, logger="kiro_crew.dashboard.handlers.updates")
+    caplog.set_level(logging.INFO, logger="aj_crew.dashboard.handlers.updates")
 
     restarted = await asyncio.wait_for(
         updates._restart_gateway(state, resolver=lambda: "/python"), timeout=30

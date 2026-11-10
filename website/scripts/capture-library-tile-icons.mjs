@@ -72,7 +72,7 @@ const app = (name, displayName, description, manifest) => ({
   manifest: {
     displayName,
     description,
-    author: 'Kiro Crew', // brand-ok: fixture author
+    author: 'Aj Crew', // brand-ok: fixture author
     ui: { pages: [{ route: `/apps/${name}`, label: displayName }] },
     ...manifest,
   },

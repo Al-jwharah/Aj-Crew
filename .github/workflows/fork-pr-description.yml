@@ -83,7 +83,7 @@ jobs:
     # lanes already run: a GitHub-hosted Ubuntu VM with no fleet credentials,
     # and the checkout below still takes the base branch, never the fork.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     timeout-minutes: 5
     steps:
       # The base branch's copy of the script, never the fork's: on

@@ -14,7 +14,7 @@ per responsibility. What makes that split safe is structural, so it is pinned he
     itself -- each is looked up on ``backend.routes`` at call time, and the only
     route to it is a function-local import, so the module graph stays acyclic;
   * the lazily imported model/redaction helpers stay function-local and every
-    module logs as ``kirocrew.app.issue-radar``.
+    module logs as ``ajcrew.app.issue-radar``.
 """
 
 from __future__ import annotations
@@ -31,10 +31,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.apps.builtins import issue_radar
-from kiro_crew.apps.builtins.issue_radar.backend import crew_routes, http_routes, routes
+from aj_crew.apps.builtins import issue_radar
+from aj_crew.apps.builtins.issue_radar.backend import crew_routes, http_routes, routes
 
-LOGGER = "kirocrew.app.issue-radar"
+LOGGER = "ajcrew.app.issue-radar"
 BACKEND = Path(inspect.getfile(routes)).parent
 HTTP_ROUTES = BACKEND / "http_routes"
 
@@ -204,7 +204,7 @@ PATCH_SEAMS = {
 
 #: Lazily imported inside the functions that use them: the model helpers and the
 #: redactor are heavy and the gateway boot path must not pay for them.
-LAZY_MODULES = {"kiro_crew.llm_helpers", "kiro_crew.security", "uuid"}
+LAZY_MODULES = {"aj_crew.llm_helpers", "aj_crew.security", "uuid"}
 
 
 def _modules():
@@ -311,8 +311,8 @@ def test_re_exported_names_are_the_owning_modules_objects():
 
 
 def test_identity_pinned_state_is_shared():
-    from kiro_crew.apps.builtins.issue_radar.backend import github_client
-    from kiro_crew.apps.builtins.issue_radar.backend.http_routes import deps
+    from aj_crew.apps.builtins.issue_radar.backend import github_client
+    from aj_crew.apps.builtins.issue_radar.backend.http_routes import deps
 
     assert routes._DEPS_REFRESH_TASKS_APP_KEY is deps._DEPS_REFRESH_TASKS_APP_KEY
     assert routes._DEPS_REBUILD_LOCKS_APP_KEY is deps._DEPS_REBUILD_LOCKS_APP_KEY
@@ -464,13 +464,13 @@ def test_the_package_import_loads_every_owner_but_defers_crew_routes(tmp_path):
     ``register_routes``, because ``crew_routes`` imports the facade back."""
     script = (
         "import sys\n"
-        "import kiro_crew.apps.builtins.issue_radar as ir\n"
-        "prefix = 'kiro_crew.apps.builtins.issue_radar.backend.'\n"
+        "import aj_crew.apps.builtins.issue_radar as ir\n"
+        "prefix = 'aj_crew.apps.builtins.issue_radar.backend.'\n"
         "assert prefix + 'crew_routes' not in sys.modules\n"
         "owners = sorted(m[len(prefix) + len('http_routes.'):] for m in sys.modules\n"
         "                if m.startswith(prefix + 'http_routes.'))\n"
         "from aiohttp import web\n"
-        "from kiro_crew.apps.builtins.issue_radar.backend import routes\n"
+        "from aj_crew.apps.builtins.issue_radar.backend import routes\n"
         "app = web.Application()\n"
         "ir.register_routes(app)\n"
         "crew = sys.modules[prefix + 'crew_routes']\n"

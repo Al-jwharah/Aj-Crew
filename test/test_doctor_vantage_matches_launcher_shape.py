@@ -1,9 +1,9 @@
 """The doctor's confined-vantage predicate must recognise the identity map the
 sandbox actually writes.
 
-``_process_userns_vantage_confined`` in :mod:`kiro_crew.doctor_checks.confinement`
+``_process_userns_vantage_confined`` in :mod:`aj_crew.doctor_checks.confinement`
 (exposed through the ``cli_doctor`` facade) decides whether the current shell is
-Kiro Crew's own confined agent shell, so diagnostics keep their host-level verdict
+Aj Crew's own confined agent shell, so diagnostics keep their host-level verdict
 instead of wrongly reporting it. It recognises that shell by the shape of
 ``/proc/self/uid_map`` (one identity entry of length one) plus seccomp filtering.
 
@@ -23,7 +23,7 @@ import sys
 import pytest
 from test_sandbox_launcher_program import RecordingLibc, payload
 
-from kiro_crew import cli_doctor, platform_compat, sandbox, sandbox_launcher_program
+from aj_crew import cli_doctor, platform_compat, sandbox, sandbox_launcher_program
 
 program = sandbox_launcher_program
 
@@ -99,7 +99,7 @@ def test_the_launcher_written_map_is_classified_confined(
         child_ends.append(os.dup(read_end))
         return read_end, write_end
 
-    monkeypatch.setenv("KIROCREW_HOST_PID", "0")
+    monkeypatch.setenv("AJCREW_HOST_PID", "0")
     monkeypatch.setattr(program.os, "pipe", _pipe)
     monkeypatch.setattr(program.os, "fork", lambda: child_pid)
     monkeypatch.setattr(program.os, "waitpid", lambda _pid, _opts: (child_pid, 0))

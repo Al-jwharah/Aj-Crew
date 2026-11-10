@@ -23,7 +23,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 
 class _Park:
@@ -73,7 +73,7 @@ class _Park:
 
 @pytest.mark.asyncio
 async def test_the_subagent_cleanup_task_outlives_a_collection() -> None:
-    from kiro_crew.session import SessionManager
+    from aj_crew.session import SessionManager
 
     cfg = MagicMock()
     cfg.session.pool_size = 0
@@ -98,7 +98,7 @@ async def test_the_subagent_cleanup_task_outlives_a_collection() -> None:
 
 @pytest.mark.asyncio
 async def test_the_idle_resize_task_outlives_a_collection() -> None:
-    from kiro_crew.knowledge import llm_pool
+    from aj_crew.knowledge import llm_pool
 
     pool = llm_pool.LLMPool(2)
     park = _Park()
@@ -115,8 +115,8 @@ async def test_the_idle_resize_task_outlives_a_collection() -> None:
 async def test_the_probe_teardown_task_outlives_a_collection(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.instances import ssh_tunnel_manager, ssh_tunnel_manager_child
-    from kiro_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
+    from aj_crew.instances import ssh_tunnel_manager, ssh_tunnel_manager_child
+    from aj_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
 
     # Patched on the facade only: it mirrors the name into the owner module.
     monkeypatch.setattr(ssh_tunnel_manager, "_PROBE_INTERVAL", 0.01)
@@ -137,7 +137,7 @@ async def test_the_probe_teardown_task_outlives_a_collection(
 
 @pytest.mark.asyncio
 async def test_the_shared_crew_child_cancel_task_outlives_a_collection() -> None:
-    from kiro_crew.shared_crew import admission_entry
+    from aj_crew.shared_crew import admission_entry
 
     park = _Park()
     manager = SimpleNamespace(
@@ -155,7 +155,7 @@ async def test_the_shared_crew_child_cancel_task_outlives_a_collection() -> None
 
 @pytest.mark.asyncio
 async def test_the_shared_crew_run_cancel_task_outlives_a_collection() -> None:
-    from kiro_crew.shared_crew import admission_entry
+    from aj_crew.shared_crew import admission_entry
 
     park = _Park()
     admission_entry._cancel_hook(park)(SimpleNamespace(extra={"execution_id": "run-1"}))
@@ -165,7 +165,7 @@ async def test_the_shared_crew_run_cancel_task_outlives_a_collection() -> None:
 
 @pytest.mark.asyncio
 async def test_a_sprites_terminal_send_outlives_a_collection() -> None:
-    from kiro_crew.sprites_session import terminal
+    from aj_crew.sprites_session import terminal
 
     park = _Park()
     terminal._send_in_background(park())
@@ -175,7 +175,7 @@ async def test_a_sprites_terminal_send_outlives_a_collection() -> None:
 
 @pytest.mark.asyncio
 async def test_the_remote_worker_sigterm_retire_outlives_a_collection() -> None:
-    from kiro_crew.remote_session import worker as worker_mod
+    from aj_crew.remote_session import worker as worker_mod
 
     worker = worker_mod.Worker("sid-1", b"s" * 32, ["true"])
     park = _Park()
@@ -188,7 +188,7 @@ async def test_the_remote_worker_sigterm_retire_outlives_a_collection() -> None:
 
 @pytest.mark.asyncio
 async def test_an_artifact_knowledge_sync_task_outlives_a_collection() -> None:
-    from kiro_crew.knowledge.artifact_ingest import ArtifactKnowledgeSync
+    from aj_crew.knowledge.artifact_ingest import ArtifactKnowledgeSync
 
     sync = ArtifactKnowledgeSync(MagicMock(), MagicMock(), set(), asyncio.get_running_loop())
     park = _Park()
@@ -201,7 +201,7 @@ async def test_an_artifact_knowledge_sync_task_outlives_a_collection() -> None:
 
 @pytest.mark.asyncio
 async def test_a_crew_log_flush_outlives_a_collection() -> None:
-    from kiro_crew.dashboard.handlers.crew_log import CrewLogPublisher
+    from aj_crew.dashboard.handlers.crew_log import CrewLogPublisher
 
     publisher = CrewLogPublisher(MagicMock())
     publisher._loop = asyncio.get_running_loop()
@@ -216,7 +216,7 @@ async def test_a_crew_log_flush_outlives_a_collection() -> None:
 
 @pytest.mark.asyncio
 async def test_a_crew_log_session_send_outlives_a_collection() -> None:
-    from kiro_crew.dashboard.handlers.crew_log import CrewLogPublisher
+    from aj_crew.dashboard.handlers.crew_log import CrewLogPublisher
 
     publisher = CrewLogPublisher(MagicMock())
     publisher._loop = asyncio.get_running_loop()

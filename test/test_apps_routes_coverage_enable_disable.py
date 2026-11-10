@@ -22,9 +22,9 @@ from apps_routes_coverage_helpers import (
     _setup_env,
 )
 
-import kiro_crew.apps.routes as routes_mod
-from kiro_crew.apps.manager import AppResult, disable_app, enable_app, register_external_app
-from kiro_crew.testing.wait import await_until
+import aj_crew.apps.routes as routes_mod
+from aj_crew.apps.manager import AppResult, disable_app, enable_app, register_external_app
+from aj_crew.testing.wait import await_until
 
 # Enable / disable warning + rollback branches
 
@@ -117,7 +117,7 @@ class TestEnableRefusesAppTokens:
     ) -> None:
         # A bare flag cannot say what the owner saw, so it approves nothing;
         # the object form approves exactly the entries it names.
-        from kiro_crew.apps.manager import enable_app, update_app
+        from aj_crew.apps.manager import enable_app, update_app
 
         _setup_env(tmp_path, monkeypatch)
         _install(tmp_path, permissions={"api": ["/api/sessions"]})
@@ -385,7 +385,7 @@ class TestDisableBranches:
         # trust-revocation path also calls, so `routes` does not hold these
         # symbols. The behaviour these tests pin is unchanged — the warnings still
         # surface on the disable response — only the module that owns the step moved.
-        from kiro_crew.apps import teardown as teardown_mod
+        from aj_crew.apps import teardown as teardown_mod
 
         # Patched on `teardown`, NOT on `lifecycle_scripts`: teardown does
         # `from ... import run_lifecycle_script`, so it holds its own binding and a
@@ -423,7 +423,7 @@ class TestDisableBranches:
         # trust-revocation path also calls, so `routes` does not hold these
         # symbols. The behaviour these tests pin is unchanged — the warnings still
         # surface on the disable response — only the module that owns the step moved.
-        from kiro_crew.apps import teardown as teardown_mod
+        from aj_crew.apps import teardown as teardown_mod
 
         monkeypatch.setattr(teardown_mod, "on_app_disable", _boom)
         monkeypatch.setattr(teardown_mod, "stop_app_backend", lambda n: None)
@@ -450,7 +450,7 @@ class TestDisableBranches:
         # trust-revocation path also calls, so `routes` does not hold these
         # symbols. The behaviour these tests pin is unchanged — the warnings still
         # surface on the disable response — only the module that owns the step moved.
-        from kiro_crew.apps import teardown as teardown_mod
+        from aj_crew.apps import teardown as teardown_mod
 
         monkeypatch.setattr(teardown_mod, "on_app_disable", _hooks)
         monkeypatch.setattr(routes_mod, "stop_app_backend", lambda n: None)
@@ -515,7 +515,7 @@ class TestRepeatedToggleIsIdempotent:
         _setup_env(tmp_path, monkeypatch)
         _install(tmp_path, setup={"onDisable": "teardown.sh"})
         enable_app(APP)
-        from kiro_crew.apps import teardown as teardown_mod
+        from aj_crew.apps import teardown as teardown_mod
 
         both_read = asyncio.Event()
         loop = asyncio.get_running_loop()
@@ -562,7 +562,7 @@ def test_on_disable_hook_resolves_hyphenated_builtin_names():
     """
     import importlib
 
-    from kiro_crew.apps.builtins import BUILTIN_NAMES
+    from aj_crew.apps.builtins import BUILTIN_NAMES
 
     hyphenated = [n for n in BUILTIN_NAMES if "_" in n]
     assert hyphenated, "expected multi-word builtins to exist"
@@ -570,14 +570,14 @@ def test_on_disable_hook_resolves_hyphenated_builtin_names():
         manifest_name = module_name.replace("_", "-")
         # What the route computes from the manifest name must land on the package.
         assert manifest_name.replace("-", "_") == module_name
-        importlib.import_module(f"kiro_crew.apps.builtins.{module_name}")
+        importlib.import_module(f"aj_crew.apps.builtins.{module_name}")
 
 
 def test_disable_route_normalizes_the_name_before_the_builtin_lookup():
     """Pins the normalization in the route itself, not just the name algebra."""
     import inspect
 
-    from kiro_crew.apps import routes
+    from aj_crew.apps import routes
 
     src = inspect.getsource(routes.handle_disable_app)
     assert 'name.replace("-", "_")' in src, (
@@ -598,7 +598,7 @@ async def test_enable_does_not_re_register_after_the_backend_starts(
     _setup_env(tmp_path, monkeypatch)
     _install(tmp_path)
     called: list[str] = []
-    import kiro_crew.apps.bridges as bridges_mod
+    import aj_crew.apps.bridges as bridges_mod
 
     monkeypatch.setattr(
         bridges_mod,
@@ -711,7 +711,7 @@ class TestRecordReadsRunOffTheLoop:
 def _install_with_backend(tmp_path: Path, entry: str, body: str, **backend: Any) -> None:
     src = _make_app_source(tmp_path, backend={"entryPoint": entry, "port": "auto", **backend})
     (src / entry).write_text(body)
-    from kiro_crew.apps.manager import install_app
+    from aj_crew.apps.manager import install_app
 
     assert install_app(src).ok
 
@@ -723,7 +723,7 @@ def _backend_sees_platform(monkeypatch: pytest.MonkeyPatch, *, is_posix: bool) -
     the refusal under test reads ``platform_compat.IS_POSIX`` in ``backend.py``. Every
     other attribute is read from the real module.
     """
-    import kiro_crew.apps.backend as bmod
+    import aj_crew.apps.backend as bmod
 
     real = bmod.platform_compat
 

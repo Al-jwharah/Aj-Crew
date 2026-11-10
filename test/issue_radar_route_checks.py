@@ -7,7 +7,7 @@ its own setup, and pytest resolves the test's fixtures from that file.
 
 from __future__ import annotations
 
-from kiro_crew.apps.builtins.issue_radar.backend import routes
+from aj_crew.apps.builtins.issue_radar.backend import routes
 
 
 class AParentheticalCitationIsRemovedAsOneUnit:

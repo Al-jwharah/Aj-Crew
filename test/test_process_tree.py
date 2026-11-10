@@ -10,10 +10,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.acp import runtime as rt
-from kiro_crew.acp import runtime_process_tree as rpt
-from kiro_crew.acp.client import (
+from aj_crew import platform_compat
+from aj_crew.acp import runtime as rt
+from aj_crew.acp import runtime_process_tree as rpt
+from aj_crew.acp.client import (
     AcpClient,
     _direct_children,
     _get_child_pids,
@@ -21,7 +21,7 @@ from kiro_crew.acp.client import (
     _kill_escaped_children,
     _read_basename,
 )
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 if sys.platform != "win32":
     import signal
@@ -39,30 +39,30 @@ class TestGetChildPidsVisitedSet:
             call_count += 1
             return {1: [2], 2: [1]}.get(pid, [])
 
-        with patch("kiro_crew.acp.client._direct_children", side_effect=fake_direct):
+        with patch("aj_crew.acp.client._direct_children", side_effect=fake_direct):
             result = _get_child_pids(1)
         assert result == [2]
         assert call_count <= 3
 
     def test_self_loop(self):
-        with patch("kiro_crew.acp.client._direct_children", return_value=[42]):
+        with patch("aj_crew.acp.client._direct_children", return_value=[42]):
             assert _get_child_pids(42) == []
 
     def test_diamond_deduplicates(self):
         tree = {1: [2, 3], 2: [4], 3: [4]}
-        with patch("kiro_crew.acp.client._direct_children", side_effect=lambda p: tree.get(p, [])):
+        with patch("aj_crew.acp.client._direct_children", side_effect=lambda p: tree.get(p, [])):
             assert sorted(_get_child_pids(1)) == [2, 3, 4]
 
     def test_none_pid(self):
         assert _get_child_pids(None) == []
 
     def test_no_children(self):
-        with patch("kiro_crew.acp.client._direct_children", return_value=[]):
+        with patch("aj_crew.acp.client._direct_children", return_value=[]):
             assert _get_child_pids(999) == []
 
     def test_deep_chain(self):
         tree = {1: [2], 2: [3], 3: [4], 4: [5]}
-        with patch("kiro_crew.acp.client._direct_children", side_effect=lambda p: tree.get(p, [])):
+        with patch("aj_crew.acp.client._direct_children", side_effect=lambda p: tree.get(p, [])):
             assert _get_child_pids(1) == [2, 3, 4, 5]
 
 
@@ -92,7 +92,7 @@ class TestKillEscapedChildren:
 
         with (
             patch("os.kill", side_effect=fake_kill),
-            patch("kiro_crew.acp.client._is_our_child", return_value=True),
+            patch("aj_crew.acp.client._is_our_child", return_value=True),
         ):
             _kill_escaped_children({42: 100})
 
@@ -118,7 +118,7 @@ class TestKillEscapedChildren:
 
         with (
             patch("os.kill", side_effect=fake_kill),
-            patch("kiro_crew.acp.client._is_our_child", return_value=False),
+            patch("aj_crew.acp.client._is_our_child", return_value=False),
         ):
             _kill_escaped_children({42: 100})
         assert all(sig == 0 for _, sig in kills)
@@ -132,7 +132,7 @@ class TestKillEscapedChildren:
 
         with (
             patch("os.kill", side_effect=fake_kill),
-            patch("kiro_crew.acp.client._is_our_child", return_value=True),
+            patch("aj_crew.acp.client._is_our_child", return_value=True),
         ):
             _kill_escaped_children({10: 1, 20: 2, 30: 3})
         assert killed == [30, 20, 10]
@@ -144,41 +144,41 @@ class TestKillEscapedChildren:
 class TestIsOurChild:
     @pytest.fixture(autouse=True)
     def _force_linux(self):
-        with patch("kiro_crew.acp.client.sys") as mock_sys:
+        with patch("aj_crew.acp.client.sys") as mock_sys:
             mock_sys.platform = "linux"
             yield
 
     def test_rejects_missing_proc(self):
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=1),
-            patch("kiro_crew.acp.client._read_basename", return_value=None),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=1),
+            patch("aj_crew.acp.client._read_basename", return_value=None),
         ):
             # recorded basename was "node" but _read_basename returns None (process gone)
             assert _is_our_child(999, expected_start=1, expected_basename=b"node") is False
 
     def test_rejects_unknown_binary(self):
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=1),
-            patch("kiro_crew.acp.client._read_basename", return_value=b"postgres"),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=1),
+            patch("aj_crew.acp.client._read_basename", return_value=b"postgres"),
         ):
             # recorded basename was "node" but live binary is "postgres" (recycled)
             assert _is_our_child(999, expected_start=1, expected_basename=b"node") is False
 
     def test_rejects_start_time_mismatch(self):
-        with patch("kiro_crew.platform_compat.get_process_start_id", return_value=200):
+        with patch("aj_crew.platform_compat.get_process_start_id", return_value=200):
             assert _is_our_child(999, expected_start=100) is False
 
     def test_accepts_matching_kiro(self):
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=100),
-            patch("kiro_crew.acp.client._read_basename", return_value=b"kiro-cli"),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=100),
+            patch("aj_crew.acp.client._read_basename", return_value=b"kiro-cli"),
         ):
             assert _is_our_child(999, expected_start=100, expected_basename=b"kiro-cli") is True
 
     def test_accepts_mcp_in_name(self):
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=50),
-            patch("kiro_crew.acp.client._read_basename", return_value=b"builder-mcp"),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=50),
+            patch("aj_crew.acp.client._read_basename", return_value=b"builder-mcp"),
         ):
             assert _is_our_child(999, expected_start=50, expected_basename=b"builder-mcp") is True
 
@@ -194,14 +194,14 @@ class TestDirectChildren:
     def _posix(self, _floor_monkeypatch):
         """Every case here takes a POSIX branch, so Windows runners pin it too."""
         _floor_monkeypatch.setattr(
-            "kiro_crew.acp.client.platform_compat", SimpleNamespace(IS_WINDOWS=False)
+            "aj_crew.acp.client.platform_compat", SimpleNamespace(IS_WINDOWS=False)
         )
 
     def test_proc_children_parsed(self, monkeypatch):
         monkeypatch.setattr(rpt, "_CHILDREN_INTERFACE", True)
         with (
-            patch("kiro_crew.acp.client.sys") as mock_sys,
-            patch("kiro_crew.acp.client.Path") as mock_path_cls,
+            patch("aj_crew.acp.client.sys") as mock_sys,
+            patch("aj_crew.acp.client.Path") as mock_path_cls,
         ):
             mock_sys.platform = "linux"
             mock_path = MagicMock()
@@ -249,9 +249,9 @@ class TestDirectChildren:
         monkeypatch.setattr(rpt, "_CHILDREN_INTERFACE", True)
         sub = self._spawner(b"999\n")
         with (
-            patch("kiro_crew.acp.client.sys") as mock_sys,
-            patch("kiro_crew.acp.client.Path", return_value=self._proc_with(["", "\n"])),
-            patch("kiro_crew.acp.client.subprocess_mod", sub),
+            patch("aj_crew.acp.client.sys") as mock_sys,
+            patch("aj_crew.acp.client.Path", return_value=self._proc_with(["", "\n"])),
+            patch("aj_crew.acp.client.subprocess_mod", sub),
         ):
             mock_sys.platform = "linux"
             assert _direct_children(100) == []
@@ -262,8 +262,8 @@ class TestDirectChildren:
         monkeypatch.setattr(rpt, "_CHILDREN_INTERFACE", False)
         sub = self._spawner(b"4242\n")
         with (
-            patch("kiro_crew.acp.client.sys") as mock_sys,
-            patch("kiro_crew.acp.client.subprocess_mod", sub),
+            patch("aj_crew.acp.client.sys") as mock_sys,
+            patch("aj_crew.acp.client.subprocess_mod", sub),
         ):
             mock_sys.platform = "linux"
             assert _direct_children(100) == [4242]
@@ -276,9 +276,9 @@ class TestDirectChildren:
         sub.check_output.side_effect = subprocess.TimeoutExpired(["pgrep"], 2)
         proc = self._proc_with(["200", FileNotFoundError()])
         with (
-            patch("kiro_crew.acp.client.sys") as mock_sys,
-            patch("kiro_crew.acp.client.Path", return_value=proc),
-            patch("kiro_crew.acp.client.subprocess_mod", sub),
+            patch("aj_crew.acp.client.sys") as mock_sys,
+            patch("aj_crew.acp.client.Path", return_value=proc),
+            patch("aj_crew.acp.client.subprocess_mod", sub),
         ):
             mock_sys.platform = "linux"
             assert _direct_children(100) == [200]
@@ -293,9 +293,9 @@ class TestDirectChildren:
         first = proc.iterdir.return_value
         proc.iterdir.side_effect = [first, FileNotFoundError()]
         with (
-            patch("kiro_crew.acp.client.sys") as mock_sys,
-            patch("kiro_crew.acp.client.Path", return_value=proc),
-            patch("kiro_crew.acp.client.subprocess_mod", sub),
+            patch("aj_crew.acp.client.sys") as mock_sys,
+            patch("aj_crew.acp.client.Path", return_value=proc),
+            patch("aj_crew.acp.client.subprocess_mod", sub),
         ):
             mock_sys.platform = "linux"
             assert _direct_children(100) == [200]
@@ -310,9 +310,9 @@ class TestDirectChildren:
         second = self._proc_with([""]).iterdir.return_value
         proc.iterdir.side_effect = [first, second]
         with (
-            patch("kiro_crew.acp.client.sys") as mock_sys,
-            patch("kiro_crew.acp.client.Path", return_value=proc),
-            patch("kiro_crew.acp.client.subprocess_mod", sub),
+            patch("aj_crew.acp.client.sys") as mock_sys,
+            patch("aj_crew.acp.client.Path", return_value=proc),
+            patch("aj_crew.acp.client.subprocess_mod", sub),
         ):
             mock_sys.platform = "linux"
             assert _direct_children(100) == [200]
@@ -328,9 +328,9 @@ class TestDirectChildren:
         second = self._proc_with(["200 300"]).iterdir.return_value
         proc.iterdir.side_effect = [first, second]
         with (
-            patch("kiro_crew.acp.client.sys") as mock_sys,
-            patch("kiro_crew.acp.client.Path", return_value=proc),
-            patch("kiro_crew.acp.client.subprocess_mod", sub),
+            patch("aj_crew.acp.client.sys") as mock_sys,
+            patch("aj_crew.acp.client.Path", return_value=proc),
+            patch("aj_crew.acp.client.subprocess_mod", sub),
         ):
             mock_sys.platform = "linux"
             assert _direct_children(100) == [200, 300]
@@ -343,9 +343,9 @@ class TestDirectChildren:
         gone = MagicMock()
         gone.iterdir.side_effect = FileNotFoundError()
         with (
-            patch("kiro_crew.acp.client.sys") as mock_sys,
-            patch("kiro_crew.acp.client.Path", return_value=gone),
-            patch("kiro_crew.acp.client.subprocess_mod", sub),
+            patch("aj_crew.acp.client.sys") as mock_sys,
+            patch("aj_crew.acp.client.Path", return_value=gone),
+            patch("aj_crew.acp.client.subprocess_mod", sub),
         ):
             mock_sys.platform = "linux"
             assert _direct_children(100) == []
@@ -366,9 +366,9 @@ class TestDirectChildren:
 
         sub = self._spawner(b"999\n")
         with (
-            patch("kiro_crew.acp.client.sys") as mock_sys,
-            patch("kiro_crew.acp.client.Path", side_effect=fake_path),
-            patch("kiro_crew.acp.client.subprocess_mod", sub),
+            patch("aj_crew.acp.client.sys") as mock_sys,
+            patch("aj_crew.acp.client.Path", side_effect=fake_path),
+            patch("aj_crew.acp.client.subprocess_mod", sub),
         ):
             mock_sys.platform = "linux"
             pids = _get_child_pids(top)
@@ -383,7 +383,7 @@ class TestDirectChildren:
         kernel_os.path.exists.return_value = True
         exists = kernel_os.path.exists
         monkeypatch.setattr(rpt, "_kernel_os", kernel_os)
-        with patch("kiro_crew.acp.client.Path") as walk_path:
+        with patch("aj_crew.acp.client.Path") as walk_path:
             assert rpt._children_interface() is True
             assert rpt._children_interface() is True
         walk_path.assert_not_called()
@@ -403,7 +403,7 @@ class TestDirectChildren:
             if not (Path(f"/proc/{leaf.pid}/task/{leaf.pid}/children")).exists():
                 pytest.skip("kernel built without /proc/<pid>/task/<tid>/children")
             sub = self._spawner(b"999\n")
-            with patch("kiro_crew.acp.client.subprocess_mod", sub):
+            with patch("aj_crew.acp.client.subprocess_mod", sub):
                 assert _direct_children(leaf.pid) == []
             sub.check_output.assert_not_called()
         finally:
@@ -422,11 +422,11 @@ class TestSnapshotProcessTree:
         client._child_pids = {}
 
         with (
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[200, 300, 400]),
-            patch("kiro_crew.platform_compat.get_process_start_id", side_effect=lambda p: p * 10),
-            patch("kiro_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
-            patch("kiro_crew.session_pid._pid_start_token", side_effect=lambda p: str(p * 10)),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[200, 300, 400]),
+            patch("aj_crew.platform_compat.get_process_start_id", side_effect=lambda p: p * 10),
+            patch("aj_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.session_pid._pid_start_token", side_effect=lambda p: str(p * 10)),
         ):
             await client._snapshot_process_tree()
 
@@ -446,7 +446,7 @@ class TestSnapshotProcessTree:
         client._pid = 100
         client._child_pids = {}
 
-        with patch("kiro_crew.acp.client._get_child_pids", return_value=[]):
+        with patch("aj_crew.acp.client._get_child_pids", return_value=[]):
             await client._snapshot_process_tree()
 
         assert client._child_pids == {}
@@ -460,10 +460,10 @@ class TestSnapshotProcessTree:
         client._child_pids = {200: (2000, b"node")}
 
         with (
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[200, 300]),
-            patch("kiro_crew.platform_compat.get_process_start_id", side_effect=lambda p: p * 10),
-            patch("kiro_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[200, 300]),
+            patch("aj_crew.platform_compat.get_process_start_id", side_effect=lambda p: p * 10),
+            patch("aj_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             await client._snapshot_process_tree()
 
@@ -512,10 +512,10 @@ class TestRuntimeSnapshotDescendants:
         r = _snapshot_runtime()
 
         with (
-            patch("kiro_crew.acp.runtime._get_child_pids", return_value=[200, 300]),
-            patch("kiro_crew.platform_compat.get_process_start_id", side_effect=lambda p: p * 10),
-            patch("kiro_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.acp.runtime._get_child_pids", return_value=[200, 300]),
+            patch("aj_crew.platform_compat.get_process_start_id", side_effect=lambda p: p * 10),
+            patch("aj_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             await r._snapshot_descendants()
 
@@ -530,10 +530,10 @@ class TestRuntimeSnapshotDescendants:
         walks = [[200], [200], [200, 400], [200, 400]]
 
         with (
-            patch("kiro_crew.acp.runtime._get_child_pids", side_effect=lambda pid: walks.pop(0)),
-            patch("kiro_crew.platform_compat.get_process_start_id", side_effect=lambda p: p * 10),
-            patch("kiro_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.acp.runtime._get_child_pids", side_effect=lambda pid: walks.pop(0)),
+            patch("aj_crew.platform_compat.get_process_start_id", side_effect=lambda p: p * 10),
+            patch("aj_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             await r._snapshot_descendants()
             await r._snapshot_descendants()
@@ -549,10 +549,10 @@ class TestRuntimeSnapshotDescendants:
         walks = [[], [200], [200]]
 
         with (
-            patch("kiro_crew.acp.runtime._get_child_pids", side_effect=lambda pid: walks.pop(0)),
-            patch("kiro_crew.platform_compat.get_process_start_id", side_effect=lambda p: p * 10),
-            patch("kiro_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.acp.runtime._get_child_pids", side_effect=lambda pid: walks.pop(0)),
+            patch("aj_crew.platform_compat.get_process_start_id", side_effect=lambda p: p * 10),
+            patch("aj_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             await r._snapshot_descendants(retry_when_empty=True)
 
@@ -564,8 +564,8 @@ class TestRuntimeSnapshotDescendants:
         r = _snapshot_runtime()
 
         with (
-            patch("kiro_crew.acp.runtime._get_child_pids", return_value=[]),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.acp.runtime._get_child_pids", return_value=[]),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             await r._snapshot_descendants()
 
@@ -578,8 +578,8 @@ class TestRuntimeSnapshotDescendants:
         r = _snapshot_runtime()
 
         with (
-            patch("kiro_crew.acp.runtime._get_child_pids", side_effect=OSError("/proc gone")),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.acp.runtime._get_child_pids", side_effect=OSError("/proc gone")),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             await r._snapshot_descendants()
 
@@ -590,7 +590,7 @@ class TestRuntimeSnapshotDescendants:
         r = _snapshot_runtime()
         r._pid = None
 
-        with patch("kiro_crew.acp.runtime._get_child_pids") as scan:
+        with patch("aj_crew.acp.runtime._get_child_pids") as scan:
             await r._snapshot_descendants()
 
         scan.assert_not_called()
@@ -612,11 +612,11 @@ class TestRuntimeSnapshotDescendants:
             return True
 
         with (
-            patch("kiro_crew.acp.runtime._get_child_pids", side_effect=_scan),
-            patch("kiro_crew.acp.runtime._replace_child_pids", side_effect=_write),
-            patch("kiro_crew.platform_compat.get_process_start_id", side_effect=lambda p: p * 10),
-            patch("kiro_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.acp.runtime._get_child_pids", side_effect=_scan),
+            patch("aj_crew.acp.runtime._replace_child_pids", side_effect=_write),
+            patch("aj_crew.platform_compat.get_process_start_id", side_effect=lambda p: p * 10),
+            patch("aj_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             await r._snapshot_descendants()
 
@@ -640,10 +640,10 @@ class TestRuntimeSnapshotDurability:
         r._child_pids = {200: ("old-start", b"node")}
 
         with (
-            patch("kiro_crew.acp.runtime._get_child_pids", return_value=[200]),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="new-start"),
-            patch("kiro_crew.acp.client._read_basename", return_value=b"agent-chat"),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.acp.runtime._get_child_pids", return_value=[200]),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="new-start"),
+            patch("aj_crew.acp.client._read_basename", return_value=b"agent-chat"),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             await r._snapshot_descendants()
 
@@ -664,10 +664,10 @@ class TestRuntimeSnapshotDurability:
         walks = [[200, 999], [200]]
 
         with (
-            patch("kiro_crew.acp.runtime._get_child_pids", side_effect=lambda pid: walks.pop(0)),
-            patch("kiro_crew.platform_compat.get_process_start_id", side_effect=lambda p: f"s{p}"),
-            patch("kiro_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.acp.runtime._get_child_pids", side_effect=lambda pid: walks.pop(0)),
+            patch("aj_crew.platform_compat.get_process_start_id", side_effect=lambda p: f"s{p}"),
+            patch("aj_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             await r._snapshot_descendants()
 
@@ -688,13 +688,13 @@ class TestRuntimeSnapshotDurability:
         reads = {200: iter(["captured", "reread"])}
 
         with (
-            patch("kiro_crew.acp.runtime._get_child_pids", return_value=[200]),
+            patch("aj_crew.acp.runtime._get_child_pids", return_value=[200]),
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=lambda p: next(reads[p]),
             ),
-            patch("kiro_crew.acp.client._read_basename", return_value=b"proc200"),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.acp.client._read_basename", return_value=b"proc200"),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             await r._snapshot_descendants()
 
@@ -709,10 +709,10 @@ class TestRuntimeSnapshotDurability:
         r._child_pids = {200: ("s200", b"escaped")}
 
         with (
-            patch("kiro_crew.acp.runtime._get_child_pids", return_value=[300]),
-            patch("kiro_crew.platform_compat.get_process_start_id", side_effect=lambda p: f"s{p}"),
-            patch("kiro_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.acp.runtime._get_child_pids", return_value=[300]),
+            patch("aj_crew.platform_compat.get_process_start_id", side_effect=lambda p: f"s{p}"),
+            patch("aj_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             await r._snapshot_descendants()
 
@@ -732,13 +732,13 @@ class TestRuntimeSnapshotDurability:
         r._child_pids = {200: ("ours", b"agent-chat")}
 
         with (
-            patch("kiro_crew.acp.runtime._get_child_pids", return_value=[300]),
+            patch("aj_crew.acp.runtime._get_child_pids", return_value=[300]),
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=lambda p: "stranger" if p == 200 else f"s{p}",
             ),
-            patch("kiro_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             await r._snapshot_descendants()
 
@@ -752,13 +752,13 @@ class TestRuntimeSnapshotDurability:
         r._child_pids = {200: ("s200", b"gone")}
 
         with (
-            patch("kiro_crew.acp.runtime._get_child_pids", return_value=[300]),
+            patch("aj_crew.acp.runtime._get_child_pids", return_value=[300]),
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=lambda p: None if p == 200 else f"s{p}",
             ),
-            patch("kiro_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             await r._snapshot_descendants()
 
@@ -772,14 +772,14 @@ class TestRuntimeSnapshotDurability:
         answers = [False, True]
 
         with (
-            patch("kiro_crew.acp.runtime._get_child_pids", return_value=[200]),
+            patch("aj_crew.acp.runtime._get_child_pids", return_value=[200]),
             patch(
-                "kiro_crew.acp.runtime._replace_child_pids",
+                "aj_crew.acp.runtime._replace_child_pids",
                 side_effect=lambda *a, **k: answers.pop(0),
             ),
-            patch("kiro_crew.platform_compat.get_process_start_id", side_effect=lambda p: f"s{p}"),
-            patch("kiro_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.platform_compat.get_process_start_id", side_effect=lambda p: f"s{p}"),
+            patch("aj_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             await r._snapshot_descendants()
             assert r._child_pids == {}, "a pid whose write failed must stay unpublished"
@@ -803,9 +803,9 @@ class TestRuntimeSnapshotDurability:
             raise asyncio.CancelledError
 
         with (
-            patch("kiro_crew.acp.runtime._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.runtime.asyncio.sleep", side_effect=_cancel),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.acp.runtime._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.runtime.asyncio.sleep", side_effect=_cancel),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             with pytest.raises(asyncio.CancelledError):
                 await r._snapshot_descendants(retry_when_empty=True)
@@ -834,11 +834,11 @@ class TestRuntimeSnapshotDurability:
             return True
 
         with (
-            patch("kiro_crew.acp.runtime._get_child_pids", side_effect=_scan),
-            patch("kiro_crew.acp.runtime._replace_child_pids", side_effect=_write),
-            patch("kiro_crew.platform_compat.get_process_start_id", side_effect=lambda p: f"s{p}"),
-            patch("kiro_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.acp.runtime._get_child_pids", side_effect=_scan),
+            patch("aj_crew.acp.runtime._replace_child_pids", side_effect=_write),
+            patch("aj_crew.platform_compat.get_process_start_id", side_effect=lambda p: f"s{p}"),
+            patch("aj_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             await asyncio.gather(r._snapshot_descendants(), r._snapshot_descendants())
 
@@ -853,9 +853,9 @@ class TestOneGuardedPassServesBothPaths:
 
     @pytest.mark.asyncio
     async def test_runtime_and_client_both_run_the_shared_pass(self):
-        from kiro_crew.acp import runtime_process_tree
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.testing.ids import UNALLOCATABLE_PID
+        from aj_crew.acp import runtime_process_tree
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.testing.ids import UNALLOCATABLE_PID
 
         modes: list[bool] = []
 
@@ -887,9 +887,9 @@ class TestRuntimeRootIdentity:
         r._start_time = "spawned-then"
 
         with (
-            patch("kiro_crew.acp.runtime._get_child_pids") as scan,
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="someone-else"),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.acp.runtime._get_child_pids") as scan,
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="someone-else"),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             await r._snapshot_descendants()
 
@@ -909,11 +909,11 @@ class TestRuntimeRootIdentity:
         r._root_identity_holds = lambda: next(answers)  # type: ignore[method-assign]
 
         with (
-            patch("kiro_crew.acp.runtime._get_child_pids", return_value=[200, 300]),
-            patch("kiro_crew.acp.runtime._replace_child_pids") as write,
-            patch("kiro_crew.platform_compat.get_process_start_id", side_effect=lambda p: p * 10),
-            patch("kiro_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.acp.runtime._get_child_pids", return_value=[200, 300]),
+            patch("aj_crew.acp.runtime._replace_child_pids") as write,
+            patch("aj_crew.platform_compat.get_process_start_id", side_effect=lambda p: p * 10),
+            patch("aj_crew.acp.client._read_basename", side_effect=lambda p: f"proc{p}".encode()),
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             await r._snapshot_descendants()
 
@@ -928,8 +928,8 @@ class TestRuntimeRootIdentity:
         r._start_time = None
 
         with (
-            patch("kiro_crew.acp.runtime._get_child_pids") as scan,
-            patch("kiro_crew.session_pid.config_dir", return_value=tmp_path),
+            patch("aj_crew.acp.runtime._get_child_pids") as scan,
+            patch("aj_crew.session_pid.config_dir", return_value=tmp_path),
         ):
             await r._snapshot_descendants()
 
@@ -1005,7 +1005,7 @@ class TestSessionCleanupOnCancellation:
         tr = self._make_mock_taskrunner(keys)
 
         # Import the real method and bind it
-        from kiro_crew.taskrunner import TaskRunner
+        from aj_crew.taskrunner import TaskRunner
 
         cleanup = TaskRunner._cleanup_run_sessions
 
@@ -1026,14 +1026,14 @@ class TestSessionCleanupOnCancellation:
         """Sessions from other runs are not touched."""
         from session_helpers import _mock_provider_factory
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
-        from kiro_crew.taskrunner import TaskRunner
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
+        from aj_crew.taskrunner import TaskRunner
 
         run = MagicMock()
         run.task_id = "abc123"
         run.error = None
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.session.timeout_secs = 2
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         keys = ["taskrunner:abc123:task0", "taskrunner:other:task0"]
@@ -1062,7 +1062,7 @@ class TestSessionCleanupOnCancellation:
         tr = self._make_mock_taskrunner(keys)
         tr._sessions.cancel_current = AsyncMock(side_effect=Exception("boom"))
 
-        from kiro_crew.taskrunner import TaskRunner
+        from aj_crew.taskrunner import TaskRunner
 
         await TaskRunner._cleanup_run_sessions(tr, run)
 
@@ -1077,10 +1077,10 @@ class TestSessionCleanupOnCancellation:
 class TestPidTracking:
     def test_track_and_untrack(self, tmp_path):
         """_track_pid appends, _untrack_pid removes."""
-        from kiro_crew.session_pid import _track_pid, _untrack_pid
+        from aj_crew.session_pid import _track_pid, _untrack_pid
 
         pid_file = tmp_path / "pids.txt"
-        with patch("kiro_crew.session_pid._pid_file_path", return_value=pid_file):
+        with patch("aj_crew.session_pid._pid_file_path", return_value=pid_file):
             _track_pid(100)
             _track_pid(200)
             _track_pid(300)

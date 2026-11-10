@@ -83,7 +83,7 @@ const mocks = vi.hoisted(() => ({
   chatFolders: vi.fn(),
   chatTags: vi.fn(),
   tagColumns: vi.fn(),
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
   models: vi.fn(),
 }))
 vi.mock('../api/client', () => ({
@@ -261,7 +261,7 @@ beforeEach(() => {
   mocks.chatFolders.mockResolvedValue([])
   mocks.chatTags.mockResolvedValue([])
   mocks.tagColumns.mockResolvedValue([])
-  mocks.kirocrewConfig.mockResolvedValue({ dashboard: { recent_tint_count: 3 } })
+  mocks.ajcrewConfig.mockResolvedValue({ dashboard: { recent_tint_count: 3 } })
   mocks.models.mockResolvedValue([])
 })
 afterEach(() => {

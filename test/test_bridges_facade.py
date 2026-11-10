@@ -1,15 +1,15 @@
-"""``kiro_crew.apps.bridges`` stays the one import path and patch surface of its owners.
+"""``aj_crew.apps.bridges`` stays the one import path and patch surface of its owners.
 
 The app registration bridge module was split into sibling owners (``bridges_<role>.py``) behind a
-:mod:`kiro_crew._facade_mirror` facade. These tests pin what the split must keep:
+:mod:`aj_crew._facade_mirror` facade. These tests pin what the split must keep:
 
 * the facade serves a mirror over exactly the ``bridges_*`` modules beside it, and every
   module-level name the unsplit file bound still resolves through it, to the object each
   owner holds;
-* every owner logs as ``kiro_crew.apps.bridges``, the logger name log filters and
+* every owner logs as ``aj_crew.apps.bridges``, the logger name log filters and
   ``caplog`` assertions use;
 * every name the facade serves from outside the family is named in a ``TYPE_CHECKING``
-  group, so ``from kiro_crew.apps.bridges import <name>`` stays visible to type checkers;
+  group, so ``from aj_crew.apps.bridges import <name>`` stays visible to type checkers;
 * nothing outside the family imports an owner: callers register and deregister an app's resources through the facade.
 
 Each structural check has a self-test that shows it can fail.
@@ -26,20 +26,20 @@ import owner_import_scan
 import pytest
 import source_corpus
 
-import kiro_crew
-from kiro_crew import _facade_mirror
-from kiro_crew.apps import bridges as facade
+import aj_crew
+from aj_crew import _facade_mirror
+from aj_crew.apps import bridges as facade
 
-# Walks src/kiro_crew for owner imports; keep it on one worker.
+# Walks src/aj_crew for owner imports; keep it on one worker.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_bridges_facade")
 
 #: Checks ``test_facade_shared_checks.py`` runs against this module's helpers; each is
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("base_names_resolve", "owners_log_as_facade")
 
-_SRC = Path(kiro_crew.__file__).resolve().parent
-_FACADE = "kiro_crew.apps.bridges"
-_OWNER_PREFIX = "kiro_crew.apps.bridges_"
+_SRC = Path(aj_crew.__file__).resolve().parent
+_FACADE = "aj_crew.apps.bridges"
+_OWNER_PREFIX = "aj_crew.apps.bridges_"
 
 #: Every module-level name ``apps/bridges.py`` bound before the split.
 _BASE_MODULE_NAMES = frozenset("""
@@ -75,7 +75,7 @@ _BASE_MODULE_NAMES = frozenset("""
     deregister_app deregister_app_crons_from_service deregister_app_crons_reporting_failures
     disarm_app_crons_for_execution discard_app_session_pointers emit_env field get_app
     get_app_manifest has_stdio_mcp_server hashlib is_module_style_entry_point
-    is_sensitive_path json kiro_agents_dir kiro_crew_file list_apps load_app_cron_defs
+    is_sensitive_path json kiro_agents_dir aj_crew_file list_apps load_app_cron_defs
     loads_mcp_config loads_user_json logger logging lookup_cron_folder_id
     maintenance_executor may_skip_gate_now os path_command_is_abi_matched pinned_fs
     platform_compat publish_materialized_agents purge_uninstalled_agent_residue re
@@ -104,7 +104,7 @@ def _source(module_name: str) -> str:
 def test_the_facade_serves_a_mirror_over_every_sibling_owner() -> None:
     assert isinstance(facade, _facade_mirror.MirroredModule)
     index = _index()
-    on_disk = sorted(f"kiro_crew.apps.{path.stem}" for path in (_SRC / "apps").glob("bridges_*.py"))
+    on_disk = sorted(f"aj_crew.apps.{path.stem}" for path in (_SRC / "apps").glob("bridges_*.py"))
     assert sorted(index.owners) == on_disk
     assert index.excluded == ()
     assert index.divergent() == ()
@@ -141,7 +141,7 @@ def test_every_served_import_is_named_for_type_checkers() -> None:
     """A name the family imports and the facade serves is in a ``TYPE_CHECKING`` group.
 
     The facade binds none of them, so this group is what keeps
-    ``from kiro_crew.apps.bridges import get_app_manifest`` visible to mypy.
+    ``from aj_crew.apps.bridges import get_app_manifest`` visible to mypy.
     """
     index = _index()
     served = _served_imports(index)
@@ -183,13 +183,13 @@ def test_only_the_family_imports_an_owner() -> None:
 
 
 def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None:
-    root = tmp_path / "kiro_crew"
+    root = tmp_path / "aj_crew"
     sources = {
-        root / "pkg" / "caller.py": "from kiro_crew.apps.bridges_sources import _namespace\n",
-        root / "other.py": "from kiro_crew.apps import bridges_sources as low\n",
+        root / "pkg" / "caller.py": "from aj_crew.apps.bridges_sources import _namespace\n",
+        root / "other.py": "from aj_crew.apps import bridges_sources as low\n",
         root / "apps" / "relative.py": "from .bridges_sources import _namespace\n",
         root / "apps" / "deep" / "up.py": "from .. import bridges_sources\n",
-        root / "facade_user.py": "from kiro_crew.apps.bridges import _namespace\n",
+        root / "facade_user.py": "from aj_crew.apps.bridges import _namespace\n",
     }
     assert _owner_importers(sources.items(), root) == {
         "pkg/caller.py",

@@ -50,7 +50,7 @@ function loadPreload() {
   return { api: exposed.mochi, sent, invoked, listeners };
 }
 
-test("exposes window.mochi and window.kirocrew", () => {
+test("exposes window.mochi and window.ajcrew", () => {
   const { api } = loadPreload();
   assert.ok(api, "mochi must be exposed");
 });

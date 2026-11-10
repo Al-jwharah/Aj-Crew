@@ -31,7 +31,7 @@ class TestForkSlotTail:
         mock_cfg = MagicMock()
         mock_cfg.dashboard.tail_fork_enabled = True
         _floor_monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_fork.KiroCrewConfig.load", lambda: mock_cfg
+            "aj_crew.dashboard.chat_fork.AjCrewConfig.load", lambda: mock_cfg
         )
 
     @pytest.mark.asyncio
@@ -176,7 +176,7 @@ class TestForkSlotTail:
         """B1 gate (D1): tail_fork_enabled=False silently downgrades tail -> head."""
         mock_cfg = MagicMock()
         mock_cfg.dashboard.tail_fork_enabled = False
-        monkeypatch.setattr("kiro_crew.dashboard.chat_fork.KiroCrewConfig.load", lambda: mock_cfg)
+        monkeypatch.setattr("aj_crew.dashboard.chat_fork.AjCrewConfig.load", lambda: mock_cfg)
         state = _make_state(tmp_path)
         _make_tail_fork_slot(state)
 

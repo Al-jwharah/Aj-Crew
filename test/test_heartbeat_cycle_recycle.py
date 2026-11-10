@@ -25,12 +25,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.heartbeat import HeartbeatService, heartbeat_path
-from kiro_crew.session import HEARTBEAT_KEY
+from aj_crew.heartbeat import HeartbeatService, heartbeat_path
+from aj_crew.session import HEARTBEAT_KEY
 
 
 def _make_cfg():
-    """Minimal KiroCrewConfig stub for SessionManager unit tests."""
+    """Minimal AjCrewConfig stub for SessionManager unit tests."""
     cfg = MagicMock()
     cfg.session.pool_size = 0
     cfg.session.pool_agent = ""
@@ -43,7 +43,7 @@ def _make_cfg():
 @pytest.fixture()
 def heartbeat_file(tmp_path, monkeypatch):
     """Redirect heartbeat_path() to a tmp file."""
-    monkeypatch.setattr("kiro_crew.heartbeat.workspace_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.heartbeat.workspace_dir", lambda: tmp_path)
     return heartbeat_path()
 
 
@@ -111,7 +111,7 @@ class TestOnCycleEndCallback:
         candidate's error."""
         import logging
 
-        from kiro_crew.llm_helpers import FALLBACK_STORY_ATTR
+        from aj_crew.llm_helpers import FALLBACK_STORY_ATTR
 
         async def _on_task(text, deliver):
             exc = RuntimeError("backend throttle 500")
@@ -131,7 +131,7 @@ class TestOnCycleEndCallback:
             memory=MagicMock(),
             on_task=_on_task,
         )
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.heartbeat"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.heartbeat"):
             await svc._process_heartbeat_file()
 
         failed = [
@@ -158,7 +158,7 @@ class TestOnCycleEndCallback:
             memory=MagicMock(),
             on_task=_on_task,
         )
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.heartbeat"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.heartbeat"):
             await svc._process_heartbeat_file()
 
         failed = [
@@ -193,12 +193,12 @@ class TestOnCycleEndCallback:
             on_task=_on_task,
             on_cycle_end=_on_cycle_end,
         )
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.heartbeat"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.heartbeat"):
             await svc._process_heartbeat_file()
 
         assert ran == ["some task"]
         assert cycle_ends == [True]
-        warnings = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.heartbeat"]
+        warnings = [r.getMessage() for r in caplog.records if r.name == "aj_crew.heartbeat"]
         assert warnings == ["Heartbeat: on_cycle_end callback failed"]
 
     @pytest.mark.asyncio
@@ -239,7 +239,7 @@ class TestRecycleHeartbeat:
     async def test_no_op_when_session_absent(self):
         """Cycles where no heartbeat task ever ran (no session created)
         must be cheap — no work, no errors."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         factory = MagicMock()
         mgr = SessionManager(cfg=_make_cfg(), provider_factory=factory)
@@ -259,7 +259,7 @@ class TestRecycleHeartbeat:
         change: preserving a session under 70% context and under 40 prompts
         let the heartbeat transcript accumulate
         across cycles while the docs promised fresh context."""
-        from kiro_crew.session import FirstTurnState, SessionManager, _Session
+        from aj_crew.session import FirstTurnState, SessionManager, _Session
 
         mgr = SessionManager(cfg=_make_cfg(), provider_factory=MagicMock())
         provider = MagicMock()
@@ -278,7 +278,7 @@ class TestRecycleHeartbeat:
     async def test_recycles_at_pct_threshold(self):
         """A full session is recycled too — the next ``get_or_create``
         creates a fresh one on demand."""
-        from kiro_crew.session import FirstTurnState, SessionManager, _Session
+        from aj_crew.session import FirstTurnState, SessionManager, _Session
 
         mgr = SessionManager(cfg=_make_cfg(), provider_factory=MagicMock())
         provider = MagicMock()
@@ -300,7 +300,7 @@ class TestRecycleHeartbeat:
     async def test_recycles_when_context_pct_unavailable(self):
         """A provider that can't report context% is recycled all the same —
         there is no threshold left to fall back on."""
-        from kiro_crew.session import FirstTurnState, SessionManager, _Session
+        from aj_crew.session import FirstTurnState, SessionManager, _Session
 
         mgr = SessionManager(cfg=_make_cfg(), provider_factory=MagicMock())
         provider = MagicMock()
@@ -317,71 +317,71 @@ class TestRecycleHeartbeat:
 
 
 class TestHeartbeatAgentInstall:
-    """``_install_heartbeat_agent`` writes the kirocrew-heartbeat agent
+    """``_install_heartbeat_agent`` writes the ajcrew-heartbeat agent
     config with a minimal MCP surface (per code review)."""
 
     def test_installs_with_minimal_mcp_servers(self, tmp_path, monkeypatch):
-        """Heartbeat agent gets kirocrew-core only on public installs — NOT
-        kirocrew-cron / governance / etc.  This is the
+        """Heartbeat agent gets ajcrew-core only on public installs — NOT
+        ajcrew-cron / governance / etc.  This is the
         narrow-toolbelt fix for cold-start cost. (Any extra internal
         wiring is omitted on public installs, matching
         ``_install_research_agent`` / ``_install_knowledge_agent``.)"""
         import json
 
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         kiro_dir = tmp_path / "agents"
         kiro_dir.mkdir()
-        # Seed a main kirocrew.json with multiple mcp servers — the heartbeat
-        # installer should pick out only the one it needs (kirocrew-core).
+        # Seed a main ajcrew.json with multiple mcp servers — the heartbeat
+        # installer should pick out only the one it needs (ajcrew-core).
         main_config = {
-            "name": "kirocrew",
+            "name": "ajcrew",
             "mcpServers": {
                 "builder-mcp": {"command": "/bin/builder-mcp", "args": ["x"]},
-                "kirocrew-core": {"command": "/bin/mc", "args": ["mcp-core"]},
-                "kirocrew-cron": {"command": "/bin/mc", "args": ["mcp-cron"]},
+                "ajcrew-core": {"command": "/bin/mc", "args": ["mcp-core"]},
+                "ajcrew-cron": {"command": "/bin/mc", "args": ["mcp-cron"]},
                 "playwright-mcp": {"command": "/bin/playwright-mcp", "args": []},
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(main_config))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(main_config))
 
         monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", kiro_dir)
 
         agent_mod._install_heartbeat_agent()
 
-        path = kiro_dir / "kirocrew-heartbeat.json"
+        path = kiro_dir / "ajcrew-heartbeat.json"
         assert path.exists()
         config = json.loads(path.read_text(encoding="utf-8"))
 
-        assert config["name"] == "kirocrew-heartbeat"
-        # Minimal MCP surface — only kirocrew-core on public installs
+        assert config["name"] == "ajcrew-heartbeat"
+        # Minimal MCP surface — only ajcrew-core on public installs
         # (builder-mcp is Amazon-internal and omitted).
-        assert set(config["mcpServers"].keys()) == {"kirocrew-core"}
+        assert set(config["mcpServers"].keys()) == {"ajcrew-core"}
         # Tools tags reflect that server (so kiro-cli loads it).
-        assert "@kirocrew-core" in config["tools"]
+        assert "@ajcrew-core" in config["tools"]
         assert "@builder-mcp" not in config["tools"]
         # Description references the SEL audit gateway-side responsibility.
         assert "_heartbeat_approval" in config["description"]
 
     def test_strips_include_tools_filters_from_main_config(self, tmp_path, monkeypatch):
-        """The main kirocrew config may narrow a server via ``--include-tools``
+        """The main ajcrew config may narrow a server via ``--include-tools``
         / ``--include-tool-tags`` / ``--exclude-tools``; those filters are
         fragile (a typo silently surfaces zero tools to the agent) and the
         heartbeat allowlist is enforced gateway-side anyway. Strip them so
         the heartbeat agent always sees the full catalog and the heartbeat
-        allowlist (``_heartbeat_approval``) is the sole gate. (Asserted on kirocrew-core —
+        allowlist (``_heartbeat_approval``) is the sole gate. (Asserted on ajcrew-core —
         the only server the public installer pulls.)
         """
         import json
 
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         kiro_dir = tmp_path / "agents"
         kiro_dir.mkdir()
         main_config = {
-            "name": "kirocrew",
+            "name": "ajcrew",
             "mcpServers": {
-                "kirocrew-core": {
+                "ajcrew-core": {
                     "command": "/bin/mc",
                     "args": [
                         "mcp-core",
@@ -396,13 +396,13 @@ class TestHeartbeatAgentInstall:
                 },
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(main_config))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(main_config))
         monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", kiro_dir)
 
         agent_mod._install_heartbeat_agent()
 
-        config = json.loads((kiro_dir / "kirocrew-heartbeat.json").read_text(encoding="utf-8"))
-        core_args = config["mcpServers"]["kirocrew-core"]["args"]
+        config = json.loads((kiro_dir / "ajcrew-heartbeat.json").read_text(encoding="utf-8"))
+        core_args = config["mcpServers"]["ajcrew-core"]["args"]
         # Filter flags + their values must be stripped (both --flag=value and
         # --flag <value> shapes).
         joined = " ".join(core_args)
@@ -418,12 +418,12 @@ class TestHeartbeatAgentInstall:
         assert "mcp-core" in core_args
 
     def test_install_resilient_when_main_config_missing(self, tmp_path, monkeypatch):
-        """First-run scenario: kirocrew.json may not exist yet when the
+        """First-run scenario: ajcrew.json may not exist yet when the
         heartbeat installer is called.  Should still write a valid (empty
         mcpServers) heartbeat config — install ordering is not load-bearing."""
         import json
 
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         kiro_dir = tmp_path / "agents"
         kiro_dir.mkdir()
@@ -431,12 +431,12 @@ class TestHeartbeatAgentInstall:
 
         agent_mod._install_heartbeat_agent()
 
-        path = kiro_dir / "kirocrew-heartbeat.json"
+        path = kiro_dir / "ajcrew-heartbeat.json"
         assert path.exists()
         config = json.loads(path.read_text(encoding="utf-8"))
-        assert config["name"] == "kirocrew-heartbeat"
+        assert config["name"] == "ajcrew-heartbeat"
         # No main config → empty mcpServers (subsequent rebuild_agent_config
-        # call will re-seed when kirocrew.json appears).
+        # call will re-seed when ajcrew.json appears).
         assert config["mcpServers"] == {}
         # tools must be derived from mcpServers — never reference a
         # namespace without a matching mcpServers entry, otherwise kiro-cli
@@ -446,33 +446,33 @@ class TestHeartbeatAgentInstall:
     def test_tools_derived_from_resolved_mcp_servers(self, tmp_path, monkeypatch):
         """``tools`` must be built from the mcpServers actually resolved.
 
-        The public installer only pulls ``kirocrew-core``; the Amazon-internal
+        The public installer only pulls ``ajcrew-core``; the Amazon-internal
         ``builder-mcp`` is never carried over.  So a main config that has
-        builder-mcp but NOT kirocrew-core resolves to an empty toolbelt — and
+        builder-mcp but NOT ajcrew-core resolves to an empty toolbelt — and
         the tools list must NEVER reference a namespace without a matching
         mcpServers entry, otherwise kiro-cli fails to load the agent.
         (review-bot finding on rev 6.)
         """
         import json
 
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         kiro_dir = tmp_path / "agents"
         kiro_dir.mkdir()
-        # Main config has builder-mcp but NOT kirocrew-core.
+        # Main config has builder-mcp but NOT ajcrew-core.
         main_config = {
-            "name": "kirocrew",
+            "name": "ajcrew",
             "mcpServers": {
                 "builder-mcp": {"command": "/bin/builder-mcp", "args": []},
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(main_config))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(main_config))
         monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", kiro_dir)
 
         agent_mod._install_heartbeat_agent()
 
-        config = json.loads((kiro_dir / "kirocrew-heartbeat.json").read_text(encoding="utf-8"))
-        # builder-mcp is omitted on public installs; kirocrew-core absent here.
+        config = json.loads((kiro_dir / "ajcrew-heartbeat.json").read_text(encoding="utf-8"))
+        # builder-mcp is omitted on public installs; ajcrew-core absent here.
         assert config["mcpServers"] == {}
         # tools list mirrors mcpServers — never references @builder-mcp.
         assert config["tools"] == []

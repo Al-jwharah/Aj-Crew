@@ -1,4 +1,4 @@
-"""``kirocrew doctor`` prints the overload-resilience contract: per-state task
+"""``ajcrew doctor`` prints the overload-resilience contract: per-state task
 counts, the configured admission bounds, the recovery ladder and the platform
 liveness evidence.
 
@@ -13,10 +13,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_doctor
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.recovery import ladder as lad
-from kiro_crew.taskq import TaskRecord, TaskStore
+from aj_crew import cli_doctor
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.recovery import ladder as lad
+from aj_crew.taskq import TaskRecord, TaskStore
 
 
 @pytest.fixture(autouse=True)
@@ -36,7 +36,7 @@ def _rec(task_id: str) -> TaskRecord:
 def test_task_store_section_lists_per_state_counts(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     store = TaskStore(tmp_path / "tasks" / "tasks.db", network_fs=False).open()
     store.accept([_rec("a"), _rec("b")])
     store.close()
@@ -49,7 +49,7 @@ def test_task_store_section_lists_per_state_counts(
 
 
 def test_overload_section_prints_configured_bounds(capsys: pytest.CaptureFixture[str]) -> None:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.session_start_concurrency = 3
     cfg.agent.adaptive_concurrency_mode = "fixed"
     cfg.agent.interactive_command_policy = "wait"
@@ -67,7 +67,7 @@ def test_overload_section_prints_configured_bounds(capsys: pytest.CaptureFixture
 
 def test_ladder_rows_print_the_configured_backoff(capsys: pytest.CaptureFixture[str]) -> None:
     """One knob, one number: the rows and the dependency line cannot disagree."""
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.recovery_backoff_base_secs = 7.0
     cfg.agent.recovery_backoff_max_secs = 300.0
     cli_doctor._doctor_overload_resilience(cfg)
@@ -82,7 +82,7 @@ def test_ladder_rows_print_the_configured_backoff(capsys: pytest.CaptureFixture[
 
 
 def test_overload_section_marks_adaptive_off(capsys: pytest.CaptureFixture[str]) -> None:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.adaptive_concurrency = False
     cli_doctor._doctor_overload_resilience(cfg)
     assert "adaptive concurrency: off" in capsys.readouterr().out

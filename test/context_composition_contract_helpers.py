@@ -18,12 +18,12 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import context as ctx
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.hooks import HookManager
-from kiro_crew.learn import Lesson, LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew import context as ctx
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.hooks import HookManager
+from aj_crew.learn import Lesson, LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 
 class _FrozenClock(datetime):
@@ -69,20 +69,20 @@ class _Rig:
     def __init__(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         self.tmp = tmp_path
         self.monkeypatch = monkeypatch
-        self.cfg = KiroCrewConfig()
+        self.cfg = AjCrewConfig()
         # Goldens pin composition, not reply style: start every scenario at
         # normal length; scenarios that test a level set it themselves.
         self.cfg.dashboard.verbosity = "default"
         monkeypatch.setattr(ctx, "datetime", _FrozenClock)
         monkeypatch.setattr(ctx, "get_local_tz", lambda: ("UTC", timezone.utc))
-        monkeypatch.setattr(ctx.KiroCrewConfig, "load", lambda *a, **k: self.cfg)
+        monkeypatch.setattr(ctx.AjCrewConfig, "load", lambda *a, **k: self.cfg)
         monkeypatch.setattr(ctx.live, "snapshot", lambda: None)
         self.agents = tmp_path / "kiro" / "agents"
         self.agents.mkdir(parents=True)
         monkeypatch.setenv("KIRO_HOME", str(tmp_path / "kiro"))
         monkeypatch.setattr(ctx, "kiro_agents_dir", lambda: self.agents)
-        monkeypatch.setattr("kiro_crew.agent.KIRO_AGENTS_DIR", self.agents)
-        monkeypatch.setattr("kiro_crew.agent_discovery._KIRO_AGENTS_DIR", self.agents)
+        monkeypatch.setattr("aj_crew.agent.KIRO_AGENTS_DIR", self.agents)
+        monkeypatch.setattr("aj_crew.agent_discovery._KIRO_AGENTS_DIR", self.agents)
         (tmp_path / "home").mkdir()
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path / "home")
         self.globs: list[str] = []

@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.session_digest."""
+"""Tests for aj_crew.session_digest."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import session_digest
-from kiro_crew.session_digest import SessionDigest, _collapse_whitespace, digest
+from aj_crew import session_digest
+from aj_crew.session_digest import SessionDigest, _collapse_whitespace, digest
 
 
 @pytest.fixture()
@@ -58,8 +58,8 @@ class TestFirstMessageExtraction:
         )
 
         with (
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("dashboard_chat-1", ("dashboard_chat-1",), "sid-123")
 
@@ -79,8 +79,8 @@ class TestFirstMessageExtraction:
         )
 
         with (
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("test_ws", ("test_ws",), "sid-nope")
 
@@ -97,8 +97,8 @@ class TestFirstMessageExtraction:
         )
 
         with (
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("test_long", ("test_long",), "sid-nope")
 
@@ -116,8 +116,8 @@ class TestFirstMessageExtraction:
         )
 
         with (
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("test_empty", ("test_empty",), "sid-nope")
 
@@ -140,8 +140,8 @@ class TestFirstMessageExtraction:
         )
 
         with (
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("no_transcript", ("no_transcript",), "sid-abc")
 
@@ -165,8 +165,8 @@ class TestTurnCounting:
         )
 
         with (
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("test_turns", ("test_turns",), "sid-nope")
 
@@ -193,8 +193,8 @@ class TestTurnCounting:
         )
 
         with (
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("test_arch", ("test_arch",), "sid-nope")
 
@@ -214,8 +214,8 @@ class TestTurnCounting:
         )
 
         with (
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("test_ws_turn", ("test_ws_turn",), "sid-nope")
 
@@ -246,8 +246,8 @@ class TestTurnCounting:
         )
 
         with (
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("no_transcript", ("no_transcript",), "sid-turns")
 
@@ -306,8 +306,8 @@ class TestImageCounting:
         )
 
         with (
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("img_session", ("img_session",), "sid-img")
 
@@ -329,8 +329,8 @@ class TestImageCounting:
         )
 
         with (
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("noimg", ("noimg",), "sid-noimg")
 
@@ -352,8 +352,8 @@ class TestRobustness:
             f.write(json.dumps({"role": "user", "content": "After garbage", "ts": "t2"}) + "\n")
 
         with (
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("test_bad", ("test_bad",), "sid-nope")
 
@@ -363,8 +363,8 @@ class TestRobustness:
     def test_nonexistent_file(self, sessions_dir: Path, cli_dir: Path) -> None:
         """Non-existent files degrade to empty/zero."""
         with (
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("ghost", ("ghost",), "ghost-sid")
 
@@ -389,8 +389,8 @@ class TestRobustness:
             )
 
         with (
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("test_bin", ("test_bin",), "sid-nope")
 
@@ -402,8 +402,8 @@ class TestRobustness:
         (sessions_dir / "test_empty.jsonl").write_text("", encoding="utf-8")
 
         with (
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("test_empty", ("test_empty",), "sid-nope")
 
@@ -438,8 +438,8 @@ class TestRobustness:
             )
 
         with (
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("bad_cli", ("bad_cli",), "sid-bad")
 
@@ -482,8 +482,8 @@ class TestMultipleStems:
         )
 
         with (
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("slack_session", ("slack_1234", "slack_thread_1234"), "sid-nope")
 
@@ -540,9 +540,9 @@ class TestBoundedRecords:
             f.write(json.dumps({"role": "user", "content": "kept"}) + "\n")
 
         with (
-            patch("kiro_crew.session_digest._RECORD_CAP", 200, create=True),
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest._RECORD_CAP", 200, create=True),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("over_cap", ("over_cap",), "sid-nope")
 
@@ -569,9 +569,9 @@ class TestBoundedRecords:
             return spy
 
         with (
-            patch("kiro_crew.session_digest.open", _spy_open),
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest.open", _spy_open),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("bounded", ("bounded",), "sid-nope")
 
@@ -600,9 +600,9 @@ class TestBoundedRecords:
             f.write(_user_record_of_length(cap) + "\n")
 
         with (
-            patch("kiro_crew.session_digest._RECORD_CAP", cap, create=True),
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest._RECORD_CAP", cap, create=True),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("at_cap", ("at_cap",), "sid-nope")
 
@@ -616,9 +616,9 @@ class TestBoundedRecords:
             f.write(_user_record_of_length(cap + 1) + "\n")
 
         with (
-            patch("kiro_crew.session_digest._RECORD_CAP", cap, create=True),
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest._RECORD_CAP", cap, create=True),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("over_by_one", ("over_by_one",), "sid-nope")
 
@@ -634,9 +634,9 @@ class TestBoundedRecords:
             f.write(json.dumps({"role": "user", "content": "second kept"}) + "\n")
 
         with (
-            patch("kiro_crew.session_digest._RECORD_CAP", cap, create=True),
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest._RECORD_CAP", cap, create=True),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("deep_drain", ("deep_drain",), "sid-nope")
 
@@ -651,9 +651,9 @@ class TestBoundedRecords:
         path.write_text(json.dumps({"role": "user", "content": "tail"}), encoding="utf-8")
 
         with (
-            patch("kiro_crew.session_digest._RECORD_CAP", 200, create=True),
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest._RECORD_CAP", 200, create=True),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("no_terminator", ("no_terminator",), "sid-nope")
 
@@ -672,9 +672,9 @@ class TestBoundedRecords:
             f.write(json.dumps({"role": "user", "content": "a\u2028b"}, ensure_ascii=False) + "\n")
 
         with (
-            patch("kiro_crew.session_digest._RECORD_CAP", 200, create=True),
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest._RECORD_CAP", 200, create=True),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("exotic", ("exotic",), "sid-nope")
 
@@ -694,9 +694,9 @@ class TestBoundedRecords:
         path.write_text("H" * (cap + 1) + forged + "\n", encoding="utf-8", newline="")
 
         with (
-            patch("kiro_crew.session_digest._RECORD_CAP", cap, create=True),
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest._RECORD_CAP", cap, create=True),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("forged_tail", ("forged_tail",), "sid-nope")
 
@@ -719,9 +719,9 @@ class TestBoundedRecords:
         path.write_text(record + "\n", encoding="utf-8", newline="")
 
         with (
-            patch("kiro_crew.session_digest._RECORD_CAP", cap, create=True),
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest._RECORD_CAP", cap, create=True),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("astral", ("astral",), "sid-nope")
 
@@ -741,9 +741,9 @@ class TestBoundedRecords:
         path.write_text(body, encoding="utf-8", newline="")
 
         with (
-            patch("kiro_crew.session_digest._RECORD_CAP", 4096, create=True),
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest._RECORD_CAP", 4096, create=True),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("crlf", ("crlf",), "sid-nope")
 
@@ -764,9 +764,9 @@ class TestBoundedRecords:
         path.write_bytes(_user_record_of_length(cap).encode("utf-8") + b"\r\n")
 
         with (
-            patch("kiro_crew.session_digest._RECORD_CAP", cap, create=True),
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest._RECORD_CAP", cap, create=True),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             at_cap = digest("crlf_at_cap", ("crlf_at_cap",), "sid-nope")
 
@@ -778,9 +778,9 @@ class TestBoundedRecords:
         over.write_bytes(_user_record_of_length(cap + 1).encode("utf-8") + b"\r\n")
 
         with (
-            patch("kiro_crew.session_digest._RECORD_CAP", cap, create=True),
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest._RECORD_CAP", cap, create=True),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             refused = digest("crlf_over_cap", ("crlf_over_cap",), "sid-nope")
 
@@ -817,9 +817,9 @@ class TestBoundedRecords:
             )
 
         with (
-            patch("kiro_crew.session_digest._RECORD_CAP", 200, create=True),
-            patch("kiro_crew.session_digest.data_home", return_value=sessions_dir.parent),
-            patch("kiro_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
+            patch("aj_crew.session_digest._RECORD_CAP", 200, create=True),
+            patch("aj_crew.session_digest.data_home", return_value=sessions_dir.parent),
+            patch("aj_crew.session_digest.kiro_sessions_dir", return_value=cli_dir),
         ):
             result = digest("cli_big", ("no_transcript",), "sid-big")
 

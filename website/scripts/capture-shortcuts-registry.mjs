@@ -19,8 +19,8 @@ const OUT = process.env.OUT_DIR || '/tmp/shortcuts-registry-shots'
 mkdirSync(OUT, { recursive: true })
 
 const SLOTS = [
-  { key: 'chat-1-a', title: 'Shortcut registry — P1', running: false, messages: 4, agent: 'kirocrew', last_ts: new Date().toISOString() },
-  { key: 'chat-1-b', title: 'Conventional defaults', running: false, messages: 2, agent: 'kirocrew', last_ts: new Date(Date.now() - 3600_000).toISOString() },
+  { key: 'chat-1-a', title: 'Shortcut registry — P1', running: false, messages: 4, agent: 'ajcrew', last_ts: new Date().toISOString() },
+  { key: 'chat-1-b', title: 'Conventional defaults', running: false, messages: 2, agent: 'ajcrew', last_ts: new Date(Date.now() - 3600_000).toISOString() },
 ]
 
 const { srv, base } = await serveDist(process.env.DIST || DEFAULT_DIST)
@@ -28,7 +28,7 @@ const browser = await chromium.launch({ executablePath: chromiumExecutable() })
 
 /**
  * `host`: 'browser' is a plain tab (browser-reserved chords demoted, Win/Linux
- * glyphs); 'desktop-mac' fakes the Electron preload bridge (`window.kirocrew`)
+ * glyphs); 'desktop-mac' fakes the Electron preload bridge (`window.ajcrew`)
  * and a macOS platform so the modal renders the desktop state — ⌘N / ⌘W
  * leading, ⌘ glyphs — the way the shipped app does. The SPA reads both at
  * module load, so they are seeded before any script runs.
@@ -39,11 +39,11 @@ async function open(theme, host = 'browser') {
   if (host === 'desktop-mac') {
     await page.addInitScript(() => {
       Object.defineProperty(navigator, 'platform', { value: 'MacIntel', configurable: true })
-      window.kirocrew = { isElectron: true, platform: 'darwin' }
+      window.ajcrew = { isElectron: true, platform: 'darwin' }
     })
   } else if (host === 'desktop-linux') {
     // Windows/Linux desktop: Ctrl chords lead, no demotion, non-Mac glyphs.
-    await page.addInitScript(() => { window.kirocrew = { isElectron: true, platform: 'linux' } })
+    await page.addInitScript(() => { window.ajcrew = { isElectron: true, platform: 'linux' } })
   }
   await stubDashboardApi(page, { slots: SLOTS, folders: [], theme, localStorageEntries: { 'mc-lang': 'en' } })
   return { ctx, page }

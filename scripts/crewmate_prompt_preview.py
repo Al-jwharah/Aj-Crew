@@ -7,7 +7,7 @@
     python3 scripts/crewmate_prompt_preview.py --fixture all-met --write    # refresh the golden
     python3 scripts/crewmate_prompt_preview.py --list
 
-Every piece of text comes from ``src/kiro_crew/crewmate_prompts.json``; this script
+Every piece of text comes from ``src/aj_crew/crewmate_prompts.json``; this script
 runs the real assembly code over a FIXTURE (a JSON file: the goal, milestones met or
 open, whether a milestones card waits, the worker's servers and what the gateway has
 beyond them, the waiting items, a worker report) in a throwaway data home, and prints
@@ -64,7 +64,7 @@ def _fixture_path(name: str) -> Path:
 
 
 def _record(fx: dict[str, Any], slug: str, member: str) -> dict[str, Any]:
-    from kiro_crew import member_goals
+    from aj_crew import member_goals
 
     member_goals.set_goal(slug, member, fx["goal"], by="user")
     milestones = fx.get("milestones") or []
@@ -86,12 +86,12 @@ def _record(fx: dict[str, Any], slug: str, member: str) -> dict[str, Any]:
 
 def assemble(fx: dict[str, Any], member: str) -> dict[str, str]:
     """Each piece's assembled text for fixture *fx*, keyed by piece name."""
-    from kiro_crew import context as ctx
-    from kiro_crew import crewmate_dynamic_capabilities
-    from kiro_crew import mate_capability_catalog as cc
-    from kiro_crew import mate_upgrade_notice, mate_worker, members
-    from kiro_crew.context_assembly import member as cm
-    from kiro_crew.dashboard import (
+    from aj_crew import context as ctx
+    from aj_crew import crewmate_dynamic_capabilities
+    from aj_crew import mate_capability_catalog as cc
+    from aj_crew import mate_upgrade_notice, mate_worker, members
+    from aj_crew.context_assembly import member as cm
+    from aj_crew.dashboard import (
         goal_reminder,
         goal_setup,
         mate_thread_wakes,
@@ -111,14 +111,14 @@ def assemble(fx: dict[str, Any], member: str) -> dict[str, str]:
         workspace="",
         member_id="",
     )
-    cfg = ctx.KiroCrewConfig()
+    cfg = ctx.AjCrewConfig()
     cfg.agents[member] = binding
-    ctx.KiroCrewConfig.load = staticmethod(lambda *a, **k: cfg)  # type: ignore[method-assign]
-    import kiro_crew.member_mate_tools as mmt
+    ctx.AjCrewConfig.load = staticmethod(lambda *a, **k: cfg)  # type: ignore[method-assign]
+    import aj_crew.member_mate_tools as mmt
 
     mmt.binding_has_mate_tools = lambda _b: tools  # type: ignore[assignment]
     # Whether the crewmate's chat mounts the work ledger: off unless the fixture says
-    # so, as on a conductor spec that does not mount ``kirocrew-work``.
+    # so, as on a conductor spec that does not mount ``ajcrew-work``.
     ledger = fx.get("has_ledger_tools", False)
     mmt.binding_has_ledger_tools = lambda _b: ledger  # type: ignore[assignment]
     worker = fx.get("worker_servers") or []
@@ -168,7 +168,7 @@ def run(fixture: Path, member: str, only: str | None) -> str:
     """The whole preview for *fixture*, assembled in a throwaway data home."""
     fx = json.loads(fixture.read_text(encoding="utf-8"))
     with tempfile.TemporaryDirectory(prefix="crewmate-prompt-preview-") as home:
-        os.environ["KIROCREW_HOME"] = home
+        os.environ["AJCREW_HOME"] = home
         os.environ["HOME"] = home
         text = render(assemble(fx, member or fx.get("member", "Atlas")), only)
         for spelling in sorted({os.path.realpath(home), home}, key=len, reverse=True):

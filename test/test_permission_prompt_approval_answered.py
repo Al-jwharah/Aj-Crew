@@ -27,8 +27,8 @@ from dashboard_approval_helpers import (
     _set_stream,
 )
 
-from kiro_crew.dashboard.chat import _run_chat
-from kiro_crew.dashboard.handlers import work_ledger
+from aj_crew.dashboard.chat import _run_chat
+from aj_crew.dashboard.handlers import work_ledger
 
 
 @pytest.mark.asyncio

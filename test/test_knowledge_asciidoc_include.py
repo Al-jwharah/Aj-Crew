@@ -14,9 +14,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.knowledge import folder_watcher, readers
-from kiro_crew.knowledge.folder_watcher import FolderWatcher, walk_filters
-from kiro_crew.knowledge.readers import FileReader
+from aj_crew.knowledge import folder_watcher, readers
+from aj_crew.knowledge.folder_watcher import FolderWatcher, walk_filters
+from aj_crew.knowledge.readers import FileReader
 
 
 def _walk_set(root, **props):
@@ -427,7 +427,7 @@ def test_hardlinked_target_is_not_read(tmp_path):
 @_os_open_seam
 @pytest.mark.skipif(not hasattr(os, "symlink"), reason="needs symlinks")
 def test_witness_parent_swapped_before_the_fence_is_not_read(tmp_path, monkeypatch):
-    from kiro_crew import pinned_fs
+    from aj_crew import pinned_fs
 
     secret_dir = tmp_path / "secret"
     secret_dir.mkdir()
@@ -503,7 +503,7 @@ class _ReadingPipeline:
 
 @pytest.mark.asyncio
 async def test_folder_scan_expands_only_selected_files(tmp_path):
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.knowledge.store import KnowledgeStore
 
     folder = tmp_path / "docs"
     (folder / "parts").mkdir(parents=True)
@@ -543,7 +543,7 @@ async def test_folder_scan_expands_only_selected_files(tmp_path):
 @pytest.mark.asyncio
 @pytest.mark.skipif(not hasattr(os, "symlink"), reason="needs symlinks")
 async def test_name_repointed_after_the_walk_cannot_admit_a_rejected_file(tmp_path, monkeypatch):
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.knowledge.store import KnowledgeStore
 
     folder = tmp_path / "docs"
     folder.mkdir()
@@ -614,7 +614,7 @@ def _set_record(store, source_id, includer, raw):
 
 async def _scan_twice(tmp_path, folder, between):
     """Scan *folder*, run *between*, scan again; return the pipeline after each."""
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.knowledge.store import KnowledgeStore
 
     store = KnowledgeStore(str(tmp_path / "kb.db"))
     try:
@@ -678,7 +678,7 @@ async def test_includer_is_reread_when_its_part_is_deleted(tmp_path):
 
 @pytest.mark.asyncio
 async def test_reread_survives_a_sweep_that_stops_before_the_includer(tmp_path, monkeypatch):
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.knowledge.store import KnowledgeStore
 
     folder = tmp_path / "docs"
     _guide_with_part(folder)
@@ -715,7 +715,7 @@ async def test_reread_survives_a_sweep_that_stops_before_the_includer(tmp_path, 
 
 @pytest.mark.asyncio
 async def test_includer_invalidation_survives_cancellation_before_deletion(tmp_path, monkeypatch):
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.knowledge.store import KnowledgeStore
 
     folder = tmp_path / "docs"
     guide = _guide_with_part(folder)
@@ -779,9 +779,9 @@ async def test_removal_elsewhere_does_not_force_a_reread(tmp_path):
 
 @pytest.fixture
 def deduped_includer(tmp_path, request):
-    from kiro_crew.knowledge.chunker import HeadingAwareChunker
-    from kiro_crew.knowledge.ingestion import IngestionPipeline
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.knowledge.chunker import HeadingAwareChunker
+    from aj_crew.knowledge.ingestion import IngestionPipeline
+    from aj_crew.knowledge.store import KnowledgeStore
 
     folder = tmp_path / "docs"
     guide = _guide_with_part(folder)
@@ -898,8 +898,8 @@ def test_deduped_includer_records_its_targets_with_its_claim(deduped_includer):
 
 
 def test_dropping_stale_items_rolls_back_as_one(tmp_path):
-    from kiro_crew._sqlite_compat import sqlite3
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew._sqlite_compat import sqlite3
+    from aj_crew.knowledge.store import KnowledgeStore
 
     folder = tmp_path / "docs"
     guide = _guide_with_part(folder)
@@ -1075,7 +1075,7 @@ def test_epoch_includer_drops_removed_text(deduped_includer, monkeypatch, owned,
 
 @pytest.mark.parametrize("text", ["ordinary text", ""])
 def test_unchanged_epoch_file_keeps_hash_shortcut(tmp_path, monkeypatch, text):
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.knowledge.store import KnowledgeStore
 
     folder = tmp_path / "docs"
     folder.mkdir()
@@ -1170,7 +1170,7 @@ def test_legacy_plaintext_copy_keeps_shared_claim(deduped_includer, monkeypatch,
 
 
 def _folder_store(tmp_path, folder, props=None):
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.knowledge.store import KnowledgeStore
 
     store = KnowledgeStore(str(tmp_path / "kb.db"))
     source_id = store.add_source("docs", "local_folder", str(folder))
@@ -1457,7 +1457,7 @@ def test_includer_retired_then_deferred_is_reread_after_its_part_returns(tmp_pat
 
 
 def test_stale_scanning_includer_keeps_its_retry_budget(tmp_path):
-    from kiro_crew.knowledge.folder_watcher import MAX_SCAN_ATTEMPTS
+    from aj_crew.knowledge.folder_watcher import MAX_SCAN_ATTEMPTS
 
     folder = tmp_path / "docs"
     guide = _guide_with_part(folder)
@@ -1509,8 +1509,8 @@ def test_markdown_name_linked_to_an_includer_is_tracked(tmp_path):
 
 
 def test_fuzzy_merged_includer_leaves_no_untracked_text(tmp_path):
-    from kiro_crew.knowledge.dedup import dedup_sweep
-    from kiro_crew.knowledge.embedder import floats_to_bytes
+    from aj_crew.knowledge.dedup import dedup_sweep
+    from aj_crew.knowledge.embedder import floats_to_bytes
 
     folder = tmp_path / "docs"
     guide = _guide_with_part(folder)

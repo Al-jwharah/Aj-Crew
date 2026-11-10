@@ -27,7 +27,7 @@ import { serveDist } from './lib/serve-dist.mjs'
 import { json, handleBootRoute } from './lib/boot-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/stt-faster-whisper'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -79,7 +79,7 @@ async function main() {
     const path = new URL(route.request().url()).pathname
     // Scene-specific routes first; everything else is the shared boot fixture.
     if (path === '/api/config/stt') return json(route, stt)
-    if (path === '/api/config/kirocrew') {
+    if (path === '/api/config/ajcrew') {
       return json(route, {
         agent: { model: 'claude-opus-4.8', reasoning_effort: 'high' },
         session: { autocompact_pct: 90 },

@@ -15,10 +15,10 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-from kiro_crew import mate_worker
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.mate_config_migration import (
+import aj_crew.config.paths as paths_mod
+from aj_crew import mate_worker
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.mate_config_migration import (
     _read_back,
     dry_run,
     migrate_existing_crewmates,
@@ -30,11 +30,11 @@ CRON = {"command": "kc", "args": ["cron"]}
 CREDS = {"command": "creds-mcp", "args": ["serve"]}
 
 BASE = {
-    "name": "kirocrew-mate-worker",
+    "name": "ajcrew-mate-worker",
     "prompt": "worker base prompt",
-    "tools": ["fs_read", "@kirocrew-core", "@kirocrew-cron", "@creds"],
-    "allowedTools": ["fs_read", "@kirocrew-cron", "@creds/list"],
-    "mcpServers": {"kirocrew-core": CORE, "kirocrew-cron": CRON, "creds": CREDS},
+    "tools": ["fs_read", "@ajcrew-core", "@ajcrew-cron", "@creds"],
+    "allowedTools": ["fs_read", "@ajcrew-cron", "@creds/list"],
+    "mcpServers": {"ajcrew-core": CORE, "ajcrew-cron": CRON, "creds": CREDS},
 }
 
 
@@ -60,8 +60,8 @@ class TestMerge:
         assert merged["mcpServers"]["creds"] == {**CREDS, "disabled": True}
         assert "@creds/list" not in merged["allowedTools"]
         # The other base servers are untouched.
-        assert merged["mcpServers"]["kirocrew-core"] == CORE
-        assert "@kirocrew-cron" in merged["allowedTools"]
+        assert merged["mcpServers"]["ajcrew-core"] == CORE
+        assert "@ajcrew-cron" in merged["allowedTools"]
 
     def test_the_switch_off_never_brings_the_files_transport(self):
         merged = _merged({"mcpServers": {"creds": {"command": "evil", "disabled": True}}})
@@ -82,23 +82,23 @@ class TestMerge:
         assert "@creds/list" not in merged["allowedTools"]
 
     def test_the_kas_projection_does_not_declare_the_muted_server(self):
-        from kiro_crew.acp.kas_agents import _project_mcp_servers
+        from aj_crew.acp.kas_agents import _project_mcp_servers
 
         merged = _merged({"mcpServers": {"creds": {"disabled": True}}})
-        projected = _project_mcp_servers(merged, "kirocrew-mate-worker", frozenset())
+        projected = _project_mcp_servers(merged, "ajcrew-mate-worker", frozenset())
         assert "creds" not in projected
-        assert "kirocrew-cron" in projected
+        assert "ajcrew-cron" in projected
 
 
 def test_a_switched_off_platform_entry_survives_the_partial_entry_repair(monkeypatch):
     monkeypatch.setattr(
-        mate_worker, "conductor_mcp_servers", lambda: frozenset({"kirocrew-cron", "kirocrew-mate"})
+        mate_worker, "conductor_mcp_servers", lambda: frozenset({"ajcrew-cron", "ajcrew-mate"})
     )
     spec = {
-        "mcpServers": {"kirocrew-cron": {"disabled": True}, "kirocrew-mate": {"disabled": False}}
+        "mcpServers": {"ajcrew-cron": {"disabled": True}, "ajcrew-mate": {"disabled": False}}
     }
-    assert mate_worker.drop_partial_platform_servers(spec) == ["kirocrew-mate"]
-    assert spec["mcpServers"] == {"kirocrew-cron": {"disabled": True}}
+    assert mate_worker.drop_partial_platform_servers(spec) == ["ajcrew-mate"]
+    assert spec["mcpServers"] == {"ajcrew-cron": {"disabled": True}}
 
 
 @pytest.fixture
@@ -111,25 +111,25 @@ def layout(monkeypatch, tmp_path):
     monkeypatch.setattr(paths_mod, "kiro_agents_dir", lambda: user)
     monkeypatch.setattr(paths_mod, "kiro_home", lambda: kiro)
     monkeypatch.setattr(
-        mate_worker, "conductor_mcp_servers", lambda: frozenset({"kirocrew-core", "kirocrew-cron"})
+        mate_worker, "conductor_mcp_servers", lambda: frozenset({"ajcrew-core", "ajcrew-cron"})
     )
-    (mates / "kirocrew-mate-worker.json").write_text(json.dumps(BASE), encoding="utf-8")
+    (mates / "ajcrew-mate-worker.json").write_text(json.dumps(BASE), encoding="utf-8")
     return user, mates
 
 
 def _migrate(user: Path, source: dict, monkeypatch):
     (user / "builder.json").write_text(json.dumps(source), encoding="utf-8")
-    cfg = KiroCrewConfig()
-    cfg.agents = {"zxc": KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder")}
+    cfg = AjCrewConfig()
+    cfg.agents = {"zxc": AjCrewAgentConfig(member_id="zxc", kiro_agent="builder")}
     monkeypatch.setattr(
-        "kiro_crew.mate_config_migration.KiroCrewConfig",
+        "aj_crew.mate_config_migration.AjCrewConfig",
         type("Shim", (), {"load": staticmethod(lambda: cfg)}),
     )
-    monkeypatch.setattr("kiro_crew.memory_stores.persist_member_config", lambda *a, **k: None)
+    monkeypatch.setattr("aj_crew.memory_stores.persist_member_config", lambda *a, **k: None)
     return migrate_existing_crewmates(cfg)
 
 
-@pytest.mark.parametrize("server", ["creds", "kirocrew-cron"])
+@pytest.mark.parametrize("server", ["creds", "ajcrew-cron"])
 def test_the_migration_keeps_a_switched_off_base_server(layout, monkeypatch, server):
     user, mates = layout
     report = _migrate(

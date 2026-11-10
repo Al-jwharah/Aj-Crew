@@ -23,10 +23,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.crew_log import session_tree_projection
-from kiro_crew.dashboard.handlers import agent_panel as panel_routes
-from kiro_crew.dashboard.handlers import member_dashboard as routes
-from kiro_crew.dashboard_templates import catalog, instance
+from aj_crew.crew_log import session_tree_projection
+from aj_crew.dashboard.handlers import agent_panel as panel_routes
+from aj_crew.dashboard.handlers import member_dashboard as routes
+from aj_crew.dashboard_templates import catalog, instance
 
 ROOT = "chat-100"
 DISPATCHED = "chat-101"
@@ -98,8 +98,8 @@ async def _none(*_a: Any, **_k: Any) -> None:
 
 @pytest.fixture(autouse=True)
 def _env(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.delenv("KIROCREW_CREW_LOG", raising=False)
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.delenv("AJCREW_CREW_LOG", raising=False)
     builtin = tmp_path / "builtin" / "fixture-board"
     builtin.mkdir(parents=True)
     (builtin / "manifest.json").write_text(json.dumps(_manifest()), encoding="utf-8")
@@ -249,7 +249,7 @@ async def test_the_slot_read_is_redacted(tmp_path):
 async def test_the_session_route_is_bound_through_the_deferred_binder():
     import inspect
 
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     flat = " ".join(inspect.getsource(server._register_mcp_routes).split())
     assert '"/api/chat/slots/{slot}/dashboard", _deferred("member_dashboard",' in flat
@@ -340,7 +340,7 @@ async def test_an_unseeded_tree_refuses_the_write(monkeypatch):
         "projection",
         lambda: SimpleNamespace(nodes=lambda: {}, seeded_for_current_store=False),
     )
-    monkeypatch.setattr("kiro_crew.dashboard.card_lifecycle._ask_for_lineage_seed", lambda: None)
+    monkeypatch.setattr("aj_crew.dashboard.card_lifecycle._ask_for_lineage_seed", lambda: None)
     async with _client() as client:
         resp = await client.get("/api/agent-panel/dashboard/templates", headers=_as(ROOT))
         assert resp.status == 403
@@ -372,7 +372,7 @@ async def test_a_session_page_is_told_it_is_a_session():
 @pytest.mark.asyncio
 async def test_a_session_page_is_told_when_the_person_last_spoke_in_that_session(monkeypatch):
     """The session's OWN chat, read off its own slot: a steer there is the reply."""
-    from kiro_crew.history import HUMAN_TURN_META_KEY
+    from aj_crew.history import HUMAN_TURN_META_KEY
 
     steer = {
         "role": "user",
@@ -384,14 +384,14 @@ async def test_a_session_page_is_told_when_the_person_last_spoke_in_that_session
     instance.adopt(instance.session_instance_key(ROOT), "fixture-board")
     async with _client() as client:
         body = await (await client.get(_read(ROOT))).json()
-    island = body["rendered_html"].split('id="kirocrew-dashboard-data">', 1)[1]
+    island = body["rendered_html"].split('id="ajcrew-dashboard-data">', 1)[1]
     assert json.loads(island.split("</script>", 1)[0])["last_user_at"] == (
         "2026-10-13T23:49:04+00:00"
     )
 
 
 def test_a_crewmate_page_is_told_it_is_a_crewmate():
-    from kiro_crew import dashboard_frame
+    from aj_crew import dashboard_frame
 
     assert dashboard_frame.read_payload({})["subject"] == "crewmate"
     assert dashboard_frame.read_payload({}, subject="session")["subject"] == "session"
@@ -403,7 +403,7 @@ def test_project_report_words_its_heading_for_a_session():
     """The shipped template switches its eyebrow on the subject, both ways."""
     from pathlib import Path
 
-    import kiro_crew.dashboard_templates as templates_pkg
+    import aj_crew.dashboard_templates as templates_pkg
 
     real = Path(templates_pkg.__file__).parent / "builtin" / "project-report" / "template.html"
     page = real.read_text("utf-8")
@@ -420,7 +420,7 @@ def test_project_report_words_its_heading_for_a_session():
 
 def _planted(tmp_path, *, at_root: bool = False):
     """Point the root session's page directory (or the whole root) at a "profiles" dir."""
-    from kiro_crew.config.paths import data_home
+    from aj_crew.config.paths import data_home
 
     target = tmp_path / "profiles"
     target.mkdir()
@@ -520,7 +520,7 @@ def test_the_lstat_walk_refuses_a_planted_link_on_its_own(tmp_path, at_root):
     _planted(tmp_path, at_root=at_root)
     key = instance.session_instance_key(ROOT)
     digest = key[len(instance.SESSION_KEY_PREFIX) :]
-    from kiro_crew.config.paths import data_home
+    from aj_crew.config.paths import data_home
 
     with pytest.raises(instance.InstanceError):
         instance._refuse_linked_session_dir(data_home() / "session-dashboards" / digest)
@@ -535,7 +535,7 @@ def test_the_pinned_open_refuses_a_planted_link_on_its_own(tmp_path, at_root):
     target = _planted(tmp_path, at_root=at_root)
     key = instance.session_instance_key(ROOT)
     digest = key[len(instance.SESSION_KEY_PREFIX) :]
-    from kiro_crew.config.paths import data_home
+    from aj_crew.config.paths import data_home
 
     with pytest.raises(instance.InstanceError):
         instance._pinned_session_dir(data_home() / "session-dashboards" / digest)
@@ -553,7 +553,7 @@ def test_a_root_swapped_for_a_link_after_it_is_opened_lands_nothing_in_the_targe
     The by-name checks have already passed by then, so only a create relative to the
     root descriptor keeps the write out of the target.
     """
-    from kiro_crew.config.paths import data_home
+    from aj_crew.config.paths import data_home
 
     target = tmp_path / "profiles"
     target.mkdir()

@@ -13,7 +13,7 @@ from pathlib import Path
 
 from test_snapshot import SNAPSHOT_FAMILY
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 SRC = Path(snap.__file__).parent
 #: The family is required to exist; the other names are optional backup modules that a

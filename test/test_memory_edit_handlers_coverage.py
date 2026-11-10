@@ -19,13 +19,13 @@ import pytest
 from aiohttp import streams, web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import memory_stores
-from kiro_crew._sqlite_compat import sqlite3
-from kiro_crew.config import loader as loader_mod
-from kiro_crew.context import ContextBuilder
-from kiro_crew.dashboard.handlers import memory_edit
-from kiro_crew.memory_stores import DEFAULT_MEMORY_STORE, owned_store_path
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import memory_stores
+from aj_crew._sqlite_compat import sqlite3
+from aj_crew.config import loader as loader_mod
+from aj_crew.context import ContextBuilder
+from aj_crew.dashboard.handlers import memory_edit
+from aj_crew.memory_stores import DEFAULT_MEMORY_STORE, owned_store_path
+from aj_crew.vector_memory import VectorMemoryStore
 
 pytestmark = pytest.mark.xdist_group("memory_edit_handlers_coverage")
 
@@ -63,7 +63,7 @@ class _Env:
     def __init__(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         self.home = tmp_path / "data-home"
         self.home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(self.home))
+        monkeypatch.setenv("AJCREW_HOME", str(self.home))
         loader_mod._invalidate_config_cache()
         monkeypatch.setattr(memory_stores, "_DECLARED_MEMO", None)
         self._monkeypatch = monkeypatch

@@ -14,8 +14,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import feature_videos_cache as cache_mod
-from kiro_crew import feature_videos_manifest as manifest_mod
+from aj_crew import feature_videos_cache as cache_mod
+from aj_crew import feature_videos_manifest as manifest_mod
 
 _CLIP = b"clip-bytes" * 64
 _POSTER = b"poster-bytes" * 8
@@ -44,10 +44,10 @@ def _no_network(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
     # rather than escaping to the network. feature_videos.py itself imports no
     # urllib at all — it makes no outbound request.
     _floor_monkeypatch.setattr(
-        "kiro_crew.asset_downloader.build_opener",
+        "aj_crew.asset_downloader.build_opener",
         lambda *a, **k: SimpleNamespace(open=_blocked),
     )
-    for module in ("kiro_crew.feature_videos_manifest", "kiro_crew.asset_downloader"):
+    for module in ("aj_crew.feature_videos_manifest", "aj_crew.asset_downloader"):
         _floor_monkeypatch.setattr(f"{module}.urllib.request.urlopen", _blocked)
 
 

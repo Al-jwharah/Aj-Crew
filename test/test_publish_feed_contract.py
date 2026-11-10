@@ -57,9 +57,9 @@ WINDOWS_WORKFLOW = WORKFLOWS / "publish-windows.yml"
 _SUBS = {
     "VERSION": "1.2.3",
     "CHANNEL": "nightly",
-    "DESKTOP_KEY": "desktop/nightly/1.2.3/KiroCrew.zip",
-    "DMG_KEY": "desktop/nightly/1.2.3/KiroCrew.dmg",
-    "ARTIFACT_KEY": "desktop/nightly/1.2.3/KiroCrew-x86_64.AppImage",
+    "DESKTOP_KEY": "desktop/nightly/1.2.3/AjCrew.zip",
+    "DMG_KEY": "desktop/nightly/1.2.3/AjCrew.dmg",
+    "ARTIFACT_KEY": "desktop/nightly/1.2.3/AjCrew-x86_64.AppImage",
     "ZIP_SHA512": "ZIPSHA512BASE64==",
     "DMG_SHA512": "DMGSHA512BASE64==",
     "ARTIFACT_SHA512": "APPIMAGESHA512BASE64==",
@@ -68,7 +68,7 @@ _SUBS = {
     "ARTIFACT_SIZE": "333",
     "FEED_PREFIX": "feed/nightly",
     "MIN_OS": "22.0.0",
-    "INSTALLER_KEY": "desktop/nightly/1.2.3/KiroCrew-Setup.exe",
+    "INSTALLER_KEY": "desktop/nightly/1.2.3/AjCrew-Setup.exe",
     "INSTALLER_SHA512": "INSTALLERSHA512BASE64==",
     "INSTALLER_SIZE": "444",
     # What scripts/feed_release_notes.py prints: one JSON string.
@@ -247,12 +247,12 @@ def test_linux_arch_resolution_matches_electron_updater_channel_file_rule() -> N
     immutable: publishing one arch under the other's basename cannot be undone.
     """
     run = _step(_steps(LINUX_WORKFLOW, "publish-linux"), "Resolve arch-dependent names")["run"]
-    # The stem is the job's PUBLISHED_STEM: `KiroCrew` on every oss channel,  # brand-ok
-    # `KiroCrew-LTS` on lts (release-lts.yml).  # brand-ok
+    # The stem is the job's PUBLISHED_STEM: `AjCrew` on every oss channel,  # brand-ok
+    # `AjCrew-LTS` on lts (release-lts.yml).  # brand-ok
     env = yaml.safe_load(LINUX_WORKFLOW.read_text(encoding="utf-8"))["jobs"]["publish-linux"]["env"]
     assert (
         env["PUBLISHED_STEM"]
-        == "${{ inputs.channel == 'lts' && 'KiroCrew-LTS' || 'KiroCrew' }}"  # brand-ok
+        == "${{ inputs.channel == 'lts' && 'AjCrew-LTS' || 'AjCrew' }}"  # brand-ok
     )  # brand-ok
     for arch, basename, feed_file, elf_machine in (
         ("x64", "${PUBLISHED_STEM}-x86_64", "latest-linux.yml", "x86-64"),
@@ -812,7 +812,7 @@ def test_mac_variant_suffixes_every_shared_name() -> None:
     for job in ("notarize", "publish"):
         stem = jobs[job]["env"]["ARTIFACT_BASENAME"]
         assert variant_ref in stem, f"{job}: ARTIFACT_BASENAME must carry the variant"
-        pinned_stem = "KiroCrew{0}"  # brand-ok
+        pinned_stem = "AjCrew{0}"  # brand-ok
         assert pinned_stem in stem, f"{job}: ARTIFACT_BASENAME stem must be the pinned basename"
     attach = _step(jobs["notarize"]["steps"], "Attach notarized artifact to workflow run")["with"][
         "name"
@@ -820,7 +820,7 @@ def test_mac_variant_suffixes_every_shared_name() -> None:
     consume = _step(jobs["publish"]["steps"], "Download gated artifact")["with"]["name"]
     for expr in (attach, consume):
         assert (
-            "KiroCrew-notarized-" in expr and variant_ref in expr
+            "AjCrew-notarized-" in expr and variant_ref in expr
         ), "the gated artifact name must carry the variant on both ends"
     prefix = jobs["publish"]["env"]["FEED_PREFIX"]
     assert (
@@ -845,7 +845,7 @@ def test_mac_universal_leg_flattens_only_its_own_mac_bytes() -> None:
     DMG) to the same run; either would trip the exactly-one-DMG assertion or
     hand the wrong zip to the signer. All three are excluded by artifact name."""
     run = _step(_steps(MAC_WORKFLOW, "sign"), "Flatten artifacts")["run"]
-    assert '-not -path "artifacts/KiroCrew-notarized-*/*"' in run, "flatten must exclude gated zips"
+    assert '-not -path "artifacts/AjCrew-notarized-*/*"' in run, "flatten must exclude gated zips"
     # The single-arch build artifacts excluded here are exactly the ones
     # build-desktop-mac-single-arch uploads -- read from build-desktop.yml, not
     # retyped, so a rename in either file fails here instead of on the nightly

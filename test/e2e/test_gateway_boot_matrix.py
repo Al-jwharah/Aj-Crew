@@ -1,14 +1,14 @@
 """Gateway boot smoke on Ubuntu, macOS and Windows.
 
-This is the cross-OS end-to-end floor: a real ``kirocrew gateway`` subprocess, a
+This is the cross-OS end-to-end floor: a real ``ajcrew gateway`` subprocess, a
 real HTTP round trip, a real ACP session and a real prompt turn, on every
-platform Kiro Crew ships to. Everything is offline and credential-less -- the
+platform Aj Crew ships to. Everything is offline and credential-less -- the
 agent binary is the packaged fake ACP backend, wired through
-``KIROCREW_KIRO_BIN`` exactly as ``test/test_e2e_smoke.py`` does -- so no model,
+``AJCREW_KIRO_BIN`` exactly as ``test/test_e2e_smoke.py`` does -- so no model,
 no token and no network is involved.
 
 WHY THIS FILE EXISTS. Before it, nothing on ``windows-latest`` or ``macos-15``
-started a gateway at all: ``test_e2e_smoke.py`` is gated on ``KIROCREW_E2E``,
+started a gateway at all: ``test_e2e_smoke.py`` is gated on ``AJCREW_E2E``,
 which only the Linux ``e2e`` job sets. That is one of the two holes
 a Windows startup break shipped through. The change added
 a settings-file probe to ``wrap_argv``'s Windows delegation branch, so on a fresh
@@ -19,12 +19,12 @@ not collect, and the PR itself changed that test's mock to hardcode the one
 answer a fresh host cannot give. Only a real boot on the real platform closes
 that. ``test_seeded_sandbox_mode_boots_and_runs_a_turn`` is the direct pin.
 
-SHAPE. Every test boots its OWN gateway on its own scratch ``KIROCREW_HOME``
+SHAPE. Every test boots its OWN gateway on its own scratch ``AJCREW_HOME``
 rather than sharing a module-scoped one. That costs a boot per test and buys
 freedom from order dependence (flake class 4), which matters more here than
 elsewhere because these tests differ in the CONFIG the gateway booted with.
 
-Readiness is tuned per OS through ``KIROCREW_HARNESS_READY_TIMEOUT`` in the job
+Readiness is tuned per OS through ``AJCREW_HARNESS_READY_TIMEOUT`` in the job
 env, not in this file, so a slow runner is retunable without a code change.
 
 Run it with ``-n0``: it spawns real processes, and under xdist a block would take
@@ -33,9 +33,9 @@ the worker down with it, which on Windows aborts the whole run (see
 
 Gating, and why there are two markers:
 
-* ``KIROCREW_E2E`` lifts the module skip. A bare ``pytest`` run does not pay
+* ``AJCREW_E2E`` lifts the module skip. A bare ``pytest`` run does not pay
   seven gateway boots.
-* ``KIROCREW_E2E_REQUIRE`` turns an unmet PRECONDITION from a graceful
+* ``AJCREW_E2E_REQUIRE`` turns an unmet PRECONDITION from a graceful
   ``pytest.skip`` into a ``pytest.fail``. A skip counts as a pass, so without it
   a required job could go green having booted zero gateways. ONE switch shared
   with the Playwright gate (``test_playwright_e2e.py``) and the pod scenarios,
@@ -59,16 +59,16 @@ from typing import Any, Callable, Iterator, NoReturn
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.testing.wait import wait_until
+from aj_crew import platform_compat
+from aj_crew.testing.wait import wait_until
 
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("KIROCREW_E2E"),
-    reason="Cross-OS gateway boot matrix. Set KIROCREW_E2E=1 to run.",
+    not os.environ.get("AJCREW_E2E"),
+    reason="Cross-OS gateway boot matrix. Set AJCREW_E2E=1 to run.",
 )
 
-# Kiro Crew's own default when ``agent.sandbox`` is absent: what the config
-# loader resolves the missing key to, and so what ``GET /api/config/kirocrew``
+# Aj Crew's own default when ``agent.sandbox`` is absent: what the config
+# loader resolves the missing key to, and so what ``GET /api/config/ajcrew``
 # reports for it. Restated rather than imported so a change to that default
 # surfaces here as a named mismatch.
 _DEFAULT_SANDBOX_MODE = "auto"
@@ -84,7 +84,7 @@ _DEFAULT_SANDBOX_MODE = "auto"
 # tested twice.
 _SEED_SANDBOX_MODES: dict[str, str] = {"minimal": "off", "rich": _DEFAULT_SANDBOX_MODE}
 
-# The provider the ``KIROCREW_KIRO_BIN`` seam requires. The fake backend is only
+# The provider the ``AJCREW_KIRO_BIN`` seam requires. The fake backend is only
 # reached when the resolved provider is ``acp``; asserting it up front turns a
 # provider change into a named failure instead of a no-reply timeout.
 _EXPECTED_PROVIDER = "acp"
@@ -111,7 +111,7 @@ def _unresolved(msg: str) -> NoReturn:
     started no gateway at all -- the exact dead-suite blindness this module
     exists to remove. Ad-hoc local runs keep the graceful skip.
     """
-    if os.environ.get("KIROCREW_E2E_REQUIRE"):
+    if os.environ.get("AJCREW_E2E_REQUIRE"):
         pytest.fail(msg)
     pytest.skip(msg)
 
@@ -170,7 +170,7 @@ class _Client:
 def _await_memory_recovery(client: _Client, *, secs: float = 60, interval: float = 0.25) -> None:
     """Wait out startup recovery before the caller writes anything.
 
-    The gateway binds its socket and prints ``KIROCREW_READY`` before memory
+    The gateway binds its socket and prints ``AJCREW_READY`` before memory
     recovery finishes, so a write issued right after boot lands inside that
     window and is refused. Both refusals are the same ``MemoryStartupUnavailable``
     seen through two shapes -- 503 on a read, 409 ``member_memory_unavailable``
@@ -219,7 +219,7 @@ def _await_memory_recovery(client: _Client, *, secs: float = 60, interval: float
 def _booted(fixture: str) -> Iterator[tuple[Any, _Client]]:
     """Boot one gateway whose agent binary is the packaged fake ACP backend.
 
-    ``KIROCREW_KIRO_BIN`` is set before the spawn (the child inherits
+    ``AJCREW_KIRO_BIN`` is set before the spawn (the child inherits
     ``os.environ``) and restored in ``finally``, so a fake backend can never leak
     into a later test in this interpreter. On Windows the value is a ``.cmd``
     shim (``fake_acp_backend_launcher``): ``CreateProcess`` cannot run a ``.py``
@@ -235,18 +235,18 @@ def _booted(fixture: str) -> Iterator[tuple[Any, _Client]]:
     may write on its first line. See ``_await_memory_recovery``.
     """
     try:
-        from kiro_crew.testing import fake_acp_backend
-        from kiro_crew.testing.harness import fake_acp_backend_launcher, spawn_feature_gateway
+        from aj_crew.testing import fake_acp_backend
+        from aj_crew.testing.harness import fake_acp_backend_launcher, spawn_feature_gateway
     except ImportError as exc:  # pragma: no cover - packaging regression
-        _unresolved(f"kiro_crew.testing is not importable: {exc}")
+        _unresolved(f"aj_crew.testing is not importable: {exc}")
 
     backend_path = Path(str(fake_acp_backend.__file__))
     if not backend_path.is_file():
         _unresolved(f"packaged fake ACP backend is missing at {backend_path}")
 
-    previous = os.environ.get("KIROCREW_KIRO_BIN")
+    previous = os.environ.get("AJCREW_KIRO_BIN")
     with tempfile.TemporaryDirectory(prefix="kc-fake-backend-") as launcher_dir:
-        os.environ["KIROCREW_KIRO_BIN"] = str(fake_acp_backend_launcher(Path(launcher_dir)))
+        os.environ["AJCREW_KIRO_BIN"] = str(fake_acp_backend_launcher(Path(launcher_dir)))
         try:
             with spawn_feature_gateway(fixture=fixture, approval="reads") as handle:
                 try:
@@ -261,9 +261,9 @@ def _booted(fixture: str) -> Iterator[tuple[Any, _Client]]:
                 yield handle, client
         finally:
             if previous is None:
-                os.environ.pop("KIROCREW_KIRO_BIN", None)
+                os.environ.pop("AJCREW_KIRO_BIN", None)
             else:
-                os.environ["KIROCREW_KIRO_BIN"] = previous
+                os.environ["AJCREW_KIRO_BIN"] = previous
 
 
 def _resolved_agent_setting(client: _Client, key: str) -> str:
@@ -277,13 +277,13 @@ def _resolved_agent_setting(client: _Client, key: str) -> str:
     fixture's value or the loader's default -- and an absent one is a named
     failure, not a silent default.
     """
-    body = client.get("/api/config/kirocrew")
+    body = client.get("/api/config/ajcrew")
     agent = body.get("agent")
     assert isinstance(agent, dict), (
-        f"GET /api/config/kirocrew carried no agent object: {sorted(body)!r}\n"
+        f"GET /api/config/ajcrew carried no agent object: {sorted(body)!r}\n"
         f"{client.diagnostics()}"
     )
-    assert key in agent, f"GET /api/config/kirocrew carried no agent.{key}: {sorted(agent)!r}"
+    assert key in agent, f"GET /api/config/ajcrew carried no agent.{key}: {sorted(agent)!r}"
     return str(agent[key])
 
 
@@ -369,7 +369,7 @@ def test_gateway_boots_and_answers_health() -> None:
 
     The harness returning a handle IS the READY assertion: it raises
     ``GatewaySpawnError`` on timeout or on an exit before the
-    ``KIROCREW_READY:`` line. Health is probed unauthenticated, the same probe
+    ``AJCREW_READY:`` line. Health is probed unauthenticated, the same probe
     ``docker-smoke.yml`` uses, so a token-plumbing regression cannot be mistaken
     for a dead gateway.
     """
@@ -382,7 +382,7 @@ def test_gateway_boots_and_answers_health() -> None:
 def test_resolved_provider_is_acp() -> None:
     """The gateway resolves the ``acp`` provider, so the fake-backend seam fires.
 
-    ``KIROCREW_KIRO_BIN`` is only consulted on the acp path. Asserting the
+    ``AJCREW_KIRO_BIN`` is only consulted on the acp path. Asserting the
     provider here turns a provider default change into a named failure rather
     than a reply that never arrives. That the acp path actually RAN is proved by
     the turn tests below, not by this one.
@@ -390,7 +390,7 @@ def test_resolved_provider_is_acp() -> None:
     with _booted("minimal") as (_handle, client):
         provider = _resolved_agent_setting(client, "provider")
         assert provider == _EXPECTED_PROVIDER, (
-            "the KIROCREW_KIRO_BIN seam needs the acp provider; the gateway "
+            "the AJCREW_KIRO_BIN seam needs the acp provider; the gateway "
             f"resolved provider={provider!r}"
         )
 
@@ -428,7 +428,7 @@ def test_tool_marker_prompt_completes_the_turn() -> None:
 def test_seeded_sandbox_mode_boots_and_runs_a_turn(fixture: str) -> None:
     """A gateway boots and serves under each seeded ``agent.sandbox`` tier.
 
-    THE DELEGATION PIN. On Windows the ``auto`` tier MUST complete a turn: Kiro Crew
+    THE DELEGATION PIN. On Windows the ``auto`` tier MUST complete a turn: Aj Crew
     has no native Windows sandbox backend, so a positively classified Kiro ACP
     spawn delegates to Kiro CLI's own internal sandbox
     (``sandbox.wrap_argv``'s ``win32 and is_kiro_cli`` branch). Break that branch
@@ -448,7 +448,7 @@ def test_seeded_sandbox_mode_boots_and_runs_a_turn(fixture: str) -> None:
     the product's own backend probe, and on Windows it is unconditionally the
     first, so a regression cannot hide in the second.
     """
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     expected_mode = _SEED_SANDBOX_MODES[fixture]
 
@@ -464,7 +464,7 @@ def test_seeded_sandbox_mode_boots_and_runs_a_turn(fixture: str) -> None:
         assert status == 200, f"/api/health returned {status} under sandbox={seeded}"
 
         # ``off`` defers isolation to the agent's own sandbox and never needs a
-        # Kiro Crew backend, so the turn must complete everywhere.
+        # Aj Crew backend, so the turn must complete everywhere.
         turn_expected = seeded == "off" or platform_compat.IS_WINDOWS
         if not turn_expected:
             turn_expected = sandbox.detect_backend(config_mode=seeded) != "none"
@@ -567,4 +567,4 @@ def test_shutdown_leaves_no_gateway_child_alive() -> None:
         "inherits the listener."
     )
     _await_port_refused(port)
-    assert not handle.home.exists(), "the throwaway KIROCREW_HOME was not removed"
+    assert not handle.home.exists(), "the throwaway AJCREW_HOME was not removed"

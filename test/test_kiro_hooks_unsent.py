@@ -18,9 +18,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import agent
-from kiro_crew.agent_materialization import kiro_hooks
-from kiro_crew.agent_materialization.kiro_hooks import (
+from aj_crew import agent
+from aj_crew.agent_materialization import kiro_hooks
+from aj_crew.agent_materialization.kiro_hooks import (
     UNSENT_AGENT_ACTION,
     UNSENT_CONFIRM,
     UNSENT_DISABLED,
@@ -30,7 +30,7 @@ from kiro_crew.agent_materialization.kiro_hooks import (
     normalize_spec_hooks,
     unsent_hook_documents,
 )
-from kiro_crew.dashboard.handlers.hooks import api_kiro_hooks
+from aj_crew.dashboard.handlers.hooks import api_kiro_hooks
 
 _CMD = "/usr/local/bin/guard.sh"
 
@@ -153,10 +153,10 @@ class TestUnsentHookDocuments:
 # --------------------------------------------------------------------------- #
 # GET /api/kiro-hooks
 # --------------------------------------------------------------------------- #
-_P_AGENTS_DIR = "kiro_crew.agent.KIRO_AGENTS_DIR"
-_P_DEFAULTS = "kiro_crew.dashboard.handlers.hooks._shipped_defaults"
-_P_CONFIG = "kiro_crew.agent._mc_config_path"
-_P_REDACT = "kiro_crew.security.redact"
+_P_AGENTS_DIR = "aj_crew.agent.KIRO_AGENTS_DIR"
+_P_DEFAULTS = "aj_crew.dashboard.handlers.hooks._shipped_defaults"
+_P_CONFIG = "aj_crew.agent._mc_config_path"
+_P_REDACT = "aj_crew.security.redact"
 
 
 def _app() -> web.Application:
@@ -168,7 +168,7 @@ def _app() -> web.Application:
 async def _get(tmp_path: Path, crew_config: object, **patches) -> dict:
     agents = tmp_path / "agents"
     agents.mkdir(parents=True, exist_ok=True)
-    (agents / "kirocrew.json").write_text(json.dumps({"hooks": {}}))
+    (agents / "ajcrew.json").write_text(json.dumps({"hooks": {}}))
     defaults = tmp_path / "defaults.json"
     defaults.write_text(json.dumps({"hooks": {}}))
     config = tmp_path / "config.json"

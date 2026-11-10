@@ -12,8 +12,8 @@
  * inherited-default capture uses. The text is never invented here; every frame
  * ASSERTS it before writing the PNG, so a stale bundle fails loudly.
  *
- *   1. pinned agent, Windows/Linux     -> "Agent: kirocrew" + Alt+Shift line
- *   2. pinned agent, macOS             -> "Agent: kirocrew" + Option glyph line
+ *   1. pinned agent, Windows/Linux     -> "Agent: ajcrew" + Alt+Shift line
+ *   2. pinned agent, macOS             -> "Agent: ajcrew" + Option glyph line
  *   3. inherited default, Windows/Linux -> long explanation + Alt+Shift line
  *   4. pinned agent, light theme       -> the same tooltip on the light palette
  *
@@ -35,13 +35,13 @@ const VERIFY_ONLY = args.includes('--verify-only')
 const OUT = args.find(a => !a.startsWith('--')) || '../temp-screenshots/agent-chip-cycle-hint'
 if (!VERIFY_ONLY) mkdirSync(OUT, { recursive: true })
 
-const DEFAULT_AGENT = 'kirocrew'
+const DEFAULT_AGENT = 'ajcrew'
 const NOW_ISO = new Date(Date.now() - 60_000).toISOString()
 const INHERITED = 'chat-inherited'
 const PINNED = 'chat-pinned'
 const slots = [
   { key: INHERITED, title: 'Inherited default', messages: 4, running: false, agent: '', mode: '', tags: [], last_ts: NOW_ISO, last_turn_ts: NOW_ISO },
-  { key: PINNED, title: 'Pinned to kirocrew', messages: 4, running: false, agent: 'kirocrew', mode: '', tags: [], last_ts: NOW_ISO, last_turn_ts: NOW_ISO },
+  { key: PINNED, title: 'Pinned to ajcrew', messages: 4, running: false, agent: 'ajcrew', mode: '', tags: [], last_ts: NOW_ISO, last_turn_ts: NOW_ISO },
 ]
 const detailFor = agent => ({
   running: false, has_more: false, total: 1, queue: [],
@@ -60,11 +60,11 @@ async function main() {
 
   const extra = async (path, route) => {
     if (path === '/api/agents' || path === '/api/chat/agents' || path === '/api/agents/catalog') {
-      await json(route, { agents: [{ name: 'kirocrew', source: 'builtin' }, { name: 'oncall', source: 'aim' }], default_agent: DEFAULT_AGENT })
+      await json(route, { agents: [{ name: 'ajcrew', source: 'builtin' }, { name: 'oncall', source: 'aim' }], default_agent: DEFAULT_AGENT })
       return true
     }
     if (path.startsWith('/api/chat/slots/' + INHERITED)) { await json(route, detailFor('')); return true }
-    if (path.startsWith('/api/chat/slots/' + PINNED)) { await json(route, detailFor('kirocrew')); return true }
+    if (path.startsWith('/api/chat/slots/' + PINNED)) { await json(route, detailFor('ajcrew')); return true }
     if (path.startsWith('/api/chat/slots/')) { await json(route, detailFor('')); return true }
     return false
   }
@@ -131,10 +131,10 @@ async function main() {
     await context.close()
   }
 
-  await frame('01-pinned-windows-linux-dark', { slot: PINNED, wantFirst: /^Agent: kirocrew$/, wantSecond: PC_LINE })
-  await frame('02-pinned-macos-dark', { slot: PINNED, mac: true, wantFirst: /^Agent: kirocrew$/, wantSecond: MAC_LINE })
+  await frame('01-pinned-windows-linux-dark', { slot: PINNED, wantFirst: /^Agent: ajcrew$/, wantSecond: PC_LINE })
+  await frame('02-pinned-macos-dark', { slot: PINNED, mac: true, wantFirst: /^Agent: ajcrew$/, wantSecond: MAC_LINE })
   await frame('03-inherited-default-windows-linux-dark', { slot: INHERITED, wantFirst: /follows the default agent/, wantSecond: PC_LINE })
-  await frame('04-pinned-windows-linux-light', { slot: PINNED, theme: 'light', wantFirst: /^Agent: kirocrew$/, wantSecond: PC_LINE })
+  await frame('04-pinned-windows-linux-light', { slot: PINNED, theme: 'light', wantFirst: /^Agent: ajcrew$/, wantSecond: PC_LINE })
 
   await browser.close()
   srv.close()

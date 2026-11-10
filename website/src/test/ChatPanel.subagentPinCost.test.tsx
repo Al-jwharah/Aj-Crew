@@ -12,7 +12,7 @@ import { Provider } from 'react-redux'
 vi.mock('../api/client', () => ({
   api: {
     dashboardConfig: () => Promise.resolve({ restore_sessions: false, restore_window_minutes: 30, merge_queued_messages: false, widget_density: 'more' }),
-    kirocrewConfig: () => Promise.resolve({ agent: { model: 'auto', reasoning_effort: '' } }),
+    ajcrewConfig: () => Promise.resolve({ agent: { model: 'auto', reasoning_effort: '' } }),
     models: () => Promise.resolve([{ model_name: 'auto', description: 'Default' }]),
     patchConfig: () => Promise.resolve({}),
     updateDashboardConfig: () => Promise.resolve({}),

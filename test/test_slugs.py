@@ -16,7 +16,7 @@ import re
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.slugs import SLUG_CHARS, refused_slug_char, slug_hash_fallback
+from aj_crew.slugs import SLUG_CHARS, refused_slug_char, slug_hash_fallback
 
 _SHAPE_RE = re.compile(r"^[a-z0-9-]+-[0-9a-f]{16}$")
 

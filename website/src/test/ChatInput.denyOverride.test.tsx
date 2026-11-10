@@ -126,13 +126,13 @@ describe('ChatInput security-rule override card', () => {
     expect(api.resolveApproval).not.toHaveBeenCalled()
     const session = screen.getAllByRole('menuitem').find(b => b.textContent?.startsWith('Allow for this session'))!
     // No family on this card, so the row says it covers this same rule only.
-    expect(session.textContent).toBe('Allow for this session: stop blocking any command this rule blocks, until you close this chat (Session options → Close session) or Kiro Crew restarts')
+    expect(session.textContent).toBe('Allow for this session: stop blocking any command this rule blocks, until you close this chat (Session options → Close session) or Aj Crew restarts')
   })
 
   it.each([
-    ['git_publish', 'Allow for this session: stop this rule from blocking pushes that could land straight on your main branch, until you close this chat (Session options → Close session) or Kiro Crew restarts'],
-    ['wipe', 'Allow for this session: stop this rule from blocking commands that could erase files or whole disks on this computer, until you close this chat (Session options → Close session) or Kiro Crew restarts'],
-    ['not-a-family', 'Allow for this session: stop blocking any command this rule blocks, until you close this chat (Session options → Close session) or Kiro Crew restarts'],
+    ['git_publish', 'Allow for this session: stop this rule from blocking pushes that could land straight on your main branch, until you close this chat (Session options → Close session) or Aj Crew restarts'],
+    ['wipe', 'Allow for this session: stop this rule from blocking commands that could erase files or whole disks on this computer, until you close this chat (Session options → Close session) or Aj Crew restarts'],
+    ['not-a-family', 'Allow for this session: stop blocking any command this rule blocks, until you close this chat (Session options → Close session) or Aj Crew restarts'],
   ])('the "Allow for this session" row names what family %s lets through', (family, label) => {
     renderWithProviders(<ChatInput {...defaultProps} />, { store: createTestStore(stateWithOverrideCard({ deny_override_family: family })) })
     fireEvent.click(screen.getByTestId('deny-override-trigger'))

@@ -59,7 +59,7 @@ vi.mock('../../utils/clipboard', () => ({ copyToClipboard: vi.fn() }))
 // the reveal-menu tests can see those items; the hidden cases are covered in
 // FilePathMenu.test.tsx.
 vi.mock('../../hooks/useBranding', () => ({
-  useBranding: () => ({ botName: 'Kiro Crew', avatar: '/logo.png', directLocal: true, desktopLauncher: true }),
+  useBranding: () => ({ botName: 'Aj Crew', avatar: '/logo.png', directLocal: true, desktopLauncher: true }),
 }))
 
 import { fileExplorerApi } from './api'

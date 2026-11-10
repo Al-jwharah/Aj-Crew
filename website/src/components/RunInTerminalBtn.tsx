@@ -68,10 +68,10 @@ function TerminalCopySettingWithConfig({ children }: { children: (willCopy: bool
   // same "one literal decides it" rule ChatPage's handler uses; a pending or
   // errored read reads as off here (the dialog defaults to Run), and ChatPage
   // owns the actual copy-vs-run decision and its read-failure notice at event
-  // time. Shares the ['kirocrewConfig'] query key so no extra fetch is made.
+  // time. Shares the ['ajcrewConfig'] query key so no extra fetch is made.
   const { data: terminalCfg } = useQuery<{ dashboard?: { terminal?: { reuse_current?: boolean } } }>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
     staleTime: 30_000,
   })
   const willCopy = terminalCfg?.dashboard?.terminal?.reuse_current === true

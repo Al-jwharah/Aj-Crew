@@ -5,7 +5,7 @@ that authenticates with a static header answers 401 and the engine falls into an
 OAuth sign-in the server does not need. The projection writes the url and
 headers into an owner-only launch snapshot and hands the engine Crew's launcher,
 which serves the engine on stdio and relays each message to the url with the
-headers added (``kiro_crew.kas_http_bridge``). The canary must reach the server's
+headers added (``aj_crew.kas_http_bridge``). The canary must reach the server's
 HTTP requests and must appear in nothing that crosses the wire.
 """
 
@@ -24,11 +24,11 @@ from pathlib import Path
 import pytest
 from kas_agents_helpers import _spec
 
-from kiro_crew import kas_env_shim
-from kiro_crew.acp import kas_env_launch
-from kiro_crew.acp._dispatch import build_session_new_params
-from kiro_crew.acp.kas_agents import hoist_servers_for_session, to_client_custom_agent
-from kiro_crew.kas_http_bridge import Bridge
+from aj_crew import kas_env_shim
+from aj_crew.acp import kas_env_launch
+from aj_crew.acp._dispatch import build_session_new_params
+from aj_crew.acp.kas_agents import hoist_servers_for_session, to_client_custom_agent
+from aj_crew.kas_http_bridge import Bridge
 
 CANARY = "Bearer zq7Xk-26232-canary"
 SESSION = "dashboard_chat-26232-1"
@@ -46,7 +46,7 @@ def _no_proxy(_floor_monkeypatch):
 def home(tmp_path, monkeypatch):
     data_home = tmp_path / "crew-home"
     data_home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(data_home))
+    monkeypatch.setenv("AJCREW_HOME", str(data_home))
     return data_home
 
 
@@ -232,7 +232,7 @@ def remote():
 
 
 def _project(spec: dict, session_key: str = SESSION) -> dict:
-    return to_client_custom_agent("kirocrew", spec, "p", session_key=session_key)
+    return to_client_custom_agent("ajcrew", spec, "p", session_key=session_key)
 
 
 def _remote_spec(url: str, **extra) -> dict:
@@ -453,12 +453,12 @@ def test_the_launcher_runs_the_bridge_for_a_remote_snapshot(home, monkeypatch):
         seen.append((url, headers, server))
         return 0
 
-    import kiro_crew._ssl_compat as ssl_compat
-    import kiro_crew.kas_http_bridge as bridge_module
+    import aj_crew._ssl_compat as ssl_compat
+    import aj_crew.kas_http_bridge as bridge_module
 
     monkeypatch.setattr(ssl_compat, "_ensure_ssl_certs", lambda: seen.append("trust"))
     monkeypatch.setattr(bridge_module, "run_bridge", _run)
-    monkeypatch.setattr(kas_env_shim.os, "environ", {"KIROCREW_HOME": str(Path(home))})
+    monkeypatch.setattr(kas_env_shim.os, "environ", {"AJCREW_HOME": str(Path(home))})
     args = launched["args"]
     with pytest.raises(SystemExit) as exc:
         kas_env_shim.main(args[args.index("--session") :])

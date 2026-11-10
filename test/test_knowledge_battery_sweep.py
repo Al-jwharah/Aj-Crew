@@ -18,8 +18,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.service_sections import (
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.service_sections import (
     ON_BATTERY_MODES,
     ON_BATTERY_NORMAL,
     ON_BATTERY_PAUSED,
@@ -27,15 +27,15 @@ from kiro_crew.config.service_sections import (
     PowerConfig,
     normalize_on_battery,
 )
-from kiro_crew.knowledge import watcher as watcher_mod
-from kiro_crew.knowledge.watcher import BATTERY_REDUCED_FLOOR_CHUNKS, KnowledgeWatcher
-from kiro_crew.platform_compat import POWER_AC, POWER_BATTERY, POWER_UNKNOWN
+from aj_crew.knowledge import watcher as watcher_mod
+from aj_crew.knowledge.watcher import BATTERY_REDUCED_FLOOR_CHUNKS, KnowledgeWatcher
+from aj_crew.platform_compat import POWER_AC, POWER_BATTERY, POWER_UNKNOWN
 
 
 class TestPowerConfig:
     def test_default_is_normal(self):
         assert PowerConfig().on_battery == ON_BATTERY_NORMAL
-        assert KiroCrewConfig().power.on_battery == ON_BATTERY_NORMAL
+        assert AjCrewConfig().power.on_battery == ON_BATTERY_NORMAL
 
     @pytest.mark.parametrize("mode", ON_BATTERY_MODES)
     def test_known_modes_survive(self, mode):
@@ -52,11 +52,11 @@ class TestPowerConfig:
     def test_loads_from_config_json(self, tmp_path):
         path = tmp_path / "config.json"
         path.write_text(json.dumps({"power": {"on_battery": "reduced"}}), encoding="utf-8")
-        with patch("kiro_crew.config.loader.config_path", return_value=path):
-            assert KiroCrewConfig.load().power.on_battery == ON_BATTERY_REDUCED
+        with patch("aj_crew.config.loader.config_path", return_value=path):
+            assert AjCrewConfig.load().power.on_battery == ON_BATTERY_REDUCED
 
     def test_round_trips_through_to_dict(self):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         assert cfg.to_dict()["power"] == {"on_battery": ON_BATTERY_NORMAL}
 
 
@@ -107,7 +107,7 @@ class TestBatteryBudget:
         assert self._budget(ON_BATTERY_NORMAL, POWER_BATTERY, sweep_budget=0) == 0
 
     def test_an_unreadable_config_is_normal(self):
-        with patch.object(watcher_mod.KiroCrewConfig, "load", side_effect=RuntimeError("boom")):
+        with patch.object(watcher_mod.AjCrewConfig, "load", side_effect=RuntimeError("boom")):
             assert KnowledgeWatcher._on_battery_mode() == ON_BATTERY_NORMAL
 
     def test_the_power_source_is_read_only_when_the_mode_throttles(self):

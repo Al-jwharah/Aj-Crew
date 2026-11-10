@@ -9,9 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.cloud import aws, ssm
-from kiro_crew.testing.wait import wait_until
+from aj_crew import platform_compat
+from aj_crew.cloud import aws, ssm
+from aj_crew.testing.wait import wait_until
 
 #: How long a killed tree's descendant may take to leave the process table.
 #: Well under the 30 s the stand-in descendants sleep, so a test that waited on
@@ -83,8 +83,8 @@ class TestArgvBuilders:
 
         if _os.name == "nt":
             pytest.skip("fallback install dirs are POSIX literals; dead on Windows by design")
-        from kiro_crew import github_runner
-        from kiro_crew.deploy import engine
+        from aj_crew import github_runner
+        from aj_crew.deploy import engine
 
         fake_aws = tmp_path / "aws"
         fake_aws.write_text("#!/bin/sh\n")
@@ -175,7 +175,7 @@ class TestOpenPortForward:
         The CLI finds ``session-manager-plugin`` by name on the child's PATH, which
         under a GUI-launched gateway is the minimal launchd one.
         """
-        from kiro_crew.deploy import engine
+        from aj_crew.deploy import engine
 
         captured: dict = {}
 
@@ -201,7 +201,7 @@ class TestOpenPortForward:
         # The PATH wiring is under test here, not the directory check, which has
         # its own tests in test_deploy_web_engine.py and refuses the Windows CI
         # runner's temp directory.
-        from kiro_crew import github_runner
+        from aj_crew import github_runner
 
         monkeypatch.setattr(
             github_runner, "validate_provider_directory", lambda candidate: candidate
@@ -225,8 +225,8 @@ class TestOpenPortForward:
         The refusal is enforced only by the bare name failing execvp, so widening
         the child's PATH would run the refused binary with AWS credentials.
         """
-        from kiro_crew import github_runner
-        from kiro_crew.deploy import engine
+        from aj_crew import github_runner
+        from aj_crew.deploy import engine
 
         captured: dict = {}
 
@@ -272,7 +272,7 @@ class TestSessionManagerPluginProbe:
         "dir branch is dead on Windows by design",
     )
     def test_probe_finds_plugin_in_install_dir_under_minimal_path(self, monkeypatch, tmp_path):
-        from kiro_crew.deploy import engine
+        from aj_crew.deploy import engine
 
         plugin = tmp_path / "session-manager-plugin"
         plugin.write_text("#!/bin/sh\n")
@@ -285,7 +285,7 @@ class TestSessionManagerPluginProbe:
         monkeypatch.setenv("PATH", str(empty_bin))
         monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(tmp_path),))
 
-        from kiro_crew import github_runner
+        from aj_crew import github_runner
 
         monkeypatch.setattr(github_runner, "validate_provider_executable", lambda c: c)
 
@@ -294,7 +294,7 @@ class TestSessionManagerPluginProbe:
     def test_probe_false_when_the_plugin_is_absent_everywhere(self, monkeypatch, tmp_path):
         """Genuinely missing still reports missing — the actionable install hint
         must not be traded away for the false-negative fix."""
-        from kiro_crew.deploy import engine
+        from aj_crew.deploy import engine
 
         empty_bin = tmp_path / "emptybin"
         empty_bin.mkdir()
@@ -306,7 +306,7 @@ class TestSessionManagerPluginProbe:
             ssm.require_session_manager_plugin()
 
     def test_no_refusal_to_explain_when_the_plugin_is_absent(self, monkeypatch, tmp_path):
-        from kiro_crew.deploy import engine
+        from aj_crew.deploy import engine
 
         empty_bin = tmp_path / "emptybin"
         empty_bin.mkdir()
@@ -324,8 +324,8 @@ class TestSessionManagerPluginProbe:
     def test_a_refused_plugin_reports_its_path_and_reason(self, monkeypatch, tmp_path):
         """Found-but-refused is not "not installed": the install command would put
         the same refused file back, so the probe names the file and the reason."""
-        from kiro_crew import github_runner
-        from kiro_crew.deploy import engine
+        from aj_crew import github_runner
+        from aj_crew.deploy import engine
 
         install = tmp_path / "brew"
         install.mkdir()
@@ -357,8 +357,8 @@ class TestSessionManagerPluginProbe:
     ):
         """The tunnel gate and the installer name the refusal, not "not
         installed" -- reinstalling puts the same refused file back."""
-        from kiro_crew import github_runner
-        from kiro_crew.deploy import engine
+        from aj_crew import github_runner
+        from aj_crew.deploy import engine
 
         install = tmp_path / "pkgbin"
         install.mkdir()
@@ -457,8 +457,8 @@ class TestSessionManagerPluginProbe:
 
     @pytest.mark.skipif(os.name == "nt", reason="POSIX ownership semantics")
     def test_an_accepted_plugin_has_no_refusal(self, monkeypatch, tmp_path):
-        from kiro_crew import github_runner
-        from kiro_crew.deploy import engine
+        from aj_crew import github_runner
+        from aj_crew.deploy import engine
 
         plugin = tmp_path / "session-manager-plugin"
         plugin.write_text("#!/bin/sh\n")
@@ -527,7 +527,7 @@ class TestSessionManagerPluginProbe:
     @staticmethod
     def _aws_package_install(monkeypatch, tmp_path) -> tuple[Path, Path]:
         """AWS's package layout with the plugin dir as the resolver's install dir."""
-        from kiro_crew.deploy import engine
+        from aj_crew.deploy import engine
 
         prefix = tmp_path / "sessionmanagerplugin"
         (prefix / "bin").mkdir(parents=True)
@@ -549,7 +549,7 @@ class TestSessionManagerPluginProbe:
     ):
         """Runs the provenance check itself, so its ownership wording and the
         remedy's category match cannot drift apart."""
-        from kiro_crew import github_runner
+        from aj_crew import github_runner
 
         prefix, binary = self._aws_package_install(monkeypatch, tmp_path)
         monkeypatch.setattr(github_runner, "strict_provider_bins", lambda: False)
@@ -578,7 +578,7 @@ class TestSessionManagerPluginProbe:
     def test_the_real_check_strict_policy_refusal_gets_no_chown_remedy(self, monkeypatch, tmp_path):
         """The strict policy refuses on its own terms (root-owned AND not writable
         by the gateway user), so the third-account command is not offered."""
-        from kiro_crew import github_runner
+        from aj_crew import github_runner
 
         _prefix, binary = self._aws_package_install(monkeypatch, tmp_path)
         monkeypatch.setattr(github_runner, "strict_provider_bins", lambda: True)
@@ -597,7 +597,7 @@ class TestSessionManagerPluginProbe:
         a wording change that broke the match fails here, not in a translation."""
         import pwd
 
-        from kiro_crew import github_runner
+        from aj_crew import github_runner
 
         _prefix, binary = self._aws_package_install(monkeypatch, tmp_path)
         monkeypatch.setattr(github_runner, "strict_provider_bins", lambda: False)
@@ -627,7 +627,7 @@ class TestSessionManagerPluginProbe:
 
     @pytest.mark.skipif(os.name == "nt", reason="POSIX ownership semantics")
     def test_the_real_check_strict_policy_refusal_carries_its_code(self, monkeypatch, tmp_path):
-        from kiro_crew import github_runner
+        from aj_crew import github_runner
 
         _prefix, binary = self._aws_package_install(monkeypatch, tmp_path)
         monkeypatch.setattr(github_runner, "strict_provider_bins", lambda: True)
@@ -639,7 +639,7 @@ class TestSessionManagerPluginProbe:
 
     @pytest.mark.skipif(os.name == "nt", reason="POSIX ownership semantics")
     def test_the_real_check_world_writable_refusal_carries_its_code(self, monkeypatch, tmp_path):
-        from kiro_crew import github_runner
+        from aj_crew import github_runner
 
         _prefix, binary = self._aws_package_install(monkeypatch, tmp_path)
         monkeypatch.setattr(github_runner, "strict_provider_bins", lambda: False)
@@ -688,8 +688,8 @@ class TestSessionManagerPluginProbe:
     ):
         """The resolver finds the bin-directory link; the command targets the
         package folder. The row names the real file so both point at one place."""
-        from kiro_crew import github_runner
-        from kiro_crew.deploy import engine
+        from aj_crew import github_runner
+        from aj_crew.deploy import engine
 
         prefix = tmp_path / "sessionmanagerplugin"
         (prefix / "bin").mkdir(parents=True)
@@ -726,8 +726,8 @@ class TestSessionManagerPluginProbe:
         """A second account's Homebrew copy sorts first; once AWS's package is
         installed too, the row must name AWS's copy and its command, or the
         "install AWS's copy" step would leave the same row on screen."""
-        from kiro_crew import github_runner
-        from kiro_crew.deploy import engine
+        from aj_crew import github_runner
+        from aj_crew.deploy import engine
 
         prefix = tmp_path / "sessionmanagerplugin"
         (prefix / "bin").mkdir(parents=True)
@@ -791,7 +791,7 @@ class TestSessionManagerPluginProbe:
     def test_open_port_forward_refused_under_agent_session(self, monkeypatch):
         # The streaming tunnel bypasses run_aws, so it carries its own
         # human-action guard: an agent session must not open a tunnel.
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "sess-1")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "sess-1")
         monkeypatch.setattr(
             ssm.subprocess, "Popen", lambda *a, **k: pytest.fail("must not spawn tunnel")
         )
@@ -1316,7 +1316,7 @@ class TestAwsCliRefusal:
     @staticmethod
     def _install(monkeypatch, tmp_path) -> Path:
         """An ``aws`` reachable only through the resolver's install dirs."""
-        from kiro_crew.deploy import engine
+        from aj_crew.deploy import engine
 
         install = tmp_path / "sessionmanagerplugin" / "bin"
         install.mkdir(parents=True)
@@ -1334,7 +1334,7 @@ class TestAwsCliRefusal:
         return cli
 
     def test_no_refusal_when_the_cli_is_absent(self, monkeypatch, tmp_path):
-        from kiro_crew.deploy import engine
+        from aj_crew.deploy import engine
 
         empty_bin = tmp_path / "emptybin"
         empty_bin.mkdir()
@@ -1346,7 +1346,7 @@ class TestAwsCliRefusal:
 
     @pytest.mark.skipif(os.name == "nt", reason="POSIX ownership semantics")
     def test_an_accepted_cli_has_no_refusal(self, monkeypatch, tmp_path):
-        from kiro_crew import github_runner
+        from aj_crew import github_runner
 
         self._install(monkeypatch, tmp_path)
         monkeypatch.setattr(github_runner, "validate_provider_executable", lambda c: c)
@@ -1357,7 +1357,7 @@ class TestAwsCliRefusal:
     def test_the_real_check_third_account_refusal_names_the_cli_with_no_command(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew import github_runner
+        from aj_crew import github_runner
 
         cli = self._install(monkeypatch, tmp_path)
         monkeypatch.setattr(github_runner, "strict_provider_bins", lambda: False)

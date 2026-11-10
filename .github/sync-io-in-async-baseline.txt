@@ -7,7 +7,7 @@
 #
 # Do NOT add or raise a line to make a red gate green: a new offender belongs
 # in a thread (`await asyncio.to_thread(...)`, or a named lane from
-# src/kiro_crew/executors.py), or carries an inline `# on-loop-io-ok: <why it
+# src/aj_crew/executors.py), or carries an inline `# on-loop-io-ok: <why it
 # cannot block>` comment. The refresh command below only lowers counts and
 # deletes lines.
 #

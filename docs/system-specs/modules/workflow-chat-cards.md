@@ -6,7 +6,7 @@ Workflow launches and completions render as durable inline cards in chat. `trans
 
 ### Launch card
 
-`website/src/pages/chat/WorkflowRunCard.tsx` renders a launch card only for a `tool` message whose persisted `meta.output` yields a run ID through `extractWorkflowRunId`; `isWorkflowRunTool` enforces the role check. The detector matches the `Started workflow run ...` contract returned by `src/kiro_crew/mcp_tools/workflows.py::workflow_run` for source and intent launches. Exact saved-definition launches currently return `Started saved workflow ... as ...`, so they fall through to the generic tool row rather than rendering this card.
+`website/src/pages/chat/WorkflowRunCard.tsx` renders a launch card only for a `tool` message whose persisted `meta.output` yields a run ID through `extractWorkflowRunId`; `isWorkflowRunTool` enforces the role check. The detector matches the `Started workflow run ...` contract returned by `src/aj_crew/mcp_tools/workflows.py::workflow_run` for source and intent launches. Exact saved-definition launches currently return `Started saved workflow ... as ...`, so they fall through to the generic tool row rather than rendering this card.
 
 The card reads the live entry from `chat.workflowRuns`. `website/src/hooks/useWebSocket.ts` folds workflow event frames into that slice, and `website/src/hooks/websocket/workflowRuns.ts` reconciles it with the workflow-runs API: on every socket open, on a slow 15-second heal tick while a row shows running, and — because a hidden tab skips that tick — immediately on `visibilitychange` when the tab becomes visible again; `WorkflowRunCard` also uses `useRunSnapshot` when its live entry is not running. This makes the card useful both while a run is active and after an event frame was missed or the live entry has gone away.
 
@@ -16,7 +16,7 @@ That link does not go through the side panel's `+` menu or its empty-state launc
 
 ### Completion card
 
-`src/kiro_crew/dashboard/workflow_inject.py::_summarize` creates the completion header, and `inject_workflow_result` appends it as an `assistant` message to the originating slot, broadcasts it to the live chat, and persists the same message for replay. The broadcast includes a workflow-result kind, while the durable message is an assistant row; the renderer therefore detects the persisted content rather than relying on an event kind.
+`src/aj_crew/dashboard/workflow_inject.py::_summarize` creates the completion header, and `inject_workflow_result` appends it as an `assistant` message to the originating slot, broadcasts it to the live chat, and persists the same message for replay. The broadcast includes a workflow-result kind, while the durable message is an assistant row; the renderer therefore detects the persisted content rather than relying on an event kind.
 
 `website/src/pages/chat/WorkflowCompletionCard.tsx::parseWorkflowCompletion` parses the backend header and separates the display body. It removes the trailing agent-facing workflow-tool hint only from the rendered body; it does not mutate the message. The card sanitizes the workflow title, renders the body with `MarkdownRenderer`, starts with the completion body collapsed, and opens the Workflows panel through `openActivityToTab('workflows')`.
 

@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.eval.bench.corpus import (
+from aj_crew.eval.bench.corpus import (
     CAT_ADVERSARIAL,
     CAT_SINGLE_HOP,
     BenchInstance,
@@ -32,8 +32,8 @@ from kiro_crew.eval.bench.corpus import (
     BenchSession,
     BenchTurn,
 )
-from kiro_crew.eval.bench.ingest import IngestConfig, ingest_instance
-from kiro_crew.eval.bench.retrieval import RetrievalConfig, retrieve_for_instance
+from aj_crew.eval.bench.ingest import IngestConfig, ingest_instance
+from aj_crew.eval.bench.retrieval import RetrievalConfig, retrieve_for_instance
 
 
 def _cached_corpus() -> Path:
@@ -42,7 +42,7 @@ def _cached_corpus() -> Path:
     Derived rather than hardcoded: a literal home path fails the repo's internal-content scan and
     would be wrong on every other machine, and `datasets` already owns this answer.
     """
-    from kiro_crew.eval.bench import datasets
+    from aj_crew.eval.bench import datasets
 
     return Path(datasets.cache_dir()) / "locomo10.json"
 
@@ -117,7 +117,7 @@ def test_the_real_corpus_population_matches_the_documented_figure() -> None:
     loudly instead of the doc quietly describing a different experiment -- which is
     exactly what this round's finding was.
     """
-    from kiro_crew.eval.bench.adapters.locomo import load_locomo_file
+    from aj_crew.eval.bench.adapters.locomo import load_locomo_file
 
     corpus = load_locomo_file(CORPUS)
     scorable = sum(1 for i in corpus.instances for q in i.queries if q.scorable_retrieval)

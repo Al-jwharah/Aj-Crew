@@ -30,7 +30,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.dashboard import social_share
+from aj_crew.dashboard import social_share
 
 _SCOPE = "capabilities.social_share"
 
@@ -45,31 +45,31 @@ _PIN_DOC: dict = {
 @pytest.fixture
 def isolated_home(tmp_path, monkeypatch):
     """Point the data home at ``tmp_path`` so no test touches a real config."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     return tmp_path
 
 
 @pytest.fixture()
 def fake_sel(monkeypatch):
     """One fake behind BOTH SEL lookups on this path: the handler module's ``sel``
-    (tool-invocation rows) and ``kiro_crew.sel.sel`` (the governance_decision row,
+    (tool-invocation rows) and ``aj_crew.sel.sel`` (the governance_decision row,
     looked up lazily at the source module by ``vet_and_audit`` and the probe)."""
     try:
-        import kiro_crew.dashboard.handlers  # noqa: F401
+        import aj_crew.dashboard.handlers  # noqa: F401
     except ImportError:
         pytest.skip("dashboard handler deps not available locally")
     fake = MagicMock()
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     monkeypatch.setattr(sel_mod, "sel", lambda: fake)
-    with patch("kiro_crew.dashboard.handlers.sel", return_value=fake):
+    with patch("aj_crew.dashboard.handlers.sel", return_value=fake):
         yield fake
 
 
 def _install_policy(monkeypatch, doc: dict | None) -> None:
     """Install *doc* as the boot-frozen ceiling for the duration of a test."""
-    from kiro_crew.platform import context as pc
-    from kiro_crew.platform.governance import parse_policy
+    from aj_crew.platform import context as pc
+    from aj_crew.platform.governance import parse_policy
 
     ceiling = parse_policy(doc) if doc is not None else None
 
@@ -105,7 +105,7 @@ def _rows_for(fake: MagicMock, scope: str) -> list[dict]:
 class TestScopeCatalog(governance_capability_checks.RowIsRegisteredAsADefaultOnCapability):
 
     def test_a_policy_can_actually_express_the_pin(self) -> None:
-        from kiro_crew.platform.governance import CapabilityGate, parse_policy
+        from aj_crew.platform.governance import CapabilityGate, parse_policy
 
         gate = parse_policy(_PIN_DOC).get(_SCOPE)
         assert isinstance(gate, CapabilityGate)
@@ -139,8 +139,8 @@ class TestProbe:
         """A denied decision from ANY layer withdraws the entry. Unlike the startup
         probes (telemetry, tailnet) this answers a per-request dashboard question,
         so a Level-2 profile narrowing the dashboard surface must bind here."""
-        from kiro_crew.platform import governance_profiles as gp
-        from kiro_crew.platform.governance import CapabilityGate, Profile
+        from aj_crew.platform import governance_profiles as gp
+        from aj_crew.platform.governance import CapabilityGate, Profile
 
         monkeypatch.setattr(
             gp,
@@ -173,9 +173,9 @@ class TestProbe:
 
     def test_evaluation_error_fails_CLOSED(self, isolated_home, fake_sel, monkeypatch) -> None:
         """An unevaluable ceiling must NOT offer the post-to-a-third-party button."""
-        from kiro_crew.platform import context as pc
-        from kiro_crew.platform import governance_profiles as gp
-        from kiro_crew.platform.governance import parse_policy
+        from aj_crew.platform import context as pc
+        from aj_crew.platform import governance_profiles as gp
+        from aj_crew.platform.governance import parse_policy
 
         monkeypatch.setattr(
             gp,
@@ -215,13 +215,13 @@ class TestProbe:
 def cfg_file(tmp_path):
     p = tmp_path / "config.json"
     p.write_text("{}", encoding="utf-8")
-    with patch("kiro_crew.config.loader.config_path", return_value=p):
+    with patch("aj_crew.config.loader.config_path", return_value=p):
         yield p
 
 
 @pytest.fixture()
 def handler_app(cfg_file, fake_sel):
-    from kiro_crew.dashboard.handlers.files import api_dashboard_config
+    from aj_crew.dashboard.handlers.files import api_dashboard_config
 
     app = web.Application()
     app.router.add_put("/api/dashboard/config", api_dashboard_config)
@@ -316,7 +316,7 @@ class TestGovernanceGenerationFrame:
     def test_the_slots_frame_carries_the_ceiling_generation(self) -> None:
         """Both slots frames come from ``_slots_ws_frame``; the key the client
         invalidates ``dashboardConfig`` on must be in it."""
-        from kiro_crew.dashboard.state import _slots_ws_frame
+        from aj_crew.dashboard.state import _slots_ws_frame
 
         frame = json.loads(
             _slots_ws_frame(
@@ -338,7 +338,7 @@ class TestGovernanceGenerationFrame:
         """Redirect the profile store at a tmp dir via the seam its own module
         docstring names (``_PROFILES_DIR``). No real config or state path is read
         or written: ``config_dir()`` is never consulted once this is set."""
-        from kiro_crew.platform import governance_profiles as gp
+        from aj_crew.platform import governance_profiles as gp
 
         profiles = tmp_path / "profiles"
         profiles.mkdir()

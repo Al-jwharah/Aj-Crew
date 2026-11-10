@@ -48,7 +48,7 @@ const ACCOUNTS = {
 }
 const GiB = 1024 ** 3
 const DRIVE = {
-  exists: true, bucket: `kirocrew-drive-${ACC}-usw2`, region: 'us-west-2',
+  exists: true, bucket: `ajcrew-drive-${ACC}-usw2`, region: 'us-west-2',
   usage: {
     bytes: 3.2 * GiB, objects: 128,
     sections: {
@@ -68,7 +68,7 @@ const CONSENT = (svc) => ({
 })
 
 /** The refusal shape the backend actually sends: prose for the agent, a code for the UI. */
-const DENIED = { error: 'AccessDenied: User is not authorized to perform s3:ListBucket on kirocrew-drive-111122223333-usw2', code: 'aws_call_failed' }
+const DENIED = { error: 'AccessDenied: User is not authorized to perform s3:ListBucket on ajcrew-drive-111122223333-usw2', code: 'aws_call_failed' }
 
 /** Whether the accounts read itself fails — flipped for the last frame. */
 let accountsFail = false

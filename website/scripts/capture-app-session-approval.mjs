@@ -59,7 +59,7 @@ const INSTALLED = [{
   resources: 'gateway', lifecycle: 'gateway',
   manifest: {
     name: FAILED_APP, version: '1.0.0', displayName: 'Docs',
-    description: 'A documentation helper.', author: 'kirocrew',
+    description: 'A documentation helper.', author: 'ajcrew',
   },
 }]
 
@@ -72,7 +72,7 @@ const REGISTRY = [{
   manifest: { permissions: { sessionApproval: true } },
 }, {
   name: FAILED_APP, displayName: 'Docs', version: '1.1.0',
-  description: 'A documentation helper.', author: 'kirocrew',
+  description: 'A documentation helper.', author: 'ajcrew',
   installed: true, enabled: true, origin: 'registry',
   updateAvailable: true, installedVersion: '1.0.0',
 }]

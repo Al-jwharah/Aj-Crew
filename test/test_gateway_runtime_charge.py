@@ -28,9 +28,9 @@ from test_gateway_subagent_wiring import (
     recording_clock,
 )
 
-from kiro_crew import runtime_death
-from kiro_crew.acp.client import AcpError, AcpProcessDied
-from kiro_crew.slack import gateway as gw_mod
+from aj_crew import runtime_death
+from aj_crew.acp.client import AcpError, AcpProcessDied
+from aj_crew.slack import gateway as gw_mod
 
 
 @pytest.fixture

@@ -531,7 +531,7 @@ export default function useAppsData(): AppsData {
         // installed under that name — names an app this wheel does not ship. A
         // built-in has no install coordinates, so the generic Install card would
         // render a control that cannot work. Dropped until a
-        // `minClientVersion`-aware "needs a newer Kiro Crew" state exists to say
+        // `minClientVersion`-aware "needs a newer Aj Crew" state exists to say
         // so honestly. This reads `apps` purely as INSTALL STATE, never as a
         // source of display copy.
         if (
@@ -638,7 +638,7 @@ export default function useAppsData(): AppsData {
       else counts.set(key, (counts.get(key) || 0) + 1)
     }
     const rows: SourceRow[] = []
-    if (builtinCount > 0) rows.push({ name: '__builtin__', label: i18nT('pages.appsPage.built_in_kirocrew'), count: builtinCount, builtin: true })
+    if (builtinCount > 0) rows.push({ name: '__builtin__', label: i18nT('pages.appsPage.built_in_ajcrew'), count: builtinCount, builtin: true })
     // Build-pinned and operator registries in ONE pass, ordered by review tier.
     // Pinned rows were previously absent from this list entirely, so their apps
     // fell through to the stale-cache loop below and the rail showed the bare
@@ -684,7 +684,7 @@ export default function useAppsData(): AppsData {
       const name = key.slice('registry:'.length)
       rows.push({ name, label: name, count, builtin: false })
     }
-    if (coreCount > 0) rows.push({ name: '__core__', label: i18nT('pages.appsPage.kirocrew_registry'), count: coreCount, builtin: true })
+    if (coreCount > 0) rows.push({ name: '__core__', label: i18nT('pages.appsPage.ajcrew_registry'), count: coreCount, builtin: true })
     return rows
   }, [browseApps, registriesData])
 

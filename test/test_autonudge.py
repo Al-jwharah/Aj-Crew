@@ -13,9 +13,9 @@ from autonudge_helpers import _enable  # noqa: F401
 from autonudge_helpers import svc_fixture  # noqa: F401
 from autonudge_helpers import _owner_dashboard_identity
 
-from kiro_crew import autonudge as _an
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
-from kiro_crew.testing.wait import await_until, default_timeout
+from aj_crew import autonudge as _an
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew.testing.wait import await_until, default_timeout
 
 #: Lost-run ceiling for synchronization the test itself must release. It is a
 #: hang guard whose expiry fails at the awaited line, never a performance
@@ -29,7 +29,7 @@ class TestAutonudgeDisabledSettingLink:
     def _app(self, monkeypatch):
         from aiohttp import web
 
-        from kiro_crew.dashboard.handlers import autonudge as _handler
+        from aj_crew.dashboard.handlers import autonudge as _handler
 
         monkeypatch.setattr(_handler, "_autonudge_get", lambda: None)
         app = web.Application(middlewares=[_owner_dashboard_identity()])
@@ -87,7 +87,7 @@ class TestAutonudgeStartIntCoercion:
 
         from aiohttp import web
 
-        from kiro_crew.dashboard.handlers import autonudge as _handler
+        from aj_crew.dashboard.handlers import autonudge as _handler
 
         monkeypatch.setattr(_handler, "_autonudge_get", lambda: fake_svc)
         state = MagicMock()
@@ -194,7 +194,7 @@ class TestAutonudgeUpdateChokepoint:
     def _client_app(self, monkeypatch, fake_svc):
         from aiohttp import web
 
-        from kiro_crew.dashboard.handlers import autonudge as _handler
+        from aj_crew.dashboard.handlers import autonudge as _handler
 
         monkeypatch.setattr(_handler, "_autonudge_get", lambda: fake_svc)
         app = web.Application(middlewares=[_owner_dashboard_identity()])
@@ -344,7 +344,7 @@ class TestAutonudgeUpdateChokepoint:
 
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew import autonudge_authz as _authz
+        from aj_crew import autonudge_authz as _authz
 
         svc = MagicMock()
         svc.update = AsyncMock(return_value=None)
@@ -370,7 +370,7 @@ class TestAutonudgeUpdateChokepoint:
 
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew import autonudge_authz as _authz
+        from aj_crew import autonudge_authz as _authz
 
         svc = self._fake_svc()
         app = self._client_app(monkeypatch, svc)
@@ -855,7 +855,7 @@ class TestSentinelPathRepair:
     """A persisted stop_sentinel_path must survive the data-home move.
 
     The path is built at ARM time and stored verbatim, so a loop armed under
-    ``~/.kirocrew`` would point at a vanished directory: a dead kill switch.
+    ``~/.ajcrew`` would point at a vanished directory: a dead kill switch.
     """
 
     @staticmethod
@@ -882,9 +882,9 @@ class TestSentinelPathRepair:
         )
 
     def test_legacy_rooted_path_is_rehomed(self, tmp_path, monkeypatch):
-        """A ~/.kirocrew-rooted sentinel is rewritten onto the current home."""
+        """A ~/.ajcrew-rooted sentinel is rewritten onto the current home."""
         home = tmp_path / "home"
-        legacy = home / ".kirocrew"
+        legacy = home / ".ajcrew"
         current = home / ".kiro" / "crew"
         current.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", staticmethod(lambda: home))
@@ -933,10 +933,10 @@ class TestSentinelPathRepair:
         assert _an.repair_sentinel_path(str(current / "workspace" / ".stop-x")) == ""
 
     def test_legacy_home_as_current_home_is_noop(self, tmp_path, monkeypatch):
-        """When the live home IS ~/.kirocrew (override / migration fallback),
+        """When the live home IS ~/.ajcrew (override / migration fallback),
         the persisted path is already correct and must not be rewritten."""
         home = tmp_path / "home"
-        legacy = home / ".kirocrew"
+        legacy = home / ".ajcrew"
         legacy.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", staticmethod(lambda: home))
         monkeypatch.setattr(_an, "config_dir", lambda: legacy)
@@ -960,13 +960,13 @@ class TestSentinelPathRepair:
         assert _an.repair_sentinel_path(value) == ""
 
     def test_nested_current_home_inside_legacy_is_not_rehomed(self, tmp_path, monkeypatch):
-        """KIROCREW_HOME may legally point INSIDE the legacy root.
+        """AJCREW_HOME may legally point INSIDE the legacy root.
 
-        Re-homing ``~/.kirocrew/dev`` would yield ``~/.kirocrew/dev/dev/workspace/...`` and
+        Re-homing ``~/.ajcrew/dev`` would yield ``~/.ajcrew/dev/dev/workspace/...`` and
         add a segment on every boot, disabling a WORKING kill switch.
         """
         home = tmp_path / "home"
-        legacy = home / ".kirocrew"
+        legacy = home / ".ajcrew"
         current = legacy / "dev"
         current.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", staticmethod(lambda: home))
@@ -981,7 +981,7 @@ class TestSentinelPathRepair:
     def test_unnormalized_path_escaping_legacy_is_preserved(
         self, tmp_path, monkeypatch, home_parent
     ):
-        """``~/.kirocrew/../workspace/STOP`` normalizes OUTSIDE the legacy root.
+        """``~/.ajcrew/../workspace/STOP`` normalizes OUTSIDE the legacy root.
 
         A purely lexical prefix test would treat it as legacy-contained and
         rewrite an external workspace sentinel to the wrong location.
@@ -992,7 +992,7 @@ class TestSentinelPathRepair:
         monkeypatch.setattr(Path, "home", staticmethod(lambda: home))
         monkeypatch.setattr(_an, "config_dir", lambda: current)
 
-        original = str(home / ".kirocrew" / ".." / "workspace" / "STOP")
+        original = str(home / ".ajcrew" / ".." / "workspace" / "STOP")
         repaired = _an.repair_sentinel_path(original)
         # Preserved verbatim — it normalizes outside the legacy root, so there is
         # nothing to re-home, and rewriting it would point at the wrong place.
@@ -1002,11 +1002,11 @@ class TestSentinelPathRepair:
     def test_live_legacy_rooted_workspace_is_not_rehomed(self, tmp_path, monkeypatch):
         """An absolute workspace dir INSIDE the legacy tree must be left alone.
 
-        ``workspaces.<name>.dir`` may be configured under ``~/.kirocrew``. The migration
+        ``workspaces.<name>.dir`` may be configured under ``~/.ajcrew``. The migration
         deletes the tree it moved, so an existing directory means "live, not stranded".
         """
         home = tmp_path / "home"
-        legacy = home / ".kirocrew"
+        legacy = home / ".ajcrew"
         current = home / ".kiro" / "crew"
         current.mkdir(parents=True)
         live_ws = legacy / "myworkspace"
@@ -1021,7 +1021,7 @@ class TestSentinelPathRepair:
         """The guard must not defeat the actual fix: a directory the migration
         removed still gets re-homed."""
         home = tmp_path / "home"
-        legacy = home / ".kirocrew"
+        legacy = home / ".ajcrew"
         current = home / ".kiro" / "crew"
         current.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", staticmethod(lambda: home))
@@ -1177,7 +1177,7 @@ class TestSentinelPathRepair:
         freshly resolved path, and a stale legacy path would ignore it.
         """
         home = tmp_path / "home"
-        legacy = home / ".kirocrew"
+        legacy = home / ".ajcrew"
         current = home / ".kiro" / "crew"
         current.mkdir(parents=True)
         monkeypatch.setattr(Path, "home", staticmethod(lambda: home))
@@ -1221,7 +1221,7 @@ class TestSentinelPathRepair:
     async def test_rehomed_sentinel_halts_the_loop(self, tmp_path, monkeypatch):
         """The repaired path is the one _timer actually honours."""
         home = tmp_path / "home"
-        legacy = home / ".kirocrew"
+        legacy = home / ".ajcrew"
         current = home / ".kiro" / "crew"
         (current / "workspace").mkdir(parents=True)
         monkeypatch.setattr(Path, "home", staticmethod(lambda: home))

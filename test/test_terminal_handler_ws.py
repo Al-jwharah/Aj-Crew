@@ -25,8 +25,8 @@ from terminal_handler_helpers import (  # noqa: F401 -- the autouse fixture regi
     _make_session,
 )
 
-from kiro_crew.dashboard.handlers import terminal
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.handlers import terminal
+from aj_crew.testing.wait import await_until
 
 # ── api_terminal_ws ──
 
@@ -595,7 +595,7 @@ class TestApiTerminalWs:
             patch.object(terminal, "_get_config", return_value={"enabled": True}),
             patch.object(terminal.ws_heartbeat, "LagTolerantWebSocketResponse", return_value=ws),
             patch.object(terminal, "_sel") as mock_sel,
-            caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.handlers.terminal"),
+            caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.handlers.terminal"),
         ):
             mock_sel.return_value.log_api_access = MagicMock()
             await terminal.api_terminal_ws(req)
@@ -607,7 +607,7 @@ class TestApiTerminalWs:
         warnings = [
             r.getMessage()
             for r in caplog.records
-            if r.name == "kiro_crew.dashboard.handlers.terminal" and r.levelno == logging.WARNING
+            if r.name == "aj_crew.dashboard.handlers.terminal" and r.levelno == logging.WARNING
         ]
         assert any(
             "controlling terminal" in m for m in warnings
@@ -659,7 +659,7 @@ class TestApiTerminalWs:
 
     @pytest.mark.asyncio
     async def test_windows_conpty_spawn_failure_sends_error(self, monkeypatch):
-        """On Windows a new WS session spawns a ConPTY shell (kiro_crew.conpty);
+        """On Windows a new WS session spawns a ConPTY shell (aj_crew.conpty);
         the old 'not supported on Windows' refusal is gone. If the
         spawn fails, the handler pops the placeholder, sends an error frame, and
         closes. WindowsPty is mocked to raise so ``return ws`` is exercised
@@ -676,7 +676,7 @@ class TestApiTerminalWs:
         with (
             patch.object(terminal.platform_compat, "IS_POSIX", False),
             patch.object(terminal.platform_compat, "IS_WINDOWS", True),
-            patch("kiro_crew.conpty.WindowsPty", side_effect=RuntimeError("boom")),
+            patch("aj_crew.conpty.WindowsPty", side_effect=RuntimeError("boom")),
             patch.object(terminal, "_get_config", return_value={"enabled": True}),
             patch.object(terminal.ws_heartbeat, "LagTolerantWebSocketResponse", return_value=ws),
             patch.object(terminal, "_sel") as mock_sel,
@@ -707,7 +707,7 @@ class TestApiTerminalWs:
         with (
             patch.object(terminal.platform_compat, "IS_POSIX", False),
             patch.object(terminal.platform_compat, "IS_WINDOWS", True),
-            patch("kiro_crew.conpty.WindowsPty", side_effect=RuntimeError("boom")),
+            patch("aj_crew.conpty.WindowsPty", side_effect=RuntimeError("boom")),
             patch.object(terminal, "_get_config", return_value={"enabled": True}),
             patch.object(terminal.ws_heartbeat, "LagTolerantWebSocketResponse", return_value=ws),
             patch.object(terminal, "_sel") as mock_sel,
@@ -860,7 +860,7 @@ class TestSweepTerminals:
         sess = _make_session(session_id="s1", alive=True, disconnect=_DETACHED_AT)
         bus = MagicMock()
         app, registry = _sweep_app(sess, bus=bus)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.handlers.terminal"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.handlers.terminal"):
             mock_kill, mock_sel = await _sweep(app, terminal._ORPHAN_TIMEOUT_S + 1)
         mock_kill.assert_awaited_once_with(sess)
         assert registry == {}

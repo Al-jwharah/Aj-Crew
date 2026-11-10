@@ -1,7 +1,7 @@
 """R35 regression tests (round-35 Codex findings on baaaaec).
 
 F1: fullstack apigateway mutations (PUT/PATCH/DELETE) must be gated on the
-    kirocrew:managed resource tag — the deploy profile must not be able to
+    ajcrew:managed resource tag — the deploy profile must not be able to
     mutate/delete unrelated APIs in the account.
 F2: the "file-too-large" staging rejection (added in R33) must be in the
     _do_deploy structured-409 allowlist, not escape as a 500.
@@ -11,11 +11,11 @@ from pathlib import Path
 import yaml
 from yaml_helpers import load_with
 
-from kiro_crew.deploy import iam as iam_mod
+from aj_crew.deploy import iam as iam_mod
 
 REPO = Path(__file__).resolve().parents[1]
-HANDLERS = (REPO / "src" / "kiro_crew" / "deploy" / "handlers_sites.py").read_text(encoding="utf-8")
-TEMPLATES = REPO / "src" / "kiro_crew" / "deploy" / "skills" / "artifact-deploy" / "templates"
+HANDLERS = (REPO / "src" / "aj_crew" / "deploy" / "handlers_sites.py").read_text(encoding="utf-8")
+TEMPLATES = REPO / "src" / "aj_crew" / "deploy" / "skills" / "artifact-deploy" / "templates"
 
 
 def _statements(doc):
@@ -35,7 +35,7 @@ class TestF1ApiGwTagCondition:
             "apigateway:DELETE",
         }
         cond = mut["Condition"]["StringEquals"]
-        assert cond["aws:ResourceTag/kirocrew:managed"] == "true"
+        assert cond["aws:ResourceTag/ajcrew:managed"] == "true"
 
     def test_read_has_no_mutations_and_post_only_on_collection(self):
         doc = iam_mod.policy_document(tier="fullstack")
@@ -64,8 +64,8 @@ class TestF1ApiGwTagCondition:
                 if r.get("Type") == "AWS::ApiGatewayV2::Api"
             )
             tags = api["Properties"].get("Tags") or {}
-            assert tags.get("kirocrew:managed") == "true", (
-                f"{name}: HttpApi must carry kirocrew:managed=true or the "
+            assert tags.get("ajcrew:managed") == "true", (
+                f"{name}: HttpApi must carry ajcrew:managed=true or the "
                 f"R35 mutation condition locks the deploy profile out"
             )
 

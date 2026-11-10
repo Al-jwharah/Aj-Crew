@@ -22,9 +22,9 @@ from subagent_scale_helpers import (  # noqa: F401 -- the autouse fixture regist
     _mock_sessions,
 )
 
-from kiro_crew import subagent as subagent_module
-from kiro_crew.subagent import _RUN_ID_HEX_CHARS, SubagentInfo, SubagentManager
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import subagent as subagent_module
+from aj_crew.subagent import _RUN_ID_HEX_CHARS, SubagentInfo, SubagentManager
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -48,7 +48,7 @@ class TestRetryGating:
 
     @pytest.mark.asyncio
     async def test_retry_rejects_running_and_stopped(self):
-        from kiro_crew.dashboard.handlers.messaging import api_spawn_retry
+        from aj_crew.dashboard.handlers.messaging import api_spawn_retry
 
         running = SubagentInfo(id="r1", task="t")
         resp = await api_spawn_retry(self._request(self._mgr_with(running), "r1"))
@@ -62,15 +62,15 @@ class TestRetryGating:
 
     @pytest.mark.asyncio
     async def test_retry_respawns_failed_with_original_task(self):
-        from kiro_crew.dashboard.handlers.messaging import api_spawn_retry
-        from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+        from aj_crew.dashboard.handlers.messaging import api_spawn_retry
+        from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
         failed = SubagentInfo(id="f1", task="redacted task", parent_session_key="dashboard:m")
         failed.done = True
         failed.error = "boom"
         failed._raw_task = "original raw task"
         failed.execution_context = ExecutionContext(
-            None, MemoryStoreRef("default"), "template", "kirocrew"
+            None, MemoryStoreRef("default"), "template", "ajcrew"
         )
         mgr = self._mgr_with(failed)
         new_info = SubagentInfo(id="n1", task="original raw task")
@@ -97,7 +97,7 @@ async def _await_drained(mgr, store, started: list[str], expected: int) -> None:
     order assertion as lost or reordered rows. It polls the production path
     (``_release_slot`` → ``_drain_queue``) rather than pumping; both measured the same.
     """
-    from kiro_crew.taskq import model
+    from aj_crew.taskq import model
 
     await async_wait_until(
         lambda: len(started) >= expected
@@ -124,7 +124,7 @@ class TestDurableQueueScale:
 
     @pytest.mark.asyncio
     async def test_2000_spawns_are_2000_rows_and_at_most_64_dicts(self):
-        from kiro_crew.taskq import model
+        from aj_crew.taskq import model
 
         mgr = SubagentManager(sessions=_mock_sessions(), ctx_builder=_mock_ctx(), max_concurrent=4)
         await mgr.wait_taskq_ready()
@@ -132,8 +132,8 @@ class TestDurableQueueScale:
         store = mgr._taskq
         assert store is not None and store.window == 64
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(SubagentManager, "_run", new=AsyncMock()),
         ):
             ids = [
@@ -151,7 +151,7 @@ class TestDurableQueueScale:
 
     @pytest.mark.asyncio
     async def test_queue_survives_manager_loss_and_drains_fifo(self):
-        from kiro_crew.taskq import model
+        from aj_crew.taskq import model
 
         first = SubagentManager(
             sessions=_mock_sessions(), ctx_builder=_mock_ctx(), max_concurrent=1
@@ -159,8 +159,8 @@ class TestDurableQueueScale:
         await first.wait_taskq_ready()
         first._spawn_stagger_secs = 0.0
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(SubagentManager, "_run", new=AsyncMock()),
         ):
             ids = [first.spawn(f"t{i}", parent_session_key="dashboard:s1").id for i in range(200)]
@@ -185,8 +185,8 @@ class TestDurableQueueScale:
                 second._drain_queue()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(SubagentManager, "_run", new=run),
         ):
             second._drain_queue()  # the recovery kick; releases pump the rest
@@ -221,8 +221,8 @@ class TestRunIdMinting:
         await mgr.wait_taskq_ready()
         mgr._spawn_stagger_secs = 0.0
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(SubagentManager, "_run", new=AsyncMock()),
         ):
             ids = [mgr.spawn(f"t{i}", parent_session_key="dashboard:s1").id for i in range(40)]
@@ -252,7 +252,7 @@ class TestRunIdMinting:
     def test_one_draw_site_owns_the_width(self):
         import inspect
 
-        import kiro_crew.subagent_manager as manager_pkg
+        import aj_crew.subagent_manager as manager_pkg
 
         package = pathlib.Path(manager_pkg.__file__).parent
         component_draws = [
@@ -308,7 +308,7 @@ class TestQueuedDepthReachesZero:
         async def run(self, info):
             started.append(info.id)
             # flake-ok: pre-existing 50 ms stand-in for a worker's run time -- moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing 50 ms stand-in for a worker's run time moved verbatim
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing 50 ms stand-in for a worker's run time moved verbatim
             await asyncio.sleep(0.05)
             info.done = True
             self._claim_finalize(info)
@@ -317,8 +317,8 @@ class TestQueuedDepthReachesZero:
                 self._drain_queue()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(SubagentManager, "_run", new=run),
         ):
             for i in range(5):
@@ -381,8 +381,8 @@ class TestQueuedDepthReachesZero:
             return fn(*a, **kw)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(SubagentManager, "_run", new=AsyncMock()),
             patch("asyncio.to_thread", new=slow_policy),
             patch.object(type(mgr._admission), "pump_off_loop", True),
@@ -427,7 +427,7 @@ class TestQueuedDepthReachesZero:
         (its policy read is on a thread) when the parent stops everything. The
         row is in no window and has no ``_agents`` record, so the store sweep
         is the only one that can see it -- and it must."""
-        from kiro_crew.taskq import model
+        from aj_crew.taskq import model
 
         mgr = SubagentManager(sessions=_mock_sessions(), ctx_builder=_mock_ctx(), max_concurrent=1)
         await mgr.wait_taskq_ready()
@@ -445,8 +445,8 @@ class TestQueuedDepthReachesZero:
             return fn(*a, **kw)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(SubagentManager, "_run", new=AsyncMock()),
             patch("asyncio.to_thread", new=slow_policy),
             patch.object(type(mgr._admission), "pump_off_loop", True),
@@ -485,7 +485,7 @@ class TestQueuedDepthReachesZero:
         """A claim the store cannot take leaves the row QUEUED. The re-entry's
         depth emit is the one the chip reads next, so it must count the row
         (1), never a dispatching-masked 0."""
-        from kiro_crew import taskq as _taskq
+        from aj_crew import taskq as _taskq
 
         mgr = SubagentManager(sessions=_mock_sessions(), ctx_builder=_mock_ctx(), max_concurrent=1)
         await mgr.wait_taskq_ready()
@@ -512,8 +512,8 @@ class TestQueuedDepthReachesZero:
             return real_claim(agent_id, *a, **kw)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(SubagentManager, "_run", new=AsyncMock()),
             patch.object(store, "claim", new=claim),
         ):
@@ -552,8 +552,8 @@ class TestQueuedDepthReachesZero:
             return real_spawn(*a, **kw)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(SubagentManager, "_run", new=AsyncMock()),
         ):
             first = mgr.spawn("t0", parent_session_key="dashboard:s1")

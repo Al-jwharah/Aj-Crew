@@ -22,7 +22,7 @@ concurrency:
 jobs:
   autosde-rules:
     name: Automated Rule Check
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 10
     steps:
       # The merge commit and its two parents. The diff-base step fetches the
@@ -137,13 +137,13 @@ jobs:
           echo "::endgroup::"
 
       - name: Check backend security rules
-        if: contains(steps.changed.outputs.files, 'src/kiro_crew/')
+        if: contains(steps.changed.outputs.files, 'src/aj_crew/')
         env:
           BASE: ${{ steps.diffbase.outputs.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
           echo "::group::sensitive-path reads must go through is_sensitive_path()"
-          SENSITIVE_PATHS='\.aws/|\.ssh/|\.gnupg/|\.docker/|\.kube/|\.npmrc|\.pypirc|\.netrc|\.git-credentials|\.kirocrew/security_policy|\.kirocrew/admission_policy|\.kirocrew/\.env|\.kiro/crew/security_policy|\.kiro/crew/admission_policy|\.kiro/crew/\.env'
+          SENSITIVE_PATHS='\.aws/|\.ssh/|\.gnupg/|\.docker/|\.kube/|\.npmrc|\.pypirc|\.netrc|\.git-credentials|\.ajcrew/security_policy|\.ajcrew/admission_policy|\.ajcrew/\.env|\.kiro/crew/security_policy|\.kiro/crew/admission_policy|\.kiro/crew/\.env'
           # Best-effort: covers open()/Path.open()/read_text()/os.open()/aiofiles.
           # The authoritative control is the security/ package + hooks.py + their unit tests;
           # this grep is a fast pre-filter, not the guarantee.
@@ -166,11 +166,11 @@ jobs:
           # among them, in _CREW_SECRET_LEAVES) under every crew-home prefix
           # (_CREW_HOME_PREFIXES). Assert the leaf is in that list; the governance
           # boot tuple carries the resolved ".kiro/crew/denied_commands.json".
-          if ! grep -qr '"denied_commands.json"' src/kiro_crew/security/; then
+          if ! grep -qr '"denied_commands.json"' src/aj_crew/security/; then
             echo "::error::denied_commands.json must be in security._SENSITIVE_HOME_DIRS (via _CREW_SECRET_LEAVES; agent must not read/write its own deny ceiling)"
             exit 1
           fi
-          if ! grep -q '".kiro/crew/denied_commands.json"' src/kiro_crew/platform/governance.py; then
+          if ! grep -q '".kiro/crew/denied_commands.json"' src/aj_crew/platform/governance.py; then
             echo "::error::denied_commands.json must be in the governance boot-integrity required tuple"
             exit 1
           fi
@@ -181,7 +181,7 @@ jobs:
           # (disable_all etc.) must be parsed with _coerce_bool, never bare bool()
           # (bool("false") is True — would silently disable every protection).
           # (?<![_\w]) so bare ``bool(`` matches but ``_coerce_bool(`` does not.
-          if git diff "$BASE".."$HEAD" -- 'src/kiro_crew/hooks.py' 'src/kiro_crew/hook_runtime/' 'src/kiro_crew/dashboard/handlers/security.py' 'src/kiro_crew/dashboard/handlers/security_*.py' | grep -nP "^\+.*(?<![_\w])bool\(\s*(dc|data|denied)\.get\(\s*['\"](disable_all|auto_approve_subagent|enabled)"; then
+          if git diff "$BASE".."$HEAD" -- 'src/aj_crew/hooks.py' 'src/aj_crew/hook_runtime/' 'src/aj_crew/dashboard/handlers/security.py' 'src/aj_crew/dashboard/handlers/security_*.py' | grep -nP "^\+.*(?<![_\w])bool\(\s*(dc|data|denied)\.get\(\s*['\"](disable_all|auto_approve_subagent|enabled)"; then
             echo "::error::Parse operator-editable boolean opt-out fields with _coerce_bool(), not bare bool() (bool('false') is truthy)"
             exit 1
           fi
@@ -194,9 +194,9 @@ jobs:
           # docs/system-specs/common/model-selection.md).
           # model_registry.py IS the id source-of-truth (excluded); the CC-seam
           # fallback (_BACKGROUND_CC_MODEL) and *_FALLBACK_* maps are the one
-          # documented exception. tests live outside src/kiro_crew.
-          if git diff "$BASE".."$HEAD" -- ':(glob)src/kiro_crew/**/*.py' \
-               ':(exclude)src/kiro_crew/model_registry.py' \
+          # documented exception. tests live outside src/aj_crew.
+          if git diff "$BASE".."$HEAD" -- ':(glob)src/aj_crew/**/*.py' \
+               ':(exclude)src/aj_crew/model_registry.py' \
              | grep -nP "^\+.*(=|\":)\s*[\"'](claude-(opus|sonnet|haiku|fable)|opus-[0-9]|sonnet-[0-9]|haiku-[0-9]|fable-[0-9]|gpt-[0-9])" \
              | grep -vP "_BACKGROUND_CC_MODEL|_FALLBACK_"; then
             echo "::error::Do not hardcode a model id as a default/fallback. Use \"auto\" or agent.role_models.<role> (see docs/system-specs/common/model-selection.md)."
@@ -213,7 +213,7 @@ jobs:
   # separately — this gate prevents new ones from landing.
   inclusive-language:
     name: Inclusive Language
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 10
     steps:
       # The merge commit and its two parents. The diff-base step fetches the
@@ -262,7 +262,7 @@ jobs:
           # and identifiers must not be rewritten — mirrors the .woke.yml
           # ignore_files entry (file ignores don't apply to a --stdin scan).
           git diff "$BASE".."$HEAD" --unified=0 --diff-filter=ACMR \
-            -- ':(exclude)THIRD-PARTY-NOTICES' ':(exclude)CHANGELOG.md' ':(exclude)*.lock' ':(exclude).woke.yml' ':(exclude)AUTOSDE.yaml' ':(exclude)website/AUTOSDE.yaml' ':(exclude)src/kiro_crew/_vendor/**' ':(exclude)test/fixtures/denied_commands_golden.json' \
+            -- ':(exclude)THIRD-PARTY-NOTICES' ':(exclude)CHANGELOG.md' ':(exclude)*.lock' ':(exclude).woke.yml' ':(exclude)AUTOSDE.yaml' ':(exclude)website/AUTOSDE.yaml' ':(exclude)src/aj_crew/_vendor/**' ':(exclude)test/fixtures/denied_commands_golden.json' \
             | grep '^+[^+]' | sed 's/^+//' > /tmp/diff-added-lines.txt
 
           if [ ! -s /tmp/diff-added-lines.txt ]; then
@@ -306,7 +306,7 @@ jobs:
   # as an image, so the engine stays pinned on both pools.
   sast:
     name: SAST (Semgrep)
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     # The baseline scan re-runs every rule on the merge-base for each changed
     # file, so the job's length grows with the diff: 2-3 min on the CodeBuild
     # fleet for a typical PR, but 9-14 min measured on ubuntu-latest for a large

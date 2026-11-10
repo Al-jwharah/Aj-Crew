@@ -12,7 +12,7 @@ import os
 
 import pytest
 
-from kiro_crew.cpu_affinity import affinity_cpu_count
+from aj_crew.cpu_affinity import affinity_cpu_count
 
 _HAS_AFFINITY = hasattr(os, "sched_getaffinity")
 _NO_AFFINITY_REASON = "this platform has no os.sched_getaffinity to narrow"

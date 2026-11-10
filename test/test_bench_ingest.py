@@ -28,15 +28,15 @@ from typing import Iterator
 
 import pytest
 
-from kiro_crew.eval.bench import ingest as ingest_mod
-from kiro_crew.eval.bench.corpus import (
+from aj_crew.eval.bench import ingest as ingest_mod
+from aj_crew.eval.bench.corpus import (
     CAT_SINGLE_HOP,
     BenchInstance,
     BenchQuery,
     BenchSession,
     BenchTurn,
 )
-from kiro_crew.eval.bench.ingest import (
+from aj_crew.eval.bench.ingest import (
     DEFAULT_EMBED_TIMEOUT_S,
     IngestConfig,
     IngestedInstance,
@@ -48,7 +48,7 @@ from kiro_crew.eval.bench.ingest import (
     prepare_embedder,
     search_backend,
 )
-from kiro_crew.eval.bench.toy_embedder import toy_embed_fn
+from aj_crew.eval.bench.toy_embedder import toy_embed_fn
 
 EMBED = toy_embed_fn()
 
@@ -667,7 +667,7 @@ class _FakeEmbedder:
 @pytest.fixture()
 def fake_embeddings(monkeypatch: pytest.MonkeyPatch) -> Iterator[_FakeEmbedder]:
     """Stub the embeddings module so no model load is attempted on this host."""
-    import kiro_crew.embeddings as embeddings
+    import aj_crew.embeddings as embeddings
 
     fake = _FakeEmbedder()
     monkeypatch.setattr(embeddings, "get_shared_embedder", lambda: fake)
@@ -683,7 +683,7 @@ def test_prepare_embedder_refuses_when_the_model_is_not_resident(
     substring overlap under that name, and nothing downstream can detect it from
     the number alone — which is why the guard, not a warning.
     """
-    import kiro_crew.embeddings as embeddings
+    import aj_crew.embeddings as embeddings
 
     monkeypatch.setattr(embeddings, "make_sync_embed_fn", lambda: (lambda _text: None))
     with pytest.raises(IngestError) as exc:
@@ -692,7 +692,7 @@ def test_prepare_embedder_refuses_when_the_model_is_not_resident(
     assert "NULL embedding" in msg
     assert "FTS5 keyword LIKE matching" in msg
     assert "substring overlap, not memory retrieval" in msg
-    assert "kirocrew doctor" in msg
+    assert "ajcrew doctor" in msg
     assert fake_embeddings.waited_with == 0.25
 
 
@@ -700,7 +700,7 @@ def test_prepare_embedder_refuses_an_empty_vector_too(
     monkeypatch: pytest.MonkeyPatch, fake_embeddings: _FakeEmbedder
 ) -> None:
     """``if not probe`` — an empty list is as unusable as None and must not pass."""
-    import kiro_crew.embeddings as embeddings
+    import aj_crew.embeddings as embeddings
 
     monkeypatch.setattr(embeddings, "make_sync_embed_fn", lambda: (lambda _t: []))
     with pytest.raises(IngestError):
@@ -710,7 +710,7 @@ def test_prepare_embedder_refuses_an_empty_vector_too(
 def test_prepare_embedder_returns_the_fn_when_the_probe_succeeds(
     monkeypatch: pytest.MonkeyPatch, fake_embeddings: _FakeEmbedder
 ) -> None:
-    import kiro_crew.embeddings as embeddings
+    import aj_crew.embeddings as embeddings
 
     monkeypatch.setattr(embeddings, "make_sync_embed_fn", toy_embed_fn)
     fn = prepare_embedder(timeout_s=0.25)

@@ -5,7 +5,7 @@ from pathlib import Path
 
 def test_every_allowed_event_snapshot_read_is_live_narrowed() -> None:
     source = (
-        Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard" / "websocket_hub.py"
+        Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard" / "websocket_hub.py"
     ).read_text(encoding="utf-8")
 
     snapshot_reads = source.count('ws.get("_allowed_events", frozenset())')

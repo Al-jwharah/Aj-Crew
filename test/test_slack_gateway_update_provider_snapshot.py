@@ -2,7 +2,7 @@
 
 `_check_for_updates_via_provider` calls ``provider.apply()`` at two sites: the
 mandatory min_version floor and the voluntary auto-update. Each must take the same
-pre-update memory copy `kirocrew update` takes, before the provider rewrites the
+pre-update memory copy `ajcrew update` takes, before the provider rewrites the
 install, and a copy that did not land skips the update without applying.
 """
 
@@ -13,11 +13,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from slack_gateway_helpers import _make_orchestrator, _mock_dashboard_state
 
-_SNAPSHOT = "kiro_crew.platform.wheel_apply.snapshot_memory_before_update"
+_SNAPSHOT = "aj_crew.platform.wheel_apply.snapshot_memory_before_update"
 
 
 def _provider(order: list[str]):
-    from kiro_crew.platform.update_provider import CommandProvider, UpdateCheckResult
+    from aj_crew.platform.update_provider import CommandProvider, UpdateCheckResult
 
     provider = CommandProvider(check_command="c", apply_command="a")
     # The check offers 9.9.9, and the re-check after the apply finds it installed.
@@ -37,7 +37,7 @@ def _provider(order: list[str]):
 
 
 def _orchestrator(effect: str):
-    from kiro_crew.platform.update_capability import AUTO_ROUTE_PROVIDER, AutoUpdateEffect
+    from aj_crew.platform.update_capability import AUTO_ROUTE_PROVIDER, AutoUpdateEffect
 
     orch = _make_orchestrator()
     orch.dashboard_state = _mock_dashboard_state()
@@ -49,8 +49,8 @@ def _orchestrator(effect: str):
 
 
 async def _run(monkeypatch, *, mandatory: bool, failure: str, order: list[str]):
-    import kiro_crew.dashboard.handlers as handlers
-    import kiro_crew.platform.update_governance as gov
+    import aj_crew.dashboard.handlers as handlers
+    import aj_crew.platform.update_governance as gov
 
     orch = _orchestrator("mandatory" if mandatory else "install")
     provider = _provider(order)
@@ -65,7 +65,7 @@ async def _run(monkeypatch, *, mandatory: bool, failure: str, order: list[str]):
         return (0, failure) if failure else (2, "")
 
     with (
-        patch("kiro_crew.config.KiroCrewConfig.load", return_value=cfg),
+        patch("aj_crew.config.AjCrewConfig.load", return_value=cfg),
         patch(_SNAPSHOT, side_effect=_copy),
     ):
         await orch._check_for_updates_via_provider(provider)

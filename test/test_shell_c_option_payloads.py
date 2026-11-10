@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.security import shell_normalizer as sn
-from kiro_crew.security.deny_gate import is_denied
+from aj_crew.security import shell_normalizer as sn
+from aj_crew.security.deny_gate import is_denied
 
 PUSH = "git push origin main"
 
@@ -79,7 +79,7 @@ HIDDEN = [
 def test_the_script_after_options_or_redirections_is_a_payload(shape: str) -> None:
     command = shape.format(p=PUSH)
     assert is_denied(command) is not None, command
-    assert is_denied(shape.format(p="kirocrew token")) is not None
+    assert is_denied(shape.format(p="ajcrew token")) is not None
 
 
 @pytest.mark.parametrize(
@@ -92,21 +92,21 @@ def test_the_script_after_options_or_redirections_is_a_payload(shape: str) -> No
         "echo bash -c -x 'git status'",
         "printf '%s\\n' \"bash -c -x 'echo ok'\"",
         # a later stage's ``-c`` is a count flag, and its pattern is text
-        "bash -c 'make' && grep -c -e 'kirocrew token' notes.txt",
+        "bash -c 'make' && grep -c -e 'ajcrew token' notes.txt",
         "sh -c 'cat log' | grep -c -i 'git push origin main' log",
         "bash -c 'make' && wc -c -l 'git push origin main'",
         "bash build.sh | grep -c -i 'git push origin main' log",
         # a shell NAME as another command's argument opens no option run
-        "grep -c bash log && grep -c -e 'kirocrew token' notes.txt",
-        "grep bash notes.txt && grep -c -e 'kirocrew token' notes.txt",
-        "bash -c 'make'\ngrep -c -e 'kirocrew token' notes.txt",
-        "grep env x && sort -S 3</dev/null 'kirocrew token'",
+        "grep -c bash log && grep -c -e 'ajcrew token' notes.txt",
+        "grep bash notes.txt && grep -c -e 'ajcrew token' notes.txt",
+        "bash -c 'make'\ngrep -c -e 'ajcrew token' notes.txt",
+        "grep env x && sort -S 3</dev/null 'ajcrew token'",
         # past a script file, ``-c -e '<text>'`` are the script's arguments
-        "bash /dev/null -c -e 'kirocrew token'",
+        "bash /dev/null -c -e 'ajcrew token'",
         # a printed example of the option spelling stays a mention
         "echo bash -c -o pipefail 'git push origin main'",
         'echo bash -c -x "git push origin main"',
-        "printf '%s\\n' bash -c -e 'kirocrew token'",
+        "printf '%s\\n' bash -c -e 'ajcrew token'",
         # digit and value words that are really the script's own arguments
         "bash -c 'echo hi' x 'git push origin main'",
         "bash -c 'x' -1",

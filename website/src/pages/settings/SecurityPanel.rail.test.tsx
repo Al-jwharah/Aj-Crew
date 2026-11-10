@@ -44,7 +44,7 @@ vi.mock('../../api/client', () => ({
     securityPosture: vi.fn(),
     // Read + write for the third-party-app execution toggle. Also consumed by
     // YoloDurationCard, which tolerates an unresolved read.
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
     patchConfig: vi.fn(),
     // Read by the rail on every mount to summarise the tailnet-origin section.
     // Present here so the rail's own read is a resolved query rather than a
@@ -72,7 +72,7 @@ describe('SecurityPanel — inspector rail', () => {
     ;(api.deniedCommands as ReturnType<typeof vi.fn>).mockResolvedValue(snapshot())
     ;(api.governancePolicy as ReturnType<typeof vi.fn>).mockResolvedValue(govNoPolicy())
     ;(api.securityPosture as ReturnType<typeof vi.fn>).mockResolvedValue(posture())
-    ;(api.kirocrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({})
+    ;(api.ajcrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({})
     ;(api.tailnetStatus as ReturnType<typeof vi.fn>).mockResolvedValue(TAILNET_OFF)
   })
 
@@ -139,7 +139,7 @@ describe('SecurityPanel — inspector rail', () => {
     // Same rule the card itself follows: a failed read is not "off". A rail badge
     // saying "Off" while third-party code is in fact admitted would be a false
     // reassurance in the most glanceable place on the page.
-    ;(api.kirocrewConfig as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('nope'))
+    ;(api.ajcrewConfig as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('nope'))
     renderWithProviders(<SecurityPanel />, { route: '/?section=posture' })
 
     const row = screen.getByRole('option', { name: /Third-party apps/ })
@@ -242,7 +242,7 @@ describe('SecurityPanel — review-round regressions', () => {
     ;(api.deniedCommands as ReturnType<typeof vi.fn>).mockResolvedValue(snapshot())
     ;(api.governancePolicy as ReturnType<typeof vi.fn>).mockResolvedValue(govNoPolicy())
     ;(api.securityPosture as ReturnType<typeof vi.fn>).mockResolvedValue(posture())
-    ;(api.kirocrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({})
+    ;(api.ajcrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({})
     ;(api.tailnetStatus as ReturnType<typeof vi.fn>).mockResolvedValue(TAILNET_OFF)
   })
 

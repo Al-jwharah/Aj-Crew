@@ -14,16 +14,16 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import chat_persistence, chat_rewind
-from kiro_crew.dashboard.state import append_and_surface
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.dashboard import chat_persistence, chat_rewind
+from aj_crew.dashboard.state import append_and_surface
+from aj_crew.testing.wait import async_wait_until
 
 
 @pytest.fixture(autouse=True)
 def _mock_run_chat(monkeypatch):
     """Replace _run_chat with a no-op so tests don't try to spawn kiro-cli."""
     run_chat_mock = AsyncMock(return_value=None)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_rewind._run_chat", run_chat_mock)
+    monkeypatch.setattr("aj_crew.dashboard.chat_rewind._run_chat", run_chat_mock)
     return run_chat_mock
 
 
@@ -136,7 +136,7 @@ class TestRewindSlot:
             raise OSError("disk full")
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_rewind._save_slot_to_history", _wait_then_fail
+            "aj_crew.dashboard.chat_rewind._save_slot_to_history", _wait_then_fail
         )
         app = _make_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -179,7 +179,7 @@ class TestRewindSlot:
         def _fail_save(*_args, **_kwargs):
             raise OSError("disk full")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_rewind._save_slot_to_history", _fail_save)
+        monkeypatch.setattr("aj_crew.dashboard.chat_rewind._save_slot_to_history", _fail_save)
         app = _make_app(state)
         async with TestClient(TestServer(app)) as client:
             resp = await client.post(
@@ -228,7 +228,7 @@ class TestRewindSlot:
         original_messages = list(slot.messages)
         state.sessions._session_map.get = MagicMock(return_value="")
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_rewind._save_slot_to_history",
+            "aj_crew.dashboard.chat_rewind._save_slot_to_history",
             MagicMock(return_value=False),
         )
 
@@ -318,7 +318,7 @@ class TestRewindSlot:
             return True
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_rewind._save_slot_to_history",
+            "aj_crew.dashboard.chat_rewind._save_slot_to_history",
             _save_stamps_witnesses,
         )
 
@@ -375,7 +375,7 @@ class TestRewindSlot:
             return True
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_rewind._save_slot_to_history", _record_pairing
+            "aj_crew.dashboard.chat_rewind._save_slot_to_history", _record_pairing
         )
 
         app = _make_app(state)
@@ -405,7 +405,7 @@ class TestRewindSlot:
         The file is ``frozen_prefix + snapshot``; a cap trim credits rows to
         ``_disk_older_count``. Drift must refuse: retryable 503, disk untouched.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state._MAX_SLOT_MESSAGES", 4)
+        monkeypatch.setattr("aj_crew.dashboard.state._MAX_SLOT_MESSAGES", 4)
         state = _make_state(tmp_path)
         slot = _populate_slot(state)
         state.sessions._session_map.get = MagicMock(return_value="")
@@ -514,7 +514,7 @@ class TestRewindSlot:
         from aiohttp import web as _web
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.dashboard.chat_rewind import api_chat_slot_rewind
+        from aj_crew.dashboard.chat_rewind import api_chat_slot_rewind
 
         app = _make_app(state)
         fake_request = make_mocked_request(
@@ -832,7 +832,7 @@ class TestRewindSlot:
         """
         events: list[dict] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_rewind.sel",
+            "aj_crew.dashboard.chat_rewind.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: events.append(kw)),
         )
         state = _make_state(tmp_path)
@@ -842,7 +842,7 @@ class TestRewindSlot:
         def _fail_save(*_args, **_kwargs):
             raise OSError("disk full")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_rewind._save_slot_to_history", _fail_save)
+        monkeypatch.setattr("aj_crew.dashboard.chat_rewind._save_slot_to_history", _fail_save)
 
         app = _make_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -877,7 +877,7 @@ class TestRewindSlot:
         """
         events: list[dict] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_rewind.sel",
+            "aj_crew.dashboard.chat_rewind.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: events.append(kw)),
         )
         state = _make_state(tmp_path)
@@ -890,7 +890,7 @@ class TestRewindSlot:
             return True
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_rewind._save_slot_to_history", _records_dispatch
+            "aj_crew.dashboard.chat_rewind._save_slot_to_history", _records_dispatch
         )
 
         async def _replace_the_slot_during_the_flush():
@@ -933,7 +933,7 @@ class TestRewindSlot:
         """
         events: list[dict] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_rewind.sel",
+            "aj_crew.dashboard.chat_rewind.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: events.append(kw)),
         )
         state = _make_state(tmp_path)
@@ -985,7 +985,7 @@ class TestRewindSlot:
         """
         events: list[dict] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_rewind.sel",
+            "aj_crew.dashboard.chat_rewind.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: events.append(kw)),
         )
         state = _make_state(tmp_path)
@@ -1048,7 +1048,7 @@ class TestRewindSlot:
         """
         events: list[dict] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_rewind.sel",
+            "aj_crew.dashboard.chat_rewind.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: events.append(kw)),
         )
         state = _make_state(tmp_path)
@@ -1089,7 +1089,7 @@ class TestRewindSlot:
         """
         events: list[dict] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_rewind.sel",
+            "aj_crew.dashboard.chat_rewind.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: events.append(kw)),
         )
         state = _make_state(tmp_path)
@@ -1154,7 +1154,7 @@ class TestRewindSlot:
         """
         events: list[dict] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_rewind.sel",
+            "aj_crew.dashboard.chat_rewind.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: events.append(kw)),
         )
         state = _make_state(tmp_path)
@@ -1211,7 +1211,7 @@ class TestRewindSlot:
         """
         events: list[dict] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_rewind.sel",
+            "aj_crew.dashboard.chat_rewind.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: events.append(kw)),
         )
         state = _make_state(tmp_path)
@@ -1305,11 +1305,11 @@ class TestRewindSlot:
             release.wait()
             return True
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_rewind._save_slot_to_history", _gated_save)
+        monkeypatch.setattr("aj_crew.dashboard.chat_rewind._save_slot_to_history", _gated_save)
 
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.dashboard.chat_rewind import api_chat_slot_rewind
+        from aj_crew.dashboard.chat_rewind import api_chat_slot_rewind
 
         app = _make_app(state)
         fake_request = make_mocked_request(
@@ -1348,7 +1348,7 @@ class TestRewindSlot:
         """
         events: list[dict] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_rewind.sel",
+            "aj_crew.dashboard.chat_rewind.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: events.append(kw)),
         )
         state = _make_state(tmp_path)
@@ -1367,12 +1367,12 @@ class TestRewindSlot:
             return False
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_rewind._save_slot_to_history", _gated_refused_save
+            "aj_crew.dashboard.chat_rewind._save_slot_to_history", _gated_refused_save
         )
 
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.dashboard.chat_rewind import api_chat_slot_rewind
+        from aj_crew.dashboard.chat_rewind import api_chat_slot_rewind
 
         app = _make_app(state)
         fake_request = make_mocked_request(
@@ -1572,7 +1572,7 @@ class TestRewindSlot:
 
         app = _make_app(state)
         with patch(
-            "kiro_crew.dashboard.chat_rewind._delete_orphan_kiro_session",
+            "aj_crew.dashboard.chat_rewind._delete_orphan_kiro_session",
             new=AsyncMock(),
         ) as mock_delete:
             async with TestClient(TestServer(app)) as client:
@@ -1594,7 +1594,7 @@ class TestRewindSlot:
 
         app = _make_app(state)
         with patch(
-            "kiro_crew.dashboard.chat_rewind._delete_orphan_kiro_session",
+            "aj_crew.dashboard.chat_rewind._delete_orphan_kiro_session",
             new=AsyncMock(),
         ) as mock_delete:
             async with TestClient(TestServer(app)) as client:
@@ -1647,7 +1647,7 @@ class TestRewindSlot:
         from aiohttp import web as _web
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.dashboard.chat_rewind import api_chat_slot_rewind
+        from aj_crew.dashboard.chat_rewind import api_chat_slot_rewind
 
         fake_request = make_mocked_request(
             "POST",
@@ -1896,8 +1896,8 @@ async def test_a_paused_crew_session_is_not_rewound(tmp_path, monkeypatch):
     not run, so nothing is truncated and the refusal names the pause."""
     from aiohttp.test_utils import make_mocked_request
 
-    from kiro_crew import crew_pause
-    from kiro_crew.dashboard.chat_rewind import api_chat_slot_rewind
+    from aj_crew import crew_pause
+    from aj_crew.dashboard.chat_rewind import api_chat_slot_rewind
 
     stored = {"read": False}
     monkeypatch.setattr(crew_pause, "holds_slot", lambda sl: stored["read"])

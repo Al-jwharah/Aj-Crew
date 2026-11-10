@@ -1,6 +1,6 @@
 """Defaults-preserving checks for the CPP consumption-site wiring.
 
-With NO companion installed and NO ``KIROCREW_PROFILE`` override, the active
+With NO companion installed and NO ``AJCREW_PROFILE`` override, the active
 PlatformContext MUST be the all-defaults standalone context, and every wired
 consumption site MUST read the SAME value it did before the wiring (the value
 held in the module-global the Default adapter delegates to).
@@ -10,9 +10,9 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import sandbox, security
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.platform import (
+from aj_crew import sandbox, security
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.platform import (
     BASELINE_DENY,
     PROFILE_STANDALONE,
     boot_platform,
@@ -21,17 +21,17 @@ from kiro_crew.platform import (
 
 
 @pytest.fixture
-def cfg() -> KiroCrewConfig:
-    return KiroCrewConfig()
+def cfg() -> AjCrewConfig:
+    return AjCrewConfig()
 
 
-def test_boot_standalone_no_signals(cfg: KiroCrewConfig, monkeypatch) -> None:
+def test_boot_standalone_no_signals(cfg: AjCrewConfig, monkeypatch) -> None:
     """No env + no companion → standalone context installed."""
-    monkeypatch.delenv("KIROCREW_PROFILE", raising=False)
-    monkeypatch.setattr("kiro_crew.platform.bootstrap.plugin_entry_points", lambda: [])
+    monkeypatch.delenv("AJCREW_PROFILE", raising=False)
+    monkeypatch.setattr("aj_crew.platform.bootstrap.plugin_entry_points", lambda: [])
     # Avoid a real SSO marker on the dev box flipping the profile.
     monkeypatch.setattr(
-        "kiro_crew.platform.profile.Path.home",
+        "aj_crew.platform.profile.Path.home",
         lambda: _NoMarkerHome(),
     )
     ctx = boot_platform(cfg)
@@ -39,12 +39,12 @@ def test_boot_standalone_no_signals(cfg: KiroCrewConfig, monkeypatch) -> None:
     assert current_context() is ctx
 
 
-def test_boot_platform_is_idempotent(cfg: KiroCrewConfig, monkeypatch) -> None:
+def test_boot_platform_is_idempotent(cfg: AjCrewConfig, monkeypatch) -> None:
     """A second boot call returns the already-installed context, no re-resolve."""
-    monkeypatch.setenv("KIROCREW_PROFILE", "standalone")
+    monkeypatch.setenv("AJCREW_PROFILE", "standalone")
     first = boot_platform(cfg)
     # A second call must NOT re-resolve (would raise if it tried amazon w/o companion).
-    monkeypatch.setenv("KIROCREW_PROFILE", "amazon")
+    monkeypatch.setenv("AJCREW_PROFILE", "amazon")
     second = boot_platform(cfg)
     assert second is first
 
@@ -111,7 +111,7 @@ def test_default_agent_runtime_delegates_to_agent_first_run_setup(monkeypatch) -
     """
     calls: list[tuple] = []
     monkeypatch.setattr(
-        "kiro_crew.agent.run_first_run_setup",
+        "aj_crew.agent.run_first_run_setup",
         lambda *a, **kw: calls.append((a, kw)),
     )
     current_context().agent_runtime.run_first_run_setup()
@@ -127,8 +127,8 @@ def test_gateway_first_run_setup_routes_through_the_seam(monkeypatch) -> None:
     """
     import dataclasses
 
-    from kiro_crew.platform import build_default_context, reset_context, set_context
-    from kiro_crew.platform.context import safe_context_call
+    from aj_crew.platform import build_default_context, reset_context, set_context
+    from aj_crew.platform.context import safe_context_call
 
     seen: list[str] = []
 
@@ -139,8 +139,8 @@ def test_gateway_first_run_setup_routes_through_the_seam(monkeypatch) -> None:
         def run_first_run_setup(self) -> None:
             seen.append("edition")
 
-    monkeypatch.setattr("kiro_crew.agent.run_first_run_setup", lambda: seen.append("core-direct"))
-    base = build_default_context(KiroCrewConfig())
+    monkeypatch.setattr("aj_crew.agent.run_first_run_setup", lambda: seen.append("core-direct"))
+    base = build_default_context(AjCrewConfig())
     composed = dataclasses.replace(base, agent_runtime=_EditionAgentRuntime())
     set_context(composed)
     try:

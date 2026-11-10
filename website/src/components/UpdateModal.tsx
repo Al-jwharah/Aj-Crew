@@ -257,7 +257,7 @@ export default function UpdateModal({ held = false }: { held?: boolean } = {}) {
               status claim: "ready to install" beside "failed to install" leaves
               the reader unable to tell which is true, or whether retrying helps. */}
           {!installMutation.isError && (
-            <p>{i18nT('components.updateModal.kirocrew')} {version && <span className="font-semibold">{version}</span>} {i18nT('components.updateModal.is_downloaded_and_ready_to_install')}</p>
+            <p>{i18nT('components.updateModal.ajcrew')} {version && <span className="font-semibold">{version}</span>} {i18nT('components.updateModal.is_downloaded_and_ready_to_install')}</p>
           )}
           {notes && (
             <p className="mt-2 text-[13px] text-muted whitespace-pre-wrap max-h-40 overflow-auto">{notes}</p>

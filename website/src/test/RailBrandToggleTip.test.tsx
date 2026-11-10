@@ -14,7 +14,7 @@ import { i18nT } from '../i18n/t'
 afterEach(cleanup)
 
 function renderToggle(effectiveCollapsed: boolean) {
-  render(<RailBrandToggle effectiveCollapsed={effectiveCollapsed} toggleNav={() => {}} avatar="" branding={undefined as never} botName="Kiro Crew" />)
+  render(<RailBrandToggle effectiveCollapsed={effectiveCollapsed} toggleNav={() => {}} avatar="" branding={undefined as never} botName="Aj Crew" />)
   return screen.getByRole('button', { name: i18nT(effectiveCollapsed ? 'app.expand_sidebar' : 'app.collapse_sidebar') })
 }
 

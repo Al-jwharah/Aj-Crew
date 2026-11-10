@@ -404,7 +404,7 @@ export const LOCATIONS = {
     },
     // The Danger zone's own notice above the button: deleting unbinds, it keeps
     // the workspace, memory store and transcripts.
-    cautionKey: 'pages.kiroCrewAgentsPage.deleting_a_crew_unbinds_it_from_new_sessions_its',
+    cautionKey: 'pages.ajCrewAgentsPage.deleting_a_crew_unbinds_it_from_new_sessions_its',
     placements: [{ surface: 'capabilities', parent: 'agents.section-danger', entry: 'tab' }],
   },
 } as const satisfies UiLocationArea

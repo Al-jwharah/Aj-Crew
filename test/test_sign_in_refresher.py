@@ -16,9 +16,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.auth.store import REFRESH_MARGIN_SECS, KasToken, TokenStore
-from kiro_crew.dashboard import sign_in_refresher as tick
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.auth.store import REFRESH_MARGIN_SECS, KasToken, TokenStore
+from aj_crew.dashboard import sign_in_refresher as tick
+from aj_crew.testing.wait import await_until, finished
 
 
 class _FakeResp:
@@ -298,7 +298,7 @@ async def test_shutdown_drain_without_a_task_returns():
 
 
 def test_renewal_request_fits_inside_the_shutdown_drain():
-    from kiro_crew.gateway_shutdown_budget import GRACEFUL_SHUTDOWN_SECS
+    from aj_crew.gateway_shutdown_budget import GRACEFUL_SHUTDOWN_SECS
 
     assert tick.REQUEST_TIMEOUT_SECS < tick.SHUTDOWN_DRAIN_SECS <= GRACEFUL_SHUTDOWN_SECS
 
@@ -321,8 +321,8 @@ def test_importing_the_tick_does_not_load_the_auth_subsystem():
     """The gateway imports this module at boot; the auth stack (and the
     cryptography wheel behind it) must still load only on first use."""
     code = (
-        "import sys; import kiro_crew.dashboard.sign_in_refresher; "
-        "bad = [m for m in sys.modules if m.startswith('kiro_crew.auth') or m == 'cryptography']; "
+        "import sys; import aj_crew.dashboard.sign_in_refresher; "
+        "bad = [m for m in sys.modules if m.startswith('aj_crew.auth') or m == 'cryptography']; "
         "print(bad); sys.exit(1 if bad else 0)"
     )
     proc = subprocess.run(

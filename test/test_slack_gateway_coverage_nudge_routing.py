@@ -1,4 +1,4 @@
-"""Coverage for ``kiro_crew.slack.gateway``: where an auto-nudge goes, and how it fires.
+"""Coverage for ``aj_crew.slack.gateway``: where an auto-nudge goes, and how it fires.
 
 The ``_fire`` router and the ``_observer`` closure ``_init_autonudge`` builds, the
 dashboard nudge's dispatch half, the Webex nudge adapter, and the shared
@@ -23,11 +23,11 @@ from slack_gateway_coverage_helpers import (
     _within_lost_run,
 )
 
-from kiro_crew.autonudge import MANUAL_STOP_REASON, MONITOR_TERMINAL_REASON, NudgeLoop
-from kiro_crew.monitoring import models as monitor_models
-from kiro_crew.monitoring.models import MonitorOutcome, MonitorState
-from kiro_crew.slack import gateway as gw
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.autonudge import MANUAL_STOP_REASON, MONITOR_TERMINAL_REASON, NudgeLoop
+from aj_crew.monitoring import models as monitor_models
+from aj_crew.monitoring.models import MonitorOutcome, MonitorState
+from aj_crew.slack import gateway as gw
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # ═════════════════════════════════════════════════════════════════════════
 # _init_autonudge closures: the _fire router and the _observer
@@ -57,10 +57,10 @@ class TestAutonudgeRouterAndObserver:
         existing_loops: list[NudgeLoop] | None = None,
         emit_during_start: NudgeLoop | None = None,
     ):
-        with patch("kiro_crew.slack.gateway.autonudge_enabled", return_value=True):
+        with patch("aj_crew.slack.gateway.autonudge_enabled", return_value=True):
             with (
-                patch("kiro_crew.slack.gateway.AutoNudgeService") as mock_svc,
-                patch("kiro_crew.monitoring.controller.MonitorController") as mock_controller,
+                patch("aj_crew.slack.gateway.AutoNudgeService") as mock_svc,
+                patch("aj_crew.monitoring.controller.MonitorController") as mock_controller,
             ):
                 inst = MagicMock()
                 inst.subscribe = MagicMock()
@@ -229,9 +229,9 @@ class TestAutonudgeRouterAndObserver:
         """The frame still goes out, with placeholders where the scrub could not run."""
         import dataclasses
 
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.dashboard.handlers.autonudge import REDACTION_UNAVAILABLE_PLACEHOLDER
-        from kiro_crew.platform import (
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.dashboard.handlers.autonudge import REDACTION_UNAVAILABLE_PLACEHOLDER
+        from aj_crew.platform import (
             PlatformCompositionError,
             build_default_context,
             set_context,
@@ -252,12 +252,12 @@ class TestAutonudgeRouterAndObserver:
             cycle_count=3,
         )
 
-        base = build_default_context(KiroCrewConfig())
+        base = build_default_context(AjCrewConfig())
         set_context(dataclasses.replace(base, credentials=_Broken()))
         try:
             observer("updated", loop)
         finally:
-            set_context(build_default_context(KiroCrewConfig()))
+            set_context(build_default_context(AjCrewConfig()))
 
         _topic, payload = orch.dashboard_state.broadcast_ws.call_args.args
         assert secret not in json.dumps(payload), "an unscrubbed secret reached the frame"
@@ -318,7 +318,7 @@ class TestAutonudgeRouterAndObserver:
         """The kind is a stored string a hand-edited state file reads back as
         written, and this frame reaches every dashboard socket, so the scalar
         goes through the redaction the structured record goes through."""
-        from kiro_crew.slack import gateway as gateway_module
+        from aj_crew.slack import gateway as gateway_module
 
         seen: list[object] = []
 
@@ -352,8 +352,8 @@ class TestAutonudgeRouterAndObserver:
         inactive row, and the member event log has to record it as a patrol stop
         -- a plain pause is not one -- or the drawer reads ``armed`` for good,
         since the boot closer closes only a log whose row is gone."""
-        from kiro_crew import eventlog_hooks
-        from kiro_crew.eventlog.types import PATROL_STOPPED
+        from aj_crew import eventlog_hooks
+        from aj_crew.eventlog.types import PATROL_STOPPED
 
         orch = _make_orchestrator()
         orch.dashboard_state = _mock_dashboard_state()
@@ -662,7 +662,7 @@ class TestFireDashboardNudgeDispatch:
         # spawn_guarded_turn, so a plain sentinel avoids creating a coroutine
         # nothing will ever await.
         task = MagicMock()
-        monkeypatch.setattr("kiro_crew.dashboard.chat._run_chat", MagicMock(return_value="CORO"))
+        monkeypatch.setattr("aj_crew.dashboard.chat._run_chat", MagicMock(return_value="CORO"))
         monkeypatch.setattr(gw, "spawn_guarded_turn", MagicMock(return_value=task))
 
         loop = _loop("chat-1", cycle_count=1)
@@ -720,7 +720,7 @@ class TestFireDashboardNudgeDispatch:
             return restored
 
         monkeypatch.setattr(gw, "rehydrate_slot_from_history_async", _rehydrate)
-        monkeypatch.setattr("kiro_crew.dashboard.chat._run_chat", MagicMock(return_value="CORO"))
+        monkeypatch.setattr("aj_crew.dashboard.chat._run_chat", MagicMock(return_value="CORO"))
         monkeypatch.setattr(gw, "spawn_guarded_turn", MagicMock(return_value=MagicMock()))
 
         assert await orch._fire_dashboard_nudge(_loop("chat-9")) is True
@@ -733,7 +733,7 @@ class TestFireDashboardNudgeDispatch:
 # ═════════════════════════════════════════════════════════════════════════
 
 
-_WKEY = "webex:kirocrew:direct:a@b.test"
+_WKEY = "webex:ajcrew:direct:a@b.test"
 
 
 def _webex_transport(
@@ -790,7 +790,7 @@ class TestFireWebexNudge:
     async def test_unsupported_key_shape_retires_loop(self):
         """A key that is not ``webex:{agent}:direct:{email}`` can never route."""
         orch = _webex_orchestrator(_webex_transport())
-        assert await orch._fire_webex_nudge(_loop("webex:kirocrew:space")) is False
+        assert await orch._fire_webex_nudge(_loop("webex:ajcrew:space")) is False
         orch.autonudge_svc.remove.assert_awaited_once_with("loop-1", stop_reason="unsupported_key")
 
     @pytest.mark.asyncio
@@ -808,7 +808,7 @@ class TestFireWebexNudge:
     @pytest.mark.asyncio
     async def test_rotated_session_retires_loop(self):
         """Firing into a rotated key would run without the loop's context."""
-        transport = _webex_transport(current_key="webex:kirocrew:direct:a@b.test:gen2")
+        transport = _webex_transport(current_key="webex:ajcrew:direct:a@b.test:gen2")
         orch = _webex_orchestrator(transport)
         assert await orch._fire_webex_nudge(_loop(_WKEY)) is False
         orch.autonudge_svc.remove.assert_awaited_once_with("loop-1", stop_reason="session_rotated")
@@ -834,7 +834,7 @@ class TestFireWebexNudge:
         assert kwargs == {"interpret_commands": False, "skill_trigger_text": "keep checking"}
         assert inbound.person_email == "a@b.test"
         assert inbound.text.startswith("[auto-nudge cycle 1]")
-        from kiro_crew.webex.transport import ROOM_DIRECT
+        from aj_crew.webex.transport import ROOM_DIRECT
 
         assert inbound.room_type == ROOM_DIRECT
 
@@ -915,7 +915,7 @@ class TestDmFireSpineIsReusable:
 
     @staticmethod
     def _transport(*, authorized: bool = True, current_key: str | None = None) -> MagicMock:
-        key = "zulip:kirocrew:direct:z1"
+        key = "zulip:ajcrew:direct:z1"
         dispatcher = MagicMock()
         dispatcher.current_session_key = MagicMock(
             return_value=current_key if current_key is not None else key
@@ -934,7 +934,7 @@ class TestDmFireSpineIsReusable:
     async def test_an_unknown_channel_delivers_with_only_an_adapter(self):
         transport = self._transport()
         orch = self._orchestrator(transport)
-        loop = _loop("zulip:kirocrew:direct:z1")
+        loop = _loop("zulip:ajcrew:direct:z1")
         assert await orch._fire_dm_nudge(loop, self._adapter()) is True
         transport.dispatcher.handle_message.assert_awaited_once()
         inbound = transport.dispatcher.handle_message.await_args.args[0]
@@ -945,7 +945,7 @@ class TestDmFireSpineIsReusable:
     async def test_the_new_channel_inherits_the_authorization_guard(self):
         transport = self._transport(authorized=False)
         orch = self._orchestrator(transport)
-        loop = _loop("zulip:kirocrew:direct:z1")
+        loop = _loop("zulip:ajcrew:direct:z1")
         assert await orch._fire_dm_nudge(loop, self._adapter()) is False
         orch.autonudge_svc.remove.assert_awaited_once_with(
             "loop-1", stop_reason="user_not_authorized"
@@ -954,9 +954,9 @@ class TestDmFireSpineIsReusable:
 
     @pytest.mark.asyncio
     async def test_the_new_channel_inherits_the_generation_guard(self):
-        transport = self._transport(current_key="zulip:kirocrew:direct:z1:gen2")
+        transport = self._transport(current_key="zulip:ajcrew:direct:z1:gen2")
         orch = self._orchestrator(transport)
-        loop = _loop("zulip:kirocrew:direct:z1")
+        loop = _loop("zulip:ajcrew:direct:z1")
         assert await orch._fire_dm_nudge(loop, self._adapter()) is False
         orch.autonudge_svc.remove.assert_awaited_once_with("loop-1", stop_reason="session_rotated")
         transport.dispatcher.handle_message.assert_not_awaited()
@@ -972,7 +972,7 @@ class TestDmFireSpineIsReusable:
         """
         transport = self._transport()
         orch = self._orchestrator(transport)
-        loop = _loop("zulip:kirocrew:direct:z1")
+        loop = _loop("zulip:ajcrew:direct:z1")
         result = await orch._fire_dm_nudge(loop, self._adapter(), "wake up")
         assert result is monitor_models.MonitorDispatchResult.UNAVAILABLE
         transport.dispatcher.handle_message.assert_not_awaited()

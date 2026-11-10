@@ -1,6 +1,6 @@
 import type { PopoutController, PopoutMsg } from '../utils/popoutController'
 
-// Under a sub-path build (KIROCREW_BASE_PATH) the no-main fallback tab must open
+// Under a sub-path build (AJCREW_BASE_PATH) the no-main fallback tab must open
 // the destination under the build base: `intent.path` is in app space (`/chat`),
 // and a tab at `https://host/chat` is outside the `/crew` mount, where the
 // prompt the pop-out already removed from its own storage would be lost. The

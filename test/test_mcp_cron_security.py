@@ -27,8 +27,8 @@ import time
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew import mcp_cron
-from kiro_crew.mcp_cron import (
+from aj_crew import mcp_cron
+from aj_crew.mcp_cron import (
     _CRON_MAX_COMMAND_SCAN,
     _EXTGLOB_MAX_EXPANSIONS,
     _extglob_expansions,
@@ -971,7 +971,7 @@ def test_fire_time_vet_rescans_a_legacy_command_body(monkeypatch):
     `_vet_shell_command` refuses, so a stored `command` body is re-scanned at fire time.
     A deny fails the run, keeps the job, and audits.
     """
-    from kiro_crew.cron import CronJob
+    from aj_crew.cron import CronJob
 
     legacy = CronJob(
         id="legacy1", name="legacy", message="", command="set -B; cat ~/.a{w,w}s/credentials"
@@ -1003,7 +1003,7 @@ def test_fire_time_vet_rescans_a_legacy_command_body(monkeypatch):
 
 def test_fire_time_vet_still_allows_a_clean_command(monkeypatch):
     """The no-regression half: an ordinary command must still fire."""
-    from kiro_crew.cron import CronJob
+    from aj_crew.cron import CronJob
 
     clean = CronJob(id="clean1", name="clean", message="", command="df -h")
     monkeypatch.setattr(mcp_cron, "_vet_cron_capability_governance", lambda **_kw: None)
@@ -1017,7 +1017,7 @@ def test_fire_time_vet_evaluates_the_command_ceiling_once(monkeypatch):
     The pass also runs at claim time inside ``claim_vet_bound``, where a repeat spends
     budget a short-``timeout_secs`` job lacks. The storage-time path still evaluates it.
     """
-    from kiro_crew.cron import CronJob
+    from aj_crew.cron import CronJob
 
     calls: list[str] = []
     real = mcp_cron._vet_command_governance
@@ -1186,7 +1186,7 @@ def test_command_length_ceiling_sits_above_the_storable_maximum():
     Pinned against the real `FieldSpec`. A storage cap above the scan ceiling would
     make a command storable but refused on every fire.
     """
-    from kiro_crew.validation import MCP_CRON_SCHEMAS
+    from aj_crew.validation import MCP_CRON_SCHEMAS
 
     specs = [
         spec

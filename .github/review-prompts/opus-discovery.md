@@ -14,7 +14,7 @@ invoking prompt gives you the value.
 
 ## What you are looking at
 
-Kiro Crew is an open-source AI agent platform (Python backend, React/TS
+Aj Crew is an open-source AI agent platform (Python backend, React/TS
 dashboard). `CLAUDE.md` and `AGENTS.md` (root and `website/`) are read
 automatically; follow the conventions there. This repo is a de-Amazoned public
 fork: do NOT flag the absence of Brazil/AUTOSDE tooling.
@@ -70,9 +70,9 @@ most; they are not a closed list.
 
 Patterns in `AUTOSDE.yaml` are repo-relative. Patterns in `website-AUTOSDE.yaml`
 are relative to `website/`: match them against a changed path with its leading
-`website/` removed (`src/**/*.tsx` means `website/src/**/*.tsx`, never `src/kiro_crew/`).
+`website/` removed (`src/**/*.tsx` means `website/src/**/*.tsx`, never `src/aj_crew/`).
 Both files use gitignore-style globs: `**` also matches zero directories, so
-`src/kiro_crew/**/*.py` covers `src/kiro_crew/hooks.py`.
+`src/aj_crew/**/*.py` covers `src/aj_crew/hooks.py`.
 
 These encode defects this repo has decided it cares about, built up over months.
 Treat them as a **checklist of things to look for**, not as a limit on what
@@ -123,7 +123,7 @@ pattern rather than assuming it is fine — chase the one that looks like it mig
 be a problem, and use your turn budget to find out. A small diff is not evidence
 of a small risk; some of the worst defects are three deleted lines. Spend extra
 effort where the diff touches credential/token handling, auth,
-`src/kiro_crew/security/`, `src/kiro_crew/hooks.py` and `src/kiro_crew/hook_runtime/`
+`src/aj_crew/security/`, `src/aj_crew/hooks.py` and `src/aj_crew/hook_runtime/`
 sensitive-path controls,
 path/command/SQL construction, or a
 `blocking: true` rule — but do not skip a hunk because the change looks routine.

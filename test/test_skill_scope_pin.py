@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""A session's skill scope pinned to one agent spec file (``kiro_crew.skill_scope_pin``).
+"""A session's skill scope pinned to one agent spec file (``aj_crew.skill_scope_pin``).
 
 The pin replaces the name lookup for its session, so what it answers when the
 pinned file is unreadable or declares no skills decides what the agent sees.
@@ -15,20 +15,20 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent_discovery
-from kiro_crew.agent_discovery import SkillScopeResolutionError
-from kiro_crew.skill_scope_pin import (
+from aj_crew import agent_discovery
+from aj_crew.agent_discovery import SkillScopeResolutionError
+from aj_crew.skill_scope_pin import (
     pin_session_skill_spec,
     pinned_session_skill_spec,
     pinned_skill_globs,
 )
 
 # A spec that may take its inherited skill trees: an explicit tool list without
-# "*", and a kirocrew-core entry that keeps skill_search.
+# "*", and a ajcrew-core entry that keeps skill_search.
 _INHERITING_SPEC = {
     "name": "pinned",
-    "tools": ["@kirocrew-core/skill_search"],
-    "mcpServers": {"kirocrew-core": {}},
+    "tools": ["@ajcrew-core/skill_search"],
+    "mcpServers": {"ajcrew-core": {}},
 }
 
 

@@ -6,14 +6,14 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew import autonudge as _an
-from kiro_crew.autonudge import APPROVAL_STALL_REASON, AutoNudgeService, NudgeLoop
-from kiro_crew.monitoring.models import MonitorOutcome, MonitorState
+from aj_crew import autonudge as _an
+from aj_crew.autonudge import APPROVAL_STALL_REASON, AutoNudgeService, NudgeLoop
+from aj_crew.monitoring.models import MonitorOutcome, MonitorState
 
 
 @pytest.fixture(autouse=True)
 def _enable(_floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    _floor_monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
 
 @pytest.fixture(autouse=True)
@@ -453,7 +453,7 @@ async def test_stall_reason_is_a_terminal_bound(svc, _nosleep):
 
 def test_monitor_inspect_reading_shows_the_hold():
     """``monitor_inspect`` reads this projection; a held loop must say so."""
-    from kiro_crew.dashboard.handlers.autonudge import _autonudge_loop_reading
+    from aj_crew.dashboard.handlers.autonudge import _autonudge_loop_reading
 
     loop = NudgeLoop(id="abcd1234", slot_key="chat-1-123", message="go")
     assert _autonudge_loop_reading(loop)["paused_for_approval"] is False
@@ -736,7 +736,7 @@ async def test_a_hold_admitted_before_shutdown_lands_and_one_after_is_dropped(st
     The lock is held so the hold parks BEFORE it submits its write, where admission
     decides. One arriving after closure writes nothing and is logged at DEBUG.
     """
-    caplog.set_level(logging.DEBUG, logger="kiro_crew.autonudge")
+    caplog.set_level(logging.DEBUG, logger="aj_crew.autonudge")
     svc = AutoNudgeService(base_dir=store_dir)
     await svc.start()
     before = await svc.add(slot_key="chat-1-123", message="go", idle_secs=600)
@@ -780,7 +780,7 @@ async def test_a_release_admitted_before_shutdown_lands_and_one_after_is_dropped
     hold a loop a person already answered for. One scheduled after closure is
     dropped at DEBUG and leaves the hold exactly as the store has it.
     """
-    caplog.set_level(logging.DEBUG, logger="kiro_crew.autonudge")
+    caplog.set_level(logging.DEBUG, logger="aj_crew.autonudge")
     svc = AutoNudgeService(base_dir=store_dir)
     await svc.start()
     released = await svc.add(slot_key="chat-1-123", message="go", idle_secs=600)

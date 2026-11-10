@@ -38,7 +38,7 @@ const theme = params.get('theme') || 'dark'
 // shipped component.
 const preFix = params.get('fix') === 'off'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const SEGMENTS = [
   { key: 'grid' as const, label: 'Gallery', icon: <Grid3x3 size={13} /> },

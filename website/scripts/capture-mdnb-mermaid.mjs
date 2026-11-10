@@ -13,7 +13,7 @@
  *   03 invalid   - a diagram with a syntax error keeps its source visible,
  *                  with the one-line hint underneath
  *
- * kiro-dark only: the diagram palette comes from mermaid's built-in themes
+ * aj-dark only: the diagram palette comes from mermaid's built-in themes
  * keyed on light/dark, not from the dashboard accent, so more themes would
  * demonstrate mermaid's own theming rather than this change.
  *
@@ -104,7 +104,7 @@ async function shoot(browser, base, doc, { file, edit = false, expectError = fal
   await page.waitForTimeout(600)
 
   const applied = await page.evaluate(() => document.documentElement.dataset.theme || '')
-  if (applied !== 'kiro-dark') throw new Error(`theme mismatch: wanted kiro-dark, got ${applied || '(none)'}`)
+  if (applied !== 'aj-dark') throw new Error(`theme mismatch: wanted aj-dark, got ${applied || '(none)'}`)
 
   if (edit) {
     await page.locator('svg[id^="mdnb-mermaid-"]').first().click()

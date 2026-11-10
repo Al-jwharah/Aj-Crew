@@ -1,7 +1,7 @@
 """A managed MCP server that ran out of time starting is re-attempted once, in band.
 
 On a small or busy KAS host a restart cold-starts every session's private backends
-at once, so ``kirocrew-core`` or ``kirocrew-cron`` can miss a start deadline: the
+at once, so ``ajcrew-core`` or ``ajcrew-cron`` can miss a start deadline: the
 gateway's first-``initialize`` deadline, or KAS's own connect timeout. Either one
 ends in a ``failed`` status entry, and a failed entry ends the session start. These
 tests pin the one re-attempt the readiness barrier makes for such a failure through
@@ -18,18 +18,18 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.acp.mcp_session_report import McpSessionReport
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.session_handle_runtime_contract import AcpRequestTimeout, AcpRuntimeError
-from kiro_crew.acp.types import METHOD_KAS_MCP_STATUS, METHOD_KAS_TOOLS_CHANGED, JsonRpcMessage
-from kiro_crew.mcp_gateway import backend_handshake
+from aj_crew.acp.mcp_session_report import McpSessionReport
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.session_handle_runtime_contract import AcpRequestTimeout, AcpRuntimeError
+from aj_crew.acp.types import METHOD_KAS_MCP_STATUS, METHOD_KAS_TOOLS_CHANGED, JsonRpcMessage
+from aj_crew.mcp_gateway import backend_handshake
 
 # The classifier is imported per call, so a tree without it fails each test that asks
 # it something rather than stopping the whole run at collection.
 
 
 def is_start_timeout_failure(error_message: object) -> bool:
-    from kiro_crew.acp import mcp_reattempt
+    from aj_crew.acp import mcp_reattempt
 
     return mcp_reattempt.is_start_timeout_failure(error_message)
 
@@ -107,7 +107,7 @@ def test_a_start_deadline_failure_qualifies(message):
         None,
         "",
         42,
-        "spawn kirocrew ENOENT",
+        "spawn ajcrew ENOENT",
         "MCP error -32000: Connection closed",
         "invalid timeout value in config",
         "outtimed",
@@ -148,15 +148,15 @@ async def test_the_gateway_deadline_reason_qualifies_as_the_stub_reports_it():
 async def test_a_timed_out_managed_server_is_reattempted_once_and_the_start_succeeds(error):
     recorder = _Recorder()
     handle = _handle(
-        _status(_entry("kirocrew-core", "failed", error), _entry("kirocrew-cron", "connected")),
-        _status(_entry("kirocrew-core", "connecting"), _entry("kirocrew-cron", "connected")),
-        _status(_entry("kirocrew-core", "connected"), _entry("kirocrew-cron", "connected")),
+        _status(_entry("ajcrew-core", "failed", error), _entry("ajcrew-cron", "connected")),
+        _status(_entry("ajcrew-core", "connecting"), _entry("ajcrew-cron", "connected")),
+        _status(_entry("ajcrew-core", "connected"), _entry("ajcrew-cron", "connected")),
         recorder=recorder,
     )
 
-    await handle.wait_mcp_ready(("kirocrew-core", "kirocrew-cron"), 5.0)
+    await handle.wait_mcp_ready(("ajcrew-core", "ajcrew-cron"), 5.0)
 
-    assert recorder.calls == [(_SID, "kirocrew-core")]
+    assert recorder.calls == [(_SID, "ajcrew-core")]
 
 
 @pytest.mark.asyncio
@@ -164,33 +164,33 @@ async def test_each_server_timed_out_in_one_snapshot_gets_its_own_reattempt():
     recorder = _Recorder()
     handle = _handle(
         _status(
-            _entry("kirocrew-core", "failed", _GATEWAY_DEADLINE),
-            _entry("kirocrew-cron", "failed", _KAS_CONNECT_TIMEOUT),
+            _entry("ajcrew-core", "failed", _GATEWAY_DEADLINE),
+            _entry("ajcrew-cron", "failed", _KAS_CONNECT_TIMEOUT),
         ),
-        _status(_entry("kirocrew-core", "connecting"), _entry("kirocrew-cron", "connecting")),
-        _status(_entry("kirocrew-core", "connected"), _entry("kirocrew-cron", "connected")),
+        _status(_entry("ajcrew-core", "connecting"), _entry("ajcrew-cron", "connecting")),
+        _status(_entry("ajcrew-core", "connected"), _entry("ajcrew-cron", "connected")),
         recorder=recorder,
     )
 
-    await handle.wait_mcp_ready(("kirocrew-core", "kirocrew-cron"), 5.0)
+    await handle.wait_mcp_ready(("ajcrew-core", "ajcrew-cron"), 5.0)
 
-    assert recorder.calls == [(_SID, "kirocrew-core"), (_SID, "kirocrew-cron")]
+    assert recorder.calls == [(_SID, "ajcrew-core"), (_SID, "ajcrew-cron")]
 
 
 @pytest.mark.asyncio
 async def test_a_second_failure_after_the_reattempt_fails_the_start():
     recorder = _Recorder()
     handle = _handle(
-        _status(_entry("kirocrew-core", "failed", _GATEWAY_DEADLINE)),
-        _status(_entry("kirocrew-core", "connecting")),
-        _status(_entry("kirocrew-core", "failed", _GATEWAY_DEADLINE)),
+        _status(_entry("ajcrew-core", "failed", _GATEWAY_DEADLINE)),
+        _status(_entry("ajcrew-core", "connecting")),
+        _status(_entry("ajcrew-core", "failed", _GATEWAY_DEADLINE)),
         recorder=recorder,
     )
 
     with pytest.raises(AcpRuntimeError, match="KAS managed MCP initialization failed"):
-        await handle.wait_mcp_ready(("kirocrew-core",), 5.0)
+        await handle.wait_mcp_ready(("ajcrew-core",), 5.0)
 
-    assert recorder.calls == [(_SID, "kirocrew-core")]
+    assert recorder.calls == [(_SID, "ajcrew-core")]
 
 
 @pytest.mark.asyncio
@@ -201,82 +201,82 @@ async def test_a_failed_frame_sent_before_the_reset_does_not_end_the_reattempt()
         params={"sessionId": _SID, "tags": [{"source": "builtin", "tag": "read"}]},
     )
     handle = _handle(
-        _status(_entry("kirocrew-core", "failed", _GATEWAY_DEADLINE)),
+        _status(_entry("ajcrew-core", "failed", _GATEWAY_DEADLINE)),
         # The host sent these before it processed the reset: still the old failure.
-        _status(_entry("kirocrew-core", "failed", _GATEWAY_DEADLINE)),
+        _status(_entry("ajcrew-core", "failed", _GATEWAY_DEADLINE)),
         builtin_tags,
-        _status(_entry("kirocrew-core", "failed", _GATEWAY_DEADLINE)),
-        _status(_entry("kirocrew-core", "connecting")),
-        _status(_entry("kirocrew-core", "connected")),
+        _status(_entry("ajcrew-core", "failed", _GATEWAY_DEADLINE)),
+        _status(_entry("ajcrew-core", "connecting")),
+        _status(_entry("ajcrew-core", "connected")),
         recorder=recorder,
     )
 
-    await handle.wait_mcp_ready(("kirocrew-core",), 5.0)
+    await handle.wait_mcp_ready(("ajcrew-core",), 5.0)
 
-    assert recorder.calls == [(_SID, "kirocrew-core")]
+    assert recorder.calls == [(_SID, "ajcrew-core")]
 
 
 @pytest.mark.asyncio
 async def test_a_snapshot_that_omits_the_server_does_not_count_as_the_reset_acted_on():
     recorder = _Recorder()
     handle = _handle(
-        _status(_entry("kirocrew-core", "failed", _GATEWAY_DEADLINE)),
+        _status(_entry("ajcrew-core", "failed", _GATEWAY_DEADLINE)),
         # Says nothing about the re-attempted server, so the next failed entry
         # can still be the one from before the reset.
-        _status(_entry("kirocrew-cron", "connected")),
-        _status(_entry("kirocrew-core", "failed", _GATEWAY_DEADLINE)),
-        _status(_entry("kirocrew-core", "connecting")),
-        _status(_entry("kirocrew-core", "connected")),
+        _status(_entry("ajcrew-cron", "connected")),
+        _status(_entry("ajcrew-core", "failed", _GATEWAY_DEADLINE)),
+        _status(_entry("ajcrew-core", "connecting")),
+        _status(_entry("ajcrew-core", "connected")),
         recorder=recorder,
     )
 
-    await handle.wait_mcp_ready(("kirocrew-core",), 5.0)
+    await handle.wait_mcp_ready(("ajcrew-core",), 5.0)
 
-    assert recorder.calls == [(_SID, "kirocrew-core")]
+    assert recorder.calls == [(_SID, "ajcrew-core")]
 
 
 @pytest.mark.asyncio
 async def test_a_reattempt_the_host_never_acts_on_times_out_naming_it():
     recorder = _Recorder()
     handle = _handle(
-        _status(_entry("kirocrew-core", "failed", _GATEWAY_DEADLINE)),
-        _status(_entry("kirocrew-core", "failed", _GATEWAY_DEADLINE)),
+        _status(_entry("ajcrew-core", "failed", _GATEWAY_DEADLINE)),
+        _status(_entry("ajcrew-core", "failed", _GATEWAY_DEADLINE)),
         recorder=recorder,
     )
 
-    with pytest.raises(AcpRequestTimeout, match="kirocrew-core: re-attempting"):
-        await handle.wait_mcp_ready(("kirocrew-core",), 0.2)
+    with pytest.raises(AcpRequestTimeout, match="ajcrew-core: re-attempting"):
+        await handle.wait_mcp_ready(("ajcrew-core",), 0.2)
 
-    assert recorder.calls == [(_SID, "kirocrew-core")]
+    assert recorder.calls == [(_SID, "ajcrew-core")]
 
 
 @pytest.mark.asyncio
 async def test_a_reattempted_server_a_snapshot_leaves_out_still_reads_as_reattempting():
     recorder = _Recorder()
     handle = _handle(
-        _status(_entry("kirocrew-core", "failed", _GATEWAY_DEADLINE)),
+        _status(_entry("ajcrew-core", "failed", _GATEWAY_DEADLINE)),
         # Lists another server only: nothing here says the host acted on the reset.
-        _status(_entry("kirocrew-cron", "connected")),
+        _status(_entry("ajcrew-cron", "connected")),
         recorder=recorder,
     )
 
-    with pytest.raises(AcpRequestTimeout, match="kirocrew-core: re-attempting"):
-        await handle.wait_mcp_ready(("kirocrew-core",), 0.2)
+    with pytest.raises(AcpRequestTimeout, match="ajcrew-core: re-attempting"):
+        await handle.wait_mcp_ready(("ajcrew-core",), 0.2)
 
-    assert recorder.calls == [(_SID, "kirocrew-core")]
+    assert recorder.calls == [(_SID, "ajcrew-core")]
 
 
 @pytest.mark.asyncio
 async def test_a_failure_that_is_not_a_timeout_is_not_reattempted():
     recorder = _Recorder()
     handle = _handle(
-        _status(_entry("kirocrew-core", "failed", "spawn kirocrew ENOENT")),
-        _status(_entry("kirocrew-core", "connected")),
+        _status(_entry("ajcrew-core", "failed", "spawn ajcrew ENOENT")),
+        _status(_entry("ajcrew-core", "connected")),
         recorder=recorder,
     )
 
     with pytest.raises(AcpRuntimeError, match="ENOENT"):
-        await handle.wait_mcp_ready(("kirocrew-core",), 5.0)
+        await handle.wait_mcp_ready(("ajcrew-core",), 5.0)
 
     assert recorder.calls == []
 
@@ -285,13 +285,13 @@ async def test_a_failure_that_is_not_a_timeout_is_not_reattempted():
 async def test_a_failed_authorization_is_not_reattempted_here():
     recorder = _Recorder()
     handle = _handle(
-        _status(_entry("kirocrew-core", "failed", _KAS_CONNECT_TIMEOUT, failedAuthorization=True)),
-        _status(_entry("kirocrew-core", "connected")),
+        _status(_entry("ajcrew-core", "failed", _KAS_CONNECT_TIMEOUT, failedAuthorization=True)),
+        _status(_entry("ajcrew-core", "connected")),
         recorder=recorder,
     )
 
     with pytest.raises(AcpRuntimeError, match="authorization failed"):
-        await handle.wait_mcp_ready(("kirocrew-core",), 5.0)
+        await handle.wait_mcp_ready(("ajcrew-core",), 5.0)
 
     assert recorder.calls == []
 
@@ -300,14 +300,14 @@ async def test_a_failed_authorization_is_not_reattempted_here():
 async def test_a_host_without_the_reset_request_fails_the_start_as_before():
     recorder = _Recorder()
     handle = _handle(
-        _status(_entry("kirocrew-core", "failed", _GATEWAY_DEADLINE)),
-        _status(_entry("kirocrew-core", "connected")),
+        _status(_entry("ajcrew-core", "failed", _GATEWAY_DEADLINE)),
+        _status(_entry("ajcrew-core", "connected")),
         recorder=recorder,
         reattempts=False,
     )
 
     with pytest.raises(AcpRuntimeError, match="did not complete within 30s"):
-        await handle.wait_mcp_ready(("kirocrew-core",), 5.0)
+        await handle.wait_mcp_ready(("ajcrew-core",), 5.0)
 
     assert recorder.calls == []
 
@@ -316,23 +316,23 @@ async def test_a_host_without_the_reset_request_fails_the_start_as_before():
 async def test_a_refused_reattempt_fails_the_start_as_before():
     recorder = _Recorder(accept=False)
     handle = _handle(
-        _status(_entry("kirocrew-core", "failed", _GATEWAY_DEADLINE)),
-        _status(_entry("kirocrew-core", "connected")),
+        _status(_entry("ajcrew-core", "failed", _GATEWAY_DEADLINE)),
+        _status(_entry("ajcrew-core", "connected")),
         recorder=recorder,
     )
 
     with pytest.raises(AcpRuntimeError, match="KAS managed MCP initialization failed"):
-        await handle.wait_mcp_ready(("kirocrew-core",), 5.0)
+        await handle.wait_mcp_ready(("ajcrew-core",), 5.0)
 
-    assert recorder.calls == [(_SID, "kirocrew-core")]
+    assert recorder.calls == [(_SID, "ajcrew-core")]
 
 
 @pytest.mark.asyncio
 async def test_a_handle_with_no_runtime_fails_the_start_as_before():
     handle = _handle(
-        _status(_entry("kirocrew-core", "failed", _GATEWAY_DEADLINE)),
-        _status(_entry("kirocrew-core", "connected")),
+        _status(_entry("ajcrew-core", "failed", _GATEWAY_DEADLINE)),
+        _status(_entry("ajcrew-core", "connected")),
     )
 
     with pytest.raises(AcpRuntimeError, match="KAS managed MCP initialization failed"):
-        await handle.wait_mcp_ready(("kirocrew-core",), 5.0)
+        await handle.wait_mcp_ready(("ajcrew-core",), 5.0)

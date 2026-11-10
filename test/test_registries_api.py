@@ -12,8 +12,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from named_cases_helpers import named_cases
 
-from kiro_crew.apps import routes
-from kiro_crew.apps.routes import (
+from aj_crew.apps import routes
+from aj_crew.apps.routes import (
     _blob_cache_key,
     _is_safe_repo_identifier,
     register_app_routes,
@@ -43,24 +43,24 @@ class TestBlobCacheKey:
 
 
 def _setup_env(tmp_path, monkeypatch):
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     cfg = home / "config.json"
     cfg.write_text("{}", encoding="utf-8")
     monkeypatch.setattr(
-        "kiro_crew.apps.routes.config_path",
+        "aj_crew.apps.routes.config_path",
         lambda: str(cfg),
     )
     mock_sel = MagicMock()
-    monkeypatch.setattr("kiro_crew.apps.routes.sel", lambda: mock_sel)
+    monkeypatch.setattr("aj_crew.apps.routes.sel", lambda: mock_sel)
     # Mock bridges/backend to avoid side effects
-    import kiro_crew.apps.bridges as bridges_mod
+    import aj_crew.apps.bridges as bridges_mod
 
     kiro_agents = tmp_path / "kiro-agents"
     kiro_agents.mkdir()
     monkeypatch.setattr(bridges_mod, "KIRO_AGENTS_DIR", kiro_agents)
-    import kiro_crew.apps.backend as bmod
+    import aj_crew.apps.backend as bmod
 
     bmod._processes.clear()
     bmod._allocated_ports.clear()
@@ -154,7 +154,7 @@ class TestPutRegistries:
         # registries.update — so incident response can reconstruct when/how a
         # host entered the trust set.
         _setup_env(tmp_path, monkeypatch)
-        from kiro_crew.apps import routes as routes_mod
+        from aj_crew.apps import routes as routes_mod
 
         mock_sel = routes_mod.sel()
         async with TestClient(TestServer(_make_app())) as client:
@@ -194,7 +194,7 @@ class TestPutRegistries:
             ),
             encoding="utf-8",
         )
-        from kiro_crew.apps import routes as routes_mod
+        from aj_crew.apps import routes as routes_mod
 
         mock_sel = routes_mod.sel()
         async with TestClient(TestServer(_make_app())) as client:
@@ -333,8 +333,8 @@ class TestPutRegistries:
     @pytest.mark.asyncio
     async def test_get_reports_owner_for_a_row_the_operator_granted(self, tmp_path, monkeypatch):
         """The keystone grant is the one config-row path to `owner`, and GET shows it."""
-        from kiro_crew.apps.registry_pipeline import sources
-        from kiro_crew.config.loader import _invalidate_config_cache, registry_trust_path
+        from aj_crew.apps.registry_pipeline import sources
+        from aj_crew.config.loader import _invalidate_config_cache, registry_trust_path
 
         home, cfg = _setup_env(tmp_path, monkeypatch)
         monkeypatch.setattr(sources, "_pinned_registries", lambda: [])
@@ -446,7 +446,7 @@ class TestPutRegistriesValidation:
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.put(
                 "/api/apps/registries",
-                json={"registries": [{"repo": "KiroCrew"}]},
+                json={"registries": [{"repo": "AjCrew"}]},
             )
             assert resp.status == 400
             data = await resp.json()
@@ -646,7 +646,7 @@ class TestPutRegistriesUrls:
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.put(
                 "/api/apps/registries",
-                json={"registries": [{"repo": "KiroCrew"}]},
+                json={"registries": [{"repo": "AjCrew"}]},
             )
             assert resp.status == 400
             assert "core registry" in (await resp.json())["error"]
@@ -733,7 +733,7 @@ class TestRefreshRegistries:
         from unittest.mock import AsyncMock
 
         monkeypatch.setattr(
-            "kiro_crew.apps.registry.list_registry",
+            "aj_crew.apps.registry.list_registry",
             AsyncMock(return_value=[{"name": "a"}, {"name": "b"}]),
         )
         async with TestClient(TestServer(_make_app())) as client:
@@ -751,7 +751,7 @@ class TestRefreshRegistries:
         from unittest.mock import AsyncMock
 
         monkeypatch.setattr(
-            "kiro_crew.apps.registry.list_registry",
+            "aj_crew.apps.registry.list_registry",
             AsyncMock(return_value=[]),
         )
         async with TestClient(TestServer(_make_app())) as client:
@@ -780,11 +780,11 @@ class TestRefreshRegistries:
         from unittest.mock import AsyncMock
 
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._fetch_external_registry_index",
+            "aj_crew.apps.registry._fetch_external_registry_index",
             AsyncMock(return_value=[{"name": "x", "repo": "R"}]),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.registry.list_registry",
+            "aj_crew.apps.registry.list_registry",
             AsyncMock(return_value=[{"name": "x"}]),
         )
         async with TestClient(TestServer(_make_app())) as client:
@@ -943,7 +943,7 @@ class TestSshUrlParity:
         # event because the host enters the loosened-sandbox / SSH-clone trust
         # set exactly as with a user@ variant.
         _setup_env(tmp_path, monkeypatch)
-        from kiro_crew.apps import routes as routes_mod
+        from aj_crew.apps import routes as routes_mod
 
         mock_sel = routes_mod.sel()
         async with TestClient(TestServer(_make_app())) as client:
@@ -989,11 +989,11 @@ class TestSshUrlParity:
         from unittest.mock import AsyncMock
 
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._fetch_external_registry_index",
+            "aj_crew.apps.registry._fetch_external_registry_index",
             AsyncMock(return_value=[{"name": "x", "repo": "R"}]),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.registry.list_registry",
+            "aj_crew.apps.registry.list_registry",
             AsyncMock(return_value=[{"name": "x"}]),
         )
         async with TestClient(TestServer(_make_app())) as client:
@@ -1190,7 +1190,7 @@ class TestRegistryLabelAndReview:
                         {
                             "name": "mine",
                             "repo": "MyApps",
-                            "label": "Reviewed by the Kiro Crew team",
+                            "label": "Reviewed by the Aj Crew team",
                             "review": "curated",
                         }
                     ]

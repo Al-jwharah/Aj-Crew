@@ -32,8 +32,8 @@ from dashboard_source_link_unlink_helpers import (
     _slot,
 )
 
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_source_link_unlink
-from kiro_crew.dashboard.source_providers.contract import is_valid_source_identity_key
+from aj_crew.dashboard.chat_handlers import api_chat_slot_source_link_unlink
+from aj_crew.dashboard.source_providers.contract import is_valid_source_identity_key
 
 
 class TestDerivationFilter:
@@ -87,7 +87,7 @@ class TestPersistenceRoundTrip:
     def test_dismiss_survives_a_simulated_reload(self):
         """The dismissed set is written to durable slot metadata and rehydrated,
         so a gateway restart does not resurrect a chip the user unlinked."""
-        from kiro_crew.dashboard.chat_persistence import _restore_dismissed_source_links
+        from aj_crew.dashboard.chat_persistence import _restore_dismissed_source_links
 
         slot = _slot()
         key = _identity_key(PR_A)
@@ -107,7 +107,7 @@ class TestPersistenceRoundTrip:
     def test_reload_drops_a_tampered_identity_key(self):
         """History JSONL is disk-tamperable; a malformed key can never match a
         real identity, so it is dropped on restore rather than stored as junk."""
-        from kiro_crew.dashboard.chat_persistence import _restore_dismissed_source_links
+        from aj_crew.dashboard.chat_persistence import _restore_dismissed_source_links
 
         slot = _slot()
         _restore_dismissed_source_links(
@@ -123,8 +123,8 @@ class TestPersistenceRoundTrip:
         discard can never hide that the restored set is incomplete."""
         import logging
 
-        from kiro_crew.dashboard.chat_persistence import _restore_dismissed_source_links
-        from kiro_crew.dashboard.state import _MAX_DISMISSED_SOURCE_LINKS
+        from aj_crew.dashboard.chat_persistence import _restore_dismissed_source_links
+        from aj_crew.dashboard.state import _MAX_DISMISSED_SOURCE_LINKS
 
         overflow = 7
         keys = [
@@ -132,7 +132,7 @@ class TestPersistenceRoundTrip:
             for i in range(_MAX_DISMISSED_SOURCE_LINKS + overflow)
         ]
         slot = _slot()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.chat_persistence"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.chat_persistence"):
             _restore_dismissed_source_links(slot, keys)
         assert len(slot._dismissed_source_links) == _MAX_DISMISSED_SOURCE_LINKS
         # Exactly one warning, naming the dropped count and the cap.
@@ -147,8 +147,8 @@ class TestPersistenceRoundTrip:
         grown by an older build) cannot round-trip an unbounded set back to
         disk. The helper drops invalid keys, sorts, then keeps only the first
         cap entries."""
-        from kiro_crew.dashboard.chat_persistence import _capped_dismissed_line
-        from kiro_crew.dashboard.state import _MAX_DISMISSED_SOURCE_LINKS
+        from aj_crew.dashboard.chat_persistence import _capped_dismissed_line
+        from aj_crew.dashboard.state import _MAX_DISMISSED_SOURCE_LINKS
 
         # Genuinely valid, distinct identity keys past the ceiling.
         valid = [
@@ -165,7 +165,7 @@ class TestPersistenceRoundTrip:
         """The carry-forward callers pass the raw on-disk list, so
         ``_capped_dismissed_line`` must re-validate each key against the identity
         grammar — a tampered/oversized string is dropped, never re-written."""
-        from kiro_crew.dashboard.chat_persistence import _capped_dismissed_line
+        from aj_crew.dashboard.chat_persistence import _capped_dismissed_line
 
         good = _identity_key(PR_A)
         result = _capped_dismissed_line([good, "not-json", "{}", ['{"nested":[1]}'], "x" * 100000])
@@ -176,8 +176,8 @@ class TestPersistenceRoundTrip:
         materializing the whole (possibly oversized/tampered) valid-key list and
         slicing — so a hostile on-disk line cannot force an unbounded list into
         memory before the cap applies. The in-memory set is exactly the ceiling."""
-        from kiro_crew.dashboard.chat_persistence import _restore_dismissed_source_links
-        from kiro_crew.dashboard.state import _MAX_DISMISSED_SOURCE_LINKS
+        from aj_crew.dashboard.chat_persistence import _restore_dismissed_source_links
+        from aj_crew.dashboard.state import _MAX_DISMISSED_SOURCE_LINKS
 
         oversized = [
             _identity_key(f"https://github.com/acme/widgets/pull/{i}")
@@ -194,7 +194,7 @@ class TestPersistenceRoundTrip:
         """The shared collector every on-disk reader uses stops at the cap during
         iteration (so an oversized/tampered list never materializes in full) and
         drops invalid keys. A non-list yields the empty set."""
-        from kiro_crew.dashboard.source_providers.contract import bounded_valid_identities
+        from aj_crew.dashboard.source_providers.contract import bounded_valid_identities
 
         good = [_identity_key(f"https://github.com/acme/widgets/pull/{i}") for i in range(50)]
         # Oversized valid input caps at the requested bound.
@@ -213,11 +213,11 @@ class TestPersistenceRoundTrip:
         # A slot bound to a transcript whose dismissed set could not be read is
         # marked _dismissed_hydrated=False; its FULL save must carry the on-disk
         # dismissed line forward, not erase it with the empty in-memory set.
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         from chat_test_helpers import _make_state
 
-        from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.chat_persistence import save_slot_off_loop
+        from aj_crew.dashboard.state import _ChatSlot
 
         state = _make_state(tmp_path)
         key = _identity_key(PR_A)
@@ -244,11 +244,11 @@ class TestPersistenceRoundTrip:
         # The EMPTY-WINDOW (merge-writer) save path must ALSO carry the on-disk
         # dismissed line forward for an unhydrated slot, not erase it with []. A
         # slot with no durable window rows routes through that branch.
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         from chat_test_helpers import _make_state
 
-        from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.chat_persistence import save_slot_off_loop
+        from aj_crew.dashboard.state import _ChatSlot
 
         state = _make_state(tmp_path)
         key = _identity_key(PR_A)
@@ -275,11 +275,11 @@ class TestPersistenceRoundTrip:
         # on-disk dismissed line forward, NOT persist the tentative in-memory set
         # — the guarded write may still fail and roll it back, and a flush that
         # committed the tentative tombstone would survive a 409'd DELETE.
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         from chat_test_helpers import _make_state
 
-        from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.chat_persistence import save_slot_off_loop
+        from aj_crew.dashboard.state import _ChatSlot
 
         state = _make_state(tmp_path)
         on_disk = _identity_key(PR_A)
@@ -310,11 +310,11 @@ class TestPersistenceRoundTrip:
         # shrink the on-disk set and erase the newer tombstone (chip reappears on
         # restart). The save must UNION memory with the on-disk line so the
         # committed tombstone survives.
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         from chat_test_helpers import _make_state
 
-        from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.chat_persistence import save_slot_off_loop
+        from aj_crew.dashboard.state import _ChatSlot
 
         state = _make_state(tmp_path)
         stale_known = _identity_key(PR_A)  # in the prefetched (stale) set
@@ -371,7 +371,7 @@ async def _delete(
     expect: str | None = None,
     omit_expect: bool = False,
 ) -> web.Response:
-    with patch("kiro_crew.dashboard.chat_handlers.sel"):
+    with patch("aj_crew.dashboard.chat_handlers.sel"):
         return await api_chat_slot_source_link_unlink(
             _request(slot_key, identity, slots, app=app, expect=expect, omit_expect=omit_expect)
         )
@@ -384,7 +384,7 @@ class TestUnlinkEndpoint:
         state_slots = {"s1": slot}
         key = _identity_key(PR_A)
         req = _request("s1", key, state_slots)
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             resp = await api_chat_slot_source_link_unlink(req)
 
         assert resp.status == 200
@@ -483,7 +483,7 @@ class TestUnlinkEndpoint:
         resurrecting whichever chip falls off. The cap gates the union write, not
         only the in-memory add, so entering the persist path on ``not
         durably_dismissed`` cannot commit an oversized set."""
-        from kiro_crew.dashboard.state import _MAX_DISMISSED_SOURCE_LINKS
+        from aj_crew.dashboard.state import _MAX_DISMISSED_SOURCE_LINKS
 
         slot = _slot()
         # Fill the in-memory dismissed set to the ceiling with synthetic keys the
@@ -496,7 +496,7 @@ class TestUnlinkEndpoint:
         key = _identity_key(PR_A)  # a genuinely new, derived link
         req = _request("s1", key, {"s1": slot})
         um = req.app["state"].conversation_log.update_metadata_if
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             resp = await api_chat_slot_source_link_unlink(req)
         assert resp.status == 409
         assert json.loads(resp.text)["code"] == "dismissed_source_links_full"
@@ -538,7 +538,7 @@ class TestUnlinkEndpoint:
         req.rel_url.query = {"expect": _expect_for_req(req)}
         req.get = lambda k, d=None: d
         req.app = {"state": state}
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             resp = await api_chat_slot_source_link_unlink(req)
         assert resp.status == 200
         # The payload the guard rewrote in place carries BOTH this request's key
@@ -560,9 +560,9 @@ class TestUnlinkEndpoint:
         req = _request("s1", encoded_identity, {"s1": slot})
         req.app["state"].conversation_log.update_metadata_if.return_value = True
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.source_providers.contract.is_valid_source_identity_key",
+                "aj_crew.dashboard.source_providers.contract.is_valid_source_identity_key",
                 new=lambda k: True,
             ),
             patch.object(
@@ -649,7 +649,7 @@ class TestUnlinkEndpoint:
         req.rel_url.query = {"expect": _expect_for_req(req)}
         req.get = lambda k, d=None: d
         req.app = {"state": state}
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             resp = await api_chat_slot_source_link_unlink(req)
         assert resp.status == 409
         assert json.loads(resp.text) == {
@@ -682,7 +682,7 @@ class TestUnlinkEndpoint:
         req.rel_url.query = {"expect": _expect_for_req(req)}
         req.get = lambda k, d=None: d
         req.app = {"state": state}
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             resp = await api_chat_slot_source_link_unlink(req)
         assert resp.status == 200
         # The written union includes BOTH the new key and the pre-existing
@@ -710,7 +710,7 @@ class TestUnlinkEndpoint:
         req.rel_url.query = {"expect": _expect_for_req(req)}
         req.get = lambda k, d=None: d
         req.app = {"state": state}
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             resp = await api_chat_slot_source_link_unlink(req)
         assert resp.status == 409
         state.conversation_log.update_metadata_if.assert_not_called()  # no write
@@ -735,9 +735,9 @@ class TestUnlinkEndpoint:
         req.get = lambda k, d=None: d
         req.app = {"state": state}
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.save_slot_off_loop",
+                "aj_crew.dashboard.chat_handlers.save_slot_off_loop",
                 new=AsyncMock(return_value=True),
             ) as saver,
         ):
@@ -782,13 +782,13 @@ class TestUnlinkEndpoint:
         req.get = lambda k, d=None: d
         req.app = {"state": state}
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.source_providers.contract.is_valid_source_identity_key",
+                "aj_crew.dashboard.source_providers.contract.is_valid_source_identity_key",
                 return_value=True,
             ),
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key",
+                "aj_crew.dashboard.chat_handlers.slot_history_key",
                 new=lambda s: "shared-history-key",
             ),
         ):
@@ -822,9 +822,9 @@ class TestUnlinkEndpoint:
         req.get = lambda k, d=None: d
         req.app = {"state": state}
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key",
+                "aj_crew.dashboard.chat_handlers.slot_history_key",
                 new=lambda s: "shared-history-key",
             ),
         ):
@@ -851,7 +851,7 @@ class TestUnlinkEndpoint:
         req.rel_url.query = {"expect": _expect_for_req(req)}
         req.get = lambda k, d=None: d
         req.app = {"state": state}
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             resp = await api_chat_slot_source_link_unlink(req)
         assert resp.status == 409
         assert key not in slot._dismissed_source_links  # rolled back
@@ -895,7 +895,7 @@ class TestUnlinkEndpoint:
         req.rel_url.query = {"expect": _expect_for_req(req)}
         req.get = lambda k, d=None: d
         req.app = {"state": state}
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             resp = await api_chat_slot_source_link_unlink(req)
         assert resp.status == 409
         assert seen["depth_during_write"] == 2  # our +1 on top of the concurrent +1
@@ -921,7 +921,7 @@ class TestUnlinkEndpoint:
         req.rel_url.query = {"expect": _expect_for_req(req)}
         req.get = lambda k, d=None: d
         req.app = {"state": state}
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             resp = await api_chat_slot_source_link_unlink(req)
         assert resp.status == 409
         guard = state.conversation_log.update_metadata_if.call_args.args[2]
@@ -953,9 +953,9 @@ class TestUnlinkEndpoint:
         req.get = lambda k, d=None: d
         req.app = {"state": state}
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key",
+                "aj_crew.dashboard.chat_handlers.slot_history_key",
                 new=lambda s: "shared-history-key",
             ),
         ):
@@ -969,9 +969,9 @@ class TestUnlinkEndpoint:
         slot = _slot(PR_A, PR_B)
         ka, kb = _identity_key(PR_A), _identity_key(PR_B)
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.save_slot_off_loop",
+                "aj_crew.dashboard.chat_handlers.save_slot_off_loop",
                 new=AsyncMock(return_value=True),
             ),
         ):
@@ -1009,9 +1009,9 @@ class TestUnlinkEndpoint:
         req.get = lambda k, d=None: d
         req.app = {"state": state}
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key",
+                "aj_crew.dashboard.chat_handlers.slot_history_key",
                 new=lambda s: hkeys[id(s)],
             ),
         ):
@@ -1058,9 +1058,9 @@ class TestUnlinkEndpoint:
         req.get = lambda k, d=None: d
         req.app = {"state": state}
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key",
+                "aj_crew.dashboard.chat_handlers.slot_history_key",
                 new=lambda s: hkeys[id(s)],
             ),
         ):
@@ -1106,9 +1106,9 @@ class TestUnlinkEndpoint:
         req.get = lambda k, d=None: d
         req.app = {"state": state}
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key",
+                "aj_crew.dashboard.chat_handlers.slot_history_key",
                 new=lambda s: hkeys[id(s)],
             ),
         ):
@@ -1160,9 +1160,9 @@ class TestUnlinkEndpoint:
         req.get = lambda k, d=None: d
         req.app = {"state": state}
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key",
+                "aj_crew.dashboard.chat_handlers.slot_history_key",
                 new=lambda s: hkeys[id(s)],
             ),
         ):
@@ -1214,9 +1214,9 @@ class TestUnlinkEndpoint:
         req.get = lambda k, d=None: d
         req.app = {"state": state}
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key",
+                "aj_crew.dashboard.chat_handlers.slot_history_key",
                 new=lambda s: hkeys[id(s)],
             ),
         ):
@@ -1256,9 +1256,9 @@ class TestUnlinkEndpoint:
         req.get = lambda k, d=None: d
         req.app = {"state": state}
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key",
+                "aj_crew.dashboard.chat_handlers.slot_history_key",
                 new=lambda s: "authorized",
             ),
         ):
@@ -1304,9 +1304,9 @@ class TestUnlinkEndpoint:
         req.get = lambda k, d=None: d
         req.app = {"state": state}
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key",
+                "aj_crew.dashboard.chat_handlers.slot_history_key",
                 new=lambda s: "authorized",
             ),
         ):
@@ -1331,9 +1331,9 @@ class TestUnlinkEndpoint:
         key = _identity_key(PR_A)
         slot.dismiss_source_link(key)  # already dismissed
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.save_slot_off_loop",
+                "aj_crew.dashboard.chat_handlers.save_slot_off_loop",
                 new=AsyncMock(return_value=True),
             ) as saver,
         ):
@@ -1377,7 +1377,7 @@ class TestUnlinkEndpoint:
         req.rel_url.query = {"expect": _expect_for_req(req)}
         req.get = lambda k, d=None: d
         req.app = {"state": state}
-        with patch("kiro_crew.dashboard.chat_handlers.sel", new=lambda: sel_mock):
+        with patch("aj_crew.dashboard.chat_handlers.sel", new=lambda: sel_mock):
             resp = await api_chat_slot_source_link_unlink(req)
         assert resp.status == 409
         calls = sel_mock.log_tool_invocation.call_args_list
@@ -1401,17 +1401,17 @@ class TestUnlinkEndpoint:
         # authorized_history_key != locked_history_key trips the rebind 409.
         keys = iter(["locked-key", "rebound-key", "rebound-key", "rebound-key"])
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel", new=lambda: sel_mock),
+            patch("aj_crew.dashboard.chat_handlers.sel", new=lambda: sel_mock),
             patch(
-                "kiro_crew.dashboard.chat_handlers.save_slot_off_loop",
+                "aj_crew.dashboard.chat_handlers.save_slot_off_loop",
                 new=AsyncMock(return_value=True),
             ),
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key",
+                "aj_crew.dashboard.chat_handlers.slot_history_key",
                 new=lambda s: next(keys),
             ),
             patch(
-                "kiro_crew.dashboard.chat_handlers._reauthorize_after_await",
+                "aj_crew.dashboard.chat_handlers._reauthorize_after_await",
                 new=MagicMock(return_value=None),
             ),
         ):

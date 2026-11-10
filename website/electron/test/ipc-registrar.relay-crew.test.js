@@ -42,7 +42,7 @@ function loadRegistrar() {
   }
 }
 
-function harness({ opener, gatewayLocal = true, portOwner = "kirocrew" }) {
+function harness({ opener, gatewayLocal = true, portOwner = "ajcrew" }) {
   const handlers = new Map();
   const probes = [];
   const createIpcRegistrar = loadRegistrar();

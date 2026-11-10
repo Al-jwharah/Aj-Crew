@@ -28,15 +28,15 @@ import pathlib
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import mcp_oauth_provenance
-from kiro_crew.dashboard.chat_persistence import (
+from aj_crew.dashboard import mcp_oauth_provenance
+from aj_crew.dashboard.chat_persistence import (
     _attach_variants,
     _build_history_prefix,
     _build_message_entry,
     _rehydrate_slot_from_history,
     restore_recent_sessions,
 )
-from kiro_crew.dashboard.chat_utils import _history_key_for, _prepare_messages
+from aj_crew.dashboard.chat_utils import _history_key_for, _prepare_messages
 
 # A credential shape `redact_credentials` catches, kept in one place so a change
 # to the detector surfaces as one failure rather than six.
@@ -119,7 +119,7 @@ def test_build_message_entry_redacts_every_non_user_role(role: str) -> None:
 
 def test_history_prefix_redacts_assistant_content(tmp_path, monkeypatch) -> None:
     """Its output is prepended to the ACP prompt, so kiro-cli persists it."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     slot = state.get_or_create_slot("chat-1-prefix")
     slot.append("assistant", f"here is {SECRET}", "msg msg-a", broadcast=False)
@@ -129,7 +129,7 @@ def test_history_prefix_redacts_assistant_content(tmp_path, monkeypatch) -> None
 
 def test_history_prefix_keeps_user_text() -> None:
     """User turns are the prompt's own history; redacting them would corrupt it."""
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("chat-1-u")
     slot.append("user", "my own note", "msg msg-u", broadcast=False)
@@ -146,8 +146,8 @@ def test_history_prefix_keeps_user_text() -> None:
 
 def test_side_chat_parent_snapshot_redacts_assistant_content() -> None:
     """The side-chat prompt embeds parent turns, so it is an egress path."""
-    from kiro_crew.dashboard.side_context import _format_parent_snapshot
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.side_context import _format_parent_snapshot
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("chat-1-side")
     slot.append("assistant", f"here is {SECRET}", "msg msg-a", broadcast=False)
@@ -159,8 +159,8 @@ def test_side_chat_parent_snapshot_redacts_assistant_content() -> None:
 
 def test_side_chat_parent_snapshot_keeps_user_text() -> None:
     """Same carve-out as the history prefix: the user's own words must survive."""
-    from kiro_crew.dashboard.side_context import _format_parent_snapshot
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.side_context import _format_parent_snapshot
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("chat-1-sideu")
     slot.append("user", "my own question", "msg msg-u", broadcast=False)
@@ -186,7 +186,7 @@ def test_restore_recent_sessions_does_not_broadcast_either(tmp_path, monkeypatch
     Google/GitHub consent URL and break the user's ability to authorize. Also
     `chat_utils` imports from `state`, so that direction would be an import cycle.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed(state, "chat-1-nb2", "assistant", f"key {SECRET}")
 
@@ -204,7 +204,7 @@ def test_restore_recent_sessions_does_not_broadcast_either(tmp_path, monkeypatch
 
     monkeypatch.setattr(state2, "get_or_create_slot", _spy)
 
-    from kiro_crew.dashboard.chat_persistence import restore_recent_sessions
+    from aj_crew.dashboard.chat_persistence import restore_recent_sessions
 
     restored = restore_recent_sessions(state2, window_minutes=0)
     assert restored == 1, "precondition: the session was restored"
@@ -222,7 +222,7 @@ def test_rehydrate_does_not_broadcast_replayed_messages(tmp_path, monkeypatch) -
     This helper also runs for on-demand cold-slot rehydrates, i.e. while clients
     are connected.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed(state, "chat-1-bcast", "assistant", "hello from history")
 
@@ -265,7 +265,7 @@ def test_load_redacts_content_restoring_the_chokepoint(tmp_path, monkeypatch) ->
     but this is what makes a NEW reader of `m["content"]` safe without having to
     know it must redact.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     log = state.conversation_log
     assert log is not None
@@ -291,7 +291,7 @@ def test_load_leaves_user_content_raw(tmp_path, monkeypatch) -> None:
     bug — and no existing test caught it, because none restored a user message
     containing a credential shape.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     log = state.conversation_log
     assert log is not None
@@ -313,7 +313,7 @@ def test_load_redacts_system_role(tmp_path, monkeypatch) -> None:
     The write path excludes `system`, so system content reaches disk raw. A gate
     of `not in ("user", "system")` would therefore leave it raw in memory too.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     log = state.conversation_log
     assert log is not None
@@ -334,7 +334,7 @@ def test_load_does_not_redact_meta_keeping_boot_fast(tmp_path, monkeypatch) -> N
     This exists so re-adding the meta pass fails loudly instead of quietly
     handing back the ~5.5s of boot time this change removed.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     log = state.conversation_log
     assert log is not None
@@ -375,8 +375,8 @@ def test_oauth_completion_redacts_restored_meta_before_broadcast() -> None:
     banner directly rather than round-tripping through disk, because a real save
     would have redacted it; the point is the re-emit, not the disk state.
     """
-    from kiro_crew.dashboard.chat_runner import _mark_mcp_oauth_completed
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.chat_runner import _mark_mcp_oauth_completed
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("chat-1-oauth")
     slot.append(
@@ -493,7 +493,7 @@ def test_oauth_url_gate_still_blocks_a_tampered_url() -> None:
     Both URLs are recorded as sent by the child, so the shape gates themselves
     are measured rather than the provenance check that runs before them.
     """
-    from kiro_crew.dashboard.chat_utils import _redact_meta_for_role
+    from aj_crew.dashboard.chat_utils import _redact_meta_for_role
 
     scheme_url = "javascript:alert(document.cookie)"
     cred_url = f"https://ex.com/cb?tok={SECRET}"
@@ -523,8 +523,8 @@ def test_oauth_completion_preserves_a_legitimate_url() -> None:
     The lesson worth keeping: a shared helper cannot be judged safe from one call
     site. The gate now matches `security.oauth_url_contains_credential` for every caller.
     """
-    from kiro_crew.dashboard.chat_runner import _mark_mcp_oauth_completed
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.chat_runner import _mark_mcp_oauth_completed
+    from aj_crew.dashboard.state import _ChatSlot
 
     legit = (
         "https://accounts.google.com/o/oauth2/v2/auth?"
@@ -567,7 +567,7 @@ def test_oauth_completion_preserves_a_legitimate_url() -> None:
 
 def test_ws_broadcast_redacts_assistant_content(tmp_path, monkeypatch) -> None:
     """An assistant row carrying a credential comes out redacted on the WS path."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     sent: list[dict] = []
     monkeypatch.setattr(state, "_broadcast", lambda payload: sent.append(payload))
@@ -587,7 +587,7 @@ def test_ws_broadcast_leaves_user_content_raw(tmp_path, monkeypatch) -> None:
     The user typed it and is the only one who sees it back; redacting it here
     would diverge from the HTTP path in the other direction.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     sent: list[dict] = []
     monkeypatch.setattr(state, "_broadcast", lambda payload: sent.append(payload))
@@ -612,7 +612,7 @@ def test_ws_broadcast_leaves_user_content_raw(tmp_path, monkeypatch) -> None:
 
 
 def test_redact_display_content_redacts_a_str_leaf() -> None:
-    from kiro_crew.dashboard.chat_utils import redact_display_content
+    from aj_crew.dashboard.chat_utils import redact_display_content
 
     out = redact_display_content(f"key {SECRET}")
     assert isinstance(out, str)
@@ -621,7 +621,7 @@ def test_redact_display_content_redacts_a_str_leaf() -> None:
 
 def test_redact_display_content_recurses_nested_containers() -> None:
     """A credential leaf nested in list/dict/tuple gets the same form as the str path."""
-    from kiro_crew.dashboard.chat_utils import redact_display_content
+    from aj_crew.dashboard.chat_utils import redact_display_content
 
     leaf = f"key {SECRET}"
     expected = redact_display_content(leaf)
@@ -638,7 +638,7 @@ def test_redact_display_content_redacts_dict_keys_on_the_wire_text() -> None:
     could collapse two distinct keys into one), but the final pass over the
     serialized wire string covers them — a credential-shaped key must not
     reach the dashboard raw."""
-    from kiro_crew.dashboard.chat_utils import redact_display_content
+    from aj_crew.dashboard.chat_utils import redact_display_content
 
     key = f"key-{SECRET}"
     out = redact_display_content({key: None, "i": 3, "f": 1.5, "b": True})
@@ -653,7 +653,7 @@ def test_redact_display_content_redacts_dict_keys_on_the_wire_text() -> None:
 
 def test_redact_display_content_does_not_mutate_input() -> None:
     """Rows are shared by reference; the helper must return new containers."""
-    from kiro_crew.dashboard.chat_utils import redact_display_content
+    from aj_crew.dashboard.chat_utils import redact_display_content
 
     original = [{"text": f"key {SECRET}"}]
     snapshot = json.dumps(original)
@@ -690,7 +690,7 @@ def test_prepare_messages_serializes_user_structured_content_unredacted() -> Non
 def test_serialize_wire_content_turns_none_into_empty_text() -> None:
     """None is the absent-content shape a hand-edited row can carry; the wire
     contract is string-for-every-row, and its display rendering is empty."""
-    from kiro_crew.dashboard.chat_utils import serialize_wire_content
+    from aj_crew.dashboard.chat_utils import serialize_wire_content
 
     assert serialize_wire_content(None) == ""
     assert serialize_wire_content("keep") == "keep"
@@ -706,7 +706,7 @@ def test_prepare_messages_serializes_none_content_as_empty_string() -> None:
 def test_ws_broadcast_serializes_none_content_as_empty_string(
     tmp_path, monkeypatch
 ) -> None:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     sent: list[dict] = []
     monkeypatch.setattr(state, "_broadcast", lambda payload: sent.append(payload))
@@ -731,7 +731,7 @@ def test_ws_broadcast_serializes_user_structured_content_unredacted(
     tmp_path, monkeypatch
 ) -> None:
     """Same two-invariant split on the WS path: shape for all, redaction for non-user."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     sent: list[dict] = []
     monkeypatch.setattr(state, "_broadcast", lambda payload: sent.append(payload))
@@ -749,7 +749,7 @@ def test_ws_broadcast_serializes_user_structured_content_unredacted(
 
 def test_build_stream_chunk_serializes_structured_content() -> None:
     """The SSE/relay chunk builder shares the guard: redacted and wire-safe."""
-    from kiro_crew.dashboard.chat_utils import _build_stream_chunk
+    from aj_crew.dashboard.chat_utils import _build_stream_chunk
 
     rec = json.loads(
         _build_stream_chunk(
@@ -775,7 +775,7 @@ def test_prepare_messages_redacts_structured_variant_content() -> None:
 
 def test_ws_broadcast_redacts_structured_content(tmp_path, monkeypatch) -> None:
     """A structured non-user content is redacted on the WS path — not skipped."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     sent: list[dict] = []
     monkeypatch.setattr(state, "_broadcast", lambda payload: sent.append(payload))
@@ -835,7 +835,7 @@ def _seed_structured(state, slot_key: str) -> None:
 
 def test_rehydrate_tolerates_structured_content(tmp_path, monkeypatch) -> None:
     """``_rehydrate_slot_from_history`` loads a structured row, redacted and flat."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _seed_structured(_make_state(tmp_path / "sessions"), "chat-1-rhstruct")
 
     state2 = _make_state(tmp_path / "sessions")
@@ -848,7 +848,7 @@ def test_rehydrate_tolerates_structured_content(tmp_path, monkeypatch) -> None:
 
 def test_restore_recent_sessions_tolerates_structured_content(tmp_path, monkeypatch) -> None:
     """The SECOND restore loop shares the tolerance — the guard is not per-site."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _seed_structured(_make_state(tmp_path / "sessions"), "chat-1-rrstruct")
 
     state2 = _make_state(tmp_path / "sessions")
@@ -862,7 +862,7 @@ def test_restore_recent_sessions_tolerates_structured_content(tmp_path, monkeypa
 
 def test_attach_variants_tolerates_structured_variant_content(tmp_path, monkeypatch) -> None:
     """The load-side variants branch redacts a structured variant instead of raising."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     slot = state.get_or_create_slot("chat-1-varstruct")
     slot.append("assistant", "fine", "msg msg-a", broadcast=False)
@@ -880,9 +880,9 @@ def test_cron_hydrate_tolerates_structured_content(tmp_path, monkeypatch) -> Non
     Its ``if not content: continue`` skip does not cover this: a non-empty
     structured value is truthy, so it reaches the redaction call either way.
     """
-    from kiro_crew.dashboard.cron_inject import hydrate_slot_from_history
+    from aj_crew.dashboard.cron_inject import hydrate_slot_from_history
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     slot = state.get_or_create_slot("chat-1-cronstruct")
 

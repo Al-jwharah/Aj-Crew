@@ -17,17 +17,17 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from overload_fakes import ManagerHarness, mock_ctx, mock_sessions
 
-from kiro_crew.subagent import SubagentManager
-from kiro_crew.taskq import model, waits
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.taskq.waits import WaitRecord
+from aj_crew.subagent import SubagentManager
+from aj_crew.taskq import model, waits
+from aj_crew.taskq.store import TaskStore
+from aj_crew.taskq.waits import WaitRecord
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
 
 @pytest.fixture
 def quiet():
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         yield
 
 
@@ -386,7 +386,7 @@ async def test_non_blocking_parent_keeps_its_slot(h) -> None:
     hz = await h(max_concurrent=2)
     s = hz.spawn("S")
     await hz.settle()
-    hz.live(s)._inflight_tool = SimpleNamespace(tool_name="@kirocrew-core/spawn_run", title="t")
+    hz.live(s)._inflight_tool = SimpleNamespace(tool_name="@ajcrew-core/spawn_run", title="t")
     a = hz.child_of(s, "A")
     await hz.settle()
     assert hz.state(s) == model.RUNNING
@@ -418,4 +418,4 @@ async def test_yield_and_resume_are_idempotent_and_generation_fenced(h) -> None:
     assert not hz.store.transition(s.id, model.DONE, generation=gen), "old generation fenced"
     await hz.end(s)
     assert hz.state(s) == model.DONE
-    assert Path(os.environ["KIROCREW_HOME"]).exists()
+    assert Path(os.environ["AJCREW_HOME"]).exists()

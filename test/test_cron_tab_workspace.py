@@ -20,15 +20,15 @@ import pytest
 from chat_test_helpers import _make_state
 from member_memory_helpers import forget_declared_stores, write_member_manifest
 
-from kiro_crew.config import loader
-from kiro_crew.cron import CronJob
-from kiro_crew.dashboard import create_rate_limit
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils_slots import cron_tab_name
-from kiro_crew.dashboard.cron_inject import ensure_cron_slot, inject_cron_result_to_dashboard
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.history import ConversationLog
-from kiro_crew.session_surface import set_dashboard_surfaced
+from aj_crew.config import loader
+from aj_crew.cron import CronJob
+from aj_crew.dashboard import create_rate_limit
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils_slots import cron_tab_name
+from aj_crew.dashboard.cron_inject import ensure_cron_slot, inject_cron_result_to_dashboard
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.history import ConversationLog
+from aj_crew.session_surface import set_dashboard_surfaced
 
 JOB_ID = "0e520ea8"
 CRON_SLOT = f"cron-{JOB_ID}"
@@ -53,7 +53,7 @@ def state(tmp_path, monkeypatch):
     ``scout`` is a crew member whose persisted id differs from its alias, so a
     member job that names it by id resolves through the id, not the name.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     dirs = {
         "default": "workspace",
         "research": "workspace-research",
@@ -69,11 +69,11 @@ def state(tmp_path, monkeypatch):
             ),
         },
         "agents": {
-            "researcher": {"kiro_agent": "kirocrew", "workspace": "research"},
-            "helper": {"kiro_agent": "kirocrew", "workspace": "research"},
-            "outsider": {"kiro_agent": "kirocrew", "workspace": "elsewhere"},
+            "researcher": {"kiro_agent": "ajcrew", "workspace": "research"},
+            "helper": {"kiro_agent": "ajcrew", "workspace": "research"},
+            "outsider": {"kiro_agent": "ajcrew", "workspace": "elsewhere"},
             "scout": {
-                "kiro_agent": "kirocrew",
+                "kiro_agent": "ajcrew",
                 "workspace": "scouting",
                 "memory_store": "member-scout",
                 "member_id": SCOUT_ID,
@@ -86,7 +86,7 @@ def state(tmp_path, monkeypatch):
     forget_declared_stores(monkeypatch)
     # The installed-template catalog, the one external boundary, seeded the way
     # the loader's own tests seed it.
-    monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"kirocrew"}))
+    monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"ajcrew"}))
     monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS_READY", True)
     monkeypatch.setattr(sc, "session_control_enabled", lambda: True)
     dashboard = _make_state(tmp_path)

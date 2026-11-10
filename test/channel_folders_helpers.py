@@ -13,8 +13,8 @@ from typing import Any
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.config.loader import config_path
-from kiro_crew.history_projection import METADATA_LINE_READABLE
+from aj_crew.config.loader import config_path
+from aj_crew.history_projection import METADATA_LINE_READABLE
 
 
 @pytest.fixture(name="dashboard_state")

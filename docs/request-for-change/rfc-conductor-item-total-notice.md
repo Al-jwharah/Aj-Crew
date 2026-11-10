@@ -1,7 +1,7 @@
 ---
 title: The goal conductor keeps its item total out of round reports and says it once past the cap
 status: superseded
-author: kirocrew agent session, directed by adlio
+author: ajcrew agent session, directed by adlio
 created: 2026-10-20
 last-audited: 2026-10-27
 audited-at: ab57fba809
@@ -38,10 +38,10 @@ in its own document, so that one is not edited here.
 `rfc-work-ledger-concurrency-cap.md` §3 made the goal's item total advisory and
 specified how the conductor surfaces it: "The total is a line in every round
 report (`items used: N of <item_cap>`)". The conductor prompt
-(`_CONDUCTOR_SYSTEM_PROMPT` in `src/kiro_crew/agent.py`, its "Rounds are not
+(`_CONDUCTOR_SYSTEM_PROMPT` in `src/aj_crew/agent.py`, its "Rounds are not
 gated, but spend is bounded" paragraph) and the goal-conductor skill
-(`src/kiro_crew/builtin_skills/goal-conductor/SKILL.md`, its "Item cap
-(advisory)" bullet) carry that instruction, and `src/kiro_crew/docs/work-ledger.md`
+(`src/aj_crew/builtin_skills/goal-conductor/SKILL.md`, its "Item cap
+(advisory)" bullet) carry that instruction, and `src/aj_crew/docs/work-ledger.md`
 documents it.
 
 In use, the line works against the user:
@@ -91,8 +91,8 @@ Two constraints from the conductor's existing round-close rule shape how:
 Rewriting the key every round matters for three reasons:
 
 - **The artifacts map is bounded.** It keeps at most 32 keys
-  (`_MAX_ARTIFACTS` in `src/kiro_crew/session_ledger_layout.py`) and the ledger
-  fold in `src/kiro_crew/crew_log/projection_ledger.py` drops the oldest first
+  (`_MAX_ARTIFACTS` in `src/aj_crew/session_ledger_layout.py`) and the ledger
+  fold in `src/aj_crew/crew_log/projection_ledger.py` drops the oldest first
   once it holds more (`LEDGER_ARTIFACT_LIMIT`). A
   re-recorded key moves to the newest position, so a key written every round
   ages out only if 32 other keys are written within one round, which no
@@ -134,9 +134,9 @@ One PR, [#22417](https://github.com/kirodotdev/KiroCrew/pull/22417):
 
 - the conductor prompt in `agent_parts/spec_prompts.py` and the goal-conductor skill carry §2's
   rule, in the same words;
-- `src/kiro_crew/docs/work-ledger.md`, the `cap_exceeded` docstring in
-  `src/kiro_crew/work_ledger_records.py` and the read comment in
-  `src/kiro_crew/dashboard/handlers/work_ledger_read.py` describe it;
+- `src/aj_crew/docs/work-ledger.md`, the `cap_exceeded` docstring in
+  `src/aj_crew/work_ledger_records.py` and the read comment in
+  `src/aj_crew/dashboard/handlers/work_ledger_read.py` describe it;
 - `test/test_conductor_agent.py::test_back_to_back_rounds_keep_a_spend_bound`
   pins both copies: the delivery-based marker, and the absence of the
   per-report line and of a "keep going?" question.

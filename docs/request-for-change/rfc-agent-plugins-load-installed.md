@@ -14,14 +14,14 @@ superseded-by: []
 
 # RFC: First-class loading of installed Agent Plugins / Kiro Powers
 
-- Proposed capability: Kiro Crew discovers Agent Plugins / Kiro Powers already
+- Proposed capability: Aj Crew discovers Agent Plugins / Kiro Powers already
   installed on the machine (`~/.kiro/powers/installed/<name>/`), shows each one's
   `mcp.json` servers and `skills/`, and activates them only after an explicit
   enable — plus a view that distinguishes discovered vs enabled and why anything
   failed.
 - This is the **first-class install path** direction set by the close of
   [#14169](https://github.com/kirodotdev/KiroCrew/pull/14169) — a path of its
-  own, explicitly **not** an extension of the `kirocrew app import` converter.
+  own, explicitly **not** an extension of the `ajcrew app import` converter.
 - Nothing here changes the enterprise governance ceiling or the PreToolUse gate;
   once enabled, plugin-supplied servers remain governed exactly as any other MCP
   server. Discovery alone must not activate them.
@@ -38,7 +38,7 @@ superseded-by: []
 
 ## The decision this asks for
 
-A Power installed on the machine should be discoverable by Kiro Crew and, after
+A Power installed on the machine should be discoverable by Aj Crew and, after
 an explicit enable, contribute its MCP servers and skills — with a surface that
 shows per-Power discovered vs enabled status and the reason for any failure.
 Discovery does not imply activation. The decision a maintainer owns is **that
@@ -51,18 +51,18 @@ calls in the final section.
 
 - A Power installed under `~/.kiro/powers/installed/<name>/` is discoverable, and
   after an explicit enable its `mcp.json` servers and `skills/` become available
-  in Kiro Crew.
+  in Aj Crew.
 - A dashboard surface shows, per installed Power, what it contributes, whether it
   is discovered vs enabled, and its load status, including the reason for any
   failed or refused entry.
-- The path reuses Kiro Crew's existing MCP-merge and skill-root seams and is
+- The path reuses Aj Crew's existing MCP-merge and skill-root seams and is
   designed to reuse the MCP-entry URL validator prototyped in the now-closed
   #14169 once that dependency lands. Phase 1 implementation remains blocked
   until then, rather than adding a parallel subsystem.
 
 ## Non-goals
 
-- The `kirocrew app import` converter route (withdrawn for Powers in #14169 —
+- The `ajcrew app import` converter route (withdrawn for Powers in #14169 —
   plugins get their own install path instead).
 - Acquisition / importing Powers from a GitHub repo or local dir — that is
   [#2545](https://github.com/kirodotdev/KiroCrew/issues/2545).
@@ -74,15 +74,15 @@ calls in the final section.
 ## What exists today, and why a Power is not loaded
 
 An Agent Plugin / Kiro Power on disk carries `plugin.json`, `mcp.json`, and
-`skills/`. Kiro IDE loads it; Kiro Crew does not, by either of its two load
+`skills/`. Kiro IDE loads it; Aj Crew does not, by either of its two load
 paths:
 
-- **MCP servers.** Kiro Crew pins `includeMcpJson` false in
-  `_refresh_dynamic_fields` (`src/kiro_crew/agent.py`) so kiro-cli does not
-  auto-ingest `~/.kiro/settings/mcp.json`. Kiro Crew instead reads that file
+- **MCP servers.** Aj Crew pins `includeMcpJson` false in
+  `_refresh_dynamic_fields` (`src/aj_crew/agent.py`) so kiro-cli does not
+  auto-ingest `~/.kiro/settings/mcp.json`. Aj Crew instead reads that file
   itself at spec rebuild and merges it with inline agent `mcpServers`. A
   Power's `mcp.json` is on neither of those two inputs.
-- **Skills.** Skills come from Kiro Crew's own on-disk skill roots. A Power's
+- **Skills.** Skills come from Aj Crew's own on-disk skill roots. A Power's
   `skills/` directory is not one of them.
 
 The result is duplicate configuration: the same plugin is set up once per client
@@ -91,18 +91,18 @@ provides, or why one failed to load.
 
 ## What this replaces, and why that shape was wrong
 
-A converter route already exists — `kirocrew app import`
-(`src/kiro_crew/apps/plugin_import.py`) already parses the `plugin.json` /
+A converter route already exists — `ajcrew app import`
+(`src/aj_crew/apps/plugin_import.py`) already parses the `plugin.json` /
 agent-plugins.org schema and maps `mcpServers` / `skills` / `hooks`, specced in
 `docs/system-specs/modules/plugin-import.md` and
 `docs/system-specs/modules/harness-plugin-mapping.md`.
 
-PR #14169 extended that converter route for Powers and was **[closed without merge by maintainer decision](https://github.com/kirodotdev/KiroCrew/pull/14169#issuecomment-5851246231)**, with the ruling that Agent Plugins get a _first-class install path of their own_ rather than being converted into apps through `kirocrew app import`. This RFC takes that ruling as settled: the converter is the thing being bypassed, and the two specs above are the mapping the first-class path must not contradict.
+PR #14169 extended that converter route for Powers and was **[closed without merge by maintainer decision](https://github.com/kirodotdev/KiroCrew/pull/14169#issuecomment-5851246231)**, with the ruling that Agent Plugins get a _first-class install path of their own_ rather than being converted into apps through `ajcrew app import`. This RFC takes that ruling as settled: the converter is the thing being bypassed, and the two specs above are the mapping the first-class path must not contradict.
 
 The now-closed #14169 (branch `feat/agent-plugins-std-mcp`, one commit, _"read
 the standard mcp.json and register remote MCP urls"_) introduced a
 converter-path prototype: it reads a package's root `mcp.json`, adds a
-three-class MCP-entry **URL** validator in `src/kiro_crew/apps/manifest.py`
+three-class MCP-entry **URL** validator in `src/aj_crew/apps/manifest.py`
 (`mcp_url_kind` → `backend` / `remote` / `invalid`, alongside
 `mcp_url_violation`, `is_loopback_host`, `references_env`,
 `mcp_entry_references_env`, and `mistyped_mcp_server_fields`), and registers
@@ -147,7 +147,7 @@ The mechanical extension points for both halves already exist, and the app path
 already set the precedent the #14169 ruling asked for:
 
 - **MCP servers →** `merge_mcp_sources()` in
-  `src/kiro_crew/agent_materialization/mcp_sources.py` composes an
+  `src/aj_crew/agent_materialization/mcp_sources.py` composes an
   ordered, namespaced, `setdefault`-based chain of sources into
   `config["mcpServers"]`. The decisive precedent is `_collect_app_mcp_servers()`
   in that same module: enabled **apps already register their servers straight
@@ -163,13 +163,13 @@ already set the precedent the #14169 ruling asked for:
   merge.
 - **Skills →** the skill-root enumerators already form a pluggable, namespaced
   list: `_edition_skill_roots()` / `_canonical_skill_roots()` in
-  `src/kiro_crew/dashboard/handlers/_shared_skill_roots.py` and
-  `_trusted_skill_roots()` in `src/kiro_crew/skills_discovery.py`. App skills are
+  `src/aj_crew/dashboard/handlers/_shared_skill_roots.py` and
+  `_trusted_skill_roots()` in `src/aj_crew/skills_discovery.py`. App skills are
   already namespaced (`{app}/{skill}`) by `_register_skills` in
-  `src/kiro_crew/apps/bridges_skills.py`. An **enabled** Power's skills attach as a
+  `src/aj_crew/apps/bridges_skills.py`. An **enabled** Power's skills attach as a
   `power-<slug>/` root and the catalog/index (`skill_runtime/catalog.py`,
   `skill_search_index.py`) pick them up.
-- **Dashboard view →** `src/kiro_crew/dashboard/handlers/mcp_discover.py` already
+- **Dashboard view →** `src/aj_crew/dashboard/handlers/mcp_discover.py` already
   runs a `ProviderRegistry` of install providers; a `powers` provider enumerating
   `~/.kiro/powers/installed/` is the natural attach point. No dedicated React
   "Powers" view exists today — that part is net-new, most naturally mirroring the
@@ -209,7 +209,7 @@ the verified activation decision — rather than left open:
   namespace, collisions with user-defined names are structurally avoided; exact
   assign-vs-fill-gap behaviour for the Power source is not treated as already
   settled by a single `setdefault` reading of today's merge.
-- **IDE parity:** the codebase posture is native to Kiro Crew, not wire-parity with
+- **IDE parity:** the codebase posture is native to Aj Crew, not wire-parity with
   the IDE's `powers.mcpServers` merged-config shape (described in #9212). That
   shape has no reader in the tree. This is distinct from KAS's native
   `includePowers` agent-spec flag, which KAS honours when explicitly set and
@@ -221,7 +221,7 @@ the verified activation decision — rather than left open:
   sole activation route without accounting for KAS's native route and its
   potential to bypass per-Power enablement, integrity, and consent checks or
   register duplicate MCP servers.
-  `harness-parity.md` governs: a foreign plugin model adapts to Kiro Crew's
+  `harness-parity.md` governs: a foreign plugin model adapts to Aj Crew's
   existing extension points rather than importing another client's wire format.
   A Powers path follows suit.
 
@@ -303,7 +303,7 @@ existing name is not overwritten unexpectedly.
 
 ## Security considerations
 
-Today Kiro Crew has **no** installed-Powers loader, so this section describes a
+Today Aj Crew has **no** installed-Powers loader, so this section describes a
 **proposed** trust boundary — not a claim that `main` is already exploitable
 through `~/.kiro/powers/installed/`.
 
@@ -363,12 +363,12 @@ open credential/consent question for a Power's _remote_ server remains below.
 
 ## Alternatives considered
 
-- **Extend the `kirocrew app import` converter** (what #14169 did). Rejected by
+- **Extend the `ajcrew app import` converter** (what #14169 did). Rejected by
   the maintainer: Powers are to get a first-class path, not be converted into
   apps. This RFC follows that ruling.
 - **Wire-parity with the IDE's `powers.mcpServers` merged-config shape.** Rejected:
   that shape has no reader in the tree, and `harness-parity.md` directs a
-  foreign model to adapt to Kiro Crew's existing seams.
+  foreign model to adapt to Aj Crew's existing seams.
 - **KAS-native `includePowers` loading.** Not adopted as the proposed first-class
   path: KAS honours this backend-specific flag, but using it alongside the Crew
   loader could create a second route outside Crew's per-Power enablement and
@@ -388,7 +388,7 @@ open credential/consent question for a Power's _remote_ server remains below.
 
 1. **Credential / consent model for plugin-supplied remote (URL) servers?** The primitives exist — installs can land disabled pending consent, the governance ceiling keeps remote calls at the PreToolUse gate, OAuth secrets bind from the vault at write time, and self-managed URLs are preserved (`harness-plugin-mapping.md` §5). With Power-level enablement already proposed as disabled-by-default, open: does a _Power's_ remote server need a further per-server consent step, and who owns its OAuth client?
 
-2. **Discovery scope:** only `~/.kiro/powers/installed/`, or also the IDE clone location `~/.vscode/agent-plugins/github.com/<org>/<repo>/`? There is zero handling of either path today, so this is fully open. (Kiro Crew's onboarding importers do read sibling tools' homes for _import_, but not for live discovery.)
+2. **Discovery scope:** only `~/.kiro/powers/installed/`, or also the IDE clone location `~/.vscode/agent-plugins/github.com/<org>/<repo>/`? There is zero handling of either path today, so this is fully open. (Aj Crew's onboarding importers do read sibling tools' homes for _import_, but not for live discovery.)
 
 3. **Consent is keyed to a Power slug, not its content — bind it tighter or seal the tree?** Enablement consents to a Power slug, but the `~/.kiro/powers/installed/` tree is not sealed like `~/.kiro/agents/` and `~/.kiro/settings/mcp.json`, and stdio command startup is outside the `PreToolUse` gate. After one-time slug consent, anything that later edits the Power's content — including the agent itself through a shell — could add a stdio server or alter `plugin.json` / `skills/` content that reaches the model without fresh consent.
 
@@ -426,10 +426,10 @@ open credential/consent question for a Power's _remote_ server remains below.
 
 ## Consequences
 
-- A Power installed once is discoverable in Kiro Crew; after explicit enable it
+- A Power installed once is discoverable in Aj Crew; after explicit enable it
   contributes servers and skills without re-declaring them in
-  `~/.kiro/settings/mcp.json` or a Kiro Crew skill root — so the duplicate-config
-  drift between Kiro IDE and Kiro Crew can go away for that Power without
+  `~/.kiro/settings/mcp.json` or a Aj Crew skill root — so the duplicate-config
+  drift between Kiro IDE and Aj Crew can go away for that Power without
   auto-activating every install.
 - Nothing changes for a user who has no installed Powers, or who has installed
   Powers but has not enabled any: discovery alone adds no source to the merge.

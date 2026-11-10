@@ -11,7 +11,7 @@ const mockApi = vi.hoisted(() => ({
   mcpApply: vi.fn(),
   mcpGlobalScopes: vi.fn(),
   mcpResetProbeFailures: vi.fn(),
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
 }))
 vi.mock('../api/client', () => ({ api: mockApi }))
 // The path chip copies through the shared util; `true` = the text reached the
@@ -35,7 +35,7 @@ import McpTab from '../pages/overview/McpTab'
 import { MemoryRouter } from 'react-router-dom'
 
 const server = (name: string): McpServer => ({
-  name, command: `${name}-cmd`, status: 'ok', source: 'kirocrew', enabled: true, tools: ['t1'],
+  name, command: `${name}-cmd`, status: 'ok', source: 'ajcrew', enabled: true, tools: ['t1'],
 })
 
 function renderTab() {
@@ -57,7 +57,7 @@ beforeEach(() => {
   // A config with no `connections_ui` key is the shipped default, and it now
   // resolves the gate ON — so the in-place sign-in is available to any managed
   // row unless a test pulls the escape hatch with an explicit false.
-  mockApi.kirocrewConfig.mockResolvedValue({})
+  mockApi.ajcrewConfig.mockResolvedValue({})
 })
 
 describe('McpTab restructure', () => {
@@ -288,7 +288,7 @@ describe('McpTab needs_auth status', () => {
    * screen chat is again the only authorize prompt.
    */
   it('offers an in-place Sign in on a resolvable managed row when connections_ui is on', async () => {
-    mockApi.kirocrewConfig.mockResolvedValue({ connections_ui: true })
+    mockApi.ajcrewConfig.mockResolvedValue({ connections_ui: true })
     mockApi.mcpServers.mockResolvedValue([
       {
         ...remote('needs_auth'),
@@ -332,7 +332,7 @@ describe('McpTab needs_auth status', () => {
     // `connections_ui: false` even a registry-resolvable row must show the same
     // chat guidance a non-registry row does, because that instance has no cards
     // and chat is once again the only authorize prompt.
-    mockApi.kirocrewConfig.mockResolvedValue({ connections_ui: false })
+    mockApi.ajcrewConfig.mockResolvedValue({ connections_ui: false })
     mockApi.mcpServers.mockResolvedValue([
       {
         ...remote('needs_auth'),
@@ -353,7 +353,7 @@ describe('McpTab needs_auth status', () => {
     // A server whose URL is NOT the registry mcp_url does not resolve to a
     // provider, so it never gets a mint control — only the chat guidance, flag
     // on or off.
-    mockApi.kirocrewConfig.mockResolvedValue({ connections_ui: true })
+    mockApi.ajcrewConfig.mockResolvedValue({ connections_ui: true })
     mockApi.mcpServers.mockResolvedValue([
       {
         ...remote('needs_auth'),
@@ -426,7 +426,7 @@ describe('McpTab needs_auth status', () => {
   })
 
   it('offers no in-place sign-in for a user-added server while connections_ui is off', async () => {
-    mockApi.kirocrewConfig.mockResolvedValue({ connections_ui: false })
+    mockApi.ajcrewConfig.mockResolvedValue({ connections_ui: false })
     mockApi.mcpServers.mockResolvedValue([userAdded({ authGrantPresent: false })])
     renderTab()
 
@@ -459,7 +459,7 @@ describe('McpTab needs_auth status', () => {
     mockApi.mcpServers.mockResolvedValue([
       {
         ...remote('needs_auth'),
-        kirocrewManaged: true,
+        ajcrewManaged: true,
         authChallenge: true,
         authGrantPresent: false,
       },
@@ -714,9 +714,9 @@ describe('probe-failure count', () => {
  * This suite pins how the table shows it — present, greyed, badged, its scope
  * toggles inert, one line saying which file to edit, Uninstall still live and
  * honest about what it does — and that nothing changes for enabled rows or for
- * Kiro Crew's own consent-disabled rows (#13075). Which of the two disabled
+ * Aj Crew's own consent-disabled rows (#13075). Which of the two disabled
  * states a row is in comes from the backend's `disabledIn`, never from
- * `enabled` + `kirocrewManaged`.
+ * `enabled` + `ajcrewManaged`.
  */
 describe('McpTab disabled-in-config rows', () => {
   const SHARED_FILE = '~/.kiro/settings/mcp.json'
@@ -724,7 +724,7 @@ describe('McpTab disabled-in-config rows', () => {
     ...server('figma'),
     status: 'disabled',
     enabled: false,
-    kirocrewManaged: false,
+    ajcrewManaged: false,
     disabledIn: 'shared',
     disabledInFile: SHARED_FILE,
     tools: [],
@@ -734,8 +734,8 @@ describe('McpTab disabled-in-config rows', () => {
     ...server('weather'),
     status: 'disabled',
     enabled: false,
-    kirocrewManaged: true,
-    disabledIn: 'kirocrew',
+    ajcrewManaged: true,
+    disabledIn: 'ajcrew',
     disabledInFile: null,
     tools: [],
   })
@@ -892,7 +892,7 @@ describe('McpTab disabled-in-config rows', () => {
     // Not greyed: every cell keeps full opacity, so the row does not read as off.
     for (const cell of Array.from(tr.querySelectorAll('td'))) expect(cell.style.opacity).toBe('')
     // Still inert -- the panel cannot repair the value.
-    for (const scope of ['kirocrew', 'kiroGlobal']) expect(tr.querySelector(`button[data-scope="${scope}"]`)).toBeDisabled()
+    for (const scope of ['ajcrew', 'kiroGlobal']) expect(tr.querySelector(`button[data-scope="${scope}"]`)).toBeDisabled()
   })
 
   it('names the shared MCP config for an invalid value when the backend cannot name the file', async () => {
@@ -933,7 +933,7 @@ describe('McpTab disabled-in-config rows', () => {
     // badges read identically to a screen reader: two unnamed inert buttons.
     // Not the pending-uninstall wording the same styling means on a staged row.
     const names: string[] = []
-    for (const [scope, label] of [['kirocrew', 'Kiro Crew'], ['kiroGlobal', 'Kiro']] as const) {
+    for (const [scope, label] of [['ajcrew', 'Aj Crew'], ['kiroGlobal', 'Kiro']] as const) {
       const badge = tr.querySelector<HTMLButtonElement>(`button[data-scope="${scope}"]`)
       expect(badge, scope).not.toBeNull()
       expect(badge).toBeDisabled()
@@ -957,19 +957,19 @@ describe('McpTab disabled-in-config rows', () => {
   })
 
   it('renders a store-managed server that the shared config disables inert, not as a consent row', async () => {
-    // The dual-scope corner: the entry is in Kiro Crew's store (so the row is
-    // `kirocrewManaged`) but the SHARED config carries the disable. Offering the
+    // The dual-scope corner: the entry is in Aj Crew's store (so the row is
+    // `ajcrewManaged`) but the SHARED config carries the disable. Offering the
     // consent step here would offer a re-enable that cannot land — lifting the
     // store's flag leaves the shared one — so the backend's `disabledIn`
-    // decides, not `kirocrewManaged`.
-    mockApi.mcpServers.mockResolvedValue([disabledInConfig({ kirocrewManaged: true })])
+    // decides, not `ajcrewManaged`.
+    mockApi.mcpServers.mockResolvedValue([disabledInConfig({ ajcrewManaged: true })])
     renderTab()
     await waitFor(() => expect(screen.getByText('figma', { selector: 'code' })).toBeInTheDocument())
     const tr = row('figma')
     expect(tr).toHaveAttribute('data-disabled-in-config', 'true')
     expect(within(tr).getByText('Disabled in config')).toBeInTheDocument()
     expect(within(tr).getByTestId('mcp-disabled-in-config-where')).toBeInTheDocument()
-    expect(tr.querySelector('button[data-scope="kirocrew"]')).toBeDisabled()
+    expect(tr.querySelector('button[data-scope="ajcrew"]')).toBeDisabled()
     // Still the store's entry: the JSON editor keeps its action.
     expect(within(tr).getByRole('button', { name: 'Edit JSON for figma' })).toBeEnabled()
   })
@@ -996,13 +996,13 @@ describe('McpTab disabled-in-config rows', () => {
     const uninstall = within(tr).getByRole('button', { name: 'Uninstall' })
     expect(uninstall).toBeEnabled()
     expect(uninstall).not.toHaveAttribute('title')
-    expect(tr.querySelector('button[data-scope="kirocrew"]')).toBeEnabled()
+    expect(tr.querySelector('button[data-scope="ajcrew"]')).toBeEnabled()
     expect(within(tr).getByText('Online')).toBeInTheDocument()
   })
 
-  it('keeps the controls on a consent-disabled row from Kiro Crew\u2019s own store', async () => {
-    // A registry install or custom add lands disabled in the Kiro Crew scope
-    // until the user enables it — through the Kiro Crew badge + Apply, in THIS
+  it('keeps the controls on a consent-disabled row from Aj Crew\u2019s own store', async () => {
+    // A registry install or custom add lands disabled in the Aj Crew scope
+    // until the user enables it — through the Aj Crew badge + Apply, in THIS
     // table. That row is disabled too, and counts as such, but it is not
     // "disabled in config" and must keep every control it had.
     mockApi.mcpServers.mockResolvedValue([consentDisabled(), disabledInConfig()])
@@ -1014,10 +1014,10 @@ describe('McpTab disabled-in-config rows', () => {
     expect(within(tr).queryByText('Disabled in config')).not.toBeInTheDocument()
     expect(within(tr).queryByTestId('mcp-disabled-in-config-where')).not.toBeInTheDocument()
     expect(within(tr).getByRole('button', { name: 'Uninstall' })).toBeEnabled()
-    const kirocrew = tr.querySelector<HTMLButtonElement>('button[data-scope="kirocrew"]')
-    expect(kirocrew).toBeEnabled()
+    const ajcrew = tr.querySelector<HTMLButtonElement>('button[data-scope="ajcrew"]')
+    expect(ajcrew).toBeEnabled()
     // The consent step still stages a pending change.
-    fireEvent.click(kirocrew!)
+    fireEvent.click(ajcrew!)
     await waitFor(() => expect(screen.getByText(/1 pending change/)).toBeInTheDocument())
   })
 })
@@ -1091,7 +1091,7 @@ describe('McpTab badge hints are keyboard/AT-reachable (#8359)', () => {
 })
 
 /**
- * #13076: the Kiro Crew badge IS the per-server enable/disable for Kiro Crew
+ * #13076: the Aj Crew badge IS the per-server enable/disable for Aj Crew
  * sessions, but a coloured word did not read as a control. Every scope badge
  * is now a switch: it says its state to assistive tech (role + aria-checked),
  * shows it with a glyph rather than colour alone, and its hover text names
@@ -1110,17 +1110,17 @@ describe('McpTab scope badges are on/off switches (#13076)', () => {
     mockApi.mcpServers.mockResolvedValue([server('alpha')])
     renderTab()
     await waitFor(() => expect(screen.getByText('alpha', { selector: 'code' })).toBeInTheDocument())
-    const kc = switchFor('alpha', 'kirocrew')
+    const kc = switchFor('alpha', 'ajcrew')
     expect(kc).toHaveAttribute('role', 'switch')
     expect(kc).toHaveAttribute('aria-checked', 'true')
-    expect(kc.getAttribute('title')).toBe('Kiro Crew: on (click to turn off, then Apply)')
+    expect(kc.getAttribute('title')).toBe('Aj Crew: on (click to turn off, then Apply)')
     expect(kc.querySelector('[data-testid="mcp-scope-switch-glyph"]')).toHaveAttribute('data-on', 'true')
-    expect(within(row('alpha')).getByRole('switch', { name: /^Kiro Crew: on/ })).toBe(kc)
+    expect(within(row('alpha')).getByRole('switch', { name: /^Aj Crew: on/ })).toBe(kc)
 
     fireEvent.click(kc)
-    await waitFor(() => expect(switchFor('alpha', 'kirocrew')).toHaveAttribute('aria-checked', 'false'))
-    const off = switchFor('alpha', 'kirocrew')
-    expect(off.getAttribute('title')).toBe('Kiro Crew: turns off when you press Apply (click to revert)')
+    await waitFor(() => expect(switchFor('alpha', 'ajcrew')).toHaveAttribute('aria-checked', 'false'))
+    const off = switchFor('alpha', 'ajcrew')
+    expect(off.getAttribute('title')).toBe('Aj Crew: turns off when you press Apply (click to revert)')
     expect(off.querySelector('[data-testid="mcp-scope-switch-glyph"]')).toHaveAttribute('data-on', 'false')
     expect(screen.getByText(/1 pending change/)).toBeInTheDocument()
   })
@@ -1136,15 +1136,15 @@ describe('McpTab scope badges are on/off switches (#13076)', () => {
 
   it('a disabled-in-config row staged for uninstall still reads off', async () => {
     mockApi.mcpServers.mockResolvedValue([{
-      ...server('figma'), status: 'disabled', enabled: false, kirocrewManaged: false,
+      ...server('figma'), status: 'disabled', enabled: false, ajcrewManaged: false,
       disabledIn: 'shared', disabledInFile: '~/.kiro/settings/mcp.json', tools: [],
-      presence: { kirocrew: true, kiroGlobal: true },
+      presence: { ajcrew: true, kiroGlobal: true },
     }])
     renderTab()
     await waitFor(() => expect(screen.getByText('figma', { selector: 'code' })).toBeInTheDocument())
     fireEvent.click(within(row('figma')).getByRole('button', { name: 'Uninstall' }))
     await waitFor(() => expect(screen.getByText(/1 pending change/)).toBeInTheDocument())
-    for (const scope of ['kirocrew', 'kiroGlobal']) {
+    for (const scope of ['ajcrew', 'kiroGlobal']) {
       const sw = switchFor('figma', scope)
       expect(sw).toBeDisabled()
       expect(sw).toHaveAttribute('aria-checked', 'false')

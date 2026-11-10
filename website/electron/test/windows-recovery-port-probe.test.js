@@ -195,7 +195,7 @@ function scriptedForceStop({ command, confirms }) {
       getCommand: async () => command,
       kill: async () => {},
       sleep: async () => {},
-      isKirocrew: (cmd) => cmd === "kirocrew gateway --port 5476",
+      isAjcrew: (cmd) => cmd === "ajcrew gateway --port 5476",
       failClosedOnProbeError: true,
       confirmFree: async (port) => { checks.push(port); return confirms; },
     }),
@@ -203,7 +203,7 @@ function scriptedForceStop({ command, confirms }) {
 }
 
 for (const [label, command] of [
-  ["after killing our own gateway", "kirocrew gateway --port 5476"],
+  ["after killing our own gateway", "ajcrew gateway --port 5476"],
   ["after skipping a foreign holder", "ssh -L 5476:localhost:5476 build-host"],
 ]) {
   test(`an empty re-probe ${label} is checked with a bind before it reads as free`, async () => {
@@ -318,10 +318,10 @@ test("an empty re-probe after a kill waits for a refused bind too", async () => 
   const bind = refusingThen(2);
   const result = await forceStopPort(5476, {
     getListenPids: async () => answers.shift() ?? [],
-    getCommand: async () => "kirocrew gateway --port 5476",
+    getCommand: async () => "ajcrew gateway --port 5476",
     kill: async () => {},
     sleep: async () => {},
-    isKirocrew: (cmd) => cmd === "kirocrew gateway --port 5476",
+    isAjcrew: (cmd) => cmd === "ajcrew gateway --port 5476",
     failClosedOnProbeError: true,
     confirmFree: bind.confirmFree,
     confirmFreeWaitMs: 10_000,

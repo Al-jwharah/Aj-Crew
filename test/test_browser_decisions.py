@@ -30,15 +30,15 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.browser_harness import decide as decide_mod
-from kiro_crew.browser_harness import ops
-from kiro_crew.config.sections import (
+from aj_crew.browser_harness import decide as decide_mod
+from aj_crew.browser_harness import ops
+from aj_crew.config.sections import (
     DECISION_PROVIDER_ENDPOINT_DEFAULT,
     DecisionProviderConfig,
     DecisionsConfig,
 )
-from kiro_crew.decisions import gate
-from kiro_crew.decisions.types import Answer, Box, Choice, ImageAsset, Noul
+from aj_crew.decisions import gate
+from aj_crew.decisions.types import Answer, Box, Choice, ImageAsset, Noul
 
 SESSION = "dashboard:chat-1"
 
@@ -172,7 +172,7 @@ def _clear_answers(questions) -> dict[str, Answer]:
 def seam(tmp_path, monkeypatch):
     """The real gate over a consented keystone and a recording provider."""
     keystone = tmp_path / "decisions_consent.json"
-    monkeypatch.setattr("kiro_crew.config.loader.decisions_consent_path", lambda: keystone)
+    monkeypatch.setattr("aj_crew.config.loader.decisions_consent_path", lambda: keystone)
     keystone.write_text(
         json.dumps({"enabled": True, "endpoint": DECISION_PROVIDER_ENDPOINT_DEFAULT}),
         encoding="utf-8",
@@ -190,9 +190,9 @@ def seam(tmp_path, monkeypatch):
 
     monkeypatch.setattr(gate, "_snapshot", _config)
     monkeypatch.setattr(
-        "kiro_crew.decisions.capability.is_decisions_denied", lambda *a, **k: state.denied
+        "aj_crew.decisions.capability.is_decisions_denied", lambda *a, **k: state.denied
     )
-    import kiro_crew.decisions.impl_systemone as impl
+    import aj_crew.decisions.impl_systemone as impl
 
     monkeypatch.setattr(impl, "SystemOneProvider", lambda _provider: state.provider)
 
@@ -274,7 +274,7 @@ def test_no_model_chosen_does_not_even_read_the_keystone(seam, tmp_path, monkeyp
     def _boom(*_a, **_k):
         raise AssertionError("the keystone was read with no decision model chosen")
 
-    monkeypatch.setattr("kiro_crew.decisions.consent.load_state", _boom)
+    monkeypatch.setattr("aj_crew.decisions.consent.load_state", _boom)
     expected, _ = _baseline("click", {"ref": "e1"}, tmp_path)
     assert _run("click", {"ref": "e1"}, _ctx(FakePage(), tmp=tmp_path)) == expected
 
@@ -499,7 +499,7 @@ def test_no_screenshot_while_the_person_holds_the_browser(seam, tmp_path):
 
 def test_a_local_model_is_never_sent_a_screenshot(seam, tmp_path, monkeypatch):
     seam.write(browser_images=True)
-    from kiro_crew.decisions import provider as provider_mod
+    from aj_crew.decisions import provider as provider_mod
 
     monkeypatch.setattr(
         provider_mod, "select", lambda *a, **k: provider_mod.get(provider_mod.PROVIDER_LOCAL)
@@ -609,7 +609,7 @@ def test_a_granted_image_request_reaches_the_provider_with_its_assets(seam):
 
 
 def test_box_and_images_on_the_wire():
-    from kiro_crew.decisions import impl_systemone as impl
+    from aj_crew.decisions import impl_systemone as impl
 
     body = impl._to_wire(
         {"screen": "a"},
@@ -646,7 +646,7 @@ def test_box_and_images_on_the_wire():
     ids=["no-area", "out-of-range", "missing-edge"],
 )
 def test_a_malformed_box_is_a_protocol_error(box):
-    from kiro_crew.decisions import impl_systemone as impl
+    from aj_crew.decisions import impl_systemone as impl
 
     raw = {"answers": {"where": {"type": "box", "box": box, "confidence": 0.8}}}
     with pytest.raises(impl.ProviderProtocolError):
@@ -659,14 +659,14 @@ def test_a_malformed_box_is_a_protocol_error(box):
     ids=["empty", "gif", "type"],
 )
 def test_an_unsendable_image_is_a_protocol_error(asset):
-    from kiro_crew.decisions import impl_systemone as impl
+    from aj_crew.decisions import impl_systemone as impl
 
     with pytest.raises(impl.ProviderProtocolError):
         impl._to_wire("s", "jev-latest", [Noul(id="n", prompt="?")], {"a": asset})
 
 
 def test_the_image_header_is_sent_only_with_an_image_or_a_box(monkeypatch):
-    from kiro_crew.decisions import impl_systemone as impl
+    from aj_crew.decisions import impl_systemone as impl
 
     sent: list[dict] = []
 
@@ -704,7 +704,7 @@ def test_the_image_header_is_sent_only_with_an_image_or_a_box(monkeypatch):
 
 
 def test_cycling_consent_keeps_an_explicit_no_to_outlines(seam):
-    from kiro_crew.decisions import consent
+    from aj_crew.decisions import consent
 
     consent.save_enabled(True, endpoint=DECISION_PROVIDER_ENDPOINT_DEFAULT, browser=False)
     consent.save_enabled(False, endpoint=DECISION_PROVIDER_ENDPOINT_DEFAULT)
@@ -713,7 +713,7 @@ def test_cycling_consent_keeps_an_explicit_no_to_outlines(seam):
 
 
 def test_cycling_consent_keeps_an_explicit_no_to_screenshots(seam):
-    from kiro_crew.decisions import consent
+    from aj_crew.decisions import consent
 
     consent.save_enabled(True, endpoint=DECISION_PROVIDER_ENDPOINT_DEFAULT, browser_images=False)
     state = consent.save_enabled(False, endpoint=DECISION_PROVIDER_ENDPOINT_DEFAULT)
@@ -725,7 +725,7 @@ def test_cycling_consent_keeps_an_explicit_no_to_screenshots(seam):
 @pytest.mark.parametrize("scope", ["browser", "browser_images"])
 def test_a_no_sent_while_consent_is_off_survives_turning_it_back_on(seam, scope):
     # Two tabs: one turns consent off, the other's scope-only "no" lands after it.
-    from kiro_crew.decisions import consent
+    from aj_crew.decisions import consent
 
     consent.save_enabled(True, endpoint=DECISION_PROVIDER_ENDPOINT_DEFAULT)
     consent.save_enabled(False, endpoint=DECISION_PROVIDER_ENDPOINT_DEFAULT)
@@ -738,7 +738,7 @@ def test_a_no_sent_while_consent_is_off_survives_turning_it_back_on(seam, scope)
 
 
 def test_screenshots_read_granted_when_absent_and_a_yes_returns_to_the_default(seam):
-    from kiro_crew.decisions import consent
+    from aj_crew.decisions import consent
 
     assert consent.consented_browser_images({}) is True
     consent.save_enabled(True, endpoint=DECISION_PROVIDER_ENDPOINT_DEFAULT, browser_images=True)
@@ -747,7 +747,7 @@ def test_screenshots_read_granted_when_absent_and_a_yes_returns_to_the_default(s
 
 
 def test_cycling_consent_returns_a_yes_to_the_default(seam):
-    from kiro_crew.decisions import consent
+    from aj_crew.decisions import consent
 
     consent.save_enabled(True, endpoint=DECISION_PROVIDER_ENDPOINT_DEFAULT, browser=True)
     state = consent.save_enabled(False, endpoint=DECISION_PROVIDER_ENDPOINT_DEFAULT)
@@ -863,7 +863,7 @@ def test_stalled_work_before_the_op_is_todays_result(seam, tmp_path, monkeypatch
 
 
 def test_the_route_gives_the_hooks_their_own_headroom():
-    from kiro_crew.browser_harness import budgets
+    from aj_crew.browser_harness import budgets
 
     assert decide_mod.PRE_OP_BUDGET_S + decide_mod.VERIFY_BUDGET_S == budgets.DECISION_HEADROOM_S
     assert budgets.SHIM_FAST_TIMEOUT_S > budgets.GATEWAY_FAST_WORST_S

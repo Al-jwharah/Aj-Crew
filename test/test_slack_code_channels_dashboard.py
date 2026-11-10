@@ -16,8 +16,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.slack.code_channels import dashboard_view
-from kiro_crew.slack.code_channels.dashboard_view import (
+from aj_crew.slack.code_channels import dashboard_view
+from aj_crew.slack.code_channels.dashboard_view import (
     binding_status,
     code_channel_view,
     code_channel_views,
@@ -125,7 +125,7 @@ class TestViews:
     def test_gate_shut_never_reads_the_store(
         self, gate: dict[str, Any], monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.slack.code_channels import store as store_mod
+        from aj_crew.slack.code_channels import store as store_mod
 
         gate["on"] = False
         monkeypatch.setattr(store_mod, "store", lambda: pytest.fail("store read"))
@@ -134,7 +134,7 @@ class TestViews:
     def test_an_unread_store_yields_nothing_and_touches_no_disk(
         self, gate: dict[str, Any], tmp_path: Any, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.slack.code_channels.store import CodeChannelStore, set_store
+        from aj_crew.slack.code_channels.store import CodeChannelStore, set_store
 
         cold = CodeChannelStore(tmp_path / "slack-code-channels.json")
         monkeypatch.setattr(cold, "load", lambda: pytest.fail("loaded on the caller"))
@@ -151,8 +151,8 @@ class TestViews:
     ) -> None:
         import asyncio
 
-        from kiro_crew.slack import handler
-        from kiro_crew.slack.code_channels.store import CodeChannelStore, set_store
+        from aj_crew.slack import handler
+        from aj_crew.slack.code_channels.store import CodeChannelStore, set_store
 
         warm = CodeChannelStore(tmp_path / "slack-code-channels.json")
         warm.put_binding(_store_binding("chat-1-1"))
@@ -203,7 +203,7 @@ class TestPendingStore:
     ROWS = [{"key": "linked", "slack_linked": True}, {"key": "plain", "slack_linked": False}]
 
     def _cold(self, tmp_path: Any, monkeypatch: pytest.MonkeyPatch) -> Any:
-        from kiro_crew.slack.code_channels.store import CodeChannelStore, set_store
+        from aj_crew.slack.code_channels.store import CodeChannelStore, set_store
 
         cold = CodeChannelStore(tmp_path / "slack-code-channels.json")
         monkeypatch.setattr(cold, "load", lambda: None)
@@ -213,7 +213,7 @@ class TestPendingStore:
     def test_unread_store_marks_only_slack_linked_rows_and_mutates_nothing(
         self, gate: dict[str, Any], tmp_path: Any, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.slack.code_channels.store import set_store
+        from aj_crew.slack.code_channels.store import set_store
 
         self._cold(tmp_path, monkeypatch)
         try:
@@ -229,7 +229,7 @@ class TestPendingStore:
         self, gate: dict[str, Any], tmp_path: Any, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A Slack-born session is not slack_linked, but it can still be a code channel's."""
-        from kiro_crew.slack.code_channels.store import set_store
+        from aj_crew.slack.code_channels.store import set_store
 
         self._cold(tmp_path, monkeypatch)
         try:
@@ -245,7 +245,7 @@ class TestPendingStore:
     def test_gate_shut_marks_nothing(
         self, gate: dict[str, Any], tmp_path: Any, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.slack.code_channels.store import set_store
+        from aj_crew.slack.code_channels.store import set_store
 
         gate["on"] = False
         self._cold(tmp_path, monkeypatch)
@@ -258,7 +258,7 @@ class TestPendingStore:
     def test_a_read_store_with_no_bindings_marks_nothing(
         self, gate: dict[str, Any], tmp_path: Any
     ) -> None:
-        from kiro_crew.slack.code_channels.store import CodeChannelStore, set_store
+        from aj_crew.slack.code_channels.store import CodeChannelStore, set_store
 
         warm = CodeChannelStore(tmp_path / "slack-code-channels.json")
         warm.load()
@@ -270,7 +270,7 @@ class TestPendingStore:
             set_store(None)
 
     def test_app_ws_rows_never_carry_the_marker(self) -> None:
-        from kiro_crew.dashboard import ws_event_scope
+        from aj_crew.dashboard import ws_event_scope
 
         row = {"key": "linked", "code_channel_pending": True}
         assert "code_channel_pending" not in ws_event_scope._withhold_from_apps(row)
@@ -285,9 +285,9 @@ def bound_state(
 ) -> tuple[Any, Any, Any]:
     from chat_test_helpers import _make_state
 
-    from kiro_crew.slack.code_channels.store import CodeChannelStore, set_store
+    from aj_crew.slack.code_channels.store import CodeChannelStore, set_store
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     bound = state.get_or_create_slot(None)
     plain = state.get_or_create_slot(None)
@@ -300,7 +300,7 @@ def bound_state(
 
 
 def _store_binding(session_key: str) -> Any:
-    from kiro_crew.slack.code_channels.store import Binding
+    from aj_crew.slack.code_channels.store import Binding
 
     return Binding(
         channel_id="C0CODE1",
@@ -317,7 +317,7 @@ class TestStoredRecord:
     def test_archive_stamp_reads_archived_on_the_row(
         self, bound_state: tuple[Any, Any, Any]
     ) -> None:
-        from kiro_crew.slack.code_channels.store import store
+        from aj_crew.slack.code_channels.store import store
 
         state, bound, _plain = bound_state
         store().update_binding("C0CODE1", archived_at=1.0, wrapped_up_at=1.0)
@@ -326,7 +326,7 @@ class TestStoredRecord:
         assert row["code_channel"]["channel_name"] == "fix-login"
 
     def test_wrap_up_stamp_reads_wrapped_up(self, bound_state: tuple[Any, Any, Any]) -> None:
-        from kiro_crew.slack.code_channels.store import store
+        from aj_crew.slack.code_channels.store import store
 
         state, bound, _plain = bound_state
         store().update_binding("C0CODE1", wrapped_up_at=5.0)
@@ -385,8 +385,8 @@ class TestViewerScoping:
     ) -> None:
         from chat_test_helpers import _make_app
 
-        from kiro_crew.dashboard import session_control
-        from kiro_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
+        from aj_crew.dashboard import session_control
+        from aj_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
 
         state, bound, plain = bound_state
         # The member owns the PLAIN session only.
@@ -444,7 +444,7 @@ class TestViewerScoping:
     def test_app_ws_rows_drop_it_even_on_a_row_the_app_may_see(
         self, bound_state: tuple[Any, Any, Any], monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.dashboard import ws_event_scope
+        from aj_crew.dashboard import ws_event_scope
 
         state, bound, plain = bound_state
         monkeypatch.setattr(ws_event_scope, "_slot_visible", lambda *_a: True)

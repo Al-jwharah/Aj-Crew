@@ -48,8 +48,8 @@ Neither gap is represented by a skipped test. A skipped test counts as a pass an
 reads as coverage on the board, so the gaps are stated here in prose and in the
 pull request instead, and only the leg that actually runs is shipped as a test.
 
-Gating matches the leak module: ``KIROCREW_E2E`` lifts the module skip, and
-``KIROCREW_E2E_REQUIRE`` turns an unmet precondition into a failure instead of a
+Gating matches the leak module: ``AJCREW_E2E`` lifts the module skip, and
+``AJCREW_E2E_REQUIRE`` turns an unmet precondition into a failure instead of a
 skip that would count as a pass. See ``docs/ci/e2e-gate.md``.
 """
 
@@ -86,11 +86,11 @@ from e2e.test_process_leak_invariant import (
     measured_gateway,
 )
 
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("KIROCREW_E2E"),
-    reason="Real-process chaos harness. Set KIROCREW_E2E=1 to run.",
+    not os.environ.get("AJCREW_E2E"),
+    reason="Real-process chaos harness. Set AJCREW_E2E=1 to run.",
 )
 
 #: Sessions opened before the kill. Two rather than one so the run also shows

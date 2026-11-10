@@ -23,8 +23,8 @@ import sqlite3
 
 import pytest
 
-from kiro_crew.knowledge.folder_watcher import FolderWatcher
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge.folder_watcher import FolderWatcher
+from aj_crew.knowledge.store import KnowledgeStore
 
 # A nested def / lambda is a separate execution frame -- a sync helper or a thread
 # target -- so a call inside one is not running on the loop.
@@ -33,7 +33,7 @@ _NESTED_SCOPES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)
 _WATCHER_SRC = (
     pathlib.Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "knowledge"
     / "folder_watcher.py"
 )
@@ -628,7 +628,7 @@ async def test_scan_records_the_committed_group_on_the_state_row(tmp_path):
     """
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.knowledge.ingestion import IngestionPipeline
+    from aj_crew.knowledge.ingestion import IngestionPipeline
 
     store = KnowledgeStore(str(tmp_path / "knowledge.db"))
     try:

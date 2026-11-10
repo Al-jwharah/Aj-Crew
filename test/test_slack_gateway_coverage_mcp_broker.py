@@ -1,4 +1,4 @@
-"""Coverage for ``kiro_crew.slack.gateway``: the MCP-gateway control plane.
+"""Coverage for ``aj_crew.slack.gateway``: the MCP-gateway control plane.
 
 ``_init_mcp_gateway``'s broker startup, its early returns and the rewriter-failure
 fallback; the retry after a failed start; ``_stop_mcp_broker``, ``_apply_mcp_stub`` and
@@ -16,9 +16,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from slack_gateway_coverage_helpers import _make_orchestrator, _mock_dashboard_state
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.slack import gateway as gw
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.slack import gateway as gw
+from aj_crew.testing.wait import await_until, finished
 
 # ═════════════════════════════════════════════════════════════════════════
 # MCP-gateway control plane
@@ -41,7 +41,7 @@ class TestInitMcpGateway:
         orch = _make_orchestrator()
         orch._cfg.mcp_gateway.enabled = False
         orch._cfg.mcp_gateway.stub_servers = []
-        with patch("kiro_crew.slack.gateway.is_gateway_supported") as probe:
+        with patch("aj_crew.slack.gateway.is_gateway_supported") as probe:
             await orch._init_mcp_gateway()
         probe.assert_not_called()
         assert orch._mcp_gateway_manager is None
@@ -58,7 +58,7 @@ class TestInitMcpGateway:
         orch = _make_orchestrator()
         orch._cfg.mcp_gateway.enabled = False
         orch._cfg.mcp_gateway.stub_servers = ["alpha-mcp"]
-        with patch("kiro_crew.slack.gateway.is_gateway_supported", return_value=False) as probe:
+        with patch("aj_crew.slack.gateway.is_gateway_supported", return_value=False) as probe:
             await orch._init_mcp_gateway()
         # The routed server reached the platform probe; the unsupported answer
         # is what keeps the broker down here.
@@ -91,7 +91,7 @@ class TestInitMcpGateway:
             calls.append("init")
             assert stub_servers == frozenset({"alpha-mcp"})
 
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=orch._cfg):
+        with patch("aj_crew.config.loader.AjCrewConfig.load", return_value=orch._cfg):
             with (
                 patch.object(orch, "_stop_mcp_broker", _stop),
                 patch.object(orch, "_init_mcp_gateway", _init),
@@ -117,7 +117,7 @@ class TestInitMcpGateway:
         async def _init() -> None:
             calls.append("init")
 
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=orch._cfg):
+        with patch("aj_crew.config.loader.AjCrewConfig.load", return_value=orch._cfg):
             with (
                 patch.object(orch, "_stop_mcp_broker", _stop),
                 patch.object(orch, "_init_mcp_gateway", _init),
@@ -130,8 +130,8 @@ class TestInitMcpGateway:
     async def test_unsupported_platform_returns_early(self):
         orch = _make_orchestrator()
         orch._cfg.mcp_gateway.enabled = True
-        with patch("kiro_crew.slack.gateway.is_gateway_supported", return_value=False):
-            with patch("kiro_crew.slack.gateway.rewrite_agents") as rewriter:
+        with patch("aj_crew.slack.gateway.is_gateway_supported", return_value=False):
+            with patch("aj_crew.slack.gateway.rewrite_agents") as rewriter:
                 await orch._init_mcp_gateway()
         rewriter.assert_not_called()
         assert orch._mcp_gateway_manager is None
@@ -141,13 +141,13 @@ class TestInitMcpGateway:
         orch = _make_orchestrator()
         orch._cfg.mcp_gateway.enabled = True
         with (
-            patch("kiro_crew.slack.gateway.is_gateway_supported", return_value=True),
+            patch("aj_crew.slack.gateway.is_gateway_supported", return_value=True),
             patch(
-                "kiro_crew.slack.gateway.rewrite_kwargs",
+                "aj_crew.slack.gateway.rewrite_kwargs",
                 side_effect=_gateway_rewrite_inputs(tmp_path),
             ),
-            patch("kiro_crew.slack.gateway.rewrite_agents", side_effect=RuntimeError("bad spec")),
-            patch("kiro_crew.slack.gateway.GatewayManager") as mgr_cls,
+            patch("aj_crew.slack.gateway.rewrite_agents", side_effect=RuntimeError("bad spec")),
+            patch("aj_crew.slack.gateway.GatewayManager") as mgr_cls,
         ):
             await orch._init_mcp_gateway()
         mgr_cls.assert_not_called()
@@ -163,16 +163,16 @@ class TestInitMcpGateway:
         manager = MagicMock()
         manager.start = AsyncMock(return_value=True)
         with (
-            patch("kiro_crew.slack.gateway.is_gateway_supported", return_value=True),
+            patch("aj_crew.slack.gateway.is_gateway_supported", return_value=True),
             patch(
-                "kiro_crew.slack.gateway.rewrite_kwargs",
+                "aj_crew.slack.gateway.rewrite_kwargs",
                 side_effect=_gateway_rewrite_inputs(tmp_path),
             ),
             patch(
-                "kiro_crew.slack.gateway.rewrite_agents",
+                "aj_crew.slack.gateway.rewrite_agents",
                 return_value=(None, {"MC_MCP_TARGET_X": "1"}),
             ),
-            patch("kiro_crew.slack.gateway.GatewayManager", return_value=manager),
+            patch("aj_crew.slack.gateway.GatewayManager", return_value=manager),
         ):
             await orch._init_mcp_gateway()
         assert orch._mcp_gateway_manager is manager
@@ -192,13 +192,13 @@ class TestInitMcpGateway:
         manager = MagicMock()
         manager.start = AsyncMock(return_value=True)
         with (
-            patch("kiro_crew.slack.gateway.is_gateway_supported", return_value=True),
+            patch("aj_crew.slack.gateway.is_gateway_supported", return_value=True),
             patch(
-                "kiro_crew.slack.gateway.rewrite_kwargs",
+                "aj_crew.slack.gateway.rewrite_kwargs",
                 side_effect=_gateway_rewrite_inputs(tmp_path),
             ),
-            patch("kiro_crew.slack.gateway.rewrite_agents", return_value=(None, {})) as rewriter,
-            patch("kiro_crew.slack.gateway.GatewayManager", return_value=manager),
+            patch("aj_crew.slack.gateway.rewrite_agents", return_value=(None, {})) as rewriter,
+            patch("aj_crew.slack.gateway.GatewayManager", return_value=manager),
         ):
             await orch._init_mcp_gateway(stub_servers=frozenset({"alpha-mcp"}))
 
@@ -225,15 +225,15 @@ class TestInitMcpGateway:
         manager = MagicMock()
         manager.start = AsyncMock(return_value=True)
         with (
-            patch("kiro_crew.slack.gateway.is_gateway_supported", return_value=True),
+            patch("aj_crew.slack.gateway.is_gateway_supported", return_value=True),
             patch(
-                "kiro_crew.slack.gateway.rewrite_kwargs",
+                "aj_crew.slack.gateway.rewrite_kwargs",
                 side_effect=_gateway_rewrite_inputs(tmp_path),
             ),
-            patch("kiro_crew.slack.gateway.rewrite_agents", return_value=(None, {})),
-            patch("kiro_crew.slack.gateway.GatewayManager", return_value=manager),
+            patch("aj_crew.slack.gateway.rewrite_agents", return_value=(None, {})),
+            patch("aj_crew.slack.gateway.GatewayManager", return_value=manager),
         ):
-            with caplog.at_level(logging.INFO, logger="kiro_crew.slack.gateway"):
+            with caplog.at_level(logging.INFO, logger="aj_crew.slack.gateway"):
                 await orch._init_mcp_gateway(stub_servers=frozenset({"alpha-mcp"}))
 
         ready = [r for r in caplog.records if "broker ready" in r.getMessage()]
@@ -257,13 +257,13 @@ class TestInitMcpGateway:
         manager.start = AsyncMock(return_value=False)  # transient failure
         manager.shutdown = AsyncMock()
         with (
-            patch("kiro_crew.slack.gateway.is_gateway_supported", return_value=True),
+            patch("aj_crew.slack.gateway.is_gateway_supported", return_value=True),
             patch(
-                "kiro_crew.slack.gateway.rewrite_kwargs",
+                "aj_crew.slack.gateway.rewrite_kwargs",
                 side_effect=_gateway_rewrite_inputs(tmp_path),
             ),
-            patch("kiro_crew.slack.gateway.rewrite_agents", return_value=(None, {})),
-            patch("kiro_crew.slack.gateway.GatewayManager", return_value=manager),
+            patch("aj_crew.slack.gateway.rewrite_agents", return_value=(None, {})),
+            patch("aj_crew.slack.gateway.GatewayManager", return_value=manager),
         ):
             await orch._init_mcp_gateway()
 
@@ -282,13 +282,13 @@ class TestInitMcpGateway:
         manager.start = AsyncMock(return_value=False)
         manager.shutdown = AsyncMock()
         with (
-            patch("kiro_crew.slack.gateway.is_gateway_supported", return_value=True),
+            patch("aj_crew.slack.gateway.is_gateway_supported", return_value=True),
             patch(
-                "kiro_crew.slack.gateway.rewrite_kwargs",
+                "aj_crew.slack.gateway.rewrite_kwargs",
                 side_effect=_gateway_rewrite_inputs(tmp_path),
             ),
-            patch("kiro_crew.slack.gateway.rewrite_agents", return_value=(None, {})),
-            patch("kiro_crew.slack.gateway.GatewayManager", return_value=manager),
+            patch("aj_crew.slack.gateway.rewrite_agents", return_value=(None, {})),
+            patch("aj_crew.slack.gateway.GatewayManager", return_value=manager),
         ):
             await orch._init_mcp_gateway()
         assert orch._mcp_gateway_manager is None
@@ -320,20 +320,20 @@ class TestFailedMcpBrokerStartIsRetried:
         the process-wide refresher slot.
         """
         stack.enter_context(
-            patch("kiro_crew.slack.gateway.is_gateway_supported", return_value=True)
+            patch("aj_crew.slack.gateway.is_gateway_supported", return_value=True)
         )
         stack.enter_context(
             patch(
-                "kiro_crew.slack.gateway.rewrite_kwargs",
+                "aj_crew.slack.gateway.rewrite_kwargs",
                 side_effect=_gateway_rewrite_inputs(tmp_path),
             )
         )
         stack.enter_context(
-            patch("kiro_crew.slack.gateway.rewrite_agents", return_value=(None, {}))
+            patch("aj_crew.slack.gateway.rewrite_agents", return_value=(None, {}))
         )
-        stack.enter_context(patch("kiro_crew.slack.gateway.GatewayManager", manager_cls))
+        stack.enter_context(patch("aj_crew.slack.gateway.GatewayManager", manager_cls))
         return stack.enter_context(
-            patch("kiro_crew.mcp_gateway.overlay_refresh.set_overlay_refresher")
+            patch("aj_crew.mcp_gateway.overlay_refresh.set_overlay_refresher")
         )
 
     @pytest.mark.asyncio
@@ -354,7 +354,7 @@ class TestFailedMcpBrokerStartIsRetried:
             stack.enter_context(
                 patch.object(orch, "_mcp_gateway_start_retry_delay", return_value=0.0)
             )
-            stack.enter_context(caplog.at_level(logging.INFO, logger="kiro_crew.slack.gateway"))
+            stack.enter_context(caplog.at_level(logging.INFO, logger="aj_crew.slack.gateway"))
 
             await orch._init_mcp_gateway()
             assert orch._mcp_gateway_manager is None, "a failed start published a broker"
@@ -471,7 +471,7 @@ class TestFailedMcpBrokerStartIsRetried:
         with contextlib.ExitStack() as stack:
             self._broker_seams(stack, tmp_path, MagicMock(side_effect=_build))
             stack.enter_context(
-                patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=orch._cfg)
+                patch("aj_crew.config.loader.AjCrewConfig.load", return_value=orch._cfg)
             )
             await orch._init_mcp_gateway()
             await finished(orch._apply_mcp_gateway_enabled(False), "the sharing toggle")
@@ -528,9 +528,9 @@ class TestStopAndApplyMcpBroker:
 
         orch._init_mcp_gateway = _init_that_must_not_run
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.mcp_gateway.stub_servers = ["beta", "alpha"]
-        with patch.object(KiroCrewConfig, "load", return_value=cfg):
+        with patch.object(AjCrewConfig, "load", return_value=cfg):
             out = await orch._apply_mcp_stub()
         assert out == {
             "applied": False,
@@ -555,9 +555,9 @@ class TestStopAndApplyMcpBroker:
 
         orch._init_mcp_gateway = _init_that_must_not_run
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.mcp_gateway.stub_servers = ["alpha"]
-        with patch.object(KiroCrewConfig, "load", return_value=cfg):
+        with patch.object(AjCrewConfig, "load", return_value=cfg):
             out = await orch._apply_mcp_stub()
 
         old.shutdown.assert_not_awaited()
@@ -600,8 +600,8 @@ class TestMcpBrokerRefreshPrefetchAndPersistArms:
         orch = _make_orchestrator()
         orch._mcp_target_env = {}
         orch._prefetch_mcp_resolutions = AsyncMock()
-        fresh = KiroCrewConfig()
-        with patch.object(gw.KiroCrewConfig, "load", return_value=fresh):
+        fresh = AjCrewConfig()
+        with patch.object(gw.AjCrewConfig, "load", return_value=fresh):
             result = await orch._refresh_mcp_resolutions()
         assert result == {"ok": False, "reason": "no_targets", "resolved": {}}
         assert orch._cfg is fresh
@@ -610,14 +610,14 @@ class TestMcpBrokerRefreshPrefetchAndPersistArms:
     @pytest.mark.asyncio
     async def test_a_refresh_forces_a_pass_and_names_the_ready_packages(self):
         orch = _make_orchestrator()
-        orch._mcp_target_env = {"KIROCREW_MCP_TARGET_A": "npx a"}
+        orch._mcp_target_env = {"AJCREW_MCP_TARGET_A": "npx a"}
         outcomes = {"b": "failed", "a": "ready"}
         orch._prefetch_mcp_resolutions = AsyncMock(return_value=outcomes)
-        with patch.object(gw.KiroCrewConfig, "load", return_value=KiroCrewConfig()):
+        with patch.object(gw.AjCrewConfig, "load", return_value=AjCrewConfig()):
             result = await orch._refresh_mcp_resolutions()
         assert result == {"ok": True, "resolved": outcomes, "ready": ["a"]}
         orch._prefetch_mcp_resolutions.assert_awaited_once_with(
-            {"KIROCREW_MCP_TARGET_A": "npx a"}, force=True
+            {"AJCREW_MCP_TARGET_A": "npx a"}, force=True
         )
 
     @pytest.mark.asyncio
@@ -625,7 +625,7 @@ class TestMcpBrokerRefreshPrefetchAndPersistArms:
         orch = _make_orchestrator()
         failing = AsyncMock(side_effect=RuntimeError("registry unreachable"))
         with patch.object(gw, "resolve_prefetch", failing):
-            with caplog.at_level(logging.ERROR, logger="kiro_crew.slack.gateway"):
+            with caplog.at_level(logging.ERROR, logger="aj_crew.slack.gateway"):
                 assert await orch._prefetch_mcp_resolutions({"K": "v"}) == {}
         failing.assert_awaited_once()
         assert "pre-resolve pass failed" in caplog.text
@@ -642,7 +642,7 @@ class TestMcpBrokerRefreshPrefetchAndPersistArms:
         orch = _make_orchestrator()
         orch._background_tasks = set()
         with patch.object(gw, "save_pass", side_effect=OSError("disk full")):
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.slack.gateway"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.slack.gateway"):
                 orch._schedule_mcp_launch_approval_persist(MagicMock())
                 (task,) = orch._background_tasks
                 orch._mcp_launch_approval_ready.set()

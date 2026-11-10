@@ -100,7 +100,7 @@ transcript, or a binding that resolves to no crewmate) is skipped. The wake also
 inherits the path's other skips, so a heartbeat does nothing that time when a
 turn is running or queued, the switch is off, or no goal is left. It adds two
 skips of its own. A wake that finds the
-gateway stopping after its own reads (`kiro_crew.shutdown_event` set) starts no
+gateway stopping after its own reads (`aj_crew.shutdown_event` set) starts no
 turn, since the stop would cancel a turn that had already been paid for; the
 cron timer itself stops firing once the event is set. A wake that fires while a
 monitor loop that will fire again is bound to the thread starts no turn either:
@@ -237,7 +237,7 @@ heartbeat relies only on what a crewmate's thread already holds.
 
 | The crewmate's thread | How a wake moves long or heavy work |
 |---|---|
-| holds the `session_*` tools (its member backend mounts session control per session and the user has not switched `kirocrew-dashboard` off) | the same way the crewmate's operating-mode block already asks: a worker session (`session_create`, then `session_send` with a self-contained brief), never a sub-agent, so the thread stays free and the user can see the work in the sidebar and take it over. A later wake reads the worker's progress (`session_read_message`) rather than starting the same work again |
+| holds the `session_*` tools (its member backend mounts session control per session and the user has not switched `ajcrew-dashboard` off) | the same way the crewmate's operating-mode block already asks: a worker session (`session_create`, then `session_send` with a self-contained brief), never a sub-agent, so the thread stays free and the user can see the work in the sidebar and take it over. A later wake reads the worker's progress (`session_read_message`) rather than starting the same work again |
 | does not hold them | in small steps, one piece per wake, with a note in the work ledger saying where it stopped, so the next wake picks it up there |
 
 Which row applies is the context builder's own answer for a member turn with no
@@ -306,7 +306,7 @@ before this change reads with `heartbeat` off and the default interval.
 | A card not pressed for 24 hours expires; a cancelled or expired card is reported once on the thread's next turn | `change_cards_records.CARD_TTL_SECONDS`, `REPORTED_STATUSES`; `change_cards.CardStore.take_unreported`; `chat_turn/turn_dispatch_gates.py` |
 | A monitor loop can be looked up by its thread | `autonudge.AutoNudgeService.get_by_slot` |
 | Crew removal removes a crewmate's check-in jobs | `agent_admin/crew_removal._remove_goal_check_ins` |
-| The gateway's stop signal | `kiro_crew.shutdown_event` |
+| The gateway's stop signal | `aj_crew.shutdown_event` |
 
 ### Added by #21172 only (not on main)
 

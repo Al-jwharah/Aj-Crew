@@ -34,7 +34,7 @@ const theme = params.get('theme') || 'dark'
 const scene = params.get('scene') || 'ended'
 const SLOT = 'capture-slot'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // Stub the network seam: the capture server has no gateway.
 const realFetch = globalThis.fetch.bind(globalThis)
@@ -59,7 +59,7 @@ if (scene === 'chip') {
   store.dispatch(sseSubagentQueued({ slot: SLOT, queued: 2, reason: 'memory_pressure', max_wait_secs: 1800 }))
 } else {
   for (const [id, error] of ended) {
-    store.dispatch(sseSubagentSpawn({ slot: SLOT, id, task: 'Summarize the release notes', agent: 'kirocrew' }))
+    store.dispatch(sseSubagentSpawn({ slot: SLOT, id, task: 'Summarize the release notes', agent: 'ajcrew' }))
     store.dispatch(sseSubagentDone({ slot: SLOT, id, elapsed: 0, error, outcome: 'failed' }))
   }
 }
@@ -67,7 +67,7 @@ if (scene === 'chip') {
 const panelAgents: Record<string, SubagentActivity> = scene === 'chip'
   ? {}
   : Object.fromEntries(ended.map(([id, error]) => [id, {
-    id, task: 'Summarize the release notes', agent: 'kirocrew', status: 'error', error,
+    id, task: 'Summarize the release notes', agent: 'ajcrew', status: 'error', error,
     streaming: '', lastTool: '', startedAt: Date.now() - 60_000, elapsed: 0,
   } as SubagentActivity]))
 

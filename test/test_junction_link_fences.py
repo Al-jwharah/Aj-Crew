@@ -32,7 +32,7 @@ from unittest import mock
 import pytest
 
 from conftest import make_dir_link
-from kiro_crew import artifacts, node_modules_txn, platform_compat, portability, skills
+from aj_crew import artifacts, node_modules_txn, platform_compat, portability, skills
 
 
 def _seed_victim(root: Path) -> Path:
@@ -671,7 +671,7 @@ class TestThePendingDetailReadIsPinned:
 
     def test_an_oversized_script_refuses_the_candidate(self, tmp_path: Path) -> None:
         """Per-file cap, asserted from the descriptor rather than a pre-open stat."""
-        from kiro_crew.skills_script_validator import MAX_SCRIPT_BYTES
+        from aj_crew.skills_script_validator import MAX_SCRIPT_BYTES
 
         loader, pdir = self._stage(tmp_path)
         (pdir / "scripts" / "big.py").write_text(
@@ -706,7 +706,7 @@ class TestThePendingDetailReadIsPinned:
         fire. Eight files just under the per-file cap sit inside that product and must
         still be served.
         """
-        from kiro_crew.skills_script_validator import MAX_SCRIPT_BYTES
+        from aj_crew.skills_script_validator import MAX_SCRIPT_BYTES
 
         loader, pdir = self._stage(tmp_path)
         sdir = pdir / "scripts"
@@ -878,7 +878,7 @@ class TestTheDeployStagingFenceSeesALink:
     ) -> None:
         """The escape that WAS reachable: no file behind the link, so the
         downstream containment gate never runs and the walk completed."""
-        from kiro_crew.deploy import handlers
+        from aj_crew.deploy import handlers
 
         outside = tmp_path / "outside"
         outside.mkdir()
@@ -895,7 +895,7 @@ class TestTheDeployStagingFenceSeesALink:
     def test_a_link_with_files_behind_it_is_named_as_a_link(self, tmp_path: Path) -> None:
         """Blocked either way, but the rejection now names the real cause -- the
         tag chooses the structured response the caller returns."""
-        from kiro_crew.deploy import handlers
+        from aj_crew.deploy import handlers
 
         victim = _seed_victim(tmp_path)
         source = tmp_path / "site"
@@ -913,7 +913,7 @@ class TestTheDeployStagingFenceSeesALink:
         ).exists(), "content behind the link reached the staged snapshot"
 
     def test_a_clean_tree_still_stages(self, tmp_path: Path) -> None:
-        from kiro_crew.deploy import handlers
+        from aj_crew.deploy import handlers
 
         source = tmp_path / "site"
         (source / "assets").mkdir(parents=True)
@@ -938,7 +938,7 @@ class TestTheUnpinnedMergeRestoreDoesNotCopyThroughALink:
     """
 
     def _merge(self, src: Path, dst: Path) -> None:
-        from kiro_crew import snapshot_merge
+        from aj_crew import snapshot_merge
 
         snapshot_merge._copy_tree_no_overwrite(src, dst, allow_unpinned=True)
 

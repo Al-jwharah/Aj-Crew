@@ -18,7 +18,7 @@ import pytest
 import yaml
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 WORKFLOWS = Path(__file__).resolve().parents[1] / ".github" / "workflows"
 
@@ -224,8 +224,8 @@ class TestScreenshotEvidence:
         the maintainer must have a step for at merge. Each place states the
         part that is its own; the reason lives once, in rationale.md."""
         root = WORKFLOWS.parents[1]
-        skills = root / "src" / "kiro_crew" / "builtin_skills" / "kirocrew-dev"
-        rationale = (skills / "kirocrew-prepare-pr" / "references" / "rationale.md").read_text(
+        skills = root / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev"
+        rationale = (skills / "ajcrew-prepare-pr" / "references" / "rationale.md").read_text(
             encoding="utf-8"
         )
         section = rationale.split("## Why screenshots are attachments, not commits", 1)[1]
@@ -260,9 +260,9 @@ class TestScreenshotEvidence:
         assert cost in template and "the blob stays" in template
         wf = _read(POLICY_WORKFLOW)
         assert cost in wf and 'echo "blob stays."' in wf
-        prepare = (skills / "kirocrew-prepare-pr" / "SKILL.md").read_text(encoding="utf-8")
+        prepare = (skills / "ajcrew-prepare-pr" / "SKILL.md").read_text(encoding="utf-8")
         contract = (
-            skills / "kirocrew-prepare-pr" / "references" / "pr-description-contract.md"
+            skills / "ajcrew-prepare-pr" / "references" / "pr-description-contract.md"
         ).read_text(encoding="utf-8")
         assert "references/pr-description-contract.md" in prepare
         assert "never committed, bar one scoped exception" in contract
@@ -277,9 +277,9 @@ class TestScreenshotEvidence:
         assert "**UI evidence is attached, never committed.**" not in stt
         assert "never committed by anyone who can attach" in stt
         assert "references/rationale.md" in stt
-        worktree = (skills / "kirocrew-worktree-dev" / "SKILL.md").read_text(encoding="utf-8")
+        worktree = (skills / "ajcrew-worktree-dev" / "SKILL.md").read_text(encoding="utf-8")
         assert "never committed — with write access, which\nthis agent has" in worktree
-        assert "see kirocrew-prepare-pr's *Screenshots*" in worktree
+        assert "see ajcrew-prepare-pr's *Screenshots*" in worktree
 
     def test_the_ci_doc_describes_the_committed_read_as_the_script_performs_it(self):
         """The CI doc's Design-lane paragraph describes where committed media is
@@ -319,10 +319,10 @@ class TestScreenshotEvidence:
         100 MB. The script's ceiling itself is pinned in
         test_ai_review_workflows_ux_committed_evidence.py and is not this test's to move."""
         root = WORKFLOWS.parents[1]
-        skills = root / "src" / "kiro_crew" / "builtin_skills" / "kirocrew-dev"
+        skills = root / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev"
         template = (root / ".github" / "PULL_REQUEST_TEMPLATE.md").read_text(encoding="utf-8")
         wf = _read(POLICY_WORKFLOW)
-        prepare = (skills / "kirocrew-prepare-pr" / "SKILL.md").read_text(encoding="utf-8")
+        prepare = (skills / "ajcrew-prepare-pr" / "SKILL.md").read_text(encoding="utf-8")
         # The attachment limits stay where they are, and the committed ceiling
         # is stated in the same block as the `git add -f` it applies to, after
         # the attachment limits and before the merge-time cost. Whitespace is
@@ -374,10 +374,10 @@ class TestScreenshotEvidence:
         prepare = (
             root
             / "src"
-            / "kiro_crew"
+            / "aj_crew"
             / "builtin_skills"
-            / "kirocrew-dev"
-            / "kirocrew-prepare-pr"
+            / "ajcrew-dev"
+            / "ajcrew-prepare-pr"
             / "SKILL.md"
         ).read_text(encoding="utf-8")
         media = "*.png|*.jpg|*.jpeg|*.webp|*.gif|*.webm|*.mp4|*.mov) ;;"
@@ -828,7 +828,7 @@ class TestScreenshotEvidencePathspecs:
         [
             "website/src/main.ts",
             "website/src/components/Foo.test.tsx",
-            "src/kiro_crew/app.css",
+            "src/aj_crew/app.css",
         ],
     )
     def test_non_visual_path_is_not_detected(self, tmp_path, changed):
@@ -865,8 +865,8 @@ class TestCrossPlatform:
 
     def test_excludes_vendor_and_compat_module(self):
         wf = _read(POLICY_WORKFLOW)
-        assert ":(exclude)src/kiro_crew/_vendor/**" in wf
-        assert ":(exclude)src/kiro_crew/platform_compat.py" in wf
+        assert ":(exclude)src/aj_crew/_vendor/**" in wf
+        assert ":(exclude)src/aj_crew/platform_compat.py" in wf
 
     def test_has_escape_hatch_label(self):
         assert "posix-only-approved" in _read(POLICY_WORKFLOW)
@@ -894,9 +894,9 @@ class TestCrossPlatformPathspecs:
     @pytest.mark.parametrize(
         "changed",
         [
-            "src/kiro_crew/probe.py",
-            "src/kiro_crew/platform_lock_compat.py",
-            "src/kiro_crew/pkg/probe.py",
+            "src/aj_crew/probe.py",
+            "src/aj_crew/platform_lock_compat.py",
+            "src/aj_crew/pkg/probe.py",
         ],
     )
     def test_added_line_is_scanned(self, tmp_path, changed):
@@ -905,7 +905,7 @@ class TestCrossPlatformPathspecs:
         assert "Absolute POSIX path literal" in result.stdout, result.stdout
 
     @pytest.mark.parametrize(
-        "changed", ["src/kiro_crew/platform_compat.py", "src/kiro_crew/platform_compat_probe.py"]
+        "changed", ["src/aj_crew/platform_compat.py", "src/aj_crew/platform_compat_probe.py"]
     )
     def test_compat_layer_is_not_scanned(self, tmp_path, changed):
         result = self._scan(tmp_path, changed)
@@ -931,7 +931,7 @@ class TestPrScope:
 
     def test_excludes_vendor_and_screenshots(self):
         wf = _read(POLICY_WORKFLOW)
-        assert ":(exclude)src/kiro_crew/_vendor/**" in wf
+        assert ":(exclude)src/aj_crew/_vendor/**" in wf
         assert ":(exclude)temp-screenshots/**" in wf
 
 
@@ -1014,8 +1014,8 @@ class TestPrScopeMeasureLogic:
     def test_measured_diff_reports_scope(self, tmp_path):
         result, summary = self._run_measure(
             tmp_path,
-            files_out="src/kiro_crew/session/state.py\n",
-            numstat_out="10\t2\tsrc/kiro_crew/session/state.py\n",
+            files_out="src/aj_crew/session/state.py\n",
+            numstat_out="10\t2\tsrc/aj_crew/session/state.py\n",
         )
         assert result.returncode == 0, result.stdout + result.stderr
         assert "distinct areas: 1" in result.stdout, result.stdout
@@ -1049,7 +1049,7 @@ class TestPrScopeMeasureLogic:
         # nothing into a legitimate-looking 0.
         result, summary = self._run_measure(
             tmp_path,
-            files_out="src/kiro_crew/session/state.py\n",
+            files_out="src/aj_crew/session/state.py\n",
             numstat_status=128,
         )
         assert result.returncode == 0, result.stdout + result.stderr

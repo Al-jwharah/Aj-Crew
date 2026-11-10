@@ -33,7 +33,7 @@ def _load_root_conftest():
     path is what names the rootdir one unambiguously. The fixtures it defines are inert
     in this namespace -- a ``@pytest.fixture`` decorator only marks a function.
     """
-    spec = importlib.util.spec_from_file_location("_kirocrew_prune_conftest", _ROOT_CONFTEST)
+    spec = importlib.util.spec_from_file_location("_ajcrew_prune_conftest", _ROOT_CONFTEST)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

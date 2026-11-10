@@ -18,25 +18,25 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.sections import AppSettingsConfig
-from kiro_crew.dashboard import state as dashboard_state
-from kiro_crew.dashboard.chat_utils import effective_session_key
-from kiro_crew.dashboard.handlers.messaging import api_notification_agent_push
-from kiro_crew.dashboard.messaging_api import proactive_send
-from kiro_crew.dashboard.notification_coordinator import unread_count
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.notifications.bus import (
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.sections import AppSettingsConfig
+from aj_crew.dashboard import state as dashboard_state
+from aj_crew.dashboard.chat_utils import effective_session_key
+from aj_crew.dashboard.handlers.messaging import api_notification_agent_push
+from aj_crew.dashboard.messaging_api import proactive_send
+from aj_crew.dashboard.notification_coordinator import unread_count
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.notifications.bus import (
     NotificationPayload,
     NotificationValidationError,
     payload_from_legacy,
 )
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 
 def _make_state(monkeypatch, tmp_path) -> DashboardState:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
     return DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(),
@@ -81,7 +81,7 @@ class TestSessionIsMuted:
     # collectable on a tree that does not have the predicate yet.
     @staticmethod
     def _muted(state: DashboardState, session: str) -> bool:
-        from kiro_crew.dashboard.notification_coordinator import session_is_muted
+        from aj_crew.dashboard.notification_coordinator import session_is_muted
 
         return session_is_muted(state, session)
 
@@ -136,8 +136,8 @@ class TestSessionIsMuted:
         self, monkeypatch, tmp_path
     ):
         state = _make_state(monkeypatch, tmp_path)
-        cfg = KiroCrewConfig(apps={"code-reviewer": AppSettingsConfig(mute_sessions=True)})
-        monkeypatch.setattr("kiro_crew.config.live.snapshot", lambda: cfg)
+        cfg = AjCrewConfig(apps={"code-reviewer": AppSettingsConfig(mute_sessions=True)})
+        monkeypatch.setattr("aj_crew.config.live.snapshot", lambda: cfg)
         review = _open(state, "chat-1-100", app="code-reviewer")
         spawned = _open(state, "chat-4-400", created_by="chat-1-100")
         research = _open(state, "chat-2-200", app="research")

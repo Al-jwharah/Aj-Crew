@@ -17,7 +17,7 @@ from artifacts_helpers import (  # noqa: F401 -- the fixture is requested by nam
     store_fixture,
 )
 
-from kiro_crew.artifacts import (
+from aj_crew.artifacts import (
     ArtifactComment,
     ArtifactNotFoundError,
     ArtifactStore,

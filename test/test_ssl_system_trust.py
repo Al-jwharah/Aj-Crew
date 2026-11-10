@@ -9,10 +9,10 @@ from unittest.mock import MagicMock
 import pytest
 
 from conftest import forget_env_at_teardown
-from kiro_crew import _ssl_compat
-from kiro_crew.doctor_checks import install as doctor_install
+from aj_crew import _ssl_compat
+from aj_crew.doctor_checks import install as doctor_install
 
-_SSL_MARKER = "KIROCREW_EXPORTED_SSL_CERT_FILE"
+_SSL_MARKER = "AJCREW_EXPORTED_SSL_CERT_FILE"
 
 
 @pytest.fixture(autouse=True)
@@ -89,7 +89,7 @@ def test_a_failed_injection_is_recorded_and_named_in_the_note(monkeypatch) -> No
     monkeypatch.setattr(_ssl_compat, "truststore", ts)
     assert _ssl_compat._inject_macos_system_trust() is False
     note = _ssl_compat.system_trust_note()
-    assert note is not None and "RuntimeError: boom" in note and "kirocrew doctor" in note
+    assert note is not None and "RuntimeError: boom" in note and "ajcrew doctor" in note
 
 
 def test_a_missing_truststore_is_recorded(monkeypatch) -> None:

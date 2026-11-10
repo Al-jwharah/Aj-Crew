@@ -19,12 +19,12 @@ from update_check_install_aware_helpers import (  # noqa: F401 -- the autouse fi
     _wheel_install,
 )
 
-from kiro_crew.dashboard.handlers import updates
+from aj_crew.dashboard.handlers import updates
 
 
 class TestRecurringAutoUpdateCoordinator:
     def test_rechecks_after_the_interval(self):
-        from kiro_crew.slack import gateway
+        from aj_crew.slack import gateway
 
         orch = object.__new__(gateway.GatewayOrchestrator)
         orch._check_for_updates = AsyncMock(side_effect=[None, asyncio.CancelledError()])
@@ -41,7 +41,7 @@ class TestRecurringAutoUpdateCoordinator:
         sleep.assert_awaited_once_with(updates._UPDATE_CHECK_INTERVAL)
 
     def test_busy_deferral_retries_soon(self):
-        from kiro_crew.slack import gateway
+        from aj_crew.slack import gateway
 
         orch = object.__new__(gateway.GatewayOrchestrator)
         calls = 0
@@ -172,8 +172,8 @@ async def callback(job):
         assert guarded == [True, False]
 
     def test_every_background_registration_is_gated_and_counted(self):
-        root = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
-        from kiro_crew.slack import gateway
+        root = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
+        from aj_crew.slack import gateway
 
         census = inspect.getsource(gateway.GatewayOrchestrator._in_flight_work_counts)
         for token in (
@@ -185,7 +185,7 @@ async def callback(job):
         ):
             assert token in census, f"channel callback census lost {token}"
 
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         subagent_census = inspect.getsource(SubagentManager.pending_work_count.fget)
         for token in (
@@ -258,7 +258,7 @@ async def callback(job):
                 assert token in census, f"{kind} registers work but is absent from the census"
 
     def test_every_pre_turn_channel_reserves_before_commands(self):
-        root = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+        root = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
         owners = {
             path.parent.name
             for path in root.glob("*/client.py")
@@ -341,7 +341,7 @@ async def callback(job):
         assert "inbound_restricted=session_restricted" in teams_source
 
     def test_upstream_inline_receivers_register_before_dispatch(self):
-        root = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+        root = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
         contracts = (
             (root / "whatsapp" / "client.py", "_on_message", "on_message"),
             (root / "weixin" / "transport.py", "_poll_forever", "receive"),
@@ -377,7 +377,7 @@ async def callback(job):
         assert "_handler_tasks" in (root / "weixin" / "client.py").read_text(encoding="utf-8")
 
     def test_slack_socket_reserves_before_ack(self):
-        path = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "slack" / "events.py"
+        path = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "slack" / "events.py"
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         listener = next(
             node
@@ -401,7 +401,7 @@ async def callback(job):
         assert admit and ack and min(admit) < min(ack)
 
     def test_every_auto_apply_path_uses_the_final_restart_fence(self):
-        path = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "slack" / "gateway.py"
+        path = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "slack" / "gateway.py"
         sources = (path, *sorted((path.parent / "gateway_runtime").glob("*.py")))
         text = "\n".join(source.read_text(encoding="utf-8") for source in sources)
         tree = ast.parse(text, filename=str(path))

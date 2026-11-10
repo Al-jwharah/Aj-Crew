@@ -13,7 +13,7 @@ import time
 
 import pytest
 
-from kiro_crew.knowledge.store import KnowledgeStore, SimpleDiGraph
+from aj_crew.knowledge.store import KnowledgeStore, SimpleDiGraph
 
 
 @pytest.fixture()
@@ -299,7 +299,7 @@ class TestLoopReadersMaterialiseOffLoop:
     def test_the_handler_reads_the_graph_on_a_worker(self, handler_name):
         import inspect
 
-        from kiro_crew.dashboard.handlers import knowledge as handlers
+        from aj_crew.dashboard.handlers import knowledge as handlers
 
         src = inspect.getsource(getattr(handlers, handler_name))
         assert (
@@ -311,7 +311,7 @@ class TestLoopReadersMaterialiseOffLoop:
         import inspect
         import re
 
-        from kiro_crew.dashboard.handlers import knowledge as handlers
+        from aj_crew.dashboard.handlers import knowledge as handlers
 
         src = inspect.getsource(getattr(handlers, handler_name))
         code = "\n".join(line.split("#", 1)[0] for line in src.splitlines())

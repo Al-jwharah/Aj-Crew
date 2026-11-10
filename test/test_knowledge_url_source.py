@@ -1,6 +1,6 @@
 """A web-page Knowledge source: the gateway fetcher, its rules, and the page it stores.
 
-Kiro Crew fetches a web-page source itself (``kiro_crew.knowledge.url_fetch``), so
+Aj Crew fetches a web-page source itself (``aj_crew.knowledge.url_fetch``), so
 ``knowledge.doc_ingest_hosts`` decides what it may fetch: https only, a listed host
 only, nothing on a default config, where the list is empty. Every request -- the
 first and each redirect hop -- must also resolve to public addresses only, and a
@@ -23,17 +23,17 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import knowledge as kh
-from kiro_crew.dashboard.handlers.knowledge import add_source, get_config, sync_source
-from kiro_crew.knowledge import url_fetch
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.knowledge.url_fetch import (
+from aj_crew.dashboard.handlers import knowledge as kh
+from aj_crew.dashboard.handlers.knowledge import add_source, get_config, sync_source
+from aj_crew.knowledge import url_fetch
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge.url_fetch import (
     UrlFetchFailed,
     UrlFetchRefused,
     fetch_page,
     url_fetch_refusal,
 )
-from kiro_crew.link_unfurl import VettedUrl
+from aj_crew.link_unfurl import VettedUrl
 
 PAGE = b"<html><head><title>Example</title></head><body><p>Article text.</p></body></html>"
 PUBLIC = "93.184.216.34"
@@ -475,9 +475,9 @@ def _config(**flags):
     """A config load as the loader would return it, with the given read flags."""
     from dataclasses import replace
 
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.knowledge.doc_ingest_hosts = ["example.com"]
     return replace(cfg, **flags)
 
@@ -488,14 +488,14 @@ class TestUnreadableHostList:
     @pytest.mark.parametrize("flag", ["_base_unreadable", "_overlay_unreadable"])
     def test_a_partial_load_raises(self, monkeypatch, flag):
         monkeypatch.setattr(
-            kh.KiroCrewConfig, "load", staticmethod(lambda: _config(**{flag: True}))
+            kh.AjCrewConfig, "load", staticmethod(lambda: _config(**{flag: True}))
         )
         with pytest.raises(kh.DocIngestHostsUnavailable):
             kh._doc_ingest_hosts()
 
     def test_a_degraded_knowledge_section_raises(self, monkeypatch):
         monkeypatch.setattr(
-            kh.KiroCrewConfig,
+            kh.AjCrewConfig,
             "load",
             staticmethod(lambda: _config(_degraded_sections=frozenset({"knowledge"}))),
         )
@@ -503,7 +503,7 @@ class TestUnreadableHostList:
             kh._doc_ingest_hosts()
 
     def test_a_whole_load_returns_the_list(self, monkeypatch):
-        monkeypatch.setattr(kh.KiroCrewConfig, "load", staticmethod(lambda: _config()))
+        monkeypatch.setattr(kh.AjCrewConfig, "load", staticmethod(lambda: _config()))
         assert kh._doc_ingest_hosts() == ["example.com"]
 
     @pytest.fixture()
@@ -593,7 +593,7 @@ class TestPageText:
 
     @pytest.mark.asyncio
     async def test_a_host_the_vet_cannot_parse_is_invalid_not_inward(self, monkeypatch):
-        from kiro_crew.link_unfurl import UnfurlRejected
+        from aj_crew.link_unfurl import UnfurlRejected
 
         def _reject(_url, resolve=None):
             raise UnfurlRejected("invalid_url")

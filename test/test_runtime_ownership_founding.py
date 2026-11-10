@@ -12,8 +12,8 @@ import asyncio
 
 import pytest
 
-from kiro_crew import runtime_ownership as ro
-from kiro_crew.testing.wait import await_until
+from aj_crew import runtime_ownership as ro
+from aj_crew.testing.wait import await_until
 
 
 class _Runtime:

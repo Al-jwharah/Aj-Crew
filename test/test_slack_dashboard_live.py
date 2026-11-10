@@ -28,17 +28,17 @@ from unittest.mock import AsyncMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
     EVENT_TOOL_RESULT,
     STOP_REASON_END_TURN,
 )
-from kiro_crew.dashboard import channel_slots
-from kiro_crew.messaging.link import canonical_key
-from kiro_crew.slack import transport_dispatch
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.dashboard import channel_slots
+from aj_crew.messaging.link import canonical_key
+from aj_crew.slack import transport_dispatch
+from aj_crew.testing.wait import async_wait_until
 
 golden = importlib.import_module("test_slack_golden_transcript")
 
@@ -337,7 +337,7 @@ def test_no_tab_means_no_step_is_written(harness: Any) -> None:
 def test_a_failing_live_view_never_breaks_the_slack_turn(
     harness: Any, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.dashboard.channel_live import ChannelLiveSink
+    from aj_crew.dashboard.channel_live import ChannelLiveSink
 
     h = harness
     baseline = golden.RecordingSlackClient()
@@ -362,8 +362,8 @@ def test_a_failing_live_view_never_breaks_the_slack_turn(
 
 
 def test_a_driver_event_tap_that_raises_does_not_change_the_turn() -> None:
-    from kiro_crew.messaging.driver import TurnDriver
-    from kiro_crew.messaging.renderer import Renderer
+    from aj_crew.messaging.driver import TurnDriver
+    from aj_crew.messaging.renderer import Renderer
 
     class _Collect(Renderer):
         def __init__(self) -> None:
@@ -423,8 +423,8 @@ def test_no_live_view_when_the_users_row_did_not_land(
 
 
 def test_a_restricted_thread_gets_no_frames_or_rows(harness: Any) -> None:
-    from kiro_crew.dashboard.channel_live import ChannelLiveSink
-    from kiro_crew.messaging.renderer import TOOL_CALL, OutputEvent
+    from aj_crew.dashboard.channel_live import ChannelLiveSink
+    from aj_crew.messaging.renderer import TOOL_CALL, OutputEvent
 
     h = harness
     _surface_tab(h)
@@ -448,8 +448,8 @@ def test_a_tab_running_its_own_turn_keeps_its_chunk_counter(harness: Any) -> Non
     turn's session lease) copied the slot's chunk counter at its start. The live
     view must not advance it under that turn, or the turn's first chunks reuse
     seqs the tab has already seen and are dropped."""
-    from kiro_crew.dashboard.channel_live import ChannelLiveSink
-    from kiro_crew.messaging.renderer import TOOL_CALL, OutputEvent
+    from aj_crew.dashboard.channel_live import ChannelLiveSink
+    from aj_crew.messaging.renderer import TOOL_CALL, OutputEvent
 
     h = harness
     slot = _surface_tab(h)
@@ -487,8 +487,8 @@ def test_a_step_still_queued_at_the_reply_is_dropped_never_written_below_it(
     finishes first, because the reply is written under the same lock."""
     import threading
 
-    from kiro_crew.dashboard.channel_live import ChannelLiveSink
-    from kiro_crew.messaging.renderer import TOOL_CALL, OutputEvent
+    from aj_crew.dashboard.channel_live import ChannelLiveSink
+    from aj_crew.messaging.renderer import TOOL_CALL, OutputEvent
 
     h = harness
     _surface_tab(h)
@@ -545,8 +545,8 @@ def test_a_step_waiting_on_the_lock_when_abandoned_writes_nothing(
     gave up must not land once it finally gets the lock."""
     import threading
 
-    from kiro_crew.dashboard.channel_live import ChannelLiveSink
-    from kiro_crew.messaging.renderer import TOOL_CALL, OutputEvent
+    from aj_crew.dashboard.channel_live import ChannelLiveSink
+    from aj_crew.messaging.renderer import TOOL_CALL, OutputEvent
 
     h = harness
     _surface_tab(h)
@@ -607,8 +607,8 @@ def test_the_live_view_settles_before_the_channel_renderer_sees_done() -> None:
     """A channel renderer may write the reply from its DONE (Slack's options
     footer persists the reply in ``on_done``), so the tee settles the live view's
     step writes BEFORE it hands DONE to the channel, and only then to the mirror."""
-    from kiro_crew.messaging.dashboard_live import DashboardLiveRenderer, TeeRenderer
-    from kiro_crew.messaging.renderer import DONE, TEXT_CHUNK, OutputEvent, SilentRenderer
+    from aj_crew.messaging.dashboard_live import DashboardLiveRenderer, TeeRenderer
+    from aj_crew.messaging.renderer import DONE, TEXT_CHUNK, OutputEvent, SilentRenderer
 
     order: list[str] = []
 

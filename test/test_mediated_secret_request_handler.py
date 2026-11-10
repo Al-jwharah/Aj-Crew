@@ -1,6 +1,6 @@
 """``api_mediated_secret_request`` — the HOST-side mediation endpoint.
 
-The in-sandbox ``kirocrew-secrets`` tool cannot read the vault (managed MCP
+The in-sandbox ``ajcrew-secrets`` tool cannot read the vault (managed MCP
 servers share the agent's mount namespace, where ``.vault`` and
 ``secret-request-policy/`` are masked). So the tool forwards the non-secret
 request intent to this endpoint in the unsandboxed dashboard process, which is
@@ -21,12 +21,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import mediated_request_capability
-from kiro_crew.dashboard.handlers import mediated_secrets as sessions_mod
-from kiro_crew.secrets_mediation import dispatch as dispatch_mod
-from kiro_crew.secrets_mediation.dispatch import SanitizedResponse
-from kiro_crew.secrets_mediation.policy import PolicyError
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import mediated_request_capability
+from aj_crew.dashboard.handlers import mediated_secrets as sessions_mod
+from aj_crew.secrets_mediation import dispatch as dispatch_mod
+from aj_crew.secrets_mediation.dispatch import SanitizedResponse
+from aj_crew.secrets_mediation.policy import PolicyError
+from aj_crew.testing.clock import ManualClock
 
 SESSION = "dashboard:reviewer-slot"
 
@@ -67,7 +67,7 @@ def _request(
         mediated_request_capability.mint_for_approved_call(
             session_key=session,
             tool_call_id=call_id,
-            mcp_server_name="kirocrew-secrets",
+            mcp_server_name="ajcrew-secrets",
             tool_name="call_api_with_secret",
             tool_args=payload,
             identity_trusted=True,
@@ -92,13 +92,13 @@ def _body(response: Any) -> Any:
 
 def _patch_common(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(sessions_mod, "_sel", lambda: MagicMock())
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: "/nonexistent-config-dir")
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: "/nonexistent-config-dir")
     # By default the caller presents a VERIFIED member scope for its own session
     # (the approved-invocation path). member_request_scope is the gate the handler
     # now uses in place of the removed proof token: a MemberScope with
     # verified=True, the same session, and a non-empty store is a genuine member
     # session. Tests that exercise an unverified/non-member scope override this.
-    from kiro_crew.dashboard.handlers import _shared as _shared_mod
+    from aj_crew.dashboard.handlers import _shared as _shared_mod
 
     async def _verified_scope(request: Any) -> Any:
         session = request.headers.get("X-Session-Key", "")
@@ -221,13 +221,13 @@ async def test_a_missing_or_invalid_member_proof_is_refused(
     """A caller with the loopback secret + session key but WITHOUT an attested
     member scope (a raw in-sandbox shell that cannot present the Unix-socket peer
     attestation or the launcher's signed token) is refused 403 before any
-    dispatch — binding the egress to an approved kirocrew-secrets invocation.
+    dispatch — binding the egress to an approved ajcrew-secrets invocation.
     """
     _patch_common(monkeypatch)
     # Override the default: member_request_scope returns an UNVERIFIED scope
     # (the transport cannot vouch for the declared session), exactly what a raw
     # in-sandbox caller gets.
-    from kiro_crew.dashboard.handlers import _shared as _shared_mod
+    from aj_crew.dashboard.handlers import _shared as _shared_mod
 
     async def _unverified(request: Any) -> Any:
         session = request.headers.get("X-Session-Key", "")
@@ -323,7 +323,7 @@ async def test_capability_grant_is_audited(monkeypatch: pytest.MonkeyPatch) -> N
     mediated_request_capability.mint_for_approved_call(
         session_key=SESSION,
         tool_call_id=call_id,
-        mcp_server_name="kirocrew-secrets",
+        mcp_server_name="ajcrew-secrets",
         tool_name="call_api_with_secret",
         tool_args=intent,
         identity_trusted=True,
@@ -408,7 +408,7 @@ def test_sandboxed_tool_has_no_import_path_to_the_vault() -> None:
     import ast
     from pathlib import Path
 
-    import kiro_crew.mcp_secrets as mcp_secrets_mod
+    import aj_crew.mcp_secrets as mcp_secrets_mod
 
     source = Path(mcp_secrets_mod.__file__).read_text(encoding="utf-8")
     tree = ast.parse(source)
@@ -421,10 +421,10 @@ def test_sandboxed_tool_has_no_import_path_to_the_vault() -> None:
                 imported.add(alias.name)
 
     forbidden = {
-        "kiro_crew.secrets",
-        "kiro_crew.secrets.SecretVault",
-        "kiro_crew.secrets_mediation.dispatch",
-        "kiro_crew.secrets_mediation.policy",
+        "aj_crew.secrets",
+        "aj_crew.secrets.SecretVault",
+        "aj_crew.secrets_mediation.dispatch",
+        "aj_crew.secrets_mediation.policy",
     }
     leaked = imported & forbidden
     assert not leaked, f"the sandboxed tool must not import the vault/dispatch: {leaked}"
@@ -443,7 +443,7 @@ def _mint(session_key: str, call_id: str) -> str:
     return mediated_request_capability.mint_for_approved_call(
         session_key=session_key,
         tool_call_id=call_id,
-        mcp_server_name="kirocrew-secrets",
+        mcp_server_name="ajcrew-secrets",
         tool_name="call_api_with_secret",
         tool_args={"secret_name": "K", "method": "POST", "url": "https://api.example.com"},
         identity_trusted=True,
@@ -545,10 +545,10 @@ def test_capability_codex_wrapper_approval_matches_inner_arguments_claim() -> No
         token = mediated_request_capability.mint_for_approved_call(
             session_key="s",
             tool_call_id="c0",
-            mcp_server_name="kirocrew-secrets",
+            mcp_server_name="ajcrew-secrets",
             tool_name="call_api_with_secret",
             tool_args={
-                "server": "kirocrew-secrets",
+                "server": "ajcrew-secrets",
                 "tool": "call_api_with_secret",
                 "arguments": inner,
             },
@@ -565,10 +565,10 @@ def test_capability_codex_wrapper_approval_matches_inner_arguments_claim() -> No
         token2 = mediated_request_capability.mint_for_approved_call(
             session_key="s",
             tool_call_id="c1",
-            mcp_server_name="kirocrew-secrets",
+            mcp_server_name="ajcrew-secrets",
             tool_name="call_api_with_secret",
             tool_args={
-                "server": "kirocrew-secrets",
+                "server": "ajcrew-secrets",
                 "tool": "call_api_with_secret",
                 "arguments": {**inner, "url": "https://evil.example.com"},
             },
@@ -597,7 +597,7 @@ def test_capability_oversized_int_timeout_is_caught_not_crash() -> None:
         token = mediated_request_capability.mint_for_approved_call(
             session_key="s",
             tool_call_id="c0",
-            mcp_server_name="kirocrew-secrets",
+            mcp_server_name="ajcrew-secrets",
             tool_name="call_api_with_secret",
             tool_args=args,
             identity_trusted=True,
@@ -761,7 +761,7 @@ async def test_a_body_spanning_many_transport_reads_is_decoded_whole(
     mediated_request_capability.mint_for_approved_call(
         session_key=SESSION,
         tool_call_id="c-big",
-        mcp_server_name="kirocrew-secrets",
+        mcp_server_name="ajcrew-secrets",
         tool_name="call_api_with_secret",
         tool_args=intent,
         identity_trusted=True,
@@ -784,8 +784,8 @@ def test_pending_grant_outlives_a_full_queue_of_slow_calls(monkeypatch):
     time. A grant that expired after 30 s refused the second of two back-to-back
     60 s calls; the pending lifetime has to cover the whole queue instead.
     """
-    from kiro_crew import mcp_secrets
-    from kiro_crew.mcp_shared_calls import PENDING_CALLS_MAX
+    from aj_crew import mcp_secrets
+    from aj_crew.mcp_shared_calls import PENDING_CALLS_MAX
 
     cap = mediated_request_capability
     assert cap._QUEUE_DEPTH == PENDING_CALLS_MAX + 1

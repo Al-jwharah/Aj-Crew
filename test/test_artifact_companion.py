@@ -26,15 +26,15 @@ from aiohttp.test_utils import TestClient, TestServer
 from body_stream_helpers import attach_json_body
 from chat_test_helpers import _make_ready_kiro_prerequisite
 
-from kiro_crew import artifacts as art_mod
-from kiro_crew.artifacts import ArtifactStore
-from kiro_crew.dashboard.handlers.artifacts import (
+from aj_crew import artifacts as art_mod
+from aj_crew.artifacts import ArtifactStore
+from aj_crew.dashboard.handlers.artifacts import (
     api_artifact_delete,
     api_artifact_update,
     api_artifacts_create,
 )
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.history import ConversationLog
 
 
 def _make_state(tmp_path, **kwargs):
@@ -55,7 +55,7 @@ def _make_state(tmp_path, **kwargs):
 
 
 def _make_app(state) -> web.Application:
-    from kiro_crew.dashboard.chat import (
+    from aj_crew.dashboard.chat import (
         api_chat_slot_context,
         api_chat_slot_create,
     )
@@ -83,7 +83,7 @@ class TestArtifactBindingField:
 
     @pytest.mark.asyncio
     async def test_create_with_valid_artifact(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post(
@@ -110,7 +110,7 @@ class TestArtifactBindingField:
         ],
     )
     async def test_create_with_invalid_artifact_dropped(self, tmp_path, monkeypatch, bad):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post(
@@ -123,7 +123,7 @@ class TestArtifactBindingField:
 
     @pytest.mark.asyncio
     async def test_create_without_artifact_unbound(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post("/api/chat/slots", json={"name": "plain"})
@@ -136,9 +136,9 @@ class TestArtifactBindingField:
 
 class TestArtifactBindingPersistence:
     def test_binding_persisted_in_meta(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot._artifact = "cr-queue"
@@ -151,9 +151,9 @@ class TestArtifactBindingPersistence:
         assert meta.get("artifact") == "cr-queue"
 
     def test_empty_binding_not_persisted(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hello")
@@ -165,12 +165,12 @@ class TestArtifactBindingPersistence:
         assert "artifact" not in meta
 
     def test_rehydrate_restores_binding(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard.chat_persistence import (
             _rehydrate_slot_from_history,
             _save_slot_to_history,
         )
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot._artifact = "cr-queue"
@@ -185,12 +185,12 @@ class TestArtifactBindingPersistence:
         assert restored._artifact == "cr-queue"
 
     def test_bulk_restore_restores_binding(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard.chat_persistence import (
             _save_slot_to_history,
             restore_recent_sessions,
         )
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot._artifact = "cr-queue"
@@ -218,13 +218,13 @@ class TestArtifactBindingPersistence:
         """History JSONL is attacker-tamperable with disk access — an invalid
         `artifact` value must be dropped on BOTH restore paths, never reaching
         to_dict()/WS broadcasts (review-bot security-controls, rev 3)."""
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard.chat_persistence import (
             _rehydrate_slot_from_history,
             _save_slot_to_history,
             restore_recent_sessions,
         )
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hello")
@@ -315,7 +315,7 @@ def _stub_restricted(monkeypatch):
     Same pattern as test_artifacts_handlers.py — the real check walks
     state._slots, which is a MagicMock in these handler-level tests.
     """
-    from kiro_crew.dashboard.handlers import artifacts as art_handlers
+    from aj_crew.dashboard.handlers import artifacts as art_handlers
 
     def _stub(state, req):
         return req.app.get("_restricted_session", False)
@@ -419,7 +419,7 @@ class TestMutationFunnelEmits:
 class TestCompanionContextInjection:
     @pytest.mark.asyncio
     async def test_dashboard_context_on_bound_slot(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post(

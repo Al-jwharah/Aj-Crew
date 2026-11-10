@@ -6,7 +6,7 @@ import math
 
 import pytest
 
-from kiro_crew.eval.bench import member_v2
+from aj_crew.eval.bench import member_v2
 
 
 def test_ranking_metrics_penalize_false_positives_missing_evidence_and_bad_order():
@@ -31,8 +31,8 @@ def test_evaluation_refuses_missing_model_evidence_before_opening_memory(tmp_pat
 
 def test_insert_assigns_identity_after_write_normalizes_trailing_space(tmp_path, monkeypatch):
     # Match the benchmark CLI: the positive named-store predicate is rooted at
-    # KIROCREW_HOME, so an arbitrary tmp_path is deliberately a legacy V1 file.
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    # AJCREW_HOME, so an arbitrary tmp_path is deliberately a legacy V1 file.
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     store = member_v2._new_store(tmp_path, "normalized-fixture", 1)
     try:
         member_v2._insert(store, "oversized text " + "detail " * 20, "oversized", None)

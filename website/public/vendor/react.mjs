@@ -2,7 +2,7 @@
 // App bundles import 'react' → import map resolves to this file → reads from host.
 // ESM links named imports before any code runs, so this list must name EVERY
 // runtime export of the pinned package; appSharedModuleBoundary.test.ts asserts it.
-const m = window.__kirocrew_modules?.react
+const m = window.__ajcrew_modules?.react
 if (!m) throw new Error('[vendor/react] Host modules not initialized. Ensure shared-modules.ts is loaded.')
 export default m
 export const {

@@ -14,7 +14,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.platform.governance import CapabilityGate, parse_policy, resolve
+from aj_crew.platform.governance import CapabilityGate, parse_policy, resolve
 
 #: (scope, inner key, matcher, an item the list allows, an item it does not)
 _CASES = (
@@ -39,13 +39,13 @@ def _allow(scope: str, key: str, allowed: str) -> dict:
 
 @pytest.fixture
 def isolated_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     return tmp_path
 
 
 @pytest.fixture
 def fake_sel(monkeypatch):
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     fake = MagicMock()
     monkeypatch.setattr(sel_mod, "sel", lambda: fake)
@@ -53,8 +53,8 @@ def fake_sel(monkeypatch):
 
 
 def _install_policy(monkeypatch, doc: dict | None) -> None:
-    from kiro_crew.metrics import provider
-    from kiro_crew.platform import context as pc
+    from aj_crew.metrics import provider
+    from aj_crew.platform import context as pc
 
     ceiling = parse_policy(doc) if doc is not None else None
     ctx = SimpleNamespace(governance=ceiling)
@@ -99,14 +99,14 @@ class TestHostReadings:
     read, so a deny glob over its domain refuses it."""
 
     def test_an_odd_ascii_host_is_asked_as_read(self) -> None:
-        from kiro_crew.platform.governance import url_policy_hosts
+        from aj_crew.platform.governance import url_policy_hosts
 
         hosts = url_policy_hosts("https://clip+one.blocked.example/v1")
         assert "clip+one.blocked.example" in hosts
         assert "" not in hosts
 
     def test_a_deny_glob_refuses_an_odd_ascii_host(self) -> None:
-        from kiro_crew.platform.governance import url_policy_hosts
+        from aj_crew.platform.governance import url_policy_hosts
 
         scope = "capabilities.decisions"
         doc = _policy(
@@ -122,7 +122,7 @@ class TestWrongShape:
     @pytest.mark.parametrize("value", [["jev-1"], "jev-1", 1, None])
     def test_a_list_in_the_wrong_shape_fails_to_load(self, key, value) -> None:
         """A malformed list must not load as no list, which permits every item."""
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.context import PlatformCompositionError
 
         with pytest.raises(PlatformCompositionError, match=f"scopes.{key} must be an object"):
             parse_policy(_policy("capabilities.decisions", {"scopes": {key: value}}))

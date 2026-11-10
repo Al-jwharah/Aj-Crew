@@ -26,10 +26,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew import session_directive
-from kiro_crew.dashboard import chat_runner as cr
-from kiro_crew.dashboard.session_directive_apply import DirectiveOutcome
-from kiro_crew.providers.base import (
+from aj_crew import session_directive
+from aj_crew.dashboard import chat_runner as cr
+from aj_crew.dashboard.session_directive_apply import DirectiveOutcome
+from aj_crew.providers.base import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
@@ -102,7 +102,7 @@ def _monitor_start_events():
             tool_call_id="tc-arm",
             title="Arming a patrol",
             tool_name="monitor_start",
-            mcp_server_name="kirocrew-core",
+            mcp_server_name="ajcrew-core",
         ),
         LLMEvent(
             kind=EVENT_TOOL_RESULT,
@@ -203,7 +203,7 @@ async def _drain_one(state, slot, monkeypatch) -> dict:
     monkeypatch.setattr(cr, "_run_chat", _fake_run_chat)
     cfg = MagicMock()
     cfg.dashboard.merge_queued_messages = False
-    with patch.object(cr.KiroCrewConfig, "load", return_value=cfg):
+    with patch.object(cr.AjCrewConfig, "load", return_value=cfg):
         assert await cr._start_next_queued_turn(state, slot) is True
     await slot.task
     await _cancel_background(state)

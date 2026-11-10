@@ -13,10 +13,10 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import autonudge as _an
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
-from kiro_crew.autonudge_service import gate as _gate
-from kiro_crew.monitoring.models import MonitorState
+from aj_crew import autonudge as _an
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew.autonudge_service import gate as _gate
+from aj_crew.monitoring.models import MonitorState
 
 _SLOT = "chat-1-123"
 _FLOOR = _an._MAX_QUIET_STREAK
@@ -25,7 +25,7 @@ _IDLE_FLOOR = _gate._IDLE_LEDGER_QUIET_FLOOR
 
 @pytest.fixture(autouse=True)
 def _enable(_floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    _floor_monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
 
 class _Ledger:

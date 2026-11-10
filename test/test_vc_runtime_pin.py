@@ -272,7 +272,7 @@ def test_the_windows_lane_refuses_a_download_that_does_not_match_the_pin(
     assert result.returncode == 1, result.stderr
     assert "VC++ redistributable sha256 mismatch: refusing to bundle" in result.stderr
     assert curl_url.read_bytes() == pin["url"].encode("utf-8")
-    assert list((tmp_path / "home" / ".cache" / "kirocrew-build" / "vc-runtime").iterdir()) == []
+    assert list((tmp_path / "home" / ".cache" / "ajcrew-build" / "vc-runtime").iterdir()) == []
 
 
 def test_the_windows_lane_stages_the_runtime_from_the_pin_not_the_build_host():
@@ -284,6 +284,6 @@ def test_the_windows_lane_stages_the_runtime_from_the_pin_not_the_build_host():
 def test_the_embeddings_runtime_note_states_the_same_redistribution_position():
     # The wheel's embeddings lane does not vendor the runtime; its note must not
     # say redistributing it is off the table while the desktop lane ships it.
-    note = (ROOT / "src" / "kiro_crew" / "embeddings_native.py").read_text(encoding="utf-8")
+    note = (ROOT / "src" / "aj_crew" / "embeddings_native.py").read_text(encoding="utf-8")
     assert "licensing decision" not in note
     assert "packaging/vc-runtime-pin.json" in note and vc.PIN_FILE.is_file()

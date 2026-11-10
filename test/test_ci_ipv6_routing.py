@@ -97,7 +97,7 @@ def _env(root):
         "COV_CORE_DATAFILE",
         "COV_CORE_CONFIG",
         "COVERAGE_PROCESS_START",
-        "KIROCREW_HOME",
+        "AJCREW_HOME",
     ):
         env.pop(key, None)
     env.update(
@@ -231,7 +231,7 @@ def test_workflow_routes_every_scope_without_changing_local_defaults(jobs):
     assert "real_venv:" in markers
     assert "ipv6_required" not in config["tool:pytest"]["addopts"]
     assert "real_venv" not in config["tool:pytest"]["addopts"]
-    assert config["tool:pytest"]["testpaths"] == "test src/kiro_crew/apps/builtins"
+    assert config["tool:pytest"]["testpaths"] == "test src/aj_crew/apps/builtins"
     for name, expected_count in (("backend-test", 4), ("backend-test-windows", 1)):
         body = _step(jobs, name, "Run tests")["run"].replace("\\\n", " ")
         commands = re.findall(r"^\s*(?:python -m )?pytest .+$", body, re.MULTILINE)
@@ -257,9 +257,9 @@ def test_workflow_routes_every_scope_without_changing_local_defaults(jobs):
     # which is what keeps a Windows leg off a Linux runner and vice versa.
     assert hosted["runs-on"] == (
         "${{ matrix.os == 'ubuntu-latest' && "
-        "(github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' "
+        "(github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' "
         "|| 'ubuntu-latest') || matrix.os == 'windows-latest' && "
-        "(github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-windows-4-core' "
+        "(github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-windows-4-core' "
         "|| 'windows-latest') || matrix.os }}"
     )
     assert hosted["strategy"] == {
@@ -376,10 +376,10 @@ def test_real_coverage_combine_preserves_both_routes_and_requires_ipv6(jobs, cov
         return path
 
     sources = [
-        "src/kiro_crew",
-        "src/kiro_crew/apps/builtins/code_review_sage/sage_lib",
-        "src/kiro_crew/apps/builtins/aws_control/crew/packaging",
-        "src/kiro_crew/apps/builtins/code_review_sage/tests",
+        "src/aj_crew",
+        "src/aj_crew/apps/builtins/code_review_sage/sage_lib",
+        "src/aj_crew/apps/builtins/aws_control/crew/packaging",
+        "src/aj_crew/apps/builtins/code_review_sage/tests",
     ]
     for source in sources:
         directory = Path(source)
@@ -394,10 +394,10 @@ def test_real_coverage_combine_preserves_both_routes_and_requires_ipv6(jobs, cov
     write("pytest.ini", "[pytest]\nmarkers =\n    ipv6_required: native IPv6\n")
     write(
         "test_probe.py",
-        "import pytest\nfrom kiro_crew import probe as core\n"
+        "import pytest\nfrom aj_crew import probe as core\n"
         "from sage_lib import probe as sage\n"
-        "from kiro_crew.apps.builtins.aws_control.crew.packaging import probe as packaging\n"
-        "from kiro_crew.apps.builtins.code_review_sage.tests import probe as fixtures\n"
+        "from aj_crew.apps.builtins.aws_control.crew.packaging import probe as packaging\n"
+        "from aj_crew.apps.builtins.code_review_sage.tests import probe as fixtures\n"
         "@pytest.mark.parametrize('value', [0, pytest.param(1, marks=pytest.mark.ipv6_required)])\n"
         "def test_branch(value):\n"
         "    for module in (core, sage, packaging, fixtures):\n"

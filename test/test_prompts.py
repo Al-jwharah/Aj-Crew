@@ -31,16 +31,16 @@ from prompts_helpers import (
 )
 
 from conftest import requires_symlinks
-from kiro_crew.dashboard.chat import _expand_prompt_mention, _run_chat
-from kiro_crew.dashboard.handlers import (
+from aj_crew.dashboard.chat import _expand_prompt_mention, _run_chat
+from aj_crew.dashboard.handlers import (
     MAX_PROMPT_BYTES,
     _extract_sop_description,
     _list_aim_prompts,
     api_prompt_detail,
     api_prompts,
 )
-from kiro_crew.dashboard.handlers import prompts as _prompts_mod
-from kiro_crew.platform_compat import IS_POSIX
+from aj_crew.dashboard.handlers import prompts as _prompts_mod
+from aj_crew.platform_compat import IS_POSIX
 
 # ── _extract_sop_description ──
 
@@ -151,7 +151,7 @@ class TestListAimPrompts:
 
     def test_no_roots_lists_no_package_sops(self, monkeypatch):
         # Default seam ([], the OSS behavior) → no package SOPs discovered.
-        from kiro_crew.platform.defaults import DefaultPromptSourceProvider
+        from aj_crew.platform.defaults import DefaultPromptSourceProvider
 
         monkeypatch.setattr(DefaultPromptSourceProvider, "prompt_source_roots", lambda self: [])
         assert _list_aim_prompts() == []
@@ -172,7 +172,7 @@ class TestListAimPrompts:
         pkg.mkdir(parents=True)
         (pkg / "evil.sop.md").symlink_to(secret)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.is_sensitive_path",
+            "aj_crew.dashboard.handlers.is_sensitive_path",
             lambda p: "secrets" in p,
         )
         assert _list_aim_prompts() == []
@@ -289,11 +289,11 @@ class TestUserPromptDiscoveryGate:
         proj, d = self._project_prompts(tmp_path)
         (d / "creds.md").symlink_to(secret)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.is_sensitive_path", lambda p: "elsewhere" in str(p)
+            "aj_crew.dashboard.chat_runner.is_sensitive_path", lambda p: "elsewhere" in str(p)
         )
-        monkeypatch.setattr("kiro_crew.hooks.is_sensitive_path", lambda p: "elsewhere" in str(p))
+        monkeypatch.setattr("aj_crew.hooks.is_sensitive_path", lambda p: "elsewhere" in str(p))
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._find_prompt",
+            "aj_crew.dashboard.chat_runner._find_prompt",
             lambda name, project_dir=None: {
                 "name": "creds",
                 "fullName": "creds",
@@ -323,7 +323,7 @@ class TestUserPromptDiscoveryGate:
         assert not alias.is_symlink(), "precondition: no symlink guard can see this"
         assert alias.stat().st_nlink == 2, "precondition: the alias is a second name"
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._find_prompt",
+            "aj_crew.dashboard.chat_runner._find_prompt",
             lambda name, project_dir=None: {
                 "name": "aliased",
                 "fullName": "aliased",
@@ -350,7 +350,7 @@ class TestUserPromptDiscoveryGate:
         outside.write_text("# Notes\nSECRET-BODY\n")
         proj, _d = self._project_prompts(tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._find_prompt",
+            "aj_crew.dashboard.chat_runner._find_prompt",
             lambda name, project_dir=None: {
                 "name": "notes",
                 "fullName": "notes",
@@ -434,7 +434,7 @@ class TestUserPromptDiscoveryGate:
         only way there is an entry swapped for a loop between that lstat and this
         resolve. Neutralizing the lstat is how that race is made deterministic.
         """
-        import kiro_crew.dashboard.handlers as h
+        import aj_crew.dashboard.handlers as h
 
         proj, d = self._project_prompts(tmp_path)
         (d / "loop.md").symlink_to(d / "loop.md")
@@ -527,7 +527,7 @@ class TestLocalLookupIsBounded:
     def test_resolving_a_mention_does_not_scan_the_project_dir(self, tmp_path, monkeypatch):
         """The shape, not a duration: the project's prompt directory is never
         enumerated, and the prompt still resolves."""
-        import kiro_crew.dashboard.handlers as h
+        import aj_crew.dashboard.handlers as h
 
         proj = tmp_path / "checkout"
         d = proj / ".kiro" / "prompts"
@@ -556,7 +556,7 @@ class TestLocalLookupIsBounded:
         part of the walk whose cost is unbounded — and requires exactly one, for
         the prompt that matched.
         """
-        import kiro_crew.dashboard.handlers as h
+        import aj_crew.dashboard.handlers as h
 
         proj = tmp_path / "checkout"
         d = proj / ".kiro" / "prompts"
@@ -633,7 +633,7 @@ class TestLocalLookupIsBounded:
         ORDERING rather than the outcome: a name that is not a plain component is
         a miss before any path derived from it is resolved or stat'd.
         """
-        import kiro_crew.dashboard.handlers as h
+        import aj_crew.dashboard.handlers as h
 
         proj = tmp_path / "checkout"
         (proj / ".kiro" / "prompts").mkdir(parents=True)
@@ -655,7 +655,7 @@ class TestLocalLookupIsBounded:
         pins the enumerated form, and with it the property that no path derived
         from caller input is ever handed to a filesystem call.
         """
-        import kiro_crew.dashboard.handlers as h
+        import aj_crew.dashboard.handlers as h
 
         proj = tmp_path / "checkout"
         d = proj / ".kiro" / "prompts"
@@ -685,7 +685,7 @@ class TestLocalLookupIsBounded:
 
     def test_a_packaged_spelling_does_not_probe_the_project(self, tmp_path, monkeypatch):
         """A user prompt's ``package`` is empty, so ``pkg/name`` can never name one."""
-        import kiro_crew.dashboard.handlers as h
+        import aj_crew.dashboard.handlers as h
 
         proj = tmp_path / "checkout"
         d = proj / ".kiro" / "prompts"
@@ -745,7 +745,7 @@ class TestExpandPromptMention:
 
         The patch target is ``chat_runner``'s own global rather than the
         handlers package the name came from: chat_runner does ``from
-        kiro_crew.dashboard.handlers import _find_prompt`` (chat_runner.py:120),
+        aj_crew.dashboard.handlers import _find_prompt`` (chat_runner.py:120),
         so rebinding the package attribute leaves the call at chat_runner.py:3730
         resolving the REAL resolver — which finds no prompt named "x" under the
         autouse-isolated HOME and returns ``not_found`` from the ``if not match``
@@ -759,7 +759,7 @@ class TestExpandPromptMention:
             raised.append(n)
             raise PermissionError
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._find_prompt", _raise_on_list)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._find_prompt", _raise_on_list)
         msg, status = _expand_prompt_mention("@x", _State(), _Slot())
         assert (msg, status) == ("@x", "not_found")
         assert raised == ["x"], "patched resolver never ran — the except arm was not exercised"
@@ -971,7 +971,7 @@ class TestPromptReadsGoThroughTheDescriptorGate:
         store = tmp_path / "credential-store"
         store.mkdir()
         (store / "credentials").write_text("# k = SHOULD-NOT-APPEAR\n", encoding="utf-8")
-        monkeypatch_target = "kiro_crew.hooks.is_sensitive_path"
+        monkeypatch_target = "aj_crew.hooks.is_sensitive_path"
         pkg = aim_dir / "Pkg"
         pkg.mkdir()
         (pkg / "creds.sop.md").symlink_to(store / "credentials")
@@ -1013,7 +1013,7 @@ class TestPromptReadsGoThroughTheDescriptorGate:
         secret = store / "credentials"
         secret.write_text("# aws_access_key_id = SHOULD-NOT-APPEAR\n", encoding="utf-8")
         monkeypatch.setattr(
-            "kiro_crew.hooks.is_sensitive_path", lambda p: "credential-store" in str(p)
+            "aj_crew.hooks.is_sensitive_path", lambda p: "credential-store" in str(p)
         )
         proj, d = self._checkout_prompts(tmp_path)
         (d / "creds.md").symlink_to(secret)
@@ -1075,7 +1075,7 @@ class TestPromptReadsGoThroughTheDescriptorGate:
     # untouched, which is exactly the window being simulated.
 
     def _swap_leaf_inside_the_gate(self, monkeypatch, entry: Path, secret: Path) -> None:
-        from kiro_crew import hooks as _hooks
+        from aj_crew import hooks as _hooks
 
         real_validate = _hooks.validate_file_path
 
@@ -1159,7 +1159,7 @@ class TestRunChatPrompts:
                 return
             await original_run_chat(state, slot, msg, **kw)
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._run_chat", _mock_run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._run_chat", _mock_run_chat)
         asyncio.run(_mock_run_chat(s, sl, "/prompts get agent-sop:review"))
         assert any("Loaded prompt" in m[1] for m in sl.messages)
         assert "Do review." in captured.get("expanded", "")
@@ -1187,7 +1187,7 @@ class TestRunChatPrompts:
         """Prompt discovered but blocked at read time by chat-level check."""
         _aim_pkg(aim_dir, "Pkg-1.0", "1", {"secret": "# S"})
         # Only patch chat-level check so prompt is discovered but blocked at read
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.is_sensitive_path", lambda p: True)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.is_sensitive_path", lambda p: True)
         s, sl = _ss()
         asyncio.run(_run_chat(s, sl, "/prompts get agent-sop:secret"))
         assert any("blocked" in m[1].lower() for m in sl.messages)
@@ -1197,7 +1197,7 @@ class TestRunChatPrompts:
         _aim_pkg(aim_dir, "Pkg-1.0", "1", {"secret": "# S"})
         # The owners of chat_turn run on the runner's globals, so the runner's
         # name is the one the read-time check calls.
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.is_sensitive_path", lambda p: True)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.is_sensitive_path", lambda p: True)
         # The @mention path runs after session acquisition, so it needs a real
         # DashboardState and slot rather than the minimal stubs.
         state = _make_state(tmp_path)
@@ -1244,7 +1244,7 @@ class TestPromptExpansionStaysOffTheEventLoop:
         """``asyncio.run`` drives the loop on the CALLING thread, so a resolve that
         reports that thread's id ran on the loop — and a chip append that reports
         anything else mutated a loop-owned ``asyncio.Event`` from a worker."""
-        import kiro_crew.dashboard.chat_runner as cr
+        import aj_crew.dashboard.chat_runner as cr
 
         real = cr._resolve_prompt_mention
         resolve_threads: list[int] = []
@@ -1281,7 +1281,7 @@ class TestPromptExpansionStaysOffTheEventLoop:
         can forget; keeping the slot out of the offloaded function's PARAMETERS is
         one it cannot, so that is what is pinned.
         """
-        import kiro_crew.dashboard.chat_runner as cr
+        import aj_crew.dashboard.chat_runner as cr
 
         assert list(inspect.signature(cr._resolve_prompt_mention).parameters) == [
             "message",
@@ -1296,8 +1296,8 @@ class TestPromptExpansionStaysOffTheEventLoop:
         import importlib
         import pkgutil
 
-        import kiro_crew.dashboard.chat_runner as cr
-        from kiro_crew.dashboard import chat_turn
+        import aj_crew.dashboard.chat_runner as cr
+        from aj_crew.dashboard import chat_turn
 
         tree = ast.parse(Path(cr.__file__).read_text(encoding="utf-8"))
         owners = [
@@ -1376,7 +1376,7 @@ class TestUnscopedDetailReadStaysOffTheEventLoop:
         so its thread is what says whether the tail came back to the loop before
         reading the file.
         """
-        import kiro_crew.hooks as hooks
+        import aj_crew.hooks as hooks
 
         proj = tmp_path / "checkout"
         d = proj / ".kiro" / "prompts"

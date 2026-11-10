@@ -19,7 +19,7 @@ from typing import Any
 import pytest
 from skill_script_helpers import load_skill_script
 
-from kiro_crew.crew_log.projection import (
+from aj_crew.crew_log.projection import (
     _FOLDS,
     FOLD_NAMES,
     INTERNAL_PROJECTION_NAMES,
@@ -27,7 +27,7 @@ from kiro_crew.crew_log.projection import (
 
 ROOT = Path(__file__).resolve().parents[1]
 GENERATOR = ROOT / "scripts" / "fold_catalogue.py"
-SKILL_DIR = ROOT / "src" / "kiro_crew" / "builtin_skills" / "kirocrew-dev" / "dashboard-template"
+SKILL_DIR = ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "dashboard-template"
 JSON_PATH = SKILL_DIR / "folds.json"
 MARKDOWN_PATH = SKILL_DIR / "FOLDS.md"
 
@@ -141,7 +141,7 @@ class TestANullFieldIsNeverGivenAGuessedType:
     """
 
     def test_every_optional_row_is_declared_or_unknown(self, committed: dict[str, Any]) -> None:
-        from kiro_crew import dashboard_types as dt
+        from aj_crew import dashboard_types as dt
 
         guessed: list[str] = []
         for fold in committed["folds"]:
@@ -175,7 +175,7 @@ class TestANullFieldIsNeverGivenAGuessedType:
 
         Three cases in one shape: a declared null, an undeclared null, and a plain value.
         """
-        from kiro_crew import dashboard_types as dt
+        from aj_crew import dashboard_types as dt
 
         entry = dt.FoldType(
             name="probe",
@@ -219,7 +219,7 @@ class TestOnlyFoldsDeclaringABinderAreBound:
             assert _FOLDS[name].bind_slot is not None
 
     def test_the_probe_binds_exactly_those_folds(self) -> None:
-        from kiro_crew import dashboard_types as dt
+        from aj_crew import dashboard_types as dt
 
         bound: list[str] = []
         for name, fold in _FOLDS.items():
@@ -240,7 +240,7 @@ class TestOnlyFoldsDeclaringABinderAreBound:
         assert sorted(bound) == expected
 
     def test_a_fold_with_no_binder_still_renders(self) -> None:
-        from kiro_crew import dashboard_types as dt
+        from aj_crew import dashboard_types as dt
 
         unbound = [name for name, fold in _FOLDS.items() if fold.bind_slot is None]
         assert unbound, "every fold declares a binder: the docstring's other half is stale"
@@ -547,7 +547,7 @@ class TestOneDerivation:
 
     def test_every_committed_row_carries_the_catalog_s_type(self, committed: Any) -> None:
         """Row by row, against ``dashboard_types.catalog``. The one source of types."""
-        from kiro_crew import dashboard_types as dt
+        from aj_crew import dashboard_types as dt
 
         shapes = {entry.name: dict(entry.shape) for entry in dt.catalog()}
         disagree: list[str] = []
@@ -583,7 +583,7 @@ class TestOneDerivation:
         """Not Python's. A row typed ``str`` is a row no Model field can declare, so the
         author has to translate it in their head and the catalog's own ``field_types``
         are the only list that matters."""
-        from kiro_crew import dashboard_types as dt
+        from aj_crew import dashboard_types as dt
 
         allowed = set(dt.describe()["field_types"]) | {dt.UNKNOWN_TYPE}
         seen = {row["type"] for fold in committed["folds"] for row in fold["fields"]}
@@ -660,7 +660,7 @@ class TestAFractionReadsIntegersOnly:
         Only the rows the empty probe reaches carry an observation; a declared null leaf
         is checked by `test_dashboard_types` instead.
         """
-        from kiro_crew.crew_log.projection import _FOLDS
+        from aj_crew.crew_log.projection import _FOLDS
 
         wrong: list[str] = []
         for fold in committed["folds"]:

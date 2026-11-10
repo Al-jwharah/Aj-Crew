@@ -10,7 +10,7 @@ const {
   stopGatewayGracefully,
   forceStopPort,
   classifyPortOwner,
-  isKirocrewCommand,
+  isAjcrewCommand,
 } = require("../gateway-stop");
 const { listenerSecretPath } = require("../local-token");
 
@@ -27,7 +27,7 @@ const SUPERVISOR_FILES = [
   "gateway-supervisor.js",
 ];
 
-// Helper: temp KIROCREW_HOME containing a .local_secret file.
+// Helper: temp AJCREW_HOME containing a .local_secret file.
 function tmpHomeWithSecret(secret) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "gw-stop-"));
   if (secret !== null) fs.writeFileSync(path.join(dir, ".local_secret"), secret);
@@ -90,7 +90,7 @@ test("postShutdown sends the listener entry for the dialed address", async () =>
   const { server, port, seen } = await startServer({ secret: "listener", status: 200 });
   writeListenerSecret(home, port, "127.0.0.1", "listener");
   try {
-    const ok = await postShutdown({ backendUrl: `http://127.0.0.1:${port}`, kirocrewHome: home });
+    const ok = await postShutdown({ backendUrl: `http://127.0.0.1:${port}`, ajcrewHome: home });
     assert.strictEqual(ok, true);
     assert.deepStrictEqual(seen, ["listener"], "the home-wide secret must not be sent");
   } finally { server.close(); fs.rmSync(home, { recursive: true, force: true }); }
@@ -104,7 +104,7 @@ test("postShutdown never sends .local_secret when no listener entry is published
   const { server, port, seen } = await startServer({ secret: "home-wide", status: 200 });
   try {
     for (const backendUrl of [`http://127.0.0.1:${port}`, `http://localhost:${port}`]) {
-      const ok = await postShutdown({ backendUrl, kirocrewHome: home });
+      const ok = await postShutdown({ backendUrl, ajcrewHome: home });
       assert.strictEqual(ok, false, backendUrl);
     }
     assert.deepStrictEqual(seen, [], "no request may carry a secret");
@@ -116,7 +116,7 @@ test("postShutdown does not reach for .local_secret when listener entries are re
   const { server, port, seen } = await startServer({ secret: "home-wide", status: 200 });
   writeListenerSecret(home, port, "127.0.0.1", "stale");
   try {
-    const ok = await postShutdown({ backendUrl: `http://127.0.0.1:${port}`, kirocrewHome: home });
+    const ok = await postShutdown({ backendUrl: `http://127.0.0.1:${port}`, ajcrewHome: home });
     assert.strictEqual(ok, false);
     assert.deepStrictEqual(seen, ["stale"]);
   } finally { server.close(); fs.rmSync(home, { recursive: true, force: true }); }
@@ -129,7 +129,7 @@ test("postShutdown sends nothing to localhost when the entries cover one family 
   const { server, port, seen } = await startServer({ secret: "home-wide", status: 200 });
   writeListenerSecret(home, port, "127.0.0.1", "v4-only");
   try {
-    const ok = await postShutdown({ backendUrl: `http://localhost:${port}`, kirocrewHome: home });
+    const ok = await postShutdown({ backendUrl: `http://localhost:${port}`, ajcrewHome: home });
     assert.strictEqual(ok, false);
     assert.deepStrictEqual(seen, []);
   } finally { server.close(); fs.rmSync(home, { recursive: true, force: true }); }
@@ -141,7 +141,7 @@ test("postShutdown refuses a target that is not an http loopback origin", async 
   const httpMod = { request: (opts) => { requests.push(opts); throw new Error("must not dial"); } };
   try {
     for (const backendUrl of ["http://192.0.2.1:5476", "https://127.0.0.1:5476", "not a url", ""]) {
-      const ok = await postShutdown({ backendUrl, kirocrewHome: home, httpMod });
+      const ok = await postShutdown({ backendUrl, ajcrewHome: home, httpMod });
       assert.strictEqual(ok, false, backendUrl);
     }
     assert.deepStrictEqual(requests, []);
@@ -150,7 +150,7 @@ test("postShutdown refuses a target that is not an http loopback origin", async 
 
 test("postShutdown returns false when no secret is published at all", async () => {
   const home = tmpHomeWithSecret(null);
-  const ok = await postShutdown({ backendUrl: "http://127.0.0.1:1", kirocrewHome: home });
+  const ok = await postShutdown({ backendUrl: "http://127.0.0.1:1", ajcrewHome: home });
   assert.strictEqual(ok, false);
   fs.rmSync(home, { recursive: true, force: true });
 });
@@ -163,7 +163,7 @@ test("postShutdown tries each listener entry -- a stale exact entry does not blo
   writeListenerSecret(home, port, "127.0.0.1", "stale-secret");
   writeListenerSecret(home, port, "0.0.0.0", "live-secret");
   try {
-    const ok = await postShutdown({ backendUrl: `http://127.0.0.1:${port}`, kirocrewHome: home });
+    const ok = await postShutdown({ backendUrl: `http://127.0.0.1:${port}`, ajcrewHome: home });
     assert.strictEqual(ok, true);
     assert.deepStrictEqual(seen, ["stale-secret", "live-secret"]);
   } finally { server.close(); fs.rmSync(home, { recursive: true, force: true }); }
@@ -176,7 +176,7 @@ test("stopGatewayGracefully hands postShutdown no caller-supplied secret", async
   try {
     await stopGatewayGracefully(proc, {
       backendUrl: "http://127.0.0.1:1",
-      kirocrewHome: "/unused",
+      ajcrewHome: "/unused",
       timeoutMs: 5000,
       postShutdownFn: async (opts) => { calls.push(opts); return false; },
     });
@@ -194,7 +194,7 @@ test("stopGatewayGracefully: a gateway with no listener entry is stopped by sign
   const { server, port, seen } = await startServer({ secret: "home-wide", status: 200 });
   try {
     await stopGatewayGracefully(proc, {
-      backendUrl: `http://127.0.0.1:${port}`, kirocrewHome: home, timeoutMs: 10000,
+      backendUrl: `http://127.0.0.1:${port}`, ajcrewHome: home, timeoutMs: 10000,
     });
     assert.notStrictEqual(proc.exitCode === null && proc.signalCode === null, true, "process should be gone");
     assert.deepStrictEqual(seen, [], "the home-wide secret must not be sent");
@@ -211,7 +211,7 @@ test("stopGatewayGracefully: happy path through the child's own listener entry",
   writeListenerSecret(home, port, "127.0.0.1", "listener");
   try {
     await stopGatewayGracefully(proc, {
-      backendUrl: `http://127.0.0.1:${port}`, kirocrewHome: home, timeoutMs: 10000,
+      backendUrl: `http://127.0.0.1:${port}`, ajcrewHome: home, timeoutMs: 10000,
     });
     assert.notStrictEqual(proc.exitCode === null && proc.signalCode === null, true, "process should be gone");
     assert.deepStrictEqual(seen, ["listener"]);
@@ -225,7 +225,7 @@ test("stopGatewayGracefully: SIGTERM fallback when endpoint fails", async () => 
   const { server, port } = await startServer({ secret: "s3cr3t", status: 500 }); // endpoint fails
   try {
     await stopGatewayGracefully(proc, {
-      backendUrl: `http://127.0.0.1:${port}`, kirocrewHome: home, timeoutMs: 10000,
+      backendUrl: `http://127.0.0.1:${port}`, ajcrewHome: home, timeoutMs: 10000,
     });
     assert.strictEqual(proc.signalCode, "SIGTERM");
   } finally { server.close(); fs.rmSync(home, { recursive: true, force: true }); }
@@ -250,7 +250,7 @@ test("stopGatewayGracefully: SIGKILL fallback when SIGTERM ignored", { skip: pro
   const { server, port } = await startServer({ secret: "s3cr3t", status: 500 });
   try {
     await stopGatewayGracefully(proc, {
-      backendUrl: `http://127.0.0.1:${port}`, kirocrewHome: home, timeoutMs: 800,
+      backendUrl: `http://127.0.0.1:${port}`, ajcrewHome: home, timeoutMs: 800,
     });
     assert.strictEqual(proc.signalCode, "SIGKILL");
   } finally { server.close(); fs.rmSync(home, { recursive: true, force: true }); }
@@ -267,7 +267,7 @@ test("stopGatewayGracefully: a SIGTERM-ignoring child still dies on Windows", { 
   const { server, port } = await startServer({ secret: "s3cr3t", status: 500 });
   try {
     await stopGatewayGracefully(proc, {
-      backendUrl: `http://127.0.0.1:${port}`, kirocrewHome: home, timeoutMs: 800,
+      backendUrl: `http://127.0.0.1:${port}`, ajcrewHome: home, timeoutMs: 800,
     });
     assert.notStrictEqual(
       proc.exitCode === null && proc.signalCode === null,
@@ -309,7 +309,7 @@ test("stopGatewayGracefully: the Windows fallback reaps the TREE, not just the g
   };
   await stopGatewayGracefully(proc, {
     backendUrl: "http://127.0.0.1:1",
-    kirocrewHome: "/nope",
+    ajcrewHome: "/nope",
     timeoutMs: 50,
     // The endpoint fails -- this is the fallback path, by construction.
     postShutdownFn: async () => false,
@@ -342,7 +342,7 @@ test("stopGatewayGracefully: a REJECTED tree kill still falls back to killing th
   };
   await stopGatewayGracefully(proc, {
     backendUrl: "http://127.0.0.1:1",
-    kirocrewHome: "/nope",
+    ajcrewHome: "/nope",
     timeoutMs: 50,
     postShutdownFn: async () => false,
     platform: "win32",
@@ -376,7 +376,7 @@ test("stopGatewayGracefully: does not resolve while the tree kill is still reapi
   };
   const stopping = stopGatewayGracefully(proc, {
     backendUrl: "http://127.0.0.1:1",
-    kirocrewHome: "/nope",
+    ajcrewHome: "/nope",
     timeoutMs: 5000,
     postShutdownFn: async () => false,
     platform: "win32",
@@ -423,7 +423,7 @@ test("stopGatewayGracefully: a HUNG tree kill still resolves, and never pre-empt
   const started = Date.now();
   await stopGatewayGracefully(proc, {
     backendUrl: "http://127.0.0.1:1",
-    kirocrewHome: "/nope",
+    ajcrewHome: "/nope",
     timeoutMs: 60,
     postShutdownFn: async () => false,
     platform: "win32",
@@ -554,7 +554,7 @@ test("stopGatewayGracefully: POSIX keeps signalling the child, not a tree kill",
   };
   await stopGatewayGracefully(proc, {
     backendUrl: "http://127.0.0.1:1",
-    kirocrewHome: "/nope",
+    ajcrewHome: "/nope",
     timeoutMs: 50,
     postShutdownFn: async () => false,
     platform: "linux",
@@ -568,7 +568,7 @@ test("stopGatewayGracefully: no-op on already-dead process", async () => {
   const proc = spawnDummy({ ignoreSigterm: false });
   await new Promise((r) => { proc.once("exit", r); proc.kill("SIGKILL"); });
   // Should resolve immediately without throwing.
-  await stopGatewayGracefully(proc, { backendUrl: "http://127.0.0.1:1", kirocrewHome: "/nope", timeoutMs: 500 });
+  await stopGatewayGracefully(proc, { backendUrl: "http://127.0.0.1:1", ajcrewHome: "/nope", timeoutMs: 500 });
   assert.ok(true);
 });
 
@@ -576,7 +576,7 @@ test("stopGatewayGracefully: no-op on already-dead process", async () => {
 // Injectable deps so we exercise the verify-the-kill-worked logic without a
 // real OS process. `listenSeq` is a queue of lsof results returned on each
 // successive call, letting a test model "killed then gone" vs "never gone".
-function fakeDeps({ listenSeq, command = "python -m kiro_crew gateway", onKill = () => {} }) {
+function fakeDeps({ listenSeq, command = "python -m aj_crew gateway", onKill = () => {} }) {
   let i = 0;
   const killed = [];
   return {
@@ -620,7 +620,7 @@ test("forceStopPort: UNKILLABLE owner still holds port -> freed=false, survivors
   assert.deepStrictEqual(r.survivors, [4242]);
 });
 
-test("forceStopPort: never signals a non-KiroCrew owner", async () => {
+test("forceStopPort: never signals a non-AjCrew owner", async () => {
   const deps = fakeDeps({ listenSeq: [[999], [999]], command: "nginx: worker process" });
   const r = await forceStopPort(7788, deps);
   assert.strictEqual(r.killed, 0);
@@ -634,7 +634,7 @@ test("forceStopPort: never signals a non-KiroCrew owner", async () => {
 });
 
 test("forceStopPort: foreign owner that vanishes during verify reports freed", async () => {
-  // A non-KiroCrew owner we skip, but the port frees on its own before we finish
+  // A non-AjCrew owner we skip, but the port frees on its own before we finish
   // (the other app exited). freed must reflect the real port state, not our kills.
   const deps = fakeDeps({ listenSeq: [[999], []], command: "nginx: worker process" });
   const r = await forceStopPort(7788, deps);
@@ -650,7 +650,7 @@ test("forceStopPort: freed reflects real port state even after killing our targe
   const seq = [[4242], [777]]; // ours dies, foreign 777 appears
   const deps = {
     getListenPids: async () => seq[Math.min(i++, seq.length - 1)],
-    getCommand: async () => "python -m kiro_crew gateway",
+    getCommand: async () => "python -m aj_crew gateway",
     kill: () => {},
     sleep: async () => {},
     verifyTimeoutMs: 1000,
@@ -672,10 +672,10 @@ test("forceStopPort: awaits an asynchronous Windows kill before verifying", asyn
       assert.strictEqual(killFinished, true, "verification raced taskkill completion");
       return [];
     },
-    getCommand: async () => "C:\\bundle\\kirocrew.exe gateway",
+    getCommand: async () => "C:\\bundle\\ajcrew.exe gateway",
     kill: async () => { killFinished = true; },
     sleep: async () => {},
-    isKirocrew: (command) => command.includes("kirocrew.exe"),
+    isAjcrew: (command) => command.includes("ajcrew.exe"),
   });
   assert.strictEqual(r.killed, 1);
   assert.strictEqual(r.freed, true);
@@ -703,10 +703,10 @@ test("forceStopPort: a failed Windows verification never claims recovery", async
       if (probes++ === 0) return [4242];
       throw new Error("netstat verify timed out");
     },
-    getCommand: async () => "C:\\bundle\\kirocrew.exe gateway",
+    getCommand: async () => "C:\\bundle\\ajcrew.exe gateway",
     kill: async () => {},
     sleep: async () => {},
-    isKirocrew: (command) => command.includes("kirocrew.exe"),
+    isAjcrew: (command) => command.includes("ajcrew.exe"),
     failClosedOnProbeError: true,
   });
   assert.deepStrictEqual(r, {
@@ -717,15 +717,15 @@ test("forceStopPort: a failed Windows verification never claims recovery", async
 
 // ── classifyPortOwner ───────────────────────────────────────────────────────
 // Ground truth for "is the thing on our port local, or a tunnel?". Every
-// outcome except a positively identified local KiroCrew process must be
+// outcome except a positively identified local AjCrew process must be
 // treated as "not ours" by callers.
 
-test("classifyPortOwner: local KiroCrew gateway is ours", async () => {
+test("classifyPortOwner: local AjCrew gateway is ours", async () => {
   const owner = await classifyPortOwner(5476, {
     getListenPids: async () => [4242],
-    getCommand: async () => "python -m kiro_crew gateway --port 5476",
+    getCommand: async () => "python -m aj_crew gateway --port 5476",
   });
-  assert.strictEqual(owner, "kirocrew");
+  assert.strictEqual(owner, "ajcrew");
 });
 
 // A gateway the OS service manager owns (launchd LaunchAgent / systemd unit) is
@@ -735,19 +735,19 @@ test("classifyPortOwner: local KiroCrew gateway is ours", async () => {
 test("classifyPortOwner: a service-managed gateway (ppid 1) is 'service'", async () => {
   const owner = await classifyPortOwner(5476, {
     getListenPids: async () => [4242],
-    getCommand: async () => "python -m kiro_crew gateway --port 5476",
+    getCommand: async () => "python -m aj_crew gateway --port 5476",
     getPpid: async () => "1",
   });
   assert.strictEqual(owner, "service");
 });
 
-test("classifyPortOwner: an app-spawned gateway (real ppid) stays 'kirocrew'", async () => {
+test("classifyPortOwner: an app-spawned gateway (real ppid) stays 'ajcrew'", async () => {
   const owner = await classifyPortOwner(5476, {
     getListenPids: async () => [4242],
-    getCommand: async () => "python -m kiro_crew gateway --port 5476",
+    getCommand: async () => "python -m aj_crew gateway --port 5476",
     getPpid: async () => "  3310\n",
   });
-  assert.strictEqual(owner, "kirocrew");
+  assert.strictEqual(owner, "ajcrew");
 });
 
 test("classifyPortOwner: an unreadable ppid fails closed to 'service'", async () => {
@@ -755,7 +755,7 @@ test("classifyPortOwner: an unreadable ppid fails closed to 'service'", async ()
   // mistaking a wedge for a service only costs an eviction we can explain.
   const owner = await classifyPortOwner(5476, {
     getListenPids: async () => [4242],
-    getCommand: async () => "python -m kiro_crew gateway --port 5476",
+    getCommand: async () => "python -m aj_crew gateway --port 5476",
     getPpid: async () => { throw new Error("ps failed"); },
   });
   assert.strictEqual(owner, "service");
@@ -766,16 +766,16 @@ test("classifyPortOwner: without a ppid probe the old classification stands", as
   // every local gateway as a service.
   const owner = await classifyPortOwner(5476, {
     getListenPids: async () => [4242],
-    getCommand: async () => "python -m kiro_crew gateway --port 5476",
+    getCommand: async () => "python -m aj_crew gateway --port 5476",
   });
-  assert.strictEqual(owner, "kirocrew");
+  assert.strictEqual(owner, "ajcrew");
 });
 
 test("forceStopPort: never SIGKILLs a service-managed gateway", async () => {
   const killed = [];
   const res = await forceStopPort(5476, {
     getListenPids: async () => [4242],
-    getCommand: async () => "python -m kiro_crew gateway --port 5476",
+    getCommand: async () => "python -m aj_crew gateway --port 5476",
     getPpid: async () => "1",
     kill: (pid, sig) => killed.push([pid, sig]),
     sleep: async () => {},
@@ -792,17 +792,17 @@ test("forceStopPort: never SIGKILLs a service-managed gateway", async () => {
 // "no job" answer keeps the service verdict.
 const PID_1_GATEWAY = {
   getListenPids: async () => [4242],
-  getCommand: async () => "python -m kiro_crew gateway --port 5476",
+  getCommand: async () => "python -m aj_crew gateway --port 5476",
   getPpid: async () => "1",
 };
 
-test("classifyPortOwner: a PID-1 gateway launchd runs no job for is an orphan, 'kirocrew'", async () => {
+test("classifyPortOwner: a PID-1 gateway launchd runs no job for is an orphan, 'ajcrew'", async () => {
   const asked = [];
   const owner = await classifyPortOwner(5476, {
     ...PID_1_GATEWAY,
     isLaunchdJob: async (pid) => { asked.push(pid); return false; },
   });
-  assert.strictEqual(owner, "kirocrew");
+  assert.strictEqual(owner, "ajcrew");
   assert.deepStrictEqual(asked, [4242]);
 });
 
@@ -824,7 +824,7 @@ test("classifyPortOwner: the job list is read only for a PID-1 holder", async ()
     getPpid: async () => "3310",
     isLaunchdJob: async () => { asked += 1; return true; },
   });
-  assert.strictEqual(owner, "kirocrew");
+  assert.strictEqual(owner, "ajcrew");
   assert.strictEqual(asked, 0);
 });
 
@@ -864,7 +864,7 @@ test("forceStopPort: still evicts a gateway this app spawned", async () => {
   const res = await forceStopPort(5476, {
     // Second probe reports the port free, i.e. the kill took.
     getListenPids: async () => (probes++ === 0 ? [4242] : []),
-    getCommand: async () => "python -m kiro_crew gateway --port 5476",
+    getCommand: async () => "python -m aj_crew gateway --port 5476",
     getPpid: async () => "3310",
     kill: (pid, sig) => killed.push([pid, sig]),
     sleep: async () => {},
@@ -912,7 +912,7 @@ test("classifyPortOwner: an unreadable command is reported unread, not as someon
   });
   assert.strictEqual(owner, "foreign");
   assert.deepStrictEqual(holders, [{ pid: 909, command: null }]);
-  assert.ok(!logs.some((line) => line.includes("NON-KiroCrew")), "an unread holder is not called non-Kiro-Crew");
+  assert.ok(!logs.some((line) => line.includes("NON-AjCrew")), "an unread holder is not called non-Aj-Crew");
   assert.ok(
     logs.some((line) => line.includes("held by pid=909, whose command could not be read")),
     "the log says the command could not be read",
@@ -923,10 +923,10 @@ test("classifyPortOwner: holders are reported only with a foreign verdict", asyn
   const holders = [];
   const owner = await classifyPortOwner(5476, {
     getListenPids: async () => [909, 4242],
-    getCommand: async (pid) => (pid === 4242 ? "kirocrew gateway" : "ssh -NL 5476:localhost:5476 host"),
+    getCommand: async (pid) => (pid === 4242 ? "ajcrew gateway" : "ssh -NL 5476:localhost:5476 host"),
     holders,
   });
-  assert.strictEqual(owner, "kirocrew");
+  assert.strictEqual(owner, "ajcrew");
   assert.deepStrictEqual(holders, []);
 });
 
@@ -952,96 +952,96 @@ test("classifyPortOwner: an unrunnable probe is 'unknown', never 'none'", async 
 test("classifyPortOwner: ours wins when a mixed set holds the port", async () => {
   const owner = await classifyPortOwner(5476, {
     getListenPids: async () => [909, 4242],
-    getCommand: async (pid) => (pid === 4242 ? "kirocrew gateway" : "ssh -NL 5476:localhost:5476 host"),
+    getCommand: async (pid) => (pid === 4242 ? "ajcrew gateway" : "ssh -NL 5476:localhost:5476 host"),
   });
-  assert.strictEqual(owner, "kirocrew");
+  assert.strictEqual(owner, "ajcrew");
 });
 
 test("classifyPortOwner: a composed edition's gateway classifies as ours, not foreign", async () => {
   const owner = await classifyPortOwner(5476, {
     getListenPids: async () => [4242],
-    getCommand: async () => "/opt/edition/bin/python3.12 -s -P -m kirocrew_enterprise gateway --port 5476",
+    getCommand: async () => "/opt/edition/bin/python3.12 -s -P -m ajcrew_enterprise gateway --port 5476",
   });
-  assert.strictEqual(owner, "kirocrew");
+  assert.strictEqual(owner, "ajcrew");
 });
 
-test("classifyPortOwner and forceStopPort share one KiroCrew matcher", async () => {
+test("classifyPortOwner and forceStopPort share one AjCrew matcher", async () => {
   // Drift between the two would let one mis-target a stranger's process.
-  assert.ok(isKirocrewCommand("python -m kiro_crew gateway"));
-  assert.ok(isKirocrewCommand("/Applications/KiroCrew.app/.../kirocrew"));
-  assert.ok(!isKirocrewCommand("ssh -NL 5476:localhost:5476 host"));
-  assert.ok(!isKirocrewCommand("ssh -NL 5476:localhost:5476 kirocrew"));
+  assert.ok(isAjcrewCommand("python -m aj_crew gateway"));
+  assert.ok(isAjcrewCommand("/Applications/AjCrew.app/.../ajcrew"));
+  assert.ok(!isAjcrewCommand("ssh -NL 5476:localhost:5476 host"));
+  assert.ok(!isAjcrewCommand("ssh -NL 5476:localhost:5476 ajcrew"));
   // The matcher keys on the executable/module TOKEN, not a path substring:
-  // an unrelated process merely living under a `kirocrew` home dir is foreign.
-  assert.ok(!isKirocrewCommand("C:\\Users\\kirocrew\\OtherApp\\server.exe --port 5476"));
-  assert.ok(!isKirocrewCommand("/home/kirocrew/some-other-server --port 5476"));
-  assert.ok(!isKirocrewCommand("C:\\Users\\kirocrew\\python.exe -m http.server 5476"));
-  assert.ok(!isKirocrewCommand("python app.py C:\\tmp\\kirocrew"));
-  assert.ok(!isKirocrewCommand("python app.py -m kiro_crew"));
+  // an unrelated process merely living under a `ajcrew` home dir is foreign.
+  assert.ok(!isAjcrewCommand("C:\\Users\\ajcrew\\OtherApp\\server.exe --port 5476"));
+  assert.ok(!isAjcrewCommand("/home/ajcrew/some-other-server --port 5476"));
+  assert.ok(!isAjcrewCommand("C:\\Users\\ajcrew\\python.exe -m http.server 5476"));
+  assert.ok(!isAjcrewCommand("python app.py C:\\tmp\\ajcrew"));
+  assert.ok(!isAjcrewCommand("python app.py -m aj_crew"));
   // A POSIX `ps` line is unquoted, so an install path with a space arrives
   // split across tokens. Our own gateway must still be identified there, and a
   // later argument must still never pose as the executable.
-  assert.ok(isKirocrewCommand("/Users/Jane Doe/Apps/KiroCrew.app/Contents/Resources/bin/kirocrew gateway --port 5476"));
-  assert.ok(isKirocrewCommand("/Users/Jane Doe/venv/bin/python -m kiro_crew gateway"));
-  assert.ok(!isKirocrewCommand("/tmp/evil --spoof /usr/local/bin/kirocrew"));
-  assert.ok(!isKirocrewCommand("/tmp/evil /usr/local/bin/kirocrew"));
-  assert.ok(!isKirocrewCommand("/tmp/dir with space/evil kirocrew --port 5476"));
+  assert.ok(isAjcrewCommand("/Users/Jane Doe/Apps/AjCrew.app/Contents/Resources/bin/ajcrew gateway --port 5476"));
+  assert.ok(isAjcrewCommand("/Users/Jane Doe/venv/bin/python -m aj_crew gateway"));
+  assert.ok(!isAjcrewCommand("/tmp/evil --spoof /usr/local/bin/ajcrew"));
+  assert.ok(!isAjcrewCommand("/tmp/evil /usr/local/bin/ajcrew"));
+  assert.ok(!isAjcrewCommand("/tmp/dir with space/evil ajcrew --port 5476"));
   // Windows identity is path-bound: a matching basename at any other location
   // remains foreign and can never authorize taskkill.
-  const trustedCli = "C:\\Program Files\\KiroCrew\\kirocrew.exe";
-  const trustedBackend = "C:\\Program Files\\KiroCrew\\kirocrew-backend.exe";
-  const trustedPython = "C:\\Program Files\\KiroCrew\\python.exe";
-  assert.ok(isKirocrewCommand(`"${trustedCli}"`, {
+  const trustedCli = "C:\\Program Files\\AjCrew\\ajcrew.exe";
+  const trustedBackend = "C:\\Program Files\\AjCrew\\ajcrew-backend.exe";
+  const trustedPython = "C:\\Program Files\\AjCrew\\python.exe";
+  assert.ok(isAjcrewCommand(`"${trustedCli}"`, {
     trustedExecutablePaths: [trustedCli],
   }));
-  assert.ok(isKirocrewCommand(`"${trustedBackend}" --gateway`, {
+  assert.ok(isAjcrewCommand(`"${trustedBackend}" --gateway`, {
     trustedExecutablePaths: [trustedBackend],
   }));
-  assert.ok(isKirocrewCommand(`"${trustedPython}" -m kiro_crew gateway`, {
+  assert.ok(isAjcrewCommand(`"${trustedPython}" -m aj_crew gateway`, {
     trustedExecutablePaths: [trustedPython],
   }));
-  assert.ok(!isKirocrewCommand("C:\\Temp\\kirocrew.exe gateway", {
+  assert.ok(!isAjcrewCommand("C:\\Temp\\ajcrew.exe gateway", {
     trustedExecutablePaths: [trustedCli],
   }));
 });
 
-test("isKirocrewCommand: a composed edition's `-m kirocrew_<edition>` gateway is ours", () => {
+test("isAjcrewCommand: a composed edition's `-m ajcrew_<edition>` gateway is ours", () => {
   // A companion package boots the gateway from its own top-level module so its
-  // composition root runs instead of the core CLI. Hardcoding `kiro_crew` made
+  // composition root runs instead of the core CLI. Hardcoding `aj_crew` made
   // every such gateway a "foreign holder" the launcher refused to reuse. The
   // core must not learn any edition's name, so the match is the naming
-  // convention `kirocrew_<edition>`, mirroring the Python side's
+  // convention `ajcrew_<edition>`, mirroring the Python side's
   // `_gateway_module_roots()`.
-  assert.ok(isKirocrewCommand("python -m kirocrew_enterprise gateway"));
-  assert.ok(isKirocrewCommand("/opt/edition/bin/python3.12 -s -P -m kirocrew_acme2 gateway --port 5476"));
-  assert.ok(isKirocrewCommand("/Users/Jane Doe/venv/bin/python -m kirocrew_enterprise gateway"));
-  const trustedPython = "C:\\Program Files\\KiroCrew\\python.exe";
-  assert.ok(isKirocrewCommand(`"${trustedPython}" -m kirocrew_enterprise gateway`, {
+  assert.ok(isAjcrewCommand("python -m ajcrew_enterprise gateway"));
+  assert.ok(isAjcrewCommand("/opt/edition/bin/python3.12 -s -P -m ajcrew_acme2 gateway --port 5476"));
+  assert.ok(isAjcrewCommand("/Users/Jane Doe/venv/bin/python -m ajcrew_enterprise gateway"));
+  const trustedPython = "C:\\Program Files\\AjCrew\\python.exe";
+  assert.ok(isAjcrewCommand(`"${trustedPython}" -m ajcrew_enterprise gateway`, {
     trustedExecutablePaths: [trustedPython],
   }));
   // Still only the FIRST execution selector: `-m` later in argv is an argument.
-  assert.ok(!isKirocrewCommand("python app.py -m kirocrew_enterprise"));
-  assert.ok(!isKirocrewCommand("python -c 'import x' -m kirocrew_enterprise"));
+  assert.ok(!isAjcrewCommand("python app.py -m ajcrew_enterprise"));
+  assert.ok(!isAjcrewCommand("python -c 'import x' -m ajcrew_enterprise"));
   // Exact top-level module only. A dotted submodule, a bare prefix, a
   // look-alike, mixed case or a hyphen never authorize a kill.
-  assert.ok(!isKirocrewCommand("python -m kirocrew_enterprise.tools gateway"));
-  assert.ok(!isKirocrewCommand("python -m kirocrew_ gateway"));
-  assert.ok(!isKirocrewCommand("python -m kirocrew gateway"));
-  assert.ok(!isKirocrewCommand("python -m kirocrew-enterprise gateway"));
-  assert.ok(!isKirocrewCommand("python -m Kirocrew_Enterprise gateway"));
-  assert.ok(!isKirocrewCommand("python -m kiro_crew_enterprise gateway"));
-  assert.ok(!isKirocrewCommand("python -m mykirocrew_enterprise gateway"));
-  assert.ok(!isKirocrewCommand("python -m kiro_crew.dashboard gateway"));
-  assert.ok(!isKirocrewCommand("python -m"));
+  assert.ok(!isAjcrewCommand("python -m ajcrew_enterprise.tools gateway"));
+  assert.ok(!isAjcrewCommand("python -m ajcrew_ gateway"));
+  assert.ok(!isAjcrewCommand("python -m ajcrew gateway"));
+  assert.ok(!isAjcrewCommand("python -m ajcrew-enterprise gateway"));
+  assert.ok(!isAjcrewCommand("python -m Ajcrew_Enterprise gateway"));
+  assert.ok(!isAjcrewCommand("python -m aj_crew_enterprise gateway"));
+  assert.ok(!isAjcrewCommand("python -m myajcrew_enterprise gateway"));
+  assert.ok(!isAjcrewCommand("python -m aj_crew.dashboard gateway"));
+  assert.ok(!isAjcrewCommand("python -m"));
   // The module alone never authorizes a kill: the first positional after it
-  // must be a server subcommand, mirroring `_KIROCREW_SERVER_SUBCOMMANDS`. A
-  // process that merely imports a `kirocrew_*` module on our port stays foreign.
-  assert.ok(isKirocrewCommand("python -m kirocrew_enterprise dashboard --port 5476"));
-  assert.ok(isKirocrewCommand("python -m kirocrew_enterprise start"));
-  assert.ok(!isKirocrewCommand("python -m kirocrew_backup"));
-  assert.ok(!isKirocrewCommand("python -m kirocrew_backup serve --port 5476"));
-  assert.ok(!isKirocrewCommand("python -m kirocrew_enterprise run gateway"));
-  assert.ok(!isKirocrewCommand("python -m kirocrew_enterprise --port 5476 gateway"));
-  assert.ok(!isKirocrewCommand("python -m kiro_crew"));
-  assert.ok(!isKirocrewCommand("python -m kiro_crew run /tmp/spec.md"));
+  // must be a server subcommand, mirroring `_AJCREW_SERVER_SUBCOMMANDS`. A
+  // process that merely imports a `ajcrew_*` module on our port stays foreign.
+  assert.ok(isAjcrewCommand("python -m ajcrew_enterprise dashboard --port 5476"));
+  assert.ok(isAjcrewCommand("python -m ajcrew_enterprise start"));
+  assert.ok(!isAjcrewCommand("python -m ajcrew_backup"));
+  assert.ok(!isAjcrewCommand("python -m ajcrew_backup serve --port 5476"));
+  assert.ok(!isAjcrewCommand("python -m ajcrew_enterprise run gateway"));
+  assert.ok(!isAjcrewCommand("python -m ajcrew_enterprise --port 5476 gateway"));
+  assert.ok(!isAjcrewCommand("python -m aj_crew"));
+  assert.ok(!isAjcrewCommand("python -m aj_crew run /tmp/spec.md"));
 });

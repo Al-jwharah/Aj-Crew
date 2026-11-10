@@ -31,15 +31,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from body_stream_helpers import attach_json_body
 
-from kiro_crew import artifacts as art_mod
-from kiro_crew.artifacts import ArtifactFolderStore, ArtifactStore
-from kiro_crew.dashboard.handlers import artifacts as art_handlers
-from kiro_crew.dashboard.handlers.artifacts import (
+from aj_crew import artifacts as art_mod
+from aj_crew.artifacts import ArtifactFolderStore, ArtifactStore
+from aj_crew.dashboard.handlers import artifacts as art_handlers
+from aj_crew.dashboard.handlers.artifacts import (
     api_artifact_folder_create,
     api_artifact_folder_delete,
     api_artifact_folder_update,
 )
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 # ── Fixtures ────────────────────────────────────────────────────────────────
 

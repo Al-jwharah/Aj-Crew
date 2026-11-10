@@ -21,8 +21,8 @@ from taskrunner_helpers import (
     _make_mock_sessions,
 )
 
-from kiro_crew.task_models import PROGRESS_FILE
-from kiro_crew.taskrunner import (
+from aj_crew.task_models import PROGRESS_FILE
+from aj_crew.taskrunner import (
     MAX_TOTAL_TASKS,
     Step,
     StepStatus,
@@ -96,7 +96,7 @@ class TestPlanRevision:
 
         sessions = _make_mock_sessions()
 
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         original_steps = json.dumps([{"title": "Broken step", "description": "Will fail"}])
         replan_steps = json.dumps([{"title": "Fixed step", "description": "Will work"}])
@@ -162,7 +162,7 @@ class TestPlanRevision:
 
         sessions = _make_mock_sessions()
 
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         step_json = json.dumps([{"title": "Always fails", "description": "d"}])
 
@@ -207,7 +207,7 @@ class TestPlanRevision:
 
         sessions = _make_mock_sessions()
 
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         original_steps = json.dumps([{"title": "Broken", "description": "d"}])
         replan_steps = json.dumps(
@@ -274,7 +274,7 @@ class TestPlanRevision:
 
         sessions = _make_mock_sessions()
 
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         original = json.dumps([{"title": "Task ", "description": "d"}])
         replan1 = json.dumps([{"title": "Replan1 step", "description": "d"}])
@@ -338,7 +338,7 @@ class TestSelfReview:
         sessions = _make_mock_sessions()
         provider = MagicMock()
 
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         async def _stream(msg: str):
             yield LLMEvent(kind="text_chunk", text='{"ok": true}')
@@ -353,7 +353,7 @@ class TestSelfReview:
         step = Step(index=1, title="Test", description="d", status=StepStatus.PASSED)
         run.tasks = [step]
 
-        with patch("kiro_crew.task_executor.stream_and_collect_json", return_value={"ok": True}):
+        with patch("aj_crew.task_executor.stream_and_collect_json", return_value={"ok": True}):
             result = await runner.self_review(run, step)
 
         assert result is True
@@ -372,7 +372,7 @@ class TestSelfReview:
         run.tasks = [step]
 
         with patch(
-            "kiro_crew.task_executor.stream_and_collect_json",
+            "aj_crew.task_executor.stream_and_collect_json",
             return_value={"ok": False, "issue": "wrong file modified"},
         ):
             result = await runner.self_review(run, step)
@@ -408,8 +408,8 @@ class TestSelfReview:
 
         judge = AsyncMock(return_value={"ok": True})
         with (
-            patch("kiro_crew.task_executor.git_coord.get_step_diff", AsyncMock(return_value="")),
-            patch("kiro_crew.task_executor.stream_and_collect_json", judge),
+            patch("aj_crew.task_executor.git_coord.get_step_diff", AsyncMock(return_value="")),
+            patch("aj_crew.task_executor.stream_and_collect_json", judge),
         ):
             result = await runner.self_review(run, step)
 
@@ -422,7 +422,7 @@ class TestSelfReview:
         self, tmp_path: Path
     ) -> None:
         """A failed commit (non-fatal) explains the missing diff, so review still runs."""
-        from kiro_crew.task_executor import self_review
+        from aj_crew.task_executor import self_review
 
         sessions = _make_mock_sessions()
         sessions.get_or_create = AsyncMock(return_value=(MagicMock(), True, False))
@@ -432,8 +432,8 @@ class TestSelfReview:
         run.tasks = [step]
 
         with (
-            patch("kiro_crew.task_executor.git_coord.get_step_diff", AsyncMock(return_value="")),
-            patch("kiro_crew.task_executor.stream_and_collect_json", return_value={"ok": True}),
+            patch("aj_crew.task_executor.git_coord.get_step_diff", AsyncMock(return_value="")),
+            patch("aj_crew.task_executor.stream_and_collect_json", return_value={"ok": True}),
         ):
             assert await self_review(run, step, sessions, "", commit_failed=True) is True
 
@@ -448,7 +448,7 @@ class TestSelfReview:
         run.tasks = [step]
         sessions.get_or_create = AsyncMock(return_value=(MagicMock(), True, False))
 
-        with patch("kiro_crew.task_executor.stream_and_collect_json", return_value={"ok": True}):
+        with patch("aj_crew.task_executor.stream_and_collect_json", return_value={"ok": True}):
             assert await runner.self_review(run, step) is True
 
     @pytest.mark.asyncio
@@ -467,8 +467,8 @@ class TestSelfReview:
             return False
 
         with (
-            patch("kiro_crew.task_executor.self_review", side_effect=_unverified),
-            patch("kiro_crew.task_executor.execute_task", AsyncMock(return_value=True)) as ex,
+            patch("aj_crew.task_executor.self_review", side_effect=_unverified),
+            patch("aj_crew.task_executor.execute_task", AsyncMock(return_value=True)) as ex,
         ):
             success = await runner._execute_single_task(run, step, "key")
 
@@ -603,7 +603,7 @@ class TestEdgeCases:
                 return False
             return True
 
-        with patch("kiro_crew.task_executor.self_review", side_effect=_review_once):
+        with patch("aj_crew.task_executor.self_review", side_effect=_review_once):
             success = await runner._execute_single_task(run, step, "key")
 
         assert success is True
@@ -640,7 +640,7 @@ class TestEdgeCases:
 
         sessions = _make_mock_sessions()
 
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         step_json = json.dumps(
             [

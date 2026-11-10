@@ -86,7 +86,7 @@ vi.mock('../../api/client', () => ({
     artifacts: vi.fn(() => Promise.resolve({ artifacts: [] })),
     // `dashboard.crewmate_threads` (reply threads) is read from the shared config
     // query; an empty config is the default -- the flag is OFF.
-    kirocrewConfig: vi.fn(() => Promise.resolve({})),
+    ajcrewConfig: vi.fn(() => Promise.resolve({})),
     // The Schedules chip's count and its tab body read the whole cron list and
     // filter it per crewmate (`wakesCrew`). Resolved-and-empty is the state every
     // case not about schedules wants: the chip reads 0/0, which is an ANSWER of
@@ -96,7 +96,7 @@ vi.mock('../../api/client', () => ({
     // `wakesCrew`'s default-crew fallback needs to know which crew is the default,
     // or every unbound job in the install would be attributed to whichever
     // crewmate happens to be open.
-    defaultAgent: vi.fn(() => Promise.resolve({ default_agent: 'kirocrew' })),
+    defaultAgent: vi.fn(() => Promise.resolve({ default_agent: 'ajcrew' })),
     // The schedule row's own controls (pause / run now), reached through
     // `useCronActions` once the Schedules tab is open.
     toggleCron: vi.fn(() => Promise.resolve({})),
@@ -107,13 +107,13 @@ vi.mock('../../api/client', () => ({
     // create write. Quiet defaults — one custom agent list item and one
     // workspace — so the dialog renders without its own options-failed notice
     // in every case that does not open it.
-    agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'kirocrew' })),
-    // The crew editor's roster read (KiroCrewAgent list), fired when the
+    agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'ajcrew' })),
+    // The crew editor's roster read (AjCrewAgent list), fired when the
     // thread-header pencil opens the in-place editor (CREW-18688).
-    kirocrewAgents: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'kirocrew' })),
+    ajcrewAgents: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'ajcrew' })),
     workspaces: vi.fn(() => Promise.resolve({ workspaces: [{ name: 'default' }] })),
     createWorkspace: vi.fn(() => Promise.resolve({ name: 'staging' })),
-    createKirocrewAgent: vi.fn(() => Promise.resolve({ ok: true })),
+    createAjcrewAgent: vi.fn(() => Promise.resolve({ ok: true })),
     // The guided (embedded Meet CrewMates) flow's reads and its schedule write.
     agentsInstalled: vi.fn(() => Promise.resolve([])),
     getSlackConfig: vi.fn(() => Promise.resolve({ connected: false })),
@@ -342,26 +342,26 @@ afterEach(realCreateClock)
 
 describe('MembersPage roster', () => {
   it('reply threads off (the default): no footer read is issued and no thread notice is drawn', async () => {
-    await renderPage([row()], 'kirocrew', { route: '/members?member=oncall' })
+    await renderPage([row()], 'ajcrew', { route: '/members?member=oncall' })
     await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
     // The config read has resolved (to an empty config) by the time the pane is up.
-    await waitFor(() => expect(api.kirocrewConfig).toHaveBeenCalled())
+    await waitFor(() => expect(api.ajcrewConfig).toHaveBeenCalled())
     expect(threadsSummary).not.toHaveBeenCalled()
     expect(screen.queryByTestId('member-threads-error-row')).toBeNull()
     expect(screen.queryByTestId('thread-panel')).toBeNull()
   })
 
   it('reply threads on: the footer read is issued for the confirmed slot and its failure is shown', async () => {
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ dashboard: { crewmate_threads: true } })
-    await renderPage([row()], 'kirocrew', { route: '/members?member=oncall' })
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ dashboard: { crewmate_threads: true } })
+    await renderPage([row()], 'ajcrew', { route: '/members?member=oncall' })
     await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
     await waitFor(() => expect(threadsSummary).toHaveBeenCalledWith('member-oncall'))
     await screen.findByTestId('member-threads-error-row', undefined, PANE_READY)
   })
 
   it('a failed config read is said with a Retry, not rendered as threads off', async () => {
-    vi.mocked(api.kirocrewConfig).mockRejectedValue(new Error('boom'))
-    await renderPage([row()], 'kirocrew', { route: '/members?member=oncall' })
+    vi.mocked(api.ajcrewConfig).mockRejectedValue(new Error('boom'))
+    await renderPage([row()], 'ajcrew', { route: '/members?member=oncall' })
     await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
     // The failure is a notice on the standard path, with the read offered again.
     await screen.findByTestId('member-threads-flag-error-row', undefined, PANE_READY)
@@ -370,7 +370,7 @@ describe('MembersPage roster', () => {
     expect(threadsSummary).not.toHaveBeenCalled()
     expect(screen.queryByTestId('thread-panel')).toBeNull()
     // Retry re-reads; a config that now says on turns the feature on in place.
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ dashboard: { crewmate_threads: true } })
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ dashboard: { crewmate_threads: true } })
     fireEvent.click(screen.getByTestId('member-threads-flag-retry'))
     await waitFor(() => expect(threadsSummary).toHaveBeenCalledWith('member-oncall'))
     await waitFor(() => expect(screen.queryByTestId('member-threads-flag-error-row')).toBeNull())
@@ -380,7 +380,7 @@ describe('MembersPage roster', () => {
     vi.mocked(api.autonudgeList).mockRejectedValue(new Error('patrol unavailable'))
     vi.mocked(api.teams.list).mockRejectedValue(new Error('teams unavailable'))
 
-    await renderPage([row()], 'kirocrew', { route: '/members?member=oncall' })
+    await renderPage([row()], 'ajcrew', { route: '/members?member=oncall' })
     await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
 
     const aside = screen.getByTestId('member-roster')
@@ -395,7 +395,7 @@ describe('MembersPage roster', () => {
   })
 
   it('shows a patrol error when a refetch fails after a good cached read', async () => {
-    const { queryClient } = await renderPage([row()], 'kirocrew', { route: '/members?member=oncall' })
+    const { queryClient } = await renderPage([row()], 'ajcrew', { route: '/members?member=oncall' })
     await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
     await waitFor(() => expect(api.autonudgeList).toHaveBeenCalled())
 
@@ -410,7 +410,7 @@ describe('MembersPage roster', () => {
     // The roster reads no default crewmate: a plain session is the default
     // custom agent (a template), so the teams read is the one notice here.
     vi.mocked(api.teams.list).mockRejectedValue(new Error('teams unavailable'))
-    const { queryClient } = await renderPage([row()], 'kirocrew', { route: '/members?member=oncall' })
+    const { queryClient } = await renderPage([row()], 'ajcrew', { route: '/members?member=oncall' })
     await screen.findByTestId('member-main-teams-error', undefined, PANE_READY)
 
     // A real, named button; pressing it removes the notice everywhere.
@@ -490,7 +490,7 @@ describe('MembersPage roster', () => {
   })
 
   it('only Mate\'s thread asks for a first welcome; a mate not created on this page asks for none', async () => {
-    await renderPage([defaultRow(), row({ name: 'mate', slug: 'mate', kiro_agent: 'kirocrew', has_dm_message: true }), row({ name: 'alpha', slug: 'alpha', last_active_ts: 50 })])
+    await renderPage([defaultRow(), row({ name: 'mate', slug: 'mate', kiro_agent: 'ajcrew', has_dm_message: true }), row({ name: 'alpha', slug: 'alpha', last_active_ts: 50 })])
     expect(await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)).toHaveTextContent('member-alpha')
     // The first crewmate is shown by its label, on whatever template it runs.
     fireEvent.click(await rosterRow('Bot'))
@@ -502,7 +502,7 @@ describe('MembersPage roster', () => {
   })
 
   it('the default member, opened explicitly, asks for no Mate greeting', async () => {
-    await renderPage([defaultRow(), assistantRow()], 'kirocrew', { route: '/members?member=default' })
+    await renderPage([defaultRow(), assistantRow()], 'ajcrew', { route: '/members?member=default' })
     expect(await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)).toHaveTextContent('member-default')
     expect(screen.queryByTestId('assistant-welcome-stub')).toBeNull()
     expect(api.memberGreet).not.toHaveBeenCalled()
@@ -535,7 +535,7 @@ describe('MembersPage roster', () => {
     // crewmate (ONCALL beside oncall would share one slug and its chat could
     // never open). New team, which has no part in that check, stays live.
     expect(await probeAddCrewmate()).toEqual({ held: true, reason: 'Could not load your bots.' })
-    ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: [row()], default_agent: 'kirocrew' })
+    ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: [row()], default_agent: 'ajcrew' })
     fireEvent.click(screen.getByTestId('member-column-load-retry'))
     expect(await rosterRow('oncall')).toBeInTheDocument()
     expect(screen.queryByTestId('member-roster-error')).toBeNull()
@@ -665,10 +665,10 @@ describe('MembersPage roster cache (React Query)', () => {
     await rosterRow('oncall')
     ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({
       members: [row(), row({ name: 'research', slug: 'research' })],
-      default_agent: 'kirocrew',
+      default_agent: 'ajcrew',
     })
     await act(async () => {
-      await queryClient.invalidateQueries({ queryKey: ['kirocrew-agents'] })
+      await queryClient.invalidateQueries({ queryKey: ['ajcrew-agents'] })
     })
     expect(await rosterRow('research')).toBeInTheDocument()
     // In place: the row that was already there never left the screen.
@@ -681,7 +681,7 @@ describe('MembersPage roster cache (React Query)', () => {
     await rosterRow('oncall')
     ;(api.members as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('boom'))
     await act(async () => {
-      await queryClient.invalidateQueries({ queryKey: ['kirocrew-agents'] })
+      await queryClient.invalidateQueries({ queryKey: ['ajcrew-agents'] })
     })
     // The re-read and the one retry an answered failure gets
     // (`retryThroughRestart`).
@@ -709,7 +709,7 @@ describe('MembersPage thread', () => {
       source: 'api', message: rawReason, status: 409, code: 'memory_unavailable',
       endpoint: '/api/members/oncall/thread', detail: rawReason,
     })
-    const { queryClient } = await renderPage([row()], 'kirocrew', { thread: new Error(rawReason) })
+    const { queryClient } = await renderPage([row()], 'ajcrew', { thread: new Error(rawReason) })
     const notice = await screen.findByTestId('member-thread-error', undefined, PANE_READY)
     expect(notice).toHaveTextContent(/Could not open this bot's chat/i)
     expect(notice).not.toHaveTextContent('Private memory database is unreadable')
@@ -800,7 +800,7 @@ describe('MembersPage thread', () => {
     // fresh visit no longer auto-opens anyone, #11763), so the failing POST
     // is that restore.
     localStorage.setItem(LAST_MEMBER_KEY, 'oncall')
-    await renderPage([row()], 'kirocrew', { thread: new Error('Create private memory in the member editor.') })
+    await renderPage([row()], 'ajcrew', { thread: new Error('Create private memory in the member editor.') })
     expect(
       await screen.findByText(/Could not open this bot's chat/i, undefined, PANE_READY),
     ).toBeInTheDocument()
@@ -816,7 +816,7 @@ describe('MembersPage thread', () => {
     // first-bound crew. Opening the OTHER one must not mount that thread.
     await renderPage(
       [row({ name: 'Oncall', slug: 'oncall' }), row({ name: 'oncall', slug: 'oncall' })],
-      'kirocrew',
+      'ajcrew',
       { thread: { slot_key: 'member-oncall', slug: 'oncall', member: 'Oncall', created: false } },
     )
     fireEvent.click(await rosterRow('oncall'))

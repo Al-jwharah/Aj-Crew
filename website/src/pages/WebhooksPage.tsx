@@ -39,7 +39,7 @@ import type {
   WebhookFreshness, WebhookOutcome, WebhookRunRecord,
   WebhookTestResult, WebhookTokenCreated, WebhookTokenEntry, WebhooksView,
 } from '../api/client'
-import AgentSelector, { type KiroCrewAgent } from '../components/AgentSelector'
+import AgentSelector, { type AjCrewAgent } from '../components/AgentSelector'
 import ErrorNotice from '../components/ErrorNotice'
 import { copyToClipboard, copyCode } from '../utils/clipboard'
 import { useScrollEdges } from '../hooks/useScrollEdges'
@@ -465,11 +465,11 @@ export default function WebhooksPage() {
     const firstSource = view.tokens[0]
     if (firstSource) setSelection({ kind: 'token', id: firstSource.id })
   }, [isLoading, view.tokens])
-  const agentsQuery = useQuery<KiroCrewAgent[]>({
+  const agentsQuery = useQuery<AjCrewAgent[]>({
     queryKey: ['agents-installed'],
     queryFn: async () => {
       const response = await Promise.resolve(api.agentsInstalled?.())
-      return Array.isArray(response) ? response as KiroCrewAgent[] : []
+      return Array.isArray(response) ? response as AjCrewAgent[] : []
     },
     retry: false,
   })
@@ -914,7 +914,7 @@ export default function WebhooksPage() {
         </div>
       </div>
 
-      <Section title={i18nT('pages.kiroCrewAgentsPage.routing')}>
+      <Section title={i18nT('pages.ajCrewAgentsPage.routing')}>
         <div className="flex items-center justify-between gap-4">
           <div>
             <div className="text-[13px] font-medium text-text-strong">{i18nT('pages.channelPage.agent')}</div>
@@ -1255,7 +1255,7 @@ export default function WebhooksPage() {
               disabled={sendTest.isPending || !live || !selectedToken.enabled}
               aria-label={i18nT('pages.webhooksPage.send_test_request')}
               title={i18nT('pages.webhooksPage.send_test_request')}
-              onClick={() => sendTest.mutate(selectedToken.agent || 'kirocrew')}
+              onClick={() => sendTest.mutate(selectedToken.agent || 'ajcrew')}
             >
               <Play size={14} />{' '}
               <span className="hidden sm:inline">

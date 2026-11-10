@@ -2,9 +2,9 @@
 
 The lane is a fact about the build's bytes: ``nightly.yml`` passes
 ``build_channel: nightly`` to every build workflow, ``scripts/stamp-distribution.sh``
-bakes it into ``_build_info.BUILD_CHANNEL``, and :mod:`kiro_crew.build_channel`
+bakes it into ``_build_info.BUILD_CHANNEL``, and :mod:`aj_crew.build_channel`
 reads it. An undeclared key resolves through
-:func:`~kiro_crew.config.loader_document.kas_bundle_build_default`; a stored
+:func:`~aj_crew.config.loader_document.kas_bundle_build_default`; a stored
 value always wins, and ``save()`` keeps an undeclared key off disk.
 """
 
@@ -19,8 +19,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from kiro_crew import build_channel
-from kiro_crew.config import loader_document
+from aj_crew import build_channel
+from aj_crew.config import loader_document
 
 _REPO = Path(__file__).resolve().parents[1]
 _STAMP_SCRIPT = _REPO / "scripts" / "stamp-distribution.sh"
@@ -53,7 +53,7 @@ class TestBakedBuildChannel:
         assert build_channel.is_nightly_build() is False
 
     def test_the_lanes_match_the_release_channels(self):
-        from kiro_crew.platform.update_layout import RELEASE_CHANNELS
+        from aj_crew.platform.update_layout import RELEASE_CHANNELS
 
         assert build_channel.KNOWN_BUILD_CHANNELS == frozenset(RELEASE_CHANNELS)
 
@@ -119,7 +119,7 @@ class TestTheStoredValueWinsAtLoad:
         ],
     )
     def test_load_resolution(self, stamp, tmp_path, lane, agent, expected):
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         stamp(lane)
         doc = loader.ConfigDocument(
@@ -135,7 +135,7 @@ class TestTheStoredValueWinsAtLoad:
     def test_a_home_with_no_config_file_takes_the_build_default(
         self, stamp, tmp_path, lane, expected
     ):
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         stamp(lane)
         doc = loader.ConfigDocument(
@@ -181,7 +181,7 @@ def test_docker_restamp_preserves_and_checks_the_wheel_lane():
     dockerfile = (_REPO / "docker" / "Dockerfile").read_text(encoding="utf-8")
     restamp = dockerfile.split("# Re-stamp the provenance", 1)[1].split("\n\n", 1)[0]
     capture = (
-        "CHANNEL=\"$(python -c 'from kiro_crew.build_channel import baked_build_channel; "
+        "CHANNEL=\"$(python -c 'from aj_crew.build_channel import baked_build_channel; "
         "print(baked_build_channel())')\""
     )
     write = '"BUILD_CHANNEL = \\"${CHANNEL}\\""'

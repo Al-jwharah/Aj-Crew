@@ -25,10 +25,10 @@ import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 from skill_script_helpers import load_skill_script
 
-from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS
+from aj_crew.platform.update_governance import _GIT_LOCATION_VARS
 
 ROOT = Path(__file__).resolve().parent.parent
-PREPARE_PR = ROOT / "src" / "kiro_crew" / "builtin_skills" / "kirocrew-dev" / "kirocrew-prepare-pr"
+PREPARE_PR = ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "ajcrew-prepare-pr"
 SCRIPT = PREPARE_PR / "scripts" / "diff_signals.py"
 SKILL = PREPARE_PR / "SKILL.md"
 
@@ -41,8 +41,8 @@ ds = load_skill_script("prepare_pr_diff_signals_under_test", SCRIPT)
 @pytest.mark.parametrize(
     "path, area",
     [
-        ("src/kiro_crew/dashboard/handlers/x.py", "src/kiro_crew/dashboard"),
-        ("src/kiro_crew/security.py", "src/kiro_crew/security.py"),
+        ("src/aj_crew/dashboard/handlers/x.py", "src/aj_crew/dashboard"),
+        ("src/aj_crew/security.py", "src/aj_crew/security.py"),
         ("website/src/components/Chat/a.tsx", "website/src/components"),
         ("website/package.json", "website"),
         (".github/workflows/ci.yml", ".github"),
@@ -66,9 +66,9 @@ def test_area_of_agrees_with_the_pr_scope_awk_program() -> None:
     assert m, "pr-policy.yml no longer carries the PR Scope area awk program"
     program = m.group(1)
     corpus = [
-        "src/kiro_crew/dashboard/handlers/x.py",
-        "src/kiro_crew/security.py",
-        "src/kiro_crew/_vendor/pkg/mod.py",
+        "src/aj_crew/dashboard/handlers/x.py",
+        "src/aj_crew/security.py",
+        "src/aj_crew/_vendor/pkg/mod.py",
         "website/src/components/Chat/a.tsx",
         "website/src/main.tsx",
         "website/package.json",
@@ -93,11 +93,11 @@ def test_area_of_agrees_with_the_pr_scope_awk_program() -> None:
 
 def test_area_named_by_any_of_the_three_forms_is_accounted() -> None:
     paths = [
-        "src/kiro_crew/dashboard/handlers/chat.py",
+        "src/aj_crew/dashboard/handlers/chat.py",
         "website/src/components/Chat/Input.tsx",
         "test/test_chat.py",
     ]
-    by_area = "touches src/kiro_crew/dashboard and website/src/components; see test/test_chat.py"
+    by_area = "touches src/aj_crew/dashboard and website/src/components; see test/test_chat.py"
     assert ds.unaccounted_areas(paths, by_area) == []
     by_tail = "handlers/chat.py and Chat/Input.tsx changed, test_chat.py pins it"
     assert ds.unaccounted_areas(paths, by_tail) == []
@@ -106,45 +106,45 @@ def test_area_named_by_any_of_the_three_forms_is_accounted() -> None:
 
 
 def test_unnamed_area_is_reported_with_its_files() -> None:
-    paths = ["src/kiro_crew/dashboard/handlers/chat.py", "src/kiro_crew/security.py"]
+    paths = ["src/aj_crew/dashboard/handlers/chat.py", "src/aj_crew/security.py"]
     missing = ds.unaccounted_areas(paths, "handlers/chat.py now debounces the send button")
-    assert missing == [("src/kiro_crew/security.py", ["src/kiro_crew/security.py"])]
+    assert missing == [("src/aj_crew/security.py", ["src/aj_crew/security.py"])]
 
 
 def test_generic_basename_never_satisfies_the_accounting() -> None:
     """``__init__.py`` or ``SKILL.md`` alone says nothing about WHICH one changed."""
-    paths = ["src/kiro_crew/apps/__init__.py"]
+    paths = ["src/aj_crew/apps/__init__.py"]
     assert ds.unaccounted_areas(paths, "__init__.py gained an export") == [
-        ("src/kiro_crew/apps", paths)
+        ("src/aj_crew/apps", paths)
     ]
     assert ds.unaccounted_areas(paths, "apps/__init__.py gained an export") == []
 
 
 def test_duplicate_basename_across_areas_needs_a_directory() -> None:
-    paths = ["src/kiro_crew/a/config.py", "src/kiro_crew/b/config.py"]
+    paths = ["src/aj_crew/a/config.py", "src/aj_crew/b/config.py"]
     # Bare name is ambiguous between the two areas: neither is accounted.
     missing = ds.unaccounted_areas(paths, "config.py reads the new key")
-    assert [m[0] for m in missing] == ["src/kiro_crew/a", "src/kiro_crew/b"]
+    assert [m[0] for m in missing] == ["src/aj_crew/a", "src/aj_crew/b"]
     assert ds.unaccounted_areas(paths, "a/config.py and b/config.py read the new key") == []
 
 
 def test_a_shared_prefix_or_suffix_is_not_a_name() -> None:
     """Substring matching would let an unnamed area ride on a neighbour's name."""
-    # Area `src/kiro_crew/chat` is not named by the sibling module `chat_runner.py`.
-    paths = ["src/kiro_crew/chat/send.py"]
-    assert ds.unaccounted_areas(paths, "src/kiro_crew/chat_runner.py retries") == [
-        ("src/kiro_crew/chat", paths)
+    # Area `src/aj_crew/chat` is not named by the sibling module `chat_runner.py`.
+    paths = ["src/aj_crew/chat/send.py"]
+    assert ds.unaccounted_areas(paths, "src/aj_crew/chat_runner.py retries") == [
+        ("src/aj_crew/chat", paths)
     ]
     # ...but a deeper path inside the area does name it.
-    assert ds.unaccounted_areas(paths, "src/kiro_crew/chat/send.py retries") == []
+    assert ds.unaccounted_areas(paths, "src/aj_crew/chat/send.py retries") == []
     # Area `test` is not named by the template heading `## Tests` or by `pytest`.
     paths = ["test/test_send.py"]
     assert ds.unaccounted_areas(paths, "## Tests\n\nrun pytest\n") == [("test", paths)]
     assert ds.unaccounted_areas(paths, "see test/test_send.py") == []
     # A unique basename is not named by a longer name that merely contains it.
-    paths = ["src/kiro_crew/chat/send.py"]
+    paths = ["src/aj_crew/chat/send.py"]
     assert ds.unaccounted_areas(paths, "resend.py and send.py.bak") == [
-        ("src/kiro_crew/chat", paths)
+        ("src/aj_crew/chat", paths)
     ]
     assert ds.unaccounted_areas(paths, "`send.py` now waits") == []
     # A sentence may end right after the name.
@@ -152,9 +152,9 @@ def test_a_shared_prefix_or_suffix_is_not_a_name() -> None:
 
 
 def test_rename_counts_both_sides() -> None:
-    ns = "R100\tsrc/kiro_crew/old/x.py\tsrc/kiro_crew/new/x.py\nM\ttest/test_x.py\n"
+    ns = "R100\tsrc/aj_crew/old/x.py\tsrc/aj_crew/new/x.py\nM\ttest/test_x.py\n"
     paths = ds.changed_paths(ns)
-    assert paths == ["src/kiro_crew/old/x.py", "src/kiro_crew/new/x.py", "test/test_x.py"]
+    assert paths == ["src/aj_crew/old/x.py", "src/aj_crew/new/x.py", "test/test_x.py"]
 
 
 # ------------------------------------------------------ what_changed_prose
@@ -206,7 +206,7 @@ def test_prose_is_none_without_the_section() -> None:
 
 
 def test_check_body_over_the_limit_is_twenty_one(capsys) -> None:
-    ns = "M\tsrc/kiro_crew/x/y.py\n"
+    ns = "M\tsrc/aj_crew/x/y.py\n"
     rc = ds.check_body(BODY + "\nAlso x/y.py.\n", ns, word_limit=3)
     out = capsys.readouterr().out
     assert rc == 21
@@ -217,7 +217,7 @@ def test_check_body_over_the_limit_is_twenty_one(capsys) -> None:
 
 
 def test_check_body_under_the_limit_is_zero(capsys) -> None:
-    ns = "M\tsrc/kiro_crew/x/y.py\n"
+    ns = "M\tsrc/aj_crew/x/y.py\n"
     rc = ds.check_body(BODY + "\nAlso x/y.py.\n", ns, word_limit=400)
     out = capsys.readouterr().out
     assert rc == 0
@@ -226,28 +226,28 @@ def test_check_body_under_the_limit_is_zero(capsys) -> None:
 
 
 def test_check_body_both_breaches_print_both_and_return_twenty(capsys) -> None:
-    ns = "M\tsrc/kiro_crew/x/y.py\nM\tsrc/kiro_crew/z/w.py\n"
+    ns = "M\tsrc/aj_crew/x/y.py\nM\tsrc/aj_crew/z/w.py\n"
     rc = ds.check_body(BODY + "\nx/y.py changed.\n", ns, word_limit=3)
     out = capsys.readouterr().out
     assert rc == 20
-    assert "UNACCOUNTED src/kiro_crew/z" in out
+    assert "UNACCOUNTED src/aj_crew/z" in out
     assert "TOO LONG: What changed is" in out
 
 
 def test_check_body_missing_area_is_twenty_even_when_prose_is_short(capsys) -> None:
-    ns = "M\tsrc/kiro_crew/x/y.py\nM\tsrc/kiro_crew/z/w.py\n"
+    ns = "M\tsrc/aj_crew/x/y.py\nM\tsrc/aj_crew/z/w.py\n"
     rc = ds.check_body(BODY + "\nx/y.py changed.\n", ns, word_limit=400)
     out = capsys.readouterr().out
     assert rc == 20
-    assert "UNACCOUNTED src/kiro_crew/z" in out
-    assert "    src/kiro_crew/z/w.py" in out
+    assert "UNACCOUNTED src/aj_crew/z" in out
+    assert "    src/aj_crew/z/w.py" in out
     assert "1 unaccounted area(s)" in out
 
 
 def test_check_body_without_what_changed_still_runs_accounting(capsys) -> None:
     # check_body alone does not gate a missing section; the template check does
     # (test_end_to_end_body_missing_what_changed_exits_twenty_two).
-    rc = ds.check_body("## Problem\n\nnames src/kiro_crew/x\n", "M\tsrc/kiro_crew/x/y.py\n", 400)
+    rc = ds.check_body("## Problem\n\nnames src/aj_crew/x\n", "M\tsrc/aj_crew/x/y.py\n", 400)
     out = capsys.readouterr().out
     assert rc == 0
     assert "length check skipped" in out
@@ -271,14 +271,14 @@ def test_table_rows_exclude_headers_separators_fences_and_other_sections() -> No
 
 def test_check_body_nine_table_rows_is_twenty_one(capsys) -> None:
     assert ds.TABLE_ROW_LIMIT == 8
-    rc = ds.check_body(_table_body(9), "M\tsrc/kiro_crew/x/y.py\n")
+    rc = ds.check_body(_table_body(9), "M\tsrc/aj_crew/x/y.py\n")
     out = capsys.readouterr().out
     assert rc == 21
     assert "TOO MANY ROWS: What changed has 9 table rows (limit 8)" in out
 
 
 def test_check_body_eight_table_rows_is_zero(capsys) -> None:
-    rc = ds.check_body(_table_body(8), "M\tsrc/kiro_crew/x/y.py\n")
+    rc = ds.check_body(_table_body(8), "M\tsrc/aj_crew/x/y.py\n")
     out = capsys.readouterr().out
     assert rc == 0
     assert "TOO MANY ROWS" not in out
@@ -330,9 +330,9 @@ def repo(tmp_path: Path) -> Path:
     _git(repo, "add", ".")
     _git(repo, "commit", "-q", "-m", "base")
     _git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
-    (repo / "src" / "kiro_crew" / "chat").mkdir(parents=True)
-    (repo / "src" / "kiro_crew" / "chat" / "send.py").write_text("x = 1\n")
-    (repo / "src" / "kiro_crew" / "security.py").write_text("y = 2\n")
+    (repo / "src" / "aj_crew" / "chat").mkdir(parents=True)
+    (repo / "src" / "aj_crew" / "chat" / "send.py").write_text("x = 1\n")
+    (repo / "src" / "aj_crew" / "security.py").write_text("y = 2\n")
     _git(repo, "add", ".")
     _git(repo, "commit", "-q", "-m", "change")
     return repo
@@ -365,7 +365,7 @@ def test_end_to_end_body_missing_an_area_exits_twenty(repo: Path) -> None:
     _body(repo).write_text("## What changed\n\nchat/send.py sends once.\n")
     rc, out = _run(repo, "--check-body")
     assert rc == 20
-    assert "UNACCOUNTED src/kiro_crew/security.py" in out
+    assert "UNACCOUNTED src/aj_crew/security.py" in out
 
 
 def test_end_to_end_complete_but_long_body_exits_twenty_one(repo: Path) -> None:
@@ -471,7 +471,7 @@ def test_skill_has_a_cold_reader_step_after_the_check_and_outside_local_review()
     assert first_check < cold
     flat = _flat(SKILL)
     assert "In two sentences, what does this PR change for a user, and why?" in flat
-    assert "agent `kirocrew-lite`" in flat
+    assert "agent `ajcrew-lite`" in flat
     local_review = (PREPARE_PR / "scripts" / "local_review.py").read_text(encoding="utf-8")
     assert "Cold reader" not in local_review
     assert "two sentences" not in local_review

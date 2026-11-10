@@ -4,7 +4,7 @@
  *  color. The crew editor sheet, the Crewmates page's New crewmate dialog and
  *  the crew profile settings mount them, each importing this module directly.
  *  It imports no page, so a consumer never closes a module cycle through it.
- *  `KiroCrewAgentsPage.tsx` re-exports every name for its existing importers. */
+ *  `AjCrewAgentsPage.tsx` re-exports every name for its existing importers. */
 import { useState, useEffect } from 'react'
 import { api } from '../../api/client'
 import { FOLDER_COLOR_PALETTE } from '../folderColorCatalog'
@@ -14,7 +14,7 @@ import {
 } from '../ui/dialog'
 import InfoTip from '../InfoTip'
 import SimpleSelect from '../SimpleSelect'
-import { type KiroCrewAgent } from '../AgentSelector'
+import { type AjCrewAgent } from '../AgentSelector'
 import { EFFORT_LEVELS, effortLabel } from '../../lib/effort'
 import { isAssistantMember } from '../../lib/assistantMember'
 import { i18nT } from '../../i18n/t'
@@ -105,7 +105,7 @@ function WorkspaceForm({
     setWsHint('')
     setWsError('')
     const n = wsName.trim()
-    if (!n) { setWsHint(i18nT('pages.kiroCrewAgentsPage.workspace_name_is_required')); return }
+    if (!n) { setWsHint(i18nT('pages.ajCrewAgentsPage.workspace_name_is_required')); return }
     setSubmitting(true)
     try {
       const body: Record<string, string> = { name: n, dir: wsDir }
@@ -120,7 +120,7 @@ function WorkspaceForm({
       if (r.error) { setWsError(r.error); setSubmitting(false); return }
       onCreated(r.name || n)
     } catch (e) {
-      setWsError(e instanceof Error ? e.message : i18nT('pages.kiroCrewAgentsPage.failed_to_create_workspace'))
+      setWsError(e instanceof Error ? e.message : i18nT('pages.ajCrewAgentsPage.failed_to_create_workspace'))
     } finally {
       setSubmitting(false)
     }
@@ -129,37 +129,37 @@ function WorkspaceForm({
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{i18nT('pages.kiroCrewAgentsPage.create_workspace')}</DialogTitle>
+        <DialogTitle>{i18nT('pages.ajCrewAgentsPage.create_workspace')}</DialogTitle>
       </DialogHeader>
       <DialogBody>
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1">
               {/* Native input associated via htmlFor+id; label-has-for's nesting requirement is a false positive. */}
-              <label htmlFor="ws-name" className="text-[11px] text-muted uppercase tracking-wider font-medium">{i18nT('pages.kiroCrewAgentsPage.name')}</label>
-              <InfoTip text={i18nT('pages.kiroCrewAgentsPage.a_unique_identifier_for_this_workspace_agents_re')} />
+              <label htmlFor="ws-name" className="text-[11px] text-muted uppercase tracking-wider font-medium">{i18nT('pages.ajCrewAgentsPage.name')}</label>
+              <InfoTip text={i18nT('pages.ajCrewAgentsPage.a_unique_identifier_for_this_workspace_agents_re')} />
             </div>
-            <Input id="ws-name" placeholder={i18nT('pages.kiroCrewAgentsPage.e_g_oncall')} value={wsName} onChange={e => handleNameChange(e.target.value)} autoFocus />
+            <Input id="ws-name" placeholder={i18nT('pages.ajCrewAgentsPage.e_g_oncall')} value={wsName} onChange={e => handleNameChange(e.target.value)} autoFocus />
           </div>
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1">
               {/* Native input associated via htmlFor+id; label-has-for's nesting requirement is a false positive. */}
-              <label htmlFor="ws-dir" className="text-[11px] text-muted uppercase tracking-wider font-medium">{i18nT('pages.kiroCrewAgentsPage.directory')}</label>
-              <InfoTip text={i18nT('pages.kiroCrewAgentsPage.subdirectory_inside_kiro_crew_where_this_workspa')} />
+              <label htmlFor="ws-dir" className="text-[11px] text-muted uppercase tracking-wider font-medium">{i18nT('pages.ajCrewAgentsPage.directory')}</label>
+              <InfoTip text={i18nT('pages.ajCrewAgentsPage.subdirectory_inside_aj_crew_where_this_workspa')} />
             </div>
-            <Input id="ws-dir" placeholder={i18nT('pages.kiroCrewAgentsPage.workspace')} value={wsDir} onChange={e => { setDirTouched(true); setWsDir(e.target.value) }} />
+            <Input id="ws-dir" placeholder={i18nT('pages.ajCrewAgentsPage.workspace')} value={wsDir} onChange={e => { setDirTouched(true); setWsDir(e.target.value) }} />
           </div>
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1">
-              <span className="text-[11px] text-muted uppercase tracking-wider font-medium">{i18nT('pages.kiroCrewAgentsPage.copy_from_optional')}</span>
-              <InfoTip text={i18nT('pages.kiroCrewAgentsPage.copy_the_contents_of_an_existing_workspace_into')} />
+              <span className="text-[11px] text-muted uppercase tracking-wider font-medium">{i18nT('pages.ajCrewAgentsPage.copy_from_optional')}</span>
+              <InfoTip text={i18nT('pages.ajCrewAgentsPage.copy_the_contents_of_an_existing_workspace_into')} />
             </div>
             <SimpleSelect
               options={workspaceOptions}
               value={copyFrom}
               onChange={setCopyFrom}
-              clearLabel={i18nT('pages.kiroCrewAgentsPage.none')}
-              aria-label={i18nT('pages.kiroCrewAgentsPage.copy_from_workspace')}
+              clearLabel={i18nT('pages.ajCrewAgentsPage.none')}
+              aria-label={i18nT('pages.ajCrewAgentsPage.copy_from_workspace')}
             />
           </div>
           {/* Client-side validation hint (the name never left the browser) —
@@ -172,8 +172,8 @@ function WorkspaceForm({
         </div>
       </DialogBody>
       <DialogFooter>
-        <Btn onClick={onClose}>{i18nT('pages.kiroCrewAgentsPage.cancel')}</Btn>
-        <SendBtn onClick={submit} disabled={submitting}>{submitting ? i18nT('pages.kiroCrewAgentsPage.creating') : i18nT('pages.kiroCrewAgentsPage.create')}</SendBtn>
+        <Btn onClick={onClose}>{i18nT('pages.ajCrewAgentsPage.cancel')}</Btn>
+        <SendBtn onClick={submit} disabled={submitting}>{submitting ? i18nT('pages.ajCrewAgentsPage.creating') : i18nT('pages.ajCrewAgentsPage.create')}</SendBtn>
       </DialogFooter>
     </>
   )
@@ -222,7 +222,7 @@ export function WorkspaceModal({
         maxWidth={448}
         className="z-[110]"
         overlayClassName="z-[109]"
-        aria-label={i18nT('pages.kiroCrewAgentsPage.create_workspace')}
+        aria-label={i18nT('pages.ajCrewAgentsPage.create_workspace')}
         // preventDefault keeps Radix from dismissing AND marks the Escape as
         // handled, so the layer underneath (the crewmate dialog's own Escape
         // listener skips a defaultPrevented event) does not close either.
@@ -282,18 +282,18 @@ export function WorkspaceField({ options, value, onChange, onNewWorkspace, subje
     : withCurrent(options, value)
   return (
     <Field
-      label={i18nT('pages.kiroCrewAgentsPage.workspace_2')}
-      hint={hint ?? (subject === 'member' ? i18nT('pages.kiroCrewAgentsPage.workspace_hint_member') : i18nT('pages.kiroCrewAgentsPage.isolated_memory_and_files_for_this_crew'))}
-      info={i18nT('pages.kiroCrewAgentsPage.bindings_preview_info')}
+      label={i18nT('pages.ajCrewAgentsPage.workspace_2')}
+      hint={hint ?? (subject === 'member' ? i18nT('pages.ajCrewAgentsPage.workspace_hint_member') : i18nT('pages.ajCrewAgentsPage.isolated_memory_and_files_for_this_crew'))}
+      info={i18nT('pages.ajCrewAgentsPage.bindings_preview_info')}
     >
       <SimpleSelect
         options={choices}
-        optionLabels={ownOption ? choices.map(o => (o === OWN_WORKSPACE ? i18nT('pages.kiroCrewAgentsPage.own_workspace_option') : o)) : undefined}
+        optionLabels={ownOption ? choices.map(o => (o === OWN_WORKSPACE ? i18nT('pages.ajCrewAgentsPage.own_workspace_option') : o)) : undefined}
         value={value}
         onChange={onChange}
-        action={{ label: i18nT('pages.kiroCrewAgentsPage.new_workspace_action'), onSelect: onNewWorkspace }}
+        action={{ label: i18nT('pages.ajCrewAgentsPage.new_workspace_action'), onSelect: onNewWorkspace }}
         disabled={disabled}
-        aria-label={i18nT('pages.kiroCrewAgentsPage.workspace_2')}
+        aria-label={i18nT('pages.ajCrewAgentsPage.workspace_2')}
       />
     </Field>
   )
@@ -330,14 +330,14 @@ export function ModelField({ options, value, onChange, hint, servedAs, harness =
   // Otherwise the off-list pin says what this harness does with it.
   const offList = !folded && servedAs !== undefined && servedAs !== value && !options.includes(value)
   const label = (m: string) => {
-    if (m === INHERIT_MODEL) return i18nT('pages.kiroCrewAgentsPage.inherited')
+    if (m === INHERIT_MODEL) return i18nT('pages.ajCrewAgentsPage.inherited')
     if (m !== value || !offList) return m
     return servedAs
-      ? i18nT('pages.kiroCrewAgentsPage.pin_runs_as', { model: m, served: servedAs })
-      : i18nT('pages.kiroCrewAgentsPage.pin_not_offered', { model: m, harness })
+      ? i18nT('pages.ajCrewAgentsPage.pin_runs_as', { model: m, served: servedAs })
+      : i18nT('pages.ajCrewAgentsPage.pin_not_offered', { model: m, harness })
   }
   return (
-    <Field label={i18nT('pages.kiroCrewAgentsPage.model')} hint={hint}>
+    <Field label={i18nT('pages.ajCrewAgentsPage.model')} hint={hint}>
       <SimpleSelect
         options={shown}
         // The inherit option must NOT read as "auto": in the chat picker "auto"
@@ -348,7 +348,7 @@ export function ModelField({ options, value, onChange, hint, servedAs, harness =
         value={folded ? servedAs : value}
         onChange={onChange}
         disabled={disabled}
-        aria-label={i18nT('pages.kiroCrewAgentsPage.edit_model')}
+        aria-label={i18nT('pages.ajCrewAgentsPage.edit_model')}
         {...uiLocation('agents.model')}
       />
     </Field>
@@ -365,15 +365,15 @@ export function EffortField({ value, onChange, levels }: {
 }) {
   const options = levels ? ['', ...levels.filter(l => l && l !== 'default')] : [...EFFORT_LEVELS]
   return (
-    <Field label={i18nT('pages.kiroCrewAgentsPage.reasoning_effort')} hint={i18nT('pages.kiroCrewAgentsPage.reasoning_effort_hint')}>
+    <Field label={i18nT('pages.ajCrewAgentsPage.reasoning_effort')} hint={i18nT('pages.ajCrewAgentsPage.reasoning_effort_hint')}>
       <SimpleSelect
         options={options}
         // '' is the inherit sentinel, labelled as such rather than as a level:
         // it means "take the global default", which may itself be a level.
-        optionLabels={options.map(l => (l === '' ? i18nT('pages.kiroCrewAgentsPage.inherited') : effortLabel(l)))}
+        optionLabels={options.map(l => (l === '' ? i18nT('pages.ajCrewAgentsPage.inherited') : effortLabel(l)))}
         value={value}
         onChange={onChange}
-        aria-label={i18nT('pages.kiroCrewAgentsPage.edit_reasoning_effort')}
+        aria-label={i18nT('pages.ajCrewAgentsPage.edit_reasoning_effort')}
       />
     </Field>
   )
@@ -387,10 +387,10 @@ export function EffortField({ value, onChange, levels }: {
 export function DisplayNameField({ value, onChange, fallback }: { value: string; onChange: (v: string) => void; fallback: string }) {
   return (
     <Field
-      label={i18nT('pages.kiroCrewAgentsPage.display_name')}
+      label={i18nT('pages.ajCrewAgentsPage.display_name')}
       // Names the actual ID, so "the name" is never a reference to something
       // invisible from this pane (the UX lane's finding on this PR).
-      hint={i18nT('pages.kiroCrewAgentsPage.shown_across_the_dashboard_instead_of_the_name_l', { name: fallback })}
+      hint={i18nT('pages.ajCrewAgentsPage.shown_across_the_dashboard_instead_of_the_name_l', { name: fallback })}
     >
       <Input
         // The name it would fall back to, so the empty state reads as "shows
@@ -398,7 +398,7 @@ export function DisplayNameField({ value, onChange, fallback }: { value: string;
         placeholder={fallback}
         value={value}
         onChange={e => onChange(e.target.value)}
-        aria-label={i18nT('pages.kiroCrewAgentsPage.display_name')}
+        aria-label={i18nT('pages.ajCrewAgentsPage.display_name')}
         data-testid="display-name-input"
       />
     </Field>
@@ -408,7 +408,7 @@ export function DisplayNameField({ value, onChange, fallback }: { value: string;
 /** What an empty display name falls back to: the crew's key, except for the
  *  built-in Mate, whose empty label reads as its default name everywhere
  *  else in the dashboard -- so its editor must not offer the internal key. */
-export function displayNameFallback(agent: KiroCrewAgent | null | undefined, key: string): string {
+export function displayNameFallback(agent: AjCrewAgent | null | undefined, key: string): string {
   return isAssistantMember(agent) ? i18nT('components.assistantWelcome.default_name') : key
 }
 
@@ -418,20 +418,20 @@ export function TriggersField({ value, onChange, subject, busy }: { value: strin
    *  field implicitly submits, so a native disable would blur it to <body>. */
   busy?: boolean }) {
   const hint = subject === 'member'
-    ? i18nT('pages.kiroCrewAgentsPage.triggers_hint_member')
-    : i18nT('pages.kiroCrewAgentsPage.triggers_hint')
+    ? i18nT('pages.ajCrewAgentsPage.triggers_hint_member')
+    : i18nT('pages.ajCrewAgentsPage.triggers_hint')
   const info = subject === 'member'
-    ? i18nT('pages.kiroCrewAgentsPage.triggers_info_member')
-    : i18nT('pages.kiroCrewAgentsPage.triggers_info')
+    ? i18nT('pages.ajCrewAgentsPage.triggers_info_member')
+    : i18nT('pages.ajCrewAgentsPage.triggers_info')
   return (
-    <Field label={i18nT('pages.kiroCrewAgentsPage.triggers')} hint={hint} info={info}>
+    <Field label={i18nT('pages.ajCrewAgentsPage.triggers')} hint={hint} info={info}>
       <Input
-        placeholder={i18nT('pages.kiroCrewAgentsPage.triggers_placeholder')}
+        placeholder={i18nT('pages.ajCrewAgentsPage.triggers_placeholder')}
         value={value}
         onChange={e => onChange(e.target.value)}
         readOnly={busy}
         aria-disabled={busy || undefined}
-        aria-label={i18nT('pages.kiroCrewAgentsPage.triggers')}
+        aria-label={i18nT('pages.ajCrewAgentsPage.triggers')}
       />
     </Field>
   )
@@ -455,7 +455,7 @@ export function SessionColorField({ value, onChange, subject, busy }: { value: s
     else { setDraft(value || '') } // invalid on blur → revert to committed
   }
   return (
-    <Field label={i18nT('pages.kiroCrewAgentsPage.session_color')} hint={subject === 'member' ? i18nT('pages.kiroCrewAgentsPage.session_color_hint_member') : i18nT('pages.kiroCrewAgentsPage.session_color_hint')}>
+    <Field label={i18nT('pages.ajCrewAgentsPage.session_color')} hint={subject === 'member' ? i18nT('pages.ajCrewAgentsPage.session_color_hint_member') : i18nT('pages.ajCrewAgentsPage.session_color_hint')}>
       {/* Quick picks first, exact entry below — the order the session
        *  right-click menu uses, so the two surfaces read the same way.
        *
@@ -512,7 +512,7 @@ export function SessionColorField({ value, onChange, subject, busy }: { value: s
           onChange={e => onChange(e.target.value.toLowerCase())}
           className="h-8 w-8 flex-none cursor-pointer p-0.5"
           disabled={busy}
-          aria-label={i18nT('pages.kiroCrewAgentsPage.session_color')}
+          aria-label={i18nT('pages.ajCrewAgentsPage.session_color')}
         />
         <Input
           placeholder={HEX_COLOR_EXAMPLE}
@@ -530,7 +530,7 @@ export function SessionColorField({ value, onChange, subject, busy }: { value: s
           // create form, so a native disable would blur it to <body>.
           readOnly={busy}
           aria-disabled={busy || undefined}
-          aria-label={i18nT('pages.kiroCrewAgentsPage.session_color_hex')}
+          aria-label={i18nT('pages.ajCrewAgentsPage.session_color_hex')}
         />
         {value && (
           <Btn
@@ -538,9 +538,9 @@ export function SessionColorField({ value, onChange, subject, busy }: { value: s
             onClick={() => onChange('')}
             className="text-[11px]"
             disabled={busy}
-            aria-label={i18nT('pages.kiroCrewAgentsPage.session_color_clear')}
+            aria-label={i18nT('pages.ajCrewAgentsPage.session_color_clear')}
           >
-            {i18nT('pages.kiroCrewAgentsPage.session_color_clear')}
+            {i18nT('pages.ajCrewAgentsPage.session_color_clear')}
           </Btn>
         )}
       </div>

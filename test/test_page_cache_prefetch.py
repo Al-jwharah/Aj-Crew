@@ -8,7 +8,7 @@ import sys
 import threading
 from pathlib import Path
 
-from kiro_crew import page_cache
+from aj_crew import page_cache
 
 
 def _wait_for(threads_before: set[int], name: str) -> None:
@@ -160,8 +160,8 @@ def test_knowledge_maintenance_reads_the_library_only_while_a_rebuild_is_pending
     import asyncio
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard import server as srv
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.dashboard import server as srv
+    from aj_crew.knowledge.store import KnowledgeStore
 
     path = str(tmp_path / "kb.db")
     seed = KnowledgeStore(path)

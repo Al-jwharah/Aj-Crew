@@ -24,9 +24,9 @@ from apps_routes_coverage_helpers import (
     _setup_env,
 )
 
-import kiro_crew.apps.routes as routes_mod
-from kiro_crew.apps.manager import disable_app, enable_app
-from kiro_crew.apps.routes import _client_install_manifest
+import aj_crew.apps.routes as routes_mod
+from aj_crew.apps.manager import disable_app, enable_app
+from aj_crew.apps.routes import _client_install_manifest
 
 
 def _sse_events(text: str) -> list[tuple[str, str]]:
@@ -340,7 +340,7 @@ class TestRegistryInstallStream:
         """
         _setup_env(tmp_path, monkeypatch)
         refusal = (
-            "Python apps that require a build step are not supported in Kiro Crew's "
+            "Python apps that require a build step are not supported in Aj Crew's "
             "desktop build: its bundled interpreter is inside the signed "
             "application bundle and cannot install packages"
         )

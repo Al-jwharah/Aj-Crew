@@ -152,10 +152,10 @@
 本报告只使用 Memory V1 与 Memory V2 两个产品名称。历史 JSON 仅规范化算法标签，逐题结果、数值、其他证据和原有指纹保持不变；provenance 记录规范化前的原始文件 SHA-256，并明确旧源码没有输出规范化后的标签。快照时间与源码指纹用于区分实测运行，不代表产品子版本。
 
 - [原始完整评测 JSON](https://github.com/kirodotdev/KiroCrew/blob/7d14fbf73706e3b659be5840c382960553a40425/temp-screenshots/memory-v2/pre-retention/member-v2-hybrid-qwen3.json)：保留策略修改前的原始快照，逐题入选 ID、证据、模式结果与模型指纹；完整字节已归档。
-- [评测程序](../../../../../src/kiro_crew/eval/bench/member_v2.py)：`ranking_metrics`、`_mode_report`、`_edge_report` 定义指标与流程。
-- [公开语料与标签](../../../../../src/kiro_crew/eval/bench/admission_corpus.py)：50 个主题与各自两条相关片段。
-- [V2 策略](../../../../../src/kiro_crew/memory_v2.py)与[检索实现](../../../../../src/kiro_crew/vector_memory.py)：阈值、词法证据、排序、MMR 与上下文。
-- [语料约束校验](../../../../../src/kiro_crew/eval/bench/admission.py)：`validate_corpus` 拒绝 `write_episodic` 会丢弃的片段；原同余弦 V1/V2 准入对照 CLI 未保留在仓库中。
+- [评测程序](../../../../../src/aj_crew/eval/bench/member_v2.py)：`ranking_metrics`、`_mode_report`、`_edge_report` 定义指标与流程。
+- [公开语料与标签](../../../../../src/aj_crew/eval/bench/admission_corpus.py)：50 个主题与各自两条相关片段。
+- [V2 策略](../../../../../src/aj_crew/memory_v2.py)与[检索实现](../../../../../src/aj_crew/vector_memory.py)：阈值、词法证据、排序、MMR 与上下文。
+- [语料约束校验](../../../../../src/aj_crew/eval/bench/admission.py)：`validate_corpus` 拒绝 `write_episodic` 会丢弃的片段；原同余弦 V1/V2 准入对照 CLI 未保留在仓库中。
 - [评测产物完整性测试](../../../../../test/test_member_memory_hybrid_bench.py)：本次复核 **3/3 通过**；另按入选 ID 独立重算上下文指标，与产物一致。
 
 语料 SHA-256：`646922d14616e33a67b4b05181ac633ca1def857592b7d063665a96839b29c7f`
@@ -167,7 +167,7 @@
 重新运行实测时，使用已有本地 GGUF（程序禁用下载、采用隔离临时数据目录）：
 
 ```sh
-python -m kiro_crew.eval.bench.member_v2 --model-path <existing.gguf> --json <report.json>
+python -m aj_crew.eval.bench.member_v2 --model-path <existing.gguf> --json <report.json>
 ```
 
 指纹用于固定输入与产物；不同推理运行环境仍可能存在数值差异。历史 V2 产物没有完整记录硬件、库版本和源码哈希，不能声称已具备完全冻结的运行环境。第 11 节的 V2 复跑另行记录源码指纹。
@@ -176,7 +176,7 @@ python -m kiro_crew.eval.bench.member_v2 --model-path <existing.gguf> --json <re
 
 ### 研究依据与实现选择
 
-[LongMemEval](https://arxiv.org/html/2410.10813v2) 将信息提取、跨会话推理、时间推理、知识更新和拒答分别评测，并研究事实扩展索引与时间过滤。它也指出，把所有经历压成事实会损失上下文。因此本实现保留原始经历，在已有事实旁增加明确身份与有效期。[LangChain 的记忆设计文档](https://docs.langchain.com/oss/python/concepts/memory) 说明了集合式记忆与更新协调的取舍；[Mem0](https://arxiv.org/html/2504.19413v1) 的提取与更新分离提供了参考。这里没有引入图数据库或额外服务，也没有把论文中的收益百分比套用到 Kiro Crew。
+[LongMemEval](https://arxiv.org/html/2410.10813v2) 将信息提取、跨会话推理、时间推理、知识更新和拒答分别评测，并研究事实扩展索引与时间过滤。它也指出，把所有经历压成事实会损失上下文。因此本实现保留原始经历，在已有事实旁增加明确身份与有效期。[LangChain 的记忆设计文档](https://docs.langchain.com/oss/python/concepts/memory) 说明了集合式记忆与更新协调的取舍；[Mem0](https://arxiv.org/html/2504.19413v1) 的提取与更新分离提供了参考。这里没有引入图数据库或额外服务，也没有把论文中的收益百分比套用到 Aj Crew。
 
 V1 和 V2 各自在本库中增加 `memory_record_meta` 与 `memory_revisions`，保留已有物理表、成员隔离与原始内容。事实身份采用明确的 subject / predicate / scope；类别、来源、观察时间和有效区间帮助区分同一事实的更新与不同实体的相似描述。修订历史保留修改前后内容。
 
@@ -494,7 +494,7 @@ b02 的 `E2E (stub ACP backend, offline)` 已通过，当前浏览器截图与�
 
 三个模式的上下文预算标志、已遗忘记录排除标志及中日韩固定结构样例均为通过；主质量集最大上下文为 1,296 字符。**字符数和传输大小是产物记录值及估算值；完整渲染片段与序列化传输帧没有保留，不能独立重计实际 payload。** 900 个预算条件的聚合标志也不等于 900 份完整输出轨迹。两个超长片段场景不能替代 `U+0344` 小预算边界、归档绑定、启动流程与权限隔离的专门验证。第 12 节的历史 `false` 保持原样，不再作为本轮该结构检查的待解决状态。
 
-**此前 b02 的 V2 策略归属临时疑问已解除。** 精确 60fcc 源码也确认：CI 使用固定模块入口并要求子进程成功；模块入口把临时目录设为 `KIROCREW_HOME`，再将同一目录交给评测；`_new_store` 在 `algorithm_version` 不为 `v2` 时直接报错。先前直接调用辅助函数的单元夹具缺少相应 HOME 设置，不能与真实 CI 模块入口混为一谈。入口检查、显式策略断言和完成产物共同支持本轮 Memory V2 观测归属；源码摘要或相同输出字节本身不构成这一结论。
+**此前 b02 的 V2 策略归属临时疑问已解除。** 精确 60fcc 源码也确认：CI 使用固定模块入口并要求子进程成功；模块入口把临时目录设为 `AJCREW_HOME`，再将同一目录交给评测；`_new_store` 在 `algorithm_version` 不为 `v2` 时直接报错。先前直接调用辅助函数的单元夹具缺少相应 HOME 设置，不能与真实 CI 模块入口混为一谈。入口检查、显式策略断言和完成产物共同支持本轮 Memory V2 观测归属；源码摘要或相同输出字节本身不构成这一结论。
 
 ### 已完成 CI 的结果与仍需验证的修复
 

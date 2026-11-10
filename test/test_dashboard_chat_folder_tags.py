@@ -29,7 +29,7 @@ class TestFolderTags:
     @staticmethod
     def _app_with_tag_delete(state):
         """Folder endpoints plus the tag-delete route, on one app."""
-        from kiro_crew.dashboard.chat_tags import api_chat_tag_delete
+        from aj_crew.dashboard.chat_tags import api_chat_tag_delete
 
         app = _make_folder_app(state)
         app.router.add_delete("/api/chat/tags/{id}", api_chat_tag_delete)
@@ -38,7 +38,7 @@ class TestFolderTags:
     @pytest.mark.asyncio
     async def test_create_and_update_with_valid_tags_persists(self, tmp_path, monkeypatch):
         """(a) Create with valid tags persists them; PATCH replaces the set."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         self._seed_vocabulary(state, ["t1", "t2", "t3"])
         app = _make_folder_app(state)
@@ -66,7 +66,7 @@ class TestFolderTags:
     @pytest.mark.asyncio
     async def test_create_dedupes_tags(self, tmp_path, monkeypatch):
         """Duplicates collapse (order preserved) and a valid set persists."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         self._seed_vocabulary(state, ["t1", "t2"])
         app = _make_folder_app(state)
@@ -83,7 +83,7 @@ class TestFolderTags:
         hand-edited tags.json carrying a list) must degrade to "unknown id"
         rather than crash the validator's set build with an unhashable type
         (which would 500 every folder-tag operation)."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         self._seed_vocabulary(state, ["t1"])
         # Corrupt entries alongside the valid one: unhashable id, missing id.
@@ -106,7 +106,7 @@ class TestFolderTags:
         intersecting them against the unknown (empty) vocabulary — that
         intersection would silently wipe the folder's tags and the PATCH would
         persist the loss."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         self._seed_vocabulary(state, ["t1", "t2"])
         app = _make_folder_app(state)
@@ -136,9 +136,9 @@ class TestFolderTags:
         critical section under ``tags_write_lock`` (the invariant every tag
         consumer follows): a tag deletion committing between them would slip a
         just-deleted id past the strip pass and back onto the folder."""
-        from kiro_crew.dashboard.chat_tags import tags_write_lock
+        from aj_crew.dashboard.chat_tags import tags_write_lock
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         self._seed_vocabulary(state, ["t1"])
         held: list[bool] = []
@@ -168,7 +168,7 @@ class TestFolderTags:
         Mirrors ``api_chat_slot_tags``: a dangling id can exist (the tag delete's folder
         strip is best-effort), and a 400 would make the folder permanently uneditable.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         self._seed_vocabulary(state, ["t1"])
         app = _make_folder_app(state)
@@ -189,7 +189,7 @@ class TestFolderTags:
     @pytest.mark.asyncio
     async def test_non_array_tags_rejected_400(self, tmp_path, monkeypatch):
         """A non-array `tags` payload is a 400, not a 500."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         self._seed_vocabulary(state, ["t1"])
         app = _make_folder_app(state)
@@ -201,7 +201,7 @@ class TestFolderTags:
     @pytest.mark.asyncio
     async def test_deleting_a_tag_strips_it_from_folders(self, tmp_path, monkeypatch):
         """(f) Deleting a tag from the vocabulary removes its id from every folder."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         self._seed_vocabulary(state, ["t1", "t2"])
         app = self._app_with_tag_delete(state)
@@ -231,9 +231,9 @@ class TestGenerateEmojiForName:
         """generate_emoji_for_name (artifact-folder path) still redacts replies."""
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.dashboard.chat_folders import generate_emoji_for_name
+        from aj_crew.dashboard.chat_folders import generate_emoji_for_name
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         mock_event = MagicMock()
@@ -241,9 +241,9 @@ class TestGenerateEmojiForName:
         mock_event.text = "🔥"
         done_event = MagicMock()
         done_event.kind = "complete"
-        monkeypatch.setattr("kiro_crew.providers.base.EVENT_TEXT_CHUNK", "text_chunk")
-        monkeypatch.setattr("kiro_crew.providers.base.EVENT_COMPLETE", "complete")
-        monkeypatch.setattr("kiro_crew.providers.base.EVENT_PERMISSION_REQUEST", "permission")
+        monkeypatch.setattr("aj_crew.providers.base.EVENT_TEXT_CHUNK", "text_chunk")
+        monkeypatch.setattr("aj_crew.providers.base.EVENT_COMPLETE", "complete")
+        monkeypatch.setattr("aj_crew.providers.base.EVENT_PERMISSION_REQUEST", "permission")
 
         mock_client = _provider_mock()
         mock_client.prompt = MagicMock(return_value=AsyncIterator([mock_event, done_event]))
@@ -252,11 +252,11 @@ class TestGenerateEmojiForName:
 
         with (
             patch(
-                "kiro_crew.dashboard.chat_folders.redact_exfiltration_urls",
+                "aj_crew.dashboard.chat_folders.redact_exfiltration_urls",
                 return_value=("🔥", False),
             ) as mock_url,
             patch(
-                "kiro_crew.dashboard.chat_folders.redact_credentials", return_value=("🔥", False)
+                "aj_crew.dashboard.chat_folders.redact_credentials", return_value=("🔥", False)
             ) as mock_cred,
         ):
             icon = await generate_emoji_for_name(state, "Oncall")
@@ -270,9 +270,9 @@ class TestGenerateEmojiForName:
         emoji generator (still used for artifact-library folders)."""
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.dashboard.chat_folders import generate_emoji_for_name
+        from aj_crew.dashboard.chat_folders import generate_emoji_for_name
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         mock_event = MagicMock()
@@ -280,9 +280,9 @@ class TestGenerateEmojiForName:
         mock_event.text = "\u2764\ufe0f"  # ❤️
         done_event = MagicMock()
         done_event.kind = "complete"
-        monkeypatch.setattr("kiro_crew.providers.base.EVENT_TEXT_CHUNK", "text_chunk")
-        monkeypatch.setattr("kiro_crew.providers.base.EVENT_COMPLETE", "complete")
-        monkeypatch.setattr("kiro_crew.providers.base.EVENT_PERMISSION_REQUEST", "permission")
+        monkeypatch.setattr("aj_crew.providers.base.EVENT_TEXT_CHUNK", "text_chunk")
+        monkeypatch.setattr("aj_crew.providers.base.EVENT_COMPLETE", "complete")
+        monkeypatch.setattr("aj_crew.providers.base.EVENT_PERMISSION_REQUEST", "permission")
 
         mock_client = _provider_mock()
         mock_client.prompt = MagicMock(return_value=AsyncIterator([mock_event, done_event]))
@@ -296,7 +296,7 @@ class TestFolderAssignmentPersistence:
     @pytest.mark.asyncio
     async def test_folder_assignment_saves_to_history(self, tmp_path, monkeypatch):
         """api_chat_slot_folder should call _save_slot_to_history for new sessions."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("myslot")
         slot.append("user", "hello")
@@ -319,7 +319,7 @@ class TestFolderAssignmentPersistence:
         _save_slot_to_history skips saves when ``len(messages) <= slot._resumed_count``,
         so the folder endpoint passes ``force=True`` to bypass that guard.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("resumedslot")
         slot.append("user", "old message from before restart")
@@ -328,7 +328,7 @@ class TestFolderAssignmentPersistence:
         # Persist first so the fixture matches reality — a slot claiming
         # on-disk history whose file is missing is the delete-won state the
         # save now refuses to recreate.
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
         _save_slot_to_history(state, slot, force=True)
         # Mark slot as a resumed session (simulates being restored from disk).
@@ -360,7 +360,7 @@ class TestFolderAssignmentPersistence:
         in _save_slot_to_history was blocking metadata-only writes. Pin
         endpoint now passes ``force=True``.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("pinslot")
         slot.append("user", "old message")
@@ -368,7 +368,7 @@ class TestFolderAssignmentPersistence:
         # Persist first: a resumed slot's file exists on disk (see the folder
         # regression above — the missing-file variant is the delete-won state
         # the save refuses to recreate).
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
         _save_slot_to_history(state, slot, force=True)
         slot._resumed_count = len(slot.messages)
@@ -392,9 +392,9 @@ class TestFolderAssignmentPersistence:
         Without force, resumed sessions with no new messages skip the write.
         With force, the metadata-only mutation reaches disk regardless.
         """
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("forceslot")
         slot.append("user", "hello")

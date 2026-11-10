@@ -2,7 +2,7 @@
 """The crewmate worker: a source-defined base plus the crewmate's own additions.
 
 ``rfc-mate-owned-agent-config`` §5.1/§5.4: a crewmate's chat runs on the
-conductor, the work it hands off runs on ``kirocrew-mate-worker``, and the
+conductor, the work it hands off runs on ``ajcrew-mate-worker``, and the
 crewmate's own file under ``~/.kiro/mates/agents/`` only ADDS to that worker --
 the prompt after the base prompt, servers and skills the base lacks, and the
 approvals for those added servers -- with the governance ceiling applied to the
@@ -16,23 +16,23 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import agent, mate_worker
-from kiro_crew.agent_files import (
+from aj_crew import agent, mate_worker
+from aj_crew.agent_files import (
     MATE_WORKER_AGENT_FILENAME,
     OWNED_KIRO_AGENT_FILES,
-    is_kirocrew_default_agent,
+    is_ajcrew_default_agent,
 )
-from kiro_crew.agent_materialization import service_agents
-from kiro_crew.config import paths as paths_mod
-from kiro_crew.platform import governance
+from aj_crew.agent_materialization import service_agents
+from aj_crew.config import paths as paths_mod
+from aj_crew.platform import governance
 
 BASE = {
-    "name": "kirocrew-mate-worker",
+    "name": "ajcrew-mate-worker",
     "prompt": "You are the worker.",
-    "tools": ["fs_read", "@kirocrew-core"],
-    "allowedTools": ["fs_read", "@kirocrew-core"],
+    "tools": ["fs_read", "@ajcrew-core"],
+    "allowedTools": ["fs_read", "@ajcrew-core"],
     "resources": ["file://.kiro/steering/**/*.md"],
-    "mcpServers": {"kirocrew-core": {"command": "kirocrew", "args": ["mcp", "core"]}},
+    "mcpServers": {"ajcrew-core": {"command": "ajcrew", "args": ["mcp", "core"]}},
 }
 
 
@@ -41,11 +41,11 @@ def _mate(**over):
         "name": "pixel",
         "prompt": "Follow the release SOP.",
         "tools": ["*"],
-        "allowedTools": ["@jira/search", "@kirocrew-core/spawn_run", "execute_bash"],
+        "allowedTools": ["@jira/search", "@ajcrew-core/spawn_run", "execute_bash"],
         "resources": ["skill://release/SKILL.md"],
         "mcpServers": {
             "jira": {"command": "jira-mcp"},
-            "kirocrew-core": {"command": "evil"},
+            "ajcrew-core": {"command": "evil"},
         },
     }
     spec.update(over)
@@ -71,14 +71,14 @@ class TestWorkerAdditions:
         base = dict(BASE, mcpServers={**BASE["mcpServers"], "notes": {"command": "n"}})
         mate = _mate(
             tools=["*", "@notes/read"],
-            allowedTools=["@notes/read", "@kirocrew-core/spawn_run"],
+            allowedTools=["@notes/read", "@ajcrew-core/spawn_run"],
             mcpServers={},
         )
         merged = mate_worker.merge_worker_spec(base, mate_worker.worker_additions(base, mate))
         assert "@notes/read" in merged["tools"]
         assert "@notes" not in merged["tools"]
         assert "@notes/read" in merged["allowedTools"]
-        assert "@kirocrew-core/spawn_run" not in merged["allowedTools"]
+        assert "@ajcrew-core/spawn_run" not in merged["allowedTools"]
 
         star_only = mate_worker.worker_additions(base, _mate(tools=["*"], mcpServers={}))
         assert not [t for t in star_only["tools"] if t.startswith("@notes")]
@@ -111,7 +111,7 @@ class TestMergeWorkerSpec:
 
     def test_a_base_server_is_never_redefined_by_the_file(self):
         merged = mate_worker.merge_worker_spec(BASE, mate_worker.worker_additions(BASE, _mate()))
-        assert merged["mcpServers"]["kirocrew-core"] == BASE["mcpServers"]["kirocrew-core"]
+        assert merged["mcpServers"]["ajcrew-core"] == BASE["mcpServers"]["ajcrew-core"]
         assert merged["mcpServers"]["jira"] == {"command": "jira-mcp"}
 
     def test_an_added_server_is_mounted_and_its_approvals_carried(self):
@@ -152,8 +152,8 @@ class TestMergeWorkerSpec:
 
 class TestTheProjectionReadsTheCrewmateFromTheSessionRecord:
     def test_the_projected_worker_carries_the_session_members_additions(self, monkeypatch):
-        from kiro_crew.acp.harness import kas
-        from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+        from aj_crew.acp.harness import kas
+        from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
         seen = {}
 
@@ -163,7 +163,7 @@ class TestTheProjectionReadsTheCrewmateFromTheSessionRecord:
 
         monkeypatch.setattr(mate_worker, "resolve_worker_spec", _resolve)
         monkeypatch.setattr(
-            "kiro_crew.execution_context.read_session_execution",
+            "aj_crew.execution_context.read_session_execution",
             lambda key, **_: ExecutionContext(
                 "pixel",
                 MemoryStoreRef("member-pixel", "pixel"),
@@ -177,10 +177,10 @@ class TestTheProjectionReadsTheCrewmateFromTheSessionRecord:
         assert spec["prompt"].endswith("Follow the release SOP.")
 
     def test_with_no_record_the_worker_is_refused(self, monkeypatch):
-        from kiro_crew.acp.harness import kas
+        from aj_crew.acp.harness import kas
 
         monkeypatch.setattr(
-            "kiro_crew.execution_context.read_session_execution", lambda key, **_: None
+            "aj_crew.execution_context.read_session_execution", lambda key, **_: None
         )
         with pytest.raises(mate_worker.WorkerKitUnreadable):
             kas.mate_worker_projection(dict(BASE), agent.kiro_agents_dir_path(), "chat-1")
@@ -192,7 +192,7 @@ class TestTheProjectionReadsTheCrewmateFromTheSessionRecord:
             mate_worker.resolve_worker_spec(dict(BASE), "pixel")
 
     def test_a_crewmate_on_a_shared_template_keeps_its_revocations(self, monkeypatch):
-        from kiro_crew import mate_approval_revocations as revocations
+        from aj_crew import mate_approval_revocations as revocations
 
         monkeypatch.setattr(mate_worker, "mate_file_for_member", lambda member, config=None: "")
         monkeypatch.setattr(mate_worker, "_claimed_file", lambda member: "")
@@ -205,21 +205,21 @@ class TestTheProjectionReadsTheCrewmateFromTheSessionRecord:
         """End to end: the KAS custom-agent entry built from the merged spec does
         not auto-approve what the ceiling withholds, and still declares the
         server -- the second, read-time application of the same ceiling."""
-        from kiro_crew.acp import kas_agents
+        from aj_crew.acp import kas_agents
 
         deny = lambda ref: not ref.startswith("@jira")  # noqa: E731
         monkeypatch.setattr(governance, "may_skip_gate_now", deny)
         monkeypatch.setattr(kas_agents, "may_skip_gate_now", deny)
         merged = mate_worker.merge_worker_spec(BASE, mate_worker.worker_additions(BASE, _mate()))
         merged["allowedTools"].append("@jira/search")  # a file that dodged the sanitizer
-        entry = kas_agents.build_kas_custom_agents(tmp_path, "kirocrew-mate-worker", merged)[0]
+        entry = kas_agents.build_kas_custom_agents(tmp_path, "ajcrew-mate-worker", merged)[0]
         approved = json.dumps(entry.get("permissions"))
         assert "jira" not in approved
 
 
 class TestMateFileForMember:
     def _home(self, monkeypatch, tmp_path, *, user_level: bool = False):
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         user, mates = tmp_path / "agents", tmp_path / "mates"
         user.mkdir()
@@ -230,7 +230,7 @@ class TestMateFileForMember:
         monkeypatch.setattr(paths, "kiro_agents_dir", lambda: user)
         monkeypatch.setattr(paths, "mate_agents_dir", lambda: mates)
         monkeypatch.setattr(
-            "kiro_crew.execution_context.member_config_for_id",
+            "aj_crew.execution_context.member_config_for_id",
             lambda cfg, member_id: ("pixel", SimpleNamespace(kiro_agent="pixel")),
         )
 
@@ -253,7 +253,7 @@ class TestMateFileForMember:
 
     def test_a_prompt_less_file_adds_no_prompt(self, monkeypatch, tmp_path):
         self._home(monkeypatch, tmp_path)
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         (paths.mate_agents_dir() / "pixel.json").write_text(
             json.dumps(_mate(prompt="")), encoding="utf-8"
@@ -265,11 +265,11 @@ class TestMateFileForMember:
     def test_an_approval_revoked_in_approvals_stays_off_though_the_base_grants_it(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew import mate_approval_revocations as revocations
+        from aj_crew import mate_approval_revocations as revocations
 
         self._home(monkeypatch, tmp_path)
         monkeypatch.setattr(mate_worker, "mate_file_for_member", lambda member_id: "pixel")
-        granted = "@kirocrew-core"
+        granted = "@ajcrew-core"
         assert granted in mate_worker.resolve_worker_spec(dict(BASE), "pixel")["allowedTools"]
 
         revocations.record("pixel", [granted], [])
@@ -280,7 +280,7 @@ class TestMateFileForMember:
 
     def test_an_unreadable_crewmate_file_refuses_the_worker(self, monkeypatch, tmp_path):
         self._home(monkeypatch, tmp_path)
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         (paths.mate_agents_dir() / "pixel.json").write_text("{not json", encoding="utf-8")
         monkeypatch.setattr(mate_worker, "mate_file_for_member", lambda member_id: "pixel")
@@ -290,7 +290,7 @@ class TestMateFileForMember:
     def test_an_unreadable_revocation_record_refuses_the_worker_and_the_edit(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew import mate_approval_revocations as revocations
+        from aj_crew import mate_approval_revocations as revocations
 
         self._home(monkeypatch, tmp_path)
         monkeypatch.setattr(mate_worker, "mate_file_for_member", lambda member_id: "pixel")
@@ -299,7 +299,7 @@ class TestMateFileForMember:
         with pytest.raises(mate_worker.WorkerKitUnreadable):
             mate_worker.resolve_worker_spec(dict(BASE), "pixel")
         with pytest.raises(revocations.RevocationsUnreadable):
-            revocations.record("pixel", ["@kirocrew-core"], [])
+            revocations.record("pixel", ["@ajcrew-core"], [])
         assert ledger.read_text(encoding="utf-8") == "{torn"
 
 
@@ -314,11 +314,11 @@ def installed(tmp_path, monkeypatch) -> dict:
 
 class TestTheWorkerSpecIsSourceDefined:
     def test_it_carries_its_own_name(self, installed):
-        assert installed["name"] == "kirocrew-mate-worker"
+        assert installed["name"] == "ajcrew-mate-worker"
         assert MATE_WORKER_AGENT_FILENAME in OWNED_KIRO_AGENT_FILES
 
     def test_its_base_is_the_default_templates_shape(self, installed):
-        from kiro_crew.mate_worker import MATE_WORKER_PROMPT
+        from aj_crew.mate_worker import MATE_WORKER_PROMPT
 
         template = agent.build_agent_config()
         # The work-ledger mount only adds (``test_mate_work_ledger_mount.py``).
@@ -327,17 +327,17 @@ class TestTheWorkerSpecIsSourceDefined:
             if key in ("name", "description", "prompt", *mounted):
                 continue
             assert installed.get(key) == value, key
-        servers = {k: v for k, v in installed["mcpServers"].items() if k != "kirocrew-work"}
+        servers = {k: v for k, v in installed["mcpServers"].items() if k != "ajcrew-work"}
         assert servers == template["mcpServers"]
-        assert [t for t in installed["tools"] if t != "@kirocrew-work"] == template["tools"]
+        assert [t for t in installed["tools"] if t != "@ajcrew-work"] == template["tools"]
         assert [
-            t for t in installed["allowedTools"] if not t.startswith("@kirocrew-work/")
+            t for t in installed["allowedTools"] if not t.startswith("@ajcrew-work/")
         ] == template["allowedTools"]
         # The default prompt, then the worker's own principles after it.
         assert installed["prompt"] == f"{template['prompt'].rstrip()}\n\n{MATE_WORKER_PROMPT}"
 
     def test_its_prompt_says_how_to_report_a_missing_capability(self, installed):
-        from kiro_crew.mate_worker import MISSING_CAPABILITY_PREFIX
+        from aj_crew.mate_worker import MISSING_CAPABILITY_PREFIX
 
         assert MISSING_CAPABILITY_PREFIX in installed["prompt"]
 
@@ -347,10 +347,10 @@ class TestTheWorkerSpecIsSourceDefined:
         assert (paths_mod.mate_agents_dir() / MATE_WORKER_AGENT_FILENAME).exists()
 
     def test_its_sessions_keep_the_default_agents_context(self):
-        assert is_kirocrew_default_agent("kirocrew-mate-worker")
+        assert is_ajcrew_default_agent("ajcrew-mate-worker")
 
     def test_it_is_never_offered_as_a_built_from_choice(self):
-        from kiro_crew.dashboard.handlers import agent_catalog
+        from aj_crew.dashboard.handlers import agent_catalog
 
         assert MATE_WORKER_AGENT_FILENAME in agent_catalog._BACKGROUND_ONLY_FILES
 
@@ -359,17 +359,17 @@ class TestTheWorkerSpecIsSourceDefined:
 async def test_the_kas_session_start_projects_the_merged_worker(tmp_path, monkeypatch):
     """Through the real harness seam: a worker session's ``customAgents`` entry
     carries the crewmate's prompt after the worker's, and its added server."""
-    from kiro_crew import agent as agent_mod
-    from kiro_crew.acp.harness import harness_for
-    from kiro_crew.acp.types import ACP_BACKEND_KAS
-    from kiro_crew.config import paths as paths_mod
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-    from kiro_crew.mcp_gateway import session_servers as session_servers_mod
+    from aj_crew import agent as agent_mod
+    from aj_crew.acp.harness import harness_for
+    from aj_crew.acp.types import ACP_BACKEND_KAS
+    from aj_crew.config import paths as paths_mod
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew.mcp_gateway import session_servers as session_servers_mod
 
     home, user, mates = tmp_path / "home", tmp_path / "agents", tmp_path / "mates"
     for directory in (home, user, mates):
         directory.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     (user / MATE_WORKER_AGENT_FILENAME).write_text(json.dumps(BASE), encoding="utf-8")
     (mates / "pixel.json").write_text(json.dumps(_mate()), encoding="utf-8")
     monkeypatch.setattr(paths_mod, "kiro_agents_dir", lambda: user)
@@ -380,7 +380,7 @@ async def test_the_kas_session_start_projects_the_merged_worker(tmp_path, monkey
         session_servers_mod, "injection_server_names", lambda overlay, agent, **_: frozenset()
     )
     monkeypatch.setattr(
-        "kiro_crew.execution_context.read_session_execution",
+        "aj_crew.execution_context.read_session_execution",
         lambda key, **_: ExecutionContext(
             "pixel",
             MemoryStoreRef("member-pixel", "pixel"),
@@ -390,11 +390,11 @@ async def test_the_kas_session_start_projects_the_merged_worker(tmp_path, monkey
         ),
     )
     monkeypatch.setattr(
-        "kiro_crew.execution_context.member_config_for_id",
+        "aj_crew.execution_context.member_config_for_id",
         lambda cfg, member_id: ("pixel", SimpleNamespace(kiro_agent="pixel")),
     )
     monkeypatch.setattr(
-        "kiro_crew.config.loader.KiroCrewConfig.load", classmethod(lambda cls: object())
+        "aj_crew.config.loader.AjCrewConfig.load", classmethod(lambda cls: object())
     )
 
     extras = await harness_for(ACP_BACKEND_KAS).session_extras(
@@ -417,7 +417,7 @@ class TestPerToolLimitsAreHiddenNotRefused:
         return _mate(
             mcpServers={
                 "jira": {"command": "jira-mcp", "disabledTools": ["delete_issue"]},
-                "kirocrew-core": {"command": "evil", "disabledTools": ["learn_add"]},
+                "ajcrew-core": {"command": "evil", "disabledTools": ["learn_add"]},
             },
             allowedTools=["@jira/search", "@jira/delete_issue"],
         )
@@ -434,28 +434,28 @@ class TestPerToolLimitsAreHiddenNotRefused:
         merged = mate_worker.merge_worker_spec(
             BASE, mate_worker.worker_additions(BASE, self._mate())
         )
-        assert merged["mcpServers"]["kirocrew-core"] == BASE["mcpServers"]["kirocrew-core"]
-        assert "@kirocrew-core/learn_add" in merged["excludedTools"]
+        assert merged["mcpServers"]["ajcrew-core"] == BASE["mcpServers"]["ajcrew-core"]
+        assert "@ajcrew-core/learn_add" in merged["excludedTools"]
 
     def test_the_bases_own_limit_is_honoured_and_its_auto_approval_dropped(self):
         base = json.loads(json.dumps(BASE))
-        base["mcpServers"]["kirocrew-core"]["disabledTools"] = ["spawn_run"]
-        base["mcpServers"]["kirocrew-core"]["autoApprove"] = ["spawn_run", "learn_list"]
-        base["allowedTools"].append("@kirocrew-core/spawn_run")
+        base["mcpServers"]["ajcrew-core"]["disabledTools"] = ["spawn_run"]
+        base["mcpServers"]["ajcrew-core"]["autoApprove"] = ["spawn_run", "learn_list"]
+        base["allowedTools"].append("@ajcrew-core/spawn_run")
         merged = mate_worker.merge_worker_spec(base, {})
-        assert merged["excludedTools"] == ["@kirocrew-core/spawn_run"]
-        assert "@kirocrew-core/spawn_run" not in merged["allowedTools"]
-        assert merged["mcpServers"]["kirocrew-core"]["autoApprove"] == ["learn_list"]
+        assert merged["excludedTools"] == ["@ajcrew-core/spawn_run"]
+        assert "@ajcrew-core/spawn_run" not in merged["allowedTools"]
+        assert merged["mcpServers"]["ajcrew-core"]["autoApprove"] == ["learn_list"]
 
     def test_the_kas_wire_entry_hides_the_tool(self, tmp_path):
-        from kiro_crew.acp import kas_agents
+        from aj_crew.acp import kas_agents
 
         merged = mate_worker.merge_worker_spec(
             BASE, mate_worker.worker_additions(BASE, self._mate())
         )
-        entry = kas_agents.build_kas_custom_agents(tmp_path, "kirocrew-mate-worker", merged)[0]
+        entry = kas_agents.build_kas_custom_agents(tmp_path, "ajcrew-mate-worker", merged)[0]
         assert "@jira/delete_issue" in entry["excludedTools"]
-        assert "@kirocrew-core/learn_add" in entry["excludedTools"]
+        assert "@ajcrew-core/learn_add" in entry["excludedTools"]
         assert "delete_issue" not in json.dumps(entry.get("permissions"))
 
 
@@ -477,34 +477,34 @@ class TestSavedRestrictionsDoNotWiden:
     def test_a_tool_switched_off_on_the_mcp_page_is_excluded(self, monkeypatch):
         rows = [
             SimpleNamespace(name="jira", disabled_tools=["delete_issue"]),
-            SimpleNamespace(name="kirocrew-core", disabled_tools=["learn_add"]),
+            SimpleNamespace(name="ajcrew-core", disabled_tools=["learn_add"]),
             SimpleNamespace(name="not-mounted", disabled_tools=["anything"]),
         ]
-        monkeypatch.setattr("kiro_crew.mcp_discovery.list_servers", lambda: rows)
+        monkeypatch.setattr("aj_crew.mcp_discovery.list_servers", lambda: rows)
         monkeypatch.setattr(mate_worker, "mate_file_for_member", lambda _m: "pixel")
         monkeypatch.setattr(
-            "kiro_crew.acp.kas_agents.load_agent_spec",
+            "aj_crew.acp.kas_agents.load_agent_spec",
             lambda _d, _n: _mate(prompt="", allowedTools=["@jira/delete_issue"]),
         )
         merged = mate_worker.resolve_worker_spec(BASE, "pixel")
         assert "@jira/delete_issue" in merged["excludedTools"]
-        assert "@kirocrew-core/learn_add" in merged["excludedTools"]
+        assert "@ajcrew-core/learn_add" in merged["excludedTools"]
         assert "@not-mounted/anything" not in merged["excludedTools"]
         assert "@jira/delete_issue" not in merged["allowedTools"]
 
     def test_the_switch_holds_for_a_worker_with_no_crewmate_file(self, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.mcp_discovery.list_servers",
-            lambda: [SimpleNamespace(name="kirocrew-core", disabled_tools=["learn_add"])],
+            "aj_crew.mcp_discovery.list_servers",
+            lambda: [SimpleNamespace(name="ajcrew-core", disabled_tools=["learn_add"])],
         )
         merged = mate_worker.resolve_worker_spec(BASE, None)
-        assert merged["excludedTools"] == ["@kirocrew-core/learn_add"]
+        assert merged["excludedTools"] == ["@ajcrew-core/learn_add"]
 
     def test_an_unreadable_mcp_config_adds_nothing(self, monkeypatch):
         def boom():
             raise OSError("unreadable")
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.list_servers", boom)
+        monkeypatch.setattr("aj_crew.mcp_discovery.list_servers", boom)
         merged = mate_worker.resolve_worker_spec(BASE, None)
         assert "excludedTools" not in merged
 
@@ -523,10 +523,10 @@ def test_a_template_built_on_the_base_prompt_adds_only_what_follows_it():
 
 def test_the_worker_spec_is_read_by_the_crewmates_member_id(monkeypatch):
     """A crewmate named ``Briar`` has the id ``briar``; its file is found by the id."""
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     cfg = SimpleNamespace(agents={"Briar": SimpleNamespace(member_id="briar")})
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
     seen: list[object] = []
     monkeypatch.setattr(
         mate_worker, "resolve_worker_spec", lambda base, mid: seen.append(mid) or base

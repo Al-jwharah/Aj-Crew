@@ -11,16 +11,16 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import members
-from kiro_crew.config.loader import KiroCrewAgentConfig
-from kiro_crew.eventlog.service import set_service
+from aj_crew import members
+from aj_crew.config.loader import AjCrewAgentConfig
+from aj_crew.eventlog.service import set_service
 
 CREW = "code-reviewer"
 
 
 @pytest.fixture(autouse=True)
 # flake-ok: pre-existing autouse fixture on the shared monkeypatch, moved verbatim; no test that imports it calls monkeypatch.undo()
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture, moved verbatim; tracked for a de-flake pass
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture, moved verbatim; tracked for a de-flake pass
 def _fresh_eventlog(tmp_path, monkeypatch):
     """Re-root the members space at tmp_path and drop any cached service.
 
@@ -42,8 +42,8 @@ def _fresh_eventlog(tmp_path, monkeypatch):
 FAKE_CONFIG_DIGEST = "the-bytes-this-fake-config-was-parsed-from"
 
 
-def _fake_config(agents: dict[str, KiroCrewAgentConfig], default=CREW):
-    # memory_stores mirrors KiroCrewConfig: the agent-update handler reads it
+def _fake_config(agents: dict[str, AjCrewAgentConfig], default=CREW):
+    # memory_stores mirrors AjCrewConfig: the agent-update handler reads it
     # (cfg.memory_stores.get(...)) to resolve a member's private-memory record.
     # degraded_sections mirrors it too: the roster withholds the reconcile from a
     # config degraded to defaults, so a double must state that it is not.
@@ -57,5 +57,5 @@ def _fake_config(agents: dict[str, KiroCrewAgentConfig], default=CREW):
     return cfg
 
 
-def _agent(**kw) -> KiroCrewAgentConfig:
-    return KiroCrewAgentConfig(kiro_agent=kw.pop("kiro_agent", "reviewer"), **kw)
+def _agent(**kw) -> AjCrewAgentConfig:
+    return AjCrewAgentConfig(kiro_agent=kw.pop("kiro_agent", "reviewer"), **kw)

@@ -37,7 +37,7 @@ def _shared_cache_root() -> str:
 # alone below), so hypothesis falls back to its own default: ``.hypothesis/examples``
 # resolved against the CURRENT WORKING DIRECTORY, i.e. the repo root, for every test
 # collected from ANY testpath -- including the ~108 modules under
-# ``src/kiro_crew/apps/builtins/*/tests/`` that never import ``test/conftest.py`` at all.
+# ``src/aj_crew/apps/builtins/*/tests/`` that never import ``test/conftest.py`` at all.
 # That writes an untracked directory into the checkout on every run (git status shows it
 # under "Ignored files" since ``.gitignore`` covers it, but it still needs a place to live
 # that is not the source tree).
@@ -59,7 +59,7 @@ def _redirect_hypothesis_database() -> None:
     """Point the active hypothesis profile's example database off the checkout.
 
     Uses a stable per-user directory under the platform cache root
-    (``$XDG_CACHE_HOME`` or ``~/.cache``, ``kirocrew/hypothesis``) rather than
+    (``$XDG_CACHE_HOME`` or ``~/.cache``, ``ajcrew/hypothesis``) rather than
     ``database=None`` or a per-run temp dir: the shrunk counterexample hypothesis
     saves is what makes a property-test failure replay on the NEXT run instead of
     costing a full re-search, so the database has to outlive the process. What
@@ -82,7 +82,7 @@ def _redirect_hypothesis_database() -> None:
     except Exception:  # noqa: BLE001 - no active profile to inherit from
         return
     if _HYPOTHESIS_DB_DIR is None:
-        candidate = os.path.join(_shared_cache_root(), "kirocrew", "hypothesis")
+        candidate = os.path.join(_shared_cache_root(), "ajcrew", "hypothesis")
         try:
             os.makedirs(candidate, exist_ok=True)
             _HYPOTHESIS_DB_DIR = candidate
@@ -136,7 +136,7 @@ def _redirect_bytecode_cache() -> None:
     """
     if os.environ.get("PYTHONDONTWRITEBYTECODE"):
         return  # nothing is written anywhere; nothing to redirect
-    candidate = os.path.join(_shared_cache_root(), "kirocrew", "pycache")
+    candidate = os.path.join(_shared_cache_root(), "ajcrew", "pycache")
     try:
         os.makedirs(candidate, exist_ok=True)
     except OSError:
@@ -146,11 +146,11 @@ def _redirect_bytecode_cache() -> None:
 
 
 def _put_the_tree_under_test_first_on_child_paths() -> None:
-    """Make every interpreter a test spawns import the ``kiro_crew`` this run imports.
+    """Make every interpreter a test spawns import the ``aj_crew`` this run imports.
 
     ``[tool:pytest] pythonpath = src`` (or a ``-o pythonpath=<tree>/src`` override)
     puts the tree under test on THIS interpreter's ``sys.path`` only. A
-    ``sys.executable -c`` child resolves ``kiro_crew`` from the venv's install
+    ``sys.executable -c`` child resolves ``aj_crew`` from the venv's install
     instead. On CI the install is the checkout being tested, so nothing differs; in
     a linked worktree that borrows another checkout's venv, every child imported
     THAT checkout, and a child calling a symbol the worktree added failed with
@@ -159,7 +159,7 @@ def _put_the_tree_under_test_first_on_child_paths() -> None:
     the same way ``PYTHONPYCACHEPREFIX`` does above.
 
     ``find_spec`` locates the package without executing it (the module-level
-    no-``kiro_crew`` rule in this file's docstring). An inherited ``PYTHONPATH`` is
+    no-``aj_crew`` rule in this file's docstring). An inherited ``PYTHONPATH`` is
     kept after it, and no empty component is ever written: an empty entry is the
     child's CWD on ``sys.path`` (``test_stdlib_shadow.py``). A test that builds a
     child env from scratch, or strips ``PYTHONPATH`` on purpose, is unaffected.
@@ -167,7 +167,7 @@ def _put_the_tree_under_test_first_on_child_paths() -> None:
     import importlib.util
 
     try:
-        spec = importlib.util.find_spec("kiro_crew")
+        spec = importlib.util.find_spec("aj_crew")
     except (ImportError, ValueError):
         return
     if spec is None or not spec.origin:
@@ -256,7 +256,7 @@ def _gate_pytest_asyncio_fixture_scan() -> None:
 
 
 def _pin_crew_log_off_for_the_process() -> None:
-    """``KIROCREW_CREW_LOG=0`` for the whole run, so a test opts IN to the crew log.
+    """``AJCREW_CREW_LOG=0`` for the whole run, so a test opts IN to the crew log.
 
     The gateway records a crew log by default. A test that drives the chat path for
     some other reason would otherwise write one into its data home, and the logs
@@ -264,7 +264,7 @@ def _pin_crew_log_off_for_the_process() -> None:
     exercise. Every crew-log test sets the variable itself: ``"1"`` to record,
     ``"0"`` to assert the off path, and ``monkeypatch.delenv`` to assert the default.
     """
-    os.environ["KIROCREW_CREW_LOG"] = "0"
+    os.environ["AJCREW_CREW_LOG"] = "0"
 
 
 @pytest.hookimpl(trylast=True)

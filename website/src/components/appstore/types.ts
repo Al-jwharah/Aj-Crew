@@ -144,7 +144,7 @@ export interface AppAdoptionRow {
   /** Present only once adopted, for a record whose source is the pinned repository.
    *  Copied from the wheel's pin, never from the app's manifest. */
   legacyNav?: { route: string; icon: string }
-  /** The installed manifest's `minKiroCrewVersion` is newer than this host. */
+  /** The installed manifest's `minAjCrewVersion` is newer than this host. */
   hostTooOld?: boolean
 }
 
@@ -249,7 +249,7 @@ export type InstalledApp = {
       workerAutoApprove?: boolean
     }
     setup?: { onInstall?: string; onUpdate?: string; onUninstall?: string; onEnable?: string; onDisable?: string }
-    minKiroCrewVersion?: string
+    minAjCrewVersion?: string
     iconPath?: string
     repo?: string
     screenshots?: string[]
@@ -310,13 +310,13 @@ export function sourceLabel(app: Pick<RegistryApp, '_registry' | 'origin' | 'pro
   if (app._registry) return app._registry
   if (app.provenance === 'builtin') return i18nT('components.appstore.types.built_in')
   if (app.provenance === 'official' || app.provenance === 'core') {
-    return i18nT('components.appstore.types.kirocrew_registry')
+    return i18nT('components.appstore.types.ajcrew_registry')
   }
   // An installed record carries no ``provenance``: a local install claims no registry.
   if (app.origin === 'local') return i18nT('appStoreSources.local')
   // Legacy fallback (older gateway: no ``provenance`` field).
   if (app.origin === 'builtin') return i18nT('components.appstore.types.built_in')
-  return i18nT('components.appstore.types.kirocrew_registry')
+  return i18nT('components.appstore.types.ajcrew_registry')
 }
 
 /**
@@ -340,7 +340,7 @@ export function isVerified(app: Pick<RegistryApp, 'origin' | 'author' | '_regist
   if (typeof app.verified === 'boolean') return app.verified
   // Legacy fallback (older gateway: no ``verified`` field).
   if (app.origin === 'builtin') return true
-  return (app.author || '').toLowerCase() === 'kirocrew'
+  return (app.author || '').toLowerCase() === 'ajcrew'
 }
 
 /** The ``source`` prefix ``install_from_registry`` records on a cloned app. */

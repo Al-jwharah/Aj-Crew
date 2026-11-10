@@ -15,9 +15,9 @@ import json
 
 import pytest
 
-from kiro_crew import change_card_catalog as catalog_mod
-from kiro_crew import mate_capabilities, mate_worker
-from kiro_crew.config import paths
+from aj_crew import change_card_catalog as catalog_mod
+from aj_crew import mate_capabilities, mate_worker
+from aj_crew.config import paths
 
 URI = "skill:///home/x/skills/my-app/learning-aid/SKILL.md"
 CATALOG = {"my-app/learning-aid": URI}
@@ -100,7 +100,7 @@ def test_a_listed_skill_removal_says_why_it_has_no_undo(mate, monkeypatch, key):
     catalog skill the list also names: a ``set`` would put back neither entry."""
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard import change_cards_readers as readers
+    from aj_crew.dashboard import change_cards_readers as readers
 
     service = SimpleNamespace(get=lambda member: mate_capabilities.get(member, CATALOG))
     monkeypatch.setattr(readers, "_capability_service", lambda app: service)
@@ -116,14 +116,14 @@ def test_a_listed_skill_removal_says_why_it_has_no_undo(mate, monkeypatch, key):
 
 
 def _patch_base(monkeypatch, base):
-    from kiro_crew.agent_sdk import agent_specs
+    from aj_crew.agent_sdk import agent_specs
 
     monkeypatch.setattr(agent_specs, "load_agent_spec", lambda *a, **k: dict(base))
 
 
 def test_the_summary_offers_remove_for_each_added_listed_skill_only(monkeypatch):
     base = {
-        "name": "kirocrew-mate-worker",
+        "name": "ajcrew-mate-worker",
         "mcpServers": {},
         "tools": [],
         "skills": ["shared-skill"],

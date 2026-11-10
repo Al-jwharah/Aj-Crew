@@ -107,7 +107,7 @@ class TestShippedScenarios:
         # scenario reads off the source row. A note added or removed without the
         # scenario moving -- or a chunker change that splits a note -- fails here,
         # not as a paid nightly run.
-        from kiro_crew.knowledge.chunker import HeadingAwareChunker
+        from aj_crew.knowledge.chunker import HeadingAwareChunker
 
         notes = sorted(KNOWLEDGE_NOTES_DIR.glob("*.md"))
         assert len(notes) == 3
@@ -117,7 +117,7 @@ class TestShippedScenarios:
         sc = scenarios.load_scenario(SCENARIOS_DIR / "knowledge-add-folder-source-and-scan.yaml")
         assert any("3 supported files found" in step for step in sc.steps)
         assert any('"3 items"' in exp for exp in sc.expectations)
-        assert any("/tmp/kirocrew-gui-user-test/team-notes" in step for step in sc.steps)
+        assert any("/tmp/ajcrew-gui-user-test/team-notes" in step for step in sc.steps)
 
     def test_knowledge_scenario_judges_the_settled_badge_and_survives_a_retry(self) -> None:
         # Two ways this scenario reached NO_VERDICT on a night the product was
@@ -148,8 +148,8 @@ class TestShippedScenarios:
         # here rather than as "No project directory is set" on a paid nightly run.
         import importlib.util
 
-        from kiro_crew.history import ConversationLog
-        from kiro_crew.testing.fixtures import seeded_home
+        from aj_crew.history import ConversationLog
+        from aj_crew.testing.fixtures import seeded_home
 
         spec = importlib.util.spec_from_file_location("gui_seed_home", SEED_HOME_PY)
         assert spec is not None and spec.loader is not None
@@ -167,7 +167,7 @@ class TestShippedScenarios:
             assert after[1:] == before[1:]  # only the metadata line moved
             meta = ConversationLog(base_dir=sessions).get_metadata(starter.stem)
         assert meta["project"] == str(project)
-        assert meta["title"] == "Welcome to KiroCrew"  # brand-ok: verbatim seeded title
+        assert meta["title"] == "Welcome to AjCrew"  # brand-ok: verbatim seeded title
         sc = scenarios.load_scenario(SCENARIOS_DIR / "chat-files-side-panel-browse.yaml")
         assert any(meta["title"] in step for step in sc.steps)
 
@@ -218,8 +218,8 @@ class TestShippedScenarios:
         # scenario moving fails here rather than as a paid nightly run. The set is
         # a copy of the `artifacts-library` fixture's, and the two are held equal
         # so the copies cannot drift apart silently.
-        from kiro_crew.artifacts import ArtifactStore
-        from kiro_crew.testing.fixtures import seeded_home
+        from aj_crew.artifacts import ArtifactStore
+        from aj_crew.testing.fixtures import seeded_home
 
         def fingerprint(fixture: str) -> dict[str, tuple[str, str, int]]:
             with seeded_home(fixture):
@@ -470,7 +470,7 @@ class TestShippedScenarios:
         expectations = " ".join(sc.expectations)
         assert "welcome to the team" not in expectations
         assert "on your behalf" not in expectations
-        from kiro_crew.testing.fake_acp_backend import REPLY_TEXT
+        from aj_crew.testing.fake_acp_backend import REPLY_TEXT
 
         assert f'"{REPLY_TEXT}"' in expectations
         assert "no bubble from you" in expectations
@@ -514,11 +514,11 @@ class TestShippedScenarios:
             sc = scenarios.load_scenario(SCENARIOS_DIR / f"{name}.yaml")
             return " ".join([*sc.steps, *sc.expectations])
 
-        new_crewmate = pages["kiroCrewAgentsPage"]["add_crew_member"]
+        new_crewmate = pages["ajCrewAgentsPage"]["add_crew_member"]
         editor = text("capabilities-agents-list-and-open-editor")
         for label in (
             new_crewmate,
-            pages["kiroCrewAgentsPage"]["filter_agents"],
+            pages["ajCrewAgentsPage"]["filter_agents"],
             manual["components"]["avatarBuilder"]["edit_avatar"],
             *(rail[k] for k in ("section_general", "section_capabilities", "tab_approvals")),
             *(rail[k] for k in ("tab_schedules", "tab_webhooks", "section_memory")),
@@ -1086,7 +1086,7 @@ class TestSeededTitleReset:
     """
 
     #: The title the ``rich`` fixture seeds for the pinned starter session.
-    _FIXTURE_WELCOME_TITLE = "Welcome to KiroCrew"  # brand-ok: verbatim fixture title
+    _FIXTURE_WELCOME_TITLE = "Welcome to AjCrew"  # brand-ok: verbatim fixture title
 
     #: The session cookie the harness sends. The link-token window does not
     #: matter to it; a cookie that validates is all the reset needs.
@@ -1201,11 +1201,11 @@ class TestSeededTitleReset:
         # derives from the ``dashboard_starter`` transcript stem by stripping
         # ``dashboard_``; assert both the key and the title against that real
         # mapping so neither can drift away from the gateway silently.
-        from kiro_crew.dashboard.slot_persistence.restore_inputs import (
+        from aj_crew.dashboard.slot_persistence.restore_inputs import (
             _recent_session_slot_name,
         )
-        from kiro_crew.history import ConversationLog
-        from kiro_crew.testing.fixtures import seeded_home
+        from aj_crew.history import ConversationLog
+        from aj_crew.testing.fixtures import seeded_home
 
         slot_name = _recent_session_slot_name("dashboard_starter")
         assert slot_name == "starter"

@@ -17,16 +17,16 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-import kiro_crew.apps.routes as routes_facade
-from kiro_crew.apps import routes_listing
-from kiro_crew.apps.builtin_unavailable import (
+import aj_crew.apps.routes as routes_facade
+from aj_crew.apps import routes_listing
+from aj_crew.apps.builtin_unavailable import (
     builtin_app_name,
     mark_unavailable,
     record_unavailable_builtin,
     unavailable_builtins,
 )
-from kiro_crew.apps.builtins import BUILTIN_NAMES
-from kiro_crew.dashboard.routes import system
+from aj_crew.apps.builtins import BUILTIN_NAMES
+from aj_crew.dashboard.routes import system
 
 
 def _app() -> web.Application:
@@ -40,7 +40,7 @@ def test_boot_records_the_skipped_builtin_and_its_reason(monkeypatch: pytest.Mon
     real_import = importlib.import_module
 
     def _import(name: str, *args, **kwargs):
-        if name == f"kiro_crew.apps.builtins.{failing}":
+        if name == f"aj_crew.apps.builtins.{failing}":
             raise PermissionError(13, "Permission denied")
         return real_import(name, *args, **kwargs)
 
@@ -69,7 +69,7 @@ def test_the_skip_is_keyed_by_the_installed_app_name() -> None:
 
 @pytest.mark.parametrize("module_name", BUILTIN_NAMES)
 def test_every_shipped_builtin_follows_the_name_rule(module_name: str) -> None:
-    manifest = resources.files(f"kiro_crew.apps.builtins.{module_name}").joinpath("app.json")
+    manifest = resources.files(f"aj_crew.apps.builtins.{module_name}").joinpath("app.json")
     assert json.loads(manifest.read_text(encoding="utf-8"))["name"] == builtin_app_name(module_name)
 
 

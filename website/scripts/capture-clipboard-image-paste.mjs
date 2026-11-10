@@ -37,7 +37,7 @@ const slots = [{
   running: false,
   last_message: 'Sure — paste the screenshot here.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: '',
   folder_id: '',

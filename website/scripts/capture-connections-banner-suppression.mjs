@@ -27,7 +27,7 @@ import { json, logPageProblems, stubDashboardApi } from './lib/stub-dashboard-ap
 
 const OUT = process.argv[2] || '../temp-screenshots/connections-banner-suppression'
 const SLOT = 'chat-1'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -39,7 +39,7 @@ const slots = [{
   running: false,
   last_message: 'Which Notion page should it land on?',
   messages: 3,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),
@@ -94,9 +94,9 @@ const mcpServers = [{
   status: 'error',
   error: 'authorization required',
   tools: [],
-  source: 'kirocrew',
+  source: 'ajcrew',
   enabled: true,
-  kirocrewManaged: true,
+  ajcrewManaged: true,
 }]
 
 async function main() {
@@ -117,7 +117,7 @@ async function main() {
     // `return json(...), true` -- the comma marks the request handled; awaiting
     // fulfil() would resolve to undefined and fall through to the boot stub.
     extra: async (path, route) => {
-      if (path === '/api/config/kirocrew') {
+      if (path === '/api/config/ajcrew') {
         // Flag OFF is served as `{}` -- absent, exactly as an instance that never
         // opted in reports it, not `false`.
         return json(route, scene.connectionsUi ? { connections_ui: true } : {}), true

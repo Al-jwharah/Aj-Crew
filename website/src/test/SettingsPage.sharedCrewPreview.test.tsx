@@ -1,6 +1,6 @@
 /**
  * Settings > People exists only while the gateway reports the Shared Crew
- * preview (`KIROCREW_SHARED_CREW_PREVIEW=1`). The gate is the capabilities
+ * preview (`AJCREW_SHARED_CREW_PREVIEW=1`). The gate is the capabilities
  * answer alone: no browser setting turns it on.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
@@ -57,7 +57,7 @@ describe('Settings > People behind the Shared Crew preview', () => {
     ['an older gateway without the field', { ...ALL_UNAVAILABLE }],
   ])('%s: no People tab and no People panel, even at its own URL', async (_name, answer) => {
     caps.mockResolvedValue(answer)
-    localStorage.setItem('kirocrew-shared-crew-preview', '1')
+    localStorage.setItem('ajcrew-shared-crew-preview', '1')
     mount('/settings/people')
     await waitFor(() => expect(caps).toHaveBeenCalled())
     await waitFor(() => expect(screen.getAllByText('Overview').length).toBeGreaterThan(0))

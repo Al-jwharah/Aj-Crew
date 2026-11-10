@@ -18,7 +18,7 @@ import JobForm from '../components/JobForm'
 import JobLogsView from '../components/JobLogsView'
 import ErrorNotice from '../components/ErrorNotice'
 import { usePublishNavigationStake, useRegisterNavigationLeaveGuard } from '../components/NavigationLeaveGuard'
-import { crewDisplayName, type KiroCrewAgent } from '../components/AgentSelector'
+import { crewDisplayName, type AjCrewAgent } from '../components/AgentSelector'
 import CrewAvatar from '../components/CrewAvatar'
 import SimpleSelect from '../components/SimpleSelect'
 import InfoTip from '../components/InfoTip'
@@ -64,7 +64,7 @@ import { compareText, fmtDateTimeNumeric, fmtRelative, fmtTime } from '../i18n/f
 import { formatCadence } from '../utils/scheduleCadence'
 import { browserTimeZone, isValidTimeZone, jobZoneCaption } from '../utils/tz'
 import { guideConfirm, guidePick, guidePickControl } from '../uiLocations/targetRegistry'
-const RENDER_TZ_STORAGE_KEY = 'kirocrew.schedule.renderTz'
+const RENDER_TZ_STORAGE_KEY = 'ajcrew.schedule.renderTz'
 
 /**
  * Column count of the jobs table — the `colSpan` every full-width row uses
@@ -1734,7 +1734,7 @@ export function JobSecretsPanel({ job, onSaved }: { job: CronJob; onSaved: () =>
  *
  * Was a resizable side panel pinned to the right of the job list. The dialog
  * form factor follows the same migration the Crews page already made
- * (`KiroCrewAgentsPage`): one modal surface, focus trap, Escape-to-dismiss and
+ * (`AjCrewAgentsPage`): one modal surface, focus trap, Escape-to-dismiss and
  * overlay behaviour owned by Radix instead of a hand-rolled backdrop.
  *
  * Two capabilities of the old panel are deliberately gone with it: the drag
@@ -1796,7 +1796,7 @@ function TemplateUpdatedNotice({ job }: { job: CronJob }) {
 type LateSaveFailure = { name: string; message: string; confirmed: boolean }
 
 function JobDetailDialog({ job, prefill, prefillWrites, agents, defaultAgent, rosterFailure, onClose, onChanged, onDirtyChange, onLateFailure }: {
-  job?: CronJob; prefill?: CronPrefill; prefillWrites?: boolean; agents: KiroCrewAgent[]; defaultAgent: string; rosterFailure?: { reloading: boolean; onReload: () => void }; onClose: () => void; onChanged: () => void; onDirtyChange: (dirty: boolean) => void; onLateFailure: (f: LateSaveFailure) => void
+  job?: CronJob; prefill?: CronPrefill; prefillWrites?: boolean; agents: AjCrewAgent[]; defaultAgent: string; rosterFailure?: { reloading: boolean; onReload: () => void }; onClose: () => void; onChanged: () => void; onDirtyChange: (dirty: boolean) => void; onLateFailure: (f: LateSaveFailure) => void
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)

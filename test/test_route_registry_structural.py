@@ -1,6 +1,6 @@
 """A ``routes`` hook may return its own route objects, not only ``AppRoute``.
 
-An installed app cannot import ``kiro_crew`` without pinning itself to one wheel's
+An installed app cannot import ``aj_crew`` without pinning itself to one wheel's
 private layout, so ``RouteRegistry`` reads any object with a ``method`` / ``path`` /
 ``handler`` triple. These tests pin which objects are accepted, that an accepted one
 serves exactly like an ``AppRoute``, and that everything else is skipped with the
@@ -21,9 +21,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-import kiro_crew.apps.route_registry as route_registry_module
-from kiro_crew.apps.context import AppContext
-from kiro_crew.apps.route_registry import AppRoute, RouteRegistry, _route_fields
+import aj_crew.apps.route_registry as route_registry_module
+from aj_crew.apps.context import AppContext
+from aj_crew.apps.route_registry import AppRoute, RouteRegistry, _route_fields
 
 APP = "structural-probe"
 
@@ -152,7 +152,7 @@ class TestRegistration:
         tmp_path: Path,
         caplog: pytest.LogCaptureFixture,
     ) -> None:
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.route_registry"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.apps.route_registry"):
             registry, ctx, described = await _register(
                 monkeypatch,
                 tmp_path,

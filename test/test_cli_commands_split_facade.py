@@ -1,9 +1,9 @@
-"""``kiro_crew.cli_commands`` keeps the patch seams and the surface the one module had.
+"""``aj_crew.cli_commands`` keeps the patch seams and the surface the one module had.
 
-``kiro_crew.cli_commands`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the
+``aj_crew.cli_commands`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the
 ``cli_commands_<command>`` owners in its ``_OWNERS``. It keeps the ``tailnet``,
 ``telemetry``, ``secrets`` and ``pod`` handlers and its whole import block; callers,
-tests and documents reach every other handler as ``kiro_crew.cli_commands.<name>``.
+tests and documents reach every other handler as ``aj_crew.cli_commands.<name>``.
 
 ``test/test_facade_mirror_guards.py`` holds every mirrored facade to the shared rules.
 These tests pin what is particular to this one: every name the test trees patch through
@@ -14,7 +14,7 @@ module-level imports are exactly its import block before the split plus the mirr
 glue, and every import inside one of its functions is read there, which together stand
 in for the F401 check ``setup.cfg`` switches off for it; a star import binds what it
 bound before; every public name it held still type-checks through it; and the moved
-handlers log as, and the moved exception class names, ``kiro_crew.cli_commands``.
+handlers log as, and the moved exception class names, ``aj_crew.cli_commands``.
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ import pytest
 import source_corpus
 import test_campaign_facades_base_public_names as base_names
 
-from kiro_crew import _facade_mirror, cli_commands
+from aj_crew import _facade_mirror, cli_commands
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_cli_commands_split_facade")
 
@@ -45,9 +45,9 @@ SHARED_FACADE_CHECKS = (
     "reach_scan_can_fail",
 )
 
-FACADE = "kiro_crew.cli_commands"
+FACADE = "aj_crew.cli_commands"
 OWNERS = tuple(
-    f"kiro_crew.cli_commands_{name}"
+    f"aj_crew.cli_commands_{name}"
     for name in (
         "workspace",
         "memory",
@@ -91,8 +91,8 @@ _KNOWN_SEAMS = frozenset(
 #: A test file worth parsing spells the facade itself, never only a ``cli_commands_*``
 #: sibling.
 _SPELLS_THE_FACADE = re.compile(
-    r"kiro_crew\.cli_commands(?![\w])"
-    r"|from\s+kiro_crew\s+import\s+(?:\([^)]*?\bcli_commands\b(?!_)|[^\n]*?\bcli_commands\b(?!_))"
+    r"aj_crew\.cli_commands(?![\w])"
+    r"|from\s+aj_crew\s+import\s+(?:\([^)]*?\bcli_commands\b(?!_)|[^\n]*?\bcli_commands\b(?!_))"
 )
 
 #: Every name the facade's import statements bound before its handlers moved out. They
@@ -112,7 +112,7 @@ _BASE_IMPORTS = frozenset("""
     EnvStagingRefused EvalRunner external_text_requires_redaction find_plugin_manifest
     format_report format_results format_schedule get_app get_app_manifest get_local_tz
     get_shared_embedder importlib inspect install_app is_claude_code is_sensitive_path
-    is_valid_timezone json key_new_crew KiroCrewAgentConfig KiroCrewConfig LessonStore
+    is_valid_timezone json key_new_crew AjCrewAgentConfig AjCrewConfig LessonStore
     LessonWriteOutcome list_apps LLMJudge load_scenario load_scenarios logging
     lookup_cron_folder_id loopback_urlopen make_sync_embed_fn materialize_workspace_dir
     MAX_SHORT_STRING MemberNameError MemberWorkspaceUnavailable memory_store_binding_defect
@@ -174,42 +174,42 @@ def patched_names(source: str) -> set[str]:
 #: Each spelling the patch scan must read, and each it must skip, keyed by case id.
 _SPELLING_CASES = {
     "monkeypatch-from-import": (
-        "from kiro_crew import cli_commands\n"
+        "from aj_crew import cli_commands\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(cli_commands, 'A', 1)\n",
         {"A"},
     ),
     "patch-object-import-as": (
-        "import kiro_crew.cli_commands as cc\n"
+        "import aj_crew.cli_commands as cc\n"
         "from unittest import mock\n"
         "def t():\n    with mock.patch.object(cc, 'B'):\n        pass\n",
         {"B"},
     ),
     "mock-patch-string": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.cli_commands.C'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.cli_commands.C'):\n        pass\n",
         {"C"},
     ),
     "dotted-setattr": (
-        "def t(monkeypatch):\n    monkeypatch.setattr('kiro_crew.cli_commands.D', 1)\n",
+        "def t(monkeypatch):\n    monkeypatch.setattr('aj_crew.cli_commands.D', 1)\n",
         {"D"},
     ),
     "assignment-and-del": (
-        "from kiro_crew import cli_commands as m\ndef t():\n    m.E = 1\n    del m.F\n",
+        "from aj_crew import cli_commands as m\ndef t():\n    m.E = 1\n    del m.F\n",
         {"E", "F"},
     ),
     # An owner is not the facade, even bound under the facade's name.
     "owner-bound-as-facade-name": (
-        "from kiro_crew import cli_commands_cron as cli_commands\n"
+        "from aj_crew import cli_commands_cron as cli_commands\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(cli_commands, 'X', 1)\n",
         set(),
     ),
     "owner-string": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.cli_commands_memory.Y'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.cli_commands_memory.Y'):\n        pass\n",
         set(),
     ),
     "name-chosen-at-run-time": (
-        "from kiro_crew import cli_commands\n"
+        "from aj_crew import cli_commands\n"
         "def t(monkeypatch, name):\n    monkeypatch.setattr(cli_commands, name, 1)\n",
         set(),
     ),
@@ -413,7 +413,7 @@ def test_the_inventory_check_reports_a_planted_and_a_dropped_import() -> None:
     """The F401 stand-in must be able to fail both ways: an import added to the facade
     and an import it stops binding are both a difference from the inventory."""
     source = _source(cli_commands)
-    planted = source + "\nfrom kiro_crew.cli_commands_cron import _cron_add\n"
+    planted = source + "\nfrom aj_crew.cli_commands_cron import _cron_add\n"
     assert runtime_imports(planted) - (_BASE_IMPORTS | _GLUE_IMPORTS) == {"_cron_add"}
     dropped = source.replace("import uuid\n", "", 1)
     assert (_BASE_IMPORTS | _GLUE_IMPORTS) - runtime_imports(dropped) == {"uuid"}
@@ -484,7 +484,7 @@ def test_the_logger_scan_reads_a_module_relative_name() -> None:
 
 
 def test_the_lazy_import_ban_names_every_owner() -> None:
-    """``import kiro_crew.cli`` must load no owner either: each one loads with the facade,
+    """``import aj_crew.cli`` must load no owner either: each one loads with the facade,
     so ``test/test_cli_lazy_imports.py`` bans every owner beside it."""
     import test_cli_lazy_imports as lazy
 
@@ -495,4 +495,4 @@ def test_the_lazy_import_ban_names_every_owner() -> None:
 def test_the_moved_exception_class_keeps_the_facade_module_name() -> None:
     """``module.qualname`` is how a traceback names a raised class."""
     assert cli_commands._CliConflict.__module__ == FACADE
-    assert "_CliConflict" in vars(sys.modules["kiro_crew.cli_commands_workspace"])
+    assert "_CliConflict" in vars(sys.modules["aj_crew.cli_commands_workspace"])

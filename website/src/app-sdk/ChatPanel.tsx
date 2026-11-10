@@ -1,5 +1,5 @@
 /**
- * ChatPanel — mounts the full KiroCrew ChatPage inside an app.
+ * ChatPanel — mounts the full AjCrew ChatPage inside an app.
  *
  * ChatPage accepts `embedded` prop which skips URL sync effects.
  * ChatPanel makes the workspace session the active slot (`useOwnSlotChat`) and
@@ -14,7 +14,7 @@
  * the artifact companion does, and refreshes the list to fill the row in.
  *
  * Usage:
- *   const { ChatPanel } = window.__kirocrew_modules['@kirocrew/app-sdk']
+ *   const { ChatPanel } = window.__ajcrew_modules['@ajcrew/app-sdk']
  *   <ChatPanel slotKey="coder-abc123" />
  */
 import { useCallback, useEffect, useRef, useState } from 'react'

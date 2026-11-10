@@ -20,15 +20,15 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-import kiro_crew.hooks as hooks_mod
-from kiro_crew.agent_sdk import spec_hooks
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_GOOSE, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.channel import _stream_task
-from kiro_crew.hooks import HOOK_EVENT_PRE_TOOL_USE, ScriptHookResult, ScriptHookStore
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST, LLMEvent
-from kiro_crew.tool_permission import SPEC_HOOKS_UNREADABLE
+import aj_crew.config.paths as paths_mod
+import aj_crew.hooks as hooks_mod
+from aj_crew.agent_sdk import spec_hooks
+from aj_crew.agent_sdk.backends import ACP_BACKEND_GOOSE, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.channel import _stream_task
+from aj_crew.hooks import HOOK_EVENT_PRE_TOOL_USE, ScriptHookResult, ScriptHookStore
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST, LLMEvent
+from aj_crew.tool_permission import SPEC_HOOKS_UNREADABLE
 
 _AGENT = "kas-channel-member"
 
@@ -65,7 +65,7 @@ def runs(monkeypatch) -> list[tuple[str, bool]]:
 @pytest.fixture
 def sel_rows(monkeypatch) -> MagicMock:
     sel_mock = MagicMock()
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: sel_mock)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: sel_mock)
     return sel_mock
 
 

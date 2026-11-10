@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import logging
 
-from kiro_crew.context_assembly.budget import _MEMORY_PROJECTS_CAP
-from kiro_crew.memory import MemoryStore
+from aj_crew.context_assembly.budget import _MEMORY_PROJECTS_CAP
+from aj_crew.memory import MemoryStore
 
 
 def _store(tmp_path) -> MemoryStore:
@@ -23,7 +23,7 @@ def test_oversize_write_logs_a_warning_and_keeps_the_file_whole(tmp_path, caplog
     store = _store(tmp_path)
     content = "# Active Projects\n" + "p" * (_MEMORY_PROJECTS_CAP + 500)
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.memory"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.memory"):
         assert store.write_projects(content) is True
 
     assert store.read_projects() == content + "\n"
@@ -34,14 +34,14 @@ def test_oversize_write_logs_a_warning_and_keeps_the_file_whole(tmp_path, caplog
 def test_write_within_the_cap_logs_nothing(tmp_path, caplog):
     store = _store(tmp_path)
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.memory"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.memory"):
         store.write_projects("# Active Projects\n- one project\n")
 
     assert not [r for r in caplog.records if "startup cap" in r.getMessage()]
 
 
 def test_overflow_counts_the_chars_past_the_cap():
-    from kiro_crew.memory import projects_cap_overflow
+    from aj_crew.memory import projects_cap_overflow
 
     assert projects_cap_overflow("x" * _MEMORY_PROJECTS_CAP) == 0
     assert projects_cap_overflow("x" * (_MEMORY_PROJECTS_CAP + 7)) == 7

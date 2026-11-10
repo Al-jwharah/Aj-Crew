@@ -1,14 +1,14 @@
 // Migration of the per-user electron-store directory across the npm `name`
-// rename ("kirocrew-electron-mac" -> "kirocrew-desktop" / "-nightly").
+// rename ("ajcrew-electron-mac" -> "ajcrew-desktop" / "-nightly").
 //
 // WHY THIS EXISTS. Electron derives userData from the npm package name, so renaming
 // it repoints electron-store at a brand-new directory and every setting in the old
 // one is silently orphaned. Observed on a machine that took the nightly rename:
-// %APPDATA%\kirocrew-electron-mac\config.json still held
+// %APPDATA%\ajcrew-electron-mac\config.json still held
 //
 //     "updateChannel": "stable",  "windowState": {...},  "themeAccent": "#8e48ff"
 //
-// while the freshly created kirocrew-desktop-nightly\config.json had
+// while the freshly created ajcrew-desktop-nightly\config.json had
 // `updateChannel: ""` and default geometry.
 //
 // The worst loss is updateChannel, because it is the stable<->insider switcher and
@@ -42,7 +42,7 @@ const {
 // The real defaults main.js constructs the store with.
 const DEFAULTS = {
   remoteHost: "",
-  kirocrewBinPath: "~/.local/bin/kirocrew",
+  ajcrewBinPath: "~/.local/bin/ajcrew",
   remoteHosts: {},
   sshTimeoutMs: 20000,
   windowState: null,
@@ -85,7 +85,7 @@ test("seeds every orphaned setting into a store that does not exist yet", () => 
     themeAccent: "#8e48ff",
     windowState: { x: 116, y: 0, width: 1354, height: 913 },
     globalHotkey: "Alt+Space",
-    remoteHosts: { 5476: { host: "box", binPath: "/usr/bin/kirocrew" } },
+    remoteHosts: { 5476: { host: "box", binPath: "/usr/bin/ajcrew" } },
     sshTimeoutMs: 30000,
     runLocalGateway: false,
     linuxFrameless: true,
@@ -110,26 +110,26 @@ test("seeds every orphaned setting into a store that does not exist yet", () => 
 test("carries the PRE-remoteHosts single-host keys so the chained migration still runs", () => {
   // Two migrations in series, and this one runs first. host-config.js's
   // migrateRemoteHostConfig converts the old single-host pair (remoteHost +
-  // kirocrewBinPath) into the per-port remoteHosts map, and it reads those keys from
+  // ajcrewBinPath) into the per-port remoteHosts map, and it reads those keys from
   // the store. An install old enough to predate remoteHosts therefore loses its
   // remote connection twice over if the rename seed drops the pair: the seed carries
   // an empty remoteHosts, and the host migration then finds nothing to convert.
   const userData = tmpUserData();
   assert.strictEqual(
     seedRenamedStore(userData, {
-      readLegacy: () => ({ remoteHost: "box.example", kirocrewBinPath: "/opt/bin/kirocrew" }),
+      readLegacy: () => ({ remoteHost: "box.example", ajcrewBinPath: "/opt/bin/ajcrew" }),
     }),
     true
   );
   const store = openStore(userData);
   assert.strictEqual(store.get("remoteHost"), "box.example");
-  assert.strictEqual(store.get("kirocrewBinPath"), "/opt/bin/kirocrew");
+  assert.strictEqual(store.get("ajcrewBinPath"), "/opt/bin/ajcrew");
 
   // ...and the chained migration can now do its job.
   const { migrateRemoteHostConfig } = require("../host-config");
   assert.strictEqual(migrateRemoteHostConfig(store, 5476), true);
   assert.deepStrictEqual(store.get("remoteHosts"), {
-    5476: { host: "box.example", binPath: "/opt/bin/kirocrew" },
+    5476: { host: "box.example", binPath: "/opt/bin/ajcrew" },
   });
 });
 
@@ -307,7 +307,7 @@ test("a CORRUPTED legacy store is final and loud, never retried", () => {
   // exists. Exercised through the REAL read path (a real malformed file on disk),
   // since the JSON.parse throw is what production hits.
   const parent = fs.mkdtempSync(path.join(os.tmpdir(), "kc-corrupt-"));
-  const userData = path.join(parent, "kirocrew-desktop-nightly");
+  const userData = path.join(parent, "ajcrew-desktop-nightly");
   fs.mkdirSync(userData, { recursive: true });
   const legacyDir = path.join(parent, LEGACY_STORE_NAME);
   fs.mkdirSync(legacyDir, { recursive: true });
@@ -417,14 +417,14 @@ test("locates the legacy store beside the CURRENT one, on every platform", () =>
   // nonexistent ~/.config path on macOS, so the lookup ENOENT'd and every setting
   // stayed orphaned there.
   const cases = [
-    ["win32", "C:\\Users\\jane\\AppData\\Roaming\\kirocrew-desktop"],
-    ["darwin", "/Users/jane/Library/Application Support/kirocrew-desktop"],
-    ["linux", "/home/jane/.config/kirocrew-desktop-nightly"],
+    ["win32", "C:\\Users\\jane\\AppData\\Roaming\\ajcrew-desktop"],
+    ["darwin", "/Users/jane/Library/Application Support/ajcrew-desktop"],
+    ["linux", "/home/jane/.config/ajcrew-desktop-nightly"],
   ];
   for (const [platform, userData] of cases) {
     const file = legacyStoreFile(userData);
     assert.ok(file.includes(LEGACY_STORE_NAME), `${platform}: must name the legacy dir`);
-    assert.ok(!file.includes("kirocrew-desktop"), `${platform}: must not point at the CURRENT store`);
+    assert.ok(!file.includes("ajcrew-desktop"), `${platform}: must not point at the CURRENT store`);
     assert.match(file, /config\.json$/, `${platform}: must target electron-store's file`);
   }
 });
@@ -459,7 +459,7 @@ test("the legacy directory name is the pre-rename npm package name", () => {
   // Pinned: this is how the migration finds the old store, and it is NOT derivable
   // from the current package.json (the rename removed it). A typo makes the
   // migration silently find nothing.
-  assert.strictEqual(LEGACY_STORE_NAME, "kirocrew-electron-mac");
+  assert.strictEqual(LEGACY_STORE_NAME, "ajcrew-electron-mac");
 });
 
 test("the Windows install guide does not contradict the code on the stable lane", () => {
@@ -597,7 +597,7 @@ test("seeding Mochi's store never touches the main config.json, and vice versa",
 
 test("locates the legacy Mochi store beside the legacy config.json", () => {
   const file = legacyStoreFile(
-    "/Users/jane/Library/Application Support/kirocrew-desktop",
+    "/Users/jane/Library/Application Support/ajcrew-desktop",
     "mochi-machine.json"
   );
   assert.ok(file.includes(LEGACY_STORE_NAME), "must name the legacy dir");

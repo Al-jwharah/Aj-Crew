@@ -17,8 +17,8 @@ import { useChatPaneUploads } from '../components/useChatPaneUploads'
 
 afterEach(() => {
   vi.restoreAllMocks()
-  const w = window as { kirocrew?: unknown }
-  delete w.kirocrew
+  const w = window as { ajcrew?: unknown }
+  delete w.ajcrew
 })
 
 const ref = <T,>(current: T) => ({ current })
@@ -27,8 +27,8 @@ const ref = <T,>(current: T) => ({ current })
  *  given regular `files`, for mixed drops. The bridge resolves each item to the
  *  path its File name carries. */
 function dirDrop(dirPath: string, files: File[] = []): DataTransfer {
-  const w = window as { kirocrew?: { getPathForFile?: (f: File) => string } }
-  w.kirocrew = { getPathForFile: f => f.name }
+  const w = window as { ajcrew?: { getPathForFile?: (f: File) => string } }
+  w.ajcrew = { getPathForFile: f => f.name }
   const items: unknown[] = [
     { kind: 'file', webkitGetAsEntry: () => ({ isDirectory: true }), getAsFile: () => new File(['x'], dirPath, { type: '' }) },
   ]

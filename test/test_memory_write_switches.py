@@ -17,15 +17,15 @@ import pytest
 from consolidation_lease_helpers import lease_aware_log
 from test_memory_context_toggles import KEY, _builder, _make_consolidator, _seed_log, _write_config
 
-from kiro_crew.config.loader import KiroCrewConfig, config_dir
-from kiro_crew.config.memory_sections import (
+from aj_crew.config.loader import AjCrewConfig, config_dir
+from aj_crew.config.memory_sections import (
     MemoryConfig,
     lesson_extraction_enabled,
     memory_writes_off_key,
 )
-from kiro_crew.history import HistoryConsolidator
-from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED
-from kiro_crew.learn import LessonStore
+from aj_crew.history import HistoryConsolidator
+from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED
+from aj_crew.learn import LessonStore
 
 
 class TestDefaults:
@@ -36,7 +36,7 @@ class TestDefaults:
 
     def test_an_unset_config_loads_both_on(self, tmp_path):
         _write_config()
-        mem = KiroCrewConfig.load().memory
+        mem = AjCrewConfig.load().memory
         assert mem.writes_enabled is True
         assert mem.lesson_extraction_enabled is True
         assert memory_writes_off_key(mem) is None
@@ -44,7 +44,7 @@ class TestDefaults:
 
     def test_the_config_file_turns_each_off(self, tmp_path):
         _write_config({"writes_enabled": False, "lesson_extraction_enabled": False})
-        mem = KiroCrewConfig.load().memory
+        mem = AjCrewConfig.load().memory
         assert mem.writes_enabled is False
         assert mem.lesson_extraction_enabled is False
 
@@ -131,14 +131,14 @@ class TestLessonExtractionSwitch:
 
     def test_learn_add_route_is_not_gated_by_extraction(self, tmp_path):
         _write_config({"lesson_extraction_enabled": False})
-        assert memory_writes_off_key(KiroCrewConfig.load().memory) is None
+        assert memory_writes_off_key(AjCrewConfig.load().memory) is None
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("enabled", [True, False])
     async def test_member_store_payload_follows_the_switch(self, tmp_path, monkeypatch, enabled):
         """The V2 member path hands the store its updates with lessons only when on."""
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+        from aj_crew.context import ContextBuilder
+        from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
         _write_config({} if enabled else {"lesson_extraction_enabled": False})
         cons, vector_store = _lesson_consolidator()
@@ -150,13 +150,13 @@ class TestLessonExtractionSwitch:
             "member-id",
             MemoryStoreRef("member-store", "member-id"),
             "member",
-            "kirocrew",
+            "ajcrew",
             "persistent",
         )
         monkeypatch.setattr(
-            "kiro_crew.execution_context.read_session_execution", lambda _key: execution
+            "aj_crew.execution_context.read_session_execution", lambda _key: execution
         )
-        monkeypatch.setattr("kiro_crew.memory_stores.memory_store_version", lambda _store: 2)
+        monkeypatch.setattr("aj_crew.memory_stores.memory_store_version", lambda _store: 2)
         monkeypatch.setattr(ContextBuilder, "ensure_store", AsyncMock(return_value=vector_store))
         monkeypatch.setattr(ContextBuilder, "get_memory_for", lambda **_kwargs: cons._memory)
         with patch.object(cons, "_call_llm", new_callable=AsyncMock) as llm:
@@ -173,7 +173,7 @@ class TestLessonExtractionSwitch:
 
 async def _task_extractor_reached() -> bool:
     """Drive the task runner's lesson extractor on a stub; True if it passed the gate."""
-    from kiro_crew.taskrunner import TaskRunner
+    from aj_crew.taskrunner import TaskRunner
 
     reached = False
 
@@ -205,7 +205,7 @@ class TestWritesSwitch:
     @pytest.mark.asyncio
     async def test_lessons_route_refuses_and_names_the_switch(self, tmp_path):
         _write_config({"writes_enabled": False})
-        from kiro_crew.dashboard.handlers import cron as cron_mod
+        from aj_crew.dashboard.handlers import cron as cron_mod
 
         req = MagicMock()
         req.app = {"state": MagicMock()}
@@ -229,7 +229,7 @@ class TestWritesSwitch:
 
     def test_learn_cli_refuses(self, tmp_path, capsys):
         _write_config({"writes_enabled": False})
-        from kiro_crew import cli_commands
+        from aj_crew import cli_commands
 
         args = argparse.Namespace(
             learn_action="add", rule="Always frobnicate", category="tool", negative=None

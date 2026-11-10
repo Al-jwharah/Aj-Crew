@@ -39,8 +39,8 @@ from slot_ownership_checkpoint_helpers import (  # noqa: F401 -- fixtures are re
     state_fixture,
 )
 
-from kiro_crew.dashboard.state import SlotOrigin, _ChatSlot
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.state import SlotOrigin, _ChatSlot
+from aj_crew.testing.wait import await_until
 
 
 class TestAcquisitionAfterSetup:
@@ -54,8 +54,8 @@ class TestAcquisitionAfterSetup:
             await _persist_and_close(state, state.get_or_create_slot("s1", origin=SlotOrigin.USER))
             return ""
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.cron_slot_creator", create_and_close)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.cron_slot_creator", create_and_close)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
         with patch(_GRANT, return_value=False):
             async with _client(state, APP) as client:
                 url, body = (
@@ -87,8 +87,8 @@ class TestAcquisitionAfterSetup:
             appeared.append(slot)
             return ""
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.cron_slot_creator", create_meanwhile)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.cron_slot_creator", create_meanwhile)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
         with patch(_GRANT, return_value=False):
             async with _client(state, caller) as client:
                 url, body = (
@@ -103,7 +103,7 @@ class TestAcquisitionAfterSetup:
 
     @pytest.mark.asyncio
     async def test_cancellation_releases_the_free_key_reservation(self, state, monkeypatch) -> None:
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         entered, release, finished = threading.Event(), threading.Event(), threading.Event()
 
@@ -153,7 +153,7 @@ class TestPostAwaitOwnership:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("phase", ["generation", "persist-entry", "persist-exit"])
     async def test_title_cannot_retitle_a_replacement(self, state, monkeypatch, phase) -> None:
-        from kiro_crew.dashboard import chat_title
+        from aj_crew.dashboard import chat_title
 
         slot = state.get_or_create_slot("s1", app=APP)
         await _persist(state, slot)
@@ -193,17 +193,17 @@ class TestPostAwaitOwnership:
     async def test_summary_cannot_publish_into_a_replacement(
         self, state, monkeypatch, phase
     ) -> None:
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.dashboard import chat_handlers, chat_summary
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.dashboard import chat_handlers, chat_summary
 
         slot = state.get_or_create_slot("s1", app=APP)
         for index in range(3):
             slot.append("user", f"goal {index}")
             slot.append("assistant", f"result {index}")
         await _persist(state, slot)
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.session_summary.enabled = True
-        monkeypatch.setattr(chat_handlers.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+        monkeypatch.setattr(chat_handlers.AjCrewConfig, "load", staticmethod(lambda: cfg))
         pushed = MagicMock()
         monkeypatch.setattr(state, "push_session_summary", pushed)
         log = state.conversation_log
@@ -255,7 +255,7 @@ class TestPostAwaitOwnership:
     async def test_replacement_after_history_save_cannot_dispatch_or_broadcast(
         self, state, regen_run, monkeypatch, route
     ) -> None:
-        from kiro_crew.dashboard import chat_regenerate
+        from aj_crew.dashboard import chat_regenerate
 
         slot = state.get_or_create_slot("s1", app=APP)
         _with_reply(slot)
@@ -283,7 +283,7 @@ class TestPostAwaitOwnership:
     async def test_rewind_does_not_commit_or_dispatch_a_replacement(
         self, state, monkeypatch, phase
     ) -> None:
-        from kiro_crew.dashboard import chat_rewind
+        from aj_crew.dashboard import chat_rewind
 
         slot = state.get_or_create_slot("s1", app=APP)
         await _persist(state, slot)
@@ -333,7 +333,7 @@ class TestAcquisitionRecheckPlacement:
     def test_no_await_between_final_recheck_and_acquisition(self, handler_name) -> None:
         import inspect
 
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         tree = ast.parse(inspect.getsource(getattr(chat_handlers, handler_name)))
         calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)]

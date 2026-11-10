@@ -15,9 +15,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import artifacts as art_mod
-from kiro_crew.artifacts import ArtifactStore
-from kiro_crew.dashboard.handlers import artifacts as handlers
+from aj_crew import artifacts as art_mod
+from aj_crew.artifacts import ArtifactStore
+from aj_crew.dashboard.handlers import artifacts as handlers
 
 
 def _strict_json(raw: bytes) -> Any:
@@ -84,7 +84,7 @@ async def test_the_list_route_answers_valid_json_with_every_artifact(
 
 
 def test_finite_values_are_sent_unchanged() -> None:
-    from kiro_crew.dashboard.handlers.artifacts_parts.route_plumbing import _json_response
+    from aj_crew.dashboard.handlers.artifacts_parts.route_plumbing import _json_response
 
     data = {"n": 1.5, "i": 3, "s": "Infinity", "l": [0.0, -2], "b": True, "z": None}
     assert _strict_json(_json_response(data).body) == data

@@ -1,5 +1,5 @@
 {
-  "_comment": "One row set, two readers. `speech` is the verdict both sides must reach for each row: the frontend's isCrewmateSpeech / isCrewmateChatRow (website/src/components/chat/crewmateBubbles.ts) decides what a crewmate's chat DRAWS, the backend's is_speech_row (src/kiro_crew/dashboard/system_notices.py) decides what the Crew Members roster QUOTES. crew-mode.md ('A crewmate's chat') promises the two agree; this fixture is the pin. Add a row here first when either side learns a new status kind. Rows the frontend classifies as speech only while streaming (`role: streaming`) are frontend-only and carry `frontend_only: true`.",
+  "_comment": "One row set, two readers. `speech` is the verdict both sides must reach for each row: the frontend's isCrewmateSpeech / isCrewmateChatRow (website/src/components/chat/crewmateBubbles.ts) decides what a crewmate's chat DRAWS, the backend's is_speech_row (src/aj_crew/dashboard/system_notices.py) decides what the Crew Members roster QUOTES. crew-mode.md ('A crewmate's chat') promises the two agree; this fixture is the pin. Add a row here first when either side learns a new status kind. Rows the frontend classifies as speech only while streaming (`role: streaming`) are frontend-only and carry `frontend_only: true`.",
   "cases": [
     { "name": "user turn", "role": "user", "content": "Take #4213 first.", "speech": true },
     { "name": "assistant reply", "role": "assistant", "content": "Found the cause of #4213.", "speech": true },
@@ -24,6 +24,6 @@
     { "name": "assistant row that merely quotes the subagent prefix with no parsable header (drawn, so quoted)", "role": "assistant", "content": "[Subagent completion event] is the header my sub-agents send back; here is what it means.", "speech": true},
     { "name": "user-role subagent completion (old scrollback), header parses", "role": "user", "content": "[Subagent completion event]\nAgent `w-triage-3` ✅\nTask: sweep\n\nSwept 2 issues.", "speech": false},
     { "name": "user pastes the envelope header with no outcome glyph (the card draws it, so it is quoted)", "role": "user", "content": "[Subagent completion event]\nAgent `demo`", "speech": true},
-    { "name": "assistant quotes a glyph-less Agent header inside prose (drawn, quoted)", "role": "assistant", "content": "[Subagent completion event]\nAgent `demo` (kirocrew) finished — here is what that header means.", "speech": true}
+    { "name": "assistant quotes a glyph-less Agent header inside prose (drawn, quoted)", "role": "assistant", "content": "[Subagent completion event]\nAgent `demo` (ajcrew) finished — here is what that header means.", "speech": true}
   ]
 }

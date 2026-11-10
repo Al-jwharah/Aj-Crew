@@ -26,7 +26,7 @@ import { logPageProblems, stubDashboardApi, json } from './lib/stub-dashboard-ap
 const OUT = process.argv[2] || '/tmp/mcp-oauth-shots'
 mkdirSync(OUT, { recursive: true })
 
-const PRESENCE = { kirocrew: true, kiroGlobal: false }
+const PRESENCE = { ajcrew: true, kiroGlobal: false }
 
 const servers = [
   // The reported case: an OAuth-protected server nobody has signed in to yet.
@@ -39,7 +39,7 @@ const servers = [
     enabled: true,
     tools: [],
     presence: PRESENCE,
-    kirocrewManaged: true,
+    ajcrewManaged: true,
     probedAt: 1786975675,
     authChallenge: true,
     authGrantPresent: false,
@@ -56,7 +56,7 @@ const servers = [
     enabled: true,
     tools: [],
     presence: PRESENCE,
-    kirocrewManaged: true,
+    ajcrewManaged: true,
     probedAt: 1786975675,
     authChallenge: true,
     authGrantPresent: true,
@@ -73,7 +73,7 @@ const servers = [
     tools: [],
     headers: { Authorization: '[REDACTED: credential]' },
     presence: PRESENCE,
-    kirocrewManaged: true,
+    ajcrewManaged: true,
     probedAt: 1786975675,
     authChallenge: true,
   },
@@ -87,13 +87,13 @@ const servers = [
     enabled: true,
     tools: [],
     presence: PRESENCE,
-    kirocrewManaged: true,
+    ajcrewManaged: true,
     probedAt: 1786975675,
   },
   // A healthy stdio server, for contrast.
   {
-    name: 'kirocrew-core',
-    command: '/usr/local/bin/kirocrew-mcp-core',
+    name: 'ajcrew-core',
+    command: '/usr/local/bin/ajcrew-mcp-core',
     status: 'ok',
     source: 'agent',
     enabled: true,

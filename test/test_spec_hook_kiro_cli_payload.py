@@ -11,10 +11,10 @@ from __future__ import annotations
 import asyncio
 import dataclasses
 
-import kiro_crew.hooks as hooks_mod
-from kiro_crew.agent_sdk import spec_hooks
-from kiro_crew.hook_runtime.hook_dispatch import pre_tool_match_names
-from kiro_crew.hooks import (
+import aj_crew.hooks as hooks_mod
+from aj_crew.agent_sdk import spec_hooks
+from aj_crew.hook_runtime.hook_dispatch import pre_tool_match_names
+from aj_crew.hooks import (
     HOOK_EVENT_PRE_TOOL_USE,
     HOOK_EVENT_STOP,
     ScriptHook,
@@ -112,7 +112,7 @@ def test_governance_is_asked_about_the_store_event_for_a_camelcase_payload(monke
         return "refused"
 
     monkeypatch.setattr(hooks_mod, "_script_hooks_capability_denied", lambda _sk: None)
-    monkeypatch.setattr("kiro_crew.hook_event_governance.event_refusal", refuse)
+    monkeypatch.setattr("aj_crew.hook_event_governance.event_refusal", refuse)
     hook = _spec_hook("preToolUse")
     result = asyncio.run(
         hooks_mod.run_script_hook(hook, "", {"hook_event_name": "preToolUse", "cwd": "/"})
@@ -124,7 +124,7 @@ def test_governance_is_asked_about_the_store_event_for_a_camelcase_payload(monke
 def test_opencode_apply_patch_is_told_write_not_its_mcp_split():
     # The fused title splits as ``@apply/patch`` too, but the call is opencode's own
     # write tool, so a guard on ``tool_name == "write"`` must still see it.
-    from kiro_crew.acp.harness_tool_names import qualified_harness_tool_id
+    from aj_crew.acp.harness_tool_names import qualified_harness_tool_id
 
     tool_id = qualified_harness_tool_id("opencode", "apply_patch", ("apply",))
     _all, spec = pre_tool_match_names("apply_patch", harness_tool_id=tool_id)
@@ -136,7 +136,7 @@ def test_opencode_apply_patch_is_told_write_not_its_mcp_split():
 def test_opencode_mcp_web_search_is_told_its_mcp_name_and_tags():
     # ``web_search`` is also a kiro-cli built-in name, but the call is server
     # ``web``'s tool ``search``: it must not be tagged ``@builtin``.
-    from kiro_crew.acp.harness_tool_names import qualified_harness_tool_id
+    from aj_crew.acp.harness_tool_names import qualified_harness_tool_id
 
     tool_id = qualified_harness_tool_id("opencode", "web_search", ("web",))
     _all, spec = pre_tool_match_names("web_search", harness_tool_id=tool_id)
@@ -155,9 +155,9 @@ def _native_calls():
     event qualifies them. goose's built-in tools run under its ``developer``
     extension, so the call also states that as its server.
     """
-    from kiro_crew.acp.harness_tool_names import HARNESS_TOOL_ID_SEPARATOR, HARNESS_TOOL_TABLES
-    from kiro_crew.acp.kas_permissions import KAS_TOOL_IDS_BY_KIRO_TOOL
-    from kiro_crew.agent_sdk.backends import ACP_BACKEND_GOOSE, ACP_BACKEND_KAS
+    from aj_crew.acp.harness_tool_names import HARNESS_TOOL_ID_SEPARATOR, HARNESS_TOOL_TABLES
+    from aj_crew.acp.kas_permissions import KAS_TOOL_IDS_BY_KIRO_TOOL
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_GOOSE, ACP_BACKEND_KAS
 
     for row, ids in KAS_TOOL_IDS_BY_KIRO_TOOL.items():
         for tool_id in ids:
@@ -171,8 +171,8 @@ def _native_calls():
 
 def test_every_backend_crew_fires_spec_hooks_for_is_walked():
     # A new backend Crew fires spec hooks for must bring a table this walk reads.
-    from kiro_crew.acp.harness_tool_names import HARNESS_TOOL_TABLES
-    from kiro_crew.agent_sdk.backends import (
+    from aj_crew.acp.harness_tool_names import HARNESS_TOOL_TABLES
+    from aj_crew.agent_sdk.backends import (
         ACP_BACKEND_KAS,
         ACP_BACKENDS_CREW_FIRES_SPEC_HOOKS,
         ACP_BACKENDS_CREW_FIRES_SPEC_OBSERVER_HOOKS,
@@ -183,8 +183,8 @@ def test_every_backend_crew_fires_spec_hooks_for_is_walked():
 
 
 def test_every_table_row_has_a_kiro_cli_hook_name():
-    from kiro_crew.acp.harness_tool_names import HARNESS_TOOL_TABLES
-    from kiro_crew.acp.kas_permissions import KAS_TOOL_IDS_BY_KIRO_TOOL, SPEC_HOOK_TOOL_TAGS
+    from aj_crew.acp.harness_tool_names import HARNESS_TOOL_TABLES
+    from aj_crew.acp.kas_permissions import KAS_TOOL_IDS_BY_KIRO_TOOL, SPEC_HOOK_TOOL_TAGS
 
     rows = set(KAS_TOOL_IDS_BY_KIRO_TOOL).union(*HARNESS_TOOL_TABLES.values())
     tagged = {tool for tools in SPEC_HOOK_TOOL_TAGS.values() for tool in tools}

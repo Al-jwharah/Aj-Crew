@@ -1,4 +1,4 @@
-"""``kirocrew doctor`` names the ``resource_limits`` keys Windows accepts but ignores.
+"""``ajcrew doctor`` names the ``resource_limits`` keys Windows accepts but ignores.
 
 On Windows the Job object bounds only per-spawn ``max_processes`` and
 ``max_memory_mb``. Every other key in the startup warning's list needs a systemd
@@ -13,9 +13,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import cli_doctor
-from kiro_crew.config.sections_limits import ResourceLimitsConfig
-from kiro_crew.doctor_checks import resources
+from aj_crew import cli_doctor
+from aj_crew.config.sections_limits import ResourceLimitsConfig
+from aj_crew.doctor_checks import resources
 
 
 def _arrange(
@@ -23,7 +23,7 @@ def _arrange(
 ) -> None:
     monkeypatch.setattr(cli_doctor.platform_compat, "IS_WINDOWS", windows)
     config = SimpleNamespace(resource_limits=limits)
-    monkeypatch.setattr(cli_doctor, "KiroCrewConfig", SimpleNamespace(load=lambda: config))
+    monkeypatch.setattr(cli_doctor, "AjCrewConfig", SimpleNamespace(load=lambda: config))
 
 
 def test_on_windows_each_set_inert_key_and_the_default_fd_cap_are_named(
@@ -78,7 +78,7 @@ def test_an_unreadable_config_degrades_to_a_line(monkeypatch: pytest.MonkeyPatch
     def _boom() -> object:
         raise ValueError("bad config")
 
-    monkeypatch.setattr(cli_doctor, "KiroCrewConfig", SimpleNamespace(load=_boom))
+    monkeypatch.setattr(cli_doctor, "AjCrewConfig", SimpleNamespace(load=_boom))
     assert resources._windows_inert_limit_lines() == [
         "  inert limits:    ⚠  could not read resource_limits"
     ]

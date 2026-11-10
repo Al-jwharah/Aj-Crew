@@ -9,9 +9,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.history import ConversationLog
-from kiro_crew.messaging.link import ChannelLink, binding_token
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.history import ConversationLog
+from aj_crew.messaging.link import ChannelLink, binding_token
 
 # -- Helpers --
 
@@ -100,9 +100,9 @@ class TestDashboardStateLinkSlack:
 
     def test_link_slack_missing_slot_noop(self, tmp_path, caplog):
         state = _make_state(tmp_path)
-        caplog.set_level(logging.WARNING, logger="kiro_crew.dashboard.state")
+        caplog.set_level(logging.WARNING, logger="aj_crew.dashboard.state")
         state.link_slack("nonexistent", "1234.5678", "C123")
-        warnings = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.dashboard.state"]
+        warnings = [r.getMessage() for r in caplog.records if r.name == "aj_crew.dashboard.state"]
         assert any("no live slot 'nonexistent'" in m for m in warnings)
         state.sessions.set_slack_link.assert_not_called()
         state.sessions.batched_save.assert_not_called()
@@ -177,7 +177,7 @@ def _fake_transport(channel_type: str):
 class TestChannelNeutralSlotLinks:
     def _permit_channels(self, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.platform.governance_profiles.governance_permits",
+            "aj_crew.platform.governance_profiles.governance_permits",
             lambda *args, **kwargs: SimpleNamespace(permitted=True),
         )
 

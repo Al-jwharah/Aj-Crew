@@ -1,6 +1,6 @@
-"""One storage location per re-exported name in ``kiro_crew.security``.
+"""One storage location per re-exported name in ``aj_crew.security``.
 
-``kiro_crew.security`` is a facade: the controls live in submodules of the
+``aj_crew.security`` is a facade: the controls live in submodules of the
 package and roughly forty modules import them through the package. A re-exported
 name therefore has an owner, and the rule these tests hold is that the name's
 value lives in that owner's namespace and nowhere else, and that the owner itself
@@ -19,11 +19,11 @@ back at the cause.
 
 DUPLICATE, ON PURPOSE. ``test/test_lazy_reexport_storage.py`` holds the same rule
 for the six lazily re-exporting packages, and this file holds it for
-``kiro_crew.security`` alone so the two land in either order without touching one
+``aj_crew.security`` alone so the two land in either order without touching one
 another.
 
     Retire this file when ``test/test_lazy_reexport_storage.py`` on main contains a
-    ``kiro_crew.security`` entry in ``PACKAGES``.
+    ``aj_crew.security`` entry in ``PACKAGES``.
 """
 
 from __future__ import annotations
@@ -38,10 +38,10 @@ from types import ModuleType
 
 import pytest
 
-import kiro_crew.security as facade
-from kiro_crew.security import _exports
+import aj_crew.security as facade
+from aj_crew.security import _exports
 
-PACKAGE = "kiro_crew.security"
+PACKAGE = "aj_crew.security"
 
 #: Every re-exported name, read from the package's own table so a name added
 #: there is covered here without editing this file.
@@ -63,7 +63,7 @@ def _owner_restored(module_name: str) -> Iterator[None]:
     A test that purges an owner and lets it be imported again has changed two
     things, not one. The obvious one is :data:`sys.modules`. The other is this
     package's own attribute: ``importlib`` finishes a submodule import by setting
-    it on the parent package, so ``kiro_crew.security.paths`` is rebound to the
+    it on the parent package, so ``aj_crew.security.paths`` is rebound to the
     fresh copy -- and that name is an ``_EXPORTS`` VALUE, not a key, so the write
     lands on the package itself rather than being forwarded.
 

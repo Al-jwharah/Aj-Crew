@@ -35,7 +35,7 @@ import source_corpus
 pytestmark = pytest.mark.xdist_group(name="tree_scan_test_host_service_guard")
 _REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 _ROOT_CONFTEST = _REPO_ROOT / "conftest.py"
-_SRC = _REPO_ROOT / "src" / "kiro_crew"
+_SRC = _REPO_ROOT / "src" / "aj_crew"
 
 
 def _load_root_conftest():
@@ -47,7 +47,7 @@ def _load_root_conftest():
     (a ``@pytest.fixture`` decorator only marks a function; nothing collects
     them from here).
     """
-    spec = importlib.util.spec_from_file_location("_kirocrew_root_conftest", _ROOT_CONFTEST)
+    spec = importlib.util.spec_from_file_location("_ajcrew_root_conftest", _ROOT_CONFTEST)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -89,7 +89,7 @@ _SERVICE_TOOL_VOCABULARY = frozenset(
 #: reason. Reviewed as part of this test rather than buried in a comment.
 _DELIBERATELY_UNGUARDED = {
     # sandbox wraps nearly EVERY subprocess in `systemd-run --user --scope
-    # --slice=kirocrew-agents.slice -p MemoryMax=...` to apply cgroup limits.
+    # --slice=ajcrew-agents.slice -p MemoryMax=...` to apply cgroup limits.
     # Refusing it refuses an ordinary `git config` spawn. Its one service-control
     # use passes `systemctl restart` as the wrapped command, caught on the inner
     # token instead -- pinned by test_wrapped_service_restart_is_refused below.
@@ -245,9 +245,9 @@ class TestRatchet:
         scenarios_conftest = (test_dir / "e2e" / "scenarios" / "conftest.py").read_text(
             encoding="utf-8"
         )
-        assert "KIROCREW_E2E_SCENARIOS" in scenarios_conftest
+        assert "AJCREW_E2E_SCENARIOS" in scenarios_conftest
         canary = (test_dir / "test_pod_windows_boot.py").read_text(encoding="utf-8")
-        assert 'os.environ.get("KIROCREW_E2E_POD_WINDOWS") != "1"' in canary
+        assert 'os.environ.get("AJCREW_E2E_POD_WINDOWS") != "1"' in canary
 
     def test_live_target_reexecs_through_the_guarded_funnel(self) -> None:
         """The guard traps ``execve`` only; pin that this is still the funnel used.
@@ -306,7 +306,7 @@ class TestRefusalReason:
         """
         argv = [
             "/usr/bin/systemd-run", "--user", "--scope", "-q",
-            "--slice=kirocrew-agents.slice", "-p", "MemoryMax=82386M",
+            "--slice=ajcrew-agents.slice", "-p", "MemoryMax=82386M",
             "--", "/usr/bin/git", "config", "branch.main.remote",
         ]
         assert _root._refusal_reason(argv) is None
@@ -320,12 +320,12 @@ class TestRefusalReason:
         """
         argv = [
             "/usr/bin/systemd-run", "--user", "--scope", "-q",
-            "--", "/usr/bin/systemctl", "--user", "restart", "kirocrew-gateway.service",
+            "--", "/usr/bin/systemctl", "--user", "restart", "ajcrew-gateway.service",
         ]
         assert _root._refusal_reason(argv)
 
     def test_sudo_wrapped_mutation_is_refused(self) -> None:
-        assert _root._refusal_reason(["sudo", "systemctl", "stop", "kirocrew.service"])
+        assert _root._refusal_reason(["sudo", "systemctl", "stop", "ajcrew.service"])
 
     def test_sudo_alone_is_allowed(self) -> None:
         """A privilege prefix is not an action."""
@@ -344,23 +344,23 @@ class TestRefusalReason:
         assert _root._refusal_reason(["echo", "restart the service"]) is None
 
     def test_a_unit_filename_is_ignored(self) -> None:
-        assert _root._refusal_reason(["cat", "kirocrew-gateway.service"]) is None
+        assert _root._refusal_reason(["cat", "ajcrew-gateway.service"]) is None
 
     def test_a_verb_before_the_manager_is_ignored(self) -> None:
         """Only the tail is scanned, so a wrapper's own flags cannot be the action."""
         assert _root._refusal_reason(["restart-helper", "--", "systemctl", "show", "x"]) is None
 
     def test_the_pod_cli_mutating_verbs_are_refused(self) -> None:
-        """A child ``kirocrew pod up`` reaches a service manager one process away."""
-        assert _root._refusal_reason(["python", "-m", "kiro_crew", "pod", "up", "wt", "--json"])
-        assert _root._refusal_reason(["/x/.venv/bin/kirocrew", "pod", "down", "wt"])
-        assert _root._refusal_reason(["C:\\v\\Scripts\\kirocrew.exe", "pod", "install"])
-        assert _root._refusal_reason(["kirocrew", "pod", "prune", "--all"])
+        """A child ``ajcrew pod up`` reaches a service manager one process away."""
+        assert _root._refusal_reason(["python", "-m", "aj_crew", "pod", "up", "wt", "--json"])
+        assert _root._refusal_reason(["/x/.venv/bin/ajcrew", "pod", "down", "wt"])
+        assert _root._refusal_reason(["C:\\v\\Scripts\\ajcrew.exe", "pod", "install"])
+        assert _root._refusal_reason(["ajcrew", "pod", "prune", "--all"])
 
     def test_the_pod_cli_read_only_verbs_are_allowed(self) -> None:
-        assert _root._refusal_reason(["kirocrew", "pod", "ls", "--json"]) is None
-        assert _root._refusal_reason(["python", "-m", "kiro_crew", "pod", "status", "wt"]) is None
-        assert _root._refusal_reason(["kirocrew", "pod", "api", "wt", "GET", "health"]) is None
+        assert _root._refusal_reason(["ajcrew", "pod", "ls", "--json"]) is None
+        assert _root._refusal_reason(["python", "-m", "aj_crew", "pod", "status", "wt"]) is None
+        assert _root._refusal_reason(["ajcrew", "pod", "api", "wt", "GET", "health"]) is None
 
     def test_pod_as_an_argument_to_another_program_is_ignored(self) -> None:
         assert _root._refusal_reason(["git", "pod", "up"]) is None
@@ -483,7 +483,7 @@ class TestLaunchdRedirect:
         assert root == resolved or root in resolved.parents, f"{resolved} is not under {root}"
 
     def test_every_macos_install_path_is_redirected(self, _xdg_config_root) -> None:
-        from kiro_crew.service import macos
+        from aj_crew.service import macos
 
         for attr in ("PLIST_DIR", "PLIST_PATH", "LOG_DIR", "STDOUT_LOG", "STDERR_LOG",
                      "LIVE_PROGRAM"):
@@ -491,7 +491,7 @@ class TestLaunchdRedirect:
 
     def test_the_launcher_path_helper_is_redirected(self, _xdg_config_root) -> None:
         """``LaunchdBackend.live_program()`` calls the function, not the constant."""
-        from kiro_crew.service.common import launchd_live_program
+        from aj_crew.service.common import launchd_live_program
 
         self._assert_under(launchd_live_program(), _xdg_config_root)
 
@@ -506,11 +506,11 @@ class TestLaunchdRedirect:
         constant. Subprocess is stubbed here because ``launchctl load`` is a
         mutating verb the execution guard would (correctly) refuse.
         """
-        from kiro_crew.service import macos
+        from aj_crew.service import macos
 
         with mock.patch.object(macos, "_launchctl", return_value=SimpleNamespace(
             returncode=0, stdout="", stderr=""
-        )), mock.patch.object(macos, "kirocrew_bin", return_value="/usr/bin/true"):
+        )), mock.patch.object(macos, "ajcrew_bin", return_value="/usr/bin/true"):
             macos.install()
 
         self._assert_under(macos.LIVE_PROGRAM, _xdg_config_root)
@@ -532,7 +532,7 @@ class TestXdgRedirect:
         A test that forgets to stub it must not be able to name the
         operator's real unit directory.
         """
-        from kiro_crew.apps.builtins.dev_fleet import server as mod
+        from aj_crew.apps.builtins.dev_fleet import server as mod
 
         dropin = mod._dropin_path().resolve()
         real = (pathlib.Path.home() / ".config" / "systemd" / "user").resolve()

@@ -21,7 +21,7 @@ from __future__ import annotations
 import pytest
 from turn_harness import APPROVED, SlotSpec, TurnScript, run_turn
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPACTION_STATUS,
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
@@ -30,7 +30,7 @@ from kiro_crew.acp.types import (
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.dashboard.chat_utils import open_construct_at_end
+from aj_crew.dashboard.chat_utils import open_construct_at_end
 
 _OPEN = "[" + "OPTIONS:"
 
@@ -47,7 +47,7 @@ class TestOptionsLine:
     def test_a_realistic_mid_label_split_point_is_caught(self):
         """A prefix cut inside an option label, the shape a live wave produces."""
         text = (
-            "an-out onward I'll use Kiro Crew's own path.\n\n"
+            "an-out onward I'll use Aj Crew's own path.\n\n"
             + _OPEN
             + " Let it finish, then post the cards | Kill it and relaun"
         )

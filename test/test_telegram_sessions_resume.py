@@ -31,7 +31,7 @@ from telegram_sessions_helpers import (
 from telegram_wire_helpers import telegram_wire
 from test_telegram import _origin
 
-from kiro_crew.dashboard.channel_handoff import (
+from aj_crew.dashboard.channel_handoff import (
     HANDOFF_QUEUED,
     HANDOFF_REFUSED,
     HANDOFF_STEERED,
@@ -45,14 +45,14 @@ from kiro_crew.dashboard.channel_handoff import (
     REFUSED_UNSAVED_CLOSE,
     ResumedBusyOutcome,
 )
-from kiro_crew.messaging import auto_title
-from kiro_crew.messaging.renderer import session_provenance_tag
-from kiro_crew.messaging.session_resume import RoutingDecision
-from kiro_crew.telegram.renderer import TelegramApprovalDecider
-from kiro_crew.telegram.session_resume import TelegramSessionResume
-from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES, TelegramInboundMessage
-from kiro_crew.telegram.transport_dispatch import TelegramDispatcher
-from kiro_crew.testing.wait import await_until
+from aj_crew.messaging import auto_title
+from aj_crew.messaging.renderer import session_provenance_tag
+from aj_crew.messaging.session_resume import RoutingDecision
+from aj_crew.telegram.renderer import TelegramApprovalDecider
+from aj_crew.telegram.session_resume import TelegramSessionResume
+from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES, TelegramInboundMessage
+from aj_crew.telegram.transport_dispatch import TelegramDispatcher
+from aj_crew.testing.wait import await_until
 
 
 async def _bind(
@@ -140,7 +140,7 @@ class TestTelegramInboundResumeRouting:
     @pytest.mark.parametrize(
         ("command", "native_reply"),
         [
-            pytest.param("/help", "🦞 Kiro Crew — Telegram\n", id="/help"),
+            pytest.param("/help", "🦞 Aj Crew — Telegram\n", id="/help"),
             pytest.param("/status", "uptime ", id="/status"),
             pytest.param("/new", "✅ New conversation started.", id="/new"),
             pytest.param("/unlink", "This conversation wasn't linked.", id="/unlink"),
@@ -270,7 +270,7 @@ class TestTelegramInboundResumeRouting:
         """The dashboard holds the resumed session's turn: the message goes to the slot's
         own machinery (steer or queue there), never to this chat's queue, and the chat is
         told. Base refused it ("busy with a turn started elsewhere")."""
-        from kiro_crew.dashboard import channel_handoff
+        from aj_crew.dashboard import channel_handoff
 
         dispatcher, client, sessions, _ = _dispatcher(tmp_path)
         dispatcher._session_resume.route = AsyncMock(
@@ -311,7 +311,7 @@ class TestTelegramInboundResumeRouting:
         dispatcher's command intercept, so the words "/clear" alone reach the slot's
         queue -- where the hand-off stamps them as turn content, never as the
         dashboard command."""
-        from kiro_crew.dashboard import channel_handoff
+        from aj_crew.dashboard import channel_handoff
 
         dispatcher, client, sessions, _ = _dispatcher(tmp_path)
         dispatcher._session_resume.route = AsyncMock(
@@ -362,7 +362,7 @@ class TestTelegramInboundResumeRouting:
     async def test_every_hand_off_outcome_is_told_to_the_chat(
         self, tmp_path: Any, monkeypatch: Any, outcome: ResumedBusyOutcome, told: str
     ) -> None:
-        from kiro_crew.dashboard import channel_handoff
+        from aj_crew.dashboard import channel_handoff
 
         dispatcher, client, sessions, _ = _dispatcher(tmp_path)
         dispatcher._session_resume.route = AsyncMock(
@@ -396,7 +396,7 @@ class TestTelegramInboundResumeRouting:
         second binding resolution: updates are concurrent tasks and ``/unlink`` is
         exempt from the busy gate, so a binding that changed in the window
         (``unlinked``) must not reroute the message into the native session."""
-        from kiro_crew.dashboard import channel_handoff
+        from aj_crew.dashboard import channel_handoff
 
         dispatcher, client, sessions, _ = _dispatcher(tmp_path)
         route = AsyncMock(return_value=RoutingDecision(resumed_key="dashboard:chat-1"))
@@ -454,8 +454,8 @@ class TestTelegramInboundResumeRouting:
     ) -> None:
         """A reply arriving into a busy resumed session hands its quoted parent to
         the slot too — framed once, the same as the native busy paths."""
-        from kiro_crew.context_assembly import markers as _markers
-        from kiro_crew.dashboard import channel_handoff
+        from aj_crew.context_assembly import markers as _markers
+        from aj_crew.dashboard import channel_handoff
 
         dispatcher, _client, sessions, _ = _dispatcher(tmp_path)
         dispatcher._session_resume.route = AsyncMock(
@@ -564,9 +564,9 @@ class TestTelegramColdResume:
         "recorded, expected",
         [
             pytest.param("research-agent", "research-agent", id="recorded"),
-            pytest.param("default", "kirocrew", id="default-sentinel"),
-            pytest.param("Auto", "kirocrew", id="auto-sentinel"),
-            pytest.param("", "kirocrew", id="absent"),
+            pytest.param("default", "ajcrew", id="default-sentinel"),
+            pytest.param("Auto", "ajcrew", id="auto-sentinel"),
+            pytest.param("", "ajcrew", id="absent"),
         ],
     )
     @pytest.mark.asyncio
@@ -626,13 +626,13 @@ class TestTelegramColdResume:
         log.get_metadata = _broken  # type: ignore[method-assign]
         await dispatcher.handle_message(_dm("continue"))
 
-        assert sessions.last_agent == "kirocrew"
+        assert sessions.last_agent == "ajcrew"
 
     @pytest.mark.asyncio
     async def test_cold_resume_suppresses_every_native_only_side_effect(
         self, tmp_path: Any, monkeypatch: Any
     ) -> None:
-        from kiro_crew.dashboard import channel_slots
+        from aj_crew.dashboard import channel_slots
 
         log = _log(tmp_path, agent="research-agent")
         dispatcher, _, sessions, _ = _dispatcher(tmp_path, log=log)
@@ -658,7 +658,7 @@ class TestTelegramColdResume:
     async def test_resumed_turn_explicitly_broadcasts_channel_user_row(
         self, tmp_path: Any, monkeypatch: Any
     ) -> None:
-        from kiro_crew.dashboard import channel_slots
+        from aj_crew.dashboard import channel_slots
 
         dispatcher, _, _, _ = _dispatcher(tmp_path)
         dispatcher._session_resume.route = AsyncMock(
@@ -699,7 +699,7 @@ class TestTelegramResumeIntegration:
         assert TELEGRAM_CAPABILITIES.supports_session_resume is True
 
     def test_dashboard_resume_target_requires_one_owner_dm(self) -> None:
-        from kiro_crew.telegram.transport import TelegramTransport
+        from aj_crew.telegram.transport import TelegramTransport
 
         owner = TelegramTransport(_Client(), allowed_user_ids={7})
         assert owner.may_resume_from("7", None) is True
@@ -747,7 +747,7 @@ class TestTelegramRestrictedResumedSession:
     @pytest.mark.asyncio
     async def test_channel_privacy_mode_alone_would_have_failed_open(self, tmp_path: Any) -> None:
         """The regression anchor: the native predicate cannot see this restriction."""
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         dispatcher, _, _, _ = _dispatcher(tmp_path)
         dispatcher.dashboard_state = self._state(SimpleNamespace(is_restricted=True))
@@ -775,7 +775,7 @@ class TestTelegramRestrictedResumedSession:
     @pytest.mark.asyncio
     async def test_an_affirmative_incognito_marker_still_denies(self, tmp_path: Any) -> None:
         """The closed-tab rung that DOES restrict: the transcript says incognito."""
-        from kiro_crew.messaging import upload_gate
+        from aj_crew.messaging import upload_gate
 
         assert (
             upload_gate._persisted_mode_is_restricted(
@@ -800,7 +800,7 @@ class TestTelegramRestrictedResumedSession:
         does NOT land here — it reads ``persistent`` — so denying costs no ordinary
         history.
         """
-        from kiro_crew.messaging import upload_gate
+        from aj_crew.messaging import upload_gate
 
         assert (
             upload_gate._persisted_mode_is_restricted(
@@ -819,7 +819,7 @@ class TestTelegramRestrictedResumedSession:
     @pytest.mark.asyncio
     async def test_the_upload_ceiling_keeps_denying_an_unknown_mode(self, tmp_path: Any) -> None:
         """The two postures stay independent: uploads deny unknown either way."""
-        from kiro_crew.messaging import upload_gate
+        from aj_crew.messaging import upload_gate
 
         for probe_result in ((False, None), (True, None)):
             assert (
@@ -837,7 +837,7 @@ class TestTelegramRestrictedResumedSession:
         fact lives on the slot. Left to the channel tracker, stored memories and
         lessons would enter the model prompt for a session that asked for none.
         """
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         dispatcher, _, _, _ = _dispatcher(tmp_path)
         dispatcher.dashboard_state = self._state(
@@ -891,7 +891,7 @@ class TestTelegramRestrictedResumedSession:
         self, tmp_path: Any, command: str
     ) -> None:
         """A channel-local mark cannot promise privacy for a persistent live slot."""
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         privacy_mode.reset()
         dispatcher, client, sessions, _ = _dispatcher(tmp_path)
@@ -1075,7 +1075,7 @@ class TestResumedRefusalsCharacterization:
     async def test_a_resumed_privacy_modifier_refuses_byte_exact(
         self, tmp_path: Any, monkeypatch: Any, text: str
     ) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         dispatcher, client, sessions = self._resumed(tmp_path)
         apply = AsyncMock()

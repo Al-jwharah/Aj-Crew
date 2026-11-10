@@ -22,7 +22,7 @@ from test_project_tree import (  # noqa: F401
     repo,
 )
 
-from kiro_crew.dashboard.file_api.project_tree import _project_tree_shallow_git
+from aj_crew.dashboard.file_api.project_tree import _project_tree_shallow_git
 
 
 async def _get(project: Path, **query: str) -> tuple[int, dict]:
@@ -117,7 +117,7 @@ class TestShallowGit:
         self, repo, mock_sel  # noqa: F811
     ):
         """One level where folders can be pinned; whole where they cannot (Windows)."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         pinnable = (
             files_mod._PROJECT_TREE_SCANDIR_TAKES_FD and files_mod.pinned_fs.supports_pinned_walk()
@@ -146,7 +146,7 @@ class TestShallowGit:
     @pytest.mark.asyncio
     async def test_hidden_files_ride_a_one_level_listing(self, repo, mock_sel):  # noqa: F811
         """``hidden=1`` adds the ignored dot-files; ``shallow=1`` still reads one level."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         (repo / ".gitignore").write_text("ignored.log\n.local\n")
         (repo / ".local").write_text("x")
@@ -166,7 +166,7 @@ class TestShallowGit:
         self, repo, mock_sel, monkeypatch  # noqa: F811
     ):
         """Where a folder listing walks (Windows), ``hidden=1`` keeps its ignored dot-files."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_SCANDIR_TAKES_FD", False)
         (repo / ".gitignore").write_text("ignored.log\n.local\n")
@@ -187,7 +187,7 @@ class TestShallowGit:
         self, repo, mock_sel, monkeypatch  # noqa: F811
     ):
         """Where folders cannot be pinned (Windows) the walk lists them, not git."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_SCANDIR_TAKES_FD", False)
         (repo / "src" / "ignored.log").write_text("x")
@@ -237,7 +237,7 @@ class TestShallowGit:
         self, repo, mock_sel, monkeypatch  # noqa: F811
     ):
         """There a folder listing walks, which cannot name every tracked path."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_SCANDIR_TAKES_FD", False)
         status, data = await _get(repo, shallow="1")

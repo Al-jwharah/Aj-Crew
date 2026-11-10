@@ -78,9 +78,9 @@ window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
 }) as typeof window.fetch
 
 const params = new URLSearchParams(location.search)
-const theme = params.get('theme') === 'light' ? 'kiro-light' : 'kiro-dark'
+const theme = params.get('theme') === 'light' ? 'aj-light' : 'aj-dark'
 document.documentElement.setAttribute('data-theme', theme)
-document.documentElement.setAttribute('data-mode', theme === 'kiro-light' ? 'light' : 'dark')
+document.documentElement.setAttribute('data-mode', theme === 'aj-light' ? 'light' : 'dark')
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 

@@ -19,14 +19,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_GOOSE, ACP_BACKEND_KIRO, PROVIDER_LABEL_DEFAULT
-from kiro_crew.context import ContextBuilder
-from kiro_crew.context_blocks import split_blocks
-from kiro_crew.learn import LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.skills import SkillsLoader
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_GOOSE, ACP_BACKEND_KIRO, PROVIDER_LABEL_DEFAULT
+from aj_crew.context import ContextBuilder
+from aj_crew.context_blocks import split_blocks
+from aj_crew.learn import LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.skills import SkillsLoader
 
 SERVED = "Intel/Qwen3-Coder-Next-int4-AutoRound"
 CORPUS = Path(__file__).parent / "fixtures" / "acp_frames" / "goose"

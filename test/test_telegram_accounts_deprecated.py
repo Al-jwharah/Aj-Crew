@@ -15,15 +15,15 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.config import loader as L
-from kiro_crew.config import validation
-from kiro_crew.config.loader import (
+from aj_crew.config import loader as L
+from aj_crew.config import validation
+from aj_crew.config.loader import (
     CRED_TELEGRAM_BOT_TOKEN,
-    KiroCrewAgentConfig,
-    KiroCrewConfig,
+    AjCrewAgentConfig,
+    AjCrewConfig,
     _parse_telegram_accounts,
 )
-from kiro_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.slack.gateway import GatewayOrchestrator
 
 _ACCOUNTS_RAW = {
     "ops": {
@@ -41,7 +41,7 @@ class TestAccountsSurvivesSave:
     """A config written by an earlier release must not lose data on rewrite."""
 
     def test_accounts_round_trip_through_to_dict(self):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.telegram.accounts = _parse_telegram_accounts(_ACCOUNTS_RAW)
 
         serialized = cfg.to_dict()["telegram"]["accounts"]
@@ -55,12 +55,12 @@ class TestAccountsSurvivesSave:
         assert serialized["finance"]["bot_token"] == "222:finance-token"
 
     def test_save_preserves_accounts_on_disk(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         cfg_path = tmp_path / "config.json"
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.telegram.accounts = _parse_telegram_accounts(_ACCOUNTS_RAW)
-        with patch("kiro_crew.config.loader.config_path", return_value=cfg_path):
+        with patch("aj_crew.config.loader.config_path", return_value=cfg_path):
             cfg.save()
 
         written = json.loads(cfg_path.read_text(encoding="utf-8"))
@@ -68,8 +68,8 @@ class TestAccountsSurvivesSave:
         assert written["telegram"]["accounts"]["finance"]["bot_token"] == "222:finance-token"
 
     def test_agent_binding_round_trips(self):
-        cfg = KiroCrewConfig()
-        cfg.agents["ops-agent"] = KiroCrewAgentConfig(telegram_account="ops")
+        cfg = AjCrewConfig()
+        cfg.agents["ops-agent"] = AjCrewAgentConfig(telegram_account="ops")
 
         assert cfg.to_dict()["agents"]["ops-agent"]["telegram_account"] == "ops"
 
@@ -88,17 +88,17 @@ class TestEmptyAccountsAreNotMaterialized:
     """
 
     def test_to_dict_omits_an_empty_accounts_map(self):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         assert cfg.telegram.accounts == {}
 
         assert "accounts" not in cfg.to_dict()["telegram"]
 
     def test_save_writes_no_accounts_key_for_a_fresh_config(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         cfg_path = tmp_path / "config.json"
 
-        with patch("kiro_crew.config.loader.config_path", return_value=cfg_path):
-            KiroCrewConfig().save()
+        with patch("aj_crew.config.loader.config_path", return_value=cfg_path):
+            AjCrewConfig().save()
 
         written = json.loads(cfg_path.read_text(encoding="utf-8"))
         assert "accounts" not in written["telegram"]
@@ -113,12 +113,12 @@ class TestEmptyAccountsAreNotMaterialized:
                 {"agent": {"provider": "acp"}, "telegram": {"enabled": False, "accounts": {}}}
             )
         )
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         monkeypatch.setattr(L, "config_path", lambda: cfg_path)
         monkeypatch.setattr(L, "config_dir", lambda: tmp_path)
         monkeypatch.setattr(L, "config_local_path", lambda: tmp_path / "config.local.json")
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.save()
 
         written = json.loads(cfg_path.read_text(encoding="utf-8"))
@@ -135,8 +135,8 @@ class TestEmptyAccountsAreNotMaterialized:
         monkeypatch.setattr(L, "config_dir", lambda: tmp_path)
         monkeypatch.setattr(L, "config_local_path", lambda: tmp_path / "config.local.json")
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
-            KiroCrewConfig.load()
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
+            AjCrewConfig.load()
 
         assert not any(
             "deprecated field 'telegram.accounts'" in r.getMessage() for r in caplog.records
@@ -147,7 +147,7 @@ class TestEmptyAccountsAreNotMaterialized:
         """The notice keeps firing for the operator who does have a token to move."""
         monkeypatch.setattr(validation, "_REPORTED_DEPRECATED_FIELDS", set())
         data = {"agent": {"provider": "acp"}, "telegram": {"accounts": dict(_ACCOUNTS_RAW)}}
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data(data)
 
         notices = [
@@ -169,11 +169,11 @@ class TestWithdrawalIsAnnounced:
             return GatewayOrchestrator(cfg)
 
     def test_warns_and_names_every_account(self, caplog):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.telegram.enabled = True
         cfg.telegram.accounts = _parse_telegram_accounts(_ACCOUNTS_RAW)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.slack.gateway"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.slack.gateway"):
             self._build(cfg)
 
         warnings = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING]
@@ -184,22 +184,22 @@ class TestWithdrawalIsAnnounced:
         assert "telegram.bot_token" in accounts_warning[0]
 
     def test_warning_says_the_channel_stays_off(self, caplog):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.telegram.enabled = True
         cfg.telegram.accounts = _parse_telegram_accounts(_ACCOUNTS_RAW)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.slack.gateway"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.slack.gateway"):
             orch = self._build(cfg)
 
         assert orch._telegram_enabled is False
         assert any("stays OFF" in r.getMessage() for r in caplog.records)
 
     def test_no_warning_without_accounts(self, caplog):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.telegram.enabled = True
         cfg.telegram.bot_token = "999:served"
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.slack.gateway"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.slack.gateway"):
             self._build(cfg)
 
         assert not any("telegram.accounts" in r.getMessage() for r in caplog.records)
@@ -209,7 +209,7 @@ class TestAccountsDoNotStartABot:
     """A shadowed top-level token must not come back to life on upgrade."""
 
     def test_accounts_alone_do_not_enable_telegram(self):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.telegram.enabled = True
         cfg.telegram.bot_token = ""
         cfg.telegram.accounts = _parse_telegram_accounts(_ACCOUNTS_RAW)
@@ -225,7 +225,7 @@ class TestAccountsDoNotStartABot:
         Serving it would reopen a bot the operator stopped when they migrated,
         under whatever allow-list the top-level fields still carry.
         """
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.telegram.enabled = True
         cfg.telegram.bot_token = "000:stale-top-level"
         cfg.telegram.allowed_user_ids = [111, 222]
@@ -238,7 +238,7 @@ class TestAccountsDoNotStartABot:
 
     def test_stale_env_credential_stays_shadowed(self):
         """The env credential overrides cfg.bot_token, so it needs the same gate."""
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.telegram.enabled = True
         cfg.telegram.accounts = _parse_telegram_accounts(_ACCOUNTS_RAW)
 
@@ -250,7 +250,7 @@ class TestAccountsDoNotStartABot:
         assert orch._telegram_enabled is False
 
     def test_channel_serves_once_the_accounts_block_is_removed(self):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.telegram.enabled = True
         cfg.telegram.bot_token = "999:served"
         cfg.telegram.accounts = {}

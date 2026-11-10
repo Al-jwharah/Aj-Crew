@@ -18,7 +18,7 @@ from pathlib import Path
 
 from spawn_test_helpers import unblocked_signals
 
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 ROOT = Path(__file__).resolve().parents[1]
 HELPER = ROOT / "scripts" / "ci_e2e_parallel.py"
@@ -359,12 +359,12 @@ import os, runpy, sys
 m = runpy.run_path(sys.argv[1])
 lane, root = sys.argv[2:]
 os.environ['RUNNER_TEMP'] = root
-os.environ.pop('KIROCREW_E2E', None)
-os.environ['KIROCREW_E2E_REQUIRE'] = '1'
-os.environ['KIROCREW_STRICT_ON_LOOP_PERSIST'] = '1'
+os.environ.pop('AJCREW_E2E', None)
+os.environ['AJCREW_E2E_REQUIRE'] = '1'
+os.environ['AJCREW_STRICT_ON_LOOP_PERSIST'] = '1'
 probe = '''import json, os, pathlib, sys
 pathlib.Path(sys.argv[1]).write_text(json.dumps({k: os.environ.get(k) for k in
-('TMPDIR', 'KIROCREW_E2E', 'KIROCREW_E2E_REQUIRE', 'KIROCREW_STRICT_ON_LOOP_PERSIST')}))'''
+('TMPDIR', 'AJCREW_E2E', 'AJCREW_E2E_REQUIRE', 'AJCREW_STRICT_ON_LOOP_PERSIST')}))'''
 m['COMMANDS'][lane] = [sys.executable, '-c', probe, root + '/' + lane + '.json']
 sys.argv = [sys.argv[1], lane]
 raise SystemExit(m['main']())
@@ -381,11 +381,11 @@ raise SystemExit(m['main']())
         ui = json.loads((self.root / "memory-ui.json").read_text())
         self.assertEqual(smoke["TMPDIR"], str(self.root / "e2e-s"))
         self.assertEqual(ui["TMPDIR"], str(self.root / "e2e-u"))
-        self.assertIsNone(smoke["KIROCREW_E2E"])
-        self.assertEqual(ui["KIROCREW_E2E"], "1")
+        self.assertIsNone(smoke["AJCREW_E2E"])
+        self.assertEqual(ui["AJCREW_E2E"], "1")
         for env in (smoke, ui):
-            self.assertEqual(env["KIROCREW_E2E_REQUIRE"], "1")
-            self.assertEqual(env["KIROCREW_STRICT_ON_LOOP_PERSIST"], "1")
+            self.assertEqual(env["AJCREW_E2E_REQUIRE"], "1")
+            self.assertEqual(env["AJCREW_STRICT_ON_LOOP_PERSIST"], "1")
 
     def test_a_gated_lane_failure_is_not_hidden_by_lanes_that_finished_first(self):
         proc = self.start(
@@ -437,9 +437,9 @@ raise SystemExit(m['main']())
         self.assertNotIn("if", parallel)
         self.assertNotIn("continue-on-error", parallel)
         self.assertNotIn("continue-on-error", private)
-        self.assertEqual(private["env"]["KIROCREW_E2E_REQUIRE"], "1")
-        self.assertEqual(parallel["env"]["KIROCREW_E2E_REQUIRE"], "1")
-        self.assertEqual(parallel["env"]["KIROCREW_STRICT_ON_LOOP_PERSIST"], "1")
+        self.assertEqual(private["env"]["AJCREW_E2E_REQUIRE"], "1")
+        self.assertEqual(parallel["env"]["AJCREW_E2E_REQUIRE"], "1")
+        self.assertEqual(parallel["env"]["AJCREW_STRICT_ON_LOOP_PERSIST"], "1")
         module = runpy.run_path(str(HELPER))
         self.assertEqual(module["COMMANDS"]["smoke"], [sys.executable, "setup.py", "test_e2e"])
         self.assertEqual(

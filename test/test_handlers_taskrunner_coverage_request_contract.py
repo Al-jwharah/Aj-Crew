@@ -26,7 +26,7 @@ from handlers_taskrunner_coverage_helpers import (  # noqa: F401 -- the autouse 
     _stub_sel,
 )
 
-from kiro_crew.dashboard.handlers.taskrunner import (
+from aj_crew.dashboard.handlers.taskrunner import (
     api_taskrunner_cancel,
     api_taskrunner_execute_plan,
     api_taskrunner_from_chat,
@@ -41,8 +41,8 @@ from kiro_crew.dashboard.handlers.taskrunner import (
     api_taskrunner_update_plan,
     api_taskrunner_update_task,
 )
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-from kiro_crew.taskrunner import TaskRun
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+from aj_crew.taskrunner import TaskRun
 
 
 class TestNonObjectBodiesAcrossConvertedHandlers:
@@ -89,7 +89,7 @@ class TestNonObjectBodiesAcrossConvertedHandlers:
 
 def _member_execution(mode="persistent"):
     return ExecutionContext(
-        "alice", MemoryStoreRef("alice-store", "alice"), "member", "kirocrew", mode
+        "alice", MemoryStoreRef("alice-store", "alice"), "member", "ajcrew", mode
     )
 
 
@@ -164,7 +164,7 @@ async def test_from_chat_owns_context_before_runtime_binding(tmp_path):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("status", ["planned", "completed"])
 async def test_task_to_chat_uses_owning_record_without_runtime_session(tmp_path, status):
-    from kiro_crew.execution_context import read_session_execution
+    from aj_crew.execution_context import read_session_execution
 
     runner = _runner(tmp_path)
     execution = _member_execution()
@@ -184,7 +184,7 @@ async def test_task_to_chat_uses_owning_record_without_runtime_session(tmp_path,
     slot.append.side_effect = lambda *args: (
         None if slot.memory_store == "alice-store" else pytest.fail("unbound append")
     )
-    with patch("kiro_crew.dashboard.chat._run_chat", AsyncMock()) as chat:
+    with patch("aj_crew.dashboard.chat._run_chat", AsyncMock()) as chat:
         response = await api_taskrunner_to_chat(
             _request(state, match_info={"task_id": "member-run"})
         )
@@ -213,7 +213,7 @@ async def test_owner_can_cancel_shared_planning(tmp_path):
 
 
 def test_exact_task_cancel_does_not_follow_another_runs_colliding_name():
-    from kiro_crew.taskrunner import TaskRunner
+    from aj_crew.taskrunner import TaskRunner
 
     runner = object.__new__(TaskRunner)
     own = TaskRun(spec_path="own", spec_content="", task_id="own-id", status="running")

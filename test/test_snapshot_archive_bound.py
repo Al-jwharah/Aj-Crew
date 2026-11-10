@@ -11,7 +11,7 @@ import tarfile
 
 import pytest
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 
 def _info(name: str, size: int, *, kind: str = "file") -> tarfile.TarInfo:
@@ -53,8 +53,8 @@ class TestTheBoundRefusesWhatWouldNotFit:
             snap._refuse_oversized_archive(_Walker(members))
 
     def test_a_normal_bundle_passes(self):
-        members = [_info("kirocrew-snapshot-x/MANIFEST.json", 200)] + [
-            _info(f"kirocrew-snapshot-x/f{i}", 4096) for i in range(50)
+        members = [_info("ajcrew-snapshot-x/MANIFEST.json", 200)] + [
+            _info(f"ajcrew-snapshot-x/f{i}", 4096) for i in range(50)
         ]
         # No raise, and the declared regular-file total comes back.
         assert snap._refuse_oversized_archive(_Walker(members)) == 200 + 50 * 4096

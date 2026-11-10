@@ -1,6 +1,6 @@
-"""Each small Kiro Crew MCP server carries its own usage text as MCP ``instructions``.
+"""Each small Aj Crew MCP server carries its own usage text as MCP ``instructions``.
 
-The text lives in ``kiro_crew.mcp_instructions``, not in ``config/prompt.md`` or
+The text lives in ``aj_crew.mcp_instructions``, not in ``config/prompt.md`` or
 ``context_assembly/sections.py``. These cases pin what that rests on: the shared
 stdio loop returns the text in ``initialize``, each real server process returns ITS
 text, and every text fits the harnesses' limits (Claude Code cuts a server's
@@ -20,17 +20,17 @@ from pathlib import Path
 import pytest
 from mcp_shared_helpers import _framing_undetected, _initialize, _LoopHarness  # noqa: F401
 
-from kiro_crew import mcp_instructions
-from kiro_crew.agent import _MANAGED_MCP_SERVERS
+from aj_crew import mcp_instructions
+from aj_crew.agent import _MANAGED_MCP_SERVERS
 
 _PROMPT = Path(mcp_instructions.__file__).with_name("config") / "prompt.md"
 
 #: Server name -> the module whose ``run_mcp_server`` serves it.
 _SERVER_MODULES = {
-    "kirocrew-cron": "kiro_crew.mcp_cron",
-    "kirocrew-guide": "kiro_crew.mcp_guide",
-    "kirocrew-dashboard": "kiro_crew.mcp_dashboard",
-    "kirocrew-computer": "kiro_crew.mcp_computer",
+    "ajcrew-cron": "aj_crew.mcp_cron",
+    "ajcrew-guide": "aj_crew.mcp_guide",
+    "ajcrew-dashboard": "aj_crew.mcp_dashboard",
+    "ajcrew-computer": "aj_crew.mcp_computer",
 }
 
 
@@ -63,8 +63,8 @@ def test_each_real_server_returns_its_own_instructions(server: str, tmp_path: Pa
         "method": "initialize",
         "params": {"protocolVersion": "2024-11-05", "capabilities": {}},
     }
-    env = {**os.environ, "KIROCREW_HOME": str(tmp_path / "home")}
-    env.pop("KIROCREW_PORT", None)
+    env = {**os.environ, "AJCREW_HOME": str(tmp_path / "home")}
+    env.pop("AJCREW_PORT", None)
     completed = subprocess.run(
         [
             sys.executable,
@@ -111,7 +111,7 @@ def test_the_prompt_no_longer_carries_the_moved_bullets() -> None:
                 "- `cron_add`:",
                 "- `cron_list`:",
                 "- `cron_update(",
-                "- `kirocrew-guide`",
+                "- `ajcrew-guide`",
                 "- Peer sessions:",
             )
         ), line
@@ -131,7 +131,7 @@ def test_the_guide_server_says_to_write_nothing_before_its_calls() -> None:
     """A "Show me around" reply opened with "Let me check the real layout first."
     before the guide: every word an agent writes is shown, so the guide server's
     own text and its find_ui description both say not to narrate the lookup."""
-    from kiro_crew import mcp_guide
+    from aj_crew import mcp_guide
 
     assert "Write no text before these calls" in mcp_instructions.GUIDE
     (find_ui,) = [t for t in mcp_guide._tool_definitions() if t["name"] == "find_ui"]

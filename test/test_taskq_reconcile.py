@@ -9,10 +9,10 @@ import pytest
 from overload_fakes import Clock
 from overload_fakes import task_record as _rec
 
-from kiro_crew import taskq
-from kiro_crew.taskq import migrate, model, waits
-from kiro_crew.taskq.reconcile import reconcile_on_boot
-from kiro_crew.taskq.store import TaskStore, TaskStoreUnavailable
+from aj_crew import taskq
+from aj_crew.taskq import migrate, model, waits
+from aj_crew.taskq.reconcile import reconcile_on_boot
+from aj_crew.taskq.store import TaskStore, TaskStoreUnavailable
 
 
 def _crash_and_reopen(path: Path, clock: Clock) -> TaskStore:
@@ -299,7 +299,7 @@ def test_a_parent_end_or_stage_cancel_tombstone_settles_the_row_cancelled(
     user stop -- an unmapped cause would leave a deliberately ended run to be
     recovered on the next boot.
     """
-    from kiro_crew.subagent_manager.admission.types import tombstone_terminal_state
+    from aj_crew.subagent_manager.admission.types import tombstone_terminal_state
 
     assert tombstone_terminal_state("parent_end") == model.CANCELLED
     assert tombstone_terminal_state("stage_cancel") == model.CANCELLED
@@ -351,8 +351,8 @@ def test_an_unleased_retry_wait_row_is_cancelled_only_on_its_current_attempts_st
     lease) whose run's tombstone already records a user stop. The run folder is
     the row id's, so a later attempt runs over an earlier attempt's tombstone:
     only a stop naming the attempt the latest ``claimed`` event began settles it."""
-    import kiro_crew.subagent_persistence as sp
-    from kiro_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
+    import aj_crew.subagent_persistence as sp
+    from aj_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
 
     monkeypatch.setattr(sp, "_SUBAGENTS_DIR", tmp_path / "subagents")
     _write_json(tmp_path / "subagents" / "rw1" / "state.json", {"id": "rw1", "task": "t"})
@@ -406,7 +406,7 @@ def test_import_legacy_subagent_folders_and_taskrunner_paused_runs(
         {
             "id": "aaa11111",
             "task": "old work",
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "parent_session": "dash:1",
             "started": 8000.0,
             "max_turns": 7,
@@ -726,7 +726,7 @@ def test_rebuild_names_the_orphan_whose_cancel_was_refused(
     _seed_wait_scenario(path, clock)
     s = _reopen_refusing(path, clock, cancel={"orphan"})
     try:
-        with caplog.at_level("INFO", logger="kiro_crew.taskq.waits"):
+        with caplog.at_level("INFO", logger="aj_crew.taskq.waits"):
             report = waits.WaitLedger(s).rebuild()
         assert report.woken == ["parent"]
         assert report.cancelled_orphans == []
@@ -903,8 +903,8 @@ def test_subagent_probe_settles_a_whole_result_done(
     """With no tombstone, or one whose cause proves nothing, a whole result is
     done: the rule (``result_is_whole``) the orphan reconcile announces it with.
     Any other tombstone decides by its recorded ending, then its cause."""
-    import kiro_crew.subagent_persistence as sp
-    from kiro_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
+    import aj_crew.subagent_persistence as sp
+    from aj_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
 
     monkeypatch.setattr(sp, "_SUBAGENTS_DIR", tmp_path / "subagents")
     folder = tmp_path / "subagents" / "run00002"
@@ -924,8 +924,8 @@ def test_an_admitted_row_whose_run_delivered_is_settled_not_rerun(
     """A row still ``admitted`` in the store (its start mark lost behind a slow
     writer) whose run already delivered settles from its tombstone: requeueing
     it would run finished work a second time."""
-    import kiro_crew.subagent_persistence as sp
-    from kiro_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
+    import aj_crew.subagent_persistence as sp
+    from aj_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
 
     monkeypatch.setattr(sp, "_SUBAGENTS_DIR", tmp_path / "subagents")
     folder = tmp_path / "subagents" / "adm00001"
@@ -955,7 +955,7 @@ def _crash_with_an_admitted_row(
     spawn gate writes the run folder before it posts the ``starting`` mark, and
     the run streamed part of its answer before the crash.
     """
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.subagent_persistence as sp
 
     monkeypatch.setattr(sp, "_SUBAGENTS_DIR", tmp_path / "subagents")
     if folder:
@@ -985,8 +985,8 @@ def test_subagent_probe_says_nothing_without_a_run_folder(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """No run folder, no proof the run began: the probe stays silent."""
-    import kiro_crew.subagent_persistence as sp
-    from kiro_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
+    import aj_crew.subagent_persistence as sp
+    from aj_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
 
     monkeypatch.setattr(sp, "_SUBAGENTS_DIR", tmp_path / "subagents")
     assert _TaskqBridgeMixin.taskq_artifact_probe(_rec("never00")) is None
@@ -998,7 +998,7 @@ def test_an_admitted_row_whose_run_started_is_parked_not_rerun(
     """A row still ``admitted`` whose run folder shows the run began (its start
     mark posted and lost in the crash) is a started run of class ``unknown``, so
     it is parked: requeueing it would run the task again from scratch."""
-    from kiro_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
+    from aj_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
 
     path = _crash_with_an_admitted_row(
         tmp_path, monkeypatch, folder=True, side_effect=model.SIDE_EFFECT_UNKNOWN
@@ -1028,7 +1028,7 @@ def test_an_admitted_row_is_requeued_when_nothing_ran_or_its_class_allows_a_reru
     its class. A started run whose class makes a fresh run safe goes back too:
     ``admitted`` has no edge to ``recovering``, and a requeue is the re-run that
     class permits."""
-    from kiro_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
+    from aj_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
 
     path = _crash_with_an_admitted_row(
         tmp_path, monkeypatch, folder=folder, side_effect=side_effect
@@ -1050,8 +1050,8 @@ async def test_a_run_cut_off_before_its_start_mark_is_reported_cut_off_and_not_r
     the parent it was cut off mid-turn, and the queue does not run it again."""
     from unittest.mock import AsyncMock, MagicMock, patch
 
-    from kiro_crew.subagent import SubagentManager
-    from kiro_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
+    from aj_crew.subagent import SubagentManager
+    from aj_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
 
     path = _crash_with_an_admitted_row(
         tmp_path, monkeypatch, folder=True, side_effect=model.SIDE_EFFECT_UNKNOWN
@@ -1068,8 +1068,8 @@ async def test_a_run_cut_off_before_its_start_mark_is_reported_cut_off_and_not_r
     with (
         patch.object(manager, "_is_pid_alive", return_value=False),
         patch.object(manager, "_send_orphan_slack_dm", AsyncMock(side_effect=notices.append)),
-        patch("kiro_crew.subagent.has_dashboard_surface", return_value=False),
-        patch("kiro_crew.subagent.sel"),
+        patch("aj_crew.subagent.has_dashboard_surface", return_value=False),
+        patch("aj_crew.subagent.sel"),
     ):
         await manager._reconcile_orphans()
 
@@ -1085,7 +1085,7 @@ def test_every_tombstone_cause_has_a_terminal_state() -> None:
 
     from source_corpus import parsed_candidates
 
-    from kiro_crew.subagent_manager.admission.types import tombstone_terminal_state
+    from aj_crew.subagent_manager.admission.types import tombstone_terminal_state
 
     causes: set[str] = set()
 
@@ -1134,12 +1134,12 @@ def test_every_recorded_outcome_and_neutral_stop_has_its_task_state() -> None:
     panel's ``_PANEL_OUTCOMES``) and the task-state tables read it: an outcome
     added there and not here would settle a stopped or failed run ``done``, and
     a neutral stop the live record calls ``stopped`` must cancel its row."""
-    from kiro_crew.subagent import _NEUTRAL_REAP_REASONS, SubagentInfo
-    from kiro_crew.subagent_manager.admission.types import (
+    from aj_crew.subagent import _NEUTRAL_REAP_REASONS, SubagentInfo
+    from aj_crew.subagent_manager.admission.types import (
         outcome_task_state,
         tombstone_terminal_state,
     )
-    from kiro_crew.subagent_persistence import _PANEL_OUTCOMES
+    from aj_crew.subagent_persistence import _PANEL_OUTCOMES
 
     live = {
         SubagentInfo(id="o", task="t", user_stopped=stopped, error=error).outcome

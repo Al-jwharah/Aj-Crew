@@ -20,7 +20,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.member_memory_auth import LocalOwnerProvenance
+from aj_crew.member_memory_auth import LocalOwnerProvenance
 
 SECRET = "local-secret-value"
 MINT_DEADLINE_SECS = 10
@@ -46,11 +46,11 @@ def _loopback_request(path: str, method: str = "GET") -> web.Request:
 @pytest.fixture
 def owner_gates_pass(monkeypatch):
     monkeypatch.setattr(
-        "kiro_crew.member_memory_auth.local_owner_bootstrap_provenance",
+        "aj_crew.member_memory_auth.local_owner_bootstrap_provenance",
         lambda _request: LocalOwnerProvenance(),
     )
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.sel", lambda: MagicMock())
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: MagicMock())
 
 
 @contextlib.contextmanager
@@ -86,7 +86,7 @@ async def _finished_within_deadline(call: Coroutine[Any, Any, _T]) -> _T:
 async def test_token_local_mints_while_the_default_executor_is_full(
     owner_gates_pass, monkeypatch
 ) -> None:
-    from kiro_crew.dashboard.handlers import core
+    from aj_crew.dashboard.handlers import core
 
     monkeypatch.setattr(core, "generate_token", lambda *_a, **_kw: "issued-value")
     request = _loopback_request("/api/token/local?ttl=2m")
@@ -101,7 +101,7 @@ async def test_token_local_mints_while_the_default_executor_is_full(
 async def test_relay_viewer_admits_main_while_the_default_executor_is_full(
     owner_gates_pass,
 ) -> None:
-    from kiro_crew.dashboard.handlers import relay_viewer
+    from aj_crew.dashboard.handlers import relay_viewer
 
     request = _loopback_request("/api/relay-viewer/token", method="POST")
 

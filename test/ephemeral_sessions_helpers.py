@@ -13,8 +13,8 @@ from unittest.mock import AsyncMock, MagicMock
 from aiohttp import web
 from chat_test_helpers import _make_ready_kiro_prerequisite
 
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.history import ConversationLog
 
 
 def _make_state(tmp_path, **kwargs):
@@ -41,13 +41,13 @@ def _make_state(tmp_path, **kwargs):
 
 
 def _make_app(state):
-    from kiro_crew.dashboard.chat import (
+    from aj_crew.dashboard.chat import (
         api_chat_slot_create,
         api_chat_slot_delete,
         api_chat_slot_resume,
         api_chat_slots,
     )
-    from kiro_crew.dashboard.handlers import api_lessons_create, api_lessons_delete
+    from aj_crew.dashboard.handlers import api_lessons_create, api_lessons_delete
 
     app = web.Application()
     app["state"] = state

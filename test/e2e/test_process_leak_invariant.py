@@ -34,9 +34,9 @@ exact false green the gate exists to prevent.
 
 Gating, and why there are two switches
 --------------------------------------
-* ``KIROCREW_E2E`` lifts the module skip. A bare ``pytest`` run does not pay a
+* ``AJCREW_E2E`` lifts the module skip. A bare ``pytest`` run does not pay a
   gateway boot plus five model turns.
-* ``KIROCREW_E2E_REQUIRE`` turns an unmet PRECONDITION from a graceful
+* ``AJCREW_E2E_REQUIRE`` turns an unmet PRECONDITION from a graceful
   ``pytest.skip`` into a ``pytest.fail``. pytest counts a skip as a pass, so a
   required job could otherwise report green having measured nothing. Shared
   with the other E2E gates rather than spelled per-module; see
@@ -79,11 +79,11 @@ from e2e.test_gateway_boot_matrix import (
     _unresolved,
 )
 
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("KIROCREW_E2E"),
-    reason="Real-process leak invariant. Set KIROCREW_E2E=1 to run.",
+    not os.environ.get("AJCREW_E2E"),
+    reason="Real-process leak invariant. Set AJCREW_E2E=1 to run.",
 )
 
 #: How many dashboard chat sessions the invariant is measured over. Five rather
@@ -140,13 +140,13 @@ def _pinned_homes(home: Path) -> Iterator[None]:
     """Point the product's path resolvers at the homes the gateway under test runs on.
 
     The projection lookup reads this home's side files through ``data_home()``
-    (``KIROCREW_HOME``) and the legacy agents directory through
+    (``AJCREW_HOME``) and the legacy agents directory through
     ``kiro_agents_dir()`` (``KIRO_HOME``), both resolved from the process
     environment on every call. The harness pins the gateway's copies in
     ``harness_environment``; this pins the same two for the test process while
     one lookup runs, then restores whatever was there.
     """
-    pinned = {"KIROCREW_HOME": str(home), "KIRO_HOME": str(home / "kiro")}
+    pinned = {"AJCREW_HOME": str(home), "KIRO_HOME": str(home / "kiro")}
     previous = {key: os.environ.get(key) for key in pinned}
     os.environ.update(pinned)
     try:
@@ -163,14 +163,14 @@ def _authored_agent(home: Path, fact: ProcessFact) -> str:
     """The agent a runtime was spawned FOR, from the product's own record of it.
 
     The product names the authored agent in every runtime child's environment
-    (``KIROCREW_RUNTIME_AGENT``, read back as ``ProcessFact.runtime_agent``), and
+    (``AJCREW_RUNTIME_AGENT``, read back as ``ProcessFact.runtime_agent``), and
     that is the answer whenever it is present: it is the one record a host that
     binds its agent over the wire (the KAS relay, whose argv carries no
     ``--agent``) leaves on the process at all.
 
     A runtime spawned with ``--agent`` in argv is read through that word when
     the environment says nothing. The product hands such a backend a projected
-    skill-view alias (``kirocrew-skill-view-<hash>``), not the authored name,
+    skill-view alias (``ajcrew-skill-view-<hash>``), not the authored name,
     and the same authored agent yields the same alias, so the alias alone cannot
     say whether a process is the background agent. The product records which
     authored agent each alias projects (a sidecar and a view ledger under the
@@ -182,16 +182,16 @@ def _authored_agent(home: Path, fact: ProcessFact) -> str:
     A runtime with neither record, or an alias nothing on this home records,
     answers ``""`` so the caller classifies it as foreign rather than guessing.
     """
-    from kiro_crew.acp.skill_projection import RetiredSkillView, source_agent_name
-    from kiro_crew.agent_spec_format import NATIVE_SKILL_ALIAS_PREFIX
-    from kiro_crew.constants import KIROCREW_RUNTIME_AGENT_ENV
+    from aj_crew.acp.skill_projection import RetiredSkillView, source_agent_name
+    from aj_crew.agent_spec_format import NATIVE_SKILL_ALIAS_PREFIX
+    from aj_crew.constants import AJCREW_RUNTIME_AGENT_ENV
 
     # The inventory restates the variable's name so it stays product-free; a
     # rename on either side must fail here by name, not read every runtime as
     # foreign.
-    assert RUNTIME_AGENT_ENV == KIROCREW_RUNTIME_AGENT_ENV, (
+    assert RUNTIME_AGENT_ENV == AJCREW_RUNTIME_AGENT_ENV, (
         f"process_inventory reads {RUNTIME_AGENT_ENV!r} but the product sets "
-        f"{KIROCREW_RUNTIME_AGENT_ENV!r}; update RUNTIME_AGENT_ENV to match"
+        f"{AJCREW_RUNTIME_AGENT_ENV!r}; update RUNTIME_AGENT_ENV to match"
     )
     if fact.runtime_agent:
         return fact.runtime_agent
@@ -217,7 +217,7 @@ def _split_background_runtimes(home: Path, alive: tuple) -> tuple[list, list]:
     the gateway is documented to keep; ``foreign`` is everything else, which
     after every slot is closed can only be a session's runtime that outlived it.
     """
-    from kiro_crew.session import BACKGROUND_AGENT
+    from aj_crew.session import BACKGROUND_AGENT
 
     background = [f for f in alive if _authored_agent(home, f) == BACKGROUND_AGENT]
     foreign = [f for f in alive if f not in background]
@@ -226,7 +226,7 @@ def _split_background_runtimes(home: Path, alive: tuple) -> tuple[list, list]:
 
 def _workspace_src() -> Path:
     """The in-repo ``src/`` the harness runs the product from."""
-    from kiro_crew.testing.harness import _resolve_workspace_src
+    from aj_crew.testing.harness import _resolve_workspace_src
 
     return _resolve_workspace_src()
 

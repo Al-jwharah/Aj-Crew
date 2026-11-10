@@ -25,17 +25,17 @@ from test_chat_mirror import (
     _real_caps_transport,
 )
 
-from kiro_crew.dashboard.chat_runner import (
+from aj_crew.dashboard.chat_runner import (
     _deliver_cross_surface_reply,
     _deliver_cross_surface_user_message,
 )
-from kiro_crew.messaging.link import ChannelLink
-from kiro_crew.platform import redact_via_context
-from kiro_crew.security import (
+from aj_crew.messaging.link import ChannelLink
+from aj_crew.platform import redact_via_context
+from aj_crew.security import (
     redact_credentials,
     redact_exfiltration_urls,
 )
-from kiro_crew.telegram.transport import TelegramTransport
+from aj_crew.telegram.transport import TelegramTransport
 
 #: A channel whose REAL capabilities permit a proactive send, so both legs must
 #: DELIVER to it. Named rather than derived: if Weixin's declaration is ever
@@ -66,11 +66,11 @@ def _fake_transport(channel_type: str = "telegram", proactive: bool = True, may_
 def audit(tmp_path, monkeypatch):
     """A real SEL under tmp_path that both legs' audit writes land in.
 
-    The governance decision (``vet_and_audit``) looks ``sel`` up on ``kiro_crew.sel`` and
+    The governance decision (``vet_and_audit``) looks ``sel`` up on ``aj_crew.sel`` and
     the recipient decision on the chat runner, so both names are pointed at this log.
     """
-    import kiro_crew.sel as sel_mod
-    from kiro_crew.dashboard import chat_runner
+    import aj_crew.sel as sel_mod
+    from aj_crew.dashboard import chat_runner
 
     (tmp_path / "sel").mkdir()
     # The class is a singleton: clear it first so this log is a new one under tmp_path,
@@ -119,7 +119,7 @@ class TestGovernanceDegradationFailsClosed:
     @pytest.mark.asyncio
     async def test_degraded_evaluation_blocks_delivery(self, tmp_path, monkeypatch, audit):
         monkeypatch.setattr(
-            "kiro_crew.platform.governance_profiles.resolve_active_scope",
+            "aj_crew.platform.governance_profiles.resolve_active_scope",
             lambda *a, **k: (_ for _ in ()).throw(RuntimeError("profile store down")),
         )
         state = _make_state(tmp_path)
@@ -139,7 +139,7 @@ class TestGovernanceDegradationFailsClosed:
         self, tmp_path, monkeypatch, audit
     ):
         monkeypatch.setattr(
-            "kiro_crew.platform.governance_profiles.governance_permits",
+            "aj_crew.platform.governance_profiles.governance_permits",
             lambda *a, **k: SimpleNamespace(),
         )
         state = _make_state(tmp_path)
@@ -163,12 +163,12 @@ class TestGovernanceDegradationFailsClosed:
         instead of degrading, so the resolver's generic fail-closed handler must
         let it through rather than swallowing it into a silent no-mirror.
         """
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.context import PlatformCompositionError
 
         def _boom(*a, **k):
             raise PlatformCompositionError("ceiling weakened")
 
-        monkeypatch.setattr("kiro_crew.platform.governance_profiles.governance_permits", _boom)
+        monkeypatch.setattr("aj_crew.platform.governance_profiles.governance_permits", _boom)
         state = _make_state(tmp_path)
         tp = _fake_transport("telegram")
         state.register_channel_transport(tp)
@@ -549,7 +549,7 @@ _CODE_MARKERS = (
 
 def _lines_the_channel_would_read_as_prose(part: str) -> list[str]:
     """Lines of *part* that fall OUTSIDE a fence, as a dialect converter sees them."""
-    from kiro_crew.messaging.split import FENCE_OUTSIDE, iter_fence_lines
+    from aj_crew.messaging.split import FENCE_OUTSIDE, iter_fence_lines
 
     return [line for line, role in iter_fence_lines(part) if role == FENCE_OUTSIDE]
 

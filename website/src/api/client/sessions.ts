@@ -8,7 +8,7 @@ import type { ClientTransport } from './transport'
 import { CONFIRM_IRREVERSIBLE_HEADER } from '../sharedCrewInvites'
 import type { CrewBoardAction, CrewBoardActionResult, WorkBoardResponse } from '../crewBoard'
 
-export const SEARCH_MIN_CHARS = 2  // backend session search threshold (must match kiro_crew.history.SEARCH_MIN_CHARS)
+export const SEARCH_MIN_CHARS = 2  // backend session search threshold (must match aj_crew.history.SEARCH_MIN_CHARS)
 
 /** One file in the consolidated session archive, as `/api/session/archive` lists it. */
 export interface ArchiveEntry {

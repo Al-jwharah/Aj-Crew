@@ -5,7 +5,7 @@
 and writes to its transcript with these files, and never writes into the
 repository. This script is the writer. It runs that test under pytest, so the
 turn gets the suite's isolation (its own data home, no real ``~/.kiro``), with
-``KIROCREW_TURN_GOLDEN_OUT`` pointing at a temporary directory outside the
+``AJCREW_TURN_GOLDEN_OUT`` pointing at a temporary directory outside the
 repository. The test writes each rendered result there, and the script copies
 every file that differs into ``test/fixtures/turn_golden/``.
 
@@ -43,7 +43,7 @@ def main(argv: list[str]) -> int:
         )
         return 2
     with tempfile.TemporaryDirectory(prefix="turn-golden-") as out:
-        env = {**os.environ, "KIROCREW_TURN_GOLDEN_OUT": out}
+        env = {**os.environ, "AJCREW_TURN_GOLDEN_OUT": out}
         cmd = [
             sys.executable,
             "-m",

@@ -26,14 +26,14 @@ from builtin_adoption_helpers import (
     write_tree,
 )
 
-import kiro_crew
-from kiro_crew.apps import builtin_adoption as adoption
-from kiro_crew.apps import builtin_adoption_pins as pins_mod
-from kiro_crew.apps import execution as exec_mod
-from kiro_crew.apps import manager
-from kiro_crew.apps.builtin_adoption_state import write_ledger
+import aj_crew
+from aj_crew.apps import builtin_adoption as adoption
+from aj_crew.apps import builtin_adoption_pins as pins_mod
+from aj_crew.apps import execution as exec_mod
+from aj_crew.apps import manager
+from aj_crew.apps.builtin_adoption_state import write_ledger
 
-_SRC = Path(kiro_crew.__file__).resolve().parent
+_SRC = Path(aj_crew.__file__).resolve().parent
 COMMIT = "a" * 40
 
 
@@ -147,7 +147,7 @@ def test_a_raising_predicate_keeps_the_shipped_root(wheel, monkeypatch):
 
 
 def _fake_package(monkeypatch):
-    module = types.ModuleType(f"kiro_crew.apps.builtins.{PACKAGE}")
+    module = types.ModuleType(f"aj_crew.apps.builtins.{PACKAGE}")
     seen: dict[str, object] = {"register": 0, "disable": 0}
 
     async def wheel_startup(_app):
@@ -166,7 +166,7 @@ def _fake_package(monkeypatch):
     module.register_routes = register_routes  # type: ignore[attr-defined]
     module.on_disable = on_disable  # type: ignore[attr-defined]
     monkeypatch.setitem(sys.modules, module.__name__, module)
-    from kiro_crew.dashboard.routes import system
+    from aj_crew.dashboard.routes import system
 
     monkeypatch.setattr(system, "BUILTIN_NAMES", [PACKAGE])
     return seen
@@ -182,7 +182,7 @@ def _wheel_routes(app) -> set[str]:
 
 @pytest.mark.parametrize("adopted", [False, True])
 def test_the_route_loop_skips_a_released_package(wheel, monkeypatch, adopted):
-    from kiro_crew.dashboard.routes import system
+    from aj_crew.dashboard.routes import system
 
     seen = _fake_package(monkeypatch)
     _adopt_record() if adopted else write_builtin_record()
@@ -280,19 +280,19 @@ def test_a_marker_alone_keeps_an_unpinned_package_in_the_release_set(wheel, monk
 
 def test_an_adopted_package_mcp_verb_is_refused(wheel, monkeypatch, capsys):
     _adopt_record()
-    from kiro_crew import cli
+    from aj_crew import cli
 
     monkeypatch.setattr(cli, "_BUILTIN_NAMES", [PACKAGE])
-    monkeypatch.setattr(sys, "argv", ["kirocrew", f"mcp-{PACKAGE}"])
+    monkeypatch.setattr(sys, "argv", ["ajcrew", f"mcp-{PACKAGE}"])
     monkeypatch.setattr(cli, "_builtin_mcp_server_available", lambda name: True)
     ran = []
-    import kiro_crew.cli_commands as commands
+    import aj_crew.cli_commands as commands
 
     monkeypatch.setattr(commands, "_run_app_mcp_server", lambda name: ran.append(name))
     with pytest.raises(SystemExit) as exited:
         cli.main()
     assert exited.value.code == 1 and ran == []
-    assert "kirocrew app mcp" in capsys.readouterr().err
+    assert "ajcrew app mcp" in capsys.readouterr().err
 
 
 # --------------------------------------------------------------------------- #
@@ -321,18 +321,18 @@ def test_each_wheel_root_chooser_imports_the_narrowed_function(rel):
         if isinstance(node, ast.ImportFrom)
         and any(alias.name == "shipped_builtin_app_root" for alias in node.names)
     }
-    assert sources == {"kiro_crew.apps.execution"}
+    assert sources == {"aj_crew.apps.execution"}
 
 
 def test_the_backend_facade_serves_the_narrowed_function():
-    from kiro_crew.apps import backend
+    from aj_crew.apps import backend
 
     assert backend.shipped_builtin_app_root is exec_mod.shipped_builtin_app_root
 
 
 def test_an_adopted_name_resolves_the_data_home_tree(wheel):
-    from kiro_crew.apps.bridges_sources import _app_resource_root, _registration_source
-    from kiro_crew.apps.hooks_integration import _app_hook_root
+    from aj_crew.apps.bridges_sources import _app_resource_root, _registration_source
+    from aj_crew.apps.hooks_integration import _app_hook_root
 
     _adopt_record()
     dest = manager.app_dir(NAME)
@@ -344,7 +344,7 @@ def test_an_adopted_name_resolves_the_data_home_tree(wheel):
 
 
 def test_a_builtin_owned_name_still_resolves_the_wheel(wheel):
-    from kiro_crew.apps.hooks_integration import _app_hook_root
+    from aj_crew.apps.hooks_integration import _app_hook_root
 
     write_builtin_record()
     assert _app_hook_root(NAME) == wheel
@@ -369,7 +369,7 @@ def test_a_pinned_record_whose_package_is_gone_is_never_orphaned(wheel, monkeypa
 
 
 def test_the_migrated_list_never_names_a_pinned_app():
-    from kiro_crew.apps.builtins import _MIGRATED_BUILTINS
+    from aj_crew.apps.builtins import _MIGRATED_BUILTINS
 
     document = json.loads((_SRC / "apps" / "adoption-pins.json").read_text(encoding="utf-8"))
     pinned = {row["name"] for row in document["pins"]}
@@ -429,7 +429,7 @@ async def test_a_registry_install_into_a_pinned_builtin_record_waits_for_adoptio
 ):
     host_with_seams(monkeypatch, 0)
     write_builtin_record()
-    from kiro_crew.apps import registry
+    from aj_crew.apps import registry
 
     def never(*_a, **_k):
         raise AssertionError("no lookup or clone before the refusal")
@@ -440,7 +440,7 @@ async def test_a_registry_install_into_a_pinned_builtin_record_waits_for_adoptio
     # A build below the pin's seam level never stages the pin, so a restart would
     # change nothing: the refusal must not promise one.
     assert "restart" not in result["error"]
-    assert "needs a newer Kiro Crew" in result["error"]
+    assert "needs a newer Aj Crew" in result["error"]
 
 
 @pytest.mark.parametrize(
@@ -448,10 +448,10 @@ async def test_a_registry_install_into_a_pinned_builtin_record_waits_for_adoptio
     [
         (None, "automatically in the background", "restart"),
         (("pending", "network_timeout"), "automatically in the background", "restart"),
-        (("staged", ""), "restart Kiro Crew to switch", "newer"),
+        (("staged", ""), "restart Aj Crew to switch", "newer"),
         (("blocked", "admission_denied"), "on hold", "restart"),
-        (("blocked", "host_too_old"), "needs a newer Kiro Crew", "restart"),
-        (("pending", "host_sdk_too_old"), "needs a newer Kiro Crew", "restart"),
+        (("blocked", "host_too_old"), "needs a newer Aj Crew", "restart"),
+        (("pending", "host_sdk_too_old"), "needs a newer Aj Crew", "restart"),
     ],
 )
 def test_the_pending_refusal_is_worded_from_the_ledger(
@@ -461,7 +461,7 @@ def test_the_pending_refusal_is_worded_from_the_ledger(
     write_builtin_record()
     if ledger is not None:
         _ledger(*ledger)
-    from kiro_crew.apps import registry
+    from aj_crew.apps import registry
 
     refusal = registry._adoption_pending(NAME)
     assert refusal is not None and says in refusal and never_says not in refusal
@@ -471,14 +471,14 @@ def test_a_staged_ledger_for_another_commit_never_promises_a_restart(wheel, monk
     host_with_seams(monkeypatch)
     write_builtin_record()
     _ledger("staged", commit="d" * 40)
-    from kiro_crew.apps import registry
+    from aj_crew.apps import registry
 
     refusal = registry._adoption_pending(NAME)
     assert refusal is not None and "restart" not in refusal
 
 
 def test_no_refusal_for_an_adopted_or_unpinned_record(wheel, monkeypatch, tmp_path):
-    from kiro_crew.apps import registry
+    from aj_crew.apps import registry
 
     _adopt_record()
     assert registry._adoption_pending(NAME) is None
@@ -493,7 +493,7 @@ def test_no_refusal_for_an_adopted_or_unpinned_record(wheel, monkeypatch, tmp_pa
 
 
 def _ledger(state, reason="", commit=COMMIT):
-    from kiro_crew.apps.builtin_adoption_state import AdoptionLedger
+    from aj_crew.apps.builtin_adoption_state import AdoptionLedger
 
     write_ledger(AdoptionLedger(name=NAME, commit=commit, state=state, reason=reason))
 
@@ -534,7 +534,7 @@ def test_a_newer_adopted_version_flags_host_too_old_and_is_never_re_registered(w
     _adopt_record(version="9.0.0")
     dest = manager.app_dir(NAME)
     manifest = json.loads((dest / "app.json").read_text(encoding="utf-8"))
-    manifest.update(version="9.0.0", minKiroCrewVersion="999.0.0")
+    manifest.update(version="9.0.0", minAjCrewVersion="999.0.0")
     (dest / "app.json").write_text(json.dumps(manifest), encoding="utf-8")
     assert manager.get_app(NAME)["adoption"]["hostTooOld"] is True
     stamped = (dest / "installed.json").read_bytes()
@@ -634,7 +634,7 @@ def test_the_pin_wins_over_a_recorded_nav(wheel):
 
 
 def test_the_config_key_drops_every_malformed_marker():
-    from kiro_crew.config.loader_builders import _builtin_adoption_markers
+    from aj_crew.config.loader_builders import _builtin_adoption_markers
 
     good = {
         "state": "adopted",
@@ -658,7 +658,7 @@ def test_the_config_key_drops_every_malformed_marker():
 
 
 def test_the_config_key_is_capped():
-    from kiro_crew.apps.builtin_adoption_markers import MAX_MARKERS, coerce_adoption_markers
+    from aj_crew.apps.builtin_adoption_markers import MAX_MARKERS, coerce_adoption_markers
 
     good = {
         "state": "adopted",
@@ -682,8 +682,8 @@ def _pin_and_manifest(tmp_path, **manifest_overrides):
 
     from builtin_adoption_helpers import repository_manifest
 
-    from kiro_crew.apps.builtin_adoption_pins import parse_adoption_pins
-    from kiro_crew.apps.manifest import AppManifest
+    from aj_crew.apps.builtin_adoption_pins import parse_adoption_pins
+    from aj_crew.apps.manifest import AppManifest
 
     pin = parse_adoption_pins({"schemaVersion": 1, "pins": [pin_row(COMMIT, "b" * 64, "c" * 64)]})[
         NAME
@@ -700,7 +700,7 @@ def _pin_and_manifest(tmp_path, **manifest_overrides):
     ["package.json", "pyproject.toml", "setup.py", "requirements.txt", ".gitattributes"],
 )
 def test_a_tree_that_needs_a_build_step_is_refused(tmp_path, build_input):
-    from kiro_crew.apps.builtin_adoption_checks import pinned_tree_refusal
+    from aj_crew.apps.builtin_adoption_checks import pinned_tree_refusal
 
     pin, manifest, tree = _pin_and_manifest(tmp_path)
     assert pinned_tree_refusal(pin, manifest, tree) is None
@@ -709,8 +709,8 @@ def test_a_tree_that_needs_a_build_step_is_refused(tmp_path, build_input):
 
 
 def test_a_name_a_core_table_keys_on_is_refused(tmp_path):
-    from kiro_crew import webhook_sources
-    from kiro_crew.apps.builtin_adoption_checks import core_named_apps, pinned_tree_refusal
+    from aj_crew import webhook_sources
+    from aj_crew.apps.builtin_adoption_checks import core_named_apps, pinned_tree_refusal
 
     # The webhook source ids are a core table that still keys a capability on an app.
     keyed = webhook_sources.SOURCE_OPS_MISSION_CONTROL
@@ -720,7 +720,7 @@ def test_a_name_a_core_table_keys_on_is_refused(tmp_path):
 
 
 def test_a_shipped_version_unlike_the_pin_is_refused(tmp_path):
-    from kiro_crew.apps.builtin_adoption_checks import pinned_tree_refusal
+    from aj_crew.apps.builtin_adoption_checks import pinned_tree_refusal
 
     pin, manifest, tree = _pin_and_manifest(tmp_path)
     shipped = types.SimpleNamespace(version="0.0.9")
@@ -731,10 +731,10 @@ def test_a_shipped_version_unlike_the_pin_is_refused(tmp_path):
 def test_a_host_older_than_the_pin_needs_is_refused(tmp_path, monkeypatch):
     import dataclasses
 
-    from kiro_crew.apps.builtin_adoption_checks import host_refusal
+    from aj_crew.apps.builtin_adoption_checks import host_refusal
 
     host_with_seams(monkeypatch)
-    pin, manifest, _tree = _pin_and_manifest(tmp_path, minKiroCrewVersion="999.0.0")
+    pin, manifest, _tree = _pin_and_manifest(tmp_path, minAjCrewVersion="999.0.0")
     assert host_refusal(pin, manifest) == "host_too_old"
     pin, manifest, _tree = _pin_and_manifest(tmp_path / "b")
     assert (
@@ -745,9 +745,9 @@ def test_a_host_older_than_the_pin_needs_is_refused(tmp_path, monkeypatch):
 
 def test_no_shipped_pin_adopts_on_a_host_without_the_seams():
     """A pin adopts only where the structural route registry exists to mount its routes."""
-    from kiro_crew.apps import route_registry
-    from kiro_crew.apps.app_sdk_level import APP_SDK_LEVEL
-    from kiro_crew.apps.builtin_adoption_pins import parse_adoption_pins
+    from aj_crew.apps import route_registry
+    from aj_crew.apps.app_sdk_level import APP_SDK_LEVEL
+    from aj_crew.apps.builtin_adoption_pins import parse_adoption_pins
 
     document = json.loads((_SRC / "apps" / "adoption-pins.json").read_text(encoding="utf-8"))
     pins = parse_adoption_pins(document)
@@ -758,8 +758,8 @@ def test_no_shipped_pin_adopts_on_a_host_without_the_seams():
 
 
 def test_the_nav_key_drops_every_malformed_entry_and_is_capped():
-    from kiro_crew.apps.builtin_adoption_markers import MAX_MARKERS, coerce_adoption_nav
-    from kiro_crew.config.loader_builders import _builtin_adoption_nav
+    from aj_crew.apps.builtin_adoption_markers import MAX_MARKERS, coerce_adoption_nav
+    from aj_crew.config.loader_builders import _builtin_adoption_nav
 
     raw = {
         NAME: _NAV,
@@ -778,7 +778,7 @@ def test_the_nav_key_drops_every_malformed_entry_and_is_capped():
 
 def test_a_marker_never_carries_the_nav():
     """A build that knows only the six marker keys must keep reading every marker."""
-    from kiro_crew.apps.builtin_adoption_markers import marker_is_valid
+    from aj_crew.apps.builtin_adoption_markers import marker_is_valid
 
     assert marker_is_valid(_MARKER)
     assert not marker_is_valid({**_MARKER, "legacyNav": _NAV})

@@ -33,21 +33,21 @@ import re
 
 import pytest
 
-from kiro_crew.acp._dispatch import parse_claude_compaction_notice
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import (
+from aj_crew.acp._dispatch import parse_claude_compaction_notice
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import (
     EVENT_COMPACTION_STATUS,
     STOP_REASON_CANCELLED,
     STOP_REASON_END_TURN,
     AcpEvent,
     AcpPromptStats,
 )
-from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
+from aj_crew.dashboard.chat_utils import (
     _COMPACTION_CONTINUE_MSG,
     should_continue_after_compaction,
 )
-from kiro_crew.dashboard.state import COMPACTION_RECOVERY_PREFIX
+from aj_crew.dashboard.state import COMPACTION_RECOVERY_PREFIX
 
 # --------------------------------------------------------------------------- #
 # 1. ACP-layer notice translation
@@ -387,7 +387,7 @@ def test_the_runner_gates_continuation_on_completed_not_on_any_terminal() -> Non
     runner = (
         pathlib.Path(__file__).resolve().parents[1]
         / "src"
-        / "kiro_crew"
+        / "aj_crew"
         / "dashboard"
         / "chat_runner.py"
     )
@@ -428,7 +428,7 @@ def test_the_dispatch_path_flags_the_notice_chunk_it_forwards() -> None:
     Pinned in source because the yield sits inside a very long async generator,
     and the regression is exactly the flag going missing from the call.
     """
-    acp_dir = pathlib.Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "acp"
+    acp_dir = pathlib.Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "acp"
     src = "".join(p.read_text(encoding="utf-8") for p in sorted(acp_dir.glob("client*.py")))
     assert re.search(
         r"yield AcpEvent\(\s*kind=kind,\s*text=chunk,\s*control_notice=_notice_chunk\b", src
@@ -450,7 +450,7 @@ def _runner_source() -> str:
     runner = (
         pathlib.Path(__file__).resolve().parents[1]
         / "src"
-        / "kiro_crew"
+        / "aj_crew"
         / "dashboard"
         / "chat_runner.py"
     )
@@ -534,7 +534,7 @@ def test_a_notice_only_turn_is_still_flushed() -> None:
 
 def test_answer_text_only_removes_each_recorded_chunk_once() -> None:
     """The helper reconstructs the turn's own answer from the exact chunks."""
-    from kiro_crew.dashboard.chat_runner import _answer_text_only
+    from aj_crew.dashboard.chat_runner import _answer_text_only
 
     # Notice-only turn: nothing of the turn's own remains, so the gate sees blank.
     assert _answer_text_only("Compacting...", ["Compacting..."]) == ""
@@ -579,7 +579,7 @@ def test_no_chunk_path_drops_the_text_on_a_notice() -> None:
     pinned. Skipping the chunk means a misclassified line is discarded rather than
     discounted, and nothing downstream can recover it.
     """
-    acp = pathlib.Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "acp"
+    acp = pathlib.Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "acp"
     src = "".join(p.read_text(encoding="utf-8") for p in sorted(acp.glob("client*.py")))
     lines = src.splitlines()
     calls = [i for i, ln in enumerate(lines) if "_claude_compaction_event(chunk)" in ln]
@@ -614,7 +614,7 @@ def test_the_runner_only_clears_text_on_an_observed_terminal() -> None:
     runner = (
         pathlib.Path(__file__).resolve().parents[1]
         / "src"
-        / "kiro_crew"
+        / "aj_crew"
         / "dashboard"
         / "chat_runner.py"
     )
@@ -651,7 +651,7 @@ async def _drive_compaction_turn(tmp_path: pathlib.Path, events: list[AcpEvent])
 
     from test_dashboard_chat_empty_response import TestEmptyResponseRetry
 
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.state import _ChatSlot
 
     state, slot, client, run_chat = TestEmptyResponseRetry()._make_state_and_slot(tmp_path)
 
@@ -671,7 +671,7 @@ async def _drive_compaction_turn(tmp_path: pathlib.Path, events: list[AcpEvent])
     with (
         patch.object(_ChatSlot, "queue_insert", record_queue),
         patch(
-            "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+            "aj_crew.dashboard.chat_runner._start_next_queued_turn",
             new=AsyncMock(return_value=False),
         ),
     ):
@@ -702,7 +702,7 @@ async def test_runner_continues_a_pre_compaction_fragment(
     tmp_path: pathlib.Path, post_compaction_text: str, expects_continuation: bool
 ) -> None:
     """The turn preserves every chunk and resumes an unfinished answer."""
-    from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+    from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
 
     events = [
         AcpEvent(kind=EVENT_TEXT_CHUNK, text=_FRAGMENT),
@@ -749,7 +749,7 @@ async def test_a_segment_cut_after_compaction_is_judged_on_its_own_text(
     answer after the tool counts in full, even one shorter than the fragment
     that preceded the compaction.
     """
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         EVENT_COMPLETE,
         EVENT_TEXT_CHUNK,
         EVENT_TOOL_CALL,
@@ -798,8 +798,8 @@ async def test_a_refusal_explained_before_compaction_takes_the_streamed_refusal_
     card, which quotes it (``streamed_text``), not the no-text refusal branch, and
     the turn is not continued.
     """
-    from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_REFUSAL
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_REFUSAL
+    from aj_crew.dashboard import chat_runner
 
     explanation = "I can't help with that request, because it asks for"
     cards: list[dict] = []

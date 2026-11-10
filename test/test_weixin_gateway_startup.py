@@ -23,7 +23,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.weixin import gateway as gw
+from aj_crew.weixin import gateway as gw
 
 
 class _Client:

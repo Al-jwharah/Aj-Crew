@@ -14,10 +14,10 @@ from types import SimpleNamespace
 import pytest
 from shared_crew_host_isolation import host_isolation  # noqa: F401
 
-from kiro_crew.shared_crew import access
-from kiro_crew.shared_crew import attribution as attr
-from kiro_crew.shared_crew import crew_mode, trigger
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew import access
+from aj_crew.shared_crew import attribution as attr
+from aj_crew.shared_crew import crew_mode, trigger
+from aj_crew.shared_crew.contracts import (
     MESSAGE_AUTHOR_META_KEY,
     ActorContext,
     AttributionAvailability,
@@ -27,7 +27,7 @@ from kiro_crew.shared_crew.contracts import (
     SessionAttribution,
     Transport,
 )
-from kiro_crew.shared_crew.identity import local_operator_principal, tailnet_principal
+from aj_crew.shared_crew.identity import local_operator_principal, tailnet_principal
 
 pytestmark = pytest.mark.usefixtures("host_isolation")
 
@@ -302,7 +302,7 @@ def test_a_request_author_is_bound_to_its_own_task_only():
 @pytest.fixture
 def owner_login(monkeypatch):
     """Set this machine's tailnet owner, as ``access_set.owner_login`` answers it."""
-    from kiro_crew.shared_crew import access_set
+    from aj_crew.shared_crew import access_set
 
     login = {"value": ""}
     monkeypatch.setattr(access_set, "owner_login", lambda: login["value"])

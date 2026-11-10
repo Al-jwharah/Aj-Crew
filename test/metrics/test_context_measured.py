@@ -17,14 +17,14 @@ from typing import Any
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew.acp import kas_profile
-from kiro_crew.context_blocks import PHASE_PER_TURN, PHASE_SESSION_START, USER_LABEL
-from kiro_crew.crew_log import eager as crew_log_eager
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import projection_usage_measured as measured_mod
-from kiro_crew.crew_log.schema import Entry
-from kiro_crew.dashboard.handlers import usage as usage_mod
+from aj_crew.acp import kas_profile
+from aj_crew.context_blocks import PHASE_PER_TURN, PHASE_SESSION_START, USER_LABEL
+from aj_crew.crew_log import eager as crew_log_eager
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import projection_usage_measured as measured_mod
+from aj_crew.crew_log.schema import Entry
+from aj_crew.dashboard.handlers import usage as usage_mod
 
 SLOT = "chat-measured"
 UNIT = "acp-measured"
@@ -33,8 +33,8 @@ FRAMES = Path(__file__).parent.parent / "fixtures" / "acp_frames" / "kas" / "pro
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     _floor_monkeypatch.setattr(crew_log_eager, "note_commit", lambda *a, **k: None)
     crew_log_emit.reset_caches()
     crew_log_eager.stop_for_tests()
@@ -253,7 +253,7 @@ def test_crews_share_is_clamped_to_what_the_engine_holds():
 
 
 def test_an_unmeasured_turn_estimates_the_agent_loop_from_tokens_at_the_composers_ratio():
-    from kiro_crew.crew_log.emit_turn import _EST_CHARS_PER_TOKEN
+    from aj_crew.crew_log.emit_turn import _EST_CHARS_PER_TOKEN
 
     _open()
     _turn(1, 4_000, None, used=20_000)
@@ -282,7 +282,7 @@ def test_an_older_measurement_is_not_shown_for_a_newer_unmeasured_turn():
 
 
 def test_a_past_turn_keeps_its_own_blocks_and_its_own_engine_breakdown():
-    """Every kept turn opens whole: its Kiro Crew blocks by name, the engine's parts
+    """Every kept turn opens whole: its Aj Crew blocks by name, the engine's parts
     when it measured that turn, and its time to first output; a turn the engine did
     not measure keeps its own reading for the estimated view."""
     _open()
@@ -578,7 +578,7 @@ def _entry(seq: int, entry_type: str, data: dict[str, Any]) -> Entry:
 
 def _fold_turns(turns: int) -> dict[str, Any]:
     """The usage state after *turns* measured turns, folded through the real step."""
-    from kiro_crew.crew_log.projection_usage import _usage_start, _usage_step
+    from aj_crew.crew_log.projection_usage import _usage_start, _usage_step
 
     profile = _real_profile(user=4_000)
     state = _usage_start()
@@ -673,7 +673,7 @@ def test_apply_never_edits_the_state_it_was_given():
     state = _fold_turns(3)
     before = copy.deepcopy(state["ctx"])
     held = state["ctx"]
-    from kiro_crew.crew_log.projection_usage import _usage_step
+    from aj_crew.crew_log.projection_usage import _usage_step
 
     _usage_step(state, _entry(99, "context/composed", {"turn": 4, "chars": 10, "sources": []}))
     assert held == before
@@ -711,8 +711,8 @@ def worst_case_context() -> dict[str, Any]:
     :data:`BLOCKS_PER_TURN` blocks by distinct names and a whole engine measurement.
     Built by hand because the shape is fixed: there is nothing a longer session could
     add."""
-    from kiro_crew.crew_log.projection_values import TEXT_LIMIT
-    from kiro_crew.engine_context import MAX_COUNT
+    from aj_crew.crew_log.projection_values import TEXT_LIMIT
+    from aj_crew.engine_context import MAX_COUNT
 
     n = iter(range(1_000_000))
 

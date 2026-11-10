@@ -81,7 +81,7 @@ describe('MarkdownRenderer forge chips — security and fallthrough', () => {
 
   it('falls through to a plain anchor for malformed forge paths', () => {
     render(
-      <MarkdownRenderer content={'https://github.com/kirodotdev/KiroCrew/pull/abc and https://github.com/kirodotdev/KiroCrew and https://gitlab.com/acme/widgets/merge_requests/7'} />,
+      <MarkdownRenderer content={'https://github.com/kirodotdev/KiroCrew/pull/abc and https://github.com/Al-jwharah/Aj-Crew and https://gitlab.com/acme/widgets/merge_requests/7'} />,
     )
     for (const link of screen.getAllByRole('link')) {
       expect(link.querySelector('[data-provider-mark]')).toBeNull()

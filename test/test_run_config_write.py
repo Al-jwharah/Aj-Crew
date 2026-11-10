@@ -17,10 +17,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard.chat_utils import run_config_write
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.chat_utils import run_config_write
+from aj_crew.testing.wait import await_until
 
-SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 #: The sync config-writing callables Slack's async handlers invoke. Every
 #: invocation from async Slack code must go through run_config_write.
@@ -69,7 +69,7 @@ class TestRunConfigWrite:
     @pytest.mark.asyncio
     async def test_holds_the_loop_side_config_lock_while_fn_runs(self) -> None:
         """While the dashboard lock is held, the write must not start."""
-        from kiro_crew.dashboard.handlers.agents import _get_config_lock
+        from aj_crew.dashboard.handlers.agents import _get_config_lock
 
         ran = asyncio.Event()
 

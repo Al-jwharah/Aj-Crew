@@ -33,7 +33,7 @@ import { logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 const OUT = process.argv[2] || '../temp-screenshots/rail-header-glyph'
 
 const slots = [
-  { key: 's1', title: 'Rail header glyph', messages: 4, running: false, agent: 'kirocrew', mode: '', created: '2026-08-11T01:00:00Z', last_ts: '2026-08-11T04:00:00Z', folder_id: '' },
+  { key: 's1', title: 'Rail header glyph', messages: 4, running: false, agent: 'ajcrew', mode: '', created: '2026-08-11T01:00:00Z', last_ts: '2026-08-11T04:00:00Z', folder_id: '' },
 ]
 
 mkdirSync(OUT, { recursive: true })
@@ -53,7 +53,7 @@ async function openRail(browser, base, { logo404, collapsed }) {
     slots,
     theme: 'dark',
     localStorageEntries: {
-      'mc-color-theme': 'kiro-dark',
+      'mc-color-theme': 'aj-dark',
       'mc-privacy-notice-v1': '1',
       'mc-nav': collapsed ? '1' : '0',
     },
@@ -62,7 +62,7 @@ async function openRail(browser, base, { logo404, collapsed }) {
   await page.goto(base + '/chat', { waitUntil: 'domcontentloaded' })
   await page.waitForFunction(
     t => document.documentElement.getAttribute('data-theme') === t,
-    'kiro-dark', { timeout: 15000 })
+    'aj-dark', { timeout: 15000 })
   await page.locator(RAIL_BTN).first().waitFor({ state: 'visible', timeout: 15000 })
   await page.mouse.move(1000, 600)
   await page.waitForTimeout(500)

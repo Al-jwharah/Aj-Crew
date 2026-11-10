@@ -246,13 +246,13 @@ test("client-only: the local-start offer routes through a re-exec on a crew's po
   assert.match(source, /\}, \{ expectPort: successorPort, pinPort: true, restartingStatus: RESTARTING_FOR_LOCAL_GATEWAY_STATUS \}\);/);
   // The splash is the only surface showing status during the handoff, and this
   // caller is not updating anything, so it must not borrow the update wording.
-  assert.match(source, /const RESTARTING_FOR_LOCAL_GATEWAY_STATUS = "Restarting Kiro Crew to start a local gateway/);
+  assert.match(source, /const RESTARTING_FOR_LOCAL_GATEWAY_STATUS = "Restarting Aj Crew to start a local gateway/);
   assert.doesNotMatch(source, /restartingStatus = RESTARTING_FOR_LOCAL_GATEWAY_STATUS/);
   // Pinning the port is what makes the watched port and the bound port one
-  // value: the successor reads KIROCREW_PORT ahead of its own selection.
+  // value: the successor reads AJCREW_PORT ahead of its own selection.
   assert.match(
     source,
-    /if \(pinPort\) \{\n {6}spawnOptions\.env = \{ \.\.\.processObj\.env, KIROCREW_PORT: String\(expectPort\) \};/,
+    /if \(pinPort\) \{\n {6}spawnOptions\.env = \{ \.\.\.processObj\.env, AJCREW_PORT: String\(expectPort\) \};/,
   );
   // A port that already has a responder cannot distinguish a successor from a
   // gateway some other install or terminal started, so confirming there would
@@ -377,7 +377,7 @@ test("client-only: the local-start offer routes through a re-exec on a crew's po
   assert.match(source, /nothing answering at \$\{remoteTarget\}:\$\{remoteTargetPort\}/);
 });
 
-test("launch port: an unusable KIROCREW_PORT takes the normal decision, not the bare default", () => {
+test("launch port: an unusable AJCREW_PORT takes the normal decision, not the bare default", () => {
   // The default port can itself name a configured crew, so answering an
   // unparseable env value with that number bare binds the crew's port -- the
   // collision selectLaunchPort is there to avoid. Every launch with no usable
@@ -396,7 +396,7 @@ test("launch port: an unusable KIROCREW_PORT takes the normal decision, not the 
   const body = source.slice(start, end);
   // Positive assertions first: they are the control, so a mis-sliced region fails
   // here rather than passing the absence checks for free.
-  assert.match(envBody, /console\.warn\('Invalid KIROCREW_PORT=/);
+  assert.match(envBody, /console\.warn\('Invalid AJCREW_PORT=/);
   // Only a usable value short-circuits selection; an unusable one reads as absent.
   // The check is isSelectablePort rather than a bare range, because the override
   // bypasses selection: a range check lets port 80 through, the shell's URL then

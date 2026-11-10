@@ -1,4 +1,4 @@
-"""``kirocrew memory forget``: delete one semantic key through the gateway's owner gate.
+"""``ajcrew memory forget``: delete one semantic key through the gateway's owner gate.
 
 Three layers, each pinned in both directions:
 
@@ -26,13 +26,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import cli_commands as cc
-from kiro_crew import mcp_caller
-from kiro_crew import memory_forget_client as client
-from kiro_crew.config import loader as loader_mod
-from kiro_crew.config.loader import config_dir
-from kiro_crew.memory_stores import DEFAULT_MEMORY_STORE, resolve_store_path
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import cli_commands as cc
+from aj_crew import mcp_caller
+from aj_crew import memory_forget_client as client
+from aj_crew.config import loader as loader_mod
+from aj_crew.config.loader import config_dir
+from aj_crew.memory_stores import DEFAULT_MEMORY_STORE, resolve_store_path
+from aj_crew.vector_memory import VectorMemoryStore
 
 # Each CLI test writes ``config.json`` into its own data home and drops the
 # process-wide config cache, so two workers racing that global is a flake.
@@ -199,14 +199,14 @@ class TestOwnerTerminal:
 
 
 def test_the_parser_routes_forget_with_its_flag(monkeypatch, tmp_path):
-    """``kirocrew memory forget <key> --superseded-by <key>`` reaches the verb."""
+    """``ajcrew memory forget <key> --superseded-by <key>`` reaches the verb."""
     seen: list[argparse.Namespace] = []
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
     monkeypatch.setattr(cc, "_memory_verb", seen.append)
     monkeypatch.setattr(
-        "sys.argv", ["kirocrew", "memory", "forget", _KEY, "--superseded-by", _WINNER]
+        "sys.argv", ["ajcrew", "memory", "forget", _KEY, "--superseded-by", _WINNER]
     )
-    from kiro_crew.cli import main
+    from aj_crew.cli import main
 
     try:
         main()
@@ -254,7 +254,7 @@ class TestRefusedBeforeAnyStoreOpens:
         self._assert_refused(capsys, "agent session's shell")
 
     def test_session_env_is_refused_through_the_real_ladder(self, monkeypatch, capsys):
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:chat-2")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:chat-2")
         monkeypatch.setattr(cc, "_interactive_terminal", lambda: True)
         self._assert_refused(capsys, "agent session's shell")
 
@@ -282,9 +282,9 @@ class TestRefusedBeforeAnyStoreOpens:
 
 
 def test_forget_help_names_native_windows(monkeypatch, capsys):
-    """``kirocrew memory forget --help`` states the platform limit."""
-    monkeypatch.setattr("sys.argv", ["kirocrew", "memory", "forget", "--help"])
-    from kiro_crew.cli import main
+    """``ajcrew memory forget --help`` states the platform limit."""
+    monkeypatch.setattr("sys.argv", ["ajcrew", "memory", "forget", "--help"])
+    from aj_crew.cli import main
 
     with pytest.raises(SystemExit) as exc:
         main()
@@ -333,12 +333,12 @@ def transport(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
     monkeypatch.setattr(client, "dashboard_socket_path", lambda _port: "/run/dash.sock")
     # The peer proof is the shared one in ``cli_server_peer``: the record and its
     # start token are read through ``run_marker``, and the kernel peer pid through
-    # the ``kiro_crew.cli_server`` facade, which reaches that owner.
-    from kiro_crew.instances import run_marker
+    # the ``aj_crew.cli_server`` facade, which reaches that owner.
+    from aj_crew.instances import run_marker
 
     monkeypatch.setattr(run_marker, "read_pid_record_path", lambda _p: script["record"])
     monkeypatch.setattr(run_marker, "pid_start_token", lambda _pid: script["live_start"])
-    monkeypatch.setattr("kiro_crew.cli_server.get_peer_pid", lambda _sock: script["peer"])
+    monkeypatch.setattr("aj_crew.cli_server.get_peer_pid", lambda _sock: script["peer"])
 
     def fake_open(req, timeout, *, socket_path, verify_peer):
         assert socket_path == "/run/dash.sock"
@@ -503,7 +503,7 @@ def _route_store(**attrs: Any) -> Any:
 
 
 async def _delete(req: Any) -> tuple[int, Any]:
-    import kiro_crew.dashboard.handlers.memory as mem_mod
+    import aj_crew.dashboard.handlers.memory as mem_mod
 
     resp = await mem_mod.api_memory_semantic_delete(req)
     return resp.status, json.loads(resp.text or "null")

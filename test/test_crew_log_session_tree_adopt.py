@@ -13,11 +13,11 @@ import json
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, emit
-from kiro_crew.crew_log import session_tree_projection as stp
-from kiro_crew.crew_log import store as crew_store
-from kiro_crew.crew_log.session_tree import (
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, emit
+from aj_crew.crew_log import session_tree_projection as stp
+from aj_crew.crew_log import store as crew_store
+from aj_crew.crew_log.session_tree import (
     EdgeRecord,
     OpenedRecord,
     SessionTree,
@@ -27,12 +27,12 @@ from kiro_crew.crew_log.session_tree import (
     latest_edges,
     log_rank_of,
 )
-from kiro_crew.crew_log.session_tree_projection import (
+from aj_crew.crew_log.session_tree_projection import (
     CHECKPOINT_NAME,
     SessionTreeProjection,
 )
-from kiro_crew.crew_log.store import read_last_tree_edge
-from kiro_crew.session_ledger import _store_name
+from aj_crew.crew_log.store import read_last_tree_edge
+from aj_crew.session_ledger import _store_name
 
 GATEWAY = "gateway"
 
@@ -44,10 +44,10 @@ def _isolated_home(tmp_path, monkeypatch):
     The process-wide projection is bound to one store, and ``_debounced_write`` saves
     outside the lock, so a live pool could land a file here after the test ends.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     monkeypatch.setattr(
-        "kiro_crew.executors.maintenance_executor",
+        "aj_crew.executors.maintenance_executor",
         lambda: type("_NoPool", (), {"submit": staticmethod(lambda *a, **k: None)}),
     )
     stp.reset_for_tests()
@@ -75,12 +75,12 @@ def _parents(nodes) -> dict[str, str | None]:
 
 
 def _log(sid: str, slot: str) -> CrewLog:
-    return CrewLog.create(lg.KIND_SESSION, sid, owner="raymond", agent="kirocrew", slot=slot)
+    return CrewLog.create(lg.KIND_SESSION, sid, owner="raymond", agent="ajcrew", slot=slot)
 
 
 def _opened(handle: CrewLog, slot: str, *, parent: str | None = None) -> None:
     data = {
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         "slot": slot,
         "model": "opus",
         "cwd": "/w",
@@ -93,7 +93,7 @@ def _opened(handle: CrewLog, slot: str, *, parent: str | None = None) -> None:
 
 
 def _checkpoint_path():
-    from kiro_crew.crew_log.store import crew_log_root
+    from aj_crew.crew_log.store import crew_log_root
 
     return crew_log_root(lg.KIND_SESSION) / "projections" / CHECKPOINT_NAME
 
@@ -196,7 +196,7 @@ def test_an_adoption_naming_a_parent_with_no_log_keeps_the_citation_unfollowed()
 
 
 def _entry(entry_type: str, data: dict, *, at: int = 7) -> object:
-    from kiro_crew.crew_log.schema import Entry
+    from aj_crew.crew_log.schema import Entry
 
     return Entry(type=entry_type, data=data, src=GATEWAY, seq=2, time=at)
 
@@ -220,7 +220,7 @@ def test_a_release_needs_no_parent_and_folds_as_no_parent():
 def test_an_over_long_key_is_refused_rather_than_truncated():
     """A truncated slot key is a DIFFERENT key: it matches nothing, or it matches
     another session."""
-    from kiro_crew.validation import MAX_SHORT_STRING
+    from aj_crew.validation import MAX_SHORT_STRING
 
     long_slot = "x" * (MAX_SHORT_STRING + 1)
     assert edge_record(long_slot, "s-a", _entry("session/released", {})) is None
@@ -402,7 +402,7 @@ def test_the_cold_read_finds_a_decision_the_tail_window_cannot_reach():
     missing edge but a wrong one: the fold falls back to the creating edge and shows the
     session under a parent that released it, with nothing to correct it.
     """
-    from kiro_crew.crew_log.store import _TAIL_WINDOW, find_last_tree_edge, read_last_tree_edge
+    from aj_crew.crew_log.store import _TAIL_WINDOW, find_last_tree_edge, read_last_tree_edge
 
     handle = _log("s-a", "A")
     _opened(handle, "A")
@@ -595,10 +595,10 @@ def test_the_emitter_writes_the_entry_and_advances_the_fold():
     """Durability first, then memory: the fold is advanced from inside the job, after
     the append returned -- so the disk can never hold a decision the memory lacks."""
     emit.on_session_opened(
-        "s-a", agent="kirocrew", slot="A", model="opus", cwd="/w", owner="raymond"
+        "s-a", agent="ajcrew", slot="A", model="opus", cwd="/w", owner="raymond"
     )
     emit.on_session_opened(
-        "s-d", agent="kirocrew", slot="D", model="opus", cwd="/w", owner="raymond"
+        "s-d", agent="ajcrew", slot="D", model="opus", cwd="/w", owner="raymond"
     )
     emit.on_session_adopted("s-a", slot="A", parent_slot="D", parent_sid="s-d")
     assert_drained()
@@ -618,10 +618,10 @@ def test_the_emitter_reports_the_durable_outcome_to_a_waiting_caller():
     """
     settled: list[bool] = []
     emit.on_session_opened(
-        "s-a", agent="kirocrew", slot="A", model="opus", cwd="/w", owner="raymond"
+        "s-a", agent="ajcrew", slot="A", model="opus", cwd="/w", owner="raymond"
     )
     emit.on_session_opened(
-        "s-d", agent="kirocrew", slot="D", model="opus", cwd="/w", owner="raymond"
+        "s-d", agent="ajcrew", slot="D", model="opus", cwd="/w", owner="raymond"
     )
     emit.on_session_adopted(
         "s-a", slot="A", parent_slot="D", parent_sid="s-d", on_settled=settled.append
@@ -686,7 +686,7 @@ def test_the_emitter_records_the_parent_a_takeover_replaced():
     """``previous_parent`` is audit and the fold ignores it, so the fold is asserted to
     show only the NEW parent while the entry keeps both."""
     emit.on_session_opened(
-        "s-a", agent="kirocrew", slot="A", model="opus", cwd="/w", owner="raymond"
+        "s-a", agent="ajcrew", slot="A", model="opus", cwd="/w", owner="raymond"
     )
     emit.on_session_adopted(
         "s-a",
@@ -704,11 +704,11 @@ def test_the_emitter_records_the_parent_a_takeover_replaced():
 
 def test_a_release_written_by_the_emitter_returns_the_session_to_a_root():
     emit.on_session_opened(
-        "s-d", agent="kirocrew", slot="D", model="opus", cwd="/w", owner="raymond"
+        "s-d", agent="ajcrew", slot="D", model="opus", cwd="/w", owner="raymond"
     )
     emit.on_session_opened(
         "s-a",
-        agent="kirocrew",
+        agent="ajcrew",
         slot="A",
         model="opus",
         cwd="/w",
@@ -730,7 +730,7 @@ def test_the_emitter_writes_nothing_without_both_sides_of_the_edge():
     """A decision with no slot names nothing a reader could fold, so it is not
     written -- rather than written and silently ignored."""
     emit.on_session_opened(
-        "s-a", agent="kirocrew", slot="A", model="opus", cwd="/w", owner="raymond"
+        "s-a", agent="ajcrew", slot="A", model="opus", cwd="/w", owner="raymond"
     )
     emit.on_session_adopted("s-a", slot="", parent_slot="D")
     emit.on_session_adopted("s-a", slot="A", parent_slot="")
@@ -749,7 +749,7 @@ def test_a_store_that_cannot_be_listed_is_not_answered_as_no_decision(monkeypatc
     """
     from pathlib import Path
 
-    from kiro_crew.crew_log.store import find_last_tree_edge
+    from aj_crew.crew_log.store import find_last_tree_edge
 
     handle = _log("s-a", "A")
     _opened(handle, "A")
@@ -842,7 +842,7 @@ def test_a_failed_stat_in_the_whole_file_scan_is_not_answered_as_no_decision(mon
     """
     from pathlib import Path
 
-    from kiro_crew.crew_log.store import _TAIL_WINDOW, find_last_tree_edge, read_last_tree_edge
+    from aj_crew.crew_log.store import _TAIL_WINDOW, find_last_tree_edge, read_last_tree_edge
 
     handle = _log("s-a", "A")
     _opened(handle, "A")

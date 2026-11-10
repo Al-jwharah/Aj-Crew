@@ -133,7 +133,7 @@ const store = new Store({
   configFileMode: STORE_FILE_MODE,
   defaults: {
     remoteHost: "",
-    kirocrewBinPath: DEFAULT_REMOTE_BIN,
+    ajcrewBinPath: DEFAULT_REMOTE_BIN,
     remoteHosts: {},
     sshTimeoutMs: 20000,
     windowState: null,
@@ -170,16 +170,16 @@ if (hotkeySeed !== null) {
   store.set("globalHotkey", hotkeySeed);
 }
 
-const KIROCREW_HOME = resolveHome();
+const AJCREW_HOME = resolveHome();
 
 // dashboard.url in the resolved data home is the backend source of truth.
-const CONFIGURED_PORT = findConfiguredDashboardPort(fs, path, [KIROCREW_HOME]);
+const CONFIGURED_PORT = findConfiguredDashboardPort(fs, path, [AJCREW_HOME]);
 
 // Resolved above the migration because both readers need it: an explicit
 // override is the port this launch binds, so it is also the port a legacy crew
 // has to be keyed under. 0 means absent or unusable.
 const ENV_PORT = (() => {
-  const raw = process.env.KIROCREW_PORT;
+  const raw = process.env.AJCREW_PORT;
   if (!raw) return 0;
   const parsed = parseInt(raw, 10);
   // isSelectablePort, not just a range check: an override short-circuits
@@ -195,7 +195,7 @@ const ENV_PORT = (() => {
   // default, so every launch with no usable port of its own takes the same
   // decision through selection. The warning stays, because the value was given
   // and ignored.
-  console.warn('Invalid KIROCREW_PORT="' + raw + '", choosing a port as if it were unset');
+  console.warn('Invalid AJCREW_PORT="' + raw + '", choosing a port as if it were unset');
   return 0;
 })();
 
@@ -225,18 +225,18 @@ const PORT = resolvePort();
 const BACKEND_URL = "http://localhost:" + PORT;
 
 // The LTS edition is a side-by-side app like nightly (packaging/build-desktop.sh
-// "KiroCrew LTS"), so its own name and app ID keep it apart from production. // brand-ok
+// "AjCrew LTS"), so its own name and app ID keep it apart from production. // brand-ok
 const IS_LTS_BUILD = readBakedEdition() === EDITION_LTS;
 app.name = identityFamily(app.getVersion()) === "nightly"
-  ? "Kiro Crew Nightly"
-  : IS_LTS_BUILD ? "Kiro Crew LTS" : "Kiro Crew";
+  ? "Aj Crew Nightly"
+  : IS_LTS_BUILD ? "Aj Crew LTS" : "Aj Crew";
 
 // Windows groups and pins the live window by this ID. Nightly and LTS must
 // remain side-by-side with stable, matching the packaged app IDs.
 if (process.platform === "win32") {
   const appUserModelId = identityFamily(app.getVersion()) === "nightly"
-    ? "com.amazon.kiro.crew.nightly"
-    : "com.amazon.kiro.crew";
+    ? "io.github.al-jwharah.ajcrew.nightly"
+    : "io.github.al-jwharah.ajcrew";
   // LTS: the production ID plus ".lts", the packaged win.appId build-desktop.sh
   // derives from package.json build.appId (electron-builder strips `build` from
   // the packaged package.json, so it cannot be read here).
@@ -294,7 +294,7 @@ function readInternalSecret(gatewayUrl) {
 let isQuitting = false;
 let desktopMetricsRecorder = null;
 let windows = null;
-// The kirocrew:// deep-link handler (armed by the single-instance winner below).
+// The ajcrew:// deep-link handler (armed by the single-instance winner below).
 let deepLinks = null;
 
 /** The main window's dashboard view webContents, or null while there is none. */
@@ -306,7 +306,7 @@ function mainDashboardContents() {
 }
 
 /**
- * Deliver a resolved kirocrew:// route to the main window, the one connected
+ * Deliver a resolved ajcrew:// route to the main window, the one connected
  * to this machine's gateway, which is where a slot key names a session. An
  * empty route only raises it. A session route is sent only while the view
  * serves the gateway's origin -- the Crew Companion's own routing check -- and
@@ -368,8 +368,8 @@ function scanCrashArtifacts() {
       appName: app.getName(),
       // BOTH names, because they are different strings and neither derives from
       // the other: `electron/package.json` sets `executableName` to
-      // `kirocrew-desktop` (and the nightly channel overrides it again), while
-      // `getName()` is `Kiro Crew`. Off darwin a minidump is our only crash
+      // `ajcrew-desktop` (and the nightly channel overrides it again), while
+      // `getName()` is `Aj Crew`. Off darwin a minidump is our only crash
       // channel, so recognising the executable name is what makes Linux work.
       execName: path.basename(process.execPath),
       fs,
@@ -404,7 +404,7 @@ onQuitForUpdate(electron.autoUpdater, () => {
 if (!app.requestSingleInstanceLock()) {
   const userDataDir = app.getPath("userData");
   glog(
-    "single-instance lock held by another process; exiting. If no Kiro Crew window is open, "
+    "single-instance lock held by another process; exiting. If no Aj Crew window is open, "
       + "a crash may have left a stale SingletonLock in " + userDataDir + ". "
       + describeSingletonLock({ userDataDir }),
   );
@@ -448,8 +448,8 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   // Chromium reads GPU switches during initialization, so the GPU policy (opt-in
-  // via KIROCREW_DISABLE_GPU / --disable-gpu, auto on a Windows RDP session,
-  // forced on by KIROCREW_DISABLE_GPU=0 / --enable-gpu)
+  // via AJCREW_DISABLE_GPU / --disable-gpu, auto on a Windows RDP session,
+  // forced on by AJCREW_DISABLE_GPU=0 / --enable-gpu)
   // must run inside the lock-winner branch and before app ready. Reading the
   // winning process's env/argv also avoids pretending a second-instance argv
   // handoff can repair the renderer that already launched.
@@ -483,8 +483,8 @@ if (!app.requestSingleInstanceLock()) {
   });
   dashboardLoaded = gpuFallback.dashboardLoaded;
 
-  // kirocrew:// deep links: bare `kirocrew://` raises the window and
-  // `kirocrew://chat?sid=<slot>` opens that session. A session link is held
+  // ajcrew:// deep links: bare `ajcrew://` raises the window and
+  // `ajcrew://chat?sid=<slot>` opens that session. A session link is held
   // until the dashboard document reports `navigate-ready` (its `navigate`
   // listener is mounted), so a link that LAUNCHED the app is applied once the
   // SPA can take it. Registered here, before `whenReady`, because macOS
@@ -504,7 +504,7 @@ if (!app.requestSingleInstanceLock()) {
   deepLinks.handleArgv(process.argv);
 
   app.on("second-instance", (_event, argv) => {
-    // On Windows and Linux a kirocrew:// link launches a second copy with the
+    // On Windows and Linux a ajcrew:// link launches a second copy with the
     // URL in argv; route to it. Otherwise a relaunch is explicit intent to see
     // the existing window. The window owner cancels a pending fullscreen/tray
     // hide before restore/show/focus.
@@ -539,7 +539,7 @@ const gateway = createGatewaySupervisor({
   ipcMain,
   port: PORT,
   backendUrl: BACKEND_URL,
-  home: KIROCREW_HOME,
+  home: AJCREW_HOME,
   getMainWindow: () => windows?.getMainWindow() || null,
   isQuitting: () => isQuitting,
   requestQuit,
@@ -632,7 +632,7 @@ async function offerRelocationIfUnupdatable() {
   try {
     ({ response } = await dialog.showMessageBox({
       type: "warning",
-      title: "Move Kiro Crew to Applications?",
+      title: "Move Aj Crew to Applications?",
       message: describeLocation(location, { bundleWritable }),
       detail: "Move it to your Applications folder to receive updates. "
         + "You can keep using it from here for now, but it will not update itself.",
@@ -664,8 +664,8 @@ async function offerRelocationIfUnupdatable() {
   try {
     await dialog.showMessageBox({
       type: "error",
-      message: "Could not move Kiro Crew automatically.",
-      detail: "Drag Kiro Crew into your Applications folder, then reopen it from there.",
+      message: "Could not move Aj Crew automatically.",
+      detail: "Drag Aj Crew into your Applications folder, then reopen it from there.",
       buttons: ["OK"],
     });
   } catch {
@@ -775,7 +775,7 @@ app.whenReady().then(async () => {
   const mainWindow = windows.createMainWindow();
 
   // Linux AppImage desktop integration. It creates the first launcher and then
-  // reconciles only files whose hashes still match bytes Kiro Crew wrote. The
+  // reconciles only files whose hashes still match bytes Aj Crew wrote. The
   // reconciliation itself (synchronous filesystem work plus one packaged
   // helper process per fingerprint, publish, and cleanup step) runs on a worker
   // thread; the main thread only evaluates the plan and receives the result,

@@ -17,7 +17,7 @@ import sys
 
 import pytest
 
-from kiro_crew.acp import runtime as rt
+from aj_crew.acp import runtime as rt
 
 # The Linux branch reads /proc directly and never spawns, so the behaviour under
 # test only exists on the non-Linux path. Force that path rather than skipping,
@@ -159,7 +159,7 @@ def test_sampler_pass_over_many_pids_takes_one_snapshot(monkeypatch):
     ``_blocking_sample`` is what fans out over every live runtime pid, so the
     guarantee has to hold there and not merely in isolation.
     """
-    from kiro_crew.dashboard import session_memory as sm
+    from aj_crew.dashboard import session_memory as sm
 
     calls = _counting_ps(monkeypatch)
     # The route without a host parent map, where each row's total comes from the
@@ -168,7 +168,7 @@ def test_sampler_pass_over_many_pids_takes_one_snapshot(monkeypatch):
     # (see the next test), while elsewhere libproc is absent.
     monkeypatch.setattr(sm, "_host_children", lambda: None)
     monkeypatch.setattr(sm, "_iter_descendant_pids", lambda pid, **kw: [pid])
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.usage.slot_spend", lambda: {})
+    monkeypatch.setattr("aj_crew.dashboard.handlers.usage.slot_spend", lambda: {})
 
     sampler = sm.SessionMemorySampler()
     rows = [{"pid": 100}, {"pid": 101}, {"pid": 200}]
@@ -182,14 +182,14 @@ def test_sampler_pass_over_many_pids_takes_one_snapshot(monkeypatch):
 def test_sampler_pass_over_a_libproc_map_spawns_no_ps(monkeypatch):
     """With a host parent map, every row is walked and summed from it: N runtime
     pids cost no ps snapshot at all."""
-    from kiro_crew.dashboard import session_memory as sm
+    from aj_crew.dashboard import session_memory as sm
 
     calls = _counting_ps(monkeypatch)
     monkeypatch.setattr(sm, "_host_children", lambda: {100: [], 101: [], 200: [201]})
     monkeypatch.setattr(sm, "_pid_memory_bytes", lambda pid: 1024 * 1024)
     monkeypatch.setattr(sm, "darwin_process_argv", lambda pid: ["node"])
     monkeypatch.setattr(sm, "proc_cpu_nanos_for_pid", lambda pid: 0)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.usage.slot_spend", lambda: {})
+    monkeypatch.setattr("aj_crew.dashboard.handlers.usage.slot_spend", lambda: {})
 
     out = sm.SessionMemorySampler()._blocking_sample([{"pid": 100}, {"pid": 101}, {"pid": 200}])
 

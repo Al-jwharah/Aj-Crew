@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from kiro_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.runtime import AcpRuntime
 
 
 class TestRuntimeModelParam:
@@ -47,11 +47,11 @@ class TestRuntimeModelParam:
 
         with (
             patch(
-                "kiro_crew.acp.client._resolve_kiro_bin_for_spawn",
+                "aj_crew.acp.client._resolve_kiro_bin_for_spawn",
                 new_callable=AsyncMock,
                 return_value="/bin/kiro-cli",
             ),
-            patch("kiro_crew.acp.runtime.wrap_argv", side_effect=_capture),
+            patch("aj_crew.acp.runtime.wrap_argv", side_effect=_capture),
         ):
             with pytest.raises(RuntimeError, match="abort-after-capture"):
                 asyncio.get_event_loop().run_until_complete(rt.spawn())
@@ -71,16 +71,16 @@ class TestRuntimeModelParam:
 
 class TestImageArtifactKind:
     def test_image_in_allowed_kinds(self):
-        from kiro_crew.artifacts import ALLOWED_KINDS
+        from aj_crew.artifacts import ALLOWED_KINDS
 
         assert "image" in ALLOWED_KINDS
 
     def test_validation_kind_regex_accepts_image(self):
-        from kiro_crew.validation import _ARTIFACT_KIND_RE
+        from aj_crew.validation import _ARTIFACT_KIND_RE
 
         assert _ARTIFACT_KIND_RE.match("image")
 
     def test_validation_kind_regex_rejects_unknown(self):
-        from kiro_crew.validation import _ARTIFACT_KIND_RE
+        from aj_crew.validation import _ARTIFACT_KIND_RE
 
         assert not _ARTIFACT_KIND_RE.match("video")

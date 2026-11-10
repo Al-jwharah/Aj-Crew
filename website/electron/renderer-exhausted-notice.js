@@ -52,7 +52,7 @@ const BLOCKED_SANDBOX_PLATFORM = "win32";
 
 /** The guide entry the dialog's button opens. Public docs on the main branch. */
 const TROUBLESHOOTING_URL =
-  "https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/windows-install.md#troubleshooting";
+  "https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/guides/windows-install.md#troubleshooting";
 
 const ACTION_RETRY = "retry";
 const ACTION_GUIDE = "guide";
@@ -117,9 +117,9 @@ function buildRendererExhaustedNotice(info = {}) {
   if (blockedSandbox) {
     paragraphs.push(
       "Most likely, security software on this Windows device is blocking the " +
-        "part of Kiro Crew that draws its window. Kiro Crew will not weaken its " +
+        "part of Aj Crew that draws its window. Aj Crew will not weaken its " +
         "own safeguards to get around this.",
-      "To fix it, ask your IT team to add the Kiro Crew app to that software's " +
+      "To fix it, ask your IT team to add the Aj Crew app to that software's " +
         "allow list (a \"process exclusion\"). The troubleshooting guide shows how " +
         "to confirm the cause and what to allow.",
     );
@@ -130,7 +130,7 @@ function buildRendererExhaustedNotice(info = {}) {
     paragraphs.push(
       `The window stopped working ${deaths} times in a row` +
         (PLAIN_REASONS[reason] ? ` (${PLAIN_REASONS[reason]})` : "") +
-        ", so Kiro Crew stopped retrying.",
+        ", so Aj Crew stopped retrying.",
     );
   }
   // Every way out is named, including the close button: a user who dismisses
@@ -139,15 +139,15 @@ function buildRendererExhaustedNotice(info = {}) {
     blockedSandbox
       ? "Try again reloads the window once more; it helps only after IT has added " +
         "the app to the allow list. Closing this box does the same as Try again. " +
-        "Quit stops Kiro Crew."
+        "Quit stops Aj Crew."
       : "Try again reloads the window once more; closing this box does the same. " +
-        "Quit stops Kiro Crew.",
+        "Quit stops Aj Crew.",
   );
   // Raw codes only: the plain words were said once, in the first sentence.
   paragraphs.push(
     "Details for IT or a bug report: " +
       (blockedSandbox
-        ? `Kiro Crew's display process exited ${deaths} times before anything was drawn ` +
+        ? `Aj Crew's display process exited ${deaths} times before anything was drawn ` +
           `(reason: ${reason}, exit code: ${exitCode} / 0x80000003).`
         : `reason: ${reason}, exit code: ${exitCode}.`) +
       (info.logPath ? `\nLog file to attach: ${info.logPath}` : ""),
@@ -168,8 +168,8 @@ function buildRendererExhaustedNotice(info = {}) {
       // The heading is the most prominent line of a native box, so it names
       // the cause when one is known instead of the shared symptom.
       message: blockedSandbox
-        ? "Security software is blocking Kiro Crew's window."
-        : "Kiro Crew's window has stopped working.",
+        ? "Security software is blocking Aj Crew's window."
+        : "Aj Crew's window has stopped working.",
       detail: paragraphs.join("\n\n"),
       buttons: actions.map((action) => LABELS[action]),
       defaultId: actions.indexOf(defaultAction),

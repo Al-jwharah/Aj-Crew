@@ -2,7 +2,7 @@ import { createElement } from 'react'
 import { Users } from 'lucide-react'
 
 import CrewAvatar from '../../components/CrewAvatar'
-import { crewDisplayName, type KiroCrewAgent } from '../../components/AgentSelector'
+import { crewDisplayName, type AjCrewAgent } from '../../components/AgentSelector'
 import { fuzzyMatch, makeScoreThenNameComparator } from '../../utils/fuzzyMatch'
 import { i18nT } from '../../i18n/t'
 import type { Result, ResourceProvider } from '../../components/commandPalette/types'
@@ -99,7 +99,7 @@ const BUILTIN_DEFAULT = 'default'
 /** Injectable dependencies for {@link createMatesProvider}. */
 export interface MatesProviderDeps {
   /** Fetch the execution-choice catalog (React-Query-cached by the caller). */
-  fetchMates: () => Promise<KiroCrewAgent[]>
+  fetchMates: () => Promise<AjCrewAgent[]>
   /** Land on a mate: open its pinned DM thread on the Crewmates page. */
   openMate: (name: string) => void
   /**
@@ -176,7 +176,7 @@ export function matesIcon() {
  * A crew field as a STRING, for anything that will call a string method on it or
  * render it.
  *
- * `KiroCrewAgent.name` and `.description` are typed `string`, and at the type level
+ * `AjCrewAgent.name` and `.description` are typed `string`, and at the type level
  * this is redundant — but the values come from the config file on disk, which a hand
  * edit or an older writer can leave holding a number, `null` or an object.
  * `fuzzyMatch` calls `.toLowerCase()` on its candidate, so an unguarded read throws
@@ -192,7 +192,7 @@ function nameText(value: unknown): string {
 }
 
 /** The mate's own face, at the row's icon size. */
-function mateAvatar(mate: KiroCrewAgent, seed: string, running: boolean) {
+function mateAvatar(mate: AjCrewAgent, seed: string, running: boolean) {
   return createElement(CrewAvatar, {
     seed,
     avatar: mate.avatar,
@@ -282,7 +282,7 @@ export function createMatesProvider(deps: MatesProviderDeps): ResourceProvider {
           // GLOSSED, not bare. The identity alone put a second name under a different
           // title with nothing naming the relationship, and a reader could read one
           // crewmate as two -- the folders sibling gets away with a bare subtitle only
-          // because `kirocrew > oss` self-evidently reads as a path. Three words say
+          // because `ajcrew > oss` self-evidently reads as a path. Three words say
           // what this one is.
           subtitle: aliasMatch
             ? glossedIdentity(identity)

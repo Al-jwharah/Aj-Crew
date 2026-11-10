@@ -22,23 +22,23 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.agent_spec_format import is_markdown_spec, parse_markdown_spec
+from aj_crew.agent_spec_format import is_markdown_spec, parse_markdown_spec
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL_DIR = ROOT / "src" / "kiro_crew" / "builtin_skills" / "kirocrew-dev" / "dashboard-template"
+SKILL_DIR = ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "dashboard-template"
 SPEC_PATH = SKILL_DIR / "agent-spec.md"
 
 #: Everything the charter needs, and nothing that lets it become something else.
-EXPECTED_TOOLS = ["execute_bash", "fs_read", "fs_write", "tool_search", "@kirocrew-core"]
+EXPECTED_TOOLS = ["execute_bash", "fs_read", "fs_write", "tool_search", "@ajcrew-core"]
 
 #: Auto-approved verbs. Every one only reads or recalls.
 EXPECTED_GRANTS = [
     "fs_read",
     "tool_search",
-    "@kirocrew-core/skill_search",
-    "@kirocrew-core/skill_discover",
-    "@kirocrew-core/memory_recall",
-    "@kirocrew-core/resource_status",
+    "@ajcrew-core/skill_search",
+    "@ajcrew-core/skill_discover",
+    "@ajcrew-core/memory_recall",
+    "@ajcrew-core/resource_status",
 ]
 
 
@@ -53,7 +53,7 @@ class TestTheSpecIsOneTheRuntimeAccepts:
 
     def test_it_parses_with_the_products_own_parser(self, spec: dict[str, Any]) -> None:
         """A local YAML read would pass over a file kiro-cli refuses."""
-        assert spec["name"] == "kirocrew-dashboard-author"
+        assert spec["name"] == "ajcrew-dashboard-author"
         assert spec["description"].strip()
 
     def test_the_body_is_the_prompt(self, spec: dict[str, Any]) -> None:
@@ -62,7 +62,7 @@ class TestTheSpecIsOneTheRuntimeAccepts:
         dead configuration that reads as live."""
         assert "prompt" not in spec or spec.get("prompt")
         body = spec.get("prompt") or ""
-        assert "You are `kirocrew-dashboard-author`" in body
+        assert "You are `ajcrew-dashboard-author`" in body
 
     def test_the_description_fits_a_roster_line(self, spec: dict[str, Any]) -> None:
         """The roster shows one line. A description that spends it on mechanism leaves an
@@ -85,8 +85,8 @@ class TestTheNarrowingIsReal:
         [
             ("session", "it dispatches nobody; a session verb is how this becomes a conductor"),
             ("report", "it is not a dispatched worker reporting against an item"),
-            ("@kirocrew-work", "work_report writes into a PARENT's record"),
-            ("@kirocrew-dashboard", "a template is not published at run time"),
+            ("@ajcrew-work", "work_report writes into a PARENT's record"),
+            ("@ajcrew-dashboard", "a template is not published at run time"),
             ("code", "governance classes it filesystem.write, and it can shell out"),
             ("web_search", "the inputs are on disk or behind gh"),
             ("web_fetch", "the inputs are on disk or behind gh"),
@@ -149,4 +149,4 @@ class TestTheCharterStatesItsFiveRules:
     def test_the_skill_names_the_crewmate_it_is_the_procedure_for(self) -> None:
         body = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
         assert "agent-spec.md" in body
-        assert "kirocrew-dashboard-author" in body
+        assert "ajcrew-dashboard-author" in body

@@ -18,8 +18,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.credential_patterns import JWT_MULTI_SEGMENT
-from kiro_crew.security import redact, redaction
+from aj_crew.credential_patterns import JWT_MULTI_SEGMENT
+from aj_crew.security import redact, redaction
 
 
 def _b64(obj: Any) -> str:

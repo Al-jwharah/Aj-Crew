@@ -20,7 +20,7 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // A ```markdown fence carrying the kind of structure the issue is about: a
 // heading, a list, a table and a link — the parts that are materially faster to

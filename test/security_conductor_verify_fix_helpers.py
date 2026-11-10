@@ -26,7 +26,7 @@ import pytest
 from skill_script_helpers import load_skill_script
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SKILL_DIR = REPO_ROOT / "src" / "kiro_crew" / "builtin_skills" / "security-conductor"
+SKILL_DIR = REPO_ROOT / "src" / "aj_crew" / "builtin_skills" / "security-conductor"
 SCRIPTS = SKILL_DIR / "scripts"
 VERIFY_FIX = SCRIPTS / "verify_fix.py"
 LEDGER = SCRIPTS / "ledger.py"
@@ -53,7 +53,7 @@ STUB_VERIFIER = """import sys
 sys.exit({code})
 """
 
-#: A fake ``kiro_crew.security`` staged on the worktree's ``src``, where the probe
+#: A fake ``aj_crew.security`` staged on the worktree's ``src``, where the probe
 #: imports the fence from. It refuses any command containing a marker substring, so
 #: a test can arrange exactly one broken golden path without depending on what the
 #: real fence happens to think.
@@ -156,14 +156,14 @@ def fence(
 
 
 def stage_fence(worktree: Path, spec: dict) -> None:
-    """Write a fake ``kiro_crew.security`` where the probe will import it.
+    """Write a fake ``aj_crew.security`` where the probe will import it.
 
     ``<worktree>/src`` leads the probe's ``PYTHONPATH``, so a package there shadows
     the installed one for the child only -- the test process keeps the real fence
     for ``TestTheShippedCorpusIsALiveGate`` in
     ``test_security_conductor_verify_fix.py``.
     """
-    package = worktree / "src" / "kiro_crew"
+    package = worktree / "src" / "aj_crew"
     package.mkdir(parents=True, exist_ok=True)
     (package / "__init__.py").write_text("", encoding="utf-8")
     body = (

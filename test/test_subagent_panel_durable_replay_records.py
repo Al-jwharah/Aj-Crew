@@ -26,13 +26,13 @@ from subagent_panel_durable_replay_helpers import (  # noqa: F401 -- the fixture
     write_record,
 )
 
-from kiro_crew.dashboard.state import (
+from aj_crew.dashboard.state import (
     NATIVE_SUBAGENT_TERMINAL_TTL_SECS,
     PERSISTED_SUBAGENT_REPLAY_KEEP,
     PERSISTED_SUBAGENT_REPLAY_MAX_AGE_SECS,
 )
-from kiro_crew.dashboard.ws_event_scope import persisted_replay_denial_reason
-from kiro_crew.subagent_persistence import (
+from aj_crew.dashboard.ws_event_scope import persisted_replay_denial_reason
+from aj_crew.subagent_persistence import (
     _PANEL_AGENT_CAP,
     _PANEL_APP_CAP,
     _PANEL_CANDIDATE_MULTIPLE,
@@ -48,7 +48,7 @@ from kiro_crew.subagent_persistence import (
     settle_delivered_batch,
     write_tombstone,
 )
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 
 class TestLiveStateWins:
@@ -93,7 +93,7 @@ class TestLiveStateWins:
 
     def test_an_excluded_folder_is_never_even_read(self, agent_root, monkeypatch):
         """Exclusion happens during the walk, so a live run costs no state read."""
-        from kiro_crew import subagent_persistence
+        from aj_crew import subagent_persistence
 
         write_record(agent_root, "liveone")
         reads: list[str] = []
@@ -291,10 +291,10 @@ class TestEndingClassification:
         assert record["elapsed"] == 0.0
 
     def test_task_and_agent_travel_with_the_record(self, agent_root):
-        write_record(agent_root, "idy111", task="audit the gate", agent="kirocrew-worker")
+        write_record(agent_root, "idy111", task="audit the gate", agent="ajcrew-worker")
         (record,) = panel(keep=10, max_age_secs=DAY)
         assert record["task"] == "audit the gate"
-        assert record["agent"] == "kirocrew-worker"
+        assert record["agent"] == "ajcrew-worker"
 
 
 class TestOwnership:
@@ -360,7 +360,7 @@ class TestRetainedFieldsAreBounded:
         self, agent_root, monkeypatch
     ):
         """Unreadable candidates must not let the walk grow with the registry."""
-        from kiro_crew import subagent_persistence
+        from aj_crew import subagent_persistence
 
         moment = time.time()
         for index in range(60):
@@ -422,7 +422,7 @@ class TestBounds:
 
     def test_folders_outside_the_window_are_never_opened(self, agent_root, monkeypatch):
         """The age filter runs during the walk, so a stale folder costs no read."""
-        from kiro_crew import subagent_persistence
+        from aj_crew import subagent_persistence
 
         moment = time.time()
         write_record(agent_root, "fresh01", started=moment - 30, died=moment - 10, mtime=moment - 1)
@@ -489,7 +489,7 @@ class TestResultText:
     def test_a_sensitive_result_path_is_not_read(self, agent_root, monkeypatch):
         """The same guard the single-agent read applies, at the one place a file opens."""
         write_record(agent_root, "res555", result="secret material")
-        monkeypatch.setattr("kiro_crew.subagent_persistence.is_sensitive_path", lambda path: True)
+        monkeypatch.setattr("aj_crew.subagent_persistence.is_sensitive_path", lambda path: True)
         (record,) = panel(keep=10, max_age_secs=DAY, include_result=True)
         assert record["result"] == ""
 
@@ -513,7 +513,7 @@ class TestCorruptFolders:
 
     def test_absent_registry_reads_as_empty(self, tmp_path, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path / "never-created"
+            "aj_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path / "never-created"
         )
         assert panel(keep=10, max_age_secs=DAY) == []
 
@@ -660,7 +660,7 @@ class TestEqualityKeysAreRefusedNotClamped:
 
     def test_an_oversized_id_drops_the_record(self, agent_root, monkeypatch):
         """The id is bounded by the filesystem in practice; the check does not rely on that."""
-        from kiro_crew import subagent_persistence
+        from aj_crew import subagent_persistence
 
         write_record(agent_root, "id111")
         monkeypatch.setattr(subagent_persistence, "_PANEL_ID_CAP", 3)
@@ -749,7 +749,7 @@ class TestOverflowIsCountedNotHidden:
         self, agent_root, monkeypatch
     ):
         """Past the scan's own window the count can only be a lower bound."""
-        from kiro_crew import subagent_persistence
+        from aj_crew import subagent_persistence
 
         monkeypatch.setattr(subagent_persistence, "_PANEL_CANDIDATE_MULTIPLE", 1)
         self.seed(agent_root, 6)
@@ -767,7 +767,7 @@ class TestOverflowIsCountedNotHidden:
 
     def test_the_result_read_is_skipped_for_records_past_the_cap(self, agent_root, monkeypatch):
         """Counting overflow must not pay for output nobody will see."""
-        from kiro_crew import subagent_persistence
+        from aj_crew import subagent_persistence
 
         moment = time.time()
         for index in range(4):
@@ -794,9 +794,9 @@ class TestTheCarryForwardReadIsNeverOnTheLoop:
     """
 
     MODULES = (
-        "src/kiro_crew/subagent_manager/terminal.py",
-        "src/kiro_crew/subagent_manager/monitoring.py",
-        "src/kiro_crew/subagent_manager/waves.py",
+        "src/aj_crew/subagent_manager/terminal.py",
+        "src/aj_crew/subagent_manager/monitoring.py",
+        "src/aj_crew/subagent_manager/waves.py",
     )
     # Resolved from this file, not from the process working directory: a worker
     # whose cwd is not the invocation root would otherwise read these paths from
@@ -1063,7 +1063,7 @@ class TestElapsedMeasuresTheRunNotTheDeliveryWait:
         The read can land on the event loop, and a caller supplying an outcome is itself the
         ending, so it must not pay for it. Counted in both directions.
         """
-        import kiro_crew.subagent_persistence as persistence
+        import aj_crew.subagent_persistence as persistence
 
         write_record(agent_root, "read111", tombstone_cause=None)
         reads: list[str] = []
@@ -1102,7 +1102,7 @@ class TestADetachedSettleBatchSurvivesCancellation:
 
     def delivery(self, agent_id: str, elapsed: float = 1.5, credits: float = 0.25):
         """The real frozen dataclass, so these pin the shipped contract."""
-        from kiro_crew.subagent import SubagentDelivery
+        from aj_crew.subagent import SubagentDelivery
 
         return SubagentDelivery(agent_id, elapsed, credits)
 
@@ -1198,7 +1198,7 @@ class TestADetachedSettleBatchSurvivesCancellation:
 
         root = pathlib.Path(__file__).resolve().parents[1]
         tree = ast.parse(
-            (root / "src/kiro_crew/subagent_manager/waves.py").read_text(encoding="utf-8")
+            (root / "src/aj_crew/subagent_manager/waves.py").read_text(encoding="utf-8")
         )
         settle = next(
             fn

@@ -12,7 +12,7 @@ import App from '../App'
 
 vi.mock('../pages/ChatPage', () => ({ default: () => <div data-testid="chat-page">ChatPage</div> }))
 vi.mock('../hooks/useWebSocket', () => ({ useWebSocket: () => ({ subscribeLogs: () => {} }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'kirocrew' }], defaultAgent: 'kirocrew' })) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'ajcrew' }], defaultAgent: 'ajcrew' })) }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 
 const { pending } = vi.hoisted(() => ({ pending: { count: 0 } }))

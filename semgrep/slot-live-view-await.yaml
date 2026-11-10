@@ -12,7 +12,7 @@ rules:
   # scans the whole package. That test is the precise one: it does not
   # count an await inside a nested `async def` the loop only defines.
 
-  - id: kirocrew.slot-live-view-await
+  - id: ajcrew.slot-live-view-await
     patterns:
       - pattern-either:
           - pattern-inside: |

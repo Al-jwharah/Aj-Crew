@@ -1,4 +1,4 @@
-"""Tests for ``kiro_crew.config.live`` and the plumbing that feeds it.
+"""Tests for ``aj_crew.config.live`` and the plumbing that feeds it.
 
 Covers the diff semantics, the subscriber registry, one forced reload cycle
 against a temp ``config.json``, the loader's writer -> ``notify_config_written``
@@ -21,15 +21,15 @@ from config_live_helpers import (  # noqa: F401 -- fixtures are used by name
     cfg_file_fixture,
 )
 
-from kiro_crew.config import live
-from kiro_crew.config.live import (
+from aj_crew.config import live
+from aj_crew.config.live import (
     ConfigChange,
     ConfigWatch,
     diff_config_docs,
     flatten_config,
 )
-from kiro_crew.config.loader import KiroCrewConfig, update_config_locked
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.config.loader import AjCrewConfig, update_config_locked
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # ── flatten / diff ────────────────────────────────────────────────────────
 
@@ -94,7 +94,7 @@ class TestRefreshNow:
     @pytest.mark.asyncio
     async def test_refresh_dispatches_only_matching_subscribers(self, cfg_file: Path) -> None:
         w = ConfigWatch(poll_interval_secs=0.05)
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
         seen: dict[str, list[frozenset[str]]] = {"agent": [], "session": [], "all": []}
         w.subscribe("agent.model", callback=lambda c: seen["agent"].append(c.changed), name="a")
         w.subscribe("session", callback=lambda c: seen["session"].append(c.changed), name="s")
@@ -118,7 +118,7 @@ class TestRefreshNow:
     @pytest.mark.asyncio
     async def test_unchanged_file_returns_none(self, cfg_file: Path) -> None:
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
         assert await w.refresh_now() is None
 
     @pytest.mark.asyncio
@@ -126,7 +126,7 @@ class TestRefreshNow:
         w = ConfigWatch(poll_interval_secs=0.05)
         calls: list[frozenset[str]] = []
         w.subscribe(callback=lambda c: calls.append(c.changed), name="all")
-        await w.start(initial=KiroCrewConfig.load())
+        await w.start(initial=AjCrewConfig.load())
         try:
             await asyncio.sleep(0.2)
             assert calls == []
@@ -140,7 +140,7 @@ class TestRefreshNow:
         """The boot config is primed without the file's fingerprint, so a write that
         landed while the gateway was still booting is diffed and dispatched on the
         first cycle instead of being paired with a fingerprint that already has it."""
-        booted = KiroCrewConfig.load()
+        booted = AjCrewConfig.load()
         _write(cfg_file, {"agent": {"model": "model-boot-edit", "log_level": "INFO"}})
         w = ConfigWatch(poll_interval_secs=0.05)
         got: list[frozenset[str]] = []
@@ -163,7 +163,7 @@ class TestRefreshNow:
         w = ConfigWatch(poll_interval_secs=0.05)
         got: list[str] = []
         w.subscribe("agent.model", callback=lambda c: got.append(c.new.agent.model), name="m")
-        await w.start(initial=KiroCrewConfig.load())
+        await w.start(initial=AjCrewConfig.load())
         try:
             with w.hold():
                 _write(cfg_file, {"agent": {"model": "model-intermediate", "log_level": "INFO"}})
@@ -192,7 +192,7 @@ class TestRefreshNow:
         w = ConfigWatch(poll_interval_secs=0.05)
         got: list[str] = []
         w.subscribe("agent.model", callback=lambda c: got.append(c.new.agent.model), name="m")
-        await w.start(initial=KiroCrewConfig.load())
+        await w.start(initial=AjCrewConfig.load())
         held = w.hold()
         real_load = ConfigWatch._load_with_doc
 
@@ -242,7 +242,7 @@ class TestDegradedReloadKeepsLastValid:
             },
         )
         w = ConfigWatch()
-        good = KiroCrewConfig.load()
+        good = AjCrewConfig.load()
         assert good.telegram.forum_activation == "mention"
         w.prime(good)
         seen: list[frozenset[str]] = []
@@ -261,7 +261,7 @@ class TestDegradedReloadKeepsLastValid:
         assert snap.agent.model == "model-a"
         assert "*" in snap.degraded_sections, "the flag the fail-closed gates read is kept"
         assert seen == [], "no applier is handed the defaults"
-        with patch("kiro_crew.config.live._WATCH", w):
+        with patch("aj_crew.config.live._WATCH", w):
             assert live.current(good, log_prefix="t") is snap
 
         # A repair to NEW values is a real change and dispatches them.
@@ -304,7 +304,7 @@ class TestDegradedReloadKeepsLastValid:
 
         _write(cfg_file, {"telegram": {"allowed_user_ids": [7, 9]}})
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
         t = Transport()
         d = Dispatcher(w, t)
         cap: list[int] = []
@@ -336,7 +336,7 @@ class TestDegradedReloadKeepsLastValid:
         reads the settled file."""
         _write(cfg_file, {"agent": {"model": "model-a", "log_level": "INFO"}})
         w = ConfigWatch()
-        good = KiroCrewConfig.load()
+        good = AjCrewConfig.load()
         w.prime(good)
         real = ConfigWatch._load_with_doc
 
@@ -364,12 +364,12 @@ class TestDegradedReloadKeepsLastValid:
     def test_the_helper_keys_on_the_file_not_the_sticky_flag(self) -> None:
         from dataclasses import replace
 
-        from kiro_crew.config.live import _keep_last_valid
+        from aj_crew.config.live import _keep_last_valid
 
         prev = replace(
-            KiroCrewConfig(), telegram=replace(KiroCrewConfig().telegram, forum_activation="off")
+            AjCrewConfig(), telegram=replace(AjCrewConfig().telegram, forum_activation="off")
         )
-        flagged = replace(KiroCrewConfig(), _degraded_sections=frozenset({"*", "*config.json"}))
+        flagged = replace(AjCrewConfig(), _degraded_sections=frozenset({"*", "*config.json"}))
         kept = _keep_last_valid(prev, flagged, torn_now=True)
         assert kept.telegram.forum_activation == "off"
         assert kept.degraded_sections == frozenset({"*", "*config.json"}), "the flag is kept"
@@ -396,7 +396,7 @@ class TestLoaderNotifies:
     def test_update_config_locked_notifies_watcher(self, cfg_file: Path) -> None:
         calls: list[int] = []
         with patch(
-            "kiro_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
+            "aj_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
         ):
             update_config_locked(cfg_file, mutate=lambda d: {**d, "x": 1})
         assert calls == [1]
@@ -404,16 +404,16 @@ class TestLoaderNotifies:
     def test_skipped_write_does_not_notify(self, cfg_file: Path) -> None:
         calls: list[int] = []
         with patch(
-            "kiro_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
+            "aj_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
         ):
             update_config_locked(cfg_file, mutate=lambda d: None)
         assert calls == []
 
     def test_save_notifies_watcher(self, cfg_file: Path) -> None:
         calls: list[int] = []
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         with patch(
-            "kiro_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
+            "aj_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
         ):
             cfg.save()
         assert calls == [1]
@@ -429,7 +429,7 @@ class TestLoaderNotifies:
 
 class TestRequiresRestart:
     def test_hot_fields_and_ancestor_resolution(self) -> None:
-        from kiro_crew.config.schema import requires_restart
+        from aj_crew.config.schema import requires_restart
 
         assert not requires_restart("agent.model")
         assert not requires_restart("agent.log_level")
@@ -452,7 +452,7 @@ class TestRequiresRestart:
         assert len(list(w.subscriptions())) == 1
 
     def test_schema_emits_requires_restart_only_when_true(self) -> None:
-        from kiro_crew.config.schema import SCHEMA_REGISTRY, config_entry_to_dict
+        from aj_crew.config.schema import SCHEMA_REGISTRY, config_entry_to_dict
 
         by_path = {e.path: e for e in SCHEMA_REGISTRY}
         jail = config_entry_to_dict(by_path["agent.jail"])
@@ -468,7 +468,7 @@ class TestRequiresRestart:
 class TestHandlerRestartRequired:
     @pytest.mark.asyncio
     async def test_hot_apply_after_write_is_noop_when_unstarted(self) -> None:
-        from kiro_crew.dashboard.handlers.core import _hot_apply_after_write
+        from aj_crew.dashboard.handlers.core import _hot_apply_after_write
 
         live.reset_for_tests()
         await _hot_apply_after_write()  # nothing started: must not raise or load
@@ -476,10 +476,10 @@ class TestHandlerRestartRequired:
 
     @pytest.mark.asyncio
     async def test_hot_apply_after_write_refreshes_started_watcher(self, cfg_file: Path) -> None:
-        from kiro_crew.dashboard.handlers.core import _hot_apply_after_write
+        from aj_crew.dashboard.handlers.core import _hot_apply_after_write
 
         w = live.watch()
-        await w.start(initial=KiroCrewConfig.load())
+        await w.start(initial=AjCrewConfig.load())
         try:
             seen: list[str] = []
             w.subscribe("agent.log_level", callback=lambda c: seen.append(c.new.agent.log_level))
@@ -494,12 +494,12 @@ class TestLogLevelApplier:
     def test_apply_log_level_from_config(self) -> None:
         import logging
 
-        from kiro_crew.dashboard.handlers.updates import apply_log_level_from_config
+        from aj_crew.dashboard.handlers.updates import apply_log_level_from_config
 
-        root = logging.getLogger("kiro_crew")
+        root = logging.getLogger("aj_crew")
         before = root.level
         try:
-            new = KiroCrewConfig()
+            new = AjCrewConfig()
             new.agent.log_level = "WARNING"
             apply_log_level_from_config(
                 ConfigChange(old=None, new=new, changed=frozenset({"agent.log_level"}))
@@ -518,7 +518,7 @@ class TestChannelManagerSetters:
     def test_the_channel_cap_is_never_set_below_one(self, tmp_path: Path) -> None:
         """The setters are plain assignments apart from this clamp, which is what
         keeps a hand-edited ``0`` from making every channel unopenable."""
-        from kiro_crew.channel import ChannelManager
+        from aj_crew.channel import ChannelManager
 
         mgr = ChannelManager(max_channels=2, max_agents=3, channels_dir=str(tmp_path))
         mgr.set_max_channels(0)
@@ -562,14 +562,14 @@ class TestFingerprintChangeDetection:
     async def test_an_equal_fingerprint_skips_the_load_entirely(self, cfg_file: Path) -> None:
         """The unforced tick must not even load when the fingerprint stands still."""
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load(), ConfigWatch._current_fingerprint())
+        w.prime(AjCrewConfig.load(), ConfigWatch._current_fingerprint())
         with patch.object(ConfigWatch, "_load_with_doc", side_effect=AssertionError("loaded")):
             assert await w._cycle() is None
 
     @pytest.mark.asyncio
     async def test_a_moved_fingerprint_reloads_without_a_kick(self, cfg_file: Path) -> None:
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load(), ConfigWatch._current_fingerprint())
+        w.prime(AjCrewConfig.load(), ConfigWatch._current_fingerprint())
         _write(cfg_file, {"agent": {"model": "model-tick", "log_level": "INFO"}})
         change = await w._cycle()  # no notify_written, no force
         assert change is not None and change.new.agent.model == "model-tick"
@@ -584,7 +584,7 @@ class TestDispatchOrderAndScope:
         """Order of dispatch is order of registration -- appliers are allowed to
         depend on it (a rebuild registered before the consumer that reads it)."""
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
         order: list[str] = []
         for name in ("first", "second", "third"):
             w.subscribe(
@@ -599,7 +599,7 @@ class TestDispatchOrderAndScope:
     @pytest.mark.asyncio
     async def test_only_touched_prefixes_fire(self, cfg_file: Path) -> None:
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
         fired: list[str] = []
         w.subscribe("agent.model", callback=lambda c: fired.append("model"), name="model")
         w.subscribe("agent.log_level", callback=lambda c: fired.append("level"), name="level")
@@ -618,7 +618,7 @@ class TestDispatchOrderAndScope:
     @pytest.mark.asyncio
     async def test_a_sync_and_an_async_applier_both_run(self, cfg_file: Path) -> None:
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
         ran: list[str] = []
 
         def _sync(c: ConfigChange) -> None:
@@ -638,7 +638,7 @@ class TestDispatchOrderAndScope:
     async def test_a_raising_applier_is_logged_by_name(self, cfg_file: Path, caplog) -> None:
         """Failure is loud: the applier's NAME reaches the log, the values do not."""
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
         after: list[str] = []
 
         def _boom(c: ConfigChange) -> None:
@@ -651,7 +651,7 @@ class TestDispatchOrderAndScope:
         w.subscribe("agent", callback=_async_boom, name="async-boom")
         w.subscribe("agent", callback=lambda c: after.append("ran"), name="survivor")
         _write(cfg_file, {"agent": {"model": "model-secret-value", "log_level": "INFO"}})
-        with caplog.at_level("ERROR", logger="kiro_crew.config.live"):
+        with caplog.at_level("ERROR", logger="aj_crew.config.live"):
             assert await w.refresh_now() is not None
         assert after == ["ran"]
         assert "sync-boom" in caplog.text
@@ -665,7 +665,7 @@ class TestDispatchOrderAndScope:
         applier missed and re-dispatches exactly those paths on the next tick,
         even though the file did not move."""
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
         seen: list[frozenset[str]] = []
         fail = {"on": True}
 
@@ -691,7 +691,7 @@ class TestDispatchOrderAndScope:
         """The paths one applier missed must not leak into the change a LATER
         applier sees, or an unrelated applier fires on fields that did not move."""
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
         other_seen: list[frozenset[str]] = []
         fail = {"on": True}
 
@@ -711,7 +711,7 @@ class TestDispatchOrderAndScope:
     @pytest.mark.asyncio
     async def test_a_later_change_folds_in_what_the_applier_missed(self, cfg_file: Path) -> None:
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
         seen: list[frozenset[str]] = []
         fail = {"on": True}
 
@@ -732,8 +732,8 @@ class TestDispatchOrderAndScope:
     @pytest.mark.asyncio
     async def test_only_changed_paths_are_logged_never_values(self, cfg_file: Path, caplog) -> None:
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load())
-        with caplog.at_level("INFO", logger="kiro_crew.config.live"):
+        w.prime(AjCrewConfig.load())
+        with caplog.at_level("INFO", logger="aj_crew.config.live"):
             _write(cfg_file, {"agent": {"model": "sk-not-a-real-token", "log_level": "INFO"}})
             assert await w.refresh_now() is not None
         assert "agent.model" in caplog.text
@@ -747,11 +747,11 @@ class TestLifecycle:
     @pytest.mark.asyncio
     async def test_start_is_idempotent(self, cfg_file: Path) -> None:
         w = ConfigWatch(poll_interval_secs=30.0)
-        await w.start(initial=KiroCrewConfig.load())
+        await w.start(initial=AjCrewConfig.load())
         try:
             first = w._task
             assert w.started
-            await w.start(initial=KiroCrewConfig.load())
+            await w.start(initial=AjCrewConfig.load())
             assert w._task is first  # second call did not create a second task
         finally:
             await w.stop()
@@ -759,7 +759,7 @@ class TestLifecycle:
     @pytest.mark.asyncio
     async def test_stop_cancels_the_task_and_is_safe_twice(self, cfg_file: Path) -> None:
         w = ConfigWatch(poll_interval_secs=30.0)
-        await w.start(initial=KiroCrewConfig.load())
+        await w.start(initial=AjCrewConfig.load())
         task = w._task
         assert task is not None
         await w.stop()
@@ -795,7 +795,7 @@ class TestLifecycle:
         w = live.watch()
         got: asyncio.Queue[str] = asyncio.Queue()
         w.subscribe("agent.model", callback=lambda c: got.put_nowait(c.new.agent.model), name="m")
-        await w.start(initial=KiroCrewConfig.load())
+        await w.start(initial=AjCrewConfig.load())
         try:
             _write(cfg_file, {"agent": {"model": "model-kicked", "log_level": "INFO"}})
             live.notify_config_written()
@@ -807,7 +807,7 @@ class TestLifecycle:
     async def test_a_forced_reload_survives_an_unmoved_fingerprint(self, cfg_file: Path) -> None:
         """A coarse filesystem clock can hide a write; the kick must not depend on it."""
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load(), ConfigWatch._current_fingerprint())
+        w.prime(AjCrewConfig.load(), ConfigWatch._current_fingerprint())
         cfg_file.write_text(
             json.dumps({"agent": {"model": "model-same-mtime", "log_level": "INFO"}}),
             encoding="utf-8",
@@ -838,19 +838,19 @@ class TestEveryWritePathNotifies:
     """
 
     def test_persist_config_migration_notifies(self, cfg_file: Path) -> None:
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         calls: list[int] = []
         with (
             patch.object(loader_mod, "_apply_document_migrations", return_value=True),
             patch(
-                "kiro_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
+                "aj_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
             ),
         ):
             wrote = loader_mod._persist_config_migration(
                 cfg_file,
                 frozenset({"agent.default_agent"}),
-                default_kiro_agent="kirocrew",
+                default_kiro_agent="ajcrew",
             )
         assert wrote is True
         assert calls  # a boot migration is a config write like any other
@@ -858,30 +858,30 @@ class TestEveryWritePathNotifies:
     def test_persist_config_migration_does_not_notify_when_nothing_to_migrate(
         self, cfg_file: Path
     ) -> None:
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         calls: list[int] = []
         with (
             patch.object(loader_mod, "_apply_document_migrations", return_value=False),
             patch(
-                "kiro_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
+                "aj_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
             ),
         ):
             assert (
                 loader_mod._persist_config_migration(
-                    cfg_file, frozenset({"agent.default_agent"}), default_kiro_agent="kirocrew"
+                    cfg_file, frozenset({"agent.default_agent"}), default_kiro_agent="ajcrew"
                 )
                 is False
             )
         assert calls == []
 
     def test_refresh_config_meta_stamp_notifies_when_it_rewrites(self, cfg_file: Path) -> None:
-        from kiro_crew.config.loader import refresh_config_meta_stamp
+        from aj_crew.config.loader import refresh_config_meta_stamp
 
         _write(cfg_file, {"agent": {"model": "model-a"}, "meta": {"lastTouchedVersion": "0.0.0"}})
         calls: list[int] = []
         with patch(
-            "kiro_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
+            "aj_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
         ):
             wrote = refresh_config_meta_stamp()
         assert wrote is True
@@ -892,18 +892,18 @@ class TestEveryWritePathNotifies:
         assert calls
 
     def test_refresh_config_meta_stamp_does_not_notify_when_current(self, cfg_file: Path) -> None:
-        from kiro_crew.config.loader import refresh_config_meta_stamp
+        from aj_crew.config.loader import refresh_config_meta_stamp
 
         refresh_config_meta_stamp()  # stamp it once so the version now matches
         calls: list[int] = []
         with patch(
-            "kiro_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
+            "aj_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
         ):
             assert refresh_config_meta_stamp() is False
         assert calls == []  # no rewrite, no mtime churn, no kick
 
     def test_agent_atomic_write_notifies_for_config_json(self, tmp_path: Path) -> None:
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         target = tmp_path / "config.json"
         target.write_text("{}", encoding="utf-8")
@@ -911,22 +911,22 @@ class TestEveryWritePathNotifies:
         with (
             patch.object(agent_mod, "_mc_config_path", return_value=target),
             patch(
-                "kiro_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
+                "aj_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
             ),
         ):
             agent_mod._atomic_json_write(target, {"agent": {"model": "m"}})
         assert calls == [1]
 
     def test_agent_atomic_write_does_not_notify_for_an_agent_spec(self, tmp_path: Path) -> None:
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
-        spec = tmp_path / "kirocrew.json"
+        spec = tmp_path / "ajcrew.json"
         calls: list[int] = []
         with (
             patch.object(agent_mod, "_mc_config_path", return_value=tmp_path / "config.json"),
             patch(
-                "kiro_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
+                "aj_crew.config.live.notify_config_written", side_effect=lambda: calls.append(1)
             ),
         ):
-            agent_mod._atomic_json_write(spec, {"name": "kirocrew"})
+            agent_mod._atomic_json_write(spec, {"name": "ajcrew"})
         assert calls == []

@@ -10,14 +10,14 @@ vi.mock('../api/client', async importOriginal => {
     ...mod,
     api: {
       ...mod.api,
-      kirocrewConfig: vi.fn(),
+      ajcrewConfig: vi.fn(),
       kasBundleStatus: vi.fn(),
       kasBundleInstall: vi.fn(),
     },
   }
 })
 
-const kirocrewConfig = vi.mocked(api.kirocrewConfig)
+const ajcrewConfig = vi.mocked(api.ajcrewConfig)
 const kasBundleStatus = vi.mocked(api.kasBundleStatus)
 const kasBundleInstall = vi.mocked(api.kasBundleInstall)
 
@@ -44,10 +44,10 @@ function status(over: Partial<KasBundleStatus> = {}): KasBundleStatus {
 
 describe('KasEngineNotice', () => {
   beforeEach(() => {
-    kirocrewConfig.mockReset()
+    ajcrewConfig.mockReset()
     kasBundleStatus.mockReset()
     kasBundleInstall.mockReset()
-    kirocrewConfig.mockResolvedValue({ agent: { acp_backend: 'kas' } } as never)
+    ajcrewConfig.mockResolvedValue({ agent: { acp_backend: 'kas' } } as never)
   })
 
   it('says the engine is downloading while the gateway installs it', async () => {
@@ -90,12 +90,12 @@ describe('KasEngineNotice', () => {
   })
 
   it('shows a failed download with its retry command and a Retry button', async () => {
-    const error = 'Kiro Crew could not install its KAS engine: offline. Then retry: run `kirocrew kas install` in a terminal, or press Retry in the dashboard.'
+    const error = 'Aj Crew could not install its KAS engine: offline. Then retry: run `ajcrew kas install` in a terminal, or press Retry in the dashboard.'
     kasBundleStatus.mockResolvedValue(status({ error }))
     kasBundleInstall.mockResolvedValue(status({ installing: true }))
     renderWithProviders(<KasEngineNotice />)
     const notice = await screen.findByTestId('kas-engine-failed', {}, CHAINED_QUERY_TIMEOUT)
-    expect(notice.textContent).toContain('kirocrew kas install')
+    expect(notice.textContent).toContain('ajcrew kas install')
     fireEvent.click(screen.getByTestId('kas-engine-retry'))
     await waitFor(() => expect(kasBundleInstall).toHaveBeenCalledTimes(1), CHAINED_QUERY_TIMEOUT)
     expect(await screen.findByTestId('kas-engine-downloading', {}, CHAINED_QUERY_TIMEOUT)).toBeTruthy()
@@ -113,9 +113,9 @@ describe('KasEngineNotice', () => {
   })
 
   it('never reads the engine status when KAS is not the backend', async () => {
-    kirocrewConfig.mockResolvedValue({ agent: { acp_backend: 'claude' } } as never)
+    ajcrewConfig.mockResolvedValue({ agent: { acp_backend: 'claude' } } as never)
     renderWithProviders(<KasEngineNotice />)
-    await waitFor(() => expect(kirocrewConfig).toHaveBeenCalled())
+    await waitFor(() => expect(ajcrewConfig).toHaveBeenCalled())
     expect(kasBundleStatus).not.toHaveBeenCalled()
   })
 })

@@ -11,9 +11,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard import chat_title
-from kiro_crew.dashboard.chat_title import (
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard import chat_title
+from aj_crew.dashboard.chat_title import (
     _TITLE_ORIGIN_AUTO,
     _TITLE_REFRESH_MILESTONES,
     _maybe_auto_title,
@@ -22,7 +22,7 @@ from kiro_crew.dashboard.chat_title import (
     _with_ticket_prefix,
     maybe_refresh_title,
 )
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.state import _ChatSlot
 
 
 def _user(text: str) -> dict:
@@ -106,7 +106,7 @@ def test_wrap_and_split_round_trip():
 
 
 def test_setting_defaults_off():
-    assert KiroCrewConfig().dashboard.title_ticket_prefix is False
+    assert AjCrewConfig().dashboard.title_ticket_prefix is False
 
 
 # ── initial auto-title ───────────────────────────────────────────────────────

@@ -31,20 +31,20 @@ from chat_mode_security_helpers import (  # noqa: F401 -- fixtures are requested
     state_fixture,
 )
 
-from kiro_crew.autonudge import NudgeLoop
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_delivery import queue_for_next_turn
-from kiro_crew.dashboard.turn_dispatch import (
+from aj_crew.autonudge import NudgeLoop
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_delivery import queue_for_next_turn
+from aj_crew.dashboard.turn_dispatch import (
     TURN_TIMEOUT_KIND,
     mark_turn_unstarted,
     spawn_guarded_turn,
 )
-from kiro_crew.monitoring.models import MonitorState
-from kiro_crew.slack import gateway as gw
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.monitoring.models import MonitorState
+from aj_crew.slack import gateway as gw
+from aj_crew.testing.wait import async_wait_until, await_until
 
-_GRANT_CHECK = "kiro_crew.apps.permissions.app_can_manage_session_approvals"
+_GRANT_CHECK = "aj_crew.apps.permissions.app_can_manage_session_approvals"
 
 
 class _TurnRecorder:
@@ -80,8 +80,8 @@ def _structured_wake(slot_key: str) -> NudgeLoop:
 
 
 def _orchestrator(state) -> gw.GatewayOrchestrator:
-    cfg = KiroCrewConfig()
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U_OWNER"}):
+    cfg = AjCrewConfig()
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U_OWNER"}):
         orch = gw.GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
     orch.dashboard_state = state
     orch.autonudge_svc = MagicMock()
@@ -120,7 +120,7 @@ async def test_a_wake_refused_before_its_runner_hands_off_the_queued_send(
     wake_runner = AsyncMock()
     with (
         caplog.at_level(logging.INFO, logger=gw.logger.name),
-        patch("kiro_crew.dashboard.chat._run_chat", new=wake_runner),
+        patch("aj_crew.dashboard.chat._run_chat", new=wake_runner),
     ):
         result = await orch._fire_dashboard_nudge(_structured_wake(slot.key), "[Monitor wake]")
         await await_until(successor.ran, what="the queued send's turn")
@@ -151,7 +151,7 @@ async def test_a_wake_refused_for_a_replaced_slot_logs_why(state, monkeypatch, c
     )
     with (
         caplog.at_level(logging.INFO, logger=gw.logger.name),
-        patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()) as wake_runner,
+        patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()) as wake_runner,
     ):
         result = await orch._fire_dashboard_nudge(_structured_wake(slot.key), "[Monitor wake]")
 
@@ -227,8 +227,8 @@ async def test_a_chat_send_abandoned_at_the_cap_is_not_a_turn_timeout(state, mon
         await await_until(holding, what="the turn holding the only permit")
         with (
             patch(_GRANT_CHECK, return_value=True),
-            patch("kiro_crew.dashboard.chat_handlers._run_chat", new=send_runner),
-            patch("kiro_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat_handlers._run_chat", new=send_runner),
+            patch("aj_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
         ):
             async with _app_client(state) as client:
                 resp = await client.post("/api/chat?ws=1", json={"slot": "s1", "message": "hi"})

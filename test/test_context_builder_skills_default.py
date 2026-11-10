@@ -10,15 +10,15 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.context import ContextBuilder
-from kiro_crew.skills import SkillsLoader
+from aj_crew.context import ContextBuilder
+from aj_crew.skills import SkillsLoader
 
 
 def test_bare_context_builder_does_not_write_builtin_skills(tmp_path, monkeypatch):
     """A default ``ContextBuilder()`` must not touch the builtin-skills sync."""
     calls: list[object] = []
     monkeypatch.setattr(
-        "kiro_crew.skills._ensure_builtin_skills",
+        "aj_crew.skills._ensure_builtin_skills",
         lambda skills_dir: calls.append(skills_dir),
     )
 
@@ -31,7 +31,7 @@ def test_bare_skills_loader_does_not_write_builtin_skills(tmp_path, monkeypatch)
     """Same guarantee directly against ``SkillsLoader()``, no path/kwargs at all."""
     calls: list[object] = []
     monkeypatch.setattr(
-        "kiro_crew.skills._ensure_builtin_skills",
+        "aj_crew.skills._ensure_builtin_skills",
         lambda skills_dir: calls.append(skills_dir),
     )
 
@@ -44,7 +44,7 @@ def test_explicit_install_builtins_true_still_syncs(tmp_path, monkeypatch):
     """An explicit opt-in must still reach the real sync through the floor."""
     calls: list[object] = []
     monkeypatch.setattr(
-        "kiro_crew.skills._ensure_builtin_skills",
+        "aj_crew.skills._ensure_builtin_skills",
         lambda skills_dir: calls.append(skills_dir),
     )
 
@@ -58,7 +58,7 @@ def test_explicit_install_builtins_true_positional_still_syncs(tmp_path, monkeyp
     """The positional form of the opt-in must not be swallowed by the floor either."""
     calls: list[object] = []
     monkeypatch.setattr(
-        "kiro_crew.skills._ensure_builtin_skills",
+        "aj_crew.skills._ensure_builtin_skills",
         lambda skills_dir: calls.append(skills_dir),
     )
 
@@ -72,7 +72,7 @@ def test_marked_test_gets_the_real_default_back(tmp_path, monkeypatch):
     """The opt-out marker leaves the constructor untouched: omitted means True."""
     calls: list[object] = []
     monkeypatch.setattr(
-        "kiro_crew.skills._ensure_builtin_skills",
+        "aj_crew.skills._ensure_builtin_skills",
         lambda skills_dir: calls.append(skills_dir),
     )
 

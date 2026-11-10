@@ -13,28 +13,28 @@ from config_live_helpers import (  # noqa: F401 -- fixtures are used by name
     cfg_file_fixture,
 )
 
-from kiro_crew.config.loader import DashboardConfig, KiroCrewConfig
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.config.loader import DashboardConfig, AjCrewConfig
+from aj_crew.testing.wait import async_wait_until
 
 
 class TestBrandingConfig:
     """Config loader correctly reads dashboard branding fields."""
 
     def test_defaults(self):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         assert cfg.dashboard.bot_name == ""
         assert cfg.dashboard.avatar == ""
 
     def test_load_from_dict(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: tmp_path / "config.json")
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: tmp_path / "config.json")
         data = {"dashboard": {"url": "", "bot_name": "Jarvis", "avatar": "/tmp/a.png"}}
         (tmp_path / "config.json").write_text(json.dumps(data))
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert cfg.dashboard.bot_name == "Jarvis"
         assert cfg.dashboard.avatar == "/tmp/a.png"
 
     def test_to_dict_roundtrip(self):
-        cfg = KiroCrewConfig(dashboard=DashboardConfig(bot_name="Bot", avatar="~/pic.png"))
+        cfg = AjCrewConfig(dashboard=DashboardConfig(bot_name="Bot", avatar="~/pic.png"))
         d = cfg.to_dict()
         assert d["dashboard"]["bot_name"] == "Bot"
         assert d["dashboard"]["avatar"] == "~/pic.png"
@@ -45,53 +45,53 @@ class TestLogoHandler:
 
     @pytest.mark.asyncio
     async def test_logo_custom_avatar(self, tmp_path):
-        from kiro_crew.dashboard.handlers import logo
+        from aj_crew.dashboard.handlers import logo
 
         avatar = tmp_path / "custom.png"
         avatar.write_bytes(b"\x89PNG")
-        cfg = KiroCrewConfig(dashboard=DashboardConfig(avatar=str(avatar)))
+        cfg = AjCrewConfig(dashboard=DashboardConfig(avatar=str(avatar)))
         req = MagicMock()
-        with patch("kiro_crew.dashboard.handlers.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.dashboard.handlers.AjCrewConfig.load", return_value=cfg):
             resp = await logo(req)
         assert resp.status == 200
 
     @pytest.mark.asyncio
     async def test_logo_missing_custom_and_default_returns_404(self, tmp_path):
-        from kiro_crew.dashboard.handlers import logo
+        from aj_crew.dashboard.handlers import logo
 
-        cfg = KiroCrewConfig(dashboard=DashboardConfig(avatar="/nonexistent/path.png"))
+        cfg = AjCrewConfig(dashboard=DashboardConfig(avatar="/nonexistent/path.png"))
         req = MagicMock()
-        with patch("kiro_crew.dashboard.handlers.KiroCrewConfig.load", return_value=cfg), patch(
-            "kiro_crew.dashboard.handlers._STATIC_DIR", tmp_path
+        with patch("aj_crew.dashboard.handlers.AjCrewConfig.load", return_value=cfg), patch(
+            "aj_crew.dashboard.handlers._STATIC_DIR", tmp_path
         ):
             resp = await logo(req)
         assert resp.status == 404
 
     @pytest.mark.asyncio
     async def test_logo_missing_custom_falls_back_to_default(self, tmp_path):
-        from kiro_crew.dashboard.handlers import logo
+        from aj_crew.dashboard.handlers import logo
 
-        default_logo = tmp_path / "kirocrew-logo.png"
+        default_logo = tmp_path / "ajcrew-logo.png"
         default_logo.write_bytes(b"\x89PNG")
-        cfg = KiroCrewConfig(dashboard=DashboardConfig(avatar="/nonexistent/path.png"))
+        cfg = AjCrewConfig(dashboard=DashboardConfig(avatar="/nonexistent/path.png"))
         req = MagicMock()
-        with patch("kiro_crew.dashboard.handlers.KiroCrewConfig.load", return_value=cfg), patch(
-            "kiro_crew.dashboard.handlers._STATIC_DIR", tmp_path
+        with patch("aj_crew.dashboard.handlers.AjCrewConfig.load", return_value=cfg), patch(
+            "aj_crew.dashboard.handlers._STATIC_DIR", tmp_path
         ):
             resp = await logo(req)
         assert resp.status == 200
 
     @pytest.mark.asyncio
     async def test_logo_sensitive_path_rejected(self, tmp_path):
-        from kiro_crew.dashboard.handlers import logo
+        from aj_crew.dashboard.handlers import logo
 
         sensitive = tmp_path / "secret_key"
         sensitive.write_bytes(b"\x89PNG")
-        cfg = KiroCrewConfig(dashboard=DashboardConfig(avatar=str(sensitive)))
+        cfg = AjCrewConfig(dashboard=DashboardConfig(avatar=str(sensitive)))
         req = MagicMock()
-        with patch("kiro_crew.dashboard.handlers.KiroCrewConfig.load", return_value=cfg), patch(
-            "kiro_crew.hooks.validate_file_path", return_value=None
-        ), patch("kiro_crew.dashboard.handlers._STATIC_DIR", tmp_path / "empty"):
+        with patch("aj_crew.dashboard.handlers.AjCrewConfig.load", return_value=cfg), patch(
+            "aj_crew.hooks.validate_file_path", return_value=None
+        ), patch("aj_crew.dashboard.handlers._STATIC_DIR", tmp_path / "empty"):
             resp = await logo(req)
         assert resp.status == 404
 
@@ -100,63 +100,63 @@ class TestLogoHandler:
         """Nightly-stamped builds serve the night-sky logo so in-app branding
         (sidebar, favicon, notification avatar -- all /logo.png) matches the
         nightly app's Dock/tray identity."""
-        from kiro_crew.dashboard.handlers import logo
+        from aj_crew.dashboard.handlers import logo
 
-        (tmp_path / "kirocrew-logo.png").write_bytes(b"\x89PNG-default")
-        (tmp_path / "kirocrew-logo-nightly.png").write_bytes(b"\x89PNG-nightly")
-        monkeypatch.setattr("kiro_crew.__version__", "0.1.0-nightly.20260722223306")
-        cfg = KiroCrewConfig(dashboard=DashboardConfig(avatar=""))
+        (tmp_path / "ajcrew-logo.png").write_bytes(b"\x89PNG-default")
+        (tmp_path / "ajcrew-logo-nightly.png").write_bytes(b"\x89PNG-nightly")
+        monkeypatch.setattr("aj_crew.__version__", "0.1.0-nightly.20260722223306")
+        cfg = AjCrewConfig(dashboard=DashboardConfig(avatar=""))
         req = MagicMock()
-        with patch("kiro_crew.dashboard.handlers.KiroCrewConfig.load", return_value=cfg), patch(
-            "kiro_crew.dashboard.handlers._STATIC_DIR", tmp_path
+        with patch("aj_crew.dashboard.handlers.AjCrewConfig.load", return_value=cfg), patch(
+            "aj_crew.dashboard.handlers._STATIC_DIR", tmp_path
         ):
             resp = await logo(req)
         assert resp.status == 200
-        assert resp._path.name == "kirocrew-logo-nightly.png"
+        assert resp._path.name == "ajcrew-logo-nightly.png"
 
     @pytest.mark.asyncio
     async def test_logo_nightly_missing_asset_falls_back_to_default(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers import logo
+        from aj_crew.dashboard.handlers import logo
 
-        (tmp_path / "kirocrew-logo.png").write_bytes(b"\x89PNG-default")
-        monkeypatch.setattr("kiro_crew.__version__", "0.1.0-nightly.20260722223306")
-        cfg = KiroCrewConfig(dashboard=DashboardConfig(avatar=""))
+        (tmp_path / "ajcrew-logo.png").write_bytes(b"\x89PNG-default")
+        monkeypatch.setattr("aj_crew.__version__", "0.1.0-nightly.20260722223306")
+        cfg = AjCrewConfig(dashboard=DashboardConfig(avatar=""))
         req = MagicMock()
-        with patch("kiro_crew.dashboard.handlers.KiroCrewConfig.load", return_value=cfg), patch(
-            "kiro_crew.dashboard.handlers._STATIC_DIR", tmp_path
+        with patch("aj_crew.dashboard.handlers.AjCrewConfig.load", return_value=cfg), patch(
+            "aj_crew.dashboard.handlers._STATIC_DIR", tmp_path
         ):
             resp = await logo(req)
         assert resp.status == 200
-        assert resp._path.name == "kirocrew-logo.png"
+        assert resp._path.name == "ajcrew-logo.png"
 
     @pytest.mark.asyncio
     async def test_logo_stable_version_ignores_nightly_variant(self, tmp_path, monkeypatch):
         """Insider/stable stamps keep the production logo even when the
         nightly asset is present in the static dir."""
-        from kiro_crew.dashboard.handlers import logo
+        from aj_crew.dashboard.handlers import logo
 
-        (tmp_path / "kirocrew-logo.png").write_bytes(b"\x89PNG-default")
-        (tmp_path / "kirocrew-logo-nightly.png").write_bytes(b"\x89PNG-nightly")
-        monkeypatch.setattr("kiro_crew.__version__", "0.1.0")
-        cfg = KiroCrewConfig(dashboard=DashboardConfig(avatar=""))
+        (tmp_path / "ajcrew-logo.png").write_bytes(b"\x89PNG-default")
+        (tmp_path / "ajcrew-logo-nightly.png").write_bytes(b"\x89PNG-nightly")
+        monkeypatch.setattr("aj_crew.__version__", "0.1.0")
+        cfg = AjCrewConfig(dashboard=DashboardConfig(avatar=""))
         req = MagicMock()
-        with patch("kiro_crew.dashboard.handlers.KiroCrewConfig.load", return_value=cfg), patch(
-            "kiro_crew.dashboard.handlers._STATIC_DIR", tmp_path
+        with patch("aj_crew.dashboard.handlers.AjCrewConfig.load", return_value=cfg), patch(
+            "aj_crew.dashboard.handlers._STATIC_DIR", tmp_path
         ):
             resp = await logo(req)
         assert resp.status == 200
-        assert resp._path.name == "kirocrew-logo.png"
+        assert resp._path.name == "ajcrew-logo.png"
 
     @pytest.mark.asyncio
     async def test_logo_no_config_serves_default(self, tmp_path):
-        from kiro_crew.dashboard.handlers import logo
+        from aj_crew.dashboard.handlers import logo
 
-        default_logo = tmp_path / "kirocrew-logo.png"
+        default_logo = tmp_path / "ajcrew-logo.png"
         default_logo.write_bytes(b"\x89PNG")
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         req = MagicMock()
-        with patch("kiro_crew.dashboard.handlers.KiroCrewConfig.load", return_value=cfg), patch(
-            "kiro_crew.dashboard.handlers._STATIC_DIR", tmp_path
+        with patch("aj_crew.dashboard.handlers.AjCrewConfig.load", return_value=cfg), patch(
+            "aj_crew.dashboard.handlers._STATIC_DIR", tmp_path
         ):
             resp = await logo(req)
         assert resp.status == 200
@@ -167,23 +167,23 @@ class TestBrandingEndpoint:
 
     @pytest.mark.asyncio
     async def test_branding_defaults(self):
-        from kiro_crew.dashboard.handlers import api_branding
+        from aj_crew.dashboard.handlers import api_branding
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         req = MagicMock()
-        with patch("kiro_crew.dashboard.handlers.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.dashboard.handlers.AjCrewConfig.load", return_value=cfg):
             resp = await api_branding(req)
         body = json.loads(resp.body)
-        assert body["bot_name"] == "Kiro Crew"
+        assert body["bot_name"] == "Aj Crew"
         assert body["avatar"] == "/logo.png"
 
     @pytest.mark.asyncio
     async def test_branding_custom_name(self):
-        from kiro_crew.dashboard.handlers import api_branding
+        from aj_crew.dashboard.handlers import api_branding
 
-        cfg = KiroCrewConfig(dashboard=DashboardConfig(bot_name="Jarvis"))
+        cfg = AjCrewConfig(dashboard=DashboardConfig(bot_name="Jarvis"))
         req = MagicMock()
-        with patch("kiro_crew.dashboard.handlers.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.dashboard.handlers.AjCrewConfig.load", return_value=cfg):
             resp = await api_branding(req)
         body = json.loads(resp.body)
         assert body["bot_name"] == "Jarvis"
@@ -204,10 +204,10 @@ class TestBrandingEndpoint:
     async def test_branding_serves_only_remote_editor_values_the_schema_accepts(
         self, stored, served
     ):
-        from kiro_crew.dashboard.handlers import api_branding
+        from aj_crew.dashboard.handlers import api_branding
 
-        cfg = KiroCrewConfig(dashboard=DashboardConfig(remote_editor=stored))
-        with patch("kiro_crew.dashboard.handlers.KiroCrewConfig.load", return_value=cfg):
+        cfg = AjCrewConfig(dashboard=DashboardConfig(remote_editor=stored))
+        with patch("aj_crew.dashboard.handlers.AjCrewConfig.load", return_value=cfg):
             resp = await api_branding(MagicMock())
         assert json.loads(resp.body)["remote_editor"] == served
 
@@ -218,12 +218,12 @@ class TestBrandingEndpoint:
         # only when this is true: on a host that cannot open a file manager (a
         # headless Linux box, which an `ssh -L` browser still reaches as
         # direct-local) /api/reveal can only answer a clipboard copy.
-        from kiro_crew import platform_compat
-        from kiro_crew.dashboard.handlers import api_branding
+        from aj_crew import platform_compat
+        from aj_crew.dashboard.handlers import api_branding
 
         req = MagicMock()
         with patch(
-            "kiro_crew.dashboard.handlers.KiroCrewConfig.load", return_value=KiroCrewConfig()
+            "aj_crew.dashboard.handlers.AjCrewConfig.load", return_value=AjCrewConfig()
         ), patch.object(platform_compat, "desktop_launcher_available", return_value=present):
             resp = await api_branding(req)
         assert json.loads(resp.body)["desktop_launcher"] is present
@@ -248,8 +248,8 @@ class TestBrandingEndpoint:
         # the rows must not be offered. The installed service names none of its
         # own, so a desktop login reaches it through the manager. `manager` is
         # that manager's environment (None: no manager to ask).
-        from kiro_crew import platform_compat, platform_compat_trust
-        from kiro_crew.dashboard.handlers import api_branding
+        from aj_crew import platform_compat, platform_compat_trust
+        from aj_crew.dashboard.handlers import api_branding
 
         monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
         if display is None:
@@ -264,7 +264,7 @@ class TestBrandingEndpoint:
         monkeypatch.setattr(platform_compat_trust, "_desktop_session_cache", None, raising=False)
         req = MagicMock()
         with patch(
-            "kiro_crew.dashboard.handlers.KiroCrewConfig.load", return_value=KiroCrewConfig()
+            "aj_crew.dashboard.handlers.AjCrewConfig.load", return_value=AjCrewConfig()
         ), patch("sys.platform", "linux"), patch.object(
             platform_compat, "IS_WINDOWS", False
         ), patch(
@@ -283,7 +283,7 @@ class TestBrandingReadsTheLiveConfig:
 
     @staticmethod
     def _count_builds():
-        from kiro_crew.config import loader_pipeline
+        from aj_crew.config import loader_pipeline
 
         return patch.object(
             loader_pipeline, "build_config", side_effect=loader_pipeline.build_config
@@ -291,8 +291,8 @@ class TestBrandingReadsTheLiveConfig:
 
     @pytest.mark.asyncio
     async def test_unchanged_requests_build_the_config_once(self, cfg_file: Path) -> None:
-        from kiro_crew.config import live
-        from kiro_crew.dashboard.handlers import api_branding
+        from aj_crew.config import live
+        from aj_crew.dashboard.handlers import api_branding
 
         _write(cfg_file, {"dashboard": {"bot_name": "Jarvis"}})
         with self._count_builds() as build:
@@ -304,15 +304,15 @@ class TestBrandingReadsTheLiveConfig:
 
     @pytest.mark.asyncio
     async def test_a_config_write_reaches_the_next_request(self, cfg_file: Path) -> None:
-        from kiro_crew.config import live
-        from kiro_crew.config.loader import update_config_locked
-        from kiro_crew.dashboard.handlers import api_branding
+        from aj_crew.config import live
+        from aj_crew.config.loader import update_config_locked
+        from aj_crew.dashboard.handlers import api_branding
 
         watcher = live.watch()
         await watcher.start()
         try:
             resp = await api_branding(MagicMock())
-            assert json.loads(resp.body)["bot_name"] == "Kiro Crew"
+            assert json.loads(resp.body)["bot_name"] == "Aj Crew"
 
             def _rename(doc: dict) -> dict:
                 doc.setdefault("dashboard", {})["bot_name"] = "Jarvis"
@@ -332,7 +332,7 @@ class TestBrandingReadsTheLiveConfig:
 
     @pytest.mark.asyncio
     async def test_without_a_watcher_each_request_loads_from_disk(self, cfg_file: Path) -> None:
-        from kiro_crew.dashboard.handlers import api_branding
+        from aj_crew.dashboard.handlers import api_branding
 
         _write(cfg_file, {"dashboard": {"bot_name": "Jarvis"}})
         resp = await api_branding(MagicMock())
@@ -345,7 +345,7 @@ class TestBrandingReadsTheLiveConfig:
 class TestLogoAssetInvariant:
     """The dashboard-served logo and the PWA 512 icon are the same image.
 
-    ``src/kiro_crew/static/kirocrew-logo.png`` (``/logo.png``) and
+    ``src/aj_crew/static/ajcrew-logo.png`` (``/logo.png``) and
     ``website/public/icon-512.png`` are hand-kept copies of one brand mark; this
     catches an update to only one of them.
     """
@@ -355,7 +355,7 @@ class TestLogoAssetInvariant:
         from pathlib import Path
 
         repo_root = Path(__file__).resolve().parents[1]
-        served = repo_root / "src" / "kiro_crew" / "static" / "kirocrew-logo.png"
+        served = repo_root / "src" / "aj_crew" / "static" / "ajcrew-logo.png"
         pwa = repo_root / "website" / "public" / "icon-512.png"
         # Skip rather than fail on a python-only checkout that lacks website/.
         if not pwa.is_file():
@@ -366,7 +366,7 @@ class TestLogoAssetInvariant:
         served_sha = hashlib.sha256(served.read_bytes()).hexdigest()
         pwa_sha = hashlib.sha256(pwa.read_bytes()).hexdigest()
         assert served_sha == pwa_sha, (
-            "kirocrew-logo.png and icon-512.png diverged — update both copies of "
+            "ajcrew-logo.png and icon-512.png diverged — update both copies of "
             "the brand mark together (they are served as /logo.png and the PWA "
             "512 icon respectively)."
         )

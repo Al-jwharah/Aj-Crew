@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.knowledge.chunker import HeadingAwareChunker
-from kiro_crew.knowledge.readers import FileReader
+from aj_crew.knowledge.chunker import HeadingAwareChunker
+from aj_crew.knowledge.readers import FileReader
 
 docx = pytest.importorskip("docx")
 

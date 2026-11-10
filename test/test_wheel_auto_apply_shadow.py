@@ -19,12 +19,12 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from wheel_update_test_helpers import wire_wheel_apply
 
-from kiro_crew import platform_compat
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.platform import wheel_engine
-from kiro_crew.platform.wheel_engine import ManagedVenvLayout
-from kiro_crew.platform_compat import IS_POSIX
-from kiro_crew.slack.gateway import GatewayOrchestrator
+from aj_crew import platform_compat
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.platform import wheel_engine
+from aj_crew.platform.wheel_engine import ManagedVenvLayout
+from aj_crew.platform_compat import IS_POSIX
+from aj_crew.slack.gateway import GatewayOrchestrator
 
 # The managed venv is a POSIX install shape (cli.sh), and the layout leans on an
 # atomic rename over a symlink, which Windows refuses.
@@ -44,10 +44,10 @@ def layout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> ManagedVenvLayout
     """A legacy managed venv served through the stable link, network stubbed."""
     legacy = tmp_path / "crew-venv"
     (legacy / "bin").mkdir(parents=True)
-    (legacy / "bin" / "kirocrew").write_text("#!/bin/sh\n", encoding="utf-8")
+    (legacy / "bin" / "ajcrew").write_text("#!/bin/sh\n", encoding="utf-8")
     (legacy / "pyvenv.cfg").write_text("", encoding="utf-8")
-    (legacy / "lib" / "kiro_crew" / "static" / "dist").mkdir(parents=True)
-    (legacy / "lib" / "kiro_crew" / "static" / "dist" / "index.html").write_text(
+    (legacy / "lib" / "aj_crew" / "static" / "dist").mkdir(parents=True)
+    (legacy / "lib" / "aj_crew" / "static" / "dist" / "index.html").write_text(
         "<html></html>", encoding="utf-8"
     )
     stable = tmp_path / "crew-venv-current"
@@ -65,7 +65,7 @@ def layout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> ManagedVenvLayout
     )
 
     def _download(payload: dict[str, str], dest: Path, **_kw: object) -> Path:
-        wheel = dest / f"kirocrew-{_VERSION}-py3-none-any.whl"
+        wheel = dest / f"ajcrew-{_VERSION}-py3-none-any.whl"
         wheel.write_bytes(b"wheel")
         return wheel
 
@@ -75,14 +75,14 @@ def layout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> ManagedVenvLayout
     # The real engine, behind the real preflight wiring.
     wire_wheel_apply(monkeypatch, apply=wheel_engine.apply_wheel_update)
     monkeypatch.setattr(
-        "kiro_crew.platform.wheel_apply.snapshot_memory_before_update", lambda: (1, "")
+        "aj_crew.platform.wheel_apply.snapshot_memory_before_update", lambda: (1, "")
     )
     return managed
 
 
 def _orchestrator(monkeypatch: pytest.MonkeyPatch) -> tuple[GatewayOrchestrator, AsyncMock]:
-    cfg = KiroCrewConfig()
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U1"}):
+    cfg = AjCrewConfig()
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U1"}):
         orch = GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
     orch.dashboard_state = None
     orch.sessions = None
@@ -101,7 +101,7 @@ def _claim(shadow: Path) -> None:
 async def test_the_served_venv_is_never_moved_while_the_new_tree_builds(
     layout: ManagedVenvLayout, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.platform.wheel_engine import respawn_executable
+    from aj_crew.platform.wheel_engine import respawn_executable
 
     orch, restart = _orchestrator(monkeypatch)
     before = _served_snapshot(layout.legacy)
@@ -115,7 +115,7 @@ async def test_the_served_venv_is_never_moved_while_the_new_tree_builds(
         )
         _claim(shadow)
         (shadow / "bin").mkdir()
-        (shadow / "bin" / "kirocrew").write_text("#!/bin/sh\n", encoding="utf-8")
+        (shadow / "bin" / "ajcrew").write_text("#!/bin/sh\n", encoding="utf-8")
 
     monkeypatch.setattr(wheel_engine, "build_shadow_venv", _build)
 
@@ -134,8 +134,8 @@ async def test_a_gateway_running_through_the_link_restarts_before_it_builds(
     layout: ManagedVenvLayout, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Promoting under it would swap its own modules while a busy restart waits."""
-    from kiro_crew.platform import wheel_apply
-    from kiro_crew.platform.wheel_engine import respawn_executable
+    from aj_crew.platform import wheel_apply
+    from aj_crew.platform.wheel_engine import respawn_executable
 
     orch, restart = _orchestrator(monkeypatch)
     monkeypatch.setattr(wheel_apply, "relaunch_before_apply", lambda: True)

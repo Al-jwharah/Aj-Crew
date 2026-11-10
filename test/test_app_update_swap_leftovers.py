@@ -20,10 +20,10 @@ from pathlib import Path
 import pytest
 from app_manager_helpers import _make_app_source, app_home_fixture  # noqa: F401 - fixture
 
-from kiro_crew.apps import manager, manager_adopt
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
-from kiro_crew.testing.ids import unallocatable_pids
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew.apps import manager, manager_adopt
+from aj_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.testing.ids import unallocatable_pids
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 NAME = "test-app"
 
@@ -37,7 +37,7 @@ PID, OTHER_PID = unallocatable_pids(2)
 _KILLED_UPDATE = """
 import os, sys
 from pathlib import Path
-from kiro_crew.apps import manager, manager_install, manager_records
+from aj_crew.apps import manager, manager_install, manager_records
 
 source, gap = Path(sys.argv[1]), sys.argv[2]
 if gap == "retired":
@@ -137,7 +137,7 @@ def test_no_walk_of_the_apps_dir_reads_a_retired_tree_as_an_app(app_home, tmp_pa
     assert [(row["name"], row["version"]) for row in manager.list_apps()] == [(NAME, "0.9.0")]
     manager.invalidate_orphan_cache()
     assert retired.name not in manager.detect_orphaned_builtins()
-    from kiro_crew.apps import dev_mode
+    from aj_crew.apps import dev_mode
 
     assert retired.name not in dev_mode._scan_installed_dev_apps()
 
@@ -282,8 +282,8 @@ async def test_the_boot_leaves_the_sweep_to_a_task_after_the_listener(
     """Before APPLY nothing lists the apps directory; the kick only schedules the sweep."""
     from types import SimpleNamespace
 
-    from kiro_crew.apps import builtin_adoption
-    from kiro_crew.dashboard.server_runtime import app_platform
+    from aj_crew.apps import builtin_adoption
+    from aj_crew.dashboard.server_runtime import app_platform
 
     _install(tmp_path)
     dead.add(PID)

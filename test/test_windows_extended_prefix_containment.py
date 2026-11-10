@@ -63,14 +63,14 @@ def _prefix_realpath_of(monkeypatch: pytest.MonkeyPatch, target: Path) -> None:
 
 
 def test_the_fold_is_lexical_and_only_strips_the_prefix() -> None:
-    from kiro_crew.platform_compat import strip_extended_length_prefix
+    from aj_crew.platform_compat import strip_extended_length_prefix
 
     assert strip_extended_length_prefix(_prefixed("/a/b")) == "/a/b"
     assert strip_extended_length_prefix("/a/b") == "/a/b"
 
 
 def test_skill_root_containment(tree) -> None:
-    from kiro_crew.dashboard.handlers._shared_skill_roots import _path_at_or_under
+    from aj_crew.dashboard.handlers._shared_skill_roots import _path_at_or_under
 
     root, inside, outside = tree
     assert _path_at_or_under(Path(_prefixed(inside)), root)
@@ -79,7 +79,7 @@ def test_skill_root_containment(tree) -> None:
 
 
 def test_worktree_allowed_root(tree) -> None:
-    from kiro_crew.dashboard.handlers.worktree import _match_allowed_root
+    from aj_crew.dashboard.handlers.worktree import _match_allowed_root
 
     root, inside, outside = tree
     assert _match_allowed_root(str(inside), [_prefixed(root)]) == _prefixed(root)
@@ -88,7 +88,7 @@ def test_worktree_allowed_root(tree) -> None:
 
 
 def test_steering_contained(tree, monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers.steering import _contained
+    from aj_crew.dashboard.handlers.steering import _contained
 
     root, inside, outside = tree
     _prefix_resolve_of(monkeypatch, inside)
@@ -97,7 +97,7 @@ def test_steering_contained(tree, monkeypatch) -> None:
 
 
 def test_papyrus_safe_child(tree, monkeypatch) -> None:
-    from kiro_crew.apps.builtins.papyrus.backend.store import PathRejected, safe_child
+    from aj_crew.apps.builtins.papyrus.backend.store import PathRejected, safe_child
 
     root, inside, _outside = tree
     _prefix_resolve_of(monkeypatch, inside)
@@ -107,7 +107,7 @@ def test_papyrus_safe_child(tree, monkeypatch) -> None:
 
 
 def test_design_tweak_contain_path(tree, monkeypatch) -> None:
-    from kiro_crew.apps.builtins.design_tweak.backend.request_state import (
+    from aj_crew.apps.builtins.design_tweak.backend.request_state import (
         PathEscape,
         contain_path,
     )
@@ -120,7 +120,7 @@ def test_design_tweak_contain_path(tree, monkeypatch) -> None:
 
 
 def test_subagent_validate_cwd(tree, monkeypatch) -> None:
-    from kiro_crew.subagent import validate_cwd
+    from aj_crew.subagent import validate_cwd
 
     root, _inside, outside = tree
     sub = root / "sub"
@@ -152,7 +152,7 @@ def test_subagent_validate_cwd(tree, monkeypatch) -> None:
     ],
 )
 def test_a_verbatim_only_name_is_named(path: str, verbatim_only: bool) -> None:
-    from kiro_crew.platform_compat import names_a_verbatim_only_file
+    from aj_crew.platform_compat import names_a_verbatim_only_file
 
     assert names_a_verbatim_only_file(path) is verbatim_only
     assert names_a_verbatim_only_file(Path(path)) is verbatim_only
@@ -180,14 +180,14 @@ _SIBLING_DOT = _PREFIX + "C:\\Users\\u\\report.md."
 
 
 def test_the_source_link_read_refuses_a_verbatim_only_name(monkeypatch) -> None:
-    from kiro_crew import artifacts_source_link
+    from aj_crew import artifacts_source_link
 
     _resolve_to(monkeypatch, _SIBLING_DOT, "report.md.")
     assert artifacts_source_link._try_read_source_path(None, "report.md.") is None  # type: ignore[arg-type]
 
 
 def test_the_source_link_write_refuses_a_verbatim_only_name(monkeypatch) -> None:
-    from kiro_crew import artifacts_source_link
+    from aj_crew import artifacts_source_link
 
     _resolve_to(monkeypatch, _SIBLING_DOT, "report.md.")
     assert (
@@ -197,7 +197,7 @@ def test_the_source_link_write_refuses_a_verbatim_only_name(monkeypatch) -> None
 
 
 def test_the_workspace_dir_check_refuses_a_verbatim_only_name(tree, monkeypatch) -> None:
-    from kiro_crew import cli_commands_workspace
+    from aj_crew import cli_commands_workspace
 
     root, _inside, _outside = tree
     # An absolute dir, so composing it reads no data home under the patched resolve.
@@ -206,7 +206,7 @@ def test_the_workspace_dir_check_refuses_a_verbatim_only_name(tree, monkeypatch)
 
 
 def test_the_channel_upload_gate_refuses_a_verbatim_only_name(monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers import files
+    from aj_crew.dashboard.handlers import files
 
     denials: list[str] = []
 
@@ -225,7 +225,7 @@ def test_the_channel_upload_gate_refuses_a_verbatim_only_name(monkeypatch) -> No
 
 
 def test_papyrus_keeps_the_main_document_when_one_realpath_is_prefixed(tree, monkeypatch) -> None:
-    from kiro_crew.apps.builtins.papyrus.backend import store
+    from aj_crew.apps.builtins.papyrus.backend import store
 
     root, _inside, _outside = tree
     main = root / "main.tex"

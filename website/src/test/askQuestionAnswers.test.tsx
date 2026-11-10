@@ -47,7 +47,7 @@ describe('parseAskAnswers', () => {
 })
 
 describe('isAskQuestionToolName', () => {
-  it.each(['ask_question', 'kirocrew-core___ask_question', 'ask_question (mcp)'])('accepts %s', (name) => {
+  it.each(['ask_question', 'ajcrew-core___ask_question', 'ask_question (mcp)'])('accepts %s', (name) => {
     expect(isAskQuestionToolName(name)).toBe(true)
   })
 

@@ -23,7 +23,7 @@ initI18n()
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 localStorage.setItem('mc-theme', theme)
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const SLUG = 'retry-helper'
 localStorage.removeItem(`mc-cmt-sent:${SLUG}`)

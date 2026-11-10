@@ -1,6 +1,6 @@
 """Crew Mode: the conductor prompt.
 
-Crew Mode is a UI over the existing ``kirocrew-conductor``: a chat with the
+Crew Mode is a UI over the existing ``ajcrew-conductor``: a chat with the
 switch on simply runs on that agent, so there is no Crew Mode field on chat
 creation or in config. This file pins the prompt section a person sees.
 """
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 
 def test_conductor_prompt_carries_the_intro_and_the_task_board() -> None:
-    from kiro_crew import agent
+    from aj_crew import agent
 
     prompt = agent._CONDUCTOR_SYSTEM_PROMPT
     section = prompt.split("## Talking to the person", 1)[1].split("## If a conductor", 1)[0]

@@ -6,7 +6,7 @@
  * The roster drifted from the sidebar once by copied value: its own header
  * padding (16/16/4 vs 8/2/0 on a 40px line), row title weight (500 vs 600),
  * unset line-heights (20.15/17.05 vs 20/16), and — the one a user saw — its own
- * `bg-bg-elevated` card that stayed white in kiro-light while the sessions list
+ * `bg-bg-elevated` card that stayed white in aj-light while the sessions list
  * beside it stepped back to `--panel`. None of that was red anywhere. This test
  * makes the recipes the only way to spell those surfaces on either page.
  *

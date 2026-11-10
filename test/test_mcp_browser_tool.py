@@ -1,6 +1,6 @@
 """The ``browser`` MCP tool: its two gates, its post, and what it tells the model.
 
-The tool runs in the ``kirocrew-core`` shim and posts one op to
+The tool runs in the ``ajcrew-core`` shim and posts one op to
 ``/api/browser/op``. Pinned here:
 
 * governance (``capabilities.browse``) refuses OUTRIGHT, before any post, and
@@ -23,8 +23,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.browser_harness import ops as harness_ops
-from kiro_crew.mcp_tools import browser as mod
+from aj_crew.browser_harness import ops as harness_ops
+from aj_crew.mcp_tools import browser as mod
 
 
 @pytest.fixture(autouse=True)

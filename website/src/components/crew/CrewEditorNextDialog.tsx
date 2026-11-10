@@ -401,7 +401,7 @@ export default function CrewEditorNextDialog({
     editAvatar, openAvatarBuilder, avatarBuilderOpen, applyAvatar, closeAvatarBuilder, onAvatarImageError,
     sheetBusy, dirtyPanes, schedDraft, requestClose, save, resolved,
     error, sheetHint, editorOptionsError,
-    childDirtyHandlers, setCapabilityBusy, memoryStore, onCapabilitiesSaved, kirocrewCfg, memoryDirty,
+    childDirtyHandlers, setCapabilityBusy, memoryStore, onCapabilitiesSaved, ajcrewCfg, memoryDirty,
     workspace, setWorkspace, workspaceOptions,
     wsModalOpen, openWsModal, closeWsModal, onWorkspaceCreated, setWsDirty, onPaneSaveChain,
     editModel, setEditModel, editEffort, setEditEffort,
@@ -513,7 +513,7 @@ export default function CrewEditorNextDialog({
   // mode. Resolve the real state and pass private only when it is private V2.
   // Null while the config read is in flight, so a broken-binding diagnostic
   // never flashes before the stores are known.
-  const memoryState = kirocrewCfg ? memberMemoryState(editing, memoryStore, kirocrewCfg.memory_stores) : null
+  const memoryState = ajcrewCfg ? memberMemoryState(editing, memoryStore, ajcrewCfg.memory_stores) : null
   const memoryIsPrivate = memoryState === 'private'
   const memoryBroken = memoryState === 'ownership_mismatch' || memoryState === 'unavailable'
   // A binding that breaks while a memory draft is open (another session or
@@ -523,10 +523,10 @@ export default function CrewEditorNextDialog({
   const memoryStatus = memoryState === null
     ? ''
     : memoryState === 'private'
-      ? i18nT('pages.kiroCrewAgentsPage.private_memory_owned')
+      ? i18nT('pages.ajCrewAgentsPage.private_memory_owned')
       : memoryState === 'legacy'
-        ? (editing === 'default' ? i18nT('pages.kiroCrewAgentsPage.global_memory_v1') : i18nT('pages.kiroCrewAgentsPage.private_memory_legacy'))
-        : i18nT(memoryState === 'ownership_mismatch' ? 'pages.kiroCrewAgentsPage.memory_binding_mismatch_diagnostic' : 'pages.kiroCrewAgentsPage.memory_binding_unavailable_diagnostic', { command: 'kirocrew doctor' })
+        ? (editing === 'default' ? i18nT('pages.ajCrewAgentsPage.global_memory_v1') : i18nT('pages.ajCrewAgentsPage.private_memory_legacy'))
+        : i18nT(memoryState === 'ownership_mismatch' ? 'pages.ajCrewAgentsPage.memory_binding_mismatch_diagnostic' : 'pages.ajCrewAgentsPage.memory_binding_unavailable_diagnostic', { command: 'ajcrew doctor' })
 
   const memoryTabs: { key: MemoryTab; label: string }[] = [
     { key: 'profile', label: i18nT('crewEditorNext.tab_profile') },
@@ -540,7 +540,7 @@ export default function CrewEditorNextDialog({
         <DialogContent
           maxWidth={1200}
           style={{ height: 'min(90vh, 760px)' }}
-          aria-label={i18nT('pages.kiroCrewAgentsPage.edit_crew_named', { name: displayName.trim() || editing })}
+          aria-label={i18nT('pages.ajCrewAgentsPage.edit_crew_named', { name: displayName.trim() || editing })}
           data-testid="crew-editor-next-dialog"
         >
           {/* Header: the mate's identity (avatar + name). The X lives in
@@ -555,13 +555,13 @@ export default function CrewEditorNextDialog({
           </DialogHeader>
 
           {/* A failed options read (installed templates / workspaces / config)
-              must not pass the ['kirocrew'] / ['default'] fallbacks off as the
+              must not pass the ['ajcrew'] / ['default'] fallbacks off as the
               real lists — a Save would then persist a binding the operator never
               chose. askAgent=false: the hand-off navigates to /chat and would
               discard this editor's unsaved edits. */}
           <ErrorNotice
             className="mx-5 mt-1"
-            title={i18nT('pages.kiroCrewAgentsPage.editor_options_load_failed')}
+            title={i18nT('pages.ajCrewAgentsPage.editor_options_load_failed')}
             message={editorOptionsError ? (editorOptionsError instanceof Error ? editorOptionsError.message : String(editorOptionsError)) : null}
             askAgent={false}
             testId="next-editor-options-load-error"
@@ -693,7 +693,7 @@ export default function CrewEditorNextDialog({
                           // Another harness's list keeps no last-good copy, so a failure leaves only Inherited.
                           message={resolved?.models_backend === undefined
                             ? i18nT('pages.chatSidebar.model_list_failed')
-                            : i18nT('pages.kiroCrewAgentsPage.harness_models_failed', { harness: pinHarness })}
+                            : i18nT('pages.ajCrewAgentsPage.harness_models_failed', { harness: pinHarness })}
                           askAgent={false}
                           testId="next-model-degraded"
                         />
@@ -708,10 +708,10 @@ export default function CrewEditorNextDialog({
                     {!effortCapable && !!editEffort && (
                       <div className="rounded-md border border-warn-subtle bg-warn-subtle px-3 py-2.5 text-[11.5px] leading-relaxed text-muted">
                         {resolved?.effort_supported === false
-                          ? i18nT('pages.kiroCrewAgentsPage.effort_ignored_by_this_backend', { harness: pinHarness })
+                          ? i18nT('pages.ajCrewAgentsPage.effort_ignored_by_this_backend', { harness: pinHarness })
                           : effortModel
-                          ? i18nT('pages.kiroCrewAgentsPage.effort_ignored_on_this_model', { model: effortModel })
-                          : i18nT('pages.kiroCrewAgentsPage.effort_pin_needs_a_model')}
+                          ? i18nT('pages.ajCrewAgentsPage.effort_ignored_on_this_model', { model: effortModel })
+                          : i18nT('pages.ajCrewAgentsPage.effort_pin_needs_a_model')}
                       </div>
                     )}
                     {/* No hand-off: a model-resolution read failure leaves the
@@ -726,19 +726,19 @@ export default function CrewEditorNextDialog({
                       <div className="flex flex-col gap-1 rounded-md border border-border bg-bg-accent px-3 py-2.5 text-[11.5px] leading-relaxed text-muted">
                         {modelLine === 'unserved' && (
                           <div className="text-text" data-testid="next-model-pin-unserved">
-                            {i18nT('pages.kiroCrewAgentsPage.pin_unserved_resolves_to', { model: editModel, harness: pinHarness })}
+                            {i18nT('pages.ajCrewAgentsPage.pin_unserved_resolves_to', { model: editModel, harness: pinHarness })}
                           </div>
                         )}
                         {modelLine === 'instead' && (
                           <div className="text-text" data-testid="next-model-runs-instead">
-                            {i18nT('pages.kiroCrewAgentsPage.model_runs_instead', {
+                            {i18nT('pages.ajCrewAgentsPage.model_runs_instead', {
                               harness: pinHarness, picked: editingAgent?.model, model: resolved.model,
                             })}
                           </div>
                         )}
                         {modelLine === 'auto_instead' && (
                           <div className="text-text" data-testid="next-model-auto-instead">
-                            {i18nT('pages.kiroCrewAgentsPage.model_picked_automatically_instead', {
+                            {i18nT('pages.ajCrewAgentsPage.model_picked_automatically_instead', {
                               harness: pinHarness, picked: editingAgent?.model,
                             })}
                           </div>
@@ -746,8 +746,8 @@ export default function CrewEditorNextDialog({
                         {modelLine === 'uses' && (
                           <div className="text-text" data-testid="next-model-uses-line">
                             {resolved.model
-                              ? i18nT('pages.kiroCrewAgentsPage.model_uses', { model: resolved.model })
-                              : i18nT('pages.kiroCrewAgentsPage.model_picked_automatically')}
+                              ? i18nT('pages.ajCrewAgentsPage.model_uses', { model: resolved.model })
+                              : i18nT('pages.ajCrewAgentsPage.model_picked_automatically')}
                           </div>
                         )}
                         {(effortCapable || !editEffort) && (
@@ -755,7 +755,7 @@ export default function CrewEditorNextDialog({
                             {effortCapable ? (
                               <>
                                 <span className="text-text">
-                                  {i18nT('pages.kiroCrewAgentsPage.effort_resolves_to', {
+                                  {i18nT('pages.ajCrewAgentsPage.effort_resolves_to', {
                                     effort: resolved.reasoning_effort
                                       ? effortLabel(resolved.reasoning_effort)
                                       : i18nT('lib.effort.default'),
@@ -763,15 +763,15 @@ export default function CrewEditorNextDialog({
                                 </span>
                                 {' — '}
                                 {resolved.effort_pinned
-                                  ? i18nT('pages.kiroCrewAgentsPage.pinned_on_this_crew')
+                                  ? i18nT('pages.ajCrewAgentsPage.pinned_on_this_crew')
                                   : resolved.reasoning_effort
-                                    ? i18nT('pages.kiroCrewAgentsPage.effort_inherited_from_the_global_default')
-                                    : i18nT('pages.kiroCrewAgentsPage.no_effort_pin_the_model_decides')}
+                                    ? i18nT('pages.ajCrewAgentsPage.effort_inherited_from_the_global_default')
+                                    : i18nT('pages.ajCrewAgentsPage.no_effort_pin_the_model_decides')}
                               </>
                             ) : effortModel ? (
-                              i18nT('pages.kiroCrewAgentsPage.effort_unavailable_on_this_model', { model: effortModel })
+                              i18nT('pages.ajCrewAgentsPage.effort_unavailable_on_this_model', { model: effortModel })
                             ) : (
-                              i18nT('pages.kiroCrewAgentsPage.effort_needs_a_model')
+                              i18nT('pages.ajCrewAgentsPage.effort_needs_a_model')
                             )}
                           </div>
                         )}
@@ -1040,16 +1040,16 @@ export default function CrewEditorNextDialog({
                 <div className="flex min-h-0 flex-1 flex-col gap-4" data-testid="next-pane-danger">
                   <div className="flex max-w-[560px] flex-col gap-4">
                     <p className="m-0 text-[12px] leading-relaxed text-muted">
-                      {i18nT('pages.kiroCrewAgentsPage.deleting_a_crew_unbinds_it_from_new_sessions_its')}
+                      {i18nT('pages.ajCrewAgentsPage.deleting_a_crew_unbinds_it_from_new_sessions_its')}
                     </p>
                   <div className="flex flex-col items-start gap-3 rounded-md border border-danger-subtle bg-danger-subtle p-3">
                     <div className="flex flex-col gap-0.5">
                       <span className="text-[12.5px] font-medium text-text-strong">
-                        {i18nT('pages.kiroCrewAgentsPage.delete_crew')}
+                        {i18nT('pages.ajCrewAgentsPage.delete_crew')}
                       </span>
                       {confirmDelete && (
                         <span className="text-[11.5px] leading-relaxed text-muted">
-                          {i18nT('pages.kiroCrewAgentsPage.delete_crew_named_confirm', { name: editing })}
+                          {i18nT('pages.ajCrewAgentsPage.delete_crew_named_confirm', { name: editing })}
                         </span>
                       )}
                     </div>
@@ -1057,15 +1057,15 @@ export default function CrewEditorNextDialog({
                       {confirmDelete ? (
                         <>
                           <Btn onClick={() => setConfirmDelete(false)} data-testid="next-cancel-delete-crew">
-                            {i18nT('pages.kiroCrewAgentsPage.cancel')}
+                            {i18nT('pages.ajCrewAgentsPage.cancel')}
                           </Btn>
                           <Btn danger onClick={deleteCrew} disabled={sheetBusy} data-testid="next-confirm-delete-crew">
-                            {i18nT('pages.kiroCrewAgentsPage.yes_delete_it')}
+                            {i18nT('pages.ajCrewAgentsPage.yes_delete_it')}
                           </Btn>
                         </>
                       ) : (
                         <Btn danger onClick={() => setConfirmDelete(true)} disabled={sheetBusy} data-testid="next-delete-crew" {...uiLocation('agents.delete')}>
-                          {i18nT('pages.kiroCrewAgentsPage.delete_crew')}
+                          {i18nT('pages.ajCrewAgentsPage.delete_crew')}
                         </Btn>
                       )}
                     </div>
@@ -1099,7 +1099,7 @@ export default function CrewEditorNextDialog({
                   : i18nT('components.crewEditor.unsaved_changes')}
               </span>
             )}
-            <Btn onClick={requestClose}>{i18nT('pages.kiroCrewAgentsPage.cancel')}</Btn>
+            <Btn onClick={requestClose}>{i18nT('pages.ajCrewAgentsPage.cancel')}</Btn>
             <SendBtn
               onClick={save}
               /* Footer Save persists only the crew-level fields; approvals and
@@ -1111,7 +1111,7 @@ export default function CrewEditorNextDialog({
                  crew-level dirt to persist, while the unsaved note and Cancel
                  confirm still see the full set. */
               disabled={sheetBusy || schedDraft || dirtyPanes.has('capabilities') || [...dirtyPanes].every(p => p === 'capabilities' || p === 'schedules')}
-            >{i18nT('pages.kiroCrewAgentsPage.save_changes')}</SendBtn>
+            >{i18nT('pages.ajCrewAgentsPage.save_changes')}</SendBtn>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1149,38 +1149,38 @@ export default function CrewEditorNextDialog({
           maxWidth={440}
           className="z-[110]"
           aria-label={askSchedOnly
-            ? i18nT('pages.kiroCrewAgentsPage.discard_new_schedule')
-            : i18nT('pages.kiroCrewAgentsPage.discard_unsaved_changes')}
+            ? i18nT('pages.ajCrewAgentsPage.discard_new_schedule')
+            : i18nT('pages.ajCrewAgentsPage.discard_unsaved_changes')}
         >
           <DialogHeader>
             <DialogTitle className="whitespace-normal">
               {askSchedOnly
-                ? i18nT('pages.kiroCrewAgentsPage.discard_new_schedule')
-                : i18nT('pages.kiroCrewAgentsPage.discard_unsaved_changes')}
+                ? i18nT('pages.ajCrewAgentsPage.discard_new_schedule')
+                : i18nT('pages.ajCrewAgentsPage.discard_unsaved_changes')}
             </DialogTitle>
           </DialogHeader>
           <DialogBody>
             <p className="m-0 text-sm text-text break-words">
               {schedDraft
-                ? i18nT('pages.kiroCrewAgentsPage.discard_new_schedule_body')
-                : i18nT('pages.kiroCrewAgentsPage.discard_unsaved_body', { name: editing })}
+                ? i18nT('pages.ajCrewAgentsPage.discard_new_schedule_body')
+                : i18nT('pages.ajCrewAgentsPage.discard_unsaved_body', { name: editing })}
             </p>
             {schedDraft && discardTakesSheet && (
               <p className="mb-0 mt-2 text-sm text-text" data-testid="next-sched-discard-also-crew">
-                {i18nT('pages.kiroCrewAgentsPage.discard_also_crew_edits')}
+                {i18nT('pages.ajCrewAgentsPage.discard_also_crew_edits')}
               </p>
             )}
             {schedSaving && (
               <p className="mb-0 mt-2 text-[12px] text-muted" data-testid="next-sched-discard-saving-note">
                 {discardForce
-                  ? i18nT('pages.kiroCrewAgentsPage.discard_anyway_note')
-                  : i18nT('pages.kiroCrewAgentsPage.discard_locked_while_saving')}
+                  ? i18nT('pages.ajCrewAgentsPage.discard_anyway_note')
+                  : i18nT('pages.ajCrewAgentsPage.discard_locked_while_saving')}
               </p>
             )}
           </DialogBody>
           <DialogFooter>
             <Btn onClick={() => setDiscardAsk(null)} data-testid="crew-sched-discard-keep">
-              {i18nT('pages.kiroCrewAgentsPage.keep_editing')}
+              {i18nT('pages.ajCrewAgentsPage.keep_editing')}
             </Btn>
             <Btn
               danger
@@ -1190,8 +1190,8 @@ export default function CrewEditorNextDialog({
               data-testid="crew-sched-discard-confirm"
             >
               {askSchedOnly
-                ? i18nT('pages.kiroCrewAgentsPage.discard_schedule_confirm')
-                : i18nT('pages.kiroCrewAgentsPage.discard_confirm')}
+                ? i18nT('pages.ajCrewAgentsPage.discard_schedule_confirm')
+                : i18nT('pages.ajCrewAgentsPage.discard_confirm')}
             </Btn>
           </DialogFooter>
         </DialogContent>

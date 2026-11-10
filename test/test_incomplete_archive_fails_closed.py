@@ -20,8 +20,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import history as history_mod
-from kiro_crew.history_projection import TranscriptReadProjection
+from aj_crew import history as history_mod
+from aj_crew.history_projection import TranscriptReadProjection
 
 
 class _Log:
@@ -99,7 +99,7 @@ def test_both_consumers_turn_the_failure_into_a_retryable_error() -> None:
     of "this session has no archive", which swallows the exception into the same
     silent truncation by a different route.
     """
-    root = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard"
+    root = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard"
     handlers = _handler_source(root)
     fork = (root / "chat_fork.py").read_text(encoding="utf-8")
 
@@ -187,7 +187,7 @@ def test_the_legacy_pagination_path_also_fails_closed() -> None:
     substitution answers 200 with the live tail and tells them the older history
     does not exist.
     """
-    root = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard"
+    root = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard"
     handlers = _handler_source(root)
     marker = "read_messages_chained_full failed for"
     after = handlers[handlers.index(marker) : handlers.index(marker) + 400]
@@ -201,7 +201,7 @@ def test_every_corpus_recovery_goes_through_one_helper() -> None:
     Pins the consolidation itself: no dashboard corpus-read failure may build its
     own 503 body, or the next one can quietly pick a different answer again.
     """
-    root = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard"
+    root = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard"
     for name, body in (
         ("chat_handlers.py", _handler_source(root)),
         ("chat_fork.py", (root / "chat_fork.py").read_text(encoding="utf-8")),
@@ -255,7 +255,7 @@ def test_the_live_snapshot_is_taken_before_the_archive() -> None:
     duplicate them, which `drop_persisted_tail_prefix` already removes.
     """
     src = (
-        Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "history_projection_reads.py"
+        Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "history_projection_reads.py"
     ).read_text(encoding="utf-8")
     body = src[src.index("def read_messages_chained_full") :]
     body = body[: body.index("def chain_mid_rotation")]
@@ -268,7 +268,7 @@ def test_the_live_snapshot_is_taken_before_the_archive() -> None:
 
 def test_a_failed_mid_rotation_probe_refuses_on_both_paths() -> None:
     """A False fallback silently selects the first-member-only cursor path."""
-    root = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard"
+    root = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard"
     for name, marker, call in (
         ("chat_handlers.py", "mid-rotation probe failed", "history_corpus_unreadable()"),
         (

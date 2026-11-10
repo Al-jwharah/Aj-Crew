@@ -14,9 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import kas_env_shim
+from aj_crew import kas_env_shim
 
-SESSION, AGENT, SERVER, VERSION = "dashboard_chat-shim", "kirocrew", "srv", "a" * 32
+SESSION, AGENT, SERVER, VERSION = "dashboard_chat-shim", "ajcrew", "srv", "a" * 32
 REF = ["--session", SESSION, "--agent", AGENT, "--server", SERVER, "--version", VERSION]
 
 
@@ -58,7 +58,7 @@ def _write(home: Path, payload: bytes) -> Path:
 
 
 def _environ(home: Path) -> dict[str, str]:
-    return {"KIROCREW_HOME": str(home), "PATH": os.environ.get("PATH", "")}
+    return {"AJCREW_HOME": str(home), "PATH": os.environ.get("PATH", "")}
 
 
 def _refused(home: Path, capsys) -> str:

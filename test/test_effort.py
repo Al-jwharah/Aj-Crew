@@ -11,8 +11,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.effort import (
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.effort import (
     EFFORT_LEVELS,
     EFFORT_VALUES,
     effort_settings_key,
@@ -20,8 +20,8 @@ from kiro_crew.effort import (
     model_supports_effort,
     resolve_effort_for_model,
 )
-from kiro_crew.providers import acp as acp_provider
-from kiro_crew.providers.acp import (
+from aj_crew.providers import acp as acp_provider
+from aj_crew.providers.acp import (
     _clear_cli_overlay_effort,
     _read_cli_overlay,
     _write_cli_overlay,
@@ -88,7 +88,7 @@ class TestModelSupportsEffort:
         # agnostic, and a kiro/acp Haiku agent reaches it with the RAW
         # "claude-haiku-4.5" spelling (the kiro path does NOT translate). So the
         # raw id must report False, NOT inherit Sonnet's supports_effort flag.
-        from kiro_crew import model_registry as mr
+        from aj_crew import model_registry as mr
 
         # The fold itself is unchanged — claude_code translation -> Sonnet id.
         assert mr.to_provider_id("claude-haiku-4.5", "claude_code") == (
@@ -379,14 +379,14 @@ class TestFactoryEffortThreading:
     def _capture_provider_kwargs(
         self, provider_name: str, *, config_effort: str = "", **factory_call
     ):
-        # Both factory branches lazily `from kiro_crew.providers.acp import
+        # Both factory branches lazily `from aj_crew.providers.acp import
         # AcpProvider` (circular-import workaround). That import runs inside
         # create_provider_factory(), so patch the source module symbol BEFORE
         # building the factory, then capture the construction kwargs.
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.provider = provider_name
         cfg.agent.reasoning_effort = config_effort
-        with patch("kiro_crew.providers.acp.AcpProvider") as mock_provider:
+        with patch("aj_crew.providers.acp.AcpProvider") as mock_provider:
             mock_provider.return_value = MagicMock()
             factory = cfg.create_provider_factory()
             factory(**factory_call)
@@ -449,12 +449,12 @@ class TestFactoryDropWarning:
     drift from the decision it reports on. Silence stays the contract when the
     effort is delivered, invalid, or absent."""
 
-    _LOGGER = "kiro_crew.config.loader"
+    _LOGGER = "aj_crew.config.loader"
 
     def _drop_warnings(self, caplog, tmp_path, **factory_call) -> list[str]:
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.provider = "acp"
-        with patch("kiro_crew.providers.acp.AcpProvider") as mock_provider:
+        with patch("aj_crew.providers.acp.AcpProvider") as mock_provider:
             mock_provider.return_value = MagicMock()
             factory = cfg.create_provider_factory()
             with caplog.at_level(logging.WARNING, logger=self._LOGGER):
@@ -490,9 +490,9 @@ class TestFactoryDropWarning:
         # model id exists yet to key the level under. The factory carries it
         # unkeyed and the provider judges it against the model the backend
         # reports serving, so the factory itself has no drop to report.
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.provider = "acp"
-        with patch("kiro_crew.providers.acp.AcpProvider") as mock_provider:
+        with patch("aj_crew.providers.acp.AcpProvider") as mock_provider:
             mock_provider.return_value = MagicMock()
             factory = cfg.create_provider_factory()
             with caplog.at_level(logging.WARNING, logger=self._LOGGER):
@@ -516,9 +516,9 @@ class TestFactoryDropWarning:
         # to surface — an explicit override never dedupes, so a config-default
         # drop cannot burn the key and silence a later per-slot request
         # (Design review on this PR).
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.provider = "acp"
-        with patch("kiro_crew.providers.acp.AcpProvider") as mock_provider:
+        with patch("aj_crew.providers.acp.AcpProvider") as mock_provider:
             mock_provider.return_value = MagicMock()
             factory = cfg.create_provider_factory()
             with caplog.at_level(logging.WARNING, logger=self._LOGGER):
@@ -549,10 +549,10 @@ class TestFactoryDropWarning:
         # A static config fact (agent.reasoning_effort with a non-capable
         # model, no per-call override) must not repeat on every provider
         # construction — the factory dedupes it per (model, level).
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.provider = "acp"
         cfg.agent.reasoning_effort = "high"
-        with patch("kiro_crew.providers.acp.AcpProvider") as mock_provider:
+        with patch("aj_crew.providers.acp.AcpProvider") as mock_provider:
             mock_provider.return_value = MagicMock()
             factory = cfg.create_provider_factory()
             with caplog.at_level(logging.WARNING, logger=self._LOGGER):
@@ -579,10 +579,10 @@ class TestFactoryDropWarning:
         # The exact interleave the Design review flagged: a config-default
         # drop fires first and burns its dedupe key; a later EXPLICIT request
         # for the same (model, level) must still warn.
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.provider = "acp"
         cfg.agent.reasoning_effort = "high"
-        with patch("kiro_crew.providers.acp.AcpProvider") as mock_provider:
+        with patch("aj_crew.providers.acp.AcpProvider") as mock_provider:
             mock_provider.return_value = MagicMock()
             factory = cfg.create_provider_factory()
             with caplog.at_level(logging.WARNING, logger=self._LOGGER):
@@ -648,12 +648,12 @@ class TestPoolEffortPostClaim:
     async def test_pool_claim_with_effort_override_applies_effort_post_claim(self):
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.providers.acp import AcpProvider
-        from kiro_crew.session import SessionManager
+        from aj_crew.providers.acp import AcpProvider
+        from aj_crew.session import SessionManager
 
         cfg = MagicMock()
         cfg.session.pool_size = 2
-        cfg.session.pool_agent = "kirocrew"
+        cfg.session.pool_agent = "ajcrew"
         cfg.session.pool_ttl_secs = 1800
         cfg.session.timeout_secs = 3600
         cfg.agent.default_agent = ""
@@ -687,12 +687,12 @@ class TestPoolEffortPostClaim:
         import logging
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.providers.acp import AcpProvider
-        from kiro_crew.session import SessionManager
+        from aj_crew.providers.acp import AcpProvider
+        from aj_crew.session import SessionManager
 
         cfg = MagicMock()
         cfg.session.pool_size = 2
-        cfg.session.pool_agent = "kirocrew"
+        cfg.session.pool_agent = "ajcrew"
         cfg.session.pool_ttl_secs = 1800
         cfg.session.timeout_secs = 3600
         cfg.agent.default_agent = ""
@@ -731,12 +731,12 @@ class TestPoolEffortPostClaim:
         import logging
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.providers.acp import AcpProvider
-        from kiro_crew.session import SessionManager
+        from aj_crew.providers.acp import AcpProvider
+        from aj_crew.session import SessionManager
 
         cfg = MagicMock()
         cfg.session.pool_size = 2
-        cfg.session.pool_agent = "kirocrew"
+        cfg.session.pool_agent = "ajcrew"
         cfg.session.pool_ttl_secs = 1800
         cfg.session.timeout_secs = 3600
         cfg.agent.default_agent = ""
@@ -776,10 +776,10 @@ class TestFactoryDefaultEffortFallback:
     instead of the provider/model default."""
 
     def _capture(self, *, config_effort: str, **factory_call):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.provider = "acp"
         cfg.agent.reasoning_effort = config_effort
-        with patch("kiro_crew.providers.acp.AcpProvider") as mock_provider:
+        with patch("aj_crew.providers.acp.AcpProvider") as mock_provider:
             mock_provider.return_value = MagicMock()
             factory = cfg.create_provider_factory()
             factory(**factory_call)

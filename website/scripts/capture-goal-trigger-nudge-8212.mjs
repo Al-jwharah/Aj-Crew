@@ -74,7 +74,7 @@ const slots = [{
   running: false,
   last_message: 'Cycle 3 done -- waiting on the Windows shard.',
   messages: 4,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   folder_id: '',

@@ -7,10 +7,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.agent_discovery import AgentInfo
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.config.sections import MemoryConfig
-from kiro_crew.memory_stores import (
+from aj_crew.agent_discovery import AgentInfo
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.config.sections import MemoryConfig
+from aj_crew.memory_stores import (
     UnknownMemoryStore,
     provision_member_memory,
     require_member_memory_store,
@@ -28,19 +28,19 @@ def _make_aim_agent(name: str) -> AgentInfo:
     )
 
 
-def _make_config(agents: dict[str, KiroCrewAgentConfig]) -> KiroCrewConfig:
-    """Create a MagicMock standing in for KiroCrewConfig with the given agents dict."""
-    cfg = MagicMock(spec=KiroCrewConfig)
+def _make_config(agents: dict[str, AjCrewAgentConfig]) -> AjCrewConfig:
+    """Create a MagicMock standing in for AjCrewConfig with the given agents dict."""
+    cfg = MagicMock(spec=AjCrewConfig)
     cfg.agents = agents
     cfg.memory_stores = {}
     cfg.memory = MemoryConfig()
     cfg.degraded_sections = frozenset()
-    cfg.default_agent = "kirocrew"
+    cfg.default_agent = "ajcrew"
     cfg.save = MagicMock()
     return cfg
 
 
-async def _run_sync(cfg: KiroCrewConfig, aim_agents_list: list[AgentInfo]) -> dict:
+async def _run_sync(cfg: AjCrewConfig, aim_agents_list: list[AgentInfo]) -> dict:
     """Invoke the production _do_agents_sync with mocked dependencies and return parsed body.
 
     The sync persists via a delta mutate through ``update_config_locked``;
@@ -48,7 +48,7 @@ async def _run_sync(cfg: KiroCrewConfig, aim_agents_list: list[AgentInfo]) -> di
     existing called/not-called assertions keep their meaning) and stores the
     mutated document on ``cfg.written_doc``.
     """
-    from kiro_crew.dashboard.handlers.agents import _do_agents_sync
+    from aj_crew.dashboard.handlers.agents import _do_agents_sync
 
     request = MagicMock()
     request.get.return_value = "dashboard"
@@ -63,13 +63,13 @@ async def _run_sync(cfg: KiroCrewConfig, aim_agents_list: list[AgentInfo]) -> di
         return result
 
     with (
-        patch("kiro_crew.dashboard.handlers.agents.KiroCrewConfig.load", return_value=cfg),
-        patch("kiro_crew.dashboard.handlers.agents.list_agents", return_value=aim_agents_list),
+        patch("aj_crew.dashboard.handlers.agents.AjCrewConfig.load", return_value=cfg),
+        patch("aj_crew.dashboard.handlers.agents.list_agents", return_value=aim_agents_list),
         patch(
-            "kiro_crew.dashboard.handlers.agents.update_config_locked",
+            "aj_crew.dashboard.handlers.agents.update_config_locked",
             new=_fake_update_config_locked,
         ),
-        patch("kiro_crew.dashboard.handlers.agents._sel", return_value=sel_mock),
+        patch("aj_crew.dashboard.handlers.agents._sel", return_value=sel_mock),
     ):
         response = await _do_agents_sync(request)
 
@@ -84,9 +84,9 @@ class TestAgentSyncPrune:
     async def test_prune_removes_stale_aim_agents(self):
         """Agents with source='aim' not in scan results get pruned."""
         agents = {
-            "omni-reviewer": KiroCrewAgentConfig(kiro_agent="omni-reviewer", source="aim"),
-            "omni-aws": KiroCrewAgentConfig(kiro_agent="omni-aws", source="aim"),
-            "gpu-dev": KiroCrewAgentConfig(kiro_agent="gpu-dev", source="aim"),
+            "omni-reviewer": AjCrewAgentConfig(kiro_agent="omni-reviewer", source="aim"),
+            "omni-aws": AjCrewAgentConfig(kiro_agent="omni-aws", source="aim"),
+            "gpu-dev": AjCrewAgentConfig(kiro_agent="gpu-dev", source="aim"),
         }
         cfg = _make_config(agents)
         aim_list = [_make_aim_agent("omni-aws"), _make_aim_agent("gpu-dev")]
@@ -104,10 +104,10 @@ class TestAgentSyncPrune:
         """A star does not keep a spec-less row alive: the row is pruned like
         any other and a reinstall comes back un-starred (one click restores it)."""
         agents = {
-            "omni-reviewer": KiroCrewAgentConfig(
+            "omni-reviewer": AjCrewAgentConfig(
                 kiro_agent="omni-reviewer", source="aim", starred=True
             ),
-            "omni-aws": KiroCrewAgentConfig(kiro_agent="omni-aws", source="aim"),
+            "omni-aws": AjCrewAgentConfig(kiro_agent="omni-aws", source="aim"),
         }
         cfg = _make_config(agents)
         body = await _run_sync(cfg, [_make_aim_agent("omni-aws")])
@@ -121,16 +121,16 @@ class TestAgentSyncPrune:
     @pytest.mark.parametrize(
         ("name", "source"),
         [
-            pytest.param("kirocrew", "kirocrew", id="test_prune_skips_kirocrew_owned_agents"),
+            pytest.param("ajcrew", "ajcrew", id="test_prune_skips_ajcrew_owned_agents"),
             # source='builtin' is a user-created agent.
             pytest.param("my-custom", "builtin", id="test_prune_skips_user_created_agents"),
         ],
     )
     async def test_prune_skips_agents_aim_does_not_own(self, name: str, source: str):
-        """Only AIM-sourced agents are pruned; kirocrew-owned and user-created ones never are."""
+        """Only AIM-sourced agents are pruned; ajcrew-owned and user-created ones never are."""
         agents = {
-            name: KiroCrewAgentConfig(kiro_agent=name, source=source),
-            "stale-aim": KiroCrewAgentConfig(kiro_agent="stale-aim", source="aim"),
+            name: AjCrewAgentConfig(kiro_agent=name, source=source),
+            "stale-aim": AjCrewAgentConfig(kiro_agent="stale-aim", source="aim"),
         }
         cfg = _make_config(agents)
         aim_list = [_make_aim_agent("gpu-dev")]
@@ -145,8 +145,8 @@ class TestAgentSyncPrune:
     async def test_no_prune_when_scan_returns_empty(self):
         """Empty scan result (likely transient failure) should not prune anything."""
         agents = {
-            "omni-aws": KiroCrewAgentConfig(kiro_agent="omni-aws", source="aim"),
-            "gpu-dev": KiroCrewAgentConfig(kiro_agent="gpu-dev", source="aim"),
+            "omni-aws": AjCrewAgentConfig(kiro_agent="omni-aws", source="aim"),
+            "gpu-dev": AjCrewAgentConfig(kiro_agent="gpu-dev", source="aim"),
         }
         cfg = _make_config(agents)
         aim_list: list[AgentInfo] = []
@@ -163,7 +163,7 @@ class TestAgentSyncPrune:
     async def test_add_and_prune_in_same_sync(self):
         """A single sync both adds new agents and prunes stale ones."""
         agents = {
-            "old-agent": KiroCrewAgentConfig(kiro_agent="old-agent", source="aim"),
+            "old-agent": AjCrewAgentConfig(kiro_agent="old-agent", source="aim"),
         }
         cfg = _make_config(agents)
         aim_list = [_make_aim_agent("new-agent")]
@@ -180,7 +180,7 @@ class TestAgentSyncPrune:
     async def test_noop_when_nothing_changed(self):
         """No adds or prunes when config matches scan exactly."""
         agents = {
-            "omni-aws": KiroCrewAgentConfig(kiro_agent="omni-aws", source="aim"),
+            "omni-aws": AjCrewAgentConfig(kiro_agent="omni-aws", source="aim"),
         }
         cfg = _make_config(agents)
         aim_list = [_make_aim_agent("omni-aws")]
@@ -193,13 +193,13 @@ class TestAgentSyncPrune:
 
     @pytest.mark.asyncio
     async def test_package_prune_preserves_memory_without_rebinding_new_member(self):
-        from kiro_crew.dashboard.handlers.agents import _do_agents_sync
+        from aj_crew.dashboard.handlers.agents import _do_agents_sync
 
-        cfg = KiroCrewConfig.load()
-        cfg.agents["stale-package"] = KiroCrewAgentConfig(
+        cfg = AjCrewConfig.load()
+        cfg.agents["stale-package"] = AjCrewAgentConfig(
             kiro_agent="stale-package", source="package"
         )
-        cfg.agents["live"] = KiroCrewAgentConfig(kiro_agent="live", source="package")
+        cfg.agents["live"] = AjCrewAgentConfig(kiro_agent="live", source="package")
         store = provision_member_memory(cfg, "stale-package")
         cfg.save()
         request = MagicMock()
@@ -207,21 +207,21 @@ class TestAgentSyncPrune:
         request.app = {}
         with (
             patch(
-                "kiro_crew.dashboard.handlers.agents.list_agents",
+                "aj_crew.dashboard.handlers.agents.list_agents",
                 return_value=[_make_aim_agent("live")],
             ),
-            patch("kiro_crew.dashboard.handlers.agents._sel", return_value=MagicMock()),
+            patch("aj_crew.dashboard.handlers.agents._sel", return_value=MagicMock()),
         ):
             response = await _do_agents_sync(request)
         assert json.loads(response.body)["pruned"] == ["stale-package"]
 
-        rebind = KiroCrewConfig.load()
-        rebind.agents["stale-package"] = KiroCrewAgentConfig(
+        rebind = AjCrewConfig.load()
+        rebind.agents["stale-package"] = AjCrewAgentConfig(
             kiro_agent="stale-package", source="package", memory_store=store
         )
         rebind.save()
         with pytest.raises(UnknownMemoryStore, match="member identity is missing or ambiguous"):
-            require_member_memory_store(KiroCrewConfig.load(), "stale-package")
+            require_member_memory_store(AjCrewConfig.load(), "stale-package")
 
 
 class TestSyncRefusesCredentialShapedNames:
@@ -256,7 +256,7 @@ class TestSyncRefusesCredentialShapedNames:
     @pytest.mark.asyncio
     async def test_reinstalled_package_member_does_not_adopt_previous_memory(self):
         """An existing store is retained but never inherited by a same-name discovery."""
-        cfg = _make_config({"oncall": KiroCrewAgentConfig(kiro_agent="oncall", source="package")})
+        cfg = _make_config({"oncall": AjCrewAgentConfig(kiro_agent="oncall", source="package")})
         retired_store = provision_member_memory(cfg, "oncall")
         del cfg.agents["oncall"]
 
@@ -268,8 +268,8 @@ class TestSyncRefusesCredentialShapedNames:
         assert retired_store in cfg.memory_stores
         assert fresh == "default"
         assert cfg.written_doc["memory_stores"] == {}
-        from kiro_crew.memory_stores import memory_stores_root
-        from kiro_crew.vector_memory import read_member_database_identity
+        from aj_crew.memory_stores import memory_stores_root
+        from aj_crew.vector_memory import read_member_database_identity
 
         assert (
             read_member_database_identity(memory_stores_root() / retired_store / "memory.db")[1]
@@ -285,7 +285,7 @@ class TestAgentSyncFsCheckIsOffloaded:
     def test_the_on_disk_check_is_awaited_off_loop(self) -> None:
         import inspect
 
-        from kiro_crew.dashboard.handlers import agents
+        from aj_crew.dashboard.handlers import agents
 
         src = inspect.getsource(agents._do_agents_sync)
         assert "await asyncio.to_thread(" in src
@@ -299,9 +299,9 @@ class TestPruneOnlySnapshotMatchedEntries:
 
     @pytest.mark.asyncio
     async def test_agent_added_or_changed_after_snapshot_survives_stale_prune(self):
-        from kiro_crew.dashboard.handlers.agents import _do_agents_sync
+        from aj_crew.dashboard.handlers.agents import _do_agents_sync
 
-        cfg = _make_config({"stale": KiroCrewAgentConfig(kiro_agent="stale-spec", source="aim")})
+        cfg = _make_config({"stale": AjCrewAgentConfig(kiro_agent="stale-spec", source="aim")})
         request = MagicMock()
         request.get.return_value = "dashboard"
 
@@ -324,16 +324,16 @@ class TestPruneOnlySnapshotMatchedEntries:
             return result
 
         with (
-            patch("kiro_crew.dashboard.handlers.agents.KiroCrewConfig.load", return_value=cfg),
+            patch("aj_crew.dashboard.handlers.agents.AjCrewConfig.load", return_value=cfg),
             patch(
-                "kiro_crew.dashboard.handlers.agents.list_agents",
+                "aj_crew.dashboard.handlers.agents.list_agents",
                 return_value=[_make_aim_agent("unrelated")],
             ),
             patch(
-                "kiro_crew.dashboard.handlers.agents.update_config_locked",
+                "aj_crew.dashboard.handlers.agents.update_config_locked",
                 new=_fake_update_config_locked,
             ),
-            patch("kiro_crew.dashboard.handlers.agents._sel", return_value=MagicMock()),
+            patch("aj_crew.dashboard.handlers.agents._sel", return_value=MagicMock()),
         ):
             await _do_agents_sync(request)
 
@@ -383,10 +383,10 @@ class TestAgentSyncSkipsForks:
 
 
 class TestAgentSyncSkipsRuntimeSpecs:
-    """Kiro Crew's own specs are runtime templates, not Bots to enrol.
+    """Aj Crew's own specs are runtime templates, not Bots to enrol.
 
     Discovery labels the managed helper specs (worker, conductors, knowledge, ...)
-    ``source="builtin"`` with ``kirocrew_owned=True``, and a derived
+    ``source="builtin"`` with ``ajcrew_owned=True``, and a derived
     ``<agent>--readonly`` side-turn spec reads as an ordinary ``builtin`` row. The
     sync must leave both out of ``cfg.agents``: a row written there lands on the
     shared memory store and no prune ever removes it.
@@ -400,12 +400,12 @@ class TestAgentSyncSkipsRuntimeSpecs:
             description=f"{name} runtime spec",
             model="auto",
             source="builtin",
-            kirocrew_owned=True,
+            ajcrew_owned=True,
         )
 
     @staticmethod
     def _readonly_spec(base: str) -> AgentInfo:
-        from kiro_crew.dashboard.side_readonly_spec import OWNER_MARKER, READONLY_SUFFIX
+        from aj_crew.dashboard.side_readonly_spec import OWNER_MARKER, READONLY_SUFFIX
 
         name = f"{base}{READONLY_SUFFIX}"
         return AgentInfo(
@@ -420,8 +420,8 @@ class TestAgentSyncSkipsRuntimeSpecs:
     @pytest.mark.parametrize(
         "row",
         [
-            _owned_spec("kirocrew-worker"),
-            _owned_spec("kirocrew-conductor"),
+            _owned_spec("ajcrew-worker"),
+            _owned_spec("ajcrew-conductor"),
             _readonly_spec("oncall"),
         ],
         ids=["owned-worker", "owned-conductor", "derived-readonly"],
@@ -440,15 +440,15 @@ class TestAgentSyncSkipsRuntimeSpecs:
         """Control: the owned flag and the owner marker are what keep the rows out."""
         cfg = _make_config({})
         plain = AgentInfo(
-            name="kirocrew-worker",
-            filename="kirocrew-worker.json",
+            name="ajcrew-worker",
+            filename="ajcrew-worker.json",
             description="a hand-written spec",
             model="auto",
             source="builtin",
-            kirocrew_owned=False,
+            ajcrew_owned=False,
         )
 
         body = await _run_sync(cfg, [plain])
 
-        assert body["synced"] == ["kirocrew-worker"]
-        assert "kirocrew-worker" in cfg.agents
+        assert body["synced"] == ["ajcrew-worker"]
+        assert "ajcrew-worker" in cfg.agents

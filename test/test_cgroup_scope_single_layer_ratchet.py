@@ -13,7 +13,7 @@ Two layers of pinning:
 * the real chokepoint, with the cgroup backend forced available, applies its scope
   as the outermost and only layer (an app pins its own spawn sites against the same
   chokepoint in its own ``tests/``, as PPTX Maker does);
-* a source sweep over ``src/kiro_crew`` refuses any function that hands a
+* a source sweep over ``src/aj_crew`` refuses any function that hands a
   ``sandboxed_spawn_argv`` / ``sandboxed_spawn_argv_async`` result to
   ``cgroup_scope_argv``, so the next caller cannot bring the double wrap back.
 """
@@ -25,10 +25,10 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.sandbox as sb
+import aj_crew.sandbox as sb
 
 _SYSTEMD_RUN = "/usr/bin/systemd-run"
-_SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+_SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 _CHOKEPOINTS = frozenset({"sandboxed_spawn_argv", "sandboxed_spawn_argv_async"})
 
 
@@ -43,7 +43,7 @@ def cgroup_backend_available(monkeypatch):
     monkeypatch.setattr(sb, "_CGROUP_SCOPE_PROBE", None)
     monkeypatch.setattr(sb, "_CGROUP_WARNED", False)
     monkeypatch.setattr(sb, "_probe_cgroup_scope", lambda: (True, "ok"))
-    monkeypatch.setattr("kiro_crew.platform_compat.trusted_system_bin", lambda name: _SYSTEMD_RUN)
+    monkeypatch.setattr("aj_crew.platform_compat.trusted_system_bin", lambda name: _SYSTEMD_RUN)
     monkeypatch.setattr(sb, "_reconcile_slice_memory_high_off_thread", lambda *a, **k: None)
     monkeypatch.setattr(sb, "_cgroup_limits_from_config", lambda _rl=None: (8192, 8192, 50, 0))
     monkeypatch.setattr(sb, "_cpu_controller_delegated", lambda: False)

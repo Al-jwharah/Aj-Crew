@@ -39,7 +39,7 @@ from test_ratchet_scope import (
     assert_fixture_ignores_ambient_git,
 )
 
-from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS
+from aj_crew.platform.update_governance import _GIT_LOCATION_VARS
 
 _RATCHET_SCOPE_SCRIPT = repo_root() / "scripts" / "ratchet_scope.py"
 _SPEC = importlib.util.spec_from_file_location("ratchet_scope", _RATCHET_SCOPE_SCRIPT)
@@ -64,7 +64,7 @@ def _is_python_test_file(rel: str) -> bool:
         return True
     if rel.startswith("test/"):
         return True
-    if rel.startswith("src/kiro_crew/apps/builtins/"):
+    if rel.startswith("src/aj_crew/apps/builtins/"):
         parts = rel.split("/")
         return any(part == "tests" or part.endswith("_tests") for part in parts[:-1])
     return False
@@ -253,7 +253,7 @@ def _patched_target(node: ast.Call) -> tuple[ast.AST | None, str | None]:
     return (node.args[0] if node.args else None), None
 
 
-#: What ``kirocrew.test-stdlib-clock-rebound`` (semgrep/test-determinism.yaml) refuses:
+#: What ``ajcrew.test-stdlib-clock-rebound`` (semgrep/test-determinism.yaml) refuses:
 #: ``<x>.setattr(time, ...)`` and ``<x>.patch.object(time, ...)`` on the stdlib ``time``
 #: module, named directly (an ``import time as`` alias included) or reached through
 #: another module's binding (``<mod>.time``), and a ``"time.<attr>"`` or
@@ -327,7 +327,7 @@ def _restores_sys_modules(fn: ast.AST) -> bool:
 
 def _k5_sys_modules_eviction(module: _Module) -> Iterable[ast.AST]:
     """``del sys.modules[...]`` / ``sys.modules.pop(...)`` with no restore in the same
-    function. ``importlib.reload`` is ``kirocrew.test-in-process-reload``'s, not this."""
+    function. ``importlib.reload`` is ``ajcrew.test-in-process-reload``'s, not this."""
     for node in [*module.calls, *module.writes]:
         evicted = False
         if isinstance(node, ast.Delete):
@@ -525,12 +525,12 @@ def _kc_testing_names(module: _Module) -> frozenset[str]:
     names: set[str] = set()
     for node in ast.walk(module.tree):
         if isinstance(node, ast.ImportFrom) and node.module:
-            if node.module == "kiro_crew.testing" or node.module.startswith("kiro_crew.testing."):
+            if node.module == "aj_crew.testing" or node.module.startswith("aj_crew.testing."):
                 for alias in node.names:
                     names.add(alias.asname or alias.name)
         elif isinstance(node, ast.Import):
             for alias in node.names:
-                if alias.asname and alias.name.startswith("kiro_crew.testing"):
+                if alias.asname and alias.name.startswith("aj_crew.testing"):
                     names.add(alias.asname)
     return frozenset(names)
 
@@ -556,7 +556,7 @@ def _kc_testing_val(node: ast.AST, kc_names: frozenset[str], param_names: frozen
         return node.id in kc_names or node.id in param_names
     if isinstance(node, ast.Attribute):
         dotted = _dotted(node)
-        if dotted.startswith("kiro_crew.testing."):
+        if dotted.startswith("aj_crew.testing."):
             return True
         root = dotted.split(".")[0]
         return bool(root) and root in kc_names
@@ -627,18 +627,18 @@ def _k20_on_loop_session_write(module: _Module) -> Iterable[ast.AST]:
             yield node
 
 
-def _kiro_crew_module_names(module: _Module) -> frozenset[str]:
-    """Lowercase names imported from ``kiro_crew.*`` at module scope.
+def _aj_crew_module_names(module: _Module) -> frozenset[str]:
+    """Lowercase names imported from ``aj_crew.*`` at module scope.
 
-    Covers both ``from kiro_crew.X import mod`` (ImportFrom) and
-    ``import kiro_crew.X.mod as mod`` (Import with alias).  A kiro_crew module
+    Covers both ``from aj_crew.X import mod`` (ImportFrom) and
+    ``import aj_crew.X.mod as mod`` (Import with alias).  A aj_crew module
     import binds a persistent object: assigning a live asyncio Task or TimerHandle
     to one of its attributes creates state that survives the test's event loop.
     """
     names: set[str] = set()
     for node in module.tree.body:
         if isinstance(node, ast.ImportFrom) and node.module:
-            if node.module == "kiro_crew" or node.module.startswith("kiro_crew."):
+            if node.module == "aj_crew" or node.module.startswith("aj_crew."):
                 for alias in node.names:
                     name = alias.asname or alias.name
                     if name and name[0].islower():
@@ -646,7 +646,7 @@ def _kiro_crew_module_names(module: _Module) -> frozenset[str]:
         elif isinstance(node, ast.Import):
             for alias in node.names:
                 if alias.asname and (
-                    alias.name == "kiro_crew" or alias.name.startswith("kiro_crew.")
+                    alias.name == "aj_crew" or alias.name.startswith("aj_crew.")
                 ):
                     if alias.asname[0].islower():
                         names.add(alias.asname)
@@ -668,7 +668,7 @@ def _is_task_creating_value(node: ast.AST) -> bool:
 
 
 def _k16_module_async_state(module: _Module) -> Iterable[ast.AST]:
-    """Writes a Task or TimerHandle into a kiro_crew module attribute from a test
+    """Writes a Task or TimerHandle into a aj_crew module attribute from a test
     function, when no autouse fixture or self-cleanup guards the state.
 
     The module object outlives the test's event loop; a stale Task in module state
@@ -687,7 +687,7 @@ def _k16_module_async_state(module: _Module) -> Iterable[ast.AST]:
     - the enclosing test function itself resets the same attribute to ``None``
       (explicit inline cleanup).
     """
-    kc_mods = _kiro_crew_module_names(module)
+    kc_mods = _aj_crew_module_names(module)
     if not kc_mods:
         return
 
@@ -1218,13 +1218,13 @@ PY_CASES: dict[str, tuple[tuple[str, ...], str]] = {
     "K3-stdlib-clock-patch": (
         (
             "import asyncio\ndef test_x(monkeypatch):\n    monkeypatch.setattr(asyncio, 'sleep', f)\n",
-            "def test_x():\n    with patch('kiro_crew.providers.acp.asyncio.sleep', new=f):\n"
+            "def test_x():\n    with patch('aj_crew.providers.acp.asyncio.sleep', new=f):\n"
             "        pass\n",
             "import datetime\ndef test_x(monkeypatch):\n"
             "    monkeypatch.setattr(datetime, 'datetime', Frozen)\n",
             "def test_x(monkeypatch):\n    monkeypatch.setattr(subject.asyncio, 'sleep', f)\n",
             "def test_x(monkeypatch):\n"
-            "    monkeypatch.setattr('kiro_crew.acp.client.datetime.datetime', Frozen)\n",
+            "    monkeypatch.setattr('aj_crew.acp.client.datetime.datetime', Frozen)\n",
             "import asyncio\nfrom unittest import mock\ndef test_x():\n"
             "    with mock.patch.object(asyncio, 'sleep', f):\n        pass\n",
         ),
@@ -1235,12 +1235,12 @@ PY_CASES: dict[str, tuple[tuple[str, ...], str]] = {
         "    monkeypatch.setattr('time.tzname', t)\n    monkeypatch.setattr(time, 'monotonic', f)\n"
         "    monkeypatch.setattr(_t, 'sleep', f)\n    monkeypatch.setattr('time.time', f)\n"
         "    monkeypatch.setattr(subject.time, 'monotonic', f)\n"
-        "    monkeypatch.setattr('kiro_crew.acp.client.time.monotonic', f)\n"
-        "    monkeypatch.setattr('kiro_crew.acp.client.time', fake)\n"
+        "    monkeypatch.setattr('aj_crew.acp.client.time.monotonic', f)\n"
+        "    monkeypatch.setattr('aj_crew.acp.client.time', fake)\n"
         "    with patch('time.sleep'), patch.object(time, 'monotonic', f):\n        pass\n"
         "    with mock.patch.object(_t, 'time', f), unittest.mock.patch('time.sleep'):\n"
         "        pass\n"
-        "    with mock.patch('kiro_crew.cron.time.time'), patch.object(subject.time, 'sleep'):\n"
+        "    with mock.patch('aj_crew.cron.time.time'), patch.object(subject.time, 'sleep'):\n"
         "        pass\n",
     ),
     "K5-sys-modules-eviction": (
@@ -1319,29 +1319,29 @@ PY_CASES: dict[str, tuple[tuple[str, ...], str]] = {
     ),
     "K16-module-async-state": (
         (
-            # 1. Plain assignment: create_task on imported kiro_crew module attr
-            "import asyncio\nfrom kiro_crew.apps.builtins.aws_control import hooks\n"
+            # 1. Plain assignment: create_task on imported aj_crew module attr
+            "import asyncio\nfrom aj_crew.apps.builtins.aws_control import hooks\n"
             "async def test_x():\n    hooks._task = asyncio.create_task(f())\n",
             # 2. call_later via get_running_loop()
-            "import asyncio\nfrom kiro_crew.dashboard import crewmate_feed\n"
+            "import asyncio\nfrom aj_crew.dashboard import crewmate_feed\n"
             "async def test_y():\n"
             "    crewmate_feed._timer = asyncio.get_running_loop().call_later(0.4, lambda: None)\n",
             # 3. Container add: mod._attr.add(create_task(...))
-            "import asyncio\nfrom kiro_crew.apps.builtins.aws_control import hooks\n"
+            "import asyncio\nfrom aj_crew.apps.builtins.aws_control import hooks\n"
             "async def test_add():\n    hooks._pending.add(asyncio.create_task(f()))\n",
-            # 4. Plain Import alias: import kiro_crew.x.hooks as hooks
-            "import asyncio\nimport kiro_crew.apps.builtins.aws_control.hooks as hooks\n"
+            # 4. Plain Import alias: import aj_crew.x.hooks as hooks
+            "import asyncio\nimport aj_crew.apps.builtins.aws_control.hooks as hooks\n"
             "async def test_import():\n    hooks._task = asyncio.create_task(f())\n",
             # 5. Indirect assignment: t = create_task(); mod._attr = t
-            "import asyncio\nfrom kiro_crew.apps.builtins.aws_control import hooks\n"
+            "import asyncio\nfrom aj_crew.apps.builtins.aws_control import hooks\n"
             "async def test_indirect():\n"
             "    t = asyncio.create_task(f())\n    hooks._task = t\n",
             # 6. Annotated assignment
-            "import asyncio\nfrom kiro_crew.apps.builtins.aws_control import hooks\n"
+            "import asyncio\nfrom aj_crew.apps.builtins.aws_control import hooks\n"
             "async def test_ann():\n"
             "    hooks._task: asyncio.Task = asyncio.create_task(f())\n",
             # 7. Non-autouse yield fixture resets _keep; test NOT requesting it writes -> K16
-            "import asyncio\nimport pytest\nfrom kiro_crew.dashboard import crewmate_feed\n"
+            "import asyncio\nimport pytest\nfrom aj_crew.dashboard import crewmate_feed\n"
             "@pytest.fixture\n"
             "def _clean_feed():\n    crewmate_feed._keep.clear()\n    yield\n"
             "    crewmate_feed._keep.clear()\n"
@@ -1351,11 +1351,11 @@ PY_CASES: dict[str, tuple[tuple[str, ...], str]] = {
         # Near misses — all count 0:
         # autouse resets (hooks, _task) -> test_x write exempt;
         # non-autouse yield fixture requested -> exempt;
-        # non-kiro_crew base -> not counted; None value -> not a task;
+        # non-aj_crew base -> not counted; None value -> not a task;
         # self-cleanup (same-fn None reset) -> exempt;
         # monkeypatch.setattr -> not detected.
         "import asyncio\nimport pytest\n"
-        "from kiro_crew.apps.builtins.aws_control import hooks\n"
+        "from aj_crew.apps.builtins.aws_control import hooks\n"
         "@pytest.fixture(autouse=True)\n"
         "def _isolated():\n    hooks._task = None\n    yield\n    hooks._task = None\n"
         "@pytest.fixture\n"
@@ -1400,9 +1400,9 @@ PY_CASES: dict[str, tuple[tuple[str, ...], str]] = {
             "def test_x():\n    call(deadline=5)\n",
             "def test_x():\n    run(on_timeout=5)\n",
         ),
-        "import kiro_crew.testing.wait as kc_wait\n"
-        "from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS, default_timeout\n"
-        "from kiro_crew.testing import wait\n"
+        "import aj_crew.testing.wait as kc_wait\n"
+        "from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS, default_timeout\n"
+        "from aj_crew.testing import wait\n"
         "def cb(): pass\n"
         "def test_x(monkeypatch, tmo):\n"
         "    run(timeout=0)\n    run(timeout=None)\n"
@@ -1437,7 +1437,7 @@ _UNREAD = (
     "    monkeypatch.setattr(subject.time, 'monotonic', f)\n",
     # A non-ASCII last item: the columns the check slices by are bytes.
     "async def test_x():\n    async with (a() as b, c('é')):\n        g(lambda a, *, b: 1)\n"
-    "    with patch('kiro_crew.cron.time.time'):\n        pass\n",
+    "    with patch('aj_crew.cron.time.time'):\n        pass\n",
     "def test_x(monkeypatch):\n    monkeypatch.setattr(time, 'sleep', f)\n"
     + "#" * SEMGREP_MAX_TARGET_BYTES
     + "\n",
@@ -1576,8 +1576,8 @@ def test_a_flake_ok_line_is_excused_only_with_a_reason() -> None:
 
 #: class -> the semgrep rule (semgrep/test-determinism.yaml) whose shape family it shares.
 _RULE_OF = {
-    "K3-stdlib-clock-patch": "kirocrew.test-stdlib-clock-rebound",
-    "K5-sys-modules-eviction": "kirocrew.test-in-process-reload",
+    "K3-stdlib-clock-patch": "ajcrew.test-stdlib-clock-rebound",
+    "K5-sys-modules-eviction": "ajcrew.test-in-process-reload",
 }
 _SEMGREP_MARK = re.compile(r"^\s*# (ruleid|ok): (\S+)\s*$")
 
@@ -1617,12 +1617,12 @@ def test_the_electron_promise_sleep_is_the_only_one_counted() -> None:
 
 def test_the_scan_covers_the_test_trees_and_nothing_else() -> None:
     assert _is_python_test_file("test/test_a.py")
-    assert _is_python_test_file("src/kiro_crew/apps/builtins/x/tests/test_a.py")
+    assert _is_python_test_file("src/aj_crew/apps/builtins/x/tests/test_a.py")
     assert _is_python_test_file(
-        "src/kiro_crew/apps/builtins/x/crew/runtime/container_tests/test_a.py"
+        "src/aj_crew/apps/builtins/x/crew/runtime/container_tests/test_a.py"
     )
     assert _is_python_test_file("conftest.py")
-    assert not _is_python_test_file("src/kiro_crew/session.py")
+    assert not _is_python_test_file("src/aj_crew/session.py")
     assert _is_js_test_file("website/src/pages/a.test.tsx")
     assert _is_js_test_file("website/playwright/a.spec.ts")
     assert _is_js_test_file("website/electron/test/a.test.js")

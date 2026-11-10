@@ -28,8 +28,8 @@ import pytest
 import work_ledger_helpers
 from work_ledger_helpers import CONDUCTOR, WORKER, _bytes_on_disk, _new_item
 
-from kiro_crew import work_ledger as wl
-from kiro_crew.work_vocab import WORK_CLOSED_WINDOW, worker_statuses
+from aj_crew import work_ledger as wl
+from aj_crew.work_vocab import WORK_CLOSED_WINDOW, worker_statuses
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _isolated_home = work_ledger_helpers._isolated_home
@@ -100,7 +100,7 @@ def test_caps_hold_their_rfc_values():
 def test_the_fold_holds_far_less_than_its_ceiling():
     """Open fan-out plus the closed window sits far below the fold's held-item
     ceiling, so a board the store admits never reaches it."""
-    from kiro_crew.crew_log import projection
+    from aj_crew.crew_log import projection
 
     assert wl.MAX_ITEMS_PER_CONDUCTOR + WORK_CLOSED_WINDOW < projection.WORK_ITEM_LIMIT
 
@@ -125,7 +125,7 @@ def test_a_model_supplied_string_cannot_reach_a_path_component(bad):
 
 
 def test_directory_name_is_session_ledgers_fold_not_a_copy():
-    from kiro_crew import session_ledger
+    from aj_crew import session_ledger
 
     assert wl._store_name is session_ledger._store_name
     assert not hasattr(wl, "_STORE_NAME_UNSAFE")
@@ -559,7 +559,7 @@ def _ledger_conductor_accept_eval() -> Path:
     script = (
         Path(__file__).resolve().parents[1]
         / "src"
-        / "kiro_crew"
+        / "aj_crew"
         / "builtin_skills"
         / "goal-conductor"
         / "scripts"
@@ -805,7 +805,7 @@ def test_the_concreteness_rules_are_exactly_accept_evals_error_only_guards():
     assert wl.is_acceptance_concrete({"kind": "pr_merged", "pr": 7, "repo": "owner/name"}) is True
     # ``edition_check`` shells out too, so its valid form is asserted concrete and
     # evaluated nowhere, as for ``pr_checks`` above. A placeholder ref matches the
-    # evaluator's ref pattern and would reach ``kirocrew``, so it is held to the
+    # evaluator's ref pattern and would reach ``ajcrew``, so it is held to the
     # placeholder rule here rather than run.
     assert (
         wl.is_acceptance_concrete({"kind": "edition_check", "check": "name", "ref": "TBD"}) is False
@@ -1064,7 +1064,7 @@ def test_accept_batch_is_what_accept_eval_reads_end_to_end():
     script = (
         Path(__file__).resolve().parents[1]
         / "src"
-        / "kiro_crew"
+        / "aj_crew"
         / "builtin_skills"
         / "goal-conductor"
         / "scripts"
@@ -1529,7 +1529,7 @@ _PERMITTED_STORE_IMPORTERS = frozenset(
         # ``work`` fold the crew log already published. It opens no store file,
         # resolves no caller, and its only reader is the owner's own slot frame.
         "dashboard/crew_work.py",
-        # The operator-run cleanup sweep behind ``kirocrew ledger-sweep``.
+        # The operator-run cleanup sweep behind ``ajcrew ledger-sweep``.
         # It is a seam deliberately, and it does not weaken the rule the
         # allowlist exists for: it resolves NO caller identity — there is no
         # request and no session to attribute — and it reads the store by
@@ -1615,15 +1615,15 @@ _PERMITTED_STORE_IMPORTERS = frozenset(
 
 #: An import of THE STORE, spelled by its own module path. A bare
 #: ``import work_ledger`` substring is not enough: ``dashboard/handlers/work_ledger.py``
-#: shares the basename, so ``from kiro_crew.dashboard.handlers import work_ledger``
+#: shares the basename, so ``from aj_crew.dashboard.handlers import work_ledger``
 #: (``server.py``'s deferred route binder) matched and was reported as a store
-#: importer. Anchoring on ``kiro_crew.work_ledger`` / ``from kiro_crew import ...
+#: importer. Anchoring on ``aj_crew.work_ledger`` / ``from aj_crew import ...
 #: work_ledger`` tells the two apart, and the guard's intent is unchanged.
 _STORE_IMPORT_RE = re.compile(
     r"^\s*(?:"
-    r"from\s+kiro_crew\.work_ledger\s+import"
-    r"|import\s+kiro_crew\.work_ledger"
-    r"|from\s+kiro_crew\s+import\s+[^\n]*\bwork_ledger\b"
+    r"from\s+aj_crew\.work_ledger\s+import"
+    r"|import\s+aj_crew\.work_ledger"
+    r"|from\s+aj_crew\s+import\s+[^\n]*\bwork_ledger\b"
     r")",
     re.MULTILINE,
 )
@@ -1638,7 +1638,7 @@ def test_only_the_phase_2_seams_import_the_module():
     fails, and a listed module that does not import the store fails too, so the
     allowlist is data rather than lore.
     """
-    package = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+    package = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
     # Excluded by PATH, not by basename: the routes module is also called
     # ``work_ledger.py``, and a basename filter skipped it — hiding the very seam
     # this allowlist exists to name.

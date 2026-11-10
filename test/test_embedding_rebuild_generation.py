@@ -8,17 +8,17 @@ from types import SimpleNamespace
 import pytest
 from member_memory_helpers import write_member_home
 
-from kiro_crew import context
-from kiro_crew import embeddings as emb
-from kiro_crew.config import loader
-from kiro_crew.dashboard.handlers import memory
-from kiro_crew.testing.wait import async_wait_until, await_until, default_timeout, finished
-from kiro_crew.vector_memory import VectorMemoryStore, open_member_database
+from aj_crew import context
+from aj_crew import embeddings as emb
+from aj_crew.config import loader
+from aj_crew.dashboard.handlers import memory
+from aj_crew.testing.wait import async_wait_until, await_until, default_timeout, finished
+from aj_crew.vector_memory import VectorMemoryStore, open_member_database
 
 
 @pytest.fixture
 def rebuild_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.delenv(emb._MODEL_PATH_ENV, raising=False)
     config = write_member_home(tmp_path, "late")
     config["memory_stores"]["legacy"] = {}
@@ -52,7 +52,7 @@ def rebuild_home(tmp_path, monkeypatch):
     legacy_path = tmp_path / "memory_stores" / "legacy" / "memory.db"
     legacy_path.parent.mkdir()
     # Copy an empty V1 database so the named legacy store keeps the V1 lineage.
-    from kiro_crew._sqlite_compat import sqlite3
+    from aj_crew._sqlite_compat import sqlite3
 
     with sqlite3.connect(str(legacy_path)) as destination:
         global_store.db.backup(destination)
@@ -162,7 +162,7 @@ def test_episode_backfill_does_not_attach_old_body_vector(rebuild_home, monkeypa
     from concurrent.futures import ThreadPoolExecutor
     from threading import Event
 
-    from kiro_crew import memory_edit
+    from aj_crew import memory_edit
 
     store = rebuild_home.late[1] if private else rebuild_home.global_store
     store.reconcile_embedding_space(store.recorded_embedding_space(), force=True)
@@ -465,13 +465,13 @@ async def test_store_opened_after_final_snapshot_requires_current_vectors(
 @pytest.mark.asyncio
 async def test_request_field_round_trips_and_reapply_mints_new_request(rebuild_home):
     home = rebuild_home
-    assert not loader.KiroCrewConfig.load().memory.embed_rebuild_generation
+    assert not loader.AjCrewConfig.load().memory.embed_rebuild_generation
     await memory._write_embed_model_config(str(home.model), 2)
     first = emb.embedding_rebuild_generation()
-    config = loader.KiroCrewConfig.load()
+    config = loader.AjCrewConfig.load()
     assert config.memory.embed_rebuild_generation == first
     await asyncio.to_thread(config.save)
-    assert loader.KiroCrewConfig.load().memory.embed_rebuild_generation == first
+    assert loader.AjCrewConfig.load().memory.embed_rebuild_generation == first
     await memory._write_embed_model_config(str(home.model), 2)
     assert emb.embedding_rebuild_generation() != first
 

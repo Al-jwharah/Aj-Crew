@@ -20,9 +20,9 @@ from subagent_helpers import (
     _mock_sessions,
 )
 
-from kiro_crew.execution_context import execution_for_store
-from kiro_crew.subagent import SubagentManager
-from kiro_crew.testing.wait import await_until
+from aj_crew.execution_context import execution_for_store
+from aj_crew.subagent import SubagentManager
+from aj_crew.testing.wait import await_until
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -33,8 +33,8 @@ class TestTimeoutContext:
     """Tests for _timeout_context() helper."""
 
     def test_basic_with_elapsed(self, manual_clock, monkeypatch) -> None:
-        from kiro_crew import subagent
-        from kiro_crew.subagent import SubagentInfo, _timeout_context
+        from aj_crew import subagent
+        from aj_crew.subagent import SubagentInfo, _timeout_context
 
         manual_clock.install(monkeypatch, subagent)
         info = SubagentInfo(
@@ -45,7 +45,7 @@ class TestTimeoutContext:
         assert "elapsed: 60s" in ctx
 
     def test_no_elapsed(self) -> None:
-        from kiro_crew.subagent import SubagentInfo, _timeout_context
+        from aj_crew.subagent import SubagentInfo, _timeout_context
 
         info = SubagentInfo(id="t1", task="test", turns=5, max_turns=30, started=time.time())
         ctx = _timeout_context(info, include_elapsed=False)
@@ -53,7 +53,7 @@ class TestTimeoutContext:
         assert "elapsed" not in ctx
 
     def test_last_tool_included(self) -> None:
-        from kiro_crew.subagent import SubagentInfo, _timeout_context
+        from aj_crew.subagent import SubagentInfo, _timeout_context
 
         info = SubagentInfo(
             id="t1", task="test", turns=3, max_turns=30, started=time.time() - 10, last_tool="shell"
@@ -62,14 +62,14 @@ class TestTimeoutContext:
         assert "last tool: shell" in ctx
 
     def test_no_last_tool(self) -> None:
-        from kiro_crew.subagent import SubagentInfo, _timeout_context
+        from aj_crew.subagent import SubagentInfo, _timeout_context
 
         info = SubagentInfo(id="t1", task="test", turns=3, max_turns=30, started=time.time() - 10)
         ctx = _timeout_context(info)
         assert "last tool" not in ctx
 
     def test_stored_elapsed_preferred(self) -> None:
-        from kiro_crew.subagent import SubagentInfo, _timeout_context
+        from aj_crew.subagent import SubagentInfo, _timeout_context
 
         info = SubagentInfo(
             id="t1", task="test", turns=1, max_turns=30, started=time.time() - 999, elapsed=42.0
@@ -80,7 +80,7 @@ class TestTimeoutContext:
     def test_redaction_called(self) -> None:
         from unittest.mock import patch as _patch
 
-        from kiro_crew.subagent import SubagentInfo, _timeout_context
+        from aj_crew.subagent import SubagentInfo, _timeout_context
 
         info = SubagentInfo(
             id="t1",
@@ -90,14 +90,14 @@ class TestTimeoutContext:
             started=time.time(),
             last_tool="some_tool",
         )
-        with _patch("kiro_crew.subagent._redact", return_value="[REDACTED]") as mock_redact:
+        with _patch("aj_crew.subagent._redact", return_value="[REDACTED]") as mock_redact:
             ctx = _timeout_context(info, include_elapsed=False)
         mock_redact.assert_called_once_with("some_tool")
         assert "last tool: [REDACTED]" in ctx
 
     def test_unset_cap_omitted_not_slash_zero(self) -> None:
         """max_turns=0 (no per-spawn cap) must not render a misleading 'turn N/0'."""
-        from kiro_crew.subagent import SubagentInfo, _timeout_context
+        from aj_crew.subagent import SubagentInfo, _timeout_context
 
         info = SubagentInfo(id="t1", task="test", turns=41, max_turns=0, started=time.time() - 10)
         ctx = _timeout_context(info)
@@ -106,7 +106,7 @@ class TestTimeoutContext:
 
     def test_resolved_turn_limit_used_over_raw_zero(self) -> None:
         """The caller-resolved effective cap is shown when the raw override is unset."""
-        from kiro_crew.subagent import SubagentInfo, _timeout_context
+        from aj_crew.subagent import SubagentInfo, _timeout_context
 
         info = SubagentInfo(id="t1", task="test", turns=41, max_turns=0, started=time.time() - 10)
         ctx = _timeout_context(info, turn_limit=100)
@@ -124,7 +124,7 @@ class TestEffectiveTurnLimit:
         )
 
     def test_unconfigured_manager_has_finite_long_task_budget(self) -> None:
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         manager = SubagentManager(sessions=_mock_sessions(), ctx_builder=None)
         assert manager._effective_turn_limit(SubagentInfo(id="long", task="test")) == 1000
@@ -138,14 +138,14 @@ class TestEffectiveTurnLimit:
         ],
     )
     def test_turn_limit_resolution(self, max_turns: int, expected: int) -> None:
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         manager = self._manager(default_turn_limit=50)
         info = SubagentInfo(id="t1", task="test", max_turns=max_turns)
         assert manager._effective_turn_limit(info) == expected
 
     def test_falls_back_to_hardcoded_limit(self) -> None:
-        from kiro_crew.subagent import _TURN_LIMIT, SubagentInfo
+        from aj_crew.subagent import _TURN_LIMIT, SubagentInfo
 
         manager = self._manager(default_turn_limit=0)
         info = SubagentInfo(id="t1", task="test", max_turns=0)
@@ -159,7 +159,7 @@ class TestAgentInheritance:
     async def test_inherits_agent_from_parent(self) -> None:
         from typing import Any
 
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         sessions = _mock_sessions()
         sessions.get_agent = MagicMock(return_value="parent-agent")
@@ -212,7 +212,7 @@ class TestParentTrustedSpawnApproval:
             on_spawn_approval=approval_callback,
         )
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = manager.spawn("trusted task", parent_session_key="dashboard:chat-1")
             assert info is not None
             await await_until(manager._tasks[info.id], what="the spawned run finishes")
@@ -234,7 +234,7 @@ class TestParentTrustedSpawnApproval:
             on_spawn_approval=approval_callback,
         )
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = manager.spawn("untrusted task", parent_session_key="dashboard:chat-1")
             assert info is not None
             await await_until(manager._tasks[info.id], what="the spawned run finishes")
@@ -255,7 +255,7 @@ class TestParentTrustedSpawnApproval:
             on_spawn_approval=approval_callback,
         )
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = manager.spawn("no parent task")
             assert info is not None
             await await_until(manager._tasks[info.id], what="the spawned run finishes")
@@ -283,7 +283,7 @@ class TestCheckMemoryAvailable:
     )
     def test_threshold_against_mem_available(self, tmp_path, meminfo, expected_ok, expected_gb):
         """Returns (MemAvailable >= threshold, MemAvailable in GB)."""
-        from kiro_crew.subagent import check_memory_available
+        from aj_crew.subagent import check_memory_available
 
         f = tmp_path / "meminfo"
         f.write_text(meminfo)
@@ -293,7 +293,7 @@ class TestCheckMemoryAvailable:
 
     def test_file_not_found_fails_open(self):
         """Returns (True, -1.0) when /proc/meminfo is unreadable — fails open."""
-        from kiro_crew.subagent import check_memory_available
+        from aj_crew.subagent import check_memory_available
 
         ok, avail = check_memory_available(path="/nonexistent/path/meminfo")
         assert ok is True
@@ -301,7 +301,7 @@ class TestCheckMemoryAvailable:
 
     def test_custom_threshold(self, tmp_path):
         """Respects custom min_gb parameter."""
-        from kiro_crew.subagent import check_memory_available
+        from aj_crew.subagent import check_memory_available
 
         f = tmp_path / "meminfo"
         f.write_text("MemAvailable:    5242880 kB\n")
@@ -319,17 +319,17 @@ class TestCheckMemoryAvailable:
         """
         from unittest.mock import patch
 
-        from kiro_crew.subagent import check_memory_available
+        from aj_crew.subagent import check_memory_available
 
         f = tmp_path / "meminfo"
         f.write_text("MemAvailable:    8388608 kB\n")
         with (
             patch(
-                "kiro_crew.hooks.safe_read_file",
+                "aj_crew.hooks.safe_read_file",
                 side_effect=AssertionError("gate must not be consulted"),
             ),
             patch(
-                "kiro_crew.hooks.is_sensitive_path",
+                "aj_crew.hooks.is_sensitive_path",
                 side_effect=AssertionError("gate must not be consulted"),
             ),
         ):
@@ -341,7 +341,7 @@ class TestCheckMemoryAvailable:
         """A real EACCES from open() is an OSError and fails open (True, -1.0)."""
         from unittest.mock import patch
 
-        from kiro_crew.subagent import check_memory_available
+        from aj_crew.subagent import check_memory_available
 
         with patch("builtins.open", side_effect=PermissionError("denied")):
             ok, avail = check_memory_available(path=str(tmp_path / "meminfo"))
@@ -350,7 +350,7 @@ class TestCheckMemoryAvailable:
 
     def test_malformed_meminfo_indexerror(self, tmp_path):
         """Handles malformed MemAvailable line without value — fails open."""
-        from kiro_crew.subagent import check_memory_available
+        from aj_crew.subagent import check_memory_available
 
         f = tmp_path / "meminfo"
         f.write_text("MemAvailable:\n")
@@ -366,7 +366,7 @@ class TestSpawnMemoryGuard:
     def _mgr(self):
         from unittest.mock import MagicMock
 
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         return SubagentManager(
             sessions=_mock_sessions(),
@@ -383,9 +383,9 @@ class TestSpawnMemoryGuard:
         assert mgr._taskq is not None
 
         with (
-            patch("kiro_crew.subagent.check_memory_available", return_value=(False, 2.5)),
-            patch("kiro_crew.subagent.KiroCrewConfig") as mock_cfg,
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.check_memory_available", return_value=(False, 2.5)),
+            patch("aj_crew.subagent.AjCrewConfig") as mock_cfg,
+            patch("aj_crew.subagent.sel") as mock_sel,
         ):
             mock_cfg.load.return_value.agent.spawn_min_memory_gb = 4.0
             mock_cfg.load.return_value.agent.subagent_cost_gb = 0.5
@@ -410,9 +410,9 @@ class TestSpawnMemoryGuard:
         mgr._taskq = None
 
         with (
-            patch("kiro_crew.subagent.check_memory_available", return_value=(False, 2.5)),
-            patch("kiro_crew.subagent.KiroCrewConfig") as mock_cfg,
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.check_memory_available", return_value=(False, 2.5)),
+            patch("aj_crew.subagent.AjCrewConfig") as mock_cfg,
+            patch("aj_crew.subagent.sel") as mock_sel,
         ):
             mock_cfg.load.return_value.agent.spawn_min_memory_gb = 4.0
             mock_cfg.load.return_value.agent.subagent_cost_gb = 0.5
@@ -445,7 +445,7 @@ class TestSpawnEmptyTaskGuard:
     def _mgr(self):
         from unittest.mock import MagicMock
 
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         return SubagentManager(
             sessions=MagicMock(),
@@ -466,7 +466,7 @@ class TestSpawnEmptyTaskGuard:
         from unittest.mock import MagicMock, patch
 
         mgr = self._mgr()
-        with patch("kiro_crew.subagent.sel") as mock_sel:
+        with patch("aj_crew.subagent.sel") as mock_sel:
             mock_sel.return_value.log_tool_invocation = MagicMock()
             info = mgr.spawn(task=task, parent_session_key="sess-1")
 
@@ -481,7 +481,7 @@ class TestSpawnEmptyTaskGuard:
         from unittest.mock import patch
 
         mgr = self._mgr()
-        with patch("kiro_crew.subagent.sel", side_effect=RuntimeError("sel down")):
+        with patch("aj_crew.subagent.sel", side_effect=RuntimeError("sel down")):
             info = mgr.spawn(task="", parent_session_key="sess-1")
 
         assert info is not None
@@ -494,7 +494,7 @@ class TestSpawnEmptyTaskGuard:
         from unittest.mock import MagicMock, patch
 
         mgr = self._mgr()
-        with patch("kiro_crew.subagent.sel") as mock_sel:
+        with patch("aj_crew.subagent.sel") as mock_sel:
             mock_sel.return_value.log_tool_invocation = MagicMock()
             info = mgr.spawn(task=None, parent_session_key="sess-1")  # type: ignore[arg-type]
 
@@ -508,7 +508,7 @@ class TestCompletionKeepHelper:
 
     def test_short_text_unchanged(self) -> None:
         """Texts at or below max_chars are returned unchanged."""
-        from kiro_crew.context_management import apply_completion_keep
+        from aj_crew.context_management import apply_completion_keep
 
         assert apply_completion_keep("hello", "head", 100) == "hello"
         assert apply_completion_keep("hello", "tail", 100) == "hello"
@@ -516,7 +516,7 @@ class TestCompletionKeepHelper:
 
     def test_max_chars_zero_or_negative_disables_truncation(self) -> None:
         """max_chars <= 0 returns the input verbatim (truncation disabled)."""
-        from kiro_crew.context_management import apply_completion_keep
+        from aj_crew.context_management import apply_completion_keep
 
         text = "a" * 10000
         assert apply_completion_keep(text, "head", 0) == text
@@ -525,7 +525,7 @@ class TestCompletionKeepHelper:
 
     def test_head_keeps_first_n_chars(self) -> None:
         """Mode 'head' keeps the first max_chars characters (default behavior)."""
-        from kiro_crew.context_management import apply_completion_keep
+        from aj_crew.context_management import apply_completion_keep
 
         text = "ABCDEFGHIJ" * 1000  # 10000 chars
         result = apply_completion_keep(text, "head", 50)
@@ -534,7 +534,7 @@ class TestCompletionKeepHelper:
 
     def test_tail_keeps_last_n_chars(self) -> None:
         """Mode 'tail' keeps the last max_chars characters."""
-        from kiro_crew.context_management import apply_completion_keep
+        from aj_crew.context_management import apply_completion_keep
 
         text = "ABCDEFGHIJ" * 1000
         result = apply_completion_keep(text, "tail", 50)
@@ -543,7 +543,7 @@ class TestCompletionKeepHelper:
 
     def test_both_keeps_head_marker_and_tail(self) -> None:
         """Mode 'both' keeps head, then a marker, then tail."""
-        from kiro_crew.context_management import apply_completion_keep
+        from aj_crew.context_management import apply_completion_keep
 
         # Use a text where head and tail are distinguishable.
         text = "H" * 5000 + "T" * 5000  # 10000 chars
@@ -555,7 +555,7 @@ class TestCompletionKeepHelper:
 
     def test_both_with_tiny_budget_falls_back_to_head(self) -> None:
         """When max_chars cannot fit the marker plus content, 'both' falls back to head."""
-        from kiro_crew.context_management import apply_completion_keep
+        from aj_crew.context_management import apply_completion_keep
 
         text = "ABCDEFGHIJ" * 100
         # Marker is ~25 chars; budget of 10 cannot fit head + marker + tail.
@@ -569,7 +569,7 @@ class TestSubagentManagerCompletionKeepWiring:
     @pytest.mark.asyncio
     async def test_default_completion_keep_is_head(self) -> None:
         """Without explicit kwargs, manager defaults to head + module default chars."""
-        from kiro_crew.context_management import COMPLETION_KEEP_DEFAULT_CHARS
+        from aj_crew.context_management import COMPLETION_KEEP_DEFAULT_CHARS
 
         manager = SubagentManager(
             sessions=_mock_sessions(),
@@ -595,13 +595,13 @@ class TestCompletionKeepLoader:
     """The config loader must reject unknown completion_keep values at load time."""
 
     def test_load_unknown_completion_keep_raises(self) -> None:
-        from kiro_crew.config.loader import _validated_completion_keep
+        from aj_crew.config.loader import _validated_completion_keep
 
         with pytest.raises(ValueError, match="completion_keep"):
             _validated_completion_keep("tial")
 
     def test_load_valid_completion_keep_accepts(self) -> None:
-        from kiro_crew.config.loader import _validated_completion_keep
+        from aj_crew.config.loader import _validated_completion_keep
 
         for v in ("head", "tail", "both"):
             assert _validated_completion_keep(v) == v
@@ -611,7 +611,7 @@ class TestSpawnMemoryModeSnapshot:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("mode", ["incognito", "temporary"])
     async def test_queue_keeps_admission_mode_after_parent_replacement(self, mode):
-        from kiro_crew.subagent_persistence import read_run_memory_mode
+        from aj_crew.subagent_persistence import read_run_memory_mode
 
         parent_modes = {"dashboard:parent": mode}
         resolver = MagicMock(side_effect=lambda key: parent_modes[key])
@@ -652,12 +652,12 @@ class TestSpawnMemoryModeSnapshot:
 
     @pytest.mark.asyncio
     async def test_global_binding_write_failure_blocks_provider(self):
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         sessions = _mock_sessions()
         manager = SubagentManager(sessions=sessions, ctx_builder=None)
         info = SubagentInfo(id="mode-write-failure", task="task", memory_mode="temporary")
-        with patch("kiro_crew.subagent.create_agent_folder", side_effect=OSError("write failed")):
+        with patch("aj_crew.subagent.create_agent_folder", side_effect=OSError("write failed")):
             manager._log_spawned(info)
         assert info.error.startswith("memory_unavailable:")
         with pytest.raises(RuntimeError, match="memory_unavailable"):
@@ -667,7 +667,7 @@ class TestSpawnMemoryModeSnapshot:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("mode", ["incognito", "temporary"])
     async def test_approval_wait_keeps_mode_after_parent_closes(self, mode):
-        from kiro_crew.subagent_persistence import read_run_memory_mode
+        from aj_crew.subagent_persistence import read_run_memory_mode
 
         modes = {"dashboard:parent": mode}
         entered = asyncio.Event()

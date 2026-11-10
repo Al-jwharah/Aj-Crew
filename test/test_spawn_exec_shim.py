@@ -30,9 +30,9 @@ import pytest
 from _clock_isolation import assert_clock_is_private
 from spawn_test_helpers import strip_spawn_shim
 
-from kiro_crew import _spawn_exec_shim as shim
-from kiro_crew import sandbox
-from kiro_crew.sandbox import (
+from aj_crew import _spawn_exec_shim as shim
+from aj_crew import sandbox
+from aj_crew.sandbox import (
     RLIMIT_PROFILE_BUILD,
     RLIMIT_PROFILE_EXTRACTOR,
     RLIMIT_PROFILE_NONE,
@@ -43,8 +43,8 @@ from kiro_crew.sandbox import (
     run_limited,
     spawn_shim_argv,
 )
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import finished
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import finished
 
 # The shim exists to deliver POSIX rlimits, and `spawn_shim_argv` returns an empty
 # prefix on Windows, so there is nothing here to exercise there. Skipping at import
@@ -441,7 +441,7 @@ class TestCreateSubprocessLimited:
         with patch("asyncio.create_subprocess_exec", AsyncMock()):
             with pytest.raises(FileNotFoundError):
                 await create_subprocess_limited(
-                    "kirocrew-no-such-command", env={"PATH": "/nonexistent"}
+                    "ajcrew-no-such-command", env={"PATH": "/nonexistent"}
                 )
 
     @pytest.mark.asyncio
@@ -757,7 +757,7 @@ class TestCreateSubprocessLimited:
         try:
             with (
                 patch("asyncio.create_subprocess_exec", AsyncMock()),
-                patch("kiro_crew.hooks._fd_real_path", return_value=None),
+                patch("aj_crew.hooks._fd_real_path", return_value=None),
             ):
                 with pytest.raises(FileNotFoundError):
                     await create_subprocess_limited(
@@ -1054,7 +1054,7 @@ class TestSyncLimitedSpawns:
     def test_missing_command_still_raises_filenotfound_at_the_spawn(self):
         with patch("subprocess.run"):
             with pytest.raises(FileNotFoundError):
-                run_limited(["kirocrew-no-such-command"], env={"PATH": "/nonexistent"})
+                run_limited(["ajcrew-no-such-command"], env={"PATH": "/nonexistent"})
 
     def test_path_search_runs_inline_not_on_a_worker_thread(self):
         """A sync caller is already off the event loop, so a thread hop buys nothing."""

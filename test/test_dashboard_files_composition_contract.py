@@ -1,8 +1,8 @@
 """The dashboard file handlers keep their surface and contracts while their owners move.
 
-``kiro_crew.dashboard.handlers.files`` is the file API's import path and its patch
+``aj_crew.dashboard.handlers.files`` is the file API's import path and its patch
 surface. Most of what it defined now lives in the modules of
-``kiro_crew.dashboard.file_api``, one responsibility each, and ``_facade_compose.compose``
+``aj_crew.dashboard.file_api``, one responsibility each, and ``_facade_compose.compose``
 runs every function they define on the facade's globals. These tests pin:
 
 * the surface: every name the facade bound before the split still resolves on it,
@@ -38,11 +38,11 @@ import pytest
 from aiohttp import web
 from source_corpus import repo_files_named, repo_root
 
-import kiro_crew.dashboard.handlers as handlers_pkg
-import kiro_crew.dashboard.handlers.files as files
-from kiro_crew._facade_compose import compose as facade_compose
-from kiro_crew.dashboard import file_api
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew.dashboard.handlers as handlers_pkg
+import aj_crew.dashboard.handlers.files as files
+from aj_crew._facade_compose import compose as facade_compose
+from aj_crew.dashboard import file_api
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 # Kept in a tree_scan group (300 s, test/conftest.py): the tree-route check runs the
 # link-screen gate, whose resolver names come from a call graph over every module, so
@@ -67,7 +67,7 @@ _SRC = _FACADE_PATH.parents[3]
 _BASE_NAMES = frozenset("""
         BINARY_MIME_ALLOWLIST BinaryIO BodyPartReader Callable
         ClientConnectionResetError DashboardState FILE_READ_SCHEMA FileTooLargeError
-        KiroCrewConfig LINK_PATTERNS_MAX LINK_PATTERN_PATTERN_MAX_LEN
+        AjCrewConfig LINK_PATTERNS_MAX LINK_PATTERN_PATTERN_MAX_LEN
         LINK_PATTERN_URL_MAX_LEN MODEL_ID_RE NamedTuple OutboundFile Path PdfExtraction
         PurePath SNIFF_BYTES TypeVar VALID_MEMORY_MODES ValidationError WorkspaceConfig
         WorkspaceDirUnusable ZipInventoryRejected _ALLOWED_AUDIO_EXT _ALLOWED_DOC_EXT
@@ -356,8 +356,8 @@ def test_a_fresh_interpreter_sees_every_base_public_name(tmp_path: Path) -> None
         tmp_path,
         """
         import sys
-        import kiro_crew.dashboard.handlers as pkg
-        import kiro_crew.dashboard.handlers.files as files
+        import aj_crew.dashboard.handlers as pkg
+        import aj_crew.dashboard.handlers.files as files
         missing = [n for n in sys.argv[1:] if not hasattr(files, n)]
         assert missing == [], missing
         foreign = [n for n in sys.argv[1:] if hasattr(pkg, n) and n.startswith("api_")
@@ -384,7 +384,7 @@ def test_the_routes_and_the_package_reach_the_facade_objects() -> None:
     handlers package re-exports is the facade's object. A route over this
     machine's files runs behind the remote-chat guard, which wraps the facade's
     object itself (``__wrapped__``)."""
-    from kiro_crew.dashboard import routes
+    from aj_crew.dashboard import routes
 
     app = web.Application()
     routes.register_all(app)
@@ -418,7 +418,7 @@ def test_the_seams_other_modules_import_keep_their_identity() -> None:
     """Sibling handlers import names from the facade or read them off it at call
     time; each still resolves there, as the same object, and the facade still takes
     the session-target resolver from the messaging facade by name."""
-    from kiro_crew.dashboard.handlers import knowledge, messaging, office_slides, terminal
+    from aj_crew.dashboard.handlers import knowledge, messaging, office_slides, terminal
 
     assert knowledge._ZIP_CONTAINER_EXTS is files._ZIP_CONTAINER_EXTS
     assert knowledge._content_matches_ext is files._content_matches_ext
@@ -439,13 +439,13 @@ def test_the_seams_other_modules_import_keep_their_identity() -> None:
 #: module-level import of any of them would put that module on the gateway's boot
 #: path (or close an import cycle), so each stays function-local.
 _IMPORTED_BY_NAME = {
-    "_get_config_lock": "kiro_crew.dashboard.handlers.agents",
-    "browse_denied_async": "kiro_crew.browser_harness.governance",
-    "denied_sides": "kiro_crew.decisions.capability",
-    "is_owner_dashboard_request": "kiro_crew.dashboard.handlers.source_providers",
-    "owner_view_for_request": "kiro_crew.dashboard.handlers.source_providers",
-    "publish_session_card_chips_now": "kiro_crew.dashboard.handlers.source_providers",
-    "is_tracked_channel": "kiro_crew.slack.handler",
+    "_get_config_lock": "aj_crew.dashboard.handlers.agents",
+    "browse_denied_async": "aj_crew.browser_harness.governance",
+    "denied_sides": "aj_crew.decisions.capability",
+    "is_owner_dashboard_request": "aj_crew.dashboard.handlers.source_providers",
+    "owner_view_for_request": "aj_crew.dashboard.handlers.source_providers",
+    "publish_session_card_chips_now": "aj_crew.dashboard.handlers.source_providers",
+    "is_tracked_channel": "aj_crew.slack.handler",
 }
 
 
@@ -473,7 +473,7 @@ def test_a_star_import_carries_the_moved_public_names(tmp_path: Path) -> None:
     assert not hasattr(files, "__all__")
     probe = tmp_path / "files_star_probe.py"
     probe.write_text(
-        "from kiro_crew.dashboard.handlers.files import *  # noqa: F401,F403\n",
+        "from aj_crew.dashboard.handlers.files import *  # noqa: F401,F403\n",
         encoding="utf-8",
     )
     spec = importlib.util.spec_from_file_location("files_star_probe", probe)
@@ -576,7 +576,7 @@ def test_every_base_definition_is_in_exactly_one_place() -> None:
 
 
 def test_the_owners_log_as_the_facade() -> None:
-    """Log capture keyed to ``kiro_crew.dashboard.handlers.files`` keeps seeing the
+    """Log capture keyed to ``aj_crew.dashboard.handlers.files`` keeps seeing the
     moved sites: an owner function logs through the facade's ``logger``."""
     assert files.logger.name == _FACADE
     readers = [
@@ -586,7 +586,7 @@ def test_the_owners_log_as_the_facade() -> None:
 
 
 def test_every_owner_function_runs_on_the_facade_globals() -> None:
-    """A patch of ``kiro_crew.dashboard.handlers.files.<name>`` reaches an owner
+    """A patch of ``aj_crew.dashboard.handlers.files.<name>`` reaches an owner
     function only because the function reads the facade's globals, not its own."""
     labels = {label for label, _ in _owner_functions()}
     assert len(labels) >= 90
@@ -712,14 +712,14 @@ def _type_checking_nodes(tree: ast.Module) -> set[int]:
 
 def _owner_runtime_edges(source: str, package: str) -> list[int]:
     """Lines where an owner imports a project module outside ``TYPE_CHECKING``: the
-    facade, a sibling owner, or anything else under ``kiro_crew``."""
+    facade, a sibling owner, or anything else under ``aj_crew``."""
     tree = ast.parse(source)
     guarded = _type_checking_nodes(tree)
     return sorted(
         {
             node.lineno
             for node, target in _import_targets(tree, package)
-            if _within(target, "kiro_crew") and id(node) not in guarded
+            if _within(target, "aj_crew") and id(node) not in guarded
         }
     )
 
@@ -730,16 +730,16 @@ def _owner_runtime_edges(source: str, package: str) -> list[int]:
         ("from . import search\n", True),
         ("from .grep import _grep_hit\n", True),
         ("from ..handlers import files\n", True),
-        ("from kiro_crew.dashboard.handlers import files\n", True),
-        ("import kiro_crew.dashboard.handlers.files as handlers\n", True),
-        ("def f():\n    from kiro_crew.dashboard.handlers.files import _sel\n", True),
-        ("def f():\n    from kiro_crew.decisions.capability import denied_sides\n", True),
+        ("from aj_crew.dashboard.handlers import files\n", True),
+        ("import aj_crew.dashboard.handlers.files as handlers\n", True),
+        ("def f():\n    from aj_crew.dashboard.handlers.files import _sel\n", True),
+        ("def f():\n    from aj_crew.decisions.capability import denied_sides\n", True),
         (
-            "import importlib\nimportlib.import_module('kiro_crew.dashboard.handlers.files')\n",
+            "import importlib\nimportlib.import_module('aj_crew.dashboard.handlers.files')\n",
             True,
         ),
-        ("__import__('kiro_crew.dashboard.file_api.grep')\n", True),
-        ("if TYPE_CHECKING:\n    from kiro_crew.dashboard.handlers.files import _sel\n", False),
+        ("__import__('aj_crew.dashboard.file_api.grep')\n", True),
+        ("if TYPE_CHECKING:\n    from aj_crew.dashboard.handlers.files import _sel\n", False),
         ("import asyncio\nfrom aiohttp import web\n", False),
     ],
 )
@@ -750,7 +750,7 @@ def test_the_owner_edge_check_sees_every_spelling(source: str, flagged: bool) ->
 def test_nothing_but_the_facade_imports_an_owner() -> None:
     """The facade is the one import path and the one patch surface."""
     importers = []
-    for path in sorted((_SRC / "kiro_crew").rglob("*.py")):
+    for path in sorted((_SRC / "aj_crew").rglob("*.py")):
         resolved = path.resolve()
         if _OWNER_DIR in resolved.parents or resolved == _FACADE_PATH or "_vendor" in path.parts:
             continue
@@ -773,14 +773,14 @@ def test_an_owner_imports_project_modules_only_for_type_checking() -> None:
     bodies are counted too, except the ones the moved code made at the base, which
     ``_IMPORTED_BY_NAME`` and this module's helpers pin."""
     lazy_at_base = {
-        "kiro_crew.config.loader",
-        "kiro_crew.dashboard",
-        "kiro_crew.dashboard.handlers",
-        "kiro_crew.dashboard.handlers._shared",
-        "kiro_crew.hooks",
-        "kiro_crew.security",
-        "kiro_crew.sel",
-        "kiro_crew.validation",
+        "aj_crew.config.loader",
+        "aj_crew.dashboard",
+        "aj_crew.dashboard.handlers",
+        "aj_crew.dashboard.handlers._shared",
+        "aj_crew.hooks",
+        "aj_crew.security",
+        "aj_crew.sel",
+        "aj_crew.validation",
         *_IMPORTED_BY_NAME.values(),
     }
     offenders = []
@@ -789,7 +789,7 @@ def test_an_owner_imports_project_modules_only_for_type_checking() -> None:
         guarded = _type_checking_nodes(tree)
         module_level = {id(node) for node in tree.body}
         for node, target in _import_targets(tree, _OWNER_PACKAGE):
-            if not _within(target, "kiro_crew") or id(node) in guarded:
+            if not _within(target, "aj_crew") or id(node) in guarded:
                 continue
             base = node.module if isinstance(node, ast.ImportFrom) else target
             if id(node) in module_level or base not in lazy_at_base:
@@ -804,9 +804,9 @@ def test_a_fresh_facade_import_loads_every_owner(tmp_path: Path) -> None:
         tmp_path,
         """
         import sys
-        import kiro_crew.dashboard.handlers.files
+        import aj_crew.dashboard.handlers.files
         missing = [n for n in sys.argv[1:]
-                   if f"kiro_crew.dashboard.file_api.{n}" not in sys.modules]
+                   if f"aj_crew.dashboard.file_api.{n}" not in sys.modules]
         assert missing == [], missing
         print("ok")
         """,
@@ -819,10 +819,10 @@ def test_a_second_facade_import_recomposes_the_owners_onto_it(tmp_path: Path) ->
         tmp_path,
         """
         import sys
-        import kiro_crew.dashboard.handlers.files as first
-        del sys.modules["kiro_crew.dashboard.handlers.files"]
-        import kiro_crew.dashboard.handlers.files as second
-        from kiro_crew.dashboard.file_api import search
+        import aj_crew.dashboard.handlers.files as first
+        del sys.modules["aj_crew.dashboard.handlers.files"]
+        import aj_crew.dashboard.handlers.files as second
+        from aj_crew.dashboard.file_api import search
         assert second is not first
         assert second.api_file_search.__globals__ is vars(second)
         assert search.api_file_search is second.api_file_search
@@ -835,7 +835,7 @@ def test_a_second_facade_import_recomposes_the_owners_onto_it(tmp_path: Path) ->
 
 _PATCH_CALLS = ("setattr", "patch.object", "delattr")
 _MULTIPLE_OPTIONS = frozenset({"spec", "create", "spec_set", "autospec", "new_callable"})
-_FACADE_STRING = re.compile(r"""^kiro_crew\.dashboard\.handlers\.files\.(\w+)$""")
+_FACADE_STRING = re.compile(r"""^aj_crew\.dashboard\.handlers\.files\.(\w+)$""")
 
 #: The patches whose attribute the scan cannot resolve from the source, keyed by
 #: (test file, enclosing function), with the names each one rebinds.
@@ -848,7 +848,7 @@ def _facade_aliases(tree: ast.Module) -> set[str]:
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             aliases |= {a.asname for a in node.names if a.name == _FACADE and a.asname}
-        elif isinstance(node, ast.ImportFrom) and node.module == "kiro_crew.dashboard.handlers":
+        elif isinstance(node, ast.ImportFrom) and node.module == "aj_crew.dashboard.handlers":
             aliases |= {a.asname or a.name for a in node.names if a.name == "files"}
     changed = True
     while changed:
@@ -990,7 +990,7 @@ def _patched_names_in(text: str) -> tuple[set[str], set[str]]:
     # Every spelling below names the facade's dotted path or imports ``files`` from
     # the handlers package, so a source with neither holds no facade patch.
     if "handlers.files" not in text and not (
-        "kiro_crew.dashboard.handlers import" in text and re.search(r"\bfiles\b", text)
+        "aj_crew.dashboard.handlers import" in text and re.search(r"\bfiles\b", text)
     ):
         return set(), set()
     tree = ast.parse(text)
@@ -1043,7 +1043,7 @@ def _patched_names_in(text: str) -> tuple[set[str], set[str]]:
                 for target in targets:
                     if isinstance(target, ast.Attribute) and ast.unparse(target.value) in aliases:
                         found.add(target.attr)
-    found |= set(re.findall(r"""["']kiro_crew\.dashboard\.handlers\.files\.(\w+)["']""", text))
+    found |= set(re.findall(r"""["']aj_crew\.dashboard\.handlers\.files\.(\w+)["']""", text))
     return found, dynamic
 
 
@@ -1128,33 +1128,33 @@ def _captured_names(source: str) -> set[str]:
 def test_the_patch_scan_reads_every_spelling() -> None:
     planted = (
         "import importlib, sys\n"
-        "import kiro_crew.dashboard.handlers.files as handlers\n"
-        "from kiro_crew.dashboard.handlers import files as fs\n"
-        "facade = importlib.import_module('kiro_crew.dashboard.handlers.files')\n"
+        "import aj_crew.dashboard.handlers.files as handlers\n"
+        "from aj_crew.dashboard.handlers import files as fs\n"
+        "facade = importlib.import_module('aj_crew.dashboard.handlers.files')\n"
         "alias = facade\n"
-        "held = sys.modules['kiro_crew.dashboard.handlers.files']\n"
+        "held = sys.modules['aj_crew.dashboard.handlers.files']\n"
         "def test(monkeypatch):\n"
         "    monkeypatch.setattr(handlers, 'first', 1)\n"
         "    monkeypatch.setattr(fs, 'second', 2)\n"
         "    patch.object(alias, 'third')\n"
         "    fs.fourth = 4\n"
-        "    monkeypatch.setattr('kiro_crew.dashboard.handlers.files.fifth', 5)\n"
+        "    monkeypatch.setattr('aj_crew.dashboard.handlers.files.fifth', 5)\n"
         "    monkeypatch.setattr(fs.Shared, 'attr', 7)\n"
         "    monkeypatch.setattr(other, 'not_the_facade', 8)\n"
         "    monkeypatch.delattr(fs, 'sixth')\n"
         "    patch.object(target=alias, attribute='seventh')\n"
         "    patch.multiple(held, eighth=1, create=True)\n"
-        "    monkeypatch.setattr('kiro_crew.dashboard.handlers.files.os.scandir', 9)\n"
+        "    monkeypatch.setattr('aj_crew.dashboard.handlers.files.os.scandir', 9)\n"
         "@pytest.mark.parametrize('which', ['ninth', 'tenth'])\n"
         "def test_param(which):\n"
-        "    patch(f'kiro_crew.dashboard.handlers.files.{which}')\n"
+        "    patch(f'aj_crew.dashboard.handlers.files.{which}')\n"
         "def test_dunder(monkeypatch):\n"
-        "    mod = __import__('kiro_crew.dashboard.handlers.files', fromlist=['x'])\n"
+        "    mod = __import__('aj_crew.dashboard.handlers.files', fromlist=['x'])\n"
         "    patch.object(mod, 'eleventh')\n"
-        "    patch.object(__import__('kiro_crew.dashboard.handlers.files', fromlist=['y']), 'twelfth')\n"
-        "    patch.object(__import__('kiro_crew.dashboard.handlers.files'), 'not_the_facade')\n"
-        "FACADE = 'kiro_crew.dashboard.handlers.files'\n"
-        "other = 'kiro_crew.dashboard.handlers.messaging'\n"
+        "    patch.object(__import__('aj_crew.dashboard.handlers.files', fromlist=['y']), 'twelfth')\n"
+        "    patch.object(__import__('aj_crew.dashboard.handlers.files'), 'not_the_facade')\n"
+        "FACADE = 'aj_crew.dashboard.handlers.files'\n"
+        "other = 'aj_crew.dashboard.handlers.messaging'\n"
         "def test_strings(monkeypatch):\n"
         "    path = FACADE\n"
         "    patch(f'{path}.thirteenth')\n"
@@ -1184,13 +1184,13 @@ def test_the_patch_scan_reads_every_spelling() -> None:
     }
     assert dynamic == set()
     unresolvable = (
-        "from kiro_crew.dashboard.handlers import files as fs\n"
+        "from aj_crew.dashboard.handlers import files as fs\n"
         "def _drive(monkeypatch, name):\n"
         "    monkeypatch.setattr(fs, name, 1)\n"
     )
     assert _patched_names_in(unresolvable) == (set(), {"_drive"})
     unresolvable_string = (
-        "FACADE = 'kiro_crew.dashboard.handlers.files'\n"
+        "FACADE = 'aj_crew.dashboard.handlers.files'\n"
         "def _rebind(name):\n"
         "    patch(f'{FACADE}.{name}')\n"
         "    patch(FACADE + '.' + name)\n"
@@ -1204,7 +1204,7 @@ def test_the_capture_scan_flags_what_an_owner_evaluates_when_it_loads() -> None:
         "from typing import TYPE_CHECKING\n"
         "import asyncio as aio\n"
         "if TYPE_CHECKING:\n"
-        "    from kiro_crew.dashboard.handlers.files import _sel\n"
+        "    from aj_crew.dashboard.handlers.files import _sel\n"
         "LIMIT = _CAP * 2\n"
         "def f(x=_DEFAULT, *, y=_KW):\n"
         "    return _sel(), is_sensitive_path\n"
@@ -1306,9 +1306,9 @@ def _mirror(tmp_path: Path) -> Path:
         *(f"dashboard/file_api/{path.name}" for path in _OWNER_DIR.glob("*.py")),
     ]
     for rel in rels:
-        target = root / "src/kiro_crew" / rel
+        target = root / "src/aj_crew" / rel
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(_SRC / "kiro_crew" / rel, target)
+        shutil.copyfile(_SRC / "aj_crew" / rel, target)
     return root
 
 
@@ -1347,9 +1347,9 @@ def test_the_config_dir_ratchet_reads_the_owners(
     import test_no_config_dir_in_async as guard
 
     root = _mirror(tmp_path)
-    monkeypatch.setattr(guard, "SRC", root / "src/kiro_crew")
+    monkeypatch.setattr(guard, "SRC", root / "src/aj_crew")
     check = guard.TestNoConfigDirInAsync().test_update_layout_channel_helpers_never_maintain
-    owner = root / "src/kiro_crew/dashboard/file_api/transfer.py"
+    owner = root / "src/aj_crew/dashboard/file_api/transfer.py"
     _red_green(owner, check, None, "\n\nasync def _planted():\n    config_dir()\n")
 
 
@@ -1361,7 +1361,7 @@ def test_the_on_loop_ratchet_reads_the_owners(
     import test_dashboard_files_onloop_fs as guard
 
     assert guard._owner_files() == sorted(_OWNER_DIR.glob("[!_]*.py"))
-    mirror = _mirror(tmp_path) / "src/kiro_crew/dashboard/file_api"
+    mirror = _mirror(tmp_path) / "src/aj_crew/dashboard/file_api"
     monkeypatch.setattr(guard, "_owner_files", lambda: sorted(mirror.glob("[!_]*.py")))
     check = guard.TestStaticRatchet().test_no_guarded_endpoint_touches_the_filesystem_on_the_loop
     planted = "\n\nasync def api_file_planted(request):\n    return os.path.isfile(request)\n"
@@ -1414,13 +1414,13 @@ def test_the_resolved_gate_dicts_name_the_owners() -> None:
 
     gate = guard._call_sites("is_sensitive_resolved_path")
     assert {k: v for k, v in gate.items() if "dashboard/file_api/" in k} == {
-        "kiro_crew/dashboard/file_api/path_complete.py": 3,
-        "kiro_crew/dashboard/file_api/project_tree.py": 3,
+        "aj_crew/dashboard/file_api/path_complete.py": 3,
+        "aj_crew/dashboard/file_api/project_tree.py": 3,
     }
-    assert "kiro_crew/dashboard/handlers/files.py" not in gate
+    assert "aj_crew/dashboard/handlers/files.py" not in gate
     containment = guard._containment_claim_sites()
-    assert containment.get("kiro_crew/dashboard/file_api/project_tree.py") == 1
-    assert "kiro_crew/dashboard/handlers/files.py" not in containment
+    assert containment.get("aj_crew/dashboard/file_api/project_tree.py") == 1
+    assert "aj_crew/dashboard/handlers/files.py" not in containment
 
 
 def test_the_tree_route_holds_no_link_screen_in_either_file() -> None:
@@ -1449,7 +1449,7 @@ def test_the_bare_hop_guard_reads_the_file_family(
     import test_sandbox_off_loop as guard
 
     cls = guard.TestNoBareSandboxedSpawnArgvHops
-    root = _mirror(tmp_path) / "src/kiro_crew"
+    root = _mirror(tmp_path) / "src/aj_crew"
     monkeypatch.setattr(cls, "_src_root", staticmethod(lambda: root))
     monkeypatch.setattr(guard, "parsed_candidates", lambda *args, **kwargs: iter(()))
     check = cls().test_no_bare_hops_to_sandboxed_spawn_argv
@@ -1480,7 +1480,7 @@ def test_the_error_code_rows_match_each_owner(tmp_path: Path) -> None:
     assert rows == {path: live[path] for path in rows}
     assert sum(counts.get("missing_code", 0) for counts in rows.values()) == 80
     assert {path for path in live if path.startswith("dashboard/file_api/")} <= set(rows)
-    root = _mirror(tmp_path) / "src/kiro_crew"
+    root = _mirror(tmp_path) / "src/aj_crew"
     owner = root / "dashboard/file_api/search.py"
     scan = guard._scan_uncached.__wrapped__
     before = guard.tally(scan(root))
@@ -1520,7 +1520,7 @@ def _owner_paths() -> list[str]:
 
 def _rules_missing_owners(rules: list[dict]) -> tuple[set[str], dict[str, list[str]]]:
     """``(ids of rules matching the facade, {id: owner files those rules miss})``."""
-    facade = "src/kiro_crew/dashboard/handlers/files.py"
+    facade = "src/aj_crew/dashboard/handlers/files.py"
     matched: set[str] = set()
     missing: dict[str, list[str]] = {}
     for rule in rules:
@@ -1584,7 +1584,7 @@ def test_the_native_macos_lane_selects_the_owners() -> None:
         (repo_root() / ".github/workflows/macos-on-demand.yml").read_text(encoding="utf-8")
     )
     darwin = _darwin_filter(workflow)
-    assert "src/kiro_crew/dashboard/handlers/files.py" in darwin
+    assert "src/aj_crew/dashboard/handlers/files.py" in darwin
 
     def uncovered(patterns: list[str]) -> list[str]:
         compiled = [_globstar(p) for p in patterns]

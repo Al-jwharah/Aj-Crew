@@ -20,9 +20,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-import kiro_crew.workflows.agent_exec as agent_exec
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.workflows.agent_exec import build_agent_fn
+import aj_crew.workflows.agent_exec as agent_exec
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.workflows.agent_exec import build_agent_fn
 
 pytestmark = pytest.mark.asyncio
 
@@ -130,7 +130,7 @@ async def test_opts_and_defaults_flow_into_get_or_create(tmp_path, monkeypatch) 
     work_dir = tmp_path / "work"
     work_dir.mkdir()
     monkeypatch.setattr(
-        KiroCrewConfig,
+        AjCrewConfig,
         "load",
         classmethod(
             lambda cls: SimpleNamespace(
@@ -171,7 +171,7 @@ async def test_extra_env_run_level_pin_flows_into_get_or_create() -> None:
 
 async def test_end_to_end_through_runner() -> None:
     """A workflow's ctx.agent() reaches the model via the built agent_fn."""
-    from kiro_crew.workflows.runner import WorkflowRunner
+    from aj_crew.workflows.runner import WorkflowRunner
 
     sessions = FakeSessions()
     fn = build_agent_fn(sessions, run_id="wf_e2e")
@@ -199,7 +199,7 @@ def _effort_script(effort: str) -> str:
 async def test_step_effort_reaches_get_or_create_as_override() -> None:
     """ctx.agent(effort=) is the step's effort: the session is created with it
     as reasoning_effort_override, the same override spawn_run passes."""
-    from kiro_crew.workflows.runner import WorkflowRunner
+    from aj_crew.workflows.runner import WorkflowRunner
 
     sessions = FakeSessions()
     runner = WorkflowRunner(agent_fn=build_agent_fn(sessions, run_id="wf_eff"), audit=_no_audit)
@@ -218,7 +218,7 @@ async def test_unset_effort_passes_no_override(opts) -> None:
 async def test_invalid_effort_fails_the_step_before_allocating() -> None:
     """A level outside the shared vocabulary fails the step with a named error
     and allocates no session, instead of running at a default."""
-    from kiro_crew.workflows.runner import WorkflowRunner
+    from aj_crew.workflows.runner import WorkflowRunner
 
     sessions = FakeSessions()
     runner = WorkflowRunner(agent_fn=build_agent_fn(sessions, run_id="wf_bad"), audit=_no_audit)
@@ -240,7 +240,7 @@ async def test_step_backend_reaches_get_or_create_as_override() -> None:
     """ctx.agent(backend=) reaches the factory as backend_override, spelled as a
     governance rule spells it ("kiro" is Kiro CLI's empty id), and a named
     session is keyed by its backend so one name never reaches another harness."""
-    from kiro_crew.workflows.runner import WorkflowRunner
+    from aj_crew.workflows.runner import WorkflowRunner
 
     sessions = FakeSessions()
     runner = WorkflowRunner(agent_fn=build_agent_fn(sessions, run_id="wf_be"), audit=_no_audit)
@@ -275,9 +275,9 @@ async def test_agent_step_persists_usage_row_with_surface() -> None:
 
     persist = AsyncMock()
     with (
-        patch("kiro_crew.dashboard.handlers.usage.persist_token_record_async", persist),
+        patch("aj_crew.dashboard.handlers.usage.persist_token_record_async", persist),
         patch(
-            "kiro_crew.dashboard.handlers.usage.read_context_tokens",
+            "aj_crew.dashboard.handlers.usage.read_context_tokens",
             MagicMock(return_value=(42, 200000)),
             create=True,
         ),
@@ -294,7 +294,7 @@ async def test_agent_step_persists_usage_row_with_surface() -> None:
 
 @pytest.mark.parametrize("opts", [{}, {"session": "chain-A"}])
 async def test_identity_is_published_before_each_agent_turn(monkeypatch, opts):
-    from kiro_crew.messaging import identity
+    from aj_crew.messaging import identity
 
     sessions = FakeSessions()
     events = []

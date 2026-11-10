@@ -1,7 +1,7 @@
 ---
 title: Remove the Piper text-to-speech provider -- unpinned install and model downloads, and a GPL engine, are risks the project will not carry
 status: accepted
-author: iamwhatever, with kirocrew-worker
+author: iamwhatever, with ajcrew-worker
 created: 2026-10-22
 last-audited: 2026-10-22
 audited-at: 69b2e503eb
@@ -26,14 +26,14 @@ Voice replies have three text-to-speech providers: `system` (the OS engine, the 
 
 Measured at `69b2e503eb`.
 
-1. **Supply chain.** Nothing about a Piper install is pinned or verified. `docs/reference/kiro-cli/chat/voice.md` and the Slack "not configured" notice in `src/kiro_crew/slack/handler_runtime/voice.py` tell users to run `pip install piper-tts` with no version or hash. The Settings hint for the model path sends them to a third-party model host to download a `.onnx` file by hand, with no checksum. The gateway then runs the installed `piper` binary on that model, and `src/kiro_crew/piper_runtime.py` starts a resident worker (`src/kiro_crew/piper_worker.py`) that imports the `piper` package. The project ships code that executes whatever arrived through that path.
-2. **License.** The maintained engine is `OHF-Voice/piper1-gpl` (the repository the `voice_reply.py` module docstring links), whose `COPYING` is GPL-3.0. Each voice model carries its own license on top. Kiro Crew is Apache-2.0. Recommending the engine, documenting its install, and importing it from a worker the project ships is a license question the project should not have to keep answering for every voice and every release.
+1. **Supply chain.** Nothing about a Piper install is pinned or verified. `docs/reference/kiro-cli/chat/voice.md` and the Slack "not configured" notice in `src/aj_crew/slack/handler_runtime/voice.py` tell users to run `pip install piper-tts` with no version or hash. The Settings hint for the model path sends them to a third-party model host to download a `.onnx` file by hand, with no checksum. The gateway then runs the installed `piper` binary on that model, and `src/aj_crew/piper_runtime.py` starts a resident worker (`src/aj_crew/piper_worker.py`) that imports the `piper` package. The project ships code that executes whatever arrived through that path.
+2. **License.** The maintained engine is `OHF-Voice/piper1-gpl` (the repository the `voice_reply.py` module docstring links), whose `COPYING` is GPL-3.0. Each voice model carries its own license on top. Aj Crew is Apache-2.0. Recommending the engine, documenting its install, and importing it from a worker the project ships is a license question the project should not have to keep answering for every voice and every release.
 
-Neither risk can be fixed from inside Kiro Crew. Pinning the wheel does not cover the models, and checksumming a curated model list makes the project the curator of third-party voice files.
+Neither risk can be fixed from inside Aj Crew. Pinning the wheel does not cover the models, and checksumming a curated model list makes the project the curator of third-party voice files.
 
 ## Decision
 
-1. Remove `PROVIDER_PIPER` from `VALID_PROVIDERS` in `src/kiro_crew/voice_reply.py`, and remove the Piper synthesis, streaming and binary-resolution code, `src/kiro_crew/piper_runtime.py`, `src/kiro_crew/piper_worker.py`, the dashboard's resident Piper runtime in `src/kiro_crew/dashboard/chat_voice.py`, and the Piper fields and notice in `src/kiro_crew/slack/handler.py` and `src/kiro_crew/slack/handler_runtime/voice.py`. Comments in the Telegram and WhatsApp clients that name Piper as the WAV source are reworded. The specs and settings reference that describe this code (`voice-streaming`, `platform-compat`, `src/kiro_crew/docs/configuration.md`, the Windows install guide) change with it.
+1. Remove `PROVIDER_PIPER` from `VALID_PROVIDERS` in `src/aj_crew/voice_reply.py`, and remove the Piper synthesis, streaming and binary-resolution code, `src/aj_crew/piper_runtime.py`, `src/aj_crew/piper_worker.py`, the dashboard's resident Piper runtime in `src/aj_crew/dashboard/chat_voice.py`, and the Piper fields and notice in `src/aj_crew/slack/handler.py` and `src/aj_crew/slack/handler_runtime/voice.py`. Comments in the Telegram and WhatsApp clients that name Piper as the WAV source are reworded. The specs and settings reference that describe this code (`voice-streaming`, `platform-compat`, `src/aj_crew/docs/configuration.md`, the Windows install guide) change with it.
 2. Remove the Piper option, its model, binary and speed fields from Settings → Voice, the strings that only those fields use, and the generated settings registries.
 3. Remove the Piper path from the dev-fleet demo-recording skill (`references/narrate.py`, `references/deps.py`, `SKILL.md`, and the `dev-fleet` spec); its `auto` provider picks `polly` or stops.
 4. Remove Piper from the user guide (`docs/reference/kiro-cli/chat/voice.md` and its row in `docs/reference/kiro-cli/README.md`). Historical CHANGELOG entries stay as they are.
@@ -51,7 +51,7 @@ Neither risk can be fixed from inside Kiro Crew. Pinning the wheel does not cove
 ## Rollout
 
 1. This document. Exit: it is on main with `status: accepted`.
-2. Decisions 1, 2 and 4 and the migration above, in one PR, with tests. Exit: `git grep -il piper -- src/kiro_crew ':!src/kiro_crew/apps'` finds only the migration in `voice_reply.py` and the settings reference's note about it; a config naming `piper` resolves to `system` with exactly one warning; the Voice panel offers `system` and `polly` only; no locale carries a Piper-only key; and the user guide no longer tells anyone to install Piper.
+2. Decisions 1, 2 and 4 and the migration above, in one PR, with tests. Exit: `git grep -il piper -- src/aj_crew ':!src/aj_crew/apps'` finds only the migration in `voice_reply.py` and the settings reference's note about it; a config naming `piper` resolves to `system` with exactly one warning; the Voice panel offers `system` and `polly` only; no locale carries a Piper-only key; and the user guide no longer tells anyone to install Piper.
 3. Decision 3. Exit: the demo-recording skill and the `dev-fleet` spec no longer name Piper.
 
 The server and the Settings UI change together so the panel never offers a provider the server has dropped: shipping them apart would leave a Piper choice in Settings that saves nothing and says nothing. The skill is a separate script with its own provider logic, so it moves on its own.

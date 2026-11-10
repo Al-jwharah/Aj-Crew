@@ -35,15 +35,15 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.process_identity import (
+from aj_crew import platform_compat
+from aj_crew.acp.client import AcpClient
+from aj_crew.process_identity import (
     ProcessHandle,
     _group_member_vouches,
     process_handle_of,
     refresh_live_process_tree,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 posix_only = pytest.mark.skipif(
     sys.platform == "win32", reason="process groups are POSIX; Windows uses the tree pin"
@@ -82,7 +82,7 @@ def _leader_gone(handle: ProcessHandle) -> ProcessHandle:
 @pytest.fixture
 def _tracking_file(tmp_path: Path) -> Iterator[Path]:
     """The refresh persists its records like the startup snapshot; keep that file in tmp."""
-    with patch("kiro_crew.session_pid.config_dir", return_value=tmp_path):
+    with patch("aj_crew.session_pid.config_dir", return_value=tmp_path):
         yield tmp_path
 
 
@@ -212,8 +212,8 @@ class TestRefreshOnlyWalksAVerifiedLiveLeader:
         client = _fake_client(returncode=0)
         # The pid still reads back as ours: only the exit status may stop the walk.
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="111"),
-            patch("kiro_crew.acp.runtime_process_tree._get_child_pids") as walk,
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="111"),
+            patch("aj_crew.acp.runtime_process_tree._get_child_pids") as walk,
         ):
             await client.refresh_process_tree()
         walk.assert_not_called()
@@ -223,15 +223,15 @@ class TestRefreshOnlyWalksAVerifiedLiveLeader:
     async def test_a_recycled_leader_pid_gets_no_walk(self) -> None:
         client = _fake_client(returncode=None)
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="999"),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="999"),
             patch(
-                "kiro_crew.acp.runtime_process_tree._get_child_pids", return_value=[5151]
+                "aj_crew.acp.runtime_process_tree._get_child_pids", return_value=[5151]
             ) as walk,
             patch(
-                "kiro_crew.acp.runtime_process_tree._capture_child_records",
+                "aj_crew.acp.runtime_process_tree._capture_child_records",
                 return_value={5151: ("999", b"sleep")},
             ),
-            patch("kiro_crew.acp.client._replace_child_pids", return_value=True),
+            patch("aj_crew.acp.client._replace_child_pids", return_value=True),
         ):
             await client.refresh_process_tree()
         walk.assert_not_called()
@@ -243,15 +243,15 @@ class TestRefreshOnlyWalksAVerifiedLiveLeader:
         reads = iter(["111", "999"])
         with (
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=lambda pid: next(reads) if pid == 4242 else "c",
             ),
-            patch("kiro_crew.acp.runtime_process_tree._get_child_pids", return_value=[5151]),
+            patch("aj_crew.acp.runtime_process_tree._get_child_pids", return_value=[5151]),
             patch(
-                "kiro_crew.acp.runtime_process_tree._capture_child_records",
+                "aj_crew.acp.runtime_process_tree._capture_child_records",
                 return_value={5151: ("c", b"sleep")},
             ),
-            patch("kiro_crew.acp.client._replace_child_pids") as track,
+            patch("aj_crew.acp.client._replace_child_pids") as track,
         ):
             await client.refresh_process_tree()
         assert client._child_pids == {}, "children walked from a recycled pid were recorded"
@@ -268,18 +268,18 @@ class TestRefreshDropsAChildWhosePidWasReused:
         child_reads = iter(child_start)
         with (
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=lambda pid: "111" if pid == 4242 else next(child_reads),
             ),
             patch(
-                "kiro_crew.acp.runtime_process_tree._get_child_pids",
+                "aj_crew.acp.runtime_process_tree._get_child_pids",
                 side_effect=lambda _pid: next(walk_answers),
             ),
             patch(
-                "kiro_crew.acp.runtime_process_tree._capture_child_records",
+                "aj_crew.acp.runtime_process_tree._capture_child_records",
                 return_value={5151: ("stranger", b"sleep")},
             ),
-            patch("kiro_crew.acp.client._replace_child_pids") as track,
+            patch("aj_crew.acp.client._replace_child_pids") as track,
         ):
             await client.refresh_process_tree()
         return client, track
@@ -318,15 +318,15 @@ class TestRefreshPersistsBeforeItPublishes:
 
         with (
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=lambda pid: "111" if pid == 4242 else "c",
             ),
-            patch("kiro_crew.acp.runtime_process_tree._get_child_pids", return_value=[5151]),
+            patch("aj_crew.acp.runtime_process_tree._get_child_pids", return_value=[5151]),
             patch(
-                "kiro_crew.acp.runtime_process_tree._capture_child_records",
+                "aj_crew.acp.runtime_process_tree._capture_child_records",
                 return_value={5151: ("c", b"sleep")},
             ),
-            patch("kiro_crew.acp.client._replace_child_pids", side_effect=_write),
+            patch("aj_crew.acp.client._replace_child_pids", side_effect=_write),
         ):
             await client.refresh_process_tree()
         assert client._child_pids == {}, "a respawned client gained the old process's child"
@@ -337,15 +337,15 @@ class TestRefreshPersistsBeforeItPublishes:
         client._child_pids = {5151: ("old", b"node")}
         with (
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=lambda pid: "111" if pid == 4242 else "new",
             ),
-            patch("kiro_crew.acp.runtime_process_tree._get_child_pids", return_value=[5151]),
+            patch("aj_crew.acp.runtime_process_tree._get_child_pids", return_value=[5151]),
             patch(
-                "kiro_crew.acp.runtime_process_tree._capture_child_records",
+                "aj_crew.acp.runtime_process_tree._capture_child_records",
                 return_value={5151: ("new", b"sleep")},
             ),
-            patch("kiro_crew.acp.client._replace_child_pids", return_value=True),
+            patch("aj_crew.acp.client._replace_child_pids", return_value=True),
         ):
             await client.refresh_process_tree()
         assert client._child_pids == {5151: ("new", b"sleep")}, "the stale record was kept"
@@ -354,15 +354,15 @@ class TestRefreshPersistsBeforeItPublishes:
     async def _refresh(client: AcpClient, written: bool) -> Any:
         with (
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=lambda pid: "111" if pid == 4242 else "c",
             ),
-            patch("kiro_crew.acp.runtime_process_tree._get_child_pids", return_value=[5151]),
+            patch("aj_crew.acp.runtime_process_tree._get_child_pids", return_value=[5151]),
             patch(
-                "kiro_crew.acp.runtime_process_tree._capture_child_records",
+                "aj_crew.acp.runtime_process_tree._capture_child_records",
                 return_value={5151: ("c", b"sleep")},
             ),
-            patch("kiro_crew.acp.client._replace_child_pids", return_value=written) as track,
+            patch("aj_crew.acp.client._replace_child_pids", return_value=written) as track,
         ):
             await client.refresh_process_tree()
         return track
@@ -394,7 +394,7 @@ class TestARefreshNeverStallsTeardown:
                     cancelled.set()
                     raise
 
-        with patch("kiro_crew.process_identity.TREE_REFRESH_TIMEOUT", 0.05):
+        with patch("aj_crew.process_identity.TREE_REFRESH_TIMEOUT", 0.05):
             await refresh_live_process_tree(_sessions_holding(_Hangs()), _KEY)
         assert cancelled.is_set(), "the bound returned without ending the hung refresh"
         assert "timed out" in caplog.text
@@ -414,12 +414,12 @@ class TestARefreshNeverStallsTeardown:
     async def test_no_live_session_or_no_client_is_a_quiet_no_op(
         self, caplog: pytest.LogCaptureFixture
     ) -> None:
-        caplog.set_level(logging.DEBUG, logger="kiro_crew.process_identity")
+        caplog.set_level(logging.DEBUG, logger="aj_crew.process_identity")
         await refresh_live_process_tree(SimpleNamespace(_sessions={}), _KEY)
         await refresh_live_process_tree(SimpleNamespace(), _KEY)
         await refresh_live_process_tree(_sessions_holding(None), _KEY)
         # Quiet: nothing to walk is not a failed or timed-out refresh.
-        logged = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.process_identity"]
+        logged = [r.getMessage() for r in caplog.records if r.name == "aj_crew.process_identity"]
         assert logged == []
 
 
@@ -428,8 +428,8 @@ class TestTheKiroBackendRefreshReachesTheRuntime:
 
     @pytest.mark.asyncio
     async def test_the_provider_hands_the_refresh_to_its_runtime(self) -> None:
-        from kiro_crew.acp.runtime import AcpRuntime
-        from kiro_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew.acp.runtime import AcpRuntime
+        from aj_crew.acp.session_provider import AcpSessionProvider
 
         runtime = AcpRuntime.__new__(AcpRuntime)
         runtime._child_pids = {}

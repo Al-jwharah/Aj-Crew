@@ -1,6 +1,6 @@
 """Content-integrity guards for the vendored ``_vendor`` tree.
 
-Everything under ``src/kiro_crew/_vendor`` is excluded from source-level
+Everything under ``src/aj_crew/_vendor`` is excluded from source-level
 content review — semgrep, the AI reviewers' reviewable diff, and the
 lint/format configs all skip it — so a modified vendored ``.py``, a swapped
 native library, or an added rogue file would pass every review gate unnoticed.
@@ -80,7 +80,7 @@ class TestRoundTrip:
 
     def test_manifest_is_deterministic_and_sha256sum_compatible(self, tmp_path: Path) -> None:
         """Two writes over the same tree are byte-identical; lines are sorted
-        ``<64-hex>␣␣src/kiro_crew/_vendor/<relpath>`` with a trailing newline —
+        ``<64-hex>␣␣src/aj_crew/_vendor/<relpath>`` with a trailing newline —
         the exact shape ``sha256sum -c`` accepts, keeping the manifest
         independently verifiable outside this script.
         """
@@ -97,7 +97,7 @@ class TestRoundTrip:
         for line in lines:
             digest, sep, name = line.partition("  ")
             assert sep and len(digest) == 64 and set(digest) <= set("0123456789abcdef")
-            assert name.startswith("src/kiro_crew/_vendor/")
+            assert name.startswith("src/aj_crew/_vendor/")
 
 
 class TestDivergenceDetection:
@@ -117,14 +117,14 @@ class TestDivergenceDetection:
 
         assert _run(_args(vendor, manifest)) == 1
         err = capsys.readouterr().err
-        assert "MODIFIED: src/kiro_crew/_vendor/llama_cpp_libs/linux_x86_64/libllama.so" in err
+        assert "MODIFIED: src/aj_crew/_vendor/llama_cpp_libs/linux_x86_64/libllama.so" in err
 
     def test_detects_a_missing_file(self, green_baseline, capsys) -> None:
         vendor, manifest = green_baseline
         (vendor / "llama_cpp/llama.py").unlink()
 
         assert _run(_args(vendor, manifest)) == 1
-        assert "MISSING: src/kiro_crew/_vendor/llama_cpp/llama.py" in capsys.readouterr().err
+        assert "MISSING: src/aj_crew/_vendor/llama_cpp/llama.py" in capsys.readouterr().err
 
     def test_detects_an_unexpected_extra_file(self, green_baseline, capsys) -> None:
         """An ADDED file must fail too: a rogue ``.py`` dropped into the
@@ -136,7 +136,7 @@ class TestDivergenceDetection:
 
         assert _run(_args(vendor, manifest)) == 1
         err = capsys.readouterr().err
-        assert "UNEXPECTED: src/kiro_crew/_vendor/llama_cpp/sitecustomize.py" in err
+        assert "UNEXPECTED: src/aj_crew/_vendor/llama_cpp/sitecustomize.py" in err
 
     def test_reports_every_class_in_one_run(self, green_baseline, capsys) -> None:
         """One run names ALL divergences, not just the first — a reviewer of a
@@ -149,9 +149,9 @@ class TestDivergenceDetection:
 
         assert _run(_args(vendor, manifest)) == 1
         err = capsys.readouterr().err
-        assert "MODIFIED: src/kiro_crew/_vendor/README.md" in err
-        assert "MISSING: src/kiro_crew/_vendor/llama_cpp/llama.py" in err
-        assert "UNEXPECTED: src/kiro_crew/_vendor/extra.bin" in err
+        assert "MODIFIED: src/aj_crew/_vendor/README.md" in err
+        assert "MISSING: src/aj_crew/_vendor/llama_cpp/llama.py" in err
+        assert "UNEXPECTED: src/aj_crew/_vendor/extra.bin" in err
 
     def test_failure_names_the_regeneration_procedure(self, green_baseline, capsys) -> None:
         """The failure message must point at the documented ``--write`` path so
@@ -176,7 +176,7 @@ class TestDivergenceDetection:
 
         assert _run(_args(vendor, manifest)) == 1
         err = capsys.readouterr().err
-        assert "SYMLINK: src/kiro_crew/_vendor/llama_cpp_libs/linux_x86_64/evil.so" in err
+        assert "SYMLINK: src/aj_crew/_vendor/llama_cpp_libs/linux_x86_64/evil.so" in err
 
     def test_write_refuses_a_symlinked_tree_too(self, green_baseline, capsys) -> None:
         """``--write`` over a tree with a symlink must refuse, not regenerate —
@@ -205,7 +205,7 @@ class TestDivergenceDetection:
 
         assert _run(_args(vendor, manifest)) == 1
         err = capsys.readouterr().err
-        assert "PYCACHE: src/kiro_crew/_vendor/llama_cpp/__pycache__/llama.cpython-312.pyc" in err
+        assert "PYCACHE: src/aj_crew/_vendor/llama_cpp/__pycache__/llama.cpython-312.pyc" in err
         assert "rm -rf" in err, "refusal must include the local-cache deletion hint"
 
         assert _run(_args(vendor, manifest, "--write")) == 1
@@ -250,9 +250,9 @@ def test_committed_manifest_exists_and_parses() -> None:
 @pytest.mark.parametrize(
     "pattern",
     (
-        "src/kiro_crew/_vendor/**/*.py text eol=lf",
-        "src/kiro_crew/_vendor/**/*.md text eol=lf",
-        "src/kiro_crew/_vendor/**/*.typed text eol=lf",
+        "src/aj_crew/_vendor/**/*.py text eol=lf",
+        "src/aj_crew/_vendor/**/*.md text eol=lf",
+        "src/aj_crew/_vendor/**/*.typed text eol=lf",
     ),
 )
 def test_vendor_text_payloads_are_checkout_byte_stable(pattern: str) -> None:

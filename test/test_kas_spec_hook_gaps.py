@@ -23,14 +23,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-import kiro_crew.hooks as hooks_mod
-from kiro_crew.acp import kas_agents, kas_permissions
-from kiro_crew.agent_sdk import spec_hooks
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.hooks import (
+import aj_crew.config.paths as paths_mod
+import aj_crew.hooks as hooks_mod
+from aj_crew.acp import kas_agents, kas_permissions
+from aj_crew.agent_sdk import spec_hooks
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard import chat_runner
+from aj_crew.hooks import (
     HOOK_EVENT_POST_TOOL_USE,
     HOOK_EVENT_PRE_TOOL_USE,
     ScriptHook,
@@ -476,9 +476,9 @@ def _save_page_hook(config_dir, matcher: str) -> None:
 
 
 def test_the_gate_with_no_registered_store_runs_the_saved_hooks(tmp_path, monkeypatch):
-    """A standalone ``kirocrew run`` registers no hook store: the saved deny hook
+    """A standalone ``ajcrew run`` registers no hook store: the saved deny hook
     still gates its KAS task's call."""
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     monkeypatch.setattr(loader, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(hooks_mod, "_global_script_hook_store", None)
@@ -511,7 +511,7 @@ def test_a_corrupt_saved_hooks_file_blocks_the_gate_and_withholds_every_approval
     """No registered store and a ``hooks.json`` the store cannot read whole: the
     gate refuses the call and the projection withholds every auto-approval,
     rather than reading a saved deny hook as absent."""
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     monkeypatch.setattr(loader, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(hooks_mod, "_global_script_hook_store", None)
@@ -536,8 +536,8 @@ def test_a_corrupt_saved_hooks_file_blocks_the_gate_and_withholds_every_approval
 def test_the_saved_hooks_are_read_once_under_the_writers_lock(tmp_path, monkeypatch):
     from contextlib import contextmanager
 
-    from kiro_crew import webhooks
-    from kiro_crew.config import loader
+    from aj_crew import webhooks
+    from aj_crew.config import loader
 
     monkeypatch.setattr(loader, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(hooks_mod, "_global_script_hook_store", None)
@@ -580,7 +580,7 @@ def test_the_gate_reads_the_saved_hooks_off_the_event_loop(monkeypatch):
 
 
 def test_a_missing_saved_hooks_file_is_no_hooks(tmp_path, monkeypatch):
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     monkeypatch.setattr(loader, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(hooks_mod, "_global_script_hook_store", None)
@@ -602,7 +602,7 @@ def test_the_gate_blocks_when_saved_hooks_cannot_be_read(monkeypatch):
 def test_the_projection_with_no_registered_store_withholds_for_saved_hooks(
     tmp_path, agents_dir, monkeypatch
 ):
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     monkeypatch.setattr(loader, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(kas_agents, "get_global_hook_store", lambda: None)
@@ -646,15 +646,15 @@ def _subagent_run(
 
     With *store*, that store's own matcher decides which hooks run.
     """
-    from kiro_crew.execution_context import execution_for_store
-    from kiro_crew.providers.base import (
+    from aj_crew.execution_context import execution_for_store
+    from aj_crew.providers.base import (
         EVENT_AGENT_SWITCHED,
         EVENT_PERMISSION_REQUEST,
         EVENT_TOOL_CALL,
         EVENT_TOOL_RESULT,
         LLMEvent,
     )
-    from kiro_crew.subagent import SubagentInfo, SubagentManager
+    from aj_crew.subagent import SubagentInfo, SubagentManager
 
     def read(agent, _project_dir=None, **_kw):
         if unreadable:
@@ -719,7 +719,7 @@ def _subagent_run(
     )
     manager._log_spawned(info)
     refused = pytest.raises(spec_hooks.StaleProjectionError) if stale else nullcontext()
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"), refused:
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"), refused:
         asyncio.run(manager._run_inner(info, "subagent:t01"))
     return manager.hook_store.fire, provider
 
@@ -748,7 +748,7 @@ def test_a_kas_web_fetch_request_titled_fetch_url_meets_a_web_fetch_deny_hook(
     tmp_path, monkeypatch, source
 ):
     # KAS titles the call "Fetch URL" and names it web_fetch in _meta.kiro.toolId.
-    from kiro_crew.acp._dispatch import _permission_tool_id
+    from aj_crew.acp._dispatch import _permission_tool_id
 
     tool_id = _permission_tool_id({"_meta": {"kiro": {"toolId": "web_fetch"}}})
     assert tool_id == "web_fetch"
@@ -845,7 +845,7 @@ def test_a_kas_subagent_post_tool_use_meets_an_mcp_call_by_its_server_form(monke
 
 @pytest.mark.usefixtures("healthy_host_memory")
 def test_a_kas_subagent_post_tool_use_waits_for_the_terminal_result(monkeypatch):
-    from kiro_crew.providers.base import EVENT_TOOL_RESULT, LLMEvent
+    from aj_crew.providers.base import EVENT_TOOL_RESULT, LLMEvent
 
     real = LLMEvent
 
@@ -856,7 +856,7 @@ def test_a_kas_subagent_post_tool_use_waits_for_the_terminal_result(monkeypatch)
             event.tool_status = "in_progress"
         return event
 
-    monkeypatch.setattr("kiro_crew.providers.base.LLMEvent", _progress_first)
+    monkeypatch.setattr("aj_crew.providers.base.LLMEvent", _progress_first)
     fire, _provider = _subagent_run(ACP_BACKEND_KAS, monkeypatch, harness_tool_id="run_command")
     assert not [c for c in fire.await_args_list if c.args[0] == HOOK_EVENT_POST_TOOL_USE]
 
@@ -898,16 +898,16 @@ def _task_step(
     session_agent: str = "",
 ) -> tuple[list, list, list]:
     """One task-runner step on *backend*; every PreToolUse fire it makes denies."""
-    from kiro_crew import task_executor
-    from kiro_crew.acp.types import STOP_REASON_END_TURN, TurnUsage
-    from kiro_crew.providers.base import (
+    from aj_crew import task_executor
+    from aj_crew.acp.types import STOP_REASON_END_TURN, TurnUsage
+    from aj_crew.providers.base import (
         EVENT_AGENT_SWITCHED,
         EVENT_COMPLETE,
         EVENT_PERMISSION_REQUEST,
         EVENT_TOOL_CALL,
         LLMEvent,
     )
-    from kiro_crew.task_models import Project, Task
+    from aj_crew.task_models import Project, Task
 
     monkeypatch.setattr(
         spec_hooks,
@@ -933,7 +933,7 @@ def _task_step(
     )
     fake_config = MagicMock()
     fake_config.load.return_value = SimpleNamespace(agent=SimpleNamespace(provider="acp"))
-    monkeypatch.setattr(task_executor, "KiroCrewConfig", fake_config)
+    monkeypatch.setattr(task_executor, "AjCrewConfig", fake_config)
     rejected: list = []
 
     class _Client:
@@ -986,8 +986,8 @@ def _task_step(
 
 
 def test_a_kas_task_step_with_no_agent_reads_the_default_agents_spec(monkeypatch):
-    from kiro_crew import task_executor
-    from kiro_crew.acp.client import CLIENT_NAME
+    from aj_crew import task_executor
+    from aj_crew.acp.client import CLIENT_NAME
 
     asked: list = []
     real = spec_hooks.turn_spec_hooks
@@ -1018,7 +1018,7 @@ def test_a_kas_task_step_switched_mid_run_is_gated_by_the_new_agents_hooks(monke
 def test_a_retried_task_step_is_gated_by_the_agent_its_session_runs_now(monkeypatch):
     """An earlier attempt switched the reused session to agent b: the retry reads
     b's hooks, not the step's original agent's."""
-    from kiro_crew import task_executor
+    from aj_crew import task_executor
 
     asked: list = []
     real = spec_hooks.turn_spec_hooks
@@ -1035,15 +1035,15 @@ def test_a_retried_task_step_is_gated_by_the_agent_its_session_runs_now(monkeypa
 def test_a_step_that_switched_and_failed_retries_under_the_switched_agents_hooks(monkeypatch):
     """Attempt 1 switches the session from worker to b and then fails; the retry
     runs on the same session and its permission request meets b's deny hook."""
-    from kiro_crew import task_executor
-    from kiro_crew.acp.types import STOP_REASON_END_TURN, TurnUsage
-    from kiro_crew.providers.base import (
+    from aj_crew import task_executor
+    from aj_crew.acp.types import STOP_REASON_END_TURN, TurnUsage
+    from aj_crew.providers.base import (
         EVENT_AGENT_SWITCHED,
         EVENT_COMPLETE,
         EVENT_PERMISSION_REQUEST,
         LLMEvent,
     )
-    from kiro_crew.task_models import Project, Task
+    from aj_crew.task_models import Project, Task
 
     monkeypatch.setattr(
         spec_hooks,
@@ -1075,7 +1075,7 @@ def test_a_step_that_switched_and_failed_retries_under_the_switched_agents_hooks
     )
     fake_config = MagicMock()
     fake_config.load.return_value = SimpleNamespace(agent=SimpleNamespace(provider="acp"))
-    monkeypatch.setattr(task_executor, "KiroCrewConfig", fake_config)
+    monkeypatch.setattr(task_executor, "AjCrewConfig", fake_config)
     rejected: list = []
     turns = {"n": 0}
 
@@ -1145,7 +1145,7 @@ def test_a_kas_task_step_denies_on_its_permission_request_and_fires_once(monkeyp
     ("backend", "outcome"), [(ACP_BACKEND_KAS, "invoked"), (ACP_BACKEND_KIRO, "auto_approved")]
 )
 def test_a_task_step_audits_a_gated_tool_call_frame_as_not_approved(monkeypatch, backend, outcome):
-    from kiro_crew import task_executor
+    from aj_crew import task_executor
 
     logged: list = []
     audit = MagicMock()
@@ -1208,7 +1208,7 @@ def test_the_projection_answer_is_the_active_agents():
 
 
 def test_the_provider_reads_the_sessions_projection_through():
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.providers.acp import AcpProvider
 
     provider = object.__new__(AcpProvider)
     provider._client = SimpleNamespace(kas_auto_approved_capabilities=frozenset({"web_fetch"}))
@@ -1309,7 +1309,7 @@ def test_an_unreadable_spec_re_projects(agents_dir, hooks_page):
 
 def _point_user_hooks_dir(monkeypatch, tmp_path: Path) -> Path:
     """Point ~/.kiro/hooks at a temp dir via the resolver's seam, return it."""
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     hooks_dir = tmp_path / "userhome" / ".kiro" / "hooks"
     hooks_dir.mkdir(parents=True, exist_ok=True)
@@ -1513,7 +1513,7 @@ def test_a_session_that_stays_stale_refuses_the_turn(agents_dir, hooks_page):
 
 
 def test_every_provider_declares_what_its_batch_auto_approves():
-    from kiro_crew.providers.base import LLMProvider
+    from aj_crew.providers.base import LLMProvider
 
     assert "kas_auto_approved_capabilities" in vars(LLMProvider)
     assert LLMProvider.kas_auto_approved_capabilities.fget(object()) is None
@@ -1523,10 +1523,10 @@ def _chat_turn(tmp_path, monkeypatch, reproject):
     """Drive one chat turn with a spied claim; returns (order, sessions)."""
     from chat_test_helpers import _make_state
 
-    from kiro_crew.agent_discovery import clear_list_agents_cache
-    from kiro_crew.config.loader import refresh_materialized_agents
-    from kiro_crew.config.paths import kiro_agents_dir
-    from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+    from aj_crew.agent_discovery import clear_list_agents_cache
+    from aj_crew.config.loader import refresh_materialized_agents
+    from aj_crew.config.paths import kiro_agents_dir
+    from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
     d = kiro_agents_dir()
     d.mkdir(parents=True, exist_ok=True)
@@ -1653,8 +1653,8 @@ def test_the_re_claim_adopts_the_new_permit(agents_dir, hooks_page):
 
 
 def test_every_provider_declares_the_agent_its_batch_was_built_for():
-    from kiro_crew.providers.acp import AcpProvider
-    from kiro_crew.providers.base import LLMProvider
+    from aj_crew.providers.acp import AcpProvider
+    from aj_crew.providers.base import LLMProvider
 
     assert LLMProvider.kas_projected_agent.fget(object()) == ""
     provider = object.__new__(AcpProvider)
@@ -1667,8 +1667,8 @@ def test_every_provider_declares_the_agent_its_batch_was_built_for():
 def test_a_kas_mode_switch_moves_the_sessions_agent_and_its_hooks(agents_dir, notices):
     """KAS session on agent A; a current_mode_update names B: the next call is gated
     by B's spec hooks, not A's, whether or not the turn names B."""
-    from kiro_crew.acp.session_handle import AcpSessionHandle
-    from kiro_crew.acp.types import EVENT_AGENT_SWITCHED, UPDATE_CURRENT_MODE
+    from aj_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.acp.types import EVENT_AGENT_SWITCHED, UPDATE_CURRENT_MODE
 
     _write_spec(agents_dir, "agent-a", hooks={"preToolUse": [{"command": "a-guard.sh"}]})
     _write_spec(agents_dir, "agent-b", hooks={"preToolUse": [{"command": "b-guard.sh"}]})
@@ -1698,8 +1698,8 @@ def test_an_explicit_agent_wins_over_a_stale_recorded_one(agents_dir, notices):
 
 
 def test_a_mode_frame_on_a_session_with_no_batch_records_nothing():
-    from kiro_crew.acp.session_handle import AcpSessionHandle
-    from kiro_crew.acp.types import UPDATE_CURRENT_MODE
+    from aj_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.acp.types import UPDATE_CURRENT_MODE
 
     handle = object.__new__(AcpSessionHandle)
     handle._last_kas_mode_id = ""
@@ -1745,10 +1745,10 @@ def test_a_shared_session_that_stays_stale_refuses_the_run(agents_dir, hooks_pag
 def test_a_shared_subagent_session_is_checked_after_it_is_created(monkeypatch):
     """The shared arm hands its new session to replace_stale_shared_session before
     the run streams on it, so a stale one is swapped for a fresh one."""
-    from kiro_crew import subagent as subagent_mod
-    from kiro_crew.execution_context import execution_for_store
-    from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
-    from kiro_crew.subagent import SubagentInfo, SubagentManager
+    from aj_crew import subagent as subagent_mod
+    from aj_crew.execution_context import execution_for_store
+    from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
+    from aj_crew.subagent import SubagentInfo, SubagentManager
 
     streamed: list = []
 
@@ -1801,7 +1801,7 @@ def test_a_shared_subagent_session_is_checked_after_it_is_created(monkeypatch):
         parent_session_key="dashboard:parent",
     )
     manager._log_spawned(info)
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         asyncio.run(manager._run_inner(info, "subagent:t02"))
     assert checked and checked[0] == (first, "worker")
     assert streamed and set(streamed) == {"fresh"}
@@ -1814,8 +1814,8 @@ _FETCH_GUARD = {"preToolUse": [{"matcher": "web_fetch", "command": "b-guard.sh"}
 
 def _switched_handle(agents_dir, to: str):
     """A KAS session registered for agent-a (web_fetch auto-approved), then switched."""
-    from kiro_crew.acp.session_handle import AcpSessionHandle
-    from kiro_crew.acp.types import UPDATE_CURRENT_MODE
+    from aj_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.acp.types import UPDATE_CURRENT_MODE
 
     spec = kas_agents.load_agent_spec(agents_dir, "agent-a")
     batch = kas_agents.build_kas_custom_agents(agents_dir, "agent-a", spec)
@@ -1833,8 +1833,8 @@ def test_only_the_kas_harness_records_the_projection():
     """The shared runtime calls one harness seam; kiro's default records nothing."""
     from types import SimpleNamespace as NS
 
-    from kiro_crew.acp.harness.kas import KasHarness
-    from kiro_crew.acp.harness.kiro import KiroHarness
+    from aj_crew.acp.harness.kas import KasHarness
+    from aj_crew.acp.harness.kiro import KiroHarness
 
     batch = [
         {"id": "a1", "permissions": {"rules": [{"capability": "web_fetch", "effect": "allow"}]}}

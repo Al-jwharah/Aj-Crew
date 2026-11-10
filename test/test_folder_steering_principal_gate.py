@@ -18,9 +18,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import chat_folders as cf
-from kiro_crew.dashboard.chat_folders import api_chat_folder_create, api_chat_folder_update
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard import chat_folders as cf
+from aj_crew.dashboard.chat_folders import api_chat_folder_create, api_chat_folder_update
+from aj_crew.dashboard.state import DashboardState
 
 
 def _state(folders: list[dict[str, Any]]) -> DashboardState:

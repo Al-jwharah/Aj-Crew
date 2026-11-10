@@ -13,11 +13,11 @@ vi.mock('../../api/client', async importOriginal => {
     ...mod,
     api: {
       ...mod.api,
-      agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'kirocrew' })),
+      agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'ajcrew' })),
       workspaces: vi.fn(() => Promise.resolve({ workspaces: [{ name: 'default' }] })),
       availableModels: vi.fn(() => Promise.resolve({ models: [] })),
       members: vi.fn(() => Promise.resolve({ members: [] })),
-      createKirocrewAgent: vi.fn(() => Promise.resolve({ ok: true, name: 'Scout' })),
+      createAjcrewAgent: vi.fn(() => Promise.resolve({ ok: true, name: 'Scout' })),
     },
   }
 })
@@ -45,7 +45,7 @@ describe('NewCrewmateDialog', () => {
   beforeEach(() => {
     props.onClose = vi.fn()
     props.onCreated = vi.fn()
-    vi.mocked(api.createKirocrewAgent).mockClear()
+    vi.mocked(api.createAjcrewAgent).mockClear()
   })
   afterEach(() => { vi.restoreAllMocks() })
 
@@ -68,10 +68,10 @@ describe('NewCrewmateDialog', () => {
     await screen.findByTestId('crewmate-create-form')
     typeName('Scout')
     fireEvent.click(screen.getByTestId('crewmate-create-submit'))
-    await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
     // Unasked, the create owes no first greeting.
-    const body = vi.mocked(api.createKirocrewAgent).mock.calls[0][0] as Record<string, unknown>
-    expect(body).toMatchObject({ name: 'Scout', kiro_agent: 'kirocrew' })
+    const body = vi.mocked(api.createAjcrewAgent).mock.calls[0][0] as Record<string, unknown>
+    expect(body).toMatchObject({ name: 'Scout', kiro_agent: 'ajcrew' })
     expect(body).not.toHaveProperty('first_greeting')
     await waitFor(() => expect(props.onCreated).toHaveBeenCalledWith({ name: 'Scout', job: '' }), { timeout: 4000 })
   })
@@ -120,7 +120,7 @@ describe('NewCrewmateDialog', () => {
       expect(screen.queryByTestId('crewmate-create-advanced')).toBeNull()
       expect(toggle()).toHaveAttribute('aria-expanded', 'false')
       expect(toggle()).toHaveTextContent('Advanced settings')
-      expect(region).not.toHaveTextContent(/kirocrew/i)
+      expect(region).not.toHaveTextContent(/ajcrew/i)
     })
 
     it('unfolding shows every setting in the same card, under the same heading', async () => {
@@ -155,30 +155,30 @@ describe('NewCrewmateDialog', () => {
       // Folded again: still sent.
       fireEvent.click(toggle())
       fireEvent.click(screen.getByTestId('crewmate-create-submit'))
-      await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
-      expect(vi.mocked(api.createKirocrewAgent).mock.calls[0][0]).toMatchObject({
+      await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
+      expect(vi.mocked(api.createAjcrewAgent).mock.calls[0][0]).toMatchObject({
         name: 'Scout',
-        kiro_agent: 'kirocrew',
+        kiro_agent: 'ajcrew',
         description: 'Watch PRs',
         first_greeting: true,
       })
       // No pick: the create still defaults the look to an icon (a shipped pose
       // over a palette colour) rather than falling back to the name's ghost.
-      const foldedBody = vi.mocked(api.createKirocrewAgent).mock.calls[0][0] as { avatar: { kind: string; pose: string; bg: string } }
+      const foldedBody = vi.mocked(api.createAjcrewAgent).mock.calls[0][0] as { avatar: { kind: string; pose: string; bg: string } }
       expect(foldedBody.avatar).toMatchObject({ kind: 'icon', pose: seedIconPose('Scout') })
       expect(foldedBody.avatar.bg).toMatch(/^#[0-9a-f]{6}$/i)
     })
 
-    it('Create from the folded card builds from kirocrew, follows the name\'s own look and asks for the first greeting', async () => {
+    it('Create from the folded card builds from ajcrew, follows the name\'s own look and asks for the first greeting', async () => {
       card()
       await screen.findByTestId('crewmate-create-form')
       typeName('Scout')
       fireEvent.click(screen.getByTestId('crewmate-create-submit'))
-      await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
-      const body = vi.mocked(api.createKirocrewAgent).mock.calls[0][0] as Record<string, unknown>
+      await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
+      const body = vi.mocked(api.createAjcrewAgent).mock.calls[0][0] as Record<string, unknown>
       expect(body).toMatchObject({
         name: 'Scout',
-        kiro_agent: 'kirocrew',
+        kiro_agent: 'ajcrew',
         workspace: '',
         description: '',
         first_greeting: true,
@@ -209,8 +209,8 @@ describe('NewCrewmateDialog', () => {
       // The pick is pinned: renaming the draft keeps it.
       typeName('Scribe')
       fireEvent.click(screen.getByTestId('crewmate-create-submit'))
-      await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
-      const body = vi.mocked(api.createKirocrewAgent).mock.calls[0][0] as { name: string; avatar: { kind: string; pose: string; bg: string } }
+      await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
+      const body = vi.mocked(api.createAjcrewAgent).mock.calls[0][0] as { name: string; avatar: { kind: string; pose: string; bg: string } }
       expect(body.name).toBe('Scribe')
       expect(body.avatar).toMatchObject({ kind: 'icon', pose })
       expect(body.avatar.bg).toMatch(/^#[0-9a-f]{6}$/i)
@@ -229,8 +229,8 @@ describe('NewCrewmateDialog', () => {
       fireEvent.click(screen.getByTestId('avatar-builder-save'))
       await waitFor(() => expect(screen.queryByTestId('avatar-icon-pane')).toBeNull())
       fireEvent.click(screen.getByTestId('crewmate-create-submit'))
-      await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
-      expect(vi.mocked(api.createKirocrewAgent).mock.calls[0][0]).toMatchObject({ avatar: { kind: 'icon', pose } })
+      await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
+      expect(vi.mocked(api.createAjcrewAgent).mock.calls[0][0]).toMatchObject({ avatar: { kind: 'icon', pose } })
     })
 
     it('the original look comes back after a pick: the editor offers it and the create then defaults to a name-seeded icon', async () => {
@@ -249,10 +249,10 @@ describe('NewCrewmateDialog', () => {
       fireEvent.click(screen.getByRole('button', { name: "Back to Scout's original look" }))
       await waitFor(() => expect(screen.queryByTestId('avatar-icon-pane')).toBeNull())
       fireEvent.click(screen.getByTestId('crewmate-create-submit'))
-      await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
+      await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
       // Reverting to the original clears the explicit pick, so the create falls
       // to the same name-seeded icon default a never-opened editor produces.
-      const reverted = vi.mocked(api.createKirocrewAgent).mock.calls[0][0] as { avatar: { kind: string; pose: string; bg: string } }
+      const reverted = vi.mocked(api.createAjcrewAgent).mock.calls[0][0] as { avatar: { kind: string; pose: string; bg: string } }
       expect(reverted.avatar).toMatchObject({ kind: 'icon', pose: seedIconPose('Scout') })
       expect(reverted.avatar.bg).toMatch(/^#[0-9a-f]{6}$/i)
     })
@@ -300,8 +300,8 @@ describe('NewCrewmateDialog', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
       await waitFor(() => expect(screen.queryByTestId('avatar-icon-pane')).toBeNull())
       fireEvent.click(screen.getByTestId('crewmate-create-submit'))
-      await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
-      const cancelled = vi.mocked(api.createKirocrewAgent).mock.calls[0][0] as { avatar: { kind: string; pose: string; bg: string } }
+      await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
+      const cancelled = vi.mocked(api.createAjcrewAgent).mock.calls[0][0] as { avatar: { kind: string; pose: string; bg: string } }
       expect(cancelled.avatar).toMatchObject({ kind: 'icon', pose: seedIconPose('Scout') })
       expect(cancelled.avatar.bg).toMatch(/^#[0-9a-f]{6}$/i)
     })
@@ -392,14 +392,14 @@ describe('NewCrewmateDialog', () => {
     })
 
     it.each([false, true])('Enter in the Name field submits through the footer Create (advanced unfolded: %s)', async (unfold) => {
-      vi.mocked(api.createKirocrewAgent).mockImplementationOnce(() => new Promise(() => {}))
+      vi.mocked(api.createAjcrewAgent).mockImplementationOnce(() => new Promise(() => {}))
       const user = userEvent.setup()
       card()
       await screen.findByTestId('crewmate-create-form')
       if (unfold) fireEvent.click(toggle())
       await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Scout{Enter}')
-      await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
-      expect(vi.mocked(api.createKirocrewAgent).mock.calls[0][0]).toMatchObject({ name: 'Scout' })
+      await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
+      expect(vi.mocked(api.createAjcrewAgent).mock.calls[0][0]).toMatchObject({ name: 'Scout' })
     })
 
     it('Advanced settings unfolds directly under its toggle, above the footer Create', async () => {
@@ -415,25 +415,25 @@ describe('NewCrewmateDialog', () => {
     })
 
     it('the footer Create submits once per press, and is locked while the create is in flight', async () => {
-      vi.mocked(api.createKirocrewAgent).mockImplementationOnce(() => new Promise(() => {}))
+      vi.mocked(api.createAjcrewAgent).mockImplementationOnce(() => new Promise(() => {}))
       card()
       await screen.findByTestId('crewmate-create-form')
       typeName('Scout')
       fireEvent.click(toggle())
       fireEvent.click(screen.getByTestId('crewmate-create-submit'))
-      await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
-      expect(vi.mocked(api.createKirocrewAgent).mock.calls[0][0]).toMatchObject({ name: 'Scout', kiro_agent: 'kirocrew' })
+      await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
+      expect(vi.mocked(api.createAjcrewAgent).mock.calls[0][0]).toMatchObject({ name: 'Scout', kiro_agent: 'ajcrew' })
       // Held, not `disabled`: the button a reader pressed keeps focus while the
       // POST is out (a native disable would blur it to <body>), and a second
       // press is refused by the form's busy guard, not by the browser.
       await waitFor(() => expect(screen.getByTestId('crewmate-create-submit')).toHaveAttribute('aria-disabled', 'true'))
       expect(screen.getByTestId('crewmate-create-submit')).not.toBeDisabled()
       fireEvent.click(screen.getByTestId('crewmate-create-submit'))
-      expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1)
+      expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1)
     })
 
     it('the toggle, the look and Create are locked with the form while a create is in flight', async () => {
-      vi.mocked(api.createKirocrewAgent).mockImplementationOnce(() => new Promise(() => {}))
+      vi.mocked(api.createAjcrewAgent).mockImplementationOnce(() => new Promise(() => {}))
       card()
       const dialog = await screen.findByRole('dialog')
       typeName('Scout')
@@ -473,7 +473,7 @@ describe('NewCrewmateDialog opened from a proposal', () => {
   beforeEach(() => {
     props.onClose = vi.fn()
     props.onCreated = vi.fn()
-    vi.mocked(api.createKirocrewAgent).mockClear()
+    vi.mocked(api.createAjcrewAgent).mockClear()
   })
   afterEach(() => { vi.restoreAllMocks() })
   const goalField = () => screen.queryByRole('textbox', { name: 'Goal' }) as HTMLTextAreaElement | null
@@ -485,8 +485,8 @@ describe('NewCrewmateDialog opened from a proposal', () => {
     expect(screen.getByTestId('crewmate-create-advanced-toggle')).toHaveAttribute('aria-expanded', 'true')
     expect(goalField()).toHaveValue('Watch CI')
     fireEvent.click(screen.getByTestId('crewmate-create-submit'))
-    await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
-    expect(vi.mocked(api.createKirocrewAgent).mock.calls[0][0]).toMatchObject({ name: 'Scout', description: 'Watch CI' })
+    await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
+    expect(vi.mocked(api.createAjcrewAgent).mock.calls[0][0]).toMatchObject({ name: 'Scout', description: 'Watch CI' })
   })
 
   it('a proposal with no goal keeps Advanced settings folded', async () => {

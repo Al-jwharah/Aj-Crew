@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps.builtins.dev_fleet import npm_preflight as np
+from aj_crew.apps.builtins.dev_fleet import npm_preflight as np
 
 #: ``EDQUOT`` is not defined on every platform (Windows' CRT omits it), so it is
 #: looked up rather than imported -- the same shape the production module uses to

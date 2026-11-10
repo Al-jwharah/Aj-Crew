@@ -3,7 +3,7 @@
 Four claims, pinned from the store rather than from the validator alone, because
 the store is where every write path lands: the dashboard tool, the browser PATCH
 handler and a plain ``artifact_update`` all reach
-:meth:`kiro_crew.artifacts.ArtifactStore.update`.
+:meth:`aj_crew.artifacts.ArtifactStore.update`.
 
 1. A package round-trips: what comes back parses, and the data line's one
    entry point finds it by its binding.
@@ -25,11 +25,11 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.artifact_store import dashboard_package as dp
-from kiro_crew.artifact_store.records import ALLOWED_EVENT_TYPES
-from kiro_crew.artifact_store.rules import ALLOWED_KINDS, USER_SELECTABLE_KINDS
-from kiro_crew.artifacts import ArtifactStore, ArtifactValidationError
-from kiro_crew.validation import (
+from aj_crew.artifact_store import dashboard_package as dp
+from aj_crew.artifact_store.records import ALLOWED_EVENT_TYPES
+from aj_crew.artifact_store.rules import ALLOWED_KINDS, USER_SELECTABLE_KINDS
+from aj_crew.artifacts import ArtifactStore, ArtifactValidationError
+from aj_crew.validation import (
     _ARTIFACT_KIND_RE,
     ARTIFACT_LIST_SCHEMA,
     ARTIFACT_SAVE_SCHEMA,
@@ -132,7 +132,7 @@ def content(**kwargs: Any) -> str:
 
 def _tool_kind_enum(tool: str) -> list[str]:
     """The ``kind`` values the MCP tool *tool* advertises to an agent."""
-    from kiro_crew.mcp_tools.artifacts import schemas
+    from aj_crew.mcp_tools.artifacts import schemas
 
     for descriptor in schemas():
         if descriptor["name"] == tool:
@@ -154,8 +154,8 @@ def _save_through_the_tool(
     alone, which is the half that cannot tell a reachable kind from an advertised
     one.
     """
-    from kiro_crew import mcp_core
-    from kiro_crew.mcp_tools.artifacts import artifact_save
+    from aj_crew import mcp_core
+    from aj_crew.mcp_tools.artifacts import artifact_save
 
     posted: dict[str, Any] = {}
 
@@ -328,7 +328,7 @@ class TestTheAgentToolMaySaveOne:
         # to be, so a key missing from it is a refusal the agent cannot act on:
         # it composes what it was told, the store refuses the result, and nothing
         # in either half says which list is short.
-        from kiro_crew.mcp_tools.artifacts import schemas
+        from aj_crew.mcp_tools.artifacts import schemas
 
         save = next(s for s in schemas() if s["name"] == "artifact_save")
         described = save["inputSchema"]["properties"]["kind"]["description"]
@@ -384,7 +384,7 @@ class TestWhereAValueComesFrom:
         is defined by is now the PACKAGE one, because a package's page has a reader a
         template's does not -- `member_dashboard_fields.LivePage` reads a tree-keyed
         fold, and the template feed reaches a fold only by its bus scope."""
-        from kiro_crew.dashboard_templates.manifest import FOLD_NAMES, PACKAGE_FOLD_NAMES
+        from aj_crew.dashboard_templates.manifest import FOLD_NAMES, PACKAGE_FOLD_NAMES
 
         assert dp.fold_names() == frozenset(PACKAGE_FOLD_NAMES)
         # And it is a SUPERSET of the template gate rather than a different list: the
@@ -398,7 +398,7 @@ class TestWhereAValueComesFrom:
     def test_a_name_this_package_accepts_a_manifest_field_accepts(self, name) -> None:
         # The translation keeps the package's own field names, so the two
         # grammars have to agree on every name, not just on the good ones.
-        from kiro_crew.dashboard_templates.manifest import _FIELD
+        from aj_crew.dashboard_templates.manifest import _FIELD
 
         mine = dp._FIELD_NAME_RE.fullmatch(name) is not None
         theirs = _FIELD.match(name) is not None
@@ -555,7 +555,7 @@ class TestVersionOnlyOnLayoutChange:
 
     def test_a_credential_in_a_migrated_title_or_label_is_still_redacted(self) -> None:
         """A hyphenated secret is masked in the stored page and stays masked when read."""
-        from kiro_crew.platform.context import redact_via_context
+        from aj_crew.platform.context import redact_via_context
 
         secret = "xoxb-" + "1234567890-1234567890123-" + "a" * 24
         p = package(blocks=[{"id": "x", "type": "stat", "fields": ["open_prs"], "title": secret}])
@@ -567,7 +567,7 @@ class TestVersionOnlyOnLayoutChange:
 
     def test_a_quoted_header_in_a_migrated_label_is_redacted_before_escaping(self) -> None:
         """Escaping turns a quote into ``&quot;``, which the page's pass does not read."""
-        from kiro_crew.platform.context import redact_via_context
+        from aj_crew.platform.context import redact_via_context
 
         opaque = "Q" * 32
         header = '{"Authorization": "Bearer ' + opaque + '"}'

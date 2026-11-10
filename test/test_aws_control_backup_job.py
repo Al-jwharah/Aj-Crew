@@ -24,18 +24,18 @@ from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 from named_cases_helpers import named_cases
 
-from kiro_crew.apps import job_sdk
-from kiro_crew.apps.builtins.aws_control import hooks
-from kiro_crew.apps.builtins.aws_control.backend import accounts as accounts_mod
-from kiro_crew.apps.builtins.aws_control.backend import backup
-from kiro_crew.apps.builtins.aws_control.backend import routes as routes_mod
-from kiro_crew.testing.wait import wait_until
+from aj_crew.apps import job_sdk
+from aj_crew.apps.builtins.aws_control import hooks
+from aj_crew.apps.builtins.aws_control.backend import accounts as accounts_mod
+from aj_crew.apps.builtins.aws_control.backend import backup
+from aj_crew.apps.builtins.aws_control.backend import routes as routes_mod
+from aj_crew.testing.wait import wait_until
 
 BASE = "/api/apps/aws-control"
 ACCOUNT = "111122223333"
 PROFILE = "prof"
 REGION = "us-west-2"
-BUCKET = "kirocrew-drive-abc"
+BUCKET = "ajcrew-drive-abc"
 
 
 class TestNoAwsCallBeforeTheGate:
@@ -87,18 +87,18 @@ class TestEveryUploadRefusalIsAudited:
         """Put every check in a PASSING state, so each case fails exactly one."""
         stack.enter_context(
             mock.patch(
-                "kiro_crew.deploy.engine._checked",
+                "aj_crew.deploy.engine._checked",
                 return_value=json.dumps({"Account": over.get("live", ACCOUNT)}),
             )
         )
         stack.enter_context(
             mock.patch(
-                "kiro_crew.apps.manager.is_app_enabled", return_value=over.get("enabled", True)
+                "aj_crew.apps.manager.is_app_enabled", return_value=over.get("enabled", True)
             )
         )
-        granted = stack.enter_context(mock.patch("kiro_crew.aws_consent.is_granted"))
+        granted = stack.enter_context(mock.patch("aj_crew.aws_consent.is_granted"))
         granted.return_value = over.get("granted", (True, ""))
-        grant = stack.enter_context(mock.patch("kiro_crew.aws_consent.read_grant"))
+        grant = stack.enter_context(mock.patch("aj_crew.aws_consent.read_grant"))
         grant.return_value = over.get("grant", SimpleNamespace(account=ACCOUNT))
         stack.enter_context(
             mock.patch.object(backup._STOP, "is_set", return_value=over.get("stopping", False))
@@ -762,7 +762,7 @@ class TestRunnerAuthorization:
         #
         # Deliberately NOT using `_authorized()`: this case drives the real gate.
         def fake_snapshot(argv):
-            (Path(argv[0]) / "kirocrew-snapshot-20260101T000000Z.tar.gz").write_bytes(b"x")
+            (Path(argv[0]) / "ajcrew-snapshot-20260101T000000Z.tar.gz").write_bytes(b"x")
             return 0
 
         with (
@@ -771,11 +771,11 @@ class TestRunnerAuthorization:
             mock.patch.object(backup, "snapshot_main", side_effect=fake_snapshot),
             mock.patch.object(backup, "_redact_for_upload", create=True, side_effect=lambda p: p),
             mock.patch(
-                "kiro_crew.deploy.engine._checked",
+                "aj_crew.deploy.engine._checked",
                 return_value=json.dumps({"Account": ACCOUNT}),
             ),
-            mock.patch("kiro_crew.apps.manager.is_app_enabled", return_value=True),
-            mock.patch("kiro_crew.aws_consent.is_granted", return_value=(False, "not confirmed")),
+            mock.patch("aj_crew.apps.manager.is_app_enabled", return_value=True),
+            mock.patch("aj_crew.aws_consent.is_granted", return_value=(False, "not confirmed")),
             mock.patch.object(backup.storage, "put_file") as put_file,
         ):
             run_id = sdk.start(backup.KIND_SNAPSHOT, dedupe_key=ACCOUNT)
@@ -936,7 +936,7 @@ class TestStartupRegistration:
         manifest = json.loads(
             (
                 Path(__file__).resolve().parents[1]
-                / "src/kiro_crew/apps/builtins/aws_control/app.json"
+                / "src/aj_crew/apps/builtins/aws_control/app.json"
             ).read_text(encoding="utf-8")
         )
         assert manifest["permissions"]["jobs"] is True
@@ -951,7 +951,7 @@ class TestLedgerSurvives:
         # backup PRODUCED -- key, size, when -- stays in the app's own state, and
         # `GET /backup/{account}` still serves it as `runs`.
         def fake_snapshot(argv):
-            (Path(argv[0]) / "kirocrew-snapshot-20260101T000000Z.tar.gz").write_bytes(b"x" * 11)
+            (Path(argv[0]) / "ajcrew-snapshot-20260101T000000Z.tar.gz").write_bytes(b"x" * 11)
             return 0
 
         with (
@@ -1213,7 +1213,7 @@ class TestScheduledFailureFeedsTheBackoff:
         # the in-flight scheduled run (CALLER_SCHEDULED, params do not merge), so
         # if that run met the gate the owner would otherwise see a backoff grow
         # for a failure they did not cause.
-        from kiro_crew.apps.builtins.aws_control.backend.backup_parts.uploads import (
+        from aj_crew.apps.builtins.aws_control.backend.backup_parts.uploads import (
             ScheduledUploadWithheld,
         )
 

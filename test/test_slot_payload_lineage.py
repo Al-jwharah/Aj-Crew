@@ -8,20 +8,20 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, emit
-from kiro_crew.crew_log import session_tree_projection as stp
-from kiro_crew.dashboard import state as st
-from kiro_crew.dashboard.session_memory import lineage_parents
-from kiro_crew.dashboard.state import _attach_slot_parents
-from kiro_crew.testing.wait import wait_until
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, emit
+from aj_crew.crew_log import session_tree_projection as stp
+from aj_crew.dashboard import state as st
+from aj_crew.dashboard.session_memory import lineage_parents
+from aj_crew.dashboard.state import _attach_slot_parents
+from aj_crew.testing.wait import wait_until
 
 GATEWAY = "gateway"
 
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     # The payload carries lineage only when the crew log is on: with it off there are no
     # records, and the builder answers None for every row without touching storage.
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
@@ -36,7 +36,7 @@ def _isolated_home(tmp_path, monkeypatch):
     # the test that asked for it returns. The one test that counts submits installs its
     # own stub over this.
     monkeypatch.setattr(
-        "kiro_crew.executors.maintenance_executor",
+        "aj_crew.executors.maintenance_executor",
         lambda: type("_Inline", (), {"submit": staticmethod(lambda fn, *a, **k: fn(*a, **k))}),
     )
     stp.reset_for_tests()
@@ -46,9 +46,9 @@ def _isolated_home(tmp_path, monkeypatch):
 
 def _unit(sid: str, slot: str, *, parent: str | None = None) -> None:
     """One announced session log, written the way the emitter writes one."""
-    handle = CrewLog.create(lg.KIND_SESSION, sid, owner="raymond", agent="kirocrew", slot=slot)
+    handle = CrewLog.create(lg.KIND_SESSION, sid, owner="raymond", agent="ajcrew", slot=slot)
     data = {
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         "slot": slot,
         "model": "opus",
         "cwd": "/w",
@@ -156,7 +156,7 @@ def test_a_channel_born_conductor_nests_its_worker_on_the_wire(tmp_path, monkeyp
     """
     from chat_test_helpers import _make_state
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "chan-home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "chan-home"))
     stp.reset_for_tests()
     channel = "discord:g1:c1:gen1"
     _unit("s-1", "chat-conductor")
@@ -189,7 +189,7 @@ def test_a_member_conductor_nests_its_worker_on_the_wire(tmp_path, monkeypatch):
     """
     from chat_test_helpers import _make_state
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "member-home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "member-home"))
     stp.reset_for_tests()
     _unit("s-1", "member-pipeline")
     _unit("s-2", "chat-worker", parent="dashboard:member-pipeline")
@@ -217,7 +217,7 @@ def test_both_joins_agree_on_every_creator_given_the_same_fold(tmp_path, monkeyp
     """
     from chat_test_helpers import _make_state
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "agree-home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "agree-home"))
     stp.reset_for_tests()
     channel = "discord:g1:c1:gen1"
     _unit("s-1", "chat-plain")
@@ -600,7 +600,7 @@ def test_the_sessions_table_names_the_closed_creator_from_the_same_registry(tmp_
 
 
 def test_the_registry_is_bounded_and_forgets_the_oldest(monkeypatch):
-    from kiro_crew.dashboard import creator_titles
+    from aj_crew.dashboard import creator_titles
 
     monkeypatch.setattr(creator_titles, "_CAP", 2)
     creator_titles.remember(["a"], "A", placeholder="-")
@@ -620,7 +620,7 @@ def test_a_rename_sent_as_a_patch_is_the_name_a_closed_creator_reads(tmp_path, m
     """
     from chat_test_helpers import _make_state
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "rename-home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "rename-home"))
     stp.reset_for_tests()
     _unit("s-c", "chat-c")
     _unit("s-w", "chat-w", parent="chat-c")
@@ -644,7 +644,7 @@ def test_a_rename_sent_as_a_patch_is_the_name_a_closed_creator_reads(tmp_path, m
 def test_a_retained_title_is_bounded_in_length(monkeypatch):
     """The entry cap bounds the count, this bounds each entry: an unbounded title
     restored from transcript metadata would otherwise stay pinned after it closes."""
-    from kiro_crew.dashboard import creator_titles
+    from aj_crew.dashboard import creator_titles
 
     monkeypatch.setattr(creator_titles, "_MAX_TITLE_CHARS", 10)
     creator_titles.remember(["long"], "x" * 1_000_000, placeholder="-")
@@ -660,7 +660,7 @@ def test_both_surfaces_re_parent_the_same_worker(tmp_path, monkeypatch):
     worker whose conductor closed belongs."""
     from chat_test_helpers import _make_state
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "reparent-home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "reparent-home"))
     stp.reset_for_tests()
     _unit("s-lead", "chat-lead")
     _unit("s-mid", "chat-mid", parent="chat-lead")
@@ -736,7 +736,7 @@ def test_a_broken_alias_read_degrades_the_nesting_and_says_so(tmp_path, monkeypa
     """
     from chat_test_helpers import _make_state
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "broken-alias-home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "broken-alias-home"))
     monkeypatch.setattr(st, "_lineage_failure_warned", False)
     stp.reset_for_tests()
     _unit("s-1", "chat-1-parent")
@@ -775,7 +775,7 @@ def test_a_state_double_without_the_alias_method_still_ships_every_slot(tmp_path
     """
     from chat_test_helpers import _make_state
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "no-method-home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "no-method-home"))
     stp.reset_for_tests()
     _unit("s-1", "chat-1-parent")
     _unit("s-2", "chat-2-child", parent="chat-1-parent")
@@ -861,7 +861,7 @@ def test_the_serialized_payload_carries_parent_for_a_created_child(tmp_path, mon
     """
     from chat_test_helpers import _make_state
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "wire-home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "wire-home"))
     stp.reset_for_tests()
     _unit("s-1", "chat-1-parent")
     _unit("s-2", "chat-2-child", parent="chat-1-parent")
@@ -904,7 +904,7 @@ def test_reads_after_the_first_do_not_touch_the_store(monkeypatch):
     _unit("s-2", "chat-2", parent="chat-1")
     _seeded()
 
-    from kiro_crew.crew_log import store as crew_store
+    from aj_crew.crew_log import store as crew_store
 
     reads = {"n": 0}
     for name in ("unit_dirs", "oldest_segment", "read_head"):
@@ -959,7 +959,7 @@ def test_the_seed_is_requested_once_however_many_frames_arrive(monkeypatch):
         seeds["n"] += 1  # never runs fn, so the flag stays raised
 
     monkeypatch.setattr(
-        "kiro_crew.executors.maintenance_executor",
+        "aj_crew.executors.maintenance_executor",
         lambda: type("P", (), {"submit": staticmethod(fake_submit)}),
     )
 

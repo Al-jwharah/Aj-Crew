@@ -26,14 +26,14 @@ def clear_nonces(tmp_path, _floor_monkeypatch):
     """Isolate token state per test.
 
     Points config_dir at a tmp dir so the persisted revocation-generation file
-    is not written to the real ~/.kirocrew, resets the in-process gen to 0, and
+    is not written to the real ~/.ajcrew, resets the in-process gen to 0, and
     clears the nonce store. Uses _state.clear_all() (not revoke_all_sessions)
     so the gen isn't bumped between unrelated tests.
     """
-    import kiro_crew.dashboard.revocation_gen as _rg
-    import kiro_crew.dashboard.token_auth as _ta
+    import aj_crew.dashboard.revocation_gen as _rg
+    import aj_crew.dashboard.token_auth as _ta
 
-    _floor_monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    _floor_monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     # Pin the memoized revocation generation to 0 (skips the lazy disk load)
     # so no persisted counter from a prior test or the real home leaks in.
     _floor_monkeypatch.setattr(_rg, "_gen", 0)
@@ -59,7 +59,7 @@ async def _ok_handler(request: web.Request) -> web.Response:
 
 def _session_token(*args, **kwargs):
     """Mint the kind of token the middleware sets as a cookie on exchange."""
-    from kiro_crew.dashboard.token_auth import generate_token
+    from aj_crew.dashboard.token_auth import generate_token
 
     return generate_token(*args, register_nonce=False, session=True, **kwargs)
 

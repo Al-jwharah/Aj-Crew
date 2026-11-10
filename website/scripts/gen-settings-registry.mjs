@@ -6,7 +6,7 @@
  * TWO artifacts come out of one extraction pass:
  *  - `src/components/commandPalette/settingsRegistry.gen.ts` — the UI registry
  *    behind settings search and the command palette's deep links.
- *  - `../src/kiro_crew/docs/settings-registry.generated.json` — the same
+ *  - `../src/aj_crew/docs/settings-registry.generated.json` — the same
  *    controls as the AGENT sees them (id/label/tab/route), bundled into the
  *    Python docs package so a deployed gateway can answer "how do I turn on X?"
  *    with a link instead of prose. Scheme: that directory's
@@ -54,7 +54,7 @@ fs.writeFileSync(outPath, source)
 // enumeration with an empty one.
 const agentOutPath = path.resolve(
   ${JSON.stringify(ROOT)},
-  '../src/kiro_crew/docs/settings-registry.generated.json',
+  '../src/aj_crew/docs/settings-registry.generated.json',
 )
 fs.writeFileSync(agentOutPath, generateAgentRegistryJson(entries))
 

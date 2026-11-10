@@ -1,8 +1,8 @@
 """The Job SDK's facade keeps the seams the one module had.
 
-``kiro_crew.apps.job_sdk`` is a plain re-export facade over the
-``kiro_crew.apps.job_sdk_<role>`` owners: it imports every name they define, so callers,
-tests and documents still reach each one as ``kiro_crew.apps.job_sdk.<name>`` and get the
+``aj_crew.apps.job_sdk`` is a plain re-export facade over the
+``aj_crew.apps.job_sdk_<role>`` owners: it imports every name they define, so callers,
+tests and documents still reach each one as ``aj_crew.apps.job_sdk.<name>`` and get the
 owner's own object. A re-export is a binding, so a patch through the facade reaches the
 facade's own readers and nothing else. These tests pin that this is enough: no owner reads
 or binds a name the test trees patch through the facade; the owners are exactly the
@@ -26,7 +26,7 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew.apps import job_sdk
+from aj_crew.apps import job_sdk
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_job_sdk_facade")
 
@@ -34,11 +34,11 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_job_sdk_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.apps.job_sdk"
+FACADE = "aj_crew.apps.job_sdk"
 OWNERS = (
-    "kiro_crew.apps.job_sdk_records",
-    "kiro_crew.apps.job_sdk_retention",
-    "kiro_crew.apps.job_sdk_returns",
+    "aj_crew.apps.job_sdk_records",
+    "aj_crew.apps.job_sdk_retention",
+    "aj_crew.apps.job_sdk_returns",
 )
 APPS_DIR = Path(job_sdk.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
@@ -111,7 +111,7 @@ def _imports(source: str) -> set[str]:
         if isinstance(node, ast.ImportFrom):
             module = node.module or ""
             if node.level:
-                module = importlib.util.resolve_name("." * node.level + module, "kiro_crew.apps")
+                module = importlib.util.resolve_name("." * node.level + module, "aj_crew.apps")
             found.add(module)
             found.update(f"{module}.{alias.name}" for alias in node.names)
         elif isinstance(node, ast.Import):
@@ -167,7 +167,7 @@ def test_the_reader_scan_sees_a_global_read_in_a_nested_function() -> None:
 def test_the_owners_are_every_job_sdk_sibling_and_import_no_family_member() -> None:
     """``OWNERS`` is every ``job_sdk_*.py`` beside the facade, and none of them imports the
     facade or another owner, anywhere in its body: the facade is the one composition point."""
-    siblings = {f"kiro_crew.apps.{path.stem}" for path in APPS_DIR.glob("job_sdk_*.py")}
+    siblings = {f"aj_crew.apps.{path.stem}" for path in APPS_DIR.glob("job_sdk_*.py")}
     assert sorted(siblings) == sorted(OWNERS)
     family = {FACADE, *OWNERS}
     reached = {o.__name__: sorted(_imports(_source(o)) & family) for o in _owners()}
@@ -177,7 +177,7 @@ def test_the_owners_are_every_job_sdk_sibling_and_import_no_family_member() -> N
 def test_the_import_scan_resolves_relative_imports() -> None:
     """Non-vacuity for the scan above: the spellings an owner could use all resolve."""
     planted = "from . import job_sdk\nfrom .job_sdk_records import JobRun\n"
-    assert {FACADE, "kiro_crew.apps.job_sdk_records"} <= _imports(planted)
+    assert {FACADE, "aj_crew.apps.job_sdk_records"} <= _imports(planted)
 
 
 def test_every_name_an_owner_defines_is_the_facades_object() -> None:
@@ -215,14 +215,14 @@ def test_the_exceptions_keep_the_facade_module() -> None:
         assert cls.__module__ == FACADE
         assert getattr(importlib.import_module(cls.__module__), cls.__qualname__) is cls
     for cls in (job_sdk.JobRun, job_sdk.JobHandle):
-        assert cls.__module__ == "kiro_crew.apps.job_sdk_records"
+        assert cls.__module__ == "aj_crew.apps.job_sdk_records"
 
 
 def test_the_record_owner_keeps_postponed_annotations() -> None:
     """``JobRun.from_dict`` coerces each field by comparing its annotation to the strings
     ``"bool"``, ``"int"`` and ``"dict[str, str]"``; without postponed annotations those
     are types, every comparison is false, and a record read off disk keeps no field."""
-    records = importlib.import_module("kiro_crew.apps.job_sdk_records")
+    records = importlib.import_module("aj_crew.apps.job_sdk_records")
     assert vars(records).get("annotations") is _POSTPONED
     fields = job_sdk.JobRun.__dataclass_fields__
     assert (fields["pid"].type, fields["cancellable"].type) == ("int", "bool")

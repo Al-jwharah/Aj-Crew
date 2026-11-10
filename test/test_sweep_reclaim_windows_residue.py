@@ -27,10 +27,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent_scratch as sc
-from kiro_crew import platform_compat
-from kiro_crew import work_root as wr
-from kiro_crew.mcp_gateway import backend_tmp as bt
+from aj_crew import agent_scratch as sc
+from aj_crew import platform_compat
+from aj_crew import work_root as wr
+from aj_crew.mcp_gateway import backend_tmp as bt
 
 _WINDOWS_ONLY = pytest.mark.skipif(sys.platform != "win32", reason="directory junctions")
 

@@ -16,7 +16,7 @@ from mcp_dashboard_folders_helpers import (
     _writes,
 )
 
-from kiro_crew.mcp_tools.table import Caller
+from aj_crew.mcp_tools.table import Caller
 
 
 class TestEveryFolderWriteCarriesTheVerifiedKey:
@@ -59,7 +59,7 @@ class TestEveryFolderWriteCarriesTheVerifiedKey:
         moved = {"id": "fldr00000002", "name": "0811", "parent_id": "fldr00000003"}
         _, dash = _call(
             "chat_folder_move",
-            {"folder": "kirocrew/0811", "new_parent": "Travel"},
+            {"folder": "ajcrew/0811", "new_parent": "Travel"},
             {**self.MIXED, "PATCH /api/chat/folders/{folder}": moved},
             self.RADAR,
         )

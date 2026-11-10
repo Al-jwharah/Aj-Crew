@@ -25,9 +25,9 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from kiro_crew.messaging.link import ChannelLink, canonical_key
-from kiro_crew.session_map import SessionMap
-from kiro_crew.slack import transport_dispatch
+from aj_crew.messaging.link import ChannelLink, canonical_key
+from aj_crew.session_map import SessionMap
+from aj_crew.slack import transport_dispatch
 
 _golden = importlib.import_module("test_slack_golden_transcript")
 
@@ -44,7 +44,7 @@ _CHANNEL = "D0AP0870FFH"
 
 @pytest.fixture()
 def session_map(tmp_path):
-    with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+    with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
         yield SessionMap()
 
 
@@ -386,7 +386,7 @@ def test_thread_index_survives_reload(session_map, tmp_path):
     exactly the state this test must reject.
     """
     _corrupted_map(session_map, _DASHBOARD_KEY, canonical_key(_THREAD_TS))
-    with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+    with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
         reloaded = SessionMap()
     assert reloaded.get_session_for_thread(_THREAD_TS) == _DASHBOARD_KEY
 
@@ -410,7 +410,7 @@ def test_thread_index_ignores_a_non_string_timestamp(session_map):
 
 def _links_for(session_key, thread_ts):
     """Run _slot_links against a slot whose session carries thread_ts."""
-    from kiro_crew.dashboard.state import DashboardState
+    from aj_crew.dashboard.state import DashboardState
 
     class _Sessions:
         def get_mirror_link(self, key):
@@ -431,7 +431,7 @@ def _links_for(session_key, thread_ts):
     state = DashboardState.__new__(DashboardState)
     state.sessions = _Sessions()
     with patch(
-        "kiro_crew.dashboard.chat_utils.effective_session_key",
+        "aj_crew.dashboard.chat_utils.effective_session_key",
         return_value=session_key,
     ):
         return state._slot_links(_Slot())
@@ -476,7 +476,7 @@ def _serialized(session_key, thread_ts, channel=_CHANNEL):
     """serialize_slot for a slot whose session carries *thread_ts* in *channel*."""
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.state import DashboardState
+    from aj_crew.dashboard.state import DashboardState
 
     class _Sessions:
         def get_mirror_link(self, key):
@@ -511,7 +511,7 @@ def _serialized(session_key, thread_ts, channel=_CHANNEL):
     state.sessions = _Sessions()
     state._pinned_order_rev = 0
     with patch(
-        "kiro_crew.dashboard.chat_utils.effective_session_key",
+        "aj_crew.dashboard.chat_utils.effective_session_key",
         return_value=session_key,
     ):
         return state.serialize_slot(_Slot())

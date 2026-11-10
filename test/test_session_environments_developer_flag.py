@@ -7,17 +7,17 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import session_environment as se
-from kiro_crew.coder.session_launch import SessionEnvironmentChoices
-from kiro_crew.providers import acp_runtime_start
-from kiro_crew.session_environment import SessionEnvironmentUnavailable
-from kiro_crew.slack import gateway
+from aj_crew import session_environment as se
+from aj_crew.coder.session_launch import SessionEnvironmentChoices
+from aj_crew.providers import acp_runtime_start
+from aj_crew.session_environment import SessionEnvironmentUnavailable
+from aj_crew.slack import gateway
 
 
 @pytest.fixture
 def choices(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.config.paths.data_home", lambda: tmp_path)
-    monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    monkeypatch.setattr("aj_crew.config.paths.data_home", lambda: tmp_path)
+    monkeypatch.setenv("AJCREW_DEV_MODE", "1")
     store = SessionEnvironmentChoices(se.choices_path())
     store.set("dashboard:remote", "dev")
     return store
@@ -25,7 +25,7 @@ def choices(tmp_path, monkeypatch):
 
 def test_flag_off_means_every_session_runs_here(choices, monkeypatch):
     assert choices.resolve("dashboard:remote") == ("dev", "dashboard:remote")
-    monkeypatch.delenv("KIROCREW_DEV_MODE")
+    monkeypatch.delenv("AJCREW_DEV_MODE")
     assert not se.session_environments_enabled()
     assert choices.resolve("dashboard:remote") is None
     assert not se.session_runs_remotely("dashboard:remote")
@@ -42,7 +42,7 @@ async def test_flag_off_reaches_no_workspace_so_no_credentialed_git(choices, mon
     ``prepare_for_session`` returned. With the flag off a bound choice prepares
     nothing, so no workspace relay and no git proxy start; with it on the same
     choice reaches the Coder provider."""
-    from kiro_crew.coder import session_launch
+    from aj_crew.coder import session_launch
 
     reached: list[str] = []
 
@@ -56,20 +56,20 @@ async def test_flag_off_reaches_no_workspace_so_no_credentialed_git(choices, mon
 
     section = SimpleNamespace(coder_url="https://c.example", profiles=[], kiro_cloud_profiles=[])
     monkeypatch.setattr(
-        "kiro_crew.config.live.snapshot", lambda: SimpleNamespace(session_environments=section)
+        "aj_crew.config.live.snapshot", lambda: SimpleNamespace(session_environments=section)
     )
     monkeypatch.setattr(session_launch, "CoderSessionEnvironments", Provider)
     monkeypatch.setattr(session_launch, "chosen_provider", lambda *_a: session_launch.PROVIDER_ID)
     with pytest.raises(Reached):
         await session_launch.prepare_for_session("dashboard:remote")
     assert reached == ["coder"]
-    monkeypatch.delenv("KIROCREW_DEV_MODE")
+    monkeypatch.delenv("AJCREW_DEV_MODE")
     assert await session_launch.prepare_for_session("dashboard:remote") is None
     assert reached == ["coder"]
 
 
 def test_flag_off_starts_no_coder_subsystem(monkeypatch):
-    monkeypatch.delenv("KIROCREW_DEV_MODE", raising=False)
+    monkeypatch.delenv("AJCREW_DEV_MODE", raising=False)
     monkeypatch.setattr(gateway, "_CODER_RETENTION_TASK", None)
     cfg = SimpleNamespace(session_environments=SimpleNamespace(coder_url="https://c.example"))
     gateway._start_coder_retention(cfg)  # no running loop needed: it returns first
@@ -105,7 +105,7 @@ def test_a_corrupt_file_does_not_stop_a_local_sessions_subagent(choices, monkeyp
     assert choices.inherit("subagent:child", "dashboard:local-parent") is None
     with pytest.raises(SessionEnvironmentUnavailable):
         choices.inherit("subagent:child-2", "dashboard:remote")
-    monkeypatch.delenv("KIROCREW_DEV_MODE")
+    monkeypatch.delenv("AJCREW_DEV_MODE")
     assert choices.inherit("subagent:child-3", "dashboard:remote") is None
 
 
@@ -132,7 +132,7 @@ def test_a_bound_session_whose_choice_is_lost_is_refused_not_run_here(choices, l
 def test_every_way_a_row_leaves_takes_its_marker(choices, monkeypatch):
     """A row ends by being cleared, by an inherited row ageing out, or by a child
     whose parent runs here; none of them may leave a marker that later refuses."""
-    from kiro_crew.coder import session_launch
+    from aj_crew.coder import session_launch
 
     choices.inherit("dashboard:child", "dashboard:remote")
     assert choices.may_be_bound("dashboard:child")

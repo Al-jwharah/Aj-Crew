@@ -10,8 +10,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from kiro_crew.dashboard.chat_runner import _broadcast_live_context
-from kiro_crew.dashboard.chat_turn.turn_stats import _LIVE_CONTEXT_MIN_INTERVAL_S
+from aj_crew.dashboard.chat_runner import _broadcast_live_context
+from aj_crew.dashboard.chat_turn.turn_stats import _LIVE_CONTEXT_MIN_INTERVAL_S
 
 
 class _Client:

@@ -17,10 +17,10 @@ from unittest.mock import AsyncMock
 import pytest
 from mcp_merge_helpers import bundled_defaults, run_install_mcp_merge
 
-from kiro_crew import mcp_dropped_servers
-from kiro_crew.dashboard.handlers import mcp as mcp_mod
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
-from kiro_crew.mcp_discovery import McpServerInfo
+from aj_crew import mcp_dropped_servers
+from aj_crew.dashboard.handlers import mcp as mcp_mod
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.mcp_discovery import McpServerInfo
 
 
 @pytest.fixture(autouse=True)
@@ -28,7 +28,7 @@ def _pinned_kiro_cli_version(_floor_monkeypatch):
     # Every rebuild ends in a spec-permissions gate that would otherwise run the
     # host's real ``kiro-cli --version``.
     _floor_monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version",
+        "aj_crew.kiro_cli.installed_kiro_cli_version",
         lambda: SPEC_PERMISSIONS_MIN_VERSION,
     )
 
@@ -50,12 +50,12 @@ def _request() -> Any:
 
 
 async def _rows(monkeypatch, tmp_path) -> dict[str, dict]:
-    import kiro_crew.mcp_discovery as disc
+    import aj_crew.mcp_discovery as disc
 
     servers = [McpServerInfo(name="example-server", command="example-mcp-program")]
     monkeypatch.setattr(disc, "list_servers", lambda *a, **k: list(servers))
     monkeypatch.setattr(mcp_mod, "_GLOBAL_MCP_JSON", tmp_path / "absent.json")
-    monkeypatch.setattr(mcp_mod, "_kirocrew_mcp_json", lambda: tmp_path / "absent-kc.json")
+    monkeypatch.setattr(mcp_mod, "_ajcrew_mcp_json", lambda: tmp_path / "absent-kc.json")
     monkeypatch.setattr(mcp_mod, "_mcp_probe_cache", [])
     monkeypatch.setattr(mcp_mod, "_mcp_probe_ts", time.time())
     monkeypatch.setattr(mcp_mod, "_mcp_probe_in_progress", True)
@@ -156,7 +156,7 @@ def test_an_exact_drop_wins_over_an_aliased_drop() -> None:
 @pytest.mark.asyncio
 @pytest.mark.parametrize("endpoint", ["api_mcp_probe", "api_mcp_probe_cached"])
 async def test_probe_response_carries_current_agent_drops(monkeypatch, tmp_path, endpoint) -> None:
-    import kiro_crew.mcp_discovery as disc
+    import aj_crew.mcp_discovery as disc
 
     await _rows(monkeypatch, tmp_path)
     servers = [McpServerInfo(name="example-server", command="example-mcp-program")]

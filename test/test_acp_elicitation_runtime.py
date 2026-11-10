@@ -14,23 +14,23 @@ import sys
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.acp import skill_projection
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.runtime_spawn_launch import SpawnPlan
-from kiro_crew.acp.types import (
+from aj_crew import platform_compat
+from aj_crew.acp import skill_projection
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.runtime_spawn_launch import SpawnPlan
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     EVENT_ELICITATION_REQUEST,
     EVENT_TEXT_CHUNK,
 )
-from kiro_crew.testing import fake_acp_backend
+from aj_crew.testing import fake_acp_backend
 
 posix_only = pytest.mark.skipif(
     not platform_compat.IS_POSIX, reason="the fake backend is launched as a POSIX child here"
 )
 
-_FAKE = [sys.executable, fake_acp_backend.__file__, "acp", "--agent", "kirocrew"]
+_FAKE = [sys.executable, fake_acp_backend.__file__, "acp", "--agent", "ajcrew"]
 _FAKE_KAS = [*_FAKE, fake_acp_backend.KAS_RELAY_FLAG, "v3"]
 
 
@@ -40,7 +40,7 @@ def _work_dir(tmp_path):
 
 def _runtime(tmp_path, monkeypatch, backend: str) -> AcpRuntime:
     rt = AcpRuntime(
-        work_dir=_work_dir(tmp_path), agent="kirocrew", sandbox_mode="off", acp_backend=backend
+        work_dir=_work_dir(tmp_path), agent="ajcrew", sandbox_mode="off", acp_backend=backend
     )
     rt._KILL_TERM_TIMEOUT = 1.0
     rt._KILL_REAP_TIMEOUT = 1.0

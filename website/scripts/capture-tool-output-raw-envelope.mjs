@@ -2,12 +2,12 @@
  * Screenshot + assertions for capture/tool-output-raw-envelope.html (issue #7799).
  *
  * From website/:
- *   KIROCREW_PORT=1 npx vite --host 127.0.0.1 --port 6831 --strictPort &
+ *   AJCREW_PORT=1 npx vite --host 127.0.0.1 --port 6831 --strictPort &
  *   node scripts/capture-tool-output-raw-envelope.mjs http://127.0.0.1:6831 \
  *     ../temp-screenshots/tool-output-raw-envelope
  *
- * (KIROCREW_PORT is pinned to an unused port on purpose: vite.config.ts proxies
- * /api to localhost:${KIROCREW_PORT||5476}, and 5476 is a real gateway. This
+ * (AJCREW_PORT is pinned to an unused port on purpose: vite.config.ts proxies
+ * /api to localhost:${AJCREW_PORT||5476}, and 5476 is a real gateway. This
  * fixture makes no API calls, so any request that appears is a bug to see fail,
  * not to route at someone's live instance.)
  *

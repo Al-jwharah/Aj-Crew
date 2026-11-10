@@ -1,6 +1,6 @@
 """Pin runtime facts the packaged docs state against the code that owns them.
 
-The docs under ``src/kiro_crew/docs`` ship with the package and are read by
+The docs under ``src/aj_crew/docs`` ship with the package and are read by
 running agents, so a stale sentence there is wrong runtime guidance. Each test
 reads the owning source of truth and checks the doc agrees with it.
 """
@@ -12,7 +12,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DOCS = ROOT / "src" / "kiro_crew" / "docs"
+DOCS = ROOT / "src" / "aj_crew" / "docs"
 
 
 def _doc(name: str) -> str:
@@ -20,7 +20,7 @@ def _doc(name: str) -> str:
 
 
 def test_decisions_doc_states_every_local_model_download_size() -> None:
-    from kiro_crew.decisions.local_models import LOCAL_MODELS
+    from aj_crew.decisions.local_models import LOCAL_MODELS
 
     text = _doc("decisions.md")
     for model in LOCAL_MODELS:
@@ -30,7 +30,7 @@ def test_decisions_doc_states_every_local_model_download_size() -> None:
 
 
 def test_decisions_doc_documents_the_wake_judge_providers() -> None:
-    from kiro_crew.config.sections import JUDGE_PROVIDERS
+    from aj_crew.config.sections import JUDGE_PROVIDERS
 
     text = _doc("decisions.md")
     assert "decisions.nudge_wake.provider" in text
@@ -40,7 +40,7 @@ def test_decisions_doc_documents_the_wake_judge_providers() -> None:
 
 def test_decisions_model_route_example_names_only_kiro_served_ids() -> None:
     registry = json.loads(
-        (ROOT / "src" / "kiro_crew" / "model_registry.json").read_text(encoding="utf-8")
+        (ROOT / "src" / "aj_crew" / "model_registry.json").read_text(encoding="utf-8")
     )
     served = {
         entry["providers"]["acp"]
@@ -55,13 +55,13 @@ def test_decisions_model_route_example_names_only_kiro_served_ids() -> None:
 
 
 def test_feishu_doc_names_only_registered_security_subcommands() -> None:
-    package = ROOT / "src" / "kiro_crew"
+    package = ROOT / "src" / "aj_crew"
     # The parser is cli.py plus the cli_parser_* registrars it calls.
     parser_files = [package / "cli.py", *sorted(package.glob("cli_parser_*.py"))]
     cli = "\n".join(path.read_text(encoding="utf-8") for path in parser_files)
     registered = set(re.findall(r'sec_sub\.add_parser\(\s*"([a-z-]+)"', cli))
     assert registered, "security subcommands not found in cli.py"
-    named = set(re.findall(r"`kirocrew security ([a-z-]+)`", _doc("feishu-integration.md")))
+    named = set(re.findall(r"`ajcrew security ([a-z-]+)`", _doc("feishu-integration.md")))
     assert named and named <= registered, named - registered
 
 

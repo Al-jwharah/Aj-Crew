@@ -16,17 +16,17 @@ from unittest.mock import AsyncMock
 import pytest
 
 from conftest import MockSlackClient
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
-from kiro_crew.context import ContextBuilder
-from kiro_crew.history import ConversationLog
-from kiro_crew.memory import MemoryStore
-from kiro_crew.session import BACKGROUND_KEY
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.slack import thread_replies, transport_dispatch
-from kiro_crew.slack.handler import handle_message, set_allowed_users, set_owner_id
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
+from aj_crew.context import ContextBuilder
+from aj_crew.history import ConversationLog
+from aj_crew.memory import MemoryStore
+from aj_crew.session import BACKGROUND_KEY
+from aj_crew.skills import SkillsLoader
+from aj_crew.slack import thread_replies, transport_dispatch
+from aj_crew.slack.handler import handle_message, set_allowed_users, set_owner_id
 
 if TYPE_CHECKING:
-    from kiro_crew.session import SessionManager
+    from aj_crew.session import SessionManager
 
 _golden = importlib.import_module("test_slack_golden_transcript")
 _parent_ctx = importlib.import_module("test_thread_parent_context")
@@ -57,7 +57,7 @@ class _ThreadSlack(_golden.RecordingSlackClient):
         return _PARENT
 
     async def fetch_message_detail(self, channel, ts):
-        return {"text": _PARENT, "bot_id": _OWN_BOT, "bot_name": "Kiro Crew"}
+        return {"text": _PARENT, "bot_id": _OWN_BOT, "bot_name": "Aj Crew"}
 
     async def fetch_thread_replies(
         self, channel, thread_ts, limit=200, warn_on_pagination=True, *, oldest=None, latest=None
@@ -135,7 +135,7 @@ def _fresh_watermarks(monkeypatch):
 
 @pytest.fixture
 def _dispatch_env(monkeypatch):
-    monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+    monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
     monkeypatch.setattr(
         transport_dispatch, "_hydrate_thread_overrides", AsyncMock(return_value=None)
     )
@@ -308,7 +308,7 @@ class TestTransportPath:
 
 class TestOneThreadContextPath:
     def _prompt(self, tmp_path, replies_text):
-        from kiro_crew.channel_history import ChannelHistory
+        from aj_crew.channel_history import ChannelHistory
 
         builder = _builder(tmp_path)
         builder.channel_history = ChannelHistory()

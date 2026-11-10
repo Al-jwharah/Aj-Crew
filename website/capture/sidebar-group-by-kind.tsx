@@ -12,7 +12,7 @@ localStorage.setItem('mc-sidebar-lane', 'tree')
 localStorage.setItem('mc-sidebar-width', '360')
 localStorage.setItem('mc-session-group-by-kind', params.get('group') === '1' ? '1' : '0')
 
-const CONDUCTOR = 'kirocrew-conductor'
+const CONDUCTOR = 'ajcrew-conductor'
 
 mountLocalSidebar([
   { ...localRow({ key: 'c-pin', title: 'Release checklist', last_ts: at(30 * MIN), last_message: 'Pinned on top.' }), pinned: true },
@@ -22,4 +22,4 @@ mountLocalSidebar([
   localRow({ key: 'c-n2', title: 'Explain the CDK stack', last_ts: at(9 * MIN), last_message: 'Four stacks, one account each.' }),
   { ...localRow({ key: 'c-crew2', title: 'Triage the PR queue', agent: CONDUCTOR, last_ts: at(14 * MIN), last_message: 'Two PRs need you.' }), crew_mode_root: true },
   localRow({ key: 'c-mate2', title: 'Follow-up from the report', parent: { slot: 'c-mate', key: 'c-mate' }, last_ts: at(20 * MIN), last_message: 'Opened by Ava.' }),
-], ['kirocrew', CONDUCTOR])
+], ['ajcrew', CONDUCTOR])

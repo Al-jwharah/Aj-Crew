@@ -29,14 +29,14 @@ import pytest
 from chat_test_helpers import _make_state
 from test_mate_worker_dispatch import _create, _fresh_create_budget, crewmate  # noqa: F401
 
-from kiro_crew.config.loader import KiroCrewConfig, _invalidate_config_cache
-from kiro_crew.dashboard import chat_persistence
-from kiro_crew.dashboard import server as srv
-from kiro_crew.dashboard.chat_utils import _history_key_for, slot_history_key
-from kiro_crew.dashboard.crewmate_approval import seed_for_turn
-from kiro_crew.execution_context import read_session_execution
-from kiro_crew.safety_override import safety_override
-from kiro_crew.testing.wait import await_until
+from aj_crew.config.loader import AjCrewConfig, _invalidate_config_cache
+from aj_crew.dashboard import chat_persistence
+from aj_crew.dashboard import server as srv
+from aj_crew.dashboard.chat_utils import _history_key_for, slot_history_key
+from aj_crew.dashboard.crewmate_approval import seed_for_turn
+from aj_crew.execution_context import read_session_execution
+from aj_crew.safety_override import safety_override
+from aj_crew.testing.wait import await_until
 
 KEY = "chat-1-nightly"
 TITLE = "Nightly monitor loop"
@@ -58,7 +58,7 @@ def _cfg() -> SimpleNamespace:
 @pytest.fixture
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """A data home holding one open chat with a transcript."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     seed = _make_state(tmp_path / "sessions")
     seed.conversation_log.append(_history_key_for(KEY), "user", "Check the nightly job.")
     seed.conversation_log.append(_history_key_for(KEY), "assistant", "On it.")
@@ -108,7 +108,7 @@ def _arm_startup_grant(state, grant: str) -> None:
     """
     agent = SimpleNamespace(dangerously_skip_permissions=grant == "declared", yolo_duration="6h")
     launch = "yolo" if grant == "launch" else None
-    with patch("kiro_crew.safety_override.sel"):
+    with patch("aj_crew.safety_override.sel"):
         srv._apply_startup_yolo(state, SimpleNamespace(agent=agent), approval_mode=launch)
     assert safety_override().is_active() is True
 
@@ -125,7 +125,7 @@ class TestTheRestartIsReported:
         self, home: Path
     ) -> None:
         before = await _booted_with_mode(home, "trust")
-        # Every restart path (the in-place re-exec, ``kirocrew restart``'s SIGTERM,
+        # Every restart path (the in-place re-exec, ``ajcrew restart``'s SIGTERM,
         # an update) runs this save before the process goes.
         chat_persistence.save_all_slots_to_history(before)
 
@@ -247,7 +247,7 @@ class TestNothingIsOwed:
     async def test_a_chat_the_launch_grant_does_not_reach_is_still_told(self, home: Path) -> None:
         # ``gateway --approval yolo`` leaves a channel-linked chat asking, so that
         # chat is still owed the notice.
-        from kiro_crew.dashboard import chat_trust_restart
+        from aj_crew.dashboard import chat_trust_restart
 
         state = await _boot(home)
         _arm_startup_grant(state, "launch")
@@ -302,7 +302,7 @@ class TestACrewmatesProfileGivesTheModeBack:
         self, crewmate, tmp_path: Path, which: str, profile: str, owed: bool  # noqa: F811
     ) -> None:
         # Imported here, so the other tests still run on a tree without the module.
-        from kiro_crew.dashboard import chat_trust_restart
+        from aj_crew.dashboard import chat_trust_restart
 
         state, thread, _execution = crewmate
         await asyncio.to_thread(_set_profile_mode, tmp_path, profile)
@@ -316,7 +316,7 @@ class TestACrewmatesProfileGivesTheModeBack:
 
         # The chat's next turn start seeds its Profile's mode: Trust is back
         # exactly when no notice was posted.
-        config = await asyncio.to_thread(KiroCrewConfig.load)
+        config = await asyncio.to_thread(AjCrewConfig.load)
         execution = await asyncio.to_thread(
             read_session_execution, slot_history_key(chat), required=True
         )

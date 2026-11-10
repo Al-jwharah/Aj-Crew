@@ -19,9 +19,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-import kiro_crew.config.loader as loader
-import kiro_crew.dashboard.handlers.messaging as mod
-from kiro_crew.testing.wait import await_until
+import aj_crew.config.loader as loader
+import aj_crew.dashboard.handlers.messaging as mod
+from aj_crew.testing.wait import await_until
 
 # Shapes each validator accepts. Real-looking because the handlers reject on
 # format before they ever reach the write, and a rejected body would make this
@@ -130,7 +130,7 @@ def test_cancelling_a_save_drains_the_env_write_before_releasing_the_lock(
     Ordering uses events, not sleeps: the worker parks, the caller is cancelled, and
     a second writer must wait for the first worker.
     """
-    from kiro_crew.dashboard.handlers.agents import _get_config_lock
+    from aj_crew.dashboard.handlers.agents import _get_config_lock
 
     in_write = threading.Event()
     finish = threading.Event()
@@ -274,7 +274,7 @@ def test_a_cancelled_save_rolls_back_only_when_the_write_failed(
 
 def test_a_landed_write_honours_the_docker_creds_scrub(monkeypatch) -> None:
     """The env sync routes through the shared ``apply_env_credential_changes``, so
-    under ``_KIROCREW_CREDS_SCRUBBED`` a credential key is NOT re-injected into
+    under ``_AJCREW_CREDS_SCRUBBED`` a credential key is NOT re-injected into
     os.environ (the duplicate-loop bug that ignored the scrub). A non-credential
     operator key still applies."""
 
@@ -284,7 +284,7 @@ def test_a_landed_write_honours_the_docker_creds_scrub(monkeypatch) -> None:
     monkeypatch.setattr(mod, "_write_env_off_loop", _ok)
     _calls, rollback = _rollback_probe()
     with monkeypatch.context() as env:
-        env.setenv("_KIROCREW_CREDS_SCRUBBED", "1")
+        env.setenv("_AJCREW_CREDS_SCRUBBED", "1")
         env.delenv("SLACK_BOT_TOKEN", raising=False)
         env.setenv("KC_PROBE_PROXY", "unset-before")
         env.delenv("KC_PROBE_PROXY")
@@ -331,7 +331,7 @@ def test_the_config_and_env_writes_run_under_the_live_config_hold(
     ``.env`` write, so, like the other savers, both writes run under
     ``live.hold()``: the watcher must not apply a config the failing write may
     yet undo."""
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     held_at: list[str] = []
     watcher = live.watch()

@@ -11,9 +11,9 @@ from itertools import permutations
 
 import pytest
 
-from kiro_crew.acp._dispatch import redact_text
-from kiro_crew.acp.types import escape_user_message_markup, wrap_user_message
-from kiro_crew.dashboard.steer_settle import (
+from aj_crew.acp._dispatch import redact_text
+from aj_crew.acp.types import escape_user_message_markup, wrap_user_message
+from aj_crew.dashboard.steer_settle import (
     possibly_consumed_steers,
     settle_consumed_steers,
 )
@@ -121,7 +121,7 @@ def test_a_redacted_echo_still_settles_its_steer():
     question = "deploy using AKIAIOSFODNN7EXAMPLE now"
 
     # The echo carries what ACP produced: the redacted form.
-    from kiro_crew.acp._dispatch import redact_text
+    from aj_crew.acp._dispatch import redact_text
 
     echoed = redact_text(question)
     assert echoed != question, "fixture is pointless unless redaction changes it"
@@ -132,7 +132,7 @@ def test_a_redacted_echo_still_settles_its_steer():
 
 def test_redaction_parity_does_not_settle_an_unrelated_steer():
     """Redacting both sides must not collapse DIFFERENT secrets into one match."""
-    from kiro_crew.acp._dispatch import redact_text
+    from aj_crew.acp._dispatch import redact_text
 
     # Distinct surrounding prose keeps the two distinguishable after the
     # secret itself is masked, which is the property that matters: parity

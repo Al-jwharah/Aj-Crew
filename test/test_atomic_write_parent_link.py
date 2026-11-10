@@ -18,7 +18,7 @@ import os
 
 import pytest
 
-from kiro_crew import atomic_write as aw
+from aj_crew import atomic_write as aw
 
 SECRET = "sk-live-DEADBEEF"
 
@@ -33,10 +33,10 @@ requires_symlinks = pytest.mark.skipif(
 
 @pytest.fixture
 def owned_home(tmp_path, monkeypatch):
-    """A Kiro Crew data home under *tmp_path*, so the walk has a trust anchor."""
+    """A Aj Crew data home under *tmp_path*, so the walk has a trust anchor."""
     home = tmp_path / "datahome"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     return home
 
 
@@ -99,7 +99,7 @@ def test_secret_write_allows_a_symlinked_data_home(tmp_path, monkeypatch):
     real.mkdir()
     linked_home = tmp_path / "datahome"
     os.symlink(real, linked_home)
-    monkeypatch.setenv("KIROCREW_HOME", str(linked_home))
+    monkeypatch.setenv("AJCREW_HOME", str(linked_home))
 
     target = linked_home / "token"
     aw.atomic_write(target, SECRET, restrict_to_owner=True)
@@ -114,7 +114,7 @@ def test_secret_write_allows_real_subdirs_under_a_symlinked_data_home(tmp_path, 
     (real / "sub").mkdir(parents=True)
     linked_home = tmp_path / "datahome"
     os.symlink(real, linked_home)
-    monkeypatch.setenv("KIROCREW_HOME", str(linked_home))
+    monkeypatch.setenv("AJCREW_HOME", str(linked_home))
 
     target = linked_home / "sub" / "token"
     aw.atomic_write(target, SECRET, restrict_to_owner=True)
@@ -200,13 +200,13 @@ def test_warn_policy_does_not_downgrade_the_refusal(owned_home, tmp_path):
 
 @requires_symlinks
 def test_outside_owned_roots_still_refuses_the_planted_chain(tmp_path, monkeypatch):
-    """A destination outside every Kiro Crew root keeps a best-effort check.
+    """A destination outside every Aj Crew root keeps a best-effort check.
 
     There the walk stops at the first ancestor that already exists, because
     everything below that is a directory the write would create itself. A link
     planted at that boundary is still caught.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "datahome"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "datahome"))
     outside = tmp_path / "outside"
     outside.mkdir()
     elsewhere = tmp_path / "elsewhere"
@@ -342,14 +342,14 @@ def test_relocated_data_home_under_the_kiro_home_still_writes(tmp_path, monkeypa
     caches are cleared alongside ``$HOME`` -- otherwise this test would read
     whichever home the process resolved first.
     """
-    from kiro_crew.config import paths as config_paths
+    from aj_crew.config import paths as config_paths
 
     relocated = tmp_path / "another-disk"
     relocated.mkdir()
     home = tmp_path / "home"
     (home / ".kiro").mkdir(parents=True)
     os.symlink(relocated, home / ".kiro" / "crew")
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
     monkeypatch.setenv("HOME", str(home))
     monkeypatch.setattr(config_paths, "_resolved_home", None)
     monkeypatch.setattr(config_paths, "_config_dir_memo", None)
@@ -407,7 +407,7 @@ def test_a_resolver_that_raises_contributes_no_anchor(owned_home, monkeypatch):
     roots are best-effort by design: a resolver that cannot answer drops out and
     the remaining ones still anchor the walk.
     """
-    from kiro_crew.config import paths as config_paths
+    from aj_crew.config import paths as config_paths
 
     def _boom():
         raise RuntimeError("Symlink loop from KIRO_HOME")

@@ -12,8 +12,8 @@ from pathlib import Path
 import pytest
 from test_snapshot import unpinnable_argv
 
-from kiro_crew import snapshot as snap
-from kiro_crew import snapshot_redact as redact
+from aj_crew import snapshot as snap
+from aj_crew import snapshot_redact as redact
 
 KEY = "AKIAIOSFODNN7EXAMPLE"
 
@@ -53,12 +53,12 @@ class TestReplaceWillNotClearATreeTheBundleLacks:
         (home / "workspace" / "memory").mkdir(parents=True)
         (home / "workspace" / "memory" / "keep.md").write_text("mine", encoding="utf-8")
         (home / "memory.db").write_bytes(b"")
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         return home
 
     def _partial_bundle(self, tmp_path: Path) -> Path:
         """A partial bundle carrying memory.db and NEITHER of memory's trees."""
-        payload = tmp_path / "kirocrew-partial-20260101T000000Z"
+        payload = tmp_path / "ajcrew-partial-20260101T000000Z"
         payload.mkdir(parents=True)
         conn = snap.sqlite3.connect(str(payload / "memory.db"))
         conn.execute("CREATE TABLE semantic_memory (key, value_json)")

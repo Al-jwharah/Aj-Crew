@@ -2,7 +2,7 @@
  * Static configuration for the Crew Companion builtin page.
  *
  * The backend runs IN-PROCESS inside the gateway (see
- * `src/kiro_crew/apps/builtins/crew_companion/backend/routes.py`), so these are
+ * `src/aj_crew/apps/builtins/crew_companion/backend/routes.py`), so these are
  * ordinary same-origin paths on the dashboard's own origin — no reverse proxy, no
  * second process, no CORS.
  *

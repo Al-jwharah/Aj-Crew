@@ -17,11 +17,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.config import loader as L
-from kiro_crew.config import superseded_defaults as SD
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.superseded_defaults import (
+from aj_crew import platform_compat
+from aj_crew.config import loader as L
+from aj_crew.config import superseded_defaults as SD
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.superseded_defaults import (
     SupersededDefault,
     drift_summary,
     superseded_default_drift,
@@ -94,22 +94,22 @@ def _superseded_warnings(caplog) -> list[str]:
 def test_unset_subagent_turn_budget_uses_long_task_default(tmp_path, monkeypatch):
     _point_home(tmp_path, monkeypatch)
     _write_config(tmp_path, {"agent": {}})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg.agent.subagent_max_turns == 1000
     assert cfg.agent.subagent_timeout_secs == 10800
     cfg.save()
-    assert KiroCrewConfig.load().agent.subagent_max_turns == 1000
+    assert AjCrewConfig.load().agent.subagent_max_turns == 1000
 
 
 @pytest.mark.parametrize("turns", [25, 100, 400, 1000])
 def test_stored_subagent_turn_budget_is_never_automatically_adopted(tmp_path, monkeypatch, turns):
     _point_home(tmp_path, monkeypatch)
     _write_config(tmp_path, {"agent": {"subagent_max_turns": turns}})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg.agent.subagent_max_turns == turns
     cfg.save()
     assert _on_disk(tmp_path)["agent"]["subagent_max_turns"] == turns
-    assert KiroCrewConfig.load().agent.subagent_max_turns == turns
+    assert AjCrewConfig.load().agent.subagent_max_turns == turns
     assert "agent.subagent_max_turns" not in SD.adopted_superseded()
 
 
@@ -117,11 +117,11 @@ def test_subagent_turn_budget_overlay_wins_over_new_default(tmp_path, monkeypatc
     _point_home(tmp_path, monkeypatch)
     _write_config(tmp_path, {"agent": {}})
     _write_local(tmp_path, {"agent": {"subagent_max_turns": 100}})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg.agent.subagent_max_turns == 100
     cfg.save()
     assert "subagent_max_turns" not in _on_disk(tmp_path)["agent"]
-    assert KiroCrewConfig.load().agent.subagent_max_turns == 100
+    assert AjCrewConfig.load().agent.subagent_max_turns == 100
 
 
 def test_stored_old_subagent_turn_default_is_reported_without_rewriting(tmp_path, monkeypatch):
@@ -181,7 +181,7 @@ def test_the_lazy_load_row_says_what_false_means_now_on_every_surface(
 
     assert lazy.note in drift_summary(lazy)
     with caplog.at_level(logging.WARNING):
-        KiroCrewConfig.load()
+        AjCrewConfig.load()
     warned = _superseded_warnings(caplog)
     assert len(warned) == 1 and lazy.note in warned[0]
 
@@ -219,7 +219,7 @@ def test_a_later_moved_default_is_reported_and_loads_unchanged(
     assert [(e.dotted_key, e.new_default) for e in entries] == [(f"{section}.{field}", new)]
     assert entries[0].auto_adopt is False
     with caplog.at_level(logging.WARNING):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
     assert getattr(getattr(cfg, section), field) == old
     kept = _on_disk(tmp_path)[section][field]
     assert type(kept) is type(old) and kept == old
@@ -231,7 +231,7 @@ def test_a_later_moved_default_is_reported_and_loads_unchanged(
 def test_a_stored_en_us_is_not_drift_where_auto_resolves_to_en_us(provider, tmp_path, monkeypatch):
     """Off the local recogniser "auto" resolves to en-US, so adopting would change
     nothing and the row must not ask the operator to act."""
-    from kiro_crew.config.sections import SttConfig
+    from aj_crew.config.sections import SttConfig
 
     _point_home(tmp_path, monkeypatch)
     stored = {"stt": {"provider": provider, "language_code": "en-US"}}
@@ -248,7 +248,7 @@ def test_a_stored_en_us_is_not_drift_where_auto_resolves_to_en_us(provider, tmp_
     ],
 )
 def test_a_stored_en_us_is_drift_on_the_local_recogniser(stt, tmp_path, monkeypatch):
-    from kiro_crew.config.sections import SttConfig
+    from aj_crew.config.sections import SttConfig
 
     _point_home(tmp_path, monkeypatch)
     assert SttConfig().effective_language_code == "auto"
@@ -270,7 +270,7 @@ def test_a_stored_en_us_is_drift_on_the_local_recogniser(stt, tmp_path, monkeypa
 def test_the_language_row_asks_about_the_provider_that_actually_runs(
     tmp_path, monkeypatch, caplog, base, overlay, reported
 ):
-    from kiro_crew.config.sections import SttConfig
+    from aj_crew.config.sections import SttConfig
 
     _point_home(tmp_path, monkeypatch)
     _write_config(tmp_path, {"stt": base})
@@ -278,7 +278,7 @@ def test_the_language_row_asks_about_the_provider_that_actually_runs(
 
     keys = [e.dotted_key for e in superseded_default_drift(_on_disk(tmp_path), acked={})]
     with caplog.at_level(logging.WARNING):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
     warned = _superseded_warnings(caplog)
 
     # The loaded value is the stored en-US either way; it is reported exactly when
@@ -342,7 +342,7 @@ def test_only_a_moved_meaning_reaches_the_load_line(tmp_path, monkeypatch, caplo
     )
     rows = {e.dotted_key: e for e in SD.SUPERSEDED_DEFAULTS}
     with caplog.at_level(logging.WARNING):
-        KiroCrewConfig.load()
+        AjCrewConfig.load()
     warned = _superseded_warnings(caplog)
     assert len(warned) == 1
     assert rows["skills.lazy_load"].note in warned[0]
@@ -383,7 +383,7 @@ def test_v060_materialized_values_load_unchanged_and_are_named_once(tmp_path, mo
     _point_home(tmp_path, monkeypatch)
     _write_config(tmp_path, _V060_MATERIALIZED)
     with caplog.at_level(logging.WARNING):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
     assert cfg.skills.lazy_load is False
     assert cfg.agent.subagent_spawn_stagger_secs == 2.0
     on_disk = _on_disk(tmp_path)
@@ -393,7 +393,7 @@ def test_v060_materialized_values_load_unchanged_and_are_named_once(tmp_path, mo
     assert len(warned) == 1
     assert "skills.lazy_load" in warned[0]
     assert "agent.subagent_spawn_stagger_secs" in warned[0]
-    assert "kirocrew config defaults" in warned[0]
+    assert "ajcrew config defaults" in warned[0]
 
 
 # Detection: pure, and precise about what counts as drift.
@@ -419,7 +419,7 @@ def test_stored_session_control_false_is_reported_but_not_adopted(
     _write_config(tmp_path, {"agent": {"session_control": False}})
 
     assert superseded_default_drift(_on_disk(tmp_path)) == [SESSION_CONTROL_ENTRY]
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg.agent.session_control is False
     assert _on_disk(tmp_path)["agent"]["session_control"] is False
 
@@ -427,7 +427,7 @@ def test_stored_session_control_false_is_reported_but_not_adopted(
     SD.render_doctor_section(issues)
     out = capsys.readouterr().out
     assert "agent.session_control" in out
-    assert "kirocrew config defaults --adopt" in out
+    assert "ajcrew config defaults --adopt" in out
     assert issues == []
 
 
@@ -435,7 +435,7 @@ def test_absent_key_and_absent_section_are_not_drift():
     """An absent key already resolves to the current default, so there is nothing to say."""
     assert superseded_default_drift({"mcp_gateway": {}}) == []
     assert superseded_default_drift({}) == []
-    assert KiroCrewConfig().mcp_gateway.forward_declared_env is True
+    assert AjCrewConfig().mcp_gateway.forward_declared_env is True
 
 
 def test_zero_is_not_read_as_false():
@@ -472,7 +472,7 @@ def test_load_reports_drift_and_leaves_the_value_alone(tmp_path, monkeypatch, ca
     _write_config(tmp_path, {"mcp_gateway": {"forward_declared_env": False}})
 
     with caplog.at_level(logging.WARNING, logger=L.__name__):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
     assert cfg.mcp_gateway.forward_declared_env is False
     assert _on_disk(tmp_path)["mcp_gateway"]["forward_declared_env"] is False
@@ -485,10 +485,10 @@ def test_load_warns_once_per_process_not_once_per_load(tmp_path, monkeypatch, ca
     _write_config(tmp_path, {"mcp_gateway": {"forward_declared_env": False}})
 
     with caplog.at_level(logging.WARNING, logger=L.__name__):
-        KiroCrewConfig.load()
+        AjCrewConfig.load()
         first = len([r for r in caplog.records if "forward_declared_env" in r.getMessage()])
         L._invalidate_config_cache()
-        KiroCrewConfig.load()
+        AjCrewConfig.load()
         second = len([r for r in caplog.records if "forward_declared_env" in r.getMessage()])
 
     assert first == 1
@@ -500,7 +500,7 @@ def test_load_says_nothing_when_the_stored_value_is_current(tmp_path, monkeypatc
     _write_config(tmp_path, {"mcp_gateway": {"forward_declared_env": True}})
 
     with caplog.at_level(logging.WARNING, logger=L.__name__):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
     assert cfg.mcp_gateway.forward_declared_env is True
     assert not [r for r in caplog.records if "forward_declared_env" in r.getMessage()]
@@ -517,7 +517,7 @@ def test_base_drift_is_reported_even_when_an_overlay_masks_it(tmp_path, monkeypa
     _write_local(tmp_path, {"mcp_gateway": {"forward_declared_env": True}})
 
     with caplog.at_level(logging.WARNING, logger=L.__name__):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
     # The overlay is the operator's live choice and still wins for this load.
     assert cfg.mcp_gateway.forward_declared_env is True
@@ -532,7 +532,7 @@ def test_an_overlay_only_value_is_not_reported_as_base_drift(tmp_path, monkeypat
     _write_local(tmp_path, {"mcp_gateway": {"forward_declared_env": False}})
 
     with caplog.at_level(logging.WARNING, logger=L.__name__):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
     assert cfg.mcp_gateway.forward_declared_env is False
     assert not [r for r in caplog.records if "forward_declared_env" in r.getMessage()]
@@ -602,7 +602,7 @@ def test_every_registered_key_ends_at_the_live_default():
 
     for dotted, entry in newest.items():
         section, field = dotted.split(".")
-        live = getattr(getattr(KiroCrewConfig(), section), field)
+        live = getattr(getattr(AjCrewConfig(), section), field)
         if dotted == "agent.sandbox_allow_unsandboxed_exec":
             # An undeclared key resolves through the platform, not the dataclass;
             # test_the_windows_exec_row_ends_at_the_windows_default pins that end.
@@ -613,13 +613,13 @@ def test_every_registered_key_ends_at_the_live_default():
             f"new entry for the later change instead of leaving this one stale"
         )
         assert any(
-            f.name == field for f in dc_fields(getattr(KiroCrewConfig(), section))
+            f.name == field for f in dc_fields(getattr(AjCrewConfig(), section))
         ), f"{dotted}: no such field on the {section} config"
 
 
 def test_the_windows_exec_row_ends_at_the_windows_default(monkeypatch):
     """The exec row's end is what an UNDECLARED key resolves to where it applies."""
-    from kiro_crew.config.loader_document import unsandboxed_exec_platform_default
+    from aj_crew.config.loader_document import unsandboxed_exec_platform_default
 
     entry = _row("agent.sandbox_allow_unsandboxed_exec")
     monkeypatch.setattr("sys.platform", "win32")
@@ -646,7 +646,7 @@ def test_a_deliberately_chosen_value_is_not_reported():
 
 def test_session_recycling_has_a_ceiling_by_default():
     """A fresh install bounds a runaway session tree, well above a healthy one."""
-    assert KiroCrewConfig().session.watchdog_rss_max_mb == 4096
+    assert AjCrewConfig().session.watchdog_rss_max_mb == 4096
 
 
 def test_a_stored_off_switch_or_custom_ceiling_is_not_drift():
@@ -732,7 +732,7 @@ def test_the_ack_file_lives_outside_config_json(tmp_path, monkeypatch):
     _write_config(tmp_path, {"session": {"autocompact_pct": 90.0}})
     SD.write_acked_superseded({"session.autocompact_pct": 90.0})
 
-    KiroCrewConfig().save()
+    AjCrewConfig().save()
 
     assert SD.acked_superseded() == {"session.autocompact_pct": 90.0}
     assert "acked_superseded" not in json.dumps(_on_disk(tmp_path))
@@ -884,7 +884,7 @@ def test_dropping_a_key_makes_the_current_default_apply(tmp_path, monkeypatch):
     # An emptied section resolves identically to an absent one.
     assert superseded_default_drift(base) == []
     _write_config(tmp_path, base)
-    assert KiroCrewConfig.load().session.autocompact_pct == 70.0
+    assert AjCrewConfig.load().session.autocompact_pct == 70.0
 
 
 def test_dropping_an_absent_key_reports_nothing_removed(tmp_path, monkeypatch):
@@ -911,7 +911,7 @@ def test_many_drifted_keys_produce_one_warning_line(tmp_path, monkeypatch, caplo
     )
 
     with caplog.at_level(logging.WARNING, logger=L.__name__):
-        KiroCrewConfig.load()
+        AjCrewConfig.load()
 
     warnings = [r for r in caplog.records if "superseded default" in r.getMessage()]
     assert len(warnings) == 1
@@ -925,7 +925,7 @@ def test_many_drifted_keys_produce_one_warning_line(tmp_path, monkeypatch, caplo
         "dashboard.loop_stall_exit_after_secs",
     ):
         assert key in text
-    assert "kirocrew config defaults" in text
+    assert "ajcrew config defaults" in text
 
 
 def test_an_acked_key_is_not_named_on_the_load_path(tmp_path, monkeypatch, caplog):
@@ -934,7 +934,7 @@ def test_an_acked_key_is_not_named_on_the_load_path(tmp_path, monkeypatch, caplo
     SD.write_acked_superseded({"session.autocompact_pct": 90.0})
 
     with caplog.at_level(logging.WARNING, logger=L.__name__):
-        KiroCrewConfig.load()
+        AjCrewConfig.load()
 
     assert not [r for r in caplog.records if "superseded default" in r.getMessage()]
 
@@ -965,8 +965,8 @@ def test_doctor_offers_the_commands_when_something_is_unacked(tmp_path, monkeypa
     SD.render_doctor_section(issues)
     out = capsys.readouterr().out
 
-    assert "kirocrew config defaults --adopt" in out
-    assert "kirocrew config defaults --keep" in out
+    assert "ajcrew config defaults --adopt" in out
+    assert "ajcrew config defaults --keep" in out
     assert issues == []
 
 
@@ -1071,7 +1071,7 @@ def test_a_pinned_stored_value_is_never_adopted(tmp_path, monkeypatch):
     }
     _write_config(tmp_path, stored)
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.stt.streaming is False
     assert cfg.session.autocompact_pct == 90.0
@@ -1122,7 +1122,7 @@ def test_a_contended_sidecar_defers_the_adoption(tmp_path, monkeypatch):
 
     monkeypatch.setattr(L, "record_adoptions", _contended)
 
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
 
     assert _on_disk(tmp_path)["agent"]["subagent_timeout_secs"] == 1800
     assert SD.adopted_superseded() == {}
@@ -1148,7 +1148,7 @@ def test_the_stored_value_lookup_agrees_with_itself_on_every_edge_case():
             doc,
             frozenset({L.MIGRATE_SUPERSEDED_DEFAULTS}),
             overlay_kiro_agent=None,
-            default_kiro_agent="kirocrew",
+            default_kiro_agent="ajcrew",
             adopt_keys=frozenset({"agent.subagent_timeout_secs"}),
             recorded_adoptions=[],
         )
@@ -1175,7 +1175,7 @@ def test_a_deferred_adoption_is_not_frozen_behind_the_cache(tmp_path, monkeypatc
 
     monkeypatch.setattr(L, "record_adoptions", _contended)
 
-    first = KiroCrewConfig.load()
+    first = AjCrewConfig.load()
     # Deferred means deferred on BOTH halves: the write did not land, so the running
     # config keeps the stored value rather than diverging from it.
     assert first.agent.subagent_timeout_secs == 1800
@@ -1183,7 +1183,7 @@ def test_a_deferred_adoption_is_not_frozen_behind_the_cache(tmp_path, monkeypatc
 
     # A second load with no file change: it must RE-READ (and try again) rather than
     # serve the cached document, which is what the retry depends on.
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
     assert len(calls) == 2, "the deferred adoption was never retried"
 
 
@@ -1200,7 +1200,7 @@ def test_an_unreadable_ledger_adopts_nothing(tmp_path, monkeypatch, caplog):
     SD.ack_file_path().write_text("{ this is not json", encoding="utf-8")
 
     with caplog.at_level(logging.WARNING, logger=SD.__name__):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
     assert cfg.agent.subagent_timeout_secs == 1800
     assert _on_disk(tmp_path)["agent"]["subagent_timeout_secs"] == 1800
@@ -1218,7 +1218,7 @@ def test_a_missing_ledger_is_not_an_unreadable_one(tmp_path, monkeypatch):
     assert not SD.ack_file_path().exists()
     _write_config(tmp_path, {"agent": {"subagent_timeout_secs": 1800}})
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.agent.subagent_timeout_secs == 10800
 
@@ -1249,7 +1249,7 @@ def test_a_malformed_sidecar_does_not_let_the_load_adopt(tmp_path, monkeypatch):
     _write_config(tmp_path, {"agent": {"subagent_timeout_secs": 1800}})
     SD.ack_file_path().write_text("}}not json", encoding="utf-8")
 
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
 
     assert _on_disk(tmp_path)["agent"]["subagent_timeout_secs"] == 1800
     assert SD.ack_file_path().read_text(encoding="utf-8") == "}}not json"
@@ -1270,7 +1270,7 @@ def test_an_exception_during_write_back_still_drops_the_cache(tmp_path, monkeypa
 
     monkeypatch.setattr(L, "_persist_config_migration", _boom)
 
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
 
     # Asserted on the CACHE itself, not on a second load's behaviour: a cache-hit
     # load still runs the other pending migrations, so counting write-back calls
@@ -1309,7 +1309,7 @@ def test_a_degraded_load_keeps_its_document_cached_instead_of_re_reading_forever
     monkeypatch.setattr(Path, "read_text", _counting_read_text)
 
     with caplog.at_level(logging.WARNING, logger=L.__name__):
-        first = KiroCrewConfig.load()
+        first = AjCrewConfig.load()
     assert "publish" in first.degraded_sections
     assert any("skipping write-back migration" in r.getMessage() for r in caplog.records)
     assert base_reads == 1
@@ -1319,7 +1319,7 @@ def test_a_degraded_load_keeps_its_document_cached_instead_of_re_reading_forever
 
     # The next load is a cache HIT: no re-read, no re-parse, and the stored value
     # is still there for the operator to see.
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
     assert base_reads == 0, "the degraded document was re-read on a plain second load"
     assert _on_disk(tmp_path)["agent"]["subagent_timeout_secs"] == 1800
 
@@ -1330,10 +1330,10 @@ def test_a_degraded_load_keeps_its_document_cached_instead_of_re_reading_forever
         json.dumps({"agent": {"subagent_timeout_secs": 1800}, "publish": {}}),
         encoding="utf-8",
     )
-    from kiro_crew.config.resolution import reset_degraded_observations
+    from aj_crew.config.resolution import reset_degraded_observations
 
     reset_degraded_observations()
-    fixed = KiroCrewConfig.load()
+    fixed = AjCrewConfig.load()
     assert base_reads >= 1, "the fixed document must be re-read on its own fingerprint"
     assert fixed.degraded_sections == frozenset()
     assert fixed.agent.subagent_timeout_secs == 10800
@@ -1350,7 +1350,7 @@ def test_doctor_lists_what_auto_adoption_removed_and_how_to_restore_it(
     """
     _point_home(tmp_path, monkeypatch)
     _write_config(tmp_path, {"agent": {"subagent_timeout_secs": 1800}})
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
     assert SD.adopted_superseded() == {"agent.subagent_timeout_secs": 1800}
 
     issues: list[str] = []
@@ -1359,7 +1359,7 @@ def test_doctor_lists_what_auto_adoption_removed_and_how_to_restore_it(
     assert "adopted:" in out
     assert "agent.subagent_timeout_secs" in out
     assert "1800" in out
-    assert "kirocrew config set agent.subagent_timeout_secs 1800" in out
+    assert "ajcrew config set agent.subagent_timeout_secs 1800" in out
     assert "removed from config.json" in out
     # The overlay may still carry the key, so the line must not claim the default
     # is what now applies.
@@ -1371,7 +1371,7 @@ def test_doctor_renders_the_ledger_even_when_config_json_is_gone(tmp_path, monke
     """A missing or unreadable config must not hide what an earlier load removed."""
     _point_home(tmp_path, monkeypatch)
     _write_config(tmp_path, {"agent": {"subagent_timeout_secs": 1800}})
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
     assert SD.adopted_superseded() == {"agent.subagent_timeout_secs": 1800}
 
     (tmp_path / "config.json").unlink()
@@ -1409,14 +1409,14 @@ def test_adoption_summary_cannot_drive_the_terminal_or_offer_a_hostile_command()
 
     # A registry-vouched entry gets the command, spelled from the registry's literals.
     plain = SD.adoption_summary("agent.subagent_timeout_secs", 1800)
-    assert plain.endswith("kirocrew config set agent.subagent_timeout_secs 1800")
+    assert plain.endswith("ajcrew config set agent.subagent_timeout_secs 1800")
     assert "stored value 1800 was removed from config.json" in plain
 
 
 def test_doctor_says_nothing_about_adoption_when_none_happened(tmp_path, monkeypatch, capsys):
     _point_home(tmp_path, monkeypatch)
     _write_config(tmp_path, {"agent": {"subagent_timeout_secs": 3600}})
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
 
     issues: list[str] = []
     SD.render_doctor_section(issues)
@@ -1437,13 +1437,13 @@ def test_the_running_config_never_diverges_from_the_stored_one(tmp_path, monkeyp
             raise OSError("read-only data home")
 
         mp.setattr(L, "record_adoptions", _refuse)
-        failed = KiroCrewConfig.load()
+        failed = AjCrewConfig.load()
         assert failed.agent.subagent_timeout_secs == 1800
         assert _on_disk(tmp_path)["agent"]["subagent_timeout_secs"] == 1800
 
     _point_home(tmp_path, monkeypatch)
     L._invalidate_config_cache()
-    ok = KiroCrewConfig.load()
+    ok = AjCrewConfig.load()
     assert ok.agent.subagent_timeout_secs == 10800
     assert "subagent_timeout_secs" not in _on_disk(tmp_path).get("agent", {})
 
@@ -1464,7 +1464,7 @@ def test_a_failed_write_keeps_the_value_and_does_not_re_adopt_later(tmp_path, mo
 
         mp.setattr(L, "_write_migration_backup", _fail_backup)
         with caplog.at_level(logging.WARNING, logger=L.__name__):
-            failed = KiroCrewConfig.load()
+            failed = AjCrewConfig.load()
 
         # Nothing was destroyed, and memory did not run ahead of the file.
         assert _on_disk(tmp_path)["agent"]["subagent_timeout_secs"] == 1800
@@ -1473,7 +1473,7 @@ def test_a_failed_write_keeps_the_value_and_does_not_re_adopt_later(tmp_path, mo
 
     _point_home(tmp_path, monkeypatch)
     L._invalidate_config_cache()
-    later = KiroCrewConfig.load()
+    later = AjCrewConfig.load()
 
     # The marker is durable, so the value is left alone from here on -- the operator's
     # 1800 survives every later load rather than being taken on a retry.
@@ -1495,7 +1495,7 @@ def test_the_unapplied_adoption_is_still_reported_so_it_is_recoverable(
     SD.record_adoptions({"agent.subagent_timeout_secs": 1800})
 
     with caplog.at_level(logging.WARNING, logger=L.__name__):
-        KiroCrewConfig.load()
+        AjCrewConfig.load()
 
     warnings = " ".join(r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING)
     assert "agent.subagent_timeout_secs" in warnings
@@ -1525,7 +1525,7 @@ def test_load_adopts_the_stale_timeout_on_disk_and_in_memory(tmp_path, monkeypat
     _write_config(tmp_path, {"agent": {"subagent_timeout_secs": 1800}})
 
     with caplog.at_level(logging.WARNING, logger=L.__name__):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
     assert cfg.agent.subagent_timeout_secs == 10800
     assert "subagent_timeout_secs" not in _on_disk(tmp_path).get("agent", {})
@@ -1536,7 +1536,7 @@ def test_load_adopts_the_stale_timeout_on_disk_and_in_memory(tmp_path, monkeypat
     assert len(notices) == 1
     assert "agent.subagent_timeout_secs" in notices[0]
     assert "1800" in notices[0]
-    assert "kirocrew config set agent.subagent_timeout_secs 1800" in notices[0]
+    assert "ajcrew config set agent.subagent_timeout_secs 1800" in notices[0]
 
 
 def test_load_adopts_the_stale_spawn_floor_once_and_keeps_what_is_set_back(tmp_path, monkeypatch):
@@ -1549,14 +1549,14 @@ def test_load_adopts_the_stale_spawn_floor_once_and_keeps_what_is_set_back(tmp_p
     _point_home(tmp_path, monkeypatch)
     _write_config(tmp_path, {"agent": {"spawn_min_memory_gb": 4.0}})
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.agent.spawn_min_memory_gb == 2.0
     assert "spawn_min_memory_gb" not in _on_disk(tmp_path).get("agent", {})
     assert SD.adopted_superseded() == {"agent.spawn_min_memory_gb": 4.0}
 
     _write_config(tmp_path, {"agent": {"spawn_min_memory_gb": 4.0}})
-    assert KiroCrewConfig.load().agent.spawn_min_memory_gb == 4.0
+    assert AjCrewConfig.load().agent.spawn_min_memory_gb == 4.0
     assert _on_disk(tmp_path)["agent"]["spawn_min_memory_gb"] == 4.0
 
 
@@ -1572,15 +1572,15 @@ def test_load_adopts_the_stale_sign_in_opt_in_once_and_keeps_a_false_set_back(
     _point_home(tmp_path, monkeypatch)
     _write_config(tmp_path, {"agent": {"kas_persist_mcp_sign_in": False}})
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.agent.kas_persist_mcp_sign_in is True
     assert "kas_persist_mcp_sign_in" not in _on_disk(tmp_path).get("agent", {})
     assert SD.adopted_superseded() == {"agent.kas_persist_mcp_sign_in": False}
 
     _write_config(tmp_path, {"agent": {"kas_persist_mcp_sign_in": False}})
-    assert KiroCrewConfig.load().agent.kas_persist_mcp_sign_in is False
-    assert KiroCrewConfig.load().agent.kas_persist_mcp_sign_in is False
+    assert AjCrewConfig.load().agent.kas_persist_mcp_sign_in is False
+    assert AjCrewConfig.load().agent.kas_persist_mcp_sign_in is False
     assert _on_disk(tmp_path)["agent"]["kas_persist_mcp_sign_in"] is False
 
 
@@ -1590,7 +1590,7 @@ def explicit_cli_write(tmp_path, monkeypatch):
     import argparse
     from unittest.mock import Mock
 
-    from kiro_crew import cli_config
+    from aj_crew import cli_config
 
     _point_home(tmp_path, monkeypatch)
     monkeypatch.setattr(cli_config, "config_path", L.config_path)
@@ -1598,7 +1598,7 @@ def explicit_cli_write(tmp_path, monkeypatch):
     monkeypatch.setattr(cli_config, "sel", Mock())
     _write_config(tmp_path, {"agent": {"kas_persist_mcp_sign_in": True}})
     _write_local(tmp_path, {})
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
     assert SD.adopted_superseded() == {}
 
     def run(mode):
@@ -1632,10 +1632,10 @@ def test_cli_explicit_old_default_survives_load(tmp_path, explicit_cli_write, mo
     # Check the load before the ledger: without the ack, base writes really flip
     # back to True. An overlay already wins, but must record the explicit choice too.
     L._invalidate_config_cache()
-    assert KiroCrewConfig.load().agent.kas_persist_mcp_sign_in is False
+    assert AjCrewConfig.load().agent.kas_persist_mcp_sign_in is False
     expected = {"agent.kas_persist_mcp_sign_in": False}
     if mode.endswith("section") or mode == "file":
-        assert KiroCrewConfig.load().agent.subagent_timeout_secs == 1800
+        assert AjCrewConfig.load().agent.subagent_timeout_secs == 1800
         expected["agent.subagent_timeout_secs"] = 1800
     if L.unsandboxed_exec_platform_default():
         # On Windows the fixture's first load, with the key absent, closes the
@@ -1666,7 +1666,7 @@ def test_a_chosen_spawn_floor_is_not_the_stale_default(tmp_path, monkeypatch, st
     _point_home(tmp_path, monkeypatch)
     _write_config(tmp_path, {"agent": {"spawn_min_memory_gb": stored}})
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.agent.spawn_min_memory_gb == stored
     assert _on_disk(tmp_path)["agent"]["spawn_min_memory_gb"] == stored
@@ -1678,7 +1678,7 @@ def test_a_deliberately_chosen_value_survives_the_adoption(tmp_path, monkeypatch
     _point_home(tmp_path, monkeypatch)
     _write_config(tmp_path, {"agent": {"subagent_timeout_secs": 2400}})
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.agent.subagent_timeout_secs == 2400
     assert _on_disk(tmp_path)["agent"]["subagent_timeout_secs"] == 2400
@@ -1694,11 +1694,11 @@ def test_adoption_is_one_shot_so_a_restored_value_is_left_alone(tmp_path, monkey
     """
     _point_home(tmp_path, monkeypatch)
     _write_config(tmp_path, {"agent": {"subagent_timeout_secs": 1800}})
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
     assert SD.adopted_superseded() == {"agent.subagent_timeout_secs": 1800}
 
     _write_config(tmp_path, {"agent": {"subagent_timeout_secs": 1800}})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.agent.subagent_timeout_secs == 1800
     assert _on_disk(tmp_path)["agent"]["subagent_timeout_secs"] == 1800
@@ -1714,7 +1714,7 @@ def test_keep_pre_empts_an_adoption_that_has_not_happened_yet(tmp_path, monkeypa
     _write_config(tmp_path, {"agent": {"subagent_timeout_secs": 1800}})
     SD.write_acked_superseded({"agent.subagent_timeout_secs": 1800})
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.agent.subagent_timeout_secs == 1800
     assert _on_disk(tmp_path)["agent"]["subagent_timeout_secs"] == 1800
@@ -1727,7 +1727,7 @@ def test_an_overlay_value_outranks_the_adoption_in_memory(tmp_path, monkeypatch)
     _write_config(tmp_path, {"agent": {"subagent_timeout_secs": 1800}})
     _write_local(tmp_path, {"agent": {"subagent_timeout_secs": 3600}})
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.agent.subagent_timeout_secs == 3600
     assert "subagent_timeout_secs" not in _on_disk(tmp_path).get("agent", {})
@@ -1740,7 +1740,7 @@ def test_both_timeout_keys_adopt_in_one_load(tmp_path, monkeypatch):
         tmp_path, {"agent": {"subagent_timeout_secs": 1800, "chat_turn_timeout_secs": 7200}}
     )
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.agent.subagent_timeout_secs == 10800
     assert cfg.agent.chat_turn_timeout_secs == 14400
@@ -1765,7 +1765,7 @@ def test_the_load_does_not_tell_the_operator_to_fix_what_it_just_fixed(
     )
 
     with caplog.at_level(logging.WARNING, logger=L.__name__):
-        KiroCrewConfig.load()
+        AjCrewConfig.load()
 
     drift_warnings = " ".join(
         r.getMessage()
@@ -1795,7 +1795,7 @@ def test_a_failed_ledger_write_aborts_the_adoption(tmp_path, monkeypatch):
 
     monkeypatch.setattr(L, "record_adoptions", _refuse)
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert _on_disk(tmp_path)["agent"]["subagent_timeout_secs"] == 1800
     # Memory follows disk. An earlier revision applied the in-memory half eagerly and
@@ -1830,7 +1830,7 @@ def test_the_registered_new_defaults_match_the_live_dataclass_defaults():
     if they ever diverge, the disk and memory halves would resolve different
     numbers and the divergence would be invisible.
     """
-    from kiro_crew.config.sections import AgentConfig
+    from aj_crew.config.sections import AgentConfig
 
     assert AgentConfig.__dataclass_fields__["subagent_timeout_secs"].default == (
         SUBAGENT_ENTRY.new_default

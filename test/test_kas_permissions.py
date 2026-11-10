@@ -25,9 +25,9 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.acp import kas_permissions
-from kiro_crew.acp.kas_agents import to_client_custom_agent
-from kiro_crew.acp.kas_permissions import (
+from aj_crew.acp import kas_permissions
+from aj_crew.acp.kas_agents import to_client_custom_agent
+from aj_crew.acp.kas_permissions import (
     CAPABILITY_BY_TOOL,
     CEILING_REFS_BY_CAPABILITY,
     KAS_CAPABILITIES,
@@ -37,10 +37,10 @@ from kiro_crew.acp.kas_permissions import (
     allowed_tools_to_permissions,
     merge_user_permissions,
 )
-from kiro_crew.agent import _seed_kas_permissions
-from kiro_crew.agent_materialization import auto_approve
-from kiro_crew.agent_sdk.kas_bundle import KAS_PIN_VERSION
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION, spec_permissions_supported
+from aj_crew.agent import _seed_kas_permissions
+from aj_crew.agent_materialization import auto_approve
+from aj_crew.agent_sdk.kas_bundle import KAS_PIN_VERSION
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION, spec_permissions_supported
 
 #: A release that accepts the field, and one that refuses it. Expressed against
 #: the floor rather than as literals so raising the floor cannot leave a test
@@ -53,7 +53,7 @@ _REFUSES = (SPEC_PERMISSIONS_MIN_VERSION[0], SPEC_PERMISSIONS_MIN_VERSION[1] - 1
 def installed_cli(monkeypatch):
     """Pin what ``_seed_kas_permissions`` believes the installed kiro-cli is.
 
-    Patched at ``kiro_crew.kiro_cli`` because the seed imports the name
+    Patched at ``aj_crew.kiro_cli`` because the seed imports the name
     function-locally, so the lookup happens in the owning module at call time.
     Without this the answer is whatever the test HOST has installed -- which on
     CI is nothing, and "unknown" reads as refusing.
@@ -61,7 +61,7 @@ def installed_cli(monkeypatch):
 
     def _pin(version):
         monkeypatch.setattr(
-            "kiro_crew.kiro_cli.installed_kiro_cli_version",
+            "aj_crew.kiro_cli.installed_kiro_cli_version",
             lambda: version,
         )
 
@@ -109,13 +109,13 @@ class TestTheSubagentToolIsKeyedOnTheCrewName:
         assert CEILING_REFS_BY_CAPABILITY["subagent"] == ("use_subagent",)
 
     def test_the_kas_spelling_is_named_with_its_fix(self, caplog):
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.kas_permissions"):
+        with caplog.at_level("WARNING", logger="aj_crew.acp.kas_permissions"):
             allowed_tools_to_permissions(["invoke_sub_agent"], agent_id="helper")
         assert "'invoke_sub_agent'" in caplog.text
         assert "'use_subagent'" in caplog.text
 
     def test_the_crew_spelling_warns_about_nothing(self, caplog):
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.kas_permissions"):
+        with caplog.at_level("WARNING", logger="aj_crew.acp.kas_permissions"):
             allowed_tools_to_permissions(["use_subagent"], agent_id="helper")
         assert caplog.text == ""
 
@@ -143,8 +143,8 @@ class TestTheShellAndFilesystemFamiliesAreRefused:
 
     def test_the_refusal_is_reported_at_info_because_it_reverses_the_spec(self, caplog):
         """Distinct from an unmappable entry: this one the spec explicitly asked for."""
-        with caplog.at_level("INFO", logger="kiro_crew.acp.kas_permissions"):
-            allowed_tools_to_permissions(["execute_bash"], agent_id="kirocrew")
+        with caplog.at_level("INFO", logger="aj_crew.acp.kas_permissions"):
+            allowed_tools_to_permissions(["execute_bash"], agent_id="ajcrew")
         assert "projecting no KAS allow rule for execute_bash" in caplog.text
 
     def test_no_withheld_tool_is_also_in_the_capability_table(self):
@@ -154,12 +154,12 @@ class TestTheShellAndFilesystemFamiliesAreRefused:
 
 class TestMcpEntries:
     def test_a_bare_server_becomes_a_one_level_glob(self):
-        policy = allowed_tools_to_permissions(["@kirocrew-core"])
-        assert _rule(policy, "mcp")["match"] == ["kirocrew-core/*"]
+        policy = allowed_tools_to_permissions(["@ajcrew-core"])
+        assert _rule(policy, "mcp")["match"] == ["ajcrew-core/*"]
 
     def test_a_named_action_stays_exact(self):
-        policy = allowed_tools_to_permissions(["@kirocrew-cron/cron_list"])
-        assert _rule(policy, "mcp")["match"] == ["kirocrew-cron/cron_list"]
+        policy = allowed_tools_to_permissions(["@ajcrew-cron/cron_list"])
+        assert _rule(policy, "mcp")["match"] == ["ajcrew-cron/cron_list"]
 
     def test_all_servers_share_one_rule(self):
         policy = allowed_tools_to_permissions(["@a", "@b"])
@@ -172,9 +172,9 @@ class TestMcpEntries:
         that one line already subsumes another.
         """
         policy = allowed_tools_to_permissions(
-            ["@kirocrew-cron/cron_list", "@kirocrew-cron/cron_pause", "@kirocrew-cron"]
+            ["@ajcrew-cron/cron_list", "@ajcrew-cron/cron_pause", "@ajcrew-cron"]
         )
-        assert _rule(policy, "mcp")["match"] == ["kirocrew-cron/*"]
+        assert _rule(policy, "mcp")["match"] == ["ajcrew-cron/*"]
 
     def test_another_servers_per_tool_entry_is_not_absorbed(self):
         policy = allowed_tools_to_permissions(["@a", "@b/one"])
@@ -221,7 +221,7 @@ class TestToolGlobsTravelAsWritten:
     def test_it_lands_on_the_wire(self):
         """The projection is where the user actually felt the drop."""
         spec = {"prompt": "p", "tools": ["@ent-a2rm"], "allowedTools": ["@ent-a2rm/a2rm___query_*"]}
-        agent = to_client_custom_agent("kirocrew", spec, "p")
+        agent = to_client_custom_agent("ajcrew", spec, "p")
         assert agent["permissions"] == {
             "rules": [
                 {"capability": "mcp", "match": ["ent-a2rm/a2rm___query_*"], "effect": "allow"}
@@ -245,26 +245,26 @@ class TestTranslationNeverWidensAGrant:
         [
             "@*",
             "@*/*",
-            "@kirocrew-*",
-            "@kirocrew-*/*",
+            "@ajcrew-*",
+            "@ajcrew-*/*",
             "@*/status",
-            "@kirocrew-core/[abc]",
-            "@kirocrew-core/{a,b}",
-            "@kirocrew-core/!x",
+            "@ajcrew-core/[abc]",
+            "@ajcrew-core/{a,b}",
+            "@ajcrew-core/!x",
             "@{a,b}",
-            "@!kirocrew-core",
+            "@!ajcrew-core",
         ],
     )
     def test_a_server_glob_or_unshared_syntax_yields_no_rule(self, entry):
         assert allowed_tools_to_permissions([entry]) is None
 
     def test_a_glob_does_not_suppress_the_literal_entries_beside_it(self):
-        policy = allowed_tools_to_permissions(["@*", "@kirocrew-core", "web_fetch"])
-        assert _rule(policy, "mcp")["match"] == ["kirocrew-core/*"]
+        policy = allowed_tools_to_permissions(["@*", "@ajcrew-core", "web_fetch"])
+        assert _rule(policy, "mcp")["match"] == ["ajcrew-core/*"]
         assert _rule(policy, "web_fetch")["effect"] == "allow"
 
     def test_a_rejected_glob_is_explainable_from_the_log(self, caplog):
-        with caplog.at_level("DEBUG", logger="kiro_crew.acp.kas_permissions"):
+        with caplog.at_level("DEBUG", logger="aj_crew.acp.kas_permissions"):
             allowed_tools_to_permissions(["@*"], agent_id="a")
         assert "@*" in caplog.text
 
@@ -321,8 +321,8 @@ class TestUnclassifiableEntriesFailClosed:
     def test_the_names_are_reported_so_a_missing_grant_is_explainable(self, caplog):
         # Names the logger: left to the root logger this passes alone and fails in
         # the full suite, once something else has raised the package level.
-        with caplog.at_level("DEBUG", logger="kiro_crew.acp.kas_permissions"):
-            allowed_tools_to_permissions(["introspect"], agent_id="kirocrew")
+        with caplog.at_level("DEBUG", logger="aj_crew.acp.kas_permissions"):
+            allowed_tools_to_permissions(["introspect"], agent_id="ajcrew")
         assert "introspect" in caplog.text
 
     @pytest.mark.parametrize("bad", [None, "fs_read", 42, {}])
@@ -348,12 +348,12 @@ class TestTheRealAllowlist:
         "introspect",
         "session",
         "report",
-        "@kirocrew-cron/cron_list",
-        "@kirocrew-cron/cron_pause",
-        "@kirocrew-core",
+        "@ajcrew-cron/cron_list",
+        "@ajcrew-cron/cron_pause",
+        "@ajcrew-core",
         "@notes-mcp",
         "@tickets-mcp",
-        "@kirocrew-cron",
+        "@ajcrew-cron",
         "@weather-mcp",
     ]
 
@@ -392,7 +392,7 @@ class TestTheDiskWriter:
 
     @staticmethod
     def _config(**over) -> dict:
-        base: dict = {"name": "kirocrew", "tools": ["fs_read"], "allowedTools": ["web_fetch"]}
+        base: dict = {"name": "ajcrew", "tools": ["fs_read"], "allowedTools": ["web_fetch"]}
         base.update(over)
         return base
 
@@ -454,7 +454,7 @@ class TestTheDiskWriter:
         )
         _seed_kas_permissions(config)
         assert config["permissions"]["rules"] == [{"capability": "web_fetch", "effect": "allow"}]
-        assert to_client_custom_agent("kirocrew", {**config, "prompt": "p"}, "p")[
+        assert to_client_custom_agent("ajcrew", {**config, "prompt": "p"}, "p")[
             "permissions"
         ] == {"rules": [{"capability": "mcp", "match": ["srv/*"], "effect": "allow"}]}
 
@@ -466,11 +466,11 @@ class TestTheDiskWriter:
             permissions={"rules": [{"capability": "web_fetch", "effect": "allow"}]},
         )
         _seed_kas_permissions(config)
-        import kiro_crew.acp.kas_agents as kas_agents
+        import aj_crew.acp.kas_agents as kas_agents
 
         with pytest.MonkeyPatch.context() as patch:
             patch.setattr(kas_agents, "may_skip_gate_now", lambda ref: ref == "@srv")
-            out = to_client_custom_agent("kirocrew", {**config, "prompt": "p"}, "p")
+            out = to_client_custom_agent("ajcrew", {**config, "prompt": "p"}, "p")
         assert out["permissions"]["rules"] == [
             {"capability": "mcp", "match": ["srv/*"], "effect": "allow"}
         ]
@@ -494,7 +494,7 @@ class TestTheInstalledCliDecidesWhetherTheFieldIsWrittenAtAll:
 
     kiro-cli validates agent specs with serde ``deny_unknown_fields``, so a
     release whose schema predates ``permissions`` does not ignore the key: it
-    refuses the whole file, drops the agent from its table, and every Kiro Crew
+    refuses the whole file, drops the agent from its table, and every Aj Crew
     MCP server is absent from the session. The user sees "agent specs rejected"
     and has no working tools. Nothing is given up by withholding the field
     there, because the same binary serves KAS, so a release that cannot read the
@@ -503,7 +503,7 @@ class TestTheInstalledCliDecidesWhetherTheFieldIsWrittenAtAll:
 
     @staticmethod
     def _config(**over) -> dict:
-        base: dict = {"name": "kirocrew", "tools": ["fs_read"], "allowedTools": ["web_fetch"]}
+        base: dict = {"name": "ajcrew", "tools": ["fs_read"], "allowedTools": ["web_fetch"]}
         base.update(over)
         return base
 
@@ -577,13 +577,13 @@ class TestTheBundledEngineDecidesOnTheBundleRoute:
     withheld the block on every such host, and Crew's auto-approve list never
     reached KAS's policy engine. The engine's floor is the pinned release, the one
     the block was measured against, so an older engine selected through
-    ``KIROCREW_KAS_VERSION`` is unmeasured and withholds. No engine installed is
+    ``AJCREW_KAS_VERSION`` is unmeasured and withholds. No engine installed is
     an unknown version: withheld, as a kiro-cli that cannot be probed is.
     """
 
     @staticmethod
     def _config(**over) -> dict:
-        base: dict = {"name": "kirocrew", "tools": ["fs_read"], "allowedTools": ["web_fetch"]}
+        base: dict = {"name": "ajcrew", "tools": ["fs_read"], "allowedTools": ["web_fetch"]}
         base.update(over)
         return base
 
@@ -592,7 +592,7 @@ class TestTheBundledEngineDecidesOnTheBundleRoute:
         """Pin the switch as the writer reads it."""
 
         def _pin(on: bool) -> None:
-            monkeypatch.setattr("kiro_crew.agent_sdk.backend_install._kas_bundle_route", lambda: on)
+            monkeypatch.setattr("aj_crew.agent_sdk.backend_install._kas_bundle_route", lambda: on)
 
         return _pin
 
@@ -604,7 +604,7 @@ class TestTheBundledEngineDecidesOnTheBundleRoute:
 
         def _pin(present: bool) -> None:
             _floor_monkeypatch.setattr(
-                "kiro_crew.kiro_cli.resolve_kiro_cli",
+                "aj_crew.kiro_cli.resolve_kiro_cli",
                 lambda: "/opt/kiro/bin/kiro-cli" if present else None,
             )
 
@@ -616,7 +616,7 @@ class TestTheBundledEngineDecidesOnTheBundleRoute:
         """Pin what the writer believes the installed engine bundle is: ``None`` for
         nothing installed, else a record at *version*. Patched through the agent-sdk
         facade, which forwards the write to the owning ACP module."""
-        from kiro_crew.agent_sdk import kas_bundle
+        from aj_crew.agent_sdk import kas_bundle
 
         def _pin(version):
             installed = (
@@ -684,7 +684,7 @@ class TestTheBundledEngineDecidesOnTheBundleRoute:
         bundle_route(True)
         installed_engine(KAS_PIN_VERSION)
         monkeypatch.setattr(
-            "kiro_crew.kiro_cli.installed_kiro_cli_version",
+            "aj_crew.kiro_cli.installed_kiro_cli_version",
             lambda: pytest.fail("kiro-cli probed on the bundle route"),
         )
         config = self._config()
@@ -700,7 +700,7 @@ class TestTheBundledEngineDecidesOnTheBundleRoute:
         installed_engine(None)
         installed_cli(_ACCEPTS)
         config = self._config(permissions={"rules": [{"capability": "shell", "effect": "allow"}]})
-        auto_approve._write_derived_permissions(config, config["allowedTools"], "kirocrew.json")
+        auto_approve._write_derived_permissions(config, config["allowedTools"], "ajcrew.json")
         assert "permissions" not in config
 
     @pytest.mark.parametrize(
@@ -729,7 +729,7 @@ class TestTheBundledEngineDecidesOnTheBundleRoute:
         def _boom():
             raise OSError("home unreadable")
 
-        monkeypatch.setattr("kiro_crew.kiro_cli.resolve_kiro_cli", _boom)
+        monkeypatch.setattr("aj_crew.kiro_cli.resolve_kiro_cli", _boom)
         bundle_route(True)
         installed_engine(KAS_PIN_VERSION)
         installed_cli(_REFUSES)
@@ -759,12 +759,12 @@ class TestTheBundledEngineDecidesOnTheBundleRoute:
     ):
         """The writer reads the switch through the install probe's own reader, so
         the two cannot disagree about which route is selected."""
-        from kiro_crew.config import KiroCrewConfig
+        from aj_crew.config import AjCrewConfig
 
         class _Cfg:
             agent = type("A", (), {"kas_bundle": on})()
 
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: _Cfg()))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: _Cfg()))
         installed_engine(KAS_PIN_VERSION)
         installed_cli(None)
         assert auto_approve._spec_permissions_accepted() is written
@@ -773,12 +773,12 @@ class TestTheBundledEngineDecidesOnTheBundleRoute:
         self, monkeypatch, installed_engine, installed_cli
     ):
         """Fail toward the gate that has always run, not toward a route nothing chose."""
-        from kiro_crew.config import KiroCrewConfig
+        from aj_crew.config import AjCrewConfig
 
         def _boom(cls):
             raise RuntimeError("config unreadable")
 
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_boom))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(_boom))
         installed_engine(KAS_PIN_VERSION)
         installed_cli(None)
         assert auto_approve._spec_permissions_accepted() is False
@@ -800,7 +800,7 @@ class TestTheVersionProbeItself:
         """A pinned binary that exists on disk, and a recorder for the spawn."""
         import subprocess
 
-        from kiro_crew import kiro_cli
+        from aj_crew import kiro_cli
 
         binary = tmp_path / "kiro-cli"
         binary.write_text("", encoding="utf-8")
@@ -819,7 +819,7 @@ class TestTheVersionProbeItself:
         return binary, _install
 
     def test_the_pinned_binary_is_asked_and_its_answer_parsed(self, pinned):
-        from kiro_crew.kiro_cli import installed_kiro_cli_version
+        from aj_crew.kiro_cli import installed_kiro_cli_version
 
         binary, install = pinned
         calls = install("kiro-cli 2.23.0\n")
@@ -828,7 +828,7 @@ class TestTheVersionProbeItself:
 
     def test_the_output_is_decoded_as_utf8_not_the_platform_locale(self, pinned):
         """A locale decode can mangle the token, and mangled reads as refusing."""
-        from kiro_crew.kiro_cli import installed_kiro_cli_version
+        from aj_crew.kiro_cli import installed_kiro_cli_version
 
         _binary, install = pinned
         calls = install("kiro-cli 2.23.0\n")
@@ -837,8 +837,8 @@ class TestTheVersionProbeItself:
         assert calls[0]["timeout"] > 0
 
     def test_a_non_zero_exit_or_garbage_is_unknown(self, pinned):
-        from kiro_crew import kiro_cli
-        from kiro_crew.kiro_cli import installed_kiro_cli_version
+        from aj_crew import kiro_cli
+        from aj_crew.kiro_cli import installed_kiro_cli_version
 
         _binary, install = pinned
         install("kiro-cli 2.23.0\n", returncode=1)
@@ -851,7 +851,7 @@ class TestTheVersionProbeItself:
         """Cached by path and mtime: a swapped binary is asked again."""
         import os
 
-        from kiro_crew.kiro_cli import installed_kiro_cli_version
+        from aj_crew.kiro_cli import installed_kiro_cli_version
 
         binary, install = pinned
         calls = install("kiro-cli 2.23.0\n")
@@ -864,7 +864,7 @@ class TestTheVersionProbeItself:
         assert len(calls) == 2
 
     def test_no_pin_means_no_spawn(self, monkeypatch):
-        from kiro_crew import kiro_cli
+        from aj_crew import kiro_cli
 
         monkeypatch.setattr(kiro_cli, "pin_kiro_cli", lambda: (None, True))
         monkeypatch.setattr(kiro_cli, "_version_cache", {})
@@ -1058,8 +1058,8 @@ class TestRule1TheBlockIsParsedAgainstKasShapeAndRefusedWhole:
     def test_the_refusal_is_reported_at_warning_with_its_reason(self, caplog):
         """WARNING, not debug: it is the author's own file being declined, and the
         reason is the only way to find out which rule did it."""
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.kas_permissions"):
-            _merge({"rules": [{"capability": "web_fetch", "effect": "maybe"}]}, agent_id="kirocrew")
+        with caplog.at_level("WARNING", logger="aj_crew.acp.kas_permissions"):
+            _merge({"rules": [{"capability": "web_fetch", "effect": "maybe"}]}, agent_id="ajcrew")
         assert "refusing its whole `permissions` block" in caplog.text
         assert "rule 0" in caplog.text
 
@@ -1126,7 +1126,7 @@ class TestALongMatchIsSplitNotRefused:
         """An exclude list cannot be split, and leaving one allow out only narrows."""
         deny = {"capability": "web_search", "effect": "deny"}
         allow = {"capability": "web_fetch", "exclude": self._hosts(65), "effect": "allow"}
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.kas_permissions"):
+        with caplog.at_level("WARNING", logger="aj_crew.acp.kas_permissions"):
             merged = _merge({"rules": [allow, deny]}, derived=_DERIVED, agent_id="uno")
         assert _user_rules(merged) == [deny]
         assert "rule 0" in caplog.text and "refusing its whole" not in caplog.text
@@ -1139,7 +1139,7 @@ class TestALongMatchIsSplitNotRefused:
         bounded = dict(allow, exclude=self._hosts(64))
         # Looked up when called, so a module without it fails this test, not the file.
         projection_dropped_rules = kas_permissions.projection_dropped_rules
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.kas_permissions"):
+        with caplog.at_level("WARNING", logger="aj_crew.acp.kas_permissions"):
             assert projection_dropped_rules({"rules": [deny, allow, bounded, allow]}) == [1, 3]
             assert projection_dropped_rules({"rules": [allow, "not-a-rule"]}) == []
             assert projection_dropped_rules({"rules": [bounded]}) == []
@@ -1268,7 +1268,7 @@ class TestRule3AnAllowTravelsOnlyWhereTheCeilingAlreadyPermitted:
         """A capability grants every tool mapped to it, so the ceiling has to clear
         every one of them -- an inversion keeping a single ref per capability would
         ask about one and grant the rest."""
-        import kiro_crew.acp.kas_permissions as module
+        import aj_crew.acp.kas_permissions as module
 
         monkeypatch.setitem(module.CEILING_REFS_BY_CAPABILITY, "web_fetch", ("web_fetch", "fetch2"))
         block = {"rules": [{"capability": "web_fetch", "effect": "allow"}]}
@@ -1291,8 +1291,8 @@ class TestRule3AnAllowTravelsOnlyWhereTheCeilingAlreadyPermitted:
 
     def test_a_withheld_allow_is_reported_so_a_missing_grant_is_explainable(self, caplog):
         block = {"rules": [{"capability": "web_fetch", "effect": "allow"}]}
-        with caplog.at_level("INFO", logger="kiro_crew.acp.kas_permissions"):
-            _merge(block, _WITHHOLDS_EVERYTHING, agent_id="kirocrew")
+        with caplog.at_level("INFO", logger="aj_crew.acp.kas_permissions"):
+            _merge(block, _WITHHOLDS_EVERYTHING, agent_id="ajcrew")
         assert "withholds auto-approval for web_fetch" in caplog.text
 
 
@@ -1313,7 +1313,7 @@ class TestAWithheldAuthoredAllowIsAudited:
             ceiling_permits=ceiling,
             audit_decision=lambda refs, outcome, reason: seen.append((refs, outcome, reason)),
             allowlist_present=allowlist_present,
-            agent_id="kirocrew",
+            agent_id="ajcrew",
         )
         return seen
 
@@ -1503,8 +1503,8 @@ class TestRule4TheShellAndFilesystemFamiliesNeverTravelAsAnAllow:
 
     def test_the_refusal_is_reported_because_it_reverses_the_spec(self, caplog):
         block = {"rules": [{"capability": "all", "effect": "allow"}]}
-        with caplog.at_level("INFO", logger="kiro_crew.acp.kas_permissions"):
-            _merge(block, agent_id="kirocrew")
+        with caplog.at_level("INFO", logger="aj_crew.acp.kas_permissions"):
+            _merge(block, agent_id="ajcrew")
         assert "fs_read, fs_write, shell" in caplog.text
 
     def test_the_capability_form_covers_every_withheld_tool(self):

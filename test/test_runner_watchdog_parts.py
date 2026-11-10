@@ -38,7 +38,7 @@ from unittest import mock
 import pytest
 from ci_runner_watchdog_helpers import ROOT, SCRIPT, FakeApi, _policy, _run, wd
 
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 # This module reads every test file once to find the patch targets; one group per file
 # keeps that read on one worker.

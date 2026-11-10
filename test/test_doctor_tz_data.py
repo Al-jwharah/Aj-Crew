@@ -1,4 +1,4 @@
-"""The ``tz data`` row of ``kirocrew doctor`` and the tzdata floor it backs.
+"""The ``tz data`` row of ``ajcrew doctor`` and the tzdata floor it backs.
 
 Stale timezone data still resolves every zone name, so a job scheduled in a zone
 whose rules changed runs at the old rule's hour with no warning anywhere. The
@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_doctor
-from kiro_crew.doctor_checks import install
+from aj_crew import cli_doctor
+from aj_crew.doctor_checks import install
 
 _REPO = Path(__file__).resolve().parents[1]
 
@@ -88,7 +88,7 @@ def test_stale_package_data_without_a_pip_channel_names_an_update(
     issues: list[str] = []
     install._doctor_tz_data(issues)
     out = capsys.readouterr().out
-    assert "Fix: update Kiro Crew, then restart the gateway." in out
+    assert "Fix: update Aj Crew, then restart the gateway." in out
     assert "PIP" not in out
     assert issues == ["timezone data out of date"]
 

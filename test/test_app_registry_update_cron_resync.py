@@ -26,10 +26,10 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from apps_routes_coverage_helpers import APP, _install, _make_app, _setup_env
 
-import kiro_crew.apps.routes as routes_mod
-from kiro_crew.apps.bridges import register_app_crons_with_service
-from kiro_crew.apps.manager import enable_app, get_app, update_app
-from kiro_crew.cron import CronService
+import aj_crew.apps.routes as routes_mod
+from aj_crew.apps.bridges import register_app_crons_with_service
+from aj_crew.apps.manager import enable_app, get_app, update_app
+from aj_crew.cron import CronService
 
 CRON = "digest"
 JOB = f"{APP}/{CRON}"

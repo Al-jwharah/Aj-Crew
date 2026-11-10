@@ -16,10 +16,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import subagent as sa
-from kiro_crew.dashboard.messaging_api import run_control
-from kiro_crew.mcp_tools import spawn as spawn_tools
-from kiro_crew.subagent import PROVIDER_LABEL_DEFAULT, SubagentManager
+from aj_crew import subagent as sa
+from aj_crew.dashboard.messaging_api import run_control
+from aj_crew.mcp_tools import spawn as spawn_tools
+from aj_crew.subagent import PROVIDER_LABEL_DEFAULT, SubagentManager
 
 
 def _manager(provider: str) -> SubagentManager:

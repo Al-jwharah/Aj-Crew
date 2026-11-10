@@ -19,14 +19,14 @@ from acp_runtime_helpers import (
     _stop_reader,
 )
 
-from kiro_crew.acp.runtime import AcpSessionHandle
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.runtime import AcpSessionHandle
+from aj_crew.testing.wait import await_until
 
 
 @pytest.mark.asyncio
 async def test_dispatch_compaction_and_clear():
     """Compaction and clear notifications yield appropriate events."""
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         EVENT_CLEAR_STATUS,
         EVENT_COMPACTION_STATUS,
         METHOD_CLEAR_STATUS,
@@ -73,7 +73,7 @@ async def test_dispatch_compaction_completed_resets_context_stats():
     """A completed compaction in the prompt dispatch loop must drop the stale
     context-usage counts (regression: the meter froze at the pre-compaction
     value because context_tokens_from_usage=True blocked fresh metadata)."""
-    from kiro_crew.acp.types import METHOD_COMPACTION_STATUS, AcpPromptStats
+    from aj_crew.acp.types import METHOD_COMPACTION_STATUS, AcpPromptStats
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -118,8 +118,8 @@ async def test_dispatch_compaction_completed_resets_context_stats():
 @pytest.mark.asyncio
 async def test_ownerless_owed_terminal_drops_and_preserves_count_zero_behavior():
     """An ownerless terminal pays this handle's debt only while debt exists."""
-    from kiro_crew.acp import stale_compaction
-    from kiro_crew.acp.types import (
+    from aj_crew.acp import stale_compaction
+    from aj_crew.acp.types import (
         EVENT_COMPACTION_STATUS,
         METHOD_COMPACTION_STATUS,
         AcpPromptStats,
@@ -185,8 +185,8 @@ async def test_ownerless_owed_terminal_drops_and_preserves_count_zero_behavior()
 
 def test_owed_completed_resets_session_state_only_for_owned_frame():
     """An ownerless completion cannot claim a session-local reset."""
-    from kiro_crew.acp import stale_compaction
-    from kiro_crew.acp.types import (
+    from aj_crew.acp import stale_compaction
+    from aj_crew.acp.types import (
         METHOD_COMPACTION_STATUS,
         AcpPromptStats,
         JsonRpcMessage,
@@ -238,7 +238,7 @@ def test_owed_completed_resets_session_state_only_for_owned_frame():
 async def test_wait_for_compaction_drain_path_resets_context_stats():
     """The async-after-end_turn drain path in wait_for_compaction bypasses the
     prompt dispatch loop, so it must drop the stale counts itself."""
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         METHOD_COMPACTION_STATUS,
         AcpPromptStats,
         JsonRpcMessage,
@@ -279,7 +279,7 @@ async def test_wait_for_compaction_drain_failed_with_empty_summary_carries_the_r
     """kiro-cli's ``summary`` is empty on failure, so the drain path carries the
     reason the payload names -- read by the same extractor the dispatch loop
     uses -- and a manual /compact names its cause the way auto-compaction does."""
-    from kiro_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
+    from aj_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
 
     rt, _reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -304,8 +304,8 @@ async def test_wait_for_compaction_drain_failed_with_empty_summary_carries_the_r
 async def test_wait_for_compaction_drain_failed_without_a_reason_reports_the_fallback():
     """No summary and no reason-bearing key: the drain result carries the
     extractor's own generic text, the same line the streaming notice shows."""
-    from kiro_crew.acp.transport_errors import compaction_failure_detail
-    from kiro_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
+    from aj_crew.acp.transport_errors import compaction_failure_detail
+    from aj_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
 
     rt, _reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -325,7 +325,7 @@ async def test_wait_for_compaction_drain_failed_with_a_credential_shaped_summary
     """A backend-echoed failure summary is LLM-influenced text, so the drain
     result carries it scrubbed -- the same ``redact_text`` the client wait path
     applies -- before the dashboard or a channel mirror shows it."""
-    from kiro_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
+    from aj_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
 
     rt, _reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -352,7 +352,7 @@ async def test_wait_for_compaction_drain_failed_with_a_credential_shaped_summary
 async def test_wait_for_compaction_drain_applies_post_compaction_metadata():
     """kiro emits the real post-compaction pct ~1s after the completed status;
     the drain path must capture it and derive against the KEPT served window."""
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         METHOD_COMPACTION_STATUS,
         AcpPromptStats,
         JsonRpcMessage,
@@ -393,7 +393,7 @@ async def test_wait_for_compaction_drain_applies_post_compaction_metadata():
 async def test_post_compaction_drain_requeues_frames_before_poison():
     """Death during the grace drain: buffered frames must be re-queued BEFORE
     the poison sentinel, or recovery would see death first and strand them."""
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         METHOD_COMPACTION_STATUS,
         AcpPromptStats,
         JsonRpcMessage,
@@ -433,7 +433,7 @@ async def test_outer_buffered_frame_restored_before_poison_from_nested_drain():
     grace drain — separate buffers restored at different times would park the
     frame behind the death sentinel and its consumer would see AcpProcessDied
     despite a completed command."""
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         METHOD_COMPACTION_STATUS,
         AcpPromptStats,
         JsonRpcMessage,
@@ -468,7 +468,7 @@ async def test_outer_buffered_frame_restored_before_poison_from_nested_drain():
 async def _next_turn_credits(rt, reader, handle) -> float:
     """Run one real ``prompt()`` turn that reports no credits of its own and
     return the credits its ``EVENT_COMPLETE`` bills."""
-    from kiro_crew.acp.types import EVENT_COMPLETE
+    from aj_crew.acp.types import EVENT_COMPLETE
 
     events: list = []
 
@@ -500,7 +500,7 @@ async def test_between_turn_compaction_credits_are_billed_once_by_the_next_turn(
     on the next turn's bill, once. The stats window open at that point is wiped
     by the next prompt's re-init, and a frame handed back to the queue is
     discarded by the pre-turn drain, so neither path may hold them."""
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         METHOD_COMPACTION_STATUS,
         AcpPromptStats,
         JsonRpcMessage,
@@ -563,7 +563,7 @@ async def test_between_turn_compaction_credits_are_billed_once_by_the_next_turn(
 async def test_wait_for_compaction_cached_result_applies_post_compaction_metadata():
     """The mid-turn cached path (compact() captured the completed status while
     draining its own prompt) must also grace-drain for the metadata."""
-    from kiro_crew.acp.types import AcpPromptStats, JsonRpcMessage
+    from aj_crew.acp.types import AcpPromptStats, JsonRpcMessage
 
     rt, _reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -607,7 +607,7 @@ async def test_wait_for_compaction_timeout_restores_a_concurrent_frame():
     this race -- only that the reader does not drop a concurrent frame on the
     timeout path.)
     """
-    from kiro_crew.acp.types import AcpPromptStats, JsonRpcMessage
+    from aj_crew.acp.types import AcpPromptStats, JsonRpcMessage
 
     rt, _reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -639,8 +639,8 @@ async def test_a_late_idle_compaction_status_is_dropped_by_the_next_turn():
     """A shared-runtime turn drops the late status of an abandoned idle
     ``/compact``: a ``failed`` there would arm the budget that ends the turn
     with the compaction stop reason. The next terminal status is its own."""
-    from kiro_crew.acp.stale_compaction import discard_stale_compaction_status
-    from kiro_crew.acp.types import EVENT_COMPACTION_STATUS, METHOD_COMPACTION_STATUS
+    from aj_crew.acp.stale_compaction import discard_stale_compaction_status
+    from aj_crew.acp.types import EVENT_COMPACTION_STATUS, METHOD_COMPACTION_STATUS
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")

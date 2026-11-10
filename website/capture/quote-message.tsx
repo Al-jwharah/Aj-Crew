@@ -50,9 +50,9 @@ const crewmateHost = params.get('host') === 'crewmate'
 // `fork=window`: a loaded window, where ChatPage keeps Fork as a row button
 // (a fork index, no server message id).
 const forkWindow = params.get('fork') === 'window'
-const CREWMATE = { name: 'kirocrew-worker', label: 'Worker' }
+const CREWMATE = { name: 'ajcrew-worker', label: 'Worker' }
 localStorage.setItem('mc-theme', theme)
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 document.documentElement.setAttribute('data-mode', theme)
 
 const realFetch = globalThis.fetch.bind(globalThis)

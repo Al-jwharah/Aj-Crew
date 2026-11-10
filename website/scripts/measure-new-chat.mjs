@@ -15,7 +15,7 @@
 //
 // Usage:
 //   npm run build
-//   SESSIONS=163 ITER=20 OUT_DIR="$KIROCREW_SCRATCH/new-chat-perf" \
+//   SESSIONS=163 ITER=20 OUT_DIR="$AJCREW_SCRATCH/new-chat-perf" \
 //     node scripts/measure-new-chat.mjs
 //
 // The stub answers POST /api/chat/slots with a fresh slot and appends it to
@@ -40,7 +40,7 @@ const mkSlots = (n) => Array.from({ length: n }, (_, i) => ({
   title: `Session ${i} — demo work item`,
   running: i % 17 === 0,
   messages: 3 + (i % 9),
-  agent: i % 3 === 0 ? 'kirocrew' : 'kirocrew-lite',
+  agent: i % 3 === 0 ? 'ajcrew' : 'ajcrew-lite',
   last_ts: new Date(Date.now() - (i + 1) * 3600_000).toISOString(),
 }))
 
@@ -72,7 +72,7 @@ await stubDashboardApi(page, {
     if (path === '/api/chat/slots' && route.request().method() === 'POST') {
       const slot = {
         key: `chat-9-${String(created++).padStart(3, '0')}`,
-        title: 'New chat', running: false, messages: 0, agent: 'kirocrew',
+        title: 'New chat', running: false, messages: 0, agent: 'ajcrew',
         last_ts: new Date().toISOString(),
       }
       slots.unshift(slot)

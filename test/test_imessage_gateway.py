@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.imessage.gateway (the guarded boot entry point).
+"""Tests for aj_crew.imessage.gateway (the guarded boot entry point).
 
 The module is all branch, no algorithm: two deliberate refusals, a fail-closed
 warning, a readiness verdict that drives the status badge, and a catch-all that
@@ -12,8 +12,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.imessage import gateway as gw
-from kiro_crew.messaging.driver import APPROVAL_AUTO, APPROVAL_INTERACTIVE
+from aj_crew.imessage import gateway as gw
+from aj_crew.messaging.driver import APPROVAL_AUTO, APPROVAL_INTERACTIVE
 
 
 class _State:

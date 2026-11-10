@@ -17,9 +17,9 @@ from monitor_controller_helpers import (
     _result,
 )
 
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.monitoring.github_pull_request import GitHubPullRequestProbeResult
-from kiro_crew.monitoring.models import (
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.monitoring.github_pull_request import GitHubPullRequestProbeResult
+from aj_crew.monitoring.models import (
     DEFAULT_MONITOR_CADENCE_SECS,
     DEFAULT_MONITOR_REALERT_SECS,
     DEFAULT_MONITOR_STALL_TICKS,

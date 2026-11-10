@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew.vector_memory import VectorMemoryStore
 
 _STAMP = "2026-01-01T00:00:00+00:00"
 # Shuffled: neither this order nor its reverse is sorted.

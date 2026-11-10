@@ -16,10 +16,10 @@ import pytest
 from app_manager_helpers import app_home_fixture  # noqa: F401 - fixture
 from app_manager_helpers import _make_app_source
 
-from kiro_crew import agent
-from kiro_crew.apps import manager as manager_mod
-from kiro_crew.apps import session_consent
-from kiro_crew.apps.manager import (
+from aj_crew import agent
+from aj_crew.apps import manager as manager_mod
+from aj_crew.apps import session_consent
+from aj_crew.apps.manager import (
     INSTALLED_META_FILENAME,
     app_dir,
     enable_app,
@@ -27,9 +27,9 @@ from kiro_crew.apps.manager import (
     install_app,
     mark_session_approval_consent_pending,
 )
-from kiro_crew.apps.permissions import app_can_manage_session_approvals
-from kiro_crew.apps.teardown import TeardownResult
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.apps.permissions import app_can_manage_session_approvals
+from aj_crew.apps.teardown import TeardownResult
+from aj_crew.testing.wait import async_wait_until, await_until
 
 _KEY = "sessionApprovalConsentPending"
 
@@ -61,7 +61,7 @@ def teardowns_fixture(monkeypatch):
         calls.append((name, _raw_record(name)["enabled"]))
         return TeardownResult(warnings=[], failures=[])
 
-    monkeypatch.setattr("kiro_crew.apps.teardown.teardown_app_runtime", _fake)
+    monkeypatch.setattr("aj_crew.apps.teardown.teardown_app_runtime", _fake)
     monkeypatch.setattr(agent, "rebuild_agent_config", lambda **_kw: None)
     return calls
 
@@ -75,11 +75,11 @@ def _first_run_setup(monkeypatch, tmp_path) -> None:
     """Run the pre-readiness first-run step with the unrelated steps stubbed out."""
     marker = tmp_path / "stale-mcp-marker"
     marker.write_text("done\n", encoding="utf-8")
-    monkeypatch.setattr(agent, "ensure_kirocrew_on_path", lambda: None)
+    monkeypatch.setattr(agent, "ensure_ajcrew_on_path", lambda: None)
     monkeypatch.setattr(agent, "_stale_mcp_purge_marker", lambda: marker)
-    monkeypatch.setattr("kiro_crew.platform.admission.seed_default_policy", lambda: False)
+    monkeypatch.setattr("aj_crew.platform.admission.seed_default_policy", lambda: False)
     monkeypatch.setattr(manager_mod, "backfill_default_on_builtins", lambda: [])
-    monkeypatch.setattr("kiro_crew.skills.remove_retired_conductor_skill", lambda: False)
+    monkeypatch.setattr("aj_crew.skills.remove_retired_conductor_skill", lambda: False)
     agent.run_first_run_setup()
 
 
@@ -98,7 +98,7 @@ class TestPreFeatureSessionApproval:
         reads = iter([real, None, real, real])
         monkeypatch.setattr(manager_mod, "get_app_manifest", lambda _name: next(reads))
         monkeypatch.setattr(
-            "kiro_crew.apps.permissions.get_app_manifest", manager_mod.get_app_manifest
+            "aj_crew.apps.permissions.get_app_manifest", manager_mod.get_app_manifest
         )
 
         assert app_can_manage_session_approvals("test-app") is False
@@ -250,7 +250,7 @@ class TestPreFeatureSessionApproval:
             return False
 
         monkeypatch.setattr(
-            "kiro_crew.apps.hooks_integration.stop_retained_startup_hooks", _still_running
+            "aj_crew.apps.hooks_integration.stop_retained_startup_hooks", _still_running
         )
         _install(tmp_path, sessionApproval=True)
         _write_pre_feature_record("test-app", enabled=True)
@@ -396,7 +396,7 @@ class TestPreFeatureSessionApproval:
     def test_a_manifest_returning_during_a_save_records_no_consent(
         self, tmp_path, app_home, monkeypatch
     ):
-        from kiro_crew.apps import manager_records
+        from aj_crew.apps import manager_records
 
         _install(tmp_path, sessionApproval=True)
         _write_pre_feature_record("test-app", enabled=True)
@@ -465,10 +465,10 @@ class TestPreFeatureSessionApproval:
 def test_gateway_schedules_the_reconcile_after_readiness():
     import inspect
 
-    from kiro_crew.slack.gateway_runtime import service_boot
+    from aj_crew.slack.gateway_runtime import service_boot
 
     source = inspect.getsource(service_boot.run)
-    ready = source.index('print(f"KIROCREW_READY:')
+    ready = source.index('print(f"AJCREW_READY:')
     scheduled = source.index("asyncio.create_task(reconcile_after_ready())")
     assert ready < scheduled
     assert "reconcile_after_ready" not in inspect.getsource(service_boot._init_services)

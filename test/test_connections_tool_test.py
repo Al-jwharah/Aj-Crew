@@ -16,10 +16,10 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.agent_sdk.drivers import acp as acp_driver
-from kiro_crew.connections import get_provider, tool_test
-from kiro_crew.dashboard.handlers import connections
-from kiro_crew.testing.wait import await_until
+from aj_crew.agent_sdk.drivers import acp as acp_driver
+from aj_crew.connections import get_provider, tool_test
+from aj_crew.dashboard.handlers import connections
+from aj_crew.testing.wait import await_until
 
 
 def _provider() -> dict[str, Any]:
@@ -87,7 +87,7 @@ def fake_client(monkeypatch: pytest.MonkeyPatch, tmp_path):
             self.shutdown_called = True
 
     monkeypatch.setattr(acp_driver, "_native_command_client_factory", lambda: FakeClient)
-    monkeypatch.setattr("kiro_crew.sandbox.configured_sandbox_mode", lambda: "strict")
+    monkeypatch.setattr("aj_crew.sandbox.configured_sandbox_mode", lambda: "strict")
     monkeypatch.setattr(tool_test, "data_home", lambda: tmp_path)
     return FakeClient
 
@@ -108,7 +108,7 @@ async def test_usable_requires_running_server_and_agent_exposed_tools(fake_clien
     client = fake_client.instances[-1]
     assert client.commands == ["/mcp", "/tools"]
     assert client.shutdown_called is True
-    assert client.kwargs["agent"] == "kirocrew"
+    assert client.kwargs["agent"] == "ajcrew"
     assert client.kwargs["sandbox_mode"] == "strict"
 
 

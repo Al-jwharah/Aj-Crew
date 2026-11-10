@@ -9,14 +9,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import session_environment as se
-from kiro_crew.coder import retention, session_browse, session_launch
-from kiro_crew.coder.client import CoderClientError, CoderWorkspace
-from kiro_crew.coder.registry import DELETING
-from kiro_crew.config import live, paths
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.sections_session import SessionEnvironmentsConfig
-from kiro_crew.config.session_environments import (
+from aj_crew import session_environment as se
+from aj_crew.coder import retention, session_browse, session_launch
+from aj_crew.coder.client import CoderClientError, CoderWorkspace
+from aj_crew.coder.registry import DELETING
+from aj_crew.config import live, paths
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.sections_session import SessionEnvironmentsConfig
+from aj_crew.config.session_environments import (
     ARCHIVED_RETENTION_DAYS,
     SessionEnvironmentsError,
     load_session_environments,
@@ -25,15 +25,15 @@ from kiro_crew.config.session_environments import (
     validate_session_environments,
     validate_stop_on_shutdown,
 )
-from kiro_crew.session_environment import SessionEnvironmentUnavailable
-from kiro_crew.slack import gateway
-from kiro_crew.testing.wait import await_until
+from aj_crew.session_environment import SessionEnvironmentUnavailable
+from aj_crew.slack import gateway
+from aj_crew.testing.wait import await_until
 
 
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments are reachable only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 URL = "https://coder.example.test"
@@ -248,14 +248,14 @@ async def test_archive_runs_no_coder_command_with_the_developer_flag_off(
 ):
     # A binding left from a dev-flag run is not stopped or scheduled for deletion
     # once the gateway restarts with the flag off.
-    from kiro_crew.coder import session_launch
+    from aj_crew.coder import session_launch
 
     fake, envs, _ = await _started(tmp_path)
     # The real lookup, so the flag check itself is under test.
     monkeypatch.setattr(live, "snapshot", lambda: SimpleNamespace(session_environments=_config()))
     monkeypatch.setattr(paths, "data_home", lambda: tmp_path)
     monkeypatch.setattr(session_launch, "CoderSessionEnvironments", lambda *_: envs)
-    _floor_monkeypatch.delenv("KIROCREW_DEV_MODE")
+    _floor_monkeypatch.delenv("AJCREW_DEV_MODE")
     monkeypatch.setattr(retention, "_TASKS", set())
     fake.calls.clear()
     retention.schedule_archived([KEY])
@@ -289,7 +289,7 @@ async def test_the_environments_follow_the_saved_coder_url(tmp_path, monkeypatch
         return SimpleNamespace(session_environments=next(saved))
 
     monkeypatch.setattr(live, "snapshot", read if live_config else lambda: None)
-    monkeypatch.setattr(KiroCrewConfig, "load", read)
+    monkeypatch.setattr(AjCrewConfig, "load", read)
     monkeypatch.setattr(paths, "data_home", lambda: tmp_path)
     envs = await retention._environments()
     assert envs.url == URL and envs.data_home == tmp_path

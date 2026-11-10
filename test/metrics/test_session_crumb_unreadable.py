@@ -18,7 +18,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.metrics import sessions as sess
+from aj_crew.metrics import sessions as sess
 
 
 @pytest.fixture(autouse=True)
@@ -32,7 +32,7 @@ def clean_live_registry() -> Iterator[None]:
 
 @pytest.fixture
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    monkeypatch.setattr("kiro_crew.config.paths.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.paths.config_dir", lambda: tmp_path)
     return tmp_path
 
 
@@ -82,7 +82,7 @@ def test_an_unreadable_live_crumb_is_kept(home: Path, caplog: pytest.LogCaptureF
     crumb = _live_sibling_crumb(home)
     with (
         _unreadable(crumb),
-        caplog.at_level(logging.DEBUG, logger="kiro_crew.metrics.sessions"),
+        caplog.at_level(logging.DEBUG, logger="aj_crew.metrics.sessions"),
     ):
         assert sess.backfill_crashed_sessions() == 0
     assert crumb.exists(), "an owner nobody can judge counts as running"

@@ -1,4 +1,4 @@
-"""Tests for the per-crew avatar override on KiroCrewAgentConfig.
+"""Tests for the per-crew avatar override on AjCrewAgentConfig.
 
 Covers:
 - _safe_avatar validation (shape guards, trait coercion, tile hex pinning)
@@ -17,12 +17,12 @@ from pathlib import Path
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.appearance_packs import MAX_PACK_ID_LEN, safe_pack_id
-from kiro_crew.config.loader import (
-    KiroCrewAgentConfig,
-    KiroCrewConfig,
+from aj_crew.appearance_packs import MAX_PACK_ID_LEN, safe_pack_id
+from aj_crew.config.loader import (
+    AjCrewAgentConfig,
+    AjCrewConfig,
 )
-from kiro_crew.config.sections import (
+from aj_crew.config.sections import (
     _AVATAR_MOTIONS,
     _AVATAR_SOUNDS,
     _AVATAR_TRAIT_MAX_LEN,
@@ -30,17 +30,17 @@ from kiro_crew.config.sections import (
 )
 
 
-def _load_from_dict(data: dict) -> KiroCrewConfig:
-    """Write *data* to a temp config file and load via KiroCrewConfig.load()."""
+def _load_from_dict(data: dict) -> AjCrewConfig:
+    """Write *data* to a temp config file and load via AjCrewConfig.load()."""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(data, f)
         tmp = Path(f.name)
     try:
         with unittest.mock.patch(
-            "kiro_crew.config.loader.config_path",
+            "aj_crew.config.loader.config_path",
             return_value=tmp,
         ):
-            return KiroCrewConfig.load()
+            return AjCrewConfig.load()
     finally:
         tmp.unlink(missing_ok=True)
 
@@ -212,23 +212,23 @@ class TestSafeAvatarIconKind:
         assert out == {"kind": "icon", "pose": "pose-2"}
 
 
-class TestKiroCrewAgentConfigAvatar:
-    """avatar field on KiroCrewAgentConfig."""
+class TestAjCrewAgentConfigAvatar:
+    """avatar field on AjCrewAgentConfig."""
 
     def test_default_empty(self):
-        assert KiroCrewAgentConfig().avatar == {}
+        assert AjCrewAgentConfig().avatar == {}
 
     def test_default_is_not_shared_between_instances(self):
-        a, b = KiroCrewAgentConfig(), KiroCrewAgentConfig()
+        a, b = AjCrewAgentConfig(), AjCrewAgentConfig()
         a.avatar["kind"] = "ghost"
         assert b.avatar == {}
 
     def test_serializes_in_asdict(self):
-        d = dataclasses.asdict(KiroCrewAgentConfig(avatar=_GHOST))
+        d = dataclasses.asdict(AjCrewAgentConfig(avatar=_GHOST))
         assert d["avatar"] == _GHOST
 
     def test_empty_serializes(self):
-        d = dataclasses.asdict(KiroCrewAgentConfig())
+        d = dataclasses.asdict(AjCrewAgentConfig())
         assert d["avatar"] == {}
 
 
@@ -236,16 +236,16 @@ class TestAvatarLoadRoundTrip:
     """The agents-section parse keeps a stored avatar and drops junk."""
 
     def test_round_trips_through_to_dict(self):
-        cfg = KiroCrewConfig()
-        cfg.agents["radar"] = KiroCrewAgentConfig(avatar=_GHOST)
+        cfg = AjCrewConfig()
+        cfg.agents["radar"] = AjCrewAgentConfig(avatar=_GHOST)
         assert cfg.to_dict()["agents"]["radar"]["avatar"] == _GHOST
 
     def test_loads_from_agents_section(self):
-        cfg = _load_from_dict({"agents": {"radar": {"kiro_agent": "kirocrew", "avatar": _GHOST}}})
+        cfg = _load_from_dict({"agents": {"radar": {"kiro_agent": "ajcrew", "avatar": _GHOST}}})
         assert cfg.agents["radar"].avatar == _GHOST
 
     def test_junk_avatar_collapses_on_load(self):
-        cfg = _load_from_dict({"agents": {"radar": {"kiro_agent": "kirocrew", "avatar": "ghost"}}})
+        cfg = _load_from_dict({"agents": {"radar": {"kiro_agent": "ajcrew", "avatar": "ghost"}}})
         assert cfg.agents["radar"].avatar == {}
 
 
@@ -256,28 +256,28 @@ class TestAvatarEndpoints:
     def _app():
         from aiohttp import web
 
-        from kiro_crew.dashboard.handlers import (
-            api_kirocrew_agent_update,
-            api_kirocrew_agents_create,
+        from aj_crew.dashboard.handlers import (
+            api_ajcrew_agent_update,
+            api_ajcrew_agents_create,
         )
 
         app = web.Application()
-        app.router.add_post("/api/agents", api_kirocrew_agents_create)
-        app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+        app.router.add_post("/api/agents", api_ajcrew_agents_create)
+        app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
         return app
 
     @pytest.fixture(autouse=True)
     def _owner_caller(self, monkeypatch):
         pass  # Member routing does not depend on OS isolation.
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             lambda request: True,
         )
 
     @pytest.fixture()
     def seeded_agent(self):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["existing"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg = AjCrewConfig.load()
+        cfg.agents["existing"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         cfg.save()
         return "existing"
 
@@ -288,7 +288,7 @@ class TestAvatarEndpoints:
         async with TestClient(TestServer(self._app())) as client:
             resp = await client.put(f"/api/agents/{seeded_agent}", json={"avatar": _GHOST})
             assert resp.status == 200
-        assert KiroCrewConfig.load().agents[seeded_agent].avatar == _GHOST
+        assert AjCrewConfig.load().agents[seeded_agent].avatar == _GHOST
 
     @pytest.mark.asyncio
     async def test_update_refuses_junk_with_a_code(self, seeded_agent):
@@ -298,19 +298,19 @@ class TestAvatarEndpoints:
             resp = await client.put(f"/api/agents/{seeded_agent}", json={"avatar": "ghost"})
             assert resp.status == 400
             assert (await resp.json())["code"] == "invalid_avatar"
-        assert KiroCrewConfig.load().agents[seeded_agent].avatar == {}
+        assert AjCrewConfig.load().agents[seeded_agent].avatar == {}
 
     @pytest.mark.asyncio
     async def test_update_empty_resets(self, seeded_agent):
         from aiohttp.test_utils import TestClient, TestServer
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents[seeded_agent].avatar = dict(_GHOST)
         cfg.save()
         async with TestClient(TestServer(self._app())) as client:
             resp = await client.put(f"/api/agents/{seeded_agent}", json={"avatar": {}})
             assert resp.status == 200
-        assert KiroCrewConfig.load().agents[seeded_agent].avatar == {}
+        assert AjCrewConfig.load().agents[seeded_agent].avatar == {}
 
     @pytest.mark.asyncio
     async def test_create_accepts_an_override(self):
@@ -319,10 +319,10 @@ class TestAvatarEndpoints:
         async with TestClient(TestServer(self._app())) as client:
             resp = await client.post(
                 "/api/agents",
-                json={"name": "radar2", "kiro_agent": "kirocrew", "avatar": _GHOST},
+                json={"name": "radar2", "kiro_agent": "ajcrew", "avatar": _GHOST},
             )
             assert resp.status == 200
-        assert KiroCrewConfig.load().agents["radar2"].avatar == _GHOST
+        assert AjCrewConfig.load().agents["radar2"].avatar == _GHOST
 
     @pytest.mark.asyncio
     async def test_create_refuses_junk_with_a_code(self):
@@ -331,11 +331,11 @@ class TestAvatarEndpoints:
         async with TestClient(TestServer(self._app())) as client:
             resp = await client.post(
                 "/api/agents",
-                json={"name": "radar3", "kiro_agent": "kirocrew", "avatar": ["x"]},
+                json={"name": "radar3", "kiro_agent": "ajcrew", "avatar": ["x"]},
             )
             assert resp.status == 400
             assert (await resp.json())["code"] == "invalid_avatar"
-        assert "radar3" not in KiroCrewConfig.load().agents
+        assert "radar3" not in AjCrewConfig.load().agents
 
 
 # Minimal structurally complete images. The endpoint sniffs the magic bytes and
@@ -353,7 +353,7 @@ class TestImageBodyComplete:
     """Structural completeness catches what magic-byte sniffing cannot."""
 
     def test_complete_fixtures_pass(self):
-        from kiro_crew.dashboard.handlers.agents import _image_body_complete
+        from aj_crew.dashboard.handlers.agents import _image_body_complete
 
         assert _image_body_complete("png", _PNG)
         assert _image_body_complete("jpg", _JPG)
@@ -372,19 +372,19 @@ class TestImageBodyComplete:
         ],
     )
     def test_truncated_bodies_fail(self, ext, body):
-        from kiro_crew.dashboard.handlers.agents import _image_body_complete
+        from aj_crew.dashboard.handlers.agents import _image_body_complete
 
         assert not _image_body_complete(ext, body)
 
     def test_webp_odd_payload_pad_byte_is_legal(self):
-        from kiro_crew.dashboard.handlers.agents import _image_body_complete
+        from aj_crew.dashboard.handlers.agents import _image_body_complete
 
         payload = b"WEBP" + b"\x00" * 63  # odd length -> one RIFF pad byte
         body = b"RIFF" + len(payload).to_bytes(4, "little") + payload + b"\x00"
         assert _image_body_complete("webp", body)
 
     def test_unknown_ext_fails(self):
-        from kiro_crew.dashboard.handlers.agents import _image_body_complete
+        from aj_crew.dashboard.handlers.agents import _image_body_complete
 
         assert not _image_body_complete("gif", b"GIF89a")
 
@@ -411,7 +411,7 @@ class TestUploadedAvatarEndpoints:
             assert resp.status == 400
             assert (await resp.json())["code"] == "avatar_bad_format"
         assert self._stored(seeded_agent) is None
-        from kiro_crew.dashboard.handlers.agents import _pending_avatar_path
+        from aj_crew.dashboard.handlers.agents import _pending_avatar_path
 
         assert _pending_avatar_path(seeded_agent) is None
 
@@ -419,33 +419,33 @@ class TestUploadedAvatarEndpoints:
     def _app():
         from aiohttp import web
 
-        from kiro_crew.dashboard.handlers import (
-            api_kirocrew_agent_avatar_get,
-            api_kirocrew_agent_avatar_upload,
-            api_kirocrew_agent_delete,
-            api_kirocrew_agent_update,
+        from aj_crew.dashboard.handlers import (
+            api_ajcrew_agent_avatar_get,
+            api_ajcrew_agent_avatar_upload,
+            api_ajcrew_agent_delete,
+            api_ajcrew_agent_update,
         )
 
         app = web.Application()
-        app.router.add_get("/api/agents/{name}/avatar", api_kirocrew_agent_avatar_get)
-        app.router.add_post("/api/agents/{name}/avatar", api_kirocrew_agent_avatar_upload)
-        app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
-        app.router.add_delete("/api/agents/{name}", api_kirocrew_agent_delete)
+        app.router.add_get("/api/agents/{name}/avatar", api_ajcrew_agent_avatar_get)
+        app.router.add_post("/api/agents/{name}/avatar", api_ajcrew_agent_avatar_upload)
+        app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
+        app.router.add_delete("/api/agents/{name}", api_ajcrew_agent_delete)
         return app
 
     @pytest.fixture(autouse=True)
     def _owner_caller(self, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             lambda request: True,
         )
 
     @pytest.fixture()
     def seeded_agent(self):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["existing"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg = AjCrewConfig.load()
+        cfg.agents["existing"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         # A second agent so crew-delete has a surviving default.
-        cfg.agents["other"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg.agents["other"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         cfg.default_agent = "other"
         cfg.save()
         return "existing"
@@ -466,7 +466,7 @@ class TestUploadedAvatarEndpoints:
         the record's ``file`` pin (:func:`_live_avatar_file`); this helper is
         how a test asserts what physically exists regardless of the pin.
         """
-        from kiro_crew.dashboard.handlers.agents import _avatar_variant_paths
+        from aj_crew.dashboard.handlers.agents import _avatar_variant_paths
 
         variants = _avatar_variant_paths(name)
         return variants[0] if variants else None
@@ -498,7 +498,7 @@ class TestUploadedAvatarEndpoints:
                 json={"avatar": {"kind": "image", "promote": True, "token": body["token"]}},
             )
             assert put.status == 200
-            stored = KiroCrewConfig.load().agents[seeded_agent].avatar
+            stored = AjCrewConfig.load().agents[seeded_agent].avatar
             assert stored["kind"] == "image" and isinstance(stored["v"], int)
             got = await client.get(f"/api/agents/{seeded_agent}/avatar")
             assert got.status == 200
@@ -533,7 +533,7 @@ class TestUploadedAvatarEndpoints:
             )
             assert resp.status == 400
             assert (await resp.json())["code"] == "avatar_file_missing"
-        assert KiroCrewConfig.load().agents[seeded_agent].avatar == {}
+        assert AjCrewConfig.load().agents[seeded_agent].avatar == {}
 
     @pytest.mark.asyncio
     async def test_leaving_image_kind_removes_the_file(self, seeded_agent):
@@ -565,7 +565,7 @@ class TestUploadedAvatarEndpoints:
     async def test_upload_caps_size(self, seeded_agent, monkeypatch):
         from aiohttp.test_utils import TestClient, TestServer
 
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.agents._AVATAR_MAX_BYTES", 128)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.agents._AVATAR_MAX_BYTES", 128)
         async with TestClient(TestServer(self._app())) as client:
             resp = await client.post(
                 f"/api/agents/{seeded_agent}/avatar",
@@ -631,7 +631,7 @@ class TestUploadedAvatarEndpoints:
     async def test_crew_delete_removes_avatar_files(self, seeded_agent):
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew.dashboard.handlers.agents import _pending_avatar_path
+        from aj_crew.dashboard.handlers.agents import _pending_avatar_path
 
         async with TestClient(TestServer(self._app())) as client:
             await self._commit(client, seeded_agent, _PNG)
@@ -647,7 +647,7 @@ class TestUploadedAvatarEndpoints:
         """A leftover file with a non-image field must not stay retrievable."""
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew.dashboard.handlers.agents import _avatar_stem, _avatars_dir
+        from aj_crew.dashboard.handlers.agents import _avatar_stem, _avatars_dir
 
         d = _avatars_dir()
         d.mkdir(parents=True, exist_ok=True)
@@ -665,13 +665,13 @@ class TestUploadedAvatarEndpoints:
         """
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew.dashboard.handlers.agents import _avatar_stem, _avatars_dir
+        from aj_crew.dashboard.handlers.agents import _avatar_stem, _avatars_dir
 
         d = _avatars_dir()
         d.mkdir(parents=True, exist_ok=True)
         orphan = d / f"{_avatar_stem(seeded_agent)}.{'a' * 16}.png"
         orphan.write_bytes(_PNG)
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents[seeded_agent].avatar = {"kind": "image", "v": 7}
         cfg.save()
         async with TestClient(TestServer(self._app())) as client:
@@ -690,7 +690,7 @@ class TestUploadedAvatarEndpoints:
         """The validator's all-empty→reset collapse is not caller junk."""
         from aiohttp.test_utils import TestClient, TestServer
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents[seeded_agent].avatar = dict(_GHOST)
         cfg.save()
         async with TestClient(TestServer(self._app())) as client:
@@ -699,7 +699,7 @@ class TestUploadedAvatarEndpoints:
                 json={"avatar": {"kind": "ghost", "traits": {}}},
             )
             assert resp.status == 200
-        assert KiroCrewConfig.load().agents[seeded_agent].avatar == {}
+        assert AjCrewConfig.load().agents[seeded_agent].avatar == {}
 
     @pytest.mark.asyncio
     async def test_mistyped_ghost_traits_never_delete_the_saved_picture(self, seeded_agent):
@@ -723,7 +723,7 @@ class TestUploadedAvatarEndpoints:
             got = await client.get(f"/api/agents/{seeded_agent}/avatar")
             assert got.status == 200
             assert await got.read() == _PNG
-        assert KiroCrewConfig.load().agents[seeded_agent].avatar.get("kind") == "image"
+        assert AjCrewConfig.load().agents[seeded_agent].avatar.get("kind") == "image"
 
     @pytest.mark.asyncio
     async def test_unknown_trait_keys_and_junk_tile_never_reset_the_picture(self, seeded_agent):
@@ -782,7 +782,7 @@ class TestUploadedAvatarEndpoints:
         """
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew.dashboard.handlers.agents import _pending_avatar_path
+        from aj_crew.dashboard.handlers.agents import _pending_avatar_path
 
         async with TestClient(TestServer(self._app())) as client:
             await self._commit(client, seeded_agent, _PNG)
@@ -857,7 +857,7 @@ class TestUploadedAvatarEndpoints:
         """
         from aiohttp.test_utils import TestClient, TestServer
 
-        import kiro_crew.dashboard.handlers.agents as handlers_agents
+        import aj_crew.dashboard.handlers.agents as handlers_agents
 
         async with TestClient(TestServer(self._app())) as client:
             await self._commit(client, seeded_agent, _PNG)
@@ -894,7 +894,7 @@ class TestUploadedAvatarEndpoints:
         """
         from aiohttp.test_utils import TestClient, TestServer
 
-        import kiro_crew.dashboard.handlers.agents as handlers_agents
+        import aj_crew.dashboard.handlers.agents as handlers_agents
 
         def _boom(src, dst):
             raise OSError("disk full")
@@ -912,7 +912,7 @@ class TestUploadedAvatarEndpoints:
             got = await client.get(f"/api/agents/{seeded_agent}/avatar")
             assert got.status == 200
             assert await got.read() == _PNG
-        assert KiroCrewConfig.load().agents[seeded_agent].avatar.get("kind") == "image"
+        assert AjCrewConfig.load().agents[seeded_agent].avatar.get("kind") == "image"
 
     @pytest.mark.asyncio
     async def test_get_serves_only_the_committed_file(self, seeded_agent):
@@ -924,7 +924,7 @@ class TestUploadedAvatarEndpoints:
         """
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew.dashboard.handlers.agents import _avatar_stem, _avatars_dir
+        from aj_crew.dashboard.handlers.agents import _avatar_stem, _avatars_dir
 
         async with TestClient(TestServer(self._app())) as client:
             await self._commit(client, seeded_agent, _WEBP)
@@ -954,7 +954,7 @@ class TestUploadedAvatarEndpoints:
             await self._commit(client, seeded_agent, _PNG)
             committed = self._stored(seeded_agent)
             assert committed is not None
-            monkeypatch.setattr("kiro_crew.dashboard.handlers.agents._AVATAR_MAX_BYTES", 128)
+            monkeypatch.setattr("aj_crew.dashboard.handlers.agents._AVATAR_MAX_BYTES", 128)
             committed.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 256)
             got = await client.get(f"/api/agents/{seeded_agent}/avatar")
             assert got.status == 404
@@ -978,7 +978,7 @@ class TestUploadedAvatarEndpoints:
         """
         from aiohttp.test_utils import TestClient, TestServer
 
-        import kiro_crew.dashboard.handlers.agents as handlers_agents
+        import aj_crew.dashboard.handlers.agents as handlers_agents
 
         other_png = b"\x89PNG\r\n\x1a\n" + b"\x01" * 64 + _PNG_IEND
 
@@ -1023,7 +1023,7 @@ class TestUploadedAvatarEndpoints:
 
         async with TestClient(TestServer(self._app())) as client:
             await self._commit(client, seeded_agent, _PNG)
-        stored = KiroCrewConfig.load().agents[seeded_agent].avatar
+        stored = AjCrewConfig.load().agents[seeded_agent].avatar
         assert "promote" not in stored and "token" not in stored
         assert stored["kind"] == "image"
 
@@ -1177,7 +1177,7 @@ class TestSafeAvatarGhostReactions:
 
     def test_stored_reactions_survive_a_config_load(self):
         avatar = {**_GHOST, "motions": _MOTIONS, "sounds": _SOUNDS}
-        cfg = _load_from_dict({"agents": {"radar": {"kiro_agent": "kirocrew", "avatar": avatar}}})
+        cfg = _load_from_dict({"agents": {"radar": {"kiro_agent": "ajcrew", "avatar": avatar}}})
         assert cfg.agents["radar"].avatar == avatar
 
 
@@ -1211,7 +1211,7 @@ class TestReactionsBelongToTheirOwnTier:
             {**self._IMAGE, "sounds": _SOUNDS},
             {"kind": "pack", "id": "aurora", "sounds": _SOUNDS},
         ):
-            cfg = _load_from_dict({"agents": {"c": {"kiro_agent": "kirocrew", "avatar": avatar}}})
+            cfg = _load_from_dict({"agents": {"c": {"kiro_agent": "ajcrew", "avatar": avatar}}})
             assert cfg.agents["c"].avatar["sounds"] == _SOUNDS
 
     def test_a_ghost_keeps_its_expressions_while_the_renderer_draws_them(self):
@@ -1251,7 +1251,7 @@ class TestReactionsBelongToTheirOwnTier:
 
     def test_a_stripped_reaction_still_leaves_a_loadable_record(self):
         avatar = {"kind": "pack", "id": "aurora", "sounds": _SOUNDS, "expressions": {"done": {}}}
-        cfg = _load_from_dict({"agents": {"nova": {"kiro_agent": "kirocrew", "avatar": avatar}}})
+        cfg = _load_from_dict({"agents": {"nova": {"kiro_agent": "ajcrew", "avatar": avatar}}})
         assert cfg.agents["nova"].avatar == {
             "kind": "pack",
             "id": "aurora",
@@ -1271,14 +1271,14 @@ class TestGhostReactionsRoundTripThroughTheEndpoints:
     @pytest.fixture(autouse=True)
     def _owner_caller(self, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             lambda request: True,
         )
 
     @pytest.fixture()
     def seeded_agent(self):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["existing"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg = AjCrewConfig.load()
+        cfg.agents["existing"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         cfg.save()
         return "existing"
 
@@ -1319,18 +1319,18 @@ class TestGhostReactionsRoundTripThroughTheEndpoints:
 
     @classmethod
     async def _put_avatar(cls, name: str, avatar):
-        from kiro_crew.dashboard.handlers import api_kirocrew_agent_update
+        from aj_crew.dashboard.handlers import api_ajcrew_agent_update
 
         request = cls._request(
             "PUT", f"/api/agents/{name}", match_info={"name": name}, body={"avatar": avatar}
         )
-        return await api_kirocrew_agent_update(request)
+        return await api_ajcrew_agent_update(request)
 
     @classmethod
     async def _roster_avatar_of(cls, name: str):
-        from kiro_crew.dashboard.handlers import api_kirocrew_agents
+        from aj_crew.dashboard.handlers import api_ajcrew_agents
 
-        resp = await api_kirocrew_agents(cls._request("GET", "/api/agents"))
+        resp = await api_ajcrew_agents(cls._request("GET", "/api/agents"))
         assert resp.status == 200
         rows = json.loads(resp.body)["agents"]
         return next(r["avatar"] for r in rows if r["name"] == name)
@@ -1342,14 +1342,14 @@ class TestGhostReactionsRoundTripThroughTheEndpoints:
         got = await self._roster_avatar_of(seeded_agent)
         assert got["motions"] == _MOTIONS
         assert got["sounds"] == _SOUNDS
-        assert KiroCrewConfig.load().agents[seeded_agent].avatar == avatar
+        assert AjCrewConfig.load().agents[seeded_agent].avatar == avatar
 
     @pytest.mark.asyncio
     async def test_ghost_crew_without_traits_round_trip(self, seeded_agent):
         avatar = {"kind": "ghost", "motions": _MOTIONS, "sounds": _SOUNDS}
         assert (await self._put_avatar(seeded_agent, avatar)).status == 200
         assert await self._roster_avatar_of(seeded_agent) == avatar
-        assert KiroCrewConfig.load().agents[seeded_agent].avatar == avatar
+        assert AjCrewConfig.load().agents[seeded_agent].avatar == avatar
 
     @pytest.mark.asyncio
     async def test_a_ghost_carrying_only_junk_is_still_refused(self, seeded_agent):
@@ -1360,7 +1360,7 @@ class TestGhostReactionsRoundTripThroughTheEndpoints:
         payload, not an intentional reset, and refusing it is what keeps it from
         silently deleting a crew's committed picture.
         """
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents[seeded_agent].avatar = {"kind": "ghost", "sounds": {"done": "ding"}}
         cfg.save()
         resp = await self._put_avatar(
@@ -1368,7 +1368,7 @@ class TestGhostReactionsRoundTripThroughTheEndpoints:
         )
         assert resp.status == 400
         assert json.loads(resp.body)["code"] == "invalid_avatar"
-        assert KiroCrewConfig.load().agents[seeded_agent].avatar == {
+        assert AjCrewConfig.load().agents[seeded_agent].avatar == {
             "kind": "ghost",
             "sounds": {"done": "ding"},
         }
@@ -1378,7 +1378,7 @@ class TestGhostReactionsRoundTripThroughTheEndpoints:
         """Same forgiveness traits already get -- strip, never refuse."""
         resp = await self._put_avatar(seeded_agent, {**_GHOST, "motions": "x", "sounds": ["chime"]})
         assert resp.status == 200
-        assert KiroCrewConfig.load().agents[seeded_agent].avatar == _GHOST
+        assert AjCrewConfig.load().agents[seeded_agent].avatar == _GHOST
 
     # ── a ghost save that says nothing about `motions` keeps the stored ones ──
     #
@@ -1391,7 +1391,7 @@ class TestGhostReactionsRoundTripThroughTheEndpoints:
 
     @pytest.fixture()
     def ghost_with_motions(self, seeded_agent):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents[seeded_agent].avatar = {**_GHOST, "motions": _MOTIONS}
         cfg.save()
         return seeded_agent
@@ -1401,7 +1401,7 @@ class TestGhostReactionsRoundTripThroughTheEndpoints:
         # Exactly what the shipped builder sends: traits + expressions + sounds.
         editor_save = {**_GHOST, "expressions": _EXPRESSIONS, "sounds": _SOUNDS}
         assert (await self._put_avatar(ghost_with_motions, editor_save)).status == 200
-        stored = KiroCrewConfig.load().agents[ghost_with_motions].avatar
+        stored = AjCrewConfig.load().agents[ghost_with_motions].avatar
         assert stored["motions"] == _MOTIONS, "a save that cannot see motions must not erase them"
         assert stored["expressions"] == _EXPRESSIONS
         assert stored["sounds"] == _SOUNDS
@@ -1411,7 +1411,7 @@ class TestGhostReactionsRoundTripThroughTheEndpoints:
     async def test_a_save_that_changes_the_traits_still_keeps_the_motions(self, ghost_with_motions):
         changed = {**_GHOST, "traits": {**_GHOST["traits"], "eyes": "wide"}}
         assert (await self._put_avatar(ghost_with_motions, changed)).status == 200
-        stored = KiroCrewConfig.load().agents[ghost_with_motions].avatar
+        stored = AjCrewConfig.load().agents[ghost_with_motions].avatar
         assert stored["traits"]["eyes"] == "wide"
         assert stored["motions"] == _MOTIONS
 
@@ -1419,20 +1419,20 @@ class TestGhostReactionsRoundTripThroughTheEndpoints:
     async def test_an_explicit_empty_motions_map_clears_them(self, ghost_with_motions):
         """Naming the key is the caller's decision, and `{}` means none."""
         assert (await self._put_avatar(ghost_with_motions, {**_GHOST, "motions": {}})).status == 200
-        assert "motions" not in KiroCrewConfig.load().agents[ghost_with_motions].avatar
+        assert "motions" not in AjCrewConfig.load().agents[ghost_with_motions].avatar
 
     @pytest.mark.asyncio
     async def test_a_named_motions_map_replaces_them(self, ghost_with_motions):
         assert (
             await self._put_avatar(ghost_with_motions, {**_GHOST, "motions": {"done": "nod"}})
         ).status == 200
-        assert KiroCrewConfig.load().agents[ghost_with_motions].avatar["motions"] == {"done": "nod"}
+        assert AjCrewConfig.load().agents[ghost_with_motions].avatar["motions"] == {"done": "nod"}
 
     @pytest.mark.asyncio
     async def test_a_reset_does_not_carry_the_motions(self, ghost_with_motions):
         """Reset means reset: `{}` and `null` both take the whole override off."""
         assert (await self._put_avatar(ghost_with_motions, {})).status == 200
-        assert KiroCrewConfig.load().agents[ghost_with_motions].avatar == {}
+        assert AjCrewConfig.load().agents[ghost_with_motions].avatar == {}
 
     @pytest.mark.asyncio
     async def test_a_tier_change_does_not_carry_the_motions(self, ghost_with_motions):
@@ -1440,7 +1440,7 @@ class TestGhostReactionsRoundTripThroughTheEndpoints:
         assert (
             await self._put_avatar(ghost_with_motions, {"kind": "pack", "id": "worn"})
         ).status == 200
-        assert KiroCrewConfig.load().agents[ghost_with_motions].avatar == {
+        assert AjCrewConfig.load().agents[ghost_with_motions].avatar == {
             "kind": "pack",
             "id": "worn",
         }
@@ -1473,7 +1473,7 @@ class TestGhostReactionsRoundTripThroughTheEndpoints:
         assert got["kind"] == "image"
         assert got["sounds"] == _SOUNDS
         assert "motions" not in got
-        stored = KiroCrewConfig.load().agents[seeded_agent].avatar
+        stored = AjCrewConfig.load().agents[seeded_agent].avatar
         assert stored["sounds"] == _SOUNDS
         assert set(stored) == {"kind", "v", "file", "sounds"}
 
@@ -1489,10 +1489,10 @@ class TestGhostReactionsRoundTripThroughTheEndpoints:
             seeded_agent, {"kind": "image", "promote": True, "token": token}
         )
         assert first.status == 200
-        pin = KiroCrewConfig.load().agents[seeded_agent].avatar["file"]
+        pin = AjCrewConfig.load().agents[seeded_agent].avatar["file"]
         again = await self._put_avatar(seeded_agent, {"kind": "image", "sounds": {"done": "pop"}})
         assert again.status == 200, again.body
-        stored = KiroCrewConfig.load().agents[seeded_agent].avatar
+        stored = AjCrewConfig.load().agents[seeded_agent].avatar
         assert stored["file"] == pin, "the keep-current-picture branch lost the pin"
         assert stored["sounds"] == {"done": "pop"}
 
@@ -1501,11 +1501,11 @@ class TestGhostReactionsRoundTripThroughTheEndpoints:
         """The ONLY app in this class: multipart staging needs a real stream."""
         from aiohttp import web
 
-        from kiro_crew.dashboard.handlers import api_kirocrew_agent_avatar_upload
+        from aj_crew.dashboard.handlers import api_ajcrew_agent_avatar_upload
 
         app = web.Application()
         app["state"] = types.SimpleNamespace(conversation_log=None)
-        app.router.add_post("/api/agents/{name}/avatar", api_kirocrew_agent_avatar_upload)
+        app.router.add_post("/api/agents/{name}/avatar", api_ajcrew_agent_avatar_upload)
         return app
 
     @staticmethod
@@ -1586,7 +1586,7 @@ class TestSafeAvatarPackKind:
         because a second list is what would drift: a crew could then persist an
         id the store refuses to look up.
         """
-        from kiro_crew.appearance_packs import store as store_mod
+        from aj_crew.appearance_packs import store as store_mod
 
         assert store_mod._safe_id("aurora-1") == safe_pack_id("aurora-1")
         assert store_mod._safe_id("a/b") is safe_pack_id("a/b") is None
@@ -1633,7 +1633,7 @@ class TestSafeAvatarPackKind:
             }
 
     def test_round_trips_through_a_real_config_load(self):
-        cfg = _load_from_dict({"agents": {"nova": {"kiro_agent": "kirocrew", "avatar": _PACK}}})
+        cfg = _load_from_dict({"agents": {"nova": {"kiro_agent": "ajcrew", "avatar": _PACK}}})
         assert cfg.agents["nova"].avatar == _PACK
 
 
@@ -1650,31 +1650,31 @@ class TestPackAvatarThroughTheEndpoints:
     def _app():
         from aiohttp import web
 
-        from kiro_crew.dashboard.handlers import (
-            api_kirocrew_agent_update,
-            api_kirocrew_agents,
-            api_kirocrew_agents_create,
+        from aj_crew.dashboard.handlers import (
+            api_ajcrew_agent_update,
+            api_ajcrew_agents,
+            api_ajcrew_agents_create,
         )
 
         app = web.Application()
         app["state"] = types.SimpleNamespace(conversation_log=None)
-        app.router.add_get("/api/agents", api_kirocrew_agents)
-        app.router.add_post("/api/agents", api_kirocrew_agents_create)
-        app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+        app.router.add_get("/api/agents", api_ajcrew_agents)
+        app.router.add_post("/api/agents", api_ajcrew_agents_create)
+        app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
         return app
 
     @pytest.fixture(autouse=True)
     def _owner_caller(self, monkeypatch):
         pass  # Member routing does not depend on OS isolation.
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             lambda request: True,
         )
 
     @pytest.fixture()
     def seeded_agent(self):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["existing"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg = AjCrewConfig.load()
+        cfg.agents["existing"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         cfg.save()
         return "existing"
 
@@ -1692,12 +1692,12 @@ class TestPackAvatarThroughTheEndpoints:
         async with TestClient(TestServer(self._app())) as client:
             resp = await client.post(
                 "/api/agents",
-                json={"name": "nova", "kiro_agent": "kirocrew", "avatar": _PACK},
+                json={"name": "nova", "kiro_agent": "ajcrew", "avatar": _PACK},
             )
             assert resp.status == 200, await resp.json()
             roster = await (await client.get("/api/agents")).json()
         assert self._row(roster, "nova")["avatar"] == _PACK
-        assert KiroCrewConfig.load().agents["nova"].avatar == _PACK
+        assert AjCrewConfig.load().agents["nova"].avatar == _PACK
 
     @pytest.mark.asyncio
     async def test_create_with_a_junk_pack_id_is_a_400(self):
@@ -1710,20 +1710,20 @@ class TestPackAvatarThroughTheEndpoints:
                 "/api/agents",
                 json={
                     "name": "nova",
-                    "kiro_agent": "kirocrew",
+                    "kiro_agent": "ajcrew",
                     "avatar": {"kind": "pack", "id": "../../etc"},
                 },
             )
             assert resp.status == 400
             assert (await resp.json())["code"] == "invalid_avatar"
-        assert "nova" not in KiroCrewConfig.load().agents
+        assert "nova" not in AjCrewConfig.load().agents
 
     @pytest.mark.asyncio
     async def test_update_round_trips_and_stages_no_picture(self, seeded_agent):
         from aiohttp.test_utils import TestClient, TestServer
 
         with unittest.mock.patch(
-            "kiro_crew.dashboard.handlers.agents._promote_pending_avatar",
+            "aj_crew.dashboard.handlers.agents._promote_pending_avatar",
             side_effect=AssertionError("a pack avatar entered the image staging flow"),
         ):
             async with TestClient(TestServer(self._app())) as client:
@@ -1731,7 +1731,7 @@ class TestPackAvatarThroughTheEndpoints:
                 assert resp.status == 200, await resp.json()
                 roster = await (await client.get("/api/agents")).json()
         assert self._row(roster, seeded_agent)["avatar"] == _PACK
-        assert KiroCrewConfig.load().agents[seeded_agent].avatar == _PACK
+        assert AjCrewConfig.load().agents[seeded_agent].avatar == _PACK
 
     @pytest.mark.asyncio
     async def test_an_unrelated_save_leaves_the_pack_alone(self, seeded_agent):
@@ -1750,7 +1750,7 @@ class TestPackAvatarThroughTheEndpoints:
             assert (
                 await client.put(f"/api/agents/{seeded_agent}", json={"description": "edited"})
             ).status == 200
-        stored = KiroCrewConfig.load().agents[seeded_agent]
+        stored = AjCrewConfig.load().agents[seeded_agent]
         assert stored.avatar == _PACK
         assert stored.description == "edited"
 
@@ -1771,7 +1771,7 @@ class TestPackAvatarThroughTheEndpoints:
                     json={"avatar": dict(_PACK), "description": "edited"},
                 )
             ).status == 200
-        assert KiroCrewConfig.load().agents[seeded_agent].avatar == _PACK
+        assert AjCrewConfig.load().agents[seeded_agent].avatar == _PACK
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("reset", [None, {}])
@@ -1789,7 +1789,7 @@ class TestPackAvatarThroughTheEndpoints:
             ).status == 200
             roster = await (await client.get("/api/agents")).json()
         assert self._row(roster, seeded_agent)["avatar"] == {}
-        assert KiroCrewConfig.load().agents[seeded_agent].avatar == {}
+        assert AjCrewConfig.load().agents[seeded_agent].avatar == {}
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -1818,7 +1818,7 @@ class TestPackAvatarThroughTheEndpoints:
             ).status == 200
             roster = await (await client.get("/api/agents")).json()
         assert self._row(roster, seeded_agent)["avatar"] == faceless
-        assert KiroCrewConfig.load().agents[seeded_agent].avatar == faceless
+        assert AjCrewConfig.load().agents[seeded_agent].avatar == faceless
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -1838,7 +1838,7 @@ class TestPackAvatarThroughTheEndpoints:
             assert (
                 await client.put(f"/api/agents/{seeded_agent}", json={"avatar": face})
             ).status == 200
-        stored = KiroCrewConfig.load().agents[seeded_agent].avatar
+        stored = AjCrewConfig.load().agents[seeded_agent].avatar
         assert stored["kind"] == face["kind"]
         assert stored.get("id") == face.get("id")
         # Ghost traits are normalised to the full axis set on save; the axis
@@ -1859,7 +1859,7 @@ class TestPackAvatarThroughTheEndpoints:
             assert (
                 await client.put(f"/api/agents/{seeded_agent}", json={"avatar": {}})
             ).status == 200
-        assert KiroCrewConfig.load().agents[seeded_agent].avatar == {}
+        assert AjCrewConfig.load().agents[seeded_agent].avatar == {}
 
     @pytest.mark.asyncio
     async def test_leaving_the_picture_tier_for_a_pack_reaps_the_files(self, seeded_agent):
@@ -1870,16 +1870,16 @@ class TestPackAvatarThroughTheEndpoints:
         """
         from aiohttp.test_utils import TestClient, TestServer
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents[seeded_agent].avatar = {"kind": "image", "v": 1, "file": "a" * 16 + ".png"}
         cfg.save()
         removed: list[str] = []
         with unittest.mock.patch(
-            "kiro_crew.dashboard.handlers.agents._remove_avatar_files",
+            "aj_crew.dashboard.handlers.agents._remove_avatar_files",
             side_effect=removed.append,
         ):
             async with TestClient(TestServer(self._app())) as client:
                 resp = await client.put(f"/api/agents/{seeded_agent}", json={"avatar": _PACK})
                 assert resp.status == 200, await resp.json()
         assert removed == [seeded_agent]
-        assert KiroCrewConfig.load().agents[seeded_agent].avatar == _PACK
+        assert AjCrewConfig.load().agents[seeded_agent].avatar == _PACK

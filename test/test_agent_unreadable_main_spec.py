@@ -1,4 +1,4 @@
-"""Tests for a rebuild that cannot read an existing ``kirocrew.json``.
+"""Tests for a rebuild that cannot read an existing ``ajcrew.json``.
 
 The rebuild keeps the user's spec and skips the cycle instead of writing defaults over
 it, and a rebuild that writes the spec again closes the episode: the skip and its
@@ -20,7 +20,7 @@ from agent_helpers import _run_install
 from mcp_merge_helpers import bundled_defaults as _bundled_defaults
 from unreadable_spec_helpers import custom_spec
 
-from kiro_crew import atomic_write as aw
+from aj_crew import atomic_write as aw
 
 
 class TestUnreadableMainSpec:
@@ -65,16 +65,16 @@ class TestUnreadableMainSpec:
         wrote_out: list[bool] = []
         held_out: list[bool] = []
         with (
-            patch("kiro_crew.agent.read_bytes_with_retry", _failing_read),
-            patch("kiro_crew.agent.worker_agent._install_worker_agent") as worker,
-            patch("kiro_crew.agent._install_heartbeat_agent") as heartbeat,
-            patch("kiro_crew.agent.service_agents._install_knowledge_agent") as knowledge,
+            patch("aj_crew.agent.read_bytes_with_retry", _failing_read),
+            patch("aj_crew.agent.worker_agent._install_worker_agent") as worker,
+            patch("aj_crew.agent._install_heartbeat_agent") as heartbeat,
+            patch("aj_crew.agent.service_agents._install_knowledge_agent") as knowledge,
             patch(
-                "kiro_crew.agent.conductor_agents._install_conductor_agent", return_value=True
+                "aj_crew.agent.conductor_agents._install_conductor_agent", return_value=True
             ) as conductor,
-            patch("kiro_crew.agent.fork_refresh.refresh_after_rebuild") as forks,
-            patch("kiro_crew.agent.repair_agent_configs") as repair,
-            caplog.at_level(logging.WARNING, logger="kiro_crew.agent"),
+            patch("aj_crew.agent.fork_refresh.refresh_after_rebuild") as forks,
+            patch("aj_crew.agent.repair_agent_configs") as repair,
+            caplog.at_level(logging.WARNING, logger="aj_crew.agent"),
         ):
             path = _run_install(
                 tmp_path,
@@ -118,7 +118,7 @@ class TestUnreadableMainSpec:
                 raise PermissionError(13, "Permission denied", str(path))
             return aw.read_bytes_with_retry(path, **_kwargs)
 
-        with patch("kiro_crew.agent.read_bytes_with_retry", _denied):
+        with patch("aj_crew.agent.read_bytes_with_retry", _denied):
             _run_install(tmp_path, cfg_dir)
         assert held_flag._conductor_spec_held is True
 
@@ -157,7 +157,7 @@ class TestUnreadableMainSpec:
         wrote_out: list[bool] = []
         with (
             patch.object(aw, "_read_bytes", _locked_once),
-            patch("kiro_crew.agent.read_bytes_with_retry", _windows_read),
+            patch("aj_crew.agent.read_bytes_with_retry", _windows_read),
         ):
             _run_install(tmp_path, cfg_dir, _wrote_out=wrote_out)
 
@@ -186,14 +186,14 @@ class TestUnreadableMainSpec:
             return aw.read_bytes_with_retry(path, **kwargs)
 
         wrote_out: list[bool] = []
-        with patch("kiro_crew.agent.read_bytes_with_retry", _denied):
+        with patch("aj_crew.agent.read_bytes_with_retry", _denied):
             _run_install(tmp_path, cfg_dir, _wrote_out=wrote_out)
 
         assert wrote_out == [False]
         assert sibling.read_bytes() == before
 
     def _skipped(self, tmp_path: Path, held_flag):
-        """Run one rebuild over a ``kirocrew.json`` whose read is denied: the gate is armed."""
+        """Run one rebuild over a ``ajcrew.json`` whose read is denied: the gate is armed."""
         cfg_dir = _bundled_defaults(tmp_path)
         spec = self._custom_spec(tmp_path)
 
@@ -202,7 +202,7 @@ class TestUnreadableMainSpec:
                 raise PermissionError(13, "Permission denied", str(path))
             return aw.read_bytes_with_retry(path, **kwargs)
 
-        with patch("kiro_crew.agent.read_bytes_with_retry", _denied):
+        with patch("aj_crew.agent.read_bytes_with_retry", _denied):
             _run_install(tmp_path, cfg_dir)
         assert held_flag._main_spec_unreadable is True
         return cfg_dir, spec, _denied
@@ -226,44 +226,44 @@ class TestUnreadableMainSpec:
                 return f"{type(exc).__name__}: {exc}"
             return None
 
-        names = ("kirocrew", "kirocrew-heartbeat", "kirocrew-worker", "kirocrew-conductor", "nope")
+        names = ("ajcrew", "ajcrew-heartbeat", "ajcrew-worker", "ajcrew-conductor", "nope")
         with (
-            patch("kiro_crew.agent.KIRO_AGENTS_DIR", spec.parent),
-            patch("kiro_crew.agent.read_bytes_with_retry", denied),
+            patch("aj_crew.agent.KIRO_AGENTS_DIR", spec.parent),
+            patch("aj_crew.agent.read_bytes_with_retry", denied),
         ):
             during = {name: _outcome(name) for name in names}
             held_flag._main_spec_unreadable = False
             after = {name: _outcome(name) for name in names}
             held_flag._main_spec_unreadable = True
         assert during == after
-        assert during["kirocrew"] is None, "the main agent starts as it would on main"
+        assert during["ajcrew"] is None, "the main agent starts as it would on main"
 
     def test_a_tightened_ceiling_reaches_the_kept_mirrors_in_place(
         self, tmp_path: Path, held_flag, monkeypatch
     ):
-        """While ``kirocrew.json`` is unreadable, the mirrors' grants still go through the ceiling.
+        """While ``ajcrew.json`` is unreadable, the mirrors' grants still go through the ceiling.
 
         The skip cannot re-derive the heartbeat and worker specs from a main spec
         it cannot read, so it re-filters what is on disk: a grant the tightened
         ceiling withholds leaves ``allowedTools`` and every server's
         ``autoApprove``, a grant it still allows stays, no server is added, and
-        ``kirocrew.json`` is left byte for byte. Mutation pin: skipping the
+        ``ajcrew.json`` is left byte for byte. Mutation pin: skipping the
         in-place re-filter (the mirrors untouched while the main spec is
         unreadable) leaves the withheld grants on both specs and this goes red.
         """
         cfg_dir = _bundled_defaults(tmp_path)
         spec = self._custom_spec(tmp_path)
         _run_install(tmp_path, cfg_dir)
-        worker_path = spec.parent / "kirocrew-worker.json"
-        heartbeat_path = spec.parent / "kirocrew-heartbeat.json"
+        worker_path = spec.parent / "ajcrew-worker.json"
+        heartbeat_path = spec.parent / "ajcrew-heartbeat.json"
         # Grants an earlier, looser ceiling left on the two mirrors.
         worker = json.loads(worker_path.read_text(encoding="utf-8"))
-        worker["allowedTools"].append("@kirocrew-core/learn_list")
-        worker["mcpServers"]["kirocrew-core"]["autoApprove"] = ["learn_list"]
+        worker["allowedTools"].append("@ajcrew-core/learn_list")
+        worker["mcpServers"]["ajcrew-core"]["autoApprove"] = ["learn_list"]
         worker["mcpServers"]["user-server"]["autoApprove"] = ["user_tool"]
         worker_path.write_text(json.dumps(worker), encoding="utf-8")
         heartbeat = json.loads(heartbeat_path.read_text(encoding="utf-8"))
-        heartbeat["mcpServers"]["kirocrew-core"]["autoApprove"] = ["learn_list"]
+        heartbeat["mcpServers"]["ajcrew-core"]["autoApprove"] = ["learn_list"]
         heartbeat_path.write_text(json.dumps(heartbeat), encoding="utf-8")
         main_before = spec.read_bytes()
 
@@ -272,16 +272,16 @@ class TestUnreadableMainSpec:
                 raise PermissionError(13, "Permission denied", str(path))
             return aw.read_bytes_with_retry(path, **kwargs)
 
-        # The tightened ceiling: kirocrew-core must go through the gate.
+        # The tightened ceiling: ajcrew-core must go through the gate.
         def _ceiling(ref: str) -> bool:
-            return not ref.startswith("@kirocrew-core")
+            return not ref.startswith("@ajcrew-core")
 
-        from kiro_crew.platform import governance
+        from aj_crew.platform import governance
 
         monkeypatch.setattr(held_flag, "_may_auto_approve", _ceiling)
         monkeypatch.setattr(governance, "may_skip_gate_now", _ceiling)
         wrote_out: list[bool] = []
-        with patch("kiro_crew.agent.read_bytes_with_retry", _denied):
+        with patch("aj_crew.agent.read_bytes_with_retry", _denied):
             _run_install(tmp_path, cfg_dir, _wrote_out=wrote_out)
 
         assert wrote_out == [False]
@@ -289,11 +289,11 @@ class TestUnreadableMainSpec:
         assert spec.read_bytes() == main_before
         worker_after = json.loads(worker_path.read_text(encoding="utf-8"))
         heartbeat_after = json.loads(heartbeat_path.read_text(encoding="utf-8"))
-        assert "@kirocrew-core/learn_list" not in worker_after["allowedTools"]
-        assert "@kirocrew-work/work_brief" in worker_after["allowedTools"]
-        assert "autoApprove" not in worker_after["mcpServers"]["kirocrew-core"]
+        assert "@ajcrew-core/learn_list" not in worker_after["allowedTools"]
+        assert "@ajcrew-work/work_brief" in worker_after["allowedTools"]
+        assert "autoApprove" not in worker_after["mcpServers"]["ajcrew-core"]
         assert worker_after["mcpServers"]["user-server"]["autoApprove"] == ["user_tool"]
-        assert "autoApprove" not in heartbeat_after["mcpServers"]["kirocrew-core"]
+        assert "autoApprove" not in heartbeat_after["mcpServers"]["ajcrew-core"]
         # Nothing is copied in from the unreadable main spec.
         assert set(worker_after["mcpServers"]) == set(worker["mcpServers"])
         assert set(heartbeat_after["mcpServers"]) == set(heartbeat["mcpServers"])
@@ -312,9 +312,9 @@ class TestUnreadableMainSpec:
         cfg_dir = _bundled_defaults(tmp_path)
         spec = self._custom_spec(tmp_path)
         _run_install(tmp_path, cfg_dir)
-        worker_path = spec.parent / "kirocrew-worker.json"
+        worker_path = spec.parent / "ajcrew-worker.json"
         worker = json.loads(worker_path.read_text(encoding="utf-8"))
-        worker["allowedTools"].append("@kirocrew-core/learn_list")
+        worker["allowedTools"].append("@ajcrew-core/learn_list")
         worker_path.write_text(json.dumps(worker), encoding="utf-8")
 
         def _denied(path, **kwargs):
@@ -330,16 +330,16 @@ class TestUnreadableMainSpec:
             return real_write(path, data, *args, **kwargs)
 
         monkeypatch.setattr(
-            held_flag, "_may_auto_approve", lambda ref: ref != "@kirocrew-core/learn_list"
+            held_flag, "_may_auto_approve", lambda ref: ref != "@ajcrew-core/learn_list"
         )
         monkeypatch.setattr(held_flag, "_atomic_json_write", _write)
         held_out: list[bool] = []
-        with patch("kiro_crew.agent.read_bytes_with_retry", _denied):
+        with patch("aj_crew.agent.read_bytes_with_retry", _denied):
             _run_install(tmp_path, cfg_dir, refresh_forks=False, _held_out=held_out)
 
         assert held_out == [True]
         assert (
-            "@kirocrew-core/learn_list"
+            "@ajcrew-core/learn_list"
             in json.loads(worker_path.read_text(encoding="utf-8"))["allowedTools"]
         )
         assert held_flag._main_spec_held_pass_at is not None, "a failed re-filter was not held"
@@ -378,7 +378,7 @@ class TestUnreadableMainSpec:
                 return False
 
         monkeypatch.setattr(held_flag, "_main_spec_episode_lock", _ReopenOnRelease())
-        caplog.set_level(logging.DEBUG, logger="kiro_crew.agent")
+        caplog.set_level(logging.DEBUG, logger="aj_crew.agent")
         caplog.clear()
         reopen[0] = True
         held_flag._note_main_spec_readable(spec, held_flag._main_spec_episode_revision)
@@ -448,10 +448,10 @@ class TestUnreadableMainSpec:
             return _run_install(tmp_path, cfg_dir, **kwargs)
 
         with (
-            patch("kiro_crew.agent.KIRO_AGENTS_DIR", spec.parent),
-            patch("kiro_crew.agent.rebuild_agent_config", _rebuild),
+            patch("aj_crew.agent.KIRO_AGENTS_DIR", spec.parent),
+            patch("aj_crew.agent.rebuild_agent_config", _rebuild),
         ):
-            with patch("kiro_crew.agent.read_bytes_with_retry", _denied):
+            with patch("aj_crew.agent.read_bytes_with_retry", _denied):
                 assert held_flag.retry_held_conductor_specs() is False
             assert set(episode_set) >= {"read:13", "retry"}
             assert held_flag.retry_held_conductor_specs() is True
@@ -479,17 +479,17 @@ class TestUnreadableMainSpec:
                 if r.levelno == logging.WARNING
             )
 
-        caplog.set_level(logging.DEBUG, logger="kiro_crew.agent")
+        caplog.set_level(logging.DEBUG, logger="aj_crew.agent")
         with (
-            patch("kiro_crew.agent.KIRO_AGENTS_DIR", spec.parent),
-            patch("kiro_crew.agent.rebuild_agent_config", _rebuild),
+            patch("aj_crew.agent.KIRO_AGENTS_DIR", spec.parent),
+            patch("aj_crew.agent.rebuild_agent_config", _rebuild),
         ):
-            with patch("kiro_crew.agent.read_bytes_with_retry", _denied):
+            with patch("aj_crew.agent.read_bytes_with_retry", _denied):
                 for _ in range(3):
                     assert held_flag.retry_held_conductor_specs() is False
             assert _retry_warnings() == 1
             assert held_flag.retry_held_conductor_specs() is True
-            with patch("kiro_crew.agent.read_bytes_with_retry", _denied):
+            with patch("aj_crew.agent.read_bytes_with_retry", _denied):
                 _run_install(tmp_path, cfg_dir)
                 assert held_flag.retry_held_conductor_specs() is False
         assert _retry_warnings() == 2
@@ -514,8 +514,8 @@ class TestUnreadableMainSpec:
             return _run_install(tmp_path, cfg_dir, **kwargs)
 
         with (
-            patch("kiro_crew.agent.KIRO_AGENTS_DIR", spec.parent),
-            patch("kiro_crew.agent.rebuild_agent_config", _rebuild),
+            patch("aj_crew.agent.KIRO_AGENTS_DIR", spec.parent),
+            patch("aj_crew.agent.rebuild_agent_config", _rebuild),
         ):
             assert held_flag.retry_held_conductor_specs() is True
         assert held_flag._main_spec_unreadable is False
@@ -552,7 +552,7 @@ class TestUnreadableMainSpec:
             return real_note(*args, **kwargs)
 
         wrote: list[bool] = []
-        with patch("kiro_crew.agent._note_main_spec_readable", _note_after_a_skip_lands):
+        with patch("aj_crew.agent._note_main_spec_readable", _note_after_a_skip_lands):
             _run_install(tmp_path, cfg_dir, _wrote_out=wrote)
         assert wrote == [True]
         assert held_flag._main_spec_unreadable is True, "an older write closed a newer episode"
@@ -562,8 +562,8 @@ class TestUnreadableMainSpec:
             return _run_install(tmp_path, cfg_dir, **kwargs)
 
         with (
-            patch("kiro_crew.agent.KIRO_AGENTS_DIR", spec.parent),
-            patch("kiro_crew.agent.rebuild_agent_config", _rebuild),
+            patch("aj_crew.agent.KIRO_AGENTS_DIR", spec.parent),
+            patch("aj_crew.agent.rebuild_agent_config", _rebuild),
         ):
             assert held_flag.retry_held_conductor_specs() is True
         assert held_flag._main_spec_unreadable is False
@@ -573,7 +573,7 @@ class TestUnreadableMainSpec:
     ):
         """The independent review's repro: a skip that lands inside a writing rebuild.
 
-        Rebuild A writes ``kirocrew.json`` and clears the flag, and while its
+        Rebuild A writes ``ajcrew.json`` and clears the flag, and while its
         sibling pass runs, rebuild B's read fails and B skips. A then settles the
         conductor memo to its own verdict. That settle may not drop B's hold, so
         the hourly wake still rebuilds once the file reads.
@@ -597,7 +597,7 @@ class TestUnreadableMainSpec:
             return True  # A's own conductor write succeeded
 
         wrote: list[bool] = []
-        with patch("kiro_crew.agent.conductor_agents._install_conductor_agent", _conductor_install):
+        with patch("aj_crew.agent.conductor_agents._install_conductor_agent", _conductor_install):
             _run_install(tmp_path, cfg_dir, _wrote_out=wrote)
         assert wrote == [True]
         assert held_flag._main_spec_unreadable is True
@@ -607,8 +607,8 @@ class TestUnreadableMainSpec:
             return _run_install(tmp_path, cfg_dir, **kwargs)
 
         with (
-            patch("kiro_crew.agent.KIRO_AGENTS_DIR", spec.parent),
-            patch("kiro_crew.agent.rebuild_agent_config", _rebuild),
+            patch("aj_crew.agent.KIRO_AGENTS_DIR", spec.parent),
+            patch("aj_crew.agent.rebuild_agent_config", _rebuild),
         ):
             assert not (
                 held_flag._main_spec_unreadable and not held_flag._conductor_spec_held
@@ -688,26 +688,26 @@ class TestUnreadableMainSpec:
 
         with (
             patch(
-                "kiro_crew.agent.migrate_agent_specs",
+                "aj_crew.agent.migrate_agent_specs",
                 _at("before_the_write", held_flag.migrate_agent_specs),
             ),
             patch(
-                "kiro_crew.agent._install_aim_capabilities",
+                "aj_crew.agent._install_aim_capabilities",
                 _at("after_the_write", held_flag._install_aim_capabilities),
             ),
             patch(
-                "kiro_crew.agent.conductor_agents._install_conductor_agent",
+                "aj_crew.agent.conductor_agents._install_conductor_agent",
                 _at("before_the_settle", _around),
             ),
             patch(
-                "kiro_crew.agent.repair_agent_configs",
+                "aj_crew.agent.repair_agent_configs",
                 _at("after_the_settle", held_flag.repair_agent_configs),
             ),
             patch(
-                "kiro_crew.agent._invalidate_projection_if_answer_moved",
+                "aj_crew.agent._invalidate_projection_if_answer_moved",
                 _at("after_the_rebuild", held_flag._invalidate_projection_if_answer_moved),
             ),
-            patch("kiro_crew.agent._read_existing_spec", _read_once_failing),
+            patch("aj_crew.agent._read_existing_spec", _read_once_failing),
         ):
             if skip_lands == "around_the_rebuild":
                 # The skipping rebuild, whose sibling pass runs the writing one.
@@ -725,8 +725,8 @@ class TestUnreadableMainSpec:
             return _run_install(tmp_path, cfg_dir, **kwargs)
 
         with (
-            patch("kiro_crew.agent.KIRO_AGENTS_DIR", spec.parent),
-            patch("kiro_crew.agent.rebuild_agent_config", _rebuild),
+            patch("aj_crew.agent.KIRO_AGENTS_DIR", spec.parent),
+            patch("aj_crew.agent.rebuild_agent_config", _rebuild),
         ):
             assert held_flag.retry_held_conductor_specs() is True
         assert held_flag._main_spec_unreadable is False
@@ -760,10 +760,10 @@ class TestUnreadableMainSpec:
             return real_pass(*args, **kwargs)
 
         with (
-            patch("kiro_crew.agent.read_bytes_with_retry", _failing),
-            patch("kiro_crew.agent._install_sibling_specs", _counting),
+            patch("aj_crew.agent.read_bytes_with_retry", _failing),
+            patch("aj_crew.agent._install_sibling_specs", _counting),
             patch(
-                "kiro_crew.platform.governance_profiles.governance_answer_generation",
+                "aj_crew.platform.governance_profiles.governance_answer_generation",
                 lambda: generation[0],
             ),
         ):
@@ -822,11 +822,11 @@ class TestUnreadableMainSpec:
 
         clock = [1000.0]
         with (
-            patch("kiro_crew.agent.read_bytes_with_retry", _denied),
-            patch("kiro_crew.agent.conductor_agents._install_conductor_agent", _conductor),
-            patch("kiro_crew.agent._held_pass_clock", lambda: clock[0]),
+            patch("aj_crew.agent.read_bytes_with_retry", _denied),
+            patch("aj_crew.agent.conductor_agents._install_conductor_agent", _conductor),
+            patch("aj_crew.agent._held_pass_clock", lambda: clock[0]),
             patch(
-                "kiro_crew.platform.governance_profiles.governance_answer_generation",
+                "aj_crew.platform.governance_profiles.governance_answer_generation",
                 lambda: 42,
             ),
         ):
@@ -863,11 +863,11 @@ class TestUnreadableMainSpec:
 
         clock = [1000.0]
         with (
-            patch("kiro_crew.agent.read_bytes_with_retry", _denied),
-            patch("kiro_crew.agent.conductor_agents._install_conductor_agent", _conductor),
-            patch("kiro_crew.agent._held_pass_clock", lambda: clock[0]),
+            patch("aj_crew.agent.read_bytes_with_retry", _denied),
+            patch("aj_crew.agent.conductor_agents._install_conductor_agent", _conductor),
+            patch("aj_crew.agent._held_pass_clock", lambda: clock[0]),
             patch(
-                "kiro_crew.platform.governance_profiles.governance_answer_generation",
+                "aj_crew.platform.governance_profiles.governance_answer_generation",
                 lambda: 42,
             ),
         ):
@@ -910,13 +910,13 @@ class TestUnreadableMainSpec:
 
         clock = [1000.0]
         with (
-            patch("kiro_crew.agent.read_bytes_with_retry", _denied),
-            patch("kiro_crew.agent.conductor_agents._install_conductor_agent", _conductor),
-            patch("kiro_crew.agent._held_pass_clock", lambda: clock[0]),
-            patch("kiro_crew.agent.KIRO_AGENTS_DIR", spec.parent),
-            patch("kiro_crew.agent.rebuild_agent_config", _rebuild),
+            patch("aj_crew.agent.read_bytes_with_retry", _denied),
+            patch("aj_crew.agent.conductor_agents._install_conductor_agent", _conductor),
+            patch("aj_crew.agent._held_pass_clock", lambda: clock[0]),
+            patch("aj_crew.agent.KIRO_AGENTS_DIR", spec.parent),
+            patch("aj_crew.agent.rebuild_agent_config", _rebuild),
             patch(
-                "kiro_crew.platform.governance_profiles.governance_answer_generation",
+                "aj_crew.platform.governance_profiles.governance_answer_generation",
                 lambda: 42,
             ),
         ):
@@ -938,7 +938,7 @@ class TestUnreadableMainSpec:
         nothing. Mutation pin: recording the generation on the deferred pass
         leaves ``refreshes`` at ``["defer"]``.
         """
-        from kiro_crew.agent_materialization import fork_refresh
+        from aj_crew.agent_materialization import fork_refresh
 
         cfg_dir = _bundled_defaults(tmp_path)
         spec = self._custom_spec(tmp_path)
@@ -961,11 +961,11 @@ class TestUnreadableMainSpec:
         monkeypatch.setattr(fork_refresh, "_shared_template_held", False)
         clock = [1000.0]
         with (
-            patch("kiro_crew.agent.read_bytes_with_retry", _denied),
-            patch("kiro_crew.agent.fork_refresh.refresh_after_rebuild", _refresh),
-            patch("kiro_crew.agent._held_pass_clock", lambda: clock[0]),
+            patch("aj_crew.agent.read_bytes_with_retry", _denied),
+            patch("aj_crew.agent.fork_refresh.refresh_after_rebuild", _refresh),
+            patch("aj_crew.agent._held_pass_clock", lambda: clock[0]),
             patch(
-                "kiro_crew.platform.governance_profiles.governance_answer_generation",
+                "aj_crew.platform.governance_profiles.governance_answer_generation",
                 lambda: 42,
             ),
         ):
@@ -994,9 +994,9 @@ class TestUnreadableMainSpec:
             return aw.read_bytes_with_retry(path, **kwargs)
 
         with (
-            patch("kiro_crew.agent.read_bytes_with_retry", _denied),
+            patch("aj_crew.agent.read_bytes_with_retry", _denied),
             patch(
-                "kiro_crew.agent.repair_agent_configs",
+                "aj_crew.agent.repair_agent_configs",
                 side_effect=PermissionError(13, "hook repair"),
             ),
             pytest.raises(PermissionError, match="hook repair"),
@@ -1022,8 +1022,8 @@ class TestUnreadableMainSpec:
             return sum(1 for r in caplog.records if r.levelno == level and text in r.getMessage())
 
         with (
-            patch("kiro_crew.agent.read_bytes_with_retry", _failing),
-            caplog.at_level(logging.INFO, logger="kiro_crew.agent"),
+            patch("aj_crew.agent.read_bytes_with_retry", _failing),
+            caplog.at_level(logging.INFO, logger="aj_crew.agent"),
         ):
             for _ in range(3):
                 _run_install(tmp_path, cfg_dir)
@@ -1049,7 +1049,7 @@ class TestUnreadableMainSpec:
         cfg_dir = _bundled_defaults(tmp_path)
         spec = self._custom_spec(tmp_path)
         before = spec.read_bytes()
-        from kiro_crew.agent_materialization import mcp_aliases
+        from aj_crew.agent_materialization import mcp_aliases
 
         def _denied(path, **kwargs):
             if Path(path) == spec:
@@ -1067,7 +1067,7 @@ class TestUnreadableMainSpec:
         held_out: list[bool] = []
         with (
             patch.object(mcp_aliases, "_durable_tool_aliases", _unreadable_in_the_lock),
-            patch("kiro_crew.agent.worker_agent._install_worker_agent") as worker,
+            patch("aj_crew.agent.worker_agent._install_worker_agent") as worker,
         ):
             _run_install(tmp_path, cfg_dir, _wrote_out=wrote_out, _held_out=held_out)
 
@@ -1089,8 +1089,8 @@ class TestUnreadableMainSpec:
         replace, of a temp file that already parses. Mutation pin: a sibling
         installer writing its spec in place goes red.
         """
-        import kiro_crew.agent as agent_mod
-        from kiro_crew.agent_materialization import mcp_aliases
+        import aj_crew.agent as agent_mod
+        from aj_crew.agent_materialization import mcp_aliases
 
         cfg_dir = _bundled_defaults(tmp_path)
         spec = self._custom_spec(tmp_path)
@@ -1117,7 +1117,7 @@ class TestUnreadableMainSpec:
 
         assert held_flag._main_spec_unreadable is True
         changed = {p.name for p in kiro_dir.glob("*.json") if before.get(p.name) != p.read_bytes()}
-        assert "kirocrew.json" not in changed
+        assert "ajcrew.json" not in changed
         assert changed, "the sibling pass wrote no spec, so this proves nothing"
         assert changed <= replaced, changed - replaced
 
@@ -1132,7 +1132,7 @@ class TestUnreadableMainSpec:
             return aw.read_bytes_with_retry(path, **kwargs)
 
         wrote_out: list[bool] = []
-        with patch("kiro_crew.agent.read_bytes_with_retry", _denied):
+        with patch("aj_crew.agent.read_bytes_with_retry", _denied):
             _run_install(tmp_path, cfg_dir, clean=True, _wrote_out=wrote_out)
 
         assert wrote_out == [True]
@@ -1140,15 +1140,15 @@ class TestUnreadableMainSpec:
 
     def test_the_durable_alias_reader_reports_an_unreadable_spec_as_present(self, tmp_path: Path):
         """A failed read is not "no spec": only ``FileNotFoundError`` is absent."""
-        import kiro_crew.agent as agent_mod
-        from kiro_crew.agent_materialization import mcp_aliases
+        import aj_crew.agent as agent_mod
+        from aj_crew.agent_materialization import mcp_aliases
 
         spec = self._custom_spec(tmp_path)
 
         def _denied(path, **kwargs):
             raise PermissionError(13, "Permission denied", str(path))
 
-        with patch("kiro_crew.agent.read_bytes_with_retry", _denied):
+        with patch("aj_crew.agent.read_bytes_with_retry", _denied):
             existed, aliases = mcp_aliases._durable_tool_aliases(spec)
             assert existed is True
             with pytest.raises(agent_mod._AgentSpecUnreadable):
@@ -1157,11 +1157,11 @@ class TestUnreadableMainSpec:
 
     def test_invalid_utf8_still_rebuilds_from_defaults(self, tmp_path: Path):
         """A file that READ but does not decode is damaged, not unreadable."""
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
-        spec = tmp_path / "kirocrew.json"
+        spec = tmp_path / "ajcrew.json"
         spec.write_bytes(b"\xff\xfe\x00not utf-8")
-        with patch("kiro_crew.agent.build_agent_config", return_value={"model": "d"}) as b:
+        with patch("aj_crew.agent.build_agent_config", return_value={"model": "d"}) as b:
             config, fresh = agent_mod._load_existing_config(spec)
         assert (config, fresh) == ({"model": "d"}, True)
         b.assert_called_once()
@@ -1172,10 +1172,10 @@ class TestUnreadableMainSpec:
         Invalid UTF-8 is a ``ValueError`` there, read as no usable alias map, the
         same as invalid JSON, and the write that replaces the file goes ahead.
         """
-        from kiro_crew.agent_materialization import mcp_aliases
+        from aj_crew.agent_materialization import mcp_aliases
 
         cfg_dir = _bundled_defaults(tmp_path)
-        spec = tmp_path / "kiro_agents" / "kirocrew.json"
+        spec = tmp_path / "kiro_agents" / "ajcrew.json"
         spec.parent.mkdir(exist_ok=True)
         spec.write_bytes(b"\xff\xfe\x00not utf-8")
         assert mcp_aliases._durable_tool_aliases(spec) == (True, None)
@@ -1186,9 +1186,9 @@ class TestUnreadableMainSpec:
 
     def test_a_spec_that_vanishes_before_the_read_rebuilds_from_defaults(self, tmp_path: Path):
         """``FileNotFoundError`` is a missing file, not an unreadable one."""
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
-        with patch("kiro_crew.agent.build_agent_config", return_value={"model": "d"}) as b:
+        with patch("aj_crew.agent.build_agent_config", return_value={"model": "d"}) as b:
             config, fresh = agent_mod._load_existing_config(tmp_path / "absent.json")
         assert (config, fresh) == ({"model": "d"}, True)
         b.assert_called_once()
@@ -1201,10 +1201,10 @@ def test_a_dashboard_rebuild_that_did_not_write_names_both_causes(monkeypatch, c
     not be read and was kept unchanged. Mutation pin: the warning naming only
     the shared agent home misleads an operator whose spec is unreadable.
     """
-    from kiro_crew.dashboard.handlers import _shared
+    from aj_crew.dashboard.handlers import _shared
 
     monkeypatch.setattr(
-        "kiro_crew.agent.rebuild_agent_config_reporting", lambda: (Path("kirocrew.json"), False)
+        "aj_crew.agent.rebuild_agent_config_reporting", lambda: (Path("ajcrew.json"), False)
     )
     with caplog.at_level(logging.WARNING, logger=_shared.logger.name):
         assert _shared.rebuild_agent_spec("an MCP change") is False

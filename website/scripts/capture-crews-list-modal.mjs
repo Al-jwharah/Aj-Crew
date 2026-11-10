@@ -26,8 +26,8 @@ mkdirSync(OUT, { recursive: true })
 
 const CREWS = [
   {
-    name: 'kirocrew',
-    kiro_agent: 'kirocrew',
+    name: 'ajcrew',
+    kiro_agent: 'ajcrew',
     workspace: 'default',
     memory_store: 'default',
     description:
@@ -45,7 +45,7 @@ const CREWS = [
   },
   {
     name: 'research',
-    kiro_agent: 'kirocrew',
+    kiro_agent: 'ajcrew',
     workspace: 'research',
     memory_store: 'research',
   },
@@ -62,7 +62,7 @@ async function main() {
   logPageProblems(page)
 
   await stubDashboardApi(page, {
-    extra: crewsApi({ crews: CREWS, defaultAgent: 'kirocrew' }),
+    extra: crewsApi({ crews: CREWS, defaultAgent: 'ajcrew' }),
   })
 
   await page.goto(base + '/capabilities', { waitUntil: 'domcontentloaded' })

@@ -32,7 +32,7 @@
 //
 // Security posture: this view renders arbitrary untrusted web content, so it is
 // deliberately the most locked-down webContents in the app.
-//   • NO preload. The dashboard's preload exposes `kirocrew`/`electronAPI`/
+//   • NO preload. The dashboard's preload exposes `ajcrew`/`electronAPI`/
 //     `zoomAPI` bridges; attaching it here would hand those to any website.
 //   • sandbox on, contextIsolation on, nodeIntegration off, webviewTag off.
 //   • Navigation is restricted to http(s) — `normalizeUrl` rejects file:,

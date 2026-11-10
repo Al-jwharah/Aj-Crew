@@ -17,12 +17,12 @@ from test_shared_crew_queued_admission import (  # noqa: F401 -- shared fixtures
     installed,
 )
 
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.shared_crew import admission_entry as entry
-from kiro_crew.shared_crew import host_hooks
-from kiro_crew.shared_crew.admission import OperationKind, OperationState
-from kiro_crew.subagent import SubagentManager
-from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+from aj_crew.dashboard import chat_handlers
+from aj_crew.shared_crew import admission_entry as entry
+from aj_crew.shared_crew import host_hooks
+from aj_crew.shared_crew.admission import OperationKind, OperationState
+from aj_crew.subagent import SubagentManager
+from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
 
 BOUND = 30
 
@@ -192,7 +192,7 @@ async def test_slot_recorded_only_when_a_line_exists(tmp_path, written, status, 
     state = SimpleNamespace(conversation_log=log)
     from unittest.mock import patch
 
-    from kiro_crew.dashboard.slot_persistence import metadata_codec
+    from aj_crew.dashboard.slot_persistence import metadata_codec
 
     with patch.object(metadata_codec, "encode", return_value={}):
         assert await host_hooks.ensure_slot_recorded(state, slot) is expected

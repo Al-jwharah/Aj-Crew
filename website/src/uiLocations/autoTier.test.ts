@@ -239,7 +239,7 @@ function build(autoCandidates: Record<string, unknown>[]) {
     previewEnablers: {},
     catalogs: { en: EN, 'zh-CN': ZH },
     locales: ['en', 'zh-CN'],
-    productName: 'Kiro Crew',
+    productName: 'Aj Crew',
     inputDigest: 'sha256:test',
     routes: ROUTES,
     conditions: UI_CONDITIONS,
@@ -330,7 +330,7 @@ describe('the build-time auto artifact', () => {
 })
 
 describe('the committed index', () => {
-  const real = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../../src/kiro_crew/docs/ui-index.generated.json'), 'utf-8'))
+  const real = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../../src/aj_crew/docs/ui-index.generated.json'), 'utf-8'))
 
   it('carries no auto tier: it is generated at build time, so a new button never stales the committed file', () => {
     expect(real.locales).toHaveLength(12)

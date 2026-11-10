@@ -2,7 +2,7 @@
 
 Found while re-measuring: the baseline log carried
 
-    WARNING kiro_crew.vector_memory: Episodic write rejected: blocked content patterns
+    WARNING aj_crew.vector_memory: Episodic write rejected: blocked content patterns
 
 and the report attributed the resulting lost gold fragment to "dedup at 0.88 or the
 capacity cap", advising a re-run with dedup disabled. MEASURED on LoCoMo: 1 of 5882 turn
@@ -19,15 +19,15 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.eval.bench.corpus import (
+from aj_crew.eval.bench.corpus import (
     CAT_SINGLE_HOP,
     BenchInstance,
     BenchQuery,
     BenchSession,
     BenchTurn,
 )
-from kiro_crew.eval.bench.ingest import IngestConfig, IngestReport, ingest_instance
-from kiro_crew.vector_memory import _contains_injection
+from aj_crew.eval.bench.ingest import IngestConfig, IngestReport, ingest_instance
+from aj_crew.vector_memory import _contains_injection
 
 # A string the store's own screen rejects. Asserted rather than assumed, so this test
 # fails loudly if the screen's ruleset changes instead of silently testing nothing.
@@ -119,7 +119,7 @@ def test_a_clean_corpus_reports_zero(tmp_path: Path) -> None:
 
 def test_the_warning_names_the_injection_screen_and_not_only_dedup() -> None:
     """The whole point: the reader must not be pointed at a setting that cannot help."""
-    from kiro_crew.eval.bench.run import _ingest_warnings
+    from aj_crew.eval.bench.run import _ingest_warnings
 
     report = IngestReport(instance_id="inj")
     report.dropped_gold = ("t1",)
@@ -134,7 +134,7 @@ def test_the_warning_names_the_injection_screen_and_not_only_dedup() -> None:
 
 
 def test_the_warning_omits_the_injection_note_when_none_fired() -> None:
-    from kiro_crew.eval.bench.run import _ingest_warnings
+    from aj_crew.eval.bench.run import _ingest_warnings
 
     report = IngestReport(instance_id="clean")
     report.dropped_gold = ("t1",)
@@ -151,9 +151,9 @@ def test_the_warning_omits_the_injection_note_when_none_fired() -> None:
 )
 def test_the_real_corpus_rate_is_the_documented_one() -> None:
     """Pins the measured figure so a corpus revision that changes it is visible."""
-    from kiro_crew.eval.bench.adapters.locomo import load_locomo_file
-    from kiro_crew.eval.bench.datasets import cache_dir
-    from kiro_crew.eval.bench.ingest import fragment_text
+    from aj_crew.eval.bench.adapters.locomo import load_locomo_file
+    from aj_crew.eval.bench.datasets import cache_dir
+    from aj_crew.eval.bench.ingest import fragment_text
 
     corpus_path = Path(cache_dir()) / "locomo10.json"
     if not corpus_path.exists():

@@ -19,7 +19,7 @@ describe("createDeepLinkHandler", () => {
     const { fn, calls } = fakeDeliver();
     const h = createDeepLinkHandler({ deliver: fn });
     h.navigateReady();
-    assert.equal(h.handleUrl("kirocrew://chat?sid=cos-quick-chat"), true);
+    assert.equal(h.handleUrl("ajcrew://chat?sid=cos-quick-chat"), true);
     assert.deepEqual(calls, ["/chat?sid=cos-quick-chat"]);
     assert.equal(h.pending(), null);
   });
@@ -27,7 +27,7 @@ describe("createDeepLinkHandler", () => {
   it("a link flushed before the ack stays pending and is not delivered", () => {
     const { fn, calls } = fakeDeliver();
     const h = createDeepLinkHandler({ deliver: fn });
-    assert.equal(h.handleUrl("kirocrew://chat?sid=a"), false);
+    assert.equal(h.handleUrl("ajcrew://chat?sid=a"), false);
     assert.equal(h.pending(), "/chat?sid=a");
     // A flush with no ack (what `did-finish-load` would have done) keeps it.
     assert.equal(h.flushPending(), false);
@@ -38,7 +38,7 @@ describe("createDeepLinkHandler", () => {
   it("the ack flushes a held link exactly once", () => {
     const { fn, calls } = fakeDeliver();
     const h = createDeepLinkHandler({ deliver: fn });
-    h.handleUrl("kirocrew://chat?sid=a");
+    h.handleUrl("ajcrew://chat?sid=a");
     assert.equal(h.navigateReady(), true);
     assert.equal(h.pending(), null);
     assert.equal(h.flushPending(), false);
@@ -51,7 +51,7 @@ describe("createDeepLinkHandler", () => {
     const h = createDeepLinkHandler({ deliver: fn });
     h.navigateReady();
     h.navigationStarted();
-    assert.equal(h.handleUrl("kirocrew://chat?sid=b"), false);
+    assert.equal(h.handleUrl("ajcrew://chat?sid=b"), false);
     assert.equal(h.flushPending(), false);
     assert.deepEqual(calls, []);
     assert.equal(h.navigateReady(), true);
@@ -61,7 +61,7 @@ describe("createDeepLinkHandler", () => {
   it("an app detail link is held and flushed exactly like a session link", () => {
     const { fn, calls } = fakeDeliver();
     const h = createDeepLinkHandler({ deliver: fn });
-    assert.equal(h.handleUrl("kirocrew://apps/detail/keeb-crew"), false);
+    assert.equal(h.handleUrl("ajcrew://apps/detail/keeb-crew"), false);
     assert.equal(h.pending(), "/apps/detail/keeb-crew");
     assert.equal(h.navigateReady(), true);
     assert.deepEqual(calls, ["/apps/detail/keeb-crew"]);
@@ -74,7 +74,7 @@ describe("createDeepLinkHandler", () => {
     const { fn, calls } = fakeDeliver(accepts);
     const h = createDeepLinkHandler({ deliver: fn });
     h.navigateReady();
-    assert.equal(h.handleUrl("kirocrew://chat?sid=c"), false);
+    assert.equal(h.handleUrl("ajcrew://chat?sid=c"), false);
     assert.equal(h.pending(), "/chat?sid=c");
     accepts.value = true;
     h.navigationStarted();
@@ -86,16 +86,16 @@ describe("createDeepLinkHandler", () => {
   it("a later link replaces a held one", () => {
     const { fn } = fakeDeliver();
     const h = createDeepLinkHandler({ deliver: fn });
-    h.handleUrl("kirocrew://chat?sid=first");
-    h.handleUrl("kirocrew://chat?sid=second");
+    h.handleUrl("ajcrew://chat?sid=first");
+    h.handleUrl("ajcrew://chat?sid=second");
     assert.equal(h.pending(), "/chat?sid=second");
   });
 
-  it("a bare kirocrew:// raises at once, before any ack, and supersedes a held link", () => {
+  it("a bare ajcrew:// raises at once, before any ack, and supersedes a held link", () => {
     const { fn, calls } = fakeDeliver();
     const h = createDeepLinkHandler({ deliver: fn });
-    h.handleUrl("kirocrew://chat?sid=held");
-    assert.equal(h.handleUrl("kirocrew://"), true);
+    h.handleUrl("ajcrew://chat?sid=held");
+    assert.equal(h.handleUrl("ajcrew://"), true);
     assert.deepEqual(calls, [""]);
     assert.equal(h.pending(), null);
   });
@@ -105,7 +105,7 @@ describe("createDeepLinkHandler", () => {
     const logs = [];
     const h = createDeepLinkHandler({ deliver: fn, log: (m) => logs.push(m) });
     h.navigateReady();
-    const payload = "kirocrew://chat?sid=x&token=SECRETVALUE";
+    const payload = "ajcrew://chat?sid=x&token=SECRETVALUE";
     assert.equal(h.handleUrl(payload), false);
     assert.deepEqual(calls, []);
     assert.equal(h.pending(), null);
@@ -119,7 +119,7 @@ describe("createDeepLinkHandler", () => {
     const h = createDeepLinkHandler({ deliver: fn });
     h.navigateReady();
     assert.equal(h.handleArgv(["bin", "--flag"]), false);
-    assert.equal(h.handleArgv(["bin", "kirocrew://chat?sid=warm"]), true);
+    assert.equal(h.handleArgv(["bin", "ajcrew://chat?sid=warm"]), true);
     assert.deepEqual(calls, ["/chat?sid=warm"]);
   });
 
@@ -128,7 +128,7 @@ describe("createDeepLinkHandler", () => {
     // process.argv, read before any window exists.
     const { fn, calls } = fakeDeliver();
     const h = createDeepLinkHandler({ deliver: fn });
-    assert.equal(h.handleArgv(["C:\\Program Files\\KiroCrew\\KiroCrew.exe", "kirocrew://chat?sid=cold"]), false);
+    assert.equal(h.handleArgv(["C:\\Program Files\\AjCrew\\AjCrew.exe", "ajcrew://chat?sid=cold"]), false);
     assert.equal(h.pending(), "/chat?sid=cold");
     assert.deepEqual(calls, []);
     h.navigateReady();
@@ -153,7 +153,7 @@ describe("installNavigateReady", () => {
 
   it("counts navigate-ready only from the dashboard view", () => {
     const { ipcMain, dashboard, other, handler, calls } = harness();
-    handler.handleUrl("kirocrew://chat?sid=k");
+    handler.handleUrl("ajcrew://chat?sid=k");
     ipcMain.emit("navigate-ready", { sender: other });
     assert.deepEqual(calls, [], "another renderer's ack is ignored");
     ipcMain.emit("navigate-ready", { sender: dashboard });
@@ -167,9 +167,9 @@ describe("installNavigateReady", () => {
     dashboard.emit("did-start-navigation", {}, "http://localhost:5476/chat", true, true);
     dashboard.emit("did-start-navigation", {}, "http://localhost:5476/pane", false, false);
     other.emit("did-start-navigation", {}, "http://localhost:5476/", false, true);
-    assert.equal(handler.handleUrl("kirocrew://chat?sid=a"), true, "same-document, subframe and other views keep the ack");
+    assert.equal(handler.handleUrl("ajcrew://chat?sid=a"), true, "same-document, subframe and other views keep the ack");
     dashboard.emit("did-start-navigation", {}, "http://localhost:5476/?token=t", false, true);
-    assert.equal(handler.handleUrl("kirocrew://chat?sid=b"), false, "a new document must ack again");
+    assert.equal(handler.handleUrl("ajcrew://chat?sid=b"), false, "a new document must ack again");
     ipcMain.emit("navigate-ready", { sender: dashboard });
     assert.deepEqual(calls, ["/chat?sid=a", "/chat?sid=b"]);
   });
@@ -194,9 +194,9 @@ describe("installDeepLinks", () => {
     handler.navigateReady();
     const { registered } = installDeepLinks({ app, handler, platform: "darwin", defaultApp: false });
     assert.equal(registered, true);
-    assert.deepEqual(app.registeredSchemes, ["kirocrew"]);
+    assert.deepEqual(app.registeredSchemes, ["ajcrew"]);
     let prevented = false;
-    app.emit("open-url", { preventDefault: () => (prevented = true) }, "kirocrew://chat?sid=k");
+    app.emit("open-url", { preventDefault: () => (prevented = true) }, "ajcrew://chat?sid=k");
     assert.equal(prevented, true);
     assert.deepEqual(calls, ["/chat?sid=k"]);
   });
@@ -227,7 +227,7 @@ describe("installDeepLinks", () => {
     const handler = createDeepLinkHandler({ deliver: () => true });
     const { registered } = installDeepLinks({ app, handler, log: (m) => logs.push(m), platform: "win32", defaultApp: false });
     assert.equal(registered, true);
-    assert.deepEqual(app.registeredSchemes, ["kirocrew"]);
+    assert.deepEqual(app.registeredSchemes, ["ajcrew"]);
     assert.deepEqual(logs, []);
   });
 
@@ -244,7 +244,7 @@ describe("installDeepLinks", () => {
     assert.deepEqual(app.registeredSchemes, []);
     assert.equal(logs.length, 1);
     assert.match(logs[0], /process\.defaultApp/);
-    app.emit("open-url", { preventDefault: () => {} }, "kirocrew://chat?sid=dev");
+    app.emit("open-url", { preventDefault: () => {} }, "ajcrew://chat?sid=dev");
     assert.deepEqual(calls, ["/chat?sid=dev"]);
   });
 });

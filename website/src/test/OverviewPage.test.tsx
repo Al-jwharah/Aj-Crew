@@ -31,7 +31,7 @@ vi.mock('../api/client', () => ({
     // the Kiro sign-in status, let alone render its chooser.
     kasLoginStatus: vi.fn().mockResolvedValue({ authenticated: false }),
     // The selected backend decides whether the sign-in signpost renders.
-    kirocrewConfig: vi.fn().mockResolvedValue({ agent: { acp_backend: 'kiro' } }),
+    ajcrewConfig: vi.fn().mockResolvedValue({ agent: { acp_backend: 'kiro' } }),
   },
 }))
 
@@ -80,7 +80,7 @@ describe('OverviewPage — mission control', () => {
     expect(screen.getByText('Uptime')).toBeInTheDocument()
     expect(screen.getByText('Sessions')).toBeInTheDocument()
     // The landing view has no sub-tab bar.
-    expect(screen.queryByText('KiroCrew Config')).not.toBeInTheDocument()
+    expect(screen.queryByText('AjCrew Config')).not.toBeInTheDocument()
     expect(screen.queryByText('Agent Config')).not.toBeInTheDocument()
     expect(screen.queryByText('Import/Export')).not.toBeInTheDocument()
     // Neither drill-in surface is mounted on the landing view.
@@ -217,7 +217,7 @@ describe('OverviewPage — mission control', () => {
     expect(screen.queryByTestId('kiro-sign-in-moved')).not.toBeInTheDocument()
     first.unmount()
 
-    vi.mocked(api.kirocrewConfig).mockResolvedValueOnce({ agent: { acp_backend: KIRO_SIGN_IN_BACKEND } })
+    vi.mocked(api.ajcrewConfig).mockResolvedValueOnce({ agent: { acp_backend: KIRO_SIGN_IN_BACKEND } })
     renderWithProviders(<OverviewPage />, { store: statusStore() })
     expect(await screen.findByText('Memory')).toBeInTheDocument()
     expect(screen.queryByTestId('kiro-sign-in-moved')).not.toBeInTheDocument()

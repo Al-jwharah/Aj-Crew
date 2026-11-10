@@ -24,13 +24,13 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.testing.channel_fixtures import load_fixture
-from kiro_crew.testing.fake_channel_wire import (
+from aj_crew.testing.channel_fixtures import load_fixture
+from aj_crew.testing.fake_channel_wire import (
     FakeWireSession,
     UnroutedRequestError,
     WireResponse,
 )
-from kiro_crew.weixin.client import (
+from aj_crew.weixin.client import (
     EP_GET_BOT_QR,
     EP_GET_QR_STATUS,
     EP_GET_UPDATES,
@@ -42,11 +42,11 @@ from kiro_crew.weixin.client import (
 _BASE = "https://ilink.example.invalid"
 
 # Shapes come from attributed fixture files, never inline literals: a fixture
-# records WHERE the shape was observed (see kiro_crew.testing.channel_fixtures),
+# records WHERE the shape was observed (see aj_crew.testing.channel_fixtures),
 # so a live-probed contract is distinguishable from a guess and the live
 # conformance lane can re-verify it against the vendor.
 # The fixtures root lives in the TEST tree, so the layout coupling lives here
-# too -- kiro_crew.testing.channel_fixtures ships in the wheel and deliberately
+# too -- aj_crew.testing.channel_fixtures ships in the wheel and deliberately
 # has no default root (no test/ tree exists in an installed package).
 CHANNEL_FIXTURES = Path(__file__).resolve().parent / "fixtures" / "channels"
 
@@ -71,7 +71,7 @@ class TestBatchGuardInPollLoop:
     redelivery."""
 
     def _transport(self):
-        from kiro_crew.weixin.transport import WeixinTransport
+        from aj_crew.weixin.transport import WeixinTransport
 
         class _StopLoop(Exception):
             pass

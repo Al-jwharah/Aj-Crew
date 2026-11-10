@@ -43,7 +43,7 @@
  *   13-signin-required the modal when no live Kiro sign-in could be read: the
  *                      shortened sign-in notice with the hand-off and no Refresh
  *   14-config-unreadable
- *                      the gateway holds no reading AND `/api/config/kirocrew` fails:
+ *                      the gateway holds no reading AND `/api/config/ajcrew` fails:
  *                      the pill's dash with its own label, the modal's ErrorNotice
  *                      with the hand-off and Refresh; opening re-asks for the config
  *
@@ -64,7 +64,7 @@ import { chromiumExecutable } from './lib/chromium-executable.mjs'
 import { serveDist } from './lib/serve-dist.mjs'
 import { json, KIRO_BACKEND_CONFIG_FIXTURE, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 
-const OUT = process.argv[2] || join(process.env.KIROCREW_SCRATCH || '/tmp', 'usage-refresh-evidence')
+const OUT = process.argv[2] || join(process.env.AJCREW_SCRATCH || '/tmp', 'usage-refresh-evidence')
 mkdirSync(OUT, { recursive: true })
 
 const REFRESH = { name: /^Refresh$/ }
@@ -113,7 +113,7 @@ const shot = async (page, name, clip) => {
  *             | 'signin' (`{available:false, reason:'signin_required'}`)
  *   `refresh` what the POST answers: 'reading' (200) | 'stale' (200, dimmed prior reading)
  *             | 'parked' (200 + skipped marker) | 'error' (500) | 'in-flight' (409) | 'hang' (held open)
- *   `config`  what GET /api/config/kirocrew answers: 'ok'
+ *   `config`  what GET /api/config/ajcrew answers: 'ok'
  *             (`KIRO_BACKEND_CONFIG_FIXTURE`, the kiro backend) | 'error' (500)
  * Returns the page, the POST count, the config-read count, and the release handle for 'hang'.
  */
@@ -153,7 +153,7 @@ async function scene(theme, get, refresh, config = 'ok') {
       else await json(route, { error: 'usage store unreadable' }, 500)
       return true
     }
-    if (path === '/api/config/kirocrew') {
+    if (path === '/api/config/ajcrew') {
       if (config === 'error') {
         configReads += 1
         await json(route, { error: 'config store unreadable' }, 500)

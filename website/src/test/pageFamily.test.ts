@@ -49,7 +49,7 @@ describe('pageFamily', () => {
   it('finds the split pages it is read for', () => {
     expect(pageFamilyFiles('ArtifactsPage')[0]).toBe('ArtifactsPage.tsx')
     expect(pageFamilyFiles('ArtifactsPage')).toEqual(expect.arrayContaining(['ArtifactsPageGallery.tsx', 'ArtifactsPageFolders.tsx']))
-    expect(pageFamilyFiles('KiroCrewAgentsPage')[0]).toBe('KiroCrewAgentsPage.tsx')
-    expect(pageFamilyFiles('KiroCrewAgentsPage')).toEqual(expect.arrayContaining(['KiroCrewAgentsPageRoster.tsx', 'kiroCrewAgentsPageRosterLabels.ts']))
+    expect(pageFamilyFiles('AjCrewAgentsPage')[0]).toBe('AjCrewAgentsPage.tsx')
+    expect(pageFamilyFiles('AjCrewAgentsPage')).toEqual(expect.arrayContaining(['AjCrewAgentsPageRoster.tsx', 'ajCrewAgentsPageRosterLabels.ts']))
   })
 })

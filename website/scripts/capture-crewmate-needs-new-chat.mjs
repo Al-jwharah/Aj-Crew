@@ -23,15 +23,15 @@ mkdirSync(OUT, { recursive: true })
 const now = Math.floor(Date.now() / 1000)
 const slots = [{
   key: ACTIVE, title: 'Plan the next release', running: false, messages: 2,
-  agent: 'kirocrew', agent_kind: 'template', modified: now, last_ts: new Date().toISOString(),
+  agent: 'ajcrew', agent_kind: 'template', modified: now, last_ts: new Date().toISOString(),
   folder_id: '', last_message: 'Here is the release checklist.', source_links: [], source_links_total: 0,
 }]
 const catalog = {
   agents: [
-    { name: 'kirocrew', selection_kind: 'template', scope: 'global', kiro_agent: 'kirocrew', description: 'Primary Kiro Crew agent.', source: 'builtin', markdown_only: false },
-    { name: MEMBER, selection_kind: 'member', display_name: 'Release helper', description: 'Tracks release checklists.', source: 'kirocrew', memory_store: 'member-release-helper', markdown_only: false },
+    { name: 'ajcrew', selection_kind: 'template', scope: 'global', kiro_agent: 'ajcrew', description: 'Primary Aj Crew agent.', source: 'builtin', markdown_only: false },
+    { name: MEMBER, selection_kind: 'member', display_name: 'Release helper', description: 'Tracks release checklists.', source: 'ajcrew', memory_store: 'member-release-helper', markdown_only: false },
   ],
-  default_agent: 'kirocrew',
+  default_agent: 'ajcrew',
   session_backend: 'kiro',
   markdown_refused_backends: ['kiro'],
   markdown_spec_backends: ['kas'],
@@ -80,7 +80,7 @@ async function main() {
         localStorageEntries: { 'mc-active-slot': ACTIVE, 'mc-privacy-notice-v1': '1' },
       })
       await page.goto(base + '/chat', { waitUntil: 'domcontentloaded' })
-      const chip = page.locator('button', { hasText: 'kirocrew' }).last()
+      const chip = page.locator('button', { hasText: 'ajcrew' }).last()
       await chip.waitFor({ state: 'visible', timeout: 20_000 })
       await chip.click()
       const pop = page.locator('[role="dialog"]').filter({ has: page.locator('[role="listbox"]') }).last()

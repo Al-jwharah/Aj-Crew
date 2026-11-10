@@ -19,8 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.hooks import verified_replace_file_nolink
+from aj_crew import platform_compat
+from aj_crew.hooks import verified_replace_file_nolink
 
 # ── the descriptor-pinned replace ──
 
@@ -107,7 +107,7 @@ def test_the_same_error_on_posix_stays_refused(tmp_path, monkeypatch, by_name_re
 def _load_fleet_probe_sessions():
     path = (
         Path(__file__).resolve().parent.parent
-        / "src/kiro_crew/builtin_skills/pipeline-conductor/scripts/fleet_probe_sessions.py"
+        / "src/aj_crew/builtin_skills/pipeline-conductor/scripts/fleet_probe_sessions.py"
     )
     spec = importlib.util.spec_from_file_location("_fleet_probe_sessions_under_test", path)
     assert spec is not None and spec.loader is not None

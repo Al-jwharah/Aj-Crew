@@ -40,16 +40,16 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew import webhooks
-from kiro_crew.dashboard import server as server_mod
-from kiro_crew.dashboard import token_auth
-from kiro_crew.dashboard.handlers import messaging
-from kiro_crew.dashboard.token_auth import (
+from aj_crew import webhooks
+from aj_crew.dashboard import server as server_mod
+from aj_crew.dashboard import token_auth
+from aj_crew.dashboard.handlers import messaging
+from aj_crew.dashboard.token_auth import (
     AGENT_HOOK_PATH,
     TEAMS_WEBHOOK_PATH,
     is_csrf_exempt,
 )
-from kiro_crew.teams.client import TEAMS_ACTIVITY_REQUEST_KEY, TEAMS_MAX_ACTIVITY_BYTES
+from aj_crew.teams.client import TEAMS_ACTIVITY_REQUEST_KEY, TEAMS_MAX_ACTIVITY_BYTES
 
 
 class _FakeContent:
@@ -143,7 +143,7 @@ class TestCsrfExemptSet:
         exemption on a path nobody serves is silent, and so is the reverse."""
         import importlib
 
-        routes = importlib.import_module(f"kiro_crew.dashboard.routes.{route_module}")
+        routes = importlib.import_module(f"aj_crew.dashboard.routes.{route_module}")
         app = web.Application()
         routes.register(app)
         methods = {

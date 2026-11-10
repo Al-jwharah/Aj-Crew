@@ -58,7 +58,7 @@ def _run_backend(
     (home / "python-bin").write_text(f"{marker_py}\n", encoding="utf-8")
 
     env = dict(os.environ)
-    env["KIROCREW_HOME"] = str(home)
+    env["AJCREW_HOME"] = str(home)
     env.pop("PY", None)
     if env_py is not None:
         env["PY"] = env_py

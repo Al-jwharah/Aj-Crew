@@ -292,7 +292,7 @@ async function cropToSquareDataUri(file: File): Promise<string> {
       // `i` is an HTMLImageElement (decode-only, cannot execute script) and
       // `url` is a same-origin blob: URL minted two lines up from the user's
       // own file pick — no externally controlled input reaches the sink.
-      // nosemgrep: semgrep.kirocrew.frontend-external-script-inject
+      // nosemgrep: semgrep.ajcrew.frontend-external-script-inject
       i.src = url
     })
     const side = Math.min(img.naturalWidth, img.naturalHeight)

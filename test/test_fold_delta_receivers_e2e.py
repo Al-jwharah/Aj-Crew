@@ -34,20 +34,20 @@ from test_fold_watch_e2e import (  # noqa: F401 -- fixtures register by import
     e2e_state,
 )
 
-from kiro_crew.crew_log import eager, fold_delta, session_tree_projection
-from kiro_crew.dashboard import token_auth
-from kiro_crew.dashboard.handlers.crew_log import (
+from aj_crew.crew_log import eager, fold_delta, session_tree_projection
+from aj_crew.dashboard import token_auth
+from aj_crew.dashboard.handlers.crew_log import (
     DELTA_FRAME,
     SLOT_FRAME,
     CrewLogPublisher,
     api_session_crew_log_projection,
 )
-from kiro_crew.dashboard.websocket_hub import (
+from aj_crew.dashboard.websocket_hub import (
     FOLD_APPLY_CAPABILITY,
     FOLD_DELTA_CAPABILITY,
     FOLD_HELLO_FRAME,
 )
-from kiro_crew.testing.wait import async_wait_until, finished
+from aj_crew.testing.wait import async_wait_until, finished
 
 BOARD = "board-a"
 UNIT = "s-d-a"
@@ -76,7 +76,7 @@ async def _hello(tab) -> dict:
 async def test_a_delta_tab_rebuilds_the_board_and_older_tabs_get_whole_values(
     e2e_state, monkeypatch  # noqa: F811 -- the fixture imported above
 ):
-    from kiro_crew.dashboard.ws import api_ws
+    from aj_crew.dashboard.ws import api_ws
 
     monkeypatch.setattr(
         session_tree_projection,

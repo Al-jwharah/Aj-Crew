@@ -41,9 +41,9 @@ from mcp_launch_approval_helpers import (  # noqa: F401 -- the fixture is reques
     toggle_home_fixture,
 )
 
-from kiro_crew.mcp_gateway import rewriter
-from kiro_crew.mcp_gateway.hashing import encode_target_args
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.mcp_gateway import rewriter
+from aj_crew.mcp_gateway.hashing import encode_target_args
+from aj_crew.testing.wait import async_wait_until
 
 #: Opts this module out of the conftest fixture that approves every gatewayd launch.
 ENFORCE_LAUNCH_APPROVAL = True
@@ -200,21 +200,21 @@ def test_the_gateway_filter_drops_an_unapproved_target():
     approvals = _approvals_for(mod, "srv", _APPROVED_CMD, [])
     kept, dropped = filt(
         {
-            "KIROCREW_MCP_TARGET_SRV": _target_spec(_APPROVED_CMD),
-            "KIROCREW_MCP_TARGET_SRV__abc": _target_spec(_ATTACK_CMD, "-c", "id"),
-            "KIROCREW_MCP_TARGET_OTHER": _target_spec(_ATTACK_CMD),
+            "AJCREW_MCP_TARGET_SRV": _target_spec(_APPROVED_CMD),
+            "AJCREW_MCP_TARGET_SRV__abc": _target_spec(_ATTACK_CMD, "-c", "id"),
+            "AJCREW_MCP_TARGET_OTHER": _target_spec(_ATTACK_CMD),
         },
         approvals,
     )
-    assert kept == {"KIROCREW_MCP_TARGET_SRV": _target_spec(_APPROVED_CMD)}
+    assert kept == {"AJCREW_MCP_TARGET_SRV": _target_spec(_APPROVED_CMD)}
     assert dropped == ["OTHER", "SRV"]
 
 
 def test_gatewayd_refuses_to_resolve_an_unapproved_target(tmp_path, monkeypatch):
-    from kiro_crew.mcp_gateway import gatewayd
+    from aj_crew.mcp_gateway import gatewayd
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_MCP_TARGET_SRV", _target_spec(_ATTACK_CMD, "-c", "id"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_MCP_TARGET_SRV", _target_spec(_ATTACK_CMD, "-c", "id"))
     mod = _approval_module()
     if mod is not None:
         approvals = _approvals_for(mod, "srv", _APPROVED_CMD, [])
@@ -224,12 +224,12 @@ def test_gatewayd_refuses_to_resolve_an_unapproved_target(tmp_path, monkeypatch)
 
 
 def test_gatewayd_resolves_an_approved_target(tmp_path, monkeypatch):
-    from kiro_crew.mcp_gateway import gatewayd
+    from aj_crew.mcp_gateway import gatewayd
 
     mod = _approval_module()
     assert mod is not None
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_MCP_TARGET_SRV", _target_spec(_APPROVED_CMD))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_MCP_TARGET_SRV", _target_spec(_APPROVED_CMD))
     approvals = _approvals_for(mod, "srv", _APPROVED_CMD, [])
     mod._write(mod.approvals_path(), mod._document(approvals, {}))
 
@@ -238,17 +238,17 @@ def test_gatewayd_resolves_an_approved_target(tmp_path, monkeypatch):
 
 
 def test_gatewayd_fails_closed_without_a_store(tmp_path, monkeypatch):
-    from kiro_crew.mcp_gateway import gatewayd
+    from aj_crew.mcp_gateway import gatewayd
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_MCP_TARGET_SRV", _target_spec(_APPROVED_CMD))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_MCP_TARGET_SRV", _target_spec(_APPROVED_CMD))
 
     assert gatewayd.env_target_resolver(_pool_key("srv")) is None
 
 
 @pytest.mark.asyncio
 async def test_gateway_resolution_reads_approval_store_off_loop(tmp_path, monkeypatch):
-    from kiro_crew.mcp_gateway import gatewayd
+    from aj_crew.mcp_gateway import gatewayd
 
     resolve = getattr(gatewayd, "_resolve_target_off_loop", None)
     assert resolve is not None, "gateway target resolution must have an async offload boundary"
@@ -263,8 +263,8 @@ async def test_gateway_resolution_reads_approval_store_off_loop(tmp_path, monkey
         return mod.LaunchApprovals()
 
     monkeypatch.setattr(mod, "load_approvals", load_snapshot)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_MCP_TARGET_SRV", _target_spec(_APPROVED_CMD))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_MCP_TARGET_SRV", _target_spec(_APPROVED_CMD))
 
     assert await resolve(gatewayd.env_target_resolver, _pool_key("srv")) is None
     assert len(reader_threads) == 1
@@ -272,26 +272,26 @@ async def test_gateway_resolution_reads_approval_store_off_loop(tmp_path, monkey
 
 @pytest.mark.asyncio
 async def test_gateway_resolution_fails_closed_before_approval_store_exists(tmp_path, monkeypatch):
-    from kiro_crew.mcp_gateway import gatewayd
+    from aj_crew.mcp_gateway import gatewayd
 
     resolve = getattr(gatewayd, "_resolve_target_off_loop", None)
     assert resolve is not None, "gateway target resolution must have an async offload boundary"
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_MCP_TARGET_SRV", _target_spec(_APPROVED_CMD))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_MCP_TARGET_SRV", _target_spec(_APPROVED_CMD))
 
     assert await resolve(gatewayd.env_target_resolver, _pool_key("srv")) is None
 
 
 @pytest.mark.asyncio
 async def test_gateway_resolution_reloads_a_new_approval_without_restart(tmp_path, monkeypatch):
-    from kiro_crew.mcp_gateway import gatewayd
+    from aj_crew.mcp_gateway import gatewayd
 
     resolve = getattr(gatewayd, "_resolve_target_off_loop", None)
     assert resolve is not None, "gateway target resolution must have an async offload boundary"
     mod = _approval_module()
     assert mod is not None
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_MCP_TARGET_SRV", _target_spec(_APPROVED_CMD))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_MCP_TARGET_SRV", _target_spec(_APPROVED_CMD))
     key = _pool_key("srv")
 
     assert await resolve(gatewayd.env_target_resolver, key) is None
@@ -307,14 +307,14 @@ async def test_gateway_resolution_reloads_a_new_approval_without_restart(tmp_pat
 async def test_gateway_rechecks_approval_after_spawn_queue_wait(tmp_path, monkeypatch):
     from unittest.mock import AsyncMock
 
-    from kiro_crew.mcp_gateway import admission as admission_mod
-    from kiro_crew.mcp_gateway import gatewayd, host_budget
-    from kiro_crew.mcp_gateway.pool import BackendPool
+    from aj_crew.mcp_gateway import admission as admission_mod
+    from aj_crew.mcp_gateway import gatewayd, host_budget
+    from aj_crew.mcp_gateway.pool import BackendPool
 
     mod = _approval_module()
     assert mod is not None
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_MCP_TARGET_SRV", _target_spec(_APPROVED_CMD))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_MCP_TARGET_SRV", _target_spec(_APPROVED_CMD))
     approved = _approvals_for(mod, "srv", _APPROVED_CMD, [])
     revoked = False
     loads = 0
@@ -431,7 +431,7 @@ def test_the_first_write_creates_the_sealed_directory_owner_only_under_any_umask
     ],
 )
 def test_agent_tools_cannot_write_the_launch_inputs(leaf):
-    from kiro_crew.security.paths import is_sensitive_path, is_sensitive_write_path
+    from aj_crew.security.paths import is_sensitive_path, is_sensitive_write_path
 
     path = str(Path.home() / ".kiro" / "crew" / leaf)
     assert is_sensitive_write_path(path)
@@ -440,7 +440,7 @@ def test_agent_tools_cannot_write_the_launch_inputs(leaf):
 
 
 def test_launch_approval_inputs_are_read_only_in_the_sandbox(tmp_path, monkeypatch):
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     monkeypatch.setattr(sandbox, "config_dir", lambda: tmp_path)
     dirs, files = sandbox._sealable_absent_ceilings()
@@ -458,7 +458,7 @@ def test_launch_approval_inputs_are_read_only_in_the_sandbox(tmp_path, monkeypat
 
 @pytest.mark.parametrize("leaf", ["mcp-launch-approvals", "mcp/resolved"])
 def test_launch_artifact_symlinks_are_refused_before_the_sandbox_mount(tmp_path, monkeypatch, leaf):
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     target = tmp_path / leaf
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -472,7 +472,7 @@ def test_launch_artifact_symlinks_are_refused_before_the_sandbox_mount(tmp_path,
 
 
 def test_nested_resolved_launch_overlap_uses_its_named_reason(tmp_path, monkeypatch):
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     home = tmp_path / "crew"
     target = home / "mcp" / "resolved"
@@ -559,10 +559,10 @@ def test_command_and_derived_env_are_approved_as_one_pair(tmp_path, monkeypatch)
     assert stored.admits_launch("SRV", command_a, env_a)
     assert not stored.admits_launch("SRV", command_a, env_b)
 
-    from kiro_crew.mcp_gateway import gatewayd
+    from aj_crew.mcp_gateway import gatewayd
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_MCP_TARGET_SRV", _target_spec(_APPROVED_CMD))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_MCP_TARGET_SRV", _target_spec(_APPROVED_CMD))
     key = _pool_key("srv")
     key = type(key)(
         **{
@@ -575,7 +575,7 @@ def test_command_and_derived_env_are_approved_as_one_pair(tmp_path, monkeypatch)
 
 @pytest.mark.asyncio
 async def test_status_reports_stored_refusal_without_resolving_again(toggle_home, monkeypatch):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     mod = _approval_module()
     assert mod is not None
@@ -615,12 +615,12 @@ async def test_status_names_a_refused_share_by_its_configured_name(tmp_path, mon
     """A slash-named share whose refusal is stored under its alias is still named."""
     from types import SimpleNamespace
 
-    from kiro_crew.config import loader
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.config import loader
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     mod = _approval_module()
     assert mod is not None
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     approvals = mod.LaunchApprovals()
     approvals.stored_refused = {
         "PLAYWRIGHT-MCP": {"name": "playwright-mcp", "reason": mod.REFUSED_UNAPPROVED},
@@ -630,7 +630,7 @@ async def test_status_names_a_refused_share_by_its_configured_name(tmp_path, mon
     cfg = SimpleNamespace(
         mcp_gateway=SimpleNamespace(enabled=True, stub_servers=["npm:@playwright/mcp", "beta-mcp"])
     )
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
 
     response = await mcp_mod.api_mcp_gateway_status(_stub_request({}))
     body = json.loads(response.body)
@@ -640,11 +640,11 @@ async def test_status_names_a_refused_share_by_its_configured_name(tmp_path, mon
 
 @pytest.mark.asyncio
 async def test_refused_display_argv_is_redacted_in_storage_and_status(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     mod = _approval_module()
     assert mod is not None
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     approvals = mod.LaunchApprovals()
     secret = "sk-proj-" + "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGH"
     fingerprint = mod.launch_fingerprint(_ATTACK_CMD, [f"--token={secret}"], {})
@@ -1153,18 +1153,18 @@ def test_the_approved_launch_is_wrapped_after_other_specs_fill_the_launch_cap(tm
         (source / f"{name}.json").write_text(json.dumps(spec))
     # Named to sort after every other spec, so it is read once the cap is full.
     crew_entry = {"command": _APPROVED_CMD, "args": []}
-    (source / "kiro-crew.json").write_text(
-        json.dumps({"name": "kiro-crew", "mcpServers": {"srv": crew_entry}})
+    (source / "aj-crew.json").write_text(
+        json.dumps({"name": "aj-crew", "mcpServers": {"srv": crew_entry}})
     )
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_gateway.rewriter"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_gateway.rewriter"):
         target_env = _rewrite(tmp_path, frozenset({"srv"}), approvals)
 
     # The one distinct launch handed to gatewayd is the approved one.
     running = {target_env[key] for key in _targets_running(target_env, _APPROVED_CMD)}
     assert [shlex.split(spec) for spec in running] == [[_APPROVED_CMD]]
     overlays = tmp_path / "home" / "mcp-gateway" / "agents"
-    wrapped = json.loads((overlays / "kiro-crew.json").read_text())["mcpServers"]["srv"]
+    wrapped = json.loads((overlays / "aj-crew.json").read_text())["mcpServers"]["srv"]
     assert wrapped.get(rewriter._WRAPPER_MARKER)
     raw = json.loads((overlays / "aim-00.json").read_text())["mcpServers"]["srv"]
     assert not raw.get(rewriter._WRAPPER_MARKER)
@@ -1172,10 +1172,10 @@ def test_the_approved_launch_is_wrapped_after_other_specs_fill_the_launch_cap(tm
     refusals = [
         record.getMessage()
         for record in caplog.records
-        if record.name == "kiro_crew.mcp_gateway.rewriter"
+        if record.name == "aj_crew.mcp_gateway.rewriter"
         and record.getMessage().startswith("mcp launch approvals:")
     ]
-    assert not any("'kiro-crew'" in line for line in refusals)
+    assert not any("'aj-crew'" in line for line in refusals)
     capped = [line for line in refusals if f"'aim-{cap:02d}'" in line]
     assert len(capped) == 1
     assert f"_MAX_SERVER_LAUNCHES={cap}" in capped[0]

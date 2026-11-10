@@ -31,7 +31,7 @@ import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/mcp-app-message-rows'
 const SLOT = 'chat-app-message'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 // mise's node injects LD_LIBRARY_PATH pointing at its own libstdc++ at process
 // startup (even bypassing the shim), and chromium inherits it and fails with
@@ -78,7 +78,7 @@ const SCENES = { '01-dispatched-turn': DISPATCHED, '02-queued-behind-turn': QUEU
 
 const slots = [{
   key: SLOT, title: 'MCP App message rows', running: false, unread: 0,
-  messages: 4, agent: 'kirocrew', memory_mode: 'persistent', project: PROJECT,
+  messages: 4, agent: 'ajcrew', memory_mode: 'persistent', project: PROJECT,
   modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0,
 }]
 

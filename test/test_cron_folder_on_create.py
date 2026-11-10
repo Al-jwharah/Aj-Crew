@@ -2,7 +2,7 @@
 
 Covers the three creation surfaces that carry a folder at create time:
 the MCP ``cron_add``/``cron_update`` tools (``folder`` argument), the CLI
-(``kirocrew cron add --folder``), and the app manifest (``CronEntry.folder``),
+(``ajcrew cron add --folder``), and the app manifest (``CronEntry.folder``),
 plus the shared read-only resolver they build on.
 
 The resolver contract under test: ``cron_folders.json`` is OWNED by the
@@ -21,9 +21,9 @@ import json
 
 import pytest
 
-from kiro_crew.apps.manifest import CronEntry
-from kiro_crew.config.loader import config_dir
-from kiro_crew.cron import load_cron_folders, lookup_cron_folder_id
+from aj_crew.apps.manifest import CronEntry
+from aj_crew.config.loader import config_dir
+from aj_crew.cron import load_cron_folders, lookup_cron_folder_id
 
 
 def _write_folders(entries) -> None:
@@ -32,9 +32,9 @@ def _write_folders(entries) -> None:
 
 @pytest.fixture()
 def folders_on_disk(tmp_path, monkeypatch):
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     config_dir().mkdir(parents=True, exist_ok=True)
     _write_folders(
         [
@@ -121,13 +121,13 @@ class TestLookupCronFolderId:
         # No file at all is genuinely "no folders yet", unlike a corrupt one.
         home = tmp_path / "empty-home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         assert lookup_cron_folder_id("Veille").missing is True
 
     def test_missing_file_degrades_to_no_folders(self, tmp_path, monkeypatch):
         home = tmp_path / "empty-home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         assert load_cron_folders() == []
 
     def test_malformed_entries_are_skipped(self, folders_on_disk):
@@ -149,7 +149,7 @@ class TestLookupCronFolderId:
 
 class TestMcpResolveCronFolder:
     def test_existing_name_resolves_without_http(self, folders_on_disk, monkeypatch):
-        from kiro_crew import mcp_cron
+        from aj_crew import mcp_cron
 
         def _boom(*a, **k):  # the create endpoint must not be hit
             raise AssertionError("POST issued for an existing folder")
@@ -160,7 +160,7 @@ class TestMcpResolveCronFolder:
         assert mcp_cron._resolve_cron_folder("", session_key="") == ("", None)
 
     def test_missing_name_is_created_via_dashboard_endpoint(self, folders_on_disk, monkeypatch):
-        from kiro_crew import mcp_cron
+        from aj_crew import mcp_cron
 
         calls: list[tuple[str, dict]] = []
 
@@ -174,7 +174,7 @@ class TestMcpResolveCronFolder:
         assert calls == [("/api/cron-folders", {"name": "Fresh"})]
 
     def test_create_failure_is_reported_not_swallowed(self, folders_on_disk, monkeypatch):
-        from kiro_crew import mcp_cron
+        from aj_crew import mcp_cron
 
         monkeypatch.setattr(mcp_cron, "_post", lambda *a, **k: {"error": "gateway unreachable"})
         fid, err = mcp_cron._resolve_cron_folder("Fresh", session_key="")
@@ -182,7 +182,7 @@ class TestMcpResolveCronFolder:
         assert err is not None and "gateway unreachable" in err
 
     def test_id_shaped_miss_is_refused_not_created(self, folders_on_disk, monkeypatch):
-        from kiro_crew import mcp_cron
+        from aj_crew import mcp_cron
 
         def _boom(*a, **k):
             raise AssertionError("POST issued for an id-shaped reference")
@@ -193,7 +193,7 @@ class TestMcpResolveCronFolder:
         assert err is not None and "minted" in err
 
     def test_ambiguous_name_is_refused(self, folders_on_disk, monkeypatch):
-        from kiro_crew import mcp_cron
+        from aj_crew import mcp_cron
 
         _write_folders(
             [
@@ -228,8 +228,8 @@ class TestCronEntryFolder:
         assert entry.folder == ""
 
     def test_defs_from_manifest_carry_folder(self):
-        from kiro_crew.apps.bridges import _cron_defs_from_manifest
-        from kiro_crew.apps.manifest import AppManifest
+        from aj_crew.apps.bridges import _cron_defs_from_manifest
+        from aj_crew.apps.manifest import AppManifest
 
         manifest = AppManifest.from_dict(
             {
@@ -266,8 +266,8 @@ class TestRegistrationFilesJobIntoFolder:
         ``state`` stands in for the gateway's dashboard: when given, its folder
         creator is wired onto the service, as the dashboard does at startup.
         """
-        from kiro_crew.apps.bridges import _app_crons_path, register_app_crons_with_service
-        from kiro_crew.cron import CronService
+        from aj_crew.apps.bridges import _app_crons_path, register_app_crons_with_service
+        from aj_crew.cron import CronService
 
         path = _app_crons_path("test-app")
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -291,7 +291,7 @@ class TestRegistrationFilesJobIntoFolder:
         async def _go():
             svc = CronService(base_dir=home / "crons")
             if state is not None:
-                from kiro_crew.dashboard.handlers.cron_board import (
+                from aj_crew.dashboard.handlers.cron_board import (
                     wire_app_cron_folder_creator,
                 )
 
@@ -307,7 +307,7 @@ class TestRegistrationFilesJobIntoFolder:
         return asyncio.run(_go())
 
     def test_existing_folder_name_is_resolved_to_its_id(self, folders_on_disk, monkeypatch):
-        monkeypatch.setattr("kiro_crew.apps.bridges._registration_denied", lambda *a, **k: False)
+        monkeypatch.setattr("aj_crew.apps.bridges._registration_denied", lambda *a, **k: False)
         jobs = self._register(
             folders_on_disk,
             [
@@ -324,7 +324,7 @@ class TestRegistrationFilesJobIntoFolder:
         assert [j.folder_id for j in jobs if j.name == "test-app/sweep"] == ["aaaa1111"]
 
     def test_unknown_folder_registers_ungrouped(self, folders_on_disk, monkeypatch):
-        monkeypatch.setattr("kiro_crew.apps.bridges._registration_denied", lambda *a, **k: False)
+        monkeypatch.setattr("aj_crew.apps.bridges._registration_denied", lambda *a, **k: False)
         jobs = self._register(
             folders_on_disk,
             [
@@ -343,7 +343,7 @@ class TestRegistrationFilesJobIntoFolder:
 
     def test_unknown_folder_is_created_through_the_dashboard(self, folders_on_disk, monkeypatch):
         """With the dashboard's creator wired, a missing name becomes a folder."""
-        monkeypatch.setattr("kiro_crew.apps.bridges._registration_denied", lambda *a, **k: False)
+        monkeypatch.setattr("aj_crew.apps.bridges._registration_denied", lambda *a, **k: False)
         state = _FakeDashboardState(load_cron_folders())
         jobs = self._register(
             folders_on_disk,
@@ -366,7 +366,7 @@ class TestRegistrationFilesJobIntoFolder:
         assert state.refreshes == ["crons"]
 
     def test_ambiguous_folder_is_never_created(self, folders_on_disk, monkeypatch):
-        monkeypatch.setattr("kiro_crew.apps.bridges._registration_denied", lambda *a, **k: False)
+        monkeypatch.setattr("aj_crew.apps.bridges._registration_denied", lambda *a, **k: False)
         _write_folders(
             [
                 {"id": "aaaa1111", "name": "Dup", "order": 0},
@@ -410,7 +410,7 @@ class _FakeDashboardState:
 
 class TestCreateOrAdoptCronFolder:
     def _call(self, state, name):
-        from kiro_crew.dashboard.handlers.cron_board import create_or_adopt_cron_folder
+        from aj_crew.dashboard.handlers.cron_board import create_or_adopt_cron_folder
 
         return asyncio.run(create_or_adopt_cron_folder(state, name))
 
@@ -445,7 +445,7 @@ class TestCreateOrAdoptCronFolder:
     def test_wiring_sets_a_coroutine_creator_on_the_service(self, folders_on_disk):
         import inspect
 
-        from kiro_crew.dashboard.handlers.cron_board import wire_app_cron_folder_creator
+        from aj_crew.dashboard.handlers.cron_board import wire_app_cron_folder_creator
 
         state = _FakeDashboardState(load_cron_folders())
         state.crons = type("Svc", (), {"folder_creator": None})()
@@ -462,7 +462,7 @@ class TestCreateOrAdoptCronFolder:
 
 class TestSurfacesAcceptFolder:
     def test_cron_add_schema_accepts_folder(self):
-        from kiro_crew.validation import CRON_ADD_SCHEMA, validate_tool_args
+        from aj_crew.validation import CRON_ADD_SCHEMA, validate_tool_args
 
         cleaned = validate_tool_args(
             {"name": "j", "message": "m", "every": 300, "folder": "Veille"}, CRON_ADD_SCHEMA
@@ -470,7 +470,7 @@ class TestSurfacesAcceptFolder:
         assert cleaned["folder"] == "Veille"
 
     def test_cron_update_schema_accepts_folder(self):
-        from kiro_crew.validation import MCP_CRON_SCHEMAS, validate_tool_args
+        from aj_crew.validation import MCP_CRON_SCHEMAS, validate_tool_args
 
         cleaned = validate_tool_args(
             {"job_id": "abcd1234", "folder": ""}, MCP_CRON_SCHEMAS["cron_update"]
@@ -480,8 +480,8 @@ class TestSurfacesAcceptFolder:
     def test_cli_add_files_job_into_existing_folder(self, folders_on_disk, capsys):
         import argparse
 
-        from kiro_crew.cli_commands import _cron_dispatch
-        from kiro_crew.cron import CronService
+        from aj_crew.cli_commands import _cron_dispatch
+        from aj_crew.cron import CronService
 
         _cron_dispatch(
             argparse.Namespace(
@@ -507,8 +507,8 @@ class TestSurfacesAcceptFolder:
         # the dashboard's endpoint (the CLI's create leg), then the job is filed.
         import argparse
 
-        from kiro_crew import cli_commands
-        from kiro_crew.cron import CronService
+        from aj_crew import cli_commands
+        from aj_crew.cron import CronService
 
         calls: list[str] = []
         monkeypatch.setattr(
@@ -540,8 +540,8 @@ class TestSurfacesAcceptFolder:
     def test_cli_add_refuses_an_unknown_id_without_creating_a_job(self, folders_on_disk, capsys):
         import argparse
 
-        from kiro_crew.cli_commands import _cron_dispatch
-        from kiro_crew.cron import CronService
+        from aj_crew.cli_commands import _cron_dispatch
+        from aj_crew.cron import CronService
 
         with pytest.raises(SystemExit):
             _cron_dispatch(
@@ -563,7 +563,7 @@ class TestSurfacesAcceptFolder:
         assert not any(j.name == "orphan" for j in svc.list_jobs(include_disabled=True))
 
     def test_mcp_cron_add_tool_declares_folder(self):
-        from kiro_crew.mcp_cron import _list_tools
+        from aj_crew.mcp_cron import _list_tools
 
         by_name = {t["name"]: t for t in _list_tools()}
         assert "folder" in by_name["cron_add"]["inputSchema"]["properties"]

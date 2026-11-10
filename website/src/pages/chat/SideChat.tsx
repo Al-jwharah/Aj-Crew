@@ -108,13 +108,13 @@ export default function SideChat({ slot, onFileOpen, onArtifactOpen }: {
   // The footer describes what the backend enforces, so it asks the gateway the
   // question the side turn asks itself: the selected harness, and on claude
   // whether the installed adapter honours the read-only session options. Keyed
-  // under `kirocrewConfig` so a config change, which invalidates that prefix,
+  // under `ajcrewConfig` so a config change, which invalidates that prefix,
   // asks again. The footer claims nothing until the answer arrives. Each failure
   // is said in its own words: a config that did not load means the turn runs
   // with no tools, while a failed request only means this panel cannot say
   // which tools work.
   const sideToolsQ = useQuery({
-    queryKey: ['kirocrewConfig', 'sideTools'],
+    queryKey: ['ajcrewConfig', 'sideTools'],
     queryFn: () => api.sideTools(),
   })
   const postureError = sideToolsQ.data?.config_unavailable === true

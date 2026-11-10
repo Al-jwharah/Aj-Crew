@@ -1,8 +1,8 @@
-"""The composition contract of ``kiro_crew.dashboard.chat_persistence``.
+"""The composition contract of ``aj_crew.dashboard.chat_persistence``.
 
 The dashboard slot save and restore are split between the facade, which keeps the
 orchestration and the process-wide state, and the owners in
-``kiro_crew.dashboard.slot_persistence``. This file pins what that split must not
+``aj_crew.dashboard.slot_persistence``. This file pins what that split must not
 change:
 
 * the surface: every name the facade bound before the split still resolves on it,
@@ -38,14 +38,14 @@ import pytest
 from chat_test_helpers import _make_state
 from source_corpus import repo_files_named, repo_root
 
-import kiro_crew
-from kiro_crew.dashboard import chat_persistence as cp
-from kiro_crew.history import HUMAN_TURN_META_KEY
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew
+from aj_crew.dashboard import chat_persistence as cp
+from aj_crew.history import HUMAN_TURN_META_KEY
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
-FACADE = "kiro_crew.dashboard.chat_persistence"
+FACADE = "aj_crew.dashboard.chat_persistence"
 FACADE_PATH = Path(cp.__file__).resolve()
-OWNER_PACKAGE = "kiro_crew.dashboard.slot_persistence"
+OWNER_PACKAGE = "aj_crew.dashboard.slot_persistence"
 OWNER_DIR = FACADE_PATH.with_name("slot_persistence")
 
 #: The owners the facade composes. Adding or removing one changes the
@@ -189,129 +189,129 @@ _FACADE_DEFINED = frozenset(
 
 #: Every name it IMPORTED there, with the module and attribute it came from.
 _FACADE_IMPORTS: dict[str, tuple[str, str | None]] = {
-    "ARTIFACT_SLUG_RE": ("kiro_crew.validation", "ARTIFACT_SLUG_RE"),
-    "ATTACHMENT_LIST_MAX_ITEMS": ("kiro_crew.dashboard.chat_delivery", "ATTACHMENT_LIST_MAX_ITEMS"),
-    "ATTACHMENT_PATH_MAX_LEN": ("kiro_crew.dashboard.chat_delivery", "ATTACHMENT_PATH_MAX_LEN"),
-    "AUTOCOMPACT_PCT_MAX": ("kiro_crew.config.loader", "AUTOCOMPACT_PCT_MAX"),
-    "AUTOCOMPACT_PCT_MIN": ("kiro_crew.config.loader", "AUTOCOMPACT_PCT_MIN"),
+    "ARTIFACT_SLUG_RE": ("aj_crew.validation", "ARTIFACT_SLUG_RE"),
+    "ATTACHMENT_LIST_MAX_ITEMS": ("aj_crew.dashboard.chat_delivery", "ATTACHMENT_LIST_MAX_ITEMS"),
+    "ATTACHMENT_PATH_MAX_LEN": ("aj_crew.dashboard.chat_delivery", "ATTACHMENT_PATH_MAX_LEN"),
+    "AUTOCOMPACT_PCT_MAX": ("aj_crew.config.loader", "AUTOCOMPACT_PCT_MAX"),
+    "AUTOCOMPACT_PCT_MIN": ("aj_crew.config.loader", "AUTOCOMPACT_PCT_MIN"),
     "Any": ("typing", "Any"),
-    "CHAT_ENTRY_CACHE_BYTES_DEFAULT": ("kiro_crew.config.loader", "CHAT_ENTRY_CACHE_BYTES_DEFAULT"),
+    "CHAT_ENTRY_CACHE_BYTES_DEFAULT": ("aj_crew.config.loader", "CHAT_ENTRY_CACHE_BYTES_DEFAULT"),
     "CHAT_ENTRY_CACHE_ENTRIES_DEFAULT": (
-        "kiro_crew.config.loader",
+        "aj_crew.config.loader",
         "CHAT_ENTRY_CACHE_ENTRIES_DEFAULT",
     ),
-    "ConversationLog": ("kiro_crew.history", "ConversationLog"),
-    "DashboardState": ("kiro_crew.dashboard.state", "DashboardState"),
-    "EFFORT_LEVELS": ("kiro_crew.effort", "EFFORT_LEVELS"),
-    "EFFORT_VALUES": ("kiro_crew.effort", "EFFORT_VALUES"),
-    "EXECUTION_CONTEXT_KEY": ("kiro_crew.execution_context", "EXECUTION_CONTEXT_KEY"),
-    "HUMAN_TURN_META_KEY": ("kiro_crew.history", "HUMAN_TURN_META_KEY"),
-    "ImageBudget": ("kiro_crew.chat_attachments", "ImageBudget"),
+    "ConversationLog": ("aj_crew.history", "ConversationLog"),
+    "DashboardState": ("aj_crew.dashboard.state", "DashboardState"),
+    "EFFORT_LEVELS": ("aj_crew.effort", "EFFORT_LEVELS"),
+    "EFFORT_VALUES": ("aj_crew.effort", "EFFORT_VALUES"),
+    "EXECUTION_CONTEXT_KEY": ("aj_crew.execution_context", "EXECUTION_CONTEXT_KEY"),
+    "HUMAN_TURN_META_KEY": ("aj_crew.history", "HUMAN_TURN_META_KEY"),
+    "ImageBudget": ("aj_crew.chat_attachments", "ImageBudget"),
     "Iterable": ("collections.abc", "Iterable"),
     "Iterator": ("collections.abc", "Iterator"),
-    "KiroCrewConfig": ("kiro_crew.config.loader", "KiroCrewConfig"),
-    "MEMORY_MODES": ("kiro_crew.execution_context", "MEMORY_MODES"),
-    "METADATA_LINE_CORRUPT": ("kiro_crew.history", "METADATA_LINE_CORRUPT"),
+    "AjCrewConfig": ("aj_crew.config.loader", "AjCrewConfig"),
+    "MEMORY_MODES": ("aj_crew.execution_context", "MEMORY_MODES"),
+    "METADATA_LINE_CORRUPT": ("aj_crew.history", "METADATA_LINE_CORRUPT"),
     "Mapping": ("collections.abc", "Mapping"),
     "OrderedDict": ("collections", "OrderedDict"),
     "Path": ("pathlib", "Path"),
-    "ROWS_ONLY_DEFERRED_META_KEYS": ("kiro_crew.history", "ROWS_ONLY_DEFERRED_META_KEYS"),
-    "ROWS_ONLY_OWNED_META_KEYS": ("kiro_crew.history", "ROWS_ONLY_OWNED_META_KEYS"),
-    "SLOT_OWNED_META_KEYS": ("kiro_crew.history", "SLOT_OWNED_META_KEYS"),
-    "STRICTEST_MEMORY_MODE": ("kiro_crew.execution_context", "STRICTEST_MEMORY_MODE"),
-    "UnknownMemoryStore": ("kiro_crew.memory_stores", "UnknownMemoryStore"),
-    "_ChatSlot": ("kiro_crew.dashboard.state", "_ChatSlot"),
-    "_MAX_DISMISSED_SOURCE_LINKS": ("kiro_crew.dashboard.state", "_MAX_DISMISSED_SOURCE_LINKS"),
-    "_TITLE_ORIGINS": ("kiro_crew.dashboard.chat_title", "_TITLE_ORIGINS"),
-    "_TRANSIENT_ROLES": ("kiro_crew.dashboard.state", "_TRANSIENT_ROLES"),
-    "_archive_lines": ("kiro_crew.history", "_archive_lines"),
-    "_normalize_model": ("kiro_crew.dashboard.chat_utils", "_normalize_model"),
-    "_normalize_slot_key": ("kiro_crew.dashboard.state", "_normalize_slot_key"),
-    "_note_authorized_elsewhere": ("kiro_crew.dashboard.state", "_note_authorized_elsewhere"),
-    "_redact_meta_for_role": ("kiro_crew.dashboard.chat_utils", "_redact_meta_for_role"),
-    "_rehydrated_refresh_mark": ("kiro_crew.dashboard.chat_title", "_rehydrated_refresh_mark"),
-    "_sync_dashboard_slots": ("kiro_crew.dashboard.chat_utils", "_sync_dashboard_slots"),
-    "agent_model_map": ("kiro_crew.agent_discovery", "agent_model_map"),
+    "ROWS_ONLY_DEFERRED_META_KEYS": ("aj_crew.history", "ROWS_ONLY_DEFERRED_META_KEYS"),
+    "ROWS_ONLY_OWNED_META_KEYS": ("aj_crew.history", "ROWS_ONLY_OWNED_META_KEYS"),
+    "SLOT_OWNED_META_KEYS": ("aj_crew.history", "SLOT_OWNED_META_KEYS"),
+    "STRICTEST_MEMORY_MODE": ("aj_crew.execution_context", "STRICTEST_MEMORY_MODE"),
+    "UnknownMemoryStore": ("aj_crew.memory_stores", "UnknownMemoryStore"),
+    "_ChatSlot": ("aj_crew.dashboard.state", "_ChatSlot"),
+    "_MAX_DISMISSED_SOURCE_LINKS": ("aj_crew.dashboard.state", "_MAX_DISMISSED_SOURCE_LINKS"),
+    "_TITLE_ORIGINS": ("aj_crew.dashboard.chat_title", "_TITLE_ORIGINS"),
+    "_TRANSIENT_ROLES": ("aj_crew.dashboard.state", "_TRANSIENT_ROLES"),
+    "_archive_lines": ("aj_crew.history", "_archive_lines"),
+    "_normalize_model": ("aj_crew.dashboard.chat_utils", "_normalize_model"),
+    "_normalize_slot_key": ("aj_crew.dashboard.state", "_normalize_slot_key"),
+    "_note_authorized_elsewhere": ("aj_crew.dashboard.state", "_note_authorized_elsewhere"),
+    "_redact_meta_for_role": ("aj_crew.dashboard.chat_utils", "_redact_meta_for_role"),
+    "_rehydrated_refresh_mark": ("aj_crew.dashboard.chat_title", "_rehydrated_refresh_mark"),
+    "_sync_dashboard_slots": ("aj_crew.dashboard.chat_utils", "_sync_dashboard_slots"),
+    "agent_model_map": ("aj_crew.agent_discovery", "agent_model_map"),
     "annotations": ("__future__", "annotations"),
     "apply_pending_slot_memory_mode": (
-        "kiro_crew.dashboard.chat_utils",
+        "aj_crew.dashboard.chat_utils",
         "apply_pending_slot_memory_mode",
     ),
     "asyncio": ("asyncio", None),
-    "atomic_write": ("kiro_crew.atomic_write", "atomic_write"),
-    "canonical_memory_mode": ("kiro_crew.execution_context", "canonical_memory_mode"),
-    "carry_provenance": ("kiro_crew.history", "carry_provenance"),
-    "carry_unowned_metadata": ("kiro_crew.history", "carry_unowned_metadata"),
+    "atomic_write": ("aj_crew.atomic_write", "atomic_write"),
+    "canonical_memory_mode": ("aj_crew.execution_context", "canonical_memory_mode"),
+    "carry_provenance": ("aj_crew.history", "carry_provenance"),
+    "carry_unowned_metadata": ("aj_crew.history", "carry_unowned_metadata"),
     "chain": ("itertools", "chain"),
     "committed_filtered_note_ids": (
-        "kiro_crew.dashboard.slot_buffers",
+        "aj_crew.dashboard.slot_buffers",
         "committed_filtered_note_ids",
     ),
-    "config_dir": ("kiro_crew.config.loader", "config_dir"),
+    "config_dir": ("aj_crew.config.loader", "config_dir"),
     "deque": ("collections", "deque"),
     "drop_committed_restored_notes": (
-        "kiro_crew.dashboard.slot_buffers",
+        "aj_crew.dashboard.slot_buffers",
         "drop_committed_restored_notes",
     ),
     "drop_records_without_placeholders": (
-        "kiro_crew.dashboard.chat_utils",
+        "aj_crew.dashboard.chat_utils",
         "drop_records_without_placeholders",
     ),
-    "durable_row_count": ("kiro_crew.dashboard.state", "durable_row_count"),
-    "effective_session_key": ("kiro_crew.dashboard.chat_utils", "effective_session_key"),
-    "file_lock": ("kiro_crew.platform_compat", "file_lock"),
+    "durable_row_count": ("aj_crew.dashboard.state", "durable_row_count"),
+    "effective_session_key": ("aj_crew.dashboard.chat_utils", "effective_session_key"),
+    "file_lock": ("aj_crew.platform_compat", "file_lock"),
     "hashlib": ("hashlib", None),
-    "is_channel_session_key": ("kiro_crew.messaging.link", "is_channel_session_key"),
-    "is_stop_event_row": ("kiro_crew.dashboard.state", "is_stop_event_row"),
-    "is_turn_interrupted": ("kiro_crew.dashboard.state", "is_turn_interrupted"),
+    "is_channel_session_key": ("aj_crew.messaging.link", "is_channel_session_key"),
+    "is_stop_event_row": ("aj_crew.dashboard.state", "is_stop_event_row"),
+    "is_turn_interrupted": ("aj_crew.dashboard.state", "is_turn_interrupted"),
     "islice": ("itertools", "islice"),
     "json": ("json", None),
-    "kiro_agents_dir_path": ("kiro_crew.agent", "kiro_agents_dir_path"),
-    "latest_transcript_ts": ("kiro_crew.history", "latest_transcript_ts"),
+    "kiro_agents_dir_path": ("aj_crew.agent", "kiro_agents_dir_path"),
+    "latest_transcript_ts": ("aj_crew.history", "latest_transcript_ts"),
     "logging": ("logging", None),
-    "mcp_apps_render": ("kiro_crew", "mcp_apps_render"),
-    "model_registry": ("kiro_crew", "model_registry"),
-    "named_store_or_empty": ("kiro_crew.memory_stores", "named_store_or_empty"),
+    "mcp_apps_render": ("aj_crew", "mcp_apps_render"),
+    "model_registry": ("aj_crew", "model_registry"),
+    "named_store_or_empty": ("aj_crew.memory_stores", "named_store_or_empty"),
     "os": ("os", None),
-    "persist_inline_images": ("kiro_crew.chat_attachments", "persist_inline_images"),
+    "persist_inline_images": ("aj_crew.chat_attachments", "persist_inline_images"),
     "queue_persist_signature": (
-        "kiro_crew.dashboard.slot_queue_repository",
+        "aj_crew.dashboard.slot_queue_repository",
         "queue_persist_signature",
     ),
     "re": ("re", None),
-    "read_session_execution": ("kiro_crew.execution_context", "read_session_execution"),
-    "redact_credentials": ("kiro_crew.security", "redact_credentials"),
-    "redact_display_content": ("kiro_crew.dashboard.chat_utils", "redact_display_content"),
-    "redact_exfiltration_urls": ("kiro_crew.security", "redact_exfiltration_urls"),
-    "redact_log_via_context": ("kiro_crew.platform.context", "redact_log_via_context"),
-    "row_mid": ("kiro_crew.dashboard.state", "row_mid"),
-    "same_text_modulo_images": ("kiro_crew.chat_attachments", "same_text_modulo_images"),
+    "read_session_execution": ("aj_crew.execution_context", "read_session_execution"),
+    "redact_credentials": ("aj_crew.security", "redact_credentials"),
+    "redact_display_content": ("aj_crew.dashboard.chat_utils", "redact_display_content"),
+    "redact_exfiltration_urls": ("aj_crew.security", "redact_exfiltration_urls"),
+    "redact_log_via_context": ("aj_crew.platform.context", "redact_log_via_context"),
+    "row_mid": ("aj_crew.dashboard.state", "row_mid"),
+    "same_text_modulo_images": ("aj_crew.chat_attachments", "same_text_modulo_images"),
     "sanitize_restored_deferred_notes": (
-        "kiro_crew.dashboard.slot_buffers",
+        "aj_crew.dashboard.slot_buffers",
         "sanitize_restored_deferred_notes",
     ),
     "sanitize_restored_queue": (
-        "kiro_crew.dashboard.slot_queue_repository",
+        "aj_crew.dashboard.slot_queue_repository",
         "sanitize_restored_queue",
     ),
-    "sel": ("kiro_crew.sel", "sel"),
-    "serialize_deferred_notes": ("kiro_crew.dashboard.slot_buffers", "serialize_deferred_notes"),
+    "sel": ("aj_crew.sel", "sel"),
+    "serialize_deferred_notes": ("aj_crew.dashboard.slot_buffers", "serialize_deferred_notes"),
     "session_agent_selection_name": (
-        "kiro_crew.session_agent_selection",
+        "aj_crew.session_agent_selection",
         "session_agent_selection_name",
     ),
-    "session_key_for": ("kiro_crew.dashboard.chat_utils", "session_key_for"),
-    "slot_closed_since": ("kiro_crew.dashboard.channel_slots", "slot_closed_since"),
-    "slot_history_key": ("kiro_crew.dashboard.chat_utils", "slot_history_key"),
-    "slot_transcript_key": ("kiro_crew.dashboard.chat_utils", "slot_transcript_key"),
-    "stricter_memory_mode": ("kiro_crew.execution_context", "stricter_memory_mode"),
+    "session_key_for": ("aj_crew.dashboard.chat_utils", "session_key_for"),
+    "slot_closed_since": ("aj_crew.dashboard.channel_slots", "slot_closed_since"),
+    "slot_history_key": ("aj_crew.dashboard.chat_utils", "slot_history_key"),
+    "slot_transcript_key": ("aj_crew.dashboard.chat_utils", "slot_transcript_key"),
+    "stricter_memory_mode": ("aj_crew.execution_context", "stricter_memory_mode"),
     "threading": ("threading", None),
     "time": ("time", None),
-    "transcript_sort_key": ("kiro_crew.history", "transcript_sort_key"),
-    "union_deferred_notes": ("kiro_crew.dashboard.slot_buffers", "union_deferred_notes"),
-    "update_metadata_off_loop": ("kiro_crew.history", "update_metadata_off_loop"),
+    "transcript_sort_key": ("aj_crew.history", "transcript_sort_key"),
+    "union_deferred_notes": ("aj_crew.dashboard.slot_buffers", "union_deferred_notes"),
+    "update_metadata_off_loop": ("aj_crew.history", "update_metadata_off_loop"),
     "with_bounded_redaction_records": (
-        "kiro_crew.dashboard.chat_utils",
+        "aj_crew.dashboard.chat_utils",
         "with_bounded_redaction_records",
     ),
 }
@@ -383,7 +383,7 @@ _MOVED: dict[str, str] = {
 
 #: The signature of every function the facade defined, as it was at that base.
 _SIGNATURES: dict[str, str] = {
-    "_apply_recent_session": "(state: 'DashboardState', key: 'str', slot_name: 'str', session: 'dict', meta: 'dict', messages: 'list[dict]', *, conv_log: \"'ConversationLog'\", kiro_model_map: 'dict[str, str]', restore_cfg: \"'KiroCrewConfig | None'\", member_identity: 'tuple[str, str] | None' = ('', '__unresolved__'), agent: 'str | None' = None, effort_marker: 'bool' = False, pending_backfills: 'list[tuple[str, dict]] | None' = None) -> 'None'",
+    "_apply_recent_session": "(state: 'DashboardState', key: 'str', slot_name: 'str', session: 'dict', meta: 'dict', messages: 'list[dict]', *, conv_log: \"'ConversationLog'\", kiro_model_map: 'dict[str, str]', restore_cfg: \"'AjCrewConfig | None'\", member_identity: 'tuple[str, str] | None' = ('', '__unresolved__'), agent: 'str | None' = None, effort_marker: 'bool' = False, pending_backfills: 'list[tuple[str, dict]] | None' = None) -> 'None'",
     "_apply_restored_open_slot": "(state: 'DashboardState', key: 'str', *, meta: 'dict', readable: 'bool', messages: 'list[dict] | None', model_map: 'dict[str, str] | None', unrestored: 'set[str]', member_identity: 'tuple[str, str] | None' = ('', '__unresolved__'), agent: 'str | None' = None, effort_marker: 'bool' = False, conv_log: 'ConversationLog | None' = None, started: 'float | None' = None, preserve_remote_only: 'bool' = False, tail: 'list[dict] | None' = None, dropped: 'set[str] | None' = None, pending_backfills: 'list[tuple[str, dict]] | None' = None) -> 'int'",
     "_approx_window_payload_bytes": "(window: 'list[dict]') -> 'int'",
     "_archive_dropped_lines": "(state: 'DashboardState', history_key: 'str', old_lines: 'list[str]', new_lines: 'list[str]') -> 'None'",
@@ -407,14 +407,14 @@ _SIGNATURES: dict[str, str] = {
     "_latest_stamp": "(*candidates: 'str') -> 'str'",
     "_latest_turn_was_deliberately_stopped": "(messages: 'list[dict]') -> 'bool'",
     "_line_is_this_slots": "(slot: '_ChatSlot', existing_meta: 'dict') -> 'bool'",
-    "_load_restore_cfg": "() -> \"'KiroCrewConfig | None'\"",
+    "_load_restore_cfg": "() -> \"'AjCrewConfig | None'\"",
     "_local_turn_generation": "(meta: 'Mapping[str, object]') -> 'int'",
     "_local_turn_prompt": "(meta: 'Mapping[str, object]') -> 'dict | None'",
-    "_member_private_selection": "(agent: 'str', config: 'KiroCrewConfig', *, authorized_store: 'str | None' = None) -> 'tuple[str, str]'",
+    "_member_private_selection": "(agent: 'str', config: 'AjCrewConfig', *, authorized_store: 'str | None' = None) -> 'tuple[str, str]'",
     "_member_restore_identity": "(slot_name: 'str') -> 'tuple[str, str] | None'",
     "_newest_human_turn_ts": "(rows: \"'list[dict] | tuple[dict, ...]'\") -> 'str'",
     "_on_config_change": "(change: 'object') -> 'None'",
-    "_pin_private_agent_assignment": "(session_key: 'str', agent: 'str', config: 'KiroCrewConfig', *, conversation_log=None, native_context: 'bool' = False, authorized_store: 'str | None' = None, memory_mode: 'str' = 'persistent', validate_only: 'bool' = False) -> 'str'",
+    "_pin_private_agent_assignment": "(session_key: 'str', agent: 'str', config: 'AjCrewConfig', *, conversation_log=None, native_context: 'bool' = False, authorized_store: 'str | None' = None, memory_mode: 'str' = 'persistent', validate_only: 'bool' = False) -> 'str'",
     "_prefetch_recent_session": "(conv_log: 'ConversationLog', key: 'str', session: 'dict', *, folders_only: 'bool', cutoff: 'float | None') -> 'tuple[dict | None, list[dict] | None, tuple[str, str] | None, str | None, bool]'",
     "_prefetch_rehydrate_inputs": "(conv_log: 'ConversationLog', history_key: 'str', *, adopt_closed: 'bool' = False, kiro_model_map: 'dict[str, str] | None' = None, with_status: 'bool' = False) -> 'tuple[dict, bool, list[dict] | None, dict[str, str] | None, tuple[str, str] | None, str | None, bool]'",
     "_queue_snapshot_is_stale": "(slot: '_ChatSlot', queue_write_basis: 'str') -> 'bool'",
@@ -450,13 +450,13 @@ _SIGNATURES: dict[str, str] = {
     "get_reasoning_effort_ordered": "() -> 'list[str]'",
     "get_reasoning_effort_values": "() -> 'frozenset[str]'",
     "local_turn_prompt_within_bounds": "(prompt: 'Mapping[str, object]') -> 'bool'",
-    "member_store_ownership_holds": "(config: 'KiroCrewConfig', member: 'str', entry_store: 'str') -> 'bool'",
+    "member_store_ownership_holds": "(config: 'AjCrewConfig', member: 'str', entry_store: 'str') -> 'bool'",
     "pending_slot_memory_mode": "(slot: '_ChatSlot') -> 'str | None'",
-    "pin_private_agent_store": "(state: 'DashboardState', session_key: 'str', agent: 'str', config: 'KiroCrewConfig', *, memory_mode: 'str' = 'persistent', validate_only: 'bool' = False) -> 'str'",
+    "pin_private_agent_store": "(state: 'DashboardState', session_key: 'str', agent: 'str', config: 'AjCrewConfig', *, memory_mode: 'str' = 'persistent', validate_only: 'bool' = False) -> 'str'",
     "register_guarded_history_write": "(slot: '_ChatSlot', save: \"'asyncio.Future[bool]'\") -> 'None'",
     "register_reasoning_effort_values": "(acp_levels: 'list[str]') -> 'list[str]'",
     "rehydrate_slot_from_history_async": "(state: 'DashboardState', slot_name: 'str', *, kiro_model_map: 'dict[str, str] | None' = None, adopt_closed: 'bool' = False) -> '_ChatSlot | None'",
-    "release_prewarmed_session": "(state: 'DashboardState', session_key: 'str', agent: 'str', config: 'KiroCrewConfig') -> 'bool'",
+    "release_prewarmed_session": "(state: 'DashboardState', session_key: 'str', agent: 'str', config: 'AjCrewConfig') -> 'bool'",
     "restore_open_slots": "(state: 'DashboardState') -> 'int'",
     "restore_open_slots_async": "(state: 'DashboardState') -> 'int'",
     "restore_recent_sessions": "(state: 'DashboardState', window_minutes: 'int' = 30, *, folders_only: 'bool' = False) -> 'int'",
@@ -630,7 +630,7 @@ class TestEagerOwners(composition_contract_checks.ThePackageInitImportsNothing):
             f"print(json.dumps(sorted(m for m in sys.modules if m.startswith({OWNER_PACKAGE + '.'!r}))))\n"
         )
         env = dict(os.environ)
-        src = str(Path(kiro_crew.__file__).resolve().parents[1])
+        src = str(Path(aj_crew.__file__).resolve().parents[1])
         env["PYTHONPATH"] = src + os.pathsep + env.get("PYTHONPATH", "")
         out = subprocess.run(
             [sys.executable, "-c", probe],
@@ -657,7 +657,7 @@ class TestEagerOwners(composition_contract_checks.ThePackageInitImportsNothing):
             extra = [
                 f"{line}: {module}"
                 for line, module in _module_scope_imports(ast.parse(source))
-                if module.startswith(("kiro_crew", ".")) and module not in facade
+                if module.startswith(("aj_crew", ".")) and module not in facade
             ]
             if extra:
                 offenders[stem] = extra
@@ -666,8 +666,8 @@ class TestEagerOwners(composition_contract_checks.ThePackageInitImportsNothing):
 
 #: Every spelling a test uses to reach the facade module.
 _MENTIONS_THE_FACADE = re.compile(
-    r"kiro_crew\.dashboard\.chat_persistence\b"
-    r"|from kiro_crew\.dashboard import [^\n]*\bchat_persistence\b"
+    r"aj_crew\.dashboard\.chat_persistence\b"
+    r"|from aj_crew\.dashboard import [^\n]*\bchat_persistence\b"
 )
 _PATCH_CALLS = ("setattr", "patch.object", "delattr")
 
@@ -676,7 +676,7 @@ def _facade_aliases(tree: ast.AST) -> set[str]:
     """Local names bound to the facade in *tree*, resolved to a fixed point."""
     aliases = {FACADE}
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew.dashboard":
+        if isinstance(node, ast.ImportFrom) and node.module == "aj_crew.dashboard":
             aliases |= {a.asname or a.name for a in node.names if a.name == "chat_persistence"}
         elif isinstance(node, ast.Import):
             aliases |= {a.asname for a in node.names if a.name == FACADE and a.asname}
@@ -705,7 +705,7 @@ def _facade_aliases(tree: ast.AST) -> set[str]:
 def _patched_names_in(text: str) -> set[str]:
     """Names one test source rebinds on the facade itself.
 
-    A dotted target (``chat_persistence.KiroCrewConfig.load``) patches an attribute
+    A dotted target (``chat_persistence.AjCrewConfig.load``) patches an attribute
     of a shared object rather than a facade binding, so every holder of that object
     sees it; only first-level facade names count.
     """
@@ -729,7 +729,7 @@ def _patched_names_in(text: str) -> set[str]:
             for target in targets:
                 if isinstance(target, ast.Attribute) and ast.unparse(target.value) in aliases:
                     found.add(target.attr)
-    found |= set(re.findall(r"""["']kiro_crew\.dashboard\.chat_persistence\.(\w+)["']""", text))
+    found |= set(re.findall(r"""["']aj_crew\.dashboard\.chat_persistence\.(\w+)["']""", text))
     return found
 
 
@@ -797,7 +797,7 @@ class TestPlacement(composition_contract_checks.NoOwnerAnchorsAPathOnItsOwnFile)
                 if not isinstance(node, ast.ImportFrom):
                     continue
                 assert node.module != FACADE, f"{stem}:{node.lineno} imports a facade name"
-                if node.module == "kiro_crew.dashboard" and "chat_persistence" in [
+                if node.module == "aj_crew.dashboard" and "chat_persistence" in [
                     a.name for a in node.names
                 ]:
                     assert node.col_offset > 0, f"{stem}:{node.lineno} imports the facade early"
@@ -867,17 +867,17 @@ class TestPlacement(composition_contract_checks.NoOwnerAnchorsAPathOnItsOwnFile)
     def test_the_patch_scan_reads_every_spelling(self) -> None:
         planted = (
             "import importlib\n"
-            "import kiro_crew.dashboard.chat_persistence as pm\n"
-            "from kiro_crew.dashboard import chat_persistence as cpm\n"
-            "facade = importlib.import_module('kiro_crew.dashboard.chat_persistence')\n"
+            "import aj_crew.dashboard.chat_persistence as pm\n"
+            "from aj_crew.dashboard import chat_persistence as cpm\n"
+            "facade = importlib.import_module('aj_crew.dashboard.chat_persistence')\n"
             "alias = facade\n"
             "def test(monkeypatch):\n"
             "    monkeypatch.setattr(pm, 'first', 1)\n"
             "    monkeypatch.setattr(cpm, 'second', 2)\n"
             "    patch.object(alias, 'third')\n"
             "    cpm.fourth = 4\n"
-            "    monkeypatch.setattr('kiro_crew.dashboard.chat_persistence.fifth', 5)\n"
-            "    monkeypatch.setattr('kiro_crew.dashboard.chat_persistence.Shared.attr', 6)\n"
+            "    monkeypatch.setattr('aj_crew.dashboard.chat_persistence.fifth', 5)\n"
+            "    monkeypatch.setattr('aj_crew.dashboard.chat_persistence.Shared.attr', 6)\n"
             "    monkeypatch.setattr(cpm.Shared, 'attr', 7)\n"
             "    monkeypatch.setattr(other, 'not_facade', 8)\n"
             "    monkeypatch.delattr(cpm, 'sixth')\n"
@@ -894,12 +894,12 @@ class TestPlacement(composition_contract_checks.NoOwnerAnchorsAPathOnItsOwnFile)
     def test_the_seam_scan_catches_a_planted_bare_read(self) -> None:
         planted = (
             "def f(path: 'atomic_write') -> 'sel':\n"
-            "    from kiro_crew.dashboard import chat_persistence as cp\n"
+            "    from aj_crew.dashboard import chat_persistence as cp\n"
             "    good = cp.atomic_write(path, '')\n"
             "    return atomic_write(path, ''), sel\n"
             "def g():\n"
-            "    from kiro_crew.security import redact_credentials\n"
-            "    from kiro_crew.config.loader import config_dir as home\n"
+            "    from aj_crew.security import redact_credentials\n"
+            "    from aj_crew.config.loader import config_dir as home\n"
             "    return redact_credentials, home\n"
         )
         seams = {"atomic_write", "sel", "redact_credentials", "config_dir"}
@@ -1051,7 +1051,7 @@ class TestPatchReach:
     def test_the_note_filter_and_its_audit_go_through_the_facade(self, monkeypatch) -> None:
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.slot_persistence import write_guards
+        from aj_crew.dashboard.slot_persistence import write_guards
 
         audited: list[dict] = []
         monkeypatch.setattr(cp, "_note_authorized_elsewhere", lambda meta, key: bool(meta))
@@ -1258,7 +1258,7 @@ def _scenario_refusals(state) -> dict:
 
 
 def _run(name: str, tmp_path, monkeypatch, caplog) -> dict:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     # The close identity is a nonce; the bytes are compared, so pin its source.
     monkeypatch.setattr(cp._metadata_line.secrets, "token_hex", lambda n: "golden-close-id")
     state = _make_state(tmp_path)

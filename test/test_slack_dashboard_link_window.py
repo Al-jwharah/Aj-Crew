@@ -3,9 +3,9 @@
 ``generate_token`` mints ``exp = now + min(LINK_WINDOW_SECS, session_ttl)`` so a
 raw link can never authenticate past the session it grants. Both Slack surfaces
 that *report* that window — the DM sent by
-:func:`kiro_crew.slack.allowlist.send_dashboard_link` and the ephemeral block
-built by :func:`kiro_crew.slack.events._handle_dashboard` — printed the
-unclamped constant, so ``/kirocrew dashboard 1m`` told the user "Click within
+:func:`aj_crew.slack.allowlist.send_dashboard_link` and the ephemeral block
+built by :func:`aj_crew.slack.events._handle_dashboard` — printed the
+unclamped constant, so ``/ajcrew dashboard 1m`` told the user "Click within
 5m" about a link that dies in one.
 
 Each test asserts the reported minutes against the minted token's own ``exp``,
@@ -24,7 +24,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard.token_auth import LINK_WINDOW_SECS, _b64url_decode
+from aj_crew.dashboard.token_auth import LINK_WINDOW_SECS, _b64url_decode
 
 
 def _click_window_secs(url: str) -> float:
@@ -41,7 +41,7 @@ def _reported_link_mins(text: str) -> int:
 
 async def _send_dm(ttl: int) -> str:
     """Drive ``send_dashboard_link`` for *ttl* and return the DM body."""
-    from kiro_crew.slack import allowlist as al
+    from aj_crew.slack import allowlist as al
 
     slack = MagicMock()
     slack.open_dm = AsyncMock(return_value="D_DM")
@@ -52,12 +52,12 @@ async def _send_dm(ttl: int) -> str:
     cfg.slack.use_tunnel_url = False
 
     with (
-        patch.object(al.KiroCrewConfig, "load", return_value=cfg),
+        patch.object(al.AjCrewConfig, "load", return_value=cfg),
         patch.object(al, "get_tunnel_url", return_value=""),
         patch.object(al, "sel", return_value=MagicMock()),
-        patch("kiro_crew.dashboard.origin.socket.gethostbyname", return_value="10.0.0.1"),
-        patch("kiro_crew.dashboard.origin.socket.getaddrinfo", side_effect=socket.gaierror),
-        patch.dict(os.environ, {}, KIROCREW_PORT=""),
+        patch("aj_crew.dashboard.origin.socket.gethostbyname", return_value="10.0.0.1"),
+        patch("aj_crew.dashboard.origin.socket.getaddrinfo", side_effect=socket.gaierror),
+        patch.dict(os.environ, {}, AJCREW_PORT=""),
     ):
         await al.send_dashboard_link(slack, "U1", ttl=ttl)
 
@@ -74,7 +74,7 @@ class TestSendDashboardLinkDm:
     @pytest.mark.asyncio
     async def test_the_reported_click_window_matches_the_minted_token(self) -> None:
         """The DM's countdown is derived from the same clamp the token uses."""
-        from kiro_crew.slack import allowlist as al
+        from aj_crew.slack import allowlist as al
 
         slack = MagicMock()
         slack.open_dm = AsyncMock(return_value="D_DM")
@@ -85,12 +85,12 @@ class TestSendDashboardLinkDm:
         cfg.slack.use_tunnel_url = False
 
         with (
-            patch.object(al.KiroCrewConfig, "load", return_value=cfg),
+            patch.object(al.AjCrewConfig, "load", return_value=cfg),
             patch.object(al, "get_tunnel_url", return_value=""),
             patch.object(al, "sel", return_value=MagicMock()),
-            patch("kiro_crew.dashboard.origin.socket.gethostbyname", return_value="10.0.0.1"),
-            patch("kiro_crew.dashboard.origin.socket.getaddrinfo", side_effect=socket.gaierror),
-            patch.dict(os.environ, {}, KIROCREW_PORT=""),
+            patch("aj_crew.dashboard.origin.socket.gethostbyname", return_value="10.0.0.1"),
+            patch("aj_crew.dashboard.origin.socket.getaddrinfo", side_effect=socket.gaierror),
+            patch.dict(os.environ, {}, AJCREW_PORT=""),
         ):
             url = await al.send_dashboard_link(slack, "U1", ttl=120)
 
@@ -110,12 +110,12 @@ class TestHandleDashboardBlock:
     def _orch() -> MagicMock:
         orch = MagicMock()
         orch.slack = MagicMock()
-        orch.slack_command = "kirocrew"
+        orch.slack_command = "ajcrew"
         return orch
 
     @pytest.mark.asyncio
     async def test_a_short_session_is_not_promised_the_full_click_window(self) -> None:
-        from kiro_crew.slack import events as ev
+        from aj_crew.slack import events as ev
 
         respond = AsyncMock()
         with patch.object(
@@ -129,7 +129,7 @@ class TestHandleDashboardBlock:
 
     @pytest.mark.asyncio
     async def test_a_full_length_session_still_reads_five_minutes(self) -> None:
-        from kiro_crew.slack import events as ev
+        from aj_crew.slack import events as ev
 
         respond = AsyncMock()
         with patch.object(
@@ -143,7 +143,7 @@ class TestHandleDashboardBlock:
 
 def test_the_helpers_read_a_real_payload() -> None:
     """Self-check: the decoder is exercised against a live mint, not a fixture."""
-    from kiro_crew.dashboard.token_auth import generate_token
+    from aj_crew.dashboard.token_auth import generate_token
 
     before = time.time()
     window = _click_window_secs(f"https://x/?token={generate_token('u', ttl_seconds=90)}")

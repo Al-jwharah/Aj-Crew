@@ -149,7 +149,7 @@ async function openLibrary(theme) {
 async function openChat(theme) {
   const iso = min => new Date(Date.now() - min * 60_000).toISOString()
   const slot = (key, title, min, folder = '') => ({
-    key, title, running: false, messages: 6, agent: 'kirocrew',
+    key, title, running: false, messages: 6, agent: 'ajcrew',
     memory_mode: 'persistent', folder_id: folder, last_ts: iso(min),
     last_turn_ts: iso(min), created: iso(min + 200),
   })

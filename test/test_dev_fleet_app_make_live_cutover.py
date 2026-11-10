@@ -21,10 +21,10 @@ from dev_fleet_app_helpers import _sweep_staged_sync_tempdirs  # noqa: F401 - fi
 from dev_fleet_app_helpers import _venv_maps_to_the_synced_checkout  # noqa: F401 - fixture
 from dev_fleet_app_helpers import _POSIX_ONLY, _mk_make_live_wt, _stub_make_live
 
-import kiro_crew.apps.builtins.dev_fleet.server as mod
-from kiro_crew.apps.builtins.dev_fleet import live as live_mod
-from kiro_crew.apps.builtins.dev_fleet import runtime as runtime_mod
-from kiro_crew.testing.wait import await_until
+import aj_crew.apps.builtins.dev_fleet.server as mod
+from aj_crew.apps.builtins.dev_fleet import live as live_mod
+from aj_crew.apps.builtins.dev_fleet import runtime as runtime_mod
+from aj_crew.testing.wait import await_until
 
 
 # --- make-live: systemd value escaping / unsafe_path ---
@@ -51,13 +51,13 @@ def test_sd_value_rejects_control_char_paths():
 async def test_make_live_escapes_special_char_worktree(monkeypatch, tmp_path):
     """A worktree path with a space yields a valid plan and a real cutover
     writes the resolved path into the pointer file correctly."""
-    name = "kirocrew-wt feat"
+    name = "ajcrew-wt feat"
     wt = tmp_path / name
     (wt / ".venv" / "bin").mkdir(parents=True)
-    _kc = wt / ".venv" / "bin" / "kirocrew"
+    _kc = wt / ".venv" / "bin" / "ajcrew"
     _kc.write_text("#!/bin/sh\n")
     _kc.chmod(0o755)
-    dd = wt / "src" / "kiro_crew" / "static" / "dist"
+    dd = wt / "src" / "aj_crew" / "static" / "dist"
     dd.mkdir(parents=True)
     (dd / "index.html").write_text("<html></html>")
     ptr_dir = tmp_path / "ptr"
@@ -72,7 +72,7 @@ async def test_make_live_escapes_special_char_worktree(monkeypatch, tmp_path):
     assert res["ok"] is True
     plan = res["plan"]
     assert plan["mechanism"] == "live-target pointer"
-    assert plan["exec"] == str(wt / ".venv" / "bin" / "kirocrew")
+    assert plan["exec"] == str(wt / ".venv" / "bin" / "ajcrew")
     # Real cutover writes the pointer with the resolved (space-containing) path.
     monkeypatch.setattr(live_mod, "_MAKE_LIVE_COMMITTED", False, raising=False)
     res2 = await mod._make_live(str(wt), dry_run=False)
@@ -479,12 +479,12 @@ async def test_live_worktree_path_prefers_pointer_over_service(monkeypatch, tmp_
     service definition ONCE THE GATEWAY IS RUNNING IT. A cutover writes the
     pointer without touching the definition, so the definition would report the
     stale install checkout."""
-    target_wt = tmp_path / "kirocrew-wt-new"
+    target_wt = tmp_path / "ajcrew-wt-new"
     target_wt.mkdir(parents=True)
     (target_wt / ".venv" / "bin").mkdir(parents=True)
-    (target_wt / ".venv" / "bin" / "kirocrew").write_text("#!/bin/sh\n")
-    (target_wt / ".venv" / "bin" / "kirocrew").chmod(0o755)
-    (target_wt / "src" / "kiro_crew").mkdir(parents=True)
+    (target_wt / ".venv" / "bin" / "ajcrew").write_text("#!/bin/sh\n")
+    (target_wt / ".venv" / "bin" / "ajcrew").chmod(0o755)
+    (target_wt / "src" / "aj_crew").mkdir(parents=True)
 
     # Write a real pointer file that points at target_wt.
     ptr_dir = tmp_path / "ptr"
@@ -521,12 +521,12 @@ async def test_live_worktree_path_reports_running_image_while_staged(monkeypatch
     """A staged pointer is NOT live: until the gateway restarts it is still
     executing the previous checkout, and reporting the pointer as live would
     tell the operator a cutover landed while old code serves real data."""
-    target_wt = tmp_path / "kirocrew-wt-new"
+    target_wt = tmp_path / "ajcrew-wt-new"
     (target_wt / ".venv" / "bin").mkdir(parents=True)
-    (target_wt / ".venv" / "bin" / "kirocrew").write_text("#!/bin/sh\n")
-    (target_wt / ".venv" / "bin" / "kirocrew").chmod(0o755)
-    (target_wt / "src" / "kiro_crew").mkdir(parents=True)
-    running_wt = tmp_path / "kirocrew-running"
+    (target_wt / ".venv" / "bin" / "ajcrew").write_text("#!/bin/sh\n")
+    (target_wt / ".venv" / "bin" / "ajcrew").chmod(0o755)
+    (target_wt / "src" / "aj_crew").mkdir(parents=True)
+    running_wt = tmp_path / "ajcrew-running"
     running_wt.mkdir(parents=True)
 
     ptr_file = tmp_path / "ptr" / "live_target.json"
@@ -553,11 +553,11 @@ async def test_live_worktree_path_honours_pointer_when_checkout_unknown(monkeypa
     compared. That is "cannot verify", not a mismatch: the pointer still names the
     live row (so removal guards keep protecting it), but it is marked UNVERIFIED
     so the fleet view does not assert the gateway runs from it."""
-    target_wt = tmp_path / "kirocrew-wt-new"
+    target_wt = tmp_path / "ajcrew-wt-new"
     (target_wt / ".venv" / "bin").mkdir(parents=True)
-    (target_wt / ".venv" / "bin" / "kirocrew").write_text("#!/bin/sh\n")
-    (target_wt / ".venv" / "bin" / "kirocrew").chmod(0o755)
-    (target_wt / "src" / "kiro_crew").mkdir(parents=True)
+    (target_wt / ".venv" / "bin" / "ajcrew").write_text("#!/bin/sh\n")
+    (target_wt / ".venv" / "bin" / "ajcrew").chmod(0o755)
+    (target_wt / "src" / "aj_crew").mkdir(parents=True)
 
     ptr_file = tmp_path / "ptr" / "live_target.json"
     ptr_file.parent.mkdir(parents=True)
@@ -586,11 +586,11 @@ async def test_live_worktree_path_is_verified_when_the_running_checkout_matches(
 ):
     """The pointer agrees with the checkout being executed: that is verified, and a
     previous unverified answer must not stick."""
-    target_wt = tmp_path / "kirocrew-wt-new"
+    target_wt = tmp_path / "ajcrew-wt-new"
     (target_wt / ".venv" / "bin").mkdir(parents=True)
-    (target_wt / ".venv" / "bin" / "kirocrew").write_text("#!/bin/sh\n")
-    (target_wt / ".venv" / "bin" / "kirocrew").chmod(0o755)
-    (target_wt / "src" / "kiro_crew").mkdir(parents=True)
+    (target_wt / ".venv" / "bin" / "ajcrew").write_text("#!/bin/sh\n")
+    (target_wt / ".venv" / "bin" / "ajcrew").chmod(0o755)
+    (target_wt / "src" / "aj_crew").mkdir(parents=True)
     ptr_file = tmp_path / "ptr" / "live_target.json"
     ptr_file.parent.mkdir(parents=True)
     import json as _json
@@ -953,7 +953,7 @@ async def test_cancel_invalid_target_is_a_refusal_not_a_crash(monkeypatch, tmp_p
     running, other, ptr = _stage_a_cutover(monkeypatch, tmp_path)
 
     def explode(_checkout):
-        raise live_mod.live_target.InvalidTarget("no src/kiro_crew in target")
+        raise live_mod.live_target.InvalidTarget("no src/aj_crew in target")
 
     monkeypatch.setattr(live_mod.live_target, "write_target", explode)
 
@@ -1037,7 +1037,7 @@ async def test_loaded_but_inactive_user_unit_is_not_drivable(monkeypatch):
     assert "(user_unit_inactive)" not in reason
     # And it composes into the staged notice, which leads with the remedy.
     notice = mod._staged_notice("main", "user_unit_inactive")
-    assert notice.index("kirocrew restart") < notice.index("not running")
+    assert notice.index("ajcrew restart") < notice.index("not running")
 
 
 @pytest.mark.asyncio
@@ -1057,7 +1057,7 @@ def test_running_checkout_resolves_this_checkout():
     which is what makes it authoritative where a service definition is not."""
     got = mod._running_checkout()
     assert got is not None
-    assert (got / "src" / "kiro_crew").is_dir()
+    assert (got / "src" / "aj_crew").is_dir()
 
 
 @pytest.mark.asyncio

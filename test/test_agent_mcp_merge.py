@@ -178,14 +178,14 @@ class TestSpecEnvPathIsExpandedOnEmit:
     def test_a_mount_only_addition_is_mounted_without_a_grant(
         self, tmp_path: Path, monkeypatch
     ) -> None:
-        from kiro_crew import template_mcp_additions as tma
+        from aj_crew import template_mcp_additions as tma
 
         home = tmp_path / "record_home"
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(tma, "config_dir", lambda: home)
         binary = _make_exec(tmp_path, "approved-mcp")
         tma.add_addition(
-            "kirocrew",
+            "ajcrew",
             "approved",
             {"command": binary},
             approved_by="owner",
@@ -201,17 +201,17 @@ class TestSpecEnvPathIsExpandedOnEmit:
     def test_undoing_a_mount_only_addition_unmounts_it_on_the_next_rebuild(
         self, tmp_path: Path, monkeypatch
     ) -> None:
-        """kirocrew.json is rebuilt on top of itself, so the record must be able to
+        """ajcrew.json is rebuilt on top of itself, so the record must be able to
         take a server back out: the card's Undo removes the record, and the next
         rebuild removes the entry and its refs."""
-        from kiro_crew import template_mcp_additions as tma
+        from aj_crew import template_mcp_additions as tma
 
         home = tmp_path / "record_home"
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(tma, "config_dir", lambda: home)
         binary = _make_exec(tmp_path, "approved-mcp")
         tma.add_addition(
-            "kirocrew",
+            "ajcrew",
             "approved",
             {"command": binary},
             approved_by="owner",
@@ -223,7 +223,7 @@ class TestSpecEnvPathIsExpandedOnEmit:
         assert config["mcpServers"]["approved"][tma.MERGED_MARK] is True
         assert "@approved" in config["tools"]
 
-        assert tma.remove_addition("kirocrew", "approved", card_id="card-1")
+        assert tma.remove_addition("ajcrew", "approved", card_id="card-1")
         config = _run_install_mcp_merge(tmp_path, cfg_dir, cc_servers={}, kiro_servers={})
         assert "approved" not in config["mcpServers"]
         assert "@approved" not in config["tools"]
@@ -234,14 +234,14 @@ class TestSpecEnvPathIsExpandedOnEmit:
     ) -> None:
         """Once the MCP page holds the same name, the page owns it: the Undo of the
         card removes the record, and the page's server stays mounted."""
-        from kiro_crew import template_mcp_additions as tma
+        from aj_crew import template_mcp_additions as tma
 
         home = tmp_path / "record_home"
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(tma, "config_dir", lambda: home)
         binary = _make_exec(tmp_path, "approved-mcp")
         tma.add_addition(
-            "kirocrew",
+            "ajcrew",
             "approved",
             {"command": binary},
             approved_by="owner",
@@ -250,7 +250,7 @@ class TestSpecEnvPathIsExpandedOnEmit:
         )
         cfg_dir = _bundled_defaults(tmp_path)
         _run_install_mcp_merge(tmp_path, cfg_dir, cc_servers={}, kiro_servers={})
-        assert tma.remove_addition("kirocrew", "approved", card_id="card-1")
+        assert tma.remove_addition("ajcrew", "approved", card_id="card-1")
         config = _run_install_mcp_merge(
             tmp_path, cfg_dir, cc_servers={}, kiro_servers={"approved": {"command": binary}}
         )
@@ -260,10 +260,10 @@ class TestSpecEnvPathIsExpandedOnEmit:
 
     def test_a_hand_planted_stamp_only_removes_its_entry(self, tmp_path: Path, monkeypatch) -> None:
         """The stamp can make a rebuild remove an entry, never add or grant one."""
-        from kiro_crew import template_mcp_additions as tma
+        from aj_crew import template_mcp_additions as tma
 
         home = tmp_path / "record_home"
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(tma, "config_dir", lambda: home)
         spec = {
             "mcpServers": {"planted": {"command": "/bin/x", tma.MERGED_MARK: True}},
@@ -279,10 +279,10 @@ class TestSpecEnvPathIsExpandedOnEmit:
     ) -> None:
         """A failed Undo puts the record back; the rebuild that already ran must
         not have destroyed the user's per-tool grant on the way."""
-        from kiro_crew import template_mcp_additions as tma
+        from aj_crew import template_mcp_additions as tma
 
         home = tmp_path / "record_home"
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(tma, "config_dir", lambda: home)
         spec = {
             "mcpServers": {"approved": {"command": "/bin/x", tma.MERGED_MARK: True}},
@@ -291,7 +291,7 @@ class TestSpecEnvPathIsExpandedOnEmit:
         }
         tma.reconcile_default_spec(spec, frozenset())
         tma.add_addition(
-            "kirocrew",
+            "ajcrew",
             "approved",
             {"command": "/bin/x"},
             approved_by="owner",
@@ -312,14 +312,14 @@ class TestSpecEnvPathIsExpandedOnEmit:
         """An Undo can remove the record between two reads of it in one rebuild.
         The entry the merge kept must still be withheld its whole-server grant,
         even when a page toggle stub gives the grant pass a source entry."""
-        from kiro_crew import template_mcp_additions as tma
+        from aj_crew import template_mcp_additions as tma
 
         home = tmp_path / "record_home"
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(tma, "config_dir", lambda: home)
         binary = _make_exec(tmp_path, "approved-mcp")
         tma.add_addition(
-            "kirocrew",
+            "ajcrew",
             "approved",
             {"command": binary},
             approved_by="owner",
@@ -327,12 +327,12 @@ class TestSpecEnvPathIsExpandedOnEmit:
             mount_only=True,
         )
         real_read = tma.read_additions
-        reads = {"kirocrew": 0}
+        reads = {"ajcrew": 0}
 
         def read_once(template):
-            if template == "kirocrew":
-                reads["kirocrew"] += 1
-                if reads["kirocrew"] > 1:
+            if template == "ajcrew":
+                reads["ajcrew"] += 1
+                if reads["ajcrew"] > 1:
                     return {}
             return real_read(template)
 
@@ -350,14 +350,14 @@ class TestSpecEnvPathIsExpandedOnEmit:
         """A page toggle writes a stub with no launch line for a server it lists.
         That is not the page owning the server: Undo still unmounts it, and the
         page's grant never reaches it."""
-        from kiro_crew import template_mcp_additions as tma
+        from aj_crew import template_mcp_additions as tma
 
         home = tmp_path / "record_home"
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(tma, "config_dir", lambda: home)
         binary = _make_exec(tmp_path, "approved-mcp")
         tma.add_addition(
-            "kirocrew",
+            "ajcrew",
             "approved",
             {"command": binary},
             approved_by="owner",
@@ -366,7 +366,7 @@ class TestSpecEnvPathIsExpandedOnEmit:
         )
         cfg_dir = _bundled_defaults(tmp_path)
         _run_install_mcp_merge(tmp_path, cfg_dir, cc_servers={}, kiro_servers={})
-        assert tma.remove_addition("kirocrew", "approved", card_id="card-1")
+        assert tma.remove_addition("ajcrew", "approved", card_id="card-1")
         config = _run_install_mcp_merge(
             tmp_path, cfg_dir, cc_servers={}, kiro_servers={"approved": {}}
         )
@@ -392,18 +392,18 @@ class TestSpecEnvPathIsExpandedOnEmit:
 
 
 class TestRebuildReconcileRetainsEnabledAppServers:
-    """The kirocrew.json reconcile drops an app's server only when the app is not enabled.
+    """The ajcrew.json reconcile drops an app's server only when the app is not enabled.
 
     A clean rebuild starts with an empty on_disk. Asserted from source because the
-    block in ``default_spec_commit.write_default_spec`` is gated on ``is_kirocrew_json``,
+    block in ``default_spec_commit.write_default_spec`` is gated on ``is_ajcrew_json``,
     which the merge-priority harness does not reproduce.
     """
 
     def test_reconcile_drops_by_enabled_state_not_ondisk_absence(self) -> None:
         import inspect
 
-        from kiro_crew import agent
-        from kiro_crew.agent_materialization import default_spec_commit
+        from aj_crew import agent
+        from aj_crew.agent_materialization import default_spec_commit
 
         assert "default_spec_commit.write_default_spec(" in inspect.getsource(agent.install_agent)
         src = inspect.getsource(default_spec_commit.write_default_spec)
@@ -420,14 +420,14 @@ class TestRebuildReconcileRetainsEnabledAppServers:
 class TestRebuildKeepsAGlobalColonKeyedServer:
     """A global ``mcp.json`` server keyed ``npm:foo`` is the user's, not an app's.
 
-    The locked kirocrew.json reconcile must not read the colon as an app prefix:
+    The locked ajcrew.json reconcile must not read the colon as an app prefix:
     with no ``npm`` app that would delete the entry, and on an existing spec pin
-    the copy already on disk. Run through the real ``is_kirocrew_json`` branch by
+    the copy already on disk. Run through the real ``is_ajcrew_json`` branch by
     pointing the bridges' agents dir at the same directory.
     """
 
     def _rebuild(self, tmp_path: Path, monkeypatch, args: list[str]) -> dict:
-        from kiro_crew.apps import bridges_sources
+        from aj_crew.apps import bridges_sources
 
         monkeypatch.setattr(bridges_sources, "KIRO_AGENTS_DIR", tmp_path / "kiro_agents")
         servers = {
@@ -451,10 +451,10 @@ class TestMcpMergePriority:
     def test_the_authorship_marker_never_reaches_the_rendered_spec(self, tmp_path: Path):
         """A shared-file marker is provenance, not configuration.
 
-        It records that Kiro Crew wrote into a file it does not own; the rendered spec is
+        It records that Aj Crew wrote into a file it does not own; the rendered spec is
         ours, so the key is not carried into it.
         """
-        from kiro_crew.mcp_provenance import MARKER_KEY, stamp
+        from aj_crew.mcp_provenance import MARKER_KEY, stamp
 
         cfg_dir = _bundled_defaults(tmp_path)
         kiro_cmd = _make_exec(tmp_path, "marked-srv")
@@ -519,8 +519,8 @@ class TestMcpMergePriority:
         The opt-in is pinned on because the non-command field this pins is a
         hand-added ``autoApprove``, which the undeclared-grant floor drops.
         """
-        from kiro_crew.config import live as _live
-        from kiro_crew.config.loader import KiroCrewConfig as _Cfg
+        from aj_crew.config import live as _live
+        from aj_crew.config.loader import AjCrewConfig as _Cfg
 
         _cfg = _Cfg()
         _cfg.mcp.honour_auto_approve = True
@@ -595,8 +595,8 @@ class TestMcpMergePriority:
         )
         assert "srv" not in config["mcpServers"]
 
-    def test_kirocrew_override_does_not_corrupt_global_fallback(self, tmp_path: Path):
-        """Regression (review-bot): a kirocrew mcp.json override carrying an
+    def test_ajcrew_override_does_not_corrupt_global_fallback(self, tmp_path: Path):
+        """Regression (review-bot): a ajcrew mcp.json override carrying an
         unresolvable command must not mutate the shared kiro-global source dict
         that is reused as a fallback candidate. The resolvable kiro-global
         command must still be recovered via the fallback (server not dropped)."""
@@ -607,7 +607,7 @@ class TestMcpMergePriority:
             cfg_dir,
             cc_servers={},
             kiro_servers={"srv": {"command": kiro_cmd}},
-            kirocrew_servers={"srv": {"command": "bare-unresolvable"}},
+            ajcrew_servers={"srv": {"command": "bare-unresolvable"}},
             which_side_effect=lambda c, **kw: None if c == "bare-unresolvable" else c,
         )
         assert (

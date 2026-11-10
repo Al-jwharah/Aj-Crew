@@ -17,12 +17,12 @@ from types import SimpleNamespace
 import pytest
 
 from conftest import requires_symlinks
-from kiro_crew import agent_discovery, mate_config, mate_worker
-from kiro_crew.agent_sdk import agent_specs
-from kiro_crew.mcp_gateway import mate_overlays, rewriter, session_servers
-from kiro_crew.mcp_gateway.hashing import expand_stub_flags
-from kiro_crew.mcp_gateway.launch_approval import LaunchApprovals
-from kiro_crew.mcp_gateway.rewriter import _WRAPPER_MARKER, env_sidecar_dir, env_sidecar_name
+from aj_crew import agent_discovery, mate_config, mate_worker
+from aj_crew.agent_sdk import agent_specs
+from aj_crew.mcp_gateway import mate_overlays, rewriter, session_servers
+from aj_crew.mcp_gateway.hashing import expand_stub_flags
+from aj_crew.mcp_gateway.launch_approval import LaunchApprovals
+from aj_crew.mcp_gateway.rewriter import _WRAPPER_MARKER, env_sidecar_dir, env_sidecar_name
 
 SERVER = "jira"
 WORKER = mate_overlays.MATE_WORKER_AGENT
@@ -39,7 +39,7 @@ def home(tmp_path, monkeypatch):
     """An agents folder, a crewmate folder holding ``pixel``, and its owner record."""
     agents = tmp_path / "agents"
     mates = tmp_path / "mates" / "agents"
-    _write(agents / "kirocrew.json", {"name": "kirocrew", "mcpServers": {}})
+    _write(agents / "ajcrew.json", {"name": "ajcrew", "mcpServers": {}})
     _write(
         mates / "pixel.json",
         {"name": "pixel", "mcpServers": {SERVER: {"command": sys.executable, "args": ["-V"]}}},
@@ -89,7 +89,7 @@ class TestTheRewritePass:
         assert _mate_overlay(home)["name"] == "crewmate:pixel"
         assert results["mates/pixel.json"] == 1
         # The daemon is handed the target, or the stub would be rejected.
-        assert any(k.startswith("KIROCREW_MCP_TARGET_JIRA") for k in target_env)
+        assert any(k.startswith("AJCREW_MCP_TARGET_JIRA") for k in target_env)
 
     def test_the_worker_and_conductor_specs_are_not_crewmates(self, home):
         _rewrite(home)
@@ -180,7 +180,7 @@ class TestTheRewritePass:
         entry = _mate_overlay(home)["mcpServers"][SERVER]
         assert _WRAPPER_MARKER not in entry
         assert "JIRA" in approvals.refused
-        assert not any(k.startswith("KIROCREW_MCP_TARGET_JIRA") for k in target_env)
+        assert not any(k.startswith("AJCREW_MCP_TARGET_JIRA") for k in target_env)
 
     def test_a_pass_without_the_crewmate_folder_prunes_crewmate_overlays(self, home):
         _rewrite(home)
@@ -212,7 +212,7 @@ class TestTheRewritePass:
 def _worker_session(monkeypatch, home, *, merged_servers, member="m-1", base_servers=None):
     """Bind one worker session to crewmate ``pixel`` with the given merged spec."""
     execution = SimpleNamespace(selection_kind="template", template_id=WORKER, member_id=member)
-    monkeypatch.setattr("kiro_crew.execution_context.read_session_execution", lambda key: execution)
+    monkeypatch.setattr("aj_crew.execution_context.read_session_execution", lambda key: execution)
     monkeypatch.setattr(mate_worker, "mate_file_for_member", lambda member_id: "pixel")
     base = {"name": WORKER, "mcpServers": base_servers or {}}
     monkeypatch.setattr(agent_specs, "load_agent_spec", lambda d, a: dict(base))
@@ -269,7 +269,7 @@ class TestTheWorkerLookup:
         _worker_session(monkeypatch, home, merged_servers={SERVER: {"command": "x"}})
         # No leftover copy under the shared name: nothing, as on main.
         assert session_servers.pooled_session_servers(home.overlay, WORKER) == []
-        # A leftover ``~/.kiro/agents/kirocrew-mate-worker.json`` overlay still
+        # A leftover ``~/.kiro/agents/ajcrew-mate-worker.json`` overlay still
         # answers the by-name lookup, as on main.
         _write(home.overlay / f"{WORKER}.json", _mate_overlay(home) | {"name": WORKER})
         assert [
@@ -314,7 +314,7 @@ class TestTheWorkerLookup:
         _rewrite(home)
         _worker_session(monkeypatch, home, merged_servers={SERVER: {"command": "x"}})
         monkeypatch.setattr(
-            "kiro_crew.execution_context.read_session_execution",
+            "aj_crew.execution_context.read_session_execution",
             lambda key: SimpleNamespace(selection_kind="member", template_id=WORKER, member_id="m"),
         )
         assert mate_overlays.worker_overlay_spec(home.overlay, "chat-1") is None
@@ -322,7 +322,7 @@ class TestTheWorkerLookup:
     def test_an_overlay_with_another_identity_is_refused(self, home, monkeypatch):
         _rewrite(home)
         path = mate_overlays.mate_overlay_dir(home.overlay) / "pixel.json"
-        _write(path, _mate_overlay(home) | {"name": "kirocrew"})
+        _write(path, _mate_overlay(home) | {"name": "ajcrew"})
         _worker_session(monkeypatch, home, merged_servers={SERVER: {"command": "x"}})
         assert mate_overlays.worker_overlay_spec(home.overlay, "chat-1") is None
 
@@ -336,7 +336,7 @@ class TestTheWorkerLookup:
         _worker_session(monkeypatch, home, merged_servers={SERVER: {"command": "x"}})
         assert mate_overlays.worker_overlay_spec(home.overlay, "chat-1") is None
 
-    @pytest.mark.parametrize("bound", ["../agents/kirocrew", "a\\b", ".."])
+    @pytest.mark.parametrize("bound", ["../agents/ajcrew", "a\\b", ".."])
     def test_a_binding_that_names_a_path_is_refused(self, home, monkeypatch, bound):
         _rewrite(home)
         _worker_session(monkeypatch, home, merged_servers={SERVER: {"command": "x"}})
@@ -357,7 +357,7 @@ class TestTheWorkerLookup:
 class TestTheSessionKeyReachesTheLookupOnKasOnly:
     @pytest.mark.parametrize(("backend", "expected"), [("kas", "chat-1"), ("kiro", None)])
     def test_the_pooled_hop(self, monkeypatch, tmp_path, backend, expected):
-        from kiro_crew.acp import runtime as runtime_mod
+        from aj_crew.acp import runtime as runtime_mod
 
         seen: dict = {}
 
@@ -375,20 +375,20 @@ class TestTheSessionKeyReachesTheLookupOnKasOnly:
 
 class TestTheKasWorkerStubSetIsOneLookup:
     def test_the_names_are_the_injected_entries_on_kas_only(self):
-        from kiro_crew.acp.runtime_session_setup import _kas_worker_stub_names
+        from aj_crew.acp.runtime_session_setup import _kas_worker_stub_names
 
         pooled = [{"name": SERVER}, {"name": "other"}]
         assert _kas_worker_stub_names("kas", WORKER, "chat-1", pooled) == frozenset(
             {SERVER, "other"}
         )
         assert _kas_worker_stub_names("kiro", WORKER, "chat-1", pooled) is None
-        assert _kas_worker_stub_names("kas", "kirocrew", "chat-1", pooled) is None
+        assert _kas_worker_stub_names("kas", "ajcrew", "chat-1", pooled) is None
         assert _kas_worker_stub_names("kas", WORKER, "", pooled) is None
 
     @pytest.mark.asyncio
     async def test_the_runtime_hands_the_names_down_only_when_it_has_them(self):
-        from kiro_crew.acp import runtime_session_setup as setup_mod
-        from kiro_crew.acp.harness import SessionExtras
+        from aj_crew.acp import runtime_session_setup as setup_mod
+        from aj_crew.acp.harness import SessionExtras
 
         seen: list[dict] = []
 
@@ -413,11 +413,11 @@ class TestTheKasWorkerStubSetIsOneLookup:
 
     @pytest.mark.asyncio
     async def test_kas_subtracts_the_handed_names_for_the_worker(self, monkeypatch, tmp_path):
-        from kiro_crew import agent as agent_mod
-        from kiro_crew.acp import kas_agents as kas_agents_mod
-        from kiro_crew.acp.harness import harness_for
-        from kiro_crew.acp.harness import kas as kas_mod
-        from kiro_crew.config import paths as paths_mod
+        from aj_crew import agent as agent_mod
+        from aj_crew.acp import kas_agents as kas_agents_mod
+        from aj_crew.acp.harness import harness_for
+        from aj_crew.acp.harness import kas as kas_mod
+        from aj_crew.config import paths as paths_mod
 
         monkeypatch.setattr(agent_mod, "require_fork_governance", lambda agent, work_dir: None)
         monkeypatch.setattr(agent_mod, "ensure_agent_materialized", lambda agent: None)
@@ -460,11 +460,11 @@ class TestTheKasWorkerStubSetIsOneLookup:
     ):
         """The stubs are picked from one read of the worker spec and the payload
         from a later one; a mute saved in between is the later read's."""
-        from kiro_crew import agent as agent_mod
-        from kiro_crew.acp import kas_agents as kas_agents_mod
-        from kiro_crew.acp.harness import harness_for
-        from kiro_crew.acp.harness import kas as kas_mod
-        from kiro_crew.config import paths as paths_mod
+        from aj_crew import agent as agent_mod
+        from aj_crew.acp import kas_agents as kas_agents_mod
+        from aj_crew.acp.harness import harness_for
+        from aj_crew.acp.harness import kas as kas_mod
+        from aj_crew.config import paths as paths_mod
 
         monkeypatch.setattr(agent_mod, "require_fork_governance", lambda agent, work_dir: None)
         monkeypatch.setattr(agent_mod, "ensure_agent_materialized", lambda agent: None)
@@ -494,7 +494,7 @@ class TestTheKasWorkerStubSetIsOneLookup:
         ],
     )
     def test_the_real_worker_merge_carries_the_mute_to_the_withdrawal(self, entry, withdrawn):
-        from kiro_crew.acp.harness.kas import withdrawn_worker_stubs
+        from aj_crew.acp.harness.kas import withdrawn_worker_stubs
 
         base = {"name": WORKER, "prompt": "p", "mcpServers": {}}
         mate = {"name": "pixel", "mcpServers": {} if entry is None else {SERVER: entry}}
@@ -502,7 +502,7 @@ class TestTheKasWorkerStubSetIsOneLookup:
         assert withdrawn_worker_stubs(merged, frozenset({SERVER})) == withdrawn
 
     def test_a_withdrawn_stub_leaves_the_session_array(self):
-        from kiro_crew.acp.runtime_session_setup import _drop_withdrawn_stubs
+        from aj_crew.acp.runtime_session_setup import _drop_withdrawn_stubs
 
         servers = [{"name": SERVER}, {"name": "other"}]
         assert _drop_withdrawn_stubs(servers, frozenset()) is servers
@@ -543,7 +543,7 @@ class TestFailClosedPaths:
 
     @pytest.mark.parametrize("fault", ["record", "file", "listing"])
     def test_an_incomplete_pass_is_uncached_and_retires_no_launch(self, home, monkeypatch, fault):
-        from kiro_crew import agent_spec_format
+        from aj_crew import agent_spec_format
 
         if fault == "record":
 
@@ -579,11 +579,11 @@ class TestFailClosedPaths:
         assert approvals.live_incomplete is False
 
     def test_the_gateway_start_passes_the_crewmate_folder(self):
-        from kiro_crew.config import paths
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.mcp_gateway.launch_resolve import rewrite_kwargs
+        from aj_crew.config import paths
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.mcp_gateway.launch_resolve import rewrite_kwargs
 
-        kwargs = rewrite_kwargs(KiroCrewConfig(), frozenset())
+        kwargs = rewrite_kwargs(AjCrewConfig(), frozenset())
         assert kwargs["mate_source_dir"] == paths.mate_agents_dir()
 
     def test_a_failed_overlay_write_leaves_no_crewmate_sidecar(self, home, monkeypatch):
@@ -669,9 +669,9 @@ class TestAnEditedCrewmateFile:
 class TestAppCallbackGovernance:
     @pytest.fixture
     def profiles(self, tmp_path, monkeypatch):
-        import kiro_crew.platform.governance_profiles as gp
+        import aj_crew.platform.governance_profiles as gp
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         folder = tmp_path / "profiles"
         folder.mkdir()
         monkeypatch.setattr(gp, "_PROFILES_DIR", folder)
@@ -693,7 +693,7 @@ class TestAppCallbackGovernance:
         gp.reset_store()
 
     def test_governance_names(self):
-        assert mate_overlays.governance_agents("kirocrew") == ("kirocrew",)
+        assert mate_overlays.governance_agents("ajcrew") == ("ajcrew",)
         assert mate_overlays.governance_agents("") == ("",)
         assert mate_overlays.governance_agents("crewmate:pixel") == (WORKER, "crewmate:pixel")
         for bad in ("crewmate:", "crewmate:..", "crewmate:a/b", "crewmate:a\\b"):
@@ -701,20 +701,20 @@ class TestAppCallbackGovernance:
 
     @pytest.mark.parametrize("bound", [WORKER, "crewmate:pixel"])
     def test_the_worker_or_identity_profile_governs_a_crewmate_callback(self, profiles, bound):
-        from kiro_crew.mcp_gateway.app_call import _governance_denial
+        from aj_crew.mcp_gateway.app_call import _governance_denial
 
         profiles(bound)
         denied = _governance_denial("srv", "draw", "dashboard:s", agent="crewmate:pixel")
         assert denied and denied.startswith("blocked by governance policy")
         # The control: another agent is not held to that profile.
-        assert _governance_denial("srv", "draw", "dashboard:s", agent="kirocrew") is None
+        assert _governance_denial("srv", "draw", "dashboard:s", agent="ajcrew") is None
 
     def test_the_worker_task_profile_wins_over_the_surface_for_a_crewmate_callback(
         self, profiles, tmp_path
     ):
         """The identity adds only its own task bind, never a second surface fallback."""
-        import kiro_crew.platform.governance_profiles as gp
-        from kiro_crew.mcp_gateway.app_call import _governance_denial
+        import aj_crew.platform.governance_profiles as gp
+        from aj_crew.mcp_gateway.app_call import _governance_denial
 
         def _profile(stem: str, bind: dict, deny: list[str]) -> None:
             (tmp_path / "profiles" / f"{stem}.json").write_text(
@@ -734,17 +734,17 @@ class TestAppCallbackGovernance:
         gp.reset_store()
         assert _governance_denial("srv", "draw", "dashboard:s", agent="crewmate:pixel") is None
         # The control: an agent with no task profile is held to the surface one.
-        denied = _governance_denial("srv", "draw", "dashboard:s", agent="kirocrew")
+        denied = _governance_denial("srv", "draw", "dashboard:s", agent="ajcrew")
         assert denied and denied.startswith("blocked by governance policy")
 
     def test_no_profile_leaves_a_crewmate_callback_to_the_ceiling(self, profiles):
-        from kiro_crew.mcp_gateway.app_call import _governance_denial
+        from aj_crew.mcp_gateway.app_call import _governance_denial
 
         profiles("someone-else")
         assert _governance_denial("srv", "draw", "dashboard:s", agent="crewmate:pixel") is None
 
     def test_an_identity_naming_no_file_denies(self, profiles):
-        from kiro_crew.mcp_gateway.app_call import _governance_denial
+        from aj_crew.mcp_gateway.app_call import _governance_denial
 
         profiles("someone-else")
         denied = _governance_denial("srv", "draw", "dashboard:s", agent="crewmate:../x")
@@ -850,17 +850,17 @@ class TestCaseFoldedCrewmateIds:
 
 class TestACrewmateFaultSparesTheAgentsHalf:
     def _agent_with_credentials(self, home) -> Path:
-        spec = {"name": "kirocrew", "mcpServers": {SERVER: {"command": sys.executable}}}
+        spec = {"name": "ajcrew", "mcpServers": {SERVER: {"command": sys.executable}}}
         spec["mcpServers"][SERVER]["env"] = {"API_TOKEN": "a"}
-        _write(home.agents / "kirocrew.json", spec)
-        return env_sidecar_dir(home.overlay) / env_sidecar_name("kirocrew", SERVER)
+        _write(home.agents / "ajcrew.json", spec)
+        return env_sidecar_dir(home.overlay) / env_sidecar_name("ajcrew", SERVER)
 
     @pytest.mark.parametrize("where", ["listing", "rewrite"])
     def test_the_agents_overlays_are_as_without_crewmates(self, home, monkeypatch, where):
         agent_sidecar = self._agent_with_credentials(home)
         mate_sidecar = _credentialed_pixel(home)
         _rewrite(home, mates=False, pooling=False)
-        without = (home.overlay / "kirocrew.json").read_text()
+        without = (home.overlay / "ajcrew.json").read_text()
         (home.overlay / rewriter._FINGERPRINT_NAME).unlink()
         if where == "listing":
 
@@ -877,7 +877,7 @@ class TestACrewmateFaultSparesTheAgentsHalf:
 
             monkeypatch.setattr(rewriter, "rewrite_mate_overlays", _explode)
         results, _target_env = _rewrite(home, pooling=False)
-        assert (home.overlay / "kirocrew.json").read_text() == without
+        assert (home.overlay / "ajcrew.json").read_text() == without
         assert agent_sidecar.exists()
         assert "mates/pixel.json" not in results
         assert list(mate_overlays.mate_overlay_dir(home.overlay).glob("*.json")) == []
@@ -902,8 +902,8 @@ class TestTheSessionStartPathsThreadTheLookup:
     ):
         from unittest.mock import AsyncMock
 
-        from kiro_crew.acp import runtime_session_create, runtime_session_load
-        from kiro_crew.acp.runtime import AcpRuntime
+        from aj_crew.acp import runtime_session_create, runtime_session_load
+        from aj_crew.acp.runtime import AcpRuntime
 
         runtime = AcpRuntime(work_dir=tmp_path, expect_mcp_reports=False, acp_backend="kas")
         runtime._initialized = True

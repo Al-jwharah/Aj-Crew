@@ -21,9 +21,9 @@ from pathlib import Path
 import pytest
 from kas_agents_helpers import _spec
 
-from kiro_crew import config as kiro_crew_config
-from kiro_crew.acp import kas_agents
-from kiro_crew.acp.kas_agents import (
+from aj_crew import config as aj_crew_config
+from aj_crew.acp import kas_agents
+from aj_crew.acp.kas_agents import (
     _KAS_FALLBACK_PROMPT,
     KAS_MAX_CUSTOM_AGENTS,
     KasAgentTranslationError,
@@ -32,14 +32,14 @@ from kiro_crew.acp.kas_agents import (
     resolve_prompt,
     to_client_custom_agent,
 )
-from kiro_crew.acp.kas_permissions import CREW_ANSWERED_BUILTINS_KEY
-from kiro_crew.agent import _gated_off_servers
-from kiro_crew.agent_discovery import (
+from aj_crew.acp.kas_permissions import CREW_ANSWERED_BUILTINS_KEY
+from aj_crew.agent import _gated_off_servers
+from aj_crew.agent_discovery import (
     WELCOME_MESSAGE_MAX_CHARS,
     spec_welcome_message,
 )
-from kiro_crew.agent_files import KAS_RESERVED_AGENT_IDS, kas_wire_agent_id
-from kiro_crew.platform.tool_names import (
+from aj_crew.agent_files import KAS_RESERVED_AGENT_IDS, kas_wire_agent_id
+from aj_crew.platform.tool_names import (
     KAS_TOOL_FAMILY_BY_KIRO_CLI_NAME,
     expand_kiro_cli_tool_names,
 )
@@ -54,8 +54,8 @@ class TestRequiredFields:
     """``id`` and ``prompt`` are the schema's only required members."""
 
     def test_id_and_prompt_are_emitted(self):
-        out = to_client_custom_agent("kirocrew", _spec(), "You are Kiro.")
-        assert out["id"] == "kirocrew"
+        out = to_client_custom_agent("ajcrew", _spec(), "You are Kiro.")
+        assert out["id"] == "ajcrew"
         assert out["prompt"] == "You are Kiro."
 
     def test_empty_id_is_refused(self):
@@ -64,11 +64,11 @@ class TestRequiredFields:
 
     def test_an_empty_prompt_is_carried_as_the_key(self):
         # KAS needs `prompt` present, not non-empty.
-        assert to_client_custom_agent("kirocrew", _spec(), "")["prompt"] == ""
+        assert to_client_custom_agent("ajcrew", _spec(), "")["prompt"] == ""
 
     def test_a_non_string_prompt_is_refused(self):
         with pytest.raises(KasAgentTranslationError):
-            to_client_custom_agent("kirocrew", _spec(), None)  # type: ignore[arg-type]
+            to_client_custom_agent("ajcrew", _spec(), None)  # type: ignore[arg-type]
 
 
 class TestReservedIds:
@@ -108,7 +108,7 @@ class TestReservedIds:
 
     @pytest.mark.parametrize(
         "agent_id",
-        ["Default", "DEFAULT", "Vibe", "Spec", "PLAN", "default-2", "kiro_default", "kirocrew"],
+        ["Default", "DEFAULT", "Vibe", "Spec", "PLAN", "default-2", "kiro_default", "ajcrew"],
     )
     def test_the_match_is_exact_and_case_sensitive(self, agent_id):
         # Measured alongside the reserved ids in one session/new: each of these
@@ -138,13 +138,13 @@ class TestToolsFailClosed:
             "fs_write",
             "str_replace",
             "fs_append",
-            "@kirocrew-core",
+            "@ajcrew-core",
         ]
 
     def test_mcp_server_shorthand_survives(self):
         """KAS tags every MCP tool ``@<server>``, so Crew's existing syntax works."""
-        out = to_client_custom_agent("a", _spec(tools=["@kirocrew-cron"]), "p")
-        assert out["tools"] == ["@kirocrew-cron"]
+        out = to_client_custom_agent("a", _spec(tools=["@ajcrew-cron"]), "p")
+        assert out["tools"] == ["@ajcrew-cron"]
 
     def test_star_becomes_the_all_tools_literal(self):
         """``"*"`` is a distinct type in the schema, not a list member."""
@@ -218,7 +218,7 @@ class TestTheSpecIsSpelledInKasToolIds:
         assert out["tools"][0] == "fs_read"
 
     def test_names_both_engines_share_and_mcp_refs_pass_through_unchanged(self):
-        shared = ["execute_bash", "code", "web_fetch", "tool_search", "@kirocrew-core"]
+        shared = ["execute_bash", "code", "web_fetch", "tool_search", "@ajcrew-core"]
         out = to_client_custom_agent("a", _spec(tools=shared), "p")
         assert out["tools"] == shared
 
@@ -667,8 +667,8 @@ class TestTheCeilingIsReAskedAtProjectionTime:
         self, monkeypatch, caplog
     ):
         monkeypatch.setattr(kas_agents, "may_skip_gate_now", lambda ref: False)
-        with caplog.at_level("INFO", logger="kiro_crew.acp.kas_agents"):
-            to_client_custom_agent("kirocrew", _spec(allowedTools=["web_fetch"]), "p")
+        with caplog.at_level("INFO", logger="aj_crew.acp.kas_agents"):
+            to_client_custom_agent("ajcrew", _spec(allowedTools=["web_fetch"]), "p")
         assert "withholds auto-approval for web_fetch" in caplog.text
 
     def test_an_ungoverned_host_keeps_every_grant(self, monkeypatch):
@@ -695,13 +695,13 @@ class TestTheCeilingIsReAskedAtProjectionTime:
             lambda: types.SimpleNamespace(log_api_access=lambda **kw: events.append(kw)),
         )
 
-        to_client_custom_agent("kirocrew", _spec(allowedTools=["@denied-srv"]), "p")
+        to_client_custom_agent("ajcrew", _spec(allowedTools=["@denied-srv"]), "p")
 
         assert len(events) == 1
         assert events[0]["operation"] == "mcp_auto_approve_withheld"
         assert events[0]["source"] == "kas_agent_projection"
         assert "@denied-srv" in events[0]["resources"]
-        assert "kirocrew" in events[0]["resources"]
+        assert "ajcrew" in events[0]["resources"]
 
     def test_nothing_withheld_emits_no_event(self, monkeypatch):
         monkeypatch.setattr(kas_agents, "may_skip_gate_now", lambda ref: True)
@@ -748,24 +748,24 @@ class TestKeysTheWireCannotCarry:
 
     def test_the_keys_are_named(self, caplog):
         spec = _spec(hooks={"postToolUse": []}, toolsSettings={"x": 1})
-        with caplog.at_level("DEBUG", logger="kiro_crew.acp.kas_agents"):
-            to_client_custom_agent("kirocrew", spec, "p")
+        with caplog.at_level("DEBUG", logger="aj_crew.acp.kas_agents"):
+            to_client_custom_agent("ajcrew", spec, "p")
         assert "toolsSettings" in caplog.text
 
     def test_it_does_not_warn_on_every_session(self, caplog):
         """Constant payload on a per-session path: at WARNING it is pure noise."""
         with caplog.at_level("WARNING"):
-            to_client_custom_agent("kirocrew", _spec(toolsSettings={"x": 1}), "p")
+            to_client_custom_agent("ajcrew", _spec(toolsSettings={"x": 1}), "p")
         assert caplog.text.strip() == ""
 
     def test_the_translated_key_is_not_reported_as_lost(self, caplog):
-        with caplog.at_level("DEBUG", logger="kiro_crew.acp.kas_agents"):
-            to_client_custom_agent("kirocrew", _spec(allowedTools=["web_fetch"]), "p")
+        with caplog.at_level("DEBUG", logger="aj_crew.acp.kas_agents"):
+            to_client_custom_agent("ajcrew", _spec(allowedTools=["web_fetch"]), "p")
         assert "allowedTools" not in caplog.text
 
     def test_nothing_logged_when_the_spec_has_none(self, caplog):
-        with caplog.at_level("DEBUG", logger="kiro_crew.acp.kas_agents"):
-            to_client_custom_agent("kirocrew", _spec(), "p")
+        with caplog.at_level("DEBUG", logger="aj_crew.acp.kas_agents"):
+            to_client_custom_agent("ajcrew", _spec(), "p")
         assert "cannot carry" not in caplog.text
 
 
@@ -842,7 +842,7 @@ class TestPromptResolution:
 
     @pytest.mark.parametrize("bad", [None, "", "   "])
     def test_only_the_background_agent_gets_the_kas_brief(self, bad, tmp_path):
-        out = resolve_prompt({"prompt": bad}, agent_id="kirocrew-lite", agents_dir=tmp_path)
+        out = resolve_prompt({"prompt": bad}, agent_id="ajcrew-lite", agents_dir=tmp_path)
         assert out == _KAS_FALLBACK_PROMPT
 
     @pytest.mark.parametrize("bad", [7, 3.14, True, [], {}, ["x"]])
@@ -878,11 +878,11 @@ class TestPromptResolution:
         assert "choose another agent" in message
 
     def test_build_projects_a_prompt_less_spec_with_the_fallback(self, tmp_path):
-        (tmp_path / "kirocrew-lite.json").write_text(
-            json.dumps({"name": "kirocrew-lite", "tools": [], "prompt": ""}), encoding="utf-8"
+        (tmp_path / "ajcrew-lite.json").write_text(
+            json.dumps({"name": "ajcrew-lite", "tools": [], "prompt": ""}), encoding="utf-8"
         )
-        spec = load_agent_spec(tmp_path, "kirocrew-lite")
-        agents = build_kas_custom_agents(tmp_path, "kirocrew-lite", spec)
+        spec = load_agent_spec(tmp_path, "ajcrew-lite")
+        agents = build_kas_custom_agents(tmp_path, "ajcrew-lite", spec)
         assert agents[0]["prompt"] == _KAS_FALLBACK_PROMPT
         # Tool restriction is preserved — the fallback only supplies a prompt.
         assert agents[0]["tools"] == []
@@ -913,14 +913,14 @@ class TestAgainstTheRealBundledSpec:
 
     @staticmethod
     def _bundled() -> dict:
-        path = Path(kiro_crew_config.__file__).resolve().parent / "defaults.json"
+        path = Path(aj_crew_config.__file__).resolve().parent / "defaults.json"
         return json.loads(path.read_text(encoding="utf-8"))
 
     def test_the_crew_agent_projects_with_its_tools_intact(self):
         spec = self._bundled()
         out = to_client_custom_agent(spec["name"], spec, "resolved prompt text")
 
-        assert out["id"] == "kirocrew"
+        assert out["id"] == "ajcrew"
         assert out["prompt"] == "resolved prompt text"
         # The MCP shorthand is most of Crew's tool surface; losing it would leave
         # the agent nominally configured but unable to reach its own tools.
@@ -946,7 +946,7 @@ class TestAgainstTheRealBundledSpec:
     def test_the_bundled_template_carries_refs_but_declares_no_servers(self):
         """Why the ref list alone cannot be the fixture for the test below.
 
-        ``defaults.json`` ships ``@kirocrew-*`` refs with NO ``mcpServers`` key:
+        ``defaults.json`` ships ``@ajcrew-*`` refs with NO ``mcpServers`` key:
         the entries are written at rebuild time by ``agent.build_agent_config``.
         So the shipped template is not a spec any session ever runs, and asserting
         ref/declaration parity against it would be asserting the wrong thing.
@@ -972,7 +972,7 @@ class TestAgainstTheRealBundledSpec:
         refs = [t[1:] for t in spec["tools"] if t.startswith("@") and t[1:] not in gated_off]
         assert refs, "expected the real template to still carry @server refs"
         spec["mcpServers"] = {
-            name: {"command": "/opt/kirocrew", "args": [f"mcp-{name.split('-')[-1]}"]}
+            name: {"command": "/opt/ajcrew", "args": [f"mcp-{name.split('-')[-1]}"]}
             for name in refs
         }
 
@@ -987,7 +987,7 @@ class TestSpecLookup:
 
     A spec's filename and its declared ``name`` are allowed to differ, and a
     package manager that installs several agents namespaces them as
-    ``<package>-<name>.json``. ``kiro_crew.agent.agent_spec_path`` already
+    ``<package>-<name>.json``. ``aj_crew.agent.agent_spec_path`` already
     resolves those by declared name, so a filename-only lookup here fails the
     projection on agents the config, the CLI and the dashboard all resolve.
     """
@@ -999,32 +999,32 @@ class TestSpecLookup:
         return path
 
     def test_the_filename_match_is_read(self, tmp_path):
-        self._write(tmp_path, "kirocrew.json", description="direct")
+        self._write(tmp_path, "ajcrew.json", description="direct")
 
-        assert load_agent_spec(tmp_path, "kirocrew")["description"] == "direct"
+        assert load_agent_spec(tmp_path, "ajcrew")["description"] == "direct"
 
     def test_a_namespaced_filename_resolves_by_declared_name(self, tmp_path):
-        self._write(tmp_path, "SomePackage-kirocrew.json", description="namespaced")
+        self._write(tmp_path, "SomePackage-ajcrew.json", description="namespaced")
 
-        assert load_agent_spec(tmp_path, "kirocrew")["description"] == "namespaced"
+        assert load_agent_spec(tmp_path, "ajcrew")["description"] == "namespaced"
 
     def test_a_declared_name_outranks_a_misnamed_direct_file(self, tmp_path):
-        """`kirocrew.json` declaring some OTHER agent must not be projected as
-        `kirocrew` while the spec that declares `kirocrew` sits beside it: that
+        """`ajcrew.json` declaring some OTHER agent must not be projected as
+        `ajcrew` while the spec that declares `ajcrew` sits beside it: that
         would run the other agent's tools and prompt under this name. Declared
         name first is the order `agent_spec_path` uses for the same reason."""
-        self._write(tmp_path, "kirocrew.json", name="other", description="misnamed")
-        self._write(tmp_path, "SomePackage-kirocrew.json", description="namespaced")
+        self._write(tmp_path, "ajcrew.json", name="other", description="misnamed")
+        self._write(tmp_path, "SomePackage-ajcrew.json", description="namespaced")
 
-        assert load_agent_spec(tmp_path, "kirocrew")["description"] == "namespaced"
+        assert load_agent_spec(tmp_path, "ajcrew")["description"] == "namespaced"
 
     def test_a_direct_file_declaring_another_name_is_the_fallback(self, tmp_path):
         """With nothing declaring the id, `<agent_id>.json` still resolves even
         when its declared name differs -- the filename-stem fallback
         `agent_spec_path` and config.md rung 2 describe."""
-        self._write(tmp_path, "kirocrew.json", name="other", description="stem fallback")
+        self._write(tmp_path, "ajcrew.json", name="other", description="stem fallback")
 
-        assert load_agent_spec(tmp_path, "kirocrew")["description"] == "stem fallback"
+        assert load_agent_spec(tmp_path, "ajcrew")["description"] == "stem fallback"
 
     def test_no_match_still_names_the_direct_path(self, tmp_path):
         """The scan must not blur the error: the operator is told which file to
@@ -1032,35 +1032,35 @@ class TestSpecLookup:
         self._write(tmp_path, "SomePackage-other.json", name="other")
 
         with pytest.raises(KasAgentTranslationError) as exc:
-            load_agent_spec(tmp_path, "kirocrew")
+            load_agent_spec(tmp_path, "ajcrew")
 
-        assert str(tmp_path / "kirocrew.json") in str(exc.value)
+        assert str(tmp_path / "ajcrew.json") in str(exc.value)
 
     def test_an_unparseable_sibling_does_not_break_the_scan(self, tmp_path):
         """The agents dir is user-writable and shared, so a stray file is normal;
         the hardened reader skips it and the real match is still found."""
         (tmp_path / "broken.json").write_text("{not json", encoding="utf-8")
         (tmp_path / "list.json").write_text("[]", encoding="utf-8")
-        self._write(tmp_path, "SomePackage-kirocrew.json", description="namespaced")
+        self._write(tmp_path, "SomePackage-ajcrew.json", description="namespaced")
 
-        assert load_agent_spec(tmp_path, "kirocrew")["description"] == "namespaced"
+        assert load_agent_spec(tmp_path, "ajcrew")["description"] == "namespaced"
 
     def test_a_missing_agents_dir_is_a_translation_error(self, tmp_path):
         with pytest.raises(KasAgentTranslationError):
-            load_agent_spec(tmp_path / "absent", "kirocrew")
+            load_agent_spec(tmp_path / "absent", "ajcrew")
 
     def test_the_scanned_spec_is_used_without_a_second_read(self, tmp_path, monkeypatch):
         """The hardened reader resolves the symlink and vets the target it lands
         on. Reopening that path afterwards would read whatever it points at by
         then, so the vetted parse itself has to be what the projection uses."""
-        self._write(tmp_path, "SomePackage-kirocrew.json", description="on disk")
+        self._write(tmp_path, "SomePackage-ajcrew.json", description="on disk")
         monkeypatch.setattr(
             kas_agents,
             "spec_by_declared_name",
             lambda *_a, **_k: _spec(description="what the reader vetted"),
         )
 
-        spec = load_agent_spec(tmp_path, "kirocrew")
+        spec = load_agent_spec(tmp_path, "ajcrew")
 
         assert spec["description"] == "what the reader vetted"
 
@@ -1069,15 +1069,15 @@ class TestSpecLookup:
         undefined. Picking one here would project an agent the operator did not
         name, with its tools and its prompt, and say nothing about it.
         """
-        self._write(tmp_path, "AlphaPackage-kirocrew.json", description="alpha")
-        self._write(tmp_path, "BetaPackage-kirocrew.json", description="beta")
+        self._write(tmp_path, "AlphaPackage-ajcrew.json", description="alpha")
+        self._write(tmp_path, "BetaPackage-ajcrew.json", description="beta")
 
         with pytest.raises(KasAgentTranslationError) as exc:
-            load_agent_spec(tmp_path, "kirocrew")
+            load_agent_spec(tmp_path, "ajcrew")
 
         message = str(exc.value)
-        assert "AlphaPackage-kirocrew.json" in message
-        assert "BetaPackage-kirocrew.json" in message
+        assert "AlphaPackage-ajcrew.json" in message
+        assert "BetaPackage-ajcrew.json" in message
 
     def test_the_refusal_names_every_claimant_and_how_to_repair_it(self, tmp_path):
         """Three installed packages each vend their own spec under one name.
@@ -1087,15 +1087,15 @@ class TestSpecLookup:
         repair, because the scan matches the declared name, and the message
         says so."""
         for package in ("AlphaPackage", "BetaPackage", "GammaPackage"):
-            self._write(tmp_path, f"{package}-kirocrew.json", description=package)
+            self._write(tmp_path, f"{package}-ajcrew.json", description=package)
 
         with pytest.raises(KasAgentTranslationError) as exc:
-            load_agent_spec(tmp_path, "kirocrew")
+            load_agent_spec(tmp_path, "ajcrew")
 
         message = str(exc.value)
-        assert message.startswith("3 specs declare the name 'kirocrew' with differing content")
+        assert message.startswith("3 specs declare the name 'ajcrew' with differing content")
         for package in ("AlphaPackage", "BetaPackage", "GammaPackage"):
-            assert repr(str(tmp_path / f"{package}-kirocrew.json")) in message
+            assert repr(str(tmp_path / f"{package}-ajcrew.json")) in message
         assert "keep exactly one: delete the others" in message
         assert 'change the "name" field inside all but one' in message
         assert "Renaming a file alone does not help" in message
@@ -1104,10 +1104,10 @@ class TestSpecLookup:
         """A package installer that flattens dependencies writes the same spec
         under two package prefixes. Both parse to one dict, so whichever the
         backend runs, the projection is the same, and the session starts."""
-        self._write(tmp_path, "AlphaPackage-kirocrew.json", description="shared", tools=["read"])
-        self._write(tmp_path, "BetaPackage-kirocrew.json", description="shared", tools=["read"])
+        self._write(tmp_path, "AlphaPackage-ajcrew.json", description="shared", tools=["read"])
+        self._write(tmp_path, "BetaPackage-ajcrew.json", description="shared", tools=["read"])
 
-        spec = load_agent_spec(tmp_path, "kirocrew")
+        spec = load_agent_spec(tmp_path, "ajcrew")
 
         assert spec["description"] == "shared"
         assert spec["tools"] == ["read"]
@@ -1120,31 +1120,31 @@ class TestSpecLookup:
         deep = "leaf"
         for _ in range(600):
             deep = {"m": [deep]}
-        self._write(tmp_path, "AlphaPackage-kirocrew.json", tools=["read"], metadata=deep)
-        self._write(tmp_path, "BetaPackage-kirocrew.json", tools=["read"], metadata=deep)
+        self._write(tmp_path, "AlphaPackage-ajcrew.json", tools=["read"], metadata=deep)
+        self._write(tmp_path, "BetaPackage-ajcrew.json", tools=["read"], metadata=deep)
 
-        spec = load_agent_spec(tmp_path, "kirocrew")
+        spec = load_agent_spec(tmp_path, "ajcrew")
 
         assert spec["tools"] == ["read"]
         assert "metadata" in spec
         # Still the caller's own parse: a mutation does not reach the memo.
         spec["tools"].append("shell")
-        assert load_agent_spec(tmp_path, "kirocrew")["tools"] == ["read"]
+        assert load_agent_spec(tmp_path, "ajcrew")["tools"] == ["read"]
 
     def test_a_direct_file_does_not_settle_a_duplicate_declared_name(self, tmp_path):
         """Two specs declaring the id are refused even when `<agent_id>.json`
         exists: which of the two is live is undefined, and a misnamed direct
         file is not a tie-breaker between them. `agent_spec_path` refuses the
         same input."""
-        self._write(tmp_path, "kirocrew.json", name="other", description="misnamed")
-        self._write(tmp_path, "AlphaPackage-kirocrew.json", description="alpha")
-        self._write(tmp_path, "BetaPackage-kirocrew.json", description="beta")
+        self._write(tmp_path, "ajcrew.json", name="other", description="misnamed")
+        self._write(tmp_path, "AlphaPackage-ajcrew.json", description="alpha")
+        self._write(tmp_path, "BetaPackage-ajcrew.json", description="beta")
 
         with pytest.raises(KasAgentTranslationError) as exc:
-            load_agent_spec(tmp_path, "kirocrew")
+            load_agent_spec(tmp_path, "ajcrew")
 
-        assert "AlphaPackage-kirocrew.json" in str(exc.value)
-        assert "BetaPackage-kirocrew.json" in str(exc.value)
+        assert "AlphaPackage-ajcrew.json" in str(exc.value)
+        assert "BetaPackage-ajcrew.json" in str(exc.value)
 
     def test_an_unsearchable_dir_is_a_translation_error_at_the_direct_read(
         self, tmp_path, monkeypatch
@@ -1163,9 +1163,9 @@ class TestSpecLookup:
         monkeypatch.setattr(Path, "resolve", _denied)
 
         with pytest.raises(KasAgentTranslationError) as exc:
-            load_agent_spec(tmp_path, "kirocrew")
+            load_agent_spec(tmp_path, "ajcrew")
 
-        assert str(tmp_path / "kirocrew.json") in str(exc.value)
+        assert str(tmp_path / "ajcrew.json") in str(exc.value)
 
     def test_an_unsearchable_dir_is_a_translation_error_during_the_scan(
         self, tmp_path, monkeypatch
@@ -1181,6 +1181,6 @@ class TestSpecLookup:
         monkeypatch.setattr(Path, "glob", _denied)
 
         with pytest.raises(KasAgentTranslationError) as exc:
-            load_agent_spec(tmp_path, "kirocrew")
+            load_agent_spec(tmp_path, "ajcrew")
 
-        assert str(tmp_path / "kirocrew.json") in str(exc.value)
+        assert str(tmp_path / "ajcrew.json") in str(exc.value)

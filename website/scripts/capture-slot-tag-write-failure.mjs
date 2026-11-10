@@ -53,7 +53,7 @@ const extra = async (path, route) => {
 }
 
 await stubDashboardApi(page, {
-  slots: [{ key: SLOT, messages: 3, running: false, agent: 'kirocrew', mode: '', tags: [], tags_revision: 'rev-1' }],
+  slots: [{ key: SLOT, messages: 3, running: false, agent: 'ajcrew', mode: '', tags: [], tags_revision: 'rev-1' }],
   extra,
   // Pin the locale: without it the SPA picks one from the environment and the
   // shot comes out in whatever language the runner happens to negotiate.

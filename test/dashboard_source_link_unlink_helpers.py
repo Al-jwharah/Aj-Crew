@@ -12,9 +12,9 @@ from unittest.mock import MagicMock
 
 from aiohttp import web
 
-from kiro_crew.dashboard.handlers.source_providers import parse_source_url
-from kiro_crew.dashboard.source_providers.contract import source_ref_identity_key
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.handlers.source_providers import parse_source_url
+from aj_crew.dashboard.source_providers.contract import source_ref_identity_key
+from aj_crew.dashboard.state import _ChatSlot
 
 PR_A = "https://github.com/acme/widgets/pull/11"
 PR_B = "https://github.com/acme/widgets/pull/12"
@@ -51,7 +51,7 @@ def _expect_for_req(req) -> str:
     ``created_at`` + ``linked_session_key``). Tests that are not exercising the
     identity gate build their manual request's query with this so they reach
     their intended path rather than the required-``expect`` 400."""
-    from kiro_crew.dashboard.chat_handlers import resolved_row_identity
+    from aj_crew.dashboard.chat_handlers import resolved_row_identity
 
     slot = req.app["state"]._slots.get(req.match_info["slot"])
     if slot is None:

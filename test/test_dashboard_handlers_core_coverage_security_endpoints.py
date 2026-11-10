@@ -16,8 +16,8 @@ import pytest
 from dashboard_handlers_core_coverage_helpers import fake_sel_fixture  # noqa: F401
 from dashboard_handlers_core_coverage_helpers import _req
 
-from kiro_crew.dashboard.handlers import core as core_mod
-from kiro_crew.sel import SelVerification as _SelVerification
+from aj_crew.dashboard.handlers import core as core_mod
+from aj_crew.sel import SelVerification as _SelVerification
 
 # ── Security event log + posture ────────────────────────────────────────
 
@@ -195,7 +195,7 @@ class TestSecurityStats:
     @pytest.mark.asyncio
     async def test_counts_are_derived_from_the_posture_registry(self, monkeypatch) -> None:
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.security.build_denied_commands_snapshot_async",
+            "aj_crew.dashboard.handlers.security.build_denied_commands_snapshot_async",
             AsyncMock(return_value={"effective_count": 42}),
         )
         monkeypatch.setattr(
@@ -221,7 +221,7 @@ class TestSecurityStats:
     async def test_denied_count_failure_degrades_to_zero(self, monkeypatch) -> None:
         """An unreadable denylist must not take the whole stats endpoint down."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.security.build_denied_commands_snapshot_async",
+            "aj_crew.dashboard.handlers.security.build_denied_commands_snapshot_async",
             AsyncMock(side_effect=OSError("unreadable")),
         )
         monkeypatch.setattr(core_mod, "posture_counts_async", AsyncMock(return_value={}))
@@ -236,7 +236,7 @@ class TestSecurityStats:
 class TestLocalToken:
     @pytest.fixture
     def verified_owner_process(self, monkeypatch) -> None:
-        from kiro_crew import member_memory_auth as auth
+        from aj_crew import member_memory_auth as auth
 
         peer_pid = 12345
         monkeypatch.setattr(auth, "_request_peer_pid", lambda _request: peer_pid)
@@ -249,7 +249,7 @@ class TestLocalToken:
 
     @pytest.mark.asyncio
     async def test_non_loopback_is_refused(self, monkeypatch, fake_sel) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: False)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: False)
         resp = await core_mod.api_token_local(_req(remote="203.0.113.9"))
         assert resp.status == 403
         assert json.loads(resp.body)["error"] == "loopback only"
@@ -257,14 +257,14 @@ class TestLocalToken:
 
     @pytest.mark.asyncio
     async def test_unconfigured_secret_is_503(self, monkeypatch, fake_sel) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: True)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: True)
         resp = await core_mod.api_token_local(_req(app={}))
         assert resp.status == 503
         assert json.loads(resp.body)["error"] == "not available"
 
     @pytest.mark.asyncio
     async def test_wrong_secret_is_refused(self, monkeypatch, fake_sel) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: True)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: True)
         resp = await core_mod.api_token_local(
             _req(app={"local_secret": "right"}, headers={"X-Local-Secret": "wrong"})
         )
@@ -273,7 +273,7 @@ class TestLocalToken:
 
     @pytest.mark.asyncio
     async def test_missing_secret_header_is_refused(self, monkeypatch, fake_sel) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: True)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: True)
         resp = await core_mod.api_token_local(_req(app={"local_secret": "right"}))
         assert resp.status == 403
 
@@ -281,7 +281,7 @@ class TestLocalToken:
     async def test_issues_credential_with_requested_ttl_and_embed_claim(
         self, monkeypatch, fake_sel, verified_owner_process
     ) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: True)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: True)
         minted: dict = {}
 
         def _generate(owner, ttl_seconds=0, extra=None):
@@ -306,9 +306,9 @@ class TestLocalToken:
         self, monkeypatch, fake_sel, verified_owner_process
     ) -> None:
         """An ordinary host process is recorded with no app name."""
-        from kiro_crew import member_memory_auth as auth
+        from aj_crew import member_memory_auth as auth
 
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: True)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: True)
         monkeypatch.setattr(auth, "_gateway_spawned_app_backend", lambda _pid: None)
         monkeypatch.setattr(core_mod, "generate_token", lambda *a, **k: "issued-value")
         resp = await core_mod.api_token_local(
@@ -330,10 +330,10 @@ class TestLocalToken:
         The token carries no ``app`` claim because the owner-dashboard check refuses an
         app-scoped token.
         """
-        from kiro_crew import member_memory_auth as auth
+        from aj_crew import member_memory_auth as auth
 
         peer_pid = 4242
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: True)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: True)
         monkeypatch.setattr(auth, "_request_peer_pid", lambda _request: peer_pid)
         monkeypatch.setattr(
             auth.platform_compat,
@@ -378,13 +378,13 @@ class TestLocalToken:
         Over the pod's unix socket ``request.remote`` is empty, so a `check_peer_is_self`
         match plus the secret check must mint.
         """
-        from kiro_crew.mcp_gateway.socketsec import PeerCredResult
+        from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
+            "aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.core.check_peer_is_self",
+            "aj_crew.dashboard.handlers.core.check_peer_is_self",
             lambda _s: PeerCredResult.MATCH,
         )
         monkeypatch.setattr(core_mod, "generate_token", lambda *a, **k: "issued-value")
@@ -402,13 +402,13 @@ class TestLocalToken:
         ("invalid secret"), not the transport check ("loopback only") -- which
         also pins that the admitted request reached past the transport gate.
         """
-        from kiro_crew.mcp_gateway.socketsec import PeerCredResult
+        from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
+            "aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.core.check_peer_is_self",
+            "aj_crew.dashboard.handlers.core.check_peer_is_self",
             lambda _s: PeerCredResult.MATCH,
         )
         resp = await core_mod.api_token_local(
@@ -428,13 +428,13 @@ class TestLocalToken:
         denying matters most. Deny-by-default: transport refusal even though
         the request carries the correct secret.
         """
-        from kiro_crew.mcp_gateway.socketsec import PeerCredResult
+        from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
+            "aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.core.check_peer_is_self",
+            "aj_crew.dashboard.handlers.core.check_peer_is_self",
             lambda _s: PeerCredResult.MISMATCH,
         )
         resp = await core_mod.api_token_local(
@@ -454,13 +454,13 @@ class TestLocalToken:
         refuse -- a platform without a peer-credential mechanism never silently
         widens this token_auth-bypassed endpoint.
         """
-        from kiro_crew.mcp_gateway.socketsec import PeerCredResult
+        from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
+            "aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.core.check_peer_is_self",
+            "aj_crew.dashboard.handlers.core.check_peer_is_self",
             lambda _s: PeerCredResult.UNVERIFIABLE,
         )
         resp = await core_mod.api_token_local(
@@ -473,9 +473,9 @@ class TestLocalToken:
     async def test_valid_secret_without_verified_owner_process_is_refused(
         self, monkeypatch, fake_sel
     ) -> None:
-        from kiro_crew import member_memory_auth as auth
+        from aj_crew import member_memory_auth as auth
 
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: True)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: True)
         monkeypatch.setattr(auth, "_request_peer_pid", lambda _request: None)
         minted = MagicMock()
         monkeypatch.setattr(core_mod, "generate_token", minted)
@@ -503,10 +503,10 @@ class TestLocalToken:
         both directions are asserted so a gate refusing everyone fails. The app-backend
         escape is held off so one cause decides the verdict.
         """
-        from kiro_crew import member_memory_auth as auth
+        from aj_crew import member_memory_auth as auth
 
         peer_pid = 12345
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: True)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: True)
         monkeypatch.setattr(auth, "sys", SimpleNamespace(platform="linux"))
         monkeypatch.setattr(auth, "_request_peer_pid", lambda _request: peer_pid)
         monkeypatch.setattr(auth, "_gateway_spawned_app_backend", lambda _pid: None)
@@ -545,16 +545,16 @@ class TestLocalToken:
         Their remedies differ, so each ``code`` is paired with the ``resources`` value
         the SEL record writes for the same refusal.
         """
-        from kiro_crew import member_memory_auth as auth
+        from aj_crew import member_memory_auth as auth
 
         seen: dict[str, str] = {}
 
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: False)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: False)
         resp = await core_mod.api_token_local(_req(remote="203.0.113.9"))
         assert resp.status == 403
         seen[json.loads(resp.body)["code"]] = fake_sel.log_api_access.call_args.kwargs["resources"]
 
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: True)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: True)
         resp = await core_mod.api_token_local(
             _req(app={"local_secret": "right"}, headers={"X-Local-Secret": "wrong"})
         )
@@ -584,12 +584,12 @@ class TestLocalToken:
         refusal body is readable by whoever could already read the ``error``
         string. These two codes carry no fact that string does not.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: False)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: False)
         body = json.loads((await core_mod.api_token_local(_req(remote="203.0.113.9"))).body)
         assert body["error"] == "loopback only"
         assert body["code"] == "loopback_only"
 
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: True)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: True)
         body = json.loads(
             (
                 await core_mod.api_token_local(
@@ -604,7 +604,7 @@ class TestLocalToken:
     async def test_bad_embed_port_is_dropped(
         self, monkeypatch, fake_sel, verified_owner_process
     ) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: True)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: True)
         minted: dict = {}
 
         def _generate(owner, ttl_seconds=0, extra=None):
@@ -626,14 +626,14 @@ class TestLocalToken:
 class TestLogout:
     @pytest.mark.asyncio
     async def test_non_loopback_is_refused(self, monkeypatch, fake_sel) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: False)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: False)
         resp = await core_mod.api_logout(_req(remote="203.0.113.9"))
         assert resp.status == 403
         assert json.loads(resp.body)["error"] == "loopback only"
 
     @pytest.mark.asyncio
     async def test_wrong_secret_is_refused(self, monkeypatch, fake_sel) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: True)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: True)
         resp = await core_mod.api_logout(
             _req(app={"local_secret": "right"}, headers={"X-Local-Secret": "wrong"})
         )
@@ -644,23 +644,23 @@ class TestLogout:
     async def test_unix_peer_match_is_admitted_and_revokes(self, monkeypatch, fake_sel) -> None:
         """A kernel-verified same-principal AF_UNIX peer is admitted.
 
-        `kirocrew logout` reaches the gateway over the owner-only unix socket,
+        `ajcrew logout` reaches the gateway over the owner-only unix socket,
         where ``request.remote`` is EMPTY -- the loopback test alone would 403
         the transport. The positive `check_peer_is_self` MATCH (plus the
         unchanged secret) must revoke, like /api/token/local.
         """
-        from kiro_crew.mcp_gateway.socketsec import PeerCredResult
+        from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: False)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: False)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
+            "aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.core.check_peer_is_self",
+            "aj_crew.dashboard.handlers.core.check_peer_is_self",
             lambda _s: PeerCredResult.MATCH,
         )
         revoke = MagicMock()
-        monkeypatch.setattr("kiro_crew.dashboard.token_auth.revoke_all_sessions", revoke)
+        monkeypatch.setattr("aj_crew.dashboard.token_auth.revoke_all_sessions", revoke)
         resp = await core_mod.api_logout(
             _req(remote="", app={"local_secret": "right"}, headers={"X-Local-Secret": "right"})
         )
@@ -672,14 +672,14 @@ class TestLogout:
     async def test_unix_peer_mismatch_is_refused(self, monkeypatch, fake_sel) -> None:
         """A foreign-principal AF_UNIX peer is refused before the secret, so the
         unix admission cannot widen the gate beyond a same-user caller."""
-        from kiro_crew.mcp_gateway.socketsec import PeerCredResult
+        from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: False)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: False)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
+            "aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.core.check_peer_is_self",
+            "aj_crew.dashboard.handlers.core.check_peer_is_self",
             lambda _s: PeerCredResult.MISMATCH,
         )
         resp = await core_mod.api_logout(
@@ -693,12 +693,12 @@ class TestLogout:
         self, monkeypatch, fake_sel
     ) -> None:
         """Fail-closed: an unpersisted revocation must never report success."""
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: True)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: True)
 
         def _boom():
             raise OSError("read-only trust dir")
 
-        monkeypatch.setattr("kiro_crew.dashboard.token_auth.revoke_all_sessions", _boom)
+        monkeypatch.setattr("aj_crew.dashboard.token_auth.revoke_all_sessions", _boom)
         resp = await core_mod.api_logout(
             _req(app={"local_secret": "right"}, headers={"X-Local-Secret": "right"})
         )
@@ -709,9 +709,9 @@ class TestLogout:
 
     @pytest.mark.asyncio
     async def test_successful_revocation_is_audited(self, monkeypatch, fake_sel) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: True)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: True)
         revoke = MagicMock()
-        monkeypatch.setattr("kiro_crew.dashboard.token_auth.revoke_all_sessions", revoke)
+        monkeypatch.setattr("aj_crew.dashboard.token_auth.revoke_all_sessions", revoke)
         resp = await core_mod.api_logout(
             _req(app={"local_secret": "right"}, headers={"X-Local-Secret": "right"})
         )
@@ -724,25 +724,25 @@ class TestLogout:
 class TestShutdownUnixPeer:
     """``POST /api/shutdown`` admits a kernel-attested same-user AF_UNIX peer.
 
-    ``kirocrew stop``'s authenticated fallback sends over the owner-only
+    ``ajcrew stop``'s authenticated fallback sends over the owner-only
     socket when it exists, where ``request.remote`` is EMPTY; the
     loopback test alone would 403 it. The secret check is unchanged.
     """
 
     @pytest.mark.asyncio
     async def test_unix_peer_match_is_admitted(self, monkeypatch, fake_sel) -> None:
-        from kiro_crew.mcp_gateway.socketsec import PeerCredResult
+        from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: False)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: False)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
+            "aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.core.check_peer_is_self",
+            "aj_crew.dashboard.handlers.core.check_peer_is_self",
             lambda _s: PeerCredResult.MATCH,
         )
         event = MagicMock()
-        monkeypatch.setattr("kiro_crew.shutdown_event", event)
+        monkeypatch.setattr("aj_crew.shutdown_event", event)
         resp = await core_mod.api_shutdown(
             _req(remote="", app={"local_secret": "right"}, headers={"X-Local-Secret": "right"})
         )
@@ -751,14 +751,14 @@ class TestShutdownUnixPeer:
 
     @pytest.mark.asyncio
     async def test_unix_peer_mismatch_is_refused(self, monkeypatch, fake_sel) -> None:
-        from kiro_crew.mcp_gateway.socketsec import PeerCredResult
+        from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: False)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: False)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
+            "aj_crew.dashboard.token_auth.request_is_unix_socket", lambda _r: True
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.core.check_peer_is_self",
+            "aj_crew.dashboard.handlers.core.check_peer_is_self",
             lambda _s: PeerCredResult.MISMATCH,
         )
         resp = await core_mod.api_shutdown(
@@ -772,7 +772,7 @@ class TestAppSecretExchange:
     @pytest.fixture
     def app_sel(self, monkeypatch) -> MagicMock:
         recorder = MagicMock()
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: recorder)
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: recorder)
         return recorder
 
     @pytest.mark.asyncio
@@ -784,7 +784,7 @@ class TestAppSecretExchange:
 
     @pytest.mark.asyncio
     async def test_invalid_secret_is_refused(self, app_sel, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.token_auth.validate_app_secret", lambda *_a: False)
+        monkeypatch.setattr("aj_crew.dashboard.token_auth.validate_app_secret", lambda *_a: False)
         resp = await core_mod.api_app_token(
             _req(match_info={"name": "meetings"}, headers={"X-App-Secret": "nope"})
         )
@@ -793,14 +793,14 @@ class TestAppSecretExchange:
 
     @pytest.mark.asyncio
     async def test_valid_secret_mints_an_app_scoped_credential(self, app_sel, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.token_auth.validate_app_secret", lambda *_a: True)
+        monkeypatch.setattr("aj_crew.dashboard.token_auth.validate_app_secret", lambda *_a: True)
         seen: dict = {}
 
         def _generate(name, app=None):
             seen.update({"name": name, "app": app})
             return "app-scoped-value"
 
-        monkeypatch.setattr("kiro_crew.dashboard.token_auth.generate_token", _generate)
+        monkeypatch.setattr("aj_crew.dashboard.token_auth.generate_token", _generate)
         resp = await core_mod.api_app_token(
             _req(match_info={"name": "meetings"}, headers={"X-App-Secret": "ok"})
         )
@@ -826,7 +826,7 @@ class TestNonAsciiLocalSecret:
     async def test_refused_like_a_wrong_secret(
         self, monkeypatch, fake_sel, handler: str, bad: str
     ) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_loopback", lambda _r: True)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_loopback", lambda _r: True)
         resp = await getattr(core_mod, handler)(
             _req(app={"local_secret": "right"}, headers={"X-Local-Secret": bad})
         )

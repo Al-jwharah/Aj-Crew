@@ -12,7 +12,7 @@ proof, because the real gate would often deny too.
 
 Everything is patched at the ``routes`` / ``store`` / ``provider`` boundary: no
 ``gh`` subprocess, no model call, no network, and nothing written outside the
-per-test ``KIROCREW_HOME``.
+per-test ``AJCREW_HOME``.
 """
 
 from __future__ import annotations
@@ -30,9 +30,9 @@ from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 from dashboard_owner_helpers import NoConfiguredOwner
 
-from kiro_crew.apps.builtins.issue_radar.backend import github_client as gh
-from kiro_crew.apps.builtins.issue_radar.backend import provider, routes, store
-from kiro_crew.testing.wait import await_until
+from aj_crew.apps.builtins.issue_radar.backend import github_client as gh
+from aj_crew.apps.builtins.issue_radar.backend import provider, routes, store
+from aj_crew.testing.wait import await_until
 
 BASE = "/api/apps/issue-radar"
 SHA = "a" * 40
@@ -767,7 +767,7 @@ class TestProviderContextPerRequest(unittest.IsolatedAsyncioTestCase):
             mock.patch.object(store, "refresh_labels_cache", side_effect=_refresh),
             mock.patch.object(gh, "list_repo_labels", side_effect=_fetch("github")),
             mock.patch(
-                "kiro_crew.apps.builtins.issue_radar.backend.gitlab_client.list_repo_labels",
+                "aj_crew.apps.builtins.issue_radar.backend.gitlab_client.list_repo_labels",
                 side_effect=_fetch("gitlab"),
             ),
         ):

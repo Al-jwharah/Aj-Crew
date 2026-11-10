@@ -1,7 +1,7 @@
 """LTS build: local switches for controls with no governance key are ignored.
 
 RFC ``rfc-crew-lts-edition`` decision D3. Each control in
-``kiro_crew.edition_locks.UNKEYED_LOCKS`` is checked at the point its feature reads
+``aj_crew.edition_locks.UNKEYED_LOCKS`` is checked at the point its feature reads
 its own switch: on, in the ``oss`` edition, the local value still applies.
 """
 
@@ -14,14 +14,14 @@ from unittest.mock import DEFAULT, MagicMock
 
 import pytest
 
-from kiro_crew import edition_locks
-from kiro_crew.config.sections import FEATURE_PREVIEW_FLAGS
-from kiro_crew.config.sections_telemetry import TelemetryConfig
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.dashboard.handlers.agents import api_config_schema
-from kiro_crew.metrics import provider as metrics_provider
-from kiro_crew.platform import update_layout
-from kiro_crew.platform.defaults import DefaultTelemetryProvider
+from aj_crew import edition_locks
+from aj_crew.config.sections import FEATURE_PREVIEW_FLAGS
+from aj_crew.config.sections_telemetry import TelemetryConfig
+from aj_crew.dashboard.handlers import updates
+from aj_crew.dashboard.handlers.agents import api_config_schema
+from aj_crew.metrics import provider as metrics_provider
+from aj_crew.platform import update_layout
+from aj_crew.platform.defaults import DefaultTelemetryProvider
 
 
 @pytest.fixture(autouse=True)
@@ -33,7 +33,7 @@ def _fresh_lock_log():
 
 @pytest.fixture
 def lts(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 @pytest.fixture
@@ -54,7 +54,7 @@ def test_oss_locks_nothing():
 
 
 def test_lts_lock_logs_once(lts, caplog):
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.edition_locks"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.edition_locks"):
         assert edition_locks.local_enable_locked("tunnel")
         assert edition_locks.local_enable_locked("tunnel")
     assert [r.getMessage() for r in caplog.records].count(
@@ -117,7 +117,7 @@ def _owner_request(body: object):
 
 def test_channel_switch_api_answers_locked_and_writes_nothing(lts, tmp_path, monkeypatch):
 
-    from kiro_crew.platform.update_layout import InstallLayout
+    from aj_crew.platform.update_layout import InstallLayout
 
     monkeypatch.setattr(update_layout, "data_home", lambda: tmp_path)
     monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -142,30 +142,30 @@ def test_schema_marks_locked_config_paths(lts):
     assert locked == set(edition_locks.CONFIG_PATH_LOCKS) | previews
 
 
-# ── KIROCREW_DEV_MODE and slack.use_tunnel_url ──
+# ── AJCREW_DEV_MODE and slack.use_tunnel_url ──
 
 
 def test_dev_mode_env_does_not_enable_session_environments(lts, monkeypatch):
-    from kiro_crew import session_environment
+    from aj_crew import session_environment
 
-    monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    monkeypatch.setenv("AJCREW_DEV_MODE", "1")
     assert session_environment.session_environments_enabled() is False
 
 
 def test_oss_dev_mode_env_still_enables_session_environments(monkeypatch):
-    from kiro_crew import session_environment
+    from aj_crew import session_environment
 
-    monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    monkeypatch.setenv("AJCREW_DEV_MODE", "1")
     assert session_environment.session_environments_enabled() is True
 
 
 def _registers_simulate(monkeypatch, home: str) -> bool:
     from aiohttp import web
 
-    from kiro_crew.dashboard.routes import system
+    from aj_crew.dashboard.routes import system
 
-    monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
-    monkeypatch.setenv("KIROCREW_HOME", home)
+    monkeypatch.setenv("AJCREW_DEV_MODE", "1")
+    monkeypatch.setenv("AJCREW_HOME", home)
     app = web.Application()
     system.register(app)
     return any(
@@ -185,8 +185,8 @@ def test_oss_dev_switches_still_register_the_update_simulator(monkeypatch, tmp_p
 
 
 def test_slack_tunnel_opt_in_reads_off(lts, monkeypatch):
-    from kiro_crew import tunnel
-    from kiro_crew.dashboard import urls
+    from aj_crew import tunnel
+    from aj_crew.dashboard import urls
 
     monkeypatch.setattr(tunnel, "get_tunnel_url", lambda: "https://t.example")
     assert urls.slack_tunnel_opt_in(True) is False
@@ -194,8 +194,8 @@ def test_slack_tunnel_opt_in_reads_off(lts, monkeypatch):
 
 
 def test_oss_slack_tunnel_opt_in_still_applies(monkeypatch):
-    from kiro_crew import tunnel
-    from kiro_crew.dashboard import urls
+    from aj_crew import tunnel
+    from aj_crew.dashboard import urls
 
     monkeypatch.setattr(tunnel, "get_tunnel_url", lambda: "https://t.example")
     assert urls.slack_tunnel_opt_in(True) is True
@@ -205,7 +205,7 @@ def test_oss_slack_tunnel_opt_in_still_applies(monkeypatch):
 def _send_link_ensure_calls(monkeypatch) -> int:
     from unittest.mock import AsyncMock, patch
 
-    from kiro_crew.slack import allowlist as al
+    from aj_crew.slack import allowlist as al
 
     ensure = AsyncMock(return_value="connected")
     slack = MagicMock()
@@ -218,10 +218,10 @@ def _send_link_ensure_calls(monkeypatch) -> int:
         patch.object(al, "get_tunnel_url", return_value=""),
         patch.object(al, "sel", return_value=MagicMock()),
         patch(
-            "kiro_crew.platform.current_context",
+            "aj_crew.platform.current_context",
             return_value=MagicMock(tunnel=MagicMock(ensure_available=ensure)),
         ),
-        patch.object(al.KiroCrewConfig, "load", return_value=cfg),
+        patch.object(al.AjCrewConfig, "load", return_value=cfg),
     ):
         asyncio.run(al.send_dashboard_link(slack, "U1", ttl=600))
     return ensure.await_count

@@ -75,5 +75,5 @@ initI18n('en')
 // Same theme convention as the sibling entries, so a frame matches production
 // paint rather than the unstyled default.
 const theme = new URLSearchParams(window.location.search).get('theme')
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 createRoot(document.getElementById('root')!).render(<Harness />)

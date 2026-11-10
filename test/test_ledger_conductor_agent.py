@@ -1,6 +1,6 @@
-"""The deprecated ``kirocrew-ledger-conductor`` alias spec.
+"""The deprecated ``ajcrew-ledger-conductor`` alias spec.
 
-The work-ledger flow is ``kirocrew-conductor`` now, and this name is kept for one
+The work-ledger flow is ``ajcrew-conductor`` now, and this name is kept for one
 release because it is a public, user-facing string: it is what a running session
 records as its agent, what a seed prompt names for a second-level conductor, and
 what an operator typed into a cron. So one property carries this whole file:
@@ -21,20 +21,20 @@ an ungoverned host, and the governed case gets its own test.
 import json
 from pathlib import Path
 
-from kiro_crew import agent
-from kiro_crew.agent_files import (
+from aj_crew import agent
+from aj_crew.agent_files import (
     CONDUCTOR_AGENT_FILENAME,
     LEDGER_CONDUCTOR_AGENT_FILENAME,
     OWNED_KIRO_AGENT_FILES,
     REQUIRED_KIRO_AGENT_FILES,
 )
-from kiro_crew.agent_sdk.drivers.acp import derived_agent_permissions
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.agent_sdk.drivers.acp import derived_agent_permissions
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
 SKILL_DIR = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
     / "goal-ledger-conductor"
 )
@@ -50,14 +50,14 @@ def _pin_spec_permissions_cli(monkeypatch, which):
     """Pin what the shared writer gate believes the installed kiro-cli is.
 
     ``_write_derived_permissions`` reads ``installed_kiro_cli_version``
-    function-locally from ``kiro_crew.kiro_cli``, so the patch lands there.
+    function-locally from ``aj_crew.kiro_cli``, so the patch lands there.
     Without it the answer is whatever the test HOST has -- nothing on CI, which
     reads as "unknown" and withholds the field, so a shared permissions
     assertion would fail for a host reason. ``which`` is ``"accepts"``,
     ``"refuses"`` or ``"unknown"``.
     """
     version = {"accepts": _ACCEPTS, "refuses": _REFUSES, "unknown": None}[which]
-    monkeypatch.setattr("kiro_crew.kiro_cli.installed_kiro_cli_version", lambda: version)
+    monkeypatch.setattr("aj_crew.kiro_cli.installed_kiro_cli_version", lambda: version)
 
 
 def _stub(tmp_path, monkeypatch, *, may_auto_approve=None, cli_version="accepts"):
@@ -67,21 +67,21 @@ def _stub(tmp_path, monkeypatch, *, may_auto_approve=None, cli_version="accepts"
         agent,
         "build_agent_config",
         lambda: {
-            "name": "kirocrew",
+            "name": "ajcrew",
             "prompt": "file://x",
             "mcpServers": {
-                "kirocrew-core": {"command": "/resolved/kirocrew", "args": ["mcp-core"]},
+                "ajcrew-core": {"command": "/resolved/ajcrew", "args": ["mcp-core"]},
                 "builder-mcp": {"command": "/x/builder", "args": []},
             },
-            "tools": ["fs_write", "@kirocrew-core"],
-            "allowedTools": ["@kirocrew-core"],
+            "tools": ["fs_write", "@ajcrew-core"],
+            "allowedTools": ["@ajcrew-core"],
             "permissions": _INHERITED_PERMISSIONS,
         },
     )
     monkeypatch.setattr(
         agent,
-        "_kirocrew_mcp_invocation",
-        lambda sub: ("/resolved/kirocrew", [sub]),
+        "_ajcrew_mcp_invocation",
+        lambda sub: ("/resolved/ajcrew", [sub]),
     )
     monkeypatch.setattr(agent, "_may_auto_approve", may_auto_approve or (lambda ref: True))
 
@@ -111,10 +111,10 @@ def test_the_alias_spec_is_identical_apart_from_name_and_description(tmp_path, m
     live = json.loads((tmp_path / CONDUCTOR_AGENT_FILENAME).read_text(encoding="utf-8"))
     alias = json.loads((tmp_path / LEDGER_CONDUCTOR_AGENT_FILENAME).read_text(encoding="utf-8"))
 
-    assert live["name"] == "kirocrew-conductor"
-    assert alias["name"] == "kirocrew-ledger-conductor"
+    assert live["name"] == "ajcrew-conductor"
+    assert alias["name"] == "ajcrew-ledger-conductor"
     assert alias["description"].startswith(
-        "Deprecated alias of kirocrew-conductor (removed next release)."
+        "Deprecated alias of ajcrew-conductor (removed next release)."
     )
     assert alias["description"] != live["description"]
     # The charter sentence survives the prefix, so the roster entry still says
@@ -165,7 +165,7 @@ def test_the_governance_ceiling_reaches_the_alias_the_same_way(tmp_path, monkeyp
     from both. Pinned on a work-ledger ref: the alias is the spec an unmigrated
     session is running under, and a ceiling that reached only the new name would
     leave that session auto-approving a verb the operator revoked."""
-    _stub(tmp_path, monkeypatch, may_auto_approve=lambda ref: ref != "@kirocrew-work/work_report")
+    _stub(tmp_path, monkeypatch, may_auto_approve=lambda ref: ref != "@ajcrew-work/work_report")
     agent._install_conductor_agent()
     agent._install_ledger_conductor_agent()
     live = json.loads((tmp_path / CONDUCTOR_AGENT_FILENAME).read_text(encoding="utf-8"))
@@ -175,16 +175,16 @@ def test_the_governance_ceiling_reaches_the_alias_the_same_way(tmp_path, monkeyp
     governed = _install(
         tmp_path,
         monkeypatch,
-        may_auto_approve=lambda ref: ref != "@kirocrew-work/work_ledger_record",
+        may_auto_approve=lambda ref: ref != "@ajcrew-work/work_ledger_record",
     )
-    assert "@kirocrew-work/work_ledger_record" not in governed["allowedTools"]
-    assert "@kirocrew-work/work_ledger_read" in governed["allowedTools"]
+    assert "@ajcrew-work/work_ledger_record" not in governed["allowedTools"]
+    assert "@ajcrew-work/work_ledger_read" in governed["allowedTools"]
     # Stripped from the derived KAS block with it, rather than surviving there.
     match = governed["permissions"]["rules"][0]["match"]
-    assert "kirocrew-work/work_ledger_record" not in match
-    assert "kirocrew-work/work_ledger_read" in match
+    assert "ajcrew-work/work_ledger_record" not in match
+    assert "ajcrew-work/work_ledger_read" in match
     # Still MOUNTED — a governed ref prompts, it is not unmounted.
-    assert "@kirocrew-work" in governed["tools"]
+    assert "@ajcrew-work" in governed["tools"]
 
 
 def test_a_withheld_grant_names_this_installer_in_the_audit(tmp_path, monkeypatch):
@@ -201,11 +201,11 @@ def test_a_withheld_grant_names_this_installer_in_the_audit(tmp_path, monkeypatc
     _install(
         tmp_path,
         monkeypatch,
-        may_auto_approve=lambda ref: ref != "@kirocrew-work/work_ledger_read",
+        may_auto_approve=lambda ref: ref != "@ajcrew-work/work_ledger_read",
     )
     (event,) = [e for e in events if e["operation"] == "mcp_auto_approve_withheld"]
     assert event["source"] == "_install_ledger_conductor_agent"
-    assert "@kirocrew-work/work_ledger_read" in event["resources"]
+    assert "@ajcrew-work/work_ledger_read" in event["resources"]
 
 
 def test_audit_failure_does_not_break_the_install(tmp_path, monkeypatch):
@@ -223,11 +223,11 @@ def test_audit_failure_does_not_break_the_install(tmp_path, monkeypatch):
 # ── registration, which is what makes the old name still resolve ───────────
 
 
-def test_spec_is_registered_as_kirocrew_owned_but_not_required(tmp_path, monkeypatch):
+def test_spec_is_registered_as_ajcrew_owned_but_not_required(tmp_path, monkeypatch):
     """Owned so the boot self-heal sweep and the Playwright convergence sweep see
     it; NOT required, because its installer degrades to ``logger.debug`` and only
     its own feature stops working — the same split as its siblings."""
-    assert LEDGER_CONDUCTOR_AGENT_FILENAME == "kirocrew-ledger-conductor.json"
+    assert LEDGER_CONDUCTOR_AGENT_FILENAME == "ajcrew-ledger-conductor.json"
     assert LEDGER_CONDUCTOR_AGENT_FILENAME in OWNED_KIRO_AGENT_FILES
     assert LEDGER_CONDUCTOR_AGENT_FILENAME not in REQUIRED_KIRO_AGENT_FILES
     _install(tmp_path, monkeypatch)
@@ -271,7 +271,7 @@ def test_the_index_line_sends_a_reader_to_the_live_skill():
     Skills`` line is the only thing an agent reads before deciding to load a
     skill. A deprecation that shows up as a normal-looking procedure summary gets
     loaded; one whose first sentence says where the procedure went does not."""
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew.skills import SkillsLoader
 
     body = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
     desc = SkillsLoader._parse_frontmatter_text(body).get("description") or ""

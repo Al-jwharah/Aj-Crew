@@ -13,14 +13,14 @@ pins that contract:
 * each bound member runs its owner's code: a plain or static member IS the owner's
   function, and a ``*_impl`` member, which ``bind_component_globals`` rebinds in place, runs
   the owner's code object; no owner keeps a function the class does not bind;
-* every ``*_impl`` member runs on ``kiro_crew.subagent``'s globals and every global it reads
-  resolves there, so a patch of a ``kiro_crew.subagent`` name reaches it; every other member
+* every ``*_impl`` member runs on ``aj_crew.subagent``'s globals and every global it reads
+  resolves there, so a patch of a ``aj_crew.subagent`` name reaches it; every other member
   runs on its owner's globals and every global it reads resolves there;
 * no bound function uses zero-argument ``super()``, ``__class__`` or a name-mangled
   attribute, which only work inside a class body;
 * no owner imports ``run.py`` at run time, and nothing else in ``src`` imports an owner;
 * each owner's docstring names the manager fields its members write and read;
-* no name the test trees patch through ``kiro_crew.subagent_manager.run`` is read as a global
+* no name the test trees patch through ``aj_crew.subagent_manager.run`` is read as a global
   by an owner.
 
 Each structural check has a self-test that shows it can fail.
@@ -42,9 +42,9 @@ from typing import Any
 import pytest
 from facade_mirror_scan import patched_names
 
-import kiro_crew.subagent as subagent_module
-from kiro_crew.subagent_manager import run as run_module
-from kiro_crew.subagent_manager.run import RunEventCoordinator
+import aj_crew.subagent as subagent_module
+from aj_crew.subagent_manager import run as run_module
+from aj_crew.subagent_manager.run import RunEventCoordinator
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_run_bindings")
 
@@ -56,7 +56,7 @@ SHARED_BINDINGS_CHECKS = (
     "leaf_test_scope_derives_this_file_as_a_corpus_gate",
 )
 
-_PACKAGE = "kiro_crew.subagent_manager"
+_PACKAGE = "aj_crew.subagent_manager"
 _RUN = f"{_PACKAGE}.run"
 _OWNERS = ("run_records", "run_lifecycle", "run_turn", "run_yields", "run_start")
 _TEST_ROOT = Path(__file__).resolve().parent
@@ -469,7 +469,7 @@ def test_a_bound_member_runs_its_owners_code(name: str) -> None:
     owned = vars(_owner(_MEMBERS[name][2]))[name]
     if name.endswith("_impl"):
         # ``bind_component_globals`` replaced the class attribute with a copy that runs the
-        # owner's code object on ``kiro_crew.subagent``'s globals.
+        # owner's code object on ``aj_crew.subagent``'s globals.
         assert _function(value).__code__ is owned.__code__
     else:
         # The class attribute IS the owner's function, not a wrapper around it.
@@ -670,15 +670,15 @@ def _owner_importers(src: Path) -> list[str]:
 
 
 def test_the_owner_importer_scan_can_fail(tmp_path: Path) -> None:
-    pkg = tmp_path / "kiro_crew" / "subagent_manager"
+    pkg = tmp_path / "aj_crew" / "subagent_manager"
     pkg.mkdir(parents=True)
     (pkg / "terminal.py").write_text("from .run_turn import f\n", encoding="utf-8")
-    (tmp_path / "kiro_crew" / "other.py").write_text(
-        "from kiro_crew.subagent_manager import run_start\n", encoding="utf-8"
+    (tmp_path / "aj_crew" / "other.py").write_text(
+        "from aj_crew.subagent_manager import run_start\n", encoding="utf-8"
     )
     assert _owner_importers(tmp_path) == [
-        "kiro_crew.other",
-        "kiro_crew.subagent_manager.terminal",
+        "aj_crew.other",
+        "aj_crew.subagent_manager.terminal",
     ]
 
 
@@ -803,7 +803,7 @@ def test_each_owner_names_the_fields_it_writes_and_reads(owner: str) -> None:
 def _test_tree_files() -> list[Path]:
     """The root conftest, ``test/`` and the builtin apps' test modules and conftests."""
     files = [_REPO_ROOT / "conftest.py", *sorted(_TEST_ROOT.rglob("*.py"))]
-    builtins_root = _REPO_ROOT / "src" / "kiro_crew" / "apps" / "builtins"
+    builtins_root = _REPO_ROOT / "src" / "aj_crew" / "apps" / "builtins"
     for path in sorted(builtins_root.rglob("*.py")):
         rel = path.relative_to(builtins_root).as_posix()
         if "/tests/" in rel or path.name.startswith("test_") or path.name == "conftest.py":
@@ -857,12 +857,12 @@ def test_no_name_patched_through_run_is_read_by_an_owner() -> None:
 def test_the_reach_scan_can_fail(tmp_path: Path) -> None:
     probe = tmp_path / "test_probe.py"
     probe.write_text(
-        "from kiro_crew.subagent_manager import run as run_mod\n"
+        "from aj_crew.subagent_manager import run as run_mod\n"
         "def test_x(monkeypatch):\n"
         "    monkeypatch.setattr(run_mod, '_logging', None)\n"
         "def test_y():\n"
         "    from unittest import mock\n"
-        "    with mock.patch('kiro_crew.subagent_manager.run.ResolvedAwsProfile'):\n"
+        "    with mock.patch('aj_crew.subagent_manager.run.ResolvedAwsProfile'):\n"
         "        pass\n",
         encoding="utf-8",
     )

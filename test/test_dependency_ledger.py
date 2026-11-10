@@ -1,11 +1,11 @@
-"""Tests for kiro_crew.apps.dependency_ledger — reference-counted dependency tracking."""
+"""Tests for aj_crew.apps.dependency_ledger — reference-counted dependency tracking."""
 from __future__ import annotations
 
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from kiro_crew.apps.dependency_ledger import (
+from aj_crew.apps.dependency_ledger import (
     LedgerEntry,
     classify_and_clean_for_uninstall,
     classify_for_uninstall,
@@ -19,7 +19,7 @@ from kiro_crew.apps.dependency_ledger import (
 @pytest.fixture(autouse=True)
 def _ledger_home(tmp_path, monkeypatch):
     """Isolate ledger to temp directory."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "kirocrew-home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "ajcrew-home"))
 
 
 # ---------------------------------------------------------------------------
@@ -139,7 +139,7 @@ _dep_key = st.from_regex(r"capability/(mcp|skills|agents)/[a-z][a-z0-9\-]{0,20}"
 
 def _clear_ledger() -> None:
     """Remove the ledger file to reset state between hypothesis examples."""
-    from kiro_crew.apps.dependency_ledger import _ledger_path
+    from aj_crew.apps.dependency_ledger import _ledger_path
     path = _ledger_path()
     if path.is_file():
         path.unlink()
@@ -213,7 +213,7 @@ def _write_raw_ledger(entries: dict) -> None:
     """Seed the ledger file directly, bypassing the record_* helpers."""
     import json
 
-    from kiro_crew.apps.dependency_ledger import _ledger_path
+    from aj_crew.apps.dependency_ledger import _ledger_path
 
     path = _ledger_path()
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -224,7 +224,7 @@ def _read_raw_ledger() -> dict:
     """Read the ledger file directly, bypassing key-resolution helpers."""
     import json
 
-    from kiro_crew.apps.dependency_ledger import _ledger_path
+    from aj_crew.apps.dependency_ledger import _ledger_path
 
     path = _ledger_path()
     if not path.is_file():
@@ -307,24 +307,24 @@ class TestLegacyKeyCompat:
 
 class TestDeclaredCapabilityKeys:
     def test_reads_capabilities_key(self):
-        from kiro_crew.apps.dependency_ledger import declared_capability_keys
+        from aj_crew.apps.dependency_ledger import declared_capability_keys
 
         keys = declared_capability_keys({"capabilities": {"mcp": ["a"], "skills": ["b"]}})
         assert keys == ["capability/mcp/a", "capability/skills/b"]
 
     def test_reads_deprecated_alias(self):
-        from kiro_crew.apps.dependency_ledger import declared_capability_keys
+        from aj_crew.apps.dependency_ledger import declared_capability_keys
 
         assert declared_capability_keys({"aim": {"mcp": ["a"]}}) == ["capability/mcp/a"]
 
     def test_canonical_key_takes_precedence_over_alias(self):
-        from kiro_crew.apps.dependency_ledger import declared_capability_keys
+        from aj_crew.apps.dependency_ledger import declared_capability_keys
 
         keys = declared_capability_keys({"capabilities": {"mcp": ["new"]}, "aim": {"mcp": ["old"]}})
         assert keys == ["capability/mcp/new"]
 
     def test_object_entries_and_blanks(self):
-        from kiro_crew.apps.dependency_ledger import declared_capability_keys
+        from aj_crew.apps.dependency_ledger import declared_capability_keys
 
         keys = declared_capability_keys({
             "capabilities": {"mcp": [{"id": "obj"}, "", {"id": ""}, "plain"]}
@@ -332,7 +332,7 @@ class TestDeclaredCapabilityKeys:
         assert keys == ["capability/mcp/obj", "capability/mcp/plain"]
 
     def test_malformed_shapes_do_not_raise(self):
-        from kiro_crew.apps.dependency_ledger import declared_capability_keys
+        from aj_crew.apps.dependency_ledger import declared_capability_keys
 
         assert declared_capability_keys({}) == []
         assert declared_capability_keys({"capabilities": "nope"}) == []
@@ -427,25 +427,25 @@ class TestCanonicalDepKey:
     is silently ignored and the dep is deleted."""
 
     def test_normalizes_legacy_prefix(self):
-        from kiro_crew.apps.dependency_ledger import canonical_dep_key
+        from aj_crew.apps.dependency_ledger import canonical_dep_key
 
         assert canonical_dep_key("aim/mcp/x") == "capability/mcp/x"
         assert canonical_dep_key("aim/skills/Pkg") == "capability/skills/Pkg"
 
     def test_is_idempotent_for_canonical_keys(self):
-        from kiro_crew.apps.dependency_ledger import canonical_dep_key
+        from aj_crew.apps.dependency_ledger import canonical_dep_key
 
         assert canonical_dep_key("capability/mcp/x") == "capability/mcp/x"
 
     def test_leaves_unrelated_strings_untouched(self):
-        from kiro_crew.apps.dependency_ledger import canonical_dep_key
+        from aj_crew.apps.dependency_ledger import canonical_dep_key
 
         for s in ("command:node", "", "aimless/mcp/x", "other/mcp/x"):
             assert canonical_dep_key(s) == s
 
     def test_legacy_keep_id_preserves_the_dependency(self):
         """The regression itself: a legacy keep id must still spare the dep."""
-        from kiro_crew.apps.dependency_ledger import canonical_dep_key
+        from aj_crew.apps.dependency_ledger import canonical_dep_key
 
         _write_raw_ledger({
             "capability/mcp/keepme": {
@@ -469,7 +469,7 @@ class TestCanonicalDepKey:
 class TestUncleanableTypesArePreserved:
     """A dependency type with no cleanup operation must keep its ledger row.
 
-    Deleting the row for something KiroCrew cannot actually uninstall leaves the
+    Deleting the row for something AjCrew cannot actually uninstall leaves the
     installed package on disk with nothing recording that it was ever referenced —
     an untraceable orphan. Ownership is dropped instead, so it reads as
     user-installed and stays reclaimable."""
@@ -538,7 +538,7 @@ class TestUncleanableTypesArePreserved:
         assert _read_raw_ledger() == {}
 
     def test_is_uncleanable_accepts_every_spelling(self):
-        from kiro_crew.apps.dependency_ledger import _is_uncleanable
+        from aj_crew.apps.dependency_ledger import _is_uncleanable
 
         for spelling in ("agents", "capability.agents", "aim.agents"):
             assert _is_uncleanable(spelling) is True

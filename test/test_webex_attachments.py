@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.webex.attachments — inbound file ingest.
+"""Tests for aj_crew.webex.attachments — inbound file ingest.
 
 Everything channel-neutral (caps, classification, signature sniffing, temp-file
 ownership, the SEL audit) belongs to ``messaging/attachments.py`` and is tested
@@ -15,8 +15,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.messaging.attachments import cleanup
-from kiro_crew.webex.attachments import process_webex_attachments, to_attachments
+from aj_crew.messaging.attachments import cleanup
+from aj_crew.webex.attachments import process_webex_attachments, to_attachments
 
 
 class FakeClient:
@@ -194,9 +194,9 @@ class TestProcessWebexAttachments:
             transcribed.append(path)
             return "spoken words"
 
-        monkeypatch.setattr("kiro_crew.transcribe.is_available", lambda: True)
-        monkeypatch.setattr("kiro_crew.transcribe.batch_duration_cap_secs", lambda _cfg: None)
-        monkeypatch.setattr("kiro_crew.transcribe.transcribe_audio", _transcribe)
+        monkeypatch.setattr("aj_crew.transcribe.is_available", lambda: True)
+        monkeypatch.setattr("aj_crew.transcribe.batch_duration_cap_secs", lambda _cfg: None)
+        monkeypatch.setattr("aj_crew.transcribe.transcribe_audio", _transcribe)
         inbound = SimpleNamespace(file_urls=(url,))
 
         result = await process_webex_attachments(client, inbound)  # type: ignore[arg-type]

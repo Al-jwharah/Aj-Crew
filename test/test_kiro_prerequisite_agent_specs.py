@@ -20,9 +20,9 @@ from kiro_prerequisite_helpers import _agents_dir_never_the_real_home  # noqa: F
 from kiro_prerequisite_helpers import _isolate_agent_specs  # noqa: F401
 from kiro_prerequisite_helpers import _make_executable, _no_audit
 
-from kiro_crew.agent_files import AGENT_FILENAME
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService, PrerequisiteStatus, ProcessResult
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.agent_files import AGENT_FILENAME
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService, PrerequisiteStatus, ProcessResult
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 def _parked_on(lock: asyncio.Lock) -> bool:
@@ -33,7 +33,7 @@ def _parked_on(lock: asyncio.Lock) -> bool:
 class TestAgentSpecsNarrowReadiness:
     """A viable binary + a good ``whoami`` are NOT sufficient for readiness.
 
-    Kiro Crew's own agent specs (``~/.kiro/agents/kirocrew*.json``) were not an
+    Aj Crew's own agent specs (``~/.kiro/agents/ajcrew*.json``) were not an
     input to ``ready`` at all, so an install whose spec write failed reported
     ready while kiro-cli answered every ``session/set_mode`` with
     ``Mode '<name>' not found`` — the gate affirmatively told the user setup was
@@ -67,8 +67,8 @@ class TestAgentSpecsNarrowReadiness:
     @staticmethod
     def _agents_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, specs: bool) -> Path:
         """Point the agents dir at a tmp path, optionally fully populated."""
-        from kiro_crew import agent as agent_module
-        from kiro_crew.agent_files import REQUIRED_KIRO_AGENT_FILES
+        from aj_crew import agent as agent_module
+        from aj_crew.agent_files import REQUIRED_KIRO_AGENT_FILES
 
         agents = tmp_path / "agents"
         agents.mkdir(parents=True, exist_ok=True)
@@ -84,7 +84,7 @@ class TestAgentSpecsNarrowReadiness:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        from kiro_crew.agent_files import REQUIRED_KIRO_AGENT_FILES
+        from aj_crew.agent_files import REQUIRED_KIRO_AGENT_FILES
 
         self._agents_dir(tmp_path, monkeypatch, specs=False)
 
@@ -139,7 +139,7 @@ class TestAgentSpecsNarrowReadiness:
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """A failed CHECK is not evidence of a missing spec."""
-        from kiro_crew import agent as agent_module
+        from aj_crew import agent as agent_module
 
         def _boom() -> list[str]:
             raise OSError("permission denied")
@@ -167,7 +167,7 @@ class TestAgentSpecsNarrowReadiness:
         "chat is broken" into "the product is unreachable" for exactly the
         instances an operator uses to diagnose.
         """
-        from kiro_crew import agent as agent_module
+        from aj_crew import agent as agent_module
 
         self._agents_dir(tmp_path, monkeypatch, specs=False)
         monkeypatch.setattr(
@@ -194,7 +194,7 @@ class TestAgentSpecsNarrowReadiness:
         is not one, and emitting a record every 30 seconds per client would bury
         the real decisions.
         """
-        from kiro_crew import agent as agent_module
+        from aj_crew import agent as agent_module
 
         events: list[str] = []
 
@@ -258,7 +258,7 @@ class TestRejectedAgentSpecsNarrowReadiness:
 
     ``missing_agent_specs`` answers presence by statting the file, which cannot
     see this: kiro-cli drops a spec it rejects from its agent table, so
-    ``--agent kirocrew`` resolves to the default agent with none of Kiro Crew's
+    ``--agent ajcrew`` resolves to the default agent with none of Aj Crew's
     MCP servers and only a line on stderr. That is the shape of the customer
     report — "my migrated agents stopped working" with a
     perfectly present file on disk.
@@ -307,7 +307,7 @@ class TestRejectedAgentSpecsNarrowReadiness:
         agents = tmp_path / ".kiro" / "agents"
 
         def _lister() -> list[tuple[str, Path]]:
-            from kiro_crew.agent_files import REQUIRED_KIRO_AGENT_FILES
+            from aj_crew.agent_files import REQUIRED_KIRO_AGENT_FILES
 
             # Mirrors present_required_agent_specs (required-and-present only) over
             # this test's dir, so the probe's spawn count is stated here rather than
@@ -333,9 +333,9 @@ class TestRejectedAgentSpecsNarrowReadiness:
         tmp_path: Path,
     ) -> None:
         agents = self._spec_dir(tmp_path)
-        (agents / "kirocrew.json").write_text("{}", encoding="utf-8")
+        (agents / "ajcrew.json").write_text("{}", encoding="utf-8")
         reason = (
-            f"Error: Json supplied at {agents / 'kirocrew.json'} is invalid: "
+            f"Error: Json supplied at {agents / 'ajcrew.json'} is invalid: "
             "data did not match any variant of untagged enum Repr"
         )
 
@@ -347,7 +347,7 @@ class TestRejectedAgentSpecsNarrowReadiness:
 
         status = await self._service(tmp_path, run).snapshot(force=True)
 
-        assert status["rejected_agent_specs"] == ["kirocrew.json"]
+        assert status["rejected_agent_specs"] == ["ajcrew.json"]
         assert status["ready"] is False
         assert status["repair_required"] is True
         assert "is invalid" in status["agent_spec_rejection_detail"]
@@ -358,7 +358,7 @@ class TestRejectedAgentSpecsNarrowReadiness:
         tmp_path: Path,
     ) -> None:
         agents = self._spec_dir(tmp_path)
-        (agents / "kirocrew.json").write_text("{}", encoding="utf-8")
+        (agents / "ajcrew.json").write_text("{}", encoding="utf-8")
 
         async def run(_command: str, args: list[str], **_kwargs: Any) -> ProcessResult:
             if args[:2] == ["agent", "validate"]:
@@ -385,7 +385,7 @@ class TestRejectedAgentSpecsNarrowReadiness:
         rewrite a file that was never malformed.
         """
         agents = self._spec_dir(tmp_path)
-        (agents / "kirocrew.json").write_text("{}", encoding="utf-8")
+        (agents / "ajcrew.json").write_text("{}", encoding="utf-8")
 
         async def run(_command: str, args: list[str], **_kwargs: Any) -> ProcessResult:
             if args[:2] == ["agent", "validate"]:
@@ -435,7 +435,7 @@ class TestRejectedAgentSpecsNarrowReadiness:
         its place accepts it. Pins the gate so a later refactor cannot quietly
         reintroduce those spawns.
         """
-        spec = self._spec_dir(tmp_path) / "kirocrew.json"
+        spec = self._spec_dir(tmp_path) / "ajcrew.json"
         spec.write_text("{}", encoding="utf-8")
         calls: list[list[str]] = []
 
@@ -467,8 +467,8 @@ class TestRejectedAgentSpecsNarrowReadiness:
 
     @staticmethod
     def _allow_kas_setup(monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew import acp_backends, sandbox
-        from kiro_crew.agent_sdk import backend_install
+        from aj_crew import acp_backends, sandbox
+        from aj_crew.agent_sdk import backend_install
 
         monkeypatch.setattr(sandbox, "detect_backend", lambda: "bwrap")
         monkeypatch.setattr(sandbox, "configured_sandbox_mode", lambda: "standard")
@@ -505,14 +505,14 @@ class TestRejectedAgentSpecsNarrowReadiness:
         KAS session creation refuses to load was reported as fine, and KAS
         finished first-run setup onto a session that could not start.
         """
-        (self._spec_dir(tmp_path) / "kirocrew.json").write_text(body, encoding="utf-8")
+        (self._spec_dir(tmp_path) / "ajcrew.json").write_text(body, encoding="utf-8")
         self._allow_kas_setup(monkeypatch)
         service = self._service(tmp_path, self._signed_out_run)
 
         status = await service.snapshot(force=True)
 
         assert status["authenticated"] is False
-        assert status["rejected_agent_specs"] == ["kirocrew.json"]
+        assert status["rejected_agent_specs"] == ["ajcrew.json"]
         assert status["repair_required"] is True
         assert reason in status["agent_spec_rejection_detail"]
         assert await service.record_independent_backend_setup("kas") is False
@@ -525,8 +525,8 @@ class TestRejectedAgentSpecsNarrowReadiness:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        (self._spec_dir(tmp_path) / "kirocrew.json").write_text(
-            json.dumps({"name": "kirocrew", "prompt": "You are Kiro."}), encoding="utf-8"
+        (self._spec_dir(tmp_path) / "ajcrew.json").write_text(
+            json.dumps({"name": "ajcrew", "prompt": "You are Kiro."}), encoding="utf-8"
         )
         self._allow_kas_setup(monkeypatch)
         service = self._service(tmp_path, self._signed_out_run)
@@ -544,8 +544,8 @@ class TestRejectedAgentSpecsNarrowReadiness:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        spec = self._spec_dir(tmp_path) / "kirocrew.json"
-        spec.write_text(json.dumps({"name": "kirocrew"}), encoding="utf-8")
+        spec = self._spec_dir(tmp_path) / "ajcrew.json"
+        spec.write_text(json.dumps({"name": "ajcrew"}), encoding="utf-8")
         self._allow_kas_setup(monkeypatch)
         service = self._service(tmp_path, self._signed_out_run)
         assert (await service.snapshot(force=True))["rejected_agent_specs"] == []
@@ -561,7 +561,7 @@ class TestRejectedAgentSpecsNarrowReadiness:
         tmp_path: Path,
     ) -> None:
         """Signed in, the CLI's verdict stands and the local KAS check is not run."""
-        (self._spec_dir(tmp_path) / "kirocrew.json").write_text(
+        (self._spec_dir(tmp_path) / "ajcrew.json").write_text(
             json.dumps({"prompt": 7}), encoding="utf-8"
         )
         calls: list[list[str]] = []
@@ -590,8 +590,8 @@ class TestRejectedAgentSpecsNarrowReadiness:
         tools the spec declares. Structural, so it must cost no subprocess.
         """
         agents = self._spec_dir(tmp_path)
-        (agents / "kirocrew.json").write_text(
-            json.dumps({"name": "kirocrew", "mcpServers": {"broken": {"args": ["x"]}}}),
+        (agents / "ajcrew.json").write_text(
+            json.dumps({"name": "ajcrew", "mcpServers": {"broken": {"args": ["x"]}}}),
             encoding="utf-8",
         )
         calls: list[list[str]] = []
@@ -603,7 +603,7 @@ class TestRejectedAgentSpecsNarrowReadiness:
 
         status = await self._service(tmp_path, run).snapshot(force=True)
 
-        assert status["rejected_agent_specs"] == ["kirocrew.json"]
+        assert status["rejected_agent_specs"] == ["ajcrew.json"]
         assert "broken" in status["agent_spec_rejection_detail"]
         assert "neither a command" in status["agent_spec_rejection_detail"]
         assert not any(a[:2] == ["agent", "validate"] for a in calls)
@@ -624,7 +624,7 @@ class TestRejectedAgentSpecsNarrowReadiness:
         agents = self._spec_dir(tmp_path)
         real = tmp_path / "elsewhere.json"
         real.write_text(json.dumps({"mcpServers": {"broken": {"args": []}}}), encoding="utf-8")
-        (agents / "kirocrew.json").symlink_to(real)
+        (agents / "ajcrew.json").symlink_to(real)
         calls: list[list[str]] = []
 
         async def run(_command: str, args: list[str], **_kwargs: Any) -> ProcessResult:
@@ -649,10 +649,10 @@ class TestRejectedAgentSpecsNarrowReadiness:
         or a name carrying a credential reaches the readiness payload verbatim.
         """
         agents = self._spec_dir(tmp_path)
-        (agents / "kirocrew.json").write_text(
+        (agents / "ajcrew.json").write_text(
             json.dumps(
                 {
-                    "name": "kirocrew",
+                    "name": "ajcrew",
                     "mcpServers": {
                         "svc?token=AKIAIOSFODNN7EXAMPLE": {"args": []},
                     },
@@ -667,7 +667,7 @@ class TestRejectedAgentSpecsNarrowReadiness:
 
         status = await self._service(tmp_path, run).snapshot(force=True)
 
-        assert status["rejected_agent_specs"] == ["kirocrew.json"]
+        assert status["rejected_agent_specs"] == ["ajcrew.json"]
         assert "AKIAIOSFODNN7EXAMPLE" not in status["agent_spec_rejection_detail"]
 
     @pytest.mark.asyncio
@@ -684,10 +684,10 @@ class TestRejectedAgentSpecsNarrowReadiness:
         selections — worse than the silent gap this check closes.
         """
         agents = self._spec_dir(tmp_path)
-        (agents / "kirocrew.json").write_text(
+        (agents / "ajcrew.json").write_text(
             json.dumps(
                 {
-                    "name": "kirocrew",
+                    "name": "ajcrew",
                     "mcpServers": {"remote": {"url": "https://mcp.example.com/sse"}},
                 }
             ),
@@ -717,8 +717,8 @@ class TestRejectedAgentSpecsNarrowReadiness:
         no-command test above).
         """
         agents = self._spec_dir(tmp_path)
-        (agents / "kirocrew.json").write_text(
-            json.dumps({"name": "kirocrew", "mcpServers": {"aws-iac-mcp": {"type": "registry"}}}),
+        (agents / "ajcrew.json").write_text(
+            json.dumps({"name": "ajcrew", "mcpServers": {"aws-iac-mcp": {"type": "registry"}}}),
             encoding="utf-8",
         )
 
@@ -743,8 +743,8 @@ class TestRejectedAgentSpecsNarrowReadiness:
         spec that passes the structural read must still be validated.
         """
         agents = self._spec_dir(tmp_path)
-        (agents / "kirocrew.json").write_text(
-            json.dumps({"name": "kirocrew", "mcpServers": {"ok": {"command": "uvx", "args": []}}}),
+        (agents / "ajcrew.json").write_text(
+            json.dumps({"name": "ajcrew", "mcpServers": {"ok": {"command": "uvx", "args": []}}}),
             encoding="utf-8",
         )
         calls: list[list[str]] = []
@@ -774,11 +774,11 @@ class TestRejectedAgentSpecsNarrowReadiness:
         button still does something only the binary can answer.
         """
         agents = self._spec_dir(tmp_path)
-        (agents / "kirocrew.json").write_text("{}", encoding="utf-8")
+        (agents / "ajcrew.json").write_text("{}", encoding="utf-8")
         # The lite spec is PRESENT so this stays a pure rejection state; the
         # mixed rejected-main/missing-lite state has its own repair test in
         # TestAgentSpecRepair.
-        (agents / "kirocrew-lite.json").write_text("{}", encoding="utf-8")
+        (agents / "ajcrew-lite.json").write_text("{}", encoding="utf-8")
         rebuilt: list[str] = []
         calls: list[list[str]] = []
 
@@ -787,13 +787,13 @@ class TestRejectedAgentSpecsNarrowReadiness:
             if args[:2] == ["agent", "validate"]:
                 # Reject ONLY the main spec: the lite spec is staged present and
                 # accepted, keeping this a pure single-spec rejection state.
-                if Path(args[-1]).name == "kirocrew.json":
+                if Path(args[-1]).name == "ajcrew.json":
                     return ProcessResult(ok=True, output="x is invalid: bad", returncode=0)
             return ProcessResult(ok=True)
 
         service = self._service(tmp_path, run)
         await service.snapshot(force=True)
-        assert service._status.rejected_agent_specs == ["kirocrew.json"]
+        assert service._status.rejected_agent_specs == ["ajcrew.json"]
 
         async def _fake_repair() -> str:
             rebuilt.append("called")
@@ -822,8 +822,8 @@ class TestRejectedAgentSpecsNarrowReadiness:
     ) -> None:
         """The widened guard must not turn every Check again into a write."""
         agents = self._spec_dir(tmp_path)
-        (agents / "kirocrew.json").write_text("{}", encoding="utf-8")
-        (agents / "kirocrew-lite.json").write_text("{}", encoding="utf-8")
+        (agents / "ajcrew.json").write_text("{}", encoding="utf-8")
+        (agents / "ajcrew-lite.json").write_text("{}", encoding="utf-8")
         rebuilt: list[str] = []
 
         async def run(_command: str, args: list[str], **_kwargs: Any) -> ProcessResult:
@@ -880,7 +880,7 @@ class TestAgentSpecRepairIsAPostNotAGet:
 
     @staticmethod
     def _agents_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-        from kiro_crew import agent as agent_module
+        from aj_crew import agent as agent_module
 
         agents = tmp_path / "agents"
         agents.mkdir(exist_ok=True)
@@ -894,7 +894,7 @@ class TestAgentSpecRepairIsAPostNotAGet:
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Even ``?refresh=1`` is a pure read — this is the regression guard."""
-        from kiro_crew import agent as agent_module
+        from aj_crew import agent as agent_module
 
         self._agents_dir(tmp_path, monkeypatch)
         calls: list[int] = []
@@ -914,7 +914,7 @@ class TestAgentSpecRepairIsAPostNotAGet:
         any reflow. What matters is the method the router will accept: GET is the
         one method csrf_middleware and sel_audit_middleware both skip.
         """
-        from kiro_crew.dashboard.handlers.kiro_prerequisite import (
+        from aj_crew.dashboard.handlers.kiro_prerequisite import (
             api_kiro_prerequisite_repair_specs,
         )
 
@@ -944,8 +944,8 @@ class TestAgentSpecRepair:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        from kiro_crew import agent as agent_module
-        from kiro_crew.agent_files import REQUIRED_KIRO_AGENT_FILES
+        from aj_crew import agent as agent_module
+        from aj_crew.agent_files import REQUIRED_KIRO_AGENT_FILES
 
         agents = self._agents_dir(tmp_path, monkeypatch)
         calls: list[int] = []
@@ -979,7 +979,7 @@ class TestAgentSpecRepair:
         graph merges ``mcpServers[*].env``, so raw exception text can carry a
         credential.
         """
-        from kiro_crew import agent as agent_module
+        from aj_crew import agent as agent_module
 
         self._agents_dir(tmp_path, monkeypatch)
 
@@ -999,7 +999,7 @@ class TestAgentSpecRepair:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        from kiro_crew import agent as agent_module
+        from aj_crew import agent as agent_module
 
         self._agents_dir(tmp_path, monkeypatch)
         # Assembled at runtime so the literal never sits in the file for the scan.
@@ -1026,7 +1026,7 @@ class TestAgentSpecRepair:
         would rewrite a shared agent home. Reporting that as success would leave
         the gate showing no error and a button that changes nothing on every press.
         """
-        from kiro_crew import agent as agent_module
+        from aj_crew import agent as agent_module
 
         self._agents_dir(tmp_path, monkeypatch)
         monkeypatch.setattr(agent_module, "rebuild_agent_config", lambda: None)
@@ -1034,7 +1034,7 @@ class TestAgentSpecRepair:
         status = await self._service(tmp_path).repair_agent_specs("owner")
 
         assert "still missing" in status["agent_spec_repair_error"]
-        assert "kirocrew setup --agent-only --clean" in status["agent_spec_repair_error"]
+        assert "ajcrew setup --agent-only --clean" in status["agent_spec_repair_error"]
         assert status["ready"] is False
 
     @pytest.mark.asyncio
@@ -1043,7 +1043,7 @@ class TestAgentSpecRepair:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """A present kirocrew.json is never regenerated by this route.
+        """A present ajcrew.json is never regenerated by this route.
 
         ``rebuild_agent_config`` rewrites the whole file. It re-merges
         ``mcpServers`` under ``bridges._mcp_lock``, but NOT the
@@ -1057,16 +1057,16 @@ class TestAgentSpecRepair:
         ``repair_agent_specs`` and this test fails: the repair would report
         success while the overlay keeps listing the lite spec.
         """
-        from kiro_crew import agent as agent_module
-        from kiro_crew.agent_files import LITE_AGENT_FILENAME
+        from aj_crew import agent as agent_module
+        from aj_crew.agent_files import LITE_AGENT_FILENAME
 
         agents = self._agents_dir(tmp_path, monkeypatch)
-        (agents / AGENT_FILENAME).write_text('{"name": "kirocrew"}', encoding="utf-8")
+        (agents / AGENT_FILENAME).write_text('{"name": "ajcrew"}', encoding="utf-8")
         calls: list[int] = []
         monkeypatch.setattr(agent_module, "rebuild_agent_config", lambda: calls.append(1))
 
         def _write_lite() -> None:
-            (agents / LITE_AGENT_FILENAME).write_text('{"name": "kirocrew-lite"}', encoding="utf-8")
+            (agents / LITE_AGENT_FILENAME).write_text('{"name": "ajcrew-lite"}', encoding="utf-8")
 
         monkeypatch.setattr(agent_module, "_install_lite_agent_fallback", _write_lite)
 
@@ -1086,25 +1086,25 @@ class TestAgentSpecRepair:
     ) -> None:
         """Rejection and a missing lite spec can coexist; both get their remedy.
 
-        Acceptance is only evaluated for PRESENT specs, so kirocrew.json can be
-        latched REJECTED while kirocrew-lite.json is missing. A rejection branch
+        Acceptance is only evaluated for PRESENT specs, so ajcrew.json can be
+        latched REJECTED while ajcrew-lite.json is missing. A rejection branch
         that returns before the auxiliary arm leaves that mixed state with no
         error, no write, and a permanently blocked gate. Writing a MISSING file
         rewrites nothing, so the lost-update reasoning behind the rejection
         guard does not apply to it.
         """
-        from kiro_crew import agent as agent_module
-        from kiro_crew.agent_files import LITE_AGENT_FILENAME
+        from aj_crew import agent as agent_module
+        from aj_crew.agent_files import LITE_AGENT_FILENAME
 
         agents = self._agents_dir(tmp_path, monkeypatch)
-        (agents / AGENT_FILENAME).write_text('{"name": "kirocrew"}', encoding="utf-8")
+        (agents / AGENT_FILENAME).write_text('{"name": "ajcrew"}', encoding="utf-8")
         service = self._service(tmp_path)
         service._status.rejected_agent_specs = [AGENT_FILENAME]
         calls: list[int] = []
         monkeypatch.setattr(agent_module, "rebuild_agent_config", lambda: calls.append(1))
 
         def _write_lite() -> None:
-            (agents / LITE_AGENT_FILENAME).write_text('{"name": "kirocrew-lite"}', encoding="utf-8")
+            (agents / LITE_AGENT_FILENAME).write_text('{"name": "ajcrew-lite"}', encoding="utf-8")
 
         monkeypatch.setattr(agent_module, "_install_lite_agent_fallback", _write_lite)
 
@@ -1126,10 +1126,10 @@ class TestAgentSpecRepair:
         Sanitized for the same reason as the main path: the error string is
         dashboard-facing.
         """
-        from kiro_crew import agent as agent_module
+        from aj_crew import agent as agent_module
 
         agents = self._agents_dir(tmp_path, monkeypatch)
-        (agents / AGENT_FILENAME).write_text('{"name": "kirocrew"}', encoding="utf-8")
+        (agents / AGENT_FILENAME).write_text('{"name": "ajcrew"}', encoding="utf-8")
         monkeypatch.setattr(agent_module, "rebuild_agent_config", lambda: None)
 
         def _boom() -> None:
@@ -1155,10 +1155,10 @@ class TestAgentSpecRepair:
         a visible error instead of a success report, honoring the docstring's
         no-op-is-failure rule.
         """
-        from kiro_crew import agent as agent_module
+        from aj_crew import agent as agent_module
 
         agents = self._agents_dir(tmp_path, monkeypatch)
-        (agents / AGENT_FILENAME).write_text('{"name": "kirocrew"}', encoding="utf-8")
+        (agents / AGENT_FILENAME).write_text('{"name": "ajcrew"}', encoding="utf-8")
         monkeypatch.setattr(agent_module, "rebuild_agent_config", lambda: None)
         monkeypatch.setattr(agent_module, "_install_lite_agent_fallback", lambda: None)
 
@@ -1188,8 +1188,8 @@ class TestAgentSpecRepair:
         inside the rebuild until the second caller has had its chance to reach its
         own check, which is the only ordering that distinguishes the two versions.
         """
-        from kiro_crew import agent as agent_module
-        from kiro_crew.agent_files import REQUIRED_KIRO_AGENT_FILES
+        from aj_crew import agent as agent_module
+        from aj_crew.agent_files import REQUIRED_KIRO_AGENT_FILES
 
         agents = self._agents_dir(tmp_path, monkeypatch)
         calls: list[int] = []

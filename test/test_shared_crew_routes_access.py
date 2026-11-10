@@ -14,14 +14,14 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.shared_crew import access_set
-from kiro_crew.shared_crew import routes_access as ra
+from aj_crew.shared_crew import access_set
+from aj_crew.shared_crew import routes_access as ra
 
 
 @pytest.fixture(autouse=True)
 def _shared_crew_preview_on(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
     """These tests cover the preview's behaviour; the gate itself has its own tests."""
-    _floor_monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    _floor_monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
 
 
 def _req(method: str, state: Any = None) -> web.Request:
@@ -95,8 +95,8 @@ async def test_ack_answers_and_maps_an_unreadable_set(
 
 @pytest.mark.asyncio
 async def test_counts_read_unknown_when_their_sources_fail(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.dashboard.handlers import memory
-    from kiro_crew.shared_crew import routes_identity
+    from aj_crew.dashboard.handlers import memory
+    from aj_crew.shared_crew import routes_identity
 
     async def broken_rows(_r: web.Request) -> list[dict[str, Any]]:
         raise RuntimeError("catalog unreadable")
@@ -112,8 +112,8 @@ async def test_counts_read_unknown_when_their_sources_fail(monkeypatch: pytest.M
 
 @pytest.mark.asyncio
 async def test_counts_add_semantic_and_episodic_memory(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.dashboard.handlers import memory
-    from kiro_crew.shared_crew import routes_identity
+    from aj_crew.dashboard.handlers import memory
+    from aj_crew.shared_crew import routes_identity
 
     async def rows(_r: web.Request) -> list[dict[str, Any]]:
         return [{"key": "chat-1"}, {"key": "chat-2"}]
@@ -136,8 +136,8 @@ async def test_a_refused_read_is_audited_and_a_refused_write_is_left_to_the_requ
 ) -> None:
     # The dashboard's SEL request audit skips GET, so the owner gate records a
     # refused read itself; a refused write is already one record there.
-    import kiro_crew.sel as sel_mod
-    from kiro_crew.shared_crew import routes_invites as ri
+    import aj_crew.sel as sel_mod
+    from aj_crew.shared_crew import routes_invites as ri
 
     records: list[dict[str, Any]] = []
     monkeypatch.setattr(
@@ -163,9 +163,9 @@ async def test_the_identity_and_avatar_reads_audit_a_non_dashboard_refusal(
 ) -> None:
     # An app token with a /api/shared-crew/* grant reaches these GETs; the 403 it
     # gets is written to SEL, since the request audit does not record a GET.
-    import kiro_crew.sel as sel_mod
-    from kiro_crew.shared_crew import routes_identity
-    from kiro_crew.shared_crew import routes_invites as ri
+    import aj_crew.sel as sel_mod
+    from aj_crew.shared_crew import routes_identity
+    from aj_crew.shared_crew import routes_invites as ri
 
     records: list[dict[str, Any]] = []
     monkeypatch.setattr(

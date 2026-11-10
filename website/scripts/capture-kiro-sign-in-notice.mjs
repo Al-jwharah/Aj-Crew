@@ -32,7 +32,7 @@
 import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
 import { serveDist, DEFAULT_DIST } from './lib/serve-dist.mjs'
-import { KIROCREW_CONFIG_FIXTURE, logPageProblems, stubDashboardApi, json } from './lib/stub-dashboard-api.mjs'
+import { AJCREW_CONFIG_FIXTURE, logPageProblems, stubDashboardApi, json } from './lib/stub-dashboard-api.mjs'
 
 // The node toolchain injects its own libstdc++ on LD_LIBRARY_PATH, which the
 // bundled Chromium then loads in preference to the system one and fails on.
@@ -46,7 +46,7 @@ const DIST = distAt >= 0 ? args[distAt + 1] : DEFAULT_DIST
 const OUT = args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--dist') || '../temp-screenshots/kiro-sign-in-notice'
 if (!VERIFY_ONLY) mkdirSync(OUT, { recursive: true })
 
-const KAS_CONFIG = { ...KIROCREW_CONFIG_FIXTURE, agent: { ...KIROCREW_CONFIG_FIXTURE.agent, acp_backend: 'kas' } }
+const KAS_CONFIG = { ...AJCREW_CONFIG_FIXTURE, agent: { ...AJCREW_CONFIG_FIXTURE.agent, acp_backend: 'kas' } }
 const HEALTHY = {
   authenticated: true, provider: 'Google', identity: 'social', transport: 'device',
   expires_at: '2099-01-01T00:00:00Z', expired: false, has_refresh_token: true,
@@ -85,7 +85,7 @@ async function main() {
       await page.route(/\/KiroSignInNotice-[^/]*\.js(\?.*)?$/, r => r.abort())
     }
     const extra = async (path, route) => {
-      if (path === '/api/config/kirocrew') {
+      if (path === '/api/config/ajcrew') {
         // A failed config read answers the way a broken config store does.
         if (config === FAILED) await json(route, { error: 'config_read_failed: the config store could not be read', code: 'config_read_failed' }, 500)
         else await json(route, config)
@@ -100,7 +100,7 @@ async function main() {
       // The shell's agent pickers need a real roster to boot past the app-shell
       // boundary (the catch-all's `[]` guess is not one).
       if (path === '/api/agents' || path === '/api/chat/agents' || path === '/api/agents/catalog') {
-        await json(route, { agents: [{ name: 'kirocrew', source: 'builtin' }], default_agent: 'kirocrew' })
+        await json(route, { agents: [{ name: 'ajcrew', source: 'builtin' }], default_agent: 'ajcrew' })
         return true
       }
       if (path.startsWith('/api/chat/slots/')) {

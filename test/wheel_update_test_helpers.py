@@ -1,7 +1,7 @@
 """Shared wiring for tests that drive a managed-venv shadow apply.
 
 The gateway's unattended apply and ``POST /api/update/approve`` both run
-:func:`kiro_crew.platform.wheel_apply.run_wheel_apply`. These tests keep that
+:func:`aj_crew.platform.wheel_apply.run_wheel_apply`. These tests keep that
 helper real and replace only what reaches outside the process: the CDN bases,
 the policy source pin, the AppArmor question, and the engine itself.
 """
@@ -35,19 +35,19 @@ def wire_wheel_apply(
     which a stand-in promotion cannot make true on its own.
     """
     monkeypatch.setattr(
-        "kiro_crew.platform.update_layout.cdn_bases", lambda: (FEED_BASE, ARTIFACT_BASE)
+        "aj_crew.platform.update_layout.cdn_bases", lambda: (FEED_BASE, ARTIFACT_BASE)
     )
     monkeypatch.setattr(
-        "kiro_crew.platform.update_layout.cdn_bases_are_safe",
+        "aj_crew.platform.update_layout.cdn_bases_are_safe",
         safe if callable(safe) else (lambda: safe),
     )
-    monkeypatch.setattr("kiro_crew.platform.update_governance.update_blocked_reason", blocked)
+    monkeypatch.setattr("aj_crew.platform.update_governance.update_blocked_reason", blocked)
     monkeypatch.setattr(
-        "kiro_crew.platform.wheel_apply.userns_reattach_needed", lambda _version: reattach
+        "aj_crew.platform.wheel_apply.userns_reattach_needed", lambda _version: reattach
     )
-    monkeypatch.setattr("kiro_crew.platform.wheel_apply.restart_reaches", lambda _version: reaches)
+    monkeypatch.setattr("aj_crew.platform.wheel_apply.restart_reaches", lambda _version: reaches)
     # A module-global set of loop-bound futures: each test starts with its own.
-    monkeypatch.setattr("kiro_crew.platform.wheel_apply._IN_FLIGHT", set())
+    monkeypatch.setattr("aj_crew.platform.wheel_apply._IN_FLIGHT", set())
     engine = apply if apply is not None else MagicMock(return_value=Path("/x/crew-venv-9.9.9"))
-    monkeypatch.setattr("kiro_crew.platform.wheel_engine.apply_wheel_update", engine)
+    monkeypatch.setattr("aj_crew.platform.wheel_engine.apply_wheel_update", engine)
     return engine

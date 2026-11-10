@@ -9,9 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import skill_trust
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.skills import (
+from aj_crew import skill_trust
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.skills import (
     _FAMILY_LINE_MAX_LABELS,
     PROJECT_SKILL_BODY_CAP,
     SkillBodyPage,
@@ -83,7 +83,7 @@ def _loader(tmp_path: Path, *, opened) -> SkillsLoader:
 
 class TestLazyLoadDefault:
     def test_bounded_index_is_the_default(self):
-        assert KiroCrewConfig().skills.lazy_load is True
+        assert AjCrewConfig().skills.lazy_load is True
 
     def test_default_entry_is_the_ranked_index_with_paths(self, tmp_path, opened):
         skills_dir = tmp_path / "skills"
@@ -176,7 +176,7 @@ class TestANonBooleanConfigValueCannotFlipAKnobOn:
     """
 
     def test_a_string_never_enables_an_off_by_default_knob(self):
-        from kiro_crew.config.loader import _build_skills_config
+        from aj_crew.config.loader import _build_skills_config
 
         for field in ("auto_create_from_sessions", "auto_refine_on_deviation"):
             cfg = _build_skills_config({field: "false"})
@@ -187,7 +187,7 @@ class TestANonBooleanConfigValueCannotFlipAKnobOn:
             assert getattr(_build_skills_config({field: "yes please"}), field) is False
 
     def test_a_real_boolean_is_still_honoured(self):
-        from kiro_crew.config.loader import _build_skills_config
+        from aj_crew.config.loader import _build_skills_config
 
         for field in (
             "lazy_load",
@@ -218,13 +218,13 @@ class TestEverySkillsDefaultComesFromTheDataclass:
     """
 
     def test_an_empty_config_section_reproduces_the_dataclass(self):
-        from kiro_crew.config.loader import _build_skills_config
+        from aj_crew.config.loader import _build_skills_config
 
         built = _build_skills_config({})
-        assert built == KiroCrewConfig().skills
+        assert built == AjCrewConfig().skills
 
     def test_an_explicit_value_still_wins(self):
-        from kiro_crew.config.loader import _build_skills_config
+        from aj_crew.config.loader import _build_skills_config
 
         built = _build_skills_config({"lazy_load": False, "max_auto_skills": 7})
         assert built.lazy_load is False
@@ -350,7 +350,7 @@ class TestScopedDiscovery:
         from aiohttp import web
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.dashboard.handlers import prompts
+        from aj_crew.dashboard.handlers import prompts
 
         root = tmp_path / "skills"
         paths = [_skill(root, f"team/s{n}") for n in range(3)]
@@ -401,7 +401,7 @@ class TestScopedDiscovery:
         from aiohttp import web
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.dashboard.handlers import prompts
+        from aj_crew.dashboard.handlers import prompts
 
         root = tmp_path / "skills"
         for n in range(3):
@@ -462,7 +462,7 @@ class TestScopedDiscovery:
         assert loader.resolve_dollar_skills("$review", only=only)[0][1] == "team-b/review"
 
     def test_external_literal_mappings_do_not_rescan_siblings(self, tmp_path, monkeypatch, opened):
-        import kiro_crew.skills as module
+        import aj_crew.skills as module
 
         paths = [_skill(tmp_path / "external", f"skill-{n:03}") for n in range(40)]
         original = module._iter_skill_files
@@ -498,7 +498,7 @@ class TestScopedDiscovery:
     def test_pinned_capacity_refuses_instead_of_truncating_required_instructions(
         self, tmp_path, monkeypatch, opened
     ):
-        import kiro_crew.skills as module
+        import aj_crew.skills as module
 
         monkeypatch.setattr(module, "PINNED_SKILL_BODIES_CAP", 2000)
         for n in range(3):
@@ -563,12 +563,12 @@ async def test_installed_post_exact_read_long_keys_and_scope_errors(tmp_path, mo
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.agent_discovery import session_skill_globs
-    from kiro_crew.dashboard.handlers import prompts
-    from kiro_crew.dashboard.routes import skills as routes
-    from kiro_crew.dashboard.server import _MIXED_INTERNAL_API_PATHS, _make_csrf_middleware
-    from kiro_crew.dashboard.token_auth import token_auth_middleware
-    from kiro_crew.validation import MAX_SKILL_KEY_CHARS
+    from aj_crew.agent_discovery import session_skill_globs
+    from aj_crew.dashboard.handlers import prompts
+    from aj_crew.dashboard.routes import skills as routes
+    from aj_crew.dashboard.server import _MIXED_INTERNAL_API_PATHS, _make_csrf_middleware
+    from aj_crew.dashboard.token_auth import token_auth_middleware
+    from aj_crew.validation import MAX_SKILL_KEY_CHARS
 
     loader = _loader(tmp_path, opened=opened)
     seen = []
@@ -672,8 +672,8 @@ async def test_installed_exact_read_credits_the_usage_ledger(tmp_path, monkeypat
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import prompts
-    from kiro_crew.dashboard.routes import skills as routes
+    from aj_crew.dashboard.handlers import prompts
+    from aj_crew.dashboard.routes import skills as routes
 
     _skill(tmp_path / "skills", "alpha")
     loader = _loader(tmp_path, opened=opened)
@@ -730,8 +730,8 @@ async def test_app_reads_a_skill_from_its_own_projectless_slot(tmp_path, monkeyp
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import prompts
-    from kiro_crew.dashboard.routes import skills as routes
+    from aj_crew.dashboard.handlers import prompts
+    from aj_crew.dashboard.routes import skills as routes
 
     _skill(tmp_path / "skills", "alpha")
     loader = _loader(tmp_path, opened=opened)
@@ -784,7 +784,7 @@ def test_external_provider_target_keeps_global_budget_and_admitted_root(
     import os
 
     from conftest import make_dir_link
-    from kiro_crew import skills as skills_module
+    from aj_crew import skills as skills_module
 
     provider = tmp_path / "provider"
     path = Path(_skill(provider, "large"))
@@ -893,7 +893,7 @@ class TestAProjectAlwaysSkillCannotFailTheSession:
             monkeypatch=monkeypatch,
         )
         required: list[str] = []
-        with caplog.at_level("WARNING", logger="kiro_crew.skills"):
+        with caplog.at_level("WARNING", logger="aj_crew.skills"):
             context = loader.get_context(
                 budget=4000,
                 project_dir=project,
@@ -924,7 +924,7 @@ class TestAProjectAlwaysSkillCannotFailTheSession:
             opened=opened,
             monkeypatch=monkeypatch,
         )
-        with caplog.at_level("WARNING", logger="kiro_crew.skills"):
+        with caplog.at_level("WARNING", logger="aj_crew.skills"):
             loader.get_context(
                 budget=4000, project_dir=project, project_body_budget=PROJECT_SKILL_BODY_CAP
             )
@@ -945,7 +945,7 @@ class TestAProjectAlwaysSkillCannotFailTheSession:
         # Enumerated and listed, then refused at the body read (a file swapped or
         # removed after the walk).
         monkeypatch.setattr(loader, "load_skill", lambda *args, **kwargs: None)
-        with caplog.at_level("WARNING", logger="kiro_crew.skills"):
+        with caplog.at_level("WARNING", logger="aj_crew.skills"):
             context = loader.get_context(
                 budget=4000, project_dir=project, project_body_budget=PROJECT_SKILL_BODY_CAP
             )
@@ -955,7 +955,7 @@ class TestAProjectAlwaysSkillCannotFailTheSession:
     def test_a_fitting_body_has_its_own_budget_beside_a_full_operator_cap(
         self, tmp_path, monkeypatch, opened
     ):
-        import kiro_crew.skills as module
+        import aj_crew.skills as module
 
         monkeypatch.setattr(module, "PINNED_SKILL_BODIES_CAP", 2000)
         Path(_skill(tmp_path / "skills", "operator")).write_text(
@@ -979,7 +979,7 @@ class TestAProjectAlwaysSkillCannotFailTheSession:
         self, tmp_path, monkeypatch, opened
     ):
         """Only the project's rows degrade; the operator's own still fail loudly."""
-        import kiro_crew.skills as module
+        import aj_crew.skills as module
 
         loader, project = _project_loader(
             tmp_path, {"proj": "small body"}, opened=opened, monkeypatch=monkeypatch
@@ -1003,7 +1003,7 @@ class TestAProjectAlwaysSkillCannotFailTheSession:
             monkeypatch=monkeypatch,
         )
         required: list[str] = []
-        with caplog.at_level("WARNING", logger="kiro_crew.skills"):
+        with caplog.at_level("WARNING", logger="aj_crew.skills"):
             loader.get_context(
                 budget=4000,
                 project_dir=project,
@@ -1019,7 +1019,7 @@ class TestAProjectAlwaysSkillCannotFailTheSession:
 
     def test_skipped_rows_are_bounded_where_they_are_retained(self):
         """Bounding only the rendered notice would still hold every skipped key."""
-        from kiro_crew.skill_runtime import delivery
+        from aj_crew.skill_runtime import delivery
 
         cap = delivery._SKIPPED_PROJECT_KEYS_MAX_CHARS
         reason = f"past the room left in the project skill budget of {PROJECT_SKILL_BODY_CAP}"
@@ -1033,7 +1033,7 @@ class TestAProjectAlwaysSkillCannotFailTheSession:
 
     def test_each_list_names_only_the_rows_skipped_first(self):
         """A key too long for the notice closes the notice, not the warning."""
-        from kiro_crew.skill_runtime import delivery
+        from aj_crew.skill_runtime import delivery
 
         skipped = delivery.SkippedProjectSkills()
         keys = ["short-0", "long/" + "y" * 3000] + [f"short-{n}" for n in range(1, 31)]
@@ -1054,7 +1054,7 @@ class TestAProjectAlwaysSkillCannotFailTheSession:
         """``repr`` renders a non-printable code point as up to ten characters, so a
         key cut to its first 200 characters can still render past the whole bound.
         The kept item is capped after rendering, the first one included."""
-        from kiro_crew.skill_runtime import delivery
+        from aj_crew.skill_runtime import delivery
 
         cap = delivery._SKIPPED_PROJECT_KEYS_MAX_CHARS
         per_key = delivery._SKIPPED_PROJECT_KEY_LOG_CHARS
@@ -1088,7 +1088,7 @@ class TestAProjectAlwaysSkillCannotFailTheSession:
         )
         monkeypatch.setattr(loader, "load_skill", lambda *args, **kwargs: rescoped)
         required: list[str] = []
-        with caplog.at_level("WARNING", logger="kiro_crew.skills"):
+        with caplog.at_level("WARNING", logger="aj_crew.skills"):
             loader.get_context(
                 budget=4000,
                 project_dir=project,

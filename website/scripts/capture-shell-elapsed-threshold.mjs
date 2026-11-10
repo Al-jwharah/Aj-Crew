@@ -27,7 +27,7 @@ import { serveDist } from './lib/serve-dist.mjs'
 import { TOOL_ROW_VIEW, makeToolRowScene, openToolRowScene } from './lib/tool-row-scene.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/shell-elapsed-threshold'
-const FRAMES = process.argv[3] || join(process.env.KIROCREW_SCRATCH || process.env.TMPDIR || '/tmp', 'shell-elapsed-frames')
+const FRAMES = process.argv[3] || join(process.env.AJCREW_SCRATCH || process.env.TMPDIR || '/tmp', 'shell-elapsed-frames')
 const SLOT = 'chat-shell-elapsed-threshold'
 // Mirrors SHELL_ACTIVITY_MIN_SECS in ToolCallLine.tsx.
 const THRESHOLD_S = 10

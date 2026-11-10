@@ -16,10 +16,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.service import common as svc_common
-from kiro_crew.service import linux as svc_linux
-from kiro_crew.service import selinux as sel
-from kiro_crew.service.common import SERVICE_NAME
+from aj_crew.service import common as svc_common
+from aj_crew.service import linux as svc_linux
+from aj_crew.service import selinux as sel
+from aj_crew.service.common import SERVICE_NAME
 
 # Contexts as they appear on a Fedora-family targeted policy. Only used as
 # opaque strings — the module never parses or matches on a type name.
@@ -120,7 +120,7 @@ class TestLabelReading:
         # parse logic under test is platform-independent, and _file_context()
         # reaches it through getattr(os, "getxattr", None).
         monkeypatch.setattr(sel.os, "getxattr", refuse, raising=False)
-        target = tmp_path / "kirocrew"
+        target = tmp_path / "ajcrew"
         target.write_text("#!/bin/sh\n")
         assert sel._file_context(str(target)) is None
 
@@ -134,15 +134,15 @@ class TestLabelReading:
         "path is meaningful there; the module only ever runs on Linux",
     )
     def test_label_is_read_through_a_symlink_chain(self, tmp_path, monkeypatch):
-        """~/.local/bin/kirocrew is a symlink to the venv entry point.
+        """~/.local/bin/ajcrew is a symlink to the venv entry point.
 
         SELinux checks the label of the resolved file, so reading the LINK's
         label would answer a question the kernel never asks.
         """
-        real = tmp_path / "venv" / "bin" / "kirocrew"
+        real = tmp_path / "venv" / "bin" / "ajcrew"
         real.parent.mkdir(parents=True)
         real.write_text("#!/usr/bin/python3\n")
-        link = tmp_path / "kirocrew"
+        link = tmp_path / "ajcrew"
         link.symlink_to(real)
 
         seen: list[str] = []
@@ -160,7 +160,7 @@ class TestLabelReading:
         """The kernel NUL-terminates the value; a bare strip leaves it behind
         and the policy query would then fail to parse the context."""
         monkeypatch.setattr(sel.os, "getxattr", lambda *_a: BIN_T.encode() + b"\x00", raising=False)
-        target = tmp_path / "kirocrew"
+        target = tmp_path / "ajcrew"
         target.write_text("x")
         assert sel._file_context(str(target)) == BIN_T
 
@@ -185,7 +185,7 @@ class TestBlocksSystemUnit:
 
     @staticmethod
     def _binary(tmp_path, shebang: str | None = None) -> str:
-        path = tmp_path / "kirocrew"
+        path = tmp_path / "ajcrew"
         path.write_text(f"{shebang}\n" if shebang else "\x7fELF")
         path.chmod(0o755)
         return str(path)
@@ -385,8 +385,8 @@ class TestUserScopeUnitRendering:
     def _render(monkeypatch, user_scope):
         monkeypatch.setenv("USER", "tester")
         with patch(
-            "kiro_crew.service.common.shutil.which",
-            return_value="/home/tester/.local/bin/kirocrew",
+            "aj_crew.service.common.shutil.which",
+            return_value="/home/tester/.local/bin/ajcrew",
         ):
             return svc_linux.render_unit(user_scope=user_scope)
 
@@ -405,8 +405,8 @@ class TestUserScopeUnitRendering:
         """Callers that pass nothing must get exactly today's unit."""
         monkeypatch.setenv("USER", "tester")
         with patch(
-            "kiro_crew.service.common.shutil.which",
-            return_value="/home/tester/.local/bin/kirocrew",
+            "aj_crew.service.common.shutil.which",
+            return_value="/home/tester/.local/bin/ajcrew",
         ):
             assert svc_linux.render_unit() == svc_linux.render_unit(user_scope=False)
 
@@ -434,7 +434,7 @@ class TestUserScopeUnitRendering:
 class TestStartFailureCoversWhatThePreflightCannotProve:
     """The pre-flight only judges the file systemd itself execs.
 
-    A `KIROCREW_SERVICE_BIN` override naming a system-labelled WRAPPER that later
+    A `AJCREW_SERVICE_BIN` override naming a system-labelled WRAPPER that later
     runs a binary under $HOME passes the gate and still cannot serve -- as the
     shell's exit 126, not 203/EXEC, because the wrapper execs fine. Following the
     delegation is not decidable and scanning the wrapper for path literals would
@@ -463,10 +463,10 @@ class TestStartFailureCoversWhatThePreflightCannotProve:
         run = self._restart_fails(monkeypatch, enforcing=True)
         with (
             patch(
-                "kiro_crew.service.common.shutil.which",
-                return_value="/usr/local/bin/kirocrew-wrapper",
+                "aj_crew.service.common.shutil.which",
+                return_value="/usr/local/bin/ajcrew-wrapper",
             ),
-            patch("kiro_crew.service.linux.subprocess.run", side_effect=run),
+            patch("aj_crew.service.linux.subprocess.run", side_effect=run),
         ):
             with pytest.raises(svc_linux.ServiceInstallError) as exc:
                 svc_linux.install()
@@ -484,14 +484,14 @@ class TestStartFailureCoversWhatThePreflightCannotProve:
         assert "ausearch -m avc" in flat
         # And it must be honest that the gate looked and found nothing.
         assert "found no proven denial" in flat
-        assert "/usr/local/bin/kirocrew-wrapper" in flat
+        assert "/usr/local/bin/ajcrew-wrapper" in flat
         # It points at the documented remedy; it does NOT paste one. This fires on
         # every failed restart on every enforcing host -- all of RHEL/Fedora --
         # including hosts the pre-flight positively proved ALLOW for, so a port
         # conflict must not be answered with a pasteable unit for a denial nobody
         # has observed.
         assert "docs/guides/install.md" in flat
-        assert "KIROCREW_UNIT" not in msg
+        assert "AJCREW_UNIT" not in msg
         assert "systemctl --user enable --now" not in msg
         assert "loginctl enable-linger" not in msg
 
@@ -501,8 +501,8 @@ class TestStartFailureCoversWhatThePreflightCannotProve:
         monkeypatch.setattr(svc_linux.selinux, "is_enforcing", lambda: True)
         with (
             patch(
-                "kiro_crew.service.common.shutil.which",
-                return_value="/home/tester/.local/bin/kirocrew",
+                "aj_crew.service.common.shutil.which",
+                return_value="/home/tester/.local/bin/ajcrew",
             ),
             patch.object(svc_linux, "_home_for_user", return_value="/home/tester"),
         ):
@@ -519,10 +519,10 @@ class TestStartFailureCoversWhatThePreflightCannotProve:
         run = self._restart_fails(monkeypatch, enforcing=False)
         with (
             patch(
-                "kiro_crew.service.common.shutil.which",
-                return_value="/usr/local/bin/kirocrew",
+                "aj_crew.service.common.shutil.which",
+                return_value="/usr/local/bin/ajcrew",
             ),
-            patch("kiro_crew.service.linux.subprocess.run", side_effect=run),
+            patch("aj_crew.service.linux.subprocess.run", side_effect=run),
         ):
             with pytest.raises(svc_linux.ServiceInstallError) as exc:
                 svc_linux.install()
@@ -542,8 +542,8 @@ class TestStartFailureCoversWhatThePreflightCannotProve:
         monkeypatch.setattr(svc_linux.selinux, "is_enforcing", lambda: True)
         with (
             patch(
-                "kiro_crew.service.common.shutil.which",
-                return_value="/home/tester/.local/bin/kirocrew",
+                "aj_crew.service.common.shutil.which",
+                return_value="/home/tester/.local/bin/ajcrew",
             ),
             patch.object(svc_linux, "_home_for_user", return_value="/home/tester"),
         ):
@@ -572,10 +572,10 @@ class TestInstallRefusesAnUnstartableSystemUnit:
 
         with (
             patch(
-                "kiro_crew.service.common.shutil.which",
-                return_value="/home/tester/.local/bin/kirocrew",
+                "aj_crew.service.common.shutil.which",
+                return_value="/home/tester/.local/bin/ajcrew",
             ),
-            patch("kiro_crew.service.linux.subprocess.run", return_value=ok) as run,
+            patch("aj_crew.service.linux.subprocess.run", return_value=ok) as run,
         ):
             with pytest.raises(svc_linux.ServiceInstallError) as exc:
                 svc_linux.install()
@@ -591,8 +591,8 @@ class TestInstallRefusesAnUnstartableSystemUnit:
     def test_refusal_carries_a_pasteable_user_unit(self, monkeypatch):
         self._blocked(monkeypatch)
         with patch(
-            "kiro_crew.service.common.shutil.which",
-            return_value="/home/tester/.local/bin/kirocrew",
+            "aj_crew.service.common.shutil.which",
+            return_value="/home/tester/.local/bin/ajcrew",
         ):
             with pytest.raises(svc_linux.ServiceInstallError) as exc:
                 svc_linux.install()
@@ -604,23 +604,23 @@ class TestInstallRefusesAnUnstartableSystemUnit:
         assert str(svc_linux.USER_UNIT_SUBDIR) in msg
         assert "WantedBy=default.target" in msg
         assert "ExecStart=" in msg
-        # Every command named must exist. `kirocrew service` has only
+        # Every command named must exist. `ajcrew service` has only
         # install/uninstall/status, so the remedy may not invent a subcommand.
-        assert "kirocrew service print-unit" not in msg
+        assert "ajcrew service print-unit" not in msg
 
     def test_refusal_names_only_real_service_subcommands(self, monkeypatch):
         """Guards the class of bug where a remedy prints a command we do not
         ship, which sends the operator into `invalid choice`."""
         self._blocked(monkeypatch)
         with patch(
-            "kiro_crew.service.common.shutil.which",
-            return_value="/home/tester/.local/bin/kirocrew",
+            "aj_crew.service.common.shutil.which",
+            return_value="/home/tester/.local/bin/ajcrew",
         ):
             with pytest.raises(svc_linux.ServiceInstallError) as exc:
                 svc_linux.install()
 
         real = {"install", "uninstall", "status"}
-        for token in str(exc.value).split("kirocrew service ")[1:]:
+        for token in str(exc.value).split("ajcrew service ")[1:]:
             word = token.split()[0].strip("`.,\n")
             # A pipe-joined hint like `status|uninstall` names several at once.
             assert set(word.split("|")) <= real, f"unknown subcommand: {word}"
@@ -637,8 +637,8 @@ class TestInstallRefusesAnUnstartableSystemUnit:
         self._blocked(monkeypatch)
         with (
             patch(
-                "kiro_crew.service.common.shutil.which",
-                return_value="/home/tester/.local/bin/kirocrew",
+                "aj_crew.service.common.shutil.which",
+                return_value="/home/tester/.local/bin/ajcrew",
             ),
             patch.object(svc_linux, "_home_for_user", return_value="/home/tester"),
         ):
@@ -665,8 +665,8 @@ class TestInstallRefusesAnUnstartableSystemUnit:
         self._blocked(monkeypatch)
         with (
             patch(
-                "kiro_crew.service.common.shutil.which",
-                return_value="/home/tester/.local/bin/kirocrew",
+                "aj_crew.service.common.shutil.which",
+                return_value="/home/tester/.local/bin/ajcrew",
             ),
             patch.object(svc_linux, "_home_for_user", return_value="/home/tester"),
         ):
@@ -693,8 +693,8 @@ class TestInstallRefusesAnUnstartableSystemUnit:
         spaced_home = "/home/tester with space"
         with (
             patch(
-                "kiro_crew.service.common.shutil.which",
-                return_value="/home/tester/.local/bin/kirocrew",
+                "aj_crew.service.common.shutil.which",
+                return_value="/home/tester/.local/bin/ajcrew",
             ),
             patch.object(svc_linux, "_home_for_user", return_value=spaced_home),
         ):
@@ -718,8 +718,8 @@ class TestInstallRefusesAnUnstartableSystemUnit:
         self._blocked(monkeypatch)
         with (
             patch(
-                "kiro_crew.service.common.shutil.which",
-                return_value="/home/tester/.local/bin/kirocrew",
+                "aj_crew.service.common.shutil.which",
+                return_value="/home/tester/.local/bin/ajcrew",
             ),
             patch.object(svc_linux, "_home_for_user", return_value="/home/tester"),
         ):
@@ -735,10 +735,10 @@ class TestInstallRefusesAnUnstartableSystemUnit:
 
         with (
             patch(
-                "kiro_crew.service.common.shutil.which",
-                return_value="/usr/local/bin/kirocrew",
+                "aj_crew.service.common.shutil.which",
+                return_value="/usr/local/bin/ajcrew",
             ),
-            patch("kiro_crew.service.linux.subprocess.run", return_value=ok) as run,
+            patch("aj_crew.service.linux.subprocess.run", return_value=ok) as run,
         ):
             svc_linux.install()
 
@@ -761,11 +761,11 @@ class TestInstallRefusesAnUnstartableSystemUnit:
 
         with (
             patch(
-                "kiro_crew.service.common.shutil.which",
-                return_value="/home/tester/.local/bin/kirocrew",
+                "aj_crew.service.common.shutil.which",
+                return_value="/home/tester/.local/bin/ajcrew",
             ),
-            patch("kiro_crew.service.linux.subprocess.run", return_value=ok),
+            patch("aj_crew.service.linux.subprocess.run", return_value=ok),
         ):
             svc_linux.install()
 
-        assert asked == ["/home/tester/.local/bin/kirocrew"]
+        assert asked == ["/home/tester/.local/bin/ajcrew"]

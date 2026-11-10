@@ -19,9 +19,9 @@ import pytest
 from named_cases_helpers import named_cases
 
 from conftest import make_dir_link, requires_symlinks
-from kiro_crew import agent_discovery as ad_mod
-from kiro_crew import hooks, security
-from kiro_crew.agent_discovery import (
+from aj_crew import agent_discovery as ad_mod
+from aj_crew import hooks, security
+from aj_crew.agent_discovery import (
     SensitiveAgentSpecPathError,
     _read_agent_spec,
     read_agent_spec_strict,
@@ -172,10 +172,10 @@ class TestTheTwoGatesAgree:
         """The ``evil.json -> <credential file>`` shape, real gates only.
 
         Proves the decision on the ``_SENSITIVE_HOME_DIRS`` class with no injected
-        verdict. The target is the crew home's ``.env``; ``KIROCREW_HOME`` is a per-test
+        verdict. The target is the crew home's ``.env``; ``AJCREW_HOME`` is a per-test
         tmp dir, so the real home and ``~/.aws`` are never touched.
         """
-        crew_home = Path(os.environ["KIROCREW_HOME"])
+        crew_home = Path(os.environ["AJCREW_HOME"])
         crew_home.mkdir(parents=True, exist_ok=True)
         secret = crew_home / ".env"
         secret.write_text(json.dumps({"name": "leaked", "model": "leaked-value"}))
@@ -203,9 +203,9 @@ class TestTheTwoGatesAgree:
 
         ``.env`` is a bare keystone leaf, so the crew home root itself is a keystone
         artifact parent and ``<crew home>/<anything>.tmp`` is fenced. The test
-        suite pins ``KIROCREW_HOME`` to a per-test tmp dir, so the temp is test-owned.
+        suite pins ``AJCREW_HOME`` to a per-test tmp dir, so the temp is test-owned.
         """
-        crew_home = Path(os.environ["KIROCREW_HOME"])
+        crew_home = Path(os.environ["AJCREW_HOME"])
         crew_home.mkdir(parents=True, exist_ok=True)
         temp = crew_home / "publish.tmp"
         temp.write_text(json.dumps({"name": "leaked"}))
@@ -460,7 +460,7 @@ class TestTheUncTrustedRootGateStays:
         self, tmp_path: Path, monkeypatch
     ) -> None:
         audited = self._arm(monkeypatch)
-        from kiro_crew.hook_runtime import windows_paths
+        from aj_crew.hook_runtime import windows_paths
 
         monkeypatch.setattr(windows_paths, "unc_probe_allowed", lambda raw: False)
         agents = tmp_path / "agents"

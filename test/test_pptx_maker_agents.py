@@ -29,7 +29,7 @@ import pytest
 # can start elsewhere), which made these pass locally and fail with
 # `FileNotFoundError` in the sharded run.
 _REPO_ROOT = Path(__file__).resolve().parent.parent
-_APP_DIR = _REPO_ROOT / "src" / "kiro_crew" / "apps" / "builtins" / "pptx_maker"
+_APP_DIR = _REPO_ROOT / "src" / "aj_crew" / "apps" / "builtins" / "pptx_maker"
 _PAGE = _REPO_ROOT / "website" / "src" / "apps" / "pptx-maker" / "PptxMakerPage.tsx"
 
 

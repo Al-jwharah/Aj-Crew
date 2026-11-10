@@ -1,4 +1,4 @@
-"""Tests for :mod:`kiro_crew.dashboard.handlers.artifacts`.
+"""Tests for :mod:`aj_crew.dashboard.handlers.artifacts`.
 
 Uses MagicMock requests (matching the test_dashboard_cron_channel.py pattern)
 plus a real :class:`ArtifactStore` rooted at a tmp dir for end-to-end coverage.
@@ -25,8 +25,8 @@ from artifacts_handlers_helpers import (  # noqa: F401 -- fixtures are requested
 )
 
 from conftest import cap_project_root_walk
-from kiro_crew import artifacts as art_mod
-from kiro_crew.dashboard.handlers.artifacts import (
+from aj_crew import artifacts as art_mod
+from aj_crew.dashboard.handlers.artifacts import (
     _MAX_BODY_BYTES,
     _clean_origin_session_key,
     api_artifact_detail,
@@ -42,7 +42,7 @@ def linkable_project(tmp_path: Path, monkeypatch):
     """A project directory whose files earn a LINK verdict on promote.
 
     ``POST /api/artifacts`` now classifies ``source_path`` (see
-    ``kiro_crew.artifact_source``): a disposable file is snapshotted and NO
+    ``aj_crew.artifact_source``): a disposable file is snapshotted and NO
     pointer is stored, so dedup-by-``source_path`` only applies to linked files.
     Pytest's ``tmp_path`` lives under the system temp dir — itself a disposable
     root — so the temp-root seam is narrowed to ``tmp_path/tmp`` and the project
@@ -54,7 +54,7 @@ def linkable_project(tmp_path: Path, monkeypatch):
     the ``.git`` planted here can earn a LINK, whatever sits above the host's
     temp root.
     """
-    from kiro_crew import artifact_source
+    from aj_crew import artifact_source
 
     (tmp_path / "tmp").mkdir()
     monkeypatch.setattr(artifact_source, "_tempdir", lambda: str(tmp_path / "tmp"))
@@ -67,7 +67,7 @@ def linkable_project(tmp_path: Path, monkeypatch):
 @pytest.fixture
 def disposable_file(tmp_path: Path, monkeypatch):
     """A file in a disposable root (temp dir), which must be COPIED not linked."""
-    from kiro_crew import artifact_source
+    from aj_crew import artifact_source
 
     tmp = tmp_path / "tmp"
     tmp.mkdir()
@@ -618,7 +618,7 @@ class TestCreate:
         # refusal from _write_text() that fires after the duplicate-slug check
         # passes) must be distinguished from ArtifactAlreadyExistsError:
         # duplicates are 409, all other store errors are 500.
-        from kiro_crew.artifacts import ArtifactError
+        from aj_crew.artifacts import ArtifactError
 
         def _boom(*_a, **_kw):
             raise ArtifactError("refusing to write sensitive path: ~/.aws/credentials")
@@ -717,7 +717,7 @@ class TestCreate:
         # FileTooLargeError is not an OSError subclass, so an oversized source
         # escaped the promotion read as an unhandled exception and surfaced as a
         # 500. It must come back as a refusal the caller can show.
-        from kiro_crew.dashboard.handlers import artifacts as _handlers
+        from aj_crew.dashboard.handlers import artifacts as _handlers
 
         src = linkable_project / "big.md"
         src.write_text("plenty of bytes here", encoding="utf-8")
@@ -995,7 +995,7 @@ class TestPromoteVerdict:
         sensitive-path gate would let the response distinguish "this sensitive
         file is here" from "it is not". Both must look identical.
         """
-        from kiro_crew.dashboard.handlers import artifacts as art_handlers
+        from aj_crew.dashboard.handlers import artifacts as art_handlers
 
         secret = tmp_path / "creds"
         secret.write_text("SECRET", encoding="utf-8")
@@ -1058,7 +1058,7 @@ class TestPromoteVerdict:
     ) -> None:
         # source_root is never read from the body — only the server-side
         # classifier can set it. Otherwise a caller could authorize any root.
-        from kiro_crew import artifact_source
+        from aj_crew import artifact_source
 
         (tmp_path / "tmp").mkdir()
         monkeypatch.setattr(artifact_source, "_tempdir", lambda: str(tmp_path / "tmp"))

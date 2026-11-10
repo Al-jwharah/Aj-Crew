@@ -39,7 +39,7 @@ vi.mock('../pages/AppPage', () => ({ default: () => <div data-testid="app-page" 
 vi.mock('../pages/AppDetailPage', () => ({ default: () => <div data-testid="app-detail-page" /> }))
 vi.mock('../pages/MigrationPage', () => ({ default: () => <div data-testid="migration-page" /> }))
 vi.mock('../pages/NotificationsPage', () => ({ default: () => null }))
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => null }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => null }))
 vi.mock('../pages/ProjectsPage', () => ({ default: () => null }))
 vi.mock('../pages/LogsPage', () => ({ default: () => null }))
 vi.mock('../pages/SettingsPage', () => ({ default: () => null }))
@@ -61,7 +61,7 @@ vi.mock('../selectionActions/SelectionActionLayer', () => ({ default: () => null
 vi.mock('../pages/PopoutFrame', () => ({ default: () => null }))
 vi.mock('../pages/ArtifactPopoutFrame', () => ({ default: () => null }))
 vi.mock('../hooks/useWebSocket', () => ({ useWebSocket: () => ({ subscribeLogs: () => {}, subscribeSubagents: () => {}, forceReconnect: () => {} }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'kirocrew' }], defaultAgent: 'kirocrew' })) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'ajcrew' }], defaultAgent: 'ajcrew' })) }))
 vi.mock('../hooks/useDashboardHealthProbe', () => ({ useDashboardHealthProbe: () => {} }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span>, Lightbox: () => null }))
@@ -239,7 +239,7 @@ describe('App apps list after a change made outside the tab', () => {
     const qc = renderApp()
     await waitFor(() => expect(screen.getByRole('button', { name: 'Keeper Demo' })).toBeInTheDocument())
 
-    // `kirocrew app install` in a terminal: the server list changes, no event here.
+    // `ajcrew app install` in a terminal: the server list changes, no event here.
     vi.mocked(api.listApps).mockResolvedValue([keeperApp, refreshedApp])
     act(() => { window.dispatchEvent(new Event('focus')) })
 

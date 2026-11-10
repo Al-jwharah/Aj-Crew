@@ -13,11 +13,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
-from kiro_crew.hooks import HOOK_EVENT_STOP, HOOK_EVENT_USER_PROMPT_SUBMIT
-from kiro_crew.messaging import TransportCapabilities, TurnDriver, script_hooks
-from kiro_crew.messaging.renderer import DONE, OutputEvent, SilentRenderer
-from kiro_crew.messaging.script_hooks import ScriptHookTurn
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
+from aj_crew.hooks import HOOK_EVENT_STOP, HOOK_EVENT_USER_PROMPT_SUBMIT
+from aj_crew.messaging import TransportCapabilities, TurnDriver, script_hooks
+from aj_crew.messaging.renderer import DONE, OutputEvent, SilentRenderer
+from aj_crew.messaging.script_hooks import ScriptHookTurn
 
 
 class _Provider:
@@ -190,7 +190,7 @@ def test_shared_pipeline_hands_the_driver_the_sender_text(monkeypatch):
     from test_messaging_dispatch import _CtxBuilder, _Driver, _patch_pipeline, _Renderer, _Sessions
     from test_messaging_dispatch import _turn as _channel_turn
 
-    from kiro_crew.messaging import dispatch as D
+    from aj_crew.messaging import dispatch as D
 
     seen: list = []
 
@@ -223,7 +223,7 @@ def test_shared_pipeline_runs_no_hooks_for_a_guest_or_shared_room(monkeypatch, p
     from test_messaging_dispatch import _CtxBuilder, _Driver, _patch_pipeline, _Renderer, _Sessions
     from test_messaging_dispatch import _turn as _channel_turn
 
-    from kiro_crew.messaging import dispatch as D
+    from aj_crew.messaging import dispatch as D
 
     seen: list = []
 
@@ -249,7 +249,7 @@ def test_shared_pipeline_runs_no_hooks_for_a_guest_or_shared_room(monkeypatch, p
 
 def _passthrough_sandbox(monkeypatch):
     """Spawn real hook processes without the OS sandbox wrap, as ``test_script_hooks.py`` does."""
-    monkeypatch.setattr("kiro_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
+    monkeypatch.setattr("aj_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
 
 
 def test_sender_text_reaches_the_hook_as_data_not_command(tmp_path, monkeypatch):
@@ -264,8 +264,8 @@ def test_sender_text_reaches_the_hook_as_data_not_command(tmp_path, monkeypatch)
     import json
     import sys
 
-    from kiro_crew.hook_runtime.script_hooks import ScriptHookStore
-    from kiro_crew.hooks import ScriptHook
+    from aj_crew.hook_runtime.script_hooks import ScriptHookStore
+    from aj_crew.hooks import ScriptHook
 
     _passthrough_sandbox(monkeypatch)
     monkeypatch.chdir(tmp_path)
@@ -291,7 +291,7 @@ def test_telegram_turn_engine_wires_script_hooks():
     import ast
     import inspect
 
-    from kiro_crew.telegram.dispatch import turn_engine
+    from aj_crew.telegram.dispatch import turn_engine
 
     tree = ast.parse(inspect.getsource(turn_engine))
     sites = [
@@ -358,8 +358,8 @@ def _kill_detached(pidfile):
     """SIGKILL the pid in *pidfile* and wait, bounded, until it has exited."""
     import signal
 
-    from kiro_crew import platform_compat
-    from kiro_crew.testing.wait import wait_until
+    from aj_crew import platform_compat
+    from aj_crew.testing.wait import wait_until
 
     # The child writes its pid before it execs; give that write a bounded wait.
     wait_until(lambda: pidfile.exists() and pidfile.read_text().strip(), timeout=10)
@@ -383,9 +383,9 @@ def test_a_timed_out_hook_with_a_detached_child_does_not_hang_the_turn(tmp_path,
     The OS sandbox is passed through, as in ``test_script_hooks.py``: its mounts
     and process namespace decide whether the detached child can write its pid
     file or outlive the wrapper, which is not what the reap bound is about."""
-    from kiro_crew import hooks as hooks_mod
-    from kiro_crew.hook_runtime.script_hooks import ScriptHookStore
-    from kiro_crew.hooks import ScriptHook
+    from aj_crew import hooks as hooks_mod
+    from aj_crew.hook_runtime.script_hooks import ScriptHookStore
+    from aj_crew.hooks import ScriptHook
 
     _passthrough_sandbox(monkeypatch)
     reap = 0.2

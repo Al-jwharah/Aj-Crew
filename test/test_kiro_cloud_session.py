@@ -21,12 +21,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp import session_handle as sh
-from kiro_crew.acp.harness import KasHarness, KiroHarness, harness_for
-from kiro_crew.acp.harness.kas_cloud import KasCloudSandboxHarness
-from kiro_crew.acp.runtime import AcpRuntime, AcpRuntimeError
-from kiro_crew.acp.types import ACP_BACKEND_CODEX, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.config.session_environments import (
+from aj_crew.acp import session_handle as sh
+from aj_crew.acp.harness import KasHarness, KiroHarness, harness_for
+from aj_crew.acp.harness.kas_cloud import KasCloudSandboxHarness
+from aj_crew.acp.runtime import AcpRuntime, AcpRuntimeError
+from aj_crew.acp.types import ACP_BACKEND_CODEX, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.config.session_environments import (
     SessionEnvironmentsError,
     load_kiro_cloud_profiles,
     validate_session_environments,
@@ -39,7 +39,7 @@ _SERVED_BACKENDS = [ACP_BACKEND_KIRO, ACP_BACKEND_KAS, ACP_BACKEND_CODEX]
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments, Kiro Cloud included, are reachable only with the
     # developer flag; the flag-off tests below turn it back off.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 _STUB = """
@@ -135,7 +135,7 @@ def stub(tmp_path, monkeypatch):
     async def fake_bin(*, environ=None, home=None) -> str:
         return str(launcher)
 
-    monkeypatch.setattr("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", fake_bin)
+    monkeypatch.setattr("aj_crew.acp.client._resolve_kiro_bin_for_spawn", fake_bin)
     monkeypatch.setenv("KAS_STUB_RECORD", str(record))
     monkeypatch.setenv("KAS_STUB_CLOUD", "1")
     return record
@@ -145,26 +145,26 @@ def stub(tmp_path, monkeypatch):
 def crew_agent(tmp_path, monkeypatch):
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    (agents_dir / "kirocrew.json").write_text(
+    (agents_dir / "ajcrew.json").write_text(
         json.dumps(
             {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "description": "test crew agent",
                 "prompt": "You are Kiro.",
-                "tools": ["fs_read", "@kirocrew-core"],
+                "tools": ["fs_read", "@ajcrew-core"],
             }
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr("kiro_crew.config.paths.kiro_agents_dir", lambda: agents_dir)
-    monkeypatch.setattr("kiro_crew.agent.ensure_agent_materialized", lambda _a: True)
+    monkeypatch.setattr("aj_crew.config.paths.kiro_agents_dir", lambda: agents_dir)
+    monkeypatch.setattr("aj_crew.agent.ensure_agent_materialized", lambda _a: True)
     return agents_dir
 
 
 def _runtime(tmp_path, repos=("acme/web",)) -> AcpRuntime:
     runtime = AcpRuntime(
         work_dir=tmp_path / "ws",
-        agent="kirocrew",
+        agent="ajcrew",
         sandbox_mode="off",
         acp_backend=ACP_BACKEND_KAS,
     )
@@ -180,7 +180,7 @@ def _requests(record, method):
 async def test_cloud_extras_take_worker_stub_names_and_withdraw_nothing():
     """The runtime hands a KAS crewmate worker's stub names to every session_extras;
     the sandbox mounts no servers, so there is nothing to withdraw."""
-    from kiro_crew.acp.harness.base import SessionExtras
+    from aj_crew.acp.harness.base import SessionExtras
 
     extras = await KasCloudSandboxHarness(("acme/web",)).session_extras(
         "kiro_default", work_dir=None, worker_stub_names=frozenset({"x"})
@@ -198,7 +198,7 @@ class TestCloudSessionWire:
         runtime = _runtime(tmp_path)
         try:
             await runtime.spawn()
-            await runtime.create_session(cwd=tmp_path / "ws", agent="kirocrew")
+            await runtime.create_session(cwd=tmp_path / "ws", agent="ajcrew")
         finally:
             await runtime.kill()
         [params] = _requests(stub, "session/new")
@@ -245,7 +245,7 @@ class TestCloudSessionWire:
         runtime = _runtime(tmp_path)
         try:
             await runtime.spawn()
-            await runtime.load_session("", "cloud-1", cwd=tmp_path / "ws", agent="kirocrew")
+            await runtime.load_session("", "cloud-1", cwd=tmp_path / "ws", agent="ajcrew")
         finally:
             await runtime.kill()
         [params] = _requests(stub, "session/load")
@@ -256,7 +256,7 @@ class TestCloudSessionWire:
 
 
 def test_cloud_sandbox_needs_kas_and_an_unspawned_runtime(tmp_path):
-    kiro = AcpRuntime(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_KIRO)
+    kiro = AcpRuntime(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_KIRO)
     with pytest.raises(AcpRuntimeError, match="KAS"):
         kiro.set_cloud_sandbox(())
     assert type(kiro._harness) is KiroHarness
@@ -264,9 +264,9 @@ def test_cloud_sandbox_needs_kas_and_an_unspawned_runtime(tmp_path):
 
 def test_the_cloud_sandbox_is_a_harness_the_runtime_installs():
     """Every cloud answer comes from the installed harness, never from the backend table."""
-    plain = AcpRuntime(work_dir="/workspace/ws", agent="kirocrew", acp_backend=ACP_BACKEND_KAS)
+    plain = AcpRuntime(work_dir="/workspace/ws", agent="ajcrew", acp_backend=ACP_BACKEND_KAS)
     assert type(plain._harness) is KasHarness
-    cloud = AcpRuntime(work_dir="/workspace/ws", agent="kirocrew", acp_backend=ACP_BACKEND_KAS)
+    cloud = AcpRuntime(work_dir="/workspace/ws", agent="ajcrew", acp_backend=ACP_BACKEND_KAS)
     cloud.set_cloud_sandbox(("acme/web",))
     assert isinstance(cloud._harness, KasCloudSandboxHarness)
     assert cloud._harness.repositories == ("acme/web",)
@@ -279,12 +279,12 @@ def test_the_cloud_sandbox_is_a_harness_the_runtime_installs():
 @pytest.mark.parametrize("method", ["session/new", "session/load"])
 def test_every_served_host_sends_the_request_it_was_built(backend, method):
     """The request seam is an identity on every host the backend table serves (H13)."""
-    params = {"cwd": "/workspace/ws", "mcpServers": [{"name": "kirocrew-core"}]}
+    params = {"cwd": "/workspace/ws", "mcpServers": [{"name": "ajcrew-core"}]}
     out, agent = harness_for(backend).session_request(
-        method, params, "kirocrew", agent_capabilities={}
+        method, params, "ajcrew", agent_capabilities={}
     )
     assert out is params
-    assert agent == "kirocrew"
+    assert agent == "ajcrew"
 
 
 @pytest.mark.parametrize(
@@ -319,13 +319,13 @@ def test_the_shared_handle_paths_probe_no_cloud_attribute(module):
     """Kiro's own destroy and drain read the declared contract, never a getattr probe (H14)."""
     import importlib
 
-    source = inspect.getsource(importlib.import_module(f"kiro_crew.acp.{module}"))
+    source = inspect.getsource(importlib.import_module(f"aj_crew.acp.{module}"))
     assert 'getattr(self._runtime, "is_cloud_sandbox"' not in source
 
 
 def test_the_resume_hold_is_no_step_of_the_shared_resume():
     """Only the cloud start takes the resume hold; the runtime's resume is unchanged (H13)."""
-    from kiro_crew.acp.harness.base import HarnessAdapter
+    from aj_crew.acp.harness.base import HarnessAdapter
 
     assert not hasattr(HarnessAdapter, "resume_hold")
     source = inspect.getsource(AcpRuntime.load_session)
@@ -404,14 +404,14 @@ def test_load_keeps_valid_cloud_profiles_and_drops_bad_ones():
 
 @pytest.mark.asyncio
 async def test_prepare_returns_a_cloud_session_without_touching_any_compute(tmp_path, monkeypatch):
-    from kiro_crew.coder import session_launch as sl
+    from aj_crew.coder import session_launch as sl
 
     section = SimpleNamespace(
         kiro_cloud_profiles=[{"id": "cloud", "name": "Kiro Cloud", "repositories": ["acme/web"]}],
     )
-    monkeypatch.setattr("kiro_crew.config.paths.data_home", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.paths.data_home", lambda: tmp_path)
     monkeypatch.setattr(
-        "kiro_crew.config.live.snapshot", lambda: SimpleNamespace(session_environments=section)
+        "aj_crew.config.live.snapshot", lambda: SimpleNamespace(session_environments=section)
     )
     sl.SessionEnvironmentChoices(tmp_path / "coder" / "session-choices.json").set(
         "s1", "cloud", sl.KIRO_CLOUD_PROVIDER_ID
@@ -430,19 +430,19 @@ async def test_prepare_returns_a_cloud_session_without_touching_any_compute(tmp_
 
 @pytest.mark.asyncio
 async def test_a_cloud_choice_is_unreachable_with_the_developer_flag_off(tmp_path, monkeypatch):
-    """KIROCREW_DEV_MODE off: no Kiro Cloud profile is offered, a recorded cloud
+    """AJCREW_DEV_MODE off: no Kiro Cloud profile is offered, a recorded cloud
     choice resolves to a local session, and the start never reaches the cloud path."""
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.dashboard.handlers import session_environments as handlers
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.dashboard.handlers import session_environments as handlers
 
     cloud = {"id": "cloud", "name": "Kiro Cloud", "repositories": ["acme/web"]}
     section = SimpleNamespace(kiro_cloud_profiles=[cloud], coder_url="", profiles=[])
-    monkeypatch.setattr("kiro_crew.config.paths.data_home", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.paths.data_home", lambda: tmp_path)
     monkeypatch.setattr(
-        "kiro_crew.config.live.snapshot", lambda: SimpleNamespace(session_environments=section)
+        "aj_crew.config.live.snapshot", lambda: SimpleNamespace(session_environments=section)
     )
     monkeypatch.setattr(
-        "kiro_crew.config.loader.KiroCrewConfig.load",
+        "aj_crew.config.loader.AjCrewConfig.load",
         lambda: SimpleNamespace(session_environments=section),
     )
     choices = sl.SessionEnvironmentChoices(tmp_path / "coder" / "session-choices.json")
@@ -450,7 +450,7 @@ async def test_a_cloud_choice_is_unreachable_with_the_developer_flag_off(tmp_pat
     assert choices.resolve_choice("s1") == ("cloud", "s1", sl.KIRO_CLOUD_PROVIDER_ID)
     assert [p["id"] for p in handlers._profiles()] == ["cloud"]
 
-    monkeypatch.delenv("KIROCREW_DEV_MODE")
+    monkeypatch.delenv("AJCREW_DEV_MODE")
     assert handlers._profiles() == []
     assert choices.resolve_choice("s1") is None
     _governed(monkeypatch, None)
@@ -460,13 +460,13 @@ async def test_a_cloud_choice_is_unreachable_with_the_developer_flag_off(tmp_pat
 
 
 def _ceiling(**controls):
-    from kiro_crew.platform.governance import parse_policy
+    from aj_crew.platform.governance import parse_policy
 
     return parse_policy({"version": 1, "boot": {"fail_closed": True}, **controls})
 
 
 def _governed(monkeypatch, ceiling, profile=None):
-    from kiro_crew.platform import context, governance_profiles
+    from aj_crew.platform import context, governance_profiles
 
     monkeypatch.setattr(context, "current_context", lambda: SimpleNamespace(governance=ceiling))
     monkeypatch.setattr(governance_profiles, "resolve_active_scope", lambda _key, **_kw: profile)
@@ -479,15 +479,15 @@ async def test_cloud_provider_enforces_the_execution_agents_profile(
 ):
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.platform import context
-    from kiro_crew.platform import governance_profiles as gp
-    from kiro_crew.providers import acp
-    from kiro_crew.session_environment import SessionEnvironmentUnavailable
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.platform import context
+    from aj_crew.platform import governance_profiles as gp
+    from aj_crew.providers import acp
+    from aj_crew.session_environment import SessionEnvironmentUnavailable
 
     profiles = tmp_path / "profiles"
     profiles.mkdir()
-    execution_agent = agent or "kirocrew"
+    execution_agent = agent or "ajcrew"
     (profiles / "restricted.json").write_text(
         json.dumps(
             {
@@ -520,9 +520,9 @@ async def test_cloud_provider_enforces_the_execution_agents_profile(
 
 def _boardroom_profile(tmp_path, monkeypatch):
     """An app-bound profile withdrawing cloud sessions, under a policy that allows them."""
-    from kiro_crew import execution_context
-    from kiro_crew.platform import context
-    from kiro_crew.platform import governance_profiles as gp
+    from aj_crew import execution_context
+    from aj_crew.platform import context
+    from aj_crew.platform import governance_profiles as gp
 
     profiles = tmp_path / "profiles"
     profiles.mkdir()
@@ -551,8 +551,8 @@ def test_a_cloud_subagent_continuation_keeps_its_provider_and_cloud_session(
     tmp_path, monkeypatch, parent_aged_out
 ):
     """Root -> A -> B on Kiro Cloud; B re-inherits after A's row is gone (or still there)."""
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.testing.clock import ManualClock
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.testing.clock import ManualClock
 
     clock = ManualClock()
     clock.install(monkeypatch, sl)
@@ -578,9 +578,9 @@ def test_a_cloud_subagent_continuation_keeps_its_provider_and_cloud_session(
 @pytest.mark.parametrize("unreadable", [True, False])
 def test_an_unreadable_profile_file_refuses_a_cloud_start(tmp_path, monkeypatch, unreadable):
     """A profile whose binding cannot be read might bind this session, so cloud is refused."""
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.platform import context
-    from kiro_crew.platform import governance_profiles as gp
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.platform import context
+    from aj_crew.platform import governance_profiles as gp
 
     profiles = tmp_path / "profiles"
     profiles.mkdir()
@@ -602,7 +602,7 @@ def test_an_unreadable_profile_file_refuses_a_cloud_start(tmp_path, monkeypatch,
 @pytest.mark.parametrize("owning_app", ["boardroom", ""])
 def test_an_app_bound_profile_governs_the_cloud_start(tmp_path, monkeypatch, owning_app):
     """The caller's trusted owning app picks its profile; transcript metadata does not."""
-    from kiro_crew.coder import session_launch as sl
+    from aj_crew.coder import session_launch as sl
 
     _boardroom_profile(tmp_path, monkeypatch)
     refusal = sl.kiro_cloud_governance_refusal("dashboard:app-owned-cloud", app=owning_app)
@@ -619,15 +619,15 @@ async def test_the_provider_carries_its_allocated_app_into_the_cloud_start(
     """``owning_app`` (set by session allocation from the slot) reaches the cloud gate."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.providers import acp
-    from kiro_crew.session_environment import SessionEnvironmentUnavailable
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.providers import acp
+    from aj_crew.session_environment import SessionEnvironmentUnavailable
 
     _boardroom_profile(tmp_path, monkeypatch)
     key = "dashboard:app-owned-provider"
     handlers._choices().set(key, "cloud", sl.KIRO_CLOUD_PROVIDER_ID)
     provider = acp.AcpProvider(
-        agent="kirocrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
+        agent="ajcrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
     )
     provider.owning_app = "boardroom"
     runtime = MagicMock()
@@ -642,9 +642,9 @@ async def test_the_provider_carries_its_allocated_app_into_the_cloud_start(
 @pytest.mark.parametrize("source", ["policy", "profile", "withdrawal", "profile-grant"])
 @pytest.mark.asyncio
 async def test_cloud_capability_is_checked_without_tool_scopes(handlers, monkeypatch, source):
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.platform.governance import CapabilityGate, Profile
-    from kiro_crew.session_environment import SessionEnvironmentUnavailable
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.platform.governance import CapabilityGate, Profile
+    from aj_crew.session_environment import SessionEnvironmentUnavailable
 
     allow = {"kiro_cloud_sessions": {"enabled": True}}
     deny = {"kiro_cloud_sessions": {"enabled": False}}
@@ -677,8 +677,8 @@ async def test_recorded_cloud_choice_stays_locked_without_its_profile(
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.dashboard import chat_runner
 
     key = "dashboard:cloud-locked"
     choices = handlers._choices()
@@ -726,10 +726,10 @@ async def test_recorded_cloud_choice_stays_locked_without_its_profile(
 async def test_cloud_launch_audits_every_governance_decision(handlers, monkeypatch, case):
     from unittest.mock import MagicMock
 
-    from kiro_crew import sel as sel_module
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.platform import context, governance_profiles
-    from kiro_crew.session_environment import SessionEnvironmentUnavailable
+    from aj_crew import sel as sel_module
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.platform import context, governance_profiles
+    from aj_crew.session_environment import SessionEnvironmentUnavailable
 
     ceiling = None if case == "ungoverned" else _ceiling(**_DENY_NC)
     if case == "opt-in":
@@ -769,8 +769,8 @@ _DENY_NC = {"commands": {"mode": "deny", "deny": ["nc *"]}}
 
 
 def test_an_ungoverned_host_may_start_a_cloud_session(monkeypatch):
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.platform.governance import Profile
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.platform.governance import Profile
 
     _governed(monkeypatch, None)
     assert sl.kiro_cloud_governance_refusal("dashboard:d1") is None
@@ -781,12 +781,12 @@ def test_an_ungoverned_host_may_start_a_cloud_session(monkeypatch):
 
 @pytest.mark.parametrize("ceiling_kind", ["none", "empty"])
 def test_an_lts_build_refuses_a_cloud_session_its_policy_does_not_name(monkeypatch, ceiling_kind):
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.platform.governance_parts.baseline import BASELINE_CONTROLS
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.platform.governance_parts.baseline import BASELINE_CONTROLS
 
     # An LTS build answers an unnamed scope from its baseline, which keeps
     # cloud execution off until the remote policy enables it.
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
     _governed(monkeypatch, None if ceiling_kind == "none" else _ceiling())
     refusal = sl.kiro_cloud_governance_refusal("dashboard:d1")
     assert refusal is not None and "LTS baseline" in refusal
@@ -805,7 +805,7 @@ def test_an_lts_build_refuses_a_cloud_session_its_policy_does_not_name(monkeypat
     ],
 )
 def test_a_ceiling_on_any_scope_refuses_a_cloud_session(monkeypatch, controls):
-    from kiro_crew.coder import session_launch as sl
+    from aj_crew.coder import session_launch as sl
 
     # Not only tool scopes: a policy narrowing browse, cron or channels bounds
     # what the session's agent may do, and the cloud agent is outside it.
@@ -819,7 +819,7 @@ def test_a_ceiling_on_any_scope_refuses_a_cloud_session(monkeypatch, controls):
 
 
 def test_a_ceiling_on_tool_execution_refuses_a_cloud_session(monkeypatch):
-    from kiro_crew.coder import session_launch as sl
+    from aj_crew.coder import session_launch as sl
 
     _governed(monkeypatch, _ceiling(**_DENY_NC))
     refusal = sl.kiro_cloud_governance_refusal("dashboard:d1")
@@ -828,16 +828,16 @@ def test_a_ceiling_on_tool_execution_refuses_a_cloud_session(monkeypatch):
 
 
 def test_a_profile_on_tool_execution_refuses_a_cloud_session(monkeypatch):
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.platform.governance import deny_all_profile
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.platform.governance import deny_all_profile
 
     _governed(monkeypatch, None, deny_all_profile())
     assert sl.kiro_cloud_governance_refusal("cron:job") is not None
 
 
 def test_only_the_policy_can_allow_a_cloud_session(monkeypatch):
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.platform.governance import CapabilityGate, Profile
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.platform.governance import CapabilityGate, Profile
 
     allow = {"kiro_cloud_sessions": {"enabled": True}}
     _governed(monkeypatch, _ceiling(**_DENY_NC, capabilities=allow))
@@ -856,8 +856,8 @@ def test_only_the_policy_can_allow_a_cloud_session(monkeypatch):
 
 
 def test_an_unreadable_ceiling_refuses_a_cloud_session(monkeypatch):
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.platform import context
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.platform import context
 
     def broken():
         raise RuntimeError("policy unreadable")
@@ -869,15 +869,15 @@ def test_an_unreadable_ceiling_refuses_a_cloud_session(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_a_governed_host_refuses_the_cloud_start_before_it_is_prepared(tmp_path, monkeypatch):
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.session_environment import SessionEnvironmentUnavailable
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.session_environment import SessionEnvironmentUnavailable
 
     section = SimpleNamespace(
         kiro_cloud_profiles=[{"id": "cloud", "name": "Kiro Cloud", "repositories": []}],
     )
-    monkeypatch.setattr("kiro_crew.config.paths.data_home", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.paths.data_home", lambda: tmp_path)
     monkeypatch.setattr(
-        "kiro_crew.config.live.snapshot", lambda: SimpleNamespace(session_environments=section)
+        "aj_crew.config.live.snapshot", lambda: SimpleNamespace(session_environments=section)
     )
     sl.SessionEnvironmentChoices(tmp_path / "coder" / "session-choices.json").set(
         "dashboard:d1", "cloud", sl.KIRO_CLOUD_PROVIDER_ID
@@ -888,8 +888,8 @@ async def test_a_governed_host_refuses_the_cloud_start_before_it_is_prepared(tmp
 
 
 def test_the_project_line_names_the_cloud_sandbox_and_no_workspace_tools():
-    from kiro_crew import session_environment as se
-    from kiro_crew.context_assembly.turn import rail_parts
+    from aj_crew import session_environment as se
+    from aj_crew.context_assembly.turn import rail_parts
 
     key = "dashboard:cloud-project-line"
     se.remember_remote_workspace(key, "Kiro Cloud", "")
@@ -930,8 +930,8 @@ def section():
 
 @pytest.fixture
 def handlers(tmp_path, monkeypatch, section):
-    from kiro_crew.config import live, loader, paths
-    from kiro_crew.dashboard.handlers import session_environments as module
+    from aj_crew.config import live, loader, paths
+    from aj_crew.dashboard.handlers import session_environments as module
 
     # ``agent.kas_bundle`` is read by the KAS harness at spawn; off = the stub launcher.
     # The spawn also reads ``agent.kas_persist_mcp_sign_in`` from a clean load.
@@ -943,7 +943,7 @@ def handlers(tmp_path, monkeypatch, section):
         _overlay_unreadable=False,
     )
     monkeypatch.setattr(paths, "data_home", lambda: tmp_path)
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(lambda cls: config))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(lambda cls: config))
     monkeypatch.setattr(live, "snapshot", lambda: config)
     return module
 
@@ -963,7 +963,7 @@ def test_the_picker_lists_cloud_profiles_with_their_repositories(handlers):
 
 @pytest.mark.asyncio
 async def test_a_started_cloud_session_keeps_its_environment(handlers):
-    from kiro_crew.coder import session_launch as sl
+    from aj_crew.coder import session_launch as sl
 
     started = SimpleNamespace(total_messages=2, messages=[])
     fresh = SimpleNamespace(total_messages=0, messages=[])
@@ -984,7 +984,7 @@ async def test_a_started_cloud_session_keeps_its_environment(handlers):
 async def test_a_cloud_session_record_lands_only_on_a_cloud_row_and_a_bad_one_locks(
     handlers, tmp_path
 ):
-    from kiro_crew.coder import session_launch as sl
+    from aj_crew.coder import session_launch as sl
 
     choices = handlers._choices()
     choices.set("dashboard:coder", "dev", sl.PROVIDER_ID)
@@ -1015,10 +1015,10 @@ async def test_a_chat_whose_cloud_start_was_refused_can_move_back_to_this_machin
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.acp.types import ACP_BACKEND_KIRO
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.dashboard import chat_runner
-    from kiro_crew.providers import acp
+    from aj_crew.acp.types import ACP_BACKEND_KIRO
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.dashboard import chat_runner
+    from aj_crew.providers import acp
 
     key = "dashboard:refused"
     choices = handlers._choices()
@@ -1030,7 +1030,7 @@ async def test_a_chat_whose_cloud_start_was_refused_can_move_back_to_this_machin
     else:
         backend = ACP_BACKEND_KIRO
     provider = acp.AcpProvider(
-        agent="kirocrew", session_key=key, acp_backend=backend, sandbox_mode="off"
+        agent="ajcrew", session_key=key, acp_backend=backend, sandbox_mode="off"
     )
     with pytest.raises(
         AcpRuntimeError, match="KAS" if cause == "kiro-backend" else "not available"
@@ -1072,15 +1072,15 @@ async def test_a_chat_whose_cloud_start_was_refused_can_move_back_to_this_machin
 async def test_a_cloud_start_records_the_cloud_session_on_the_choice_row(
     handlers, stub, crew_agent, tmp_path, monkeypatch
 ):
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.providers import acp
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.providers import acp
 
     key = "dashboard:answered"
     choices = handlers._choices()
     choices.set(key, "cloud", sl.KIRO_CLOUD_PROVIDER_ID)
     _governed(monkeypatch, None)
     provider = acp.AcpProvider(
-        agent="kirocrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
+        agent="ajcrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
     )
     try:
         await provider._start_kiro_runtime_impl({}, {})
@@ -1100,9 +1100,9 @@ async def test_a_cloud_start_records_the_cloud_session_on_the_choice_row(
 async def test_a_private_chat_never_starts_a_cloud_sandbox(
     handlers, stub, crew_agent, tmp_path, monkeypatch, memory_mode
 ):
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.providers import acp
-    from kiro_crew.session_environment import SessionEnvironmentUnavailable
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.providers import acp
+    from aj_crew.session_environment import SessionEnvironmentUnavailable
 
     # A private chat never reopens its session, so a cloud start would mint a new
     # sandbox after each eviction and strand the last one's files: refused first.
@@ -1111,7 +1111,7 @@ async def test_a_private_chat_never_starts_a_cloud_sandbox(
     choices.set(key, "cloud", sl.KIRO_CLOUD_PROVIDER_ID)
     _governed(monkeypatch, None)
     provider = acp.AcpProvider(
-        agent="kirocrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
+        agent="ajcrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
     )
     provider.memory_mode = memory_mode
     try:
@@ -1140,8 +1140,8 @@ async def test_a_private_chat_cannot_choose_a_cloud_profile(handlers, monkeypatc
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.dashboard import chat_runner
 
     key = "dashboard:choose"
     slot = _private_slot("choose", memory_mode)
@@ -1178,14 +1178,14 @@ async def test_a_private_chat_cannot_choose_a_cloud_profile(handlers, monkeypatc
 @pytest.mark.asyncio
 @pytest.mark.parametrize("memory_mode", ["incognito", "temporary", "persistent"])
 async def test_a_private_chat_skips_a_kiro_cloud_default(handlers, monkeypatch, memory_mode):
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.config.loader import AjCrewConfig
 
     key = "dashboard:fresh"
     slot = _private_slot("fresh", memory_mode)
-    config = KiroCrewConfig()
+    config = AjCrewConfig()
     config.session_environments.default_profile = "cloud"
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: config))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls, *a, **k: config))
     monkeypatch.setattr(
         handlers, "_profiles", lambda: [{"id": "cloud", "provider": sl.KIRO_CLOUD_PROVIDER_ID}]
     )
@@ -1213,17 +1213,17 @@ async def test_ending_the_runtime_leaves_the_cloud_session_and_the_next_start_re
     removes the cloud session and its sandbox. The next start must reopen THAT
     session by the id Kiro's cloud answered, never provision a second sandbox.
     """
-    from kiro_crew.acp.types import METHOD_CANCEL, METHOD_SESSION_CLOSE
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.providers import acp
-    from kiro_crew.session_environment import forget_remote_workspace
+    from aj_crew.acp.types import METHOD_CANCEL, METHOD_SESSION_CLOSE
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.providers import acp
+    from aj_crew.session_environment import forget_remote_workspace
 
     key = "dashboard:reconnect"
     handlers._choices().set(key, "cloud", sl.KIRO_CLOUD_PROVIDER_ID)
     _governed(monkeypatch, None)
     ending = {METHOD_CANCEL, METHOD_SESSION_CLOSE, KasCloudSandboxHarness().teardown.method}
     first = acp.AcpProvider(
-        agent="kirocrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
+        agent="ajcrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
     )
     try:
         try:
@@ -1234,7 +1234,7 @@ async def test_ending_the_runtime_leaves_the_cloud_session_and_the_next_start_re
         assert [r["method"] for r in json.loads(stub.read_text()) if r["method"] in ending] == []
 
         second = acp.AcpProvider(
-            agent="kirocrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
+            agent="ajcrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
         )
         second._client.set_resume_session_id(recorded)
         meta: dict[str, object] = {}
@@ -1258,8 +1258,8 @@ async def test_ending_the_runtime_leaves_the_cloud_session_and_the_next_start_re
 async def test_browse_and_terminal_refuse_a_cloud_session_without_touching_coder(
     handlers, tmp_path, monkeypatch
 ):
-    from kiro_crew.coder import session_browse as sb
-    from kiro_crew.coder import session_launch as sl
+    from aj_crew.coder import session_browse as sb
+    from aj_crew.coder import session_launch as sl
 
     sl.SessionEnvironmentChoices(tmp_path / "coder" / "session-choices.json").set(
         "dashboard:c2", "cloud", sl.KIRO_CLOUD_PROVIDER_ID
@@ -1280,9 +1280,9 @@ async def test_an_id_reused_by_another_provider_does_not_move_a_started_session(
     handlers, section, tmp_path, monkeypatch
 ):
     """The row's provider is checked: a reused id never moves a session across providers."""
-    from kiro_crew.coder import session_browse as sb
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.session_environment import SessionEnvironmentUnavailable
+    from aj_crew.coder import session_browse as sb
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.session_environment import SessionEnvironmentUnavailable
 
     choices = sl.SessionEnvironmentChoices(tmp_path / "coder" / "session-choices.json")
     # Started on Coder profile "gone"; that profile was deleted and a cloud one took its id.
@@ -1311,8 +1311,8 @@ async def test_a_cloud_chat_whose_profile_was_deleted_is_refused_not_started_on_
 ):
     """A start or reopen reads the row's recorded provider, so a deleted cloud
     profile refuses the start instead of falling back to a Coder workspace."""
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.session_environment import SessionEnvironmentUnavailable
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.session_environment import SessionEnvironmentUnavailable
 
     section.kiro_cloud_profiles.clear()
     sl.SessionEnvironmentChoices(tmp_path / "coder" / "session-choices.json").set(
@@ -1336,9 +1336,9 @@ def _choice_rows(tmp_path):
 async def test_an_id_saved_for_two_providers_is_neither_offered_nor_launched(
     handlers, section, tmp_path, monkeypatch
 ):
-    from kiro_crew.coder import session_browse as sb
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.session_environment import SessionEnvironmentUnavailable
+    from aj_crew.coder import session_browse as sb
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.session_environment import SessionEnvironmentUnavailable
 
     # A hand edit the config writer would refuse: "dev" names a Coder and a cloud profile.
     section.kiro_cloud_profiles.append({**_CLOUD, "id": "dev", "name": "Dev cloud"})
@@ -1373,8 +1373,8 @@ async def test_the_choice_row_records_the_provider_the_profile_resolves_to(
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.dashboard import chat_runner
 
     async def owner(request, operation):
         return None
@@ -1414,16 +1414,16 @@ async def test_cloud_start_requires_the_prepared_choice_to_commit(
 ):
     import asyncio
 
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.providers import acp
-    from kiro_crew.session_environment import SessionEnvironmentUnavailable, forget_remote_workspace
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.providers import acp
+    from aj_crew.session_environment import SessionEnvironmentUnavailable, forget_remote_workspace
 
     key = "dashboard:cloud-choice-race"
     choices = handlers._choices()
     choices.set(key, "cloud", sl.KIRO_CLOUD_PROVIDER_ID)
     _governed(monkeypatch, None)
     provider = acp.AcpProvider(
-        agent="kirocrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
+        agent="ajcrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
     )
     if method == "load_session":
         provider._client._resume_session_id = "cloud-session"
@@ -1481,9 +1481,9 @@ async def test_a_cancel_during_the_unrecorded_sandbox_cleanup_still_deletes_it(
     ``create_session``: a second cancel cannot leave it in Kiro's cloud unrecorded."""
     import asyncio
 
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.providers import acp
-    from kiro_crew.session_environment import forget_remote_workspace
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.providers import acp
+    from aj_crew.session_environment import forget_remote_workspace
 
     key = "dashboard:cloud-cleanup-cancel"
     handlers._choices().set(key, "cloud", sl.KIRO_CLOUD_PROVIDER_ID)
@@ -1508,7 +1508,7 @@ async def test_a_cancel_during_the_unrecorded_sandbox_cleanup_still_deletes_it(
 
     monkeypatch.setattr(AcpRuntime, "terminate_session", slow_terminate)
     provider = acp.AcpProvider(
-        agent="kirocrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
+        agent="ajcrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
     )
     start = asyncio.ensure_future(provider._start_kiro_runtime_impl({}, {}))
     try:
@@ -1530,9 +1530,9 @@ async def test_a_cancel_during_the_unrecorded_sandbox_cleanup_still_deletes_it(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("cloud", [True, False])
 async def test_gateway_drain_preserves_only_cloud_turns(tmp_path, monkeypatch, cloud):
-    from kiro_crew.acp.session_provider import AcpSessionProvider
-    from kiro_crew.providers.acp import AcpProvider
-    from kiro_crew.session import SessionManager, _Session
+    from aj_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.providers.acp import AcpProvider
+    from aj_crew.session import SessionManager, _Session
 
     runtime = (
         _runtime(tmp_path) if cloud else AcpRuntime(work_dir=tmp_path, acp_backend=ACP_BACKEND_KAS)
@@ -1540,13 +1540,13 @@ async def test_gateway_drain_preserves_only_cloud_turns(tmp_path, monkeypatch, c
     handle = sh.AcpSessionHandle("cloud-drain", asyncio.Queue(), runtime)
     handle._turn_done.clear()
     monkeypatch.setattr(runtime, "is_alive", lambda: True)
-    provider = AcpProvider(agent="kirocrew", acp_backend=ACP_BACKEND_KAS)
+    provider = AcpProvider(agent="ajcrew", acp_backend=ACP_BACKEND_KAS)
     monkeypatch.setattr(provider, "_client", AcpSessionProvider(handle, runtime, owns_runtime=True))
     cancel = AsyncMock(return_value="acked")
     monkeypatch.setattr(provider, "cancel", cancel)
-    from kiro_crew.config import KiroCrewConfig
+    from aj_crew.config import AjCrewConfig
 
-    manager = SessionManager(KiroCrewConfig())
+    manager = SessionManager(AjCrewConfig())
     manager._sessions["dashboard:cloud-drain"] = _Session(provider=provider)
     assert await manager.drain_active_turns() == (0 if cloud else 1)
     assert cancel.await_count == (0 if cloud else 1)
@@ -1557,7 +1557,7 @@ async def test_gateway_drain_preserves_only_cloud_turns(tmp_path, monkeypatch, c
 @pytest.mark.skipif(sys.platform == "win32", reason="the stub launcher is a POSIX shell script")
 @pytest.mark.parametrize("memory_mode", ["persistent", "incognito", "temporary"])
 async def test_cloud_teardown_never_deletes_the_sandbox(stub, crew_agent, tmp_path, memory_mode):
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     runtime = _runtime(tmp_path)
     try:
@@ -1566,7 +1566,7 @@ async def test_cloud_teardown_never_deletes_the_sandbox(stub, crew_agent, tmp_pa
         provider = AcpSessionProvider(handle, runtime, owns_runtime=True)
         provider.memory_mode = memory_mode
         # A provider shutdown is also what idle eviction, compaction, a reset and
-        # a gateway restart run, so it cannot tell a chat ending from Kiro Crew
+        # a gateway restart run, so it cannot tell a chat ending from Aj Crew
         # letting go. In every memory mode the sandbox, and any work in it that
         # exists nowhere else, stays in Kiro's cloud. A persistent shutdown kills
         # the relay without asking terminate_session, so that is asked directly.
@@ -1729,7 +1729,7 @@ async def test_replayed_cloud_permission_reaches_the_normal_approval_path(
         assert isinstance(runtime._harness, KasCloudSandboxHarness)
         assert not runtime._harness.loading
         if live_behind:
-            from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION, JsonRpcMessage
+            from aj_crew.acp.types import METHOD_REQUEST_PERMISSION, JsonRpcMessage
 
             handle._queue.put_nowait(
                 JsonRpcMessage(
@@ -1771,8 +1771,8 @@ async def test_replayed_cloud_permission_reaches_the_normal_approval_path(
 async def test_cloud_permission_hold_expires_when_load_never_registers(
     stub, crew_agent, tmp_path, monkeypatch
 ):
-    from kiro_crew.acp.harness import kas_cloud
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.acp.harness import kas_cloud
+    from aj_crew.testing.wait import async_wait_until
 
     monkeypatch.setenv("KAS_STUB_PERMISSION", "1")
     monkeypatch.setenv("KAS_STUB_HANG_LOAD", "1")
@@ -1810,16 +1810,16 @@ async def test_the_cloud_start_holds_the_approval_its_reopen_replays(
     handlers, stub, crew_agent, tmp_path, monkeypatch
 ):
     """The provider's cloud reopen takes the resume hold, so a replay is kept, not rejected."""
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.providers import acp
-    from kiro_crew.session_environment import forget_remote_workspace
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.providers import acp
+    from aj_crew.session_environment import forget_remote_workspace
 
     key = "dashboard:cloud-held"
     handlers._choices().set(key, "cloud", sl.KIRO_CLOUD_PROVIDER_ID)
     _governed(monkeypatch, None)
     monkeypatch.setenv("KAS_STUB_PERMISSION", "1")
     provider = acp.AcpProvider(
-        agent="kirocrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
+        agent="ajcrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
     )
     provider._client.set_resume_session_id("old-cloud")
     meta: dict[str, object] = {}
@@ -1841,9 +1841,9 @@ async def test_the_cloud_start_holds_the_approval_its_reopen_replays(
 async def test_cloud_resume_fallback_is_logged_and_surfaces_once_in_the_transcript(
     handlers, stub, crew_agent, tmp_path, monkeypatch, caplog
 ):
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.providers import acp
-    from kiro_crew.session_environment import forget_remote_workspace
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.providers import acp
+    from aj_crew.session_environment import forget_remote_workspace
 
     key = "dashboard:cloud-fallback"
     handlers._choices().set(key, "cloud", sl.KIRO_CLOUD_PROVIDER_ID)
@@ -1852,12 +1852,12 @@ async def test_cloud_resume_fallback_is_logged_and_surfaces_once_in_the_transcri
     _governed(monkeypatch, None)
     monkeypatch.setenv("KAS_STUB_FAIL_LOAD", "1")
     provider = acp.AcpProvider(
-        agent="kirocrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
+        agent="ajcrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
     )
     provider._client.set_resume_session_id("old-cloud")
     meta: dict[str, object] = {}
     rows = []
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     monkeypatch.setattr(chat_runner, "append_and_surface", lambda *a, **kw: rows.append((a, kw)))
     try:
@@ -1889,22 +1889,22 @@ async def test_cloud_resume_fallback_is_logged_and_surfaces_once_in_the_transcri
 async def test_close_all_stops_only_the_cloud_relay_with_an_unfinished_turn(
     handlers, stub, crew_agent, tmp_path, monkeypatch
 ):
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.providers import acp
-    from kiro_crew.session import SessionManager, _Session
-    from kiro_crew.session_environment import forget_remote_workspace
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.providers import acp
+    from aj_crew.session import SessionManager, _Session
+    from aj_crew.session_environment import forget_remote_workspace
 
     key = "dashboard:cloud-shutdown"
     handlers._choices().set(key, "cloud", sl.KIRO_CLOUD_PROVIDER_ID)
     _governed(monkeypatch, None)
     provider = acp.AcpProvider(
-        agent="kirocrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
+        agent="ajcrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
     )
-    manager = SessionManager(KiroCrewConfig())
+    manager = SessionManager(AjCrewConfig())
     try:
         await provider._start_kiro_runtime_impl({}, {})
-        from kiro_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew.acp.session_provider import AcpSessionProvider
 
         inner = provider._client
         assert isinstance(inner, AcpSessionProvider)

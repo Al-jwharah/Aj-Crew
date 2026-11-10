@@ -15,7 +15,7 @@ import { join } from 'node:path'
 import { serveDist } from './lib/serve-dist.mjs'
 import { stubDashboardApi, json } from './lib/stub-dashboard-api.mjs'
 
-const out = process.argv[2] || join(process.env.KIROCREW_SCRATCH || 'temp-screenshots', 'terminal-rename')
+const out = process.argv[2] || join(process.env.AJCREW_SCRATCH || 'temp-screenshots', 'terminal-rename')
 mkdirSync(out, { recursive: true })
 const { srv, base } = await serveDist()
 const tabs = [1, 2, 3, 4].map(n => ({ id: `fixture-terminal-${n}`, cwd: '/workspace' }))
@@ -32,7 +32,7 @@ async function preparePage(page, theme) {
         return true
       }
       if (path === '/api/chat/slots' && route.request().method() === 'POST') {
-        await json(route, { key: 'fixture-chat', title: 'New Session', agent: 'kirocrew' })
+        await json(route, { key: 'fixture-chat', title: 'New Session', agent: 'ajcrew' })
         return true
       }
       return false

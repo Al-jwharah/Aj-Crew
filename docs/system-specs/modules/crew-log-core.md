@@ -1,10 +1,10 @@
 # Crew log Core
 
-Owners: `kiro_crew.crew_log` (`schema.py`, `store.py` with its owners `store_paths.py`, `store_segment_reads.py`, `store_cuts.py`, `store_segment_writes.py`, `store_tail_repair.py`, `store_results.py`, `store_units.py`, `store_removal.py`, `store_retention.py` and `store_handle.py`, `errors.py`, `lease.py`, `entry_types.py` with the field leaf `entry_types_fields.py` and the family owners `entry_types_lifecycle.py`, `entry_types_exchange.py`, `entry_types_delegated.py`, `entry_types_ledgers.py`, `entry_types_surfaces.py`)
+Owners: `aj_crew.crew_log` (`schema.py`, `store.py` with its owners `store_paths.py`, `store_segment_reads.py`, `store_cuts.py`, `store_segment_writes.py`, `store_tail_repair.py`, `store_results.py`, `store_units.py`, `store_removal.py`, `store_retention.py` and `store_handle.py`, `errors.py`, `lease.py`, `entry_types.py` with the field leaf `entry_types_fields.py` and the family owners `entry_types_lifecycle.py`, `entry_types_exchange.py`, `entry_types_delegated.py`, `entry_types_ledgers.py`, `entry_types_surfaces.py`)
 
 ## 1. Purpose
 
-`kiro_crew.crew_log` gives a crew, a session, or a member one durable, ordered, citable record of what happened. It is the storage layer: it defines a file format, enforces who may write what into it, and reads it back. The storage layer itself carries no routes, no MCP tools, no dashboard surface and no migration; the read routes live in `dashboard/handlers/crew_log.py` and the agent-facing reads in the `kirocrew-crew-log` MCP server (`mcp_crew_log.py`).
+`aj_crew.crew_log` gives a crew, a session, or a member one durable, ordered, citable record of what happened. It is the storage layer: it defines a file format, enforces who may write what into it, and reads it back. The storage layer itself carries no routes, no MCP tools, no dashboard surface and no migration; the read routes live in `dashboard/handlers/crew_log.py` and the agent-facing reads in the `ajcrew-crew-log` MCP server (`mcp_crew_log.py`).
 
 The problem it answers is that long-horizon work keeps its state in a context window, which harness-owned compaction summarizes lossily. Transcripts are not a substitute: rotation, compaction and consolidation rewrite the whole file, the grain is a message rather than an operation, and no field defines an order a consumer can fold on. An append-only file with a writer-assigned sequence inverts that -- the record is the authority, the context is a cache -- and lets one unit cite a segment of another's history instead of copying it.
 
@@ -38,7 +38,7 @@ The `crew-log` root is established EAGERLY, and that is what makes the mask non-
 
 ### 3a. Where the store's code lives
 
-`crew_log/store.py` is the module every caller imports, and every name it bound before its owners moved out is still reached there. It is a mirror facade (`kiro_crew._facade_mirror`): it binds each name an owner defines, so its namespace holds the definitions the unsplit module held, and it serves the names the owners import from the owner holding them. A patch through the facade reaches every owner holding the name, so the moved code reads its names as plain module globals. Owners never import the facade, each imports only the owners listed before it below, and new work goes to the owner of its responsibility rather than back into the facade. The store logs under the facade's name, `kiro_crew.crew_log.store`, whichever owner writes the record. `_slot_index` is the one owner name the facade serves instead of binding: `session_units_by_slot` rebinds it, so it lives in `crew_log/store_units.py` alone, where a copy on the facade would go stale.
+`crew_log/store.py` is the module every caller imports, and every name it bound before its owners moved out is still reached there. It is a mirror facade (`aj_crew._facade_mirror`): it binds each name an owner defines, so its namespace holds the definitions the unsplit module held, and it serves the names the owners import from the owner holding them. A patch through the facade reaches every owner holding the name, so the moved code reads its names as plain module globals. Owners never import the facade, each imports only the owners listed before it below, and new work goes to the owner of its responsibility rather than back into the facade. The store logs under the facade's name, `aj_crew.crew_log.store`, whichever owner writes the record. `_slot_index` is the one owner name the facade serves instead of binding: `session_units_by_slot` rebinds it, so it lives in `crew_log/store_units.py` alone, where a copy on the facade would go stale.
 
 | Owner | Holds |
 |---|---|
@@ -117,7 +117,7 @@ The families, from the RFC:
 | knowledge | `crew/finding`, `crew/summary`, `crew/note-*`, `crew/link` | the segment covered |
 | memory | `memory/bound\|copied\|forgotten\|restored` | -- |
 
-Two of these families carry a contract with REQUIRED fields. **Required here is a contract on the writer, and what enforces it is a declaration rather than a branch:** a per-type `data` requirement belongs to the type registry, next to that type's own `data` shape, not to `check_ownership`, which answers who may write a type rather than what the type must contain. `kiro_crew.crew_log.entry_types` declares both kinds: `SESSION_ENTRY_TYPES` for the session families and `CREW_ENTRY_TYPES` for these two contracts, keyed into `ENTRY_TYPES` by kind, so `validate_data` answers for the unit the entry is being written into and a crew's `data` is checked on the same append path a session's is. What the registry cannot state stays a writer's obligation: a CONDITIONAL requirement has no spelling in a declaration, so `target`'s exclusive `slot`-or-`name` pairing and `crew/report`'s required `ref` are enforced where the entry is built, and a field one legitimate form omits is declared optional rather than refusing a valid entry.
+Two of these families carry a contract with REQUIRED fields. **Required here is a contract on the writer, and what enforces it is a declaration rather than a branch:** a per-type `data` requirement belongs to the type registry, next to that type's own `data` shape, not to `check_ownership`, which answers who may write a type rather than what the type must contain. `aj_crew.crew_log.entry_types` declares both kinds: `SESSION_ENTRY_TYPES` for the session families and `CREW_ENTRY_TYPES` for these two contracts, keyed into `ENTRY_TYPES` by kind, so `validate_data` answers for the unit the entry is being written into and a crew's `data` is checked on the same append path a session's is. What the registry cannot state stays a writer's obligation: a CONDITIONAL requirement has no spelling in a declaration, so `target`'s exclusive `slot`-or-`name` pairing and `crew/report`'s required `ref` are enforced where the entry is built, and a field one legitimate form omits is declared optional rather than refusing a valid entry.
 
 **`crew/dispatch`** -- a parent asking for an item to be worked.
 
@@ -176,7 +176,7 @@ envelope, storage, lease, and damage rules it uses.
 
 ## 5. The session-log format and its compatibility rule
 
-`KIROCREW_CREW_LOG` defaults on, so a stock install writes session-kind units and a later
+`AJCREW_CREW_LOG` defaults on, so a stock install writes session-kind units and a later
 build may read files an earlier one wrote. The shapes below change under one rule. A type
 gains fields additively, and a reader ignores a key it does not know. A new type that an
 older reader may safely skip is written `ignorable` (see "An unknown type is the reader's
@@ -692,7 +692,7 @@ one hourly throttle, no new config key, and a negative value disables both halve
 `crew-log/sessions` alone -- the crews' logs are never in scope, since they have no writer and no
 `session/closed` to age from, and a rule invented for them now would be a guess applied to files
 nothing produces. A missing root costs one directory listing, which is also what makes the sweep de
-facto gated by `KIROCREW_CREW_LOG` without reading it: only the emitter creates session units.
+facto gated by `AJCREW_CREW_LOG` without reading it: only the emitter creates session units.
 Reading the flag here would be worse than not reading it, because turning it off would then strand
 every crew log already written, permanently.
 
@@ -837,7 +837,7 @@ owner is gone -- and it is asked through `eventlog.service`, not from the handle
 cached log for that slug is dropped in the same step as the files.
 
 **Exactly one member-delete path reclaims, and the others are named rather than implied.** The
-dashboard delete route is that path. `kirocrew agent delete`, the package-sync prune and the Bot
+dashboard delete route is that path. `ajcrew agent delete`, the package-sync prune and the Bot
 prune migration each remove a member record without collecting its unit, and a unit orphaned before
 this exists has no collector at all -- the first two already hold `memory_store_namespace_lock`, so
 reaching them is a call apiece, while the migration holds no such lock and reads a member's own
@@ -849,7 +849,7 @@ follow-on to this one.
 
 ## 9. Scope
 
-The session-log emitter ([crew-log-emitter.md](crew-log-emitter.md)) writes the ACP turn lifecycle behind the `KIROCREW_CREW_LOG` flag. The member event log ([member-event-log.md](member-event-log.md)) independently writes the member kind through `kiro_crew.eventlog`. The crew kind has one writer, behind the same flag: `crew_log.emit.on_crew_dispatch` and `on_crew_report` record the dispatch family into a crew's own log, driven by the conductor work board's `bind` action and by a worker's report. It covers that family alone, so the ownership registry still describes what a crew MAY write rather than what is produced -- the other six domains have no writer, and a guest app needs no registry entry because its `app:<name>/` prefix is its permission.
+The session-log emitter ([crew-log-emitter.md](crew-log-emitter.md)) writes the ACP turn lifecycle behind the `AJCREW_CREW_LOG` flag. The member event log ([member-event-log.md](member-event-log.md)) independently writes the member kind through `aj_crew.eventlog`. The crew kind has one writer, behind the same flag: `crew_log.emit.on_crew_dispatch` and `on_crew_report` record the dispatch family into a crew's own log, driven by the conductor work board's `bind` action and by a worker's report. It covers that family alone, so the ownership registry still describes what a crew MAY write rather than what is produced -- the other six domains have no writer, and a guest app needs no registry entry because its `app:<name>/` prefix is its permission.
 
 Those two entries are BEST EFFORT, and the asymmetry with the session emitter is deliberate. A work-ledger route refuses its own write when the `work/recorded` entry cannot be appended, because the board is a projection of that entry and a cache holding a mutation the log never saw is a divergence. The crew entry is the crew-side record of a fact the board already holds, so a crew log that cannot be written must not fail a ledger write that succeeded: the caller reads a zero seq as "not recorded" and proceeds. Neither entry is routed through the session emitter's write-behind queue, whose every structure is keyed by an ACP session id -- a crew store name handed to it would be looked up as a session unit and dropped as a policy no-op.
 

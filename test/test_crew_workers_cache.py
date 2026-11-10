@@ -18,10 +18,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import crew_mode
-from kiro_crew import work_ledger as wl
-from kiro_crew.crew_log.session_tree import TreeNode
-from kiro_crew.dashboard.handlers import crew_workers
+from aj_crew import crew_mode
+from aj_crew import work_ledger as wl
+from aj_crew.crew_log.session_tree import TreeNode
+from aj_crew.dashboard.handlers import crew_workers
 
 
 class _Tree:
@@ -49,18 +49,18 @@ class _Log:
     def get_metadata(self, key: str) -> dict[str, str]:
         self.reads.append(key)
         slot = key.removeprefix("dashboard:")
-        return {"title": self.titles.get(slot, ""), "agent": "kirocrew-worker"}
+        return {"title": self.titles.get(slot, ""), "agent": "ajcrew-worker"}
 
 
 def _row(key: str, **over: Any) -> dict[str, Any]:
-    return {"key": key, "agent": "kirocrew-worker", "title": key, "running": False, **over}
+    return {"key": key, "agent": "ajcrew-worker", "title": key, "running": False, **over}
 
 
 class _World:
     def __init__(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.crew_log import session_tree_projection
+        from aj_crew.crew_log import session_tree_projection
 
-        self.rows = [_row("root", agent="kirocrew-conductor"), _row("w1", created_by="root")]
+        self.rows = [_row("root", agent="ajcrew-conductor"), _row("w1", created_by="root")]
         self.tree = _Tree({"root": None, "w1": "root", "c1": "root", "c2": "c1"})
         self.log = _Log({"c1": "Closed one", "c2": "Closed two"})
         self.ledger_reads: list[str] = []

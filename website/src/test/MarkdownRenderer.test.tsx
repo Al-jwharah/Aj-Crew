@@ -391,7 +391,7 @@ describe('MarkdownRenderer GFM task-list checkboxes', () => {
  */
 describe('isPathCandidate — path chip pre-filter', () => {
   it('accepts rooted, home-relative and explicitly relative paths', () => {
-    expect(isPathCandidate('/Users/me/project/KiroCrew')).toBe(true)
+    expect(isPathCandidate('/Users/me/project/AjCrew')).toBe(true)
     expect(isPathCandidate('/home/user/reports/2026-05-17T05:46.md')).toBe(true)
     expect(isPathCandidate('~/.kiro/crew/workspace')).toBe(true)
     expect(isPathCandidate('./src/index.ts')).toBe(true)
@@ -876,7 +876,7 @@ describe('MarkdownRenderer path chips — stat gate', () => {
 
   it('renders a confirmed directory as a folder chip, not a broken file link', async () => {
     stubKind('dir', false)
-    const { container } = render(<MarkdownRenderer content={'`/Users/me/workspace/KiroCrew`'} />)
+    const { container } = render(<MarkdownRenderer content={'`/Users/me/workspace/AjCrew`'} />)
     await waitFor(() => {
       const code = container.querySelector('code')!
       expect(code.dataset.pathKind).toBe('dir')

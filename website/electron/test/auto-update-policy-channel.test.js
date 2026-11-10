@@ -141,9 +141,9 @@ test("a requirement that changes to one the build cannot follow stops the next c
 
 test("manualDownloadUrl: the lts channel names the LTS app's own files", () => {
   const { manualDownloadUrl } = require("../auto-update");
-  assert.match(manualDownloadUrl("lts", "darwin", "arm64"), /\/desktop\/lts\/latest\/KiroCrew-LTS\.dmg$/);
-  assert.match(manualDownloadUrl("lts", "linux", "x64", "deb"), /\/desktop\/lts\/latest\/KiroCrew-LTS-x86_64\.deb$/);
-  assert.match(manualDownloadUrl("lts", "win32", "x64"), /\/desktop\/lts\/latest\/KiroCrew-LTS-Setup\.exe$/);
+  assert.match(manualDownloadUrl("lts", "darwin", "arm64"), /\/desktop\/lts\/latest\/AjCrew-LTS\.dmg$/);
+  assert.match(manualDownloadUrl("lts", "linux", "x64", "deb"), /\/desktop\/lts\/latest\/AjCrew-LTS-x86_64\.deb$/);
+  assert.match(manualDownloadUrl("lts", "win32", "x64"), /\/desktop\/lts\/latest\/AjCrew-LTS-Setup\.exe$/);
   // oss channels keep their published names.
-  assert.match(manualDownloadUrl("stable", "darwin", "arm64"), /\/desktop\/stable\/latest\/KiroCrew\.dmg$/);
+  assert.match(manualDownloadUrl("stable", "darwin", "arm64"), /\/desktop\/stable\/latest\/AjCrew\.dmg$/);
 });

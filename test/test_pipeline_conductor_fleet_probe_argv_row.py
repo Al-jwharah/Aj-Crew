@@ -48,7 +48,7 @@ def test_an_alias_run_reports_its_scope_instead_of_declining(mod, tmp_path, monk
     fleet = tmp_path / "wt"
     fleet.mkdir()
     fleet_pid(root, fleet, "406", ["pytest-3", *UNBUDGETED, "test/test_x.py"])
-    fleet_pid(root, fleet, "407", ["pytest-3", *UNBUDGETED, "--cov", "src/kiro_crew"])
+    fleet_pid(root, fleet, "407", ["pytest-3", *UNBUDGETED, "--cov", "src/aj_crew"])
     lines, _host = mod._host_lines({"fleet_worktrees": [str(fleet)]})
     scopes = {
         line.split()[1].split("=", 1)[1]: line.split("scope=", 1)[1].split()[0] for line in lines

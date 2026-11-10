@@ -17,8 +17,8 @@ from test_agent_capabilities import (  # noqa: F401 -- editor is a pytest fixtur
     spec_for,
 )
 
-from kiro_crew import agent_state
-from kiro_crew.agent_capabilities import (
+from aj_crew import agent_state
+from aj_crew.agent_capabilities import (
     CapabilityError,
     _digest,
     prepare_member_capabilities,
@@ -40,7 +40,7 @@ def _enrolled(service, home, specs):
         ("permissions", {"rules": [{"capability": "fsWrite", "effect": "allow"}]}),
         # Not permission-shaped, still ungoverned: a denylist on name shape misses these.
         ("toolsSettings", {"read": {"setting": "custom"}}),
-        ("managedToolPolicy", {"deny": ["kirocrew-computer"]}),
+        ("managedToolPolicy", {"deny": ["ajcrew-computer"]}),
         ("excludedTools", ["execute_bash"]),
         ("includeMcpJson", True),
         # A key no current release knows: the allowlist refuses it unread.
@@ -84,7 +84,7 @@ def test_edit_carrying_save_refuses_ungoverned_drift(
     original_intent = agent_state.get_capabilities(target)
     # Not permission-shaped, so ``_align_permissions`` has nothing to say about it:
     # only the drift rule stands between this key and a reviewed stamp.
-    spec["managedToolPolicy"] = {"deny": ["kirocrew-computer"]}
+    spec["managedToolPolicy"] = {"deny": ["ajcrew-computer"]}
     path.write_text(json.dumps(spec), encoding="utf-8")
     on_disk = path.read_bytes()
 
@@ -182,7 +182,7 @@ def test_empty_review_refuses_a_deleted_parent_key(editor):  # noqa: F811 -- pyt
 def test_edit_carrying_save_refuses_a_deleted_parent_key(editor):  # noqa: F811 -- fixture
     service, home, specs, parent = editor
     # A deny list the fork inherits; deleting it from the fork lifts the denial.
-    parent["managedToolPolicy"] = {"deny": ["kirocrew-computer"]}
+    parent["managedToolPolicy"] = {"deny": ["ajcrew-computer"]}
     (specs / "parent.json").write_text(json.dumps(parent), encoding="utf-8")
     spec, target, path = _drop_parent_key(service, home, specs, parent, "managedToolPolicy")
     original_intent = agent_state.get_capabilities(target)
@@ -212,7 +212,7 @@ def test_empty_review_refuses_a_key_deleted_from_parent_and_file(editor):  # noq
     """A reviewed deny list gone from BOTH sides is still drift the review never showed."""
     service, home, specs, parent = editor
     spec, target, path = _drop_key_from_both(
-        service, home, specs, parent, "managedToolPolicy", {"deny": ["kirocrew-computer"]}
+        service, home, specs, parent, "managedToolPolicy", {"deny": ["ajcrew-computer"]}
     )
     original_intent = agent_state.get_capabilities(target)
     on_disk = path.read_bytes()
@@ -228,7 +228,7 @@ def test_empty_review_refuses_a_key_deleted_from_parent_and_file(editor):  # noq
 def test_edit_carrying_save_refuses_a_key_deleted_from_parent_and_file(editor):  # noqa: F811
     service, home, specs, parent = editor
     spec, target, path = _drop_key_from_both(
-        service, home, specs, parent, "managedToolPolicy", {"deny": ["kirocrew-computer"]}
+        service, home, specs, parent, "managedToolPolicy", {"deny": ["ajcrew-computer"]}
     )
     original_intent = agent_state.get_capabilities(target)
 
@@ -262,8 +262,8 @@ def test_every_stamp_refreshes_the_reviewed_keys(editor):  # noqa: F811 -- pytes
 
 def test_permissions_removed_for_an_old_cli_is_vouched(editor, monkeypatch):  # noqa: F811
     """On a release that refuses ``permissions``, Crew itself drops the block."""
-    from kiro_crew import kiro_cli
-    from kiro_crew.agent_sdk.drivers.acp import derived_agent_permissions
+    from aj_crew import kiro_cli
+    from aj_crew.agent_sdk.drivers.acp import derived_agent_permissions
 
     service, home, specs, parent = editor
     parent["permissions"] = derived_agent_permissions(parent["allowedTools"], "parent")
@@ -294,14 +294,14 @@ def test_permissions_removed_for_a_missing_bundled_engine_is_vouched(
     writer removes ``permissions`` because the engine cannot vouch for it, so the
     missing key is Crew's output and a later save must not call it a hand edit.
     """
-    from kiro_crew import kiro_cli
-    from kiro_crew.agent_sdk import kas_bundle
-    from kiro_crew.agent_sdk.drivers.acp import derived_agent_permissions
+    from aj_crew import kiro_cli
+    from aj_crew.agent_sdk import kas_bundle
+    from aj_crew.agent_sdk.drivers.acp import derived_agent_permissions
 
     service, home, specs, parent = editor
     parent["permissions"] = derived_agent_permissions(parent["allowedTools"], "parent")
     (specs / "parent.json").write_text(json.dumps(parent), encoding="utf-8")
-    monkeypatch.setattr("kiro_crew.agent_sdk.backend_install._kas_bundle_route", lambda: True)
+    monkeypatch.setattr("aj_crew.agent_sdk.backend_install._kas_bundle_route", lambda: True)
     monkeypatch.setattr(kas_bundle, "installed_bundle", lambda: None)
     monkeypatch.setattr(kiro_cli, "resolve_kiro_cli", lambda: "/opt/kiro/bin/kiro-cli")
     monkeypatch.setattr(kiro_cli, "spec_permissions_supported", lambda _version: True)

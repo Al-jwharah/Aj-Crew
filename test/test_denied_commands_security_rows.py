@@ -24,10 +24,10 @@ from denied_commands_security_helpers import (
     _rule_pattern,
 )
 
-from kiro_crew import security
-from kiro_crew.security import BUILTIN_DENIED_RULES, BUILTIN_DENY_PATTERNS
-from kiro_crew.security import argv_floor as _argv_floor
-from kiro_crew.security import compute_effective_denied, is_denied, is_safe_user_regex
+from aj_crew import security
+from aj_crew.security import BUILTIN_DENIED_RULES, BUILTIN_DENY_PATTERNS
+from aj_crew.security import argv_floor as _argv_floor
+from aj_crew.security import compute_effective_denied, is_denied, is_safe_user_regex
 
 # Each test starts with the macOS libc and libproc handle caches unbuilt and puts them
 # back after, as every test of the test_denied_commands_security family does (see conftest.py).
@@ -183,7 +183,7 @@ class TestSelfProtectionFloorIsAdditive:
         """
         import re as _re
 
-        from kiro_crew.security import _is_credential_mint, _is_self_kill
+        from aj_crew.security import _is_credential_mint, _is_self_kill
 
         predicate = _is_self_kill if rule_id == _RULE_KILL else _is_credential_mint
         rx = _re.compile(_rule_pattern(rule_id), _re.IGNORECASE)
@@ -208,7 +208,7 @@ class TestSelfProtectionFloorIsAdditive:
     def test_tokenizer_failure_does_not_allow_a_mint(self, monkeypatch):
         # Simulate the floor's tokenizer failing outright.  The command must
         # still be denied, by the regex half of the union.
-        import kiro_crew.security as sec
+        import aj_crew.security as sec
 
         def _boom(_cmd):
             raise ValueError("simulated tokenizer failure")
@@ -227,7 +227,7 @@ class TestSelfProtectionFloorIsAdditive:
         """
         import os as _os
 
-        from kiro_crew.security import normalize_shell_command
+        from aj_crew.security import normalize_shell_command
 
         monkeypatch.setattr(_os.path, "expanduser", lambda _p: r"C:\Users\runneradmin")
         # The guard is that this RETURNS rather than raising.
@@ -401,7 +401,7 @@ class TestReverseShellNcIsCommandTokenAnchored:
         # No top-level ``.*`` gap, so the row is one fragment matched with exact
         # ``re.search`` over the WHOLE command, never the length-capped scan --
         # a padded command cannot slip the needle past a bound.
-        from kiro_crew.security import _deny_matcher
+        from aj_crew.security import _deny_matcher
 
         pattern = _rule_pattern(self._RULE)
         assert is_safe_user_regex(pattern)
@@ -445,13 +445,13 @@ class TestDevModeConfirmFlagIsAgentInaccessible:
     """
 
     def test_the_flag_is_denied_in_direct_and_nested_forms(self):
-        from kiro_crew import security
+        from aj_crew import security
 
         for cmd in (
-            "kirocrew app dev my-app --confirm-out-of-install-root",
-            'bash -c "kirocrew app dev my-app --confirm-out-of-install-root"',
+            "ajcrew app dev my-app --confirm-out-of-install-root",
+            'bash -c "ajcrew app dev my-app --confirm-out-of-install-root"',
             'python3 -c "import subprocess; subprocess.run('
-            "['kirocrew','app','dev','x','--confirm-out-of-install-root'])\"",
+            "['ajcrew','app','dev','x','--confirm-out-of-install-root'])\"",
         ):
             assert security.is_denied(cmd) is not None, f"not denied: {cmd!r}"
 
@@ -459,27 +459,27 @@ class TestDevModeConfirmFlagIsAgentInaccessible:
         """Quoting splits the flag in RAW text but the shell strips it, so the
         de-quoted argv still carries the accepted flag -- the argv floor must
         deny every spelling the raw-text regex cannot see."""
-        from kiro_crew import security
+        from aj_crew import security
 
         for cmd in (
-            "kirocrew app dev my-app --confirm-out-of-install-'root'",
-            'kirocrew app dev my-app --confirm-out-of-install-"root"',
-            'kirocrew app dev my-app "--confirm-out-of-install-root"',
-            "kirocrew app dev my-app '--confirm-out-of-install-root'",
-            'kirocrew app dev my-app --confirm-out-of-install-ro""ot',
-            "kirocrew app dev my-app --confirm\\-out-of-install-root",
-            "kirocrew app dev my-app --'confirm'-out-of-install-root",
-            "bash -c \"kirocrew app dev my-app --confirm-out-of-install-'root'\"",
+            "ajcrew app dev my-app --confirm-out-of-install-'root'",
+            'ajcrew app dev my-app --confirm-out-of-install-"root"',
+            'ajcrew app dev my-app "--confirm-out-of-install-root"',
+            "ajcrew app dev my-app '--confirm-out-of-install-root'",
+            'ajcrew app dev my-app --confirm-out-of-install-ro""ot',
+            "ajcrew app dev my-app --confirm\\-out-of-install-root",
+            "ajcrew app dev my-app --'confirm'-out-of-install-root",
+            "bash -c \"ajcrew app dev my-app --confirm-out-of-install-'root'\"",
         ):
             assert security.is_denied(cmd) is not None, f"not denied: {cmd!r}"
 
     def test_ordinary_dev_toggles_stay_allowed(self):
         """The rule targets the attestation flag, not the dev-mode verb —
         in-install dev-mode toggles remain an ordinary agent operation."""
-        from kiro_crew import security
+        from aj_crew import security
 
-        assert security.is_denied("kirocrew app dev my-app") is None
-        assert security.is_denied("kirocrew app dev my-app --off") is None
+        assert security.is_denied("ajcrew app dev my-app") is None
+        assert security.is_denied("ajcrew app dev my-app --off") is None
 
 
 class TestRecursiveForceRmFloor:
@@ -653,7 +653,7 @@ class TestRecursiveForceRmFloor:
 
     def test_nested_open_expansions_are_read_a_bounded_number_of_times(self, monkeypatch):
         """Twenty ``"$( ${`` levels cost a linear number of walks, not 2**20."""
-        from kiro_crew.security import rm_floor
+        from aj_crew.security import rm_floor
 
         calls = 0
         real = rm_floor._segments
@@ -679,7 +679,7 @@ class TestRecursiveForceRmFloor:
         assert is_denied("rm -fr ~", denied_regexes=only_home) is not None
 
     def test_a_floor_error_refuses_only_a_command_that_could_hold_rm(self, monkeypatch):
-        from kiro_crew.security import rm_floor
+        from aj_crew.security import rm_floor
 
         def _boom(_text):
             raise RuntimeError("walk failed")
@@ -698,7 +698,7 @@ class TestRecursiveForceRmFloor:
     )
     def test_a_floor_error_refuses_rm_behind_an_unset_parameter(self, monkeypatch, command):
         """An unset ``$1`` glued to ``rm`` expands to nothing, so bash runs ``rm``."""
-        from kiro_crew.security import rm_floor
+        from aj_crew.security import rm_floor
 
         def _boom(_text):
             raise RuntimeError("walk failed")
@@ -720,7 +720,7 @@ class TestRecursiveForceRmFloor:
     )
     def test_a_floor_error_lets_a_command_without_an_rm_word_pass(self, monkeypatch, command):
         """The letters r..m inside another word do not make a command one the floor reads."""
-        from kiro_crew.security import rm_floor
+        from aj_crew.security import rm_floor
 
         def _boom(_text):
             raise RuntimeError("walk failed")
@@ -960,7 +960,7 @@ class TestRmFloorReadsNestedShellPayloads:
         ],
     )
     def test_the_reader_keeps_both_stream_and_clobber_redirects_whole(self, command, argvs):
-        from kiro_crew.security import shell_commands
+        from aj_crew.security import shell_commands
 
         got = [[w.raw for w in cmd.argv] for cmd in shell_commands.read_commands(command)]
         assert got == argvs
@@ -968,7 +968,7 @@ class TestRmFloorReadsNestedShellPayloads:
     def test_a_frame_with_no_redirect_char_is_not_read(self, monkeypatch):
         """Every walk frame asks for views, so a frame without a ``<`` or ``>`` (which
         every redirection needs) costs no read of its nested substitutions."""
-        from kiro_crew.security import shell_commands
+        from aj_crew.security import shell_commands
 
         def _boom(*_args, **_kwargs):
             raise AssertionError("read")
@@ -980,7 +980,7 @@ class TestRmFloorReadsNestedShellPayloads:
     def test_many_redirects_split_each_command_once(self, monkeypatch):
         """The view test is linear in redirects: each command's words are split once,
         not once per redirect (2,000 redirects would split it 4,000 times)."""
-        from kiro_crew.security import shell_commands
+        from aj_crew.security import shell_commands
 
         calls = 0
         split = shell_commands.ShellCommand._parts
@@ -995,7 +995,7 @@ class TestRmFloorReadsNestedShellPayloads:
         assert calls == 1
 
     def test_one_gate_call_reads_each_frame_once_and_keeps_nothing(self, monkeypatch):
-        from kiro_crew.security import shell_commands
+        from aj_crew.security import shell_commands
 
         seen: list[str] = []
         real = shell_commands.redirect_free_views
@@ -1023,7 +1023,7 @@ class TestRmFloorReadsNestedShellPayloads:
     @pytest.mark.parametrize("separator", [";", "&&", "&", "\n"])
     def test_a_separator_ends_the_command(self, separator):
         """``echo x <sep> sh`` runs ``sh`` with no input: the printed wipe stays printed."""
-        from kiro_crew.security import rm_floor
+        from aj_crew.security import rm_floor
 
         command = f"echo '{'r' + 'm'} -fr ~'{separator}sh"
         assert rm_floor._rm_wipe_targets_nested(command) == set()
@@ -1038,12 +1038,12 @@ class TestRmFloorReadsNestedShellPayloads:
 
     def test_many_heredoc_markers_on_one_line_read_in_linear_time(self):
         """The line reader ends at the first heredoc; the rest of its line is one read."""
-        from kiro_crew.security import rm_floor
+        from aj_crew.security import rm_floor
 
         assert len(rm_floor._command_lines("r" + "m x " + "<<a " * 5000)) == 1
 
     def test_a_view_reads_only_its_own_frame(self):
-        from kiro_crew.security import shell_commands
+        from aj_crew.security import shell_commands
 
         command = 'bash -c 2>/dev/null "$(sh -c >x ls)"'
         listed = shell_commands.read_commands(command, nested=False)
@@ -1061,7 +1061,7 @@ class TestRmFloorReadsNestedShellPayloads:
 
     def test_an_eval_argument_is_left_to_the_rows(self, monkeypatch):
         """``eval`` re-joins its words under each level; the floor does not model that."""
-        from kiro_crew.security import rm_floor
+        from aj_crew.security import rm_floor
 
         frames: list[str] = []
         real = rm_floor._rm_wipe_targets

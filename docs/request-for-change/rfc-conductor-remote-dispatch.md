@@ -63,12 +63,12 @@ Six decisions:
 
 - **Session tools.** `session_create`, `session_send`, `session_read_message`,
   `session_stop` and `session_close` (`_session_tools` in
-  `src/kiro_crew/mcp_dashboard_session_tools.py`) call `/api/session-control/*` on this
+  `src/aj_crew/mcp_dashboard_session_tools.py`) call `/api/session-control/*` on this
   gateway. Those routes are MCP-only and strict (`dashboard/server_internal_paths.py`, the
   *Session control* block of the internal-secret path set). No argument names
   another machine. `session_read_message` returns at most 100 messages
   (`limit`, default 20).
-- **The proxy.** `api_instances_proxy` (`src/kiro_crew/dashboard/handlers_instances_peer.py`)
+- **The proxy.** `api_instances_proxy` (`src/aj_crew/dashboard/handlers_instances_peer.py`)
   forwards only paths under `_PROXY_ALLOWED_PREFIXES` = `api/chat`, `api/stream`,
   owner-only, and redacts every reply since
   [#16757](https://github.com/kirodotdev/KiroCrew/pull/16757)
@@ -89,10 +89,10 @@ Six decisions:
   ([#16757](https://github.com/kirodotdev/KiroCrew/pull/16757)) and the
   per-machine sidebar ([#16756](https://github.com/kirodotdev/KiroCrew/pull/16756))
   use exactly these.
-- **Version gate.** `versions_compatible` (`src/kiro_crew/apps/version.py`)
+- **Version gate.** `versions_compatible` (`src/aj_crew/apps/version.py`)
   matches `major.minor`. `api_instances_capabilities` reports it as
   `version_match`.
-- **Peer headroom.** `resource_status.probe()` (`src/kiro_crew/resource_status.py`)
+- **Peer headroom.** `resource_status.probe()` (`src/aj_crew/resource_status.py`)
   returns a `ResourceStatus`: cgroup-clamped `available_gb`, `cpu_count`,
   `load_per_cpu`, a `posture` and its `pressure_gb` / `critical_gb` thresholds.
   The subagent spawn floor is `check_memory_available` in
@@ -101,11 +101,11 @@ Six decisions:
   measures free disk. The `resource_status` MCP tool reports this to an agent;
   no route serves it to another machine.
 - **Scratch.** Each agent process gets its own directory under
-  `agent_scratch.scratch_root()` (`src/kiro_crew/agent_scratch.py`), exported as
-  `KIROCREW_SCRATCH`. An hourly sweep reclaims a directory once its owner is
+  `agent_scratch.scratch_root()` (`src/aj_crew/agent_scratch.py`), exported as
+  `AJCREW_SCRATCH`. An hourly sweep reclaims a directory once its owner is
   dead; one that holds a git repository is quarantined first, not deleted.
-- **The work ledger.** `src/kiro_crew/work_ledger.py` stores items per
-  conductor; `src/kiro_crew/mcp_work.py` serves `work_brief`, `work_report`,
+- **The work ledger.** `src/aj_crew/work_ledger.py` stores items per
+  conductor; `src/aj_crew/mcp_work.py` serves `work_brief`, `work_report`,
   `work_ledger_read`, `work_ledger_record`, `work_ledger_rebuild` over
   `/api/work-ledger/*`, also MCP-only. A worker is found by its **binding**
   (`binding_path` in `work_ledger_store.py`, keyed by the worker's own session
@@ -118,7 +118,7 @@ Six decisions:
   `work_ledger_writes.py`). One ledger entry is at most 64 KB
   (`MAX_ENTRY_BYTES` in `crew_log/schema.py`).
 - **Wakes.** `WORK_WAKE_STATUSES` = `done`, `blocked`, `question`
-  (`src/kiro_crew/work_vocab.py`). Both `conductor_wake.py` (the push) and
+  (`src/aj_crew/work_vocab.py`). Both `conductor_wake.py` (the push) and
   `ledger_wake.py` (the gate) read that one tuple. `progress` wakes nobody, and
   neither does a chat reply that writes no report.
 
@@ -350,7 +350,7 @@ The seed names what the worker needs and nothing else:
 | `branch` | the branch to create or resume; new per binding (§5b) |
 | `handoff` | earlier workers' summaries and branches (§3b) |
 
-The worker clones into its own `KIROCREW_SCRATCH`, works there, pushes its
+The worker clones into its own `AJCREW_SCRATCH`, works there, pushes its
 branch, and reports `progress` after each step that changed the branch. A
 replacement can resume from the pushed branch (§5b). Before it reports `done`
 the worker deletes the clone. The scratch sweep's quarantine stays the backstop

@@ -18,17 +18,17 @@ from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401
 from acp_runtime_helpers import _make_runtime
 from test_update_provider import _UNALLOCATABLE_PID
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import ACP_BACKEND_KIRO, METHOD_SESSION_LOAD
-from kiro_crew.testing.wait import finished
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import ACP_BACKEND_KIRO, METHOD_SESSION_LOAD
+from aj_crew.testing.wait import finished
 
 _ITEM = "it_0badc0de"
 
 
 def _guard():
-    return importlib.import_module("kiro_crew.acp.batch_guard")
+    return importlib.import_module("aj_crew.acp.batch_guard")
 
 
 @pytest.fixture
@@ -133,11 +133,11 @@ async def test_a_runtime_load_marks_the_handle_window_resumed(monkeypatch):
 
     async def _fake_send(method, params, timeout=None):
         if method == METHOD_SESSION_LOAD:
-            return {"modes": {"currentModeId": "kirocrew"}}
+            return {"modes": {"currentModeId": "ajcrew"}}
         return {}
 
     monkeypatch.setattr(rt, "_send_and_await", _fake_send)
     handle = await rt.load_session(
-        "/home/u/.kiro/sessions/cli/sid-123.json", "sid-123", cwd="/work", agent="kirocrew"
+        "/home/u/.kiro/sessions/cli/sid-123.json", "sid-123", cwd="/work", agent="ajcrew"
     )
     assert handle._batch_window.seen.resumed is True

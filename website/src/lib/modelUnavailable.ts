@@ -9,7 +9,7 @@
  * Both carriers are read, as for the other error kinds: the live broadcast
  * ships `kind`, a rebuilt transcript `meta.kind`. Mirrors
  * `is_model_unavailable_row` in
- * `src/kiro_crew/dashboard/state_parts/transcript_rows.py`.
+ * `src/aj_crew/dashboard/state_parts/transcript_rows.py`.
  */
 export const MODEL_UNAVAILABLE_KIND = 'model_unavailable'
 

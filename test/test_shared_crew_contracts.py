@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.shared_crew import SCHEMA_VERSION, ContractError
-from kiro_crew.shared_crew.admission import (
+from aj_crew.shared_crew import SCHEMA_VERSION, ContractError
+from aj_crew.shared_crew.admission import (
     CAPACITY_HOLDING,
     TASKQ_STATE_MAP,
     TERMINAL,
@@ -32,14 +32,14 @@ from kiro_crew.shared_crew.admission import (
     is_legal_transition,
     retry_after_header,
 )
-from kiro_crew.shared_crew.collab import (
+from aj_crew.shared_crew.collab import (
     DecisionKind,
     DecisionState,
     ResolveOutcome,
     SharedDecision,
     classify_response,
 )
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew.contracts import (
     SESSION_ATTRIBUTION_META_KEY,
     UNKNOWN_PRINCIPAL_ID,
     ActionOutcome,
@@ -62,7 +62,7 @@ from kiro_crew.shared_crew.contracts import (
     principal_id_for,
     principal_or_unknown,
 )
-from kiro_crew.taskq import model as taskq_model
+from aj_crew.taskq import model as taskq_model
 
 REPO = Path(__file__).resolve().parent.parent
 ALICE = Principal(
@@ -439,7 +439,7 @@ def test_frontend_preview_gate_reads_the_key_capabilities_send(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The dashboard's Shared Crew preview gate reads the exact key the capabilities body sends."""
-    from kiro_crew.shared_crew import capabilities, preview
+    from aj_crew.shared_crew import capabilities, preview
 
     monkeypatch.setattr(preview, "preview_enabled", lambda: True)
     body = capabilities.aggregate_capabilities().to_dict()

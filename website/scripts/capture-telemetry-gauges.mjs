@@ -1,7 +1,7 @@
 /**
  * Screenshot harness for the Telemetry panel's new Gauges section.
  *
- * The PR adds kirocrew.process.* observable gauges; the API reports them as
+ * The PR adds ajcrew.process.* observable gauges; the API reports them as
  * {kind: "gauge", latest} and the panel renders them under a Gauges heading
  * (previously every non-histogram row was folded under Counters and displayed
  * as 0). This captures the Instruments card with realistic gauge + counter +
@@ -44,19 +44,19 @@ const telemetry = {
   context: null,
   cost: null,
   other: [
-    { name: 'kirocrew.mcp.backend.acquire.duration', kind: 'histogram', ...stat({ count: 1134 }) },
-    { name: 'kirocrew.mcp.warm_pool.acquire', kind: 'counter', total: 1134,
+    { name: 'ajcrew.mcp.backend.acquire.duration', kind: 'histogram', ...stat({ count: 1134 }) },
+    { name: 'ajcrew.mcp.warm_pool.acquire', kind: 'counter', total: 1134,
       by_attr: { 'result=hit': 1031, 'result=miss': 103 } },
     // The new process gauges — point-in-time readings, `latest` not `total`.
-    { name: 'kirocrew.process.threads.python', kind: 'gauge', latest: 49, by_attr: {} },
-    { name: 'kirocrew.process.threads.os', kind: 'gauge', latest: 96, by_attr: {} },
-    { name: 'kirocrew.process.open_fds', kind: 'gauge', latest: 144, by_attr: {} },
+    { name: 'ajcrew.process.threads.python', kind: 'gauge', latest: 49, by_attr: {} },
+    { name: 'ajcrew.process.threads.os', kind: 'gauge', latest: 96, by_attr: {} },
+    { name: 'ajcrew.process.open_fds', kind: 'gauge', latest: 144, by_attr: {} },
     // Multi-process window: the API keys gauge samples per exporting PID so
     // no process masquerades as another; the panel renders the breakdown.
-    { name: 'kirocrew.process.memory.rss_bytes', kind: 'gauge', latest: 4402341888,
+    { name: 'ajcrew.process.memory.rss_bytes', kind: 'gauge', latest: 4402341888,
       by_attr: { 'pid=5346': 4402341888, 'pid=9121': 287309824 } },
-    { name: 'kirocrew.process.memory.peak_rss_bytes', kind: 'gauge', latest: 4617089024, by_attr: {} },
-    { name: 'kirocrew.process.cpu.seconds', kind: 'counter', total: 5123.4, by_attr: {} },
+    { name: 'ajcrew.process.memory.peak_rss_bytes', kind: 'gauge', latest: 4617089024, by_attr: {} },
+    { name: 'ajcrew.process.cpu.seconds', kind: 'counter', total: 5123.4, by_attr: {} },
   ],
 }
 
@@ -92,9 +92,9 @@ async function main() {
   await page.waitForTimeout(1500)
 
   // The Instruments card carries histograms + Counters + the new Gauges section.
-  const gauges = page.getByText('kirocrew.process.threads.os')
+  const gauges = page.getByText('ajcrew.process.threads.os')
   await gauges.waitFor({ timeout: 10000 })
-  const card = page.locator('text=kirocrew.process.threads.os').locator(
+  const card = page.locator('text=ajcrew.process.threads.os').locator(
     'xpath=ancestor::div[contains(@class,"mb-4")][1]',
   )
   await card.screenshot({ path: `${OUT}/instruments-with-gauges.png` })

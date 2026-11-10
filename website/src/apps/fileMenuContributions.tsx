@@ -147,7 +147,7 @@ export function FileMenuItemLabel({ item }: { item: ContributedFileMenuItem }) {
       {' '}
       {/* HOST-owned framing around the app's identifier, from the catalog. The bare
           identifier is unspoofable as a host WORD (kebab-case only), but nothing stops an
-          app installing as `kiro-crew`, and on its own that still reads as core. The
+          app installing as `aj-crew`, and on its own that still reads as core. The
           word around it is core's, in the reader's language, so the row states who owns
           it rather than leaving the reader to infer it from a slug.
           Shrinkable and truncating rather than `shrink-0`: `KEBAB_RE` bounds the app
@@ -301,7 +301,7 @@ function readItem(app: FileMenuAppRecord, raw: unknown): ContributedFileMenuItem
   // The attribution, and it comes from `name` -- NEVER `displayName`.
   //
   // `displayName` is free text the app chooses, so as provenance it can claim to be
-  // anything, the host included: a manifest saying `displayName: "Kiro Crew"` rendered a
+  // anything, the host included: a manifest saying `displayName: "Aj Crew"` rendered a
   // row that read as native, and the reader clicked it believing core was handling their
   // file. `name` is the install identity and `KEBAB_RE` constrains it to
   // `[a-z0-9]` plus single hyphens, so it cannot spell a host word with a space or a

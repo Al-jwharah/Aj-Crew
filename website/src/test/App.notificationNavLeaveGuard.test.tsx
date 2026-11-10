@@ -29,7 +29,7 @@ vi.mock('../pages/ChatPage', () => ({ default: () => <div data-testid="chat-page
 vi.mock('../pages/SystemPage', () => ({ default: () => null }))
 vi.mock('../pages/ProjectsPage', () => ({ default: () => null }))
 vi.mock('../pages/LogsPage', () => ({ default: () => null }))
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => null }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => null }))
 vi.mock('../pages/NotificationsPage', () => ({ default: () => <div data-testid="inbox-page">inbox</div> }))
 vi.mock('../pages/SchedulePage', () => ({ default: () => <div data-testid="schedule-page">schedule</div> }))
 // The page at risk, with the REAL SidePanelLayout inside it: the pane is mounted
@@ -67,7 +67,7 @@ vi.mock('../pages/CapabilitiesPage', () => {
   return { default: CapabilitiesPageStub }
 })
 vi.mock('../hooks/useWebSocket', () => ({ useWebSocket: () => ({ subscribeLogs: () => {} }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'kirocrew' }], defaultAgent: 'kirocrew' })) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'ajcrew' }], defaultAgent: 'ajcrew' })) }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span>, Lightbox: () => null }))
 // Absent from the mock on purpose in every other case (so a dispatched ack

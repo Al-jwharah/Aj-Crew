@@ -29,17 +29,17 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.mcp_gateway import gatewayd as gw
-from kiro_crew.mcp_gateway.backend import (
+from aj_crew.mcp_gateway import gatewayd as gw
+from aj_crew.mcp_gateway.backend import (
     _RECYCLE_EXEMPT_METHODS,
     Backend,
     BackendGone,
     _PendingRequest,
     has_recyclable_in_flight,
 )
-from kiro_crew.mcp_gateway.pool import BackendUnavailable, PoolAtCapacity, PoolKey
-from kiro_crew.mcp_gateway.prewarm import HotKeyStore
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.mcp_gateway.pool import BackendUnavailable, PoolAtCapacity, PoolKey
+from aj_crew.mcp_gateway.prewarm import HotKeyStore
+from aj_crew.testing.wait import async_wait_until, await_until
 
 pytestmark = pytest.mark.xdist_group("mcp_gateway")
 
@@ -274,10 +274,10 @@ class TestControlFrames:
         spec's ``mcp_target_env``. Without this field the adopter cannot tell a
         daemon that predates a ``stub_servers`` change from a current one, which
         is how a stale daemon silently removed a whole server's tools."""
-        monkeypatch.setenv("KIROCREW_MCP_TARGET_KIROCREW_CORE", "kirocrew mcp-core")
+        monkeypatch.setenv("AJCREW_MCP_TARGET_AJCREW_CORE", "ajcrew mcp-core")
         writer = _FakeWriter()
         await _handle(_ScriptedReader({"type": "ping"}), writer, _fake_pool())
-        assert "KIROCREW_CORE" in writer.frames()[0]["targets"]
+        assert "AJCREW_CORE" in writer.frames()[0]["targets"]
 
     @pytest.mark.asyncio
     async def test_stats_merges_the_warm_pool_hit_tally(self, peer_ok, monkeypatch):
@@ -333,8 +333,8 @@ class TestControlFrames:
     async def test_app_call_is_refused_and_audited_when_the_feature_is_off(
         self, peer_ok, monkeypatch
     ):
-        from kiro_crew.mcp_gateway import app_call as app_call_mod
-        from kiro_crew.mcp_gateway import backend as backend_mod
+        from aj_crew.mcp_gateway import app_call as app_call_mod
+        from aj_crew.mcp_gateway import backend as backend_mod
 
         monkeypatch.setattr(backend_mod, "_mcp_apps_enabled", lambda: False)
         audits: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
@@ -362,8 +362,8 @@ class TestControlFrames:
 
     @pytest.mark.asyncio
     async def test_app_call_is_forwarded_when_the_feature_is_on(self, peer_ok, monkeypatch):
-        from kiro_crew.mcp_gateway import app_call as app_call_mod
-        from kiro_crew.mcp_gateway import backend as backend_mod
+        from aj_crew.mcp_gateway import app_call as app_call_mod
+        from aj_crew.mcp_gateway import backend as backend_mod
 
         monkeypatch.setattr(backend_mod, "_mcp_apps_enabled", lambda: True)
         handled = AsyncMock(return_value={"type": "app-call-result", "ok": True})
@@ -410,7 +410,7 @@ class TestControlFrames:
         itself with the prefix would inherit both exemptions and be served tools
         the model is meant not to see. The prefix is the gateway's own; refuse it
         at registration."""
-        from kiro_crew.mcp_gateway.backend import INTERNAL_STUB_PREFIXES
+        from aj_crew.mcp_gateway.backend import INTERNAL_STUB_PREFIXES
 
         assert INTERNAL_STUB_PREFIXES  # a silently empty tuple would pass vacuously
         for prefix in INTERNAL_STUB_PREFIXES:
@@ -434,7 +434,7 @@ class TestControlFrames:
         record of -- the operator sees a denial that never happened rather than
         one that did.
         """
-        from kiro_crew.mcp_gateway.backend import INTERNAL_STUB_PREFIXES
+        from aj_crew.mcp_gateway.backend import INTERNAL_STUB_PREFIXES
 
         audited: list[str] = []
         monkeypatch.setattr(gw, "_audit_reserved_stub_prefix_denied", audited.append)
@@ -1126,7 +1126,7 @@ class TestDisconnectTeardown:
         backend = _fake_backend()
         monkeypatch.setattr(gw, "_acquire_backend", AsyncMock(return_value=(backend, True)))
         pool = _fake_pool(release_exclusive=AsyncMock(side_effect=RuntimeError("pool wedged")))
-        from kiro_crew.mcp_gateway.daemon import connection as conn_mod
+        from aj_crew.mcp_gateway.daemon import connection as conn_mod
 
         name = conn_mod.logger.name
         # The handler must return normally: a teardown-time failure here would

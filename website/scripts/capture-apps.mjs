@@ -73,16 +73,16 @@ const A = (name, displayName, author, description, tags, extra = {}) => ({
   installed: false, updateAvailable: false, ...extra,
 })
 const registryApps = [
-  A('code-review-sage', 'Code Review Sage', 'kirocrew', 'Self-evolving deep code reviewer for GitHub PRs with a prioritized focus report.', ['code-review', 'github'], { featured: 1, version: '3.2.0' }),
-  A('oncall-radar', 'Oncall Radar', 'kirocrew', 'Oncall operations dashboard — track tickets, pipelines, risks, MCMs, shift handoffs and maintain runbooks.', ['oncall', 'tickets'], { featured: 2, version: '2.1.0' }),
-  A('auto-research', 'Research Lab', 'kirocrew', 'Autonomous research campaigns powered by autonudge — pre-flight validation, live findings, stagnation detection.', ['research', 'autonudge'], { featured: 3, installed: true, enabled: true, version: '1.4.0' }),
-  A('issue-radar', 'Issue Radar', 'kirocrew', 'An issue triage assistant that remembers. Browse, filter, and triage GitHub issues with AI-suggested labels.', ['github', 'issue-triage'], { _registry: REG }),
+  A('code-review-sage', 'Code Review Sage', 'ajcrew', 'Self-evolving deep code reviewer for GitHub PRs with a prioritized focus report.', ['code-review', 'github'], { featured: 1, version: '3.2.0' }),
+  A('oncall-radar', 'Oncall Radar', 'ajcrew', 'Oncall operations dashboard — track tickets, pipelines, risks, MCMs, shift handoffs and maintain runbooks.', ['oncall', 'tickets'], { featured: 2, version: '2.1.0' }),
+  A('auto-research', 'Research Lab', 'ajcrew', 'Autonomous research campaigns powered by autonudge — pre-flight validation, live findings, stagnation detection.', ['research', 'autonudge'], { featured: 3, installed: true, enabled: true, version: '1.4.0' }),
+  A('issue-radar', 'Issue Radar', 'ajcrew', 'An issue triage assistant that remembers. Browse, filter, and triage GitHub issues with AI-suggested labels.', ['github', 'issue-triage'], { _registry: REG }),
   A('secretary', 'Secretary', 'zezhexu', 'Slack inbox manager — triage, draft replies, and digest channels.', ['slack', 'inbox'], { _registry: REG, installed: true, enabled: true, updateAvailable: true, installedVersion: '1.0.0', version: '1.1.0', lifecycle: 'gateway', origin: 'registry' }),
   A('taskkeeper', 'TaskKeeper', 'zezhexu', 'Personal task manager — triage Slack and email into actionable tasks with To-Do sync.', ['tasks', 'outlook'], { _registry: REG }),
   A('mimir', 'Mimir', 'zezhexu', 'Unified task aggregation across Taskei, SIM, and Asana.', ['tasks', 'aggregation'], { _registry: REG }),
   A('team-manager', 'Team Manager', 'zezhexu', 'Generate periodic team work reports and compare products with source-cited evidence.', ['reports', 'team'], { _registry: REG }),
-  A('workflows', 'Workflows', 'kirocrew', 'Author, run, and watch dynamic workflows — agent-authored Python scripts that orchestrate KiroCrew agents.', ['workflows', 'automation'], { installed: true, enabled: true }),
-  A('code-reviewer', 'Code Reviewer', 'kirocrew', 'Review local git changes with a CRUX-like diff viewer, inline comments, and an IntelliJ-style Git panel.', ['code-review', 'git'], { _registry: REG }),
+  A('workflows', 'Workflows', 'ajcrew', 'Author, run, and watch dynamic workflows — agent-authored Python scripts that orchestrate AjCrew agents.', ['workflows', 'automation'], { installed: true, enabled: true }),
+  A('code-reviewer', 'Code Reviewer', 'ajcrew', 'Review local git changes with a CRUX-like diff viewer, inline comments, and an IntelliJ-style Git panel.', ['code-review', 'git'], { _registry: REG }),
   A('writing-review', 'WritingReview', 'zezhexu', 'Multi-scanner writing review for documents. Upload a doc, supply audience and tone context, and get findings grouped by scanner.', ['writing', 'review'], { _registry: REG }),
   A('auto-improvement', 'Auto-Improvement', 'zezhexu', 'Analyzes a target codebase, designs a calibrated metric, then runs keep-or-revert performance loops.', ['performance', 'code-quality'], { _registry: REG }),
 ]
@@ -93,7 +93,7 @@ const I = (name, displayName, origin, over = {}) => {
     name, displayName, version: '1.0.0', enabled: true,
     installedAt: '2026-07-20T10:00:00Z', origin, resources: 'gateway',
     lifecycle: origin === 'builtin' ? 'locked' : 'gateway',
-    manifest: { name, version: '1.0.0', displayName, description: src.description || '', author: src.author || 'kirocrew', tags: src.tags || [] },
+    manifest: { name, version: '1.0.0', displayName, description: src.description || '', author: src.author || 'ajcrew', tags: src.tags || [] },
     ...over,
   }
 }
@@ -107,7 +107,7 @@ const installedApps = [
   I('aws-control', 'AWS Control', 'builtin', {
     enabled: false,
     manifest: {
-      name: 'aws-control', version: '1.0.0', displayName: 'AWS Control', author: 'kirocrew',
+      name: 'aws-control', version: '1.0.0', displayName: 'AWS Control', author: 'ajcrew',
       description: 'Your cloud accounts, in plain language, with an S3-backed drive.',
       tags: ['aws', 'storage'],
       ui: { pages: [{ route: '/aws-control', label: 'AWS Control', icon: 'Cloud' }] },
@@ -118,7 +118,7 @@ const installedApps = [
   I('channels', 'Channels', 'builtin', {
     enabled: false,
     manifest: {
-      name: 'channels', version: '1.0.0', displayName: 'Channels', author: 'kirocrew',
+      name: 'channels', version: '1.0.0', displayName: 'Channels', author: 'ajcrew',
       description: 'Messaging channel configuration.', tags: ['channels'], hidden: true,
     },
   }),
@@ -178,7 +178,7 @@ await page.route('**/api/**', async route => {
   })
   if (path === '/api/themes') return json(route, { themes: [], installed: [] })
   if (path === '/api/status') return json(route, status)
-  if (path === '/api/dashboard/branding') return json(route, { bot_name: 'Kiro Crew', avatar: '' })
+  if (path === '/api/dashboard/branding') return json(route, { bot_name: 'Aj Crew', avatar: '' })
   if (path === '/api/theme/boot') return json(route, { mode: 'dark', theme: '' })
   if (path === '/api/notifications') return json(route, { notifications: [], unread: 0 })
   if (path === '/api/chat/slots') return json(route, [])

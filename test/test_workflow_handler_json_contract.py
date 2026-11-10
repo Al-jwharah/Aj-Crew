@@ -9,7 +9,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers.workflows import (
+from aj_crew.dashboard.handlers.workflows import (
     api_workflow_author,
     api_workflow_run,
     api_workflow_run_intent,
@@ -176,7 +176,7 @@ async def test_runs_list_is_compact_and_detail_carries_result() -> None:
     Both read endpoints redact + serialize on a worker thread; the response
     must still be well-formed JSON.
     """
-    from kiro_crew.dashboard.handlers.workflows import (
+    from aj_crew.dashboard.handlers.workflows import (
         api_workflow_run_get,
         api_workflow_runs,
     )
@@ -263,7 +263,7 @@ async def test_run_rejects_bad_folder_before_admission_reserves_capacity() -> No
     """
     from unittest.mock import patch
 
-    import kiro_crew.dashboard.handlers.workflows as wf
+    import aj_crew.dashboard.handlers.workflows as wf
 
     start = AsyncMock(return_value={"run_id": "wf_never"})
     app = web.Application()
@@ -299,7 +299,7 @@ async def test_run_refuses_mate_home_folder_before_admission() -> None:
     slot is leaked and the run never starts."""
     from unittest.mock import patch
 
-    import kiro_crew.dashboard.handlers.workflows as wf
+    import aj_crew.dashboard.handlers.workflows as wf
 
     start = AsyncMock(return_value={"run_id": "wf_never"})
     folders = [

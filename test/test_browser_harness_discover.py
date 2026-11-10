@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.browser_harness import discover
-from kiro_crew.browser_harness.discover import BrowserChoice, HostFacts, choose_browser
+from aj_crew.browser_harness import discover
+from aj_crew.browser_harness.discover import BrowserChoice, HostFacts, choose_browser
 
 _CHROME = Path("/apps/chrome")
 _EDGE = Path("/apps/msedge.exe")

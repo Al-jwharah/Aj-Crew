@@ -30,11 +30,11 @@ from cron_reaper_helpers import (
     _torn_down_by_the_run,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.cron import _JOB_TIMEOUT_SECS, CronService, _RunClaim
-from kiro_crew.cron_history import CronHistoryStore
-from kiro_crew.process_identity import ProcessHandle
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import platform_compat
+from aj_crew.cron import _JOB_TIMEOUT_SECS, CronService, _RunClaim
+from aj_crew.cron_history import CronHistoryStore
+from aj_crew.process_identity import ProcessHandle
+from aj_crew.testing.wait import async_wait_until
 
 #: Every cron reaper suite pins a healthy free-memory reading (see
 #: ``ample_host_free_memory``): ``test_cron_reaper.py`` fires cron jobs through the
@@ -67,16 +67,16 @@ class TestReaperRecordsAFailedSigkill:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 side_effect=refusal,
             ),
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
         ):
             await svc._force_reap("refused1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -106,7 +106,7 @@ class TestReaperRecordsAFailedSigkill:
         holds the total to ``MAX_ERROR_DETAIL_LEN``, the reason keeping at least
         ``KILL_FAILURE_RESERVE_LEN`` and the run's text trimmed to make room.
         """
-        from kiro_crew.process_identity import (
+        from aj_crew.process_identity import (
             KILL_FAILURE_RESERVE_LEN,
             MAX_ERROR_DETAIL_LEN,
             with_kill_failure,
@@ -121,17 +121,17 @@ class TestReaperRecordsAFailedSigkill:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 side_effect=PermissionError(blob),
             ),
             patch(
-                "kiro_crew.platform_compat.kill_pid_async",
+                "aj_crew.platform_compat.kill_pid_async",
                 AsyncMock(side_effect=PermissionError(blob)),
             ),
         ):
@@ -165,17 +165,17 @@ class TestReaperRecordsAFailedSigkill:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 side_effect=PermissionError("[Errno 1] Operation not permitted"),
             ),
             patch(
-                "kiro_crew.platform_compat.kill_pid_async",
+                "aj_crew.platform_compat.kill_pid_async",
                 AsyncMock(side_effect=PermissionError("[Errno 1] Operation not permitted")),
             ),
         ):
@@ -194,14 +194,14 @@ class TestReaperRecordsAFailedSigkill:
         _session_with_pid(svc, "cron:probe1", 4444)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID),
             patch(
-                "kiro_crew.acp.client._get_child_pids",
+                "aj_crew.acp.client._get_child_pids",
                 side_effect=RuntimeError("cannot schedule new futures after shutdown"),
             ),
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
         ):
             await svc._force_reap("probe1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -216,12 +216,12 @@ class TestReaperRecordsAFailedSigkill:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             await svc._force_reap("killed1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -237,17 +237,17 @@ class TestReaperRecordsAFailedSigkill:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 side_effect=ProcessLookupError("[Errno 3] No such process"),
             ),
             patch(
-                "kiro_crew.platform_compat.kill_pid_async",
+                "aj_crew.platform_compat.kill_pid_async",
                 AsyncMock(side_effect=ProcessLookupError("[Errno 3] No such process")),
             ),
         ):
@@ -269,11 +269,11 @@ class TestReaperRecordsAFailedSigkill:
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 side_effect=PermissionError("[Errno 1] Operation not permitted"),
             ),
             patch(
-                "kiro_crew.platform_compat.kill_pid_async",
+                "aj_crew.platform_compat.kill_pid_async",
                 AsyncMock(side_effect=ProcessLookupError("[Errno 3] No such process")),
             ),
         ):
@@ -303,10 +303,10 @@ class TestReaperRecordsAFailedSigkill:
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 side_effect=PermissionError("[Errno 1] Operation not permitted"),
             ),
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock(return_value=True)),
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock(return_value=True)),
         ):
             assert (
                 await svc._sigkill_session("cron:fallback", _handle_of(svc, "cron:fallback"))
@@ -333,12 +333,12 @@ class TestReaperRecordsAFailedSigkill:
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_tree_pinned",
+                "aj_crew.platform_compat.kill_process_tree_pinned",
                 side_effect=PermissionError("Access is denied."),
             ),
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
             patch(
-                "kiro_crew.platform_compat.kill_pid_async", AsyncMock(return_value=True)
+                "aj_crew.platform_compat.kill_pid_async", AsyncMock(return_value=True)
             ) as pid_kill,
         ):
             failure = await svc._sigkill_session(
@@ -371,12 +371,12 @@ class TestReaperRecordsAFailedSigkill:
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock(return_value=True)),
-            patch("kiro_crew.platform_compat.pgroup_exists", return_value=True) as group,
-            patch("kiro_crew.platform_compat.windows_tree_cleanup_pending", return_value=False),
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock(return_value=True)),
+            patch("aj_crew.platform_compat.pgroup_exists", return_value=True) as group,
+            patch("aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=False),
             patch(
-                "kiro_crew.platform_compat.kill_process_tree_pinned", return_value=False
+                "aj_crew.platform_compat.kill_process_tree_pinned", return_value=False
             ) as drain,
         ):
             assert (
@@ -403,7 +403,7 @@ class TestReaperRecordsAFailedSigkill:
 
         assert svc._session_process_handles("cron:nopid") == []
         assert svc._session_process_handles("cron:pid1") == []
-        with patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill:
+        with patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill:
             assert await svc._sigkill_session("cron:absent", None) is None
             assert await svc._sigkill_session("cron:absent", no_pid) is None
             assert await svc._sigkill_sessions("cron:nopid", []) is None
@@ -428,7 +428,7 @@ class TestReaperRecordsAFailedSigkill:
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             handle = _handle_of(svc, "cron:succ")
             # The reset popped the run's session; a successor process now holds the key.
@@ -460,12 +460,12 @@ class TestReaperRecordsAFailedSigkill:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             await svc._force_reap("popped1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -487,11 +487,11 @@ class TestReaperRecordsAFailedSigkill:
         _session_with_pid(svc, "cron:root", 5252)
 
         with (
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID),
             _isolated_leader(),
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             assert await svc._sigkill_session("cron:root", _handle_of(svc, "cron:root")) is None
 
@@ -508,11 +508,11 @@ class TestReaperRecordsAFailedSigkill:
         client._child_pids = {6161: ("111", b"node")}
 
         with (
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[7171]) as probe,
-            patch("kiro_crew.acp.client._kill_escaped_children") as sweep,
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="9999999"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[7171]) as probe,
+            patch("aj_crew.acp.client._kill_escaped_children") as sweep,
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="9999999"),
             _group_gone(),
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
         ):
             assert (
                 await svc._sigkill_session("cron:recycled", _handle_of(svc, "cron:recycled"))
@@ -535,14 +535,14 @@ class TestReaperRecordsAFailedSigkill:
         client._start_time = None
 
         with (
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=None),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=None),
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
         ):
             unread = await svc._sigkill_session("cron:unread", _handle_of(svc, "cron:unread"))
-            with patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID):
+            with patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID):
                 no_record = await svc._sigkill_session(
                     "cron:norecord", _handle_of(svc, "cron:norecord")
                 )
@@ -561,12 +561,12 @@ class TestReaperRecordsAFailedSigkill:
         _session_with_pid(svc, "cron:exited", 5656)
 
         with (
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]) as probe,
-            patch("kiro_crew.acp.client._kill_escaped_children") as sweep,
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=None),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]) as probe,
+            patch("aj_crew.acp.client._kill_escaped_children") as sweep,
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=None),
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
             _group_gone(),
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
         ):
             assert await svc._sigkill_session("cron:exited", _handle_of(svc, "cron:exited")) is None
 
@@ -594,19 +594,19 @@ class TestReaperRecordsAFailedSigkill:
             return {6161: None if swept else "111", 8181: "888"}.get(pid)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             patch(
-                "kiro_crew.acp.client._get_child_pids",
+                "aj_crew.acp.client._get_child_pids",
                 side_effect=lambda pid, *_: [8181] if pid == 6161 else [],
             ) as walk,
             patch(
-                "kiro_crew.acp.client._kill_escaped_children",
+                "aj_crew.acp.client._kill_escaped_children",
                 side_effect=lambda pids: swept.append(dict(pids)),
             ),
-            patch("kiro_crew.platform_compat.get_process_start_id", side_effect=_start_ids),
-            patch("kiro_crew.platform_compat.pid_exists", side_effect=lambda pid: pid != 5151),
-            patch("kiro_crew.platform_compat.pid_is_zombie", return_value=False),
+            patch("aj_crew.platform_compat.get_process_start_id", side_effect=_start_ids),
+            patch("aj_crew.platform_compat.pid_exists", side_effect=lambda pid: pid != 5151),
+            patch("aj_crew.platform_compat.pid_is_zombie", return_value=False),
             _group_gone(),
         ):
             await svc._force_reap("escaped1", _JOB_TIMEOUT_SECS + 60, claim=claim)
@@ -638,19 +638,19 @@ class TestReaperRecordsAFailedSigkill:
         handle = _handle_of(svc, "cron:walk")
 
         with (
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[7272]) as probe,
+            patch("aj_crew.acp.client._get_child_pids", return_value=[7272]) as probe,
             patch(
-                "kiro_crew.acp.client._capture_child_records", return_value={7272: ("333", b"sh")}
+                "aj_crew.acp.client._capture_child_records", return_value={7272: ("333", b"sh")}
             ),
-            patch("kiro_crew.acp.client._kill_escaped_children") as sweep,
+            patch("aj_crew.acp.client._kill_escaped_children") as sweep,
             # The root's two reads, then the post-sweep read of the recorded
             # child: gone (its start id does not read back).
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=_start_id_reads({5757: [_START_ID, "9999999"], 6262: None}),
             ),
             _group_gone(),
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
         ):
             failure = await svc._sigkill_session("cron:walk", handle)
 
@@ -680,15 +680,15 @@ class TestReaperRecordsAFailedSigkill:
         handle = _handle_of(svc, "cron:walk2")
 
         with (
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[6363]),
-            patch("kiro_crew.acp.client._capture_child_records") as capture,
-            patch("kiro_crew.acp.client._kill_escaped_children") as sweep,
+            patch("aj_crew.acp.client._get_child_pids", return_value=[6363]),
+            patch("aj_crew.acp.client._capture_child_records") as capture,
+            patch("aj_crew.acp.client._kill_escaped_children") as sweep,
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=_start_id_reads({5858: [_START_ID, "9999999"], 6363: None}),
             ),
             _group_gone(),
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
         ):
             assert await svc._sigkill_session("cron:walk2", handle) is None
 
@@ -716,12 +716,12 @@ class TestReaperRecordsAFailedSigkill:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             await svc._force_reap("unmapped1", elapsed=_JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -746,12 +746,12 @@ class TestReaperRecordsAFailedSigkill:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             await svc._force_reap("torn1", elapsed=_JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -778,12 +778,12 @@ class TestReaperRecordsAFailedSigkill:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             await svc._force_reap("torn3", elapsed=_JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -806,13 +806,13 @@ class TestReaperRecordsAFailedSigkill:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 side_effect=ValueError(
                     "kill_process_group: refusing broadcast/self process group 6464"
                 ),
@@ -834,8 +834,8 @@ class TestReaperRecordsAFailedSigkill:
         The reap's cancel of the run task ends the hung teardown, whose scope releases the
         torn-down table entry.
         """
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
         def _factory(
             session_key: Any = None, agent: Any = None, channel_id: Any = None, **_: Any
@@ -850,7 +850,7 @@ class TestReaperRecordsAFailedSigkill:
             provider.runtime_abort_target = lambda: None
             return provider
 
-        mgr = SessionManager(KiroCrewConfig(), provider_factory=_factory)
+        mgr = SessionManager(AjCrewConfig(), provider_factory=_factory)
         provider, _, _ = await mgr.get_or_create("cron:real1")
         mgr.release("cron:real1")
         # Above the kernel's pid ceiling: even an unpatched probe cannot meet a
@@ -877,18 +877,18 @@ class TestReaperRecordsAFailedSigkill:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
             # The run's own teardown (``SessionLifecycle.reset``), resumed by the
             # reap's cancel, signals the pid it holds through its own seams.
             patch(
-                "kiro_crew.platform_compat.kill_process_tree_async", AsyncMock(return_value=True)
+                "aj_crew.platform_compat.kill_process_tree_async", AsyncMock(return_value=True)
             ) as teardown_tree_kill,
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock(return_value=True)),
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock(return_value=True)),
         ):
             # The run's own finally reset: pops the session, then hangs in the
             # provider shutdown. Reap only once it is IN the shutdown: the reap's
@@ -956,8 +956,8 @@ class TestReaperRecordsAFailedSigkill:
         A late completion cold-starts a successor whose reset also hangs. Every teardown in
         flight is retained, so a table keeping only the first would leave one standing.
         """
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
         def _factory(
             session_key: Any = None, agent: Any = None, channel_id: Any = None, **_: Any
@@ -972,7 +972,7 @@ class TestReaperRecordsAFailedSigkill:
             provider.runtime_abort_target = lambda: None
             return provider
 
-        mgr = SessionManager(KiroCrewConfig(), provider_factory=_factory)
+        mgr = SessionManager(AjCrewConfig(), provider_factory=_factory)
         hang = asyncio.Event()
 
         async def _hung_shutdown() -> None:
@@ -1008,16 +1008,16 @@ class TestReaperRecordsAFailedSigkill:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
             patch(
-                "kiro_crew.platform_compat.kill_process_tree_async", AsyncMock(return_value=True)
+                "aj_crew.platform_compat.kill_process_tree_async", AsyncMock(return_value=True)
             ),
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock(return_value=True)),
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock(return_value=True)),
         ):
             # The run's own finally reset pops its session and hangs; then a late
             # completion's successor is popped by ITS reset and hangs too.
@@ -1073,12 +1073,12 @@ class TestReaperRecordsAFailedSigkill:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             await svc._force_reap("survived1", elapsed=_JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -1097,13 +1097,13 @@ class TestReaperRecordsAFailedSigkill:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 side_effect=ValueError(
                     "kill_process_group: refusing broadcast/self process group 6060"
                 ),
@@ -1124,12 +1124,12 @@ class TestReaperRecordsAFailedSigkill:
         svc._sessions.reset = AsyncMock(return_value=True)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=None),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=None),
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
             _group_gone(),
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
         ):
             await svc._force_reap("gone1", elapsed=_JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -1152,12 +1152,12 @@ class TestReaperRecordsAFailedSigkill:
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID),
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
         ):
             await svc._force_reap("exited1", elapsed=_JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -1176,11 +1176,11 @@ class TestReaperRecordsAFailedSigkill:
         svc._sessions.reset = AsyncMock(return_value=True)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="9999999"),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="9999999"),
             _group_gone(),
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
         ):
             await svc._force_reap("recycled1", elapsed=_JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -1196,9 +1196,9 @@ class TestReaperRecordsAFailedSigkill:
         svc._sessions.reset = AsyncMock(return_value=False)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
         ):
             await svc._force_reap("nosess1", elapsed=_JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -1212,9 +1212,9 @@ class TestReaperRecordsAFailedSigkill:
         svc._sessions.reset = AsyncMock()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
         ):
             await svc._force_reap("reset1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 

@@ -19,11 +19,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.messaging.link import ChannelLink
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.messaging.link import ChannelLink
+from aj_crew.testing.wait import async_wait_until, await_until
 
-KEY = "discord:kirocrew:direct:42"
+KEY = "discord:ajcrew:direct:42"
 
 
 def _signed(link: ChannelLink) -> ChannelLink:
@@ -31,7 +31,7 @@ def _signed(link: ChannelLink) -> ChannelLink:
     carries its admission, or the notice ladder refuses the row."""
     import dataclasses
 
-    from kiro_crew.mirror_admission import sign_mirror_admission
+    from aj_crew.mirror_admission import sign_mirror_admission
 
     return dataclasses.replace(link, admission=sign_mirror_admission(KEY, link))
 
@@ -76,7 +76,7 @@ class _Transport:
 
 @pytest.fixture()
 def state(monkeypatch, tmp_path):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     return DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(),
@@ -89,7 +89,7 @@ def state(monkeypatch, tmp_path):
 def _permit_governance():
     """Permit the ladder's governance gate, which it imports at call time."""
     with patch(
-        "kiro_crew.platform.governance_profiles.vet_and_audit",
+        "aj_crew.platform.governance_profiles.vet_and_audit",
         return_value=SimpleNamespace(permitted=True),
     ):
         yield
@@ -270,10 +270,10 @@ class TestDelivery:
         state.channel_transports["discord"] = transport or _Transport(proactive=False)
 
         with patch(
-            "kiro_crew.platform.governance_profiles.vet_and_audit",
+            "aj_crew.platform.governance_profiles.vet_and_audit",
             return_value=SimpleNamespace(permitted=permit),
         ):
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.state"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.state"):
                 await state._notify_inbound_unbind(KEY, LINK, "entry_deleted")
 
         assert state.channel_transports["discord"].sent == []
@@ -372,8 +372,8 @@ class TestNoticeIsSafeAndHuman:
 
     def test_every_audited_reason_has_a_phrase(self) -> None:
         """A new reason constant without copy would fall back silently."""
-        from kiro_crew.dashboard.state import _INBOUND_UNBIND_WHY
-        from kiro_crew.messaging.link import UNBIND_REASON_USER_UNLINK, UNBIND_REASONS
+        from aj_crew.dashboard.state import _INBOUND_UNBIND_WHY
+        from aj_crew.messaging.link import UNBIND_REASON_USER_UNLINK, UNBIND_REASONS
 
         # user_unlink is never announced (the in-channel command already replied),
         # so it is the one reason that needs no phrase.
@@ -384,7 +384,7 @@ class TestNoticeIsSafeAndHuman:
         """A production gateway logs WARNING and above, so DEBUG is invisible."""
         state.channel_transports["discord"] = _Transport(fail=True)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.state"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.state"):
             with _permit_governance():
                 await state._notify_inbound_unbind(KEY, LINK, "dashboard_unlink")
 

@@ -35,7 +35,7 @@ const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 localStorage.setItem('mc-theme', theme === 'light' ? 'light' : 'dark')
 localStorage.setItem('mc-color-theme', 'kiro')
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 localStorage.setItem('mc-sidebar-lane', 'conductor')
 localStorage.setItem('mc-session-stale-collapse-ms', '0')
 localStorage.removeItem('mc-sidebar-conductor-expanded')
@@ -61,14 +61,14 @@ interface Row {
   source_links?: NonNullable<ChatSlot['source_links']>
 }
 type RowSeed = Partial<Row> & Pick<Row, 'key' | 'title' | 'last_ts' | 'last_message'>
-const row = (over: RowSeed): Row => ({ messages: 12, running: false, agent: 'kirocrew', ...over })
+const row = (over: RowSeed): Row => ({ messages: 12, running: false, agent: 'ajcrew', ...over })
 
 /** The member's own thread: what `ChatPage` never hands the sidebar. */
-const MEMBER = 'member-kirocrew-pipeline-conductor'
+const MEMBER = 'member-ajcrew-pipeline-conductor'
 const MEMBER_ROW: Row = row({
   key: MEMBER,
   title: 'Pipeline Work Focus On Issues',
-  agent: 'kirocrew-pipeline-conductor',
+  agent: 'ajcrew-pipeline-conductor',
   mode: 'member',
   surface: 'member',
   running: true,
@@ -84,17 +84,17 @@ const link = (n: number, ci: 'passed' | 'running' | 'failed') => ([
 /** What the chat page lists: the member's workers, plus one unrelated chat. */
 const LISTED: Row[] = [
   row({
-    key: 'chat-2124', title: 'issue-fix: #13957 — conflict, drive to green', agent: 'kirocrew-worker',
+    key: 'chat-2124', title: 'issue-fix: #13957 — conflict, drive to green', agent: 'ajcrew-worker',
     running: true, last_ts: at(40_000), last_message: 'Rebased on main; board is mid-flight.',
     parent: { slot: MEMBER, key: MEMBER }, source_links: link(13957, 'running'),
   }),
   row({
-    key: 'chat-2125', title: 'issue-fix: #13715 — conflict, drive to green', agent: 'kirocrew-worker',
+    key: 'chat-2125', title: 'issue-fix: #13715 — conflict, drive to green', agent: 'ajcrew-worker',
     last_ts: at(3 * MIN), last_message: 'Diagnosis block. Nothing changed. No push.',
     parent: { slot: MEMBER, key: MEMBER }, source_links: link(13715, 'passed'),
   }),
   row({
-    key: 'chat-2130', title: 'issue-fix: #13273 — conflict, drive to green', agent: 'kirocrew-worker',
+    key: 'chat-2130', title: 'issue-fix: #13273 — conflict, drive to green', agent: 'ajcrew-worker',
     needs_input: true, last_ts: at(7 * MIN), last_message: 'RULING: mask the apps tree from the cron fixture?',
     parent: { slot: MEMBER, key: MEMBER }, source_links: link(13273, 'failed'),
   }),
@@ -103,7 +103,7 @@ const LISTED: Row[] = [
     last_ts: at(12 * MIN), last_message: 'Loop 0/8 · W1 mockup dispatched.',
   }),
   row({
-    key: 'chat-2135', title: 'W1 editorial crew-panel template — mockup', agent: 'kirocrew-worker',
+    key: 'chat-2135', title: 'W1 editorial crew-panel template — mockup', agent: 'ajcrew-worker',
     last_ts: at(9 * MIN), last_message: 'Three directions drafted.',
     parent: { slot: 'chat-2134', key: 'chat-2134' },
   }),
@@ -128,11 +128,11 @@ function Harness() {
         unreadSlots={[]}
         history={[]}
         historyHasMore={false}
-        defaultAgent="kirocrew"
+        defaultAgent="ajcrew"
         installedAgents={[
-          { name: 'kirocrew', source: 'builtin' },
-          { name: 'kirocrew-worker', source: 'builtin' },
-          { name: 'kirocrew-pipeline-conductor', source: 'builtin' },
+          { name: 'ajcrew', source: 'builtin' },
+          { name: 'ajcrew-worker', source: 'builtin' },
+          { name: 'ajcrew-pipeline-conductor', source: 'builtin' },
         ]}
       />
     </div>

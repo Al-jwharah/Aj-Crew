@@ -28,7 +28,7 @@ import { CONNECTION_PROVIDERS } from '../connections/registry'
 export const OAUTH_CLIENTS_QUERY_KEY = ['connections', 'oauth-clients'] as const
 
 /** Repository docs are the runbook's home; the link resolves against main. */
-const RUNBOOK_BASE = 'https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/'
+const RUNBOOK_BASE = 'https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/guides/'
 
 /** `[data-setting-id]` the gallery card deep-links to for one provider. */
 export function oauthClientSettingId(slug: string): string {
@@ -36,7 +36,7 @@ export function oauthClientSettingId(slug: string): string {
 }
 
 function envName(slug: string, half: 'CLIENT_ID' | 'CLIENT_SECRET'): string {
-  return `KIROCREW_CONNECTIONS_${slug.toUpperCase().replace(/-/g, '_')}_${half}`
+  return `AJCREW_CONNECTIONS_${slug.toUpperCase().replace(/-/g, '_')}_${half}`
 }
 
 function CopyRedirectUri({ value }: { value: string }) {

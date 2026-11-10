@@ -30,10 +30,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.types import STOP_CLASS_CANCELLED, STOP_REASON_CANCELLED, STOP_REASON_END_TURN
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.types import STOP_CLASS_CANCELLED, STOP_REASON_CANCELLED, STOP_REASON_END_TURN
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.testing.wait import await_until
 
 
 def _mk_real_manager(**kwargs):  # type: ignore[no-untyped-def]
@@ -61,7 +61,7 @@ def _build_gw():  # type: ignore[no-untyped-def]
     ``__init__``) and a slack/dashboard-free routing surface so the wave digest
     lands on the patched cron-injection path.
     """
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     gw = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gw.sessions = MagicMock()
@@ -90,7 +90,7 @@ def _build_gw():  # type: ignore[no-untyped-def]
 def _init_and_get_done_cb(gw):  # type: ignore[no-untyped-def]
     captured_done = None
 
-    with patch("kiro_crew.slack.gateway.SubagentManager") as mock_cls:
+    with patch("aj_crew.slack.gateway.SubagentManager") as mock_cls:
 
         def capture_mgr(**kwargs):  # type: ignore[no-untyped-def]
             nonlocal captured_done
@@ -122,15 +122,15 @@ def _member(agent_id: str, *, total: int = 2) -> SubagentInfo:
 def _patches(stream_rv: str = "ok"):  # type: ignore[no-untyped-def]
     return (
         patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             AsyncMock(return_value=stream_rv),
         ),
         patch(
-            "kiro_crew.slack.gateway.redact_exfiltration_urls",
+            "aj_crew.slack.gateway.redact_exfiltration_urls",
             side_effect=lambda s: (s, False),
         ),
         patch(
-            "kiro_crew.slack.gateway.redact_credentials",
+            "aj_crew.slack.gateway.redact_credentials",
             side_effect=lambda s: (s, False),
         ),
     )
@@ -599,7 +599,7 @@ class TestOnlyTheTransitionArmsTheHold:
             consumed.append(done.id)
 
         mgr._on_done = _consumer
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = mgr.spawn(
                 "do work", parent_session_key="dashboard:p", batch_id="w1", batch_total=2
             )
@@ -649,7 +649,7 @@ class TestOnlyTheTransitionArmsTheHold:
             return await real_write(run_info, text, **kw)
 
         mgr._write_finished_result_off_loop = _ended_elsewhere  # type: ignore[method-assign]
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = mgr.spawn(
                 "do work", parent_session_key="dashboard:p", batch_id="w1", batch_total=2
             )

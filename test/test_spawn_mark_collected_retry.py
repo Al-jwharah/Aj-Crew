@@ -11,8 +11,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import mcp_core
-from kiro_crew.mcp_tools.spawn import _SubAgentsStep
+from aj_crew import mcp_core
+from aj_crew.mcp_tools.spawn import _SubAgentsStep
 
 _PATH = "/api/spawn/mark-collected"
 

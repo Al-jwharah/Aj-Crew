@@ -1,4 +1,4 @@
-"""Tests for the watchdog telemetry (kirocrew.watchdog.*).
+"""Tests for the watchdog telemetry (ajcrew.watchdog.*).
 
 Drives the REAL production emit paths — ``AcpSessionHandle._emit_watchdog_metric``
 via the dispatch-loop decision points, ``_watchdog_evidence_class``, and
@@ -14,8 +14,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.liveness import ToolCallState
-from kiro_crew.acp.session_handle import (
+from aj_crew.acp.liveness import ToolCallState
+from aj_crew.acp.session_handle import (
     AcpSessionHandle,
     WatchdogSettings,
     _watchdog_evidence_class,
@@ -39,14 +39,14 @@ class _CapturingRecorder:
 
 
 def _action_calls(rec, action=None):
-    calls = [c for c in rec.counters if c["name"] == "kirocrew.watchdog.action"]
+    calls = [c for c in rec.counters if c["name"] == "ajcrew.watchdog.action"]
     if action is not None:
         calls = [c for c in calls if c["attrs"].get("action") == action]
     return calls
 
 
 def _idle_calls(rec):
-    return [h for h in rec.histograms if h["name"] == "kirocrew.watchdog.idle.duration"]
+    return [h for h in rec.histograms if h["name"] == "ajcrew.watchdog.idle.duration"]
 
 
 # ── Evidence bucketing (the cardinality firewall) ────────────────────────────
@@ -122,7 +122,7 @@ def _handle(watchdog=None):
 
 def _emit(handle, *args, **kwargs):
     rec = _CapturingRecorder()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=rec):
         handle._emit_watchdog_metric(*args, **kwargs)
     return rec
 
@@ -197,7 +197,7 @@ class TestEmitWatchdogMetric:
     def test_emit_failure_never_raises(self):
         handle = _handle()
         with patch(
-            "kiro_crew.metrics.provider.get_recorder", side_effect=RuntimeError("boom")
+            "aj_crew.metrics.provider.get_recorder", side_effect=RuntimeError("boom")
         ):
             handle._emit_watchdog_metric("cancel", "unknown", "x", 1.0)  # must not raise
 
@@ -246,7 +246,7 @@ async def test_tool_stall_cancel_emits_action_point():
     handle = _stalling_handle(wd, "mcp subtree flat (io +0B cpu +0t)")
 
     rec = _CapturingRecorder()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=rec):
         await _drain(handle, req_id=1, timeout=5.0)
 
     (c,) = _action_calls(rec, "cancel")
@@ -264,7 +264,7 @@ async def test_narrowed_established_flat_cancel_tagged_narrowed():
     handle = _stalling_handle(wd, "established_flat: mcp subtree flat (io +0B cpu +0t)")
 
     rec = _CapturingRecorder()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=rec):
         await _drain(handle, req_id=1, timeout=5.0)
 
     (c,) = _action_calls(rec, "cancel")
@@ -291,7 +291,7 @@ async def test_absent_shell_child_cancel_tagged_narrowed():
     )
 
     rec = _CapturingRecorder()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=rec):
         await _drain(handle, req_id=1, timeout=5.0)
 
     (c,) = _action_calls(rec, "cancel")
@@ -311,7 +311,7 @@ async def test_untagged_shell_evidence_keeps_the_full_window():
     handle = _stalling_handle(wd, "no matching shell child")
 
     rec = _CapturingRecorder()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=rec):
         await _drain(handle, req_id=1, timeout=0.3)
 
     assert not _action_calls(rec, "cancel"), "an untagged shell stall must keep its window"
@@ -329,7 +329,7 @@ async def test_stale_probe_emits_probe_point():
     handle._oracle.check_model_wait = lambda pid: ("unknown", "no readable counters")
 
     rec = _CapturingRecorder()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=rec):
         await _drain(handle, req_id=1, timeout=0.3)
 
     calls = _action_calls(rec, "probe")
@@ -368,7 +368,7 @@ async def test_stale_probe_established_flat_tagged_extended():
     )
 
     rec = _CapturingRecorder()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=rec):
         await _drain(handle, req_id=1, timeout=0.5)
 
     calls = _action_calls(rec, "probe")
@@ -389,7 +389,7 @@ async def test_working_deferral_emits_rate_limited_deferral_point():
     handle = _stalling_handle(wd, "shell child 1234 alive", verdict="working")
 
     rec = _CapturingRecorder()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=rec):
         await _drain(handle, req_id=1, timeout=0.3)  # many ticks
 
     calls = _action_calls(rec, "deferral")
@@ -412,10 +412,10 @@ async def test_first_working_deferral_always_logged_regardless_of_host_uptime():
     # Patch monotonic to a very small value (simulating a recently-booted host
     # whose clock is below the 600s interval). The deferral must still fire.
     short_uptime_ts = 5.0  # 5 seconds since boot
-    with patch("kiro_crew.acp.session_handle.time") as mock_time:
+    with patch("aj_crew.acp.session_handle.time") as mock_time:
         mock_time.monotonic.return_value = short_uptime_ts
         rec = _CapturingRecorder()
-        with patch("kiro_crew.metrics.provider.get_recorder", return_value=rec):
+        with patch("aj_crew.metrics.provider.get_recorder", return_value=rec):
             handle._log_working_deferral(120.0, "shell child 1234 alive", 7200.0)
 
     calls = _action_calls(rec, "deferral")
@@ -424,21 +424,21 @@ async def test_first_working_deferral_always_logged_regardless_of_host_uptime():
     )
 
 
-# ── kirocrew.watchdog.recovery.outcome (chat_runner) ─────────────────────────
+# ── ajcrew.watchdog.recovery.outcome (chat_runner) ─────────────────────────
 
 
 def _run_recovery(mechanism, outcome, attempts):
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     rec = _CapturingRecorder()
     # chat_runner imports get_recorder at module top-level → patch the consumer.
-    with patch("kiro_crew.dashboard.chat_runner.get_recorder", return_value=rec):
+    with patch("aj_crew.dashboard.chat_runner.get_recorder", return_value=rec):
         chat_runner._emit_recovery_outcome(mechanism, outcome, attempts)
     return rec
 
 
 def _recovery_calls(rec):
-    return [c for c in rec.counters if c["name"] == "kirocrew.watchdog.recovery.outcome"]
+    return [c for c in rec.counters if c["name"] == "ajcrew.watchdog.recovery.outcome"]
 
 
 class TestRecoveryOutcome:
@@ -465,9 +465,9 @@ class TestRecoveryOutcome:
         ] == 1
 
     def test_emit_failure_never_raises(self):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         with patch(
-            "kiro_crew.dashboard.chat_runner.get_recorder", side_effect=RuntimeError("boom")
+            "aj_crew.dashboard.chat_runner.get_recorder", side_effect=RuntimeError("boom")
         ):
             chat_runner._emit_recovery_outcome("tool_stall", "recovered", 1)  # must not raise

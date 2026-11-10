@@ -1,4 +1,4 @@
-"""Coverage of ``kiro_crew.hooks``' hook manager beyond the file helpers.
+"""Coverage of ``aj_crew.hooks``' hook manager beyond the file helpers.
 
 The boot-warmed builtin-app registries the gate reads, the computer-use and
 tool-kind read-only auto-approve branches, message transforms, script hooks
@@ -17,9 +17,9 @@ from hooks_coverage_helpers import (
     _write,
 )
 
-from kiro_crew import hooks as hooks_mod
-from kiro_crew import security, webhooks
-from kiro_crew.hooks import (
+from aj_crew import hooks as hooks_mod
+from aj_crew import security, webhooks
+from aj_crew.hooks import (
     HOOK_EVENT_POST_TOOL_USE,
     HOOK_EVENT_PRE_TOOL_USE,
     HOOK_EVENT_STOP,
@@ -114,7 +114,7 @@ class TestBuiltinAppRegistries:
             ("meetings:srv", "meetings", True),
             ("Meetings:srv", "MEETINGS", True),
             ("meetings:srv", "papyrus", False),
-            ("kirocrew-cron", "meetings", False),
+            ("ajcrew-cron", "meetings", False),
             ("", "meetings", False),
             ("meetings:srv", "", False),
         ],
@@ -133,7 +133,7 @@ class TestComputerUseReadOnlyAutoApprove:
         monkeypatch.setattr(
             hooks_mod, "computer_use_action_classes", lambda action: (hooks_mod.CU_CLASS_OBSERVE,)
         )
-        import kiro_crew.computer_use as cu
+        import aj_crew.computer_use as cu
 
         class _Boom:
             @staticmethod
@@ -141,12 +141,12 @@ class TestComputerUseReadOnlyAutoApprove:
                 raise RuntimeError("keystone unreadable")
 
         monkeypatch.setattr(cu, "enable_state", _Boom, raising=False)
-        assert _cu_read_only_auto_approve("mcp__kirocrew-computer__computer_get_state") is False
+        assert _cu_read_only_auto_approve("mcp__ajcrew-computer__computer_get_state") is False
 
     def test_a_mutating_action_is_not_read_only(self, monkeypatch):
         monkeypatch.setattr(hooks_mod, "computer_use_action_from_title", lambda name: "click")
         monkeypatch.setattr(hooks_mod, "computer_use_action_classes", lambda action: ("mutate",))
-        assert _cu_read_only_auto_approve("mcp__kirocrew-computer__computer_click") is False
+        assert _cu_read_only_auto_approve("mcp__ajcrew-computer__computer_click") is False
 
 
 # ── script hook dataclasses ──
@@ -308,7 +308,7 @@ class TestGlobalHookStore:
 
 class TestScriptHookGovernance:
     def test_no_opinion_when_governance_permits(self, monkeypatch):
-        import kiro_crew.platform.governance_profiles as gp
+        import aj_crew.platform.governance_profiles as gp
 
         monkeypatch.setattr(
             gp, "governance_permits", lambda *a, **k: _StubDecision(True), raising=False
@@ -316,7 +316,7 @@ class TestScriptHookGovernance:
         assert _script_hooks_capability_denied("slot:1") is None
 
     def test_denial_reason_is_returned(self, monkeypatch):
-        import kiro_crew.platform.governance_profiles as gp
+        import aj_crew.platform.governance_profiles as gp
 
         monkeypatch.setattr(
             gp,
@@ -327,7 +327,7 @@ class TestScriptHookGovernance:
         assert _script_hooks_capability_denied() == "script hooks off"
 
     def test_a_transient_governance_error_degrades_to_no_opinion(self, monkeypatch):
-        import kiro_crew.platform.governance_profiles as gp
+        import aj_crew.platform.governance_profiles as gp
 
         def _boom(*a, **k):
             raise RuntimeError("profile store glitch")
@@ -338,8 +338,8 @@ class TestScriptHookGovernance:
         assert _script_hooks_capability_denied() is None
 
     def test_composition_error_fails_closed(self, monkeypatch):
-        import kiro_crew.platform.governance_profiles as gp
-        from kiro_crew.platform.context import PlatformCompositionError
+        import aj_crew.platform.governance_profiles as gp
+        from aj_crew.platform.context import PlatformCompositionError
 
         def _boom(*a, **k):
             raise PlatformCompositionError("cannot compose")
@@ -368,7 +368,7 @@ class TestScriptHookGovernance:
     @pytest.mark.asyncio
     async def test_the_deny_audit_never_breaks_the_caller(self, monkeypatch):
         monkeypatch.setattr(hooks_mod, "_script_hooks_capability_denied", lambda sk: "nope")
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         class _Sel:
             def log_governance_decision(self, **kwargs):
@@ -628,7 +628,7 @@ class TestGovernancePinResolution:
         assert _governance_pinned_command_ids(None) == set()
 
     def test_composition_error_propagates(self, monkeypatch):
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.context import PlatformCompositionError
 
         def _boom():
             raise PlatformCompositionError("cannot compose")
@@ -640,8 +640,8 @@ class TestGovernancePinResolution:
 
 class TestGovernanceDenial:
     def test_composition_error_propagates(self, monkeypatch):
-        import kiro_crew.platform.governance_profiles as gp
-        from kiro_crew.platform.context import PlatformCompositionError
+        import aj_crew.platform.governance_profiles as gp
+        from aj_crew.platform.context import PlatformCompositionError
 
         def _boom(*a, **k):
             raise PlatformCompositionError("cannot compose")
@@ -651,7 +651,7 @@ class TestGovernanceDenial:
             _governance_denial(object(), "some_tool", "", "", "")
 
     def test_a_glitch_degrades_to_no_opinion(self, monkeypatch):
-        import kiro_crew.platform.governance_profiles as gp
+        import aj_crew.platform.governance_profiles as gp
 
         def _boom(*a, **k):
             raise RuntimeError("profile store glitch")
@@ -661,7 +661,7 @@ class TestGovernanceDenial:
         assert _governance_denial(object(), "some_tool", "", "", "") is None
 
     def test_ungoverned_host_is_a_fast_no_op(self, monkeypatch):
-        import kiro_crew.platform.governance_profiles as gp
+        import aj_crew.platform.governance_profiles as gp
 
         monkeypatch.setattr(gp, "resolve_active_scope", lambda *a, **k: None, raising=False)
 
@@ -673,7 +673,7 @@ class TestGovernanceDenial:
 
 class TestGovernanceAudit:
     def test_a_raising_sel_never_breaks_the_gate(self, monkeypatch):
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         class _Sel:
             def log_governance_decision(self, **kwargs):
@@ -681,7 +681,7 @@ class TestGovernanceAudit:
 
         monkeypatch.setattr(sel_mod, "sel", lambda: _Sel())
         # Returns None rather than propagating -- the audit is best effort.
-        assert _audit_governance("slot:1", "kirocrew", "some_tool", object()) is None
+        assert _audit_governance("slot:1", "ajcrew", "some_tool", object()) is None
 
 
 # ── message transforms and the read-only auto-approve branch ──
@@ -724,7 +724,7 @@ class TestReadOnlyKindAutoApprove:
             lambda name: consulted.append(name) or True,
         )
         got = HookManager().on_tool_call(
-            "mcp__kirocrew-computer__computer_get_state", tool_kind="read"
+            "mcp__ajcrew-computer__computer_get_state", tool_kind="read"
         )
         assert got.action == TOOL_AUTO_APPROVE
         assert consulted == []

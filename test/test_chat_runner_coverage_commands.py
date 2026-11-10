@@ -1,4 +1,4 @@
-"""Coverage tests for ``kiro_crew.dashboard.chat_runner``: local commands and recovery.
+"""Coverage tests for ``aj_crew.dashboard.chat_runner``: local commands and recovery.
 
 Covers the model backfill and pinned-model guards, the slash commands a ``_run_chat``
 turn answers locally, and the retry ladders a terminal ``stop_reason`` walks.
@@ -26,16 +26,16 @@ from chat_runner_coverage_helpers import (
 )
 from chat_test_helpers import pin_harness_choice
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_TEXT_CHUNK,
     STOP_REASON_COMPACTION_FAILED,
     STOP_REASON_STALE_RECOVER,
     STOP_REASON_TOOL_STALL,
 )
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.testing.wait import await_until
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard import chat_runner
+from aj_crew.providers.base import LLMEvent
+from aj_crew.testing.wait import await_until
 
 # ── model backfill / pin guards ───────────────────────────────────────────
 
@@ -168,7 +168,7 @@ class TestRunChatLocalCommands:
         state, client = _runner_state(tmp_path)
         _set_stream(client, [_complete()])
         slot = _slot()
-        cfg = await asyncio.to_thread(chat_runner.KiroCrewConfig.load)
+        cfg = await asyncio.to_thread(chat_runner.AjCrewConfig.load)
         cfg.agent.provider = provider
         cfg.agent.acp_backend = acp_backend
         client.capabilities = capabilities_for(acp_backend)
@@ -177,7 +177,7 @@ class TestRunChatLocalCommands:
         client.kas_auto_approved_capabilities = frozenset()
 
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", return_value=cfg),
+            patch.object(chat_runner.AjCrewConfig, "load", return_value=cfg),
             patch.object(
                 chat_runner, "select_provider_backend", wraps=chat_runner.select_provider_backend
             ) as select_backend,
@@ -224,7 +224,7 @@ class TestRunChatLocalCommands:
         different harness from current config. The command gate must use the
         provider whose lease it actually acquired, not either pre-turn hint.
         """
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         state, client = _runner_state(tmp_path)
         _set_stream(client, [_complete()])
@@ -242,11 +242,11 @@ class TestRunChatLocalCommands:
             return client, True, False
 
         state.sessions.get_or_create = AsyncMock(side_effect=acquire_successor)
-        cfg = await asyncio.to_thread(chat_runner.KiroCrewConfig.load)
+        cfg = await asyncio.to_thread(chat_runner.AjCrewConfig.load)
         cfg.agent.provider = "acp"
         cfg.agent.acp_backend = config_backend
 
-        with patch.object(chat_runner.KiroCrewConfig, "load", return_value=cfg):
+        with patch.object(chat_runner.AjCrewConfig, "load", return_value=cfg):
             await _drive(state, slot, "/todos")
 
         notices = [
@@ -268,11 +268,11 @@ class TestRunChatLocalCommands:
         initial = SimpleNamespace(capabilities=capabilities_for("claude"))
         state.sessions.get_or_create = AsyncMock(return_value=(initial, True, False))
         slot = _slot("todos-reprojected")
-        cfg = await asyncio.to_thread(chat_runner.KiroCrewConfig.load)
+        cfg = await asyncio.to_thread(chat_runner.AjCrewConfig.load)
         cfg.agent.acp_backend = "claude"
 
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", return_value=cfg),
+            patch.object(chat_runner.AjCrewConfig, "load", return_value=cfg),
             patch.object(
                 chat_runner,
                 "reproject_claimed_session",
@@ -298,13 +298,13 @@ class TestRunChatLocalCommands:
         self, tmp_path, prefetched_resume
     ):
         """A fresh or resume-prefetched first command owes member start context."""
-        from kiro_crew import member_memory_auth
-        from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.memory_stores import provision_member_memory
-        from kiro_crew.session import FirstTurnState, SessionManager, _Session
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew import member_memory_auth
+        from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+        from aj_crew.context import ContextBuilder
+        from aj_crew.memory import MemoryStore
+        from aj_crew.memory_stores import provision_member_memory
+        from aj_crew.session import FirstTurnState, SessionManager, _Session
+        from aj_crew.skills import SkillsLoader
 
         builds: list[tuple[bool, str]] = []
 
@@ -332,10 +332,10 @@ class TestRunChatLocalCommands:
         state._slots[slot.key] = slot
         slot.mode = "member"
         slot.agent = "oncall"
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         # The pre-claim authority permits acquisition; the acquired Kiro refuses.
         cfg.agent.member_acp_backend = "claude"
-        cfg.agents["oncall"] = KiroCrewAgentConfig()
+        cfg.agents["oncall"] = AjCrewAgentConfig()
         store = provision_member_memory(cfg, "oncall")
         cfg.save()
         # save() keeps the harness fields as stored, so the choice goes on disk.
@@ -416,8 +416,8 @@ class TestRunChatLocalCommands:
     async def test_todos_expires_slack_options_only_after_capability_acceptance(
         self, tmp_path, backend, acquired_backend, refused
     ):
-        from kiro_crew.dashboard.chat_utils import options_records, remember_slack_options
-        from kiro_crew.slack.outbound import PostedOptions
+        from aj_crew.dashboard.chat_utils import options_records, remember_slack_options
+        from aj_crew.slack.outbound import PostedOptions
 
         state, client = _runner_state(tmp_path)
         slot = _slot("todos-options")
@@ -430,10 +430,10 @@ class TestRunChatLocalCommands:
         client.client.pop_pending_oauth_requests = MagicMock(return_value=[])
         _set_stream(client, [_complete()])
         client.stream_command = client.stream
-        cfg = await asyncio.to_thread(chat_runner.KiroCrewConfig.load)
+        cfg = await asyncio.to_thread(chat_runner.AjCrewConfig.load)
         cfg.agent.acp_backend = backend
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", return_value=cfg),
+            patch.object(chat_runner.AjCrewConfig, "load", return_value=cfg),
             patch.object(
                 chat_runner, "expire_slack_options", wraps=chat_runner.expire_slack_options
             ) as expire,
@@ -461,8 +461,8 @@ class TestRunChatLocalCommands:
     async def test_todos_deferred_options_cleanup_survives_early_failure(
         self, tmp_path, backend, refused, failure_site
     ):
-        from kiro_crew.dashboard.chat_utils import options_records, remember_slack_options
-        from kiro_crew.slack.outbound import PostedOptions
+        from aj_crew.dashboard.chat_utils import options_records, remember_slack_options
+        from aj_crew.slack.outbound import PostedOptions
 
         state, client = _runner_state(tmp_path)
         slot = _slot("todos-options-failure")
@@ -472,19 +472,19 @@ class TestRunChatLocalCommands:
         posted = PostedOptions(channel="C1", ts="failure-options-ts", choices=("A", "B"), blocks=())
         remember_slack_options(state, session_key, posted)
         client.capabilities = capabilities_for(backend)
-        cfg = await asyncio.to_thread(chat_runner.KiroCrewConfig.load)
+        cfg = await asyncio.to_thread(chat_runner.AjCrewConfig.load)
         cfg.agent.acp_backend = backend
         error = RuntimeError("early todos failure")
         if failure_site == "memory":
-            failure_target = "kiro_crew.memory_startup.wait_for_memory_preparation"
+            failure_target = "aj_crew.memory_startup.wait_for_memory_preparation"
         elif failure_site == "claim":
             failure_target = state.sessions.get_or_create
             failure_target.side_effect = chat_runner.SessionBusyError("early todos failure")
         else:
-            failure_target = "kiro_crew.dashboard.chat_runner._prepare_spec_hooks"
+            failure_target = "aj_crew.dashboard.chat_runner._prepare_spec_hooks"
 
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", return_value=cfg),
+            patch.object(chat_runner.AjCrewConfig, "load", return_value=cfg),
             patch.object(
                 chat_runner, "expire_slack_options", wraps=chat_runner.expire_slack_options
             ) as expire,
@@ -512,8 +512,8 @@ class TestRunChatLocalCommands:
 
     @pytest.mark.asyncio
     async def test_todos_deferred_expiry_cancellation_releases_session(self, tmp_path):
-        from kiro_crew.dashboard.chat_utils import remember_slack_options
-        from kiro_crew.slack.outbound import PostedOptions
+        from aj_crew.dashboard.chat_utils import remember_slack_options
+        from aj_crew.slack.outbound import PostedOptions
 
         state, client = _runner_state(tmp_path)
         slot = _slot("todos-options-cancel")
@@ -525,7 +525,7 @@ class TestRunChatLocalCommands:
             PostedOptions(channel="C1", ts="cancel-options-ts", choices=("A", "B"), blocks=()),
         )
         client.capabilities = capabilities_for("claude")
-        cfg = await asyncio.to_thread(chat_runner.KiroCrewConfig.load)
+        cfg = await asyncio.to_thread(chat_runner.AjCrewConfig.load)
         cfg.agent.acp_backend = "claude"
         preparing = asyncio.Event()
         expiring = asyncio.Event()
@@ -543,7 +543,7 @@ class TestRunChatLocalCommands:
 
         state.slack_client = MagicMock(update_message=AsyncMock(side_effect=wait_expiry))
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", return_value=cfg),
+            patch.object(chat_runner.AjCrewConfig, "load", return_value=cfg),
             patch.object(
                 chat_runner, "_prepare_spec_hooks", new=AsyncMock(side_effect=wait_preparation)
             ),
@@ -574,8 +574,8 @@ class TestRunChatLocalCommands:
     @pytest.mark.parametrize("alive", [True, False, None, "absent"])
     async def test_todos_member_override_selects_claude_over_default_kiro(self, tmp_path, alive):
         """Live capability or member-aware successor wins over the global default."""
-        from kiro_crew.config.loader import KiroCrewAgentConfig
-        from kiro_crew.memory_stores import provision_member_memory
+        from aj_crew.config.loader import AjCrewAgentConfig
+        from aj_crew.memory_stores import provision_member_memory
 
         state, client = _runner_state(tmp_path)
         slot = _slot("member-oncall")
@@ -590,14 +590,14 @@ class TestRunChatLocalCommands:
         hint = SimpleNamespace(capabilities=capabilities_for("claude" if alive is True else ""))
         state.sessions.get_provider = MagicMock(return_value=None if alive == "absent" else hint)
         state.sessions.is_provider_alive = AsyncMock(return_value=alive)
-        cfg = await asyncio.to_thread(chat_runner.KiroCrewConfig.load)
+        cfg = await asyncio.to_thread(chat_runner.AjCrewConfig.load)
         cfg.agent.acp_backend = ""
         cfg.agent.member_acp_backend = "claude"
-        cfg.agents["oncall"] = KiroCrewAgentConfig()
+        cfg.agents["oncall"] = AjCrewAgentConfig()
         provision_member_memory(cfg, "oncall")
         cfg.save()
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", return_value=cfg),
+            patch.object(chat_runner.AjCrewConfig, "load", return_value=cfg),
             patch.object(
                 chat_runner, "select_provider_backend", wraps=chat_runner.select_provider_backend
             ) as select_backend,
@@ -633,8 +633,8 @@ class TestRunChatLocalCommands:
         command and cold-started that kiro session only to refuse after the claim.
         A dead Claude row is no better a witness than the global default.
         """
-        from kiro_crew.config.loader import KiroCrewAgentConfig
-        from kiro_crew.memory_stores import provision_member_memory
+        from aj_crew.config.loader import AjCrewAgentConfig
+        from aj_crew.memory_stores import provision_member_memory
 
         state, client = _runner_state(tmp_path)
         slot = _slot("member-oncall")
@@ -646,14 +646,14 @@ class TestRunChatLocalCommands:
         hint = SimpleNamespace(capabilities=capabilities_for("claude"))
         state.sessions.get_provider = MagicMock(return_value=None if alive == "absent" else hint)
         state.sessions.is_provider_alive = AsyncMock(return_value=alive)
-        cfg = await asyncio.to_thread(chat_runner.KiroCrewConfig.load)
+        cfg = await asyncio.to_thread(chat_runner.AjCrewConfig.load)
         cfg.agent.acp_backend = "claude"
         cfg.agent.member_acp_backend = ""
-        cfg.agents["oncall"] = KiroCrewAgentConfig()
+        cfg.agents["oncall"] = AjCrewAgentConfig()
         provision_member_memory(cfg, "oncall")
         cfg.save()
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", return_value=cfg),
+            patch.object(chat_runner.AjCrewConfig, "load", return_value=cfg),
             patch.object(
                 chat_runner, "expire_slack_options", wraps=chat_runner.expire_slack_options
             ) as expire_options,
@@ -668,13 +668,13 @@ class TestRunChatLocalCommands:
     @pytest.mark.asyncio
     async def test_live_busy_kiro_todos_refuses_before_session_claim(self, tmp_path):
         """A held turn semaphore cannot delay an unsupported local command."""
-        from kiro_crew.session import SessionManager, _Session
+        from aj_crew.session import SessionManager, _Session
 
         state, client = _runner_state(tmp_path)
         slot = _slot("busy-todos")
         client.capabilities = capabilities_for("")
         client.is_process_alive = MagicMock(return_value=True)
-        cfg = await asyncio.to_thread(chat_runner.KiroCrewConfig.load)
+        cfg = await asyncio.to_thread(chat_runner.AjCrewConfig.load)
         cfg.agent.acp_backend = "claude"
         manager = SessionManager(cfg)
         session = _Session(provider=client)
@@ -685,7 +685,7 @@ class TestRunChatLocalCommands:
         state.sessions.is_provider_alive = manager.is_provider_alive
         state.sessions.get_or_create = AsyncMock(wraps=manager.get_or_create)
         try:
-            with patch.object(chat_runner.KiroCrewConfig, "load", return_value=cfg):
+            with patch.object(chat_runner.AjCrewConfig, "load", return_value=cfg):
                 await await_until(asyncio.ensure_future(_drive(state, slot, "/todos")))
             state.sessions.get_or_create.assert_not_awaited()
             assert session.semaphore.locked()
@@ -717,7 +717,7 @@ class TestRunChatLocalCommands:
         agrees with the widened gate while every kiro-only member is in
         ``_SLASH_COMMANDS`` and forwards on any provider.
         """
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             _KIRO_ONLY_BLOCKED_SLASH_COMMANDS,
             _SLASH_COMMANDS,
             is_harness_slash_command,
@@ -732,10 +732,10 @@ class TestRunChatLocalCommands:
     async def test_terminal_only_commands_stay_blocked_on_the_claude_harness(self, tmp_path):
         state, client = _runner_state(tmp_path)
         slot = _slot()
-        cfg = await asyncio.to_thread(chat_runner.KiroCrewConfig.load)
+        cfg = await asyncio.to_thread(chat_runner.AjCrewConfig.load)
         cfg.agent.acp_backend = "claude"
 
-        with patch.object(chat_runner.KiroCrewConfig, "load", return_value=cfg):
+        with patch.object(chat_runner.AjCrewConfig, "load", return_value=cfg):
             await _drive(state, slot, "/quit")
 
         state.sessions.get_or_create.assert_not_awaited()

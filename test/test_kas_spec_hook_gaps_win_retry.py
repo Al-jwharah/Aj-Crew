@@ -1,6 +1,6 @@
 """A momentary Windows share-deny hold on ``hooks.json`` is retried.
 
-The saved-hooks read a store-less ``kirocrew run`` task does goes through
+The saved-hooks read a store-less ``ajcrew run`` task does goes through
 ``atomic_write.read_bytes_with_retry``, the helper the other saved-state readers
 use, so a foreign process holding ``hooks.json`` without read sharing for a few
 hundred ms does not fail the gate closed for a call no hook covers. The retry
@@ -20,10 +20,10 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-import kiro_crew.hooks as hooks_mod
-from kiro_crew.acp import kas_agents
-from kiro_crew.hooks import HOOK_EVENT_PRE_TOOL_USE, ScriptHook, ScriptHookStore
+import aj_crew.config.paths as paths_mod
+import aj_crew.hooks as hooks_mod
+from aj_crew.acp import kas_agents
+from aj_crew.hooks import HOOK_EVENT_PRE_TOOL_USE, ScriptHook, ScriptHookStore
 
 
 @pytest.fixture
@@ -116,7 +116,7 @@ def _arm_windows_retry(monkeypatch, deny: "_ShareDeny") -> None:
     base -- where the read refuses with no retry -- and green here, where the
     ``read_bytes_with_retry`` boundary clears the hold within budget.
     """
-    from kiro_crew import atomic_write, platform_compat
+    from aj_crew import atomic_write, platform_compat
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
     monkeypatch.setattr(atomic_write.platform_compat, "IS_WINDOWS", True)
@@ -132,7 +132,7 @@ def test_a_transient_hold_on_hooks_json_is_retried_so_the_gate_does_not_refuse(
     attempts, the gate returns ``None`` for a call no saved hook covers. A bare
     read refuses with the ``could not be read`` reason; here the retry clears the
     hold within the shared budget."""
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     monkeypatch.setattr(loader, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(hooks_mod, "_global_script_hook_store", None)
@@ -153,7 +153,7 @@ def test_a_transient_hold_on_hooks_json_is_retried_for_the_matcher_projection(
     """Criterion 2: under the same hold, ``pre_tool_hook_matchers`` (called off
     the event loop by ``build_kas_custom_agents``) returns the saved matchers,
     not the fail-closed ``("*",)``."""
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     monkeypatch.setattr(loader, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(hooks_mod, "_global_script_hook_store", None)
@@ -174,7 +174,7 @@ def test_a_persistent_hold_on_hooks_json_still_refuses_the_gate(tmp_path, monkey
     """Criterion 3: a ``hooks.json`` that stays unreadable past the budget (a
     read-deny ACL, not a transient scan) still raises, so the gate fails closed
     with the same text, on Windows and off."""
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     monkeypatch.setattr(loader, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(hooks_mod, "_global_script_hook_store", None)
@@ -191,7 +191,7 @@ def test_a_persistent_hold_on_hooks_json_still_refuses_the_gate(tmp_path, monkey
 def test_a_persistent_hold_still_withholds_every_approval(tmp_path, agents_dir, monkeypatch):
     """Criterion 3, projection side: a persistent denial still makes
     ``pre_tool_hook_matchers`` fail closed to ``("*",)``."""
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     monkeypatch.setattr(loader, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(hooks_mod, "_global_script_hook_store", None)
@@ -210,8 +210,8 @@ def test_a_persistent_hold_still_withholds_every_approval(tmp_path, agents_dir, 
 def test_a_posix_permission_error_is_not_retried(tmp_path, monkeypatch):
     """A ``PermissionError`` on POSIX is a genuine access fault, re-raised at
     once rather than slept over: the gate fails closed on the first attempt."""
-    from kiro_crew import atomic_write, platform_compat
-    from kiro_crew.config import loader
+    from aj_crew import atomic_write, platform_compat
+    from aj_crew.config import loader
 
     monkeypatch.setattr(loader, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(hooks_mod, "_global_script_hook_store", None)

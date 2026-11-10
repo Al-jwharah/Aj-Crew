@@ -21,17 +21,17 @@ import urllib.parse
 import aiohttp
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.auth.login import portal
-from kiro_crew.auth.service import (
+from aj_crew import platform_compat
+from aj_crew.auth.login import portal
+from aj_crew.auth.service import (
     LOOPBACK_TIMEOUT_SECS,
     KasLoginService,
     LoopbackUnavailableError,
     UnknownLoginError,
 )
-from kiro_crew.auth.shape import Transport
-from kiro_crew.auth.store import TokenStore
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.auth.shape import Transport
+from aj_crew.auth.store import TokenStore
+from aj_crew.testing.wait import async_wait_until
 
 
 class _FakeResp:
@@ -231,7 +231,7 @@ async def test_loopback_timeout_reports_expired_with_fallback_code(
     tmp_path, loopback_shape, monkeypatch
 ):
     """A listener nobody reaches (browser on another machine) must degrade, not hang."""
-    monkeypatch.setattr("kiro_crew.auth.service.LOOPBACK_TIMEOUT_SECS", 0.05)
+    monkeypatch.setattr("aj_crew.auth.service.LOOPBACK_TIMEOUT_SECS", 0.05)
     service, _ = _service(tmp_path)
     begin = await service.begin_loopback("google")
     result = await _poll_until_terminal(service, begin["login_id"])

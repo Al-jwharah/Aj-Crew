@@ -1,4 +1,4 @@
-"""Tests for ``kirocrew pod scenarios`` discovery."""
+"""Tests for ``ajcrew pod scenarios`` discovery."""
 
 from __future__ import annotations
 
@@ -11,12 +11,12 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew
-from kiro_crew import seed as seed_mod
-from kiro_crew.pod import cli as pod_cli
-from kiro_crew.pod.config import PodConfig
+import aj_crew
+from aj_crew import seed as seed_mod
+from aj_crew.pod import cli as pod_cli
+from aj_crew.pod.config import PodConfig
 
-_SRC = str(Path(kiro_crew.__file__).resolve().parents[1])
+_SRC = str(Path(aj_crew.__file__).resolve().parents[1])
 _REPO = Path(_SRC).parent
 
 # Fixtures every checkout ships. Assertions against the real registry name these
@@ -34,13 +34,13 @@ def _run_cli(tmp_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
         {
             "HOME": str(tmp_path / "os-home"),
             "USERPROFILE": str(tmp_path / "os-home"),
-            "KIROCREW_HOME": str(tmp_path / "crew-home"),
-            "KIROCREW_PROJECT_DIR": str(_REPO),
+            "AJCREW_HOME": str(tmp_path / "crew-home"),
+            "AJCREW_PROJECT_DIR": str(_REPO),
             "PYTHONPATH": _SRC,
         }
     )
     return subprocess.run(
-        [sys.executable, "-m", "kiro_crew", "pod", "scenarios", *args],
+        [sys.executable, "-m", "aj_crew", "pod", "scenarios", *args],
         capture_output=True,
         text=True,
         encoding="utf-8",
@@ -79,10 +79,10 @@ def test_human_output_lists_sorted_names_and_first_sentences(tmp_path: Path) -> 
     # The column carries the last complete sentence that fits, not the whole
     # scalar — which for every shipped fixture is its first sentence.
     assert rows["empty"].split(maxsplit=1)[1].strip() == (
-        "A KIROCREW_HOME with nothing in it but this manifest."
+        "A AJCREW_HOME with nothing in it but this manifest."
     )
     # The hint names whichever fixture sorts first, so it moves with the registry.
-    assert hint == ("seed one with: kirocrew pod up <worktree> --seed " + next(iter(rows)))
+    assert hint == ("seed one with: ajcrew pod up <worktree> --seed " + next(iter(rows)))
 
 
 def test_json_output_contains_complete_literal_descriptions(tmp_path: Path) -> None:
@@ -100,7 +100,7 @@ def test_json_output_contains_complete_literal_descriptions(tmp_path: Path) -> N
     described = {row["name"]: row["description"] for row in rows}
     # JSON keeps the full literal scalar, including paragraph and list structure.
     assert described["empty"].startswith(
-        "A KIROCREW_HOME with nothing in it but this manifest. The gateway writes its"
+        "A AJCREW_HOME with nothing in it but this manifest. The gateway writes its"
     )
     assert "\n" in described["empty"]
     assert "\n\nUse ``rich``" in described["minimal"]
@@ -131,7 +131,7 @@ def test_output_absorbs_an_added_fixture_without_moving_known_rows(
     assert header == "SCENARIO        DESCRIPTION"
     assert rows["empty"] == "empty           about empty."
     # The hint follows the registry instead of naming a hard-coded fixture.
-    assert hint == "seed one with: kirocrew pod up <worktree> --seed apps-installed"
+    assert hint == "seed one with: ajcrew pod up <worktree> --seed apps-installed"
 
 
 def test_human_output_keeps_a_second_sentence_that_fits(

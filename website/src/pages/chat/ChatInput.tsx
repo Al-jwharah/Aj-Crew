@@ -70,7 +70,7 @@ const SIDE_RE = /^\/(?:side|btw)(?:\s+([\s\S]+))?$/
 // native skill projection is on, and with it off it would move the process
 // without Crew's skill scope following -- so the composer sends it to the
 // same endpoint the agent picker uses, which restarts the session on the new
-// agent with its skills prepared. Mirrors `src/kiro_crew/agent_switch_command.py`,
+// agent with its skills prepared. Mirrors `src/aj_crew/agent_switch_command.py`,
 // which catches the command on every other path (split pane, linked channel
 // threads, Slack) once it has been sent.
 const AGENT_RE = /^\/agent\s+([A-Za-z0-9][A-Za-z0-9_.-]*)$/

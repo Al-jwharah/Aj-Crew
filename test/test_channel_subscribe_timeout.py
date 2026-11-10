@@ -12,8 +12,8 @@ import asyncio
 
 import pytest
 
-from kiro_crew.channel import Channel, ChannelAgent, ChannelMessage
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.channel import Channel, ChannelAgent, ChannelMessage
+from aj_crew.testing.wait import await_until, finished
 
 
 def _make_channel_with_agent(state: str = "working") -> tuple[Channel, ChannelAgent]:
@@ -28,7 +28,7 @@ def _make_channel_with_agent(state: str = "working") -> tuple[Channel, ChannelAg
 async def test_subscribe_exits_when_agent_becomes_done(monkeypatch) -> None:
     """Blocked subscribe() must exit once the agent transitions to done."""
     # Speed up the poll so the test is fast but still exercises the timeout loop.
-    monkeypatch.setattr("kiro_crew.channel._INBOX_POLL_SECS", 0.05)
+    monkeypatch.setattr("aj_crew.channel._INBOX_POLL_SECS", 0.05)
     ch, agent = _make_channel_with_agent("working")
 
     async def consume() -> None:
@@ -47,7 +47,7 @@ async def test_subscribe_exits_when_agent_becomes_done(monkeypatch) -> None:
 @pytest.mark.asyncio
 async def test_subscribe_still_yields_messages(monkeypatch) -> None:
     """The timeout loop must not drop delivered messages."""
-    monkeypatch.setattr("kiro_crew.channel._INBOX_POLL_SECS", 0.05)
+    monkeypatch.setattr("aj_crew.channel._INBOX_POLL_SECS", 0.05)
     ch, agent = _make_channel_with_agent("working")
     gen = ch.subscribe("a1")
 

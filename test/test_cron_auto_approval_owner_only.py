@@ -75,7 +75,7 @@ async def _call(claims: dict, method: str, path: str, route: str, handler, json_
 
 
 def _routes():
-    from kiro_crew.dashboard.handlers import cron as handlers
+    from aj_crew.dashboard.handlers import cron as handlers
 
     return (
         (
@@ -132,21 +132,21 @@ async def test_the_owner_still_creates_an_auto_job_from_the_schedule_page() -> N
 
 @pytest.fixture
 def home(monkeypatch, tmp_path):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", SESSION)
-    monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_SESSION_KEY", SESSION)
+    monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
     return tmp_path
 
 
 def _svc(home):
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     return CronService(base_dir=home)
 
 
 def _tool(name: str, args: dict) -> str:
     # The dispatch the gateway's ``POST /api/crons/tools`` route runs.
-    from kiro_crew import mcp_cron
+    from aj_crew import mcp_cron
 
     return mcp_cron._call_tool_locally(name, args)
 
@@ -201,7 +201,7 @@ def _auto_job(home, **over):
     "change",
     (
         {"message": "do something else"},
-        {"agent": "kirocrew"},
+        {"agent": "ajcrew"},
         {"model": "sonnet"},
         {"cron_expr": "0 9 * * *"},
         {"every": 300},
@@ -238,7 +238,7 @@ def test_a_behaviour_edit_on_a_normal_job_says_nothing_about_auto(home) -> None:
 @pytest.mark.asyncio
 async def test_the_owner_can_edit_an_auto_job_and_keep_auto() -> None:
     # The Schedule page's PATCH writes what the owner sends; auto is not reset.
-    from kiro_crew.dashboard.handlers import cron as handlers
+    from aj_crew.dashboard.handlers import cron as handlers
 
     status, payload, state = await _call(
         _OWNER,

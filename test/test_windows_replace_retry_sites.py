@@ -19,10 +19,10 @@ from unittest.mock import patch
 import pytest
 from windows_sim import replace_sharing_violation
 
-from kiro_crew import atomic_write as aw
-from kiro_crew import gateway_identity, platform_compat
-from kiro_crew.artifacts import ArtifactFolderStore
-from kiro_crew.session_map import SESSION_MAP_FILENAME, SessionMap
+from aj_crew import atomic_write as aw
+from aj_crew import gateway_identity, platform_compat
+from aj_crew.artifacts import ArtifactFolderStore
+from aj_crew.session_map import SESSION_MAP_FILENAME, SessionMap
 
 
 @pytest.fixture(autouse=True)
@@ -63,7 +63,7 @@ def test_gateway_id_is_persisted_through_a_sharing_violation(tmp_path, monkeypat
 
 
 def test_session_map_write_survives_a_sharing_violation(tmp_path):
-    with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+    with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
         session_map = SessionMap()
         with replace_sharing_violation(match=SESSION_MAP_FILENAME, times=2) as sim:
             session_map.set("dashboard:durable", "sid-durable")

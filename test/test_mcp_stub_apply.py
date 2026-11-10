@@ -23,7 +23,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.slack.gateway import GatewayOrchestrator
 
 
 def _orch(stub: list[str]) -> GatewayOrchestrator:
@@ -51,7 +51,7 @@ def _pin_broker_calls(monkeypatch, orch: GatewayOrchestrator) -> list[str]:
     monkeypatch.setattr(orch, "_init_mcp_gateway", _init)
     monkeypatch.setattr(orch, "_stop_mcp_broker", _stop)
     monkeypatch.setattr(
-        "kiro_crew.config.loader.KiroCrewConfig.load", staticmethod(lambda: orch._cfg)
+        "aj_crew.config.loader.AjCrewConfig.load", staticmethod(lambda: orch._cfg)
     )
     return calls
 
@@ -168,7 +168,7 @@ async def test_a_sharing_toggle_does_not_republish_a_pending_unstub(monkeypatch)
     monkeypatch.setattr(orch, "_init_mcp_gateway", _init)
     monkeypatch.setattr(orch, "_stop_mcp_broker", _stop)
     monkeypatch.setattr(
-        "kiro_crew.config.loader.KiroCrewConfig.load", staticmethod(lambda: orch._cfg)
+        "aj_crew.config.loader.AjCrewConfig.load", staticmethod(lambda: orch._cfg)
     )
 
     await orch._apply_mcp_gateway_enabled(True)
@@ -193,7 +193,7 @@ async def test_a_sharing_toggle_still_refreshes_when_config_and_served_agree(mon
     monkeypatch.setattr(orch, "_init_mcp_gateway", _init)
     monkeypatch.setattr(orch, "_stop_mcp_broker", _stop)
     monkeypatch.setattr(
-        "kiro_crew.config.loader.KiroCrewConfig.load", staticmethod(lambda: orch._cfg)
+        "aj_crew.config.loader.AjCrewConfig.load", staticmethod(lambda: orch._cfg)
     )
 
     await orch._apply_mcp_gateway_enabled(True)
@@ -228,7 +228,7 @@ async def test_a_sharing_toggle_does_not_apply_the_pending_stub_set(monkeypatch)
     monkeypatch.setattr(orch, "_init_mcp_gateway", _init)
     monkeypatch.setattr(orch, "_stop_mcp_broker", _stop)
     monkeypatch.setattr(
-        "kiro_crew.config.loader.KiroCrewConfig.load", staticmethod(lambda: orch._cfg)
+        "aj_crew.config.loader.AjCrewConfig.load", staticmethod(lambda: orch._cfg)
     )
 
     await orch._apply_mcp_gateway_enabled(True)
@@ -254,7 +254,7 @@ async def test_a_sharing_toggle_starts_nothing_when_no_stub_is_served(monkeypatc
     monkeypatch.setattr(orch, "_init_mcp_gateway", _init)
     monkeypatch.setattr(orch, "_stop_mcp_broker", AsyncMock())
     monkeypatch.setattr(
-        "kiro_crew.config.loader.KiroCrewConfig.load", staticmethod(lambda: orch._cfg)
+        "aj_crew.config.loader.AjCrewConfig.load", staticmethod(lambda: orch._cfg)
     )
 
     await orch._apply_mcp_gateway_enabled(True)

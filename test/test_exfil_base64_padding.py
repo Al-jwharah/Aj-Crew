@@ -15,8 +15,8 @@ from __future__ import annotations
 import base64
 import re
 
-from kiro_crew.security import redact_exfiltration_urls, scan_exfiltration_urls
-from kiro_crew.security.exfil import _EXFIL_PATTERNS
+from aj_crew.security import redact_exfiltration_urls, scan_exfiltration_urls
+from aj_crew.security.exfil import _EXFIL_PATTERNS
 
 # The spelling this change replaced, kept only to show which fixtures it
 # matched; nothing in the product uses it.

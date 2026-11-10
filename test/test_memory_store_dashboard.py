@@ -11,7 +11,7 @@ PERMISSIVELY with a clean response body:
   onto the default store.
 * A store's writes never reach another store; paths come from production's resolvers.
 
-Every test pins ``KIROCREW_HOME`` under ``tmp_path`` (asserted by :class:`_Env`), since
+Every test pins ``AJCREW_HOME`` under ``tmp_path`` (asserted by :class:`_Env`), since
 this file plants a corrupt database and drives a restore. Never call
 ``monkeypatch.undo()``: it reverts that pin too.
 """
@@ -31,15 +31,15 @@ import pytest
 from aiohttp import streams, web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import memory_backup, memory_stores
-from kiro_crew.config import loader as loader_mod
-from kiro_crew.config.loader import config_dir
-from kiro_crew.context import ContextBuilder
-from kiro_crew.dashboard.handlers import memory as memory_handlers
-from kiro_crew.dashboard.handlers import memory_admin
-from kiro_crew.dashboard.handlers.source_providers import is_owner_dashboard_request
-from kiro_crew.memory import MemoryStore
-from kiro_crew.memory_stores import (
+from aj_crew import memory_backup, memory_stores
+from aj_crew.config import loader as loader_mod
+from aj_crew.config.loader import config_dir
+from aj_crew.context import ContextBuilder
+from aj_crew.dashboard.handlers import memory as memory_handlers
+from aj_crew.dashboard.handlers import memory_admin
+from aj_crew.dashboard.handlers.source_providers import is_owner_dashboard_request
+from aj_crew.memory import MemoryStore
+from aj_crew.memory_stores import (
     DEFAULT_MEMORY_STORE,
     declared_store_names,
     memory_index_path_for,
@@ -47,7 +47,7 @@ from kiro_crew.memory_stores import (
     owned_store_path,
     resolve_store_path,
 )
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew.vector_memory import VectorMemoryStore
 
 # Every test writes ``config.json`` into its own data home and drops the process-wide
 # config cache and the declared-store memo, so two workers racing those globals is a
@@ -135,7 +135,7 @@ class _Env:
     def __init__(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         self.home = tmp_path / "data-home"
         self.home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(self.home))
+        monkeypatch.setenv("AJCREW_HOME", str(self.home))
         loader_mod._invalidate_config_cache()
         monkeypatch.setattr(memory_stores, "_DECLARED_MEMO", None)
         # THE guard for this file. Every store path below is composed from
@@ -453,8 +453,8 @@ class TestTheGateExcludesAnAgentBecauseItHasNoIdentity:
         the claim is about the paths an agent actually calls, and a hand-written set
         would keep passing after a path moved between the two classes.
         """
-        import kiro_crew.dashboard.token_auth as token_auth
-        from kiro_crew.dashboard import server
+        import aj_crew.dashboard.token_auth as token_auth
+        from aj_crew.dashboard import server
 
         class _FakeSel:
             def log_api_access(self, **kw: Any) -> None:
@@ -911,8 +911,8 @@ async def test_dashboard_backup_uses_configured_retention(env, keep, remaining):
     # where the lock is waited for. An unlocked write lands between that migration's
     # read and its write and is replaced by the migrated pre-write document.
     await asyncio.to_thread(loader_mod.update_config_locked, config_path, mutate=_set_retention)
-    assert loader_mod.KiroCrewConfig.load().memory.backup_keep == keep
-    assert loader_mod.KiroCrewConfig.load().memory.backup_keep == keep
+    assert loader_mod.AjCrewConfig.load().memory.backup_keep == keep
+    assert loader_mod.AjCrewConfig.load().memory.backup_keep == keep
     for day in range(1, 9):
         assert memory_backup.backup_store(path, now=datetime(2020, 1, day, tzinfo=timezone.utc))
     response = await memory_admin.api_memory_backup(
@@ -1157,7 +1157,7 @@ class TestTheLegacyMemoryProbeRunsOffTheLoop:
 
     @pytest.mark.asyncio
     async def test_the_probe_runs_in_a_worker_thread(self, env, monkeypatch) -> None:
-        from kiro_crew import memory as memory_mod
+        from aj_crew import memory as memory_mod
 
         loop_thread = threading.get_ident()
         seen: list[int] = []

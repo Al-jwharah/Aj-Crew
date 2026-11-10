@@ -8,7 +8,7 @@ const {
   READY_PATH,
 } = require("../../instance-guard");
 
-const RESTARTING_STATUS = "Restarting Kiro Crew to finish the update…";
+const RESTARTING_STATUS = "Restarting Aj Crew to finish the update…";
 // How long this instance stays alive waiting for a successor copy of the app
 // to prove itself by serving on the gateway port (relaunchViaConfirmedSuccessor):
 // Electron boot, then the successor's own gateway budget.
@@ -120,7 +120,7 @@ function createSuccessorHandoff({
    * re-execs the same configuration, so the successor binds this process's own
    * port and inherits the environment that chose it. Turning the local gateway
    * back on does not: the successor would re-run port selection with the setting
-   * now on, and an inherited `KIROCREW_PORT` outranks that selection, so the
+   * now on, and an inherited `AJCREW_PORT` outranks that selection, so the
    * successor could bind a port this process is not watching and be killed while
    * healthy. That caller therefore pins its chosen port into the successor's
    * environment, which makes the watched port and the bound port one value
@@ -202,7 +202,7 @@ function createSuccessorHandoff({
     };
     const spawnOptions = { detached: true, stdio: "ignore" };
     if (pinPort) {
-      spawnOptions.env = { ...processObj.env, KIROCREW_PORT: String(expectPort) };
+      spawnOptions.env = { ...processObj.env, AJCREW_PORT: String(expectPort) };
     }
     const successor = spawn(target, args, spawnOptions);
 
@@ -254,7 +254,7 @@ function createSuccessorHandoff({
     //
     // The four outcomes are deliberately not collapsed, because they call for
     // three different actions:
-    //   kirocrew / service -- positively ours. Confirm. A successor spawns its
+    //   ajcrew / service -- positively ours. Confirm. A successor spawns its
     //     own gateway child, so the holder is a grandchild of this process and
     //     never the pid we spawned; this classifies the process, not the
     //     instance, which is why it still passes an ordinary handoff.
@@ -276,7 +276,7 @@ function createSuccessorHandoff({
     //     never served, which is the wrong cause.
     const successorOwnsPort = async () => {
       const owner = await probeGatewayPortOwner(expectPort);
-      if (owner === "kirocrew" || owner === "service") return "confirm";
+      if (owner === "ajcrew" || owner === "service") return "confirm";
       if (owner === "foreign") return "foreign";
       if (owner === "unknown") {
         glog(

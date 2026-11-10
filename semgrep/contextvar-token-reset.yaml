@@ -10,7 +10,7 @@ rules:
   #   ...
   #   var.set(previous)
 
-  - id: kirocrew.contextvar-token-reset
+  - id: ajcrew.contextvar-token-reset
     patterns:
       - pattern: |
           $TOKEN = $VAR.set(...)

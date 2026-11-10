@@ -4,7 +4,7 @@
 // beside the approval prose. These tests pin that the card reads that verdict
 // first, that a message without it (persisted before the field existed) renders
 // exactly as before, and that the tier labels and confirmations name the channel
-// grant's real scope (agent-scoped, until Kiro Crew restarts; blanket = channel-wide,
+// grant's real scope (agent-scoped, until Aj Crew restarts; blanket = channel-wide,
 // persisted).
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 
@@ -25,7 +25,7 @@ beforeAll(() => {
 type Raw = Record<string, unknown>
 
 const member = (over: Raw = {}): Raw => ({
-  id: 'a1', role: 'Researcher', agent_name: 'kiro-crew-default',
+  id: 'a1', role: 'Researcher', agent_name: 'aj-crew-default',
   state: 'listening', listen_mode: 'mention', approval_policy: 'writes', ...over,
 })
 
@@ -41,7 +41,7 @@ function mockApi(messages: Raw[]) {
   vi.mocked(api).channelGet = vi.fn().mockResolvedValue(ch)
   vi.mocked(api).channelPresets = vi.fn().mockResolvedValue({ presets: undefined })
   vi.mocked(api).channelApproveAgent = vi.fn().mockResolvedValue({ ok: true })
-  vi.mocked(api).kirocrewAgents = vi.fn().mockResolvedValue({ agents: [], default_agent: 'legacy-default' })
+  vi.mocked(api).ajcrewAgents = vi.fn().mockResolvedValue({ agents: [], default_agent: 'legacy-default' })
   vi.mocked(api).agentCatalog = vi.fn().mockResolvedValue({ agents: [], default_agent: 'legacy-default' })
 }
 
@@ -106,7 +106,7 @@ describe('ChannelPage approval card with meta', () => {
     fireEvent.click(screen.getByRole('button', { name: /Trust/ }))
     const items = screen.getAllByRole('menuitem').map(i => i.textContent ?? '')
     expect(items).toHaveLength(2)
-    expect(items[0]).toBe('Trust cat f | wc -l for @Researcher — until Kiro Crew restarts')
+    expect(items[0]).toBe('Trust cat f | wc -l for @Researcher — until Aj Crew restarts')
     expect(items[1]).toBe(BLANKET)
     // On the prose path the first token would have offered "cat" -- a grant the
     // endpoint refuses (pattern_underivable). No item names it.
@@ -119,14 +119,14 @@ describe('ChannelPage approval card with meta', () => {
     fireEvent.click(screen.getByRole('button', { name: /Trust/ }))
     const items = screen.getAllByRole('menuitem')
     expect(items.map(i => i.textContent)).toEqual([
-      'Trust ls -la /tmp for @Researcher — until Kiro Crew restarts',
-      'Trust all ls commands for @Researcher — until Kiro Crew restarts',
+      'Trust ls -la /tmp for @Researcher — until Aj Crew restarts',
+      'Trust all ls commands for @Researcher — until Aj Crew restarts',
       BLANKET,
     ])
     fireEvent.click(items[1])
     await waitFor(() => expect(vi.mocked(api).channelApproveAgent)
       .toHaveBeenCalledWith('ch1', 'a1', 'trust_base', 'ls *'))
-    expect(screen.getByText('Trusted — ls commands are auto-approved for @Researcher until Kiro Crew restarts')).toBeInTheDocument()
+    expect(screen.getByText('Trusted — ls commands are auto-approved for @Researcher until Aj Crew restarts')).toBeInTheDocument()
   })
 
   it('prefers the meta title over the prose for the exact-command grant', async () => {
@@ -139,7 +139,7 @@ describe('ChannelPage approval card with meta', () => {
     await waitFor(() => expect(vi.mocked(api).channelApproveAgent)
       .toHaveBeenCalledWith('ch1', 'a1', 'trust_command', 'ls -la /tmp'))
     const chip = screen.getByText('ls -la /tmp', { selector: 'span' })
-    expect(chip.parentElement!.textContent!.trim()).toBe('Trusted — ls -la /tmp is auto-approved for @Researcher until Kiro Crew restarts')
+    expect(chip.parentElement!.textContent!.trim()).toBe('Trusted — ls -la /tmp is auto-approved for @Researcher until Aj Crew restarts')
   })
 
   it.each([
@@ -235,6 +235,6 @@ describe('ApprovalCard meta-driven props', () => {
     fireEvent.click(screen.getByRole('button', { name: /Trust/ }))
     fireEvent.click(screen.getAllByRole('menuitem')[0])
     const chip = await screen.findByText(cmd, { selector: 'span' })
-    expect(chip.parentElement!.textContent!.trim()).toBe(`Trusted — ${cmd} is auto-approved for @Researcher until Kiro Crew restarts`)
+    expect(chip.parentElement!.textContent!.trim()).toBe(`Trusted — ${cmd} is auto-approved for @Researcher until Aj Crew restarts`)
   })
 })

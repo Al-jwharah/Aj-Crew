@@ -3,7 +3,7 @@
  *
  * A relay archive (remote-executor) session refuses every turn-starting
  * action server-side: `relay_archive_refusal` in
- * `src/kiro_crew/dashboard/relay_archive.py` answers 409
+ * `src/aj_crew/dashboard/relay_archive.py` answers 409
  * `relay_archive_read_only` for regenerate, edit-resend, rewind and continue,
  * because each would run the crew's old turn on THIS machine. Continue was already gated client-side (`selectContinuable`);
  * regenerate and edit-resend were NOT, so ChatPage offered controls the server

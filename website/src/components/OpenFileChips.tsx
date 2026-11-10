@@ -8,7 +8,7 @@ import { pathBasename } from '../utils/pathBasename'
 
 /**
  * One "Open file" chip per file an assistant reply offers with an open-file
- * marker (`<!-- kirocrew:open-file path="/abs/notes.md" -->`, see
+ * marker (`<!-- ajcrew:open-file path="/abs/notes.md" -->`, see
  * detectOpenFileMarker). The marker only decides that the chip is shown:
  * rendering, streaming and reloading the transcript open nothing.
  *

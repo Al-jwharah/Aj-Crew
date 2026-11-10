@@ -12,15 +12,15 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_mode
-from kiro_crew.dashboard import crew_dispatch_notice as cdn
+from aj_crew import crew_mode
+from aj_crew.dashboard import crew_dispatch_notice as cdn
 
 
 @pytest.fixture
 def appended(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, Any]]:
     """Capture every ``append_and_surface`` call the notice writer makes.
 
-    Patched on ``kiro_crew.dashboard.state`` because the writer imports it from
+    Patched on ``aj_crew.dashboard.state`` because the writer imports it from
     there at call time.
     """
     rows: list[dict[str, Any]] = []
@@ -32,7 +32,7 @@ def appended(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, Any]]:
         rows.append(row)
         return row
 
-    import kiro_crew.dashboard.state as state_mod
+    import aj_crew.dashboard.state as state_mod
 
     monkeypatch.setattr(state_mod, "append_and_surface", _fake_append, raising=True)
     return rows
@@ -42,9 +42,9 @@ def _root_slot(key: str = "r", *, turn_generation: int = 1) -> SimpleNamespace:
     """A Crew Mode root conductor slot: a conductor template, no creator."""
     return SimpleNamespace(
         key=key,
-        agent="kirocrew-conductor",
+        agent="ajcrew-conductor",
         agent_kind="template",
-        crew_mode_agent="kirocrew-conductor",
+        crew_mode_agent="ajcrew-conductor",
         mode="",
         memory_mode="persistent",
         _created_by="",
@@ -163,13 +163,13 @@ def _run_create_route(tmp_path, monkeypatch, *, refuse: bool) -> list[dict[str, 
 
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard import create_rate_limit
-    from kiro_crew.dashboard import session_control as sc
-    from kiro_crew.dashboard.chat_utils import slot_history_key
-    from kiro_crew.dashboard.handlers import session_control as handlers_sc
-    from kiro_crew.dashboard.handlers import work_ledger as ledger_routes
+    from aj_crew.dashboard import create_rate_limit
+    from aj_crew.dashboard import session_control as sc
+    from aj_crew.dashboard.chat_utils import slot_history_key
+    from aj_crew.dashboard.handlers import session_control as handlers_sc
+    from aj_crew.dashboard.handlers import work_ledger as ledger_routes
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setattr(sc, "session_control_enabled", lambda: True)
     create_rate_limit.reset_for_tests()
 

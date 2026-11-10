@@ -6,8 +6,8 @@ import unicodedata
 
 import pytest
 
-from kiro_crew.config import loader
-from kiro_crew.config.loader import _sanitize_bot_name
+from aj_crew.config import loader
+from aj_crew.config.loader import _sanitize_bot_name
 
 # Non-ASCII fixtures are spelled as escapes so the file stays ASCII; the
 # comment beside each names what the reader would see.
@@ -145,7 +145,7 @@ class TestSanitizeBotNameUnicode:
         format and unassigned ones; this test checks the two together against
         the artifact store's full published table, code point by code point.
         """
-        from kiro_crew.artifact_store.rules import _DEFAULT_IGNORABLE
+        from aj_crew.artifact_store.rules import _DEFAULT_IGNORABLE
 
         kept = sorted(
             cp for cp in _DEFAULT_IGNORABLE if _sanitize_bot_name(f"K{chr(cp)}iro") != "Kiro"
@@ -236,7 +236,7 @@ class TestSanitizeBotNameUnicode:
         inside that shape; the tag rule is the artifact store's, read here only
         as the reference the filter mirrors.
         """
-        from kiro_crew.artifact_store.rules import normalize_tag
+        from aj_crew.artifact_store.rules import normalize_tag
 
         assert _sanitize_bot_name(name) == name
         assert normalize_tag(name) == name
@@ -244,7 +244,7 @@ class TestSanitizeBotNameUnicode:
 
 class TestBotNameSubstitution:
     def test_custom_name_substituted(self):
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         ctx = ContextBuilder(bot_name="Alita")
         assert ctx._substitute_bot_name("You are {bot_name} 🐾") == "You are Alita 🐾"
@@ -252,29 +252,29 @@ class TestBotNameSubstitution:
     def test_empty_defaults_from_config(self):
         from unittest.mock import patch
 
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         # When provider is ACP, default bot_name is "Kiro"
-        with patch("kiro_crew.context.KiroCrewConfig.load") as mock_cfg:
+        with patch("aj_crew.context.AjCrewConfig.load") as mock_cfg:
             mock_cfg.return_value.agent.provider = "acp"
             ctx = ContextBuilder(bot_name="")
             assert ctx._substitute_bot_name("You are {bot_name}.") == "You are Kiro."
 
-        # When provider is claude_code, default bot_name is "KiroCrew"
-        with patch("kiro_crew.context.KiroCrewConfig.load") as mock_cfg:
+        # When provider is claude_code, default bot_name is "AjCrew"
+        with patch("aj_crew.context.AjCrewConfig.load") as mock_cfg:
             mock_cfg.return_value.agent.provider = "claude_code"
             ctx = ContextBuilder(bot_name="")
-            assert ctx._substitute_bot_name("You are {bot_name}.") == "You are KiroCrew."
+            assert ctx._substitute_bot_name("You are {bot_name}.") == "You are AjCrew."
 
     def test_no_placeholder_is_noop(self):
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         ctx = ContextBuilder(bot_name="Alita")
         assert ctx._substitute_bot_name("No placeholder here.") == "No placeholder here."
 
     def test_self_referential_no_recursion(self):
         """bot_name containing {bot_name} — braces stripped by sanitizer."""
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         name = _sanitize_bot_name("{bot_name}")
         ctx = ContextBuilder(bot_name=name)

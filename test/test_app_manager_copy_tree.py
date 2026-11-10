@@ -16,7 +16,7 @@ from app_manager_helpers import app_home_fixture  # noqa: F401 - fixture
 from app_manager_helpers import _DATA_IS_A_FILE, _DATA_IS_A_LINK, _make_app_source
 
 from conftest import requires_symlinks
-from kiro_crew.apps.manager import (
+from aj_crew.apps.manager import (
     APP_MANIFEST_FILENAME,
     _read_installed,
     enable_app,
@@ -27,7 +27,7 @@ from kiro_crew.apps.manager import (
     registry_source_repository,
     update_app,
 )
-from kiro_crew.testing.wait import await_until, finished, wait_until
+from aj_crew.testing.wait import await_until, finished, wait_until
 
 #: The update's refusal for an installed `.app_secret` that is a symlink; the
 #: test pins the full sentence so a wording change is visible.
@@ -59,7 +59,7 @@ class TestCopyAppTree:
         result = install_app(src)
         assert result.ok, result.error
 
-        from kiro_crew.apps.manager import app_dir
+        from aj_crew.apps.manager import app_dir
 
         dest = app_dir("test-app")
         assert not (dest / "assets-link").exists()
@@ -82,7 +82,7 @@ class TestCopyAppTree:
         result = install_app(src)
         assert result.ok, result.error
 
-        from kiro_crew.apps.manager import app_dir
+        from aj_crew.apps.manager import app_dir
 
         dest = app_dir("test-app")
         link = dest / "alias"
@@ -110,13 +110,13 @@ class TestCopyAppTree:
         # Copying it would put a foreign wheel tree FIRST on the child's
         # PYTHONPATH, shadowing the correctly provisioned copy. The transient
         # staging/prior swap directories are denylisted for the same reason.
-        (src / ".kirocrew-deps").mkdir()
-        (src / ".kirocrew-deps" / "requests").mkdir()
-        (src / ".kirocrew-deps" / "requests" / "__init__.py").write_text("x = 1")
-        (src / ".kirocrew-deps-staging").mkdir()
-        (src / ".kirocrew-deps-staging" / "partial.py").write_text("x = 1")
-        (src / ".kirocrew-deps-prior").mkdir()
-        (src / ".kirocrew-deps-prior" / "old.py").write_text("x = 1")
+        (src / ".ajcrew-deps").mkdir()
+        (src / ".ajcrew-deps" / "requests").mkdir()
+        (src / ".ajcrew-deps" / "requests" / "__init__.py").write_text("x = 1")
+        (src / ".ajcrew-deps-staging").mkdir()
+        (src / ".ajcrew-deps-staging" / "partial.py").write_text("x = 1")
+        (src / ".ajcrew-deps-prior").mkdir()
+        (src / ".ajcrew-deps-prior" / "old.py").write_text("x = 1")
         # A real `build/` dir is NOT denylisted: the manifest may reference
         # runtime paths anywhere under the app root, so it must survive.
         # (A `build` *symlink* is neutralized by symlinks=True instead.)
@@ -126,20 +126,20 @@ class TestCopyAppTree:
         result = install_app(src)
         assert result.ok, result.error
 
-        from kiro_crew.apps.manager import app_dir
+        from aj_crew.apps.manager import app_dir
 
         dest = app_dir("test-app")
         assert not (dest / "ui" / "node_modules").exists()
         assert not (dest / ".git").exists()
         assert not (dest / "__pycache__").exists()
-        assert not (dest / ".kirocrew-deps").exists()
-        assert not (dest / ".kirocrew-deps-staging").exists()
-        assert not (dest / ".kirocrew-deps-prior").exists()
+        assert not (dest / ".ajcrew-deps").exists()
+        assert not (dest / ".ajcrew-deps-staging").exists()
+        assert not (dest / ".ajcrew-deps-prior").exists()
         assert (dest / "build" / "artifact.txt").is_file()
         assert (dest / "ui" / "dist" / "index.mjs").is_file()
 
     def test_lifecycle_lock_is_per_app(self):
-        from kiro_crew.apps.manager import app_lifecycle_lock
+        from aj_crew.apps.manager import app_lifecycle_lock
 
         lock_a = app_lifecycle_lock("app-a")
         assert app_lifecycle_lock("app-a") is lock_a
@@ -215,7 +215,7 @@ class TestCopyAppTree:
 
     def test_orphaned_partial_install_self_heals(self, tmp_path, app_home):
         """dest exists with junk but no installed metadata → fresh install wins."""
-        from kiro_crew.apps.manager import app_dir
+        from aj_crew.apps.manager import app_dir
 
         orphan = app_dir("test-app")
         orphan.mkdir(parents=True)
@@ -228,7 +228,7 @@ class TestCopyAppTree:
         assert (orphan / APP_MANIFEST_FILENAME).is_file()
 
     def test_local_install_cannot_claim_a_repository_bound_grant(self, tmp_path, app_home):
-        from kiro_crew.config.loader import _invalidate_config_cache
+        from aj_crew.config.loader import _invalidate_config_cache
 
         reviewed = "https://clone.example.test/Owner/reviewed-app"
         (app_home / "config.json").write_text(
@@ -252,7 +252,7 @@ class TestCopyAppTree:
         assert get_app("test-app") is None
 
     def test_external_registration_cannot_claim_a_repository_bound_grant(self, app_home):
-        from kiro_crew.config.loader import _invalidate_config_cache
+        from aj_crew.config.loader import _invalidate_config_cache
 
         reviewed = "https://clone.example.test/Owner/reviewed-app"
         (app_home / "config.json").write_text(
@@ -276,7 +276,7 @@ class TestCopyAppTree:
         assert get_app("test-app") is None
 
     def test_legacy_name_grant_cannot_install_repository_code(self, tmp_path, app_home):
-        from kiro_crew.config.loader import _invalidate_config_cache
+        from aj_crew.config.loader import _invalidate_config_cache
 
         (app_home / "config.json").write_text(
             json.dumps({"agent": {"apps_trusted": ["test-app"]}}),
@@ -295,7 +295,7 @@ class TestCopyAppTree:
         assert get_app("test-app") is None
 
     def test_legacy_name_grant_cannot_claim_fresh_local_install(self, tmp_path, app_home):
-        from kiro_crew.config.loader import _invalidate_config_cache
+        from aj_crew.config.loader import _invalidate_config_cache
 
         (app_home / "config.json").write_text(
             json.dumps({"agent": {"apps_trusted": ["test-app"]}}),
@@ -313,7 +313,7 @@ class TestCopyAppTree:
         self, tmp_path, app_home
     ):
         """The registry's one-argument manager call still gets its safe source."""
-        from kiro_crew.config.loader import _invalidate_config_cache
+        from aj_crew.config.loader import _invalidate_config_cache
 
         reviewed = "ssh://deploy@example.test/owner/repo"
         (app_home / "config.json").write_text(
@@ -343,8 +343,8 @@ class TestCopyAppTree:
         self, tmp_path, app_home, monkeypatch
     ):
         """A failure after installed.json cannot turn repository code local."""
-        from kiro_crew.apps.execution import app_execution_denied
-        from kiro_crew.config.loader import _invalidate_config_cache
+        from aj_crew.apps.execution import app_execution_denied
+        from aj_crew.config.loader import _invalidate_config_cache
 
         reviewed = "https://example.test/owner/reviewed"
         (app_home / "config.json").write_text(
@@ -364,7 +364,7 @@ class TestCopyAppTree:
             raise RuntimeError("secret bookkeeping failed")
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.token_auth.write_app_secret",
+            "aj_crew.dashboard.token_auth.write_app_secret",
             _bookkeeping_failure,
         )
 
@@ -382,7 +382,7 @@ class TestCopyAppTree:
     def test_provenance_enrichment_failure_keeps_provisional_repository(
         self, tmp_path, app_home, monkeypatch
     ):
-        from kiro_crew.apps import manager
+        from aj_crew.apps import manager
 
         reviewed = "https://example.test/owner/reviewed"
         with registry_source_repository(reviewed):
@@ -409,7 +409,7 @@ class TestCopyAppTree:
 
     def test_registry_context_rechecks_binding_at_replacement_boundary(self, tmp_path, app_home):
         """A source changed after registry preflight cannot reach the copy step."""
-        from kiro_crew.config.loader import _invalidate_config_cache
+        from aj_crew.config.loader import _invalidate_config_cache
 
         reviewed = "ssh://deploy@example.test/owner/reviewed"
         rebound = "ssh://deploy@example.test/owner/rebound"
@@ -438,7 +438,7 @@ class TestCopyAppTree:
     @pytest.mark.asyncio
     async def test_registry_context_is_task_local_across_to_thread(self):
         """Concurrent installs cannot exchange their repository coordinates."""
-        from kiro_crew.apps.manager import _effective_source_repository
+        from aj_crew.apps.manager import _effective_source_repository
 
         rendezvous = asyncio.Barrier(2)
 
@@ -460,8 +460,8 @@ class TestCopyAppTree:
         assert second == "https://example.test/owner/second"
 
     def test_legacy_name_grant_cannot_update_to_repository_code(self, tmp_path, app_home):
-        from kiro_crew.apps.manager import update_app
-        from kiro_crew.config.loader import _invalidate_config_cache
+        from aj_crew.apps.manager import update_app
+        from aj_crew.config.loader import _invalidate_config_cache
 
         assert install_app(_make_app_source(tmp_path)).ok
         (app_home / "config.json").write_text(
@@ -480,7 +480,7 @@ class TestCopyAppTree:
         assert get_app("test-app")["version"] == "1.0.0"
 
     def test_legacy_name_grant_cannot_register_repository_code(self, app_home):
-        from kiro_crew.config.loader import _invalidate_config_cache
+        from aj_crew.config.loader import _invalidate_config_cache
 
         (app_home / "config.json").write_text(
             json.dumps({"agent": {"apps_trusted": ["test-app"]}}),
@@ -500,8 +500,8 @@ class TestCopyAppTree:
         assert get_app("test-app") is None
 
     def test_installed_legacy_local_grant_can_update_local_code(self, tmp_path, app_home):
-        from kiro_crew.apps.manager import update_app
-        from kiro_crew.config.loader import _invalidate_config_cache
+        from aj_crew.apps.manager import update_app
+        from aj_crew.config.loader import _invalidate_config_cache
 
         assert install_app(_make_app_source(tmp_path)).ok
         (app_home / "config.json").write_text(
@@ -516,7 +516,7 @@ class TestCopyAppTree:
         assert get_app("test-app")["version"] == "2.0.0"
 
     def test_update_preserves_data_and_secret(self, tmp_path, app_home):
-        from kiro_crew.apps.manager import app_dir, update_app
+        from aj_crew.apps.manager import app_dir, update_app
 
         src = _make_app_source(tmp_path)
         assert install_app(src).ok
@@ -540,7 +540,7 @@ class TestCopyAppTree:
 
         Moving the link breaks its relative target, and the retired tree would delete the
         directory it named. The message comes from `gateway_data_dir_obstruction`."""
-        from kiro_crew.apps.manager import app_dir, update_app
+        from aj_crew.apps.manager import app_dir, update_app
 
         src = _make_app_source(tmp_path)
         assert install_app(src).ok
@@ -576,7 +576,7 @@ class TestCopyAppTree:
 
         `os.path.islink` and `Path.is_symlink` both say False for it. POSIX cannot create
         one, so `is_link_or_junction` is patched to report a real directory as a junction."""
-        from kiro_crew.apps.manager import (
+        from aj_crew.apps.manager import (
             _owned_data_dir,
             app_dir,
             preserved_data_awaits,
@@ -589,7 +589,7 @@ class TestCopyAppTree:
         before = _read_installed("test-app")
         junction = dest / "data"
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.is_link_or_junction", lambda path: Path(path) == junction
+            "aj_crew.apps.manager.is_link_or_junction", lambda path: Path(path) == junction
         )
         assert _owned_data_dir(junction) is False  # not a directory the gateway may move
         assert (
@@ -616,7 +616,7 @@ class TestCopyAppTree:
         resolves to, so the update refuses before anything moves: the link still
         stands and still resolves, the sentinel behind it is intact, the tree and
         the record are untouched, no temp copy and no retired tree appear."""
-        from kiro_crew.apps.manager import app_dir, update_app
+        from aj_crew.apps.manager import app_dir, update_app
 
         assert install_app(_make_app_source(tmp_path)).ok
         dest = app_dir("test-app")
@@ -646,7 +646,7 @@ class TestCopyAppTree:
 
         A link-only preflight would retire the file with the old tree and return `ok=True`
         with an empty `data/`. The check is `gateway_data_dir_obstruction`."""
-        from kiro_crew.apps.manager import app_dir, update_app
+        from aj_crew.apps.manager import app_dir, update_app
 
         assert install_app(_make_app_source(tmp_path)).ok
         dest = app_dir("test-app")
@@ -682,7 +682,7 @@ class TestCopyAppTree:
         moved onto it (which would deposit it inside the link's target and later
         rename the link back over `data`). Data, record, tree and the link's target
         are untouched; nothing is retired."""
-        from kiro_crew.apps.manager import app_dir, update_app
+        from aj_crew.apps.manager import app_dir, update_app
 
         assert install_app(_make_app_source(tmp_path)).ok
         dest = app_dir("test-app")
@@ -712,7 +712,7 @@ class TestCopyAppTree:
         complete copy in `.<name>-data-tmp`. The next update refuses
         before the transaction opens, names both paths and writes an audit
         record, instead of deleting that copy as stale."""
-        from kiro_crew.apps.manager import app_dir
+        from aj_crew.apps.manager import app_dir
 
         assert install_app(_make_app_source(tmp_path)).ok
         dest = app_dir("test-app")
@@ -724,7 +724,7 @@ class TestCopyAppTree:
         before = _read_installed("test-app")
         audit: list[dict] = []
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.sel",
+            "aj_crew.apps.manager.sel",
             lambda: type("FakeSel", (), {"log_api_access": lambda self, **kw: audit.append(kw)})(),
         )
 
@@ -748,7 +748,7 @@ class TestCopyAppTree:
         preserved secret it is replaced by that regular file; with none (an install
         that predates per-app secrets) nothing the source shipped stands there
         either, so no later write can be steered through an app-chosen link."""
-        from kiro_crew.apps.manager import app_dir, update_app
+        from aj_crew.apps.manager import app_dir, update_app
 
         assert install_app(_make_app_source(tmp_path)).ok
         dest = app_dir("test-app")
@@ -783,7 +783,7 @@ class TestCopyAppTree:
         the relative target does not resolve, so `tmp_secret.is_file()` fails
         and the secret is silently lost.  Refused before the transaction opens:
         the link, its target, the rest of the tree and the record are untouched."""
-        from kiro_crew.apps.manager import app_dir
+        from aj_crew.apps.manager import app_dir
 
         src = _make_app_source(tmp_path)
         assert install_app(src).ok
@@ -819,7 +819,7 @@ class TestCopyAppTree:
         `data` FILE reached the app directory and `app_data_dir()` raised AFTER the
         new record and tree were durable and the old tree discarded. Refused inside
         the transaction instead: the old tree and record come back whole."""
-        from kiro_crew.apps.manager import app_dir, update_app
+        from aj_crew.apps.manager import app_dir, update_app
 
         src = _make_app_source(tmp_path)
         (src / "marker-v1.txt").write_text("", encoding="utf-8")
@@ -843,8 +843,8 @@ class TestCopyAppTree:
     def test_metadata_failure_restores_data_secret_and_retired_tree(
         self, tmp_path, app_home, monkeypatch, rollback_metadata_fails
     ):
-        from kiro_crew.apps import manager as manager_mod
-        from kiro_crew.apps.manager import app_dir, update_app
+        from aj_crew.apps import manager as manager_mod
+        from aj_crew.apps.manager import app_dir, update_app
 
         assert install_app(_make_app_source(tmp_path)).ok
         dest = app_dir("test-app")
@@ -895,9 +895,9 @@ class TestCopyAppTree:
         # live manifest, so a version that ADDS the grant must not inherit the
         # user's earlier "enabled" -- otherwise an update silently widens what
         # the app may do to their sessions.
-        from kiro_crew.apps import manager as manager_mod
-        from kiro_crew.apps.manager import update_app
-        from kiro_crew.apps.permissions import app_can_manage_session_approvals
+        from aj_crew.apps import manager as manager_mod
+        from aj_crew.apps.manager import update_app
+        from aj_crew.apps.permissions import app_can_manage_session_approvals
 
         assert install_app(_make_app_source(tmp_path)).ok
         assert enable_app("test-app").ok
@@ -973,7 +973,7 @@ class TestCopyAppTree:
     def test_update_keeping_session_approval_stays_enabled(self, tmp_path, app_home):
         # The grant was already declared when the user enabled the app, so a
         # refresh that keeps it is not a new request.
-        from kiro_crew.apps.manager import update_app
+        from aj_crew.apps.manager import update_app
 
         assert install_app(_make_app_source(tmp_path, permissions={"sessionApproval": True})).ok
         assert enable_app("test-app", session_approval_consent=True).ok
@@ -1071,7 +1071,7 @@ class TestCopyAppTree:
         assert get_app("ext-keypad")["sessionApprovalConsentPending"] is False
 
     def test_failed_self_registration_widening_restores_metadata(self, app_home, monkeypatch):
-        from kiro_crew.apps import manager as manager_mod
+        from aj_crew.apps import manager as manager_mod
 
         assert register_external_app("ext-keypad", "1.0.0", "Keypad").ok
         original = _read_installed("ext-keypad")
@@ -1106,7 +1106,7 @@ class TestCopyAppTree:
     def test_failed_self_registration_removal_preserves_pending_consent(
         self, app_home, monkeypatch
     ):
-        from kiro_crew.apps import manager as manager_mod
+        from aj_crew.apps import manager as manager_mod
 
         manifest = {
             "name": "ext-keypad",
@@ -1144,7 +1144,7 @@ class TestCopyAppTree:
         self, tmp_path, app_home
     ):
         # A disabled app can be enabled later, so a new grant still needs consent.
-        from kiro_crew.apps.manager import update_app
+        from aj_crew.apps.manager import update_app
 
         assert install_app(_make_app_source(tmp_path)).ok
         assert get_app("test-app")["enabled"] is False
@@ -1177,7 +1177,7 @@ class TestCopyAppTree:
         assert get_app("test-app")["sessionApprovalConsentPending"] is False
 
     def test_local_update_clears_prior_registry_provenance(self, tmp_path, app_home):
-        from kiro_crew.apps.manager import (
+        from aj_crew.apps.manager import (
             _read_installed,
             set_app_provenance,
             update_app,
@@ -1222,14 +1222,14 @@ class TestCopyAppTree:
         result = install_app(src)
         assert result.ok, result.error
 
-        from kiro_crew.apps.manager import app_dir
+        from aj_crew.apps.manager import app_dir
 
         dest = app_dir("test-app")
         assert not (dest / "junction-dir").exists()
 
     def test_update_rejects_mismatched_source_name(self, tmp_path, app_home):
         """expected_name guards against updating app A from app B's source."""
-        from kiro_crew.apps.manager import update_app
+        from aj_crew.apps.manager import update_app
 
         src = _make_app_source(tmp_path)
         assert install_app(src).ok

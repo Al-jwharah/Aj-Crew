@@ -1,6 +1,6 @@
 name: Publish Docker (reusable)
 
-# Reusable workflow: build the multi-arch KiroCrew gateway image from the
+# Reusable workflow: build the multi-arch AjCrew gateway image from the
 # already-built wheel artifact and publish it to GitHub Container Registry.
 # Called by nightly.yml (channel: nightly) and release.yml (channel:
 # insider | stable) as its own lane BESIDE publish-cli / publish-linux /
@@ -8,7 +8,7 @@ name: Publish Docker (reusable)
 # takes no part in the macOS trust chain and depends only on the wheel, so
 # neither a desktop build nor a signing failure can block it.
 #
-# Registry: ghcr.io/<owner>/kirocrew. Deliberately GHCR, not the
+# Registry: ghcr.io/<owner>/ajcrew. Deliberately GHCR, not the
 # distribution CDN — OCI images are pulled through a registry protocol, the
 # CDN serves raw bytes. GHCR needs no AWS credentials at all: pushes
 # authenticate with the workflow's own GITHUB_TOKEN (packages:write), so
@@ -97,14 +97,14 @@ jobs:
   publish-docker:
     name: Publish Docker Image (${{ inputs.channel }})
     if: ${{ inputs.publish }}
-    # `kirocrew-runners` larger-runner group, reached by its runner LABEL rather
+    # `ajcrew-runners` larger-runner group, reached by its runner LABEL rather
     # than by GROUP. nightly.yml calls this lane with no repository guard, so a
     # fork running its own nightly starts it too; there an organization runner
     # group is unreachable and a job asking for a label no runner there carries
     # would wait out GitHub's pending limit instead of running. See
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 30
     env:
       CHANNEL: ${{ inputs.channel }}
@@ -161,7 +161,7 @@ jobs:
           # references must be lowercase. Forks resolve to their own
           # namespace automatically — no hardcoded org.
           OWNER="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
-          echo "name=ghcr.io/${OWNER}/kirocrew" >> "$GITHUB_OUTPUT"
+          echo "name=ghcr.io/${OWNER}/ajcrew" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
@@ -222,7 +222,7 @@ jobs:
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
       # Read the pinned kiro-cli version BEFORE the build so it lands in the
-      # dev.kirocrew.kiro-cli.version OCI label -- an auditable record of the
+      # dev.ajcrew.kiro-cli.version OCI label -- an auditable record of the
       # agent runtime a digest carries. The Dockerfile installs the same pin
       # (packaging/kiro-cli-version), sha256-verified against
       # packaging/kiro-cli-sha256, and fails if the two disagree.
@@ -251,7 +251,7 @@ jobs:
           provenance: false
           tags: ${{ steps.image.outputs.name }}:${{ inputs.version }}
           build-args: |
-            KIROCREW_VERSION=${{ inputs.version }}
+            AJCREW_VERSION=${{ inputs.version }}
             VCS_REF=${{ github.sha }}
             KIRO_CLI_VERSION=${{ steps.kirocli.outputs.version }}
             SOURCE_REPO_URL=${{ github.server_url }}/${{ github.repository }}
@@ -434,7 +434,7 @@ jobs:
           IMAGE="${{ steps.image.outputs.name }}"
           docker logout ghcr.io
           if ! docker buildx imagetools inspect "${IMAGE}:${VERSION}" > /dev/null 2>&1; then
-            echo "::error::Anonymous pull of ${IMAGE}:${VERSION} FAILED — the GHCR package is not public. Open the package settings for 'kirocrew' (Danger Zone → Change visibility → Public); GHCR creates packages private and does NOT inherit visibility from the repo, so this is expected on a first-ever publish and otherwise means visibility regressed. No rebuild is needed: the image and alias are already published; visibility is the only gate. Note the flip is one-way — a package made public cannot be made private again."
+            echo "::error::Anonymous pull of ${IMAGE}:${VERSION} FAILED — the GHCR package is not public. Open the package settings for 'ajcrew' (Danger Zone → Change visibility → Public); GHCR creates packages private and does NOT inherit visibility from the repo, so this is expected on a first-ever publish and otherwise means visibility regressed. No rebuild is needed: the image and alias are already published; visibility is the only gate. Note the flip is one-way — a package made public cannot be made private again."
             exit 1
           fi
           echo "Anonymous pull OK — package is public."
@@ -457,5 +457,5 @@ jobs:
             else
               echo "- Registry access: private (authenticate to GHCR before pulling)"
             fi
-            echo "- Run: \`docker run -d -p 127.0.0.1:5476:5476 -v kirocrew-home:/home/kirocrew ${{ steps.image.outputs.name }}:${CHANNEL}\`"
+            echo "- Run: \`docker run -d -p 127.0.0.1:5476:5476 -v ajcrew-home:/home/ajcrew ${{ steps.image.outputs.name }}:${CHANNEL}\`"
           } >> "$GITHUB_STEP_SUMMARY"

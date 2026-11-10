@@ -9,7 +9,7 @@ cgroup ceilings the restart storm takes journald and sshd down with it.
 
 The oracle is the store's own guard. ``KnowledgeStore.db`` calls
 ``OnLoopDBGuard.check()``, which RAISES ``OnLoopStoreError`` when
-``KIROCREW_STRICT_ON_LOOP_STORE`` is set and a connection is taken with a
+``AJCREW_STRICT_ON_LOOP_STORE`` is set and a connection is taken with a
 running loop. Arming that switch and driving each endpoint through a real
 ``TestClient`` therefore turns "this handler blocks the loop" into a test
 failure -- and it catches the interprocedural case too, where the handler calls
@@ -45,19 +45,19 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer, make_mocked_request
 
-from kiro_crew._sqlite_compat import sqlite3
-from kiro_crew.dashboard.handlers import knowledge as kh
-from kiro_crew.knowledge.store import _ON_LOOP_DB_GUARD, KnowledgeStore
-from kiro_crew.knowledge.url_fetch import FetchedPage
-from kiro_crew.on_loop_db import OnLoopStoreError
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew._sqlite_compat import sqlite3
+from aj_crew.dashboard.handlers import knowledge as kh
+from aj_crew.knowledge.store import _ON_LOOP_DB_GUARD, KnowledgeStore
+from aj_crew.knowledge.url_fetch import FetchedPage
+from aj_crew.on_loop_db import OnLoopStoreError
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 @pytest.fixture(autouse=True)
 def _listed_test_hosts(_floor_monkeypatch):
     """List the hosts these sources name in ``knowledge.doc_ingest_hosts``.
 
-    A source with no connector is fetched by Kiro Crew only from a listed host,
+    A source with no connector is fetched by Aj Crew only from a listed host,
     and the list is empty by default; these tests exercise what happens after
     that gate lets the URL through.
     """
@@ -212,7 +212,7 @@ class TestEndpointsNeverTakeTheConnectionOnTheLoop:
         path = template.format(item=ids["item_id"], source=ids["source_id"])
         # Armed only now: seeding above deliberately runs off-loop, and the
         # fixture's own construction is the sanctioned on-loop take.
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         async with TestClient(TestServer(_make_app(store))) as client:
             resp = await client.request(method, path, json=body)
         # 500 is what an OnLoopStoreError surfaces as; any other status means the
@@ -227,7 +227,7 @@ class TestEndpointsNeverTakeTheConnectionOnTheLoop:
         this is the variant that ran two on-loop takes rather than one.
         """
         await asyncio.to_thread(_seed, store)
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         app = _make_app(store, embedder=_FakeEmbedder())
         async with TestClient(TestServer(app)) as client:
             resp = await client.get("/api/knowledge/stats")
@@ -246,7 +246,7 @@ class TestEndpointsNeverTakeTheConnectionOnTheLoop:
     async def test_batch_embed_is_off_loop(self, store, monkeypatch):
         """The fill-NULL embedding pass reads, writes and re-counts off-loop."""
         await asyncio.to_thread(_seed, store)
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         app = _make_app(store, embedder=_FakeEmbedder())
         async with TestClient(TestServer(app)) as client:
             resp = await client.post("/api/knowledge/embedding/generate", json={})
@@ -257,7 +257,7 @@ class TestEndpointsNeverTakeTheConnectionOnTheLoop:
 
     @pytest.mark.asyncio
     async def test_import_bundle_is_off_loop(self, store, monkeypatch):
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         bundle = {
             "items": [],
             "entities": [],
@@ -285,7 +285,7 @@ class TestOracleHasTeeth:
 
     @pytest.mark.asyncio
     async def test_direct_query_on_the_loop_raises(self, store, monkeypatch):
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         with pytest.raises(OnLoopStoreError):
             store.db.execute("SELECT COUNT(*) FROM items").fetchone()
 
@@ -293,7 +293,7 @@ class TestOracleHasTeeth:
     async def test_store_method_on_the_loop_raises(self, store, monkeypatch):
         """The interprocedural shape the reports carried: a plain store method
         called from a coroutine, taking the connection one frame down."""
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         with pytest.raises(OnLoopStoreError):
             store.get_stats()
 
@@ -305,7 +305,7 @@ class TestOracleHasTeeth:
         monkeypatch.setattr(
             kh.asyncio, "to_thread", AsyncMock(side_effect=lambda fn, *a, **k: fn(*a, **k))
         )
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         async with TestClient(TestServer(_make_app(store))) as client:
             resp = await client.get("/api/knowledge/namespaces")
         assert resp.status == 500
@@ -491,7 +491,7 @@ class TestBackgroundTasksOwnTheSyncStamp:
         second upload of a filename and silently drop the file the user sent."""
         source_id = await asyncio.to_thread(_seed_source, store)
         await asyncio.to_thread(_set_status, store, source_id, "syncing")
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         # The stamp is unconditional: a row already 'syncing' still gets ingested.
         await asyncio.to_thread(kh._set_sync_status, store, source_id, "syncing")
         assert await asyncio.to_thread(_sync_status, store, source_id) == "syncing"
@@ -505,7 +505,7 @@ class TestBackgroundTasksOwnTheSyncStamp:
         'processing' row, so an interrupted finalize cannot block the guard, and
         nothing here needs to reach the store on the loop."""
         job_id = await asyncio.to_thread(_seed_job, store)
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         embedder = _FakeEmbedder()
 
         async def _boom(*a, **k):
@@ -521,7 +521,7 @@ class TestBackgroundTasksOwnTheSyncStamp:
     @pytest.mark.asyncio
     async def test_rebuild_job_finalize_is_off_loop_on_failure(self, store, monkeypatch):
         job_id = await asyncio.to_thread(_seed_job, store)
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
 
         async def _boom(*a, **k):
             raise RuntimeError("embedder exploded")
@@ -749,7 +749,7 @@ class TestPropertiesBlobSurvives:
         """The read must not happen on the loop: under strict mode an on-loop
         read raises, so a green call proves both ends are in the worker."""
         source_id = await asyncio.to_thread(_seed_source, store)
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         outcome, row, props = await asyncio.to_thread(
             kh._adopt_source, store, source_id, event="source.confirm"
         )
@@ -1394,7 +1394,7 @@ class TestCancellationFinalizesSyncStatus:
         """A cancel inside the budget-deferral arm is not caught by the sibling
         ``except BaseException`` arm, so the 'pending' write itself must be
         cancel-safe: drained, finalized, re-raised -- never left 'syncing'."""
-        from kiro_crew.knowledge.ingestion import ImportChunkBudgetError
+        from aj_crew.knowledge.ingestion import ImportChunkBudgetError
 
         source_id = await asyncio.to_thread(_seed_source, store)
         entered = threading.Event()

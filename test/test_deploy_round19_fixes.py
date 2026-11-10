@@ -15,7 +15,7 @@ import pytest
 
 def test_f1_sanitize_response_redacts_credential_in_error():
     """Error response containing an AKIA key in local_dir path gets redacted."""
-    from kiro_crew.deploy.handlers import _sanitize_response
+    from aj_crew.deploy.handlers import _sanitize_response
     payload = {"error": "local_dir not found: /tmp/AKIAIOSFODNN7EXAMPLE/build"}
     result = _sanitize_response(payload)
     assert "AKIAIOSFODNN7EXAMPLE" not in result.get("error", "")
@@ -24,7 +24,7 @@ def test_f1_sanitize_response_redacts_credential_in_error():
 
 def test_f1_sanitize_response_recursive_nested():
     """Nested dicts and lists are recursively sanitized."""
-    from kiro_crew.deploy.handlers import _sanitize_response
+    from aj_crew.deploy.handlers import _sanitize_response
     payload = {
         "outer": {"inner": "token=AKIAIOSFODNN7EXAMPLE"},
         "list": ["safe", "AKIAIOSFODNN7EXAMPLE"],
@@ -35,7 +35,7 @@ def test_f1_sanitize_response_recursive_nested():
 
 def test_f1_sanitize_response_idempotent_on_clean():
     """Clean text passes through unchanged."""
-    from kiro_crew.deploy.handlers import _sanitize_response
+    from aj_crew.deploy.handlers import _sanitize_response
     payload = {"status": "ok", "url": "https://example.cloudfront.net"}
     result = _sanitize_response(payload)
     assert result == payload
@@ -45,7 +45,7 @@ def test_f1_sanitize_response_idempotent_on_clean():
 
 def test_f2_hardlink_rejected_in_staging(tmp_path):
     """A hardlinked file in the source tree blocks deploy staging."""
-    from kiro_crew.deploy.handlers import _stage_tree_safe
+    from aj_crew.deploy.handlers import _stage_tree_safe
     src = tmp_path / "site"
     src.mkdir()
     (src / "index.html").write_text("<h1>Hi</h1>")
@@ -64,7 +64,7 @@ def test_f2_hardlink_rejected_in_staging(tmp_path):
 
 def test_f2_normal_files_pass_staging(tmp_path):
     """Normal files (nlink=1) pass staging without error."""
-    from kiro_crew.deploy.handlers import _stage_tree_safe
+    from aj_crew.deploy.handlers import _stage_tree_safe
     src = tmp_path / "site"
     src.mkdir()
     (src / "index.html").write_text("<h1>Hi</h1>")
@@ -81,7 +81,7 @@ def test_f2_normal_files_pass_staging(tmp_path):
 def _load_attach_backend():
     spec_path = (
         Path(__file__).resolve().parent.parent
-        / "src/kiro_crew/deploy/skills/artifact-deploy/scripts/attach_backend.py"
+        / "src/aj_crew/deploy/skills/artifact-deploy/scripts/attach_backend.py"
     )
     spec = importlib.util.spec_from_file_location("attach_backend", spec_path)
     mod = importlib.util.module_from_spec(spec)
@@ -114,11 +114,11 @@ def test_f3_origin_domain_rejects_wrong_region():
 # --- F4: reaper tag verification ---
 
 def test_f4_reaper_dist_tag_mismatch_skips(capsys):
-    """Distribution with mismatched kirocrew:site tag is skipped, not deleted."""
+    """Distribution with mismatched ajcrew:site tag is skipped, not deleted."""
     from unittest.mock import patch as _patch
     spec_path = (
         Path(__file__).resolve().parent.parent
-        / "src/kiro_crew/deploy/skills/artifact-deploy/scripts/reaper_lambda/index.py"
+        / "src/aj_crew/deploy/skills/artifact-deploy/scripts/reaper_lambda/index.py"
     )
     spec = importlib.util.spec_from_file_location("reaper", spec_path)
     mod = importlib.util.module_from_spec(spec)
@@ -140,7 +140,7 @@ def test_f4_reaper_dist_tag_mismatch_skips(capsys):
         "DistributionConfig": {"Enabled": True},
     }
     mock_cf.list_tags_for_resource.return_value = {
-        "Tags": {"Items": [{"Key": "kirocrew:site", "Value": "OTHER-SLUG"}]}
+        "Tags": {"Items": [{"Key": "ajcrew:site", "Value": "OTHER-SLUG"}]}
     }
     man = {"distribution_id": "EABC12345678", "bucket": "", "slug": "my-site"}
     result = mod._reap_engine_arch(man, "my-site", 9999999999)
@@ -156,7 +156,7 @@ def test_f4_reaper_dist_tag_mismatch_skips(capsys):
 
 def test_f5_dedup_validates_webapp_metadata():
     """Dedup branch rejects invalid webapp_metadata (same as normal save path)."""
-    from kiro_crew.dashboard.handlers.artifacts import _validate_inbound_webapp_metadata
+    from aj_crew.dashboard.handlers.artifacts import _validate_inbound_webapp_metadata
 
     # Non-dict webapp_metadata is rejected
     bad_body = {"webapp_metadata": "not a dict"}
@@ -169,7 +169,7 @@ def test_f5_dedup_kind_conflict_code_exists():
     # The fix adds kind-conflict detection in the dedup branch.
     import inspect
 
-    from kiro_crew.dashboard.handlers import artifacts as art_mod
+    from aj_crew.dashboard.handlers import artifacts as art_mod
     source = inspect.getsource(art_mod.api_artifacts_create)
     assert "dedup kind conflict" in source
     assert "409" in source

@@ -14,15 +14,15 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from test_slack_renderer import _Provider, _RecSlack  # noqa: E402
 
-from kiro_crew.acp.types import (  # noqa: E402
+from aj_crew.acp.types import (  # noqa: E402
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
     AcpEvent,
 )
-from kiro_crew.messaging import TurnDriver  # noqa: E402
-from kiro_crew.slack.renderer import SlackRenderer  # noqa: E402
-from kiro_crew.slack.step_labels import (  # noqa: E402
+from aj_crew.messaging import TurnDriver  # noqa: E402
+from aj_crew.slack.renderer import SlackRenderer  # noqa: E402
+from aj_crew.slack.step_labels import (  # noqa: E402
     FALLBACK_LABEL,
     HOST_PLACEHOLDER,
     slack_step_label,
@@ -40,8 +40,8 @@ class TestSlackStepLabel:
         assert HOME not in label and "VENV=" not in label
 
     def test_a_path_under_the_worktree_is_relative_to_it(self):
-        label = slack_step_label(f"cat {WORKTREE}/src/kiro_crew/app.py", WORKTREE)
-        assert label == "cat src/kiro_crew/app.py"
+        label = slack_step_label(f"cat {WORKTREE}/src/aj_crew/app.py", WORKTREE)
+        assert label == "cat src/aj_crew/app.py"
 
     def test_the_worktree_itself_is_dot(self):
         assert slack_step_label(f"cd {WORKTREE} && git status", WORKTREE) == "cd . && git status"
@@ -117,7 +117,7 @@ class TestSlackStepLabel:
     def test_a_long_assignment_chain_is_cheap(self, monkeypatch: pytest.MonkeyPatch):
         # Cheap by bound, not by a clock: the scrub only ever reads the first
         # MAX_LABEL_INPUT_CHARS of a label, however long the model made it.
-        from kiro_crew.slack import step_labels
+        from aj_crew.slack import step_labels
 
         real = step_labels._ASSIGNMENTS
         seen: list[int] = []

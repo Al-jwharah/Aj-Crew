@@ -29,7 +29,7 @@ def _load_gate():
 
 gate = _load_gate()
 
-_ROOTS = ["test", "src/kiro_crew/apps/builtins"]
+_ROOTS = ["test", "src/aj_crew/apps/builtins"]
 
 
 def _violations(files, texts=None):
@@ -40,7 +40,7 @@ def _violations(files, texts=None):
 
 class TestParseTestpaths:
     def test_reads_the_pin_from_setup_cfg(self) -> None:
-        cfg = "[tool:pytest]\ntestpaths = test src/kiro_crew/apps/builtins\n"
+        cfg = "[tool:pytest]\ntestpaths = test src/aj_crew/apps/builtins\n"
         assert gate.parse_testpaths(cfg) == _ROOTS
 
     def test_missing_testpaths_fails_closed(self) -> None:
@@ -62,7 +62,7 @@ class TestClassification:
 
     def test_collected_roots_are_clean(self) -> None:
         assert (
-            _violations(["test/test_x.py", "src/kiro_crew/apps/builtins/foo/tests/test_y.py"]) == []
+            _violations(["test/test_x.py", "src/aj_crew/apps/builtins/foo/tests/test_y.py"]) == []
         )
 
     def test_a_directory_name_sharing_the_prefix_does_not_collect(self) -> None:

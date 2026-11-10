@@ -16,11 +16,11 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.browser_harness import discover
-from kiro_crew.browser_harness import install as harness_install
-from kiro_crew.browser_harness.supervisor import HarnessSupervisor
-from kiro_crew.dashboard.handlers import browser_harness_status as routes
-from kiro_crew.testing.wait import await_until
+from aj_crew.browser_harness import discover
+from aj_crew.browser_harness import install as harness_install
+from aj_crew.browser_harness.supervisor import HarnessSupervisor
+from aj_crew.dashboard.handlers import browser_harness_status as routes
+from aj_crew.testing.wait import await_until
 
 #: A gateway's environment: none of the skip markers set.
 _GATEWAY_ENV: dict[str, str] = {}
@@ -72,9 +72,9 @@ def _current(monkeypatch, value: bool) -> None:
 def test_a_test_rig_gateway_outside_pytest_and_ci_is_skipped_too() -> None:
     # scripts/gui-user-test/boot.sh and testing/harness.py pin the fake-agent mode;
     # neither sets PYTEST_CURRENT_TEST or CI when run by hand.
-    assert "KIROCREW_FAKE_ACP_TEST_MODE" in routes.AUTO_SKIP_ENV
+    assert "AJCREW_FAKE_ACP_TEST_MODE" in routes.AUTO_SKIP_ENV
     # A real cloud microVM gateway sets this one, and needs its browser.
-    assert "KIROCREW_SKIP_MODEL_DOWNLOAD" not in routes.AUTO_SKIP_ENV
+    assert "AJCREW_SKIP_MODEL_DOWNLOAD" not in routes.AUTO_SKIP_ENV
 
 
 @pytest.mark.asyncio
@@ -282,8 +282,8 @@ async def test_the_startup_hook_reclaims_first_then_auto_sets_up(monkeypatch) ->
     then runs the auto-setup, in that order."""
     from aiohttp import web
 
-    from kiro_crew.dashboard import server
-    from kiro_crew.dashboard.handlers import browser_harness_status
+    from aj_crew.dashboard import server
+    from aj_crew.dashboard.handlers import browser_harness_status
 
     order: list[str] = []
 
@@ -295,7 +295,7 @@ async def test_the_startup_hook_reclaims_first_then_auto_sets_up(monkeypatch) ->
         order.append("auto")
         return routes.AUTO_READY
 
-    monkeypatch.setattr("kiro_crew.browser_harness.supervisor.get_supervisor", lambda _home: _Sup())
+    monkeypatch.setattr("aj_crew.browser_harness.supervisor.get_supervisor", lambda _home: _Sup())
     monkeypatch.setattr(browser_harness_status, "auto_setup_browser_harness", fake_auto)
 
     class _DashState:

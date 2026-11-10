@@ -42,7 +42,7 @@ from unittest.mock import patch
 import pytest
 from source_corpus import parsed_candidates
 
-from kiro_crew.history import latest_transcript_ts, monotonic_transcript_ts, transcript_sort_key
+from aj_crew.history import latest_transcript_ts, monotonic_transcript_ts, transcript_sort_key
 
 _BANNED_FUNC = "save_conversation_turn"
 _SUPPRESS = "loop-ok"
@@ -56,13 +56,13 @@ _NESTED_SCOPES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)
 
 
 def _src_root() -> pathlib.Path:
-    """Locate the kiro_crew source tree (import-first, repo-path fallback)."""
+    """Locate the aj_crew source tree (import-first, repo-path fallback)."""
     try:
-        import kiro_crew  # noqa: PLC0415
+        import aj_crew  # noqa: PLC0415
 
-        return pathlib.Path(kiro_crew.__file__).resolve().parent
+        return pathlib.Path(aj_crew.__file__).resolve().parent
     except Exception:
-        return pathlib.Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+        return pathlib.Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 
 
 def _bound_names(tree: ast.Module) -> tuple[set[str], set[str]]:
@@ -149,7 +149,7 @@ def find_violations(source: str, path: str = "<source>") -> list[tuple[str, int]
 
 
 def collect_repo_violations() -> list[tuple[str, int]]:
-    """Scan every ``kiro_crew/**/*.py`` for an on-loop turn persist."""
+    """Scan every ``aj_crew/**/*.py`` for an on-loop turn persist."""
     base = _src_root().parent
     out: list[tuple[str, int]] = []
     # ``find_violations`` cannot report a hit unless ``_bound_names`` bound
@@ -200,7 +200,7 @@ def test_no_turn_is_persisted_on_the_event_loop() -> None:
 
 def test_detector_flags_an_on_loop_call() -> None:
     src = (
-        "from kiro_crew.llm_helpers import save_conversation_turn\n"
+        "from aj_crew.llm_helpers import save_conversation_turn\n"
         "async def f(log, k):\n"
         "    save_conversation_turn(log, k, 'a', 'b')\n"
     )
@@ -210,7 +210,7 @@ def test_detector_flags_an_on_loop_call() -> None:
 def test_detector_flags_an_aliased_on_loop_call() -> None:
     """A one-import rename must not defeat the gate."""
     src = (
-        "from kiro_crew.llm_helpers import save_conversation_turn as sct\n"
+        "from aj_crew.llm_helpers import save_conversation_turn as sct\n"
         "async def f(log, k):\n"
         "    sct(log, k, 'a', 'b')\n"
     )
@@ -220,7 +220,7 @@ def test_detector_flags_an_aliased_on_loop_call() -> None:
 def test_detector_flags_the_attribute_form() -> None:
     """Importing the MODULE must not be a way around the gate."""
     src = (
-        "from kiro_crew import llm_helpers\n"
+        "from aj_crew import llm_helpers\n"
         "async def f(log, k):\n"
         "    llm_helpers.save_conversation_turn(log, k, 'a', 'b')\n"
     )
@@ -229,7 +229,7 @@ def test_detector_flags_the_attribute_form() -> None:
 
 def test_detector_flags_an_aliased_module_attribute_call() -> None:
     src = (
-        "import kiro_crew.llm_helpers as lh\n"
+        "import aj_crew.llm_helpers as lh\n"
         "async def f(log, k):\n"
         "    lh.save_conversation_turn(log, k, 'a', 'b')\n"
     )
@@ -239,7 +239,7 @@ def test_detector_flags_an_aliased_module_attribute_call() -> None:
 def test_detector_ignores_a_same_named_method_on_another_object() -> None:
     """An unrelated object that happens to share the name must not trip it."""
     src = (
-        "from kiro_crew import llm_helpers\n"
+        "from aj_crew import llm_helpers\n"
         "async def f(store, log, k):\n"
         "    store.save_conversation_turn(log, k, 'a', 'b')\n"
     )
@@ -250,7 +250,7 @@ def test_detector_accepts_the_offloaded_form() -> None:
     """to_thread receives the function as a bare Name, so it is not a call."""
     src = (
         "import asyncio\n"
-        "from kiro_crew.llm_helpers import save_conversation_turn\n"
+        "from aj_crew.llm_helpers import save_conversation_turn\n"
         "async def f(log, k):\n"
         "    await asyncio.to_thread(save_conversation_turn, log, k, 'a', 'b')\n"
     )
@@ -260,7 +260,7 @@ def test_detector_accepts_the_offloaded_form() -> None:
 def test_detector_ignores_a_sync_caller() -> None:
     """A sync function is not on the loop; only async bodies are in scope."""
     src = (
-        "from kiro_crew.llm_helpers import save_conversation_turn\n"
+        "from aj_crew.llm_helpers import save_conversation_turn\n"
         "def f(log, k):\n"
         "    save_conversation_turn(log, k, 'a', 'b')\n"
     )
@@ -270,7 +270,7 @@ def test_detector_ignores_a_sync_caller() -> None:
 def test_detector_ignores_a_nested_sync_helper_inside_an_async_body() -> None:
     """A nested def is a separate frame — typically the thread target itself."""
     src = (
-        "from kiro_crew.llm_helpers import save_conversation_turn\n"
+        "from aj_crew.llm_helpers import save_conversation_turn\n"
         "async def f(log, k):\n"
         "    def _do():\n"
         "        save_conversation_turn(log, k, 'a', 'b')\n"
@@ -281,7 +281,7 @@ def test_detector_ignores_a_nested_sync_helper_inside_an_async_body() -> None:
 
 def test_loop_ok_comment_suppresses() -> None:
     src = (
-        "from kiro_crew.llm_helpers import save_conversation_turn\n"
+        "from aj_crew.llm_helpers import save_conversation_turn\n"
         "async def f(log, k):\n"
         "    save_conversation_turn(log, k, 'a', 'b')  # loop-ok: empty test log\n"
     )
@@ -290,7 +290,7 @@ def test_loop_ok_comment_suppresses() -> None:
 
 def test_loop_ok_inside_a_string_does_not_suppress() -> None:
     src = (
-        "from kiro_crew.llm_helpers import save_conversation_turn\n"
+        "from aj_crew.llm_helpers import save_conversation_turn\n"
         "async def f(log, k):\n"
         '    save_conversation_turn(log, k, "loop-ok", "b")\n'
     )
@@ -337,7 +337,7 @@ def test_the_choke_point_offloads_and_is_awaitable() -> None:
     """
     import inspect
 
-    from kiro_crew.llm_helpers import save_conversation_turn_off_loop
+    from aj_crew.llm_helpers import save_conversation_turn_off_loop
 
     assert inspect.iscoroutinefunction(save_conversation_turn_off_loop)
     src = inspect.getsource(save_conversation_turn_off_loop)
@@ -365,8 +365,8 @@ async def test_two_concurrent_turns_do_not_interleave(tmp_path) -> None:
     """
     import threading
 
-    from kiro_crew.history import ConversationLog
-    from kiro_crew.llm_helpers import save_conversation_turn_off_loop
+    from aj_crew.history import ConversationLog
+    from aj_crew.llm_helpers import save_conversation_turn_off_loop
 
     log = ConversationLog(tmp_path / "history")
     key = "s1"

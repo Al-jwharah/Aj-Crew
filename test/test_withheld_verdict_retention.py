@@ -484,7 +484,7 @@ VERDICT_BODY = (
     "## Some Review\n\n"
     f"[SOME-REVIEWED] {HEAD}\n"
     f"[BLOCK-MERGE] {HEAD}\n\n"
-    "UPHOLD-FENCED F1 src/kiro_crew/knowledge/store.py:3175 -- the finding a\n"
+    "UPHOLD-FENCED F1 src/aj_crew/knowledge/store.py:3175 -- the finding a\n"
     "reader has to be able to see in full, including this second line.\n"
 )
 

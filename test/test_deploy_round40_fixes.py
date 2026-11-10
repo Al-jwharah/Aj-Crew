@@ -6,7 +6,7 @@ F1: an EMPTY profile name must never reach ``aws configure set`` —
     ``POST {"name":"","create":true}`` would silently rewrite the user's
     DEFAULT AWS profile. Both layers must reject empty explicitly.
 
-F2: the ``.kirocrew-deploy.json`` control manifest lives beside published
+F2: the ``.ajcrew-deploy.json`` control manifest lives beside published
     site content in a CloudFront origin bucket — without an explicit Deny it
     is world-readable through the distribution (leaks local username +
     bucket/distribution/OAC ids). Both bucket policies (engine per-site +
@@ -16,13 +16,13 @@ import json
 from pathlib import Path
 from unittest import mock
 
-from kiro_crew.deploy import engine, profiles
-from kiro_crew.validation import validate_field
+from aj_crew.deploy import engine, profiles
+from aj_crew.validation import validate_field
 
 REPO = Path(__file__).resolve().parents[1]
-HANDLERS = (REPO / "src" / "kiro_crew" / "deploy" / "handlers.py").read_text(encoding="utf-8")
+HANDLERS = (REPO / "src" / "aj_crew" / "deploy" / "handlers.py").read_text(encoding="utf-8")
 BASE_STACK = (
-    REPO / "src" / "kiro_crew" / "deploy" / "skills" / "artifact-deploy"
+    REPO / "src" / "aj_crew" / "deploy" / "skills" / "artifact-deploy"
     / "templates" / "base-stack.yaml"
 ).read_text(encoding="utf-8")
 
@@ -33,7 +33,7 @@ class TestF1EmptyProfileName:
         # because the pattern check is skipped on empty and required is not
         # set. If this ever starts raising, the explicit guards are welcome
         # redundancy — but the guards must never be removed on that basis.
-        from kiro_crew.deploy.handlers import _PROFILE_SPEC
+        from aj_crew.deploy.handlers import _PROFILE_SPEC
         assert validate_field("", _PROFILE_SPEC) == ""
 
     def test_handler_rejects_empty_name_before_side_effects(self):
@@ -66,7 +66,7 @@ class TestF2ManifestNotPublic:
     def _policy_statements(self):
         with mock.patch.object(engine, "_checked") as checked:
             engine.put_oac_bucket_policy(
-                "kirocrew-web-example", "arn:aws:cloudfront::123:distribution/EX1", "p")
+                "ajcrew-web-example", "arn:aws:cloudfront::123:distribution/EX1", "p")
         argv = checked.call_args[0][0]
         policy = json.loads(argv[argv.index("--policy") + 1])
         return policy["Statement"]
@@ -78,7 +78,7 @@ class TestF2ManifestNotPublic:
         deny = denies[0]
         assert deny["Principal"] == {"Service": "cloudfront.amazonaws.com"}
         res = deny["Resource"]
-        assert any(r.endswith("/*/.kirocrew-deploy.json") for r in res), (
+        assert any(r.endswith("/*/.ajcrew-deploy.json") for r in res), (
             "Deny must cover the per-slug control manifest key")
         assert any("/_quarantine/" in r for r in res), (
             "Deny must cover the quarantine prefix")
@@ -97,5 +97,5 @@ class TestF2ManifestNotPublic:
         idx = BASE_STACK.index("DenyCloudFrontControlManifests")
         block = BASE_STACK[idx:idx + 600]
         assert "Effect: Deny" in block
-        assert "/*/.kirocrew-deploy.json" in block
+        assert "/*/.ajcrew-deploy.json" in block
         assert "/_quarantine/*" in block

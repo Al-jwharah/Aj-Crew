@@ -43,7 +43,7 @@ function harness({ remoteHosts, isWindows = false } = {}) {
       spawned.push({ bin, args, options, child });
       return child;
     },
-    resolveBin: () => "/app/backend-dist/bin/kirocrew",
+    resolveBin: () => "/app/backend-dist/bin/ajcrew",
     isWindows,
     setTimeoutFn: (fn, ms) => { const t = { fn, ms }; timers.push(t); return t; },
     clearTimeoutFn: (t) => { const i = timers.indexOf(t); if (i >= 0) timers.splice(i, 1); },
@@ -51,14 +51,14 @@ function harness({ remoteHosts, isWindows = false } = {}) {
   return { keeper, spawned, timers, store };
 }
 
-const OPTED_IN = { 5477: { host: "devbox.example.com", binPath: "kirocrew", remotePort: "5476", manageTunnel: true } };
+const OPTED_IN = { 5477: { host: "devbox.example.com", binPath: "ajcrew", remotePort: "5476", manageTunnel: true } };
 
 test("an opted-in crew gets a keeper for its own port pair, with a stdin lifeline", () => {
   const { keeper, spawned } = harness({ remoteHosts: OPTED_IN });
   assert.equal(keeper.start(), true);
   assert.equal(spawned.length, 1);
   const { bin, args, options } = spawned[0];
-  assert.equal(bin, "/app/backend-dist/bin/kirocrew");
+  assert.equal(bin, "/app/backend-dist/bin/ajcrew");
   assert.deepEqual(args, [
     "desktop", "tunnel",
     "--host", "devbox.example.com",
@@ -105,7 +105,7 @@ test("a keeper that dies on its own is respawned after the delay", () => {
 test("a spawn that fails asynchronously (error, no exit) is respawned too", () => {
   const { keeper, spawned, timers } = harness({ remoteHosts: OPTED_IN });
   keeper.start();
-  spawned[0].child.emit("error", Object.assign(new Error("spawn kirocrew ENOENT"), { code: "ENOENT" }));
+  spawned[0].child.emit("error", Object.assign(new Error("spawn ajcrew ENOENT"), { code: "ENOENT" }));
   assert.equal(timers.length, 1);
   timers.shift().fn();
   assert.equal(spawned.length, 2);

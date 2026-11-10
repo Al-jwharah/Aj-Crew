@@ -22,9 +22,9 @@ from dashboard_updates_coverage_helpers import (  # noqa: F401 -- the autouse fi
     _request,
 )
 
-from kiro_crew.dashboard.handlers import updates, updates_streams
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard.handlers import updates, updates_streams
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 class TestLogLevel:
@@ -32,7 +32,7 @@ class TestLogLevel:
 
     @pytest.fixture(autouse=True)
     def _restore_level(self):
-        root = logging.getLogger("kiro_crew")
+        root = logging.getLogger("aj_crew")
         saved = root.level
         yield
         root.setLevel(saved)
@@ -45,23 +45,23 @@ class TestLogLevel:
     @pytest.mark.parametrize("level", ["TRACE", "", "verbose", "CRITICAL"])
     @pytest.mark.asyncio
     async def test_rejects_a_level_outside_the_map(self, level):
-        before = logging.getLogger("kiro_crew").level
+        before = logging.getLogger("aj_crew").level
         resp = await updates.api_log_level(_request({"level": level}))
         assert resp.status == 400
         # A rejected level must not have been applied on the way to the refusal.
-        assert logging.getLogger("kiro_crew").level == before
+        assert logging.getLogger("aj_crew").level == before
 
     @pytest.mark.parametrize("level", [None, 10, ["DEBUG"]], ids=["null", "int", "list"])
     @pytest.mark.asyncio
     async def test_a_non_string_level_is_a_coded_400(self, level):
-        before = logging.getLogger("kiro_crew").level
+        before = logging.getLogger("aj_crew").level
         resp = await updates.api_log_level(_request({"level": level}))
         assert resp.status == 400
         assert json.loads(resp.body.decode()) == {
             "error": "level must be a string",
             "code": "invalid_field_type",
         }
-        assert logging.getLogger("kiro_crew").level == before
+        assert logging.getLogger("aj_crew").level == before
 
     @pytest.mark.asyncio
     async def test_applies_and_persists_a_valid_level_case_insensitively(self, monkeypatch):
@@ -81,7 +81,7 @@ class TestLogLevel:
         assert resp.status == 200
         payload = json.loads(resp.body.decode())
         assert payload == {"ok": True, "level": "WARNING", "persisted": True}
-        assert logging.getLogger("kiro_crew").level == logging.WARNING
+        assert logging.getLogger("aj_crew").level == logging.WARNING
         assert saved == ["WARNING"]
 
     @pytest.mark.asyncio
@@ -102,17 +102,17 @@ class TestLogLevel:
         payload = json.loads(resp.body.decode())
         assert payload["ok"] is True
         assert payload["persisted"] is False
-        assert logging.getLogger("kiro_crew").level == logging.DEBUG
+        assert logging.getLogger("aj_crew").level == logging.DEBUG
 
     @pytest.mark.asyncio
     async def test_the_getter_reports_the_live_level(self):
-        logging.getLogger("kiro_crew").setLevel(logging.ERROR)
+        logging.getLogger("aj_crew").setLevel(logging.ERROR)
         resp = await updates.api_log_level_get(_request())
         assert json.loads(resp.body.decode()) == {"level": "ERROR"}
 
 
 def _record(msg: str = "hello", level: int = logging.INFO) -> logging.LogRecord:
-    return logging.LogRecord("kiro_crew.test", level, __file__, 1, msg, None, None)
+    return logging.LogRecord("aj_crew.test", level, __file__, 1, msg, None, None)
 
 
 class TestQueueLogHandler:
@@ -262,7 +262,7 @@ class TestRingLogHandler:
         assert json.loads(ring[0])["msg"] == "during shutdown"
 
     def test_install_is_idempotent_and_attaches_exactly_one_handler(self, monkeypatch):
-        root = logging.getLogger("kiro_crew")
+        root = logging.getLogger("aj_crew")
         monkeypatch.setattr(updates, "_log_ring_handler_installed", False)
         monkeypatch.setattr(updates, "_log_ring_handler", None)
         before = list(root.handlers)
@@ -300,7 +300,7 @@ class TestLogsStream:
     """``GET /api/logs`` — ring replay, then a live tail."""
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture moved verbatim; no test of the class calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture moved verbatim; no test of the class calls monkeypatch.undo()
     def _own_shutdown_event(self, monkeypatch):
         """The module binds ``shutdown_event`` at import, so patch it there."""
         event = asyncio.Event()
@@ -330,7 +330,7 @@ class TestLogsStream:
         # The queue handler is only installed AFTER the replay, so an abort here
         # must not leave one attached to the logger.
         assert not any(
-            isinstance(h, updates._QueueLogHandler) for h in logging.getLogger("kiro_crew").handlers
+            isinstance(h, updates._QueueLogHandler) for h in logging.getLogger("aj_crew").handlers
         )
 
     @pytest.mark.parametrize("raw", ["not-a-number", "", "1e5"])
@@ -365,7 +365,7 @@ class TestLogsStream:
         self, monkeypatch
     ):
         writes = _stub_stream(monkeypatch)
-        root = logging.getLogger("kiro_crew")
+        root = logging.getLogger("aj_crew")
         before = len(root.handlers)
 
         task = asyncio.ensure_future(updates.api_logs(_request(query={"lines": "1"})))
@@ -374,8 +374,8 @@ class TestLogsStream:
             describe=lambda: f"handlers={root.handlers!r}",
         )
 
-        logging.getLogger("kiro_crew.stream").warning("live one")
-        logging.getLogger("kiro_crew.stream").warning("live two")
+        logging.getLogger("aj_crew.stream").warning("live one")
+        logging.getLogger("aj_crew.stream").warning("live two")
         await async_wait_until(lambda: len(writes) >= 2, describe=lambda: f"writes={writes!r}")
         task.cancel()
         await await_until(task, what="the cancelled logs stream to return")
@@ -446,7 +446,7 @@ def test_neither_chat_message_door_builds_the_frame_by_hand() -> None:
     """
     from pathlib import Path
 
-    import kiro_crew
+    import aj_crew
 
     def _branch(src: str) -> str:
         """The `chat_message` arm's body, up to the next sibling arm."""
@@ -459,7 +459,7 @@ def test_neither_chat_message_door_builds_the_frame_by_hand() -> None:
         ]
         return rest[: min(ends)] if ends else rest
 
-    root = Path(kiro_crew.__file__).parent
+    root = Path(aj_crew.__file__).parent
     for rel in ("dashboard/state_parts/slots_push.py", "dashboard/handlers/updates_streams.py"):
         branch = _branch((root / rel).read_text(encoding="utf-8"))
         assert "chat_message_frame(" in branch, (
@@ -477,21 +477,21 @@ class TestDashboardStream:
     """The dashboard SSE endpoint — one event name per queued note type."""
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture moved verbatim; no test of the class calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture moved verbatim; no test of the class calls monkeypatch.undo()
     def _own_shutdown_event(self, monkeypatch):
         event = asyncio.Event()
         monkeypatch.setattr(updates, "shutdown_event", event)
         return event
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture moved verbatim; no test of the class calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture moved verbatim; no test of the class calls monkeypatch.undo()
     def _warm_status_counts(self, monkeypatch):
         # The SSE `dashboard` frame routes its lesson/cron counts through the
         # shared status_counts cache now, not an inline status_snapshot call.
         # Seed it warm so the writer serves serializable counts without the
         # MagicMock state's count methods (which return non-serializable Mocks)
         # ever running.
-        from kiro_crew.dashboard import status_counts as sc
+        from aj_crew.dashboard import status_counts as sc
 
         monkeypatch.setattr(sc, "_counts_cache", (0, 0))
         clock = ManualClock()

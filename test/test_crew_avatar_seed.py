@@ -1,6 +1,6 @@
 """Parity tests for the backend name-seeded default ICON (``crew_avatar_seed``).
 
-The headless create paths (``POST /api/agents``, ``kirocrew agent create``) must
+The headless create paths (``POST /api/agents``, ``ajcrew agent create``) must
 default a new crew with no avatar to the SAME ``{kind: icon, pose, bg}`` the
 frontend posts for the same name, so the stored value matches the UI preview. The frontend derives pose/bg through ``@dicebear/core``'s seeded
 PRNG in ``website/src/lib/avatarPoses.ts``; the backend re-implements that
@@ -35,7 +35,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.crew_avatar_seed import (
+from aj_crew.crew_avatar_seed import (
     BLANK_LOOK_SEED,
     DEFAULT_POSE,
     DEFAULT_POSE_BG,
@@ -196,7 +196,7 @@ def test_pick_tolerates_the_max_draw_index() -> None:
     past the end. JS reads arr[len] as undefined and its `?? fallback` yields the
     fallback; the Python port must do the same, not raise IndexError -- otherwise
     a valid crew name whose seed hits that draw crashes headless creation."""
-    from kiro_crew.crew_avatar_seed import _PRNG_MAX, _Prng
+    from aj_crew.crew_avatar_seed import _PRNG_MAX, _Prng
 
     prng = _Prng("anything")
     # Force the NEXT draw to the maximum (integer() calls next() and scales its

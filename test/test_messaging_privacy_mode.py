@@ -27,9 +27,9 @@ from messaging_privacy_mode_helpers import audits_fixture  # noqa: F401
 from messaging_privacy_mode_helpers import session_map_fixture  # noqa: F401
 from messaging_privacy_mode_helpers import _TG_KEY, _land_on_disk, _Recorder, _Sessions
 
-from kiro_crew.messaging import privacy_mode
-from kiro_crew.session_map import SessionMap
-from kiro_crew.testing.wait import LoopHop, async_wait_until, await_until
+from aj_crew.messaging import privacy_mode
+from aj_crew.session_map import SessionMap
+from aj_crew.testing.wait import LoopHop, async_wait_until, await_until
 
 _SLACK_KEY = "slack:1700000000.000100"
 
@@ -402,8 +402,8 @@ class TestInboundRestoreReadsRowAndHeader:
 
     @staticmethod
     def _log():
-        from kiro_crew import history as history_mod
-        from kiro_crew.history import ConversationLog
+        from aj_crew import history as history_mod
+        from aj_crew.history import ConversationLog
 
         log = ConversationLog()
         log.init()
@@ -420,7 +420,7 @@ class TestInboundRestoreReadsRowAndHeader:
     @staticmethod
     def _unreadable_map(tmp_path, session_map):
         """A restart over a map file that cannot be parsed: the map loads empty."""
-        from kiro_crew.session_map import SESSION_MAP_FILENAME
+        from aj_crew.session_map import SESSION_MAP_FILENAME
 
         (tmp_path / SESSION_MAP_FILENAME).write_text("{not json", encoding="utf-8")
         sm = session_map()
@@ -459,7 +459,7 @@ class TestInboundRestoreReadsRowAndHeader:
         refuses both the write side and the read side."""
         from types import SimpleNamespace
 
-        from kiro_crew.messaging import upload_gate
+        from aj_crew.messaging import upload_gate
 
         log = self._log()
         await self._set_header(log, "temporary")
@@ -525,7 +525,7 @@ class TestInboundRestoreReadsRowAndHeader:
         """A release restores the header and drops the mark under the session's
         lock; a read taken before it finished would re-publish the mode it took
         back. Mutation: read the header outside ``_serialized`` -- red."""
-        from kiro_crew.testing.wait import until_parked
+        from aj_crew.testing.wait import until_parked
 
         log = self._log()
         await self._set_header(log, "incognito")
@@ -553,7 +553,7 @@ class TestInboundRestoreReadsRowAndHeader:
         key. That chat keeps its transcript and gates its derived reads on the
         header itself; a channel mark would make the channel skip the transcript
         for it. Mutation: read every key's header -- red."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         key = "dashboard:private-chat"
         log = ConversationLog()
@@ -570,7 +570,7 @@ class TestInboundRestoreReadsRowAndHeader:
     async def test_an_unreadable_header_adds_nothing_and_the_row_still_counts(
         self, audits, session_map, monkeypatch
     ):
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         self._log()
         sm = session_map()
@@ -602,8 +602,8 @@ class TestTranscriptHeaderDurability:
 
     @staticmethod
     def _log(seed: bool = True):
-        from kiro_crew import history as history_mod
-        from kiro_crew.history import ConversationLog
+        from aj_crew import history as history_mod
+        from aj_crew.history import ConversationLog
 
         log = ConversationLog()
         log.init()
@@ -644,7 +644,7 @@ class TestTranscriptHeaderDurability:
         under a header that already carries the mode. Mutation: switch the
         stamp to ``require_existing=True`` — red.
         """
-        from kiro_crew import history as history_mod
+        from aj_crew import history as history_mod
 
         log = self._log(seed=False)
         assert not log.has_log(_TG_KEY), "premise: no transcript yet"
@@ -700,8 +700,8 @@ class TestTranscriptHeaderDurability:
         applies). Mutation: compare the raw string -- the header reads
         ``incognito``.
         """
-        from kiro_crew import history as history_mod
-        from kiro_crew.history import transcript_privacy_mode
+        from aj_crew import history as history_mod
+        from aj_crew.history import transcript_privacy_mode
 
         log = self._log()
         with history_mod.allow_on_loop_persist():
@@ -735,7 +735,7 @@ class TestTranscriptHeaderDurability:
         message was NOT processed. Patched on the class, because the module
         builds its own ``ConversationLog``.
         """
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         self._log()
         monkeypatch.setattr(
@@ -770,7 +770,7 @@ class TestTranscriptHeaderDurability:
     def _raw_first_line(text: str):
         """A transcript whose first line is *text* -- written raw, as a foreign or
         damaged writer would leave it."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         log = ConversationLog()
         log.init()
@@ -785,7 +785,7 @@ class TestTranscriptHeaderDurability:
         the state the reader reports when every bounded read attempt raised) --
         forced at the reader, because no byte content produces it: bytes that
         do not decode or parse are ``METADATA_LINE_CORRUPT``."""
-        from kiro_crew.history import METADATA_LINE_TRANSIENT, ConversationLog
+        from aj_crew.history import METADATA_LINE_TRANSIENT, ConversationLog
 
         log = ConversationLog()
         log.init()
@@ -879,7 +879,7 @@ class TestTranscriptHeaderDurability:
         """
         log = self._raw_first_line("this is not a JSON line\n")
         assert log.get_metadata(_TG_KEY) == {}, "premise: the header cannot be read"
-        from kiro_crew.history import METADATA_LINE_CORRUPT
+        from aj_crew.history import METADATA_LINE_CORRUPT
 
         assert (
             log.metadata_line_state(_TG_KEY) == METADATA_LINE_CORRUPT
@@ -919,13 +919,13 @@ class TestTranscriptHeaderDurability:
         drop the in-lock corrupt re-test (heal on the outer read alone) -- red:
         the header is loosened to ``incognito``.
         """
-        from kiro_crew.execution_context import STRICTEST_MEMORY_MODE
-        from kiro_crew.history import ConversationLog
+        from aj_crew.execution_context import STRICTEST_MEMORY_MODE
+        from aj_crew.history import ConversationLog
 
         log = self._raw_first_line("this is not a JSON line\n")
         assert log.get_metadata(_TG_KEY) == {}, "premise: the header cannot be read"
 
-        import kiro_crew.messaging.privacy_mode as pm
+        import aj_crew.messaging.privacy_mode as pm
 
         real_heal = pm._heal_corrupt_header
 
@@ -995,7 +995,7 @@ class TestTranscriptHeaderDurability:
         under a notice that said only "this message was not processed", and the
         next turns ran persistent. Mutation: roll back to ``False`` -- red.
         """
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         log = self._log()
         sm = session_map()
@@ -1036,7 +1036,7 @@ class TestTranscriptHeaderDurability:
         (``['allowed'] == []``): a mode is announced whose header write has not
         happened.
         """
-        from kiro_crew.history import ConversationLog, transcript_privacy_mode
+        from aj_crew.history import ConversationLog, transcript_privacy_mode
 
         log = self._log()
         entered = asyncio.Event()
@@ -1118,7 +1118,7 @@ class TestDashboardGateReach:
     def test_a_telegram_incognito_session_is_restricted(self):
         """Mutation: narrow the branch back to ``sk.startswith("slack:")`` — red
         here while the Slack case below stays green."""
-        from kiro_crew.dashboard.handlers._shared import _is_restricted_session
+        from aj_crew.dashboard.handlers._shared import _is_restricted_session
 
         privacy_mode.mark_incognito(_TG_KEY)
         state, request = self._state_and_request(_TG_KEY)
@@ -1126,14 +1126,14 @@ class TestDashboardGateReach:
 
     def test_a_telegram_temporary_session_blocks_reads(self):
         """Mutation: narrow ``_blocks_reads_session``'s branch — red."""
-        from kiro_crew.dashboard.handlers._shared import _blocks_reads_session
+        from aj_crew.dashboard.handlers._shared import _blocks_reads_session
 
         privacy_mode.mark_temporary(_TG_KEY)
         state, request = self._state_and_request(_TG_KEY)
         assert _blocks_reads_session(state, request) is True
 
     def test_the_slack_answers_are_unchanged(self):
-        from kiro_crew.dashboard.handlers._shared import (
+        from aj_crew.dashboard.handlers._shared import (
             _blocks_reads_session,
             _is_restricted_session,
         )
@@ -1148,7 +1148,7 @@ class TestDashboardGateReach:
     def test_an_incognito_session_still_serves_reads(self):
         """Incognito blocks writes only; widening the reach must not also widen
         what each mode means."""
-        from kiro_crew.dashboard.handlers._shared import (
+        from aj_crew.dashboard.handlers._shared import (
             _blocks_reads_session,
             _is_restricted_session,
         )
@@ -1165,7 +1165,7 @@ class TestDashboardGateReach:
         because a dashboard slot that shares a name with a marked channel key
         would start answering off the channel trackers.
         """
-        from kiro_crew.dashboard.handlers._shared import _is_restricted_session
+        from aj_crew.dashboard.handlers._shared import _is_restricted_session
 
         key = "dashboard:chat-1"
         privacy_mode.mark_incognito(key)
@@ -1222,7 +1222,7 @@ class TestPrivateConversationCap:
 
     @staticmethod
     def _fill(sm: SessionMap, count: int) -> list[str]:
-        keys = [f"telegram:kirocrew:direct:{n}" for n in range(count)]
+        keys = [f"telegram:ajcrew:direct:{n}" for n in range(count)]
         for key in keys:
             sm.set_flag(key, privacy_mode.MODE_INCOGNITO, True)
         return keys
@@ -1231,7 +1231,7 @@ class TestPrivateConversationCap:
     async def test_a_new_flag_past_the_cap_is_refused_and_nothing_is_written(
         self, audits, session_map, monkeypatch
     ):
-        import kiro_crew.session_map as session_map_mod
+        import aj_crew.session_map as session_map_mod
 
         monkeypatch.setattr(session_map_mod, "PRIVACY_ROW_CAP", 3)
         sm = session_map()
@@ -1284,7 +1284,7 @@ class TestPrivateConversationCap:
         self, audits, session_map, monkeypatch
     ):
         """``!temporary`` on a thread already incognito adds no row: admitted."""
-        import kiro_crew.session_map as session_map_mod
+        import aj_crew.session_map as session_map_mod
 
         monkeypatch.setattr(session_map_mod, "PRIVACY_ROW_CAP", 3)
         sm = session_map()
@@ -1304,10 +1304,10 @@ class TestPrivateConversationCap:
 
     @pytest.mark.asyncio
     async def test_an_over_long_key_is_refused_at_the_same_gate(self, audits, session_map):
-        import kiro_crew.session_map as session_map_mod
+        import aj_crew.session_map as session_map_mod
 
         sm = session_map()
-        key = "telegram:kirocrew:direct:" + "9" * session_map_mod.PRIVACY_ROW_KEY_MAX
+        key = "telegram:ajcrew:direct:" + "9" * session_map_mod.PRIVACY_ROW_KEY_MAX
         rec = _Recorder()
         with pytest.raises(privacy_mode.PrivacyModeRefused) as raised:
             await privacy_mode.apply_mode(
@@ -1355,7 +1355,7 @@ class TestPrivateConversationCap:
         assert privacy_mode._pending == {}, "a refused (mode, key) must not stay held"
 
     def test_the_cap_is_the_trackers_bound(self):
-        import kiro_crew.session_map as session_map_mod
+        import aj_crew.session_map as session_map_mod
 
         assert session_map_mod.PRIVACY_ROW_CAP == privacy_mode.PRIVACY_LRU_MAX == 10_000
 
@@ -1551,9 +1551,9 @@ class TestPublishOnlyThroughTheCommitPrimitive:
         import re
         from pathlib import Path
 
-        import kiro_crew
+        import aj_crew
 
-        root = Path(kiro_crew.__file__).resolve().parent
+        root = Path(aj_crew.__file__).resolve().parent
         publish = re.compile(
             r"(privacy_mode\.mark\(|\bmark_temporary\(|\bmark_incognito\(|_mark_temporary\(|_mark_incognito\()"
         )
@@ -1582,7 +1582,7 @@ class TestAHeaderAlreadyAtTheModeIsNotRewritten:
     async def test_reapplying_after_a_restart_writes_the_header_once(
         self, audits, session_map, monkeypatch
     ):
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         log = TestTranscriptHeaderDurability._log()
         writes: list[str] = []

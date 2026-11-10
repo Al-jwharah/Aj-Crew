@@ -45,9 +45,9 @@ const WIDTH = Number(process.argv[3] || 390)
 mkdirSync(OUT, { recursive: true })
 
 const SKILLS = [
-  { key: 'babysit', name: 'babysit', description: 'Same-session monitoring loop for PRs and CI runs', path: '/home/user/.kiro/crew/skills/babysit/SKILL.md', source: 'kirocrew' },
-  { key: 'prepare-pr', name: 'prepare-pr', description: 'Drive working-tree changes to a review-ready pull request', path: '/home/user/.kiro/crew/skills/prepare-pr/SKILL.md', source: 'kirocrew' },
-  { key: 'widgets', name: 'widgets', description: 'Render rich HTML inline via mcwidget tags', path: '/home/user/.kiro/crew/skills/widgets/SKILL.md', source: 'kirocrew' },
+  { key: 'babysit', name: 'babysit', description: 'Same-session monitoring loop for PRs and CI runs', path: '/home/user/.kiro/crew/skills/babysit/SKILL.md', source: 'ajcrew' },
+  { key: 'prepare-pr', name: 'prepare-pr', description: 'Drive working-tree changes to a review-ready pull request', path: '/home/user/.kiro/crew/skills/prepare-pr/SKILL.md', source: 'ajcrew' },
+  { key: 'widgets', name: 'widgets', description: 'Render rich HTML inline via mcwidget tags', path: '/home/user/.kiro/crew/skills/widgets/SKILL.md', source: 'ajcrew' },
 ]
 const STEERING = {
   files: [
@@ -65,8 +65,8 @@ const PROMPTS = [
 ]
 const MCP = {
   servers: {
-    'kirocrew-core': { command: 'kirocrew', args: ['mcp'], disabled: false },
-    'kirocrew-cron': { command: 'kirocrew', args: ['mcp-cron'], disabled: false },
+    'ajcrew-core': { command: 'ajcrew', args: ['mcp'], disabled: false },
+    'ajcrew-cron': { command: 'ajcrew', args: ['mcp-cron'], disabled: false },
   },
 }
 const WORKSPACES = [
@@ -74,7 +74,7 @@ const WORKSPACES = [
   { name: 'research', path: '/home/user/.kiro/crew/workspaces/research', active: false, sessions: 0 },
 ]
 const AGENTS = [
-  { name: 'kirocrew', description: 'Autonomous personal AI agent', source: 'kirocrew', model: 'auto', mcp_servers: ['kirocrew-core'], filename: 'kirocrew.json', skills: [] },
+  { name: 'ajcrew', description: 'Autonomous personal AI agent', source: 'ajcrew', model: 'auto', mcp_servers: ['ajcrew-core'], filename: 'ajcrew.json', skills: [] },
   { name: 'code-reviewer', description: 'Reviews changes against the repo conventions', source: 'builtin', model: 'auto', mcp_servers: [], filename: 'code-reviewer.json', skills: [] },
 ]
 
@@ -110,7 +110,7 @@ await stubDashboardApi(page, {
     if (path === '/api/workspaces') return json(route, WORKSPACES), true
     if (path === '/api/agents/installed') return json(route, AGENTS), true
     if (path === '/api/config/default-agent') {
-      return json(route, { default_agent: 'kirocrew' }), true
+      return json(route, { default_agent: 'ajcrew' }), true
     }
     if (path === '/api/models') {
       return json(route, [{ model_name: 'auto', description: 'Let Kiro choose' }]), true

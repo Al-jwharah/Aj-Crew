@@ -18,7 +18,7 @@ import threading
 
 import pytest
 
-from kiro_crew.decisions import outcomes
+from aj_crew.decisions import outcomes
 
 
 @pytest.fixture(autouse=True)

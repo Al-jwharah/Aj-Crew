@@ -38,10 +38,10 @@ from auto_research_handlers_coverage_helpers import (
 )
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.apps.builtins.auto_research import handlers as h
-from kiro_crew.apps.builtins.auto_research.campaign import LOGGER_NAME, publication
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.testing.wait import await_until
+from aj_crew.apps.builtins.auto_research import handlers as h
+from aj_crew.apps.builtins.auto_research.campaign import LOGGER_NAME, publication
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.testing.wait import await_until
 
 
 @pytest_asyncio.fixture
@@ -1054,7 +1054,7 @@ class TestEmergentExploration:
 
     @staticmethod
     def _seed_pending(cid: str, texts: list[str]) -> None:
-        from kiro_crew.apps.builtins.auto_research import subquestion_queue as sq
+        from aj_crew.apps.builtins.auto_research import subquestion_queue as sq
 
         d = h._campaign_dir(cid)
         queue = sq.load_queue(d)

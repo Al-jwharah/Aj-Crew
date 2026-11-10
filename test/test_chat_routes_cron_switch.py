@@ -20,8 +20,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.handlers import _shared
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.handlers import _shared
 
 _CRON_KEY = "cron:nightly-dispatcher"
 _DISABLED_BODY = {
@@ -54,7 +54,7 @@ def audit(monkeypatch: pytest.MonkeyPatch) -> list[dict]:
     """Record SEL denials instead of writing them."""
     events: list[dict] = []
     recorder = SimpleNamespace(log_api_access=lambda **kw: events.append(kw))
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: recorder)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: recorder)
     return events
 
 
@@ -261,7 +261,7 @@ class TestCronModeRefusal:
         """One constant names the slot-scoped trust modes. The handler reads it to
         keep a slot-scoped grant off the global one; the cron rule reads it as the
         whole allowlist. A second spelling would let the two drift apart."""
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         assert chat_handlers._SLOT_SCOPED_TRUST_MODES is _shared._SLOT_SCOPED_TRUST_MODES
         assert isinstance(_shared._SLOT_SCOPED_TRUST_MODES, tuple)
@@ -276,7 +276,7 @@ class TestCronModeRefusal:
         def _broken(**_kw):
             raise OSError("sel store unavailable")
 
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: SimpleNamespace(log_api_access=_broken))
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: SimpleNamespace(log_api_access=_broken))
         with caplog.at_level(logging.DEBUG, logger=_shared.logger.name):
             resp = await self._refusal("yolo", self._SLOT)
 
@@ -342,12 +342,12 @@ class TestRequestSlotOriginForACron:
     """The cron attribution decides the origin tag; ``_app`` still carries the owner."""
 
     def test_a_cron_creator_makes_a_dashboard_request_cron(self):
-        from kiro_crew.dashboard.state import SlotOrigin, request_slot_origin
+        from aj_crew.dashboard.state import SlotOrigin, request_slot_origin
 
         assert request_slot_origin("", cron_creator=_CRON_KEY) == SlotOrigin.CRON
 
     def test_a_cron_creator_wins_over_the_app_token(self):
-        from kiro_crew.dashboard.state import SlotOrigin, request_slot_origin
+        from aj_crew.dashboard.state import SlotOrigin, request_slot_origin
 
         assert request_slot_origin("some-app", cron_creator=_CRON_KEY) == SlotOrigin.CRON
 
@@ -386,7 +386,7 @@ class TestCronCreatorAdmission:
 
     @staticmethod
     def _transcript_key(slot_key: str) -> str:
-        from kiro_crew.dashboard.chat_utils import slot_transcript_key
+        from aj_crew.dashboard.chat_utils import slot_transcript_key
 
         return slot_transcript_key(slot_key)
 

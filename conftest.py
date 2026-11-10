@@ -2,7 +2,7 @@
 
 ``test/conftest.py`` holds the bulk of the suite's isolation, but it only applies
 to ``test/``. ``[tool:pytest] testpaths`` also collects ``transfer`` and
-``src/kiro_crew/apps/builtins`` (~108 test modules that ship inside the package,
+``src/aj_crew/apps/builtins`` (~108 test modules that ship inside the package,
 next to the code they cover), and those get no ``test/conftest.py`` fixtures at
 all -- only this file, plus that app's own ``tests/conftest.py`` where one exists.
 Anything that must hold for EVERY test therefore has to live here, at the
@@ -30,15 +30,15 @@ this" contract failed at least once:
 * **Services.** ``$XDG_CONFIG_HOME`` is redirected and the stdlib spawn funnels
   refuse a ``systemctl``/``launchctl`` invocation carrying a mutating verb, so no
   test can reconfigure or restart the operator's real gateway (issue #1722).
-* **The data home.** ``KIROCREW_HOME`` is pinned per test, and the ``~/.kiro``
+* **The data home.** ``AJCREW_HOME`` is pinned per test, and the ``~/.kiro``
   paths that production binds at IMPORT time (which the env var cannot reach) are
   pinned with it. Without this, the ~108 test modules that ship inside the package
-  under ``src/kiro_crew/apps/builtins/*/tests/`` -- which see this conftest and no
+  under ``src/aj_crew/apps/builtins/*/tests/`` -- which see this conftest and no
   other -- write the operator's live ``~/.kiro/crew`` the moment they touch
-  ``config_dir()``. ``KIROCREW_WORKSPACE`` is pinned alongside it for the same
+  ``config_dir()``. ``AJCREW_WORKSPACE`` is pinned alongside it for the same
   reason: ``workspace_root()`` is a SEPARATE default from ``config_dir()`` (it
-  falls back to ``~/workplace/kirocrew-workspace``, not under the data home at
-  all), so pinning only ``KIROCREW_HOME`` leaves it resolving to the operator's
+  falls back to ``~/workplace/ajcrew-workspace``, not under the data home at
+  all), so pinning only ``AJCREW_HOME`` leaves it resolving to the operator's
   real ``~/workplace`` the moment a test reaches an agent working directory.
 * **Credential environment.** Recognised fixed credentials and validated
   ``JIRA_TOKEN_<HEX>`` keys are restored after every test, so a fabricated
@@ -54,7 +54,7 @@ this" contract failed at least once:
   refusal on those hosts while Ubuntu CI stayed green (issue #8395).
 * **The agent-spec home.** ``kiro_agents_dir()`` is a LAZY resolver, so neither of
   the two above reaches it, and a test that reaches the spec write path rewrites
-  the machine-wide ``<kiro home>/agents/kirocrew.json`` -- the file that decides
+  the machine-wide ``<kiro home>/agents/ajcrew.json`` -- the file that decides
   which MCP servers the operator's real agent has (issue #4912). The per-module
   override seams are pinned instead of ``KIRO_HOME``, which cannot be pinned
   without overriding ~35 tests' own ``Path.home()`` isolation.
@@ -87,7 +87,7 @@ imports made explicit first. The visible effect today is that isort now classifi
 that use it.
 
 Why this floor exists (issue #1722): a test asserting that a staged cutover can
-be *cancelled* rewrote the operator's real ``kirocrew-gateway.service`` drop-in
+be *cancelled* rewrote the operator's real ``ajcrew-gateway.service`` drop-in
 to point at its own pytest temp dir. pytest deleted the temp dir at the end of
 the run; the drop-in survived, so systemd looped on ``203/EXEC`` — 548 failed
 starts over 25 minutes. The test never intended to touch the host: it called the
@@ -98,20 +98,20 @@ for each test to remember to stub.
 The fixtures below remove that "remember to" from the contract. None of them
 changes the behaviour of a test that already isolates itself correctly: every one
 sets a value a test can still override, and a test that sets its own
-``KIROCREW_HOME`` or its own temp dir keeps winning.
+``AJCREW_HOME`` or its own temp dir keeps winning.
 
 Besides the floor, this file carries the two pieces of the Determinism contract
 (``docs/system-specs/common/testing-conventions.md``) that every testpath needs and
 that no test can import from ``test/``: the opt-in ``manual_clock``, ``seeded_rng``
 and ``local_tz`` fixtures (requested by name, never autouse), and the per-test
 publication of the running test's timeout to
-``kiro_crew.testing.wait.runner_timeout_secs``, so a wait helper's default deadline is
+``aj_crew.testing.wait.runner_timeout_secs``, so a wait helper's default deadline is
 half of the timeout pytest-timeout enforces on that test.
 
 Imports at MODULE level are stdlib + pytest only, on purpose: a rootdir conftest is
-imported before every collection, so pulling ``kiro_crew`` in here would make the
+imported before every collection, so pulling ``aj_crew`` in here would make the
 whole suite depend on import-time side effects of the package under test. The
-fixtures that do need ``kiro_crew`` import it in their own body, which runs at test
+fixtures that do need ``aj_crew`` import it in their own body, which runs at test
 setup -- by which point the test module has already imported the package anyway --
 and tolerate an ImportError so a partial checkout cannot break collection.
 """
@@ -139,17 +139,17 @@ import _pytest.runner
 import pytest
 
 # ── ACP frame recorder switch (rootdir floor) ───────────────────────────────
-# ``kiro_crew.acp._frame_record`` starts its writer thread at IMPORT time when
-# ``KIROCREW_ACP_RECORD_FRAMES`` is set, and ``acp.client`` (hence the dashboard
+# ``aj_crew.acp._frame_record`` starts its writer thread at IMPORT time when
+# ``AJCREW_ACP_RECORD_FRAMES`` is set, and ``acp.client`` (hence the dashboard
 # server, the session handle, the Slack handler, ...) imports it transitively. An
 # operator running the suite with a live recording configured would otherwise
 # have every collected test module's fake frames appended to their real corpus
 # file -- from ANY testpath, including the ~108 modules under
-# ``src/kiro_crew/apps/builtins/*/tests/`` that never see ``test/conftest.py``.
+# ``src/aj_crew/apps/builtins/*/tests/`` that never see ``test/conftest.py``.
 # Cleared here, at rootdir-conftest import, which precedes every test module's
-# first ``kiro_crew`` import; tests that need the switch set it themselves
+# first ``aj_crew`` import; tests that need the switch set it themselves
 # through monkeypatch.
-os.environ.pop("KIROCREW_ACP_RECORD_FRAMES", None)
+os.environ.pop("AJCREW_ACP_RECORD_FRAMES", None)
 
 
 @pytest.fixture
@@ -161,7 +161,7 @@ def _floor_monkeypatch():
     independently, and that is the point: ``monkeypatch.undo()`` reverts EVERY
     record on the instance it is called on, so a test that called it mid-way to
     drop one of its own patches -- ~90 sites do, to restore a function before a
-    final assertion -- also dropped the floor's ``KIROCREW_HOME`` pin, and
+    final assertion -- also dropped the floor's ``AJCREW_HOME`` pin, and
     whatever ran after that resolved the OPERATOR's real data home. Five full
     runs on a developer machine left ``~/.kiro/crew/trash/session-storage.lock``
     (``test_session_storage`` ran ``empty_trash()`` against the real trash) and
@@ -178,8 +178,8 @@ def _floor_monkeypatch():
     cli_process_environment = {
         name: os.environ.get(name)
         for name in (
-            "KIROCREW_SANDBOX_ACTIVE",
-            "KIROCREW_SANDBOX_LEVEL",
+            "AJCREW_SANDBOX_ACTIVE",
+            "AJCREW_SANDBOX_LEVEL",
             "PYTHONUTF8",
             "PYTHONIOENCODING",
         )
@@ -203,7 +203,7 @@ def monkeypatch(_floor_monkeypatch):
     dependency on ``_floor_monkeypatch``, which is what GUARANTEES the order the
     docstring above relies on: the floor is set up before the test's ``monkeypatch``
     and torn down after it, whatever autouse fixture in whatever conftest happens to
-    request ``monkeypatch`` first. A test's ``setenv("KIROCREW_HOME", ...)`` therefore
+    request ``monkeypatch`` first. A test's ``setenv("AJCREW_HOME", ...)`` therefore
     records the pinned value, restores it on the test's undo, and the floor's undo then
     restores the operator's. A test cannot tell the difference otherwise: same type,
     same scope, same undo semantics for everything IT patched.
@@ -282,7 +282,7 @@ from conftest_floor_determinism import (  # noqa: E402,F401 -- bound for pytest 
     OffLoopbackNetworkRefused,
     _another_run_member,
     _AuditState,
-    _bind_unbound_kiro_crew_modules,
+    _bind_unbound_aj_crew_modules,
     _classify_kill_target,
     _kill_finding,
     _network_finding,
@@ -319,7 +319,7 @@ from conftest_floor_home import (  # noqa: E402,F401 -- bound for pytest and for
     _breadcrumb_guard,
     _isolate_agent_spec_home,
     _isolate_kiro_sessions_dir,
-    _isolate_kirocrew_home,
+    _isolate_ajcrew_home,
     _isolate_sel_default_dir,
     _isolate_shared_kiro_paths,
     _isolate_subagents_dir,
@@ -479,7 +479,7 @@ def _scrub_inherited_preload_env(_floor_monkeypatch):
     nothing a test leaked survives past the test on this worker.
     """
     monkeypatch = _floor_monkeypatch
-    from kiro_crew.name_grant import (
+    from aj_crew.name_grant import (
         _BASH_FUNC_KEY_PREFIX,
         _BASH_FUNC_VALUE_PREFIX,
         _ENV_PRELOAD_VARS,
@@ -531,18 +531,18 @@ _FROZEN_AT_COLLECTION: int | None = None
 #: ``PeriodicExportingMetricReader`` whose exporter is bound to the real
 #: ``~/.kiro/crew/metrics`` and which exports every minute for the life of the xdist
 #: worker. The per-test exporter-leak guard cannot see it (the thread predates every
-#: test), and the per-test ``KIROCREW_TELEMETRY=0`` pin cannot reach it (it is already
+#: test), and the per-test ``AJCREW_TELEMETRY=0`` pin cannot reach it (it is already
 #: built). The third full-run audit found four worker pids writing the operator's
 #: metrics dir on every run from exactly one such default argument.
 IMPORT_TIME_METRIC_EMITTERS: list[str] = []
 
 
 def _metrics_provider_module():
-    return sys.modules.get("kiro_crew.metrics.provider")
+    return sys.modules.get("aj_crew.metrics.provider")
 
 
 def _pin_telemetry_off_for_the_process() -> None:
-    """``KIROCREW_TELEMETRY=0`` from process start, not just from each test's setup.
+    """``AJCREW_TELEMETRY=0`` from process start, not just from each test's setup.
 
     The per-test pin (``_no_model_download``) covers the test body; this covers the
     stretch BEFORE the first test (conftest imports and the collection of every
@@ -551,7 +551,7 @@ def _pin_telemetry_off_for_the_process() -> None:
     no thread, so even an emitter this guard has not yet named cannot reach the host.
     Tests that exercise telemetry delete the variable themselves, as they already did.
     """
-    os.environ["KIROCREW_TELEMETRY"] = "0"
+    os.environ["AJCREW_TELEMETRY"] = "0"
 
 
 @pytest.hookimpl(hookwrapper=True)
@@ -739,8 +739,8 @@ def _join_telemetry_consent_worker() -> "BaseException | None":
     ``metrics.provider.get_recorder()`` is on the path of ordinary production code
     (``skills``, ``session``, ``context``, ``hooks`` and the metric helpers all call
     it), and once per ``_CONSENT_RECHECK_SECS`` the call hands a consent re-read to a
-    daemon thread. That thread runs ``KiroCrewConfig.load()``, which reaches
-    ``config_dir()``, which honours ``KIROCREW_HOME`` *at call time* and ``mkdir``s
+    daemon thread. That thread runs ``AjCrewConfig.load()``, which reaches
+    ``config_dir()``, which honours ``AJCREW_HOME`` *at call time* and ``mkdir``s
     the data home it names. The recorder is process-global and nothing resets it
     between tests, so the test that schedules the worker is rarely the test whose
     home it creates: the read lands a few milliseconds later, under the NEXT test's
@@ -755,7 +755,7 @@ def _join_telemetry_consent_worker() -> "BaseException | None":
     the test builds the sensitive-target set twice and compares, and on Windows
     ``os.path.realpath`` keeps its ``\\\\?\\`` prefix when the directory above a
     not-yet-existing anchor is created between its two lookups -- so the first build
-    carried ``\\\\?\\...\\<n>-kirocrew-home\\diag`` (``diag`` being the first anchor under
+    carried ``\\\\?\\...\\<n>-ajcrew-home\\diag`` (``diag`` being the first anchor under
     the crew home) and the second did not.
 
     Same place and same reason as :func:`_join_install_receipt_workers`: the
@@ -781,7 +781,7 @@ def _join_telemetry_consent_worker() -> "BaseException | None":
     return AssertionError(
         f"a telemetry consent-recheck worker {still_alive} is still running "
         f"{_EXECUTOR_JOIN_SECS:.0f}s after this test ended; its config read would land "
-        "under the next test's KIROCREW_HOME. See conftest._join_telemetry_consent_worker."
+        "under the next test's AJCREW_HOME. See conftest._join_telemetry_consent_worker."
     )
 
 
@@ -993,7 +993,7 @@ def _forget_crew_log_slot_index() -> None:
     do, since both other caches are checked against it by identity; all three are
     cleared so neither depends on that.
     """
-    store_units = sys.modules.get("kiro_crew.crew_log.store_units")
+    store_units = sys.modules.get("aj_crew.crew_log.store_units")
     if store_units is None:
         return
     store_units._slot_index = None
@@ -1030,30 +1030,30 @@ _probe_attempted = False
 
 #: The session's own ``time.monotonic``, ``time.sleep`` and ``asyncio.sleep``, taken in
 #: ``pytest_sessionstart`` (after every plugin's configure, before any test can patch
-#: them): what :func:`_publish_runner_timeout` hands back to ``kiro_crew.testing.wait``.
+#: them): what :func:`_publish_runner_timeout` hands back to ``aj_crew.testing.wait``.
 _WAIT_CLOCKS: tuple | None = None
 
 
 def _publish_runner_timeout(seconds: float | None) -> None:
-    """Hand the running test's timeout, and the real clocks, to ``kiro_crew.testing.wait``.
+    """Hand the running test's timeout, and the real clocks, to ``aj_crew.testing.wait``.
 
     Set at setup and cleared after teardown, so a wait in a fixture's teardown still
     sees it. The module is imported here once its package is loaded, which is cheap
-    (only ``wait`` itself and ``kiro_crew.loop_lock``) and lets a test that imports
+    (only ``wait`` itself and ``aj_crew.loop_lock``) and lets a test that imports
     ``wait`` inside its body see its own timeout. The package itself is never
     imported here: its ``__init__`` loads the gateway harness, which must not happen
     under one test's pinned home. A test in a suite that never loaded
-    ``kiro_crew.testing`` waits on the module's fallback instead.
+    ``aj_crew.testing`` waits on the module's fallback instead.
 
     The module captures the clocks it waits with when it is first imported, so a test
     that patched ``time.monotonic`` and then imported it first would leave every later
     wait in the worker reading the fake. Writing the session's originals back at each
     setup confines that to the one test.
     """
-    wait = sys.modules.get("kiro_crew.testing.wait")
-    if wait is None and seconds is not None and "kiro_crew.testing" in sys.modules:
+    wait = sys.modules.get("aj_crew.testing.wait")
+    if wait is None and seconds is not None and "aj_crew.testing" in sys.modules:
         try:
-            wait = importlib.import_module("kiro_crew.testing.wait")
+            wait = importlib.import_module("aj_crew.testing.wait")
         except ImportError:  # pragma: no cover - a partial checkout
             return
     if wait is not None:
@@ -1080,7 +1080,7 @@ def pytest_runtest_setup(item):
     OS sandbox backend" on a host whose sandbox works perfectly.
 
     This lived in ``test/conftest.py``, which the in-package app suites never load,
-    so the ~1490 tests under ``src/kiro_crew/apps/builtins/*/tests/`` had no warm
+    so the ~1490 tests under ``src/aj_crew/apps/builtins/*/tests/`` had no warm
     cache at all -- 19 of them failed that way in a full run while every one passed
     when its own file was run alone. Whether an app test file happened to land on an
     xdist worker that had already run something under ``test/`` decided the verdict.
@@ -1109,7 +1109,7 @@ def pytest_runtest_setup(item):
     _publish_runner_timeout(_runner_timeout_secs(item))
     global _probe_verdict, _probe_attempted
     try:
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         if not _probe_attempted:
             _probe_attempted = True
@@ -1189,22 +1189,22 @@ def _check_pool_leftovers(item) -> None:
 
 
 @pytest.fixture(autouse=True)
-def _kiro_crew_package_attr_floor(request):
-    """Restore the ``kiro_crew`` module graph a test inherited; report the test that changed it.
+def _aj_crew_package_attr_floor(request):
+    """Restore the ``aj_crew`` module graph a test inherited; report the test that changed it.
 
-    Compares, at teardown, every ``kiro_crew.*`` entry of ``sys.modules`` the test
+    Compares, at teardown, every ``aj_crew.*`` entry of ``sys.modules`` the test
     inherited and its parent package's attribute (plus the root package's own globals,
-    which an in-process ``importlib.reload(kiro_crew)`` rebinds) with what they were at
+    which an in-process ``importlib.reload(aj_crew)`` rebinds) with what they were at
     setup, using C-level ``map`` comparisons; only a change takes the slow path. A
     module the test imported for the first time is checked too: one left in
     ``sys.modules`` without its parent attribute is bound back. Reports by default and
-    fails under ``KIROCREW_PKG_ATTR_STRICT=1``; restores either way. A module- or
+    fails under ``AJCREW_PKG_ATTR_STRICT=1``; restores either way. A module- or
     session-scoped fixture that replaces a module defeats the check for its own tests
     (the table is taken when the test starts), and one created lazily inside a test
     (``request.getfixturevalue``) has its replacement undone at that test's teardown.
     """
     table = _PACKAGE_TABLE
-    if sys.modules.get("kiro_crew") is None:
+    if sys.modules.get("aj_crew") is None:
         yield
         return
     if len(sys.modules) != table.modules_len or not table.intact():
@@ -1214,7 +1214,7 @@ def _kiro_crew_package_attr_floor(request):
     if not table.intact():
         changed = table.restore()
     if len(sys.modules) != table.modules_len:
-        changed += _bind_unbound_kiro_crew_modules()
+        changed += _bind_unbound_aj_crew_modules()
         table.rebuild()
     if not changed:
         return
@@ -1223,7 +1223,7 @@ def _kiro_crew_package_attr_floor(request):
     )
     if os.environ.get(_PKG_ATTR_STRICT_ENV) == "1":
         raise AssertionError(
-            f"this test changed the kiro_crew module graph (restored): {detail}. Load a "
+            f"this test changed the aj_crew module graph (restored): {detail}. Load a "
             "private copy with spec_from_file_location under a unique name instead of "
             "reloading or evicting a shared module (testing-conventions D11)."
         )
@@ -1426,7 +1426,7 @@ def _isolate_tempfile_base(tmp_path_factory):
     can both NAME it (residue is still a defect) and REMOVE it (so the accumulation stops
     regardless of whether anyone acts on the report).
 
-    The report WARNS by default and fails under ``KIROCREW_TMP_RESIDUE_STRICT``, which
+    The report WARNS by default and fails under ``AJCREW_TMP_RESIDUE_STRICT``, which
     CI's ``Backend Tests*`` jobs set -- see ``_TMP_RESIDUE_STRICT_ENV`` for why a local
     run only warns.
 

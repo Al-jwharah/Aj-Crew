@@ -20,10 +20,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import members as members_mod
-from kiro_crew.dashboard.handlers import member_dashboard as routes
-from kiro_crew.dashboard_templates import catalog, instance
-from kiro_crew.platform.context import redact_via_context
+from aj_crew import members as members_mod
+from aj_crew.dashboard.handlers import member_dashboard as routes
+from aj_crew.dashboard_templates import catalog, instance
+from aj_crew.platform.context import redact_via_context
 
 #: The REAL resolvers, bound at import time.
 #:
@@ -69,7 +69,7 @@ def _env(tmp_path, _floor_monkeypatch):
     ``_floor_monkeypatch`` (D11) so a test calling ``monkeypatch.undo()`` cannot lift
     the isolation and reach the real config loader and owner gate.
     """
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     builtin = tmp_path / "builtin" / "fixture-board"
     builtin.mkdir(parents=True)
     (builtin / "manifest.json").write_text(json.dumps(_manifest()), encoding="utf-8")
@@ -77,7 +77,7 @@ def _env(tmp_path, _floor_monkeypatch):
     _floor_monkeypatch.setattr(catalog, "builtin_dir", lambda: builtin.parent)
 
     cfg = SimpleNamespace(agents={MEMBER: SimpleNamespace(member_id="")})
-    _floor_monkeypatch.setattr(routes.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+    _floor_monkeypatch.setattr(routes.AjCrewConfig, "load", staticmethod(lambda: cfg))
     _floor_monkeypatch.setattr(routes.members_mod, "member_slug", lambda name, config=None: SLUG)
     _floor_monkeypatch.setattr(routes.members_mod, "validate_slug", lambda slug: slug)
     _floor_monkeypatch.setattr(routes.members_mod, "is_dispatchable_member_name", bool)
@@ -185,7 +185,7 @@ async def test_a_member_whose_name_does_not_derive_the_slug_is_refused(monkeypat
 async def test_a_name_not_in_config_is_a_404(monkeypatch):
     async with _client() as client:
         monkeypatch.setattr(
-            routes.KiroCrewConfig, "load", staticmethod(lambda: SimpleNamespace(agents={}))
+            routes.AjCrewConfig, "load", staticmethod(lambda: SimpleNamespace(agents={}))
         )
         resp = await client.get(_q(""))
         assert resp.status == 404
@@ -238,7 +238,7 @@ async def test_a_preview_read_with_nothing_staged_is_a_404_the_tab_can_name():
 
 def _template_at_the_ceiling() -> str:
     """A second template whose page is exactly the frame's ceiling. Returns the page."""
-    from kiro_crew import dashboard_frame
+    from aj_crew import dashboard_frame
 
     head, tail = PAGE + "<script>", "</script>"
     page = head + "x" * (dashboard_frame.MAX_PAGE_BYTES - len(head) - len(tail)) + tail
@@ -289,7 +289,7 @@ async def test_a_template_page_at_the_frames_ceiling_previews_applies_and_draws(
 async def test_a_preview_read_the_store_refuses_answers_in_the_stores_words(monkeypatch):
     """A store refusal on the staged read (a linked session directory raises
     `InstanceError`) is the route's structured answer, not aiohttp's bare 500."""
-    from kiro_crew.dashboard.handlers import member_dashboard as md
+    from aj_crew.dashboard.handlers import member_dashboard as md
 
     def _refuse(_slug):
         raise instance.InstanceError("the session dashboard directory is a link")
@@ -312,8 +312,8 @@ async def test_a_live_dashboard_comes_back_with_its_values_filled_in(monkeypatch
     both are stubbed at their seams, so this pins the WIRING -- the route asks for the
     values and hands the page back filled, with the agentic field named as such.
     """
-    from kiro_crew import dashboard_feed
-    from kiro_crew.crew_log import projection
+    from aj_crew import dashboard_feed
+    from aj_crew.crew_log import projection
 
     class FakeFeed:
         def __init__(self, slot, unit="", panel_record=None):
@@ -347,8 +347,8 @@ async def test_a_live_dashboard_comes_back_with_its_values_filled_in(monkeypatch
         body = await (await client.get(_q(""))).json()
     rendered = body["rendered_html"]
     assert body["html"] == PAGE
-    assert PAGE in rendered and "kirocrew-dashboard-data" in rendered
-    island = rendered.split('id="kirocrew-dashboard-data">', 1)[1].split("</script>", 1)[0]
+    assert PAGE in rendered and "ajcrew-dashboard-data" in rendered
+    island = rendered.split('id="ajcrew-dashboard-data">', 1)[1].split("</script>", 1)[0]
     read = json.loads(island)
     assert read["fields"] == {"credits": 1.5, "phase": "reviewing"}
     assert read["agentic"] == ["phase"] and read["seq"] == 7
@@ -359,7 +359,7 @@ async def test_a_live_dashboard_comes_back_with_its_values_filled_in(monkeypatch
     async with _client() as client:
         for asked, got in (("zh-CN", "zh-CN"), ("xx-YY", "en")):
             body = await (await client.get(_q("", locale=asked))).json()
-            island = body["rendered_html"].split('id="kirocrew-dashboard-data">', 1)[1]
+            island = body["rendered_html"].split('id="ajcrew-dashboard-data">', 1)[1]
             assert json.loads(island.split("</script>", 1)[0])["locale"] == got, asked
 
 
@@ -537,7 +537,7 @@ async def test_a_stale_copy_is_still_composed_with_its_values(monkeypatch, tmp_p
     all -- and a template version bump is enough to put every adopted dashboard on that
     template into this state, which makes it the common failure rather than a corner.
     """
-    from kiro_crew import dashboard_feed
+    from aj_crew import dashboard_feed
 
     class FakeFeed:
         def __init__(self, slot, unit="", panel_record=None):
@@ -575,14 +575,14 @@ async def test_a_stale_copy_is_still_composed_with_its_values(monkeypatch, tmp_p
     assert body["state"] == "stale", "the registry bump did not make the copy stale"
     assert "rendered_html" in body, "a stale copy was served without being composed"
     rendered = body["rendered_html"]
-    assert "kirocrew-dashboard-data" in rendered, "the stale page carries no data island"
-    island = rendered.split('id="kirocrew-dashboard-data">', 1)[1].split("</script>", 1)[0]
+    assert "ajcrew-dashboard-data" in rendered, "the stale page carries no data island"
+    island = rendered.split('id="ajcrew-dashboard-data">', 1)[1].split("</script>", 1)[0]
     assert json.loads(island)["fields"] == {"credits": 2.5}
 
 
 @pytest.mark.asyncio
 async def test_a_page_whose_values_cannot_be_read_still_answers_without_them(monkeypatch):
-    from kiro_crew import dashboard_feed
+    from aj_crew import dashboard_feed
 
     def boom(*_a, **_k):
         raise RuntimeError("bus down")
@@ -662,7 +662,7 @@ async def test_a_non_owner_cannot_read_a_crewmates_values():
 
     The route-walk above proves the CALL is there; this proves it refuses.
     """
-    import kiro_crew.dashboard.handlers.member_dashboard as mod
+    import aj_crew.dashboard.handlers.member_dashboard as mod
 
     async def _deny(request, operation):
         _deny.operations.append(operation)
@@ -696,7 +696,7 @@ async def test_the_gateway_registers_exactly_these_paths_without_importing_us():
     """
     import inspect
 
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     app = web.Application()
     routes.register_member_dashboard_routes(app)
@@ -741,7 +741,7 @@ def test_the_history_session_is_the_newest_by_SUCCESSION_not_by_the_clock(monkey
     order here is the opposite of the chain order, so a fallthrough to the header
     listing fails this case.
     """
-    from kiro_crew.crew_log import projection as crew_log
+    from aj_crew.crew_log import projection as crew_log
 
     monkeypatch.setattr(routes, "_dashboard_slot", lambda member, slug: "chat-dm")
     # The clock order, which is inverted here: the retired unit sorts last.
@@ -758,7 +758,7 @@ def test_a_crewmate_with_no_dm_session_gets_no_history_row_rather_than_a_refusal
     The instance record is a file and is already committed by the time this is used,
     so refusing here would lose a change that had already landed.
     """
-    from kiro_crew.crew_log import projection as crew_log
+    from aj_crew.crew_log import projection as crew_log
 
     monkeypatch.setattr(routes, "_dashboard_slot", lambda member, slug: "chat-dm")
     monkeypatch.setattr(crew_log, "units_in_succession", lambda slot: ())
@@ -771,7 +771,7 @@ def test_an_unreadable_crew_log_is_the_same_no_history_answer(monkeypatch):
     Same reason as the empty case: the record is already written, so the history row is
     the part that may be missing and the change is not.
     """
-    from kiro_crew.crew_log import projection as crew_log
+    from aj_crew.crew_log import projection as crew_log
 
     def _boom(_slot):
         raise RuntimeError("the crew log is unreadable")
@@ -1137,7 +1137,7 @@ def test_past_the_bound_a_scripts_text_gets_every_pass_not_fewer():
     them goes back to the full pass, and empty elements neither spend the bound nor change
     what is masked. So adding elements can only move text from the relaxed pass to the strict one.
     """
-    from kiro_crew import dashboard_frame
+    from aj_crew import dashboard_frame
 
     bound = dashboard_frame.MAX_CODE_PIECES
     key_id = "AKIA" + "IOSFODNN7" + "EXAMPLE"
@@ -1269,7 +1269,7 @@ class TestOneCrewmateResolvesToOneSlug:
         """
         cfg = self._roster()
         owned = _REAL_MEMBER_SLUG("Atlas", cfg)
-        _floor_monkeypatch.setattr(routes.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+        _floor_monkeypatch.setattr(routes.AjCrewConfig, "load", staticmethod(lambda: cfg))
         _floor_monkeypatch.setattr(routes.members_mod, "member_slug", _REAL_MEMBER_SLUG)
         _floor_monkeypatch.setattr(routes.members_mod, "canonical_member_key", _REAL_CANONICAL_KEY)
         _floor_monkeypatch.setattr(routes.members_mod, "validate_slug", lambda slug: slug)
@@ -1438,8 +1438,8 @@ class TestAStagedPageReachesOnlyItsOwnersPreview:
         only caller outside the store itself is `member_dashboard._preview_record`."""
         import pathlib
 
-        from kiro_crew.dashboard.handlers import member_dashboard
-        from kiro_crew.dashboard_templates import instance as instance_store
+        from aj_crew.dashboard.handlers import member_dashboard
+        from aj_crew.dashboard_templates import instance as instance_store
 
         root = pathlib.Path(instance_store.__file__).resolve().parents[1]
         callers = sorted(
@@ -1461,7 +1461,7 @@ class TestAStagedPageReachesOnlyItsOwnersPreview:
 
     def test_the_preview_record_is_built_only_under_the_preview_query(self) -> None:
         """`_preview_record` has one call site, and it is guarded by `preview=1`."""
-        from kiro_crew.dashboard.handlers import member_dashboard
+        from aj_crew.dashboard.handlers import member_dashboard
 
         body = self._source(member_dashboard._serve)
         assert body.count("_preview_record(") == 1
@@ -1477,7 +1477,7 @@ class TestAStagedPageReachesOnlyItsOwnersPreview:
         `_owner_only` call -- so the staged page inherits the applied page's gate rather
         than carrying one of its own.
         """
-        from kiro_crew.dashboard.handlers import member_dashboard
+        from aj_crew.dashboard.handlers import member_dashboard
 
         for handler in (
             member_dashboard.api_member_dashboard,
@@ -1496,7 +1496,7 @@ class TestAStagedPageReachesOnlyItsOwnersPreview:
     def test_a_non_preview_read_serves_the_applied_record(self) -> None:
         """The other branch reads the stored record, or the shipped default when the
         crewmate adopted nothing. Neither is a staged page."""
-        from kiro_crew.dashboard.handlers import member_dashboard
+        from aj_crew.dashboard.handlers import member_dashboard
 
         body = self._source(member_dashboard._serve)
         assert "instance.read(slug)" in body
@@ -1510,7 +1510,7 @@ class TestAStagedPageReachesOnlyItsOwnersPreview:
     def test_the_package_route_cannot_serve_a_staged_page(self) -> None:
         """A `view.html` package page is read from the artifact store, which has no
         staged side at all, so the third page producer is outside this question."""
-        from kiro_crew.dashboard.handlers import member_dashboard
+        from aj_crew.dashboard.handlers import member_dashboard
 
         source = self._source(member_dashboard._serve_package)
         assert "staged_preview" not in source
@@ -1524,7 +1524,7 @@ class TestAStagedPageReachesOnlyItsOwnersPreview:
         """
         from urllib.parse import parse_qs, urlparse
 
-        from kiro_crew.dashboard_templates import instance as instance_store
+        from aj_crew.dashboard_templates import instance as instance_store
 
         link = instance_store.preview_url(MEMBER)
         parsed = urlparse(link)
@@ -1544,7 +1544,7 @@ class TestAStagedPageReachesOnlyItsOwnersPreview:
     def test_the_staging_route_hands_back_a_link_and_no_page(self) -> None:
         """`api_dashboard_preview` stages and returns the wire record. It composes
         nothing, so there is no rendered staged page anywhere but behind the gate."""
-        from kiro_crew.dashboard.handlers import agent_panel
+        from aj_crew.dashboard.handlers import agent_panel
 
         source = self._source(agent_panel.api_dashboard_preview)
         assert "stage_preview(" in source
@@ -1557,7 +1557,7 @@ class TestAStagedPageReachesOnlyItsOwnersPreview:
         The preview link carries no `dashboard=`, so resolving a binding first would serve
         the live package page. Pinned as a source order.
         """
-        from kiro_crew.dashboard.handlers import member_dashboard
+        from aj_crew.dashboard.handlers import member_dashboard
 
         body = self._source(member_dashboard._serve)
         decided = 'staged_only = request.query.get("preview") == "1" and not package_slug'
@@ -1583,7 +1583,7 @@ class TestAStagedPageReachesOnlyItsOwnersPreview:
         """
         import pathlib
 
-        from kiro_crew.dashboard_templates import instance as instance_store
+        from aj_crew.dashboard_templates import instance as instance_store
 
         root = pathlib.Path(instance_store.__file__).resolve().parents[1]
         emitters: dict[str, int] = {}
@@ -1632,7 +1632,7 @@ class TestTheStagedComposedPage:
     async def test_a_package_left_staged_by_an_older_gateway_is_nothing_to_preview(
         self,
     ) -> None:
-        from kiro_crew.artifact_store.dashboard_package import canonical_package_content
+        from aj_crew.artifact_store.dashboard_package import canonical_package_content
 
         directory = instance.instance_dir(SLUG)
         directory.mkdir(parents=True, exist_ok=True)
@@ -1683,7 +1683,7 @@ class _Window:
 
 def _human(ts: str, **meta) -> dict:
     """A row a human send path wrote, with the marker those paths set."""
-    from kiro_crew.history import HUMAN_TURN_META_KEY
+    from aj_crew.history import HUMAN_TURN_META_KEY
 
     return {
         "role": "user",
@@ -1782,7 +1782,7 @@ class TestThePageIsToldWhenThePersonLastSpoke:
         reply. Equal is what the page reads as "not answered"."""
         from datetime import datetime, timezone
 
-        from kiro_crew.crew_log.projection import _panel_iso
+        from aj_crew.crew_log.projection import _panel_iso
 
         # SPOKE's own second, with the reply 0.3 s into it and the write 0.7 s into it.
         reply_ms, write_ms = 1791935344300, 1791935344700
@@ -1818,7 +1818,7 @@ class TestThePageIsToldWhenThePersonLastSpoke:
         assert state.asked == ["chat-7"]
 
     def test_a_thread_with_no_live_slot_reads_the_stored_stamp_from_its_file(self) -> None:
-        from kiro_crew.dashboard.chat_utils import slot_transcript_key
+        from aj_crew.dashboard.chat_utils import slot_transcript_key
 
         dm = routes._dashboard_slot(MEMBER, SLUG)
         log = _Log({slot_transcript_key(dm): {"_type": "metadata", "last_user_at": SPOKE}})
@@ -1837,7 +1837,7 @@ class TestThePageIsToldWhenThePersonLastSpoke:
     @pytest.mark.asyncio
     async def test_the_composed_page_carries_the_stamp(self, monkeypatch) -> None:
         """Through the route: `_serve` reads it off the loop and hands it to the page."""
-        from kiro_crew import dashboard_feed
+        from aj_crew import dashboard_feed
 
         class FakeFeed:
             def __init__(self, slot, unit="", panel_record=None):
@@ -1857,7 +1857,7 @@ class TestThePageIsToldWhenThePersonLastSpoke:
             def unsubscribe(self):
                 pass
 
-        from kiro_crew.crew_log import projection
+        from aj_crew.crew_log import projection
 
         monkeypatch.setattr(dashboard_feed, "DashboardFeed", FakeFeed)
         monkeypatch.setattr(
@@ -1868,7 +1868,7 @@ class TestThePageIsToldWhenThePersonLastSpoke:
         state = _ChatState({dm: _Window([_human(SPOKE, steer=True)])})
         async with _client(state) as client:
             body = await (await client.get(_q(""))).json()
-        island = body["rendered_html"].split('id="kirocrew-dashboard-data">', 1)[1]
+        island = body["rendered_html"].split('id="ajcrew-dashboard-data">', 1)[1]
         read = json.loads(island.split("</script>", 1)[0])
         assert read["last_user_at"] == SPOKE
 
@@ -1878,11 +1878,11 @@ class TestThePageIsToldWhenThePersonLastSpoke:
         async with _client(state) as client:
             body = await (await client.get(_q("", preview="1"))).json()
         assert body["preview"] is True
-        island = body["rendered_html"].split('id="kirocrew-dashboard-data">', 1)[1]
+        island = body["rendered_html"].split('id="ajcrew-dashboard-data">', 1)[1]
         assert json.loads(island.split("</script>", 1)[0])["last_user_at"] == SPOKE
 
         # No gateway state at all is no stamp, and the page is served all the same.
         async with _client() as client:
             body = await (await client.get(_q(""))).json()
-        island = body["rendered_html"].split('id="kirocrew-dashboard-data">', 1)[1]
+        island = body["rendered_html"].split('id="ajcrew-dashboard-data">', 1)[1]
         assert json.loads(island.split("</script>", 1)[0])["last_user_at"] == ""

@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.dashboard.handlers import source_providers as source
+from aj_crew.dashboard.handlers import source_providers as source
 
 MR_URL = "https://gitlab.com/acme/platform/service/-/merge_requests/42"
 PROJECT = "projects/acme%2Fplatform%2Fservice/merge_requests/42"

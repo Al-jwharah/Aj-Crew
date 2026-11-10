@@ -11,18 +11,18 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.session import SessionManager
-from kiro_crew.session_map import SessionMap
-from kiro_crew.testing.wait import await_until
+from aj_crew.config import AjCrewConfig
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.session import SessionManager
+from aj_crew.session_map import SessionMap
+from aj_crew.testing.wait import await_until
 
 KEY = "dashboard:test"
 
 
 def _provider_factory(tmp_path, bound: list):
-    from kiro_crew.acp.types import ACP_BACKEND_KIRO
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.acp.types import ACP_BACKEND_KIRO
+    from aj_crew.providers.acp import AcpProvider
 
     def factory(session_key=None, agent=None, channel_id=None, **kwargs):
         provider = object.__new__(AcpProvider)
@@ -52,10 +52,10 @@ def resumable(tmp_path, monkeypatch):
     native.mkdir()
     (native / "old-sid.json").write_text("{}", encoding="utf-8")
     (native / "old-sid.jsonl").write_text('{"role":"user","content":"x"}\n', encoding="utf-8")
-    monkeypatch.setattr("kiro_crew.session_map._kiro_sessions_dir", lambda: native)
+    monkeypatch.setattr("aj_crew.session_map._kiro_sessions_dir", lambda: native)
     old = tmp_path / "old-project"
     old.mkdir()
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session.timeout_secs = 2
     bound: list = []
     factory = _provider_factory(tmp_path, bound)
@@ -65,7 +65,7 @@ def resumable(tmp_path, monkeypatch):
 
 
 def _dashboard_state(mgr, slot):
-    from kiro_crew.dashboard.state import DashboardState
+    from aj_crew.dashboard.state import DashboardState
 
     state = MagicMock(spec=DashboardState)
     state._slots = {slot.key: slot}
@@ -80,7 +80,7 @@ def _dashboard_state(mgr, slot):
 async def _clear_over_http(state, expect_status=200):
     from aiohttp import web
 
-    from kiro_crew.dashboard.chat import api_chat_slot_project
+    from aj_crew.dashboard.chat import api_chat_slot_project
 
     app = web.Application()
     app["state"] = state
@@ -92,7 +92,7 @@ async def _clear_over_http(state, expect_status=200):
 
 
 async def _clear_by_directive(state, slot):
-    from kiro_crew.dashboard.session_directive_apply import _set_project
+    from aj_crew.dashboard.session_directive_apply import _set_project
 
     return await _set_project(state, slot, {"clear": True})
 
@@ -136,7 +136,7 @@ async def test_the_clear_is_on_disk_when_it_is_acknowledged(resumable, clear, mo
     """The debounced write is held off, so only a write the clear itself awaited can land."""
     mgr, old, _, _ = resumable
     await mgr.aflush()
-    monkeypatch.setattr("kiro_crew.session_map._FLUSH_DEBOUNCE_SECS", 60.0)
+    monkeypatch.setattr("aj_crew.session_map._FLUSH_DEBOUNCE_SECS", 60.0)
     slot = _ChatSlot("test")
     slot.project = old
     state = _dashboard_state(mgr, slot)
@@ -180,7 +180,7 @@ async def _clear(state, slot, clear, expect_ok):
 async def test_a_retried_clear_is_not_acknowledged_until_it_is_saved(resumable, clear, monkeypatch):
     """The retry finds the project already empty, so it must still wait for the owed write."""
     mgr, old, _, _ = resumable
-    monkeypatch.setattr("kiro_crew.session_map._FLUSH_DEBOUNCE_SECS", 60.0)
+    monkeypatch.setattr("aj_crew.session_map._FLUSH_DEBOUNCE_SECS", 60.0)
     smap = mgr._session_map
     real_write = smap._write_payload
     smap._write_payload = MagicMock(side_effect=OSError("disk full"))
@@ -225,7 +225,7 @@ async def test_a_clear_is_refused_while_the_map_stays_unreadable(resumable, clea
     mgr._session_map._data = {}
     mgr._session_map._load_failed = True
     monkeypatch.setattr(
-        "kiro_crew.session_map_store._read_map_file", MagicMock(side_effect=OSError("io"))
+        "aj_crew.session_map_store._read_map_file", MagicMock(side_effect=OSError("io"))
     )
     slot = _ChatSlot("test")
     slot.project = old
@@ -268,7 +268,7 @@ async def test_a_reset_successor_of_a_cleared_session_does_not_inherit_the_remov
     resumable,
 ):
     """Reset and compaction successors rebuild from ``allocation_identity`` of the old session."""
-    from kiro_crew.session_lifecycle_parts.parked_queue import allocation_identity
+    from aj_crew.session_lifecycle_parts.parked_queue import allocation_identity
 
     mgr, old, bound, _ = resumable
     await mgr.get_or_create(KEY, cwd=old)
@@ -289,7 +289,7 @@ async def test_the_claude_sid_backfill_does_not_store_a_cleared_sessions_directo
     resumable, monkeypatch
 ):
     mgr, old, _, _ = resumable
-    monkeypatch.setattr("kiro_crew.session._is_claude_provider", lambda provider: True)
+    monkeypatch.setattr("aj_crew.session._is_claude_provider", lambda provider: True)
     await mgr.get_or_create(KEY, cwd=old)
     mgr.release(KEY)
     mgr.retract_cwd(KEY)
@@ -329,7 +329,7 @@ async def test_the_directive_clear_reads_the_project_after_preparing_the_map(res
 @pytest.mark.asyncio
 async def test_a_cleared_chats_reply_thread_never_resumes_a_stored_cwd(resumable):
     """A thread key is stateless, so the ``cwd`` a stale map row carries for it is never read."""
-    from kiro_crew.dashboard.chat_threads import thread_session_key
+    from aj_crew.dashboard.chat_threads import thread_session_key
 
     mgr, old, bound, _ = resumable
     slot = _ChatSlot("test")
@@ -454,7 +454,7 @@ async def test_the_pending_reset_drops_a_cwd_stored_after_the_clear(tmp_path):
     """A cold start already in flight at the clear registers with the old directory."""
     from chat_runner_coverage_helpers import _slot, _state
 
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     state, slot = _state(tmp_path), _slot("test")
     state._slots[slot.key] = slot
@@ -474,8 +474,8 @@ async def test_a_model_only_reset_on_a_chat_with_no_project_keeps_the_stored_cwd
     """A model switch arms the same pending reset, but no project was cleared."""
     from chat_runner_coverage_helpers import _slot, _state
 
-    from kiro_crew.dashboard import chat_runner
-    from kiro_crew.dashboard.session_control_parts.model_switch import arm_model_switch_reset
+    from aj_crew.dashboard import chat_runner
+    from aj_crew.dashboard.session_control_parts.model_switch import arm_model_switch_reset
 
     state, slot = _state(tmp_path), _slot("test")
     state._slots[slot.key] = slot
@@ -494,7 +494,7 @@ async def test_a_model_only_reset_on_a_chat_with_no_project_keeps_the_stored_cwd
 async def test_the_pending_reset_keeps_the_cwd_of_a_chosen_project(resumable, tmp_path):
     from chat_runner_coverage_helpers import _slot, _state
 
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     mgr, old, bound, _ = resumable
     await mgr.get_or_create(KEY, cwd=None)

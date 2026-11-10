@@ -679,7 +679,7 @@ function showSessionExpiredBanner(lead?: string): void {
   const instruction = document.createElement('div')
   setInstructionWithCommandChip(
     instruction,
-    i18nT('api.client.run_kirocrew_token_then_paste_sign_in_url'),
+    i18nT('api.client.run_ajcrew_token_then_paste_sign_in_url'),
   )
   el.append(b, instruction, input, failure)
   // On a phone the desktop "Connect your phone" QR carries this same sign-in URL,
@@ -831,7 +831,7 @@ export function checkSessionExpired(r: Response): Response {
 
 /**
  * Recovery prompt for the ONE denial the silent-refresh path can never clear:
- * a session whose token was minted before `KIROCREW_OWNER_ID` was configured.
+ * a session whose token was minted before `AJCREW_OWNER_ID` was configured.
  * `/api/auth/refresh` re-mints from the incoming subject, so a "successful"
  * refresh would rotate the cookie and keep the stale bootstrap subject — the
  * next owner-gated call is denied again, forever. Only a fresh sign-in (a new
@@ -1409,7 +1409,7 @@ function callerMayHaveChanged(): void {
  * exchange, and treats every announcement it hears as a possible caller change.
  */
 const callerChanged: BroadcastChannel | null =
-  typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel('kirocrew-caller-changed')
+  typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel('ajcrew-caller-changed')
 if (callerChanged) callerChanged.onmessage = callerMayHaveChanged
 callerChanged?.postMessage(null)
 

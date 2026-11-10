@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-SRC = Path(__file__).parent.parent / "src" / "kiro_crew"
+SRC = Path(__file__).parent.parent / "src" / "aj_crew"
 HANDLERS = "".join(
     (SRC / "deploy" / name).read_text(encoding="utf-8")
     for name in ("handlers_guards.py", "handlers_content.py", "handlers_sites.py", "handlers.py")
@@ -38,8 +38,8 @@ class TestF1FailClosedManifestExpiry:
         """Artifact metadata without distribution_id must NOT expire a manifest."""
         from types import SimpleNamespace
 
-        from kiro_crew.deploy import engine, handlers
-        from kiro_crew.deploy import profiles as profiles_mod
+        from aj_crew.deploy import engine, handlers
+        from aj_crew.deploy import profiles as profiles_mod
 
         lifecycle = SimpleNamespace(created_at="2026-01-01T00:00:00Z",
                                     expires_at=None, persistent=False, status="live")
@@ -72,7 +72,7 @@ class TestF1FailClosedManifestExpiry:
 
 class TestF3StatusTypeCheck:
     def test_unhashable_status_is_400_not_500(self):
-        from kiro_crew.validation import ValidationError, _validate_webapp_metadata_shape
+        from aj_crew.validation import ValidationError, _validate_webapp_metadata_shape
         with pytest.raises(ValidationError) as ei:
             _validate_webapp_metadata_shape({"lifecycle": {"status": ["live"]}})
         assert "must be a string" in str(ei.value)

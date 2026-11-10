@@ -23,13 +23,13 @@ import asyncio
 
 import pytest
 
-from kiro_crew.acp.client import AcpAuthRequired, AcpError, _raise_acp_error
-from kiro_crew.acp.types import ACP_BACKEND_KIRO
-from kiro_crew.cron import _AUTO_PAUSE_THRESHOLD, CronJob, CronService
-from kiro_crew.cron_service.model import _NEVER_PAUSE_BACKOFF_BASE_SECS, CronSchedule
-from kiro_crew.cron_service.schedule import is_due
-from kiro_crew.slack.gateway import _charge_failure, _cron_auth_expiry, _failure_alert_due
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.client import AcpAuthRequired, AcpError, _raise_acp_error
+from aj_crew.acp.types import ACP_BACKEND_KIRO
+from aj_crew.cron import _AUTO_PAUSE_THRESHOLD, CronJob, CronService
+from aj_crew.cron_service.model import _NEVER_PAUSE_BACKOFF_BASE_SECS, CronSchedule
+from aj_crew.cron_service.schedule import is_due
+from aj_crew.slack.gateway import _charge_failure, _cron_auth_expiry, _failure_alert_due
+from aj_crew.testing.wait import await_until
 
 
 def _stored(tmp_path, job_id: str) -> CronJob:

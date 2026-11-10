@@ -14,7 +14,7 @@ that merely contain a sentinel cannot shadow the genuine fragment start.
 """
 
 from conftest import assert_rejected_without_backtracking
-from kiro_crew.constants import split_trailing_protocol_suffix
+from aj_crew.constants import split_trailing_protocol_suffix
 
 
 class TestProseMentionIsNotAMarker:

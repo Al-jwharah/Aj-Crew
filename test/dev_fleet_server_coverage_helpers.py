@@ -20,7 +20,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.apps.builtins.dev_fleet import fleet_state, repository, runtime, worktree_ops
+from aj_crew.apps.builtins.dev_fleet import fleet_state, repository, runtime, worktree_ops
 
 
 # --------------------------------------------------------------------------

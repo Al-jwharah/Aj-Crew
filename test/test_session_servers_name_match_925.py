@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from kiro_crew.mcp_gateway.session_servers import _load_overlay_for_agent
+from aj_crew.mcp_gateway.session_servers import _load_overlay_for_agent
 
 
 def test_bare_filename_fast_path(tmp_path: Path) -> None:

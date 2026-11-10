@@ -17,20 +17,20 @@ from types import SimpleNamespace
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, emit
-from kiro_crew.crew_log import session_tree as stp_session_tree
-from kiro_crew.crew_log import session_tree_projection as stp
-from kiro_crew.crew_log import store as crew_store
-from kiro_crew.crew_log.session_tree import (
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, emit
+from aj_crew.crew_log import session_tree as stp_session_tree
+from aj_crew.crew_log import session_tree_projection as stp
+from aj_crew.crew_log import store as crew_store
+from aj_crew.crew_log.session_tree import (
     EdgeRecord,
     OpenedRecord,
     SessionTree,
     fold_tree,
     spawned_record,
 )
-from kiro_crew.crew_log.session_tree_projection import CHECKPOINT_NAME, SessionTreeProjection
-from kiro_crew.dashboard.session_memory import lineage_parents
+from aj_crew.crew_log.session_tree_projection import CHECKPOINT_NAME, SessionTreeProjection
+from aj_crew.dashboard.session_memory import lineage_parents
 
 GATEWAY = "gateway"
 
@@ -39,10 +39,10 @@ GATEWAY = "gateway"
 def _isolated_home(tmp_path, _floor_monkeypatch):
     """Own data home per test, and no checkpoint write armed on the real pool. Patched
     through ``_floor_monkeypatch`` so a test's own ``monkeypatch.undo()`` cannot lift it."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _floor_monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     _floor_monkeypatch.setattr(
-        "kiro_crew.executors.maintenance_executor",
+        "aj_crew.executors.maintenance_executor",
         lambda: type("_NoPool", (), {"submit": staticmethod(lambda *a, **k: None)}),
     )
     stp.reset_for_tests()
@@ -60,7 +60,7 @@ def _spawn(child: str, creator: str, sid: str, at: int = 10, seq: int = 2) -> Ed
 
 
 def _open_creator(sid: str, slot: str) -> None:
-    emit.on_session_opened(sid, agent="kirocrew", slot=slot, model="opus", cwd="/w", owner="o")
+    emit.on_session_opened(sid, agent="ajcrew", slot=slot, model="opus", cwd="/w", owner="o")
 
 
 def _restart() -> SessionTreeProjection:
@@ -239,7 +239,7 @@ def test_a_childs_first_turn_after_a_restart_cites_the_creator_from_the_spawn():
     resolved = revived.spawned_creator("W")
     assert resolved == "L"
     emit.on_session_opened(
-        "s-w", agent="kirocrew", slot="W", model="opus", cwd="/w", owner="o", parent_slot=resolved
+        "s-w", agent="ajcrew", slot="W", model="opus", cwd="/w", owner="o", parent_slot=resolved
     )
     assert_drained()
     assert stp.projection().nodes()["W"].parent_slot == "L"
@@ -256,9 +256,9 @@ def test_a_boot_restore_keeps_only_the_creator_the_spawn_records(tmp_path, monke
     spawn records it and refused when nothing does."""
     from chat_test_helpers import _make_state
 
-    from kiro_crew.config.paths import config_dir
-    from kiro_crew.dashboard.chat import restore_open_slots, restore_recent_sessions
-    from kiro_crew.dashboard.session_control import UNVERIFIED_CREATOR
+    from aj_crew.config.paths import config_dir
+    from aj_crew.dashboard.chat import restore_open_slots, restore_recent_sessions
+    from aj_crew.dashboard.session_control import UNVERIFIED_CREATOR
 
     _open_creator("s-l", "chat-l")
     emit.on_session_spawned("s-l", creator_slot="chat-l", child_slot="chat-w")
@@ -267,7 +267,7 @@ def test_a_boot_restore_keeps_only_the_creator_the_spawn_records(tmp_path, monke
     emit.reset_caches()
     assert stp.projection().seeded is False
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     history = tmp_path / "history"
     history.mkdir()
     for slot in ("chat-w", "chat-x"):
@@ -373,7 +373,7 @@ def test_a_cut_read_of_spawns_whose_children_self_record_stays_complete(_floor_m
     for i, child in enumerate(children):
         emit.on_session_opened(
             f"s-{child.lower()}",
-            agent="kirocrew",
+            agent="ajcrew",
             slot=child,
             model="opus",
             cwd="/w",
@@ -422,7 +422,7 @@ def test_the_self_parented_filter_never_drops_a_spawn_from_the_held_set(_floor_m
     for child in children:
         emit.on_session_opened(
             f"s-{child.lower()}",
-            agent="kirocrew",
+            agent="ajcrew",
             slot=child,
             model="opus",
             cwd="/w",
@@ -472,7 +472,7 @@ def test_a_capped_scan_is_never_cached_even_when_self_parented_suppresses_the_cu
     for child in children:
         emit.on_session_opened(
             f"s-{child.lower()}",
-            agent="kirocrew",
+            agent="ajcrew",
             slot=child,
             model="opus",
             cwd="/w",
@@ -541,7 +541,7 @@ def test_eviction_past_the_cap_is_not_undone_by_the_replay_scan_cache(_floor_mon
 
 
 def test_session_control_records_only_a_witnessed_mint(_floor_monkeypatch):
-    from kiro_crew.dashboard import session_control as sc
+    from aj_crew.dashboard import session_control as sc
 
     calls: list[tuple] = []
 
@@ -569,7 +569,7 @@ def test_session_control_records_only_a_witnessed_mint(_floor_monkeypatch):
 def test_the_create_is_answered_only_after_the_spawn_is_on_disk():
     """``_record_spawn`` returns True only once the entry is durable, so the create's
     success reply cannot outrun the edge it depends on."""
-    from kiro_crew.dashboard import session_control as sc
+    from aj_crew.dashboard import session_control as sc
 
     _open_creator("s-l", "L")
     assert_drained()
@@ -587,11 +587,11 @@ def test_the_create_is_answered_only_after_the_spawn_is_on_disk():
 
 
 def test_the_creator_log_is_a_real_unit_with_the_entry_type_registered():
-    handle = CrewLog.create(lg.KIND_SESSION, "s-l", owner="o", agent="kirocrew", slot="L")
+    handle = CrewLog.create(lg.KIND_SESSION, "s-l", owner="o", agent="ajcrew", slot="L")
     handle.append(
         "session/opened",
         {
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "slot": "L",
             "model": "opus",
             "cwd": "/w",

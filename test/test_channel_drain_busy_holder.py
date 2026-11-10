@@ -36,10 +36,10 @@ from webex_dispatch_helpers import _dispatcher as _webex_dispatcher
 from webex_dispatch_helpers import _entry as _webex_entry
 from webex_dispatch_helpers import _inbound as _webex_inbound
 
-from kiro_crew.messaging import queue_drain
-from kiro_crew.messaging.queue_drain import reset_drains
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.messaging import queue_drain
+from aj_crew.messaging.queue_drain import reset_drains
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 @pytest.fixture(autouse=True)
@@ -88,7 +88,7 @@ def _forbid_dequeue_while_held(sessions: Any, key: str) -> None:
 
 
 def _discord() -> tuple[Any, ...]:
-    from kiro_crew.discord.transport_dispatch import _QueuedOrigin
+    from aj_crew.discord.transport_dispatch import _QueuedOrigin
 
     d, cli, sess = _dc_dispatcher({"u1"})
     key = d._session_key("u1")
@@ -150,7 +150,7 @@ class TestDiscord:
 
     @pytest.mark.asyncio
     async def test_the_client_close_retires_the_waiting_drain(self) -> None:
-        from kiro_crew.discord.gateway import _client_close_hook
+        from aj_crew.discord.gateway import _client_close_hook
 
         d, cli, sess, replayed, key, origin = _discord()
         assert await d._enqueue_with_receipt(key, "c1", "hello", origin=origin)
@@ -164,7 +164,7 @@ class TestDiscord:
         assert [e[1] for e in sess.queued] == ["hello"]
 
     def test_an_old_clients_close_keeps_a_restarted_dispatchers_drain(self) -> None:
-        from kiro_crew.discord.gateway import _client_close_hook
+        from aj_crew.discord.gateway import _client_close_hook
 
         old, _c1, _s1 = _dc_dispatcher({"u1"})
         new, _c2, _s2 = _dc_dispatcher({"u1"})  # registers itself, replacing ``old``
@@ -176,7 +176,7 @@ class TestDiscord:
 
 
 def _teams(monkeypatch) -> tuple[Any, ...]:
-    from kiro_crew.teams.transport_dispatch import _origin_kwargs
+    from aj_crew.teams.transport_dispatch import _origin_kwargs
 
     turns: list[str] = []
 
@@ -186,8 +186,8 @@ def _teams(monkeypatch) -> tuple[Any, ...]:
     async def _permitted(_c, **_kw):
         return True
 
-    monkeypatch.setattr("kiro_crew.teams.transport_dispatch.drive_turn", _fake_drive)
-    monkeypatch.setattr("kiro_crew.teams.transport_dispatch.inbound_permitted", _permitted)
+    monkeypatch.setattr("aj_crew.teams.transport_dispatch.drive_turn", _fake_drive)
+    monkeypatch.setattr("aj_crew.teams.transport_dispatch.inbound_permitted", _permitted)
     sessions = _TeamsSessions(_TeamsProvider(), busy=True)
     d = _teams_dispatcher(sessions, _TeamsClient())
     key = d._session_key(_TEAMS_EMAIL)
@@ -231,8 +231,8 @@ class TestTeams:
 
     @pytest.mark.asyncio
     async def test_the_client_close_retires_the_waiting_drain(self, monkeypatch) -> None:
-        from kiro_crew.teams.client import TeamsClient
-        from kiro_crew.teams.gateway import _client_close_hook
+        from aj_crew.teams.client import TeamsClient
+        from aj_crew.teams.gateway import _client_close_hook
 
         d, sessions, turns, key = _teams(monkeypatch)
         await d._drain_queue(key, _teams_inbound("opener"))
@@ -306,8 +306,8 @@ class TestWebex:
 
     @pytest.mark.asyncio
     async def test_the_client_close_retires_the_waiting_drain(self) -> None:
-        from kiro_crew.webex.client import WebexClient
-        from kiro_crew.webex.gateway import _client_close_hook
+        from aj_crew.webex.client import WebexClient
+        from aj_crew.webex.gateway import _client_close_hook
 
         d, sessions, _client, key = _webex()
         seen: list[str] = []

@@ -23,12 +23,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from member_memory_helpers import declare_v2_store
 
-from kiro_crew.dashboard.handlers import knowledge as kh
-from kiro_crew.dashboard.handlers import memory as mem_mod
-from kiro_crew.dashboard.handlers import memory_admin, memory_edit
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.validation import LESSON_LIST_OFFSET_MAX, clamp_query_offset
-from kiro_crew.vector_memory import VectorMemoryStore, open_member_database
+from aj_crew.dashboard.handlers import knowledge as kh
+from aj_crew.dashboard.handlers import memory as mem_mod
+from aj_crew.dashboard.handlers import memory_admin, memory_edit
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.validation import LESSON_LIST_OFFSET_MAX, clamp_query_offset
+from aj_crew.vector_memory import VectorMemoryStore, open_member_database
 
 # The first value the signed 64-bit range cannot hold, and one far past it:
 # the first is the exact boundary ``sqlite3`` refuses, the second shows the
@@ -77,7 +77,7 @@ def v2(tmp_path: Path):
 @pytest.mark.parametrize("huge", [2**63, 2**80])
 def test_the_facet_page_query_binds_the_shared_ceiling_for_route_and_cli(huge) -> None:
     """The carve route and the CLI verb both reach this one query, so the bound lives here."""
-    from kiro_crew import memory_schema
+    from aj_crew import memory_schema
 
     _sql, params = memory_schema.facet_page_query({}, "", memory_schema.DEFAULT_FACET_PAGE, huge)
     assert params[-1] == LESSON_LIST_OFFSET_MAX

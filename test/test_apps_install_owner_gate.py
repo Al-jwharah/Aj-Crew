@@ -27,7 +27,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.apps import routes
+from aj_crew.apps import routes
 
 pytestmark = pytest.mark.asyncio
 

@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 _KEY = pytest.StashKey()
-_PROPERTY = "kirocrew_ci_progress"
+_PROPERTY = "ajcrew_ci_progress"
 _CONSOLE_INTERVAL = 30.0
 _COMPONENT = re.compile(r"[A-Za-z_][A-Za-z_0-9]{0,99}\Z")
 

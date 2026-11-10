@@ -36,14 +36,14 @@ from typing import Any
 import pytest
 from fake_devtools_browser import FakeBrowser
 
-from kiro_crew import (
+from aj_crew import (
     dashboard_frame,
     dashboard_synth,
     dashboard_verify,
     github_runner,
     platform_compat,
 )
-from kiro_crew.dashboard_verify import (
+from aj_crew.dashboard_verify import (
     STATUS_FAILED,
     STATUS_PASSED,
     STATUS_SKIPPED,
@@ -51,7 +51,7 @@ from kiro_crew.dashboard_verify import (
     _Collector,
     _compose,
 )
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 LINUX_ONLY = pytest.mark.skipif(
     not platform_compat.IS_LINUX, reason="the page check runs on Linux only"
@@ -287,7 +287,7 @@ def test_an_error_past_the_cap_that_repeats_is_counted_once():
 
 def test_a_refused_url_is_clipped_where_it_is_stored(monkeypatch):
     """The page picks the URL, so neither how many nor how long is the page's to choose."""
-    from kiro_crew.dashboard_verify import _MAX_BLOCKED_URLS, _MAX_URL_CHARS, _Run
+    from aj_crew.dashboard_verify import _MAX_BLOCKED_URLS, _MAX_URL_CHARS, _Run
 
     sent: list[tuple[str, dict[str, Any]]] = []
 
@@ -1168,7 +1168,7 @@ def _run(monkeypatch, fake: FakeBrowser, page: str, read: dict[str, Any] | None 
 
 @LINUX_ONLY
 def test_a_throwing_page_is_reported_with_the_line_it_was_thrown_on(monkeypatch, tmp_path, fast):
-    page = "<div>x</div>\n<script>\n  var rows = window.kirocrew.fields.ratio;\n  rows.map(String);\n</script>"
+    page = "<div>x</div>\n<script>\n  var rows = window.ajcrew.fields.ratio;\n  rows.map(String);\n</script>"
     fake = FakeBrowser(
         tmp_path,
         events=[
@@ -1225,7 +1225,7 @@ def test_the_browser_is_given_the_keys_the_page_names_and_none_of_the_others(
     monkeypatch, tmp_path, fast
 ):
     fake = FakeBrowser(tmp_path)
-    page = "<script>window.kirocrew.fields.rows.map(function (r) { return r.title; });</script>"
+    page = "<script>window.ajcrew.fields.rows.map(function (r) { return r.title; });</script>"
     read = dashboard_frame.read_payload(
         {"rows": [{"title": "Alpha plan", "client_name": "Initech", "Fire Alice": 3}]}, seq=1
     )
@@ -1305,7 +1305,7 @@ def test_a_library_page_whose_own_code_throws_on_the_data_is_still_failed(
 ):
     """The library is not fetched, and the page's data bug is reported all the same."""
     page = (
-        f"{_LIBRARY}\n<script>\n  var rows = window.kirocrew.fields.ratio;\n"
+        f"{_LIBRARY}\n<script>\n  var rows = window.ajcrew.fields.ratio;\n"
         "  rows.map(String);\n  new Chart(document.body, {});\n</script>"
     )
     fake = FakeBrowser(
@@ -1353,7 +1353,7 @@ def test_a_library_page_that_stops_at_the_library_is_skipped_with_the_name(
 
 @LINUX_ONLY
 def test_the_browser_is_started_without_a_port_and_with_its_sandbox_on(monkeypatch, tmp_path, fast):
-    monkeypatch.setenv("KIROCREW_TEST_SECRET", "must-not-reach-the-browser")
+    monkeypatch.setenv("AJCREW_TEST_SECRET", "must-not-reach-the-browser")
     fake = FakeBrowser(tmp_path)
 
     _run(monkeypatch, fake, "<p>x</p>")
@@ -1370,7 +1370,7 @@ def test_the_browser_is_started_without_a_port_and_with_its_sandbox_on(monkeypat
     profile = next(a.split("=", 1)[1] for a in argv if a.startswith("--user-data-dir="))
     assert profile.startswith(str(fast)), "the profile was not made in the temp root"
     # What it inherited: a scrubbed environment and no descriptor but the pipe.
-    assert "KIROCREW_TEST_SECRET" not in start["env"]
+    assert "AJCREW_TEST_SECRET" not in start["env"]
     assert start["env"]["HOME"] == profile
     assert start["leaked_fds"] == []
 
@@ -1663,7 +1663,7 @@ def test_a_browser_that_never_answers_is_killed_and_timed_out(monkeypatch, tmp_p
 
 _CLEAN = (
     '<div data-dashboard-field="open_prs"></div>\n'
-    "<script>window.kirocrew.subscribe('open_prs', function (v) { document.title = String(v); });</script>"
+    "<script>window.ajcrew.subscribe('open_prs', function (v) { document.title = String(v); });</script>"
 )
 
 
@@ -1696,7 +1696,7 @@ def _ran(v: dashboard_verify.Verification) -> dashboard_verify.Verification:
 
 
 def test_a_real_page_that_throws_on_its_data_is_reported_with_its_line(real_browser):
-    page = "<p>data</p>\n<script>\n  var rows = window.kirocrew.fields.ratio;\n  rows.map(String);\n</script>"
+    page = "<p>data</p>\n<script>\n  var rows = window.ajcrew.fields.ratio;\n  rows.map(String);\n</script>"
     read = dashboard_frame.read_payload({"ratio": "n/a"}, seq=1)
 
     v = _ran(dashboard_verify.verify_page(page, read))
@@ -1712,7 +1712,7 @@ def test_a_real_page_that_crashes_only_on_a_null_field_crashes_on_the_copy_too(r
     The control is the same page over a field that has a number: it passes, so the failure
     is the null's and not the page's.
     """
-    page = "<p>data</p>\n<script>\n  var x = window.kirocrew.fields.x;\n  x.toFixed(1);\n</script>"
+    page = "<p>data</p>\n<script>\n  var x = window.ajcrew.fields.x;\n  x.toFixed(1);\n</script>"
 
     empty = _ran(
         dashboard_verify.verify_page(page, dashboard_frame.read_payload({"x": None}, seq=1))
@@ -1731,7 +1731,7 @@ def test_a_real_library_page_whose_own_code_throws_on_its_data_is_still_failed(r
     """Chart.js is not fetched here; the page's own error on the record is still found."""
     page = (
         '<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>\n<script>\n'
-        "  var rows = window.kirocrew.fields.ratio;\n  rows.map(String);\n"
+        "  var rows = window.ajcrew.fields.ratio;\n  rows.map(String);\n"
         "  new Chart(document.body, {});\n</script>"
     )
     read = dashboard_frame.read_payload({"ratio": "n/a"}, seq=1)
@@ -1794,7 +1794,7 @@ def test_a_real_page_cannot_reach_a_listener_on_this_machine(real_browser):
             <img src="{origin}/i.png">
             <form id="f" action="{origin}/form" method="post"></form>
             <script>
-              var d = encodeURIComponent(JSON.stringify(window.kirocrew.fields));
+              var d = encodeURIComponent(JSON.stringify(window.ajcrew.fields));
               fetch('{origin}/fetch?d=' + d).catch(function () {{}});
               new Image().src = '{origin}/img?d=' + d;
               navigator.sendBeacon('{origin}/beacon', d);

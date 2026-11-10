@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import asyncio
 
-from kiro_crew.messaging.display_safety import canonicalize_display
-from kiro_crew.whatsapp.renderer import (
+from aj_crew.messaging.display_safety import canonicalize_display
+from aj_crew.whatsapp.renderer import (
     WHATSAPP_CHUNK_LIMIT,
     display_safe_text,
     render_chunks,

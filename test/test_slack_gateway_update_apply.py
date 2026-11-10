@@ -32,10 +32,10 @@ from slack_gateway_helpers import (
     _mock_sessions,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.slack import gateway as gw
-from kiro_crew.slack.gateway import GatewayOrchestrator
-from kiro_crew.testing.wait import async_wait_until, await_until, finished
+from aj_crew import platform_compat
+from aj_crew.slack import gateway as gw
+from aj_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.testing.wait import async_wait_until, await_until, finished
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Tests: _check_for_updates
@@ -49,8 +49,8 @@ class TestCheckForUpdates:
     async def test_no_update_available(self):
         orch = _make_orchestrator()
         orch.dashboard_state = _mock_dashboard_state()
-        with patch("kiro_crew.dashboard.handlers._do_update_check", new_callable=AsyncMock):
-            with patch("kiro_crew.dashboard.handlers._update_info", {"update_available": False}):
+        with patch("aj_crew.dashboard.handlers._do_update_check", new_callable=AsyncMock):
+            with patch("aj_crew.dashboard.handlers._update_info", {"update_available": False}):
                 await orch._check_for_updates()
 
     @pytest.mark.asyncio
@@ -59,8 +59,8 @@ class TestCheckForUpdates:
         ds = _mock_dashboard_state()
         orch.dashboard_state = ds
         orch._auto_apply_update = AsyncMock()
-        import kiro_crew.dashboard.handlers as _h
-        from kiro_crew.platform.governance import UpdatePins
+        import aj_crew.dashboard.handlers as _h
+        from aj_crew.platform.governance import UpdatePins
 
         fake_cfg = MagicMock()
         fake_cfg.auto_update = False
@@ -69,9 +69,9 @@ class TestCheckForUpdates:
         _h._update_info.clear()
         _h._update_info.update({"update_available": True, "version": "9.9.9"})
         with patch.object(_h, "_do_update_check", new_callable=AsyncMock):
-            with patch("kiro_crew.config.KiroCrewConfig.load", return_value=fake_cfg):
+            with patch("aj_crew.config.AjCrewConfig.load", return_value=fake_cfg):
                 with patch(
-                    "kiro_crew.platform.governance.active_update_pins",
+                    "aj_crew.platform.governance.active_update_pins",
                     return_value=UpdatePins(),
                 ):
                     await orch._check_for_updates()
@@ -90,7 +90,7 @@ class TestCheckForUpdates:
         ds = _mock_dashboard_state()
         orch.dashboard_state = ds
         orch._auto_apply_update = AsyncMock()
-        import kiro_crew.dashboard.handlers as _h
+        import aj_crew.dashboard.handlers as _h
 
         fake_cfg = MagicMock()
         fake_cfg.auto_update = True
@@ -99,9 +99,9 @@ class TestCheckForUpdates:
             {"update_available": True, "can_apply": True, "version_newer": False}
         )
         with patch.object(_h, "_do_update_check", new_callable=AsyncMock):
-            with patch("kiro_crew.config.KiroCrewConfig.load", return_value=fake_cfg):
+            with patch("aj_crew.config.AjCrewConfig.load", return_value=fake_cfg):
                 with patch(
-                    "kiro_crew.platform.update_governance.update_required",
+                    "aj_crew.platform.update_governance.update_required",
                     return_value=False,
                 ):
                     with _install_effect():
@@ -115,16 +115,16 @@ class TestCheckForUpdates:
         orch = _make_orchestrator()
         orch.dashboard_state = _mock_dashboard_state()
         orch._auto_apply_update = AsyncMock()
-        import kiro_crew.dashboard.handlers as _h
+        import aj_crew.dashboard.handlers as _h
 
         fake_cfg = MagicMock()
         fake_cfg.auto_update = True
         _h._update_info.clear()
         _h._update_info.update({"update_available": True, "can_apply": True, "version_newer": True})
         with patch.object(_h, "_do_update_check", new_callable=AsyncMock):
-            with patch("kiro_crew.config.KiroCrewConfig.load", return_value=fake_cfg):
+            with patch("aj_crew.config.AjCrewConfig.load", return_value=fake_cfg):
                 with patch(
-                    "kiro_crew.platform.update_governance.update_required",
+                    "aj_crew.platform.update_governance.update_required",
                     return_value=False,
                 ):
                     with _install_effect():
@@ -143,8 +143,8 @@ class TestCheckForUpdates:
         ds = _mock_dashboard_state()
         orch.dashboard_state = ds
         orch._auto_apply_update = AsyncMock()
-        import kiro_crew.dashboard.handlers as _h
-        from kiro_crew.platform.update_capability import CHECK_SUCCEEDED
+        import aj_crew.dashboard.handlers as _h
+        from aj_crew.platform.update_capability import CHECK_SUCCEEDED
 
         # A git checkout (`can_apply`) below the floor whose check SUCCEEDED
         # but found no newer `__version__` (version_newer False). The wheel
@@ -160,7 +160,7 @@ class TestCheckForUpdates:
             }
         )
         with patch.object(_h, "_do_update_check", new_callable=AsyncMock):
-            with patch("kiro_crew.platform.update_governance.update_required", return_value=True):
+            with patch("aj_crew.platform.update_governance.update_required", return_value=True):
                 with _install_effect("mandatory"):
                     await orch._check_for_updates()
         orch._auto_apply_update.assert_not_awaited()
@@ -183,12 +183,12 @@ class TestCheckForUpdates:
         orch = _make_orchestrator()
         orch.dashboard_state = _mock_dashboard_state()
         orch._auto_apply_update = AsyncMock()
-        import kiro_crew.dashboard.handlers as _h
+        import aj_crew.dashboard.handlers as _h
 
         _h._update_info.clear()
         _h._update_info.update({"update_available": True, "can_apply": True, "version_newer": True})
         with patch.object(_h, "_do_update_check", new_callable=AsyncMock):
-            with patch("kiro_crew.platform.update_governance.update_required", return_value=True):
+            with patch("aj_crew.platform.update_governance.update_required", return_value=True):
                 with _install_effect("mandatory"):
                     await orch._check_for_updates()
         orch._auto_apply_update.assert_awaited_once()
@@ -200,7 +200,7 @@ class TestCheckForUpdates:
         orch = _make_orchestrator()
         orch._auto_apply_update = AsyncMock()
         with patch(
-            "kiro_crew.dashboard.handlers._do_update_check",
+            "aj_crew.dashboard.handlers._do_update_check",
             new_callable=AsyncMock,
             side_effect=RuntimeError("network"),
         ) as check:
@@ -222,9 +222,9 @@ class TestAutoApplyUpdate:
         orch = _make_orchestrator()
         ds = _mock_dashboard_state()
         orch.dashboard_state = ds
-        with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": ""}, clear=False):
+        with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": ""}, clear=False):
             with patch(
-                "kiro_crew.slack.gateway.platform_compat.trusted_git_bin",
+                "aj_crew.slack.gateway.platform_compat.trusted_git_bin",
                 return_value="/trusted/bin/git",
             ) as resolve_git:
                 with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as spawn:
@@ -243,18 +243,18 @@ class TestAutoApplyUpdate:
         ds = real_dashboard_state(tmp_path)
         feed = open_feed(ds)
         orch.dashboard_state = ds
-        with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": "/tmp/proj"}, clear=False):
+        with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": "/tmp/proj"}, clear=False):
             with (
                 patch(
-                    "kiro_crew.slack.gateway.platform_compat.trusted_git_bin",
+                    "aj_crew.slack.gateway.platform_compat.trusted_git_bin",
                     return_value="/trusted/bin/git",
                 ),
                 # Permissive, so only the branch gate can stop the run before the
                 # next precondition (the repo-named exec config) is read.
                 patch(
-                    "kiro_crew.slack.gateway.repo_exec_config_reason", return_value=""
+                    "aj_crew.slack.gateway.repo_exec_config_reason", return_value=""
                 ) as exec_config,
-                patch("kiro_crew.slack.gateway.tracks_upstream", return_value=True),
+                patch("aj_crew.slack.gateway.tracks_upstream", return_value=True),
                 patch(
                     "asyncio.create_subprocess_exec",
                     new_callable=AsyncMock,
@@ -281,7 +281,7 @@ class TestAutoApplyUpdate:
 
         def slow_hint() -> str:
             # flake-ok: pre-existing two-second bound on the loop-served event, moved verbatim; tracked for a de-flake pass
-            return "kirocrew restart" if loop_ran.wait(timeout=2.0) else "LOOP BLOCKED"
+            return "ajcrew restart" if loop_ran.wait(timeout=2.0) else "LOOP BLOCKED"
 
         async def loop_is_serving() -> None:
             # flake-ok: pre-existing event-loop yield in the serving probe, moved verbatim; tracked for a de-flake pass
@@ -289,7 +289,7 @@ class TestAutoApplyUpdate:
             loop_ran.set()
 
         with (
-            patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": "/tmp/proj"}, clear=False),
+            patch.dict("os.environ", {"AJCREW_PROJECT_DIR": "/tmp/proj"}, clear=False),
             # The first statement inside the handler's `try` raises, so the
             # failure path is reached before any spawn.
             patch.object(gw, "git_command_env", side_effect=RuntimeError("disk gone")),
@@ -302,7 +302,7 @@ class TestAutoApplyUpdate:
 
         assert orch.dashboard_state._update_progress == {
             "step": "failed",
-            "detail": "Restart failed — run: kirocrew restart",
+            "detail": "Restart failed — run: ajcrew restart",
         }
 
 
@@ -342,7 +342,7 @@ class TestBrazilInstallAndDeps:
     def test_check_missing_deps_brazil_skips(self):
         orch = _make_orchestrator()
         with patch("importlib.util.find_spec", return_value=None):
-            with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": "/proj"}):
+            with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": "/proj"}):
                 with patch.object(
                     GatewayOrchestrator, "_is_brazil_install", return_value=True
                 ) as is_brazil:
@@ -355,7 +355,7 @@ class TestBrazilInstallAndDeps:
 
     def test_check_console_script_skips_when_no_project_dir(self):
         orch = _make_orchestrator()
-        with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": ""}, clear=False):
+        with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": ""}, clear=False):
             with patch.object(gw, "sandboxed_spawn_argv_async", new_callable=AsyncMock) as spawn:
                 asyncio.run(orch._check_console_script())
         spawn.assert_not_awaited()
@@ -363,7 +363,7 @@ class TestBrazilInstallAndDeps:
     def test_check_console_script_skips_brazil(self, tmp_path):
         (tmp_path / ".install-method").write_text("brazil")
         orch = _make_orchestrator()
-        with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": str(tmp_path)}, clear=False):
+        with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": str(tmp_path)}, clear=False):
             with patch.object(gw, "sandboxed_spawn_argv_async", new_callable=AsyncMock) as spawn:
                 asyncio.run(orch._check_console_script())
         spawn.assert_not_awaited()
@@ -371,7 +371,7 @@ class TestBrazilInstallAndDeps:
     def test_check_console_script_skips_non_pip(self, tmp_path):
         # No .install-method (or a non-pip one) means this is not a pip install.
         orch = _make_orchestrator()
-        with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": str(tmp_path)}, clear=False):
+        with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": str(tmp_path)}, clear=False):
             with patch.object(GatewayOrchestrator, "_is_brazil_install", return_value=False):
                 with patch.object(
                     gw, "sandboxed_spawn_argv_async", new_callable=AsyncMock
@@ -387,7 +387,7 @@ class TestBrazilInstallAndDeps:
         script.write_text("#!/bin/sh\n")
         script.chmod(0o755)
         orch = _make_orchestrator()
-        with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": str(tmp_path)}, clear=False):
+        with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": str(tmp_path)}, clear=False):
             with patch.object(gw, "sandboxed_spawn_argv_async", new_callable=AsyncMock) as spawn:
                 asyncio.run(orch._check_console_script())
         spawn.assert_not_awaited()
@@ -408,7 +408,7 @@ class TestBrazilInstallAndDeps:
             seen["kwargs"] = kwargs
             return list(cmd), {"SCRUBBED": "1"}, None
 
-        with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": str(tmp_path)}, clear=False):
+        with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": str(tmp_path)}, clear=False):
             with patch.object(gw, "sandboxed_spawn_argv_async", side_effect=fake_prepare):
                 with patch.object(
                     gw,
@@ -450,7 +450,7 @@ class TestBrazilInstallAndDeps:
         async def fake_prepare(cmd, **kwargs):
             return list(cmd), {}, None
 
-        with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": str(tmp_path)}, clear=False):
+        with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": str(tmp_path)}, clear=False):
             with patch.object(gw, "sandboxed_spawn_argv_async", side_effect=fake_prepare):
                 with patch.object(
                     gw,
@@ -498,7 +498,7 @@ class TestBrazilInstallAndDeps:
             return loop_thread
 
         with (
-            patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": str(tmp_path)}, clear=False),
+            patch.dict("os.environ", {"AJCREW_PROJECT_DIR": str(tmp_path)}, clear=False),
             patch.object(GatewayOrchestrator, "_is_brazil_install", side_effect=is_brazil),
             patch.object(Path, "read_text", read_text),
             patch.object(gw.os, "access", side_effect=access),
@@ -537,7 +537,7 @@ class TestBrazilInstallAndDeps:
             return loop_thread
 
         with (
-            patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": str(tmp_path)}, clear=False),
+            patch.dict("os.environ", {"AJCREW_PROJECT_DIR": str(tmp_path)}, clear=False),
             patch.object(Path, "resolve", resolve),
             patch.object(gw, "sandboxed_spawn_argv_async", side_effect=fake_prepare),
             patch.object(
@@ -569,7 +569,7 @@ class TestBrazilInstallAndDeps:
             "unshare(CLONE_NEWNS) failed with errno 1 (EPERM)",
         )
 
-        with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": str(tmp_path)}, clear=False):
+        with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": str(tmp_path)}, clear=False):
             with patch.object(
                 gw,
                 "sandboxed_spawn_argv_async",
@@ -611,7 +611,7 @@ class TestBrazilInstallAndDeps:
             return list(cmd), {}, str(cleanup)
 
         with (
-            patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": str(tmp_path)}, clear=False),
+            patch.dict("os.environ", {"AJCREW_PROJECT_DIR": str(tmp_path)}, clear=False),
             patch.object(gw, "sandboxed_spawn_argv_async", side_effect=fake_prepare),
             patch.object(
                 gw,
@@ -657,7 +657,7 @@ class TestBrazilInstallAndDeps:
             raise AssertionError("bare asyncio.create_subprocess_exec is forbidden")
 
         with (
-            patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": str(tmp_path)}, clear=False),
+            patch.dict("os.environ", {"AJCREW_PROJECT_DIR": str(tmp_path)}, clear=False),
             patch.object(gw, "sandboxed_spawn_argv_async", side_effect=fake_prepare) as prep,
             patch.object(
                 gw,
@@ -726,7 +726,7 @@ class TestAutoApplyUpdateGitPath:
     def _permit_update_preconditions(self):
         """Neutralize the seam preconditions so these tests reach the reset sequence.
 
-        The preconditions read real git metadata of ``KIROCREW_PROJECT_DIR``, a non-repo
+        The preconditions read real git metadata of ``AJCREW_PROJECT_DIR``, a non-repo
         here, so without these patches every test would refuse before the fetch. The git
         binary is pinned because a host git outside the trusted directories skips the
         update.
@@ -738,28 +738,28 @@ class TestAutoApplyUpdateGitPath:
             # test_update_check_git_exec_neutralized. A fetch-failure test
             # re-patches this to None, and that inner patch wins.
             patch(
-                "kiro_crew.slack.gateway.fetch_and_pin_upstream",
+                "aj_crew.slack.gateway.fetch_and_pin_upstream",
                 new=AsyncMock(return_value="0" * 40),
             ),
-            patch("kiro_crew.slack.gateway.hidden_worktree_edits", return_value=[]),
+            patch("aj_crew.slack.gateway.hidden_worktree_edits", return_value=[]),
             patch(
-                "kiro_crew.slack.gateway.repo_exec_config_reason",
+                "aj_crew.slack.gateway.repo_exec_config_reason",
                 return_value="",
             ),
-            patch("kiro_crew.slack.gateway.tracks_upstream", return_value=True),
-            patch("kiro_crew.slack.gateway.commits_ahead", return_value=0),
+            patch("aj_crew.slack.gateway.tracks_upstream", return_value=True),
+            patch("aj_crew.slack.gateway.commits_ahead", return_value=0),
             patch(
-                "kiro_crew.slack.gateway.platform_compat.trusted_git_bin",
+                "aj_crew.slack.gateway.platform_compat.trusted_git_bin",
                 return_value="/trusted/bin/git",
             ),
-            # A completed update reloads the kiro_crew package; see
+            # A completed update reloads the aj_crew package; see
             # _ImportlibWithoutReload for what that left the next test.
             patch.object(gw, "importlib", _ImportlibWithoutReload()),
             patch(
                 # The interpreter-floor gate reads the pinned commit with a real
                 # `git show`; against a non-repo that read FAILS, and a failed read
                 # refuses (its own tests are in TestAutoApplyUpdateResetPath).
-                "kiro_crew.slack.gateway.dep_sync.incoming_python_floor_breach",
+                "aj_crew.slack.gateway.dep_sync.incoming_python_floor_breach",
                 return_value=None,
             ),
             # The pre-restart drain never finishes here, so its 30s deadline would only
@@ -780,9 +780,9 @@ class TestAutoApplyUpdateGitPath:
         # The isolated fetch fails (bad source URL, fetch error, unreadable tip).
         failed_fetch = AsyncMock(return_value=None)
 
-        with patch("kiro_crew.env.is_toolbox_install", return_value=False):
-            with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": "/tmp/proj"}):
-                with patch("kiro_crew.slack.gateway.fetch_and_pin_upstream", new=failed_fetch):
+        with patch("aj_crew.env.is_toolbox_install", return_value=False):
+            with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": "/tmp/proj"}):
+                with patch("aj_crew.slack.gateway.fetch_and_pin_upstream", new=failed_fetch):
                     with patch("asyncio.create_subprocess_exec", side_effect=_fake_exec):
                         await orch._auto_apply_update()
         failed_fetch.assert_awaited()
@@ -799,8 +799,8 @@ class TestAutoApplyUpdateGitPath:
         record: list = []
         _fake_exec = _git_exec_fake(diff_rc=0, record=record)
 
-        with patch("kiro_crew.env.is_toolbox_install", return_value=False):
-            with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": "/tmp/proj"}):
+        with patch("aj_crew.env.is_toolbox_install", return_value=False):
+            with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": "/tmp/proj"}):
                 with patch("asyncio.create_subprocess_exec", side_effect=_fake_exec):
                     await orch._auto_apply_update()
         # A voluntary apply settles silently: it clears the bar and does not
@@ -825,8 +825,8 @@ class TestAutoApplyUpdateGitPath:
 
         _fake_exec = _git_exec_fake(diff_rc=0)
 
-        with patch("kiro_crew.env.is_toolbox_install", return_value=False):
-            with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": "/tmp/proj"}):
+        with patch("aj_crew.env.is_toolbox_install", return_value=False):
+            with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": "/tmp/proj"}):
                 with patch("asyncio.create_subprocess_exec", side_effect=_fake_exec):
                     await orch._auto_apply_update(mandatory=True)
         sent = drain(feed)
@@ -884,12 +884,12 @@ class TestAutoApplyUpdateGitPath:
         orch.dashboard_state = _mock_dashboard_state()
         orch.sessions = _mock_sessions()
         with (
-            patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": str(tmp_path)}),
+            patch.dict("os.environ", {"AJCREW_PROJECT_DIR": str(tmp_path)}),
             patch("asyncio.create_subprocess_exec", side_effect=_exec),
             # A failed dependency sync is what reaches the core-dep repair.
-            patch("kiro_crew.dep_sync.sync_or_reinstall", return_value=1),
-            patch("kiro_crew.slack.gateway.build_frontend_async", new_callable=AsyncMock),
-            patch("kiro_crew.kiro_cli.resolve_kiro_cli", return_value="/usr/bin/kiro-cli"),
+            patch("aj_crew.dep_sync.sync_or_reinstall", return_value=1),
+            patch("aj_crew.slack.gateway.build_frontend_async", new_callable=AsyncMock),
+            patch("aj_crew.kiro_cli.resolve_kiro_cli", return_value="/usr/bin/kiro-cli"),
             patch("os.execv"),
         ):
             task = asyncio.create_task(orch._auto_apply_update())
@@ -927,7 +927,7 @@ class TestAutoApplyUpdateVenvPath:
     def _permit_update_preconditions(self):
         """Neutralize the seam preconditions so these tests reach the reset sequence.
 
-        The preconditions read real git metadata of ``KIROCREW_PROJECT_DIR``, a non-repo
+        The preconditions read real git metadata of ``AJCREW_PROJECT_DIR``, a non-repo
         here, so without these patches every test would refuse before the fetch. The git
         binary is pinned because a host git outside the trusted directories skips the
         update.
@@ -939,28 +939,28 @@ class TestAutoApplyUpdateVenvPath:
             # test_update_check_git_exec_neutralized. A fetch-failure test
             # re-patches this to None, and that inner patch wins.
             patch(
-                "kiro_crew.slack.gateway.fetch_and_pin_upstream",
+                "aj_crew.slack.gateway.fetch_and_pin_upstream",
                 new=AsyncMock(return_value="0" * 40),
             ),
-            patch("kiro_crew.slack.gateway.hidden_worktree_edits", return_value=[]),
+            patch("aj_crew.slack.gateway.hidden_worktree_edits", return_value=[]),
             patch(
-                "kiro_crew.slack.gateway.repo_exec_config_reason",
+                "aj_crew.slack.gateway.repo_exec_config_reason",
                 return_value="",
             ),
-            patch("kiro_crew.slack.gateway.tracks_upstream", return_value=True),
-            patch("kiro_crew.slack.gateway.commits_ahead", return_value=0),
+            patch("aj_crew.slack.gateway.tracks_upstream", return_value=True),
+            patch("aj_crew.slack.gateway.commits_ahead", return_value=0),
             patch(
-                "kiro_crew.slack.gateway.platform_compat.trusted_git_bin",
+                "aj_crew.slack.gateway.platform_compat.trusted_git_bin",
                 return_value="/trusted/bin/git",
             ),
-            # A completed update reloads the kiro_crew package; see
+            # A completed update reloads the aj_crew package; see
             # _ImportlibWithoutReload for what that left the next test.
             patch.object(gw, "importlib", _ImportlibWithoutReload()),
             patch(
                 # The interpreter-floor gate reads the pinned commit with a real
                 # `git show`; against a non-repo that read FAILS, and a failed read
                 # refuses (its own tests are in TestAutoApplyUpdateResetPath).
-                "kiro_crew.slack.gateway.dep_sync.incoming_python_floor_breach",
+                "aj_crew.slack.gateway.dep_sync.incoming_python_floor_breach",
                 return_value=None,
             ),
             # The pre-restart drain never finishes here, so its 30s deadline would only
@@ -981,17 +981,17 @@ class TestAutoApplyUpdateVenvPath:
 
         _fake_exec = _git_exec_fake()
 
-        with patch("kiro_crew.env.is_toolbox_install", return_value=False):
-            with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": "/tmp/proj"}):
+        with patch("aj_crew.env.is_toolbox_install", return_value=False):
+            with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": "/tmp/proj"}):
                 with patch("asyncio.create_subprocess_exec", side_effect=_fake_exec):
                     with patch(
-                        "kiro_crew.dep_sync.sync_or_reinstall", return_value=0
+                        "aj_crew.dep_sync.sync_or_reinstall", return_value=0
                     ) as mock_install:
                         with patch.object(
                             GatewayOrchestrator, "_is_brazil_install", return_value=False
                         ):
                             with patch(
-                                "kiro_crew.slack.gateway.build_frontend_async",
+                                "aj_crew.slack.gateway.build_frontend_async",
                                 new_callable=AsyncMock,
                             ):
                                 with patch("os.execv"):
@@ -1048,30 +1048,30 @@ class TestAutoApplyUpdateVenvPath:
         async def _fake_kill_and_reap(proc):
             killed.append(proc)
 
-        with patch("kiro_crew.env.is_toolbox_install", return_value=False):
-            with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": "/tmp/proj"}):
+        with patch("aj_crew.env.is_toolbox_install", return_value=False):
+            with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": "/tmp/proj"}):
                 with patch("asyncio.create_subprocess_exec", side_effect=_fake_exec):
                     with patch(
-                        "kiro_crew.dep_sync.sync_or_reinstall", return_value=0
+                        "aj_crew.dep_sync.sync_or_reinstall", return_value=0
                     ) as mock_install:
                         with patch.object(
                             GatewayOrchestrator, "_is_brazil_install", return_value=False
                         ):
                             with patch(
-                                "kiro_crew.slack.gateway.build_frontend_async",
+                                "aj_crew.slack.gateway.build_frontend_async",
                                 new_callable=AsyncMock,
                             ) as mock_build:
                                 with patch("os.execv"):
                                     # Resolves: the optional kiro-cli step runs.
                                     with patch(
-                                        "kiro_crew.kiro_cli.resolve_kiro_cli",
+                                        "aj_crew.kiro_cli.resolve_kiro_cli",
                                         return_value="/usr/bin/kiro-cli",
                                     ):
                                         # The gateway resolves _kill_and_reap
                                         # function-locally on every call, so
                                         # patching the source module reaches it.
                                         with patch(
-                                            "kiro_crew.platform.update_provider._kill_and_reap",
+                                            "aj_crew.platform.update_provider._kill_and_reap",
                                             side_effect=_fake_kill_and_reap,
                                         ):
                                             await orch._auto_apply_update()
@@ -1110,20 +1110,20 @@ class TestAutoApplyUpdateVenvPath:
                 return proc
             return await _git_fake(*args, **kwargs)
 
-        with patch("kiro_crew.env.is_toolbox_install", return_value=False):
-            with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": "/tmp/proj"}):
+        with patch("aj_crew.env.is_toolbox_install", return_value=False):
+            with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": "/tmp/proj"}):
                 with patch("asyncio.create_subprocess_exec", side_effect=_fake_exec):
-                    with patch("kiro_crew.dep_sync.sync_or_reinstall", return_value=0):
+                    with patch("aj_crew.dep_sync.sync_or_reinstall", return_value=0):
                         with patch.object(
                             GatewayOrchestrator, "_is_brazil_install", return_value=False
                         ):
                             with patch(
-                                "kiro_crew.slack.gateway.build_frontend_async",
+                                "aj_crew.slack.gateway.build_frontend_async",
                                 new_callable=AsyncMock,
                             ):
                                 with patch("os.execv"):
                                     with patch(
-                                        "kiro_crew.kiro_cli.resolve_kiro_cli",
+                                        "aj_crew.kiro_cli.resolve_kiro_cli",
                                         return_value="/opt/pinned/bin/kiro-cli",
                                     ):
                                         await orch._auto_apply_update()
@@ -1155,20 +1155,20 @@ class TestAutoApplyUpdateVenvPath:
                 return proc
             return await _git_fake(*args, **kwargs)
 
-        with patch("kiro_crew.env.is_toolbox_install", return_value=False):
-            with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": "/tmp/proj"}):
+        with patch("aj_crew.env.is_toolbox_install", return_value=False):
+            with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": "/tmp/proj"}):
                 with patch("asyncio.create_subprocess_exec", side_effect=_fake_exec):
-                    with patch("kiro_crew.dep_sync.sync_or_reinstall", return_value=0):
+                    with patch("aj_crew.dep_sync.sync_or_reinstall", return_value=0):
                         with patch.object(
                             GatewayOrchestrator, "_is_brazil_install", return_value=False
                         ):
                             with patch(
-                                "kiro_crew.slack.gateway.build_frontend_async",
+                                "aj_crew.slack.gateway.build_frontend_async",
                                 new_callable=AsyncMock,
                             ):
                                 with patch("os.execv"):
                                     with patch(
-                                        "kiro_crew.kiro_cli.resolve_kiro_cli",
+                                        "aj_crew.kiro_cli.resolve_kiro_cli",
                                         return_value="/opt/pinned/bin/kiro-cli",
                                     ) as mock_resolve:
                                         await orch._auto_apply_update()
@@ -1199,22 +1199,22 @@ class TestAutoApplyUpdateVenvPath:
                 kiro_argvs.append(argv)
             return await _git_fake(*args, **kwargs)
 
-        with patch("kiro_crew.env.is_toolbox_install", return_value=False):
-            with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": "/tmp/proj"}):
+        with patch("aj_crew.env.is_toolbox_install", return_value=False):
+            with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": "/tmp/proj"}):
                 with patch("asyncio.create_subprocess_exec", side_effect=_fake_exec):
                     with patch(
-                        "kiro_crew.dep_sync.sync_or_reinstall", return_value=0
+                        "aj_crew.dep_sync.sync_or_reinstall", return_value=0
                     ) as mock_install:
                         with patch.object(
                             GatewayOrchestrator, "_is_brazil_install", return_value=False
                         ):
                             with patch(
-                                "kiro_crew.slack.gateway.build_frontend_async",
+                                "aj_crew.slack.gateway.build_frontend_async",
                                 new_callable=AsyncMock,
                             ) as mock_build:
                                 with patch("os.execv"):
                                     with patch(
-                                        "kiro_crew.kiro_cli.resolve_kiro_cli",
+                                        "aj_crew.kiro_cli.resolve_kiro_cli",
                                         return_value=None,
                                     ):
                                         await orch._auto_apply_update()
@@ -1230,7 +1230,7 @@ class TestCheckMissingDepsPip:
     def test_pip_install_on_missing_dep(self, nonbundled_python_without_user_site):
         orch = _make_orchestrator()
         with patch("importlib.util.find_spec", return_value=None):
-            with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": "/proj"}):
+            with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": "/proj"}):
                 with patch.object(GatewayOrchestrator, "_is_brazil_install", return_value=False):
                     mock_exec = AsyncMock(return_value=_fake_async_proc(returncode=0))
                     with patch("asyncio.create_subprocess_exec", mock_exec):
@@ -1252,7 +1252,7 @@ class TestCheckMissingDepsPip:
     def test_pip_install_failure(self):
         orch = _make_orchestrator()
         with patch("importlib.util.find_spec", return_value=None):
-            with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": "/proj"}):
+            with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": "/proj"}):
                 with patch.object(GatewayOrchestrator, "_is_brazil_install", return_value=False):
                     mock_exec = AsyncMock(
                         return_value=_fake_async_proc(returncode=1, stderr=b"error")
@@ -1271,13 +1271,13 @@ class TestCheckMissingDepsPip:
             if proc.kill.called:
                 return (b"", b"")  # post-kill reap returns immediately
             # flake-ok: pre-existing parked stub the timeout cancels, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- parked stub the code under test cancels, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- parked stub the code under test cancels, moved verbatim; tracked for a de-flake pass
             await asyncio.sleep(3600)  # hang until wait_for cancels us
             return (b"", b"")
 
         proc.communicate = MagicMock(side_effect=_communicate)
         with patch("importlib.util.find_spec", return_value=None):
-            with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": "/proj"}):
+            with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": "/proj"}):
                 with patch.object(GatewayOrchestrator, "_is_brazil_install", return_value=False):
                     with patch.object(GatewayOrchestrator, "_DEP_INSTALL_TIMEOUT_SECS", 0.05):
                         with patch(
@@ -1308,7 +1308,7 @@ class TestCheckMissingDepsPip:
         proc.kill = MagicMock()
         proc.communicate = MagicMock(side_effect=_communicate)
         orch = _make_orchestrator()
-        with patch("kiro_crew.kiro_cli.resolve_kiro_cli", return_value="/opt/pinned/bin/kiro-cli"):
+        with patch("aj_crew.kiro_cli.resolve_kiro_cli", return_value="/opt/pinned/bin/kiro-cli"):
             with patch("asyncio.create_subprocess_exec", AsyncMock(return_value=proc)):
                 await orch._warn_if_kiro_cli_outdated()  # must not raise
         proc.kill.assert_called_once()
@@ -1327,19 +1327,19 @@ class TestCheckMissingDepsPip:
 
         async def _communicate():
             # flake-ok: pre-existing parked stub the cancellation unblocks, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- parked stub the test cancels, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- parked stub the test cancels, moved verbatim; tracked for a de-flake pass
             await asyncio.sleep(3600)  # hang until cancelled
             return (b"", b"")
 
         proc.communicate = MagicMock(side_effect=_communicate)
         orch = _make_orchestrator()
         with patch("importlib.util.find_spec", return_value=None):
-            with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": "/proj"}):
+            with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": "/proj"}):
                 with patch.object(GatewayOrchestrator, "_is_brazil_install", return_value=False):
                     with patch("asyncio.create_subprocess_exec", AsyncMock(return_value=proc)):
                         task = asyncio.create_task(orch._check_missing_deps())
                         # flake-ok: pre-existing sleep barrier before the cancel, moved verbatim; tracked for a de-flake pass
-                        # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing sleep barrier, moved verbatim; tracked for a de-flake pass
+                        # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing sleep barrier, moved verbatim; tracked for a de-flake pass
                         await asyncio.sleep(0.05)  # let it reach the await
                         task.cancel()
                         with pytest.raises(asyncio.CancelledError):

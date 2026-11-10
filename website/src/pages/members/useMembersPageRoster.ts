@@ -38,7 +38,7 @@ export function useMembersPageRoster() {
   // The roster is a React Query read (issue #9418), not page state: a return
   // to the page renders the cached list at once and refreshes it in the
   // background, and a crew written anywhere else reaches it through the
-  // `['kirocrew-agents']` prefix invalidation (see membersQuery.ts). Three
+  // `['ajcrew-agents']` prefix invalidation (see membersQuery.ts). Three
   // states, kept apart the way every block on this page keeps them: not yet
   // answered, answered, failed with no answer to fall back on — a refetch
   // error after a good read keeps showing the last roster.

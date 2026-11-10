@@ -37,11 +37,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import irq, ledger_wake, work_ledger
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.monitoring.models import MONITOR_STATE_VERSION, MonitorState
-from kiro_crew.slack import gateway as gw
+from aj_crew import irq, ledger_wake, work_ledger
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.monitoring.models import MONITOR_STATE_VERSION, MonitorState
+from aj_crew.slack import gateway as gw
 
 CONDUCTOR = "chat-conductor"
 WORKER = "chat-worker"
@@ -56,7 +56,7 @@ def _isolated_home(tmp_path, _floor_monkeypatch):
     ``monkeypatch.undo()``, which would point the rest of that test at the real
     data home.
     """
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
 
 
 # ── the text policy ───────────────────────────────────────────────────────
@@ -325,8 +325,8 @@ class TestAWakeOwedAfterTheTurnEnds:
 
 
 def _orchestrator() -> gw.GatewayOrchestrator:
-    cfg = KiroCrewConfig()
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U_OWNER"}):
+    cfg = AjCrewConfig()
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U_OWNER"}):
         orch = gw.GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
     orch.dashboard_state = SimpleNamespace(
         get_slot=MagicMock(return_value=None),
@@ -403,8 +403,8 @@ class TestSteeringAWakeIntoARunningTurn:
         orch.dashboard_state.get_slot = MagicMock(return_value=slot)
         steer = AsyncMock(return_value="steered")
         with (
-            patch("kiro_crew.dashboard.chat_delivery.steer_into_running_turn", steer),
-            patch("kiro_crew.dashboard.session_control.containment_meta", return_value={}),
+            patch("aj_crew.dashboard.chat_delivery.steer_into_running_turn", steer),
+            patch("aj_crew.dashboard.session_control.containment_meta", return_value={}),
             patch.object(
                 orch, "_work_ledger_wake_text", AsyncMock(return_value="WAKE TEXT")
             ) as text,
@@ -441,9 +441,9 @@ class TestSteeringAWakeIntoARunningTurn:
         steer = AsyncMock(return_value="steered")
         wake = ledger_wake.wake_turn_text("[work-ledger wake] item=it_1 status=done")
         with (
-            patch("kiro_crew.dashboard.chat_delivery.steer_into_running_turn", steer),
-            patch("kiro_crew.dashboard.session_control.containment_meta", return_value={}),
-            patch("kiro_crew.dashboard.session_control.record_audience_admission") as fenced,
+            patch("aj_crew.dashboard.chat_delivery.steer_into_running_turn", steer),
+            patch("aj_crew.dashboard.session_control.containment_meta", return_value={}),
+            patch("aj_crew.dashboard.session_control.record_audience_admission") as fenced,
             patch.object(orch, "_work_ledger_wake_text", AsyncMock(return_value=wake)),
         ):
             assert await orch._fire_dashboard_nudge(loop) is True
@@ -474,8 +474,8 @@ class TestSteeringAWakeIntoARunningTurn:
         wake = ledger_wake.wake_turn_text("[work-ledger wake] item=it_1 status=done")
         with (
             patch.object(gw, "spawn_guarded_turn", spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()) as ran,
-            patch("kiro_crew.dashboard.session_control.record_audience_admission") as fenced,
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()) as ran,
+            patch("aj_crew.dashboard.session_control.record_audience_admission") as fenced,
             patch.object(orch, "_work_ledger_wake_text", AsyncMock(return_value=wake)),
         ):
             assert await orch._fire_dashboard_nudge(loop) is True
@@ -500,10 +500,10 @@ class TestSteeringAWakeIntoARunningTurn:
         orch.dashboard_state.get_slot = MagicMock(return_value=slot)
         with (
             patch(
-                "kiro_crew.dashboard.chat_delivery.steer_into_running_turn",
+                "aj_crew.dashboard.chat_delivery.steer_into_running_turn",
                 AsyncMock(return_value="requeued"),
             ),
-            patch("kiro_crew.dashboard.session_control.containment_meta", return_value={}),
+            patch("aj_crew.dashboard.session_control.containment_meta", return_value={}),
             patch.object(orch, "_work_ledger_wake_text", AsyncMock(return_value="WAKE TEXT")),
         ):
             assert await orch._fire_dashboard_nudge(loop) is True
@@ -517,10 +517,10 @@ class TestSteeringAWakeIntoARunningTurn:
         orch.dashboard_state.get_slot = MagicMock(return_value=slot)
         with (
             patch(
-                "kiro_crew.dashboard.chat_delivery.steer_into_running_turn",
+                "aj_crew.dashboard.chat_delivery.steer_into_running_turn",
                 AsyncMock(return_value="unavailable"),
             ),
-            patch("kiro_crew.dashboard.session_control.containment_meta", return_value={}),
+            patch("aj_crew.dashboard.session_control.containment_meta", return_value={}),
             patch.object(orch, "_work_ledger_wake_text", AsyncMock(return_value="WAKE TEXT")),
         ):
             assert await orch._fire_dashboard_nudge(loop) is False
@@ -534,7 +534,7 @@ class TestSteeringAWakeIntoARunningTurn:
         slot = _slot(running=True)
         orch.dashboard_state.get_slot = MagicMock(return_value=slot)
         steer = AsyncMock(return_value="steered")
-        with patch("kiro_crew.dashboard.chat_delivery.steer_into_running_turn", steer):
+        with patch("aj_crew.dashboard.chat_delivery.steer_into_running_turn", steer):
             assert await orch._fire_dashboard_nudge(loop) is False
         steer.assert_not_awaited()
 
@@ -555,7 +555,7 @@ class TestSteeringAWakeIntoARunningTurn:
         slot = _slot(running=True)
         orch.dashboard_state.get_slot = MagicMock(return_value=slot)
         steer = AsyncMock(return_value="steered")
-        with patch("kiro_crew.dashboard.chat_delivery.steer_into_running_turn", steer):
+        with patch("aj_crew.dashboard.chat_delivery.steer_into_running_turn", steer):
             assert await orch._fire_dashboard_nudge(loop) is False
         steer.assert_not_awaited()
 
@@ -569,7 +569,7 @@ class TestSteeringAWakeIntoARunningTurn:
         orch.dashboard_state.get_slot = MagicMock(return_value=slot)
         steer = AsyncMock(return_value="steered")
         with (
-            patch("kiro_crew.dashboard.chat_delivery.steer_into_running_turn", steer),
+            patch("aj_crew.dashboard.chat_delivery.steer_into_running_turn", steer),
             patch.object(orch, "_audit_fire_refused", AsyncMock()) as audited,
         ):
             assert await orch._fire_dashboard_nudge(loop) is False
@@ -585,7 +585,7 @@ class TestSteeringAWakeIntoARunningTurn:
         orch.dashboard_state.get_slot = MagicMock(return_value=slot)
         steer = AsyncMock(return_value="steered")
         with (
-            patch("kiro_crew.dashboard.chat_delivery.steer_into_running_turn", steer),
+            patch("aj_crew.dashboard.chat_delivery.steer_into_running_turn", steer),
             patch.object(orch, "_work_ledger_wake_text", AsyncMock(return_value="")),
         ):
             assert await orch._fire_dashboard_nudge(loop) is False
@@ -597,7 +597,7 @@ class TestSteeringAWakeIntoARunningTurn:
         orch = _orchestrator()
         loop = _ledger_loop()
         steer = AsyncMock(return_value="steered")
-        with patch("kiro_crew.dashboard.chat_delivery.steer_into_running_turn", steer):
+        with patch("aj_crew.dashboard.chat_delivery.steer_into_running_turn", steer):
             assert (await orch._steer_work_ledger_wake(loop, _slot(running=True), "")) is False
             closing = _slot(running=True)
             closing.is_closing = True
@@ -610,9 +610,9 @@ class TestSteeringAWakeIntoARunningTurn:
         loop = _ledger_loop()
         steer = AsyncMock(return_value="steered")
         with (
-            patch("kiro_crew.dashboard.chat_delivery.steer_into_running_turn", steer),
+            patch("aj_crew.dashboard.chat_delivery.steer_into_running_turn", steer),
             patch(
-                "kiro_crew.dashboard.session_control.containment_meta",
+                "aj_crew.dashboard.session_control.containment_meta",
                 side_effect=RuntimeError("no probe"),
             ),
         ):
@@ -627,10 +627,10 @@ class TestSteeringAWakeIntoARunningTurn:
         loop = _ledger_loop()
         with (
             patch(
-                "kiro_crew.dashboard.chat_delivery.steer_into_running_turn",
+                "aj_crew.dashboard.chat_delivery.steer_into_running_turn",
                 AsyncMock(side_effect=RuntimeError("rpc died")),
             ),
-            patch("kiro_crew.dashboard.session_control.containment_meta", return_value={}),
+            patch("aj_crew.dashboard.session_control.containment_meta", return_value={}),
         ):
             assert (await orch._steer_work_ledger_wake(loop, _slot(running=True), "WAKE")) is False
 
@@ -650,7 +650,7 @@ class TestTheNudgeTurnCarriesTheWake:
         wake = ledger_wake.wake_turn_text("[work-ledger wake] item=it_1 status=done")
         with (
             patch.object(gw, "spawn_guarded_turn", spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
             patch.object(orch, "_work_ledger_wake_text", AsyncMock(return_value=wake)),
         ):
             assert await orch._fire_dashboard_nudge(loop) is True
@@ -673,7 +673,7 @@ class TestTheNudgeTurnCarriesTheWake:
         spawn = _fake_spawn()
         with (
             patch.object(gw, "spawn_guarded_turn", spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
             patch.object(orch, "_work_ledger_wake_text", AsyncMock(return_value="")),
         ):
             assert await orch._fire_dashboard_nudge(loop) is True
@@ -704,7 +704,7 @@ class TestTheNudgeTurnCarriesTheWake:
         slot = _slot(running=True)
         orch.dashboard_state.get_slot = MagicMock(return_value=slot)
         steer = AsyncMock(return_value="steered")
-        with patch("kiro_crew.dashboard.chat_delivery.steer_into_running_turn", steer):
+        with patch("aj_crew.dashboard.chat_delivery.steer_into_running_turn", steer):
             assert await orch._fire_dashboard_nudge(loop) is False
         steer.assert_not_awaited()
 
@@ -735,7 +735,7 @@ class TestTheNudgeTurnCarriesTheWake:
         orch.autonudge_svc.pending_wake_briefs = MagicMock(
             return_value=ledger_wake.wake_brief(item_id=item_id, status="done")
         )
-        from kiro_crew.probes import work_ledger as probe_mod
+        from aj_crew.probes import work_ledger as probe_mod
 
         verdict = await asyncio.to_thread(
             irq.poll,

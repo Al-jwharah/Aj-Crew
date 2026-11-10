@@ -37,7 +37,7 @@ import '../src/index.css'
 
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const realFetch = globalThis.fetch.bind(globalThis)
 globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {

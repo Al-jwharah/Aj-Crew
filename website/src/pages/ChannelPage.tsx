@@ -933,8 +933,8 @@ export default function ChannelPage() {
         setChannels(prev => prev.map(c => c.id === data.channel_id ? { ...c, messages: [] } : c))
       }
     }
-    window.addEventListener('kirocrew-channel', handler)
-    return () => window.removeEventListener('kirocrew-channel', handler)
+    window.addEventListener('ajcrew-channel', handler)
+    return () => window.removeEventListener('ajcrew-channel', handler)
   }, [reload])
 
   // Scroll the list itself: `scrollIntoView` would also scroll every scrollable

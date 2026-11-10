@@ -23,13 +23,13 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.harness.deepseek import deepseek_gate_extension_path
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.acp_backends import ACP_BACKEND_DEEPSEEK, ACP_BACKENDS_SIDE_READONLY
-from kiro_crew.llm_helpers import ToolApprovalPolicy, stream_and_collect
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.harness.deepseek import deepseek_gate_extension_path
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.acp_backends import ACP_BACKEND_DEEPSEEK, ACP_BACKENDS_SIDE_READONLY
+from aj_crew.llm_helpers import ToolApprovalPolicy, stream_and_collect
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
 _FIXTURE = (
     Path(__file__).parent / "fixtures" / "acp_frames" / "deepseek" / "side-read-only-live.jsonl"
@@ -150,7 +150,7 @@ class _ScriptedProvider:
 
 
 def _hooks(**config: Any):
-    from kiro_crew.hooks import HookManager, HooksConfig
+    from aj_crew.hooks import HookManager, HooksConfig
 
     return HookManager(HooksConfig(**config))
 
@@ -408,13 +408,13 @@ def _governance():
     """Install a governance ceiling for one test, and reset the context after."""
     import dataclasses
 
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.platform import context as ctx_mod
-    from kiro_crew.platform.bootstrap import build_default_context
-    from kiro_crew.platform.governance import parse_policy
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.platform import context as ctx_mod
+    from aj_crew.platform.bootstrap import build_default_context
+    from aj_crew.platform.governance import parse_policy
 
     def install(policy: dict[str, Any]) -> None:
-        base = build_default_context(KiroCrewConfig.load())
+        base = build_default_context(AjCrewConfig.load())
         body = {"version": 1, "boot": {"fail_closed": True}, **policy}
         ctx_mod.set_context(dataclasses.replace(base, governance=parse_policy(body)))
 
@@ -504,9 +504,9 @@ def test_the_gate_plugin_turns_a_harness_allow_into_an_ask(tmp_path):
 _COMPOSITION_PROBE = """
 const [, , pluginUrl, markerPath, specJson] = process.argv;
 const spec = JSON.parse(specJson);
-process.env.KIROCREW_DSH_GATE_MARKER = markerPath;
-process.env.KIROCREW_DSH_GATE_SESSION = "n1";
-process.env.KIROCREW_DSH_GATE_SCRUB_NAMES = "";
+process.env.AJCREW_DSH_GATE_MARKER = markerPath;
+process.env.AJCREW_DSH_GATE_SESSION = "n1";
+process.env.AJCREW_DSH_GATE_SCRUB_NAMES = "";
 const gate = await import(pluginUrl);
 const entries = spec.entries.map(([id, name, state, disabled]) => ({
   id, options: { name }, fiber: { state }, disabled,
@@ -564,7 +564,7 @@ def _composition_marker(
         ([row[0], row[1], owner_state, row[3]] if row[1] == "@deepseek-ai/dsh-tool-fs" else row)
         for row in _STOCK_ENTRIES
     ]
-    entries.append(["include:kiro-crew-tool-gate", plugin.as_uri(), 2, False])
+    entries.append(["include:aj-crew-tool-gate", plugin.as_uri(), 2, False])
     spec = {
         "entries": [*entries, *extra],
         "scoped": list(scoped),
@@ -588,7 +588,7 @@ def _composition_marker(
 
 def _proved_client(tmp_path: Path, marker: dict[str, Any]) -> AcpClient:
     """A deepseek client whose launch recorded *marker*'s composition proof."""
-    from kiro_crew.acp.harness.deepseek import _record_deepseek_read_only_proof
+    from aj_crew.acp.harness.deepseek import _record_deepseek_read_only_proof
 
     client = _client(tmp_path, proven=False)
     _record_deepseek_read_only_proof(client, marker, deepseek_gate_extension_path())

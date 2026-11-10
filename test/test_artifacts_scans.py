@@ -1,6 +1,6 @@
 """``ArtifactStore.migrate_kinds``: the corrective ``widget`` -> ``markdown`` reclassification.
 
-Pinned through the store's interface (``kiro_crew.artifacts_scans`` holds the body): a dry
+Pinned through the store's interface (``aj_crew.artifacts_scans`` holds the body): a dry
 run reports every candidate and writes nothing; ``apply=True`` rewrites the record's
 ``kind`` and its ``widget`` ``version_kinds`` entries, and a second run finds nothing;
 genuine widgets, other kinds, unreadable records and records another writer reclassified
@@ -15,7 +15,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.artifacts import ArtifactError, ArtifactStore
+from aj_crew.artifacts import ArtifactError, ArtifactStore
 
 
 @pytest.fixture
@@ -75,7 +75,7 @@ def test_an_unreadable_record_is_skipped_and_the_rest_still_migrate(
     broken.mkdir()
     (broken / "meta.json").write_text("{not json", encoding="utf-8")
 
-    with caplog.at_level("WARNING", logger="kiro_crew.artifacts"):
+    with caplog.at_level("WARNING", logger="aj_crew.artifacts"):
         report = store.migrate_kinds(apply=True)
 
     assert [entry["slug"] for entry in report] == ["plain-notes"]

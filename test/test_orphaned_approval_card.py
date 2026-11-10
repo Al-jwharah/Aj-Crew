@@ -29,7 +29,7 @@ from turn_harness import (
     run_turn,
 )
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
@@ -43,7 +43,7 @@ class _FakeSlot:
 
     def __init__(self) -> None:
         self.key = "test-slot"
-        self.agent = "kirocrew"
+        self.agent = "ajcrew"
         self.messages: list[dict] = []
         self._dirty = False
         self._approval_futures: dict[str, asyncio.Future] = {}
@@ -85,13 +85,13 @@ class TestRejectPendingApprovalsMarksMessage:
         mark a stop is written into an append-only file as a human refusal. Marked
         BEFORE the future resolves, since resolving can wake the runner at once.
         """
-        from kiro_crew.dashboard.chat_handlers import _reject_pending_approvals
+        from aj_crew.dashboard.chat_handlers import _reject_pending_approvals
 
         slot = _FakeSlot()
         slot.add_pending_approval("ap-1")
         slot.add_pending_approval("ap-2")
 
-        with patch("kiro_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
+        with patch("aj_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
             _reject_pending_approvals(slot)  # type: ignore[arg-type]
 
         assert slot._approval_stopped == {"ap-1", "ap-2"}
@@ -102,12 +102,12 @@ class TestRejectPendingApprovalsMarksMessage:
 
     @pytest.mark.asyncio
     async def test_marks_permission_resolved(self) -> None:
-        from kiro_crew.dashboard.chat_handlers import _reject_pending_approvals
+        from aj_crew.dashboard.chat_handlers import _reject_pending_approvals
 
         slot = _FakeSlot()
         fut = slot.add_pending_approval("ap-1")
 
-        with patch("kiro_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
+        with patch("aj_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
             _reject_pending_approvals(slot)  # type: ignore[arg-type]
 
         assert fut.done() and fut.result() == "rejected"
@@ -119,13 +119,13 @@ class TestRejectPendingApprovalsMarksMessage:
 
     @pytest.mark.asyncio
     async def test_marks_every_pending_approval(self) -> None:
-        from kiro_crew.dashboard.chat_handlers import _reject_pending_approvals
+        from aj_crew.dashboard.chat_handlers import _reject_pending_approvals
 
         slot = _FakeSlot()
         slot.add_pending_approval("ap-1")
         slot.add_pending_approval("ap-2")
 
-        with patch("kiro_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
+        with patch("aj_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
             _reject_pending_approvals(slot)  # type: ignore[arg-type]
 
         assert slot.resolved_for("ap-1") == "rejected"
@@ -134,8 +134,8 @@ class TestRejectPendingApprovalsMarksMessage:
     @pytest.mark.asyncio
     async def test_already_resolved_future_untouched(self) -> None:
         """A future the user already answered keeps its recorded decision."""
-        from kiro_crew.dashboard.chat_handlers import _reject_pending_approvals
-        from kiro_crew.dashboard.state import _mark_permission_resolved
+        from aj_crew.dashboard.chat_handlers import _reject_pending_approvals
+        from aj_crew.dashboard.state import _mark_permission_resolved
 
         slot = _FakeSlot()
         fut = slot.add_pending_approval("ap-1")
@@ -143,7 +143,7 @@ class TestRejectPendingApprovalsMarksMessage:
         _mark_permission_resolved(slot.messages, "ap-1", "trust")
         slot._dirty = False
 
-        with patch("kiro_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
+        with patch("aj_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
             _reject_pending_approvals(slot)  # type: ignore[arg-type]
 
         assert slot.resolved_for("ap-1") == "trust"
@@ -230,7 +230,7 @@ class TestRunnerBackstopContract:
         in a file nothing rewrites. ``rejected_once`` IS listed and keeps its own
         value. Checked against the registry as well as the expected value.
         """
-        from kiro_crew.crew_log.entry_types import SESSION_ENTRY_TYPES
+        from aj_crew.crew_log.entry_types import SESSION_ENTRY_TYPES
 
         record = await run_turn(_prompt_turn(answers={"req-1": answer}))
         [decision] = record.approval_decisions
@@ -262,7 +262,7 @@ class TestRunnerBackstopContract:
         assert [call.args for call in record.calls("reject_tool")] == [("req-1",), ("req-1",)]
 
     def test_timeout_marks_rejected_when_pending(self) -> None:
-        from kiro_crew.dashboard.state import _mark_permission_resolved
+        from aj_crew.dashboard.state import _mark_permission_resolved
 
         slot = _FakeSlot()
         slot.messages.append(
@@ -279,7 +279,7 @@ class TestRunnerBackstopContract:
 
     def test_backstop_does_not_clobber_http_decision(self) -> None:
         """HTTP slot-approve already recorded "yolo"/"trust" — keep it."""
-        from kiro_crew.dashboard.state import _mark_permission_resolved
+        from aj_crew.dashboard.state import _mark_permission_resolved
 
         slot = _FakeSlot()
         slot.messages.append(
@@ -312,7 +312,7 @@ class TestResolveApprovalFlushes:
         import re
         from pathlib import Path
 
-        import kiro_crew.dashboard as pkg
+        import aj_crew.dashboard as pkg
 
         root = Path(pkg.__file__).parent
         sources = [
@@ -340,7 +340,7 @@ class TestResolveApprovalFlushes:
 
     @pytest.mark.asyncio
     async def test_marks_slot_dirty(self) -> None:
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.state import DashboardState
 
         slot = _FakeSlot()
         fut = slot.add_pending_approval("ap-1")

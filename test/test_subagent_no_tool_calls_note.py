@@ -22,9 +22,9 @@ from idle_tab_drain_helpers import (  # noqa: F401 -- the autouse fixture regist
     open_idle_tab,
 )
 
-from kiro_crew.constants import NO_TOOL_CALLS_NOTE
-from kiro_crew.subagent import SubagentInfo
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.constants import NO_TOOL_CALLS_NOTE
+from aj_crew.subagent import SubagentInfo
+from aj_crew.testing.wait import async_wait_until
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -32,7 +32,7 @@ pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 def _drive(result: Any) -> str:
     """``spawn_run`` and ``spawn_sub_agents`` return a :class:`DeferredTool`
     the stdio loop steps; drive it to its text here, as ``_call_tool`` does."""
-    from kiro_crew import mcp_core, mcp_shared
+    from aj_crew import mcp_core, mcp_shared
 
     if isinstance(result, mcp_shared.DeferredTool):
         return mcp_shared.drive_deferred(result, clock=mcp_core.time)
@@ -40,7 +40,7 @@ def _drive(result: Any) -> str:
 
 
 def _spawn_run(args: dict[str, Any]) -> str:
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     counter = iter(range(1, 100))
 
@@ -59,14 +59,14 @@ class TestSpawnRunDispatch:
     """The note rides on the completion, where the narration arrives, not here."""
 
     def test_the_dispatch_is_not_refused_and_carries_no_note(self):
-        out = _spawn_run({"task": "write a.py", "agent": "kirocrew-lite"})
+        out = _spawn_run({"task": "write a.py", "agent": "ajcrew-lite"})
         assert out.startswith("Spawned 1 subagent(s).")
         assert NO_TOOL_CALLS_NOTE not in out
 
 
 class TestSpawnSubAgentsResultNote:
     def _collect(self, status: dict[str, Any]) -> dict[str, Any]:
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         with (
             patch.object(mcp_core, "_post", return_value={"id": "a1"}),
@@ -81,7 +81,7 @@ class TestSpawnSubAgentsResultNote:
             out = _drive(
                 mcp_core._call_tool_inner(
                     "spawn_sub_agents",
-                    {"agents": [{"agent_or_mode": "kirocrew-lite", "prompt": "write a.py"}]},
+                    {"agents": [{"agent_or_mode": "ajcrew-lite", "prompt": "write a.py"}]},
                 )
             )
         return json.loads(out.split("\n\n")[0])
@@ -103,7 +103,7 @@ class TestSpawnSubAgentsResultNote:
 
 class TestSpawnStatusSaysWhetherToolsWereCalled:
     async def _status(self, info: SubagentInfo) -> dict[str, Any]:
-        from kiro_crew.dashboard.messaging_api.run_views import api_spawn_status
+        from aj_crew.dashboard.messaging_api.run_views import api_spawn_status
 
         state = MagicMock()
         state.subagents.get = MagicMock(return_value=info)
@@ -153,11 +153,11 @@ class TestSpawnStatusSaysWhetherToolsWereCalled:
 
 
 def _make_orchestrator():
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
-    cfg = KiroCrewConfig()
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U_OWNER"}):
+    cfg = AjCrewConfig()
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U_OWNER"}):
         return GatewayOrchestrator(cfg, no_dashboard=False, no_crons=True, no_open=True)
 
 
@@ -191,8 +191,8 @@ class TestCompletionEventNote:
         orch.ctx_builder = MagicMock()
         orch.dashboard_state = _dashboard_state()
         with (
-            patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False),
-            patch("kiro_crew.slack.gateway.SubagentManager") as mock_sm,
+            patch("aj_crew.slack.handler.is_yolo_mode", return_value=False),
+            patch("aj_crew.slack.gateway.SubagentManager") as mock_sm,
         ):
             mgr = MagicMock()
             mock_sm.return_value = mgr
@@ -208,7 +208,7 @@ class TestCompletionEventNote:
             parent_session_key="dashboard:main",
             **kw,
         )
-        info.agent = "kirocrew-lite"
+        info.agent = "ajcrew-lite"
         info.done = True
         info.tool_count = tool_count
         info.turns = turns
@@ -223,8 +223,8 @@ class TestCompletionEventNote:
             injected.append(text)
 
         with (
-            patch("kiro_crew.dashboard.chat_runner._run_chat", side_effect=_fake_run_chat),
-            patch("kiro_crew.subagent_persistence.mark_delivered"),
+            patch("aj_crew.dashboard.chat_runner._run_chat", side_effect=_fake_run_chat),
+            patch("aj_crew.subagent_persistence.mark_delivered"),
         ):
             for n, info in enumerate(infos):
                 mgr.batch_members_pending = MagicMock(return_value=n != len(infos) - 1)

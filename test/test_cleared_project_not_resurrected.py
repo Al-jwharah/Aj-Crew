@@ -19,9 +19,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 from chat_test_helpers import _make_ready_kiro_prerequisite
 
-from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.history import ConversationLog
 
 KEY = "dashboard:s1"
 
@@ -58,7 +58,7 @@ def _newborn_with_stored_project(state, tmp_path):
 
 class TestClearedProjectIsPersistedAsCleared:
     def test_clearing_a_project_overwrites_the_stored_directory(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = _newborn_with_stored_project(state, tmp_path)
 
@@ -73,7 +73,7 @@ class TestClearedProjectIsPersistedAsCleared:
 
     def test_a_live_project_survives_the_same_merge(self, tmp_path, monkeypatch):
         """The unconditional write must not blank a project that is still set."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = _newborn_with_stored_project(state, tmp_path)
         scoped = str(tmp_path / "scoped")

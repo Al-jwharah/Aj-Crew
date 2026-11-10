@@ -20,7 +20,7 @@ from slack_gateway_helpers import (
     _mock_sessions,
 )
 
-from kiro_crew.testing.wait import async_wait_until, await_until, finished
+from aj_crew.testing.wait import async_wait_until, await_until, finished
 
 
 def _admit_drains(slot: MagicMock) -> None:
@@ -53,8 +53,8 @@ class TestInitSubagents:
         orch.ctx_builder = _mock_context_builder()
         orch.ctx_builder.hooks = MagicMock()
         orch.dashboard_state = _mock_dashboard_state()
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-            with patch("kiro_crew.slack.gateway.SubagentManager") as mock_sm:
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.slack.gateway.SubagentManager") as mock_sm:
                 mock_sm_inst = MagicMock()
                 mock_sm_inst.start_reaper = MagicMock()
                 mock_sm_inst._max_concurrent = 10
@@ -70,8 +70,8 @@ class TestInitSubagents:
         orch.ctx_builder = _mock_context_builder()
         orch.ctx_builder.hooks = MagicMock()
         orch.dashboard_state = None
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-            with patch("kiro_crew.slack.gateway.SubagentManager") as mock_sm:
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.slack.gateway.SubagentManager") as mock_sm:
                 mock_sm_inst = MagicMock()
                 mock_sm_inst.start_reaper = MagicMock()
                 mock_sm_inst._max_concurrent = 5
@@ -81,8 +81,8 @@ class TestInitSubagents:
 
     def _capture_on_event(self, orch):
         """Run _init_subagents with SubagentManager patched; return the on_event callback."""
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-            with patch("kiro_crew.slack.gateway.SubagentManager") as mock_sm:
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.slack.gateway.SubagentManager") as mock_sm:
                 mock_sm_inst = MagicMock()
                 mock_sm_inst.start_reaper = MagicMock()
                 mock_sm.return_value = mock_sm_inst
@@ -106,7 +106,7 @@ class TestInitSubagents:
         slot list. Multiple events inside the debounce window coalesce into one push.
         Covers the reaper too, since _force_reap fires subagent_done through the same
         on_event path."""
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         orch = _make_orchestrator()
         orch.sessions = _mock_sessions()
@@ -145,7 +145,7 @@ class TestInitSubagents:
         """A queued-depth frame changes slots[].subagents_queued, so it schedules
         the same debounced push_subagent_patch: the next patch reconciles a client
         that missed the depth frame itself, without a whole-list rebroadcast."""
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         orch = _make_orchestrator()
         orch.sessions = _mock_sessions()
@@ -167,8 +167,8 @@ class TestInitSubagents:
         """Two parents that route to one cron tab: each frame carries the tab's
         sum, which is what serialize_slots reports, so a frame and the next slots
         push agree -- including after one of the parents publishes 0."""
-        from kiro_crew.dashboard.state import _published_queued_by_slot
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.dashboard.state import _published_queued_by_slot
+        from aj_crew.subagent import SubagentInfo
 
         def _slot(key: str) -> str:
             return "cron-job7" if key.startswith("cron:job7") else key.removeprefix("dashboard:")
@@ -180,8 +180,8 @@ class TestInitSubagents:
         orch.dashboard_state = _mock_dashboard_state()
         table: dict[str, int] = {}
         with (
-            patch("kiro_crew.slack.gateway.subagent_event_slot", _slot),
-            patch("kiro_crew.dashboard.chat_utils.subagent_event_slot", _slot),
+            patch("aj_crew.slack.gateway.subagent_event_slot", _slot),
+            patch("aj_crew.dashboard.chat_utils.subagent_event_slot", _slot),
         ):
             on_event = self._capture_on_event(orch)
             orch.subagent_mgr.published_queued_depths = lambda: dict(table)
@@ -210,7 +210,7 @@ class TestInitSubagents:
         """High-frequency subagent_tool events must NOT trigger slots pushes —
         only spawn/done flip the subagents_running truth value (and a queued
         frame moves subagents_queued)."""
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         orch = _make_orchestrator()
         orch.sessions = _mock_sessions()
@@ -233,7 +233,7 @@ class TestInitSubagents:
         """A run whose parent is a sub-agent draws in the tab of the chat its tree
         started from (``root_session_key``), not on ``subagent:<id>``, which no tab
         reads. Its parent's queued depth and wave start stay on the parent's key."""
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         orch = _make_orchestrator()
         orch.sessions = _mock_sessions()
@@ -264,8 +264,8 @@ class TestSubagentDoneStoppedClassification:
     a successful completion by _subagent_done in the announce text."""
 
     def _capture_on_done(self, orch):
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-            with patch("kiro_crew.slack.gateway.SubagentManager") as mock_sm:
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.slack.gateway.SubagentManager") as mock_sm:
                 mock_sm_inst = MagicMock()
                 mock_sm_inst.start_reaper = MagicMock()
                 mock_sm.return_value = mock_sm_inst
@@ -273,7 +273,7 @@ class TestSubagentDoneStoppedClassification:
                 return mock_sm.call_args.kwargs["on_done"]
 
     def _stopped_info(self):
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         info = SubagentInfo(
             id="stop1",
@@ -339,8 +339,8 @@ class TestSubagentFinalSummaryDirective:
     (slot._pending_synthesis) in chat mode; earlier completions do not."""
 
     def _capture_on_done(self, orch):
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-            with patch("kiro_crew.slack.gateway.SubagentManager") as mock_sm:
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.slack.gateway.SubagentManager") as mock_sm:
                 mock_sm_inst = MagicMock()
                 mock_sm_inst.start_reaper = MagicMock()
                 mock_sm.return_value = mock_sm_inst
@@ -362,7 +362,7 @@ class TestSubagentFinalSummaryDirective:
         the manager's in-memory pending work for the parent."""
         from chat_test_helpers import drain_background_tasks
 
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         orch = _make_orchestrator()
         orch.sessions = _mock_sessions()
@@ -390,7 +390,7 @@ class TestSubagentFinalSummaryDirective:
         self.mgr = orch.subagent_mgr
 
         info = SubagentInfo(id="a1", task="do X", parent_session_key="dashboard:s1")
-        with patch("kiro_crew.slack.gateway._start_next_queued_turn", new=AsyncMock()):
+        with patch("aj_crew.slack.gateway._start_next_queued_turn", new=AsyncMock()):
             await on_done(info)
             # Any injection task the delivery spawned is registered on the state:
             # wait for those tasks to end, not for a guessed span.
@@ -473,7 +473,7 @@ class TestSynthesisAfterAOneTurnBatch:
     @staticmethod
     async def _complete(on_done, slot, agent_id, *, busy=False, **fields):
         """Route one completion; *busy* parks it behind a turn still running."""
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         info = SubagentInfo(
             id=agent_id, task=f"do {agent_id}", parent_session_key="dashboard:s1", **fields
@@ -485,7 +485,7 @@ class TestSynthesisAfterAOneTurnBatch:
         if blocker is not None:
             slot.task = blocker
         try:
-            from kiro_crew.dashboard import chat_runner
+            from aj_crew.dashboard import chat_runner
 
             with (
                 # An idle tab drains the completion through the real queue
@@ -496,7 +496,7 @@ class TestSynthesisAfterAOneTurnBatch:
                     "spawn_guarded_turn",
                     side_effect=lambda _state, _slot, coro: asyncio.ensure_future(coro),
                 ),
-                patch("kiro_crew.slack.gateway.INJECTION_TIMEOUT", 0.01),
+                patch("aj_crew.slack.gateway.INJECTION_TIMEOUT", 0.01),
             ):
                 await on_done(info)
                 turn = slot.task
@@ -512,7 +512,7 @@ class TestSynthesisAfterAOneTurnBatch:
         """End the turn that just ran; True when a synthesis turn was started."""
         from chat_test_helpers import drain_background_tasks
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         with (
             patch.object(chat_runner, "_run_pending_synthesis", new=AsyncMock()) as synth,
@@ -532,7 +532,7 @@ class TestSynthesisAfterAOneTurnBatch:
         """Queue a user message and drain it. *turn_tail* drains it the way a
         turn's end does (``_hand_off_queue``, with the ending turn still holding
         the floor); otherwise the direct drain, as the queued card's Run now."""
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         qid = slot.queue_append("thanks, carry on")
         if kwargs.get("allow_user_during_subagents"):
@@ -684,8 +684,8 @@ class TestSubagentDone:
         orch.ctx_builder.hooks = MagicMock()
         orch.ctx_builder.build_message = MagicMock(return_value=("msg", None))
         orch.dashboard_state = _mock_dashboard_state()
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-            with patch("kiro_crew.slack.gateway.SubagentManager") as mock_sm:
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.slack.gateway.SubagentManager") as mock_sm:
                 mock_sm_inst = MagicMock()
                 mock_sm_inst.start_reaper = MagicMock()
                 mock_sm_inst.running = []
@@ -703,7 +703,7 @@ class TestSubagentDone:
     @pytest.mark.asyncio
     async def test_dashboard_slot_idle_queues_and_drains(self):
         """Subagent done → dashboard slot idle → queued, then the queue drains."""
-        from kiro_crew.slack.gateway import SUBAGENT_COMPLETION_KIND
+        from aj_crew.slack.gateway import SUBAGENT_COMPLETION_KIND
 
         orch, mock_sm = self._setup_orch_with_subagent_mgr()
         on_done = mock_sm.call_args[1]["on_done"]
@@ -731,12 +731,12 @@ class TestSubagentDone:
 
         with (
             patch(
-                "kiro_crew.slack.gateway._start_next_queued_turn",
+                "aj_crew.slack.gateway._start_next_queued_turn",
                 new_callable=AsyncMock,
                 return_value=True,
             ) as mock_drain,
             patch(
-                "kiro_crew.dashboard.chat_runner._run_chat", new_callable=AsyncMock
+                "aj_crew.dashboard.chat_runner._run_chat", new_callable=AsyncMock
             ) as mock_run_chat,
         ):
             await on_done(info)
@@ -782,7 +782,7 @@ class TestSubagentDone:
         info.started = 0.0
 
         await on_done(info)
-        from kiro_crew.slack.gateway import SUBAGENT_COMPLETION_KIND
+        from aj_crew.slack.gateway import SUBAGENT_COMPLETION_KIND
 
         slot.queue_append.assert_called_once()
         assert "queued result" in slot.queue_append.call_args.args[0]
@@ -813,7 +813,7 @@ class TestSubagentDone:
         reset = AsyncMock(wraps=orch.sessions.reset)
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="llm response",
             ) as mock_stream,
@@ -898,7 +898,7 @@ class TestSubagentDone:
         info.started = 0.0
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             return_value="synthesized response",
         ) as mock_stream:
@@ -949,8 +949,8 @@ class TestSubagentFailureEvents:
         orch.ctx_builder.hooks = MagicMock()
         orch.ctx_builder.build_message = MagicMock(return_value=("msg", None))
         orch.dashboard_state = _mock_dashboard_state()
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-            with patch("kiro_crew.slack.gateway.SubagentManager") as mock_sm:
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.slack.gateway.SubagentManager") as mock_sm:
                 mock_sm_inst = MagicMock()
                 mock_sm_inst.start_reaper = MagicMock()
                 mock_sm_inst.running = []
@@ -998,7 +998,7 @@ class TestSubagentFailureEvents:
         The queued notice carries the debt instead, under its own text, for the
         drain that hands that text to the parent to settle.
         """
-        from kiro_crew.subagent import SubagentDelivery
+        from aj_crew.subagent import SubagentDelivery
 
         orch, mock_sm = self._setup()
         on_event = mock_sm.call_args[1]["on_event"]
@@ -1087,7 +1087,7 @@ class TestSubagentFailureEvents:
         frontend routes frames by exact slot match, so the raw key left the
         Subagents panel permanently on "No subagents running" for every agent
         spawned from a cron-born session."""
-        from kiro_crew.session_surface import set_dashboard_surfaced
+        from aj_crew.session_surface import set_dashboard_surfaced
 
         orch, mock_sm = self._setup()
         on_event = mock_sm.call_args[1]["on_event"]

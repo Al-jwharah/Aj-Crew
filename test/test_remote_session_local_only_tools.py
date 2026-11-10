@@ -12,31 +12,31 @@ from dataclasses import replace
 
 import pytest
 
-from kiro_crew import hooks, mcp_core
-from kiro_crew import session_environment as se
-from kiro_crew.acp._dispatch_parts.permission_requests import build_permission_event
-from kiro_crew.acp.kas_agents import to_client_custom_agent
-from kiro_crew.acp.runtime import (
+from aj_crew import hooks, mcp_core
+from aj_crew import session_environment as se
+from aj_crew.acp._dispatch_parts.permission_requests import build_permission_event
+from aj_crew.acp.kas_agents import to_client_custom_agent
+from aj_crew.acp.runtime import (
     _WORKSPACE_TOOLS_BY_BUILTIN,
     AcpRuntime,
     AcpRuntimeError,
     _without_local_only_grants,
 )
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.coder.session_launch import SessionEnvironmentChoices
-from kiro_crew.computer_use import tools as computer_tools
-from kiro_crew.config import paths
-from kiro_crew.hook_runtime.tool_identity import ToolCall
-from kiro_crew.mcp_tool_titles import _table
-from kiro_crew.mcp_tools import artifacts
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform.governance import may_skip_gate, parse_policy
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.coder.session_launch import SessionEnvironmentChoices
+from aj_crew.computer_use import tools as computer_tools
+from aj_crew.config import paths
+from aj_crew.hook_runtime.tool_identity import ToolCall
+from aj_crew.mcp_tool_titles import _table
+from aj_crew.mcp_tools import artifacts
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform.governance import may_skip_gate, parse_policy
 
 
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments are reachable only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 WORKSPACE = {"name": "workspace", "command": "bridge"}
@@ -63,43 +63,43 @@ def _bind(home, key: str, profile: str | None = "dev") -> None:
 
 
 def test_a_whole_core_grant_becomes_every_core_tool_except_the_local_only_ones():
-    grants = _without_local_only_grants(["@kirocrew-core", "@kirocrew-cron"])
-    core = {g.split("/", 1)[1] for g in grants if g.startswith("@kirocrew-core/")}
-    assert core == set(_table()["kirocrew-core"]) - se.LOCAL_ONLY_CORE_TOOLS
+    grants = _without_local_only_grants(["@ajcrew-core", "@ajcrew-cron"])
+    core = {g.split("/", 1)[1] for g in grants if g.startswith("@ajcrew-core/")}
+    assert core == set(_table()["ajcrew-core"]) - se.LOCAL_ONLY_CORE_TOOLS
     assert core and not core & se.LOCAL_ONLY_CORE_TOOLS
     # A cron job runs on the gateway machine, so the cron server is local-only too.
-    assert not any(g.startswith("@kirocrew-cron") for g in grants)
+    assert not any(g.startswith("@ajcrew-cron") for g in grants)
 
 
 def test_explicit_and_wildcard_grants_cannot_readmit_a_local_only_tool():
     grants = _without_local_only_grants(
         [
-            "@kirocrew-core/file_send",
-            "@kirocrew-core/memory_recall",
-            "@kirocrew-core/b*",
-            "@kirocrew-core/pod_*",
-            "@kirocrew-computer",
-            "@kirocrew-computer/computer_click",
+            "@ajcrew-core/file_send",
+            "@ajcrew-core/memory_recall",
+            "@ajcrew-core/b*",
+            "@ajcrew-core/pod_*",
+            "@ajcrew-computer",
+            "@ajcrew-computer/computer_click",
         ]
     )
-    assert "@kirocrew-core/memory_recall" in grants
+    assert "@ajcrew-core/memory_recall" in grants
     assert not any(g.endswith(("/file_send", "/browser", "/pod_up", "/pod_down")) for g in grants)
-    assert "@kirocrew-core/pod_ls" in grants  # read-only: kept
+    assert "@ajcrew-core/pod_ls" in grants  # read-only: kept
     assert not any("*" in g for g in grants)
-    assert not any(g.startswith("@kirocrew-computer") for g in grants)
+    assert not any(g.startswith("@ajcrew-computer") for g in grants)
 
 
 def test_agent_tools_drop_builtins_builtin_group_and_local_only_tools():
     runtime = _runtime()
-    servers = _servers("kirocrew-core", "kirocrew-computer", "kirocrew-cron")
+    servers = _servers("ajcrew-core", "ajcrew-computer", "ajcrew-cron")
     wire = runtime._remote_session_servers(servers)
-    assert [s["name"] for s in wire] == ["kirocrew-core", "workspace"]
+    assert [s["name"] for s in wire] == ["ajcrew-core", "workspace"]
     [star] = runtime._remote_workspace_agents([{"name": "a", "tools": ["*"]}], wire)
     [listed] = runtime._remote_workspace_agents(
         [
             {
                 "name": "b",
-                "tools": ["read", "shell", "@builtin", "@kirocrew-core", "@kirocrew-computer"],
+                "tools": ["read", "shell", "@builtin", "@ajcrew-core", "@ajcrew-computer"],
             }
         ],
         wire,
@@ -107,54 +107,54 @@ def test_agent_tools_drop_builtins_builtin_group_and_local_only_tools():
     for agent in (star, listed):
         tools = agent["tools"]
         assert "@workspace" in tools
-        assert not {"read", "shell", "@builtin", "@kirocrew-core"} & set(tools)
-        assert "@kirocrew-core/set_project" not in tools
-        assert "@kirocrew-core/spawn_run" in tools
-        assert not any(t.startswith("@kirocrew-computer") for t in tools)
+        assert not {"read", "shell", "@builtin", "@ajcrew-core"} & set(tools)
+        assert "@ajcrew-core/set_project" not in tools
+        assert "@ajcrew-core/spawn_run" in tools
+        assert not any(t.startswith("@ajcrew-computer") for t in tools)
 
 
 def test_an_agent_block_local_only_server_is_withheld_and_never_awaited():
     # A managed server the session-level hoist left in the active agent's own block
     # would mount on this machine, and the readiness barrier would wait for it.
-    from kiro_crew.acp.mcp_session_report import required_managed_servers
+    from aj_crew.acp.mcp_session_report import required_managed_servers
 
     runtime = _runtime()
-    wire = runtime._remote_session_servers(_servers("kirocrew-core", "kirocrew-cron"))
-    block = {"kirocrew-cron": {"command": "x"}, "kirocrew-computer": {"command": "y"}}
+    wire = runtime._remote_session_servers(_servers("ajcrew-core", "ajcrew-cron"))
+    block = {"ajcrew-cron": {"command": "x"}, "ajcrew-computer": {"command": "y"}}
     [agent] = runtime._remote_workspace_agents(
         [{"id": "a", "name": "a", "tools": ["*"], "mcpServers": dict(block)}], wire
     )
     assert agent["mcpServers"] == {}
     params = {"mcpServers": wire, "_meta": {"kiro": {"customAgents": [agent]}}}
     required = required_managed_servers(params, "a")
-    assert "kirocrew-cron" not in required and "kirocrew-computer" not in required
-    assert "kirocrew-core" in required
+    assert "ajcrew-cron" not in required and "ajcrew-computer" not in required
+    assert "ajcrew-core" in required
 
 
 def test_a_local_session_is_untouched():
     runtime = object.__new__(AcpRuntime)
     runtime._remote_workspace = None
-    servers = _servers("kirocrew-core", "kirocrew-computer")
+    servers = _servers("ajcrew-core", "ajcrew-computer")
     agents = [{"name": "a", "tools": ["*"]}]
     assert runtime._remote_session_servers(servers) is servers
     assert runtime._remote_workspace_agents(agents, servers) is agents
 
 
 def test_refusal_follows_the_choice_record(home):
-    assert se.refuse_local_only_tool("dashboard:a", "kirocrew-core", "file_send") is None
+    assert se.refuse_local_only_tool("dashboard:a", "ajcrew-core", "file_send") is None
     _bind(home, "dashboard:a")
-    refusal = se.refuse_local_only_tool("dashboard:a", "kirocrew-core", "file_send")
+    refusal = se.refuse_local_only_tool("dashboard:a", "ajcrew-core", "file_send")
     assert refusal and "remote workspace" in refusal
-    assert se.refuse_local_only_tool("dashboard:a", "kirocrew-core", "memory_recall") is None
-    assert se.refuse_local_only_tool("dashboard:a", "kirocrew-computer", "computer_click")
-    assert se.refuse_local_only_tool("dashboard:a", "kirocrew-cron", "cron_add")
+    assert se.refuse_local_only_tool("dashboard:a", "ajcrew-core", "memory_recall") is None
+    assert se.refuse_local_only_tool("dashboard:a", "ajcrew-computer", "computer_click")
+    assert se.refuse_local_only_tool("dashboard:a", "ajcrew-cron", "cron_add")
     # A subagent that inherited the environment is remote too.
     SessionEnvironmentChoices(home / "coder" / "session-choices.json").inherit(
         "subagent:x", "dashboard:a"
     )
-    assert se.refuse_local_only_tool("subagent:x", "kirocrew-core", "browser")
+    assert se.refuse_local_only_tool("subagent:x", "ajcrew-core", "browser")
     _bind(home, "dashboard:a", None)
-    assert se.refuse_local_only_tool("dashboard:a", "kirocrew-core", "file_send") is None
+    assert se.refuse_local_only_tool("dashboard:a", "ajcrew-core", "file_send") is None
 
 
 def test_a_known_placement_answers_for_its_own_session_only(home, monkeypatch):
@@ -166,13 +166,13 @@ def test_a_known_placement_answers_for_its_own_session_only(home, monkeypatch):
     real = se._choices
     monkeypatch.setattr(se, "_choices", _no_store_read)
     with se.known_placement("dashboard:a", True):
-        assert se.refuse_local_only_tool("dashboard:a", "kirocrew-core", "set_project")
+        assert se.refuse_local_only_tool("dashboard:a", "ajcrew-core", "set_project")
     with se.known_placement("dashboard:a", False):
-        assert se.refuse_local_only_tool("dashboard:a", "kirocrew-core", "set_project") is None
+        assert se.refuse_local_only_tool("dashboard:a", "ajcrew-core", "set_project") is None
     # Another session's question still goes to the store.
     monkeypatch.setattr(se, "_choices", real)
     with se.known_placement("dashboard:a", False):
-        assert se.refuse_local_only_tool("dashboard:b", "kirocrew-core", "set_project")
+        assert se.refuse_local_only_tool("dashboard:b", "ajcrew-core", "set_project")
 
 
 @pytest.mark.asyncio
@@ -184,8 +184,8 @@ async def test_directive_replay_reads_placement_off_the_gateway_loop(home, monke
 
     from aiohttp import web
 
-    from kiro_crew.dashboard import directive_queue
-    from kiro_crew.dashboard.handlers.sessions import api_session_directive
+    from aj_crew.dashboard import directive_queue
+    from aj_crew.dashboard.handlers.sessions import api_session_directive
 
     _bind(home, "dashboard:a")
     loop_thread = threading.get_ident()
@@ -215,10 +215,10 @@ def test_an_unreadable_choice_record_refuses(home):
     _bind(home, "dashboard:a")
     path = home / "coder" / "session-choices.json"
     path.write_text("{broken", encoding="utf-8")
-    assert se.refuse_local_only_tool("dashboard:a", "kirocrew-core", "set_project")
+    assert se.refuse_local_only_tool("dashboard:a", "ajcrew-core", "set_project")
     # A session that was never bound keeps its local tools.
-    assert se.refuse_local_only_tool("dashboard:b", "kirocrew-core", "set_project") is None
-    assert se.refuse_local_only_tool("", "kirocrew-core", "set_project") is None
+    assert se.refuse_local_only_tool("dashboard:b", "ajcrew-core", "set_project") is None
+    assert se.refuse_local_only_tool("", "ajcrew-core", "set_project") is None
 
 
 def test_core_dispatch_refuses_before_the_handler_runs(home, monkeypatch):
@@ -238,7 +238,7 @@ def test_core_dispatch_refuses_before_the_handler_runs(home, monkeypatch):
 @pytest.mark.parametrize("bound", [True, False])
 def test_cron_refuses_in_a_remote_session_before_any_routing(home, monkeypatch, bound):
     # A cron job's command, script or agent session runs on the gateway machine.
-    from kiro_crew import mcp_cron
+    from aj_crew import mcp_cron
 
     if bound:
         _bind(home, "dashboard:a")
@@ -283,14 +283,14 @@ def test_computer_use_dispatch_refuses_a_remote_session(home, monkeypatch):
     "pattern", ["artifact_*_comments", "artifact_get_comment?", "brow?er", "artifact_[gd]*"]
 )
 def test_core_wildcards_keep_the_complete_requested_pattern(pattern):
-    grant = f"@kirocrew-core/{pattern}"
+    grant = f"@ajcrew-core/{pattern}"
     expected = {
-        f"@kirocrew-core/{tool}"
-        for tool in set(_table()["kirocrew-core"]) - se.LOCAL_ONLY_CORE_TOOLS
+        f"@ajcrew-core/{tool}"
+        for tool in set(_table()["ajcrew-core"]) - se.LOCAL_ONLY_CORE_TOOLS
         if "[" not in pattern and fnmatch.fnmatchcase(tool, pattern)
     }
     assert set(_without_local_only_grants([grant])) == expected
-    assert "@kirocrew-core/artifact_delete" not in expected
+    assert "@ajcrew-core/artifact_delete" not in expected
 
 
 @pytest.mark.parametrize(
@@ -491,7 +491,7 @@ workflow_result workflow_status request_server
 
 def test_every_core_tool_is_classified_for_remote_sessions():
     # A new core tool must be judged local-only or remote-safe, never default in.
-    core = set(_table()["kirocrew-core"])
+    core = set(_table()["ajcrew-core"])
     assert not REMOTE_SAFE_CORE_TOOLS & se.LOCAL_ONLY_CORE_TOOLS
     assert core - se.LOCAL_ONLY_CORE_TOOLS - REMOTE_SAFE_CORE_TOOLS == set()
     assert {"task_run", "workflow_run", "workflow_rerun_subtree"} <= se.LOCAL_ONLY_CORE_TOOLS
@@ -556,7 +556,7 @@ def test_an_untrusted_identity_is_not_mapped():
 def test_the_session_handle_names_the_workspace_only_when_its_runtime_attached_it():
     from types import SimpleNamespace
 
-    from kiro_crew.acp import session_handle_permissions as shp
+    from aj_crew.acp import session_handle_permissions as shp
 
     def handle(remote_workspace):
         return SimpleNamespace(
@@ -603,9 +603,9 @@ def test_the_permission_event_builder_is_the_only_source_of_a_gated_identity():
     call can enter the gate. A second constructor would be a path around the mapping."""
     from pathlib import Path
 
-    import kiro_crew
+    import aj_crew
 
-    root = Path(kiro_crew.__file__).parent
+    root = Path(aj_crew.__file__).parent
     makers = sorted(
         path.relative_to(root).as_posix()
         for path in root.rglob("*.py")

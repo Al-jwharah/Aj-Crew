@@ -15,13 +15,13 @@ from telegram_helpers import _drop_live_config_snapshot  # noqa: F401
 from telegram_helpers import FakeClient
 from telegram_parity_helpers import _AWS_KEY
 
-from kiro_crew.telegram.renderer import (
+from aj_crew.telegram.renderer import (
     TelegramRenderer,
     _md_to_telegram_html,
     md_to_telegram_html_safe,
 )
-from kiro_crew.telegram.renderer_display import _strip_hr
-from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES
+from aj_crew.telegram.renderer_display import _strip_hr
+from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
 
 NUL = "\x00"
 

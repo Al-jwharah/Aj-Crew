@@ -7,8 +7,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.slack.code_channels import lifecycle
-from kiro_crew.slack.code_channels.store import Binding, CodeChannelStore, set_store
+from aj_crew.slack.code_channels import lifecycle
+from aj_crew.slack.code_channels.store import Binding, CodeChannelStore, set_store
 
 
 class _Sel:
@@ -179,7 +179,7 @@ async def test_other_event_types_are_not_handled(env: Any) -> None:
 
 
 def test_every_lifecycle_event_is_subscribed_under_the_code_channels_switch() -> None:
-    from kiro_crew import slack_manifest
+    from aj_crew import slack_manifest
 
     events = slack_manifest.requirements(frozenset({"code_channels"})).bot_events
     assert lifecycle.LIFECYCLE_EVENTS <= events

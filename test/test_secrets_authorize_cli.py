@@ -1,4 +1,4 @@
-"""``kirocrew secrets authorize`` must not launder an agent-planted policy.
+"""``ajcrew secrets authorize`` must not launder an agent-planted policy.
 
 If an unsigned ``secret_request_policy.json`` already exists (something an agent
 could plant before the owner ever authorizes, or before the sandbox mask applies
@@ -18,25 +18,25 @@ import stat
 import pytest
 
 from conftest import requires_symlinks
-from kiro_crew import cli_commands_secrets
-from kiro_crew.secrets_mediation.policy import (
+from aj_crew import cli_commands_secrets
+from aj_crew.secrets_mediation.policy import (
     POLICY_LOCK_FILENAME,
     load_authorization,
     policy_path,
 )
-from kiro_crew.secrets_mediation.provenance import SIGNATURE_FIELD, verify_secret_authorizations
+from aj_crew.secrets_mediation.provenance import SIGNATURE_FIELD, verify_secret_authorizations
 
 #: Captured before the autouse fixture pins it, for the tests of the predicate itself.
 _REAL_PREDICATE = cli_commands_secrets._spawn_precreates_policy_directory
 
 
 def _run_authorize(monkeypatch, tmp_path, **ns):
-    from kiro_crew import cli_commands
+    from aj_crew import cli_commands
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     # The policy key derives from the token-signing secret. A test that exercises
     # the unreadable-secret abort makes that read fail.
-    from kiro_crew.secrets_mediation import provenance
+    from aj_crew.secrets_mediation import provenance
 
     if ns.get("real_token_root", False):
         pass  # the caller arranged the shared loader itself
@@ -66,7 +66,7 @@ def _gateway_owned_policy_directory(tmp_path, _floor_monkeypatch):
     no test here probes the host's real sandbox backend. Tests of the other
     backends override the pin.
     """
-    from kiro_crew import cli_commands_secrets
+    from aj_crew import cli_commands_secrets
 
     _floor_monkeypatch.setattr(
         cli_commands_secrets, "_spawn_precreates_policy_directory", lambda: True
@@ -83,8 +83,8 @@ def test_authorize_publishes_only_inside_the_hidden_policy_directory(tmp_path, m
     revoked one. Mutation guard: publishing to a data-home-root name (or staging a
     temp there) leaves a new name beside ``secret-request-policy`` and fails here.
     """
-    from kiro_crew import sandbox
-    from kiro_crew.secrets_mediation.provenance import REQUEST_POLICY_DIRNAME
+    from aj_crew import sandbox
+    from aj_crew.secrets_mediation.provenance import REQUEST_POLICY_DIRNAME
 
     root_before = set(os.listdir(tmp_path))
     _run_authorize(monkeypatch, tmp_path, secret_name="K", origin="https://api.example.com")
@@ -102,10 +102,10 @@ def test_authorize_publishes_only_inside_the_hidden_policy_directory(tmp_path, m
 def test_authorize_refuses_without_the_gateway_owned_directory(tmp_path, monkeypatch):
     """The CLI never creates the hidden directory: one it created while a sandbox
     was running would be visible, unmasked, inside that sandbox."""
-    from kiro_crew import cli_commands
+    from aj_crew import cli_commands
 
     policy_path(tmp_path).parent.rmdir()
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     args = argparse.Namespace(
         secret_name="K", origin="https://api.example.com", header=None, remove=False, reset=False
     )
@@ -120,7 +120,7 @@ def test_authorize_creates_the_directory_where_no_namespace_mask_needs_it(tmp_pa
     denied) and a sandbox-off host masks nothing, so neither backend ever
     precreates the directory. There the CLI creates it, owner-only, and publishes.
     Mutation guard: without the create, authorize exits 1 on every run here."""
-    from kiro_crew import cli_commands_secrets
+    from aj_crew import cli_commands_secrets
 
     policy_path(tmp_path).parent.rmdir()
     monkeypatch.setattr(cli_commands_secrets, "_spawn_precreates_policy_directory", lambda: False)
@@ -135,7 +135,7 @@ def test_authorize_creates_the_directory_where_no_namespace_mask_needs_it(tmp_pa
 @requires_symlinks
 def test_authorize_never_creates_through_a_planted_link(tmp_path, monkeypatch):
     """A link squatting the name is not followed and not replaced: the CLI refuses."""
-    from kiro_crew import cli_commands_secrets
+    from aj_crew import cli_commands_secrets
 
     directory = policy_path(tmp_path).parent
     directory.rmdir()
@@ -154,12 +154,12 @@ def test_authorize_never_creates_through_a_planted_link(tmp_path, monkeypatch):
     [("namespace", True), ("sandbox-exec", False), ("none", False)],
 )
 def test_the_precreate_predicate_follows_the_spawn_backend(monkeypatch, backend, expected):
-    from kiro_crew import cli_commands_secrets, sandbox
+    from aj_crew import cli_commands_secrets, sandbox
 
     # Drop the autouse pin: this exercises the real predicate.
     monkeypatch.setattr(cli_commands_secrets, "_spawn_precreates_policy_directory", _REAL_PREDICATE)
     seen: list[str] = []
-    # Through the ``kiro_crew.sandbox`` facade, which reaches every owner holding each name.
+    # Through the ``aj_crew.sandbox`` facade, which reaches every owner holding each name.
     monkeypatch.setattr(sandbox, "configured_sandbox_mode", lambda: "standard")
     monkeypatch.setattr(sandbox, "effective_sandbox_mode", lambda m: m)
 
@@ -174,7 +174,7 @@ def test_the_precreate_predicate_follows_the_spawn_backend(monkeypatch, backend,
 
 def test_the_precreate_predicate_fails_closed(monkeypatch):
     """An unanswerable backend question keeps the refuse-unless-precreated path."""
-    from kiro_crew import cli_commands_secrets, sandbox
+    from aj_crew import cli_commands_secrets, sandbox
 
     monkeypatch.setattr(cli_commands_secrets, "_spawn_precreates_policy_directory", _REAL_PREDICATE)
 
@@ -264,7 +264,7 @@ def test_first_authorize_publishes_nothing_on_an_ephemeral_signing_key(tmp_path,
     success while the gateway (a different process) refuses the signature, and
     fixing the key file later would not repair it. So authorize must refuse and
     publish nothing. Mutation guard: provenance reading ``_get_secret`` publishes."""
-    from kiro_crew.dashboard import token_secret
+    from aj_crew.dashboard import token_secret
 
     def _ephemeral(outcome=None):
         if outcome is not None:
@@ -324,7 +324,7 @@ def test_authorize_refuses_an_oversized_policy_without_unbounded_load(tmp_path, 
     a bounded read BEFORE the JSON decode, so the CLI cannot be driven to OOM by
     an agent-authored file. The read is capped at _MAX_POLICY_BYTES+1 and refused
     on overflow; the file is left untouched (no clobber)."""
-    from kiro_crew.secrets_mediation.policy import _MAX_POLICY_BYTES
+    from aj_crew.secrets_mediation.policy import _MAX_POLICY_BYTES
 
     policy = policy_path(tmp_path)
     # Syntactically valid JSON padded well past the cap, so the ONLY thing that
@@ -354,12 +354,12 @@ def test_authorize_refuses_when_the_new_entry_would_exceed_the_write_bound(
     This is distinct from the read-side test above (an agent-planted oversize file
     refused on read): here the oversize is the owner's OWN would-be write.
     """
-    from kiro_crew.secrets_mediation import policy as policy_mod
-    from kiro_crew.secrets_mediation.provenance import sign_secret_authorizations
+    from aj_crew.secrets_mediation import policy as policy_mod
+    from aj_crew.secrets_mediation.provenance import sign_secret_authorizations
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.config.paths.config_dir", lambda: tmp_path)
-    from kiro_crew.secrets_mediation import provenance
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.paths.config_dir", lambda: tmp_path)
+    from aj_crew.secrets_mediation import provenance
 
     monkeypatch.setattr(provenance, "_token_root", lambda: b"T" * 32)
 
@@ -412,7 +412,7 @@ def test_authorize_aborts_without_writing_when_the_audit_cannot_be_recorded(tmp_
     """A credential-egress permission change must never land unaudited: if the SEL
     audit raises, authorize aborts BEFORE publishing the policy. Fails without the
     audit-before-write + abort-on-failure gate."""
-    from kiro_crew import cli_commands
+    from aj_crew import cli_commands
 
     policy = policy_path(tmp_path)
     assert not policy.exists()
@@ -455,7 +455,7 @@ def test_authorize_emits_a_secret_free_sel_audit_event(tmp_path, monkeypatch):
     """Granting or removing a credential egress is a security-relevant control
     change and must produce a SEL audit event — carrying the secret NAME, the
     action, and (on grant) the origin, but never a secret value."""
-    from kiro_crew import cli_commands
+    from aj_crew import cli_commands
 
     events = []
 
@@ -478,13 +478,13 @@ def test_authorize_emits_a_secret_free_sel_audit_event(tmp_path, monkeypatch):
 
 
 def test_remove_succeeds_without_an_origin_argument(tmp_path, monkeypatch):
-    """``kirocrew secrets authorize <name> --remove`` de-authorizes by name alone.
+    """``ajcrew secrets authorize <name> --remove`` de-authorizes by name alone.
 
     ``origin`` is an optional positional, so the real argparse path leaves it
     ``None`` when omitted. The remove path never reads it; the authorization is
     dropped and the policy re-signed without the entry, with no ``SystemExit``.
     """
-    from kiro_crew import cli_commands
+    from aj_crew import cli_commands
 
     # Seed a validly-signed authorization, then remove it with origin omitted.
     _run_authorize(monkeypatch, tmp_path, secret_name="GONE", origin="https://api.example.com")
@@ -504,7 +504,7 @@ def test_authorize_without_origin_and_without_remove_exits_2(tmp_path, monkeypat
     """Adding an authorization still REQUIRES an origin: an omitted origin
     (``None``) without ``--remove`` is rejected with exit code 2 before any
     policy read/write, mirroring argparse's missing-required-argument exit."""
-    from kiro_crew import cli_commands
+    from aj_crew import cli_commands
 
     args = argparse.Namespace(secret_name="K", origin=None, header=None, remove=False, reset=False)
     with pytest.raises(SystemExit) as exc_info:
@@ -517,7 +517,7 @@ def test_authorize_without_origin_and_without_remove_exits_2(tmp_path, monkeypat
 def test_authorize_remove_clears_an_entry(tmp_path, monkeypatch):
     """``--remove`` clears an entry by name alone; origin=None mirrors the omitted
     optional positional."""
-    from kiro_crew import cli_commands
+    from aj_crew import cli_commands
 
     _run_authorize(monkeypatch, tmp_path, secret_name="GONE", origin="https://api.example.com")
     load_authorization(tmp_path, "GONE")  # present before removal

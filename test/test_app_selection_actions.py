@@ -24,18 +24,18 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.apps import app_frame as af
-from kiro_crew.apps import selection_action_frame as saf
-from kiro_crew.apps import selection_action_grants as sag
-from kiro_crew.apps.manager_records import (
+from aj_crew.apps import app_frame as af
+from aj_crew.apps import selection_action_frame as saf
+from aj_crew.apps import selection_action_grants as sag
+from aj_crew.apps.manager_records import (
     STAGED_GRANT_FAMILIES,
     _approved_grants_after_manifest_change,
     _declared_grant_entries,
     _held_back_entries,
 )
-from kiro_crew.apps.manifest_contributes import Contributes, SelectionActionConfig
-from kiro_crew.apps.point_grants import grant_source, point_grant_families
-from kiro_crew.apps.selection_action_grants import (
+from aj_crew.apps.manifest_contributes import Contributes, SelectionActionConfig
+from aj_crew.apps.point_grants import grant_source, point_grant_families
+from aj_crew.apps.selection_action_grants import (
     selection_action_entry,
     selection_action_grant_entries,
 )
@@ -173,7 +173,7 @@ def test_the_row_and_the_frame_resolver_read_the_same_approved_entries(
 
     approved: list[str] = ["save:chat:1-8000:"]
     monkeypatch.setattr(
-        "kiro_crew.apps.manager.staged_app_grants",
+        "aj_crew.apps.manager.staged_app_grants",
         lambda name, family, read: [e for e in read() if e in approved],
     )
     manifest = _manifest()
@@ -243,8 +243,8 @@ async def _frames(
     monkeypatch.setattr(
         saf, "approved_selection_action", lambda name, m, item_id: item(name, item_id)
     )
-    monkeypatch.setattr("kiro_crew.apps.hooks_integration.get_route_registry", _Registry)
-    monkeypatch.setattr("kiro_crew.dashboard.server._embed_parent_port", lambda r, a: None)
+    monkeypatch.setattr("aj_crew.apps.hooks_integration.get_route_registry", _Registry)
+    monkeypatch.setattr("aj_crew.dashboard.server._embed_parent_port", lambda r, a: None)
 
     @web.middleware
     async def auth(request: web.Request, handler: Any) -> web.StreamResponse:

@@ -1,6 +1,6 @@
 """The spawn audit's benign-spawn rows for the builtin apps under ``apps/builtins/``.
 
-``test_spawn_audit.py`` checks the unrouted spawns in ``src/kiro_crew`` against
+``test_spawn_audit.py`` checks the unrouted spawns in ``src/aj_crew`` against
 ``BENIGN_SPAWNS``, the union of this table and ``BENIGN_PACKAGE_SPAWNS`` in
 ``spawn_audit_helpers.py``. A row is keyed by ``<relpath>::<enclosing function>``, and a
 comment above a row or a run of rows justifies them; the rule for adding one is the
@@ -564,8 +564,8 @@ BENIGN_APP_SPAWNS: frozenset[str] = frozenset(
         # spawn is listed above.
         "apps/builtins/dev_fleet/npm_preflight.py::_frontend_tree_complete",
         # Foreground last-resort restart (Make Live on hosts with no drivable
-        # service manager): a detached `kirocrew restart --port <marker port>`,
-        # fixed argv whose binary is validated (basenamed kirocrew, absolute,
+        # service manager): a detached `ajcrew restart --port <marker port>`,
+        # fixed argv whose binary is validated (basenamed ajcrew, absolute,
         # executable) from the gateway's own keystone-fenced run-marker or
         # shutil.which — never agent input. Deliberately NOT sandboxed for the
         # same reason as cli_server_restart.py::_spawn_detached_gateway above: the child

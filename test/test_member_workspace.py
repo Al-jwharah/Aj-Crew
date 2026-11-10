@@ -13,10 +13,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, WorkspaceConfig
-from kiro_crew.config.paths import config_dir
-from kiro_crew.dashboard.handlers import agents as handlers
-from kiro_crew.member_workspace import (
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, WorkspaceConfig
+from aj_crew.config.paths import config_dir
+from aj_crew.dashboard.handlers import agents as handlers
+from aj_crew.member_workspace import (
     AUTO_WORKSPACE,
     MemberWorkspaceUnavailable,
     member_workspace_name,
@@ -25,15 +25,15 @@ from kiro_crew.member_workspace import (
     retire_unpublished_workspace,
     workspace_dir_name,
 )
-from kiro_crew.memory_stores import (
+from aj_crew.memory_stores import (
     UnknownMemoryStore,
     persist_member_config,
     provision_member_memory,
 )
 
 
-def _config(**agents: KiroCrewAgentConfig) -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
+def _config(**agents: AjCrewAgentConfig) -> AjCrewConfig:
+    cfg = AjCrewConfig()
     cfg.agents.update(agents)
     return cfg
 
@@ -71,7 +71,7 @@ class TestNaming:
 
 class TestProvision:
     def test_auto_binds_a_fresh_workspace_in_the_snapshot(self):
-        cfg = _config(atlas=KiroCrewAgentConfig(workspace=AUTO_WORKSPACE))
+        cfg = _config(atlas=AjCrewAgentConfig(workspace=AUTO_WORKSPACE))
         assert provision_member_workspace(cfg, "atlas") == "member-atlas"
         assert cfg.agents["atlas"].workspace == "member-atlas"
         assert cfg.workspaces["member-atlas"] == WorkspaceConfig(dir="workspace-member-atlas")
@@ -79,26 +79,26 @@ class TestProvision:
         assert not (config_dir() / "workspace-member-atlas").exists()
 
     def test_a_declared_workspace_is_an_explicit_reuse(self):
-        cfg = _config(atlas=KiroCrewAgentConfig(workspace="shared"))
+        cfg = _config(atlas=AjCrewAgentConfig(workspace="shared"))
         cfg.workspaces["shared"] = WorkspaceConfig(dir="workspace-shared")
         assert provision_member_workspace(cfg, "atlas") == ""
         assert cfg.agents["atlas"].workspace == "shared"
 
     def test_default_is_always_a_legal_reuse(self):
-        cfg = _config(atlas=KiroCrewAgentConfig(workspace="default"))
+        cfg = _config(atlas=AjCrewAgentConfig(workspace="default"))
         assert provision_member_workspace(cfg, "atlas") == ""
         assert cfg.agents["atlas"].workspace == "default"
 
     def test_an_undeclared_name_is_stored_as_given(self):
         # The binding every create path always stored; it resolves to the base
         # directory at use (workspace_dir_for), as it always did.
-        cfg = _config(atlas=KiroCrewAgentConfig(workspace="nowhere"))
+        cfg = _config(atlas=AjCrewAgentConfig(workspace="nowhere"))
         assert provision_member_workspace(cfg, "atlas") == ""
         assert cfg.agents["atlas"].workspace == "nowhere"
         assert "nowhere" not in cfg.workspaces
 
     def test_a_directory_another_entry_uses_is_skipped(self):
-        cfg = _config(atlas=KiroCrewAgentConfig(workspace=AUTO_WORKSPACE))
+        cfg = _config(atlas=AjCrewAgentConfig(workspace=AUTO_WORKSPACE))
         cfg.workspaces["old"] = WorkspaceConfig(dir="workspace-member-atlas")
         assert provision_member_workspace(cfg, "atlas") == "member-atlas-2"
         assert cfg.workspaces["member-atlas-2"].dir == "workspace-member-atlas-2"
@@ -107,7 +107,7 @@ class TestProvision:
         # The folder a hand-written ``WORKSPACE-MEMBER-ATLAS`` entry names.
         (config_dir() / "workspace-member-atlas").mkdir()
         _fold_case_under_home(monkeypatch)
-        cfg = _config(atlas=KiroCrewAgentConfig(workspace=AUTO_WORKSPACE))
+        cfg = _config(atlas=AjCrewAgentConfig(workspace=AUTO_WORKSPACE))
         cfg.workspaces["hand"] = WorkspaceConfig(dir="WORKSPACE-MEMBER-ATLAS")
         assert provision_member_workspace(cfg, "atlas") == "member-atlas-2"
 
@@ -115,7 +115,7 @@ class TestProvision:
         # With no identities to compare, _ws_dir_in_use retains Path's lexical
         # comparison: case-sensitive on POSIX and case-insensitive on Windows.
         _fold_case_under_home(monkeypatch)
-        cfg = _config(atlas=KiroCrewAgentConfig(workspace=AUTO_WORKSPACE))
+        cfg = _config(atlas=AjCrewAgentConfig(workspace=AUTO_WORKSPACE))
         cfg.workspaces["hand"] = WorkspaceConfig(dir="WORKSPACE-MEMBER-ATLAS")
         path_type = type(config_dir())
         folds = path_type("WORKSPACE-MEMBER-ATLAS") == path_type("workspace-member-atlas")
@@ -131,7 +131,7 @@ class TestProvision:
             return path
 
         monkeypatch.setattr("os.path.expanduser", expand)
-        cfg = _config(atlas=KiroCrewAgentConfig(workspace=AUTO_WORKSPACE))
+        cfg = _config(atlas=AjCrewAgentConfig(workspace=AUTO_WORKSPACE))
         cfg.workspaces["old"] = WorkspaceConfig(dir="~gone/project")
         assert provision_member_workspace(cfg, "atlas") == "member-atlas"
         doc = {"workspaces": {"old": {"dir": "~gone/project"}}}
@@ -140,7 +140,7 @@ class TestProvision:
 
     def test_a_stale_entry_with_an_embedded_nul_does_not_block_a_create(self):
         # resolve() raises ValueError on an embedded NUL; skipped like the above.
-        cfg = _config(atlas=KiroCrewAgentConfig(workspace=AUTO_WORKSPACE))
+        cfg = _config(atlas=AjCrewAgentConfig(workspace=AUTO_WORKSPACE))
         cfg.workspaces["old"] = WorkspaceConfig(dir="bad\x00dir")
         assert provision_member_workspace(cfg, "atlas") == "member-atlas"
         doc = {"workspaces": {"old": {"dir": "bad\x00dir"}}}
@@ -148,14 +148,14 @@ class TestProvision:
         assert "member-atlas" in doc["workspaces"]
 
     def test_retire_restores_the_snapshot(self):
-        cfg = _config(atlas=KiroCrewAgentConfig(workspace=AUTO_WORKSPACE))
+        cfg = _config(atlas=AjCrewAgentConfig(workspace=AUTO_WORKSPACE))
         name = provision_member_workspace(cfg, "atlas")
         retire_unpublished_workspace(cfg, "atlas", name, previous_workspace=AUTO_WORKSPACE)
         assert cfg.agents["atlas"].workspace == AUTO_WORKSPACE
         assert name not in cfg.workspaces
 
     def test_retire_of_nothing_is_a_no_op(self):
-        cfg = _config(atlas=KiroCrewAgentConfig(workspace="default"))
+        cfg = _config(atlas=AjCrewAgentConfig(workspace="default"))
         retire_unpublished_workspace(cfg, "atlas", "", previous_workspace="default")
         assert cfg.agents["atlas"].workspace == "default"
 
@@ -207,27 +207,27 @@ class TestPublish:
 
 class TestPersistTogether:
     def test_the_record_and_its_workspace_land_in_one_write(self):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.save()
-        cfg.agents["atlas"] = KiroCrewAgentConfig(kiro_agent="kirocrew", workspace=AUTO_WORKSPACE)
+        cfg.agents["atlas"] = AjCrewAgentConfig(kiro_agent="ajcrew", workspace=AUTO_WORKSPACE)
         provision_member_memory(cfg, "atlas")
         name = provision_member_workspace(cfg, "atlas")
         persist_member_config(cfg, "atlas", create=True, new_workspace=name)
-        loaded = KiroCrewConfig.load()
+        loaded = AjCrewConfig.load()
         assert loaded.agents["atlas"].workspace == "member-atlas"
         assert loaded.workspaces["member-atlas"].dir == "workspace-member-atlas"
         assert (config_dir() / "workspace-member-atlas").is_dir()
 
     def test_a_workspace_that_is_not_the_binding_is_refused(self):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["atlas"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg = AjCrewConfig.load()
+        cfg.agents["atlas"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         provision_member_memory(cfg, "atlas")
         with pytest.raises(UnknownMemoryStore):
             persist_member_config(cfg, "atlas", create=True, new_workspace="member-atlas")
 
     def test_an_update_never_allocates(self):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["atlas"] = KiroCrewAgentConfig(kiro_agent="kirocrew", workspace=AUTO_WORKSPACE)
+        cfg = AjCrewConfig.load()
+        cfg.agents["atlas"] = AjCrewAgentConfig(kiro_agent="ajcrew", workspace=AUTO_WORKSPACE)
         provision_member_memory(cfg, "atlas")
         name = provision_member_workspace(cfg, "atlas")
         persist_member_config(cfg, "atlas", create=True, new_workspace=name)
@@ -240,10 +240,10 @@ class TestPersistTogether:
 @pytest.fixture
 def owner_gateway(monkeypatch):
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request", lambda _: True
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request", lambda _: True
     )
     monkeypatch.setattr(handlers, "list_agents", lambda: [])
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.save()
     return cfg
 
@@ -251,14 +251,14 @@ def owner_gateway(monkeypatch):
 async def _create(monkeypatch, body: dict) -> web.Response:
     request = make_mocked_request("POST", "/api/agents", app=web.Application())
     monkeypatch.setattr(request, "json", AsyncMock(return_value=body))
-    return await handlers.api_kirocrew_agents_create(request)
+    return await handlers.api_ajcrew_agents_create(request)
 
 
 @pytest.mark.asyncio
 async def test_dashboard_create_gives_the_member_its_own_workspace(owner_gateway, monkeypatch):
-    response = await _create(monkeypatch, {"name": "atlas", "kiro_agent": "kirocrew"})
+    response = await _create(monkeypatch, {"name": "atlas", "kiro_agent": "ajcrew"})
     assert response.status == 200, response.text
-    loaded = await asyncio.to_thread(KiroCrewConfig.load)
+    loaded = await asyncio.to_thread(AjCrewConfig.load)
     assert loaded.agents["atlas"].workspace == "member-atlas"
     assert loaded.workspaces["member-atlas"].dir == "workspace-member-atlas"
     assert (config_dir() / "workspace-member-atlas").is_dir()
@@ -266,10 +266,10 @@ async def test_dashboard_create_gives_the_member_its_own_workspace(owner_gateway
 
 @pytest.mark.asyncio
 async def test_two_members_get_two_workspaces(owner_gateway, monkeypatch):
-    first = await _create(monkeypatch, {"name": "atlas", "kiro_agent": "kirocrew"})
-    second = await _create(monkeypatch, {"name": "beacon", "kiro_agent": "kirocrew"})
+    first = await _create(monkeypatch, {"name": "atlas", "kiro_agent": "ajcrew"})
+    second = await _create(monkeypatch, {"name": "beacon", "kiro_agent": "ajcrew"})
     assert first.status == 200 and second.status == 200
-    loaded = await asyncio.to_thread(KiroCrewConfig.load)
+    loaded = await asyncio.to_thread(AjCrewConfig.load)
     assert loaded.agents["atlas"].workspace != loaded.agents["beacon"].workspace
 
 
@@ -278,10 +278,10 @@ async def test_dashboard_create_can_share_a_declared_workspace(owner_gateway, mo
     owner_gateway.workspaces["shared"] = WorkspaceConfig(dir="workspace-shared")
     owner_gateway.save()
     response = await _create(
-        monkeypatch, {"name": "atlas", "kiro_agent": "kirocrew", "workspace": "shared"}
+        monkeypatch, {"name": "atlas", "kiro_agent": "ajcrew", "workspace": "shared"}
     )
     assert response.status == 200, response.text
-    loaded = await asyncio.to_thread(KiroCrewConfig.load)
+    loaded = await asyncio.to_thread(AjCrewConfig.load)
     assert loaded.agents["atlas"].workspace == "shared"
     assert set(loaded.workspaces) == {"shared"}
     assert not (config_dir() / "workspace-member-atlas").exists()
@@ -295,9 +295,9 @@ async def test_a_failed_create_leaves_no_workspace_entry(owner_gateway, monkeypa
         raise OSError("publication refused")
 
     monkeypatch.setattr(handlers, "persist_member_config", refuse)
-    response = await _create(monkeypatch, {"name": "atlas", "kiro_agent": "kirocrew"})
+    response = await _create(monkeypatch, {"name": "atlas", "kiro_agent": "ajcrew"})
     assert response.status == 409
-    loaded = await asyncio.to_thread(KiroCrewConfig.load)
+    loaded = await asyncio.to_thread(AjCrewConfig.load)
     assert "atlas" not in loaded.agents
     assert "member-atlas" not in loaded.workspaces
     assert all(not store.owner_member for store in loaded.memory_stores.values())
@@ -308,7 +308,7 @@ async def test_a_failed_create_leaves_no_workspace_entry(owner_gateway, monkeypa
 @pytest.mark.asyncio
 async def test_dashboard_create_refuses_a_non_string_workspace(owner_gateway, monkeypatch):
     response = await _create(
-        monkeypatch, {"name": "atlas", "kiro_agent": "kirocrew", "workspace": 7}
+        monkeypatch, {"name": "atlas", "kiro_agent": "ajcrew", "workspace": 7}
     )
     assert response.status == 400
     assert json.loads(response.text)["code"] == "invalid_workspace"

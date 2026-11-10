@@ -28,11 +28,11 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from windows_sim import replace_sharing_violation
 
-from kiro_crew import atomic_write as aw
-from kiro_crew import platform_compat
-from kiro_crew.dashboard import chat_handlers as ch
+from aj_crew import atomic_write as aw
+from aj_crew import platform_compat
+from aj_crew.dashboard import chat_handlers as ch
 
-MOD = "kiro_crew.dashboard.chat_handlers"
+MOD = "aj_crew.dashboard.chat_handlers"
 
 
 @pytest.fixture

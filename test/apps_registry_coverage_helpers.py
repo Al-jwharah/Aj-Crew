@@ -15,14 +15,14 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps import registry
-from kiro_crew.apps.manifest import AppManifest
+from aj_crew.apps import registry
+from aj_crew.apps.manifest import AppManifest
 
 #: The install's refusal for a root `data` the data directory cannot stand beside,
 #: as `manager.gateway_data_dir_obstruction` spells it -- the transaction must carry it
 #: unchanged, so it is pinned here as text.
 _DATA_IS_A_FILE = (
-    "`data` in the app tree is a file; Kiro Crew creates the app's data directory at "
+    "`data` in the app tree is a file; Aj Crew creates the app's data directory at "
     "that path and cannot install beside it."
 )
 
@@ -32,10 +32,10 @@ _DATA_IS_A_FILE = (
 
 
 @pytest.fixture(autouse=True)
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- the registry coverage modules' autouse admission, moved verbatim; tracked for a de-flake pass
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- the registry coverage modules' autouse admission, moved verbatim; tracked for a de-flake pass
 def _explicit_registry_execution_admission(monkeypatch):
     """These tests reach admitted registry code paths unless they say otherwise."""
-    monkeypatch.setattr("kiro_crew.apps.execution.third_party_execution_allowed", lambda: True)
+    monkeypatch.setattr("aj_crew.apps.execution.third_party_execution_allowed", lambda: True)
 
 
 @pytest.fixture(name="cache_dir")
@@ -61,7 +61,7 @@ def pip_importable_fixture(monkeypatch):
     """
     import site
 
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(site, "ENABLE_USER_SITE", False)
     monkeypatch.setattr(platform_compat, "is_bundled_interpreter", lambda: False)
@@ -90,7 +90,7 @@ def bundled_interpreter_fixture(monkeypatch, tmp_path):
     exists here and each case using it isolates the condition it is about. The
     case about a MISSING entry removes it explicitly.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "is_bundled_interpreter", lambda: True)
     (tmp_path / "server.py").write_text("", encoding="utf-8")
@@ -122,7 +122,7 @@ class _FakeProc:
         output: bytes = b"",
     ) -> None:
         self.returncode = returncode
-        # nosemgrep: kirocrew.mock-pid-allocatable -- pre-existing literal pid on the fake process, moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.mock-pid-allocatable -- pre-existing literal pid on the fake process, moved verbatim; tracked for a de-flake pass
         self.pid = 31337
         self.kill_calls = 0
         self.wait_calls = 0
@@ -177,8 +177,8 @@ def _reg(name: str, repo: str, branch: str = "main") -> SimpleNamespace:
 
 
 def _config_with(monkeypatch, registries: list[SimpleNamespace]) -> None:
-    """Make every ``KiroCrewConfig.load()`` in this module see *registries*."""
+    """Make every ``AjCrewConfig.load()`` in this module see *registries*."""
     monkeypatch.setattr(
-        "kiro_crew.config.loader.KiroCrewConfig.load",
+        "aj_crew.config.loader.AjCrewConfig.load",
         classmethod(lambda cls: SimpleNamespace(registries=registries)),
     )

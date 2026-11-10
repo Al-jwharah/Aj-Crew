@@ -34,10 +34,10 @@ const row = (name, selection_kind, source, description, extra = {}) => ({
   model: '', reasoning_effort: '', triggers: '', session_color: '', avatar: {}, ...extra,
 })
 const CATALOG = [
-  row('default', 'member', 'kirocrew', 'The stock crew agent'),
-  row('reviewer', 'member', 'kirocrew', 'My reviewer, with its own memory'),
-  row('radar', 'member', 'kirocrew', 'Watches the issue queue'),
-  row('kirocrew', 'template', 'builtin', 'The stock crew agent template'),
+  row('default', 'member', 'ajcrew', 'The stock crew agent'),
+  row('reviewer', 'member', 'ajcrew', 'My reviewer, with its own memory'),
+  row('radar', 'member', 'ajcrew', 'Watches the issue queue'),
+  row('ajcrew', 'template', 'builtin', 'The stock crew agent template'),
   row('reviewer', 'template', 'package', 'Shared reviewer template'),
   row('gpu-autosde-analyzer', 'template', 'package', 'Analyzer subagent for gpu-autosde: reads assigned chunk file diffs from disk and generates review comments'),
   row('oncall-triage', 'template', 'package', 'Triage pager alerts against the runbook'),
@@ -68,7 +68,7 @@ async function openPicker(theme) {
   // (dark) in both runs. The locale and slot seeds ride the stub's own init
   // script too, after its storage clear.
   await stubDashboardApi(page, {
-    slots: [{ key: SLOT, messages: 0, running: false, agent: 'kirocrew', mode: '' }],
+    slots: [{ key: SLOT, messages: 0, running: false, agent: 'ajcrew', mode: '' }],
     theme,
     localStorageEntries: { 'mc-active-slot': SLOT, 'mc-lang': 'en' },
     extra,

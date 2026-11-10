@@ -20,15 +20,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
     METHOD_CANCEL,
     METHOD_SESSION_UPDATE,
     JsonRpcMessage,
 )
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS, await_until, finished
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS, await_until, finished
 
 
 class _Backend:
@@ -198,7 +198,7 @@ async def test_a_turn_cut_mid_tool_names_the_open_call_and_the_session(caplog):
                     await asyncio.Event().wait()
 
     consumer = asyncio.ensure_future(_consume_until_cut())
-    with caplog.at_level("WARNING", logger="kiro_crew.acp.session_handle"):
+    with caplog.at_level("WARNING", logger="aj_crew.acp.session_handle"):
         await await_until(tool_seen, what="the tool call reaching the consumer")
         consumer.cancel()
         with pytest.raises(asyncio.CancelledError):

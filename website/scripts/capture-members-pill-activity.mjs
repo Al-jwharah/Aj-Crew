@@ -26,8 +26,8 @@
  * turn never reaches is reported, not faked.
  *
  * Usage:
- *   kirocrew pod up <worktree> --json | tail -1 > "$KIROCREW_SCRATCH/pod-info.json"
- *   POD_INFO="$KIROCREW_SCRATCH/pod-info.json" \
+ *   ajcrew pod up <worktree> --json | tail -1 > "$AJCREW_SCRATCH/pod-info.json"
+ *   POD_INFO="$AJCREW_SCRATCH/pod-info.json" \
  *     node scripts/capture-members-pill-activity.mjs ../temp-screenshots/members-pill-activity
  */
 import { chromium } from 'playwright'

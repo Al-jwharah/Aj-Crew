@@ -132,7 +132,7 @@ export const LOCATIONS = {
     kind: 'button',
     label: { from: 'description', attr: 'aria-label', key: 'uiLocations.description.chat_model_picker' },
     // What a guide's panel calls it: the chip shows the model's own name.
-    aliasKeys: ['pages.kiroCrewAgentsPage.model'],
+    aliasKeys: ['pages.ajCrewAgentsPage.model'],
     terms: {
       en: [
         'change the model for this chat', 'change the model', 'switch the model', 'change model', 'switch model',

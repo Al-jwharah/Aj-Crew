@@ -29,12 +29,12 @@ superseded-by: []
 
 ## Summary
 
-Any crewmate can answer "where is X?" and "how do I do Y?" about Kiro Crew by
+Any crewmate can answer "where is X?" and "how do I do Y?" about Aj Crew by
 pointing at the real control on the user's screen, and can prepare a change as
 a card that applies only when the user presses it. Both come from one MCP
-server, `kirocrew-guide`, that only reads or offers.
+server, `ajcrew-guide`, that only reads or offers.
 
-On top of that, Kiro Crew creates one ordinary crewmate, Mate, so a person who
+On top of that, Aj Crew creates one ordinary crewmate, Mate, so a person who
 opens the Crewmates page meets a crewmate that speaks first, explains what
 crewmates are, and asks to be named.
 
@@ -53,19 +53,19 @@ before they know what one is for. Nothing on the page speaks first.
 
 ### Part 1: platform guides and change cards
 
-**One server.** A managed MCP server, `kirocrew-guide`, carries `find_ui`,
+**One server.** A managed MCP server, `ajcrew-guide`, carries `find_ui`,
 `search_docs`, `find_setting`, `get_member_capabilities`, `diagnose_settings`,
 the `guide_*` tools, `list_change_kinds`, `propose_change` and
 `get_change_status`.
 
-**Who mounts it.** The `kirocrew` template, every crewmate built from it, and
+**Who mounts it.** The `ajcrew` template, every crewmate built from it, and
 worker and dashboard sessions mount it by default. Conductors and background
 templates do not. Its tools are granted by exact name through the
 `allowedTools` ceiling. A governance ceiling wins over the grant. A tool added
 to the server later is not pre-approved.
 
 **Why its own server.** It is the unit of authorization and governance, and it
-answers only dashboard turns. Folding it into `kirocrew-core` would grant it
+answers only dashboard turns. Folding it into `ajcrew-core` would grant it
 wherever core is mounted and would mix a dashboard-only surface into a server
 every session carries.
 
@@ -98,9 +98,9 @@ assistant.
 
 ### Part 2: Mate, a first crewmate
 
-**Created once.** On startup Kiro Crew creates one ordinary crewmate, Mate (key
+**Created once.** On startup Aj Crew creates one ordinary crewmate, Mate (key
 `mate`), once, on fresh and existing installs alike. It is built from the
-ordinary `kirocrew` template and has its own private memory. The user can
+ordinary `ajcrew` template and has its own private memory. The user can
 rename it and delete it. A deleted Mate is never re-created. Mate replaces the
 "No crewmates yet" first state.
 
@@ -114,11 +114,11 @@ main's ordinary landing.
 
 **The first welcome.** Mate's first turn is a hidden kickoff. The model writes
 the welcome from principles, not from a fixed text. It says who it is, what a
-crewmate is compared with a session, and that it can help set up Kiro Crew, fix
+crewmate is compared with a session, and that it can help set up Aj Crew, fix
 problems in it, or show the user around. It asks what the user wants to call
 it, never the user's own name. This changes rfc-crewmate-greeting §6 for Mate's
 first welcome only. Other crewmates keep one greeting mechanism per create path.
-(Amended 2026-10-29: the welcome no longer offers to set up Kiro Crew, fix
+(Amended 2026-10-29: the welcome no longer offers to set up Aj Crew, fix
 problems in it or show the user around. It asks for its name first, explains
 what a mate is and tours its Profile, Schedules and Goals tabs. The owner,
 Zezhen Xu, decided this on
@@ -126,7 +126,7 @@ Zezhen Xu, decided this on
 see [the decision entry](../decisions/2026-10-29-the-first-mate-welcome-introduces-mates-and-tours-their-tabs.md).)
 
 **Renaming itself.** When the user answers, Mate renames itself through
-`rename_self` on `kirocrew-guide`. The tool renames only the caller's own
+`rename_self` on `ajcrew-guide`. The tool renames only the caller's own
 crewmate thread, answers only a dashboard turn the user sent, validates the
 name, and never renames the default crew. The chat header and the roster
 update live.
@@ -157,10 +157,10 @@ holds a message. The search still reaches it.
 
 Checked at `4f9c5697b9`:
 
-- No guide server exists. `_MANAGED_MCP_SERVERS` in `src/kiro_crew/agent.py`
-  holds `kirocrew-cron`, `kirocrew-core`, `kirocrew-computer`,
-  `kirocrew-dashboard`, `kirocrew-work`, `kirocrew-debug` and `kirocrew-panel`.
-  `kirocrew-guide`, `mcp_guide`, `not_user_turn`, `_turn_user_sent`,
+- No guide server exists. `_MANAGED_MCP_SERVERS` in `src/aj_crew/agent.py`
+  holds `ajcrew-cron`, `ajcrew-core`, `ajcrew-computer`,
+  `ajcrew-dashboard`, `ajcrew-work`, `ajcrew-debug` and `ajcrew-panel`.
+  `ajcrew-guide`, `mcp_guide`, `not_user_turn`, `_turn_user_sent`,
   `rename_self` and `rename_member_display` have no hits under `src/` or
   `website/src/`.
 - The ceiling the grants go through exists: `build_agent_config` ends with
@@ -180,7 +180,7 @@ Checked at `4f9c5697b9`:
   with `last_chat_ts > 0` or a star, and keeps the older-gateway rule, which
   always lists the default crew, for a row without `last_chat_ts`.
   `crew_recency.record_user_chat` writes that record.
-- The default crew cannot be deleted: `api_kirocrew_agent_delete` in
+- The default crew cannot be deleted: `api_ajcrew_agent_delete` in
   `dashboard/agent_admin/crew_removal.py` refuses `cfg.default_agent`, and the
   CLI delete refuses it too. `validate_member_name` in `members.py` is the
   name gate.
@@ -196,7 +196,7 @@ Checked at `4f9c5697b9`:
 - **Turning `default` into Mate.** Rejected: `default` receives every chat with
   no crew picked and uses Global memory. A crewmate the user names and shapes
   needs its own memory and must be deletable.
-- **Putting the guide tools in `kirocrew-core`.** Rejected: core is mounted far
+- **Putting the guide tools in `ajcrew-core`.** Rejected: core is mounted far
   more widely than the guide is allowed to reach, and the server is the unit
   a governance ceiling grants or withholds.
 - **Letting the model drive the page or apply changes.** Rejected: every click
@@ -207,7 +207,7 @@ Checked at `4f9c5697b9`:
 Two stacked pull requests, Part 1 first:
 
 1. [#18301](https://github.com/kirodotdev/KiroCrew/pull/18301): the
-   `kirocrew-guide` server, its default mount and grants, the guide layer, the
+   `ajcrew-guide` server, its default mount and grants, the guide layer, the
    change cards and the user-turn admission.
 2. [#18317](https://github.com/kirodotdev/KiroCrew/pull/18317), on top of #18301:
    Mate, its hidden first welcome, `rename_self`, the landing rule and the

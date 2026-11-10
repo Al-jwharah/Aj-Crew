@@ -21,9 +21,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.messaging.link import canonical_key
-from kiro_crew.messaging.queue_drain import entry_owner
-from kiro_crew.slack import events as slack_events
+from aj_crew.messaging.link import canonical_key
+from aj_crew.messaging.queue_drain import entry_owner
+from aj_crew.slack import events as slack_events
 
 # ── Slack's inlined !stop ───────────────────────────────────────────────────
 
@@ -44,7 +44,7 @@ def slack_home(tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch) -> Itera
     held dispatch cancelled at loop teardown chains one more drain onto a closing loop,
     and a later test that gathers ``_bg_tasks`` would otherwise await it on its own.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / ".kiro" / "crew"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / ".kiro" / "crew"))
     monkeypatch.setenv("KIRO_HOME", str(tmp_path / ".kiro"))
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
@@ -61,19 +61,19 @@ def _slack_orch() -> Any:
     """
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.config.loader import (
+    from aj_crew.config.loader import (
         ACTIVATION_ALWAYS,
         ChannelConfig,
-        KiroCrewConfig,
+        AjCrewConfig,
         MessagingConfig,
     )
 
     orch = MagicMock()
-    orch._cfg = KiroCrewConfig(
+    orch._cfg = AjCrewConfig(
         slack_channels={"C1": ChannelConfig(activation=ACTIVATION_ALWAYS)},
         messaging=MessagingConfig(),
     )
-    orch.slack_command = "kirocrew"
+    orch.slack_command = "ajcrew"
     orch._owner_id = "U_ALICE"
     orch._allowed_users = {"U_ALICE", "U_BOB"}
     orch._tracking_channels = set()
@@ -140,9 +140,9 @@ def _pending_entry(user: str, ts: str, temp: pathlib.Path) -> tuple[str, str, di
 async def _route(orch: Any, event: dict) -> None:
     from unittest.mock import MagicMock, patch
 
-    with patch("kiro_crew.slack.events.sel", return_value=MagicMock()):
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.is_owner", return_value=False):
+    with patch("aj_crew.slack.events.sel", return_value=MagicMock()):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.is_owner", return_value=False):
                 await slack_events._route_message(orch, event, slack_events.SeenCache())
 
 
@@ -286,7 +286,7 @@ def _stop_by_bob(
     async def run() -> None:
         if registered:
             orch._session_tasks = {_THREAD: _NeverDone()}
-        with patch("kiro_crew.slack.events._dispatch_queued", new=dispatches):
+        with patch("aj_crew.slack.events._dispatch_queued", new=dispatches):
             await _route(orch, _slack_event("U_BOB", "!stop", "103.0"))
             # flake-ok: pre-existing fixed-yield barrier, moved verbatim; tracked for a de-flake pass
             await _settle()
@@ -344,7 +344,7 @@ class TestSlacksStopIsTheCallersToo:
 
         async def run() -> None:
             orch._session_tasks = {_THREAD: _NeverDone()}
-            with patch("kiro_crew.slack.events._dispatch_queued", new=dispatches):
+            with patch("aj_crew.slack.events._dispatch_queued", new=dispatches):
                 await _route(orch, _slack_event("U_BOB", "!stop", "103.0"))
                 # flake-ok: pre-existing fixed-yield barrier, moved verbatim; tracked for a de-flake pass
                 await _settle()
@@ -450,8 +450,8 @@ class TestThePreservedEntryDrainsOnlyOnceTheStopIsDone:
                 await turn_may_end.wait()
 
             with (
-                patch("kiro_crew.slack.events.handle_message", new=_turn),
-                patch("kiro_crew.slack.events._dispatch_queued", new=dispatches),
+                patch("aj_crew.slack.events.handle_message", new=_turn),
+                patch("aj_crew.slack.events._dispatch_queued", new=dispatches),
             ):
                 await _route(orch, _slack_event("U_ALICE", "first", "100.5"))
                 turn = orch._session_tasks[_THREAD]
@@ -497,7 +497,7 @@ class TestThePreservedEntryDrainsOnlyOnceTheStopIsDone:
 
         async def run() -> None:
             orch._session_tasks = {_THREAD: _NeverDone()}
-            with patch("kiro_crew.slack.events._dispatch_queued", new=dispatches):
+            with patch("aj_crew.slack.events._dispatch_queued", new=dispatches):
                 inner: list[bool] = []
 
                 async def _second_stop_inside_the_first() -> None:
@@ -593,7 +593,7 @@ class TestThePreservedEntryDrainsOnlyOnceTheStopIsDone:
                     await dave_may_finish.wait()
 
             sessions.during_stop = _during
-            with patch("kiro_crew.slack.events._dispatch_queued", new=_dispatch):
+            with patch("aj_crew.slack.events._dispatch_queued", new=_dispatch):
                 await _route(orch, _slack_event("U_BOB", "!stop", "105.0"))
                 # flake-ok: pre-existing fixed-yield barrier, moved verbatim; tracked for a de-flake pass
                 await _settle()
@@ -659,7 +659,7 @@ class TestThePreservedEntryDrainsOnlyOnceTheStopIsDone:
                     await alice_may_finish.wait()
 
             sessions.during_stop = _during
-            with patch("kiro_crew.slack.events._dispatch_queued", new=_dispatch):
+            with patch("aj_crew.slack.events._dispatch_queued", new=_dispatch):
                 await _route(orch, _slack_event("U_BOB", "!stop", "105.0"))
                 # flake-ok: pre-existing fixed-yield barrier, moved verbatim; tracked for a de-flake pass
                 await _settle()
@@ -697,7 +697,7 @@ class TestThePreservedEntryDrainsOnlyOnceTheStopIsDone:
                 await _route(orch, _slack_event("U_BOB", "!stop", "103.0"))
             assert not slack_events._key_busy(orch, _THREAD)
             sessions.queue.append(_pending_entry("U_ALICE", "104.0", slack_home / "a.png"))
-            with patch("kiro_crew.slack.events._dispatch_queued", new=dispatches):
+            with patch("aj_crew.slack.events._dispatch_queued", new=dispatches):
                 await slack_events._drain_slack_queue(orch, _THREAD)
                 # flake-ok: pre-existing fixed-yield barrier, moved verbatim; tracked for a de-flake pass
                 await _settle()
@@ -717,7 +717,7 @@ def _real_manager_with_two_members_queued() -> tuple[Any, Any]:
     """
     from unittest.mock import MagicMock
 
-    from kiro_crew.session import SessionManager, _Session
+    from aj_crew.session import SessionManager, _Session
 
     mgr = SessionManager.__new__(SessionManager)
     mgr._sessions = {}
@@ -750,8 +750,8 @@ def _press(handler: str, mgr: Any) -> tuple[list[str], list[int]]:
     """
     from unittest.mock import MagicMock, patch
 
-    from kiro_crew.slack import handler as slack_handler
-    from kiro_crew.slack import interactions
+    from aj_crew.slack import handler as slack_handler
+    from aj_crew.slack import interactions
 
     orch = MagicMock()
     orch.sessions = mgr

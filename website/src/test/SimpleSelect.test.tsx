@@ -4,7 +4,7 @@ import SimpleSelect from '../components/SimpleSelect'
 
 /**
  * SimpleSelect — the shared Radix Select wrapper that replaced StyledSelect
- * (PublishHub, ArtifactDeployPage, KiroCrewAgentsPage) and backs SettingsSelect.
+ * (PublishHub, ArtifactDeployPage, AjCrewAgentsPage) and backs SettingsSelect.
  * Runs against REAL @radix-ui/react-select: Radix Select opens on click in
  * jsdom (unlike DropdownMenu), so no mock is needed here.
  */

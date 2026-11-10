@@ -13,7 +13,7 @@ import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SKILL_DIR = REPO_ROOT / "src" / "kiro_crew" / "builtin_skills" / "security-conductor"
+SKILL_DIR = REPO_ROOT / "src" / "aj_crew" / "builtin_skills" / "security-conductor"
 CORPUS = SKILL_DIR / "golden-paths.json"
 VERIFY_FIX = SKILL_DIR / "scripts" / "verify_fix.py"
 

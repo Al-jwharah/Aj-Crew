@@ -28,7 +28,7 @@ from typing import Final
 
 import pytest
 
-from kiro_crew import memory_record_metadata, memory_schema, vector_memory
+from aj_crew import memory_record_metadata, memory_schema, vector_memory
 
 # ── The relation scanner ─────────────────────────────────────────────────────
 
@@ -285,13 +285,13 @@ class TestLineageDrift:
     def _module_trees() -> dict[str, ast.Module]:
         """``vector_memory.py`` and every owner module it binds or delegates to, each
         parsed on its own: the owners beside it and the ``vector_memory_runtime`` modules."""
-        import kiro_crew
+        import aj_crew
 
-        root = Path(kiro_crew.__file__).resolve().parent
+        root = Path(aj_crew.__file__).resolve().parent
         facade = root / "vector_memory.py"
         paths = [facade]
         for node in ast.parse(facade.read_text(encoding="utf-8")).body:
-            if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew":
+            if isinstance(node, ast.ImportFrom) and node.module == "aj_crew":
                 paths += [
                     root / f"{a.name}.py" for a in node.names if a.name.startswith("vector_memory_")
                 ]
@@ -370,9 +370,9 @@ class TestLineageDrift:
         Verified in both directions on a seeded sample, so the detector cannot go
         vacuous: a guarded write passes and an unguarded one is reported.
         """
-        import kiro_crew
+        import aj_crew
 
-        root = Path(kiro_crew.__file__).resolve().parent
+        root = Path(aj_crew.__file__).resolve().parent
         for label in self._module_trees():
             source = (root / label).read_text(encoding="utf-8")
             assert _unguarded_write_violations(source, label) == []

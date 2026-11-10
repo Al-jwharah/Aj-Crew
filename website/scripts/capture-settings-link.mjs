@@ -24,9 +24,9 @@ const STATUS = {
   lessons: 0, subagents: 0, no_crons: false, branch: '', commit: '',
   release_channel: 'stable', version: '0.4.0', version_display: '0.4.0',
   update_available: false, update_can_apply: false,
-  update_check_status: 'succeeded', update_command: 'kirocrew update',
+  update_check_status: 'succeeded', update_command: 'ajcrew update',
   update_latest_version: '0.4.0', update_channel: 'stable',
-  update_managed_by: 'kirocrew', update_commits_ahead: 0,
+  update_managed_by: 'ajcrew', update_commits_ahead: 0,
   update_commits_behind: 0, update_can_arm: false,
 }
 
@@ -54,8 +54,8 @@ await p.route('**/*', route => {
   if (u.pathname === '/api/status') return json(STATUS)
   if (u.pathname.startsWith('/api/update/check')) return json({
     check_status: 'succeeded', update_available: false, error_code: null,
-    latest_version: '0.4.0', channel: 'stable', managed_by: 'kirocrew',
-    can_apply: false, update_command: 'kirocrew update', current_version: '0.4.0',
+    latest_version: '0.4.0', channel: 'stable', managed_by: 'ajcrew',
+    can_apply: false, update_command: 'ajcrew update', current_version: '0.4.0',
     commits_ahead: 0, commits_behind: 0,
   })
   if (u.pathname.startsWith('/api/changelog')) return json({ content: CHANGELOG })

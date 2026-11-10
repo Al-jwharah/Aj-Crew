@@ -14,7 +14,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.deploy import engine
+from aj_crew.deploy import engine
 
 
 def _capture_run_limited(monkeypatch: pytest.MonkeyPatch) -> dict[str, object]:

@@ -19,11 +19,11 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state, drain_background_tasks
 
-from kiro_crew.context import ContextBuilder
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.memory import MemoryStore
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-from kiro_crew.skills import SkillsLoader
+from aj_crew.context import ContextBuilder
+from aj_crew.dashboard import chat_runner
+from aj_crew.memory import MemoryStore
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.skills import SkillsLoader
 
 SLOT_NAME = "mid-turn-project"
 
@@ -138,7 +138,7 @@ def test_explicit_project_overrides_the_live_slot_project(tmp_path):
 def test_dollar_skills_resolve_against_the_explicit_project(tmp_path, monkeypatch):
     slot = MagicMock()
     slot.project = str(tmp_path / "live")
-    slot.agent = "kirocrew"
+    slot.agent = "ajcrew"
     slot.key = SLOT_NAME
     seen: dict = {}
 

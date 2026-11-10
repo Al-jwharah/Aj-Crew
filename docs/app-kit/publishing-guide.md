@@ -2,7 +2,7 @@
 
 The full path an app takes: develop, test locally, list it in a registry, users
 install it. An "app" is a package that contributes agents, skills, SOPs, MCP
-servers, cron jobs, backend routes, or dashboard UI pages to Kiro Crew.
+servers, cron jobs, backend routes, or dashboard UI pages to Aj Crew.
 
 This guide covers the publish-facing surface (store listing, assets, registry
 entry, review). The complete field reference is
@@ -14,7 +14,7 @@ entry, review). The complete field reference is
 Scaffold a skeleton, then edit it:
 
 ```bash
-kirocrew app init my-app --ui --backend --cron
+ajcrew app init my-app --ui --backend --cron
 ```
 
 `app.json` at the app root is the single source of truth for identity,
@@ -63,12 +63,12 @@ own repo.
 The App Store fetches each listed app's `app.json` with `git archive` and caches
 it for 24 hours (an external registry's index is cached for 1 hour). Image paths
 inside the manifest are rewritten to blob-proxy URLs, so nothing has to be
-mirrored into the Kiro Crew repo. Push a new version and the store picks it up on
+mirrored into the Aj Crew repo. Push a new version and the store picks it up on
 the next refresh.
 
 ### Bumping a version reaches your users
 
-Once the store sees a version newer than the one installed, Kiro Crew tells the
+Once the store sees a version newer than the one installed, Aj Crew tells the
 user itself: a bell notification naming your app and the new version, once per
 version, plus the pending-updates count on Discover. Your app can also read the
 same answer and show its own banner through `useAppInfo().update` (see
@@ -196,7 +196,7 @@ Execution model:
   response's `warnings` and logged. A misbehaving app must always be
   disableable; orphaned processes beyond what the backend stop handles are the
   app's own responsibility.
-- Installing from a **local path** (`POST /api/apps/install`, `kirocrew app
+- Installing from a **local path** (`POST /api/apps/install`, `ajcrew app
   install <dir>`) copies and registers the app but does not run `onInstall`. Do
   any build step yourself while iterating locally.
 - An update of an enabled app re-runs `onEnable` once the new version is in
@@ -210,7 +210,7 @@ Execution model:
   or in an idempotent `onInstall` for a build step, since a registry update
   re-runs it.
 
-Only declare `onUninstall` for state Kiro Crew cannot see: app binaries outside
+Only declare `onUninstall` for state Aj Crew cannot see: app binaries outside
 the data home, shell aliases, launchd plists. For `resources: "gateway"` apps the
 gateway already deregisters agents, skills, MCP entries, and cron jobs, so do not
 duplicate that. For `resources: "app"` apps the gateway deregisters nothing and
@@ -234,7 +234,7 @@ your script owns all of it.
 
 | Field | Description |
 |-------|-------------|
-| `managedBy` | Default resolution strategy. `"gateway"` resolves each entry through the edition's `CapabilityManager` seam; `"app"` means Kiro Crew only checks existence. A per-entry object (`{"id": ..., "managedBy": ...}`) overrides it. |
+| `managedBy` | Default resolution strategy. `"gateway"` resolves each entry through the edition's `CapabilityManager` seam; `"app"` means Aj Crew only checks existence. A per-entry object (`{"id": ..., "managedBy": ...}`) overrides it. |
 | `capabilities.mcp` / `capabilities.skills` | Capability packages the app needs but does not provide. |
 | `capabilities.agents` | Declarable, but no edition has an install operation for it, so it is always reported unresolved. Declare `managedBy: "app"` or install it out of band. |
 | `commands` | REQUIRED host executables, probed with `which`. A miss is reported in `missing` and warned about; it does not block the install. |
@@ -247,7 +247,7 @@ stock install.
 
 `dependencies.capabilities.mcp` is not `mcpServers`. `mcpServers` are servers
 your app itself provides and runs, and the gateway registers them into
-Kiro Crew's own agent config. `capabilities.mcp` are external servers your app
+Aj Crew's own agent config. `capabilities.mcp` are external servers your app
 merely consumes.
 
 Resolved dependencies are recorded in a reference-counting ledger at
@@ -266,7 +266,7 @@ named entries.
     "os": ["macos"],
     "installMode": "client",
     "clientInstall": {
-      "shell": "git clone https://github.com/you/MyApp.git ~/MyApp && cd ~/MyApp && KIROCREW_HOST={{gateway_host}} bash setup.sh",
+      "shell": "git clone https://github.com/you/MyApp.git ~/MyApp && cd ~/MyApp && AJCREW_HOST={{gateway_host}} bash setup.sh",
       "postInstall": "open ~/Applications/MyApp.app"
     },
     "requiresDesktopApp": false
@@ -278,7 +278,7 @@ named entries.
 |-------|---------|-------------|
 | `os` | `["macos", "linux"]` | Platforms the app can run on: `macos`, `linux`, `windows`. This constrains the machine the GATEWAY runs on. |
 | `arch` | any | Architecture restriction; empty means any. |
-| `installMode` | `"server"` | `"server"`: Kiro Crew clones and installs. `"client"`: the app must be installed on the user's own machine. |
+| `installMode` | `"server"` | `"server"`: Aj Crew clones and installs. `"client"`: the app must be installed on the user's own machine. |
 | `clientInstall.shell` | | One-liner the user runs in their local terminal. `{{gateway_url}}` and `{{gateway_host}}` are substituted with the dashboard origin and the gateway hostname. |
 | `clientInstall.postInstall` | | Follow-up command shown as a hint (for example, launching the app). |
 | `requiresDesktopApp` | `false` | The app's UI needs the Electron shell (native always-on-top windows, global shortcuts, tray). A UX gate only: the browser marker is client-side and spoofable, so nothing security-relevant may depend on it. |
@@ -302,8 +302,8 @@ unreachable on exactly the hosts that need it to explain how to get the desktop 
 # Build the UI bundle if the app has one
 cd my-app/ui && npm install && npm run build && cd ..
 
-kirocrew app install /absolute/path/to/my-app
-kirocrew app enable my-app
+ajcrew app install /absolute/path/to/my-app
+ajcrew app enable my-app
 ```
 
 `enable` refuses an app that is not built in until it is trusted. Enabling it
@@ -319,20 +319,20 @@ The dashboard's Sources menu on the Apps page can install from a local path too.
 
 Verify:
 
-1. Open the dashboard (`kirocrew token`, then the printed URL).
+1. Open the dashboard (`ajcrew token`, then the printed URL).
 2. Library tab: the app is listed with the right badges.
 3. If it ships UI, open its sidebar entry and confirm the page loads.
 4. If it ships agents, ask one to do something from chat.
 5. If it ships crons, confirm they appear on the Schedule page.
 
-Debug the installed record with `kirocrew app info my-app`; the install command
+Debug the installed record with `ajcrew app info my-app`; the install command
 reports manifest validation errors directly and names the offending field.
 
 To iterate, rebuild the UI and use the installed app's **Update** action in the
 authenticated App Store UI. The update REST route is available to authenticated
 clients, but not to a bare `curl` request.
 
-For a tighter loop, turn on dev mode (`kirocrew app dev my-app`, or `POST
+For a tighter loop, turn on dev mode (`ajcrew app dev my-app`, or `POST
 /api/apps/my-app/dev`): UI files are then served with `Cache-Control: no-store`
 and a gateway-side watcher broadcasts a reload event when anything under `ui/`
 changes. Agent and skill edits take effect on the next agent invocation with no
@@ -350,7 +350,7 @@ safeguards:
   rewritten to relative form so the installed copy does not depend on your
   source directory.
 - **Build-input and VCS directories are excluded** at any depth: `node_modules`,
-  `.git`, `__pycache__`, `.venv`, and the gateway's own `.kirocrew-deps`
+  `.git`, `__pycache__`, `.venv`, and the gateway's own `.ajcrew-deps`
   provisioning output (plus its transient staging/prior siblings). Serve your
   UI from a committed `ui/dist/` bundle; nothing needed at runtime may live
   under those names.
@@ -359,7 +359,7 @@ safeguards:
 
 ### Third-party executable code is off by default
 
-Code shipped inside the Kiro Crew package (a built-in app) is exempt, but every
+Code shipped inside the Aj Crew package (a built-in app) is exempt, but every
 other app's **executable** surfaces refuse to run unless the operator turns
 third-party execution on in Settings → Security → Third-party apps ("Trust every
 third-party app"), which sets
@@ -400,7 +400,7 @@ MyAppRepo/
 ## 10. Add a registry entry
 
 **Where your app's code lives.** Every app reaches people through a registry,
-never by being added to the Kiro Crew package: Kiro Crew accepts no new built-in
+never by being added to the Aj Crew package: Aj Crew accepts no new built-in
 app. Every app, first-party included, lives in a dedicated GitHub repository
 listed in the official registry
 ([kirodotdev/KiroCrewApps](https://github.com/kirodotdev/KiroCrewApps)), and the
@@ -408,7 +408,7 @@ official catalog row below is what lists it; the catalog repository holds listin
 data, never app code. The built-in apps that still ship inside the package are
 being moved out the same way, so do not copy one of them as a pattern for where a
 new app goes
-([decision](../decisions/2026-11-01-kiro-crew-accepts-no-new-built-in-apps.md)).
+([decision](../decisions/2026-11-01-aj-crew-accepts-no-new-built-in-apps.md)).
 
 There are two listing surfaces, and they take different paths:
 
@@ -419,7 +419,7 @@ public to read and not publicly writable: you can read
 `catalog/official-registry.json` to see the authored shape your entry will take,
 but outside authors do not open the listing pull request themselves — there is no
 self-serve PR path for third-party apps. A published entry is what
-makes your app appear in the store *and installable*, with **no Kiro Crew
+makes your app appear in the store *and installable*, with **no Aj Crew
 release involved**: a maintainer authors a `git` source (URL + a branch or tag;
 the publish pipeline resolves and pins the exact commit) plus a category against
 the authored schema, and the pipeline emits the published document that clients
@@ -430,7 +430,7 @@ exactly and read update availability from the published entry's `version` field,
 so republishing a revised entry is also how an update reaches users.
 
 To request a listing, open an **App Store listing request** issue using the
-[listing request template](https://github.com/kirodotdev/KiroCrew/issues/new?template=app-store-listing.yml).
+[listing request template](https://github.com/Al-jwharah/Aj-Crew/issues/new?template=app-store-listing.yml).
 Provide the git source, the ref to pin, the display name, a summary, the
 category/tags, and author credit, and confirm the section 14 review checklist.
 A maintainer picks it up and authors the catalog entry with full author credit.
@@ -438,10 +438,10 @@ A maintainer picks it up and authors the catalog entry with full author credit.
 alternative, but it is a maintainer-only org-visibility decision, not something
 an author can do.)
 
-**The bundled seed** (`src/kiro_crew/apps/app-registry.json` in the Kiro Crew
+**The bundled seed** (`src/aj_crew/apps/app-registry.json` in the Aj Crew
 repo) is the catalog's offline snapshot, not the listing surface: it is what a
 client falls back to when the catalog host is unreachable. Entries here ride the
-Kiro Crew release train: a seed change follows the normal contribution flow and
+Aj Crew release train: a seed change follows the normal contribution flow and
 ships with the next release. A catalog row for the same repository supersedes the
 seed row, so the seed needs touching only when offline availability matters.
 
@@ -471,7 +471,7 @@ The seed (and any federated registry index) uses this row shape:
 
 ## 11. Federated external registries
 
-A team can host its own registry without Kiro Crew review per app. Users opt in by
+A team can host its own registry without Aj Crew review per app. Users opt in by
 adding it to their config:
 
 ```json
@@ -486,7 +486,7 @@ The index is read as `app-registry.json` at the repo root, falling back to
 discovering `apps/*/app.json` when no index file exists. Repo and branch values
 are validated against strict patterns, and unsafe `subdirectory` values are
 dropped from the index. Manage registries with `GET`/`PUT /api/apps/registries`
-(the PUT blocks adding the Kiro Crew repo itself) and `POST
+(the PUT blocks adding the Aj Crew repo itself) and `POST
 /api/apps/registries/refresh`.
 
 **Trust model:** the user explicitly opts in by adding the registry, and the repo
@@ -501,7 +501,7 @@ trusted forge and have the gateway read it with ambient credentials.
 Such a clone also reads no ssh config, so an app repo on a host you reach only
 through `~/.ssh/config` (a `ProxyCommand`, `ProxyJump` or `Host` alias) cannot be
 cloned that way, and the install fails with `git_clone_failed_strict_ssh_route`.
-Clone the repo from your own shell and run `kirocrew app install <dir>`, or use
+Clone the repo from your own shell and run `ajcrew app install <dir>`, or use
 the same-repo carve-out or an owner-tier registry below, which clone with your
 credentials.
 
@@ -577,7 +577,7 @@ The store's Install button (`POST /api/apps/registry/install`, or the SSE varian
    policy, so a banned, non-allowlisted, or unsigned app is never cloned.
 2. Check `platform`, and answer with client-install instructions instead if the
    gateway's OS cannot run it.
-3. Check `minKiroCrewVersion`.
+3. Check `minAjCrewVersion`.
 4. Clone into `~/.kiro/crew/app-sources/{name}/` (persistent, one workspace per
    app; 60s timeout) and run a detected build: `npm install` plus `npm run build`
    when `package.json` declares a build script, or `pip install .` /
@@ -643,14 +643,14 @@ installed one.
 
 - Patch for fixes, minor for features, major for breaking changes (agent config
   schema, MCP tool interface).
-- `minKiroCrewVersion` is checked on install and update; too-old gateways get a
-  clear error telling the user to update Kiro Crew first.
+- `minAjCrewVersion` is checked on install and update; too-old gateways get a
+  clear error telling the user to update Aj Crew first.
 - Users update from the store or via `POST /api/apps/{name}/update`. For a
   registry-sourced app the update runs its preflight, stops the backend and
   deregisters the app's resources, then re-clones, rebuilds, and re-runs
   `onInstall`. If that install fails, the old version is restored: an enabled app
   is re-registered and restarted, while a disabled app stays stopped and
-  unregistered. `kirocrew app update <name> [--source <dir>]` runs the same
+  unregistered. `ajcrew app update <name> [--source <dir>]` runs the same
   request from a terminal through a running gateway.
 
 ## 14. Review checklist
@@ -674,21 +674,21 @@ installed one.
 
 Reviewers check that the manifest is complete, the permissions are proportionate,
 resource paths do not traverse, any install script is safe to run, and the app is
-useful to Kiro Crew users.
+useful to Aj Crew users.
 
 ## 15. Quick reference
 
 | Stage | Command or action |
 |-------|-------------------|
-| Scaffold | `kirocrew app init my-app` |
+| Scaffold | `ajcrew app init my-app` |
 | Build UI | `cd ui && npm run build` |
-| Install locally | `POST /api/apps/install`, or `kirocrew app install <dir>` |
-| Enable | Trust the app first, then `POST /api/apps/{name}/enable`, or `kirocrew app enable <name>` |
-| Live reload | `kirocrew app dev <name>` |
-| Update local copy | `POST /api/apps/{name}/update`, or `kirocrew app update <name> [--source <dir>]` |
-| List a registry app | Official catalog: open an [App Store listing request](https://github.com/kirodotdev/KiroCrew/issues/new?template=app-store-listing.yml) issue (maintainer-curated). Bundled seed or a federated registry: add an entry to `app-registry.json`, open a pull request |
+| Install locally | `POST /api/apps/install`, or `ajcrew app install <dir>` |
+| Enable | Trust the app first, then `POST /api/apps/{name}/enable`, or `ajcrew app enable <name>` |
+| Live reload | `ajcrew app dev <name>` |
+| Update local copy | `POST /api/apps/{name}/update`, or `ajcrew app update <name> [--source <dir>]` |
+| List a registry app | Official catalog: open an [App Store listing request](https://github.com/Al-jwharah/Aj-Crew/issues/new?template=app-store-listing.yml) issue (maintainer-curated). Bundled seed or a federated registry: add an entry to `app-registry.json`, open a pull request |
 | User install | Apps page, Discover, Install |
 | Ship an update | Bump `version`, push |
 
 Bugs and feature requests: [GitHub
-issues](https://github.com/kirodotdev/KiroCrew/issues).
+issues](https://github.com/Al-jwharah/Aj-Crew/issues).

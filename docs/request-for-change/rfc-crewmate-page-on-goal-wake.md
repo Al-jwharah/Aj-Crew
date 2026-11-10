@@ -1,7 +1,7 @@
 ---
 title: Crewmate page on a goal wake -- the goal-loop wakes build a crewmate's first Dashboard page, and offer once on a card before replacing a template
 status: accepted
-author: rayrayxu, with kirocrew-worker
+author: rayrayxu, with ajcrew-worker
 created: 2026-10-21
 last-audited: 2026-10-21
 audited-at: c428ea050d
@@ -112,7 +112,7 @@ the line is present, and only then, the next task is building the page. Kickoff 
 ### 4.3 A template on the tab: offer once
 
 The offer line is `page_offer.OFFER_LINE`, naming the template. It is given only to
-a crewmate with the `kirocrew-mate` tools, because it asks the crewmate to call
+a crewmate with the `ajcrew-mate` tools, because it asks the crewmate to call
 `offer_dashboard_page` once. That tool raises one `crewmate.dashboard_page` change
 card ("Want me to build a Dashboard page around your goal?"), with one row naming
 the template it would replace. Raising it writes nothing to the page.

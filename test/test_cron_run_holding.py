@@ -73,7 +73,7 @@ async def test_a_newer_run_waiting_for_the_permit_keeps_the_key_it_registered() 
     registered the same durable sequence-step key and waits for the permit, which a
     tab turn holds. The cleanup leaves the session to the tab turn, and the key stays
     registered to R2: a reap or cancel of R2 still ends this step's session."""
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     key = "cron:j1:alpha"
     sessions, gateway, info = _cron_route_gateway(key)
@@ -109,7 +109,7 @@ async def test_a_newer_run_waiting_for_the_permit_keeps_the_key_it_registered() 
 async def test_a_newer_runs_key_survives_a_cleanup_that_resets_the_idle_session() -> None:
     """The same, with nothing holding the session: the cleanup resets it, and R2's
     registration of the key still survives, for R2's own finalizer to retire."""
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     key = "cron:j1:alpha"
     sessions, gateway, info = _cron_route_gateway(key)
@@ -133,7 +133,7 @@ async def test_a_newer_runs_key_survives_a_cleanup_that_resets_the_idle_session(
 async def test_a_finished_runs_key_is_retired_when_no_newer_run_owns_it() -> None:
     """R1 registered the key under its claim and ended; no run of the job is live.
     The cleanup retires the key."""
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     key = "cron:j1:alpha"
     sessions, gateway, info = _cron_route_gateway(key)
@@ -151,7 +151,7 @@ async def test_a_finished_runs_key_is_retired_when_no_newer_run_owns_it() -> Non
 async def test_a_stateless_runs_key_is_retired_while_the_next_run_keeps_its_own() -> None:
     """A stateless job: R1's key is its own. R1's cleanup runs while R2 runs under
     its own key: R1's key is retired and R2's stays registered to R2."""
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     r1_key, r2_key = "cron:j1:r1", "cron:j1:r2"
     sessions, gateway, info = _cron_route_gateway(r1_key)
@@ -176,7 +176,7 @@ async def test_a_live_runs_own_deferred_step_key_is_retired_by_its_last_cleanup(
     on step beta, so its claim is live. Alpha's engine marked the key finished as it
     released the session (``finish_session_key``), so alpha's last child's cleanup
     resets the idle session and retires the key: nothing else would."""
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     key = "cron:j1:alpha"
     sessions, gateway, info = _cron_route_gateway(key)
@@ -207,7 +207,7 @@ async def test_a_stateless_runs_key_is_retired_when_its_last_cleanup_beats_the_c
     """A stateless run's ``finally`` marked its key finished and deferred the reset;
     its last child's cleanup runs before ``_run_job_isolated`` releases the claim.
     The ephemeral key, which no run registers again, is retired there."""
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     key = "cron:j1:r1"
     sessions, gateway, info = _cron_route_gateway(key)
@@ -232,7 +232,7 @@ async def test_a_key_registered_again_after_it_was_finished_is_kept_for_the_new_
     """R1 finished its turn on a durable key and deferred the reset; R2 of the same
     job registered the same key before its acquire. The registration takes the
     finished mark off, so R1's last cleanup leaves the key to R2."""
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     key = "cron:j1:alpha"
     sessions, gateway, info = _cron_route_gateway(key)
@@ -254,7 +254,7 @@ async def test_a_key_registered_again_after_it_was_finished_is_kept_for_the_new_
 def test_a_finished_mark_is_dropped_with_the_key_and_ignored_for_an_unknown_key() -> None:
     """``finish_session_key`` marks only a registered key; clearing the key drops the
     mark, so a later registration of the same key starts unfinished."""
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     svc = CronService()
     svc.finish_session_key("j1", "cron:j1:never")

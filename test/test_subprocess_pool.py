@@ -16,10 +16,10 @@ import types
 
 import pytest
 
-from kiro_crew.security import _child_realpath as child_mod
-from kiro_crew.security.paths import _resolved_spellings_inline as _resolved_spellings
-from kiro_crew.subprocess_pool import executor as executor_mod
-from kiro_crew.subprocess_pool.executor import (
+from aj_crew.security import _child_realpath as child_mod
+from aj_crew.security.paths import _resolved_spellings_inline as _resolved_spellings
+from aj_crew.subprocess_pool import executor as executor_mod
+from aj_crew.subprocess_pool.executor import (
     OP_REALPATH_MANY,
     OP_REALPATH_SPELLINGS,
     SubprocessPoolExecutor,
@@ -28,7 +28,7 @@ from kiro_crew.subprocess_pool.executor import (
     pack_strings,
     unpack_strings,
 )
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 _CHILD = pathlib.Path(child_mod.__file__)
 
@@ -103,7 +103,7 @@ class TestFraming:
 
 
 class TestChildIsolation:
-    """The child must never import kiro_crew: the cold-start budget depends on it."""
+    """The child must never import aj_crew: the cold-start budget depends on it."""
 
     def test_the_child_imports_stdlib_only(self) -> None:
         tree = ast.parse(_CHILD.read_text(encoding="utf-8"))
@@ -116,7 +116,7 @@ class TestChildIsolation:
                     pytest.fail("the child must not use a relative import")
                 if node.module:
                     imported.add(node.module.split(".")[0])
-        assert "kiro_crew" not in imported
+        assert "aj_crew" not in imported
         assert imported <= {"__future__", "os", "pathlib", "struct", "sys"}
 
     def test_the_child_answers_without_site_packages(self, tmp_path: pathlib.Path) -> None:
@@ -927,7 +927,7 @@ class TestChildFunctionsInProcess:
 
     def test_the_child_packs_what_the_parent_unpacks(self) -> None:
         # The two protocol implementations are deliberate copies, since sharing
-        # them would mean importing kiro_crew in the child. This is what pins the
+        # them would mean importing aj_crew in the child. This is what pins the
         # copies to each other.
         values = [b"/a", b"/two\nline", b"", b"/non\xffutf8", b"/x" * 500]
         assert unpack_strings(child_mod._pack_strings(values)) == values

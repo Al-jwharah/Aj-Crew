@@ -15,15 +15,15 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.session import SessionManager
+from aj_crew.config import AjCrewConfig
+from aj_crew.session import SessionManager
 
 KEY = "dashboard:chat-14841"
 
 
 @pytest.fixture(autouse=True)
 def _clear_channel_decline_markers():
-    from kiro_crew import session_lifecycle as sl
+    from aj_crew import session_lifecycle as sl
 
     sl._stop_declined_markers.clear()
     sl._parked_queue.clear()
@@ -82,7 +82,7 @@ def _factory(compact: _Compact, order: list[str]):
 async def _setup():
     order: list[str] = []
     compact = _Compact()
-    mgr = SessionManager(KiroCrewConfig(), provider_factory=_factory(compact, order))
+    mgr = SessionManager(AjCrewConfig(), provider_factory=_factory(compact, order))
     await mgr.get_or_create(KEY)
     key = mgr._fold_key(KEY)
     mgr.release(key)
@@ -147,11 +147,11 @@ def _slack_orch():
 def _run_slack_stop(orch):
     from unittest.mock import patch
 
-    from kiro_crew.slack import events as ev
+    from aj_crew.slack import events as ev
 
-    with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-        with patch("kiro_crew.slack.events.is_owner", return_value=True):
-            with patch("kiro_crew.slack.events.unlink_queued_temp_paths") as unlink:
+    with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+        with patch("aj_crew.slack.events.is_owner", return_value=True):
+            with patch("aj_crew.slack.events.unlink_queued_temp_paths") as unlink:
                 from test_slack_events_coverage import _event
 
                 asyncio.run(ev._route_message(orch, _event(text="!stop"), ev.SeenCache()))

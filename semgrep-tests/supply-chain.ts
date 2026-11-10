@@ -9,7 +9,7 @@ export function externalScriptInject(): void {
   const script = document.createElement("script");
   // Dynamic script src assignment: externally controlled URLs enable
   // supply-chain code injection.
-  // ruleid: kirocrew.frontend-external-script-inject
+  // ruleid: ajcrew.frontend-external-script-inject
   script.src = remoteUrl;
   document.head.appendChild(script);
 }
@@ -17,7 +17,7 @@ export function externalScriptInject(): void {
 export function plainLink(): void {
   const link = document.createElement("a");
   // A href assignment is navigation, not script execution.
-  // ok: kirocrew.frontend-external-script-inject
+  // ok: ajcrew.frontend-external-script-inject
   link.href = remoteUrl;
   document.body.appendChild(link);
 }

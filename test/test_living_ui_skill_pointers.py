@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-BUILTIN = ROOT / "src" / "kiro_crew" / "builtin_skills"
+BUILTIN = ROOT / "src" / "aj_crew" / "builtin_skills"
 
 # Each skill that points at living-ui, and the heading of the section that must
 # carry the pointer: the one an author is reading when motion comes up.
@@ -27,7 +27,7 @@ POINTERS = {
         BUILTIN / "frontend-design-workflow" / "SKILL.md",
         "## Phase 2 — Implementation",
     ),
-    "kirocrew-app-dev": (ROOT / "skills" / "kirocrew-app-dev" / "SKILL.md", "### UI Rules"),
+    "ajcrew-app-dev": (ROOT / "skills" / "ajcrew-app-dev" / "SKILL.md", "### UI Rules"),
 }
 
 

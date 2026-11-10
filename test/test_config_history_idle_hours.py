@@ -15,9 +15,9 @@ import math
 import pytest
 from config_loader_helpers import _load_from_dict, _load_from_dict_with_logs
 
-from kiro_crew.config.fields import field_default
-from kiro_crew.config.memory_sections import HISTORY_IDLE_HOURS_MIN, MemoryConfig
-from kiro_crew.config.section_builders import _build_memory_config
+from aj_crew.config.fields import field_default
+from aj_crew.config.memory_sections import HISTORY_IDLE_HOURS_MIN, MemoryConfig
+from aj_crew.config.section_builders import _build_memory_config
 
 _DEFAULT = float(field_default(MemoryConfig, "history_idle_hours"))
 
@@ -85,7 +85,7 @@ class TestHistoryIdleHoursBuilder:
     def test_value_is_a_positive_finite_float(
         self, raw: object, expected: float, warns: bool, caplog: pytest.LogCaptureFixture
     ) -> None:
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             hours = _build_memory_config({"history_idle_hours": raw}).history_idle_hours
         assert type(hours) is float
         assert hours == expected

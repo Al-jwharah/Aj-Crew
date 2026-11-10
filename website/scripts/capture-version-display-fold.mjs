@@ -27,9 +27,9 @@ function statusBody(withDisplay) {
     release_channel: 'stable', version: RAW,
     ...(withDisplay ? { version_display: FOLDED, update_latest_version_display: FOLDED } : {}),
     update_available: true, update_can_apply: false,
-    update_check_status: 'succeeded', update_command: 'kirocrew update',
+    update_check_status: 'succeeded', update_command: 'ajcrew update',
     update_latest_version: RAW, update_channel: 'stable',
-    update_managed_by: 'kirocrew', update_commits_ahead: 0,
+    update_managed_by: 'ajcrew', update_commits_ahead: 0,
     update_commits_behind: 0, update_can_arm: false,
   }
 }
@@ -38,8 +38,8 @@ function checkBody(withDisplay) {
   return {
     check_status: 'succeeded', update_available: true, error_code: null,
     latest_version: RAW, ...(withDisplay ? { latest_version_display: FOLDED } : {}),
-    channel: 'stable', managed_by: 'kirocrew', can_apply: false,
-    update_command: 'kirocrew update', current_version: FOLDED,
+    channel: 'stable', managed_by: 'ajcrew', can_apply: false,
+    update_command: 'ajcrew update', current_version: FOLDED,
     commits_ahead: 0, commits_behind: 0,
   }
 }

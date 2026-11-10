@@ -7,7 +7,7 @@ suite uses, then runs the credential-less, crash-free Playwright spec set
 browser binary.
 
 Gating:
-  * ``KIROCREW_E2E`` (set by E2eTestCommand) lifts the skipif, same as the
+  * ``AJCREW_E2E`` (set by E2eTestCommand) lifts the skipif, same as the
     smoke suite.
   * Skips gracefully when the in-tree ``website`` dir or its Playwright CLI
     can't be resolved (e.g. a python-only checkout without the built frontend
@@ -31,13 +31,13 @@ from typing import NoReturn
 
 import pytest
 
-# Gate the browser suite behind KIROCREW_E2E so it never runs in the default
+# Gate the browser suite behind AJCREW_E2E so it never runs in the default
 # unit-test pass. Applied as a decorator rather than a module-level pytestmark so
 # the floor helper's own tests below DO run in the default pass -- an unverified
 # guard against silent darkening is no guard.
 _requires_e2e = pytest.mark.skipif(
-    not os.environ.get("KIROCREW_E2E"),
-    reason="E2E Playwright suite. Set KIROCREW_E2E=1 to run.",
+    not os.environ.get("AJCREW_E2E"),
+    reason="E2E Playwright suite. Set AJCREW_E2E=1 to run.",
 )
 
 _WEBSITE = "website"
@@ -80,7 +80,7 @@ MAX_FLAKY_SPECS = 0
 # passed -- so it must be sized against the job that hosts it, not left behind it.
 #
 # The CI job budget is NOT one number: ci.yml gives this job 30 minutes on the
-# CodeBuild fleet and 40 minutes on the hosted `kirocrew-linux-4-core` route (one
+# CodeBuild fleet and 40 minutes on the hosted `ajcrew-linux-4-core` route (one
 # slow dependency install there was 66 s from a cancel with no failing test). A
 # fixed ceiling sized for a 25-minute budget then kills a green suite on the
 # 40-minute route with ~20 minutes of job budget still unused: a run with every
@@ -132,7 +132,7 @@ _CEILING_FALLBACK_SECS = 1200
 # Largest ceiling that still leaves the per-test pytest timeout room for the
 # in-test startup, the stop grace and the report read, rounded down for margin.
 _CEILING_CAP_SECS = 1500
-_JOB_TIMEOUT_MINUTES_ENV = "KIROCREW_E2E_JOB_TIMEOUT_MINUTES"
+_JOB_TIMEOUT_MINUTES_ENV = "AJCREW_E2E_JOB_TIMEOUT_MINUTES"
 
 
 def _ceiling_from_job_budget(minutes: str | None) -> int:
@@ -288,7 +288,7 @@ def _run_playwright(
     and after *grace_secs* its whole process group is killed. Playwright never
     outlives this call, whatever ends it.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     proc = subprocess.Popen(argv, cwd=str(cwd), env=env, start_new_session=True)
     started = time.monotonic()
@@ -365,11 +365,11 @@ def _resolve_node18_dir() -> str | None:
 def _resolve_website_dir() -> Path | None:
     """Locate the in-tree ``website`` root (with ``playwright/`` + ``node_modules``).
 
-    Mirrors ``kiro_crew.frontend`` dist resolution: the canonical frontend lives
+    Mirrors ``aj_crew.frontend`` dist resolution: the canonical frontend lives
     in-tree at ``<repo-root>/website``. ``test/`` sits at the repo root, so the
     website is a sibling of this file's parent directory.
     """
-    repo_root = Path(__file__).resolve().parent.parent  # KiroCrew repo root
+    repo_root = Path(__file__).resolve().parent.parent  # AjCrew repo root
     in_tree = repo_root / _WEBSITE
     return in_tree if (in_tree / "playwright").is_dir() else None
 
@@ -392,7 +392,7 @@ def _stage_dashboard_preview(home: Path) -> tuple[str, str]:
     ``agent_panel.api_dashboard_preview`` makes -- so the spec opens exactly what a
     person is given, rather than a link it built itself.
 
-    Staged in this process with ``KIROCREW_HOME`` pointed at *home* for the duration of
+    Staged in this process with ``AJCREW_HOME`` pointed at *home* for the duration of
     the call: the store resolves the data home per call (``paths.data_home``), so the
     page lands in the gateway's home, and the override is undone on exit.
 
@@ -400,19 +400,19 @@ def _stage_dashboard_preview(home: Path) -> tuple[str, str]:
     spec reaches it: ``test_the_staged_preview_outlives_the_whole_browser_run`` pins
     the preview window above the run's ceiling.
     """
-    from kiro_crew.config.loader import update_config_locked
-    from kiro_crew.dashboard_templates import instance
-    from kiro_crew.members import slug_for_name
+    from aj_crew.config.loader import update_config_locked
+    from aj_crew.dashboard_templates import instance
+    from aj_crew.members import slug_for_name
 
     def _seed(data: dict) -> dict:
         agents = data.setdefault("agents", {})
         assert DASHBOARD_PREVIEW_MEMBER not in agents
-        agents[DASHBOARD_PREVIEW_MEMBER] = {"kiro_agent": "kirocrew", "memory_store": "default"}
+        agents[DASHBOARD_PREVIEW_MEMBER] = {"kiro_agent": "ajcrew", "memory_store": "default"}
         return data
 
     update_config_locked(home / "config.json", mutate=_seed)
     with pytest.MonkeyPatch.context() as mp:
-        mp.setenv("KIROCREW_HOME", str(home))
+        mp.setenv("AJCREW_HOME", str(home))
         staged = instance.stage_preview(
             slug_for_name(DASHBOARD_PREVIEW_MEMBER), template_id=DASHBOARD_PREVIEW_TEMPLATE
         )
@@ -425,12 +425,12 @@ def test_dashboard_playwright_suite() -> None:
     """Boot a gateway and run the credential-less Playwright spec set against it."""
 
     def _unresolved(msg: str) -> NoReturn:
-        # On the required PR gate (KIROCREW_E2E_REQUIRE, set by that step) an
+        # On the required PR gate (AJCREW_E2E_REQUIRE, set by that step) an
         # environment-resolution miss is a HARD failure: pytest counts a skip as
         # a pass, so the gate would go green having run zero browser specs -- the
         # exact "dead suite, silent UI drift" rot this fold exists to catch. Keep
         # the graceful skip for ad-hoc local/dev runs (marker unset).
-        if os.environ.get("KIROCREW_E2E_REQUIRE"):
+        if os.environ.get("AJCREW_E2E_REQUIRE"):
             pytest.fail(msg)
         pytest.skip(msg)
 
@@ -449,18 +449,18 @@ def test_dashboard_playwright_suite() -> None:
     # Point the gateway's ACP client at the packaged fake backend so the
     # agent-driven specs (chat, fork) run deterministic, credential-less turns
     # instead of needing real model access. acp/client.py reads
-    # KIROCREW_KIRO_BIN and, when set, spawns it as the agent binary; the
+    # AJCREW_KIRO_BIN and, when set, spawns it as the agent binary; the
     # harness gateway inherits os.environ at spawn time.
-    from kiro_crew.testing import fake_acp_backend
-    from kiro_crew.testing.harness import spawn_feature_gateway
+    from aj_crew.testing import fake_acp_backend
+    from aj_crew.testing.harness import spawn_feature_gateway
 
-    prev_kiro_bin = os.environ.get("KIROCREW_KIRO_BIN")
-    os.environ["KIROCREW_KIRO_BIN"] = str(fake_acp_backend.__file__)
+    prev_kiro_bin = os.environ.get("AJCREW_KIRO_BIN")
+    os.environ["AJCREW_KIRO_BIN"] = str(fake_acp_backend.__file__)
     try:
         with tempfile.TemporaryDirectory() as tmp:
             report = Path(tmp) / "playwright-results.json"
             with spawn_feature_gateway(fixture="minimal", approval="reads") as gw:
-                from kiro_crew.config.loader import update_config_locked
+                from aj_crew.config.loader import update_config_locked
 
                 # A new-member API request already provisions private memory, so
                 # it cannot represent an existing install's uninitialized alias.
@@ -495,7 +495,7 @@ def test_dashboard_playwright_suite() -> None:
                     agents = data.setdefault("agents", {})
                     for name in legacy_members:
                         assert name not in agents
-                        agents[name] = {"kiro_agent": "kirocrew", "memory_store": "default"}
+                        agents[name] = {"kiro_agent": "ajcrew", "memory_store": "default"}
                     # Intentional bad configuration, confined to gw.home. These
                     # declarations do not represent healthy peer stores and do
                     # not create or modify any memory directory or database.
@@ -505,7 +505,7 @@ def test_dashboard_playwright_suite() -> None:
                             name = broken[f"{kind}_member"]
                             assert name not in agents
                             agents[name] = {
-                                "kiro_agent": "kirocrew",
+                                "kiro_agent": "ajcrew",
                                 "memory_store": broken[f"{kind}_store"],
                             }
                         store = broken["mismatched_store"]
@@ -531,14 +531,14 @@ def test_dashboard_playwright_suite() -> None:
                         # can run headlessly -- opt them back in.
                         "PLAYWRIGHT_RUN_AGENT_SPECS": "1",
                         # Explicit ephemeral-harness marker: this gateway runs on an
-                        # isolated tmp KIROCREW_HOME (spawn_feature_gateway --test-mode),
+                        # isolated tmp AJCREW_HOME (spawn_feature_gateway --test-mode),
                         # so its slots are disposable.
-                        "KIROCREW_E2E_EPHEMERAL": "1",
-                        "KIROCREW_E2E_LEGACY_MEMBERS": json.dumps(legacy_members),
-                        "KIROCREW_E2E_INVALID_MEMORY_BINDINGS": json.dumps(invalid_memory_bindings),
+                        "AJCREW_E2E_EPHEMERAL": "1",
+                        "AJCREW_E2E_LEGACY_MEMBERS": json.dumps(legacy_members),
+                        "AJCREW_E2E_INVALID_MEMORY_BINDINGS": json.dumps(invalid_memory_bindings),
                         # The link `dashboard_preview` hands a crewmate, built by the
                         # production store; dashboard-preview-link.spec.ts opens it.
-                        "KIROCREW_E2E_DASHBOARD_PREVIEW": json.dumps(
+                        "AJCREW_E2E_DASHBOARD_PREVIEW": json.dumps(
                             {"member": preview_member, "url": preview_url}
                         ),
                         # CI mode: serial workers + retries:2 (a detector: a spec that
@@ -574,9 +574,9 @@ def test_dashboard_playwright_suite() -> None:
             assert rc == 0, f"playwright test exited {rc}"
     finally:
         if prev_kiro_bin is None:
-            os.environ.pop("KIROCREW_KIRO_BIN", None)
+            os.environ.pop("AJCREW_KIRO_BIN", None)
         else:
-            os.environ["KIROCREW_KIRO_BIN"] = prev_kiro_bin
+            os.environ["AJCREW_KIRO_BIN"] = prev_kiro_bin
 
 
 # --------------------------------------------------------------------------- #
@@ -593,7 +593,7 @@ def test_the_staged_preview_outlives_the_whole_browser_run() -> None:
     preview-link spec run late enough to read "nothing staged" and fail for a reason
     that is not the link.
     """
-    from kiro_crew.dashboard_templates import instance
+    from aj_crew.dashboard_templates import instance
 
     assert instance.MAX_PREVIEW_AGE_MS / 1000 > PLAYWRIGHT_RUN_CEILING_SECS
 
@@ -811,7 +811,7 @@ def test_a_run_is_stopped_past_its_bound(tmp_path: Path) -> None:
 def test_playwright_is_reaped_when_the_poll_raises(tmp_path: Path) -> None:
     from types import SimpleNamespace
 
-    from kiro_crew.platform_compat import pid_exists
+    from aj_crew.platform_compat import pid_exists
 
     started: list[int] = []
 

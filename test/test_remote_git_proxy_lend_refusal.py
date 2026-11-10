@@ -14,9 +14,9 @@ from pathlib import Path
 import pytest
 from test_remote_git_proxy import HEADER, FrameLink, HttpBackendUpstream
 
-from kiro_crew.remote_session import git_gateway
-from kiro_crew.remote_session.git_gateway import GitProxyChannel, GitProxyRefusal
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.remote_session import git_gateway
+from aj_crew.remote_session.git_gateway import GitProxyChannel, GitProxyRefusal
+from aj_crew.testing.wait import async_wait_until, await_until
 
 pytestmark = pytest.mark.skipif(shutil.which("git") is None, reason="git is required")
 
@@ -30,7 +30,7 @@ async def test_a_rejected_gateway_login_is_republished_at_once(monkeypatch):
 
     async def credential(host):
         if host not in valid:
-            raise GitProxyRefusal(502, f"Kiro Crew: no {host} login found")
+            raise GitProxyRefusal(502, f"Aj Crew: no {host} login found")
         return HEADER
 
     channel = GitProxyChannel(
@@ -74,7 +74,7 @@ async def test_a_revoked_login_its_source_still_returns_stops_being_lent(monkeyp
 
     async def credential(host):
         if host != "github.com":
-            raise GitProxyRefusal(502, f"Kiro Crew: no {host} login found")
+            raise GitProxyRefusal(502, f"Aj Crew: no {host} login found")
         return token["value"]
 
     channel = GitProxyChannel(

@@ -27,7 +27,7 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_folder_app, _make_state
 
-from kiro_crew.dashboard.chat_folders import _KNOWN_INTERNAL_CALLERS
+from aj_crew.dashboard.chat_folders import _KNOWN_INTERNAL_CALLERS
 
 
 class _RecordingSel:
@@ -44,7 +44,7 @@ class _RecordingSel:
 @pytest.fixture
 def recorded(monkeypatch: Any) -> _RecordingSel:
     rec = _RecordingSel()
-    monkeypatch.setattr("kiro_crew.dashboard.chat_folders.sel", lambda: rec)
+    monkeypatch.setattr("aj_crew.dashboard.chat_folders.sel", lambda: rec)
     return rec
 
 
@@ -59,7 +59,7 @@ class TestFolderAuditOrigin:
     async def test_browser_create_is_audited_as_dashboard(
         self, tmp_path: Any, monkeypatch: Any, recorded: _RecordingSel
     ) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         client = await _client(state)
         try:
@@ -82,14 +82,14 @@ class TestFolderAuditOrigin:
         one: the secret check runs first, and this request audits exactly like
         any other browser write.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         client = await _client(state)
         try:
             resp = await client.post(
                 "/api/chat/folders",
                 json={"name": "Sneaky"},
-                headers={"X-Internal-Caller": "kirocrew-dashboard"},
+                headers={"X-Internal-Caller": "ajcrew-dashboard"},
             )
             assert resp.status == 201
         finally:
@@ -102,7 +102,7 @@ class TestFolderAuditOrigin:
     async def test_mcp_create_is_audited_as_declared_caller(
         self, tmp_path: Any, monkeypatch: Any, recorded: _RecordingSel
     ) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         client = await _client(state)
         try:
@@ -111,7 +111,7 @@ class TestFolderAuditOrigin:
                 json={"name": "Agent"},
                 headers={
                     "X-Internal-Secret": "s3cret",
-                    "X-Internal-Caller": "kirocrew-dashboard",
+                    "X-Internal-Caller": "ajcrew-dashboard",
                 },
             )
             assert resp.status == 201
@@ -119,14 +119,14 @@ class TestFolderAuditOrigin:
             await client.close()
         event = next(e for e in recorded.events if e["operation"] == "chat.folder_create")
         assert event["source"] == "mcp"
-        assert event["caller"] == "kirocrew-dashboard"
+        assert event["caller"] == "ajcrew-dashboard"
 
     @pytest.mark.asyncio
     async def test_mcp_session_move_is_audited_as_declared_caller(
         self, tmp_path: Any, monkeypatch: Any, recorded: _RecordingSel
     ) -> None:
         """The mutation Raymond most needs attributed: who re-filed the session."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("myslot")
         slot.append("user", "hello")
@@ -141,7 +141,7 @@ class TestFolderAuditOrigin:
                 json={"folder_id": "f1"},
                 headers={
                     "X-Internal-Secret": "s3cret",
-                    "X-Internal-Caller": "kirocrew-dashboard",
+                    "X-Internal-Caller": "ajcrew-dashboard",
                 },
             )
             assert resp.status == 200
@@ -149,7 +149,7 @@ class TestFolderAuditOrigin:
             await client.close()
         event = next(e for e in recorded.events if e["operation"] == "chat.slot_folder")
         assert event["source"] == "mcp"
-        assert event["caller"] == "kirocrew-dashboard"
+        assert event["caller"] == "ajcrew-dashboard"
         assert event["resources"] == "myslot"
 
     @pytest.mark.asyncio
@@ -163,11 +163,11 @@ class TestFolderAuditOrigin:
         silently; now it shows up as ``unknown-internal`` plus a warning that
         names the fix (add the caller to the known set, with a test).
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         client = await _client(state)
         try:
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.chat_folders"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.chat_folders"):
                 resp = await client.post(
                     "/api/chat/folders",
                     json={"name": "Mystery"},
@@ -186,11 +186,11 @@ class TestFolderAuditOrigin:
         self, tmp_path: Any, monkeypatch: Any, recorded: _RecordingSel, caplog: Any
     ) -> None:
         """An arbitrary caller string is never trusted verbatim into the audit log."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         client = await _client(state)
         try:
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.chat_folders"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.chat_folders"):
                 resp = await client.post(
                     "/api/chat/folders",
                     json={"name": "Rogue"},
@@ -217,7 +217,7 @@ class TestKnownCallerRatchet:
         ``test_crew_log_routes_unit_door_audit.py`` and ``test_mcp_debug.py``.
         """
         assert _KNOWN_INTERNAL_CALLERS == frozenset(
-            {"kirocrew-dashboard", "kirocrew-crew-log", "kirocrew-debug"}
+            {"ajcrew-dashboard", "ajcrew-crew-log", "ajcrew-debug"}
         )
 
     def test_crew_log_server_name_is_a_known_caller(self) -> None:
@@ -225,7 +225,7 @@ class TestKnownCallerRatchet:
         server: its routes accept the internal transport ONLY for the caller name
         it declares, so renaming either side without the other turns every agent
         read into a refusal rather than into a silent widen."""
-        from kiro_crew.mcp_crew_log import SERVER_NAME
+        from aj_crew.mcp_crew_log import SERVER_NAME
 
         assert SERVER_NAME in _KNOWN_INTERNAL_CALLERS
 
@@ -235,6 +235,6 @@ class TestKnownCallerRatchet:
         name ``_audit_origin`` recognizes — renaming either side without the
         other silently downgrades every agent folder write to
         ``unknown-internal``."""
-        from kiro_crew.mcp_dashboard import SERVER_NAME
+        from aj_crew.mcp_dashboard import SERVER_NAME
 
         assert SERVER_NAME in _KNOWN_INTERNAL_CALLERS

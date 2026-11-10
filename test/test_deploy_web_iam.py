@@ -6,8 +6,8 @@ from pathlib import Path
 
 from yaml_helpers import load_with
 
-from kiro_crew.deploy import engine
-from kiro_crew.deploy import iam as iam_mod
+from aj_crew.deploy import engine
+from aj_crew.deploy import iam as iam_mod
 
 _PKG = Path(iam_mod.__file__).parent
 
@@ -23,12 +23,12 @@ def test_policy_is_valid_json_with_expected_sids():
 def test_policy_scoping_levers_present():
     doc = json.loads(iam_mod.policy_json())
     s3 = next(s for s in doc["Statement"] if s["Sid"] == "S3BucketLevel")
-    # Must cover BOTH the CFN template prefix (kirocrew-deploy-*) and the
-    # engine.py HTTP-publish prefix (kirocrew-web-*).
+    # Must cover BOTH the CFN template prefix (ajcrew-deploy-*) and the
+    # engine.py HTTP-publish prefix (ajcrew-web-*).
     assert f"arn:aws:s3:::{iam_mod.S3_PREFIX}" in s3["Resource"]
     assert iam_mod.S3_PREFIX_WEB in s3["Resource"]
     cf = next(s for s in doc["Statement"] if s["Sid"] == "CloudFrontManageTagged")
-    assert cf["Condition"]["StringEquals"]["aws:ResourceTag/kirocrew:managed"] == "true"  # tag scope
+    assert cf["Condition"]["StringEquals"]["aws:ResourceTag/ajcrew:managed"] == "true"  # tag scope
 
 
 def test_policy_prefix_matches_template_bucket():
@@ -59,8 +59,8 @@ def test_policy_prefix_matches_template_bucket():
     with open(template_path, encoding="utf-8") as f:
         tmpl = load_with(_CfnLoader, f)
     bucket_name = tmpl["Resources"]["OriginBucket"]["Properties"]["BucketName"]
-    # Template uses !Sub 'kirocrew-deploy-${AWS::AccountId}-${AWS::Region}'
-    # The IAM prefix must be 'kirocrew-deploy-*' to cover all account/region combos.
+    # Template uses !Sub 'ajcrew-deploy-${AWS::AccountId}-${AWS::Region}'
+    # The IAM prefix must be 'ajcrew-deploy-*' to cover all account/region combos.
     sub_str = bucket_name["Fn::Sub"] if isinstance(bucket_name, dict) else bucket_name
     prefix_stem = sub_str.split("-${")[0]
     expected_prefix = f"{prefix_stem}-*"
@@ -127,7 +127,7 @@ def test_audit_log_bucket_has_versioning_enabled():
 
 
 def test_policy_covers_engine_bucket_prefix():
-    """Regression (R8→R9): engine.py creates kirocrew-web-* buckets; IAM must cover them."""
+    """Regression (R8→R9): engine.py creates ajcrew-web-* buckets; IAM must cover them."""
     doc = iam_mod.policy_document()
     s3_bucket = next(s for s in doc["Statement"] if s["Sid"] == "S3BucketLevel")
     s3_object = next(s for s in doc["Statement"] if s["Sid"] == "S3ObjectLevel")
@@ -165,7 +165,7 @@ def test_policy_covers_base_stack_audit_controls():
                    "cloudtrail:AddTags"):
         assert needed in trail["Action"], f"missing {needed}"
     # Least-privilege: scoped to the trail name the template creates, not "*".
-    assert trail["Resource"] == "arn:aws:cloudtrail:*:*:trail/kirocrew-deploy-trail-*"
+    assert trail["Resource"] == "arn:aws:cloudtrail:*:*:trail/ajcrew-deploy-trail-*"
     # Present in the static tier too (base-stack is deployed by the static tier).
     static_sids = {s["Sid"] for s in iam_mod.policy_document(tier="static")["Statement"]}
     assert "CloudTrailBaseStack" in static_sids
@@ -250,9 +250,9 @@ def test_policy_fullstack_tier_includes_lambda_and_dynamodb():
     assert "IAMCreateRoleWithBoundaryOnly" in sids
     assert "IAMRoleLifecycleFullstack" in sids
     assert "IAMDenyBoundaryTampering" in sids
-    # Resources are scoped to kirocrew-deploy-app-*
+    # Resources are scoped to ajcrew-deploy-app-*
     lambda_stmt = next(s for s in doc["Statement"] if s["Sid"] == "LambdaFullstack")
-    assert "kirocrew-deploy-app-*" in lambda_stmt["Resource"]
+    assert "ajcrew-deploy-app-*" in lambda_stmt["Resource"]
 
 
 def test_policy_static_tier_has_no_fullstack_sids():
@@ -270,15 +270,15 @@ def test_policy_fullstack_tier_includes_reaper_permissions():
     assert "ReaperCloudFormation" in sids
     assert "ReaperIAMRole" in sids
     assert "ReaperEvents" in sids
-    # All scoped to kirocrew-deploy-reaper*
+    # All scoped to ajcrew-deploy-reaper*
     reaper_lambda = next(s for s in doc["Statement"] if s["Sid"] == "ReaperLambda")
-    assert "kirocrew-deploy-reaper" in reaper_lambda["Resource"]
+    assert "ajcrew-deploy-reaper" in reaper_lambda["Resource"]
     reaper_cfn = next(s for s in doc["Statement"] if s["Sid"] == "ReaperCloudFormation")
-    assert "kirocrew-deploy-reaper" in reaper_cfn["Resource"]
+    assert "ajcrew-deploy-reaper" in reaper_cfn["Resource"]
     reaper_iam = next(s for s in doc["Statement"] if s["Sid"] == "ReaperIAMRole")
-    assert "kirocrew-deploy-reaper" in reaper_iam["Resource"]
+    assert "ajcrew-deploy-reaper" in reaper_iam["Resource"]
     reaper_events = next(s for s in doc["Statement"] if s["Sid"] == "ReaperEvents")
-    assert "kirocrew-deploy-reaper" in reaper_events["Resource"]
+    assert "ajcrew-deploy-reaper" in reaper_events["Resource"]
 
 
 def test_policy_fullstack_iam_attach_constrained_to_template_policies():
@@ -310,7 +310,7 @@ def test_policy_fullstack_passrole_scoped_to_lambda():
     # Lambda resource the role may be associated with, not just the service.
     assert (
         cond.get("ArnLike", {}).get("iam:AssociatedResourceArn")
-        == "arn:aws:lambda:*:*:function:kirocrew-deploy-app-*"
+        == "arn:aws:lambda:*:*:function:ajcrew-deploy-app-*"
     )
 
 
@@ -323,13 +323,13 @@ def test_policy_reaper_passrole_scoped_to_lambda():
         (s for s in doc["Statement"] if s.get("Sid") == "ReaperPassRoleLambdaOnly"), None)
     assert pass_stmt is not None, "ReaperPassRoleLambdaOnly statement missing"
     assert pass_stmt["Action"] == ["iam:PassRole"]
-    assert "kirocrew-deploy-reaper" in pass_stmt["Resource"]
+    assert "ajcrew-deploy-reaper" in pass_stmt["Resource"]
     cond = pass_stmt.get("Condition", {})
     assert cond.get("StringEquals", {}).get("iam:PassedToService") == "lambda.amazonaws.com"
     # Confused-deputy defense (CWE-441): bound to WHICH reaper Lambda too.
     assert (
         cond.get("ArnLike", {}).get("iam:AssociatedResourceArn")
-        == "arn:aws:lambda:*:*:function:kirocrew-deploy-reaper*"
+        == "arn:aws:lambda:*:*:function:ajcrew-deploy-reaper*"
     )
     # PassRole must not be bundled in the general ReaperIAMRole statement.
     reaper_iam = next(s for s in doc["Statement"] if s["Sid"] == "ReaperIAMRole")
@@ -348,8 +348,8 @@ def test_unmark_webapp_expired_sets_live():
     import tempfile
     from pathlib import Path
 
-    from kiro_crew.artifacts import ArtifactStore
-    from kiro_crew.deploy.webapp_types import WebAppDeployTarget, WebAppLifecycle, WebAppMetadata
+    from aj_crew.artifacts import ArtifactStore
+    from aj_crew.deploy.webapp_types import WebAppDeployTarget, WebAppLifecycle, WebAppMetadata
 
     with tempfile.TemporaryDirectory() as tmp:
         store = ArtifactStore(Path(tmp))
@@ -389,16 +389,16 @@ def test_reaper_template_includes_engine_arch_permissions():
     assert "S3EngineSites" in sids, "Missing S3EngineSites statement"
     assert "S3EngineSiteObjects" in sids, "Missing S3EngineSiteObjects statement"
 
-    # CloudFrontEngineSites must be scoped by the kirocrew:site tag PRESENCE
-    # test (Null: false), NOT kirocrew:managed==true (which the shared base-stack
+    # CloudFrontEngineSites must be scoped by the ajcrew:site tag PRESENCE
+    # test (Null: false), NOT ajcrew:managed==true (which the shared base-stack
     # distribution also carries, so it wouldn't scope to per-site only).
-    # The value of kirocrew:site is the site_id string — a StringEquals "true"
+    # The value of ajcrew:site is the site_id string — a StringEquals "true"
     # condition would be a dead (never-matching) condition. Presence test ensures
     # only distributions that carry the tag at all are affected.
     cf_engine = next(s for s in stmts if s["Sid"] == "CloudFrontEngineSites")
     assert "cloudfront:DeleteDistribution" in cf_engine["Action"]
-    assert cf_engine["Condition"]["Null"]["aws:ResourceTag/kirocrew:site"] == "false"
+    assert cf_engine["Condition"]["Null"]["aws:ResourceTag/ajcrew:site"] == "false"
 
-    # S3EngineSites must be scoped to kirocrew-web-*
+    # S3EngineSites must be scoped to ajcrew-web-*
     s3_engine = next(s for s in stmts if s["Sid"] == "S3EngineSites")
-    assert "arn:aws:s3:::kirocrew-web-*" in s3_engine["Resource"]
+    assert "arn:aws:s3:::ajcrew-web-*" in s3_engine["Resource"]

@@ -1,6 +1,6 @@
 """Tests for the advisory resource probe and its two surfaces.
 
-Covers :mod:`kiro_crew.resource_status` (posture classification, context line,
+Covers :mod:`aj_crew.resource_status` (posture classification, context line,
 disable switch, fail-open) and the ``resource_status`` pull tool wired into
 ``mcp_core`` (advertised + dispatchable).
 """
@@ -12,12 +12,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew import resource_status as rs
+from aj_crew import platform_compat
+from aj_crew import resource_status as rs
 
 
 def _cfg(pressure: float, critical: float) -> SimpleNamespace:
-    """Minimal stand-in for KiroCrewConfig exposing the two thresholds."""
+    """Minimal stand-in for AjCrewConfig exposing the two thresholds."""
     return SimpleNamespace(
         agent=SimpleNamespace(
             resource_pressure_gb=pressure,
@@ -109,7 +109,7 @@ def test_probe_unknown_when_unreadable(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def _cgroup_usage_unreadable_reading() -> float:
     """What the memory probe returns for a cgroup limit whose usage cannot be read."""
-    from kiro_crew.subagent_parts import host_memory
+    from aj_crew.subagent_parts import host_memory
 
     host_memory._memory_check_cause.value = host_memory.MEMORY_CAUSE_CGROUP_USAGE_UNREADABLE
     return 0.0
@@ -171,7 +171,7 @@ def test_probe_keeps_measured_reading_the_thresholds_classify(
 
 def test_probe_ignores_a_stale_unreadable_cause(monkeypatch: pytest.MonkeyPatch) -> None:
     # A cause left by an earlier reading must not turn a measured low figure unknown.
-    from kiro_crew.subagent_parts import host_memory
+    from aj_crew.subagent_parts import host_memory
 
     host_memory._memory_check_cause.value = host_memory.MEMORY_CAUSE_CGROUP_USAGE_UNREADABLE
     monkeypatch.setattr(rs, "_read_available_gb", lambda: 0.5)
@@ -328,14 +328,14 @@ def test_shared_memory_is_named_only_when_it_holds_a_tenth(shmem_gb, named) -> N
 
 
 def test_tool_is_advertised() -> None:
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     names = {t["name"] for t in mcp_core._list_tools()}
     assert "resource_status" in names
 
 
 def test_tool_dispatch_returns_report(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     fake = rs.ResourceStatus(
         available_gb=3.0,
@@ -424,7 +424,7 @@ def test_temp_headroom_without_statvfs_measures_disk_usage(
     assert reading is not None and reading.low
     assert reading.text() == "LOW on space, 9% space free, no inode limit"
 
-    monkeypatch.delenv("KIROCREW_SCRATCH", raising=False)
+    monkeypatch.delenv("AJCREW_SCRATCH", raising=False)
     lines = rs.temp_headroom_lines()
     assert lines[:2] == [
         "Temp space (advisory):",
@@ -497,12 +497,12 @@ def test_temp_headroom_lines_guide_away_from_a_low_root(
     }
     monkeypatch.setattr(rs, "temp_roots", lambda: list(readings))
     monkeypatch.setattr(rs, "temp_headroom", readings.get)
-    monkeypatch.setenv("KIROCREW_SCRATCH", "/scratch")
+    monkeypatch.setenv("AJCREW_SCRATCH", "/scratch")
     _fake_devices(monkeypatch, {"/tmp": 1, "/scratch": 2})
     joined = "\n".join(rs.temp_headroom_lines())
     assert "  /tmp: LOW on inodes," in joined
     assert "  /scratch: 70% space free" in joined
-    assert "temp space is low on /tmp." in joined and "use $KIROCREW_SCRATCH instead" in joined
+    assert "temp space is low on /tmp." in joined and "use $AJCREW_SCRATCH instead" in joined
 
 
 @pytest.mark.parametrize(
@@ -524,10 +524,10 @@ def test_temp_guidance_never_points_at_a_low_device(
     low = _headroom(86.0, 2.0, 20_000, root="/scratch")
     monkeypatch.setattr(rs, "temp_roots", lambda: ["/scratch"])
     monkeypatch.setattr(rs, "temp_headroom", lambda root: low)
-    monkeypatch.setenv("KIROCREW_SCRATCH", scratch)
+    monkeypatch.setenv("AJCREW_SCRATCH", scratch)
     _fake_devices(monkeypatch, devices)
     joined = "\n".join(rs.temp_headroom_lines())
-    assert "$KIROCREW_SCRATCH" not in joined
+    assert "$AJCREW_SCRATCH" not in joined
     assert "free space there or use a filesystem that is not low." in joined
 
 
@@ -550,7 +550,7 @@ def test_temp_headroom_lines_empty_when_nothing_measurable(
 def test_tool_dispatch_appends_temp_space_after_memory_guidance(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     fake = rs.ResourceStatus(
         available_gb=30.0,
@@ -563,7 +563,7 @@ def test_tool_dispatch_appends_temp_space_after_memory_guidance(
     monkeypatch.setattr(rs, "probe", lambda cfg=None: fake)
     monkeypatch.setattr(rs, "temp_roots", lambda: ["/tmp"])
     monkeypatch.setattr(rs, "temp_headroom", lambda root: _headroom(86.0, 2.0, 20_000))
-    monkeypatch.delenv("KIROCREW_SCRATCH", raising=False)
+    monkeypatch.delenv("AJCREW_SCRATCH", raising=False)
     out = mcp_core._call_tool_inner("resource_status", {})
     assert out.index("ample headroom") < out.index("Temp space (advisory):")
     assert "temp space is low on /tmp." in out
@@ -592,7 +592,7 @@ def test_thresholds_clamped_when_inverted(monkeypatch: pytest.MonkeyPatch) -> No
 
 
 def test_tool_registered_and_rejects_stray_args() -> None:
-    from kiro_crew.validation import (
+    from aj_crew.validation import (
         MCP_CORE_SCHEMAS,
         ValidationError,
         validate_tool_args,
@@ -701,7 +701,7 @@ def test_prewarm_allowance_tracks_the_advisory_thresholds() -> None:
 # under that slice at once, so these cases cover the read, the tight band, both
 # render paths, and the invariance the design promises: reported, never gated.
 
-_TOKEN = "kirocrew-agents-abc123def456.slice"
+_TOKEN = "ajcrew-agents-abc123def456.slice"
 
 
 def _slice_tree(
@@ -713,7 +713,7 @@ def _slice_tree(
     token: str = _TOKEN,
 ):
     """Build a fake agent-slice cgroup tree; returns its directory."""
-    slice_dir = tmp_path / "kirocrew-agents.slice"
+    slice_dir = tmp_path / "ajcrew-agents.slice"
     slice_dir.mkdir()
     (slice_dir / "pids.current").write_text(current, encoding="utf-8")
     (slice_dir / "pids.max").write_text(limit, encoding="utf-8")
@@ -726,7 +726,7 @@ def _slice_tree(
 
 def _patch_slice(monkeypatch, slice_dir, token: str = _TOKEN) -> None:
     """Point the probe at a fake tree, through the real cgroup reader."""
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     monkeypatch.setattr(sandbox, "_agents_slice_cgroup_dir", lambda: slice_dir)
     monkeypatch.setattr(sandbox, "_agents_slice_name", lambda: token)
@@ -775,7 +775,7 @@ def test_slice_tasks_unparseable_ceiling_is_unreadable(tmp_path, monkeypatch) ->
 
 def test_slice_tasks_absent_slice_is_unknown(monkeypatch) -> None:
     """No slice directory (not Linux, no delegation) reads as unknown, not zero."""
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     monkeypatch.setattr(sandbox, "_agents_slice_cgroup_dir", lambda: None)
     assert _REAL_SLICE_PROBE() == (-1, -1, -1)
@@ -789,7 +789,7 @@ def test_slice_tasks_degraded_token_leaves_own_unattributed(tmp_path, monkeypatc
     credit for a co-resident gateway's tasks.
     """
     slice_dir = _slice_tree(tmp_path)
-    _patch_slice(monkeypatch, slice_dir, token="kirocrew-agents.slice")
+    _patch_slice(monkeypatch, slice_dir, token="ajcrew-agents.slice")
     current, limit, own = _REAL_SLICE_PROBE()
     assert (current, limit) == (29500, 32768)
     assert own == -1
@@ -809,7 +809,7 @@ def test_slice_tasks_unreadable_child_count_is_unknown(tmp_path, monkeypatch) ->
 
 def test_slice_tasks_probe_never_raises(monkeypatch) -> None:
     """Any failure inside the probe degrades to unknown; it must never raise."""
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     def _boom():
         raise RuntimeError("cgroup gone")
@@ -1109,7 +1109,7 @@ def test_summary_reports_the_level_only_where_it_is_read(monkeypatch) -> None:
 
 
 def test_tool_guidance_never_says_heavy_work_is_fine_under_pressure(monkeypatch) -> None:
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     fake = rs.ResourceStatus(
         available_gb=8.0,
@@ -1155,7 +1155,7 @@ def test_an_unreadable_level_on_macos_is_reported_once(monkeypatch, caplog) -> N
     monkeypatch.setattr(rs, "_pressure_unreadable_reported", False)
     monkeypatch.setattr(platform_compat, "IS_MACOS", True)
     _pressure(monkeypatch, None)
-    with caplog.at_level("WARNING", logger="kiro_crew.resource_status"):
+    with caplog.at_level("WARNING", logger="aj_crew.resource_status"):
         rs.probe(_cfg(4.0, 2.0))
         rs.probe(_cfg(4.0, 2.0))
         rs.read_memory_pressure_level()
@@ -1168,7 +1168,7 @@ def test_an_unknown_level_off_macos_says_nothing(monkeypatch, caplog) -> None:
     monkeypatch.setattr(rs, "_pressure_unreadable_reported", False)
     monkeypatch.setattr(platform_compat, "IS_MACOS", False)
     _pressure(monkeypatch, None)
-    with caplog.at_level("WARNING", logger="kiro_crew.resource_status"):
+    with caplog.at_level("WARNING", logger="aj_crew.resource_status"):
         rs.probe(_cfg(4.0, 2.0))
     assert not any("memory-pressure level" in r.getMessage() for r in caplog.records)
 
@@ -1291,7 +1291,7 @@ def _gate_figure(monkeypatch: pytest.MonkeyPatch, avail: float, cause: str = "")
 
 
 def test_spawn_floor_prices_starts_with_the_gate_helpers(monkeypatch) -> None:
-    from kiro_crew.subagent import _UNLEARNED_DEDICATED_START_GB, _shared_start_price_gb
+    from aj_crew.subagent import _UNLEARNED_DEDICATED_START_GB, _shared_start_price_gb
 
     asked = _gate_figure(monkeypatch, 8.0)
     reading = rs.spawn_floor_reading(_spawn_cfg(2.0))
@@ -1317,23 +1317,23 @@ def test_a_fresh_install_is_blocked_between_the_cost_bar_and_the_gate_bar(monkey
 
 
 def test_a_learned_lighter_bucket_lowers_the_bar_to_its_price(monkeypatch) -> None:
-    from kiro_crew.subagent import _shared_start_price_gb
+    from aj_crew.subagent import _shared_start_price_gb
 
-    monkeypatch.setattr(rs, "_read_learned_settled", lambda: {"kirocrew": 0.8, "heavy": 1.6})
+    monkeypatch.setattr(rs, "_read_learned_settled", lambda: {"ajcrew": 0.8, "heavy": 1.6})
     _gate_figure(monkeypatch, 8.0)
     reading = rs.spawn_floor_reading(_spawn_cfg(2.0))
     assert reading.min_start_gb == pytest.approx(2.0 + _shared_start_price_gb(0.8))
 
 
 def test_a_remote_bucket_never_sets_the_local_bar(monkeypatch) -> None:
-    from kiro_crew.subagent import (
+    from aj_crew.subagent import (
         _UNLEARNED_DEDICATED_START_GB,
         REMOTE_COST_BUCKET_SUFFIX,
         _shared_start_price_gb,
     )
 
     monkeypatch.setattr(
-        rs, "_read_learned_settled", lambda: {"kirocrew" + REMOTE_COST_BUCKET_SUFFIX: 0.3}
+        rs, "_read_learned_settled", lambda: {"ajcrew" + REMOTE_COST_BUCKET_SUFFIX: 0.3}
     )
     _gate_figure(monkeypatch, 8.0)
     reading = rs.spawn_floor_reading(_spawn_cfg(2.0))
@@ -1343,7 +1343,7 @@ def test_a_remote_bucket_never_sets_the_local_bar(monkeypatch) -> None:
 
 
 def test_an_unreadable_cost_log_falls_back_to_the_configured_cost(monkeypatch) -> None:
-    from kiro_crew.subagent import _shared_start_price_gb
+    from aj_crew.subagent import _shared_start_price_gb
 
     monkeypatch.setattr(rs, "_read_learned_settled", lambda: None)
     _gate_figure(monkeypatch, 8.0)
@@ -1354,8 +1354,8 @@ def test_an_unreadable_cost_log_falls_back_to_the_configured_cost(monkeypatch) -
 def test_an_incomplete_cost_log_read_falls_back_to_the_configured_cost(monkeypatch) -> None:
     """A partial read may miss a figure the manager still holds, so it must not
     raise the bar to the unlearned price."""
-    from kiro_crew import subagent_cost
-    from kiro_crew.subagent import _shared_start_price_gb
+    from aj_crew import subagent_cost
+    from aj_crew.subagent import _shared_start_price_gb
 
     monkeypatch.setattr(rs, "_read_learned_settled", _REAL_LEARNED_SETTLED)
     monkeypatch.setattr(subagent_cost, "read_learned_costs_checked", lambda *a, **k: ({}, False))
@@ -1404,7 +1404,7 @@ def test_an_unmeasurable_gate_figure_fails_open_like_the_gate(monkeypatch) -> No
 
 
 def test_an_unreadable_cgroup_usage_is_blocked_with_its_cause(monkeypatch) -> None:
-    from kiro_crew.subagent import MEMORY_CAUSE_CGROUP_USAGE_UNREADABLE
+    from aj_crew.subagent import MEMORY_CAUSE_CGROUP_USAGE_UNREADABLE
 
     _gate_figure(monkeypatch, 0.0, MEMORY_CAUSE_CGROUP_USAGE_UNREADABLE)
     reading = rs.spawn_floor_reading(_spawn_cfg(2.0))
@@ -1415,7 +1415,7 @@ def test_an_unreadable_cgroup_usage_is_blocked_with_its_cause(monkeypatch) -> No
 def test_tool_says_spawning_is_blocked_on_an_ample_posture(monkeypatch) -> None:
     """End to end through the tool: AMPLE on the posture's figure, while the
     gate's own figure misses the floor, must not read as ample headroom."""
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     fake = rs.ResourceStatus(
         available_gb=8.0,

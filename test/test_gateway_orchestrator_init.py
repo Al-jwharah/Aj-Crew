@@ -18,9 +18,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.slack import gateway as gw_mod
-from kiro_crew.slack.gateway import GatewayOrchestrator
-from kiro_crew.slack.gateway_runtime import channel_boot, orchestrator_init
+from aj_crew.slack import gateway as gw_mod
+from aj_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.slack.gateway_runtime import channel_boot, orchestrator_init
 
 #: ``(function, field, annotation)`` for every ``self.<field>: <annotation> = ...``
 #: the constructor and the channel hoists carried inline, read from their source by
@@ -121,7 +121,7 @@ _DECLARED_FOR_OTHER_OWNERS = frozenset(
 
 #: ``inspect.signature(GatewayOrchestrator)`` before the move.
 _SIGNATURE = (
-    "(cfg: 'KiroCrewConfig', *, no_dashboard: 'bool' = False, no_crons: 'bool' = False, "
+    "(cfg: 'AjCrewConfig', *, no_dashboard: 'bool' = False, no_crons: 'bool' = False, "
     "no_open: 'bool' = False, port_override: 'str | None' = None, json_ready: 'bool' = "
     "False, approval_mode: 'str | None' = None, test_mode: 'bool' = False, credentials: "
     "'Mapping[str, str] | None' = None) -> 'None'"
@@ -230,7 +230,7 @@ def test_the_constructor_keeps_its_name_module_and_signature() -> None:
 
     assert init.__name__ == "__init__"
     assert init.__qualname__ == "GatewayOrchestrator.__init__"
-    assert init.__module__ == "kiro_crew.slack.gateway"
+    assert init.__module__ == "aj_crew.slack.gateway"
     assert str(inspect.signature(GatewayOrchestrator)) == _SIGNATURE
 
 

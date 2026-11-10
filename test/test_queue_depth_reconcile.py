@@ -57,16 +57,16 @@ from queue_depth_reconcile_helpers import (
     _warned,
 )
 
-import kiro_crew.subagent as subagent_mod
-import kiro_crew.subagent_manager.run as run_mod
-import kiro_crew.taskq.store as store_mod
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
-from kiro_crew.subagent_persistence import read_tombstone
-from kiro_crew.taskq import model
-from kiro_crew.taskq.store import TaskStore, TaskStoreUnavailable
-from kiro_crew.testing.wait import await_until
-from kiro_crew.testing.wait import finished as _finished
+import aj_crew.subagent as subagent_mod
+import aj_crew.subagent_manager.run as run_mod
+import aj_crew.taskq.store as store_mod
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+from aj_crew.subagent_persistence import read_tombstone
+from aj_crew.taskq import model
+from aj_crew.taskq.store import TaskStore, TaskStoreUnavailable
+from aj_crew.testing.wait import await_until
+from aj_crew.testing.wait import finished as _finished
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 

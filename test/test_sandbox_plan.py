@@ -1,9 +1,9 @@
 """The confinement plan: what one spawn masks, seals and re-opens, decided once.
 
-:func:`kiro_crew.sandbox_plan.plan_confinement` is pure, so these tests hand it a literal
-:class:`~kiro_crew.sandbox_plan.PlanHost` (the test adapter at the host seam) and assert
-on the :class:`~kiro_crew.sandbox_plan.ConfinementPlan` it returns. The live adapter,
-``kiro_crew.sandbox._live_plan_host``, has its own tests at the end: each host fact it
+:func:`aj_crew.sandbox_plan.plan_confinement` is pure, so these tests hand it a literal
+:class:`~aj_crew.sandbox_plan.PlanHost` (the test adapter at the host seam) and assert
+on the :class:`~aj_crew.sandbox_plan.ConfinementPlan` it returns. The live adapter,
+``aj_crew.sandbox._live_plan_host``, has its own tests at the end: each host fact it
 gathers reaches the plan.
 """
 
@@ -25,9 +25,9 @@ from typing import Any
 import pytest
 from tmpdir_helpers import SHORT_TMP_PREFIX, short_tmp_base
 
-from kiro_crew import sandbox, sandbox_plan, sandbox_seatbelt
-from kiro_crew.dashboard.urls import dashboard_socket_name
-from kiro_crew.sandbox_plan import (
+from aj_crew import sandbox, sandbox_plan, sandbox_seatbelt
+from aj_crew.dashboard.urls import dashboard_socket_name
+from aj_crew.sandbox_plan import (
     BACKEND_NAMESPACE,
     BACKEND_SEATBELT,
     CarveoutProbe,
@@ -705,7 +705,7 @@ def live_host(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     crew.mkdir(parents=True)
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     monkeypatch.setenv("HOME", str(home))
-    for name in ("KIROCREW_POD", "KIROCREW_OS_HOME", "KIRO_HOME"):
+    for name in ("AJCREW_POD", "AJCREW_OS_HOME", "KIRO_HOME"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setattr(sandbox, "config_dir", lambda: crew)
     monkeypatch.setattr(sandbox, "kiro_agents_dir", lambda: home / ".kiro" / "agents")
@@ -763,8 +763,8 @@ def test_a_relative_home_is_compared_against_the_working_directory(
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: Path("relhome")))
         masked = os.path.join("relhome", ".aws")
     else:
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", "relpod")
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", "relpod")
         masked = os.path.join("relpod", ".gnupg")
     plan = sandbox._spawn_plan(backend, "strict", extra_visible_dirs=(str(work / masked),))
     assert masked in [m.path for m in plan.masks if m.cancelled]
@@ -917,9 +917,9 @@ def test_a_table_rebound_on_the_sandbox_reaches_the_plan(
 def test_the_spawn_plan_logs_each_refusal_under_the_sandbox_logger(
     live_host: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
-    caplog.set_level(logging.WARNING, logger="kiro_crew.sandbox")
+    caplog.set_level(logging.WARNING, logger="aj_crew.sandbox")
     sandbox._spawn_plan(BACKEND_NAMESPACE, "standard", extra_writable_dirs=("relative",))
-    [record] = [r for r in caplog.records if r.name == "kiro_crew.sandbox"]
+    [record] = [r for r in caplog.records if r.name == "aj_crew.sandbox"]
     assert record.getMessage() == (
         "SECURITY: refusing sandbox write carve-out 'relative': not an absolute path"
     )

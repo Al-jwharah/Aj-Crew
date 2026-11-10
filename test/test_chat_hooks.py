@@ -6,9 +6,9 @@ import re
 
 import pytest
 
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat import _validate_tool_name
-from kiro_crew.validation import MAX_TOOL_NAME_LEN
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat import _validate_tool_name
+from aj_crew.validation import MAX_TOOL_NAME_LEN
 
 
 class TestToolNameValidation:

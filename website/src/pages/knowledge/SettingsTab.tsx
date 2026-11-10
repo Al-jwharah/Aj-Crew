@@ -33,7 +33,7 @@ const POOL_SIZE_DEFAULT = 3
  * that the runtime-resolved model decides. '' on the effort select is the
  * Default option: the pool then runs High effort —
  * resolved server-side by llm_pool._get_workload_effort.
- * Reads/writes via the same PATCH /api/config/kirocrew endpoint as the
+ * Reads/writes via the same PATCH /api/config/ajcrew endpoint as the
  * Settings page.
  */
 export function SettingsTab() {
@@ -52,8 +52,8 @@ export function SettingsTab() {
       extraction_pool_size?: number
     }
   }>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
   })
   const cfg = cfgQ.data?.knowledge
 
@@ -61,7 +61,7 @@ export function SettingsTab() {
   const patchMut = useMutation({
     mutationFn: ({ path, value }: { path: string; value: number | string | boolean }) =>
       api.patchConfig(path, value),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['kirocrewConfig'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['ajcrewConfig'] }),
     onError: () => {
       setSaveError(i18nT('pages.knowledge.settings.save_failed'))
       // Revert all local inputs to last-known server values

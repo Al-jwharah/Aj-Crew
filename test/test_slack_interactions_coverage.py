@@ -1,4 +1,4 @@
-"""Coverage tests for ``kiro_crew.slack.interactions``.
+"""Coverage tests for ``aj_crew.slack.interactions``.
 
 Focuses on the interactive-payload surfaces the existing suite leaves
 untested: the view-submission registry, ``ack_button``, ``dispatch``
@@ -9,7 +9,7 @@ config writers, and the session resume-choice flow.
 
 Everything runs in-process: no network, no subprocesses, no real Slack.
 ``aiohttp.ClientSession`` is stubbed for the whole module, and config
-writes land in the per-test ``KIROCREW_HOME`` that ``conftest.py`` pins.
+writes land in the per-test ``AJCREW_HOME`` that ``conftest.py`` pins.
 """
 
 from __future__ import annotations
@@ -35,11 +35,11 @@ from slack_interactions_coverage_helpers import (
 )
 from slack_wire_helpers import SlackWire, slack_wire
 
-from kiro_crew import sel as sel_mod
-from kiro_crew.config.loader import ConfigReadError, config_path
-from kiro_crew.slack import handler as sh
-from kiro_crew.slack import interactions as ix
-from kiro_crew.slack.allowlist import (
+from aj_crew import sel as sel_mod
+from aj_crew.config.loader import ConfigReadError, config_path
+from aj_crew.slack import handler as sh
+from aj_crew.slack import interactions as ix
+from aj_crew.slack.allowlist import (
     ACTION_ALLOWLIST_APPROVE,
     ACTION_ALLOWLIST_DENY,
     ACTION_TRACK_APPROVE,
@@ -73,8 +73,8 @@ def _updates(wire: SlackWire) -> list[tuple[Any, Any, Any]]:
 
 
 def _stops(audit: sel_mod.SecurityEventLog) -> list[tuple[str, str]]:
-    """``(session key, outcome)`` of each stored ``/kirocrew stop`` row."""
-    rows = [e for e in audit.recent() if e["operation"] == "/kirocrew stop"]
+    """``(session key, outcome)`` of each stored ``/ajcrew stop`` row."""
+    rows = [e for e in audit.recent() if e["operation"] == "/ajcrew stop"]
     return [(e["caller_identity"], e["outcome"]) for e in reversed(rows)]
 
 
@@ -441,7 +441,7 @@ class TestDispatchRouting:
     async def test_choose_several_opens_the_modal(
         self, orch: MagicMock, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.slack.format import OPTIONS_SEVERAL_ACTION
+        from aj_crew.slack.format import OPTIONS_SEVERAL_ACTION
 
         spy = AsyncMock()
         monkeypatch.setattr(ix, "_open_options_several", spy)
@@ -452,7 +452,7 @@ class TestDispatchRouting:
     async def test_spent_options_marker_is_a_noop(
         self, orch: MagicMock, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.slack.format import OPTIONS_ACTION_PREFIX
+        from aj_crew.slack.format import OPTIONS_ACTION_PREFIX
 
         gate = MagicMock(return_value=True)
         monkeypatch.setattr(ix, "is_allowed_user", gate)
@@ -471,7 +471,7 @@ class TestDispatchRouting:
     async def test_options_blocked_by_channels_governance(
         self, orch: MagicMock, monkeypatch: pytest.MonkeyPatch, ix_logs: pytest.LogCaptureFixture
     ) -> None:
-        from kiro_crew.slack.format import OPTIONS_ACTION_PREFIX, OPTIONS_SEVERAL_ACTION
+        from aj_crew.slack.format import OPTIONS_ACTION_PREFIX, OPTIONS_SEVERAL_ACTION
 
         gov = AsyncMock(return_value=False)
         monkeypatch.setattr(ix, "channel_inbound_permitted", gov)
@@ -611,7 +611,7 @@ class TestChannelsModal:
     @pytest.mark.asyncio
     async def test_refresh_without_orch_is_a_noop(self, monkeypatch: pytest.MonkeyPatch) -> None:
         build = MagicMock()
-        monkeypatch.setattr("kiro_crew.slack.blocks.channels_modal", build)
+        monkeypatch.setattr("aj_crew.slack.blocks.channels_modal", build)
         monkeypatch.setattr(ix, "_orch", None)
         await ix._refresh_channels_modal("V1")
         build.assert_not_called()
@@ -1583,7 +1583,7 @@ class TestResumeChoice:
         lines.append(json.dumps({"role": "tool", "content": "ignored"}))
         (sessions / "s9.jsonl").write_text("\n".join(lines), encoding="utf-8")
         monkeypatch.setattr(ix, "_orch", resume_orch)
-        monkeypatch.setattr("kiro_crew.config.loader.data_home", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.config.loader.data_home", lambda: tmp_path)
 
         await ix._handle_resume_choice(_payload(), _choice(key="s9"), "C1", "m1", "U1", mode="dm")
         texts = [c.args[1] for c in resume_orch.slack.post_message.await_args_list]
@@ -1601,7 +1601,7 @@ class TestResumeChoice:
         (sessions / "dashboard_s9.jsonl").write_text(
             json.dumps({"role": "assistant", "content": "hi there"}), encoding="utf-8"
         )
-        monkeypatch.setattr("kiro_crew.config.loader.data_home", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.config.loader.data_home", lambda: tmp_path)
         await ix._handle_resume_choice(_payload(), _choice(key="s9"), "C1", "m1", "U1", mode="dm")
         texts = [c.args[1] for c in resume_orch.slack.post_message.await_args_list]
         assert any("hi there" in t for t in texts)

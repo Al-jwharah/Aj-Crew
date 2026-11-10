@@ -18,8 +18,8 @@ from pathlib import Path
 import pytest
 
 from conftest import requires_symlinks
-from kiro_crew import hooks, security
-from kiro_crew.config import loader, loader_snapshots
+from aj_crew import hooks, security
+from aj_crew.config import loader, loader_snapshots
 
 
 def _spec(directory: Path, filename: str, name: str) -> Path:
@@ -43,8 +43,8 @@ def _pool_recorder(monkeypatch: pytest.MonkeyPatch) -> list[str]:
 
 
 def _crew_secret(text: str) -> Path:
-    """The crew home's ``.env``: ``KIROCREW_HOME`` is a per-test tmp dir here."""
-    crew_home = Path(os.environ["KIROCREW_HOME"])
+    """The crew home's ``.env``: ``AJCREW_HOME`` is a per-test tmp dir here."""
+    crew_home = Path(os.environ["AJCREW_HOME"])
     crew_home.mkdir(parents=True, exist_ok=True)
     secret = crew_home / ".env"
     secret.write_text(text, encoding="utf-8")

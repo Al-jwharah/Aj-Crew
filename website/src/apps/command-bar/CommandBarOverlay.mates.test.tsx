@@ -65,7 +65,7 @@ vi.mock('../../hooks/useTheme', () => ({ useTheme: () => ({ cycle: vi.fn() }) })
 /** Every network call the overlay could make, so a request is observable. */
 const listApps = vi.fn(async () => [])
 const chatFolders = vi.fn(async () => [] as unknown[])
-const kirocrewConfig = vi.fn(async () => ({}) as unknown)
+const ajcrewConfig = vi.fn(async () => ({}) as unknown)
 // The settings-search governance reads: the root must answer from cache, never fetch.
 const dashboardConfig = vi.fn(async () => ({}) as unknown)
 const tipsStatus = vi.fn(async () => ({}) as unknown)
@@ -74,7 +74,7 @@ vi.mock('../../api/client', () => ({
   api: {
     listApps: (...a: unknown[]) => listApps(...(a as [])),
     chatFolders: (...a: unknown[]) => chatFolders(...(a as [])),
-    kirocrewConfig: (...a: unknown[]) => kirocrewConfig(...(a as [])),
+    ajcrewConfig: (...a: unknown[]) => ajcrewConfig(...(a as [])),
     dashboardConfig: (...a: unknown[]) => dashboardConfig(...(a as [])),
     tipsStatus: (...a: unknown[]) => tipsStatus(...(a as [])),
     agentCatalog: (...a: unknown[]) => agentCatalog(...(a as [])),

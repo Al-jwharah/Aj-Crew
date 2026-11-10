@@ -86,7 +86,7 @@ jobs:
             drive_timeout: "900"
     env:
       PORT: "8799"
-      OUT: "/tmp/kirocrew-ota"
+      OUT: "/tmp/ajcrew-ota"
       INSTALLED_VER: "1.0.0"
       UPDATE_VER: "1.0.1"
       CDP_PORT: "9222"
@@ -108,7 +108,7 @@ jobs:
           python-version: "3.12"
 
       # The app only reaches initAutoUpdate after its gateway connects, and
-      # find-bin.js falls back to a PATH `kirocrew`. Installing the package is
+      # find-bin.js falls back to a PATH `ajcrew`. Installing the package is
       # cheaper and less brittle than building the desktop backend bundle, and the
       # script stubs an empty backend-dist so electron-builder's extraResources
       # does not fail on a missing source dir.
@@ -117,8 +117,8 @@ jobs:
           set -euo pipefail
           python -m pip install --upgrade pip
           pip install -e .
-          command -v kirocrew
-          kirocrew --version || true
+          command -v ajcrew
+          ajcrew --version || true
 
       - name: Install electron dependencies
         working-directory: website/electron
@@ -177,9 +177,9 @@ jobs:
       - name: Launch the installed app with remote debugging
         run: |
           set -euo pipefail
-          KIROCREW_UPDATE_FEED="http://127.0.0.1:${PORT}/feed" \
-          KIROCREW_FLAVOR=beta \
-          KIROCREW_HOME="${OUT}/home" \
+          AJCREW_UPDATE_FEED="http://127.0.0.1:${PORT}/feed" \
+          AJCREW_FLAVOR=beta \
+          AJCREW_HOME="${OUT}/home" \
           nohup "$INSTALLED_BIN" --remote-debugging-port="${CDP_PORT}" \
             > /tmp/ota-app.log 2>&1 &
           for i in $(seq 1 40); do

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 
 import { isOpenableMarkerPath, openFileMarkerPaths, OPEN_FILE_MARKER_MAX_CHIPS } from '../utils/detectOpenFileMarker'
 
-const marker = (path: string) => `<!-- kirocrew:open-file path="${path}" -->`
+const marker = (path: string) => `<!-- ajcrew:open-file path="${path}" -->`
 
 describe('openFileMarkerPaths', () => {
   it('returns the absolute path a marker in the reply names', () => {
@@ -21,12 +21,12 @@ describe('openFileMarkerPaths', () => {
   })
 
   it('tolerates whitespace inside the comment', () => {
-    expect(openFileMarkerPaths('<!--   kirocrew:open-file   path="/a/b.md"   -->')).toEqual(['/a/b.md'])
+    expect(openFileMarkerPaths('<!--   ajcrew:open-file   path="/a/b.md"   -->')).toEqual(['/a/b.md'])
   })
 
   it('returns nothing without a marker, and ignores the preview marker', () => {
     expect(openFileMarkerPaths('see /home/u/notes.md')).toEqual([])
-    expect(openFileMarkerPaths('<!-- kirocrew:preview url="http://127.0.0.1:8080" -->')).toEqual([])
+    expect(openFileMarkerPaths('<!-- ajcrew:preview url="http://127.0.0.1:8080" -->')).toEqual([])
     expect(openFileMarkerPaths('')).toEqual([])
   })
 

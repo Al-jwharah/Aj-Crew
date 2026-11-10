@@ -57,11 +57,11 @@ concurrency:
 jobs:
   fork-opus-review:
     name: Fork Opus 5.5 Review
-    # `kirocrew-runners` larger-runner group, targeted by GROUP not label; see
+    # `ajcrew-runners` larger-runner group, targeted by GROUP not label; see
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     # Runaway/hang backstop only, NOT a per-review budget: the review
     # self-terminates well before this. Set at 120 min (matches
     # claude-review.yml) so it never cuts a completing --max-turns 180 review --
@@ -1232,7 +1232,7 @@ jobs:
           #
           # A marker comment is the ONLY thing a freshness verifier reads. A
           # write that does not land therefore leaves the PR indistinguishable
-          # from one no lane ever reviewed: kirocrew-prepare-pr's pr_status.py refuses a
+          # from one no lane ever reviewed: ajcrew-prepare-pr's pr_status.py refuses a
           # PR whose check-runs, readiness status and mergeable state all pass,
           # and the only way out is manufacturing a new head -- which re-rolls
           # the non-deterministic review lanes and discards the verdicts they
@@ -1488,7 +1488,7 @@ jobs:
             # would invent a BLOCK nobody judged out of an infrastructure fault.
             # The annotation is what says so: the required readiness status reads
             # check-run CONCLUSIONS and has no stamp-freshness read, so the reader
-            # that catches a head with no verdict is kirocrew-prepare-pr's own marker
+            # that catches a head with no verdict is ajcrew-prepare-pr's own marker
             # evaluation, run before a PR is called ready.
             if [ -n "$slot" ]; then
               occupied=""

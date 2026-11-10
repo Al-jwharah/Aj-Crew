@@ -17,9 +17,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import onboarding_import, onboarding_sources
-from kiro_crew.cron import CronService
-from kiro_crew.onboarding_sources import amazon_quick
+from aj_crew import onboarding_import, onboarding_sources
+from aj_crew.cron import CronService
+from aj_crew.onboarding_sources import amazon_quick
 
 # Keep apply_import's MCP sidecar lock off the real ~/.kiro/settings (see the
 # shared fixture in test/conftest.py).
@@ -472,7 +472,7 @@ class TestMcpServers:
         _apply(plan, destination, "mcp_servers")
 
         assert _counts(plan) == {"mcp_servers": 4}
-        # A server that was on in Quick is written the way Kiro Crew writes an
+        # A server that was on in Quick is written the way Aj Crew writes an
         # enabled server: with no ``disabled`` key at all.
         assert _written_servers(destination) == {
             "notes": {"command": "notes-mcp", "args": ["serve", "--stdio"]},

@@ -4,7 +4,7 @@
  *
  * The row is a +/- stepper over `dashboard.title_refresh_every_turns`, like
  * Message Font Size: a plain text readout, no typed input box. It saves through
- * PATCH /api/config/kirocrew and reads back from GET /api/config/kirocrew. The
+ * PATCH /api/config/ajcrew and reads back from GET /api/config/ajcrew. The
  * harness answers that route from one stateful fixture, so a save is read back
  * the way the gateway would return it, and the frames show what the server
  * holds rather than an optimistic display that a refetch would undo.
@@ -66,7 +66,7 @@ let stored
 // so the refetch after the failure reads back the value the server still holds.
 let failNextPatch = false
 const patches = []
-await page.route('**/api/config/kirocrew', route => {
+await page.route('**/api/config/ajcrew', route => {
   const req = route.request()
   if (req.method() === 'PATCH') {
     const { path, value } = req.postDataJSON()

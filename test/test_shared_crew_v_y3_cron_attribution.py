@@ -5,17 +5,17 @@ from __future__ import annotations
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.cron import CronJob
-from kiro_crew.dashboard.cron_inject import (
+from aj_crew.cron import CronJob
+from aj_crew.dashboard.cron_inject import (
     _MIN_PROMPT_CHARS_TO_REFERENCE,
     _REFERENCE_MARKER,
     hydrate_slot_from_history,
     inject_cron_result_to_dashboard,
 )
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.shared_crew import attribution, trigger
-from kiro_crew.shared_crew.admission_gate import AUTOMATION_PRINCIPAL
-from kiro_crew.shared_crew.contracts import ActorContext, Principal
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.shared_crew import attribution, trigger
+from aj_crew.shared_crew.admission_gate import AUTOMATION_PRINCIPAL
+from aj_crew.shared_crew.contracts import ActorContext, Principal
 
 
 @pytest.fixture
@@ -59,7 +59,7 @@ def test_non_cron_keys_do_not_invent_a_trigger(key):
 
 
 def test_human_creator_is_not_replaced_by_a_cron_label():
-    from kiro_crew.shared_crew.contracts import Transport
+    from aj_crew.shared_crew.contracts import Transport
 
     slot = _ChatSlot("cron-abc12345")
     human = Principal.from_dict({"id": "p_human", "kind": "human"})

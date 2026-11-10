@@ -19,8 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import member_goals, member_records, members, sandbox
-from kiro_crew.sandbox import userns_available
+from aj_crew import member_goals, member_records, members, sandbox
+from aj_crew.sandbox import userns_available
 
 pytestmark = [
     pytest.mark.skipif(sys.platform != "linux", reason="the namespace launcher is Linux-only"),
@@ -51,7 +51,7 @@ def write(path):
 
 report = {
     "mnt_ns": os.readlink("/proc/self/ns/mnt"),
-    "marker": os.environ.get("KIROCREW_SANDBOX_ACTIVE"),
+    "marker": os.environ.get("AJCREW_SANDBOX_ACTIVE"),
     "paths": {p: {"read": attempt(lambda p=p: read(p)), "write": attempt(lambda p=p: write(p))}
               for p in sys.argv[1:]},
 }
@@ -68,9 +68,9 @@ def home(tmp_path, monkeypatch) -> Path:
     # too; ``$HOME`` is pinned so no step of the launch touches a real data home.
     home = (tmp_path / "home").resolve()
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_ASSUME_GATEWAY_RUNNING", "0")
+    monkeypatch.setenv("AJCREW_ASSUME_GATEWAY_RUNNING", "0")
     sandbox.reset_backend()
     yield home
     sandbox.reset_backend()
@@ -89,7 +89,7 @@ def _write_all_three() -> list[Path]:
 
 
 def _run(mode: str, home: Path, paths: list[Path]) -> dict:
-    env = {k: v for k, v in os.environ.items() if k != "KIROCREW_SANDBOX_ACTIVE"}
+    env = {k: v for k, v in os.environ.items() if k != "AJCREW_SANDBOX_ACTIVE"}
     proc = subprocess.run(
         sandbox.namespace_argv([sys.executable, "-c", _AGENT, *map(str, paths)], mode),
         cwd=home,

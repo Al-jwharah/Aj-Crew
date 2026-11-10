@@ -16,9 +16,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import subagent as sa
-from kiro_crew.subagent import SubagentManager
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import subagent as sa
+from aj_crew.subagent import SubagentManager
+from aj_crew.testing.wait import async_wait_until
 
 
 def _manager(forget_sid: str = "sid-1") -> SubagentManager:

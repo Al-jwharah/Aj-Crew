@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from kiro_crew.coder import retention
-from kiro_crew.gateway_shutdown_budget import GRACEFUL_SHUTDOWN_SECS, TOTAL_SHUTDOWN_BUDGET_SECS
+from aj_crew.coder import retention
+from aj_crew.gateway_shutdown_budget import GRACEFUL_SHUTDOWN_SECS, TOTAL_SHUTDOWN_BUDGET_SECS
 
 
 def test_the_shutdown_stop_ends_inside_the_graceful_budget():

@@ -24,8 +24,8 @@ from named_cases_helpers import named_cases
 from source_corpus import repo_files_named, repo_root
 from yaml_helpers import load_with
 
-from kiro_crew import history
-from kiro_crew.frontmatter import (
+from aj_crew import history
+from aj_crew.frontmatter import (
     ONBOARDING_IMPORT,
     SKILL_LOADER,
     SKILL_UPDATE,
@@ -40,8 +40,8 @@ from kiro_crew.frontmatter import (
     split_frontmatter,
     split_inline_comment,
 )
-from kiro_crew.onboarding_import import _column0_activation_declared, _frontmatter
-from kiro_crew.skills import SkillsLoader
+from aj_crew.onboarding_import import _column0_activation_declared, _frontmatter
+from aj_crew.skills import SkillsLoader
 
 
 class _StringScalarLoader(yaml.SafeLoader):
@@ -866,7 +866,7 @@ class TestTheRepoSkillFileCorpus:
     # needs updating with it.
     NOT_VALID_YAML = frozenset(
         {
-            "src/kiro_crew/builtin_skills/web-verify/SKILL.md",
+            "src/aj_crew/builtin_skills/web-verify/SKILL.md",
         }
     )
 
@@ -1031,21 +1031,21 @@ class TestChompingCannotFlipAnActivationFlag:
         # `project_scope_satisfied` strips its own fragment, so `src/x\n` was always gated
         # as `src/x`. Only the whitespace-only case was ever a defect.
         for label, header, body in (
-            ("keep chomped", "|+", ["  src/kiro_crew", "", ""]),
-            ("clip chomped", "|", ["  src/kiro_crew", ""]),
-            ("plain literal", "|", ["  src/kiro_crew"]),
-            ("strip chomped", "|-", ["  src/kiro_crew"]),
-            ("folded", ">", ["  src/kiro_crew"]),
+            ("keep chomped", "|+", ["  src/aj_crew", "", ""]),
+            ("clip chomped", "|", ["  src/aj_crew", ""]),
+            ("plain literal", "|", ["  src/aj_crew"]),
+            ("strip chomped", "|-", ["  src/aj_crew"]),
+            ("folded", ">", ["  src/aj_crew"]),
         ):
             text = "\n".join(["---", "name: s", f"repo_scope: {header}", *body, "---", "", "# B"])
             value = parse_frontmatter(text, SKILL_LOADER)["repo_scope"]
-            assert value.strip() == "src/kiro_crew", f"{label}: {value!r}"
+            assert value.strip() == "src/aj_crew", f"{label}: {value!r}"
         # Not vacuous: at least one spelling really does carry the break, so the
         # normalisation is doing work rather than restating the parser.
         carried = parse_frontmatter(
-            "---\nname: s\nrepo_scope: |\n  src/kiro_crew\n---\n\n# B\n", SKILL_LOADER
+            "---\nname: s\nrepo_scope: |\n  src/aj_crew\n---\n\n# B\n", SKILL_LOADER
         )["repo_scope"]
-        assert carried == "src/kiro_crew\n", carried
+        assert carried == "src/aj_crew\n", carried
         # The whitespace-only value: truthy as parsed, falsy once normalised, which is
         # what makes the three gate sites agree. Measured spellings -- keep-chomping and
         # an explicit indent both survive as breaks, and so does a tab past the indent.
@@ -1076,7 +1076,7 @@ class TestChompingCannotFlipAnActivationFlag:
         # third consumed an unstripped row, so one document was scoped at one site and
         # unscoped at another. Pin every site that feeds the gate as normalised.
         # The facade and every ``skills_*`` owner it binds members from, joined.
-        src_dir = Path(__file__).resolve().parents[1] / "src/kiro_crew"
+        src_dir = Path(__file__).resolve().parents[1] / "src/aj_crew"
         src = "\n".join(
             p.read_text(encoding="utf-8")
             for p in [src_dir / "skills.py", *sorted(src_dir.glob("skills_*.py"))]
@@ -1257,7 +1257,7 @@ def test_removing_the_last_field_keeps_the_body_blank_lines():
     """The fence takes ONE separator newline with it. `lstrip` would eat every
     blank line the document itself opens with — a silent reflow of text this
     writer promises to preserve byte for byte."""
-    from kiro_crew.frontmatter import STEERING_LOADER, set_frontmatter_fields
+    from aj_crew.frontmatter import STEERING_LOADER, set_frontmatter_fields
 
     doc = "---\ninclusion: manual\n---\n\n\n# Title\n\nbody\n"
     out = set_frontmatter_fields(doc, {"inclusion": None}, STEERING_LOADER)
@@ -1265,7 +1265,7 @@ def test_removing_the_last_field_keeps_the_body_blank_lines():
 
 
 def test_removing_the_last_field_on_a_body_with_no_blank_line():
-    from kiro_crew.frontmatter import STEERING_LOADER, set_frontmatter_fields
+    from aj_crew.frontmatter import STEERING_LOADER, set_frontmatter_fields
 
     doc = "---\ninclusion: manual\n---\n# Title\n"
     assert set_frontmatter_fields(doc, {"inclusion": None}, STEERING_LOADER) == "# Title\n"
@@ -1282,17 +1282,17 @@ class TestCrlfSteeringDocuments:
     CRLF = "---\r\ninclusion: manual\r\n---\r\n# Title\r\nbody\r\n"
 
     def _d(self):
-        from kiro_crew.frontmatter import STEERING_LOADER
+        from aj_crew.frontmatter import STEERING_LOADER
 
         return STEERING_LOADER
 
     def test_the_declaration_is_visible(self):
-        from kiro_crew.frontmatter import split_frontmatter
+        from aj_crew.frontmatter import split_frontmatter
 
         assert split_frontmatter(self.CRLF, self._d())[0] == {"inclusion": "manual"}
 
     def test_an_edit_rewrites_rather_than_prepends(self):
-        from kiro_crew.frontmatter import set_frontmatter_fields
+        from aj_crew.frontmatter import set_frontmatter_fields
 
         out = set_frontmatter_fields(self.CRLF, {"inclusion": "always"}, self._d())
         assert out == "---\r\ninclusion: always\r\n---\r\n# Title\r\nbody\r\n"
@@ -1300,20 +1300,20 @@ class TestCrlfSteeringDocuments:
     def test_creation_matches_the_document_newline(self):
         """Emitting LF into a CRLF file leaves it mixed — the same class of
         damage as reflowing the body, and as invisible in a diff viewer."""
-        from kiro_crew.frontmatter import set_frontmatter_fields
+        from aj_crew.frontmatter import set_frontmatter_fields
 
         out = set_frontmatter_fields("# Title\r\nbody\r\n", {"inclusion": "manual"}, self._d())
         assert out == "---\r\ninclusion: manual\r\n---\r\n# Title\r\nbody\r\n"
         assert "\n" not in out.replace("\r\n", "")
 
     def test_removing_the_last_field_takes_one_crlf(self):
-        from kiro_crew.frontmatter import set_frontmatter_fields
+        from aj_crew.frontmatter import set_frontmatter_fields
 
         out = set_frontmatter_fields(self.CRLF, {"inclusion": None}, self._d())
         assert out == "# Title\r\nbody\r\n"
 
     def test_lf_documents_are_unchanged(self):
-        from kiro_crew.frontmatter import set_frontmatter_fields
+        from aj_crew.frontmatter import set_frontmatter_fields
 
         lf = "---\ninclusion: manual\n---\n# Title\nbody\n"
         out = set_frontmatter_fields(lf, {"inclusion": "always"}, self._d())
@@ -1330,21 +1330,21 @@ class TestEmptyFenceIsStillAFence:
     """
 
     def test_an_edit_populates_the_empty_block_in_place(self):
-        from kiro_crew.frontmatter import STEERING_LOADER, set_frontmatter_fields
+        from aj_crew.frontmatter import STEERING_LOADER, set_frontmatter_fields
 
         doc = "---\n---\n# Title\nbody\n"
         out = set_frontmatter_fields(doc, {"inclusion": "manual"}, STEERING_LOADER)
         assert out == "---\ninclusion: manual\n---\n# Title\nbody\n"
 
     def test_an_edit_populates_the_empty_crlf_block_in_place(self):
-        from kiro_crew.frontmatter import STEERING_LOADER, set_frontmatter_fields
+        from aj_crew.frontmatter import STEERING_LOADER, set_frontmatter_fields
 
         doc = "---\r\n---\r\n# Title\r\nbody\r\n"
         out = set_frontmatter_fields(doc, {"inclusion": "manual"}, STEERING_LOADER)
         assert out == "---\r\ninclusion: manual\r\n---\r\n# Title\r\nbody\r\n"
 
     def test_split_frontmatter_reports_no_fields_and_the_real_body(self):
-        from kiro_crew.frontmatter import STEERING_LOADER, split_frontmatter
+        from aj_crew.frontmatter import STEERING_LOADER, split_frontmatter
 
         fields, body = split_frontmatter("---\n---\n# Title\nbody\n", STEERING_LOADER)
         assert fields == {}
@@ -1354,7 +1354,7 @@ class TestEmptyFenceIsStillAFence:
 def test_crlf_block_scalar_survives_a_mode_edit():
     """The folded value's continuation lines are re-joined with the document's
     newline, so a retained CR would be written back as ``\r\r\n``."""
-    from kiro_crew.frontmatter import STEERING_LOADER, set_frontmatter_fields
+    from aj_crew.frontmatter import STEERING_LOADER, set_frontmatter_fields
 
     doc = (
         "---\r\ndescription: >\r\n  folded one\r\n  folded two\r\n"

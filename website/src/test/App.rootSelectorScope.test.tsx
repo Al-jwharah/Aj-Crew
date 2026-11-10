@@ -47,12 +47,12 @@ vi.mock('../pages/ChatPage', () => ({ default: () => <div data-testid="chat-page
 vi.mock('../pages/SystemPage', () => ({ default: () => null }))
 vi.mock('../pages/ProjectsPage', () => ({ default: () => null }))
 vi.mock('../pages/LogsPage', () => ({ default: () => null }))
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => null }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => null }))
 vi.mock('../pages/CapabilitiesPage', () => ({ default: () => null }))
 vi.mock('../pages/NotificationsPage', () => ({ default: () => null }))
 vi.mock('../pages/SchedulePage', () => ({ default: () => null }))
 vi.mock('../hooks/useWebSocket', () => ({ useWebSocket: () => ({ subscribeLogs: () => {} }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'kirocrew' }], defaultAgent: 'kirocrew' })) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'ajcrew' }], defaultAgent: 'ajcrew' })) }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span>, Lightbox: () => null }))
 vi.mock('../api/client', () => ({
@@ -73,7 +73,7 @@ vi.mock('../api/client', () => ({
     updateThemeConfig: vi.fn().mockResolvedValue({}),
     onboardingImportScan: vi.fn().mockResolvedValue({ sources: [], skipped: [], merge_only: true }),
     onboardingImportState: vi.fn().mockResolvedValue({}),
-    beaconStatus: vi.fn().mockResolvedValue({ enabled: true, would_send: true, reason: 'ready', endpoint_configured: true, env_override: false, env_var: 'KIROCREW_TELEMETRY_DISABLED' }),
+    beaconStatus: vi.fn().mockResolvedValue({ enabled: true, would_send: true, reason: 'ready', endpoint_configured: true, env_override: false, env_var: 'AJCREW_TELEMETRY_DISABLED' }),
     patchConfig: vi.fn().mockResolvedValue({}),
   },
   isAuthBannerShown: vi.fn(() => false),

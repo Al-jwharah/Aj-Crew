@@ -1,4 +1,4 @@
-"""``kirocrew cron`` verbs refuse a busy store with one line, not a traceback.
+"""``ajcrew cron`` verbs refuse a busy store with one line, not a traceback.
 
 ``cron add`` already answers ``CronStoreBusy`` with ``cron store busy, please
 retry`` on stderr and exit 1. ``update``, ``remove``, ``pause`` and ``resume``
@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.cli_commands as cc
-from kiro_crew.cron import CronService, CronStoreBusy
+import aj_crew.cli_commands as cc
+from aj_crew.cron import CronService, CronStoreBusy
 
 
 def _busy(*_args: object, **_kwargs: object) -> object:

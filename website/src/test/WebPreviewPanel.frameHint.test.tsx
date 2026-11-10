@@ -31,7 +31,7 @@ import WebPreviewPanel from '../components/WebPreviewPanel'
  *  not refused by the gate (which has its own cases). */
 const PORTS = [80, 443, 1234, 3000, 3001, 4000, 4321, 5000, 5173, 5174, 8000, 8080, 8081, 9000]
 const ORIGINS = PORTS.flatMap(p => [`localhost:${p}`, `127.0.0.1:${p}`, `[::1]:${p}`])
-const kirocrewConfig = vi.fn()
+const ajcrewConfig = vi.fn()
 const patchConfig = vi.fn()
 vi.mock('../api/client', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../api/client')>()
@@ -39,7 +39,7 @@ vi.mock('../api/client', async (importOriginal) => {
     ...actual,
     api: {
       ...actual.api,
-      kirocrewConfig: () => kirocrewConfig(),
+      ajcrewConfig: () => ajcrewConfig(),
       patchConfig: (path: string, value: unknown) => patchConfig(path, value),
     },
   }
@@ -61,7 +61,7 @@ const PICKED_AS_TYPED = 'http://localhost:3000/'
 
 beforeEach(() => {
   localStorage.clear()
-  kirocrewConfig.mockReset().mockResolvedValue({ dashboard: { browser_local_origins: ORIGINS } })
+  ajcrewConfig.mockReset().mockResolvedValue({ dashboard: { browser_local_origins: ORIGINS } })
   patchConfig.mockReset().mockResolvedValue({ ok: true })
   // A reachable server by default, so the liveness probe does not take the
   // preview into its unreachable state while a test is about something else.

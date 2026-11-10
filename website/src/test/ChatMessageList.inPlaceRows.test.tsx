@@ -271,8 +271,8 @@ describe('a change card', () => {
     editable: [],
     params: { path: 'chat.verbosity', value: 'brief' },
     plan: {
-      apply: [{ method: 'PATCH', path: '/api/config/kirocrew', body: { path: 'chat.verbosity', value: 'brief' } }],
-      undo: [{ method: 'PATCH', path: '/api/config/kirocrew', body: { path: 'chat.verbosity', value: 'standard' } }],
+      apply: [{ method: 'PATCH', path: '/api/config/ajcrew', body: { path: 'chat.verbosity', value: 'brief' } }],
+      undo: [{ method: 'PATCH', path: '/api/config/ajcrew', body: { path: 'chat.verbosity', value: 'standard' } }],
     },
     created_at: 1_700_000_000,
     expires_at: NOW + 3_600_000,

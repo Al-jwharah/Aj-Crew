@@ -1,8 +1,8 @@
 /**
- * The AppArmor grant a DIRECTLY LAUNCHED Kiro Crew needs, and why the app cannot
+ * The AppArmor grant a DIRECTLY LAUNCHED Aj Crew needs, and why the app cannot
  * just apply it itself.
  *
- * `kirocrew service install` installs a NAMED AppArmor profile and lets systemd
+ * `ajcrew service install` installs a NAMED AppArmor profile and lets systemd
  * apply it to the gateway unit. A double-clicked AppImage has no unit: this
  * process execs the bundled backend directly, so nothing transitions either of
  * them into a profile. On Ubuntu 23.10+ (`kernel.apparmor_restrict_unprivileged_
@@ -38,9 +38,9 @@
  * @param {Record<string,string|undefined>} opts.env - `process.env`.
  * @param {(path: string) => string|null} opts.readSysctl - returns the sysctl
  *   contents, or null when it cannot be read (not Ubuntu, no AppArmor).
- * @param {string} [opts.cliBin] - absolute path to the bundled `kirocrew` CLI.
+ * @param {string} [opts.cliBin] - absolute path to the bundled `ajcrew` CLI.
  *   REQUIRED in practice: this persona installed no CLI, so there is no
- *   `kirocrew` on their PATH and a bare command would be `command not found`.
+ *   `ajcrew` on their PATH and a bare command would be `command not found`.
  * @returns {{appImagePath: string, command: string, reason: string}|null}
  *   null when nothing is needed — a non-Linux host, a host that does not
  *   restrict user namespaces, or a launch that is not a direct AppImage.
@@ -68,9 +68,9 @@ function describeSandboxProfileNeed({ platform, env, readSysctl, cliBin }) {
 
   // Name the CLI by absolute path. The AppImage is documented as needing "no
   // Python, pip, npm, or Node", so the CLI exists only INSIDE this bundle —
-  // printing `kirocrew` would hand the affected user `command not found` and
+  // printing `ajcrew` would hand the affected user `command not found` and
   // leave them with only the sandbox opt-out.
-  const cli = String(cliBin || "").trim() || "kirocrew";
+  const cli = String(cliBin || "").trim() || "ajcrew";
 
   return {
     appImagePath,
@@ -89,7 +89,7 @@ function describeSandboxProfileNeed({ platform, env, readSysctl, cliBin }) {
  * Single-quote a value for safe pasting into a POSIX shell.
  *
  * A filename is attacker-influenced for a downloaded AppImage, and this string
- * is printed for a human to paste, so `Kiro-Crew-$(...).AppImage` must not have
+ * is printed for a human to paste, so `Aj-Crew-$(...).AppImage` must not have
  * its substitution executed. Embedded single quotes are closed, escaped, and
  * reopened — the standard `'\''` dance.
  */

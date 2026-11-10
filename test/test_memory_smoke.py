@@ -1,7 +1,7 @@
 """Smoke tests for memory system across all agent types and sessions.
 
 Verifies that memory (semantic, episodic, lessons) is truly useful:
-- Injected for ALL agents (kirocrew, custom, cron, taskrunner)
+- Injected for ALL agents (ajcrew, custom, cron, taskrunner)
 - Complex values render as JSON, not [Object] or Python repr
 - Episodic text-hash dedup prevents near-identical entries
 - Consolidation prompt instructs LLM to merge existing keys
@@ -15,12 +15,12 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.context import ContextBuilder
-from kiro_crew.hooks import ContextRule, HookManager, HooksConfig, TransformHook
-from kiro_crew.learn import LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew.context import ContextBuilder
+from aj_crew.hooks import ContextRule, HookManager, HooksConfig, TransformHook
+from aj_crew.learn import LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
+from aj_crew.vector_memory import VectorMemoryStore
 
 
 def _builder(tmp_path: Path, *, opened, **kw: object) -> ContextBuilder:
@@ -129,12 +129,12 @@ class TestMemoryInjectionAllAgents:
     # fixture for the advisory it pins off.
     pytestmark = pytest.mark.usefixtures("ample_host_resources")
 
-    def test_kirocrew_agent_gets_everything(self, tmp_path: Path, opened) -> None:
+    def test_ajcrew_agent_gets_everything(self, tmp_path: Path, opened) -> None:
         ws = tmp_path / "ws"
         store = MemoryStore(workspace=ws)
         store.write("# Memory\n\nUser likes Python.")
         builder = _builder(tmp_path, memory=store, opened=opened)
-        ctx = builder.build_session_context(agent="kirocrew")
+        ctx = builder.build_session_context(agent="ajcrew")
         assert "Python" in ctx
         assert "[CRITICAL RULES" in ctx
 
@@ -156,8 +156,8 @@ class TestMemoryInjectionAllAgents:
         # explicit ``includeCrewContext: false`` suppresses it.
         agents_dir = tmp_path / "agents"
         agents_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.context.kiro_agents_dir", lambda: agents_dir)
-        monkeypatch.setattr("kiro_crew.context._INCLUDE_CREW_CONTEXT_CACHE", {})
+        monkeypatch.setattr("aj_crew.context.kiro_agents_dir", lambda: agents_dir)
+        monkeypatch.setattr("aj_crew.context._INCLUDE_CREW_CONTEXT_CACHE", {})
         builder = _builder(tmp_path, opened=opened)
         ctx = builder.build_session_context(agent="my-custom-agent")
         assert "[CRITICAL RULES" in ctx
@@ -166,7 +166,7 @@ class TestMemoryInjectionAllAgents:
         self, tmp_path: Path, monkeypatch, opened
     ) -> None:
         # A custom app agent that declares ``includeCrewContext: false`` ships its
-        # own output contract, so the kirocrew assistant's critical-rules block
+        # own output contract, so the ajcrew assistant's critical-rules block
         # (diff blocks, [OPTIONS:] footer, absolute-path rule) must NOT be injected
         # on top of it — that both conflicts with the agent's contract and, on a
         # safety-tuned model, reads as an identity override the model refuses.
@@ -175,12 +175,12 @@ class TestMemoryInjectionAllAgents:
         (agents_dir / "opted-out-agent.json").write_text(
             json.dumps({"name": "opted-out-agent", "includeCrewContext": False})
         )
-        monkeypatch.setattr("kiro_crew.context.kiro_agents_dir", lambda: agents_dir)
-        monkeypatch.setattr("kiro_crew.context._INCLUDE_CREW_CONTEXT_CACHE", {})
+        monkeypatch.setattr("aj_crew.context.kiro_agents_dir", lambda: agents_dir)
+        monkeypatch.setattr("aj_crew.context._INCLUDE_CREW_CONTEXT_CACHE", {})
         builder = _builder(tmp_path, opened=opened)
         ctx = builder.build_session_context(agent="opted-out-agent")
         assert "[CRITICAL RULES" not in ctx
-        # The built-in agent still gets it (see test_kirocrew_agent_gets_everything).
+        # The built-in agent still gets it (see test_ajcrew_agent_gets_everything).
 
     def test_plain_custom_agent_keeps_dashboard_nudges(
         self, tmp_path: Path, monkeypatch, opened
@@ -189,9 +189,9 @@ class TestMemoryInjectionAllAgents:
         # (ask_question / suggest_followup) are still injected on a dashboard slot.
         agents_dir = tmp_path / "agents"
         agents_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.context.kiro_agents_dir", lambda: agents_dir)
-        monkeypatch.setattr("kiro_crew.context._INCLUDE_CREW_CONTEXT_CACHE", {})
-        monkeypatch.setattr("kiro_crew.context.has_dashboard_surface", lambda key: True)
+        monkeypatch.setattr("aj_crew.context.kiro_agents_dir", lambda: agents_dir)
+        monkeypatch.setattr("aj_crew.context._INCLUDE_CREW_CONTEXT_CACHE", {})
+        monkeypatch.setattr("aj_crew.context.has_dashboard_surface", lambda key: True)
         builder = _builder(tmp_path, opened=opened)
         msg, _ = builder.build_message(
             "hello",
@@ -216,9 +216,9 @@ class TestMemoryInjectionAllAgents:
         (agents_dir / "opted-out-agent.json").write_text(
             json.dumps({"name": "opted-out-agent", "includeCrewContext": False})
         )
-        monkeypatch.setattr("kiro_crew.context.kiro_agents_dir", lambda: agents_dir)
-        monkeypatch.setattr("kiro_crew.context._INCLUDE_CREW_CONTEXT_CACHE", {})
-        monkeypatch.setattr("kiro_crew.context.has_dashboard_surface", lambda key: True)
+        monkeypatch.setattr("aj_crew.context.kiro_agents_dir", lambda: agents_dir)
+        monkeypatch.setattr("aj_crew.context._INCLUDE_CREW_CONTEXT_CACHE", {})
+        monkeypatch.setattr("aj_crew.context.has_dashboard_surface", lambda key: True)
         builder = _builder(tmp_path, opened=opened)
         msg, _ = builder.build_message(
             "hello",
@@ -235,7 +235,7 @@ class TestMemoryInjectionAllAgents:
         # The per-agent flag cache must be droppable: an app upgrade rewrites its
         # agent JSON mid-process, so a value cached before that write would stay
         # wrong until gateway restart otherwise.
-        import kiro_crew.context as ctx
+        import aj_crew.context as ctx
 
         monkeypatch.setattr(ctx, "_INCLUDE_CREW_CONTEXT_CACHE", {"a": True, "b": False})
         ctx.invalidate_include_crew_context_cache()
@@ -245,8 +245,8 @@ class TestMemoryInjectionAllAgents:
         # Wiring: rescanning the materialized-agent snapshot MUST invalidate the
         # flag cache, so a flipped includeCrewContext takes effect without a
         # gateway restart (the restart-heals class this PR removes).
-        import kiro_crew.context as ctx
-        from kiro_crew.config import loader
+        import aj_crew.context as ctx
+        from aj_crew.config import loader
 
         hit = {}
         monkeypatch.setattr(
@@ -281,7 +281,7 @@ class TestMemoryInjectionAllAgents:
         assert "WORKSPACE IDENTITY" not in ctx
 
     def test_custom_agent_gets_lessons(self, tmp_path: Path, opened) -> None:
-        from kiro_crew.learn import Lesson
+        from aj_crew.learn import Lesson
 
         lessons = LessonStore(base_dir=tmp_path)
         lessons.save(
@@ -347,7 +347,7 @@ class TestEpisodicInjectionAllAgents:
         assert "memory_recall" in msg
         assert "PostgreSQL" in vs.recall("what database should I use?")["episodic_context"]
 
-    def test_kirocrew_agent_carries_episodic_once_on_new_session(
+    def test_ajcrew_agent_carries_episodic_once_on_new_session(
         self, tmp_path: Path, opened
     ) -> None:
         store, vs = self._seeded(tmp_path, opened=opened)
@@ -355,7 +355,7 @@ class TestEpisodicInjectionAllAgents:
         msg, _ = builder.build_message(
             "what database should I use?",
             is_new_session=True,
-            agent="kirocrew",
+            agent="ajcrew",
         )
         assert msg.count("PostgreSQL") == 1
         assert "memory_recall" in msg
@@ -459,7 +459,7 @@ class TestMMRReranking:
     """MMR reranking balances relevance with diversity in episodic results."""
 
     def test_mmr_rerank_promotes_diversity(self) -> None:
-        from kiro_crew.vector_memory import _mmr_rerank
+        from aj_crew.vector_memory import _mmr_rerank
 
         candidates = [
             {"text": "deployed H2C to prod fixed IAM role", "score": 0.92},
@@ -479,18 +479,18 @@ class TestMMRReranking:
         assert not any("wrong scope" in t for t in texts)
 
     def test_mmr_rerank_single_item(self) -> None:
-        from kiro_crew.vector_memory import _mmr_rerank
+        from aj_crew.vector_memory import _mmr_rerank
 
         result = _mmr_rerank([{"text": "only one", "score": 0.5}], limit=3)
         assert len(result) == 1
 
     def test_mmr_rerank_empty(self) -> None:
-        from kiro_crew.vector_memory import _mmr_rerank
+        from aj_crew.vector_memory import _mmr_rerank
 
         assert _mmr_rerank([], limit=3) == []
 
     def test_mmr_rerank_respects_limit(self) -> None:
-        from kiro_crew.vector_memory import _mmr_rerank
+        from aj_crew.vector_memory import _mmr_rerank
 
         candidates = [{"text": f"item {i}", "score": 1.0 - i * 0.1} for i in range(10)]
         result = _mmr_rerank(candidates, limit=4)
@@ -529,7 +529,7 @@ class TestHybridSemanticRetrieval:
         store = opened(VectorMemoryStore(db_path=tmp_path / "mem.db"))
         store.init()
         store.set_semantic("pref.language", "Python", 1.0, "user_explicit")
-        store.set_semantic("project.name", "KiroCrew", 1.0, "user_explicit")
+        store.set_semantic("project.name", "AjCrew", 1.0, "user_explicit")
         ctx = store.get_semantic_context(query_text="Python language")
         assert "pref.language: Python" in ctx
 
@@ -548,7 +548,7 @@ class TestHybridSemanticRetrieval:
         store.init()
         store.embed_fn = mock_embed
         store.set_semantic("pref.language", "Python", 1.0, "user_explicit")
-        store.set_semantic("project.name", "KiroCrew", 1.0, "user_explicit")
+        store.set_semantic("project.name", "AjCrew", 1.0, "user_explicit")
         store.set_semantic("user.timezone", "PST", 1.0, "user_explicit")
         ctx = store.get_semantic_context(query_text="what language do you prefer")
         # Should return results — hybrid scoring should find relevant entries
@@ -570,20 +570,20 @@ class TestHybridSemanticRetrieval:
 
 class TestJaccardSimilarity:
     def test_identical_texts(self) -> None:
-        from kiro_crew.vector_memory import _jaccard, _tokenize
+        from aj_crew.vector_memory import _jaccard, _tokenize
 
         a = _tokenize("deployed the app to production")
         assert _jaccard(a, a) == 1.0
 
     def test_disjoint_texts(self) -> None:
-        from kiro_crew.vector_memory import _jaccard, _tokenize
+        from aj_crew.vector_memory import _jaccard, _tokenize
 
         a = _tokenize("deployed the app")
         b = _tokenize("migration database schema")
         assert _jaccard(a, b) == 0.0
 
     def test_partial_overlap(self) -> None:
-        from kiro_crew.vector_memory import _jaccard, _tokenize
+        from aj_crew.vector_memory import _jaccard, _tokenize
 
         a = _tokenize("deployed app to production")
         b = _tokenize("deployed service to staging")
@@ -591,7 +591,7 @@ class TestJaccardSimilarity:
         assert 0.0 < sim < 1.0
 
     def test_empty_sets(self) -> None:
-        from kiro_crew.vector_memory import _jaccard
+        from aj_crew.vector_memory import _jaccard
 
         assert _jaccard(set(), set()) == 0.0
         assert _jaccard({"a"}, set()) == 0.0
@@ -732,7 +732,7 @@ class TestLessonEmbeddingStorage:
     def test_backfill_cap(self, tmp_path: Path, opened) -> None:
         """Lazy backfill stops after _MAX_BACKFILLS_PER_CALL legacy lessons."""
 
-        from kiro_crew.vector_memory import _MAX_BACKFILLS_PER_CALL
+        from aj_crew.vector_memory import _MAX_BACKFILLS_PER_CALL
 
         db = tmp_path / "mem.db"
         s = opened(VectorMemoryStore(db_path=db))

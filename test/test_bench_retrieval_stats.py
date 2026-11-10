@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.eval.bench.corpus import (
+from aj_crew.eval.bench.corpus import (
     CAT_MULTI_HOP,
     CAT_SINGLE_HOP,
     BenchInstance,
@@ -31,8 +31,8 @@ from kiro_crew.eval.bench.corpus import (
     BenchTurn,
     Corpus,
 )
-from kiro_crew.eval.bench.ingest import IngestConfig, ingest_instance
-from kiro_crew.eval.bench.retrieval import (
+from aj_crew.eval.bench.ingest import IngestConfig, ingest_instance
+from aj_crew.eval.bench.retrieval import (
     RetrievalConfig,
     RetrievalNotMeasurable,
     aggregate,
@@ -44,8 +44,8 @@ from kiro_crew.eval.bench.retrieval import (
     retrieve_for_instance,
     retrieve_for_query,
 )
-from kiro_crew.eval.bench.run import run_retrieval
-from kiro_crew.eval.bench.stats import (
+from aj_crew.eval.bench.run import run_retrieval
+from aj_crew.eval.bench.stats import (
     MIN_REPS,
     ArmResult,
     Comparison,
@@ -54,7 +54,7 @@ from kiro_crew.eval.bench.stats import (
     noise_band_from,
     sensitivity_check,
 )
-from kiro_crew.eval.bench.toy_embedder import TOY_EMBEDDER_ID, toy_embed_fn
+from aj_crew.eval.bench.toy_embedder import TOY_EMBEDDER_ID, toy_embed_fn
 
 EMBED = toy_embed_fn()
 

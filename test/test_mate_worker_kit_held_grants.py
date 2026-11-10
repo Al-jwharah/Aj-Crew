@@ -14,12 +14,12 @@ import json
 
 import pytest
 
-from kiro_crew import mate_approval_revocations as revocations
-from kiro_crew import mate_capabilities, mate_worker, mate_worker_kit
-from kiro_crew.acp_backends import ACP_BACKEND_KAS
-from kiro_crew.config import paths
-from kiro_crew.mate_spec_policy import SpecPolicyUncarried
-from kiro_crew.mate_worker_kit import WorkerKitError
+from aj_crew import mate_approval_revocations as revocations
+from aj_crew import mate_capabilities, mate_worker, mate_worker_kit
+from aj_crew.acp_backends import ACP_BACKEND_KAS
+from aj_crew.config import paths
+from aj_crew.mate_spec_policy import SpecPolicyUncarried
+from aj_crew.mate_worker_kit import WorkerKitError
 
 TRUSTED = [".*docs\\.example\\.com.*"]
 WEB_FETCH_ALLOW = {"capability": "web_fetch", "effect": "allow"}
@@ -31,7 +31,7 @@ SUBAGENT_ALLOW = {
 
 #: The worker base as Crew installs it lists ``web_fetch`` in ``allowedTools``.
 WORKER_BASE = {
-    "name": "kirocrew-mate-worker",
+    "name": "ajcrew-mate-worker",
     "prompt": "base",
     "tools": ["*"],
     "allowedTools": ["fs_read", "web_fetch"],
@@ -53,7 +53,7 @@ ATLAS = {
 @pytest.fixture(autouse=True)
 def _no_ceiling(_floor_monkeypatch):
     """The governance ceiling is its own module's concern; here it passes grants."""
-    from kiro_crew.platform import governance
+    from aj_crew.platform import governance
 
     _floor_monkeypatch.setattr(
         governance, "sanitize_agent_config_governance", lambda spec, **_k: None
@@ -70,7 +70,7 @@ def home(tmp_path, monkeypatch):
         json.dumps({"name": "pixel", "prompt": "", "tools": [], "mcpServers": {}}),
         encoding="utf-8",
     )
-    (mates / "kirocrew-mate-worker.json").write_text(json.dumps(WORKER_BASE), encoding="utf-8")
+    (mates / "ajcrew-mate-worker.json").write_text(json.dumps(WORKER_BASE), encoding="utf-8")
     monkeypatch.setattr(paths, "kiro_agents_dir", lambda: user)
     monkeypatch.setattr(paths, "mate_agents_dir", lambda: mates)
     monkeypatch.setattr(mate_capabilities, "binding_is_mate", lambda member: member == "pixel")
@@ -87,7 +87,7 @@ def _use(user, template: dict) -> None:
 
 
 def _base(mates, **changes) -> None:
-    (mates / "kirocrew-mate-worker.json").write_text(
+    (mates / "ajcrew-mate-worker.json").write_text(
         json.dumps({**WORKER_BASE, **changes}), encoding="utf-8"
     )
 
@@ -164,7 +164,7 @@ def test_a_web_fetch_trust_is_refused_when_the_worker_would_ask(home):
 def test_a_web_fetch_trust_is_refused_when_the_ceiling_withholds_web_fetch(
     home, _floor_monkeypatch
 ):
-    from kiro_crew.platform import governance
+    from aj_crew.platform import governance
 
     def withhold(spec, **_k):
         if isinstance(spec.get("allowedTools"), list):

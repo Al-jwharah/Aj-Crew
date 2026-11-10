@@ -12,7 +12,7 @@ Every one of those must refuse WITHOUT writing while the file is unreadable,
 because a write built from the defaults snapshot would replace every setting the
 user has. This drives the real handlers against a real torn ``config.json`` and
 compares the bytes afterwards. The theme route's refusal comes from
-``KiroCrewConfig.save``, which fails closed on such a file.
+``AjCrewConfig.save``, which fails closed on such a file.
 """
 
 from __future__ import annotations
@@ -23,16 +23,16 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew.config.loader import config_path
-from kiro_crew.dashboard.handlers import core as core_mod
-from kiro_crew.dashboard.handlers import onboarding_import as onboarding_mod
+from aj_crew.config.loader import config_path
+from aj_crew.dashboard.handlers import core as core_mod
+from aj_crew.dashboard.handlers import onboarding_import as onboarding_mod
 
 _UNREADABLE = b'{"dashboard": {"theme_mode": "light", "onboarded": tr'
 
 
 @pytest.fixture
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     assert config_path().parent == tmp_path
     config_path().write_bytes(_UNREADABLE)
     return tmp_path
@@ -97,7 +97,7 @@ async def test_the_tour_profile_writes_refuse(
 ) -> None:
     monkeypatch.setattr(core_mod, "_sel", lambda: MagicMock())
 
-    resp = await core_mod.api_kirocrew_config_patch(
+    resp = await core_mod.api_ajcrew_config_patch(
         _owner_request("PATCH", {"path": path, "value": value})
     )
 

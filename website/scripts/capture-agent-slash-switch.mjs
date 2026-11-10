@@ -20,15 +20,15 @@ import { serveDist } from './lib/serve-dist.mjs'
 import { stubDashboardApi, json } from './lib/stub-dashboard-api.mjs'
 import { stubSplitPanes } from './lib/split-pane-fixture.mjs'
 
-const out = process.argv[2] || join(process.env.KIROCREW_SCRATCH || 'temp-screenshots', 'agent-slash-switch')
+const out = process.argv[2] || join(process.env.AJCREW_SCRATCH || 'temp-screenshots', 'agent-slash-switch')
 mkdirSync(out, { recursive: true })
 const { srv, base } = await serveDist()
 const SLOT = 'chat-agent-slash'
-const slots = () => [{ key: SLOT, title: '/agent switch', running: false, messages: 2, agent: 'kirocrew', project: '/workspace', last_ts: new Date().toISOString() }]
+const slots = () => [{ key: SLOT, title: '/agent switch', running: false, messages: 2, agent: 'ajcrew', project: '/workspace', last_ts: new Date().toISOString() }]
 const row = { kiro_agent: '', workspace: 'default', memory_store: 'default' }
 const AGENTS = {
-  agents: [{ name: 'kirocrew', source: 'builtin', ...row }, { name: 'fable', source: 'user', ...row }],
-  default_agent: 'kirocrew',
+  agents: [{ name: 'ajcrew', source: 'builtin', ...row }, { name: 'fable', source: 'user', ...row }],
+  default_agent: 'ajcrew',
 }
 
 const SWITCHED = '🔄 Switched to agent: fable'
@@ -91,7 +91,7 @@ try {
     await composer.click()
     await composer.fill('/agent fable')
     await expect(composer).toHaveValue('/agent fable')
-    await expect(page.getByRole('button', { name: /kirocrew/i }).first()).toBeVisible()
+    await expect(page.getByRole('button', { name: /ajcrew/i }).first()).toBeVisible()
     await shoot(page, `${theme}-1-typed.png`)
     await composer.press('Enter')
     await expect.poll(() => agentPosts().length).toBe(1)
@@ -130,7 +130,7 @@ try {
       const LEFT = 'pane-switched'
       const RIGHT = 'pane-refused'
       const ts = '2026-10-07T03:00:00Z'
-      const paneSlot = (key, title) => ({ key, title, running: false, messages: 2, agent: 'kirocrew', created: ts, last_ts: ts, folder_id: '' })
+      const paneSlot = (key, title) => ({ key, title, running: false, messages: 2, agent: 'ajcrew', created: ts, last_ts: ts, folder_id: '' })
       const REFUSED = '⚠️ Could not switch to agent `fabel`: the selected agent choice is not available'
       await stubSplitPanes(spage, {
         theme,

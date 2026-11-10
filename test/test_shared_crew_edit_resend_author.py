@@ -15,12 +15,12 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.chat_regenerate import (
+from aj_crew.dashboard.chat_regenerate import (
     api_chat_slot_edit_resend,
     api_chat_slot_regenerate,
 )
-from kiro_crew.shared_crew import attribution
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew import attribution
+from aj_crew.shared_crew.contracts import (
     ActorContext,
     DisplaySnapshot,
     Principal,
@@ -49,7 +49,7 @@ BOB = _person("bob@example.test")
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.push_slots_update = MagicMock()
@@ -85,7 +85,7 @@ async def test_bob_editing_alices_row_is_attributed_to_bob(state) -> None:
     slot.append("assistant", "answer")
     slot.drain()
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()):
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()):
         async with _client(state, BOB) as client:
             resp = await client.post(
                 "/api/chat/slots/s1/edit-resend", json={"index": 0, "content": "bob edits"}
@@ -105,7 +105,7 @@ async def test_regenerate_keeps_the_original_author(state) -> None:
     slot.append("assistant", "answer")
     slot.drain()
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()):
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()):
         async with _client(state, BOB) as client:
             resp = await client.post("/api/chat/slots/s1/regenerate")
             assert resp.status == 200

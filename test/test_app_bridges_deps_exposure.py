@@ -12,7 +12,7 @@ import sys
 import pytest
 from app_bridges_helpers import _stub_venv_probe  # noqa: F401
 
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
 
 def _isolated_python_args(cfg: dict) -> list[str]:
@@ -34,8 +34,8 @@ class TestAbiMatchedShebangPathScript:
         (via the shim, so .pth files work) instead of dying on import."""
         import sys as _sys
 
-        from kiro_crew.apps.bridges import resolve_stdio_command
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.bridges import resolve_stdio_command
+        from aj_crew.apps.interpreter import app_deps_dir
 
         app_deps_dir(tmp_path).mkdir(parents=True)
         (tmp_path / "requirements.txt").write_bytes(b"requests\n")
@@ -58,8 +58,8 @@ class TestAbiMatchedShebangPathScript:
         reason="shebang launch semantics are POSIX-only",
     )
     def test_a_path_script_with_foreign_shebang_stays_direct(self, tmp_path):
-        from kiro_crew.apps.bridges import resolve_stdio_command
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.bridges import resolve_stdio_command
+        from aj_crew.apps.interpreter import app_deps_dir
 
         app_deps_dir(tmp_path).mkdir(parents=True)
         (tmp_path / "requirements.txt").write_bytes(b"requests\n")
@@ -81,7 +81,7 @@ class TestStaleTreeScriptSelection:
         name falls through instead and the provisioning error surfaces."""
         import sys as _sys
 
-        from kiro_crew.apps.interpreter import app_deps_dir, venv_provided_command
+        from aj_crew.apps.interpreter import app_deps_dir, venv_provided_command
 
         (tmp_path / "requirements.txt").write_bytes(b"requests\n")
         deps_bin = app_deps_dir(tmp_path) / ("Scripts" if _sys.platform == "win32" else "bin")
@@ -101,7 +101,7 @@ class TestShebangReaderGates:
         """The shebang sniff runs on a manifest-author-controlled absolute
         path: a protected location must be refused by the sensitive-path
         gate BEFORE any read, not read-and-discarded."""
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         opened: list[str] = []
         real_open = open
@@ -125,11 +125,11 @@ class TestShebangReaderGates:
         where the kernel honors every flag exactly as written."""
         import sys as _sys
 
-        from kiro_crew.apps.bridges import (
+        from aj_crew.apps.bridges import (
             _python_shebang_interpreter,
             resolve_stdio_command,
         )
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.interpreter import app_deps_dir
 
         app_deps_dir(tmp_path).mkdir(parents=True)
         (tmp_path / "requirements.txt").write_bytes(b"requests\n")
@@ -151,8 +151,8 @@ class TestSkipFirstLineFlagUnshimmable:
         """-x skips the launched script's FIRST LINE; shimming would make
         deps_boot that script and the interpreter dies with SyntaxError on
         its severed docstring. Unshimmable: direct launch + PYTHONPATH."""
-        from kiro_crew.apps.bridges import resolve_stdio_command
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.bridges import resolve_stdio_command
+        from aj_crew.apps.interpreter import app_deps_dir
 
         app_deps_dir(tmp_path).mkdir(parents=True)
         (tmp_path / "requirements.txt").write_bytes(b"requests\n")
@@ -171,8 +171,8 @@ def _plant_deps_stamp(app_root, req_bytes: bytes) -> None:
     """Write the CURRENT interpreter's stamp for req_bytes: activation now
     requires it (a stampless or stale-ABI tree must not inject), so any
     fixture that expects the deps dir to reach the server plants it."""
-    import kiro_crew.apps.backend as _bk
-    from kiro_crew.apps.interpreter import app_deps_dir as _add
+    import aj_crew.apps.backend as _bk
+    from aj_crew.apps.interpreter import app_deps_dir as _add
 
     d = _add(app_root)
     d.mkdir(parents=True, exist_ok=True)
@@ -188,8 +188,8 @@ class TestStdioDepsDirExposure:
     def test_the_deps_dir_is_prepended_to_a_stdio_server_pythonpath(
         self, tmp_path, nonbundled_python_with_user_site
     ):
-        from kiro_crew.apps.bridges import resolve_stdio_command
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.bridges import resolve_stdio_command
+        from aj_crew.apps.interpreter import app_deps_dir
 
         app_deps_dir(tmp_path).mkdir(parents=True)
         (tmp_path / "requirements.txt").write_bytes(b"requests\n")
@@ -211,7 +211,7 @@ class TestStdioDepsDirExposure:
         )
         assert cfg["command"] == _sys.executable, cfg
         # PATH spelling, not -m: an ABI-matched path python can be the
-        # app's own venv interpreter, which cannot import kiro_crew
+        # app's own venv interpreter, which cannot import aj_crew
         assert _isolated_python_args(cfg)[0].endswith("deps_boot.py"), cfg
         assert _isolated_python_args(cfg)[1] == str(app_deps_dir(tmp_path)), cfg
         assert _isolated_python_args(cfg)[2] == "server.py", cfg
@@ -233,8 +233,8 @@ class TestStdioDepsDirExposure:
         PYTHONPATH entry is stripped (shim XOR PYTHONPATH)."""
         import sys as _sys
 
-        from kiro_crew.apps.bridges import resolve_stdio_command
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.bridges import resolve_stdio_command
+        from aj_crew.apps.interpreter import app_deps_dir
 
         deps_bin = app_deps_dir(tmp_path) / "bin"
         deps_bin.mkdir(parents=True)
@@ -266,8 +266,8 @@ class TestStdioDepsDirExposure:
         the shim, or its .pth-dependent imports silently die."""
         import sys as _sys
 
-        from kiro_crew.apps.bridges import resolve_stdio_command
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.bridges import resolve_stdio_command
+        from aj_crew.apps.interpreter import app_deps_dir
 
         deps_bin = app_deps_dir(tmp_path) / "bin"
         deps_bin.mkdir(parents=True)
@@ -300,8 +300,8 @@ class TestStdioDepsDirExposure:
         exec re-launch) reads as a trampoline. An ordinary dependency shell
         wrapper that merely RUNS a python command must stay a shell script
         - runpy would parse it as python source and crash the server."""
-        from kiro_crew.apps.bridges import resolve_stdio_command
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.bridges import resolve_stdio_command
+        from aj_crew.apps.interpreter import app_deps_dir
 
         deps_bin = app_deps_dir(tmp_path) / "bin"
         deps_bin.mkdir(parents=True)
@@ -323,8 +323,8 @@ class TestStdioDepsDirExposure:
         companion stays a direct launch."""
         import sys as _sys
 
-        from kiro_crew.apps.bridges import resolve_stdio_command
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.bridges import resolve_stdio_command
+        from aj_crew.apps.interpreter import app_deps_dir
 
         deps_bin = app_deps_dir(tmp_path) / ("Scripts" if _sys.platform == "win32" else "bin")
         deps_bin.mkdir(parents=True)
@@ -355,8 +355,8 @@ class TestStdioDepsDirExposure:
         import sys as _sys
         import zipfile as _zipfile
 
-        from kiro_crew.apps.bridges import resolve_stdio_command
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.bridges import resolve_stdio_command
+        from aj_crew.apps.interpreter import app_deps_dir
 
         deps_bin = app_deps_dir(tmp_path) / ("Scripts" if _sys.platform == "win32" else "bin")
         deps_bin.mkdir(parents=True)
@@ -380,8 +380,8 @@ class TestStdioDepsDirExposure:
         script would break a working launch. Only a python-shebang
         script is shimmed - everything else executes directly and keeps the
         PYTHONPATH transport."""
-        from kiro_crew.apps.bridges import resolve_stdio_command
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.bridges import resolve_stdio_command
+        from aj_crew.apps.interpreter import app_deps_dir
 
         deps_bin = app_deps_dir(tmp_path) / "bin"
         deps_bin.mkdir(parents=True)
@@ -404,8 +404,8 @@ class TestStdioDepsDirExposure:
         owns provisioning (module-style builtins must never reach it)."""
         from types import SimpleNamespace as NS
 
-        import kiro_crew.apps.backend as bkmod
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.backend as bkmod
+        import aj_crew.apps.bridges as brmod
 
         (tmp_path / "requirements.txt").write_bytes(b"requests\n")
         _plant_deps_stamp(tmp_path, b"requests\n")
@@ -453,7 +453,7 @@ class TestStdioDepsDirExposure:
             "app",
             NS(
                 mcpServers={"srv": {"command": "x"}},
-                backend=NS(entryPoint="kiro_crew.apps.builtins.demo"),
+                backend=NS(entryPoint="aj_crew.apps.builtins.demo"),
             ),
         )
         # url-only servers never import from the deps dir
@@ -469,7 +469,7 @@ class TestStdioDepsDirExposure:
         assert calls == []
 
     def test_no_deps_dir_leaves_the_manifest_env_untouched(self, tmp_path):
-        from kiro_crew.apps.bridges import resolve_stdio_command
+        from aj_crew.apps.bridges import resolve_stdio_command
 
         cfg = resolve_stdio_command(
             {"command": "python3", "args": ["server.py"]}, app_root=tmp_path
@@ -485,8 +485,8 @@ class TestStdioDepsDirExposure:
         misread as the target) and falls back to the PYTHONPATH transport."""
         import sys as _sys
 
-        from kiro_crew.apps.bridges import resolve_stdio_command
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.bridges import resolve_stdio_command
+        from aj_crew.apps.interpreter import app_deps_dir
 
         app_deps_dir(tmp_path).mkdir(parents=True)
         (tmp_path / "requirements.txt").write_bytes(b"requests\n")
@@ -541,7 +541,7 @@ class TestStdioDepsDirExposure:
         )
         assert _isolated_python_args(cfg3b)[2:] == ["-c", "import server"], cfg3b
         # -S skips site initialization, so the shim itself could never
-        # import (kiro_crew lives in site-packages) - unshimmable, keep the
+        # import (aj_crew lives in site-packages) - unshimmable, keep the
         # PYTHONPATH transport; same for -E/-I and combined spellings
         # an attached -W VALUE is not a flag cluster: the uppercase letters
         # inside ignore::ImportWarning must not read as -S/-E/-I
@@ -580,8 +580,8 @@ class TestStdioDepsDirExposure:
         """data/ survives updates, so an update that REMOVES requirements.txt
         leaves the provisioned tree behind - a stale tree must neither
         inject removed dependency code nor route through the shim."""
-        from kiro_crew.apps.bridges import resolve_stdio_command
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.bridges import resolve_stdio_command
+        from aj_crew.apps.interpreter import app_deps_dir
 
         app_deps_dir(tmp_path).mkdir(parents=True)  # tree present, no requirements.txt
         cfg = resolve_stdio_command(
@@ -599,8 +599,8 @@ class TestStdioDepsDirExposure:
         deps path is emitted up front - a missing PYTHONPATH entry is inert
         to Python, while omitting it strands the first registration without
         its dependencies."""
-        from kiro_crew.apps.bridges import resolve_stdio_command
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.bridges import resolve_stdio_command
+        from aj_crew.apps.interpreter import app_deps_dir
 
         (tmp_path / "requirements.txt").write_bytes(b"requests\n")
         _plant_deps_stamp(tmp_path, b"requests\n")
@@ -622,7 +622,7 @@ class TestStdioDepsDirExposure:
 
         if not hasattr(_os, "symlink"):
             pytest.skip("no symlink support")
-        import kiro_crew.apps.interpreter as imod
+        import aj_crew.apps.interpreter as imod
 
         venv_bin = tmp_path / ".venv" / ("Scripts" if _sys.platform == "win32" else "bin")
         venv_bin.mkdir(parents=True)
@@ -646,8 +646,8 @@ class TestStdioDepsDirExposure:
         must not receive the deps PYTHONPATH - 3.12-built wheels injected
         into a foreign 3.11 would kill the server at import. Its env stays
         exactly the pre-deps status quo."""
-        from kiro_crew.apps.bridges import resolve_stdio_command
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.bridges import resolve_stdio_command
+        from aj_crew.apps.interpreter import app_deps_dir
 
         app_deps_dir(tmp_path).mkdir(parents=True)
         (tmp_path / "requirements.txt").write_bytes(b"requests\n")
@@ -669,42 +669,42 @@ class TestStdioDepsDirExposure:
 
     def test_a_path_based_gateway_module_server_gets_no_deps_env(self, tmp_path):
         """The gateway-module exclusion survives the hoist: even a path-based
-        command whose args launch a kiro_crew module must not see the app
+        command whose args launch a aj_crew module must not see the app
         deps dir on PYTHONPATH."""
-        from kiro_crew.apps.bridges import resolve_stdio_command
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.bridges import resolve_stdio_command
+        from aj_crew.apps.interpreter import app_deps_dir
 
         app_deps_dir(tmp_path).mkdir(parents=True)
         cfg = resolve_stdio_command(
             {
                 "command": os.path.join("bin", "python3"),
-                "args": ["-m", "kiro_crew.apps.builtins.x"],
+                "args": ["-m", "aj_crew.apps.builtins.x"],
             },
             app_root=tmp_path,
         )
         assert "env" not in cfg, cfg
 
     def test_a_gateway_module_server_never_gets_the_deps_pythonpath(self, tmp_path):
-        """An app that pip-pins its own kiro_crew copy must not shadow the
-        gateway's code: a `-m kiro_crew...` server runs the gateway's OWN
+        """An app that pip-pins its own aj_crew copy must not shadow the
+        gateway's code: a `-m aj_crew...` server runs the gateway's OWN
         module on the gateway's interpreter, so the app deps dir stays out of
         its PYTHONPATH entirely."""
         import sys as _sys
 
-        from kiro_crew.apps.bridges import resolve_stdio_command
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.bridges import resolve_stdio_command
+        from aj_crew.apps.interpreter import app_deps_dir
 
         app_deps_dir(tmp_path).mkdir(parents=True)
         cfg = resolve_stdio_command(
-            {"command": "python3", "args": ["-m", "kiro_crew.apps.builtins.x"]},
+            {"command": "python3", "args": ["-m", "aj_crew.apps.builtins.x"]},
             app_root=tmp_path,
         )
         assert cfg["command"] == _sys.executable
         assert "env" not in cfg, cfg
 
     def test_a_deps_dir_console_script_is_rewritten_and_gets_the_env(self, tmp_path):
-        from kiro_crew.apps.bridges import resolve_stdio_command
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.bridges import resolve_stdio_command
+        from aj_crew.apps.interpreter import app_deps_dir
 
         scripts = "Scripts" if platform_compat.IS_WINDOWS else "bin"
         name = "my-mcp-server.exe" if platform_compat.IS_WINDOWS else "my-mcp-server"

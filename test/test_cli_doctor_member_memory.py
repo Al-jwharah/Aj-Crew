@@ -8,12 +8,12 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_doctor
-from kiro_crew import members as members_mod
-from kiro_crew import memory_stores
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, config_dir
-from kiro_crew.config.sections import MemoryStoreConfig
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import cli_doctor
+from aj_crew import members as members_mod
+from aj_crew import memory_stores
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, config_dir
+from aj_crew.config.sections import MemoryStoreConfig
+from aj_crew.vector_memory import VectorMemoryStore
 
 
 def _snapshot(home: Path) -> dict[str, bytes]:
@@ -46,13 +46,13 @@ def _assert_only_new_sqlite_coordination(home: Path, before: dict[str, bytes], d
 def members(monkeypatch):
     # The root fixture pins the data home. Finish normal configuration creation
     # before taking a byte baseline; the diagnostic itself never loads or saves it.
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     home = config_dir()
     cfg.agents = {
-        "default": KiroCrewAgentConfig(),
-        "legacy": KiroCrewAgentConfig(memory_store="legacy-store"),
-        "private": KiroCrewAgentConfig(),
-        "healthy-peer": KiroCrewAgentConfig(),
+        "default": AjCrewAgentConfig(),
+        "legacy": AjCrewAgentConfig(memory_store="legacy-store"),
+        "private": AjCrewAgentConfig(),
+        "healthy-peer": AjCrewAgentConfig(),
     }
     cfg.default_agent = "default"
     cfg.memory_stores["legacy-store"] = MemoryStoreConfig()
@@ -68,7 +68,7 @@ def members(monkeypatch):
             db.close()
     private_store = memory_stores.provision_member_memory(cfg, "private")
     cfg.save()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     writes: list[str] = []
 
     def forbidden_write(*args, **kwargs):
@@ -137,7 +137,7 @@ def test_broken_nondefault_binding_reports_reason_and_continues_healthy_peers(
         (memory_stores.memory_stores_root() / "legacy-store" / "memory.db").write_bytes(
             b"unreadable legacy database"
         )
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg.default_agent == "default"
     before = _snapshot(home)
     issues: list[str] = []
@@ -216,9 +216,9 @@ def test_dispatchability_is_silent_for_an_nfd_only_legacy_name(members, capsys):
     assert members_mod.normalize_unicode(name) != name
     assert not members_mod.is_valid_member_name(name)
     assert members_mod.is_dispatchable_member_name(name)
-    cfg.agents[name] = KiroCrewAgentConfig()
+    cfg.agents[name] = AjCrewAgentConfig()
     cfg.save()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert name in cfg.agents  # persisted as raw NFD, not folded to NFC
     issues: list[str] = []
 
@@ -232,9 +232,9 @@ def test_dispatchability_is_silent_for_an_nfd_only_legacy_name(members, capsys):
 def test_nondispatchable_member_name_is_reported_by_count_without_disclosure(members, capsys):
     cfg, _, _, writes = members
     name = "AKIAIOSFODNN7EXAMPLE"
-    cfg.agents[name] = KiroCrewAgentConfig()
+    cfg.agents[name] = AjCrewAgentConfig()
     cfg.save()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert name in cfg.agents
     issues: list[str] = []
 
@@ -257,9 +257,9 @@ def test_nondispatchable_member_name_is_reported_by_count_without_disclosure(mem
 def test_memory_binding_diagnostic_skips_nondispatchable_record(members, capsys):
     cfg, home, private_store, writes = members
     name = "AKIAIOSFODNN7EXAMPLE"
-    cfg.agents[name] = KiroCrewAgentConfig()
+    cfg.agents[name] = AjCrewAgentConfig()
     cfg.save()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     before = _snapshot(home)
     issues: list[str] = []
 
@@ -286,7 +286,7 @@ def _composition_failed(monkeypatch):
     ``platform.context.redact_via_context``, which re-raises the composition
     failure instead of degrading; doctor must survive it.
     """
-    from kiro_crew.platform import PlatformCompositionError
+    from aj_crew.platform import PlatformCompositionError
 
     def _raise(name):
         raise PlatformCompositionError("security_policy.json unreadable")
@@ -297,9 +297,9 @@ def _composition_failed(monkeypatch):
 def test_dispatchability_survives_a_platform_composition_failure(members, capsys, monkeypatch):
     cfg, _, _, writes = members
     name = "AKIAIOSFODNN7EXAMPLE"
-    cfg.agents[name] = KiroCrewAgentConfig()
+    cfg.agents[name] = AjCrewAgentConfig()
     cfg.save()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     _composition_failed(monkeypatch)
     issues: list[str] = []
 
@@ -319,9 +319,9 @@ def test_dispatchability_survives_a_platform_composition_failure(members, capsys
 def test_memory_bindings_survive_a_platform_composition_failure(members, capsys, monkeypatch):
     cfg, home, _, writes = members
     name = "AKIAIOSFODNN7EXAMPLE"
-    cfg.agents[name] = KiroCrewAgentConfig()
+    cfg.agents[name] = AjCrewAgentConfig()
     cfg.save()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     before = _snapshot(home)
     _composition_failed(monkeypatch)
     issues: list[str] = []
@@ -347,9 +347,9 @@ def test_member_store_and_error_text_cannot_inject_terminal_controls(members, ca
     # rides the STORE and the resulting error text instead.
     name = "terminal-probe"
     store = "missing\x1b[2J\nstore"
-    cfg.agents[name] = KiroCrewAgentConfig(memory_store=store)
+    cfg.agents[name] = AjCrewAgentConfig(memory_store=store)
     cfg.save()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     before = _snapshot(home)
     issues: list[str] = []
 

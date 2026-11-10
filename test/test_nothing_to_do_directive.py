@@ -26,8 +26,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew import session_directive
-from kiro_crew.acp.types import (
+from aj_crew import session_directive
+from aj_crew.acp.types import (
     EVENT_COMPACTION_STATUS,
     EVENT_COMPLETE,
     EVENT_STEER_CONSUMED,
@@ -36,14 +36,14 @@ from kiro_crew.acp.types import (
     EVENT_TOOL_RESULT,
     AcpEvent,
 )
-from kiro_crew.dashboard import session_directive_apply as sda
-from kiro_crew.dashboard.chat_turn.directives import _DIRECTIVE_NOT_APPLIED_OUTCOMES
-from kiro_crew.dashboard.chat_utils import EMPTY_TURN_NOTICE_KIND
-from kiro_crew.mcp_tools import control
-from kiro_crew.messaging import TransportCapabilities, TurnDriver
-from kiro_crew.messaging.renderer import Renderer
-from kiro_crew.testing.wait import await_until
-from kiro_crew.validation import MAX_SHORT_STRING
+from aj_crew.dashboard import session_directive_apply as sda
+from aj_crew.dashboard.chat_turn.directives import _DIRECTIVE_NOT_APPLIED_OUTCOMES
+from aj_crew.dashboard.chat_utils import EMPTY_TURN_NOTICE_KIND
+from aj_crew.mcp_tools import control
+from aj_crew.messaging import TransportCapabilities, TurnDriver
+from aj_crew.messaging.renderer import Renderer
+from aj_crew.testing.wait import await_until
+from aj_crew.validation import MAX_SHORT_STRING
 
 pytestmark = pytest.mark.xdist_group("nothing_to_do_directive")
 
@@ -97,7 +97,7 @@ class TestFrontendMirrorStaysInSync:
         the same server, or a rename on one side silently brings the Resume
         button back on every quiet turn. Read from the TypeScript source, so
         the pin fails on the side that drifted."""
-        from kiro_crew.dashboard import state as st
+        from aj_crew.dashboard import state as st
 
         src = (
             Path(__file__).resolve().parents[1]
@@ -419,7 +419,7 @@ class TestChannelDriverHonoursTheSignal:
         ]
         renderer = _RecordingRenderer()
         driver = TurnDriver(_ScriptedProvider(events), renderer, directive_consumer=_consumer)
-        with caplog.at_level("WARNING", logger="kiro_crew.messaging.driver"):
+        with caplog.at_level("WARNING", logger="aj_crew.messaging.driver"):
             text = asyncio.run(driver.run("patrol"))
         assert text == ""
         assert driver.partial_text == ""
@@ -461,7 +461,7 @@ class TestChannelDriverHonoursTheSignal:
         events.append(AcpEvent(kind=EVENT_COMPLETE, stop_reason="end_turn"))
         renderer = _RecordingRenderer()
         driver = TurnDriver(_StampingProvider(events), renderer, directive_consumer=_consumer)
-        with caplog.at_level("WARNING", logger="kiro_crew.messaging.driver"):
+        with caplog.at_level("WARNING", logger="aj_crew.messaging.driver"):
             text = asyncio.run(driver.run("patrol"))
         assert text == "Yes, still here."
         assert "".join(renderer.text) == "Yes, still here."
@@ -509,7 +509,7 @@ async def _drive_turn(state, slot, events, monkeypatch, *, self_wake: bool = Tru
     record every recovery turn the runner queued. ``self_wake`` drives the turn
     as a monitor wake (the designed caller); False drives it as a person's
     message."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     async def _stream(_msg):
         for ev in events:
@@ -557,7 +557,7 @@ async def _drive_turn(state, slot, events, monkeypatch, *, self_wake: bool = Tru
 def _crewmate_worker(state, key: str):
     """A worker slot *key* created by a busy crewmate thread, so a report it
     records stays pending where the test can read it."""
-    from kiro_crew import members as members_mod
+    from aj_crew import members as members_mod
 
     mate = state.get_or_create_slot("chat-mate-thread")
     mate.mode = members_mod.DM_SLOT_MODE
@@ -571,7 +571,7 @@ def _crewmate_worker(state, key: str):
 
 
 async def _pending_reports(state, mate) -> dict:
-    from kiro_crew.dashboard import mate_thread_wakes as wakes
+    from aj_crew.dashboard import mate_thread_wakes as wakes
 
     for task in list(getattr(state, "_mate_wake_tasks", {}).values()):
         await await_until(task)
@@ -601,7 +601,7 @@ class TestDashboardRunnerHonoursTheSignal:
     ):
         """The tool call flushes the text out of the reply, so the report is
         decided by what the turn wrote, not by the reply left at its end."""
-        from kiro_crew.dashboard.state_parts.transcript_rows import is_quiet_end_row
+        from aj_crew.dashboard.state_parts.transcript_rows import is_quiet_end_row
 
         state = _stub_state(tmp_path)
         mate, worker = _crewmate_worker(state, "worker-text-then-quiet-end")
@@ -674,7 +674,7 @@ class TestDashboardRunnerHonoursTheSignal:
             and c.args[1].get("meta") == {"ends_turn": True}
         ]
         assert patches, "no live ends_turn patch for the quiet-end row"
-        from kiro_crew.dashboard.state import is_turn_interrupted
+        from aj_crew.dashboard.state import is_turn_interrupted
 
         assert is_turn_interrupted(slot.messages) is False
 
@@ -691,11 +691,11 @@ class TestDashboardRunnerHonoursTheSignal:
             "role": "tool",
             "ts": "t-old",
             "cls": "msg msg-tool",
-            "content": "🔧 @kirocrew-core/nothing_to_do",
+            "content": "🔧 @ajcrew-core/nothing_to_do",
             "meta": {
                 "tool_call_id": "tc-quiet",
                 "tool_name": "nothing_to_do",
-                "mcp_server": "kirocrew-core",
+                "mcp_server": "ajcrew-core",
                 "output": sda.QUIET_END_REFUSED_USER_TURN,
             },
         }
@@ -749,7 +749,7 @@ class TestDashboardRunnerHonoursTheSignal:
             if c.args and c.args[0] == "tool_result"
         ]
         assert any(o.startswith(sda.QUIET_END_REFUSED_USER_TURN) for o in outputs)
-        from kiro_crew.dashboard.state import is_turn_interrupted
+        from aj_crew.dashboard.state import is_turn_interrupted
 
         assert is_turn_interrupted(slot.messages) is True
 
@@ -805,7 +805,7 @@ class TestDashboardRunnerHonoursTheSignal:
             AcpEvent(kind=EVENT_TEXT_CHUNK, text="oh, one more thing"),
             AcpEvent(kind=EVENT_COMPLETE, stop_reason="end_turn"),
         ]
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.chat_runner"):
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.chat_runner"):
             queue_calls = await _drive_turn(state, slot, events, monkeypatch)
         assert queue_calls == []
         assert slot._empty_response_retries == 0
@@ -848,7 +848,7 @@ class TestDashboardRunnerHonoursTheSignal:
             AcpEvent(kind=EVENT_TEXT_CHUNK, text=placeholder[40:]),
             AcpEvent(kind=EVENT_COMPLETE, stop_reason="end_turn"),
         ]
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.chat_runner"):
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.chat_runner"):
             queue_calls = await _drive_turn(state, slot, events, monkeypatch)
         assert queue_calls == []
         assert slot._empty_response_retries == 0
@@ -926,7 +926,7 @@ class TestDashboardRunnerHonoursTheSignal:
                     continue
                 yield ev
 
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.chat_runner"):
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.chat_runner"):
             await _drive_turn(state, slot, _stream(), monkeypatch)
         assistant = [m for m in slot.messages if m.get("role") == "assistant"]
         assert [m["content"] for m in assistant] == ["Yes, still here."], slot.messages
@@ -1025,7 +1025,7 @@ class TestDashboardRunnerHonoursTheSignal:
                     continue
                 yield ev
 
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.chat_runner"):
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.chat_runner"):
             queue_calls = await _drive_turn(state, slot, _stream(), monkeypatch)
         assert [m for m in slot.messages if m.get("role") == "assistant"] == [], slot.messages
         assert not any("No assistant response" in str(m.get("content", "")) for m in slot.messages)
@@ -1107,8 +1107,8 @@ def _parked_kas_stream(slot, tool: str, events: list[AcpEvent]):
     by the call's input digest. Parked mid-turn, as the tool does, so the
     claim's turn bound admits it.
     """
-    from kiro_crew.dashboard import directive_queue
-    from kiro_crew.dashboard.chat_utils import effective_session_key
+    from aj_crew.dashboard import directive_queue
+    from aj_crew.dashboard.chat_utils import effective_session_key
 
     args = _kas_tool_call_frame("", tool)["rawInput"]
     directive_queue.publish(
@@ -1119,7 +1119,7 @@ def _parked_kas_stream(slot, tool: str, events: list[AcpEvent]):
 
 def _kas_call(tool: str, tcid: str) -> AcpEvent:
     """Parse the KAS frame through the REAL ``parse_session_update``."""
-    from kiro_crew.acp._dispatch import parse_session_update
+    from aj_crew.acp._dispatch import parse_session_update
 
     [event] = parse_session_update(_kas_tool_call_frame(tcid, tool))
     assert event.kind == EVENT_TOOL_CALL
@@ -1136,7 +1136,7 @@ class TestQuietEndWithoutABackendToolName:
 
     @pytest.fixture(autouse=True)
     def _clean_queue(self):
-        from kiro_crew.dashboard import directive_queue
+        from aj_crew.dashboard import directive_queue
 
         directive_queue.reset()
         yield
@@ -1144,8 +1144,8 @@ class TestQuietEndWithoutABackendToolName:
 
     @pytest.mark.asyncio
     async def test_a_kas_quiet_end_is_a_finished_turn(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_handlers import _is_interrupted
-        from kiro_crew.dashboard.state import is_turn_interrupted
+        from aj_crew.dashboard.chat_handlers import _is_interrupted
+        from aj_crew.dashboard.state import is_turn_interrupted
 
         state = _stub_state(tmp_path)
         slot = state.get_or_create_slot("kas-quiet-end")
@@ -1191,7 +1191,7 @@ class TestQuietEndWithoutABackendToolName:
     ):
         """Counterfactual: the same backend, an ordinary Crew tool, no reply and
         no quiet end. That is the shape a dropped connection leaves."""
-        from kiro_crew.dashboard.state import is_turn_interrupted
+        from aj_crew.dashboard.state import is_turn_interrupted
 
         state = _stub_state(tmp_path)
         slot = state.get_or_create_slot("kas-died")
@@ -1208,7 +1208,7 @@ class TestQuietEndWithoutABackendToolName:
     async def test_a_refused_kas_quiet_end_is_still_interrupted(self, tmp_path, monkeypatch):
         """A person opened the turn, so the applier refuses: no ``ends_turn``
         stamp, and the row must not close the turn."""
-        from kiro_crew.dashboard.state import is_turn_interrupted
+        from aj_crew.dashboard.state import is_turn_interrupted
 
         state = _stub_state(tmp_path)
         slot = state.get_or_create_slot("kas-refused")
@@ -1236,27 +1236,27 @@ class TestQuietEndRowPredicate:
 
     @staticmethod
     def _row(**meta) -> dict:
-        return {"role": "tool", "content": "🔧 @kirocrew-core/nothing_to_do", "meta": meta}
+        return {"role": "tool", "content": "🔧 @ajcrew-core/nothing_to_do", "meta": meta}
 
     def test_a_stamped_row_without_a_backend_tool_name_closes_the_turn(self):
-        from kiro_crew.dashboard.state import is_quiet_end_row
+        from aj_crew.dashboard.state import is_quiet_end_row
 
-        assert is_quiet_end_row(self._row(mcp_server="kirocrew-core", ends_turn=True))
+        assert is_quiet_end_row(self._row(mcp_server="ajcrew-core", ends_turn=True))
         assert is_quiet_end_row(self._row(ends_turn=True))
 
     def test_an_unstamped_row_never_closes_the_turn(self):
-        from kiro_crew.dashboard.state import is_quiet_end_row
+        from aj_crew.dashboard.state import is_quiet_end_row
 
         assert not is_quiet_end_row(
-            self._row(tool_name="nothing_to_do", mcp_server="kirocrew-core")
+            self._row(tool_name="nothing_to_do", mcp_server="ajcrew-core")
         )
-        assert not is_quiet_end_row(self._row(mcp_server="kirocrew-core", ends_turn="true"))
+        assert not is_quiet_end_row(self._row(mcp_server="ajcrew-core", ends_turn="true"))
 
     def test_a_contradicting_identity_never_closes_the_turn(self):
-        from kiro_crew.dashboard.state import is_quiet_end_row
+        from aj_crew.dashboard.state import is_quiet_end_row
 
         assert not is_quiet_end_row(
-            self._row(tool_name="execute_bash", mcp_server="kirocrew-core", ends_turn=True)
+            self._row(tool_name="execute_bash", mcp_server="ajcrew-core", ends_turn=True)
         )
         assert not is_quiet_end_row(
             self._row(tool_name="nothing_to_do", mcp_server="other-server", ends_turn=True)
@@ -1265,19 +1265,19 @@ class TestQuietEndRowPredicate:
     def test_the_field_transcript_tail_reads_as_finished(self):
         """The persisted rows of the reported session, reduced to the keys the
         scan reads: a nudge, two tool calls, then the stamped quiet end."""
-        from kiro_crew.dashboard.state import is_turn_interrupted
+        from aj_crew.dashboard.state import is_turn_interrupted
 
         rows = [
             {"role": "nudge", "content": "[auto-nudge cycle 25] patrol"},
             {
                 "role": "tool",
-                "content": "🔧 @kirocrew-work/work_ledger_read",
-                "meta": {"mcp_server": "kirocrew-work", "done": True},
+                "content": "🔧 @ajcrew-work/work_ledger_read",
+                "meta": {"mcp_server": "ajcrew-work", "done": True},
             },
             {
                 "role": "tool",
-                "content": "🔧 @kirocrew-core/nothing_to_do",
-                "meta": {"mcp_server": "kirocrew-core", "done": True, "ends_turn": True},
+                "content": "🔧 @ajcrew-core/nothing_to_do",
+                "meta": {"mcp_server": "ajcrew-core", "done": True, "ends_turn": True},
             },
         ]
         assert is_turn_interrupted(rows) is False

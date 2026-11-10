@@ -25,16 +25,16 @@ from acp_runtime_helpers import (
     _stop_reader,
 )
 
-from kiro_crew.acp._dispatch import classify_notification
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp._dispatch import classify_notification
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     EVENT_STEER_DROPPED,
     METHOD_KIRO_SESSION_UPDATE,
     METHOD_SESSION_STEER_CLEAR,
     JsonRpcMessage,
 )
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.testing.wait import async_wait_until, await_until
 
 SID = "kiro-steer-clear-session-1"
 
@@ -110,7 +110,7 @@ async def test_a_refused_handle_sends_nothing_again():
 
 @pytest.mark.asyncio
 async def test_no_answer_in_time_is_unknown_and_forgotten():
-    with patch("kiro_crew.acp.session_handle_steering.STEER_CLEAR_ANSWER_WAIT_SECS", 0.0):
+    with patch("aj_crew.acp.session_handle_steering.STEER_CLEAR_ANSWER_WAIT_SECS", 0.0):
         result, handle, proc = await _clear(ACP_BACKEND_KIRO, None)
 
     assert result is None

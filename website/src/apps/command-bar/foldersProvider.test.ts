@@ -16,14 +16,14 @@ import type { ChatFolder } from '../../types'
 import type { FolderSortMode } from '../../utils/folderTree'
 
 /**
- * `oss` appears twice: once as a root folder and once nested under `kirocrew`.
+ * `oss` appears twice: once as a root folder and once nested under `ajcrew`.
  * That duplication is the point — it is what makes the breadcrumb load-bearing
  * rather than decorative, and it is the real shape of the sidebar this backs.
  */
 const FOLDERS: ChatFolder[] = [
-  { id: 'f-kirocrew', name: 'kirocrew', order: 0 },
+  { id: 'f-ajcrew', name: 'ajcrew', order: 0 },
   { id: 'f-oss-root', name: 'oss', order: 1 },
-  { id: 'f-oss-nested', name: 'oss', order: 0, parent_id: 'f-kirocrew' },
+  { id: 'f-oss-nested', name: 'oss', order: 0, parent_id: 'f-ajcrew' },
   { id: 'f-travel', name: 'Travel Desk', order: 2 },
 ]
 
@@ -65,21 +65,21 @@ describe('createFoldersProvider — matching', () => {
     const results = await provider.search('oss')
     const nested = results.find(r => r.id === 'folders:f-oss-nested')
     const root = results.find(r => r.id === 'folders:f-oss-root')
-    expect(nested?.subtitle).toBe('kirocrew')
+    expect(nested?.subtitle).toBe('ajcrew')
     expect(root?.subtitle).toBeUndefined()
   })
 
   it('reaches a folder through its ancestry path, and ranks it below a name match', async () => {
     const { provider } = build()
-    const results = await provider.search('kirocrew')
+    const results = await provider.search('ajcrew')
     const ids = results.map(r => r.id)
     // The parent matched by name; its child matched only through the path.
-    expect(ids).toContain('folders:f-kirocrew')
+    expect(ids).toContain('folders:f-ajcrew')
     expect(ids).toContain('folders:f-oss-nested')
     // A name match must come first — typing a parent's name lists the parent, not
     // one of its children.
-    expect(ids[0]).toBe('folders:f-kirocrew')
-    const parent = results.find(r => r.id === 'folders:f-kirocrew')!
+    expect(ids[0]).toBe('folders:f-ajcrew')
+    const parent = results.find(r => r.id === 'folders:f-ajcrew')!
     const child = results.find(r => r.id === 'folders:f-oss-nested')!
     expect(parent.score).toBeGreaterThan(child.score)
     // The child surfaced BECAUSE of its path, so that is what gets highlighted…
@@ -90,7 +90,7 @@ describe('createFoldersProvider — matching', () => {
 
   it('matches a query spanning two path segments', async () => {
     const { provider } = build()
-    const results = await provider.search('kirocrew oss')
+    const results = await provider.search('ajcrew oss')
     expect(results.map(r => r.id)).toContain('folders:f-oss-nested')
   })
 
@@ -105,7 +105,7 @@ describe('createFoldersProvider — matching', () => {
     // Pre-order: roots by (order, name), each parent immediately followed by its
     // children. Mirrors what the sidebar draws rather than an alphabetical view.
     expect(results.map(r => r.id)).toEqual([
-      'folders:f-kirocrew',
+      'folders:f-ajcrew',
       'folders:f-oss-nested',
       'folders:f-oss-root',
       'folders:f-travel',

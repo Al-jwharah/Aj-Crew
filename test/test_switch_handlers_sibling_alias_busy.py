@@ -30,15 +30,15 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard.chat import (
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard.chat import (
     api_chat_slot_agent,
     api_chat_slot_model,
     api_chat_slot_reasoning_effort,
     api_chat_slot_workspace,
     api_chat_slots_model,
 )
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 _MODEL_OLD = "claude-opus-4.8"
 _MODEL_NEW = "gpt-5.6-sol"
@@ -398,7 +398,7 @@ class TestLegacyBareSlackKeyIsTheSameSession:
     async def test_refuses_across_spellings_and_shares_one_lock(
         self, state, alias_a, alias_b, switching_key, sibling_key, route, body, field, old_value
     ):
-        from kiro_crew.llm_helpers import slot_switch_session_lock
+        from aj_crew.llm_helpers import slot_switch_session_lock
 
         alias_a.linked_session_key = switching_key
         alias_b.linked_session_key = sibling_key

@@ -20,8 +20,8 @@
 /* The "Ultra Mode" words. The purple stop is the theme's `--aim` and the blue
    stop its `--info`, pulled 15% and 40% toward the strongest text colour, so
    the two ends stay far apart in hue. Measured >= 4.5:1 for each stop on the
-   page and on idle, hover and selected rows in the light, dark, kiro-light and
-   kiro-dark themes, and >= 5.2:1 on the pressed chip, whose tint is kept light
+   page and on idle, hover and selected rows in the light, dark, aj-light and
+   aj-dark themes, and >= 5.2:1 on the pressed chip, whose tint is kept light
    (12%, 16% on hover or press) for it. */
 .crew-grad-text,
 .crew-eyebrow-text,

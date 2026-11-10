@@ -3,7 +3,7 @@
 Real: ``worktree_ops._worktree_remove`` and ``worktree_ops._pod_up``, a scratch git
 repository under ``tmp_path`` with real worktrees, and a real ``git worktree remove``.
 Stand-ins: the pod backend (``runtime.rt``, an in-memory set of active pod names) and
-the ``kirocrew pod up`` CLI, which marks the pod active the way its unit does.
+the ``ajcrew pod up`` CLI, which marks the pod active the way its unit does.
 
 The two-process tests split the work the way production does: an agent's pod start
 runs in the gateway (this process, serving the real removal-lease routes on
@@ -24,8 +24,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestServer
 
-import kiro_crew
-from kiro_crew.apps.builtins.dev_fleet import (
+import aj_crew
+from aj_crew.apps.builtins.dev_fleet import (
     fleet_state,
     gateway_routes,
     live,
@@ -33,7 +33,7 @@ from kiro_crew.apps.builtins.dev_fleet import (
     runtime,
     worktree_ops,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 NAME = "feature-wt"
 OTHER = "other-wt"
@@ -68,7 +68,7 @@ class _Lease:
 
 @pytest.fixture
 def world(monkeypatch, tmp_path):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     repo = tmp_path / "repo"
     repo.mkdir()
     _git("init", "-q", "-b", "main", cwd=repo)
@@ -149,7 +149,7 @@ def world(monkeypatch, tmp_path):
         runtime, "_sel", lambda: type("_S", (), {"log_tool_invocation": lambda self, **kw: None})()
     )
     monkeypatch.setattr(runtime, "_warm_build_path", AsyncMock(return_value=None))
-    monkeypatch.setattr(runtime, "_find_cli", lambda: ["kirocrew"])
+    monkeypatch.setattr(runtime, "_find_cli", lambda: ["ajcrew"])
     monkeypatch.setattr(worktree_ops, "_read_pin_strict", lambda c, n: (False, None))
     monkeypatch.setattr(worktree_ops, "_mint_pod_token_locked", lambda c, n, p: {"ok": True})
 
@@ -162,7 +162,7 @@ def world(monkeypatch, tmp_path):
     )
 
     async def run_cmd(cmd, cwd=None, env=None, timeout=None, pre_spawn=None, **kw):
-        if cmd[:3] == ["kirocrew", "pod", "up"]:
+        if cmd[:3] == ["ajcrew", "pod", "up"]:
             await world.pod_cli(cmd[3])
             active.add(cmd[3])
             return 0, '{"base_url": "http://127.0.0.1:1"}', ""
@@ -304,7 +304,7 @@ _BACKEND_LEASE = """\
 import asyncio
 import sys
 
-from kiro_crew.apps.builtins.dev_fleet import live, pointer_broker
+from aj_crew.apps.builtins.dev_fleet import live, pointer_broker
 
 
 async def main(port, path, secret):
@@ -374,9 +374,9 @@ async def _backend(port, path, tmp_path):
     script.write_text(_BACKEND_LEASE, encoding="utf-8")
     env = {
         **os.environ,
-        "PYTHONPATH": str(Path(kiro_crew.__file__).resolve().parents[1]),
+        "PYTHONPATH": str(Path(aj_crew.__file__).resolve().parents[1]),
         "PYTHONDONTWRITEBYTECODE": "1",
-        "KIROCREW_HOME": str(tmp_path / "home"),
+        "AJCREW_HOME": str(tmp_path / "home"),
     }
     proc = await asyncio.create_subprocess_exec(
         sys.executable,

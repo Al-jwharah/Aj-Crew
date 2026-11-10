@@ -10,8 +10,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from kiro_crew import env, env_mise
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import env, env_mise
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 
 @pytest.fixture

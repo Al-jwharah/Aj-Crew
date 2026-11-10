@@ -23,12 +23,12 @@ from remove_slot_for_history_key_helpers import _make_state as _make_delete_stat
 from remove_slot_for_history_key_helpers import _remove_slot_for_history_key
 from slot_close_recreation_race_helpers import _Req
 
-from kiro_crew.browser_harness import live_hub
-from kiro_crew.browser_harness.relay import CdpRelay
-from kiro_crew.dashboard.chat_handlers import api_chat_slots_cleanup, close_slot
-from kiro_crew.dashboard.handlers import browser_live, browser_ops
-from kiro_crew.history import ConversationLog
-from kiro_crew.testing.wait import await_until
+from aj_crew.browser_harness import live_hub
+from aj_crew.browser_harness.relay import CdpRelay
+from aj_crew.dashboard.chat_handlers import api_chat_slots_cleanup, close_slot
+from aj_crew.dashboard.handlers import browser_live, browser_ops
+from aj_crew.history import ConversationLog
+from aj_crew.testing.wait import await_until
 
 pytestmark = pytest.mark.asyncio
 
@@ -36,7 +36,7 @@ pytestmark = pytest.mark.asyncio
 @pytest.fixture
 def browser(monkeypatch: pytest.MonkeyPatch) -> Iterator[tuple[CdpRelay, list[Any]]]:
     """Chat A owns tab T-a, chat B owns T-b; every CDP request the relay sends is kept."""
-    monkeypatch.setattr("kiro_crew.autonudge._INSTANCE", None)
+    monkeypatch.setattr("aj_crew.autonudge._INSTANCE", None)
     live_hub.reset_live_hub()
     hub = live_hub.get_live_hub()
     hub.bind_target("chat-a", "T-a")

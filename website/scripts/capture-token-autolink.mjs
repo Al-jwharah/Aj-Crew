@@ -9,7 +9,7 @@
  * so a stock build renders exactly as it did before this change — that is the
  * design, and it means the delta only appears once an edition registers a rule:
  *
- *   before -> dist built with KIROCREW_EDITION_DIR unset (stock, no rules)
+ *   before -> dist built with AJCREW_EDITION_DIR unset (stock, no rules)
  *   after  -> dist built with a demo edition registering one TICKET-\d+ rule
  *
  * The "before" frame is therefore also the evidence for the no-op claim: it is
@@ -33,7 +33,7 @@ import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 const OUT = process.argv[2] || '../temp-screenshots/token-autolink'
 const LABEL = process.argv[3] || 'after'
 const SLOT = 'chat-token-autolink'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 const BUBBLE = '[data-role="assistant"] .msg-content'
 
 const TRANSCRIPT = [
@@ -52,7 +52,7 @@ const slots = [{
   running: false,
   last_message: 'ready for review',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(now),

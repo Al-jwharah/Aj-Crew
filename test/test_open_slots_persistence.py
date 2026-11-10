@@ -8,10 +8,10 @@ snapshots the live ``_slots`` keys to ``<config_dir>/open_slots.json`` on
 every flush + shutdown, and ``restore_open_slots`` reads it back on startup
 before the legacy mtime restore runs.
 
-Path resolution goes through ``kiro_crew.config.loader.config_dir`` (the
+Path resolution goes through ``aj_crew.config.loader.config_dir`` (the
 canonical helper used by every other dashboard persistence path -- session
 metadata, vector memory, agent metadata, secretary, etc.) so the snapshot
-honors ``KIROCREW_HOME``. These tests set ``KIROCREW_HOME`` to ``tmp_path``
+honors ``AJCREW_HOME``. These tests set ``AJCREW_HOME`` to ``tmp_path``
 directly to exercise that resolution end-to-end (rather than monkeypatching
 ``Path.home`` and bypassing the env-var branch).
 
@@ -34,18 +34,18 @@ from chat_test_helpers import _make_state
 from open_slots_persistence_helpers import _seed_session
 from windows_sim import builtin_open_sharing_violation, read_text_sharing_violation
 
-from kiro_crew.dashboard.chat_persistence import (
+from aj_crew.dashboard.chat_persistence import (
     ENV_AUTHORITY_RESTORED,
     restore_open_slots,
     restore_open_slots_async,
 )
-from kiro_crew.dashboard.chat_utils import _history_key_for
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.chat_utils import _history_key_for
+from aj_crew.dashboard.state import DashboardState
 
 
 def test_persist_writes_open_slots_json(tmp_path, monkeypatch):
     """_persist_open_slots writes the live slot keys to <config_dir>/open_slots.json."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     state.open_slots_restored = True  # steady state: the boot restore has run
     state.get_or_create_slot("chat-1-foo")
@@ -66,7 +66,7 @@ def test_persist_overwrites_atomically(tmp_path, monkeypatch):
     atomic_write uses a unique mkstemp name per writer, because the flush thread and the
     shutdown handler can persist at the same time and would race on a fixed temp name.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     state.open_slots_restored = True  # steady state: the boot restore has run
     state.get_or_create_slot("chat-1-foo")
@@ -83,10 +83,10 @@ def test_persist_overwrites_atomically(tmp_path, monkeypatch):
     assert set(payload["keys"]) == {"chat-1-foo", "chat-2-bar"}
 
 
-def test_persist_honors_kirocrew_home_env(tmp_path, monkeypatch):
-    """Snapshot lands in KIROCREW_HOME, not ~/.kirocrew -- proves the env-var path."""
-    custom_home = tmp_path / "custom-kirocrew-home"
-    monkeypatch.setenv("KIROCREW_HOME", str(custom_home))
+def test_persist_honors_ajcrew_home_env(tmp_path, monkeypatch):
+    """Snapshot lands in AJCREW_HOME, not ~/.ajcrew -- proves the env-var path."""
+    custom_home = tmp_path / "custom-ajcrew-home"
+    monkeypatch.setenv("AJCREW_HOME", str(custom_home))
     state = _make_state(tmp_path / "sessions")
     state.open_slots_restored = True  # steady state: the boot restore has run
     state.get_or_create_slot("chat-1-foo")
@@ -96,7 +96,7 @@ def test_persist_honors_kirocrew_home_env(tmp_path, monkeypatch):
 
 def test_restore_open_slots_rehydrates_listed_keys(tmp_path, monkeypatch):
     """restore_open_slots rehydrates each listed key from history."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     # Seed two sessions on disk
     _seed_session(state, "chat-1-alpha")
@@ -118,7 +118,7 @@ def test_restore_open_slots_rehydrates_listed_keys(tmp_path, monkeypatch):
 
 def test_restore_open_slots_skips_closed_sessions(tmp_path, monkeypatch):
     """A session marked closed=True in metadata must not be restored."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, "chat-1-open")
     _seed_session(state, "chat-2-closed", closed=True)
@@ -134,14 +134,14 @@ def test_restore_open_slots_skips_closed_sessions(tmp_path, monkeypatch):
 
 def test_restore_open_slots_missing_file_is_noop(tmp_path, monkeypatch):
     """No snapshot file -> 0 restored, no exception."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     assert restore_open_slots(state) == 0
 
 
 def test_restore_open_slots_malformed_file_is_noop(tmp_path, monkeypatch):
     """Garbage in the snapshot file -> 0 restored, gateway still boots."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     snapshot_path = tmp_path / "open_slots.json"
     snapshot_path.write_text("{not valid json")
@@ -150,7 +150,7 @@ def test_restore_open_slots_malformed_file_is_noop(tmp_path, monkeypatch):
 
 def test_restore_open_slots_skips_already_loaded(tmp_path, monkeypatch):
     """If a key is already in _slots (e.g. created via another path) skip it."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, "chat-1-foo")
     snapshot_path = tmp_path / "open_slots.json"
@@ -169,10 +169,10 @@ def test_persist_open_slots_handles_write_failure_gracefully(tmp_path, monkeypat
     atomic_write calls os.fchmod on the open descriptor, not os.chmod, so that is the
     seam patched here.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     state.get_or_create_slot("chat-1-foo")
-    with patch("kiro_crew.atomic_write.os.fchmod", side_effect=OSError("read-only filesystem")):
+    with patch("aj_crew.atomic_write.os.fchmod", side_effect=OSError("read-only filesystem")):
         # Should not raise
         state._persist_open_slots()
     # fchmod_safe logs a permission failure and the write goes on, so the
@@ -187,7 +187,7 @@ def test_restore_open_slots_rejects_path_separator_keys(tmp_path, monkeypatch):
     Slot keys become filesystem paths through ``_history_key_for()``, so a crafted key in
     open_slots.json could otherwise escape the sessions directory.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, "chat-1-legit")
     snapshot_path = tmp_path / "open_slots.json"
@@ -222,7 +222,7 @@ def test_restore_open_slots_rolls_back_partial_slot_on_rehydrate_failure(tmp_pat
     empty slot would make ``restore_recent_sessions`` dedupe on the key and skip the real
     restore, leaving an empty tab.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, "chat-1-good")
     snapshot_path = tmp_path / "open_slots.json"
@@ -233,7 +233,7 @@ def test_restore_open_slots_rolls_back_partial_slot_on_rehydrate_failure(tmp_pat
     # Patch _rehydrate_slot_from_history so that it leaks a partial slot
     # (mirroring the real partial-state path) and then raises. Without the
     # rollback in restore_open_slots, the partial slot would persist.
-    from kiro_crew.dashboard import chat_persistence as cp_mod
+    from aj_crew.dashboard import chat_persistence as cp_mod
 
     def _failing_rehydrate(state_arg, slot_name):
         # Mimic the real failure mode: register an empty slot via
@@ -261,7 +261,7 @@ def test_rehydrate_slot_restores_persisted_tab_id_for_fork_chaining(tmp_path, mo
     ``get_or_create_slot`` assigns a random tab_id, and the next flush would persist it,
     cutting the fork chain ``read_messages_chained`` walks.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, "chat-1-with-tab-id")
     # Inject a known tab_id into the persisted metadata to simulate an
@@ -306,7 +306,7 @@ def test_restore_carries_the_agent_selection_namespace(tmp_path, monkeypatch):
     metadata (``SLOT_OWNED_META_KEYS``), and only the two known values are
     honoured on the way back in.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, "chat-1-template-pick")
     history_key = _history_key_for("chat-1-template-pick")
@@ -335,7 +335,7 @@ def test_rehydrate_slot_uses_chained_read_with_500_message_window(tmp_path, monk
     ``restore_open_slots`` runs before ``restore_recent_sessions`` and wins the key, so it
     must use the same chained, 500-message read or long sessions lose history on restart.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, "chat-1-long")
 
@@ -382,7 +382,7 @@ def test_rehydrate_slot_loads_full_500_message_window(tmp_path, monkeypatch):
 
     250 sits between the flat read's 200 cap and the 500 window while keeping seeding fast.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     history_key = _history_key_for("chat-1-bigwindow")
     log = state.conversation_log
@@ -414,7 +414,7 @@ def test_persist_open_slots_excludes_incognito_and_temporary(tmp_path, monkeypat
     Incognito and temporary tabs promise to close when the user is done, so they must not
     survive a restart.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     state.open_slots_restored = True  # steady state: the boot restore has run
     state.get_or_create_slot("chat-persistent-1")
@@ -439,14 +439,14 @@ def test_restore_open_slots_rollback_also_discards_restricted_keys(tmp_path, mon
     A leftover entry would make a later persistent slot of the same name inherit
     restricted status and lose consolidation and lessons.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, "chat-1-incognito")
     snapshot_path = tmp_path / "open_slots.json"
     snapshot_path.write_text(json.dumps({"keys": ["chat-1-incognito"], "ts": 0.0}))
 
     state2 = _make_state(tmp_path / "sessions")
-    from kiro_crew.dashboard import chat_persistence as cp_mod
+    from aj_crew.dashboard import chat_persistence as cp_mod
 
     def _failing_rehydrate(state_arg, slot_name):
         # Mimic the real failure mode for an INCOGNITO session: register the
@@ -484,7 +484,7 @@ FOLDED_KEY = "Artifact__2026_Example_Benchmark_Report_-_alice_vs_Bob_Smith_Org"
 
 def test_restore_open_slots_folds_legacy_raw_keys(tmp_path, monkeypatch):
     """A raw snapshot key restores under the canonical folded key."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, FOLDED_KEY)  # on-disk file is always the folded form
     (tmp_path / "open_slots.json").write_text(json.dumps({"keys": [RAW_KEY], "ts": 0.0}))
@@ -499,7 +499,7 @@ def test_restore_open_slots_folds_legacy_raw_keys(tmp_path, monkeypatch):
 
 def test_restore_open_slots_dedupes_raw_and_folded_snapshot_twins(tmp_path, monkeypatch):
     """A polluted snapshot carrying BOTH key forms restores exactly one slot."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, FOLDED_KEY)
     (tmp_path / "open_slots.json").write_text(
@@ -520,9 +520,9 @@ def test_restart_restore_paths_converge_on_one_slot(tmp_path, monkeypatch):
     restore_recent_sessions walk is what produces two identical sidebar sessions
     after a gateway restart.
     """
-    from kiro_crew.dashboard.chat_persistence import restore_recent_sessions
+    from aj_crew.dashboard.chat_persistence import restore_recent_sessions
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, FOLDED_KEY)
     (tmp_path / "open_slots.json").write_text(json.dumps({"keys": [RAW_KEY], "ts": 0.0}))
@@ -548,7 +548,7 @@ def test_restart_restore_paths_converge_on_one_slot(tmp_path, monkeypatch):
 
 def test_reseed_advances_past_highest_restored_index(tmp_path, monkeypatch):
     """reseed_slot_counter seeds the counter to the max restored slot index."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     assert state._slot_counter == 0
     state.get_or_create_slot("chat-6-1783712190")
@@ -561,7 +561,7 @@ def test_reseed_advances_past_highest_restored_index(tmp_path, monkeypatch):
 
 def test_reseed_ignores_non_indexed_keys(tmp_path, monkeypatch):
     """Custom keys (Slack sessions, sanitized names) are skipped, not crashed on."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     state.get_or_create_slot("chat-3-1783712000")
     # Keys without a digit in the second-to-last segment must be ignored.
@@ -578,7 +578,7 @@ def test_reseed_ignores_non_indexed_keys(tmp_path, monkeypatch):
 
 def test_reseed_is_monotonic(tmp_path, monkeypatch):
     """reseed never lowers the counter below its current value."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     state._slot_counter = 12
     state.get_or_create_slot("chat-3-1783712000")
@@ -590,7 +590,7 @@ def test_reseed_is_monotonic(tmp_path, monkeypatch):
 
 def test_reseed_noop_when_no_slots(tmp_path, monkeypatch):
     """No slots -> counter unchanged, no exception."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     state.reseed_slot_counter()
     assert state._slot_counter == 0
@@ -598,7 +598,7 @@ def test_reseed_noop_when_no_slots(tmp_path, monkeypatch):
 
 def test_new_slot_does_not_collide_with_restored_tab(tmp_path, monkeypatch):
     """Restore high-index tabs, reseed, then mint: the new key is unused and one higher."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, "chat-6-restored")
     _seed_session(state, "chat-7-restored")
@@ -627,7 +627,7 @@ def test_reseed_skips_unicode_digit_key_without_crashing(tmp_path, monkeypatch):
 
     str.isdigit() accepts '²' but int() raises on it, so the isascii() guard matters.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     state.get_or_create_slot("chat-4-1783712000")
     # Inject a pathological key directly (get_or_create_slot would ascii-sanitize it).
@@ -647,7 +647,7 @@ def test_reseed_skips_unicode_digit_key_without_crashing(tmp_path, monkeypatch):
 
 def test_flush_before_restore_does_not_wipe_seed(tmp_path, monkeypatch):
     """An empty-slots flush before restore must leave open_slots.json intact."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     seed = {"keys": ["chat-1-idle", "chat-2-idle", "chat-3-idle"], "ts": 123.0}
     (tmp_path / "open_slots.json").write_text(json.dumps(seed))
 
@@ -673,7 +673,7 @@ def test_pre_restore_flush_does_not_clobber_seed_with_a_boot_time_slot(tmp_path,
     The HTTP listener binds before restore, so ``_slots`` can hold only a tab opened
     during boot; pruning the seed down to it would lose every seeded tab.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     seed = {"keys": ["chat-1-idle", "chat-2-idle"], "ts": 123.0}
     (tmp_path / "open_slots.json").write_text(json.dumps(seed))
 
@@ -699,7 +699,7 @@ def test_post_restore_empty_flush_still_clears_the_file(tmp_path, monkeypatch):
     The guard must not pin a stale seed once restore has run — otherwise closing
     the last tab would never take effect across a restart.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     (tmp_path / "open_slots.json").write_text(json.dumps({"keys": ["chat-1-old"], "ts": 0.0}))
     state = _make_state(tmp_path / "sessions")
     # Restore ran this boot and found nothing to restore.
@@ -718,7 +718,7 @@ def test_post_restore_empty_flush_still_clears_the_file(tmp_path, monkeypatch):
 
 def test_restore_sets_open_slots_restored_flag(tmp_path, monkeypatch):
     """Both drivers mark the restore as having run, even on a missing file."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
 
     sync_state = _make_state(tmp_path / "sessions")
     assert sync_state.open_slots_restored is False
@@ -733,7 +733,7 @@ def test_restore_sets_open_slots_restored_flag(tmp_path, monkeypatch):
 
 def test_two_boot_restart_keeps_idle_sessions_active(tmp_path, monkeypatch):
     """A pre-restore flush on boot #1 does not strand idle sessions in "older" on boot #2."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     base = _make_state(tmp_path / "sessions")
     keys = ["chat-1-idle", "chat-2-idle", "chat-3-idle"]
     for k in keys:
@@ -767,7 +767,7 @@ def test_crash_before_restore_keeps_seed_and_boot_time_tab(tmp_path, monkeypatch
 
     The next boot restores from that flush, and the pre-restore merge wrote A ∪ B ∪ C.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     base = _make_state(tmp_path / "sessions")
     for k in ("chat-A-idle", "chat-B-idle", "chat-C-boot"):
         _seed_session(base, k)
@@ -798,7 +798,7 @@ def test_pre_restore_transient_seed_read_failure_preserves_seed(tmp_path, monkey
     Merging an empty read (e.g. a Windows sharing violation) would drop the seeded tabs;
     the next flush retries.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     seed = {"keys": ["chat-A-idle", "chat-B-idle"], "ts": 0.0}
     (tmp_path / "open_slots.json").write_text(json.dumps(seed))
 
@@ -808,7 +808,7 @@ def test_pre_restore_transient_seed_read_failure_preserves_seed(tmp_path, monkey
 
     # Simulate a transient read failure (seed exists but is momentarily
     # unreadable) distinct from a genuinely-absent file.
-    from kiro_crew.dashboard.state import _persistence_for
+    from aj_crew.dashboard.state import _persistence_for
 
     monkeypatch.setattr(
         _persistence_for(state),
@@ -828,7 +828,7 @@ def test_pre_restore_transient_seed_read_failure_preserves_seed(tmp_path, monkey
 
 def test_persist_without_restore_is_not_permanently_suppressed(tmp_path, monkeypatch):
     """A surface that never runs a restore (e.g. headless) still persists its live slots."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     assert state.open_slots_restored is False  # no restore on this surface
     state.get_or_create_slot("chat-live")
@@ -847,7 +847,7 @@ def test_context_snapshot_prune_skipped_before_restore(tmp_path, monkeypatch):
 
     It prunes to ``set(_slots)``, which is still empty before restore.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     snap_path = tmp_path / "context_snapshots.json"
     snap_path.write_text(json.dumps({"chat-1-idle": {"pct": 42}, "chat-2-idle": {"pct": 7}}))
 
@@ -872,7 +872,7 @@ def test_context_snapshot_prune_skipped_before_restore(tmp_path, monkeypatch):
 
 def test_context_snapshot_prune_runs_after_restore(tmp_path, monkeypatch):
     """After restore the prune is authoritative again (dead keys drop)."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     snap_path = tmp_path / "context_snapshots.json"
 
     state = _make_state(tmp_path / "sessions")
@@ -895,7 +895,7 @@ def test_context_snapshot_write_skipped_when_pre_restore_read_fails(tmp_path, mo
 
     Latching the failure as an empty loaded map would overwrite every other tab's reading.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     snap_path = tmp_path / "context_snapshots.json"
     snap_path.write_text(json.dumps({"chat-1-idle": {"pct": 42}, "chat-2-idle": {"pct": 7}}))
     before = snap_path.read_bytes()
@@ -963,7 +963,7 @@ def test_a_transient_metadata_read_failure_does_not_drop_a_tab(tmp_path, monkeyp
     (``ERROR_SHARING_VIOLATION``), and an empty metadata read means "skip this key", so
     the metadata read retries.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     keys = [f"chat-{i}-transient" for i in range(6)]
     for k in keys:
@@ -991,7 +991,7 @@ def test_read_messages_retries_transient_sharing_violation(tmp_path, monkeypatch
     The metadata cache is primed so the only faulted open is the body read in
     ``_read_messages``, which is on the same restore path as the metadata read.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, "chat-1-body")
     log = state.conversation_log
@@ -1019,9 +1019,9 @@ def test_read_messages_reraises_after_exhausting_retries(tmp_path, monkeypatch):
     ``[]`` would register an empty slot that ``restore_recent_sessions`` then skips;
     re-raising lets rehydrate roll back so a later restore can retry.
     """
-    from kiro_crew.history import _METADATA_READ_ATTEMPTS
+    from aj_crew.history import _METADATA_READ_ATTEMPTS
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, "chat-1-persist")
     log = state.conversation_log
@@ -1044,7 +1044,7 @@ def test_read_messages_missing_file_mid_read_returns_empty(tmp_path, monkeypatch
     ``FileNotFoundError`` is not a transient lock: re-raising it would turn a concurrent
     ``delete_session`` into an HTTP 500 in callers like ``api_session_detail``.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, "chat-1-race")
     log = state.conversation_log
@@ -1075,7 +1075,7 @@ def test_persistent_body_read_failure_drops_tab_not_registers_empty(tmp_path, mo
 
     An absent key leaves ``restore_recent_sessions`` and the next restart free to recover it.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     keys = [f"chat-{i}-persist" for i in range(3)]
     for k in keys:
@@ -1108,7 +1108,7 @@ def test_persistent_metadata_failure_keeps_key_in_reopen_seed(tmp_path, monkeypa
     The flush snapshots live ``_slots``, and ``dashboard.restore_sessions`` defaults to
     ``False``, so the seed is the only way to restore the tab on a later boot.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     keys = [f"chat-{i}-seed" for i in range(4)]
     for k in keys:
@@ -1139,7 +1139,7 @@ def test_persistent_metadata_failure_keeps_key_in_reopen_seed(tmp_path, monkeypa
 
 def test_absent_session_is_dropped_from_reopen_seed(tmp_path, monkeypatch):
     """A key with no transcript is pruned; only FAILED reads keep their seed."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, "chat-1-real")
     (tmp_path / "open_slots.json").write_text(
@@ -1162,7 +1162,7 @@ def test_remote_only_slot_is_kept_as_reopen_seed_after_authority_restore(tmp_pat
     A replacement task restores ``open_slots.json`` but loads transcripts lazily, so with
     ``ENV_AUTHORITY_RESTORED`` set the key stays a reopen seed instead of being pruned.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setenv(ENV_AUTHORITY_RESTORED, "1")
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, "chat-1-local")
@@ -1195,7 +1195,7 @@ def test_closed_tab_is_dropped_even_after_authority_restore(tmp_path, monkeypatc
     not to tabs the user dismissed: a closed tab carries ``meta.closed`` and must
     not be resurrected by a replacement.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setenv(ENV_AUTHORITY_RESTORED, "1")
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, "chat-1-closed", closed=True)
@@ -1210,14 +1210,14 @@ def test_closed_tab_is_dropped_even_after_authority_restore(tmp_path, monkeypatc
 
 def test_metadata_failure_is_reported_above_debug(tmp_path, monkeypatch, caplog):
     """The restore layer logs a WARNING naming the dropped tab, not just the unread file."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _seed_session(state, "chat-1-logged")
     (tmp_path / "open_slots.json").write_text(json.dumps({"keys": ["chat-1-logged"], "ts": 0.0}))
 
     state2 = _make_state(tmp_path / "sessions")
     victim = state2.conversation_log._path(_history_key_for("chat-1-logged")).name
-    with caplog.at_level("WARNING", logger="kiro_crew.dashboard.chat_persistence"):
+    with caplog.at_level("WARNING", logger="aj_crew.dashboard.chat_persistence"):
         with builtin_open_sharing_violation(match=victim, times=3):
             restore_open_slots(state2)
 
@@ -1228,7 +1228,7 @@ def test_metadata_failure_is_reported_above_debug(tmp_path, monkeypatch, caplog)
 
 def test_get_metadata_status_separates_unreadable_from_absent(tmp_path, monkeypatch):
     """The new signal must not report absence as a read failure, or vice versa."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     log = state.conversation_log
     assert log is not None
@@ -1261,7 +1261,7 @@ def test_non_object_metadata_line_does_not_abort_the_whole_restore(tmp_path, mon
     ``data.get`` on a non-dict raises ``AttributeError``, which would escape to
     ``server.py`` and abort startup; like an undecodable line, it is a corrupt answer.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     keys = ["chat-0-ok", "chat-1-corrupt", "chat-2-ok"]
     for k in keys:

@@ -1,4 +1,4 @@
-"""Tests for :mod:`kiro_crew.diag.procs` -- the read-only process-tree view.
+"""Tests for :mod:`aj_crew.diag.procs` -- the read-only process-tree view.
 
 The whole suite runs against a FAKE process table built under ``tmp_path``, so
 nothing here reads the real ``/proc``, spawns ``ps``, or touches a live process.
@@ -6,7 +6,7 @@ That is also what makes the negative assertions meaningful: a stranger process
 and a non-allowlisted environment key exist in the fixture, and the tests assert
 they never reach the output.
 
-``kiro_crew.diag`` has no ``__init__.py`` in this branch -- worker A owns that
+``aj_crew.diag`` has no ``__init__.py`` in this branch -- worker A owns that
 file -- so the package resolves as a namespace package. The import below is the
 test that this works; no conftest shim is needed.
 """
@@ -23,8 +23,8 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import platform_compat, platform_compat_proctable, session_pid
-from kiro_crew.diag import procs
+from aj_crew import platform_compat, platform_compat_proctable, session_pid
+from aj_crew.diag import procs
 
 NUL = b"\x00"
 
@@ -68,9 +68,9 @@ ORPHAN_CHILD = 1004
 RUNNER = 1005
 STRANGER = 1006
 
-MARKER = {session_pid.KIROCREW_SPAWNED_ENV: session_pid.KIROCREW_SPAWNED_VALUE}
+MARKER = {session_pid.AJCREW_SPAWNED_ENV: session_pid.AJCREW_SPAWNED_VALUE}
 
-GATEWAY_ARGV = nul_argv(b"/v/bin/python3", b"-m", b"kiro_crew.cli", b"gateway")
+GATEWAY_ARGV = nul_argv(b"/v/bin/python3", b"-m", b"aj_crew.cli", b"gateway")
 CHAT_ARGV = nul_argv(b"/usr/local/bin/kiro-cli-chat", b"--acp")
 BROWSER_ARGV = nul_argv(b"/opt/chrome/chrome", b"--headless=new", b"--remote-debugging-port=0")
 RENDERER_ARGV = nul_argv(b"/opt/chrome/chrome-headless", b"--type=renderer")
@@ -81,7 +81,7 @@ STRANGER_ARGV = nul_argv(b"/usr/sbin/sshd", b"-D")
 class FakeProcTable:
     """A writable stand-in for ``/proc``, one directory per process.
 
-    Only the files :mod:`kiro_crew.diag.procs` reads are created, and each is
+    Only the files :mod:`aj_crew.diag.procs` reads are created, and each is
     written in the real kernel's shape -- including a ``comm`` containing a space
     and a ``)``, because surviving that is the ``stat`` parser's whole job.
     """
@@ -337,7 +337,7 @@ def test_kind_classification(tmp_path: Path) -> None:
     table.add(
         1010,
         GATEWAY,
-        cmdline=nul_argv(b"/v/bin/python3", b"-m", b"kiro_crew.mcp_gateway.gatewayd", b"-s", b"/x"),
+        cmdline=nul_argv(b"/v/bin/python3", b"-m", b"aj_crew.mcp_gateway.gatewayd", b"-s", b"/x"),
         env=dict(MARKER),
     )
     table.add(1011, GATEWAY, cmdline=CHAT_ARGV, env=dict(MARKER))
@@ -363,17 +363,17 @@ def test_kind_classification(tmp_path: Path) -> None:
 def test_the_shipped_gateway_entry_form_is_classified_as_the_gateway(
     tmp_path: Path,
 ) -> None:
-    """Regression: the live gateway on this host runs as ``python -m kiro_crew gateway``.
+    """Regression: the live gateway on this host runs as ``python -m aj_crew gateway``.
 
-    Its argv names the PACKAGE, so neither ``kiro_crew.cli`` nor
-    ``kiro_crew.__main__`` appears in it and the reaper's module markers do not
+    Its argv names the PACKAGE, so neither ``aj_crew.cli`` nor
+    ``aj_crew.__main__`` appears in it and the reaper's module markers do not
     match. A first draft classified a real running gateway as ``other``.
     """
     table = FakeProcTable(tmp_path / "proc")
     shipped = nul_argv(
-        b"/rt/python3.12/bin/real/python3.12", b"-m", b"kiro_crew", b"gateway", b"--port", b"8476"
+        b"/rt/python3.12/bin/real/python3.12", b"-m", b"aj_crew", b"gateway", b"--port", b"8476"
     )
-    console = nul_argv(b"/home/u/.local/bin/kirocrew", b"gateway", b"--port", b"9000")
+    console = nul_argv(b"/home/u/.local/bin/ajcrew", b"gateway", b"--port", b"9000")
     table.add(GATEWAY, OUTSIDER, cmdline=GATEWAY_ARGV, env=dict(MARKER))
     table.add(1030, GATEWAY, cmdline=shipped, env=dict(MARKER))
     table.add(1031, GATEWAY, cmdline=console, env=dict(MARKER))
@@ -424,28 +424,28 @@ def test_env_reports_only_allowlisted_keys_and_never_leaks_the_others(
         OUTSIDER,
         cmdline=GATEWAY_ARGV,
         env={
-            session_pid.KIROCREW_SPAWNED_ENV: session_pid.KIROCREW_SPAWNED_VALUE,
-            "KIROCREW_HOME": "/home/u/.kiro/crew",
+            session_pid.AJCREW_SPAWNED_ENV: session_pid.AJCREW_SPAWNED_VALUE,
+            "AJCREW_HOME": "/home/u/.kiro/crew",
             "TMPDIR": "/tmp",
-            "KIROCREW_SCRATCH": "/scratch/run",
+            "AJCREW_SCRATCH": "/scratch/run",
             "AWS_SECRET_ACCESS_KEY": secret_value,
-            "KIROCREW_GATEWAY_TOKEN": secret_value,
+            "AJCREW_GATEWAY_TOKEN": secret_value,
         },
     )
     roster = table.scan()
     node = roster.nodes[GATEWAY]
 
     assert set(node.env) <= set(procs.ENV_ALLOWLIST)
-    assert node.env["KIROCREW_HOME"] == "/home/u/.kiro/crew"
+    assert node.env["AJCREW_HOME"] == "/home/u/.kiro/crew"
     assert node.env["TMPDIR"] == "/tmp"
-    assert "KIROCREW_POD_ROOT" not in node.env, "an unset allowlisted key is omitted, not empty"
+    assert "AJCREW_POD_ROOT" not in node.env, "an unset allowlisted key is omitted, not empty"
 
     rendered = json.dumps(procs.tree(roster, "flat", include_env=True))
     assert secret_value not in rendered
     assert "AWS_SECRET_ACCESS_KEY" not in rendered
-    assert "KIROCREW_GATEWAY_TOKEN" not in rendered
+    assert "AJCREW_GATEWAY_TOKEN" not in rendered
     # Even the marker the family test depends on is not an output field.
-    assert session_pid.KIROCREW_SPAWNED_ENV not in rendered
+    assert session_pid.AJCREW_SPAWNED_ENV not in rendered
 
 
 def test_env_is_omitted_entirely_unless_requested(family: FakeProcTable) -> None:
@@ -503,14 +503,14 @@ def test_cmdline_credentials_are_redacted(tmp_path: Path) -> None:
     table.add(
         GATEWAY,
         OUTSIDER,
-        cmdline=nul_argv(b"/v/bin/python3", b"-m", b"kiro_crew.cli", b"--key=AKIAIOSFODNN7EXAMPLE"),
+        cmdline=nul_argv(b"/v/bin/python3", b"-m", b"aj_crew.cli", b"--key=AKIAIOSFODNN7EXAMPLE"),
         env=dict(MARKER),
     )
     roster = table.scan()
     rendered = roster.nodes[GATEWAY].cmdline
     assert "AKIAIOSFODNN7EXAMPLE" not in rendered
     assert "REDACTED" in rendered
-    assert "kiro_crew.cli" in rendered, "redaction must not eat the identifying argv"
+    assert "aj_crew.cli" in rendered, "redaction must not eat the identifying argv"
 
 
 def test_every_emitted_string_passes_through_the_canonical_redactor(
@@ -522,7 +522,7 @@ def test_every_emitted_string_passes_through_the_canonical_redactor(
     all leave through it; a regex-shaped assertion would only prove that one
     pattern happens to be covered today.
     """
-    from kiro_crew.platform import context
+    from aj_crew.platform import context
 
     monkeypatch.setattr(context, "redact_via_context", lambda text: f"<scrubbed:{text}>")
 
@@ -532,13 +532,13 @@ def test_every_emitted_string_passes_through_the_canonical_redactor(
         OUTSIDER,
         cmdline=GATEWAY_ARGV,
         cwd="/home/u/project",
-        env={**MARKER, "KIROCREW_HOME": "/home/u/.kiro/crew"},
+        env={**MARKER, "AJCREW_HOME": "/home/u/.kiro/crew"},
     )
     roster = table.scan()
     node = roster.nodes[GATEWAY]
     assert node.cmdline.startswith("<scrubbed:")
     assert node.cwd == "<scrubbed:/home/u/project>"
-    assert node.env["KIROCREW_HOME"] == "<scrubbed:/home/u/.kiro/crew>"
+    assert node.env["AJCREW_HOME"] == "<scrubbed:/home/u/.kiro/crew>"
 
 
 # -- deltas ------------------------------------------------------------------
@@ -681,12 +681,12 @@ def test_a_long_env_value_and_cwd_are_bounded(tmp_path: Path) -> None:
         OUTSIDER,
         cmdline=GATEWAY_ARGV,
         cwd="/" + "d" * 5000,
-        env={**MARKER, "KIROCREW_HOME": "/" + "h" * 5000},
+        env={**MARKER, "AJCREW_HOME": "/" + "h" * 5000},
     )
     roster = table.scan()
     node = roster.nodes[GATEWAY]
     assert node.cwd is not None and len(node.cwd) <= procs.MAX_PATH_CHARS
-    assert len(node.env["KIROCREW_HOME"]) <= procs.MAX_PATH_CHARS
+    assert len(node.env["AJCREW_HOME"]) <= procs.MAX_PATH_CHARS
 
 
 def test_the_population_cap_keeps_the_gateway_and_every_candidate_orphan(
@@ -775,7 +775,7 @@ def test_a_credential_straddling_the_bound_is_still_redacted(tmp_path: Path) -> 
     table = FakeProcTable(tmp_path / "proc")
     # Pad so the credential sits astride MAX_CMDLINE_CHARS.
     pad = b"x" * (procs.MAX_CMDLINE_CHARS - 10)
-    argv = nul_argv(b"/v/bin/python3", b"-m", b"kiro_crew.cli", pad + b"--key=AKIAIOSFODNN7EXAMPLE")
+    argv = nul_argv(b"/v/bin/python3", b"-m", b"aj_crew.cli", pad + b"--key=AKIAIOSFODNN7EXAMPLE")
     table.add(GATEWAY, OUTSIDER, cmdline=argv, env=dict(MARKER))
 
     roster = table.scan()
@@ -794,9 +794,9 @@ def test_a_credential_straddling_the_env_bound_is_still_redacted(tmp_path: Path)
         GATEWAY,
         OUTSIDER,
         cmdline=GATEWAY_ARGV,
-        env={**MARKER, "KIROCREW_HOME": pad + "AKIAIOSFODNN7EXAMPLE"},
+        env={**MARKER, "AJCREW_HOME": pad + "AKIAIOSFODNN7EXAMPLE"},
     )
-    stored = table.scan().nodes[GATEWAY].env["KIROCREW_HOME"]
+    stored = table.scan().nodes[GATEWAY].env["AJCREW_HOME"]
     assert len(stored) <= procs.MAX_PATH_CHARS
     assert "AKIAIOSFODNN7EXAMPLE" not in stored
 

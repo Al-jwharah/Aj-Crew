@@ -22,9 +22,9 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from kiro_crew.dashboard.chat_runner import _slot_is_trusted
+from aj_crew.dashboard.chat_runner import _slot_is_trusted
 
-_RUNNER = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard" / "chat_runner.py"
+_RUNNER = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard" / "chat_runner.py"
 
 
 class _Slot:

@@ -2,7 +2,7 @@
 
 Lives in the repo-level ``test/`` tree (not the app's in-package ``tests/``)
 because ``setup.cfg`` sets ``testpaths = test transfer`` — a test under
-``src/kiro_crew/apps/builtins/...`` is never collected by CI.
+``src/aj_crew/apps/builtins/...`` is never collected by CI.
 
 The engine is third-party code fetched at runtime and then BUILT and EXECUTED
 (``uv sync`` compiles wheels; the app's agents drive the engine), so the two
@@ -31,8 +31,8 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import asset_downloader
-from kiro_crew.apps.builtins.pptx_maker.backend import engine_source
+from aj_crew import asset_downloader
+from aj_crew.apps.builtins.pptx_maker.backend import engine_source
 
 
 def _tar_bytes(entries: list[tarfile.TarInfo], payloads: dict[str, bytes]) -> bytes:

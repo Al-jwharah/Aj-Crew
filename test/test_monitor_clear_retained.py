@@ -27,10 +27,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import autonudge_authz
-from kiro_crew.autonudge import AutoNudgeService, MonitorUpdateConflict
-from kiro_crew.dashboard.handlers import autonudge as h
-from kiro_crew.monitoring.models import (
+from aj_crew import autonudge_authz
+from aj_crew.autonudge import AutoNudgeService, MonitorUpdateConflict
+from aj_crew.dashboard.handlers import autonudge as h
+from aj_crew.monitoring.models import (
     MONITOR_STATE_VERSION,
     MonitorBudgets,
     MonitorOutcome,
@@ -39,7 +39,7 @@ from kiro_crew.monitoring.models import (
 
 @pytest.fixture(autouse=True)
 def _enable(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
 
 @pytest.fixture(autouse=True)

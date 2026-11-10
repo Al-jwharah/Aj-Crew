@@ -1,4 +1,4 @@
-"""Tests for :mod:`kiro_crew.crew_log.holders` -- the pull-request holder projection.
+"""Tests for :mod:`aj_crew.crew_log.holders` -- the pull-request holder projection.
 
 The suite is organised around the two things this module claims: the ownership
 RULE (a conductor does not out-own the worker it dispatched) and the resume CACHE
@@ -16,11 +16,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.crew_log import eager
-from kiro_crew.crew_log import holders as holders_mod
-from kiro_crew.crew_log import session_tree as tree_mod
-from kiro_crew.crew_log import store as crew_store
-from kiro_crew.crew_log.holders import (
+from aj_crew.crew_log import eager
+from aj_crew.crew_log import holders as holders_mod
+from aj_crew.crew_log import session_tree as tree_mod
+from aj_crew.crew_log import store as crew_store
+from aj_crew.crew_log.holders import (
     MAX_ENTRY_BYTES,
     MAX_OWNER_CHARS,
     MAX_PR_NUMBER,
@@ -36,9 +36,9 @@ from kiro_crew.crew_log.holders import (
     is_ancestor,
     parse_references,
 )
-from kiro_crew.crew_log.schema import KIND_SESSION, Entry
-from kiro_crew.crew_log.session_tree import SessionTree, TreeNode, TreeReading
-from kiro_crew.validation import MAX_ACP_SESSION_ID_LEN, MAX_SHORT_STRING
+from aj_crew.crew_log.schema import KIND_SESSION, Entry
+from aj_crew.crew_log.session_tree import SessionTree, TreeNode, TreeReading
+from aj_crew.validation import MAX_ACP_SESSION_ID_LEN, MAX_SHORT_STRING
 
 #: The repository this suite's fixtures name. Split from the SLUG rather than
 #: spelled as two literals: the slug is the identifier form, and a bare joined
@@ -529,7 +529,7 @@ class _Store:
 def store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> _Store:
     """A crew-log store in an isolated data home, never the live one."""
     home = tmp_path / "home"
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     (home / "crew-log" / "sessions").mkdir(parents=True)
     return _Store()
 
@@ -1095,7 +1095,7 @@ class TestScannerBounds:
         def failing_listing(kind: str, **kwargs: object) -> tuple[list[Path], bool, bool]:
             return [], False, True
 
-        monkeypatch.setattr("kiro_crew.crew_log.session_tree.unit_dirs", failing_listing)
+        monkeypatch.setattr("aj_crew.crew_log.session_tree.unit_dirs", failing_listing)
         assert SessionTree().reading(preferred=("sid-c",)).incomplete is True
 
     def test_the_preferred_list_is_bounded_before_it_is_materialized(self, store: _Store) -> None:
@@ -1454,7 +1454,7 @@ class TestScannerFaults:
         # directory fold turns `/` into `_`, so a hand-written pair can match the name.
         # That refusal is not an `OSError`; it must mark this unit unreadable, not make
         # the outer guard answer with no holders at all.
-        from kiro_crew.session_ledger import _store_name
+        from aj_crew.session_ledger import _store_name
 
         store.unit("sid-a", "slot-a")
         store.append("sid-a", f"{_URL}/7")

@@ -112,7 +112,7 @@ The bus's single `sink=` becomes a composite: the local sink runs first and sync
 
 ### Sink contract: reuse `MessagingTransport`
 
-All five transports already implement the Layer-1 `MessagingTransport` contract (`src/kiro_crew/messaging/transport.py`): `slack/transport.py`, `discord/transport.py`, `telegram/transport.py`, `webex/transport.py`, `wecom/transport.py`. The bridge introduces no new transport abstraction:
+All five transports already implement the Layer-1 `MessagingTransport` contract (`src/aj_crew/messaging/transport.py`): `slack/transport.py`, `discord/transport.py`, `telegram/transport.py`, `webex/transport.py`, `wecom/transport.py`. The bridge introduces no new transport abstraction:
 
 - **Eligibility** is gated on `TransportCapabilities` — the existing proactive/delayed send-policy flag decides whether a transport may receive bridge deliveries at all.
 - **Rendering** uses each transport's renderer and the capabilities' chunking parameters, so a long body degrades per transport instead of assuming one shape. The bridge renders a compact notification form: title, body, priority marker, and the deep-link `url` as text (dashboard-internal routes only, per the bus's existing validation).

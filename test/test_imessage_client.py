@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.imessage.client (watch resume, dedupe, capability probe).
+"""Tests for aj_crew.imessage.client (watch resume, dedupe, capability probe).
 
 The JSON-RPC peer is replaced with a stub, so these run on any host: no ``imsg``
 binary, no Messages database, no Mac.
@@ -18,8 +18,8 @@ from typing import Any
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.imessage import client as client_mod
-from kiro_crew.imessage.client import (
+from aj_crew.imessage import client as client_mod
+from aj_crew.imessage.client import (
     DEDUPE_WINDOW,
     ECHO_TTL_S,
     ECHO_WINDOW,
@@ -30,10 +30,10 @@ from kiro_crew.imessage.client import (
     parse_inbound,
     redact_handle,
 )
-from kiro_crew.imessage.rpc import RpcError, RpcTransportError
-from kiro_crew.imessage.transport import IMessageTransport
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import await_until
+from aj_crew.imessage.rpc import RpcError, RpcTransportError
+from aj_crew.imessage.transport import IMessageTransport
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import await_until
 
 #: The handle every fixture message comes from, and the one the self-chat tests
 #: put on the allowlist -- in that case it is the user's OWN handle.
@@ -1210,7 +1210,7 @@ class TestOwnEchoLedger:
         # later drop indistinguishable from a message that never arrived.
         imc = await _client(tmp_path)
         peers[0].default_result = {"ok": True}
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.imessage.client"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.imessage.client"):
             for i in range(3):
                 await imc.send(OWNER, "same words")
                 echo = parse_inbound(_message(guid=f"E{i}", text="same words"))

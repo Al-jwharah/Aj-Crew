@@ -14,7 +14,7 @@
  * @module appFrame/frameProtocol
  */
 
-export const APP_FRAME_TAG = 'kirocrew-app-frame'
+export const APP_FRAME_TAG = 'ajcrew-app-frame'
 
 /** Messages a frame may send in a burst, and how fast that allowance refills. */
 export const BURST_CAPACITY = 120

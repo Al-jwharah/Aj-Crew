@@ -26,13 +26,13 @@ from github_pull_request_monitor_helpers import (
     _threads,
 )
 
-from kiro_crew.github_runner import GITHUB_MAX_OWNER_CHARS, GITHUB_MAX_REPO_CHARS
-from kiro_crew.monitoring import github_pull_request
-from kiro_crew.monitoring.github_pull_request import (
+from aj_crew.github_runner import GITHUB_MAX_OWNER_CHARS, GITHUB_MAX_REPO_CHARS
+from aj_crew.monitoring import github_pull_request
+from aj_crew.monitoring.github_pull_request import (
     GitHubPullRequestTarget,
     parse_github_pull_request_target,
 )
-from kiro_crew.monitoring.models import MonitorObservationStatus
+from aj_crew.monitoring.models import MonitorObservationStatus
 
 
 def test_blank_check_label_keeps_the_provider_state_under_an_opaque_identity() -> None:

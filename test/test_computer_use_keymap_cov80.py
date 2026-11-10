@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.computer_use.keymap import (
+from aj_crew.computer_use.keymap import (
     FLAG_ALTERNATE,
     FLAG_COMMAND,
     FLAG_SHIFT,
@@ -33,7 +33,7 @@ from kiro_crew.computer_use.keymap import (
     parse_key,
     parse_spec,
 )
-from kiro_crew.computer_use.types import KeyParseError
+from aj_crew.computer_use.types import KeyParseError
 
 
 class TestParseKeyRefuses:
@@ -57,7 +57,7 @@ class TestParseKeyRefuses:
     def test_a_spec_of_only_separators_still_names_the_plus_key(self) -> None:
         """``"+ +"`` strips to a trailing-plus spec: the whitespace token drops out
         and the plus survives, so this is the plus key rather than a refusal."""
-        from kiro_crew.computer_use.keymap import KEYCODES as _kc
+        from aj_crew.computer_use.keymap import KEYCODES as _kc
 
         assert parse_key("+ +") == (_kc["="], FLAG_SHIFT)
 

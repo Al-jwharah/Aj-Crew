@@ -17,12 +17,12 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_folder_app, _make_state
 
-from kiro_crew import executors
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew import executors
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 _AGENT_HEADERS = {
     "X-Internal-Secret": "s3cret",
-    "X-Internal-Caller": "kirocrew-dashboard",
+    "X-Internal-Caller": "ajcrew-dashboard",
     "X-Session-Key": "dashboard:conductor",
 }
 
@@ -54,7 +54,7 @@ async def _answered(request: Awaitable[Any]) -> Any:
 async def test_folder_list_and_empty_delete_answer_while_subprocess_pool_is_full(
     tmp_path, monkeypatch
 ) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.get_or_create_slot("conductor")
     release = threading.Event()

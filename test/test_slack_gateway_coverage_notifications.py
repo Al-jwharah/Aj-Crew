@@ -1,4 +1,4 @@
-"""Coverage for ``kiro_crew.slack.gateway``: notification closures and module helpers.
+"""Coverage for ``aj_crew.slack.gateway``: notification closures and module helpers.
 
 ``on_orphan_notify`` / ``on_orphan_dm`` handed to ``SubagentManager`` and
 ``on_notify`` handed to ``TaskRunner``; ``_channel_transport_permitted``'s
@@ -20,8 +20,8 @@ from real_dashboard_state import _settle_real_dashboard_states  # noqa: F401
 from real_dashboard_state import drain, note_rows, notes, open_feed, real_dashboard_state
 from slack_gateway_coverage_helpers import _awaited, _make_orchestrator, _mock_dashboard_state
 
-from kiro_crew import subagent as _sa
-from kiro_crew.slack import gateway as gw
+from aj_crew import subagent as _sa
+from aj_crew.slack import gateway as gw
 
 # ═════════════════════════════════════════════════════════════════════════
 # _init_subagents orphan-notification closures
@@ -29,8 +29,8 @@ from kiro_crew.slack import gateway as gw
 
 
 def _capture_subagent_kwargs(orch: Any) -> dict:
-    with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-        with patch("kiro_crew.slack.gateway.SubagentManager") as mock_sm:
+    with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.gateway.SubagentManager") as mock_sm:
             inst = MagicMock()
             inst.start_reaper = MagicMock()
             mock_sm.return_value = inst
@@ -180,7 +180,7 @@ class TestTaskNotify:
         orch.ctx_builder = MagicMock()
         orch.conv_log = MagicMock()
         orch.consolidator = MagicMock()
-        with patch("kiro_crew.slack.gateway.TaskRunner") as mock_tr:
+        with patch("aj_crew.slack.gateway.TaskRunner") as mock_tr:
             mock_tr.return_value = MagicMock()
             orch._init_task_runner()
             return mock_tr.call_args.kwargs["on_notify"]
@@ -457,10 +457,10 @@ class TestChannelTransportPermittedAuditPaths:
 
 
 class TestDigestChunkSize:
-    """``KIROCREW_SUBAGENT_DIGEST_CHUNK_SIZE`` parse guard: never crash import."""
+    """``AJCREW_SUBAGENT_DIGEST_CHUNK_SIZE`` parse guard: never crash import."""
 
     def test_default_when_unset(self, monkeypatch):
-        monkeypatch.delenv("KIROCREW_SUBAGENT_DIGEST_CHUNK_SIZE", raising=False)
+        monkeypatch.delenv("AJCREW_SUBAGENT_DIGEST_CHUNK_SIZE", raising=False)
         assert gw._digest_chunk_size() == 10
 
     @pytest.mark.parametrize(
@@ -471,23 +471,23 @@ class TestDigestChunkSize:
         ],
     )
     def test_set_value_is_parsed(self, monkeypatch, raw: str, expected: int):
-        monkeypatch.setenv("KIROCREW_SUBAGENT_DIGEST_CHUNK_SIZE", raw)
+        monkeypatch.setenv("AJCREW_SUBAGENT_DIGEST_CHUNK_SIZE", raw)
         assert gw._digest_chunk_size() == expected
 
     def test_value_is_clamped_to_a_sane_range(self, monkeypatch):
-        monkeypatch.setenv("KIROCREW_SUBAGENT_DIGEST_CHUNK_SIZE", "0")
+        monkeypatch.setenv("AJCREW_SUBAGENT_DIGEST_CHUNK_SIZE", "0")
         assert gw._digest_chunk_size() == 1
-        monkeypatch.setenv("KIROCREW_SUBAGENT_DIGEST_CHUNK_SIZE", "99999")
+        monkeypatch.setenv("AJCREW_SUBAGENT_DIGEST_CHUNK_SIZE", "99999")
         assert gw._digest_chunk_size() == 1000
 
 
 class TestDigestHoldSecs:
-    """``KIROCREW_SUBAGENT_DIGEST_HOLD_SECS`` parse guard: the
+    """``AJCREW_SUBAGENT_DIGEST_HOLD_SECS`` parse guard: the
     latency half of the digest split must never crash import, and 0 is the
     documented opt-out back to count-trigger-only delivery."""
 
     def test_default_when_unset(self, monkeypatch):
-        monkeypatch.delenv("KIROCREW_SUBAGENT_DIGEST_HOLD_SECS", raising=False)
+        monkeypatch.delenv("AJCREW_SUBAGENT_DIGEST_HOLD_SECS", raising=False)
         assert _sa._digest_hold_secs() == 120.0
 
     @pytest.mark.parametrize(
@@ -498,19 +498,19 @@ class TestDigestHoldSecs:
         ],
     )
     def test_set_value_is_parsed(self, monkeypatch, raw: str, expected: float):
-        monkeypatch.setenv("KIROCREW_SUBAGENT_DIGEST_HOLD_SECS", raw)
+        monkeypatch.setenv("AJCREW_SUBAGENT_DIGEST_HOLD_SECS", raw)
         assert _sa._digest_hold_secs() == expected
 
     def test_zero_and_negative_disable_the_deadline(self, monkeypatch):
-        monkeypatch.setenv("KIROCREW_SUBAGENT_DIGEST_HOLD_SECS", "0")
+        monkeypatch.setenv("AJCREW_SUBAGENT_DIGEST_HOLD_SECS", "0")
         assert _sa._digest_hold_secs() == 0.0
-        monkeypatch.setenv("KIROCREW_SUBAGENT_DIGEST_HOLD_SECS", "-30")
+        monkeypatch.setenv("AJCREW_SUBAGENT_DIGEST_HOLD_SECS", "-30")
         assert _sa._digest_hold_secs() == 0.0
 
     def test_clamped_to_the_per_agent_hard_ceiling(self, monkeypatch):
         """A deadline beyond the reap window is meaningless — the member is
         already dead by then and the wave closes on its own."""
-        monkeypatch.setenv("KIROCREW_SUBAGENT_DIGEST_HOLD_SECS", "999999")
+        monkeypatch.setenv("AJCREW_SUBAGENT_DIGEST_HOLD_SECS", "999999")
         assert _sa._digest_hold_secs() == float(_sa._TIMEOUT_SECS)
 
     def test_nan_is_malformed_input_not_a_deadline(self, monkeypatch):
@@ -521,7 +521,7 @@ class TestDigestHoldSecs:
         clocks were cleared and ``flushed`` advanced — permanently withholding
         the results the deadline exists to release."""
         for spelling in ("nan", "NaN", "-nan"):
-            monkeypatch.setenv("KIROCREW_SUBAGENT_DIGEST_HOLD_SECS", spelling)
+            monkeypatch.setenv("AJCREW_SUBAGENT_DIGEST_HOLD_SECS", spelling)
             got = _sa._digest_hold_secs()
             assert not math.isnan(got), f"{spelling!r} leaked NaN into the deadline"
             assert got == 120.0
@@ -534,9 +534,9 @@ class TestDigestHoldSecs:
     def test_infinity_is_clamped_not_leaked(self, monkeypatch):
         """+inf clamps to the ceiling; -inf is a valid opt-out. Unlike NaN,
         both order correctly, so neither needs rejecting."""
-        monkeypatch.setenv("KIROCREW_SUBAGENT_DIGEST_HOLD_SECS", "inf")
+        monkeypatch.setenv("AJCREW_SUBAGENT_DIGEST_HOLD_SECS", "inf")
         assert _sa._digest_hold_secs() == float(_sa._TIMEOUT_SECS)
-        monkeypatch.setenv("KIROCREW_SUBAGENT_DIGEST_HOLD_SECS", "-inf")
+        monkeypatch.setenv("AJCREW_SUBAGENT_DIGEST_HOLD_SECS", "-inf")
         assert _sa._digest_hold_secs() == 0.0
 
 

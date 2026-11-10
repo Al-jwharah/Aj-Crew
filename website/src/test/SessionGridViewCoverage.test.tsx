@@ -1,5 +1,5 @@
 /**
- * Coverage for SessionGridView — Kiro Crew's native in-place "terminal split"
+ * Coverage for SessionGridView — Aj Crew's native in-place "terminal split"
  * chat surface.
  *
  * The view is thin glue over useSessionGrid, and the parts worth pinning down are
@@ -702,7 +702,7 @@ describe('SessionGridView — picker list', () => {
 
   it('filters by title, key and agent', async () => {
     seedApi([
-      { key: 'a1', title: 'Alpha', agent: 'kirocrew' },
+      { key: 'a1', title: 'Alpha', agent: 'ajcrew' },
       { key: 'b2', title: 'Bravo', agent: 'reviewer' },
     ])
     renderGrid(null)

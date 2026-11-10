@@ -8,8 +8,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.shared_crew import capabilities as caps_mod
-from kiro_crew.shared_crew.capabilities import (
+from aj_crew.shared_crew import capabilities as caps_mod
+from aj_crew.shared_crew.capabilities import (
     CAPABILITY_FIELDS,
     REASON_NO_SOURCE,
     REASON_SOURCE_FAILED,
@@ -19,14 +19,14 @@ from kiro_crew.shared_crew.capabilities import (
     registered_capability_sources,
     unregister_capability_source,
 )
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew.contracts import (
     MEMBERSHIP_LINK_CONSOLE,
     MEMBERSHIP_LINK_TAILSCALE,
     Capabilities,
     CapabilityState,
     EnforcementLevel,
 )
-from kiro_crew.shared_crew.routes_capabilities import CAPABILITIES_PATH, register
+from aj_crew.shared_crew.routes_capabilities import CAPABILITIES_PATH, register
 
 A = CapabilityState.AVAILABLE
 D = CapabilityState.DEGRADED

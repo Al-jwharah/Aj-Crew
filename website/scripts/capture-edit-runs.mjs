@@ -63,7 +63,7 @@ const messages = [
 
 const slots = [{
   key: SLOT, title: 'Tighten the remote blog intro', running: false, last_message: 'Marked the intro done.',
-  messages: messages.length, agent: 'kirocrew', memory_mode: 'persistent', project: PROJECT,
+  messages: messages.length, agent: 'ajcrew', memory_mode: 'persistent', project: PROJECT,
   modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0,
 }]
 const detail = { running: false, has_more: false, total: messages.length, queue: [], project: PROJECT, messages }

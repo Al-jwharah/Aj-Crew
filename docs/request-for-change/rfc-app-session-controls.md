@@ -63,7 +63,7 @@ Verified on main `1d705a03f` (2026-09-01):
   now"*, and no amount of calling it will.
 
 - **The manifest's UI surfaces are all session-blind.** `UIConfig`
-  (`UIConfig` in `src/kiro_crew/apps/manifest_sections.py`) declares `entry`, `pages`, `overlays`
+  (`UIConfig` in `src/aj_crew/apps/manifest_sections.py`) declares `entry`, `pages`, `overlays`
   and `sidebar`. A `UIPage` is routed and full-surface; a `UIOverlay`
   (`UIOverlay`) is explicitly *"not routed: it floats above whatever the
   user is looking at"*, and its required `replaces` field names a host slot the

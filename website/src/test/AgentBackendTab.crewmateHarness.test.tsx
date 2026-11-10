@@ -6,9 +6,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
 
-const { patchConfigMock, kirocrewConfigMock, schemaMock, acpBackendsMock, acpBackendRecheckMock } = vi.hoisted(() => ({
+const { patchConfigMock, ajcrewConfigMock, schemaMock, acpBackendsMock, acpBackendRecheckMock } = vi.hoisted(() => ({
   patchConfigMock: vi.fn(() => Promise.resolve({})),
-  kirocrewConfigMock: vi.fn(() => Promise.resolve({ agent: { acp_backend: 'kas' } })),
+  ajcrewConfigMock: vi.fn(() => Promise.resolve({ agent: { acp_backend: 'kas' } })),
   schemaMock: vi.fn(),
   acpBackendsMock: vi.fn(),
   acpBackendRecheckMock: vi.fn(),
@@ -16,7 +16,7 @@ const { patchConfigMock, kirocrewConfigMock, schemaMock, acpBackendsMock, acpBac
 
 vi.mock('../api/client', () => ({
   api: {
-    kirocrewConfig: kirocrewConfigMock,
+    ajcrewConfig: ajcrewConfigMock,
     patchConfig: patchConfigMock,
     acpBackends: acpBackendsMock,
     acpBackendRecheck: acpBackendRecheckMock,

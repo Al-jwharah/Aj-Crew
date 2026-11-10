@@ -36,7 +36,7 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 
 /** Every shipped builtin manifest, read the way `appManifest.test.ts` reads them. */
 function shippedManifests(): { name: string; routes: string[] }[] {
-  const dir = resolve(HERE, '../../../src/kiro_crew/apps/builtins')
+  const dir = resolve(HERE, '../../../src/aj_crew/apps/builtins')
   return readdirSync(dir, { withFileTypes: true })
     .filter((e) => e.isDirectory() && !e.name.startsWith('.') && !e.name.startsWith('_'))
     .map((e) => join(dir, e.name, 'app.json'))

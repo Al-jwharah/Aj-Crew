@@ -12,7 +12,7 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from kiro_crew.apps.manifest import (
+from aj_crew.apps.manifest import (
     AppManifest,
     BackendConfig,
     CronEntry,

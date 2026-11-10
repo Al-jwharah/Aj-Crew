@@ -37,17 +37,17 @@ if (!['before', 'after'].includes(EXPECT)) throw new Error(`--expect must be bef
 
 const EXISTING = 'chat-existing'
 const FR_SLOT = 'chat-feature-request'
-const FORM_URL = 'https://github.com/kirodotdev/KiroCrew/issues/new?template=feature_request.yml'
+const FORM_URL = 'https://github.com/Al-jwharah/Aj-Crew/issues/new?template=feature_request.yml'
 // Derived from this script's own location, never hardcoded: it renders into the shot.
 const PROJECT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 // The shape of `kiro_cli_not_found_message`, prefixed the way `chat_runner` does.
-const MISSING_ROW = '❌ kiro-cli not found (searched 4 directories: /home/user/.local/bin, /usr/local/bin, /usr/bin, /bin). Install it from https://kiro.dev/cli/, or point KIROCREW_KIRO_BIN at the binary.'
+const MISSING_ROW = '❌ kiro-cli not found (searched 4 directories: /home/user/.local/bin, /usr/local/bin, /usr/bin, /bin). Install it from https://kiro.dev/cli/, or point AJCREW_KIRO_BIN at the binary.'
 
 mkdirSync(OUT, { recursive: true })
 
 const now = Date.now() / 1000
 const slot = (key, title, last, messages) => ({
-  key, title, running: false, last_message: last, messages, agent: 'kirocrew',
+  key, title, running: false, last_message: last, messages, agent: 'ajcrew',
   memory_mode: 'persistent', project: PROJECT, modified: Math.floor(now),
   source_links: [], source_links_total: 0,
 })

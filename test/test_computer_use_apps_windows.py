@@ -21,9 +21,9 @@ from contextlib import contextmanager
 
 import pytest
 
-from kiro_crew.computer_use import apps_windows, policy
-from kiro_crew.computer_use import windows_ffi as ffi
-from kiro_crew.computer_use.types import AppRef, ComputerUseError, PolicyConfig
+from aj_crew.computer_use import apps_windows, policy
+from aj_crew.computer_use import windows_ffi as ffi
+from aj_crew.computer_use.types import AppRef, ComputerUseError, PolicyConfig
 
 
 def _info(
@@ -124,7 +124,7 @@ class TestTransientPopupsAreNotApplications:
         denied = _info(
             hwnd=7,
             pid=901,
-            title="Kiro Crew",
+            title="Aj Crew",
             cls="Microsoft.UI.Content.PopupWindowSiteBridge",
             exe="chrome.exe",
         )
@@ -133,7 +133,7 @@ class TestTransientPopupsAreNotApplications:
         )
         monkeypatch.setattr(ffi, "window_list", lambda: (denied, sibling))
         apps = apps_windows.list_apps()
-        assert [app.window_title for app in apps] == ["Kiro Crew"]
+        assert [app.window_title for app in apps] == ["Aj Crew"]
         assert policy.check_app(apps[0], PolicyConfig()) is not None
 
 
@@ -222,7 +222,7 @@ class TestListApps:
         assert [a.window_id for a in apps] == [1, 2]
         assert len({a.window_id for a in apps}) == 2
 
-    def test_kirocrews_own_window_is_refused_at_the_ENFORCEMENT_layer(self, monkeypatch) -> None:
+    def test_ajcrews_own_window_is_refused_at_the_ENFORCEMENT_layer(self, monkeypatch) -> None:
         """The one built-in target refusal: the agent must not drive its own UI.
 
         Asserted through ``policy.check_app`` rather than through the shape of
@@ -237,12 +237,12 @@ class TestListApps:
             ffi,
             "window_list",
             lambda: (
-                _info(hwnd=1, title="Kiro Crew", exe="KiroCrew Nightly.exe"),
+                _info(hwnd=1, title="Aj Crew", exe="AjCrew Nightly.exe"),
                 _info(hwnd=2, title="Notepad", exe="notepad.exe"),
             ),
         )
         by_title = {a.window_title: a for a in apps_windows.list_apps()}
-        assert policy.check_app(by_title["Kiro Crew"], PolicyConfig()) is not None
+        assert policy.check_app(by_title["Aj Crew"], PolicyConfig()) is not None
         assert policy.check_app(by_title["Notepad"], PolicyConfig()) is None
 
     def test_the_on_screen_filter_is_UPSTREAM_and_not_re_derived_here(self, monkeypatch) -> None:

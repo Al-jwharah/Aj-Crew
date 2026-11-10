@@ -8,11 +8,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers.notifications_push import (
+from aj_crew.dashboard.handlers.notifications_push import (
     api_own_notification_ack,
     api_own_notifications,
 )
-from kiro_crew.dashboard.notification_coordinator import NotificationCoordinator
+from aj_crew.dashboard.notification_coordinator import NotificationCoordinator
 
 
 class _FakeState:
@@ -104,7 +104,7 @@ async def test_the_dashboard_names_the_app_and_must_be_the_owner():
 @pytest.mark.asyncio
 async def test_every_refusal_leaves_an_audit_record():
     state = _FakeState()
-    with patch("kiro_crew.dashboard.handlers.notifications_push.sel") as sel_mock:
+    with patch("aj_crew.dashboard.handlers.notifications_push.sel") as sel_mock:
         async with TestClient(TestServer(_app(state, app="ledger"))) as client:
             resp = await client.post("/api/notifications/own/ack", json={"ts": "t2"})
             assert resp.status == 404

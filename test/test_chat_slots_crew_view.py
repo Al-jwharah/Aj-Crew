@@ -16,9 +16,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import crew_mode
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard.handlers import source_providers
+from aj_crew import crew_mode
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard.handlers import source_providers
 
 ROOT = {"key": "chat-1-1", crew_mode.ROOT_FIELD: True}
 WORKER = {"key": "chat-2-2", crew_mode.WORKER_FIELD: "chat-1-1"}

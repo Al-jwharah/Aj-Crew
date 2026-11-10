@@ -82,7 +82,7 @@ beforeEach(() => {
   })
   mockApi.steeringFile.mockResolvedValue({ key: 'user/personal.md', content: '# Personal', path: '~/.kiro/steering/personal.md', source: 'user' })
   mockApi.skills.mockResolvedValue([
-    { key: 'foo', name: 'foo', description: 'a foo skill', source: 'kirocrew', loaded_by_agents: [] },
+    { key: 'foo', name: 'foo', description: 'a foo skill', source: 'ajcrew', loaded_by_agents: [] },
   ])
   mockApi.skill.mockResolvedValue({ name: 'foo', content: '---\nname: foo\n---\nbody', hash: 'h-foo' })
 })

@@ -1,7 +1,7 @@
-"""Helpers shared by the ``kiro_crew.apps.routes`` coverage modules.
+"""Helpers shared by the ``aj_crew.apps.routes`` coverage modules.
 
 ``APP`` (the synthetic app's name), ``_make_app_source`` and ``_install`` (write its
-manifest and install it), ``_setup_env`` (an isolated ``KIROCREW_HOME`` with the
+manifest and install it), ``_setup_env`` (an isolated ``AJCREW_HOME`` with the
 out-of-process side effects neutralized) and ``_make_app`` (an aiohttp app with the routes
 registered and, optionally, an authenticated app or dashboard identity).
 ``test_apps_routes_coverage.py`` and the route modules its docstring names import them by
@@ -19,9 +19,9 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp import web
 
-import kiro_crew.apps.routes as routes_mod
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
-from kiro_crew.apps.routes import invalidate_app_secret_cache, register_app_routes
+import aj_crew.apps.routes as routes_mod
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
+from aj_crew.apps.routes import invalidate_app_secret_cache, register_app_routes
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -46,10 +46,10 @@ def _make_app_source(tmp_path: Path, name: str = APP, **manifest_extra: Any) -> 
 
 
 def _setup_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """Isolate KIROCREW_HOME and neutralize out-of-process side effects."""
-    home = tmp_path / "kirocrew-home"
+    """Isolate AJCREW_HOME and neutralize out-of-process side effects."""
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     # These synthetic apps are third-party; admit them explicitly so the
     # execution guard is not the thing under test in every case.
     (home / "config.json").write_text(
@@ -57,10 +57,10 @@ def _setup_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     )
     kiro_agents = tmp_path / "kiro-agents"
     kiro_agents.mkdir()
-    import kiro_crew.apps.bridges as bridges_mod
+    import aj_crew.apps.bridges as bridges_mod
 
     monkeypatch.setattr(bridges_mod, "KIRO_AGENTS_DIR", kiro_agents)
-    import kiro_crew.apps.backend as bmod
+    import aj_crew.apps.backend as bmod
 
     bmod._processes.clear()
     bmod._allocated_ports.clear()

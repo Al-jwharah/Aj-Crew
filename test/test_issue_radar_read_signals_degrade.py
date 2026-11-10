@@ -16,9 +16,9 @@ import logging
 from test_read_json_or_signal import _fresh_dedup_state, _no_backoff_sleep  # noqa: F401
 from windows_sim import read_sharing_violation
 
-from kiro_crew import atomic_write as aw
-from kiro_crew import platform_compat
-from kiro_crew.apps.builtins.issue_radar.backend import crew_runtime
+from aj_crew import atomic_write as aw
+from aj_crew import platform_compat
+from aj_crew.apps.builtins.issue_radar.backend import crew_runtime
 
 
 def test_converted_site_read_signals_emits_the_degrade(tmp_path, monkeypatch, caplog):

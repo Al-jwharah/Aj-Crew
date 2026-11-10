@@ -28,8 +28,8 @@ from test_workspace_crud_handlers import (
     _seed_file,
 )
 
-from kiro_crew.config.loader import WorkspaceConfig
-from kiro_crew.dashboard.handlers import api_workspaces_create, api_workspaces_update
+from aj_crew.config.loader import WorkspaceConfig
+from aj_crew.dashboard.handlers import api_workspaces_create, api_workspaces_update
 
 _GONE_USER = "~no-such-user-kc32845"
 _UNRESOLVABLE = ["bad\x00dir", f"{_GONE_USER}/ws"]

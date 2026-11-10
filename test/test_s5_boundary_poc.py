@@ -16,7 +16,7 @@ verbatim in shape so that what the gate re-runs is the proof that was filed.
 ``record_owner`` runs in the GATEWAY process after the child has been resumed
 (``acp/client.py`` -> ``finish_suspended_spawn``, then ``record_owner``; twin in
 ``acp/runtime.py``). The child owns that directory by design -- it is its own
-``TMPDIR``/``KIROCREW_SCRATCH`` (``agent_scratch.scratch_env``) -- so it can
+``TMPDIR``/``AJCREW_SCRATCH`` (``agent_scratch.scratch_env``) -- so it can
 replace the regular ``.owner`` file with a symlink. ``Path.write_text`` opened
 ``O_WRONLY|O_CREAT|O_TRUNC`` with no ``lstat`` and no ``O_NOFOLLOW``, so the
 unsandboxed gateway truncated whatever the link named.
@@ -34,7 +34,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent_scratch
+from aj_crew import agent_scratch
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="symlink creation needs privilege")
@@ -47,7 +47,7 @@ def test_s5_1_record_owner_must_not_follow_a_symlink(tmp_path: Path) -> None:
     victim = tmp_path / "victim.json"
     victim.write_text("KEEP-ME")
 
-    # The child, running with $KIROCREW_SCRATCH == scratch, swaps its own marker.
+    # The child, running with $AJCREW_SCRATCH == scratch, swaps its own marker.
     owner.unlink()
     owner.symlink_to(victim)
 

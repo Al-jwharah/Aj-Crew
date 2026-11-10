@@ -31,7 +31,7 @@ const slots = [{
   title: 'Session summary — open items overflow',
   running: false,
   messages: 40,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   modified: Math.floor(Date.now() / 1000),
   last_ts: '2026-08-18T20:00:00Z',
   folder_id: '',

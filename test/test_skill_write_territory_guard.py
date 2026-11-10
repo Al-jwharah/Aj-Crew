@@ -27,7 +27,7 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.dashboard.handlers.prompts as prompts_mod
+import aj_crew.dashboard.handlers.prompts as prompts_mod
 
 
 @pytest.fixture(autouse=True)

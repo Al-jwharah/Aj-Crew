@@ -17,15 +17,15 @@ from typing import Any
 
 import pytest
 
-import kiro_crew.messaging.queue_receipt as Q
-from kiro_crew.messaging.queue_receipt import (
+import aj_crew.messaging.queue_receipt as Q
+from aj_crew.messaging.queue_receipt import (
     RECEIPT_MAX_ITEMS,
     RECEIPT_MAX_OWED,
     ReceiptQueue,
     receipt_address_key,
     receipt_text,
 )
-from kiro_crew.testing.wait import finished
+from aj_crew.testing.wait import finished
 
 
 class _Surface:
@@ -1036,7 +1036,7 @@ class TestRetentionIsBoundedInLifetimeAndPopulation:
                 await queue.create_or_grow_locked("s", chat, "again", "alice")
             return queue, held
 
-        with caplog.at_level("WARNING", logger="kiro_crew.messaging.queue_receipt"):
+        with caplog.at_level("WARNING", logger="aj_crew.messaging.queue_receipt"):
             queue, held = asyncio.run(go())
         assert held, "inside the allowance the record is still owed, not discarded"
         assert "s" not in queue._receipts, "past it the debt is given up and the key freed"
@@ -1060,7 +1060,7 @@ class TestRetentionIsBoundedInLifetimeAndPopulation:
                     await queue.flip_answering_locked("s", chat, [f"mid {n}"], owner="alice")
             return queue
 
-        with caplog.at_level("WARNING", logger="kiro_crew.messaging.queue_receipt"):
+        with caplog.at_level("WARNING", logger="aj_crew.messaging.queue_receipt"):
             queue = asyncio.run(go())
         assert not queue.has_receipt("s"), "no live bubble on a conversation taking nothing"
         assert "s" not in queue._receipts, "the key is released despite the interleaving"
@@ -1112,7 +1112,7 @@ class TestRetentionIsBoundedInLifetimeAndPopulation:
                 await queue.flip_answering_locked("s", alive, ["hello"], owner="bob")
             return queue, alive
 
-        with caplog.at_level("WARNING", logger="kiro_crew.messaging.queue_receipt"):
+        with caplog.at_level("WARNING", logger="aj_crew.messaging.queue_receipt"):
             queue, alive = asyncio.run(go())
         assert alive.sent == [receipt_text(["hello"], answering=True)], "posted on its own"
         assert "s" not in queue._receipts, "and the dead conversation's key is released"
@@ -1136,7 +1136,7 @@ class TestRetentionIsBoundedInLifetimeAndPopulation:
                 await queue.flip_answering_locked("s", mute, ["hello"], owner="bob")
             return queue
 
-        with caplog.at_level("WARNING", logger="kiro_crew.messaging.queue_receipt"):
+        with caplog.at_level("WARNING", logger="aj_crew.messaging.queue_receipt"):
             queue = asyncio.run(go())
         assert "s" not in queue._receipts, "the key is still released"
         assert self.given_up(caplog) == [1, 1], "the debt, then the record that followed it"
@@ -1165,7 +1165,7 @@ class TestRetentionIsBoundedInLifetimeAndPopulation:
                 await queue.create_or_grow_locked("s", chat, "again", "alice")
             return queue, spent
 
-        with caplog.at_level("WARNING", logger="kiro_crew.messaging.queue_receipt"):
+        with caplog.at_level("WARNING", logger="aj_crew.messaging.queue_receipt"):
             queue, spent = asyncio.run(go())
         assert spent == Q.RECEIPT_MAX_PUBLISH_ATTEMPTS - 1, "it really was one short"
         receipt = queue._receipts["s"]
@@ -1190,7 +1190,7 @@ class TestRetentionIsBoundedInLifetimeAndPopulation:
                     await queue.flip_answering_locked("s", chat, [f"drain {n}"], owner="alice")
             return queue
 
-        with caplog.at_level("WARNING", logger="kiro_crew.messaging.queue_receipt"):
+        with caplog.at_level("WARNING", logger="aj_crew.messaging.queue_receipt"):
             queue = asyncio.run(go())
         assert "s" not in queue._receipts, "the key stays released, not re-armed"
         counts = self.given_up(caplog)
@@ -1220,7 +1220,7 @@ class TestRetentionIsBoundedInLifetimeAndPopulation:
                     await queue.flip_answering_locked(key, chat, ["m"], owner="alice")
             return queue
 
-        with caplog.at_level("WARNING", logger="kiro_crew.messaging.queue_receipt"):
+        with caplog.at_level("WARNING", logger="aj_crew.messaging.queue_receipt"):
             queue = asyncio.run(go())
         assert "s" not in queue._receipts, "the orphaned pre-rotation debt is the one released"
         assert len(queue._receipts) == Q.RECEIPT_MAX_DEBTS, "the registry is held at the bound"
@@ -1284,7 +1284,7 @@ class TestRetentionIsBoundedInLifetimeAndPopulation:
                     await queue.flip_answering_locked(key, other, ["m"], owner="alice")
             return queue
 
-        with caplog.at_level("WARNING", logger="kiro_crew.messaging.queue_receipt"):
+        with caplog.at_level("WARNING", logger="aj_crew.messaging.queue_receipt"):
             queue = asyncio.run(go())
         assert "s" not in queue._receipts
         assert RECEIPT_MAX_OWED + 2 in self.given_up(caplog), "held bodies AND the omitted"
@@ -1308,7 +1308,7 @@ class TestRetentionIsBoundedInLifetimeAndPopulation:
                     await queue.flip_answering_locked(key, chat, ["m"], owner="alice")
             return queue
 
-        with caplog.at_level("WARNING", logger="kiro_crew.messaging.queue_receipt"):
+        with caplog.at_level("WARNING", logger="aj_crew.messaging.queue_receipt"):
             queue = asyncio.run(go())
         assert queue.has_receipt("live"), "the live entry survives a registry full of debts"
         assert queue._receipts["live"].texts == ["still queued"]
@@ -1480,7 +1480,7 @@ class TestAPartialDrainKeepsWhatIsStillQueuedHere:
         outright would take a message that is still queued off the list the next
         re-render is built from.
         """
-        from kiro_crew.messaging.queue_receipt import QueueReceipt, ReceiptLine
+        from aj_crew.messaging.queue_receipt import QueueReceipt, ReceiptLine
 
         here = receipt_address_key("fake", "chat")
         receipt = QueueReceipt(
@@ -1504,7 +1504,7 @@ class TestAPartialDrainKeepsWhatIsStillQueuedHere:
         negative slice answers EMPTY and would drop nothing at all on exactly the case
         that has to drop everything.
         """
-        from kiro_crew.messaging.queue_receipt import QueueReceipt, ReceiptLine
+        from aj_crew.messaging.queue_receipt import QueueReceipt, ReceiptLine
 
         here = receipt_address_key("fake", "chat")
         receipt = QueueReceipt(
@@ -1530,7 +1530,7 @@ class TestAPartialDrainKeepsWhatIsStillQueuedHere:
         the only handle her still-queued message has, it would lose both its
         acknowledgement here and its own final record.
         """
-        from kiro_crew.messaging.queue_receipt import QueueReceipt, ReceiptLine
+        from aj_crew.messaging.queue_receipt import QueueReceipt, ReceiptLine
 
         here = receipt_address_key("fake", "chat")
         receipt = QueueReceipt(
@@ -1554,7 +1554,7 @@ class TestAPartialDrainKeepsWhatIsStillQueuedHere:
         is unrecoverable: a line left listed is re-rendered by the next transition, a
         line removed is gone.
         """
-        from kiro_crew.messaging.queue_receipt import QueueReceipt, ReceiptLine
+        from aj_crew.messaging.queue_receipt import QueueReceipt, ReceiptLine
 
         here = receipt_address_key("fake", "chat")
         receipt = QueueReceipt(

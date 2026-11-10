@@ -22,16 +22,16 @@ from knowledge_helpers import store_factory_fixture  # noqa: F401
 from knowledge_helpers import store_fixture  # noqa: F401
 from pdf_test_helpers import flate_bomb_pdf
 
-from kiro_crew import pdf_extract
-from kiro_crew.knowledge import readers
-from kiro_crew.knowledge.chunker import HeadingAwareChunker
-from kiro_crew.knowledge.extractor import EntityExtractor
-from kiro_crew.knowledge.readers import FileReader
-from kiro_crew.knowledge.retrieval import (
+from aj_crew import pdf_extract
+from aj_crew.knowledge import readers
+from aj_crew.knowledge.chunker import HeadingAwareChunker
+from aj_crew.knowledge.extractor import EntityExtractor
+from aj_crew.knowledge.readers import FileReader
+from aj_crew.knowledge.retrieval import (
     ANY_EMBEDDING_SPACE,
     HybridRetriever,
 )
-from kiro_crew.knowledge.store import KnowledgeBundleError, KnowledgeStore, SimpleDiGraph
+from aj_crew.knowledge.store import KnowledgeBundleError, KnowledgeStore, SimpleDiGraph
 
 #: Slack for a float budget compared against its nominal cap. Two readings of
 #: the same monotonic tick do not cancel exactly once a cap has been added to
@@ -69,7 +69,7 @@ class TestKnowledgeStore:
         """
         # The driver the store itself runs on: pysqlite3 on Linux x86_64 (CI), the
         # stdlib elsewhere. Their ProgrammingError classes are unrelated types.
-        from kiro_crew._sqlite_compat import sqlite3
+        from aj_crew._sqlite_compat import sqlite3
 
         store.add_item("Doc", "body", "note")
         took_first = threading.Event()
@@ -113,10 +113,10 @@ class TestKnowledgeStore:
         With the flag off a connection keeps SQLite's thread-affinity guard, and the
         every-thread close refuses to run: production has no moment at which every
         thread is provably idle. The refusal names ``test/conftest.py`` and says the
-        app test trees under ``src/kiro_crew/apps/builtins`` do not flip the flag.
+        app test trees under ``src/aj_crew/apps/builtins`` do not flip the flag.
         """
-        from kiro_crew._sqlite_compat import sqlite3
-        from kiro_crew.knowledge import store as store_mod
+        from aj_crew._sqlite_compat import sqlite3
+        from aj_crew.knowledge import store as store_mod
 
         monkeypatch.setattr(store_mod, "_ALLOW_CROSS_THREAD_CLOSE_FOR_TESTS", False)
         prod = KnowledgeStore(str(tmp_path / "prod.db"))
@@ -144,7 +144,7 @@ class TestKnowledgeStore:
         message = str(excinfo.value)
         assert "test/conftest.py" in message, message
         assert "rootdir" not in message, message
-        assert "src/kiro_crew/apps/builtins" in message, message
+        assert "src/aj_crew/apps/builtins" in message, message
 
     def test_the_test_mode_connection_still_refuses_another_threads_use(self, store):
         """Relaxing SQLite's guard for the teardown close does not relax it for USE.
@@ -154,7 +154,7 @@ class TestKnowledgeStore:
         did not open it is refused exactly as production refuses it, so the suite
         still catches a caller that caches ``store.db`` and uses it from a worker.
         """
-        from kiro_crew._sqlite_compat import sqlite3
+        from aj_crew._sqlite_compat import sqlite3
 
         handle = store.db
         outcome: list = []
@@ -409,7 +409,7 @@ class TestKnowledgeStore:
                     conn.close()
             return parsed
 
-        with patch("kiro_crew.knowledge.store.json.loads", confirm_lands_mid_scan):
+        with patch("aj_crew.knowledge.store.json.loads", confirm_lands_mid_scan):
             reopened = KnowledgeStore(db_path)
         try:
             assert fired, "the mid-scan write never landed; the test proves nothing"
@@ -754,7 +754,7 @@ class TestFileReader:
             assert meta["extension"] == ext
         # Scripts and modules chunk at function boundaries like their .sh/.rb
         # peers; the .psd1 manifest is data, so it stays on the generic path.
-        from kiro_crew.knowledge.ingestion import CODE_EXTS
+        from aj_crew.knowledge.ingestion import CODE_EXTS
 
         assert ".ps1" in CODE_EXTS
         assert ".psm1" in CODE_EXTS
@@ -779,7 +779,7 @@ class TestFileReader:
             assert meta["extension"] == ext
         # .php chunks at function/class lines; a .phtml template is markup with
         # no such lines, so it stays on the generic chunker.
-        from kiro_crew.knowledge.ingestion import CODE_EXTS
+        from aj_crew.knowledge.ingestion import CODE_EXTS
 
         assert ".php" in CODE_EXTS
         assert ".phtml" not in CODE_EXTS
@@ -812,7 +812,7 @@ class TestFileReader:
         # gates the folder scan. An extension listed in CODE_EXTS alone never
         # reaches the chunker it selects -- the file is dropped upstream with no
         # error -- so the subset relation is the guard against that silent drift.
-        from kiro_crew.knowledge.ingestion import CODE_EXTS
+        from aj_crew.knowledge.ingestion import CODE_EXTS
 
         assert {".kt", ".kts"} <= CODE_EXTS
         missing = sorted(CODE_EXTS - FileReader.SUPPORTED)
@@ -821,7 +821,7 @@ class TestFileReader:
     def test_kotlin_script_routes_to_the_code_chunker(self):
         # .kts is a Kotlin build/script file, not prose: it must reach chunk_code
         # like .kt rather than the generic prose chunker.
-        from kiro_crew.knowledge.ingestion import _run_chunker
+        from aj_crew.knowledge.ingestion import _run_chunker
 
         chunker = MagicMock()
         chunks = _run_chunker(chunker, ".kts", "val x = 1", "file:///build.gradle.kts")
@@ -868,7 +868,7 @@ class TestFileReader:
         # Notepad and PowerShell `-Encoding utf8` write a UTF-8 BOM. Kept as a
         # U+FEFF, it sits before the first `#`, so the heading is not a heading
         # and its section folds into the next one's title.
-        from kiro_crew.knowledge.chunker import HeadingAwareChunker
+        from aj_crew.knowledge.chunker import HeadingAwareChunker
 
         f = tmp_path / "notes.md"
         f.write_bytes(codecs.BOM_UTF8 + b"# Intro\n\nhello\n\n# Usage\n\nrun it\n")

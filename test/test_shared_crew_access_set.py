@@ -17,25 +17,25 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config.sections_shared_crew import shared_crew_config_from
-from kiro_crew.dashboard import tailnet, tailnet_direct, tailnet_live_allowlist, tailnet_localapi
-from kiro_crew.dashboard.tailnet_direct import DirectGate, SelfNode
-from kiro_crew.dashboard.tailnet_localapi import Answer
-from kiro_crew.dashboard.token_auth import token_auth_middleware
-from kiro_crew.shared_crew import access_set
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import host_power, people, routes_access
-from kiro_crew.shared_crew import tailscale_invite_store as store
-from kiro_crew.shared_crew.admission import OperationState
-from kiro_crew.shared_crew.containment import ContainmentReport
-from kiro_crew.shared_crew.contracts import ActorContext, EnforcementLevel, Provenance, Transport
-from kiro_crew.shared_crew.identity import tailnet_principal
+from aj_crew.config.sections_shared_crew import shared_crew_config_from
+from aj_crew.dashboard import tailnet, tailnet_direct, tailnet_live_allowlist, tailnet_localapi
+from aj_crew.dashboard.tailnet_direct import DirectGate, SelfNode
+from aj_crew.dashboard.tailnet_localapi import Answer
+from aj_crew.dashboard.token_auth import token_auth_middleware
+from aj_crew.shared_crew import access_set
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import host_power, people, routes_access
+from aj_crew.shared_crew import tailscale_invite_store as store
+from aj_crew.shared_crew.admission import OperationState
+from aj_crew.shared_crew.containment import ContainmentReport
+from aj_crew.shared_crew.contracts import ActorContext, EnforcementLevel, Provenance, Transport
+from aj_crew.shared_crew.identity import tailnet_principal
 
 
 @pytest.fixture(autouse=True)
 def _shared_crew_preview_on(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
     """These tests cover the preview's behaviour; the gate itself has its own tests."""
-    _floor_monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    _floor_monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
 
 
 S = OperationState
@@ -75,14 +75,14 @@ def _fake_whois(addr: str) -> Answer:
 
 @pytest.fixture(autouse=True)
 def _isolated(_floor_monkeypatch):
-    import kiro_crew.dashboard.revocation_gen as rg
-    import kiro_crew.dashboard.token_auth as ta
+    import aj_crew.dashboard.revocation_gen as rg
+    import aj_crew.dashboard.token_auth as ta
 
     monkeypatch = _floor_monkeypatch
     monkeypatch.setattr(rg, "_gen", 0)
     monkeypatch.setattr(ta, "_revoked_store_singleton", None)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers._shared._is_restricted_session", lambda *_a: False
+        "aj_crew.dashboard.handlers._shared._is_restricted_session", lambda *_a: False
     )
     ta._state.clear_all()
     people.reset_for_tests()
@@ -110,7 +110,7 @@ def _install(seed: tuple[str, ...] = ()) -> None:
 
 
 async def _whoami(request: web.Request) -> web.Response:
-    from kiro_crew.dashboard.handlers.source_providers import is_owner_dashboard_request
+    from aj_crew.dashboard.handlers.source_providers import is_owner_dashboard_request
 
     return web.json_response(
         {"user": request.get("user"), "owner": is_owner_dashboard_request(request)}
@@ -226,7 +226,7 @@ async def test_irreversible_action_by_the_owner_needs_the_confirm_header() -> No
             "DELETE",
             "/api/shared-crew/tailscale/credential",
             OWNER_PHONE_IP,
-            **{"X-Kirocrew-Confirm": "irreversible"},
+            **{"X-Ajcrew-Confirm": "irreversible"},
         )
     finally:
         await client.close()
@@ -270,8 +270,8 @@ async def test_first_share_warning_counts_and_is_shown_once(monkeypatch) -> None
     async def vector_store(_state: Any) -> Vector:
         return Vector()
 
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.memory._get_vector_store_async", vector_store)
-    monkeypatch.setattr("kiro_crew.shared_crew.routes_identity._machine_only", lambda _k: False)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.memory._get_vector_store_async", vector_store)
+    monkeypatch.setattr("aj_crew.shared_crew.routes_identity._machine_only", lambda _k: False)
     client = await _client()
     client.server.app["state"].conversation_log = Log()
     try:
@@ -338,7 +338,7 @@ def test_macos_and_windows_laptop_detection(monkeypatch) -> None:
 
 
 def test_keep_awake_capability_per_platform(monkeypatch) -> None:
-    from kiro_crew import power
+    from aj_crew import power
 
     monkeypatch.setattr(power, "_resolve_trusted", lambda paths: paths[0])
     assert host_power.keep_awake_capability(system="darwin")["backend"] == "caffeinate"
@@ -354,7 +354,7 @@ def test_keep_awake_capability_per_platform(monkeypatch) -> None:
 def test_keep_awake_starts_while_a_collaborator_is_here_and_stops_when_idle(
     monkeypatch, platform_name
 ) -> None:
-    from kiro_crew import platform_compat, power
+    from aj_crew import platform_compat, power
 
     _install()
     for flag in ("IS_MACOS", "IS_LINUX", "IS_WINDOWS"):
@@ -421,7 +421,7 @@ def test_keep_awake_starts_while_a_collaborator_is_here_and_stops_when_idle(
 
 
 def test_capabilities_report_keep_awake(monkeypatch) -> None:
-    from kiro_crew.shared_crew.capabilities import aggregate_capabilities
+    from aj_crew.shared_crew.capabilities import aggregate_capabilities
 
     monkeypatch.setattr(
         host_power, "detect_laptop", lambda: host_power.LaptopInfo(True, "battery_present")
@@ -455,7 +455,7 @@ def _tagged_whois() -> dict[str, Any]:
 
 
 def test_the_listener_installs_the_set() -> None:
-    from kiro_crew.dashboard import tailnet_direct_listener
+    from aj_crew.dashboard import tailnet_direct_listener
 
     cfg = SimpleNamespace(
         degraded_sections=set(),

@@ -292,7 +292,7 @@ describe('AppDetailPage — auto-action deep links', () => {
       renderDetail({ state: { autoAction: 'update' } })
       fireEvent.click(await screen.findByRole('button', { name: /Trust the repository and update/ }))
       const dialog = within(await screen.findByRole('dialog'))
-      expect(dialog.getByText(i18nT('components.appstore.types.kirocrew_registry'))).toBeInTheDocument()
+      expect(dialog.getByText(i18nT('components.appstore.types.ajcrew_registry'))).toBeInTheDocument()
       expect(dialog.queryByText(i18nT('appStoreSources.local'))).not.toBeInTheDocument()
     })
 

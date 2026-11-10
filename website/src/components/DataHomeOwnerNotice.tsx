@@ -17,7 +17,7 @@ export function dataHomeOwnerMessage(home: string, owner: string): string {
 
 /**
  * The likely cause and the way out: stop running as root, and the docs section
- * that explains giving the files back by hand. Kiro Crew gives no command to
+ * that explains giving the files back by hand. Aj Crew gives no command to
  * copy: changing owners as root is the person's own step, taken with nothing
  * else running.
  */
@@ -40,7 +40,7 @@ export function DataHomeOwnerHelp({ helpUrl }: { helpUrl: string }) {
 
 /**
  * Some files in the data home belong to another account (an earlier
- * `sudo kirocrew ...`), so this account cannot read them and a new Bot cannot be
+ * `sudo ajcrew ...`), so this account cannot read them and a new Bot cannot be
  * created. Says which folder and owner, the likely cause, and where the fix is.
  */
 export function DataHomeOwnerNotice({ home, owner, helpUrl, testId = 'data-home-owner-notice' }: {

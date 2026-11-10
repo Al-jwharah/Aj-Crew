@@ -14,13 +14,13 @@ vi.mock('../api/client', () => ({
     sessionsMemory: () => Promise.resolve({
       sessions: [
         { key: 'chat-1', title: 'alpha session', slot_key: 'chat-1', untitled: false,
-          agent: 'kirocrew', channel: 'slack', pid: 1, owns_runtime: true, prompts: 1,
+          agent: 'ajcrew', channel: 'slack', pid: 1, owns_runtime: true, prompts: 1,
           rss_mb: 100, procs: 1, mcp: 1, cpu_cores: 0.1, uptime_s: 60, credits: 1, turns: 1 },
         { key: 'chat-2', title: 'beta session', slot_key: 'chat-2', untitled: false,
-          agent: 'kirocrew', channel: 'slack', pid: 2, owns_runtime: true, prompts: 1,
+          agent: 'ajcrew', channel: 'slack', pid: 2, owns_runtime: true, prompts: 1,
           rss_mb: 200, procs: 1, mcp: 1, cpu_cores: 0.2, uptime_s: 60, credits: 2, turns: 2 },
         { key: 'chat-3', title: 'gamma session', slot_key: 'chat-3', untitled: false,
-          agent: 'kirocrew', channel: 'cron', pid: 3, owns_runtime: true, prompts: 1,
+          agent: 'ajcrew', channel: 'cron', pid: 3, owns_runtime: true, prompts: 1,
           rss_mb: 300, procs: 1, mcp: 1, cpu_cores: 0.3, uptime_s: 60, credits: 3, turns: 3 },
       ],
       tasks: [],

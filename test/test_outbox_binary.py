@@ -12,7 +12,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import api_outbox_download, api_outbox_notify
+from aj_crew.dashboard.handlers import api_outbox_download, api_outbox_notify
 
 
 def _synth_flagged_png() -> bytes:
@@ -94,7 +94,7 @@ def _make_app(state=None) -> web.Application:
 
 @pytest.fixture
 def mock_sel():
-    with patch("kiro_crew.dashboard.handlers.files._sel") as m:
+    with patch("aj_crew.dashboard.handlers.files._sel") as m:
         instance = MagicMock()
         m.return_value = instance
         yield instance
@@ -124,7 +124,7 @@ def outbox(tmp_path):
     odir = base / "outbox"
     odir.mkdir()
     try:
-        with patch("kiro_crew.config.loader.outbox_dir", return_value=odir):
+        with patch("aj_crew.config.loader.outbox_dir", return_value=odir):
             yield odir
     finally:
         shutil.rmtree(base, ignore_errors=True)
@@ -339,12 +339,12 @@ class TestGeneratedBinaryActuallyTrips:
     """A fixture the scanner ignores would make every case below vacuous."""
 
     def test_the_flagged_png_is_detected(self):
-        from kiro_crew.platform import binary_content_is_flagged
+        from aj_crew.platform import binary_content_is_flagged
 
         assert binary_content_is_flagged(_synth_flagged_png())
 
     def test_the_clean_png_is_not_detected(self):
-        from kiro_crew.platform import binary_content_is_flagged
+        from aj_crew.platform import binary_content_is_flagged
 
         assert not binary_content_is_flagged(_clean_png())
 
@@ -401,7 +401,7 @@ class TestOwnerFacingGatesAndBinaryContent:
         png = outbox / "shot.png"
         png.write_bytes(_synth_flagged_png())
         with patch(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             return_value=False,
         ):
             async with TestClient(TestServer(_make_app())) as client:
@@ -414,7 +414,7 @@ class TestOwnerFacingGatesAndBinaryContent:
         raw = _synth_flagged_png()
         png.write_bytes(raw)
         with patch(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             return_value=True,
         ):
             async with TestClient(TestServer(_make_app())) as client:
@@ -481,7 +481,7 @@ class TestWideEncodedCredentialInAUtf8DecodableFile:
 
     @pytest.mark.parametrize("encoding", _WIDE_ENCODINGS)
     def test_the_container_decodes_as_utf8_and_the_text_pass_misses_it(self, encoding):
-        from kiro_crew import security
+        from aj_crew import security
 
         raw = _synth_wide_utf8_pdf(encoding)
         text = raw.decode("utf-8")
@@ -489,14 +489,14 @@ class TestWideEncodedCredentialInAUtf8DecodableFile:
 
     @pytest.mark.parametrize("encoding", _WIDE_ENCODINGS)
     def test_the_shared_wide_pass_answers_on_it(self, encoding):
-        from kiro_crew.platform import wide_content_is_flagged
+        from aj_crew.platform import wide_content_is_flagged
 
         assert wide_content_is_flagged(_synth_wide_utf8_pdf(encoding))
 
     @pytest.mark.parametrize("encoding", _WIDE_ENCODINGS)
     def test_innocent_wide_text_in_a_utf8_container_is_not_flagged(self, encoding):
         """The pass must discriminate on content, not on wide text existing."""
-        from kiro_crew.platform import wide_content_is_flagged
+        from aj_crew.platform import wide_content_is_flagged
 
         innocent = "the quick brown fox jumps over the lazy dog\n" * 3
         raw = b"%PDF-1.7\n" + innocent.encode(encoding) + b"\n%%EOF\n"
@@ -544,7 +544,7 @@ def _enumerated_table() -> bytes:
     Taken from the product constant rather than restated, so a test cannot pass
     against a table the scanner does not actually pin itself to.
     """
-    from kiro_crew.security.redaction import _BASELINE_SYMBOL_TABLE
+    from aj_crew.security.redaction import _BASELINE_SYMBOL_TABLE
 
     return _BASELINE_SYMBOL_TABLE.encode("latin-1")
 
@@ -627,7 +627,7 @@ class TestContainerSymbolTablesAreNotCredentials:
     """
 
     def test_the_table_really_does_satisfy_a_credential_shape(self):
-        from kiro_crew import security
+        from aj_crew import security
 
         table = _enumerated_table().decode("latin-1")
         assert security.redact(table) != table
@@ -640,7 +640,7 @@ class TestContainerSymbolTablesAreNotCredentials:
         ``HUFFVAL`` list above states those bytes independently, as a flat list
         rather than as ranges, and this is where the two are made to agree.
         """
-        from kiro_crew.security.redaction import _BASELINE_SYMBOL_TABLE
+        from aj_crew.security.redaction import _BASELINE_SYMBOL_TABLE
 
         printable_runs = _text_regions(_STANDARD_AC_HUFFVAL)
         assert _BASELINE_SYMBOL_TABLE == max(printable_runs, key=len)
@@ -654,13 +654,13 @@ class TestContainerSymbolTablesAreNotCredentials:
         the standard ``HUFFVAL`` list, whose neighbouring entries are outside
         printable ASCII, and then against the fixture the rest of these tests use.
         """
-        from kiro_crew.security.redaction import _BASELINE_SYMBOL_TABLE
+        from aj_crew.security.redaction import _BASELINE_SYMBOL_TABLE
 
         assert _BASELINE_SYMBOL_TABLE in _text_regions(_STANDARD_AC_HUFFVAL)
         assert _BASELINE_SYMBOL_TABLE in _text_regions(_clean_jpeg())
 
     def test_a_container_carrying_only_its_table_is_not_flagged(self):
-        from kiro_crew.platform import binary_content_is_flagged
+        from aj_crew.platform import binary_content_is_flagged
 
         raw = _clean_jpeg()
         with pytest.raises(UnicodeDecodeError):
@@ -677,12 +677,12 @@ class TestContainerSymbolTablesAreNotCredentials:
         ids=["bot-token", "access-key-id", "forge-token"],
     )
     def test_a_credential_inside_the_same_container_is_still_flagged(self, secret):
-        from kiro_crew.platform import binary_content_is_flagged
+        from aj_crew.platform import binary_content_is_flagged
 
         assert binary_content_is_flagged(_clean_jpeg() + secret.encode())
 
     def test_a_key_inside_the_same_container_is_still_flagged(self):
-        from kiro_crew.platform import binary_content_is_flagged
+        from aj_crew.platform import binary_content_is_flagged
 
         assert binary_content_is_flagged(_clean_jpeg() + _pem_text().encode())
 
@@ -696,8 +696,8 @@ class TestContainerSymbolTablesAreNotCredentials:
         pinned constant, which is the only thing masking answers to, so it is not
         masked and the file is refused.
         """
-        from kiro_crew.platform import binary_content_is_flagged
-        from kiro_crew.security.redaction import _BASELINE_SYMBOL_TABLE
+        from aj_crew.platform import binary_content_is_flagged
+        from aj_crew.security.redaction import _BASELINE_SYMBOL_TABLE
 
         shaped = "123456789:ABCDEFabcdefGHIJKLmnopqrSTUVWX"
         runs, run = [], 1
@@ -721,7 +721,7 @@ class TestContainerSymbolTablesAreNotCredentials:
         """
         from collections import Counter
 
-        from kiro_crew.security.redaction import (
+        from aj_crew.security.redaction import (
             _BASELINE_SYMBOL_TABLE,
             mask_baseline_symbol_tables,
         )
@@ -745,7 +745,7 @@ class TestContainerSymbolTablesAreNotCredentials:
         Padding is the one case an attacker would reach for, and the credential
         between the two tables keeps its match.
         """
-        from kiro_crew.platform import binary_content_is_flagged
+        from aj_crew.platform import binary_content_is_flagged
 
         table = _enumerated_table()
         secret = _telegram_shaped_token("110201543").encode()
@@ -759,7 +759,7 @@ class TestContainerSymbolTablesAreNotCredentials:
         one table. The region carrying both is longer than the pinned constant, so
         it is not a slice of it and neither part is masked.
         """
-        from kiro_crew.platform import binary_content_is_flagged
+        from aj_crew.platform import binary_content_is_flagged
 
         assert ord(":") == ord("9") + 1
         table = _enumerated_table()
@@ -768,7 +768,7 @@ class TestContainerSymbolTablesAreNotCredentials:
 
     def test_a_non_text_byte_between_them_does_not_hide_it_either(self):
         """The other way to split them: the table gets its own region, the value keeps its."""
-        from kiro_crew.platform import binary_content_is_flagged
+        from aj_crew.platform import binary_content_is_flagged
 
         table = _enumerated_table()
         secret = _telegram_shaped_token("123456789").encode()
@@ -778,14 +778,14 @@ class TestContainerSymbolTablesAreNotCredentials:
 
     def test_one_long_ordered_fragment_keeps_its_whole_match(self):
         """An ordered span inside an identifier is not the table, so nothing is masked."""
-        from kiro_crew.platform import binary_content_is_flagged
+        from aj_crew.platform import binary_content_is_flagged
 
         secret = _telegram_shaped_token("123456789")
         assert secret.startswith("123456789:")
         assert binary_content_is_flagged(b"\xff\xd8\xff\xe0\x80\x81" + secret.encode())
 
     def test_an_ascending_span_that_is_not_the_table_is_left_alone(self):
-        from kiro_crew.security.redaction import mask_baseline_symbol_tables
+        from aj_crew.security.redaction import mask_baseline_symbol_tables
 
         span = "".join(chr(0x41 + step) for step in range(40))
         probe = f"\x00{span}\x00"
@@ -793,14 +793,14 @@ class TestContainerSymbolTablesAreNotCredentials:
 
     def test_a_region_that_is_more_than_the_table_is_left_alone(self):
         """Only a whole region equal to a slice of the constant is masked."""
-        from kiro_crew.security.redaction import mask_baseline_symbol_tables
+        from aj_crew.security.redaction import mask_baseline_symbol_tables
 
         table = _enumerated_table().decode("latin-1")
         mixed = f"{table}the quick brown fox"
         assert mask_baseline_symbol_tables(mixed) == mixed
 
     def test_masking_leaves_every_byte_outside_the_table_alone(self):
-        from kiro_crew.security.redaction import (
+        from aj_crew.security.redaction import (
             _MASKED_TABLE_FILLER,
             mask_baseline_symbol_tables,
         )
@@ -817,7 +817,7 @@ class TestContainerSymbolTablesAreNotCredentials:
 
     def test_nothing_is_masked_when_there_is_no_table(self):
         """The buffer comes back ITSELF, which is what lets the gate skip a re-scan."""
-        from kiro_crew.security.redaction import mask_baseline_symbol_tables
+        from aj_crew.security.redaction import mask_baseline_symbol_tables
 
         probe = "the quick brown fox jumps over the lazy dog, twice over and then again"
         assert mask_baseline_symbol_tables(probe) is probe
@@ -829,8 +829,8 @@ class TestContainerSymbolTablesAreNotCredentials:
         no such slice is flagged in the first place. If a detector ever starts
         matching a shorter one, this fails and the floor has to come down with it.
         """
-        from kiro_crew import security
-        from kiro_crew.security.redaction import (
+        from aj_crew import security
+        from aj_crew.security.redaction import (
             _BASELINE_SYMBOL_TABLE,
             _BASELINE_SYMBOL_TABLE_MIN,
         )
@@ -856,9 +856,9 @@ class TestContainerSymbolTablesAreNotCredentials:
         can survive that -- removing the character removes the literal -- so the
         region's punctuation is copied through instead of being filled.
         """
-        from kiro_crew.platform import binary_content_is_flagged
-        from kiro_crew.security import redact
-        from kiro_crew.security.redaction import (
+        from aj_crew.platform import binary_content_is_flagged
+        from aj_crew.security import redact
+        from aj_crew.security.redaction import (
             _BASELINE_SYMBOL_TABLE,
             mask_baseline_symbol_tables,
         )
@@ -885,7 +885,7 @@ class TestContainerSymbolTablesAreNotCredentials:
 
     def test_the_constant_can_supply_a_required_literal(self):
         """Why the punctuation split exists: the table really does carry a ``:``."""
-        from kiro_crew.security.redaction import _BASELINE_SYMBOL_TABLE
+        from aj_crew.security.redaction import _BASELINE_SYMBOL_TABLE
 
         assert ":" in _BASELINE_SYMBOL_TABLE
 
@@ -895,7 +895,7 @@ class TestContainerSymbolTablesAreNotCredentials:
         Every literal the region could lend stays; the credential shape, which is
         alphanumeric, goes.
         """
-        from kiro_crew.security.redaction import (
+        from aj_crew.security.redaction import (
             _BASELINE_SYMBOL_TABLE,
             _MASKED_TABLE_FILLER,
             mask_baseline_symbol_tables,
@@ -919,8 +919,8 @@ class TestContainerSymbolTablesAreNotCredentials:
         needs forty alphanumerics; the filler is in neither class, so a region of
         filler plus punctuation is inert.
         """
-        from kiro_crew.security import redact
-        from kiro_crew.security.redaction import (
+        from aj_crew.security import redact
+        from aj_crew.security.redaction import (
             _BASELINE_SYMBOL_TABLE,
             mask_baseline_symbol_tables,
         )
@@ -939,7 +939,7 @@ class TestContainerSymbolTablesAreNotCredentials:
         """
         import re
 
-        from kiro_crew.security.redaction import _MASKED_TABLE_FILLER
+        from aj_crew.security.redaction import _MASKED_TABLE_FILLER
 
         crossing = {
             "url password": r"[^\s/]",
@@ -962,7 +962,7 @@ class TestContainerSymbolTablesAreNotCredentials:
         """
         import re
 
-        from kiro_crew.security.redaction import _MASKED_TABLE_FILLER
+        from aj_crew.security.redaction import _MASKED_TABLE_FILLER
 
         contiguous = {
             "bare secret run": r"[A-Za-z0-9+/]",
@@ -986,9 +986,9 @@ class TestContainerSymbolTablesAreNotCredentials:
         thing standing between this and a delivered password is the filler not
         terminating the run.
         """
-        from kiro_crew.platform import binary_content_is_flagged
-        from kiro_crew.security import redact
-        from kiro_crew.security.redaction import (
+        from aj_crew.platform import binary_content_is_flagged
+        from aj_crew.security import redact
+        from aj_crew.security.redaction import (
             _BASELINE_SYMBOL_TABLE,
             mask_baseline_symbol_tables,
         )
@@ -1014,8 +1014,8 @@ class TestContainerSymbolTablesAreNotCredentials:
     @pytest.mark.parametrize("boundary", ["\x80", "\xff", "\x00", "\x81\x82"])
     def test_a_crossing_credential_survives_at_every_boundary_spelling(self, boundary):
         """Whatever non-text bytes delimit the region, the crossing match holds."""
-        from kiro_crew.platform import binary_content_is_flagged
-        from kiro_crew.security.redaction import _BASELINE_SYMBOL_TABLE
+        from aj_crew.platform import binary_content_is_flagged
+        from aj_crew.security.redaction import _BASELINE_SYMBOL_TABLE
 
         payload = (
             f"https://user:{'p' * 30}{boundary}{_BASELINE_SYMBOL_TABLE}{boundary}"
@@ -1024,8 +1024,8 @@ class TestContainerSymbolTablesAreNotCredentials:
         assert binary_content_is_flagged(b"\xff\xd8\xff\xe0" + payload.encode("latin-1"))
 
     def test_masking_never_turns_a_clean_buffer_into_a_flagged_one(self):
-        from kiro_crew.security import redact
-        from kiro_crew.security.redaction import (
+        from aj_crew.security import redact
+        from aj_crew.security.redaction import (
             _BASELINE_SYMBOL_TABLE,
             mask_baseline_symbol_tables,
         )
@@ -1051,9 +1051,9 @@ class TestContainerSymbolTablesAreNotCredentials:
         buffer comes back untouched, so the gate answers exactly as it did before
         masking existed -- which is to refuse.
         """
-        from kiro_crew.platform import binary_content_is_flagged
-        from kiro_crew.security import redact
-        from kiro_crew.security.redaction import (
+        from aj_crew.platform import binary_content_is_flagged
+        from aj_crew.security import redact
+        from aj_crew.security.redaction import (
             _BASELINE_SYMBOL_TABLE,
             _MASKED_REGION_CAP,
             mask_baseline_symbol_tables,
@@ -1066,7 +1066,7 @@ class TestContainerSymbolTablesAreNotCredentials:
         assert binary_content_is_flagged(b"\xff\xd8\xff\xe0\x80" + dense.encode("latin-1"))
 
     def test_under_the_cap_the_tables_are_still_masked(self):
-        from kiro_crew.security.redaction import (
+        from aj_crew.security.redaction import (
             _BASELINE_SYMBOL_TABLE,
             _MASKED_REGION_CAP,
             mask_baseline_symbol_tables,
@@ -1085,8 +1085,8 @@ class TestContainerSymbolTablesAreNotCredentials:
         symbol table is contiguous bytes at single-byte spacing, so a container's
         table matches none of them and the leg lifts nothing at all out of it.
         """
-        from kiro_crew.platform import wide_content_is_flagged
-        from kiro_crew.platform.context import _WIDE_PROJECTIONS
+        from aj_crew.platform import wide_content_is_flagged
+        from aj_crew.platform.context import _WIDE_PROJECTIONS
 
         raw = _clean_jpeg()
         lifted = [
@@ -1099,7 +1099,7 @@ class TestContainerSymbolTablesAreNotCredentials:
 
     @pytest.mark.parametrize("encoding", _WIDE_ENCODINGS)
     def test_the_wide_pass_still_answers_on_a_key_beside_a_table(self, encoding):
-        from kiro_crew.platform import wide_content_is_flagged
+        from aj_crew.platform import wide_content_is_flagged
 
         payload = _enumerated_table().decode("latin-1") + _pem_text()
         assert wide_content_is_flagged(b"%PDF-1.7\n" + payload.encode(encoding) + b"\n%%EOF\n")
@@ -1107,7 +1107,7 @@ class TestContainerSymbolTablesAreNotCredentials:
     @pytest.mark.parametrize("encoding", _WIDE_ENCODINGS)
     def test_the_wide_pass_still_answers_on_an_ascending_id_beside_a_table(self, encoding):
         """The colon case at wide spacing, where a projection starts mid-block."""
-        from kiro_crew.platform import wide_content_is_flagged
+        from aj_crew.platform import wide_content_is_flagged
 
         payload = _enumerated_table().decode("latin-1") + _telegram_shaped_token("123456789")
         assert wide_content_is_flagged(b"%PDF-1.7\n" + payload.encode(encoding) + b"\n%%EOF\n")

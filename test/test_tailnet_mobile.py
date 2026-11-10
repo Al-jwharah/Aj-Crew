@@ -45,10 +45,10 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.dashboard import tailnet
-from kiro_crew.dashboard.handlers import tailnet_mobile
-from kiro_crew.dashboard.tailnet import DaemonProbe
-from kiro_crew.dashboard.token_auth import (
+from aj_crew.dashboard import tailnet
+from aj_crew.dashboard.handlers import tailnet_mobile
+from aj_crew.dashboard.tailnet import DaemonProbe
+from aj_crew.dashboard.token_auth import (
     LINK_WINDOW_SECS,
     MAX_SESSION_TTL_SECS,
     _b64url_encode,
@@ -700,7 +700,7 @@ def _machine(
         https_enabled=https_enabled,
     )
     with (
-        patch.object(tailnet_mobile.KiroCrewConfig, "load", classmethod(lambda cls: cfg)),
+        patch.object(tailnet_mobile.AjCrewConfig, "load", classmethod(lambda cls: cfg)),
         patch.object(tailnet_mobile.tailnet, "is_governance_pinned_off", return_value=pinned),
         patch.object(tailnet_mobile.tailnet, "probe_daemon", return_value=probe),
         patch.object(
@@ -765,7 +765,7 @@ class TestConfigureEndpoint:
                 return_value=_probe(login="owner@example.com"),
             ),
             patch.object(
-                tailnet_mobile.KiroCrewConfig,
+                tailnet_mobile.AjCrewConfig,
                 "load",
                 classmethod(lambda cls: self._effective_cfg()),
             ),
@@ -798,7 +798,7 @@ class TestConfigureEndpoint:
                 return_value=_probe(login="owner@example.com"),
             ),
             patch.object(
-                tailnet_mobile.KiroCrewConfig,
+                tailnet_mobile.AjCrewConfig,
                 "load",
                 classmethod(lambda cls: effective),
             ),
@@ -831,7 +831,7 @@ class TestConfigureEndpoint:
             patch.object(tailnet_mobile.tailnet, "is_governance_pinned_off", return_value=False),
             patch.object(tailnet_mobile.tailnet, "probe_daemon", return_value=_probe()),
             patch.object(
-                tailnet_mobile.KiroCrewConfig,
+                tailnet_mobile.AjCrewConfig,
                 "load",
                 classmethod(lambda cls: effective),
             ),
@@ -870,7 +870,7 @@ class TestConfigureEndpoint:
             patch.object(tailnet_mobile.tailnet, "is_governance_pinned_off", return_value=False),
             patch.object(tailnet_mobile.tailnet, "probe_daemon", return_value=_probe()),
             patch.object(
-                tailnet_mobile.KiroCrewConfig,
+                tailnet_mobile.AjCrewConfig,
                 "load",
                 classmethod(lambda cls: self._effective_cfg()),
             ),
@@ -912,7 +912,7 @@ class TestConfigureEndpoint:
             patch.object(tailnet_mobile.tailnet, "is_governance_pinned_off", return_value=False),
             patch.object(tailnet_mobile.tailnet, "probe_daemon", return_value=_probe()),
             patch.object(
-                tailnet_mobile.KiroCrewConfig,
+                tailnet_mobile.AjCrewConfig,
                 "load",
                 classmethod(lambda cls: self._effective_cfg()),
             ),
@@ -1052,7 +1052,7 @@ class TestQrRefusals:
         Pinned because it IS the default — the shape a scan produces with no
         configuration at all is the one most likely to be changed by accident.
         """
-        from kiro_crew.dashboard.boot_id import current_boot_id
+        from aj_crew.dashboard.boot_id import current_boot_id
 
         captured: dict[str, object] = {}
 
@@ -1128,7 +1128,7 @@ class TestQrRefusals:
                     tailnet_mobile, "render_qr_data_uri", return_value="data:image/png;base64,x"
                 ),
                 patch(
-                    "kiro_crew.dashboard.tailnet_proxy_proof.proof_support",
+                    "aj_crew.dashboard.tailnet_proxy_proof.proof_support",
                     return_value="platform_unprovable",
                 ),
                 patch.object(tailnet_mobile, "preview_enabled", return_value=preview),
@@ -1168,7 +1168,7 @@ class TestQrRefusals:
                 patch.object(
                     tailnet_mobile, "render_qr_data_uri", return_value="data:image/png;base64,x"
                 ),
-                patch("kiro_crew.dashboard.tailnet_proxy_proof.proof_support", return_value=""),
+                patch("aj_crew.dashboard.tailnet_proxy_proof.proof_support", return_value=""),
             ):
                 resp = await tailnet_mobile.api_tailnet_mobile_qr(
                     _request(tailnet_host=_HOST, cookie_token=_owner_session_token())
@@ -1194,7 +1194,7 @@ class TestQrRefusals:
         be handed out on that basis. Silently honouring the flag would leave the
         operator believing their phone survives restarts.
         """
-        from kiro_crew.dashboard.boot_id import current_boot_id
+        from aj_crew.dashboard.boot_id import current_boot_id
 
         captured: dict[str, object] = {}
 
@@ -1258,7 +1258,7 @@ class TestQrRefusals:
         (``_live_state``'s) succeeds — making every load raise would refuse the
         request at the origin-trust gate long before the mint and prove nothing.
         """
-        from kiro_crew.dashboard.boot_id import current_boot_id
+        from aj_crew.dashboard.boot_id import current_boot_id
 
         opted_out = SimpleNamespace(
             dashboard=SimpleNamespace(
@@ -1283,13 +1283,13 @@ class TestQrRefusals:
         with _machine():
             with (
                 patch.object(
-                    tailnet_mobile.KiroCrewConfig,
+                    tailnet_mobile.AjCrewConfig,
                     "load",
                     classmethod(lambda cls: _load_then_fail()),
                 ),
                 # This test pins the CONFIG fallback, not governance. The
                 # capabilities.mobile_connect pre-check would lazily build the
-                # platform context (its own KiroCrewConfig.load), consuming the
+                # platform context (its own AjCrewConfig.load), consuming the
                 # single successful load this fixture budgets for _live_state —
                 # so neutralize it here; the governance path has its own pins
                 # in test_mobile_connect_seam.py.
@@ -1473,7 +1473,7 @@ class TestQrCallerBounds:
         caller = _owner_session_token(ttl_seconds=60)
         req = _request(tailnet_host=_HOST, cookie_token=caller)
         clock = patch(
-            "kiro_crew.dashboard.handlers._shared.time.time",
+            "aj_crew.dashboard.handlers._shared.time.time",
             return_value=time.time() + 120,
         )
 
@@ -1500,7 +1500,7 @@ class TestQrCallerBounds:
     ) -> None:
         """The ordinary case must not regress: a full-length owner session mints
         the configured default shape at the default TTL."""
-        from kiro_crew.dashboard.boot_id import current_boot_id
+        from aj_crew.dashboard.boot_id import current_boot_id
 
         captured: dict[str, object] = {}
         resp = await self._mint(captured, cookie_token=_owner_session_token())
@@ -1656,7 +1656,7 @@ class TestKeepAwakeProbe:
 
     @pytest.fixture(autouse=True)
     def _clear_cache(self):
-        from kiro_crew.dashboard import server as srv
+        from aj_crew.dashboard import server as srv
 
         srv._tailnet_awake_cache = (0.0, False)
         yield
@@ -1666,7 +1666,7 @@ class TestKeepAwakeProbe:
     async def test_publishing_keeps_the_host_awake_without_the_turn_opt_in(self) -> None:
         """Publishing is itself the consent — an operator must not have to also find
         ``dashboard.prevent_sleep``, which is scoped to in-flight turns."""
-        from kiro_crew.dashboard import server as srv
+        from aj_crew.dashboard import server as srv
 
         cfg = SimpleNamespace(
             dashboard=SimpleNamespace(
@@ -1676,7 +1676,7 @@ class TestKeepAwakeProbe:
         )
         published = SimpleNamespace(published=True, configured=True, detail="ours")
         with (
-            patch.object(srv.KiroCrewConfig, "load", classmethod(lambda cls: cfg)),
+            patch.object(srv.AjCrewConfig, "load", classmethod(lambda cls: cfg)),
             patch.object(srv.tailnet_serve, "serve_state", return_value=published),
         ):
             assert await srv._should_prevent_sleep(SimpleNamespace(sessions=None), _PORT) is True
@@ -1684,7 +1684,7 @@ class TestKeepAwakeProbe:
     @pytest.mark.asyncio
     async def test_keep_awake_off_lets_the_host_sleep(self) -> None:
         """The opt-OUT of the awake half, without having to unpublish."""
-        from kiro_crew.dashboard import server as srv
+        from aj_crew.dashboard import server as srv
 
         cfg = SimpleNamespace(
             dashboard=SimpleNamespace(
@@ -1693,7 +1693,7 @@ class TestKeepAwakeProbe:
             )
         )
         with (
-            patch.object(srv.KiroCrewConfig, "load", classmethod(lambda cls: cfg)),
+            patch.object(srv.AjCrewConfig, "load", classmethod(lambda cls: cfg)),
             patch.object(srv.tailnet_serve, "serve_state") as serve,
         ):
             assert await srv._should_prevent_sleep(SimpleNamespace(sessions=None), _PORT) is False
@@ -1702,7 +1702,7 @@ class TestKeepAwakeProbe:
     @pytest.mark.asyncio
     async def test_undetermined_serve_state_lets_the_host_sleep(self) -> None:
         """An unresolvable probe must never pin a laptop awake indefinitely."""
-        from kiro_crew.dashboard import server as srv
+        from aj_crew.dashboard import server as srv
 
         cfg = SimpleNamespace(
             dashboard=SimpleNamespace(
@@ -1712,7 +1712,7 @@ class TestKeepAwakeProbe:
         )
         unknown = SimpleNamespace(published=None, configured=None, detail="unreadable")
         with (
-            patch.object(srv.KiroCrewConfig, "load", classmethod(lambda cls: cfg)),
+            patch.object(srv.AjCrewConfig, "load", classmethod(lambda cls: cfg)),
             patch.object(srv.tailnet_serve, "serve_state", return_value=unknown),
         ):
             assert await srv._should_prevent_sleep(SimpleNamespace(sessions=None), _PORT) is False
@@ -1722,15 +1722,15 @@ class TestKeepAwakeProbe:
         """A config object predating the section must resolve to "allow sleep", not
         propagate an AttributeError. The contract is fail-closed for ANY failure, and
         a raising probe inside the poll would be swallowed and retried forever."""
-        from kiro_crew.dashboard import server as srv
+        from aj_crew.dashboard import server as srv
 
         cfg = SimpleNamespace(dashboard=SimpleNamespace(prevent_sleep=False))
-        with patch.object(srv.KiroCrewConfig, "load", classmethod(lambda cls: cfg)):
+        with patch.object(srv.AjCrewConfig, "load", classmethod(lambda cls: cfg)):
             assert await srv._should_prevent_sleep(SimpleNamespace(sessions=None), _PORT) is False
 
     @pytest.mark.asyncio
     async def test_probe_is_cached_so_a_15s_poll_does_not_spawn_a_cli_each_time(self) -> None:
-        from kiro_crew.dashboard import server as srv
+        from aj_crew.dashboard import server as srv
 
         published = SimpleNamespace(published=True, configured=True, detail="ours")
         with patch.object(srv.tailnet_serve, "serve_state", return_value=published) as serve:
@@ -1740,7 +1740,7 @@ class TestKeepAwakeProbe:
 
     @pytest.mark.asyncio
     async def test_unknown_port_short_circuits_without_probing(self) -> None:
-        from kiro_crew.dashboard import server as srv
+        from aj_crew.dashboard import server as srv
 
         with patch.object(srv.tailnet_serve, "serve_state") as serve:
             assert await srv._tailnet_publish_keeps_awake(0) is False
@@ -1748,7 +1748,7 @@ class TestKeepAwakeProbe:
 
     @pytest.mark.asyncio
     async def test_a_raising_probe_lets_the_host_sleep(self) -> None:
-        from kiro_crew.dashboard import server as srv
+        from aj_crew.dashboard import server as srv
 
         with patch.object(
             srv.tailnet_serve, "serve_state", side_effect=RuntimeError("daemon exploded")
@@ -1896,7 +1896,7 @@ class TestStatusIsOwnerOnly:
         to publish (it would REPLACE it). The card's copy tells the operator to
         run the command if the existing mapping is safe to overwrite — so the
         command has to be there, and it must be the real `tailscale serve`
-        publish, not `kirocrew tailnet up`, which re-runs the path that refused.
+        publish, not `ajcrew tailnet up`, which re-runs the path that refused.
         """
         # `occupied` sits late in the step order (past trust_off and
         # restart_gateway), so the derivation only reaches it with the origin
@@ -1927,7 +1927,7 @@ class TestStatusIsOwnerOnly:
             published=False, configured=True, detail="not ours", port_free=False
         )
         with (
-            patch.object(tailnet_mobile.KiroCrewConfig, "load", classmethod(lambda cls: cfg)),
+            patch.object(tailnet_mobile.AjCrewConfig, "load", classmethod(lambda cls: cfg)),
             patch.object(tailnet_mobile.tailnet, "probe_daemon", return_value=healthy),
             patch.object(tailnet_mobile.tailnet_serve, "serve_state", return_value=stranger),
         ):

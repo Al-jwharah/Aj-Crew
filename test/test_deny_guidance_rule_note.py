@@ -16,14 +16,14 @@ import re
 
 import pytest
 
-from kiro_crew import deny_guidance as dg
-from kiro_crew import security
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.state import build_refusal_recovery_prompt, build_refusal_steer_notice
-from kiro_crew.hooks import HooksConfig, resolve_effective_denied_regexes
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.security import DeniedCommandRule
+from aj_crew import deny_guidance as dg
+from aj_crew import security
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.state import build_refusal_recovery_prompt, build_refusal_steer_notice
+from aj_crew.hooks import HooksConfig, resolve_effective_denied_regexes
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.security import DeniedCommandRule
 
 _MINT_ID = "acme-credential-mint"
 _MINT_PATTERN = r"\bacme-mint\s+credentials\b"
@@ -58,7 +58,7 @@ class _Source:
 @pytest.fixture
 def compose(monkeypatch):
     """Compose an edition that contributes the given rules through the real seam."""
-    base = build_default_context(KiroCrewConfig())
+    base = build_default_context(AjCrewConfig())
 
     def _compose(*rules: DeniedCommandRule) -> None:
         composed = dataclasses.replace(base, denied_rules=_Source(rules))

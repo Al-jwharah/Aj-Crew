@@ -118,7 +118,7 @@ function renderSidebar(folderData: ChatFolder[] = folders, slotData: ChatSlot[] 
   qc.setQueryData(['chat-tags'], chatConfig.tagColumnsEnabled ? tags : [])
   qc.setQueryData(['tag-columns'], chatConfig.tagColumnsEnabled ? columns : [])
   qc.setQueryData(['chat-folders'], folderData)
-  qc.setQueryData(['kirocrewConfig'], { dashboard: {} })
+  qc.setQueryData(['ajcrewConfig'], { dashboard: {} })
   mocks.chatFolders.mockImplementation(() => Promise.resolve(folderData))
   return render(
     <QueryClientProvider client={qc}>

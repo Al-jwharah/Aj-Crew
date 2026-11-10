@@ -192,7 +192,7 @@ for (const lane of ['conductor', 'board', 'board-flat', 'tree', 'flat']) {
   await page.waitForSelector('[data-capture-ready]')
   await page.waitForSelector('[data-slot-key]')
   const theme = await settledTheme()
-  check(`${name}: pinned Kiro dark`, theme === 'kiro-dark', String(theme))
+  check(`${name}: pinned Aj dark`, theme === 'aj-dark', String(theme))
   const funnel = page.locator('[data-folder-hide-active]')
   check(`${name}: the funnel is marked while the hide withholds rows`, await funnel.count() === 1,
     `${await funnel.count()} marked button(s)`)
@@ -294,7 +294,7 @@ for (const theme of ['dark', 'light']) {
   await page.waitForSelector('[data-capture-ready]')
   await page.waitForSelector('[data-slot-key]')
   const settled = await settledTheme()
-  check(`${name}: pinned Kiro dark`, settled === 'kiro-dark', String(settled))
+  check(`${name}: pinned Aj dark`, settled === 'aj-dark', String(settled))
 
   const glyph = page.locator('[data-cites-parent]')
   const found = await glyph.count()

@@ -1,4 +1,4 @@
-# Design — Kiro Crew App Builder Kit
+# Design — Aj Crew App Builder Kit
 
 Status: historical; the proposed `website/src/kit/` implementation is not present.
 

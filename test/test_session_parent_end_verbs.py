@@ -17,8 +17,8 @@ from session_helpers import (  # noqa: F401 -- the fixture is requested by name
     cfg_fixture,
 )
 
-from kiro_crew.session import SessionManager
-from kiro_crew.testing.wait import await_until
+from aj_crew.session import SessionManager
+from aj_crew.testing.wait import await_until
 
 
 class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
@@ -51,8 +51,8 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
     @pytest.mark.asyncio
     async def test_parent_end_cancels_owned_followup_without_recreating_session(self, cfg):
         """A queued continuation cannot outlive the parent that accepted it."""
-        from kiro_crew.subagent import SubagentInfo
-        from kiro_crew.subagent_manager.cancellation import CancellationCoordinator
+        from aj_crew.subagent import SubagentInfo
+        from aj_crew.subagent_manager.cancellation import CancellationCoordinator
 
         parent = "dashboard:chat-9"
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
@@ -309,7 +309,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         mgr.release("dashboard:chat-9")
 
         with patch(
-            "kiro_crew.session._provider_uses_kiro_identity_store",
+            "aj_crew.session._provider_uses_kiro_identity_store",
             return_value=True,
         ):
             retired, complete = await mgr.retire_kiro_identity_sessions(spare_children=True)
@@ -345,7 +345,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         mgr.release("dashboard:chat-9")
 
         with patch(
-            "kiro_crew.session._provider_uses_kiro_identity_store",
+            "aj_crew.session._provider_uses_kiro_identity_store",
             return_value=True,
         ):
             retired, complete = await mgr.retire_kiro_identity_sessions(spare_children=True)
@@ -379,7 +379,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         mgr.release("dashboard:chat-9")
 
         with patch(
-            "kiro_crew.session._provider_uses_kiro_identity_store",
+            "aj_crew.session._provider_uses_kiro_identity_store",
             return_value=True,
         ):
             retired, complete = await mgr.retire_kiro_identity_sessions(spare_children=True)
@@ -402,7 +402,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         waiting on the parent's sub-agents.
         """
         with patch(
-            "kiro_crew.session._provider_uses_kiro_identity_store",
+            "aj_crew.session._provider_uses_kiro_identity_store",
             return_value=True,
         ):
             retired, complete = await mgr.retire_kiro_identity_sessions(spare_children=True)
@@ -513,7 +513,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
 
         owed[key] = False
         with patch(
-            "kiro_crew.session._provider_uses_kiro_identity_store",
+            "aj_crew.session._provider_uses_kiro_identity_store",
             return_value=True,
         ):
             retired, complete = await mgr.retire_kiro_identity_sessions(spare_children=True)
@@ -545,7 +545,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         mgr.release("dashboard:chat-9")
 
         with patch(
-            "kiro_crew.session._provider_uses_kiro_identity_store",
+            "aj_crew.session._provider_uses_kiro_identity_store",
             return_value=True,
         ):
             retired, complete = await mgr.retire_kiro_identity_sessions(spare_children=True)
@@ -579,7 +579,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         mgr.release("dashboard:chat-9")
 
         with patch(
-            "kiro_crew.session._provider_uses_kiro_identity_store",
+            "aj_crew.session._provider_uses_kiro_identity_store",
             return_value=True,
         ):
             retired, complete = await mgr.retire_kiro_identity_sessions(spare_children=True)
@@ -624,7 +624,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         orig_clear = mgr._session_map.clear_sid
         with (
             patch(
-                "kiro_crew.session._provider_uses_kiro_identity_store",
+                "aj_crew.session._provider_uses_kiro_identity_store",
                 return_value=True,
             ),
             patch.object(
@@ -674,7 +674,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         mgr.release("dashboard:chat-9")
 
         with patch(
-            "kiro_crew.session._provider_uses_kiro_identity_store",
+            "aj_crew.session._provider_uses_kiro_identity_store",
             return_value=True,
         ):
             retired, complete = await mgr.retire_kiro_identity_sessions(spare_children=True)
@@ -695,7 +695,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         and removed inside an incomplete one, so the spare is gated on the parent's own
         spawn stamp. Here the store source drops (vault still set), so it is retired.
         """
-        import kiro_crew.kiro_prerequisite as kp
+        import aj_crew.kiro_prerequisite as kp
 
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         # The default recorder reports a live child for any key.
@@ -711,7 +711,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         live_vault_only = kp._combine_identity_fingerprints("", "V")
 
         with patch(
-            "kiro_crew.session._provider_uses_kiro_identity_store",
+            "aj_crew.session._provider_uses_kiro_identity_store",
             return_value=True,
         ):
             retired, complete = await mgr.retire_kiro_identity_sessions(
@@ -733,7 +733,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         parent with live children is still spared (a plain two-account switch that
         adds nothing and drops nothing).
         """
-        import kiro_crew.kiro_prerequisite as kp
+        import aj_crew.kiro_prerequisite as kp
 
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         snapshotted, seen, cb = self._recorder()
@@ -750,7 +750,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         live_switched = kp._combine_identity_fingerprints("S2", "V")
 
         with patch(
-            "kiro_crew.session._provider_uses_kiro_identity_store",
+            "aj_crew.session._provider_uses_kiro_identity_store",
             return_value=True,
         ):
             retired, complete = await mgr.retire_kiro_identity_sessions(
@@ -783,7 +783,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         mgr.release("dashboard:chat-9")
 
         with patch(
-            "kiro_crew.session._provider_uses_kiro_identity_store",
+            "aj_crew.session._provider_uses_kiro_identity_store",
             return_value=True,
         ):
             retired, complete = await mgr.retire_kiro_identity_sessions()
@@ -806,7 +806,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         mgr.release("dashboard:chat-9")
 
         with patch(
-            "kiro_crew.session._provider_uses_kiro_identity_store",
+            "aj_crew.session._provider_uses_kiro_identity_store",
             return_value=True,
         ):
             retired, _complete = await mgr.retire_kiro_identity_sessions()
@@ -851,7 +851,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         shut_a = mgr._sessions[key_a].provider.shutdown
 
         with patch(
-            "kiro_crew.session._provider_uses_kiro_identity_store",
+            "aj_crew.session._provider_uses_kiro_identity_store",
             return_value=True,
         ):
             task = asyncio.ensure_future(mgr.retire_kiro_identity_sessions(spare_children=True))
@@ -875,7 +875,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         Such a parent goes into ``doomed``, which must drain in the same always-run
         shielded finally as committed spares, or its children keep the old credential.
         """
-        import kiro_crew.kiro_prerequisite as kp
+        import aj_crew.kiro_prerequisite as kp
 
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         key_a, key_b = "dashboard:chat-a", "dashboard:chat-b"
@@ -906,7 +906,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         shut_a = mgr._sessions[key_a].provider.shutdown
 
         with patch(
-            "kiro_crew.session._provider_uses_kiro_identity_store",
+            "aj_crew.session._provider_uses_kiro_identity_store",
             return_value=True,
         ):
             task = asyncio.ensure_future(
@@ -956,7 +956,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         shut_a.side_effect = asyncio.CancelledError
 
         with patch(
-            "kiro_crew.session._provider_uses_kiro_identity_store",
+            "aj_crew.session._provider_uses_kiro_identity_store",
             return_value=True,
         ):
             with pytest.raises(asyncio.CancelledError):
@@ -1126,7 +1126,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         try:
             # The reap parks on ``release`` until the test sets it, so the parent's
             # 0.01 s wait expires with the reap unfinished however slow the host is.
-            with patch("kiro_crew.session_lifecycle._CHILD_CANCEL_TIMEOUT_SECS", 0.01):
+            with patch("aj_crew.session_lifecycle._CHILD_CANCEL_TIMEOUT_SECS", 0.01):
                 await mgr.remove("dashboard:chat-9")
         finally:
             release.set()
@@ -1196,7 +1196,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
 
         if verb == "retire_kiro_identity_sessions":
             with patch(
-                "kiro_crew.session._provider_uses_kiro_identity_store",
+                "aj_crew.session._provider_uses_kiro_identity_store",
                 return_value=True,
             ):
                 with contextlib.suppress(RuntimeError):
@@ -1233,7 +1233,7 @@ class TestParentEndCancelsItsChildren(_TestParentEndCancelsItsChildrenHarness):
         mgr._sessions["dashboard:chat-9"].provider.shutdown = _boom  # type: ignore[method-assign]
 
         with patch(
-            "kiro_crew.session._provider_uses_kiro_identity_store",
+            "aj_crew.session._provider_uses_kiro_identity_store",
             return_value=True,
         ):
             retired, complete = await mgr.retire_kiro_identity_sessions()

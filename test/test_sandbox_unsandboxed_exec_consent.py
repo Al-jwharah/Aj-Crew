@@ -1,4 +1,4 @@
-"""The ``kirocrew setup`` step that surfaces the unsandboxed-exec decision on a
+"""The ``ajcrew setup`` step that surfaces the unsandboxed-exec decision on a
 host with no sandbox backend.
 
 The step asks in whichever direction matches what an UNDECLARED key resolves to on
@@ -59,7 +59,7 @@ def _run_consent(
     and so never reaches stdout — asserting the question via ``capsys`` would pass
     whatever the step asked, including nothing at all.
     """
-    from kiro_crew import cli_setup
+    from aj_crew import cli_setup
 
     cfg_file = tmp_path / "config.json"
     local_file = tmp_path / "config.local.json"
@@ -370,7 +370,7 @@ class TestSetupSandboxConsentOnlyActsOnNoBackend:
     def test_non_interactive_stdio_does_not_prompt(
         self, tmp_path, monkeypatch, capsys
     ) -> None:
-        """`kirocrew update` captures output; an unseen prompt would hang it."""
+        """`ajcrew update` captures output; an unseen prompt would hang it."""
         result = _run_consent(
             tmp_path, monkeypatch, kind="no_backend", answer="y", tty=False
         )
@@ -447,7 +447,7 @@ class TestSetupSandboxConsentOnADefaultAllowPlatform:
         self, tmp_path, monkeypatch
     ) -> None:
         """Unacked, the next Windows load would drop this false as the stale one."""
-        from kiro_crew.config import superseded_defaults as SD
+        from aj_crew.config import superseded_defaults as SD
 
         _run_consent(tmp_path, monkeypatch, kind="no_backend", answer="y", platform_allows=True)
         assert SD.acked_superseded() == {"agent.sandbox_allow_unsandboxed_exec": False}

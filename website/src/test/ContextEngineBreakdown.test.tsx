@@ -1,9 +1,9 @@
 /**
- * The newest turn's breakdown as one flat list. Row 1 is always Kiro Crew (its four
+ * The newest turn's breakdown as one flat list. Row 1 is always Aj Crew (its four
  * blocks, open by default); then, largest first, Messages (the engine's history less
- * Kiro Crew's blocks) and every other category, zero rows hidden. The rows add up to
- * the request's characters. The bar draws Kiro Crew first as its own group; the
- * window share sits on a thin bar of its own. A turn that was not split shows Kiro
+ * Aj Crew's blocks) and every other category, zero rows hidden. The rows add up to
+ * the request's characters. The bar draws Aj Crew first as its own group; the
+ * window share sits on a thin bar of its own. A turn that was not split shows Aj
  * Crew, Your messages and one Rest of the context row, each number with its unit.
  */
 import { describe, it, expect, afterEach } from 'vitest'
@@ -94,7 +94,7 @@ const trace = (l: LatestTurn | null): ContextTrace => ({
 const row = (rows: Row[], id: string) => rows.find(r => r.id === id)!
 
 describe('breakdownOf, a measured turn', () => {
-  it('puts Kiro Crew first, then every category by size, adding up to the total', () => {
+  it('puts Aj Crew first, then every category by size, adding up to the total', () => {
     const b = breakdownOf(latest())
     expect(b.rows.map(r => r.id)).toEqual([
       'crew',
@@ -113,11 +113,11 @@ describe('breakdownOf, a measured turn', () => {
     expect(b.overlap).toBe(0)
   })
 
-  it('lists the four Kiro Crew blocks under Kiro Crew', () => {
+  it('lists the four Aj Crew blocks under Aj Crew', () => {
     const crew = row(breakdownOf(latest()).rows, 'crew')
-    expect(crew.label).toBe('Kiro Crew')
+    expect(crew.label).toBe('Aj Crew')
     expect(crew.chars).toBe(12_000)
-    expect(crew.children!.map(r => r.label)).toEqual(['Kiro Crew rules', 'Kiro Crew skills', 'Kiro Crew memory', 'Kiro Crew session details'])
+    expect(crew.children!.map(r => r.label)).toEqual(['Aj Crew rules', 'Aj Crew skills', 'Aj Crew memory', 'Aj Crew session details'])
   })
 
   it("gives the engine's Other its own pink, never the grey of Rest of the context", () => {
@@ -130,7 +130,7 @@ describe('breakdownOf, a measured turn', () => {
     expect(barSegments(breakdownOf(latest()).rows).find(s => s.id === 'other')?.color).toBe('var(--ctx-eng-other)')
   })
 
-  it('puts Your messages right after Kiro Crew; Messages is the rest of the history', () => {
+  it('puts Your messages right after Aj Crew; Messages is the rest of the history', () => {
     const b = breakdownOf(latest())
     expect(b.rows[1].label).toBe('Your messages')
     const messages = row(b.rows, 'history')
@@ -143,13 +143,13 @@ describe('breakdownOf, a measured turn', () => {
     ])
   })
 
-  it('holds Messages at 0 and says so when Kiro Crew counts more than the history', () => {
+  it('holds Messages at 0 and says so when Aj Crew counts more than the history', () => {
     const b = breakdownOf(latest({ ours: { ...ours, rules: 7_000 } }))
     expect(row(b.rows, 'history')).toBeUndefined()
     expect(b.overlap).toBe(13_000 + 100 - 12_192)
   })
 
-  it('draws Kiro Crew first on the bar, ending its group, then the rest in list order', () => {
+  it('draws Aj Crew first on the bar, ending its group, then the rest in list order', () => {
     const segments = barSegments(breakdownOf(latest()).rows)
     expect(segments.slice(0, 4).map(s => s.id)).toEqual(['crew.rules', 'crew.skills', 'crew.memory', 'crew.other'])
     expect(segments[3].groupEnd).toBe(true)
@@ -194,7 +194,7 @@ describe('breakdownOf, a turn that was not split', () => {
     ])
     expect(b.rows.reduce((s, r) => s + (r.tokens ?? 0), 0)).toBe(85_311)
     expect(b.rows.every(r => r.estimated)).toBe(true)
-    // Kiro Crew's own total is the sum of its blocks' estimates, so it adds up too.
+    // Aj Crew's own total is the sum of its blocks' estimates, so it adds up too.
     const crew = b.rows[0]
     expect(crew.children!.reduce((s, r) => s + (r.tokens ?? 0), 0)).toBe(crew.tokens)
     expect(crew.chars).toBe(12_000)
@@ -225,19 +225,19 @@ describe('the one breakdown on the panel', () => {
     expect(screen.getByTestId('engine-caption').textContent).toMatch(/2\.9/)
   })
 
-  it('shows Kiro Crew open by default, and closes it on click', () => {
+  it('shows Aj Crew open by default, and closes it on click', () => {
     render(<ContextBreakdownPanel trace={trace(latest())} chartWidth={600} />)
     const section = screen.getByTestId('engine-breakdown')
     const first = section.querySelector('[data-engine-row]') as HTMLElement
     expect(first.getAttribute('data-engine-row')).toBe('crew')
-    expect(section.querySelector('[data-engine-row="crew.rules"]')!.textContent).toMatch(/Kiro Crew rules.*6,000/)
+    expect(section.querySelector('[data-engine-row="crew.rules"]')!.textContent).toMatch(/Aj Crew rules.*6,000/)
     const toggle = within(first).getByRole('button')
     expect(toggle.getAttribute('aria-expanded')).toBe('true')
     fireEvent.click(toggle)
     expect(section.querySelector('[data-engine-row="crew.rules"]')).toBeNull()
   })
 
-  it('says when Kiro Crew counts more than the messages', () => {
+  it('says when Aj Crew counts more than the messages', () => {
     render(<ContextBreakdownPanel trace={trace(latest({ ours: { ...ours, rules: 7_000 } }))} chartWidth={600} />)
     expect(screen.getByTestId('engine-overlap').textContent).toMatch(/908/)
   })
@@ -339,7 +339,7 @@ describe('the one breakdown on the panel', () => {
     expect(tag()).toBeUndefined()
   })
 
-  it('names the engine rows apart from the Kiro Crew rows', () => {
+  it('names the engine rows apart from the Aj Crew rows', () => {
     const b = breakdownOf(latest())
     expect(row(b.rows, 'kiroInstructions').label).toBe('Engine system prompt')
     expect(row(b.rows, 'skillsIndex').label).toBe('Skill list (engine)')
@@ -373,7 +373,7 @@ describe('the one breakdown on the panel', () => {
     expect(screen.queryByTestId('window-bar')).toBeNull()
   })
 
-  it('never says "agent loop", "History" or "Kiro Crew prompts"', () => {
+  it('never says "agent loop", "History" or "Aj Crew prompts"', () => {
     for (const l of [latest(), latest({ engine: null, context_used: 85_311 })]) {
       const { container, unmount } = render(
         <ContextBreakdownPanel
@@ -383,7 +383,7 @@ describe('the one breakdown on the panel', () => {
       )
       expect(container.textContent).not.toMatch(/agent loop/i)
       expect(container.textContent).not.toMatch(/History/)
-      expect(container.textContent).not.toMatch(/Kiro Crew prompts/)
+      expect(container.textContent).not.toMatch(/Aj Crew prompts/)
       unmount()
     }
   })

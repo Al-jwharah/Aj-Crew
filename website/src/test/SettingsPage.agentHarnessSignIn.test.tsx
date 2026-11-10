@@ -21,7 +21,7 @@ vi.mock('../api/client', async importOriginal => {
     ...mod,
     api: {
       ...mod.api,
-      kirocrewConfig: vi.fn(() => Promise.resolve({ agent: { acp_backend: 'kiro' } })),
+      ajcrewConfig: vi.fn(() => Promise.resolve({ agent: { acp_backend: 'kiro' } })),
       patchConfig: vi.fn(() => Promise.resolve({})),
       acpBackends: vi.fn(() =>
         Promise.resolve({
@@ -52,7 +52,7 @@ vi.mock('../components/settingRef/useConfigSchema', () => ({
 
 // The run cards beside the switch (Subagent Settings + Warm Pool) read a config
 // shape this suite does not seed; they are pinned in CfgTabCoverage.test.tsx.
-vi.mock('../pages/overview/KiroCrewCfgTab', () => ({ AgentRunSettings: () => <div /> }))
+vi.mock('../pages/overview/AjCrewCfgTab', () => ({ AgentRunSettings: () => <div /> }))
 
 // Settings panels: heavy and irrelevant here.
 vi.mock('../pages/settings/OverviewPanel', () => ({ OverviewPanel: () => <div data-testid="overview-panel" /> }))

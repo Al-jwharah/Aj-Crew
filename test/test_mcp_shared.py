@@ -25,8 +25,8 @@ from mcp_shared_helpers import (  # noqa: F401 -- the autouse fixture, and re-ex
 )
 from stray_line_helpers import STRAY_LINES, too_deep_to_decode
 
-import kiro_crew.mcp_shared as mcp_shared
-from kiro_crew.mcp_shared import SKIP, _read_message, respond
+import aj_crew.mcp_shared as mcp_shared
+from aj_crew.mcp_shared import SKIP, _read_message, respond
 
 
 def _make_stdin(data: bytes):
@@ -274,7 +274,7 @@ class TestReadMessageContentLength:
 
     def test_the_body_cap_is_the_gateways_read_limit(self):
         """The constant's comment says so; a copy could drift without a test."""
-        from kiro_crew.mcp_gateway import pool
+        from aj_crew.mcp_gateway import pool
 
         assert mcp_shared.MAX_CONTENT_LENGTH_BYTES == pool._DEFAULT_READ_BUFFER_LIMIT
 
@@ -763,7 +763,7 @@ class TestCallToolWithLoggingRedaction:
         ],
     )
     def test_session_body_tools_audit_outcome_without_retaining_payload(self, failure, tool):
-        from kiro_crew.validation import ValidationError
+        from aj_crew.validation import ValidationError
 
         captured = {}
 
@@ -788,7 +788,7 @@ class TestCallToolWithLoggingRedaction:
                 validate,
                 recall,
                 session_key="dashboard:alice",
-                downstream_service="kirocrew-core",
+                downstream_service="ajcrew-core",
             )
 
         assert captured["tool_name"] == tool
@@ -798,7 +798,7 @@ class TestCallToolWithLoggingRedaction:
         assert result.startswith("Error:") if failure else result == "recalled context"
 
     def test_args_redacted_before_sel_log(self):
-        from kiro_crew.mcp_shared import call_tool_with_logging
+        from aj_crew.mcp_shared import call_tool_with_logging
 
         captured = {}
 
@@ -814,14 +814,14 @@ class TestCallToolWithLoggingRedaction:
         def _inner(_name, _args):
             return "ok"
 
-        with patch("kiro_crew.mcp_shared.sel", return_value=_FakeSel()):
+        with patch("aj_crew.mcp_shared.sel", return_value=_FakeSel()):
             call_tool_with_logging(
                 "artifact_post_comment",
                 {"slug": "doc", "text": f"leak {secret} here"},
                 _validate,
                 _inner,
                 session_key="mcp_core",
-                downstream_service="kirocrew-core",
+                downstream_service="ajcrew-core",
             )
         # The raw AKIA credential must NOT appear in the logged resources.
         assert secret not in captured.get("resources", "")
@@ -838,8 +838,8 @@ class TestCallToolWithLoggingKind:
     _CALLER = "dashboard:chat-7"
 
     def _capture(self, *, raises: bool = False) -> dict:
-        from kiro_crew.mcp_shared import call_tool_with_logging
-        from kiro_crew.validation import ValidationError
+        from aj_crew.mcp_shared import call_tool_with_logging
+        from aj_crew.validation import ValidationError
 
         captured: dict = {}
 
@@ -855,14 +855,14 @@ class TestCallToolWithLoggingKind:
         def _inner(_name, _args):
             return "ok"
 
-        with patch("kiro_crew.mcp_shared.sel", return_value=_FakeSel()):
+        with patch("aj_crew.mcp_shared.sel", return_value=_FakeSel()):
             call_tool_with_logging(
                 "artifact_list",
                 {"slug": "doc"},
                 _validate,
                 _inner,
                 session_key=self._CALLER,
-                downstream_service="kirocrew-core",
+                downstream_service="ajcrew-core",
             )
         assert captured, "the wrapper wrote no audit row at all"
         return captured
@@ -896,7 +896,7 @@ def _tools_call_with_caller_call_id(
     ``_meta.progressToken`` — the shape a client that omits the optional token
     produces. The toolCallId is the always-present correlation key.
     """
-    from kiro_crew.mcp_caller import CallerContext, build_caller_meta
+    from aj_crew.mcp_caller import CallerContext, build_caller_meta
 
     msg = _tools_call(req_id, tool_name)
     msg["params"]["_meta"] = build_caller_meta(
@@ -911,7 +911,7 @@ def _tools_call_with_caller_call_id(
 
         With an empty id the authorized call could not claim its own capability.
         """
-        from kiro_crew import mcp_caller
+        from aj_crew import mcp_caller
 
         seen: list = []
 
@@ -935,7 +935,7 @@ def _tools_call_with_caller_call_id(
         optional progressToken — the pre-existing behaviour, kept for a client
         that sends one and a gateway that carries none.
         """
-        from kiro_crew import mcp_caller
+        from aj_crew import mcp_caller
 
         seen: list = []
 
@@ -958,7 +958,7 @@ def _tools_call_with_caller_call_id(
 
         A capability claim with an empty id is refused fail-closed.
         """
-        from kiro_crew import mcp_caller
+        from aj_crew import mcp_caller
 
         seen: list = []
 

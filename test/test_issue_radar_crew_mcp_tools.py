@@ -2,7 +2,7 @@
 
 The two tools are declared in the app's ``app.json`` (``agentTools``, ``strictSession``)
 and served by its ``backend/agent_tools.py``; ``issue_radar_agent_tools_helpers`` runs a
-call through the real ``kirocrew-core`` path with the app's route legs faked. The ledger
+call through the real ``ajcrew-core`` path with the app's route legs faked. The ledger
 is the crew's memory across compaction and restarts, so:
 
   * it is reachable only through the forwarded tool call; a raw HTTP call earns 403;
@@ -34,11 +34,11 @@ from issue_radar_agent_tools_helpers import (
 )
 from turn_harness import SlotSpec, TurnScript, run_turn
 
-from kiro_crew import mcp_core
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN, AcpEvent
-from kiro_crew.apps.builtins.issue_radar.backend import agent_tools
-from kiro_crew.dashboard.token_auth import token_auth_middleware
-from kiro_crew.validation import ValidationError
+from aj_crew import mcp_core
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN, AcpEvent
+from aj_crew.apps.builtins.issue_radar.backend import agent_tools
+from aj_crew.dashboard.token_auth import token_auth_middleware
+from aj_crew.validation import ValidationError
 
 READ_PATH = "/api/apps/issue-radar/crew"
 WORK_PATH = "/api/apps/issue-radar/crew/work"
@@ -146,7 +146,7 @@ class TestGatewayPathsAreReachableWithTheInternalSecret(unittest.TestCase):
         holding the internal secret. The forwarded call enters at
         ``/api/app-tools/call`` instead.
         """
-        from kiro_crew.dashboard.server import (
+        from aj_crew.dashboard.server import (
             _MIXED_INTERNAL_API_PATHS,
             _STRICT_INTERNAL_API_PATHS,
         )
@@ -170,7 +170,7 @@ def _listed_spec(name: str) -> dict:
 
 
 def _validated_fields(name: str) -> dict:
-    from kiro_crew.apps import app_agent_tools
+    from aj_crew.apps import app_agent_tools
 
     return {f.name: f for f in app_agent_tools.build_tool_schema(shipped(name)).fields}
 
@@ -246,7 +246,7 @@ class TestToolRegistration(unittest.TestCase):
         # one the core enforces, and refusing an odd label would fail the write
         # that indexes the skip, and an unindexed skip is the waste the index
         # exists to remove. The store coerces to ``other`` instead.
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_store
+        from aj_crew.apps.builtins.issue_radar.backend import crew_store
 
         prop = descriptor(RECORD_TOOL)["inputSchema"]["properties"]["skip_scope"]
         assert "enum" not in prop
@@ -257,7 +257,7 @@ class TestToolRegistration(unittest.TestCase):
     def test_the_phase_vocabulary_mirrors_the_store_exactly(self):
         # The manifest is data and cannot import the store, so it spells these.
         # Drift would silently reject a legitimate phase at the tool boundary.
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_store
+        from aj_crew.apps.builtins.issue_radar.backend import crew_store
 
         by_name = _validated_fields(RECORD_TOOL)
         assert set(by_name["phase"].allowed) == set(crew_store.PHASES)
@@ -398,9 +398,9 @@ class TestAnAutoNudgeTurnResolvesTheSameIdentityAsADirectTurn:
         from types import SimpleNamespace
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.autonudge import NudgeLoop
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.slack import gateway as gw
+        from aj_crew.autonudge import NudgeLoop
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.slack import gateway as gw
 
         slot_key = "crew-c_7f3a"
         loop = NudgeLoop(
@@ -421,8 +421,8 @@ class TestAnAutoNudgeTurnResolvesTheSameIdentityAsADirectTurn:
         # would make it look channel-linked.
         slot.linked_session_key = ""
 
-        cfg = KiroCrewConfig()
-        with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U_OWNER"}):
+        cfg = AjCrewConfig()
+        with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U_OWNER"}):
             orch = gw.GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
         orch.dashboard_state = SimpleNamespace(
             get_slot=MagicMock(return_value=slot),
@@ -443,8 +443,8 @@ class TestAnAutoNudgeTurnResolvesTheSameIdentityAsADirectTurn:
         The expected value is ``effective_session_key(slot)``, not a literal, so the
         test pins nudge == direct rather than the key's spelling.
         """
-        from kiro_crew.dashboard.chat_utils import effective_session_key
-        from kiro_crew.slack import gateway as gw
+        from aj_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.slack import gateway as gw
 
         orch, loop, slot = self._fire_env()
         expected = effective_session_key(slot)
@@ -464,7 +464,7 @@ class TestAnAutoNudgeTurnResolvesTheSameIdentityAsADirectTurn:
 
         with (
             patch.object(gw, "spawn_guarded_turn", _spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=_fake_run_chat),
+            patch("aj_crew.dashboard.chat._run_chat", new=_fake_run_chat),
         ):
             result = await orch._fire_dashboard_nudge(loop)
             # Drain the spawned turn so the publish recorded above has run.
@@ -488,7 +488,7 @@ class TestAnAutoNudgeTurnResolvesTheSameIdentityAsADirectTurn:
         A direct turn's identity must be non-empty and slot-derived, not the empty
         string the strict gate refuses.
         """
-        from kiro_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.dashboard.chat_utils import effective_session_key
 
         _, _, slot = self._fire_env()
         direct_identity = effective_session_key(slot)
@@ -520,7 +520,7 @@ class TestAnAutoNudgeTurnResolvesTheSameIdentityAsADirectTurn:
         """The writer keys off the session key it is handed, not a re-resolve."""
         import inspect
 
-        from kiro_crew.messaging import identity
+        from aj_crew.messaging import identity
 
         writer_src = inspect.getsource(identity.publish_turn_identity)
         assert "session_key" in inspect.signature(identity.publish_turn_identity).parameters
@@ -736,10 +736,10 @@ class TestPublicStringsAreSanitizedOnTheWayIn(unittest.TestCase):
         assert home not in captured["body"]["event"]
         assert "<home>" in captured["body"]["event"]
 
-    def test_the_kirocrew_home_collapses_before_the_user_home(self):
+    def test_the_ajcrew_home_collapses_before_the_user_home(self):
         # Longest-first ordering: scrubbing the home first would leave
         # "<home>/.kiro/crew/..." — still this machine's directory layout.
-        from kiro_crew.config.loader import config_dir
+        from aj_crew.config.loader import config_dir
 
         captured, _ = _record(
             event=f"read the ledger under {config_dir()}/workspace",
@@ -819,7 +819,7 @@ class TestPublicStringsAreSanitizedOnTheWayIn(unittest.TestCase):
 
     def test_the_clear_names_are_the_store_s_list(self):
         # Named in the argument's description; the route refuses any other name.
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_store
+        from aj_crew.apps.builtins.issue_radar.backend import crew_store
 
         prop = descriptor(RECORD_TOOL)["inputSchema"]["properties"]["clear"]
         named = prop["description"].rsplit("One of: ", 1)[1].split(", ")
@@ -1055,7 +1055,7 @@ class TestMiddlewareDecision:
         return req
 
     def _mw(self, secret: str = "s3cret"):
-        from kiro_crew.dashboard.server import (
+        from aj_crew.dashboard.server import (
             _MIXED_INTERNAL_API_PATHS,
             _STRICT_INTERNAL_API_PATHS,
         )
@@ -1142,7 +1142,7 @@ class TestMiddlewareDecision:
         middleware sets on an agent call (``internal_auth``), with no middleware.
         ``/crew/guidance`` is absent, not closed; that is asserted separately.
         """
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_routes, routes
+        from aj_crew.apps.builtins.issue_radar.backend import crew_routes, routes
 
         app = web.Application()
         crew_routes.register_crew_routes(app)
@@ -1178,7 +1178,7 @@ class TestMiddlewareDecision:
 
         Checked by registration, since a route that exists and refuses also gives 403/404.
         """
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_routes
+        from aj_crew.apps.builtins.issue_radar.backend import crew_routes
 
         app = web.Application()
         crew_routes.register_crew_routes(app)

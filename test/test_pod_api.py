@@ -1,4 +1,4 @@
-"""Tests for the authenticated ``kirocrew pod api`` front door."""
+"""Tests for the authenticated ``ajcrew pod api`` front door."""
 
 from __future__ import annotations
 
@@ -24,13 +24,13 @@ import pytest
 from loopback_servers import LoopbackHTTPServer
 from tmpdir_helpers import SHORT_TMP_PREFIX, short_tmp_base
 
-import kiro_crew
-from kiro_crew import platform_compat
-from kiro_crew.dashboard.urls import dashboard_socket_path
-from kiro_crew.instances import run_marker
-from kiro_crew.pod import cli as pod_cli
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod.config import PodConfig
+import aj_crew
+from aj_crew import platform_compat
+from aj_crew.dashboard.urls import dashboard_socket_path
+from aj_crew.instances import run_marker
+from aj_crew.pod import cli as pod_cli
+from aj_crew.pod import runtime as rt
+from aj_crew.pod.config import PodConfig
 
 
 class _RecordingServer(LoopbackHTTPServer):
@@ -144,7 +144,7 @@ def stub_gateway(monkeypatch: pytest.MonkeyPatch) -> _RecordingUnixServer:
     with contextlib.ExitStack() as stack:
         root = Path(tempfile.mkdtemp(prefix=SHORT_TMP_PREFIX + "podapi-", dir=short_tmp_base()))
         stack.callback(shutil.rmtree, root, ignore_errors=True)
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(root))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(root))
         cfg = PodConfig.load()
         tcp = _RecordingServer(("127.0.0.1", 0), _Handler)
         stack.callback(tcp.server_close)
@@ -209,7 +209,7 @@ def port_squatter(monkeypatch: pytest.MonkeyPatch) -> _RecordingServer:
     with contextlib.ExitStack() as stack:
         root = Path(tempfile.mkdtemp(prefix=SHORT_TMP_PREFIX + "podapi-", dir=short_tmp_base()))
         stack.callback(shutil.rmtree, root, ignore_errors=True)
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(root))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(root))
         server = _RecordingServer(("127.0.0.1", 0), _Handler)
         stack.callback(server.server_close)
         server.seen = []
@@ -287,7 +287,7 @@ class TestPodRecordFreshness:
 
     @pytest.fixture
     def cfg(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PodConfig:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         return PodConfig.load()
 
     def test_an_unattributable_loopback_listener_still_proves_our_pod(
@@ -386,7 +386,7 @@ class TestPodRecordFreshness:
         The pid file must ALSO stay a bare pid, because the reader shipped on
         older clients takes the whole file and requires ``isdigit()``.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         run_marker.write_marker(7999)
         pid_file = run_marker.pid_path(7999)
         # One line, bare pid — not a literal byte string: text-mode writes give
@@ -458,13 +458,13 @@ class TestPodUnprovenRemediation:
 
     @pytest.fixture
     def cfg(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PodConfig:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         return PodConfig.load()
 
     def test_no_record_at_all_is_told_to_restart(self, cfg: PodConfig) -> None:
         remedy = rt._unproven_remedy(cfg, "demo", 7999)
         assert "restarting it is what re-establishes the proof" in remedy
-        assert "kirocrew pod down demo && kirocrew pod up demo" in remedy
+        assert "ajcrew pod down demo && ajcrew pod up demo" in remedy
         assert "provision" not in remedy
 
     def test_a_stale_generation_is_told_to_restart(self, cfg: PodConfig) -> None:
@@ -479,7 +479,7 @@ class TestPodUnprovenRemediation:
         _write_record(cfg, "demo", 7999, f"{os.getpid()}\n")
         remedy = rt._unproven_remedy(cfg, "demo", 7999)
         assert "re-establishes the proof" not in remedy
-        assert "kirocrew pod provision demo" in remedy
+        assert "ajcrew pod provision demo" in remedy
         assert "worktree" in remedy
 
     def test_the_mint_refusal_carries_the_matching_remedy(
@@ -501,7 +501,7 @@ class TestPodUnprovenRemediation:
         with pytest.raises(rt.PodOwnershipUnproven) as excinfo:
             rt.mint_token(cfg, "demo", "1h")
         message = str(excinfo.value)
-        assert "kirocrew pod provision demo" in message
+        assert "ajcrew pod provision demo" in message
         assert "re-establishes the proof" not in message
         assert "must-not-leave-this-process" not in message
 
@@ -516,7 +516,7 @@ class TestPodPidAttestation:
         its own and the lookup is never even attempted. Withholding here would
         deny the credential to every healthy pod on a minimal Linux box forever.
         """
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         live = os.getpid()
         monkeypatch.setattr(rt, "main_pid", lambda cfg, name: live)
         monkeypatch.setattr(rt, "listening_pid_tool_available", lambda: False)
@@ -533,7 +533,7 @@ class TestPodPidAttestation:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The historical one-line format cannot prove it is not a crash leftover."""
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         live = os.getpid()
         monkeypatch.setattr(rt, "main_pid", lambda cfg, name: live)
         monkeypatch.setattr(rt, "listening_pid_tool_available", lambda: False)
@@ -544,7 +544,7 @@ class TestPodPidAttestation:
     def test_a_listener_tool_corroborates_the_pid_agreement(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         _pin_start_token(monkeypatch, 4242, _START_TOKEN_FOR_4242)
         monkeypatch.setattr(rt, "main_pid", lambda cfg, name: 4242)
         monkeypatch.setattr(rt, "listening_pid_tool_available", lambda: True)
@@ -560,7 +560,7 @@ class TestPodPidAttestation:
     def test_listener_attribution_alone_never_vouches_for_a_pod(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         monkeypatch.setattr(rt, "main_pid", lambda cfg, name: 4242)
         monkeypatch.setattr(rt, "listening_pid_tool_available", lambda: True)
         monkeypatch.setattr(
@@ -573,7 +573,7 @@ class TestPodPidAttestation:
     def test_a_listener_disagreeing_with_the_attested_pid_is_foreign(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         _pin_start_token(monkeypatch, 4242, _START_TOKEN_FOR_4242)
         monkeypatch.setattr(rt, "main_pid", lambda cfg, name: 4242)
         monkeypatch.setattr(rt, "listening_pid_tool_available", lambda: True)
@@ -590,7 +590,7 @@ class TestPodPidAttestation:
     def test_missing_malformed_or_stale_records_are_unproven(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, recorded: str
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         _pin_start_token(monkeypatch, 4242, _START_TOKEN_FOR_4242)
         monkeypatch.setattr(rt, "main_pid", lambda cfg, name: 4242)
         monkeypatch.setattr(rt, "listening_pid_tool_available", lambda: False)
@@ -831,7 +831,7 @@ class TestPodApiUnixTransport:
         assert "?token=" not in rendered
         # Actionable: names the socket it wanted and what to do about it.
         assert "dashboard-" in rendered and ".sock" in rendered
-        assert "kirocrew pod status wt" in rendered
+        assert "ajcrew pod status wt" in rendered
 
     def test_windows_names_the_real_cause_instead_of_prescribing_a_futile_restart(
         self, monkeypatch: pytest.MonkeyPatch
@@ -851,7 +851,7 @@ class TestPodApiUnixTransport:
         rendered = str(excinfo.value)
         assert "AF_UNIX" in rendered, "must name the actual missing capability"
         assert "restart will not fix it" in rendered, "must stop the futile loop explicitly"
-        assert "kirocrew pod token wt" in rendered, "must name the way through"
+        assert "ajcrew pod token wt" in rendered, "must name the way through"
         assert "127.0.0.1:" in rendered, "must name where to send the request"
         assert "pod down" not in rendered, "must not prescribe the restart that cannot help"
 
@@ -1232,18 +1232,18 @@ class TestPodApiAuditAndCli:
         `choices=` would answer with argparse usage text and exit 2 instead of the JSON
         envelope. In-process tests call `_api` directly, so this runs the real parser.
         """
-        src = str(Path(kiro_crew.__file__).resolve().parents[1])
+        src = str(Path(aj_crew.__file__).resolve().parents[1])
         env = os.environ.copy()
         env.update(
             {
                 "HOME": str(tmp_path / "os-home"),
                 "USERPROFILE": str(tmp_path / "os-home"),
-                "KIROCREW_HOME": str(tmp_path / "crew-home"),
+                "AJCREW_HOME": str(tmp_path / "crew-home"),
                 "PYTHONPATH": src,
             }
         )
         result = subprocess.run(
-            [sys.executable, "-m", "kiro_crew", "pod", "api", "wt", "OPTIONS", "sessions"],
+            [sys.executable, "-m", "aj_crew", "pod", "api", "wt", "OPTIONS", "sessions"],
             capture_output=True,
             encoding="utf-8",
             env=env,

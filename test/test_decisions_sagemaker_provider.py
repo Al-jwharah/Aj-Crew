@@ -18,9 +18,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.config.sections import DECISION_PROVIDER_ENDPOINT_DEFAULT as DEFAULT_ENDPOINT
-from kiro_crew.config.sections import DECISION_PROVIDER_MODEL_DEFAULT as DEFAULT_MODEL
-from kiro_crew.decisions import consent, impl_sagemaker
+from aj_crew.config.sections import DECISION_PROVIDER_ENDPOINT_DEFAULT as DEFAULT_ENDPOINT
+from aj_crew.config.sections import DECISION_PROVIDER_MODEL_DEFAULT as DEFAULT_MODEL
+from aj_crew.decisions import consent, impl_sagemaker
 
 GOOD = {"preset": "sagemaker", "endpoint_name": "decision-model-a", "region": "us-west-2"}
 GOOD_ADDRESS = "sagemaker://decision-model-a?region=us-west-2"
@@ -43,7 +43,7 @@ def _request(*, app: str = "", user: str = "owner-1", owner: str = "owner-1", bo
 
 @pytest.fixture
 def audit(monkeypatch):
-    import kiro_crew.dashboard.handlers as handlers_pkg
+    import aj_crew.dashboard.handlers as handlers_pkg
 
     rows: list[dict] = []
     fake = MagicMock()
@@ -55,14 +55,14 @@ def audit(monkeypatch):
 @pytest.fixture
 def keystone(tmp_path, monkeypatch):
     path = tmp_path / "decisions_consent.json"
-    monkeypatch.setattr("kiro_crew.config.loader.decisions_consent_path", lambda: path)
+    monkeypatch.setattr("aj_crew.config.loader.decisions_consent_path", lambda: path)
     return path
 
 
 @pytest.fixture
 def provider_config():
     """A reader for the ``decisions.provider`` the pinned data home's config.json holds."""
-    from kiro_crew.config.loader import config_path
+    from aj_crew.config.loader import config_path
 
     path = config_path()
 
@@ -76,7 +76,7 @@ def provider_config():
 @pytest.fixture(autouse=True)
 def runtime(_floor_monkeypatch):
     """No local model server may start; the route's runtime calls are recorded."""
-    from kiro_crew.decisions import local_runtime
+    from aj_crew.decisions import local_runtime
 
     calls: list = []
     fake = MagicMock()
@@ -106,14 +106,14 @@ def aws_profiles(tmp_path, _floor_monkeypatch):
 
 @pytest.fixture
 def not_denied(monkeypatch):
-    from kiro_crew.decisions import capability
+    from aj_crew.decisions import capability
 
     monkeypatch.setattr(capability, "is_decisions_denied", lambda *a, **k: False)
     monkeypatch.setattr(capability, "targets_denied", lambda *a, **k: False)
 
 
 async def _put(body, **kw):
-    from kiro_crew.dashboard.handlers.decisions import api_decisions_provider_put
+    from aj_crew.dashboard.handlers.decisions import api_decisions_provider_put
 
     resp = await api_decisions_provider_put(_request(body=body, **kw))
     return resp.status, json.loads(resp.text)
@@ -290,7 +290,7 @@ class TestSageMakerPut:
     async def test_a_hand_set_model_and_timeout_survive_a_change_of_endpoint(
         self, audit, provider_config, keystone, not_denied
     ):
-        from kiro_crew.config.loader import config_path, update_config_locked
+        from aj_crew.config.loader import config_path, update_config_locked
 
         def _seed(data):
             data["decisions"] = {
@@ -325,7 +325,7 @@ class TestSageMakerPut:
     async def test_a_fleet_denial_of_the_hosted_side_refuses_it(
         self, audit, provider_config, monkeypatch
     ):
-        from kiro_crew.decisions import capability
+        from aj_crew.decisions import capability
 
         monkeypatch.setattr(capability, "is_decisions_denied", lambda *, local=False: not local)
         status, body = await _put(GOOD)
@@ -345,8 +345,8 @@ class TestSageMakerPut:
 class TestSageMakerGet:
     @pytest.mark.asyncio
     async def test_a_configured_endpoint_is_named_by_its_parts(self, audit):
-        from kiro_crew.config.loader import config_path, update_config_locked
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_provider_get
+        from aj_crew.config.loader import config_path, update_config_locked
+        from aj_crew.dashboard.handlers.decisions import api_decisions_provider_get
 
         def _seed(data):
             data["decisions"] = {"provider": {"endpoint": f"{GOOD_ADDRESS}&profile=research"}}
@@ -365,8 +365,8 @@ class TestSageMakerGet:
         ids=["a-path", "an-unbalanced-bracket"],
     )
     async def test_an_address_that_does_not_parse_stays_custom(self, endpoint, audit):
-        from kiro_crew.config.loader import config_path, update_config_locked
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_provider_get
+        from aj_crew.config.loader import config_path, update_config_locked
+        from aj_crew.dashboard.handlers.decisions import api_decisions_provider_get
 
         def _seed(data):
             data["decisions"] = {"provider": {"endpoint": endpoint}}
@@ -381,7 +381,7 @@ class TestSageMakerGet:
 
 class TestConnectionTest:
     async def _test(self, body=None, **kw):
-        from kiro_crew.dashboard.handlers.decisions_sagemaker import (
+        from aj_crew.dashboard.handlers.decisions_sagemaker import (
             api_decisions_provider_sagemaker_test,
         )
 
@@ -500,7 +500,7 @@ class TestConnectionTest:
 
     @pytest.mark.asyncio
     async def test_the_test_is_refused_where_policy_refuses_the_endpoint(self, audit, monkeypatch):
-        from kiro_crew.decisions import capability
+        from aj_crew.decisions import capability
 
         asked: list = []
         monkeypatch.setattr(capability, "is_decisions_denied", lambda *a, **k: False)

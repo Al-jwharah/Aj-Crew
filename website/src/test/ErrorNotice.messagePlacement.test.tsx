@@ -72,7 +72,7 @@ describe('ErrorNotice messagePlacement', () => {
   })
 
   it('below keeps the raw string as the journal key: the hand-off still recovers the structured report from it', async () => {
-    recordError({ source: 'api', message: RAW, status: 503, code: 'config_store_unavailable', endpoint: '/api/config/kirocrew' })
+    recordError({ source: 'api', message: RAW, status: 503, code: 'config_store_unavailable', endpoint: '/api/config/ajcrew' })
     render(<ErrorNotice title="Folder order could not be read" message={RAW} messagePlacement="below" askAgent actionPlacement="below" testId="n" />)
     const handoff = screen.getByRole('button', { name: /ask the agent/i })
     // Rendered inside the text column, under the demoted line.
@@ -82,7 +82,7 @@ describe('ErrorNotice messagePlacement', () => {
     const staged = consumeChatHandoff() ?? ''
     expect(staged).toContain(RAW)
     expect(staged).toContain('config_store_unavailable')
-    expect(staged).toContain('/api/config/kirocrew')
+    expect(staged).toContain('/api/config/ajcrew')
   })
 
   it('scrollMessage keeps one built-in hand-off outside the message and preserves its report and callbacks', () => {
@@ -90,7 +90,7 @@ describe('ErrorNotice messagePlacement', () => {
     const onDismiss = vi.fn()
     const report = recordError({
       source: 'api', message: RAW, status: 503,
-      code: 'config_store_unavailable', endpoint: '/api/config/kirocrew',
+      code: 'config_store_unavailable', endpoint: '/api/config/ajcrew',
     })
     render(
       <ErrorNotice
@@ -114,7 +114,7 @@ describe('ErrorNotice messagePlacement', () => {
     const staged = consumeChatHandoff() ?? ''
     expect(staged).toContain(RAW)
     expect(staged).toContain('config_store_unavailable')
-    expect(staged).toContain('/api/config/kirocrew')
+    expect(staged).toContain('/api/config/ajcrew')
     fireEvent.click(within(notice).getByRole('button', { name: 'Dismiss' }))
     expect(onDismiss).toHaveBeenCalledOnce()
   })

@@ -1,6 +1,6 @@
 """Additional KnowledgeStore coverage, folder sources and the watcher loop.
 
-The store's wider surface, the retirement of folders Kiro Crew registered
+The store's wider surface, the retirement of folders Aj Crew registered
 itself, imported folder sources that wait for confirmation, the watcher's run
 loop and dedup cadence, and ``sync_all`` skipping errored sources.
 The ``store`` fixtures come from ``knowledge_helpers.py``.
@@ -17,9 +17,9 @@ import pytest
 from knowledge_helpers import store_factory_fixture  # noqa: F401
 from knowledge_helpers import store_fixture  # noqa: F401
 
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.knowledge.sync import SyncScheduler
-from kiro_crew.testing.wait import async_wait_until, await_until, finished
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge.sync import SyncScheduler
+from aj_crew.testing.wait import async_wait_until, await_until, finished
 
 # The stamp written into the test's own rows. A fixed naive value, so the rows do not
 # depend on the host's clock or its time zone.
@@ -237,7 +237,7 @@ class TestKnowledgeStoreExtended:
                     conn.close()
             return parsed
 
-        with patch("kiro_crew.knowledge.store.json.loads", failure_lands_mid_scan):
+        with patch("aj_crew.knowledge.store.json.loads", failure_lands_mid_scan):
             reopened = KnowledgeStore(db_path)
         try:
             assert fired, "the mid-scan write never landed; the test proves nothing"
@@ -677,11 +677,11 @@ class TestKnowledgeStoreExtended:
         s2.close()
 
 
-# 7b. Retirement of folders Kiro Crew registered itself
+# 7b. Retirement of folders Aj Crew registered itself
 
 
 class TestRetireAutoRegisteredFolders:
-    """A folder row Kiro Crew registered itself is not walked until the user adopts it.
+    """A folder row Aj Crew registered itself is not walked until the user adopts it.
 
     The refusal lives in ``FolderWatcher.scan_source``, the one funnel every scan
     goes through, and NOT in the store constructor, where taking the write lock
@@ -702,7 +702,7 @@ class TestRetireAutoRegisteredFolders:
 
     @staticmethod
     def _watcher(store):
-        from kiro_crew.knowledge.watcher import KnowledgeWatcher
+        from aj_crew.knowledge.watcher import KnowledgeWatcher
 
         return KnowledgeWatcher(store=store, pipeline=object(), interval=1)
 
@@ -753,7 +753,7 @@ class TestRetireAutoRegisteredFolders:
             def log_tool_invocation(**kw):
                 events.append(kw)
 
-        with patch("kiro_crew.knowledge.folder_watcher.sel", lambda: _Sel()):
+        with patch("aj_crew.knowledge.folder_watcher.sel", lambda: _Sel()):
             await fw.scan_source(
                 {
                     "id": sid,
@@ -840,7 +840,7 @@ class TestRetireAutoRegisteredFolders:
         ``"false"`` is truthy, and on the retired marker that direction is fail-open:
         the row would read as adopted and skip the refusal entirely.
         """
-        from kiro_crew.knowledge.store import is_auto_registered
+        from aj_crew.knowledge.store import is_auto_registered
 
         expected = (
             props.get("auto_added") is True and props.get("auto_registration_retired") is not True
@@ -848,7 +848,7 @@ class TestRetireAutoRegisteredFolders:
         assert is_auto_registered(props) is expected
 
     def test_a_real_legacy_row_is_recognised(self):
-        from kiro_crew.knowledge.store import is_auto_registered
+        from aj_crew.knowledge.store import is_auto_registered
 
         assert is_auto_registered({"auto_added": True}) is True
         assert is_auto_registered({"auto_added": True, "auto_registration_retired": True}) is False
@@ -898,7 +898,7 @@ class TestRetireAutoRegisteredFolders:
         does not contend with a ``pysqlite3`` one here (both took BEGIN IMMEDIATE
         at once), so it would land with or without the lock.
         """
-        from kiro_crew.knowledge import store as store_mod
+        from aj_crew.knowledge import store as store_mod
 
         sqlite = store_mod.sqlite3
 
@@ -920,7 +920,7 @@ class TestRetireAutoRegisteredFolders:
                     conn.close()
             return parsed
 
-        with patch("kiro_crew.knowledge.store.json.loads", ingestion_writes_mid_pass):
+        with patch("aj_crew.knowledge.store.json.loads", ingestion_writes_mid_pass):
             store.retire_auto_registered_folder(sid)
 
         assert outcome, "the mid-pass write never ran; the test proves nothing"
@@ -935,7 +935,7 @@ class TestRetireAutoRegisteredFolders:
         The scan is refused either way, so deferring costs nothing and raising
         would surface as a failed scan the user cannot act on.
         """
-        from kiro_crew.knowledge import store as store_mod
+        from aj_crew.knowledge import store as store_mod
 
         sqlite = store_mod.sqlite3
 
@@ -1057,7 +1057,7 @@ class TestWatcherRunLoop:
 
     @staticmethod
     def _watcher(store, interval=0.01):
-        from kiro_crew.knowledge.watcher import KnowledgeWatcher
+        from aj_crew.knowledge.watcher import KnowledgeWatcher
 
         return KnowledgeWatcher(store=store, pipeline=object(), interval=interval)
 
@@ -1109,7 +1109,7 @@ class TestScheduledDedupCadence:
 
     @staticmethod
     def _watcher(store):
-        from kiro_crew.knowledge.watcher import KnowledgeWatcher
+        from aj_crew.knowledge.watcher import KnowledgeWatcher
 
         return KnowledgeWatcher(store=store, pipeline=object(), interval=1)
 
@@ -1123,8 +1123,8 @@ class TestScheduledDedupCadence:
     async def test_zero_disables_the_scheduled_pass(self, store):
         w = self._watcher(store)
         with (
-            patch("kiro_crew.knowledge.watcher.KiroCrewConfig") as cfg,
-            patch("kiro_crew.knowledge.watcher.dedup_sweep") as sweep,
+            patch("aj_crew.knowledge.watcher.AjCrewConfig") as cfg,
+            patch("aj_crew.knowledge.watcher.dedup_sweep") as sweep,
         ):
             cfg.load.return_value = self._cfg(0)
             await w._maybe_dedup_sweep()
@@ -1137,8 +1137,8 @@ class TestScheduledDedupCadence:
         w = self._watcher(store)
         w._sweep_count = 5  # 5 % 4 != 0
         with (
-            patch("kiro_crew.knowledge.watcher.KiroCrewConfig") as cfg,
-            patch("kiro_crew.knowledge.watcher.dedup_sweep", return_value=[]) as sweep,
+            patch("aj_crew.knowledge.watcher.AjCrewConfig") as cfg,
+            patch("aj_crew.knowledge.watcher.dedup_sweep", return_value=[]) as sweep,
         ):
             cfg.load.return_value = self._cfg(4)
             await w._maybe_dedup_sweep()
@@ -1168,8 +1168,8 @@ class TestScheduledDedupCadence:
             return [{"loser": "a", "winner": "b", "reason": "exact"}]
 
         with (
-            patch("kiro_crew.knowledge.watcher.KiroCrewConfig") as cfg,
-            patch("kiro_crew.knowledge.watcher.dedup_sweep", _sweep),
+            patch("aj_crew.knowledge.watcher.AjCrewConfig") as cfg,
+            patch("aj_crew.knowledge.watcher.dedup_sweep", _sweep),
         ):
             cfg.load.return_value = self._cfg(4)
             await w._maybe_dedup_sweep()
@@ -1180,7 +1180,7 @@ class TestScheduledDedupCadence:
         assert all(c["certain_only"] for c in calls)
         # The SCHEDULED sweep passes the single-signature bucket cap so a
         # pathological bucket cannot stall the gateway.
-        from kiro_crew.knowledge.dedup import SCHEDULED_FUZZY_BUCKET_CAP
+        from aj_crew.knowledge.dedup import SCHEDULED_FUZZY_BUCKET_CAP
 
         assert all(c["max_fuzzy_bucket"] == SCHEDULED_FUZZY_BUCKET_CAP for c in calls)
 
@@ -1191,8 +1191,8 @@ class TestScheduledDedupCadence:
         w = self._watcher(store)
         w._sweep_count = 4
         with (
-            patch("kiro_crew.knowledge.watcher.KiroCrewConfig") as cfg,
-            patch("kiro_crew.knowledge.watcher.dedup_sweep", side_effect=RuntimeError("locked")),
+            patch("aj_crew.knowledge.watcher.AjCrewConfig") as cfg,
+            patch("aj_crew.knowledge.watcher.dedup_sweep", side_effect=RuntimeError("locked")),
         ):
             cfg.load.return_value = self._cfg(4)
             await w._maybe_dedup_sweep()  # contained, must not raise
@@ -1202,8 +1202,8 @@ class TestScheduledDedupCadence:
     async def test_an_unreadable_cadence_setting_skips_the_pass(self, store):
         w = self._watcher(store)
         with (
-            patch("kiro_crew.knowledge.watcher.KiroCrewConfig") as cfg,
-            patch("kiro_crew.knowledge.watcher.dedup_sweep") as sweep,
+            patch("aj_crew.knowledge.watcher.AjCrewConfig") as cfg,
+            patch("aj_crew.knowledge.watcher.dedup_sweep") as sweep,
         ):
             cfg.load.side_effect = RuntimeError("no config")
             await w._maybe_dedup_sweep()

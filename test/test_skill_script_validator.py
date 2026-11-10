@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from kiro_crew.skills_script_validator import validate_scripts, validate_skill_script
+from aj_crew.skills_script_validator import validate_scripts, validate_skill_script
 
 
 def test_clean_python_script_passes():

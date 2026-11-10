@@ -33,9 +33,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard.chat import api_chat_slot_reload, api_chat_slot_reset_conversation
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard.chat import api_chat_slot_reload, api_chat_slot_reset_conversation
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 _ALIAS_A = "alias-a"
 _ALIAS_B = "alias-b"

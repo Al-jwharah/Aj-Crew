@@ -12,9 +12,9 @@ from __future__ import annotations
 import pytest
 from kas_agents_helpers import _spec
 
-from kiro_crew.acp import kas_agents
-from kiro_crew.acp.kas_agents import spec_keys_without_carrier, to_client_custom_agent
-from kiro_crew.dashboard.chat_turn.tool_approval import _spec_keys_notice
+from aj_crew.acp import kas_agents
+from aj_crew.acp.kas_agents import spec_keys_without_carrier, to_client_custom_agent
+from aj_crew.dashboard.chat_turn.tool_approval import _spec_keys_notice
 
 _SECRET = "placeholder-client-secret-value"
 _CLIENT_ID = "placeholder-client-id"
@@ -48,7 +48,7 @@ class TestProjection:
         assert "oauth" not in out["mcpServers"]["slack-example"]
 
     def test_the_log_names_keys_and_never_values(self, caplog):
-        with caplog.at_level("DEBUG", logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level("DEBUG", logger="aj_crew.acp.kas_agents"):
             to_client_custom_agent("a", _remote(), "p")
         assert "slack-example" in caplog.text
         assert "oauth block (4 keys)" in caplog.text
@@ -60,14 +60,14 @@ class TestProjection:
 
     def test_any_key_is_counted_not_named(self, caplog):
         spec = _spec(mcpServers={"s": {"url": "https://x.example", "oauth": {"tok3n": _SECRET}}})
-        with caplog.at_level("INFO", logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level("INFO", logger="aj_crew.acp.kas_agents"):
             to_client_custom_agent("a", spec, "p")
         assert "oauth block (1 keys)" in caplog.text
         assert "tok3n" not in caplog.text and _SECRET not in caplog.text
 
     def test_a_non_object_block_is_withheld_and_named_without_its_value(self, caplog):
         spec = _spec(mcpServers={"s": {"url": "https://mcp.example.com", "oauth": _SECRET}})
-        with caplog.at_level("INFO", logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level("INFO", logger="aj_crew.acp.kas_agents"):
             out = to_client_custom_agent("a", spec, "p")
         assert "oauth" not in out["mcpServers"]["s"]
         assert "oauth block (0 keys)" in caplog.text

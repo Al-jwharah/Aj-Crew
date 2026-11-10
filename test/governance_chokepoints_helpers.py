@@ -12,10 +12,10 @@ import dataclasses
 
 import pytest
 
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.governance import parse_policy
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.governance import parse_policy
 
 
 @pytest.fixture(autouse=True)
@@ -30,8 +30,8 @@ def _isolate(tmp_path, _floor_monkeypatch):
 
 
 def _install(policy_body):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    base = build_default_context(KiroCrewConfig.load())
+    base = build_default_context(AjCrewConfig.load())
     ceiling = parse_policy(policy_body) if policy_body is not None else None
     ctx_mod.set_context(dataclasses.replace(base, governance=ceiling))

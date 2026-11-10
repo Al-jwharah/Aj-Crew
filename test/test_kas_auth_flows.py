@@ -8,21 +8,21 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.auth.login import builder_id
-from kiro_crew.auth.login.builder_id import BuilderIdAuthError, RegisteredClient
-from kiro_crew.auth.login.portal import (
+from aj_crew.auth.login import builder_id
+from aj_crew.auth.login.builder_id import BuilderIdAuthError, RegisteredClient
+from aj_crew.auth.login.portal import (
     PortalAuthError,
     exchange_code,
 )
-from kiro_crew.auth.provider import KasAuthProvider, NotAuthenticated
-from kiro_crew.auth.refresh import (
+from aj_crew.auth.provider import KasAuthProvider, NotAuthenticated
+from aj_crew.auth.refresh import (
     IdentitySignedOut,
     RefreshBlocked,
     RefreshError,
     RefreshRejected,
     ensure_fresh,
 )
-from kiro_crew.auth.store import KasToken, SocialProvider, TokenStore
+from aj_crew.auth.store import KasToken, SocialProvider, TokenStore
 
 pytestmark = pytest.mark.asyncio
 

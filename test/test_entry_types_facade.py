@@ -1,6 +1,6 @@
 """The entry-type registry keeps its content, its order and its one import path.
 
-``kiro_crew.crew_log.entry_types`` composes the session table from five family owners
+``aj_crew.crew_log.entry_types`` composes the session table from five family owners
 (``entry_types_lifecycle``, ``entry_types_exchange``, ``entry_types_delegated``,
 ``entry_types_ledgers``, ``entry_types_surfaces``) written over one leaf,
 ``entry_types_fields``, and stays the module callers, tests and documents import from.
@@ -36,15 +36,15 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-import kiro_crew.crew_log as crew_log_package
-from kiro_crew.crew_log import entry_types
-from kiro_crew.crew_log.schema import KIND_CREW, KIND_SESSION
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew.crew_log as crew_log_package
+from aj_crew.crew_log import entry_types
+from aj_crew.crew_log.schema import KIND_CREW, KIND_SESSION
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_entry_types_facade")
 
-FACADE = "kiro_crew.crew_log.entry_types"
-LEAF = "kiro_crew.crew_log.entry_types_fields"
+FACADE = "aj_crew.crew_log.entry_types"
+LEAF = "aj_crew.crew_log.entry_types_fields"
 CREW_LOG_DIR = Path(entry_types.__file__).resolve().parent
 
 #: Each kind's declarations when the registry was split into owners: type, then the
@@ -149,7 +149,7 @@ def _paste(kind: str, specs) -> str:
 
 def _owner_paths() -> dict[str, Path]:
     return {
-        f"kiro_crew.crew_log.{path.stem}": path
+        f"aj_crew.crew_log.{path.stem}": path
         for path in sorted(CREW_LOG_DIR.glob("entry_types_*.py"))
     }
 
@@ -179,11 +179,11 @@ def _parsed(path: Path) -> ast.Module:
 def test_the_session_table_is_its_owners_types_in_owner_order() -> None:
     owners = entry_types._SESSION_OWNERS
     assert [owner.__name__ for owner in owners] == [
-        "kiro_crew.crew_log.entry_types_lifecycle",
-        "kiro_crew.crew_log.entry_types_exchange",
-        "kiro_crew.crew_log.entry_types_delegated",
-        "kiro_crew.crew_log.entry_types_ledgers",
-        "kiro_crew.crew_log.entry_types_surfaces",
+        "aj_crew.crew_log.entry_types_lifecycle",
+        "aj_crew.crew_log.entry_types_exchange",
+        "aj_crew.crew_log.entry_types_delegated",
+        "aj_crew.crew_log.entry_types_ledgers",
+        "aj_crew.crew_log.entry_types_surfaces",
     ]
     composed = [spec for owner in owners for spec in owner.TYPES]
     assert len(composed) == len(entry_types._SESSION_TYPES)
@@ -261,7 +261,7 @@ def test_every_sibling_that_declares_types_is_an_owner() -> None:
     assert LEAF not in declaring
 
 
-def _imported_modules(tree: ast.AST, package: str = "kiro_crew.crew_log") -> set[str]:
+def _imported_modules(tree: ast.AST, package: str = "aj_crew.crew_log") -> set[str]:
     """Every module *tree* imports, anywhere in it, with relative imports resolved."""
     found: set[str] = set()
     for node in ast.walk(tree):
@@ -275,7 +275,7 @@ def _imported_modules(tree: ast.AST, package: str = "kiro_crew.crew_log") -> set
             found.add(base)
             found.update(f"{base}.{alias.name}" for alias in node.names)
         elif isinstance(node, ast.Constant) and isinstance(node.value, str):
-            if node.value.startswith("kiro_crew."):
+            if node.value.startswith("aj_crew."):
                 found.add(node.value)
     return found
 
@@ -287,18 +287,18 @@ def _imports_the_facade(source: str) -> bool:
 @pytest.mark.parametrize(
     ("source", "expected"),
     [
-        ("import kiro_crew.crew_log.entry_types\n", True),
-        ("from kiro_crew.crew_log import entry_types\n", True),
-        ("from kiro_crew.crew_log.entry_types import Field\n", True),
+        ("import aj_crew.crew_log.entry_types\n", True),
+        ("from aj_crew.crew_log import entry_types\n", True),
+        ("from aj_crew.crew_log.entry_types import Field\n", True),
         ("from . import entry_types\n", True),
         ("from .entry_types import Field\n", True),
         (
-            "def f():\n    import importlib\n    importlib.import_module('kiro_crew.crew_log.entry_types')\n",
+            "def f():\n    import importlib\n    importlib.import_module('aj_crew.crew_log.entry_types')\n",
             True,
         ),
-        ("from kiro_crew.crew_log.entry_types_fields import Field\n", False),
-        ("from kiro_crew.crew_log import entry_types_fields\n", False),
-        ("x = 'kiro_crew.crew_log.entry_types_ledgers'\n", False),
+        ("from aj_crew.crew_log.entry_types_fields import Field\n", False),
+        ("from aj_crew.crew_log import entry_types_fields\n", False),
+        ("x = 'aj_crew.crew_log.entry_types_ledgers'\n", False),
     ],
 )
 def test_the_facade_import_detector_answers_both_ways(source: str, expected: bool) -> None:
@@ -314,7 +314,7 @@ def test_owners_never_import_the_facade() -> None:
 def test_the_leaf_imports_nothing_from_the_project_and_families_import_no_family() -> None:
     paths = _owner_paths()
     leaf_imports = _imported_modules(_parsed(paths[LEAF]))
-    assert sorted(m for m in leaf_imports if m.startswith("kiro_crew")) == []
+    assert sorted(m for m in leaf_imports if m.startswith("aj_crew")) == []
     for name, path in paths.items():
         imported = {m for m in _imported_modules(_parsed(path)) if m in paths or m == FACADE}
         assert imported <= ({LEAF} - {name}), (name, imported)
@@ -381,8 +381,8 @@ def test_the_package_serves_the_facades_objects() -> None:
 # --------------------------------------------------------------------------- #
 
 #: The facade's own spelling, and the package's: a patch of a name the package forwards
-#: to the facade lands on the facade, since ``kiro_crew.crew_log`` writes through.
-_SPELLINGS = {FACADE: FACADE, "kiro_crew.crew_log": "kiro_crew.crew_log"}
+#: to the facade lands on the facade, since ``aj_crew.crew_log`` writes through.
+_SPELLINGS = {FACADE: FACADE, "aj_crew.crew_log": "aj_crew.crew_log"}
 _FORWARDED = frozenset(
     n for n, owner in crew_log_package._EXPORTS.items() if owner == "entry_types"
 )
@@ -392,17 +392,17 @@ def _names_patched_through_the_facade(source: str) -> set[str]:
     """The names *source* patches on the facade, directly or through a name the package
     forwards to it, as the shared scanner (:mod:`facade_mirror_scan`) reads them."""
     found = facade_mirror_scan.patched_names(source, _SPELLINGS)
-    return found.get(FACADE, set()) | (found.get("kiro_crew.crew_log", set()) & _FORWARDED)
+    return found.get(FACADE, set()) | (found.get("aj_crew.crew_log", set()) & _FORWARDED)
 
 
 def test_the_patch_scan_reads_the_facade_and_the_forwarding_package() -> None:
     """The wiring above; the scanner's own spellings are tested with the scanner."""
     source = (
-        "import kiro_crew.crew_log as pkg\n"
-        "from kiro_crew.crew_log import entry_types as reg\n"
+        "import aj_crew.crew_log as pkg\n"
+        "from aj_crew.crew_log import entry_types as reg\n"
         "def t(monkeypatch):\n"
         "    monkeypatch.setattr(reg, 'RADAR_PHASES', ())\n"
-        "    monkeypatch.setattr('kiro_crew.crew_log.entry_types.PANEL_FOLD_NAME', 'x')\n"
+        "    monkeypatch.setattr('aj_crew.crew_log.entry_types.PANEL_FOLD_NAME', 'x')\n"
         "    monkeypatch.setattr(pkg, 'Field', 1)\n"
         "    monkeypatch.setattr(pkg, 'CrewLog', 1)\n"
     )
@@ -454,7 +454,7 @@ def test_the_family_modules_hold_nothing_that_runs_after_import() -> None:
     field builder are the one other exception."""
     allowed = {
         LEAF: {"Field", "EntryType", "_turn"},
-        "kiro_crew.crew_log.entry_types_surfaces": {"_conversation_row"},
+        "aj_crew.crew_log.entry_types_surfaces": {"_conversation_row"},
     }
     for name, path in _owner_paths().items():
         defined = {

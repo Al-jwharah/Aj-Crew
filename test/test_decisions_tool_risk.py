@@ -23,11 +23,11 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.decisions import gate
-from kiro_crew.decisions import log as _log
-from kiro_crew.decisions.points import skills_select as sel
-from kiro_crew.decisions.points import tool_risk as tr
-from kiro_crew.decisions.types import Answer
+from aj_crew.decisions import gate
+from aj_crew.decisions import log as _log
+from aj_crew.decisions.points import skills_select as sel
+from aj_crew.decisions.points import tool_risk as tr
+from aj_crew.decisions.types import Answer
 
 #: The append ceiling these tests run under, in place of the production
 #: :data:`tr.LOG_BUDGET_SECS` (0.05 s). The tests here assert on the RECORD, and a
@@ -99,7 +99,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 #: The module spec, which names the bar's constant, and the operator doc, which
 #: prints only the number a reader sees on the card.
 _SPEC = _REPO_ROOT / "docs" / "system-specs" / "modules" / "decisions.md"
-_OPERATOR_DOC = _REPO_ROOT / "src" / "kiro_crew" / "docs" / "decisions.md"
+_OPERATOR_DOC = _REPO_ROOT / "src" / "aj_crew" / "docs" / "decisions.md"
 
 
 # ── the record it returns ─────────────────────────────────────────────────────
@@ -300,7 +300,7 @@ class TestTheRequest:
         def _boom(_text):
             raise RuntimeError("scanner down")
 
-        with patch("kiro_crew.security.redact_credentials", _boom):
+        with patch("aj_crew.security.redact_credentials", _boom):
             assert tr.scrubbed("anything at all", 100) == ""
 
 

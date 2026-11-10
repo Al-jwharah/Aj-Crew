@@ -2,7 +2,7 @@
 
 Lives in the repo-level ``test/`` tree (not the app's in-package ``tests/``)
 because ``setup.cfg`` sets ``testpaths = test transfer`` — a test under
-``src/kiro_crew/apps/builtins/...`` is never collected by CI.
+``src/aj_crew/apps/builtins/...`` is never collected by CI.
 
 The library is the only part of this app that WRITES on a browser request, so the
 tests cover the validation ladder (name grammar, content sniffing, size caps,
@@ -22,7 +22,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from kiro_crew.apps.builtins.pptx_maker.backend import engine, library
+from aj_crew.apps.builtins.pptx_maker.backend import engine, library
 
 
 class _LibraryFixture(unittest.TestCase):

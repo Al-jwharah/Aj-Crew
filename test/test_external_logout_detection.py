@@ -22,7 +22,7 @@ import pytest
 from external_logout_detection_helpers import _private_sel_root_per_test  # noqa: F401
 from external_logout_detection_helpers import _write_store
 
-from kiro_crew import kiro_prerequisite as kp
+from aj_crew import kiro_prerequisite as kp
 
 
 def _simulate_unsearchable_directory(monkeypatch: pytest.MonkeyPatch, directory: Path) -> None:
@@ -390,7 +390,7 @@ class TestIdentityFingerprint:
     def test_the_audit_id_is_registered(self) -> None:
         """An unregistered id is refused by the hook, which would fail every read."""
 
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         assert kp._IDENTITY_FINGERPRINT_READ_ID in hooks._AUDIT_ONLY_READ_IDS
 
@@ -793,7 +793,7 @@ class TestApiKeyIdentity:
         """The proof comes from the key claim's own read: a later read that succeeds
         cannot vouch for the one that failed, because the key may be in the file."""
 
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         self._write_empty_store(tmp_path)
         env_file = tmp_path / ".kiro" / "crew" / ".env"
@@ -820,8 +820,8 @@ class TestApiKeyIdentity:
     ) -> None:
         """The token store reads a corrupt vault as empty; the proof must not."""
 
-        from kiro_crew.auth import bridge
-        from kiro_crew.auth.store import TokenStore
+        from aj_crew.auth import bridge
+        from aj_crew.auth.store import TokenStore
 
         vault = TokenStore(tmp_path / "vault-home")
         entries = tmp_path / "vault-home" / "kas" / ".vault" / "secrets.enc"
@@ -902,8 +902,8 @@ class TestApiKeyIdentity:
     ) -> None:
         """Only a missing entry map is an empty vault, not one the gateway may not see."""
 
-        from kiro_crew.auth import bridge
-        from kiro_crew.auth.store import TokenStore
+        from aj_crew.auth import bridge
+        from aj_crew.auth.store import TokenStore
 
         vault = TokenStore(tmp_path / "vault-home")
         vault_dir = tmp_path / "vault-home" / "kas" / ".vault"
@@ -1065,8 +1065,8 @@ class TestApiKeyIdentity:
         """Couples the guard to the REAL provider/client/runtime shapes, so a
         rename of the attributes it reads fails here instead of failing open."""
 
-        from kiro_crew.acp.runtime import AcpRuntime
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.acp.runtime import AcpRuntime
+        from aj_crew.providers.acp import AcpProvider
 
         overlay = {"KIRO_API_KEY": "b"}
         assert kp.overlay_sets_api_key(AcpProvider(extra_env=overlay)) is True
@@ -1090,8 +1090,8 @@ class TestApiKeyIdentity:
         child and a cli-owned KAS relay ARE handed the key, so they keep the
         whole-fingerprint spare."""
 
-        from kiro_crew.acp.runtime import AcpRuntime
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.acp.runtime import AcpRuntime
+        from aj_crew.providers.acp import AcpProvider
 
         sep, vault = kp._API_KEY_FINGERPRINT_SEP, kp._CREW_VAULT_FINGERPRINT_SEP
         stamp, rotated = f"s1{sep}k1{vault}v1", f"s1{sep}k2{vault}v1"

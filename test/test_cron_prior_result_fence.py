@@ -10,18 +10,18 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.context import ContextBuilder
-from kiro_crew.context_assembly.markers import (
+from aj_crew.context import ContextBuilder
+from aj_crew.context_assembly.markers import (
     UNTRUSTED_CRON_RESULT_FENCE_CLOSE,
     UNTRUSTED_CRON_RESULT_FENCE_OPEN,
     _neutralize_context_payload,
     _neutralize_dashed_turn_fences,
 )
-from kiro_crew.cron_service.identity import build_cron_session_context, cron_prior_result_context
-from kiro_crew.cron_service.model import CronJob
-from kiro_crew.learn import LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew.cron_service.identity import build_cron_session_context, cron_prior_result_context
+from aj_crew.cron_service.model import CronJob
+from aj_crew.learn import LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 # A boundary marker in carried-over text, beside an ordinary line that must survive.
 _CARRIED_LINE = "next step: https://example.invalid/x"
@@ -154,7 +154,7 @@ class TestTheNextRunsPrompt:
 
     def test_the_openai_compat_fences_in_the_turn_survive(self, tmp_path):
         """The endpoint's own fences live in the turn text, which this scrub never touches."""
-        from kiro_crew.dashboard.openai_compat import _flatten_messages
+        from aj_crew.dashboard.openai_compat import _flatten_messages
 
         flat = _flatten_messages(
             [
@@ -191,7 +191,7 @@ class TestEveryContextPayloadIsScrubbed:
 
     @pytest.mark.parametrize("rules_prefix", [False, True], ids=["plain", "after-rules"])
     def test_the_session_context_tail(self, tmp_path, monkeypatch, rules_prefix):
-        from kiro_crew import context as ctx
+        from aj_crew import context as ctx
 
         builder = _builder(tmp_path)
         head = ctx._CRITICAL_RULES if rules_prefix else ""

@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.changelog import base_version, build_release_list, parse_sections, running_release
+from aj_crew.changelog import base_version, build_release_list, parse_sections, running_release
 
 # Shaped after the repo's real CHANGELOG.md: an em dash in the heading, a title
 # and preamble before the first section, and h3 subsections inside the body.
 REAL_SHAPE = """# Changelog
 
-All notable changes to Kiro Crew are documented in this file.
+All notable changes to Aj Crew are documented in this file.
 
 ## [0.1.2] — 2026-07-30
 

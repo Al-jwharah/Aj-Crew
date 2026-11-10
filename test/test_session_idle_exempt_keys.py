@@ -17,10 +17,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.config.loader import _build_session_config
-from kiro_crew.config.sections import IDLE_EXEMPT_KEY_MAX_CHARS, IDLE_EXEMPT_KEYS_MAX, POOL_SIZE_MAX
-from kiro_crew.session import SessionManager
+from aj_crew.config import AjCrewConfig
+from aj_crew.config.loader import _build_session_config
+from aj_crew.config.sections import IDLE_EXEMPT_KEY_MAX_CHARS, IDLE_EXEMPT_KEYS_MAX, POOL_SIZE_MAX
+from aj_crew.session import SessionManager
 
 EXEMPT_KEY = "dashboard:chat-1-1790000000"
 # Extend the listed key so the test rejects prefix or substring exemptions.
@@ -41,7 +41,7 @@ def _provider_factory():
 
 
 def _manager(*exempt_keys: str) -> SessionManager:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session.idle_exempt_keys = list(exempt_keys)
     return SessionManager(cfg, provider_factory=_provider_factory())
 
@@ -125,9 +125,9 @@ async def test_the_rss_recycle_still_resets_a_listed_session() -> None:
     # The stubs are the /proc route's measurement, so pin that route: a Windows host would
     # otherwise measure the fake pid for real and read it as under the ceiling.
     with (
-        patch("kiro_crew.session.platform_compat.IS_WINDOWS", False),
-        patch("kiro_crew.session._build_child_map", return_value={}),
-        patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
+        patch("aj_crew.session.platform_compat.IS_WINDOWS", False),
+        patch("aj_crew.session._build_child_map", return_value={}),
+        patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
     ):
         await manager._rss_threshold_check()
 
@@ -161,7 +161,7 @@ def test_the_loader_keeps_only_the_first_bounded_number_of_keys(
 ) -> None:
     keys = [f"dashboard:{index}" for index in range(IDLE_EXEMPT_KEYS_MAX + 3)]
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
         loaded = _build_session_config({"idle_exempt_keys": keys})
 
     assert loaded.idle_exempt_keys == keys[:IDLE_EXEMPT_KEYS_MAX]
@@ -176,7 +176,7 @@ def test_the_loader_drops_an_overlong_key_without_truncating_it(
     overlong = "o" * (IDLE_EXEMPT_KEY_MAX_CHARS + 1)
     padded = "  " + "p" * IDLE_EXEMPT_KEY_MAX_CHARS + "  "
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
         loaded = _build_session_config({"idle_exempt_keys": [exact, overlong, padded]})
 
     assert loaded.idle_exempt_keys == [exact, padded.strip()]
@@ -191,7 +191,7 @@ def test_an_overlong_key_does_not_consume_a_bounded_slot(
     overlong = "o" * (IDLE_EXEMPT_KEY_MAX_CHARS + 1)
     valid = [f"cron:{index}" for index in range(IDLE_EXEMPT_KEYS_MAX)]
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
         loaded = _build_session_config({"idle_exempt_keys": [overlong, *valid]})
 
     assert loaded.idle_exempt_keys == valid
@@ -203,7 +203,7 @@ def test_a_list_within_both_bounds_loads_without_a_warning(
 ) -> None:
     keys = [" dashboard:a ", "cron:b"]
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
         loaded = _build_session_config({"idle_exempt_keys": keys})
 
     assert loaded.idle_exempt_keys == ["dashboard:a", "cron:b"]
@@ -215,11 +215,11 @@ def test_config_json_reaches_the_session_config(tmp_path: Path) -> None:
     config_file.write_text(json.dumps({"session": {"idle_exempt_keys": [f" {EXEMPT_KEY} "]}}))
 
     with (
-        patch("kiro_crew.config.loader.config_path", return_value=config_file),
+        patch("aj_crew.config.loader.config_path", return_value=config_file),
         patch(
-            "kiro_crew.config.loader.config_local_path", return_value=tmp_path / "config.local.json"
+            "aj_crew.config.loader.config_local_path", return_value=tmp_path / "config.local.json"
         ),
     ):
-        loaded = KiroCrewConfig.load()
+        loaded = AjCrewConfig.load()
 
     assert loaded.session.idle_exempt_keys == [EXEMPT_KEY]

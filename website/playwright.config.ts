@@ -117,7 +117,7 @@ export default defineConfig({
       : []),
   ],
 
-  // Note: Make sure kirocrew gateway is running on port 5476 before running tests
-  // Run: kirocrew gateway
+  // Note: Make sure ajcrew gateway is running on port 5476 before running tests
+  // Run: ajcrew gateway
   webServer: undefined,
 })

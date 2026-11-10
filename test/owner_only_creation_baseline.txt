@@ -1,6 +1,6 @@
-# Umask-mode creation sites per file under src/kiro_crew when the owner-only
+# Umask-mode creation sites per file under src/aj_crew when the owner-only
 # creation ratchet landed. Read by test/test_owner_only_creation_ratchet.py;
-# one "<count> <path under src/kiro_crew/>" per line.
+# one "<count> <path under src/aj_crew/>" per line.
 # RATCHET: a count may only go down (delete the line at zero); never raise or add one.
 # `python test/test_owner_only_creation_ratchet.py --write-baseline` lowers every
 # line to its real count and drops files that are gone; it never raises or adds.

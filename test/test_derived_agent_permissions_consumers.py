@@ -12,7 +12,7 @@ pins WHERE the fallback is spelled. The IMPORT half of the invariant is
 already held by the live CI boundary gate -- after this migration pruned
 ``agent.py`` from ``.github/agent-sdk-boundary-baseline.txt`` (shrink-only),
 ``scripts/check_agent_sdk_boundary.py`` reds any re-grown
-``kiro_crew.acp.kas_permissions`` import in application code, including the
+``aj_crew.acp.kas_permissions`` import in application code, including the
 dynamic-import spellings a second scanner would miss. This module guards only
 the half nothing else covers: the fallback expression itself re-growing
 around some other derive path.
@@ -28,7 +28,7 @@ from __future__ import annotations
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SRC_ROOT = REPO_ROOT / "src" / "kiro_crew"
+SRC_ROOT = REPO_ROOT / "src" / "aj_crew"
 
 #: Trees allowed to spell the fallback, as ``as_posix()`` prefixes relative
 #: to the repo root (Windows ``relative_to`` yields backslashes; the table
@@ -39,8 +39,8 @@ SRC_ROOT = REPO_ROOT / "src" / "kiro_crew"
 #: - the ``agent_sdk`` driver, whose ``derived_agent_permissions`` wrapper is
 #:   the one legitimate spelling.
 ALLOWED_PREFIXES = (
-    "src/kiro_crew/acp/",
-    "src/kiro_crew/agent_sdk/drivers/acp.py",
+    "src/aj_crew/acp/",
+    "src/aj_crew/agent_sdk/drivers/acp.py",
 )
 
 #: Vendored third-party code: not ours, never spells the fallback, and

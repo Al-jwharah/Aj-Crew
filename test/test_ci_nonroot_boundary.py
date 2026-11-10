@@ -22,7 +22,7 @@ _LARGE = _CANONICAL_CONSUMER_EXPR_LARGE
 # larger-runner group where it can reach one.
 _GROUP_LINUX_ELSE_HOSTED = (
     "${{ github.repository == 'kirodotdev/KiroCrew' "
-    "&& 'kirocrew-linux-4-core' || 'ubuntu-latest' }}"
+    "&& 'ajcrew-linux-4-core' || 'ubuntu-latest' }}"
 )
 
 
@@ -159,7 +159,7 @@ def test_privilege_transition_only_goes_down_and_temp_stays_root_owned(action):
     assert 'if [ "$(id -u)" != "0" ]' in code
     assert 'exec bash --noprofile --norc -eo pipefail "$1"' in code
     assert "exec runuser -m -u runner -- env --default-signal=INT" in code
-    assert "HOME=/home/runner USER=runner LOGNAME=runner KIROCREW_LOCK_TEST_ROOT=/dev/shm" in code
+    assert "HOME=/home/runner USER=runner LOGNAME=runner AJCREW_LOCK_TEST_ROOT=/dev/shm" in code
     assert 'test "$(stat -f -c %T /dev/shm)" = tmpfs' in code
     assert "ldconfig" in code and "--no-install-recommends lsof" in code
     assert code.count("sha256sum -c -") == code.count("curl ") == 1
@@ -260,9 +260,9 @@ def test_private_namespace_lane_is_the_only_e2e_step_left_hosted(jobs):
         "python -m pytest -q -n0 --no-cov --timeout=600 test/e2e/test_private_workflow_memory.py",
     ]
     assert private["env"] == {
-        "KIROCREW_E2E": "1",
-        "KIROCREW_E2E_REQUIRE": "1",
-        "KIROCREW_STRICT_ON_LOOP_PERSIST": "1",
+        "AJCREW_E2E": "1",
+        "AJCREW_E2E_REQUIRE": "1",
+        "AJCREW_STRICT_ON_LOOP_PERSIST": "1",
     }
     assert "if" not in private and "continue-on-error" not in private
     e2e_text = "\n".join(str(step) for step in jobs["e2e"]["steps"])

@@ -3,7 +3,7 @@
  * value its controls show and the two writes (a key patch, the default memory mode),
  * plus the Discovery page's Feature Tips and feature-video reads. `ChatPanel` calls
  * it once per render, after the optimistic overlay it reads and before its own
- * kirocrewConfig read.
+ * ajcrewConfig read.
  */
 import { useQuery, useMutation, type QueryClient } from '@tanstack/react-query'
 import type { DashboardConfig, MemoryMode } from '../chat/ChatSettings'
@@ -139,7 +139,7 @@ export function useChatPanelDashboard({
   // mutation already does it: the config handler applies whichever keys the body
   // carries, so a full-object PUT rebuilt from this tab's cache would write every
   // OTHER setting back at its cached value -- clobbering one that a second tab
-  // (or `kirocrew config set`) changed after we cached it.
+  // (or `ajcrew config set`) changed after we cached it.
   //
   // The overlay still displays and caches the WHOLE object, so the patch is
   // merged in both places. Merging onto the SHOWN config rather than the server

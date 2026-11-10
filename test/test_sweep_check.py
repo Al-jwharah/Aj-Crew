@@ -35,9 +35,9 @@ repo_pair = push_guard_helpers.repo_pair
 SCRIPT = push_guard_helpers.PUSH_GUARD_DIR / "sweep_check.py"
 SPAN = "abcdef012345"
 CLASS = "a git hook can come from a source other than core.hooksPath"
-SEARCH = "git grep -nE 'hooksPath' -- src/kiro_crew"
-A = "src/kiro_crew/a.py"
-B = "src/kiro_crew/b.py"
+SEARCH = "git grep -nE 'hooksPath' -- src/aj_crew"
+A = "src/aj_crew/a.py"
+B = "src/aj_crew/b.py"
 REASON = "reads the name only, never runs the command"
 
 
@@ -226,7 +226,7 @@ class TestRefusals:
         assert "REFUSED" in err and "no site line accounts for" in err and f"{B}:2" in err
 
     def test_a_vacuous_pattern_is_refused(self, clone, monkeypatch, capsys):
-        text = _entry(search="git grep -nE 'neverAppears' -- src/kiro_crew")
+        text = _entry(search="git grep -nE 'neverAppears' -- src/aj_crew")
         rc, err = _refused(_mod(), clone, text, monkeypatch, capsys, counts={})
         assert rc == 40 and "matches nothing in the tree before the fix" in err
 
@@ -280,8 +280,8 @@ class TestRefusals:
     @pytest.mark.parametrize(
         "search",
         [
-            "git grep -nE '-oops' -- src/kiro_crew",
-            "git grep -e hooksPath -- src/kiro_crew",
+            "git grep -nE '-oops' -- src/aj_crew",
+            "git grep -e hooksPath -- src/aj_crew",
             "git grep --open-files-in-pager=touch hooksPath",
             "git grep --no-index hooksPath",
             "git grep -nE hooksPath -- :(top)src",
@@ -299,7 +299,7 @@ class TestRefusals:
 
     def test_the_pattern_reaches_git_as_data_not_through_a_shell(self, clone, monkeypatch, capsys):
         marker = Path(clone, "pwned")
-        text = _entry(search=f"git grep -nE 'hooksPath;touch {marker}' -- src/kiro_crew")
+        text = _entry(search=f"git grep -nE 'hooksPath;touch {marker}' -- src/aj_crew")
         rc, _ = _refused(_mod(), clone, text, monkeypatch, capsys, counts={})
         assert rc == 40 and not marker.exists()
 
@@ -867,22 +867,22 @@ class TestSearchSemantics:
     """The search means what it meant when the mate ran it, in both checks."""
 
     def test_git_default_basic_regex_alternation_is_kept(self, clone, monkeypatch):
-        text = _entry(search=r"git grep -n 'hooksPath\|nothingElse' -- src/kiro_crew")
+        text = _entry(search=r"git grep -n 'hooksPath\|nothingElse' -- src/aj_crew")
         assert _check(_mod(), clone, text, monkeypatch, counts={}) == 0
 
     def test_the_same_text_under_dash_e_is_a_literal_pipe_and_vacuous(
         self, clone, monkeypatch, capsys
     ):
-        text = _entry(search=r"git grep -nE 'hooksPath\|nothingElse' -- src/kiro_crew")
+        text = _entry(search=r"git grep -nE 'hooksPath\|nothingElse' -- src/aj_crew")
         rc, err = _refused(_mod(), clone, text, monkeypatch, capsys, counts={})
         assert rc == 40 and "matches nothing in the tree before the fix" in err
 
     def test_dash_e_alternation_still_works(self, clone, monkeypatch):
-        text = _entry(search="git grep -nE 'hooksPath|nothingElse' -- src/kiro_crew")
+        text = _entry(search="git grep -nE 'hooksPath|nothingElse' -- src/aj_crew")
         assert _check(_mod(), clone, text, monkeypatch, counts={}) == 0
 
     def test_a_fixed_string_search_is_literal(self, clone, monkeypatch, capsys):
-        text = _entry(search="git grep -nF 'hooks.Path' -- src/kiro_crew")
+        text = _entry(search="git grep -nF 'hooks.Path' -- src/aj_crew")
         rc, err = _refused(_mod(), clone, text, monkeypatch, capsys, counts={})
         assert rc == 40 and "matches nothing" in err
 
@@ -892,12 +892,12 @@ class TestSearchSemantics:
         _git(clone, "push", "-q", "origin", "feature/x")
         _commit_tree(clone, {A: "x = 1\nhooks_path = 1\n"}, "fix: a3")
         text = _entry(
-            search="git grep -nE legacy_token -- src/kiro_crew", sites=(f"- {A}:2  fixed",)
+            search="git grep -nE legacy_token -- src/aj_crew", sites=(f"- {A}:2  fixed",)
         )
         assert _check(_mod(), clone, text, monkeypatch, counts={}) == 0
 
     def test_an_unpushed_token_is_vacuous(self, clone, monkeypatch, capsys):
-        text = _entry(search="git grep -nE hooks_path -- src/kiro_crew", sites=(f"- {A}:2  fixed",))
+        text = _entry(search="git grep -nE hooks_path -- src/aj_crew", sites=(f"- {A}:2  fixed",))
         rc, err = _refused(_mod(), clone, text, monkeypatch, capsys, counts={})
         assert rc == 40 and "matches nothing" in err
 
@@ -906,7 +906,7 @@ class TestRunsFromTheRepositoryRoot:
     def test_a_check_started_in_a_subdirectory_reads_root_relative_searches(
         self, clone, monkeypatch
     ):
-        sub = Path(clone, "src", "kiro_crew")
+        sub = Path(clone, "src", "aj_crew")
         assert _check(_mod(), str(sub), _entry(), monkeypatch, counts={}) == 0
 
     def test_a_check_started_in_a_nested_directory_refuses_the_same_findings(
@@ -1021,7 +1021,7 @@ class TestBatchShimLaunch:
             return real(args)
 
         monkeypatch.setattr(guard, "tool_argv", argv)
-        text = _entry(search="git grep -nF 'hooksPath&calc&' -- src/kiro_crew")
+        text = _entry(search="git grep -nF 'hooksPath&calc&' -- src/aj_crew")
         git_dir = _git(clone, "rev-parse", "--absolute-git-dir")
         _write_sweep(git_dir, text)
         monkeypatch.setattr(mod, "SWEEP_ENFORCED", True)
@@ -1037,10 +1037,10 @@ class TestSearchParsing:
     @pytest.mark.parametrize(
         "search",
         [
-            "git grep -nFE 'a|b' -- src/kiro_crew",
-            "git grep -nEF 'a|b' -- src/kiro_crew",
-            "git grep -E -F hooksPath -- src/kiro_crew",
-            "git grep -F -n -E hooksPath -- src/kiro_crew",
+            "git grep -nFE 'a|b' -- src/aj_crew",
+            "git grep -nEF 'a|b' -- src/aj_crew",
+            "git grep -E -F hooksPath -- src/aj_crew",
+            "git grep -F -n -E hooksPath -- src/aj_crew",
         ],
     )
     def test_both_regex_modes_in_one_search_are_refused(self, clone, monkeypatch, capsys, search):
@@ -1049,9 +1049,9 @@ class TestSearchParsing:
 
     def test_a_single_mode_is_kept_whatever_the_flag_order(self, clone, monkeypatch):
         for search in (
-            "git grep -nFi hooksPATH -- src/kiro_crew",
-            "git grep -n -E 'hooksPath|zzz' -- src/kiro_crew",
-            "git grep -nE -i 'HOOKSPATH|zzz' -- src/kiro_crew",
+            "git grep -nFi hooksPATH -- src/aj_crew",
+            "git grep -n -E 'hooksPath|zzz' -- src/aj_crew",
+            "git grep -nE -i 'HOOKSPATH|zzz' -- src/aj_crew",
         ):
             assert _check(_mod(), clone, _entry(search=search), monkeypatch, counts={}) == 0, search
 
@@ -1098,14 +1098,14 @@ class TestSiteRows:
         assert rc == 40 and f"{B}:2" in err
 
     def test_non_ascii_and_spaced_file_names_are_matched_verbatim(self, clone, monkeypatch):
-        odd = "src/kiro_crew/my é file.py"
+        odd = "src/aj_crew/my é file.py"
         _commit_tree(clone, {odd: "x = 1\nhooksPath = 2\n"}, "fix: odd")
         sites = (f"- {A}:2  fixed", f"- {B}:2  not-in-class -- {REASON}", f"- {odd}  fixed")
         assert _check(_mod(), clone, _entry(sites=sites), monkeypatch, counts={}) == 0
 
     @needs_posix_names
     def test_a_file_name_with_colons_and_digits_is_matched_verbatim(self, clone, monkeypatch):
-        odd = "src/kiro_crew/my é:12:file.py"
+        odd = "src/aj_crew/my é:12:file.py"
         _commit_tree(clone, {odd: "x = 1\nhooksPath = 2\n"}, "fix: odd")
         sites = (f"- {A}:2  fixed", f"- {B}:2  not-in-class -- {REASON}", f"- {odd}  fixed")
         assert _check(_mod(), clone, _entry(sites=sites), monkeypatch, counts={}) == 0
@@ -1160,7 +1160,7 @@ class TestNamesFromTheSweep:
         assert rc == 40 and "is not in the diff" in err
 
     def test_a_path_with_a_space_in_the_diff_is_found(self, clone, monkeypatch):
-        spaced = "src/kiro_crew/two words.py"
+        spaced = "src/aj_crew/two words.py"
         _commit_tree(clone, {spaced: "x = 1\n"}, "fix: spaced")
         sites = (f"- {A}:2  fixed", f"- {B}:2  not-in-class -- {REASON}", f"- {spaced}  fixed")
         assert _check(_mod(), clone, _entry(sites=sites), monkeypatch, counts={}) == 0
@@ -1318,7 +1318,7 @@ class TestDelimiters:
     def test_a_file_name_with_a_newline_is_read_whole_and_listed_not_dropped(
         self, clone, monkeypatch, capsys
     ):
-        odd = "src/kiro_crew/line\nbreak.py"
+        odd = "src/aj_crew/line\nbreak.py"
         _commit_tree(clone, {odd: "hooksPath = 2\n"}, "fix: newline name")
         # a row is one line, so no row can name this file: it is listed as unaccounted
         sites = (f"- {A}:2  fixed", f"- {B}:2  not-in-class -- {REASON}")
@@ -1333,7 +1333,7 @@ class TestDelimiters:
 
     # 14-15: parts that already work, pinned
     def test_fields_and_the_search_line_accept_tabs_and_trailing_blanks(self, clone, monkeypatch):
-        text = _entry(search="git\tgrep\t-nE\t'hooksPath'\t--\tsrc/kiro_crew   ")
+        text = _entry(search="git\tgrep\t-nE\t'hooksPath'\t--\tsrc/aj_crew   ")
         text = text.replace("class: ", "class:\t").replace("sites:", "sites:   ")
         assert _check(_mod(), clone, text, monkeypatch, counts={}) == 0
 

@@ -1,6 +1,6 @@
-"""``kiro_crew.history_projection`` stays the import path and the patch surface of its family.
+"""``aj_crew.history_projection`` stays the import path and the patch surface of its family.
 
-The module keeps ``SessionMetadataProjection`` and is a ``kiro_crew._facade_mirror`` facade
+The module keeps ``SessionMetadataProjection`` and is a ``aj_crew._facade_mirror`` facade
 over two owners: ``history_projection_contract`` (the family's module-level vocabulary: the
 line states, the page and revision types, the read tuning and the logger) and
 ``history_projection_reads`` (``TranscriptReadProjection``). ``test_facade_mirror_guards``
@@ -22,12 +22,12 @@ from pathlib import Path
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew import history_projection as facade
+from aj_crew import _facade_mirror
+from aj_crew import history_projection as facade
 
-_FACADE = "kiro_crew.history_projection"
-_CONTRACT = "kiro_crew.history_projection_contract"
-_READS = "kiro_crew.history_projection_reads"
+_FACADE = "aj_crew.history_projection"
+_CONTRACT = "aj_crew.history_projection_contract"
+_READS = "aj_crew.history_projection_reads"
 _OWNERS = (_CONTRACT, _READS)
 
 
@@ -80,11 +80,11 @@ def _logs_under_own_name(source: str) -> bool:
 
 def test_the_own_name_logger_detector_answers_both_ways() -> None:
     assert _logs_under_own_name("import logging\nlog = logging.getLogger(__name__)\n")
-    assert not _logs_under_own_name('import logging\nlog = logging.getLogger("kiro_crew.x")\n')
+    assert not _logs_under_own_name('import logging\nlog = logging.getLogger("aj_crew.x")\n')
 
 
 def test_the_family_logs_on_the_history_logger() -> None:
-    logger = logging.getLogger("kiro_crew.history")
+    logger = logging.getLogger("aj_crew.history")
     for dotted in (_FACADE, *_OWNERS):
         assert vars(importlib.import_module(dotted))["_HISTORY_LOGGER"] is logger, dotted
         assert not _logs_under_own_name(_source(dotted)), dotted
@@ -157,8 +157,8 @@ def _owner_imports(tree: ast.Module) -> set[str]:
         if isinstance(node, ast.ImportFrom) and node.module:
             if node.module in _OWNERS:
                 found.add(node.module)
-            elif node.module == "kiro_crew":
-                found |= {f"kiro_crew.{a.name}" for a in node.names} & set(_OWNERS)
+            elif node.module == "aj_crew":
+                found |= {f"aj_crew.{a.name}" for a in node.names} & set(_OWNERS)
         elif isinstance(node, ast.Import):
             found |= {a.name for a in node.names} & set(_OWNERS)
     return found
@@ -166,16 +166,16 @@ def _owner_imports(tree: ast.Module) -> set[str]:
 
 def test_the_owner_import_scan_answers_both_ways() -> None:
     source = (
-        "from kiro_crew.history_projection_reads import TranscriptReadProjection\n"
-        "from kiro_crew import history_projection_contract, platform_compat\n"
-        "import kiro_crew.history_projection\n"
+        "from aj_crew.history_projection_reads import TranscriptReadProjection\n"
+        "from aj_crew import history_projection_contract, platform_compat\n"
+        "import aj_crew.history_projection\n"
     )
     assert _owner_imports(ast.parse(source)) == set(_OWNERS)
 
 
 def test_only_the_family_imports_an_owner() -> None:
-    """Callers keep importing ``kiro_crew.history_projection``; the owners are its own."""
-    family = {"kiro_crew/history_projection.py", "kiro_crew/history_projection_reads.py"}
+    """Callers keep importing ``aj_crew.history_projection``; the owners are its own."""
+    family = {"aj_crew/history_projection.py", "aj_crew/history_projection_reads.py"}
     root = source_corpus.src_root().parent
     offenders = sorted(
         path.relative_to(root).as_posix()

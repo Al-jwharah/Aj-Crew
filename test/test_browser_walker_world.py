@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.browser_harness import frames, helper_worker, ops, quick_ask
+from aj_crew.browser_harness import frames, helper_worker, ops, quick_ask
 
 
 def _ctx(seen: list[str]) -> ops.OpContext:

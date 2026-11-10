@@ -13,8 +13,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew import diagnose_probes as dp
+from aj_crew import change_card_catalog as catalog
+from aj_crew import diagnose_probes as dp
 
 #: A credential-shaped value the redactor recognises; it must never reach a finding.
 SECRET = "AKIA" + "Z7Q3XK2LM9PB4TWV"
@@ -50,18 +50,18 @@ class _State:
 @pytest.fixture
 def world(tmp_path, monkeypatch):
     """A private data home, kiro home and config, plus the in-memory seams."""
-    from kiro_crew import agent_discovery, model_registry
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.dashboard.handlers import sessions
+    from aj_crew import agent_discovery, model_registry
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.dashboard.handlers import sessions
 
     home = tmp_path / "crew"
     kiro = tmp_path / "kiro"
     (kiro / "agents").mkdir(parents=True)
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.setenv("KIRO_HOME", str(kiro))
-    cfg = KiroCrewConfig()
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    cfg = AjCrewConfig()
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
     monkeypatch.setattr(model_registry, "advertised_models", lambda ns: ["model-a", "auto"])
     monkeypatch.setattr(agent_discovery, "_LIST_AGENTS_CACHE", {})
     monkeypatch.setattr(sessions, "_usage_cache", {"available": True, "percentage": 10.0})
@@ -190,7 +190,7 @@ def test_pinned_model_the_account_does_not_offer(world):
 
 
 def test_model_pins_are_unknown_before_any_session_reported_models(world, monkeypatch):
-    from kiro_crew import model_registry
+    from aj_crew import model_registry
 
     world["cfg"].agent.model = "model-x"
     monkeypatch.setattr(model_registry, "advertised_models", lambda ns: [])
@@ -198,7 +198,7 @@ def test_model_pins_are_unknown_before_any_session_reported_models(world, monkey
 
 
 def test_config_naming_a_deprecated_agent_spec(world):
-    from kiro_crew.agent import DEPRECATED_AGENT_SPECS
+    from aj_crew.agent import DEPRECATED_AGENT_SPECS
 
     old, new = next(iter(DEPRECATED_AGENT_SPECS.items()))
     world["cfg"].agent.default_agent = old
@@ -432,7 +432,7 @@ def test_recent_tool_failures_grouped_by_tool(world):
 
 
 def test_used_up_plan_and_unreadable_balance(world, monkeypatch):
-    from kiro_crew.dashboard.handlers import sessions
+    from aj_crew.dashboard.handlers import sessions
 
     monkeypatch.setattr(
         sessions,
@@ -561,8 +561,8 @@ def test_no_probe_writes_to_disk(world, tmp_path):
 
 
 def test_diagnose_settings_carries_the_findings(world, monkeypatch):
-    from kiro_crew import context
-    from kiro_crew.dashboard import change_cards as cards
+    from aj_crew import context
+    from aj_crew.dashboard import change_cards as cards
 
     class _Mem:
         def read_history_entries(self, since=None):
@@ -587,7 +587,7 @@ def test_an_older_unit_left_open_by_a_crash_does_not_age_the_running_turn(world)
 
 
 def test_a_model_pin_is_resolved_for_the_configured_backend(world, monkeypatch):
-    from kiro_crew.agent_sdk.drivers import acp as acp_driver
+    from aj_crew.agent_sdk.drivers import acp as acp_driver
 
     seen: list[str] = []
 

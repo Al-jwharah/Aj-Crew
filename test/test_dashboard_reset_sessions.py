@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from aiohttp import web
 
-from kiro_crew.dashboard.handlers import _reset_all_sessions
+from aj_crew.dashboard.handlers import _reset_all_sessions
 
 
 class _FakeSession:
@@ -93,7 +93,7 @@ class TestResetAllSessionsShutdown:
         sessions = _FakeSessionManager([p1, p2])
         request, state = _make_request(sessions)
 
-        with patch("kiro_crew.dashboard.handlers._sync_kill_provider") as mock_kill:
+        with patch("aj_crew.dashboard.handlers._sync_kill_provider") as mock_kill:
             count = await _reset_all_sessions(request)
             # Wait for the background task to finish so we can observe side effects.
             for task in list(state._background_tasks):
@@ -118,7 +118,7 @@ class TestResetAllSessionsShutdown:
         # module (handlers.sessions), not the handlers package re-export —
         # ``_safe_shutdown`` reads the global from its own module, so patching
         # the re-export is a silent no-op and the test blocks the full 10s.
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.sessions._SHUTDOWN_TIMEOUT_SECS", 0.05)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.sessions._SHUTDOWN_TIMEOUT_SECS", 0.05)
 
         async def _never_returns() -> None:
             await asyncio.sleep(60)
@@ -130,7 +130,7 @@ class TestResetAllSessionsShutdown:
         sessions = _FakeSessionManager([hung, healthy])
         request, state = _make_request(sessions)
 
-        with patch("kiro_crew.dashboard.handlers._sync_kill_provider") as mock_kill:
+        with patch("aj_crew.dashboard.handlers._sync_kill_provider") as mock_kill:
             await _reset_all_sessions(request)
             for task in list(state._background_tasks):
                 await task
@@ -147,7 +147,7 @@ class TestResetAllSessionsShutdown:
         """
         # Patch the DEFINING module (handlers.sessions), not the package
         # re-export — see test_force_kills_hung_provider_after_timeout.
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.sessions._SHUTDOWN_TIMEOUT_SECS", 0.05)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.sessions._SHUTDOWN_TIMEOUT_SECS", 0.05)
 
         async def _never_returns() -> None:
             await asyncio.sleep(60)
@@ -162,7 +162,7 @@ class TestResetAllSessionsShutdown:
             raise PermissionError("simulated kill failure")
 
         with patch(
-            "kiro_crew.dashboard.handlers._sync_kill_provider", side_effect=_raising_kill
+            "aj_crew.dashboard.handlers._sync_kill_provider", side_effect=_raising_kill
         ) as mock_kill:
             await _reset_all_sessions(request)
             for task in list(state._background_tasks):
@@ -180,7 +180,7 @@ class TestResetAllSessionsShutdown:
         The kill waits out a SIGTERM grace per provider, which inline would freeze the
         gateway. The tree must also be reaped before ``start_pool`` spawns replacements.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.sessions._SHUTDOWN_TIMEOUT_SECS", 0.05)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.sessions._SHUTDOWN_TIMEOUT_SECS", 0.05)
 
         async def _never_returns() -> None:
             await asyncio.sleep(60)
@@ -201,7 +201,7 @@ class TestResetAllSessionsShutdown:
             kill_finished_at.append(loop.time())
 
         with patch(
-            "kiro_crew.dashboard.handlers._sync_kill_provider", side_effect=_blocking_kill
+            "aj_crew.dashboard.handlers._sync_kill_provider", side_effect=_blocking_kill
         ) as mock_kill:
             await _reset_all_sessions(request)
             for task in list(state._background_tasks):
@@ -227,7 +227,7 @@ class TestResetAllSessionsShutdown:
         would leak the very process tree this path exists to reap, so the kill
         falls back to a plain daemon thread — still off the loop.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.sessions._SHUTDOWN_TIMEOUT_SECS", 0.05)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.sessions._SHUTDOWN_TIMEOUT_SECS", 0.05)
 
         async def _never_returns() -> None:
             await asyncio.sleep(60)
@@ -241,7 +241,7 @@ class TestResetAllSessionsShutdown:
             raise RuntimeError("cannot schedule new futures after shutdown")
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.sessions.subprocess_executor", _dead_executor
+            "aj_crew.dashboard.handlers.sessions.subprocess_executor", _dead_executor
         )
 
         loop_thread = threading.get_ident()
@@ -252,7 +252,7 @@ class TestResetAllSessionsShutdown:
             kill_threads.append(threading.get_ident())
             killed.set()
 
-        with patch("kiro_crew.dashboard.handlers._sync_kill_provider", side_effect=_record_kill):
+        with patch("aj_crew.dashboard.handlers._sync_kill_provider", side_effect=_record_kill):
             await _reset_all_sessions(request)
             for task in list(state._background_tasks):
                 await task

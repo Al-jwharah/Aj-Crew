@@ -15,36 +15,36 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.config.sections import WorkspaceConfig
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.config.sections import WorkspaceConfig
 
 
 @pytest.fixture(autouse=True)
 def _owner_caller(_floor_monkeypatch):
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
 
 def _crud_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import api_kirocrew_agent_update
+    from aj_crew.dashboard.handlers import api_ajcrew_agent_update
 
     app = web.Application()
-    app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+    app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
     return app
 
 
 def _seed(workspace: str = "default") -> str:
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.workspaces["team"] = WorkspaceConfig(dir="workspace-team")
-    cfg.agents["existing"] = KiroCrewAgentConfig(
-        kiro_agent="kirocrew",
+    cfg.agents["existing"] = AjCrewAgentConfig(
+        kiro_agent="ajcrew",
         workspace=workspace,
         memory_store="default",
         description="before",
         triggers="before",
-        source="kirocrew",
+        source="ajcrew",
     )
     cfg.save()
     return "existing"
@@ -56,8 +56,8 @@ async def _put(name: str, body: dict) -> tuple[int, dict]:
         return resp.status, await resp.json()
 
 
-def _stored(name: str) -> KiroCrewAgentConfig:
-    return KiroCrewConfig.load().agents[name]
+def _stored(name: str) -> AjCrewAgentConfig:
+    return AjCrewConfig.load().agents[name]
 
 
 class TestWrongTypeIsRefused:
@@ -76,7 +76,7 @@ class TestWrongTypeIsRefused:
             "default",
             "before",
             "before",
-            "kirocrew",
+            "ajcrew",
         )
 
     @pytest.mark.asyncio
@@ -101,17 +101,17 @@ class TestCreateRefusesWrongTypes:
     @pytest.mark.parametrize("field", ["description", "triggers", "source"])
     @pytest.mark.parametrize("junk", [1, None, ["x"]])
     async def test_non_string_is_a_400_and_creates_nothing(self, field, junk):
-        from kiro_crew.dashboard.handlers import api_kirocrew_agents_create
+        from aj_crew.dashboard.handlers import api_ajcrew_agents_create
 
         app = web.Application()
-        app.router.add_post("/api/agents", api_kirocrew_agents_create)
+        app.router.add_post("/api/agents", api_ajcrew_agents_create)
         async with TestClient(TestServer(app)) as client:
             resp = await client.post(
-                "/api/agents", json={"name": "fresh-crew", "kiro_agent": "kirocrew", field: junk}
+                "/api/agents", json={"name": "fresh-crew", "kiro_agent": "ajcrew", field: junk}
             )
             assert resp.status == 400
             assert (await resp.json())["code"] == f"invalid_{field}"
-        assert "fresh-crew" not in KiroCrewConfig.load().agents
+        assert "fresh-crew" not in AjCrewConfig.load().agents
 
 
 class TestWorkspaceBinding:
@@ -149,10 +149,10 @@ class TestWorkspaceBinding:
     @pytest.mark.asyncio
     async def test_default_saves_with_no_warning_even_when_not_declared(self):
         name = _seed(workspace="team")
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.workspaces.pop("default", None)
         cfg.save()
-        assert "default" not in KiroCrewConfig.load().workspaces
+        assert "default" not in AjCrewConfig.load().workspaces
         status, data = await _put(name, {"workspace": "default"})
         assert status == 200
         assert "warnings" not in data

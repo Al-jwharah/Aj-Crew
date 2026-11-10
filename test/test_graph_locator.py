@@ -6,12 +6,12 @@ Graph vendor constraint enforced at shaping time, so it must fail closed.
 
 import pytest
 
-from kiro_crew.connections.control_plane.operation import (
+from aj_crew.connections.control_plane.operation import (
     CREDENTIAL_MODE_FINE_GRAINED_PAT,
     CREDENTIAL_MODE_OAUTH_USER,
     CREDENTIAL_MODE_SERVICE_TO_SERVICE,
 )
-from kiro_crew.connections.vendors.microsoft.graph.locator import (
+from aj_crew.connections.vendors.microsoft.graph.locator import (
     GraphLocator,
     GraphLocatorError,
     Principal,

@@ -20,9 +20,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import source_providers as source
-from kiro_crew.dashboard.source_providers import bitbucket_server, hosts, plugins, sanitize
-from kiro_crew.dashboard.source_providers.contract import (
+from aj_crew.dashboard.handlers import source_providers as source
+from aj_crew.dashboard.source_providers import bitbucket_server, hosts, plugins, sanitize
+from aj_crew.dashboard.source_providers.contract import (
     SourceProviderError,
     SourceProviderNotConfigured,
     SourceRef,
@@ -228,7 +228,7 @@ def acme_route(tmp_path, monkeypatch):
     source.reset_source_providers_for_tests()
     provider = _AcmeReview()
     source.register_source_provider(provider)  # type: ignore[arg-type]
-    with patch("kiro_crew.config.loader.config_path", return_value=path):
+    with patch("aj_crew.config.loader.config_path", return_value=path):
         yield provider
     source.reset_source_providers_for_tests()
 

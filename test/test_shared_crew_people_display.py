@@ -18,11 +18,11 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from shared_crew_host_isolation import host_isolation  # noqa: F401
 
-from kiro_crew.dashboard import tailnet_live_allowlist
-from kiro_crew.shared_crew import audit, routes_invites, routes_people
-from kiro_crew.shared_crew import tailscale_invite_store as store
-from kiro_crew.shared_crew.contracts import ACTOR_REQUEST_KEY, ActorContext, Provenance, Transport
-from kiro_crew.shared_crew.identity import local_operator_principal, tailnet_principal
+from aj_crew.dashboard import tailnet_live_allowlist
+from aj_crew.shared_crew import audit, routes_invites, routes_people
+from aj_crew.shared_crew import tailscale_invite_store as store
+from aj_crew.shared_crew.contracts import ACTOR_REQUEST_KEY, ActorContext, Provenance, Transport
+from aj_crew.shared_crew.identity import local_operator_principal, tailnet_principal
 
 pytestmark = pytest.mark.usefixtures("host_isolation")
 
@@ -32,7 +32,7 @@ BOB = tailnet_principal("bob@example.com", "bob-laptop", Provenance.TAILSCALE_LI
 
 @pytest.fixture(autouse=True)
 def _clean(_floor_monkeypatch: pytest.MonkeyPatch) -> Any:
-    import kiro_crew.dashboard.handlers._shared as shared
+    import aj_crew.dashboard.handlers._shared as shared
 
     _floor_monkeypatch.setattr(shared, "_is_restricted_session", lambda *_a: False)
     tailnet_live_allowlist.reset_for_tests()
@@ -78,7 +78,7 @@ def _as_owner(monkeypatch: pytest.MonkeyPatch) -> None:
     """The local operator principal is the owner's own session: the owner gate passes."""
     from unittest.mock import AsyncMock
 
-    import kiro_crew.dashboard.handlers._shared as shared
+    import aj_crew.dashboard.handlers._shared as shared
 
     monkeypatch.setattr(shared, "require_owner_for_dashboard_caller", AsyncMock(return_value=None))
 
@@ -89,7 +89,7 @@ def _path(user_id: str) -> str:
 
 @pytest.mark.asyncio
 async def test_gate_off_answers_404(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("KIROCREW_SHARED_CREW_PREVIEW", raising=False)
+    monkeypatch.delenv("AJCREW_SHARED_CREW_PREVIEW", raising=False)
     tailnet_live_allowlist.note_login("4102", "riley@example.com")
     app, _ = _app(BOB)
     async with TestClient(TestServer(app)) as client:
@@ -102,7 +102,7 @@ async def test_gate_off_answers_404(monkeypatch: pytest.MonkeyPatch) -> None:
 async def test_any_admitted_person_edits_anyone_and_it_is_audited(
     monkeypatch: pytest.MonkeyPatch, written: list[Any]
 ) -> None:
-    monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
     # Riley was never invited: only the daemon's whois named this user id.
     tailnet_live_allowlist.note_login("4102", "riley@example.com")
     app, state = _app(BOB)
@@ -142,7 +142,7 @@ async def test_any_admitted_person_edits_anyone_and_it_is_audited(
 async def test_a_teammate_renames_an_invited_member_and_the_old_name_is_the_invite_alias(
     monkeypatch: pytest.MonkeyPatch, written: list[Any]
 ) -> None:
-    monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
 
     def seed(s: dict[str, Any]) -> None:
         s["members"]["4107"] = {
@@ -167,7 +167,7 @@ async def test_a_teammate_renames_an_invited_member_and_the_old_name_is_the_invi
 async def test_bad_avatar_unknown_person_and_app_tokens_are_refused(
     monkeypatch: pytest.MonkeyPatch, written: list[Any]
 ) -> None:
-    monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
     tailnet_live_allowlist.note_login("4102", "riley@example.com")
     _as_owner(monkeypatch)
     app, _ = _app(local_operator_principal("local-app"))
@@ -199,7 +199,7 @@ async def test_bad_avatar_unknown_person_and_app_tokens_are_refused(
 async def test_a_name_only_save_keeps_a_picture_another_save_just_wrote(
     monkeypatch: pytest.MonkeyPatch, written: list[Any]
 ) -> None:
-    monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
     tailnet_live_allowlist.note_login("4102", "riley@example.com")
     picture_b = store.save_avatar(PNG)
     real_set = store.set_display
@@ -224,9 +224,9 @@ async def test_a_non_owner_dashboard_link_session_cannot_edit_anyone(
 ) -> None:
     from unittest.mock import AsyncMock
 
-    import kiro_crew.dashboard.handlers._shared as shared
+    import aj_crew.dashboard.handlers._shared as shared
 
-    monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
     tailnet_live_allowlist.note_login("4102", "riley@example.com")
     gate = AsyncMock(
         return_value=web.json_response({"error": "owner only", "code": "owner_only"}, status=403)
@@ -246,7 +246,7 @@ async def test_a_non_owner_dashboard_link_session_cannot_edit_anyone(
 async def test_the_owner_passes_the_owner_gate(
     monkeypatch: pytest.MonkeyPatch, written: list[Any]
 ) -> None:
-    monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
     tailnet_live_allowlist.note_login("4102", "riley@example.com")
     _as_owner(monkeypatch)
     app, _ = _app(local_operator_principal("owner"), direct=False)
@@ -330,9 +330,9 @@ def test_a_full_avatar_folder_deletes_nothing_when_the_state_file_cannot_be_read
 
 
 def test_people_rows_say_who_is_here_and_where_by_the_tab_slot_key() -> None:
-    from kiro_crew.shared_crew.collab import Activity
-    from kiro_crew.shared_crew.presence import presence_for
-    from kiro_crew.shared_crew.routes_identity import _attach_live
+    from aj_crew.shared_crew.collab import Activity
+    from aj_crew.shared_crew.presence import presence_for
+    from aj_crew.shared_crew.routes_identity import _attach_live
 
     state = SimpleNamespace()
     presence_for(state).report("c1", BOB, "Release_plan", Activity.TYPING)
@@ -351,9 +351,9 @@ def test_people_rows_say_who_is_here_and_where_by_the_tab_slot_key() -> None:
 
 
 def test_people_owner_row_uses_presence_from_every_local_owner_id() -> None:
-    from kiro_crew.shared_crew.collab import Activity
-    from kiro_crew.shared_crew.presence import presence_for
-    from kiro_crew.shared_crew.routes_identity import _attach_live
+    from aj_crew.shared_crew.collab import Activity
+    from aj_crew.shared_crew.presence import presence_for
+    from aj_crew.shared_crew.routes_identity import _attach_live
 
     state = SimpleNamespace()
     startup = local_operator_principal("local-startup")
@@ -377,9 +377,9 @@ def test_people_owner_row_uses_presence_from_every_local_owner_id() -> None:
 async def test_the_person_who_runs_this_crew_can_be_named_like_anyone(
     monkeypatch: pytest.MonkeyPatch, written: list[Any]
 ) -> None:
-    from kiro_crew.shared_crew import access_set
+    from aj_crew.shared_crew import access_set
 
-    monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
     monkeypatch.setattr(access_set, "owner_user_id", lambda: "11")
     monkeypatch.setattr(access_set, "owner_login", lambda: "owner@example.com")
     _as_owner(monkeypatch)

@@ -16,8 +16,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.mcp_shared import DeferredTool
-from kiro_crew.validation import SPAWN_RUN_SCHEMA, ValidationError, validate_tool_args
+from aj_crew.mcp_shared import DeferredTool
+from aj_crew.validation import SPAWN_RUN_SCHEMA, ValidationError, validate_tool_args
 
 
 def _through_solo_gate(args: dict[str, Any], tool: str) -> dict[str, Any]:
@@ -40,7 +40,7 @@ def _through_solo_gate(args: dict[str, Any], tool: str) -> dict[str, Any]:
 
 def _posted(args: dict[str, Any], tool: str = "spawn_run") -> list[dict]:
     """Run a spawn tool call and return the bodies it POSTed to /api/spawn."""
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     bodies: list[dict] = []
 
@@ -161,7 +161,7 @@ class TestApiSpawnHandler:
 
     @pytest.mark.asyncio
     async def test_withheld_group_reaches_spawn(self):
-        from kiro_crew.dashboard.handlers.messaging import api_spawn
+        from aj_crew.dashboard.handlers.messaging import api_spawn
 
         request, mgr = self._request({"task": "x", "include_memory": False})
         await api_spawn(request)
@@ -170,7 +170,7 @@ class TestApiSpawnHandler:
 
     @pytest.mark.asyncio
     async def test_absent_flags_reach_spawn_as_true(self):
-        from kiro_crew.dashboard.handlers.messaging import api_spawn
+        from aj_crew.dashboard.handlers.messaging import api_spawn
 
         request, mgr = self._request({"task": "x"})
         await api_spawn(request)
@@ -181,7 +181,7 @@ class TestApiSpawnHandler:
     @pytest.mark.asyncio
     async def test_null_does_not_withhold(self):
         """The regression this guards: bool(None) would have read as withheld."""
-        from kiro_crew.dashboard.handlers.messaging import api_spawn
+        from aj_crew.dashboard.handlers.messaging import api_spawn
 
         request, mgr = self._request({"task": "x", "include_memory": None})
         await api_spawn(request)

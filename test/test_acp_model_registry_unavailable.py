@@ -14,7 +14,7 @@ import json
 
 import pytest
 
-from kiro_crew.acp.client import (
+from aj_crew.acp.client import (
     PROVIDER_ERROR_HTTP_5XX,
     AcpError,
     _format_acp_error,
@@ -22,7 +22,7 @@ from kiro_crew.acp.client import (
     _raise_acp_error,
     classify_provider_error,
 )
-from kiro_crew.acp.model_registry_errors import MODEL_REGISTRY_UNAVAILABLE_TEXT
+from aj_crew.acp.model_registry_errors import MODEL_REGISTRY_UNAVAILABLE_TEXT
 
 # The frame KAS sends (packages/kiro-agent/src/types/errors.ts,
 # ModelRegistryUnavailableError): the dict it sends, and the same object as JSON text.

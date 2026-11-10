@@ -10,10 +10,10 @@ import shutil
 import tarfile
 
 import pytest
-from test_snapshot import _setup_fake_kirocrew, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
-from kiro_crew import pinned_fs, platform_compat
-from kiro_crew import snapshot as snap
+from aj_crew import pinned_fs, platform_compat
+from aj_crew import snapshot as snap
 
 
 class TestAnUnsafeTreeRootFailsTheSnapshot:
@@ -28,8 +28,8 @@ class TestAnUnsafeTreeRootFailsTheSnapshot:
     def test_a_symlinked_component_root_refuses_the_snapshot(self, tmp_path, monkeypatch, capsys):
         home = tmp_path / "home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
-        _setup_fake_kirocrew(home)
+        monkeypatch.setenv("AJCREW_HOME", str(home))
+        _setup_fake_ajcrew(home)
 
         outside = tmp_path / "outside"
         outside.mkdir()
@@ -49,21 +49,21 @@ class TestAnUnsafeTreeRootFailsTheSnapshot:
         printed = capsys.readouterr().out
         assert "Refusing" in printed or "refus" in printed.lower()
         # And no bundle claiming `memory` was left behind.
-        assert list(out.glob("kirocrew-snapshot-*.tar.gz")) == []
+        assert list(out.glob("ajcrew-snapshot-*.tar.gz")) == []
 
     def test_the_guard_still_stages_a_legitimate_tree(self, tmp_path, monkeypatch):
         """The refusal must not turn a valid tree into a failure."""
         home = tmp_path / "home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
-        _setup_fake_kirocrew(home)
+        monkeypatch.setenv("AJCREW_HOME", str(home))
+        _setup_fake_ajcrew(home)
         md = home / "workspace" / "memory"
         md.mkdir(parents=True, exist_ok=True)
         (md / "preferences.md").write_text("keep me")
 
         out = tmp_path / "out"
         assert snap.snapshot_main([str(out), "--components", "memory", *unpinnable_argv()]) == 0
-        with tarfile.open(next(out.glob("kirocrew-snapshot-*.tar.gz"))) as tf:
+        with tarfile.open(next(out.glob("ajcrew-snapshot-*.tar.gz"))) as tf:
             names = tf.getnames()
         assert any(n.endswith("workspace/memory/preferences.md") for n in names)
 

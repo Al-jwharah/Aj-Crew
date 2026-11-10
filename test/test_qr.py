@@ -1,4 +1,4 @@
-"""Scannability of the shared QR encoder (``kiro_crew.qr``).
+"""Scannability of the shared QR encoder (``aj_crew.qr``).
 
 A module drawn as a whole number of screen pixels stays sharp. The phone-connect
 code runs to about 80 modules, so its module size also decides whether it fits the
@@ -13,7 +13,7 @@ import json
 
 from PIL import Image
 
-from kiro_crew import qr
+from aj_crew import qr
 
 
 def _b64url(raw: bytes) -> str:
@@ -64,7 +64,7 @@ def test_default_box_size_is_unchanged_for_other_callers() -> None:
 
 
 def test_mobile_access_code_fits_the_dialog_at_natural_size() -> None:
-    from kiro_crew.dashboard.handlers.tailnet_mobile import MOBILE_QR_BOX_SIZE
+    from aj_crew.dashboard.handlers.tailnet_mobile import MOBILE_QR_BOX_SIZE
 
     img = _decode(qr.render_qr_data_uri(_ACCESS_URL, box_size=MOBILE_QR_BOX_SIZE))
     # The dialog shows the image unscaled, so the whole code must fit its box, and

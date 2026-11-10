@@ -13,13 +13,13 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import cli_cloud
-from kiro_crew.cloud import connect as connect_mod
-from kiro_crew.cloud import ec2, iam
-from kiro_crew.cloud import login as login_mod
-from kiro_crew.cloud import source, ssm
-from kiro_crew.cloud.aws import AWSError, CloudActionDenied
-from kiro_crew.cloud.launch_state import LaunchState
+from aj_crew import cli_cloud
+from aj_crew.cloud import connect as connect_mod
+from aj_crew.cloud import ec2, iam
+from aj_crew.cloud import login as login_mod
+from aj_crew.cloud import source, ssm
+from aj_crew.cloud.aws import AWSError, CloudActionDenied
+from aj_crew.cloud.launch_state import LaunchState
 
 INSTANCE = {"exists": True, "instance_id": "i-0abc"}
 URL = "http://localhost:5599/"
@@ -52,11 +52,11 @@ def test_list_reports_an_aws_failure_and_exits_one(monkeypatch, capsys):
 
 
 def test_status_prints_the_stack_the_instance_and_the_region(monkeypatch, capsys):
-    stack = {"stack_name": "kirocrew-crew-a", "stack_status": "CREATE_COMPLETE"}
+    stack = {"stack_name": "ajcrew-crew-a", "stack_status": "CREATE_COMPLETE"}
     _describe(monkeypatch, {**INSTANCE, **stack, "instance_state": "running", "region": "eu-1"})
     assert cli_cloud._cloud_status(_args()) == 0
     out = capsys.readouterr().out
-    assert "stack:    kirocrew-crew-a (CREATE_COMPLETE)" in out
+    assert "stack:    ajcrew-crew-a (CREATE_COMPLETE)" in out
     assert "instance: i-0abc [running]" in out
     assert "region:   eu-1" in out
 
@@ -184,8 +184,8 @@ class TestLogin:
 
 
 VERBS = [
-    ("stop", "Stopped 'crew-a'. Compute billing paused", "Resume with: kirocrew cloud start"),
-    ("start", "Starting 'crew-a'.", "Reopen the dashboard with: kirocrew cloud connect"),
+    ("stop", "Stopped 'crew-a'. Compute billing paused", "Resume with: ajcrew cloud start"),
+    ("start", "Starting 'crew-a'.", "Reopen the dashboard with: ajcrew cloud connect"),
 ]
 
 
@@ -219,7 +219,7 @@ class TestDestroyFailures:
         monkeypatch.setattr(ec2, "destroy", destroy)
         assert cli_cloud._cloud_destroy(_args(yes=False)) == 0
         confirm.assert_called_once_with(
-            "Remove KiroCrew instance 'crew-a' from AWS?", default=False  # brand-ok: exact prompt
+            "Remove AjCrew instance 'crew-a' from AWS?", default=False  # brand-ok: exact prompt
         )
         destroy.assert_not_called()
         assert "Aborted — nothing was deleted." in capsys.readouterr().out
@@ -308,7 +308,7 @@ class TestEnsurePlugin:
         install.assert_not_called()
         out = capsys.readouterr().out
         assert "session-manager-plugin is required for SSM dashboard tunnels." in out
-        assert "Install it later with: kirocrew cloud doctor" in out
+        assert "Install it later with: ajcrew cloud doctor" in out
 
     @pytest.mark.parametrize(
         ("ok", "message", "shown"),

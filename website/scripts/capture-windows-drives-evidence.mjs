@@ -38,16 +38,16 @@ let drivesMode = 'ok'
 const TREE = {
   'C:\\': { path: 'C:\\', parent: '', dirs: ['Program Files', 'Users', 'Windows'].map(n => ({ name: n, path: `C:\\${n}` })) },
   'D:\\': { path: 'D:\\', parent: '', dirs: ['backups', 'games', 'work'].map(n => ({ name: n, path: `D:\\${n}` })) },
-  'D:\\work': { path: 'D:\\work', parent: 'D:\\', dirs: ['kirocrew', 'notes'].map(n => ({ name: n, path: `D:\\work\\${n}` })) },
+  'D:\\work': { path: 'D:\\work', parent: 'D:\\', dirs: ['ajcrew', 'notes'].map(n => ({ name: n, path: `D:\\work\\${n}` })) },
 }
 
 const folders = [
-  { id: 'f1', name: 'Kiro', icon: '🚀', order: 0, collapsed: false, project_dir: 'C:\\Users\\me\\KiroCrew' },
+  { id: 'f1', name: 'Kiro', icon: '🚀', order: 0, collapsed: false, project_dir: 'C:\\Users\\me\\AjCrew' },
 ]
 const slots = [
-  { key: 's1', title: 'Windows drives', messages: 4, running: false, agent: 'kirocrew', created: '2026-07-20T01:00:00Z', last_ts: '2026-08-01T20:00:00Z', folder_id: 'f1' },
+  { key: 's1', title: 'Windows drives', messages: 4, running: false, agent: 'ajcrew', created: '2026-07-20T01:00:00Z', last_ts: '2026-08-01T20:00:00Z', folder_id: 'f1' },
 ]
-const agentsRoster = { agents: [{ name: 'kirocrew', source: 'builtin' }], default_agent: 'kirocrew' }
+const agentsRoster = { agents: [{ name: 'ajcrew', source: 'builtin' }], default_agent: 'ajcrew' }
 
 const { srv, base: BASE } = await serveDist()
 const browser = await chromium.launch()
@@ -66,7 +66,7 @@ await stubDashboardApi(page, {
       await json(route, DRIVES); return true
     }
     const p = u.searchParams.get('path') || 'C:\\'
-    if (p.startsWith('D:\\work\\kirocrew')) { await json(route, { error: 'Access denied' }, 403); return true }
+    if (p.startsWith('D:\\work\\ajcrew')) { await json(route, { error: 'Access denied' }, 403); return true }
     if (/^Z:/i.test(p)) { await json(route, { error: 'Not a directory', path: p }, 400); return true }
     await json(route, TREE[p] ?? { path: p, parent: 'C:\\', dirs: [] })
     return true
@@ -127,8 +127,8 @@ await shot('4c-drives-timed-out')
 // refuses. The notice names the listing still on screen.
 drivesMode = 'ok'
 await page.getByRole('option', { name: /work/ }).click()
-await page.getByRole('option', { name: /kirocrew/ }).waitFor()
-await page.getByRole('option', { name: /kirocrew/ }).click()
+await page.getByRole('option', { name: /ajcrew/ }).waitFor()
+await page.getByRole('option', { name: /ajcrew/ }).click()
 await page.getByTestId('pp-listing-error').waitFor()
 await page.waitForTimeout(300)
 await shot('5-folder-failed')

@@ -21,10 +21,10 @@ from dashboard_approval_helpers import (
     _set_stream,
 )
 
-from kiro_crew.dashboard.chat import _run_chat
+from aj_crew.dashboard.chat import _run_chat
 
 #: The guard's public SEL outcome and mechanism, as literals so this file binds no
-#: kiro_crew.acp name; the strings are pinned against the batch_guard constants in
+#: aj_crew.acp name; the strings are pinned against the batch_guard constants in
 #: test_batch_write_guard.py.
 _BATCH_GUARD_OUTCOME = "rejected_batch_guard"
 _BATCH_GUARD_MECHANISM = "batch_write_guard"
@@ -49,7 +49,7 @@ async def test_trust_auto_approve_refused_by_the_guard_is_labelled_batch_guard(t
     client.approve_tool = AsyncMock(return_value=False)
     client.take_batch_refusal = MagicMock(return_value="Blocked by the batch guard: ...")
 
-    with patch("kiro_crew.dashboard.chat_runner.sel") as mock_sel:
+    with patch("aj_crew.dashboard.chat_runner.sel") as mock_sel:
         mock_sel.return_value = MagicMock()
         await _run_chat(state, slot, "hello")
         rows = _dashboard_rows(mock_sel, evt.request_id)
@@ -70,7 +70,7 @@ async def test_trust_auto_approve_refused_by_the_floor_stays_transport_floor(tmp
     client.approve_tool = AsyncMock(return_value=False)
     client.take_batch_refusal = MagicMock(return_value=None)
 
-    with patch("kiro_crew.dashboard.chat_runner.sel") as mock_sel:
+    with patch("aj_crew.dashboard.chat_runner.sel") as mock_sel:
         mock_sel.return_value = MagicMock()
         await _run_chat(state, slot, "hello")
         rows = _dashboard_rows(mock_sel, evt.request_id)

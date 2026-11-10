@@ -15,9 +15,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import history as history_mod
-from kiro_crew import history_listing_memo, history_search
-from kiro_crew.history import ConversationLog
+from aj_crew import history as history_mod
+from aj_crew import history_listing_memo, history_search
+from aj_crew.history import ConversationLog
 
 
 @pytest.fixture

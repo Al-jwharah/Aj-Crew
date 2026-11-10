@@ -28,8 +28,8 @@ from plugin_import_helpers import (
     _write_json,
 )
 
-from kiro_crew.apps import plugin_import
-from kiro_crew.apps.plugin_import import PluginImportError, convert_plugin_package
+from aj_crew.apps import plugin_import
+from aj_crew.apps.plugin_import import PluginImportError, convert_plugin_package
 
 
 def _probe_before_link_offenders(source: str) -> list[str]:
@@ -103,7 +103,7 @@ class TestLinkCheckOrdering:
     """
 
     def test_no_boolean_test_probes_a_path_before_proving_it_unlinked(self):
-        from kiro_crew.apps import plugin_import as module
+        from aj_crew.apps import plugin_import as module
 
         source = Path(module.__file__).read_text(encoding="utf-8")
         offenders = _probe_before_link_offenders(source)
@@ -488,7 +488,7 @@ class TestARelativeProgramIsDetectedByItsSeparator:
     """
 
     def test_every_relative_spelling_is_detected(self):
-        from kiro_crew.apps.plugin_import import _package_relative_fields
+        from aj_crew.apps.plugin_import import _package_relative_fields
 
         for command in [
             "bin/server",  # the spelling the dot-prefixed rule missed
@@ -510,7 +510,7 @@ class TestARelativeProgramIsDetectedByItsSeparator:
         convert correctly: each of these carries no filesystem meaning, and three
         of them carry a slash, which is exactly why a bare separator test needs
         these exclusions stated as tests rather than assumed."""
-        from kiro_crew.apps.plugin_import import _package_relative_fields
+        from aj_crew.apps.plugin_import import _package_relative_fields
 
         for command in [
             "node",  # a bare name resolved through PATH
@@ -527,7 +527,7 @@ class TestARelativeProgramIsDetectedByItsSeparator:
             )
 
     def test_a_relative_arg_is_detected_too(self):
-        from kiro_crew.apps.plugin_import import _package_relative_fields
+        from aj_crew.apps.plugin_import import _package_relative_fields
 
         found = _package_relative_fields({"command": "node", "args": ["-y", "lib/main.js"]})
         assert found == ["args[1]"], found
@@ -684,7 +684,7 @@ class TestInstallDoesNotActivateADisabledApp:
         import ast
         from pathlib import Path as _Path
 
-        import kiro_crew.cli_commands_app as cli
+        import aj_crew.cli_commands_app as cli
 
         tree = ast.parse(_Path(cli.__file__).read_text(encoding="utf-8"))
         target = next(
@@ -706,7 +706,7 @@ class TestInstallDoesNotActivateADisabledApp:
         import ast
         from pathlib import Path as _Path
 
-        import kiro_crew.cli_commands_app as cli
+        import aj_crew.cli_commands_app as cli
 
         tree = ast.parse(_Path(cli.__file__).read_text(encoding="utf-8"))
         target = next(
@@ -812,8 +812,8 @@ class TestTheImportCommandCannotBeMadeToWriteLiveTerminalControls:
     def test_a_conversion_refusal_cannot_carry_controls(self, tmp_path, monkeypatch, capsys):
         import argparse
 
-        from kiro_crew import cli_commands
-        from kiro_crew.cli_commands import _handle_app_import
+        from aj_crew import cli_commands
+        from aj_crew.cli_commands import _handle_app_import
 
         root = _package(tmp_path)
 
@@ -835,8 +835,8 @@ class TestTheImportCommandCannotBeMadeToWriteLiveTerminalControls:
         filename -- and that name comes from the package."""
         import argparse
 
-        from kiro_crew import cli_commands
-        from kiro_crew.cli_commands import _handle_app_import
+        from aj_crew import cli_commands
+        from aj_crew.cli_commands import _handle_app_import
 
         root = _package(tmp_path)
 

@@ -1,4 +1,4 @@
-# Kiro Crew behind enterprise MCP governance
+# Aj Crew behind enterprise MCP governance
 
 Applies when the Kiro account `kiro-cli` is signed in to is an **enterprise**
 account — IAM Identity Center (or an external IdP such as Okta / Entra ID
@@ -8,21 +8,21 @@ organization-level MCP controls and need nothing on this page.
 
 [Central policy distribution](#central-policy-distribution-one-security-policy-every-host),
 at the end of this page, is a separate axis and depends on none of that: it is how
-you hand every host in a fleet the same Kiro Crew `security_policy.json`, and it
+you hand every host in a fleet the same Aj Crew `security_policy.json`, and it
 works on any account type.
 
 ## The symptom
 
-Kiro Crew starts, the dashboard works, chat works — and a large part of the
+Aj Crew starts, the dashboard works, chat works — and a large part of the
 product is quietly absent. `spawn_run` does nothing, `cron_add` is unavailable,
 `learn_add` never saves, the knowledge tools are missing, the research agent has
-no tools to work with. Nothing errors. `kirocrew doctor` reports the MCP servers
+no tools to work with. Nothing errors. `ajcrew doctor` reports the MCP servers
 healthy.
 
 That combination — healthy locally, absent in sessions — is the signature of MCP
 governance, because the two checks are measuring different things:
 
-- Kiro Crew's own probe **spawns each server directly** and completes an MCP
+- Aj Crew's own probe **spawns each server directly** and completes an MCP
   handshake with it. That succeeds regardless of governance.
 - `kiro-cli` applies governance **when it assembles a session**, after reading
   the agent spec. Every server it drops there is dropped silently.
@@ -45,7 +45,7 @@ also load personal `mcp.json` servers alongside the registry-managed set:
 Two consequences worth internalising:
 
 - The match is on the **`mcpServers` map key**, not on the command, not on a
-  registry id. `kirocrew-core` in your spec must be `kirocrew-core` in the
+  registry id. `ajcrew-core` in your spec must be `ajcrew-core` in the
   registry file.
 - `"type": "registry"` is **not a transport**. It declares "this entry is a
   pointer into the catalog", and only `env`, `headers` and `timeout` are carried
@@ -54,9 +54,9 @@ Two consequences worth internalising:
 
 Registry servers a user installs from Kiro IDE or the Kiro CLI land in
 `~/.kiro/settings/mcp.json` as bare pointers, `{"type": "registry"}` with no
-`command` or `url`. Kiro Crew carries each pointer into the `kirocrew` agent spec
+`command` or `url`. Aj Crew carries each pointer into the `ajcrew` agent spec
 unchanged, so kiro-cli resolves it there exactly as it does for its own sessions,
-and the dashboard lists it as **Not verified** rather than starting it (Kiro Crew
+and the dashboard lists it as **Not verified** rather than starting it (Aj Crew
 cannot read the catalog). A pointer goes through the same tool-ref and
 auto-approve rules as any other user server. Sessions on the Claude and KAS
 backends still withhold every marked entry.
@@ -66,14 +66,14 @@ MCP is disabled entirely rather than falling open.
 
 ## Fixing it — two halves, both required
 
-### 1. Declare registry mode on the Kiro Crew side
+### 1. Declare registry mode on the Aj Crew side
 
 ```bash
-kirocrew config set agent.mcp_registry_mode true
-kirocrew restart
+ajcrew config set agent.mcp_registry_mode true
+ajcrew restart
 ```
 
-Kiro Crew then stamps `"type": "registry"` on the servers it manages, so they
+Aj Crew then stamps `"type": "registry"` on the servers it manages, so they
 survive the registry filter. It is an explicit declaration rather than
 auto-detection on purpose: the client fetches the toggle and the registry URL
 from `GetProfile` at startup and **persists neither**, so nothing on disk
@@ -81,16 +81,16 @@ distinguishes a governed account from an ungoverned one. Leave the setting
 `false` on a personal account — there the filter inverts and the marked entries
 are the ones dropped.
 
-`kirocrew-core` and `kirocrew-cron` are the one exception. When no API key is
+`ajcrew-core` and `ajcrew-cron` are the one exception. When no API key is
 set (in the environment or in the data home's `.env`, where the Docker image
 keeps it) and both the local store and `kiro-cli whoami` say the sign-in is
 Builder ID or social, so no admin
-registry can apply, Kiro Crew writes these two without the marker even with the
+registry can apply, Aj Crew writes these two without the marker even with the
 declaration on, and they keep loading. If any check is unsure, they keep the
 marker. After you switch this machine to an Identity Center or API-key sign-in,
-run `kirocrew restart` so the spec is written again with the marker.
+run `ajcrew restart` so the spec is written again with the marker.
 
-Verify with `kirocrew doctor`, which grows an `MCP Governance (enterprise)`
+Verify with `ajcrew doctor`, which grows an `MCP Governance (enterprise)`
 section when the local identity is one an administrator's registry can govern
 (an IAM Identity Center or API-key sign-in), when `agent.mcp_registry_mode` is
 set, or when registry-marked entries are present. The identity comes from the
@@ -103,7 +103,7 @@ personal account.
 
 ### 2. Have the administrator allow-list the servers
 
-Kiro Crew ships eleven servers (`_MANAGED_MCP_SERVERS` in `src/kiro_crew/agent.py`
+Aj Crew ships eleven servers (`_MANAGED_MCP_SERVERS` in `src/aj_crew/agent.py`
 is the authoritative map), and the registry filter applies to every one of them.
 Five are emitted on every install; the other six are assignable sets an agent
 carries only when granted them — but any agent that IS granted one loses it the
@@ -114,175 +114,175 @@ Always emitted, on every install:
 
 | Server | What is lost without it |
 |---|---|
-| `kirocrew-core` | `spawn_run`, `learn_add`, artifacts, knowledge, monitoring — the bulk of the product |
-| `kirocrew-cron` | every scheduled job (`cron_add` and the whole cron surface) |
-| `kirocrew-computer` | desktop automation on supported macOS and Windows hosts (inert unless separately enabled, but still filtered) |
-| `kirocrew-guide` | the platform guide set: where-is answers (`find_ui`), the packaged docs (`search_docs`), dashboard guides and change cards |
-| `kirocrew-mate` | a Bot's tools over its own record (name, description, face; goal and tools asked through a change card) |
+| `ajcrew-core` | `spawn_run`, `learn_add`, artifacts, knowledge, monitoring — the bulk of the product |
+| `ajcrew-cron` | every scheduled job (`cron_add` and the whole cron surface) |
+| `ajcrew-computer` | desktop automation on supported macOS and Windows hosts (inert unless separately enabled, but still filtered) |
+| `ajcrew-guide` | the platform guide set: where-is answers (`find_ui`), the packaged docs (`search_docs`), dashboard guides and change cards |
+| `ajcrew-mate` | a Bot's tools over its own record (name, description, face; goal and tools asked through a change card) |
 
 Assignable — emitted only for agents granted the set, and filtered the same way:
 
 | Server | What is lost without it |
 |---|---|
-| `kirocrew-work` | the work ledger every conductor records its dispatches to — without it a conductor still runs, but the Dashboard's Workstreams board has nothing to show for its fleet |
-| `kirocrew-dashboard` | the dashboard control surface mounted on every conductor |
-| `kirocrew-panel` | the member panel tools of member-scoped agents |
-| `kirocrew-crew-log` | the crew log set of agents granted it |
-| `kirocrew-debug` | the debug views (the wide ones answer only on the owner's own dashboard tab) |
-| `kirocrew-secrets` | mediated secret requests (`call_api_with_secret`): API writes that use a Custom secret the agent never sees |
+| `ajcrew-work` | the work ledger every conductor records its dispatches to — without it a conductor still runs, but the Dashboard's Workstreams board has nothing to show for its fleet |
+| `ajcrew-dashboard` | the dashboard control surface mounted on every conductor |
+| `ajcrew-panel` | the member panel tools of member-scoped agents |
+| `ajcrew-crew-log` | the crew log set of agents granted it |
+| `ajcrew-debug` | the debug views (the wide ones answer only on the owner's own dashboard tab) |
+| `ajcrew-secrets` | mediated secret requests (`call_api_with_secret`): API writes that use a Custom secret the agent never sees |
 
 The registry file format is a subset of the MCP registry standard's server
 schema. Each entry needs a `packages` entry describing how to launch the server,
-and — because every Kiro Crew server lives behind one package — a
+and — because every Aj Crew server lives behind one package — a
 `packageArguments` entry naming the subcommand. For a `pypi` package the client
 derives `uvx <identifier> <packageArguments>`, so an entry without the argument
-launches `uvx kirocrew` with no subcommand, which prints CLI help instead of
-speaking MCP and fails the handshake. Kiro Crew releases are not published to
+launches `uvx ajcrew` with no subcommand, which prints CLI help instead of
+speaking MCP and fails the handshake. Aj Crew releases are not published to
 the public Python Package Index; the `pypi` example below therefore launches
-only once `uvx` is pointed at an index that hosts the matching `kirocrew` wheel,
+only once `uvx` is pointed at an index that hosts the matching `ajcrew` wheel,
 as the steps after it show:
 
 ```json
 {
   "servers": [
     {
-      "name": "kirocrew-core",
-      "description": "Kiro Crew orchestration: subagents, memory, artifacts, monitoring",
+      "name": "ajcrew-core",
+      "description": "Aj Crew orchestration: subagents, memory, artifacts, monitoring",
       "version": "<fleet version>",
       "packages": [
         {
           "registryType": "pypi",
-          "identifier": "kirocrew",
+          "identifier": "ajcrew",
           "packageArguments": [{ "type": "positional", "value": "mcp-core" }],
           "transport": { "type": "stdio" }
         }
       ]
     },
     {
-      "name": "kirocrew-cron",
-      "description": "Kiro Crew scheduled jobs",
+      "name": "ajcrew-cron",
+      "description": "Aj Crew scheduled jobs",
       "version": "<fleet version>",
       "packages": [
         {
           "registryType": "pypi",
-          "identifier": "kirocrew",
+          "identifier": "ajcrew",
           "packageArguments": [{ "type": "positional", "value": "mcp-cron" }],
           "transport": { "type": "stdio" }
         }
       ]
     },
     {
-      "name": "kirocrew-computer",
-      "description": "Kiro Crew desktop automation (macOS/Windows, opt-in)",
+      "name": "ajcrew-computer",
+      "description": "Aj Crew desktop automation (macOS/Windows, opt-in)",
       "version": "<fleet version>",
       "packages": [
         {
           "registryType": "pypi",
-          "identifier": "kirocrew",
+          "identifier": "ajcrew",
           "packageArguments": [{ "type": "positional", "value": "mcp-computer" }],
           "transport": { "type": "stdio" }
         }
       ]
     },
     {
-      "name": "kirocrew-work",
-      "description": "Kiro Crew work ledger (conductor agents)",
+      "name": "ajcrew-work",
+      "description": "Aj Crew work ledger (conductor agents)",
       "version": "<fleet version>",
       "packages": [
         {
           "registryType": "pypi",
-          "identifier": "kirocrew",
+          "identifier": "ajcrew",
           "packageArguments": [{ "type": "positional", "value": "mcp-work" }],
           "transport": { "type": "stdio" }
         }
       ]
     },
     {
-      "name": "kirocrew-dashboard",
-      "description": "Kiro Crew dashboard control surface (conductor agents)",
+      "name": "ajcrew-dashboard",
+      "description": "Aj Crew dashboard control surface (conductor agents)",
       "version": "<fleet version>",
       "packages": [
         {
           "registryType": "pypi",
-          "identifier": "kirocrew",
+          "identifier": "ajcrew",
           "packageArguments": [{ "type": "positional", "value": "mcp-dashboard" }],
           "transport": { "type": "stdio" }
         }
       ]
     },
     {
-      "name": "kirocrew-panel",
-      "description": "Kiro Crew member panel (member-scoped agents)",
+      "name": "ajcrew-panel",
+      "description": "Aj Crew member panel (member-scoped agents)",
       "version": "<fleet version>",
       "packages": [
         {
           "registryType": "pypi",
-          "identifier": "kirocrew",
+          "identifier": "ajcrew",
           "packageArguments": [{ "type": "positional", "value": "mcp-panel" }],
           "transport": { "type": "stdio" }
         }
       ]
     },
     {
-      "name": "kirocrew-guide",
-      "description": "Kiro Crew platform guide: find_ui, search_docs, guides, change cards",
+      "name": "ajcrew-guide",
+      "description": "Aj Crew platform guide: find_ui, search_docs, guides, change cards",
       "version": "<fleet version>",
       "packages": [
         {
           "registryType": "pypi",
-          "identifier": "kirocrew",
+          "identifier": "ajcrew",
           "packageArguments": [{ "type": "positional", "value": "mcp-guide" }],
           "transport": { "type": "stdio" }
         }
       ]
     },
     {
-      "name": "kirocrew-mate",
-      "description": "Kiro Crew crewmate self-record tools",
+      "name": "ajcrew-mate",
+      "description": "Aj Crew crewmate self-record tools",
       "version": "<fleet version>",
       "packages": [
         {
           "registryType": "pypi",
-          "identifier": "kirocrew",
+          "identifier": "ajcrew",
           "packageArguments": [{ "type": "positional", "value": "mcp-mate" }],
           "transport": { "type": "stdio" }
         }
       ]
     },
     {
-      "name": "kirocrew-crew-log",
-      "description": "Kiro Crew crew log (assignable)",
+      "name": "ajcrew-crew-log",
+      "description": "Aj Crew crew log (assignable)",
       "version": "<fleet version>",
       "packages": [
         {
           "registryType": "pypi",
-          "identifier": "kirocrew",
+          "identifier": "ajcrew",
           "packageArguments": [{ "type": "positional", "value": "mcp-crew-log" }],
           "transport": { "type": "stdio" }
         }
       ]
     },
     {
-      "name": "kirocrew-debug",
-      "description": "Kiro Crew debug views (assignable, owner-tab only)",
+      "name": "ajcrew-debug",
+      "description": "Aj Crew debug views (assignable, owner-tab only)",
       "version": "<fleet version>",
       "packages": [
         {
           "registryType": "pypi",
-          "identifier": "kirocrew",
+          "identifier": "ajcrew",
           "packageArguments": [{ "type": "positional", "value": "mcp-debug" }],
           "transport": { "type": "stdio" }
         }
       ]
     },
     {
-      "name": "kirocrew-secrets",
-      "description": "Kiro Crew mediated secret requests (assignable)",
+      "name": "ajcrew-secrets",
+      "description": "Aj Crew mediated secret requests (assignable)",
       "version": "<fleet version>",
       "packages": [
         {
           "registryType": "pypi",
-          "identifier": "kirocrew",
+          "identifier": "ajcrew",
           "packageArguments": [{ "type": "positional", "value": "mcp-secrets" }],
           "transport": { "type": "stdio" }
         }
@@ -292,17 +292,17 @@ as the steps after it show:
 }
 ```
 
-Set `version` to the Kiro Crew version your fleet runs.
+Set `version` to the Aj Crew version your fleet runs.
 
 > **Without that index, the servers are accepted but do not start.**
 > `kiro-cli mcp list` shows each entry, kiro-cli starts it as
-> `uvx kirocrew@<version> <subcommand>`, and `uvx` fails with
-> `kirocrew was not found in the package registry`, so the session has none of
-> the Kiro Crew tools those entries serve.
+> `uvx ajcrew@<version> <subcommand>`, and `uvx` fails with
+> `ajcrew was not found in the package registry`, so the session has none of
+> the Aj Crew tools those entries serve.
 
 Point `uvx` at the index through uv's own configuration on every client
 machine, for example in the user's `uv.toml` (`~/.config/uv/uv.toml` on macOS
-and Linux, `%APPDATA%\uv\uv.toml` on Windows). Kiro Crew's release CDN serves
+and Linux, `%APPDATA%\uv\uv.toml` on Windows). Aj Crew's release CDN serves
 one index per release channel, and each version is listed only on the channel
 that released it (see
 [Installing a published wheel with pip](install.md#installing-a-published-wheel-with-pip)),
@@ -320,10 +320,10 @@ ignore-error-codes = [403]
 ```
 
 Clients that cannot reach the CDN need your organisation's own index carrying
-the `kirocrew` wheel for your fleet's version: put its URL in `url`, and keep
+the `ajcrew` wheel for your fleet's version: put its URL in `url`, and keep
 `ignore-error-codes` only if that index also answers 403 for a missing package.
 uv checks an index listed this way before public PyPI and moves on to PyPI for
-any package the index does not host, so `kirocrew`'s dependencies still
+any package the index does not host, so `ajcrew`'s dependencies still
 resolve. Do not add `default = true` unless the index also proxies PyPI or hosts
 every dependency: that setting removes PyPI as the fallback for every `uv` and
 `uvx` call that reads this file. Set the index in uv rather than in a package's
@@ -332,42 +332,42 @@ every dependency: that setting removes PyPI as the fallback for every `uv` and
 
 ## Known limitation: the registry launches the server, not your install
 
-Kiro Crew's MCP servers are not standalone tools — they are the gateway's own
-process, reached through subcommands (`kirocrew mcp-core`, `mcp-cron`,
+Aj Crew's MCP servers are not standalone tools — they are the gateway's own
+process, reached through subcommands (`ajcrew mcp-core`, `mcp-cron`,
 `mcp-computer`), and they share the gateway's data home and version.
 
 A registry-type entry hands the launch decision to the catalog: the client
 resolves the package and, when a locally installed server's version differs from
 the registry's, relaunches it at the registry's version. For a `pypi` entry that
-means `uvx` fetching Kiro Crew into its own ephemeral environment from its
+means `uvx` fetching Aj Crew into its own ephemeral environment from its
 configured Python index. Because the project is not on public PyPI, that route
 works only with the index set up above. The process serving your MCP tools can
-then still be a *different* Kiro Crew from the gateway serving your dashboard.
-Your `env` overrides (including `KIROCREW_HOME`) do flow through, which keeps the
+then still be a *different* Aj Crew from the gateway serving your dashboard.
+Your `env` overrides (including `AJCREW_HOME`) do flow through, which keeps the
 data home aligned, but the code does not.
 
 Keep the registry `version` in step with your fleet's installed version. If your
-organisation pins Kiro Crew centrally, that pin now governs the MCP side too.
+organisation pins Aj Crew centrally, that pin now governs the MCP side too.
 
-## Session identity for Kiro Crew's own tools: an admin opt-in, off by default
+## Session identity for Aj Crew's own tools: an admin opt-in, off by default
 
-Many `kirocrew-core` tools act for *one session* — `artifact_save`, `spawn_run`,
+Many `ajcrew-core` tools act for *one session* — `artifact_save`, `spawn_run`,
 memory, monitors — and need to prove which session is calling. Outside registry
-mode Kiro Crew gives each session's `kirocrew-core` and `kirocrew-cron` a signed
+mode Aj Crew gives each session's `ajcrew-core` and `ajcrew-cron` a signed
 session identity by mounting its own copy of them on the session. Under registry
 mode that copy would be launched as given, from the local install, past your
-catalog. So by default Kiro Crew mounts nothing there (except on a Builder ID or
+catalog. So by default Aj Crew mounts nothing there (except on a Builder ID or
 social sign-in no admin registry can govern, described above): the servers run from your
 catalog entry, which carries no session identity, and their tool calls refuse with
 
 ```
 identity_unattestable ... This host is MCP registry-governed (agent.mcp_registry_mode),
-and the admin's MCP registry is blocking Kiro Crew's own tools ...
+and the admin's MCP registry is blocking Aj Crew's own tools ...
 ```
 
 To enable session identity, set one field at the top level of the security policy
 (`~/.kiro/crew/security_policy.json`, or your centrally distributed document) and
-restart Kiro Crew:
+restart Aj Crew:
 
 ```json
 {
@@ -379,12 +379,12 @@ restart Kiro Crew:
 
 What that changes, and what it does not:
 
-- `kirocrew-core` and `kirocrew-cron` then run from the **local Kiro Crew install**
+- `ajcrew-core` and `ajcrew-cron` then run from the **local Aj Crew install**
   for each session, not from your catalog entry. A catalog `version` pin no longer
   governs those two servers, and they are mounted even if your catalog omits them.
-  The code that runs is the same Kiro Crew as the gateway, which also removes the
+  The code that runs is the same Aj Crew as the gateway, which also removes the
   version mismatch described in the previous section.
-- Nothing else widens. `kirocrew-computer`, `kirocrew-dashboard`, builtin app
+- Nothing else widens. `ajcrew-computer`, `ajcrew-dashboard`, builtin app
   servers and every third-party server stay under your catalog exactly as before.
 - Only you can set it. `security_policy.json` is mounted read-only in the sandbox
   and the agent's file tools refuse to write it; a per-surface profile that sets the
@@ -399,11 +399,11 @@ What that changes, and what it does not:
 ## Known limitation: registry mode cannot work on the KAS backend
 
 Everything above is about Kiro CLI, which reads your agent spec off disk and so
-sees the `"type": "registry"` marker Kiro Crew writes into it. The KAS backend
-(`kiro-agent`) reads no spec: Kiro Crew projects the agent over the wire on
+sees the `"type": "registry"` marker Aj Crew writes into it. The KAS backend
+(`kiro-agent`) reads no spec: Aj Crew projects the agent over the wire on
 `session/new`, and that wire schema has no slot for `type`. The marker is dropped
 in transit, the host therefore sees every server as unmarked, and in registry
-access mode it filters all of them out — Kiro Crew's own control plane included.
+access mode it filters all of them out — Aj Crew's own control plane included.
 
 What you see is a session that starts and chats normally with no MCP tools at
 all: no `spawn_run`, no `cron_add`, no `learn_add`, no artifacts, knowledge or
@@ -414,12 +414,12 @@ The limitation is tracked upstream as
 [kirodotdev/Kiro#12231](https://github.com/kirodotdev/Kiro/issues/12231).
 
 When the host names the servers it filtered (KAS lists them in its MCP status as
-`accessModeFilteredServers`), Kiro Crew acts on that at once instead of waiting
+`accessModeFilteredServers`), Aj Crew acts on that at once instead of waiting
 out the session-start budget. With `agent.mcp_registry_mode` on, the session
 starts without those servers. With it off, the session start fails straight
 away with an error that names each filtered server and the setting to declare.
 
-Kiro Crew makes the failure visible rather than silent. Projecting an agent onto
+Aj Crew makes the failure visible rather than silent. Projecting an agent onto
 that backend under registry mode logs a warning naming exactly this, and the
 servers your spec declares are withheld with a line each instead of being sent to
 be dropped downstream. Until the wire schema carries `type`:
@@ -427,12 +427,12 @@ be dropped downstream. Until the wire schema carries `type`:
 - run a registry-governed profile on Kiro CLI, where the marker is read from disk
   and the servers survive;
 - or, on an install whose profile is not actually registry-governed, turn the
-  declaration off with `kirocrew config set agent.mcp_registry_mode false` — the
+  declaration off with `ajcrew config set agent.mcp_registry_mode false` — the
   filter only runs when the administrator has set a registry URL, so a host
   outside that profile loses nothing by not claiming to be governed.
 
 A muted server is dropped on the same wire for a similar reason: the schema
-accepts `"disabled": true` and then discards it, so Kiro Crew does not declare a
+accepts `"disabled": true` and then discards it, so Aj Crew does not declare a
 muted server to that backend at all. The mute is honoured; it is simply honoured
 by omission.
 
@@ -440,16 +440,16 @@ by omission.
 
 MCP registry governance requires Kiro CLI **1.23** or later (Kiro IDE 0.11.28).
 Enforcement in the V2 TUI arrived in **2.2.2**, and **2.6.0** made personal
-`mcp.json` servers load alongside registry-managed ones. Kiro Crew's servers
-live in an agent spec (`~/.kiro/agents/kirocrew.json`), not in personal
+`mcp.json` servers load alongside registry-managed ones. Aj Crew's servers
+live in an agent spec (`~/.kiro/agents/ajcrew.json`), not in personal
 `mcp.json`, so that last change does not exempt them.
 
 ## Central policy distribution: one security policy, every host
 
-`security_policy.json` is Kiro Crew's **enterprise ceiling**: the trust-root
-document that denies tools, commands, filesystem paths and MCP calls at Kiro
+`security_policy.json` is Aj Crew's **enterprise ceiling**: the trust-root
+document that denies tools, commands, filesystem paths and MCP calls at Aj
 Crew's own gate, and that the agent can neither read nor rewrite. It is a
-different mechanism from the MCP registry above — it governs Kiro Crew rather
+different mechanism from the MCP registry above — it governs Aj Crew rather
 than what `kiro-cli` will connect to — and it needs no enterprise Kiro account.
 
 By default it is a local file on each host, which makes every change to it a
@@ -473,7 +473,7 @@ Two properties to internalise before you design a rollout:
   every refresh, because both run the same composition — so a host you tightened
   locally does not quietly lose that tightening at its next successful poll.
 - **The fetched document outranks every local file.** A local policy — including one
-  named by `KIROCREW_SECURITY_POLICY` — can only *tighten* what you published; it
+  named by `AJCREW_SECURITY_POLICY` — can only *tighten* what you published; it
   cannot loosen a single clause. That reverses the older behaviour, where a local
   file beat the central one and the fleet ceiling was therefore advisory: anyone who
   could set an environment variable could point it at a permissive file. It is the
@@ -483,11 +483,11 @@ Two properties to internalise before you design a rollout:
 
 ### The two ways to point a host at a source
 
-| | `KIROCREW_POLICY_URL` | a `distribution` block in a policy file |
+| | `AJCREW_POLICY_URL` | a `distribution` block in a policy file |
 |---|---|---|
 | Where it lives | per-machine environment | inside a `security_policy.json` some host already has |
 | Set by | Jamf / Intune / Ansible / Chef / Puppet, a systemd unit, a container env | placing one small bootstrap policy once |
-| Carries a credential | yes, via `KIROCREW_POLICY_HEADERS` | never — see below |
+| Carries a credential | yes, via `AJCREW_POLICY_HEADERS` | never — see below |
 | Reach for it when | your config-management tool already reaches every host and you want no file to place | you would rather place one file once and have the published document name where its own successors come from |
 
 The two compose, and the environment wins **per setting** — so a host can be
@@ -501,19 +501,19 @@ and redefinable by whoever launches the process, and a bootstrap policy file liv
 in a directory the user may own. What they cannot do is loosen the fetched document —
 every local tier only tightens it.
 
-The full order Kiro Crew loads in, highest first:
+The full order Aj Crew loads in, highest first:
 
 | Tier | Where | Role |
 |---|---|---|
 | 1 | the centrally distributed document | **authority** — one document, every host |
-| 2 | `KIROCREW_SECURITY_POLICY` | subordinate — tightens only |
+| 2 | `AJCREW_SECURITY_POLICY` | subordinate — tightens only |
 | 3 | a companion edition's packaged policy | subordinate — tightens only |
 | 4 | `~/.kiro/crew/security_policy.json` | subordinate — tightens only |
 
 A `distribution` block is read from the first of the local tiers that supplies one —
-`KIROCREW_SECURITY_POLICY`, then a companion's packaged policy, then
+`AJCREW_SECURITY_POLICY`, then a companion's packaged policy, then
 `~/.kiro/crew/security_policy.json` — so naming a source in the file
-`KIROCREW_SECURITY_POLICY` points at works exactly as naming it in any other tier's
+`AJCREW_SECURITY_POLICY` points at works exactly as naming it in any other tier's
 file.
 
 Tiers 2–4 are mutually exclusive (the first one present is used) and the result is
@@ -532,12 +532,12 @@ a document the schema rejects) beneath a central document is skipped with one
 warning rather than refusing boot; the authority governs unchanged.
 
 ```bash
-KIROCREW_POLICY_URL=https://config.corp.example/kirocrew/security_policy.json
-KIROCREW_POLICY_HEADERS='{"Authorization":"Bearer <per-machine token>"}'
-KIROCREW_POLICY_REFRESH_SECS=900          # 0 = fetch at boot only; floor is 60
-KIROCREW_POLICY_TIMEOUT_SECS=10           # per request; default 10
-KIROCREW_POLICY_MAX_CACHE_AGE_SECS=86400  # 0 = no staleness bound
-KIROCREW_POLICY_ON_UNAVAILABLE=fail_closed  # or: degrade
+AJCREW_POLICY_URL=https://config.corp.example/ajcrew/security_policy.json
+AJCREW_POLICY_HEADERS='{"Authorization":"Bearer <per-machine token>"}'
+AJCREW_POLICY_REFRESH_SECS=900          # 0 = fetch at boot only; floor is 60
+AJCREW_POLICY_TIMEOUT_SECS=10           # per request; default 10
+AJCREW_POLICY_MAX_CACHE_AGE_SECS=86400  # 0 = no staleness bound
+AJCREW_POLICY_ON_UNAVAILABLE=fail_closed  # or: degrade
 ```
 
 The `distribution` block spells the same settings as policy keys — `source`,
@@ -547,7 +547,7 @@ shows one filled in alongside the rest of a policy. Read the `network.egress` an
 `commands` rows in that example as **egress defense-in-depth, not a bounded
 egress guarantee**: a deny list is a finite set of known patterns and cannot
 enumerate every network-capable tool. Neither row constrains the policy fetch
-itself — that is Kiro Crew reaching for its own ceiling before any agent exists,
+itself — that is Aj Crew reaching for its own ceiling before any agent exists,
 not a governed tool call, so your source does not need to appear in an egress
 allow-list.
 
@@ -558,26 +558,26 @@ policy names the source for the boot fetch; a published document that omits
 `distribution` leaves the host with no source to poll, so it fetches once at
 startup and then never again. Carrying the block forward in every published
 revision is what makes the channel self-sustaining. The environment channel has no
-such trap: `KIROCREW_POLICY_URL` is read from the environment on every poll. Either
-way, `refresh_interval_secs` (or `KIROCREW_POLICY_REFRESH_SECS`) must be non-zero
+such trap: `AJCREW_POLICY_URL` is read from the environment on every poll. Either
+way, `refresh_interval_secs` (or `AJCREW_POLICY_REFRESH_SECS`) must be non-zero
 for a background poller to exist at all — `0` means fetch at boot only, which is
 still centrally managed but not "on the fly".
 
 **Do not put a request credential in the published document.** The block has no
 `headers` field on purpose: that document goes to the whole fleet, is copied into
 a local cache on every host, and is reported on by a read-only viewer. Per-machine
-credentials belong in `KIROCREW_POLICY_HEADERS` (a JSON object of header name to
+credentials belong in `AJCREW_POLICY_HEADERS` (a JSON object of header name to
 value).
 
 **Transports.** `https` works anywhere. `file://` must name a **local path** — an
 NFS/SMB share is fine, but mount it and name the mount point, because a
 `file://server/share/...` URL is refused. It must also be **read-only to the account
-Kiro Crew runs as — the file *and* every directory above it**: a source that account can write is one an agent subprocess can
+Aj Crew runs as — the file *and* every directory above it**: a source that account can write is one an agent subprocess can
 write, and the refresher would install that ceiling without a restart. A `0444` file in a
 writable directory does not count: it can be replaced by unlink-and-recreate. Use a
 root-owned path or a read-only mount; if what you want is a local, editable policy file, that is
-`KIROCREW_SECURITY_POLICY`, not this channel. On Windows `file://` sources are
-refused until Kiro Crew can read the file's ACL. Use `https`. The validator is a content digest,
+`AJCREW_SECURITY_POLICY`, not this channel. On Windows `file://` sources are
+refused until Aj Crew can read the file's ACL. Use `https`. The validator is a content digest,
 so a host on a shared mount re-reads only when the bytes actually change — including the
 case where you replace the file with a same-size version and preserve its timestamp.
 Plain
@@ -596,24 +596,24 @@ Publish the document, point one host at it, verify, then widen.
 ```bash
 # 1. Publish. Any HTTPS endpoint that serves the bytes verbatim: an S3 object
 #    your hosts can read, a static web server, an internal config service. Put
-#    any request credential in KIROCREW_POLICY_HEADERS rather than in the URL, so
+#    any request credential in AJCREW_POLICY_HEADERS rather than in the URL, so
 #    it is not baked into a link that expires or leaks. ETag / Last-Modified
 #    support is optional but saves a body on every unchanged poll.
-aws s3 cp security_policy.json s3://corp-config/kirocrew/security_policy.json
+aws s3 cp security_policy.json s3://corp-config/ajcrew/security_policy.json
 
 # 2. Point the host at it, through whatever already sets environment variables
-#    for the Kiro Crew service, then restart it once.
-export KIROCREW_POLICY_URL=https://corp-config.s3.amazonaws.com/kirocrew/security_policy.json
-export KIROCREW_POLICY_REFRESH_SECS=900
-kirocrew restart
+#    for the Aj Crew service, then restart it once.
+export AJCREW_POLICY_URL=https://corp-config.s3.amazonaws.com/ajcrew/security_policy.json
+export AJCREW_POLICY_REFRESH_SECS=900
+ajcrew restart
 
 # 3. Verify. `source` reports the posture; `fetch` proves the round trip.
-kirocrew policy source
-kirocrew policy fetch --force
-kirocrew policy show
+ajcrew policy source
+ajcrew policy fetch --force
+ajcrew policy show
 ```
 
-`kirocrew policy source` reports whether central distribution is active, the
+`ajcrew policy source` reports whether central distribution is active, the
 refresh interval, the staleness bound, the `on_unavailable` disposition, and how old
 the cached copy on disk is. It prints the
 source's **scheme, not its URL** — as do the dashboard's policy viewer and the
@@ -626,7 +626,7 @@ A one-shot CLI run has no background poller, so it reports none even on a host
 whose gateway is polling happily; the live refresher's own state is on
 `GET /api/governance/policy` and in the dashboard's security panel.
 
-`kirocrew policy fetch` fetches now, folds the document back into the tier ladder,
+`ajcrew policy fetch` fetches now, folds the document back into the tier ladder,
 validates that composed result, and on success installs it and records the fetched
 document as this host's last-known-good. Run from a shell, what outlives the command is
 the validation and the cache write — the install lands in that short-lived CLI process,
@@ -643,8 +643,8 @@ into a log nobody reads. `--force` skips the cached ETag / Last-Modified
 validators, because a `304` tells you nothing about whether the document you just
 published reads correctly.
 
-`kirocrew policy show` then prints the ceiling actually in effect, and
-`kirocrew policy validate` load-checks the policy plus every profile. No `policy`
+`ajcrew policy show` then prints the ceiling actually in effect, and
+`ajcrew policy validate` load-checks the policy plus every profile. No `policy`
 subcommand is exposed as an MCP tool, deliberately: the governed subject does not
 get to enumerate its own ceiling.
 
@@ -666,7 +666,7 @@ cached copy at all, `on_unavailable` decides:
 
 | `on_unavailable` | Behaviour with no usable cache |
 |---|---|
-| `fail_closed` (**the default**) | **Kiro Crew refuses to start.** A fleet that pointed a host at a central ceiling meant that ceiling to bind, so "we could not reach it" must not read as "run unbounded". |
+| `fail_closed` (**the default**) | **Aj Crew refuses to start.** A fleet that pointed a host at a central ceiling meant that ceiling to bind, so "we could not reach it" must not read as "run unbounded". |
 | `degrade` | Falls through to the next policy tier (a local `security_policy.json`, or none) and records a governance incident, so the dashboard shows the host as degraded. |
 
 Be clear-eyed about the default: **a host with a cold cache and an unreachable
@@ -676,16 +676,16 @@ endpoint is misconfigured, or a container built with the variable set and no
 cache baked in. The error message names the three levers, all of which take
 effect on the next start:
 
-- `KIROCREW_POLICY_ON_UNAVAILABLE=degrade` — boot, and report the degradation.
-- unset `KIROCREW_POLICY_URL` — stop fetching centrally on this host.
-- `KIROCREW_SECURITY_POLICY=/path/to/local.json` — supply a local ceiling so the
+- `AJCREW_POLICY_ON_UNAVAILABLE=degrade` — boot, and report the degradation.
+- unset `AJCREW_POLICY_URL` — stop fetching centrally on this host.
+- `AJCREW_SECURITY_POLICY=/path/to/local.json` — supply a local ceiling so the
   host has one. Note what this is **not**: a local file no longer outranks the
   central tier, so on a host that *did* reach the endpoint it only tightens what you
   published. It is a way to give a host a ceiling, not a way to escape one.
 
-A refusal to establish the ceiling aborts every `kirocrew` command on that host,
+A refusal to establish the ceiling aborts every `ajcrew` command on that host,
 `policy source` included, because each of them boots the same platform context.
-`kirocrew doctor` is the exception and the diagnostic to reach for: it is exempt
+`ajcrew doctor` is the exception and the diagnostic to reach for: it is exempt
 from the abort precisely so the one command that can explain the failure is not
 bricked by it.
 
@@ -707,13 +707,13 @@ matters when you plan:
   kept.** A candidate is validated through the same gates boot uses before it is
   installed, so a refresh can never install a ceiling this host would have
   refused to start under. A refused document is not cached either, so a rejection
-  does not outlive the push once you correct it. `kirocrew policy source` reports
+  does not outlive the push once you correct it. `ajcrew policy source` reports
   the refusal as the last refresh status.
 - **A host that RESTARTS while a bad document is published will try to adopt
   it**, and at boot there is no running ceiling to fall back to. Under
   `fail_closed` that host does not come up. Assume this happens — autoscaling, a
   crash loop, a scheduled reboot window — and stage a change to a canary host
-  (with `KIROCREW_POLICY_URL` pointed at a canary object) before you publish it
+  (with `AJCREW_POLICY_URL` pointed at a canary object) before you publish it
   to the fleet's URL.
 
 ### Signing, and how far it goes
@@ -746,7 +746,7 @@ Two limitations, stated plainly:
   longer consulted, even when the public-key value is a `null` or empty
   placeholder: every policy from that issuer then reads as unverified, and is
   refused when `require_policy_signature` is set.
-- **No signing runbook ships.** There is no `kirocrew policy sign`, no key
+- **No signing runbook ships.** There is no `ajcrew policy sign`, no key
   distribution tooling and no rotation procedure; you compute the signature and
   place the key yourself. `require_policy_signature` on a fleet with no matching
   trust key means every policy is refused, so place the key first. Leaving it
@@ -771,34 +771,34 @@ that issuer:
 
 So you do not plan around capabilities that are not here:
 
-- **No MDM or directory integration.** Kiro Crew reads an environment variable
+- **No MDM or directory integration.** Aj Crew reads an environment variable
   and an HTTPS URL. Jamf, Intune, Group Policy, Ansible and friends are how a
   host gets pointed at a source; nothing on this side knows about them.
 - **No fleet-compliance reporting.** There is no console that lists which hosts
   adopted which version. Each host reports only its own posture, over
-  `kirocrew policy source`, the dashboard's policy viewer, and its own audit log
+  `ajcrew policy source`, the dashboard's policy viewer, and its own audit log
   (which records refresh outcomes that changed something or failed, by scheme, not
-  by URL). Aggregation is yours to build — `kirocrew policy fetch`'s exit code is
+  by URL). Aggregation is yours to build — `ajcrew policy fetch`'s exit code is
   the intended hook.
 - **No push channel.** As above: a change lands within one refresh interval, not
   instantly, and the interval has a 60-second floor.
 - **No staged or percentage rollout.** One URL serves one document to everyone
   who reads it. Canarying means publishing to a second object and pointing a few
-  hosts at it with `KIROCREW_POLICY_URL`.
+  hosts at it with `AJCREW_POLICY_URL`.
 - **Nothing is distributed except the policy.** Profiles, the admission policy
   (including the trust keys), `config.json` and agent configuration are all still
   per-host.
 
 ## Related
 
-- [../architecture/mcp.md](../architecture/mcp.md) — how Kiro Crew composes the
+- [../architecture/mcp.md](../architecture/mcp.md) — how Aj Crew composes the
   agent spec's `mcpServers` map and which files it owns.
 - [../system-specs/modules/governance.md](../system-specs/modules/governance.md)
   — the full `security_policy.json` reference: every governed scope, the
   policy-versus-profile algebra, and the distribution engine's internals.
 - [assets/security-policy.example.json](assets/security-policy.example.json) — a
   policy with a `distribution` block filled in, to copy from.
-- [../../src/kiro_crew/docs/troubleshooting.md](../../src/kiro_crew/docs/troubleshooting.md)
+- [../../src/aj_crew/docs/troubleshooting.md](../../src/aj_crew/docs/troubleshooting.md)
   — the user-facing "MCP tools not working" checklist.
 - Kiro's own documentation: [Enterprise MCP governance](https://kiro.dev/docs/enterprise/governance/mcp/)
   (administrator setup) and [MCP registry mode](https://kiro.dev/docs/mcp/registry/)

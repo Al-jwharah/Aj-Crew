@@ -12,7 +12,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.dashboard.handlers import api_file_watch
+from aj_crew.dashboard.handlers import api_file_watch
 
 
 def _make_app() -> web.Application:
@@ -23,7 +23,7 @@ def _make_app() -> web.Application:
 
 @pytest.fixture()
 def mock_sel():
-    with patch("kiro_crew.dashboard.handlers.sel") as m:
+    with patch("aj_crew.dashboard.handlers.sel") as m:
         instance = MagicMock()
         m.return_value = instance
         yield instance

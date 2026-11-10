@@ -8,15 +8,15 @@ import threading
 
 import pytest
 
-from kiro_crew.dashboard import tailnet_localapi
-from kiro_crew.dashboard.tailnet_direct import (
+from aj_crew.dashboard import tailnet_localapi
+from aj_crew.dashboard.tailnet_direct import (
     MAX_TAILNET_USERS,
     parse_status,
     parse_tailnet_users,
 )
-from kiro_crew.shared_crew import access_set, owner, people, tailscale_sharees
-from kiro_crew.shared_crew.contracts import Principal, Provenance
-from kiro_crew.shared_crew.identity import local_operator_principal, tailnet_principal
+from aj_crew.shared_crew import access_set, owner, people, tailscale_sharees
+from aj_crew.shared_crew.contracts import Principal, Provenance
+from aj_crew.shared_crew.identity import local_operator_principal, tailnet_principal
 
 OWNER_UID = 100
 SHAREE_UID = 200
@@ -86,7 +86,7 @@ def test_the_parser_caps_users_and_reports_the_omitted_count_once(caplog):
         "User": {str(i): {"LoginName": f"user-{i}@example.com"} for i in range(1, total + 1)},
     }
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.tailnet_direct"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.tailnet_direct"):
         users = parse_tailnet_users(status)
 
     assert [user.user_id for user in users] == [str(i) for i in range(1, MAX_TAILNET_USERS + 1)]

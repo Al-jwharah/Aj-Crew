@@ -83,7 +83,7 @@ vi.mock('../../api/client', () => ({
     artifacts: vi.fn(() => Promise.resolve({ artifacts: [] })),
     // `dashboard.crewmate_threads` (reply threads) is read from the shared config
     // query; an empty config is the default -- the flag is OFF.
-    kirocrewConfig: vi.fn(() => Promise.resolve({})),
+    ajcrewConfig: vi.fn(() => Promise.resolve({})),
     // The Schedules chip's count and its tab body read the whole cron list and
     // filter it per crewmate (`wakesCrew`). Resolved-and-empty is the state every
     // case not about schedules wants: the chip reads 0/0, which is an ANSWER of
@@ -93,7 +93,7 @@ vi.mock('../../api/client', () => ({
     // `wakesCrew`'s default-crew fallback needs to know which crew is the default,
     // or every unbound job in the install would be attributed to whichever
     // crewmate happens to be open.
-    defaultAgent: vi.fn(() => Promise.resolve({ default_agent: 'kirocrew' })),
+    defaultAgent: vi.fn(() => Promise.resolve({ default_agent: 'ajcrew' })),
     // The schedule row's own controls (pause / run now), reached through
     // `useCronActions` once the Schedules tab is open.
     toggleCron: vi.fn(() => Promise.resolve({})),
@@ -104,13 +104,13 @@ vi.mock('../../api/client', () => ({
     // create write. Quiet defaults — one custom agent list item and one
     // workspace — so the dialog renders without its own options-failed notice
     // in every case that does not open it.
-    agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'kirocrew' })),
-    // The crew editor's roster read (KiroCrewAgent list), fired when the
+    agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'ajcrew' })),
+    // The crew editor's roster read (AjCrewAgent list), fired when the
     // thread-header pencil opens the in-place editor (CREW-18688).
-    kirocrewAgents: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'kirocrew' })),
+    ajcrewAgents: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'ajcrew' })),
     workspaces: vi.fn(() => Promise.resolve({ workspaces: [{ name: 'default' }] })),
     createWorkspace: vi.fn(() => Promise.resolve({ name: 'staging' })),
-    createKirocrewAgent: vi.fn(() => Promise.resolve({ ok: true })),
+    createAjcrewAgent: vi.fn(() => Promise.resolve({ ok: true })),
     // The guided (embedded Meet CrewMates) flow's reads and its schedule write.
     agentsInstalled: vi.fn(() => Promise.resolve([])),
     getSlackConfig: vi.fn(() => Promise.resolve({ connected: false })),
@@ -475,7 +475,7 @@ describe('MembersPage default member, memory and URL', () => {
       row({ name: 'default', slug: 'default', last_active_ts: 900 }),
       row({ name: 'alpha', slug: 'alpha', last_active_ts: 500 }),
       row({ name: 'beta', slug: 'beta', last_active_ts: 700 }),
-    ], 'kirocrew', { route: '/members?member=default' })
+    ], 'ajcrew', { route: '/members?member=default' })
 
     expect(await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)).toHaveTextContent('member-default')
     expect(localStorage.getItem(LAST_MEMBER_KEY)).toBe('default')
@@ -486,7 +486,7 @@ describe('MembersPage default member, memory and URL', () => {
     await renderPage([
       row({ name: 'default', slug: 'default' }),
       row({ name: 'alpha', slug: 'alpha' }),
-    ], 'kirocrew', { route: '/members?member=default' })
+    ], 'ajcrew', { route: '/members?member=default' })
     expect(await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)).toHaveTextContent('member-default')
     fireEvent.click(await rosterRow('default'))
     await waitFor(() => expect(localStorage.getItem(LAST_MEMBER_KEY)).toBe('default'))
@@ -566,7 +566,7 @@ describe('MembersPage default member, memory and URL', () => {
       defaultRow(),
       assistantRow(),
       row({ name: 'alpha', slug: 'alpha', last_active_ts: 500 }),
-    ], 'kirocrew', { route: '/members?member=mate' })
+    ], 'ajcrew', { route: '/members?member=mate' })
 
     expect(await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)).toHaveTextContent('member-mate')
     expect(localStorage.getItem(LAST_MEMBER_KEY)).toBe('mate')
@@ -653,7 +653,7 @@ describe('MembersPage default member, memory and URL', () => {
   })
 
   it('an explicit member link is not hijacked by the Assistant', async () => {
-    await renderPage([defaultRow(), assistantRow(), row({ name: 'alpha', slug: 'alpha' })], 'kirocrew', { route: '/members?member=alpha' })
+    await renderPage([defaultRow(), assistantRow(), row({ name: 'alpha', slug: 'alpha' })], 'ajcrew', { route: '/members?member=alpha' })
     expect(await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)).toHaveTextContent('member-alpha')
     expect(currentUrl()).toBe('/members?member=alpha')
   })
@@ -678,10 +678,10 @@ describe('MembersPage default member, memory and URL', () => {
         row({ name: 'alpha', slug: 'alpha', last_active_ts: 100 }),
         row({ name: 'beta', slug: 'beta', last_active_ts: 999, last_message: 'fresh row content' }),
       ],
-      default_agent: 'kirocrew',
+      default_agent: 'ajcrew',
     })
     act(() => {
-      void utils.queryClient.invalidateQueries({ queryKey: ['kirocrew-agents'] })
+      void utils.queryClient.invalidateQueries({ queryKey: ['ajcrew-agents'] })
     })
     // Content updated in place…
     await roster().findByText('fresh row content')
@@ -694,10 +694,10 @@ describe('MembersPage default member, memory and URL', () => {
         row({ name: 'beta', slug: 'beta', last_active_ts: 999 }),
         row({ name: 'gamma', slug: 'gamma', last_active_ts: 500 }),
       ],
-      default_agent: 'kirocrew',
+      default_agent: 'ajcrew',
     })
     act(() => {
-      void utils.queryClient.invalidateQueries({ queryKey: ['kirocrew-agents'] })
+      void utils.queryClient.invalidateQueries({ queryKey: ['ajcrew-agents'] })
     })
     await rosterRow('gamma')
     expect(names()).toEqual(['beta', 'gamma', 'alpha'])
@@ -837,7 +837,7 @@ describe('MembersPage default member, memory and URL', () => {
 
   it('a URL naming a member wins over the remembered one (shallow link)', async () => {
     localStorage.setItem(LAST_MEMBER_KEY, 'alpha')
-    await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=beta' })
+    await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=beta' })
     expect(await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)).toHaveTextContent('member-beta')
     expect(api.memberThread).toHaveBeenCalledTimes(1)
     // Opening via the link also becomes the memory for the next visit.
@@ -845,7 +845,7 @@ describe('MembersPage default member, memory and URL', () => {
   })
 
   it('a URL naming a gone member with NOTHING remembered falls back to the most-recently-used one and SAYS so', async () => {
-    await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=ghost' })
+    await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=ghost' })
     // The user asked for a specific member, but there is nothing remembered to
     // stand in for them — the roster is not empty though, so the fallback is
     // the most-recently-used crewmate (alpha and beta tie at ts=0; the tie
@@ -870,7 +870,7 @@ describe('MembersPage default member, memory and URL', () => {
   })
 
   it('a URL naming a gone member on an EMPTY roster returns to the roster and SAYS so', async () => {
-    await renderPage([], 'kirocrew', { route: '/members?member=ghost' })
+    await renderPage([], 'ajcrew', { route: '/members?member=ghost' })
     // An empty roster has nothing to stand in for the gone name at all — the
     // one case that still lands on the roster (the New crewmate hero) rather
     // than a stand-in chat.
@@ -891,7 +891,7 @@ describe('MembersPage default member, memory and URL', () => {
 
   it('a gone link falls back to the REMEMBERED member first, and leaves the memory alone', async () => {
     localStorage.setItem(LAST_MEMBER_KEY, 'beta')
-    await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=ghost' })
+    await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=ghost' })
     // The remembered member, not the first row, is the stand-in.
     expect(await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)).toHaveTextContent('member-beta')
     expect(screen.getByTestId('member-gone-notice')).toHaveTextContent(/^Showing beta/)
@@ -948,10 +948,10 @@ describe('MembersPage default member, memory and URL', () => {
       return realSet.call(this, key, value)
     })
     try {
-      ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: alphaBeta(), default_agent: 'kirocrew' })
+      ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: alphaBeta(), default_agent: 'ajcrew' })
       ;(api.memberThread as ReturnType<typeof vi.fn>).mockImplementation(echoThread)
       // The app's own return-to-the-list route: the crew editor exits to a
-      // BARE /members (KiroCrewAgentsPage), as does the rail's Crew Members row.
+      // BARE /members (AjCrewAgentsPage), as does the rail's Crew Members row.
       function ReturnToList() {
         const nav = useNavigate()
         return (
@@ -990,7 +990,7 @@ describe('MembersPage default member, memory and URL', () => {
     const had = proto.scrollIntoView
     proto.scrollIntoView = scroll
     try {
-      await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=beta' })
+      await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=beta' })
       await waitFor(() => expect(screen.getByTestId('chat-pane-stub')).toHaveTextContent('member-beta'), PANE_READY)
       const row = roster().getByText('beta').closest('button')!
       expect(row).toHaveAttribute('aria-current', 'true')
@@ -1010,7 +1010,7 @@ describe('MembersPage default member, memory and URL', () => {
     // member seeds the initial arrival (a fresh visit no longer auto-opens
     // anyone, #11763); this test is about the in-flight link, not the arrival.
     localStorage.setItem(LAST_MEMBER_KEY, 'alpha')
-    ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: alphaBeta(), default_agent: 'kirocrew' })
+    ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: alphaBeta(), default_agent: 'ajcrew' })
     ;(api.memberThread as ReturnType<typeof vi.fn>).mockImplementation(echoThread)
     function Elsewhere() {
       const nav = useNavigate()
@@ -1050,10 +1050,10 @@ describe('MembersPage default member, memory and URL', () => {
       () =>
         new Promise((resolve) => {
           release = () =>
-            resolve({ members: [...alphaBeta(), row({ name: 'staging', slug: 'staging' })], default_agent: 'kirocrew' })
+            resolve({ members: [...alphaBeta(), row({ name: 'staging', slug: 'staging' })], default_agent: 'ajcrew' })
         }),
     )
-    void queryClient.invalidateQueries({ queryKey: ['kirocrew-agents'] })
+    void queryClient.invalidateQueries({ queryKey: ['ajcrew-agents'] })
     fireEvent.click(screen.getByTestId('return-with-new-member'))
     await waitFor(() => expect(api.members).toHaveBeenCalledTimes(2))
 
@@ -1080,7 +1080,7 @@ describe('MembersPage default member, memory and URL', () => {
     // `/members` entry, or Back would need two presses to leave the page.
     // Below md the first tap is the two-level step and does push (its own
     // case in MembersPage.narrow.test.tsx's below-md block).
-    ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: alphaBeta(), default_agent: 'kirocrew' })
+    ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: alphaBeta(), default_agent: 'ajcrew' })
     ;(api.memberThread as ReturnType<typeof vi.fn>).mockImplementation(echoThread)
     function Elsewhere() {
       const nav = useNavigate()
@@ -1130,7 +1130,7 @@ describe('MembersPage default member, memory and URL', () => {
     // about the history shape of SWITCHING, so the restore stands in for the
     // arrival that the auto-open used to provide.
     localStorage.setItem(LAST_MEMBER_KEY, 'alpha')
-    ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: alphaBeta(), default_agent: 'kirocrew' })
+    ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: alphaBeta(), default_agent: 'ajcrew' })
     ;(api.memberThread as ReturnType<typeof vi.fn>).mockImplementation(echoThread)
     function Elsewhere() {
       const nav = useNavigate()

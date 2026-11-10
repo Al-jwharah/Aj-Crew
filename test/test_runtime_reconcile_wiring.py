@@ -18,8 +18,8 @@ from typing import Any
 import pytest
 from runtime_reconcile_helpers import _cleanup, _refusals
 
-from kiro_crew import runtime_reconcile as rr
-from kiro_crew.testing.ids import unallocatable_pids
+from aj_crew import runtime_reconcile as rr
+from aj_crew.testing.ids import unallocatable_pids
 
 # Module-wide, like the other runtime reconciler test modules: the rootdir conftest
 # leaves runtime_ownership's tables as this module's own tests leave them, and the
@@ -129,7 +129,7 @@ def test_the_configured_ceiling_cannot_exceed_the_shipped_budget() -> None:
     a write can withhold signals and cannot authorize one the arm would not already
     send. A ceiling above the default would make the field an arming surface.
     """
-    from kiro_crew.config import sections
+    from aj_crew.config import sections
 
     assert sections.RECONCILE_MAX_KILLS_MAX == rr.DEFAULT_MAX_KILLS
     assert rr.DEFAULT_MAX_KILLS > 0, "and the shipped budget is a real one"
@@ -142,7 +142,7 @@ def test_the_config_default_matches_the_module_default() -> None:
     import would be a cycle -- so the value is written in both places. A test is the
     only place they can be held together.
     """
-    from kiro_crew.config import sections
+    from aj_crew.config import sections
 
     assert sections.DEFAULT_RECONCILE_MAX_KILLS == rr.DEFAULT_MAX_KILLS
     assert sections.SessionConfig().reconcile_max_kills == rr.DEFAULT_MAX_KILLS
@@ -174,7 +174,7 @@ def test_the_configured_budget_is_clamped_on_load(stored: object, loaded: int) -
     ``config.json`` is agent-writable and never passes the dashboard's write gate, so
     the load path is the only place a hand-edited kill budget is bounded.
     """
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     cfg = loader._build_session_config({"reconcile_max_kills": stored})
     assert cfg.reconcile_max_kills == loaded
@@ -271,7 +271,7 @@ def test_the_kill_line_names_the_count_signalled_not_the_root_alone(
     rec._kill_tree = lambda pid, expected=None: 3  # type: ignore[method-assign]
     rec.run_once()
     audited.clear()
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.runtime_reconcile"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.runtime_reconcile"):
         rec.run_once()
 
     lines = [r.getMessage() for r in caplog.records]
@@ -293,7 +293,7 @@ def test_the_wiring_claims_pids_tracked_by_any_gateway_on_this_data_home(
     """MUTATION TARGET: membership read at the same scope as the kernel question.
 
     The agent slice is named from a hash of the data home, so a SECOND process on
-    that home -- a ``kirocrew chat`` doing agent work in-process, or this gateway's
+    that home -- a ``ajcrew chat`` doing agent work in-process, or this gateway's
     own namespace-sandbox children whose tracked pid is the launcher parent -- puts
     live runtimes in the very slice this reconciler reads. Their records are filed
     under a different gateway pid, or in the descendant pid file, and the lease
@@ -303,7 +303,7 @@ def test_the_wiring_claims_pids_tracked_by_any_gateway_on_this_data_home(
     by construction, passes the inherited marker test, ages past the floor, and is
     signalled. So membership comes from both pid files across every gateway pid.
     """
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     home = tmp_path / "home"
     home.mkdir()
@@ -321,7 +321,7 @@ def test_the_wiring_claims_pids_tracked_by_any_gateway_on_this_data_home(
     # reconciler would read the host's real slice.
     monkeypatch.setattr(rr, "instance_slice_pids", lambda: {5101, 5202, 5303})
     monkeypatch.setattr(
-        "kiro_crew.platform_compat.pid_liveness", lambda pid: platform_compat.PID_ALIVE
+        "aj_crew.platform_compat.pid_liveness", lambda pid: platform_compat.PID_ALIVE
     )
     monkeypatch.setattr(session_pid, "_pid_start_token", lambda pid: None)
 
@@ -350,7 +350,7 @@ def test_an_incomplete_tracked_pid_snapshot_refuses_the_pass(
     incomplete membership -- the same requirement the scope reaper imposes on every
     kill-authorizing caller.
     """
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     monkeypatch.setattr(rr, "_mcp_backend_pids", lambda: set())
     monkeypatch.setattr(session_pid, "_session_pid_entry_index", lambda gw: {})
@@ -374,7 +374,7 @@ def test_a_foreign_gateways_dead_record_is_counted_but_not_claimed_retracted(
     row -- and an unchanged rewrite still returns True, so calling it would report a
     retraction that never happened, every pass, forever.
     """
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     home = tmp_path / "home"
     home.mkdir()
@@ -386,7 +386,7 @@ def test_a_foreign_gateways_dead_record_is_counted_but_not_claimed_retracted(
     monkeypatch.setattr(rr, "_mcp_backend_pids", lambda: set())
     monkeypatch.setattr(rr, "instance_slice_pids", lambda: set())
     monkeypatch.setattr(
-        "kiro_crew.platform_compat.pid_liveness", lambda pid: platform_compat.PID_DEAD
+        "aj_crew.platform_compat.pid_liveness", lambda pid: platform_compat.PID_DEAD
     )
     untracked: list[str] = []
     real_retract = rr._retract_session_rows
@@ -416,7 +416,7 @@ def test_the_entry_reader_carries_every_gateways_rows(
 ) -> None:
     """POSITIVE CONTROL for the reader: without it, a reader that silently returned
     nothing would satisfy the test above by making both rows invisible."""
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     home = tmp_path / "home"
     home.mkdir()
@@ -447,7 +447,7 @@ def test_the_reconcile_pass_reads_the_pid_union_on_the_loop_not_in_the_worker(
     that sees a momentarily empty pool spawns runtimes to fill one that was never
     empty -- so the union must be gathered here and handed over frozen.
     """
-    from kiro_crew import session_cleanup as sc
+    from aj_crew import session_cleanup as sc
 
     union_threads: list[int] = []
     pass_threads: list[int] = []
@@ -488,7 +488,7 @@ def test_an_incomplete_pid_union_skips_the_reconcile_pass(
     union makes a live runtime look unowned, which is the one input that turns this
     reconciler into the leak it exists to report.
     """
-    from kiro_crew import session_cleanup as sc
+    from aj_crew import session_cleanup as sc
 
     ran: list[int] = []
 
@@ -532,7 +532,7 @@ def test_the_hook_hands_the_configured_kill_budget_to_every_pass(
     Without this the field is inert: the reconciler would keep whatever budget it was
     built with, and an operator arming it would see nothing change.
     """
-    from kiro_crew import session_cleanup as sc
+    from aj_crew import session_cleanup as sc
 
     budgets: list[int] = []
 
@@ -566,7 +566,7 @@ def test_the_configured_budget_is_re_read_on_the_next_tick(
     The reconciler instance is built once and kept, so this is the only thing that
     makes arming the budget take effect without a gateway restart.
     """
-    from kiro_crew import session_cleanup as sc
+    from aj_crew import session_cleanup as sc
 
     budgets: list[int] = []
 
@@ -611,7 +611,7 @@ def test_a_record_in_neither_tracking_file_is_counted_dead_but_not_claimed_retra
     succeeds. Counting that as a retraction reports work that did not happen on
     every pass for as long as the record lives.
     """
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     home = tmp_path / "home"
     home.mkdir()
@@ -619,7 +619,7 @@ def test_a_record_in_neither_tracking_file_is_counted_dead_but_not_claimed_retra
     monkeypatch.setattr(rr, "_mcp_backend_pids", lambda: set())
     monkeypatch.setattr(rr, "instance_slice_pids", lambda: set())
     monkeypatch.setattr(
-        "kiro_crew.platform_compat.pid_liveness", lambda pid: platform_compat.PID_DEAD
+        "aj_crew.platform_compat.pid_liveness", lambda pid: platform_compat.PID_DEAD
     )
     handed: list[int] = []
     monkeypatch.setattr(session_pid, "_untrack_session_pid", lambda pid: handed.append(pid) is None)
@@ -642,7 +642,7 @@ def test_a_descendant_only_record_is_retracted_from_the_descendant_file(
     because the pid that is tracked and leased is the launcher parent. Their record
     is not in the session file at all, so the session untracker cannot retract it.
     """
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     home = tmp_path / "home"
     home.mkdir()
@@ -652,7 +652,7 @@ def test_a_descendant_only_record_is_retracted_from_the_descendant_file(
     monkeypatch.setattr(rr, "_mcp_backend_pids", lambda: set())
     monkeypatch.setattr(rr, "instance_slice_pids", lambda: set())
     monkeypatch.setattr(
-        "kiro_crew.platform_compat.pid_liveness",
+        "aj_crew.platform_compat.pid_liveness",
         lambda pid: platform_compat.PID_DEAD if pid == 5501 else platform_compat.PID_ALIVE,
     )
     # The live sibling must also pass the recycle check, so its identity is pinned
@@ -684,7 +684,7 @@ def test_a_legacy_bare_descendant_row_is_retracted_by_the_bare_line_remover(
 ) -> None:
     """The two row grammars in one file need different removers, and the remover for
     a parented row matches on its child field -- which a bare line has no form of."""
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     home = tmp_path / "home"
     home.mkdir()
@@ -694,7 +694,7 @@ def test_a_legacy_bare_descendant_row_is_retracted_by_the_bare_line_remover(
     monkeypatch.setattr(rr, "_mcp_backend_pids", lambda: set())
     monkeypatch.setattr(rr, "instance_slice_pids", lambda: set())
     monkeypatch.setattr(
-        "kiro_crew.platform_compat.pid_liveness", lambda pid: platform_compat.PID_DEAD
+        "aj_crew.platform_compat.pid_liveness", lambda pid: platform_compat.PID_DEAD
     )
 
     reading = rr.build_reconciler(
@@ -715,7 +715,7 @@ def test_a_session_row_the_remover_left_in_place_is_not_claimed_retracted(
     its rewrite succeeded, which an unchanged rewrite also does. So a row still
     present after the retraction must count as nothing removed.
     """
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     home = tmp_path / "home"
     home.mkdir()
@@ -724,7 +724,7 @@ def test_a_session_row_the_remover_left_in_place_is_not_claimed_retracted(
     monkeypatch.setattr(rr, "_mcp_backend_pids", lambda: set())
     monkeypatch.setattr(rr, "instance_slice_pids", lambda: set())
     monkeypatch.setattr(
-        "kiro_crew.platform_compat.pid_liveness", lambda pid: platform_compat.PID_DEAD
+        "aj_crew.platform_compat.pid_liveness", lambda pid: platform_compat.PID_DEAD
     )
     # Returns nothing and changes nothing -- the shape of a rewrite that matched no
     # row, which is indistinguishable from a successful one by its answer alone.
@@ -749,7 +749,7 @@ def test_the_descendant_row_reader_names_only_a_pids_own_row(
     A pid appearing only as the PARENT field is not a record of itself -- that is the
     field the reapers deliberately ignore, and the field no remover matches on.
     """
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     home = tmp_path / "home"
     home.mkdir()
@@ -775,7 +775,7 @@ def test_a_pid_carrying_two_rows_keeps_both_so_neither_is_retracted_by_the_other
     child, so one pid legitimately carries a row per parent. A reader that kept only
     the last would hand the retraction a set that omits rows it inspected.
     """
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     home = tmp_path / "home"
     home.mkdir()
@@ -800,7 +800,7 @@ def test_a_replacement_row_under_a_reused_pid_survives_the_dead_rows_retraction(
     dead one. The live descendant would then be tracked in neither file: leaked past
     every reaper that keys off it, and read as unowned by the next pass.
     """
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     home = tmp_path / "home"
     home.mkdir()
@@ -825,7 +825,7 @@ def test_a_replacement_row_under_a_reused_pid_survives_the_dead_rows_retraction(
                 handle.write(replacement + "\n")
         return platform_compat.PID_DEAD
 
-    monkeypatch.setattr("kiro_crew.platform_compat.pid_liveness", register_replacement_mid_pass)
+    monkeypatch.setattr("aj_crew.platform_compat.pid_liveness", register_replacement_mid_pass)
 
     reading = rr.build_reconciler(
         active_pids=lambda: set(), notify_dead=lambda pid: None
@@ -853,7 +853,7 @@ def test_a_replacements_session_row_survives_the_dead_records_retraction(
     with the dead one, and its LIVE runtime is tracked nowhere -- past every reaper
     that keys off this file, and read as unowned by the next pass.
     """
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     home = tmp_path / "home"
     home.mkdir()
@@ -865,7 +865,7 @@ def test_a_replacements_session_row_survives_the_dead_records_retraction(
     monkeypatch.setattr(rr, "_mcp_backend_pids", lambda: set())
     monkeypatch.setattr(rr, "instance_slice_pids", lambda: set())
     monkeypatch.setattr(
-        "kiro_crew.platform_compat.pid_liveness", lambda pid: platform_compat.PID_DEAD
+        "aj_crew.platform_compat.pid_liveness", lambda pid: platform_compat.PID_DEAD
     )
 
     real_retract = rr._retract_session_rows
@@ -901,7 +901,7 @@ def test_the_session_row_remover_matches_whole_lines_in_both_grammars(
     Without this, a remover that quietly removed nothing would satisfy the guard
     above by leaving every row in place.
     """
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     home = tmp_path / "home"
     home.mkdir()
@@ -926,7 +926,7 @@ def test_a_recycled_descendant_with_no_session_row_counts_as_dead(
     reused: its dead row is never retracted, so a record goes on naming somebody
     else's process for the gateway's life.
     """
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     home = tmp_path / "home"
     home.mkdir()
@@ -936,7 +936,7 @@ def test_a_recycled_descendant_with_no_session_row_counts_as_dead(
     monkeypatch.setattr(rr, "_mcp_backend_pids", lambda: set())
     monkeypatch.setattr(rr, "instance_slice_pids", lambda: set())
     monkeypatch.setattr(
-        "kiro_crew.platform_compat.pid_liveness", lambda pid: platform_compat.PID_ALIVE
+        "aj_crew.platform_compat.pid_liveness", lambda pid: platform_compat.PID_ALIVE
     )
 
     reading = rr.build_reconciler(
@@ -959,7 +959,7 @@ def test_a_descendant_row_whose_identity_still_matches_is_alive(
     Without this, reading both files could become "any disagreement is a stranger",
     which would retract the record of a live runtime whose other row is stale.
     """
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     home = tmp_path / "home"
     home.mkdir()
@@ -973,7 +973,7 @@ def test_a_descendant_row_whose_identity_still_matches_is_alive(
     monkeypatch.setattr(rr, "_mcp_backend_pids", lambda: set())
     monkeypatch.setattr(rr, "instance_slice_pids", lambda: set())
     monkeypatch.setattr(
-        "kiro_crew.platform_compat.pid_liveness", lambda pid: platform_compat.PID_ALIVE
+        "aj_crew.platform_compat.pid_liveness", lambda pid: platform_compat.PID_ALIVE
     )
 
     reading = rr.build_reconciler(
@@ -1103,7 +1103,7 @@ def test_a_record_that_is_not_ours_to_retract_is_not_warned_about_every_pass(
         forget=lambda pid: "not-mine",
         notify_dead=lambda pid: None,
     )
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.runtime_reconcile"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.runtime_reconcile"):
         reconciler.run_once()
 
     warnings = [
@@ -1133,7 +1133,7 @@ def test_a_retraction_that_was_ours_and_did_not_land_is_still_warned_about(
         forget=lambda pid: "failed",
         notify_dead=lambda pid: None,
     )
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.runtime_reconcile"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.runtime_reconcile"):
         reconciler.run_once()
 
     warnings = [
@@ -1155,7 +1155,7 @@ def _dead_summary_levels(forget: Any, caplog: pytest.LogCaptureFixture) -> list[
         forget=forget,
         notify_dead=lambda pid: None,
     )
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.runtime_reconcile"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.runtime_reconcile"):
         reading = reconciler.run_once()
     assert reading.owned_dead == 2, "both records are counted dead whatever the answer"
     return [r.levelno for r in caplog.records if "records named processes" in r.getMessage()]
@@ -1212,7 +1212,7 @@ def _cleanup_with_clock(
 
 def _drive_reconcile(cleanup: Any, monkeypatch: pytest.MonkeyPatch, reading: Any) -> None:
     """Run one reconcile hook tick whose pass returns *reading*."""
-    from kiro_crew import session_cleanup as sc
+    from aj_crew import session_cleanup as sc
 
     class _Fake:
         def __init__(self, active_pids: Any) -> None:
@@ -1368,7 +1368,7 @@ def test_an_incomplete_union_skip_surfaces_through_the_same_warn_once_ledger(
     """
     import dataclasses
 
-    from kiro_crew import session_cleanup as sc
+    from aj_crew import session_cleanup as sc
 
     logger = logging.getLogger("test.reconcile.refusal.union")
     clock = [0.0]
@@ -1491,12 +1491,12 @@ def test_the_reconcile_counter_name_passes_the_core_metric_name_check(
 ) -> None:
     """MUTATION TARGET: the per-pass counter is named so the recorder accepts it.
 
-    The recorder refuses a core name outside ``kirocrew.`` / ``gen_ai.`` and only
+    The recorder refuses a core name outside ``ajcrew.`` / ``gen_ai.`` and only
     logs a warning, so a bad name drops the counter on every pass with no failure.
     """
     import dataclasses
 
-    from kiro_crew.metrics.schema import validate_name
+    from aj_crew.metrics.schema import validate_name
 
     emitted: list[tuple[str, dict[str, Any]]] = []
     cleanup, _recorded = _cleanup(candidates=[], active={4242})

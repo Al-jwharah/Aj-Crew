@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.browser_harness import decide, dom_census, helper_worker, ops
+from aj_crew.browser_harness import decide, dom_census, helper_worker, ops
 
 
 class _Frames:
@@ -525,7 +525,7 @@ async def test_a_secret_field_in_a_closed_shadow_root_refuses_the_screenshot(
 
 
 def test_the_census_counts_only_secret_fields_inside_closed_roots() -> None:
-    from kiro_crew.browser_harness import dom_census
+    from aj_crew.browser_harness import dom_census
 
     def field(**attrs: str) -> dict[str, Any]:
         flat: list[str] = []
@@ -710,7 +710,7 @@ async def test_copy_chords_are_refused_while_a_closed_root_holds_a_secret_field(
 
 
 def test_the_replay_mask_names_secret_fields_by_the_walkers_rule() -> None:
-    from kiro_crew.browser_harness import dom_census, screencast
+    from aj_crew.browser_harness import dom_census, screencast
 
     mask_re = screencast._MASK_JS.split("const NAMED=/", 1)[1].split("/i;", 1)[0]
     assert mask_re == dom_census.SECRET_NAME_RE.pattern

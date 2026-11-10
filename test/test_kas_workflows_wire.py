@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.agent_sdk.capabilities import UNKNOWN_BACKEND_CAPABILITIES, capabilities_for
-from kiro_crew.kas_workflows import wire
-from kiro_crew.kas_workflows.engine import ENGINE_CREW, ENGINE_KAS, engine_for
+from aj_crew.agent_sdk.capabilities import UNKNOWN_BACKEND_CAPABILITIES, capabilities_for
+from aj_crew.kas_workflows import wire
+from aj_crew.kas_workflows.engine import ENGINE_CREW, ENGINE_KAS, engine_for
 
 
 def test_only_kas_has_a_native_workflow_engine() -> None:

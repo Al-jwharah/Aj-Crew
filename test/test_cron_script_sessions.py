@@ -15,9 +15,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import cron_script
-from kiro_crew.cron_script import ScriptContext
-from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+from aj_crew import cron_script
+from aj_crew.cron_script import ScriptContext
+from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
 
 _JOB = "nightly-dispatch"
 # Assembled at runtime so the source never holds a credential-shaped literal.
@@ -41,9 +41,9 @@ class _Resp:
 @pytest.fixture
 def ctx(monkeypatch: pytest.MonkeyPatch) -> ScriptContext:
     """A context built from the env contract ``run_script_sandboxed`` sets up."""
-    monkeypatch.setenv("_KIROCREW_DIAL_PORT", "7788")
-    monkeypatch.setenv("KIROCREW_INTERNAL_SECRET", "tok")
-    monkeypatch.delenv("_KIROCREW_SECRET_FILE", raising=False)
+    monkeypatch.setenv("_AJCREW_DIAL_PORT", "7788")
+    monkeypatch.setenv("AJCREW_INTERNAL_SECRET", "tok")
+    monkeypatch.delenv("_AJCREW_SECRET_FILE", raising=False)
     monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, "signed-run-token")
     return ScriptContext(job=SimpleNamespace(id=_JOB, message=""))
 
@@ -488,9 +488,9 @@ class TestTheCronCredential:
 
     def test_no_run_token_means_no_token_header(self, monkeypatch, gateway):
         """A directly constructed context outside a run presents only the secret and key."""
-        monkeypatch.setenv("_KIROCREW_DIAL_PORT", "7788")
-        monkeypatch.setenv("KIROCREW_INTERNAL_SECRET", "tok")
-        monkeypatch.delenv("_KIROCREW_SECRET_FILE", raising=False)
+        monkeypatch.setenv("_AJCREW_DIAL_PORT", "7788")
+        monkeypatch.setenv("AJCREW_INTERNAL_SECRET", "tok")
+        monkeypatch.delenv("_AJCREW_SECRET_FILE", raising=False)
         monkeypatch.delenv(STUB_SESSION_TOKEN_ENV, raising=False)
         gateway.answers[("GET", "/api/chat/folders")] = []
 

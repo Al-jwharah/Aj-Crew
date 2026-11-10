@@ -26,9 +26,9 @@ import yarl
 from aiohttp.test_utils import TestClient, TestServer
 from git_maintenance_helpers import GIT_MAINTENANCE_OFF_CONFIG
 
-from kiro_crew import platform_compat
-from kiro_crew.loop_lock import LoopBoundLock
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import platform_compat
+from aj_crew.loop_lock import LoopBoundLock
+from aj_crew.testing.wait import async_wait_until
 
 SECRET = "test-proxy-secret"
 
@@ -130,7 +130,7 @@ class SignedClient:
         digest = hashlib.sha256(body).hexdigest()
         msg = f"{ts}:{method}:{target}:{digest}"
         sig = hmac.new(SECRET.encode(), msg.encode(), hashlib.sha256).hexdigest()
-        return {"X-KiroCrew-Proxy": f"{ts}:{sig}"}
+        return {"X-AjCrew-Proxy": f"{ts}:{sig}"}
 
     async def request(
         self, method: str, path: str, payload: Optional[dict[str, Any]] = None
@@ -189,9 +189,9 @@ def fixtures_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, _seed_temp
     """The backend module with fresh per-process state, a temp home and git fixture repos."""
     monkeypatch.setenv("MD_NOTEBOOK_HOME", str(tmp_path / "home"))
     # The PAT lives under the crew data home (config_dir), never MD_NOTEBOOK_HOME,
-    # so isolate KIROCREW_HOME too or tests would touch the real ~/.kiro/crew.
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew"))
-    monkeypatch.setenv("KIROCREW_PROXY_SECRET", SECRET)
+    # so isolate AJCREW_HOME too or tests would touch the real ~/.kiro/crew.
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew"))
+    monkeypatch.setenv("AJCREW_PROXY_SECRET", SECRET)
     monkeypatch.setenv("MD_NOTEBOOK_NO_PICKER", "1")
     # Every auth-bearing route falls through ``resolve_auth`` to ``gh_token``,
     # which spawns the host's real ``gh auth token`` whenever ``_find_gh`` finds
@@ -200,7 +200,7 @@ def fixtures_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, _seed_temp
     # live token. Pin the resolver's own override to a path that does not exist
     # so it answers "no gh" and the token path is exercised as a genuine absence.
     monkeypatch.setenv("MD_NOTEBOOK_GH_BIN", str(tmp_path / "no-such-gh"))
-    from kiro_crew.apps.builtins.md_notebook import server as server_mod
+    from aj_crew.apps.builtins.md_notebook import server as server_mod
 
     # Every data-home path resolves per call from the env above, so the module is
     # used as imported.

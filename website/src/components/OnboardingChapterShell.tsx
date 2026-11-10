@@ -79,7 +79,7 @@ export function ShellAside({ copy, compact = false }: { copy: ShellAsideCopy; co
       <div className={`relative z-10 flex w-full flex-col ${compact ? 'p-5' : 'p-7'} sm:p-10`}>
         <div className="flex items-center gap-3">
           <KiroGhost size={28} className="h-8 w-7" />
-          <span className="text-[15px] font-semibold tracking-wide">{i18nT('components.onboardingChapterShell.kiro_crew')}</span>
+          <span className="text-[15px] font-semibold tracking-wide">{i18nT('components.onboardingChapterShell.aj_crew')}</span>
         </div>
         <div className="mt-auto max-w-[290px]">
           <h1 className={`${compact ? 'mt-4 text-2xl sm:mt-0' : 'text-4xl'} font-semibold leading-[1.05] tracking-[-0.02em] sm:text-[clamp(2.2rem,4vw,3.5rem)]`}>

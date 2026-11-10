@@ -1,10 +1,10 @@
 # Implementation Plan: Builtin App Migration
 
-Status: implemented in `src/kiro_crew/apps/manager_records.py`, `src/kiro_crew/apps/manager_builtins.py`, `src/kiro_crew/apps/manager_lookup.py` and the dashboard migration components.
+Status: implemented in `src/aj_crew/apps/manager_records.py`, `src/aj_crew/apps/manager_builtins.py`, `src/aj_crew/apps/manager_lookup.py` and the dashboard migration components.
 
 ## Overview
 
-Implement the two-phase graceful migration mechanism for builtin apps. Backend changes in Python (KiroCrew gateway), frontend changes in TypeScript/React (KiroCrewWebsite).
+Implement the two-phase graceful migration mechanism for builtin apps. Backend changes in Python (AjCrew gateway), frontend changes in TypeScript/React (AjCrewWebsite).
 
 ## Tasks
 

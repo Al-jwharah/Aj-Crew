@@ -1,4 +1,4 @@
-"""Status reactions, review drafts and the safe update paths of :mod:`kiro_crew.slack.handler`.
+"""Status reactions, review drafts and the safe update paths of :mod:`aj_crew.slack.handler`.
 
 Pins the ``StatusReactionController`` phases, stall watchdog and finalize, the review-draft
 store's expiry and cap, and the safe update paths (truncation, splitting, and the Slack,
@@ -21,7 +21,7 @@ from slack_handler_coverage_helpers import (  # noqa: F401 -- fixtures are reque
 )
 from slack_wire_helpers import slack_wire
 
-from kiro_crew.slack import handler as h
+from aj_crew.slack import handler as h
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -143,7 +143,7 @@ class TestStatusReactionController:
 class TestSafeUpdates:
     @pytest.mark.asyncio
     async def test_update_truncates_over_limit(self, slack):
-        from kiro_crew.slack.format import SLACK_MSG_LIMIT
+        from aj_crew.slack.format import SLACK_MSG_LIMIT
 
         await h._safe_update(slack, "C1", "m1", "x" * (SLACK_MSG_LIMIT + 50))
         text = slack.actions[0][1]["text"]
@@ -162,7 +162,7 @@ class TestSafeUpdates:
 
     @pytest.mark.asyncio
     async def test_final_update_splits_long_text(self, slack):
-        from kiro_crew.slack.format import SLACK_MSG_LIMIT
+        from aj_crew.slack.format import SLACK_MSG_LIMIT
 
         await h._safe_final_update(slack, "C1", "m1", "y " * SLACK_MSG_LIMIT, "t1")
         assert [a for a in slack.actions if a[0] == "update"]

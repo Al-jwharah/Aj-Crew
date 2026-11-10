@@ -4,7 +4,7 @@
 # Shared by ensure-python.sh, ensure-node.sh and `install.sh --mise`. They used
 # to pipe https://mise.run into sh, which runs whatever that script and the
 # release it picks are on the day. ensure-node.sh is also reached without a
-# prompt (gateway start, `kirocrew update`), so this path must never execute
+# prompt (gateway start, `ajcrew update`), so this path must never execute
 # downloaded code before it is verified.
 #
 # To bump: pick a release at least 7 days old from

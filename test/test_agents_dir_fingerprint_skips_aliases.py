@@ -5,7 +5,7 @@ rules, and leave skill-view aliases out exactly as the roster does.
 caches; ``agents_dir_revision`` pins the ``AgentsDirMemo`` answers of the KAS
 projection and the tool-policy read. Both walk ``_iter_spec_entries``, and the
 roster they protect (``iter_agent_spec_files``) leaves out every managed
-``kirocrew-skill-view-*`` alias. A fingerprint that stat'ed those aliases would
+``ajcrew-skill-view-*`` alias. A fingerprint that stat'ed those aliases would
 cost one ``stat`` per alias per call -- on the event loop, in the spawn path --
 and would move on every alias write, invalidating caches whose contents an alias
 cannot change. So an alias is neither stat'ed nor named by either fingerprint,
@@ -24,9 +24,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import agent_discovery
-from kiro_crew.agent_discovery import clear_list_agents_cache, list_agents
-from kiro_crew.agent_spec_format import NATIVE_SKILL_ALIAS_PREFIX, iter_agent_spec_files
+from aj_crew import agent_discovery
+from aj_crew.agent_discovery import clear_list_agents_cache, list_agents
+from aj_crew.agent_spec_format import NATIVE_SKILL_ALIAS_PREFIX, iter_agent_spec_files
 
 SPEC = "reviewer"
 ALIAS = f"{NATIVE_SKILL_ALIAS_PREFIX}0123456789abcdef01234567"

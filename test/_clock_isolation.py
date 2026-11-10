@@ -15,7 +15,7 @@ import threading
 import time
 import types
 
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.testing.clock import ManualClock
 
 #: Taken when this module is imported, before any test patches anything, so a
 #: helper that rebinds the stdlib ``time.sleep`` cannot also rebind the reference.

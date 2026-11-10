@@ -1,6 +1,6 @@
 """Every new crewmate gets its own-record tools, and the text it hears matches what it has.
 
-``member_mate_tools.grant_mate_tools_to_new_member`` adds ``kirocrew-mate`` to a
+``member_mate_tools.grant_mate_tools_to_new_member`` adds ``ajcrew-mate`` to a
 just-created crewmate by editing its OWNED config file in ``mates/agents/`` in
 place (no fork, no enroll) -- see the grant-mechanism tests in
 ``test_mate_owned_config.py``. Here we cover the WORDING that follows from whether
@@ -15,15 +15,15 @@ from types import SimpleNamespace
 import pytest
 from agent_capabilities_helpers import _accepting_kiro_cli  # noqa: F401
 
-from kiro_crew import agent
-from kiro_crew import context as ctx
-from kiro_crew import crewmate_dynamic_capabilities, member_mate_tools
-from kiro_crew.context_assembly import member as member_ctx
-from kiro_crew.dashboard import goal_setup, mate_welcome
+from aj_crew import agent
+from aj_crew import context as ctx
+from aj_crew import crewmate_dynamic_capabilities, member_mate_tools
+from aj_crew.context_assembly import member as member_ctx
+from aj_crew.dashboard import goal_setup, mate_welcome
 
 MATE_TOOLS = ("set_goal", "set_key_results", "set_check_ins", "update_self")
 
-TRANSPORT = {"command": "/opt/kirocrew", "args": ["mcp", "mate"]}
+TRANSPORT = {"command": "/opt/ajcrew", "args": ["mcp", "mate"]}
 
 
 def test_a_project_template_shadows_the_global_one(tmp_path, monkeypatch) -> None:
@@ -31,7 +31,7 @@ def test_a_project_template_shadows_the_global_one(tmp_path, monkeypatch) -> Non
     (project / ".kiro" / "agents").mkdir(parents=True)
     glob = tmp_path / "glob"
     glob.mkdir()
-    monkeypatch.setattr("kiro_crew.config.loader.default_project_dir", lambda _: str(project))
+    monkeypatch.setattr("aj_crew.config.loader.default_project_dir", lambda _: str(project))
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: glob)
     parent = {
         "name": "parent",
@@ -41,8 +41,8 @@ def test_a_project_template_shadows_the_global_one(tmp_path, monkeypatch) -> Non
     }
     with_mate = {
         **parent,
-        "tools": ["@kirocrew-mate"],
-        "mcpServers": {"kirocrew-mate": dict(TRANSPORT)},
+        "tools": ["@ajcrew-mate"],
+        "mcpServers": {"ajcrew-mate": dict(TRANSPORT)},
     }
     (glob / "parent.json").write_text(json.dumps(with_mate), encoding="utf-8")
     shadow = project / ".kiro" / "agents" / "parent.json"
@@ -61,14 +61,14 @@ def test_a_project_template_shadows_the_global_one(tmp_path, monkeypatch) -> Non
 
 
 def test_spec_has_mate_tools_needs_the_server_and_a_tools_ref() -> None:
-    entry = {"kirocrew-mate": dict(TRANSPORT)}
+    entry = {"ajcrew-mate": dict(TRANSPORT)}
     assert member_mate_tools.spec_has_mate_tools({"mcpServers": entry, "tools": ["*"]})
     assert member_mate_tools.spec_has_mate_tools(
-        {"mcpServers": entry, "tools": ["@kirocrew-mate/set_goal"]}
+        {"mcpServers": entry, "tools": ["@ajcrew-mate/set_goal"]}
     )
     assert not member_mate_tools.spec_has_mate_tools({"mcpServers": entry, "tools": ["read"]})
-    assert not member_mate_tools.spec_has_mate_tools({"tools": ["@kirocrew-mate"]})
-    muted = {"kirocrew-mate": {**TRANSPORT, "disabled": True}}
+    assert not member_mate_tools.spec_has_mate_tools({"tools": ["@ajcrew-mate"]})
+    muted = {"ajcrew-mate": {**TRANSPORT, "disabled": True}}
     assert not member_mate_tools.spec_has_mate_tools({"mcpServers": muted, "tools": ["*"]})
 
 
@@ -91,12 +91,12 @@ def test_the_desk_hears_the_identity_sentence_its_tools_and_preview_pick(
     monkeypatch, tmp_path, has_tools, dynamic, expected
 ) -> None:
     """Without the tools, the page sentence, whatever the crewmate's preview says."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    cfg = ctx.KiroCrewConfig()
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    cfg = ctx.AjCrewConfig()
     cfg.agents["Ada"] = SimpleNamespace(
         description="", triggers="", kiro_agent="", workspace="", member_id=""
     )
-    monkeypatch.setattr(ctx.KiroCrewConfig, "load", staticmethod(lambda *a, **k: cfg))
+    monkeypatch.setattr(ctx.AjCrewConfig, "load", staticmethod(lambda *a, **k: cfg))
     monkeypatch.setattr(member_mate_tools, "binding_has_mate_tools", lambda *a, **k: has_tools)
     # Scoped to the one call: an autouse fixture holds ``_override``, and an unscoped
     # patch is undone after that fixture's restore, re-installing the fixture's value
@@ -152,15 +152,15 @@ def test_the_shipped_defaults_auto_approve_every_mate_grant() -> None:
     from importlib import resources
 
     defaults = json.loads(
-        resources.files("kiro_crew.config").joinpath("defaults.json").read_text(encoding="utf-8")
+        resources.files("aj_crew.config").joinpath("defaults.json").read_text(encoding="utf-8")
     )
-    shipped = {t for t in defaults["allowedTools"] if t.startswith("@kirocrew-mate/")}
+    shipped = {t for t in defaults["allowedTools"] if t.startswith("@ajcrew-mate/")}
     assert shipped == set(agent._MATE_AUTO_GRANTS)
 
 
 def test_a_found_capability_goes_straight_to_its_card():
     """The card is the question to the user, so nothing asks first in chat."""
-    from kiro_crew import mcp_mate
+    from aj_crew import mcp_mate
 
     assert "request_capabilities right away" in member_ctx._MATE_TOOLS_IDENTITY
     identity = member_ctx._MATE_TOOLS_IDENTITY
@@ -182,7 +182,7 @@ def test_an_unreadable_or_missing_template_keeps_the_default_wording(monkeypatch
     assert member_mate_tools.binding_has_file_write(row)
     assert member_mate_tools.binding_has_mate_tools(SimpleNamespace(kiro_agent=""))
     assert member_mate_tools.binding_has_file_write(SimpleNamespace(kiro_agent=None))
-    load = "kiro_crew.config.loader.KiroCrewConfig.load"
+    load = "aj_crew.config.loader.AjCrewConfig.load"
     monkeypatch.setattr(load, boom)
     assert member_mate_tools.member_has_mate_tools("atlas")
     monkeypatch.setattr(load, lambda: SimpleNamespace(agents={}))
@@ -192,7 +192,7 @@ def test_an_unreadable_or_missing_template_keeps_the_default_wording(monkeypatch
 
 
 def test_a_template_file_outside_its_folder_is_not_read(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.config.loader.default_project_dir", lambda _: "")
+    monkeypatch.setattr("aj_crew.config.loader.default_project_dir", lambda _: "")
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     (tmp_path / "parent.json").write_text("{}", encoding="utf-8")
     monkeypatch.setattr(agent, "_spec_path_is_safe", lambda *_a: False)
@@ -205,7 +205,7 @@ def test_a_template_file_outside_its_folder_is_not_read(tmp_path, monkeypatch) -
     [
         ("default", SimpleNamespace(kiro_agent="default"), True, member_mate_tools.NOT_A_MEMBER),
         ("pixel", None, True, member_mate_tools.NOT_A_MEMBER),
-        ("pixel", SimpleNamespace(kiro_agent="kirocrew"), True, member_mate_tools.DEFAULT_TEMPLATE),
+        ("pixel", SimpleNamespace(kiro_agent="ajcrew"), True, member_mate_tools.DEFAULT_TEMPLATE),
         ("pixel", SimpleNamespace(kiro_agent="shared"), True, member_mate_tools.MATE_FILE_MISSING),
         ("pixel", SimpleNamespace(kiro_agent="pixel"), False, member_mate_tools.MATE_FILE_MISSING),
         ("pixel", SimpleNamespace(kiro_agent="pixel"), True, member_mate_tools.PLATFORM_PROVIDED),
@@ -214,9 +214,9 @@ def test_a_template_file_outside_its_folder_is_not_read(tmp_path, monkeypatch) -
 def test_the_new_member_grant_writes_nothing(monkeypatch, name, row, owned, outcome) -> None:
     agents = {name: row} if row is not None else {}
     monkeypatch.setattr(
-        "kiro_crew.config.loader.KiroCrewConfig.load", lambda: SimpleNamespace(agents=agents)
+        "aj_crew.config.loader.AjCrewConfig.load", lambda: SimpleNamespace(agents=agents)
     )
-    monkeypatch.setattr("kiro_crew.mate_config.has_mate_config", lambda _m: owned)
+    monkeypatch.setattr("aj_crew.mate_config.has_mate_config", lambda _m: owned)
     assert member_mate_tools.grant_mate_tools_to_new_member(name) == outcome
 
 
@@ -224,5 +224,5 @@ def test_a_grant_that_raises_reports_failed(monkeypatch) -> None:
     def boom():
         raise RuntimeError("config")
 
-    monkeypatch.setattr("kiro_crew.config.loader.KiroCrewConfig.load", boom)
+    monkeypatch.setattr("aj_crew.config.loader.AjCrewConfig.load", boom)
     assert member_mate_tools.grant_mate_tools_to_new_member("pixel") == member_mate_tools.FAILED

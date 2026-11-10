@@ -101,7 +101,7 @@ class TestShaMatches:
 
 def test_elided_design_stamp_no_longer_reads_as_stale() -> None:
     """The reported harm: the Design lane mangled its own stamp and every
-    kirocrew-prepare-pr/babysit loop read exit 20 BLOCKED while PR Readiness was green."""
+    ajcrew-prepare-pr/babysit loop read exit 20 BLOCKED while PR Readiness was green."""
     module = _load_script()
     comments = json.dumps(
         [

@@ -28,7 +28,7 @@ const now = () => Date.now() / 1000
 
 const slots = [{
   key: SLOT, title: 'Create the Supabase secret', running: false, last_message: 'Done', messages: 2,
-  agent: 'kirocrew', memory_mode: 'persistent', project: PROJECT, modified: Math.floor(now()),
+  agent: 'ajcrew', memory_mode: 'persistent', project: PROJECT, modified: Math.floor(now()),
   source_links: [], source_links_total: 0,
 }]
 

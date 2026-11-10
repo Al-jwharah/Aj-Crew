@@ -1,4 +1,4 @@
-"""Tests for the grouped top-level ``kirocrew`` help.
+"""Tests for the grouped top-level ``ajcrew`` help.
 
 The listing a user reads is rendered from ``cli_help.COMMAND_GROUPS``, not from
 argparse's own subcommand block, so the risk this file exists to catch is a
@@ -10,18 +10,18 @@ import sys
 
 import pytest
 
-from kiro_crew import cli_help
+from aj_crew import cli_help
 
 
 def _capture_cli(monkeypatch, tmp_path, capsys, argv):
-    """Run ``kirocrew <argv>`` far enough to render help, and return (out, err).
+    """Run ``ajcrew <argv>`` far enough to render help, and return (out, err).
 
-    ``KIROCREW_PROJECT_DIR`` is pinned so ``main()``'s project auto-detection
+    ``AJCREW_PROJECT_DIR`` is pinned so ``main()``'s project auto-detection
     does not walk (and then export) the checkout it happens to run in.
     """
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-    monkeypatch.setattr(sys, "argv", ["kirocrew", *argv])
-    from kiro_crew.cli import main
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+    monkeypatch.setattr(sys, "argv", ["ajcrew", *argv])
+    from aj_crew.cli import main
 
     with pytest.raises(SystemExit):
         main()
@@ -83,7 +83,7 @@ class TestInternalCommandsStayHidden:
     def test_still_dispatchable_despite_being_hidden(self, monkeypatch, tmp_path, capsys):
         """Hiding filters what argparse PRINTS, never what it accepts."""
         out, _err = _capture_cli(monkeypatch, tmp_path, capsys, ["mcp-core", "--help"])
-        assert out.startswith("usage: kirocrew mcp-core")
+        assert out.startswith("usage: ajcrew mcp-core")
 
     def test_error_lists_the_starting_commands_first(self, monkeypatch, tmp_path, capsys):
         """The offer is ordered like the help, not like the registration order."""
@@ -116,14 +116,14 @@ class TestTopLevelHelpLayout:
         out, _err = _capture_cli(monkeypatch, tmp_path, capsys, ["--help"])
         assert "==SUPPRESS==" not in out
         assert "{chat," not in out
-        assert out.startswith("usage: kirocrew [-h] [--version] [-v] [--no-jail] <command>")
+        assert out.startswith("usage: ajcrew [-h] [--version] [-v] [--no-jail] <command>")
 
     def test_subcommand_usage_is_not_prefixed_with_the_top_level_usage(
         self, monkeypatch, tmp_path, capsys
     ):
         """argparse derives a subcommand's prog from the parent's ``usage=``."""
         out, _err = _capture_cli(monkeypatch, tmp_path, capsys, ["service", "--help"])
-        assert out.startswith("usage: kirocrew service")
+        assert out.startswith("usage: ajcrew service")
 
     def test_a_name_wider_than_the_column_puts_its_summary_on_the_next_line(self):
         lines = cli_help.render_epilog().splitlines()
@@ -133,10 +133,10 @@ class TestTopLevelHelpLayout:
     def test_orientation_explains_both_lifetimes_and_the_default_port(
         self, monkeypatch, tmp_path, capsys
     ):
-        from kiro_crew.config.loader import _DEFAULT_PORT
+        from aj_crew.config.loader import _DEFAULT_PORT
 
         out, _err = _capture_cli(monkeypatch, tmp_path, capsys, ["--help"])
-        assert "kirocrew service install" in out
+        assert "ajcrew service install" in out
         assert "foreground" in out
         # The help text spells the port out; keep it honest against the binder.
         assert str(_DEFAULT_PORT) in out
@@ -146,17 +146,17 @@ class TestTopLevelHelpLayout:
 class TestPodApiMethodParsing:
     @pytest.mark.parametrize("spelling", ["GET", "Get", "get"])
     def test_method_is_case_insensitive_and_canonicalized(self, spelling, monkeypatch, tmp_path):
-        import kiro_crew.cli_commands as cli_commands
+        import aj_crew.cli_commands as cli_commands
 
         captured = []
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(
             sys,
             "argv",
-            ["kirocrew", "pod", "api", "wt", spelling, "health"],
+            ["ajcrew", "pod", "api", "wt", spelling, "health"],
         )
         monkeypatch.setattr(cli_commands, "_pod", lambda args: captured.append(args))
-        from kiro_crew.cli import main
+        from aj_crew.cli import main
 
         main()
         assert len(captured) == 1

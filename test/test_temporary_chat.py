@@ -13,14 +13,14 @@ import pytest
 
 class TestChatSlotTemporary:
     def test_temporary_mode(self):
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         slot = _ChatSlot(key="test-1", memory_mode="temporary")
         assert slot.is_restricted is True
         assert slot.blocks_reads is True
 
     def test_normal_mode(self):
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         slot = _ChatSlot(key="test-2")
         assert slot.is_restricted is False
@@ -35,10 +35,10 @@ class TestChatSlotTemporary:
 class TestSaveSlotToHistory:
     def _save_and_count_lines(self, tmp_path, monkeypatch, slot_kwargs):
         """Save one message through a REAL ConversationLog; return .jsonl files."""
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-        from kiro_crew.history import ConversationLog
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.history import ConversationLog
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         from chat_test_helpers import _make_state
 
         state = _make_state(tmp_path)
@@ -80,9 +80,9 @@ class TestPersistTitle:
         """
         from chat_test_helpers import _make_state
 
-        from kiro_crew.dashboard.chat_title import _persist_title
+        from aj_crew.dashboard.chat_title import _persist_title
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("titled", memory_mode=mode)
         slot.title = "A private question"
@@ -102,9 +102,9 @@ class TestPersistTitle:
     ):
         from chat_test_helpers import _make_state
 
-        from kiro_crew.dashboard.chat_title import _persist_title
+        from aj_crew.dashboard.chat_title import _persist_title
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("plain")
         slot.title = "An ordinary question"
@@ -123,9 +123,9 @@ class TestPersistTitle:
         """A retired titler cannot leave its same-transcript replacement looser."""
         from chat_test_helpers import _make_state
 
-        from kiro_crew.dashboard.chat_title import _persist_title
+        from aj_crew.dashboard.chat_title import _persist_title
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         original = state.get_or_create_slot("title-race", memory_mode="incognito")
         original.title = "A private question"
@@ -162,9 +162,9 @@ class TestPersistTitle:
 
         from chat_test_helpers import _make_state
 
-        from kiro_crew.dashboard.chat_title import _persist_title
+        from aj_crew.dashboard.chat_title import _persist_title
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         key = "dashboard:ratcheted-title"
         await asyncio.to_thread(
@@ -189,24 +189,24 @@ class TestPersistTitle:
 
 class TestSlackThreadTemporary:
     def setup_method(self):
-        from kiro_crew.slack import handler
+        from aj_crew.slack import handler
 
         handler._thread_temporary.clear()
 
     def test_is_thread_temporary_false_by_default(self):
-        from kiro_crew.slack.handler import is_thread_temporary
+        from aj_crew.slack.handler import is_thread_temporary
 
         assert is_thread_temporary("unknown-key") is False
 
     def test_mark_temporary(self):
-        from kiro_crew.slack.handler import _mark_temporary, is_thread_temporary
+        from aj_crew.slack.handler import _mark_temporary, is_thread_temporary
 
         _mark_temporary("slack-key-1")
         assert is_thread_temporary("slack-key-1") is True
 
     # Bounded LRU eviction of the temporary-thread tracker is covered by
     # test_messaging_privacy_mode.py::TestTrackers (the tracker moved from
-    # slack.handler into kiro_crew.messaging.privacy_mode).
+    # slack.handler into aj_crew.messaging.privacy_mode).
 
 
 # ---------------------------------------------------------------------------
@@ -216,13 +216,13 @@ class TestSlackThreadTemporary:
 
 class TestTemporaryCommand:
     def setup_method(self):
-        from kiro_crew.slack import handler
+        from aj_crew.slack import handler
 
         handler._thread_temporary.clear()
 
     # The notice text, audit event, and session-link behaviour of applying the
     # modifier are covered by test_messaging_privacy_mode.py::TestApplyMode
-    # (the implementation moved into kiro_crew.messaging.privacy_mode).
+    # (the implementation moved into aj_crew.messaging.privacy_mode).
 
 
 # ---------------------------------------------------------------------------
@@ -237,8 +237,8 @@ class TestIsRestrictedSession:
         return req
 
     def test_dashboard_temporary_slot(self):
-        from kiro_crew.dashboard.handlers import _is_restricted_session
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.handlers import _is_restricted_session
+        from aj_crew.dashboard.state import _ChatSlot
 
         state = MagicMock()
         state._restricted_keys = set()
@@ -247,8 +247,8 @@ class TestIsRestrictedSession:
         assert _is_restricted_session(state, self._mock_request("dashboard:chat-1-abc")) is True
 
     def test_dashboard_normal_slot(self):
-        from kiro_crew.dashboard.handlers import _is_restricted_session
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.handlers import _is_restricted_session
+        from aj_crew.dashboard.state import _ChatSlot
 
         state = MagicMock()
         state._restricted_keys = set()
@@ -257,7 +257,7 @@ class TestIsRestrictedSession:
         assert _is_restricted_session(state, self._mock_request("dashboard:chat-1-def")) is False
 
     def test_dashboard_restricted_key_set(self):
-        from kiro_crew.dashboard.handlers import _is_restricted_session
+        from aj_crew.dashboard.handlers import _is_restricted_session
 
         state = MagicMock()
         state._restricted_keys = {"dashboard:chat-1-eph"}
@@ -266,8 +266,8 @@ class TestIsRestrictedSession:
         assert _is_restricted_session(state, self._mock_request("dashboard:chat-1-eph")) is True
 
     def test_slack_temporary_thread(self):
-        from kiro_crew.dashboard.handlers import _is_restricted_session
-        from kiro_crew.slack.handler import _mark_temporary
+        from aj_crew.dashboard.handlers import _is_restricted_session
+        from aj_crew.slack.handler import _mark_temporary
 
         _mark_temporary("slack:C123-456")
 
@@ -279,7 +279,7 @@ class TestIsRestrictedSession:
 
     def test_no_header(self):
         """No X-Session-Key header — should return False (browser UI or normal)."""
-        from kiro_crew.dashboard.handlers import _is_restricted_session
+        from aj_crew.dashboard.handlers import _is_restricted_session
 
         state = MagicMock()
         state._restricted_keys = set()
@@ -287,14 +287,14 @@ class TestIsRestrictedSession:
 
     def test_dashboard_ui_key_not_restricted(self):
         """Browser UI sends 'dashboard:ui' — never restricted."""
-        from kiro_crew.dashboard.handlers import _is_restricted_session
+        from aj_crew.dashboard.handlers import _is_restricted_session
 
         state = MagicMock()
         state._restricted_keys = set()
         assert _is_restricted_session(state, self._mock_request("dashboard:ui")) is False
 
     def teardown_method(self):
-        from kiro_crew.slack import handler
+        from aj_crew.slack import handler
 
         handler._thread_temporary.clear()
 
@@ -305,35 +305,35 @@ class TestIsRestrictedSession:
 
 
 class TestMcpSessionKeyPlumbing:
-    @patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "dashboard:chat-1-tmp"})
-    @patch("kiro_crew.mcp_core._post")
+    @patch.dict("os.environ", {"AJCREW_SESSION_KEY": "dashboard:chat-1-tmp"})
+    @patch("aj_crew.mcp_core._post")
     def test_learn_add_no_session_key_in_body(self, mock_post):
         """session_key should NOT be in the JSON body — header handles it."""
         mock_post.return_value = {"ok": True}
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         result = _call_tool_inner("learn_add", {"rule": "test rule", "category": "knowledge"})
         payload = mock_post.call_args[0][1]
         assert "session_key" not in payload
         assert "Saved" in result
 
-    @patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "dashboard:chat-1-tmp"})
-    @patch("kiro_crew.mcp_core._delete")
+    @patch.dict("os.environ", {"AJCREW_SESSION_KEY": "dashboard:chat-1-tmp"})
+    @patch("aj_crew.mcp_core._delete")
     def test_learn_remove_no_session_key_in_body(self, mock_delete):
         """session_key should NOT be in the JSON body — header handles it."""
         mock_delete.return_value = {"removed": 1}
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         _call_tool_inner("learn_remove", {"query": "test"})
         payload = mock_delete.call_args[0][1]
         assert "session_key" not in payload
 
-    @patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "dashboard:chat-1-tmp"})
-    @patch("kiro_crew.mcp_core._get")
+    @patch.dict("os.environ", {"AJCREW_SESSION_KEY": "dashboard:chat-1-tmp"})
+    @patch("aj_crew.mcp_core._get")
     def test_learn_list_no_session_key_in_url(self, mock_get):
         """session_key should NOT be in query params — header handles it."""
         mock_get.return_value = {"lessons": []}
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         _call_tool_inner("learn_list", {})
         url = mock_get.call_args[0][0]

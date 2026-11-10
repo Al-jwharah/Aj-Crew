@@ -9,15 +9,15 @@ from unittest.mock import MagicMock, patch
 
 from aiohttp import web
 
-from kiro_crew.dashboard.handlers import _shared, auth_mobile
-from kiro_crew.dashboard.handlers.tailnet_mobile import MOBILE_QR_BOX_SIZE
-from kiro_crew.dashboard.token_auth import (
+from aj_crew.dashboard.handlers import _shared, auth_mobile
+from aj_crew.dashboard.handlers.tailnet_mobile import MOBILE_QR_BOX_SIZE
+from aj_crew.dashboard.token_auth import (
     LINK_WINDOW_SECS,
     MAX_SESSION_TTL_SECS,
     _b64url_decode,
     generate_token,
 )
-from kiro_crew.qr import render_qr_data_uri
+from aj_crew.qr import render_qr_data_uri
 
 
 def _request(
@@ -49,7 +49,7 @@ def _request(
 
 
 def _call(request: MagicMock, *, valid_origin: bool = True):
-    with patch("kiro_crew.dashboard.handlers.auth_mobile.check_origin", return_value=valid_origin):
+    with patch("aj_crew.dashboard.handlers.auth_mobile.check_origin", return_value=valid_origin):
         return asyncio.run(auth_mobile.api_auth_mobile_link(request))
 
 
@@ -126,7 +126,7 @@ def test_mobile_link_refuses_a_restricted_session():
     """An incognito/temporary/channel-guest slot must not mint a durable link."""
     state = MagicMock()
     with patch(
-        "kiro_crew.dashboard.handlers.auth_mobile._is_restricted_session", return_value=True
+        "aj_crew.dashboard.handlers.auth_mobile._is_restricted_session", return_value=True
     ):
         response = _call(_request(dashboard_url="https://dashboard.example", state=state))
 

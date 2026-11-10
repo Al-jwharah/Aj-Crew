@@ -4,10 +4,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.monitoring.models import MonitorBudgets, monitor_state_from_dict
-from kiro_crew.testing.wait import finished
-from kiro_crew.validation import (
+from aj_crew.config import AjCrewConfig
+from aj_crew.monitoring.models import MonitorBudgets, monitor_state_from_dict
+from aj_crew.testing.wait import finished
+from aj_crew.validation import (
     MONITOR_START_SCHEMA,
     MONITOR_UPDATE_SCHEMA,
     MONITOR_WATCH_SCHEMA,
@@ -21,7 +21,7 @@ MONTH = 2_592_000
 @pytest.fixture
 def monthly_policy(monkeypatch):
     monkeypatch.setattr(
-        KiroCrewConfig,
+        AjCrewConfig,
         "load",
         lambda: SimpleNamespace(monitoring=SimpleNamespace(max_runtime_secs=MONTH)),
     )
@@ -69,7 +69,7 @@ def test_monitor_metadata_obeys_absolute_boundary(monthly_policy):
 
 @pytest.mark.asyncio
 async def test_daily_loop_restart_update_expiry_and_stop(tmp_path, monthly_policy):
-    from kiro_crew.autonudge import AutoNudgeService, runtime_budget_exceeded
+    from aj_crew.autonudge import AutoNudgeService, runtime_budget_exceeded
 
     service = AutoNudgeService(base_dir=tmp_path)
     try:
@@ -110,7 +110,7 @@ async def test_daily_loop_restart_update_expiry_and_stop(tmp_path, monthly_polic
 
 
 def test_api_state_creation_shares_runtime_boundary(monthly_policy):
-    from kiro_crew.dashboard.handlers.autonudge import _monitor_config
+    from aj_crew.dashboard.handlers.autonudge import _monitor_config
 
     body = {
         "kind": "github_pull_request",
@@ -130,14 +130,14 @@ async def test_lowered_policy_leaves_a_stored_budget_running(tmp_path, monthly_p
     monthly ceiling and loaded under a weekly one keeps running on its stored
     budget; a pause and a resume that carry no budget are not re-checked, and
     only a new budget over the ceiling is refused."""
-    from kiro_crew.autonudge import AutoNudgeService
+    from aj_crew.autonudge import AutoNudgeService
 
     service = AutoNudgeService(base_dir=tmp_path)
     loop = await service.add(
         slot_key="lowered", message="check", idle_secs=86400, max_runtime_secs=MONTH
     )
     service.stop()
-    monkeypatch.setattr("kiro_crew.monitoring.limits.runtime_ceiling_secs", lambda: 604800)
+    monkeypatch.setattr("aj_crew.monitoring.limits.runtime_ceiling_secs", lambda: 604800)
     restored = AutoNudgeService(base_dir=tmp_path)
     restored._load()
     try:
@@ -162,8 +162,8 @@ async def test_persisted_legacy_budget_above_the_absolute_maximum_is_left_as_sto
     written."""
     import json
 
-    from kiro_crew.autonudge import AutoNudgeService
-    from kiro_crew.monitoring.limits import MAX_RUNTIME_CEILING_SECS
+    from aj_crew.autonudge import AutoNudgeService
+    from aj_crew.monitoring.limits import MAX_RUNTIME_CEILING_SECS
 
     assert MAX_RUNTIME_CEILING_SECS == MONTH
     service = AutoNudgeService(base_dir=tmp_path)
@@ -200,8 +200,8 @@ async def test_persisted_structured_budget_above_the_absolute_maximum_is_quarant
     inert quarantine shape, never a policy hold."""
     import json
 
-    from kiro_crew.autonudge import AutoNudgeService
-    from kiro_crew.monitoring.models import MONITOR_STOP_INVALID_RECORD, MonitorOutcome
+    from aj_crew.autonudge import AutoNudgeService
+    from aj_crew.monitoring.models import MONITOR_STOP_INVALID_RECORD, MonitorOutcome
 
     service = AutoNudgeService(base_dir=tmp_path)
     try:
@@ -235,7 +235,7 @@ def test_an_unknown_stop_reason_is_not_replaceable():
     """No load path records a runtime-policy stop, so no such reason is in the
     replaceable set; a row carrying one (a store written by another build)
     fails CLOSED like any reason this version does not know."""
-    from kiro_crew.autonudge import (
+    from aj_crew.autonudge import (
         _REPLACEABLE_LOOP_STOP_REASONS,
         NudgeLoop,
         _stopped_row_is_replaceable,
@@ -257,7 +257,7 @@ async def test_low_policy_keeps_over_policy_structured_record_active(tmp_path, m
     """A well-formed structured record above a lowered ceiling loads active,
     with its budget, target and typed state as stored, and is never parked in
     ``_unparsed_rows`` or rewritten."""
-    from kiro_crew.autonudge import AutoNudgeService
+    from aj_crew.autonudge import AutoNudgeService
 
     service = AutoNudgeService(base_dir=tmp_path)
     try:
@@ -271,7 +271,7 @@ async def test_low_policy_keeps_over_policy_structured_record_active(tmp_path, m
         )
     finally:
         service.stop()
-    monkeypatch.setattr("kiro_crew.monitoring.limits.runtime_ceiling_secs", lambda: 60)
+    monkeypatch.setattr("aj_crew.monitoring.limits.runtime_ceiling_secs", lambda: 60)
     restored = AutoNudgeService(base_dir=tmp_path)
     restored._load()
     row = restored.get_by_slot("lowered")
@@ -291,8 +291,8 @@ async def test_malformed_structured_record_is_still_quarantined(tmp_path, monkey
     ceiling plays no part in that decision."""
     import json
 
-    from kiro_crew.autonudge import AutoNudgeService
-    from kiro_crew.monitoring.models import MONITOR_STOP_INVALID_RECORD, MonitorOutcome
+    from aj_crew.autonudge import AutoNudgeService
+    from aj_crew.monitoring.models import MONITOR_STOP_INVALID_RECORD, MonitorOutcome
 
     service = AutoNudgeService(base_dir=tmp_path)
     try:
@@ -323,9 +323,9 @@ async def test_malformed_structured_record_is_still_quarantined(tmp_path, monkey
 
 @pytest.mark.asyncio
 async def test_low_policy_preserves_legacy_gate_metadata(tmp_path, monkeypatch):
-    from kiro_crew.autonudge import AutoNudgeService, infer_monitor
+    from aj_crew.autonudge import AutoNudgeService, infer_monitor
 
-    monkeypatch.setattr("kiro_crew.monitoring.limits.runtime_ceiling_secs", lambda: 3600)
+    monkeypatch.setattr("aj_crew.monitoring.limits.runtime_ceiling_secs", lambda: 3600)
     message = "Watch https://github.com/a/b/pull/1"
     assert infer_monitor(message, 100) is not None
     service = AutoNudgeService(base_dir=tmp_path)
@@ -354,22 +354,22 @@ async def test_resume_without_a_budget_is_not_rechecked_but_a_supplied_one_is(
     import json
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.autonudge import AutoNudgeService
-    from kiro_crew.dashboard.handlers.autonudge import api_autonudge_update
+    from aj_crew.autonudge import AutoNudgeService
+    from aj_crew.dashboard.handlers.autonudge import api_autonudge_update
 
     service = AutoNudgeService(base_dir=tmp_path)
     try:
         loop = await service.add(slot_key="lowered", message="check", max_runtime_secs=MONTH)
         await service.update(loop.id, active=False)
-        monkeypatch.setattr("kiro_crew.monitoring.limits.runtime_ceiling_secs", lambda: 604800)
+        monkeypatch.setattr("aj_crew.monitoring.limits.runtime_ceiling_secs", lambda: 604800)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.autonudge._require_monitor_owner",
+            "aj_crew.dashboard.handlers.autonudge._require_monitor_owner",
             AsyncMock(return_value=None),
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.autonudge._autonudge_get", lambda: service
+            "aj_crew.dashboard.handlers.autonudge._autonudge_get", lambda: service
         )
-        monkeypatch.setattr("kiro_crew.autonudge_authz.sel", MagicMock())
+        monkeypatch.setattr("aj_crew.autonudge_authz.sel", MagicMock())
 
         def _request(body):
             return SimpleNamespace(
@@ -396,7 +396,7 @@ async def test_resume_without_a_budget_is_not_rechecked_but_a_supplied_one_is(
 
 @pytest.mark.asyncio
 async def test_structured_service_applies_policy_on_create_and_update(tmp_path, monthly_policy):
-    from kiro_crew.autonudge import AutoNudgeService
+    from aj_crew.autonudge import AutoNudgeService
 
     service = AutoNudgeService(base_dir=tmp_path)
     args = dict(
@@ -419,7 +419,7 @@ async def test_structured_service_applies_policy_on_create_and_update(tmp_path, 
 
 
 def test_stdio_descriptors_advertise_the_operator_ceiling(monthly_policy):
-    from kiro_crew.mcp_tools.control import schemas
+    from aj_crew.mcp_tools.control import schemas
 
     tools = {tool["name"]: tool for tool in schemas()}
     for name in ("monitor_start", "monitor_watch", "monitor_update"):
@@ -430,13 +430,13 @@ def test_stdio_descriptors_advertise_the_operator_ceiling(monthly_policy):
 async def test_active_metadata_update_keeps_a_stored_budget_over_the_lowered_policy(
     tmp_path, monthly_policy, monkeypatch
 ):
-    from kiro_crew.autonudge import AutoNudgeService
+    from aj_crew.autonudge import AutoNudgeService
 
     service = AutoNudgeService(base_dir=tmp_path)
     try:
         loop = await service.add(slot_key="lowered", message="original", max_runtime_secs=MONTH)
         created = loop.created_ts
-        monkeypatch.setattr("kiro_crew.monitoring.limits.runtime_ceiling_secs", lambda: 604800)
+        monkeypatch.setattr("aj_crew.monitoring.limits.runtime_ceiling_secs", lambda: 604800)
         updated = await service.update(loop.id, message="revised")
         assert updated is loop and loop.message == "revised" and loop.active
         assert loop.created_ts == created and loop.max_runtime_secs == MONTH
@@ -455,16 +455,16 @@ async def test_monitor_slot_read_advertises_the_live_operator_ceiling(monkeypatc
     import json
     from unittest.mock import AsyncMock
 
-    from kiro_crew.dashboard.handlers.autonudge import api_monitor_slot_get
+    from aj_crew.dashboard.handlers.autonudge import api_monitor_slot_get
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.autonudge.runtime_ceiling_secs", lambda: MONTH
+        "aj_crew.dashboard.handlers.autonudge.runtime_ceiling_secs", lambda: MONTH
     )
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.autonudge._require_monitor_owner",
+        "aj_crew.dashboard.handlers.autonudge._require_monitor_owner",
         AsyncMock(return_value=None),
     )
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.autonudge._autonudge_get", lambda: None)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.autonudge._autonudge_get", lambda: None)
     request = SimpleNamespace(match_info={"slot_key": "chat-1"}, remote="test")
     response = await finished(api_monitor_slot_get(request), "the slot monitor read")
     assert response.status == 200
@@ -475,13 +475,13 @@ async def test_monitor_slot_read_advertises_the_live_operator_ceiling(monkeypatc
 
 @pytest.mark.asyncio
 async def test_raising_policy_does_not_extend_existing_deadline(tmp_path, monkeypatch):
-    from kiro_crew.autonudge import AutoNudgeService, runtime_budget_exceeded
-    from kiro_crew.monitoring.limits import DEFAULT_RUNTIME_CEILING_SECS
+    from aj_crew.autonudge import AutoNudgeService, runtime_budget_exceeded
+    from aj_crew.monitoring.limits import DEFAULT_RUNTIME_CEILING_SECS
 
     policy = SimpleNamespace(max_runtime_secs=DEFAULT_RUNTIME_CEILING_SECS)
     config = SimpleNamespace(monitoring=policy)
-    monkeypatch.setattr(KiroCrewConfig, "load", lambda: config)
-    monkeypatch.setattr("kiro_crew.config.live.snapshot", lambda: None)
+    monkeypatch.setattr(AjCrewConfig, "load", lambda: config)
+    monkeypatch.setattr("aj_crew.config.live.snapshot", lambda: None)
 
     service = AutoNudgeService(base_dir=tmp_path)
     try:
@@ -533,8 +533,8 @@ async def test_ceiling_changes_across_loads_never_rewrite_a_row(
     """Arm under a month, load under a week, then under a month again: every
     load reads the row back identical to how it was armed, none marks the
     store dirty for it, and the deadline stays creation time plus budget."""
-    from kiro_crew.autonudge import AutoNudgeService, runtime_budget_exceeded
-    from kiro_crew.monitoring.decision import monitor_budget_reason
+    from aj_crew.autonudge import AutoNudgeService, runtime_budget_exceeded
+    from aj_crew.monitoring.decision import monitor_budget_reason
 
     service = AutoNudgeService(base_dir=tmp_path)
     try:
@@ -555,7 +555,7 @@ async def test_ceiling_changes_across_loads_never_rewrite_a_row(
     finally:
         service.stop()
     for ceiling in (604800, MONTH, 60):
-        monkeypatch.setattr("kiro_crew.monitoring.limits.runtime_ceiling_secs", lambda c=ceiling: c)
+        monkeypatch.setattr("aj_crew.monitoring.limits.runtime_ceiling_secs", lambda c=ceiling: c)
         restored = AutoNudgeService(base_dir=tmp_path)
         restored._load()
         try:
@@ -576,7 +576,7 @@ async def test_ceiling_changes_across_loads_never_rewrite_a_row(
 
 @pytest.mark.asyncio
 async def test_manual_pause_is_not_resumed_by_a_raised_ceiling(tmp_path, monthly_policy):
-    from kiro_crew.autonudge import AutoNudgeService
+    from aj_crew.autonudge import AutoNudgeService
 
     service = AutoNudgeService(base_dir=tmp_path)
     try:
@@ -592,7 +592,7 @@ async def test_manual_pause_is_not_resumed_by_a_raised_ceiling(tmp_path, monthly
 
 
 def _loaded_service(tmp_path):
-    from kiro_crew.autonudge import AutoNudgeService
+    from aj_crew.autonudge import AutoNudgeService
 
     restored = AutoNudgeService(base_dir=tmp_path)
     restored._load()
@@ -605,7 +605,7 @@ async def test_structured_update_revalidates_only_a_supplied_runtime_budget(
     tmp_path, monthly_policy, monkeypatch
 ):
     """A lower live ceiling governs new budgets, not unrelated patches."""
-    from kiro_crew.autonudge import AutoNudgeService
+    from aj_crew.autonudge import AutoNudgeService
 
     service = AutoNudgeService(base_dir=tmp_path)
     try:
@@ -618,7 +618,7 @@ async def test_structured_update_revalidates_only_a_supplied_runtime_budget(
             budgets=MonitorBudgets(max_runtime_secs=MONTH),
         )
         monkeypatch.setattr(
-            KiroCrewConfig,
+            AjCrewConfig,
             "load",
             lambda: SimpleNamespace(monitoring=SimpleNamespace(max_runtime_secs=604_800)),
         )

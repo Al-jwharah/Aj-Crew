@@ -23,8 +23,8 @@ from typing import Any
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import channel_slots
-from kiro_crew.dashboard.chat_handlers import SlotContinueRefusal, continue_slot_turn
+from aj_crew.dashboard import channel_slots
+from aj_crew.dashboard.chat_handlers import SlotContinueRefusal, continue_slot_turn
 
 CHANNEL_KEY = "slack:1792530008.294939"
 TRAILING_USER = [
@@ -173,9 +173,9 @@ def test_stop_reaches_the_channel_turn_on_its_session(
 ) -> None:
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
     state.sessions.stop_turn = AsyncMock(return_value="soft")
     state._test_busy.add(CHANNEL_KEY)
     slot = _surface(state)
@@ -194,9 +194,9 @@ def test_stop_on_an_idle_channel_tab_is_still_a_no_op(
 ) -> None:
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
     state.sessions.stop_turn = AsyncMock(return_value="idle")
     slot = _surface(state)
 
@@ -239,9 +239,9 @@ def test_stop_during_a_compaction_is_declined_then_the_next_press_forces(
     must hold for a channel-path turn too, or Stop there is a dead end."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
     state.sessions.stop_turn = AsyncMock(return_value="compacting")
     state.sessions.is_compacting = lambda key: key == CHANNEL_KEY
     state._test_busy.add(CHANNEL_KEY)
@@ -270,9 +270,9 @@ def test_an_explicit_force_is_hard_only_as_the_compaction_escape(
     a re-send cannot hard-reset the channel's session."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
     state.sessions.stop_turn = AsyncMock(return_value="hard" if compacting else "soft")
     state.sessions.is_compacting = lambda key: compacting
     state._test_busy.add(CHANNEL_KEY)
@@ -291,9 +291,9 @@ def test_a_stale_decline_marker_is_dropped_once_the_compaction_ended(
     import time
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
     state.sessions.stop_turn = AsyncMock(return_value="soft")
     state.sessions.is_compacting = lambda key: False
     state._test_busy.add(CHANNEL_KEY)
@@ -311,9 +311,9 @@ def test_stop_names_a_held_lease_with_no_provider_turn_yet(
 ) -> None:
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
     state.sessions.stop_turn = AsyncMock(return_value="idle")
     state._test_busy.add(CHANNEL_KEY)
     slot = _surface(state)
@@ -331,9 +331,9 @@ def test_interrupt_cancels_the_channel_path_turn(
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.chat import api_chat_slot_interrupt
+    from aj_crew.dashboard.chat import api_chat_slot_interrupt
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
     state.sessions.stop_turn = AsyncMock(return_value="soft")
     state._test_busy.add(CHANNEL_KEY)
     slot = _surface(state)
@@ -362,10 +362,10 @@ def test_the_slack_transport_refreshes_the_tab_after_releasing_the_session(
     import importlib
     from unittest.mock import AsyncMock
 
-    from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
-    from kiro_crew.history import ConversationLog
-    from kiro_crew.messaging.link import canonical_key
-    from kiro_crew.slack import transport_dispatch
+    from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
+    from aj_crew.history import ConversationLog
+    from aj_crew.messaging.link import canonical_key
+    from aj_crew.slack import transport_dispatch
 
     golden = importlib.import_module("test_slack_golden_transcript")
     monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "")
@@ -424,11 +424,11 @@ def test_a_queued_interrupt_cancels_the_channel_turn_only_once_validated(
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.chat import api_chat_slot_interrupt
+    from aj_crew.dashboard.chat import api_chat_slot_interrupt
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
     start = AsyncMock(return_value=True)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._start_next_queued_turn", start)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._start_next_queued_turn", start)
     state.sessions.stop_turn = AsyncMock(return_value="soft")
     state._test_busy.add(CHANNEL_KEY)
     slot = _surface(state)
@@ -497,9 +497,9 @@ def test_a_scheduled_cron_run_reads_running_on_its_tab_and_stops_there(
     pass pushes the row when the run starts and when it ends."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
     state.sessions.stop_turn = AsyncMock(return_value="soft")
     state.crons = MagicMock()
     state.crons.cancel = AsyncMock(return_value=True)
@@ -516,7 +516,7 @@ def test_a_scheduled_cron_run_reads_running_on_its_tab_and_stops_there(
     state.sessions.stop_turn.assert_not_awaited()
     # A one-shot whose pause did not reach the store is reported, as the Schedule
     # page reports it, and the run is not cancelled a second way.
-    from kiro_crew.cron import CronPauseNotSaved
+    from aj_crew.cron import CronPauseNotSaved
 
     state.crons.cancel = AsyncMock(side_effect=CronPauseNotSaved("pause not saved"))
     refused = asyncio.run(stop_slot_turn(state, slot, cron_cancel=True))
@@ -575,8 +575,8 @@ def test_only_a_caller_the_cron_cancel_route_admits_cancels_the_run_from_its_tab
 
     from aiohttp import web
 
-    from kiro_crew.dashboard.chat_handlers import _may_cancel_cron_run
-    from kiro_crew.dashboard.handlers import _shared
+    from aj_crew.dashboard.chat_handlers import _may_cancel_cron_run
+    from aj_crew.dashboard.handlers import _shared
 
     async def _gate(request: Any, operation: str) -> Any:
         assert operation == "crons.cancel"
@@ -603,14 +603,14 @@ def test_a_non_owner_stop_on_a_running_cron_tab_is_refused_not_idled(
 
     from aiohttp import web
 
-    from kiro_crew.dashboard.chat_handlers import api_chat_slot_stop
-    from kiro_crew.dashboard.handlers import _shared
+    from aj_crew.dashboard.chat_handlers import api_chat_slot_stop
+    from aj_crew.dashboard.handlers import _shared
 
     async def _gate(request: Any, operation: str) -> Any:
         return web.json_response({"code": "owner_only"}, status=403)
 
     monkeypatch.setattr(_shared, "require_owner_dashboard_request", _gate)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
     state.sessions.stop_turn = AsyncMock(return_value="soft")
     state.crons = MagicMock()
     state.crons.cancel = AsyncMock(return_value=True)

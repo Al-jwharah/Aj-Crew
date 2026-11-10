@@ -31,7 +31,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.apps.builtins.dev_fleet import (
+from aj_crew.apps.builtins.dev_fleet import (
     fleet_state,
     http_api,
     live,
@@ -153,7 +153,7 @@ def test_repo_accessor_surfaces_a_config_parse_failure_over_the_missing_checkout
 
     An unparsable config leaves ``MAIN_REPO`` empty on purpose, so
     ``_REPO_CFG_UNREADABLE_MSG`` is checked before the truthiness gate; otherwise the
-    operator is told "no Kiro Crew checkout found" instead of which file failed.
+    operator is told "no Aj Crew checkout found" instead of which file failed.
     """
     monkeypatch.setattr(repository, "MAIN_REPO", "")
     monkeypatch.setattr(
@@ -166,8 +166,8 @@ def test_repo_accessor_surfaces_a_config_parse_failure_over_the_missing_checkout
 
 
 def test_repo_accessor_returns_resolved_checkout(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(repository, "MAIN_REPO", "/somewhere/kirocrew")
-    assert repository._repo() == "/somewhere/kirocrew"
+    monkeypatch.setattr(repository, "MAIN_REPO", "/somewhere/ajcrew")
+    assert repository._repo() == "/somewhere/ajcrew"
 
 
 def test_primary_checkout_resolution_preserves_the_host_text_decoder(
@@ -323,15 +323,15 @@ async def test_base_branch_reads_a_sole_remote_under_another_name(
     """One remote is unambiguous whatever it is called, so its answer is taken."""
     probed = _stub_base_branch_git(
         monkeypatch,
-        remotes="kirocrew\n",
-        published={"kirocrew": "release/3"},
+        remotes="ajcrew\n",
+        published={"ajcrew": "release/3"},
         local=set(),
     )
     await repository._resolve_base_branch()
     assert repository.BASE_BRANCH == "release/3"
     # The base's own tracking remote is read on the second pass; it names none, so the
     # sole remote's verdict stands.
-    assert probed == ["HEAD", "ls-remote kirocrew HEAD", "config branch.release/3.remote"]
+    assert probed == ["HEAD", "ls-remote ajcrew HEAD", "config branch.release/3.remote"]
 
 
 @pytest.mark.asyncio
@@ -440,7 +440,7 @@ def test_plausible_remote_name_refuses_option_like_and_metachar_names() -> None:
     """The remote-name gate accepts real names and refuses option/argv-hazard shapes."""
     assert repository._plausible_remote_name("origin")
     assert repository._plausible_remote_name("upstream")
-    assert repository._plausible_remote_name("kirocrew")
+    assert repository._plausible_remote_name("ajcrew")
     assert repository._plausible_remote_name("my.remote-2")
     assert not repository._plausible_remote_name("")
     assert not repository._plausible_remote_name("--upload-pack=/tmp/x")

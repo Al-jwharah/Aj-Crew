@@ -7,7 +7,7 @@ exists to enforce.
 
 from __future__ import annotations
 
-from kiro_crew.mcp_gateway.stub import _hash_permission_profile
+from aj_crew.mcp_gateway.stub import _hash_permission_profile
 
 
 def test_comma_bearing_tool_name_does_not_collide() -> None:

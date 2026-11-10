@@ -21,10 +21,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 from test_mcp_shared import _LoopHarness, _tools_call
 
-from kiro_crew import mcp_caller, mcp_shared, session_pid_sig, session_token_sig
-from kiro_crew.mcp_caller import CallerContext
-from kiro_crew.mcp_gateway import stub as mcp_stub
-from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+from aj_crew import mcp_caller, mcp_shared, session_pid_sig, session_token_sig
+from aj_crew.mcp_caller import CallerContext
+from aj_crew.mcp_gateway import stub as mcp_stub
+from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
 
 LIVE_KEY = "dashboard:chat-9-current"
 STALE_KEY = "dashboard:chat-7-previous"
@@ -49,8 +49,8 @@ def cfg(tmp_path, monkeypatch):
     key_path.write_bytes(b"\x03" * 32)
     (tmp_path / ".local_secret").write_text("test-secret", encoding="utf-8")
     monkeypatch.delenv(STUB_SESSION_TOKEN_ENV, raising=False)
-    monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-    monkeypatch.delenv("KIROCREW_HOST_PID", raising=False)
+    monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+    monkeypatch.delenv("AJCREW_HOST_PID", raising=False)
     monkeypatch.setattr(mcp_caller, "_FROM_ENV_CACHE", None)
     mcp_shared._excluded_tools_by_session.clear()
     monkeypatch.setattr(mcp_shared, "_last_failure_time", 0.0)
@@ -63,8 +63,8 @@ def cfg(tmp_path, monkeypatch):
         patch.object(session_token_sig, "sel_hmac_key_path", return_value=key_path),
         patch.object(session_pid_sig, "_sel_hmac_key_bytes", return_value=None),
         patch.object(mcp_shared, "config_dir", return_value=tmp_path),
-        patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
-        patch("kiro_crew.member_memory_auth.protected_member_session_for_pid", return_value=None),
+        patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
+        patch("aj_crew.member_memory_auth.protected_member_session_for_pid", return_value=None),
     ):
         session_pid_sig._reported.clear()
         yield tmp_path
@@ -82,7 +82,7 @@ def policy(monkeypatch, cfg):
     """
     conf = MagicMock()
     conf.dashboard.url = "http://localhost:5476/"
-    monkeypatch.setattr(mcp_shared.KiroCrewConfig, "load", classmethod(lambda cls: conf))
+    monkeypatch.setattr(mcp_shared.AjCrewConfig, "load", classmethod(lambda cls: conf))
     monkeypatch.setattr(mcp_shared, "parse_dashboard_url", lambda url: ("localhost", 5476))
     audit = MagicMock()
     monkeypatch.setattr(mcp_shared, "sel", lambda: audit)
@@ -119,7 +119,7 @@ class TestFromEnvReadsTheToken:
         """THE warm-pool case, at the resolver the stub's register block uses."""
         session_token_sig.publish_session_token(TOKEN, LIVE_KEY)
         monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, TOKEN)
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", STALE_KEY)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", STALE_KEY)
         ctx = CallerContext.from_env()
         assert ctx.session_key == LIVE_KEY
         assert ctx.session_type == "token"
@@ -134,7 +134,7 @@ class TestFromEnvReadsTheToken:
         """
         session_token_sig.publish_session_token(TOKEN, LIVE_KEY)
         monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, TOKEN)
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", STALE_KEY)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", STALE_KEY)
         assert mcp_stub._build_caller_block(None)["session_key"] == LIVE_KEY
 
     def test_a_primed_legacy_cache_does_not_shadow_the_token(self, cfg, monkeypatch):
@@ -185,7 +185,7 @@ class TestFromEnvReadsTheToken:
         no-identity one, so a missing mapping and a forged one both fall through.
         """
         _path_for(cfg, OTHER_TOKEN).write_text(f"{'0' * 64}\n{LIVE_KEY}", encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", STALE_KEY)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", STALE_KEY)
         for token in (TOKEN, OTHER_TOKEN):
             monkeypatch.setattr(mcp_caller, "_FROM_ENV_CACHE", None)
             monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, token)
@@ -194,7 +194,7 @@ class TestFromEnvReadsTheToken:
             assert ctx.session_type == "env"
 
     def test_no_token_leaves_behaviour_unchanged(self, cfg, monkeypatch):
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", STALE_KEY)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", STALE_KEY)
         ctx = CallerContext.from_env()
         assert ctx.session_key == STALE_KEY
         assert ctx.session_type == "env"
@@ -210,9 +210,9 @@ class TestFromEnvReadsTheToken:
         """
         session_token_sig.publish_session_token(TOKEN, LIVE_KEY)
         monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, TOKEN)
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", STALE_KEY)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", STALE_KEY)
         with patch(
-            "kiro_crew.member_memory_auth.protected_member_session_for_pid",
+            "aj_crew.member_memory_auth.protected_member_session_for_pid",
             return_value=protected,
         ):
             ctx = CallerContext.from_env()
@@ -229,7 +229,7 @@ class TestFromEnvReadsTheToken:
         deny), ``PermissionError`` included. Only a host override that can tell a
         sandbox deny apart returns ``None``.
         """
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", STALE_KEY)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", STALE_KEY)
         monkeypatch.setattr(mcp_caller, "_FROM_ENV_CACHE", None)
 
         for exc in (PermissionError("seatbelt deny"), OSError(5, "EIO"), RuntimeError("bug")):
@@ -239,7 +239,7 @@ class TestFromEnvReadsTheToken:
 
             monkeypatch.setattr(mcp_caller, "_FROM_ENV_CACHE", None)
             with patch(
-                "kiro_crew.member_memory_auth.protected_member_session_for_pid",
+                "aj_crew.member_memory_auth.protected_member_session_for_pid",
                 _boom,
             ):
                 ctx = CallerContext.from_env()
@@ -259,7 +259,7 @@ class TestToolPolicyReadsTheToken:
         """
         session_token_sig.publish_session_token(TOKEN, LIVE_KEY)
         monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, TOKEN)
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", STALE_KEY)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", STALE_KEY)
         policy.policies[LIVE_KEY] = ["live_only_tool"]
         policy.policies[STALE_KEY] = ["stale_tool"]
         assert policy.resolve() == {"live_only_tool"}
@@ -316,7 +316,7 @@ class TestToolPolicyReadsTheToken:
     def test_an_unverifiable_token_falls_through_to_the_env_key(self, cfg, monkeypatch, policy):
         _path_for(cfg, TOKEN).write_text(f"{'0' * 64}\n{LIVE_KEY}", encoding="utf-8")
         monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, TOKEN)
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", STALE_KEY)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", STALE_KEY)
         policy.policies[STALE_KEY] = ["stale_tool"]
         assert policy.resolve() == {"stale_tool"}
         assert policy.asked_keys() == [STALE_KEY]
@@ -335,11 +335,11 @@ class TestToolPolicyReadsTheToken:
         """An invalid protected record refuses rather than falling through."""
         session_token_sig.publish_session_token(TOKEN, LIVE_KEY)
         monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, TOKEN)
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", STALE_KEY)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", STALE_KEY)
         policy.policies[protected or "unused"] = ["protected_tool"]
         policy.policies[LIVE_KEY] = ["live_only_tool"]
         with patch(
-            "kiro_crew.member_memory_auth.protected_member_session_for_pid",
+            "aj_crew.member_memory_auth.protected_member_session_for_pid",
             return_value=protected,
         ):
             resolved = policy.resolve()
@@ -352,7 +352,7 @@ class TestToolPolicyReadsTheToken:
             # A refused identity is "no session key", not a broken resolution: the
             # record answered, and what it said was no.
             with patch(
-                "kiro_crew.member_memory_auth.protected_member_session_for_pid",
+                "aj_crew.member_memory_auth.protected_member_session_for_pid",
                 return_value=protected,
             ):
                 assert (
@@ -423,13 +423,13 @@ class TestToolPolicyReadsTheToken:
         def _boom(_pid, **_kw):
             raise RuntimeError("unreadable home")
 
-        with patch("kiro_crew.member_memory_auth.protected_member_session_for_pid", _boom):
+        with patch("aj_crew.member_memory_auth.protected_member_session_for_pid", _boom):
             assert policy.resolve() == set()
         ops = [c.kwargs.get("operation") for c in policy.audit.log_api_access.call_args_list]
         assert ops == ["tool_policy.resolution_failed"]
         assert mcp_shared._last_failure_time > 0.0
         assert mcp_shared._last_startup_race_time == 0.0
-        with patch("kiro_crew.member_memory_auth.protected_member_session_for_pid", _boom):
+        with patch("aj_crew.member_memory_auth.protected_member_session_for_pid", _boom):
             assert (
                 mcp_shared._resolve_tool_policy(ignore_negative_cache=True).unresolved
                 == "resolution_failed"
@@ -441,15 +441,15 @@ class TestToolPolicyReadsTheToken:
         """``PermissionError`` from the probe is no different from any other raise.
 
         A sandbox deny and one the fenced process induced look the same here, so EPERM
-        as absence would fall through to ``KIROCREW_SESSION_KEY``.
+        as absence would fall through to ``AJCREW_SESSION_KEY``.
         """
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", STALE_KEY)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", STALE_KEY)
         policy.policies[STALE_KEY] = ["stale_tool"]
 
         def _deny(_pid, **_kw):
             raise PermissionError(1, "Operation not permitted")
 
-        with patch("kiro_crew.member_memory_auth.protected_member_session_for_pid", _deny):
+        with patch("aj_crew.member_memory_auth.protected_member_session_for_pid", _deny):
             assert policy.resolve() == set()
             assert (
                 mcp_shared._resolve_tool_policy(ignore_negative_cache=True).unresolved
@@ -460,13 +460,13 @@ class TestToolPolicyReadsTheToken:
     def test_a_failed_fetch_is_attributed_to_the_resolved_session(self, cfg, monkeypatch, policy):
         """The audit trail names the session the request was made for.
 
-        Every failure path read ``KIROCREW_SESSION_KEY`` directly, so a rekeyed or
+        Every failure path read ``AJCREW_SESSION_KEY`` directly, so a rekeyed or
         subagent session's fail-open was recorded against the wrong session — the
         one case where the trail is all that is left.
         """
         session_token_sig.publish_session_token(TOKEN, LIVE_KEY)
         monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, TOKEN)
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", STALE_KEY)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", STALE_KEY)
 
         def _boom(req, timeout=None):
             raise urllib.error.URLError("gateway down")
@@ -487,7 +487,7 @@ class TestDispatchLoopAuditAttribution:
     def test_an_unstamped_call_is_audited_under_the_token_session(self, cfg, monkeypatch):
         session_token_sig.publish_session_token(TOKEN, LIVE_KEY)
         monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, TOKEN)
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", STALE_KEY)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", STALE_KEY)
 
         def _tool(name, args):
             # A tool that escapes with an exception is audited as ``failed`` --
@@ -521,9 +521,9 @@ class TestDispatchLoopAuditAttribution:
             harness.close()
 
     def test_no_token_keeps_the_env_fallback(self, cfg, monkeypatch):
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", STALE_KEY)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", STALE_KEY)
         assert mcp_shared._ambient_audit_session() == STALE_KEY
-        monkeypatch.delenv("KIROCREW_SESSION_KEY")
+        monkeypatch.delenv("AJCREW_SESSION_KEY")
         assert mcp_shared._ambient_audit_session() == "mcp"
 
 
@@ -608,7 +608,7 @@ def test_a_locally_resolved_key_with_a_token_is_still_sent(monkeypatch, dialled)
     monkeypatch.setattr(mcp_shared, "_policy_session_key", lambda: LENIENT_KEY)
     monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, "f" * 64)
     monkeypatch.setattr(
-        "kiro_crew.session_token_sig.session_token_header",
+        "aj_crew.session_token_sig.session_token_header",
         lambda token="": {"X-Session-Token": "f" * 64},
     )
 

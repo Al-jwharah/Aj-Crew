@@ -36,7 +36,7 @@ import pytest
 
 
 def _params(method: str, headless: bool):
-    from kiro_crew.instances.ssh_tunnel_manager import _TransportParams
+    from aj_crew.instances.ssh_tunnel_manager import _TransportParams
 
     return _TransportParams(method=method, ssh_host="127.0.0.1", headless=headless)
 
@@ -68,7 +68,7 @@ def test_the_params_flag_is_the_registry_s_own_answer():
     place, so the flag must be derivable from the function rather than from a
     second list of lanes.
     """
-    from kiro_crew.instances.registry import (
+    from aj_crew.instances.registry import (
         HEADLESS_CREW_PROVISIONERS,
         is_headless_provisioner,
     )
@@ -88,7 +88,7 @@ def test_every_resolved_transport_carries_the_flag():
     import inspect
     import sys
 
-    from kiro_crew.instances import ssh_tunnel_manager as mod
+    from aj_crew.instances import ssh_tunnel_manager as mod
 
     tree = ast.parse(
         "".join(inspect.getsource(sys.modules[name]) for name in (mod.__name__, *mod._OWNERS))

@@ -19,9 +19,9 @@ import pytest
 from real_dashboard_state import _settle_real_dashboard_states  # noqa: F401
 from real_dashboard_state import notes, real_dashboard_state
 
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.platform import update_stepup
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.handlers import updates
+from aj_crew.platform import update_stepup
+from aj_crew.testing.wait import await_until
 
 
 def _request(
@@ -72,7 +72,7 @@ class TestStepUpModule:
             # POSIX mode bits only: on Windows restrict_to_owner grants via
             # DACL and stat().st_mode reports 0o666 regardless, so the POSIX
             # assertion would test the platform, not the code.
-            from kiro_crew.platform_compat import IS_POSIX
+            from aj_crew.platform_compat import IS_POSIX
 
             if IS_POSIX:
                 mode = path.stat().st_mode & 0o777
@@ -162,7 +162,7 @@ class TestStepUpModule:
             finally:
                 # Always release and reap the worker INSIDE the fixture's
                 # scope, even when consume() raises — a leaked thread would
-                # outlive the isolated KIROCREW_HOME.
+                # outlive the isolated AJCREW_HOME.
                 in_window.set()
                 rearm_thread.join(timeout=5)
         assert not rearm_thread.is_alive()
@@ -212,7 +212,7 @@ class TestStepUpModule:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A DEFAULT read never writes. A reader outside the gateway (the
-        `kirocrew update approve` CLI) uses the default: its unlink cannot be
+        `ajcrew update approve` CLI) uses the default: its unlink cannot be
         serialized against a gateway re-arm, so an expired read must report
         absent WITHOUT touching the file — otherwise it could delete a fresh
         request it never read. Cleanup
@@ -289,7 +289,7 @@ def _release_once_the_arm_joins(monkeypatch: pytest.MonkeyPatch) -> asyncio.Even
 @pytest.mark.asyncio
 class TestArmEndpoint:
     async def test_arm_refuses_non_managed_shape(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         checks = _freeze_check(monkeypatch)
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: False)
@@ -308,7 +308,7 @@ class TestArmEndpoint:
         the feed has moved past -- arm, host approval, refusal, start over. So
         the arm re-checks first and pins that answer.
         """
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -345,7 +345,7 @@ class TestArmEndpoint:
         chose is its own dishonesty. The armed `version` stays raw: the apply
         compares it byte-for-byte.
         """
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         _freeze_check(monkeypatch)
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
@@ -370,8 +370,8 @@ class TestArmEndpoint:
         the user to run a check would be a wrong statement of fact here -- a check
         just ran, and running another returns this same refusal.
         """
-        from kiro_crew.platform import wheel_engine
-        from kiro_crew.platform.update_capability import CHECK_SUCCEEDED
+        from aj_crew.platform import wheel_engine
+        from aj_crew.platform.update_capability import CHECK_SUCCEEDED
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -409,8 +409,8 @@ class TestArmEndpoint:
         moment the user can still act on it. Its own code, not the no-verdict one:
         a check just ran, and trying again is the remedy.
         """
-        from kiro_crew.platform import wheel_engine
-        from kiro_crew.platform.update_capability import CHECK_FAILED
+        from aj_crew.platform import wheel_engine
+        from aj_crew.platform.update_capability import CHECK_FAILED
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -443,7 +443,7 @@ class TestArmEndpoint:
         the distinction the retraction test above pins from the other side -- and
         not a failed check either, which has its own code.
         """
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         _freeze_check(monkeypatch)
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
@@ -458,7 +458,7 @@ class TestArmEndpoint:
     async def test_arm_refuses_when_check_reports_nothing_to_apply(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -484,7 +484,7 @@ class TestArmEndpoint:
         but a DOWNGRADE. The user clicked an upgrade, so arming the move would install
         an older build nobody chose; the offer they clicked is withdrawn instead.
         """
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -511,7 +511,7 @@ class TestArmEndpoint:
     async def test_arm_accepts_a_pending_channel_downgrade(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -545,7 +545,7 @@ class TestArmEndpoint:
         and arming the move would install an older build than the one the user
         chose.
         """
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -576,7 +576,7 @@ class TestArmEndpoint:
         running stamp, so judging it against the unfolded running build would read
         the move as an upgrade and refuse it as withdrawn on every click.
         """
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -609,7 +609,7 @@ class TestArmEndpoint:
         "0.5.0" and the click would arm the rollback; the running build is shown
         unfolded while a move is pending, and against that the click is an upgrade.
         """
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -641,7 +641,7 @@ class TestArmEndpoint:
         upgrade verdict keeps that stale click from arming a build older than the
         running one even though its folded label differs from the button's label.
         """
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -671,7 +671,7 @@ class TestArmEndpoint:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """`offered` crosses a trust boundary: only a short string can be a version."""
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -699,7 +699,7 @@ class TestArmEndpoint:
         the re-check is there to catch, which approval then rejects. The arm joins
         the running worker and reads ITS answer.
         """
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -752,7 +752,7 @@ class TestArmEndpoint:
         per caller. An arm that started its own check would serialize behind the
         poll's and hit the CDN twice for one verdict.
         """
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -788,7 +788,7 @@ class TestArmEndpoint:
     async def test_arm_refuses_a_channel_move_below_the_minimum_version(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -796,7 +796,7 @@ class TestArmEndpoint:
         monkeypatch.setattr(updates, "min_version", lambda: "0.6.0")
         monkeypatch.setattr(updates, "_local_version", "0.7.0")
         audit = MagicMock()
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(sel_mod, "sel", lambda: audit)
         updates._set_update_info(
@@ -828,7 +828,7 @@ class TestArmEndpoint:
     async def test_arm_floor_denial_survives_an_unwritable_audit(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -840,7 +840,7 @@ class TestArmEndpoint:
             def log_api_access(self, **kwargs: object) -> None:
                 raise OSError(28, "no space left on device")
 
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(sel_mod, "sel", lambda: _BrokenSel())
         updates._set_update_info(
@@ -862,7 +862,7 @@ class TestArmEndpoint:
     async def test_arm_allows_an_upgrade_toward_the_minimum_version(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -886,7 +886,7 @@ class TestArmEndpoint:
             updates._set_update_info()
 
     async def test_arm_response_carries_no_nonce(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         _freeze_check(monkeypatch)
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
@@ -897,7 +897,7 @@ class TestArmEndpoint:
             assert resp.status == 200
             payload = json.loads(resp.body.decode())
             assert payload["armed"] is True
-            assert payload["approve_command"] == "kirocrew update approve"
+            assert payload["approve_command"] == "ajcrew update approve"
             on_disk = update_stepup.read_pending()
             assert on_disk is not None
             assert on_disk.nonce not in resp.body.decode()
@@ -915,7 +915,7 @@ class TestArmEndpoint:
         build's own never-folded `__version__`. Arming a display-folded value
         (e.g. "0.4.0" instead of "0.4.0rc14") would make apply fail every time
         on the stable channel."""
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         _freeze_check(monkeypatch)
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
@@ -935,7 +935,7 @@ class TestArmEndpoint:
             updates._set_update_info()
 
     async def test_policy_managed_host_refuses_arm(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         checks = _freeze_check(monkeypatch)
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
@@ -950,9 +950,9 @@ def _assert_update_lock_free() -> None:
     """The layout's update lock can be taken again (raises ``WheelUpdateBusy`` if not).
 
     The layout sits beside the scratch data home (the conftest floor clears
-    ``KIROCREW_VENV``), so this takes a real lock no operator install uses.
+    ``AJCREW_VENV``), so this takes a real lock no operator install uses.
     """
-    from kiro_crew.platform import wheel_engine
+    from aj_crew.platform import wheel_engine
 
     wheel_engine.release_update_lock(wheel_engine.hold_update_lock())
 
@@ -962,7 +962,7 @@ class TestApproveEndpoint:
     @pytest.fixture(autouse=True)
     def _host_isolated(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """The host's AppArmor state is never read, and no apply is in flight."""
-        from kiro_crew.platform import wheel_apply
+        from aj_crew.platform import wheel_apply
 
         monkeypatch.setattr(wheel_apply, "userns_reattach_needed", lambda _version: False)
         monkeypatch.setattr(wheel_apply, "_IN_FLIGHT", set())
@@ -976,7 +976,7 @@ class TestApproveEndpoint:
     async def test_refusal_releases_the_lock_once_off_loop(
         self, monkeypatch: pytest.MonkeyPatch, reason: str
     ) -> None:
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         loop_thread = threading.current_thread()
         released: list[tuple[int, threading.Thread]] = []
@@ -1014,7 +1014,7 @@ class TestApproveEndpoint:
     ) -> None:
         import asyncio
 
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         entered, finish, released = threading.Event(), threading.Event(), threading.Event()
         loop_thread = threading.current_thread()
@@ -1143,7 +1143,7 @@ class TestApproveEndpoint:
         pending = update_stepup.arm("0.5.0", "nightly")
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
         monkeypatch.setattr(
-            "kiro_crew.platform.update_layout.policy_release_channel", lambda: "stable"
+            "aj_crew.platform.update_layout.policy_release_channel", lambda: "stable"
         )
         req = _request({"nonce": pending.nonce})
         resp = await updates.api_update_approve(req)
@@ -1195,7 +1195,7 @@ class TestApproveEndpoint:
             restarted.append(state)
             return True
 
-        from kiro_crew.platform import wheel_apply, wheel_engine
+        from aj_crew.platform import wheel_apply, wheel_engine
 
         monkeypatch.setattr(wheel_engine, "apply_wheel_update", fake_apply)
         monkeypatch.setattr(wheel_apply, "restart_reaches", lambda _version: True)
@@ -1227,7 +1227,7 @@ class TestApproveEndpoint:
         """
         applied: list[dict[str, object]] = []
 
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "apply_wheel_update", lambda **kw: applied.append(kw))
 
@@ -1235,7 +1235,7 @@ class TestApproveEndpoint:
             def log_api_access(self, **kwargs: object) -> None:
                 raise OSError(28, "no space left on device")
 
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(sel_mod, "sel", lambda: _BrokenSel())
         pending = update_stepup.arm("9.9.9", "stable")
@@ -1253,7 +1253,7 @@ class TestApproveEndpoint:
     async def test_failed_apply_reports_and_does_not_restart(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.platform.wheel_engine import WheelUpdateError
+        from aj_crew.platform.wheel_engine import WheelUpdateError
 
         def failing_apply(**kwargs: object) -> None:
             raise WheelUpdateError("wheel SHA-256 mismatch")
@@ -1264,7 +1264,7 @@ class TestApproveEndpoint:
             restarted.append(state)
             return True
 
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "apply_wheel_update", failing_apply)
         monkeypatch.setattr(updates, "_restart_gateway", fake_restart)
@@ -1287,11 +1287,11 @@ class TestApproveEndpoint:
     async def test_an_incompatible_release_names_the_installer_rerun(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         def incompatible(**kwargs: object) -> None:
             raise wheel_engine.WheelUpdateIncompatible(
-                "kirocrew 9.9.9 requires Python >= 3.99", version="9.9.9", sha256="a" * 64
+                "ajcrew 9.9.9 requires Python >= 3.99", version="9.9.9", sha256="a" * 64
             )
 
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -1312,7 +1312,7 @@ class TestApproveEndpoint:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The restart's exec would stop the apply before its outcome is audited."""
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
         locked: list[int] = []
@@ -1334,10 +1334,10 @@ class TestApproveEndpoint:
     async def test_an_apply_already_holding_the_lock_refuses_before_the_nonce_is_used(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         def busy() -> int:
-            raise wheel_engine.WheelUpdateBusy("another kirocrew update is already in progress")
+            raise wheel_engine.WheelUpdateBusy("another ajcrew update is already in progress")
 
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
         monkeypatch.setattr(wheel_engine, "hold_update_lock", busy)
@@ -1360,7 +1360,7 @@ class TestApproveEndpoint:
     async def test_memory_still_preparing_defers_before_the_nonce_is_used(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.platform import wheel_apply, wheel_engine
+        from aj_crew.platform import wheel_apply, wheel_engine
 
         def preparing() -> None:
             raise wheel_engine.WheelUpdateNotReady("memory is still being prepared")
@@ -1379,7 +1379,7 @@ class TestApproveEndpoint:
     async def test_a_memory_failure_refuses_with_its_own_words_before_the_nonce(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.platform import wheel_apply, wheel_engine
+        from aj_crew.platform import wheel_apply, wheel_engine
 
         def failed() -> None:
             raise wheel_engine.WheelUpdateSnapshotFailed("Memory recovery failed: journal broken")
@@ -1399,7 +1399,7 @@ class TestApproveEndpoint:
     async def test_a_cancelled_apply_is_audited_as_cancelled_not_failed(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         def stopped(**_kw: object) -> None:
             raise wheel_engine.WheelUpdateCancelled("stopped", reason="exec")
@@ -1434,8 +1434,8 @@ class TestApproveEndpoint:
         ``busy`` that would make the operator approve again."""
         import asyncio
 
-        from kiro_crew.platform import wheel_apply, wheel_engine
-        from kiro_crew.platform.wheel_engine import ApplyCancel
+        from aj_crew.platform import wheel_apply, wheel_engine
+        from aj_crew.platform.wheel_engine import ApplyCancel
 
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
         monkeypatch.setattr(wheel_engine, "apply_wheel_update", lambda **_kw: None)
@@ -1464,7 +1464,7 @@ class TestApproveEndpoint:
     async def test_a_promotion_that_detaches_the_sandbox_profile_says_how_to_reattach(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        from kiro_crew.platform import wheel_apply, wheel_engine
+        from aj_crew.platform import wheel_apply, wheel_engine
 
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
         monkeypatch.setattr(wheel_engine, "apply_wheel_update", lambda **_kw: None)
@@ -1480,10 +1480,10 @@ class TestApproveEndpoint:
             await task
         bodies = [body for _kind, _title, body in notes(state)]
         assert len(bodies) == 1, notes(state)
-        assert "kirocrew service install" in bodies[0]
+        assert "ajcrew service install" in bodies[0]
         # Sent after the promotion: the update is done, only the re-attach is left.
         assert "is installed" in bodies[0]
-        assert "Run `kirocrew update`" not in bodies[0]
+        assert "Run `ajcrew update`" not in bodies[0]
 
     async def test_a_restart_that_would_rerun_the_old_version_is_not_started(
         self, monkeypatch: pytest.MonkeyPatch
@@ -1491,7 +1491,7 @@ class TestApproveEndpoint:
         """A promotion the restart cannot reach (the stable link leads elsewhere)
         must not exec the running version again: that successor would find the
         same update, promote and restart, for ever."""
-        from kiro_crew.platform import wheel_apply, wheel_engine
+        from aj_crew.platform import wheel_apply, wheel_engine
 
         monkeypatch.setattr(updates, "resolve_provider", lambda: None)
         monkeypatch.setattr(wheel_engine, "apply_wheel_update", lambda **_kw: None)

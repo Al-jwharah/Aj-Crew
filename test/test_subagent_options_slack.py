@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from kiro_crew.slack.format import (
+from aj_crew.slack.format import (
     OPTIONS_ACTION_PREFIX,
     OPTIONS_SEVERAL_ACTION,
     build_options_blocks,
@@ -20,7 +20,7 @@ class TestSubagentOptionsExtraction:
             "Want me to commit what we have and raise a CR?\n\n"
             "[OPTIONS: Commit and raise CR | Spawn adversarial review | Just commit]"
         )
-        from kiro_crew.slack.format import to_slack_mrkdwn
+        from aj_crew.slack.format import to_slack_mrkdwn
 
         reply_text = to_slack_mrkdwn(response)
         reply_text, options = extract_options(reply_text)

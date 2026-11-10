@@ -80,7 +80,7 @@ describe('native notification toasts are silent (WebAudio is the only sound)', (
     function wrapper({ children }: { children: React.ReactNode }) {
       return createElement(Provider, { store }, children)
     }
-    renderHook(() => useNativeNotification('Kiro Crew', '/avatar.png'), { wrapper })
+    renderHook(() => useNativeNotification('Aj Crew', '/avatar.png'), { wrapper })
 
     act(() => {
       store.dispatch(addNotification({
@@ -100,7 +100,7 @@ describe('native notification toasts are silent (WebAudio is the only sound)', (
     }
     renderHook(() => {
       useWebSocket()
-      useNativeNotification('Kiro Crew', '/avatar.png')
+      useNativeNotification('Aj Crew', '/avatar.png')
     }, { wrapper })
     const ws = WS_INSTANCES[0]
     act(() => { ws.simulateOpen() })

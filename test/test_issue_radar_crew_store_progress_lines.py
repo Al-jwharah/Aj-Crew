@@ -21,7 +21,7 @@ from issue_radar_crew_store_helpers import (  # noqa: F401 -- the autouse fixtur
     _tick,
 )
 
-from kiro_crew.apps.builtins.issue_radar.backend import crew_store as cs
+from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs
 
 # ── the ledger: progress lines ──────────────────────────────────────────────
 
@@ -231,7 +231,7 @@ def test_the_two_phase_classifications_do_not_coincide(tmp_path):
 def test_the_vocabularies_are_the_ones_the_entry_type_declares(tmp_path):
     """The store re-exports the crew log's constants rather than owning a copy:
     the entry type's closed enums and the writer's refusals must be ONE set."""
-    from kiro_crew.crew_log import entry_types as et
+    from aj_crew.crew_log import entry_types as et
 
     assert cs.PHASES is et.RADAR_PHASES
     assert cs.EVENT_KINDS is et.RADAR_EVENT_KINDS

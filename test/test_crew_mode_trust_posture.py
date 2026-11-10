@@ -12,29 +12,29 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew import crew_mode
-from kiro_crew.dashboard.approval_posture import trust_carries, trust_reaches_subagents
-from kiro_crew.dashboard.chat_handlers import api_chat_mode, api_chat_slot_approve
-from kiro_crew.dashboard.chat_utils_slots import effective_session_key
-from kiro_crew.dashboard.state import SlotOrigin
+from aj_crew import crew_mode
+from aj_crew.dashboard.approval_posture import trust_carries, trust_reaches_subagents
+from aj_crew.dashboard.chat_handlers import api_chat_mode, api_chat_slot_approve
+from aj_crew.dashboard.chat_utils_slots import effective_session_key
+from aj_crew.dashboard.state import SlotOrigin
 
 
 @pytest.fixture(autouse=True)
 def _routing_live(_floor_monkeypatch):
     # The routing is off on main until the Crew panel turns it on; these tests pin
     # the rules as they run then.
-    from kiro_crew import crew_mode
+    from aj_crew import crew_mode
 
     _floor_monkeypatch.setattr(crew_mode, "APPROVAL_ROUTING_LIVE", True)
 
 
 @pytest.fixture(autouse=True)
 def _clean(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _floor_monkeypatch.setattr(crew_mode, "_known_roots", set())
     _floor_monkeypatch.setattr(crew_mode, "persisted_parents", lambda: {})
     _floor_monkeypatch.setattr(crew_mode, "_live_cfg", lambda: None)
-    _floor_monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    _floor_monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
 
 @web.middleware
@@ -46,9 +46,9 @@ async def _owner(request: web.Request, handler):
 
 @pytest.mark.asyncio
 async def test_H1_card_trust_reaches_subagents_not_sessions_on_any_path(tmp_path):
-    from kiro_crew.dashboard.chat_turn.tool_approval import _persistable_session_policy
-    from kiro_crew.dashboard.handlers.crew_workers import api_crew_worker_approve
-    from kiro_crew.dashboard.server import (
+    from aj_crew.dashboard.chat_turn.tool_approval import _persistable_session_policy
+    from aj_crew.dashboard.handlers.crew_workers import api_crew_worker_approve
+    from aj_crew.dashboard.server import (
         _clear_override_derived_trust,
         _suspend_override_derived_trust,
     )
@@ -58,11 +58,11 @@ async def test_H1_card_trust_reaches_subagents_not_sessions_on_any_path(tmp_path
     state.push_slots_update = MagicMock()
     state.owner_id = ""
     root = state.get_or_create_slot("root", origin=SlotOrigin.USER)
-    root.agent = "kirocrew-conductor"
+    root.agent = "ajcrew-conductor"
     worker = state.get_or_create_slot("w", origin=SlotOrigin.USER)
-    worker.agent = "kirocrew-worker"
+    worker.agent = "ajcrew-worker"
     worker._created_by = "root"
-    state.get_or_create_slot("plain", origin=SlotOrigin.USER).agent = "kirocrew"
+    state.get_or_create_slot("plain", origin=SlotOrigin.USER).agent = "ajcrew"
     fut = asyncio.get_running_loop().create_future()
     row = worker.append(
         "permission", "Shell", json.dumps({"request_id": "r", "trust_grantable": "1"})
@@ -110,7 +110,7 @@ async def test_H1_card_trust_reaches_subagents_not_sessions_on_any_path(tmp_path
     plain_key = effective_session_key(state._slots["plain"])
     state._slots["plain"]._trust = False
     state._slots["plain"]._trust_reads = False
-    with patch("kiro_crew.messaging.session_trust.clear_trusted_sessions"):
+    with patch("aj_crew.messaging.session_trust.clear_trusted_sessions"):
         _clear_override_derived_trust(state, "test")
     children_ask()
     state.sessions.get_approval_policy = MagicMock(return_value="auto")
@@ -139,8 +139,8 @@ async def test_H1_card_trust_reaches_subagents_not_sessions_on_any_path(tmp_path
 
 @pytest.mark.asyncio
 async def test_H3_a_workers_spawn_approval_sends_no_slack_buttons():
-    from kiro_crew.llm_helpers import LLMEvent
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.llm_helpers import LLMEvent
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     def live(key: str, agent: str, created_by: str = "") -> SimpleNamespace:
         return SimpleNamespace(
@@ -159,15 +159,15 @@ async def test_H3_a_workers_spawn_approval_sends_no_slack_buttons():
     gw._cfg.hooks.get = MagicMock(return_value=[])
     gw._approval_mode = None
     event = LLMEvent(kind="permission_request", request_id="spawn:a", title="spawn_run")
-    with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
+    with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
         gw.dashboard_state._slots = {
-            "root": live("root", "kirocrew-conductor"),
-            "w": live("w", "kirocrew-worker", "root"),
+            "root": live("root", "ajcrew-conductor"),
+            "w": live("w", "ajcrew-worker", "root"),
         }
         assert await gw._interactive_approval("subagent")(event, "dashboard:w") is True
         gw.slack.post_blocks.assert_not_awaited()  # the conductor's card only
         # A plain session still gets the DM (a failing post falls back at once).
-        gw.dashboard_state._slots = {"plain": live("plain", "kirocrew")}
+        gw.dashboard_state._slots = {"plain": live("plain", "ajcrew")}
         gw.slack.post_blocks = AsyncMock(side_effect=RuntimeError("down"))
         await gw._interactive_approval("subagent")(event, "dashboard:plain")
         gw.slack.post_blocks.assert_awaited_once()

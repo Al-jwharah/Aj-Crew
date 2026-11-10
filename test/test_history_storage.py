@@ -16,10 +16,10 @@ from unittest.mock import MagicMock
 import pytest
 from windows_sim import builtin_open_sharing_violation
 
-from kiro_crew import history, history_projection
-from kiro_crew.history import _METADATA_CACHE_MAX, ConversationLog
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import await_until, wait_until
+from aj_crew import history, history_projection
+from aj_crew.history import _METADATA_CACHE_MAX, ConversationLog
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import await_until, wait_until
 
 #: Loop turns every worker of a storm over bare caches begins before the storm is stopped. It
 #: counts work, so the storm asks as much of a slow host as of a fast one. On a developer machine
@@ -74,7 +74,7 @@ class TestLRUCache:
     """Unit tests for the bounded _LRUCache primitive backing the caches."""
 
     def test_idle_entries_are_dropped_and_recent_ones_kept(self):
-        from kiro_crew.history import _LRUCache
+        from aj_crew.history import _LRUCache
 
         c: _LRUCache[int] = _LRUCache(maxsize=8, idle_ttl=100.0)
         c["old"] = 1
@@ -91,7 +91,7 @@ class TestLRUCache:
         assert c.get("read-late") == 2 and c.get("new") == 3
 
     def test_without_a_ttl_nothing_expires(self):
-        from kiro_crew.history import _LRUCache
+        from aj_crew.history import _LRUCache
 
         c: _LRUCache[int] = _LRUCache(maxsize=8)
         c["a"] = 1
@@ -99,7 +99,7 @@ class TestLRUCache:
         assert c.get("a") == 1
 
     def test_the_transcript_caches_expire_and_the_sweep_reaches_them(self, tmp_path):
-        from kiro_crew import history_cache
+        from aj_crew import history_cache
 
         log = ConversationLog(tmp_path)
         log._msg_cache["k"] = ((0, 0, 0), 0, [{"role": "user", "content": "x"}])
@@ -113,7 +113,7 @@ class TestLRUCache:
         assert "k\x00" not in log._recent_cache
 
     def test_hit_returns_value(self):
-        from kiro_crew.history import _LRUCache
+        from aj_crew.history import _LRUCache
 
         c: _LRUCache[int] = _LRUCache(maxsize=4)
         c["a"] = 1
@@ -121,14 +121,14 @@ class TestLRUCache:
         assert c["a"] == 1
 
     def test_miss_returns_default(self):
-        from kiro_crew.history import _LRUCache
+        from aj_crew.history import _LRUCache
 
         c: _LRUCache[int] = _LRUCache(maxsize=4)
         assert c.get("missing") is None
         assert c.get("missing", 42) == 42
 
     def test_eviction_is_deterministic_lru(self):
-        from kiro_crew.history import _LRUCache
+        from aj_crew.history import _LRUCache
 
         c: _LRUCache[int] = _LRUCache(maxsize=3)
         c["a"] = 1
@@ -140,7 +140,7 @@ class TestLRUCache:
         assert set(c._data.keys()) == {"b", "c", "d"}
 
     def test_get_marks_recently_used(self):
-        from kiro_crew.history import _LRUCache
+        from aj_crew.history import _LRUCache
 
         c: _LRUCache[int] = _LRUCache(maxsize=3)
         c["a"] = 1
@@ -154,7 +154,7 @@ class TestLRUCache:
         assert "a" in c
 
     def test_setitem_update_marks_recently_used(self):
-        from kiro_crew.history import _LRUCache
+        from aj_crew.history import _LRUCache
 
         c: _LRUCache[int] = _LRUCache(maxsize=3)
         c["a"] = 1
@@ -166,7 +166,7 @@ class TestLRUCache:
         assert c.get("a") == 10
 
     def test_pop_and_contains_and_len(self):
-        from kiro_crew.history import _LRUCache
+        from aj_crew.history import _LRUCache
 
         c: _LRUCache[int] = _LRUCache(maxsize=4)
         c["a"] = 1
@@ -179,7 +179,7 @@ class TestLRUCache:
         assert len(c) == 1
 
     def test_clear(self):
-        from kiro_crew.history import _LRUCache
+        from aj_crew.history import _LRUCache
 
         c: _LRUCache[int] = _LRUCache(maxsize=4)
         c["a"] = 1
@@ -188,7 +188,7 @@ class TestLRUCache:
         assert len(c) == 0
 
     def test_maxsize_zero_disables_bound(self):
-        from kiro_crew.history import _LRUCache
+        from aj_crew.history import _LRUCache
 
         c: _LRUCache[int] = _LRUCache(maxsize=0)
         for i in range(1000):
@@ -213,7 +213,7 @@ class TestConversationLogCacheBounded:
         # constructor parameter: the production default deliberately does not follow
         # ``cache_max`` down, and a kwarg only tests pass is production API surface
         # with no product consumer. The eviction invariant under test is unchanged.
-        from kiro_crew.history import _LRUCache
+        from aj_crew.history import _LRUCache
 
         log = ConversationLog(base_dir=tmp_path)
         log._meta_cache = _LRUCache(3)
@@ -268,7 +268,7 @@ class TestConversationLogCacheBounded:
 
     def test_msg_cache_is_bounded_by_bytes(self, tmp_path, monkeypatch):
         """Past the byte budget the least recently read transcripts go first."""
-        from kiro_crew import history_cache
+        from aj_crew import history_cache
 
         log = ConversationLog(base_dir=tmp_path)
         # Written as fixed bytes, not through append(): a live timestamp prints
@@ -312,7 +312,7 @@ class TestLRUCacheWeights:
     """The optional byte bound of _LRUCache keeps its total exact across every removal."""
 
     def _cache(self):
-        from kiro_crew.history import _LRUCache
+        from aj_crew.history import _LRUCache
 
         return _LRUCache(maxsize=0, max_weight=10, weigh=len)
 
@@ -323,7 +323,7 @@ class TestLRUCacheWeights:
         assert c.total_weight() == 2
 
     def test_pop_prefix_clear_and_idle_drop_release_weight(self):
-        from kiro_crew.history import _LRUCache
+        from aj_crew.history import _LRUCache
 
         c = self._cache()
         c["p\x00a"] = "xxx"
@@ -342,7 +342,7 @@ class TestLRUCacheWeights:
         assert c.total_weight() == 0 and len(c) == 0
 
     def test_without_weigh_there_is_no_byte_bound(self):
-        from kiro_crew.history import _LRUCache
+        from aj_crew.history import _LRUCache
 
         c = _LRUCache(maxsize=0, max_weight=1)
         c["a"] = "xxxxxxxx"
@@ -496,7 +496,7 @@ class TestLRUCacheConcurrency:
     """
 
     def test_get_pop_interleave_no_exception(self):
-        from kiro_crew.history import _LRUCache
+        from aj_crew.history import _LRUCache
 
         c: _LRUCache[int] = _LRUCache(maxsize=64)
         errors: list[BaseException] = []
@@ -554,7 +554,7 @@ class TestLRUCacheConcurrency:
         assert len(c) <= 64
 
     def test_getitem_pop_interleave_no_exception(self):
-        from kiro_crew.history import _LRUCache
+        from aj_crew.history import _LRUCache
 
         c: _LRUCache[int] = _LRUCache(maxsize=32)
         for i in range(32):
@@ -862,7 +862,7 @@ class TestMetadataReadSurvivesATransientSharingViolation:
         log.append("s1", "user", "hello", agent="my-agent")
         log._meta_cache.pop("s1", None)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
             with builtin_open_sharing_violation(match="s1.jsonl", times=99):
                 meta = log.get_metadata("s1")
 

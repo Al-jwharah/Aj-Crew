@@ -17,12 +17,12 @@ import pytest
 from telegram_helpers import _drop_live_config_snapshot  # noqa: F401
 from telegram_helpers import FakeProvider, _dispatcher, _dm, _Ev
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_STALE_RECOVER
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.telegram.renderer import TelegramApprovalDecider, TelegramRenderer
-from kiro_crew.telegram.transport_dispatch import _user_safe_failure_reason
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.client import AcpError
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_STALE_RECOVER
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.telegram.renderer import TelegramApprovalDecider, TelegramRenderer
+from aj_crew.telegram.transport_dispatch import _user_safe_failure_reason
+from aj_crew.testing.wait import await_until
 
 
 class TestTelegramSessionPidPublish:
@@ -36,17 +36,17 @@ class TestTelegramSessionPidPublish:
     """
 
     def test_telegram_turn_delegates_identity_publish(self, tmp_path: Any, monkeypatch) -> None:
-        from kiro_crew.messaging.identity import publish_turn_identity
-        from kiro_crew.session_pid_sig import read_session_pid_mapping
+        from aj_crew.messaging.identity import publish_turn_identity
+        from aj_crew.session_pid_sig import read_session_pid_mapping
 
-        monkeypatch.setattr("kiro_crew.session_pid_sig.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_pid_sig.config_dir", lambda: tmp_path)
         d, _cli, sess = _dispatcher({7})
         sess._pid = 4242  # SessionManager.get_pid -> kiro-cli host PID
 
         # Wrapping the facade name keeps the real writer running while the
         # composition contract still sees this seam as rebound on the facade.
         with patch(
-            "kiro_crew.telegram.transport_dispatch.publish_turn_identity",
+            "aj_crew.telegram.transport_dispatch.publish_turn_identity",
             wraps=publish_turn_identity,
         ):
             asyncio.run(
@@ -61,7 +61,7 @@ class TestTelegramSessionPidPublish:
             )
 
         mapping = read_session_pid_mapping(4242, cfg=tmp_path)
-        assert mapping.session_key == "telegram:kirocrew:direct:7"
+        assert mapping.session_key == "telegram:ajcrew:direct:7"
 
 
 class TestUserSafeFailureReason:
@@ -86,7 +86,7 @@ class TestUserSafeFailureReason:
 
     def test_non_retryable_provider_fallback_returns_none(self) -> None:
         # The formatter's fallback passes the provider's own text through and
-        # still marks it non-retryable; only Kiro Crew's own wording may reach chat.
+        # still marks it non-retryable; only Aj Crew's own wording may reach chat.
         exc = AcpError("provider said: {'data': 'opaque'}", transient=False)
         assert _user_safe_failure_reason(exc) is None
 
@@ -137,10 +137,10 @@ class TestContextThresholdNotices:
 class TestTurnLifecycleCharacterization:
     """The turn's exit paths: what is charged, finalized, released, cleaned and drained."""
 
-    _KEY = "telegram:kirocrew:direct:7"
+    _KEY = "telegram:ajcrew:direct:7"
 
     def test_a_failure_reason_is_bounded_and_scrubbed(self) -> None:
-        from kiro_crew.memory_stores import UnknownMemoryStore
+        from aj_crew.memory_stores import UnknownMemoryStore
 
         assert (
             _user_safe_failure_reason(AcpError("x" * 500, transient=False, user_worded=True))
@@ -174,8 +174,8 @@ class TestTurnLifecycleCharacterization:
         )
 
     def _instrument(self, monkeypatch: Any, d: Any, sess: Any, stream: Any = None) -> list:
-        from kiro_crew.messaging import auto_title
-        from kiro_crew.telegram import transport_dispatch as td
+        from aj_crew.messaging import auto_title
+        from aj_crew.telegram import transport_dispatch as td
 
         events: list[tuple[Any, ...]] = []
         monkeypatch.setattr(auto_title, "try_claim", lambda _key: False)
@@ -363,7 +363,7 @@ class TestTurnLifecycleCharacterization:
         assert d._active_renderers.get(k) is later
 
     def test_close_gets_the_failure_reason_the_turn_classified(self, monkeypatch: Any) -> None:
-        from kiro_crew.memory_stores import UnknownMemoryStore
+        from aj_crew.memory_stores import UnknownMemoryStore
 
         cases = [
             (
@@ -394,7 +394,7 @@ class TestTurnLifecycleCharacterization:
     def test_a_landed_turn_clears_the_shared_death_streak_after_record_success(
         self, monkeypatch: Any
     ) -> None:
-        from kiro_crew import runtime_death
+        from aj_crew import runtime_death
 
         runtime_death._reset_for_tests()
         try:
@@ -420,7 +420,7 @@ class TestTurnLifecycleCharacterization:
                         runtime_death.shared_deaths(TestTurnLifecycleCharacterization._KEY)
                     )
 
-            monkeypatch.setattr("kiro_crew.telegram.transport_dispatch.Stats", _Stats)
+            monkeypatch.setattr("aj_crew.telegram.transport_dispatch.Stats", _Stats)
             asyncio.run(d.handle_message(_dm("hi")))
             assert at_success == [2] and counted == [0]
             assert runtime_death.shared_deaths(self._KEY) == 0

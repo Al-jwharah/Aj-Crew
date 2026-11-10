@@ -76,21 +76,21 @@ def test_a_forbidden_path_beats_the_scope_row_that_covers_it(
 ):
     """Same precedence, on the path axis rather than the technique axis."""
     seed_roe(ledger, db)
-    add_rule(ledger, db, "forbidden", "path:src/kiro_crew/secrets/")
+    add_rule(ledger, db, "forbidden", "path:src/aj_crew/secrets/")
 
-    code = run_scope(scope_check, db, missing_json, "--path", "src/kiro_crew/secrets/keys.py")
+    code = run_scope(scope_check, db, missing_json, "--path", "src/aj_crew/secrets/keys.py")
 
     payload = out_json(capsys)
     assert code == 10
     assert payload["verdict"] == "OUT_OF_SCOPE"
-    assert payload["matched_rules"][0]["value"] == "path:src/kiro_crew/secrets/"
+    assert payload["matched_rules"][0]["value"] == "path:src/aj_crew/secrets/"
 
 
 def test_an_empty_ledger_with_no_export_is_unknown_not_permission(
     scope_check, db, missing_json, capsys
 ):
     """No rules means no answer, and no answer is a nonzero exit."""
-    code = run_scope(scope_check, db, missing_json, "--path", "src/kiro_crew/security.py")
+    code = run_scope(scope_check, db, missing_json, "--path", "src/aj_crew/security.py")
 
     payload = out_json(capsys)
     assert code == 20
@@ -110,7 +110,7 @@ def test_a_rule_field_the_script_cannot_interpret_is_unknown(
     seed_roe(ledger, db)
     add_rule(ledger, db, "aggression_budget", "3")
 
-    code = run_scope(scope_check, db, missing_json, "--path", "src/kiro_crew/security.py")
+    code = run_scope(scope_check, db, missing_json, "--path", "src/aj_crew/security.py")
 
     payload = out_json(capsys)
     assert code == 20
@@ -124,7 +124,7 @@ def test_a_bare_scope_value_is_unknown_because_repo_and_path_differ(
     seed_roe(ledger, db)
     add_rule(ledger, db, "scope", "everything-really")
 
-    code = run_scope(scope_check, db, missing_json, "--path", "src/kiro_crew/security.py")
+    code = run_scope(scope_check, db, missing_json, "--path", "src/aj_crew/security.py")
 
     assert code == 20
     assert any("neither repo: nor path:" in reason for reason in out_json(capsys)["reasons"])
@@ -141,7 +141,7 @@ def test_severity_scale_and_report_schema_rows_are_skipped_not_unknown(
     seed_roe(ledger, db)
     add_rule(ledger, db, "report_schema", "poc")
 
-    code = run_scope(scope_check, db, missing_json, "--path", "src/kiro_crew/security.py")
+    code = run_scope(scope_check, db, missing_json, "--path", "src/aj_crew/security.py")
 
     assert code == 0
     assert out_json(capsys)["verdict"] == "IN_SCOPE"
@@ -166,7 +166,7 @@ def test_a_repo_and_path_and_technique_all_covered_is_in_scope(
         "--repo",
         "kirodotdev/KiroCrew",
         "--path",
-        "src/kiro_crew/security.py",
+        "src/aj_crew/security.py",
         "--technique",
         "static-code-review",
     )
@@ -351,7 +351,7 @@ def test_a_permitting_rule_naming_a_path_is_recorded_as_uninterpretable(
     add_rule(ledger, db, "scope", "path:src/")
     add_rule(ledger, db, "allowed_techniques", "path:network-egress")
 
-    code = run_scope(scope_check, db, missing_json, "--path", "src/kiro_crew/security.py")
+    code = run_scope(scope_check, db, missing_json, "--path", "src/aj_crew/security.py")
 
     payload = out_json(capsys)
     assert code == 20
@@ -383,9 +383,9 @@ def test_a_forbidden_rule_may_still_name_a_path_or_repo(
     not narrow this one.
     """
     add_rule(ledger, db, "scope", "path:src/")
-    add_rule(ledger, db, "forbidden", "path:src/kiro_crew/secrets/")
+    add_rule(ledger, db, "forbidden", "path:src/aj_crew/secrets/")
 
-    code = run_scope(scope_check, db, missing_json, "--path", "src/kiro_crew/secrets/k.py")
+    code = run_scope(scope_check, db, missing_json, "--path", "src/aj_crew/secrets/k.py")
 
     payload = out_json(capsys)
     assert code == 10
@@ -406,9 +406,9 @@ def test_a_forbidden_path_rule_does_not_poison_an_unrelated_verdict(
     answer UNKNOWN for every question ever asked.
     """
     add_rule(ledger, db, "scope", "path:src/")
-    add_rule(ledger, db, "forbidden", "path:src/kiro_crew/secrets/")
+    add_rule(ledger, db, "forbidden", "path:src/aj_crew/secrets/")
 
-    code = run_scope(scope_check, db, missing_json, "--path", "src/kiro_crew/security.py")
+    code = run_scope(scope_check, db, missing_json, "--path", "src/aj_crew/security.py")
 
     payload = out_json(capsys)
     assert code == 0
@@ -458,7 +458,7 @@ def test_a_bare_forbidden_value_with_a_colon_is_still_a_technique_phrase(
     add_rule(ledger, db, "scope", "path:src/")
     add_rule(ledger, db, "forbidden", value)
 
-    code = run_scope(scope_check, db, missing_json, "--path", "src/kiro_crew/security.py")
+    code = run_scope(scope_check, db, missing_json, "--path", "src/aj_crew/security.py")
 
     assert code == 0
     assert out_json(capsys)["verdict"] == "IN_SCOPE"
@@ -505,7 +505,7 @@ def test_a_granting_path_rule_does_not_fold_case(ledger, scope_check, db, missin
     """Folding case on a GRANT would widen what is permitted."""
     add_rule(ledger, db, "scope", "path:src/")
 
-    code = run_scope(scope_check, db, missing_json, "--path", "SRC/kiro_crew/security.py")
+    code = run_scope(scope_check, db, missing_json, "--path", "SRC/aj_crew/security.py")
 
     assert code == 10
     assert out_json(capsys)["verdict"] == "OUT_OF_SCOPE"
@@ -546,7 +546,7 @@ def test_a_root_scope_prefix_still_covers_a_path_inside_the_repository(
     """The absoluteness check must not refuse what ``path:.`` is FOR."""
     add_rule(ledger, db, "scope", "path:.")
 
-    code = run_scope(scope_check, db, missing_json, "--path", "src/kiro_crew/security.py")
+    code = run_scope(scope_check, db, missing_json, "--path", "src/aj_crew/security.py")
 
     assert code == 0
     assert out_json(capsys)["verdict"] == "IN_SCOPE"
@@ -576,7 +576,7 @@ def test_revoking_every_rule_is_unknown_and_does_not_reach_the_export(
         conn.close()
 
     code = scope_check.main(
-        ["--db", str(db), "--roe-json", str(export), "--path", "src/kiro_crew/security.py"]
+        ["--db", str(db), "--roe-json", str(export), "--path", "src/aj_crew/security.py"]
     )
 
     captured = capsys.readouterr()
@@ -601,7 +601,7 @@ def test_a_truly_empty_ledger_still_reaches_the_export(scope_check, db, tmp_path
     )
 
     code = scope_check.main(
-        ["--db", str(db), "--roe-json", str(export), "--path", "src/kiro_crew/security.py"]
+        ["--db", str(db), "--roe-json", str(export), "--path", "src/aj_crew/security.py"]
     )
 
     captured = capsys.readouterr()
@@ -657,7 +657,7 @@ def test_the_export_is_read_only_when_the_ledger_holds_no_rules(scope_check, db,
             "--roe-json",
             str(export),
             "--path",
-            "src/kiro_crew/security.py",
+            "src/aj_crew/security.py",
         ]
     )
 
@@ -706,7 +706,7 @@ def test_an_unreadable_database_is_unknown_and_does_not_fall_back(
     )
 
     code = scope_check.main(
-        ["--db", str(db), "--roe-json", str(export), "--path", "src/kiro_crew/security.py"]
+        ["--db", str(db), "--roe-json", str(export), "--path", "src/aj_crew/security.py"]
     )
 
     captured = capsys.readouterr()
@@ -823,7 +823,7 @@ def test_a_severity_outside_the_scale_is_refused(ledger, finding_entry, db, miss
         "--title",
         "invented grade",
         "--path",
-        "src/kiro_crew/security.py",
+        "src/aj_crew/security.py",
         "--poc",
         "cmd::python3 -c pass",
     )
@@ -864,7 +864,7 @@ def test_a_finding_with_no_runnable_proof_is_refused(
         "--title",
         "described but not demonstrated",
         "--path",
-        "src/kiro_crew/security.py",
+        "src/aj_crew/security.py",
         "--poc",
         "read the function and it is obvious",
     )
@@ -906,9 +906,9 @@ def test_a_json_finding_is_filed_and_an_unknown_key_is_refused(
                 "surface": "dashboard.token_auth",
                 "severity": "Critical",
                 "title": "session token accepted from a query string",
-                "paths": ["src/kiro_crew/dashboard/token_auth.py"],
+                "paths": ["src/aj_crew/dashboard/token_auth.py"],
                 "poc": "cmd::python3 -c pass",
-                "round_id": "kirocrew-dogfood-round-1",
+                "round_id": "ajcrew-dogfood-round-1",
             }
         ),
         encoding="utf-8",
@@ -966,7 +966,7 @@ def test_parallel_filings_of_one_defect_record_one_auditor_verdict(
         "--json-file",
         str(payload),
     ]
-    env = {k: v for k, v in os.environ.items() if not k.startswith("KIROCREW_")}
+    env = {k: v for k, v in os.environ.items() if not k.startswith("AJCREW_")}
     procs = [subprocess.Popen(argv, env=env, stdout=subprocess.DEVNULL) for _ in range(6)]
     codes = [p.wait(timeout=120) for p in procs]
 

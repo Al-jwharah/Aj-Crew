@@ -23,25 +23,25 @@ import asyncio
 
 import pytest
 
-from kiro_crew import name_grant
-from kiro_crew.acp.types import (
+from aj_crew import name_grant
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
     AcpEvent,
     TurnUsage,
 )
-from kiro_crew.dashboard.handlers import usage
-from kiro_crew.dashboard.handlers.hooks import (
+from aj_crew.dashboard.handlers import usage
+from aj_crew.dashboard.handlers.hooks import (
     _EVENT_PERMISSION_REQUEST_KIND,
     _run_hook_inner,
 )
-from kiro_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, TOOL_DENY, ToolHookResult
-from kiro_crew.permission_floor import (
+from aj_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, TOOL_DENY, ToolHookResult
+from aj_crew.permission_floor import (
     OUTCOME_PENDING_APPROVAL,
     OUTCOME_REJECTED_TRANSPORT_FLOOR,
 )
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.testing.wait import await_until, finished
 
 _REQUEST_ID = "perm-req-9790"
 
@@ -73,7 +73,7 @@ class _FakeClient:
         self._permission_event = permission_event or _permission_event()
         self._approval_sent = approval_sent
         # read_effective_agent / _resolve_model walk the wrapper chain for these.
-        self._agent = "kirocrew"
+        self._agent = "ajcrew"
         self._model = "claude-test"
 
     async def stream(self, _message: str):
@@ -153,7 +153,7 @@ def _drive(
     sel = _RecordingSel()
     # _sel() in handlers/hooks_scripts.py resolves through the handlers package's
     # late-binding sel() exactly for this patch point.
-    import kiro_crew.dashboard.handlers as handlers_pkg
+    import aj_crew.dashboard.handlers as handlers_pkg
 
     monkeypatch.setattr(handlers_pkg, "sel", lambda: sel)
     # Keep the usage row off the real shards (same seam the turn-duration
@@ -334,7 +334,7 @@ def test_unauditable_auto_approve_is_denied(monkeypatch):
             if kwargs.get("outcome") == OUTCOME_PENDING_APPROVAL:
                 raise OSError("audit disk full")
 
-    import kiro_crew.dashboard.handlers as handlers_pkg
+    import aj_crew.dashboard.handlers as handlers_pkg
 
     raising = _RaisingSel()
     monkeypatch.setattr(handlers_pkg, "sel", lambda: raising)
@@ -398,7 +398,7 @@ class _SteeringClient(_FakeClient):
 def _notice(client: _SteeringClient) -> str:
     assert [kind for kind, _ in client.trace] == ["steer", "reject"], client.trace
     text = str(client.trace[0][1])
-    assert text.startswith("[Kiro Crew host notice]")
+    assert text.startswith("[Aj Crew host notice]")
     assert "User denied tool execution" in text
     return text
 
@@ -409,7 +409,7 @@ def _notice(client: _SteeringClient) -> str:
         (None, "tool policy of the surface", "no hook gate"),
         (
             ToolHookResult(action=TOOL_DENY, reason="Blocked by security policy: secrets dir"),
-            "blocked by a Kiro Crew safety policy",
+            "blocked by a Aj Crew safety policy",
             "secrets dir",
         ),
         (ToolHookResult(action=TOOL_ALLOW), "tool policy of the surface", "no person to approve"),
@@ -433,7 +433,7 @@ def test_an_unauditable_auto_approve_steers_the_audit_cause(monkeypatch):
             if kwargs.get("outcome") == OUTCOME_PENDING_APPROVAL:
                 raise OSError("audit disk full")
 
-    import kiro_crew.dashboard.handlers as handlers_pkg
+    import aj_crew.dashboard.handlers as handlers_pkg
 
     monkeypatch.setattr(handlers_pkg, "sel", lambda: _RaisingSel())
     monkeypatch.setattr(usage, "_write_token_record", lambda _record, _now: None)

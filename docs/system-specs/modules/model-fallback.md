@@ -2,7 +2,7 @@
 
 `agent.fallback_model` controls an optional retry after an active model exhausts
 its transient-error budget before activity begins. The implementation is
-Kiro Crew-side: `llm_helpers.advance_fallback_candidate` changes the model through
+Aj Crew-side: `llm_helpers.advance_fallback_candidate` changes the model through
 the substitute `set_model` seam, and `test/test_llm_helpers_fallback_chain.py` pins that a
 successful swap is observable before it is recorded.
 
@@ -511,7 +511,7 @@ rather than naming the model that refused:
   Telegram or Discord is left alone, since its model is the dashboard slot's.
 
 App code reaches all of this through `agent_sdk/drivers/acp_vocab.py`, which
-re-exports the engine-fallback names, so no consumer imports `kiro_crew.acp`
+re-exports the engine-fallback names, so no consumer imports `aj_crew.acp`
 for it (`scripts/check_agent_sdk_boundary.py`).
 
 Crew's own fallback is unchanged and is not gated on the engine's: a turn the

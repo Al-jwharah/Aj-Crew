@@ -31,11 +31,11 @@ vi.mock('../api/client', async importOriginal => {
     ...mod,
     api: {
       ...mod.api,
-      agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'kirocrew' })),
+      agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'ajcrew' })),
       workspaces: vi.fn(() => Promise.resolve({ workspaces: [{ name: 'default' }] })),
       availableModels: vi.fn(() => Promise.resolve({ models: [] })),
       members: vi.fn(() => Promise.resolve({ members: [] })),
-      createKirocrewAgent: vi.fn(() => Promise.resolve({ ok: true, name: 'Scout' })),
+      createAjcrewAgent: vi.fn(() => Promise.resolve({ ok: true, name: 'Scout' })),
     },
   }
 })
@@ -45,15 +45,15 @@ const create = async (guided: boolean) => {
   renderWithProviders(<NewCrewmateDialog open embedded guided={guided} initialDraft={{ name: 'Scout', goal: '' }} {...props} />)
   await screen.findByTestId('crewmate-create-form')
   fireEvent.click(screen.getByTestId('crewmate-create-submit'))
-  await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
+  await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
 }
 
 describe('NewCrewmateDialog guided door', () => {
   beforeEach(() => {
     guide.headers = undefined
     guide.sync.mockClear(); guide.refused.mockClear(); guide.savedUncredited.mockClear()
-    vi.mocked(api.createKirocrewAgent).mockReset()
-    vi.mocked(api.createKirocrewAgent).mockResolvedValue({ ok: true, name: 'Scout' })
+    vi.mocked(api.createAjcrewAgent).mockReset()
+    vi.mocked(api.createAjcrewAgent).mockResolvedValue({ ok: true, name: 'Scout' })
     props.onCreated = vi.fn()
   })
 
@@ -61,20 +61,20 @@ describe('NewCrewmateDialog guided door', () => {
     guide.headers = { 'X-Guide-Id': 'g1', 'X-Guide-Tab': 't1', 'X-Guide-Revision': '3' }
     await create(true)
     expect(guide.sync).toHaveBeenCalledTimes(1)
-    expect(vi.mocked(api.createKirocrewAgent).mock.calls[0][1]).toEqual(guide.headers)
+    expect(vi.mocked(api.createAjcrewAgent).mock.calls[0][1]).toEqual(guide.headers)
     await waitFor(() => expect(props.onCreated).toHaveBeenCalled(), { timeout: 4000 })
     expect(guide.savedUncredited).not.toHaveBeenCalled()
   })
 
   it('a guided create the guide had not reached yet closes the guide honestly', async () => {
     await create(true)
-    expect(vi.mocked(api.createKirocrewAgent).mock.calls[0]).toHaveLength(1)
+    expect(vi.mocked(api.createAjcrewAgent).mock.calls[0]).toHaveLength(1)
     await waitFor(() => expect(guide.savedUncredited).toHaveBeenCalledTimes(1), { timeout: 4000 })
   })
 
   it('a refused guided create stops the guide waiting', async () => {
     guide.headers = { 'X-Guide-Id': 'g1' }
-    vi.mocked(api.createKirocrewAgent).mockRejectedValue(new ApiError(409, 'exists', '{"code":"agent_exists"}'))
+    vi.mocked(api.createAjcrewAgent).mockRejectedValue(new ApiError(409, 'exists', '{"code":"agent_exists"}'))
     await create(true)
     await waitFor(() => expect(guide.refused).toHaveBeenCalledTimes(1))
     expect(props.onCreated).not.toHaveBeenCalled()
@@ -84,7 +84,7 @@ describe('NewCrewmateDialog guided door', () => {
     guide.headers = { 'X-Guide-Id': 'g1' }
     await create(false)
     expect(guide.sync).not.toHaveBeenCalled()
-    expect(vi.mocked(api.createKirocrewAgent).mock.calls[0]).toHaveLength(1)
+    expect(vi.mocked(api.createAjcrewAgent).mock.calls[0]).toHaveLength(1)
     await waitFor(() => expect(props.onCreated).toHaveBeenCalled(), { timeout: 4000 })
     expect(guide.savedUncredited).not.toHaveBeenCalled()
   })

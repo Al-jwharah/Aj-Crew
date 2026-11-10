@@ -28,18 +28,18 @@ from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from kiro_crew.recovery.policy import LayerPolicy, RecoveryPolicy
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.subagent_manager.admission import FairnessSettings
-from kiro_crew.taskq import model
-from kiro_crew.taskq.adapters.runner import RunnerAdmission
-from kiro_crew.taskq.dependency import dependency_backoff
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.taskq.waits import WaitLedger
-from kiro_crew.testing.wait import finished
+from aj_crew.recovery.policy import LayerPolicy, RecoveryPolicy
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent_manager.admission import FairnessSettings
+from aj_crew.taskq import model
+from aj_crew.taskq.adapters.runner import RunnerAdmission
+from aj_crew.taskq.dependency import dependency_backoff
+from aj_crew.taskq.store import TaskStore
+from aj_crew.taskq.waits import WaitLedger
+from aj_crew.testing.wait import finished
 
 #: The tool a parent blocks in while it waits for its children.
-BLOCKING_TOOL = "@kirocrew-core/spawn_sub_agents"
+BLOCKING_TOOL = "@ajcrew-core/spawn_sub_agents"
 
 
 class Clock:
@@ -217,7 +217,7 @@ def mock_ctx() -> MagicMock:
 def memory_below_floor(*_args: Any, **_kwargs: Any) -> tuple[bool, float]:
     """The memory floor's reading of a host with 0.5 GB free: below any floor.
 
-    Patch ``kiro_crew.subagent.check_memory_available`` with it inside
+    Patch ``aj_crew.subagent.check_memory_available`` with it inside
     ``monkeypatch.context()`` (or ``patch.object``), never with a bare
     ``monkeypatch.setattr`` followed by ``monkeypatch.undo()``: the test and
     ``healthy_host_memory`` share ONE ``monkeypatch``, so a blanket undo also
@@ -272,8 +272,8 @@ class ManagerHarness:
         # deferral that surfaces as a bare KeyError one line on; and it answers
         # the sync gate (which reads the boolean) exactly as the off-loop one
         # (which compares the figure against its own bar).
-        import kiro_crew.subagent as subagent_mod
-        from kiro_crew.constants import DEFAULT_SPAWN_MIN_MEMORY_GB
+        import aj_crew.subagent as subagent_mod
+        from aj_crew.constants import DEFAULT_SPAWN_MIN_MEMORY_GB
 
         def _host(min_gb: float | None = None, **_kw: Any) -> tuple[bool, float]:
             floor = DEFAULT_SPAWN_MIN_MEMORY_GB if min_gb is None else min_gb

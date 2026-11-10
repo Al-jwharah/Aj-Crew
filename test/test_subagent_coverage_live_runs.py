@@ -17,9 +17,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from subagent_coverage_helpers import _info, _manager
 
-from kiro_crew import subagent as sa
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import subagent as sa
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.testing.wait import async_wait_until
 
 # ── Manager: session sharing / provider probes ────────────────────────────
 
@@ -36,12 +36,12 @@ class TestShouldUseSessionSharing:
         mgr = _manager()
         cfg = MagicMock()
         cfg.agent.session_sharing = enabled
-        with patch("kiro_crew.subagent.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.subagent.AjCrewConfig.load", return_value=cfg):
             assert mgr._should_use_session_sharing(_info(parent_session_key="dash:1")) is enabled
 
     def test_config_failure_fails_closed(self) -> None:
         mgr = _manager()
-        with patch("kiro_crew.subagent.KiroCrewConfig.load", side_effect=RuntimeError):
+        with patch("aj_crew.subagent.AjCrewConfig.load", side_effect=RuntimeError):
             assert mgr._should_use_session_sharing(_info(parent_session_key="dash:1")) is False
 
     @pytest.mark.parametrize(
@@ -53,14 +53,14 @@ class TestShouldUseSessionSharing:
         cfg = MagicMock()
         cfg.agent.session_sharing = True
         info = _info(parent_session_key="dash:1", **override)
-        with patch("kiro_crew.subagent.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.subagent.AjCrewConfig.load", return_value=cfg):
             assert mgr._should_use_session_sharing(info) is False
 
     def test_parentless_spawn_excluded(self) -> None:
         mgr = _manager()
         cfg = MagicMock()
         cfg.agent.session_sharing = True
-        with patch("kiro_crew.subagent.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.subagent.AjCrewConfig.load", return_value=cfg):
             assert mgr._should_use_session_sharing(_info()) is False
 
 
@@ -93,12 +93,12 @@ class TestIsCcProvider:
 
     @staticmethod
     def _provider(backend: str) -> SimpleNamespace:
-        from kiro_crew.agent_sdk.capabilities import capabilities_for
+        from aj_crew.agent_sdk.capabilities import capabilities_for
 
         return SimpleNamespace(capabilities=capabilities_for(backend))
 
     def test_claude_seam_routes_to_the_claude_home(self) -> None:
-        from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE
+        from aj_crew.acp_backends import ACP_BACKEND_CLAUDE
 
         assert SubagentManager._is_cc_provider(self._provider(ACP_BACKEND_CLAUDE)) is True
 
@@ -121,7 +121,7 @@ class TestCancelTaskIntentionally:
 
         async def _sleep() -> None:
             # flake-ok: an hour-long placeholder body for a task the test cancels at once; moved verbatim
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- the sleep is the body of a task the test cancels at once, so the hour never elapses; moved verbatim
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- the sleep is the body of a task the test cancels at once, so the hour never elapses; moved verbatim
             await asyncio.sleep(3600)
 
         task = asyncio.ensure_future(_sleep())
@@ -138,7 +138,7 @@ class TestCancelTaskIntentionally:
 
         async def _sleep() -> None:
             # flake-ok: an hour-long placeholder body for a task the test cancels at once; moved verbatim
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- the sleep is the body of a task the test cancels at once, so the hour never elapses; moved verbatim
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- the sleep is the body of a task the test cancels at once, so the hour never elapses; moved verbatim
             await asyncio.sleep(3600)
 
         task = asyncio.ensure_future(_sleep())
@@ -154,7 +154,7 @@ class TestCancelTaskIntentionally:
 
         async def _sleep() -> None:
             # flake-ok: an hour-long placeholder body for a task the test cancels at once; moved verbatim
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- the sleep is the body of a task the test cancels at once, so the hour never elapses; moved verbatim
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- the sleep is the body of a task the test cancels at once, so the hour never elapses; moved verbatim
             await asyncio.sleep(3600)
 
         task = asyncio.ensure_future(_sleep())
@@ -293,7 +293,7 @@ class TestPlatformConstants:
 
 
 # ── run and conversation ages on the monotonic clock ──────────────────────
-# The reaper resolves ``time`` through the ``kiro_crew.subagent`` facade, so the
+# The reaper resolves ``time`` through the ``aj_crew.subagent`` facade, so the
 # clock is stepped there. Every kill, release, sweep, prune and store call the
 # reaper makes per tick is a recorder: nothing is killed and nothing is deleted.
 
@@ -414,12 +414,12 @@ class TestReaperClock:
 class TestConversationTtlClock:
     @pytest.mark.asyncio
     async def test_a_forward_wall_clock_step_keeps_a_recently_used_conversation(self) -> None:
-        from kiro_crew.subagent_persistence import RetentionPromotionResult
+        from aj_crew.subagent_persistence import RetentionPromotionResult
 
         mgr = _manager()
         mgr._conv_registry_rebuilt = True
         with patch(
-            "kiro_crew.subagent_persistence.promote_retention",
+            "aj_crew.subagent_persistence.promote_retention",
             return_value=RetentionPromotionResult.PROMOTED,
         ):
             mgr._promote_conversation("c1", "subagent:c1")

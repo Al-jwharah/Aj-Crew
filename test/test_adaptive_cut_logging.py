@@ -21,9 +21,9 @@ from unittest.mock import AsyncMock
 import pytest
 from test_adaptive_controller import FakeGate, FakeManager, _controller
 
-from kiro_crew.adaptive import controller as ctl_mod
-from kiro_crew.adaptive.busy import LoopBusySampler, describe_frame
-from kiro_crew.adaptive.policy import (
+from aj_crew.adaptive import controller as ctl_mod
+from aj_crew.adaptive.busy import LoopBusySampler, describe_frame
+from aj_crew.adaptive.policy import (
     ACTION_DECREASE,
     ACTION_FIXED,
     ACTION_HOLD,
@@ -32,7 +32,7 @@ from kiro_crew.adaptive.policy import (
     ACTION_RESUME,
     Decision,
 )
-from kiro_crew.adaptive.signals import SIGNAL_LOOP_LAG, Sample
+from aj_crew.adaptive.signals import SIGNAL_LOOP_LAG, Sample
 
 
 def _frame(module: str, qualname: str, back: Any = None) -> Any:
@@ -83,14 +83,14 @@ def _messages(caplog: pytest.LogCaptureFixture, level: int) -> list[str]:
 
 class TestDescribeFrame:
     def test_a_library_frame_is_named_with_the_package_frame_below_it(self) -> None:
-        own = _frame("kiro_crew.shell_normalizer", "_fold_line_continuations")
+        own = _frame("aj_crew.shell_normalizer", "_fold_line_continuations")
         lib = _frame("json.decoder", "JSONDecoder.raw_decode", back=_frame("json", "loads", own))
         assert describe_frame(lib) == (
-            "json.decoder.JSONDecoder.raw_decode via kiro_crew.shell_normalizer._fold_line_continuations"
+            "json.decoder.JSONDecoder.raw_decode via aj_crew.shell_normalizer._fold_line_continuations"
         )
 
     def test_a_package_frame_is_named_alone(self) -> None:
-        assert describe_frame(_frame("kiro_crew.agent", "rebuild")) == "kiro_crew.agent.rebuild"
+        assert describe_frame(_frame("aj_crew.agent", "rebuild")) == "aj_crew.agent.rebuild"
 
     def test_a_native_callback_under_the_loop_handle_is_named(self) -> None:
         """A native callback has no Python frame of its own, so the innermost
@@ -98,14 +98,14 @@ class TestDescribeFrame:
         handle is running, not the program's entry point further out."""
         lock = threading.Lock()
         handle = _handle_frame(
-            lock.acquire, back=_loop_frames_from(_frame("kiro_crew.cli", "main"))
+            lock.acquire, back=_loop_frames_from(_frame("aj_crew.cli", "main"))
         )
         assert describe_frame(handle) == "asyncio.events.Handle._run via _thread.lock.acquire"
 
     def test_a_library_callback_is_not_named_by_the_entry_point(self) -> None:
         """Frames beyond ``Handle._run`` are the loop and whatever started it,
         not what held the loop: the walk stops at the handle and names its callback."""
-        handle = _handle_frame(json.loads, back=_loop_frames_from(_frame("kiro_crew.cli", "main")))
+        handle = _handle_frame(json.loads, back=_loop_frames_from(_frame("aj_crew.cli", "main")))
         lib = _frame("json.decoder", "JSONDecoder.raw_decode", back=_frame("json", "loads", handle))
         assert describe_frame(lib) == "json.decoder.JSONDecoder.raw_decode via json.loads"
 
@@ -284,18 +284,18 @@ class TestLoopLagCutNamesTheBusyFrame:
     async def test_a_loop_lag_cut_names_the_frame(self, caplog) -> None:
         mgr = FakeManager(user_max=10)
         ctl, _clock = _controller(mgr, FakeGate())
-        ctl._last_busy = "kiro_crew.shell_normalizer._fold_line_continuations"
+        ctl._last_busy = "aj_crew.shell_normalizer._fold_line_continuations"
         with caplog.at_level(logging.WARNING, logger=ctl_mod.__name__):
             await ctl.apply(_decision(10, 6, ACTION_HOLD))
             await ctl.apply(_decision(10, 3, ACTION_DECREASE, signals=(SIGNAL_LOOP_LAG,)))
         cut = [m for m in _messages(caplog, logging.WARNING) if " decrease:" in m]
-        assert cut and cut[0].endswith(" busy=kiro_crew.shell_normalizer._fold_line_continuations")
+        assert cut and cut[0].endswith(" busy=aj_crew.shell_normalizer._fold_line_continuations")
 
     @pytest.mark.asyncio
     async def test_a_cut_from_another_signal_does_not_name_it(self, caplog) -> None:
         mgr = FakeManager(user_max=10)
         ctl, _clock = _controller(mgr)
-        ctl._last_busy = "kiro_crew.agent.rebuild"
+        ctl._last_busy = "aj_crew.agent.rebuild"
         with caplog.at_level(logging.WARNING, logger=ctl_mod.__name__):
             await ctl.apply(_decision(10, 4, ACTION_HOLD))
             await ctl.apply(_decision(5, 4, ACTION_DECREASE, signals=("work_timeouts",)))
@@ -314,7 +314,7 @@ class TestLoopLagCutNamesTheBusyFrame:
                 self.armed.append(after_secs)
 
             def disarm(self) -> str:
-                return "kiro_crew.agent.rebuild"
+                return "aj_crew.agent.rebuild"
 
         sampler = _Sampler()
         ctl._busy_sampler = sampler  # type: ignore[assignment]
@@ -328,13 +328,13 @@ class TestLoopLagCutNamesTheBusyFrame:
         await ctl._sample_and_tick()
         lag_s = ctl._policy.params.thresholds.lag_decrease_ms / 1000.0
         assert sampler.armed == [pytest.approx(ctl._sample_secs + lag_s)]
-        assert seen["loop_busy"] == "kiro_crew.agent.rebuild"
+        assert seen["loop_busy"] == "aj_crew.agent.rebuild"
 
     @pytest.mark.asyncio
     async def test_tick_keeps_the_reading_for_the_decision(self) -> None:
         mgr = FakeManager(user_max=10)
         ctl, _clock = _controller(mgr)
-        await ctl.tick(loop_lag_ms=0.0, loop_busy="kiro_crew.agent.rebuild")
-        assert ctl._last_busy == "kiro_crew.agent.rebuild"
+        await ctl.tick(loop_lag_ms=0.0, loop_busy="aj_crew.agent.rebuild")
+        assert ctl._last_busy == "aj_crew.agent.rebuild"
         await ctl.tick(loop_lag_ms=0.0)
         assert ctl._last_busy == ""

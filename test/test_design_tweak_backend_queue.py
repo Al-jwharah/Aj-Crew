@@ -18,8 +18,8 @@ from design_tweak_backend_helpers import isolated_queue_fixture  # noqa: F401
 from design_tweak_backend_helpers import _JsonHandler
 
 from conftest import requires_symlinks
-from kiro_crew.apps.builtins.design_tweak.backend import server
-from kiro_crew.testing.wait import wait_until
+from aj_crew.apps.builtins.design_tweak.backend import server
+from aj_crew.testing.wait import wait_until
 
 
 class TestThreadGrowthIsBounded:
@@ -69,7 +69,7 @@ class TestQueueReadIsSizeBounded:
         ``read_text`` ever being called on it, and a normal one must still be read,
         so the recorder is shown to see the reader's call at all.
         """
-        from kiro_crew.apps.builtins.design_tweak.backend import request_state
+        from aj_crew.apps.builtins.design_tweak.backend import request_state
 
         reads: list[str] = []
         real_read_text = Path.read_text
@@ -450,11 +450,11 @@ class TestMalformedSelectionCannotPoisonTheQueue:
         Every caller takes `isolated_queue`, including the ones that expect a
         refusal. A payload the guard lets through reaches the draft transaction
         for real, and `QUEUE_DIR`/`HANDLED_DIR` are frozen at import off
-        `$KIROCREW_HOME` (server.py), so the accepted case writes
+        `$AJCREW_HOME` (server.py), so the accepted case writes
         `queue/<id>.json` — and, via the unscoped counter, `config.json` — into
         whatever data home the session resolved: outside `tmp_path`, outside the
         run's temp root, so none of conftest's residue guards can see it, and
-        permanent when the operator exported `KIROCREW_HOME` themselves. The
+        permanent when the operator exported `AJCREW_HOME` themselves. The
         refused cases write nothing today; they take the fixture so a regression
         of the guard fails as a test rather than as a file in someone's queue.
         """

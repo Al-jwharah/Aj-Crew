@@ -15,11 +15,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.apps import manifest_names
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME
-from kiro_crew.apps.manager_records import _record_lock_path, _update_retired_tree_prefix
-from kiro_crew.apps.manifest import app_name_error
-from kiro_crew.apps.routes import register_app_routes
+from aj_crew.apps import manifest_names
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME
+from aj_crew.apps.manager_records import _record_lock_path, _update_retired_tree_prefix
+from aj_crew.apps.manifest import app_name_error
+from aj_crew.apps.routes import register_app_routes
 
 # The documented cap on an app name's length.
 APP_NAME_MAX_LENGTH = 128
@@ -40,8 +40,8 @@ def _derived_components(name: str) -> list[str]:
         f".{name}-update-inflight",
         f"{_update_retired_tree_prefix(name)}{_LONGEST_PID}-{_HEX8}",
         f"{name}.partial-{_HEX8}",
-        f".{name}-deps-doomed.kirocrew-deps-prior",
-        f".{name}-deps-doomed.kirocrew-deps-staging-{_LONGEST_PID}-{_HEX8}",
+        f".{name}-deps-doomed.ajcrew-deps-prior",
+        f".{name}-deps-doomed.ajcrew-deps-staging-{_LONGEST_PID}-{_HEX8}",
     ]
 
 
@@ -99,16 +99,16 @@ def _make_app_source(tmp_path, name):
 
 @pytest.fixture()
 def app_home(tmp_path, monkeypatch):
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     (home / "config.json").write_text(
         json.dumps({"agent": {"apps_allow_third_party": True}}), encoding="utf-8"
     )
     kiro_agents = tmp_path / "kiro-agents"
     kiro_agents.mkdir()
-    import kiro_crew.apps.backend as bmod
-    import kiro_crew.apps.bridges as bridges_mod
+    import aj_crew.apps.backend as bmod
+    import aj_crew.apps.bridges as bridges_mod
 
     monkeypatch.setattr(bridges_mod, "KIRO_AGENTS_DIR", kiro_agents)
     bmod._processes.clear()

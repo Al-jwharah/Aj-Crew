@@ -18,18 +18,18 @@ from typing import Any, Optional
 
 import pytest
 
-from kiro_crew import speech_providers, voice_reply
-from kiro_crew.config import sections_stt
-from kiro_crew.config.loader import KiroCrewConfig, _invalidate_config_cache
-from kiro_crew.platform import bootstrap as bootstrap_mod
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.context import (
+from aj_crew import speech_providers, voice_reply
+from aj_crew.config import sections_stt
+from aj_crew.config.loader import AjCrewConfig, _invalidate_config_cache
+from aj_crew.platform import bootstrap as bootstrap_mod
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.context import (
     PROFILE_ENTERPRISE,
     PlatformCompositionError,
     reset_context,
     set_context,
 )
-from kiro_crew.platform.defaults import DefaultSpeechProviderRegistry
+from aj_crew.platform.defaults import DefaultSpeechProviderRegistry
 
 
 @dataclasses.dataclass
@@ -80,23 +80,23 @@ def _clean_state():
 
 
 def _install(registry: Any) -> None:
-    ctx = build_default_context(KiroCrewConfig())
+    ctx = build_default_context(AjCrewConfig())
     set_context(dataclasses.replace(ctx, speech=registry))
 
 
 def _load_stt(tmp_path: Path, section: dict) -> str:
     (tmp_path / "config.json").write_text(json.dumps({"stt": section}))
     _invalidate_config_cache()
-    with unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path):
-        return KiroCrewConfig.load().stt.provider
+    with unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path):
+        return AjCrewConfig.load().stt.provider
 
 
 #: The exact text a standalone install logged before the seam existed.
 _STANDALONE_STT_WARNING = (
     "Unknown STT provider 'whispr'; using 'off' instead, so no recogniser runs until "
     "the value is fixed. Selectable providers: local, apple, transcribe, codex, off. Run "
-    "'kirocrew config set stt.provider <provider>' to choose one, or "
-    "'kirocrew config defaults --adopt stt.provider' to drop the stored value."
+    "'ajcrew config set stt.provider <provider>' to choose one, or "
+    "'ajcrew config defaults --adopt stt.provider' to drop the stored value."
 )
 _STANDALONE_TTS_WARNING = (
     "voice_reply.provider 'ploly' not in ['polly', 'system'], defaulting to 'system'"
@@ -147,7 +147,7 @@ class TestStandaloneIsUnchanged:
 
     def test_default_registry_passes_boot_validation(self) -> None:
         speech_providers.validate_speech_registry(DefaultSpeechProviderRegistry())
-        assert build_default_context(KiroCrewConfig()).speech.stt_providers() == ()
+        assert build_default_context(AjCrewConfig()).speech.stt_providers() == ()
 
 
 class TestRegisteredProvider:
@@ -190,7 +190,7 @@ class TestRegisteredProvider:
         assert "Selectable providers: local, apple, transcribe, codex, acme, off." in caplog.text
 
     def test_config_set_accepts_it(self) -> None:
-        from kiro_crew.cli_config import _declared_enum_value
+        from aj_crew.cli_config import _declared_enum_value
 
         assert _declared_enum_value("stt.provider", "acme") == "acme"
         with pytest.raises(ValueError):
@@ -230,7 +230,7 @@ class TestEditionDefault:
         A retired ``whisper`` runs as ``local``; deleting it would now select the
         edition default instead, so adoption must write ``local``.
         """
-        from kiro_crew.config import superseded_defaults as sd
+        from aj_crew.config import superseded_defaults as sd
 
         entry = next(c for c in sd.COERCED_VALUES if c.dotted_key == "stt.provider")
         assert entry.adopted_value("whisper") == "local"
@@ -247,8 +247,8 @@ class TestEditionDefault:
 
     def test_a_home_with_no_config_file_takes_the_edition_default(self, tmp_path) -> None:
         _invalidate_config_cache()
-        with unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path):
-            assert KiroCrewConfig.load().stt.provider == "acme"
+        with unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path):
+            assert AjCrewConfig.load().stt.provider == "acme"
 
     def test_a_stale_piper_model_resolves_like_an_absent_provider(self) -> None:
         assert voice_reply.resolve_configured_provider({"piper_model": "/m/en.onnx"}) == "acme"
@@ -262,12 +262,12 @@ class TestEditionDefault:
         assert voice_reply.resolve_configured_provider({}) == "polly"
 
 
-def _boot_with(monkeypatch, registry: Any, cfg: Optional[KiroCrewConfig] = None):
-    cfg = cfg or KiroCrewConfig()
+def _boot_with(monkeypatch, registry: Any, cfg: Optional[AjCrewConfig] = None):
+    cfg = cfg or AjCrewConfig()
     companion = dataclasses.replace(
         build_default_context(cfg, profile=PROFILE_ENTERPRISE), speech=registry
     )
-    monkeypatch.setenv("KIROCREW_PROFILE", "enterprise")
+    monkeypatch.setenv("AJCREW_PROFILE", "enterprise")
     monkeypatch.setattr(bootstrap_mod, "plugin_entry_points", lambda: [object()])
     monkeypatch.setattr(
         bootstrap_mod, "discover_companion_context", lambda profile, cfg, **_kw: companion
@@ -279,7 +279,7 @@ class TestPreBootWarning:
     """Before boot on a companion host, an unknown name may be about to be registered."""
 
     def _companion_host(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.platform.discovery.plugin_entry_points", lambda: [object()])
+        monkeypatch.setattr("aj_crew.platform.discovery.plugin_entry_points", lambda: [object()])
 
     def test_a_name_the_edition_registers_never_warns(self, monkeypatch, caplog) -> None:
         self._companion_host(monkeypatch)
@@ -306,7 +306,7 @@ class TestPreBootWarning:
         assert "retired" in caplog.text
 
     def test_standalone_warns_immediately(self, monkeypatch, caplog) -> None:
-        monkeypatch.setattr("kiro_crew.platform.discovery.plugin_entry_points", lambda: [])
+        monkeypatch.setattr("aj_crew.platform.discovery.plugin_entry_points", lambda: [])
         with caplog.at_level(logging.WARNING):
             sections_stt._validated_stt_provider("whispr")
         assert _STANDALONE_STT_WARNING in [r.getMessage() for r in caplog.records]
@@ -384,23 +384,23 @@ class TestBootRefreshesThePreBootConfig:
 
     def test_a_stored_registered_provider_survives_boot(self, monkeypatch, tmp_path) -> None:
         (tmp_path / "config.json").write_text(json.dumps({"stt": {"provider": "acme"}}))
-        with unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path):
-            cfg = KiroCrewConfig.load()
+        with unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path):
+            cfg = AjCrewConfig.load()
             assert cfg.stt.provider == "off"  # nothing registered yet
             _boot_with(monkeypatch, _Registry(stt=("acme",)), cfg)
             assert cfg.stt.provider == "acme"
-            assert KiroCrewConfig.load().stt.provider == "acme"
+            assert AjCrewConfig.load().stt.provider == "acme"
 
     def test_standalone_boot_does_not_reload(self, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_PROFILE", "standalone")
-        with unittest.mock.patch.object(KiroCrewConfig, "load") as load:
-            bootstrap_mod.bootstrap_context(KiroCrewConfig())
+        monkeypatch.setenv("AJCREW_PROFILE", "standalone")
+        with unittest.mock.patch.object(AjCrewConfig, "load") as load:
+            bootstrap_mod.bootstrap_context(AjCrewConfig())
         load.assert_not_called()
 
 
 def test_the_dashboard_has_no_sentence_for_the_unavailable_code() -> None:
     """So it renders the backend ``detail`` instead of a canned Off sentence."""
-    from kiro_crew import transcribe
+    from aj_crew import transcribe
 
     source = (Path(__file__).resolve().parents[1] / "website/src/lib/sttProviders.ts").read_text(
         encoding="utf-8"

@@ -13,12 +13,12 @@ from test_workflows_inject import _FakeSlot, _FakeState
 from test_workflows_private_outputs import State
 from test_workflows_private_outputs import world as _world
 
-from kiro_crew.dashboard import workflow_inject
-from kiro_crew.dashboard.workflow_inject import (
+from aj_crew.dashboard import workflow_inject
+from aj_crew.dashboard.workflow_inject import (
     inject_bound_workflow_result,
     inject_workflow_result,
 )
-from kiro_crew.workflow_memory import WorkflowScope
+from aj_crew.workflow_memory import WorkflowScope
 
 world = _world
 
@@ -95,7 +95,7 @@ async def test_bound_fallback_at_ceiling_creates_and_binds_nothing(world, monkey
     def unexpected_binding(*args, **kwargs):
         pytest.fail("A fallback refused at the ceiling must not bind an identity")
 
-    monkeypatch.setattr("kiro_crew.execution_context.bind_session_execution", unexpected_binding)
+    monkeypatch.setattr("aj_crew.execution_context.bind_session_execution", unexpected_binding)
     snapshot = {
         "session_key": scope.origin,
         "run_id": scope.run_id,

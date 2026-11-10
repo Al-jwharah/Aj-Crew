@@ -3,9 +3,9 @@
 The dispatch branch in ``_call_tool_inner`` does not resolve session
 identity, does not refuse non-dashboard sessions, and does not POST to the
 gateway. It VALIDATES its items and returns a session DIRECTIVE (see
-``kiro_crew.session_directive``). The session-aware consumer renders the card
+``aj_crew.session_directive``). The session-aware consumer renders the card
 against ITS OWN slot via
-``kiro_crew.dashboard.session_directive_apply.apply_session_directive`` — that
+``aj_crew.dashboard.session_directive_apply.apply_session_directive`` — that
 applier is exercised directly here against a fake state whose
 ``deliver_ws_owners`` returns a delivered-client count.
 """
@@ -16,9 +16,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import mcp_core, session_directive
-from kiro_crew.dashboard.session_directive_apply import apply_session_directive
-from kiro_crew.session_surface import has_dashboard_surface
+from aj_crew import mcp_core, session_directive
+from aj_crew.dashboard.session_directive_apply import apply_session_directive
+from aj_crew.session_surface import has_dashboard_surface
 
 
 def _item(**over: object) -> dict:
@@ -44,7 +44,7 @@ class TestSuggestFollowupDispatch:
     def test_schema_violation_is_refused_at_the_dispatch_layer(self):
         """The tool re-validates before producing a directive — a bad branch is
         rejected with ``ValidationError`` and no directive is returned."""
-        from kiro_crew.validation import ValidationError
+        from aj_crew.validation import ValidationError
 
         with pytest.raises(ValidationError):
             mcp_core._call_tool_inner("suggest_followup", {"items": [_item(branch="-rf")]})
@@ -260,7 +260,7 @@ class TestHeadlessProducersAreRefused:
         all — it blocks and returns its answers as the tool result — so it
         appears in neither set and no gate here applies to it.
         """
-        from kiro_crew.dashboard.session_directive_apply import (
+        from aj_crew.dashboard.session_directive_apply import (
             _DASHBOARD_ONLY_DIRECTIVES,
             _USER_ORIGIN_DIRECTIVES,
         )

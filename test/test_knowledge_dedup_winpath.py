@@ -18,7 +18,7 @@ inputs behave identically once the separator is normalised.
 
 from __future__ import annotations
 
-from kiro_crew.knowledge.dedup import (
+from aj_crew.knowledge.dedup import (
     _file_ext,
     filename_near_match,
     normalize_filename,

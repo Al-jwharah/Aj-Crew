@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from conftest import MockSlackClient
-from kiro_crew.slack.handler import (
+from aj_crew.slack.handler import (
     _discover_project_agents,
     _hydrate_thread_overrides,
     _hydrated_sessions,
@@ -125,13 +125,13 @@ class TestHydrateThreadOverrides:
         # Defense-in-depth: a tampered/corrupted metadata project path that
         # resolves to a sensitive credential dir must never enter the cache.
         log = FakeConversationLog({"t10": {"project": "/home/user/.aws"}})
-        with patch("kiro_crew.slack.handler.is_sensitive_path", return_value=True):
+        with patch("aj_crew.slack.handler.is_sensitive_path", return_value=True):
             await _hydrate_thread_overrides("t10", log)
         assert "t10" not in _thread_projects
 
     async def test_hydrate_accepts_non_sensitive_project_path(self):
         log = FakeConversationLog({"t11": {"project": "/home/user/safe-proj"}})
-        with patch("kiro_crew.slack.handler.is_sensitive_path", return_value=False):
+        with patch("aj_crew.slack.handler.is_sensitive_path", return_value=False):
             await _hydrate_thread_overrides("t11", log)
         assert _thread_projects["t11"] == "/home/user/safe-proj"
 
@@ -221,7 +221,7 @@ class TestResolveAgentNameWithProject:
         Reading every spec to compare its declared name stalls Slack and the gateway
         on a checkout with many agents or slow storage; at most the one matching file
         is read."""
-        import kiro_crew.slack.handler as h
+        import aj_crew.slack.handler as h
 
         kiro = tmp_path / ".kiro"
         kiro.mkdir()
@@ -261,7 +261,7 @@ class TestProjectCommand:
     """Tests for the !project slash command."""
 
     async def test_project_show_current_empty(self):
-        from kiro_crew.slack.handler import _handle_slash_command
+        from aj_crew.slack.handler import _handle_slash_command
 
         slack = MockSlackClient()
         sessions = FakeSessionManager()
@@ -273,7 +273,7 @@ class TestProjectCommand:
         assert any("No project set" in p[1]["text"] for p in posts)
 
     async def test_project_show_current_set(self):
-        from kiro_crew.slack.handler import _handle_slash_command
+        from aj_crew.slack.handler import _handle_slash_command
 
         _thread_projects["t1"] = "/my/project"
         slack = MockSlackClient()
@@ -286,7 +286,7 @@ class TestProjectCommand:
         assert any("/my/project" in p[1]["text"] for p in posts)
 
     async def test_project_set_valid_dir(self, tmp_path):
-        from kiro_crew.slack.handler import _handle_slash_command
+        from aj_crew.slack.handler import _handle_slash_command
 
         slack = MockSlackClient()
         sessions = FakeSessionManager()
@@ -310,7 +310,7 @@ class TestProjectCommand:
         assert "t1" in sessions.removed
 
     async def test_project_set_invalid_dir(self):
-        from kiro_crew.slack.handler import _handle_slash_command
+        from aj_crew.slack.handler import _handle_slash_command
 
         slack = MockSlackClient()
         sessions = FakeSessionManager()
@@ -330,7 +330,7 @@ class TestProjectCommand:
         assert "t1" not in _thread_projects
 
     async def test_project_off_clears(self):
-        from kiro_crew.slack.handler import _handle_slash_command
+        from aj_crew.slack.handler import _handle_slash_command
 
         _thread_projects["t1"] = "/some/path"
         slack = MockSlackClient()
@@ -352,7 +352,7 @@ class TestProjectCommand:
         assert log.updates[0][1]["project"] == ""
 
     async def test_project_discovers_agents(self, tmp_path):
-        from kiro_crew.slack.handler import _handle_slash_command
+        from aj_crew.slack.handler import _handle_slash_command
 
         kiro = tmp_path / ".kiro"
         kiro.mkdir()
@@ -383,7 +383,7 @@ class TestTaCommandPersistence:
     """Tests for !ta command metadata persistence."""
 
     async def test_ta_persists_agent_to_log(self, tmp_path):
-        from kiro_crew.slack.handler import _handle_slash_command, set_owner_id
+        from aj_crew.slack.handler import _handle_slash_command, set_owner_id
 
         set_owner_id("U1")
         # Create a real agent file so resolution works
@@ -396,7 +396,7 @@ class TestTaCommandPersistence:
         sessions = FakeSessionManager()
         log = FakeConversationLog()
 
-        with patch("kiro_crew.slack.handler.Path.home", return_value=tmp_path):
+        with patch("aj_crew.slack.handler.Path.home", return_value=tmp_path):
             kiro_agents = tmp_path / ".kiro" / "agents"
             kiro_agents.mkdir(parents=True)
             kiro_file = kiro_agents / "test-agent.json"
@@ -419,7 +419,7 @@ class TestTaCommandPersistence:
         assert log.updates[0][1]["agent"] == "test-agent"
 
     async def test_ta_off_clears_and_persists(self):
-        from kiro_crew.slack.handler import _handle_slash_command, set_owner_id
+        from aj_crew.slack.handler import _handle_slash_command, set_owner_id
 
         set_owner_id("U1")
         _thread_agents["t1"] = "some-agent"
@@ -447,14 +447,14 @@ class TestProjectSensitivePathCheck:
     """Tests for sensitive path enforcement in !project command."""
 
     async def test_project_rejects_sensitive_path(self, tmp_path):
-        from kiro_crew.slack.handler import _handle_slash_command
+        from aj_crew.slack.handler import _handle_slash_command
 
         slack = MockSlackClient()
         sessions = FakeSessionManager()
-        with patch("kiro_crew.slack.handler.is_sensitive_path", return_value=True):
-            with patch("kiro_crew.slack.handler.os.path.realpath", return_value="/sensitive/dir"):
+        with patch("aj_crew.slack.handler.is_sensitive_path", return_value=True):
+            with patch("aj_crew.slack.handler.os.path.realpath", return_value="/sensitive/dir"):
                 with patch(
-                    "kiro_crew.slack.handler.os.path.expanduser", return_value="/sensitive/dir"
+                    "aj_crew.slack.handler.os.path.expanduser", return_value="/sensitive/dir"
                 ):
                     result = await _handle_slash_command(
                         "!project /sensitive/dir",
@@ -472,17 +472,17 @@ class TestProjectSensitivePathCheck:
         assert "t1" not in _thread_projects
 
     async def test_project_sensitive_path_emits_sel_audit(self, tmp_path):
-        from kiro_crew.slack.handler import _handle_slash_command
+        from aj_crew.slack.handler import _handle_slash_command
 
         slack = MockSlackClient()
         sessions = FakeSessionManager()
-        with patch("kiro_crew.slack.handler.sel") as mock_sel:
-            with patch("kiro_crew.slack.handler.is_sensitive_path", return_value=True):
+        with patch("aj_crew.slack.handler.sel") as mock_sel:
+            with patch("aj_crew.slack.handler.is_sensitive_path", return_value=True):
                 with patch(
-                    "kiro_crew.slack.handler.os.path.realpath", return_value="/sensitive/dir"
+                    "aj_crew.slack.handler.os.path.realpath", return_value="/sensitive/dir"
                 ):
                     with patch(
-                        "kiro_crew.slack.handler.os.path.expanduser", return_value="/sensitive/dir"
+                        "aj_crew.slack.handler.os.path.expanduser", return_value="/sensitive/dir"
                     ):
                         await _handle_slash_command(
                             "!project /sensitive/dir",
@@ -500,11 +500,11 @@ class TestProjectSensitivePathCheck:
         assert kwargs["tool_name"] == "!project"
 
     async def test_project_invalid_dir_emits_sel_audit(self):
-        from kiro_crew.slack.handler import _handle_slash_command
+        from aj_crew.slack.handler import _handle_slash_command
 
         slack = MockSlackClient()
         sessions = FakeSessionManager()
-        with patch("kiro_crew.slack.handler.sel") as mock_sel:
+        with patch("aj_crew.slack.handler.sel") as mock_sel:
             await _handle_slash_command(
                 "!project /nonexistent/path/xyz123",
                 slack,
@@ -521,7 +521,7 @@ class TestProjectSensitivePathCheck:
         assert kwargs["tool_name"] == "!project"
 
     async def test_project_off_removes_session(self):
-        from kiro_crew.slack.handler import _handle_slash_command
+        from aj_crew.slack.handler import _handle_slash_command
 
         _thread_projects["t1"] = "/some/path"
         slack = MockSlackClient()
@@ -558,7 +558,7 @@ class TestDiscoverProjectAgentsSensitivePath:
         kiro.mkdir()
         spec = kiro / "agent.agent-spec.json"
         spec.write_text(json.dumps({"name": "agent"}))
-        with patch("kiro_crew.agent_discovery.is_sensitive_path", return_value=True):
+        with patch("aj_crew.agent_discovery.is_sensitive_path", return_value=True):
             result = _discover_project_agents(str(tmp_path))
         assert result == []
 
@@ -567,6 +567,6 @@ class TestDiscoverProjectAgentsSensitivePath:
         kiro.mkdir()
         spec = kiro / "agent.agent-spec.json"
         spec.write_text(json.dumps({"name": "agent"}))
-        with patch("kiro_crew.agent_discovery.is_sensitive_path", return_value=False):
+        with patch("aj_crew.agent_discovery.is_sensitive_path", return_value=False):
             result = _discover_project_agents(str(tmp_path))
         assert len(result) == 1

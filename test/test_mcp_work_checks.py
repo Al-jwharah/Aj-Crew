@@ -1,4 +1,4 @@
-"""The ``kirocrew-work`` ``accept_eval`` tool.
+"""The ``ajcrew-work`` ``accept_eval`` tool.
 
 It runs goal-conductor's bundled evaluator in-process so a conductor's verify
 cycle needs no ``execute_bash`` approval. Pinned here:
@@ -19,9 +19,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent, channel, mcp_core, mcp_work
-from kiro_crew.skills import _BUILTIN_SKILLS_DIR
-from kiro_crew.validation import ValidationError
+from aj_crew import agent, channel, mcp_core, mcp_work
+from aj_crew.skills import _BUILTIN_SKILLS_DIR
+from aj_crew.validation import ValidationError
 
 SCRIPTS = Path(_BUILTIN_SKILLS_DIR) / "goal-conductor" / "scripts"
 
@@ -70,9 +70,9 @@ def test_the_check_is_advertised_and_granted_to_the_conductor_and_team_lead():
     names = [t["name"] for t in mcp_work._list_tools()]
     assert names[-1] == "accept_eval"
     assert mcp_work.CHECK_TOOLS == ("accept_eval",)
-    # One tuple serves kirocrew-conductor and kirocrew-team-lead.
+    # One tuple serves ajcrew-conductor and ajcrew-team-lead.
     for tool in mcp_work.CHECK_TOOLS:
-        assert f"@kirocrew-work/{tool}" in agent._LEDGER_CONDUCTOR_WORK_GRANTS
+        assert f"@ajcrew-work/{tool}" in agent._LEDGER_CONDUCTOR_WORK_GRANTS
         assert tool in channel.CHANNEL_AGENT_BLOCKED_TOOLS
 
 
@@ -138,7 +138,7 @@ def test_a_screened_out_file_path_is_refused_without_a_probe(caller, argvs, monk
     """A sensitive path, or a UNC share whose probe would authenticate over SMB on
     Windows, is refused before the evaluator stats anything; siblings keep their
     order and are probed at the screen's canonical path."""
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     unc = "\\\\attacker\\share\\x"
     monkeypatch.setattr(

@@ -44,11 +44,11 @@ from test_connections_warm import (  # noqa: F401 -- autouse fixtures
     _clean_warm_runtime,
 )
 
-from kiro_crew.connections import mint, status, warm
-from kiro_crew.connections.mint import _mints
-from kiro_crew.connections.registry import Provider
-from kiro_crew.dashboard import mcp_banner_dedupe
-from kiro_crew.dashboard.handlers import connections
+from aj_crew.connections import mint, status, warm
+from aj_crew.connections.mint import _mints
+from aj_crew.connections.registry import Provider
+from aj_crew.dashboard import mcp_banner_dedupe
+from aj_crew.dashboard.handlers import connections
 
 _URL = "https://consent.example/authorize?state=abc"
 

@@ -12,7 +12,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from kiro_crew import cron_inflight
+from aj_crew import cron_inflight
 
 
 def _no_raise(fn: Callable[..., Any], *args: Any) -> Any:

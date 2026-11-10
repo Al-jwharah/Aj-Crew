@@ -28,10 +28,10 @@ from unittest import mock
 import pytest
 
 from conftest import make_dir_link
-from kiro_crew import memory_schema, vector_memory
-from kiro_crew.config import loader as loader_mod
-from kiro_crew.config.loader import config_dir
-from kiro_crew.memory_stores import (
+from aj_crew import memory_schema, vector_memory
+from aj_crew.config import loader as loader_mod
+from aj_crew.config.loader import config_dir
+from aj_crew.memory_stores import (
     DEFAULT_MEMORY_STORE,
     MEMORY_DB_FILE,
     UnknownMemoryStore,
@@ -39,7 +39,7 @@ from kiro_crew.memory_stores import (
     named_store_of_db,
     resolve_store_path,
 )
-from kiro_crew.vector_memory import (
+from aj_crew.vector_memory import (
     _HAS_NUMPY,
     _MEMORY_META_TABLE,
     _MIGRATIONS,
@@ -821,9 +821,9 @@ class TestFacetsAreUnreachableFromEveryRanker:
                 f"{node.module}.{alias.name}"
                 for node in ast.parse(inspect.getsource(vector_memory)).body
                 if isinstance(node, ast.ImportFrom)
-                and node.module in ("kiro_crew", "kiro_crew.vector_memory_runtime")
+                and node.module in ("aj_crew", "aj_crew.vector_memory_runtime")
                 for alias in node.names
-                if node.module != "kiro_crew" or alias.name.startswith("vector_memory_")
+                if node.module != "aj_crew" or alias.name.startswith("vector_memory_")
             )
         ]
         through_a_view = [
@@ -1146,11 +1146,11 @@ class TestAFacetStampNeverFailsAWrite:
         connection = _RaisesOnTheFacetStamp(silo.db)
         # ``db`` is a read-only property over ``_db``, so the patch goes on the
         # attribute. A context manager, and never ``monkeypatch.undo()``, which
-        # reverts the conftest's KIROCREW_HOME pin along with it and aims the next
+        # reverts the conftest's AJCREW_HOME pin along with it and aims the next
         # write at the operator's real data home.
         with (
             mock.patch.object(silo, "_db", connection),
-            caplog.at_level(logging.WARNING, logger="kiro_crew.vector_memory"),
+            caplog.at_level(logging.WARNING, logger="aj_crew.vector_memory"),
         ):
             assert (
                 silo.set_semantic(_SEMANTIC_KEY, "vim", 1.0, "user_explicit", facets=_WRITER_AXES)

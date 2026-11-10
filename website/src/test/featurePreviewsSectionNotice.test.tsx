@@ -42,7 +42,7 @@ beforeEach(() => {
   localStorage.clear()
   __resetPreviewFlagServerSyncForTests()
   vi.spyOn(api, 'dashboardConfig').mockResolvedValue({ decisions_enabled: true } as never)
-  vi.spyOn(api, 'kirocrewConfig').mockResolvedValue({ dashboard: { feature_previews: {} } } as never)
+  vi.spyOn(api, 'ajcrewConfig').mockResolvedValue({ dashboard: { feature_previews: {} } } as never)
   vi.spyOn(api, 'getDecisionsConsent').mockResolvedValue({
     enabled: false, endpoint: '', configured_endpoint: 'https://api.typesafe.ai/v1/systemone', permits: false,
   })
@@ -66,22 +66,22 @@ describe('Feature previews section, refused toggles', () => {
   ])('names the %s switch when the owner-only write is refused', async (name, label) => {
     vi.spyOn(api, 'patchConfig').mockRejectedValue(Object.assign(new Error('owner only'), { status: 403 }))
     renderSection()
-    await waitFor(() => expect(api.kirocrewConfig).toHaveBeenCalled())
+    await waitFor(() => expect(api.ajcrewConfig).toHaveBeenCalled())
     await act(async () => { screen.getAllByRole('switch', { name })[0].click() })
     await waitFor(() => expect(notice()).toContain(`“${label}” was switched back`))
-    expect(notice()).toMatch(/only the owner of this Kiro Crew/i)
+    expect(notice()).toMatch(/only the owner of this Aj Crew/i)
     // The refetch the refused write ends with has landed, so nothing is still
     // in flight when the next test resets the sync state.
-    await waitFor(() => expect(api.kirocrewConfig).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(api.ajcrewConfig).toHaveBeenCalledTimes(2))
   })
 
   it('says the save failed for any other refusal', async () => {
     vi.spyOn(api, 'patchConfig').mockRejectedValue(Object.assign(new Error('boom'), { status: 500 }))
     renderSection()
-    await waitFor(() => expect(api.kirocrewConfig).toHaveBeenCalled())
+    await waitFor(() => expect(api.ajcrewConfig).toHaveBeenCalled())
     await act(async () => { screen.getAllByRole('switch', { name: /^ultra mode/i })[0].click() })
     await waitFor(() => expect(notice()).toMatch(/couldn’t save “Ultra Mode”, so it was switched back/i))
-    await waitFor(() => expect(api.kirocrewConfig).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(api.ajcrewConfig).toHaveBeenCalledTimes(2))
   })
 })
 
@@ -91,7 +91,7 @@ describe('Feature previews section, ingress links', () => {
     [PREVIEW_WEBHOOKS, /open webhooks/i, '/webhooks'],
   ])('opens the page %s reveals', async (flag, link, path) => {
     localStorage.setItem(flag, '1')
-    vi.mocked(api.kirocrewConfig).mockResolvedValue(
+    vi.mocked(api.ajcrewConfig).mockResolvedValue(
       { dashboard: { feature_previews: { artifact_deploy: true, webhooks: true } } } as never,
     )
     renderSection()

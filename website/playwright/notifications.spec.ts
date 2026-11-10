@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-const HARNESS_GATEWAY = !!process.env.KIROCREW_E2E_EPHEMERAL
+const HARNESS_GATEWAY = !!process.env.AJCREW_E2E_EPHEMERAL
 
 test.describe('Notifications Page', () => {
   test.beforeEach(async ({ page }) => {
@@ -74,7 +74,7 @@ test.describe('Notifications Page', () => {
   // /api/notifications/clear is global: it deletes EVERY notification, not just
   // ones this spec created, and the endpoint offers no way to scope it. Gated on
   // the explicit ephemeral-harness marker, same contract as session-tags-e2e.
-  // test/test_playwright_e2e.py sets KIROCREW_E2E_EPHEMERAL for the throwaway
+  // test/test_playwright_e2e.py sets AJCREW_E2E_EPHEMERAL for the throwaway
   // tmp-home gateway it spawns, so this still runs in CI. Token presence is NOT
   // a safe signal -- it is also the normal state for a real token-protected
   // gateway, so a developer pointing this suite at their live gateway to debug a
@@ -82,7 +82,7 @@ test.describe('Notifications Page', () => {
   test('POST /api/notifications/clear round-trips correctly on empty state', async ({ request }) => {
     test.skip(
       !HARNESS_GATEWAY,
-      'destructive notification wipe requires the ephemeral harness gateway (KIROCREW_E2E_EPHEMERAL)',
+      'destructive notification wipe requires the ephemeral harness gateway (AJCREW_E2E_EPHEMERAL)',
     )
     // Clear on empty is idempotent -- verifies the full HTTP round-trip
     const resp = await request.post('/api/notifications/clear')

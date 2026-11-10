@@ -22,7 +22,7 @@ const lang = params.get('lang') || 'en'
 
 document.documentElement.setAttribute(
   'data-theme',
-  theme === 'light' ? 'kiro-light' : 'kiro-dark',
+  theme === 'light' ? 'aj-light' : 'aj-dark',
 )
 
 initI18n(lang)

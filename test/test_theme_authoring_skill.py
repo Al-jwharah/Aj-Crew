@@ -16,13 +16,13 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from kiro_crew.dashboard.theme_validate import (
+from aj_crew.dashboard.theme_validate import (
     _THEME_CSS_VARS,
     _THEME_MAX_FONTS,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
-SKILL = ROOT / "src" / "kiro_crew" / "builtin_skills" / "theme-pack-authoring" / "SKILL.md"
+SKILL = ROOT / "src" / "aj_crew" / "builtin_skills" / "theme-pack-authoring" / "SKILL.md"
 THEME_CSS_TS = ROOT / "website" / "src" / "hooks" / "themeCss.ts"
 
 

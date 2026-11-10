@@ -4,7 +4,7 @@ The run freezes its caller's execution carrier at admission. A chat on a custom
 agent binds a ``template`` carrier naming that agent, so a step with no
 ``agent=`` opens its session on that agent, on the warm pool and on the
 cold-start path alike, and its usage row is attributed to it. A default chat (the
-``kirocrew`` floor), a carrier bound to a member and an app's own agent pass no
+``ajcrew`` floor), a carrier bound to a member and an app's own agent pass no
 agent, so their steps keep the configured pool agent.
 
 No provider is constructed and no process is spawned: ``stream_and_collect`` is
@@ -18,17 +18,17 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.apps.manager as apps_manager
-import kiro_crew.dashboard.handlers.usage as usage_mod
-import kiro_crew.member_essential_context as member_essential_context
-import kiro_crew.workflows.agent_exec as agent_exec
-import kiro_crew.workflows.agent_pool as agent_pool
-from kiro_crew.apps.manager_lookup import AgentOwner
-from kiro_crew.config.paths import kiro_agents_dir
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef, bind_session_execution
-from kiro_crew.mate_worker import MATE_WORKER_AGENT
-from kiro_crew.testing.wait import await_until
-from kiro_crew.workflows.service import WorkflowService
+import aj_crew.apps.manager as apps_manager
+import aj_crew.dashboard.handlers.usage as usage_mod
+import aj_crew.member_essential_context as member_essential_context
+import aj_crew.workflows.agent_exec as agent_exec
+import aj_crew.workflows.agent_pool as agent_pool
+from aj_crew.apps.manager_lookup import AgentOwner
+from aj_crew.config.paths import kiro_agents_dir
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef, bind_session_execution
+from aj_crew.mate_worker import MATE_WORKER_AGENT
+from aj_crew.testing.wait import await_until
+from aj_crew.workflows.service import WorkflowService
 
 pytestmark = pytest.mark.asyncio
 
@@ -131,7 +131,7 @@ async def _run_one_step(carrier: ExecutionContext, *, pooled: bool) -> _Recordin
 
 async def _builder_kwargs(monkeypatch, carrier: ExecutionContext, *, pooled: bool) -> dict:
     """The keyword arguments the service hands the step builder for *carrier*'s run."""
-    from kiro_crew.workflows import service as service_mod
+    from aj_crew.workflows import service as service_mod
 
     captured: dict[str, object] = {}
 
@@ -163,7 +163,7 @@ async def test_a_step_with_no_agent_runs_the_caller_s_template(pooled, usage_age
 
 @pytest.mark.parametrize("pooled", [True, False], ids=["pooled", "cold-start"])
 async def test_a_default_chat_keeps_the_pool_agent(pooled, usage_agents):
-    sessions = await _run_one_step(_template("kirocrew"), pooled=pooled)
+    sessions = await _run_one_step(_template("ajcrew"), pooled=pooled)
 
     assert sessions.agents == [None]
 

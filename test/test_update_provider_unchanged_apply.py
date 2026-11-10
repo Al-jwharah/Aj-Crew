@@ -16,14 +16,14 @@ from real_dashboard_state import _settle_real_dashboard_states  # noqa: F401
 from real_dashboard_state import notes, real_dashboard_state
 from slack_gateway_helpers import _make_orchestrator, _mock_dashboard_state
 
-_SNAPSHOT = "kiro_crew.platform.wheel_apply.snapshot_memory_before_update"
+_SNAPSHOT = "aj_crew.platform.wheel_apply.snapshot_memory_before_update"
 
 
 async def _run(monkeypatch, *, mandatory: bool, recheck, state=None):
-    import kiro_crew.dashboard.handlers as handlers
-    import kiro_crew.platform.update_governance as gov
-    from kiro_crew.platform.update_capability import AUTO_ROUTE_PROVIDER, AutoUpdateEffect
-    from kiro_crew.platform.update_provider import CommandProvider, UpdateCheckResult
+    import aj_crew.dashboard.handlers as handlers
+    import aj_crew.platform.update_governance as gov
+    from aj_crew.platform.update_capability import AUTO_ROUTE_PROVIDER, AutoUpdateEffect
+    from aj_crew.platform.update_provider import CommandProvider, UpdateCheckResult
 
     orch = _make_orchestrator()
     orch.dashboard_state = _mock_dashboard_state() if state is None else state
@@ -47,7 +47,7 @@ async def _run(monkeypatch, *, mandatory: bool, recheck, state=None):
     try:
         handlers._update_info.clear()
         with (
-            patch("kiro_crew.config.KiroCrewConfig.load", return_value=cfg),
+            patch("aj_crew.config.AjCrewConfig.load", return_value=cfg),
             patch(_SNAPSHOT, return_value=(1, "")),
         ):
             await orch._check_for_updates_via_provider(provider)
@@ -60,7 +60,7 @@ async def _run(monkeypatch, *, mandatory: bool, recheck, state=None):
 @pytest.mark.parametrize("mandatory", [True, False], ids=["min_version-floor", "auto-update"])
 @pytest.mark.asyncio
 async def test_an_apply_the_check_still_offers_again_does_not_restart(monkeypatch, mandatory):
-    from kiro_crew.platform.update_provider import UpdateCheckResult
+    from aj_crew.platform.update_provider import UpdateCheckResult
 
     orch, provider = await _run(
         monkeypatch,
@@ -76,7 +76,7 @@ async def test_an_apply_the_check_still_offers_again_does_not_restart(monkeypatc
     failed = [c for c in ds.push_update_progress.call_args_list if c.args[0] == "failed"]
     assert failed and "did not change" in failed[-1].args[1]
     ds.notify.assert_called_once()
-    assert ds.notify.call_args.args[1] == "Kiro Crew update changed nothing"
+    assert ds.notify.call_args.args[1] == "Aj Crew update changed nothing"
 
 
 @pytest.mark.parametrize("mandatory", [True, False], ids=["min_version-floor", "auto-update"])
@@ -92,7 +92,7 @@ async def test_an_apply_the_check_still_offers_again_does_not_restart(monkeypatc
 async def test_an_apply_that_changed_the_install_restarts(
     monkeypatch, mandatory, recheck, tmp_path
 ):
-    from kiro_crew.platform.update_provider import UpdateCheckResult
+    from aj_crew.platform.update_provider import UpdateCheckResult
 
     ds = real_dashboard_state(tmp_path)
     orch, provider = await _run(

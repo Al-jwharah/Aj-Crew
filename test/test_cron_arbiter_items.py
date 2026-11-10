@@ -18,12 +18,12 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps import bridges
-from kiro_crew.apps.cron_sdk import CronSDK, CronSyncOnLoopError
-from kiro_crew.cron import CronLoopSafetyError, CronService, CronStoreBusy
-from kiro_crew.cron_service.store import cron_store_lock
+from aj_crew.apps import bridges
+from aj_crew.apps.cron_sdk import CronSDK, CronSyncOnLoopError
+from aj_crew.cron import CronLoopSafetyError, CronService, CronStoreBusy
+from aj_crew.cron_service.store import cron_store_lock
 
-STRICT = "KIROCREW_STRICT_LOOP_SAFETY"
+STRICT = "AJCREW_STRICT_LOOP_SAFETY"
 
 
 # ── Item 1: the sync SDK contract is preserved ──
@@ -236,15 +236,15 @@ class TestLoopSafetyGuard:
         monkeypatch.delenv(STRICT, raising=False)
         # The warning is once per process; reset it so this test sees it
         # whichever test on the worker tripped the guard first.
-        monkeypatch.setattr("kiro_crew.cron._loop_safety_warned", False)
+        monkeypatch.setattr("aj_crew.cron._loop_safety_warned", False)
         svc = CronService(base_dir=tmp_path)
         # Default (non-strict) degrades to a warning — must NOT raise, so the
         # many existing tests that seed jobs via sync mutators from an async
         # body keep working.
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.cron"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.cron"):
             with svc._file_lock():
                 pass
-        warnings = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.cron"]
+        warnings = [r.getMessage() for r in caplog.records if r.name == "aj_crew.cron"]
         assert any("acquired on the event loop thread" in m for m in warnings), warnings
 
     @pytest.mark.asyncio

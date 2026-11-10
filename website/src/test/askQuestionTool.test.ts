@@ -5,7 +5,7 @@ import { ASK_ANSWERED_HEADER, ASK_MAX_ANSWER_LEN, ASK_PAIR_SEPARATOR, MAX_TOOL_R
 
 // Blocking-card cap stays synchronized with validation_parts/ask_question_card.py's derived server bound.
 
-const SRC = path.resolve(__dirname, '../../../src/kiro_crew')
+const SRC = path.resolve(__dirname, '../../../src/aj_crew')
 
 function pyInt(source: string, name: string): number {
   const m = source.match(new RegExp(`^${name} = (\\d+)$`, 'm'))

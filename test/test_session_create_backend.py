@@ -18,10 +18,10 @@ import pytest
 from chat_test_helpers import _make_state
 from member_memory_helpers import make_request
 
-from kiro_crew import members
-from kiro_crew.dashboard import create_rate_limit
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.handlers.session_control import api_session_control_create
+from aj_crew import members
+from aj_crew.dashboard import create_rate_limit
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.handlers.session_control import api_session_control_create
 
 
 @pytest.fixture(autouse=True)
@@ -34,7 +34,7 @@ def _fresh_create_budget():
 @pytest.fixture(autouse=True)
 def _session_harness_preview_on(_floor_monkeypatch):
     """Everything here is the preview's ON behaviour; OFF is test_session_harness_preview.py."""
-    from kiro_crew import session_harness_preview
+    from aj_crew import session_harness_preview
 
     _floor_monkeypatch.setattr(session_harness_preview, "session_harness_enabled", lambda: True)
 
@@ -42,9 +42,9 @@ def _session_harness_preview_on(_floor_monkeypatch):
 @pytest.fixture
 def selectable(monkeypatch):
     """Kiro, Claude and Codex are allowed and installed; Pi is allowed but missing."""
-    from kiro_crew import acp_backends
-    from kiro_crew.agent_sdk import backend_install
-    from kiro_crew.agent_sdk.backend_install import INSTALLED, MISSING, BackendInstallState
+    from aj_crew import acp_backends
+    from aj_crew.agent_sdk import backend_install
+    from aj_crew.agent_sdk.backend_install import INSTALLED, MISSING, BackendInstallState
 
     installs = {"": INSTALLED, "claude": INSTALLED, "codex": INSTALLED, "pi": MISSING}
     monkeypatch.setattr(acp_backends, "selectable_backend_values", lambda: sorted(installs))
@@ -159,7 +159,7 @@ class TestTheRoute:
         assert payload["code"] == "backend_with_crew"
 
     def test_the_model_is_judged_against_the_pick(self, tmp_path, selectable, monkeypatch):
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         judged: list[str] = []
 
@@ -182,7 +182,7 @@ class TestTheRoute:
 
 class TestTheSlotRunsOnItsPick:
     def test_the_allocation_hands_the_pick_to_the_gate(self, tmp_path):
-        from kiro_crew.dashboard.chat_runner import _slot_backend_allocation_kwargs
+        from aj_crew.dashboard.chat_runner import _slot_backend_allocation_kwargs
 
         slot = _make_state(tmp_path).get_or_create_slot("w")
         assert _slot_backend_allocation_kwargs(slot) == {}
@@ -192,7 +192,7 @@ class TestTheSlotRunsOnItsPick:
         assert _slot_backend_allocation_kwargs(slot) == {"backend_override": ""}
 
     def test_restore_reads_the_pick_back(self, tmp_path):
-        from kiro_crew.dashboard.slot_persistence import metadata_codec as codec
+        from aj_crew.dashboard.slot_persistence import metadata_codec as codec
 
         slot = _make_state(tmp_path).get_or_create_slot("w")
         codec._read_backend(SimpleNamespace(meta={"backend": "claude"}, slot=slot))
@@ -201,13 +201,13 @@ class TestTheSlotRunsOnItsPick:
 
     def test_a_cold_slot_reads_as_its_pick(self, tmp_path, monkeypatch):
         """The Context panel and the model picker read this before the session exists."""
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         slot = _make_state(tmp_path).get_or_create_slot("w")
         slot.backend = "claude"
         members.note_session_backend_pick(slot.key, "claude")
         monkeypatch.setattr(
-            "kiro_crew.agent_sdk.backends.selectable_backends", lambda: {"", "claude"}
+            "aj_crew.agent_sdk.backends.selectable_backends", lambda: {"", "claude"}
         )
 
         assert asyncio.run(chat_handlers._configured_backend_for_slot(slot)) == "claude"
@@ -221,8 +221,8 @@ class TestTheSlotRunsOnItsPick:
         ],
     )
     def test_a_live_session_on_another_harness_is_reset(self, tmp_path, pick, live, reset):
-        from kiro_crew.agent_sdk.capabilities import capabilities_for
-        from kiro_crew.dashboard.chat_runner import _live_session_off_slot_backend
+        from aj_crew.agent_sdk.capabilities import capabilities_for
+        from aj_crew.dashboard.chat_runner import _live_session_off_slot_backend
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("w")
@@ -238,9 +238,9 @@ class TestTheSlotRunsOnItsPick:
     ):
         """The turn's inherited-default check must resolve the model the allocation
         does, or every turn on a picked session resets a healthy runtime."""
-        from kiro_crew import session
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.dashboard.chat_runner import _inherited_default_model
+        from aj_crew import session
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.dashboard.chat_runner import _inherited_default_model
 
         seen: list[dict] = []
 
@@ -251,7 +251,7 @@ class TestTheSlotRunsOnItsPick:
         monkeypatch.setattr(session, "_session_model", _resolver)
         slot = _make_state(tmp_path).get_or_create_slot("w")
         slot.backend = pick
-        sessions = SimpleNamespace(_cfg=KiroCrewConfig())
+        sessions = SimpleNamespace(_cfg=AjCrewConfig())
 
         asyncio.run(
             _inherited_default_model(sessions, slot, "dashboard:w", agent=None, crew_agent="")
@@ -262,9 +262,9 @@ class TestTheSlotRunsOnItsPick:
 
 class TestTheTools:
     def _call(self, tool: str, args: dict, reply: dict):
-        from kiro_crew.mcp_dashboard import TABLE
-        from kiro_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
-        from kiro_crew.mcp_tools.table import Caller, ToolContext
+        from aj_crew.mcp_dashboard import TABLE
+        from aj_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
+        from aj_crew.mcp_tools.table import Caller, ToolContext
 
         dash = InMemoryDashboardClient(
             {
@@ -282,7 +282,7 @@ class TestTheTools:
     def test_session_create_forwards_the_pick_and_names_it(self):
         out, creates = self._call(
             "session_create",
-            {"title": "w", "agent": "kirocrew-worker", "backend": "claude"},
+            {"title": "w", "agent": "ajcrew-worker", "backend": "claude"},
             {"ok": True, "target": "chat-9", "title": "w", "backend": "claude"},
         )
         assert creates[-1]["backend"] == "claude"
@@ -294,7 +294,7 @@ class TestTheTools:
             {
                 "title": "item",
                 "acceptance": {"kind": "human_approval"},
-                "agent": "kirocrew-worker",
+                "agent": "ajcrew-worker",
                 "seed": "go",
                 "backend": "codex",
             },
@@ -303,12 +303,12 @@ class TestTheTools:
         assert creates and creates[-1]["backend"] == "codex"
 
     def test_a_backend_refusal_names_its_code(self):
-        from kiro_crew.mcp_dashboard import TABLE
-        from kiro_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
-        from kiro_crew.mcp_tools.table import Caller, ToolContext
+        from aj_crew.mcp_dashboard import TABLE
+        from aj_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
+        from aj_crew.mcp_tools.table import Caller, ToolContext
 
         def _refuse(_req):
-            from kiro_crew.mcp_tools.dashboard_client import DashboardError
+            from aj_crew.mcp_tools.dashboard_client import DashboardError
 
             raise DashboardError(
                 {"error": "backend 'nonesuch' is not available", "code": "unknown_backend"}

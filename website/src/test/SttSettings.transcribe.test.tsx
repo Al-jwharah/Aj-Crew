@@ -167,7 +167,7 @@ describe('SttSettings provider-aware install surface', () => {
   it('hides the Install button and shows the restart hint for Transcribe', async () => {
     mount({
       provider: 'transcribe',
-      prereqs: ["/opt/kirocrew/bin/python -m pip install 'boto3>=1.34,<2' 'amazon-transcribe>=0.6,<1'"],
+      prereqs: ["/opt/ajcrew/bin/python -m pip install 'boto3>=1.34,<2' 'amazon-transcribe>=0.6,<1'"],
     })
     await loaded()
     // No install affordance of any kind — the button installs a local Whisper
@@ -185,7 +185,7 @@ describe('SttSettings provider-aware install surface', () => {
     mockApi.restartGateway.mockImplementation(() => new Promise<void>(resolve => { finish = resolve }))
     mount({
       provider: 'transcribe',
-      prereqs: ["/opt/kirocrew/bin/python -m pip install 'boto3>=1.34,<2' 'amazon-transcribe>=0.6,<1'"],
+      prereqs: ["/opt/ajcrew/bin/python -m pip install 'boto3>=1.34,<2' 'amazon-transcribe>=0.6,<1'"],
     })
     await loaded()
 
@@ -205,7 +205,7 @@ describe('SttSettings provider-aware install surface', () => {
     // the same extra, and the in-dashboard installer that used to cover it is gone.
     mount({
       provider: 'local',
-      prereqs: ["/opt/kirocrew/bin/python -m pip install 'boto3>=1.34,<2' 'amazon-transcribe>=0.6,<1'"],
+      prereqs: ["/opt/ajcrew/bin/python -m pip install 'boto3>=1.34,<2' 'amazon-transcribe>=0.6,<1'"],
     })
     await loaded()
     expect(screen.getByTestId('stt-restart-gateway')).toBeTruthy()
@@ -273,7 +273,7 @@ describe('SttSettings provider-aware install surface', () => {
       prereqs: [],
     })
     expect(await screen.findByText(/bundled audio decoder is missing or damaged/i)).toBeTruthy()
-    expect(screen.getByText(/reinstall the Kiro Crew desktop app/i)).toBeTruthy()
+    expect(screen.getByText(/reinstall the Aj Crew desktop app/i)).toBeTruthy()
     expect(screen.queryByText(/run these commands/i)).toBeNull()
   })
 

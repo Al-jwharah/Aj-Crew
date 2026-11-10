@@ -18,7 +18,7 @@ from test_kiro_cloud_session import (  # noqa: F401 -- fixtures, used by name
     section,
 )
 
-from kiro_crew.config.session_environments import (
+from aj_crew.config.session_environments import (
     SessionEnvironmentsError,
     validate_session_environments,
 )
@@ -37,7 +37,7 @@ from kiro_crew.config.session_environments import (
     ],
 )
 def test_parse_repository_accepts_a_name_or_owner_and_name(value, parsed):
-    from kiro_crew.config.session_environments import parse_repository
+    from aj_crew.config.session_environments import parse_repository
 
     assert parse_repository(value) == parsed
 
@@ -69,7 +69,7 @@ def test_parse_repository_accepts_a_name_or_owner_and_name(value, parsed):
     ],
 )
 def test_parse_repository_refuses_anything_else(value):
-    from kiro_crew.config.session_environments import parse_repository
+    from aj_crew.config.session_environments import parse_repository
 
     with pytest.raises(ValueError):
         parse_repository(value)
@@ -92,7 +92,7 @@ async def test_an_unreadable_choices_file_does_not_lock_a_chat_without_cloud_evi
 ):
     """Only positive cloud evidence locks: an unreadable choices file leaves the
     decision to main's workspace check, which finds no workspace for this chat."""
-    from kiro_crew.coder import session_launch as sl
+    from aj_crew.coder import session_launch as sl
 
     choices = handlers._choices()
     choices.set("dashboard:coder", "dev", sl.PROVIDER_ID)
@@ -103,7 +103,7 @@ async def test_an_unreadable_choices_file_does_not_lock_a_chat_without_cloud_evi
 
 @pytest.mark.asyncio
 async def test_a_cloud_chat_with_a_recorded_sandbox_stays_locked(handlers):  # noqa: F811
-    from kiro_crew.coder import session_launch as sl
+    from aj_crew.coder import session_launch as sl
 
     choices = handlers._choices()
     choices.set("dashboard:cloud", "cloud", sl.KIRO_CLOUD_PROVIDER_ID)

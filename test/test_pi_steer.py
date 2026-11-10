@@ -20,15 +20,15 @@ from unittest.mock import MagicMock
 import pytest
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
-from kiro_crew.acp import pi_steer_turn
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.harness import pi as pi_mod
-from kiro_crew.acp.harness.pi_steer import (
+from aj_crew.acp import pi_steer_turn
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.harness import pi as pi_mod
+from aj_crew.acp.harness.pi_steer import (
     PiSteerChannel,
     new_pi_steer_channel,
     steer_echo_seq,
 )
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     ACP_BACKEND_PI,
     ACP_BACKENDS_STEER,
     ACP_BACKENDS_STEERING_REQUEST,
@@ -38,7 +38,7 @@ from kiro_crew.acp.types import (
     MAX_STEERING_ANSWERS,
     MAX_STEERING_TEXT_CHARS,
 )
-from kiro_crew.testing.wait import await_until, until_parked
+from aj_crew.testing.wait import await_until, until_parked
 
 _SID = "pi-session-1"
 _NONCE = "0123456789abcdef0123456789abcdef"
@@ -50,7 +50,7 @@ _FIXTURE = Path(__file__).parent / "fixtures" / "acp_frames" / "pi" / "steering-
 def gate_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> str:
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     return pi_mod._pi_gate_artifact_dir()
 
 
@@ -83,7 +83,7 @@ def _chunk(text: str, *, notify: bool) -> bytes:
 
 
 def _echo(seq: int, nonce: str = _NONCE) -> str:
-    return json.dumps({"kiro-crew-steer": 1, "nonce": nonce, "seq": seq}, separators=(",", ":"))
+    return json.dumps({"aj-crew-steer": 1, "nonce": nonce, "seq": seq}, separators=(",", ":"))
 
 
 def _complete(stop: str = "end_turn") -> bytes:
@@ -94,7 +94,7 @@ def _open(path: str, key: bytes, nonce: str, session: str) -> dict[str, Any]:
     """Open a steer file the way the extension does (``readSteers``)."""
     record = json.loads(Path(path).read_text())
     seq = record["seq"]
-    aad = "\0".join(("kiro-crew-steer", nonce, session, str(seq))).encode()
+    aad = "\0".join(("aj-crew-steer", nonce, session, str(seq))).encode()
     sealed = base64.b64decode(record["sealed"])
     plain = AESGCM(key).decrypt(base64.b64decode(record["iv"]), sealed, aad)
     return json.loads(plain)
@@ -118,13 +118,13 @@ def test_a_steer_file_is_sealed_to_its_launch_session_and_sequence(gate_dir: str
     assert channel.publish(_SID, "and green") == 2
     names = _steer_files(gate_dir)
     assert names == [
-        f"kirocrew_pi_gate_{os.getpid()}_steer_{_NONCE}_{seq:010d}.json" for seq in (1, 2)
+        f"ajcrew_pi_gate_{os.getpid()}_steer_{_NONCE}_{seq:010d}.json" for seq in (1, 2)
     ]
     first = os.path.join(gate_dir, names[0])
     if os.name != "nt":
         assert stat.S_IMODE(os.stat(first).st_mode) == 0o400
     body = json.loads(Path(first).read_text())
-    assert set(body) == {"kiro-crew-steer", "nonce", "seq", "iv", "sealed"}
+    assert set(body) == {"aj-crew-steer", "nonce", "seq", "iv", "sealed"}
     assert "use blue" not in Path(first).read_text(), "the text is sealed, not plain"
     assert _open(first, channel.key, _NONCE, _SID) == {
         "seq": 1,
@@ -147,10 +147,10 @@ def test_a_steer_file_is_sealed_to_its_launch_session_and_sequence(gate_dir: str
 def test_the_child_is_named_the_channel_and_given_its_key(gate_dir: str) -> None:
     channel = new_pi_steer_channel(_NONCE, gate_dir)
     env = channel.env()
-    assert env["KIROCREW_PI_STEER"] == os.path.join(
-        gate_dir, f"kirocrew_pi_gate_{os.getpid()}_steer_{_NONCE}_"
+    assert env["AJCREW_PI_STEER"] == os.path.join(
+        gate_dir, f"ajcrew_pi_gate_{os.getpid()}_steer_{_NONCE}_"
     )
-    assert bytes.fromhex(env["KIROCREW_PI_STEER_KEY"]) == channel.key
+    assert bytes.fromhex(env["AJCREW_PI_STEER_KEY"]) == channel.key
     assert len(channel.key) == 32
     assert new_pi_steer_channel(_NONCE, gate_dir).key != channel.key
 
@@ -189,11 +189,11 @@ def test_a_steer_is_written_only_into_a_real_owner_only_gate_leaf(
     [
         (_echo(3), 3),
         (_echo(3, nonce="f" * 32), None),
-        (json.dumps({"kiro-crew-steer": 1, "nonce": _NONCE, "seq": 3, "x": 1}), None),
-        (json.dumps({"kiro-crew-steer": 1, "nonce": _NONCE, "seq": True}), None),
-        (json.dumps({"kiro-crew-steer": True, "nonce": _NONCE, "seq": 3}), None),
-        (json.dumps({"kiro-crew-steer": 1, "nonce": _NONCE, "seq": 0}), None),
-        (json.dumps({"kiro-crew-steer": 2, "nonce": _NONCE, "seq": 3}), None),
+        (json.dumps({"aj-crew-steer": 1, "nonce": _NONCE, "seq": 3, "x": 1}), None),
+        (json.dumps({"aj-crew-steer": 1, "nonce": _NONCE, "seq": True}), None),
+        (json.dumps({"aj-crew-steer": True, "nonce": _NONCE, "seq": 3}), None),
+        (json.dumps({"aj-crew-steer": 1, "nonce": _NONCE, "seq": 0}), None),
+        (json.dumps({"aj-crew-steer": 2, "nonce": _NONCE, "seq": 3}), None),
         ("Steer received: PINEAPPLE.", None),
         ("{not json", None),
     ],
@@ -508,6 +508,6 @@ async def test_the_live_capture_reports_the_steer_consumed_and_shows_no_envelope
     texts_after = [e.text for e in events[consumed_at:] if e.kind == EVENT_TEXT_CHUNK]
     assert "".join(texts_after) == "Steer received: PINEAPPLE."
     assert not any(
-        "kiro-crew-steer" in (e.text or "") for e in events if e.kind == EVENT_TEXT_CHUNK
+        "aj-crew-steer" in (e.text or "") for e in events if e.kind == EVENT_TEXT_CHUNK
     )
     assert events[-1].stop_reason == "end_turn"

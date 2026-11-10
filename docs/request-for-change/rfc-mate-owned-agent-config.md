@@ -36,7 +36,7 @@ superseded-by: []
   changed an earlier reading, the change is called out inline (search
   "2026-10-17"). The open step-1 pull request
   [#21463](https://github.com/kirodotdev/KiroCrew/pull/21463) predates this
-  amendment: it names a `kirocrew-mate-conductor` spec but derives it from the
+  amendment: it names a `ajcrew-mate-conductor` spec but derives it from the
   default template, so its shape is the one §6 step 1 now says not to use.
 - Amended 2026-10-23 in #23010 (product owner's decision, rayrayxu). The
   conductor keeps the default template's built-ins, `execute_bash`,
@@ -104,7 +104,7 @@ lives.
   well as the user-level read scope, and `list_agents()`
   (`agent_discovery.py`) scans it (plus a project-local read-only scope) for the
   agents selectable via `session/set_mode`.
-- A crewmate's binding is a `KiroCrewAgentConfig` record (`config/sections.py`).
+- A crewmate's binding is a `AjCrewAgentConfig` record (`config/sections.py`).
   Its crewmate-specific fields — `member_id`, `kiro_agent`, `workspace`,
   `memory_store`, `model`, `avatar`, `description`, `triggers`, `session_color`,
   `starred`, `source` — already live on the binding. `kiro_agent` is the pointer
@@ -114,16 +114,16 @@ lives.
   `session/new`; `set_mode` then activates it. Crew does not pass a file path —
   it hands over the agent definition on the wire.
 - A crewmate's chat runs the Kiro-wide default template: the first crewmate's
-  implicit template is `kirocrew` (`first_crewmate._ORDINARY_TEMPLATE`), the
-  New Crewmate dialog's default is `kirocrew`
-  (`change_card_catalog.DEFAULT_CREWMATE_TEMPLATE`), and `kirocrew.json` is the
+  implicit template is `ajcrew` (`first_crewmate._ORDINARY_TEMPLATE`), the
+  New Crewmate dialog's default is `ajcrew`
+  (`change_card_catalog.DEFAULT_CREWMATE_TEMPLATE`), and `ajcrew.json` is the
   full default agent — every configured MCP server, every skill, `execute_bash`.
   So the agent the user chats with is also the agent that does the work, with
   the whole tool surface loaded into its context. The work it hands to
   `spawn_run` without naming an agent runs the member's OWN template again
   (`subagent_parts/agent_policy._inherited_member_agent`,
   `subagent_manager/run_turn.py`: `info.agent or execution.template_id`) — for a
-  `kirocrew`-bound crewmate, the full default once more. `kirocrew-worker`, the
+  `ajcrew`-bound crewmate, the full default once more. `ajcrew-worker`, the
   disk mirror of that default (`agent_materialization/worker_agent.py`), is
   what a plain session's unnamed spawn runs.
 - A copy mechanism already exists, but it is **copy-on-write and lazy**:
@@ -191,7 +191,7 @@ lives.
 - **A data-model change for `member_id`.** The spike considered whether
   `member_id`'s empty-string-means-"not a member" sentinel should become a real
   nullable. Decision: leave it. `""`-is-unset is the house convention across the
-  whole `KiroCrewAgentConfig` dataclass (`model`, `reasoning_effort`,
+  whole `AjCrewAgentConfig` dataclass (`model`, `reasoning_effort`,
   `display_name`, `approval_mode` … all default `""`), and "is this mate-owned
   config?" is a DERIVED fact (does `kiro_agent` resolve under
   `mates/agents/`), never a stored flag — an `is_mate` boolean would be the
@@ -248,7 +248,7 @@ prompt and REMOVED only for the work the tool set excludes; the design accepts
 that residue rather than pretending the prompt closes it.
 
 **The conductor's prompt is a source-code string.** It names: who the mate is
-and how it talks to the user; what Kiro Crew can do (render a widget, set a
+and how it talks to the user; what Aj Crew can do (render a widget, set a
 schedule, keep memory); how to use the work ledger; how to spawn a worker and
 what to put in the brief; and that the conductor never runs a task inline. It
 is not a JSON file and it reads no `~/.kiro/crew/prompt.md` override. The
@@ -259,8 +259,8 @@ stay what they are — project context for the member's work, not a contract tha
 can replace or reorder the charter.
 
 **The conductor's tools are a minimal set fixed in code.** A read-only file
-tool, the spawn/dispatch verbs, the work ledger (`kirocrew-work`), the
-member's own servers (`kirocrew-mate`, the dashboard/widget set), memory. No
+tool, the spawn/dispatch verbs, the work ledger (`ajcrew-work`), the
+member's own servers (`ajcrew-mate`, the dashboard/widget set), memory. No
 user-configured MCP server is mounted on it. *(2026-10-23: plus the default
 built-ins; see the amendment note.)* The exact
 grant tuple is the step-1 PR's to pin, following the shape the three existing
@@ -330,7 +330,7 @@ Nothing from the file reaches the conductor.
 
 **The folder is machine-wide, alongside `~/.kiro/agents/` — a settled team
 decision.** It sits under the Kiro home (`kiro_home()`), not under a per-instance
-`KIROCREW_HOME`, so the mate config files live beside the custom agents they are
+`AJCREW_HOME`, so the mate config files live beside the custom agents they are
 copied from rather than inside one Crew instance's data home. Because the folder
 is shared across instances, `<id>` alone is NOT a safe partition: `<id>` is the
 crewmate's `member_id`, and `memory_stores._allocate_member_id` only uniquifies it
@@ -346,7 +346,7 @@ overwriting another's additions, not the id by itself.
 
 ### 5.2 Crewmate-specific data stays on the binding
 
-`KiroCrewAgentConfig` (`config/sections.py`) is unchanged. It keeps carrying
+`AjCrewAgentConfig` (`config/sections.py`) is unchanged. It keeps carrying
 `member_id`, `kiro_agent`, `workspace`, `memory_store`, `model`, `avatar`,
 `description`, `triggers`, `session_color`, `starred`, `source`. Only what
 `kiro_agent` resolves to changes — the file in `mates/agents/` instead of one in
@@ -358,7 +358,7 @@ overwriting another's additions, not the id by itself.
   "kiro_agent":   "zxc",            // resolves to ~/.kiro/mates/agents/zxc.json
   "workspace":    "member-zxc",
   "memory_store": "member-zxc-<uuid>",
-  "source":       "kirocrew"
+  "source":       "ajcrew"
 }
 ```
 
@@ -368,7 +368,7 @@ memory store is owned by — `memory_stores.py` fails closed when
 mate-owned binding is: **`member_id` is non-empty AND `kiro_agent == <the
 member's own id>`, resolving to a file in `mates/agents/`.** A member whose
 `kiro_agent` still names a shared template (e.g. the built-in `mate` member on
-`kirocrew`) is a crewmate without mate-owned config — the two facts are
+`ajcrew`) is a crewmate without mate-owned config — the two facts are
 orthogonal.
 
 ### 5.3 Binding resolution reads both folders — and there are FIVE readers, not two
@@ -439,7 +439,7 @@ are source-defined, so nothing is copied FROM — the file holds only the worker
 
 **Spike correction — any create-time addition and the eager copy must be
 ordered, and the addition must not fork.** If create needs to seed the worker
-file with a default addition (for example the `kirocrew-mate` MCP server), it is
+file with a default addition (for example the `ajcrew-mate` MCP server), it is
 written INTO `mates/agents/<id>.json` after the file exists, not minted as a
 fork. The pre-spike path drove the capability editor with `put(enroll=True)`,
 which **forked** the crewmate into a `crew-<hex>` draft and repointed the binding
@@ -506,7 +506,7 @@ conductor
      (a read-only tool, new; it mounts nothing)
   2. notices the worker it is about to spawn lacks X
   3. raises a change card: "add X to this mate"
-     (kirocrew-mate.request_capabilities, the existing card-backed tool)
+     (ajcrew-mate.request_capabilities, the existing card-backed tool)
   4. the user presses → the gateway writes mates/agents/<id>.json in place,
      through the same backend path the editor uses (governance sanitizer,
      optimistic lock)
@@ -570,14 +570,14 @@ full tool surface, the shape §2 problems 5 and 6 describe.
 **What rebinds, and what does not.** The three DEFAULTS move to the mate
 conductor: the first crewmate's implicit template, the New Crewmate dialog's
 "Built from" default and the `crewmate.create` card's template. A stored
-binding is not rewritten: a crewmate whose `kiro_agent` names `kirocrew` or a
+binding is not rewritten: a crewmate whose `kiro_agent` names `ajcrew` or a
 custom agent keeps it until step 3's migration (which carries its additions
 into the per-mate file before it repoints anything). The mate conductor is
 withheld from the "Built from" picker as a choice, but a binding that names it
 still shows there, so the editor can rebind.
 
 **Reversal.** Per crewmate: the crew editor's "Built from" still offers
-`kirocrew` and every custom agent, so a crewmate whose conductor dispatches
+`ajcrew` and every custom agent, so a crewmate whose conductor dispatches
 badly is rebound to the full-surface template in one edit, with no restart.
 Per install: step 1 is a sourcing change with no setting of its own, and
 reverting it is reverting the PR; the step does not add a switch that would
@@ -586,21 +586,21 @@ conductor shape.
 
 Exit criteria:
 - A mate's chat runs the source-defined conductor: its prompt text and grant
-  tuple come from source, and editing `~/.kiro/agents/kirocrew.json` or
+  tuple come from source, and editing `~/.kiro/agents/ajcrew.json` or
   `~/.kiro/crew/prompt.md` changes nothing about it.
 - The conductor mounts no user-configured MCP server, and no sub-agent spawn,
   `task_run` or `workflow_run` tool. *(2026-10-23: it keeps `execute_bash`,
   `fs_write` and `code`; the earlier "no shell" criterion is retired.)*
-- A mate-conductor-bound member's unnamed `spawn_run` runs `kirocrew-worker`,
+- A mate-conductor-bound member's unnamed `spawn_run` runs `ajcrew-worker`,
   not the member's own template: the member-template inheritance that today
-  re-runs `kirocrew` for a `kirocrew`-bound member would otherwise run the
+  re-runs `ajcrew` for a `ajcrew`-bound member would otherwise run the
   dispatch-only conductor as its own worker, with no write tool and no shell.
   The step maps that one template to the worker spec at the two inheritance
   sites; every other member template inherits as before.
 - Asked to do substantive work, the conductor dispatches it (`spawn_run`)
   rather than running it inline — pinned by a prompt-contract test, the way
   the goal conductor's charter is.
-- A crewmate bound to `kirocrew` or to a custom agent before the step still
+- A crewmate bound to `ajcrew` or to a custom agent before the step still
   runs that binding after it; only the defaults moved.
 - No conductor path reads or writes `~/.kiro/mates/agents/`.
 
@@ -613,20 +613,20 @@ whole config is its source base. Its prompt carries the worker charter of §5.0:
 do the one task, report back, do not promote yourself.
 
 **The route does not flip here.** A crewmate's unnamed `spawn_run` keeps
-dispatching to `kirocrew-worker` (the mapping step 1 introduces) — the mirror of
+dispatching to `ajcrew-worker` (the mapping step 1 introduces) — the mirror of
 the default template, which carries the user's MCP servers today — until step 3
 lands the per-mate file. Flipping the
 route in this step would run every crewmate's work on a worker with no user
 server for as long as the gap between the two steps lasts; the interim shape is
 therefore: conductor from source (step 1), the user's servers still reached
-through `kirocrew-worker`, and the source-defined worker installed but not yet
+through `ajcrew-worker`, and the source-defined worker installed but not yet
 dispatched to. Step 3 flips the route and layers the file in the same change.
 
 Exit criteria:
 - The source-defined worker spec is installed and, dispatched to directly,
   projects exactly its source-defined base.
 - No worker path reads `~/.kiro/mates/agents/` yet.
-- A crewmate's `spawn_run` still routes to `kirocrew-worker`; no user-visible
+- A crewmate's `spawn_run` still routes to `ajcrew-worker`; no user-visible
   behaviour change in what a crewmate's work can reach.
 
 ### Step 3 — the worker reads its per-mate file as *additional* config
@@ -638,7 +638,7 @@ created (full schema, empty `prompt`/`mcpServers`/`skills`, defaults elsewhere �
 user-facing capability ("edit what my mate can do"), the folder resolution
 (§5.3), the in-place edit path (§5.4), the conductor's catalog read and the
 card-confirmed change it raises (§5.4), the create-time eager copy, and the
-route flip: a crewmate's `spawn_run` moves from `kirocrew-worker` to the
+route flip: a crewmate's `spawn_run` moves from `ajcrew-worker` to the
 source-defined worker in the same change that gives that worker the file, so
 no release ships a worker without the user's servers. The governance ceiling
 (§8) applies to the merged result.
@@ -697,7 +697,7 @@ for each crewmate:
   (only then) repoint kiro_agent
   then, for each of its DM threads whose record is a member selection carrying
   its member_id and running the agent it was moved from:
-    template_id := kirocrew-mate-conductor   (member, store, mode, app unchanged)
+    template_id := ajcrew-mate-conductor   (member, store, mode, app unchanged)
   record the agent moved from and the thread keys moved, for a rollback
 ```
 
@@ -739,8 +739,8 @@ audit does not gate steps 1–2 and is not blocking for step 3's own exit criter
   through the dispatch path the conductor already uses. What a user loses is
   the chat agent holding every user MCP server directly — those move to the
   worker, where the task runs. Between steps 1 and 3 that worker is
-  `kirocrew-worker`, which mirrors the default template and so still carries
-  the user's servers; a crewmate bound to `kirocrew` or a custom agent before
+  `ajcrew-worker`, which mirrors the default template and so still carries
+  the user's servers; a crewmate bound to `ajcrew` or a custom agent before
   step 1 keeps that binding until step 3's migration (§6).
 
 ## 8. Security considerations
@@ -906,7 +906,7 @@ only if mates are ever redefined as living templates that track a source.
    Capabilities editor's own live view.)
 3. **Default additions for a new worker file.** The conductor and worker base are
    source-defined, so a new file starts with empty `prompt`/`mcpServers`/`skills`.
-   Should create seed any default additions (e.g. the `kirocrew-mate` server),
+   Should create seed any default additions (e.g. the `ajcrew-mate` server),
    and if so, which — versus leaving the file empty until the user adds
    something?
 4. **Harness abstraction.** `kiro_agent` is KAS/custom-agent-shaped. Should the

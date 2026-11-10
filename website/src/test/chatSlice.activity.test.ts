@@ -60,7 +60,7 @@ describe('subagent reducers', () => {
 
   it('sseSubagentSpawn carries the resolved model, and later frames never blank a known model (#3582)', () => {
     // Spawn stamps the served model.
-    let state = reducer(withSlot, sseSubagentSpawn({ slot: 'slot-1', id: 'a1', task: 't', agent: 'kirocrew', model: 'claude-opus-4.8' }))
+    let state = reducer(withSlot, sseSubagentSpawn({ slot: 'slot-1', id: 'a1', task: 't', agent: 'ajcrew', model: 'claude-opus-4.8' }))
     expect(state.subagents['a1'].model).toBe('claude-opus-4.8')
     // A tool frame (no model field) must not clobber it.
     state = reducer(state, sseSubagentTool({ slot: 'slot-1', id: 'a1', tool: 'grep' }))
@@ -69,7 +69,7 @@ describe('subagent reducers', () => {
     state = reducer(state, sseSubagentDone({ slot: 'slot-1', id: 'a1', elapsed: 1, outcome: 'completed', model: 'claude-opus-4.7' }))
     expect(state.subagents['a1'].model).toBe('claude-opus-4.7')
     // A done frame WITHOUT a model must not blank a known one.
-    let s2 = reducer(withSlot, sseSubagentSpawn({ slot: 'slot-1', id: 'a2', task: 't', agent: 'kirocrew', model: 'gpt-5.6-sol' }))
+    let s2 = reducer(withSlot, sseSubagentSpawn({ slot: 'slot-1', id: 'a2', task: 't', agent: 'ajcrew', model: 'gpt-5.6-sol' }))
     s2 = reducer(s2, sseSubagentDone({ slot: 'slot-1', id: 'a2', elapsed: 1, outcome: 'completed' }))
     expect(s2.subagents['a2'].model).toBe('gpt-5.6-sol')
   })
@@ -81,7 +81,7 @@ describe('subagent reducers', () => {
 
   it('sseSubagentSnapshot restores the model on reconnect', () => {
     const state = reducer(withSlot, sseSubagentSnapshot({
-      id: 'a1', slot: 'slot-1', task: 't', agent: 'kirocrew', model: 'claude-opus-4.8',
+      id: 'a1', slot: 'slot-1', task: 't', agent: 'ajcrew', model: 'claude-opus-4.8',
       streaming: '', last_tool: '', started: 1,
     }))
     expect(state.subagents['a1'].model).toBe('claude-opus-4.8')
@@ -91,11 +91,11 @@ describe('subagent reducers', () => {
     // A subagent_retrying frame set retrying=true on a still-running card; a
     // reconnect replay snapshot must not blank the ⟳ cue (it carries no attempt
     // field, so it can only preserve, never set, retrying).
-    let state = reducer(withSlot, sseSubagentSpawn({ slot: 'slot-1', id: 'a1', task: 't', agent: 'kirocrew' }))
+    let state = reducer(withSlot, sseSubagentSpawn({ slot: 'slot-1', id: 'a1', task: 't', agent: 'ajcrew' }))
     state = reducer(state, sseSubagentRetrying({ slot: 'slot-1', id: 'a1', attempt: 1 }))
     expect(state.subagents['a1'].retrying).toBe(true)
     state = reducer(state, sseSubagentSnapshot({
-      id: 'a1', slot: 'slot-1', task: 't', agent: 'kirocrew',
+      id: 'a1', slot: 'slot-1', task: 't', agent: 'ajcrew',
       streaming: '', last_tool: '', started: 1,
     }))
     expect(state.subagents['a1'].retrying).toBe(true)
@@ -103,7 +103,7 @@ describe('subagent reducers', () => {
 
   it('sseSubagentSpawn preserves existing streaming text from pending', () => {
     let state = reducer(withSlot, sseSubagentPending({ slot: 'slot-1', id: 'a1', task: 'task', approval_id: 'spawn:a1' }))
-    state = reducer(state, sseSubagentSpawn({ slot: 'slot-1', id: 'a1', task: 'task', agent: 'kirocrew' }))
+    state = reducer(state, sseSubagentSpawn({ slot: 'slot-1', id: 'a1', task: 'task', agent: 'ajcrew' }))
     expect(state.subagents['a1'].status).toBe('running')
     expect(state.subagents['a1'].startedAt).toBeDefined()
   })
@@ -161,7 +161,7 @@ describe('subagent reducers', () => {
     // Pending card created from a spawn-approval event whose title carried no
     // task text — the later spawn event holds the authoritative task.
     let state = reducer(withSlot, sseSubagentPending({ slot: 'slot-1', id: 'a1', task: '', approval_id: 'spawn:a1' }))
-    state = reducer(state, sseSubagentSpawn({ slot: 'slot-1', id: 'a1', task: 'scan package X', agent: 'kirocrew' }))
+    state = reducer(state, sseSubagentSpawn({ slot: 'slot-1', id: 'a1', task: 'scan package X', agent: 'ajcrew' }))
     expect(state.subagents['a1'].status).toBe('running')
     expect(state.subagents['a1'].task).toBe('scan package X')
   })
@@ -457,9 +457,9 @@ describe('approval_resolved and toolLog mutations', () => {
     // then a tool_call_update with the refined title/input.
     let state = reducer(withSlot, sseToolActivity({ slot: 'slot-1', tool: 'Terminal', kind: 'execute', purpose: '', input_preview: '', tool_call_id: 'tc-bash-1' }))
     expect(state.toolLog).toHaveLength(1)
-    state = reducer(state, sseToolActivity({ slot: 'slot-1', tool: 'List Kiro Crew modules', kind: 'execute', purpose: '', input_preview: '{"command":"ls"}', tool_call_id: 'tc-bash-1', is_update: true }))
+    state = reducer(state, sseToolActivity({ slot: 'slot-1', tool: 'List Aj Crew modules', kind: 'execute', purpose: '', input_preview: '{"command":"ls"}', tool_call_id: 'tc-bash-1', is_update: true }))
     expect(state.toolLog).toHaveLength(1)
-    expect(state.toolLog[0].text).toBe('List Kiro Crew modules')
+    expect(state.toolLog[0].text).toBe('List Aj Crew modules')
     expect(state.toolLog[0].input).toBe('{"command":"ls"}')
   })
 
@@ -680,7 +680,7 @@ describe('selectSlotPendingSpawnApprovals', () => {
   it('drops the approval once the sub-agent starts running', () => {
     let state = reducer(withSlot, sseSubagentPending({ slot: 'slot-1', id: 'a1', task: 't', approval_id: 'spawn:a1' }))
     expect(selectSlotPendingSpawnApprovals(wrap(state), 'slot-1')).toHaveLength(1)
-    state = reducer(state, sseSubagentSpawn({ slot: 'slot-1', id: 'a1', task: 't', agent: 'kirocrew' }))
+    state = reducer(state, sseSubagentSpawn({ slot: 'slot-1', id: 'a1', task: 't', agent: 'ajcrew' }))
     expect(selectSlotPendingSpawnApprovals(wrap(state), 'slot-1')).toHaveLength(0)
   })
 

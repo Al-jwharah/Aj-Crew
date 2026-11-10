@@ -28,9 +28,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps.builtins.mochi import queue_file as qf
-from kiro_crew.apps.builtins.mochi import queue_poller as qp
-from kiro_crew.apps.builtins.mochi.queue_poller import (
+from aj_crew.apps.builtins.mochi import queue_file as qf
+from aj_crew.apps.builtins.mochi import queue_poller as qp
+from aj_crew.apps.builtins.mochi.queue_poller import (
     PLAN_BACKOFF_BASE_MS,
     PLAN_SPAWN_TIMEOUT_MS,
     SPAWN_TIMEOUT_MS,
@@ -39,7 +39,7 @@ from kiro_crew.apps.builtins.mochi.queue_poller import (
     build_missed_notify_prompt,
     build_watch_check_prompt,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 
 class _Clock:

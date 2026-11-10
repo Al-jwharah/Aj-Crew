@@ -3,7 +3,7 @@
 ``bus.subscribe(baseline=True)`` and the eager worker's ``_advance`` read with
 ``cold=False``, so a cell with no warm state and no usable savepoint is never folded on
 the CALLER's thread: it answers "no baseline yet" at once, ONE background prime per cell
-folds it (:mod:`kiro_crew.crew_log.slot_prime`), and its value reaches every subscriber
+folds it (:mod:`aj_crew.crew_log.slot_prime`), and its value reaches every subscriber
 as the next ``FOLD_ADVANCED``.
 
 Real bus, real store, own data home. The seams are a wrapper that COUNTS which thread
@@ -20,10 +20,10 @@ from typing import Any, Callable
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, bus, eager, emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import projection_slot_memo, slot_prime
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, bus, eager, emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import projection_slot_memo, slot_prime
 
 GATEWAY = "gateway"
 SLOT = "dashboard:cold-1"
@@ -37,7 +37,7 @@ JOIN_SECONDS = 30.0
 
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     eager.stop_for_tests()
     crew_log.forget_slot_folds()
     crew_log.forget_session_folds()
@@ -121,7 +121,7 @@ def _finishes_while_held(call: "Callable[[], Any]", holder: _Held) -> Any:
 def _board(units: "tuple[str, ...]" = UNITS, per_unit: int = ENTRIES_PER_UNIT) -> None:
     for unit_id in units:
         handle = CrewLog.create(
-            lg.KIND_SESSION, unit_id, owner="raymond", agent="kirocrew", slot=SLOT
+            lg.KIND_SESSION, unit_id, owner="raymond", agent="ajcrew", slot=SLOT
         )
         for nth in range(per_unit):
             _work(handle, f"{unit_id}-it-{nth}")
@@ -313,7 +313,7 @@ def test_a_subscribe_does_not_wait_for_a_cold_read_on_another_thread(held, strea
 
 def test_a_workers_read_does_not_wait_on_a_stripe_held_by_a_cold_fold():
     """The ``workers`` read's own stripe lock follows the same not-ready rule."""
-    from kiro_crew.crew_log import projection_readers
+    from aj_crew.crew_log import projection_readers
 
     home = str(crew_log.data_home())
     stripe = projection_readers._WORKERS_READ_LOCKS[
@@ -362,13 +362,13 @@ def test_a_unit_removal_waits_for_a_running_prime(held):
 
 def test_a_one_shot_field_read_waits_for_the_prime_instead_of_reporting_missing(held):
     """``DashboardFeed.wait_for_primes``: a one-shot read gets the primed value."""
-    from kiro_crew.dashboard_feed import DashboardFeed
+    from aj_crew.dashboard_feed import DashboardFeed
 
     _board()
     feed = DashboardFeed(SLOT, "")
     feed._folds = frozenset({"work"})
     with feed._lock:
-        from kiro_crew.dashboard_feed import _Cell
+        from aj_crew.dashboard_feed import _Cell
 
         feed._cells.setdefault("work", _Cell())
     feed._disposers.append(
@@ -428,8 +428,8 @@ def test_a_request_during_the_catch_up_gets_another_publish(held, monkeypatch):
 
 def test_a_package_page_arm_waits_for_the_prime_and_paints_its_value(held):
     """``LivePage.arm`` (first paint and one-shot snapshot) carries the primed value."""
-    from kiro_crew.artifact_store import dashboard_package as dp
-    from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+    from aj_crew.artifact_store import dashboard_package as dp
+    from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
     _board()
     package = dp.validate_package(

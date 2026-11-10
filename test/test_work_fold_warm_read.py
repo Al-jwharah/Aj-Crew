@@ -26,12 +26,12 @@ from typing import Any
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import eager as crew_log_eager
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.work_vocab import WorkBoardView
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import eager as crew_log_eager
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.work_vocab import WorkBoardView
 
 SLOT = "member-fleet-crew"
 UNIT = "acp-fleet-crew"
@@ -53,8 +53,8 @@ def _isolated_home(tmp_path, monkeypatch):
     arrived, which is every fold that is not eager and every process that did not write the
     entry.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     monkeypatch.setattr(crew_log_eager, "note_commit", lambda *a, **k: None)
     crew_log_emit.reset_caches()
     crew_log_eager.stop_for_tests()

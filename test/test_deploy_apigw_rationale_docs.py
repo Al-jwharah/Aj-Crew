@@ -22,7 +22,7 @@ from pathlib import Path
 import yaml
 from yaml_helpers import load_with
 
-_DEPLOY = Path(__file__).parent.parent / "src" / "kiro_crew" / "deploy"
+_DEPLOY = Path(__file__).parent.parent / "src" / "aj_crew" / "deploy"
 _SKILL = _DEPLOY / "skills" / "artifact-deploy"
 
 SKILL_MD = _SKILL / "SKILL.md"
@@ -31,7 +31,7 @@ APIGW_DDB_TEMPLATE = _SKILL / "templates" / "app-apigw-ddb.yaml"
 DEPLOY_BACKEND_SH = _SKILL / "scripts" / "deploy-backend.sh"
 ATTACH_BACKEND_PY = _SKILL / "scripts" / "attach_backend.py"
 DEPLOY_WEB_DOC = (
-    Path(__file__).parent.parent / "src" / "kiro_crew" / "docs" / "deploy-web.md"
+    Path(__file__).parent.parent / "src" / "aj_crew" / "docs" / "deploy-web.md"
 )
 
 #: Every surface that explains why the backend sits behind API Gateway. A new

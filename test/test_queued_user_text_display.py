@@ -18,7 +18,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard.chat import api_chat_slot_queue_cancel
+from aj_crew.dashboard.chat import api_chat_slot_queue_cancel
 
 _SECRET = "AKIAIOSFODNN7EXAMPLE"
 _TYPED = f"use https://docs.example.com/page?key={_SECRET} for this"
@@ -26,7 +26,7 @@ _TYPED = f"use https://docs.example.com/page?key={_SECRET} for this"
 
 @pytest.fixture
 def _patch_sel():
-    with patch("kiro_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
+    with patch("aj_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
         yield
 
 
@@ -48,17 +48,17 @@ def _steer_capable_slot(state, key: str = "test"):
 
 class TestDisplayHelper:
     def test_user_origin_text_is_returned_as_typed(self):
-        from kiro_crew.dashboard.chat_delivery import queued_text_for_display
+        from aj_crew.dashboard.chat_delivery import queued_text_for_display
 
         assert queued_text_for_display(_TYPED, user_origin=True) == _TYPED
 
     def test_any_other_origin_is_redacted(self):
-        from kiro_crew.dashboard.chat_delivery import queued_text_for_display
+        from aj_crew.dashboard.chat_delivery import queued_text_for_display
 
         assert _SECRET not in queued_text_for_display(_TYPED, user_origin=False)
 
     def test_entry_origin_reads_only_the_composer_stamp(self):
-        from kiro_crew.dashboard.chat_delivery import queue_entry_is_user_origin
+        from aj_crew.dashboard.chat_delivery import queue_entry_is_user_origin
 
         assert queue_entry_is_user_origin({"_directive_user_origin": True}) is True
         assert queue_entry_is_user_origin({"_directive_channel_origin": True}) is False
@@ -85,7 +85,7 @@ class TestDisplayHelper:
 
 class TestQueueEgress:
     def test_queue_entry_view_follows_the_entry_origin(self):
-        from kiro_crew.dashboard.chat_delivery import queue_entry_view
+        from aj_crew.dashboard.chat_delivery import queue_entry_view
 
         mine = queue_entry_view({"id": "q1", "content": _TYPED, "_directive_user_origin": True})
         peer = queue_entry_view({"id": "q2", "content": _TYPED})
@@ -94,14 +94,14 @@ class TestQueueEgress:
 
     @pytest.mark.parametrize("user_origin", [True, False])
     def test_queue_push_follows_the_caller_origin(self, user_origin, tmp_path):
-        from kiro_crew.dashboard.chat_delivery import queue_for_next_turn
+        from aj_crew.dashboard.chat_delivery import queue_for_next_turn
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("chat-1")
         state.broadcast_ws = MagicMock()
         with (
-            patch("kiro_crew.dashboard.session_control.containment_meta", return_value={}),
-            patch("kiro_crew.dashboard.chat_delivery.start_queue_persist"),
+            patch("aj_crew.dashboard.session_control.containment_meta", return_value={}),
+            patch("aj_crew.dashboard.chat_delivery.start_queue_persist"),
         ):
             queue_for_next_turn(state, slot, _TYPED, directive_user_origin=user_origin)
         (frame,) = _frames(state, "queue_push")
@@ -116,7 +116,7 @@ class TestQueueEgress:
     async def test_cancel_restores_the_users_own_text(self, tmp_path, monkeypatch, _patch_sel):
         """The cancel frame is what the composer is refilled from, so a redacted
         copy would replace the link the user typed with a placeholder."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("test")
@@ -168,9 +168,9 @@ class TestQueueEgress:
         human pasted while the slot was busy reaches the model, not a placeholder.
         The ``queue_pop`` frame the client rebuilds the row from carries the same
         text, so card and delivery agree."""
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("test")
@@ -194,9 +194,9 @@ class TestQueueEgress:
         """A peer's queued send (no composer stamp) is not the reader's own
         words, so the drain redacts its row, its turn input and its pop frame --
         exactly as before, so the fix widens nothing beyond the human's own text."""
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("test")
@@ -217,9 +217,9 @@ class TestQueueEgress:
         """A linked-channel message carries the user stamp TOGETHER with the
         channel stamp; its author is not the dashboard's reader, so the whole
         drain (input, row, frame) keeps the redaction."""
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("test")
@@ -239,7 +239,7 @@ class TestSteerEgress:
     async def test_composer_steer_row_and_push_are_as_typed(
         self, tmp_path, monkeypatch, _patch_sel
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _steer_capable_slot(state)
@@ -259,9 +259,9 @@ class TestSteerEgress:
     async def test_peer_steer_row_and_push_stay_redacted(self, tmp_path, monkeypatch):
         """``session_send`` steers another session with ``user_origin=False``: that
         text has no human author, so its row and card keep the redaction."""
-        from kiro_crew.dashboard.chat_delivery import STEER_STEERED, steer_into_running_turn
+        from aj_crew.dashboard.chat_delivery import STEER_STEERED, steer_into_running_turn
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _steer_capable_slot(state)
@@ -276,7 +276,7 @@ class TestSteerEgress:
     def test_state_patch_finds_a_row_stored_as_typed(self, tmp_path):
         """The lifecycle patch resolves a steer's row by content; a composer row
         now holds the text as typed, so the lookup must still find it."""
-        from kiro_crew.dashboard.chat_delivery import STEER_STATE_WRITTEN, find_written_steer_row
+        from aj_crew.dashboard.chat_delivery import STEER_STATE_WRITTEN, find_written_steer_row
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("chat-1")
@@ -299,7 +299,7 @@ class TestEditReDispatchEgress:
     async def test_rewind_delivers_the_edit_as_typed(self, tmp_path):
         """The composer's rewind edit reaches the model and its row as typed --
         redacting it would strip a link the human kept in the edited message."""
-        from kiro_crew.dashboard import chat_rewind
+        from aj_crew.dashboard import chat_rewind
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("src")
@@ -329,7 +329,7 @@ class TestEditReDispatchEgress:
         """Rewind and edit-resend both stamp ``user_origin=not bool(request_app)``:
         an app-driven edit is not the reader's own words, so that branch redacts
         the row and the turn input, matching the composer/idle-send boundary."""
-        from kiro_crew.dashboard.chat_delivery import queued_text_for_display
+        from aj_crew.dashboard.chat_delivery import queued_text_for_display
 
         request_app = "spec-builder"
         assert _SECRET not in queued_text_for_display(_TYPED, user_origin=not bool(request_app))
@@ -339,10 +339,10 @@ class TestEditReDispatchEgress:
     async def test_edit_resend_delivers_the_edit_as_typed(self, tmp_path, monkeypatch, _patch_sel):
         """Edit-resend truncates then re-runs the edited user message; the
         composer's edit is delivered as typed into both row and turn input."""
-        from kiro_crew.dashboard import chat_regenerate
-        from kiro_crew.dashboard.chat_regenerate import api_chat_slot_edit_resend
+        from aj_crew.dashboard import chat_regenerate
+        from aj_crew.dashboard.chat_regenerate import api_chat_slot_edit_resend
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("src")
         slot.append("user", "first question", "msg msg-u", ts="2026-05-21T16:00:00Z")
@@ -360,7 +360,7 @@ class TestEditReDispatchEgress:
         with (
             patch.object(chat_regenerate, "_run_chat", side_effect=_capture_run),
             patch(
-                "kiro_crew.dashboard.chat_regenerate.reject_if_kiro_unverified",
+                "aj_crew.dashboard.chat_regenerate.reject_if_kiro_unverified",
                 new=AsyncMock(return_value=None),
             ),
         ):
@@ -378,7 +378,7 @@ class TestEditReDispatchEgress:
             assert slot.messages[0]["content"] == _TYPED
             assert captured.get("input") == _TYPED
         else:
-            from kiro_crew.dashboard.chat_delivery import queued_text_for_display
+            from aj_crew.dashboard.chat_delivery import queued_text_for_display
 
             assert queued_text_for_display(_TYPED, user_origin=True) == _TYPED
         if slot.task:

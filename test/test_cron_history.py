@@ -14,8 +14,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import cron_history as cron_history_mod
-from kiro_crew.cron_history import _SUMMARY_CAP, CronHistoryStore, CronRunRecord
+from aj_crew import cron_history as cron_history_mod
+from aj_crew.cron_history import _SUMMARY_CAP, CronHistoryStore, CronRunRecord
 
 # ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -347,7 +347,7 @@ def test_record_from_dict_ignores_extra_keys() -> None:
 
 @pytest.mark.asyncio
 async def test_run_job_returns_false_when_already_executing() -> None:
-    from kiro_crew.cron import CronJob, CronService, RunClaims, _RunClaim
+    from aj_crew.cron import CronJob, CronService, RunClaims, _RunClaim
 
     svc = CronService.__new__(CronService)
     svc._jobs = [CronJob(id="j1", name="test", schedule="* * * * *", message="hi")]
@@ -363,7 +363,7 @@ async def test_run_job_returns_false_when_already_executing() -> None:
 
 @pytest.mark.asyncio
 async def test_run_job_stores_manual_trigger_meta() -> None:
-    from kiro_crew.cron import CronJob, CronService, RunClaims
+    from aj_crew.cron import CronJob, CronService, RunClaims
 
     svc = CronService.__new__(CronService)
     svc._jobs = [CronJob(id="j1", name="test", schedule="* * * * *", message="hi")]
@@ -407,7 +407,7 @@ def _read_history_rows(tmp_path: Path, job_id: str) -> list[dict]:
 
 
 def _freshness_job(**kw):
-    from kiro_crew.cron import CronJob, CronSchedule
+    from aj_crew.cron import CronJob, CronSchedule
 
     return CronJob(
         id=kw.pop("id", "j1"),
@@ -423,7 +423,7 @@ class TestRunResultFreshness:
         """A timed-out run must record its own error, not the prior run's summary."""
         import asyncio
 
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         async def _hang(*args, **kwargs):
             await asyncio.sleep(9999)
@@ -433,7 +433,7 @@ class TestRunResultFreshness:
         svc._jobs = [job]
         svc._save()
         with patch.object(svc, "_execute", side_effect=_hang), patch(
-            "kiro_crew.cron._JOB_TIMEOUT_SECS", 0.05
+            "aj_crew.cron._JOB_TIMEOUT_SECS", 0.05
         ):
             asyncio.run(svc._run_job_isolated(job, svc._claim_run(job.id, "scheduled")))
 
@@ -451,7 +451,7 @@ class TestRunResultFreshness:
         """None snapshot branch: first-ever run timing out records its error."""
         import asyncio
 
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         async def _hang(*args, **kwargs):
             await asyncio.sleep(9999)
@@ -462,7 +462,7 @@ class TestRunResultFreshness:
         svc._jobs = [job]
         svc._save()
         with patch.object(svc, "_execute", side_effect=_hang), patch(
-            "kiro_crew.cron._JOB_TIMEOUT_SECS", 0.05
+            "aj_crew.cron._JOB_TIMEOUT_SECS", 0.05
         ):
             asyncio.run(svc._run_job_isolated(job, svc._claim_run(job.id, "scheduled")))
 
@@ -475,7 +475,7 @@ class TestRunResultFreshness:
         """A run that produces a new result records it as summary and trace."""
         import asyncio
 
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         async def _produce(job, meta=None):
             job.set_run_result("new run output")
@@ -505,7 +505,7 @@ class TestRunResultFreshness:
         """
         import asyncio
 
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         async def _script_ok(job, meta=None):
             job.set_run_result("ok")  # interned literal, same object every run
@@ -533,7 +533,7 @@ class TestRunResultFreshness:
         """
         import asyncio
 
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         async def _one_char(job, meta=None):
             job.set_run_result("y")
@@ -559,7 +559,7 @@ class TestRunResultFreshness:
         with empty output) must not surface the previous run's result."""
         import asyncio
 
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         async def _no_output(job, meta=None):
             job.last_status = "ok"
@@ -584,7 +584,7 @@ class TestRunResultFreshness:
         object must not leak run 1's freshness marker into run 2's history."""
         import asyncio
 
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         async def _produce(job, meta=None):
             job.set_run_result("run one output")
@@ -721,14 +721,14 @@ def test_sandbox_masked_dir_logs_debug_not_warning(
     Under an agent's sandbox the healthy history dir answers EPERM to stat,
     and mkdir answers EEXIST or EPERM depending on the route. History stays
     off in that process because the gateway records runs, so a WARNING on
-    every ``kirocrew cron`` CLI run would only be misread as a fault.
+    every ``ajcrew cron`` CLI run would only be misread as a fault.
     """
     (tmp_path / "cron-history").mkdir()
-    caplog.set_level(logging.DEBUG, logger="kiro_crew.cron_history")
+    caplog.set_level(logging.DEBUG, logger="aj_crew.cron_history")
     with _confined(True), mkdir_shape(), _deny_leaf("stat", "scandir", "listdir"):
         store = CronHistoryStore(base_dir=tmp_path)
     assert store.enabled is False
-    ours = [r for r in caplog.records if r.name == "kiro_crew.cron_history"]
+    ours = [r for r in caplog.records if r.name == "aj_crew.cron_history"]
     assert not [r for r in ours if r.levelno >= logging.WARNING]
     assert any(
         r.levelno == logging.DEBUG and "not available in this sandbox" in r.getMessage()
@@ -741,14 +741,14 @@ def test_regular_file_at_history_path_still_warns(
 ) -> None:
     """A regular file where the dir should be is a real fault: keep the WARNING."""
     (tmp_path / "cron-history").write_text("not a directory")
-    caplog.set_level(logging.DEBUG, logger="kiro_crew.cron_history")
+    caplog.set_level(logging.DEBUG, logger="aj_crew.cron_history")
     with _confined(True):
         store = CronHistoryStore(base_dir=tmp_path)
     assert store.enabled is False
     assert any(
         r.levelno == logging.WARNING and "cron history disabled" in r.getMessage()
         for r in caplog.records
-        if r.name == "kiro_crew.cron_history"
+        if r.name == "aj_crew.cron_history"
     )
 
 
@@ -756,14 +756,14 @@ def test_denied_missing_dir_still_warns(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Stat denied on a name the parent does not list is not a mask: warn."""
-    caplog.set_level(logging.DEBUG, logger="kiro_crew.cron_history")
+    caplog.set_level(logging.DEBUG, logger="aj_crew.cron_history")
     with _confined(True), _deny_leaf("mkdir", "stat", "scandir", "listdir"):
         store = CronHistoryStore(base_dir=tmp_path)
     assert store.enabled is False
     assert any(
         r.levelno == logging.WARNING and "cron history disabled" in r.getMessage()
         for r in caplog.records
-        if r.name == "kiro_crew.cron_history"
+        if r.name == "aj_crew.cron_history"
     )
 
 
@@ -777,43 +777,43 @@ def test_unconfined_process_with_mask_shape_still_warns(
     agent confinement that must stay a WARNING.
     """
     (tmp_path / "cron-history").mkdir()
-    caplog.set_level(logging.DEBUG, logger="kiro_crew.cron_history")
+    caplog.set_level(logging.DEBUG, logger="aj_crew.cron_history")
     with _confined(False), _deny_leaf("mkdir", "stat", "scandir", "listdir"):
         store = CronHistoryStore(base_dir=tmp_path)
     assert store.enabled is False
     assert any(
         r.levelno == logging.WARNING and "cron history disabled" in r.getMessage()
         for r in caplog.records
-        if r.name == "kiro_crew.cron_history"
+        if r.name == "aj_crew.cron_history"
     )
 
 
 def test_sandbox_confined_reads_the_launch_mark_and_the_probe() -> None:
     """``cli.main`` pops the env marker, so the noted launch mark must count."""
-    from kiro_crew import sandbox_launch_mark
+    from aj_crew import sandbox_launch_mark
 
     with (
         patch.object(sandbox_launch_mark, "launched_in_sandbox", return_value=True),
-        patch("kiro_crew.sandbox_unavailable.agent_confinement_evidence", return_value=None),
+        patch("aj_crew.sandbox_unavailable.agent_confinement_evidence", return_value=None),
     ):
         assert cron_history_mod._sandbox_confined() is True
     with (
         patch.object(sandbox_launch_mark, "launched_in_sandbox", return_value=False),
         patch(
-            "kiro_crew.sandbox_unavailable.agent_confinement_evidence",
+            "aj_crew.sandbox_unavailable.agent_confinement_evidence",
             return_value="cgroup scope",
         ),
     ):
         assert cron_history_mod._sandbox_confined() is True
     with (
         patch.object(sandbox_launch_mark, "launched_in_sandbox", return_value=False),
-        patch("kiro_crew.sandbox_unavailable.agent_confinement_evidence", return_value=None),
+        patch("aj_crew.sandbox_unavailable.agent_confinement_evidence", return_value=None),
     ):
         assert cron_history_mod._sandbox_confined() is False
     with (
         patch.object(sandbox_launch_mark, "launched_in_sandbox", return_value=False),
         patch(
-            "kiro_crew.sandbox_unavailable.agent_confinement_evidence",
+            "aj_crew.sandbox_unavailable.agent_confinement_evidence",
             side_effect=RuntimeError("probe broke"),
         ),
     ):
@@ -904,9 +904,9 @@ def test_cron_service_survives_unusable_history_dir(tmp_path: Path) -> None:
     This is the reported blast radius: the store is built in
     ``CronService.__init__``, so a throw there takes the whole cron subsystem
     down — gateway scheduler, MCP ``cron_add``/``cron_list``/``cron_trigger``
-    and ``kirocrew cron list`` alike, none of which need history to work.
+    and ``ajcrew cron list`` alike, none of which need history to work.
     """
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     with _deny_leaf("mkdir", "stat", "scandir", "listdir", "open"):
         svc = CronService(base_dir=tmp_path)
@@ -921,7 +921,7 @@ def test_cron_service_start_survives_stat_denied_history(tmp_path: Path) -> None
     wrongly reports itself enabled turns this into a fatal gateway-startup
     error even though the constructor survived.
     """
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     async def _boot() -> None:
         with _deny_leaf("mkdir", "stat", "scandir", "listdir"):
@@ -944,7 +944,7 @@ def test_create_factory_prepares_history_off_the_event_loop(tmp_path: Path) -> N
     """
     import threading
 
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     async def _boot() -> None:
         loop_thread = threading.get_ident()
@@ -1123,7 +1123,7 @@ def test_lock_closes_fd_when_acquire_raises(store: CronHistoryStore) -> None:
     close, so ``_lock`` closes it itself before re-raising. A leaked handle on
     Windows blocks deleting the lock file or the history folder.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     store._dir.mkdir(parents=True, exist_ok=True)
 
@@ -1155,7 +1155,7 @@ def test_lock_closes_fd_when_acquire_raises(store: CronHistoryStore) -> None:
 
 def test_lock_returns_open_fd_on_success(store: CronHistoryStore) -> None:
     """The normal acquire path still hands back a usable, open fd."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     store._dir.mkdir(parents=True, exist_ok=True)
     fd = store._lock()

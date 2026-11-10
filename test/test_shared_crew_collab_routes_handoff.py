@@ -15,9 +15,9 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.handlers.sessions import api_approval_resolve
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.dashboard.handlers.sessions import api_approval_resolve
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.shared_crew.contracts import (
     ACTOR_REQUEST_KEY,
     ActorContext,
     DisplaySnapshot,
@@ -27,7 +27,7 @@ from kiro_crew.shared_crew.contracts import (
     Transport,
     principal_id_for,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 
 def _person(login: str, name: str) -> Principal:
@@ -49,12 +49,12 @@ CAROL = _person("carol@example.test", "Carol")
 
 @pytest.fixture(autouse=True)
 def _hermetic_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
 
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.push_slots_update = MagicMock()

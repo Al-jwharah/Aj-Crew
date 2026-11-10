@@ -42,7 +42,7 @@ const columns = [
 
 const now = Math.floor(Date.now() / 1000)
 const mkSlot = (key, title, slotTags) => ({
-  key, title, running: false, last_message: '', messages: 2, agent: 'kirocrew',
+  key, title, running: false, last_message: '', messages: 2, agent: 'ajcrew',
   memory_mode: 'persistent', project: '', folder_id: '', modified: now,
   tags: slotTags, source_links: [], source_links_total: 0,
 })

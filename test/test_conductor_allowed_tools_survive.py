@@ -3,8 +3,8 @@
 The conductor installers run on every ``rebuild_agent_config`` -- every gateway start
 -- and an installer that rebuilt ``allowedTools`` from its grant tuple and wrote the
 file without reading it would leave an entry the user approved on
-``kirocrew-conductor.json`` (or the pipeline, security or ledger-alias spec) gone at
-the next start, silently, while ``toolsSettings`` carried over. ``kirocrew.json``
+``ajcrew-conductor.json`` (or the pipeline, security or ledger-alias spec) gone at
+the next start, silently, while ``toolsSettings`` carried over. ``ajcrew.json``
 keeps the user's list on an existing install; these tests pin that the four conductor
 specs do too, the way that list does: the user's entries are kept, the shipped grants
 are re-added, the governance ceiling still removes what it forbids, and nothing is
@@ -16,7 +16,7 @@ entry it names is Crew's and is kept exactly when this release ships it; an entr
 does not name is the user's and survives. Without it an add-only merge would keep
 every grant an earlier release shipped and a later one deliberately stopped shipping
 -- the goal conductor's core grant is named verbs where an earlier release's was a
-bare ``@kirocrew-core``, and that narrowing has to reach existing installs. The one
+bare ``@ajcrew-core``, and that narrowing has to reach existing installs. The one
 cost is pinned too: a grant Crew once shipped and has since retired, hand-re-added by
 a user, reads as Crew's and goes, loudly.
 
@@ -31,7 +31,7 @@ bytes. A read that may succeed next time leaves the user's file exactly where it
 -- and the installer says it wrote nothing, as it does when its write raised, so a
 moved ceiling stays pending instead of being marked projected onto a list that was
 never rewritten. That hold is reported apart from the shared-home guard's refusal:
-``kirocrew.json`` was written, and the dashboard's default-model applier must not
+``ajcrew.json`` was written, and the dashboard's default-model applier must not
 read a held conductor spec as a change that failed to land.
 """
 
@@ -47,34 +47,34 @@ from typing import Any
 import pytest
 
 from conftest import requires_symlinks
-from kiro_crew import agent, agent_discovery
-from kiro_crew.agent_files import (
+from aj_crew import agent, agent_discovery
+from aj_crew.agent_files import (
     CONDUCTOR_AGENT_FILENAME,
     LEDGER_CONDUCTOR_AGENT_FILENAME,
     PIPELINE_CONDUCTOR_AGENT_FILENAME,
     SECURITY_CONDUCTOR_AGENT_FILENAME,
 )
-from kiro_crew.agent_materialization import conductor_agents
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
-from kiro_crew.platform import governance
+from aj_crew.agent_materialization import conductor_agents
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.platform import governance
 
 #: (spec name, filename, installer) for the three installers; the ledger alias shares
 #: ``_conductor_spec`` with the goal conductor and gets its own test below.
 _CONDUCTORS = [
     pytest.param(
-        "kirocrew-conductor",
+        "ajcrew-conductor",
         CONDUCTOR_AGENT_FILENAME,
         "_install_conductor_agent",
         id="conductor",
     ),
     pytest.param(
-        "kirocrew-pipeline-conductor",
+        "ajcrew-pipeline-conductor",
         PIPELINE_CONDUCTOR_AGENT_FILENAME,
         "_install_pipeline_conductor_agent",
         id="pipeline",
     ),
     pytest.param(
-        "kirocrew-security-conductor",
+        "ajcrew-security-conductor",
         SECURITY_CONDUCTOR_AGENT_FILENAME,
         "_install_security_conductor_agent",
         id="security",
@@ -88,14 +88,14 @@ _CONDUCTORS = [
 _USER_GRANT = "web_fetch"
 
 #: A grant an earlier release shipped on the spec and this one does not -- the bare
-#: ``@kirocrew-core`` on the goal conductor. The pipeline and security conductors
+#: ``@ajcrew-core`` on the goal conductor. The pipeline and security conductors
 #: have retired nothing (the pipeline conductor's one-release work-ledger verbs are
 #: shipped again as the conductor base); on them an earlier release's file holds
 #: nothing the history can claim.
 _RETIRED_GRANT: dict[str, str | None] = {
-    "kirocrew-conductor": "@kirocrew-core",
-    "kirocrew-pipeline-conductor": None,
-    "kirocrew-security-conductor": None,
+    "ajcrew-conductor": "@ajcrew-core",
+    "ajcrew-pipeline-conductor": None,
+    "ajcrew-security-conductor": None,
 }
 
 #: An entry every regeneration drops from any conductor spec: a wildcard, which the
@@ -111,19 +111,19 @@ _NEVER_SHIPPED_HERE = [
     pytest.param(
         "_install_conductor_agent",
         CONDUCTOR_AGENT_FILENAME,
-        "@kirocrew-work/work_report",
+        "@ajcrew-work/work_report",
         id="conductor-work_report",
     ),
     pytest.param(
         "_install_pipeline_conductor_agent",
         PIPELINE_CONDUCTOR_AGENT_FILENAME,
-        "@kirocrew-work/work_report",
+        "@ajcrew-work/work_report",
         id="pipeline-work_report",
     ),
     pytest.param(
         "_install_pipeline_conductor_agent",
         PIPELINE_CONDUCTOR_AGENT_FILENAME,
-        "@kirocrew-work/work_brief",
+        "@ajcrew-work/work_brief",
         id="pipeline-work_brief",
     ),
 ]
@@ -135,20 +135,20 @@ _NEVER_SHIPPED_HERE = [
 #: The folder verbs retired from every conductor when dispatchers stopped managing
 #: folders (rfc-crewmate-workers-under-the-crewmate.md, Design 6).
 _FOLDER_TREE_AND_CREATE = frozenset(
-    {"@kirocrew-dashboard/chat_folder_tree", "@kirocrew-dashboard/chat_folder_create"}
+    {"@ajcrew-dashboard/chat_folder_tree", "@ajcrew-dashboard/chat_folder_create"}
 )
-_FOLDER_FILE_SELF = frozenset({"@kirocrew-dashboard/chat_folder_file_self"})
+_FOLDER_FILE_SELF = frozenset({"@ajcrew-dashboard/chat_folder_file_self"})
 #: The patrol budget check, retired once a work-ledger patrol had no bound to
 #: check (rfc-permanent-patrol.md).
-_PATROL_BUDGET = frozenset({"@kirocrew-work/patrol_budget"})
+_PATROL_BUDGET = frozenset({"@ajcrew-work/patrol_budget"})
 _VERIFIED_RETIREMENTS: dict[str, frozenset[str]] = {
-    "kirocrew-conductor": frozenset({"@kirocrew-core"})
+    "ajcrew-conductor": frozenset({"@ajcrew-core"})
     | _FOLDER_TREE_AND_CREATE
     | _FOLDER_FILE_SELF
     | _PATROL_BUDGET,
-    "kirocrew-ledger-conductor": _FOLDER_TREE_AND_CREATE | _FOLDER_FILE_SELF | _PATROL_BUDGET,
-    "kirocrew-pipeline-conductor": _FOLDER_TREE_AND_CREATE,
-    "kirocrew-security-conductor": _FOLDER_TREE_AND_CREATE | _FOLDER_FILE_SELF,
+    "ajcrew-ledger-conductor": _FOLDER_TREE_AND_CREATE | _FOLDER_FILE_SELF | _PATROL_BUDGET,
+    "ajcrew-pipeline-conductor": _FOLDER_TREE_AND_CREATE,
+    "ajcrew-security-conductor": _FOLDER_TREE_AND_CREATE | _FOLDER_FILE_SELF,
 }
 
 
@@ -157,23 +157,23 @@ def agents_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """A private agents directory, an ungoverned ceiling, and an accepting kiro-cli."""
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version", lambda: SPEC_PERMISSIONS_MIN_VERSION
+        "aj_crew.kiro_cli.installed_kiro_cli_version", lambda: SPEC_PERMISSIONS_MIN_VERSION
     )
     monkeypatch.setattr(
         agent,
         "build_agent_config",
         lambda: {
-            "name": "kirocrew",
+            "name": "ajcrew",
             "prompt": "file://x",
             "mcpServers": {
-                "kirocrew-core": {"command": "/resolved/kirocrew", "args": ["mcp-core"]},
+                "ajcrew-core": {"command": "/resolved/ajcrew", "args": ["mcp-core"]},
             },
-            "tools": ["fs_write", "@kirocrew-core"],
-            "allowedTools": ["@kirocrew-core"],
+            "tools": ["fs_write", "@ajcrew-core"],
+            "allowedTools": ["@ajcrew-core"],
         },
     )
     monkeypatch.setattr(
-        agent, "_kirocrew_mcp_invocation", lambda sub: ("/resolved/kirocrew", [sub])
+        agent, "_ajcrew_mcp_invocation", lambda sub: ("/resolved/ajcrew", [sub])
     )
     # An ungoverned host as the gate sees it: no ceiling, the floor still on.
     monkeypatch.setattr(agent, "_may_auto_approve", lambda ref: governance.may_skip_gate(ref, None))
@@ -281,7 +281,7 @@ class TestUserGrantsSurviveRegeneration:
     def test_a_shipped_grant_the_user_removed_comes_back(
         self, agents_dir: Path, name: str, filename: str, installer: str
     ) -> None:
-        """The list is the shipped grants PLUS the user's, like ``kirocrew.json``'s
+        """The list is the shipped grants PLUS the user's, like ``ajcrew.json``'s
         managed refs: narrowing a conductor is the governance ceiling's job."""
         install = getattr(agent, installer)
         install()
@@ -329,7 +329,7 @@ class TestUserGrantsSurviveRegeneration:
             pytest.param("session_*", id="mcp-verb-glob"),
             pytest.param("*_send", id="mcp-verb-suffix-glob"),
             pytest.param("@*", id="every-server"),
-            pytest.param("@kirocrew-*", id="server-glob"),
+            pytest.param("@ajcrew-*", id="server-glob"),
             pytest.param("@other-server/do_*", id="server-scoped-verb-glob"),
         ],
     )
@@ -393,8 +393,8 @@ class TestUserGrantsSurviveRegeneration:
         pattern: str,
     ) -> None:
         """The case the expansion over builtin names could not see: a ceiling whose
-        ``mcp`` rules withhold ``@kirocrew-dashboard/session_send`` by name withholds
-        every exact ``@kirocrew-dashboard`` grant this rebuild offers -- and a kept
+        ``mcp`` rules withhold ``@ajcrew-dashboard/session_send`` by name withholds
+        every exact ``@ajcrew-dashboard`` grant this rebuild offers -- and a kept
         ``session_*``, ``*_send`` or ``@*`` would hand the same verb back, auto-approved
         past that ceiling, because the pattern matches no builtin, names no server and
         so passes the gate as an unmapped name. The wildcard goes; the exact grants
@@ -408,7 +408,7 @@ class TestUserGrantsSurviveRegeneration:
         monkeypatch.setattr(
             agent,
             "_may_auto_approve",
-            lambda ref: not ref.startswith("@kirocrew-dashboard")
+            lambda ref: not ref.startswith("@ajcrew-dashboard")
             and governance.may_skip_gate(ref, None),
         )
 
@@ -417,7 +417,7 @@ class TestUserGrantsSurviveRegeneration:
 
         allowed = _read(agents_dir, filename)["allowedTools"]
         assert pattern not in allowed, "a wildcard was carried past the MCP ceiling"
-        assert not [ref for ref in allowed if ref.startswith("@kirocrew-dashboard")]
+        assert not [ref for ref in allowed if ref.startswith("@ajcrew-dashboard")]
         assert _USER_GRANT in allowed and "session" in allowed
         line = _one_line(caplog, filename)
         assert pattern in line and "name tools exactly" in line
@@ -463,7 +463,7 @@ class TestUserGrantsSurviveRegeneration:
         assert not hasattr(conductor_agents, "_GOVERNED_BUILTINS")
         assert not hasattr(conductor_agents, "_builtins_a_wildcard_may_not_skip_for")
         assert conductor_agents._is_wildcard("session_*") is True
-        assert conductor_agents._is_wildcard("@kirocrew-dashboard/session_send") is False
+        assert conductor_agents._is_wildcard("@ajcrew-dashboard/session_send") is False
 
     def test_a_retired_grant_goes_and_the_users_entry_stays(
         self,
@@ -475,7 +475,7 @@ class TestUserGrantsSurviveRegeneration:
         installer: str,
     ) -> None:
         """The narrowing shape: a spec written by an earlier release carries a grant
-        that release shipped and this one does not -- the bare ``@kirocrew-core``
+        that release shipped and this one does not -- the bare ``@ajcrew-core``
         where this release ships named verbs -- beside an entry the user added. The
         history of every grant any release shipped tells them apart: the retired
         grant is Crew's and goes, named and audited as a revoked auto-approval, and
@@ -568,7 +568,7 @@ class TestUserGrantsSurviveRegeneration:
         spec that never shipped it is the user's and stays."""
         install = getattr(agent, installer)
         install()
-        once_shipped = _RETIRED_GRANT[name] or "@kirocrew-core"
+        once_shipped = _RETIRED_GRANT[name] or "@ajcrew-core"
         assert once_shipped not in _read(agents_dir, filename)["allowedTools"]
         _edit_allowed(agents_dir, filename, lambda lst: lst.append(once_shipped))
 
@@ -651,8 +651,8 @@ class TestUserGrantsSurviveRegeneration:
     def test_a_clean_install_resets_the_list(
         self, agents_dir: Path, name: str, filename: str, installer: str
     ) -> None:
-        """``kirocrew setup --agent-only --clean`` is the explicit reset, and it resets
-        the conductor specs as it resets ``kirocrew.json``."""
+        """``ajcrew setup --agent-only --clean`` is the explicit reset, and it resets
+        the conductor specs as it resets ``ajcrew.json``."""
         install = getattr(agent, installer)
         install()
         shipped = _read(agents_dir, filename)["allowedTools"]
@@ -680,13 +680,13 @@ class TestUserGrantsSurviveRegeneration:
         so an approval that survives on kiro-cli survives on KAS too."""
         install = getattr(agent, installer)
         install()
-        user_grant = "@kirocrew-core/knowledge_list_sources"
+        user_grant = "@ajcrew-core/knowledge_list_sources"
         assert user_grant not in _read(agents_dir, filename)["allowedTools"]
         _edit_allowed(agents_dir, filename, lambda lst: lst.append(user_grant))
         install()
         rules = _read(agents_dir, filename)["permissions"]["rules"]
         matches = [m for rule in rules for m in (rule.get("match") or [])]
-        assert "kirocrew-core/knowledge_list_sources" in matches
+        assert "ajcrew-core/knowledge_list_sources" in matches
 
     def test_removing_a_shipped_grant_by_hand_brings_it_back_and_keeps_the_users_entry(
         self,
@@ -773,7 +773,7 @@ class TestUserGrantsSurviveRegeneration:
 
         with caplog.at_level(logging.WARNING), monkeypatch.context() as scoped:
             if breakage == "cap":
-                scoped.setattr("kiro_crew.hooks.MAX_FILE_BYTES", 64)
+                scoped.setattr("aj_crew.hooks.MAX_FILE_BYTES", 64)
             wrote = install()
 
         data = _read(agents_dir, filename)
@@ -1002,7 +1002,7 @@ class TestUserGrantsSurviveRegeneration:
     def test_a_clean_install_replaces_an_unreadable_spec(
         self, agents_dir: Path, name: str, filename: str, installer: str
     ) -> None:
-        """``kirocrew setup --agent-only --clean`` is the documented way out: it reads
+        """``ajcrew setup --agent-only --clean`` is the documented way out: it reads
         nothing, so it rebuilds the broken file."""
         install = getattr(agent, installer)
         install()
@@ -1065,7 +1065,7 @@ class TestLedgerAliasPreservesUnderItsOwnName:
         self, agents_dir: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         shipped = _shipped_tuple(monkeypatch, "_install_ledger_conductor_agent")
-        assert set(shipped) <= conductor_agents._SHIPPED_GRANT_HISTORY["kirocrew-ledger-conductor"]
+        assert set(shipped) <= conductor_agents._SHIPPED_GRANT_HISTORY["ajcrew-ledger-conductor"]
 
 
 class TestTheHistoryClaimsOnlyWhatAReleaseShipped:
@@ -1097,15 +1097,15 @@ class TestTheHistoryClaimsOnlyWhatAReleaseShipped:
     @pytest.mark.parametrize(
         ("name", "installer"),
         [
-            pytest.param("kirocrew-conductor", "_install_conductor_agent", id="conductor"),
+            pytest.param("ajcrew-conductor", "_install_conductor_agent", id="conductor"),
             pytest.param(
-                "kirocrew-ledger-conductor", "_install_ledger_conductor_agent", id="ledger"
+                "ajcrew-ledger-conductor", "_install_ledger_conductor_agent", id="ledger"
             ),
             pytest.param(
-                "kirocrew-pipeline-conductor", "_install_pipeline_conductor_agent", id="pipeline"
+                "ajcrew-pipeline-conductor", "_install_pipeline_conductor_agent", id="pipeline"
             ),
             pytest.param(
-                "kirocrew-security-conductor", "_install_security_conductor_agent", id="security"
+                "ajcrew-security-conductor", "_install_security_conductor_agent", id="security"
             ),
         ],
     )
@@ -1130,7 +1130,7 @@ class TestASpecLeftInPlaceHoldsTheCeilingMemo:
     list the rebuild did not re-derive, so the rebuild must report the hold -- else
     a tightened ceiling would be marked projected onto a list that still carries the
     old grants, and the retry every later poll would otherwise give is lost for the
-    process. The hold is NOT the shared-home guard's refusal: ``kirocrew.json`` was
+    process. The hold is NOT the shared-home guard's refusal: ``ajcrew.json`` was
     written, so ``wrote`` stays ``True`` and the dashboard's default-model applier,
     which raises on ``wrote=False``, does not announce a landed change as failed."""
 
@@ -1143,7 +1143,7 @@ class TestASpecLeftInPlaceHoldsTheCeilingMemo:
         default home is never resolved (conftest's ratchet fails a test that does)."""
         from test_agent_home_isolation import _durable_checkout, _pretend_target_is_shared
 
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         home = tmp_path / "home"
         home.mkdir()
@@ -1154,13 +1154,13 @@ class TestASpecLeftInPlaceHoldsTheCeilingMemo:
         own_home = tmp_path / "relocated-home"
         own_home.mkdir()
         monkeypatch.delenv("KIRO_HOME", raising=False)
-        monkeypatch.delenv("KIROCREW_POD", raising=False)
-        monkeypatch.setenv("KIROCREW_HOME", str(own_home))
+        monkeypatch.delenv("AJCREW_POD", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(own_home))
         _durable_checkout(monkeypatch, agent)
         shared = tmp_path / "agents"
         _pretend_target_is_shared(monkeypatch, agent, shared)
         # The real rebuild below writes the hold memo; restored after the test.
-        from kiro_crew.agent_materialization import fork_refresh
+        from aj_crew.agent_materialization import fork_refresh
 
         monkeypatch.setattr(agent, "_conductor_spec_held", False, raising=False)
         monkeypatch.setattr(agent, "_conductor_installers_held", False, raising=False)
@@ -1243,7 +1243,7 @@ class TestASpecLeftInPlaceHoldsTheCeilingMemo:
             pending = agent._projected_ceiling_generation
 
         assert security.read_bytes() == before
-        assert wrote is True, "kirocrew.json was written; this is not a refusal"
+        assert wrote is True, "ajcrew.json was written; this is not a refusal"
         assert held == [True], "an installer that raised must hold the ceiling memo"
         assert pending is None, "the memo advanced over a spec that was never rewritten"
         warnings = [r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING]
@@ -1252,14 +1252,14 @@ class TestASpecLeftInPlaceHoldsTheCeilingMemo:
     def test_a_bound_shared_template_over_the_ceiling_is_left_as_written_and_holds_nothing(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        """A crew-bound shared template carries a grant the ceiling now denies. Kiro Crew
+        """A crew-bound shared template carries a grant the ceiling now denies. Aj Crew
         does not own it, so the real rebuild never writes it and holds nothing for it,
         and the real hook advances the memo: the ceiling holds at a kiro-cli start on it
         instead (``fork_refresh.require_shared_template_within_ceiling``)."""
         from types import SimpleNamespace
 
-        from kiro_crew.agent_materialization import auto_approve, fork_refresh
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.agent_materialization import auto_approve, fork_refresh
+        from aj_crew.config.loader import AjCrewConfig
 
         shared = self._shared_home_rig(monkeypatch, tmp_path)
         agent.rebuild_agent_config()
@@ -1271,7 +1271,7 @@ class TestASpecLeftInPlaceHoldsTheCeilingMemo:
         monkeypatch.setattr(fork_refresh, "_shared_template_held", False)
         bindings = {"reviewer-crew": SimpleNamespace(kiro_agent="reviewer")}
         monkeypatch.setattr(
-            KiroCrewConfig, "load", classmethod(lambda cls: SimpleNamespace(agents=bindings))
+            AjCrewConfig, "load", classmethod(lambda cls: SimpleNamespace(agents=bindings))
         )
         real_gate = auto_approve._may_auto_approve
         monkeypatch.setattr(
@@ -1285,7 +1285,7 @@ class TestASpecLeftInPlaceHoldsTheCeilingMemo:
 
         assert template.read_bytes() == before
         assert wrote is True
-        assert held == [False], "a spec Kiro Crew does not own holds nothing"
+        assert held == [False], "a spec Aj Crew does not own holds nothing"
         assert agent._projected_ceiling_generation is not None
         with pytest.raises(fork_refresh.SharedTemplateOverCeiling):
             fork_refresh.require_shared_template_within_ceiling("reviewer", "")
@@ -1296,7 +1296,7 @@ class TestASpecLeftInPlaceHoldsTheCeilingMemo:
         """A ``config.local.json`` that does not parse may hide a crew binding, so the
         pass holds. Its bytes are what they are until someone saves the file, so a poll
         under the same answer runs no rebuild; the poll after the repair does, and lands."""
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         shared = self._shared_home_rig(monkeypatch, tmp_path)
         agent.rebuild_agent_config()
@@ -1336,14 +1336,14 @@ class TestASpecLeftInPlaceHoldsTheCeilingMemo:
     ) -> None:
         """The hook reads both signals: a refusal OR a hold leaves the memo behind;
         only a rebuild that wrote and held nothing advances it."""
-        from kiro_crew.platform.governance_profiles import governance_answer_generation
+        from aj_crew.platform.governance_profiles import governance_answer_generation
 
         outcomes = iter([(False, False), (True, True), (True, False)])
 
         def fake_reporting(**kw: Any) -> tuple[Path, bool]:
             wrote, held = next(outcomes)
             kw["_held_out"].append(held)
-            return Path("/shared/agents/kirocrew.json"), wrote
+            return Path("/shared/agents/ajcrew.json"), wrote
 
         monkeypatch.setattr(agent, "rebuild_agent_config_reporting", fake_reporting)
         self._pending_memo(monkeypatch)
@@ -1367,7 +1367,7 @@ class TestASpecLeftInPlaceHoldsTheCeilingMemo:
         again -- the list is never re-derived for the process lifetime. The baseline
         must stay unseeded while the last rebuild held, so the first poll retries; it
         advances only once the spec is rewritten."""
-        from kiro_crew.platform.governance_profiles import governance_answer_generation
+        from aj_crew.platform.governance_profiles import governance_answer_generation
 
         shared = self._shared_home_rig(monkeypatch, tmp_path)
         agent.rebuild_agent_config()
@@ -1423,7 +1423,7 @@ class TestASpecLeftInPlaceHoldsTheCeilingMemo:
         retries it: a no-op while nothing is held, one reporting rebuild when
         something is, the hold standing while the failure does, and the memo clearing
         only once every spec is written."""
-        from kiro_crew.platform import policy_distribution
+        from aj_crew.platform import policy_distribution
 
         shared = self._shared_home_rig(monkeypatch, tmp_path)
         agent.rebuild_agent_config()
@@ -1509,14 +1509,14 @@ class TestASpecLeftInPlaceHoldsTheCeilingMemo:
             assert str(tmp_path / agent.AGENT_FILENAME) in message
         else:
             assert "still unwritten" in message
-            assert "kirocrew setup --agent-only --clean" in message
+            assert "ajcrew setup --agent-only --clean" in message
 
     def test_the_hourly_maintenance_wake_retries_held_specs_before_its_sweeps(self) -> None:
         """The retry rides the gateway's existing hourly maintenance wake -- the one
         loop that already hosts the scratch, work-root and session-dir sweeps rather
         than a scheduler of its own -- first in the wake, off the event loop, and
         from nowhere else: no second timer, no thread."""
-        from kiro_crew.slack.gateway_runtime import process_entry
+        from aj_crew.slack.gateway_runtime import process_entry
 
         source = Path(process_entry.__file__).read_text(encoding="utf-8")
         wake = source.index("async def _run_agent_scratch_sweep()")
@@ -1557,5 +1557,5 @@ class TestASpecLeftInPlaceHoldsTheCeilingMemo:
 
         assert (wrote, held) == (True, [False])
         rewritten = json.loads(security.read_text(encoding="utf-8"))
-        assert rewritten["name"] == "kirocrew-security-conductor"
+        assert rewritten["name"] == "ajcrew-security-conductor"
         assert isinstance(rewritten["allowedTools"], list) and rewritten["allowedTools"]

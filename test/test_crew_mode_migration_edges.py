@@ -16,9 +16,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from aiohttp import web
 
-from kiro_crew import crew_mode
-from kiro_crew.dashboard import crew_mode_migration as _mig
-from kiro_crew.testing.wait import async_wait_until, until_parked
+from aj_crew import crew_mode
+from aj_crew.dashboard import crew_mode_migration as _mig
+from aj_crew.testing.wait import async_wait_until, until_parked
 
 #: The real name check, kept so one test can put it back after the fixture stubs it.
 _REAL_USABLE = _mig._usable
@@ -26,7 +26,7 @@ _REAL_USABLE = _mig._usable
 
 @pytest.fixture(autouse=True)
 def _clean(_floor_monkeypatch, tmp_path):
-    from kiro_crew.config import paths
+    from aj_crew.config import paths
 
     _floor_monkeypatch.setattr(crew_mode, "_known_roots", set())
     _floor_monkeypatch.setattr(crew_mode, "persisted_parents", lambda: {})
@@ -42,7 +42,7 @@ def _clean(_floor_monkeypatch, tmp_path):
     yield
 
 
-def _slot(key: str, agent: str = "kirocrew-conductor", **over: Any) -> SimpleNamespace:
+def _slot(key: str, agent: str = "ajcrew-conductor", **over: Any) -> SimpleNamespace:
     base = dict(
         key=key,
         agent=agent,
@@ -86,8 +86,8 @@ def _answer(code: str | None, status: int = 409):
 @pytest.fixture
 def switch(monkeypatch):
     """The migration's switch. ``refuse[key]`` answers that code instead of moving."""
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.dashboard import crew_mode_migration as mig
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import crew_mode_migration as mig
 
     calls: list[tuple[str, str]] = []
     refuse: dict[str, tuple[str, int]] = {}
@@ -117,14 +117,14 @@ def _target(monkeypatch, name: str = "better-conductor") -> None:
 async def test_E1_attached_subagents_keep_the_root_owed_and_the_name_unadvanced(
     switch, monkeypatch
 ):
-    switch.mig.write_applied("kirocrew-conductor")
+    switch.mig.write_applied("ajcrew-conductor")
     _target(monkeypatch)
     root = _slot("r")
     state = _State(root)
     switch.refuse["r"] = ("slot_subagents_running", 409)
     out = await switch.mig.reconcile(state)
     assert out == {"moved": [], "pending": ["r"]}
-    assert switch.mig.read_applied() == "kirocrew-conductor"
+    assert switch.mig.read_applied() == "ajcrew-conductor"
     # Idle again: the retry loop's reconcile moves it, then advances the name.
     del switch.refuse["r"]
     out = await switch.mig.reconcile(state, retry_failed=False)
@@ -136,7 +136,7 @@ async def test_E1_attached_subagents_keep_the_root_owed_and_the_name_unadvanced(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("code", ["session_rebound", "history_unavailable"])
 async def test_E1_other_retryable_refusals_are_retried(switch, monkeypatch, code):
-    switch.mig.write_applied("kirocrew-conductor")
+    switch.mig.write_applied("ajcrew-conductor")
     _target(monkeypatch)
     state = _State(_slot("r"))
     switch.refuse["r"] = (code, 503 if code == "history_unavailable" else 409)
@@ -149,7 +149,7 @@ async def test_E1_other_retryable_refusals_are_retried(switch, monkeypatch, code
 async def test_E1_a_permanent_refusal_never_advances_the_name_and_tells_the_person(
     switch, monkeypatch
 ):
-    switch.mig.write_applied("kirocrew-conductor")
+    switch.mig.write_applied("ajcrew-conductor")
     _target(monkeypatch)
     ok = _slot("ok")
     bad = _slot("bad")
@@ -158,7 +158,7 @@ async def test_E1_a_permanent_refusal_never_advances_the_name_and_tells_the_pers
     out = await switch.mig.reconcile(state)
     assert out == {"moved": ["ok"], "pending": []}
     assert switch.mig._failed == {"bad": "agent_choice_unavailable"}
-    assert switch.mig.read_applied() == "kirocrew-conductor"
+    assert switch.mig.read_applied() == "ajcrew-conductor"
     assert len(state.notices) == 1 and "bad (agent_choice_unavailable)" in state.notices[0][2]
     # The idle loop does not hammer a permanent refusal, nor repeat the notice.
     n = len(switch.calls)
@@ -175,7 +175,7 @@ async def test_E1_a_permanent_refusal_never_advances_the_name_and_tells_the_pers
 async def test_E2_the_migration_runs_off_the_applier_and_is_never_cancelled_by_its_bound(
     switch, monkeypatch
 ):
-    switch.mig.write_applied("kirocrew-conductor")
+    switch.mig.write_applied("ajcrew-conductor")
     _target(monkeypatch)
     root = _slot("r")
     state = _State(root)
@@ -192,7 +192,7 @@ async def test_E2_the_migration_runs_off_the_applier_and_is_never_cancelled_by_i
 
 
 def test_E2_config_watch_schedules_the_migration_instead_of_awaiting_it():
-    from kiro_crew.dashboard.server_runtime import config_watch
+    from aj_crew.dashboard.server_runtime import config_watch
 
     source = open(config_watch.__file__, encoding="utf-8").read()
     assert "crew_mode_migration.schedule_on_config_change(" in source
@@ -201,8 +201,8 @@ def test_E2_config_watch_schedules_the_migration_instead_of_awaiting_it():
 
 @pytest.mark.asyncio
 async def test_E2_a_cancel_inside_the_reset_rolls_the_switch_back():
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
     slot = _ChatSlot("t1")
     prior_agent, prior_kind = slot.agent, slot.agent_kind
@@ -215,13 +215,13 @@ async def test_E2_a_cancel_inside_the_reset_rolls_the_switch_back():
     caller = chat_handlers.SlotAgentSwitchCaller(app="", remote="t", owner=True)
     with (
         patch(
-            "kiro_crew.dashboard.chat_handlers._reset_slot_session_or_warn",
+            "aj_crew.dashboard.chat_handlers._reset_slot_session_or_warn",
             new=AsyncMock(side_effect=asyncio.CancelledError),
         ),
-        patch("kiro_crew.dashboard.chat_handlers.save_slot_off_loop", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_handlers.save_slot_off_loop", new=AsyncMock()),
     ):
         with pytest.raises(asyncio.CancelledError):
-            await chat_handlers.switch_slot_agent(state, slot, "t1", "kirocrew", "template", caller)
+            await chat_handlers.switch_slot_agent(state, slot, "t1", "ajcrew", "template", caller)
     assert slot.agent == prior_agent and slot.agent_kind == prior_kind
     state.conversation_log.update_metadata.assert_not_called()
 
@@ -230,7 +230,7 @@ async def test_E2_a_cancel_inside_the_reset_rolls_the_switch_back():
 async def test_E3_a_cancel_before_the_second_root_leaves_it_owed_and_the_loop_moves_it(
     switch, monkeypatch
 ):
-    switch.mig.write_applied("kirocrew-conductor")
+    switch.mig.write_applied("ajcrew-conductor")
     _target(monkeypatch)
     r1, r2 = _slot("r1"), _slot("r2")
     state = _State(r1, r2)
@@ -242,7 +242,7 @@ async def test_E3_a_cancel_before_the_second_root_leaves_it_owed_and_the_loop_mo
     with pytest.raises(asyncio.CancelledError):
         await task
     assert switch.mig._pending == {"r1", "r2"}
-    assert switch.mig.read_applied() == "kirocrew-conductor"
+    assert switch.mig.read_applied() == "ajcrew-conductor"
     switch.gate.clear()
     await switch.mig.reconcile(state, retry_failed=False)
     assert r1.agent == r2.agent == "better-conductor"
@@ -251,7 +251,7 @@ async def test_E3_a_cancel_before_the_second_root_leaves_it_owed_and_the_loop_mo
 
 @pytest.mark.asyncio
 async def test_E3_the_idle_loop_retries_when_the_name_is_not_yet_applied(switch, monkeypatch):
-    switch.mig.write_applied("kirocrew-conductor")
+    switch.mig.write_applied("ajcrew-conductor")
     _target(monkeypatch)
     root = _slot("r")
     state = _State(root)
@@ -269,7 +269,7 @@ async def test_E3_the_idle_loop_retries_when_the_name_is_not_yet_applied(switch,
 
 @pytest.mark.asyncio
 async def test_E4_two_concurrent_migrations_switch_one_root_once(switch, monkeypatch):
-    switch.mig.write_applied("kirocrew-conductor")
+    switch.mig.write_applied("ajcrew-conductor")
     _target(monkeypatch)
     state = _State(_slot("r"))
     await asyncio.gather(switch.mig.reconcile(state), switch.mig.migrate(state))
@@ -281,17 +281,17 @@ async def test_E4_two_concurrent_migrations_switch_one_root_once(switch, monkeyp
 async def test_E6_an_unusable_name_moves_nothing_and_keeps_the_applied_conductor(
     switch, monkeypatch, why
 ):
-    switch.mig.write_applied("kirocrew-conductor")
+    switch.mig.write_applied("ajcrew-conductor")
     _target(monkeypatch, "typo-conductr")
     monkeypatch.setattr(switch.mig, "_usable", lambda name: why)
     root = _slot("r")
     state = _State(root)
     assert await switch.mig.reconcile(state) is None
-    assert switch.calls == [] and root.agent == "kirocrew-conductor"
-    assert switch.mig.read_applied() == "kirocrew-conductor"
+    assert switch.calls == [] and root.agent == "ajcrew-conductor"
+    assert switch.mig.read_applied() == "ajcrew-conductor"
     assert len(state.notices) == 1 and "typo-conductr" in state.notices[0][2]
     # Every reader keeps the applied conductor, so new chats still turn Crew Mode on.
-    assert crew_mode.crew_mode_agent() == "kirocrew-conductor"
+    assert crew_mode.crew_mode_agent() == "ajcrew-conductor"
     assert "typo-conductr" not in crew_mode.conductor_agents()
     # The idle loop does not repeat the notice.
     await switch.mig.reconcile(state, retry_failed=False)
@@ -308,7 +308,7 @@ async def test_E6_an_unusable_name_moves_nothing_and_keeps_the_applied_conductor
 async def test_F3_a_name_changed_mid_pass_leaves_the_rest_pending_with_no_notice(
     switch, monkeypatch
 ):
-    switch.mig.write_applied("kirocrew-conductor")
+    switch.mig.write_applied("ajcrew-conductor")
     _target(monkeypatch, "a-conductor")
     r1, r2 = _slot("r1"), _slot("r2")
     state = _State(r1, r2)
@@ -339,7 +339,7 @@ async def test_F3_a_name_changed_mid_pass_leaves_the_rest_pending_with_no_notice
 
 @pytest.mark.asyncio
 async def test_F3_a_template_installed_later_heals_without_a_config_edit(switch, monkeypatch):
-    switch.mig.write_applied("kirocrew-conductor")
+    switch.mig.write_applied("ajcrew-conductor")
     _target(monkeypatch, "new-conductor")
     verdict = {"why": "agent_not_found"}
     monkeypatch.setattr(switch.mig, "_usable", lambda name: verdict["why"])
@@ -359,29 +359,29 @@ def test_E6_usable_asks_the_template_namespace_and_refuses_an_unknown_template(m
     switch names: a name that is only a crewmate's does not resolve there, and a
     crewmate that shares its name with an installed template (an upgraded install can
     keep such an entry) does not make the template unusable."""
-    from kiro_crew.config import KiroCrewConfig, loader_agents
-    from kiro_crew.dashboard import crew_mode_migration as mig
+    from aj_crew.config import AjCrewConfig, loader_agents
+    from aj_crew.dashboard import crew_mode_migration as mig
 
     monkeypatch.setattr(mig, "_usable", _REAL_USABLE)  # the autouse fixture stubbed it
-    cfg = SimpleNamespace(agents={"buddy": object(), "kirocrew-conductor": object()})
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    cfg = SimpleNamespace(agents={"buddy": object(), "ajcrew-conductor": object()})
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
     asked: list[str] = []
 
     def _resolve(c, name, p, **k):
         asked.append(k.get("selection_kind", ""))
-        return SimpleNamespace(requested_resolved=name in ("real-conductor", "kirocrew-conductor"))
+        return SimpleNamespace(requested_resolved=name in ("real-conductor", "ajcrew-conductor"))
 
     monkeypatch.setattr(loader_agents, "resolve_agent_bindings", _resolve)
     assert mig._usable("buddy") == "agent_not_found"
     assert mig._usable("nope-conductor") == "agent_not_found"
     assert mig._usable("real-conductor") == ""
-    assert mig._usable("kirocrew-conductor") == ""
+    assert mig._usable("ajcrew-conductor") == ""
     assert asked and set(asked) == {"template"}
     assert mig._usable("../x") == "invalid_agent_name"
 
 
 def test_E10_a_migration_switch_counts_no_turned_on():
-    from kiro_crew.dashboard.chat_api import agent_switch
+    from aj_crew.dashboard.chat_api import agent_switch
 
     source = open(agent_switch.__file__, encoding="utf-8").read()
     i = source.index("crew_turned_on = (")
@@ -419,7 +419,7 @@ async def test_E11_the_start_pass_waits_for_the_restore_to_rebuild_the_slots(mon
     assert stuck.reads >= 1
     # The session tree's seed is waited for the same way: with the crew log on and the
     # lineage not yet settled the wait holds, and ends when it settles.
-    monkeypatch.setattr("kiro_crew.crew_log.emit.enabled", lambda: True)
+    monkeypatch.setattr("aj_crew.crew_log.emit.enabled", lambda: True)
     seeded = iter([False, False, True])
     monkeypatch.setattr(crew_mode, "lineage_is_settled", lambda: next(seeded, True))
     await _mig._await_restore(_Restoring(reads_until_done=1))
@@ -457,12 +457,12 @@ async def test_E12_an_adopted_conductor_is_not_learned_as_a_closed_root(monkeypa
     class _Log:
         def list_sessions(self) -> list[dict]:
             return [
-                {"key": "dashboard_root", "agent": "kirocrew-conductor"},
-                {"key": "dashboard_adopted", "agent": "kirocrew-conductor"},
+                {"key": "dashboard_root", "agent": "ajcrew-conductor"},
+                {"key": "dashboard_adopted", "agent": "ajcrew-conductor"},
             ]
 
         def get_metadata(self, key: str) -> dict:
-            return {"agent": "kirocrew-conductor", "crew_mode_agent": "kirocrew-conductor"}
+            return {"agent": "ajcrew-conductor", "crew_mode_agent": "ajcrew-conductor"}
 
     state = _State()
     state.conversation_log = _Log()
@@ -478,25 +478,25 @@ async def test_E13_the_reconcile_defers_while_the_restore_runs_and_on_a_headless
     """Over a half-built or absent slot set every root is trivially on the target, so
     nothing is read or written until the dashboard's restore has finished; a gateway
     that never began a restore (headless) records nothing either."""
-    switch.mig.write_applied("kirocrew-conductor")
+    switch.mig.write_applied("ajcrew-conductor")
     _target(monkeypatch)
-    root = _slot("r", "kirocrew-conductor")
+    root = _slot("r", "ajcrew-conductor")
     still = _State(root)
     still.slot_list_rebuilding = True
     assert await switch.mig.reconcile(still) is None
-    assert root.agent == "kirocrew-conductor" and switch.calls == []
+    assert root.agent == "ajcrew-conductor" and switch.calls == []
     headless = _State()
     headless._slot_list_rebuild_began = 0.0
     assert await switch.mig.reconcile(headless) is None
-    assert switch.mig.read_applied() == "kirocrew-conductor"
+    assert switch.mig.read_applied() == "ajcrew-conductor"
     # With the slots rebuilt but the session tree still seeding, the root rule would
     # fall back to the birth stamps, which an adopted worker lacks, so the reconcile
     # still waits; it runs once the lineage is settled (or the crew log is off).
     still.slot_list_rebuilding = False
-    monkeypatch.setattr("kiro_crew.crew_log.emit.enabled", lambda: True)
+    monkeypatch.setattr("aj_crew.crew_log.emit.enabled", lambda: True)
     monkeypatch.setattr(crew_mode, "lineage_is_settled", lambda: False)
     assert await switch.mig.reconcile(still) is None
-    assert root.agent == "kirocrew-conductor" and switch.calls == []
+    assert root.agent == "ajcrew-conductor" and switch.calls == []
     monkeypatch.setattr(crew_mode, "lineage_is_settled", lambda: True)
     out = await switch.mig.reconcile(still)
     assert out == {"moved": ["r"], "pending": []}
@@ -510,7 +510,7 @@ async def test_E13_the_reconcile_defers_while_the_restore_runs_and_on_a_headless
 async def test_E14_a_state_file_with_a_utf8_bom_still_migrates(switch, monkeypatch):
     """A hand edit saved with a byte-order mark names the same conductor."""
     path = switch.mig._state_path()
-    path.write_bytes(b'\xef\xbb\xbf{"applied": "kirocrew-conductor"}\n')
+    path.write_bytes(b'\xef\xbb\xbf{"applied": "ajcrew-conductor"}\n')
     _target(monkeypatch)
     root = _slot("r")
     out = await switch.mig.reconcile(_State(root))
@@ -521,7 +521,7 @@ async def test_E14_a_state_file_with_a_utf8_bom_still_migrates(switch, monkeypat
 
 @pytest.mark.asyncio
 async def test_E14_a_failed_read_records_nothing_and_a_later_pass_migrates(switch, monkeypatch):
-    switch.mig.write_applied("kirocrew-conductor")
+    switch.mig.write_applied("ajcrew-conductor")
     path = switch.mig._state_path()
     before = path.read_bytes()
     _target(monkeypatch)
@@ -537,7 +537,7 @@ async def test_E14_a_failed_read_records_nothing_and_a_later_pass_migrates(switc
     with patch.object(type(path), "read_text", held):
         assert await switch.mig.reconcile(state) is None
     assert path.read_bytes() == before
-    assert switch.calls == [] and root.agent == "kirocrew-conductor"
+    assert switch.calls == [] and root.agent == "ajcrew-conductor"
     # The handle is gone by the retry loop's next pass.
     out = await switch.mig.reconcile(state, retry_failed=False)
     assert out == {"moved": ["r"], "pending": []}
@@ -558,7 +558,7 @@ async def test_E14_an_unparseable_state_file_stays_unmoved_with_one_warning(
         assert await switch.mig.reconcile(state) is None
         assert await switch.mig.reconcile(state, retry_failed=False) is None
     assert path.read_bytes() == content
-    assert switch.calls == [] and root.agent == "kirocrew-conductor"
+    assert switch.calls == [] and root.agent == "ajcrew-conductor"
     warned = [r for r in caplog.records if switch.mig.STATE_FILENAME in r.getMessage()]
     assert len(warned) == 1
 
@@ -575,4 +575,4 @@ async def test_E14_a_dangling_state_symlink_is_not_a_first_start(switch, monkeyp
     root = _slot("r")
     assert await switch.mig.reconcile(_State(root)) is None
     assert path.is_symlink() and not path.exists()
-    assert switch.calls == [] and root.agent == "kirocrew-conductor"
+    assert switch.calls == [] and root.agent == "ajcrew-conductor"

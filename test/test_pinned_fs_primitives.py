@@ -1,7 +1,7 @@
 """``fd_real_path`` reads a descriptor's real path on each platform, and fails closed.
 
-The primitive lives in ``kiro_crew.pinned_fs_primitives`` and is reached through the
-``kiro_crew.pinned_fs`` facade. Linux answers through ``/proc/self/fd``, which the rest of
+The primitive lives in ``aj_crew.pinned_fs_primitives`` and is reached through the
+``aj_crew.pinned_fs`` facade. Linux answers through ``/proc/self/fd``, which the rest of
 the suite exercises for real. These tests drive the other two routes on any host:
 ``GetFinalPathNameByHandleW`` on Windows, with its ``\\\\?\\`` and ``\\\\?\\UNC\\``
 prefixes, and ``fcntl.F_GETPATH`` on macOS. They stand in only the platform calls,
@@ -17,7 +17,7 @@ import types
 
 import pytest
 
-from kiro_crew import pinned_fs
+from aj_crew import pinned_fs
 
 _DOS_PREFIX = "\\\\?\\"
 _UNC_PREFIX = "\\\\?\\UNC\\"

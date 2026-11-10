@@ -17,9 +17,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.telegram import client as tg_client
-from kiro_crew.telegram.client import TelegramClient, TelegramInbound
-from kiro_crew.testing.wait import async_wait_until, finished
+from aj_crew.telegram import client as tg_client
+from aj_crew.telegram.client import TelegramClient, TelegramInbound
+from aj_crew.testing.wait import async_wait_until, finished
 
 
 def _make_client() -> tuple[TelegramClient, list[TelegramInbound]]:
@@ -249,7 +249,7 @@ class TestAlbumBounds:
         assert len(client._albums[key]) == tg_client._ALBUM_MAX_MEMBERS
         assert client._album_dropped[key] == 4
 
-        with caplog.at_level("WARNING", logger="kiro_crew.telegram.client"):
+        with caplog.at_level("WARNING", logger="aj_crew.telegram.client"):
             await _drain(client)
 
         assert len(received) == 1

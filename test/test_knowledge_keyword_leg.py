@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.knowledge.retrieval import HybridRetriever
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge.retrieval import HybridRetriever
+from aj_crew.knowledge.store import KnowledgeStore
 
 # The confidence floor `local_knowledge_search` applies to every row it renders
 # (mcp_tools/knowledge.py). A row stamped with a sentinel score instead of its

@@ -1,6 +1,6 @@
 """A crewmate changes itself: ``update_self`` writes only the caller's own record.
 
-The ``kirocrew-mate`` tool posts to ``POST /api/member/self/update``. The member
+The ``ajcrew-mate`` tool posts to ``POST /api/member/self/update``. The member
 changed is the one whose pinned thread the verified caller's slot is, never a
 name from the body; only a turn the user sent from the dashboard may do it; the
 change lands in the chat as one ``self`` row the user can undo through
@@ -15,17 +15,17 @@ from typing import Any
 import pytest
 from guide_route_helpers import FakeState, agent, run_guide_app
 
-from kiro_crew import crewmate_prompts, mcp_mate
-from kiro_crew import members as members_mod
-from kiro_crew.agent_files import ASSISTANT_DEFAULT_DISPLAY_NAME, ASSISTANT_MEMBER_NAME
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, _invalidate_config_cache
-from kiro_crew.dashboard import chat_cards, member_self_changes
-from kiro_crew.dashboard.handlers import guide as guide_routes
-from kiro_crew.dashboard.handlers import member_self as self_routes
-from kiro_crew.dashboard.mate_welcome import NOTE_CONFIDENTIALITY, welcome_kickoff
+from aj_crew import crewmate_prompts, mcp_mate
+from aj_crew import members as members_mod
+from aj_crew.agent_files import ASSISTANT_DEFAULT_DISPLAY_NAME, ASSISTANT_MEMBER_NAME
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, _invalidate_config_cache
+from aj_crew.dashboard import chat_cards, member_self_changes
+from aj_crew.dashboard.handlers import guide as guide_routes
+from aj_crew.dashboard.handlers import member_self as self_routes
+from aj_crew.dashboard.mate_welcome import NOTE_CONFIDENTIALITY, welcome_kickoff
 
 ORDINARY = "scout"
-DEFAULT = "kirocrew"
+DEFAULT = "ajcrew"
 MATE_SLOT = "member-mate"
 
 UPDATE = ("POST", "/api/member/self/update", self_routes.api_member_self_update)
@@ -48,7 +48,7 @@ def _quiet_sel(_floor_monkeypatch):
 @pytest.fixture(autouse=True)
 def _events(_floor_monkeypatch) -> list[tuple]:
     seen: list[tuple] = []
-    from kiro_crew import eventlog_hooks
+    from aj_crew import eventlog_hooks
 
     _floor_monkeypatch.setattr(eventlog_hooks, "emit", lambda *a, **_k: seen.append(a))
     return seen
@@ -72,25 +72,25 @@ def _owner_ok(_floor_monkeypatch):
 
 
 def _seed(avatar: dict | None = None) -> None:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        DEFAULT: KiroCrewAgentConfig(kiro_agent=DEFAULT),
-        ASSISTANT_MEMBER_NAME: KiroCrewAgentConfig(kiro_agent=DEFAULT, avatar=avatar or {}),
-        ORDINARY: KiroCrewAgentConfig(kiro_agent=DEFAULT, display_name="Scout"),
+        DEFAULT: AjCrewAgentConfig(kiro_agent=DEFAULT),
+        ASSISTANT_MEMBER_NAME: AjCrewAgentConfig(kiro_agent=DEFAULT, avatar=avatar or {}),
+        ORDINARY: AjCrewAgentConfig(kiro_agent=DEFAULT, display_name="Scout"),
     }
     cfg.default_agent = DEFAULT
     cfg.save()
     _invalidate_config_cache()
 
 
-def _record(member: str) -> KiroCrewAgentConfig:
+def _record(member: str) -> AjCrewAgentConfig:
     _invalidate_config_cache()
-    return KiroCrewConfig.load().agents[member]
+    return AjCrewConfig.load().agents[member]
 
 
 def _labels() -> dict[str, str]:
     _invalidate_config_cache()
-    return {k: v.display_name for k, v in KiroCrewConfig.load().agents.items()}
+    return {k: v.display_name for k, v in AjCrewConfig.load().agents.items()}
 
 
 def _thread(state: FakeState, member: str, key: str = MATE_SLOT):
@@ -180,7 +180,7 @@ def test_an_old_thread_cannot_change_the_crewmate_that_replaced_it(_events) -> N
 
 def test_a_crewmate_whose_row_cannot_be_published_is_refused_not_a_500(monkeypatch) -> None:
     """A crewmate declared only in ``config.local.json`` has no base row to write."""
-    from kiro_crew.memory_stores import UnknownMemoryStore
+    from aj_crew.memory_stores import UnknownMemoryStore
 
     def refuse(*_a, **_k):
         raise UnknownMemoryStore("no base-config row")
@@ -575,7 +575,7 @@ def test_an_undo_refuses_a_name_another_crewmate_has_taken_since() -> None:
     assert _update(state, {"display_name": "Pebble"})[0] == 200
     status, body = _update(state, {"display_name": "Rock"})
     assert status == 200, body
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents[ORDINARY].display_name = "Pebble"
     cfg.save()
     _invalidate_config_cache()
@@ -654,7 +654,7 @@ def test_the_row_names_the_crewmate_by_its_display_name_not_its_key() -> None:
 
 
 def test_the_crewmate_hears_about_an_undo_once_on_its_next_turn() -> None:
-    from kiro_crew.context_blocks import render_self_change_undos
+    from aj_crew.context_blocks import render_self_change_undos
 
     _seed()
     state = FakeState()
@@ -684,7 +684,7 @@ def test_an_undo_is_refused_once_the_field_was_edited_again() -> None:
     _thread(state, ASSISTANT_MEMBER_NAME)
     status, first = _update(state, {"description": "I watch builds."})
     assert status == 200, first
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents[ASSISTANT_MEMBER_NAME].description = "I watch builds and file what breaks."
     cfg.save()
     _invalidate_config_cache()
@@ -693,7 +693,7 @@ def test_an_undo_is_refused_once_the_field_was_edited_again() -> None:
     assert (status, refused["code"]) == (409, "stale_undo")
     assert _record(ASSISTANT_MEMBER_NAME).description == "I watch builds and file what breaks."
     # Still undoable later if the newer value is put back by hand.
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents[ASSISTANT_MEMBER_NAME].description = "I watch builds."
     cfg.save()
     _invalidate_config_cache()
@@ -706,7 +706,7 @@ def test_an_oversized_original_is_applied_but_keeps_no_undo_record(monkeypatch) 
     change is drawn without Undo rather than retained unbounded or truncated."""
     monkeypatch.setattr(member_self_changes, "SNAPSHOT_FIELD_MAX_CHARS", 40)
     _seed()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents[ASSISTANT_MEMBER_NAME].description = "x" * 200
     cfg.save()
     _invalidate_config_cache()
@@ -727,7 +727,7 @@ def test_an_oversized_original_is_applied_but_keeps_no_undo_record(monkeypatch) 
 def test_the_undo_compare_and_set_runs_inside_the_config_lock(monkeypatch) -> None:
     """A crew-editor save that commits after the undo's snapshot check, but before
     its write, is kept: the persist re-reads the field under the config lock."""
-    from kiro_crew import memory_stores
+    from aj_crew import memory_stores
 
     _seed()
     state = FakeState()
@@ -738,7 +738,7 @@ def test_the_undo_compare_and_set_runs_inside_the_config_lock(monkeypatch) -> No
 
     def commit_between(config, member, **kw):
         # The competing save lands between the snapshot check and the locked write.
-        other = KiroCrewConfig.load()
+        other = AjCrewConfig.load()
         other.agents[member].description = "I watch builds and file what breaks."
         other.save()
         _invalidate_config_cache()
@@ -754,7 +754,7 @@ def test_the_undo_compare_and_set_runs_inside_the_config_lock(monkeypatch) -> No
 def test_a_save_landing_between_the_snapshot_and_the_write_is_refused(monkeypatch) -> None:
     """The undo record must hold what was on disk at the write: a crew-editor save
     that commits in between is kept and the crewmate is told to try again."""
-    from kiro_crew import memory_stores
+    from aj_crew import memory_stores
 
     _seed()
     state = FakeState()
@@ -762,7 +762,7 @@ def test_a_save_landing_between_the_snapshot_and_the_write_is_refused(monkeypatc
     real_persist = memory_stores.persist_member_config
 
     def commit_between(config, member, **kw):
-        other = KiroCrewConfig.load()
+        other = AjCrewConfig.load()
         other.agents[member].description = "Set from the editor."
         other.save()
         _invalidate_config_cache()
@@ -798,7 +798,7 @@ def test_a_description_the_write_path_accepts_always_keeps_its_undo_record() -> 
 def test_an_oversized_display_name_keeps_no_undo_record_either(monkeypatch) -> None:
     monkeypatch.setattr(member_self_changes, "SNAPSHOT_FIELD_MAX_CHARS", 40)
     _seed()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents[ASSISTANT_MEMBER_NAME].display_name = "N" * 60
     cfg.save()
     _invalidate_config_cache()
@@ -886,8 +886,8 @@ def test_a_card_backed_ask_names_the_request_never_a_kind(monkeypatch) -> None:
 
 
 def test_every_member_tool_is_granted_and_schema_checked() -> None:
-    from kiro_crew.agent import _MATE_AUTO_GRANTS, _MATE_SERVER
-    from kiro_crew.validation import MCP_MATE_SCHEMAS
+    from aj_crew.agent import _MATE_AUTO_GRANTS, _MATE_SERVER
+    from aj_crew.validation import MCP_MATE_SCHEMAS
 
     names = {t["name"] for t in mcp_mate._list_tools()}
     assert names == set(MCP_MATE_SCHEMAS)
@@ -912,7 +912,7 @@ def _proposed(monkeypatch) -> list[dict[str, Any]]:
     """Captures what the member route hands the shared propose body."""
     from aiohttp import web
 
-    from kiro_crew.dashboard.handlers import change_cards as card_routes
+    from aj_crew.dashboard.handlers import change_cards as card_routes
 
     seen: list[dict[str, Any]] = []
 
@@ -1014,7 +1014,7 @@ def test_fields_must_be_a_non_empty_object() -> None:
 
 
 def test_an_undo_with_a_bad_slug_or_an_unpublishable_row_is_a_coded_refusal(monkeypatch) -> None:
-    from kiro_crew.memory_stores import UnknownMemoryStore
+    from aj_crew.memory_stores import UnknownMemoryStore
 
     _seed()
     state = FakeState()
@@ -1038,7 +1038,7 @@ def test_an_undo_with_a_bad_slug_or_an_unpublishable_row_is_a_coded_refusal(monk
 
 @pytest.mark.parametrize("others", [False, True])
 def test_mates_first_welcome_asks_for_a_name_for_mate(others: bool) -> None:
-    entry = KiroCrewAgentConfig(kiro_agent=DEFAULT)
+    entry = AjCrewAgentConfig(kiro_agent=DEFAULT)
     kickoff = welcome_kickoff(entry, has_other_crewmates=others)
     # Structure only; the wording lives in crewmate_prompts.json. The intro
     # (name first, then what a mate is) comes before the offer.
@@ -1060,7 +1060,7 @@ def test_mates_first_welcome_asks_for_a_name_for_mate(others: bool) -> None:
 
 
 def test_mates_welcome_fits_a_user_who_already_has_crewmates() -> None:
-    entry = KiroCrewAgentConfig(kiro_agent=DEFAULT)
+    entry = AjCrewAgentConfig(kiro_agent=DEFAULT)
     alone = welcome_kickoff(entry, has_other_crewmates=False)
     crewed = welcome_kickoff(entry, has_other_crewmates=True)
     assert "You are the first Bot on their crew" in alone
@@ -1073,7 +1073,7 @@ def test_mates_welcome_fits_a_user_who_already_has_crewmates() -> None:
 def test_a_welcome_kickoff_is_written_as_principles_not_prohibitions(others: bool) -> None:
     """Outside the one note-confidentiality sentence a kickoff carries no
     must / never / do not / exactly wording."""
-    entry = KiroCrewAgentConfig(kiro_agent=DEFAULT, description="ship the release")
+    entry = AjCrewAgentConfig(kiro_agent=DEFAULT, description="ship the release")
     kickoff = welcome_kickoff(entry, has_other_crewmates=others)
     assert NOTE_CONFIDENTIALITY in kickoff
     rest = kickoff.replace(NOTE_CONFIDENTIALITY, "")

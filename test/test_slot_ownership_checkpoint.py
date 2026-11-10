@@ -41,17 +41,17 @@ from slot_ownership_checkpoint_helpers import (  # noqa: F401 -- fixtures are re
     state_fixture,
 )
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.dashboard import slot_ownership
-from kiro_crew.dashboard.slot_ownership import (
+from aj_crew.config import AjCrewConfig
+from aj_crew.dashboard import slot_ownership
+from aj_crew.dashboard.slot_ownership import (
     SLOT_ROUTE_POLICIES,
     SlotRoutePolicy,
     slot_ownership_middleware,
     slot_route_param,
     slot_route_policy,
 )
-from kiro_crew.dashboard.state import SlotOrigin, _ChatSlot
-from kiro_crew.testing.wait import LoopHop
+from aj_crew.dashboard.state import SlotOrigin, _ChatSlot
+from aj_crew.testing.wait import LoopHop
 
 _FAMILY_PREFIX = "/api/chat/slots/{"
 #: Header the sweep's identity stand-in reads: absent is no claim at all, "-" is
@@ -66,7 +66,7 @@ def family_routes() -> list[tuple[str, str]]:
     Enumerated from the router by template prefix, NOT through the checkpoint's own
     matcher, so a route the matcher would miss still shows up here.
     """
-    from kiro_crew.dashboard.routes import register_all
+    from aj_crew.dashboard.routes import register_all
 
     app = web.Application()
     register_all(app)
@@ -147,7 +147,7 @@ class TestEveryPerSlotRouteIsDecided:
 
     def test_the_checkpoint_sits_inner_to_token_auth_in_both_server_chains(self) -> None:
         """A chain without it would serve every per-slot route undecided."""
-        import kiro_crew.dashboard.server as server_mod
+        import aj_crew.dashboard.server as server_mod
 
         # Both chains are installed by a server_runtime owner server.py composes.
         owners = sorted((Path(server_mod.__file__).parent / "server_runtime").glob("[!_]*.py"))
@@ -175,7 +175,7 @@ class TestEveryPerSlotRouteIsDecided:
 
     def test_the_reserved_prefixes_are_the_ones_the_binders_mint(self) -> None:
         """The acquisition refusal and the binders must agree on the spelling."""
-        from kiro_crew.dashboard import session_control
+        from aj_crew.dashboard import session_control
 
         assert slot_ownership.CRON_SLOT_PREFIX == session_control.CRON_SLOT_PREFIX
         assert slot_ownership.WORKFLOW_SLOT_PREFIX == session_control.WORKFLOW_SLOT_PREFIX
@@ -309,7 +309,7 @@ class TestTheLiveTableRefusesANonOwnerApp:
         self, state, sel_spy, scope: bool
     ) -> None:
         """A member's pinned DM thread is a user session the grant alone stops at."""
-        from kiro_crew.members import DM_SLOT_MODE
+        from aj_crew.members import DM_SLOT_MODE
 
         state.get_or_create_slot(
             "member-mate", agent="mate", mode=DM_SLOT_MODE, origin=SlotOrigin.USER
@@ -332,7 +332,7 @@ class TestTheLiveTableRefusesANonOwnerApp:
 
     @pytest.mark.asyncio
     async def test_the_scope_alone_reaches_nothing(self, state, sel_spy) -> None:
-        from kiro_crew.members import DM_SLOT_MODE
+        from aj_crew.members import DM_SLOT_MODE
 
         state.get_or_create_slot(
             "member-mate", agent="mate", mode=DM_SLOT_MODE, origin=SlotOrigin.USER
@@ -357,7 +357,7 @@ class TestTheLiveTableRefusesANonOwnerApp:
         scope: the cost of a refusal never depends on whether the name addressed a
         member thread, and the scope can never come from a later read than the
         grant's."""
-        from kiro_crew.members import DM_SLOT_MODE
+        from aj_crew.members import DM_SLOT_MODE
 
         state.get_or_create_slot("u1", origin=SlotOrigin.USER)
         state.get_or_create_slot(
@@ -605,7 +605,7 @@ class TestRegenerateAndSwitchVariant:
     ) -> None:
         rows: list[dict] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_regenerate.sel",
+            "aj_crew.dashboard.chat_regenerate.sel",
             lambda: MagicMock(log_api_access=lambda **kw: rows.append(kw)),
         )
         slot = state.get_or_create_slot("s1", app=APP)
@@ -624,7 +624,7 @@ class TestRegenerateAndSwitchVariant:
     ) -> None:
         rows: list[dict] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_regenerate.sel",
+            "aj_crew.dashboard.chat_regenerate.sel",
             lambda: MagicMock(log_api_access=lambda **kw: rows.append(kw)),
         )
         slot = state.get_or_create_slot("s1", app=APP)
@@ -652,7 +652,7 @@ class TestRegenerateAndSwitchVariant:
     ) -> None:
         """The checkpoint judged the app's slot; the handler must not act on its successor."""
         # The gate asks only when the applied harness signs in via kiro-cli.
-        state.sessions._cfg = KiroCrewConfig.load()
+        state.sessions._cfg = AjCrewConfig.load()
         state.get_or_create_slot("s1", app=APP)
         replacement = _ChatSlot("s1")
         replacement._origin = SlotOrigin.USER
@@ -664,7 +664,7 @@ class TestRegenerateAndSwitchVariant:
             return None
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_regenerate.reject_if_kiro_unverified", swap_during_await
+            "aj_crew.dashboard.chat_regenerate.reject_if_kiro_unverified", swap_during_await
         )
         async with _client(state, APP) as client:
             resp = await client.post("/api/chat/slots/s1/regenerate")
@@ -689,7 +689,7 @@ class TestTitleAndColour:
         llm = AsyncMock(return_value="A summary of the private plan")
         with (
             patch(_GRANT, return_value=False),
-            patch("kiro_crew.dashboard.chat_title._generate_title_via_kiro", new=llm),
+            patch("aj_crew.dashboard.chat_title._generate_title_via_kiro", new=llm),
         ):
             async with _client(state, APP) as client:
                 gen = await client.post("/api/chat/slots/s1/generate-title")
@@ -754,7 +754,7 @@ class TestChannelLinksAndLanes:
             state._slots["s1"] = replacement
             return None
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_mirror._expected_binding", swap_during_read)
+        monkeypatch.setattr("aj_crew.dashboard.chat_mirror._expected_binding", swap_during_read)
         cleared = MagicMock()
         state.sessions.clear_mirror_link = cleared
         async with _client(state, APP) as client:
@@ -819,7 +819,7 @@ class TestTranscriptOwnershipWithoutALiveSlot:
         self, state, monkeypatch, caller
     ) -> None:
         """The source's owner cannot authorize a destination written during the reads."""
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         log = state.conversation_log
         source_key, destination_key = "dashboard:a1", "dashboard:b1"
@@ -878,7 +878,7 @@ class TestTranscriptOwnershipWithoutALiveSlot:
     async def test_resume_reserves_the_destination_and_rechecks_the_source(
         self, state, monkeypatch, source_change
     ) -> None:
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         log = state.conversation_log
         source_key = "dashboard:a1"
@@ -981,7 +981,7 @@ class TestTranscriptOwnershipWithoutALiveSlot:
     async def test_resume_dedups_a_session_published_during_the_destination_read(
         self, state, monkeypatch
     ) -> None:
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         log = state.conversation_log
         source_key = "dashboard:a1"
@@ -1043,7 +1043,7 @@ class TestTranscriptOwnershipWithoutALiveSlot:
         import builtins
         import threading
 
-        from kiro_crew.history import _METADATA_READ_ATTEMPTS
+        from aj_crew.history import _METADATA_READ_ATTEMPTS
 
         await _persist_and_close(state, state.get_or_create_slot("a1", app=APP))
         log = state.conversation_log
@@ -1104,7 +1104,7 @@ class TestTranscriptOwnershipWithoutALiveSlot:
         """
         import builtins
 
-        from kiro_crew.history import _METADATA_READ_ATTEMPTS
+        from aj_crew.history import _METADATA_READ_ATTEMPTS
 
         await _persist_and_close(state, state.get_or_create_slot("a1", app=APP))
         log = state.conversation_log
@@ -1359,7 +1359,7 @@ class TestNoAnswerBeforeOwnership:
             return None, None
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._app_slot_acquisition_denial", nothing_live_yet
+            "aj_crew.dashboard.chat_handlers._app_slot_acquisition_denial", nothing_live_yet
         )
         state.get_or_create_slot("s1", origin=SlotOrigin.USER)
         async with _client(state, APP) as client:
@@ -1386,7 +1386,7 @@ class TestNoAnswerBeforeOwnership:
             return True
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.members_mod.is_configured_dispatchable_member",
+            "aj_crew.dashboard.chat_handlers.members_mod.is_configured_dispatchable_member",
             close_meanwhile,
         )
         with patch(_GRANT, return_value=True):
@@ -1411,7 +1411,7 @@ class TestNoAnswerBeforeOwnership:
 @pytest.fixture
 def case_insensitive_fs(monkeypatch):
     """Transcript paths that fold letter case, as the macOS and Windows defaults do."""
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     real_path = ConversationLog._path
 
@@ -1431,7 +1431,7 @@ class TestALetterCaseTwinIsNotANewSession:
     async def test_send_create_and_resume(
         self, state, chat_run, sel_spy, case_insensitive_fs
     ) -> None:
-        from kiro_crew.dashboard.slot_ownership import CASE_ALIAS_DENIED
+        from aj_crew.dashboard.slot_ownership import CASE_ALIAS_DENIED
 
         await _persist_and_close(state, state.get_or_create_slot("appconv", app=APP))
         # The person's new tab: live, with nothing written to its transcript yet.
@@ -1490,11 +1490,11 @@ class TestModeChanges:
 
 class TestBindersDoNotAdoptAnAppSlot:
     def test_a_cron_result_is_not_bound_into_an_app_slot(self, state, sel_spy) -> None:
-        from kiro_crew.cron import CronJob
-        from kiro_crew.dashboard.cron_inject import inject_cron_result_to_dashboard
+        from aj_crew.cron import CronJob
+        from aj_crew.dashboard.cron_inject import inject_cron_result_to_dashboard
 
         squatter = state.get_or_create_slot("cron-j1", app=APP)
-        job = CronJob(id="j1", name="nightly", message="report", agent_id="kirocrew")
+        job = CronJob(id="j1", name="nightly", message="report", agent_id="ajcrew")
         inject_cron_result_to_dashboard(state, job, "THE PERSON'S CRON RESULT", history=None)
         assert squatter.linked_session_key == ""
         assert not any("CRON RESULT" in str(m.get("content")) for m in squatter.messages)
@@ -1504,7 +1504,7 @@ class TestBindersDoNotAdoptAnAppSlot:
         ]
 
     def test_a_workflow_result_is_not_bound_into_an_app_slot(self, state, sel_spy) -> None:
-        from kiro_crew.dashboard.workflow_inject import inject_workflow_result
+        from aj_crew.dashboard.workflow_inject import inject_workflow_result
 
         squatter = state.get_or_create_slot("workflow-r1", app=APP)
         snapshot = {
@@ -1525,7 +1525,7 @@ class TestBindersDoNotAdoptAnAppSlot:
     async def test_to_chat_files_the_refusal_under_the_person(self, state, sel_spy) -> None:
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.dashboard.handlers.cron import api_cron_to_chat
+        from aj_crew.dashboard.handlers.cron import api_cron_to_chat
 
         state.get_or_create_slot("cron-j1", app=APP)
         app = web.Application()
@@ -1545,8 +1545,8 @@ class TestBindersDoNotAdoptAnAppSlot:
         """The run-start pre-create stands down before any transcript read or audit row."""
         import asyncio
 
-        from kiro_crew.cron import CronJob
-        from kiro_crew.dashboard.cron_inject import (
+        from aj_crew.cron import CronJob
+        from aj_crew.dashboard.cron_inject import (
             ensure_cron_slot,
             prefetch_cron_dismissed,
             prefetch_cron_history,
@@ -1567,7 +1567,7 @@ class TestBindersDoNotAdoptAnAppSlot:
         monkeypatch.setattr(log, "read_messages", read_messages)
         monkeypatch.setattr(log, "get_metadata_status", get_metadata_status)
         job = CronJob(
-            id="j1", name="nightly", message="report", agent_id="kirocrew", persistent_session=True
+            id="j1", name="nightly", message="report", agent_id="ajcrew", persistent_session=True
         )
 
         async def run() -> None:

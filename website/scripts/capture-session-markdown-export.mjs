@@ -25,7 +25,7 @@ import { json, makeFixedApi, handleBootRoute } from './lib/boot-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/session-markdown-export'
 const SLOT = 'chat-mdexport'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -35,7 +35,7 @@ const slots = [{
   running: false,
   last_message: '',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

@@ -7,7 +7,7 @@
  * files, chat) goes to the gateway over same-origin HTTP/WS instead — the pet
  * page is loaded FROM the gateway, so it already carries the auth cookie.
  *
- * Also sets `kirocrew.isElectron`, matching the dashboard's own preload. Two
+ * Also sets `ajcrew.isElectron`, matching the dashboard's own preload. Two
  * reasons: `needsDesktopApp()` uses it for the App Store gate, and the panel's
  * BrowserPreviewNotice keys off it — without this the "browser preview" banner
  * would show inside the real desktop window.
@@ -34,7 +34,7 @@ const { contextBridge, ipcRenderer } = require("electron");
  *    the routes says.
  *  - tunnel connect / disconnect and the backend-switch callbacks. A builtin is
  *    served BY the gateway, so there is no other backend to choose; "run the pet
- *    against a remote KiroCrew" is core's /api/instances feature instead (see
+ *    against a remote AjCrew" is core's /api/instances feature instead (see
  *    panelBridge's remote-instances note), which never puts a secret in the page.
  *  - a generic `send(channel)` / `invoke(channel, ...)` relay. Enumerated
  *    channels only: a string-keyed relay is what let several menu actions rot
@@ -59,7 +59,7 @@ const NEVER_EXPOSE = Object.freeze([
   "invoke",
 ]);
 
-contextBridge.exposeInMainWorld("kirocrew", {
+contextBridge.exposeInMainWorld("ajcrew", {
   platform: process.platform,
   isElectron: true,
 });
@@ -195,7 +195,7 @@ exposePetApi({
   openImage: (filePath) => ipcRenderer.invoke("mochi-pet:open-image", filePath),
 
   /**
-   * Open KiroCrew's dashboard in the user's default browser.
+   * Open AjCrew's dashboard in the user's default browser.
    *
    * The dashboard IS the gateway origin, so the panel's own window-open handler
    * would load it INSIDE the panel; a dedicated channel routes it through

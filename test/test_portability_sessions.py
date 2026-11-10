@@ -12,14 +12,14 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat, portability
-from kiro_crew.dashboard.handlers._shared import _read_memory_mode
-from kiro_crew.history import (
+from aj_crew import platform_compat, portability
+from aj_crew.dashboard.handlers._shared import _read_memory_mode
+from aj_crew.history import (
     TRANSCRIPT_HEADER_MAX_BYTES,
     ConversationLog,
     memory_mode_from_header_line,
 )
-from kiro_crew.portability import (
+from aj_crew.portability import (
     _read_first_line_fd,
     _transcript_header_verdict,
     apply_import_zip,
@@ -83,7 +83,7 @@ def home(tmp_path, monkeypatch):
     (sessions / ".summaries").mkdir()
     (sessions / ".summaries" / "dashboard_kept.json").write_text("{}")
 
-    monkeypatch.setenv("KIROCREW_HOME", str(mc))
+    monkeypatch.setenv("AJCREW_HOME", str(mc))
     return mc
 
 
@@ -95,7 +95,7 @@ def _members(zip_bytes: bytes) -> set[str]:
 def _import(zip_bytes: bytes, target: Path, tmp_path: Path, monkeypatch, mode: str = "merge"):
     zip_path = tmp_path / f"import-{mode}-{target.name}.zip"
     zip_path.write_bytes(zip_bytes)
-    monkeypatch.setenv("KIROCREW_HOME", str(target))
+    monkeypatch.setenv("AJCREW_HOME", str(target))
     return apply_import_zip(zip_path, mode=mode)
 
 
@@ -221,7 +221,7 @@ class TestExportFitsImport:
         sessions = mc / "sessions"
         sessions.mkdir(parents=True)
         (mc / "config.json").write_text("{}")
-        monkeypatch.setenv("KIROCREW_HOME", str(mc))
+        monkeypatch.setenv("AJCREW_HOME", str(mc))
         return mc
 
     @staticmethod
@@ -501,7 +501,7 @@ class TestImport:
 
     def test_import_rejudges_a_hand_built_archive(self, tmp_path, monkeypatch):
         """The archive is not trusted to have applied the export's own rules."""
-        top = "kirocrew-export-20260101T000000Z"
+        top = "ajcrew-export-20260101T000000Z"
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w") as zf:
             zf.writestr(f"{top}/MANIFEST.json", json.dumps({"version": 1, "contents": {}}))
@@ -527,7 +527,7 @@ class TestImport:
         assert summary["sessions_withheld"] == 1
 
     def test_import_installs_only_dashboard_chats(self, tmp_path, monkeypatch):
-        top = "kirocrew-export-20260101T000000Z"
+        top = "ajcrew-export-20260101T000000Z"
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w") as zf:
             zf.writestr(f"{top}/MANIFEST.json", json.dumps({"version": 1, "contents": {}}))
@@ -556,7 +556,7 @@ class TestImport:
         ids=["integer-past-digit-limit", "nesting-past-recursion-limit"],
     )
     def test_an_unparseable_header_is_withheld_not_raised(self, tmp_path, monkeypatch, header):
-        top = "kirocrew-export-20260101T000000Z"
+        top = "ajcrew-export-20260101T000000Z"
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w") as zf:
             zf.writestr(f"{top}/MANIFEST.json", json.dumps({"version": 1, "contents": {}}))
@@ -579,7 +579,7 @@ class TestImport:
     def test_an_archive_name_cannot_collide_with_the_staging_area(
         self, tmp_path, monkeypatch, collision
     ):
-        top = "sessions-stage" if collision == "top-level-dir" else "kirocrew-export-x"
+        top = "sessions-stage" if collision == "top-level-dir" else "ajcrew-export-x"
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w") as zf:
             zf.writestr(f"{top}/MANIFEST.json", json.dumps({"version": 1, "contents": {}}))
@@ -1348,11 +1348,11 @@ class TestWriterRechecksPrivacyAndCap:
         import io
         import zipfile
 
-        mc_real = os.path.realpath(os.environ["KIROCREW_HOME"])
+        mc_real = os.path.realpath(os.environ["AJCREW_HOME"])
         # The pre-pass sees dashboard_kept as a persistent, exportable chat.
         order, _skipped = portability._plan_sessions(
             mc_real,
-            "kirocrew-export-t",
+            "ajcrew-export-t",
             base_members=0,
             base_bytes=0,
             manifest={"version": 3, "contents": {}},
@@ -1374,7 +1374,7 @@ class TestWriterRechecksPrivacyAndCap:
             exported, withheld, skipped = portability._write_sessions(
                 zf,
                 mc_real,
-                "kirocrew-export-t",
+                "ajcrew-export-t",
                 {},
                 manifest={"version": 3, "contents": {}},
                 order=order,
@@ -1394,7 +1394,7 @@ class TestWriterRechecksPrivacyAndCap:
             exported2, _withheld2, _skipped2 = portability._write_sessions(
                 zf,
                 mc_real,
-                "kirocrew-export-t",
+                "ajcrew-export-t",
                 {},
                 manifest={"version": 3, "contents": {}},
                 order=order,
@@ -1410,10 +1410,10 @@ class TestWriterRechecksPrivacyAndCap:
         import io
         import zipfile
 
-        mc_real = os.path.realpath(os.environ["KIROCREW_HOME"])
+        mc_real = os.path.realpath(os.environ["AJCREW_HOME"])
         order, _skipped = portability._plan_sessions(
             mc_real,
-            "kirocrew-export-t",
+            "ajcrew-export-t",
             base_members=0,
             base_bytes=0,
             manifest={"version": 3, "contents": {}},
@@ -1429,7 +1429,7 @@ class TestWriterRechecksPrivacyAndCap:
             exported, _withheld, skipped = portability._write_sessions(
                 zf,
                 mc_real,
-                "kirocrew-export-t",
+                "ajcrew-export-t",
                 {},
                 manifest={"version": 3, "contents": {}},
                 order=order,

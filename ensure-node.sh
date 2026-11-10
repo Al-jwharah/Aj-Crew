@@ -1,14 +1,14 @@
 #!/bin/bash
 # Ensure Node.js is available for the build. Installs via mise (preferred),
 # nvm, or the nodejs "unofficial-builds" glibc-217 tarball on old-glibc hosts.
-# Called by: setup.sh, kirocrew update, kirocrew gateway, Makefile (frontend)
+# Called by: setup.sh, ajcrew update, ajcrew gateway, Makefile (frontend)
 # Platforms: macOS, Amazon Linux 2 (glibc 2.26), Amazon Linux 2023, Linux
 #
 # On success this records the resolved node bin directory in
 # "<data-home>/node-bin-dir" so non-interactive callers (e.g. make) can put
 # the right node on PATH without re-running a version manager. The data home is
-# "$KIROCREW_HOME" when set, else "$HOME/.kiro/crew" (the current default) —
-# NOT the pre-move "$HOME/.kirocrew", which is not the data home and must not
+# "$AJCREW_HOME" when set, else "$HOME/.kiro/crew" (the current default) —
+# NOT the pre-move "$HOME/.ajcrew", which is not the data home and must not
 # be written to.
 
 # The frontend build (vite 8 / rolldown) requires a Node in the bundler's own
@@ -172,7 +172,7 @@ EOF
 
 # Directory holding the unofficial glibc-217 Node install, under the data home.
 _glibc217_node_dir() {
-    echo "${KIROCREW_HOME:-$HOME/.kiro/crew}/node-glibc217"
+    echo "${AJCREW_HOME:-$HOME/.kiro/crew}/node-glibc217"
 }
 
 # Put a previously-installed glibc-217 node on PATH (if present). Called LAST in
@@ -281,11 +281,11 @@ _install_glibc217_node() {
 }
 
 # Record where node ended up so make / other callers can find it. Writes into
-# the data home ($KIROCREW_HOME, else ~/.kiro/crew) — never the legacy
-# ~/.kirocrew (see header).
+# the data home ($AJCREW_HOME, else ~/.kiro/crew) — never the legacy
+# ~/.ajcrew (see header).
 _record_node_bin() {
     if command -v node >/dev/null 2>&1; then
-        local home="${KIROCREW_HOME:-$HOME/.kiro/crew}"
+        local home="${AJCREW_HOME:-$HOME/.kiro/crew}"
         mkdir -p "$home"
         dirname "$(command -v node)" > "$home/node-bin-dir" 2>/dev/null || true
     fi
@@ -315,7 +315,7 @@ _ensure_mise() {
     if ! command -v mise &>/dev/null; then
         echo "  → Installing mise…"
         # A pinned release checked against a recorded sha256, never a piped
-        # script: this runs unprompted from gateway start and `kirocrew update`.
+        # script: this runs unprompted from gateway start and `ajcrew update`.
         local lib
         lib="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/lib/pinned-mise.sh"
         if [ -f "$lib" ]; then

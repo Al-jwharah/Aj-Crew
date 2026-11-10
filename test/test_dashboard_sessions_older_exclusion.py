@@ -22,8 +22,8 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew.dashboard.handlers import api_sessions
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard.handlers import api_sessions
+from aj_crew.history import ConversationLog
 
 
 class _FakeSlot:
@@ -399,11 +399,11 @@ async def test_user_only_drops_a_never_used_session(tmp_path) -> None:
     rows both stay: only "no title and no rows" is dropped.
     """
     log = ConversationLog(base_dir=tmp_path)
-    log.update_metadata("dashboard:chat-3-1790874654", {"agent": "kirocrew"})
+    log.update_metadata("dashboard:chat-3-1790874654", {"agent": "ajcrew"})
     log.update_metadata("dashboard:named", {"title": "Planning"})
     log.append("dashboard:used", "user", "hello")
     log.append("dashboard:reply-only", "assistant", "a cron-style reply")
-    log.update_metadata("dashboard:reply-only", {"agent": "kirocrew"})
+    log.update_metadata("dashboard:reply-only", {"agent": "ajcrew"})
 
     body = await _call(_real_request(log, {"user_only": "1"}))
 

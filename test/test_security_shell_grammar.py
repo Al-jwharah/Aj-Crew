@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.security: the shell grammar the self-protection gate reads.
+"""Tests for aj_crew.security: the shell grammar the self-protection gate reads.
 
 Substitution bodies end where command grammar ends them, ``case`` arms only in command
 position, and line continuations fold before tokenizing, inside substitution openers too.
@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import security
+from aj_crew import security
 
 
 class TestSubstitutionCloserReadsCommandGrammar:
@@ -30,7 +30,7 @@ class TestSubstitutionCloserReadsCommandGrammar:
     """
 
     VERB = "tok" + "en"
-    NAME = "kiro" + "crew"
+    NAME = "aj" + "crew"
 
     def test_a_comment_hides_the_closer_from_the_paren_count(self) -> None:
         """``$(: # )`` closes on the NEXT line, so the ``)`` after ``#`` is inert.
@@ -100,7 +100,7 @@ class TestSubstitutionCloserReadsCommandGrammar:
             "T=$(: # )\nprintf hi); echo $T",
             "echo $(printf %s ${v:-)}) done",
             # A ``$(`` in a ``${...}`` word inside a ``case`` closes on its own ``)``.
-            "kill $(case x in a) echo ${P:-$(cat f)};; esac); echo kirocrew",
+            "kill $(case x in a) echo ${P:-$(cat f)};; esac); echo ajcrew",
         ],
     )
     def test_the_new_grammar_does_not_start_refusing_benign_shapes(self, command: str) -> None:
@@ -207,30 +207,30 @@ class TestCaseArmingRequiresCommandPosition:
         [
             # Command position hands through reserved words -- INHERITED, so
             # each keeper must hold position itself.
-            "kill $(if true; then case x in x) : ;; esac; fi; pgrep -f kirocrew)",
-            "kill $({ case x in x) : ;; esac; }; pgrep -f kirocrew)",
+            "kill $(if true; then case x in x) : ;; esac; fi; pgrep -f ajcrew)",
+            "kill $({ case x in x) : ;; esac; }; pgrep -f ajcrew)",
             # Both function-definition forms make the body command position.
-            "kill $(function f case x in x) : ;; esac; pgrep -f kirocrew)",
-            "kill $(f() case x in x) : ;; esac; f; pgrep -f kirocrew)",
-            "kill $(f ( ) case x in x) : ;; esac; f; pgrep -f kirocrew)",
+            "kill $(function f case x in x) : ;; esac; pgrep -f ajcrew)",
+            "kill $(f() case x in x) : ;; esac; f; pgrep -f ajcrew)",
+            "kill $(f ( ) case x in x) : ;; esac; f; pgrep -f ajcrew)",
             # ``coproc [NAME] compound-command``.
-            "kill $(coproc c case x in x) : ;; esac; pgrep -f kirocrew)",
+            "kill $(coproc c case x in x) : ;; esac; pgrep -f ajcrew)",
             # A nested case in a clause body opens after ``)`` -> command position.
-            "kill $(case a in a) case b in b) : ;; esac ;; esac; pgrep -f kirocrew)",
+            "kill $(case a in a) case b in b) : ;; esac ;; esac; pgrep -f ajcrew)",
             # The MULTI-CLAUSE form: an outer pattern paren
             # AFTER the inner esac is what a missed inner arm hands to the
             # desynchronised counter as the closer -- this vector is red on a
             # gate that skips the clause-body position.
-            "kill $(case a in a) case b in b) : ;; esac ;; c) : ;; esac; pgrep -f kirocrew)",
+            "kill $(case a in a) case b in b) : ;; esac ;; c) : ;; esac; pgrep -f ajcrew)",
             # ``case`` GLUED to a backtick opener: the
             # opener both breaks the word and starts a command, so the word
             # must still be recognised and armed.
-            "kill $(`case x in x) : ;; esac`; pgrep -f kirocrew)",
+            "kill $(`case x in x) : ;; esac`; pgrep -f ajcrew)",
         ],
     )
     def test_every_bash_spanning_form_still_arms(self, command: str) -> None:
         (body,) = security._substitution_bodies(command)
-        assert "pgrep -f kirocrew" in body, body
+        assert "pgrep -f ajcrew" in body, body
         assert security._is_self_kill(command)
 
     def test_a_redirect_prefixed_case_is_not_armed(self) -> None:
@@ -260,11 +260,11 @@ class TestCaseArmingRequiresCommandPosition:
         arming keeps the walk uniform with the bare ``time case`` form at the
         cost of a longer span on input bash never runs (the documented safe
         direction). ``echo -n case`` chains to ``echo`` and stays data."""
-        from kiro_crew.security.shell_normalizer import _matching_close_paren
+        from aj_crew.security.shell_normalizer import _matching_close_paren
 
         for text in (
-            "$(time -p case x in x) : ;; esac; pgrep -f kirocrew)",
-            "$(time -- case x in x) : ;; esac; pgrep -f kirocrew)",
+            "$(time -p case x in x) : ;; esac; pgrep -f ajcrew)",
+            "$(time -- case x in x) : ;; esac; pgrep -f ajcrew)",
         ):
             assert _matching_close_paren(text, 2) == (len(text), True), text
         assert security._substitution_bodies("echo $(echo -n case x in y) tail") == [
@@ -280,13 +280,13 @@ class TestCaseArmingRequiresCommandPosition:
         scanned — the self-kill consumer convicts. bash runs the tail in both
         shapes (verified live)."""
         for cmd in (
-            "kill $(echo <<X\ncase x in y)\nX\npgrep -f kirocrew)",
-            "kill $(cat <<X\ncase a in a) : ;; esac\nX\npgrep -f kirocrew)",
+            "kill $(echo <<X\ncase x in y)\nX\npgrep -f ajcrew)",
+            "kill $(cat <<X\ncase a in a) : ;; esac\nX\npgrep -f ajcrew)",
             # A ``${`` in the data: the paren-only span is kept, never a shorter one.
-            "kill $(cat <<X\n${\nX\n(echo })\npgrep -f kirocrew)",
+            "kill $(cat <<X\n${\nX\n(echo })\npgrep -f ajcrew)",
         ):
             (body,) = security._substitution_bodies(cmd)
-            assert "pgrep -f kirocrew" in body, body
+            assert "pgrep -f ajcrew" in body, body
             assert security._is_self_kill(cmd)
 
     def test_the_two_keyword_tables_are_cross_pinned(self) -> None:
@@ -295,8 +295,8 @@ class TestCaseArmingRequiresCommandPosition:
         (grammar model here, fail-closed bail in the redirect skip). Every
         membership difference is intentional and named, so an edit to one
         table trips this pin and the editor rules on the other deliberately."""
-        from kiro_crew.security.argv_floor import _SHELL_RESERVED_WORDS
-        from kiro_crew.security.shell_normalizer import _KEEPS_COMMAND_POSITION
+        from aj_crew.security.argv_floor import _SHELL_RESERVED_WORDS
+        from aj_crew.security.shell_normalizer import _KEEPS_COMMAND_POSITION
 
         only_reserved = _SHELL_RESERVED_WORDS - _KEEPS_COMMAND_POSITION
         only_keeps = _KEEPS_COMMAND_POSITION - _SHELL_RESERVED_WORDS
@@ -345,7 +345,7 @@ class TestCaseArmingRequiresCommandPosition:
         and the pattern ``)`` then closes substitution scanning early -- the
         under-scan direction the self-protection consumers cannot afford.
         """
-        from kiro_crew.security.shell_normalizer import _arms_case_context
+        from aj_crew.security.shell_normalizer import _arms_case_context
 
         for keeper_split in ("th\\\nen", "i\\\nf true; then", "d\\\no"):
             head = {
@@ -359,9 +359,9 @@ class TestCaseArmingRequiresCommandPosition:
 
     def test_a_continuation_split_keeper_spans_the_whole_body(self) -> None:
         """The substitution body survives the pattern ``)`` when the keeper is split."""
-        command = 'kill -9 $(if true; th\\\nen case x in x) pgrep -f "kiro""crew";; esac; fi)'
+        command = 'kill -9 $(if true; th\\\nen case x in x) pgrep -f "aj""crew";; esac; fi)'
         (body,) = security._substitution_bodies(command)
-        assert 'pgrep -f "kiro""crew"' in body, body
+        assert 'pgrep -f "aj""crew"' in body, body
         assert body.endswith("fi"), body
         assert security.is_denied(command) is not None
 
@@ -372,7 +372,7 @@ class TestCaseArmingRequiresCommandPosition:
         can classify it) and start at the FIRST fragment, so chained walks
         (``then`` -> ``if``) resume before the whole keeper, not mid-word.
         """
-        from kiro_crew.security.shell_normalizer import _prev_word
+        from aj_crew.security.shell_normalizer import _prev_word
 
         text = "th\\\nen case"
         got = _prev_word(text, text.index("case"))
@@ -392,7 +392,7 @@ class TestCaseArmingRequiresCommandPosition:
         keeps nothing, and the refused arm truncates the substitution body at
         the pattern ``)`` -- the under-scan direction.
         """
-        from kiro_crew.security.shell_normalizer import _arms_case_context
+        from aj_crew.security.shell_normalizer import _arms_case_context
 
         for text in (
             "function time case",
@@ -414,14 +414,14 @@ class TestCaseArmingRequiresCommandPosition:
         which behaves the same with this gate present or absent (identical on
         the base branch, measured) and is tracked separately.
         """
-        clause = 'kill -9 $(function time case x in x) pgrep -f "kiro""crew";; esac)'
+        clause = 'kill -9 $(function time case x in x) pgrep -f "aj""crew";; esac)'
         (body,) = security._substitution_bodies(clause)
-        assert 'pgrep -f "kiro""crew"' in body, body
+        assert 'pgrep -f "aj""crew"' in body, body
         assert security.is_denied(clause) is not None
 
-        tail = 'kill -9 $(function time case x in x) :;; esac; pgrep -f "kiro""crew")'
+        tail = 'kill -9 $(function time case x in x) :;; esac; pgrep -f "aj""crew")'
         (body,) = security._substitution_bodies(tail)
-        assert 'pgrep -f "kiro""crew"' in body, body
+        assert 'pgrep -f "aj""crew"' in body, body
 
 
 class TestSelfTokensFoldLineContinuations:
@@ -430,7 +430,7 @@ class TestSelfTokensFoldLineContinuations:
     The shell removes a line continuation while READING, before it tokenizes
     anything, so the two characters vanish. ``_self_tokens`` folds them the same
     way, which keeps an assignment and the invocation it feeds in ONE command:
-    ``$T`` resolves and the ``kirocrew token`` argv pair forms, so the
+    ``$T`` resolves and the ``ajcrew token`` argv pair forms, so the
     self-protection check sees the command bash assembles and runs. A quote-blind
     fold is safe here because this view only feeds the deny-direction
     self-protection predicates.
@@ -441,7 +441,7 @@ class TestSelfTokensFoldLineContinuations:
     """
 
     VERB = "tok" + "en"
-    NAME = "kiro" + "crew"
+    NAME = "aj" + "crew"
 
     def test_a_continuation_is_folded_not_read_as_a_separator(self) -> None:
         """The token list carries no ``';'`` -- the pair vanishes, as in bash."""
@@ -471,7 +471,7 @@ class TestSelfTokensFoldLineContinuations:
 
         ``_self_floor_can_fire`` strips removable quote and backslash glue before
         looking for the product name. A ``\\`` + newline leaves a newline behind
-        once the backslash goes, which pushes the two halves of ``kiro_crew`` past
+        once the backslash goes, which pushes the two halves of ``aj_crew`` past
         the hint's one-separator budget -- so the gate answered "provably cannot
         fire" and the whole argv scan was skipped for a command bash mints from.
         """
@@ -483,7 +483,7 @@ class TestSelfTokensFoldLineContinuations:
         """``\\\\`` before a newline is an escaped literal backslash, so the line ENDS.
 
         Only a LONE ``\\`` + newline continues a line. Bash runs a mint on the
-        second line of ``true\\\\`` + newline + ``python -m kirocrew token``; a
+        second line of ``true\\\\`` + newline + ``python -m ajcrew token``; a
         fold that joined any backslash-newline would mangle the ``python`` token
         and hide the mint, so the fold must leave the even run intact and the
         mint on its own line must still deny.
@@ -495,7 +495,7 @@ class TestSelfTokensFoldLineContinuations:
         """``\\`` + CRLF is NOT a continuation: bash escapes the CR and the LF ends the line.
 
         Measured against bash: ``echo a\\`` + CRLF + ``echo b`` runs two
-        commands. So ``true\\`` + CRLF + ``python -m kirocrew token`` runs the
+        commands. So ``true\\`` + CRLF + ``python -m ajcrew token`` runs the
         mint on the second line, and folding the ``\\`` + CRLF away would join
         ``true`` and ``python`` and hide the mint from the argv check.
         """
@@ -554,7 +554,7 @@ class TestSubstitutionBodiesReadFoldedOpeners:
     """
 
     VERB = "tok" + "en"
-    NAME = "kiro" + "crew"
+    NAME = "aj" + "crew"
     OPENERS = ("<(", ">(", "$(")
 
     @classmethod

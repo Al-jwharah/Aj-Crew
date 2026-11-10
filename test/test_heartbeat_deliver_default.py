@@ -24,7 +24,7 @@ def _make_orch(default_deliver, monkeypatch, state=None):
 
     *state* is the dashboard the result lands on; without one it is a stand-in.
     """
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     orch = gateway.GatewayOrchestrator.__new__(gateway.GatewayOrchestrator)
 
@@ -48,14 +48,14 @@ def _make_orch(default_deliver, monkeypatch, state=None):
 
     cfg = MagicMock()
     cfg.heartbeat.default_deliver = default_deliver
-    monkeypatch.setattr(gateway.KiroCrewConfig, "load", lambda *a, **k: cfg)
+    monkeypatch.setattr(gateway.AjCrewConfig, "load", lambda *a, **k: cfg)
     return orch, state
 
 
 class TestDefaultDeliverConfig:
     @pytest.mark.asyncio()
     async def test_empty_deliver_dashboard_default_is_dashboard_only(self, monkeypatch):
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         orch, state = _make_orch("dashboard", monkeypatch)
         slot = _ChatSlot(key="chat-1")

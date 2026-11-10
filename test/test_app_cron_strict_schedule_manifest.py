@@ -17,16 +17,16 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.apps.execution as execution_mod
-from kiro_crew.apps.bridges import (
+import aj_crew.apps.execution as execution_mod
+from aj_crew.apps.bridges import (
     _app_crons_path,
     _register_crons,
     load_app_cron_defs,
     register_app_crons_with_service,
 )
-from kiro_crew.apps.manifest import AppManifest, CronEntry
-from kiro_crew.cron import CronService
-from kiro_crew.cron_service.schedule import compute_jitter
+from aj_crew.apps.manifest import AppManifest, CronEntry
+from aj_crew.cron import CronService
+from aj_crew.cron_service.schedule import compute_jitter
 
 APP = "strict-app"
 SHORT = "morning-report"
@@ -55,11 +55,11 @@ def _daily_cron(**extra) -> dict:
 @pytest.fixture()
 def home(tmp_path, monkeypatch):
     """An isolated crew home with one installed app bundle."""
-    root = tmp_path / "kirocrew-home"
+    root = tmp_path / "ajcrew-home"
     bundle = root / "apps" / APP
     bundle.mkdir(parents=True)
     (root / "crons").mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(root))
+    monkeypatch.setenv("AJCREW_HOME", str(root))
     (bundle / "app.json").write_text(
         json.dumps(
             {
@@ -72,7 +72,7 @@ def home(tmp_path, monkeypatch):
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr("kiro_crew.apps.bridges._registration_denied", lambda *a, **k: False)
+    monkeypatch.setattr("aj_crew.apps.bridges._registration_denied", lambda *a, **k: False)
     monkeypatch.setattr(execution_mod, "third_party_execution_allowed", lambda: True)
     return root
 

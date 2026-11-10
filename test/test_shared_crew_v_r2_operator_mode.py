@@ -20,17 +20,17 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 from shared_crew_host_isolation import host_isolation  # noqa: F401
 
-from kiro_crew.dashboard import revocation_gen, token_auth
-from kiro_crew.dashboard.routes import register_all
-from kiro_crew.shared_crew import crew_mode, people, routes_identity
-from kiro_crew.shared_crew.attribution import creator_of_public, public_attribution
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.dashboard import revocation_gen, token_auth
+from aj_crew.dashboard.routes import register_all
+from aj_crew.shared_crew import crew_mode, people, routes_identity
+from aj_crew.shared_crew.attribution import creator_of_public, public_attribution
+from aj_crew.shared_crew.contracts import (
     AttributionAvailability,
     Principal,
     Provenance,
     SessionAttribution,
 )
-from kiro_crew.shared_crew.identity import local_operator_principal, tailnet_principal
+from aj_crew.shared_crew.identity import local_operator_principal, tailnet_principal
 
 pytestmark = pytest.mark.usefixtures("host_isolation")
 
@@ -56,8 +56,8 @@ def _creators(*rows: dict[str, Any]) -> list[Principal]:
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(token_auth, "_get_secret", lambda: b"shared-crew-r2-key")
     monkeypatch.setattr(token_auth, "_state", token_auth.TokenStateManager())
     monkeypatch.setattr(token_auth, "_app_perms_cache", {})
@@ -202,9 +202,9 @@ async def test_only_the_direct_listener_admission_skips_the_owner_gate(
     """A token whose request only resolves to a tailnet peer is still owner-gated."""
     from aiohttp.test_utils import make_mocked_request
 
-    from kiro_crew.dashboard.handlers import _shared
-    from kiro_crew.shared_crew.contracts import ACTOR_REQUEST_KEY, ActorContext, Transport
-    from kiro_crew.shared_crew.identity import tailnet_principal
+    from aj_crew.dashboard.handlers import _shared
+    from aj_crew.shared_crew.contracts import ACTOR_REQUEST_KEY, ActorContext, Transport
+    from aj_crew.shared_crew.identity import tailnet_principal
 
     refused = web.json_response({"code": "owner_only"}, status=403)
 

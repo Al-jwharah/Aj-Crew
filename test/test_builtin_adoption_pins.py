@@ -9,11 +9,11 @@ from pathlib import Path
 import pytest
 from builtin_adoption_helpers import NAME, REPOSITORY, install_pins, pin_row, requires_git
 
-import kiro_crew
-from kiro_crew.apps import builtin_adoption_pins as pins_mod
-from kiro_crew.apps.builtin_adoption_pins import load_adoption_pins, parse_adoption_pins
+import aj_crew
+from aj_crew.apps import builtin_adoption_pins as pins_mod
+from aj_crew.apps.builtin_adoption_pins import load_adoption_pins, parse_adoption_pins
 
-_SRC = Path(kiro_crew.__file__).resolve().parent
+_SRC = Path(aj_crew.__file__).resolve().parent
 COMMIT = "a" * 40
 TREE = "b" * 64
 ARCHIVE = "c" * 64
@@ -39,9 +39,9 @@ def test_a_valid_row_loads_with_a_derived_archive_url():
     pin = pins[NAME]
     assert pin.repository == REPOSITORY
     assert pin.archive_url == (
-        f"https://codeload.github.com/FixtureOrg/kirocrew-app-fixture-former/tar.gz/{COMMIT}"
+        f"https://codeload.github.com/FixtureOrg/ajcrew-app-fixture-former/tar.gz/{COMMIT}"
     )
-    assert pin.archive_root == f"kirocrew-app-fixture-former-{COMMIT}"
+    assert pin.archive_root == f"ajcrew-app-fixture-former-{COMMIT}"
     assert (pin.legacy_route, pin.legacy_icon) == (f"/{NAME}", "Box")
 
 
@@ -202,7 +202,7 @@ def test_the_shipped_pin_file_validates_and_pins_exactly_the_shipped_table():
 
 def test_every_shipped_pin_matches_its_wheel_built_in_version():
     """D12: a first-adoption pin carries the wheel built-in's version (downgrade-safe)."""
-    from kiro_crew.apps.execution import _shipped_builtin_apps
+    from aj_crew.apps.execution import _shipped_builtin_apps
 
     shipped = {}
     for root, name in _shipped_builtin_apps():
@@ -233,8 +233,8 @@ _ADOPTION_MODULES = (
 
 
 def _builtin_identifiers() -> set[str]:
-    from kiro_crew.apps.builtins import BUILTIN_NAMES
-    from kiro_crew.apps.execution import _shipped_builtin_apps
+    from aj_crew.apps.builtins import BUILTIN_NAMES
+    from aj_crew.apps.execution import _shipped_builtin_apps
 
     names = set(BUILTIN_NAMES)
     for root, name in _shipped_builtin_apps():
@@ -344,7 +344,7 @@ def test_the_pin_tool_checks_out_without_the_operators_git_config(tmp_path, monk
     checkout = tmp_path / "checkout"
     _pin_tool(monkeypatch)._clone(bare.as_uri(), commit, checkout)
     assert b"\r\n" not in (checkout / "app.json").read_bytes()
-    from kiro_crew.apps.builtin_adoption_fetch import adoption_tree_digest
+    from aj_crew.apps.builtin_adoption_fetch import adoption_tree_digest
 
     assert adoption_tree_digest(checkout) == adoption_tree_digest(tree)
 

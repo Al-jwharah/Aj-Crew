@@ -23,7 +23,7 @@ const ONE_LINE_H = 44 // min-h-[44px] on the textarea
 const INPUT = '[data-chat-pane] textarea[data-composer-input]'
 // A stylesheet, not a class edit: React owns className and restores it on render.
 const DEFEAT = `${INPUT}::placeholder { white-space: pre-wrap !important; overflow: visible !important; mask-image: none !important; -webkit-mask-image: none !important }`
-const slot = (key, title) => ({ key, title, messages: 1, running: false, agent: 'kirocrew', created: '2026-09-24T09:00:00Z', last_ts: '2026-09-25T08:00:00Z', folder_id: '' })
+const slot = (key, title) => ({ key, title, messages: 1, running: false, agent: 'ajcrew', created: '2026-09-24T09:00:00Z', last_ts: '2026-09-25T08:00:00Z', folder_id: '' })
 const reply = (mid, content) => [{ role: 'assistant', content, ts: '2026-09-25T08:00:00Z', meta: { mid } }]
 // `dir: 'col'` tiles left→right (SessionGridLayout), which is what squeezes a
 // composer; 1100px then puts each one under the hint's own width.

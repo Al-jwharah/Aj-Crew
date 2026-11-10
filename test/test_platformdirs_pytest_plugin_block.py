@@ -23,7 +23,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 _REPO = Path(__file__).resolve().parents[1]
 _SETUP_CFG = _REPO / "setup.cfg"
@@ -59,7 +59,7 @@ class TestTheBlockIsConfigured:
 class TestTheBlockCostsNothing:
     def test_no_test_asks_for_the_isolated_fixture(self) -> None:
         """Blocking the plugin is only safe while the fixture is unused."""
-        roots = [_REPO / "test", _REPO / "src" / "kiro_crew" / "apps" / "builtins"]
+        roots = [_REPO / "test", _REPO / "src" / "aj_crew" / "apps" / "builtins"]
         users = [
             path
             for root in roots

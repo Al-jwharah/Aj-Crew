@@ -8,7 +8,7 @@ from typing import Iterator
 
 import pytest
 
-from kiro_crew.taskq.store import TaskStore, TaskStoreUnavailable, WorkRow
+from aj_crew.taskq.store import TaskStore, TaskStoreUnavailable, WorkRow
 
 
 @pytest.fixture

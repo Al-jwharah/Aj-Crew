@@ -1,7 +1,7 @@
 """The opencode session MCP array: its projection, and the adapter facts it rests on.
 
 Two halves, deliberately in one file. The unit half drives
-:mod:`kiro_crew.providers.mirrors.opencode` over a temp agent spec. The
+:mod:`aj_crew.providers.mirrors.opencode` over a temp agent spec. The
 :func:`test_real_opencode_acp_accepts_the_crew_stdio_element` half drives a real
 ``opencode acp`` and is the anti-drift guard for the whole projection: this backend
 had NO projection at all because an adapter fact was inferred from its
@@ -24,16 +24,16 @@ from pathlib import Path
 import pytest
 from real_adapter_gate import MEASURED_OPENCODE_VERSION, require_real_adapter
 
-from kiro_crew import agent as agent_mod
-from kiro_crew import platform_compat
-from kiro_crew.acp import session_mcp
-from kiro_crew.acp_backends import (
+from aj_crew import agent as agent_mod
+from aj_crew import platform_compat
+from aj_crew.acp import session_mcp
+from aj_crew.acp_backends import (
     ACP_BACKEND_OPENCODE,
     ACP_BACKENDS_SESSION_MCP_ARRAY,
 )
-from kiro_crew.providers.mirrors import Concern, Disposition, mirror_for
-from kiro_crew.providers.mirrors.identity import identity_bound_crew_servers
-from kiro_crew.providers.mirrors.opencode import (
+from aj_crew.providers.mirrors import Concern, Disposition, mirror_for
+from aj_crew.providers.mirrors.identity import identity_bound_crew_servers
+from aj_crew.providers.mirrors.opencode import (
     OpenCodeMirror,
     opencode_deny_rules,
     opencode_elements,
@@ -41,15 +41,15 @@ from kiro_crew.providers.mirrors.opencode import (
     opencode_tool_id,
     without_stdio_tag,
 )
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 #: What opencode 1.18.30's ``initialize`` actually answered. Two fields, because
 #: ACP's ``McpCapabilities`` has exactly two -- which is the whole point: there is
 #: no stdio field for a conforming agent to set, so this IS full support.
 _OPENCODE_1_18_CAPS = {"http": True, "sse": True}
 
-_CORE = {"command": "/opt/kirocrew", "args": ["mcp-core"]}
-_CRON = {"command": "/opt/kirocrew", "args": ["mcp-cron"]}
+_CORE = {"command": "/opt/ajcrew", "args": ["mcp-core"]}
+_CRON = {"command": "/opt/ajcrew", "args": ["mcp-cron"]}
 
 
 @pytest.fixture
@@ -64,7 +64,7 @@ def agents_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", d)
     monkeypatch.setattr(agent_mod, "_KIRO_MCP_JSON", tmp_path / "settings-mcp.json")
     monkeypatch.setattr(session_mcp, "ensure_agent_materialized", lambda _a: True)
-    managed = {"kirocrew-core": dict(_CORE), "kirocrew-cron": dict(_CRON)}
+    managed = {"ajcrew-core": dict(_CORE), "ajcrew-cron": dict(_CRON)}
     monkeypatch.setattr(
         session_mcp,
         "managed_mcp_spec_entry",
@@ -75,10 +75,10 @@ def agents_dir(tmp_path, monkeypatch):
 
 
 def _write_spec(agents_dir: Path, *, servers: dict, tools: list | None) -> None:
-    spec: dict = {"name": "kirocrew", "mcpServers": servers}
+    spec: dict = {"name": "ajcrew", "mcpServers": servers}
     if tools is not None:
         spec["tools"] = tools
-    (agents_dir / "kirocrew.json").write_text(json.dumps(spec), encoding="utf-8")
+    (agents_dir / "ajcrew.json").write_text(json.dumps(spec), encoding="utf-8")
 
 
 def _by_name(elements: list[dict]) -> dict[str, dict]:
@@ -120,9 +120,9 @@ class TestTheChannelExists:
 
     def test_the_control_plane_reaches_a_session_end_to_end(self, agents_dir):
         """The defect, inverted: ``spawn_run`` and friends have to be THERE."""
-        _write_spec(agents_dir, servers={}, tools=["@kirocrew-core", "@kirocrew-cron"])
-        names = [e["name"] for e in opencode_projection("kirocrew").params["mcpServers"]]
-        assert names == ["kirocrew-core", "kirocrew-cron"]
+        _write_spec(agents_dir, servers={}, tools=["@ajcrew-core", "@ajcrew-cron"])
+        names = [e["name"] for e in opencode_projection("ajcrew").params["mcpServers"]]
+        assert names == ["ajcrew-core", "ajcrew-cron"]
 
 
 # ── no transport filter, and why ────────────────────────────────────────────
@@ -143,7 +143,7 @@ class TestEveryTransportSurvives:
             servers={"remote": {"url": "https://example.invalid/sse", "type": "sse"}},
             tools=["@remote"],
         )
-        element = _by_name(opencode_projection("kirocrew").params["mcpServers"])["remote"]
+        element = _by_name(opencode_projection("ajcrew").params["mcpServers"])["remote"]
         assert element["type"] == "sse"
         assert element["url"] == "https://example.invalid/sse"
 
@@ -153,7 +153,7 @@ class TestEveryTransportSurvives:
             servers={"remote": {"url": "https://example.invalid/mcp"}},
             tools=["@remote"],
         )
-        element = _by_name(opencode_projection("kirocrew").params["mcpServers"])["remote"]
+        element = _by_name(opencode_projection("ajcrew").params["mcpServers"])["remote"]
         assert element["type"] == "http"
 
     def test_the_stdio_type_tag_is_removed_rather_than_relied_on(self, agents_dir):
@@ -168,7 +168,7 @@ class TestEveryTransportSurvives:
         shapes are measured working, so the safe one is free.
         """
         _write_spec(agents_dir, servers={"local": {"command": "/bin/x"}}, tools=["@local"])
-        element = _by_name(opencode_projection("kirocrew").params["mcpServers"])["local"]
+        element = _by_name(opencode_projection("ajcrew").params["mcpServers"])["local"]
         assert "type" not in element
         # The rest of the element is untouched: this is a removal, not a reshape.
         assert element["command"] == "/bin/x"
@@ -186,7 +186,7 @@ class TestEveryTransportSurvives:
             servers={"remote": {"url": "https://example.invalid/sse", "type": "sse"}},
             tools=["@remote"],
         )
-        element = _by_name(opencode_projection("kirocrew").params["mcpServers"])["remote"]
+        element = _by_name(opencode_projection("ajcrew").params["mcpServers"])["remote"]
         assert element["type"] == "sse"
 
 
@@ -212,7 +212,7 @@ class TestAMalformedEntryIsSkippedNotSent:
             },
             tools=["@broken", "@fine"],
         )
-        names = [e["name"] for e in opencode_projection("kirocrew").params["mcpServers"]]
+        names = [e["name"] for e in opencode_projection("ajcrew").params["mcpServers"]]
         assert names == ["fine"]
 
     def test_a_non_list_args_is_launched_with_none_rather_than_exploded(self, agents_dir):
@@ -222,7 +222,7 @@ class TestAMalformedEntryIsSkippedNotSent:
         _write_spec(
             agents_dir, servers={"local": {"command": "/bin/x", "args": 8080}}, tools=["@local"]
         )
-        element = _by_name(opencode_projection("kirocrew").params["mcpServers"])["local"]
+        element = _by_name(opencode_projection("ajcrew").params["mcpServers"])["local"]
         assert element["args"] == []
 
     def test_every_element_carries_the_two_arrays_the_schema_requires(self, agents_dir):
@@ -234,9 +234,9 @@ class TestAMalformedEntryIsSkippedNotSent:
         _write_spec(
             agents_dir,
             servers={"local": {"command": "/bin/x"}},
-            tools=["@local", "@kirocrew-core"],
+            tools=["@local", "@ajcrew-core"],
         )
-        for element in opencode_projection("kirocrew", session_key="k").params["mcpServers"]:
+        for element in opencode_projection("ajcrew", session_key="k").params["mcpServers"]:
             assert isinstance(element.get("args"), list), element
             assert isinstance(element.get("env"), list), element
             assert all(
@@ -254,7 +254,7 @@ class TestAMalformedEntryIsSkippedNotSent:
 
 
 class TestIdentityRidesOnlyTheControlPlane:
-    """``KIROCREW_SESSION_KEY`` is a credential, so its placement is a security rule.
+    """``AJCREW_SESSION_KEY`` is a credential, so its placement is a security rule.
 
     The REASON differs from codex's and the difference decides the failure mode.
     codex-rs ``env_clear()``s its stdio children, so without the element env codex's
@@ -264,17 +264,17 @@ class TestIdentityRidesOnlyTheControlPlane:
     """
 
     def test_the_control_plane_carries_the_session_key(self, agents_dir):
-        _write_spec(agents_dir, servers={}, tools=["@kirocrew-core", "@kirocrew-cron"])
+        _write_spec(agents_dir, servers={}, tools=["@ajcrew-core", "@ajcrew-cron"])
         elements = _by_name(
-            opencode_projection("kirocrew", session_key="sk-1", channel_id="ch-1").params[
+            opencode_projection("ajcrew", session_key="sk-1", channel_id="ch-1").params[
                 "mcpServers"
             ]
         )
-        for name in ("kirocrew-core", "kirocrew-cron"):
+        for name in ("ajcrew-core", "ajcrew-cron"):
             env = _env(elements[name])
-            assert env["KIROCREW_SESSION_KEY"] == "sk-1"
-            assert env["KIROCREW_CHANNEL_ID"] == "ch-1"
-            assert "KIROCREW_BOUND_PORT" in env
+            assert env["AJCREW_SESSION_KEY"] == "sk-1"
+            assert env["AJCREW_CHANNEL_ID"] == "ch-1"
+            assert "AJCREW_BOUND_PORT" in env
 
     def test_a_spec_described_server_gets_no_crew_identity(self, agents_dir):
         """An element the spec describes is one whose command, args and env the spec
@@ -283,39 +283,39 @@ class TestIdentityRidesOnlyTheControlPlane:
         _write_spec(
             agents_dir,
             servers={"third-party": {"command": "/bin/x", "env": {"A": "1"}}},
-            tools=["@third-party", "@kirocrew-core"],
+            tools=["@third-party", "@ajcrew-core"],
         )
         elements = _by_name(
-            opencode_projection("kirocrew", session_key="sk-1").params["mcpServers"]
+            opencode_projection("ajcrew", session_key="sk-1").params["mcpServers"]
         )
         assert _env(elements["third-party"]) == {"A": "1"}
-        assert "KIROCREW_SESSION_KEY" in _env(elements["kirocrew-core"])
+        assert "AJCREW_SESSION_KEY" in _env(elements["ajcrew-core"])
 
     def test_a_third_party_server_NAMED_like_the_control_plane_cannot_steal_the_key(
         self, agents_dir
     ):
         """Provenance, not the name. The two control-plane entries are the ones the
         shared translation REPLACES from ``managed_mcp_spec_entry``, so a spec line
-        spelling ``kirocrew-core`` with its own command never survives to receive
+        spelling ``ajcrew-core`` with its own command never survives to receive
         anything -- the managed entry overwrites it."""
         _write_spec(
             agents_dir,
-            servers={"kirocrew-core": {"command": "/tmp/evil", "args": ["--x"]}},
-            tools=["@kirocrew-core"],
+            servers={"ajcrew-core": {"command": "/tmp/evil", "args": ["--x"]}},
+            tools=["@ajcrew-core"],
         )
         element = _by_name(
-            opencode_projection("kirocrew", session_key="sk-1").params["mcpServers"]
-        )["kirocrew-core"]
+            opencode_projection("ajcrew", session_key="sk-1").params["mcpServers"]
+        )["ajcrew-core"]
         assert element["command"] == _CORE["command"]
         assert element["args"] == _CORE["args"]
-        assert _env(element)["KIROCREW_SESSION_KEY"] == "sk-1"
+        assert _env(element)["AJCREW_SESSION_KEY"] == "sk-1"
 
     def test_no_identity_is_added_when_the_caller_supplies_none(self, agents_dir):
         """A session with no key must not get an empty-valued one, which would look
         like a credential and authenticate nothing."""
-        _write_spec(agents_dir, servers={}, tools=["@kirocrew-core"])
-        element = _by_name(opencode_projection("kirocrew").params["mcpServers"])["kirocrew-core"]
-        assert "KIROCREW_SESSION_KEY" not in _env(element)
+        _write_spec(agents_dir, servers={}, tools=["@ajcrew-core"])
+        element = _by_name(opencode_projection("ajcrew").params["mcpServers"])["ajcrew-core"]
+        assert "AJCREW_SESSION_KEY" not in _env(element)
 
     def test_a_stale_key_on_an_entry_is_replaced_rather_than_duplicated(self):
         """Later wins, and only once: an ACP env array with two pairs of one name is
@@ -323,17 +323,17 @@ class TestIdentityRidesOnlyTheControlPlane:
         element = opencode_elements(
             [
                 {
-                    "name": "kirocrew-core",
+                    "name": "ajcrew-core",
                     "command": "/x",
                     "args": [],
-                    "env": [{"name": "KIROCREW_SESSION_KEY", "value": "stale"}],
+                    "env": [{"name": "AJCREW_SESSION_KEY", "value": "stale"}],
                 }
             ],
             session_key="fresh",
         )[0]
         keys = [p["name"] for p in element["env"]]
-        assert keys.count("KIROCREW_SESSION_KEY") == 1
-        assert _env(element)["KIROCREW_SESSION_KEY"] == "fresh"
+        assert keys.count("AJCREW_SESSION_KEY") == 1
+        assert _env(element)["AJCREW_SESSION_KEY"] == "fresh"
 
 
 class TestNoNameFolding:
@@ -349,7 +349,7 @@ class TestNoNameFolding:
 
     def test_a_name_with_whitespace_is_passed_through_unchanged(self, agents_dir):
         _write_spec(agents_dir, servers={"my server": {"command": "/bin/x"}}, tools=["@my server"])
-        names = [e["name"] for e in opencode_projection("kirocrew").params["mcpServers"]]
+        names = [e["name"] for e in opencode_projection("ajcrew").params["mcpServers"]]
         assert "my server" in names
 
 
@@ -371,7 +371,7 @@ class TestPerToolDenyRules:
             servers={"narrowed": {"command": "/bin/x", "disabledTools": ["danger"]}},
             tools=["@narrowed"],
         )
-        projection = opencode_projection("kirocrew")
+        projection = opencode_projection("ajcrew")
         names = [e["name"] for e in projection.params["mcpServers"]]
         assert "narrowed" in names
         assert projection.harness_deny_rules == ("narrowed_danger",)
@@ -390,28 +390,28 @@ class TestPerToolDenyRules:
         )
         monkeypatch.setattr(agent_mod, "_KIRO_MCP_JSON", settings)
         _write_spec(agents_dir, servers={"narrowed": {"command": "/bin/x"}}, tools=["@narrowed"])
-        projection = opencode_projection("kirocrew")
+        projection = opencode_projection("ajcrew")
         assert "narrowed" in [e["name"] for e in projection.params["mcpServers"]]
         assert projection.harness_deny_rules == ("narrowed_danger",)
 
     def test_a_narrowed_control_plane_stays_mounted_with_a_deny_rule(self, agents_dir):
-        """The case whole-server withholding cost most: with kirocrew-core gone a
+        """The case whole-server withholding cost most: with ajcrew-core gone a
         session cannot report back to its channel at all."""
         _write_spec(
             agents_dir,
-            servers={"kirocrew-core": {"command": "/x", "disabledTools": ["spawn_run"]}},
-            tools=["@kirocrew-core", "@kirocrew-cron"],
+            servers={"ajcrew-core": {"command": "/x", "disabledTools": ["spawn_run"]}},
+            tools=["@ajcrew-core", "@ajcrew-cron"],
         )
-        projection = opencode_projection("kirocrew")
+        projection = opencode_projection("ajcrew")
         names = [e["name"] for e in projection.params["mcpServers"]]
-        assert names == ["kirocrew-core", "kirocrew-cron"]
-        assert projection.harness_deny_rules == ("kirocrew-core_spawn_run",)
+        assert names == ["ajcrew-core", "ajcrew-cron"]
+        assert projection.harness_deny_rules == ("ajcrew-core_spawn_run",)
 
     def test_an_unnarrowed_control_plane_pays_nothing(self, agents_dir):
-        _write_spec(agents_dir, servers={}, tools=["@kirocrew-core", "@kirocrew-cron"])
-        projection = opencode_projection("kirocrew")
+        _write_spec(agents_dir, servers={}, tools=["@ajcrew-core", "@ajcrew-cron"])
+        projection = opencode_projection("ajcrew")
         names = [e["name"] for e in projection.params["mcpServers"]]
-        assert names == ["kirocrew-core", "kirocrew-cron"]
+        assert names == ["ajcrew-core", "ajcrew-cron"]
         assert projection.harness_deny_rules == ()
 
     def test_the_rule_is_spelled_the_way_the_harness_names_the_tool(self):
@@ -431,7 +431,7 @@ class TestPerToolDenyRules:
             servers={"apply": {"command": "/bin/x", "disabledTools": ["patch"]}},
             tools=["@apply"],
         )
-        projection = opencode_projection("kirocrew")
+        projection = opencode_projection("ajcrew")
         assert "apply" not in [e["name"] for e in projection.params["mcpServers"]]
         assert projection.harness_deny_rules == ()
         assert projection.unhonoured_servers == frozenset({"apply"})
@@ -443,15 +443,15 @@ class TestPerToolDenyRules:
             agents_dir,
             servers={
                 "narrowed": {"command": "/bin/x", "disabledTools": ["danger"]},
-                "kirocrew-core": {"command": "/x", "disabledTools": ["spawn_run"]},
+                "ajcrew-core": {"command": "/x", "disabledTools": ["spawn_run"]},
             },
-            tools=["@narrowed", "@kirocrew-core"],
+            tools=["@narrowed", "@ajcrew-core"],
         )
         projection = opencode_projection(
-            "kirocrew", denies_in_force=frozenset({"kirocrew-core_spawn_run"})
+            "ajcrew", denies_in_force=frozenset({"ajcrew-core_spawn_run"})
         )
         names = [e["name"] for e in projection.params["mcpServers"]]
-        assert names == ["kirocrew-core"]
+        assert names == ["ajcrew-core"]
         assert projection.unhonoured_servers == frozenset({"narrowed"})
 
     def test_the_mirror_face_passes_the_in_force_set_through(self, agents_dir):
@@ -461,8 +461,8 @@ class TestPerToolDenyRules:
             tools=["@narrowed"],
         )
         mirror = OpenCodeMirror()
-        kept = mirror.session_projection("kirocrew", harness_denies_in_force=None)
-        lost = mirror.session_projection("kirocrew", harness_denies_in_force=frozenset())
+        kept = mirror.session_projection("ajcrew", harness_denies_in_force=None)
+        lost = mirror.session_projection("ajcrew", harness_denies_in_force=frozenset())
         assert "narrowed" in [e["name"] for e in kept.params["mcpServers"]]
         assert "narrowed" not in [e["name"] for e in lost.params["mcpServers"]]
 
@@ -471,10 +471,10 @@ class TestPerToolDenyRules:
         harness sends only a fused title. Pairs here could never match."""
         _write_spec(
             agents_dir,
-            servers={"kirocrew-core": {"command": "/x", "disabledTools": ["spawn_run"]}},
-            tools=["@kirocrew-core"],
+            servers={"ajcrew-core": {"command": "/x", "disabledTools": ["spawn_run"]}},
+            tools=["@ajcrew-core"],
         )
-        assert opencode_projection("kirocrew").denied_tools == frozenset()
+        assert opencode_projection("ajcrew").denied_tools == frozenset()
         reason = OpenCodeMirror().rulings()[Concern.DENIED_TOOLS].reason
         assert "deny" in reason and "fused" in reason
 
@@ -489,7 +489,7 @@ class TestPerToolDenyRules:
         assert bound, "the identity-bound set is empty, so this test proves nothing"
         name = bound[0]
         _write_spec(agents_dir, servers={name: {"command": "/bin/x"}}, tools=[f"@{name}"])
-        names = [e["name"] for e in opencode_projection("kirocrew").params["mcpServers"]]
+        names = [e["name"] for e in opencode_projection("ajcrew").params["mcpServers"]]
         assert name not in names
 
     def test_the_identity_bound_set_never_includes_the_control_plane(self):
@@ -512,7 +512,7 @@ class TestPooledStubs:
         _write_spec(agents_dir, servers={"pooled": {"command": "/bin/x"}}, tools=["@pooled"])
         stub = {"name": "pooled", "command": "/opt/stub", "args": [], "env": []}
         elements = opencode_projection(
-            "kirocrew", stub_server_names=("pooled",), stub_elements=[stub]
+            "ajcrew", stub_server_names=("pooled",), stub_elements=[stub]
         ).params["mcpServers"]
         assert _by_name(elements)["pooled"]["command"] == "/opt/stub"
 
@@ -522,7 +522,7 @@ class TestPooledStubs:
         _write_spec(agents_dir, servers={"pooled": {"command": "/bin/x"}}, tools=[])
         stub = {"name": "pooled", "command": "/opt/stub", "args": [], "env": []}
         elements = opencode_projection(
-            "kirocrew", stub_server_names=("pooled",), stub_elements=[stub]
+            "ajcrew", stub_server_names=("pooled",), stub_elements=[stub]
         ).params["mcpServers"]
         assert "pooled" not in _by_name(elements)
 
@@ -537,7 +537,7 @@ class TestPooledStubs:
         )
         stub = {"name": "narrowed", "command": "/opt/stub", "args": [], "env": []}
         elements = opencode_projection(
-            "kirocrew",
+            "ajcrew",
             stub_server_names=("narrowed",),
             stub_elements=[stub],
             denies_in_force=frozenset(),
@@ -554,7 +554,7 @@ class TestPooledStubs:
         )
         stub = {"name": "narrowed", "command": "/opt/stub", "args": [], "env": []}
         projection = opencode_projection(
-            "kirocrew", stub_server_names=("narrowed",), stub_elements=[stub]
+            "ajcrew", stub_server_names=("narrowed",), stub_elements=[stub]
         )
         assert _by_name(projection.params["mcpServers"])["narrowed"]["command"] == "/opt/stub"
         assert projection.harness_deny_rules == ("narrowed_danger",)
@@ -564,9 +564,9 @@ class TestPooledStubs:
         session-strict server is never pooled, so none of them is the control
         plane."""
         _write_spec(agents_dir, servers={"pooled": {"command": "/bin/x"}}, tools=["@pooled"])
-        stub = {"name": "kirocrew-core", "command": "/opt/stub", "args": [], "env": []}
+        stub = {"name": "ajcrew-core", "command": "/opt/stub", "args": [], "env": []}
         elements = opencode_projection(
-            "kirocrew",
+            "ajcrew",
             stub_server_names=("pooled",),
             stub_elements=[stub],
             session_key="sk-1",
@@ -575,7 +575,7 @@ class TestPooledStubs:
         # assertion that matters is that no stub path adds a credential.
         for element in elements:
             if element.get("command") == "/opt/stub":
-                assert "KIROCREW_SESSION_KEY" not in _env(element)
+                assert "AJCREW_SESSION_KEY" not in _env(element)
 
     def test_a_stub_goes_through_the_same_stdio_tag_strip(self, agents_dir):
         """The array is ONE array, so a rule true of half of it is false.
@@ -597,7 +597,7 @@ class TestPooledStubs:
         }
         element = _by_name(
             opencode_projection(
-                "kirocrew", stub_server_names=("pooled",), stub_elements=[stub]
+                "ajcrew", stub_server_names=("pooled",), stub_elements=[stub]
             ).params["mcpServers"]
         )["pooled"]
         assert element["command"] == "/opt/stub"
@@ -618,8 +618,8 @@ class TestPooledStubs:
         path with no unit-level seam."""
         import inspect
 
-        from kiro_crew.acp import client as client_mod
-        from kiro_crew.providers.mirrors import MIRRORS
+        from aj_crew.acp import client as client_mod
+        from aj_crew.providers.mirrors import MIRRORS
 
         assert ACP_BACKEND_OPENCODE in MIRRORS
         pooled = inspect.getsource(client_mod.AcpClient._pooled_mcp_servers)
@@ -638,14 +638,14 @@ class TestTheToolsAllowlistApplies:
             servers={"used": {"command": "/bin/x"}, "unused": {"command": "/bin/y"}},
             tools=["@used"],
         )
-        names = [e["name"] for e in opencode_projection("kirocrew").params["mcpServers"]]
+        names = [e["name"] for e in opencode_projection("ajcrew").params["mcpServers"]]
         assert names == ["used"]
 
     def test_a_spec_that_drops_the_control_plane_reference_drops_the_server(self, agents_dir):
         """kiro-cli parity: it mounts a server only when ``tools`` names it, and this
         backend must not re-grant what kiro-cli would drop."""
         _write_spec(agents_dir, servers={}, tools=["fs_read"])
-        assert opencode_projection("kirocrew").params["mcpServers"] == []
+        assert opencode_projection("ajcrew").params["mcpServers"] == []
 
 
 # ── the two faces cannot drift ──────────────────────────────────────────────
@@ -653,17 +653,17 @@ class TestTheToolsAllowlistApplies:
 
 class TestTheMirrorFaces:
     def test_the_wire_face_is_the_projections_params(self, agents_dir):
-        _write_spec(agents_dir, servers={}, tools=["@kirocrew-core"])
+        _write_spec(agents_dir, servers={}, tools=["@ajcrew-core"])
         mirror = OpenCodeMirror()
-        assert mirror.session_params("kirocrew") == mirror.session_projection("kirocrew").params
+        assert mirror.session_params("ajcrew") == mirror.session_projection("ajcrew").params
 
     def test_the_wire_face_does_NOT_fail_closed_on_claudes_precondition(self, agents_dir):
         """``permission_surface_owned`` describes claude's settings file, not this
         harness. Failing closed on it would withhold every Crew tool from every
         opencode session on the strength of a condition that does not apply."""
-        _write_spec(agents_dir, servers={}, tools=["@kirocrew-core"])
-        params = OpenCodeMirror().session_params("kirocrew", permission_surface_owned=False)
-        assert [e["name"] for e in params["mcpServers"]] == ["kirocrew-core"]
+        _write_spec(agents_dir, servers={}, tools=["@ajcrew-core"])
+        params = OpenCodeMirror().session_params("ajcrew", permission_surface_owned=False)
+        assert [e["name"] for e in params["mcpServers"]] == ["ajcrew-core"]
 
     def test_the_mirror_writes_no_files(self, tmp_path):
         """Crew authors no opencode MCP config, and that is a decision rather than an
@@ -672,7 +672,7 @@ class TestTheMirrorFaces:
         DOUBLE-MOUNTS it -- both children spawn, because the array does not go
         through config resolution at all."""
         before = sorted(p.name for p in tmp_path.iterdir())
-        OpenCodeMirror().write_files("kirocrew", work_dir=tmp_path)
+        OpenCodeMirror().write_files("ajcrew", work_dir=tmp_path)
         assert sorted(p.name for p in tmp_path.iterdir()) == before
 
     def test_the_routing_seed_carries_no_mcp_block(self, monkeypatch):
@@ -680,8 +680,8 @@ class TestTheMirrorFaces:
         DOES seed: its only key of Crew's own is the permission setting, so no
         ``mcp`` block reaches the harness through it, with or without an operator's
         own config to merge over."""
-        from kiro_crew import acp_tool_gate
-        from kiro_crew.acp.harness import opencode as opencode_mod
+        from aj_crew import acp_tool_gate
+        from aj_crew.acp.harness import opencode as opencode_mod
 
         setting_key, _value = acp_tool_gate.permission_setting_for(ACP_BACKEND_OPENCODE)
         monkeypatch.delenv("OPENCODE_CONFIG_CONTENT", raising=False)
@@ -793,10 +793,10 @@ def drive(case, element, watch_report):
 
 # 1 + 2 + 3: the element Crew already emits, its child, and the env it carried.
 stdio_el = {
-    "name": "kirocrew-core", "type": "stdio", "command": sys.executable,
+    "name": "ajcrew-core", "type": "stdio", "command": sys.executable,
     "args": [stub],
     "env": [{"name": "STUB_MCP_REPORT", "value": report},
-            {"name": "KIROCREW_SESSION_KEY", "value": "probe-session-key"}],
+            {"name": "AJCREW_SESSION_KEY", "value": "probe-session-key"}],
 }
 init, new = drive("stdio", stdio_el, True)
 out = {
@@ -904,7 +904,7 @@ def _run_driver_reaping_group(
     broadcast guard. Copied in shape from ``test_codex_session_mcp.py``, whose
     sibling test has the identical three-generation problem.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     proc = subprocess.Popen(
         argv,
@@ -944,7 +944,7 @@ def _opencode_bin() -> str | None:
     what this test must exercise is the binary a real session would spawn, on the
     same ladder (``OPENCODE_BIN``, mise, PATH).
     """
-    from kiro_crew.acp.client import _resolve_self_served_bin
+    from aj_crew.acp.client import _resolve_self_served_bin
 
     resolved, _search = _resolve_self_served_bin(ACP_BACKEND_OPENCODE)
     return resolved or None
@@ -957,7 +957,7 @@ def _require_opencode() -> None:
     """Gate a live measurement on the harness, without a skip a lane can hide behind.
 
     The codex file's ``_require_codex_acp`` with this backend's resolver and pin:
-    absent locally it skips, absent under ``KIROCREW_E2E_REQUIRE=1`` it fails, so
+    absent locally it skips, absent under ``AJCREW_E2E_REQUIRE=1`` it fails, so
     the lane that installs the pinned harness cannot report success having measured
     nothing.
     """
@@ -983,7 +983,7 @@ def test_real_opencode_acp_accepts_the_crew_stdio_element():
        ``initialize`` and then ``tools/list``. Acceptance alone would leave a
        session holding a mounted server with no usable tool.
     3. The element's ``env`` REACHES the child, which is what makes
-       ``KIROCREW_SESSION_KEY`` on the element the thing that scopes Crew's control
+       ``AJCREW_SESSION_KEY`` on the element the thing that scopes Crew's control
        plane to this session rather than to the gateway.
     4. Dropping the ``type`` key is EQUIVALENT, which is what licenses leaving the
        tag on rather than adding a second element shape to the shared translator.
@@ -1046,7 +1046,7 @@ def test_real_opencode_acp_accepts_the_crew_stdio_element():
         "opencode acp launched the server but never listed its tools, so the session "
         "would hold a mounted server with no usable tool\n" + context
     )
-    assert child["env"].get("KIROCREW_SESSION_KEY") == "probe-session-key", (
+    assert child["env"].get("AJCREW_SESSION_KEY") == "probe-session-key", (
         "the element's env did not reach the child, so nothing scopes Crew's control "
         "plane to this session\n" + context
     )
@@ -1104,7 +1104,7 @@ def test_the_real_adapter_guard_is_reachable_at_all(monkeypatch):
     """A skip-only guard is a guard nobody notices has stopped running.
 
     This does not assert the harness is installed -- most runners have none, and
-    the lane that installs it enforces presence with ``KIROCREW_E2E_REQUIRE``
+    the lane that installs it enforces presence with ``AJCREW_E2E_REQUIRE``
     instead. It asserts the RESOLVER the guard
     reads is the spawn's own, so a rename there cannot turn the guard permanently
     green without anyone seeing it.
@@ -1114,8 +1114,8 @@ def test_the_real_adapter_guard_is_reachable_at_all(monkeypatch):
     binary from this test's process -- a host program this test has no business
     starting (test-hygiene class 7).
     """
-    from kiro_crew.acp import client as client_mod
-    from kiro_crew.acp.client import _resolve_self_served_bin
+    from aj_crew.acp import client as client_mod
+    from aj_crew.acp.client import _resolve_self_served_bin
 
     monkeypatch.setattr(client_mod, "_mise_which", lambda tool: None)
     resolved, search = _resolve_self_served_bin(ACP_BACKEND_OPENCODE)
@@ -1151,7 +1151,7 @@ def test_the_driver_runner_reaps_descendants_on_the_timeout_path():
     parent = (
         "import subprocess, sys, time\n"
         f"sys.path.insert(0, {str(src_root)!r})\n"
-        "from kiro_crew.platform_compat import get_process_start_id\n"
+        "from aj_crew.platform_compat import get_process_start_id\n"
         'g = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(300)"])\n'
         "print(g.pid, get_process_start_id(g.pid) or '', flush=True)\n"
         "time.sleep(300)\n"
@@ -1210,8 +1210,8 @@ def test_the_driver_and_stub_are_syntactically_valid_python():
 
 def _real_opencode_read_back(tmp_path, global_permission: dict) -> tuple[str, str]:
     """Run the real routing read-back under a private HOME holding *global_permission*."""
-    from kiro_crew.acp.client import AcpClient
-    from kiro_crew.acp.harness import opencode as opencode_mod
+    from aj_crew.acp.client import AcpClient
+    from aj_crew.acp.harness import opencode as opencode_mod
 
     home = tmp_path / "home"
     config_home = home / ".config"
@@ -1253,7 +1253,7 @@ def test_the_real_read_back_helper_reaches_the_routing_read_back(
     built, in the private HOME it built, and read the answer the way the live test
     expects -- a per-tool allow under a trailing ask is in force, a deny is refused.
     """
-    from kiro_crew.acp.harness import opencode as opencode_mod
+    from aj_crew.acp.harness import opencode as opencode_mod
 
     ran: list[tuple[list[str], dict]] = []
 
@@ -1343,9 +1343,9 @@ def test_real_opencode_the_version_gate_passes_the_pinned_binary(tmp_path):
       child runs, so ``SandboxUnavailableError`` propagating IS the contract
       there.
     """
-    import kiro_crew.sandbox as sandbox_mod
-    from kiro_crew.acp.harness import opencode as opencode_mod
-    from kiro_crew.agent_sdk import tool_gate as acp_tool_gate
+    import aj_crew.sandbox as sandbox_mod
+    from aj_crew.acp.harness import opencode as opencode_mod
+    from aj_crew.agent_sdk import tool_gate as acp_tool_gate
 
     _require_opencode()
     assert _BIN is not None

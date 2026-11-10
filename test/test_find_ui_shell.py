@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import ui_index
+from aj_crew import ui_index
 
 
 @pytest.fixture(autouse=True)

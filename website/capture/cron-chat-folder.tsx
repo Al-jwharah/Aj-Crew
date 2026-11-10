@@ -36,7 +36,7 @@ const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 const scene = params.get('scene') || 'closed'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 document.documentElement.setAttribute('data-capture-scene', scene)
 
 const FOLDERS: ChatFolder[] = [
@@ -84,7 +84,7 @@ window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } })
   if (url.includes('/api/chat/folders')) return answerFolders(json)
   if (url.includes('/api/models')) return json({ models: [] })
-  if (url.includes('/api/kirocrew-agents')) return json({ agents: [], default_agent: '' })
+  if (url.includes('/api/ajcrew-agents')) return json({ agents: [], default_agent: '' })
   return originalFetch(input as RequestInfo, init)
 }) as typeof window.fetch
 

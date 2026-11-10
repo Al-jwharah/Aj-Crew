@@ -14,9 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard import tailnet_proxy_proof as proof
-from kiro_crew.shared_crew import access, capabilities, wiring
-from kiro_crew.shared_crew.access import FORWARDED_ATTRIBUTION_REASONS, note_tailnet
+from aj_crew.dashboard import tailnet_proxy_proof as proof
+from aj_crew.shared_crew import access, capabilities, wiring
+from aj_crew.shared_crew.access import FORWARDED_ATTRIBUTION_REASONS, note_tailnet
 
 
 @pytest.fixture(autouse=True)
@@ -92,21 +92,21 @@ def test_the_row_says_not_checked_until_the_post_start_probe_answers():
 
 def test_the_boot_path_runs_no_host_probe(monkeypatch):
     """The access set is installed at boot; the laptop and keep-awake probe is not."""
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.dashboard import tailnet_direct_listener
-    from kiro_crew.shared_crew import access_set, host_power
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.dashboard import tailnet_direct_listener
+    from aj_crew.shared_crew import access_set, host_power
 
     def refuse() -> None:
         raise AssertionError("a host probe ran on the boot path")
 
     monkeypatch.setattr(host_power, "note_host", refuse)
     monkeypatch.setattr(access_set, "install", lambda _seed, **_kw: None)
-    tailnet_direct_listener._install_access_set(KiroCrewConfig())
+    tailnet_direct_listener._install_access_set(AjCrewConfig())
 
 
 @pytest.mark.asyncio
 async def test_the_post_start_probe_fills_both_rows(monkeypatch):
-    from kiro_crew.shared_crew import host_power
+    from aj_crew.shared_crew import host_power
 
     note_tailnet(enabled=True, host="h", identity_trust=True, loopback_only=True, proof_gap=None)
     monkeypatch.setattr(proof, "proof_support", lambda: "daemon_not_found")
@@ -121,7 +121,7 @@ async def test_the_post_start_probe_fills_both_rows(monkeypatch):
 async def test_the_maintenance_starter_kicks_the_host_probe(monkeypatch):
     from aiohttp import web
 
-    from kiro_crew.shared_crew import host_power, lifecycle
+    from aj_crew.shared_crew import host_power, lifecycle
 
     ran: list[bool] = []
 

@@ -32,11 +32,11 @@ from crew_log_emit_helpers import (  # noqa: F401 -- the autouse fixture registe
     _remove_as_retention_does,
 )
 
-from kiro_crew import crew_log as lg
-from kiro_crew import session_map
-from kiro_crew.crew_log import emit
-from kiro_crew.crew_log import projection as crew_log_projection
-from kiro_crew.crew_log.writer import DEFAULT_LIMITS, WriterLimits
+from aj_crew import crew_log as lg
+from aj_crew import session_map
+from aj_crew.crew_log import emit
+from aj_crew.crew_log import projection as crew_log_projection
+from aj_crew.crew_log.writer import DEFAULT_LIMITS, WriterLimits
 
 # creation and header
 
@@ -53,7 +53,7 @@ def test_the_header_is_line_one_and_carries_owner_agent_slot_cwd():
     assert header["type"] == "session"
     assert header["id"] == SESSION
     assert header["owner"] == "default"
-    assert header["agent"] == "kirocrew"
+    assert header["agent"] == "ajcrew"
     assert header["slot"] == "chat-7"
     assert header["cwd"] == "/home/dev/project"
     assert isinstance(header["createdAt"], int)
@@ -67,7 +67,7 @@ def test_opened_entry_echoes_the_header_and_adds_the_model():
     assert entry["src"] == "gateway"
     assert isinstance(entry["time"], int)
     data = entry["data"]
-    assert data["agent"] == "kirocrew"
+    assert data["agent"] == "ajcrew"
     assert data["slot"] == "chat-7"
     assert data["cwd"] == "/home/dev/project"
     assert data["owner"] == "default"
@@ -78,7 +78,7 @@ def test_opened_entry_echoes_the_header_and_adds_the_model():
 
 def test_an_agentless_call_site_still_produces_a_valid_header():
     emit.on_session_opened(SESSION, slot="chat-1")
-    assert _entries()[0]["agent"] == "kirocrew"
+    assert _entries()[0]["agent"] == "ajcrew"
 
 
 # --- the model: what serves, and what was asked for ------------------------
@@ -91,7 +91,7 @@ def test_an_agentless_call_site_still_produces_a_valid_header():
         # the backend confirmed none. Without the request the entry is
         # indistinguishable from a session deliberately left on the backend default.
         pytest.param(
-            "kirocrew-worker",
+            "ajcrew-worker",
             "chat-42",
             "",
             id="test_the_request_is_recorded_when_the_backend_confirmed_nothing",
@@ -101,7 +101,7 @@ def test_an_agentless_call_site_still_produces_a_valid_header():
         # the request on an unknown `model` dropped exactly this case, and the entry
         # is append-only, so the requested/served pair was lost with no way back.
         pytest.param(
-            "kirocrew-worker",
+            "ajcrew-worker",
             "chat-42",
             "backend-default-7",
             id="test_a_concrete_served_default_does_not_hide_the_request",
@@ -110,7 +110,7 @@ def test_an_agentless_call_site_still_produces_a_valid_header():
         # back as a different string. The entry records both and claims nothing about
         # which happened -- a reader must not read the difference as a refusal.
         pytest.param(
-            "kirocrew",
+            "ajcrew",
             "chat-7",
             "kiro::claude-opus-5-v1",
             id="test_a_request_served_under_another_spelling_keeps_both_ids",
@@ -133,7 +133,7 @@ def test_the_request_is_recorded_beside_whatever_model_served(agent, slot, serve
 def test_asking_for_nothing_writes_no_request_field():
     # Every tier deferred to the backend, so there is no request to record and an
     # empty field would read as a resolved model of "".
-    emit.on_session_opened(SESSION, agent="kirocrew", slot="chat-7", model="")
+    emit.on_session_opened(SESSION, agent="ajcrew", slot="chat-7", model="")
     data = _opened_data()
     assert data["model"] == ""
     assert "model_requested" not in data
@@ -154,7 +154,7 @@ def test_a_created_session_records_its_creator_on_the_opened_entry():
     # child. The sid is absent when the creator had no live handle at mint.
     emit.on_session_opened(
         SESSION,
-        agent="kirocrew-worker",
+        agent="ajcrew-worker",
         slot="chat-42",
         parent_slot="chat-7",
         parent_sid="acp-sess-creator",
@@ -165,7 +165,7 @@ def test_a_created_session_records_its_creator_on_the_opened_entry():
 def test_a_creator_whose_handle_is_gone_is_recorded_by_slot_alone():
     # An empty sid is not written as "": a reader would take an empty string for
     # a creator with an empty name, where an absent key says the handle was down.
-    emit.on_session_opened(SESSION, agent="kirocrew-worker", slot="chat-42", parent_slot="chat-7")
+    emit.on_session_opened(SESSION, agent="ajcrew-worker", slot="chat-42", parent_slot="chat-7")
     assert _opened_data()["parent"] == {"slot": "chat-7"}
 
 
@@ -178,7 +178,7 @@ def test_a_session_nobody_created_carries_no_parent_at_all():
 
 def test_a_sid_without_a_slot_names_no_creator():
     # The slot is the tree key; a sid alone is a citation with nowhere to hang.
-    emit.on_session_opened(SESSION, agent="kirocrew", slot="chat-42", parent_sid="acp-sess-creator")
+    emit.on_session_opened(SESSION, agent="ajcrew", slot="chat-42", parent_sid="acp-sess-creator")
     assert "parent" not in _opened_data()
 
 
@@ -188,7 +188,7 @@ def test_the_session_class_is_recorded_as_facts_on_the_opened_entry():
     # have closed, and a closed session has no slot left to ask.
     emit.on_session_opened(
         SESSION,
-        agent="kirocrew",
+        agent="ajcrew",
         slot="chat-42",
         memory="persistent",
         app="travel-desk",
@@ -206,7 +206,7 @@ def test_a_session_with_nothing_to_declare_still_records_its_class():
     # distinguishable from "not recorded". The object is never empty, because
     # ``memory`` is always known for a live slot, so its presence is the witness --
     # and a reader deciding an authorization question refuses on the absence.
-    emit.on_session_opened(SESSION, agent="kirocrew", slot="chat-42", memory="persistent")
+    emit.on_session_opened(SESSION, agent="ajcrew", slot="chat-42", memory="persistent")
     assert _opened_data()["class"] == {"memory": "persistent"}
 
 
@@ -222,7 +222,7 @@ def test_an_absent_app_or_channel_is_absent_rather_than_falsy():
     # would claim the gateway checked and found none -- which is true here, but it
     # is not true on a log written before the field existed, and a reader must not
     # have to tell those two apart by the shape of a falsy value.
-    emit.on_session_opened(SESSION, agent="kirocrew", slot="chat-42", memory="incognito")
+    emit.on_session_opened(SESSION, agent="ajcrew", slot="chat-42", memory="incognito")
     recorded = _opened_data()["class"]
     assert recorded == {"memory": "incognito"}
     assert "app" not in recorded and "channel" not in recorded
@@ -233,11 +233,11 @@ def test_the_creator_is_written_again_on_a_re_attach():
     # slot's attribution outlives the ACP session, so a gateway taking the child
     # over records who made it in the entry that says it re-attached. The emitter
     # writes whatever the caller froze on the slot; it never looks the sid up.
-    emit.on_session_opened(SESSION, agent="kirocrew-worker", slot="chat-42", parent_slot="chat-7")
+    emit.on_session_opened(SESSION, agent="ajcrew-worker", slot="chat-42", parent_slot="chat-7")
     emit.reset_caches()
     emit.on_session_opened(
         SESSION,
-        agent="kirocrew-worker",
+        agent="ajcrew-worker",
         slot="chat-42",
         resumed=True,
         parent_slot="chat-7",
@@ -252,7 +252,7 @@ def test_reopening_appends_instead_of_truncating():
     _open_session()
     first = len(_entries())
     emit.reset_caches()
-    emit.on_session_opened(SESSION, agent="kirocrew", slot="chat-7", resumed=True)
+    emit.on_session_opened(SESSION, agent="ajcrew", slot="chat-7", resumed=True)
     entries = _entries()
     assert len(entries) == first + 1
     assert entries[-1]["data"]["resumed"] is True
@@ -280,9 +280,9 @@ def test_a_warm_reuse_does_not_change_which_turn_a_later_entry_names():
 
 
 def test_owner_is_written_once_and_a_reopen_cannot_change_it():
-    emit.on_session_opened(SESSION, agent="kirocrew", owner="raymond")
+    emit.on_session_opened(SESSION, agent="ajcrew", owner="raymond")
     emit.reset_caches()
-    emit.on_session_opened(SESSION, agent="kirocrew", owner="somebody-else")
+    emit.on_session_opened(SESSION, agent="ajcrew", owner="somebody-else")
     assert _entries()[0]["owner"] == "raymond"
 
 
@@ -348,13 +348,13 @@ def test_the_repair_refuses_a_candidate_whose_header_names_another_slot():
     so this pins the guard where the write happens.
     """
     bystander = "acp-sess-other-slot"
-    emit.on_session_opened(bystander, agent="kirocrew", slot="chat-99")
+    emit.on_session_opened(bystander, agent="ajcrew", slot="chat-99")
     emit.on_turn_started(bystander, 1, "user")
     assert_drained()
     # Nothing is live for it any more: a fresh claim ends every turn no terminal is
     # coming for, so a stale pin cannot stand the repair down for a reason other than
     # the one under test.
-    emit.on_session_opened(bystander, agent="kirocrew", slot="chat-99")
+    emit.on_session_opened(bystander, agent="ajcrew", slot="chat-99")
     assert_drained()
     assert emit.live_turn(bystander) == 0
 
@@ -371,7 +371,7 @@ def test_the_repair_stands_down_for_a_turn_still_running_in_this_process(caplog)
     _dangling_predecessor()
     assert emit.live_turn(SESSION) == 1
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.crew_log.emit"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.crew_log.emit"):
         emit._repair_superseded(SESSION, "chat-7")
 
     assert _closers(SESSION) == [], "a turn still running in this process was closed"
@@ -555,7 +555,7 @@ def test_a_reattach_recovers_the_durable_edge_after_a_crash_lost_the_repair():
 
     # The restart: no in-memory state survives it.
     emit.reset_caches()
-    emit.on_session_opened(SUCCESSOR, agent="kirocrew", slot="chat-7", resumed=True)
+    emit.on_session_opened(SUCCESSOR, agent="ajcrew", slot="chat-7", resumed=True)
     assert_drained()
 
     closers = _closers(SESSION)
@@ -575,15 +575,15 @@ def test_the_recovery_reads_this_logs_own_edge_not_the_callers(caplog):
     emit.on_turn_started(SESSION, 1, "user")
     assert_drained()
     # A successor opened with NO predecessor, so its file records no edge.
-    emit.on_session_opened(SUCCESSOR, agent="kirocrew", slot="chat-7")
+    emit.on_session_opened(SUCCESSOR, agent="ajcrew", slot="chat-7")
     assert_drained()
     opened = [e for e in _body(SUCCESSOR) if e["type"] == "session/opened"]
     assert opened and "previous" not in opened[0]["data"], "the fixture wrote an edge"
 
     emit.reset_caches()
-    with caplog.at_level(logging.INFO, logger="kiro_crew.crew_log.emit"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.crew_log.emit"):
         emit.on_session_opened(
-            SUCCESSOR, agent="kirocrew", slot="chat-7", resumed=True, previous_sid=third
+            SUCCESSOR, agent="ajcrew", slot="chat-7", resumed=True, previous_sid=third
         )
         assert_drained()
 
@@ -601,7 +601,7 @@ def _open_on_chat_7(session_id: str, **kwargs) -> None:
     """Open *session_id* on the slot ``_open_session`` uses."""
     emit.on_session_opened(
         session_id,
-        agent="kirocrew",
+        agent="ajcrew",
         slot="chat-7",
         model="claude-opus-5",
         cwd="/home/dev/project",
@@ -725,7 +725,7 @@ def test_a_cyclic_predecessor_pointer_ends_the_walk_with_a_logged_stop(edges, mo
     emit.reset_caches()
     monkeypatch.setattr(emit, "_durable_previous", lambda sid: edges.get(sid, ""))
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.crew_log.emit"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.crew_log.emit"):
         emit._queue_tail_repair("acp-sess-0001", "chat-7")
         assert emit.flush(), "the walk did not terminate"
 
@@ -745,7 +745,7 @@ def test_the_walk_stops_at_its_hop_bound_with_a_logged_stop(monkeypatch, caplog)
     _chain_of_open_tails(chain)
     monkeypatch.setattr(emit, "_REPAIR_WALK_HOPS", 2)
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.crew_log.emit"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.crew_log.emit"):
         emit._queue_tail_repair(chain[3], "chat-7")
         assert_drained()
 
@@ -765,7 +765,7 @@ def test_a_walk_that_reaches_a_log_retention_removed_ends_quietly(caplog):
     _chain_of_open_tails(chain[:2])
     _remove_as_retention_does(lambda: shutil.rmtree(_log_path(chain[0]).parent))
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.crew_log.emit"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.crew_log.emit"):
         _open_on_chat_7(chain[2], previous_sid=chain[1])
         assert_drained()
 
@@ -781,7 +781,7 @@ def test_a_walk_does_not_follow_an_edge_to_another_slots_log(monkeypatch, caplog
     what this pins.
     """
     foreign = "acp-sess-0009"
-    emit.on_session_opened(foreign, agent="kirocrew", slot="chat-8", owner="default")
+    emit.on_session_opened(foreign, agent="ajcrew", slot="chat-8", owner="default")
     emit.on_turn_started(foreign, 1, "user")
     assert_drained()
     _chain_of_open_tails(["acp-sess-0001"])
@@ -789,7 +789,7 @@ def test_a_walk_does_not_follow_an_edge_to_another_slots_log(monkeypatch, caplog
         emit, "_durable_previous", lambda sid: foreign if sid == "acp-sess-0001" else ""
     )
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.crew_log.emit"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.crew_log.emit"):
         emit._queue_tail_repair("acp-sess-0001", "chat-7")
         assert_drained()
 
@@ -1053,12 +1053,12 @@ def test_three_stores_of_one_slot_form_a_chain_with_no_store_skipped():
     """
     first, second, third = SESSION, SUCCESSOR, "acp-sess-0003"
 
-    emit.on_session_opened(first, agent="kirocrew", slot="chat-7", cwd="/home/dev/project")
+    emit.on_session_opened(first, agent="ajcrew", slot="chat-7", cwd="/home/dev/project")
     assert_drained()
 
     emit.on_session_opened(
         second,
-        agent="kirocrew",
+        agent="ajcrew",
         slot="chat-7",
         cwd="/home/dev/project",
         previous_sid=first,
@@ -1067,7 +1067,7 @@ def test_three_stores_of_one_slot_form_a_chain_with_no_store_skipped():
 
     emit.on_session_opened(
         third,
-        agent="kirocrew",
+        agent="ajcrew",
         slot="chat-7",
         cwd="/home/dev/project",
         previous_sid=second,
@@ -1091,7 +1091,7 @@ def test_every_slot_allocation_site_latches_the_predecessor_first():
     The window is bounded (a far-off latch is no evidence), and the site count is
     exact so a new site cannot hide below an unrelated latch.
     """
-    runner = Path(__file__).parent.parent / "src" / "kiro_crew" / "dashboard" / "chat_runner.py"
+    runner = Path(__file__).parent.parent / "src" / "aj_crew" / "dashboard" / "chat_runner.py"
     lines = "\n".join(
         turn_file.read_text(encoding="utf-8")
         for turn_file in [*sorted(runner.with_name("chat_turn").glob("*.py")), runner]
@@ -1119,7 +1119,7 @@ def test_the_turn_path_reads_the_predecessor_through_the_non_pruning_accessor():
     generation behind while a replay is pending. Behavioural tests pass on either,
     because the emitter is handed the value, so the choice is pinned at both sites.
     """
-    runner = Path(__file__).parent.parent / "src" / "kiro_crew" / "dashboard" / "chat_runner.py"
+    runner = Path(__file__).parent.parent / "src" / "aj_crew" / "dashboard" / "chat_runner.py"
     source = "\n".join(
         turn_file.read_text(encoding="utf-8")
         for turn_file in [*sorted(runner.with_name("chat_turn").glob("*.py")), runner]
@@ -1276,7 +1276,7 @@ def test_every_report_call_site_names_a_literal_operation():
     """
     import ast
 
-    from kiro_crew.crew_log import writer as writer_mod
+    from aj_crew.crew_log import writer as writer_mod
 
     sites = []
     for module, wanted in ((emit, ast.Name), (writer_mod, ast.Attribute)):

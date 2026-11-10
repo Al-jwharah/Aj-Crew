@@ -60,7 +60,7 @@ Usage:
     python scripts/check_lockdown_before_publish.py [PATH ...]
 
 Exits non-zero and prints ``file:line`` per violation. With no arguments it
-scans ``src/kiro_crew``. Sites tracked by an open conversion issue live in
+scans ``src/aj_crew``. Sites tracked by an open conversion issue live in
 ``KNOWN_UNCONVERTED``; that list is shrink-only.
 """
 
@@ -101,7 +101,7 @@ GROUP_OTHER_BITS = 0o077
 WRITE_DESTINATION_ARG = {
     "atomic_write": 0,
     # This repo's private JSON writer (agent_parts/spec_files.py, reached as
-    # ``kiro_crew.agent._atomic_json_write``): mkstemp + write + rename, so
+    # ``aj_crew.agent._atomic_json_write``): mkstemp + write + rename, so
     # the payload lands at the FINAL path when it returns. It is not
     # ``atomic_write`` and takes no ``restrict_to_owner``, so a lockdown after it
     # is the #5307 shape -- and it is the single most widely used writer in the
@@ -743,7 +743,7 @@ def scan_path(path: Path, root: Path) -> list[tuple[str, int, str, str]]:
 
 def main(argv: list[str]) -> int:
     root = Path(__file__).resolve().parent.parent
-    targets = [Path(a) for a in argv[1:]] or [root / "src" / "kiro_crew"]
+    targets = [Path(a) for a in argv[1:]] or [root / "src" / "aj_crew"]
 
     found: list[tuple[str, int, str, str]] = []
     for target in targets:

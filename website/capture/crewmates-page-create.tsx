@@ -29,7 +29,7 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 const scene = params.get('scene') || 'empty'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 // ThemeProvider (the page needs it) reads its cache from
 // storage; first-run flags keep onboarding dialogs off the frame.
 localStorage.setItem('mc-theme', theme)

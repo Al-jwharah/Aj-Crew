@@ -14,7 +14,7 @@ import sys
 
 import pytest
 
-from kiro_crew import platform_compat, sandbox_cgroup
+from aj_crew import platform_compat, sandbox_cgroup
 
 
 def _warning(caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch) -> str:

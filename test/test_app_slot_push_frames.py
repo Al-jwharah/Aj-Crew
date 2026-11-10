@@ -21,8 +21,8 @@ import pytest
 import ws_event_scoping_helpers
 from ws_event_scoping_helpers import _allowed, _make_slot, _make_state
 
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.dashboard.ws_event_scope import (
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.dashboard.ws_event_scope import (
     _SLOT_SCOPED_EVENTS,
     _SUBAGENT_EVENTS,
     filter_slots_for_app,

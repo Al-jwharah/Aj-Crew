@@ -161,7 +161,7 @@ describe('usePanelDocumentActions.openArtifact with a staged-dashboard reference
 
   it('titles the tab with the roster name when the roster is cached', async () => {
     const queryClient = new QueryClient()
-    queryClient.setQueryData(['kirocrew-agents', 'members-roster'], [{ name: 'Atlas', slug: 'atlas' }])
+    queryClient.setQueryData(['ajcrew-agents', 'members-roster'], [{ name: 'Atlas', slug: 'atlas' }])
     const openArtifact = vi.fn()
     const tabsCtl = { openArtifact } as unknown as ReturnType<typeof usePanelTabs>
     const { result } = renderHook(() => usePanelDocumentActions({
@@ -207,7 +207,7 @@ describe('either preview link form, clicked in chat, opens the staged page in th
 
   it('the old JSON-read link /api/members/<slug>/dashboard?preview=1', async () => {
     const queryClient = new QueryClient()
-    queryClient.setQueryData(['kirocrew-agents', 'members-roster'], [{ name: 'Atlas', slug: 'atlas' }])
+    queryClient.setQueryData(['ajcrew-agents', 'members-roster'], [{ name: 'Atlas', slug: 'atlas' }])
     const { openTab, showActionError, openArtifact } = wire(queryClient)
     expect(await clickLink('/api/members/atlas/dashboard?preview=1', openArtifact)).toBe(false)
     expect(openTab).toHaveBeenCalledWith({ slug: 'dashboard-preview:atlas', kind: 'html', title: 'Atlas (preview)' }, '', 'chat-1')

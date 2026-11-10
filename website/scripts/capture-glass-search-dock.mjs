@@ -37,7 +37,7 @@ const TITLES = [
 ]
 const slots = TITLES.map((title, i) => ({
   key: `chat-${i}`, title, running: i === 0 || i === 6, last_message: 'Latest turn.', messages: 4 + i,
-  agent: 'kirocrew', memory_mode: 'persistent', project: '', folder_id: '',
+  agent: 'ajcrew', memory_mode: 'persistent', project: '', folder_id: '',
   modified: now - i * 3600, source_links: [], source_links_total: 0,
 }))
 
@@ -69,15 +69,15 @@ const MATES = [
 ]
 const members = MATES.map(([name, description, last_message], i) => ({
   name, slug: name.toLowerCase(), bound: true, slot_key: `member-${name.toLowerCase()}`, running: i === 1 || i === 6,
-  kiro_agent: 'kirocrew', workspace: 'default', memory_store: name.toLowerCase(), memory_version: 2, memory_owner: name,
-  model: '', description, source: 'kirocrew', last_active_ts: now - i * 1800, last_message,
+  kiro_agent: 'ajcrew', workspace: 'default', memory_store: name.toLowerCase(), memory_version: 2, memory_owner: name,
+  model: '', description, source: 'ajcrew', last_active_ts: now - i * 1800, last_message,
 }))
 
 const THEME = { mode: 'dark' }
 const extra = async (path, route) => {
   // Dev server: the stub's `**/api/**` glob also catches `/src/api/*.ts` modules.
   if (!path.startsWith('/api/')) { await route.continue(); return true }
-  if (path === '/api/members') { await json(route, { members, default_agent: 'kirocrew' }); return true }
+  if (path === '/api/members') { await json(route, { members, default_agent: 'ajcrew' }); return true }
   if (/^\/api\/members\/[^/]+\/(thread|activity|panel)$/.test(path)) {
     await json(route, path.endsWith('thread') ? { messages: [], has_more: false } : path.endsWith('activity') ? { entries: [], capped: false } : { panel: null, html: null })
     return true
@@ -234,7 +234,7 @@ async function scenes(browser, theme) {
   await stubGlass(p4, {
     slots, theme,
     extra: async (path, route) => {
-      if (/^\/api\/(config\/kirocrew\/)?agents\/[^/]+$/.test(path) && route.request().method() !== 'GET') { await route.fulfill({ status: 503, contentType: 'application/json', body: '{"error":"config file is read-only"}' }); return true }
+      if (/^\/api\/(config\/ajcrew\/)?agents\/[^/]+$/.test(path) && route.request().method() !== 'GET') { await route.fulfill({ status: 503, contentType: 'application/json', body: '{"error":"config file is read-only"}' }); return true }
       return extra(path, route)
     },
   })

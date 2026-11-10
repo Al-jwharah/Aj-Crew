@@ -10,7 +10,7 @@ tooling that is not part of the repository.
 
 from __future__ import annotations
 
-from kiro_crew.apps.builtins.mochi.pet_state_machine import (
+from aj_crew.apps.builtins.mochi.pet_state_machine import (
     ALL_EVENTS,
     ALL_STATES,
     ERROR_TIMEOUT_MS,
@@ -19,11 +19,11 @@ from kiro_crew.apps.builtins.mochi.pet_state_machine import (
     legal_events,
     transition,
 )
-from kiro_crew.apps.builtins.mochi.pet_state_manager import (
+from aj_crew.apps.builtins.mochi.pet_state_manager import (
     WALK_RESTORE_DELAY_MS,
     PetStateManager,
 )
-from kiro_crew.apps.builtins.mochi.soul_loader import (
+from aj_crew.apps.builtins.mochi.soul_loader import (
     BUILTIN_PET_NAMES,
     DEFAULT_SOUL,
     SoulLoader,
@@ -176,7 +176,7 @@ class TestPetStateManager:
         assert calls == [("start", 10), ("end", 30)]
 
     def test_transient_mood_auto_resets(self) -> None:
-        from kiro_crew.apps.builtins.mochi.pet_state_manager import (
+        from aj_crew.apps.builtins.mochi.pet_state_manager import (
             MOOD_DURATION_MS,
             PET_MOOD_CHANNEL,
         )
@@ -192,7 +192,7 @@ class TestPetStateManager:
         assert broadcasts[-1] == (PET_MOOD_CHANNEL, "neutral")
 
     def test_persistent_mood_lingers_until_cleared(self) -> None:
-        from kiro_crew.apps.builtins.mochi.pet_state_manager import MOOD_DURATION_MS
+        from aj_crew.apps.builtins.mochi.pet_state_manager import MOOD_DURATION_MS
 
         mgr, _ = self._mk()
         mgr.set_mood("busy", 0)
@@ -220,8 +220,8 @@ class TestPetStateManager:
         # SEPARATE deadline slots, so arming the mood must not cancel the error
         # recovery, and the error state change must not cancel the mood timer.
         # Staggered so the deadlines don't coincide (both default to 3000ms).
-        from kiro_crew.apps.builtins.mochi.pet_state_machine import ERROR_TIMEOUT_MS
-        from kiro_crew.apps.builtins.mochi.pet_state_manager import MOOD_DURATION_MS
+        from aj_crew.apps.builtins.mochi.pet_state_machine import ERROR_TIMEOUT_MS
+        from aj_crew.apps.builtins.mochi.pet_state_manager import MOOD_DURATION_MS
 
         mgr, _ = self._mk()
         mgr.set_pet_state("idle", 0)

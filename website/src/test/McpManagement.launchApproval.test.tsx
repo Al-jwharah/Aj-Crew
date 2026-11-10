@@ -33,7 +33,7 @@ const server = {
   can_stub: true,
   in_allowlist: true,
   entry_poolable: false,
-  agents: ['kirocrew'],
+  agents: ['ajcrew'],
   transport: 'stdio',
   denylisted: false,
 }

@@ -15,11 +15,11 @@ import json
 
 import pytest
 
-from kiro_crew import mate_approval_revocations as revocations
-from kiro_crew import mate_capabilities, mate_worker, mate_worker_kit
-from kiro_crew.config import paths
-from kiro_crew.mate_worker_kit import WorkerKitError
-from kiro_crew.platform import governance
+from aj_crew import mate_approval_revocations as revocations
+from aj_crew import mate_capabilities, mate_worker, mate_worker_kit
+from aj_crew.config import paths
+from aj_crew.mate_worker_kit import WorkerKitError
+from aj_crew.platform import governance
 
 TEMPLATE = {
     "name": "release-bot",
@@ -119,7 +119,7 @@ def test_adding_copies_the_servers_skills_resources_approvals_and_directions(hom
 def test_the_added_kit_reaches_the_worker(home):
     _, mates = home
     _add()
-    base = {"name": "kirocrew-mate-worker", "prompt": "Worker.", "mcpServers": {}, "tools": []}
+    base = {"name": "ajcrew-mate-worker", "prompt": "Worker.", "mcpServers": {}, "tools": []}
     merged = mate_worker.merge_worker_spec(base, mate_worker.worker_additions(base, _file(mates)))
     # The directions follow the worker's own prompt, never replace it.
     assert merged["prompt"] == f"Worker.\n\n{TEMPLATE['prompt']}"
@@ -485,7 +485,7 @@ async def test_every_worker_kit_route_is_owner_only(method, path):
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.routes import agents as agents_routes
+    from aj_crew.dashboard.routes import agents as agents_routes
 
     @web.middleware
     async def _identity(request, handler):
@@ -506,13 +506,13 @@ def test_adding_the_same_template_onto_a_migrated_file_changes_nothing(home):
     """A migrated file already holds what the template adds, so re-adding only skips."""
     user, mates = home
     base = {
-        "name": "kirocrew-mate-worker",
+        "name": "ajcrew-mate-worker",
         "prompt": "Worker base.",
-        "tools": ["@kirocrew-core"],
-        "allowedTools": ["@kirocrew-core/cron_list"],
-        "mcpServers": {"kirocrew-core": {"command": "kc", "autoApprove": ["cron_list"]}},
+        "tools": ["@ajcrew-core"],
+        "allowedTools": ["@ajcrew-core/cron_list"],
+        "mcpServers": {"ajcrew-core": {"command": "kc", "autoApprove": ["cron_list"]}},
     }
-    (mates / "kirocrew-mate-worker.json").write_text(json.dumps(base), encoding="utf-8")
+    (mates / "ajcrew-mate-worker.json").write_text(json.dumps(base), encoding="utf-8")
     template = {
         **json.loads(json.dumps(base)),
         "name": "release-bot",
@@ -532,7 +532,7 @@ def test_adding_the_same_template_onto_a_migrated_file_changes_nothing(home):
 
     preview = mate_worker_kit.preview("pixel", {"template": "release-bot"})
 
-    # jira is already in the file; kirocrew-core is the base's own: both skipped.
+    # jira is already in the file; ajcrew-core is the base's own: both skipped.
     assert not [
         r for r in preview["changes"] if r["change"] == "added" and r["section"] != "prompt"
     ]
@@ -542,21 +542,21 @@ def test_the_preview_does_not_re_add_a_base_server(home):
     """A template server the worker base already declares is skipped, not added."""
     user, mates = home
     base = {
-        "name": "kirocrew-mate-worker",
+        "name": "ajcrew-mate-worker",
         "prompt": "Worker base.",
-        "tools": ["@kirocrew-core"],
-        "mcpServers": {"kirocrew-core": {"command": "kc"}},
+        "tools": ["@ajcrew-core"],
+        "mcpServers": {"ajcrew-core": {"command": "kc"}},
     }
-    (mates / "kirocrew-mate-worker.json").write_text(json.dumps(base), encoding="utf-8")
+    (mates / "ajcrew-mate-worker.json").write_text(json.dumps(base), encoding="utf-8")
     template = {
         **TEMPLATE,
-        "mcpServers": {**TEMPLATE["mcpServers"], "kirocrew-core": {"command": "kc"}},
+        "mcpServers": {**TEMPLATE["mcpServers"], "ajcrew-core": {"command": "kc"}},
     }
     (user / "release-bot.json").write_text(json.dumps(template), encoding="utf-8")
 
     preview = mate_worker_kit.preview("pixel", {"template": "release-bot"})
     changed = {(row["section"], row["id"], row["change"]) for row in preview["changes"]}
-    assert ("mcpServers", "kirocrew-core", "skipped") in changed
+    assert ("mcpServers", "ajcrew-core", "skipped") in changed
     assert ("mcpServers", "jira", "added") in changed
 
 
@@ -564,19 +564,19 @@ def test_adopting_a_name_a_user_level_agent_declares_is_refused(home, monkeypatc
     """The binding would name that agent, and the crewmate would run it, not its copy."""
     from types import SimpleNamespace
 
-    from kiro_crew import mate_config
-    from kiro_crew.config import loader
+    from aj_crew import mate_config
+    from aj_crew.config import loader
 
-    binding = SimpleNamespace(kiro_agent="kirocrew", memory_store="member-release-bot")
+    binding = SimpleNamespace(kiro_agent="ajcrew", memory_store="member-release-bot")
     cfg = SimpleNamespace(agents={"release-bot": binding})
-    monkeypatch.setattr(loader, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+    monkeypatch.setattr(loader, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
     written: list[str] = []
     monkeypatch.setattr(mate_config, "write_mate_config", lambda name, src: written.append(name))
 
     with pytest.raises(mate_config.MateConfigError):
         mate_config.adopt_own_file("release-bot")
     assert written == []
-    assert binding.kiro_agent == "kirocrew"
+    assert binding.kiro_agent == "ajcrew"
 
 
 @pytest.mark.parametrize(
@@ -617,8 +617,8 @@ def test_creating_a_crewmate_reads_nothing_from_its_starting_template(home, monk
     the starting template, whatever that template sets."""
     from types import SimpleNamespace
 
-    from kiro_crew import mate_config
-    from kiro_crew.config import loader
+    from aj_crew import mate_config
+    from aj_crew.config import loader
 
     user, _ = home
     limited = {**TEMPLATE, "toolsSettings": {"fs_write": {"deniedPaths": ["/etc"]}}}
@@ -626,7 +626,7 @@ def test_creating_a_crewmate_reads_nothing_from_its_starting_template(home, monk
     binding = SimpleNamespace(kiro_agent="release-bot", memory_store="member-ada")
     monkeypatch.setattr(
         loader,
-        "KiroCrewConfig",
+        "AjCrewConfig",
         SimpleNamespace(load=lambda: SimpleNamespace(agents={"ada": binding})),
     )
     monkeypatch.setattr(loader, "_invalidate_config_cache", lambda: None)
@@ -639,7 +639,7 @@ def test_creating_a_crewmate_reads_nothing_from_its_starting_template(home, monk
     written: list[str] = []
     monkeypatch.setattr(mate_config, "write_mate_config", lambda name: written.append(name))
     persisted: list[str] = []
-    import kiro_crew.memory_stores as stores
+    import aj_crew.memory_stores as stores
 
     monkeypatch.setattr(
         stores, "persist_member_config", lambda cfg, name, **_k: persisted.append(name)
@@ -662,12 +662,12 @@ def test_the_preview_lists_a_tool_the_add_turns_off(home):
 
 def _write_base(mates, servers: dict) -> None:
     base = {
-        "name": "kirocrew-mate-worker",
+        "name": "ajcrew-mate-worker",
         "prompt": "Worker base.",
         "tools": [f"@{name}" for name in servers],
         "mcpServers": servers,
     }
-    (mates / "kirocrew-mate-worker.json").write_text(json.dumps(base), encoding="utf-8")
+    (mates / "ajcrew-mate-worker.json").write_text(json.dumps(base), encoding="utf-8")
 
 
 def test_a_skipped_base_servers_disabled_tools_are_carried_as_exclusions(home):
@@ -700,12 +700,12 @@ def test_adding_a_template_selects_its_tools_on_a_base_declared_server(home):
     and the worker gets the tools."""
     user, mates = home
     base = {
-        "name": "kirocrew-mate-worker",
+        "name": "ajcrew-mate-worker",
         "prompt": "Worker base.",
         "tools": [],
         "mcpServers": {"jira": {"command": "jira-mcp"}},
     }
-    (mates / "kirocrew-mate-worker.json").write_text(json.dumps(base), encoding="utf-8")
+    (mates / "ajcrew-mate-worker.json").write_text(json.dumps(base), encoding="utf-8")
 
     preview = _add()
 
@@ -791,7 +791,7 @@ def test_adding_keeps_the_templates_tool_selection_on_its_servers(home):
     _add()
     tools = _file(mates)["tools"]
     assert "@notes/read" in tools and "@notes" not in tools
-    base = {"name": "kirocrew-mate-worker", "prompt": "Worker.", "mcpServers": {}, "tools": []}
+    base = {"name": "ajcrew-mate-worker", "prompt": "Worker.", "mcpServers": {}, "tools": []}
     merged = mate_worker.merge_worker_spec(base, mate_worker.worker_additions(base, _file(mates)))
     assert [t for t in merged["tools"] if t.startswith("@notes")] == ["@notes/read"]
 
@@ -811,7 +811,7 @@ async def test_the_worker_kit_routes_serve_the_owner(home, monkeypatch):
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import member_worker_kit as route
+    from aj_crew.dashboard.handlers import member_worker_kit as route
 
     async def _owner(request, operation):
         return None
@@ -843,9 +843,9 @@ async def test_adding_reads_a_null_exclusion_list_copied_from_the_template(home,
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew import mate_config
-    from kiro_crew.config import loader
-    from kiro_crew.dashboard.handlers import member_worker_kit as route
+    from aj_crew import mate_config
+    from aj_crew.config import loader
+    from aj_crew.dashboard.handlers import member_worker_kit as route
 
     async def _owner(request, operation):
         return None
@@ -1027,7 +1027,7 @@ def test_adding_skips_a_retained_servers_revoked_approval(notes_approval):
 
 
 def test_a_failed_add_write_keeps_its_approval_revoked(notes_approval, monkeypatch):
-    from kiro_crew import atomic_write
+    from aj_crew import atomic_write
 
     mates, _ = notes_approval
     revocations.record("pixel", ["@notes/read"], [])

@@ -13,8 +13,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.apps.builtins.issue_radar.backend import pipeline_fold as fold
-from kiro_crew.apps.builtins.issue_radar.backend import pipeline_routes as routes
+from aj_crew.apps.builtins.issue_radar.backend import pipeline_fold as fold
+from aj_crew.apps.builtins.issue_radar.backend import pipeline_routes as routes
 
 #: The repositories these route tests name. Connected by the ``enabled`` fixture, so
 #: the handlers get past the host app's authorization gate and each test can reach
@@ -494,7 +494,7 @@ def test_the_route_prefix_is_derived_from_the_host_app() -> None:
     Clients render a non-2xx as "nothing here yet", so a drifted prefix would fail
     silently as a pipeline that never ran.
     """
-    from kiro_crew.apps.builtins.issue_radar.backend import store
+    from aj_crew.apps.builtins.issue_radar.backend import store
 
     assert routes.APP_NAME == store.APP_NAME
     assert routes.PREFIX == f"/api/apps/{store.APP_NAME}/pipeline"

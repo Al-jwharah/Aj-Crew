@@ -178,9 +178,9 @@ def test_manual_credit_outside_block_not_re_added(credit):
 @pytest.mark.parametrize(
     "repo_link",
     [
-        'See <a href="https://github.com/kirodotdev/KiroCrew/releases">releases</a>.',
-        "docs at https://github.com/kirodotdev/KiroCrew/",  # trailing slash on a repo
-        "https://github.com/kirodotdev/KiroCrew#install",  # repo + fragment
+        'See <a href="https://github.com/Al-jwharah/Aj-Crew/releases">releases</a>.',
+        "docs at https://github.com/Al-jwharah/Aj-Crew/",  # trailing slash on a repo
+        "https://github.com/Al-jwharah/Aj-Crew#install",  # repo + fragment
     ],
 )
 def test_repo_and_deep_links_are_not_treated_as_contributors(repo_link):

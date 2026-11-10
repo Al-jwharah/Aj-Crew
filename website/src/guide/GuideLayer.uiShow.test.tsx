@@ -699,7 +699,7 @@ describe('ui.show: point at an indexed location, never click it', () => {
   })
 
   it("a destructive step with the page's own words shows them, never the generic 'gone for good' line", async () => {
-    const key = 'pages.kiroCrewAgentsPage.deleting_a_crew_unbinds_it_from_new_sessions_its'
+    const key = 'pages.ajCrewAgentsPage.deleting_a_crew_unbinds_it_from_new_sessions_its'
     const plan = GUIDE_PLANS['chat.older-sessions'] as { placements: { steps: { caution?: true; caution_key?: string }[] }[] }
     const lasts = plan.placements.map(p => p.steps[p.steps.length - 1])
     for (const st of lasts) { st.caution = true; st.caution_key = key }
@@ -725,7 +725,7 @@ describe('ui.show: point at an indexed location, never click it', () => {
     const r = resolveGuideAction(show('agents.delete'))
     if (!r.ok) throw new Error(r.reason)
     const last = r.action.steps[r.action.steps.length - 1]
-    expect(last.cautionKey).toBe('pages.kiroCrewAgentsPage.deleting_a_crew_unbinds_it_from_new_sessions_its')
+    expect(last.cautionKey).toBe('pages.ajCrewAgentsPage.deleting_a_crew_unbinds_it_from_new_sessions_its')
     expect(i18nT(last.cautionKey!)).toMatch(/workspace, memory and past chats are kept/)
     expect(r.action.steps.slice(0, -1).every(st => st.cautionKey === undefined)).toBe(true)
   })

@@ -1,6 +1,6 @@
 """The durable grant behind a ``settings.local.json`` seed.
 
-A sidecar entry is the grant Kiro Crew adopts a file on, so no write floor lets the agent
+A sidecar entry is the grant Aj Crew adopts a file on, so no write floor lets the agent
 add one. A claim moves only once the write or the unlink it names has happened, and a
 seed and its durable record commit or roll back together, a cancelled teardown included.
 Shared fixtures and helpers live in ``acp_seed_provenance_helpers.py``.
@@ -30,11 +30,11 @@ from acp_seed_provenance_helpers import (
     _unwritable_sidecar,
 )
 
-from kiro_crew import model_registry as mr
-from kiro_crew import sandbox, security
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp import seed_provenance as sp
-from kiro_crew.testing.wait import await_until
+from aj_crew import model_registry as mr
+from aj_crew import sandbox, security
+from aj_crew.acp import client as acp_client
+from aj_crew.acp import seed_provenance as sp
+from aj_crew.testing.wait import await_until
 
 
 def _attribute_calls(node: ast.AST, name: str) -> list[ast.Attribute]:

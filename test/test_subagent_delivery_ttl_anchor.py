@@ -28,8 +28,8 @@ from idle_tab_drain_helpers import (  # noqa: F401 -- the autouse fixture regist
 )
 from turn_harness import Raise, TurnScript, VirtualClock, Wait, run_turn
 
-from kiro_crew.acp.client import AcpProcessDied
-from kiro_crew.acp.types import (
+from aj_crew.acp.client import AcpProcessDied
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_THINKING_CHUNK,
@@ -42,20 +42,20 @@ from kiro_crew.acp.types import (
     STOP_REASON_TOOL_STALL,
     AcpEvent,
 )
-from kiro_crew.dashboard.chat_runner import _start_next_queued_turn
-from kiro_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND, SYNTHETIC_RECOVERY_KIND
-from kiro_crew.dashboard.state import (
+from aj_crew.dashboard.chat_runner import _start_next_queued_turn
+from aj_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND, SYNTHETIC_RECOVERY_KIND
+from aj_crew.dashboard.state import (
     _MAX_PENDING_SUBAGENT_DELIVERIES,
     SUBAGENT_COMPLETION_PREFIX,
     _ChatSlot,
 )
-from kiro_crew.subagent import SubagentDelivery, SubagentInfo, SubagentManager
-from kiro_crew.subagent_persistence import (
+from aj_crew.subagent import SubagentDelivery, SubagentInfo, SubagentManager
+from aj_crew.subagent_persistence import (
     create_agent_folder,
     prune_stale_tombstones,
     write_result_chunk,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 @pytest.fixture(autouse=True)
@@ -74,7 +74,7 @@ def _ann(tag: str) -> str:
 
 def _key(content: str) -> str:
     """The ledger's key for an announce (a digest, not the text)."""
-    from kiro_crew.dashboard.state import _delivery_key
+    from aj_crew.dashboard.state import _delivery_key
 
     return _delivery_key(content)
 
@@ -152,7 +152,7 @@ def _pending_map(slot) -> dict[str, list[str]]:
 @pytest.fixture()
 def agent_root(tmp_path, monkeypatch):
     """Point the sub-agent registry at a temp directory."""
-    monkeypatch.setattr("kiro_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path)
+    monkeypatch.setattr("aj_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path)
     return tmp_path
 
 
@@ -245,7 +245,7 @@ def _manager() -> SubagentManager:
 
 
 def _defer(slot, info, *, flush_only: bool = False, announce: str = COMPLETION):
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     GatewayOrchestrator._defer_queued_delivery(slot, announce, info, flush_only=flush_only)
 
@@ -478,7 +478,7 @@ class TestConsumptionSignalIsPerTurn:
 
         slot.queue_append(COMPLETION, kind=SUBAGENT_COMPLETION_KIND)
         slot.note_pending_subagent_delivery(COMPLETION, [_delivery("a1")])
-        with patch("kiro_crew.dashboard.chat_runner.spawn_guarded_turn", _spawn):
+        with patch("aj_crew.dashboard.chat_runner.spawn_guarded_turn", _spawn):
             assert await _start_next_queued_turn(state, slot) is True
             # First turn is consumed: its own cell records it.
             spawned[0]["hook"]()
@@ -582,7 +582,7 @@ class TestTeardownGateOnQueuedSettlement:
         done: asyncio.Future = asyncio.get_event_loop().create_future()
 
         with patch(
-            "kiro_crew.dashboard.chat_runner.spawn_guarded_turn",
+            "aj_crew.dashboard.chat_runner.spawn_guarded_turn",
             TestDrainSettlesDelivery()._turn_spawner(done),
         ):
             assert await _start_next_queued_turn(state, slot) is True
@@ -615,11 +615,11 @@ class TestTeardownGateOnQueuedSettlement:
         # Every name a delivered tombstone is written through, so a write anywhere,
         # not only into this run's folder, fails the turn's settlement here.
         with (
-            patch("kiro_crew.subagent_persistence.mark_delivered", writes),
-            patch("kiro_crew.subagent.mark_delivered", writes),
+            patch("aj_crew.subagent_persistence.mark_delivered", writes),
+            patch("aj_crew.subagent.mark_delivered", writes),
         ):
             with patch(
-                "kiro_crew.dashboard.chat_runner.spawn_guarded_turn",
+                "aj_crew.dashboard.chat_runner.spawn_guarded_turn",
                 TestDrainSettlesDelivery()._turn_spawner(done),
             ):
                 assert await _start_next_queued_turn(state, slot) is True
@@ -678,7 +678,7 @@ class TestDrainSettlesDelivery:
         done: asyncio.Future = asyncio.get_event_loop().create_future()
 
         with patch(
-            "kiro_crew.dashboard.chat_runner.spawn_guarded_turn",
+            "aj_crew.dashboard.chat_runner.spawn_guarded_turn",
             self._turn_spawner(done),
         ):
             assert await _start_next_queued_turn(state, slot) is True
@@ -706,7 +706,7 @@ class TestDrainSettlesDelivery:
         done: asyncio.Future = asyncio.get_event_loop().create_future()
 
         with patch(
-            "kiro_crew.dashboard.chat_runner.spawn_guarded_turn",
+            "aj_crew.dashboard.chat_runner.spawn_guarded_turn",
             self._turn_spawner(done, consumed=False),
         ):
             assert await _start_next_queued_turn(state, slot) is True
@@ -733,7 +733,7 @@ class TestDrainSettlesDelivery:
         done: asyncio.Future = asyncio.get_event_loop().create_future()
 
         with patch(
-            "kiro_crew.dashboard.chat_runner.spawn_guarded_turn",
+            "aj_crew.dashboard.chat_runner.spawn_guarded_turn",
             self._turn_spawner(done),  # consumed: the turn streamed output
         ):
             assert await _start_next_queued_turn(state, slot) is True
@@ -754,7 +754,7 @@ class TestDrainSettlesDelivery:
         done: asyncio.Future = asyncio.get_event_loop().create_future()
 
         with patch(
-            "kiro_crew.dashboard.chat_runner.spawn_guarded_turn",
+            "aj_crew.dashboard.chat_runner.spawn_guarded_turn",
             self._turn_spawner(done, consumed=False),
         ):
             assert await _start_next_queued_turn(state, slot) is True
@@ -781,7 +781,7 @@ class TestDrainSettlesDelivery:
         done: asyncio.Future = asyncio.get_event_loop().create_future()
 
         with patch(
-            "kiro_crew.dashboard.chat_runner.spawn_guarded_turn",
+            "aj_crew.dashboard.chat_runner.spawn_guarded_turn",
             self._turn_spawner(done, consumed=False),
         ):
             assert await _start_next_queued_turn(state, slot) is True
@@ -809,7 +809,7 @@ class TestDrainSettlesDelivery:
         done: asyncio.Future = asyncio.get_event_loop().create_future()
 
         with patch(
-            "kiro_crew.dashboard.chat_runner.spawn_guarded_turn",
+            "aj_crew.dashboard.chat_runner.spawn_guarded_turn",
             self._turn_spawner(done, consumed=False),
         ):
             assert await _start_next_queued_turn(state, slot) is True
@@ -846,7 +846,7 @@ class TestDrainSettlesDelivery:
 
             return asyncio.get_event_loop().create_task(_turn())
 
-        with patch("kiro_crew.dashboard.chat_runner.spawn_guarded_turn", _spawn):
+        with patch("aj_crew.dashboard.chat_runner.spawn_guarded_turn", _spawn):
             assert await _start_next_queued_turn(state, slot) is True
 
         # No tokens, no tool call -- only the provider's turn-complete event.
@@ -881,7 +881,7 @@ class TestDrainSettlesDelivery:
 
             return asyncio.get_event_loop().create_task(_turn())
 
-        with patch("kiro_crew.dashboard.chat_runner.spawn_guarded_turn", _spawn):
+        with patch("aj_crew.dashboard.chat_runner.spawn_guarded_turn", _spawn):
             assert await _start_next_queued_turn(state, slot) is True
 
         hooks[0]()  # turn-complete on a real end-of-turn
@@ -909,7 +909,7 @@ class TestDrainSettlesDelivery:
 
         # Attempt 1: dies before the model consumed the prompt.
         with patch(
-            "kiro_crew.dashboard.chat_runner.spawn_guarded_turn",
+            "aj_crew.dashboard.chat_runner.spawn_guarded_turn",
             self._turn_spawner(first_done, consumed=False),
         ):
             assert await _start_next_queued_turn(state, slot) is True
@@ -923,7 +923,7 @@ class TestDrainSettlesDelivery:
         second_done: asyncio.Future = asyncio.get_event_loop().create_future()
 
         with patch(
-            "kiro_crew.dashboard.chat_runner.spawn_guarded_turn",
+            "aj_crew.dashboard.chat_runner.spawn_guarded_turn",
             self._turn_spawner(second_done),
         ):
             assert await _start_next_queued_turn(state, slot) is True
@@ -953,7 +953,7 @@ class TestDrainSettlesDelivery:
         done: asyncio.Future = asyncio.get_event_loop().create_future()
 
         with patch(
-            "kiro_crew.dashboard.chat_runner.spawn_guarded_turn",
+            "aj_crew.dashboard.chat_runner.spawn_guarded_turn",
             self._turn_spawner(done),
         ):
             assert (
@@ -985,7 +985,7 @@ class TestDrainSettlesDelivery:
         done: asyncio.Future = asyncio.get_event_loop().create_future()
 
         with patch(
-            "kiro_crew.dashboard.chat_runner.spawn_guarded_turn",
+            "aj_crew.dashboard.chat_runner.spawn_guarded_turn",
             self._turn_spawner(done),
         ):
             assert await _start_next_queued_turn(state, slot) is True
@@ -1029,7 +1029,7 @@ class TestReaperDoesNotPruneAQueuedPromise:
         )
 
         # 3. The parent's turn runs long; the reaper sweeps well past the TTL.
-        with patch("kiro_crew.subagent_persistence.time.time", return_value=time.time() + 4 * ttl):
+        with patch("aj_crew.subagent_persistence.time.time", return_value=time.time() + 4 * ttl):
             assert prune_stale_tombstones(7, ttl) == 0
         assert (agent_root / info.id / "result.txt").exists()
 
@@ -1047,7 +1047,7 @@ class TestReaperDoesNotPruneAQueuedPromise:
         assert ts["credits"] == 0.75
 
         # 5. And it still bounds disk growth: one TTL after consumption, gone.
-        with patch("kiro_crew.subagent_persistence.time.time", return_value=time.time() + 2 * ttl):
+        with patch("aj_crew.subagent_persistence.time.time", return_value=time.time() + 2 * ttl):
             assert prune_stale_tombstones(7, ttl) == 1
         assert not (agent_root / info.id).exists()
 
@@ -1067,12 +1067,12 @@ class TestReaperDoesNotPruneAQueuedPromise:
         slot.task = blocker  # busy: an injection must wait behind this turn
         orch.dashboard_state.get_slot = MagicMock(return_value=slot)
 
-        with patch("kiro_crew.slack.gateway.SubagentManager") as mock_sm:
+        with patch("aj_crew.slack.gateway.SubagentManager") as mock_sm:
             mock_sm_inst = MagicMock()
             mock_sm_inst.start_reaper = MagicMock()
             mock_sm_inst.running_agents_for = MagicMock(return_value=[])
             mock_sm.return_value = mock_sm_inst
-            with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
                 orch._init_subagents()
             orch.subagent_mgr = mock_sm_inst
             on_done = mock_sm.call_args.kwargs["on_done"]
@@ -1080,7 +1080,7 @@ class TestReaperDoesNotPruneAQueuedPromise:
         info = _member()
         _finished_run(info.id, agent_root)
         try:
-            with patch("kiro_crew.slack.gateway.INJECTION_TIMEOUT", 0.01):
+            with patch("aj_crew.slack.gateway.INJECTION_TIMEOUT", 0.01):
                 await on_done(info)
         finally:
             blocker.cancel()
@@ -1094,7 +1094,7 @@ class TestReaperDoesNotPruneAQueuedPromise:
     async def test_child_completion_waits_for_parent_work_without_interrupting_it(self, agent_root):
         from test_subagent_scale import _drain_injections, _mock_dashboard_state, _mock_sessions
 
-        from kiro_crew.slack import gateway
+        from aj_crew.slack import gateway
 
         orch = _make_orchestrator()
         orch.sessions = _mock_sessions()
@@ -1108,7 +1108,7 @@ class TestReaperDoesNotPruneAQueuedPromise:
         orch.dashboard_state.get_slot = MagicMock(return_value=slot)
         with patch.object(gateway, "SubagentManager") as manager:
             manager.return_value.running_agents_for.return_value = []
-            with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
                 orch._init_subagents()
             on_done = manager.call_args.kwargs["on_done"]
 
@@ -1129,7 +1129,7 @@ class TestReaperDoesNotPruneAQueuedPromise:
         _finished_run(info.id, agent_root)
         with (
             patch.object(gateway, "_injection_slot_busy", side_effect=checked_busy),
-            patch("kiro_crew.dashboard.chat_runner._run_chat", side_effect=run_chat),
+            patch("aj_crew.dashboard.chat_runner._run_chat", side_effect=run_chat),
         ):
             delivery = asyncio.create_task(on_done(info))
             try:
@@ -1152,9 +1152,9 @@ class TestReaperDoesNotPruneAQueuedPromise:
 
 
 def _make_orchestrator():
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
-    cfg = KiroCrewConfig()
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U_OWNER"}):
+    cfg = AjCrewConfig()
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U_OWNER"}):
         return GatewayOrchestrator(cfg, no_dashboard=False, no_crons=True, no_open=True)

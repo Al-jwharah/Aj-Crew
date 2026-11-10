@@ -40,7 +40,7 @@ function defaultPayload() {
         title: 'Debugging session',
         slot_key: 'chat-1',
         untitled: false,
-        agent: 'kirocrew',
+        agent: 'ajcrew',
         channel: 'dashboard',
         pid: 1001,
         owns_runtime: true,
@@ -76,7 +76,7 @@ function defaultPayload() {
       {
         id: 'task-1',
         task: 'Research subtask',
-        agent: 'kirocrew-research',
+        agent: 'ajcrew-research',
         parent: 'dashboard:chat-1',
         rss_mb: 64,
         peak_rss_mb: 80,
@@ -437,13 +437,13 @@ describe('Created-by citation', () => {
     })
 
     const tip = document.querySelector('[title*="more than 4,096 exist"]')
-    expect(tip?.getAttribute('title')).not.toMatch(/kirocrew config set|in a terminal/)
+    expect(tip?.getAttribute('title')).not.toMatch(/ajcrew config set|in a terminal/)
     expect(tip?.contains(chip)).toBe(false)
     expect(chip.parentElement).toHaveTextContent('Stored session logs')
 
     fireEvent.click(chip)
     expect(
-      await screen.findByText('kirocrew config set session.archive_retention_days 7'),
+      await screen.findByText('ajcrew config set session.archive_retention_days 7'),
     ).toBeInTheDocument()
   })
 
@@ -459,7 +459,7 @@ describe('Created-by citation', () => {
       config_set_hints: {
         version: 1,
         encoding: 'utf-8-base64',
-        shells: [{ id: 'posix', prefix: '/usr/local/bin/kirocrew' }],
+        shells: [{ id: 'posix', prefix: '/usr/local/bin/ajcrew' }],
       },
     })
     const chip = await screen.findByRole('button', {
@@ -471,7 +471,7 @@ describe('Created-by citation', () => {
     expect(((await screen.findByLabelText('Value for the command')) as HTMLInputElement).value).toBe('7')
     // `7` encodes to `Nw==`.
     expect(
-      screen.getByText('/usr/local/bin/kirocrew config set session.archive_retention_days --value-base64=Nw=='),
+      screen.getByText('/usr/local/bin/ajcrew config set session.archive_retention_days --value-base64=Nw=='),
     ).toBeInTheDocument()
   })
 
@@ -601,7 +601,7 @@ describe('Credits and Turns columns', () => {
     })
     const col = screen.getAllByRole('columnheader').findIndex(h => h.textContent === 'Credits')
     const credits = (tr: Element) => tr.querySelectorAll('td')[col]?.textContent
-    const header = screen.getAllByRole('row').find(tr => tr.querySelector('td')?.textContent === 'kirocrew')!
+    const header = screen.getAllByRole('row').find(tr => tr.querySelector('td')?.textContent === 'ajcrew')!
     // 5 own + 10 from the task: the header adds the session's total, not the task again.
     expect(credits(screen.getByText('Debugging session').closest('tr')!)).toBe('15.0')
     expect(credits(header)).toBe('15.0')
@@ -639,7 +639,7 @@ describe('Credits and Turns columns', () => {
     })
     const col = screen.getAllByRole('columnheader').findIndex(h => h.textContent === 'Credits')
     const credits = (tr: Element) => tr.querySelectorAll('td')[col]?.textContent
-    const header = screen.getAllByRole('row').find(tr => tr.querySelector('td')?.textContent === 'kirocrew')!
+    const header = screen.getAllByRole('row').find(tr => tr.querySelector('td')?.textContent === 'ajcrew')!
     // The creator's own figure keeps the created session out (5 + its task's 10),
     // and the group adds the created session's 7 on top: 22, not 15 and not 29.
     expect(credits(screen.getByText('Debugging session').closest('tr')!)).toBe('15.0')
@@ -673,7 +673,7 @@ describe('Credits and Turns columns', () => {
     })
     expect(screen.queryByText('Worker opened by debugging')).toBeNull()
     const col = screen.getAllByRole('columnheader').findIndex(h => h.textContent === 'Credits')
-    const header = screen.getAllByRole('row').find(tr => tr.querySelector('td')?.textContent === 'kirocrew')!
+    const header = screen.getAllByRole('row').find(tr => tr.querySelector('td')?.textContent === 'ajcrew')!
     // The creator's own figure (15) is what the group still shows; the hidden 7 is not.
     expect(header.querySelectorAll('td')[col]?.textContent).toBe('15.0')
   })

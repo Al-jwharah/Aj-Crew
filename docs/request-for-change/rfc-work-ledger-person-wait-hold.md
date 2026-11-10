@@ -1,7 +1,7 @@
 ---
 title: Work-ledger person-wait hold -- a conductor patrol rests while every open item waits on a person, and a worker can say why it is blocked
 status: implemented
-author: iamwhatever, with kirocrew-worker
+author: iamwhatever, with ajcrew-worker
 created: 2026-10-08
 last-audited: 2026-10-11
 audited-at: a84f616557
@@ -21,7 +21,7 @@ superseded-by: []
 
 ## 1. Problem
 
-A conductor's `watch: "work-ledger"` loop is kept alive while any item is open. When the cycle cap or runtime budget runs out, `_extend_for_open_ledger` in `src/kiro_crew/autonudge_service/firing.py` raises it, up to the seven-day backstop. That is the right call while a worker is building or testing.
+A conductor's `watch: "work-ledger"` loop is kept alive while any item is open. When the cycle cap or runtime budget runs out, `_extend_for_open_ledger` in `src/aj_crew/autonudge_service/firing.py` raises it, up to the seven-day backstop. That is the right call while a worker is building or testing.
 
 It is the wrong call when every open item is waiting on a person. A worker whose tool approval timed out, or whose question only the user can answer, will not move until that person acts. The loop still takes turns on its timer and on the quiet floor, and still extends itself, for up to seven days. Each turn reads a board that cannot change.
 

@@ -11,8 +11,8 @@ from __future__ import annotations
 import pytest
 from app_backend_helpers import _FakeHealthResp, _FakeProc, _probe_outcome
 
-from kiro_crew.apps.backend import AppProcess
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.apps.backend import AppProcess
+from aj_crew.testing.wait import default_timeout
 
 
 def _reconcile_lock_held() -> bool:
@@ -23,7 +23,7 @@ def _reconcile_lock_held() -> bool:
     """
     import threading
 
-    import kiro_crew.apps.backend as bmod
+    import aj_crew.apps.backend as bmod
 
     result: list[bool] = []
 
@@ -52,7 +52,7 @@ class TestHealthGatedMcpRegistration:
         monkeypatch.setattr(bmod, "_HEALTH_CHECK_RETRIES", 3)
 
     def test_registers_when_healthy_and_still_tracked(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -81,7 +81,7 @@ class TestHealthGatedMcpRegistration:
     def test_does_not_register_if_stopped_mid_healthcheck(self, monkeypatch):
         # review-bot race finding: app removed from _processes between the poll and the lock →
         # must NOT register MCP for a now-dead backend.
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -104,7 +104,7 @@ class TestHealthGatedMcpRegistration:
         assert calls == []  # never registered — no dead-URL entry written
 
     def test_scrubs_when_never_healthy(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -143,7 +143,7 @@ class TestMcpReconcileHonoursRecordIdentity:
 
     @pytest.fixture
     def wired(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         calls: list[tuple[str, int, bool]] = []
         monkeypatch.setattr(
@@ -211,7 +211,7 @@ class TestMcpReconcileHonoursRecordIdentity:
         # Serializing only the watch would not be enough: the successor's own startup
         # registration has to queue behind a retiring watcher's reconcile, or the two
         # can still interleave and leave the dead port as the last write.
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -249,7 +249,7 @@ class TestFailedMcpReconcileIsRetried:
 
     @pytest.fixture
     def watched(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -343,7 +343,7 @@ class TestTerminalScrubIsRetriedUntilItLands:
 
     @pytest.fixture
     def wired(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -440,7 +440,7 @@ class TestTeardownParticipatesInTheReconcileSerialization:
     """
 
     def test_stop_holds_the_reconcile_lock_across_the_pop(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         ap = AppProcess(app_name="s", port=9230, healthy=True, mcp_healthy=True)
         with bmod._lock:
@@ -486,7 +486,7 @@ class TestAdoptedRecoveryRebindsOwnership:
 
     @pytest.fixture
     def watched(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -580,7 +580,7 @@ class TestUnknownMcpStateStillGetsScrubbed:
     """
 
     def test_a_none_mcp_state_keeps_retrying_the_terminal_scrub(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -617,7 +617,7 @@ class TestUnknownMcpStateStillGetsScrubbed:
                 bmod._processes.clear()
 
     def test_a_confirmed_scrub_still_ends_the_watch(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -660,8 +660,8 @@ class TestScrubAlsoRefreshesMaterializedAgents:
     """
 
     def test_an_unhealthy_reconcile_refreshes_the_apps_agents(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.backend as bmod
+        import aj_crew.apps.bridges as brmod
 
         seen: list[str] = []
         monkeypatch.setattr(brmod, "scrub_backend_mcp_url", lambda name, unreconciled=None: [])
@@ -680,8 +680,8 @@ class TestScrubAlsoRefreshesMaterializedAgents:
         assert seen == ["a"]
 
     def test_a_healthy_reconcile_does_not_take_the_scrub_path(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.backend as bmod
+        import aj_crew.apps.bridges as brmod
 
         seen: list[str] = []
         monkeypatch.setattr(
@@ -701,8 +701,8 @@ class TestScrubAlsoRefreshesMaterializedAgents:
         # The agent JSON is the file kiro-cli reads, so a scrub whose agent half failed
         # has NOT achieved what the scrub exists for. Reporting it landed would let
         # `mcp_healthy` advance and strand the dead url there permanently.
-        import kiro_crew.apps.backend as bmod
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.backend as bmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(brmod, "scrub_backend_mcp_url", lambda name, unreconciled=None: [])
 
@@ -724,8 +724,8 @@ class TestScrubAlsoRefreshesMaterializedAgents:
         # A self-managed app, a denied one, and an app with no declared agents all return
         # an empty list. None is a failed write, and retrying them never converges — only
         # the io_failures collector means retry.
-        import kiro_crew.apps.backend as bmod
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.backend as bmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(brmod, "scrub_backend_mcp_url", lambda name, unreconciled=None: [])
         monkeypatch.setattr(brmod, "refresh_app_agents", lambda name, io_failures=None: [])
@@ -748,8 +748,8 @@ class TestRegistrationReportsAgentIoFailuresToo:
     """
 
     def test_a_failed_agent_write_on_recovery_is_unlanded(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.backend as bmod
+        import aj_crew.apps.bridges as brmod
 
         def _reregister(app_name, live_port=None, io_failures=None):
             if io_failures is not None:
@@ -761,8 +761,8 @@ class TestRegistrationReportsAgentIoFailuresToo:
         assert bmod._gate_mcp_registration("a", 9300, healthy=True) is False
 
     def test_a_clean_registration_still_lands(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.backend as bmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(
             brmod,
@@ -774,8 +774,8 @@ class TestRegistrationReportsAgentIoFailuresToo:
 
     def test_the_live_port_is_still_threaded_through(self, monkeypatch):
         # The collector must not displace the argument that makes the url reachable.
-        import kiro_crew.apps.backend as bmod
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.backend as bmod
+        import aj_crew.apps.bridges as brmod
 
         seen: dict[str, object] = {}
 

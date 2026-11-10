@@ -14,8 +14,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from kiro_crew.vector_memory import VectorMemoryStore
-from kiro_crew.vector_memory_runtime import semantic, term_index
+from aj_crew.vector_memory import VectorMemoryStore
+from aj_crew.vector_memory_runtime import semantic, term_index
 
 _DIM = 16
 _QUERIES = ["tokyo deploy", "rust recall memory", "brand new gateway", "python note", "zzz nothing"]

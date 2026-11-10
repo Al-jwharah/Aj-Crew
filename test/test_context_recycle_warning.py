@@ -23,19 +23,19 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.config.sections import CONTEXT_WARN_MARGIN_PCT
-from kiro_crew.discord.transport_dispatch import DiscordDispatcher
-from kiro_crew.feishu.transport_dispatch import FeishuDispatcher
-from kiro_crew.imessage.transport_dispatch import IMessageDispatcher
-from kiro_crew.messaging import commands
-from kiro_crew.messaging.conversation import ConversationState
-from kiro_crew.teams.transport_dispatch import TeamsDispatcher
-from kiro_crew.telegram.transport_dispatch import TelegramDispatcher
-from kiro_crew.webex.transport_dispatch import WebexDispatcher
-from kiro_crew.wecom.transport_dispatch import WeComDispatcher
-from kiro_crew.weixin.transport_dispatch import WeixinDispatcher
-from kiro_crew.whatsapp import transport_dispatch as whatsapp_dispatch
-from kiro_crew.whatsapp.transport_dispatch import WhatsAppDispatcher
+from aj_crew.config.sections import CONTEXT_WARN_MARGIN_PCT
+from aj_crew.discord.transport_dispatch import DiscordDispatcher
+from aj_crew.feishu.transport_dispatch import FeishuDispatcher
+from aj_crew.imessage.transport_dispatch import IMessageDispatcher
+from aj_crew.messaging import commands
+from aj_crew.messaging.conversation import ConversationState
+from aj_crew.teams.transport_dispatch import TeamsDispatcher
+from aj_crew.telegram.transport_dispatch import TelegramDispatcher
+from aj_crew.webex.transport_dispatch import WebexDispatcher
+from aj_crew.wecom.transport_dispatch import WeComDispatcher
+from aj_crew.weixin.transport_dispatch import WeixinDispatcher
+from aj_crew.whatsapp import transport_dispatch as whatsapp_dispatch
+from aj_crew.whatsapp.transport_dispatch import WhatsAppDispatcher
 
 THRESHOLD = 70.0
 IN_BAND = THRESHOLD - CONTEXT_WARN_MARGIN_PCT / 2  # 65: warn

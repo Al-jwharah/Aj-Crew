@@ -19,10 +19,10 @@ import asyncio
 
 import pytest
 
-from kiro_crew.testing.wait import async_wait_until, await_until, finished
-from kiro_crew.workflows.runner import WorkflowRunner
-from kiro_crew.workflows.service import WorkflowService
-from kiro_crew.workflows.store import WorkflowRunStore
+from aj_crew.testing.wait import async_wait_until, await_until, finished
+from aj_crew.workflows.runner import WorkflowRunner
+from aj_crew.workflows.service import WorkflowService
+from aj_crew.workflows.store import WorkflowRunStore
 
 pytestmark = pytest.mark.asyncio
 
@@ -187,7 +187,7 @@ async def _wait(svc, rid):
 
 async def test_service_rerun_subtree_from_index(monkeypatch) -> None:
     # Patch the agent_fn the service builds so calls are counted + deterministic.
-    import kiro_crew.workflows.agent_exec as ae
+    import aj_crew.workflows.agent_exec as ae
 
     calls = {"n": 0}
 
@@ -200,7 +200,7 @@ async def test_service_rerun_subtree_from_index(monkeypatch) -> None:
 
     monkeypatch.setattr(ae, "build_agent_fn", fake_build)
     # service.py imported build_agent_fn by name — patch there too
-    import kiro_crew.workflows.service as svc_mod
+    import aj_crew.workflows.service as svc_mod
 
     monkeypatch.setattr(svc_mod, "build_agent_fn", fake_build)
 
@@ -250,8 +250,8 @@ PARALLEL_TWO_STEP = (
 
 def _patch_agent_fn(monkeypatch) -> dict:
     """Route the service's per-run agent_fn to ``holder["fn"]``, set per run."""
-    import kiro_crew.workflows.agent_exec as ae
-    import kiro_crew.workflows.service as svc_mod
+    import aj_crew.workflows.agent_exec as ae
+    import aj_crew.workflows.service as svc_mod
 
     holder: dict = {}
 
@@ -293,7 +293,7 @@ def guards_in_start_order(monkeypatch):
     calls take their indices in the order they started: the order the script and
     each test's events set.
     """
-    from kiro_crew.workflow_memory import WorkflowScope
+    from aj_crew.workflow_memory import WorkflowScope
 
     real_validate = WorkflowScope.validate
     started: list = []

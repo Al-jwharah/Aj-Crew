@@ -59,15 +59,15 @@ it to lessons, and step E applies it to the backlog.
 
 | Block | Cap (symbol, file) | Relevance gate |
 |---|---|---|
-| Rule block | `_LESSONS_STARTUP_CAP = 37_000`, `src/kiro_crew/context_assembly/budget.py` | None. `directives = authored + untagged` (`src/kiro_crew/vector_memory_runtime/lessons.py`) is ranked and filled to the cap |
+| Rule block | `_LESSONS_STARTUP_CAP = 37_000`, `src/aj_crew/context_assembly/budget.py` | None. `directives = authored + untagged` (`src/aj_crew/vector_memory_runtime/lessons.py`) is ranked and filled to the cap |
 | Findings tier (`on_topic`) | `_LESSON_EXPERIENCE_CAP`, `budget.py` | `any_lesson_overlap` (`lessons.py`): any shared stemmed word admits the tier |
 | Preferences | `_PREFS_STARTUP_CAP = 12_700`, `budget.py` | None |
-| Task facts (V1) | `_SEMANTIC_MEMORY_CAP`, `budget.py` | Ranked by `get_semantic_context` (`src/kiro_crew/vector_memory_runtime/semantic.py`), no floor |
-| Task facts (V2) | same | `semantic_candidates_v2` (`semantic.py`) requires `relevance_evidence` (`src/kiro_crew/memory_v2.py`), floors 0.62 / 0.57 (`memory_v2.py`) |
+| Task facts (V1) | `_SEMANTIC_MEMORY_CAP`, `budget.py` | Ranked by `get_semantic_context` (`src/aj_crew/vector_memory_runtime/semantic.py`), no floor |
+| Task facts (V2) | same | `semantic_candidates_v2` (`semantic.py`) requires `relevance_evidence` (`src/aj_crew/memory_v2.py`), floors 0.62 / 0.57 (`memory_v2.py`) |
 | Episodic | `_EPISODIC_INJECT_CAP = 3_000`, `budget.py` | Cosine floor |
 
 The private member store reaches `get_lessons_context` without a query vector
-(`src/kiro_crew/context_assembly/store_admission.py`), so its rule order is
+(`src/aj_crew/context_assembly/store_admission.py`), so its rule order is
 always lexical. The default store passes one (`store_admission.py`).
 
 ### Measured numbers
@@ -101,14 +101,14 @@ Other findings, from read-only replays on this host:
 The consolidation model picks the tier, and nothing pushes back:
 
 1. Unstated means standing. `LESSON_APPLIES_INSTRUCTION`
-   (`src/kiro_crew/lesson_validation.py`) tells the model to omit the
+   (`src/aj_crew/lesson_validation.py`) tells the model to omit the
    field when unsure, and an omitted field is served as a standing rule.
 2. The prompt examples read like rules. The lessons key in
-   `src/kiro_crew/history_consolidation_pass.py` gives `"always Y"` and
+   `src/aj_crew/history_consolidation_pass.py` gives `"always Y"` and
    `"never Z"` as its examples.
 3. The model pays no budget cost. It never sees how full the 37k block is.
 4. Each job may add up to `_MAX_LESSONS_PER_CONSOLIDATION = 10` lessons
-   (`src/kiro_crew/vector_memory_constants.py`).
+   (`src/aj_crew/vector_memory_constants.py`).
 
 Hypothesis: many consolidation `always` rows come from orchestrator-to-worker
 chats, where the "user" is another agent handing out process steps. We sampled
@@ -129,8 +129,8 @@ a worker brief call. The text column is a keyword heuristic.
 
 | Store | Check | Scope |
 |---|---|---|
-| Default | cosine > 0.85 against existing lessons (`src/kiro_crew/vector_memory_runtime/lesson_write.py`), authority-aware | same scope |
-| Private | key only: `_lesson_key(rule, scope)` (`src/kiro_crew/vector_memory_member.py`) | exact text and same scope |
+| Default | cosine > 0.85 against existing lessons (`src/aj_crew/vector_memory_runtime/lesson_write.py`), authority-aware | same scope |
+| Private | key only: `_lesson_key(rule, scope)` (`src/aj_crew/vector_memory_member.py`) | exact text and same scope |
 
 ## Goals
 
@@ -310,7 +310,7 @@ A refused proposal is logged with its reason and counted in the run receipt.
   approval.
 - An approved change goes through the existing edit and forget paths, which
   write `memory_revisions` and leave a tombstone, so every row restores
-  (`src/kiro_crew/memory_edit.py` reads `memory_revisions` to restore a prior
+  (`src/aj_crew/memory_edit.py` reads `memory_revisions` to restore a prior
   value).
 - Trust may widen later for one narrow class (for example exact copies written
   by agents) only after a measured run of zero bad merges across a stated
@@ -344,13 +344,13 @@ After an approved batch is applied:
 
 ### Measurement: extend injection receipts
 
-Injection receipts (`src/kiro_crew/injection_receipts.py`) already record, per
+Injection receipts (`src/aj_crew/injection_receipts.py`) already record, per
 composition, the ids each lesson tier rendered. This RFC adds fields and caps:
 
 - New fields: `would_drop`, `would_add`, `folded` (leader, folded) pairs, and a
   small `control` sample of rows the live policy omitted. Keys only, never text.
 - New kinds must be added to `KINDS` (`injection_receipts.py`).
-- Caps, copied from kind routing (`src/kiro_crew/memory_kind_routing.py`):
+- Caps, copied from kind routing (`src/aj_crew/memory_kind_routing.py`):
   150 rows a day, 2,000 rows total, 1 MB, 14-day sample window, counters kept
   400 days, reset on a policy-version change.
 

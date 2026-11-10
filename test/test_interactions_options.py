@@ -1,4 +1,4 @@
-"""OPTIONS controls and action buttons in Slack, driven through ``kiro_crew.slack.interactions``.
+"""OPTIONS controls and action buttons in Slack, driven through ``aj_crew.slack.interactions``.
 
 Covers the single-click OPTIONS path end to end (the in-place edit, the post-and-delete
 fallback, a delete that fails and keeps the control's record, a duplicate click, a
@@ -23,23 +23,23 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.dashboard import chat_persistence
-from kiro_crew.dashboard.chat_utils_slack_options import options_records, set_options_records
-from kiro_crew.slack import interactions as ix
-from kiro_crew.slack.format import (
+from aj_crew.dashboard import chat_persistence
+from aj_crew.dashboard.chat_utils_slack_options import options_records, set_options_records
+from aj_crew.slack import interactions as ix
+from aj_crew.slack.format import (
     OPTIONS_ACTION_PREFIX,
     OPTIONS_SEVERAL_BLOCK,
     OPTIONS_SEVERAL_INPUT,
     is_options_actions_block,
 )
-from kiro_crew.slack.outbound import (
+from aj_crew.slack.outbound import (
     PostedOptions,
     claim_options_answer,
     encode_options_token,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
-LOGGER = "kiro_crew.slack.interactions"
+LOGGER = "aj_crew.slack.interactions"
 MINTED_TS = "2026-10-01T10:00:00+00:00"
 LATER_TS = "2026-10-01T10:05:00+00:00"
 HEADER = {"type": "section", "text": {"type": "mrkdwn", "text": "Which one?"}}
@@ -483,7 +483,7 @@ class TestOptionsBlockId:
         assert ix._options_block_id(payload, {"block_id": 7}) == "second"
 
     def test_a_later_rows_suffixed_id_still_decodes_to_the_token(self) -> None:
-        from kiro_crew.slack.outbound import decode_options_token, options_row_block_id
+        from aj_crew.slack.outbound import decode_options_token, options_row_block_id
 
         token = encode_options_token("slack:t1", MINTED_TS)
         assert token is not None
@@ -734,7 +734,7 @@ class TestImportThreadToSlot:
     async def test_an_unreadable_store_still_imports_an_ordinary_thread(
         self, saved: AsyncMock, tmp_path
     ) -> None:
-        from kiro_crew.slack.code_channels.store import CodeChannelStore, set_store
+        from aj_crew.slack.code_channels.store import CodeChannelStore, set_store
 
         (tmp_path / "cc.json").write_text("{not json", encoding="utf-8")
         set_store(CodeChannelStore(tmp_path / "cc.json"))
@@ -750,8 +750,8 @@ class TestImportThreadToSlot:
 
     def test_each_refusal_gets_its_own_notice_and_audit_reason(self) -> None:
         """Only a real anchor refusal says the thread is a code channel's own."""
-        from kiro_crew.slack.code_channels.binding import AnchorHandoffRefused
-        from kiro_crew.slack.interactions_options import (
+        from aj_crew.slack.code_channels.binding import AnchorHandoffRefused
+        from aj_crew.slack.interactions_options import (
             IMPORT_AGENT_MISMATCH_NOTICE,
             IMPORT_CODE_CHANNEL_NOTICE,
             ChannelAgentMismatchError,
@@ -772,8 +772,8 @@ class TestImportThreadToSlot:
         self, saved: AsyncMock, tmp_path
     ) -> None:
         """Its thread is the binding's own session: refused before any slot."""
-        from kiro_crew.slack.code_channels.binding import AnchorHandoffRefused
-        from kiro_crew.slack.code_channels.store import Binding, CodeChannelStore, set_store
+        from aj_crew.slack.code_channels.binding import AnchorHandoffRefused
+        from aj_crew.slack.code_channels.store import Binding, CodeChannelStore, set_store
 
         cc = CodeChannelStore(tmp_path / "cc.json")
         cc.put_binding(
@@ -810,8 +810,8 @@ class TestCodeChannelAnswerSender:
 
     @pytest.fixture
     def bound(self, tmp_path: Any, monkeypatch: pytest.MonkeyPatch) -> Any:
-        from kiro_crew.slack.code_channels import routing
-        from kiro_crew.slack.code_channels.store import Binding, CodeChannelStore, set_store
+        from aj_crew.slack.code_channels import routing
+        from aj_crew.slack.code_channels.store import Binding, CodeChannelStore, set_store
 
         monkeypatch.setattr(routing, "code_channels_on", lambda _cfg: self.on)
         self.on = True

@@ -25,7 +25,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers.files import _write_file_restricted, api_upload_file
+from aj_crew.dashboard.handlers.files import _write_file_restricted, api_upload_file
 
 
 def _make_app() -> web.Application:
@@ -39,7 +39,7 @@ def _make_app() -> web.Application:
 def mock_sel():
     """Patch the late-bound ``_sel()`` in handlers.files so SEL audit
     calls in the upload handler don't blow up on a missing global."""
-    with patch("kiro_crew.dashboard.handlers.files._sel") as m:
+    with patch("aj_crew.dashboard.handlers.files._sel") as m:
         instance = MagicMock()
         m.return_value = instance
         yield instance
@@ -48,10 +48,10 @@ def mock_sel():
 @pytest.fixture
 def upload_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Redirect ``_UPLOAD_DIR`` to a per-test tmp path so uploads don't
-    pollute the real ``~/.kirocrew/uploads/`` and don't race other tests."""
+    pollute the real ``~/.ajcrew/uploads/`` and don't race other tests."""
     target = tmp_path / "uploads"
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.files._UPLOAD_DIR",
+        "aj_crew.dashboard.handlers.files._UPLOAD_DIR",
         target,
     )
     return target
@@ -114,7 +114,7 @@ async def test_upload_docx_emits_match_true_diagnostic(
         ),
     )
     with caplog.at_level(
-        logging.INFO, logger="kiro_crew.dashboard.handlers.files",
+        logging.INFO, logger="aj_crew.dashboard.handlers.files",
     ):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.post("/api/upload/file", data=form)
@@ -178,7 +178,7 @@ async def test_upload_image_emits_diagnostic_without_zip_check(
         "file", png, filename="dot.png", content_type="image/png",
     )
     with caplog.at_level(
-        logging.INFO, logger="kiro_crew.dashboard.handlers.files",
+        logging.INFO, logger="aj_crew.dashboard.handlers.files",
     ):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.post("/api/upload/file", data=form)
@@ -222,7 +222,7 @@ async def test_upload_text_skips_diagnostic_block_entirely(
         content_type="text/markdown",
     )
     with caplog.at_level(
-        logging.INFO, logger="kiro_crew.dashboard.handlers.files",
+        logging.INFO, logger="aj_crew.dashboard.handlers.files",
     ):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.post("/api/upload/file", data=form)
@@ -302,7 +302,7 @@ async def test_upload_ooxml_template_is_accepted_and_zip_checked(
         form.add_field(
             "file", _minimal_docx_bytes(), filename=f"brand{extension}", content_type=content_type
         )
-        with caplog.at_level(logging.INFO, logger="kiro_crew.dashboard.handlers.files"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.dashboard.handlers.files"):
             resp = await client.post("/api/upload/file", data=form)
         assert resp.status == 200, await resp.text()
         saved = Path((await resp.json())["paths"][0])
@@ -346,7 +346,7 @@ async def test_upload_har_is_accepted_as_plain_text(
         content_type="application/json",
     )
     with caplog.at_level(
-        logging.INFO, logger="kiro_crew.dashboard.handlers.files",
+        logging.INFO, logger="aj_crew.dashboard.handlers.files",
     ):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.post("/api/upload/file", data=form)
@@ -393,7 +393,7 @@ async def test_upload_drawio_is_accepted_as_xml_text(
         content_type="application/xml",
     )
     with caplog.at_level(
-        logging.INFO, logger="kiro_crew.dashboard.handlers.files",
+        logging.INFO, logger="aj_crew.dashboard.handlers.files",
     ):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.post("/api/upload/file", data=form)
@@ -708,7 +708,7 @@ async def test_upload_fits_a_file_system_with_a_short_name_limit(
 ) -> None:
     """On eCryptfs (NAME_MAX 143) a name under the fixed 200-byte cap still fits."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.files._name_max", lambda _directory: 143, raising=False
+        "aj_crew.dashboard.handlers.files._name_max", lambda _directory: 143, raising=False
     )
     form = aiohttp.FormData()
     form.add_field("file", b"body\n", filename="a" * 111 + ".txt", content_type="text/plain")
@@ -730,7 +730,7 @@ async def test_a_relabelled_upload_still_fits_a_short_name_limit(
 ) -> None:
     """A .jpg whose bytes are WebP is stored as .webp, one byte longer, and must still fit."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.files._name_max", lambda _directory: 143, raising=False
+        "aj_crew.dashboard.handlers.files._name_max", lambda _directory: 143, raising=False
     )
     form = aiohttp.FormData()
     form.add_field("file", _WEBP_HEAD, filename="p" * 130 + ".jpg", content_type="image/jpeg")
@@ -751,10 +751,10 @@ async def test_a_streamed_video_temp_name_fits_a_short_name_limit(
     monkeypatch,
 ) -> None:
     """A streamed part is written under the stored name plus ".part"; that must fit too."""
-    from kiro_crew.dashboard import part_stream
+    from aj_crew.dashboard import part_stream
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.files._name_max", lambda _directory: 143, raising=False
+        "aj_crew.dashboard.handlers.files._name_max", lambda _directory: 143, raising=False
     )
     temp_names: list[str] = []
     real_init = part_stream._TempSink.__init__
@@ -776,7 +776,7 @@ async def test_a_streamed_video_temp_name_fits_a_short_name_limit(
 
 
 def test_the_stored_name_cap_follows_the_file_system_limit() -> None:
-    from kiro_crew.dashboard.file_api.uploads import _fit_stored_name
+    from aj_crew.dashboard.file_api.uploads import _fit_stored_name
 
     # 33 bytes of UUID prefix before the tail, 5 for a streamed part's ".part" after it.
     assert len(_fit_stored_name("a" * 150 + ".txt", 143)) == 143 - 33 - 5
@@ -785,7 +785,7 @@ def test_the_stored_name_cap_follows_the_file_system_limit() -> None:
 
 
 def test_name_max_falls_back_when_the_file_system_cannot_say(tmp_path: Path, monkeypatch) -> None:
-    from kiro_crew.dashboard.file_api.uploads import _name_max
+    from aj_crew.dashboard.file_api.uploads import _name_max
 
     def refuse(_path: str, _name: str) -> int:
         raise OSError("not supported")
@@ -823,7 +823,7 @@ async def test_upload_with_a_name_past_the_file_system_limit_is_stored_shortened
 
 
 def test_a_short_name_is_kept_as_it_is() -> None:
-    from kiro_crew.dashboard.file_api.uploads import _fit_stored_name
+    from aj_crew.dashboard.file_api.uploads import _fit_stored_name
 
     assert _fit_stored_name("notes.md") == "notes.md"
     assert _fit_stored_name("é" * 150 + ".txt") == "é" * 98 + ".txt"
@@ -842,7 +842,7 @@ def test_a_short_name_is_kept_as_it_is() -> None:
     ids=["nfd-latin", "nfd-several", "devanagari-kept", "invisible-marks", "ascii-punctuation"],
 )
 def test_upload_name_composes_accents(filename: str, expected: str) -> None:
-    from kiro_crew.dashboard.file_api.uploads import _safe_upload_name
+    from aj_crew.dashboard.file_api.uploads import _safe_upload_name
 
     assert _safe_upload_name(filename) == expected
 
@@ -863,8 +863,8 @@ def test_a_sanitized_image_name_is_still_read_as_an_image_path(
     filename: str, grammar: str, uploads: str
 ) -> None:
     """Each host's path grammar must read the stored path, or the picture never reaches the model."""
-    from kiro_crew import image_refs
-    from kiro_crew.dashboard.file_api.uploads import _safe_upload_name
+    from aj_crew import image_refs
+    from aj_crew.dashboard.file_api.uploads import _safe_upload_name
 
     stored = f"{uploads}{'0' * 32}_{_safe_upload_name(filename)}"
 
@@ -894,7 +894,7 @@ def test_upload_name_keeping_marks_still_drops_separators_and_controls(
     """Keeping combining marks must not let a separator, control or bidi character through."""
     import unicodedata
 
-    from kiro_crew.dashboard.file_api.uploads import _safe_upload_name
+    from aj_crew.dashboard.file_api.uploads import _safe_upload_name
 
     out = _safe_upload_name(Path(filename).name)
 

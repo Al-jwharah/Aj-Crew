@@ -59,14 +59,14 @@ permissions:
 jobs:
   publish-cli:
     name: Publish CLI wheel (${{ inputs.channel }})
-    # `kirocrew-runners` larger-runner group, reached by its runner LABEL rather
+    # `ajcrew-runners` larger-runner group, reached by its runner LABEL rather
     # than by GROUP. nightly.yml calls this lane with no repository guard, so a
     # fork running its own nightly starts it too; there an organization runner
     # group is unreachable and a job asking for a label no runner there carries
     # would wait out GitHub's pending limit instead of running. See
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 30
     # REQUIRED for tag-triggered (release) runs: the signing role's OIDC trust
     # accepts exactly two subjects -- ref:refs/heads/main and environment:prod.
@@ -127,12 +127,12 @@ jobs:
           WHEEL_DIR=$(dirname "$WHEEL")
           WHEEL_NAME=$(basename "$WHEEL")
           # The lts channel carries the LTS edition's own distribution
-          # (kirocrew-lts, build-wheel.yml); every other channel carries kirocrew.
+          # (ajcrew-lts, build-wheel.yml); every other channel carries ajcrew.
           # The stem is pinned to the channel so neither lane can publish the
           # other edition's wheel.
-          if [ "$CHANNEL" = lts ]; then STEM=kirocrew_lts; else STEM=kirocrew; fi
+          if [ "$CHANNEL" = lts ]; then STEM=ajcrew_lts; else STEM=ajcrew; fi
           if [[ ! "$WHEEL_NAME" =~ ^${STEM}-([A-Za-z0-9][A-Za-z0-9._+]{0,127})-py3-none-any\.whl$ ]]; then
-            echo "::error::Wheel name does not match the canonical Kiro Crew pure-Python artifact contract for channel ${CHANNEL}: $WHEEL_NAME"
+            echo "::error::Wheel name does not match the canonical Aj Crew pure-Python artifact contract for channel ${CHANNEL}: $WHEEL_NAME"
             exit 1
           fi
           WHEEL_VERSION="${BASH_REMATCH[1]}"
@@ -367,14 +367,14 @@ jobs:
           # PEP 503 static "simple" index per channel, so pip/uv can install
           # natively (verified invocation; --index-url alone would cut off PyPI
           # and fail on dependencies):
-          #   pip install --pre kirocrew --extra-index-url ${CDN_BASE}/feed/<channel>/simple/
+          #   pip install --pre ajcrew --extra-index-url ${CDN_BASE}/feed/<channel>/simple/
           # pip verifies the #sha256= fragment on each link, giving the same
           # fail-closed integrity as the feed. Lives under feed/ because that
           # prefix is CI-writable and CloudFront serves it no-cache.
           CDN_BASE="${CDN_BASE%/}"
           SIMPLE="feed/${CHANNEL}/simple"
-          # PEP 503 normalized project name: the lts channel serves kirocrew-lts.
-          if [ "$CHANNEL" = lts ]; then PROJECT=kirocrew-lts; else PROJECT=kirocrew; fi
+          # PEP 503 normalized project name: the lts channel serves ajcrew-lts.
+          if [ "$CHANNEL" = lts ]; then PROJECT=ajcrew-lts; else PROJECT=ajcrew; fi
           PROJ_URL="${CDN_BASE}/${SIMPLE}/${PROJECT}/"
           NEW_LINK="<a href=\"${CDN_BASE}/cli/${CHANNEL}/${WHEEL_VERSION}/${WHEEL_NAME}#sha256=${SHA256}\">${WHEEL_NAME}</a><br/>"
 
@@ -406,7 +406,7 @@ jobs:
           # hosting), so ALSO upload the literal trailing-slash keys pip hits.
           # Must use `s3api put-object` (writes the EXACT key): `s3 cp` treats a
           # trailing-slash destination as a directory prefix and would silently
-          # write .../kirocrew/project.html instead of the .../kirocrew/ key.
+          # write .../ajcrew/project.html instead of the .../ajcrew/ key.
           for DEST in "${SIMPLE}/${PROJECT}/index.html" "${SIMPLE}/${PROJECT}/"; do
             aws s3api put-object --bucket "${BUCKET}" --key "${DEST}" --body project.html \
               --content-type "text/html" --cache-control no-cache > /dev/null

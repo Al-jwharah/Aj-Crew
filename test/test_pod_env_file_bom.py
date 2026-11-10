@@ -14,16 +14,16 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps.builtins.dev_fleet import worktree_ops
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod import runtime_ports
-from kiro_crew.pod.config import PodConfig
+from aj_crew.apps.builtins.dev_fleet import worktree_ops
+from aj_crew.pod import runtime as rt
+from aj_crew.pod import runtime_ports
+from aj_crew.pod.config import PodConfig
 
 _BODY = "MYVAR='hello'\r\nPORT='7999'\r\n"
 
 
 def _cfg(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PodConfig:
-    monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path))
+    monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path))
     cfg = PodConfig.load()
     cfg.pods_dir.mkdir(parents=True, exist_ok=True)
     return cfg

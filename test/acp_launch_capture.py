@@ -21,20 +21,20 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp import launch as launch_mod
-from kiro_crew.acp import runtime as runtime_mod
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.harness import claude as claude_mod
-from kiro_crew.acp.harness import codex as codex_harness_mod
-from kiro_crew.acp.harness import deepseek as deepseek_mod
-from kiro_crew.acp.harness import opencode as opencode_mod
-from kiro_crew.acp.harness import pi as pi_mod
-from kiro_crew.acp.harness import pi_node as pi_node_mod
-from kiro_crew.acp.harness import strands as strands_mod
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.skill_projection import NativeSkillProjection
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.acp import client as client_mod
+from aj_crew.acp import launch as launch_mod
+from aj_crew.acp import runtime as runtime_mod
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.harness import claude as claude_mod
+from aj_crew.acp.harness import codex as codex_harness_mod
+from aj_crew.acp.harness import deepseek as deepseek_mod
+from aj_crew.acp.harness import opencode as opencode_mod
+from aj_crew.acp.harness import pi as pi_mod
+from aj_crew.acp.harness import pi_node as pi_node_mod
+from aj_crew.acp.harness import strands as strands_mod
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.skill_projection import NativeSkillProjection
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_COPILOT,
     ACP_BACKEND_DEEPSEEK,
     ACP_BACKEND_GOOSE,
@@ -44,9 +44,9 @@ from kiro_crew.agent_sdk.backends import (
     ACP_BACKENDS_KIRO_FAMILY,
     ACP_BACKENDS_KNOWN,
 )
-from kiro_crew.config import paths as config_paths
-from kiro_crew.constants import KIROCREW_SPAWN_INSTANCE_ENV
-from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+from aj_crew.config import paths as config_paths
+from aj_crew.constants import AJCREW_SPAWN_INSTANCE_ENV
+from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
 
 #: The committed fixture. Resolved from this file so both callers agree on it.
 GOLDEN_PATH = Path(__file__).parent / "fixtures" / "acp_launch_goldens.json"
@@ -59,13 +59,13 @@ _CODEX_ACP_ARGV = ["/opt/bin/node", "/opt/lib/codex-acp/index.js"]
 _PI_ACP_ARGV = ["/opt/bin/node", "/opt/lib/pi-acp/index.js"]
 _PI_BIN = "/opt/bin/pi"
 _PI_LAUNCHER = "/opt/run/pi-launcher.sh"
-_PI_EXTENSION = "/opt/run/kiro_crew_tool_gate.ts"
-_PI_MCP_HANDOFF = "/opt/run/kirocrew_pi_gate_mcp_handoff.json"
+_PI_EXTENSION = "/opt/run/aj_crew_tool_gate.ts"
+_PI_MCP_HANDOFF = "/opt/run/ajcrew_pi_gate_mcp_handoff.json"
 # The DeepSeek Harness gate artifacts, pinned the same way and for the same reason:
 # both are real files in the owner-only run directory, and the golden records the
 # argv rather than the filesystem.
-_DSH_EXTENSION = "/opt/run/kiro_crew_tool_gate.mjs"
-_DSH_PATCH = "/opt/run/kiro_crew_dsh_gate.patch.yml"
+_DSH_EXTENSION = "/opt/run/aj_crew_tool_gate.mjs"
+_DSH_PATCH = "/opt/run/aj_crew_dsh_gate.patch.yml"
 _OPENCODE_BIN = "/opt/bin/opencode"
 _GOOSE_BIN = "/opt/bin/goose"
 _DEEPSEEK_BIN = "/opt/bin/dsh"
@@ -81,16 +81,16 @@ _OPENCODE_CONFIG = '{"permission":"ask"}'
 #: appear -- that a harness receives it at all is the fact being pinned.
 VOLATILE_ENV = {
     "PATH": "<augmented-path>",
-    "KIROCREW_RUNTIME_PYTHON": "<interpreter>",
-    "KIROCREW_PI_GATE_SESSION": "<nonce>",
-    "KIROCREW_DSH_GATE_SESSION": "<nonce>",
-    "KIROCREW_STRANDS_GATE_SESSION": "<nonce>",
+    "AJCREW_RUNTIME_PYTHON": "<interpreter>",
+    "AJCREW_PI_GATE_SESSION": "<nonce>",
+    "AJCREW_DSH_GATE_SESSION": "<nonce>",
+    "AJCREW_STRANDS_GATE_SESSION": "<nonce>",
     # Under the capture's own home, so the path is the host's.
-    "KIROCREW_STRANDS_STATE_DIR": "<state-dir>",
+    "AJCREW_STRANDS_STATE_DIR": "<state-dir>",
     # The pi steer channel: a stem naming the gateway's pid and the launch nonce, and
     # a key minted per launch (``acp.harness.pi_steer``).
-    "KIROCREW_PI_STEER": "<steer-stem>",
-    "KIROCREW_PI_STEER_KEY": "<steer-key>",
+    "AJCREW_PI_STEER": "<steer-stem>",
+    "AJCREW_PI_STEER_KEY": "<steer-key>",
     # Minted from ``secrets`` on every client, so it can never match a golden twice.
     # That a one-session client's child RECEIVES it is the fact being pinned: it is
     # how a control-plane MCP server on that child resolves its own session.
@@ -99,10 +99,10 @@ VOLATILE_ENV = {
     # tree inherits it and a teardown that has lost its root reads it back out of
     # /proc to tell the root's own descendants from a fresh runtime's. That the
     # runtime's child RECEIVES it is the fact being pinned.
-    KIROCREW_SPAWN_INSTANCE_ENV: "<spawn-instance>",
+    AJCREW_SPAWN_INSTANCE_ENV: "<spawn-instance>",
     # The spawning gateway's data home, so a reclaim can refuse a sibling install's
     # runtime. That the child RECEIVES it is the fact pinned; the path is the host's.
-    "KIROCREW_SPAWN_HOME": "<data-home>",
+    "AJCREW_SPAWN_HOME": "<data-home>",
     # The runtime's private-state directory, under the capture's temp dir.
     # That the codex child RECEIVES it -- its SQLite home is its own -- is the fact
     # being pinned; the directory is not.
@@ -113,7 +113,7 @@ VOLATILE_ENV = {
 #: own environment happens to be.
 #:
 #: ``env_added`` is a delta, so against the ambient env a variable the host already
-#: exports (``KIROCREW_SPAWNED`` inside any agent) would never show as set by ``_spawn``.
+#: exports (``AJCREW_SPAWNED`` inside any agent) would never show as set by ``_spawn``.
 _FIXED_PARENT_ENV = {
     "PATH": "/opt/bin",
 }
@@ -337,13 +337,13 @@ def _stub_common(stack: list, rec: _Recorder, tmp_path: Path, backend: str = "")
                     "TMPDIR": "<scratch>",
                     "TMP": "<scratch>",
                     "TEMP": "<scratch>",
-                    "KIROCREW_SCRATCH": "<scratch>",
+                    "AJCREW_SCRATCH": "<scratch>",
                     "KIRO_CHAT_LOG_FILE": "<scratch-log>",
                 },
             ),
             patch.object(launch_mod, "_run_preflight_bounded", new=AsyncMock(return_value=())),
-            patch("kiro_crew.session._track_pid", return_value=None),
-            patch("kiro_crew.session._track_session_pid", return_value=None),
+            patch("aj_crew.session._track_pid", return_value=None),
+            patch("aj_crew.session._track_session_pid", return_value=None),
             patch.object(
                 client_mod, "assert_voice_runtime_outside_agent_workspace", return_value=None
             ),
@@ -359,8 +359,8 @@ def _stub_common(stack: list, rec: _Recorder, tmp_path: Path, backend: str = "")
             ),
             patch.object(client_mod, "ensure_agent_materialized", return_value=None),
             patch(
-                "kiro_crew.acp.skill_projection.prepare_native_skill_projection",
-                return_value=NativeSkillProjection({"kirocrew": "kirocrew-skill-view-golden"}),
+                "aj_crew.acp.skill_projection.prepare_native_skill_projection",
+                return_value=NativeSkillProjection({"ajcrew": "ajcrew-skill-view-golden"}),
             ),
             patch.object(client_mod, "require_fresh_derived_spec", return_value=None),
             patch.object(client_mod, "require_fork_governance", return_value=None),
@@ -515,7 +515,7 @@ def _env_delta(parent_env: dict, child_env: dict) -> tuple[dict[str, str], list[
 def _default_home_pins(tmp_path: Path) -> list:
     """The default data home and its breadcrumb, pinned for the whole capture.
 
-    The fixed env has no ``KIROCREW_HOME``, so ``config_dir()`` would create the real
+    The fixed env has no ``AJCREW_HOME``, so ``config_dir()`` would create the real
     ``~/.kiro/crew``; the breadcrumb writer is stubbed for ``conftest._breadcrumb_guard``.
 
     Enter these before the env patch so they exit after it: a stray thread from an
@@ -583,7 +583,7 @@ def _capture_runtime_served(
                     "TMPDIR": "<scratch>",
                     "TMP": "<scratch>",
                     "TEMP": "<scratch>",
-                    "KIROCREW_SCRATCH": "<scratch>",
+                    "AJCREW_SCRATCH": "<scratch>",
                     "KIRO_CHAT_LOG_FILE": "<scratch-log>",
                 },
             ),
@@ -610,7 +610,7 @@ def _capture_runtime_served(
         inherited_env = dict(os.environ)
         runtime = AcpRuntime(
             work_dir=tmp_path / "workspace",
-            agent="kirocrew",
+            agent="ajcrew",
             acp_backend=backend,
             expect_mcp_reports=False,
         )

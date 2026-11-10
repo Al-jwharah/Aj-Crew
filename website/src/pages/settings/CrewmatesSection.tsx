@@ -9,7 +9,7 @@
  *
  * Server-side, like the Power toggle on the Chat tab: the value is PATCHed to
  * `dashboard.crewmate_threads` and read back through the shared
- * `['kirocrewConfig']` query the Members page reads the flag from
+ * `['ajcrewConfig']` query the Members page reads the flag from
  * (`useCrewmateThreadsFlag`), so the Reply in thread control appears or goes
  * on the next render without a reload.
  */
@@ -22,13 +22,13 @@ import { SettingsCard, SettingsSection, SettingsToggle } from '../../components/
 import { CREWMATE_THREADS_CONFIG_KEY } from '../../hooks/useCrewmateThreadsFlag'
 import { i18nT } from '../../i18n/t'
 
-type KirocrewConfigShape = { dashboard?: { crewmate_threads?: boolean } }
+type AjcrewConfigShape = { dashboard?: { crewmate_threads?: boolean } }
 
 export function CrewmatesSection() {
   const qc = useQueryClient()
-  const cfgQ = useQuery<KirocrewConfigShape>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+  const cfgQ = useQuery<AjcrewConfigShape>({
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
   })
   const [saveError, setSaveError] = useState('')
   const threads = cfgQ.data?.dashboard?.crewmate_threads === true
@@ -36,7 +36,7 @@ export function CrewmatesSection() {
     mutationFn: (v: boolean) => api.patchConfig(CREWMATE_THREADS_CONFIG_KEY, v),
     onSuccess: () => {
       setSaveError('')
-      void qc.invalidateQueries({ queryKey: ['kirocrewConfig'] })
+      void qc.invalidateQueries({ queryKey: ['ajcrewConfig'] })
     },
     onError: () => setSaveError(i18nT('pages.settings.crewmatesSection.failed_to_save')),
   })

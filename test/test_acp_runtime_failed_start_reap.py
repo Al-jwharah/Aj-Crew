@@ -17,11 +17,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.acp import skill_projection
-from kiro_crew.acp.harness.base import SpawnPlan
-from kiro_crew.acp.runtime import AcpRuntime, AcpRuntimeError
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import platform_compat
+from aj_crew.acp import skill_projection
+from aj_crew.acp.harness.base import SpawnPlan
+from aj_crew.acp.runtime import AcpRuntime, AcpRuntimeError
+from aj_crew.testing.wait import async_wait_until, await_until
 
 pytestmark = pytest.mark.skipif(
     not platform_compat.IS_POSIX, reason="process groups are a POSIX mechanism"
@@ -82,12 +82,12 @@ async def test_a_failed_init_leaves_no_child_processes(tmp_path, monkeypatch, ca
     script.write_text(_FAKE_AGENT, encoding="utf-8")
     pid_file = tmp_path / "child.pid"
 
-    rt = AcpRuntime(work_dir=tmp_path / "wd", agent="kirocrew", sandbox_mode="off")
+    rt = AcpRuntime(work_dir=tmp_path / "wd", agent="ajcrew", sandbox_mode="off")
     rt._KILL_TERM_TIMEOUT = 1.0
     rt._KILL_REAP_TIMEOUT = 1.0
 
     async def _plan() -> SpawnPlan:
-        return SpawnPlan(argv=[sys.executable, str(script), str(pid_file), "--agent", "kirocrew"])
+        return SpawnPlan(argv=[sys.executable, str(script), str(pid_file), "--agent", "ajcrew"])
 
     child_pid: list[int] = []
     start_ids: dict[int, str | None] = {}
@@ -109,7 +109,7 @@ async def test_a_failed_init_leaves_no_child_processes(tmp_path, monkeypatch, ca
     monkeypatch.setattr(rt, "_initialize_handshake", _failing_handshake)
 
     try:
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.runtime"):
+        with caplog.at_level("WARNING", logger="aj_crew.acp.runtime"):
             with pytest.raises(AcpRuntimeError, match="initialize timed out"):
                 await rt.spawn()
         assert child_pid, "the stand-in tree never started"
@@ -143,12 +143,12 @@ async def test_a_cancel_during_the_failed_start_scan_still_reaps_the_tree(tmp_pa
     script.write_text(_FAKE_AGENT, encoding="utf-8")
     pid_file = tmp_path / "child.pid"
 
-    rt = AcpRuntime(work_dir=tmp_path / "wd", agent="kirocrew", sandbox_mode="off")
+    rt = AcpRuntime(work_dir=tmp_path / "wd", agent="ajcrew", sandbox_mode="off")
     rt._KILL_TERM_TIMEOUT = 1.0
     rt._KILL_REAP_TIMEOUT = 1.0
 
     async def _plan() -> SpawnPlan:
-        return SpawnPlan(argv=[sys.executable, str(script), str(pid_file), "--agent", "kirocrew"])
+        return SpawnPlan(argv=[sys.executable, str(script), str(pid_file), "--agent", "ajcrew"])
 
     child_pid: list[int] = []
     start_ids: dict[int, str | None] = {}

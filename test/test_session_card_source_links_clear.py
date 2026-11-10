@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.state import _ChatSlot
 
 OLD = "https://github.com/acme/widgets/pull/11"
 NEW = "https://github.com/acme/widgets/pull/12"
@@ -76,7 +76,7 @@ class TestIsClearCommandRow:
         ["/clear", "/Clear", "  /clear  ", "/clear now please"],
     )
     def test_user_clear_commands_match(self, content):
-        from kiro_crew.dashboard.slot_projection import is_clear_command_row
+        from aj_crew.dashboard.slot_projection import is_clear_command_row
 
         assert is_clear_command_row({"role": "user", "content": content})
 
@@ -94,6 +94,6 @@ class TestIsClearCommandRow:
         ],
     )
     def test_everything_else_does_not(self, msg):
-        from kiro_crew.dashboard.slot_projection import is_clear_command_row
+        from aj_crew.dashboard.slot_projection import is_clear_command_row
 
         assert not is_clear_command_row(msg)

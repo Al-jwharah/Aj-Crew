@@ -26,9 +26,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard.handlers import cron
-from kiro_crew.learn import LessonStore
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew.dashboard.handlers import cron
+from aj_crew.learn import LessonStore
+from aj_crew.vector_memory import VectorMemoryStore
 
 pytestmark = pytest.mark.asyncio
 
@@ -153,7 +153,7 @@ async def test_jsonl_rows_carry_the_same_selector_contract(tmp_path) -> None:
 
 
 def test_mcp_learn_list_renders_the_scope_beside_the_rule() -> None:
-    from kiro_crew.mcp_tools import learn
+    from aj_crew.mcp_tools import learn
 
     rows = [
         {"rule": f"{RULE} everywhere", "category": "tool", "repo_scope": "", "scope": "global"},
@@ -183,8 +183,8 @@ def test_mcp_learn_list_renders_the_scope_beside_the_rule() -> None:
 
 
 def test_mcp_learn_remove_forwards_the_tier_only_when_named() -> None:
-    from kiro_crew.mcp_tools import learn
-    from kiro_crew.validation import LEARN_REMOVE_SCHEMA, ValidationError, validate_tool_args
+    from aj_crew.mcp_tools import learn
+    from aj_crew.validation import LEARN_REMOVE_SCHEMA, ValidationError, validate_tool_args
 
     with patch.object(learn.mcp_core, "_delete", return_value={"ok": True}) as delete:
         learn.learn_remove(
@@ -277,7 +277,7 @@ async def test_delete_route_validates_the_tier_pair_together() -> None:
 def test_cli_learn_list_renders_the_scope_for_both_tiers(tmp_path, capsys) -> None:
     import argparse
 
-    from kiro_crew import cli_commands
+    from aj_crew import cli_commands
 
     store = _store(tmp_path)
     try:
@@ -296,7 +296,7 @@ def test_cli_learn_list_renders_the_scope_for_both_tiers(tmp_path, capsys) -> No
         with (
             patch.object(cli_commands, "VectorMemoryStore", return_value=store),
             patch.object(cli_commands, "LessonStore", return_value=MagicMock()),
-            patch.object(cli_commands.KiroCrewConfig, "load", return_value=MagicMock()),
+            patch.object(cli_commands.AjCrewConfig, "load", return_value=MagicMock()),
         ):
             cli_commands._learn(args)
     finally:
@@ -320,7 +320,7 @@ def test_cli_learn_list_renders_the_scope_for_both_tiers(tmp_path, capsys) -> No
     with (
         patch.object(cli_commands, "VectorMemoryStore", return_value=empty_vs),
         patch.object(cli_commands, "LessonStore", return_value=LessonStore(base_dir=tmp_path)),
-        patch.object(cli_commands.KiroCrewConfig, "load", return_value=MagicMock()),
+        patch.object(cli_commands.AjCrewConfig, "load", return_value=MagicMock()),
     ):
         cli_commands._learn(argparse.Namespace(learn_action="list"))
     out = capsys.readouterr().out
@@ -345,7 +345,7 @@ async def test_control_split_credential_scope_is_withheld_from_the_list(tmp_path
     token is still split and no consumer can rejoin it. The selector guard is independent
     of that: any control character in the selector withholds the row, which is what keeps
     a raw stored scope off the response."""
-    from kiro_crew.dashboard.handlers._shared import _redact_memory_field
+    from aj_crew.dashboard.handlers._shared import _redact_memory_field
 
     scrubbed = _redact_memory_field(SPLIT_SECRET_SCOPE)
     assert "\x1b" not in scrubbed, "the scrubber removes the control character"
@@ -375,7 +375,7 @@ async def test_control_split_credential_scope_is_withheld_from_the_list(tmp_path
 
 
 async def test_credential_shaped_scope_is_withheld_from_the_list(tmp_path) -> None:
-    from kiro_crew.dashboard.handlers._shared import _redact_memory_field
+    from aj_crew.dashboard.handlers._shared import _redact_memory_field
 
     # The fixture is only meaningful while the redactor actually alters it.
     assert _redact_memory_field(SECRET_SCOPE) != SECRET_SCOPE
@@ -413,7 +413,7 @@ async def test_credential_shaped_scope_is_withheld_from_the_list(tmp_path) -> No
 def test_cli_learn_list_prints_a_credential_shaped_scope_as_unusable(tmp_path, capsys) -> None:
     import argparse
 
-    from kiro_crew import cli_commands
+    from aj_crew import cli_commands
 
     store = _store(tmp_path)
     try:
@@ -421,7 +421,7 @@ def test_cli_learn_list_prints_a_credential_shaped_scope_as_unusable(tmp_path, c
         with (
             patch.object(cli_commands, "VectorMemoryStore", return_value=store),
             patch.object(cli_commands, "LessonStore", return_value=MagicMock()),
-            patch.object(cli_commands.KiroCrewConfig, "load", return_value=MagicMock()),
+            patch.object(cli_commands.AjCrewConfig, "load", return_value=MagicMock()),
         ):
             cli_commands._learn(argparse.Namespace(learn_action="list"))
     finally:
@@ -435,8 +435,8 @@ def test_cli_learn_list_judges_the_scope_after_stripping_terminal_controls() -> 
     """A credential split by an embedded escape sequence passes the redactor whole
     and would be reassembled by the control stripping the CLI applies before
     printing -- so the printed (stripped) text is what gets judged."""
-    from kiro_crew import cli_commands
-    from kiro_crew.security import redact
+    from aj_crew import cli_commands
+    from aj_crew.security import redact
 
     split = "repos/ghp_ABCDEFGHIJKLMNOPQRST\x1b[0mUVWXYZabcdefghij1234"
     assert redact(split) == split, "fixture must pass the redactor unstripped"
@@ -494,7 +494,7 @@ async def test_jsonl_union_rows_name_their_tier_and_the_delete_honours_it(tmp_pa
         # The operator's dashboard key names no slot, so the union covers every
         # configured workspace.
         patch.object(
-            cron.KiroCrewConfig, "load", return_value=MagicMock(workspaces={"ws-1": MagicMock()})
+            cron.AjCrewConfig, "load", return_value=MagicMock(workspaces={"ws-1": MagicMock()})
         ),
     ):
         resp = await cron.api_lessons(request)
@@ -522,7 +522,7 @@ async def test_jsonl_union_rows_name_their_tier_and_the_delete_honours_it(tmp_pa
         patch.object(cron, "resolve_lesson_memory_store", new=AsyncMock(return_value=("", None))),
         patch.object(cron, "_prepare_member_lesson_store", new=AsyncMock(return_value=None)),
         patch.object(cron, "_get_memory", return_value=MagicMock(vector_store=None)),
-        patch.object(cron.KiroCrewConfig, "load", return_value=configured),
+        patch.object(cron.AjCrewConfig, "load", return_value=configured),
     ):
         async with TestClient(TestServer(app)) as client:
             # A name the workspace map does not hold is refused before any store
@@ -698,7 +698,7 @@ async def test_delete_reaches_the_jsonl_tier_when_the_vector_tier_matches_nothin
 ) -> None:
     from types import SimpleNamespace
 
-    from kiro_crew.learn import Lesson
+    from aj_crew.learn import Lesson
 
     jsonl = LessonStore(base_dir=tmp_path)
     jsonl.save(Lesson(ts="t", rule="JSONL-SENTINEL", category="tool"))
@@ -719,7 +719,7 @@ async def test_delete_reaches_the_jsonl_tier_when_the_vector_tier_matches_nothin
 async def test_a_vector_match_does_not_also_delete_from_the_jsonl_tier(tmp_path) -> None:
     from types import SimpleNamespace
 
-    from kiro_crew.learn import Lesson
+    from aj_crew.learn import Lesson
 
     jsonl = LessonStore(base_dir=tmp_path)
     jsonl.save(Lesson(ts="t", rule="model identity note", category="tool"))
@@ -747,7 +747,7 @@ async def test_a_v2_member_store_never_falls_through_to_a_jsonl_file() -> None:
 
 
 def test_mcp_learn_remove_says_so_when_nothing_was_removed() -> None:
-    from kiro_crew.mcp_tools import learn
+    from aj_crew.mcp_tools import learn
 
     with patch.object(learn.mcp_core, "_delete", return_value={"ok": False}):
         out = learn.learn_remove("learn_remove", {"query": RULE})

@@ -15,12 +15,12 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from kiro_crew.decisions import consent, gate
-from kiro_crew.decisions import log as _log
-from kiro_crew.decisions import outcomes as _outcomes
-from kiro_crew.decisions.points import memory_recall as mr
-from kiro_crew.decisions.types import Answer
-from kiro_crew.vector_memory import EPISODIC_BLOCK_TEXT_CHARS, _kept_episodes
+from aj_crew.decisions import consent, gate
+from aj_crew.decisions import log as _log
+from aj_crew.decisions import outcomes as _outcomes
+from aj_crew.decisions.points import memory_recall as mr
+from aj_crew.decisions.types import Answer
+from aj_crew.vector_memory import EPISODIC_BLOCK_TEXT_CHARS, _kept_episodes
 
 
 @pytest.fixture
@@ -362,7 +362,7 @@ class TestEgress:
     def test_a_failing_redactor_drops_the_snippet_rather_than_sending_it(self, monkeypatch):
         """A scan that did not complete cannot clear text for the wire."""
         monkeypatch.setattr(
-            "kiro_crew.security.pass_compose.compose",
+            "aj_crew.security.pass_compose.compose",
             lambda _t: (_ for _ in ()).throw(RuntimeError("x")),
         )
         assert mr.scrubbed("anything at all", mr.MAX_SNIPPET_CHARS) == ""
@@ -641,7 +641,7 @@ class TestTheRecord:
         assert [row["turn_id"] for row in written] == ["returned"]
 
     def test_a_missing_outcomes_module_is_a_no_op(self, monkeypatch):
-        monkeypatch.setattr(mr, "OUTCOMES_MODULE", "kiro_crew.this_module_does_not_exist")
+        monkeypatch.setattr(mr, "OUTCOMES_MODULE", "aj_crew.this_module_does_not_exist")
         assert mr._publish("s", {"turn_id": "t"}) is False
 
     def test_a_raising_publisher_cannot_cost_the_turn(self, monkeypatch):
@@ -725,7 +725,7 @@ class TestTheRecord:
         """The funnel reads the deadline itself, so no call site can forget to."""
         import time as _time
 
-        from kiro_crew.embeddings import EmbeddingWork, embedding_work
+        from aj_crew.embeddings import EmbeddingWork, embedding_work
 
         held = [({"turn_id": "t", "baseline_keys": ["a"], "jev_keys": ["a"]}, 1)]
         previous = embedding_work.get()
@@ -965,7 +965,7 @@ class TestTheWaitFitsInsideTheRoute:
     """
 
     def test_the_ceiling_is_under_the_route_deadline(self):
-        from kiro_crew.executors import RECALL_TIMEOUT_SECS
+        from aj_crew.executors import RECALL_TIMEOUT_SECS
 
         assert mr.MAX_WAIT_SECS < RECALL_TIMEOUT_SECS, (
             f"the hook may wait {mr.MAX_WAIT_SECS}s inside a request bounded at "
@@ -980,7 +980,7 @@ class TestTheWaitFitsInsideTheRoute:
         already paid for by the time it waits. A ceiling a hair under the deadline would
         be arithmetically fine and still turn every slow judge into a 504.
         """
-        from kiro_crew.executors import RECALL_TIMEOUT_SECS
+        from aj_crew.executors import RECALL_TIMEOUT_SECS
 
         headroom = RECALL_TIMEOUT_SECS - mr.MAX_WAIT_SECS
         assert headroom >= 2.0, (

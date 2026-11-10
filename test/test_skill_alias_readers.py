@@ -9,8 +9,8 @@ the same rule.
 
 from pathlib import Path
 
-from kiro_crew.skills import SkillsLoader, skills_dir
-from kiro_crew.testing.links import make_dir_link
+from aj_crew.skills import SkillsLoader, skills_dir
+from aj_crew.testing.links import make_dir_link
 
 
 def _app_case(tmp_path: Path, skills_root: Path) -> tuple[Path, Path, str]:
@@ -29,7 +29,7 @@ def _app_case(tmp_path: Path, skills_root: Path) -> tuple[Path, Path, str]:
 def test_exact_read_while_building_admits_a_flat_row_through_the_app_wildcard(
     tmp_path, monkeypatch, opened
 ):
-    from kiro_crew.skill_runtime import catalog as catalog_mod
+    from aj_crew.skill_runtime import catalog as catalog_mod
 
     skills_root, _target, pattern = _app_case(tmp_path, tmp_path / "skills")
     monkeypatch.setattr(catalog_mod, "_disabled_app_names", lambda: frozenset())
@@ -43,7 +43,7 @@ def test_exact_read_while_building_admits_a_flat_row_through_the_app_wildcard(
 
 
 def test_dashboard_annotation_names_an_agent_mapping_the_app_wildcard(tmp_path):
-    from kiro_crew.dashboard.handlers._shared import (
+    from aj_crew.dashboard.handlers._shared import (
         _agent_loads_skill,
         _agents_loading_skill,
         _expand_agent_globs,
@@ -72,11 +72,11 @@ def test_agent_scoped_filter_keeps_a_flat_row_through_the_app_wildcard(tmp_path)
     app's ``<app>/*/SKILL.md`` loads it at runtime, so the agent-scoped listing
     must keep it too, as the ``loaded_by_agents`` badge does.
     """
-    from kiro_crew.dashboard.handlers._shared import skill_rows_for_globs
+    from aj_crew.dashboard.handlers._shared import skill_rows_for_globs
 
     skills_root, _target, _pattern = _app_case(tmp_path, skills_dir())
     rows = [
-        {"key": "a-first", "source": "kirocrew", "path": str(skills_root / "a-first" / "SKILL.md")}
+        {"key": "a-first", "source": "ajcrew", "path": str(skills_root / "a-first" / "SKILL.md")}
     ]
 
     kept = skill_rows_for_globs(rows, [f"{skills_root}/app/*/SKILL.md"])
@@ -90,8 +90,8 @@ def test_dashboard_alias_never_resolves_a_row_outside_the_skills_root(tmp_path, 
     """A project row sharing a leaf with an app skill is not resolved or matched."""
     import os
 
-    from kiro_crew.dashboard.handlers._shared import _agents_loading_skill
-    from kiro_crew.skill_runtime import catalog as catalog_mod
+    from aj_crew.dashboard.handlers._shared import _agents_loading_skill
+    from aj_crew.skill_runtime import catalog as catalog_mod
 
     skills_root, _target, pattern = _app_case(tmp_path, skills_dir())
     project_row = tmp_path / "project" / ".kiro" / "skills" / "a-first" / "SKILL.md"

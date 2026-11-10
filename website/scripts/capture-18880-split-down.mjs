@@ -43,7 +43,7 @@ const PICKER = 'Search sessions…'
 const slots = [
   {
     key: SLOT, title: 'Release checklist review', messages: 2, running: false,
-    agent: 'kirocrew', created: '2026-08-25T09:00:00Z', last_ts: '2026-08-25T10:00:00Z', folder_id: '',
+    agent: 'ajcrew', created: '2026-08-25T09:00:00Z', last_ts: '2026-08-25T10:00:00Z', folder_id: '',
   },
   {
     key: 'chat-triage', title: 'Pipeline triage', messages: 2, running: false,

@@ -19,9 +19,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 import sandbox_argv_helpers
 
-import kiro_crew.sandbox as sandbox_mod
-from kiro_crew.instances import run_marker
-from kiro_crew.sandbox import (
+import aj_crew.sandbox as sandbox_mod
+from aj_crew.instances import run_marker
+from aj_crew.sandbox import (
     _CC_FILES,
     _STRICT_DIRS,
     _build_seatbelt_profile,
@@ -51,30 +51,30 @@ class TestDetectBackend:
         result = detect_backend(config_mode="off")
         assert result == "none"
 
-    @patch("kiro_crew.sandbox._probe_unshare", return_value=False)
-    @patch("kiro_crew.sandbox._probe_sandbox_exec", return_value=False)
+    @patch("aj_crew.sandbox._probe_unshare", return_value=False)
+    @patch("aj_crew.sandbox._probe_sandbox_exec", return_value=False)
     def test_no_backend_available(self, mock_sb, mock_ns):
         result = detect_backend(config_mode="auto")
         assert result == "none"
 
-    @patch("kiro_crew.sandbox._probe_unshare", return_value=True)
+    @patch("aj_crew.sandbox._probe_unshare", return_value=True)
     def test_linux_namespace(self, mock_ns):
         result = detect_backend(config_mode="auto")
         assert result == "namespace"
 
-    @patch("kiro_crew.sandbox._probe_unshare", return_value=False)
-    @patch("kiro_crew.sandbox._probe_sandbox_exec", return_value=True)
+    @patch("aj_crew.sandbox._probe_unshare", return_value=False)
+    @patch("aj_crew.sandbox._probe_sandbox_exec", return_value=True)
     def test_macos_sandbox_exec(self, mock_sb, mock_ns):
         result = detect_backend(config_mode="auto")
         assert result == "sandbox-exec"
 
-    @patch("kiro_crew.sandbox._probe_unshare", return_value=True)
+    @patch("aj_crew.sandbox._probe_unshare", return_value=True)
     def test_caches_result(self, mock_ns):
         assert detect_backend(config_mode="auto") == "namespace"
         assert detect_backend(config_mode="auto") == "namespace"
         assert mock_ns.call_count == 1
 
-    @patch("kiro_crew.sandbox._probe_unshare", return_value=True)
+    @patch("aj_crew.sandbox._probe_unshare", return_value=True)
     def test_invalidates_on_mode_change(self, mock_ns):
         assert detect_backend(config_mode="auto") == "namespace"
         assert detect_backend(config_mode="off") == "none"
@@ -82,8 +82,8 @@ class TestDetectBackend:
 
 
 class TestWrapArgv:
-    @patch("kiro_crew.sandbox._allow_unsandboxed_exec", return_value=True)
-    @patch("kiro_crew.sandbox.detect_backend", return_value="none")
+    @patch("aj_crew.sandbox._allow_unsandboxed_exec", return_value=True)
+    @patch("aj_crew.sandbox.detect_backend", return_value="none")
     def test_no_sandbox_returns_original(self, mock_detect, mock_allow):
         argv = ["kiro-cli", "acp"]
         result, cleanup = wrap_argv(argv, mode="auto")
@@ -96,8 +96,8 @@ class TestWrapArgv:
         assert result == argv
         assert cleanup is None
 
-    @patch("kiro_crew.sandbox.detect_backend", return_value="namespace")
-    @patch("kiro_crew.sandbox.namespace_argv")
+    @patch("aj_crew.sandbox.detect_backend", return_value="namespace")
+    @patch("aj_crew.sandbox.namespace_argv")
     def test_namespace_backend(self, mock_ns_argv, mock_detect):
         # Stub must carry the real shape: [python, *flags, script, *argv]. Without
         # the flags, wrap_argv's cleanup-path lookup reads past the end.
@@ -114,8 +114,8 @@ class TestWrapArgv:
         assert result == mock_ns_argv.return_value
         assert cleanup == "/tmp/launcher.py"
 
-    @patch("kiro_crew.sandbox.detect_backend", return_value="sandbox-exec")
-    @patch("kiro_crew.sandbox.sandbox_exec_argv")
+    @patch("aj_crew.sandbox.detect_backend", return_value="sandbox-exec")
+    @patch("aj_crew.sandbox.sandbox_exec_argv")
     def test_sandbox_exec_backend(self, mock_sb_argv, mock_detect):
         mock_sb_argv.return_value = (["sandbox-exec", "-f", "/tmp/p.sb", "kiro-cli"], "/tmp/p.sb")
         result, cleanup = wrap_argv(["kiro-cli"], mode="strict")
@@ -124,25 +124,25 @@ class TestWrapArgv:
         )
         assert (result, cleanup) == mock_sb_argv.return_value
 
-    @patch("kiro_crew.sandbox.detect_backend")
+    @patch("aj_crew.sandbox.detect_backend")
     def test_inside_sandbox_passes_through(self, mock_detect, monkeypatch):
-        # Inside an existing Kiro Crew sandbox, nested unshare is seccomp-denied,
+        # Inside an existing Aj Crew sandbox, nested unshare is seccomp-denied,
         # so wrap_argv must pass the argv through unchanged without consulting a
         # backend (rather than fail closed and brick script-cron MCP spawns).
         # Deny-by-default: the passthrough is gated SOLELY on the explicit
-        # KIROCREW_SANDBOX_ACTIVE marker (not the dual-purpose KIROCREW_HOST_PID).
-        monkeypatch.setenv("KIROCREW_SANDBOX_ACTIVE", "1")
+        # AJCREW_SANDBOX_ACTIVE marker (not the dual-purpose AJCREW_HOST_PID).
+        monkeypatch.setenv("AJCREW_SANDBOX_ACTIVE", "1")
         # The outer tier is unknown here, as from a launcher that exports none, so no
         # tier downgrade can be proven and the argv passes through unchanged. A host
         # value (a sandboxed dev shell exports `standard`) would make a `strict`
         # request a downgrade, which wraps the argv in the stricter env scrub.
-        monkeypatch.delenv("KIROCREW_SANDBOX_LEVEL", raising=False)
+        monkeypatch.delenv("AJCREW_SANDBOX_LEVEL", raising=False)
         # Fix the macOS kernel cross-check explicitly: "unanswerable" (None) is the
         # platform-neutral input, so this assertion holds on a sandboxed dev
         # machine and an unsandboxed CI runner alike.
         monkeypatch.setattr(sandbox_mod, "_macos_sandbox_state", lambda: None)
         argv = ["kiro-cli", "acp"]
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             result, cleanup = wrap_argv(argv, mode="strict")
         assert result == argv
         assert cleanup is None
@@ -155,44 +155,44 @@ class TestWrapArgv:
         assert kwargs["outcome"] == "allowed"
         assert kwargs["critical"] is True
 
-    @patch("kiro_crew.sandbox.detect_backend")
+    @patch("aj_crew.sandbox.detect_backend")
     def test_inside_sandbox_passthrough_survives_sel_failure(self, mock_detect, monkeypatch):
         # A SEL write failure must NOT brick the passthrough: seccomp denies the
         # re-wrap by design, so denying here reintroduces a prior in-sandbox
         # spawn outage (every in-sandbox MCP spawn bricked). The spawn is
         # confined by the outer namespace regardless, so we log and proceed.
-        monkeypatch.setenv("KIROCREW_SANDBOX_ACTIVE", "1")
+        monkeypatch.setenv("AJCREW_SANDBOX_ACTIVE", "1")
         # Unknown outer tier, so no downgrade wrap: see test_inside_sandbox_passes_through.
-        monkeypatch.delenv("KIROCREW_SANDBOX_LEVEL", raising=False)
+        monkeypatch.delenv("AJCREW_SANDBOX_LEVEL", raising=False)
         monkeypatch.setattr(sandbox_mod, "_macos_sandbox_state", lambda: None)
         argv = ["kiro-cli", "acp"]
-        with patch("kiro_crew.sel.sel", side_effect=OSError("SEL transport down")):
+        with patch("aj_crew.sel.sel", side_effect=OSError("SEL transport down")):
             result, cleanup = wrap_argv(argv, mode="strict")
         assert result == argv
         assert cleanup is None
         mock_detect.assert_not_called()
 
-    @patch("kiro_crew.sandbox.detect_backend", return_value="none")
+    @patch("aj_crew.sandbox.detect_backend", return_value="none")
     def test_host_pid_alone_does_not_pass_through(self, mock_detect, monkeypatch):
-        # Deny-by-default: KIROCREW_HOST_PID is dual-purpose session-identity
+        # Deny-by-default: AJCREW_HOST_PID is dual-purpose session-identity
         # plumbing, so it must NOT by itself open the nested-sandbox passthrough.
-        # Only the explicit KIROCREW_SANDBOX_ACTIVE marker does.
-        monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
-        monkeypatch.setenv("KIROCREW_HOST_PID", "12345")
-        with patch("kiro_crew.sandbox._allow_unsandboxed_exec", return_value=True):
+        # Only the explicit AJCREW_SANDBOX_ACTIVE marker does.
+        monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
+        monkeypatch.setenv("AJCREW_HOST_PID", "12345")
+        with patch("aj_crew.sandbox._allow_unsandboxed_exec", return_value=True):
             result, cleanup = wrap_argv(["kiro-cli"], mode="strict")
         # Falls through to normal backend detection rather than passing through.
         mock_detect.assert_called_once()
         assert mock_detect.call_args.kwargs == {"config_mode": "strict"}
         assert (result, cleanup) == (["kiro-cli"], None)
 
-    @patch("kiro_crew.sandbox.detect_backend", return_value="none")
+    @patch("aj_crew.sandbox.detect_backend", return_value="none")
     def test_outside_sandbox_does_not_pass_through(self, mock_detect, monkeypatch):
         # No marker set → normal wrap path (here: no backend), proving the
         # passthrough is gated strictly on the in-sandbox marker.
-        monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
-        monkeypatch.delenv("KIROCREW_HOST_PID", raising=False)
-        with patch("kiro_crew.sandbox._allow_unsandboxed_exec", return_value=True):
+        monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
+        monkeypatch.delenv("AJCREW_HOST_PID", raising=False)
+        with patch("aj_crew.sandbox._allow_unsandboxed_exec", return_value=True):
             result, cleanup = wrap_argv(["kiro-cli"], mode="strict")
         mock_detect.assert_called_once()
         assert mock_detect.call_args.kwargs == {"config_mode": "strict"}
@@ -217,7 +217,7 @@ class TestBuildSeatbeltProfile:
     def test_every_mode_seals_voice_runtime_from_agents(self, level):
         profile = _build_seatbelt_profile(level)
         home = str(Path.home())
-        for relative in (".kiro/crew/run/voice-runtime", ".kirocrew/run/voice-runtime"):
+        for relative in (".kiro/crew/run/voice-runtime", ".ajcrew/run/voice-runtime"):
             path = os.path.join(home, relative)
             assert f'(deny file-read* (subpath "{path}"))' in profile
             assert f'(deny file-write* (subpath "{path}"))' in profile
@@ -477,7 +477,7 @@ class TestBuildSeatbeltProfile:
         assert str(runtime) in message
         assert "contains" in message
         assert (
-            "Pick a project subdirectory that does not contain the Kiro Crew data home." in message
+            "Pick a project subdirectory that does not contain the Aj Crew data home." in message
         )
 
     def test_voice_guard_refusal_names_both_paths_when_workspace_is_inside_runtime(
@@ -502,7 +502,7 @@ class TestBuildSeatbeltProfile:
         assert str(runtime) in message
         assert "lives inside it" in message
         assert (
-            "Pick a project subdirectory that does not contain the Kiro Crew data home." in message
+            "Pick a project subdirectory that does not contain the Aj Crew data home." in message
         )
 
     def test_voice_guard_alias_refusal_names_both_paths(self, monkeypatch, tmp_path):
@@ -535,7 +535,7 @@ class TestBuildSeatbeltProfile:
         assert str(runtime) in message
         assert "aliases" in message
         assert (
-            "Pick a project subdirectory that does not contain the Kiro Crew data home." in message
+            "Pick a project subdirectory that does not contain the Aj Crew data home." in message
         )
 
     def test_voice_guard_cannot_verify_refusal_names_the_failed_stat(self, monkeypatch, tmp_path):
@@ -570,7 +570,7 @@ class TestBuildSeatbeltProfile:
         assert "Permission denied" in message
         assert "fails closed" in message
         assert (
-            "Pick a project subdirectory that does not contain the Kiro Crew data home." in message
+            "Pick a project subdirectory that does not contain the Aj Crew data home." in message
         )
         assert isinstance(excinfo.value.__cause__, OSError)
 
@@ -598,7 +598,7 @@ class TestBuildSeatbeltProfile:
         assert "a filesystem check failed on" in message
         assert "Permission denied" in message
         assert (
-            "Pick a project subdirectory that does not contain the Kiro Crew data home." in message
+            "Pick a project subdirectory that does not contain the Aj Crew data home." in message
         )
         assert isinstance(excinfo.value.__cause__, OSError)
 
@@ -725,7 +725,7 @@ class TestBuildSeatbeltProfile:
         exists to close.
         """
         monkeypatch.setattr(sandbox_mod, "_bound_agent_workspace_matches", lambda *_args: True)
-        monkeypatch.setattr("kiro_crew.sandbox.fd_real_path", lambda _fd: "/canonical/workspace")
+        monkeypatch.setattr("aj_crew.sandbox.fd_real_path", lambda _fd: "/canonical/workspace")
 
         assert (
             sandbox_mod.bound_agent_workspace_target(41, "/mutable/workspace")
@@ -740,7 +740,7 @@ class TestBuildSeatbeltProfile:
     def test_bound_session_target_fails_closed_when_the_name_cannot_be_read(self, monkeypatch):
         """No fallback to the mutable pathname: that is the string under attack."""
         monkeypatch.setattr(sandbox_mod, "_bound_agent_workspace_matches", lambda *_args: True)
-        monkeypatch.setattr("kiro_crew.sandbox.fd_real_path", lambda _fd: None)
+        monkeypatch.setattr("aj_crew.sandbox.fd_real_path", lambda _fd: None)
 
         with pytest.raises(OSError):
             sandbox_mod.bound_agent_workspace_target(41, "/mutable/workspace")
@@ -822,7 +822,7 @@ class TestBuildSeatbeltProfile:
         assert "/mutable/workspace" in message
         assert "/protected/voice-runtime" in message
         assert (
-            "Pick a project subdirectory that does not contain the Kiro Crew data home." in message
+            "Pick a project subdirectory that does not contain the Aj Crew data home." in message
         )
         assert closed == [51, 52]
 

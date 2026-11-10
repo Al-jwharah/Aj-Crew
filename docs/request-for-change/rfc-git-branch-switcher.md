@@ -1,7 +1,7 @@
 ---
 title: Git branch switcher -- switch the project's checked-out branch from the dashboard, refused while an agent works in the repository
 status: draft
-author: inariku, with Kiro Crew
+author: inariku, with Aj Crew
 created: 2026-10-24
 last-audited: 2026-10-25
 audited-at: 1a7190c711
@@ -44,25 +44,25 @@ it is waiting for. Nothing is ended, killed or stashed to make a switch possible
 ### 2.1 What exists today
 
 - The branch is shown, never changed. `GET /api/project/git`
-  (`api_project_git` in `src/kiro_crew/dashboard/file_api/project_dirs.py`)
+  (`api_project_git` in `src/aj_crew/dashboard/file_api/project_dirs.py`)
   reads `.git/HEAD` directly to label the branch; `GET /api/project/git/status`
   and `GET /api/project/git/log` (`api_project_git_status` and
-  `api_project_git_log` in `src/kiro_crew/dashboard/file_api/git_panel.py`) are
+  `api_project_git_log` in `src/aj_crew/dashboard/file_api/git_panel.py`) are
   read-only. No route under `src/` and no component under `website/src/`
   switches a branch: `git grep` for `git/switch`, `git/branches` and
   `repo_checkout_guard` returns nothing.
 - Clicking the branch segment of the composer chip copies the name
   (`CopyBranchButton`, rendered by `website/src/components/ChatInput.tsx`).
 - The one route that rewrites a repository today is `POST /api/worktree/create`
-  (`api_worktree_create` in `src/kiro_crew/dashboard/handlers/worktree.py`),
+  (`api_worktree_create` in `src/aj_crew/dashboard/handlers/worktree.py`),
   which serializes per repository on `_repo_lock` and runs git through the
   strict-sandbox helper `_run_git`, both in the same module.
 - Nothing records which agent work is running in which repository. A chat turn
-  starts at `_turn_open` (`src/kiro_crew/dashboard/chat_turn/turn_entry.py`)
+  starts at `_turn_open` (`src/aj_crew/dashboard/chat_turn/turn_entry.py`)
   and claims its session in `_turn_admit` (`chat_turn/turn_admission.py`); a
   sub-agent runs from `_run_inner_impl`
-  (`src/kiro_crew/subagent_manager/run_turn.py`); workflow steps open their own
-  sessions outside chat slots (`src/kiro_crew/workflows/agent_exec.py`,
+  (`src/aj_crew/subagent_manager/run_turn.py`); workflow steps open their own
+  sessions outside chat slots (`src/aj_crew/workflows/agent_exec.py`,
   `agent_pool.py`); and the ACP request writers (`_send_request` in
   `acp/client_transport.py`; `send_request`, `send_request_for_answer` and
   `_send_and_await` in `acp/runtime_wire.py`) do not know the repository a
@@ -72,7 +72,7 @@ it is waiting for. Nothing is ended, killed or stashed to make a switch possible
 
 The issue's case: an agent works in a separate worktree and opens a pull
 request; the user later checks that branch out in the main checkout to deploy
-it; reopening the repository in Kiro Crew, it is still on that branch, and the
+it; reopening the repository in Aj Crew, it is still on that branch, and the
 user does not want the agent to see it. The dashboard offers no way back, so
 the user leaves for a terminal or asks the agent to run `git switch`, which
 spends a turn on a one-word command.
@@ -198,7 +198,7 @@ switched: “Fix the login redirect” is still running in this repository. Wait
 for it to finish, then switch.").
 
 Busy is checked under the repository lock, and the switch also takes a
-reservation in a new registry, `kiro_crew/repo_checkout_guard.py` (below the
+reservation in a new registry, `aj_crew/repo_checkout_guard.py` (below the
 dashboard, so the engines that register with it import no dashboard code),
 before the check awaits anything. Work that starts during a checkout waits:
 `_turn_open` waits at its first await, the turn waits again before it claims a
@@ -270,7 +270,7 @@ with `switchBlocked: "filter"`; a path outside every live chat slot's project
 is refused with 403 and audited.
 
 **Phase 2: the work registry, with nothing reading it.** The registry in
-`kiro_crew/repo_checkout_guard.py`, the chat-turn, sub-agent, linked-channel and
+`aj_crew/repo_checkout_guard.py`, the chat-turn, sub-agent, linked-channel and
 workflow-step registrations, and prompt tracking at the ACP transport. No user
 behaviour changes; the cost is bookkeeping on every turn and request.
 Exit: tests show a cancelled turn whose backend has not answered stays
@@ -279,7 +279,7 @@ ends its prompts once confirmed; a lingering descendant keeps the record until
 it exits, across a respawn of the same runtime; workflow tests keep the
 expectations they have on main (no session is ended); prompt tracking is
 tested for every backend in `BASELINE_SELECTABLE_BACKENDS`
-(`src/kiro_crew/agent_sdk/backends.py`), parametrized over that set so a
+(`src/aj_crew/agent_sdk/backends.py`), parametrized over that set so a
 backend added later is covered without a new test, since every harness writes
 through the same ACP transport; and the bookkeeping adds at most 1 ms at p99 to
 an ACP request write and to a response read, measured with and without it on
@@ -372,5 +372,5 @@ write and response; its exit criterion bounds that cost.
    they switch from.
 6. Should the busy rule be the shared guard for any future route that changes a
    repository (for example `POST /api/worktree/create`), and if so should a
-   maintainer own `kiro_crew/repo_checkout_guard.py` as a module of its own
+   maintainer own `aj_crew/repo_checkout_guard.py` as a module of its own
    rather than as part of this feature?

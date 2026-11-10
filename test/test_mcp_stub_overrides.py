@@ -17,15 +17,15 @@ import json
 import unittest.mock
 from pathlib import Path
 
-from kiro_crew.config.loader import (
-    KiroCrewConfig,
+from aj_crew.config.loader import (
+    AjCrewConfig,
     _resolve_stub_overrides,
     _resolve_stub_roster,
     _resolve_stub_servers,
 )
 
 
-def _load_from_dict(data: object, tmp_path: Path) -> KiroCrewConfig:
+def _load_from_dict(data: object, tmp_path: Path) -> AjCrewConfig:
     """Write *data* into the test's own tmp_path and load through the real loader.
 
     Kept under ``tmp_path`` rather than the shared temp dir so concurrent workers
@@ -34,10 +34,10 @@ def _load_from_dict(data: object, tmp_path: Path) -> KiroCrewConfig:
     cfg = tmp_path / "config.json"
     cfg.write_text(json.dumps(data), encoding="utf-8")
     with unittest.mock.patch(
-        "kiro_crew.config.loader.config_path",
+        "aj_crew.config.loader.config_path",
         return_value=cfg,
     ):
-        return KiroCrewConfig.load()
+        return AjCrewConfig.load()
 
 
 class TestTheRosterIsFollowedWhenTheOperatorIsSilent:
@@ -182,10 +182,10 @@ class TestSaveRoundTripPreservesTheRoster:
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text(json.dumps(data), encoding="utf-8")
         with unittest.mock.patch(
-            "kiro_crew.config.loader.config_path",
+            "aj_crew.config.loader.config_path",
             return_value=cfg_file,
         ):
-            cfg = KiroCrewConfig.load()
+            cfg = AjCrewConfig.load()
             cfg.save()
         return json.loads(cfg_file.read_text(encoding="utf-8")).get("mcp_gateway", {})
 
@@ -258,25 +258,25 @@ class TestThroughTheLoader:
 
 
 class TestManagedServersFollowTheControlPlane:
-    """Crew's own caller-aware servers are stubbed whenever ``kirocrew-core`` is.
+    """Crew's own caller-aware servers are stubbed whenever ``ajcrew-core`` is.
 
     Without this an install that pools the control plane still paid one Python
-    process per session for ``kirocrew-guide``, which every default spec declares.
+    process per session for ``ajcrew-guide``, which every default spec declares.
     """
 
     def test_followers_join_when_core_is_rostered(self) -> None:
-        from kiro_crew.config.integration_sections import MANAGED_STUB_FOLLOWERS
+        from aj_crew.config.integration_sections import MANAGED_STUB_FOLLOWERS
 
-        resolved = _resolve_stub_servers({"stub_servers": ["builder-mcp", "kirocrew-core"]})
-        assert resolved[:2] == ["builder-mcp", "kirocrew-core"]
+        resolved = _resolve_stub_servers({"stub_servers": ["builder-mcp", "ajcrew-core"]})
+        assert resolved[:2] == ["builder-mcp", "ajcrew-core"]
         assert set(MANAGED_STUB_FOLLOWERS) <= set(resolved)
         assert len(resolved) == len(set(resolved))
 
     def test_followers_join_when_core_is_added_by_override(self) -> None:
         resolved = _resolve_stub_servers(
-            {"stub_servers": [], "stub_overrides": {"kirocrew-core": True}}
+            {"stub_servers": [], "stub_overrides": {"ajcrew-core": True}}
         )
-        assert "kirocrew-guide" in resolved
+        assert "ajcrew-guide" in resolved
 
     def test_nothing_follows_without_core(self) -> None:
         assert _resolve_stub_servers({"stub_servers": ["builder-mcp"]}) == ["builder-mcp"]
@@ -285,24 +285,24 @@ class TestManagedServersFollowTheControlPlane:
     def test_nothing_follows_when_core_is_overridden_off(self) -> None:
         assert (
             _resolve_stub_servers(
-                {"stub_servers": ["kirocrew-core"], "stub_overrides": {"kirocrew-core": False}}
+                {"stub_servers": ["ajcrew-core"], "stub_overrides": {"ajcrew-core": False}}
             )
             == []
         )
 
     def test_an_operator_can_turn_one_follower_off(self) -> None:
         resolved = _resolve_stub_servers(
-            {"stub_servers": ["kirocrew-core"], "stub_overrides": {"kirocrew-guide": False}}
+            {"stub_servers": ["ajcrew-core"], "stub_overrides": {"ajcrew-guide": False}}
         )
-        assert "kirocrew-guide" not in resolved
-        assert "kirocrew-panel" in resolved
+        assert "ajcrew-guide" not in resolved
+        assert "ajcrew-panel" in resolved
 
     def test_the_computer_server_never_follows(self) -> None:
-        assert "kirocrew-computer" not in _resolve_stub_servers({"stub_servers": ["kirocrew-core"]})
+        assert "ajcrew-computer" not in _resolve_stub_servers({"stub_servers": ["ajcrew-core"]})
 
     def test_the_roster_layer_is_unchanged(self) -> None:
         """Writers persist the roster; the followers must never leak into it."""
-        assert _resolve_stub_roster({"stub_servers": ["kirocrew-core"]}) == ["kirocrew-core"]
+        assert _resolve_stub_roster({"stub_servers": ["ajcrew-core"]}) == ["ajcrew-core"]
 
     def test_followers_are_every_caller_aware_server_not_excluded(self) -> None:
         """Every caller-aware managed server is either a follower or excluded by name.
@@ -310,64 +310,64 @@ class TestManagedServersFollowTheControlPlane:
         Pinned as an equality so a new caller-aware server fails here until it
         is placed in one list or the other with a reason.
         """
-        from kiro_crew.config.integration_sections import (
+        from aj_crew.config.integration_sections import (
             MANAGED_STUB_FOLLOWERS,
             MANAGED_STUB_LEADER,
         )
-        from kiro_crew.mcp_caller import POOLING_REQUIRES_TENANT_NONCE
-        from kiro_crew.mcp_cleanup import KIROCREW_BIN_MCP_SERVERS
-        from kiro_crew.mcp_discovery import _MANAGED_SERVERS_CALLER_AWARE
+        from aj_crew.mcp_caller import POOLING_REQUIRES_TENANT_NONCE
+        from aj_crew.mcp_cleanup import AJCREW_BIN_MCP_SERVERS
+        from aj_crew.mcp_discovery import _MANAGED_SERVERS_CALLER_AWARE
 
         # computer: tenant-nonce gated. cron and secrets: outside this layer's
         # measured scope (secrets is opt-in, credential-bearing egress).
-        excluded = {"kirocrew-computer", "kirocrew-cron", "kirocrew-secrets"}
+        excluded = {"ajcrew-computer", "ajcrew-cron", "ajcrew-secrets"}
         assert len(MANAGED_STUB_FOLLOWERS) == len(set(MANAGED_STUB_FOLLOWERS))
         assert set(MANAGED_STUB_FOLLOWERS) == (
             _MANAGED_SERVERS_CALLER_AWARE - {MANAGED_STUB_LEADER} - excluded
         )
         assert POOLING_REQUIRES_TENANT_NONCE <= excluded
-        assert set(MANAGED_STUB_FOLLOWERS) <= set(KIROCREW_BIN_MCP_SERVERS)
+        assert set(MANAGED_STUB_FOLLOWERS) <= set(AJCREW_BIN_MCP_SERVERS)
 
     def test_the_cron_server_never_follows(self) -> None:
-        assert "kirocrew-cron" not in _resolve_stub_servers({"stub_servers": ["kirocrew-core"]})
+        assert "ajcrew-cron" not in _resolve_stub_servers({"stub_servers": ["ajcrew-core"]})
 
     def test_a_follower_turned_on_survives_core_turned_off_later(self) -> None:
-        from kiro_crew.dashboard.handlers.mcp import _record_stub_decisions
+        from aj_crew.dashboard.handlers.mcp import _record_stub_decisions
 
-        section = {"stub_servers": ["kirocrew-core"]}
-        _record_stub_decisions(section, ["kirocrew-guide"], True)
-        _record_stub_decisions(section, ["kirocrew-core"], False)
+        section = {"stub_servers": ["ajcrew-core"]}
+        _record_stub_decisions(section, ["ajcrew-guide"], True)
+        _record_stub_decisions(section, ["ajcrew-core"], False)
         resolved = _resolve_stub_servers(section)
-        assert "kirocrew-core" not in resolved
-        assert "kirocrew-guide" in resolved
-        assert "kirocrew-panel" not in resolved
+        assert "ajcrew-core" not in resolved
+        assert "ajcrew-guide" in resolved
+        assert "ajcrew-panel" not in resolved
 
     def test_a_follower_toggled_with_core_in_one_call_survives(self) -> None:
-        from kiro_crew.dashboard.handlers.mcp import _record_stub_decisions
+        from aj_crew.dashboard.handlers.mcp import _record_stub_decisions
 
-        section = {"stub_servers": ["kirocrew-core"]}
-        _record_stub_decisions(section, ["kirocrew-core", "kirocrew-guide"], True)
-        _record_stub_decisions(section, ["kirocrew-core"], False)
-        assert "kirocrew-guide" in _resolve_stub_servers(section)
+        section = {"stub_servers": ["ajcrew-core"]}
+        _record_stub_decisions(section, ["ajcrew-core", "ajcrew-guide"], True)
+        _record_stub_decisions(section, ["ajcrew-core"], False)
+        assert "ajcrew-guide" in _resolve_stub_servers(section)
 
     def test_dashboard_stores_a_follower_turned_off(self) -> None:
         """Toggling a follower off must persist, not be pruned as "agrees"."""
-        from kiro_crew.dashboard.handlers.mcp import _record_stub_decisions
+        from aj_crew.dashboard.handlers.mcp import _record_stub_decisions
 
-        section = {"stub_servers": ["kirocrew-core"]}
-        _record_stub_decisions(section, ["kirocrew-guide"], False)
-        assert section["stub_servers"] == ["kirocrew-core"]
-        assert section["stub_overrides"] == {"kirocrew-guide": False}
-        assert "kirocrew-guide" not in _resolve_stub_servers(section)
-        _record_stub_decisions(section, ["kirocrew-guide"], True)
-        assert section["stub_overrides"] == {"kirocrew-guide": True}
-        assert "kirocrew-guide" in _resolve_stub_servers(section)
+        section = {"stub_servers": ["ajcrew-core"]}
+        _record_stub_decisions(section, ["ajcrew-guide"], False)
+        assert section["stub_servers"] == ["ajcrew-core"]
+        assert section["stub_overrides"] == {"ajcrew-guide": False}
+        assert "ajcrew-guide" not in _resolve_stub_servers(section)
+        _record_stub_decisions(section, ["ajcrew-guide"], True)
+        assert section["stub_overrides"] == {"ajcrew-guide": True}
+        assert "ajcrew-guide" in _resolve_stub_servers(section)
 
     def test_an_off_outside_the_roster_is_kept_as_the_declined_marker(self) -> None:
         """An OFF the roster agrees with is stored: it marks "turned off by hand",
         which the page-wide switch reads so it never re-enables that server.
         The resolved set is unchanged by it."""
-        from kiro_crew.dashboard.handlers.mcp import _record_stub_decisions
+        from aj_crew.dashboard.handlers.mcp import _record_stub_decisions
 
         section: dict = {"stub_servers": []}
         _record_stub_decisions(section, ["docs-mcp"], True)
@@ -380,7 +380,7 @@ class TestManagedServersFollowTheControlPlane:
         assert "docs-mcp" in _resolve_stub_servers(section)
 
     def test_an_on_the_roster_agrees_with_is_still_pruned(self) -> None:
-        from kiro_crew.dashboard.handlers.mcp import _record_stub_decisions
+        from aj_crew.dashboard.handlers.mcp import _record_stub_decisions
 
         section: dict = {"stub_servers": ["docs-mcp"]}
         _record_stub_decisions(section, ["docs-mcp"], True)

@@ -20,17 +20,17 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import agent_discovery
-from kiro_crew.acp import skill_projection as projection
-from kiro_crew.acp.types import PROVIDER_LABEL_KAS
-from kiro_crew.agent_sdk.provider_identity import PROVIDER_ACP
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.context import ContextBuilder
-from kiro_crew.dashboard.handlers import hooks as hooks_handlers
-from kiro_crew.essential_delivery import EssentialDelivery
-from kiro_crew.memory import MemoryStore
-from kiro_crew.providers.base import LLMProvider
-from kiro_crew.skills import SkillsLoader
+from aj_crew import agent_discovery
+from aj_crew.acp import skill_projection as projection
+from aj_crew.acp.types import PROVIDER_LABEL_KAS
+from aj_crew.agent_sdk.provider_identity import PROVIDER_ACP
+from aj_crew.config import AjCrewConfig
+from aj_crew.context import ContextBuilder
+from aj_crew.dashboard.handlers import hooks as hooks_handlers
+from aj_crew.essential_delivery import EssentialDelivery
+from aj_crew.memory import MemoryStore
+from aj_crew.providers.base import LLMProvider
+from aj_crew.skills import SkillsLoader
 
 SKILL = "deploy-helper-21860"
 
@@ -104,7 +104,7 @@ class _NewSession:
 @pytest.fixture
 def unmapped_custom(tmp_path, monkeypatch):
     """A kiro-cli home holding one global skill and one unmapped custom agent."""
-    monkeypatch.delenv("KIROCREW_NATIVE_SKILL_PROJECTION", raising=False)
+    monkeypatch.delenv("AJCREW_NATIVE_SKILL_PROJECTION", raising=False)
     home = tmp_path / "kiro"
     agents = home / "agents"
     agents.mkdir(parents=True)
@@ -119,7 +119,7 @@ def unmapped_custom(tmp_path, monkeypatch):
     project = tmp_path / "project"
     project.mkdir()
     monkeypatch.setattr(projection, "kiro_home", lambda: home)
-    monkeypatch.setattr("kiro_crew.config.paths.kiro_home", lambda: home)
+    monkeypatch.setattr("aj_crew.config.paths.kiro_home", lambda: home)
     monkeypatch.setattr(agent_discovery, "_kiro_agents_dir", lambda: agents)
     monkeypatch.setattr(
         agent_discovery,
@@ -128,13 +128,13 @@ def unmapped_custom(tmp_path, monkeypatch):
     )
     # The configured provider is the ACP label on every ACP backend, KAS included.
     monkeypatch.setattr(
-        KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: _config_with_acp())
+        AjCrewConfig, "load", classmethod(lambda cls, *a, **k: _config_with_acp())
     )
 
     async def _no_store(ctx_builder, session_key):
         return ""
 
-    import kiro_crew.context as _ctx
+    import aj_crew.context as _ctx
 
     monkeypatch.setattr(_ctx, "session_store_for_turn", _no_store)
     builder = ContextBuilder(
@@ -144,8 +144,8 @@ def unmapped_custom(tmp_path, monkeypatch):
     return builder, project
 
 
-def _config_with_acp() -> KiroCrewConfig:
-    config = KiroCrewConfig()
+def _config_with_acp() -> AjCrewConfig:
+    config = AjCrewConfig()
     config.agent.provider = PROVIDER_ACP
     return config
 

@@ -21,9 +21,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log.errors import CrewLogError
-from kiro_crew.crew_log.schema import Entry
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log.errors import CrewLogError
+from aj_crew.crew_log.schema import Entry
 
 GATEWAY = "gateway"
 ACP = "acp"

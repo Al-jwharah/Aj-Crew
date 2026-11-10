@@ -57,7 +57,7 @@ const context = await browser.newContext({ viewport: { width: 1500, height: 950 
 const page = await context.newPage()
 
 await stubDashboardApi(page, {
-  slots: [{ key: SLOT, messages: 0, running: false, agent: 'kirocrew', mode: '' }],
+  slots: [{ key: SLOT, messages: 0, running: false, agent: 'ajcrew', mode: '' }],
   // Pin the locale: without it the SPA picks one from the environment and the
   // shot comes out in whatever language the runner happens to negotiate.
   localStorageEntries: { 'mc-active-slot': SLOT, 'mc-lang': 'en' },

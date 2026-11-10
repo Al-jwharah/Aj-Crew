@@ -25,10 +25,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import platform_compat
-from kiro_crew.artifact_store.dashboard_package import DASHBOARD_KIND, parse_package
-from kiro_crew.dashboard.handlers import agent_panel as routes
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import platform_compat
+from aj_crew.artifact_store.dashboard_package import DASHBOARD_KIND, parse_package
+from aj_crew.dashboard.handlers import agent_panel as routes
+from aj_crew.testing.wait import async_wait_until, await_until
 
 CREW = "fleet-crew"
 SLUG = "fleet-crew"
@@ -90,10 +90,10 @@ class _Store:
         return [r for r in self.records.values() if kind is None or r.kind == kind]
 
     def get(self, slug: str, **_kw: Any) -> SimpleNamespace:
-        from kiro_crew.artifact_store.model import ArtifactNotFoundError
+        from aj_crew.artifact_store.model import ArtifactNotFoundError
 
         if slug in self.unreadable:
-            from kiro_crew.artifact_store.model import ArtifactError
+            from aj_crew.artifact_store.model import ArtifactError
 
             raise ArtifactError(f"{slug} cannot be opened")
         if slug not in self.records:
@@ -101,7 +101,7 @@ class _Store:
         return self.records[slug]
 
     def create(self, *, name: str, content: str, kind: str | None = None, **_kw: Any):
-        from kiro_crew.artifact_store.dashboard_package import canonical_package_content
+        from aj_crew.artifact_store.dashboard_package import canonical_package_content
 
         if kind == DASHBOARD_KIND:
             content = canonical_package_content(content)
@@ -118,7 +118,7 @@ class _Store:
         return rec
 
     def update(self, slug: str, *, content: str | None = None, **kw: Any):
-        from kiro_crew.artifact_store.dashboard_package import (
+        from aj_crew.artifact_store.dashboard_package import (
             canonical_package_content,
             layout_changed,
         )
@@ -190,7 +190,7 @@ async def _apply(client: TestClient):
 
 
 def _instance():
-    from kiro_crew.dashboard_templates import instance as instance_store
+    from aj_crew.dashboard_templates import instance as instance_store
 
     return instance_store
 
@@ -260,7 +260,7 @@ async def test_one_rollback_goes_back_to_a_package_or_to_the_template(monkeypatc
 
 async def test_the_page_read_draws_what_the_record_puts_in_force(monkeypatch, store):
     """The page read follows the record: pinned, locked, then released."""
-    from kiro_crew.dashboard.handlers import member_dashboard
+    from aj_crew.dashboard.handlers import member_dashboard
 
     async with _client(monkeypatch) as client:
         await _save_and_apply(client, _package_body())
@@ -301,7 +301,7 @@ async def test_the_pinned_page_survives_whatever_happens_to_the_artifact(monkeyp
 
 async def test_only_pinned_pages_are_kept_after_a_save(monkeypatch, store):
     """A save prunes the snapshots no kept version pins, and keeps every pinned one."""
-    from kiro_crew.agent_panel import panel_dir
+    from aj_crew.agent_panel import panel_dir
 
     second = _package_body()
     _flip(second)
@@ -321,9 +321,9 @@ async def test_only_pinned_pages_are_kept_after_a_save(monkeypatch, store):
 
 async def test_an_older_locked_record_checks_writes_against_its_template(monkeypatch, tmp_path):
     """A record from before pins keeps its template under the lock, for the write too."""
-    from kiro_crew import artifacts
-    from kiro_crew import dashboard_package as reader
-    from kiro_crew.artifacts import ArtifactStore
+    from aj_crew import artifacts
+    from aj_crew import dashboard_package as reader
+    from aj_crew.artifacts import ArtifactStore
 
     instance_store = _instance()
     real = ArtifactStore(tmp_path / "artifacts")
@@ -350,8 +350,8 @@ async def test_an_older_locked_record_checks_writes_against_its_template(monkeyp
 
 def test_a_package_enum_keeps_its_choices_for_the_write_check():
     """A value outside an `enum` field's declared choices is refused before it lands."""
-    from kiro_crew import dashboard_agentic
-    from kiro_crew.dashboard.handlers.member_dashboard_fields import package_manifest
+    from aj_crew import dashboard_agentic
+    from aj_crew.dashboard.handlers.member_dashboard_fields import package_manifest
 
     package = {
         "model": {
@@ -379,7 +379,7 @@ async def test_a_package_rebound_before_the_fenced_read_is_not_written(monkeypat
         [slug] = store.records
         # Rebound to another crewmate between the lookup and the fenced read.
         theirs = {**_package_body(), "kind": DASHBOARD_KIND, "bound_to": f"crewmate:{OTHER_SLUG}"}
-        from kiro_crew.artifact_store.dashboard_package import canonical_package_content
+        from aj_crew.artifact_store.dashboard_package import canonical_package_content
 
         real_get = store.get
 
@@ -415,7 +415,7 @@ async def test_any_apply_drops_a_preview_left_staged(monkeypatch, store):
 
 async def test_a_scan_that_cannot_read_a_kept_version_prunes_nothing(monkeypatch, store):
     """A kept version that will not read may pin a page, so nothing is deleted."""
-    from kiro_crew.agent_panel import panel_dir
+    from aj_crew.agent_panel import panel_dir
 
     instance_store = _instance()
     second = _package_body()
@@ -448,7 +448,7 @@ def test_a_concurrent_prune_never_drops_the_page_being_committed(monkeypatch):
 
     monkeypatch.setattr(instance_store, "_prune_page_snapshots", _prune)
     pkg = {**_package_body(), "kind": DASHBOARD_KIND, "bound_to": f"crewmate:{SLUG}"}
-    from kiro_crew.artifact_store.dashboard_package import canonical_package_content
+    from aj_crew.artifact_store.dashboard_package import canonical_package_content
 
     record = instance_store.apply_package(
         SLUG,
@@ -501,9 +501,9 @@ async def test_a_locked_layout_refuses_the_apply_and_keeps_the_page(monkeypatch,
 
 async def test_dashboard_write_is_checked_against_the_package_in_force(monkeypatch, tmp_path):
     """The write guard is lifted: a bound package's own Model checks the write."""
-    from kiro_crew import artifacts, dashboard_agentic
-    from kiro_crew import dashboard_package as reader
-    from kiro_crew.artifacts import ArtifactStore
+    from aj_crew import artifacts, dashboard_agentic
+    from aj_crew import dashboard_package as reader
+    from aj_crew.artifacts import ArtifactStore
 
     real = ArtifactStore(tmp_path / "artifacts")
     monkeypatch.setattr(routes, "_dashboard_artifact_store", lambda: real)
@@ -615,7 +615,7 @@ async def test_a_lone_surrogate_never_reaches_the_real_store_either(monkeypatch,
     The save refuses before any store write, so the store stays EMPTY. The store's own
     refusal is pinned in ``test_artifact_update_refuses_a_surrogate_the_same_way``.
     """
-    from kiro_crew.artifacts import ArtifactStore
+    from aj_crew.artifacts import ArtifactStore
 
     real = ArtifactStore(tmp_path / "artifacts")
     monkeypatch.setattr(routes, "_dashboard_artifact_store", lambda: real, raising=False)
@@ -638,8 +638,8 @@ async def test_artifact_update_refuses_a_surrogate_the_same_way(tmp_path):
     ``_validate_content`` measures content by encoding it, and an unpaired surrogate
     cannot be encoded: a raw ``UnicodeEncodeError`` would turn a fixable artifact into a 500.
     """
-    from kiro_crew.artifact_store.model import ArtifactValidationError
-    from kiro_crew.artifacts import ArtifactStore
+    from aj_crew.artifact_store.model import ArtifactValidationError
+    from aj_crew.artifacts import ArtifactStore
 
     store = ArtifactStore(tmp_path / "artifacts")
     pkg = _package_body()
@@ -688,7 +688,7 @@ async def test_a_credential_shaped_field_name_is_refused_at_save(monkeypatch, st
     The premise is asserted on the real redactor, the rule both sides consult. The
     refusal names a POSITION, not the name, so the name never travels raw in logs.
     """
-    from kiro_crew.platform import redact_via_context
+    from aj_crew.platform import redact_via_context
 
     token_name = "ghp_" + "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8"
     # The two halves of the premise, each asserted rather than assumed.
@@ -734,7 +734,7 @@ async def test_a_credential_shaped_theme_token_is_refused_too(monkeypatch, store
     A token is ``--[a-z][a-z0-9-]{0,63}``, so a HYPHENATED look-alike fits it. It is a
     join key the page's style names, so no masked form would still work.
     """
-    from kiro_crew.platform import redact_via_context
+    from aj_crew.platform import redact_via_context
 
     token_key = "--xoxb-" + "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8"
     # The two halves of the premise, each asserted rather than assumed.
@@ -777,7 +777,7 @@ async def test_the_real_store_round_trips_a_valid_package(monkeypatch, tmp_path)
     so this proves the 400 there came from the surrogate and not from the save path
     being broken against a real store.
     """
-    from kiro_crew.artifacts import ArtifactStore
+    from aj_crew.artifacts import ArtifactStore
 
     real = ArtifactStore(tmp_path / "artifacts")
     monkeypatch.setattr(routes, "_dashboard_artifact_store", lambda: real)
@@ -819,7 +819,7 @@ async def test_a_caller_with_no_dashboard_slot_is_refused(monkeypatch, store):
 
 
 def test_the_tool_is_on_the_panel_server_and_takes_no_target():
-    from kiro_crew import mcp_panel
+    from aj_crew import mcp_panel
 
     tool = next(t for t in mcp_panel._tool_definitions() if t["name"] == "dashboard_save")
     props = tool["inputSchema"]["properties"]
@@ -831,7 +831,7 @@ def test_the_tool_is_on_the_panel_server_and_takes_no_target():
 
 def test_the_tool_refuses_a_caller_whose_identity_is_not_strict(monkeypatch):
     """A subagent, answered by the tool before any request leaves the process."""
-    from kiro_crew import mcp_panel
+    from aj_crew import mcp_panel
 
     monkeypatch.setattr(mcp_panel, "_strict_session_key", lambda: ("", "Error: no identity"))
 
@@ -844,7 +844,7 @@ def test_the_tool_refuses_a_caller_whose_identity_is_not_strict(monkeypatch):
 
 
 def test_the_tool_sends_only_the_three_declarations(monkeypatch):
-    from kiro_crew import mcp_panel
+    from aj_crew import mcp_panel
 
     sent: dict[str, Any] = {}
     monkeypatch.setattr(mcp_panel, "_strict_session_key", lambda: ("sk", ""))
@@ -875,7 +875,7 @@ def test_the_tool_sends_only_the_three_declarations(monkeypatch):
 
 def test_the_tool_hands_back_a_refusal_whole(monkeypatch):
     """The refusal names the key and the reason, which is what the agent fixes from."""
-    from kiro_crew import mcp_panel
+    from aj_crew import mcp_panel
 
     monkeypatch.setattr(mcp_panel, "_strict_session_key", lambda: ("sk", ""))
     monkeypatch.setattr(
@@ -897,13 +897,13 @@ def test_the_tool_hands_back_a_refusal_whole(monkeypatch):
 
 
 def test_the_member_grant_names_the_save_tool():
-    from kiro_crew.agent import _MEMBER_PANEL_GRANTS
+    from aj_crew.agent import _MEMBER_PANEL_GRANTS
 
-    assert "@kirocrew-panel/dashboard_save" in _MEMBER_PANEL_GRANTS
+    assert "@ajcrew-panel/dashboard_save" in _MEMBER_PANEL_GRANTS
 
 
 def test_the_tool_has_a_registered_argument_schema():
-    from kiro_crew.validation import MCP_PANEL_SCHEMAS
+    from aj_crew.validation import MCP_PANEL_SCHEMAS
 
     assert "dashboard_save" in MCP_PANEL_SCHEMAS
 
@@ -912,7 +912,7 @@ def test_the_tool_has_a_registered_argument_schema():
 # 7. The verification block: an authored page is run once over a synthetic copy
 # --------------------------------------------------------------------------- #
 
-_PAGE = '<span data-dashboard-field="open_prs"></span>\n<script>window.kirocrew.fields.open_prs;</script>'
+_PAGE = '<span data-dashboard-field="open_prs"></span>\n<script>window.ajcrew.fields.open_prs;</script>'
 
 #: The grammar the artifact store gives a slug (``artifact_store.rules._SLUG_RE``).
 _STORE_SLUG = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,78}[a-z0-9])?\Z")
@@ -943,9 +943,9 @@ async def test_a_page_written_as_html_comes_back_with_its_verification(monkeypat
     would commit), a deadline no later than the check's time limit, its answer reaches
     the body, and the page stays saved whatever the answer is, so the fix is one more save.
     """
-    from kiro_crew import dashboard_verify
-    from kiro_crew.artifact_store import dashboard_package
-    from kiro_crew.dashboard.handlers import member_dashboard_fields
+    from aj_crew import dashboard_verify
+    from aj_crew.artifact_store import dashboard_package
+    from aj_crew.dashboard.handlers import member_dashboard_fields
 
     asked: dict[str, Any] = {}
     failed = _verdict(
@@ -986,7 +986,7 @@ async def test_a_page_written_as_html_comes_back_with_its_verification(monkeypat
 
 async def test_a_refused_page_is_not_run(monkeypatch, store):
     """The store's write gate answers first; a page that cannot be stored is not executed."""
-    from kiro_crew.dashboard.handlers import member_dashboard_fields
+    from aj_crew.dashboard.handlers import member_dashboard_fields
 
     monkeypatch.setattr(
         member_dashboard_fields,
@@ -1030,7 +1030,7 @@ class _FakeLivePage:
 def tab_stubs(monkeypatch):
     """What the tab's own side of the check decides, stubbed: the live page, the script
     grant and its audit row. The runner is left as it is."""
-    from kiro_crew.dashboard.handlers import member_dashboard, member_dashboard_fields
+    from aj_crew.dashboard.handlers import member_dashboard, member_dashboard_fields
 
     _FakeLivePage.built, _FakeLivePage.calls, _FakeLivePage.fail_on_arm = [], [], False
     monkeypatch.setattr(_FakeLivePage, "record", {"fields": {"open_prs": 4}, "version": 1})
@@ -1053,7 +1053,7 @@ def glue(tab_stubs, monkeypatch):
     by calling the function it was handed. ``ran`` keeps what it was given and whether the
     live page had been built by the time it was asked.
     """
-    from kiro_crew import dashboard_verify
+    from aj_crew import dashboard_verify
 
     ran: list[SimpleNamespace] = []
     # The cheap tests are the host's (not Linux, a check running, no memory); these tests
@@ -1089,7 +1089,7 @@ def browser(monkeypatch, tmp_path):
 
     from fake_devtools_browser import FakeBrowser
 
-    from kiro_crew import dashboard_synth, dashboard_verify
+    from aj_crew import dashboard_synth, dashboard_verify
 
     monkeypatch.setattr(platform_compat, "host_available_mib", lambda: 1 << 20)
     monkeypatch.setattr(dashboard_verify, "find_launcher_python", lambda: sys.executable)
@@ -1119,7 +1119,7 @@ def test_the_page_is_run_over_the_read_the_tab_is_served(glue):
     holds the check's slot, so a save that is turned away reads nothing, and the runner
     is the only place the record goes.
     """
-    from kiro_crew.dashboard.handlers import member_dashboard
+    from aj_crew.dashboard.handlers import member_dashboard
 
     out = glue.module.verify_package_page(SLUG, CREW, "slot-1", _PACKAGE, 123.5)
 
@@ -1166,7 +1166,7 @@ def test_the_page_is_run_as_the_route_serves_it(glue):
     Without this a page that holds a string the filter rewrites runs here as written and
     passes, and breaks on the gateway alone.
     """
-    from kiro_crew.dashboard.handlers import member_dashboard
+    from aj_crew.dashboard.handlers import member_dashboard
 
     package = _keyed_package()
     written = package["view"]["html"]
@@ -1182,7 +1182,7 @@ def test_the_page_is_run_as_the_route_serves_it(glue):
 
 def test_the_filter_the_check_uses_is_the_one_the_route_has(glue, monkeypatch):
     """The check calls the route's functions by name, so a change to the filter reaches it."""
-    from kiro_crew.dashboard.handlers import member_dashboard
+    from aj_crew.dashboard.handlers import member_dashboard
 
     monkeypatch.setattr(member_dashboard, "_template_text_safe", lambda text: text.upper())
     monkeypatch.setattr(member_dashboard, "_manifest_text_safe", lambda model: {"seen": model})
@@ -1214,7 +1214,7 @@ def test_a_page_the_filter_leaves_alone_gets_no_such_note(glue):
 
 def test_the_note_comes_before_the_runners_own_and_whatever_the_outcome(glue, monkeypatch):
     """The rewrite is a fact about the page and is told for a ``skipped`` check as well."""
-    from kiro_crew import dashboard_verify
+    from aj_crew import dashboard_verify
 
     def _skip(html: str, read: Any, **_kw: Any):
         return dashboard_verify.Verification(
@@ -1233,7 +1233,7 @@ def test_the_note_comes_before_the_runners_own_and_whatever_the_outcome(glue, mo
 def test_what_the_check_returns_has_crossed_the_redaction_the_tab_values_cross(glue, monkeypatch):
     """A page chooses the text of its errors, and can build a key-shaped string that no scan
     of its source saw. What goes back to the agent crosses the same pass the tab's values do."""
-    from kiro_crew import dashboard_verify
+    from aj_crew import dashboard_verify
 
     def _fail(html: str, read: Any, **_kw: Any):
         return dashboard_verify.Verification(
@@ -1277,7 +1277,7 @@ def test_a_package_with_no_page_is_not_run(glue):
 
 def test_a_page_the_tab_would_mount_without_script_is_not_run(glue, monkeypatch):
     """An owner whose egress is restricted has asked that the page's script not run."""
-    from kiro_crew.dashboard.handlers import member_dashboard
+    from aj_crew.dashboard.handlers import member_dashboard
 
     withheld = member_dashboard._EgressDecision(False, "profile", "profile_restricts_egress")
     monkeypatch.setattr(member_dashboard, "_egress_decision", lambda *_a: withheld)
@@ -1304,7 +1304,7 @@ def test_a_session_that_is_not_a_crewmate_has_its_page_left_unrun(glue):
 def test_a_check_that_cannot_start_reads_nothing_and_audits_nothing(glue, monkeypatch):
     """The cheap refusals come first, so a save that will be skipped costs a read of nothing
     and takes no decision that nothing then acts on."""
-    from kiro_crew import dashboard_verify
+    from aj_crew import dashboard_verify
 
     busy = "busy: another page check is running, so this one was not started"
     monkeypatch.setattr(dashboard_verify, "preflight", lambda: busy)
@@ -1328,7 +1328,7 @@ def test_a_read_that_fails_is_a_skip_and_the_page_is_still_disarmed(glue):
 
 
 def test_the_tool_hands_the_verification_to_the_agent(monkeypatch):
-    from kiro_crew import mcp_panel
+    from aj_crew import mcp_panel
 
     monkeypatch.setattr(mcp_panel, "_strict_session_key", lambda: ("sk", ""))
     monkeypatch.setattr(
@@ -1350,7 +1350,7 @@ def test_the_tool_hands_the_verification_to_the_agent(monkeypatch):
 
 
 def test_the_tool_description_tells_the_agent_about_the_check():
-    from kiro_crew import mcp_panel
+    from aj_crew import mcp_panel
 
     tool = next(t for t in mcp_panel._tool_definitions() if t["name"] == "dashboard_save")
 
@@ -1381,7 +1381,7 @@ LINUX_ONLY = pytest.mark.skipif(
 
 def _read_payload() -> dict[str, Any]:
     """A read in the shape the tab is served: what the live page gives the check."""
-    from kiro_crew import dashboard_frame
+    from aj_crew import dashboard_frame
 
     return dashboard_frame.read_payload({"open_prs": 4}, agentic=["open_prs"], seq=1)
 
@@ -1423,7 +1423,7 @@ async def test_a_saved_page_is_run_end_to_end_through_the_route(
     (served,) = fake.records("fulfill")
     document = served["document"]
     # The tab's first paint: the live page's read, in the frame's own document.
-    assert 'id="kirocrew-dashboard-data"' in document
+    assert 'id="ajcrew-dashboard-data"' in document
     assert '"generation"' in document and '"missing"' in document
     assert "boom();" in document
     assert len(store.records) == 1
@@ -1469,7 +1469,7 @@ async def test_the_browser_of_a_saved_page_is_given_a_copy_and_never_the_record(
     Every value the crewmate's read held is looked for in everything the browser received,
     and none is there; the copy has the read's field names, so a page binds as it will.
     """
-    from kiro_crew import dashboard_frame
+    from aj_crew import dashboard_frame
 
     secrets = ["ZXQ-LEDGER-7781", "it_5e1d9c0b", "https://intranet.example.test/secret-path"]
     record = dashboard_frame.read_payload(
@@ -1545,7 +1545,7 @@ def real_browser():
     """
     if not platform_compat.IS_LINUX:
         pytest.skip("the page check runs on Linux only")
-    from kiro_crew import dashboard_verify
+    from aj_crew import dashboard_verify
 
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(dashboard_verify, "find_launcher_python", lambda: sys.executable)
@@ -1577,7 +1577,7 @@ async def test_a_real_page_that_breaks_only_on_what_the_filter_rewrites_is_faile
     the page passes; saved, it is failed, at the line the script threw on, and the reply
     says where the filter touched it.
     """
-    from kiro_crew import dashboard_verify
+    from aj_crew import dashboard_verify
 
     monkeypatch.setattr(dashboard_verify, "find_launcher_python", lambda: sys.executable)
     monkeypatch.setattr(platform_compat, "host_available_mib", lambda: 1 << 20)
@@ -1695,7 +1695,7 @@ async def test_a_save_stops_waiting_for_a_check_that_does_not_come_back(
     The check is a function that does not return until the test lets it, and the save's wait
     ends once the check has started, so the save is answered while the check is running.
     """
-    from kiro_crew.dashboard.handlers import member_dashboard_fields
+    from aj_crew.dashboard.handlers import member_dashboard_fields
 
     running = threading.Event()
     release = threading.Event()
@@ -1723,7 +1723,7 @@ async def test_a_save_stops_waiting_for_a_check_that_does_not_come_back(
 
 async def test_the_save_waits_for_a_check_no_longer_than_the_bound(monkeypatch):
     """The one wait is ``dashboard_verify.REPLY_SECONDS``, read when the save waits."""
-    from kiro_crew import dashboard_verify
+    from aj_crew import dashboard_verify
 
     asked: list[float | None] = []
 
@@ -1748,7 +1748,7 @@ async def test_a_check_the_save_stopped_waiting_for_still_holds_its_place(
 ):
     """The save is answered, the check goes on in its thread and keeps the one place, so a
     second save is turned away rather than started on top of it."""
-    from kiro_crew import dashboard_verify
+    from aj_crew import dashboard_verify
 
     fake = browser(hold=True)
     real_wait = routes._await_check
@@ -1779,7 +1779,7 @@ async def test_a_save_whose_limit_has_passed_starts_no_browser_and_says_timed_ou
     """The limit is counted from the save, so a check that gets its turn after it is over
     does not start a browser. (Killing a browser that outlives the limit is the runner's,
     and is tested there.)"""
-    from kiro_crew import dashboard_verify
+    from aj_crew import dashboard_verify
 
     fake = browser()
     monkeypatch.setattr(dashboard_verify, "RUN_TIMEOUT_SECONDS", 0.0)
@@ -1832,7 +1832,7 @@ def test_only_a_save_of_a_written_page_can_start_a_check():
         if isinstance(call, ast.Call) and getattr(call.func, "id", None) == "_page_check"
     }
     assert starters == {"api_dashboard_save"}
-    snapshot = importlib.import_module("kiro_crew.dashboard.handlers.agent_panel_snapshot")
+    snapshot = importlib.import_module("aj_crew.dashboard.handlers.agent_panel_snapshot")
     picture_takers = {
         fn.name
         for fn in ast.walk(ast.parse(Path(snapshot.__file__).read_text(encoding="utf-8")))
@@ -1847,7 +1847,7 @@ async def test_a_skipped_run_says_so_and_the_gateway_checks_shapes_and_schemes(m
     """No browser on the host: the reply says the page was NOT run, and the two checks
     the gateway does itself still come back -- a list bound to a text cell, and a theme
     that fixes the text colour for one scheme only."""
-    from kiro_crew.dashboard.handlers import member_dashboard_fields
+    from aj_crew.dashboard.handlers import member_dashboard_fields
 
     skipped = _verdict("skipped", reason="no browser on this host", data=None)
     monkeypatch.setattr(member_dashboard_fields, "verify_package_page", lambda *_a, **_k: skipped)
@@ -1870,7 +1870,7 @@ async def test_a_skipped_run_says_so_and_the_gateway_checks_shapes_and_schemes(m
 
 async def test_a_clean_page_carries_no_warning_keys(monkeypatch, store):
     """A text field in a text cell and a theme left to the host's variables: no warnings."""
-    from kiro_crew.dashboard.handlers import member_dashboard_fields
+    from aj_crew.dashboard.handlers import member_dashboard_fields
 
     passed = _verdict("passed", data="synthetic")
     monkeypatch.setattr(member_dashboard_fields, "verify_package_page", lambda *_a, **_k: passed)
@@ -1906,7 +1906,7 @@ async def test_a_save_with_no_theme_or_no_tokens_stores_empty_tokens(monkeypatch
 
 
 def test_the_tool_sends_the_empty_theme_when_the_client_dropped_it(monkeypatch):
-    from kiro_crew import mcp_panel
+    from aj_crew import mcp_panel
 
     sent: list[dict[str, Any]] = []
     monkeypatch.setattr(mcp_panel, "_strict_session_key", lambda: ("sk", None))

@@ -1,4 +1,4 @@
-"""Coverage for the Kiro Crew gateway's deterministic cron-execution paths.
+"""Coverage for the Aj Crew gateway's deterministic cron-execution paths.
 
 The ``job.command`` and ``job.script`` arms of ``_cron_callback``, claim-time vetting,
 ``_deliver_script_result`` and the module helper guards. Sandbox runners, the governance
@@ -27,11 +27,11 @@ from slack_gateway_cron_exec_coverage_helpers import (
     _mock_dashboard_state,
 )
 
-from kiro_crew.cron import CronStoreBusy
-from kiro_crew.dashboard import chat_persistence
-from kiro_crew.dashboard.chat_utils import CRON_NOTIFICATION_KIND
-from kiro_crew.slack import gateway as gw
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.cron import CronStoreBusy
+from aj_crew.dashboard import chat_persistence
+from aj_crew.dashboard.chat_utils import CRON_NOTIFICATION_KIND
+from aj_crew.slack import gateway as gw
+from aj_crew.testing.wait import async_wait_until
 
 # ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -67,7 +67,7 @@ class TestModuleHelpers:
                 "_hb",
                 provider="anthropic",
                 surface="heartbeat",
-                agent_fallback=lambda: "kirocrew",
+                agent_fallback=lambda: "ajcrew",
                 t0=0.0,
             )
         assert result is None
@@ -692,8 +692,8 @@ class TestTheVetIsAnAccountedBudgetTerm:
     @staticmethod
     def _budgets(job: Any) -> tuple[float, float]:
         """(vet bound, pre-fix inner backstop) from the live functions."""
-        from kiro_crew.cron import effective_wake_budget
-        from kiro_crew.executors import cron_gate_budget
+        from aj_crew.cron import effective_wake_budget
+        from aj_crew.executors import cron_gate_budget
 
         return cron_gate_budget(effective_wake_budget(job)), float((job.timeout or 300) + 5)
 
@@ -843,7 +843,7 @@ class TestTheVetIsAnAccountedBudgetTerm:
         import importlib
         import pkgutil
 
-        from kiro_crew.cron_service import service
+        from aj_crew.cron_service import service
 
         # Every module the class binds members from is read: the two sums live in
         # service owners and read the helpers through the facade (``seams.<name>``),
@@ -851,7 +851,7 @@ class TestTheVetIsAnAccountedBudgetTerm:
         owed = {"_pool_queue_allowance", "_gate_budget_allowance", "_vet_allowance"}
         run_deadlines: list[tuple[str, int, set[str]]] = []
         for module in (
-            "kiro_crew.cron",
+            "aj_crew.cron",
             *(f"{service.__name__}.{info.name}" for info in pkgutil.iter_modules(service.__path__)),
         ):
             path = Path(importlib.import_module(module).__file__)
@@ -934,7 +934,7 @@ class TestDeliverScriptResult:
         job = _job(script="probes.py:check", session_key="dashboard:chat-1-2")
         result = {"status": "report", "message": "green again"}
         drain = AsyncMock(return_value=True)
-        with patch("kiro_crew.dashboard.chat_runner._start_next_queued_turn", drain):
+        with patch("aj_crew.dashboard.chat_runner._start_next_queued_turn", drain):
             async with _cron_cb(orch, script_result=result) as cb:
                 assert await cb(job) == "green again"
         slot.queue_append.assert_called_once()

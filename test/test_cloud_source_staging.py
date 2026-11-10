@@ -19,9 +19,9 @@ import pytest
 from group_privacy_helpers import _ACL_USER, _acl_xattr, _serve_acl
 
 from conftest import make_dir_link
-from kiro_crew import github_runner, platform_compat, windows_acl
-from kiro_crew.cloud import aws, source
-from kiro_crew.config import ensure_data_home
+from aj_crew import github_runner, platform_compat, windows_acl
+from aj_crew.cloud import aws, source
+from aj_crew.config import ensure_data_home
 
 
 @pytest.fixture(autouse=True)
@@ -52,7 +52,7 @@ class TestTarballStagingDirectory:
         home.mkdir(mode=0o700)
         temp_root = tmp_path / "process-temp-root"
         temp_root.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(tempfile, "tempdir", str(temp_root))
         return home, temp_root
 
@@ -223,7 +223,7 @@ class TestTarballStagingDirectory:
 
     def test_a_linked_ancestor_above_the_data_home_is_followed(self, monkeypatch, tmp_path):
         # A link above the data home (a symlinked $HOME) is a supported layout
-        # (atomic_write._link_trust_anchor). Driven through config_dir: KIROCREW_HOME
+        # (atomic_write._link_trust_anchor). Driven through config_dir: AJCREW_HOME
         # arrives already resolved. _first_replaceable walks the RESOLVED chain, and
         # asserting the resolved location is what a lexical staging dir would fail.
         real = tmp_path / "real-parent"
@@ -271,7 +271,7 @@ class TestTarballStagingDirectory:
         a resolved path could not show the lexical default home. ``config.paths``
         memoises the resolved home per process, so both caches are cleared.
         """
-        from kiro_crew.config import paths as config_paths
+        from aj_crew.config import paths as config_paths
 
         real_home = tmp_path / "local" / "home" / "u"
         real_home.mkdir(mode=0o700, parents=True)
@@ -282,7 +282,7 @@ class TestTarballStagingDirectory:
         temp_root = tmp_path / "process-temp-root"
         temp_root.mkdir()
         monkeypatch.setattr(tempfile, "tempdir", str(temp_root))
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
         monkeypatch.setenv("HOME", str(home))
         monkeypatch.setenv("USERPROFILE", str(home))
         monkeypatch.setattr(config_paths, "_resolved_home", None)
@@ -345,7 +345,7 @@ class TestTarballStagingDirectory:
         home.mkdir(mode=0o700, parents=True)
         temp_root = tmp_path / "process-temp-root"
         temp_root.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(tempfile, "tempdir", str(temp_root))
         # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
         os.chmod(shared, 0o777)  # noqa: S103 - the shared parent is the fixture. lockdown-ok.
@@ -373,7 +373,7 @@ class TestTarballStagingDirectory:
         home.mkdir(mode=0o700, parents=True)
         temp_root = tmp_path / "process-temp-root"
         temp_root.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(tempfile, "tempdir", str(temp_root))
         # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
         os.chmod(shared, 0o775)  # noqa: S103 - the user-private-group shape. lockdown-ok.
@@ -400,7 +400,7 @@ class TestTarballStagingDirectory:
         home.mkdir(mode=0o700, parents=True)
         temp_root = tmp_path / "process-temp-root"
         temp_root.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(tempfile, "tempdir", str(temp_root))
         # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
         os.chmod(shared, 0o775)  # noqa: S103 - the shared-group shape is the fixture. lockdown-ok.
@@ -433,7 +433,7 @@ class TestTarballStagingDirectory:
         home.mkdir(mode=0o700, parents=True)
         temp_root = tmp_path / "process-temp-root"
         temp_root.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(tempfile, "tempdir", str(temp_root))
         # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
         os.chmod(shared, 0o1775)  # noqa: S103 - sticky + group write is the fixture. lockdown-ok.
@@ -457,7 +457,7 @@ class TestTarballStagingDirectory:
         shared = tmp_path / "group-writable-parent"
         home = shared / "data-home"
         home.mkdir(mode=0o700, parents=True)
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
         os.chmod(shared, 0o775)  # noqa: S103 - group-writable fixture. lockdown-ok.
         with pytest.raises(aws.AWSError) as caught:
@@ -477,7 +477,7 @@ class TestTarballStagingDirectory:
         shared = tmp_path / "acl-parent"
         home = shared / "data-home"
         home.mkdir(mode=0o700, parents=True)
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
         os.chmod(shared, 0o770)  # noqa: S103 - the ACL mask shape is the fixture. lockdown-ok.
         _serve_acl(monkeypatch, shared, _acl_xattr((_ACL_USER, 0o7, 4242)))
@@ -499,7 +499,7 @@ class TestTarballStagingDirectory:
         shared = tmp_path / "acl-parent"
         home = shared / "data-home"
         home.mkdir(mode=0o700, parents=True)
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
         os.chmod(shared, 0o770)  # noqa: S103 - the ACL mask shape is the fixture. lockdown-ok.
         _serve_acl(monkeypatch, shared, _acl_xattr((_ACL_USER, 0o5, 4242), group_obj=0o7))
@@ -516,7 +516,7 @@ class TestTarballStagingDirectory:
         home.mkdir(mode=0o700, parents=True)
         temp_root = tmp_path / "process-temp-root"
         temp_root.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(tempfile, "tempdir", str(temp_root))
         # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
         os.chmod(shared, 0o1777)  # noqa: S103 - the /tmp shape is the fixture. lockdown-ok.
@@ -551,7 +551,7 @@ class TestTarballStagingDirectory:
         home.mkdir(mode=0o700, parents=True)
         temp_root = tmp_path / "process-temp-root"
         temp_root.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(tempfile, "tempdir", str(temp_root))
         # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
         os.chmod(
@@ -588,11 +588,11 @@ class TestTarballStagingDirectory:
             pytest.skip("POSIX ownership")
         above = tmp_path / "above-the-account"
         account = above / "account-home"
-        home = account / "kirocrew"
+        home = account / "ajcrew"
         home.mkdir(mode=0o700, parents=True)
         temp_root = tmp_path / "process-temp-root"
         temp_root.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(tempfile, "tempdir", str(temp_root))
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: account))
 
@@ -619,9 +619,9 @@ class TestTarballStagingDirectory:
         if os.name != "posix":
             pytest.skip("POSIX paths")
         account = tmp_path / "account-home"
-        home = account / "kirocrew"
+        home = account / "ajcrew"
         home.mkdir(mode=0o700, parents=True)
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: account))
         chain = source._chain_the_launcher_owns(home)
         assert chain[0] == account.resolve(), "the walk should start at the operator's own home"
@@ -640,7 +640,7 @@ class TestTarballStagingDirectory:
             pytest.skip("POSIX paths")
         elsewhere = tmp_path / "pretend-account-home"
         elsewhere.mkdir(mode=0o700)
-        home = tmp_path / "srv-shared" / "kirocrew"
+        home = tmp_path / "srv-shared" / "ajcrew"
         home.mkdir(mode=0o700, parents=True)
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: elsewhere))
         chain = source._chain_the_launcher_owns(home)
@@ -659,7 +659,7 @@ class TestTarballStagingDirectory:
         home.mkdir(mode=0o700, parents=True)
         temp_root = tmp_path / "process-temp-root"
         temp_root.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setattr(tempfile, "tempdir", str(temp_root))
         # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
         os.chmod(shared, 0o777)  # noqa: S103 - the peer-writable share is the fixture. lockdown-ok.
@@ -1072,7 +1072,7 @@ class TestWindowsStagingAncestorWalk:
             profile.mkdir()
             monkeypatch.setattr(source.Path, "home", staticmethod(lambda: profile))
             base = profile / ".kiro" / "crew"
-        monkeypatch.setenv("KIROCREW_HOME", str(base))
+        monkeypatch.setenv("AJCREW_HOME", str(base))
 
         # Build and lock down the real data home exactly as the gateway prologue
         # does, then walk it with the live descriptor read and no mocks. For the

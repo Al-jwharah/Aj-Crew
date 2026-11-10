@@ -37,13 +37,13 @@ from mcp_shared_helpers import (  # noqa: F401 -- the autouse fixture registers 
 )
 from test_gateway_subagent_wiring import _Done, harness, make_info
 
-import kiro_crew.mcp_shared as mcp_shared
-from kiro_crew import install_liveness, mcp_core
-from kiro_crew.context_management import COMPLETION_KEEP_DEFAULT_CHARS
-from kiro_crew.mcp_tools import spawn as spawn_tools
-from kiro_crew.subagent import SubagentInfo
-from kiro_crew.testing.wait import async_wait_until, wait_until
-from kiro_crew.validation import build_tool_response
+import aj_crew.mcp_shared as mcp_shared
+from aj_crew import install_liveness, mcp_core
+from aj_crew.context_management import COMPLETION_KEEP_DEFAULT_CHARS
+from aj_crew.mcp_tools import spawn as spawn_tools
+from aj_crew.subagent import SubagentInfo
+from aj_crew.testing.wait import async_wait_until, wait_until
+from aj_crew.validation import build_tool_response
 
 #: One parent of each kind the completion routes tell apart.
 PARENTS = ["dashboard:tab1", "cron:job1:run1", "slack:C1:1700000000.1"]
@@ -99,7 +99,7 @@ def _drive(monkeypatch, gateway: _Gateway, parent: str, members: int, *, respond
         patch.object(mcp_core, "_post", side_effect=gateway.post),
         patch.object(mcp_core, "_get", side_effect=gateway.get),
         patch.object(mcp_core, "sel"),
-        patch.dict("os.environ", {"KIROCREW_SESSION_KEY": parent}),
+        patch.dict("os.environ", {"AJCREW_SESSION_KEY": parent}),
     ):
         try:
             harness_.send(call)
@@ -170,7 +170,7 @@ def test_a_crash_writing_the_reply_marks_nothing(monkeypatch, events, parent):
 
 @pytest.mark.parametrize("parent", PARENTS)
 def test_a_pooled_backends_written_reply_marks_nothing(monkeypatch, events, parent):
-    """Routed through the MCP broker, ``kirocrew-core`` is a pooled backend: its
+    """Routed through the MCP broker, ``ajcrew-core`` is a pooled backend: its
     whole frame lands in the broker, whose relay to the parent confirms nothing.
     No member is marked, so each is delivered again by its completion."""
     monkeypatch.setenv(install_liveness.POOLED_BACKEND_ENV, install_liveness.POOLED_BACKEND_VALUE)
@@ -293,7 +293,7 @@ def test_respond_claims_no_write_the_clients_pipe_did_not_take(monkeypatch, snap
 def test_respond_claims_no_write_for_the_error_frame_it_substitutes(monkeypatch):
     """An answer that fails validation goes out as an "Internal error" frame: the
     client then holds an error, not this answer, so nothing it carried arrived."""
-    from kiro_crew.validation import ValidationError
+    from aj_crew.validation import ValidationError
 
     def _refuse(_resp: Any) -> Any:
         raise ValidationError("response", "refused for the test")
@@ -434,8 +434,8 @@ async def _spawn_from_the_parents_tool(
     admission and recording run as they do in production."""
     from test_subagent_queued_visibility import _Req
 
-    from kiro_crew.dashboard.handlers import messaging
-    from kiro_crew.dashboard.handlers._shared_member_scope import _MEMBER_SCOPE_KEY, MemberScope
+    from aj_crew.dashboard.handlers import messaging
+    from aj_crew.dashboard.handlers._shared_member_scope import _MEMBER_SCOPE_KEY, MemberScope
 
     pending = list(children)
 
@@ -463,7 +463,7 @@ async def _spawn_from_the_parents_tool(
 def _late_mark(sessions: Any, mgr: Any, key: str, *ids: str) -> set[str]:
     """POST mark-collected with ``written: true``, flagged as the real endpoint
     flags it, under whatever holds ``key`` now."""
-    from kiro_crew.dashboard.messaging_api.run_control import _flag_collected_inline
+    from aj_crew.dashboard.messaging_api.run_control import _flag_collected_inline
 
     return _flag_collected_inline(SimpleNamespace(subagents=mgr, sessions=sessions), list(ids), key)
 
@@ -504,11 +504,11 @@ async def test_a_returned_childs_completion_leaves_the_running_cron_turn_undistu
     the completion acknowledged, with no second turn."""
     from test_subagent_injection_live_turn import _HANG_CEILING_S, _gateway, _provider_factory
 
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.session import SessionManager
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.session import SessionManager
 
     key = "cron:job-1:run-1"
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_provider_factory())
     gateway = _gateway(sessions)
     gateway.cron_svc = MagicMock(name="cron_svc")
     gateway.subagent_mgr.settle_queued_delivery = AsyncMock()
@@ -627,11 +627,11 @@ async def test_a_confirmed_completion_leaves_a_live_cron_turn_undisturbed() -> N
     the turn's own finalizer resets the session after."""
     from test_subagent_injection_live_turn import _HANG_CEILING_S, _gateway, _provider_factory
 
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.session import SessionManager
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.session import SessionManager
 
     key = "cron:job-1"
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_provider_factory())
     gateway = _gateway(sessions)
     gateway.cron_svc = MagicMock(name="cron_svc")
     info = _returned_child("child-1", key)
@@ -716,7 +716,7 @@ def _cron_job() -> Any:
 
 
 async def _cron_callback(orch: Any) -> Any:
-    with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+    with patch("aj_crew.slack.gateway.CronService") as mock_cs:
         cron_svc = MagicMock()
         cron_svc.start = AsyncMock()
         cron_svc.start_reaper = MagicMock()
@@ -763,12 +763,12 @@ async def _drive_cron_turn(*, ending: str, children: int = 1) -> dict[str, Any]:
     """
     from test_subagent_injection_live_turn import _provider_factory
 
-    from kiro_crew.acp.client import AcpError
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.session import SessionManager
+    from aj_crew.acp.client import AcpError
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.session import SessionManager
 
     key = "cron:j1:r1"
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_provider_factory())
     infos = [_returned_child(f"child-{i}", key) for i in range(children)]
     orch = _cron_orchestrator(sessions, infos)
     seen: dict[str, Any] = {"injected": [], "infos": infos, "sessions": sessions, "orch": orch}
@@ -814,8 +814,8 @@ async def _drive_cron_turn(*, ending: str, children: int = 1) -> dict[str, Any]:
         return "never"
 
     with (
-        patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream),
-        patch("kiro_crew.slack.gateway.build_cron_session_context", return_value=(key, "task")),
+        patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream),
+        patch("aj_crew.slack.gateway.build_cron_session_context", return_value=(key, "task")),
     ):
         run = asyncio.create_task(callback(_cron_job()))
         await asyncio.wait_for(answering.wait(), 30)
@@ -930,11 +930,11 @@ async def test_a_mark_landing_while_the_route_waits_on_the_real_lease_is_honoure
     resets the idle session once."""
     from test_subagent_injection_live_turn import _gateway, _provider_factory
 
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.session import SessionManager
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.session import SessionManager
 
     key = "cron:j1:r1"
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_provider_factory())
     gateway = _gateway(sessions)
     gateway.cron_svc = MagicMock(name="cron_svc")
     info = _returned_child("child-1", key)
@@ -970,11 +970,11 @@ async def test_the_cron_turn_ending_inside_a_settled_completions_cleanup_tears_d
     shutdown, the key retired once, nothing left registered."""
     from test_subagent_injection_live_turn import _provider_factory
 
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.session import SessionManager
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.session import SessionManager
 
     key = "cron:j1:r1"
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_provider_factory())
     info = _returned_child("child-1", key)
     orch = _cron_orchestrator(sessions, [info])
     in_read, go_on = asyncio.Event(), asyncio.Event()
@@ -1002,8 +1002,8 @@ async def test_the_cron_turn_ending_inside_a_settled_completions_cleanup_tears_d
         return "cron result"
 
     with (
-        patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream),
-        patch("kiro_crew.slack.gateway.build_cron_session_context", return_value=(key, "task")),
+        patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream),
+        patch("aj_crew.slack.gateway.build_cron_session_context", return_value=(key, "task")),
     ):
         await asyncio.wait_for(callback(_cron_job()), 30)
     await asyncio.wait_for(in_read.wait(), 30)  # the settled completion's cleanup
@@ -1056,10 +1056,10 @@ def _channel_route(gateway: Any, info: SubagentInfo, key: str) -> asyncio.Task[A
 def _new_sessions() -> Any:
     from test_subagent_injection_live_turn import _provider_factory
 
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.session import SessionManager
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.session import SessionManager
 
-    return SessionManager(KiroCrewConfig(), provider_factory=_provider_factory())
+    return SessionManager(AjCrewConfig(), provider_factory=_provider_factory())
 
 
 @pytest.mark.asyncio
@@ -1214,7 +1214,7 @@ async def test_each_sequence_step_settles_only_what_it_received() -> None:
 
 
 def test_the_ledger_hands_each_holding_its_own_marks_and_landing() -> None:
-    from kiro_crew.parent_turns import ParentTurnLedger
+    from aj_crew.parent_turns import ParentTurnLedger
 
     ledger = ParentTurnLedger()
     settled: list[tuple[Any, bool, list[str]]] = []
@@ -1233,7 +1233,7 @@ def test_the_ledger_hands_each_holding_its_own_marks_and_landing() -> None:
 
 
 def test_a_failing_settle_hook_never_breaks_the_release(caplog) -> None:
-    from kiro_crew.parent_turns import ParentTurnLedger
+    from aj_crew.parent_turns import ParentTurnLedger
 
     ledger = ParentTurnLedger()
     ledger.on_released = MagicMock(side_effect=RuntimeError("boom"))
@@ -1295,7 +1295,7 @@ async def test_only_the_holding_task_notes_its_own_landing() -> None:
 @pytest.mark.asyncio
 async def test_a_turn_bracket_notes_a_landed_verdict_on_its_session() -> None:
     """Every engine on ``ChannelTurns`` decides landing through the bracket."""
-    from kiro_crew.messaging.turn_bracket import TurnBracket
+    from aj_crew.messaging.turn_bracket import TurnBracket
 
     sessions = _new_sessions()
     key = "discord:7"
@@ -1317,7 +1317,7 @@ def test_every_engine_that_settles_a_turn_notes_its_landing() -> None:
     their landing in ``chat_turn/turn_stats``."""
     from pathlib import Path
 
-    src = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+    src = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
     settlers = {
         path.relative_to(src).as_posix()
         for path in src.rglob("*.py")
@@ -1347,10 +1347,10 @@ async def test_a_completion_parked_through_a_restart_is_re_announced(tmp_path, m
     the tombstone, once."""
     import json
 
-    from kiro_crew.subagent import SubagentManager
-    from kiro_crew.subagent_persistence import create_agent_folder, list_orphans, write_result_chunk
+    from aj_crew.subagent import SubagentManager
+    from aj_crew.subagent_persistence import create_agent_folder, list_orphans, write_result_chunk
 
-    monkeypatch.setattr("kiro_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path)
+    monkeypatch.setattr("aj_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path)
     key = "cron:j1:r1"
     sessions = _new_sessions()
     info = _returned_child("park001", key)
@@ -1404,16 +1404,16 @@ async def test_mark_collected_flags_only_the_callers_own_children(tmp_path) -> N
     from test_subagent_injection_live_turn import _provider_factory
     from test_subagent_queued_visibility import _Req
 
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.dashboard.handlers import messaging
-    from kiro_crew.dashboard.messaging_api import run_views
-    from kiro_crew.session import SessionManager
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.dashboard.handlers import messaging
+    from aj_crew.dashboard.messaging_api import run_views
+    from aj_crew.session import SessionManager
 
     own = make_info("c1", parent="cron:j1:r1")
     foreign = make_info("f1", parent="cron:other:r1")
     late = make_info("l1", parent="cron:j1:r1")
     state = _make_state(tmp_path)
-    state.sessions = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory())
+    state.sessions = SessionManager(AjCrewConfig(), provider_factory=_provider_factory())
     state.subagents = MagicMock()
     records = {r.id: r for r in (own, foreign, late)}
     state.subagents.get = MagicMock(side_effect=records.get)
@@ -1432,7 +1432,7 @@ async def test_mark_collected_flags_only_the_callers_own_children(tmp_path) -> N
     assert own._seen_done_under == state.sessions.turn_token("cron:j1:r1")
     assert foreign._seen_done_under is None, "another parent's tool named this turn"
 
-    # A kirocrew-core that marks without saying the frame was written (one from
+    # A ajcrew-core that marks without saying the frame was written (one from
     # before the mark moved behind the write) flags nothing.
     legacy = {"ids": ["c1"], "parent_session": "cron:j1:r1"}
     assert (await messaging.api_spawn_mark_collected(_Req(state, body=legacy))).status == 200
@@ -1449,7 +1449,7 @@ async def test_mark_collected_flags_only_the_callers_own_children(tmp_path) -> N
     assert foreign._collected_inline is False, "a caller suppressed another parent's result"
 
     state.sessions.release("cron:j1:r1")  # the turn ended (it noted no landing)
-    from kiro_crew.slack.gateway_runtime.subagent_injection import _inline_verdict
+    from aj_crew.slack.gateway_runtime.subagent_injection import _inline_verdict
 
     verdict, _holding = _inline_verdict(state.subagents, state.sessions, ("c1",))
     assert verdict == "deliver", "a mark whose turn released unconfirmed was honoured"
@@ -1484,11 +1484,11 @@ async def test_a_queued_tab_completion_stays_without_its_written_mark(
     from chat_test_helpers import _make_state
     from test_subagent_queued_visibility import _Req
 
-    from kiro_crew.constants import SUBAGENT_COMPLETION_META_KEY
-    from kiro_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND
-    from kiro_crew.dashboard.handlers import messaging
-    from kiro_crew.subagent import SubagentDelivery
-    from kiro_crew.subagent_completion_meta import single_completion_meta
+    from aj_crew.constants import SUBAGENT_COMPLETION_META_KEY
+    from aj_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND
+    from aj_crew.dashboard.handlers import messaging
+    from aj_crew.subagent import SubagentDelivery
+    from aj_crew.subagent_completion_meta import single_completion_meta
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("chat-1")
@@ -1527,7 +1527,7 @@ async def test_a_queued_tab_completion_stays_without_its_written_mark(
 
 def test_an_announce_carrying_no_member_is_never_skipped() -> None:
     """Nothing carried proves nothing returned: the announce is delivered."""
-    from kiro_crew.slack.gateway_runtime.subagent_injection import _delivered_inline
+    from aj_crew.slack.gateway_runtime.subagent_injection import _delivered_inline
 
     record = SubagentInfo(id="m1", task="t")
     record._collected_inline = True
@@ -1549,8 +1549,8 @@ def test_every_member_reaches_its_parent_at_least_once() -> None:
     ``test_a_member_past_the_response_cap_is_not_marked`` keeps the real cap."""
     # Imported here, not at module level, so the module collects on a tree that
     # lacks these two helpers and the other tests in it can show the bug there.
-    from kiro_crew.mcp_tools.spawn_parts.wave import _carried_in_reply
-    from kiro_crew.slack.gateway_runtime.subagent_injection import _delivered_inline
+    from aj_crew.mcp_tools.spawn_parts.wave import _carried_in_reply
+    from aj_crew.slack.gateway_runtime.subagent_injection import _delivered_inline
 
     cap = 1_000
     cut = 0  # waves whose reply the cap cuts short of a settled member
@@ -1618,8 +1618,8 @@ class TestAParkedCompletionOfARetiredParentIsNotDelivered:
     def _retiring_gateway(sessions: Any, *infos: SubagentInfo) -> Any:
         """A channel gateway whose manager runs the real teardown snapshot and the
         real retired-delivery decision over its own records."""
-        from kiro_crew.subagent_manager.cancellation import CancellationCoordinator
-        from kiro_crew.subagent_manager.terminal import TerminalCoordinator
+        from aj_crew.subagent_manager.cancellation import CancellationCoordinator
+        from aj_crew.subagent_manager.terminal import TerminalCoordinator
 
         gateway = _channel_gateway(sessions, *infos)
         mgr = gateway.subagent_mgr
@@ -1663,7 +1663,7 @@ class TestAParkedCompletionOfARetiredParentIsNotDelivered:
     @staticmethod
     async def _agent_off(sessions: Any, key: str) -> None:
         """An owner's ``!agent off`` in the parent's thread, through the real handler."""
-        from kiro_crew.slack import handler
+        from aj_crew.slack import handler
 
         slack = MagicMock()
         slack.post_message = AsyncMock()
@@ -1685,7 +1685,7 @@ class TestAParkedCompletionOfARetiredParentIsNotDelivered:
 
     @pytest.mark.asyncio
     async def test_agent_off_while_a_completion_is_parked_delivers_nothing(self) -> None:
-        from kiro_crew.subagent import SubagentDelivery
+        from aj_crew.subagent import SubagentDelivery
 
         sessions = _new_sessions()
         info = _returned_child("child-1", self.KEY)
@@ -1716,7 +1716,7 @@ class TestAParkedCompletionOfARetiredParentIsNotDelivered:
     ) -> None:
         """A flush-only record has a synthetic id the teardown never marks: a
         retired member it carries or holds is what says its parent ended."""
-        from kiro_crew.subagent import SubagentDelivery
+        from aj_crew.subagent import SubagentDelivery
 
         sessions = _new_sessions()
         info = _returned_child("flush-1", self.KEY)

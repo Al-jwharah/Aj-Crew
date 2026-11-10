@@ -27,8 +27,8 @@ const BEFORE = process.argv.includes('--before')
 mkdirSync(OUT, { recursive: true })
 
 const SKILLS = [
-  { key: 'team/oncall-handover', name: 'oncall-handover', description: 'Write the on-call handover report', source: 'kirocrew' },
-  { key: 'ticket-pull', name: 'ticket-pull', description: 'Pull my open tickets', source: 'kirocrew' },
+  { key: 'team/oncall-handover', name: 'oncall-handover', description: 'Write the on-call handover report', source: 'ajcrew' },
+  { key: 'ticket-pull', name: 'ticket-pull', description: 'Pull my open tickets', source: 'ajcrew' },
 ]
 const USER = { role: 'user', content: 'Summarize what changed in the release branch this week.', cls: '', ts: '2026-10-24T14:00:00Z', meta: { mid: 'm-user-1' } }
 const REPLY = { role: 'assistant', content: 'Three changes landed this week:\n\n- the retry budget moved to config\n- the health check now times out after 5s\n- two flaky tests were quarantined', cls: '', ts: '2026-10-24T14:00:20Z', meta: { mid: 'm-reply-1' } }

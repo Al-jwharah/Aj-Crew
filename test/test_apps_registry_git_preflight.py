@@ -16,9 +16,9 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from apps_routes_coverage_helpers import APP, _install, _make_app, _setup_env
 
-import kiro_crew.apps.routes as routes_mod
-from kiro_crew.apps import registry
-from kiro_crew.apps.manager import enable_app, get_app
+import aj_crew.apps.routes as routes_mod
+from aj_crew.apps import registry
+from aj_crew.apps.manager import enable_app, get_app
 
 # The wire contract, spelled out rather than imported: a client keys off the code,
 # and the install banner shows the sentence.
@@ -37,7 +37,7 @@ def _drop_git_from_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None
 
 
 def test_refusal_names_the_app_and_says_what_to_do(tmp_path, monkeypatch):
-    from kiro_crew.apps.registry_git_preflight import git_unavailable_refusal
+    from aj_crew.apps.registry_git_preflight import git_unavailable_refusal
 
     _drop_git_from_path(tmp_path, monkeypatch)
 

@@ -21,7 +21,7 @@
  *      ⌘/Ctrl+digit chord. That chord is Electron-only — `useInstanceShortcuts`
  *      returns early on `!isElectron`, because a plain browser keeps those keys for
  *      its own tabs — and the shell is detected solely from
- *      `window.kirocrew.isElectron`, so the harness presents as the shell and
+ *      `window.ajcrew.isElectron`, so the harness presents as the shell and
  *      presses `Control+2` rather than driving a proxy for it. There is no
  *      non-keyboard door to reproduce this: the open palette's overlay intercepts a
  *      click on the instance bar, which is WHY the dismissal was missing.
@@ -100,7 +100,7 @@ const SLOTS = [
     messages: 12,
     running: false,
     pending_approval: true,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     mode: '',
     last_activity_ts: ago(3 * 24 * 60),
     last_ts: ago(1),
@@ -115,7 +115,7 @@ const SLOTS = [
     title: 'Zulu — quick switcher fixes',
     messages: 24,
     running: true,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     mode: '',
     last_activity_ts: '',
     last_ts: ago(2),
@@ -125,7 +125,7 @@ const SLOTS = [
     title: 'Mike — nav rail badge',
     messages: 8,
     running: false,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     mode: '',
     last_activity_ts: ago(90),
   },
@@ -134,7 +134,7 @@ const SLOTS = [
     title: 'Alpha — table breakout',
     messages: 31,
     running: false,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     mode: '',
     last_activity_ts: ago(26 * 60),
   },
@@ -146,7 +146,7 @@ const SLOTS = [
     messages: 57,
     running: false,
     pinned: true,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     mode: '',
     last_activity_ts: ago(8 * 24 * 60),
   },
@@ -157,7 +157,7 @@ const SLOTS = [
     title: 'New Session…',
     messages: 0,
     running: false,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     mode: '',
     last_activity_ts: ago(3),
   },
@@ -193,7 +193,7 @@ async function openBar({ instances = [], electron = false, apps = APPS } = {}) {
   // before the bundle evaluates — an `evaluate` after `goto` would be too late.
   if (electron) {
     await page.addInitScript(() => {
-      window.kirocrew = { isElectron: true, platform: 'linux' }
+      window.ajcrew = { isElectron: true, platform: 'linux' }
     })
   }
 
@@ -280,7 +280,7 @@ async function shot(page, name) {
 //
 // Driven by the REAL gesture from the report: Ctrl+2. That chord is claimed only in
 // the Electron shell (useInstanceShortcuts returns early on `!isElectron`), and the
-// shell is detected solely from `window.kirocrew.isElectron` — so the harness
+// shell is detected solely from `window.ajcrew.isElectron` — so the harness
 // presents as the shell before the bundle loads and then presses the actual key.
 // This matters: the two non-keyboard doors are both unreachable here (a mouse path
 // to the topbar is blocked by the modal's own overlay, and the embedded-pane relay

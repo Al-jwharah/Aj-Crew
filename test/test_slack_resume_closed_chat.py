@@ -12,9 +12,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.history import ConversationLog
-from kiro_crew.slack import interactions as ix
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.history import ConversationLog
+from aj_crew.slack import interactions as ix
 
 
 def _make_state(tmp_path) -> DashboardState:
@@ -34,7 +34,7 @@ def _make_state(tmp_path) -> DashboardState:
 class TestLinkSlackSignal:
     def test_missing_slot_warns_and_links_nothing(self, tmp_path, caplog) -> None:
         state = _make_state(tmp_path)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.state"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.state"):
             state.link_slack("chat-gone", "1.2", "C1")
         assert any("chat-gone" in r.getMessage() for r in caplog.records)
         state.sessions.set_slack_link.assert_not_called()
@@ -42,7 +42,7 @@ class TestLinkSlackSignal:
     def test_present_slot_links_without_warning(self, tmp_path, caplog) -> None:
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.state"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.state"):
             state.link_slack("s1", "1.2", "C1")
         assert slot._slack_linked is True
         assert slot._slack_thread_ts == "1.2"
@@ -70,9 +70,9 @@ def orch(monkeypatch: pytest.MonkeyPatch, tmp_path) -> MagicMock:
     monkeypatch.setattr(ix, "_orch", o)
     monkeypatch.setattr(ix, "is_allowed_user", lambda uid: True)
     monkeypatch.setattr(ix, "is_owner", lambda uid: True)
-    monkeypatch.setattr("kiro_crew.slack.handler.is_owner", lambda uid: True)
+    monkeypatch.setattr("aj_crew.slack.handler.is_owner", lambda uid: True)
     monkeypatch.setattr(ix, "channel_inbound_permitted", AsyncMock(return_value=True))
-    monkeypatch.setattr("kiro_crew.config.loader.data_home", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.data_home", lambda: tmp_path)
     monkeypatch.setattr(ix, "_resume_locks", {})
     return o
 

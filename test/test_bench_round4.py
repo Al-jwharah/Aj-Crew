@@ -16,9 +16,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.eval.bench import datasets
-from kiro_crew.eval.bench.run import compare_reports
-from kiro_crew.eval.bench.safepath import (
+from aj_crew.eval.bench import datasets
+from aj_crew.eval.bench.run import compare_reports
+from aj_crew.eval.bench.safepath import (
     UnsafePathError,
     open_write_nofollow,
     read_text_nofollow,
@@ -110,7 +110,7 @@ def test_the_sidecar_read_in_ensure_goes_through_the_nofollow_path(
     """
     cache = tmp_path / "cache"
     cache.mkdir()
-    monkeypatch.setenv("KIROCREW_BENCH_CACHE", str(cache))
+    monkeypatch.setenv("AJCREW_BENCH_CACHE", str(cache))
 
     spec = datasets.SPECS["longmemeval_s"]  # sha256 is None -> takes the sidecar path
     corpus = cache / spec.filename

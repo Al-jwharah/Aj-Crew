@@ -1,8 +1,8 @@
 """Conductor agent installer + bundled acceptance evaluator.
 
-``kirocrew-conductor`` IS the work-ledger conductor: it mounts ``kirocrew-work``,
+``ajcrew-conductor`` IS the work-ledger conductor: it mounts ``ajcrew-work``,
 dispatches bind-before-seed, and settles every ``done`` claim with the bundled
-``scripts/accept_eval.py``. ``kirocrew-ledger-conductor`` is a deprecated alias
+``scripts/accept_eval.py``. ``ajcrew-ledger-conductor`` is a deprecated alias
 emitting this same spec under its old name for one release, and the proof that
 the two cannot drift lives in ``test_ledger_conductor_agent.py``.
 
@@ -27,14 +27,14 @@ from pathlib import Path
 import conductor_agent_checks
 from skill_script_helpers import load_skill_script
 
-from kiro_crew import agent
-from kiro_crew.agent_files import CONDUCTOR_AGENT_FILENAME, OWNED_KIRO_AGENT_FILES
-from kiro_crew.agent_sdk.drivers.acp import derived_agent_permissions
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
-from kiro_crew.skills import _BUILTIN_SKILLS_DIR
+from aj_crew import agent
+from aj_crew.agent_files import CONDUCTOR_AGENT_FILENAME, OWNED_KIRO_AGENT_FILES
+from aj_crew.agent_sdk.drivers.acp import derived_agent_permissions
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.skills import _BUILTIN_SKILLS_DIR
 
 SKILL_DIR = (
-    Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "builtin_skills" / "goal-conductor"
+    Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "builtin_skills" / "goal-conductor"
 )
 SCRIPT = SKILL_DIR / "scripts" / "accept_eval.py"
 
@@ -51,14 +51,14 @@ def _pin_spec_permissions_cli(monkeypatch, which):
 
     The generated spec writers share one gate (``_write_derived_permissions``), which
     reads ``installed_kiro_cli_version`` function-locally from
-    ``kiro_crew.kiro_cli``, so the patch lands in the owning module. Without it
+    ``aj_crew.kiro_cli``, so the patch lands in the owning module. Without it
     the answer is whatever the test HOST has, which on CI is nothing and reads
     as "unknown" -- the refusing case -- so a writer test asserting a
     ``permissions`` block would fail for a host reason rather than a code one.
     ``which`` is one of ``"accepts"``, ``"refuses"`` or ``"unknown"``.
     """
     version = {"accepts": _ACCEPTS, "refuses": _REFUSES, "unknown": None}[which]
-    monkeypatch.setattr("kiro_crew.kiro_cli.installed_kiro_cli_version", lambda: version)
+    monkeypatch.setattr("aj_crew.kiro_cli.installed_kiro_cli_version", lambda: version)
 
 
 class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetiredVerbosityToken):
@@ -69,21 +69,21 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
             agent,
             "build_agent_config",
             lambda: {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "prompt": "file://x",
                 "mcpServers": {
-                    "kirocrew-core": {"command": "/resolved/kirocrew", "args": ["mcp-core"]},
+                    "ajcrew-core": {"command": "/resolved/ajcrew", "args": ["mcp-core"]},
                     "builder-mcp": {"command": "/x/builder", "args": []},
                 },
-                "tools": ["fs_write", "@kirocrew-core"],
-                "allowedTools": ["@kirocrew-core"],
+                "tools": ["fs_write", "@ajcrew-core"],
+                "allowedTools": ["@ajcrew-core"],
                 "permissions": _INHERITED_PERMISSIONS,
             },
         )
         monkeypatch.setattr(
             agent,
-            "_kirocrew_mcp_invocation",
-            lambda sub: ("/resolved/kirocrew", [sub]),
+            "_ajcrew_mcp_invocation",
+            lambda sub: ("/resolved/ajcrew", [sub]),
         )
         # Pin the ceiling predicate: the default is an ungoverned host (keep every
         # grant), and the governed case gets its own test below.
@@ -93,7 +93,7 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
 
     def test_identity_and_charter(self, tmp_path, monkeypatch):
         data = self._install(tmp_path, monkeypatch)
-        assert data["name"] == "kirocrew-conductor"
+        assert data["name"] == "ajcrew-conductor"
         assert "work item" in data["prompt"]
 
     def test_prompt_drives_patrol_with_monitor_start_not_wait(self, tmp_path, monkeypatch):
@@ -134,7 +134,7 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
         """The security properties of the spec, in one place.
 
         No ``fs_write``: the conductor cannot do a work item's work itself.
-        ``@kirocrew-core`` and ``@kirocrew-dashboard`` are MOUNTED whole but never
+        ``@ajcrew-core`` and ``@ajcrew-dashboard`` are MOUNTED whole but never
         granted whole — the auto-approve list names verbs, so the destructive ones
         keep prompting. ``execute_bash`` is mounted and never granted, because
         ``allowedTools`` has no argument matching and trusting the two bundled
@@ -142,10 +142,10 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
         """
         data = self._install(tmp_path, monkeypatch)
         assert "fs_write" not in data["tools"]
-        assert "@kirocrew-dashboard" in data["tools"]
-        assert "@kirocrew-dashboard" not in data["allowedTools"]
-        assert "@kirocrew-core" in data["tools"]
-        assert "@kirocrew-core" not in data["allowedTools"]
+        assert "@ajcrew-dashboard" in data["tools"]
+        assert "@ajcrew-dashboard" not in data["allowedTools"]
+        assert "@ajcrew-core" in data["tools"]
+        assert "@ajcrew-core" not in data["allowedTools"]
         assert "execute_bash" in data["tools"]
         assert "execute_bash" not in data["allowedTools"]
 
@@ -186,7 +186,7 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
             "session_broadcast",
             "session_stop",
         ):
-            assert f"@kirocrew-dashboard/{verb}" not in granted, verb
+            assert f"@ajcrew-dashboard/{verb}" not in granted, verb
         for verb in (
             "session_create",
             "session_read_message",
@@ -196,7 +196,7 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
             # in a loop with nobody at the keyboard.
             "session_status",
         ):
-            assert f"@kirocrew-dashboard/{verb}" in granted, verb
+            assert f"@ajcrew-dashboard/{verb}" in granted, verb
 
     def test_no_dashboard_verb_is_granted_outside_the_named_set(self, tmp_path, monkeypatch):
         """Nothing reaches ``allowedTools`` that the audit above did not rule on.
@@ -207,21 +207,21 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
         expected set is spelled out so adding a grant is a deliberate edit here.
         """
         granted = self._install(tmp_path, monkeypatch)["allowedTools"]
-        dashboard = {g for g in granted if g.startswith("@kirocrew-dashboard")}
+        dashboard = {g for g in granted if g.startswith("@ajcrew-dashboard")}
         assert dashboard == {
-            "@kirocrew-dashboard/session_create",
-            "@kirocrew-dashboard/session_read_message",
-            "@kirocrew-dashboard/session_status",
+            "@ajcrew-dashboard/session_create",
+            "@ajcrew-dashboard/session_read_message",
+            "@ajcrew-dashboard/session_status",
         }
         # The bare server must never appear: it would grant every verb, including
         # the four the test above withholds.
-        assert "@kirocrew-dashboard" not in granted
+        assert "@ajcrew-dashboard" not in granted
 
     def test_core_grants_are_named_verbs_never_the_whole_server(self, tmp_path, monkeypatch):
         """Both directions of the core narrowing, because only one of them can rot.
 
         The positive half — the 14 verbs the charter needs are granted — passes
-        just as well against the server-wide ``@kirocrew-core`` this replaced, so
+        just as well against the server-wide ``@ajcrew-core`` this replaced, so
         on its own it is vacuous on the thing being changed. The negative half is
         the real assertion: the verbs the charter never names must be DENIED, and
         it is the half a future edit can silently undo by restoring the bare
@@ -239,31 +239,31 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
         together and assert nothing.
         """
         granted = self._install(tmp_path, monkeypatch)["allowedTools"]
-        core = {g for g in granted if g.startswith("@kirocrew-core")}
+        core = {g for g in granted if g.startswith("@ajcrew-core")}
         assert core == {
-            "@kirocrew-core/monitor_start",
-            "@kirocrew-core/monitor_update",
-            "@kirocrew-core/autonudge_stop",
-            "@kirocrew-core/wait",
-            "@kirocrew-core/resource_status",
-            "@kirocrew-core/list_sessions",
-            "@kirocrew-core/session_ledger_read",
-            "@kirocrew-core/session_ledger_record",
-            "@kirocrew-core/skill_search",
-            "@kirocrew-core/skill_fetch",
-            "@kirocrew-core/select_crew",
-            "@kirocrew-core/send_message",
-            "@kirocrew-core/send_notification",
-            "@kirocrew-core/ask_question",
-            "@kirocrew-core/nothing_to_do",
+            "@ajcrew-core/monitor_start",
+            "@ajcrew-core/monitor_update",
+            "@ajcrew-core/autonudge_stop",
+            "@ajcrew-core/wait",
+            "@ajcrew-core/resource_status",
+            "@ajcrew-core/list_sessions",
+            "@ajcrew-core/session_ledger_read",
+            "@ajcrew-core/session_ledger_record",
+            "@ajcrew-core/skill_search",
+            "@ajcrew-core/skill_fetch",
+            "@ajcrew-core/select_crew",
+            "@ajcrew-core/send_message",
+            "@ajcrew-core/send_notification",
+            "@ajcrew-core/ask_question",
+            "@ajcrew-core/nothing_to_do",
             # Granted on purpose: the conductor drops its own chat at a round
             # close. The directive consumer still refuses it from any wake it
             # cannot vouch for (test_conductor_wake_reset.py).
-            "@kirocrew-core/reset_conversation",
+            "@ajcrew-core/reset_conversation",
         }
         # The bare server is what this test exists to keep out: it would re-grant
         # all 74 registered core tools, including every verb named below.
-        assert "@kirocrew-core" not in granted
+        assert "@ajcrew-core" not in granted
         for denied in (
             # Persistent work — the three the prompt PROHIBITS by name.
             "task_run",
@@ -291,14 +291,14 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
             "learn_add",
             "knowledge_add_document",
         ):
-            assert f"@kirocrew-core/{denied}" not in granted, denied
+            assert f"@ajcrew-core/{denied}" not in granted, denied
         # And the projected KAS policy must deny them too, not just the kiro-cli
-        # allowlist: a ``kirocrew-core/*`` pattern here would re-grant every one
+        # allowlist: a ``ajcrew-core/*`` pattern here would re-grant every one
         # of them on the KAS backend while the list above still looked narrow.
         match = self._install(tmp_path, monkeypatch)["permissions"]["rules"][0]["match"]
-        assert "kirocrew-core/*" not in match
+        assert "ajcrew-core/*" not in match
         for denied in ("task_run", "spawn_run", "set_project", "browser", "artifact_save"):
-            assert f"kirocrew-core/{denied}" not in match, denied
+            assert f"ajcrew-core/{denied}" not in match, denied
 
     def test_template_grants_never_leak_into_the_conductor_list(self, tmp_path, monkeypatch):
         """No-op proof: the conductor replaces ``allowedTools``
@@ -311,19 +311,19 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
             agent,
             "build_agent_config",
             lambda: {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "prompt": "file://x",
                 "mcpServers": {
-                    "kirocrew-core": {"command": "/resolved/kirocrew", "args": ["mcp-core"]}
+                    "ajcrew-core": {"command": "/resolved/ajcrew", "args": ["mcp-core"]}
                 },
-                "tools": ["fs_read", "@kirocrew-core"],
+                "tools": ["fs_read", "@ajcrew-core"],
                 # A template list carrying floor builtins — as if the build-time
                 # filter did not exist. None of it may survive the replacement.
-                "allowedTools": ["fs_read", "code", "glob", "grep", "@kirocrew-core"],
+                "allowedTools": ["fs_read", "code", "glob", "grep", "@ajcrew-core"],
             },
         )
         monkeypatch.setattr(
-            agent, "_kirocrew_mcp_invocation", lambda sub: ("/resolved/kirocrew", [sub])
+            agent, "_ajcrew_mcp_invocation", lambda sub: ("/resolved/ajcrew", [sub])
         )
         monkeypatch.setattr(agent, "_may_auto_approve", lambda ref: True)
         agent._install_conductor_agent()
@@ -365,25 +365,25 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
     def test_mcp_surface_is_core_plus_dashboard_plus_work(self, tmp_path, monkeypatch):
         """Exactly three servers, and inherited ones the charter has no use for go.
 
-        ``kirocrew-work`` is one of them now: this spec IS the ledger conductor,
+        ``ajcrew-work`` is one of them now: this spec IS the ledger conductor,
         so the mount is the charter rather than an addition to it. Pinned
         positively AND as an exact set, so a fourth inherited server cannot ride
         in unnoticed.
         """
         data = self._install(tmp_path, monkeypatch)
         assert set(data["mcpServers"]) == {
-            "kirocrew-core",
-            "kirocrew-dashboard",
-            "kirocrew-work",
+            "ajcrew-core",
+            "ajcrew-dashboard",
+            "ajcrew-work",
         }
-        assert data["mcpServers"]["kirocrew-dashboard"]["args"] == ["mcp-dashboard"]
-        assert data["mcpServers"]["kirocrew-work"]["args"] == ["mcp-work"]
+        assert data["mcpServers"]["ajcrew-dashboard"]["args"] == ["mcp-dashboard"]
+        assert data["mcpServers"]["ajcrew-work"]["args"] == ["mcp-work"]
         assert "builder-mcp" not in data["mcpServers"]
         # Never auto-approved at the SERVER level: an autoApproved MCP tool is
         # approved inside kiro-cli and emits no permission request, so
         # ``hooks.on_tool_call`` — the deny floor, the sensitive-path check, the
         # governance ceiling — is never reached for it.
-        assert "autoApprove" not in data["mcpServers"]["kirocrew-work"]
+        assert "autoApprove" not in data["mcpServers"]["ajcrew-work"]
 
     def test_the_work_mount_lands_on_all_four_surfaces(self, tmp_path, monkeypatch):
         """A mount is four separate facts: tools, mcpServers, allowedTools, rules[].match.
@@ -392,23 +392,23 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
         grants nothing there, and every patrol cycle stalls on an unanswered approval.
         """
         data = self._install(tmp_path, monkeypatch)
-        assert "@kirocrew-work" in data["tools"]
-        assert "kirocrew-work" in data["mcpServers"]
-        assert "@kirocrew-work/work_ledger_read" in data["allowedTools"]
-        assert "@kirocrew-work/work_ledger_record" in data["allowedTools"]
-        assert "@kirocrew-work/work_brief" in data["allowedTools"]
+        assert "@ajcrew-work" in data["tools"]
+        assert "ajcrew-work" in data["mcpServers"]
+        assert "@ajcrew-work/work_ledger_read" in data["allowedTools"]
+        assert "@ajcrew-work/work_ledger_record" in data["allowedTools"]
+        assert "@ajcrew-work/work_brief" in data["allowedTools"]
         match = data["permissions"]["rules"][0]["match"]
-        assert "kirocrew-work/work_ledger_read" in match
-        assert "kirocrew-work/work_ledger_record" in match
-        assert "kirocrew-work/work_brief" in match
+        assert "ajcrew-work/work_ledger_read" in match
+        assert "ajcrew-work/work_ledger_record" in match
+        assert "ajcrew-work/work_brief" in match
         # ``work_report``, the grant every worker holds, so a nested conductor's
         # round-boundary report wakes its parent without a prompt, on both backends.
-        assert "@kirocrew-work/work_report" in data["allowedTools"]
-        assert "kirocrew-work/work_report" in match
+        assert "@ajcrew-work/work_report" in data["allowedTools"]
+        assert "ajcrew-work/work_report" in match
         # And never the whole server, which would hand over the worker half by
         # the back door on either backend.
-        assert "@kirocrew-work" not in data["allowedTools"]
-        assert "kirocrew-work/*" not in match
+        assert "@ajcrew-work" not in data["allowedTools"]
+        assert "ajcrew-work/*" not in match
 
     def test_prompt_carries_the_work_ledger_procedure(self, tmp_path, monkeypatch):
         """The charter has to describe the flow the mount makes reachable.
@@ -424,7 +424,7 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
             "work_ledger_record",
             "work_brief",
             "work_report",
-            "@kirocrew-work",
+            "@ajcrew-work",
             "action=create",
             "action=bind",
             "action=verdict",
@@ -581,14 +581,14 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
     def test_prompt_and_skill_name_the_template_dispatch_for_a_shadowed_worker(
         self, tmp_path, monkeypatch
     ):
-        """Where ``kirocrew-worker`` is enrolled as a member with private memory, a
+        """Where ``ajcrew-worker`` is enrolled as a member with private memory, a
         member dispatch is refused ``memory_delegation_denied``. Both texts name
         ``agent_kind: "template"`` for every dispatch and say no setting changes it.
         """
         prompt = " ".join(self._install(tmp_path, monkeypatch)["prompt"].split())
         body = " ".join((SKILL_DIR / "SKILL.md").read_text(encoding="utf-8").split())
         for text in (prompt, body):
-            assert 'Always dispatch `kirocrew-worker` with `agent_kind: "template"`' in text
+            assert 'Always dispatch `ajcrew-worker` with `agent_kind: "template"`' in text
             assert "Re-send" not in text
             assert "memory_delegation_denied" in text
             assert "needs no memory of its own" in text
@@ -630,29 +630,29 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
         """Neither helper contributes by default, so the emitted entry stays minimal.
 
         Pinned explicitly rather than read off the ambient environment: the
-        repo-root conftest pins ``KIROCREW_HOME`` for every test, so the real
+        repo-root conftest pins ``AJCREW_HOME`` for every test, so the real
         ``_managed_mcp_env()`` legitimately returns a pin in-suite.
         """
         monkeypatch.setattr(agent, "_mcp_registry_mode", lambda: False)
         monkeypatch.setattr(agent, "_managed_mcp_env", dict)
-        dash = self._install(tmp_path, monkeypatch)["mcpServers"]["kirocrew-dashboard"]
-        assert dash == {"command": "/resolved/kirocrew", "args": ["mcp-dashboard"]}
+        dash = self._install(tmp_path, monkeypatch)["mcpServers"]["ajcrew-dashboard"]
+        assert dash == {"command": "/resolved/ajcrew", "args": ["mcp-dashboard"]}
 
     def test_dashboard_entry_carries_managed_server_metadata(self, tmp_path, monkeypatch):
         """The hand-built dashboard entry is enriched like every managed server.
 
         Without ``"type": "registry"`` a registry-mode client silently drops the
         entry, so the conductor's session-control tools never launch. Without the
-        ``KIROCREW_HOME`` pin the shim reads the default data home while the
+        ``AJCREW_HOME`` pin the shim reads the default data home while the
         gateway runs under an override, so session control acts on a different
         session store than it reports on.
         """
         monkeypatch.setattr(agent, "_mcp_registry_mode", lambda: True)
-        monkeypatch.setattr(agent, "_managed_mcp_env", lambda: {"KIROCREW_HOME": "/tmp/override"})
+        monkeypatch.setattr(agent, "_managed_mcp_env", lambda: {"AJCREW_HOME": "/tmp/override"})
         data = self._install(tmp_path, monkeypatch)
-        dash = data["mcpServers"]["kirocrew-dashboard"]
+        dash = data["mcpServers"]["ajcrew-dashboard"]
         assert dash["type"] == "registry"
-        assert dash["env"] == {"KIROCREW_HOME": "/tmp/override"}
+        assert dash["env"] == {"AJCREW_HOME": "/tmp/override"}
 
     def test_grants_pass_through_the_governance_ceiling(self, tmp_path, monkeypatch):
         """``allowedTools`` never reaches the PreToolUse gate, so it is filtered.
@@ -664,53 +664,53 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
 
         Governs one core verb rather than the whole server, which is what the
         ceiling now has to be able to reach: after the per-verb narrowing there is
-        no bare ``@kirocrew-core`` entry left for it to have an opinion about.
+        no bare ``@ajcrew-core`` entry left for it to have an opinion about.
         """
         data = self._install(
             tmp_path,
             monkeypatch,
-            may_auto_approve=lambda ref: ref != "@kirocrew-core/monitor_start",
+            may_auto_approve=lambda ref: ref != "@ajcrew-core/monitor_start",
         )
-        assert "@kirocrew-core" in data["tools"]
-        assert "@kirocrew-core" not in data["allowedTools"]
-        assert "@kirocrew-core/monitor_start" not in data["allowedTools"]
+        assert "@ajcrew-core" in data["tools"]
+        assert "@ajcrew-core" not in data["allowedTools"]
+        assert "@ajcrew-core/monitor_start" not in data["allowedTools"]
         # Every sibling grant survives — the ceiling removed one verb, not the set.
-        assert "@kirocrew-core/monitor_update" in data["allowedTools"]
+        assert "@ajcrew-core/monitor_update" in data["allowedTools"]
         assert data["allowedTools"] == [
             "session",
             "report",
             "tool_search",
-            "@kirocrew-core/monitor_update",
-            "@kirocrew-core/autonudge_stop",
-            "@kirocrew-core/wait",
-            "@kirocrew-core/resource_status",
-            "@kirocrew-core/list_sessions",
-            "@kirocrew-core/session_ledger_read",
-            "@kirocrew-core/session_ledger_record",
-            "@kirocrew-core/skill_search",
-            "@kirocrew-core/skill_fetch",
-            "@kirocrew-core/select_crew",
-            "@kirocrew-core/send_message",
-            "@kirocrew-core/send_notification",
-            "@kirocrew-core/ask_question",
-            "@kirocrew-core/nothing_to_do",
-            "@kirocrew-core/reset_conversation",
-            "@kirocrew-dashboard/session_create",
-            "@kirocrew-dashboard/session_read_message",
-            "@kirocrew-dashboard/session_status",
-            "@kirocrew-work/work_ledger_read",
-            "@kirocrew-work/work_ledger_record",
-            "@kirocrew-work/work_ledger_rebuild",
-            "@kirocrew-work/work_brief",
-            "@kirocrew-work/work_report",
-            "@kirocrew-work/accept_eval",
+            "@ajcrew-core/monitor_update",
+            "@ajcrew-core/autonudge_stop",
+            "@ajcrew-core/wait",
+            "@ajcrew-core/resource_status",
+            "@ajcrew-core/list_sessions",
+            "@ajcrew-core/session_ledger_read",
+            "@ajcrew-core/session_ledger_record",
+            "@ajcrew-core/skill_search",
+            "@ajcrew-core/skill_fetch",
+            "@ajcrew-core/select_crew",
+            "@ajcrew-core/send_message",
+            "@ajcrew-core/send_notification",
+            "@ajcrew-core/ask_question",
+            "@ajcrew-core/nothing_to_do",
+            "@ajcrew-core/reset_conversation",
+            "@ajcrew-dashboard/session_create",
+            "@ajcrew-dashboard/session_read_message",
+            "@ajcrew-dashboard/session_status",
+            "@ajcrew-work/work_ledger_read",
+            "@ajcrew-work/work_ledger_record",
+            "@ajcrew-work/work_ledger_rebuild",
+            "@ajcrew-work/work_brief",
+            "@ajcrew-work/work_report",
+            "@ajcrew-work/accept_eval",
         ]
 
     def test_kas_permissions_are_derived_from_the_filtered_grants(self, tmp_path, monkeypatch):
         """The KAS block is derived, not restated — so the ceiling reaches it too.
 
         Ungoverned: the per-tool grants project to EXACT ``server/tool`` resources
-        rather than ``kirocrew-core/*`` / ``kirocrew-dashboard/*`` wildcards, which
+        rather than ``ajcrew-core/*`` / ``ajcrew-dashboard/*`` wildcards, which
         is what makes the narrowing real on the KAS backend as well as on kiro-cli
         — a wildcard here would re-grant the ``task_run`` / ``spawn_run`` and the
         ``session_stop`` / ``session_send`` that ``allowedTools`` deliberately
@@ -719,35 +719,35 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
         literal would have lost.
         """
         core_resources = [
-            "kirocrew-core/ask_question",
-            "kirocrew-core/autonudge_stop",
-            "kirocrew-core/list_sessions",
-            "kirocrew-core/monitor_start",
-            "kirocrew-core/monitor_update",
-            "kirocrew-core/nothing_to_do",
-            "kirocrew-core/reset_conversation",
-            "kirocrew-core/resource_status",
-            "kirocrew-core/select_crew",
-            "kirocrew-core/send_message",
-            "kirocrew-core/send_notification",
-            "kirocrew-core/session_ledger_read",
-            "kirocrew-core/session_ledger_record",
-            "kirocrew-core/skill_fetch",
-            "kirocrew-core/skill_search",
-            "kirocrew-core/wait",
+            "ajcrew-core/ask_question",
+            "ajcrew-core/autonudge_stop",
+            "ajcrew-core/list_sessions",
+            "ajcrew-core/monitor_start",
+            "ajcrew-core/monitor_update",
+            "ajcrew-core/nothing_to_do",
+            "ajcrew-core/reset_conversation",
+            "ajcrew-core/resource_status",
+            "ajcrew-core/select_crew",
+            "ajcrew-core/send_message",
+            "ajcrew-core/send_notification",
+            "ajcrew-core/session_ledger_read",
+            "ajcrew-core/session_ledger_record",
+            "ajcrew-core/skill_fetch",
+            "ajcrew-core/skill_search",
+            "ajcrew-core/wait",
         ]
         dashboard_resources = [
-            "kirocrew-dashboard/session_create",
-            "kirocrew-dashboard/session_read_message",
-            "kirocrew-dashboard/session_status",
+            "ajcrew-dashboard/session_create",
+            "ajcrew-dashboard/session_read_message",
+            "ajcrew-dashboard/session_status",
         ]
         work_resources = [
-            "kirocrew-work/accept_eval",
-            "kirocrew-work/work_brief",
-            "kirocrew-work/work_ledger_read",
-            "kirocrew-work/work_ledger_rebuild",
-            "kirocrew-work/work_ledger_record",
-            "kirocrew-work/work_report",
+            "ajcrew-work/accept_eval",
+            "ajcrew-work/work_brief",
+            "ajcrew-work/work_ledger_read",
+            "ajcrew-work/work_ledger_rebuild",
+            "ajcrew-work/work_ledger_record",
+            "ajcrew-work/work_report",
         ]
         data = self._install(tmp_path, monkeypatch)
         assert data["permissions"] == {
@@ -759,24 +759,24 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
                 }
             ]
         }
-        assert "kirocrew-core/*" not in data["permissions"]["rules"][0]["match"]
-        assert "kirocrew-dashboard/*" not in data["permissions"]["rules"][0]["match"]
-        # The work server is narrowed the same way: a ``kirocrew-work/*`` wildcard
+        assert "ajcrew-core/*" not in data["permissions"]["rules"][0]["match"]
+        assert "ajcrew-dashboard/*" not in data["permissions"]["rules"][0]["match"]
+        # The work server is narrowed the same way: a ``ajcrew-work/*`` wildcard
         # would grant verbs the tuple does not name, on the backend where nobody
         # reads ``allowedTools``.
-        assert "kirocrew-work/*" not in data["permissions"]["rules"][0]["match"]
+        assert "ajcrew-work/*" not in data["permissions"]["rules"][0]["match"]
 
         governed = self._install(
             tmp_path,
             monkeypatch,
-            may_auto_approve=lambda ref: ref != "@kirocrew-core/monitor_start",
+            may_auto_approve=lambda ref: ref != "@ajcrew-core/monitor_start",
         )
         assert governed["permissions"] == {
             "rules": [
                 {
                     "capability": "mcp",
                     "match": [
-                        *(r for r in core_resources if r != "kirocrew-core/monitor_start"),
+                        *(r for r in core_resources if r != "ajcrew-core/monitor_start"),
                         *dashboard_resources,
                         *work_resources,
                     ],
@@ -829,7 +829,7 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
 
         The withheld ref must be named in the record, which after the per-verb
         narrowing means the VERB and not just the server — an operator reading
-        "@kirocrew-core was withheld" could not tell which of 14 grants he lost.
+        "@ajcrew-core was withheld" could not tell which of 14 grants he lost.
         """
         calls: list[dict] = []
 
@@ -839,11 +839,11 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
 
         monkeypatch.setattr(agent, "sel", lambda: _Recorder())
         self._install(
-            tmp_path, monkeypatch, may_auto_approve=lambda ref: ref != "@kirocrew-core/select_crew"
+            tmp_path, monkeypatch, may_auto_approve=lambda ref: ref != "@ajcrew-core/select_crew"
         )
         withheld = [c for c in calls if c.get("operation") == "mcp_auto_approve_withheld"]
         assert len(withheld) == 1
-        assert "@kirocrew-core/select_crew" in withheld[0]["resources"]
+        assert "@ajcrew-core/select_crew" in withheld[0]["resources"]
         assert withheld[0]["source"] == "_install_conductor_agent"
 
     def test_no_audit_event_when_nothing_is_withheld(self, tmp_path, monkeypatch):
@@ -867,37 +867,37 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
 
         monkeypatch.setattr(agent, "sel", lambda: _Broken())
         data = self._install(
-            tmp_path, monkeypatch, may_auto_approve=lambda ref: ref != "@kirocrew-core/select_crew"
+            tmp_path, monkeypatch, may_auto_approve=lambda ref: ref != "@ajcrew-core/select_crew"
         )
-        assert "@kirocrew-core/select_crew" not in data["allowedTools"]
+        assert "@ajcrew-core/select_crew" not in data["allowedTools"]
         assert data["allowedTools"] == [
             "session",
             "report",
             "tool_search",
-            "@kirocrew-core/monitor_start",
-            "@kirocrew-core/monitor_update",
-            "@kirocrew-core/autonudge_stop",
-            "@kirocrew-core/wait",
-            "@kirocrew-core/resource_status",
-            "@kirocrew-core/list_sessions",
-            "@kirocrew-core/session_ledger_read",
-            "@kirocrew-core/session_ledger_record",
-            "@kirocrew-core/skill_search",
-            "@kirocrew-core/skill_fetch",
-            "@kirocrew-core/send_message",
-            "@kirocrew-core/send_notification",
-            "@kirocrew-core/ask_question",
-            "@kirocrew-core/nothing_to_do",
-            "@kirocrew-core/reset_conversation",
-            "@kirocrew-dashboard/session_create",
-            "@kirocrew-dashboard/session_read_message",
-            "@kirocrew-dashboard/session_status",
-            "@kirocrew-work/work_ledger_read",
-            "@kirocrew-work/work_ledger_record",
-            "@kirocrew-work/work_ledger_rebuild",
-            "@kirocrew-work/work_brief",
-            "@kirocrew-work/work_report",
-            "@kirocrew-work/accept_eval",
+            "@ajcrew-core/monitor_start",
+            "@ajcrew-core/monitor_update",
+            "@ajcrew-core/autonudge_stop",
+            "@ajcrew-core/wait",
+            "@ajcrew-core/resource_status",
+            "@ajcrew-core/list_sessions",
+            "@ajcrew-core/session_ledger_read",
+            "@ajcrew-core/session_ledger_record",
+            "@ajcrew-core/skill_search",
+            "@ajcrew-core/skill_fetch",
+            "@ajcrew-core/send_message",
+            "@ajcrew-core/send_notification",
+            "@ajcrew-core/ask_question",
+            "@ajcrew-core/nothing_to_do",
+            "@ajcrew-core/reset_conversation",
+            "@ajcrew-dashboard/session_create",
+            "@ajcrew-dashboard/session_read_message",
+            "@ajcrew-dashboard/session_status",
+            "@ajcrew-work/work_ledger_read",
+            "@ajcrew-work/work_ledger_record",
+            "@ajcrew-work/work_ledger_rebuild",
+            "@ajcrew-work/work_brief",
+            "@ajcrew-work/work_report",
+            "@ajcrew-work/accept_eval",
         ]
 
     def test_skill_gates_the_plan_once_instead_of_interrogating(self):
@@ -944,7 +944,7 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
         # the skill has to keep naming it for that.
         assert "session_ledger_record" in text
 
-    def test_spec_is_registered_as_kirocrew_owned(self):
+    def test_spec_is_registered_as_ajcrew_owned(self):
         """Every managed spec registers in ``OWNED_KIRO_AGENT_FILES``.
 
         Three consumers key off that tuple (the Playwright convergence sweep,
@@ -958,7 +958,7 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
         """The packaged skill must NOT be named ``conductor``.
 
         ``<skills>/conductor/SKILL.md`` was the delegation skill the retired
-        ``agent.conductor_skill`` flag generated, and ``kirocrew setup`` still
+        ``agent.conductor_skill`` flag generated, and ``ajcrew setup`` still
         removes a file there whose bytes it wrote on old installs. A packaged
         skill sharing the name would be erased on an upgraded install.
         """
@@ -986,7 +986,7 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
 
     def test_conductor_prompts_give_no_folder_guidance(self):
         """No dispatcher system prompt names a folder verb or a folder path."""
-        from kiro_crew.agent_parts import spec_prompts
+        from aj_crew.agent_parts import spec_prompts
 
         for name in (
             "_CONDUCTOR_SYSTEM_PROMPT",
@@ -999,18 +999,18 @@ class TestConductorInstaller(conductor_agent_checks.PromptDoesNotCarryTheRetired
             assert "<goal folder>" not in prompt and "<audit>/<agent>" not in prompt, name
 
     def test_pr_checks_seed_may_name_the_prepare_pr_skill_by_path(self):
-        """A ``pr_checks`` seed can point the worker at kirocrew-prepare-pr's SKILL.md.
+        """A ``pr_checks`` seed can point the worker at ajcrew-prepare-pr's SKILL.md.
 
-        ``kirocrew-worker`` gets no per-message trigger matching (``build_message`` gates
+        ``ajcrew-worker`` gets no per-message trigger matching (``build_message`` gates
         it on ``not is_custom``), so however a seed is worded nothing auto-loads
-        ``kirocrew-prepare-pr`` in the worker session. The conductor naming the file is
+        ``ajcrew-prepare-pr`` in the worker session. The conductor naming the file is
         what makes the worker follow it. Pinned as an OPTIONAL hint, not a mandate: a user
-        who does not want kirocrew-prepare-pr must not have it forced on every worker.
+        who does not want ajcrew-prepare-pr must not have it forced on every worker.
         """
         text = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
         dispatch = text.split("### Dispatch a round")[1].split("### Patrol")[0]
         flat = " ".join(dispatch.split())
-        assert "`<crew-home>/skills/kirocrew-dev/kirocrew-prepare-pr/SKILL.md`" in flat
+        assert "`<crew-home>/skills/ajcrew-dev/ajcrew-prepare-pr/SKILL.md`" in flat
         assert "may name the PR procedure" in flat
         # Optional, by design.
         assert "Optional" in flat
@@ -1046,7 +1046,7 @@ class TestAcceptEvaluatorInvariant:
     """No model-authored argv may reach subprocess.
 
     Constraining a spec-supplied argv (allowlist, basename check) never closes
-    the class, because the script runs as an approved wrapper and Kiro Crew's
+    the class, because the script runs as an approved wrapper and Aj Crew's
     denied-command floor cannot see the argv it receives on stdin. So the
     evaluator accepts no argv at all.
     """
@@ -1102,7 +1102,7 @@ class TestAcceptEvaluatorInvariant:
         verdict, evidence = mod._run(["git", "--version"])
         assert verdict == "refused"
         assert "not a command this script builds" in evidence
-        assert mod._SELF_BUILT_COMMANDS == {"gh", "kirocrew"}
+        assert mod._SELF_BUILT_COMMANDS == {"gh", "ajcrew"}
 
     def test_the_draft_probe_refuses_a_command_it_did_not_build(self):
         """Same guard, reached through the probe's own seam."""

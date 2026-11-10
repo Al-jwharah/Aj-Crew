@@ -2,7 +2,7 @@
 
 Lives in the repo-level ``test/`` tree (not the app's in-package ``tests/``)
 because ``setup.cfg`` sets ``testpaths = test transfer`` — a test under
-``src/kiro_crew/apps/builtins/...`` is never collected by CI.
+``src/aj_crew/apps/builtins/...`` is never collected by CI.
 
 Every dispatch goes through the fake session manager from ``meetings_helpers`` —
 no test spawns a process or opens a socket.
@@ -23,13 +23,13 @@ from meetings_helpers import (  # noqa: F401
     root_fixture,
 )
 
-from kiro_crew import llm_helpers
-from kiro_crew.apps import agent_turn_sdk
-from kiro_crew.apps.builtins.meetings.backend import constants as k
-from kiro_crew.apps.builtins.meetings.backend import store
-from kiro_crew.apps.builtins.meetings.backend.domain import session as sess
-from kiro_crew.apps.builtins.meetings.backend.domain.translate import TranslationQueue
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import llm_helpers
+from aj_crew.apps import agent_turn_sdk
+from aj_crew.apps.builtins.meetings.backend import constants as k
+from aj_crew.apps.builtins.meetings.backend import store
+from aj_crew.apps.builtins.meetings.backend.domain import session as sess
+from aj_crew.apps.builtins.meetings.backend.domain.translate import TranslationQueue
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 async def _finished(coro, what: str, *, timeout: float | None = None):

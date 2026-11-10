@@ -11,14 +11,14 @@ import os
 
 import pytest
 
-from kiro_crew import history as history_mod
-from kiro_crew.cron_service.run_residue import (
+from aj_crew import history as history_mod
+from aj_crew.cron_service.run_residue import (
     RUN_TRANSCRIPT_KEEP_PER_JOB,
     RUN_TRANSCRIPT_PRUNE_CAP,
     RUN_TRANSCRIPT_TTL_SECS,
     prune_stale_run_transcripts,
 )
-from kiro_crew.history import ConversationLog
+from aj_crew.history import ConversationLog
 
 JOB = "abcd1234"
 NOW = 1_800_000_000.0
@@ -150,8 +150,8 @@ def test_the_reaper_reports_a_backlog_only_when_a_pass_fills_its_cap(
 ) -> None:
     import asyncio
 
-    from kiro_crew.cron_service import run_residue
-    from kiro_crew.cron_service.service import run_teardown
+    from aj_crew.cron_service import run_residue
+    from aj_crew.cron_service.service import run_teardown
 
     monkeypatch.setattr(run_residue, "prune_stale_run_transcripts", lambda **_kw: removed)
     assert asyncio.run(run_teardown._prune_run_residue(_Service(), NOW)) is backlog
@@ -160,8 +160,8 @@ def test_the_reaper_reports_a_backlog_only_when_a_pass_fills_its_cap(
 def test_the_reaper_reports_no_backlog_when_a_pass_raises(monkeypatch) -> None:
     import asyncio
 
-    from kiro_crew.cron_service import run_residue
-    from kiro_crew.cron_service.service import run_teardown
+    from aj_crew.cron_service import run_residue
+    from aj_crew.cron_service.service import run_teardown
 
     def boom(**_kw):
         raise OSError("disk")

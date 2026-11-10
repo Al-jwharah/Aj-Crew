@@ -23,10 +23,10 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.computer_use import windows_driver
-from kiro_crew.computer_use.backend import ComputerUseBackend, select_default_backend
-from kiro_crew.computer_use.types import (
+from aj_crew import platform_compat
+from aj_crew.computer_use import windows_driver
+from aj_crew.computer_use.backend import ComputerUseBackend, select_default_backend
+from aj_crew.computer_use.types import (
     CLICK_METHOD_GLOBAL,
     PERMISSION_GRANTED,
     PERMISSION_UNSUPPORTED,
@@ -39,7 +39,7 @@ from kiro_crew.computer_use.types import (
     Snapshot,
     SnapshotRequest,
 )
-from kiro_crew.computer_use.windows_driver import WindowsBackend
+from aj_crew.computer_use.windows_driver import WindowsBackend
 
 _APP = AppRef(
     name="explorer", pid=1234, bundle_id="explorer.exe", window_id=0x1234, window_title="Documents"

@@ -13,8 +13,8 @@ import threading
 import pytest
 from test_dashboard_save_tool import SLUG, _client, _flip, _instance, _package_body, _save
 
-from kiro_crew.artifact_store.dashboard_package import DASHBOARD_KIND
-from kiro_crew.dashboard.handlers import agent_panel as routes
+from aj_crew.artifact_store.dashboard_package import DASHBOARD_KIND
+from aj_crew.dashboard.handlers import agent_panel as routes
 
 
 def test_the_write_check_refuses_a_package_replaced_between_its_two_reads(monkeypatch, tmp_path):
@@ -23,9 +23,9 @@ def test_the_write_check_refuses_a_package_replaced_between_its_two_reads(monkey
     the write check names no Model rather than checking a write against that one."""
     import dataclasses
 
-    from kiro_crew import artifacts
-    from kiro_crew import dashboard_package as reader
-    from kiro_crew.artifacts import ArtifactStore
+    from aj_crew import artifacts
+    from aj_crew import dashboard_package as reader
+    from aj_crew.artifacts import ArtifactStore
 
     real = ArtifactStore(tmp_path / "artifacts")
     monkeypatch.setattr(artifacts, "get_default_store", lambda: real)
@@ -61,8 +61,8 @@ async def test_two_first_saves_at_once_bind_one_package(monkeypatch, tmp_path):
     Without the save lock both find no package and both create one, so the binding is
     ambiguous and every later save and apply is refused until a person deletes one.
     """
-    from kiro_crew import artifacts, dashboard_agentic
-    from kiro_crew.artifacts import ArtifactStore
+    from aj_crew import artifacts, dashboard_agentic
+    from aj_crew.artifacts import ArtifactStore
 
     real = ArtifactStore(tmp_path / "artifacts")
     monkeypatch.setattr(artifacts, "get_default_store", lambda: real)
@@ -105,16 +105,16 @@ async def test_a_save_without_an_apply_leaves_an_older_crewmate_on_its_template(
     check must all still name the template page -- not a blank tab, and not a page the
     person cannot see.
     """
-    from kiro_crew import artifacts, dashboard_agentic
-    from kiro_crew import dashboard_package as reader
-    from kiro_crew.artifacts import ArtifactStore
+    from aj_crew import artifacts, dashboard_agentic
+    from aj_crew import dashboard_package as reader
+    from aj_crew.artifacts import ArtifactStore
 
     instance_store = _instance()
     real = ArtifactStore(tmp_path / "artifacts")
     monkeypatch.setattr(artifacts, "get_default_store", lambda: real)
     monkeypatch.setattr(routes, "_dashboard_artifact_store", lambda: real)
     # The turn block also syncs the page's helper scripts; that is not under test here.
-    from kiro_crew import dashboard_upkeep
+    from aj_crew import dashboard_upkeep
 
     monkeypatch.setattr(dashboard_upkeep, "sync", lambda *_a, **_k: None)
     if adopted:

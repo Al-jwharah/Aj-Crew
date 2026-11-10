@@ -15,8 +15,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-import kiro_crew
-from kiro_crew.apps.manifest import (
+import aj_crew
+from aj_crew.apps.manifest import (
     CORE_APP_ROUTE_SEGMENTS,
     RESERVED_APP_PATH_SEGMENTS,
     AppManifest,
@@ -356,7 +356,7 @@ def test_reserved_app_names_never_own_their_api_apps_path():
 
 def test_reserved_segment_mirrors_agree_across_python_and_the_frontend():
     """Two copies of one control drift apart invisibly, so pin them to each other."""
-    root = Path(kiro_crew.__file__).resolve().parent.parent.parent
+    root = Path(aj_crew.__file__).resolve().parent.parent.parent
     src = (root / "website" / "src" / "apps" / "coreAppRoutes.ts").read_text(encoding="utf-8")
     block = src[src.index("RESERVED_APP_PATH_SEGMENTS = new Set([") :]
     block = block[: block.index("])")]
@@ -414,7 +414,7 @@ def test_proxy_namespace_is_opt_in_per_caller():
 
 def test_publish_provider_registry_does_not_admit_the_proxy_namespace():
     """Pinned at the CALL, because the default is what protects that surface."""
-    src = (Path(kiro_crew.__file__).parent / "apps" / "routes_listing.py").read_text(
+    src = (Path(aj_crew.__file__).parent / "apps" / "routes_listing.py").read_text(
         encoding="utf-8"
     )
     call = src[src.index("if not app_endpoint_allowed(app_name, endpoint)") :][:120]
@@ -445,7 +445,7 @@ def test_core_route_segments_covers_every_core_route_in_the_app_namespace():
     ``/api/apps/{name}/status`` is a template line emitted into a GENERATED app's own
     backend rather than a route core serves.
     """
-    root = Path(kiro_crew.__file__).resolve().parent
+    root = Path(aj_crew.__file__).resolve().parent
     pattern = re.compile(r"/api/apps/\{(?:name|app|app_name)\}/([a-z_][a-z0-9_-]*)")
     registered: dict[str, set[str]] = {}
     for path in sorted(root.rglob("*.py")):

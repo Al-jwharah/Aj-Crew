@@ -2,7 +2,7 @@
 /**
  * Every built-in dashboard template speaks the reader's UI language.
  *
- * The gateway puts the reader's checked locale on `window.kirocrew.locale`. Each
+ * The gateway puts the reader's checked locale on `window.ajcrew.locale`. Each
  * template carries its own small string table per language and picks by it, with
  * English for any key a language lacks and for any locale it has no table for.
  * What is checked here is the page's real script in a real DOM, the way
@@ -15,7 +15,7 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-const BUILTIN = resolve(__dirname, '../../../src/kiro_crew/dashboard_templates/builtin')
+const BUILTIN = resolve(__dirname, '../../../src/aj_crew/dashboard_templates/builtin')
 const IDS = readdirSync(BUILTIN, { withFileTypes: true })
   .filter((d) => d.isDirectory())
   .map((d) => d.name)
@@ -43,7 +43,7 @@ function decoded(id: string) {
  * the locale shows the English one under zh-CN and fails here.
  */
 const PROBES: Record<string, { en: string; zh: string }> = {
-  'kirocrew-conductor': { en: 'No tasks on this board yet.', zh: '\u770b\u677f\u4e0a\u8fd8\u6ca1\u6709\u4efb\u52a1\u3002' },
+  'ajcrew-conductor': { en: 'No tasks on this board yet.', zh: '\u770b\u677f\u4e0a\u8fd8\u6ca1\u6709\u4efb\u52a1\u3002' },
   'goal-board': { en: 'No item on this board yet.', zh: '\u770b\u677f\u4e0a\u8fd8\u6ca1\u6709\u4efb\u4f55\u4e8b\u9879\u3002' },
   'project-report': {
     en: 'No workstream yet. Nothing needs you, and nothing has been spent.',
@@ -95,7 +95,7 @@ function halves(id: string) {
 
 function mount(id: string, locale: string | undefined) {
   const { scripts, body } = halves(id)
-  ;(window as unknown as { kirocrew: unknown }).kirocrew = {
+  ;(window as unknown as { ajcrew: unknown }).ajcrew = {
     fields: {},
     agentic: [],
     seq: 1,

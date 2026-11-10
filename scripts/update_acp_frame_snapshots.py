@@ -26,18 +26,18 @@ import sys
 from pathlib import Path
 
 # Replay is offline, but the parsers it drives are the production ones, and
-# ``_dispatch`` records a ``kirocrew.tool.call.duration`` sample for every
+# ``_dispatch`` records a ``ajcrew.tool.call.duration`` sample for every
 # ``tool_call`` -> terminal ``tool_call_update`` pair it sees. Under pytest the
-# root conftest pins ``KIROCREW_TELEMETRY=0`` for the same reason; this script
+# root conftest pins ``AJCREW_TELEMETRY=0`` for the same reason; this script
 # runs outside pytest, so on a host with telemetry enabled the fixtures' tool
 # calls would land in the real histogram as sub-millisecond samples. The pin is
-# set before any ``kiro_crew`` import because ``metrics.provider`` resolves
+# set before any ``aj_crew`` import because ``metrics.provider`` resolves
 # consent on its first build and the env var outranks the config flag.
-os.environ["KIROCREW_TELEMETRY"] = "0"
+os.environ["AJCREW_TELEMETRY"] = "0"
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 # The harness lives under test/ (not src/) so that importing
-# kiro_crew.acp._dispatch does not add an edge to the agent-sdk boundary
+# aj_crew.acp._dispatch does not add an edge to the agent-sdk boundary
 # baseline. Both this script and the test import it from there.
 sys.path.insert(0, str(REPO_ROOT / "test"))
 sys.path.insert(0, str(REPO_ROOT / "src"))

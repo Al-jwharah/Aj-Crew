@@ -28,10 +28,10 @@ from meetings_helpers import (  # noqa: F401
 )
 from meetings_routes_helpers import BASE, _start, _start_and_get_session
 
-from kiro_crew.apps.builtins.meetings.backend import constants as k
-from kiro_crew.apps.builtins.meetings.backend import store
-from kiro_crew.apps.builtins.meetings.backend.routes import _common
-from kiro_crew.testing.wait import await_until
+from aj_crew.apps.builtins.meetings.backend import constants as k
+from aj_crew.apps.builtins.meetings.backend import store
+from aj_crew.apps.builtins.meetings.backend.routes import _common
+from aj_crew.testing.wait import await_until
 
 
 class TestMeetingLifecycleRoutes:
@@ -396,7 +396,7 @@ class TestMeetingLifecycleRoutes:
 
     @pytest.mark.asyncio
     async def test_delete_waits_for_in_flight_initialization(self, app, root: Path, monkeypatch):
-        from kiro_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle
+        from aj_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle
 
         class ObservedLock:
             def __init__(self):
@@ -442,7 +442,7 @@ class TestMeetingLifecycleRoutes:
 
     @pytest.mark.asyncio
     async def test_delete_waits_for_in_flight_agent_toggle(self, app, root: Path, monkeypatch):
-        from kiro_crew.apps.builtins.meetings.backend.routes import agents, meeting_lifecycle
+        from aj_crew.apps.builtins.meetings.backend.routes import agents, meeting_lifecycle
 
         class ObservedLock:
             def __init__(self):
@@ -496,7 +496,7 @@ class TestMeetingLifecycleRoutes:
     async def test_task_mutation_cannot_resurrect_a_deleted_meeting(
         self, app, root: Path, monkeypatch
     ):
-        from kiro_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
+        from aj_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
 
         async with client_for(app) as client:
             await client.post(f"{BASE}/meetings/standup/init", json={"title": "Standup"})
@@ -637,7 +637,7 @@ class TestMeetingLifecycleRoutes:
         poll; `"labels": "urgent"` is iterable and would smear into six junk labels.
         A truthiness check catches neither; the type check catches both.
         """
-        from kiro_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
+        from aj_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
 
         out = task_routes._normalize_task({"description": "d", "labels": labels})
         assert out is not None
@@ -646,7 +646,7 @@ class TestMeetingLifecycleRoutes:
 
 class TestActiveMeetingHolder:
     def test_set_cancels_the_previous_session(self, root: Path):
-        from kiro_crew.apps.builtins.meetings.backend.domain import session as sess
+        from aj_crew.apps.builtins.meetings.backend.domain import session as sess
 
         first = sess.MeetingSession(meeting_id="a", config=store.read_config(root))
         second = sess.MeetingSession(meeting_id="b", config=store.read_config(root))
@@ -657,7 +657,7 @@ class TestActiveMeetingHolder:
         assert _common.ACTIVE.get("b") is second
 
     def test_clear_returns_the_previous(self, root: Path):
-        from kiro_crew.apps.builtins.meetings.backend.domain import session as sess
+        from aj_crew.apps.builtins.meetings.backend.domain import session as sess
 
         session = sess.MeetingSession(meeting_id="a", config=store.read_config(root))
         _common.ACTIVE.set(session)
@@ -729,7 +729,7 @@ class TestOutputsPollIsRedactedAndOffLoop:
         """A blocking read on the loop is the defect; pin the offload."""
         import inspect
 
-        from kiro_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle as ml
+        from aj_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle as ml
 
         src = inspect.getsource(ml.handle_get_outputs)
         assert "asyncio.to_thread" in src, "the poll must not read on the event loop"
@@ -739,7 +739,7 @@ class TestOutputsPollIsRedactedAndOffLoop:
     def test_the_collector_redacts_both_halves(self):
         import inspect
 
-        from kiro_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle as ml
+        from aj_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle as ml
 
         src = inspect.getsource(ml._collect_outputs)
         assert "redact(" in src, "agent outputs must be redacted"
@@ -759,7 +759,7 @@ class TestTeardownDrainsBeforeClearing:
 
     @pytest.mark.asyncio
     async def test_drain_and_clear_flushes_first(self, root: Path) -> None:
-        from kiro_crew.apps.builtins.meetings.backend.routes import _common
+        from aj_crew.apps.builtins.meetings.backend.routes import _common
 
         flushed: list[str] = []
 
@@ -785,7 +785,7 @@ class TestTeardownDrainsBeforeClearing:
     @pytest.mark.asyncio
     async def test_a_failed_flush_still_tears_down(self, root: Path) -> None:
         """A stuck agent must not wedge shutdown — the session goes away regardless."""
-        from kiro_crew.apps.builtins.meetings.backend.routes import _common
+        from aj_crew.apps.builtins.meetings.backend.routes import _common
 
         class _BrokenSession:
             meeting_id = "m2"
@@ -811,7 +811,7 @@ class TestTeardownDrainsBeforeClearing:
         import ast
         import inspect
 
-        from kiro_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle
+        from aj_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle
 
         tree = ast.parse(inspect.getsource(meeting_lifecycle))
         for fn in [n for n in ast.walk(tree) if isinstance(n, ast.AsyncFunctionDef)]:
@@ -829,8 +829,8 @@ class TestTeardownDrainsBeforeClearing:
         it is logged with the count rather than vanishing."""
         import logging
 
-        from kiro_crew.apps.builtins.meetings.backend.domain import session as sess
-        from kiro_crew.apps.builtins.meetings.backend.routes import _common
+        from aj_crew.apps.builtins.meetings.backend.domain import session as sess
+        from aj_crew.apps.builtins.meetings.backend.routes import _common
 
         class _Session:
             meeting_id = "stale"
@@ -845,7 +845,7 @@ class TestTeardownDrainsBeforeClearing:
 
         active = _common._ActiveMeeting()
         active.set(_Session())  # type: ignore[arg-type]
-        with caplog.at_level(logging.WARNING, logger="kirocrew.app.meetings"):
+        with caplog.at_level(logging.WARNING, logger="ajcrew.app.meetings"):
             active.set(None)
         assert "1 queued line(s)" in caplog.text
         assert "drain_and_clear" in caplog.text
@@ -858,14 +858,14 @@ class TestTeardownDrainsBeforeClearing:
         import importlib
         import inspect
 
-        from kiro_crew.apps.builtins.meetings.backend.routes import (
+        from aj_crew.apps.builtins.meetings.backend.routes import (
             agents,
             meeting_lifecycle,
         )
 
         # `from ... import __init__` binds the dunder attribute, not the package —
         # import the package itself so `inspect.getsource` gets a module.
-        routes_init = importlib.import_module("kiro_crew.apps.builtins.meetings.backend.routes")
+        routes_init = importlib.import_module("aj_crew.apps.builtins.meetings.backend.routes")
 
         offenders: list[str] = []
         for module in (routes_init, agents, meeting_lifecycle):
@@ -902,7 +902,7 @@ class TestConcurrentStartsAreSerialized:
         import ast
         import inspect
 
-        from kiro_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle
+        from aj_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle
 
         tree = ast.parse(inspect.getsource(meeting_lifecycle))
         starts = [
@@ -949,7 +949,7 @@ class TestTeardownLeavesNoMeetingFalselyActive:
     async def test_gateway_shutdown_marks_the_live_meeting_ended(
         self, app: web.Application, root: Path
     ) -> None:
-        from kiro_crew.apps.builtins.meetings.backend import routes as routes_pkg
+        from aj_crew.apps.builtins.meetings.backend import routes as routes_pkg
 
         async with client_for(app) as client:
             await _start(client, "shutdown-me")
@@ -972,7 +972,7 @@ class TestTeardownLeavesNoMeetingFalselyActive:
         paused meeting from an earlier run must keep its status, or a restart would
         silently end everything in the user's history.
         """
-        from kiro_crew.apps.builtins.meetings.backend import routes as routes_pkg
+        from aj_crew.apps.builtins.meetings.backend import routes as routes_pkg
 
         async with client_for(app) as client:
             await client.post(f"{BASE}/meetings/never-started/init", json={"title": "Later"})
@@ -985,7 +985,7 @@ class TestTeardownLeavesNoMeetingFalselyActive:
     ) -> None:
         """Order matters: the flush is what saves the queued transcript, and it can
         only run while the session still exists."""
-        from kiro_crew.apps.builtins.meetings.backend import routes as routes_pkg
+        from aj_crew.apps.builtins.meetings.backend import routes as routes_pkg
 
         order: list[str] = []
 
@@ -1045,12 +1045,12 @@ class TestTeardownLeavesNoMeetingFalselyActive:
         import importlib
         import inspect
 
-        from kiro_crew.apps.builtins.meetings.backend.routes import agents as agents_routes
-        from kiro_crew.apps.builtins.meetings.backend.routes import (
+        from aj_crew.apps.builtins.meetings.backend.routes import agents as agents_routes
+        from aj_crew.apps.builtins.meetings.backend.routes import (
             meeting_lifecycle,
         )
 
-        routes_init = importlib.import_module("kiro_crew.apps.builtins.meetings.backend.routes")
+        routes_init = importlib.import_module("aj_crew.apps.builtins.meetings.backend.routes")
 
         offenders: list[str] = []
         for module in (routes_init, agents_routes, meeting_lifecycle):
@@ -1118,7 +1118,7 @@ class TestTeardownLeavesNoMeetingFalselyActive:
         Startup is a sound place to repair it: `ACTIVE` is empty by construction in a
         fresh process, so any non-terminal status on disk is provably orphaned.
         """
-        from kiro_crew.apps.builtins.meetings.backend import routes as routes_pkg
+        from aj_crew.apps.builtins.meetings.backend import routes as routes_pkg
 
         # Three meetings a killed process could have left behind, one per
         # non-terminal status, written directly to stand in for "no cleanup ran".
@@ -1144,7 +1144,7 @@ class TestTeardownLeavesNoMeetingFalselyActive:
         """`idle` is not orphaned — a meeting can sit initialized-but-never-started
         across any number of restarts, and ending those would mark every meeting the
         user ever opened as finished. Same for one already `ended`."""
-        from kiro_crew.apps.builtins.meetings.backend import routes as routes_pkg
+        from aj_crew.apps.builtins.meetings.backend import routes as routes_pkg
 
         store.write_meeting_meta("fresh", store.new_meeting_meta("fresh", "Fresh"), root)
         ended = store.new_meeting_meta("done", "Done")
@@ -1176,7 +1176,7 @@ class TestStartAndStopAreSerialized:
         import ast
         import inspect
 
-        from kiro_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle
+        from aj_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle
 
         tree = ast.parse(inspect.getsource(meeting_lifecycle))
         start = next(
@@ -1201,7 +1201,7 @@ class TestStartAndStopAreSerialized:
         import ast
         import inspect
 
-        from kiro_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle
+        from aj_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle
 
         tree = ast.parse(inspect.getsource(meeting_lifecycle))
         stop = next(
@@ -1261,7 +1261,7 @@ class TestATeardownNeverClearsAReplacement:
     async def test_a_session_installed_during_the_flush_survives(self, root: Path) -> None:
         import asyncio
 
-        from kiro_crew.apps.builtins.meetings.backend.routes import _common
+        from aj_crew.apps.builtins.meetings.backend.routes import _common
 
         active = _common._ActiveMeeting()
         release = asyncio.Event()
@@ -1300,7 +1300,7 @@ class TestATeardownNeverClearsAReplacement:
     @pytest.mark.asyncio
     async def test_the_ordinary_teardown_still_clears(self, root: Path) -> None:
         """With no replacement, the session is dropped exactly as before."""
-        from kiro_crew.apps.builtins.meetings.backend.routes import _common
+        from aj_crew.apps.builtins.meetings.backend.routes import _common
 
         class _Session:
             meeting_id = "solo"

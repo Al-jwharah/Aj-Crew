@@ -30,7 +30,7 @@ describe('splitDirectUrls', () => {
 describe('buildInviteMessage', () => {
   it('a link invite carries its URL, then the IPv4 link, then MagicDNS', () => {
     expect(buildInviteMessage({ owner: 'Mac Studio', urls: [V4, NAME, V6], inviteUrl: 'https://login.tailscale.com/uinv/x' }).split('\n')).toEqual([
-      'Mac Studio invited you to Kiro Crew.',
+      'Mac Studio invited you to Aj Crew.',
       '1. Accept the Tailscale share: https://login.tailscale.com/uinv/x',
       `2. Open Crew: ${V4}`,
       '',

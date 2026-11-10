@@ -8,8 +8,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps.builtins.mochi import watchlist_file as wf
-from kiro_crew.apps.builtins.mochi.watchlist_service import (
+from aj_crew.apps.builtins.mochi import watchlist_file as wf
+from aj_crew.apps.builtins.mochi.watchlist_service import (
     _ARCHIVE_FILE,
     _WATCHLIST_FILE,
     MAX_SPAWN_FAILURES,

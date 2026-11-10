@@ -23,7 +23,7 @@ function snapshotStore() {
 
 function spawn(store: ReturnType<typeof createTestStore>) {
   const SLOT = store.getState().chat.activeSlot
-  store.dispatch(sseSubagentSpawn({ slot: SLOT, id: ID, task: 'do a thing', agent: 'kirocrew' }))
+  store.dispatch(sseSubagentSpawn({ slot: SLOT, id: ID, task: 'do a thing', agent: 'ajcrew' }))
   return SLOT
 }
 const sub = (store: ReturnType<typeof createTestStore>) => store.getState().chat.subagents[ID]
@@ -80,7 +80,7 @@ describe('subagent progress reducers', () => {
   // wording that was only ever meant for a gateway too old to send the field.
 
   const snap = (over: Record<string, unknown> = {}) => ({
-    id: ID, slot: '', task: 'do a thing', agent: 'kirocrew',
+    id: ID, slot: '', task: 'do a thing', agent: 'ajcrew',
     streaming: '', last_tool: 'Running: sleep 600', started: 1000,
     tool_count: 3, ...over,
   })

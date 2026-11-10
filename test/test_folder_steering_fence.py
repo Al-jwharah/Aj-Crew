@@ -18,12 +18,12 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import folder_steering
-from kiro_crew.config import loader as L
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.resolution import DEGRADED_WHOLE_CONFIG, DEGRADED_WORKSPACES
-from kiro_crew.dashboard.chat_folders import _validate_steering_dirs
-from kiro_crew.folder_steering import (
+from aj_crew import folder_steering
+from aj_crew.config import loader as L
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.resolution import DEGRADED_WHOLE_CONFIG, DEGRADED_WORKSPACES
+from aj_crew.dashboard.chat_folders import _validate_steering_dirs
+from aj_crew.folder_steering import (
     collect_folder_steering,
     crosses_memory_silo,
     memory_silo_fence,
@@ -36,8 +36,8 @@ _needs_pinned_walk = pytest.mark.skipif(
 )
 
 
-def _cfg(*sections: str) -> KiroCrewConfig:
-    return replace(KiroCrewConfig(), _degraded_sections=frozenset(sections))
+def _cfg(*sections: str) -> AjCrewConfig:
+    return replace(AjCrewConfig(), _degraded_sections=frozenset(sections))
 
 
 def _fake_home(tmp_path: Path) -> Path:
@@ -55,16 +55,16 @@ def test_validate_fails_closed_while_the_fence_is_incomplete(tmp_path, monkeypat
     """Admission refuses a harmless root on every degraded shape and names why."""
     if shape == "whole-config-unreadable":
         cfg = _cfg(DEGRADED_WHOLE_CONFIG)
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
     elif shape == "workspaces-table-unreadable":
         cfg = _cfg(DEGRADED_WORKSPACES)
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
     else:
 
         def _boom(cls):
             raise RuntimeError("config exploded")
 
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_boom))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(_boom))
     harmless = tmp_path / "standards"
     harmless.mkdir()
     resolved, err = _validate_steering_dirs([str(harmless)])
@@ -79,7 +79,7 @@ def test_validate_fails_closed_while_the_fence_is_incomplete(tmp_path, monkeypat
 def test_validate_admits_the_same_root_when_the_fence_is_complete(tmp_path, monkeypatch):
     """The control for the fail-closed pin: an intact config admits the root."""
     cfg = _cfg()
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
     harmless = tmp_path / "standards"
     harmless.mkdir()
     resolved, err = _validate_steering_dirs([str(harmless)])
@@ -90,7 +90,7 @@ def test_crosses_memory_silo_clears_nothing_on_a_degraded_fence(tmp_path, monkey
     """Without explicit silos the predicate builds the fence itself; an unknown
     fence answers ``True`` for every root."""
     cfg = _cfg(DEGRADED_WORKSPACES)
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
     fence = memory_silo_fence()
     assert not fence.complete and "workspaces" in fence.degraded
     assert crosses_memory_silo(tmp_path / "anywhere")
@@ -100,13 +100,13 @@ def test_crosses_memory_silo_clears_nothing_on_a_degraded_fence(tmp_path, monkey
 
 
 def test_fence_is_complete_and_names_configured_workspaces_on_an_intact_load(tmp_path, monkeypatch):
-    from kiro_crew.config.sections import WorkspaceConfig
+    from aj_crew.config.sections import WorkspaceConfig
 
     research = tmp_path / "elsewhere" / "research-ws"
     research.mkdir(parents=True)
     cfg = _cfg()
     cfg.workspaces["research"] = WorkspaceConfig(dir=str(research))
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
     fence = memory_silo_fence()
     assert fence.complete
     assert research.resolve() in fence.roots
@@ -122,7 +122,7 @@ def test_collect_reads_nothing_and_says_so_while_the_fence_is_incomplete(tmp_pat
     (root / "rule.md").write_text("ALWAYS-RULE-SENTINEL", encoding="utf-8")
     intact = _cfg()
     degraded = _cfg(DEGRADED_WORKSPACES)
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: degraded))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: degraded))
     docs = collect_folder_steering([str(root)], project=None, home=_fake_home(tmp_path))
     assert list(docs) == []
     assert [o.kind for o in docs.omissions] == ["fence"]
@@ -131,7 +131,7 @@ def test_collect_reads_nothing_and_says_so_while_the_fence_is_incomplete(tmp_pat
     assert "ALWAYS-RULE-SENTINEL" not in section
     assert "memory-store fence is incomplete" in section
     assert "no folder steering is loaded" in section
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: intact))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: intact))
     docs = collect_folder_steering([str(root)], project=None, home=_fake_home(tmp_path))
     assert [body for _, body in docs] == ["ALWAYS-RULE-SENTINEL"]
     assert docs.omissions == []
@@ -148,8 +148,8 @@ def test_fence_resolves_every_workspace_from_one_config_snapshot(tmp_path, monke
     therefore resolve every workspace from the snapshot it already holds and
     load exactly once.
     """
-    from kiro_crew.config import loader as L
-    from kiro_crew.config.sections import WorkspaceConfig
+    from aj_crew.config import loader as L
+    from aj_crew.config.sections import WorkspaceConfig
 
     research = tmp_path / "elsewhere" / "research-ws"
     research.mkdir(parents=True)
@@ -163,7 +163,7 @@ def test_fence_resolves_every_workspace_from_one_config_snapshot(tmp_path, monke
         # shape a concurrent rewrite or a transient read failure produces).
         return snapshot if len(loads) == 1 else _cfg()
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_load))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_load))
 
     def _forbidden(*args, **kwargs):
         raise AssertionError("the fence must not resolve a workspace through a reload")
@@ -186,9 +186,9 @@ def test_loader_marks_a_non_object_workspaces_table_as_degraded(tmp_path, monkey
     monkeypatch.setattr(L, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(L, "config_local_path", lambda: tmp_path / "config.local.json")
     cfgp.write_text(json.dumps({"workspaces": []}), encoding="utf-8")
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert DEGRADED_WORKSPACES in cfg.degraded_sections
     # The malformed table contributes nothing; only the synthesized default remains.
     assert set(cfg.workspaces) <= {"default"}
     cfgp.write_text(json.dumps({"workspaces": {}}), encoding="utf-8")
-    assert DEGRADED_WORKSPACES not in KiroCrewConfig.load().degraded_sections
+    assert DEGRADED_WORKSPACES not in AjCrewConfig.load().degraded_sections

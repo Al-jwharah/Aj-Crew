@@ -12,7 +12,7 @@
  *
  * Three states, because each renders a different header contract:
  *   own      — a shared user template: Custom badge, used-by count, fork hint
- *   built-in — the `kirocrew` template: Built-in badge, file:// prompt
+ *   built-in — the `ajcrew` template: Built-in badge, file:// prompt
  *   own-copy — a crew's private fork: header names the ORIGIN, Customized tag,
  * *              live change-count pill (its popover holds Reset), and a
  *              Save-as-new-template action
@@ -24,16 +24,16 @@
 import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
 import { serveDist } from './lib/serve-dist.mjs'
-import { logPageProblems, stubDashboardApi, json, KIROCREW_CONFIG_FIXTURE } from './lib/stub-dashboard-api.mjs'
+import { logPageProblems, stubDashboardApi, json, AJCREW_CONFIG_FIXTURE } from './lib/stub-dashboard-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/agent-template-pane'
 const PREFIX = process.argv[3] || 'after'
 mkdirSync(OUT, { recursive: true })
 
 /** The crews the roster shows. Two point at `atlas`, so its blast radius is real.
- *  `scout` is bound to its own private copy of `kirocrew` (blueprint fork). */
+ *  `scout` is bound to its own private copy of `ajcrew` (blueprint fork). */
 const CREWS = [
-  { name: 'default', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: 'Used for all new chats', source: 'user', model: '', triggers: '', session_color: '' },
+  { name: 'default', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: 'Used for all new chats', source: 'user', model: '', triggers: '', session_color: '' },
   { name: 'atlas', kiro_agent: 'atlas', workspace: 'default', memory_store: 'default', description: 'Long-horizon planner', source: 'user', model: '', triggers: 'migration', session_color: '' },
   { name: 'gpu-critic', kiro_agent: 'atlas', workspace: 'default', memory_store: 'default', description: 'Validates review findings', source: 'user', model: '', triggers: '', session_color: '' },
   { name: 'scout', kiro_agent: 'scout', workspace: 'default', memory_store: 'default', description: 'Research scout with its own definition', source: 'user', model: '', triggers: '', session_color: '' },
@@ -43,11 +43,11 @@ const CREWS = [
  *  All three provenance shapes, because the header badge and the dropdown rows
  *  both label from them. `scout` carries fork lineage: one crew's private copy. */
 const INSTALLED = [
-  { name: 'kirocrew', description: 'Built-in', source: 'kirocrew', model: '', skills: ['memory', 'artifacts'], mcp_servers: ['kirocrew-core'], filename: 'kirocrew.json', kirocrew_owned: true },
-  { name: 'kirocrew-heartbeat', description: 'Unattended heartbeat worker', source: 'builtin', model: '', skills: [], mcp_servers: ['kirocrew-core'], filename: 'kirocrew-heartbeat.json', kirocrew_owned: true },
-  { name: 'papyrus-writer', description: 'LaTeX co-author', source: 'package', package: 'papyrus', model: '', skills: [], mcp_servers: [], filename: 'papyrus-writer.json', kirocrew_owned: false },
-  { name: 'atlas', description: 'Long-horizon planner', source: 'builtin', model: 'claude-opus-4.8', skills: ['grill', 'five-whys'], mcp_servers: ['kirocrew-core'], filename: 'atlas.json', kirocrew_owned: false },
-  { name: 'scout', description: 'Built-in', source: 'builtin', model: 'claude-sonnet-4.5', skills: ['memory'], mcp_servers: ['kirocrew-core'], filename: 'scout.json', kirocrew_owned: false, forked_from: 'kirocrew', private_to: 'scout' },
+  { name: 'ajcrew', description: 'Built-in', source: 'ajcrew', model: '', skills: ['memory', 'artifacts'], mcp_servers: ['ajcrew-core'], filename: 'ajcrew.json', ajcrew_owned: true },
+  { name: 'ajcrew-heartbeat', description: 'Unattended heartbeat worker', source: 'builtin', model: '', skills: [], mcp_servers: ['ajcrew-core'], filename: 'ajcrew-heartbeat.json', ajcrew_owned: true },
+  { name: 'papyrus-writer', description: 'LaTeX co-author', source: 'package', package: 'papyrus', model: '', skills: [], mcp_servers: [], filename: 'papyrus-writer.json', ajcrew_owned: false },
+  { name: 'atlas', description: 'Long-horizon planner', source: 'builtin', model: 'claude-opus-4.8', skills: ['grill', 'five-whys'], mcp_servers: ['ajcrew-core'], filename: 'atlas.json', ajcrew_owned: false },
+  { name: 'scout', description: 'Built-in', source: 'builtin', model: 'claude-sonnet-4.5', skills: ['memory'], mcp_servers: ['ajcrew-core'], filename: 'scout.json', ajcrew_owned: false, forked_from: 'ajcrew', private_to: 'scout' },
 ]
 
 const DENIED = [
@@ -62,27 +62,27 @@ const DETAIL = {
     skills: ['grill', 'five-whys'],
     tools: ['fs_read', 'fs_write', 'execute_bash', 'git', 'web', 'web_search', 'glob', 'grep'],
     allowedTools: ['fs_read', 'glob'],
-    mcpServers: { 'kirocrew-core': {}, figma: { args: ['--include-tools', 'get_design_context,get_screenshot,get_metadata'] } },
+    mcpServers: { 'ajcrew-core': {}, figma: { args: ['--include-tools', 'get_design_context,get_screenshot,get_metadata'] } },
     toolsSettings: { execute_bash: { deniedCommands: DENIED } },
   },
-  kirocrew: {
-    name: 'kirocrew', model: '',
-    prompt: 'file://~/.kiro/agents/prompts/kirocrew.md',
+  ajcrew: {
+    name: 'ajcrew', model: '',
+    prompt: 'file://~/.kiro/agents/prompts/ajcrew.md',
     skills: ['memory', 'artifacts'],
     tools: ['fs_read', 'fs_write', 'execute_bash'],
     allowedTools: ['fs_read'],
-    mcpServers: { 'kirocrew-core': {}, 'kirocrew-cron': {} },
+    mcpServers: { 'ajcrew-core': {}, 'ajcrew-cron': {} },
     toolsSettings: { execute_bash: { deniedCommands: ['rm -rf /', 'git push --force'] } },
   },
-  // scout differs from kirocrew in EXACTLY two sections (model, skills), so
+  // scout differs from ajcrew in EXACTLY two sections (model, skills), so
   // the change-count pill must read "2 changes" — a wrong diff fails the run.
   scout: {
     name: 'scout', model: 'claude-sonnet-4.5',
-    prompt: 'file://~/.kiro/agents/prompts/kirocrew.md',
+    prompt: 'file://~/.kiro/agents/prompts/ajcrew.md',
     skills: ['memory'],
     tools: ['fs_read', 'fs_write', 'execute_bash'],
     allowedTools: ['fs_read'],
-    mcpServers: { 'kirocrew-core': {}, 'kirocrew-cron': {} },
+    mcpServers: { 'ajcrew-core': {}, 'ajcrew-cron': {} },
     toolsSettings: { execute_bash: { deniedCommands: ['rm -rf /', 'git push --force'] } },
   },
 }
@@ -109,16 +109,16 @@ const browser = await chromium.launch({ channel: 'chrome' })
 try {
   for (const [crew, template, expectBadge, expectOwnCopy] of [
     ['atlas', 'atlas', 'Custom', false],
-    ['default', 'kirocrew', 'Built-in', false],
-    ['scout', 'kirocrew', '', true],
+    ['default', 'ajcrew', 'Built-in', false],
+    ['scout', 'ajcrew', '', true],
   ]) {
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, baseURL: base })
     const page = await ctx.newPage()
     logPageProblems(page)
     await stubDashboardApi(page, {
       extra: async (path, route) => {
-        if (path === '/api/config/kirocrew') {
-          await json(route, KIROCREW_CONFIG_FIXTURE)
+        if (path === '/api/config/ajcrew') {
+          await json(route, AJCREW_CONFIG_FIXTURE)
           return true
         }
         if (path === '/api/agents') {
@@ -180,7 +180,7 @@ try {
       if (await sheet.getByText(/Reset my changes/).count()) {
         throw new Error(`${crew}: Reset leaked into the own-copy header`)
       }
-      if (!(await sheet.getByText(/Based on the kirocrew template/i).count())) {
+      if (!(await sheet.getByText(/Based on the ajcrew template/i).count())) {
         throw new Error(`${crew}: own copy lacks the based-on hint`)
       }
     } else {
@@ -196,7 +196,7 @@ try {
       }
     }
 
-    const tag = expectOwnCopy ? 'own-copy' : template === 'kirocrew' ? 'builtin' : 'own'
+    const tag = expectOwnCopy ? 'own-copy' : template === 'ajcrew' ? 'builtin' : 'own'
     const out = `${OUT}/${PREFIX}-${tag}.png`
     await sheet.screenshot({ path: out })
     console.log(`wrote ${out}`)

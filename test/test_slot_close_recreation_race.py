@@ -41,11 +41,11 @@ from slot_close_recreation_race_helpers import (
     _slot_with_committed_and_uncommitted_rows,
 )
 
-from kiro_crew import autonudge
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.dashboard import chat_handlers as handlers
-from kiro_crew.dashboard.snapshot_commit import slots_with_a_close_in_flight
-from kiro_crew.testing.wait import await_until
+from aj_crew import autonudge
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.dashboard import chat_handlers as handlers
+from aj_crew.dashboard.snapshot_commit import slots_with_a_close_in_flight
+from aj_crew.testing.wait import await_until
 
 
 def _state_with_slot(tmp_path, name: str = NAME):
@@ -267,8 +267,8 @@ async def test_delete_first_guard_keeps_the_app_dismissal_and_says_so(
         saved.append((bool(kw.get("closed")), bool(kw.get("rows_only"))))
         return True
 
-    monkeypatch.setattr("kiro_crew.apps.teardown.notify_slot_closed", _told)
-    monkeypatch.setattr("kiro_crew.apps.teardown.notify_slot_close_undone", _undo)
+    monkeypatch.setattr("aj_crew.apps.teardown.notify_slot_closed", _told)
+    monkeypatch.setattr("aj_crew.apps.teardown.notify_slot_close_undone", _undo)
     monkeypatch.setattr(handlers, "save_slot_off_loop", _persist)
 
     caplog.set_level(logging.WARNING, logger=handlers.__name__)
@@ -397,8 +397,8 @@ async def test_delete_failure_arm_skips_both_compensations_when_restore_skipped(
         await release.wait()
         raise RuntimeError("disk wedged")
 
-    monkeypatch.setattr("kiro_crew.apps.teardown.notify_slot_closed", _told)
-    monkeypatch.setattr("kiro_crew.apps.teardown.notify_slot_close_undone", _undo)
+    monkeypatch.setattr("aj_crew.apps.teardown.notify_slot_closed", _told)
+    monkeypatch.setattr("aj_crew.apps.teardown.notify_slot_close_undone", _undo)
     monkeypatch.setattr(handlers, "save_slot_off_loop", _persist)
 
     close = asyncio.create_task(handlers.api_chat_slot_delete(_Req(state, NAME)))
@@ -450,8 +450,8 @@ async def test_delete_failure_arm_undoes_the_app_close_when_the_slot_is_restored
     async def _persist(*_a, **_kw) -> None:
         raise RuntimeError("disk wedged")
 
-    monkeypatch.setattr("kiro_crew.apps.teardown.notify_slot_closed", _told)
-    monkeypatch.setattr("kiro_crew.apps.teardown.notify_slot_close_undone", _undo)
+    monkeypatch.setattr("aj_crew.apps.teardown.notify_slot_closed", _told)
+    monkeypatch.setattr("aj_crew.apps.teardown.notify_slot_close_undone", _undo)
     monkeypatch.setattr(handlers, "save_slot_off_loop", _persist)
 
     resp = await handlers.api_chat_slot_delete(_Req(state, NAME))

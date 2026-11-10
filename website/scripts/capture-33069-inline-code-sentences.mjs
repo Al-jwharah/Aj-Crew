@@ -47,7 +47,7 @@ const GOVERNANCE = {
 }
 
 const control = (key, label, unit, count) => ({
-  key, label, unit, count, summary: label, unavailable: false, source: 'src/kiro_crew/security.py',
+  key, label, unit, count, summary: label, unavailable: false, source: 'src/aj_crew/security.py',
   items: [{ label: `${key}-1`, detail: label }],
 })
 const POSTURE = {
@@ -65,15 +65,15 @@ const DENIED = { builtins: [], user_added: [], disable_all: false, effective_cou
 
 const extra = async (path, route) => {
   // The starred-bots dock reads this; a guessed [] shows a load-failed toast in every frame.
-  if (path === '/api/members') return json(route, { members: [], default_agent: 'kirocrew' }), true
+  if (path === '/api/members') return json(route, { members: [], default_agent: 'ajcrew' }), true
   if (path === '/api/security/posture') return json(route, POSTURE), true
   if (path === '/api/security/denied-commands') return json(route, DENIED), true
-  if (path === '/api/config/kirocrew') return json(route, { agent: { yolo_duration: '6h', apps_allow_third_party: false } }), true
+  if (path === '/api/config/ajcrew') return json(route, { agent: { yolo_duration: '6h', apps_allow_third_party: false } }), true
   if (path === '/api/teams/config') return json(route, TEAMS_CONFIG), true
   if (path === '/api/governance/channels') return json(route, { teams: true }), true
   if (path === '/api/governance/policy') return json(route, GOVERNANCE), true
   if (path === '/api/deploy/config') {
-    return json(route, { cloudDeploymentEnabled: true, reaperInstallScript: '/home/example/.kirocrew/skills/artifact-deploy/install-reaper.sh' }), true
+    return json(route, { cloudDeploymentEnabled: true, reaperInstallScript: '/home/example/.ajcrew/skills/artifact-deploy/install-reaper.sh' }), true
   }
   if (path === '/api/deploy/profiles') {
     return json(route, { profiles: [], default: '', available: [] }), true

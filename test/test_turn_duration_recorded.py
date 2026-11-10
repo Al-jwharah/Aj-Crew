@@ -27,10 +27,10 @@ from datetime import datetime
 
 import pytest
 
-from kiro_crew.acp.types import TurnUsage
-from kiro_crew.dashboard.handlers.usage import _build_token_record
+from aj_crew.acp.types import TurnUsage
+from aj_crew.dashboard.handlers.usage import _build_token_record
 
-SRC = pathlib.Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+SRC = pathlib.Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 
 class _Ev:
@@ -185,4 +185,4 @@ def test_chat_runner_no_longer_builds_the_dead_stats_object():
         if turn_file.name != "__init__.py"
     )
     assert "stats = Stats()" not in src
-    assert "from kiro_crew.stats import Stats" not in src
+    assert "from aj_crew.stats import Stats" not in src

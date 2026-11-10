@@ -21,19 +21,19 @@ import json
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.dashboard import chat_persistence as cp
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.relay_archive import relay_archive_refusal
-from kiro_crew.dashboard.slot_buffers import (
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.dashboard import chat_persistence as cp
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.relay_archive import relay_archive_refusal
+from aj_crew.dashboard.slot_buffers import (
     sanitize_restored_deferred_notes,
     serialize_deferred_notes,
 )
-from kiro_crew.dashboard.slot_persistence import metadata_codec as codec
-from kiro_crew.dashboard.slot_persistence import metadata_line, metadata_values
-from kiro_crew.dashboard.source_providers.contract import source_ref_identity_key
-from kiro_crew.dashboard.state import durable_queue_entries
-from kiro_crew.history import SLOT_OWNED_META_KEYS
+from aj_crew.dashboard.slot_persistence import metadata_codec as codec
+from aj_crew.dashboard.slot_persistence import metadata_line, metadata_values
+from aj_crew.dashboard.source_providers.contract import source_ref_identity_key
+from aj_crew.dashboard.state import durable_queue_entries
+from aj_crew.history import SLOT_OWNED_META_KEYS
 
 K1 = source_ref_identity_key(("github", "github.com", "o", "r", 1, "", "change", ""))
 K2 = source_ref_identity_key(("github", "github.com", "o", "r", 2, "", "change", ""))
@@ -62,7 +62,7 @@ _POPULATED: dict = {
     "memory_store": "silo",
     "agent_kind": "member",
     "backend": "claude",
-    "crew_mode_agent": "kirocrew-conductor",
+    "crew_mode_agent": "ajcrew-conductor",
     "app_agent_owner": "pr-bulk-ops/agent-a",
     "project": "/srv/p",
     "executor": "remote",
@@ -221,7 +221,7 @@ _BASE_MERGE_ORDER = (
 
 
 def _state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     # The crew log records the populated creator, so a restore keeps the claim.
     monkeypatch.setattr(sc, "_creation_parent", lambda key: _POPULATED["_created_by"])
     state = _make_state(tmp_path)
@@ -572,9 +572,9 @@ _NO_MODEL_KEY = object()
 @pytest.mark.parametrize(
     ("line_model", "restored"),
     [
-        (_NO_MODEL_KEY, "model-of-kirocrew"),
+        (_NO_MODEL_KEY, "model-of-ajcrew"),
         ("", ""),
-        ("model-of-kirocrew", "model-of-kirocrew"),
+        ("model-of-ajcrew", "model-of-ajcrew"),
         ("picked-model", "picked-model"),
     ],
     ids=["legacy-line", "follows-the-default", "pin-equal-to-agent-model", "pin"],
@@ -589,11 +589,11 @@ def test_a_restart_takes_the_agents_model_only_for_a_line_with_no_model_key(
     the agent's spec does.
     """
     state = _state(tmp_path, monkeypatch)
-    meta: dict = {"agent": "kirocrew"}
+    meta: dict = {"agent": "ajcrew"}
     if line_model is not _NO_MODEL_KEY:
         meta["model"] = line_model
     slot, _, _ = _read_back(
-        state, meta, purpose, agent="kirocrew", model_map={"kirocrew": "model-of-kirocrew"}
+        state, meta, purpose, agent="ajcrew", model_map={"ajcrew": "model-of-ajcrew"}
     )
     assert slot.model == restored
 
@@ -603,9 +603,9 @@ def test_a_crewmate_thread_that_follows_the_default_stays_unpinned(purpose, tmp_
     """A crewmate thread resolves the legacy fallback through its crewmate's kiro agent;
     a thread whose line says ``""`` must not get that agent's model as a pin."""
     state = _state(tmp_path, monkeypatch)
-    cfg = KiroCrewConfig()
-    cfg.agents["mate"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
-    inputs = {"cfg": cfg, "model_map": {"kirocrew": "model-of-kirocrew"}}
+    cfg = AjCrewConfig()
+    cfg.agents["mate"] = AjCrewAgentConfig(kiro_agent="ajcrew")
+    inputs = {"cfg": cfg, "model_map": {"ajcrew": "model-of-ajcrew"}}
     meta = {"agent": "mate", "mode": "member", "model": ""}
     slot, _, _ = _read_back(
         state, meta, purpose, name="member-mate", member=("mate", "member"), **inputs
@@ -615,7 +615,7 @@ def test_a_crewmate_thread_that_follows_the_default_stays_unpinned(purpose, tmp_
     legacy, _, _ = _read_back(
         state, meta, purpose, name="member-mate-legacy", member=("mate", "member"), **inputs
     )
-    assert legacy.model == "model-of-kirocrew"
+    assert legacy.model == "model-of-ajcrew"
 
 
 @pytest.mark.parametrize(

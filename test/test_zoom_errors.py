@@ -7,8 +7,8 @@ control-plane-built typed error, and the Zoom-shape credential detector plus the
 proof that a leaked Zoom credential never survives (negative fault test 6).
 """
 
-from kiro_crew.connections.control_plane import ERROR_CLASSES
-from kiro_crew.connections.vendors.zoom.errors import (
+from aj_crew.connections.control_plane import ERROR_CLASSES
+from aj_crew.connections.vendors.zoom.errors import (
     AMBIGUOUS_ABSENCE_CODE,
     classify_error,
     contains_zoom_credential,

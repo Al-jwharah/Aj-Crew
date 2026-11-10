@@ -1,7 +1,7 @@
 """A ``cron:`` caller on ``POST /api/chat/mode`` sets one posture on one slot it created.
 
 ``ScriptContext.set_session_mode`` is the cron path to ``api_chat_mode``
-(``src/kiro_crew/dashboard/chat_api/slot_approval.py``). The handler holds a caller that
+(``src/aj_crew/dashboard/chat_api/slot_approval.py``). The handler holds a caller that
 presents an attested ``cron:<job id>`` key to three rules, each audited:
 
 1. the mode is ``trust`` or ``trust_reads``; ``yolo``, ``normal`` and anything
@@ -31,10 +31,10 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard.chat_handlers import api_chat_mode
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.safety_override import reset_singleton
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard.chat_handlers import api_chat_mode
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.safety_override import reset_singleton
 
 _JOB = "nightly-dispatcher"
 _CRON_KEY = f"cron:{_JOB}"
@@ -108,7 +108,7 @@ class _FakeOverride:
 
 @pytest.fixture(autouse=True)
 def _hermetic_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
 
 
 @pytest.fixture(autouse=True)
@@ -120,7 +120,7 @@ def _isolate_safety_override():
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.push_slots_update = MagicMock()
@@ -141,7 +141,7 @@ def audit(monkeypatch) -> list[dict]:
     events: list[dict] = []
     recorder = SimpleNamespace(log_api_access=lambda **kw: events.append(kw))
     monkeypatch.setattr(chat_handlers, "sel", lambda: recorder)
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: recorder)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: recorder)
     return events
 
 

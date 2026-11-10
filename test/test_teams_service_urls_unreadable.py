@@ -16,7 +16,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.teams.service_urls import ServiceUrlStore
+from aj_crew.teams.service_urls import ServiceUrlStore
 
 _SVC = "https://smba.trafficmanager.net/amer/"
 
@@ -61,7 +61,7 @@ async def test_an_unreadable_store_is_not_rewritten_with_one_conversation(
     await _seed(path)
     store = ServiceUrlStore(path=path)
 
-    with _held(path), caplog.at_level(logging.WARNING, logger="kiro_crew.teams.service_urls"):
+    with _held(path), caplog.at_level(logging.WARNING, logger="aj_crew.teams.service_urls"):
         await store.ensure_loaded()
         assert store.loaded is True
         store.remember("a:conv3", _SVC)

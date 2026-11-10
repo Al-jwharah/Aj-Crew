@@ -17,11 +17,11 @@ superseded-by: []
 > **Status:** `draft`. Acceptance is requested from a maintainer; the status
 > flips to `accepted` when one records it here. Nothing is on main. The
 > baseline below was verified at `c4c51aac52`: `select_provider_backend` in
-> `src/kiro_crew/members.py` decides a session's backend from an explicit
+> `src/aj_crew/members.py` decides a session's backend from an explicit
 > `backend_override` (today set only by `spawn_run(backend=...)`), then the
 > member-DM route, then the configured default; a dashboard chat slot stores
 > a `model` but no backend; and `/api/chat/slots/{slot}/model` exists in
-> `src/kiro_crew/dashboard/routes/chat.py` with no backend sibling. This is
+> `src/aj_crew/dashboard/routes/chat.py` with no backend sibling. This is
 > PR 1 of the plan in
 > [#13892](https://github.com/kirodotdev/KiroCrew/issues/13892), and it reuses
 > the plumbing
@@ -78,7 +78,7 @@ backend id (`kiro` becomes Kiro's `""`) and passed as `backend_override`, so a
 chat can be pinned to Kiro even when the gateway default is another backend.
 The override arm, which already wins over the member-DM route and the default,
 selects it through `resolve_selected_backend`
-(`src/kiro_crew/agent_sdk/backends.py`), the same governance gate a sub-agent's
+(`src/aj_crew/agent_sdk/backends.py`), the same governance gate a sub-agent's
 backend crosses.
 
 The allowed set is the one sub-agent spawn already enforces:
@@ -86,7 +86,7 @@ The allowed set is the one sub-agent spawn already enforces:
 unknown, not selectable under governance, not installed, or installed only
 after the gateway started is refused with the codes `/api/spawn` returns
 (`unknown_backend`, `backend_not_installed`, `backend_restart_required`; see
-`_requested_backend` in `src/kiro_crew/dashboard/messaging_api/spawn.py`), each
+`_requested_backend` in `src/aj_crew/dashboard/messaging_api/spawn.py`), each
 listing the backends that can start. Nothing is stored on a refusal.
 
 ### 2. Switching
@@ -103,7 +103,7 @@ rule a provider switch applies to every slot (`server_runtime/config_watch.py`).
 A switch that is refused or rolled back restores both.
 
 A switch while a turn is in flight is refused with 409, as
-`api_chat_slot_model` in `src/kiro_crew/dashboard/chat_api/slot_model.py` refuses a
+`api_chat_slot_model` in `src/aj_crew/dashboard/chat_api/slot_model.py` refuses a
 model switch that would tear down a streaming turn. Setting the backend the
 slot already has is a no-op.
 
@@ -113,7 +113,7 @@ The pick is persisted with the slot's other metadata, so it survives a gateway
 restart. When the session is created, the pick reaches the factory through
 `get_or_create(..., backend_override=)`, which records it as
 `session.backend_override`. `allocation_identity` in
-`src/kiro_crew/session_lifecycle_parts/parked_queue.py` already carries that field to a reset or
+`src/aj_crew/session_lifecycle_parts/parked_queue.py` already carries that field to a reset or
 compaction successor, so those keep the chat's backend with no new code.
 
 ### 4. Agent surface
@@ -121,7 +121,7 @@ compaction successor, so those keep the chat's backend with no new code.
 - `POST /api/chat/slots/{slot}/backend`, registered beside
   `/api/chat/slots/{slot}/model`, takes `{"backend": "<name>"}` or
   `{"backend": ""}` to clear.
-- MCP tool `session_set_backend` in `src/kiro_crew/mcp_dashboard_session_tools.py`, beside
+- MCP tool `session_set_backend` in `src/aj_crew/mcp_dashboard_session_tools.py`, beside
   `session_set_model`, calls the same handler logic.
 
 Both run the same validation and the same ownership gate

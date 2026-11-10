@@ -29,7 +29,7 @@ def _load_root_conftest():
     ``from conftest import ...`` inside ``test/`` binds to ``test/conftest.py``, so the
     rootdir file is loaded by path. Its fixtures are inert here: nothing collects them.
     """
-    spec = importlib.util.spec_from_file_location("_kirocrew_annotations_conftest", _ROOT_CONFTEST)
+    spec = importlib.util.spec_from_file_location("_ajcrew_annotations_conftest", _ROOT_CONFTEST)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

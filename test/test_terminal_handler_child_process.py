@@ -26,9 +26,9 @@ from terminal_handler_helpers import (  # noqa: F401 -- the autouse fixture regi
     _make_session,
 )
 
-from kiro_crew.dashboard.handlers import terminal, terminal_session
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import async_wait_until, await_until, finished, until_parked
+from aj_crew.dashboard.handlers import terminal, terminal_session
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import async_wait_until, await_until, finished, until_parked
 
 
 class _AsyncioNotingTheBound:
@@ -168,7 +168,7 @@ def test_runner_sigint_normalization_preserves_other_signals(tmp_path, normalize
 class TestPtyChildEnvStripsPythonStartupVars:
     """``PYTHONPATH``/``PYTHONHOME``/``PYTHONPYCACHEPREFIX`` are searched BEFORE a
     venv's own site-packages, so leaking the gateway's copies into an interactive
-    shell makes a user's Python 3.13 venv import Kiro Crew's 3.12 site-packages
+    shell makes a user's Python 3.13 venv import Aj Crew's 3.12 site-packages
     and its C extensions fail to load. The agent surface already strips them
     (``sandbox.scrub_agent_subprocess_env``); these pin the terminal surface,
     which was never brought into line.
@@ -178,16 +178,16 @@ class TestPtyChildEnvStripsPythonStartupVars:
         monkeypatch.setenv("PYTHONPATH", "/gateway/site-packages")
         monkeypatch.setenv("PYTHONHOME", "/gateway/python3.12")
         monkeypatch.setenv("PYTHONPYCACHEPREFIX", "/gateway/pycache")
-        monkeypatch.setenv("KIROCREW_UNRELATED_KEEPME", "keep-this-value")
+        monkeypatch.setenv("AJCREW_UNRELATED_KEEPME", "keep-this-value")
 
-        env = terminal._pty_child_env({"TERM": "xterm-256color", "KIROCREW_TERMINAL": "1"})
+        env = terminal._pty_child_env({"TERM": "xterm-256color", "AJCREW_TERMINAL": "1"})
 
         assert "PYTHONPATH" not in env
         assert "PYTHONHOME" not in env
         assert "PYTHONPYCACHEPREFIX" not in env
-        assert env["KIROCREW_TERMINAL"] == "1"
+        assert env["AJCREW_TERMINAL"] == "1"
         assert env["TERM"] == "xterm-256color"
-        assert env["KIROCREW_UNRELATED_KEEPME"] == "keep-this-value"
+        assert env["AJCREW_UNRELATED_KEEPME"] == "keep-this-value"
 
     def test_macos_bash_deprecation_banner_is_silenced(self, monkeypatch):
         """macOS ships Bash 3.2, which prints a three-line "use zsh" notice on
@@ -207,7 +207,7 @@ class TestPtyChildEnvStripsPythonStartupVars:
         monkeypatch.setenv("AWS_SESSION_TOKEN", "FAKE-token")
         monkeypatch.setenv("PYTHONPATH", "/gateway/site-packages")
 
-        env = terminal._pty_child_env({"KIROCREW_TERMINAL": "1"})
+        env = terminal._pty_child_env({"AJCREW_TERMINAL": "1"})
 
         assert env["SSH_AUTH_SOCK"] == "/tmp/ssh-abc/agent.1"
         assert env["AWS_SESSION_TOKEN"] == "FAKE-token"
@@ -251,7 +251,7 @@ class TestPtyChildEnvStripsPythonStartupVars:
         env = spawn.call_args.kwargs["env"]
         assert "PYTHONPATH" not in env
         assert "PYTHONHOME" not in env
-        assert env["KIROCREW_TERMINAL"] == "1"
+        assert env["AJCREW_TERMINAL"] == "1"
         assert env["TERM"] == "xterm-256color"
         assert env["SHELL"] == "/bin/zsh"
 
@@ -275,7 +275,7 @@ class TestPtyChildEnvStripsPythonStartupVars:
         class _FakeWinPty:
             def __init__(self, argv, cwd=None, env=None, cols=80, rows=24):
                 captured["env"] = env
-                # nosemgrep: kirocrew.mock-pid-allocatable -- pre-existing mock pid moved verbatim; the process double is never signalled
+                # nosemgrep: ajcrew.mock-pid-allocatable -- pre-existing mock pid moved verbatim; the process double is never signalled
                 self.pid = 4321
                 self._reads = iter((b"PS> ", b""))
 
@@ -294,7 +294,7 @@ class TestPtyChildEnvStripsPythonStartupVars:
             def terminate(self, force=True):
                 pass
 
-        monkeypatch.setattr("kiro_crew.conpty.WindowsPty", _FakeWinPty)
+        monkeypatch.setattr("aj_crew.conpty.WindowsPty", _FakeWinPty)
 
         registry: dict = {}
         app = _make_app(registry=registry)
@@ -325,7 +325,7 @@ class TestPtyChildEnvStripsPythonStartupVars:
         env = captured["env"]
         assert "PYTHONPATH" not in env
         assert "PYTHONHOME" not in env
-        assert env["KIROCREW_TERMINAL"] == "1"
+        assert env["AJCREW_TERMINAL"] == "1"
 
 
 class TestChildExitStatus:
@@ -717,12 +717,12 @@ class TestAbnormalExitNotification:
 
     @staticmethod
     def _bus(notes: list):
-        from kiro_crew.notifications.bus import NotificationBus
+        from aj_crew.notifications.bus import NotificationBus
 
         return NotificationBus(sink=notes.append)
 
     def test_system_terminal_is_a_registered_default_channel(self):
-        from kiro_crew.notifications.bus import SYSTEM_CHANNELS
+        from aj_crew.notifications.bus import SYSTEM_CHANNELS
 
         assert SYSTEM_CHANNELS["system.terminal"] == "default"
 
@@ -924,7 +924,7 @@ class TestShellExitIntegration:
         monkeypatch.setattr(terminal, "_sel", lambda: MagicMock())
 
         notes: list = []
-        from kiro_crew.notifications.bus import NotificationBus
+        from aj_crew.notifications.bus import NotificationBus
 
         registry: dict = {}
         app = _make_app(registry=registry)

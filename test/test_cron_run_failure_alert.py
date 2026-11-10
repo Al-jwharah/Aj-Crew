@@ -16,19 +16,19 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.cron import CronJob, CronSchedule
-from kiro_crew.slack.gateway import _FAILURE_REMINDER_SECS
+from aj_crew.cron import CronJob, CronSchedule
+from aj_crew.slack.gateway import _FAILURE_REMINDER_SECS
 
 # The reason from the issue: a startup guard raising before the script body runs.
 CONFLICT = (
     "data-home conflict: completion marker present at /home/u/.kiro/crew but a "
-    "non-empty legacy home /home/u/.kirocrew also exists"
+    "non-empty legacy home /home/u/.ajcrew also exists"
 )
 
 
 def _make_gw():
     """A GatewayOrchestrator with only the attributes the cron callback touches."""
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     gw = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gw.sessions = MagicMock()
@@ -102,10 +102,10 @@ async def _run_script(gw, job, script_result=None, *, vet_reason=None, side_effe
         {"side_effect": side_effect} if side_effect is not None else {"return_value": script_result}
     )
     with (
-        patch("kiro_crew.slack.gateway.CronService") as mock_cron_cls,
-        patch("kiro_crew.slack.gateway.run_script_sandboxed", **mock_kw),
-        patch("kiro_crew.slack.gateway.vet_job_at_fire_time", return_value=vet_reason),
-        patch("kiro_crew.slack.gateway.sel"),
+        patch("aj_crew.slack.gateway.CronService") as mock_cron_cls,
+        patch("aj_crew.slack.gateway.run_script_sandboxed", **mock_kw),
+        patch("aj_crew.slack.gateway.vet_job_at_fire_time", return_value=vet_reason),
+        patch("aj_crew.slack.gateway.sel"),
     ):
 
         def capture_cron(on_job=None, **kw):
@@ -128,15 +128,15 @@ async def _run_command(gw, job, cmd_result=None, *, vet_reason=None, side_effect
         {"side_effect": side_effect} if side_effect is not None else {"return_value": cmd_result}
     )
     gate = (
-        patch("kiro_crew.slack.gateway.vet_job_at_fire_time", return_value=vet_reason)
+        patch("aj_crew.slack.gateway.vet_job_at_fire_time", return_value=vet_reason)
         if vet_reason is not None
         else nullcontext()
     )
     with (
-        patch("kiro_crew.slack.gateway.CronService") as mock_cron_cls,
-        patch("kiro_crew.slack.gateway.run_command_sandboxed", **mock_kw),
+        patch("aj_crew.slack.gateway.CronService") as mock_cron_cls,
+        patch("aj_crew.slack.gateway.run_command_sandboxed", **mock_kw),
         gate,
-        patch("kiro_crew.slack.gateway.sel"),
+        patch("aj_crew.slack.gateway.sel"),
     ):
 
         def capture_cron(on_job=None, **kw):
@@ -165,10 +165,10 @@ async def _run_message_callback_raising(gw, job, exc):
         raise exc
 
     with (
-        patch("kiro_crew.slack.gateway.stream_and_collect", fake_stream),
-        patch("kiro_crew.slack.gateway.CronService") as mock_cron_cls,
-        patch("kiro_crew.slack.gateway.sel"),
-        patch("kiro_crew.slack.gateway.vet_job_at_fire_time", return_value=None),
+        patch("aj_crew.slack.gateway.stream_and_collect", fake_stream),
+        patch("aj_crew.slack.gateway.CronService") as mock_cron_cls,
+        patch("aj_crew.slack.gateway.sel"),
+        patch("aj_crew.slack.gateway.vet_job_at_fire_time", return_value=None),
     ):
 
         def capture_cron(on_job=None, **kw):

@@ -8,9 +8,9 @@ import pytest
 from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F401 - fixture
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
-from kiro_crew.acp import client_turn as client_turn_mod
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.acp import client_turn as client_turn_mod
+from aj_crew.acp.client import AcpClient
+from aj_crew.testing.clock import ManualClock
 
 
 class TestCompactionResetsContextStats:
@@ -26,7 +26,7 @@ class TestCompactionResetsContextStats:
         return client
 
     def _usage_msg(self, used, size):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         return JsonRpcMessage(
             method="session/update",
@@ -34,7 +34,7 @@ class TestCompactionResetsContextStats:
         )
 
     def _compaction_msg(self, status_type):
-        from kiro_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
 
         return JsonRpcMessage(
             method=METHOD_COMPACTION_STATUS,
@@ -70,8 +70,8 @@ class TestCompactionResetsContextStats:
         """Load-bearing: with the reset reverted, context_tokens_from_usage
         stays True and this fresh metadata percentage would be ignored,
         freezing the meter at the pre-compaction value forever."""
-        import kiro_crew.acp.client as c
-        from kiro_crew.acp.types import JsonRpcMessage
+        import aj_crew.acp.client as c
+        from aj_crew.acp.types import JsonRpcMessage
 
         monkeypatch.setattr(c.model_registry, "has_known_window", lambda mid: True)
         monkeypatch.setattr(c.model_registry, "model_window", lambda mid, **kw: 200_000)
@@ -94,8 +94,8 @@ class TestCompactionResetsContextStats:
         unchanged) and can differ from the registry's static entry (opus
         served at 1M vs a 200K registry row). A metadata pct must derive
         against the kept served window, not clobber it with the registry."""
-        import kiro_crew.acp.client as c
-        from kiro_crew.acp.types import JsonRpcMessage
+        import aj_crew.acp.client as c
+        from aj_crew.acp.types import JsonRpcMessage
 
         monkeypatch.setattr(c.model_registry, "has_known_window", lambda mid: True)
         monkeypatch.setattr(c.model_registry, "model_window", lambda mid, **kw: 200_000)
@@ -122,8 +122,8 @@ class TestCompactionResetsContextStats:
         metadata frame ~1s AFTER the completed status (live-probe confirmed).
         wait_for_compaction must capture it so the dashboard broadcast
         reports accurate numbers instead of the unknown fallback."""
-        import kiro_crew.acp.client as c
-        from kiro_crew.acp.types import JsonRpcMessage
+        import aj_crew.acp.client as c
+        from aj_crew.acp.types import JsonRpcMessage
 
         monkeypatch.setattr(c.model_registry, "has_known_window", lambda mid: True)
         monkeypatch.setattr(c.model_registry, "model_window", lambda mid, **kw: 200_000)
@@ -150,8 +150,8 @@ class TestCompactionResetsContextStats:
         """A credits-only metadata frame (no contextUsagePercentage) must not
         end the grace drain — the real usage frame behind it would be
         stranded and the meter would fall back to the reset state."""
-        import kiro_crew.acp.client as c
-        from kiro_crew.acp.types import JsonRpcMessage
+        import aj_crew.acp.client as c
+        from aj_crew.acp.types import JsonRpcMessage
 
         monkeypatch.setattr(c.model_registry, "has_known_window", lambda mid: True)
         monkeypatch.setattr(c.model_registry, "model_window", lambda mid, **kw: 200_000)
@@ -205,7 +205,7 @@ class TestCompactionFailureTurnBudget:
     """
 
     def _failed_msg(self, params: dict | None = None):
-        from kiro_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
 
         return JsonRpcMessage(
             method=METHOD_COMPACTION_STATUS,
@@ -224,7 +224,7 @@ class TestCompactionFailureTurnBudget:
     async def test_silent_turn_after_failure_ends_at_budget(self, tmp_path, monkeypatch):
         """Armed by the failed status, the loop stops reading at the budget and
         marks the turn so the caller can terminate it explicitly."""
-        from kiro_crew.acp import client as acp_client
+        from aj_crew.acp import client as acp_client
 
         monkeypatch.setattr(acp_client, "_COMPACTION_FAILED_TURN_BUDGET", 0.2)
         monkeypatch.setattr(acp_client, "_READ_TIMEOUT", 0.02)
@@ -259,8 +259,8 @@ class TestCompactionFailureTurnBudget:
         """Full path, the reported hang: a `failed` status arrives, the backend
         never answers the prompt, and the stream still terminates — with the
         compaction stop reason, well inside the 30s turn ceiling."""
-        from kiro_crew.acp import client as acp_client
-        from kiro_crew.acp.types import (
+        from aj_crew.acp import client as acp_client
+        from aj_crew.acp.types import (
             EVENT_COMPACTION_STATUS,
             EVENT_COMPLETE,
             STOP_REASON_COMPACTION_FAILED,
@@ -294,7 +294,7 @@ class TestCompactionFailureTurnBudget:
     async def test_budget_is_disarmed_without_a_failure(self, tmp_path, monkeypatch):
         """No failed status → no budget: the loop runs to its own deadline, so
         an ordinary silent turn keeps its existing watchdog behavior."""
-        from kiro_crew.acp import client as acp_client
+        from aj_crew.acp import client as acp_client
 
         monkeypatch.setattr(acp_client, "_COMPACTION_FAILED_TURN_BUDGET", 0.05)
         monkeypatch.setattr(acp_client, "_READ_TIMEOUT", 0.02)
@@ -331,8 +331,8 @@ class TestCompactionFailureTurnBudget:
     async def test_frames_after_the_failure_defer_the_budget(self, tmp_path, monkeypatch):
         """The budget measures BACKEND SILENCE: a backend that keeps sending
         frames after a failed compaction is not reaped by it."""
-        from kiro_crew.acp import client as acp_client
-        from kiro_crew.acp.types import METHOD_METADATA, JsonRpcMessage
+        from aj_crew.acp import client as acp_client
+        from aj_crew.acp.types import METHOD_METADATA, JsonRpcMessage
 
         monkeypatch.setattr(acp_client, "_COMPACTION_FAILED_TURN_BUDGET", 0.3)
         monkeypatch.setattr(acp_client, "_READ_TIMEOUT", 0.02)
@@ -366,7 +366,7 @@ class TestCompactionFailureTurnBudget:
     async def test_dispatch_ends_turn_with_compaction_stop_reason(self):
         """The abandoned turn terminates with the explicit stop reason instead
         of raising the generic timeout, so the runner releases the slot."""
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_COMPLETE,
             STOP_REASON_COMPACTION_FAILED,
             AcpEvent,
@@ -397,7 +397,7 @@ class TestCompactionFailureTurnBudget:
     async def test_streamed_text_still_reports_compaction_failure(self):
         """A turn that streamed text before the failure must NOT be finalized as
         a normal end_turn by the stale-turn branch — the cause is the failure."""
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_COMPLETE,
             STOP_REASON_COMPACTION_FAILED,
             AcpEvent,
@@ -427,7 +427,7 @@ class TestCompactionFailureTurnBudget:
         """The notice reads AcpEvent.title. kiro-cli leaves `summary` empty on
         failure, which collapsed the row to "unknown error" — the raw
         notification's own reason now rides the title instead."""
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_COMPACTION_STATUS,
             METHOD_COMPACTION_STATUS,
             AcpEvent,
@@ -467,8 +467,8 @@ class TestCompactionFailureTurnBudget:
         AcpSessionHandle park accounting): without the exclusion, the resume
         computes idle = the park length and reaps a live turn whose backend
         was only ever waiting for the approval answer."""
-        from kiro_crew.acp import client as acp_client
-        from kiro_crew.acp.types import METHOD_METADATA, JsonRpcMessage
+        from aj_crew.acp import client as acp_client
+        from aj_crew.acp.types import METHOD_METADATA, JsonRpcMessage
 
         monkeypatch.setattr(acp_client, "_COMPACTION_FAILED_TURN_BUDGET", 0.2)
         monkeypatch.setattr(acp_client, "_READ_TIMEOUT", 0.02)
@@ -511,7 +511,7 @@ class TestCompactionFailureTurnBudget:
         legitimately silent long tool (a build, a spawned subagent) must NOT be
         reaped at the compaction budget — that would cancel valid work the
         tool-stall watchdog already governs on its own longer budget."""
-        from kiro_crew.acp import client as acp_client
+        from aj_crew.acp import client as acp_client
 
         monkeypatch.setattr(acp_client, "_COMPACTION_FAILED_TURN_BUDGET", 0.05)
         monkeypatch.setattr(acp_client, "_TOOL_STALL_TIMEOUT", 30.0)
@@ -545,8 +545,8 @@ class TestCompactionFailureTurnBudget:
     async def test_the_budget_re_arms_when_the_tool_resolves(self, tmp_path, monkeypatch):
         """Suspension is not a permanent disarm: once the tool resolves and the
         backend goes silent again, the abandoned turn is still ended."""
-        from kiro_crew.acp import client as acp_client
-        from kiro_crew.acp.types import METHOD_METADATA, JsonRpcMessage
+        from aj_crew.acp import client as acp_client
+        from aj_crew.acp.types import METHOD_METADATA, JsonRpcMessage
 
         monkeypatch.setattr(acp_client, "_COMPACTION_FAILED_TURN_BUDGET", 0.1)
         monkeypatch.setattr(acp_client, "_READ_TIMEOUT", 0.02)
@@ -587,7 +587,7 @@ class TestCompactionVerdictReachesTheConsumer:
         it must answer "permanent" from the contract rather than from a getattr
         default nobody wrote down. False is the safe value — it gives up the turn
         exactly as it did before the capability existed."""
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         assert isinstance(LLMProvider.last_compaction_transient, property)
         # Read through the descriptor rather than an instance: LLMProvider is
@@ -602,7 +602,7 @@ class TestCompactionVerdictReachesTheConsumer:
     def test_the_provider_forwards_the_verdict_from_its_inner_client(self):
         from types import SimpleNamespace
 
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         prov = AcpProvider.__new__(AcpProvider)
         prov._client = SimpleNamespace(last_compaction_transient=True)
@@ -611,7 +611,7 @@ class TestCompactionVerdictReachesTheConsumer:
     def test_the_session_provider_forwards_the_verdict_from_its_handle(self):
         from types import SimpleNamespace
 
-        from kiro_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew.acp.session_provider import AcpSessionProvider
 
         sess = AcpSessionProvider.__new__(AcpSessionProvider)
         sess._handle = SimpleNamespace(last_compaction_transient=True)
@@ -622,7 +622,7 @@ class TestCompactionVerdictReachesTheConsumer:
         "not retryable" rather than raising — the fields are additive."""
         from types import SimpleNamespace
 
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         prov = AcpProvider.__new__(AcpProvider)
         prov._client = SimpleNamespace()
@@ -635,7 +635,7 @@ class TestCompactionVerdictReachesTheConsumer:
         from types import SimpleNamespace
         from unittest.mock import MagicMock
 
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         prov = AcpProvider.__new__(AcpProvider)
         prov._client = SimpleNamespace(last_compaction_transient=MagicMock())
@@ -648,7 +648,7 @@ class TestCompactionFailureIsTransient:
     that text is truncated, redacted, and sometimes only a raw repr."""
 
     def test_a_throttled_summarization_call_is_transient(self):
-        from kiro_crew.acp.client import compaction_failure_is_transient
+        from aj_crew.acp.client import compaction_failure_is_transient
 
         assert compaction_failure_is_transient(
             {
@@ -661,26 +661,26 @@ class TestCompactionFailureIsTransient:
         """The machine reason arrives SCREAMING_SNAKE while the sentence beside
         it is prose, so a marker list matching only one spelling would classify
         the same fault differently depending on which field was filled."""
-        from kiro_crew.acp.client import compaction_failure_is_transient
+        from aj_crew.acp.client import compaction_failure_is_transient
 
         assert compaction_failure_is_transient({"reason": "MODEL_TEMPORARILY_UNAVAILABLE"})
 
     def test_a_nested_5xx_status_is_transient(self):
-        from kiro_crew.acp.client import compaction_failure_is_transient
+        from aj_crew.acp.client import compaction_failure_is_transient
 
         assert compaction_failure_is_transient(
             {"status": {"type": "failed"}, "error": {"cause": {"httpStatusCode": 503}}}
         )
 
     def test_a_429_is_transient(self):
-        from kiro_crew.acp.client import compaction_failure_is_transient
+        from aj_crew.acp.client import compaction_failure_is_transient
 
         assert compaction_failure_is_transient({"error": {"httpStatusCode": 429}})
 
     def test_an_overflowing_conversation_is_not_transient(self):
         """The case the no-retry policy was written for: replaying it repeats
         the same overflow, so it must NOT be classified as retryable."""
-        from kiro_crew.acp.client import compaction_failure_is_transient
+        from aj_crew.acp.client import compaction_failure_is_transient
 
         assert not compaction_failure_is_transient(
             {"status": {"type": "failed", "reason": "context window exceeded"}}
@@ -692,7 +692,7 @@ class TestCompactionFailureIsTransient:
         KAS branch passes whole, so a summary that merely mentions a timeout must
         not upgrade a permanent overflow to transient — a control decision has to
         be unreachable from content the model wrote."""
-        from kiro_crew.acp.client import compaction_failure_is_transient
+        from aj_crew.acp.client import compaction_failure_is_transient
 
         assert not compaction_failure_is_transient(
             {
@@ -708,7 +708,7 @@ class TestCompactionFailureIsTransient:
     def test_a_reason_bearing_key_still_matches_beside_that_summary(self):
         """The scoping must not cost a real case: the same frame with a genuine
         throttle in a reason-bearing field is still transient."""
-        from kiro_crew.acp.client import compaction_failure_is_transient
+        from aj_crew.acp.client import compaction_failure_is_transient
 
         assert compaction_failure_is_transient(
             {
@@ -733,7 +733,7 @@ class TestCompactionFailureIsTransient:
         ],
     )
     def test_not_transient(self, frame):
-        from kiro_crew.acp.client import compaction_failure_is_transient
+        from aj_crew.acp.client import compaction_failure_is_transient
 
         assert not compaction_failure_is_transient(frame)
 
@@ -742,7 +742,7 @@ class TestCompactionFailureIsTransient:
         and the verdict that decides the RETRY cannot be derived from different
         views of the same frame. Separate calls rather than a paired helper,
         because only the verdict crosses the provider contract."""
-        from kiro_crew.acp.client import (
+        from aj_crew.acp.client import (
             compaction_failure_detail,
             compaction_failure_is_transient,
         )
@@ -765,7 +765,7 @@ class TestStaleIdleCompactionStatus:
     """
 
     def _status(self, status_type: str):
-        from kiro_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
 
         return JsonRpcMessage(
             method=METHOD_COMPACTION_STATUS, params={"status": {"type": status_type}}
@@ -773,8 +773,8 @@ class TestStaleIdleCompactionStatus:
 
     @pytest.mark.asyncio
     async def test_a_late_failed_status_does_not_end_the_next_turn(self):
-        from kiro_crew.acp.stale_compaction import discard_stale_compaction_status
-        from kiro_crew.acp.types import EVENT_COMPACTION_STATUS, EVENT_COMPLETE, JsonRpcMessage
+        from aj_crew.acp.stale_compaction import discard_stale_compaction_status
+        from aj_crew.acp.types import EVENT_COMPACTION_STATUS, EVENT_COMPLETE, JsonRpcMessage
 
         client = AcpClient()
         discard_stale_compaction_status(client, within_secs=0.0)
@@ -798,7 +798,7 @@ class TestStaleIdleCompactionStatus:
 
     @pytest.mark.asyncio
     async def test_the_mark_ends_at_the_first_terminal_status(self, tmp_path):
-        from kiro_crew.acp.stale_compaction import discard_stale_compaction_status
+        from aj_crew.acp.stale_compaction import discard_stale_compaction_status
 
         client = AcpClient(work_dir=tmp_path)
         discard_stale_compaction_status(client, within_secs=300.0)
@@ -810,7 +810,7 @@ class TestStaleIdleCompactionStatus:
 
     @pytest.mark.asyncio
     async def test_the_mark_does_not_lapse_at_the_old_window(self, tmp_path):
-        from kiro_crew.acp import stale_compaction
+        from aj_crew.acp import stale_compaction
 
         client = AcpClient(work_dir=tmp_path)
         stale_compaction.discard_stale_compaction_status(client, within_secs=0.0)
@@ -819,7 +819,7 @@ class TestStaleIdleCompactionStatus:
 
     @pytest.mark.asyncio
     async def test_wait_for_compaction_skips_the_late_status(self, tmp_path):
-        from kiro_crew.acp.stale_compaction import discard_stale_compaction_status
+        from aj_crew.acp.stale_compaction import discard_stale_compaction_status
 
         client = AcpClient(work_dir=tmp_path)
         discard_stale_compaction_status(client, within_secs=300.0)
@@ -835,8 +835,8 @@ class TestStaleIdleCompactionStatus:
 
     @pytest.mark.asyncio
     async def test_steer_answer_drain_counts_an_owed_terminal(self, tmp_path):
-        from kiro_crew.acp import stale_compaction
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp import stale_compaction
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient(work_dir=tmp_path)
         stale_compaction.discard_stale_compaction_status(client, within_secs=0.0)
@@ -854,7 +854,7 @@ class TestStaleIdleCompactionStatus:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("source", ["buffered", "live"])
     async def test_init_drain_counts_an_owed_terminal(self, tmp_path, source):
-        from kiro_crew.acp import stale_compaction
+        from aj_crew.acp import stale_compaction
 
         client = AcpClient(work_dir=tmp_path)
         stale_compaction.discard_stale_compaction_status(client, within_secs=0.0)
@@ -878,14 +878,14 @@ class TestStaleIdleCompactionStatus:
 
     @pytest.mark.asyncio
     async def test_next_stream_invalidates_delivery_after_a_dropped_completion(self, tmp_path):
-        from kiro_crew.acp import stale_compaction
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.acp import stale_compaction
+        from aj_crew.providers.acp import AcpProvider
 
         async def _empty_events():
             if False:
                 yield None
 
-        with patch("kiro_crew.providers.acp.AcpClient"):
+        with patch("aj_crew.providers.acp.AcpClient"):
             provider = AcpProvider(acp_backend="")
         reader = AcpClient(work_dir=tmp_path)
         reader.ensure_ready = AsyncMock()
@@ -914,7 +914,7 @@ class TestStaleIdleCompactionStatus:
     def test_only_an_acp_client_or_session_handle_is_marked(self):
         from types import SimpleNamespace
 
-        from kiro_crew.acp.stale_compaction import discard_provider_stale_compaction_status
+        from aj_crew.acp.stale_compaction import discard_provider_stale_compaction_status
 
         client = AcpClient()
         assert discard_provider_stale_compaction_status(
@@ -928,7 +928,7 @@ class TestStaleIdleCompactionStatus:
     def test_each_terminal_resolves_one_unresolved_compaction(self):
         from types import SimpleNamespace
 
-        from kiro_crew.acp.stale_compaction import (
+        from aj_crew.acp.stale_compaction import (
             discard_provider_stale_compaction_status,
             is_compact_command,
             provider_has_unresolved_compaction_status,
@@ -958,8 +958,8 @@ class TestStaleIdleCompactionStatus:
         """The replacement process cannot send the old compaction's terminal."""
         from types import SimpleNamespace
 
-        from kiro_crew.acp import stale_compaction
-        from kiro_crew.essential_delivery import EssentialDelivery
+        from aj_crew.acp import stale_compaction
+        from aj_crew.essential_delivery import EssentialDelivery
 
         client = AcpClient(work_dir=tmp_path)
         provider = SimpleNamespace(_client=client)

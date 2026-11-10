@@ -73,7 +73,7 @@ const now = Date.now() / 1000
 const slots = [{
   key: SLOT, title: 'Why is the build failing on main?', running: false,
   last_message: 'Opened a pull request with the fix.', messages: 4,
-  agent: 'kirocrew', memory_mode: 'persistent', project: '', folder_id: '',
+  agent: 'ajcrew', memory_mode: 'persistent', project: '', folder_id: '',
   modified: Math.floor(now), source_links: [], source_links_total: 0,
 }]
 const detail = {

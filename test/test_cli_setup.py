@@ -1,4 +1,4 @@
-"""The ``kirocrew setup`` wizard, ``kirocrew manifest`` and the files under ``config_dir()``.
+"""The ``ajcrew setup`` wizard, ``ajcrew manifest`` and the files under ``config_dir()``.
 
 The workspace-directory and timezone prompts (with system timezone detection), the alias lookup,
 the Slack app manifest, the prerequisite check, the ``project_dir`` pointer read from, and the
@@ -23,9 +23,9 @@ class TestSetupWorkspaceDir:
         ws_file = tmp_path / "workspace_dir"
         ws_file.write_text("/custom/workspace\n")
         custom_dir = tmp_path / "custom"
-        monkeypatch.setattr("kiro_crew.cli_setup._workspace_dir_file", lambda: ws_file)
+        monkeypatch.setattr("aj_crew.cli_setup._workspace_dir_file", lambda: ws_file)
         with patch("builtins.input", return_value=str(custom_dir)) as mock_input:
-            from kiro_crew.cli_setup import _setup_workspace_dir
+            from aj_crew.cli_setup import _setup_workspace_dir
 
             _setup_workspace_dir()
         prompt = mock_input.call_args[0][0]
@@ -37,9 +37,9 @@ class TestSetupWorkspaceDir:
         ws_file = tmp_path / "workspace_dir"
         ws_file.write_text("/custom/workspace\n")
         custom_dir = tmp_path / "custom"
-        monkeypatch.setattr("kiro_crew.cli_setup._workspace_dir_file", lambda: ws_file)
+        monkeypatch.setattr("aj_crew.cli_setup._workspace_dir_file", lambda: ws_file)
         with patch("builtins.input", return_value=str(custom_dir)):
-            from kiro_crew.cli_setup import _setup_workspace_dir
+            from aj_crew.cli_setup import _setup_workspace_dir
 
             _setup_workspace_dir()
         output = capsys.readouterr().out
@@ -48,9 +48,9 @@ class TestSetupWorkspaceDir:
     def test_shows_default_label_when_no_saved(self, tmp_path, monkeypatch, capsys):
         ws_file = tmp_path / "no_such_file"
         custom_dir = tmp_path / "ws"
-        monkeypatch.setattr("kiro_crew.cli_setup._workspace_dir_file", lambda: ws_file)
+        monkeypatch.setattr("aj_crew.cli_setup._workspace_dir_file", lambda: ws_file)
         with patch("builtins.input", return_value=str(custom_dir)):
-            from kiro_crew.cli_setup import _setup_workspace_dir
+            from aj_crew.cli_setup import _setup_workspace_dir
 
             _setup_workspace_dir()
         output = capsys.readouterr().out
@@ -60,14 +60,14 @@ class TestSetupWorkspaceDir:
 class TestSetupTimezone:
     def test_auto_detect_from_tz_env(self, monkeypatch):
         """TZ env var is checked before /etc/localtime."""
-        from kiro_crew.cli_setup import _detect_system_timezone
+        from aj_crew.cli_setup import _detect_system_timezone
 
         monkeypatch.setenv("TZ", "Europe/London")
         assert _detect_system_timezone() == "Europe/London"
 
     def test_auto_detect_tz_env_with_colon(self, monkeypatch):
         """TZ env var with glibc colon prefix is handled."""
-        from kiro_crew.cli_setup import _detect_system_timezone
+        from aj_crew.cli_setup import _detect_system_timezone
 
         monkeypatch.setenv("TZ", ":America/Chicago")
         assert _detect_system_timezone() == "America/Chicago"
@@ -78,7 +78,7 @@ class TestSetupTimezone:
         import sys
         import types
 
-        from kiro_crew import cli_setup
+        from aj_crew import cli_setup
 
         monkeypatch.delenv("TZ", raising=False)
         monkeypatch.setattr(cli_setup.platform_compat, "IS_WINDOWS", True)
@@ -92,7 +92,7 @@ class TestSetupTimezone:
         """A source checkout without tzlocal must skip-and-ask, never crash."""
         import builtins
 
-        from kiro_crew import cli_setup
+        from aj_crew import cli_setup
 
         monkeypatch.delenv("TZ", raising=False)
         monkeypatch.setattr(cli_setup.platform_compat, "IS_WINDOWS", True)
@@ -112,7 +112,7 @@ class TestSetupTimezone:
         sentinel). A closed/piped stdin raises _SetupAborted so the wizard exits
         cleanly at the top level rather than tracebacking at the NEXT bare
         input() call in a later step."""
-        from kiro_crew.cli_setup import _input_or_skip, _SetupAborted
+        from aj_crew.cli_setup import _input_or_skip, _SetupAborted
 
         monkeypatch.setattr("builtins.input", lambda _p: "")
         assert _input_or_skip("tz: ") is None
@@ -130,9 +130,9 @@ class TestSetupTimezone:
         next step to traceback."""
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text("{}")
-        monkeypatch.setattr("kiro_crew.cli_setup.config_path", lambda: cfg_file)
+        monkeypatch.setattr("aj_crew.cli_setup.config_path", lambda: cfg_file)
 
-        from kiro_crew.cli_setup import _setup_timezone, _SetupAborted
+        from aj_crew.cli_setup import _setup_timezone, _SetupAborted
 
         answers = iter(["Not/AZone"])
 
@@ -143,7 +143,7 @@ class TestSetupTimezone:
                 raise EOFError
 
         with patch("builtins.input", _input):
-            with patch("kiro_crew.cli_setup._detect_system_timezone", return_value=""):
+            with patch("aj_crew.cli_setup._detect_system_timezone", return_value=""):
                 with pytest.raises(_SetupAborted):
                     _setup_timezone()
 
@@ -156,13 +156,13 @@ class TestSetupTimezone:
         following the computer after it travels; a fixed name would not."""
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text("{}")
-        monkeypatch.setattr("kiro_crew.cli_setup.config_path", lambda: cfg_file)
+        monkeypatch.setattr("aj_crew.cli_setup.config_path", lambda: cfg_file)
 
-        from kiro_crew.cli_setup import _setup_timezone
+        from aj_crew.cli_setup import _setup_timezone
 
         with patch("builtins.input", return_value="") as mock_input:
             with patch(
-                "kiro_crew.cli_setup._detect_system_timezone",
+                "aj_crew.cli_setup._detect_system_timezone",
                 return_value="America/Los_Angeles",
             ):
                 _setup_timezone()
@@ -175,13 +175,13 @@ class TestSetupTimezone:
     def test_a_detected_zone_typed_in_is_saved_as_typed(self, tmp_path, monkeypatch):
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text("{}")
-        monkeypatch.setattr("kiro_crew.cli_setup.config_path", lambda: cfg_file)
+        monkeypatch.setattr("aj_crew.cli_setup.config_path", lambda: cfg_file)
 
-        from kiro_crew.cli_setup import _setup_timezone
+        from aj_crew.cli_setup import _setup_timezone
 
         with patch("builtins.input", return_value="America/Los_Angeles"):
             with patch(
-                "kiro_crew.cli_setup._detect_system_timezone",
+                "aj_crew.cli_setup._detect_system_timezone",
                 return_value="America/Los_Angeles",
             ):
                 _setup_timezone()
@@ -192,12 +192,12 @@ class TestSetupTimezone:
     def test_local_in_any_case_is_saved_as_local(self, tmp_path, monkeypatch):
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text("{}")
-        monkeypatch.setattr("kiro_crew.cli_setup.config_path", lambda: cfg_file)
+        monkeypatch.setattr("aj_crew.cli_setup.config_path", lambda: cfg_file)
 
-        from kiro_crew.cli_setup import _setup_timezone
+        from aj_crew.cli_setup import _setup_timezone
 
         with patch("builtins.input", return_value="Local"):
-            with patch("kiro_crew.cli_setup._detect_system_timezone", return_value=""):
+            with patch("aj_crew.cli_setup._detect_system_timezone", return_value=""):
                 _setup_timezone()
 
         data = json.loads(cfg_file.read_text(encoding="utf-8"))
@@ -207,12 +207,12 @@ class TestSetupTimezone:
         """When no auto-detect, user types timezone manually."""
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text("{}")
-        monkeypatch.setattr("kiro_crew.cli_setup.config_path", lambda: cfg_file)
+        monkeypatch.setattr("aj_crew.cli_setup.config_path", lambda: cfg_file)
 
-        from kiro_crew.cli_setup import _setup_timezone
+        from aj_crew.cli_setup import _setup_timezone
 
         with patch("builtins.input", return_value="America/New_York"):
-            with patch("kiro_crew.cli_setup._detect_system_timezone", return_value=""):
+            with patch("aj_crew.cli_setup._detect_system_timezone", return_value=""):
                 _setup_timezone()
 
         data = json.loads(cfg_file.read_text(encoding="utf-8"))
@@ -222,12 +222,12 @@ class TestSetupTimezone:
         """Empty input skips timezone setup, and says the undetected zone means UTC."""
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text("{}")
-        monkeypatch.setattr("kiro_crew.cli_setup.config_path", lambda: cfg_file)
+        monkeypatch.setattr("aj_crew.cli_setup.config_path", lambda: cfg_file)
 
-        from kiro_crew.cli_setup import _setup_timezone
+        from aj_crew.cli_setup import _setup_timezone
 
         with patch("builtins.input", return_value=""):
-            with patch("kiro_crew.cli_setup._detect_system_timezone", return_value=""):
+            with patch("aj_crew.cli_setup._detect_system_timezone", return_value=""):
                 _setup_timezone()
 
         data = json.loads(cfg_file.read_text(encoding="utf-8"))
@@ -241,12 +241,12 @@ class TestSetupTimezone:
         """Invalid timezone is rejected, not saved."""
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text("{}")
-        monkeypatch.setattr("kiro_crew.cli_setup.config_path", lambda: cfg_file)
+        monkeypatch.setattr("aj_crew.cli_setup.config_path", lambda: cfg_file)
 
-        from kiro_crew.cli_setup import _setup_timezone
+        from aj_crew.cli_setup import _setup_timezone
 
         with patch("builtins.input", return_value="Invalid/Timezone"):
-            with patch("kiro_crew.cli_setup._detect_system_timezone", return_value=""):
+            with patch("aj_crew.cli_setup._detect_system_timezone", return_value=""):
                 _setup_timezone()
 
         data = json.loads(cfg_file.read_text(encoding="utf-8"))
@@ -258,9 +258,9 @@ class TestSetupTimezone:
         """Re-running setup with existing timezone keeps it on Enter."""
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text(json.dumps({"timezone": "America/Chicago"}))
-        monkeypatch.setattr("kiro_crew.cli_setup.config_path", lambda: cfg_file)
+        monkeypatch.setattr("aj_crew.cli_setup.config_path", lambda: cfg_file)
 
-        from kiro_crew.cli_setup import _setup_timezone
+        from aj_crew.cli_setup import _setup_timezone
 
         with patch("builtins.input", return_value=""):
             _setup_timezone()
@@ -272,9 +272,9 @@ class TestSetupTimezone:
         """Corrupted config file is not overwritten."""
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text("not json {{{")
-        monkeypatch.setattr("kiro_crew.cli_setup.config_path", lambda: cfg_file)
+        monkeypatch.setattr("aj_crew.cli_setup.config_path", lambda: cfg_file)
 
-        from kiro_crew.cli_setup import _setup_timezone
+        from aj_crew.cli_setup import _setup_timezone
 
         _setup_timezone()
 
@@ -288,14 +288,14 @@ class TestGetAlias:
 
     def test_returns_user_env(self, monkeypatch):
         monkeypatch.setenv("USER", "testuser")
-        from kiro_crew.cli_setup import _get_alias
+        from aj_crew.cli_setup import _get_alias
 
         assert _get_alias() == "testuser"
 
     def test_falls_back_to_getlogin(self, monkeypatch):
         monkeypatch.delenv("USER", raising=False)
         with patch("os.getlogin", return_value="loginuser"):
-            from kiro_crew.cli_setup import _get_alias
+            from aj_crew.cli_setup import _get_alias
 
             assert _get_alias() == "loginuser"
 
@@ -305,7 +305,7 @@ class TestGetAlias:
             patch("os.getlogin", side_effect=OSError("no tty")),
             patch("builtins.input", return_value="prompted"),
         ):
-            from kiro_crew.cli_setup import _get_alias
+            from aj_crew.cli_setup import _get_alias
 
             assert _get_alias() == "prompted"
 
@@ -315,7 +315,7 @@ class TestGetAlias:
             patch("os.getlogin", side_effect=OSError("no tty")),
             patch("builtins.input", return_value=""),
         ):
-            from kiro_crew.cli_setup import _get_alias
+            from aj_crew.cli_setup import _get_alias
 
             try:
                 _get_alias()
@@ -330,7 +330,7 @@ class TestManifest:
     def test_packaged_manifest_declares_complete_oauth_scopes(self):
         import yaml
 
-        from kiro_crew import slack_manifest
+        from aj_crew import slack_manifest
 
         manifest = yaml.safe_load(slack_manifest.render("scope-test"))
         assert manifest["oauth_config"]["scopes"] == {
@@ -367,7 +367,7 @@ class TestManifest:
         assert "message.groups" in bot_events
 
     def _patch_template(
-        self, content="name: KiroCrew-{{ALIAS}}\ndisplay_name: KiroCrew-{{ALIAS}}\n"  # brand-ok
+        self, content="name: AjCrew-{{ALIAS}}\ndisplay_name: AjCrew-{{ALIAS}}\n"  # brand-ok
     ):
         """Patch importlib.resources.files to return a fake template.
 
@@ -376,30 +376,30 @@ class TestManifest:
         """
         mock_resource = MagicMock()
         mock_resource.joinpath.return_value.read_text.return_value = content
-        return patch("kiro_crew.slack_manifest._pkg_files", return_value=mock_resource)
+        return patch("aj_crew.slack_manifest._pkg_files", return_value=mock_resource)
 
     def test_renders_alias_to_stdout(self, capsys):
         with self._patch_template():
-            from kiro_crew.cli_setup import _manifest
+            from aj_crew.cli_setup import _manifest
 
             _manifest(alias="alice")
         out = capsys.readouterr().out
-        assert "KiroCrew-alice" in out  # brand-ok
+        assert "AjCrew-alice" in out  # brand-ok
         assert "{{ALIAS}}" not in out
 
     def test_writes_to_output_file(self, tmp_path):
         out_file = tmp_path / "sub" / "out.yaml"
-        with self._patch_template("name: KiroCrew-{{ALIAS}}\n"):  # brand-ok
-            from kiro_crew.cli_setup import _manifest
+        with self._patch_template("name: AjCrew-{{ALIAS}}\n"):  # brand-ok
+            from aj_crew.cli_setup import _manifest
 
             _manifest(alias="bob", output=str(out_file))
         assert out_file.exists()
-        assert "KiroCrew-bob" in out_file.read_text(encoding="utf-8")  # brand-ok
+        assert "AjCrew-bob" in out_file.read_text(encoding="utf-8")  # brand-ok
 
     def test_creates_parent_dirs(self, tmp_path):
         out_file = tmp_path / "deep" / "nested" / "out.yaml"
-        with self._patch_template("name: KiroCrew-{{ALIAS}}\n"):  # brand-ok
-            from kiro_crew.cli_setup import _manifest
+        with self._patch_template("name: AjCrew-{{ALIAS}}\n"):  # brand-ok
+            from aj_crew.cli_setup import _manifest
 
             _manifest(alias="carol", output=str(out_file))
         assert out_file.exists()
@@ -409,8 +409,8 @@ class TestManifest:
         (tmp_path / "a-directory").mkdir()
         (tmp_path / "a-file").write_text("", encoding="utf-8")
         out_file = tmp_path / target
-        with self._patch_template("name: KiroCrew-{{ALIAS}}\n"):  # brand-ok
-            from kiro_crew.cli_setup import _manifest
+        with self._patch_template("name: AjCrew-{{ALIAS}}\n"):  # brand-ok
+            from aj_crew.cli_setup import _manifest
 
             try:
                 with pytest.raises(SystemExit) as exc_info:
@@ -425,8 +425,8 @@ class TestManifest:
     def test_exits_when_template_missing(self):
         mock_resource = MagicMock()
         mock_resource.joinpath.return_value.read_text.side_effect = FileNotFoundError
-        with patch("kiro_crew.slack_manifest._pkg_files", return_value=mock_resource):
-            from kiro_crew.cli_setup import _manifest
+        with patch("aj_crew.slack_manifest._pkg_files", return_value=mock_resource):
+            from aj_crew.cli_setup import _manifest
 
             try:
                 _manifest(alias="dave")
@@ -435,7 +435,7 @@ class TestManifest:
                 assert e.code == 1
 
     def test_rejects_invalid_alias(self):
-        from kiro_crew.cli_setup import _manifest
+        from aj_crew.cli_setup import _manifest
 
         for bad in ["a\nb", "foo:bar", "x{{y}}", "hello world"]:
             try:
@@ -445,13 +445,13 @@ class TestManifest:
                 assert e.code == 1
 
     def test_url_flag_prints_creation_link(self, capsys):
-        with self._patch_template("# comment\nname: KiroCrew-{{ALIAS}}\n"):  # brand-ok
-            from kiro_crew.cli_setup import _manifest
+        with self._patch_template("# comment\nname: AjCrew-{{ALIAS}}\n"):  # brand-ok
+            from aj_crew.cli_setup import _manifest
 
             _manifest(alias="alice", url=True)
         out = capsys.readouterr().out
         assert "https://api.slack.com/apps?new_app=1&manifest_yaml=" in out
-        assert "KiroCrew-alice" in out  # alias substituted  # brand-ok
+        assert "AjCrew-alice" in out  # alias substituted  # brand-ok
         assert "%0A" in out  # newlines are URL-encoded
         assert "\nname:" not in out  # raw YAML not printed
         assert "%23" not in out  # comments stripped from URL
@@ -461,11 +461,11 @@ class TestEnsurePrerequisites:
     """Tests for _ensure_prerequisites return value."""
 
     def test_returns_true_when_all_satisfied(self):
-        from kiro_crew.cli_setup import _ensure_prerequisites
+        from aj_crew.cli_setup import _ensure_prerequisites
 
         with (
-            patch("kiro_crew.cli_setup.shutil.which", return_value="/usr/bin/kiro-cli"),
-            patch("kiro_crew.cli_doctor.subprocess.run", return_value=MagicMock(returncode=0)),
+            patch("aj_crew.cli_setup.shutil.which", return_value="/usr/bin/kiro-cli"),
+            patch("aj_crew.cli_doctor.subprocess.run", return_value=MagicMock(returncode=0)),
         ):
             assert _ensure_prerequisites() is True
 
@@ -476,20 +476,20 @@ class TestEnsurePrerequisites:
         no installs and imposes no login prerequisite) and always returns True so
         setup proceeds even when the kiro-cli backend is not yet on PATH.
         """
-        from kiro_crew.cli_setup import _ensure_prerequisites
+        from aj_crew.cli_setup import _ensure_prerequisites
 
-        with patch("kiro_crew.cli_setup.shutil.which", return_value=None):
+        with patch("aj_crew.cli_setup.shutil.which", return_value=None):
             assert _ensure_prerequisites() is True
 
 
 class TestConfigDirOverride:
-    """Tests that CLI functions respect KIROCREW_HOME env var via config_dir()."""
+    """Tests that CLI functions respect AJCREW_HOME env var via config_dir()."""
 
     def test_project_dir_file_uses_config_dir(self, tmp_path, monkeypatch):
         """_project_dir_file() returns path under config_dir(), not hardcoded home."""
-        monkeypatch.setattr("kiro_crew.cli.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.cli.config_dir", lambda: tmp_path)
 
-        from kiro_crew.cli import _project_dir_file
+        from aj_crew.cli import _project_dir_file
 
         assert _project_dir_file() == tmp_path / "project_dir"
 
@@ -498,16 +498,16 @@ class TestConfigDirOverride:
         proj = tmp_path / "my_project"
         proj.mkdir()
         (proj / "skills").mkdir()
-        (proj / "src" / "kiro_crew").mkdir(parents=True)
+        (proj / "src" / "aj_crew").mkdir(parents=True)
 
         config_home = tmp_path / "custom_config"
         config_home.mkdir()
         (config_home / "project_dir").write_text(str(proj) + "\n")
 
-        monkeypatch.setattr("kiro_crew.cli.config_dir", lambda: config_home)
+        monkeypatch.setattr("aj_crew.cli.config_dir", lambda: config_home)
         # "CWD has no project markers" has to be pinned, not assumed of tmp_path:
         # the walk climbs every ancestor, and a temp root under a checkout (a
-        # developer's `TMPDIR=./tmp`) puts the real `skills/` + `src/kiro_crew`
+        # developer's `TMPDIR=./tmp`) puts the real `skills/` + `src/aj_crew`
         # above it. The seam the walk reads is `Path.cwd()`, so it answers a
         # fabricated, marker-free location; the path is never created because
         # `resolve()` is lexical for a missing path and nothing here opens it.
@@ -517,7 +517,7 @@ class TestConfigDirOverride:
             classmethod(lambda cls: cls("/kc-detect-project-dir-has-no-markers/cwd")),
         )
 
-        from kiro_crew.cli import _detect_project_dir
+        from aj_crew.cli import _detect_project_dir
 
         assert _detect_project_dir() == str(proj)
 
@@ -526,7 +526,7 @@ class TestConfigDirOverride:
         config_home = tmp_path / "custom_config"
         config_home.mkdir()
         (config_home / "project_dir").write_bytes(b"/home/\xff\xfe/clone\n")
-        monkeypatch.setattr("kiro_crew.cli.config_dir", lambda: config_home)
+        monkeypatch.setattr("aj_crew.cli.config_dir", lambda: config_home)
         # Marker-free CWD, pinned the same way as the test above.
         monkeypatch.setattr(
             Path,
@@ -534,37 +534,37 @@ class TestConfigDirOverride:
             classmethod(lambda cls: cls("/kc-detect-project-dir-has-no-markers/cwd")),
         )
 
-        from kiro_crew.cli import _detect_project_dir
+        from aj_crew.cli import _detect_project_dir
 
         assert _detect_project_dir() is None
 
     def test_detect_project_dir_no_agents_dir(self, tmp_path, monkeypatch):
         """Detection works without a project-level agents/ dir (removed in bbbc1f6e).
 
-        Regression guard: agent config was consolidated into src/kiro_crew/config/
+        Regression guard: agent config was consolidated into src/aj_crew/config/
         and the root agents/ dir deleted, which silently broke detection (and the
         dashboard changelog) while the marker still required agents/ + skills/.
         """
-        proj = tmp_path / "KiroCrew"  # brand-ok: checkout directory name
+        proj = tmp_path / "AjCrew"  # brand-ok: checkout directory name
         (proj / "skills").mkdir(parents=True)
-        (proj / "src" / "kiro_crew").mkdir(parents=True)
+        (proj / "src" / "aj_crew").mkdir(parents=True)
         assert not (proj / "agents").exists()
 
-        monkeypatch.setattr("kiro_crew.cli.config_dir", lambda: tmp_path / "cfg")
+        monkeypatch.setattr("aj_crew.cli.config_dir", lambda: tmp_path / "cfg")
         (tmp_path / "cfg").mkdir()
         monkeypatch.chdir(proj)
 
-        from kiro_crew.cli import _detect_project_dir
+        from aj_crew.cli import _detect_project_dir
 
         assert _detect_project_dir() == str(proj.resolve())
 
     def test_logout_reads_secret_for_listener_port(self, monkeypatch, capsys):
         """_logout resolves the secret paired with the requested listener."""
         read_secret = MagicMock(return_value="test-secret")
-        monkeypatch.setattr("kiro_crew.cli_server.platform_compat.IS_POSIX", True)
-        monkeypatch.setattr("kiro_crew.cli_server.read_local_secret", read_secret)
+        monkeypatch.setattr("aj_crew.cli_server.platform_compat.IS_POSIX", True)
+        monkeypatch.setattr("aj_crew.cli_server.read_local_secret", read_secret)
 
-        from kiro_crew.cli_server import _logout
+        from aj_crew.cli_server import _logout
 
         mock_resp = MagicMock()
         mock_resp.read.return_value = b'{"ok": true}'
@@ -572,12 +572,12 @@ class TestConfigDirOverride:
         mock_resp.__exit__ = MagicMock(return_value=False)
 
         monkeypatch.setattr(
-            "kiro_crew.cli_server._owner_verified_secret_urlopen",
+            "aj_crew.cli_server._owner_verified_secret_urlopen",
             lambda req, port, timeout, *, operation="": __import__(
-                "kiro_crew.cli_server", fromlist=["loopback_urlopen"]
+                "aj_crew.cli_server", fromlist=["loopback_urlopen"]
             ).loopback_urlopen(req, timeout=timeout),
         )
-        with patch("kiro_crew.cli_server.loopback_urlopen", return_value=mock_resp) as opener:
+        with patch("aj_crew.cli_server.loopback_urlopen", return_value=mock_resp) as opener:
             _logout(5476)
         read_secret.assert_called_once_with(5476, dial_host="127.0.0.1")
         # The secret read for that listener is the one the request carries.
@@ -585,10 +585,10 @@ class TestConfigDirOverride:
         assert "All dashboard sessions revoked" in capsys.readouterr().out
 
     def test_setup_slack_tokens_writes_to_config_dir(self, tmp_path, monkeypatch):
-        """_setup_slack_tokens writes .env to config_dir(), not ~/.kirocrew."""
-        monkeypatch.setattr("kiro_crew.cli_setup.env_path", lambda: tmp_path / ".env")
+        """_setup_slack_tokens writes .env to config_dir(), not ~/.ajcrew."""
+        monkeypatch.setattr("aj_crew.cli_setup.env_path", lambda: tmp_path / ".env")
 
-        from kiro_crew.cli_setup import _setup_slack_tokens
+        from aj_crew.cli_setup import _setup_slack_tokens
 
         inputs = iter(["y", "xapp-test", "xoxb-test", "U12345"])
         monkeypatch.setattr("builtins.input", lambda _: next(inputs))
@@ -608,11 +608,11 @@ class TestConfigDirOverride:
         than beside .env."""
         import os as os_mod
 
-        import kiro_crew.cli_setup as cs
-        from kiro_crew import platform_compat as pc
+        import aj_crew.cli_setup as cs
+        from aj_crew import platform_compat as pc
 
         env_file = tmp_path / ".env"
-        monkeypatch.setattr("kiro_crew.cli_setup.env_path", lambda: env_file)
+        monkeypatch.setattr("aj_crew.cli_setup.env_path", lambda: env_file)
         inputs = iter(["y", "xapp-test", "xoxb-test", "U12345"])
         monkeypatch.setattr("builtins.input", lambda _: next(inputs))
 
@@ -642,11 +642,11 @@ class TestConfigDirOverride:
         must not abort the wizard with a traceback after the user already
         typed their tokens: the .env doctrine is enforce-and-warn, matching
         the dashboard credential writers."""
-        import kiro_crew.cli_setup as cs
-        from kiro_crew import platform_compat as pc
+        import aj_crew.cli_setup as cs
+        from aj_crew import platform_compat as pc
 
         env_file = tmp_path / ".env"
-        monkeypatch.setattr("kiro_crew.cli_setup.env_path", lambda: env_file)
+        monkeypatch.setattr("aj_crew.cli_setup.env_path", lambda: env_file)
         inputs = iter(["y", "xapp-test", "xoxb-test", "U12345"])
         monkeypatch.setattr("builtins.input", lambda _: next(inputs))
         monkeypatch.setattr(
@@ -666,17 +666,17 @@ class TestConfigDirOverride:
         holds the lock — and leaves .env untouched."""
         import os as os_mod
 
-        import kiro_crew.cli_setup as cs
-        from kiro_crew import platform_compat as pc
-        from kiro_crew.secrets.migrate import _env_lock_path
+        import aj_crew.cli_setup as cs
+        from aj_crew import platform_compat as pc
+        from aj_crew.secrets.migrate import _env_lock_path
 
         env_file = tmp_path / ".env"
         env_file.write_text("EXISTING=1\n", encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.cli_setup.env_path", lambda: env_file)
+        monkeypatch.setattr("aj_crew.cli_setup.env_path", lambda: env_file)
         inputs = iter(["y", "xapp-test", "xoxb-test", "U12345"])
         monkeypatch.setattr("builtins.input", lambda _: next(inputs))
 
-        # Simulate another writer (e.g. `kirocrew secrets import`) holding the
+        # Simulate another writer (e.g. `ajcrew secrets import`) holding the
         # shared advisory lock.
         lock_path = _env_lock_path(env_file)
         held_fd = os_mod.open(lock_path, os_mod.O_CREAT | os_mod.O_RDWR, 0o600)
@@ -691,7 +691,7 @@ class TestConfigDirOverride:
 
 
 class TestSetupChannelGating:
-    """`kirocrew setup` runs the Slack steps only with --slack.
+    """`ajcrew setup` runs the Slack steps only with --slack.
 
     Messaging channels are optional: the default wizard must configure none and
     instead print the pointer to connect channels later, while `--slack` opts
@@ -699,10 +699,10 @@ class TestSetupChannelGating:
     """
 
     def _run_setup(self, monkeypatch, tmp_path, argv=None, install_wrote: bool = True, **kwargs):
-        import kiro_crew.cli_setup as cs
+        import aj_crew.cli_setup as cs
 
         calls: list[str] = []
-        monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+        monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
 
         def _install(clean=False, _wrote_out=None, **_):
             if _wrote_out is not None:
@@ -710,12 +710,12 @@ class TestSetupChannelGating:
             return tmp_path / "agent.json"
 
         # Imported inside _setup_impl — patch at their source modules.
-        monkeypatch.setattr("kiro_crew.agent.install_agent", _install)
+        monkeypatch.setattr("aj_crew.agent.install_agent", _install)
         # Mirror the real signature (bin_dir, *, claim_existing): the setup path
         # passes claim_existing=True, and a stub that refused it would fail here
         # for a reason that has nothing to do with channel gating.
-        monkeypatch.setattr("kiro_crew.agent.ensure_kirocrew_on_path", lambda *a, **k: None)
-        monkeypatch.setattr("kiro_crew.mcp_cleanup.clean_stale_managed_mcp", lambda: [])
+        monkeypatch.setattr("aj_crew.agent.ensure_ajcrew_on_path", lambda *a, **k: None)
+        monkeypatch.setattr("aj_crew.mcp_cleanup.clean_stale_managed_mcp", lambda: [])
         # Neutralize every unrelated wizard step so only the gating is under test.
         for name in (
             "_ensure_prerequisites",
@@ -733,7 +733,7 @@ class TestSetupChannelGating:
         monkeypatch.setattr(cs, "_setup_whatsapp", lambda: calls.append("whatsapp"))
         # Conductor-skill step catches Exception and continues.
         monkeypatch.setattr(
-            cs, "KiroCrewConfig", MagicMock(load=MagicMock(side_effect=RuntimeError("no config")))
+            cs, "AjCrewConfig", MagicMock(load=MagicMock(side_effect=RuntimeError("no config")))
         )
         # Keep the macOS-only desktop-app input() prompt off the path.
         monkeypatch.setattr(cs.platform, "system", lambda: "Linux")
@@ -741,7 +741,7 @@ class TestSetupChannelGating:
         if argv is None:
             cs._setup_impl(**kwargs)
         else:
-            from kiro_crew.cli import main
+            from aj_crew.cli import main
 
             monkeypatch.setattr("sys.argv", argv)
             main()
@@ -810,8 +810,8 @@ class TestSetupChannelGating:
     def test_the_whatsapp_flag_reaches_setup_from_the_command_line(self, tmp_path, monkeypatch):
         """The wizard-level tests call ``_setup_impl`` directly, so the argparse
         flag and its plumbing need their own guard: without them
-        ``kirocrew setup --whatsapp`` exits 2 instead of running anything."""
-        calls = self._run_setup(monkeypatch, tmp_path, argv=["kirocrew", "setup", "--whatsapp"])
+        ``ajcrew setup --whatsapp`` exits 2 instead of running anything."""
+        calls = self._run_setup(monkeypatch, tmp_path, argv=["ajcrew", "setup", "--whatsapp"])
         assert calls == ["whatsapp"]
 
     def test_agent_only_with_whatsapp_warns_and_skips_the_step(self, tmp_path, monkeypatch, capsys):

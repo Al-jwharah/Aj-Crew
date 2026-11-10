@@ -12,8 +12,8 @@ import io
 import os
 from pathlib import Path
 
-from kiro_crew.task_models import PROGRESS_FILE, Project, Task, TaskStatus
-from kiro_crew.task_reporter import load_checkpoint, save_progress
+from aj_crew.task_models import PROGRESS_FILE, Project, Task, TaskStatus
+from aj_crew.task_reporter import load_checkpoint, save_progress
 
 _REAL_OPEN = io.open
 

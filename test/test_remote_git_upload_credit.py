@@ -14,8 +14,8 @@ import sys
 import pytest
 from test_remote_git_proxy_serve import WAIT, _call, proxy  # noqa: F401 -- the fixture
 
-from kiro_crew.remote_session import git_proxy
-from kiro_crew.testing.wait import wait_until
+from aj_crew.remote_session import git_proxy
+from aj_crew.testing.wait import wait_until
 
 WINDOW = git_proxy.UPLOAD_WINDOW
 
@@ -81,8 +81,8 @@ def test_a_large_push_sends_only_its_window_until_the_gateway_grants_more(
             {"status": 200, "body": b"refused"},
         ),
         (
-            [{"t": "err", "status": 403, "message": "Kiro Crew: denied"}],
-            {"status": 403, "body": b"Kiro Crew: denied\n"},
+            [{"t": "err", "status": 403, "message": "Aj Crew: denied"}],
+            {"status": 403, "body": b"Aj Crew: denied\n"},
         ),
     ],
     ids=["response", "error"],
@@ -159,7 +159,7 @@ def test_waiting_for_credit_ends_when_the_link_closes(monkeypatch, closed_first)
     "build, refusal",
     [
         (None, b"--build"),  # a gateway that predates the pin passes none
-        ("0" * 64, b"another Kiro Crew build"),  # a gateway of another build
+        ("0" * 64, b"another Aj Crew build"),  # a gateway of another build
         ("", None),  # this build: the proxy starts
     ],
     ids=["no-build", "other-build", "same-build"],

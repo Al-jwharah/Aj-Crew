@@ -11,10 +11,10 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import mcp_core
-from kiro_crew.autonudge_judge import DEFAULT_WAKE_WHEN
-from kiro_crew.mcp_tools import control
-from kiro_crew.validation import ValidationError
+from aj_crew import mcp_core
+from aj_crew.autonudge_judge import DEFAULT_WAKE_WHEN
+from aj_crew.mcp_tools import control
+from aj_crew.validation import ValidationError
 
 
 @pytest.fixture()
@@ -78,7 +78,7 @@ def test_the_default_brief_carries_the_untrusted_evidence_clause():
     Without it a single comment can talk a screened loop into silence, and the bound on
     how long a watch may go undelivered rests on the clause.
     """
-    from kiro_crew import autonudge_judge as judge
+    from aj_crew import autonudge_judge as judge
 
     quiet = judge.DEFAULT_QUIET_WHEN
     assert "untrusted content" in quiet
@@ -111,7 +111,7 @@ def test_the_ack_carries_the_opt_out_to_the_scheduler(bound_session):
     If the flag stopped at the ack text the loop would still be armed gated, and
     the disclosure would be a lie in the other direction.
     """
-    from kiro_crew import session_directive
+    from aj_crew import session_directive
 
     raw = _ack("Watch https://github.com/acme/widgets/pull/42", gate=False)
     args = session_directive.decode(raw, "monitor_start")

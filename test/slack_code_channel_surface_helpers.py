@@ -18,14 +18,14 @@ from typing import Any
 import pytest
 from slack_code_channels_helpers import OWNER, make_env
 
-from kiro_crew.dashboard.handlers import worktree as wt
-from kiro_crew.slack.code_channels import commands, status, surface, tools, wrapup
-from kiro_crew.slack.code_channels.store import Binding
-from kiro_crew.slack.code_channels.surface_store import SurfaceStore
-from kiro_crew.slack.code_channels.surface_store import set_store as set_surface_store
-from kiro_crew.slack.code_channels.surface_store import store as surface_store
-from kiro_crew.slack.code_channels.workspace import git_ops, service
-from kiro_crew.slack.code_channels.workspace.store import WorkspaceRecord, WorkspaceStore
+from aj_crew.dashboard.handlers import worktree as wt
+from aj_crew.slack.code_channels import commands, status, surface, tools, wrapup
+from aj_crew.slack.code_channels.store import Binding
+from aj_crew.slack.code_channels.surface_store import SurfaceStore
+from aj_crew.slack.code_channels.surface_store import set_store as set_surface_store
+from aj_crew.slack.code_channels.surface_store import store as surface_store
+from aj_crew.slack.code_channels.workspace import git_ops, service
+from aj_crew.slack.code_channels.workspace.store import WorkspaceRecord, WorkspaceStore
 
 CH = "C0CODE"
 
@@ -54,13 +54,13 @@ def _passthrough_spawn(argv: Any, mode: str = "standard", **_kw: Any) -> Any:
 
 @pytest.fixture(name="env")
 def env_fixture(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Any:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setattr(wt, "sandboxed_spawn_argv", _passthrough_spawn)
     monkeypatch.setattr(git_ops, "sandboxed_spawn_argv", _passthrough_spawn)
     # No workspace service left installed by an earlier test (a gateway start in
     # another module installs one with its own store): cleanup reads the
     # default store these tests write, unless a test installs its own.
-    from kiro_crew.slack.code_channels.workspace import core as workspace_core
+    from aj_crew.slack.code_channels.workspace import core as workspace_core
 
     monkeypatch.setattr(workspace_core, "_SERVICE", None)
     gen = make_env(monkeypatch, tmp_path)
@@ -75,7 +75,7 @@ def env_fixture(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Any:
     e.sessions = {SESSION: SLOT, OTHER_SESSION: OTHER_SLOT}
     monkeypatch.setattr(surface, "caller_slot_key", lambda _s, key: e.sessions.get(key, ""))
     e.allowed = {OWNER}
-    from kiro_crew.slack import handler
+    from aj_crew.slack import handler
 
     # The surface reads the owner check through the handler facade.
     monkeypatch.setattr(handler, "is_allowed_user", lambda u: u in e.allowed)
@@ -106,7 +106,7 @@ def env_fixture(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Any:
     tools._maybe_created.clear()
     surface._stopped_at.clear()
     surface._turn_started_at.clear()
-    from kiro_crew.messaging import identity
+    from aj_crew.messaging import identity
 
     e.inbound_ok = True
     e.outbound_ok = True
@@ -292,7 +292,7 @@ def _retarget_service(
     applies: bool,
     refuse_remove: bool | str = False,
 ) -> Any:
-    from kiro_crew.slack.code_channels.workspace import core as workspace_core
+    from aj_crew.slack.code_channels.workspace import core as workspace_core
 
     async def set_project(key: str, path: str) -> bool:
         events.append(("set_project", f"{key}->{path}"))

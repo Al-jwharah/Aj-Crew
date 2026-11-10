@@ -8,7 +8,7 @@
  * fence and a raw JSON tail with the sentence that says what broke scrolled out
  * of sight. That is only provable from a rendered composer under the real
  * ChatPage -> ChatInput wiring, so the shots come from a live gateway
- * (`kirocrew pod up <worktree> --json`).
+ * (`ajcrew pod up <worktree> --json`).
  *
  * Two hand-off paths, the same way a user hits them:
  *   cross-page  -- a backend failure on /apps/<name> (the app fetch is answered
@@ -20,8 +20,8 @@
  *                  change.
  *
  * Usage:
- *   kirocrew pod up <worktree> --json | tail -1 > "$KIROCREW_SCRATCH/pod-info.json"
- *   POD_INFO="$KIROCREW_SCRATCH/pod-info.json" \
+ *   ajcrew pod up <worktree> --json | tail -1 > "$AJCREW_SCRATCH/pod-info.json"
+ *   POD_INFO="$AJCREW_SCRATCH/pod-info.json" \
  *     node scripts/capture-error-handoff-composer.mjs ../temp-screenshots/error-handoff-composer
  *
  * Every frame asserts the composer state it photographs before writing the PNG
@@ -39,7 +39,7 @@ mkdirSync(OUT, { recursive: true })
 
 const { BASE, authed } = podInfo(readFileSync)
 const COMPOSER = { name: 'Message input' }
-const REPORT_LEAD = 'This error just came up in the Kiro Crew dashboard.'
+const REPORT_LEAD = 'This error just came up in the Aj Crew dashboard.'
 
 async function primePod(page) {
   await page.goto(authed('/chat'), { waitUntil: 'domcontentloaded' })

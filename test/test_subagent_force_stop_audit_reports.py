@@ -28,13 +28,13 @@ from subagent_force_stop_audit_helpers import (
 )
 from test_subagent_continuable import _mock_sessions as _completing_sessions
 
-from kiro_crew import platform_compat, process_identity
-from kiro_crew.acp.client import AcpProcessDied
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.session import SessionManager
-from kiro_crew.slack.gateway import _compose_subagent_completion
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import platform_compat, process_identity
+from aj_crew.acp.client import AcpProcessDied
+from aj_crew.config import AjCrewConfig
+from aj_crew.session import SessionManager
+from aj_crew.slack.gateway import _compose_subagent_completion
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _kill_seam = subagent_force_stop_audit_helpers._kill_seam
@@ -62,14 +62,14 @@ class TestTheReapNamesTheRunsOwnSession:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("cont-run", info, 7200.0)
 
@@ -127,15 +127,15 @@ class TestTheRunsOwnReportWaitsForItsTeardown:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent.mark_delivered") as delivered,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.mark_delivered") as delivered,
             children,
             alive,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 MagicMock(side_effect=_REFUSAL),
             ),
         ):
@@ -176,12 +176,12 @@ class TestTheRunsOwnReportWaitsForItsTeardown:
         manager = _completing_run(seen)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent.mark_delivered") as delivered,
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=None),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.mark_delivered") as delivered,
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=None),
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             info = manager.spawn("finish cleanly", keep=True)
             assert info is not None and not info.error
@@ -211,16 +211,16 @@ class TestTheRunsOwnReportWaitsForItsTeardown:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
-            patch("kiro_crew.subagent.read_tombstone", return_value={"cause": "error"}),
-            patch("kiro_crew.subagent.write_tombstone") as tombstones,
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.read_tombstone", return_value={"cause": "error"}),
+            patch("aj_crew.subagent.write_tombstone") as tombstones,
             children,
             alive,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 MagicMock(side_effect=_REFUSAL),
             ),
         ):
@@ -251,16 +251,16 @@ class TestTheRunsOwnReportWaitsForItsTeardown:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
-            patch("kiro_crew.subagent.read_tombstone", return_value=None),
-            patch("kiro_crew.subagent.write_tombstone") as tombstones,
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.read_tombstone", return_value=None),
+            patch("aj_crew.subagent.write_tombstone") as tombstones,
             children,
             alive,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 MagicMock(side_effect=_REFUSAL),
             ),
         ):
@@ -291,16 +291,16 @@ class TestTheRunsOwnReportWaitsForItsTeardown:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
-            patch("kiro_crew.subagent.read_tombstone", return_value=None),
-            patch("kiro_crew.subagent.write_tombstone"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.read_tombstone", return_value=None),
+            patch("aj_crew.subagent.write_tombstone"),
             children,
             alive,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 MagicMock(side_effect=_REFUSAL),
             ),
         ):
@@ -333,10 +333,10 @@ class TestTheRunsOwnReportWaitsForItsTeardown:
         manager._sessions.reset = AsyncMock(side_effect=_reset_that_hangs)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent.mark_delivered") as delivered,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent.mark_delivered") as delivered,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             info = manager.spawn("finish, then be cancelled in the teardown", keep=True)
             assert info is not None and not info.error
@@ -400,17 +400,17 @@ class TestTheRunsOwnReportWaitsForItsTeardown:
             return await real_signal(*args, **kwargs)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent.mark_delivered") as delivered,
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
-            patch("kiro_crew.subagent._TEARDOWN_REPORT_GRACE", 0.05),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.mark_delivered") as delivered,
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent._TEARDOWN_REPORT_GRACE", 0.05),
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.process_identity._signal_retained_group", _held_signal),
-            patch("kiro_crew.platform_compat.kill_process_group", MagicMock(side_effect=_REFUSAL)),
+            patch("aj_crew.process_identity._signal_retained_group", _held_signal),
+            patch("aj_crew.platform_compat.kill_process_group", MagicMock(side_effect=_REFUSAL)),
         ):
             info = manager.spawn("finish, then hang in the reset and stall in the kill", keep=True)
             assert info is not None and not info.error
@@ -478,20 +478,20 @@ class TestTheRecordCarriesTheKillBeforeItIsPublished:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
-            patch("kiro_crew.subagent.write_tombstone") as tombstones,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.write_tombstone") as tombstones,
             patch.object(manager, "_run_inner", AsyncMock(side_effect=_stream)),
             children,
             alive,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 MagicMock(side_effect=_REFUSAL),
             ),
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock()),
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock()),
         ):
             run_task = asyncio.create_task(manager._run(info))
             manager._tasks["pub1"] = run_task
@@ -557,16 +557,16 @@ class TestADeliveredRecordIsNotRewrittenByTheReap:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
-            patch("kiro_crew.subagent.write_tombstone") as tombstones,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.write_tombstone") as tombstones,
             children,
             alive,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 MagicMock(side_effect=_REFUSAL),
             ),
         ):
@@ -608,16 +608,16 @@ class TestADeliveredRecordIsNotRewrittenByTheReap:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
-            patch("kiro_crew.subagent.write_tombstone") as tombstones,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.write_tombstone") as tombstones,
             children,
             alive,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 MagicMock(side_effect=_REFUSAL),
             ),
         ):
@@ -705,18 +705,18 @@ class TestAStopCancelledMidTeardownStillReports:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent._REPORT_DRAIN_TIMEOUT", 5.0),
-            patch("kiro_crew.subagent.write_tombstone") as tombstones,
-            patch("kiro_crew.subagent.clear_tombstone") as cleared,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent._REPORT_DRAIN_TIMEOUT", 5.0),
+            patch("aj_crew.subagent.write_tombstone") as tombstones,
+            patch("aj_crew.subagent.clear_tombstone") as cleared,
             patch.object(manager, "_run_inner", AsyncMock(side_effect=_stream)),
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group"),
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock()),
+            patch("aj_crew.platform_compat.kill_process_group"),
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock()),
         ):
             run_task = asyncio.create_task(manager._run(info))
             manager._tasks["shut1"] = run_task
@@ -803,11 +803,11 @@ class TestAStopCancelledMidTeardownStillReports:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
-            patch("kiro_crew.subagent._REPORT_DRAIN_TIMEOUT", 5.0),
-            patch("kiro_crew.subagent.write_tombstone") as tombstones,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent._REPORT_DRAIN_TIMEOUT", 5.0),
+            patch("aj_crew.subagent.write_tombstone") as tombstones,
             patch.object(manager, "_run_inner", AsyncMock(side_effect=_stream)),
             children,
             alive,
@@ -816,10 +816,10 @@ class TestAStopCancelledMidTeardownStillReports:
             # The group signal fails; the kill's pid-scoped fallback is the await
             # the cancellation lands in.
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 MagicMock(side_effect=PermissionError("[Errno 1] Operation not permitted")),
             ),
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock(side_effect=_hanging_kill)),
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock(side_effect=_hanging_kill)),
         ):
             run_task = asyncio.create_task(manager._run(info))
             manager._tasks["shut3"] = run_task
@@ -878,17 +878,17 @@ class TestAStopCancelledMidTeardownStillReports:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent._REPORT_DRAIN_TIMEOUT", 5.0),
-            patch("kiro_crew.subagent.write_tombstone") as tombstones,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent._REPORT_DRAIN_TIMEOUT", 5.0),
+            patch("aj_crew.subagent.write_tombstone") as tombstones,
             patch.object(manager, "_run_inner", AsyncMock(side_effect=_stream)),
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group"),
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock()),
+            patch("aj_crew.platform_compat.kill_process_group"),
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock()),
         ):
             run_task = asyncio.create_task(manager._run(info))
             manager._tasks["shut2"] = run_task
@@ -950,18 +950,18 @@ class TestAStopCancelledMidTeardownStillReports:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent._REPORT_DRAIN_TIMEOUT", 0.5),
-            patch("kiro_crew.subagent.write_tombstone") as tombstones,
-            patch("kiro_crew.subagent.clear_tombstone") as cleared,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent._REPORT_DRAIN_TIMEOUT", 0.5),
+            patch("aj_crew.subagent.write_tombstone") as tombstones,
+            patch("aj_crew.subagent.clear_tombstone") as cleared,
             patch.object(manager, "_run_inner", AsyncMock(side_effect=_stream)),
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group"),
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock()),
+            patch("aj_crew.platform_compat.kill_process_group"),
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock()),
         ):
             run_task = asyncio.create_task(manager._run(info))
             manager._tasks["shut4"] = run_task
@@ -1028,16 +1028,16 @@ class TestConcurrentStopsCoalesceIntoOneReap:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
-            patch("kiro_crew.subagent.write_tombstone") as tombstones,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.write_tombstone") as tombstones,
             children,
             alive,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 MagicMock(side_effect=_REFUSAL),
             ) as group_kill,
         ):
@@ -1096,17 +1096,17 @@ class TestConcurrentStopsCoalesceIntoOneReap:
             await report_task
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
-            patch("kiro_crew.subagent.write_tombstone"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.write_tombstone"),
             patch.object(manager, "_await_report", AsyncMock(side_effect=_slow_delivery)),
             children,
             alive,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 MagicMock(side_effect=_REFUSAL),
             ),
         ):
@@ -1148,15 +1148,15 @@ class TestConcurrentStopsCoalesceIntoOneReap:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
             children,
             alive,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 MagicMock(side_effect=_REFUSAL),
             ) as group_kill,
         ):
@@ -1218,8 +1218,8 @@ class TestTheReapFencesTheKey:
         children, _alive, _start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
             patch.object(manager, "_sessions_under", side_effect=_snapshot),
             patch.object(
                 manager, "_write_tombstone", side_effect=lambda *_a, **_k: events.append("record")
@@ -1228,9 +1228,9 @@ class TestTheReapFencesTheKey:
             sweep,
             # The reset stopped the process: gone by identity and by liveness,
             # its group empty (the autouse pin), so nothing survives to kill.
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=None),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=None),
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             mock_sel().log_tool_invocation.side_effect = lambda **_: events.append("audit")
             await manager._force_reap("fence1", info, 7200.0)
@@ -1263,12 +1263,12 @@ class TestTheReapFencesTheKey:
         children, _alive, _start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
             children,
             sweep,
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=None),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=None),
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
         ):
             await manager._force_reap("fence3", info, 7200.0)
 
@@ -1304,7 +1304,7 @@ class TestTheReapFencesTheKey:
             provider.start = AsyncMock(side_effect=_gated_start)
             return provider
 
-        mgr = SessionManager(KiroCrewConfig(), provider_factory=_factory)
+        mgr = SessionManager(AjCrewConfig(), provider_factory=_factory)
         key = "subagent:fence2"
         cold_start = asyncio.create_task(mgr.get_or_create(key))
         await await_until(inside_start, what="start() being entered")
@@ -1328,14 +1328,14 @@ class TestTheReapFencesTheKey:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
             patch.object(mgr, "_dispatch_hard_kill") as hard_kill,
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             assert manager._retain_process_handles("fence2", key) == []
             await manager._force_reap("fence2", info, 7200.0)

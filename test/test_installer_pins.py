@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.acp.client_claude_session import CLAUDE_ACP_SETTING_SOURCES_MIN_VERSION
+from aj_crew.acp.client_claude_session import CLAUDE_ACP_SETTING_SOURCES_MIN_VERSION
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ACP_PIN_JSON = REPO_ROOT / "packaging" / "acp-adapters" / "package.json"

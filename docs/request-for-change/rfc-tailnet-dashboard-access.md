@@ -44,7 +44,7 @@ superseded-by: []
 
 ## Summary
 
-Kiro Crew's remote-access story is "bind loopback, mount token auth, put a
+Aj Crew's remote-access story is "bind loopback, mount token auth, put a
 tunnel in front". `tailscale serve` fits that shape exactly and works today with
 no code changes. But it works *by accident*, and two of the properties the
 documentation advertises as mitigations do not hold behind it.
@@ -75,7 +75,7 @@ setting, and any change to which endpoints refuse forwarded requests.
 Remote access has exactly one shape. `is_local_only()` (`dashboard/urls.py`)
 always returns `True` in the OSS build — its only widening branch depends on
 `devspaces_proxy_url()`, which always returns `None` — so the dashboard
-binds loopback unconditionally. `KIROCREW_BIND` overrides the bind
+binds loopback unconditionally. `AJCREW_BIND` overrides the bind
 address only, and is documented as existing for containers.
 
 Everything else is layered on top of that loopback socket:
@@ -104,7 +104,7 @@ session creation, which is `request.remote`. For cloudflared, ngrok, and
 - the token binds to the proxy on first use and then matches every subsequent
   request from anyone arriving through the same proxy;
 - a leaked link is a bearer credential for its full session lifetime — up to the
-  20-hour `MAX_SESSION_TTL_SECS` ceiling, and `kirocrew token` defaults straight
+  20-hour `MAX_SESSION_TTL_SECS` ceiling, and `ajcrew token` defaults straight
   to `20h`;
 - there is no record of who used it, because the audit `caller` is the proxy.
 
@@ -198,7 +198,7 @@ reuses that rule verbatim and adds the second and third clauses.
 
 ### §2 Forwarded-peer resolution
 
-A new module `src/kiro_crew/dashboard/tailnet.py` exposes one function:
+A new module `src/aj_crew/dashboard/tailnet.py` exposes one function:
 
 ```python
 def resolve_forwarded_peer(request: web.Request) -> ForwardedPeer | None
@@ -264,7 +264,7 @@ dashboard. So:
 
 `trust_identity: true` with an empty `allowed_logins` is a **configuration
 error**: it is refused at load with a logged reason and identity trust stays
-off. This must not be a silently-permissive default. `KIROCREW_OWNER_ID` cannot
+off. This must not be a silently-permissive default. `AJCREW_OWNER_ID` cannot
 supply the default — it is a chat-platform user id, a different namespace from a
 Tailscale login.
 
@@ -297,7 +297,7 @@ the resolved login is `tagged-devices`, force node scope and log that the
 configured scope was overridden.
 
 An unrecognised `pin_scope` value falls back to `node` with a logged warning —
-the same direction as `KIROCREW_BIND`'s invalid-value handling, where a typo can
+the same direction as `AJCREW_BIND`'s invalid-value handling, where a typo can
 only ever narrow exposure, never widen it.
 
 `pin_scope` is nested under `tailscale` because a resolved peer identity is
@@ -515,7 +515,7 @@ is regenerated on restart.
 
 ## Alternatives considered
 
-**Recommend `KIROCREW_BIND=<tailnet address>` instead of Serve.** Works today
+**Recommend `AJCREW_BIND=<tailnet address>` instead of Serve.** Works today
 and gives a genuine per-peer `request.remote`, so the IP pin functions. Rejected
 as the recommended path: no TLS, requires a stable tailnet address in an env
 var, and no identity headers — so the audit trail still cannot name a person.

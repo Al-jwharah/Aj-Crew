@@ -20,12 +20,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp import session_handle
-from kiro_crew.acp.liveness import VERDICT_DEAD, VERDICT_UNKNOWN, ToolCallState
-from kiro_crew.acp.session_handle import AcpSessionHandle, WatchdogSettings
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.acp.types import STOP_REASON_TOOL_STALL
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp import session_handle
+from aj_crew.acp.liveness import VERDICT_DEAD, VERDICT_UNKNOWN, ToolCallState
+from aj_crew.acp.session_handle import AcpSessionHandle, WatchdogSettings
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.acp.types import STOP_REASON_TOOL_STALL
+from aj_crew.testing.wait import await_until
 
 # Binary fractions, so the clock's sums are exact.
 _TICK = 1 / 64

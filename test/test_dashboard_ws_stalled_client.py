@@ -27,12 +27,12 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import revocation_gen, token_auth, websocket_hub
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.dashboard.state import _websocket_for
-from kiro_crew.dashboard.websocket_hub import SLOT_PATCH_WS_FLAG
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.dashboard import revocation_gen, token_auth, websocket_hub
+from aj_crew.dashboard.handlers import updates
+from aj_crew.dashboard.state import _websocket_for
+from aj_crew.dashboard.websocket_hub import SLOT_PATCH_WS_FLAG
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import async_wait_until
 
 FRAME = 64 * 1024
 
@@ -48,8 +48,8 @@ def _level_moves_on_this_loop() -> bool:
 
 @pytest.fixture
 def ws_state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(token_auth, "_get_secret", lambda: b"stalled-tab-test-signing-key")
     monkeypatch.setattr(token_auth, "_state", token_auth.TokenStateManager())
     monkeypatch.setattr(token_auth, "_app_perms_cache", {})
@@ -57,7 +57,7 @@ def ws_state(tmp_path, monkeypatch):
     monkeypatch.setattr(revocation_gen, "_gen", 0)
     stopped = asyncio.Event()
     monkeypatch.setattr(updates, "shutdown_event", stopped)
-    monkeypatch.setattr("kiro_crew.dashboard.ws.shutdown_event", stopped)
+    monkeypatch.setattr("aj_crew.dashboard.ws.shutdown_event", stopped)
     # A stalled tab is dropped at the first send that finds its buffer over the
     # limit and not shrunk since the send before (no window in these tests).
     monkeypatch.setattr(websocket_hub, "WS_STALL_SECONDS", 0.0, raising=False)
@@ -89,7 +89,7 @@ async def _stalled_socket(host: str, port: int, token: str, origin: str) -> sock
 
 
 async def _harness(state, body):
-    from kiro_crew.dashboard.ws import api_ws
+    from aj_crew.dashboard.ws import api_ws
 
     app = _make_app(state)
     app.middlewares.insert(0, token_auth.token_auth_middleware())

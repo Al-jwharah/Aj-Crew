@@ -25,10 +25,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import atomic_write as atomic_write_mod
-from kiro_crew import session_storage
-from kiro_crew.atomic_write import fsync_dir, fsync_open_dir
-from kiro_crew.session_storage import INCOMING_PREFIX, MANIFEST_NAME, SessionIndex
+from aj_crew import atomic_write as atomic_write_mod
+from aj_crew import session_storage
+from aj_crew.atomic_write import fsync_dir, fsync_open_dir
+from aj_crew.session_storage import INCOMING_PREFIX, MANIFEST_NAME, SessionIndex
 
 _NOW = 1_700_000_000.0
 _DAY = 86400.0
@@ -54,7 +54,7 @@ def stores(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, Path]
     kiro_home = crew_home / "kiro"
     (crew_home / "sessions" / "archive").mkdir(parents=True)
     (kiro_home / "sessions" / "cli").mkdir(parents=True)
-    monkeypatch.setenv("KIROCREW_HOME", str(crew_home))
+    monkeypatch.setenv("AJCREW_HOME", str(crew_home))
     monkeypatch.setenv("KIRO_HOME", str(kiro_home))
     return crew_home, kiro_home
 

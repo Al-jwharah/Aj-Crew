@@ -33,7 +33,7 @@ const OPTION_LABELS = ['Merge it now', 'Show me the diff', 'Skip the rebase']
 const slots = [
   {
     key: LEFT, title: 'Release PR babysit', messages: 4, running: false,
-    agent: 'kirocrew', created: '2026-08-20T09:00:00Z', last_ts: '2026-08-25T10:00:00Z', folder_id: '',
+    agent: 'ajcrew', created: '2026-08-20T09:00:00Z', last_ts: '2026-08-25T10:00:00Z', folder_id: '',
   },
   {
     key: RIGHT, title: 'Pipeline triage', messages: 2, running: false,

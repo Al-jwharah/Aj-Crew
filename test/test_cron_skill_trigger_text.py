@@ -1,6 +1,6 @@
 """A single-agent cron turn matches skill triggers on the job's own prompt.
 
-When a job carries acknowledged items, the cron turn appends Kiro Crew's own
+When a job carries acknowledged items, the cron turn appends Aj Crew's own
 ``[User has seen and acknowledged ALL of the following ...]`` list to the prompt
 before ``build_message``. Unless ``build_message`` gets ``skill_trigger_text``,
 triggers match that whole text, so a skill whose trigger appears only in the
@@ -21,10 +21,10 @@ import pytest
 from slack_gateway_helpers import _restore_update_check_cache  # noqa: F401
 from slack_gateway_helpers import _make_orchestrator, _mock_dashboard_state, _mock_sessions
 
-from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
-from kiro_crew.context import ContextBuilder
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew.config.loader import AjCrewConfig, SkillsConfig
+from aj_crew.context import ContextBuilder
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 pytestmark = pytest.mark.usefixtures("close_skills_loaders")
 
@@ -52,7 +52,7 @@ def _builder(tmp_path: Path) -> ContextBuilder:
     loader = SkillsLoader(
         skills_path=skills,
         install_builtins=False,
-        config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+        config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
     )
     return ContextBuilder(memory=MemoryStore(workspace=tmp_path / "ws"), skills=loader)
 
@@ -102,7 +102,7 @@ async def _cron_call(prompt: str, acked: list[str]) -> tuple[tuple[Any, ...], di
     orch.slack.post_blocks = AsyncMock(return_value="ts1")
     orch.slack.post_message = AsyncMock()
 
-    with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+    with patch("aj_crew.slack.gateway.CronService") as mock_cs:
         mock_cs_inst = MagicMock()
         mock_cs_inst.start = AsyncMock()
         mock_cs_inst.start_reaper = MagicMock()
@@ -115,12 +115,12 @@ async def _cron_call(prompt: str, acked: list[str]) -> tuple[tuple[Any, ...], di
 
     with (
         patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             return_value="cron result",
         ),
         patch(
-            "kiro_crew.slack.gateway.build_cron_session_context",
+            "aj_crew.slack.gateway.build_cron_session_context",
             return_value=("cron:j1", prompt),
         ),
     ):

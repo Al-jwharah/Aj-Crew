@@ -98,8 +98,8 @@ describe('useWebSocket reconnect unread suppression', () => {
     testStore = createTestStore({
       chat: { ...chatReducer(undefined, { type: '@@INIT' }), activeSlot: 'chat-active' },
     })
-    testStore.dispatch(sseSubagentSpawn({ slot: 'chat-active', id: 'stale-active', task: 'Old active task', agent: 'kirocrew' }))
-    testStore.dispatch(sseSubagentSpawn({ slot: 'chat-other', id: 'stale-background', task: 'Old background task', agent: 'kirocrew' }))
+    testStore.dispatch(sseSubagentSpawn({ slot: 'chat-active', id: 'stale-active', task: 'Old active task', agent: 'ajcrew' }))
+    testStore.dispatch(sseSubagentSpawn({ slot: 'chat-other', id: 'stale-background', task: 'Old background task', agent: 'ajcrew' }))
 
     const { unmount } = renderHook(() => useWebSocket(), { wrapper })
     const ws1 = WS_INSTANCES[0]
@@ -114,7 +114,7 @@ describe('useWebSocket reconnect unread suppression', () => {
     act(() => {
       ws1.simulateMessage({
         type: 'subagent_snapshot',
-        data: { id: 'live-1', slot: 'chat-active', task: 'Live task', agent: 'kirocrew', streaming: '', last_tool: '', started: Date.now() / 1000 },
+        data: { id: 'live-1', slot: 'chat-active', task: 'Live task', agent: 'ajcrew', streaming: '', last_tool: '', started: Date.now() / 1000 },
       })
     })
     expect(testStore.getState().chat.subagents['live-1']?.status).toBe('running')
@@ -127,7 +127,7 @@ describe('useWebSocket reconnect unread suppression', () => {
     act(() => {
       ws2.simulateMessage({
         type: 'subagent_snapshot',
-        data: { id: 'live-2', slot: 'chat-active', task: 'Current live task', agent: 'kirocrew', streaming: '', last_tool: '', started: Date.now() / 1000 },
+        data: { id: 'live-2', slot: 'chat-active', task: 'Current live task', agent: 'ajcrew', streaming: '', last_tool: '', started: Date.now() / 1000 },
       })
       ws2.simulateMessage({ type: 'subagent_replay_done', data: {} })
     })
@@ -145,7 +145,7 @@ describe('useWebSocket reconnect unread suppression', () => {
     })
     // A running card (has a backend record, will be re-hydrated by replay) and a
     // pending spawn-approval card (no backend SubagentInfo yet, so nothing replays it).
-    testStore.dispatch(sseSubagentSpawn({ slot: 'chat-active', id: 'stale-running', task: 'Old task', agent: 'kirocrew' }))
+    testStore.dispatch(sseSubagentSpawn({ slot: 'chat-active', id: 'stale-running', task: 'Old task', agent: 'ajcrew' }))
     testStore.dispatch(sseSubagentPending({ slot: 'chat-active', id: 'spawn:pending-1', task: 'Awaiting approval', approval_id: 'appr-1' }))
 
     const { unmount } = renderHook(() => useWebSocket(), { wrapper })

@@ -9,14 +9,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from conftest import forget_env_at_teardown
-from kiro_crew import _ssl_compat
-from kiro_crew._ssl_compat import _CA_CANDIDATES, _ensure_ssl_certs
+from aj_crew import _ssl_compat
+from aj_crew._ssl_compat import _CA_CANDIDATES, _ensure_ssl_certs
 
 # The provenance markers, one per exported variable. The names are a contract
 # (a successor reads them from an environment a predecessor wrote), so they
 # are spelled here rather than imported.
-_SSL_MARKER = "KIROCREW_EXPORTED_SSL_CERT_FILE"
-_REQUESTS_MARKER = "KIROCREW_EXPORTED_REQUESTS_CA_BUNDLE"
+_SSL_MARKER = "AJCREW_EXPORTED_SSL_CERT_FILE"
+_REQUESTS_MARKER = "AJCREW_EXPORTED_REQUESTS_CA_BUNDLE"
 _MARKERS = (_SSL_MARKER, _REQUESTS_MARKER)
 
 
@@ -82,7 +82,7 @@ class TestEnsureSslCerts:
 
         with (
             patch("ssl.get_default_verify_paths", return_value=mock_paths),
-            patch("kiro_crew._ssl_compat._CA_CANDIDATES", candidates),
+            patch("aj_crew._ssl_compat._CA_CANDIDATES", candidates),
         ):
             _ensure_ssl_certs()
 
@@ -104,7 +104,7 @@ class TestEnsureSslCerts:
 
         with (
             patch("ssl.get_default_verify_paths", return_value=mock_paths),
-            patch("kiro_crew._ssl_compat._CA_CANDIDATES", candidates),
+            patch("aj_crew._ssl_compat._CA_CANDIDATES", candidates),
         ):
             _ensure_ssl_certs()
 
@@ -123,7 +123,7 @@ class TestEnsureSslCerts:
 
         with (
             patch("ssl.get_default_verify_paths", return_value=mock_paths),
-            patch("kiro_crew._ssl_compat._CA_CANDIDATES", candidates),
+            patch("aj_crew._ssl_compat._CA_CANDIDATES", candidates),
             patch.dict("sys.modules", {"certifi": None}),
         ):
             _ensure_ssl_certs()
@@ -147,7 +147,7 @@ class TestEnsureSslCerts:
 
         with (
             patch("ssl.get_default_verify_paths", return_value=mock_paths),
-            patch("kiro_crew._ssl_compat._CA_CANDIDATES", candidates),
+            patch("aj_crew._ssl_compat._CA_CANDIDATES", candidates),
             patch.dict("sys.modules", {"certifi": mock_certifi}),
         ):
             _ensure_ssl_certs()
@@ -191,7 +191,7 @@ class TestEnsureSslCerts:
 
         with (
             patch("ssl.get_default_verify_paths", return_value=mock_paths),
-            patch("kiro_crew._ssl_compat._CA_CANDIDATES", (str(existing_candidate),)),
+            patch("aj_crew._ssl_compat._CA_CANDIDATES", (str(existing_candidate),)),
             patch.dict("sys.modules", {"certifi": mock_certifi}),
         ):
             _ensure_ssl_certs()
@@ -235,7 +235,7 @@ class TestEnsureSslCerts:
 
         with (
             patch("ssl.get_default_verify_paths", return_value=mock_paths),
-            patch("kiro_crew._ssl_compat._CA_CANDIDATES", candidates),
+            patch("aj_crew._ssl_compat._CA_CANDIDATES", candidates),
         ):
             _ensure_ssl_certs()
 
@@ -258,12 +258,12 @@ class TestEnsureSslCerts:
         mock_fn = MagicMock()
         mock_drop = MagicMock()
         with (
-            _patch("kiro_crew._ssl_compat._ensure_ssl_certs", mock_fn),
-            _patch("kiro_crew._llama_lib_path.drop_inherited_lib_path", mock_drop),
+            _patch("aj_crew._ssl_compat._ensure_ssl_certs", mock_fn),
+            _patch("aj_crew._llama_lib_path.drop_inherited_lib_path", mock_drop),
         ):
-            import kiro_crew.cli
+            import aj_crew.cli
 
-            importlib.reload(kiro_crew.cli)
+            importlib.reload(aj_crew.cli)
         mock_fn.assert_called()
 
     def test_macos_injects_system_trust(self, monkeypatch, tmp_path):
@@ -340,7 +340,7 @@ class TestEnsureSslCerts:
             patch.object(_ssl_compat, "truststore", mock_truststore),
             patch.dict(sys.modules, {"certifi": mock_certifi}),
             patch("ssl.get_default_verify_paths", return_value=mock_paths),
-            patch("kiro_crew._ssl_compat._CA_CANDIDATES", ("/nonexistent/a.pem",)),
+            patch("aj_crew._ssl_compat._CA_CANDIDATES", ("/nonexistent/a.pem",)),
         ):
             _ensure_ssl_certs()
 
@@ -363,7 +363,7 @@ class TestEnsureSslCerts:
         with (
             patch.object(_ssl_compat, "truststore", mock_truststore),
             patch("ssl.get_default_verify_paths", return_value=mock_paths),
-            caplog.at_level("WARNING", logger="kiro_crew._ssl_compat"),
+            caplog.at_level("WARNING", logger="aj_crew._ssl_compat"),
         ):
             _ensure_ssl_certs()
 
@@ -386,7 +386,7 @@ class TestEnsureSslCerts:
         with (
             patch.object(_ssl_compat, "truststore", None),
             patch("ssl.get_default_verify_paths", return_value=mock_paths),
-            caplog.at_level("WARNING", logger="kiro_crew._ssl_compat"),
+            caplog.at_level("WARNING", logger="aj_crew._ssl_compat"),
         ):
             _ensure_ssl_certs()
 
@@ -398,10 +398,10 @@ class TestEnsureSslCerts:
         import importlib
 
         mock_fn = MagicMock()
-        with patch("kiro_crew._ssl_compat._ensure_ssl_certs", mock_fn):
-            import kiro_crew.mcp_gateway.gatewayd
+        with patch("aj_crew._ssl_compat._ensure_ssl_certs", mock_fn):
+            import aj_crew.mcp_gateway.gatewayd
 
-            importlib.reload(kiro_crew.mcp_gateway.gatewayd)
+            importlib.reload(aj_crew.mcp_gateway.gatewayd)
         mock_fn.assert_called()
 
     def test_context_trust_uses_openssl_ca_count(self, monkeypatch):
@@ -422,7 +422,7 @@ class TestEnsureSslCerts:
 
 
 def _install_bundle(root: Path, install: str) -> Path:
-    """The certifi bundle path of a Kiro Crew install rooted at *root*/*install*.
+    """The certifi bundle path of a Aj Crew install rooted at *root*/*install*.
 
     The shape every pip, venv and desktop-bundle install shares:
     ``<prefix>/lib/pythonX.Y/site-packages/certifi/cacert.pem``. Built from the
@@ -447,7 +447,7 @@ def _no_system_bundle():
     mock_paths = type("P", (), {"cafile": None, "capath": None})()
     return (
         patch("ssl.get_default_verify_paths", return_value=mock_paths),
-        patch("kiro_crew._ssl_compat._CA_CANDIDATES", ("/nonexistent/a.pem", "/nonexistent/b.crt")),
+        patch("aj_crew._ssl_compat._CA_CANDIDATES", ("/nonexistent/a.pem", "/nonexistent/b.crt")),
     )
 
 
@@ -458,7 +458,7 @@ def _certifi_at(bundle) -> object:
 
 def _inherited_lines(caplog) -> list:
     return [
-        r for r in caplog.records if "inherited from another Kiro Crew process" in r.getMessage()
+        r for r in caplog.records if "inherited from another Aj Crew process" in r.getMessage()
     ]
 
 
@@ -481,7 +481,7 @@ class TestInheritedInstallPinnedBundle:
     publishes beside each variable it assigns, and by nothing else -- is
     re-derived for this install.  An operator's value, including a certifi bundle they chose
     themselves, a pin whose file they have yet to repair, and a dead file
-    inside one of Kiro Crew's own install trees, is never touched.  A
+    inside one of Aj Crew's own install trees, is never touched.  A
     predecessor from before the provenance existed is therefore not recognised:
     its dead export is kept, fails closed, and the warning names the way out.
     """
@@ -526,7 +526,7 @@ class TestInheritedInstallPinnedBundle:
             no_cafile,
             no_candidates,
             patch.dict("sys.modules", {"certifi": _certifi_at(new_bundle)}),
-            caplog.at_level("INFO", logger="kiro_crew._ssl_compat"),
+            caplog.at_level("INFO", logger="aj_crew._ssl_compat"),
         ):
             _ensure_ssl_certs()
 
@@ -580,7 +580,7 @@ class TestInheritedInstallPinnedBundle:
 
         Its export carries no provenance marker, so the successor
         holds a dead path and nothing that says whose it is.  The directory it
-        lies in is not that proof either, not even one of Kiro Crew's own
+        lies in is not that proof either, not even one of Aj Crew's own
         install trees (the retired ``<data home>/venv`` the installer re-run
         deletes, a versioned sibling of the managed venv): an operator can place
         a restricted bundle inside this runtime's venv, and a dead file there
@@ -595,7 +595,7 @@ class TestInheritedInstallPinnedBundle:
             "versioned-sibling": home.with_name(f"{home.name}-venv-1.2.3"),
         }[former_tree]
         dead_pin = _bundle_in(dead_tree)  # never created: the tree was deleted
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setenv("SSL_CERT_FILE", str(dead_pin))
         monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
         for marker in _MARKERS:
@@ -609,7 +609,7 @@ class TestInheritedInstallPinnedBundle:
             no_cafile,
             no_candidates,
             patch.dict("sys.modules", {"certifi": _certifi_at(new_bundle)}),
-            caplog.at_level("INFO", logger="kiro_crew._ssl_compat"),
+            caplog.at_level("INFO", logger="aj_crew._ssl_compat"),
         ):
             _ensure_ssl_certs()
 
@@ -628,8 +628,8 @@ class TestInheritedInstallPinnedBundle:
         """The prelude's import set is two modules, the same on every platform.
 
         A fresh interpreter runs the prelude against a dead pin without
-        provenance and reports the ``kiro_crew`` modules it loaded: exactly
-        ``kiro_crew`` and the prelude.  The config package, ``platform_compat``
+        provenance and reports the ``aj_crew`` modules it loaded: exactly
+        ``aj_crew`` and the prelude.  The config package, ``platform_compat``
         and the update engine must not be among them, and no HTTPS client may
         have been imported -- the prelude exists to run before any of them.
         """
@@ -648,10 +648,10 @@ class TestInheritedInstallPinnedBundle:
             env.pop(marker, None)
         code = (
             "import sys\n"
-            "from kiro_crew._ssl_compat import _ensure_ssl_certs\n"
+            "from aj_crew._ssl_compat import _ensure_ssl_certs\n"
             "_ensure_ssl_certs()\n"
             "print(repr(sorted(m for m in sys.modules "
-            "if m.startswith('kiro_crew') or m in ('aiohttp', 'requests', 'urllib3'))))\n"
+            "if m.startswith('aj_crew') or m in ('aiohttp', 'requests', 'urllib3'))))\n"
         )
         result = subprocess.run(
             [sys.executable, "-c", code],
@@ -662,7 +662,7 @@ class TestInheritedInstallPinnedBundle:
         )
         assert result.returncode == 0, result.stderr
         loaded = ast.literal_eval(result.stdout.strip().splitlines()[-1])
-        assert loaded == ["kiro_crew", "kiro_crew._ssl_compat"], loaded
+        assert loaded == ["aj_crew", "aj_crew._ssl_compat"], loaded
 
     def test_runtime_export_yields_to_a_system_bundle(self, monkeypatch, tmp_path):
         """Re-deriving means the clean-start order: the system bundle wins over certifi.
@@ -712,7 +712,7 @@ class TestInheritedInstallPinnedBundle:
             monkeypatch.delenv(marker, raising=False)
         inject = MagicMock()
         mock_truststore = type("Truststore", (), {"inject_into_ssl": inject})()
-        own_bundle = _install_bundle(tmp_path, "kiro-crew")
+        own_bundle = _install_bundle(tmp_path, "aj-crew")
         own_bundle.parent.mkdir(parents=True)
         own_bundle.write_text("this install's certifi bundle")
         no_cafile, no_candidates = _no_system_bundle()
@@ -722,7 +722,7 @@ class TestInheritedInstallPinnedBundle:
             no_cafile,
             no_candidates,
             patch.dict("sys.modules", {"certifi": _certifi_at(own_bundle)}),
-            caplog.at_level("INFO", logger="kiro_crew._ssl_compat"),
+            caplog.at_level("INFO", logger="aj_crew._ssl_compat"),
         ):
             _ensure_ssl_certs()
 
@@ -755,7 +755,7 @@ class TestInheritedInstallPinnedBundle:
             no_cafile,
             no_candidates,
             patch.dict("sys.modules", {"certifi": _certifi_at(new_bundle)}),
-            caplog.at_level("INFO", logger="kiro_crew._ssl_compat"),
+            caplog.at_level("INFO", logger="aj_crew._ssl_compat"),
         ):
             _ensure_ssl_certs()
 
@@ -773,7 +773,7 @@ class TestInheritedInstallPinnedBundle:
         monkeypatch.setenv("SSL_CERT_FILE", str(missing))
         monkeypatch.delenv("REQUESTS_CA_BUNDLE", raising=False)
 
-        with caplog.at_level("WARNING", logger="kiro_crew._ssl_compat"):
+        with caplog.at_level("WARNING", logger="aj_crew._ssl_compat"):
             _ensure_ssl_certs()
 
         import os
@@ -804,7 +804,7 @@ class TestInheritedInstallPinnedBundle:
         for marker in _MARKERS:
             monkeypatch.setenv(marker, str(stale))
 
-        with caplog.at_level("INFO", logger="kiro_crew._ssl_compat"):
+        with caplog.at_level("INFO", logger="aj_crew._ssl_compat"):
             _ensure_ssl_certs()
 
         import os
@@ -859,7 +859,7 @@ class TestInheritedInstallPinnedBundle:
             no_cafile,
             no_candidates,
             patch.dict("sys.modules", {"certifi": _certifi_at(new_bundle)}),
-            caplog.at_level("INFO", logger="kiro_crew._ssl_compat"),
+            caplog.at_level("INFO", logger="aj_crew._ssl_compat"),
         ):
             _ensure_ssl_certs()
 
@@ -892,7 +892,7 @@ class TestInheritedInstallPinnedBundle:
             no_cafile,
             no_candidates,
             patch.dict("sys.modules", {"certifi": _certifi_at(bundle)}),
-            caplog.at_level("INFO", logger="kiro_crew._ssl_compat"),
+            caplog.at_level("INFO", logger="aj_crew._ssl_compat"),
         ):
             _ensure_ssl_certs()
             _ensure_ssl_certs()

@@ -18,11 +18,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import safety_override as so_mod
-from kiro_crew.apps import teardown
-from kiro_crew.apps import worker_auto_approve as waa
-from kiro_crew.apps.context import build_app_context
-from kiro_crew.apps.manager import (
+from aj_crew import safety_override as so_mod
+from aj_crew.apps import teardown
+from aj_crew.apps import worker_auto_approve as waa
+from aj_crew.apps.context import build_app_context
+from aj_crew.apps.manager import (
     APP_MANIFEST_FILENAME,
     APPROVED_GRANTS_FILENAME,
     INSTALLED_META_FILENAME,
@@ -35,13 +35,13 @@ from kiro_crew.apps.manager import (
     uninstall_app,
     update_app,
 )
-from kiro_crew.apps.manifest_sections import Permissions
-from kiro_crew.apps.point_grants import grant_source, point_grant_families
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.governance import parse_policy
+from aj_crew.apps.manifest_sections import Permissions
+from aj_crew.apps.point_grants import grant_source, point_grant_families
+from aj_crew.dashboard import chat_runner
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.governance import parse_policy
 
 APP = "test-app"
 OTHER = "other-app"
@@ -52,9 +52,9 @@ TTL = 900
 def _isolate(tmp_path, _floor_monkeypatch, sel_private_root):
     """A private app home, SEL root, ceiling and ``SafetyOverride`` per case."""
     monkeypatch = _floor_monkeypatch
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     (home / "config.json").write_text(
         json.dumps({"agent": {"apps_allow_third_party": True}}), encoding="utf-8"
     )
@@ -116,9 +116,9 @@ def _active(scope: str) -> bool:
 
 
 def _deny_yolo() -> None:
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    base = build_default_context(KiroCrewConfig.load())
+    base = build_default_context(AjCrewConfig.load())
     ceiling = parse_policy(
         {
             "version": 1,

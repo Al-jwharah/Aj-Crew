@@ -53,14 +53,14 @@ const DIFF_TOL = 24
 // ---------------------------------------------------------------------------
 
 const CREWS = [
-  { name: 'default', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: 'Used for all new chats', source: 'user', model: '', triggers: '', session_color: '' },
+  { name: 'default', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: 'Used for all new chats', source: 'user', model: '', triggers: '', session_color: '' },
   { name: 'atlas', kiro_agent: 'atlas', workspace: 'default', memory_store: 'default', description: 'Long-horizon planner', source: 'user', model: '', triggers: 'migration', session_color: '' },
   { name: 'scout', kiro_agent: 'scout', workspace: 'default', memory_store: 'default', description: 'Research scout', source: 'user', model: '', triggers: '', session_color: '' },
 ]
 const INSTALLED = [
-  { name: 'kirocrew', description: 'Built-in', source: 'kirocrew', model: '', skills: ['memory', 'artifacts'], mcp_servers: ['kirocrew-core'], filename: 'kirocrew.json', kirocrew_owned: true },
-  { name: 'atlas', description: 'Long-horizon planner', source: 'builtin', model: '', skills: ['grill'], mcp_servers: ['kirocrew-core'], filename: 'atlas.json', kirocrew_owned: false },
-  { name: 'scout', description: 'Built-in', source: 'builtin', model: '', skills: ['memory'], mcp_servers: ['kirocrew-core'], filename: 'scout.json', kirocrew_owned: false },
+  { name: 'ajcrew', description: 'Built-in', source: 'ajcrew', model: '', skills: ['memory', 'artifacts'], mcp_servers: ['ajcrew-core'], filename: 'ajcrew.json', ajcrew_owned: true },
+  { name: 'atlas', description: 'Long-horizon planner', source: 'builtin', model: '', skills: ['grill'], mcp_servers: ['ajcrew-core'], filename: 'atlas.json', ajcrew_owned: false },
+  { name: 'scout', description: 'Built-in', source: 'builtin', model: '', skills: ['memory'], mcp_servers: ['ajcrew-core'], filename: 'scout.json', ajcrew_owned: false },
 ]
 const FOLDERS = [
   { id: 'f1', name: 'Kiro', icon: '🚀', order: 0, collapsed: false },
@@ -72,7 +72,7 @@ function makeScene() {
   const now = Math.floor(Date.now() / 1000)
   // Two more sessions so the sidebar shows a list, one of them in a folder.
   slots.push(
-    { key: 'chat-1-b', title: 'Per-app trust grants', running: false, last_message: 'Done.', messages: 4, agent: 'kirocrew', memory_mode: 'persistent', project: PROJECT, modified: now - 3600, folder_id: 'f1', source_links: [], source_links_total: 0 },
+    { key: 'chat-1-b', title: 'Per-app trust grants', running: false, last_message: 'Done.', messages: 4, agent: 'ajcrew', memory_mode: 'persistent', project: PROJECT, modified: now - 3600, folder_id: 'f1', source_links: [], source_links_total: 0 },
     { key: 'chat-1-c', title: 'Windows NSIS target', running: false, last_message: 'Shipped.', messages: 9, agent: 'atlas', memory_mode: 'persistent', project: PROJECT, modified: now - 7200, source_links: [], source_links_total: 0 },
   )
   return { slots, detail }

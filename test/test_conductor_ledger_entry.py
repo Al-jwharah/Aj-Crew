@@ -22,15 +22,15 @@ from pathlib import Path
 
 from skill_script_helpers import load_skill_script
 
-from kiro_crew import crew_log as lg
-from kiro_crew import session_ledger
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import emit as crew_log_emit
+from aj_crew import crew_log as lg
+from aj_crew import session_ledger
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import emit as crew_log_emit
 
 SCRIPT = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
     / "goal-conductor"
     / "scripts"
@@ -490,11 +490,11 @@ class TestLedgerAcceptsWhatTheCodecEmits:
     ``session_ledger.record`` write and reads back byte-identical."""
 
     def test_encoded_entry_round_trips_through_the_ledger(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-        monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_CREW_LOG", "1")
         crew_log_emit.reset_caches()
         try:
-            CrewLog.create(lg.KIND_SESSION, "acp-a", owner="owner", agent="kirocrew", slot="slot-a")
+            CrewLog.create(lg.KIND_SESSION, "acp-a", owner="owner", agent="ajcrew", slot="slot-a")
             mod = _mod()
             value = mod.mode_encode(_fields())["value"]
             session_ledger.record("slot-a", session_id="acp-a", artifacts={"item-1": value})

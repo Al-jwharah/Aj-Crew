@@ -53,7 +53,7 @@ vi.mock('../pages/ChatPage', () => ({ default: () => <div data-testid="chat-page
 vi.mock('../pages/SystemPage', () => ({ default: () => null }))
 vi.mock('../pages/ProjectsPage', () => ({ default: () => null }))
 vi.mock('../pages/LogsPage', () => ({ default: () => null }))
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => null }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => null }))
 
 import { renderWithProviders } from './helpers'
 import App from '../App'

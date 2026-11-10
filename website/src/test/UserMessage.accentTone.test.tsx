@@ -84,7 +84,7 @@ describe('UserMessage tone', () => {
 
 describe("the mate chat's user entry", () => {
   it('turns the accent tone on, and only when a mate is drawn', () => {
-    const crewmate = { name: 'kirocrew-radar', label: 'Radar' }
+    const crewmate = { name: 'ajcrew-radar', label: 'Radar' }
     // Built the way ChatPane builds it for the Members page: `crewmate` set,
     // `hideSteerBadge` NOT set (the page runs the split busy mode since
     // #16684). The fill must not depend on the badge flag (#18361).
@@ -117,8 +117,8 @@ describe('the index.css hook', () => {
     for (const token of ['--bg-hover', '--bg-elevated', '--card']) {
       expect(block, `${token} must be re-pointed off the fill`).toMatch(new RegExp(`${token}:color-mix\\(in srgb,var\\(--text\\) \\d+%,var\\(--crewmate-fill\\)\\)`))
     }
-    // Kiro dark's code patch is a literal (#28242e == its --bg-hover), which no token reaches.
-    expect(INDEX_CSS).toMatch(/\[data-theme="kiro-dark"\] \.message-bubble\.crewmate-bubble :not\(pre\)>code\{background:var\(--bg-hover\)\}/)
+    // Aj dark's code patch is a literal (#28242e == its --bg-hover), which no token reaches.
+    expect(INDEX_CSS).toMatch(/\[data-theme="aj-dark"\] \.message-bubble\.crewmate-bubble :not\(pre\)>code\{background:var\(--bg-hover\)\}/)
   })
 
   it('redefines the theme tokens inside the accent bubble so every descendant inherits accent-fg colours', () => {
@@ -141,7 +141,7 @@ describe('the index.css hook', () => {
   it('keeps a link signal and reaches the Kiro literals tokens cannot', () => {
     const rules = INDEX_CSS.split('\n').filter(l => l.includes('.msg-content.user-bubble.user-bubble-accent'))
     const joined = rules.join('\n')
-    // Kiro dark paints code and links with literal purples, which no token redefinition reaches.
+    // Aj dark paints code and links with literal purples, which no token redefinition reaches.
     expect(joined).toMatch(/user-bubble-accent :not\(pre\)>code\{background:var\(--bg-hover\);color:var\(--accent-fg\)\}/)
     // Colour alone no longer says "link" on an accent fill, so the underline and the
     // link pill's patch + outline are the link signal (UX review on #17918).

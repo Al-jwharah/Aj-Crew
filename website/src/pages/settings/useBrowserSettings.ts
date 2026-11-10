@@ -4,7 +4,7 @@
  *
  * One hook so the main card and the setting rows read the same answers and
  * invalidate the same keys. Reads are React Query; every config write is the
- * generic `PATCH /api/config/kirocrew` with ONE path, so a stale cache in this tab
+ * generic `PATCH /api/config/ajcrew` with ONE path, so a stale cache in this tab
  * can never clobber a key another client changed (the same reason the Chat panel
  * sends only the changed key).
  */
@@ -15,7 +15,7 @@ import { fetchDashboardConfig } from '../../api/dashboardConfigQuery'
 import { browsePolicyOff } from '../../lib/browsePolicy'
 
 export const BROWSER_STATUS_KEY = ['browserStatus'] as const
-const CONFIG_KEY = ['kirocrewConfig'] as const
+const CONFIG_KEY = ['ajcrewConfig'] as const
 
 /** Poll cadence while something is in flight on the gateway (an install job, or
  *  Chrome's Allow prompt waiting for a click), which only a re-read can observe. */
@@ -23,7 +23,7 @@ const BUSY_POLL_MS = 2_000
 /** Poll cadence at rest: notices a browser connected or dropped elsewhere. */
 const IDLE_POLL_MS = 15_000
 
-/** The slice of `GET /api/config/kirocrew` this page reads. Every field optional:
+/** The slice of `GET /api/config/ajcrew` this page reads. Every field optional:
  *  an older gateway, or a config written before the section existed, omits them
  *  and the page falls back to the shipped defaults below. */
 export interface BrowserSettingsConfig {
@@ -114,7 +114,7 @@ export function useBrowserSettings() {
 
   const config = useQuery<BrowserSettingsConfig>({
     queryKey: CONFIG_KEY,
-    queryFn: () => api.kirocrewConfig() as Promise<BrowserSettingsConfig>,
+    queryFn: () => api.ajcrewConfig() as Promise<BrowserSettingsConfig>,
   })
 
   const invalidateStatus = () => { void qc.invalidateQueries({ queryKey: BROWSER_STATUS_KEY }) }

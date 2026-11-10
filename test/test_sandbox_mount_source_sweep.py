@@ -9,8 +9,8 @@ when the sandboxed process exits — filling the runtime tmpfs until
 fails.
 
 Two halves lock the fix in:
-  (a) the launcher (``kiro_crew.sandbox_launcher_program``) tags every staging
-      site with a pid-bearing prefix (``kirocrew_sb_<pid>_``) taken from the
+  (a) the launcher (``aj_crew.sandbox_launcher_program``) tags every staging
+      site with a pid-bearing prefix (``ajcrew_sb_<pid>_``) taken from the
       process that execs the agent — a whole child run over a tree that reaches
       every staging site, with a libc whose binds hide their target, shows every
       name it creates on the stand-in root carries it, and the launcher's child
@@ -28,7 +28,7 @@ Two halves lock the fix in:
       the runtime tmpfs ran out of inodes. A readable pin always wins, a
       recycled pid is reclaimed rather than stranded. Foreign
       ``tmp*`` names, probe names, planted hostile pid segments, and
-      ``kirocrew_sandbox_*`` launcher scripts are preserved, without the sweep
+      ``ajcrew_sandbox_*`` launcher scripts are preserved, without the sweep
       ever raising.
 """
 
@@ -49,9 +49,9 @@ from pathlib import Path
 import pytest
 from test_sandbox_launcher_program import CoveringLibc, launch, payload
 
-from kiro_crew import sandbox_launcher, sandbox_launcher_program, sandbox_mount_sweep, sandbox_plan
-from kiro_crew.config.paths import config_dir
-from kiro_crew.sandbox import (
+from aj_crew import sandbox_launcher, sandbox_launcher_program, sandbox_mount_sweep, sandbox_plan
+from aj_crew.config.paths import config_dir
+from aj_crew.sandbox import (
     _MOUNT_SOURCE_MAX_AGE_SECONDS,
     _cleanup_legacy_mount_source_residue,
     _cleanup_stale_sandbox_mount_sources,
@@ -59,8 +59,8 @@ from kiro_crew.sandbox import (
     _PinScanCoverage,
     cleanup_stale_sandbox_profiles,
 )
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import wait_until
 
 program = sandbox_launcher_program
 
@@ -125,7 +125,7 @@ def _pin(
             coverage.covered = False
         return (names, complete)
 
-    monkeypatch.setattr("kiro_crew.sandbox._mount_pinned_source_names", _fake)
+    monkeypatch.setattr("aj_crew.sandbox._mount_pinned_source_names", _fake)
 
 
 def _raise_einval_for(monkeypatch: pytest.MonkeyPatch, target: Path) -> None:
@@ -156,8 +156,8 @@ class TestMountSourceSweep:
     ):
         """A dead-pid dir is removed even when non-empty (the SSH-shadow case)."""
         _pin(monkeypatch, set())
-        empty = _make_dir(tmp_path, f"kirocrew_sb_{_DEAD_PID}_abc123")
-        shadow = _make_dir(tmp_path, f"kirocrew_sb_{_DEAD_PID}_ssh456", populate=True)
+        empty = _make_dir(tmp_path, f"ajcrew_sb_{_DEAD_PID}_abc123")
+        shadow = _make_dir(tmp_path, f"ajcrew_sb_{_DEAD_PID}_ssh456", populate=True)
 
         removed = _cleanup_stale_sandbox_mount_sources(roots=[str(tmp_path)])
 
@@ -166,7 +166,7 @@ class TestMountSourceSweep:
         assert not shadow.exists()
 
     def test_reclaims_dead_pid_file(self, tmp_path: Path):
-        stale = _make_file(tmp_path, f"kirocrew_sb_{_DEAD_PID}_file01")
+        stale = _make_file(tmp_path, f"ajcrew_sb_{_DEAD_PID}_file01")
 
         removed = _cleanup_stale_sandbox_mount_sources(roots=[str(tmp_path)])
 
@@ -183,8 +183,8 @@ class TestMountSourceSweep:
         gated on the pin scan, which here proves no namespace binds it.
         """
         _pin(monkeypatch, set())
-        recycled_dir = _make_dir(tmp_path, f"kirocrew_sb_{_LIVE_PID}_old999", old=True)
-        recycled_file = _make_file(tmp_path, f"kirocrew_sb_{_LIVE_PID}_old888", old=True)
+        recycled_dir = _make_dir(tmp_path, f"ajcrew_sb_{_LIVE_PID}_old999", old=True)
+        recycled_file = _make_file(tmp_path, f"ajcrew_sb_{_LIVE_PID}_old888", old=True)
 
         removed = _cleanup_stale_sandbox_mount_sources(roots=[str(tmp_path)])
 
@@ -204,9 +204,9 @@ class TestMountSourceSweep:
         The over-age mtime and even a dead pid probe must not override the
         pin.
         """
-        live_name = f"kirocrew_sb_{_LIVE_PID}_shadow1"
-        dead_name = f"kirocrew_sb_{_DEAD_PID}_held01"
-        empty_name = f"kirocrew_sb_{_DEAD_PID}_mask01"
+        live_name = f"ajcrew_sb_{_LIVE_PID}_shadow1"
+        dead_name = f"ajcrew_sb_{_DEAD_PID}_held01"
+        empty_name = f"ajcrew_sb_{_DEAD_PID}_mask01"
         live_shadow = _make_dir(tmp_path, live_name, populate=True, old=True)
         dead_held = _make_dir(tmp_path, dead_name, populate=True)
         empty_mask = _make_dir(tmp_path, empty_name, old=True)
@@ -230,7 +230,7 @@ class TestMountSourceSweep:
         class (which can hold a known-hosts or exposed-config copy).
         """
         _pin(monkeypatch, set())
-        recycled = _make_dir(tmp_path, f"kirocrew_sb_{_LIVE_PID}_recyc1", populate=True, old=True)
+        recycled = _make_dir(tmp_path, f"ajcrew_sb_{_LIVE_PID}_recyc1", populate=True, old=True)
 
         removed = _cleanup_stale_sandbox_mount_sources(roots=[str(tmp_path)])
 
@@ -249,9 +249,9 @@ class TestMountSourceSweep:
         unaffected by the scan.
         """
         _pin(monkeypatch, set(), complete=False)
-        held = _make_dir(tmp_path, f"kirocrew_sb_{_DEAD_PID}_part01", populate=True)
-        empty = _make_dir(tmp_path, f"kirocrew_sb_{_DEAD_PID}_part03")
-        plain = _make_file(tmp_path, f"kirocrew_sb_{_DEAD_PID}_part02")
+        held = _make_dir(tmp_path, f"ajcrew_sb_{_DEAD_PID}_part01", populate=True)
+        empty = _make_dir(tmp_path, f"ajcrew_sb_{_DEAD_PID}_part03")
+        plain = _make_file(tmp_path, f"ajcrew_sb_{_DEAD_PID}_part02")
 
         removed = _cleanup_stale_sandbox_mount_sources(roots=[str(tmp_path)])
 
@@ -273,8 +273,8 @@ class TestMountSourceSweep:
         pinned one stays.
         """
         _pin(monkeypatch, set(), complete=False, covered=True)
-        stale = _make_dir(tmp_path, f"kirocrew_sb_{_DEAD_PID}_inherit1", populate=True, old=True)
-        live_name = f"kirocrew_sb_{_DEAD_PID}_inherit2"
+        stale = _make_dir(tmp_path, f"ajcrew_sb_{_DEAD_PID}_inherit1", populate=True, old=True)
+        live_name = f"ajcrew_sb_{_DEAD_PID}_inherit2"
         live = _make_dir(tmp_path, live_name, populate=True, old=True)
         _pin(monkeypatch, {live_name}, complete=False, covered=True)
 
@@ -283,7 +283,7 @@ class TestMountSourceSweep:
         assert (live / "known_hosts").exists()
 
     def test_preserves_fresh_live_pid_entry(self, tmp_path: Path):
-        live = _make_dir(tmp_path, f"kirocrew_sb_{_LIVE_PID}_live01")
+        live = _make_dir(tmp_path, f"ajcrew_sb_{_LIVE_PID}_live01")
 
         removed = _cleanup_stale_sandbox_mount_sources(roots=[str(tmp_path)])
 
@@ -302,8 +302,8 @@ class TestMountSourceSweep:
             raise RecursionError("maximum recursion depth exceeded")
 
         monkeypatch.setattr(shutil, "rmtree", _boom)
-        _make_dir(tmp_path, f"kirocrew_sb_{_DEAD_PID}_deep01", populate=True)
-        plain = _make_file(tmp_path, f"kirocrew_sb_{_DEAD_PID}_zfile1")
+        _make_dir(tmp_path, f"ajcrew_sb_{_DEAD_PID}_deep01", populate=True)
+        plain = _make_file(tmp_path, f"ajcrew_sb_{_DEAD_PID}_zfile1")
 
         removed = _cleanup_stale_sandbox_mount_sources(roots=[str(tmp_path)])
 
@@ -313,16 +313,16 @@ class TestMountSourceSweep:
     def test_preserves_foreign_and_unparseable_names(self, tmp_path: Path):
         """Only the recognized pid-bearing shape is touched, however old.
 
-        Foreign ``tmp*`` (the unprefixed backlog), ``kirocrew_sandbox_*``
-        launcher scripts, the ``kirocrew_sbprobe_*`` tmpfs probe, and a
+        Foreign ``tmp*`` (the unprefixed backlog), ``ajcrew_sandbox_*``
+        launcher scripts, the ``ajcrew_sbprobe_*`` tmpfs probe, and a
         non-numeric pid segment are all left alone.
         """
         keep = [
             _make_dir(tmp_path, "tmpa1b2c3d4", old=True),
             _make_file(tmp_path, "tmpz9y8x7w6", old=True),
-            _make_file(tmp_path, f"kirocrew_sandbox_{_DEAD_PID}_x.py", old=True),
-            _make_dir(tmp_path, "kirocrew_sbprobe_ab12cd", old=True),
-            _make_dir(tmp_path, f"kirocrew_sb_pid{_DEAD_PID}_z", old=True),
+            _make_file(tmp_path, f"ajcrew_sandbox_{_DEAD_PID}_x.py", old=True),
+            _make_dir(tmp_path, "ajcrew_sbprobe_ab12cd", old=True),
+            _make_dir(tmp_path, f"ajcrew_sb_pid{_DEAD_PID}_z", old=True),
         ]
 
         removed = _cleanup_stale_sandbox_mount_sources(roots=[str(tmp_path)])
@@ -346,12 +346,12 @@ class TestMountSourceSweep:
         refusal mechanism differs per platform).
         """
         _pin(monkeypatch, set())
-        superscript = _make_dir(tmp_path, "kirocrew_sb_\u00b2_x", old=True)
-        arabic_indic = _make_dir(tmp_path, "kirocrew_sb_\u0663_x", old=True)
-        zero = _make_dir(tmp_path, "kirocrew_sb_0_x", populate=True, old=True)
-        padded = _make_dir(tmp_path, f"kirocrew_sb_0{_DEAD_PID}_x", old=True)
-        oversized = _make_dir(tmp_path, f"kirocrew_sb_{'9' * 40}_x", old=True)
-        genuine = _make_dir(tmp_path, f"kirocrew_sb_{_DEAD_PID}_real1")
+        superscript = _make_dir(tmp_path, "ajcrew_sb_\u00b2_x", old=True)
+        arabic_indic = _make_dir(tmp_path, "ajcrew_sb_\u0663_x", old=True)
+        zero = _make_dir(tmp_path, "ajcrew_sb_0_x", populate=True, old=True)
+        padded = _make_dir(tmp_path, f"ajcrew_sb_0{_DEAD_PID}_x", old=True)
+        oversized = _make_dir(tmp_path, f"ajcrew_sb_{'9' * 40}_x", old=True)
+        genuine = _make_dir(tmp_path, f"ajcrew_sb_{_DEAD_PID}_real1")
 
         removed = _cleanup_stale_sandbox_mount_sources(roots=[str(tmp_path)])
 
@@ -365,9 +365,9 @@ class TestMountSourceSweep:
 
     def test_second_sweep_is_a_no_op(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         _pin(monkeypatch, set())
-        _make_dir(tmp_path, f"kirocrew_sb_{_DEAD_PID}_one", populate=True)
-        _make_file(tmp_path, f"kirocrew_sb_{_DEAD_PID}_two")
-        survivor = _make_dir(tmp_path, f"kirocrew_sb_{_LIVE_PID}_three")
+        _make_dir(tmp_path, f"ajcrew_sb_{_DEAD_PID}_one", populate=True)
+        _make_file(tmp_path, f"ajcrew_sb_{_DEAD_PID}_two")
+        survivor = _make_dir(tmp_path, f"ajcrew_sb_{_LIVE_PID}_three")
 
         assert _cleanup_stale_sandbox_mount_sources(roots=[str(tmp_path)]) == 2
         assert _cleanup_stale_sandbox_mount_sources(roots=[str(tmp_path)]) == 0
@@ -384,8 +384,8 @@ class TestMountSourceSweep:
         _pin(monkeypatch, set())
         root = tmp_path / "tmpfs"
         root.mkdir()
-        _make_dir(root, f"kirocrew_sb_{_DEAD_PID}_wired", populate=True)
-        monkeypatch.setattr("kiro_crew.sandbox._mount_source_candidate_roots", lambda: [str(root)])
+        _make_dir(root, f"ajcrew_sb_{_DEAD_PID}_wired", populate=True)
+        monkeypatch.setattr("aj_crew.sandbox._mount_source_candidate_roots", lambda: [str(root)])
         # Point the legacy /tmp sweep at an empty per-test dir so host residue
         # cannot inflate the count.
         legacy = tmp_path / "legacy"
@@ -394,7 +394,7 @@ class TestMountSourceSweep:
         removed = cleanup_stale_sandbox_profiles(legacy_dir=str(legacy), data_home=config_dir())
 
         assert removed >= 1
-        assert not (root / f"kirocrew_sb_{_DEAD_PID}_wired").exists()
+        assert not (root / f"ajcrew_sb_{_DEAD_PID}_wired").exists()
 
 
 class TestMountPinnedSourceNames:
@@ -416,14 +416,14 @@ class TestMountPinnedSourceNames:
         self._write_mountinfo(
             proc,
             "101",
-            "36 35 0:22 /kirocrew_sb_123_ab /home/u/.aws rw,nosuid - tmpfs tmpfs rw\n"
-            "37 35 0:22 /kirocrew_sb_123_cd /home/u/.ssh rw,nosuid - tmpfs tmpfs rw\n"
+            "36 35 0:22 /ajcrew_sb_123_ab /home/u/.aws rw,nosuid - tmpfs tmpfs rw\n"
+            "37 35 0:22 /ajcrew_sb_123_cd /home/u/.ssh rw,nosuid - tmpfs tmpfs rw\n"
             "38 35 8:1 / / rw - ext4 /dev/sda1 rw\n",
         )
 
         pinned, complete = _mount_pinned_source_names(proc_root=str(proc))
 
-        assert pinned == {"kirocrew_sb_123_ab", "kirocrew_sb_123_cd"}
+        assert pinned == {"ajcrew_sb_123_ab", "ajcrew_sb_123_cd"}
         assert complete is True
 
     def test_prefix_in_the_mount_point_field_alone_pins_nothing(self, tmp_path: Path):
@@ -432,7 +432,7 @@ class TestMountPinnedSourceNames:
         self._write_mountinfo(
             proc,
             "102",
-            "36 35 0:22 /elsewhere /tmp/kirocrew_sb_123_ab rw,nosuid - tmpfs tmpfs rw\n",
+            "36 35 0:22 /elsewhere /tmp/ajcrew_sb_123_ab rw,nosuid - tmpfs tmpfs rw\n",
         )
 
         pinned, complete = _mount_pinned_source_names(proc_root=str(proc))
@@ -450,12 +450,12 @@ class TestMountPinnedSourceNames:
         self._write_mountinfo(
             proc,
             "104",
-            "36 35 0:22 /kirocrew_sb_9_zz /home/u/.aws rw - tmpfs tmpfs rw\n",
+            "36 35 0:22 /ajcrew_sb_9_zz /home/u/.aws rw - tmpfs tmpfs rw\n",
         )
 
         pinned, complete = _mount_pinned_source_names(proc_root=str(proc))
 
-        assert pinned == {"kirocrew_sb_9_zz"}
+        assert pinned == {"ajcrew_sb_9_zz"}
         assert complete is True
 
     def test_successor_appearing_after_a_vanish_is_scanned(
@@ -469,7 +469,7 @@ class TestMountPinnedSourceNames:
         self._write_mountinfo(
             proc,
             "202",
-            "36 35 0:22 /kirocrew_sb_7_hh /home/u/.ssh rw - tmpfs tmpfs rw\n",
+            "36 35 0:22 /ajcrew_sb_7_hh /home/u/.ssh rw - tmpfs tmpfs rw\n",
         )
         real_listdir = os.listdir
         calls = {"n": 0}
@@ -486,7 +486,7 @@ class TestMountPinnedSourceNames:
 
         pinned, complete = _mount_pinned_source_names(proc_root=str(proc))
 
-        assert pinned == {"kirocrew_sb_7_hh"}
+        assert pinned == {"ajcrew_sb_7_hh"}
         assert complete is True
 
     def test_scan_still_churning_after_the_pass_budget_reports_incomplete(
@@ -552,7 +552,7 @@ class TestMountPinnedSourceNames:
         self._write_mountinfo(
             proc,
             "301",
-            "36 35 0:22 /kirocrew_sb_5_aa /home/u/.aws rw - tmpfs tmpfs rw\n",
+            "36 35 0:22 /ajcrew_sb_5_aa /home/u/.aws rw - tmpfs tmpfs rw\n",
         )
         zombie = proc / "302"
         zombie.mkdir()
@@ -561,7 +561,7 @@ class TestMountPinnedSourceNames:
 
         pinned, complete = _mount_pinned_source_names(proc_root=str(proc))
 
-        assert pinned == {"kirocrew_sb_5_aa"}
+        assert pinned == {"ajcrew_sb_5_aa"}
         assert complete is True
 
     def test_namespaceless_task_still_forces_a_rescan_for_its_successor(
@@ -587,7 +587,7 @@ class TestMountPinnedSourceNames:
         successor = proc / "402"
         successor.mkdir()
         (successor / "mountinfo").write_text(
-            "36 35 0:22 /kirocrew_sb_11_bb /home/u/.ssh rw - tmpfs tmpfs rw\n"
+            "36 35 0:22 /ajcrew_sb_11_bb /home/u/.ssh rw - tmpfs tmpfs rw\n"
         )
         real_listdir = os.listdir
         calls = {"n": 0}
@@ -605,7 +605,7 @@ class TestMountPinnedSourceNames:
         pinned, complete = _mount_pinned_source_names(proc_root=str(proc))
 
         assert calls["n"] >= 2, "a namespaceless task must trigger another listing pass"
-        assert pinned == {"kirocrew_sb_11_bb"}
+        assert pinned == {"ajcrew_sb_11_bb"}
         assert complete is True
 
     @pytest.mark.skipif(
@@ -677,12 +677,12 @@ class TestMountPinnedSourceNames:
         thread_dir = leader / "task" / "502"
         thread_dir.mkdir(parents=True)
         (thread_dir / "mountinfo").write_text(
-            "36 35 0:22 /kirocrew_sb_21_tt /home/u/.aws rw - tmpfs tmpfs rw\n"
+            "36 35 0:22 /ajcrew_sb_21_tt /home/u/.aws rw - tmpfs tmpfs rw\n"
         )
 
         pinned, complete = _mount_pinned_source_names(proc_root=str(proc))
 
-        assert pinned == {"kirocrew_sb_21_tt"}
+        assert pinned == {"ajcrew_sb_21_tt"}
         assert complete is True
 
     def test_group_with_no_namespace_left_is_still_a_vanish(
@@ -830,7 +830,7 @@ class TestMountPinnedSourceNames:
         readable = leader / "task" / "802"
         readable.mkdir(parents=True)
         (readable / "mountinfo").write_text(
-            "36 35 0:22 /kirocrew_sb_31_rr /home/u/.aws rw - tmpfs tmpfs rw\n"
+            "36 35 0:22 /ajcrew_sb_31_rr /home/u/.aws rw - tmpfs tmpfs rw\n"
         )
         opaque = leader / "task" / "803"
         opaque.mkdir(parents=True)
@@ -842,7 +842,7 @@ class TestMountPinnedSourceNames:
         finally:
             os.chmod(blocked, 0o644)
 
-        assert pinned == {"kirocrew_sb_31_rr"}, "the pin that was read must be kept"
+        assert pinned == {"ajcrew_sb_31_rr"}, "the pin that was read must be kept"
         assert complete is False, "an unaccounted sibling must sink coverage"
 
     @pytest.mark.parametrize("departure", ["gone", "namespaceless"])
@@ -872,7 +872,7 @@ class TestMountPinnedSourceNames:
         readable = leader / "task" / "902"
         readable.mkdir(parents=True)
         (readable / "mountinfo").write_text(
-            "36 35 0:22 /kirocrew_sb_41_aa /home/u/.aws rw - tmpfs tmpfs rw\n"
+            "36 35 0:22 /ajcrew_sb_41_aa /home/u/.aws rw - tmpfs tmpfs rw\n"
         )
         departed = leader / "task" / "903"
         departed.mkdir(parents=True)
@@ -883,7 +883,7 @@ class TestMountPinnedSourceNames:
 
         pinned, complete = _mount_pinned_source_names(proc_root=str(proc))
 
-        assert pinned == {"kirocrew_sb_41_aa"}, "the pin that was read must be kept"
+        assert pinned == {"ajcrew_sb_41_aa"}, "the pin that was read must be kept"
         assert complete is False, "a sibling that did not read must sink coverage"
 
     def test_missing_proc_root_reports_incomplete(self, tmp_path: Path):
@@ -905,13 +905,13 @@ class TestMountPinnedSourceNames:
         d = proc / "106"
         d.mkdir(parents=True)
         (d / "mountinfo").write_text(
-            f"1932 1355 0:55 /kirocrew_sb_{_DEAD_PID}_live1 /home/u/.ssh rw - tmpfs tmpfs rw\n"
+            f"1932 1355 0:55 /ajcrew_sb_{_DEAD_PID}_live1 /home/u/.ssh rw - tmpfs tmpfs rw\n"
         )
 
         pinned, complete = _mount_pinned_source_names(proc_root=str(proc))
 
         assert complete is False
-        assert pinned == {f"kirocrew_sb_{_DEAD_PID}_live1"}
+        assert pinned == {f"ajcrew_sb_{_DEAD_PID}_live1"}
 
     @staticmethod
     def _proc_task(
@@ -937,13 +937,13 @@ class TestMountPinnedSourceNames:
         miss its binds."""
         proc = tmp_path / "proc"
         self._proc_task(proc, 1, mountinfo="")
-        line = "100 99 0:40 /kirocrew_sb_777_home /root/home rw - tmpfs tmpfs rw\n"
+        line = "100 99 0:40 /ajcrew_sb_777_home /root/home rw - tmpfs tmpfs rw\n"
         self._proc_task(proc, 500, mountinfo="", threads={501: line})
 
         coverage = _PinScanCoverage()
         pinned, complete = _mount_pinned_source_names(proc_root=str(proc), coverage=coverage)
 
-        assert "kirocrew_sb_777_home" in pinned
+        assert "ajcrew_sb_777_home" in pinned
         assert complete is True and coverage.covered is True
 
     def test_a_sibling_thread_departing_on_the_final_pass_clears_coverage(
@@ -952,7 +952,7 @@ class TestMountPinnedSourceNames:
         """A thread gone between the ``task/`` snapshot and its read may have
         left a successor thread holding its namespace; only re-reading the
         group can tell, and the final pass has no next pass."""
-        monkeypatch.setattr("kiro_crew.sandbox._PIN_SCAN_MAX_PASSES", 1)
+        monkeypatch.setattr("aj_crew.sandbox._PIN_SCAN_MAX_PASSES", 1)
         proc = tmp_path / "proc"
         self._proc_task(proc, 1, mountinfo="")
         self._proc_task(proc, 500, mountinfo="", threads={501: None})
@@ -980,7 +980,7 @@ class TestMountPinnedSourceNames:
             return names
 
         with pytest.MonkeyPatch.context() as mp:
-            mp.setattr("kiro_crew.sandbox.os.listdir", _settling_listdir)
+            mp.setattr("aj_crew.sandbox.os.listdir", _settling_listdir)
             coverage = _PinScanCoverage()
             _, complete = _mount_pinned_source_names(proc_root=str(proc), coverage=coverage)
 
@@ -994,7 +994,7 @@ class TestMountPinnedSourceNames:
         namespace to a child forked after that pass's listing, which no
         re-listing will catch — coverage of launcher descendants is unproven.
         """
-        monkeypatch.setattr("kiro_crew.sandbox._PIN_SCAN_MAX_PASSES", 1)
+        monkeypatch.setattr("aj_crew.sandbox._PIN_SCAN_MAX_PASSES", 1)
         proc = tmp_path / "proc"
         self._proc_task(proc, 1, mountinfo="")
         self._proc_task(proc, 4242, mountinfo=None)  # departed before its read
@@ -1046,7 +1046,7 @@ class TestMountPinnedSourceNames:
                 return os.stat_result(tuple(st)[:4] + (uid,) + tuple(st)[5:])
             return st
 
-        monkeypatch.setattr("kiro_crew.sandbox.os.stat", _fake_stat)
+        monkeypatch.setattr("aj_crew.sandbox.os.stat", _fake_stat)
 
     @pytest.mark.skipif(
         not hasattr(os, "getuid"), reason="without os.getuid every task is a possible holder"
@@ -1056,8 +1056,8 @@ class TestMountPinnedSourceNames:
     ):
         """Another user's task departing on the final pass lowers only the
         host-wide flag: it cannot hold a source this uid staged."""
-        monkeypatch.setattr("kiro_crew.sandbox._PIN_SCAN_MAX_PASSES", 1)
-        monkeypatch.setattr("kiro_crew.sandbox._overflow_uid", lambda: 65534)
+        monkeypatch.setattr("aj_crew.sandbox._PIN_SCAN_MAX_PASSES", 1)
+        monkeypatch.setattr("aj_crew.sandbox._overflow_uid", lambda: 65534)
         proc = tmp_path / "proc"
         self._proc_task(proc, 1, mountinfo="")
         self._proc_task(proc, 4242, mountinfo=None)
@@ -1072,8 +1072,8 @@ class TestMountPinnedSourceNames:
     def test_root_departure_clears_coverage(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         """Root can ``nsenter`` a sandbox's namespace, so a root task departing
         on the final pass is a possible holder gone unread."""
-        monkeypatch.setattr("kiro_crew.sandbox._PIN_SCAN_MAX_PASSES", 1)
-        monkeypatch.setattr("kiro_crew.sandbox._overflow_uid", lambda: 65534)
+        monkeypatch.setattr("aj_crew.sandbox._PIN_SCAN_MAX_PASSES", 1)
+        monkeypatch.setattr("aj_crew.sandbox._overflow_uid", lambda: 65534)
         proc = tmp_path / "proc"
         self._proc_task(proc, 1, mountinfo="")
         self._proc_task(proc, 4242, mountinfo=None)
@@ -1091,8 +1091,8 @@ class TestMountPinnedSourceNames:
         """A holder inside a nested user namespace stats as the overflow uid.
         When that uid cannot be learned (sysctl unreadable), a departing task of
         ANY other uid may have been such a holder, so coverage fails closed."""
-        monkeypatch.setattr("kiro_crew.sandbox._PIN_SCAN_MAX_PASSES", 1)
-        monkeypatch.setattr("kiro_crew.sandbox._overflow_uid", lambda: None)
+        monkeypatch.setattr("aj_crew.sandbox._PIN_SCAN_MAX_PASSES", 1)
+        monkeypatch.setattr("aj_crew.sandbox._overflow_uid", lambda: None)
         proc = tmp_path / "proc"
         self._proc_task(proc, 1, mountinfo="")
         self._proc_task(proc, 4242, mountinfo=None)
@@ -1108,7 +1108,7 @@ class TestMountPinnedSourceNames:
     ):
         """A pin from an incomplete scan still retains: a ``setsid()``
         descendant's own mountinfo, being this uid's, is readable and wins."""
-        name = f"kirocrew_sb_{_DEAD_PID}_setsid1"
+        name = f"ajcrew_sb_{_DEAD_PID}_setsid1"
         _pin(monkeypatch, {name}, complete=False, covered=True)
         held = _make_dir(tmp_path, name)
 
@@ -1124,8 +1124,8 @@ class TestMountPinnedSourceNames:
         proc = tmp_path / "proc"
         self._proc_task(proc, 1, mountinfo="")
         table = (
-            "100 99 0:40 /kirocrew_sb_777_home /root/home rw - tmpfs tmpfs rw\n"
-            "101 99 0:40 /kirocrew_sb_777_ssh /root/.ssh rw - tmpfs tmpfs rw\n"
+            "100 99 0:40 /ajcrew_sb_777_home /root/home rw - tmpfs tmpfs rw\n"
+            "101 99 0:40 /ajcrew_sb_777_ssh /root/.ssh rw - tmpfs tmpfs rw\n"
         )
         self._proc_task(proc, 500, mountinfo=table, threads={tid: table for tid in range(501, 521)})
         self._proc_task(proc, 600, mountinfo=table)
@@ -1133,16 +1133,16 @@ class TestMountPinnedSourceNames:
 
         def _matcher(name: str) -> bool:
             matched.append(name)
-            return name.startswith("kirocrew_sb_")
+            return name.startswith("ajcrew_sb_")
 
         coverage = _PinScanCoverage()
         pinned, complete = _mount_pinned_source_names(
             proc_root=str(proc), matcher=_matcher, coverage=coverage
         )
 
-        assert pinned == {"kirocrew_sb_777_home", "kirocrew_sb_777_ssh"}
+        assert pinned == {"ajcrew_sb_777_home", "ajcrew_sb_777_ssh"}
         assert complete is True and coverage.covered is True
-        assert matched == ["kirocrew_sb_777_home", "kirocrew_sb_777_ssh"]
+        assert matched == ["ajcrew_sb_777_home", "ajcrew_sb_777_ssh"]
 
     @pytest.mark.parametrize(
         "cache_limit",
@@ -1152,23 +1152,23 @@ class TestMountPinnedSourceNames:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, cache_limit: str
     ):
         """A zero cache bound drops deduplication, not mount-source discovery."""
-        monkeypatch.setattr(f"kiro_crew.sandbox.{cache_limit}", 0)
+        monkeypatch.setattr(f"aj_crew.sandbox.{cache_limit}", 0)
         proc = tmp_path / "proc"
-        first = "100 99 0:40 /kirocrew_sb_1_first /root/a rw - tmpfs tmpfs rw\n"
-        uncached = "101 99 0:40 /kirocrew_sb_2_later /root/b rw - tmpfs tmpfs rw\n"
+        first = "100 99 0:40 /ajcrew_sb_1_first /root/a rw - tmpfs tmpfs rw\n"
+        uncached = "101 99 0:40 /ajcrew_sb_2_later /root/b rw - tmpfs tmpfs rw\n"
         self._proc_task(proc, 1, mountinfo=first)
         self._proc_task(proc, 500, mountinfo=uncached, threads={501: uncached})
         matched: list[str] = []
 
         def _matcher(name: str) -> bool:
             matched.append(name)
-            return name.startswith("kirocrew_sb_")
+            return name.startswith("ajcrew_sb_")
 
         pinned, complete = _mount_pinned_source_names(proc_root=str(proc), matcher=_matcher)
 
-        assert pinned == {"kirocrew_sb_1_first", "kirocrew_sb_2_later"}
+        assert pinned == {"ajcrew_sb_1_first", "ajcrew_sb_2_later"}
         assert complete is True
-        assert set(matched) == {"kirocrew_sb_1_first", "kirocrew_sb_2_later"}
+        assert set(matched) == {"ajcrew_sb_1_first", "ajcrew_sb_2_later"}
         assert len(matched) == 3
 
     @pytest.mark.skipif(
@@ -1219,16 +1219,16 @@ class TestLegacyResidueSweep:
     ) -> None:
         if covered is None:
             covered = complete
-        monkeypatch.setattr("kiro_crew.sandbox._launcher_tmpfs_roots", lambda: [str(root)])
+        monkeypatch.setattr("aj_crew.sandbox._launcher_tmpfs_roots", lambda: [str(root)])
 
         def _fake(proc_root="/proc", *, coverage=None, **_kw):
             if coverage is not None and not covered:
                 coverage.covered = False
             return (bound or set(), complete)
 
-        monkeypatch.setattr("kiro_crew.sandbox._bound_source_basenames", _fake)
+        monkeypatch.setattr("aj_crew.sandbox._bound_source_basenames", _fake)
         # Each test below pins ONE fence; the pile threshold has its own tests.
-        monkeypatch.setattr("kiro_crew.sandbox._LEGACY_PILE_THRESHOLD", 1)
+        monkeypatch.setattr("aj_crew.sandbox._LEGACY_PILE_THRESHOLD", 1)
 
     def _legacy_dir(self, root: Path, name: str = "tmpab12cd34", *, old: bool = True) -> Path:
         path = root / name
@@ -1273,7 +1273,7 @@ class TestLegacyResidueSweep:
         """The stamp is create-only and O_NOFOLLOW: a dangling link at the
         marker path fails the stamp (the pass repeats) instead of making the
         gateway write at the link's target."""
-        from kiro_crew.sandbox import _LEGACY_RESIDUE_MARKER, config_dir
+        from aj_crew.sandbox import _LEGACY_RESIDUE_MARKER, config_dir
 
         self._fence(monkeypatch, tmp_path)
         marker = config_dir() / _LEGACY_RESIDUE_MARKER
@@ -1326,7 +1326,7 @@ class TestLegacyResidueSweep:
         self._fence(monkeypatch, tmp_path, complete=False)
         held = self._legacy_dir(tmp_path)
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.sandbox"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.sandbox"):
             assert _cleanup_legacy_mount_source_residue(data_home=config_dir()) == 0
         assert held.exists()
         retained = [r for r in caplog.records if "legacy pass retained" in r.getMessage()]
@@ -1351,7 +1351,7 @@ class TestLegacyResidueSweep:
         scanned = []
 
         monkeypatch.setattr(
-            "kiro_crew.sandbox._launcher_tmpfs_roots", lambda: [str(tmp_path / "absent")]
+            "aj_crew.sandbox._launcher_tmpfs_roots", lambda: [str(tmp_path / "absent")]
         )
 
         def _fake(proc_root="/proc", *, coverage=None, **_kw):
@@ -1360,9 +1360,9 @@ class TestLegacyResidueSweep:
                 coverage.covered = False
             return (set(), False)
 
-        monkeypatch.setattr("kiro_crew.sandbox._bound_source_basenames", _fake)
+        monkeypatch.setattr("aj_crew.sandbox._bound_source_basenames", _fake)
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.sandbox"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.sandbox"):
             assert _cleanup_legacy_mount_source_residue(data_home=config_dir()) == 0
         assert scanned == []  # the pin scan never ran
         assert not [r for r in caplog.records if "legacy pass retained" in r.getMessage()]
@@ -1412,7 +1412,7 @@ class TestLegacyResidueSweep:
         # restored on the module for the delegation to reach the real walk.
         bound_scan = sandbox_sweep_original("_bound_source_basenames")
         monkeypatch.setattr(
-            "kiro_crew.sandbox._mount_pinned_source_names",
+            "aj_crew.sandbox._mount_pinned_source_names",
             sandbox_sweep_original("_mount_pinned_source_names"),
         )
 
@@ -1423,7 +1423,7 @@ class TestLegacyResidueSweep:
         (proc / "202" / "mountinfo").write_text(
             "1930 1355 0:55 /tmpab12cd34 /home/u/.gnupg rw,nosuid - tmpfs tmpfs rw\n"
             "1931 1355 0:55 /tmpef56gh78//deleted /home/u/.aws rw,nosuid - tmpfs tmpfs rw\n"
-            "1932 1355 0:55 /kirocrew_sb_7_x /home/u/.ssh rw,nosuid - tmpfs tmpfs rw\n"
+            "1932 1355 0:55 /ajcrew_sb_7_x /home/u/.ssh rw,nosuid - tmpfs tmpfs rw\n"
             "1933 1355 0:55 /notlegacy /home/u/x rw - tmpfs tmpfs rw\n"
         )
 
@@ -1445,7 +1445,7 @@ class TestLegacyResidueSweep:
         os.utime(sized, (time.time() - _MOUNT_SOURCE_MAX_AGE_SECONDS - 100,) * 2)
         named = tmp_path / "tmp-not-mkdtemp"
         named.mkdir(mode=0o700)
-        keyed = _make_dir(tmp_path, f"kirocrew_sb_{_DEAD_PID}_keyed01")
+        keyed = _make_dir(tmp_path, f"ajcrew_sb_{_DEAD_PID}_keyed01")
 
         assert _cleanup_legacy_mount_source_residue(data_home=config_dir()) == 0
         for path in (fresh, loose, sized, named, keyed):
@@ -1463,7 +1463,7 @@ class TestLegacyResidueSweep:
         tmpfs on every sweep.
         """
         self._fence(monkeypatch, tmp_path)
-        monkeypatch.setattr("kiro_crew.sandbox._LEGACY_PILE_THRESHOLD", 4)
+        monkeypatch.setattr("aj_crew.sandbox._LEGACY_PILE_THRESHOLD", 4)
         strays = [self._legacy_dir(tmp_path, f"tmpstray00{i}") for i in range(3)]
 
         assert _cleanup_legacy_mount_source_residue(data_home=config_dir()) == 0
@@ -1478,7 +1478,7 @@ class TestLegacyResidueSweep:
     ):
         """Candidates seen BEFORE the threshold is reached are not stranded."""
         self._fence(monkeypatch, tmp_path)
-        monkeypatch.setattr("kiro_crew.sandbox._LEGACY_PILE_THRESHOLD", 4)
+        monkeypatch.setattr("aj_crew.sandbox._LEGACY_PILE_THRESHOLD", 4)
         pile = [self._legacy_dir(tmp_path, f"tmppile000{i}") for i in range(6)]
 
         assert _cleanup_legacy_mount_source_residue(data_home=config_dir()) == 6
@@ -1500,7 +1500,7 @@ class TestLegacyResidueSweep:
         just-updated host stays broken until someone finds it by hand."""
         self._fence(monkeypatch, tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.sandbox._mount_source_candidate_roots", lambda: [str(tmp_path)]
+            "aj_crew.sandbox._mount_source_candidate_roots", lambda: [str(tmp_path)]
         )
         legacy = self._legacy_dir(tmp_path)
 
@@ -1524,7 +1524,7 @@ class TestLegacyResidueSweep:
         Asserted structurally: the ORDER and the non-await are the contract, and
         both are one edit away from silently regressing.
         """
-        import kiro_crew.session_cleanup as cleanup_mod
+        import aj_crew.session_cleanup as cleanup_mod
 
         tree = ast.parse(Path(cleanup_mod.__file__).read_text(encoding="utf-8"))
         for node in ast.walk(tree):
@@ -1557,7 +1557,7 @@ class TestSweepTimeBudget:
         """A SCOPED patcher for the budget knobs, deliberately not the test's own.
 
         ``monkeypatch.undo()`` would also revert the autouse host-isolation floor
-        — including the ``KIROCREW_HOME`` pin — and this sweep then stamps its
+        — including the ``AJCREW_HOME`` pin — and this sweep then stamps its
         one-shot marker into the operator's REAL data home. Every knob here is
         therefore undone through its own
         context, never the shared fixture.
@@ -1567,8 +1567,8 @@ class TestSweepTimeBudget:
         done nothing, and a pass that can never progress is a different bug.
         """
         budget = pytest.MonkeyPatch()
-        budget.setattr("kiro_crew.sandbox._SWEEP_TIME_BUDGET_SECONDS", -1.0)
-        budget.setattr("kiro_crew.sandbox._SWEEP_BUDGET_CHECK_EVERY", 2)
+        budget.setattr("aj_crew.sandbox._SWEEP_TIME_BUDGET_SECONDS", -1.0)
+        budget.setattr("aj_crew.sandbox._SWEEP_BUDGET_CHECK_EVERY", 2)
         return budget
 
     def test_keyed_pass_stops_at_the_budget_and_resumes(
@@ -1576,11 +1576,11 @@ class TestSweepTimeBudget:
     ):
         _pin(monkeypatch, set())
         for index in range(4):
-            _make_file(tmp_path, f"kirocrew_sb_{_DEAD_PID}_file{index:02d}")
+            _make_file(tmp_path, f"ajcrew_sb_{_DEAD_PID}_file{index:02d}")
 
         budget = self._spent_budget()
         try:
-            with caplog.at_level(logging.INFO, logger="kiro_crew.sandbox"):
+            with caplog.at_level(logging.INFO, logger="aj_crew.sandbox"):
                 first = _cleanup_stale_sandbox_mount_sources(roots=[str(tmp_path)])
         finally:
             budget.undo()
@@ -1604,10 +1604,10 @@ class TestSweepTimeBudget:
             clock.advance(60.0)  # longer than the whole budget
             return (set(), True)
 
-        monkeypatch.setattr("kiro_crew.sandbox._mount_pinned_source_names", _slow_scan)
-        monkeypatch.setattr("kiro_crew.sandbox._SWEEP_BUDGET_CHECK_EVERY", 2)
+        monkeypatch.setattr("aj_crew.sandbox._mount_pinned_source_names", _slow_scan)
+        monkeypatch.setattr("aj_crew.sandbox._SWEEP_BUDGET_CHECK_EVERY", 2)
         for index in range(3):
-            _make_dir(tmp_path, f"kirocrew_sb_{_DEAD_PID}_dir{index:02d}")
+            _make_dir(tmp_path, f"ajcrew_sb_{_DEAD_PID}_dir{index:02d}")
 
         # Only the scan is excused: a spent budget still ends the pass after it.
         budget = self._spent_budget()
@@ -1624,12 +1624,12 @@ class TestSweepTimeBudget:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ):
         """Stamping a partial pass would retire the rest of the residue unswept."""
-        monkeypatch.setattr("kiro_crew.sandbox._launcher_tmpfs_roots", lambda: [str(tmp_path)])
+        monkeypatch.setattr("aj_crew.sandbox._launcher_tmpfs_roots", lambda: [str(tmp_path)])
         monkeypatch.setattr(
-            "kiro_crew.sandbox._bound_source_basenames",
+            "aj_crew.sandbox._bound_source_basenames",
             lambda proc_root="/proc", **_kw: (set(), True),
         )
-        monkeypatch.setattr("kiro_crew.sandbox._LEGACY_PILE_THRESHOLD", 1)
+        monkeypatch.setattr("aj_crew.sandbox._LEGACY_PILE_THRESHOLD", 1)
         stale = time.time() - _MOUNT_SOURCE_MAX_AGE_SECONDS - 100
         for name in ("tmpaaaaaaaa", "tmpbbbbbbbb", "tmpcccccccc"):
             path = tmp_path / name
@@ -1664,9 +1664,9 @@ class TestHeldBackDiagnostic:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
     ):
         _pin(monkeypatch, set(), complete=False)
-        _make_dir(tmp_path, f"kirocrew_sb_{_DEAD_PID}_held01")
+        _make_dir(tmp_path, f"ajcrew_sb_{_DEAD_PID}_held01")
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.sandbox"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.sandbox"):
             removed = _cleanup_stale_sandbox_mount_sources(roots=[str(tmp_path)])
 
         assert removed == 0
@@ -1680,11 +1680,11 @@ class TestHeldBackDiagnostic:
     ):
         """Holding an entry a live namespace binds is correct operation, not a
         fault — it must not be escalated, or the fault signal drowns."""
-        name = f"kirocrew_sb_{_DEAD_PID}_pinned1"
+        name = f"ajcrew_sb_{_DEAD_PID}_pinned1"
         _pin(monkeypatch, {name}, complete=True)
         _make_dir(tmp_path, name)
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.sandbox"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.sandbox"):
             removed = _cleanup_stale_sandbox_mount_sources(roots=[str(tmp_path)])
 
         assert removed == 0
@@ -1865,7 +1865,7 @@ class TestLauncherStagingSitesArePrefixed:
         # window's real contents while its parent is masked, and the private tmpfs stage
         # for an unreadable mask.
         assert {role: bool(names) for role, names in roles.items()} == dict.fromkeys(roles, True)
-        prefix = "kirocrew_sb_%d_" % os.getpid()
+        prefix = "ajcrew_sb_%d_" % os.getpid()
         assert run.src_prefix == prefix
         for role, names in roles.items():
             for name in names:
@@ -1887,7 +1887,7 @@ class TestLauncherStagingSitesArePrefixed:
 
         root = str(tmp_path / "stand-ins")
         assert created, "the run created nothing on the stand-in root"
-        probes = [p for p in created if os.path.basename(p).startswith("kirocrew_sbprobe_")]
+        probes = [p for p in created if os.path.basename(p).startswith("ajcrew_sbprobe_")]
         assert len(probes) == 1 and not os.path.lexists(probes[0])
         for path in created:
             assert os.path.dirname(path) == root, path
@@ -1924,7 +1924,7 @@ class TestLauncherStagingSitesArePrefixed:
                 "launch.src_prefix",
                 "launch.src_prefix + _STAGE_MARK",
             )
-            probe = isinstance(prefix, ast.Constant) and prefix.value == "kirocrew_sbprobe_"
+            probe = isinstance(prefix, ast.Constant) and prefix.value == "ajcrew_sbprobe_"
             assert staged or probe, ast.dump(call)
 
     @pytest.mark.parametrize("level", ["strict", "cc", "standard"])
@@ -1940,7 +1940,7 @@ class TestLauncherStagingSitesArePrefixed:
         plan = sandbox_plan.plan_confinement(
             sandbox_plan.SandboxRequest(tier=level), sandbox_plan.PlanHost(home=str(tmp_path))
         )
-        script = tmp_path / "kirocrew_sandbox_prefix.py"
+        script = tmp_path / "ajcrew_sandbox_prefix.py"
         script.write_text(sandbox_launcher.render_namespace_launcher(plan), encoding="utf-8")
 
         done = subprocess.run(
@@ -1955,4 +1955,4 @@ class TestLauncherStagingSitesArePrefixed:
         assert done.returncode == 0, done.stderr
         pid, prefix = done.stdout.split()
         assert int(pid) != os.getpid()
-        assert prefix == "kirocrew_sb_%s_" % pid
+        assert prefix == "ajcrew_sb_%s_" % pid

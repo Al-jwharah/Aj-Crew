@@ -16,9 +16,9 @@ from terminal_handler_helpers import (  # noqa: F401 -- the autouse fixture regi
     _make_request,
 )
 
-from kiro_crew.dashboard.handlers import terminal, terminal_session
-from kiro_crew.platform import context as platform_context
-from kiro_crew.platform.governance import parse_policy
+from aj_crew.dashboard.handlers import terminal, terminal_session
+from aj_crew.platform import context as platform_context
+from aj_crew.platform.governance import parse_policy
 
 
 def _install(monkeypatch, boot: dict | None) -> None:
@@ -47,7 +47,7 @@ def test_policy_decides_only_where_it_states_the_key(monkeypatch, boot, enabled)
 
 
 def test_boot_controls_built_without_the_key_have_no_opinion():
-    from kiro_crew.platform.governance import BootControls
+    from aj_crew.platform.governance import BootControls
 
     assert BootControls().allow_terminal is None
 
@@ -81,7 +81,7 @@ async def test_create_route_refused_when_policy_says_no_terminal(monkeypatch):
 
 
 def test_a_translated_enterprise_policy_leaves_the_terminal_alone(monkeypatch):
-    from kiro_crew.platform.enterprise_policy_translate import neutral_document
+    from aj_crew.platform.enterprise_policy_translate import neutral_document
 
     document = neutral_document()
     assert "allow_terminal" not in document["boot"]
@@ -101,7 +101,7 @@ def test_a_cached_allow_does_not_outlive_a_policy_refusal(monkeypatch):
 async def test_a_refreshed_policy_refusal_ends_open_shells(monkeypatch, boot, ended):
     import asyncio
 
-    from kiro_crew.dashboard.handlers import terminal_lifecycle
+    from aj_crew.dashboard.handlers import terminal_lifecycle
 
     _install(monkeypatch, boot)
     calls: list = []
@@ -122,7 +122,7 @@ def test_the_gateway_registers_the_shell_teardown_hook():
     """The wiring, not just the function: registered before the poller starts."""
     from pathlib import Path
 
-    from kiro_crew.slack.gateway_runtime import service_boot
+    from aj_crew.slack.gateway_runtime import service_boot
 
     src = Path(service_boot.__file__).read_text(encoding="utf-8")
     hook = "register_post_install_hook(lambda: end_shells_if_policy_refuses(_app, _loop))"
@@ -133,7 +133,7 @@ def test_the_gateway_registers_the_shell_teardown_hook():
 def test_a_cache_an_older_translation_wrote_is_not_reused_on_upgrade():
     """The ``t2`` build's boot block still said ``allow_terminal: false``; its cached
     version must not be sent, or ``UNCHANGED`` would keep that refusal in force."""
-    from kiro_crew.platform import enterprise_policy_fetch as fetch
+    from aj_crew.platform import enterprise_policy_fetch as fetch
 
     assert fetch._version_for("scope:t2/v1", "scope") == ""
     assert fetch.cached_version("scope:t2/v1") == ""

@@ -14,15 +14,15 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from guide_route_helpers import in_dashboard_turn
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew.dashboard.change_cards import (
+from aj_crew import change_card_catalog as catalog
+from aj_crew.dashboard.change_cards import (
     CODE_STORE_UNAVAILABLE,
     CardError,
     CardStore,
     _store_unavailable,
 )
-from kiro_crew.dashboard.handlers import change_cards as routes
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.handlers import change_cards as routes
+from aj_crew.dashboard.state import _ChatSlot
 
 SLOT = "chat-1"
 SK = f"dashboard:{SLOT}"
@@ -261,7 +261,7 @@ def _app(store: CardStore) -> web.Application:
     app = web.Application(middlewares=[_fake_auth, routes.change_card_middleware])
     app["state"] = FakeState(store)
     routes.register_change_card_routes(app)
-    app.router.add_patch("/api/config/kirocrew", patch_config)
+    app.router.add_patch("/api/config/ajcrew", patch_config)
     return app
 
 
@@ -416,7 +416,7 @@ def test_a_card_step_answers_503_when_warm_refuses(tmp_path):
 
     async def go(c: TestClient):
         r = await c.patch(
-            "/api/config/kirocrew",
+            "/api/config/ajcrew",
             json={"path": "chat.verbosity", "value": "ultra-brief"},
             headers=_card_headers(rec),
         )

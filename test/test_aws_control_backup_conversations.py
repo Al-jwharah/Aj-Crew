@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps.builtins.aws_control.backend import backup
+from aj_crew.apps.builtins.aws_control.backend import backup
 
 # A column name and value that would be a live bearer token if it leaked, plus a
 # whole auth table. The export must carry NEITHER.
@@ -969,7 +969,7 @@ class TestTheExportKeepsItsReadLock:
     def test_a_kiro_cli_read_during_the_export_keeps_the_exports_lock(self, tmp_path, monkeypatch):
         if not backup._CAN_PIN_TRAVERSAL:
             pytest.skip("sessions export needs descriptor-pinned open; kind is unavailable here")
-        from kiro_crew import kiro_cli
+        from aj_crew import kiro_cli
 
         db = tmp_path / "data.sqlite3"
         _build_source_db(db, conversation_rows=3)

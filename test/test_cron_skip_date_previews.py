@@ -6,8 +6,8 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from kiro_crew.cron import CronJob, CronSchedule
-from kiro_crew.cron_service.schedule import (
+from aj_crew.cron import CronJob, CronSchedule
+from aj_crew.cron_service.schedule import (
     _MAX_SKIP_DATE_HORIZON_SECS,
     compute_next_run_ts,
     is_due,

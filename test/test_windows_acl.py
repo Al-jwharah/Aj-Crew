@@ -26,8 +26,8 @@ from typing import Any
 import pytest
 
 from conftest import host_abs
-from kiro_crew import github_runner as runner
-from kiro_crew import platform_compat, windows_acl
+from aj_crew import github_runner as runner
+from aj_crew import platform_compat, windows_acl
 
 ME = "S-1-5-21-1-2-3-1001"
 SYSTEM = "S-1-5-18"

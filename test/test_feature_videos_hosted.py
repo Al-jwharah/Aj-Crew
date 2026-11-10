@@ -53,11 +53,11 @@ from feature_videos_hosted_helpers import (
     _write_media,
 )
 
-from kiro_crew import asset_downloader
-from kiro_crew import feature_videos_cache as cache_mod
-from kiro_crew import feature_videos_manifest as manifest_mod
-from kiro_crew import pinned_fs
-from kiro_crew.platform import feed_trust
+from aj_crew import asset_downloader
+from aj_crew import feature_videos_cache as cache_mod
+from aj_crew import feature_videos_manifest as manifest_mod
+from aj_crew import pinned_fs
+from aj_crew.platform import feed_trust
 
 # ── fixtures ──
 
@@ -276,7 +276,7 @@ class TestManifestVerification:
         feed_shaped = _sign(
             signing_key,
             tmp_path,
-            {"schema": "kirocrew-cli-artifact-manifest-v1", "channel": "stable"},
+            {"schema": "ajcrew-cli-artifact-manifest-v1", "channel": "stable"},
         )
         assert manifest_mod.verify_manifest(feed_shaped) is True
         assert manifest_mod.verified_manifest(feed_shaped) is None
@@ -320,7 +320,7 @@ class TestManifestParsing:
         """A cap tighter than the publisher's would discard a valid release WHOLE.
 
         ``scripts/feature-videos/_manifest.py`` accepts a bare numeric version of
-        any depth; Kiro Crew's own releases are always three components, and the
+        any depth; Aj Crew's own releases are always three components, and the
         fetch path only ever asks for those.
         """
         parsed = manifest_mod.parse_manifest(_document(release=release))
@@ -445,7 +445,7 @@ class TestReleaseResolution:
         assert manifest_mod.running_release("not-a-version") == ""
 
     def test_release_dir_refuses_an_unsafe_folder_name(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with pytest.raises(ValueError):
                 manifest_mod.release_dir("../escape")
 
@@ -496,7 +496,7 @@ class TestManifestFetch:
         signed = _sign(signing_key, tmp_path, _document(release="0.5.0"))
         state = SimpleNamespace(urls=[])
         monkeypatch.setattr(
-            "kiro_crew.asset_downloader.build_opener",
+            "aj_crew.asset_downloader.build_opener",
             _as_opener(
                 _fake_manifest_fetch(
                     {
@@ -527,7 +527,7 @@ class TestManifestFetch:
         signed = _sign(signing_key, tmp_path, _document(release="0.6.0"))
         state = SimpleNamespace(urls=[])
         monkeypatch.setattr(
-            "kiro_crew.asset_downloader.build_opener",
+            "aj_crew.asset_downloader.build_opener",
             _as_opener(
                 _fake_manifest_fetch(
                     {
@@ -551,7 +551,7 @@ class TestManifestFetch:
         signed = _sign(signing_key, tmp_path, _document(release="0.4.0"))
         state = SimpleNamespace(urls=[])
         monkeypatch.setattr(
-            "kiro_crew.asset_downloader.build_opener",
+            "aj_crew.asset_downloader.build_opener",
             _as_opener(
                 _fake_manifest_fetch(
                     {
@@ -575,7 +575,7 @@ class TestManifestFetch:
         signed = _sign(signing_key, tmp_path, _document(release="0.4.0"))
         state = SimpleNamespace(urls=[])
         monkeypatch.setattr(
-            "kiro_crew.asset_downloader.build_opener",
+            "aj_crew.asset_downloader.build_opener",
             _as_opener(
                 _fake_manifest_fetch(
                     {
@@ -598,11 +598,11 @@ class TestManifestFetch:
         state = SimpleNamespace(urls=[])
         override = "https://mirror.example/feature-videos/manifest.json"
         monkeypatch.setattr(
-            "kiro_crew.asset_downloader.build_opener",
+            "aj_crew.asset_downloader.build_opener",
             _as_opener(_fake_manifest_fetch({override: json.dumps(signed).encode()}, state)),
         )
         monkeypatch.setenv(manifest_mod.MANIFEST_URL_ENV, override)
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             manifest, raw = manifest_mod.fetch_manifest("0.6.0")
             assert manifest is not None and manifest.release == "0.4.0"
             assert state.urls == [override]
@@ -619,7 +619,7 @@ class TestManifestFetch:
         state = SimpleNamespace(urls=[])
         override = "https://mirror.example/feature-videos/manifest.json"
         monkeypatch.setattr(
-            "kiro_crew.asset_downloader.build_opener",
+            "aj_crew.asset_downloader.build_opener",
             _as_opener(_fake_manifest_fetch({override: json.dumps(signed).encode()}, state)),
         )
         monkeypatch.setenv(manifest_mod.MANIFEST_URL_ENV, override)
@@ -637,7 +637,7 @@ class TestManifestFetch:
             seen.append(allow_cross_host_redirects)
             raise urllib.error.URLError("stop here")
 
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", _record)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", _record)
         manifest_mod.fetch_manifest("0.6.0")
         assert seen and not any(seen), "CDN urls are host-pinned"
         seen.clear()
@@ -648,7 +648,7 @@ class TestManifestFetch:
     def test_an_unsigned_response_yields_nothing(self, monkeypatch: pytest.MonkeyPatch) -> None:
         state = SimpleNamespace(urls=[])
         monkeypatch.setattr(
-            "kiro_crew.asset_downloader.build_opener",
+            "aj_crew.asset_downloader.build_opener",
             _as_opener(
                 _fake_manifest_fetch(
                     {
@@ -670,7 +670,7 @@ class TestManifestFetch:
         state = SimpleNamespace(urls=[])
         url = f"{manifest_mod.DEFAULT_CDN_BASE}/0.6.0/manifest.json"
         monkeypatch.setattr(
-            "kiro_crew.asset_downloader.build_opener",
+            "aj_crew.asset_downloader.build_opener",
             _as_opener(_fake_manifest_fetch({url: b"x" * (256 * 1024 + 10)}, state)),
         )
         assert manifest_mod._fetch_json(url) is None
@@ -686,7 +686,7 @@ class TestManifestFetch:
         def _explode(*_a: object, **_k: object) -> object:
             raise http.client.InvalidURL("nonnumeric port: 'not-a-port'")
 
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", _as_opener(_explode))
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", _as_opener(_explode))
         assert manifest_mod._fetch_json("https://cdn.example.com:not-a-port/manifest.json") is None
 
 
@@ -709,7 +709,7 @@ class TestManifestUrlResolution:
         ``feature_videos_manifest_url`` leaf, and the cache asks the manifest
         module for the url without consulting the dashboard config.
         """
-        from kiro_crew.config.sections import DashboardConfig
+        from aj_crew.config.sections import DashboardConfig
 
         assert not hasattr(DashboardConfig(), "feature_videos_manifest_url")
         assert manifest_mod.operator_manifest_url() == ""
@@ -731,7 +731,7 @@ class TestManifestOnDisk:
     def test_a_stored_manifest_is_re_verified_on_read(
         self, signing_key: Path, tmp_path: Path
     ) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             signed = _sign(signing_key, tmp_path, _document())
             manifest_mod.store_manifest(_parsed(), signed)
             loaded = manifest_mod.load_cached_manifest("0.6.0")
@@ -739,7 +739,7 @@ class TestManifestOnDisk:
 
     def test_an_edited_cache_file_is_refused(self, signing_key: Path, tmp_path: Path) -> None:
         """The cache states cdn_base, so trusting it because we once did is not enough."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             signed = _sign(signing_key, tmp_path, _document())
             manifest_mod.store_manifest(_parsed(), signed)
             path = manifest_mod.cached_manifest_path("0.6.0")
@@ -758,7 +758,7 @@ class TestManifestOnDisk:
         elsewhere.write_text(
             json.dumps(_sign(signing_key, tmp_path, _document())), encoding="utf-8"
         )
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             manifest_mod.ensure_cache_dir("0.6.0")
             manifest_mod.cached_manifest_path("0.6.0").symlink_to(elsewhere)
             assert manifest_mod.load_cached_manifest("0.6.0") is None
@@ -768,7 +768,7 @@ class TestManifestOnDisk:
     ) -> None:
         """The read stops at the cap the network fetch already enforces; what it has
         by then is not a document, so the file reads as no manifest."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             signed = _sign(signing_key, tmp_path, _document())
             manifest_mod.store_manifest(_parsed(), signed)
             path = manifest_mod.cached_manifest_path("0.6.0")
@@ -778,7 +778,7 @@ class TestManifestOnDisk:
             assert manifest_mod.load_cached_manifest("0.6.0") is None
 
     def test_a_corrupt_cache_file_reads_as_no_manifest(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             manifest_mod.ensure_cache_dir("0.6.0")
             manifest_mod.cached_manifest_path("0.6.0").write_text("{not json", encoding="utf-8")
             assert manifest_mod.load_cached_manifest("0.6.0") is None
@@ -786,7 +786,7 @@ class TestManifestOnDisk:
     def test_a_lower_release_cache_is_used_for_a_newer_build(
         self, signing_key: Path, tmp_path: Path
     ) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             signed = _sign(signing_key, tmp_path, _document(release="0.4.0"))
             manifest_mod.store_manifest(_parsed(release="0.4.0"), signed)
             loaded = manifest_mod.load_cached_manifest("0.6.0")
@@ -803,7 +803,7 @@ class TestManifestOnDisk:
         """
         outside = tmp_path / "outside"
         outside.mkdir(mode=0o755)
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             manifest_mod.cache_root().mkdir(parents=True)
             (manifest_mod.cache_root() / "0.6.0").symlink_to(outside, target_is_directory=True)
             with pytest.raises(manifest_mod.CacheDirRefused):
@@ -835,7 +835,7 @@ class TestManifestOnDisk:
                     planted.symlink_to(outside, target_is_directory=True)
 
         monkeypatch.setattr(manifest_mod, "_refuse_link", _check_then_plant)
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with pytest.raises(manifest_mod.CacheDirRefused):
                 manifest_mod.ensure_cache_dir("0.6.0")
         assert stat.S_IMODE(outside.stat().st_mode) == 0o755
@@ -862,7 +862,7 @@ class TestManifestOnDisk:
                 path.symlink_to(outside, target_is_directory=True)
 
         monkeypatch.setattr(manifest_mod, "_refuse_link", _check_then_swap_root)
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with pytest.raises(manifest_mod.CacheDirRefused):
                 manifest_mod.ensure_cache_dir("0.6.0")
         assert list(outside.iterdir()) == []
@@ -872,7 +872,7 @@ class TestManifestOnDisk:
         self, tmp_path: Path
     ) -> None:
         """A folder created before the guarantee (or loosened since) comes back 0700."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             folder = manifest_mod.cache_root() / "0.6.0"
             folder.mkdir(parents=True)
             folder.chmod(0o755)
@@ -886,7 +886,7 @@ class TestManifestOnDisk:
     ) -> None:
         """A Windows junction lstat's as a plain directory; it is refused by its reparse
         tag through ``is_link_or_junction``. Simulated here, since Linux has none."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             folder = manifest_mod.ensure_cache_dir("0.6.0")
             monkeypatch.setattr(
                 manifest_mod.platform_compat,
@@ -900,7 +900,7 @@ class TestManifestOnDisk:
         """A planted root moves every release folder at once, so it is checked too."""
         outside = tmp_path / "elsewhere"
         outside.mkdir()
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             manifest_mod.cache_root().parent.mkdir(parents=True, exist_ok=True)
             manifest_mod.cache_root().symlink_to(outside, target_is_directory=True)
             with pytest.raises(manifest_mod.CacheDirRefused):
@@ -908,7 +908,7 @@ class TestManifestOnDisk:
         assert list(outside.iterdir()) == []
 
     def test_a_file_where_the_release_folder_should_be_is_refused(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             manifest_mod.cache_root().mkdir(parents=True)
             (manifest_mod.cache_root() / "0.6.0").write_text("not a dir", encoding="utf-8")
             with pytest.raises(manifest_mod.CacheDirRefused):
@@ -919,7 +919,7 @@ class TestManifestOnDisk:
         """Both transfers ask ensure_cache_dir for the folder, so the gate covers them."""
         outside = tmp_path / "outside"
         outside.mkdir()
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             manifest = _parsed()
             manifest_mod.cache_root().mkdir(parents=True)
             (manifest_mod.cache_root() / "0.6.0").symlink_to(outside, target_is_directory=True)
@@ -934,7 +934,7 @@ class TestManifestOnDisk:
 
     @pytest.mark.skipif(sys.platform.startswith("win"), reason="POSIX mode bits")
     def test_the_cache_is_owner_only(self, signing_key: Path, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             manifest_mod.store_manifest(_parsed(), _sign(signing_key, tmp_path, _document()))
             folder = manifest_mod.release_dir("0.6.0")
             assert stat.S_IMODE(folder.stat().st_mode) == 0o700
@@ -964,7 +964,7 @@ class TestManifestOnDisk:
                 removals.append(1)
                 os.rmdir(name, dir_fd=dir_fd)  # type: ignore[arg-type]
 
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             folder = manifest_mod.release_dir("0.6.0")
             monkeypatch.setattr(os, "mkdir", vanishing)
             with pytest.raises(FileNotFoundError) as excinfo:
@@ -995,7 +995,7 @@ class TestManifestOnDisk:
                 os.rmdir(manifest_mod.cache_root())
             real_mkdir(name, mode, dir_fd=dir_fd)  # type: ignore[arg-type]
 
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             folder = manifest_mod.release_dir("0.6.0")
             monkeypatch.setattr(os, "mkdir", removing_the_root)
             with pytest.raises(FileNotFoundError) as excinfo:
@@ -1022,7 +1022,7 @@ class TestManifestOnDisk:
         real_pin = manifest_mod.platform_compat.pin_directory
         pinned_by_name: list[str] = []
 
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             folder = manifest_mod.release_dir("0.6.0")
 
             def windows_shaped_pin(path: object) -> int:
@@ -1064,7 +1064,7 @@ class TestManifestOnDisk:
         real_mkdir = os.mkdir
         real_pin = manifest_mod.platform_compat.pin_directory
 
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             folder = manifest_mod.release_dir("0.6.0")
 
             def bare_oserror_pin(path: object) -> int:
@@ -1104,7 +1104,7 @@ class TestManifestOnDisk:
         monkeypatch.setattr(manifest_mod.pinned_fs, "supports_pinned_walk", lambda: False)
         real_pin = manifest_mod.platform_compat.pin_directory
 
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             folder = manifest_mod.release_dir("0.6.0")
 
             def refusing_pin(path: object) -> int:
@@ -1126,7 +1126,7 @@ class TestPinnedReleaseDir:
     """The write side holds the folder open and proves, on the descriptor, where it is."""
 
     def test_the_handle_is_the_checked_folder(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with manifest_mod.pinned_release_dir("0.6.0") as folder:
                 assert folder.directory == manifest_mod.release_dir("0.6.0")
                 folder.write_text("note.txt", "x")
@@ -1156,7 +1156,7 @@ class TestPinnedReleaseDir:
             return real_pin(path, **kwargs)
 
         monkeypatch.setattr(asset_downloader, "pin_target_dir", _swap_then_pin)
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with pytest.raises(manifest_mod.CacheDirRefused, match="not where its name says"):
                 with manifest_mod.pinned_release_dir("0.6.0"):
                     pass
@@ -1167,7 +1167,7 @@ class TestPinnedReleaseDir:
     ) -> None:
         """Fail closed: no witness, no write."""
         monkeypatch.setattr(manifest_mod.pinned_fs, "fd_real_path", lambda _fd: None)
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with pytest.raises(manifest_mod.CacheDirRefused, match="cannot be located"):
                 with manifest_mod.pinned_release_dir("0.6.0"):
                     pass
@@ -1177,7 +1177,7 @@ class TestPinnedReleaseDir:
     ) -> None:
         """The download pass reports the refusal; it does not crash or write."""
         monkeypatch.setattr(manifest_mod.pinned_fs, "fd_real_path", lambda _fd: None)
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             manifest = _parsed()
             cache = cache_mod.FeatureVideoCache()
             ok, err = cache._download_entry(manifest.entries[0], manifest, 0)
@@ -1188,7 +1188,7 @@ class TestPinnedReleaseDir:
     def test_a_receipt_from_a_path_goes_through_the_same_pin(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             folder = manifest_mod.ensure_cache_dir("0.6.0")
             monkeypatch.setattr(manifest_mod.pinned_fs, "fd_real_path", lambda _fd: None)
             assert cache_mod.record_verified(folder, "hosted-clip.mp4", _CLIP_SHA) is False
@@ -1205,7 +1205,7 @@ class TestEviction:
             os.utime(folder, (stamp, stamp))
 
     def test_evicts_oldest_first_until_the_cap_is_met(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             self._seed_releases({"0.3.0": 400, "0.4.0": 400, "0.5.0": 400, "0.6.0": 400})
             evicted = cache_mod.evict("0.6.0", max_bytes=900)
             assert evicted == ["0.3.0", "0.4.0"]
@@ -1213,7 +1213,7 @@ class TestEviction:
             assert remaining == {"0.5.0", "0.6.0"}
 
     def test_the_running_release_is_never_evicted_even_over_the_cap(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             self._seed_releases({"0.6.0": 5000})
             assert cache_mod.evict("0.6.0", max_bytes=10) == []
             assert manifest_mod.release_dir("0.6.0").is_dir()
@@ -1241,7 +1241,7 @@ class TestEviction:
     def test_an_absurd_configured_ceiling_evicts_nothing_instead_of_raising(
         self, tmp_path: Path
     ) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             self._seed_releases({"0.5.0": 400, "0.6.0": 400})
             cache = cache_mod.FeatureVideoCache()
             dashboard = SimpleNamespace(feature_videos_cache_max_mb=1e308)
@@ -1250,7 +1250,7 @@ class TestEviction:
             assert remaining == {"0.5.0", "0.6.0"}
 
     def test_no_cap_evicts_nothing(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             self._seed_releases({"0.4.0": 10, "0.6.0": 10})
             assert cache_mod.evict("0.6.0", max_bytes=0) == []
 
@@ -1260,7 +1260,7 @@ class TestEviction:
         outside = tmp_path / "elsewhere"
         (outside / "0.3.0").mkdir(parents=True)
         (outside / "0.3.0" / "clip.mp4").write_bytes(b"x" * 400)
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             manifest_mod.cache_root().parent.mkdir(parents=True, exist_ok=True)
             manifest_mod.cache_root().symlink_to(outside, target_is_directory=True)
             assert cache_mod.release_folders() == []
@@ -1274,7 +1274,7 @@ class TestEviction:
         outside = tmp_path / "elsewhere"
         outside.mkdir()
         (outside / "keep.txt").write_text("x", encoding="utf-8")
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             self._seed_releases({"0.6.0": 10})
             (manifest_mod.cache_root() / "0.3.0").symlink_to(outside, target_is_directory=True)
             assert {r for r, _p, _m, _s in cache_mod.release_folders()} == {"0.6.0"}
@@ -1300,7 +1300,7 @@ class TestEviction:
             return real_remove(resolved_path, **kwargs)
 
         monkeypatch.setattr(pinned_fs, "remove_tree_pinned", _swap_then_remove)
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _write_media("0.3.0")
             assert cache_mod._remove_release("0.3.0", manifest_mod.release_dir("0.3.0")) is False
         assert (outside / "keep.txt").read_bytes() == b"mine"
@@ -1325,7 +1325,7 @@ class TestEviction:
             return real_remove(resolved_path, **kwargs)
 
         monkeypatch.setattr(pinned_fs, "remove_tree_pinned", _swap_root_then_remove)
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _write_media("0.3.0")
             assert cache_mod._remove_release("0.3.0", manifest_mod.release_dir("0.3.0")) is False
         assert (outside / "0.3.0" / "keep.txt").read_bytes() == b"mine"
@@ -1336,7 +1336,7 @@ class TestEviction:
         """The branch a platform without descriptor-relative walks takes (Windows),
         exercised here on purpose."""
         monkeypatch.setattr(pinned_fs, "supports_pinned_tree_walk", lambda: False)
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             folder = _write_media("0.3.0")
             assert cache_mod._remove_release("0.3.0", folder) is True
             assert not folder.exists()
@@ -1349,7 +1349,7 @@ class TestEviction:
         outside = tmp_path / "outside"
         outside.mkdir()
         (outside / "keep.txt").write_bytes(b"mine")
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             manifest_mod.cache_root().mkdir(parents=True)
             (manifest_mod.cache_root() / "0.3.0").symlink_to(outside, target_is_directory=True)
             assert cache_mod._remove_release("0.3.0", manifest_mod.cache_root() / "0.3.0") is False
@@ -1357,7 +1357,7 @@ class TestEviction:
 
     def test_an_unrecognized_directory_is_left_alone(self, tmp_path: Path) -> None:
         """We never created it, so we never delete it."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             stray = manifest_mod.cache_root() / "not-a-release"
             stray.mkdir(parents=True)
             (stray / "keep.txt").write_text("x", encoding="utf-8")

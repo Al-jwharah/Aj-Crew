@@ -17,8 +17,8 @@ import native_skill_projection_helpers
 import pytest
 from native_skill_projection_helpers import _alias_file
 
-from kiro_crew.acp import skill_projection as projection
-from kiro_crew.platform import governance
+from aj_crew.acp import skill_projection as projection
+from aj_crew.platform import governance
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _no_eager_prune = native_skill_projection_helpers._no_eager_prune
@@ -72,7 +72,7 @@ def test_a_custom_agent_s_view_grants_its_kept_auto_approve(native_tree, opt_in)
 
 
 def test_the_opt_in_off_takes_the_grant_out_of_the_next_view(native_tree, opt_in) -> None:
-    """The file still lists the verb, since Kiro Crew never rewrites it; the view asks
+    """The file still lists the verb, since Aj Crew never rewrites it; the view asks
     governance again at every spawn."""
     _home, agents, project = native_tree
     _write_custom(agents, ["ReadInternalWebsites"])

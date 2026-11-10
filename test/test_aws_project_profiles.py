@@ -29,10 +29,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import aws_project_profiles as app
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.config.sections import AwsConfig
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import aws_project_profiles as app
+from aj_crew.config import AjCrewConfig
+from aj_crew.config.sections import AwsConfig
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 def _project(root: Path, name: str) -> Path:
@@ -212,12 +212,12 @@ class TestCoerce:
     def test_an_invalid_profile_name_is_dropped_with_a_warning(
         self, tmp_path: Path, caplog: pytest.LogCaptureFixture, profile: object
     ) -> None:
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.aws_project_profiles"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.aws_project_profiles"):
             assert app.coerce_project_profiles({str(tmp_path): profile}) == {}
         assert any(str(tmp_path) in r.getMessage() for r in caplog.records)
 
     def test_a_relative_key_is_dropped(self, caplog: pytest.LogCaptureFixture) -> None:
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.aws_project_profiles"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.aws_project_profiles"):
             assert app.coerce_project_profiles({"relative/dir": "dev", "": "dev"}) == {}
         assert len(caplog.records) == 2
 
@@ -239,8 +239,8 @@ class TestCoerce:
 
 class TestConfigLoadAndSave:
     def test_the_default_map_is_empty(self) -> None:
-        assert KiroCrewConfig().aws.project_profiles == {}
-        assert KiroCrewConfig().to_dict()["aws"] == {"project_profiles": {}}
+        assert AjCrewConfig().aws.project_profiles == {}
+        assert AjCrewConfig().to_dict()["aws"] == {"project_profiles": {}}
 
     def test_load_keeps_valid_entries_and_drops_invalid_ones(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -261,21 +261,21 @@ class TestConfigLoadAndSave:
             ),
             encoding="utf-8",
         )
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: stored)
-        assert KiroCrewConfig.load().aws.project_profiles == {str(proj): "dev"}
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: stored)
+        assert AjCrewConfig.load().aws.project_profiles == {str(proj): "dev"}
 
     def test_a_saved_binding_survives_a_reload(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         proj = _project(tmp_path, "proj")
         stored = tmp_path / "config.json"
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: stored)
-        chosen = KiroCrewConfig(aws=AwsConfig(project_profiles={str(proj): "dev"}))
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: stored)
+        chosen = AjCrewConfig(aws=AwsConfig(project_profiles={str(proj): "dev"}))
         stored.write_text(json.dumps(chosen.to_dict()), encoding="utf-8")
-        assert KiroCrewConfig.load().aws.project_profiles == {str(proj): "dev"}
+        assert AjCrewConfig.load().aws.project_profiles == {str(proj): "dev"}
 
     def test_a_write_introducing_an_invalid_profile_is_refused(self, tmp_path: Path) -> None:
-        from kiro_crew.config.loader import ConfigWriteRefused, update_config_locked
+        from aj_crew.config.loader import ConfigWriteRefused, update_config_locked
 
         path = tmp_path / "config.json"
         path.write_text(json.dumps({"agent": {"yolo": True}}), encoding="utf-8")
@@ -292,7 +292,7 @@ class TestConfigLoadAndSave:
         assert path.read_bytes() == before
 
     def test_a_write_introducing_a_relative_key_is_refused(self, tmp_path: Path) -> None:
-        from kiro_crew.config.loader import ConfigWriteRefused, update_config_locked
+        from aj_crew.config.loader import ConfigWriteRefused, update_config_locked
 
         path = tmp_path / "config.json"
         path.write_text("{}", encoding="utf-8")
@@ -305,7 +305,7 @@ class TestConfigLoadAndSave:
             update_config_locked(path, mutate=plant)
 
     def test_a_valid_write_lands(self, tmp_path: Path) -> None:
-        from kiro_crew.config.loader import update_config_locked
+        from aj_crew.config.loader import update_config_locked
 
         path = tmp_path / "config.json"
         path.write_text("{}", encoding="utf-8")
@@ -321,7 +321,7 @@ class TestConfigLoadAndSave:
     def test_a_pre_existing_bad_entry_does_not_refuse_an_unrelated_write(
         self, tmp_path: Path, caplog: pytest.LogCaptureFixture
     ) -> None:
-        from kiro_crew.config.loader import update_config_locked
+        from aj_crew.config.loader import update_config_locked
 
         path = tmp_path / "config.json"
         stale = {"relative/dir": "dev"}
@@ -331,7 +331,7 @@ class TestConfigLoadAndSave:
             existing.setdefault("agent", {})["yolo"] = True
             return existing
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             update_config_locked(path, mutate=unrelated)
         written = json.loads(path.read_text(encoding="utf-8"))
         assert written["agent"]["yolo"] is True
@@ -341,7 +341,7 @@ class TestConfigLoadAndSave:
 
 class TestScrubKeepsTheProfile:
     def test_aws_profile_survives_the_agent_scrub_and_secrets_do_not(self) -> None:
-        from kiro_crew.sandbox import scrub_agent_subprocess_env
+        from aj_crew.sandbox import scrub_agent_subprocess_env
 
         env = {
             "PATH": "/usr/bin",
@@ -375,8 +375,8 @@ def _recording_factory(calls: list[dict]):
     return factory
 
 
-def _cfg(mapping: dict[str, str], pool_size: int = 0) -> KiroCrewConfig:
-    c = KiroCrewConfig()
+def _cfg(mapping: dict[str, str], pool_size: int = 0) -> AjCrewConfig:
+    c = AjCrewConfig()
     c.session.timeout_secs = 2
     c.session.pool_size = pool_size
     c.aws.project_profiles = dict(mapping)
@@ -389,7 +389,7 @@ class TestSessionSpawn:
     async def test_an_empty_map_passes_the_callers_env_through_unchanged(
         self, tmp_path: Path, caller_env: dict | None
     ) -> None:
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         proj = _project(tmp_path, "proj")
         settings = _project(proj, ".kiro/settings")
@@ -409,7 +409,7 @@ class TestSessionSpawn:
     async def test_an_unbound_cwd_passes_the_callers_env_through_unchanged(
         self, tmp_path: Path
     ) -> None:
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         proj = _project(tmp_path, "proj")
         sibling = _project(tmp_path, "project2")
@@ -423,7 +423,7 @@ class TestSessionSpawn:
 
     @pytest.mark.asyncio
     async def test_a_bound_cwd_starts_the_agent_with_the_profile(self, tmp_path: Path) -> None:
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         proj = _project(tmp_path, "proj")
         calls: list[dict] = []
@@ -444,7 +444,7 @@ class TestSessionSpawn:
     async def test_the_profile_reaches_only_the_env_and_is_logged_by_name(
         self, tmp_path: Path, caplog: pytest.LogCaptureFixture
     ) -> None:
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         proj = _project(tmp_path, "proj")
         calls: list[dict] = []
@@ -469,7 +469,7 @@ class TestSessionSpawn:
     async def test_an_unbound_spawn_logs_no_profile(
         self, tmp_path: Path, caplog: pytest.LogCaptureFixture
     ) -> None:
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         proj = _project(tmp_path, "proj")
         other = _project(tmp_path, "other")
@@ -485,7 +485,7 @@ class TestSessionSpawn:
 
     @pytest.mark.asyncio
     async def test_a_callers_explicit_profile_wins(self, tmp_path: Path) -> None:
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         proj = _project(tmp_path, "proj")
         calls: list[dict] = []
@@ -501,7 +501,7 @@ class TestSessionSpawn:
     async def test_a_successor_applies_the_binding_again(self, tmp_path: Path) -> None:
         """The session records the caller's env, not the bound one: rebuilt from the
         bound one, a successor would read the profile as the caller's own choice."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         proj = _project(tmp_path, "proj")
         calls: list[dict] = []
@@ -531,7 +531,7 @@ class TestSessionSpawn:
     async def test_a_won_race_retry_applies_the_binding_again(self, tmp_path: Path) -> None:
         """A cold start that lost the race to a session gone stale retries with the
         caller's env, so the session it registers still records the binding."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         proj = _project(tmp_path, "proj")
         record = _recording_factory([])
@@ -583,7 +583,7 @@ class TestSessionSpawn:
         self, tmp_path: Path
     ) -> None:
         """A pooled process was spawned without the profile, so a bound session never takes one."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         proj = _project(tmp_path, "proj")
         calls: list[dict] = []
@@ -607,8 +607,8 @@ class TestSessionSpawn:
 class TestTaskRunStep:
     @pytest.mark.asyncio
     async def test_a_bound_step_takes_the_dedicated_path(self, tmp_path: Path) -> None:
-        from kiro_crew.session import SessionManager
-        from kiro_crew.start_priority import StartPriority
+        from aj_crew.session import SessionManager
+        from aj_crew.start_priority import StartPriority
 
         proj = _project(tmp_path, "proj")
         mgr = SessionManager(_cfg({str(proj): "dev"}), provider_factory=_recording_factory([]))
@@ -621,7 +621,7 @@ class TestTaskRunStep:
             result = await mgr.open_task_session(
                 "taskrunner:run6332:runtime",
                 "taskrunner:run6332:task0",
-                agent="kirocrew",
+                agent="ajcrew",
                 cwd=str(proj),
             )
         finally:
@@ -629,7 +629,7 @@ class TestTaskRunStep:
         assert result == (dedicated, True, False)
         mgr.get_or_create.assert_awaited_once_with(
             "taskrunner:run6332:task0",
-            agent="kirocrew",
+            agent="ajcrew",
             approval_policy="",
             cwd=str(proj),
             start_priority=StartPriority.BACKGROUND,
@@ -637,7 +637,7 @@ class TestTaskRunStep:
 
     @pytest.mark.asyncio
     async def test_an_unbound_step_keeps_the_shared_runtime(self, tmp_path: Path) -> None:
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         proj = _project(tmp_path, "proj")
         other = _project(tmp_path, "other")
@@ -653,7 +653,7 @@ class TestTaskRunStep:
                 await mgr.open_task_session(
                     "taskrunner:run6332b:runtime",
                     "taskrunner:run6332b:task0",
-                    agent="kirocrew",
+                    agent="ajcrew",
                     cwd=str(other),
                 )
         finally:
@@ -666,8 +666,8 @@ class TestHotReload:
         self, tmp_path: Path
     ) -> None:
         """The manager subscribes to ``aws``, so an edit alone is adopted into ``_cfg``."""
-        from kiro_crew.config.live import ConfigChange
-        from kiro_crew.session import SessionManager
+        from aj_crew.config.live import ConfigChange
+        from aj_crew.session import SessionManager
 
         proj = _project(tmp_path, "proj")
         calls: list[dict] = []
@@ -696,7 +696,7 @@ async def _bound_parent(sm, cwd: Path, extra_env: dict | None = None) -> None:
     sm.get_provider(_PARENT_KEY).is_session_sharing_eligible = True
 
 
-def _sharing_cfg() -> KiroCrewConfig:
+def _sharing_cfg() -> AjCrewConfig:
     """The config the subagent manager loads: session sharing on."""
     cfg = _cfg({})
     cfg.agent.session_sharing = True
@@ -705,7 +705,7 @@ def _sharing_cfg() -> KiroCrewConfig:
 
 def _sharing_runner(sm):
     """A subagent manager on *sm*, its message builder a double."""
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.subagent import SubagentManager
 
     ctx = MagicMock()
     ctx.build_message = MagicMock(return_value=("msg", None))
@@ -715,8 +715,8 @@ def _sharing_runner(sm):
 
 def _child_info(cwd: str):
     """One template subagent of the parent, in *cwd*."""
-    from kiro_crew.execution_context import execution_for_store
-    from kiro_crew.subagent import SubagentInfo
+    from aj_crew.execution_context import execution_for_store
+    from aj_crew.subagent import SubagentInfo
 
     return SubagentInfo(
         execution_context=execution_for_store(""),
@@ -734,8 +734,8 @@ async def _start_subagent(sm, cwd: str) -> AsyncMock:
     environment lands in the recording factory; the run itself then streams on
     a plain double, which keeps the turn out of these tests.
     """
-    import kiro_crew.subagent as subagent_mod
-    from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+    import aj_crew.subagent as subagent_mod
+    from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
     client = MagicMock()
 
@@ -764,7 +764,7 @@ async def _start_subagent(sm, cwd: str) -> AsyncMock:
         patch.object(sm, "get_or_create", _get_or_create),
         patch.object(runner, "_create_shared_session", shared),
         patch.object(subagent_mod, "replace_stale_shared_session", _unchanged),
-        patch("kiro_crew.config.loader.KiroCrewConfig.load", classmethod(lambda c: cfg)),
+        patch("aj_crew.config.loader.AjCrewConfig.load", classmethod(lambda c: cfg)),
     ):
         await runner._run_inner(info, _CHILD_KEY)
     return shared
@@ -777,7 +777,7 @@ class TestSubagentSharing:
     async def test_a_child_bound_to_another_profile_gets_its_own_process_and_profile(
         self, tmp_path: Path
     ) -> None:
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         billing = _project(tmp_path, "billing")
         sandbox = _project(tmp_path, "sandbox")
@@ -801,7 +801,7 @@ class TestSubagentSharing:
     async def test_an_unbound_child_of_a_bound_parent_does_not_inherit_its_profile(
         self, tmp_path: Path
     ) -> None:
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         billing = _project(tmp_path, "billing")
         scratch = _project(tmp_path, "scratch")
@@ -822,7 +822,7 @@ class TestSubagentSharing:
     async def test_a_bound_child_of_an_unbound_parent_gets_its_own_profile(
         self, tmp_path: Path
     ) -> None:
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         home = _project(tmp_path, "home")
         sandbox = _project(tmp_path, "sandbox")
@@ -842,7 +842,7 @@ class TestSubagentSharing:
     async def test_a_child_bound_to_the_same_profile_still_shares(
         self, tmp_path: Path, child_dir: str
     ) -> None:
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         billing = _project(tmp_path, "billing")
         mirror = _project(tmp_path, "billing-mirror")
@@ -865,7 +865,7 @@ class TestSubagentSharing:
     async def test_an_empty_map_keeps_sharing_and_reads_no_path(
         self, tmp_path: Path, child_cwd: str
     ) -> None:
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         home = _project(tmp_path, "home")
         cwd = str(_project(tmp_path, child_cwd)) if child_cwd else ""
@@ -884,7 +884,7 @@ class TestSubagentSharing:
     async def test_an_unbound_child_keeps_sharing_a_profile_the_parents_caller_chose(
         self, tmp_path: Path
     ) -> None:
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         billing = _project(tmp_path, "billing")
         scratch = _project(tmp_path, "scratch")
@@ -903,9 +903,9 @@ class TestSubagentSharing:
     @pytest.mark.asyncio
     async def test_the_childs_profile_is_resolved_off_the_event_loop(self, tmp_path: Path) -> None:
         """A mapped directory on a mount that stops answering stalls the run, not the loop."""
-        from kiro_crew import session_allocation
-        from kiro_crew.session import SessionManager
-        from kiro_crew.testing.wait import LoopHop, await_until, default_timeout
+        from aj_crew import session_allocation
+        from aj_crew.session import SessionManager
+        from aj_crew.testing.wait import LoopHop, await_until, default_timeout
 
         billing = _project(tmp_path, "billing")
         sandbox = _project(tmp_path, "sandbox")
@@ -970,7 +970,7 @@ class TestSubagentSharing:
         self, tmp_path: Path, binding: str, shared: bool
     ) -> None:
         """The synchronous probe prices a possible split dedicated without a ``realpath``."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         billing = _project(tmp_path, "billing")
         child = _project(billing, "src")
@@ -985,7 +985,7 @@ class TestSubagentSharing:
             runner = _sharing_runner(sm)
             with (
                 patch.object(app, "_dir_parts", side_effect=AssertionError("a path was resolved")),
-                patch("kiro_crew.config.loader.KiroCrewConfig.load", classmethod(lambda c: cfg)),
+                patch("aj_crew.config.loader.AjCrewConfig.load", classmethod(lambda c: cfg)),
             ):
                 plan = runner._sharing_plan(_child_info(str(child)), cfg=cfg)
         finally:

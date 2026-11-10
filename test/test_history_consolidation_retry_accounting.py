@@ -20,15 +20,15 @@ from history_consolidation_retry_helpers import (
 )
 from windows_sim import replace_sharing_violation
 
-from kiro_crew import atomic_write as aw
-from kiro_crew import history as history_mod
-from kiro_crew import history_consolidation, platform_compat
-from kiro_crew.history import (
+from aj_crew import atomic_write as aw
+from aj_crew import history as history_mod
+from aj_crew import history_consolidation, platform_compat
+from aj_crew.history import (
     _CONSOLIDATION_BACKOFF_BASE_SECS,
     _CONSOLIDATION_MAX_ATTEMPTS,
     ConversationLog,
 )
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).
@@ -453,7 +453,7 @@ class TestHostileMetadataDoesNotBreakTheGate:
     @pytest.mark.asyncio
     async def test_the_manual_trigger_does_not_500_on_hostile_metadata(self, tmp_path):
         """The gate runs inside a request handler — a raise there is a 500."""
-        from kiro_crew.dashboard.handlers.memory import api_memory_consolidate
+        from aj_crew.dashboard.handlers.memory import api_memory_consolidate
 
         log = _seed_log(tmp_path)
         _plant_raw_meta(log, KEY, '"consolidation_attempts": 1e309')
@@ -561,12 +561,12 @@ class TestOnlyASentTurnConsumesTheCap:
 
     @pytest.mark.asyncio
     async def test_memory_binding_failure_arms_durable_backoff_without_spending(self, tmp_path):
-        from kiro_crew.memory_stores import UnknownMemoryStore
+        from aj_crew.memory_stores import UnknownMemoryStore
 
         log = _seed_log(tmp_path)
         c = _make_consolidator(log)
         with (
-            patch("kiro_crew.context.store_of_session", side_effect=UnknownMemoryStore("missing")),
+            patch("aj_crew.context.store_of_session", side_effect=UnknownMemoryStore("missing")),
             patch.object(c, "_call_llm", AsyncMock()) as call,
             pytest.raises(UnknownMemoryStore, match="missing"),
         ):
@@ -717,7 +717,7 @@ class TestOnlyASentTurnConsumesTheCap:
     async def test_an_empty_reply_whose_turn_billed_still_consumes_an_attempt(self, tmp_path):
         """Only a turn that billed nothing is free. The billing here is on an attempt a
         transient error abandoned, and the retry's fresh stats show none of it."""
-        from kiro_crew.acp.client import AcpError
+        from aj_crew.acp.client import AcpError
 
         class _BilledThenRetried(_OneTurnProvider):
             def __init__(self) -> None:
@@ -737,7 +737,7 @@ class TestOnlyASentTurnConsumesTheCap:
         provider = _BilledThenRetried()
         with (
             patch.object(history_consolidation, "background_turn", _background_turn_on(provider)),
-            patch("kiro_crew.llm_helpers.transient_retry_delay", return_value=0),
+            patch("aj_crew.llm_helpers.transient_retry_delay", return_value=0),
         ):
             await c._consolidate(KEY, include_history=True)
 
@@ -757,7 +757,7 @@ class TestOnlyASentTurnConsumesTheCap:
         provider = _OneTurnProvider(reply, credits=9.6)
         with (
             patch.object(history_consolidation, "background_turn", _background_turn_on(provider)),
-            caplog.at_level(logging.WARNING, logger="kiro_crew.history"),
+            caplog.at_level(logging.WARNING, logger="aj_crew.history"),
         ):
             await c._consolidate(KEY, include_history=True)
 
@@ -821,7 +821,7 @@ class _SignedOutProvider(_OneTurnProvider):
         self.calls = 0
 
     async def stream(self, _message: str, *, allow_image: bool = True):
-        from kiro_crew.acp.client import AcpAuthRequired, AcpError
+        from aj_crew.acp.client import AcpAuthRequired, AcpError
 
         self.calls += 1
         if self._billed_first and self.calls == 1:
@@ -881,7 +881,7 @@ class TestALapsedLoginIsNotAFailedAttempt:
 
     @pytest.mark.asyncio
     async def test_an_auth_failure_leaves_the_prefs_window_pending(self, tmp_path):
-        from kiro_crew.history_consolidation import _CONSOLIDATION_EMPTY
+        from aj_crew.history_consolidation import _CONSOLIDATION_EMPTY
 
         log = _seed_log(tmp_path)
         c, abandoned, turn = self._consolidator(log, _SignedOutProvider())
@@ -912,7 +912,7 @@ class TestALapsedLoginIsNotAFailedAttempt:
         provider = _SignedOutProvider(**provider_kwargs)
         c, _, turn = self._consolidator(log, provider)
 
-        with turn, patch("kiro_crew.llm_helpers.transient_retry_delay", return_value=0):
+        with turn, patch("aj_crew.llm_helpers.transient_retry_delay", return_value=0):
             await c._consolidate(KEY, include_history=True)
 
         assert log.consolidation_retry_state(KEY)[0] == 1

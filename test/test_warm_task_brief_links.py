@@ -14,9 +14,9 @@ from dataclasses import replace
 import pytest
 from test_warm_task_brief import _arm_model, _claimed, _foreground_slot, _snapshot, _State
 
-from kiro_crew.dashboard import warm_task_brief
-from kiro_crew.dashboard import warm_task_brief_facts as facts
-from kiro_crew.dashboard import warm_task_brief_inputs as inputs
+from aj_crew.dashboard import warm_task_brief
+from aj_crew.dashboard import warm_task_brief_facts as facts
+from aj_crew.dashboard import warm_task_brief_inputs as inputs
 
 _OURS = inputs.PrRef("kirodotdev/KiroCrew", 12)
 _THEIRS = inputs.PrRef("acme/other", 12)

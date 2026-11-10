@@ -30,8 +30,8 @@ from contextlib import contextmanager
 import pytest
 from opentelemetry.metrics import CallbackOptions
 
-from kiro_crew.metrics import crew_log_health as health
-from kiro_crew.metrics.recorder import MetricsRecorder
+from aj_crew.metrics import crew_log_health as health
+from aj_crew.metrics.recorder import MetricsRecorder
 
 
 class _Rec:
@@ -54,7 +54,7 @@ class _Rec:
 @pytest.fixture()
 def rec(monkeypatch):
     r = _Rec()
-    monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: r)
+    monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: r)
     return r
 
 
@@ -96,7 +96,7 @@ class TestLabels:
         """An unbounded value would be a series the instrument cache never evicts."""
         assert health._closed("disk-on-fire", health.CAUSES, health.OTHER) == "other"
         assert health._closed("chat-2915", health.SCOPES, health.OTHER) == "other"
-        assert health._closed("/home/someone/kirocrew", health.ORIGINS, health.OTHER) == "other"
+        assert health._closed("/home/someone/ajcrew", health.ORIGINS, health.OTHER) == "other"
         assert health._closed("acp-session-41", health.FOLD_LABELS, health.OTHER) == "other"
 
     def test_cardinality_stays_a_small_constant(self):
@@ -152,7 +152,7 @@ class TestFoldCatalogue:
     """
 
     def test_the_label_set_is_the_crew_logs_own_catalogue(self):
-        from kiro_crew.crew_log.projection_catalogue import FOLD_NAMES
+        from aj_crew.crew_log.projection_catalogue import FOLD_NAMES
 
         assert health.FOLD_LABELS == frozenset(FOLD_NAMES)
 
@@ -183,7 +183,7 @@ class TestFoldCatalogue:
             # restores each one -- patching the owner directly would leave the
             # undo restoring every holder to the patched value.
             monkey.setattr(
-                "kiro_crew.crew_log.projection.FOLD_NAMES",
+                "aj_crew.crew_log.projection.FOLD_NAMES",
                 ("status", "heartbeat"),
             )
             spec = importlib.util.spec_from_file_location("_crew_log_health_probe", health.__file__)
@@ -228,11 +228,11 @@ class TestFoldStart:
 
     def test_an_out_of_enum_value_is_collapsed_at_the_record_site(self, rec):
         with as_fold_worker():
-            _one_pass("/home/someone/kirocrew", "acp-first")
+            _one_pass("/home/someone/ajcrew", "acp-first")
         assert rec.attrs_for(health.FOLD_START) == [{"scope": "other", "origin": "other"}]
 
     def test_a_broken_recorder_costs_the_metric_and_not_the_fold(self, monkeypatch):
-        monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: _Rec(explode=True))
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: _Rec(explode=True))
         with as_fold_worker():
             _one_pass("slot", "cold", ("work",))  # must not raise
             # The lost point still consumed the stamp, so a later pass cannot report it.
@@ -332,7 +332,7 @@ class TestFoldPassStamps:
                 now[0] += 2.0  # the provider build
             return built
 
-        monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", get_recorder)
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", get_recorder)
         with as_fold_worker():
             started = health.begin_fold_pass()
             health.note_fold_origin("slot", "cold")
@@ -426,7 +426,7 @@ class TestTelemetryOff:
     def test_nothing_is_recorded_and_no_instrument_is_built(self, monkeypatch):
         """``MetricsRecorder(None)`` is the gate every call site goes through."""
         off = MetricsRecorder(None)
-        monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: off)
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: off)
         with as_fold_worker():
             _one_pass("session", "cold", ("status",))
         assert off.enabled is False
@@ -590,7 +590,7 @@ class TestWriteLostAccrual:
 
 class TestWriteLostSources:
     def test_each_cause_reads_the_count_its_own_subsystem_keeps(self, monkeypatch):
-        from kiro_crew.crew_log import eager, emit
+        from aj_crew.crew_log import eager, emit
 
         monkeypatch.setattr(emit, "dropped_writes", lambda: 2)
         monkeypatch.setattr(emit, "overflow_writes", lambda *a, **k: 3)
@@ -603,8 +603,8 @@ class TestWriteLostSources:
 
     def test_a_subsystem_that_was_never_imported_reports_zero(self, monkeypatch):
         """Read through ``sys.modules``: a telemetry callback imports nothing."""
-        monkeypatch.delitem(sys.modules, "kiro_crew.crew_log.emit", raising=False)
-        monkeypatch.delitem(sys.modules, "kiro_crew.crew_log.eager", raising=False)
+        monkeypatch.delitem(sys.modules, "aj_crew.crew_log.emit", raising=False)
+        monkeypatch.delitem(sys.modules, "aj_crew.crew_log.eager", raising=False)
         assert health._read_raw_losses() == {cause: 0 for cause in health.CAUSES}
 
     def test_the_observations_carry_one_point_per_cause(self, raw):

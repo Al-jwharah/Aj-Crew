@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.cloud import config as cloud_config
-from kiro_crew.cloud.config import (
+from aj_crew.cloud import config as cloud_config
+from aj_crew.cloud.config import (
     _MAX_FILE_BYTES,
     DEFAULT_REGION,
     CloudConfig,
@@ -20,20 +20,20 @@ from kiro_crew.cloud.config import (
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 
 #: The model-credential secret as a conforming ``(name, ARN)`` pair: the name is
-#: ``kirocrew/crew/<crew>/<ENV>`` and the ARN is that name plus one six-character
+#: ``ajcrew/crew/<crew>/<ENV>`` and the ARN is that name plus one six-character
 #: service suffix. The account id is fictional.
 CREDENTIAL_SECRET = [
-    "kirocrew/crew/demo/KIRO_IDENTITY",
-    "arn:aws:secretsmanager:us-east-1:123456789012:secret:kirocrew/crew/demo/KIRO_IDENTITY-abcdef",
+    "ajcrew/crew/demo/KIRO_IDENTITY",
+    "arn:aws:secretsmanager:us-east-1:123456789012:secret:ajcrew/crew/demo/KIRO_IDENTITY-abcdef",
 ]
 
 #: A complete Fargate block. Every case below is this, minus or plus one thing, so
 #: a case cannot pass by being malformed in a second way the assertion never named.
 COMPLETE_FARGATE = {
-    "cluster": "kirocrew-crew-prod",
+    "cluster": "ajcrew-crew-prod",
     "subnets": ["subnet-a", "subnet-b"],
     "security_groups": ["sg-1"],
-    "image": "public.ecr.aws/example/kirocrew-crew-base@sha256:" + "a" * 64,
+    "image": "public.ecr.aws/example/ajcrew-crew-base@sha256:" + "a" * 64,
     "secrets": [CREDENTIAL_SECRET],
     "cpu_architecture": "X86_64",
 }
@@ -93,7 +93,7 @@ class TestFargateConfig:
         import inspect
         import textwrap
 
-        from kiro_crew.cloud.fargate.taskdef import credential_recipient as shared
+        from aj_crew.cloud.fargate.taskdef import credential_recipient as shared
 
         tree = ast.parse(textwrap.dedent(inspect.getsource(FargateConfig.credential_recipient)))
         returns = [n for n in ast.walk(tree) if isinstance(n, ast.Return) and n.value is not None]
@@ -106,7 +106,7 @@ class TestFargateConfig:
     def test_a_complete_block_is_read(self):
         config = FargateConfig.from_mapping(COMPLETE_FARGATE)
         assert config is not None
-        assert config.cluster == "kirocrew-crew-prod"
+        assert config.cluster == "ajcrew-crew-prod"
         assert config.subnets == ("subnet-a", "subnet-b")
         assert config.security_groups == ("sg-1",)
         assert config.secrets == (
@@ -132,7 +132,7 @@ class TestFargateConfig:
                 "secrets but none named for the model credential",
                 {
                     **COMPLETE_FARGATE,
-                    "secrets": [["kirocrew/crew/demo/OTHER_KEY", CREDENTIAL_SECRET[1]]],
+                    "secrets": [["ajcrew/crew/demo/OTHER_KEY", CREDENTIAL_SECRET[1]]],
                 },
             ),
             ("public ip is the string false", {**COMPLETE_FARGATE, "assign_public_ip": "false"}),
@@ -209,7 +209,7 @@ class TestFargateConfig:
         that does not exist. Parametrized over the FIELDS as well as the values, so a
         string field added later is covered without anyone remembering.
         """
-        from kiro_crew.cloud.config import _STRING_FIELD_DEFAULTS
+        from aj_crew.cloud.config import _STRING_FIELD_DEFAULTS
 
         assert _STRING_FIELD_DEFAULTS, "the field derivation must not be empty"
         for field_name in _STRING_FIELD_DEFAULTS:
@@ -220,7 +220,7 @@ class TestFargateConfig:
         """Pins the derivation itself, so a field cannot silently drop out of it."""
         from dataclasses import fields
 
-        from kiro_crew.cloud.config import _STRING_FIELD_DEFAULTS
+        from aj_crew.cloud.config import _STRING_FIELD_DEFAULTS
 
         expected = {f.name for f in fields(FargateConfig) if isinstance(f.default, str)}
         assert set(_STRING_FIELD_DEFAULTS) == expected
@@ -233,7 +233,7 @@ class TestFargateConfig:
         and the trust boundary. An explicit JSON ``null`` is a PRESENT value and must drop
         the block rather than fall through to the default.
         """
-        from kiro_crew.cloud.config import _BOOL_FIELD_DEFAULTS
+        from aj_crew.cloud.config import _BOOL_FIELD_DEFAULTS
 
         assert _BOOL_FIELD_DEFAULTS, "the field derivation must not be empty"
         for field_name in _BOOL_FIELD_DEFAULTS:
@@ -249,7 +249,7 @@ class TestFargateConfig:
         """
         from dataclasses import fields
 
-        from kiro_crew.cloud.config import _BOOL_FIELD_DEFAULTS
+        from aj_crew.cloud.config import _BOOL_FIELD_DEFAULTS
 
         expected = {f.name for f in fields(FargateConfig) if isinstance(f.default, bool)}
         assert set(_BOOL_FIELD_DEFAULTS) == expected
@@ -262,7 +262,7 @@ class TestFargateConfig:
         field in this block that LOOSENS a posture, so a default of ``True`` would hand
         every lane an unsandboxed model subprocess for saying nothing at all.
         """
-        from kiro_crew.cloud.config import _BOOL_FIELD_DEFAULTS
+        from aj_crew.cloud.config import _BOOL_FIELD_DEFAULTS
 
         assert all(default is False for default in _BOOL_FIELD_DEFAULTS.values())
 
@@ -298,7 +298,7 @@ class TestFargateConfig:
         thing the ``None`` default exists to avoid. Read from the engine, this also fails
         if that constant moves without this lane following it.
         """
-        from kiro_crew.cloud.fargate_engine import (
+        from aj_crew.cloud.fargate_engine import (
             DEFAULT_MAX_RUNNING_TASKS,
             DEFAULT_TASK_TTL_SECONDS,
         )
@@ -317,7 +317,7 @@ class TestFargateConfig:
         cannot quietly move the population ceiling with it: the two travel in one
         dataclass and only one of them is operator-reachable.
         """
-        from kiro_crew.cloud.fargate_engine import (
+        from aj_crew.cloud.fargate_engine import (
             DEFAULT_MAX_RUNNING_TASKS,
             DEFAULT_TASK_TTL_SECONDS,
         )
@@ -360,13 +360,13 @@ class TestFargateConfig:
         engine only. The cap's value (``10``) is not asserted absent, because it occurs in
         unrelated prose and the check would prove nothing.
         """
-        from kiro_crew.cloud.fargate_engine import (
+        from aj_crew.cloud.fargate_engine import (
             DEFAULT_MAX_RUNNING_TASKS,
             DEFAULT_TASK_TTL_SECONDS,
         )
 
         spec = (_REPO_ROOT / "docs/system-specs/modules/cloud.md").read_text(encoding="utf-8")
-        module_src = (_REPO_ROOT / "src/kiro_crew/cloud/config.py").read_text(encoding="utf-8")
+        module_src = (_REPO_ROOT / "src/aj_crew/cloud/config.py").read_text(encoding="utf-8")
 
         assert "DEFAULT_TASK_TTL_SECONDS" in spec
         assert "DEFAULT_MAX_RUNNING_TASKS" in spec
@@ -387,7 +387,7 @@ class TestFargateConfig:
         An explicit JSON ``null`` is a present value of the wrong type. ``0`` and ``-1`` must
         drop the block rather than raise out of ``TaskBounds`` on the first launch.
         """
-        from kiro_crew.cloud.config import _INT_FIELD_NAMES
+        from aj_crew.cloud.config import _INT_FIELD_NAMES
 
         assert _INT_FIELD_NAMES, "the field derivation must not be empty"
         for field_name in _INT_FIELD_NAMES:
@@ -404,7 +404,7 @@ class TestFargateConfig:
         """
         from dataclasses import fields
 
-        from kiro_crew.cloud.config import _INT_FIELD_NAMES
+        from aj_crew.cloud.config import _INT_FIELD_NAMES
 
         declared = {f.name: f for f in fields(FargateConfig)}
         for name in _INT_FIELD_NAMES:
@@ -441,7 +441,7 @@ class TestAConcurrentEditIsNeverLost:
 
     def test_the_tag_pattern_accepts_its_own_bound(self):
         """One bound, two users. A second literal would be free to drift."""
-        from kiro_crew.cloud.config import _TAG_MAX_LEN, _TAG_RE
+        from aj_crew.cloud.config import _TAG_MAX_LEN, _TAG_RE
 
         assert _TAG_RE.match("a" * _TAG_MAX_LEN), "the pattern must accept its own bound"
         assert not _TAG_RE.match("a" * (_TAG_MAX_LEN + 1)), "and reject one past it"
@@ -454,7 +454,7 @@ class TestAConcurrentEditIsNeverLost:
         A read that ignores the ceiling both defeats the memory bound and pulls in a file
         too large to write back, so the size of what comes in is the property under test.
         """
-        from kiro_crew.cloud.config import _MAX_FILE_BYTES, CloudConfig
+        from aj_crew.cloud.config import _MAX_FILE_BYTES, CloudConfig
 
         p = tmp_path / "cloud.json"
         p.write_text(
@@ -512,7 +512,7 @@ class TestAConcurrentEditIsNeverLost:
 
     def test_two_configs_with_the_same_settings_are_equal(self, tmp_path):
         """The fingerprint must stay out of equality, or callers comparing configs break."""
-        from kiro_crew.cloud.config import CloudConfig
+        from aj_crew.cloud.config import CloudConfig
 
         p = tmp_path / "cloud.json"
         self._seed(p)
@@ -527,7 +527,7 @@ class TestAConcurrentEditIsNeverLost:
         cover, and a directory leaf no alias check validated -- so the code they are about is
         what had to go. A mechanism left in place behind a flag would keep both.
         """
-        import kiro_crew.cloud.config as config_mod
+        import aj_crew.cloud.config as config_mod
 
         leftovers = [n for n in vars(config_mod) if "preserv" in n.lower()]
         assert leftovers == [], leftovers
@@ -543,8 +543,8 @@ class TestAConcurrentEditIsNeverLost:
 
         import pytest as _pytest
 
-        from kiro_crew import cli_cloud as _cli_cloud
-        from kiro_crew.cloud.config import CloudConfig
+        from aj_crew import cli_cloud as _cli_cloud
+        from aj_crew.cloud.config import CloudConfig
 
         monkeypatch.setattr(CloudConfig, "load", classmethod(lambda cls, *a, **k: cls()))
         assert CloudConfig().last_tag == "", "the premise of this test is the default tag"
@@ -569,7 +569,7 @@ class TestAConcurrentEditIsNeverLost:
         Parametrized on a short KEY: pytest exports the node id as an environment variable,
         and a 60,000-bracket id exceeds the Windows 32767-character cap.
         """
-        from kiro_crew.cloud.config import CloudConfig
+        from aj_crew.cloud.config import CloudConfig
 
         p = tmp_path / "cloud.json"
         if kind == "not_utf8":
@@ -598,8 +598,8 @@ class TestAConcurrentEditIsNeverLost:
         so with no block it writes a complete one and the owner's next launch runs its image.
         All three cases must refuse identically, which is what makes the rule content-blind.
         """
-        from kiro_crew import sandbox
-        from kiro_crew.cloud import config as cloud_config
+        from aj_crew import sandbox
+        from aj_crew.cloud import config as cloud_config
 
         home = tmp_path / "crew"
         home.mkdir()
@@ -631,7 +631,7 @@ class TestAConcurrentEditIsNeverLost:
         """
         import inspect
 
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         both = set(sandbox._CREW_NOFOLLOW_READONLY_FILE_LEAVES) | set(
             sandbox._CREW_NOFOLLOW_READONLY_DIR_LEAVES
@@ -646,7 +646,7 @@ class TestAConcurrentEditIsNeverLost:
 
     def test_a_delegated_workspace_elsewhere_is_left_alone(self, tmp_path):
         """Only an overlap is refused, so an ordinary project workspace still spawns."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         home = tmp_path / "crew"
         home.mkdir()
@@ -725,7 +725,7 @@ class TestAConcurrentEditIsNeverLost:
         import ast as _ast
         import pathlib as _pathlib
 
-        for rel in ("src/kiro_crew/cloud/wizard.py", "src/kiro_crew/cli_cloud.py"):
+        for rel in ("src/aj_crew/cloud/wizard.py", "src/aj_crew/cli_cloud.py"):
             path = _pathlib.Path(__file__).resolve().parents[1] / rel
             tree = _ast.parse(path.read_text(encoding="utf-8"))
             offenders = [
@@ -750,14 +750,14 @@ class TestAConcurrentEditIsNeverLost:
         registering a lane that rejects every launch through it.
         """
         same_crew = [
-            "kirocrew/crew/demo/OTHER_KEY",
+            "ajcrew/crew/demo/OTHER_KEY",
             "arn:aws:secretsmanager:us-east-1:123456789012:secret:"
-            "kirocrew/crew/demo/OTHER_KEY-AbCdEf",
+            "ajcrew/crew/demo/OTHER_KEY-AbCdEf",
         ]
         cross_crew = [
-            "kirocrew/crew/other/OTHER_KEY",
+            "ajcrew/crew/other/OTHER_KEY",
             "arn:aws:secretsmanager:us-east-1:999988887777:secret:"
-            "kirocrew/crew/other/OTHER_KEY-AbCdEf",
+            "ajcrew/crew/other/OTHER_KEY-AbCdEf",
         ]
         good = {**COMPLETE_FARGATE, "secrets": [list(CREDENTIAL_SECRET), same_crew]}
         assert FargateConfig.from_mapping(good) is not None, "a same-crew sibling is fine"
@@ -845,7 +845,7 @@ class TestCloudConfig:
         # into the resume path where validate_tag (cap 51) would raise. The
         # sanitizer's job is "no last launch", not a crash. Keep _TAG_RE in
         # lockstep with ec2._TAG_RE.
-        from kiro_crew.cloud import ec2
+        from aj_crew.cloud import ec2
 
         assert ec2._TAG_RE.pattern == r"^[a-zA-Z0-9-]{1,51}\Z"  # the cap we mirror
         p = tmp_path / "cloud.json"
@@ -868,7 +868,7 @@ class TestCloudConfig:
     def test_non_object_json_falls_back_to_defaults(self, tmp_path):
         # Valid JSON that isn't an object ("hello", [1,2], 42, null) must not
         # raise AttributeError out of load() — that would give a raw traceback on
-        # every `kirocrew cloud` command (handle_cloud only catches AWS/validation
+        # every `ajcrew cloud` command (handle_cloud only catches AWS/validation
         # errors). Honor the tolerate-a-corrupt-file promise.
         for body in ('"hello"', "[1, 2, 3]", "42", "null", "true"):
             p = tmp_path / "cloud.json"
@@ -895,11 +895,11 @@ class TestCloudConfigIsSealedAgainstAgentWrites:
 
     #: Spelled out rather than looped from the production tuple: a test derived from
     #: the same list the code reads would keep passing after someone emptied it.
-    PATHS = ("~/.kiro/crew/cloud.json", "~/.kirocrew/cloud.json")
+    PATHS = ("~/.kiro/crew/cloud.json", "~/.ajcrew/cloud.json")
 
     @pytest.mark.parametrize("path", PATHS)
     def test_an_agent_may_not_write_it(self, path: str):
-        from kiro_crew.security.paths import is_sensitive_write_path
+        from aj_crew.security.paths import is_sensitive_write_path
 
         assert is_sensitive_write_path(path) is True
 
@@ -909,7 +909,7 @@ class TestCloudConfigIsSealedAgainstAgentWrites:
 
         Blocking reads would take the Set-up tab down instead of protecting it.
         """
-        from kiro_crew.security.paths import is_sensitive_path
+        from aj_crew.security.paths import is_sensitive_path
 
         assert is_sensitive_path(path) is False
 
@@ -920,7 +920,7 @@ class TestCloudConfigIsSealedAgainstAgentWrites:
         writable; without this, a predicate that answered True for everything would
         satisfy this class.
         """
-        from kiro_crew.security.paths import is_sensitive_write_path
+        from aj_crew.security.paths import is_sensitive_write_path
 
         assert is_sensitive_write_path("~/.kiro/crew/not-a-protected-leaf.json") is False
 
@@ -934,7 +934,7 @@ class TestTheSealedCloudConfigNameCannotBeAnAlias:
     """
 
     def test_cloud_json_is_on_the_nofollow_file_list(self):
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert "cloud.json" in sandbox._CREW_NOFOLLOW_READONLY_FILE_LEAVES
 
@@ -944,7 +944,7 @@ class TestTheSealedCloudConfigNameCannotBeAnAlias:
         A nofollow leaf that is not materialised has no seal to protect on a default
         install, so the strict check would guard a name nothing binds.
         """
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert set(sandbox._CREW_NOFOLLOW_READONLY_FILE_LEAVES) <= set(
             sandbox._CREW_PRECREATE_READONLY_FILE_LEAVES
@@ -952,7 +952,7 @@ class TestTheSealedCloudConfigNameCannotBeAnAlias:
 
     def test_the_list_is_not_everything(self):
         """Positive control: the strict path is opt-in, not applied to every leaf."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert set(sandbox._CREW_PRECREATE_READONLY_FILE_LEAVES) - set(
             sandbox._CREW_NOFOLLOW_READONLY_FILE_LEAVES
@@ -965,7 +965,7 @@ def _strict_check(target: str) -> None:
     ``harm`` and ``remedy`` are required because the two strict leaves are refused for
     different reasons; their wording is not what these tests check.
     """
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     sandbox._require_real_file_nofollow(
         target,
@@ -990,7 +990,7 @@ class TestTheStrictCloudConfigSealRefusesEveryUncoveredName:
 
     @staticmethod
     def _strict_target(tmp_path):
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         return tmp_path / sandbox._CREW_NOFOLLOW_READONLY_FILE_LEAVES[0]
 
@@ -1004,7 +1004,7 @@ class TestTheStrictCloudConfigSealRefusesEveryUncoveredName:
         _strict_check(str(self._strict_target(tmp_path)))
 
     def test_a_symlink_is_refused(self, tmp_path):
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         real = tmp_path / "elsewhere.json"
         real.write_text(self.RISKY, encoding="utf-8")
@@ -1015,7 +1015,7 @@ class TestTheStrictCloudConfigSealRefusesEveryUncoveredName:
 
     def test_a_hardlinked_file_is_refused(self, tmp_path):
         """The shape the earlier symlink-only check missed entirely."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         p = self._strict_target(tmp_path)
         p.write_text(self.RISKY, encoding="utf-8")
@@ -1024,7 +1024,7 @@ class TestTheStrictCloudConfigSealRefusesEveryUncoveredName:
             _strict_check(str(p))
 
     def test_a_directory_at_the_name_is_refused(self, tmp_path):
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         p = self._strict_target(tmp_path)
         p.mkdir()
@@ -1033,7 +1033,7 @@ class TestTheStrictCloudConfigSealRefusesEveryUncoveredName:
 
     def test_an_unreadable_alias_is_treated_as_risky(self, tmp_path):
         """Contents are never read now, so even an unreadable alias refuses."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         p = self._strict_target(tmp_path)
         p.write_text(self.RISKY, encoding="utf-8")
@@ -1062,7 +1062,7 @@ class TestTheStrictCloudConfigSealRefusesEveryUncoveredName:
 
     @pytest.mark.parametrize(("label", "body"), ENCODINGS)
     def test_a_symlink_is_refused_whatever_the_contents(self, tmp_path, label, body):
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         real = tmp_path / "elsewhere.json"
         real.write_text(body, encoding="utf-8")
@@ -1073,7 +1073,7 @@ class TestTheStrictCloudConfigSealRefusesEveryUncoveredName:
 
     @pytest.mark.parametrize(("label", "body"), ENCODINGS)
     def test_a_hardlink_is_refused_whatever_the_contents(self, tmp_path, label, body):
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         p = self._strict_target(tmp_path)
         p.write_text(body, encoding="utf-8")
@@ -1090,7 +1090,7 @@ class TestTheStrictCloudConfigSealRefusesEveryUncoveredName:
         """
         import inspect
 
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         src = inspect.getsource(sandbox._require_real_file_nofollow)
         for reader in ("open(", "read(", "json.loads", "carries_risk"):
@@ -1119,18 +1119,18 @@ class TestTheCredentialGateAgreesWithTheEngine:
         [
             "KIRO_IDENTITY",
             "junk/KIRO_IDENTITY",
-            "kirocrew/crew/KIRO_IDENTITY",
-            "kirocrew/crew//KIRO_IDENTITY",
-            "kirocrew/crew/a/b/KIRO_IDENTITY",
-            "kirocrew/crew/demo/OTHER_KEY",
-            "kirocrew/crew/demo/KIRO_API_KEY",
+            "ajcrew/crew/KIRO_IDENTITY",
+            "ajcrew/crew//KIRO_IDENTITY",
+            "ajcrew/crew/a/b/KIRO_IDENTITY",
+            "ajcrew/crew/demo/OTHER_KEY",
+            "ajcrew/crew/demo/KIRO_API_KEY",
         ],
     )
     def test_a_name_the_engine_would_refuse_does_not_register_the_lane(self, name: str):
         assert FargateConfig.from_mapping(self._with_credential_named(name)) is None, name
 
     def test_a_conforming_name_is_accepted(self):
-        block = self._with_credential_named("kirocrew/crew/demo/KIRO_IDENTITY")
+        block = self._with_credential_named("ajcrew/crew/demo/KIRO_IDENTITY")
         assert FargateConfig.from_mapping(block) is not None
 
     def test_every_name_this_gate_accepts_the_engine_also_accepts(self):
@@ -1141,9 +1141,9 @@ class TestTheCredentialGateAgreesWithTheEngine:
         """
         import itertools
 
-        from kiro_crew.cloud.fargate.identity import SecretRef, secret_env_name
+        from aj_crew.cloud.fargate.identity import SecretRef, secret_env_name
 
-        prefixes = ["kirocrew/crew/", "kirocrew/crews/", "junk/", ""]
+        prefixes = ["ajcrew/crew/", "ajcrew/crews/", "junk/", ""]
         crews = [
             "demo",
             "DEMO",
@@ -1179,10 +1179,10 @@ class TestTheCredentialGateAgreesWithTheEngine:
     )
     def test_a_crew_segment_the_engine_would_refuse_does_not_register(self, crew: str):
         """Each of these passed the earlier truthiness check and died in provisioning."""
-        name = f"kirocrew/crew/{crew}/KIRO_IDENTITY"
+        name = f"ajcrew/crew/{crew}/KIRO_IDENTITY"
         assert FargateConfig.from_mapping(self._with_credential_named(name)) is None, crew
 
     @pytest.mark.parametrize("crew", ["demo", "a", "1", "a-b", "a--b", "d" * 32])
     def test_a_conforming_crew_segment_registers(self, crew: str):
-        name = f"kirocrew/crew/{crew}/KIRO_IDENTITY"
+        name = f"ajcrew/crew/{crew}/KIRO_IDENTITY"
         assert FargateConfig.from_mapping(self._with_credential_named(name)) is not None, crew

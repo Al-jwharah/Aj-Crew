@@ -3,7 +3,7 @@
  *
  * Mounts the REAL ChannelPage with only the api reads stubbed: one channel
  * holding one top-level message with no replies yet. The capture script then
- * dispatches the same `kirocrew-channel` window event the app shell forwards
+ * dispatches the same `ajcrew-channel` window event the app shell forwards
  * from the socket, carrying a reply in that message's thread, and shapes the
  * payload exactly as `Channel.post` broadcasts it (the reply only; the
  * parent's raised reply_count is not re-sent).
@@ -33,7 +33,7 @@ const CHANNEL = {
   topic: 'Gamma rollout',
   members: {
     a1: {
-      id: 'a1', role: 'Researcher', agent_name: 'kirocrew', state: 'listening',
+      id: 'a1', role: 'Researcher', agent_name: 'ajcrew', state: 'listening',
       listen_mode: 'mention', approval_policy: 'writes', session_key: 'k1',
     },
   },

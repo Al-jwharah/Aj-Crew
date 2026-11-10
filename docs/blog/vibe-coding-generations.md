@@ -11,7 +11,7 @@ These are the four phases I think vibe coding goes through.
 - 1.0: you read the code in an IDE and chat with one agent.
 - 2.0: there are too many sessions to hold in your head, and you have stopped
   reading the code. So the sessions go in a list and you switch between them.
-  Kiro Crew's interface is here today.
+  Aj Crew's interface is here today.
 - 3.0: you stop caring what any individual agent is doing. You give guidance and
   unblock ten or more agents at once.
 - 4.0: you stop handing out tasks at all. An agent holds a standing mandate:
@@ -137,7 +137,7 @@ commit. The team watched the outage happen. Accountability is far more
 institutional than psychological, and that is good news for us, because you
 cannot ship a conscience but you can ship an institution.
 
-Kiro Crew already has the first part and the fourth, plus a narrow version of the
+Aj Crew already has the first part and the fourth, plus a narrow version of the
 second: the security keystone is exactly "the agent cannot write its own ceiling", in
 any sandbox mode. It can read it, by design: hiding a policy file would make it
 resolve to the permissive default. The third is missing entirely. Today an agent whose change gets
@@ -188,10 +188,10 @@ That second limit has a ceiling I can measure, and it is in this repository.
 In the Global (V1) memory store (Memory V2 member stores do not decay), episodic ranking defaults to a recency factor of
 `math.exp(-0.03 * days_old)`, with per-tag overrides through
 `memory.decay_rates` (`_DEFAULT_DECAY_RATE` and `_sanitize_decay_rates` in
-`src/kiro_crew/vector_memory.py`, which clamps each rate to
+`src/aj_crew/vector_memory.py`, which clamps each rate to
 `[_DECAY_RATE_MIN, _DECAY_RATE_MAX]`). Scores, `sim * (0.7 + 0.3 * importance) * exp(-rate * days_old)`, are rounded to
 four decimals (`rank_from_scoring_set` in
-`src/kiro_crew/vector_memory_runtime/episodic_search.py`), so under the default rate a typical
+`src/aj_crew/vector_memory_runtime/episodic_search.py`), so under the default rate a typical
 score reaches `0.0000` after roughly a year. The benchmark harness in
 [#2123](https://github.com/kirodotdev/KiroCrew/pull/2123) measured that default
 decay over a 293-day LoCoMo corpus: session `recall_all@1` fell from 0.4942 to

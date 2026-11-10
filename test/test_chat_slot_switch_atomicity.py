@@ -25,22 +25,22 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_slot_switch_atomicity_helpers import _MODEL_A, _MODEL_B, _make_app, _mock_state
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.state import _ChatSlot
 
-MOD = "kiro_crew.dashboard.chat_handlers"
+MOD = "aj_crew.dashboard.chat_handlers"
 
 
 @pytest.fixture
 def private_switch_state():
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-    from kiro_crew.dashboard.chat_utils import effective_session_key
-    from kiro_crew.history import ConversationLog
-    from kiro_crew.member_memory_auth import bind_private_session_store
-    from kiro_crew.memory_stores import provision_member_memory
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+    from aj_crew.dashboard.chat_utils import effective_session_key
+    from aj_crew.history import ConversationLog
+    from aj_crew.member_memory_auth import bind_private_session_store
+    from aj_crew.memory_stores import provision_member_memory
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     for name in ("writer", "reviewer"):
-        cfg.agents[name] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg.agents[name] = AjCrewAgentConfig(kiro_agent="ajcrew")
         provision_member_memory(cfg, name)
     cfg.save()
     slot = _ChatSlot("private-switch")
@@ -65,7 +65,7 @@ class TestPrivateChatMemberSwitch:
     async def test_cross_member_switch_refuses_before_any_mutation(
         self, private_switch_state, target
     ):
-        from kiro_crew.member_memory_auth import read_private_session_store
+        from aj_crew.member_memory_auth import read_private_session_store
 
         state, slot, key = private_switch_state
         before = (slot.agent, slot.memory_store, slot.workspace, slot.project)
@@ -120,7 +120,7 @@ class TestPrivateChatMemberSwitch:
     async def test_unreadable_pin_refuses_without_reset(self, private_switch_state):
         state, slot, _ = private_switch_state
         with patch(
-            "kiro_crew.execution_context.read_session_execution",
+            "aj_crew.execution_context.read_session_execution",
             side_effect=ValueError("invalid binding"),
         ):
             async with TestClient(TestServer(as_owner(_make_app(state)))) as client:
@@ -200,7 +200,7 @@ class TestSlotModelSwitchAtomicity:
         # sibling slot's refusal restore can already observe the landed pick
         # live, and an unstamped epoch lets that restore overwrite the user's
         # explicit choice with its recorded primary.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         class _EpochClient:
             def __init__(self):
@@ -232,7 +232,7 @@ class TestSlotModelSwitchAtomicity:
         # in-flight turn mid-stream. The handler takes neither path: the pick
         # is committed on the slot, marked for the turn boundary, and answered
         # deferred; the live session is untouched and nothing is reset.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -283,7 +283,7 @@ class TestSlotModelSwitchAtomicity:
         # declines. The handler re-checks busyness in a no-await window
         # immediately before the reset: busy → rollback + 409, reset NEVER
         # entered.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -319,8 +319,8 @@ class TestSlotModelSwitchAtomicity:
         # the turn, but the live session already serves the target — rolling
         # back would publish the old model while the turn streams under the
         # new one. Success, no rollback, reset never entered.
-        from kiro_crew import model_registry
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew import model_registry
+        from aj_crew.providers.acp import AcpProvider
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -353,7 +353,7 @@ class TestSlotModelSwitchAtomicity:
         # — the handler must read the session client's raw served id instead,
         # or a landed switch to Auto rolls back to the old model while the
         # live session runs Auto.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -383,8 +383,8 @@ class TestSlotModelSwitchAtomicity:
         # The raw read is scoped to the Auto wire id only: when the raw served
         # id is something else, the switch to Auto did not land and the
         # fail-closed rollback + 409 stands.
-        from kiro_crew import model_registry
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew import model_registry
+        from aj_crew.providers.acp import AcpProvider
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -415,7 +415,7 @@ class TestSlotModelSwitchAtomicity:
         # declined and is mid-turn, the committed model is rolled back, the
         # response is the same 409 the pre-check gives, and the in-flight
         # turn survives.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -442,7 +442,7 @@ class TestSlotModelSwitchAtomicity:
         # reporting success would leave that stale process alive under the
         # new slot.model. The handler retries the reset once (the reload
         # handler's template for this exact race) and succeeds.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -463,7 +463,7 @@ class TestSlotModelSwitchAtomicity:
         # genuinely racing the retry): the handler must fail closed — roll
         # back the commit and answer 409 — never report success over a live
         # session whose model it cannot prove.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -488,7 +488,7 @@ class TestSlotModelSwitchAtomicity:
         # call site but registers only after a multi-second provider.start()),
         # so the handler fails CLOSED: rollback + 409, never a silent success
         # over a live session that may be running the old model.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -517,8 +517,8 @@ class TestSlotModelSwitchAtomicity:
         # equals the requested wire id, so slot.model is TRUTHFUL — rolling
         # back would report the old model while the turn runs the new one.
         # Success, no rollback, no second reset.
-        from kiro_crew import model_registry
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew import model_registry
+        from aj_crew.providers.acp import AcpProvider
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -590,7 +590,7 @@ class TestSlotModelSwitchAtomicity:
         # (idle live session), the retry's teardown throws. Same
         # committed-switch answer as the first attempt — 200 + warning +
         # slots push, no rollback to the old model.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -628,7 +628,7 @@ class TestSlotModelSwitchAtomicity:
         # success the decline ladders treat as worse than any retryable
         # error. The helper re-raises instead of
         # answering a committed-switch success it cannot vouch for.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -650,7 +650,7 @@ class TestSlotModelSwitchAtomicity:
         # IDENTITY, so a different registered provider is NOT the unpopped
         # old session — the switch is committed, the successor cold-started
         # from the committed bindings, and the answer is 200 + warning.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -832,7 +832,7 @@ class TestSlotWorkspaceSwitchAtomicity:
     @pytest.fixture(autouse=True)
     def _stub_project_dir(self, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.default_project_dir",
+            "aj_crew.dashboard.chat_handlers.default_project_dir",
             lambda ws: f"/workspace/{ws}",
         )
 
@@ -893,7 +893,7 @@ class TestSlotWorkspaceSwitchAtomicity:
         # with skip_if_busy=True: on an atomic decline the committed
         # workspace/project pair is rolled back, the response is 409, and the
         # slipped-in turn survives.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         slot.workspace = "old-ws"
@@ -921,7 +921,7 @@ class TestSlotWorkspaceSwitchAtomicity:
         # rejected and only then got a 409. The model handler's early refusal
         # is copied here: a live turn at the pre-commit check answers 409 with
         # nothing committed, nothing unblocked and no reset attempted.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         slot.workspace = "old-ws"
@@ -971,7 +971,7 @@ class TestSlotWorkspaceSwitchAtomicity:
         # a 409 rollback must re-mark the slot dirty or the rejected switch
         # survives a restart. Simulate the flush having cleared the flag
         # mid-transaction.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         slot.workspace = "old-ws"
@@ -1001,7 +1001,7 @@ class TestSlotWorkspaceSwitchAtomicity:
         # The rollback is identity-scoped -- it unwinds only THIS request's
         # commit token -- so a concurrent write of a different project stands
         # while the workspace (untouched by that writer) is rolled back.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         slot.workspace = "old-ws"
@@ -1028,7 +1028,7 @@ class TestSlotWorkspaceSwitchAtomicity:
         # The identity test distinguishes this handler's own token from a
         # concurrent write of the SAME text: with no concurrent writer, the
         # committed project (same text as the token) IS rolled back.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         slot.workspace = "old-ws"
@@ -1050,7 +1050,7 @@ class TestSlotWorkspaceSwitchAtomicity:
         # send finished before the re-read): the handler retries once and
         # succeeds, so the stale process never survives under the new
         # bindings.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         slot.workspace = "old-ws"
@@ -1073,7 +1073,7 @@ class TestSlotWorkspaceSwitchAtomicity:
         # actual cwd equals the committed project, so slot state is TRUTHFUL —
         # rolling back would advertise the old workspace while the live
         # process runs the new one. Success, no rollback, no teardown.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         slot = _ChatSlot("test")
         slot.workspace = "old-ws"
@@ -1097,7 +1097,7 @@ class TestSlotWorkspaceSwitchAtomicity:
         # Pre-check era saw no session; the decline came from a session
         # registered after the commit with a turn in flight. Fail closed:
         # both fields rolled back, 409.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         slot.workspace = "old-ws"
@@ -1124,7 +1124,7 @@ class TestSlotWorkspaceSwitchAtomicity:
         # Two declined resets from an idle live session: exactly two
         # attempts, both fields rolled back, 409 — never success over a live
         # session whose bindings cannot be proven.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         slot.workspace = "old-ws"
@@ -1211,7 +1211,7 @@ class TestSlotWorkspaceSwitchAtomicity:
         # (idle live session), the retry's teardown throws. Same
         # committed-switch answer — 200 + warning + slots push, no rollback
         # to the old bindings.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         slot.workspace = "old-ws"

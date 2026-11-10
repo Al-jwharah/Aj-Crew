@@ -1,10 +1,10 @@
-"""Tests for kiro_crew.apps.permissions — permission validation and enforcement."""
+"""Tests for aj_crew.apps.permissions — permission validation and enforcement."""
 
 from __future__ import annotations
 
-from kiro_crew.apps.manager import InstalledApp
-from kiro_crew.apps.manifest import AppManifest, Permissions
-from kiro_crew.apps.permissions import (
+from aj_crew.apps.manager import InstalledApp
+from aj_crew.apps.manifest import AppManifest, Permissions
+from aj_crew.apps.permissions import (
     PermissionCheck,
     app_can_manage_session_approvals,
     check_tool_permission,
@@ -113,7 +113,7 @@ class TestManagedToolsToExclude:
     """
 
     def test_empty_declaration_excludes_nothing(self):
-        from kiro_crew.apps.permissions import managed_tools_to_exclude
+        from aj_crew.apps.permissions import managed_tools_to_exclude
 
         m = AppManifest(
             name="app",
@@ -125,7 +125,7 @@ class TestManagedToolsToExclude:
         assert managed_tools_to_exclude(m) == []
 
     def test_a_declared_managed_tool_is_not_excluded(self):
-        from kiro_crew.apps.permissions import managed_tools_to_exclude
+        from aj_crew.apps.permissions import managed_tools_to_exclude
 
         m = AppManifest(
             name="app",
@@ -139,7 +139,7 @@ class TestManagedToolsToExclude:
         assert "cron_list" not in excl
 
     def test_an_undeclared_managed_tool_is_excluded(self):
-        from kiro_crew.apps.permissions import managed_tools_to_exclude
+        from aj_crew.apps.permissions import managed_tools_to_exclude
 
         m = AppManifest(
             name="app",
@@ -157,7 +157,7 @@ class TestManagedToolsToExclude:
         """A ``@<server>/tool`` ref the app declared is not a managed tool, and
         declaring one does not pull any managed tool into the allow-list — so the
         whole managed universe is excluded, and the app's own ref is not in it."""
-        from kiro_crew.apps.permissions import (
+        from aj_crew.apps.permissions import (
             _FRAMEWORK_REQUIRED_MANAGED_TOOLS,
             _managed_tool_universe,
             managed_tools_to_exclude,
@@ -177,7 +177,7 @@ class TestManagedToolsToExclude:
         assert excl == _managed_tool_universe() - _FRAMEWORK_REQUIRED_MANAGED_TOOLS
 
     def test_the_result_is_sorted_and_deduplicated(self):
-        from kiro_crew.apps.permissions import managed_tools_to_exclude
+        from aj_crew.apps.permissions import managed_tools_to_exclude
 
         m = AppManifest(
             name="app",
@@ -198,22 +198,22 @@ class TestManagedToolUniverse:
     """
 
     def test_it_unions_every_managed_server(self):
-        from kiro_crew.apps.permissions import _managed_tool_universe
+        from aj_crew.apps.permissions import _managed_tool_universe
 
         names = _managed_tool_universe()
         # A sample from servers the display-title table does NOT cover, so this
         # fails if the universe regresses to the title table (which tabled only
         # core / cron / dashboard and missed work / debug / panel / guide / mate).
-        assert "spawn_run" in names  # kirocrew-core
-        assert "cron_add" in names  # kirocrew-cron
-        assert "session_create" in names  # kirocrew-dashboard
+        assert "spawn_run" in names  # ajcrew-core
+        assert "cron_add" in names  # ajcrew-cron
+        assert "session_create" in names  # ajcrew-dashboard
 
     def test_it_covers_servers_the_title_table_omits(self):
         """The regression the First Principles lane flagged: a second, incomplete
         source. Every managed server in the registry must contribute, including the
         seven the title table never listed."""
-        from kiro_crew.apps.permissions import _managed_tool_universe
-        from kiro_crew.mcp_discovery import (
+        from aj_crew.apps.permissions import _managed_tool_universe
+        from aj_crew.mcp_discovery import (
             _MANAGED_SERVER_TOOL_MODULES,
             _managed_tools_in_process,
         )
@@ -225,14 +225,14 @@ class TestManagedToolUniverse:
                 assert set(tools) <= names, f"{server} tools missing from the universe"
 
     def test_feature_gated_tools_are_in_the_universe_while_disabled(self, monkeypatch):
-        """The GPT security finding: ``kirocrew-computer`` hides its tools behind
+        """The GPT security finding: ``ajcrew-computer`` hides its tools behind
         the computer-use enable, so the discovery read returns ``[]`` while it is
         off (the default). The policy universe must still carry every
         ``computer_*`` name — otherwise enabling computer use later (which does not
         re-materialize the app agent) would expose undeclared desktop actions.
         Force the feature OFF and assert the tools are present anyway."""
-        import kiro_crew.mcp_computer as mcp_computer
-        from kiro_crew.apps.permissions import _managed_tool_universe
+        import aj_crew.mcp_computer as mcp_computer
+        from aj_crew.apps.permissions import _managed_tool_universe
 
         # Computer use OFF -> the gated _list_tools() returns [] ...
         monkeypatch.setattr(mcp_computer.enable_state, "is_enabled", lambda: False)
@@ -246,8 +246,8 @@ class TestManagedToolUniverse:
         """End of the same finding: an app that declares only the observation tool
         still has every mutating computer tool excluded, even with computer use
         off at materialization time."""
-        import kiro_crew.mcp_computer as mcp_computer
-        from kiro_crew.apps.permissions import managed_tools_to_exclude
+        import aj_crew.mcp_computer as mcp_computer
+        from aj_crew.apps.permissions import managed_tools_to_exclude
 
         monkeypatch.setattr(mcp_computer.enable_state, "is_enabled", lambda: False)
         m = AppManifest(
@@ -264,7 +264,7 @@ class TestManagedToolUniverse:
     def test_base_builtins_are_not_managed_tools(self):
         """``read`` / ``glob`` / ``grep`` are kiro-cli native, not host-managed, so
         enforcement never touches an agent's ability to read its own files."""
-        from kiro_crew.apps.permissions import _managed_tool_universe
+        from aj_crew.apps.permissions import _managed_tool_universe
 
         names = _managed_tool_universe()
         for builtin in ("read", "glob", "grep", "web_fetch", "web_search"):
@@ -277,7 +277,7 @@ class TestUnreadableManagedServer:
 
     @staticmethod
     def _unreadable(monkeypatch, server):
-        import kiro_crew.mcp_discovery_managed as managed
+        import aj_crew.mcp_discovery_managed as managed
 
         real = managed.managed_tool_names_for_policy
         monkeypatch.setattr(
@@ -287,9 +287,9 @@ class TestUnreadableManagedServer:
         )
 
     def test_the_server_is_returned_to_withhold(self, monkeypatch):
-        from kiro_crew.apps.permissions import managed_tool_exclusion
+        from aj_crew.apps.permissions import managed_tool_exclusion
 
-        self._unreadable(monkeypatch, "kirocrew-cron")
+        self._unreadable(monkeypatch, "ajcrew-cron")
         m = AppManifest(
             name="app",
             version="1.0.0",
@@ -298,14 +298,14 @@ class TestUnreadableManagedServer:
             permissions=Permissions(mcpTools=["spawn_run"]),
         )
         out = managed_tool_exclusion(m)
-        assert out.servers == ["kirocrew-cron"]
+        assert out.servers == ["ajcrew-cron"]
         assert "spawn_run" not in out.tools
         assert "session_create" in out.tools, "readable servers are still excluded by name"
 
     def test_an_unrestricted_app_withholds_nothing(self, monkeypatch):
-        from kiro_crew.apps.permissions import managed_tool_exclusion
+        from aj_crew.apps.permissions import managed_tool_exclusion
 
-        self._unreadable(monkeypatch, "kirocrew-cron")
+        self._unreadable(monkeypatch, "ajcrew-cron")
         m = AppManifest(
             name="app",
             version="1.0.0",
@@ -316,7 +316,7 @@ class TestUnreadableManagedServer:
         assert managed_tool_exclusion(m) == ([], [])
 
     def test_every_server_readable_withholds_no_server(self):
-        from kiro_crew.apps.permissions import managed_tool_exclusion
+        from aj_crew.apps.permissions import managed_tool_exclusion
 
         m = AppManifest(
             name="app",
@@ -367,11 +367,11 @@ class TestSessionApprovalPermission:
             permissions=Permissions(sessionApproval=True),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.permissions.is_app_enabled", lambda name: name == "test"
+            "aj_crew.apps.permissions.is_app_enabled", lambda name: name == "test"
         )
-        monkeypatch.setattr("kiro_crew.apps.permissions.get_app_manifest", lambda _name: manifest)
+        monkeypatch.setattr("aj_crew.apps.permissions.get_app_manifest", lambda _name: manifest)
         monkeypatch.setattr(
-            "kiro_crew.apps.permissions._read_installed",
+            "aj_crew.apps.permissions._read_installed",
             lambda name, **_kw: InstalledApp(name=name),
         )
 
@@ -385,14 +385,14 @@ class TestSessionApprovalPermission:
             description="T",
             permissions=Permissions(sessionApproval=True),
         )
-        monkeypatch.setattr("kiro_crew.apps.permissions.is_app_enabled", lambda _name: True)
-        monkeypatch.setattr("kiro_crew.apps.permissions.get_app_manifest", lambda _name: manifest)
-        monkeypatch.setattr("kiro_crew.apps.permissions._read_installed", lambda _name, **_kw: None)
+        monkeypatch.setattr("aj_crew.apps.permissions.is_app_enabled", lambda _name: True)
+        monkeypatch.setattr("aj_crew.apps.permissions.get_app_manifest", lambda _name: manifest)
+        monkeypatch.setattr("aj_crew.apps.permissions._read_installed", lambda _name, **_kw: None)
 
         assert app_can_manage_session_approvals("test") is False
 
     def test_disabled_app_is_denied(self, monkeypatch):
-        monkeypatch.setattr("kiro_crew.apps.permissions.is_app_enabled", lambda _name: False)
+        monkeypatch.setattr("aj_crew.apps.permissions.is_app_enabled", lambda _name: False)
         assert app_can_manage_session_approvals("test") is False
 
     def test_missing_grant_is_denied(self, monkeypatch):
@@ -402,8 +402,8 @@ class TestSessionApprovalPermission:
             displayName="T",
             description="T",
         )
-        monkeypatch.setattr("kiro_crew.apps.permissions.is_app_enabled", lambda _name: True)
-        monkeypatch.setattr("kiro_crew.apps.permissions.get_app_manifest", lambda _name: manifest)
+        monkeypatch.setattr("aj_crew.apps.permissions.is_app_enabled", lambda _name: True)
+        monkeypatch.setattr("aj_crew.apps.permissions.get_app_manifest", lambda _name: manifest)
 
         assert app_can_manage_session_approvals("test") is False
 

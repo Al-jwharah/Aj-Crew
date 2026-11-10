@@ -28,7 +28,7 @@ def _load_root_conftest():
     uses. Its fixtures are inert here because nothing in this namespace collects
     them.
     """
-    spec = importlib.util.spec_from_file_location("_kirocrew_nodeid_guard_conftest", _ROOT_CONFTEST)
+    spec = importlib.util.spec_from_file_location("_ajcrew_nodeid_guard_conftest", _ROOT_CONFTEST)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

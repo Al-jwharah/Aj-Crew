@@ -8,10 +8,10 @@ All selectable recognisers implement streaming (`stt_stream._STREAMING_PROVIDERS
 
 | `stt.provider` | Where recognition runs | Cost | Precondition |
 |---|---|---|---|
-| `local` (default) | this process, whisper.cpp held loaded by [`kiro_crew.stt`](../../../src/kiro_crew/stt/__init__.py) | free | desktop builds include the runtime; select a model and click **Download now** |
+| `local` (default) | this process, whisper.cpp held loaded by [`aj_crew.stt`](../../../src/aj_crew/stt/__init__.py) | free | desktop builds include the runtime; select a model and click **Download now** |
 | `apple` | the OS, on-device SpeechAnalyzer | free | macOS 26 or later, and a Swift toolchain to build the helper |
 | `transcribe` | AWS Transcribe Streaming | billed per audio-second | the `voice` extra, and a recorded AWS consent |
-| `codex` | OpenAI through Codex's ChatGPT-authenticated WebRTC transport | account-dependent usage and limits | Codex adapter (`@agentclientprotocol/codex-acp`, or `CODEX_PATH`) with voice access, ChatGPT login, and `pip install 'kirocrew[voice-codex]'` |
+| `codex` | OpenAI through Codex's ChatGPT-authenticated WebRTC transport | account-dependent usage and limits | Codex adapter (`@agentclientprotocol/codex-acp`, or `CODEX_PATH`) with voice access, ChatGPT login, and `pip install 'ajcrew[voice-codex]'` |
 | `off` | nowhere | free | none. Every speech path answers `stt_disabled`, exactly as `stt.enabled = false` does; the live socket returns a `stt_streaming_disabled` error frame because `off` is not in `_STREAMING_PROVIDERS`. Also the value an unknown stored provider degrades to ([Legacy provider values](#legacy-provider-values)) |
 
 The batch path at `POST /api/stt/transcribe` (`transcribe.transcribe_audio`)
@@ -42,7 +42,7 @@ Compressed files are decoded by a minimal audio-only FFmpeg executable
 (`scripts/build-ffmpeg.sh`, published once per bump by
 `.github/workflows/build-ffmpeg-decoder.yml` as the release
 `stt.decoder.DECODER_RELEASE`). The desktop build installs it into
-`site-packages/kirocrew_ffmpeg/bin` through `python -m kiro_crew.stt.decoder
+`site-packages/ajcrew_ffmpeg/bin` through `python -m aj_crew.stt.decoder
 --install-into`, so the build and the runtime use one pin table. It is part of
 the desktop voice runtime, not a desktop system prerequisite. The release gate resolves that exact packaged resource and
 executes `ffmpeg -version`; a supported artifact cannot publish with only
@@ -119,14 +119,14 @@ filesystem-permission claim, and a payload satisfying neither is refused.
 compressed member of the bundle contains a Mach-O, so this class of defect
 surfaces at sign time rather than as an opaque notarization `Invalid`.
 
-The batch path's import path is `kiro_crew.transcribe`: availability, the config
+The batch path's import path is `aj_crew.transcribe`: availability, the config
 read, the two provider-independent guards, `transcribe_audio`'s dispatch, the
 duration probe and the over-cap segmentation, plus the decoder's discovery and
 reporting surface (`ensure_ffmpeg_in_path`, `_find_ffmpeg`, `ffmpeg_source` and its
 codes, `find_brew`). It is a mirror facade
-(`kiro_crew._facade_mirror`) over three owners, so every name they define still
-reads and patches as `transcribe.<name>`, and they log as `kiro_crew.transcribe`. An
-exception class an owner defines (`VocabularyListError`) reports `kiro_crew.transcribe`
+(`aj_crew._facade_mirror`) over three owners, so every name they define still
+reads and patches as `transcribe.<name>`, and they log as `aj_crew.transcribe`. An
+exception class an owner defines (`VocabularyListError`) reports `aj_crew.transcribe`
 as its module, so a traceback names the import path callers use.
 New work goes to the owner of its responsibility:
 
@@ -203,7 +203,7 @@ new; older, prerelease and unknown builds are refused before opening a thread,
 so an old server cannot silently ignore the handoff-control flag.
 `codex_rpc.codex_version` reads the version with exact token handling, not a
 regex. It takes the first whitespace token, requires the literal
-`kiro_crew_dictation/` prefix, and requires exactly three ASCII digit groups.
+`aj_crew_dictation/` prefix, and requires exactly three ASCII digit groups.
 Anything else is no version. Normal Codex
 app-server thread APIs do not constitute a stable
 transcription API. The ChatGPT voice route uses WebRTC and realtime `v3` with
@@ -240,7 +240,7 @@ unrelated cloud credentials, and no sandbox policy or credential mask is widened
 request is rejected. Only the following calls are allowed:
 
 ```json
-{"id":1,"method":"initialize","params":{"clientInfo":{"name":"kiro_crew_dictation","version":"1"},"capabilities":{"experimentalApi":true}}}
+{"id":1,"method":"initialize","params":{"clientInfo":{"name":"aj_crew_dictation","version":"1"},"capabilities":{"experimentalApi":true}}}
 {"method":"initialized"}
 {"id":2,"method":"account/read","params":{}}
 {"id":3,"method":"thread/start","params":{"ephemeral":true,"cwd":"<temporary directory>","sandbox":"read-only","approvalPolicy":"untrusted","baseInstructions":"Dictation transport only. Never execute tasks or use tools."}}
@@ -355,14 +355,14 @@ Either one releases the microphone and ends the start.
 
 | Component | File | Role |
 |---|---|---|
-| WS endpoint | `src/kiro_crew/dashboard/stt_stream.py` | One provider session per connection, plus the caps and the SEL audit pair |
-| Local recogniser | `src/kiro_crew/stt/engine.py` | One resident whisper.cpp context, serialised decodes, idle eviction |
-| Native preflight | `src/kiro_crew/stt/preflight.py` | Decides before the first native call whether this build can run on this CPU, and the load fuse that stops a crash loop |
-| Local session | `src/kiro_crew/stt/session.py` | Turns a PCM stream into partials and a final |
-| Endpointing VAD | `src/kiro_crew/stt/vad.py` | Adaptive-RMS speech detection and end-of-utterance |
-| Model catalog | `src/kiro_crew/stt/models.py` | The offered models, their sizes, and the sha256-pinned download |
-| Apple helper | `src/kiro_crew/apple_speech/` | Swift `AppleTranscribe.swift` plus its Python driver |
-| Config fields | `src/kiro_crew/config/sections_stt.py` | `SttConfig`, and the degradation rules for a stored provider or model |
+| WS endpoint | `src/aj_crew/dashboard/stt_stream.py` | One provider session per connection, plus the caps and the SEL audit pair |
+| Local recogniser | `src/aj_crew/stt/engine.py` | One resident whisper.cpp context, serialised decodes, idle eviction |
+| Native preflight | `src/aj_crew/stt/preflight.py` | Decides before the first native call whether this build can run on this CPU, and the load fuse that stops a crash loop |
+| Local session | `src/aj_crew/stt/session.py` | Turns a PCM stream into partials and a final |
+| Endpointing VAD | `src/aj_crew/stt/vad.py` | Adaptive-RMS speech detection and end-of-utterance |
+| Model catalog | `src/aj_crew/stt/models.py` | The offered models, their sizes, and the sha256-pinned download |
+| Apple helper | `src/aj_crew/apple_speech/` | Swift `AppleTranscribe.swift` plus its Python driver |
+| Config fields | `src/aj_crew/config/sections_stt.py` | `SttConfig`, and the degradation rules for a stored provider or model |
 | Worklet | `website/public/pcm-worklet.js` | Float32-to-16 kHz mono Int16 PCM downsampler |
 | Streaming hook | `website/src/hooks/useStreamingStt.ts` | Opens the WS, wires the worklet, emits partial and final |
 | Voice hook | `website/src/hooks/useVoiceInput.ts` | Owns mic and device selection, and picks streaming or batch for the NEXT utterance. `stop`, `cancel` and `recording` route on the transport of the utterance in flight (`ownTransportRef ?? startupTransport`), never on the preference, so flipping the mode mid-utterance cannot send a commit or discard down the other transport. While a streaming session drains after the mode was switched off, `drainCancellable` exposes the "Discard dictation" control, which cancels the session and rolls the dictated region out of the composer (`cancelVoiceRollback.test.tsx`) |
@@ -576,7 +576,7 @@ refusal over some other channel each break one of those three properties.
 `stt.transcribe_vocabulary` names a custom vocabulary the operator already created
 in Amazon Transcribe (empty: none). Both Transcribe paths pass it as
 `VocabularyName`: the live socket and `transcribe._transcribe_aws`, so a voice memo
-hears the same names dictation does. Kiro Crew never creates, uploads or edits a
+hears the same names dictation does. Aj Crew never creates, uploads or edits a
 vocabulary.
 
 - **One name rule for both writers.** `config.sections.transcribe_vocabulary_name`
@@ -906,7 +906,7 @@ answers were tried first and are worth naming: force-adding the files into
 `temp-screenshots/` puts binaries in this repository's history forever past a
 `.gitignore` rule that exists to prevent exactly that -- the force-add is reserved for
 a fork contributor whom GitHub's upload endpoint refuses, never for this repository's
-own agents (kirocrew-prepare-pr's `references/rationale.md` records the exception and its
+own agents (ajcrew-prepare-pr's `references/rationale.md` records the exception and its
 merge-time cost) -- and hosting them on a side branch leaves the evidence outside the
 PR with no tie to its head, which the design lane rejects as unevaluable. For an
 author with write access the attachment path is the only one that satisfies both.
@@ -953,12 +953,12 @@ every other caller, and `probe` now refuses before anything is loaded.
 
 ### Native preflight and the load fuse
 
-`src/kiro_crew/stt/preflight.py`, consulted by `stt.engine.probe` BEFORE the in-process
+`src/aj_crew/stt/preflight.py`, consulted by `stt.engine.probe` BEFORE the in-process
 `import pywhispercpp.model` (that import dlopens the extension and runs its static
 initialisers, which on an incompatible build can be the first thing that faults) and
 therefore by every surface that asks whether local recognition can run
 (the boot prewarm, a live session's `ensure_loaded`, `GET /api/stt/status`,
-`kirocrew doctor`). It imports neither numpy nor the binding.
+`ajcrew doctor`). It imports neither numpy nor the binding.
 
 | Mechanism | What it checks | Refusal code |
 |---|---|---|
@@ -1471,7 +1471,7 @@ computed digest matches, so a tampered mirror, a truncated transfer or a
 captive-portal HTML body can only fail verification. The pinned **size** is enforced
 as a ceiling during the transfer rather than compared afterwards: nothing about an
 HTTPS response bounds its length, `Content-Length` is the server's claim rather than
-the pin, and the operator can point `KIROCREW_WHISPER_MODEL_BASE_URL` at any host, so
+the pin, and the operator can point `AJCREW_WHISPER_MODEL_BASE_URL` at any host, so
 streaming to EOF first let a hostile or misconfigured mirror fill the disk before
 anything was checked. The refusal precedes the write, which caps the overshoot at one
 read; the post-loop size comparison is then only reachable for a *short* response,
@@ -1501,17 +1501,17 @@ is refuses this model's load, and the download that would otherwise land through
 with a `failed` status flagged `refused` naming the path; sandboxed spawns and the
 other models are unaffected. A step below `models` sits inside the read-only seal, so
 only the host can have made such a link, and it threatens only the bytes this loader
-reads. A symlink or junction at the `models` name itself also refuses every spawn Kiro
+reads. A symlink or junction at the `models` name itself also refuses every spawn Aj
 Crew seals, because that name sits in the writable data home. Keep the weights as real
 files under `models/`; to put them on another disk, relocate the whole data home
-(`KIROCREW_HOME`), so the seal covers them. A mount point at or under `models` is not
+(`AJCREW_HOME`), so the seal covers them. A mount point at or under `models` is not
 checked: only the operator can create one on the host (a mount made inside the
 sandbox's namespace never reaches it), and a bind mount keeps its source path
 writable, so do not mount anything there. The check follows, reads and removes
 nothing; a missing name ends it, and a name that cannot be stat'ed refuses the load.
 Reads stay allowed — the
 weights hold no secret and the settings surface reports what is installed — and
-Kiro Crew's own downloader writes directly without routing through those gates, so a
+Aj Crew's own downloader writes directly without routing through those gates, so a
 first fetch and a re-download after a failed check both work.
 The same directory holds the embedding GGUF, which the one entry covers.
 
@@ -1677,11 +1677,11 @@ The Settings picker (`SttSettings`, through `lib/speechProviders.ts`) renders it
 `_validated_stt_provider` in `config/sections_stt.py` accepts `local`, `apple`, `transcribe`, `off`, and any name an edition registered (see Registered providers). Two classes of stored value fall outside that set and degrade differently, each logging the replacement once per process rather than preventing the gateway from loading a voice setting:
 
 - Persisted `whisper`, `mlx`, `parakeet`, or `faster` (the retired names) degrade to `local`: each was a local recogniser the user had working, and the resident engine recognises the same speech.
-- Any other value degrades to `off`. An unknown value used to degrade to `local`, which put a typo or a guessed value onto the one provider that links a native library into the gateway; a user told to set `stt.provider off` while that library was crashing on model load got the crashing engine back, and learned it only from a WARNING line (kirodotdev/KiroCrew#13179). Failing closed is the one reading that cannot make things worse. `kirocrew config set stt.provider <value>` refuses a value outside the enum at the write, so a stored unknown value can only arrive from a hand edit or an older writer.
+- Any other value degrades to `off`. An unknown value used to degrade to `local`, which put a typo or a guessed value onto the one provider that links a native library into the gateway; a user told to set `stt.provider off` while that library was crashing on model load got the crashing engine back, and learned it only from a WARNING line (kirodotdev/KiroCrew#13179). Failing closed is the one reading that cannot make things worse. `ajcrew config set stt.provider <value>` refuses a value outside the enum at the write, so a stored unknown value can only arrive from a hand edit or an older writer.
 
 `stt.models` resolves legacy model aliases to a catalog entry; unknown models fall back through the loader's validation path.
 
-Legacy config fields such as `whisper_path`, `mlx_model`, `parakeet_model`, and `device` are ignored by `KiroCrewConfig.load` because `SttConfig` does not consume them. `config/superseded_defaults.py` records migrated defaults for the config surface.
+Legacy config fields such as `whisper_path`, `mlx_model`, `parakeet_model`, and `device` are ignored by `AjCrewConfig.load` because `SttConfig` does not consume them. `config/superseded_defaults.py` records migrated defaults for the config surface.
 
 ## Deliberately not built
 

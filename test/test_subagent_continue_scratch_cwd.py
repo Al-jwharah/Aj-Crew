@@ -15,7 +15,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.subagent import SubagentManager
+from aj_crew.subagent import SubagentManager
 
 
 def _mgr() -> SubagentManager:
@@ -29,12 +29,12 @@ def _mgr() -> SubagentManager:
 def workspace(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     root = tmp_path / "ws"
     root.mkdir()
-    monkeypatch.setenv("KIROCREW_WORKSPACE", str(root))
+    monkeypatch.setenv("AJCREW_WORKSPACE", str(root))
     return root.resolve()
 
 
 def _record(monkeypatch: pytest.MonkeyPatch, state: dict) -> None:
-    monkeypatch.setattr("kiro_crew.subagent.read_state", lambda _id: state)
+    monkeypatch.setattr("aj_crew.subagent.read_state", lambda _id: state)
 
 
 def test_the_runs_own_reclaimed_scratch_dir_is_omitted(

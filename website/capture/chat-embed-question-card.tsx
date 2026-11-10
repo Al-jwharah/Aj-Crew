@@ -28,7 +28,7 @@ const height = Number(params.get('height')) || 560
 // The capture script sets this to retire the card mid-draft (the restored notice).
 declare global { interface Window { __retireQuestion?: boolean } }
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const SLOT = 'chat-embed-question-capture'
 const transcript = {

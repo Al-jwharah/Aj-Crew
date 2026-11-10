@@ -103,7 +103,7 @@ test("the baked edition is packed into app.asar and staged by build-desktop.sh",
     "utf8",
   );
   // Staged only for LTS, from the same build stamp the backend uses.
-  assert.match(script, /case "\$\{KIROCREW_BUILD_EDITION:-oss\}" in\n {2}oss\) ;;\n {2}lts\)/);
+  assert.match(script, /case "\$\{AJCREW_BUILD_EDITION:-oss\}" in\n {2}oss\) ;;\n {2}lts\)/);
   assert.match(script, /printf 'lts\\n' > "\$ELECTRON_DIR\/EDITION"/);
   assert.match(script, /^rm -f .*"\$ELECTRON_DIR\/EDITION"$/m);
 });

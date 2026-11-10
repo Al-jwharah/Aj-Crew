@@ -37,11 +37,11 @@ from governance_distribution_helpers import (
     _write_policy,
 )
 
-from kiro_crew import security
-from kiro_crew.hooks import validate_file_path
-from kiro_crew.platform import governance
-from kiro_crew.platform import policy_distribution as pd
-from kiro_crew.platform.context import PlatformCompositionError
+from aj_crew import security
+from aj_crew.hooks import validate_file_path
+from aj_crew.platform import governance
+from aj_crew.platform import policy_distribution as pd
+from aj_crew.platform.context import PlatformCompositionError
 
 # ──────────────────────────────────────────────────────────────────────────
 # Keystone — the cache is a trust root
@@ -50,7 +50,7 @@ from kiro_crew.platform.context import PlatformCompositionError
 
 _CACHE_PATHS = [
     f"~/{prefix}/{pd.CACHE_DIR_LEAF}/{leaf}"
-    for prefix in (".kiro/crew", ".kirocrew")
+    for prefix in (".kiro/crew", ".ajcrew")
     for leaf in (pd._CACHE_DOC_LEAF, pd._CACHE_META_LEAF)
 ]
 
@@ -536,9 +536,9 @@ class TestTheCacheIsHiddenFromAgentSubprocesses:
     the ceiling.
     """
 
-    @pytest.mark.parametrize("prefix", [".kiro/crew", ".kirocrew"])
+    @pytest.mark.parametrize("prefix", [".kiro/crew", ".ajcrew"])
     def test_every_sandbox_tier_masks_the_cache_directory(self, prefix):
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         entry = f"{prefix}/{pd.CACHE_DIR_LEAF}"
         for name, dirs in (
@@ -549,22 +549,22 @@ class TestTheCacheIsHiddenFromAgentSubprocesses:
             assert entry in dirs, f"{entry} is not hidden in the {name} sandbox tier"
 
     def test_the_leaf_matches_the_engine(self):
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert sandbox._POLICY_CACHE_LEAF == pd.CACHE_DIR_LEAF
 
     def test_a_relocated_data_home_is_masked_by_its_resolved_path(self, monkeypatch, tmp_path):
-        """Those entries are ``$HOME``-relative, and ``KIROCREW_HOME`` moves the cache.
+        """Those entries are ``$HOME``-relative, and ``AJCREW_HOME`` moves the cache.
 
         The limitation is pre-existing and shared with the vault entries, but this one
         directory must not inherit it: on an env-channel fleet the cache is the ONLY
         on-disk copy of the ceiling, and its metadata records the source the next boot
         trusts.
         """
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         relocated = tmp_path / "relocated-home"
-        monkeypatch.setenv("KIROCREW_HOME", str(relocated))
+        monkeypatch.setenv("AJCREW_HOME", str(relocated))
         masked = sandbox._relocated_policy_cache_dirs()
         assert masked == [os.path.realpath(relocated / pd.CACHE_DIR_LEAF)]
 
@@ -577,7 +577,7 @@ class TestTheCacheIsHiddenFromAgentSubprocesses:
         textually — which is the ordinary case, including dot segments — and a symlinked
         home is handled by the test below instead.
         """
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         # A REAL (non-symlinked) home, so the test states the de-duplication contract
         # rather than whatever the CI host's home happens to be. ``config_dir()`` resolves
@@ -587,11 +587,11 @@ class TestTheCacheIsHiddenFromAgentSubprocesses:
         (home / ".kiro" / "crew").mkdir(parents=True)
         monkeypatch.setattr(sandbox.Path, "home", staticmethod(lambda: home))
 
-        monkeypatch.setenv("KIROCREW_HOME", str(home / ".kiro" / "crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(home / ".kiro" / "crew"))
         assert sandbox._relocated_policy_cache_dirs() == []
 
         # normpath still collapses the spellings a path can differ by without a syscall.
-        monkeypatch.setenv("KIROCREW_HOME", str(home / ".kiro" / "." / "crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(home / ".kiro" / "." / "crew"))
         assert sandbox._relocated_policy_cache_dirs() == []
 
     def test_a_symlinked_home_costs_a_redundant_rule_never_a_missing_one(
@@ -605,7 +605,7 @@ class TestTheCacheIsHiddenFromAgentSubprocesses:
         masked either way — the comparison was only ever de-duplication, so it cannot
         produce a gap.
         """
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         real = tmp_path / "real-home"
         (real / ".kiro" / "crew").mkdir(parents=True)
@@ -613,7 +613,7 @@ class TestTheCacheIsHiddenFromAgentSubprocesses:
         link.symlink_to(real)
 
         monkeypatch.setattr(sandbox.Path, "home", staticmethod(lambda: link))
-        monkeypatch.setenv("KIROCREW_HOME", str(real / ".kiro" / "crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(real / ".kiro" / "crew"))
 
         extra = sandbox._relocated_policy_cache_dirs()
         assert extra == [os.path.normpath(str(real / ".kiro" / "crew" / pd.CACHE_DIR_LEAF))]
@@ -652,7 +652,7 @@ class TestAnExposedCacheIsStillReadOnly:
         first builds a plan — these tests read the mount lists, not the ssh
         flag, so the seam is pinned rather than left to find the host binary.
         """
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         _floor_monkeypatch.setattr(sandbox, "_ssh_supports_accept_new", lambda: True)
 
@@ -663,7 +663,7 @@ class TestAnExposedCacheIsStillReadOnly:
         return str(_Path.home() / ".kiro" / "crew" / pd.CACHE_DIR_LEAF)
 
     def test_the_linux_launcher_binds_it_read_only_instead_of_hiding_it(self):
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         cache = self._cache_path()
         plan = sandbox._spawn_plan("namespace", "standard", extra_visible_dirs=(cache,))
@@ -687,7 +687,7 @@ class TestAnExposedCacheIsStillReadOnly:
         """
         from test_sandbox_launcher_program import RecordingLibc, launch, payload, refusal
 
-        from kiro_crew import sandbox_launcher_program as program
+        from aj_crew import sandbox_launcher_program as program
 
         cache = tmp_path / pd.CACHE_DIR_LEAF
         cache.mkdir()
@@ -709,14 +709,14 @@ class TestAnExposedCacheIsStillReadOnly:
 
     def test_an_unexposed_cache_gets_no_read_only_rule(self):
         """The ordinary spawn hides it; only the protected runtime parent is read-only."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         readonly = sandbox._spawn_plan("namespace", "standard").readonly
         assert set(readonly) >= set(sandbox._voice_runtime_parent_paths())
         assert self._cache_path() not in readonly
 
     def test_macos_keeps_the_write_and_link_denies_when_it_drops_the_read_deny(self):
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         cache = self._cache_path()
         profile = sandbox._build_seatbelt_profile("standard", extra_visible_dirs=(cache,))
@@ -730,7 +730,7 @@ class TestAnExposedCacheIsStillReadOnly:
         one on ``.aws`` would break a tool legitimately refreshing a cached token."""
         from pathlib import Path as _Path
 
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         aws = str(_Path.home() / ".aws")
         profile = sandbox._build_seatbelt_profile("strict", extra_visible_dirs=(aws,))
@@ -740,12 +740,12 @@ class TestAnExposedCacheIsStillReadOnly:
         assert set(readonly) >= set(sandbox._voice_runtime_parent_paths())
         assert aws not in readonly
 
-    @pytest.mark.parametrize("prefix", [".kiro/crew", ".kirocrew"])
+    @pytest.mark.parametrize("prefix", [".kiro/crew", ".ajcrew"])
     def test_it_holds_for_every_spelling_the_dir_lists_carry(self, prefix):
-        """Including the legacy ``~/.kirocrew`` entry the deny lists must keep covering."""
+        """Including the legacy ``~/.ajcrew`` entry the deny lists must keep covering."""
         from pathlib import Path as _Path
 
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         path = str(_Path.home() / prefix / pd.CACHE_DIR_LEAF)
         assert sandbox._is_policy_cache_dir(path)
@@ -754,7 +754,7 @@ class TestAnExposedCacheIsStillReadOnly:
         )
 
     def test_a_sibling_directory_is_not_mistaken_for_the_cache(self):
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert not sandbox._is_policy_cache_dir("/home/u/.kiro/crew")
         assert not sandbox._is_policy_cache_dir("/home/u/.kiro/crew/policy_cache_backup")

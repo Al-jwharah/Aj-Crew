@@ -11,9 +11,9 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_ready_kiro_prerequisite, _make_state
 from dashboard_chat_helpers import _provider_mock
 
-from kiro_crew.dashboard.chat_utils_slots import effective_session_key
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard.chat_utils_slots import effective_session_key
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.history import ConversationLog
 
 
 class TestStopReasonCancelled:
@@ -34,7 +34,7 @@ class TestStopReasonCancelled:
 
     @staticmethod
     def _make_state_for_run_chat(tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.push_slots_update = MagicMock()
@@ -48,9 +48,9 @@ class TestStopReasonCancelled:
     async def test_handler_stop_reason_cancelled_skips_record_success(self, tmp_path, monkeypatch):
         """When EVENT_COMPLETE carries stop_reason='cancelled', neither
         record_success nor record_failure should be called."""
-        from kiro_crew.acp.types import STOP_REASON_CANCELLED
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_CANCELLED
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         events = [
             LLMEvent(kind=EVENT_TEXT_CHUNK, text="partial"),
@@ -77,9 +77,9 @@ class TestStopReasonCancelled:
         the leg that consumes the flag -- with no consume there is nothing to
         restore, so a test without this would pass vacuously.
         """
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.context import ContextBuilder
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         ctx_builder = ContextBuilder(
             memory=MemoryStore(workspace=tmp_path / "ws"),
@@ -114,9 +114,9 @@ class TestStopReasonCancelled:
         the empty-response re-queue left a soft-stop losing the skills index for
         the rest of the session.
         """
-        from kiro_crew.acp.types import STOP_REASON_CANCELLED
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_CANCELLED
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         events = [
             LLMEvent(kind=EVENT_TEXT_CHUNK, text="partial"),
@@ -140,7 +140,7 @@ class TestStopReasonCancelled:
         """An exception between the consume and the success check must not
         swallow the flag either -- the restore lives in the `finally`, so every
         non-landing exit is covered, not only the ones that reach the end."""
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         flags = self._wire_reinjection(state, tmp_path, monkeypatch)
@@ -166,8 +166,8 @@ class TestStopReasonCancelled:
     async def test_landed_turn_does_not_restore_the_reinjection_flag(self, tmp_path, monkeypatch):
         """The complement: a turn that lands must leave the flag cleared,
         otherwise the index is re-paid on every subsequent turn."""
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         events = [
             LLMEvent(kind=EVENT_TEXT_CHUNK, text="a real answer"),
@@ -191,9 +191,9 @@ class TestStopReasonCancelled:
     @pytest.mark.asyncio
     async def test_handler_stop_reason_cancelled_skips_consolidation(self, tmp_path, monkeypatch):
         """When cancelled, maybe_consolidate must not be called."""
-        from kiro_crew.acp.types import STOP_REASON_CANCELLED
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_CANCELLED
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         events = [
             LLMEvent(kind=EVENT_TEXT_CHUNK, text="partial"),
@@ -214,9 +214,9 @@ class TestStopReasonCancelled:
         self, tmp_path, monkeypatch
     ):
         """When stop_reason='end_turn', record_success and maybe_consolidate fire."""
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         events = [
             LLMEvent(kind=EVENT_TEXT_CHUNK, text="done"),
@@ -239,10 +239,10 @@ class TestStopReasonCancelled:
 
     @pytest.mark.asyncio
     async def test_monitor_wake_turn_does_not_write_user_memory(self, tmp_path, monkeypatch):
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.dashboard.state import MONITOR_WAKE_PREFIX
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.state import MONITOR_WAKE_PREFIX
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         events = [
             LLMEvent(kind=EVENT_TEXT_CHUNK, text="monitor action complete"),
@@ -268,9 +268,9 @@ class TestStopReasonCancelled:
     @pytest.mark.asyncio
     async def test_handler_stop_reason_cancelled_flushes_partial_text(self, tmp_path, monkeypatch):
         """Partial text chunks before cancel must be flushed to the slot."""
-        from kiro_crew.acp.types import STOP_REASON_CANCELLED
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_CANCELLED
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         events = [
             LLMEvent(kind=EVENT_TEXT_CHUNK, text="partial output here"),
@@ -294,7 +294,7 @@ class TestStopTurnSlotState:
     """Tests for api_chat_slot_stop soft/hard state transitions."""
 
     def _make_state(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         sessions = MagicMock(count=0)
         sessions.stop_turn = AsyncMock(return_value="soft")
         sessions.reset = AsyncMock()
@@ -691,7 +691,7 @@ class TestStopDuringSessionPrep:
     """
 
     def _make_state_and_slot(self, tmp_path):
-        from kiro_crew.dashboard.chat_runner import _run_chat
+        from aj_crew.dashboard.chat_runner import _run_chat
 
         state = _make_state(tmp_path)
         state.sessions.release = MagicMock()
@@ -709,7 +709,7 @@ class TestStopDuringSessionPrep:
         return state, slot, _run_chat
 
     def _make_client(self, stream_calls):
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         client = MagicMock()
         client.shutdown = AsyncMock()
@@ -754,7 +754,7 @@ class TestStopDuringSessionPrep:
         self, tmp_path: Path
     ) -> None:
         """A stopped pre-stream wake stays retryable instead of becoming DISPATCHED."""
-        from kiro_crew.monitoring.completion import MonitorCompletionHook
+        from aj_crew.monitoring.completion import MonitorCompletionHook
 
         state, slot, _run_chat = self._make_state_and_slot(tmp_path)
         stream_calls: list[str] = []
@@ -786,7 +786,7 @@ class TestStopDuringSessionPrep:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Pause all lands while the turn is prepared: it never opens, on any path."""
-        from kiro_crew import crew_pause
+        from aj_crew import crew_pause
 
         state, slot, _run_chat = self._make_state_and_slot(tmp_path)
         stream_calls: list[str] = []
@@ -814,7 +814,7 @@ class TestStopDuringSessionPrep:
     ) -> None:
         """The startup preload has not read the pause file yet: the gate reads it
         (off the loop) before it asks, so a crew paused before the restart holds."""
-        from kiro_crew import crew_pause
+        from aj_crew import crew_pause
 
         state, slot, _run_chat = self._make_state_and_slot(tmp_path)
         stream_calls: list[str] = []
@@ -839,7 +839,7 @@ class TestStopDuringSessionPrep:
     ) -> None:
         """Resume all drops the record while the gate writes the obligation:
         nothing would continue the turn, so it runs instead of ending."""
-        from kiro_crew import crew_pause
+        from aj_crew import crew_pause
 
         state, slot, _run_chat = self._make_state_and_slot(tmp_path)
         stream_calls: list[str] = []

@@ -22,7 +22,7 @@ const flat = params.get('flat') === '1'
 const foldersFail = params.get('folders') === 'fail'
 
 const peerRow = (key: string, title: string, msAgo: number, folder?: string): PeerRow & { folder_id?: string } => ({
-  key, title, agent: 'kirocrew', running: false, pending_approval: false,
+  key, title, agent: 'ajcrew', running: false, pending_approval: false,
   last_turn_ts: at(msAgo), last_ts: at(msAgo), created: at(msAgo + 30 * MIN),
   row_identity: `${PEER}:${key}`,
   ...(folder && !flat ? { folder_id: folder } : {}),
@@ -47,7 +47,7 @@ const PEER_FOLDERS = [
 
 // One LOCAL space too, so the shot sets a crew space beside a local one.
 const LOCAL = [
-  { key: 'chat-1', title: 'Local planning notes', messages: 4, running: false, agent: 'kirocrew', last_ts: at(5 * MIN), last_message: 'ok', folder_id: 'l-plan' },
+  { key: 'chat-1', title: 'Local planning notes', messages: 4, running: false, agent: 'ajcrew', last_ts: at(5 * MIN), last_message: 'ok', folder_id: 'l-plan' },
 ] as LocalRow[]
 const LOCAL_FOLDERS = [{ id: 'l-plan', name: 'Planning', order: 0 }]
 

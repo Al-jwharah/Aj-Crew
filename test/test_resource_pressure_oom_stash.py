@@ -15,13 +15,13 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.notifications import resource_pressure
-from kiro_crew.notifications.bus import _MAX_BODY_LEN, NotificationBus
-from kiro_crew.notifications.resource_pressure import ResourcePressureNotifier
-from kiro_crew.resource_status import POSTURE_AMPLE, ResourceStatus
+from aj_crew.notifications import resource_pressure
+from aj_crew.notifications.bus import _MAX_BODY_LEN, NotificationBus
+from aj_crew.notifications.resource_pressure import ResourcePressureNotifier
+from aj_crew.resource_status import POSTURE_AMPLE, ResourceStatus
 
-_KILL_A = "cgroup OOM kill inside kirocrew-agents.slice: 1 new kill(s); scope A"
-_KILL_B = "cgroup OOM kill inside kirocrew-agents.slice: 1 new kill(s); scope B"
+_KILL_A = "cgroup OOM kill inside ajcrew-agents.slice: 1 new kill(s); scope A"
+_KILL_B = "cgroup OOM kill inside ajcrew-agents.slice: 1 new kill(s); scope B"
 
 
 def _ample() -> ResourceStatus:

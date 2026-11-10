@@ -43,8 +43,8 @@ from acp_frame_replay_harness import (
     snapshot_json,
 )
 
-from kiro_crew.acp._dispatch import agent_version_from_init, classify_notification
-from kiro_crew.acp_backends import (
+from aj_crew.acp._dispatch import agent_version_from_init, classify_notification
+from aj_crew.acp_backends import (
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     ACP_BACKENDS_KNOWN,
@@ -339,13 +339,13 @@ def test_a_non_object_frame_is_a_fixture_error_not_a_crash(tmp_path, bad_line: s
 
 
 def test_the_snapshot_writer_never_records_telemetry(tmp_path) -> None:
-    """Regenerating snapshots must not emit ``kirocrew.tool.call.duration``.
+    """Regenerating snapshots must not emit ``ajcrew.tool.call.duration``.
 
     The real parsers record a duration per tool call; the writer runs outside the
-    conftest's ``KIROCREW_TELEMETRY=0``, so it is run fresh with the var unset.
+    conftest's ``AJCREW_TELEMETRY=0``, so it is run fresh with the var unset.
     """
-    env = {k: v for k, v in os.environ.items() if k != "KIROCREW_TELEMETRY"}
-    env["KIROCREW_HOME"] = str(tmp_path)
+    env = {k: v for k, v in os.environ.items() if k != "AJCREW_TELEMETRY"}
+    env["AJCREW_HOME"] = str(tmp_path)
     (tmp_path / "config.json").write_text('{"telemetry": {"enabled": true}}', encoding="utf-8")
     probe = (
         "import importlib.util\n"
@@ -353,8 +353,8 @@ def test_the_snapshot_writer_never_records_telemetry(tmp_path) -> None:
         "mod = importlib.util.module_from_spec(spec)\n"
         "spec.loader.exec_module(mod)\n"
         "import os\n"
-        "from kiro_crew.metrics.provider import get_recorder\n"
-        "print(os.environ.get('KIROCREW_TELEMETRY'), get_recorder().enabled)\n"
+        "from aj_crew.metrics.provider import get_recorder\n"
+        "print(os.environ.get('AJCREW_TELEMETRY'), get_recorder().enabled)\n"
     )
     out = subprocess.run(
         [sys.executable, "-c", probe],
@@ -380,9 +380,9 @@ def test_a_numeric_handshake_fixture_requires_a_protocol_version_row() -> None:
     The kiro family is exempt by name: ACP negotiates, so their numeric answer is the
     version they chose, and adding an id there claims the harness takes the date string.
     """
-    from kiro_crew.acp.client import _PROTOCOL_VERSION_BY_BACKEND
-    from kiro_crew.acp.harness import harness_for
-    from kiro_crew.acp_backends import ACP_BACKENDS_ACP_RUNTIME
+    from aj_crew.acp.client import _PROTOCOL_VERSION_BY_BACKEND
+    from aj_crew.acp.harness import harness_for
+    from aj_crew.acp_backends import ACP_BACKENDS_ACP_RUNTIME
 
     # The kiro family: handed the date-stamped version by construction, and named here
     # rather than inferred so an addition is a decision a reviewer sees.

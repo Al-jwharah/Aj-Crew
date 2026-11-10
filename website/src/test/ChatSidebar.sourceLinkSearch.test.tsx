@@ -235,7 +235,7 @@ describe('ChatSidebar – session search matches source-link badge ids', () => {
     expect(screen.queryByText(NO_LINKS_TITLE)).toBeNull()
   })
 
-  it.each(['pull', 'merge', 'github', 'browse', 'kirocrew', 'example-svc'])('does NOT retain badged rows for URL boilerplate %s', async (q) => {
+  it.each(['pull', 'merge', 'github', 'browse', 'ajcrew', 'example-svc'])('does NOT retain badged rows for URL boilerplate %s', async (q) => {
     // The URL is an invisible href, and the local predicate fires from the first
     // character, so matching any part of it retained every badged row.
     renderSidebar(ALL)

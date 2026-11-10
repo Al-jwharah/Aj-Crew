@@ -13,13 +13,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import task_executor
-from kiro_crew.acp.mcp_session_report import McpSessionReport
-from kiro_crew.acp.types import EVENT_MCP_SERVER_INIT_FAILURE, EVENT_MCP_SERVER_INITIALIZED
-from kiro_crew.agent_sdk.mcp_problems import UNATTENDED_MCP_WAIT_SECS
-from kiro_crew.dashboard.handlers import usage
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-from kiro_crew.task_models import SESSION_PREFIX, Project, Task
+from aj_crew import task_executor
+from aj_crew.acp.mcp_session_report import McpSessionReport
+from aj_crew.acp.types import EVENT_MCP_SERVER_INIT_FAILURE, EVENT_MCP_SERVER_INITIALIZED
+from aj_crew.agent_sdk.mcp_problems import UNATTENDED_MCP_WAIT_SECS
+from aj_crew.dashboard.handlers import usage
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.task_models import SESSION_PREFIX, Project, Task
 
 _RUN_TASK_ID = "task-mcp-start"
 _SESSION_KEY = f"{SESSION_PREFIX}:{_RUN_TASK_ID}:task1"
@@ -90,7 +90,7 @@ def quiet(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(usage, "read_effective_model", lambda *a, **k: "test-model")
     fake_config = MagicMock()
     fake_config.load.return_value = SimpleNamespace(agent=SimpleNamespace(provider="acp"))
-    monkeypatch.setattr(task_executor, "KiroCrewConfig", fake_config)
+    monkeypatch.setattr(task_executor, "AjCrewConfig", fake_config)
     monkeypatch.setattr(task_executor, "check_context", AsyncMock())
     monkeypatch.setattr(task_executor, "build_task_prompt", AsyncMock(return_value="PROMPT"))
 

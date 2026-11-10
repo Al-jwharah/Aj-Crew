@@ -22,9 +22,9 @@ from crew_log_projection_helpers import (  # noqa: F401 -- fixtures are used by 
     _turn,
 )
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, CrewLogError, Ref
-from kiro_crew.crew_log import projection as crew_log
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, CrewLogError, Ref
+from aj_crew.crew_log import projection as crew_log
 
 
 @pytest.fixture

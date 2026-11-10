@@ -13,7 +13,7 @@ import re
 import uuid
 from pathlib import Path
 
-from kiro_crew.dashboard.chat_delivery import normalize_send_id
+from aj_crew.dashboard.chat_delivery import normalize_send_id
 
 _ROOT = Path(__file__).resolve().parents[1]
 _GUIDE = _ROOT / "docs" / "app-kit" / "migration-guide.md"

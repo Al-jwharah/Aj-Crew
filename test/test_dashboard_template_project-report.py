@@ -15,11 +15,11 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.dashboard_templates.manifest import ManifestError, load_template
+from aj_crew.dashboard_templates.manifest import ManifestError, load_template
 
 TEMPLATE_ID = "project-report"
 ROOT = Path(__file__).resolve().parents[1]
-DIRECTORY = ROOT / "src/kiro_crew/dashboard_templates/builtin" / TEMPLATE_ID
+DIRECTORY = ROOT / "src/aj_crew/dashboard_templates/builtin" / TEMPLATE_ID
 SAMPLE = ROOT / "test/fixtures/dashboard_templates/sample_workstreams.json"
 
 #: The four level names the page tags a row with, outermost first. Named here so a case
@@ -765,7 +765,7 @@ class TestNeedsYouCardsOfferChoices:
     """Each needs-you card carries buttons; picking one fills the chat box and folds it."""
 
     def test_a_choice_posts_an_act_and_never_sends(self, script: str) -> None:
-        assert "type: 'kirocrew-dashboard:act'" in script
+        assert "type: 'ajcrew-dashboard:act'" in script
         assert "fetch(" not in script.split("function act(text)")[1].split("\n  }")[0]
 
     def test_a_finished_choice_asks_to_send_and_write_my_own_fills(self, script: str) -> None:
@@ -773,7 +773,7 @@ class TestNeedsYouCardsOfferChoices:
         one-click sends on, and otherwise fills the composer exactly as ``act`` does.
         "Write my own" posts a starter the person finishes, so it stays ``act``. Fails
         if a finished choice goes back to ``act``."""
-        assert "type: 'kirocrew-dashboard:send'" in script
+        assert "type: 'ajcrew-dashboard:send'" in script
         assert "fetch(" not in script.split("function send(text)")[1].split("\n  }")[0]
         assert "if (c.own) act(c.say); else send(c.say);" in script
 

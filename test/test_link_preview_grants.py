@@ -16,17 +16,17 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps import app_frame as lpf
-from kiro_crew.apps import link_preview_grants as g
-from kiro_crew.apps import point_grants as pg
-from kiro_crew.apps.manager_records import (
+from aj_crew.apps import app_frame as lpf
+from aj_crew.apps import link_preview_grants as g
+from aj_crew.apps import point_grants as pg
+from aj_crew.apps.manager_records import (
     STAGED_GRANT_FAMILIES,
     _approved_grants_after_manifest_change,
     _declared_grant_entries,
     _held_back_entries,
     _parse_approved_grants,
 )
-from kiro_crew.apps.manifest_contributes import LinkPreviewConfig
+from aj_crew.apps.manifest_contributes import LinkPreviewConfig
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -149,7 +149,7 @@ def test_turning_full_urls_on_is_held_back(monkeypatch: pytest.MonkeyPatch) -> N
     def staged(name: str, family: str, read: Any) -> list[str]:
         return list(approved[family])
 
-    monkeypatch.setattr("kiro_crew.apps.manager_records.staged_app_grants", staged)
+    monkeypatch.setattr("aj_crew.apps.manager_records.staged_app_grants", staged)
     row = g.link_preview_grant_row("cards-app", _with_full_url(_manifest(["a.example.com"]), True))
     assert row["linkPreviewGrant"]["fullUrl"] is False
     assert row["linkPreviewGrant"]["stagedFullUrl"] is True
@@ -196,7 +196,7 @@ def test_the_grant_row_reports_approved_and_waiting(monkeypatch: pytest.MonkeyPa
         declared = read()
         return declared[:1]
 
-    monkeypatch.setattr("kiro_crew.apps.manager_records.staged_app_grants", staged)
+    monkeypatch.setattr("aj_crew.apps.manager_records.staged_app_grants", staged)
     row = g.link_preview_grant_row("cards-app", _manifest(["a.example.com", "b.example.com"]))
     assert row["linkPreviewGrant"]["hosts"] == ["a.example.com"]
     assert row["linkPreviewGrant"]["stagedHosts"] == ["b.example.com"]

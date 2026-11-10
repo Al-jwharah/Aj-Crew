@@ -25,9 +25,9 @@ from stall_dump_helpers import (
     write_dump,
 )
 
-from kiro_crew import cron_inflight, stall_attribution
-from kiro_crew.dashboard import crash_dump_store
-from kiro_crew.stall_attribution import (
+from aj_crew import cron_inflight, stall_attribution
+from aj_crew.dashboard import crash_dump_store
+from aj_crew.stall_attribution import (
     attribute_dump,
     attribute_latest_stall,
     classify_surface,
@@ -251,7 +251,7 @@ class TestSurface:
 
     def test_cron_wins_over_the_slack_gateway_module_it_passes_through(self) -> None:
         # A cron turn's stack contains slack/gateway.py frames; the OUTERMOST
-        # Kiro Crew frame is the cron run, and that is what names the surface.
+        # Aj Crew frame is the cron run, and that is what names the surface.
         assert classify_surface(parse_frames(CRON_STACK)) == "cron"
 
     def test_dashboard_chat_and_slack(self) -> None:
@@ -285,7 +285,7 @@ class TestSurface:
         assert classify_surface([]) == "unknown"
 
     def test_windows_paths_classify_too(self) -> None:
-        win = [r'  File "C:\Users\u\venv\Lib\site-packages\kiro_crew\cron.py", line 1 in _execute']
+        win = [r'  File "C:\Users\u\venv\Lib\site-packages\aj_crew\cron.py", line 1 in _execute']
         assert classify_surface(parse_frames(win)) == "cron"
 
     def test_rules_name_modules_and_functions_that_exist(self) -> None:
@@ -293,9 +293,9 @@ class TestSurface:
         the package. A rename that stranded a rule would otherwise degrade
         ``classify_surface`` to "unknown" -- and the breaker to a no-op -- with
         CI still green."""
-        import kiro_crew
+        import aj_crew
 
-        pkg = Path(kiro_crew.__file__).resolve().parent
+        pkg = Path(aj_crew.__file__).resolve().parent
         defs: set[str] = set()
         for py in pkg.rglob("*.py"):
             if "_vendor" in py.parts:
@@ -303,15 +303,15 @@ class TestSurface:
             defs.update(_DEF_RE.findall(py.read_text(encoding="utf-8", errors="replace")))
         for label, fragments, funcs in stall_attribution._SURFACE_RULES:
             for fragment in fragments:
-                rel = fragment.removeprefix("/kiro_crew/")
+                rel = fragment.removeprefix("/aj_crew/")
                 assert (pkg / rel).exists(), f"{label}: no such module or package {fragment!r}"
             for func in funcs:
-                assert func in defs, f"{label}: no function named {func!r} in kiro_crew"
+                assert func in defs, f"{label}: no function named {func!r} in aj_crew"
         for gate in stall_attribution._GATE_FILES:
             # ``exists`` rather than ``is_file``: a gate entry names a module file or
             # a package directory whose submodules all count, the same shape the
             # surface fragments above are checked with.
-            assert (pkg / gate.removeprefix("/kiro_crew/")).exists(), gate
+            assert (pkg / gate.removeprefix("/aj_crew/")).exists(), gate
 
 
 class TestAttribution:
@@ -427,7 +427,7 @@ class TestAttribution:
             == "stuck in the tool permission gate (__init__.py:7969 is_sensitive_bash_command)"
         )
         assert "was executing cron job 'twb-refresh' (caeb441a)" in lines[1]
-        assert lines[2] == "recommended: kirocrew cron pause caeb441a"
+        assert lines[2] == "recommended: ajcrew cron pause caeb441a"
 
     def test_two_markers_name_candidates_not_a_job(
         self, tmp_path: Path, dead_pids: set[int]
@@ -464,7 +464,7 @@ class TestAttribution:
             "two markers of one job read as two jobs in flight: "
             f"{[(m.job_id, m.path.name) for m in a.candidates]!r}"
         )
-        assert "recommended: kirocrew cron pause c3" in describe(a)
+        assert "recommended: ajcrew cron pause c3" in describe(a)
         # Both files are still swept once the verdict is recorded.
         assert sorted(m.path.name for m in cron_inflight.abandoned_markers(tmp_path)) == [
             "c3.aaaa.json",
@@ -532,7 +532,7 @@ class TestAttribution:
         # descriptor and set the module's active-dump global.
         header_only = dumps / f"{crash_dump_store.DUMP_PREFIX}20260999T000000Z.txt"
         header_only.write_text(
-            "# KiroCrew loop-stall crash dump — opened test\n"  # brand-ok: mirrors the store's header bytes
+            "# AjCrew loop-stall crash dump — opened test\n"  # brand-ok: mirrors the store's header bytes
             f"# PID: {os.getpid()} @ {crash_dump_store._pid_domain()}\n"
             "# If thread stacks appear below, the event loop wedged and faulthandler fired.\n\n",
             encoding="utf-8",
@@ -547,7 +547,7 @@ class TestAttribution:
         now = time.time()
         hostile = "\x1b[2Kok\rALL CLEAR 刷新"
         stack = [
-            '  File "/opt/venv/lib/python3.12/site-packages/kiro_crew/security/__init__.py\x07", '
+            '  File "/opt/venv/lib/python3.12/site-packages/aj_crew/security/__init__.py\x07", '
             "line 1 in is_sensitive_bash_command",
         ] + CRON_STACK
         dump = write_dump(tmp_path / "dumps", 4_000_030, stack, mtime=now)

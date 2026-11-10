@@ -7,15 +7,15 @@ must reach every collaborator at once; any other early report stays refused.
 
 from __future__ import annotations
 
-from kiro_crew.shared_crew.collab import ACTIVITY_MIN_INTERVAL_SECONDS, FRAME_PRESENCE, Activity
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew.collab import ACTIVITY_MIN_INTERVAL_SECONDS, FRAME_PRESENCE, Activity
+from aj_crew.shared_crew.contracts import (
     DisplaySnapshot,
     Principal,
     PrincipalKind,
     Provenance,
     principal_id_for,
 )
-from kiro_crew.shared_crew.presence import REFUSED_RATE, PresenceRegistry, handle_activity_frame
+from aj_crew.shared_crew.presence import REFUSED_RATE, PresenceRegistry, handle_activity_frame
 
 
 def _person(login: str) -> Principal:

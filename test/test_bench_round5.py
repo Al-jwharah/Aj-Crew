@@ -28,22 +28,22 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.eval.bench.adapters import locomo as locomo_adapter
-from kiro_crew.eval.bench.corpus import (
+from aj_crew.eval.bench.adapters import locomo as locomo_adapter
+from aj_crew.eval.bench.corpus import (
     CAT_SINGLE_HOP,
     BenchInstance,
     BenchQuery,
     BenchSession,
     BenchTurn,
 )
-from kiro_crew.eval.bench.ingest import (
+from aj_crew.eval.bench.ingest import (
     IngestConfig,
     IngestedInstance,
     IngestError,
     ingest_instance,
 )
-from kiro_crew.eval.bench.retrieval import QueryRetrieval, aggregate
-from kiro_crew.eval.bench.safepath import UnsafePathError
+from aj_crew.eval.bench.retrieval import QueryRetrieval, aggregate
+from aj_crew.eval.bench.safepath import UnsafePathError
 
 LME_TS = "2023/04/10 (Mon) 23:07"
 
@@ -121,16 +121,16 @@ def _embed(text: str) -> list[float]:
 
 
 def test_recorded_identity_comes_from_the_live_embedder(monkeypatch) -> None:
-    """`KIROCREW_EMBED_MODEL_PATH` runs a different model, and the width can be
+    """`AJCREW_EMBED_MODEL_PATH` runs a different model, and the width can be
     adopted from the file, so the module constants do not describe the system."""
-    from kiro_crew.eval.bench import run as run_mod
+    from aj_crew.eval.bench import run as run_mod
 
     class FakeEmbedder:
         model_id = "some-other-model:1.5b"
         dim = 768
 
     monkeypatch.setattr(
-        "kiro_crew.embeddings.get_shared_embedder", lambda: FakeEmbedder(), raising=True
+        "aj_crew.embeddings.get_shared_embedder", lambda: FakeEmbedder(), raising=True
     )
     assert run_mod._production_embedder_id() == "some-other-model:1.5b@768"
 
@@ -139,13 +139,13 @@ def test_an_unreadable_identity_refuses_rather_than_claiming_the_bundled_one(
     monkeypatch,
 ) -> None:
     """Falling back to the constants would reintroduce the mislabelling, silently."""
-    from kiro_crew.eval.bench import run as run_mod
+    from aj_crew.eval.bench import run as run_mod
 
     class Mute:
         pass
 
     monkeypatch.setattr(
-        "kiro_crew.embeddings.get_shared_embedder", lambda: Mute(), raising=True
+        "aj_crew.embeddings.get_shared_embedder", lambda: Mute(), raising=True
     )
     with pytest.raises(IngestError) as excinfo:
         run_mod._production_embedder_id()
@@ -180,7 +180,7 @@ def test_a_null_embedding_after_readiness_aborts_the_run(tmp_path: Path) -> None
 def test_a_healthy_run_is_unaffected(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Otherwise the suite could pass by making the harness refuse everything."""
     # One fake vector for every text trips FAISS's near-duplicate check.
-    monkeypatch.setattr("kiro_crew.vector_memory._HAS_FAISS", False)
+    monkeypatch.setattr("aj_crew.vector_memory._HAS_FAISS", False)
     loaded = ingest_instance(
         _instance(),
         db_path=tmp_path / "ok.db",
@@ -341,8 +341,8 @@ def test_a_plain_corpus_file_still_loads(tmp_path: Path) -> None:
 
 def test_all_three_corpus_readers_route_through_the_nofollow_helper() -> None:
     """Point-wise patching is how the previous sweep left these three behind."""
-    from kiro_crew.eval.bench import datasets
-    from kiro_crew.eval.bench.adapters import longmemeval
+    from aj_crew.eval.bench import datasets
+    from aj_crew.eval.bench.adapters import longmemeval
 
     for mod, fn_name in (
         (datasets, "load_json"),

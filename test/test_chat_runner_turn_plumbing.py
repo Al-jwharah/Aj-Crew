@@ -1,7 +1,7 @@
 """The turn object's plumbing keeps one value per name across ``_run_chat`` and its phases.
 
 ``_run_chat`` and the phase functions cut from it share their state through one
-:class:`~kiro_crew.dashboard.chat_turn.turn_locals._ChatTurn` per turn. A phase reads a
+:class:`~aj_crew.dashboard.chat_turn.turn_locals._ChatTurn` per turn. A phase reads a
 name the turn shares under its own name (``x = turn.x`` once, at its start, or right
 after a phase it calls returns) and writes it back the moment it changes
 (``x = ...`` then ``turn.x = x``, with nothing between), so a write that happens before
@@ -36,8 +36,8 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.dashboard.chat_runner as cr
-from kiro_crew.dashboard import chat_turn
+import aj_crew.dashboard.chat_runner as cr
+from aj_crew.dashboard import chat_turn
 
 #: Phase-local temporaries that share a spelling with a name read off the turn: the
 #: phase's own value never leaves it, so its store needs no copy. ``(function, name)``.
@@ -278,7 +278,7 @@ def test_a_name_a_closure_writes_is_never_held_under_its_own_name() -> None:
 
 def test_a_value_the_turn_never_set_reads_as_the_unbound_local_did() -> None:
     """A phase reading a name the turn has not bound fails as the inline read did."""
-    from kiro_crew.dashboard.chat_turn.turn_locals import _ChatTurn
+    from aj_crew.dashboard.chat_turn.turn_locals import _ChatTurn
 
     turn = _ChatTurn.__new__(_ChatTurn)
     with pytest.raises(UnboundLocalError, match="'assistant_text'"):

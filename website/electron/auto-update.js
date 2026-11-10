@@ -9,7 +9,7 @@
  * support, and — on macOS — still drives Squirrel.Mac underneath, so the proven
  * atomic bundle swap is unchanged. See docs/guides/windows-install.md and issue #598.
  *
- * The ONE KiroCrew-specific concern vs. a plain Electron app is unchanged: the
+ * The ONE AjCrew-specific concern vs. a plain Electron app is unchanged: the
  * bundled Python gateway is a long-running child process, so it MUST be stopped
  * gracefully BEFORE the app bundle is swapped — otherwise the swap races a live
  * child and can leave a half-replaced app. That is why autoInstallOnAppQuit is
@@ -29,7 +29,7 @@
  */
 
 // Default update feed host: updates.crew.kiro.dev, the pointer hostname of the
-// public distribution CDN (CloudFront + OAC over the kirocrew-updates bucket).
+// public distribution CDN (CloudFront + OAC over the ajcrew-updates bucket).
 //
 // electron-updater's generic provider treats the configured URL as a DIRECTORY
 // and resolves <base>/latest-mac.yml (macOS) or <base>/latest-linux.yml (Linux)
@@ -153,14 +153,14 @@ const RELAUNCH_PATH_MAX_CHARS = 1024;
 /**
  * Is this install's update lifecycle owned by an external package manager?
  *
- * Lookup order: the `KIROCREW_EXTERNALLY_MANAGED` env var (a path to a marker
+ * Lookup order: the `AJCREW_EXTERNALLY_MANAGED` env var (a path to a marker
  * file, or any other non-empty value to mark the install managed with no
- * metadata — the test-harness seam, mirroring `KIROCREW_UPDATE_FEED`, and
+ * metadata — the test-harness seam, mirroring `AJCREW_UPDATE_FEED`, and
  * honored ONLY on an unpackaged build: in a packaged app one env var in the
  * launch environment would otherwise name the file whose body we execute), then
  * the BAKED marker `<app code>/EXTERNALLY-MANAGED` (inside app.asar, next to
  * this file — placed there at build time by `packaging/build-desktop.sh` when
- * `KIROCREW_MANAGED_INSTALL_MARKER` names one; read on a PACKAGED build only,
+ * `AJCREW_MANAGED_INSTALL_MARKER` names one; read on a PACKAGED build only,
  * since in a dev checkout that directory is writable source), then the LOOSE marker
  * `<resourcesPath>/EXTERNALLY-MANAGED` a repackager drops beside the app.
  * I/O-bearing and fully injectable, like resolveLinuxInstall above.
@@ -267,7 +267,7 @@ function readExternallyManaged({
     // environment (shell profile, launchd plist, .desktop file) is writable by
     // the user, so honoring it there would let one env var choose the file whose
     // body this process shells.
-    const override = (!isPackaged && env && env.KIROCREW_EXTERNALLY_MANAGED) || "";
+    const override = (!isPackaged && env && env.AJCREW_EXTERNALLY_MANAGED) || "";
     if (override) {
       // A value that names a marker file reads it; any other non-empty value
       // (including a dangling path) marks the install managed with no metadata.
@@ -751,7 +751,7 @@ function shouldAutoOffer({ candidate, current, followedChannel, defaultChannel }
  * keeps the contract explicit and independent of that internal.
  *
  * Enforces HTTPS, with plain HTTP allowed ONLY for loopback so the local
- * update harness (KIROCREW_UPDATE_FEED=http://127.0.0.1:PORT/feed) works;
+ * update harness (AJCREW_UPDATE_FEED=http://127.0.0.1:PORT/feed) works;
  * cleartext update metadata over a real network stays rejected.
  *
  * `variant` adds one path segment below the channel, which is how a Linux
@@ -789,7 +789,7 @@ function buildFeedBase({ base, channel, variant = "" }) {
  * user with no next step -- the card simply re-offers the same update after
  * relaunch (observed in the field on 0.1.2-nightly.20260729t073648). Reinstalling
  * over the top is the supported recovery and is non-destructive: user data lives
- * in the KiroCrew home directory, never inside the app bundle.
+ * in the AjCrew home directory, never inside the app bundle.
  *
  * Computed HERE rather than in the renderer because the display-oriented
  * getInfo().platform value is not the updater's routing authority. osPlatform
@@ -809,9 +809,9 @@ function buildFeedBase({ base, channel, variant = "" }) {
 function manualDownloadUrl(channel, osPlatform, osArch = process.arch, linuxFormat = "", macDistArch = "") {
   if (!channelHasLane(channel)) return null;
   // On darwin the arch comes from the BUILD, not the host: the universal DMG
-  // runs anywhere, so a universal install is offered KiroCrew.dmg whatever
+  // runs anywhere, so a universal install is offered AjCrew.dmg whatever
   // process.arch says, and a single-arch install is offered its own DMG
-  // (KiroCrew-arm64.dmg / KiroCrew-x64.dmg, the latest aliases
+  // (AjCrew-arm64.dmg / AjCrew-x64.dmg, the latest aliases
   // sign-and-notarize.yml's mac_variant legs write) so a reinstall keeps the
   // install the user chose. Linux has no universal
   // binary: publish-linux.yml publishes one artifact per arch per format under
@@ -828,8 +828,8 @@ function manualDownloadUrl(channel, osPlatform, osArch = process.arch, linuxForm
   // publish-linux.yml writes to the CDN, and the arch and extension are
   // interpolated because there are now six (arch, format) pairs to name.
   // The lts channel publishes the LTS edition under its own file stem
-  // (release-lts.yml, `KiroCrew-LTS`), so a download never reads as the oss app. // brand-ok
-  const stem = channel === "lts" ? "KiroCrew-LTS" : "KiroCrew"; // brand-ok
+  // (release-lts.yml, `AjCrew-LTS`), so a download never reads as the oss app. // brand-ok
+  const stem = channel === "lts" ? "AjCrew-LTS" : "AjCrew"; // brand-ok
   const linuxFile = linuxArch ? `${stem}-${linuxArch}.${linuxExt}` : null;
   // Windows ships x64 only. build-windows.yml has no arm64 leg, and Windows has
   // exactly one channel file whatever the arch (electron-updater appends an arch
@@ -1091,7 +1091,7 @@ function initAutoUpdate(deps) {
           : [];
       } catch { return []; }
     },
-    feedBase = process.env.KIROCREW_UPDATE_FEED || DEFAULT_FEED_BASE,
+    feedBase = process.env.AJCREW_UPDATE_FEED || DEFAULT_FEED_BASE,
     onUpdateState = null,
     log = console,
     // Whether a security policy provider currently governs this install's

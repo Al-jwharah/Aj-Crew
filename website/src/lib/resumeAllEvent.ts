@@ -5,4 +5,4 @@
  *  Its own module, not only an export of the `useWebSocket` facade: many page
  *  tests mock that facade with a fixed export list, and the sidebar row reads
  *  this name when it mounts, so a facade-only home turned every such test red. */
-export const RESUME_ALL_DONE_EVENT = 'kirocrew:resume-all-done'
+export const RESUME_ALL_DONE_EVENT = 'ajcrew:resume-all-done'

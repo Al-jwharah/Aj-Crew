@@ -14,13 +14,13 @@ from acp_client_helpers import _POSIX_EXEC_PATHS_ONLY, _stop_stderr_drain
 from spawn_test_helpers import strip_spawn_shim
 
 from conftest import cap_node_module_walk
-from kiro_crew.acp.client import (
+from aj_crew.acp.client import (
     _CLAUDE_ACP_PKG_ENTRY,
     AcpClient,
     _resolve_vendored_claude_acp,
     _vendored_acp_roots,
 )
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.ids import UNALLOCATABLE_PID
 
 
 class TestVendoredClaudeAcp:
@@ -32,7 +32,7 @@ class TestVendoredClaudeAcp:
         With *with_deps* (default) also creates the hoisted dependency marker
         ``@agentclientprotocol/sdk`` so the completeness guard accepts it.
         """
-        from kiro_crew.acp.client import _CLAUDE_ACP_DEP_MARKER
+        from aj_crew.acp.client import _CLAUDE_ACP_DEP_MARKER
 
         entry = root / _CLAUDE_ACP_PKG_ENTRY
         entry.parent.mkdir(parents=True, exist_ok=True)
@@ -44,35 +44,35 @@ class TestVendoredClaudeAcp:
     def test_finds_vendored_in_pkg_vendor_dir(self, tmp_path, monkeypatch):
         # Toolbox/pip layout: <pkg_dir>/_vendor/node_modules/<pkg>/dist/index.js.
         # Inject a fake pkg_dir under an isolated home so the real workspace
-        # (sibling-website detection / KIROCREW_PROJECT_DIR) is not consulted.
-        monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
-        pkg_dir = tmp_path / "site-packages" / "kiro_crew"
+        # (sibling-website detection / AJCREW_PROJECT_DIR) is not consulted.
+        monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
+        pkg_dir = tmp_path / "site-packages" / "aj_crew"
         pkg_dir.mkdir(parents=True)
         entry = self._make_vendored(pkg_dir / "_vendor" / "node_modules")
         assert _resolve_vendored_claude_acp(pkg_dir=pkg_dir) == str(entry)
 
     def test_finds_vendored_under_project_dir(self, tmp_path, monkeypatch):
-        # KIROCREW_PROJECT_DIR/node_modules holds the adapter; pkg_dir has none.
-        pkg_dir = tmp_path / "site-packages" / "kiro_crew"
+        # AJCREW_PROJECT_DIR/node_modules holds the adapter; pkg_dir has none.
+        pkg_dir = tmp_path / "site-packages" / "aj_crew"
         pkg_dir.mkdir(parents=True)
         entry = self._make_vendored(tmp_path / "proj" / "node_modules")
         (tmp_path / "proj").mkdir(exist_ok=True)
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path / "proj"))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path / "proj"))
         assert _resolve_vendored_claude_acp(pkg_dir=pkg_dir) == str(entry)
 
     def test_returns_none_when_absent(self, tmp_path, monkeypatch):
         # Isolated pkg_dir with no _vendor and a project dir with no adapter.
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path / "empty"))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path / "empty"))
         (tmp_path / "empty").mkdir()
-        pkg_dir = tmp_path / "site-packages" / "kiro_crew"
+        pkg_dir = tmp_path / "site-packages" / "aj_crew"
         pkg_dir.mkdir(parents=True)
         assert _resolve_vendored_claude_acp(pkg_dir=pkg_dir) is None
 
     def test_skips_incomplete_copy_missing_deps(self, tmp_path, monkeypatch):
         # Regression: an entry script whose dependency Node could not import must
         # be rejected (it would crash with ERR_MODULE_NOT_FOUND @agentclientprotocol/sdk),
-        # falling through to a complete copy under KIROCREW_PROJECT_DIR.
-        pkg_dir = tmp_path / "site-packages" / "kiro_crew"
+        # falling through to a complete copy under AJCREW_PROJECT_DIR.
+        pkg_dir = tmp_path / "site-packages" / "aj_crew"
         pkg_dir.mkdir(parents=True)
         # Incomplete copy in _vendor (entry only, no deps) — must be skipped. The
         # dependency walk runs to the filesystem root like Node's; cap it at tmp_path
@@ -82,7 +82,7 @@ class TestVendoredClaudeAcp:
         # Complete copy in the project dir — must win.
         (tmp_path / "proj").mkdir()
         good = self._make_vendored(tmp_path / "proj" / "node_modules")
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path / "proj"))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path / "proj"))
         assert _resolve_vendored_claude_acp(pkg_dir=pkg_dir) == str(good)
 
     def test_roots_include_pkg_vendor_dir(self):
@@ -93,8 +93,8 @@ class TestVendoredClaudeAcp:
 
 class TestResolveClaudeAcpBin:
     def test_env_override_wins(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import client as client_mod
-        from kiro_crew.acp.client import _resolve_claude_acp_bin
+        from aj_crew.acp import client as client_mod
+        from aj_crew.acp.client import _resolve_claude_acp_bin
 
         bin_path = tmp_path / "claude-agent-acp"
         bin_path.write_text("#!/bin/sh\nexit 0\n")
@@ -107,7 +107,7 @@ class TestResolveClaudeAcpBin:
 
     @_POSIX_EXEC_PATHS_ONLY
     def test_path_lookup(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         bin_path = tmp_path / "claude-agent-acp"
         bin_path.write_text("#!/bin/sh\nexit 0\n")
@@ -129,7 +129,7 @@ class TestResolveClaudeAcpBin:
 
     @_POSIX_EXEC_PATHS_ONLY
     def test_mise_which_preferred(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         script = tmp_path / "bin" / "claude-agent-acp"
         script.parent.mkdir(parents=True)
@@ -151,8 +151,8 @@ class TestResolveClaudeAcpBin:
 
     @_POSIX_EXEC_PATHS_ONLY
     def test_mise_installed_script_resolves_node(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import client as client_mod
-        from kiro_crew.acp.client import _resolve_claude_acp_bin
+        from aj_crew.acp import client as client_mod
+        from aj_crew.acp.client import _resolve_claude_acp_bin
 
         mise_node = tmp_path / ".local" / "share" / "mise" / "installs" / "node" / "20.18.0"
         node_bin = mise_node / "bin" / "node"
@@ -178,7 +178,7 @@ class TestResolveClaudeAcpBin:
         assert argv == [str(node_bin), str(script.resolve())]
 
     def test_non_executable_script_falls_back_to_path_node(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         fake_home = tmp_path / "fakehome"
         fake_home.mkdir()
@@ -207,7 +207,7 @@ class TestResolveClaudeAcpBin:
 
     @_POSIX_EXEC_PATHS_ONLY
     def test_mise_glob_fallback(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         mise_node = tmp_path / ".local" / "share" / "mise" / "installs" / "node" / "22.1.0"
         bin_dir = mise_node / "bin"
@@ -232,7 +232,7 @@ class TestResolveClaudeAcpBin:
         assert argv == [str(node_bin), str(acp_script.resolve())]
 
     def test_returns_none_when_not_found(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         fake_home = tmp_path / "fakehome"
         fake_home.mkdir()
@@ -251,7 +251,7 @@ class TestResolveClaudeAcpBin:
 
     def test_shim_next_to_another_package_is_left_alone(self, tmp_path, monkeypatch):
         """Only the shim npm wrote for the named bin is mapped to its target."""
-        from kiro_crew.acp import launch as launch_mod
+        from aj_crew.acp import launch as launch_mod
 
         shim = tmp_path / "claude-agent-acp.cmd"
         shim.write_text("@echo off\n", encoding="utf-8")
@@ -279,7 +279,7 @@ class TestResolveClaudeAcpBin:
 
 class TestResolveClaudeCodeExecutable:
     def test_env_override_wins(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         exe = tmp_path / "claude"
         exe.write_text("#!/bin/sh\nexit 0\n")
@@ -290,7 +290,7 @@ class TestResolveClaudeCodeExecutable:
         assert client_mod._resolve_claude_code_executable() == str(exe)
 
     def test_env_override_ignored_when_missing(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         monkeypatch.setenv("CLAUDE_CODE_EXECUTABLE", str(tmp_path / "nope"))
         monkeypatch.setattr(client_mod, "_mise_which", lambda tool: None)
@@ -298,7 +298,7 @@ class TestResolveClaudeCodeExecutable:
         assert client_mod._resolve_claude_code_executable() is None
 
     def test_mise_preferred_over_path(self, monkeypatch):
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         monkeypatch.delenv("CLAUDE_CODE_EXECUTABLE", raising=False)
         monkeypatch.setattr(client_mod, "_mise_which", lambda tool: "/mise/bin/claude")
@@ -307,7 +307,7 @@ class TestResolveClaudeCodeExecutable:
 
     @_POSIX_EXEC_PATHS_ONLY
     def test_path_lookup(self, monkeypatch):
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         monkeypatch.delenv("CLAUDE_CODE_EXECUTABLE", raising=False)
         monkeypatch.setattr(client_mod, "_mise_which", lambda tool: None)
@@ -325,8 +325,8 @@ class TestResolveClaudeCodeExecutable:
         The gateway's own PATH may not hold that dir, and the Agent Harness
         probe must still find the ``claude`` there.
         """
-        from kiro_crew import env as env_mod
-        from kiro_crew.acp import client as client_mod
+        from aj_crew import env as env_mod
+        from aj_crew.acp import client as client_mod
 
         bin_dir = tmp_path / "Local" / "Toolbox" / "bin"
         bin_dir.mkdir(parents=True)
@@ -347,7 +347,7 @@ class TestResolveClaudeCodeExecutable:
         assert client_mod._resolve_claude_code_executable() == str(claude)
 
     def test_none_when_absent(self, monkeypatch):
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         monkeypatch.delenv("CLAUDE_CODE_EXECUTABLE", raising=False)
         monkeypatch.setattr(client_mod, "_mise_which", lambda tool: None)
@@ -373,7 +373,7 @@ class TestResolveClaudeCodeExecutable:
         Node refuses a ``.cmd`` there with ``spawn EINVAL`` (CVE-2024-27980), so the
         npm shim must never be the value: the ``claude.exe`` it runs is.
         """
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         shim, exe = self._npm_windows_claude(tmp_path / "npm", with_exe=True)
         monkeypatch.delenv("CLAUDE_CODE_EXECUTABLE", raising=False)
@@ -390,20 +390,20 @@ class TestResolveClaudeCodeExecutable:
 
     def test_windows_cmd_shim_without_an_exe_is_not_passed(self, tmp_path, monkeypatch, caplog):
         """A batch shim Node cannot spawn is withheld, with a warning naming it."""
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         shim, _exe = self._npm_windows_claude(tmp_path / "npm", with_exe=False)
         monkeypatch.delenv("CLAUDE_CODE_EXECUTABLE", raising=False)
         monkeypatch.setattr(client_mod.platform_compat, "IS_WINDOWS", True)
         monkeypatch.setattr(client_mod, "_mise_which", lambda tool: None)
         monkeypatch.setattr(client_mod.shutil, "which", lambda name, path=None: str(shim))
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.client"):
+        with caplog.at_level("WARNING", logger="aj_crew.acp.client"):
             assert client_mod._resolve_claude_code_executable() is None
         assert str(shim) in caplog.text
 
     def test_cmd_shim_is_kept_off_windows(self, tmp_path, monkeypatch):
         """The swap is a Windows rule: POSIX Node spawns any executable file."""
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         shim, _exe = self._npm_windows_claude(tmp_path / "npm", with_exe=True)
         monkeypatch.delenv("CLAUDE_CODE_EXECUTABLE", raising=False)
@@ -414,8 +414,8 @@ class TestResolveClaudeCodeExecutable:
 
 class TestMiseWhich:
     def test_returns_path_on_success(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import client as client_mod
-        from kiro_crew.acp.client import _mise_which
+        from aj_crew.acp import client as client_mod
+        from aj_crew.acp.client import _mise_which
 
         script = tmp_path / "claude-agent-acp"
         script.write_text("#!/usr/bin/env node\n")
@@ -431,15 +431,15 @@ class TestMiseWhich:
         assert _mise_which("claude-agent-acp") == str(script)
 
     def test_returns_none_when_mise_not_installed(self, monkeypatch):
-        from kiro_crew.acp import client as client_mod
-        from kiro_crew.acp.client import _mise_which
+        from aj_crew.acp import client as client_mod
+        from aj_crew.acp.client import _mise_which
 
         monkeypatch.setattr(client_mod.shutil, "which", lambda name: None)
         assert _mise_which("claude-agent-acp") is None
 
     def test_returns_none_on_nonzero_exit(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import client as client_mod
-        from kiro_crew.acp.client import _mise_which
+        from aj_crew.acp import client as client_mod
+        from aj_crew.acp.client import _mise_which
 
         monkeypatch.setattr(
             client_mod.shutil,
@@ -453,8 +453,8 @@ class TestMiseWhich:
     def test_returns_none_on_timeout(self, tmp_path, monkeypatch):
         import subprocess
 
-        from kiro_crew.acp import client as client_mod
-        from kiro_crew.acp.client import _mise_which
+        from aj_crew.acp import client as client_mod
+        from aj_crew.acp.client import _mise_which
 
         monkeypatch.setattr(
             client_mod.shutil,
@@ -480,8 +480,8 @@ class TestMiseWhich:
         """
         import subprocess
 
-        from kiro_crew.acp import client as client_mod
-        from kiro_crew.acp.client import _mise_which
+        from aj_crew.acp import client as client_mod
+        from aj_crew.acp.client import _mise_which
 
         script = tmp_path / "José" / "node"
         script.parent.mkdir()
@@ -504,23 +504,23 @@ class TestMiseWhich:
 
 
 class TestResolveKiroBinEnvOverride:
-    """_resolve_kiro_bin honors the KIROCREW_KIRO_BIN override for environments
+    """_resolve_kiro_bin honors the AJCREW_KIRO_BIN override for environments
     (e.g. AgentSpaces/DevSpaces) where the toolbox shim is broken."""
 
     def test_env_override_used_when_valid(self, tmp_path):
-        from kiro_crew.acp.client import _resolve_kiro_bin
-        from kiro_crew.kiro_prerequisite import TrustedAcpExecutableSnapshot
+        from aj_crew.acp.client import _resolve_kiro_bin
+        from aj_crew.kiro_prerequisite import TrustedAcpExecutableSnapshot
 
         fake = tmp_path / "kiro-cli"
         fake.write_text("#!/bin/sh\n")
         fake.chmod(0o755)
         with (
             patch(
-                "kiro_crew.acp.client.resolve_kiro_cli",
+                "aj_crew.acp.client.resolve_kiro_cli",
                 return_value=str(fake),
             ),
             patch(
-                "kiro_crew.kiro_prerequisite.snapshot_trusted_acp_executable",
+                "aj_crew.kiro_prerequisite.snapshot_trusted_acp_executable",
                 return_value=TrustedAcpExecutableSnapshot("/immutable/kiro-cli"),
             ),
         ):
@@ -531,7 +531,7 @@ class TestResolveKiroBinEnvOverride:
         # never substitute a private copy: Kiro CLI 2.15+ exec's a sibling
         # subcommand binary resolved relative to its own path, so a copy into a
         # flat dir breaks every spawn with ENOENT.
-        from kiro_crew.acp import client as client_module
+        from aj_crew.acp import client as client_module
 
         macos_dir = tmp_path / "Kiro CLI.app" / "Contents" / "MacOS"
         macos_dir.mkdir(parents=True)
@@ -548,7 +548,7 @@ class TestResolveKiroBinEnvOverride:
         assert (Path(launch_path).parent / "kiro-cli-chat").exists()
 
     def test_windows_resolver_accepts_runnable_candidate_anywhere(self, tmp_path):
-        from kiro_crew.acp import client as client_module
+        from aj_crew.acp import client as client_module
 
         # Trust is "it runs": a Windows CLI outside Program Files (winget/scoop,
         # a venv Scripts dir) resolves for ACP launch rather than being rejected.
@@ -574,9 +574,9 @@ class TestResolveKiroBinEnvOverride:
 
     @pytest.mark.asyncio
     async def test_spawn_launches_self_updated_override(self, tmp_path):
-        from kiro_crew import sandbox as sandbox_module
-        from kiro_crew.acp import client as client_module
-        from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
+        from aj_crew import sandbox as sandbox_module
+        from aj_crew.acp import client as client_module
+        from aj_crew.kiro_prerequisite import KiroPrerequisiteService
 
         fake = tmp_path / "kiro-cli"
         fake.write_bytes(b"#!/bin/sh\n# original\n")
@@ -584,9 +584,9 @@ class TestResolveKiroBinEnvOverride:
         mock_exec = AsyncMock()
         mock_exec.return_value.pid = UNALLOCATABLE_PID
         with (
-            patch.dict("os.environ", {"KIROCREW_KIRO_BIN": str(fake)}),
-            patch("kiro_crew.session._track_pid"),
-            patch("kiro_crew.session._track_session_pid"),
+            patch.dict("os.environ", {"AJCREW_KIRO_BIN": str(fake)}),
+            patch("aj_crew.session._track_pid"),
+            patch("aj_crew.session._track_session_pid"),
             patch.object(client_module, "_get_child_pids", return_value=[]),
             # This test asserts WHICH bytes get launched, not that the spawn is
             # sandboxed (covered by test_sandbox_*.py). A CI runner with
@@ -627,7 +627,7 @@ class TestResolveKiroBinEnvOverride:
 
     @pytest.mark.asyncio
     async def test_spawn_passes_installed_path_through_exact_wrappers(self, tmp_path):
-        from kiro_crew.acp import client as client_module
+        from aj_crew.acp import client as client_module
 
         fake = tmp_path / "kiro-cli"
         fake.write_bytes(b"#!/bin/sh\n")
@@ -729,7 +729,7 @@ class TestResolveKiroBinEnvOverride:
         # create_subprocess_limited(chdir_fd=...) -> a pass_fds holding exactly
         # that descriptor. Spy-and-delegate rather than stub, so the fd compared
         # against pass_fds is the one the real binding opened.
-        from kiro_crew.acp import client as client_module
+        from aj_crew.acp import client as client_module
 
         fake = tmp_path / "kiro-cli"
         fake.write_bytes(b"#!/bin/sh\n")
@@ -774,28 +774,28 @@ class TestResolveKiroBinEnvOverride:
     def test_env_override_ignored_when_missing_file(self, tmp_path):
         # A configured-but-nonexistent path must not be returned; resolution
         # falls through to the normal candidates / PATH lookup.
-        from kiro_crew.acp.client import _resolve_kiro_bin
+        from aj_crew.acp.client import _resolve_kiro_bin
 
         missing = str(tmp_path / "does-not-exist")
         with (
-            patch.dict("os.environ", {"KIROCREW_KIRO_BIN": missing}),
+            patch.dict("os.environ", {"AJCREW_KIRO_BIN": missing}),
             patch(
-                "kiro_crew.acp.client.resolve_kiro_cli",
+                "aj_crew.acp.client.resolve_kiro_cli",
                 return_value=None,
             ),
         ):
             assert _resolve_kiro_bin() is None
 
     def test_env_override_ignored_when_not_executable(self, tmp_path):
-        from kiro_crew.acp.client import _resolve_kiro_bin
+        from aj_crew.acp.client import _resolve_kiro_bin
 
         nonexec = tmp_path / "kiro-cli"
         nonexec.write_text("#!/bin/sh\n")
         nonexec.chmod(0o644)  # not executable
         with (
-            patch.dict("os.environ", {"KIROCREW_KIRO_BIN": str(nonexec)}),
+            patch.dict("os.environ", {"AJCREW_KIRO_BIN": str(nonexec)}),
             patch(
-                "kiro_crew.acp.client.resolve_kiro_cli",
+                "aj_crew.acp.client.resolve_kiro_cli",
                 return_value=None,
             ),
         ):
@@ -804,13 +804,13 @@ class TestResolveKiroBinEnvOverride:
     def test_no_env_falls_through(self):
         # With no override set, resolution uses the normal candidate/PATH path
         # and never returns the override sentinel.
-        from kiro_crew.acp.client import _resolve_kiro_bin
+        from aj_crew.acp.client import _resolve_kiro_bin
 
-        env = {k: v for k, v in os.environ.items() if k != "KIROCREW_KIRO_BIN"}
+        env = {k: v for k, v in os.environ.items() if k != "AJCREW_KIRO_BIN"}
         with (
             patch.dict("os.environ", env, clear=True),
             patch(
-                "kiro_crew.acp.client.resolve_kiro_cli",
+                "aj_crew.acp.client.resolve_kiro_cli",
                 return_value=None,
             ),
         ):
@@ -832,7 +832,7 @@ class TestMiseNodeInstallsDir:
         _floor_monkeypatch.delenv("XDG_DATA_HOME", raising=False)
 
     def test_default_layout_is_unchanged(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         monkeypatch.setattr(Path, "home", staticmethod(lambda: tmp_path))
         assert (
@@ -841,7 +841,7 @@ class TestMiseNodeInstallsDir:
         )
 
     def test_mise_data_dir_env_is_honoured(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         monkeypatch.setenv("MISE_DATA_DIR", str(tmp_path / "custom-mise"))
         assert (
@@ -849,7 +849,7 @@ class TestMiseNodeInstallsDir:
         )
 
     def test_xdg_data_home_is_honoured(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "xdg"))
         assert (
@@ -858,7 +858,7 @@ class TestMiseNodeInstallsDir:
 
     @_POSIX_EXEC_PATHS_ONLY
     def test_resolve_node_for_script_under_custom_mise_data_dir(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         monkeypatch.setenv("MISE_DATA_DIR", str(tmp_path / "custom-mise"))
         version_dir = tmp_path / "custom-mise" / "installs" / "node" / "22.1.0"
@@ -874,7 +874,7 @@ class TestMiseNodeInstallsDir:
 
     @_POSIX_EXEC_PATHS_ONLY
     def test_resolve_node_for_script_outside_mise_returns_none(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         monkeypatch.setenv("MISE_DATA_DIR", str(tmp_path / "custom-mise"))
         script = tmp_path / "elsewhere" / "cli.js"

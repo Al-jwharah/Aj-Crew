@@ -28,8 +28,8 @@ import types
 
 import pytest
 
-import kiro_crew.sandbox as sb
-from kiro_crew.testing.clock import ManualClock
+import aj_crew.sandbox as sb
+from aj_crew.testing.clock import ManualClock
 
 # This file replaces ctypes.CDLL, find_library or a cached libc handle for a test,
 # so the shared macOS handle caches are put back after each one (see conftest.py).
@@ -57,8 +57,8 @@ def _become_child(monkeypatch, child_env):
     """Install *child_env* as this process's env and seed state as import does."""
     for name in (
         sb._INHERITED_USERNS_FAILURE_ENV,
-        sb.KIROCREW_SPAWNED_ENV,
-        sb.KIROCREW_SANDBOX_TOOL_ENV,
+        sb.AJCREW_SPAWNED_ENV,
+        sb.AJCREW_SANDBOX_TOOL_ENV,
     ):
         monkeypatch.delenv(name, raising=False)
     for name, value in child_env.items():
@@ -80,13 +80,13 @@ def clean_backend(monkeypatch):
     these tests assert on never raises. Point the settings path at a
     non-existent file so delegation is off by default.
 
-    Clears ``KIROCREW_SANDBOX_ACTIVE`` to prevent the "already inside sandbox"
+    Clears ``AJCREW_SANDBOX_ACTIVE`` to prevent the "already inside sandbox"
     passthrough from short-circuiting tests on sandboxed hosts.
     """
-    monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+    monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
     monkeypatch.delenv(sb._INHERITED_USERNS_FAILURE_ENV, raising=False)
     monkeypatch.setattr(
-        sb, "_KIRO_INTERNAL_SETTINGS_PATH", "/nonexistent/kirocrew-test/amazon-internal.json"
+        sb, "_KIRO_INTERNAL_SETTINGS_PATH", "/nonexistent/ajcrew-test/amazon-internal.json"
     )
     _join_warm_thread()
     sb.reset_backend()
@@ -175,7 +175,7 @@ def test_inherited_permanent_failure_skips_probe_and_warning(monkeypatch, caplog
     child_env = _sandbox_child_env(
         monkeypatch, {sb._INHERITED_USERNS_FAILURE_ENV: '["forged","forged"]'}
     )
-    assert "KIROCREW_SANDBOX_ACTIVE" not in child_env
+    assert "AJCREW_SANDBOX_ACTIVE" not in child_env
 
     _become_child(monkeypatch, child_env)
     monkeypatch.setattr(
@@ -743,7 +743,7 @@ def test_probe_unshare_fast_path_on_loop_when_backend_set(monkeypatch):
 
 
 class TestNoBackendGuidanceNamesTheRightRemedy:
-    """Which remedy is named depends on HOW Kiro Crew was launched."""
+    """Which remedy is named depends on HOW Aj Crew was launched."""
 
     @staticmethod
     def _apparmor_host(monkeypatch):
@@ -752,12 +752,12 @@ class TestNoBackendGuidanceNamesTheRightRemedy:
 
     def test_appimage_launch_names_the_attach_command_with_the_path(self, monkeypatch):
         self._apparmor_host(monkeypatch)
-        monkeypatch.setenv("APPIMAGE", "/home/user/Apps/kirocrew.AppImage")
+        monkeypatch.setenv("APPIMAGE", "/home/user/Apps/ajcrew.AppImage")
 
         msg = sb._no_backend_guidance()
 
-        assert "kirocrew sandbox install-profile" in msg
-        assert "/home/user/Apps/kirocrew.AppImage" in msg
+        assert "ajcrew sandbox install-profile" in msg
+        assert "/home/user/Apps/ajcrew.AppImage" in msg
         assert "needs sudo" in msg, "must say why the app cannot do it"
 
     def test_non_appimage_launch_points_at_the_service(self, monkeypatch):
@@ -767,20 +767,20 @@ class TestNoBackendGuidanceNamesTheRightRemedy:
 
         msg = sb._no_backend_guidance()
 
-        assert "kirocrew service install" in msg
+        assert "ajcrew service install" in msg
         assert "sandbox install-profile" not in msg
 
     def test_never_advises_disabling_the_kernel_wide_protection(self, monkeypatch):
         """Setting the sysctl to 0 trades a host-wide protection for one app."""
         self._apparmor_host(monkeypatch)
-        monkeypatch.setenv("APPIMAGE", "/home/user/Apps/kirocrew.AppImage")
+        monkeypatch.setenv("APPIMAGE", "/home/user/Apps/ajcrew.AppImage")
 
         msg = sb._no_backend_guidance()
 
         assert "Do NOT set the sysctl to 0" in msg
         assert "=0" not in msg.replace("apparmor_restrict_unprivileged_userns=1", "")
 
-    @pytest.mark.parametrize("appimage", ["/home/user/Apps/kirocrew.AppImage", None])
+    @pytest.mark.parametrize("appimage", ["/home/user/Apps/ajcrew.AppImage", None])
     def test_still_names_the_opt_out_but_only_after_the_real_fix(
         self, monkeypatch, appimage
     ):
@@ -812,11 +812,11 @@ class TestNoBackendGuidanceNamesTheRightRemedy:
     @pytest.mark.parametrize(
         "hostile",
         [
-            "/home/user/KiroCrew-$(touch PWNED).AppImage",
+            "/home/user/AjCrew-$(touch PWNED).AppImage",
             "/home/user/`id`.AppImage",
             "/home/user/a;rm -rf ~/b.AppImage",
-            "/home/user/Bob's Apps/kirocrew.AppImage",
-            "/home/user/a b/kirocrew.AppImage",
+            "/home/user/Bob's Apps/ajcrew.AppImage",
+            "/home/user/a b/ajcrew.AppImage",
         ],
     )
     def test_the_path_is_shell_quoted_for_safe_pasting(self, monkeypatch, hostile):
@@ -847,20 +847,20 @@ class TestNoBackendGuidanceNamesTheRightRemedy:
         """The AppImage mechanism's no-backend guidance is self-contained.
 
         The AppImage is documented as needing "no Python, pip, npm, or Node", so
-        this persona has no `kirocrew` on PATH — the CLI lives inside the bundle.
+        this persona has no `ajcrew` on PATH — the CLI lives inside the bundle.
         Naming the bare command would hand exactly the affected user a
         `command not found` and leave them with only the opt-out.
         """
         self._apparmor_host(monkeypatch)
-        monkeypatch.setenv("APPIMAGE", "/home/user/Apps/kirocrew.AppImage")
-        bundled = tmp_path / "kirocrew"
+        monkeypatch.setenv("APPIMAGE", "/home/user/Apps/ajcrew.AppImage")
+        bundled = tmp_path / "ajcrew"
         bundled.write_text("#!/bin/sh\n")
         monkeypatch.setattr(sb.sys, "argv", [str(bundled)])
 
         msg = sb._no_backend_guidance()
 
         assert str(bundled) in msg
-        assert "while Kiro Crew is open" in msg, "must say the path is live-only"
+        assert "while Aj Crew is open" in msg, "must say the path is live-only"
 
     def test_which_is_not_trusted_as_evidence_the_user_has_the_cli(
         self, monkeypatch, tmp_path
@@ -873,11 +873,11 @@ class TestNoBackendGuidanceNamesTheRightRemedy:
         path wins regardless.
         """
         self._apparmor_host(monkeypatch)
-        monkeypatch.setenv("APPIMAGE", "/home/user/Apps/kirocrew.AppImage")
-        bundled = tmp_path / "kirocrew"
+        monkeypatch.setenv("APPIMAGE", "/home/user/Apps/ajcrew.AppImage")
+        bundled = tmp_path / "ajcrew"
         bundled.write_text("#!/bin/sh\n")
         monkeypatch.setattr(sb.sys, "argv", [str(bundled)])
-        monkeypatch.setattr(sb.shutil, "which", lambda _n: "/usr/local/bin/kirocrew")
+        monkeypatch.setattr(sb.shutil, "which", lambda _n: "/usr/local/bin/ajcrew")
 
         msg = sb._no_backend_guidance()
 
@@ -889,13 +889,13 @@ class TestNoBackendGuidanceNamesTheRightRemedy:
     ):
         """Better a short command than a confidently wrong absolute path."""
         self._apparmor_host(monkeypatch)
-        monkeypatch.setenv("APPIMAGE", "/home/user/Apps/kirocrew.AppImage")
+        monkeypatch.setenv("APPIMAGE", "/home/user/Apps/ajcrew.AppImage")
         monkeypatch.setattr(sb.sys, "argv", argv)
 
         msg = sb._no_backend_guidance()
 
-        assert "kirocrew sandbox install-profile" in msg
-        assert "while Kiro Crew is open" not in msg
+        assert "ajcrew sandbox install-profile" in msg
+        assert "while Aj Crew is open" not in msg
 
     def test_an_unaffected_host_keeps_the_original_text(self, monkeypatch):
         """macOS, Debian, and a relaxed sysctl must be untouched by this change."""

@@ -13,10 +13,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew import mcp_core
-from kiro_crew.constants import LEAKED_TOOL_CALL_NOTE, NO_TOOL_CALLS_NOTE
-from kiro_crew.mcp_core import _call_tool_inner
-from kiro_crew.mcp_shared import DeferredTool
+from aj_crew import mcp_core
+from aj_crew.constants import LEAKED_TOOL_CALL_NOTE, NO_TOOL_CALLS_NOTE
+from aj_crew.mcp_core import _call_tool_inner
+from aj_crew.mcp_shared import DeferredTool
 
 
 def _call(tool: str, args: dict[str, Any], payload: dict[str, Any]) -> str:

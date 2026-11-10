@@ -30,7 +30,7 @@ import json
 import subprocess
 from collections.abc import Sequence
 
-from kiro_crew.monitoring.github_pull_request import (
+from aj_crew.monitoring.github_pull_request import (
     GitHubPullRequestProvider,
     parse_github_pull_request_target,
 )
@@ -40,7 +40,7 @@ HEAD = "0123456789abcdef0123456789abcdef01234567"
 PREVIOUS_HEAD = "fedcba9876543210fedcba9876543210fedcba98"
 
 #: sha256 over the canonical probe output of every matrix row. Captured on
-#: kirocrew/main at 53987e756 -- before the verdict-payload change -- and
+#: ajcrew/main at 53987e756 -- before the verdict-payload change -- and
 #: unchanged by it.
 GOLDEN_DIGEST = "2ccba80c98aaf46ec5de2f6180664b0f063fe28c1f3502083a270d1c0e2ef7af"
 

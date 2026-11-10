@@ -21,8 +21,8 @@ import pytest
 from mcp_merge_helpers import bundled_defaults as _bundled_defaults
 from mcp_merge_helpers import run_install_mcp_merge as _run_install_mcp_merge
 
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
-from kiro_crew.mcp_provenance import DERIVED_KEY
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.mcp_provenance import DERIVED_KEY
 
 
 @pytest.fixture(autouse=True)
@@ -34,7 +34,7 @@ def _pinned_kiro_cli_version(monkeypatch):
     ``test_agent.py`` does.
     """
     monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version",
+        "aj_crew.kiro_cli.installed_kiro_cli_version",
         lambda: SPEC_PERMISSIONS_MIN_VERSION,
     )
 
@@ -48,10 +48,10 @@ def _emitted(tmp_path: Path, cfg_dir: Path, kiro_servers: dict, **kw) -> dict:
 def _make_agent_only(tmp_path: Path, name: str, command: str) -> None:
     """Turn an emitted entry into an agent-only one: bare command, no scope entry.
 
-    This is the shape ``kiro-cli mcp add --agent kirocrew`` and a hand-edit both
+    This is the shape ``kiro-cli mcp add --agent ajcrew`` and a hand-edit both
     produce -- a server whose only persisted home is the generated spec.
     """
-    spec_path = tmp_path / "kiro_agents" / "kirocrew.json"
+    spec_path = tmp_path / "kiro_agents" / "ajcrew.json"
     cfg = json.loads(spec_path.read_text())
     cfg["mcpServers"][name] = {"command": command}
     spec_path.write_text(json.dumps(cfg))
@@ -314,7 +314,7 @@ class TestUserEditsAreNotOverwritten:
         _make_agent_only(tmp_path, "s", "srv")
         _emitted(tmp_path, cfg_dir, {}, which_side_effect=which)
 
-        spec_path = tmp_path / "kiro_agents" / "kirocrew.json"
+        spec_path = tmp_path / "kiro_agents" / "ajcrew.json"
         cfg = json.loads(spec_path.read_text())
         cfg["mcpServers"]["s"]["command"] = str(chosen)
         spec_path.write_text(json.dumps(cfg))
@@ -337,7 +337,7 @@ class TestTheRecordIsNotPartOfSpecIdentity:
     """
 
     def test_the_record_is_excluded_from_the_dedup_comparison(self) -> None:
-        from kiro_crew.agent import _norm_mcp_spec
+        from aj_crew.agent import _norm_mcp_spec
 
         plain = {"command": "/abs/srv", "args": ["--x"]}
         recorded = dict(plain)
@@ -346,7 +346,7 @@ class TestTheRecordIsNotPartOfSpecIdentity:
 
     def test_a_real_difference_still_differs(self) -> None:
         """The exclusion must not flatten specs that genuinely disagree."""
-        from kiro_crew.agent import _norm_mcp_spec
+        from aj_crew.agent import _norm_mcp_spec
 
         a = {"command": "/abs/one", DERIVED_KEY: {"from": "srv", "emitted": "/abs/one"}}
         b = {"command": "/abs/two"}

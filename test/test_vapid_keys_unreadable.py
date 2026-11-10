@@ -16,12 +16,12 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.notifications import vapid_keys
+from aj_crew.notifications import vapid_keys
 
 
 @pytest.fixture
 def key_file(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
-    monkeypatch.setattr("kiro_crew.notifications.vapid_keys.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.vapid_keys.config_dir", lambda: tmp_path)
     vapid_keys.reset_cache_for_tests()
     vapid_keys.public_key_b64url()  # first use writes the keypair
     vapid_keys.reset_cache_for_tests()

@@ -15,7 +15,7 @@ import os
 
 import pytest
 
-from kiro_crew.appearance_packs import store as ap
+from aj_crew.appearance_packs import store as ap
 
 
 def _manifest(pack_id: str) -> dict:

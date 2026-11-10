@@ -31,7 +31,7 @@ export function errorCode(error: unknown): string {
   return ''
 }
 
-/** Kiro Crew has no browse transport into a Kiro cloud sandbox. */
+/** Aj Crew has no browse transport into a Kiro cloud sandbox. */
 export function isCloudSandbox(error: unknown): boolean {
   return errorCode(error) === 'cloud_sandbox'
 }

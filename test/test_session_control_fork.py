@@ -24,15 +24,15 @@ from unittest.mock import MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import chat_fork, create_rate_limit
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.handlers import session_control as handlers_sc
-from kiro_crew.mcp_dashboard import SESSION_CONTROL_TOOLS, TABLE
-from kiro_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
-from kiro_crew.validation import SESSION_FORK_SCHEMA, ValidationError, validate_tool_args
+from aj_crew.dashboard import chat_fork, create_rate_limit
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.handlers import session_control as handlers_sc
+from aj_crew.mcp_dashboard import SESSION_CONTROL_TOOLS, TABLE
+from aj_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew.validation import SESSION_FORK_SCHEMA, ValidationError, validate_tool_args
 
 
 @pytest.fixture(autouse=True)
@@ -661,7 +661,7 @@ def test_the_human_fork_route_still_reports_its_full_body(tmp_path, monkeypatch)
     from aiohttp.test_utils import TestClient, TestServer
     from chat_test_helpers import _make_app
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     _seed(state, "forkable", turns=1)
 
@@ -693,7 +693,7 @@ def test_only_the_human_fork_opts_into_the_session_count(tmp_path, monkeypatch):
     literal at the one call site the two paths now share."""
     increments: list[int] = []
     monkeypatch.setattr(
-        "kiro_crew.dashboard.state.increment_user_session_count_off_loop",
+        "aj_crew.dashboard.state.increment_user_session_count_off_loop",
         lambda: increments.append(1),
     )
     state = _make_state(tmp_path)
@@ -760,7 +760,7 @@ class TestTheRoute:
         """The create route once shipped dead for exactly this omission."""
         from pathlib import Path
 
-        from kiro_crew.dashboard import server as server_mod
+        from aj_crew.dashboard import server as server_mod
 
         source = open(server_mod.__file__, encoding="utf-8").read()
         # The route table lives in a server_runtime owner; the strict set stays here.

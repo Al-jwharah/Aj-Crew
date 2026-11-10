@@ -46,7 +46,7 @@ const slots = [{
   running: false,
   last_message: 'Opened the Changes panel on the conflicting pull request…',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   modified: Math.floor(Date.now() / 1000),
   source_links: [
@@ -81,7 +81,7 @@ const source = {
   headBranch: 'fix/pr-panel-selected-status-merge',
   baseBranch: 'main',
   headSha: 'abc1234',
-  author: 'kirocrew',
+  author: 'ajcrew',
   additions: 46,
   deletions: 14,
   changedFiles: 2,
@@ -89,7 +89,7 @@ const source = {
   mergeStateStatus: 'dirty',
   commits: [{
     sha: 'abc1234', message: 'fix(dashboard): merge the selected status field by field',
-    author: 'kirocrew', committedAt: new Date().toISOString(), url: PR_URL,
+    author: 'ajcrew', committedAt: new Date().toISOString(), url: PR_URL,
   }],
   checks: [
     { name: 'Frontend Tests', workflow: 'CI', status: 'COMPLETED', conclusion: 'SUCCESS', bucket: 'passed', url: `${PR_URL}/checks`, startedAt: '', completedAt: '' },

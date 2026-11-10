@@ -39,17 +39,17 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.artifacts import ArtifactStore
-from kiro_crew.knowledge import artifact_ingest
-from kiro_crew.knowledge.artifact_ingest import (
+from aj_crew.artifacts import ArtifactStore
+from aj_crew.knowledge import artifact_ingest
+from aj_crew.knowledge.artifact_ingest import (
     ensure_artifact_source,
     ingest_artifact,
 )
-from kiro_crew.knowledge.ingestion import IngestionPipeline
-from kiro_crew.knowledge.readers import FileReader
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge.ingestion import IngestionPipeline
+from aj_crew.knowledge.readers import FileReader
+from aj_crew.knowledge.store import KnowledgeStore
 
-_KNOWLEDGE_SRC = pathlib.Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "knowledge"
+_KNOWLEDGE_SRC = pathlib.Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "knowledge"
 
 # The banned snapshot's query text. The one occurrence pinned below is the
 # _old_item_ids resolver: same text, different meaning (the PRIOR group this

@@ -1,7 +1,7 @@
 ---
-title: Ship the team lead as a default agent built like kirocrew-research, not as a crewmate template
+title: Ship the team lead as a default agent built like ajcrew-research, not as a crewmate template
 status: in-progress
-author: Raymond Chen, with kirocrew-worker
+author: Raymond Chen, with ajcrew-worker
 created: 2026-10-10
 last-audited: 2026-10-10
 audited-at: 7612507e11
@@ -30,16 +30,16 @@ patrols a session for every other one.
 
 **The dispatch surface is mounted, not inherited.** Running a goal as a team needs
 `session_create`, `chat_folder_*` and `work_ledger_*`. Those live on
-`kirocrew-dashboard` and `kirocrew-work`, which are `opt_in` servers that
+`ajcrew-dashboard` and `ajcrew-work`, which are `opt_in` servers that
 `build_agent_config()` skips. A spec that only names them in `tools` mounts
 nothing: kiro-cli reports the server as declared but not configured. So the
 installer builds both entries with `managed_mcp._managed_opt_in_entry`, the call
 the dashboard-manager and worker installers already make. That helper carries the
 two fields that fail silently when dropped: `"type": "registry"` and the
-`KIROCREW_HOME` pin. The verbs auto-approved on them are the goal conductor's own
+`AJCREW_HOME` pin. The verbs auto-approved on them are the goal conductor's own
 tuples, `_CONDUCTOR_DASHBOARD_GRANTS` and `_LEDGER_CONDUCTOR_WORK_GRANTS`, and the
 whole `allowedTools` list goes back through the governance ceiling before it is
-written. `kirocrew-panel` is not mounted.
+written. `ajcrew-panel` is not mounted.
 
 ## Approach
 
@@ -49,7 +49,7 @@ from `build_agent_config()`, swaps in a name, a description and a prompt, drops
 the platform guide server, and writes the file. The install sequence calls it on
 every boot and the filename sits in `OWNED_KIRO_AGENT_FILES`.
 
-`kirocrew-team-lead` is the same five things: one installer beside research, one
+`ajcrew-team-lead` is the same five things: one installer beside research, one
 call in the same sequence, one filename in the owned list, one prompt constant
 beside `_RESEARCH_SYSTEM_PROMPT`, and the two facade entries every moved name in
 `agent.py` carries.
@@ -63,8 +63,8 @@ grant. No `autoApprove` map is written.
 
 ### Overwritten on every boot, and that is the whole design
 
-The spec is rewritten each boot, exactly as `kirocrew-research` and
-`kirocrew-knowledge` are. **An operator who wants a lead with different rules
+The spec is rewritten each boot, exactly as `ajcrew-research` and
+`ajcrew-knowledge` are. **An operator who wants a lead with different rules
 copies it to a different agent name.** A spec this installer wrote on an earlier
 boot is replaced in place on the next one.
 
@@ -78,7 +78,7 @@ whether the file is ours: it is simply re-derived.
 
 This stem is newly reserved, so a first boot can overwrite a file an operator
 happened to author under this name. That is the same accepted behaviour
-`kirocrew-research` and `kirocrew-knowledge` already carry, and the reason the
+`ajcrew-research` and `ajcrew-knowledge` already carry, and the reason the
 one-line "copy it to another name" contract exists: a customized lead belongs
 under a name the install sequence does not own.
 
@@ -105,7 +105,7 @@ that drifts from the ceiling the moment either changes.
    and how to run the team. `goal-conductor` stays the dispatch and patrol
    procedure.
 3. This document.
-4. Tests mirroring the ones `kirocrew-research` already has.
+4. Tests mirroring the ones `ajcrew-research` already has.
 
 ## Backwards compatibility
 
@@ -114,8 +114,8 @@ and one filename joins `OWNED_KIRO_AGENT_FILES` so the boot-time self-heal sweep
 covers it. No field, key, type, validator or tool signature changes.
 
 One behaviour is worth stating plainly because it is a contract and not an
-accident: a spec this installer wrote at `kirocrew-team-lead.json` is overwritten
-on every boot. That name is a shipped name, the same as `kirocrew-research.json`,
+accident: a spec this installer wrote at `ajcrew-team-lead.json` is overwritten
+on every boot. That name is a shipped name, the same as `ajcrew-research.json`,
 and a customized copy belongs under another name.
 
 ## Open questions

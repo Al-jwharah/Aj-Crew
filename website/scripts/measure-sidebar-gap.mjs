@@ -35,7 +35,7 @@ const HOUR = 3600_000
 const DAY = 24 * HOUR
 
 const folders = [
-  { id: 'f-autofix', name: 'kirocrew-github-autofix', parent_id: '', collapsed: process.env.EXPAND_FOLDER !== '1', color: '' },
+  { id: 'f-autofix', name: 'ajcrew-github-autofix', parent_id: '', collapsed: process.env.EXPAND_FOLDER !== '1', color: '' },
 ]
 
 /** 152 sessions inside the collapsed folder — they must not render any rows.
@@ -49,7 +49,7 @@ const foldered = process.env.EMPTY_FOLDER === '1' ? [] : Array.from({ length: 15
   title: `autofix session ${i + 1}`,
   messages: 6,
   running: false,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   created: new Date(NOW - 30 * DAY).toISOString(),
   last_ts: new Date(NOW - i * HOUR).toISOString(),
   folder_id: 'f-autofix',
@@ -73,7 +73,7 @@ const dormant = Array.from({ length: 6 }, (_, i) => ({
   title: `dormant session ${i + 1}`,
   messages: 3,
   running: false,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   created: new Date(NOW - 20 * DAY).toISOString(),
   last_ts: new Date(NOW - (5 + i) * DAY).toISOString(),
   folder_id: '',

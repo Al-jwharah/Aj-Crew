@@ -16,9 +16,9 @@ from pathlib import Path
 import pytest
 
 from conftest import requires_symlinks
-from kiro_crew.acp import liveness
-from kiro_crew.acp._dispatch import _dumps_degraded, _redact
-from kiro_crew.acp.liveness import (
+from aj_crew.acp import liveness
+from aj_crew.acp._dispatch import _dumps_degraded, _redact
+from aj_crew.acp.liveness import (
     CHILD_EXIT_GRACE_SECS,
     EVIDENCE_ESTABLISHED_FLAT,
     EVIDENCE_SHARED_TREE,
@@ -364,7 +364,7 @@ def test_no_tick_rate_fails_open_instead_of_claiming_absence(tmp_path, monkeypat
     clock = _Clock()
     fake = FakeProc(tmp_path / "proc")
     _old_pid(fake, 100, children=[201], cmdline="kiro-cli acp")
-    _old_pid(fake, 201, cmdline="python -m kiro_crew.mcp_gateway.stub --server github")
+    _old_pid(fake, 201, cmdline="python -m aj_crew.mcp_gateway.stub --server github")
     monkeypatch.setattr(liveness, "process_start_boot_secs", lambda _ticks: None)
     oracle = _oracle(fake, clock)
     tool = _shell_tool("ls /some/dir | grep needle | wc -l", clock)
@@ -392,8 +392,8 @@ def test_absent_shell_child_is_tagged_when_every_descendant_predates_dispatch(tm
     clock = _Clock()
     fake = FakeProc(tmp_path / "proc")
     _old_pid(fake, 100, children=[201, 202], cmdline="kiro-cli acp")
-    _old_pid(fake, 201, cmdline="python -m kiro_crew.mcp_gateway.stub --server github")
-    _old_pid(fake, 202, cmdline="python -m kiro_crew.mcp_gateway.stub --server slack")
+    _old_pid(fake, 201, cmdline="python -m aj_crew.mcp_gateway.stub --server github")
+    _old_pid(fake, 202, cmdline="python -m aj_crew.mcp_gateway.stub --server slack")
     oracle = _oracle(fake, clock)
     tool = _shell_tool("ls /some/dir | grep needle | wc -l", clock)
     clock.advance(61.0)  # first look lands after the tool-idle threshold
@@ -414,7 +414,7 @@ def test_unmatched_but_young_descendant_keeps_the_full_window(tmp_path):
     clock = _Clock()
     fake = FakeProc(tmp_path / "proc")
     _old_pid(fake, 100, children=[201, 300], cmdline="kiro-cli acp")
-    _old_pid(fake, 201, cmdline="python -m kiro_crew.mcp_gateway.stub --server github")
+    _old_pid(fake, 201, cmdline="python -m aj_crew.mcp_gateway.stub --server github")
     fake.add_pid(300, cmdline="/opt/vendor/bin/opaque-worker --serve")  # young
     oracle = _oracle(fake, clock)
     tool = _shell_tool("[REDACTED-CREDENTIAL] x", clock)
@@ -470,7 +470,7 @@ def test_every_production_dispatch_answers_both_attribution_fields():
     """
     import ast
 
-    import kiro_crew.acp.liveness as liveness_mod
+    import aj_crew.acp.liveness as liveness_mod
 
     required = {"dispatch_boot_ts", "dispatch_parked_secs"}
     package_root = Path(liveness_mod.__file__).resolve().parents[1]
@@ -498,7 +498,7 @@ def test_every_production_dispatch_wires_the_trusted_wait_identity():
     ``ToolCallState`` construction must answer both."""
     import ast
 
-    import kiro_crew.acp.liveness as liveness_mod
+    import aj_crew.acp.liveness as liveness_mod
 
     required = {"mcp_server_name", "tool_name"}
     package_root = Path(liveness_mod.__file__).resolve().parents[1]
@@ -532,8 +532,8 @@ def test_main_dispatch_names_the_server_only_from_a_trusted_identity(
     import time
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.acp import session_handle as sh
-    from kiro_crew.acp.types import (
+    from aj_crew.acp import session_handle as sh
+    from aj_crew.acp.types import (
         EVENT_TOOL_CALL,
         METHOD_SESSION_UPDATE,
         AcpEvent,
@@ -581,7 +581,7 @@ def test_missing_boot_stamp_keeps_the_full_window(tmp_path):
     clock = _Clock()
     fake = FakeProc(tmp_path / "proc")
     _old_pid(fake, 100, children=[201], cmdline="kiro-cli acp")
-    _old_pid(fake, 201, cmdline="python -m kiro_crew.mcp_gateway.stub --server github")
+    _old_pid(fake, 201, cmdline="python -m aj_crew.mcp_gateway.stub --server github")
     oracle = _oracle(fake, clock)
     tool = ToolCallState(
         title="bash",
@@ -609,7 +609,7 @@ def test_a_suspend_after_dispatch_does_not_disown_a_live_child(tmp_path):
     clock = _Clock()  # monotonic: unmoved by the suspend
     fake = FakeProc(tmp_path / "proc")
     _old_pid(fake, 100, children=[201, 300], cmdline="kiro-cli acp")
-    _old_pid(fake, 201, cmdline="python -m kiro_crew.mcp_gateway.stub --server github")
+    _old_pid(fake, 201, cmdline="python -m aj_crew.mcp_gateway.stub --server github")
     fake.add_pid(300, cmdline="bash -c long-build release", starttime=5001.0 * hz)
     (fake.root / "uptime").write_text("5301.00 9000.00\n")  # boot clock after resume
     oracle = _oracle(fake, clock)
@@ -638,7 +638,7 @@ def test_zombie_only_tree_is_absent_not_live(tmp_path):
     clock = _Clock()
     fake = FakeProc(tmp_path / "proc")
     _old_pid(fake, 100, children=[201, 300], cmdline="kiro-cli acp")
-    _old_pid(fake, 201, cmdline="python -m kiro_crew.mcp_gateway.stub --server github")
+    _old_pid(fake, 201, cmdline="python -m aj_crew.mcp_gateway.stub --server github")
     fake.add_pid(300, state="Z", cmdline="bash -c ls /some/dir | grep needle | wc -l")
     oracle = _oracle(fake, clock)
     tool = _shell_tool("ls /some/dir | grep needle | wc -l", clock)
@@ -655,7 +655,7 @@ def test_live_matched_child_still_wins_over_the_absence_test(tmp_path):
     clock = _Clock()
     fake = FakeProc(tmp_path / "proc")
     _old_pid(fake, 100, children=[201, 300], cmdline="kiro-cli acp")
-    _old_pid(fake, 201, cmdline="python -m kiro_crew.mcp_gateway.stub --server github")
+    _old_pid(fake, 201, cmdline="python -m aj_crew.mcp_gateway.stub --server github")
     fake.add_pid(300, cmdline="bash -c long-build release > build.log 2>&1")
     oracle = _oracle(fake, clock)
     tool = _shell_tool("long-build release > build.log 2>&1", clock)
@@ -678,7 +678,7 @@ def test_a_stamp_taken_late_still_owns_its_child(tmp_path):
     clock = _Clock()
     fake = FakeProc(tmp_path / "proc")
     _old_pid(fake, 100, children=[201, 300], cmdline="kiro-cli acp")
-    _old_pid(fake, 201, cmdline="python -m kiro_crew.mcp_gateway.stub --server github")
+    _old_pid(fake, 201, cmdline="python -m aj_crew.mcp_gateway.stub --server github")
     fake.add_pid(300, cmdline="/opt/vendor/bin/opaque-worker", starttime=4900.0 * hz)
     oracle = _oracle(fake, clock)
     tool = ToolCallState(
@@ -706,7 +706,7 @@ def test_matching_but_older_child_vetoes_the_absence_claim(tmp_path):
     clock = _Clock()
     fake = FakeProc(tmp_path / "proc")
     _old_pid(fake, 100, children=[201, 300], cmdline="kiro-cli acp")
-    _old_pid(fake, 201, cmdline="python -m kiro_crew.mcp_gateway.stub --server github")
+    _old_pid(fake, 201, cmdline="python -m aj_crew.mcp_gateway.stub --server github")
     _old_pid(fake, 300, cmdline="bash -c long-build release > build.log 2>&1")
     oracle = _oracle(fake, clock)
     tool = _shell_tool("long-build release > build.log 2>&1", clock)
@@ -827,7 +827,7 @@ def test_wait_tool_working_until_declared_duration(tmp_path):
         dispatch_ts=clock.t,
         is_shell=False,
         tool_name="wait",
-        mcp_server_name="kirocrew-core",
+        mcp_server_name="ajcrew-core",
     )
 
     clock.advance(299.0)
@@ -838,7 +838,7 @@ def test_wait_tool_working_until_declared_duration(tmp_path):
 
 @pytest.mark.parametrize(
     "tool_name",
-    ["wait", "kirocrew-core___wait", "mcp__kirocrew-core__wait"],
+    ["wait", "ajcrew-core___wait", "mcp__ajcrew-core__wait"],
 )
 def test_a_server_qualified_wait_name_selects_the_contract(tmp_path, tool_name):
     """kiro-cli may server-qualify the trusted tool name, so every qualified
@@ -853,7 +853,7 @@ def test_a_server_qualified_wait_name_selects_the_contract(tmp_path, tool_name):
         dispatch_ts=clock.t,
         is_shell=False,
         tool_name=tool_name,
-        mcp_server_name="kirocrew-core",
+        mcp_server_name="ajcrew-core",
     )
     clock.advance(60.0)
     assert oracle.check_tool(100, tool)[0] == VERDICT_WORKING
@@ -866,15 +866,15 @@ def test_a_server_qualified_wait_name_selects_the_contract(tmp_path, tool_name):
         pytest.param("wait", "wait_for_ci", "third-party", id="other-tool-exact-wait-title"),
         pytest.param("wait", "wait", "third-party", id="wait-on-another-server"),
         pytest.param("wait", "wait", "", id="unverified-identity"),
-        pytest.param("wait", "monitor_start", "kirocrew-core", id="other-core-tool"),
-        pytest.param("wait", "do_wait", "kirocrew-core", id="single-underscore-suffix"),
+        pytest.param("wait", "monitor_start", "ajcrew-core", id="other-core-tool"),
+        pytest.param("wait", "do_wait", "ajcrew-core", id="single-underscore-suffix"),
     ],
 )
 def test_the_oracle_wait_contract_is_selected_by_identity_not_title(
     tmp_path, title, tool_name, server
 ):
     """The title is model-authored prose, so a call that is not the trusted
-    kirocrew-core ``wait`` must not read WORKING from a wait-shaped title and a
+    ajcrew-core ``wait`` must not read WORKING from a wait-shaped title and a
     ``seconds`` argument."""
     clock = _Clock()
     fake = FakeProc(tmp_path / "proc")
@@ -1147,7 +1147,7 @@ def _no_procfs_oracle(clock: _Clock, tmp_path) -> LivenessOracle:
 
 def test_model_wait_portable_cpu_delta_is_working(tmp_path, monkeypatch):
     """A CPU delta on a live pid forgives silence where the /proc walk is blind."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     clock = _Clock()
     cpu = {"ns": 5_000_000_000}
@@ -1165,7 +1165,7 @@ def test_model_wait_portable_cpu_delta_is_working(tmp_path, monkeypatch):
 
 def test_model_wait_portable_flat_cpu_stays_unknown(tmp_path, monkeypatch):
     """An idle process is not evidence of work — today's cutoff is preserved."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     clock = _Clock()
     monkeypatch.setattr(platform_compat, "proc_cpu_nanos_for_pid", lambda _pid: 5_000_000_000)
@@ -1184,7 +1184,7 @@ def test_model_wait_portable_movement_needs_a_live_pid(tmp_path, monkeypatch):
     finished-but-lost-frame backend forever (a wedged process is alive too),
     trading a 90s truncation for a full-prompt-timeout hang.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     clock = _Clock()
     cpu = {"ns": 1_000_000_000}
@@ -1200,7 +1200,7 @@ def test_model_wait_portable_movement_needs_a_live_pid(tmp_path, monkeypatch):
 
 def test_model_wait_without_any_portable_counter_is_unknown(tmp_path, monkeypatch):
     """No counter readable anywhere → the pre-fix verdict, unchanged."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     clock = _Clock()
     monkeypatch.setattr(platform_compat, "proc_cpu_nanos_for_pid", lambda _pid: None)
@@ -1211,7 +1211,7 @@ def test_model_wait_without_any_portable_counter_is_unknown(tmp_path, monkeypatc
 
 def test_model_wait_prefers_procfs_when_it_is_readable(tmp_path, monkeypatch):
     """On Linux the portable probe is never consulted — the tree walk answers."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     def _never(_pid):
         raise AssertionError("portable probe consulted while /proc was readable")
@@ -1417,7 +1417,7 @@ def test_mcp_tool_without_a_tree_backend_is_unknown_tagged_platform_limited(tmp_
     clock = _Clock()
     oracle = _no_backend_oracle(tmp_path, clock, monkeypatch)
     tool = ToolCallState(
-        title="kirocrew-core___spawn_run",
+        title="ajcrew-core___spawn_run",
         command='{"task": "x"}',
         dispatch_ts=clock.t,
         dispatch_boot_ts=clock.t,
@@ -1437,12 +1437,12 @@ def test_wait_tool_contract_holds_without_a_tree_backend(tmp_path, monkeypatch):
     clock = _Clock()
     oracle = _no_backend_oracle(tmp_path, clock, monkeypatch)
     tool = ToolCallState(
-        title="kirocrew-core___wait",
+        title="ajcrew-core___wait",
         command='{"seconds": 300}',
         dispatch_ts=clock.t,
         is_shell=False,
         tool_name="wait",
-        mcp_server_name="kirocrew-core",
+        mcp_server_name="ajcrew-core",
     )
     assert oracle.check_tool(4242, tool)[0] == VERDICT_WORKING
 

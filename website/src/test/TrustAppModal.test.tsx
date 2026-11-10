@@ -392,7 +392,7 @@ describe('LibraryPage trust gate', () => {
     )
     // The source badge names the same registry as the box (#20656).
     expect(within(screen.getByRole('dialog')).getByText('community')).toBeTruthy()
-    expect(within(screen.getByRole('dialog')).queryByText('components.appstore.types.kirocrew_registry')).toBeNull()
+    expect(within(screen.getByRole('dialog')).queryByText('components.appstore.types.ajcrew_registry')).toBeNull()
     // Display only: the consent copy beside it is unchanged.
     expect(screen.getByText(`${K}.not_reviewed`)).toBeTruthy()
     expect(screen.getByText(`${K}.revocable`)).toBeTruthy()
@@ -663,7 +663,7 @@ describe('registry install trust gate', () => {
     // The source badge names the same registry as the box, not a first-party
     // fallback label (#20656).
     expect(within(screen.getByRole('dialog')).getByText('community')).toBeTruthy()
-    expect(within(screen.getByRole('dialog')).queryByText('components.appstore.types.kirocrew_registry')).toBeNull()
+    expect(within(screen.getByRole('dialog')).queryByText('components.appstore.types.ajcrew_registry')).toBeNull()
   })
 
   it('names the same registry in the badge and the box on the detail-page enable gate (#20656)', async () => {
@@ -706,7 +706,7 @@ describe('registry install trust gate', () => {
       namedCeiling('DETAIL_ENABLE_GATE_TRUST', 5000),
     )
     expect(dialog.getByText('community')).toBeTruthy()
-    expect(dialog.queryByText('components.appstore.types.kirocrew_registry')).toBeNull()
+    expect(dialog.queryByText('components.appstore.types.ajcrew_registry')).toBeNull()
     expect(dialog.getByRole('button', { name: `${K}.confirm` })).toBeTruthy()
   })
 
@@ -722,7 +722,7 @@ describe('registry install trust gate', () => {
     const dialog = within(screen.getByRole('dialog'))
     // The badge is a third-party registry's id, never the first-party fallback.
     expect(dialog.getByText('partner')).toBeTruthy()
-    expect(dialog.queryByText('components.appstore.types.kirocrew_registry')).toBeNull()
+    expect(dialog.queryByText('components.appstore.types.ajcrew_registry')).toBeNull()
     // The box shows while the tier is unknown, so its absence only means
     // something once the curated list has landed.
     await waitFor(() => expect(listRegistries).toHaveBeenCalled(), namedCeiling('CURATED_GATE_LIST', 5000))
@@ -1269,7 +1269,7 @@ describe('registry install trust gate', () => {
     // the same shape the permanent refusal uses) rather than running on inline
     // after "check the logs"; the agent hand-off still keeps it, looked up by the
     // raw string.
-    const refusal = 'Python apps that require a build step are not supported in Kiro Crew\'s desktop build'
+    const refusal = 'Python apps that require a build step are not supported in Aj Crew\'s desktop build'
     installFromRegistryStream
       .mockResolvedValueOnce(INSTALL_DENIED())
       .mockResolvedValue({ ok: false, name: THIRD_PARTY.name, error: refusal })
@@ -1344,7 +1344,7 @@ describe('retryFailureCode', () => {
 
 describe('registry install trust gate — permanent desktop refusal', () => {
   const REFUSAL =
-    'Python apps that require a build step are not supported in Kiro Crew\'s desktop ' +
+    'Python apps that require a build step are not supported in Aj Crew\'s desktop ' +
     'build: its bundled interpreter is inside the signed application bundle and cannot install packages'
 
   beforeEach(() => {

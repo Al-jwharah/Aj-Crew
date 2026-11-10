@@ -19,7 +19,7 @@ const mockChannel = {
   id: 'ch1',
   topic: 'Test Channel',
   members: {
-    a1: { id: 'a1', role: 'Researcher', agent_name: 'kirocrew', state: 'listening', listen_mode: 'mention', approval_policy: 'writes', session_key: 'k1' },
+    a1: { id: 'a1', role: 'Researcher', agent_name: 'ajcrew', state: 'listening', listen_mode: 'mention', approval_policy: 'writes', session_key: 'k1' },
   },
   messages: [],
 }
@@ -29,7 +29,7 @@ const mockChannel2 = {
   id: 'ch2',
   topic: 'Second Channel',
   members: {
-    b1: { id: 'b1', role: 'Scribe', agent_name: 'kirocrew', state: 'listening', listen_mode: 'mention', approval_policy: 'writes', session_key: 'k2' },
+    b1: { id: 'b1', role: 'Scribe', agent_name: 'ajcrew', state: 'listening', listen_mode: 'mention', approval_policy: 'writes', session_key: 'k2' },
   },
   messages: [],
 }
@@ -65,10 +65,10 @@ describe('ChannelPage — Clear Context', () => {
     }))
   }
 
-  /** Fire one `kirocrew-channel` window event, the page's stand-in for the socket. */
+  /** Fire one `ajcrew-channel` window event, the page's stand-in for the socket. */
   const wsEvent = (type: string, data: unknown) => {
     act(() => {
-      window.dispatchEvent(new CustomEvent('kirocrew-channel', { detail: { type, data } }))
+      window.dispatchEvent(new CustomEvent('ajcrew-channel', { detail: { type, data } }))
     })
   }
 

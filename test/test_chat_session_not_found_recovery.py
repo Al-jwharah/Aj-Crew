@@ -17,14 +17,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.dashboard.chat_runner import (
+from aj_crew.acp.client import AcpError
+from aj_crew.dashboard.chat_runner import (
     SESSION_NOT_FOUND_CANCELLED_TEXT,
     SESSION_NOT_FOUND_GIVE_UP_TEXT,
     SESSION_NOT_FOUND_RETRY_TEXT,
 )
-from kiro_crew.dashboard.recovery_replays import ReplayFamily
-from kiro_crew.llm_helpers import acp_error_is_session_not_found
+from aj_crew.dashboard.recovery_replays import ReplayFamily
+from aj_crew.llm_helpers import acp_error_is_session_not_found
 
 _SNF = ReplayFamily.SESSION_NOT_FOUND
 
@@ -35,7 +35,7 @@ _NOT_FOUND = (
 
 
 def _state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     state.push_slots_update = MagicMock()
@@ -92,8 +92,8 @@ def _assistant(slot):
 
 @pytest.mark.asyncio
 async def test_lost_session_resets_and_retries_once_then_lands(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.chat import _run_chat
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.dashboard.chat import _run_chat
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
     calls: list[str] = []
 
@@ -127,7 +127,7 @@ async def test_lost_session_resets_and_retries_once_then_lands(tmp_path, monkeyp
 
 @pytest.mark.asyncio
 async def test_lost_session_twice_ends_on_a_clear_error_without_looping(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.chat import _run_chat
+    from aj_crew.dashboard.chat import _run_chat
 
     calls: list[str] = []
 
@@ -156,7 +156,7 @@ async def test_lost_session_twice_ends_on_a_clear_error_without_looping(tmp_path
 
 def _credential_dead() -> AcpError:
     """A ``cloud_credential_error`` frame, raised through the real raise path."""
-    from kiro_crew.acp.transport_errors import _raise_acp_error
+    from aj_crew.acp.transport_errors import _raise_acp_error
 
     try:
         _raise_acp_error(
@@ -180,8 +180,8 @@ async def test_broken_credential_helper_ends_on_the_providers_remedy(tmp_path, m
     """A helper that is really broken (expired SSO, revoked role) fails the fresh
     process too. The chat recycles once, worded for credentials, then ends on the
     provider's own instruction -- not on "start a new chat", which fails alike."""
-    from kiro_crew.dashboard.chat import _run_chat
-    from kiro_crew.llm_helpers import CREDENTIAL_RELOAD_RETRY_NOTICE
+    from aj_crew.dashboard.chat import _run_chat
+    from aj_crew.llm_helpers import CREDENTIAL_RELOAD_RETRY_NOTICE
 
     calls: list[str] = []
 
@@ -211,9 +211,9 @@ async def test_broken_credential_helper_ends_on_the_providers_remedy(tmp_path, m
 @pytest.mark.asyncio
 async def test_stale_credentials_recycle_once_then_land(tmp_path, monkeypatch):
     """The healthy-helper case the fix was built for still lands on the replay."""
-    from kiro_crew.dashboard.chat import _run_chat
-    from kiro_crew.llm_helpers import CREDENTIAL_RELOAD_RETRY_NOTICE
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.dashboard.chat import _run_chat
+    from aj_crew.llm_helpers import CREDENTIAL_RELOAD_RETRY_NOTICE
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
     calls: list[str] = []
 
@@ -258,7 +258,7 @@ async def test_stop_during_the_reset_purges_the_replay_before_dispatch(
     """A soft Stop landing while the reset is awaited keeps the queue and snaps
     back to idle; the Stop counter is the only evidence, and it must veto the
     replay so a cancelled request is never re-run."""
-    from kiro_crew.dashboard.chat import _run_chat
+    from aj_crew.dashboard.chat import _run_chat
 
     calls: list[str] = []
 
@@ -277,7 +277,7 @@ async def test_stop_during_the_reset_purges_the_replay_before_dispatch(
         return True
 
     state.sessions.reset = AsyncMock(side_effect=_reset_then_stop)
-    caplog.set_level(logging.INFO, logger="kiro_crew.dashboard.chat_runner")
+    caplog.set_level(logging.INFO, logger="aj_crew.dashboard.chat_runner")
 
     with patch("asyncio.sleep", new_callable=AsyncMock):
         await _run_chat(state, slot, "delete the old branches")
@@ -298,9 +298,9 @@ async def test_stop_during_the_reset_purges_the_replay_before_dispatch(
 async def test_stop_after_dispatch_aborts_the_replay_before_the_provider(tmp_path, monkeypatch):
     """A Stop after dequeue but before the guarded task consumes the replay still
     vetoes it, from the snapshots the drain handed over."""
-    from kiro_crew.dashboard.chat import _run_chat
-    from kiro_crew.dashboard.chat_utils import effective_session_key
-    from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+    from aj_crew.dashboard.chat import _run_chat
+    from aj_crew.dashboard.chat_utils import effective_session_key
+    from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
     provider_calls = 0
 
@@ -344,7 +344,7 @@ async def test_stop_resolved_before_the_error_never_queues_a_replay(tmp_path, mo
     error reaches the handler leaves ``_stopping`` False; only the Stop counter
     moved. The handler must read that counter itself: the replay snapshots are
     taken after the Stop, so the drain-side veto cannot see it either."""
-    from kiro_crew.dashboard.chat import _run_chat
+    from aj_crew.dashboard.chat import _run_chat
 
     calls: list[str] = []
 

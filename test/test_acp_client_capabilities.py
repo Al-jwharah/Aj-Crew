@@ -1,15 +1,15 @@
 """ACP `clientCapabilities` advertisement.
 
-Locks in what KiroCrew declares during the ACP `initialize` handshake, and that
+Locks in what AjCrew declares during the ACP `initialize` handshake, and that
 BOTH transports declare it. Before this, the key was omitted entirely, so the
 agent assumed the all-false default.
 """
 
 from pathlib import Path
 
-from kiro_crew.acp._dispatch import classify_notification
-from kiro_crew.acp.client_turn import _process_message
-from kiro_crew.acp.types import (
+from aj_crew.acp._dispatch import classify_notification
+from aj_crew.acp.client_turn import _process_message
+from aj_crew.acp.types import (
     ACP_CLIENT_CAPABILITIES,
     METHOD_ELICITATION_CREATE,
     METHOD_KAS_MCP_ELICITATION,
@@ -65,11 +65,11 @@ def test_both_acp_transports_send_capabilities() -> None:
     # The standalone transport picks its set per backend, and must send it from
     # the per-backend helper; every harness names its constant directly.
     required = {
-        "src/kiro_crew/acp/client_start.py": (
+        "src/aj_crew/acp/client_start.py": (
             '"clientCapabilities": client_capabilities_for(self.backend)'
         ),
-        "src/kiro_crew/acp/harness/kiro.py": "return ACP_CLIENT_CAPABILITIES\n",
-        "src/kiro_crew/acp/harness/kas.py": "return KAS_CLIENT_CAPABILITIES\n",
+        "src/aj_crew/acp/harness/kiro.py": "return ACP_CLIENT_CAPABILITIES\n",
+        "src/aj_crew/acp/harness/kas.py": "return KAS_CLIENT_CAPABILITIES\n",
     }
     for rel, needle in required.items():
         src = Path(__file__).resolve().parents[1] / rel
@@ -83,7 +83,7 @@ def _runtime_family_text() -> str:
     """runtime.py and its owner modules (runtime_*.py), which hold code that was its own."""
     import sys
 
-    from kiro_crew.acp import runtime
+    from aj_crew.acp import runtime
 
     return "".join(
         Path(sys.modules[name].__file__).read_text(encoding="utf-8")
@@ -113,7 +113,7 @@ def test_both_acp_transports_send_client_info_name() -> None:
     kiro-cli ignores a flat `clientName` (agent/acp/acp_agent.rs), leaving telemetry at
     "(none)". Asserted on source because neither params dict is reachable without a spawn.
     """
-    for rel in ("src/kiro_crew/acp/client.py", "src/kiro_crew/acp/runtime.py"):
+    for rel in ("src/aj_crew/acp/client.py", "src/aj_crew/acp/runtime.py"):
         src = Path(__file__).resolve().parents[1] / rel
         # client.py's owner modules (client_*.py) hold code that was its own.
         paths = [src, *sorted(src.parent.glob("client_*.py"))] if src.name == "client.py" else [src]
@@ -131,10 +131,10 @@ def test_client_version_is_the_package_version() -> None:
     A literal has no bumper, so `acp_client_version` telemetry could not split releases.
     `__version__` tracks both the release lane and a repackager's `BUILD_VERSION` stamp.
     """
-    import kiro_crew
-    from kiro_crew.acp import client
+    import aj_crew
+    from aj_crew.acp import client
 
-    assert client.CLIENT_VERSION == kiro_crew.__version__
+    assert client.CLIENT_VERSION == aj_crew.__version__
 
 
 def test_client_identity_is_declared_once_for_both_transports() -> None:
@@ -143,7 +143,7 @@ def test_client_identity_is_declared_once_for_both_transports() -> None:
     A second pair of literals in `runtime.py` could report a different client. Checked on
     source too: an equal but separate literal passes today and drifts later.
     """
-    from kiro_crew.acp import client, runtime
+    from aj_crew.acp import client, runtime
 
     assert runtime.CLIENT_NAME is client.CLIENT_NAME
     assert runtime.CLIENT_VERSION is client.CLIENT_VERSION

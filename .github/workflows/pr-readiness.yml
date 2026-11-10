@@ -306,7 +306,7 @@ jobs:
     # activity may use it, as for Sensitive Change Review. Unset
     # CODEBUILD_ACTOR_IDS to send every new run off the fleet.
     #
-    # Every other run EXECUTING in this repository takes the `kirocrew-runners`
+    # Every other run EXECUTING in this repository takes the `ajcrew-runners`
     # group's own label, which keeps this lane's bursts off the standard pool
     # whose concurrency is shared enterprise-wide. A fork repository running its
     # own copy of this workflow cannot reach an organization runner group at
@@ -325,7 +325,7 @@ jobs:
     # review lanes nor Issue Gate nor Security Scope Review. What the move
     # changes is which queue that window's length comes from: the group's own
     # cap instead of the enterprise-shared pool.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 20
     env:
       # The same-repo workflow-run lanes of the verdict step's spec list, read
@@ -841,11 +841,11 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.repository.default_branch || github.ref_name }}
-          sparse-checkout: src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/scripts
+          sparse-checkout: src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts
           persist-credentials: false
 
       # Issue #6658: the one-lane / one-rationale-per-finding disposition rule
-      # was mechanical only for a writer running the kirocrew-prepare-pr loop, so a
+      # was mechanical only for a writer running the ajcrew-prepare-pr loop, so a
       # writer who skips that loop could post a blanket single-rationale
       # `target=gpt` record that codex-review.yml's adjudication ledger admits
       # with full downgrade power while nothing on the merge path objected.
@@ -885,7 +885,7 @@ jobs:
           REPO: ${{ github.repository }}
           PR: ${{ steps.context.outputs.pr }}
           SHA: ${{ steps.context.outputs.sha }}
-          GATE: ${{ github.workspace }}/src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/scripts/pr_status.py
+          GATE: ${{ github.workspace }}/src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts/pr_status.py
         run: |
           set -uo pipefail
 
@@ -937,7 +937,7 @@ jobs:
       # goes green over a block nobody adjudicated away.
       #
       # Evaluated HERE for the same reason the disposition rule is: a reader that
-      # only runs in the local kirocrew-prepare-pr loop binds whoever runs that loop, and
+      # only runs in the local ajcrew-prepare-pr loop binds whoever runs that loop, and
       # #13951's own finding was that the record existed in GraphQL
       # userContentEdits while nothing read it. A reader no gate calls reproduces
       # that shape one layer up -- the reading exists and nothing consumes it.
@@ -990,7 +990,7 @@ jobs:
           REPO: ${{ github.repository }}
           PR: ${{ steps.context.outputs.pr }}
           SHA: ${{ steps.context.outputs.sha }}
-          GATE: ${{ github.workspace }}/src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/scripts/pr_status.py
+          GATE: ${{ github.workspace }}/src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts/pr_status.py
         run: |
           set -uo pipefail
 

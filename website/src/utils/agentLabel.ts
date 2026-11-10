@@ -58,7 +58,7 @@ export function agentOrDefaultLabel(
  */
 export function builtinAgentDisplayName(name: string): string {
   switch (name) {
-    case 'kirocrew-conductor': return i18nT('components.agentLabel.builtin_conductor')
+    case 'ajcrew-conductor': return i18nT('components.agentLabel.builtin_conductor')
     default: return name
   }
 }

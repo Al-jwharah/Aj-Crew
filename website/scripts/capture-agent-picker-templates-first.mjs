@@ -20,9 +20,9 @@ import { join } from 'node:path'
 
 import { json } from './lib/boot-api.mjs'
 import { serveDist } from './lib/serve-dist.mjs'
-import { KIROCREW_CONFIG_FIXTURE, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
+import { AJCREW_CONFIG_FIXTURE, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 
-const OUT = process.argv[2] || join(process.env.KIROCREW_SCRATCH || '/tmp', 'agent-picker-templates-first-shots')
+const OUT = process.argv[2] || join(process.env.AJCREW_SCRATCH || '/tmp', 'agent-picker-templates-first-shots')
 
 mkdirSync(OUT, { recursive: true })
 
@@ -33,10 +33,10 @@ const row = (name, selection_kind, source, description, extra = {}) => ({
   model: '', reasoning_effort: '', triggers: '', session_color: '', avatar: {}, ...extra,
 })
 const CATALOG = [
-  row('default', 'member', 'kirocrew', 'The stock crew agent'),
-  row('reviewer', 'member', 'kirocrew', 'My reviewer, with its own memory'),
-  row('radar', 'member', 'kirocrew', 'Watches the issue queue'),
-  row('kirocrew', 'template', 'builtin', 'The stock crew agent template'),
+  row('default', 'member', 'ajcrew', 'The stock crew agent'),
+  row('reviewer', 'member', 'ajcrew', 'My reviewer, with its own memory'),
+  row('radar', 'member', 'ajcrew', 'Watches the issue queue'),
+  row('ajcrew', 'template', 'builtin', 'The stock crew agent template'),
   row('reviewer', 'template', 'package', 'Shared reviewer template'),
   row('oncall-triage', 'template', 'package', 'Triage pager alerts against the runbook'),
 ]
@@ -52,19 +52,19 @@ async function openPicker(theme) {
   /** Each branch AWAITS `json()` then returns true; a falsy return means "not handled". */
   const extra = async (path, route) => {
     if (path === '/api/agents/catalog') {
-      await json(route, { agents: CATALOG, default_agent: 'kirocrew' })
+      await json(route, { agents: CATALOG, default_agent: 'ajcrew' })
       return true
     }
-    if (path === '/api/config/kirocrew') {
+    if (path === '/api/config/ajcrew') {
       // The key the hook reads to list every crewmate beside the templates.
-      await json(route, { ...KIROCREW_CONFIG_FIXTURE, dashboard: { ...(KIROCREW_CONFIG_FIXTURE.dashboard || {}), crewmates_in_agent_picker: true } })
+      await json(route, { ...AJCREW_CONFIG_FIXTURE, dashboard: { ...(AJCREW_CONFIG_FIXTURE.dashboard || {}), crewmates_in_agent_picker: true } })
       return true
     }
     return false
   }
 
   await stubDashboardApi(page, {
-    slots: [{ key: SLOT, messages: 0, running: false, agent: 'kirocrew', mode: '' }],
+    slots: [{ key: SLOT, messages: 0, running: false, agent: 'ajcrew', mode: '' }],
     theme,
     localStorageEntries: { 'mc-active-slot': SLOT, 'mc-lang': 'en' },
     extra,

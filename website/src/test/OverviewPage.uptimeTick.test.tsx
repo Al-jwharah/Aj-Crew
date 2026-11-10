@@ -17,7 +17,7 @@ vi.mock('../api/client', () => ({
     memorySettings: vi.fn().mockResolvedValue({ history_idle_hours: 3, history_max_days: 90, migrated: false }),
     wakatimeStats: vi.fn().mockResolvedValue({ configured: false }),
     kasLoginStatus: vi.fn().mockResolvedValue({ authenticated: false }),
-    kirocrewConfig: vi.fn().mockResolvedValue({ agent: { acp_backend: 'kiro' } }),
+    ajcrewConfig: vi.fn().mockResolvedValue({ agent: { acp_backend: 'kiro' } }),
   },
 }))
 vi.mock('../providers', () => ({

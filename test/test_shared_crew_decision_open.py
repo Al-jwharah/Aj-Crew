@@ -7,9 +7,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.shared_crew import decisions as shared_decisions
-from kiro_crew.shared_crew.collab import DecisionKind, DecisionState
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew import decisions as shared_decisions
+from aj_crew.shared_crew.collab import DecisionKind, DecisionState
+from aj_crew.shared_crew.contracts import (
     ACTOR_REQUEST_KEY,
     ActorContext,
     DisplaySnapshot,
@@ -19,7 +19,7 @@ from kiro_crew.shared_crew.contracts import (
     Transport,
     principal_id_for,
 )
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 
 def _person(login: str) -> Principal:
@@ -49,8 +49,8 @@ def _actor(principal: Principal) -> ActorContext:
 def dash_state(tmp_path, monkeypatch, _floor_monkeypatch):
     from chat_test_helpers import _make_state
 
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.broadcast_ws_owners = MagicMock()
@@ -60,7 +60,7 @@ def dash_state(tmp_path, monkeypatch, _floor_monkeypatch):
 
 
 def _authored_slot(state, key: str, author: Principal):
-    from kiro_crew.dashboard.state import SlotOrigin
+    from aj_crew.dashboard.state import SlotOrigin
 
     slot = state.get_or_create_slot(key, origin=SlotOrigin.USER)
     slot.append("user", "go", "msg msg-u", meta={"author": author.to_public_dict()})
@@ -80,7 +80,7 @@ async def test_slot_permission_prompt_opens_its_decision_through_the_real_turn(t
         _set_stream,
     )
 
-    from kiro_crew.dashboard.chat import _run_chat
+    from aj_crew.dashboard.chat import _run_chat
 
     state, client = _make_state(tmp_path, context_builder=_context_builder())
     slot = _make_slot("chat-decision")
@@ -136,7 +136,7 @@ def test_unanswered_slot_approval_closes_expired_or_withdrawn(dash_state):
 
 @pytest.mark.asyncio
 async def test_agent_question_opens_its_decision_and_names_who_answered(dash_state):
-    from kiro_crew.dashboard.interaction_coordinator import QuestionCoordinator
+    from aj_crew.dashboard.interaction_coordinator import QuestionCoordinator
 
     slot = _authored_slot(dash_state, "tab-q", ALICE)
 

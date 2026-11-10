@@ -34,9 +34,9 @@ from update_check_install_aware_helpers import (  # noqa: F401 -- the autouse fi
     _wheel_install,
 )
 
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.platform import update_capability, update_layout
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.handlers import updates
+from aj_crew.platform import update_capability, update_layout
+from aj_crew.testing.wait import await_until
 
 # A well-formed manifest, shaped like the real feed document.
 _FEED_TEMPLATE = {
@@ -45,7 +45,7 @@ _FEED_TEMPLATE = {
     "key_id": "sha256:d3a83f0c",
     "pub_date": "2026-08-05T07:49:33Z",
     "python_requires": ">=3.10",
-    "schema": "kirocrew-cli-artifact-manifest-v1",
+    "schema": "ajcrew-cli-artifact-manifest-v1",
     "sha256": "ea681adb",
     "signature": "V9MGrlYt",
     "version": "0.1.3rc2",
@@ -116,7 +116,7 @@ def _pin_probe_git(monkeypatch, tmp_path):
         )
         fake.chmod(0o755)
     monkeypatch.setattr(
-        "kiro_crew.platform.update_capability.trusted_system_bin", lambda _name: str(fake)
+        "aj_crew.platform.update_capability.trusted_system_bin", lambda _name: str(fake)
     )
     return fake
 
@@ -232,17 +232,17 @@ class TestChannelResolution:
 
     def test_remediation_command_pins_https(self, monkeypatch):
         # The string is copied into a shell and runs an installer, and the base is
-        # overridable via KIROCREW_CDN_BASE. Without --proto '=https' an http://
+        # overridable via AJCREW_CDN_BASE. Without --proto '=https' an http://
         # override yields a command that fetches a script in plaintext and
         # executes it — an on-path attacker could swap the installer. curl
         # refuses the scheme even when the override is plaintext.
-        monkeypatch.setenv("KIROCREW_CDN_BASE", "http://evil.example")
+        monkeypatch.setenv("AJCREW_CDN_BASE", "http://evil.example")
         capability = update_capability.derive_capability(install_root="", dist="wheel")
         assert capability.remediation is not None
         assert "--proto '=https'" in capability.remediation["command"]
 
     def test_cdn_override_moves_check_and_command_together(self, monkeypatch):
-        monkeypatch.setenv("KIROCREW_CDN_BASE", "https://cdn.example/")
+        monkeypatch.setenv("AJCREW_CDN_BASE", "https://cdn.example/")
         feed, artifact = updates._cdn_bases()
         assert feed == artifact == "https://cdn.example"
 
@@ -259,7 +259,7 @@ class TestWheelInstallCheck:
         assert info["check_status"] == "succeeded"
         assert info["error_code"] is None
         assert info["latest_version"] == "0.1.3rc2"
-        assert info["managed_by"] == "kirocrew"
+        assert info["managed_by"] == "ajcrew"
         assert info["can_apply"] is False
         assert info["channel"] == "insider"
         assert "--channel insider" in updates.remediation_command(info)
@@ -278,7 +278,7 @@ class TestWheelInstallCheck:
         # `release_channel` at import, while `derive_capability` imports it inside the
         # call, so patching the module attribute reaches one and not the other. That
         # asymmetry is precisely the production race — two reads, two moments.
-        monkeypatch.setattr("kiro_crew.platform.update_layout.release_channel", lambda: "stable")
+        monkeypatch.setattr("aj_crew.platform.update_layout.release_channel", lambda: "stable")
         _stub_feed(monkeypatch, body=_manifest(version="0.1.3rc2"))
         monkeypatch.setattr(updates, "_local_version", "0.1.2rc3")
         asyncio.run(updates._do_update_check())
@@ -420,7 +420,7 @@ class TestFeedMinVersion:
     def _verified_signature(self, monkeypatch):
         """Default the signature to VERIFIED so each test exercises one axis;
         the unverified case overrides this explicitly."""
-        from kiro_crew.platform import feed_trust
+        from aj_crew.platform import feed_trust
 
         monkeypatch.setattr(feed_trust, "verify_manifest_signature", lambda _m: True)
 
@@ -485,7 +485,7 @@ class TestFeedMinVersion:
         """The floor coerces the UI, so a manifest whose signature does not
         verify contributes NO floor — while the ordinary (non-coercive) update
         verdict still succeeds, exactly the pre-floor posture."""
-        from kiro_crew.platform import feed_trust
+        from aj_crew.platform import feed_trust
 
         monkeypatch.setattr(feed_trust, "verify_manifest_signature", lambda _m: False)
         _stub_feed(monkeypatch, body=_manifest(version="0.6.0", min_version="0.6.0"))
@@ -629,7 +629,7 @@ class TestWheelInstallFailuresAreHonest:
         assert info["update_available"] is None
         # The install is still identified, so the UI can still tell the user HOW
         # to update even when it could not learn WHETHER to.
-        assert info["managed_by"] == "kirocrew"
+        assert info["managed_by"] == "ajcrew"
         assert "--channel insider" in updates.remediation_command(info)
 
     def test_network_error(self, monkeypatch):
@@ -723,12 +723,12 @@ class TestGitCheckoutStillWorks:
     def _git_install(self, monkeypatch, tmp_path):
         _init_repo(tmp_path)
         _pin_probe_git(monkeypatch, tmp_path)
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         # These tests exercise the CHECK against a scripted git; the process
-        # running them does not load kiro_crew from tmp_path, so the provenance
+        # running them does not load aj_crew from tmp_path, so the provenance
         # half of the git-lane gate is declared rather than derived.
         monkeypatch.setattr(
-            "kiro_crew.platform.update_capability.running_from_checkout",
+            "aj_crew.platform.update_capability.running_from_checkout",
             lambda root, **kw: True,
         )
         return tmp_path
@@ -807,7 +807,7 @@ class TestGitCheckoutStillWorks:
         assert "### 0.1.3rc2" in str(info["changes"])
         assert info["channel"] == ""
         # A checkout's remediation is the CLI command, not an installer re-run.
-        assert updates.remediation_command(info) == "kirocrew update"
+        assert updates.remediation_command(info) == "ajcrew update"
         assert any("fetch" in c for c in calls)
 
     def test_commits_behind_with_an_unchanged_version_is_an_update(self, _git_install, monkeypatch):
@@ -1121,7 +1121,7 @@ class TestExternallyManagedInstalls:
         # owns the bytes, and reading the CLI feed here would compare against the
         # wrong release stream.
         _init_repo(tmp_path)
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(update_capability, "distribution", lambda: "dmg")
 
         def _boom(url: str):  # pragma: no cover - must not be called
@@ -1148,7 +1148,7 @@ class TestExternallyManagedInstalls:
         info = updates.get_update_info()
         # One capability for both stamps: what a consumer acts on is who manages
         # the install, not which packaging label it happens to carry.
-        assert info["managed_by"] == "kirocrew"
+        assert info["managed_by"] == "ajcrew"
         assert info["update_available"] is True
         assert info["check_status"] == "succeeded"
         assert "--channel insider" in updates.remediation_command(info)

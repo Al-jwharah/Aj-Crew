@@ -4,7 +4,7 @@
  *
  * WHY THIS EXISTS. `APP_MANIFEST_KEY` (`src/components/appstore/appManifest.ts`)
  * localises app metadata WITHOUT touching `app.json`, so the English now lives in two
- * places on purpose: the manifest, which is what `kirocrew app list` and every other
+ * places on purpose: the manifest, which is what `ajcrew app list` and every other
  * catalog-less consumer prints, and `locales/en.json`, which is what the SPA renders
  * and what the nine translated catalogs were derived from.
  *
@@ -42,7 +42,7 @@ import { fileURLToPath } from 'node:url'
 const HERE = dirname(fileURLToPath(import.meta.url))
 const WEB = join(HERE, '..')
 const REPO = join(WEB, '..')
-const BUILTINS = join(REPO, 'src', 'kiro_crew', 'apps', 'builtins')
+const BUILTINS = join(REPO, 'src', 'aj_crew', 'apps', 'builtins')
 const TABLE = join(WEB, 'src', 'components', 'appstore', 'appManifest.ts')
 const EN = join(WEB, 'src', 'i18n', 'locales', 'en.json')
 

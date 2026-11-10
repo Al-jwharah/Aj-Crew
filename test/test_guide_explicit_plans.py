@@ -11,9 +11,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.guide_catalog import ui_show_plans
-from kiro_crew.mcp_guide import _find_ui_next
-from kiro_crew.ui_index import find_ui
+from aj_crew.guide_catalog import ui_show_plans
+from aj_crew.mcp_guide import _find_ui_next
+from aj_crew.ui_index import find_ui
 
 
 def _steps(location_id: str, placement: str) -> list[dict[str, Any]]:

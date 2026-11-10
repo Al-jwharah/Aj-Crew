@@ -8,7 +8,7 @@ import { useLanguageGeneration } from '../../i18n/useLanguageGeneration'
 /**
  * The gateway's one-per-turn Crew Mode dispatch notice
  * (`meta.kind === 'crew_dispatch_notice'`,
- * `src/kiro_crew/dashboard/crew_dispatch_notice.py`).
+ * `src/aj_crew/dashboard/crew_dispatch_notice.py`).
  *
  * In Crew Mode a dispatched crew member is listed on the Board (view `workers`)
  * of the side panel, not in the session list, so after the conductor starts one the

@@ -21,9 +21,9 @@ import pytest
 from aiohttp.test_utils import make_mocked_request
 from body_stream_helpers import BodyStreamPayload
 
-from kiro_crew import session_storage as session_storage_module
-from kiro_crew.dashboard.handlers import session_storage as handler
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import session_storage as session_storage_module
+from aj_crew.dashboard.handlers import session_storage as handler
+from aj_crew.testing.wait import async_wait_until
 
 _DAY = 86400.0
 
@@ -42,7 +42,7 @@ def stores(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, Path]
     kiro_home = crew_home / "kiro"
     (crew_home / "sessions" / "archive").mkdir(parents=True)
     (kiro_home / "sessions" / "cli").mkdir(parents=True)
-    monkeypatch.setenv("KIROCREW_HOME", str(crew_home))
+    monkeypatch.setenv("AJCREW_HOME", str(crew_home))
     monkeypatch.setenv("KIRO_HOME", str(kiro_home))
     return crew_home, kiro_home
 
@@ -1208,7 +1208,7 @@ class TestWhyAReclaimIsRefused:
         then refuses, the all-or-nothing failure ``_classify`` exists to prevent. Both
         halves are counted, so splitting the flag cannot re-cache either.
         """
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         index = session_storage_module.SessionIndex(stem_to_sid={}, active_sids=frozenset())
         # Prime both caches through the ordinary cached read path.
         session_storage_module.list_units(index)
@@ -1610,8 +1610,8 @@ def test_the_activation_reads_the_live_map_under_the_lock_a_resume_maps_under():
     """A mapping in the live map is seen before its deferred file write lands."""
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.handlers import session_storage as handler
-    from kiro_crew.session_map import _MAP_LOCK
+    from aj_crew.dashboard.handlers import session_storage as handler
+    from aj_crew.session_map import _MAP_LOCK
 
     live = SimpleNamespace(mapped_sids_by_key=lambda: {"dashboard:chat-1": "acp-resumed"})
     state = SimpleNamespace(sessions=SimpleNamespace(_session_map=live))

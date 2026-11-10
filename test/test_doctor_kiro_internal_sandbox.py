@@ -1,6 +1,6 @@
-"""`kirocrew doctor` names the sandbox that actually confines a kiro-cli spawn.
+"""`ajcrew doctor` names the sandbox that actually confines a kiro-cli spawn.
 
-On macOS with kiro-cli's internal sandbox enabled, Kiro Crew deliberately skips
+On macOS with kiro-cli's internal sandbox enabled, Aj Crew deliberately skips
 its own seatbelt wrap for kiro-cli spawns (mutual exclusion: only one layer can
 be active per spawn). A Sandbox section that answers with the backend alone and
 returns leaves a host in exactly that configuration reading:
@@ -16,7 +16,7 @@ the operator grants Full Disk Access and nothing changes.
 
 These tests pin the diagnostic: report the delegation on every backend verdict,
 name the exact switch, say Full Disk Access cannot help, keep the remedy safe
-under Kiro Crew's own configured tier, and never count a working audited
+under Aj Crew's own configured tier, and never count a working audited
 delegation as a fault.
 """
 
@@ -26,7 +26,7 @@ import sys
 
 import pytest
 
-from kiro_crew import cli_doctor, sandbox
+from aj_crew import cli_doctor, sandbox
 
 
 @pytest.fixture(autouse=True)
@@ -93,14 +93,14 @@ class TestDelegationIsReported:
         """
         _delegating(monkeypatch, True)
         monkeypatch.setattr(
-            sandbox, "_KIRO_INTERNAL_SETTINGS_PATH", "/probe/kirocrew-test/settings.json"
+            sandbox, "_KIRO_INTERNAL_SETTINGS_PATH", "/probe/ajcrew-test/settings.json"
         )
         monkeypatch.setattr(sandbox, "_KIRO_INTERNAL_SANDBOX_KEY", "probe_key")
 
         cli_doctor._doctor_sandbox([])
 
         out = _flat(capsys)
-        assert "/probe/kirocrew-test/settings.json" in out
+        assert "/probe/ajcrew-test/settings.json" in out
         assert '"probe_key": true' in out
         assert "amazon-internal.json" not in out
 
@@ -138,7 +138,7 @@ class TestDelegationIsReported:
     def test_delegation_is_not_an_issue(self, monkeypatch: pytest.MonkeyPatch, capsys) -> None:
         """Delegation is a working audited configuration, not a fault.
 
-        Counting it would make ``kirocrew doctor`` exit non-zero on a correctly
+        Counting it would make ``ajcrew doctor`` exit non-zero on a correctly
         configured host and bury real faults in the summary.
         """
         _delegating(monkeypatch, True)
@@ -150,10 +150,10 @@ class TestDelegationIsReported:
         assert issues == []
 
 
-class TestRemedyDependsOnKiroCrewsOwnTier:
+class TestRemedyDependsOnAjCrewsOwnTier:
     """The advice must never remove the only layer confining the spawn.
 
-    With ``agent.sandbox="off"`` Kiro Crew builds no profile, so "disable
+    With ``agent.sandbox="off"`` Aj Crew builds no profile, so "disable
     kiro-cli's sandbox" leaves nothing confining a kiro-cli spawn and turns
     ``~/.aws`` and ``~/.ssh`` into readable files. The two settings correlate --
     ``"off"`` exists to defer isolation to kiro-cli -- so that is a reachable
@@ -252,7 +252,7 @@ class TestSilentWhenNotDelegating:
 
         Linux namespace isolation is unaffected by that file, so reporting it
         there would tell a Linux operator their agent is confined by kiro-cli
-        when Kiro Crew's own launcher is what wraps the child.
+        when Aj Crew's own launcher is what wraps the child.
         """
         monkeypatch.setattr(sys, "platform", "linux")
         monkeypatch.setattr(sandbox, "kiro_internal_sandbox_enabled", lambda: True)

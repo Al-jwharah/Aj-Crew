@@ -1,4 +1,4 @@
-"""The ``Connectivity`` gateway row of ``kirocrew doctor``.
+"""The ``Connectivity`` gateway row of ``ajcrew doctor``.
 
 ``_doctor_gateway_reachability`` probes ``GET /api/status`` on loopback with a 2 s
 deadline. A bare read ``TimeoutError`` means the connection was accepted and the
@@ -19,10 +19,10 @@ import urllib.request
 import pytest
 from loopback_servers import LoopbackHTTPServer
 
-from kiro_crew import loopback_http
-from kiro_crew.doctor_checks import services
-from kiro_crew.doctor_checks.services import DashboardBinding
-from kiro_crew.service import live_target
+from aj_crew import loopback_http
+from aj_crew.doctor_checks import services
+from aj_crew.doctor_checks.services import DashboardBinding
+from aj_crew.service import live_target
 
 
 def _binding(port: int = 5476) -> DashboardBinding:
@@ -120,7 +120,7 @@ def _select(monkeypatch: pytest.MonkeyPatch, version: str | None) -> None:
 class TestRunningVersionRow:
     """The ``running:`` row reads the gateway's own version from token-exempt
     ``/api/health`` and compares it with ``live_target.selected_version()``, the
-    reading ``kirocrew status`` prints, so the two commands cannot disagree."""
+    reading ``ajcrew status`` prints, so the two commands cannot disagree."""
 
     def test_match_reads_same_as_on_disk(
         self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
@@ -145,7 +145,7 @@ class TestRunningVersionRow:
         services._doctor_gateway_reachability(_binding(), issues)
         out = capsys.readouterr().out
         assert "running:     ⚠️  1.2.3, on disk 1.2.4 (restart needed)" in out
-        assert "Fix: `kirocrew restart`" in out
+        assert "Fix: `ajcrew restart`" in out
         assert issues == ["gateway restart needed (running version differs from on-disk)"]
 
     @pytest.mark.parametrize(

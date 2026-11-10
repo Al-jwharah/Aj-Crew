@@ -35,7 +35,7 @@ the turn changed does not appear on kiro-cli's v3 engine.
 - **The changed-files card is missing on v3.** At turn end `_flush_file_changes`
   writes `meta.file_changes` onto the turn's reply, and `FileChangeChips` draws
   it under the answer. Its entries come only from `_snapshot_write_target` in
-  `src/kiro_crew/dashboard/chat_turn/file_changes.py`, which reads the older
+  `src/aj_crew/dashboard/chat_turn/file_changes.py`, which reads the older
   kiro-cli `fs_write` shape: a `command` of `create`, `strReplace` or `insert`.
   v3 (KAS) writes carry no `command`. `str_replace` sends
   `{path, oldStr, newStr, replace_all}`, and `fs_write` and `fs_append` send

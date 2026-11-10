@@ -66,7 +66,7 @@ import pytest
 import source_corpus
 from mirrored_owner_probe import SENTINEL, one_reexported_pair
 
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 #: Text that must appear for a file to be worth parsing, which is what keeps this
 #: scan off the two thirds of the tree that mirror nothing.
@@ -284,26 +284,26 @@ def test_the_discovery_rule_answers_both_ways() -> None:
     built here: each value spelling it must accept, and the two kinds of value it must
     pass over.
     """
-    probe = ModuleType("kiro_crew_probe_owner")
-    probe.__name__ = "kiro_crew.probe_mirror"
-    leaf = importlib.import_module("kiro_crew.subprocess_utf8")
+    probe = ModuleType("aj_crew_probe_owner")
+    probe.__name__ = "aj_crew.probe_mirror"
+    leaf = importlib.import_module("aj_crew.subprocess_utf8")
 
     accepted = {
-        "a dotted module name": {"UTF8_TEXT": "kiro_crew.subprocess_utf8"},
+        "a dotted module name": {"UTF8_TEXT": "aj_crew.subprocess_utf8"},
         "a module object": {"UTF8_TEXT": leaf},
-        "an (owner, symbol) pair": {"UTF8_TEXT": ("kiro_crew.subprocess_utf8", "UTF8_TEXT")},
+        "an (owner, symbol) pair": {"UTF8_TEXT": ("aj_crew.subprocess_utf8", "UTF8_TEXT")},
         "a bare name under the parent": {"UTF8_TEXT": "subprocess_utf8"},
     }
     for why, table in accepted.items():
         probe._TABLE = table  # type: ignore[attr-defined]
         assert one_reexported_pair(probe) == (
             "UTF8_TEXT",
-            "kiro_crew.subprocess_utf8",
+            "aj_crew.subprocess_utf8",
         ), f"discovery missed {why}"
 
     rejected = {
-        "a dunder key": {"__spec__": "kiro_crew.subprocess_utf8"},
-        "an attribute the owner lacks": {"no_such_attribute_here": "kiro_crew.subprocess_utf8"},
+        "a dunder key": {"__spec__": "aj_crew.subprocess_utf8"},
+        "an attribute the owner lacks": {"no_such_attribute_here": "aj_crew.subprocess_utf8"},
         "an owner outside this package": {"getcwd": "os"},
         "a value that is not a name": {"UTF8_TEXT": 17},
     }
@@ -312,7 +312,7 @@ def test_the_discovery_rule_answers_both_ways() -> None:
         assert one_reexported_pair(probe) is None, f"discovery accepted {why}"
 
     probe.__dunder_table__ = {  # type: ignore[attr-defined]
-        "UTF8_TEXT": "kiro_crew.subprocess_utf8"
+        "UTF8_TEXT": "aj_crew.subprocess_utf8"
     }
     del probe._TABLE  # type: ignore[attr-defined]
     assert one_reexported_pair(probe) is None, "discovery read a dunder-named table"

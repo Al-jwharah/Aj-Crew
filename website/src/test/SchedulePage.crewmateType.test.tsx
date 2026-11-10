@@ -35,9 +35,9 @@ vi.mock('../api/client', () => ({
     runCron: vi.fn().mockResolvedValue({}),
     cronToChat: vi.fn().mockResolvedValue({}),
     cronHistoryAll: vi.fn().mockResolvedValue({ runs: [] }),
-    kirocrewAgents: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
+    ajcrewAgents: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
     agentCatalog: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
-    defaultAgent: vi.fn().mockResolvedValue({ default_agent: 'kirocrew', default_template: 'kirocrew' }),
+    defaultAgent: vi.fn().mockResolvedValue({ default_agent: 'ajcrew', default_template: 'ajcrew' }),
     members: vi.fn(),
   },
 }))

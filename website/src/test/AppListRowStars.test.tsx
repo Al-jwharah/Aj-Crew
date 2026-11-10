@@ -74,7 +74,7 @@ describe('AppListRow desktop-only Enable name', () => {
     desktop.needs = true
     renderRow(builtinOff)
     const btn = screen.getByRole('button', { name: 'Enable' })
-    expect(btn).toHaveAccessibleDescription("Enabling works from here, but the app's own window needs the Kiro Crew desktop app.")
+    expect(btn).toHaveAccessibleDescription("Enabling works from here, but the app's own window needs the Aj Crew desktop app.")
   })
 
   it('keeps the visible Japanese label as the name, with no English period', async () => {
@@ -82,7 +82,7 @@ describe('AppListRow desktop-only Enable name', () => {
     await act(async () => { await i18next.changeLanguage('ja') })
     renderRow(builtinOff)
     const btn = screen.getByRole('button', { name: '有効にする' })
-    expect(btn).toHaveAccessibleDescription('ここから有効にできますが、アプリ独自のウィンドウには Kiro Crew デスクトップアプリが必要です。')
+    expect(btn).toHaveAccessibleDescription('ここから有効にできますが、アプリ独自のウィンドウには Aj Crew デスクトップアプリが必要です。')
   })
 
   it('adds no description when the app does not need the desktop shell', () => {

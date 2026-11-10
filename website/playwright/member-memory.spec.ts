@@ -30,14 +30,14 @@ test.afterEach(async ({ page }, testInfo) => {
 // These writes must never target an operator gateway. The offline E2E harness
 // owns the seeded home and deletes it, including retained member archives.
 test.beforeEach(async ({ page }) => {
-  expect(process.env.KIROCREW_E2E_EPHEMERAL, 'Use the isolated gateway E2E harness').toBe('1')
+  expect(process.env.AJCREW_E2E_EPHEMERAL, 'Use the isolated gateway E2E harness').toBe('1')
   await page.emulateMedia({ reducedMotion: 'reduce' })
   expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true)
 })
 
 async function member(request: APIRequestContext, role: string) {
   const name = `memory-e2e-${role}-${randomUUID().slice(0, 8)}`
-  const response = await request.post('/api/agents', { data: { name, kiro_agent: 'kirocrew' } })
+  const response = await request.post('/api/agents', { data: { name, kiro_agent: 'ajcrew' } })
   expect(response.ok(), await response.text()).toBeTruthy()
   const created = await response.json()
   expect(created.memory_store).toMatch(/^member-/)
@@ -224,13 +224,13 @@ test('private backup staging can be cancelled and a replaced experience can be r
   await expect(restoreBackup).toBeVisible()
   await expect(restoreBackup).toBeDisabled()
   await expect(restoreBackup).toHaveAttribute('aria-expanded', 'true')
-  await expect(page.getByText(/Stage this backup for the next Kiro Crew gateway restart/)).toBeVisible()
+  await expect(page.getByText(/Stage this backup for the next Aj Crew gateway restart/)).toBeVisible()
   await page.screenshot({ path: testInfo.outputPath('member-memory-restore-confirm.png'), fullPage: false, animations: 'disabled' })
   await page.getByRole('button', { name: 'Confirm restore', exact: true }).click()
-  await expect(page.getByText('Restart the Kiro Crew gateway to restore this backup. Current memory stays active until then.', { exact: true })).toBeVisible()
+  await expect(page.getByText('Restart the Aj Crew gateway to restore this backup. Current memory stays active until then.', { exact: true })).toBeVisible()
   await page.reload()
   await page.getByRole('tab', { name: 'Recovery', exact: true }).click()
-  await expect(page.getByText('Restart the Kiro Crew gateway to restore this backup. Current memory stays active until then.', { exact: true })).toBeVisible()
+  await expect(page.getByText('Restart the Aj Crew gateway to restore this backup. Current memory stays active until then.', { exact: true })).toBeVisible()
   expect(await rows(request, owner.store)).toEqual(active)
   // With reduced motion the indicator must stay inside the selected tab,
   // including after the restore refresh that previously obscured Profile.
@@ -395,7 +395,7 @@ test('an empty private memory opens its exact member conversation and reuses the
 
 test('a legacy configured default member keeps V1 while new members receive independent V2 memory', async ({ page, request }, testInfo) => {
   test.setTimeout(90000)
-  const legacyMembers = JSON.parse(process.env.KIROCREW_E2E_LEGACY_MEMBERS || '[]') as string[]
+  const legacyMembers = JSON.parse(process.env.AJCREW_E2E_LEGACY_MEMBERS || '[]') as string[]
   const name = legacyMembers[testInfo.retry]
   expect(name, 'The isolated harness must seed a fresh legacy member for this attempt').toMatch(/^memory-e2e-legacy-\d+$/)
   const currentDefault = await request.get('/api/config/default-agent')
@@ -534,14 +534,14 @@ test('a legacy configured default member keeps V1 while new members receive inde
 
 test('intentional bad memory configuration shows unavailable, mismatch and a real identity retry', async ({ page, request }, testInfo) => {
   test.setTimeout(90000)
-  const fixtures = JSON.parse(process.env.KIROCREW_E2E_INVALID_MEMORY_BINDINGS || '[]') as {
+  const fixtures = JSON.parse(process.env.AJCREW_E2E_INVALID_MEMORY_BINDINGS || '[]') as {
     unavailable_member: string; unavailable_store: string; mismatched_member: string; mismatched_store: string; declared_owner: string
   }[]
   const fixture = fixtures[testInfo.retry]
   expect(fixture, 'The isolated harness must seed this attempt’s invalid bindings').toBeDefined()
   testInfo.annotations.push({ type: 'fixture', description: 'Intentional invalid config in the disposable gateway home; no healthy peer store or automatic repair claim. All responses come from the real gateway.' })
   const readConfig = async () => {
-    const response = await request.get('/api/config/kirocrew')
+    const response = await request.get('/api/config/ajcrew')
     expect(response.ok(), await response.text()).toBeTruthy()
     return await response.json()
   }
@@ -562,7 +562,7 @@ test('intentional bad memory configuration shows unavailable, mismatch and a rea
     await expect(editor).toBeVisible({ timeout: 10000 })
     await editor.getByTestId('next-rail-memory').click()
     const diagnostic = editor.getByTestId('next-memory-status')
-    await expect(diagnostic).toHaveText(`${message} Inspect the cause on the gateway: kirocrew doctor`)
+    await expect(diagnostic).toHaveText(`${message} Inspect the cause on the gateway: ajcrew doctor`)
     await diagnostic.scrollIntoViewIfNeeded()
     await expect(diagnostic).toBeInViewport({ ratio: 1 })
     await expect(editor.getByRole('button', { name: 'Create private memory', exact: true })).toHaveCount(0)

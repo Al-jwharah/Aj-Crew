@@ -20,10 +20,10 @@ import pytest
 from test_kas_spec_builtin_grant import _handle, _permission
 from test_tool_call_classification_kas import _kas_builtin_flow
 
-from kiro_crew import permission_floor
-from kiro_crew.acp import kas_agents
-from kiro_crew.acp._dispatch import attach_kas_custom_agents
-from kiro_crew.acp.kas_permissions import (
+from aj_crew import permission_floor
+from aj_crew.acp import kas_agents
+from aj_crew.acp._dispatch import attach_kas_custom_agents
+from aj_crew.acp.kas_permissions import (
     CREW_ANSWERED_COMMANDS_KEY,
     CREW_SHELL_ALLOWLIST_KEY,
     allowed_tools_grant_shell,
@@ -31,19 +31,19 @@ from kiro_crew.acp.kas_permissions import (
     spec_shell_allowlist,
     tools_settings_to_permissions,
 )
-from kiro_crew.acp.types import AcpEvent
-from kiro_crew.acp_backends import ACP_BACKEND_KAS
-from kiro_crew.dashboard.chat_turn.tool_approval import _spec_keys_notice
-from kiro_crew.hooks import (
+from aj_crew.acp.types import AcpEvent
+from aj_crew.acp_backends import ACP_BACKEND_KAS
+from aj_crew.dashboard.chat_turn.tool_approval import _spec_keys_notice
+from aj_crew.hooks import (
     TOOL_ALLOW,
     TOOL_DENY,
     HookManager,
     HooksConfig,
     hook_gate_kwargs,
 )
-from kiro_crew.platform import allowed_commands
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance_profiles as gp
+from aj_crew.platform import allowed_commands
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance_profiles as gp
 
 #: The reporter's spec, its pattern written in the subset Crew reads like kiro-cli
 #: (literals, escaped punctuation, ``.*``): a deny-by-default shell, one shape allowed.
@@ -192,7 +192,7 @@ def test_an_entry_in_rust_syntax_runs_its_command_and_refuses_the_rest(
 
 @pytest.mark.parametrize("pattern", [r"touch \p{L}+", "(?x)touch a", r"touch \x41"])
 def test_an_unreadable_entry_allows_nothing_and_each_surface_names_it(pattern: str) -> None:
-    """Outside the syntax Kiro Crew reads (``\\p``, the ``x`` flag, ``\\x``), so a
+    """Outside the syntax Aj Crew reads (``\\p``, the ``x`` flag, ``\\x``), so a
     command only it would match is refused, never let through, while the other
     entries still apply. The refusal an auto-mode job records and the session-start
     notice name the entry and why, so the author can rewrite it."""
@@ -229,7 +229,7 @@ def test_a_list_withheld_whole_is_never_said_to_keep_its_other_entries() -> None
 def test_a_repeat_count_rust_cannot_compile_allows_nothing_even_repeated_zero_times() -> None:
     """Rust reads a count as a ``u32`` and refuses ``a{4294967296}``, so kiro-cli
     refuses ``touch marker`` under this spec. An outer ``{0}`` leaves the group out
-    of Kiro Crew's own program, so the count is refused as it is read; the same
+    of Aj Crew's own program, so the count is refused as it is read; the same
     shape at the largest ``u32`` still compiles in Rust and still grants here."""
     overflow = "touch marker(a{4294967296}){0}"
     settings = {
@@ -386,7 +386,7 @@ def test_the_record_never_reaches_the_wire() -> None:
 
 
 def test_the_session_record_follows_the_active_agent_and_a_mode_switch() -> None:
-    from kiro_crew.agent_files import kas_wire_agent_id
+    from aj_crew.agent_files import kas_wire_agent_id
 
     batch = [
         {"id": "probe", "prompt": "p", CREW_SHELL_ALLOWLIST_KEY: ["git status", 7]},

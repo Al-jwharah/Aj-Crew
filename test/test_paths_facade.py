@@ -1,14 +1,14 @@
 """The path floor facade keeps the patch seams the one module had.
 
-``kiro_crew.security.paths`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the
+``aj_crew.security.paths`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the
 owners ``paths_lists``, ``paths_resolver`` and ``paths_targets``; the public path gates,
 their matchers and the command-line orchestrator stay in the facade itself. The moved code
 reads its names as plain module globals, so a patch reaches it only because the mirror
 writes the patch into every module holding the name. Two spellings reach the facade: a
-write on ``kiro_crew.security.paths`` itself, and a write on the package
-``kiro_crew.security`` of a path floor name its ``_EXPORTS`` table lists (each row naming
+write on ``aj_crew.security.paths`` itself, and a write on the package
+``aj_crew.security`` of a path floor name its ``_EXPORTS`` table lists (each row naming
 ``paths``), which the package forwards here. Every other owner-defined name is reached
-through ``kiro_crew.security.paths`` only.
+through ``aj_crew.security.paths`` only.
 
 ``test/test_facade_mirror_guards.py`` holds every mirrored facade to the shared rules, and
 its corpus counts patches spelled through the facade's own name only. These tests pin what
@@ -34,9 +34,9 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-import kiro_crew.security as security
-from kiro_crew import _facade_mirror
-from kiro_crew.security import paths
+import aj_crew.security as security
+from aj_crew import _facade_mirror
+from aj_crew.security import paths
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_paths_facade")
 
@@ -51,8 +51,8 @@ SHARED_FACADE_CHECKS = (
     "reach_rule_can_fail",
 )
 
-FACADE = "kiro_crew.security.paths"
-PACKAGE = "kiro_crew.security"
+FACADE = "aj_crew.security.paths"
+PACKAGE = "aj_crew.security"
 LEAF = "paths"
 SECURITY_DIR = Path(paths.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
@@ -113,7 +113,7 @@ def _family_sources() -> dict[str, str]:
 
 def _test_tree_files() -> list[Path]:
     """Every file pytest collects tests or fixtures from: the root conftest, ``test/``,
-    and the test modules and conftests under ``src/kiro_crew/apps/builtins`` -- the same
+    and the test modules and conftests under ``src/aj_crew/apps/builtins`` -- the same
     walk as ``test_facade_mirror_guards._test_tree_files``."""
     root = source_corpus.repo_root()
     test_root = source_corpus.repo_root() / "test"
@@ -123,7 +123,7 @@ def _test_tree_files() -> list[Path]:
         name = path.name
         if rel == "conftest.py" or path.is_relative_to(test_root):
             out.append(path)
-        elif rel.startswith("src/kiro_crew/apps/builtins/") and (
+        elif rel.startswith("src/aj_crew/apps/builtins/") and (
             "/tests/" in rel
             or name.startswith("test_")
             or name.endswith("_test.py")
@@ -141,7 +141,7 @@ def _module_aliases(tree: ast.Module) -> dict[str, str]:
             for alias in node.names:
                 if alias.name in (FACADE, PACKAGE) and alias.asname:
                     aliases[alias.asname] = alias.name
-        elif isinstance(node, ast.ImportFrom) and node.module in ("kiro_crew", PACKAGE):
+        elif isinstance(node, ast.ImportFrom) and node.module in ("aj_crew", PACKAGE):
             for alias in node.names:
                 dotted = f"{node.module}.{alias.name}"
                 if dotted in (FACADE, PACKAGE):
@@ -237,7 +237,7 @@ def _corpus_patched_names() -> dict[str, frozenset[str]]:
 #: Each spelling the patch scan must read, and each it must skip, keyed by case id.
 _SPELLING_CASES = {
     "alias-setattr": (
-        "from kiro_crew.security import paths as gate\n"
+        "from aj_crew.security import paths as gate\n"
         "def test(monkeypatch):\n"
         "    monkeypatch.setattr(gate, '_home_targets_cache', {})\n",
         {FACADE: {"_home_targets_cache"}},
@@ -245,26 +245,26 @@ _SPELLING_CASES = {
     "dotted-string": (
         "from unittest import mock\n"
         "def test():\n"
-        "    with mock.patch('kiro_crew.security.paths._resolved_spellings'):\n"
+        "    with mock.patch('aj_crew.security.paths._resolved_spellings'):\n"
         "        pass\n",
         {FACADE: {"_resolved_spellings"}},
     ),
     "package": (
-        "import kiro_crew.security as security\n"
+        "import aj_crew.security as security\n"
         "def test(monkeypatch):\n"
         "    monkeypatch.setattr(security, '_path_resolve_degraded', {})\n"
         "    monkeypatch.setattr(security, 'is_denied', None)\n",
         {PACKAGE: {"_path_resolve_degraded", "is_denied"}},
     ),
     "loop": (
-        "from kiro_crew.security import paths\n"
+        "from aj_crew.security import paths\n"
         "def test(monkeypatch):\n"
         "    for name in ('_path_resolve_load_probes', '_path_resolve_thread_waits'):\n"
         "        monkeypatch.setattr(paths, name, {})\n",
         {FACADE: {"_path_resolve_load_probes", "_path_resolve_thread_waits"}},
     ),
     "owner-not-facade": (
-        "from kiro_crew.security import paths_resolver\n"
+        "from aj_crew.security import paths_resolver\n"
         "def test(monkeypatch):\n"
         "    monkeypatch.setattr(paths_resolver, '_ON_WINDOWS', True)\n",
         {},
@@ -420,7 +420,7 @@ def _outside_imports() -> dict[str, tuple[str, str]]:
                 continue
             if node.level == 1:
                 home = f"{PACKAGE}.{node.module}" if node.module else PACKAGE
-            elif node.module and node.module.startswith("kiro_crew"):
+            elif node.module and node.module.startswith("aj_crew"):
                 home = node.module
             else:
                 continue
@@ -446,7 +446,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
-    """At BASE the module bound these by import, so ``from kiro_crew.security.paths
+    """At BASE the module bound these by import, so ``from aj_crew.security.paths
     import path_resolve_executor`` type-checked. Now an owner holds them, so the facade names each
     one from its home module under ``TYPE_CHECKING``, and exactly those."""
     served = set(_index().exports)

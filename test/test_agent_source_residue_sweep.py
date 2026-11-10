@@ -16,15 +16,15 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.knowledge.agent_source import (
+from aj_crew.knowledge.agent_source import (
     add_agent_document,
     document_slug,
     ensure_agent_source,
     get_state,
 )
-from kiro_crew.knowledge.ingestion import IngestionPipeline
-from kiro_crew.knowledge.readers import FileReader
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge.ingestion import IngestionPipeline
+from aj_crew.knowledge.readers import FileReader
+from aj_crew.knowledge.store import KnowledgeStore
 
 URI = "https://example.invalid/doc"
 OTHER_URI = "https://example.invalid/other"
@@ -377,7 +377,7 @@ class TestReplacePathAndNormalization:
         # owns the old items while the new items are orphaned. The marker lives
         # in its own table, so it exists alongside the live ownership row and the
         # sweep reaps exactly the new-hash orphans -- the old owned copy survives.
-        from kiro_crew.knowledge.agent_source import mark_ingesting
+        from aj_crew.knowledge.agent_source import mark_ingesting
 
         sid, _ = ensure_agent_source(kstore)
         await add_agent_document(pipeline, title="Doc", content="first body", source_uri=URI)
@@ -513,7 +513,7 @@ class TestMarkerRetirementAcrossChunks:
         # Retirement must wait until no unowned same-hash item remains.
         import hashlib
 
-        from kiro_crew.knowledge.store import _RECLAIM_CHUNK
+        from aj_crew.knowledge.store import _RECLAIM_CHUNK
 
         sid, _ = ensure_agent_source(kstore)
         body = "big body"
@@ -551,7 +551,7 @@ class TestMarkerRetirementAcrossChunks:
         # row; the retry's finalize must not erase it while the orphan is unowned.
         # The hash is live-owned, so the sweep keeps every unowned copy: a duplicate
         # is the cost of never deleting what might be a slug's sole copy.
-        from kiro_crew.knowledge.agent_source import clear_ingesting, mark_ingesting
+        from aj_crew.knowledge.agent_source import clear_ingesting, mark_ingesting
 
         sid, _ = ensure_agent_source(kstore)
         await add_agent_document(pipeline, title="Doc", content="retry body", source_uri=URI)
@@ -798,7 +798,7 @@ class TestEarliestStartIsKeptAcrossRetries:
         # same-content retry pushed the older orphan below the finalize's
         # `created_at >= started_at` gate, dropping its marker and stranding it.
         # _write_ingest_intent now keeps the EARLIEST start on conflict.
-        from kiro_crew.knowledge.agent_source import mark_ingesting
+        from aj_crew.knowledge.agent_source import mark_ingesting
 
         sid, _ = ensure_agent_source(kstore)
         chash = "deadbeef"
@@ -841,8 +841,8 @@ class TestIngestionGateHeldAcrossIntent:
         # ingestion_in_flight across the whole span. Prove the gate is held while
         # mark_ingesting runs: patch mark_ingesting to assert the gate depth is
         # non-zero at the moment the marker is written.
-        import kiro_crew.knowledge.agent_source as agent_source
-        from kiro_crew.knowledge.ingestion import _INGESTION_GATE_DEPTH
+        import aj_crew.knowledge.agent_source as agent_source
+        from aj_crew.knowledge.ingestion import _INGESTION_GATE_DEPTH
 
         real_mark = agent_source.mark_ingesting
         seen = {}
@@ -886,7 +886,7 @@ class TestOwnedIdDerivationIsShared:
         # method the sweep uses. On an unreadable group that method returns None,
         # so clear_ingesting must keep the marker (stand down), exactly as the
         # sweep sweeps nothing.
-        from kiro_crew.knowledge.agent_source import clear_ingesting, mark_ingesting
+        from aj_crew.knowledge.agent_source import clear_ingesting, mark_ingesting
 
         sid, _ = ensure_agent_source(kstore)
         slug = document_slug(URI)
@@ -933,7 +933,7 @@ class TestReplaceNeverLosesTheSoleCopy:
         # raises after the finalize hop deleted the previous group. As two
         # commits this persisted "old gone, new unowned + marker", and the sweep
         # then deleted the new version too -- nothing was left to find.
-        from kiro_crew.knowledge import agent_source
+        from aj_crew.knowledge import agent_source
 
         sid, _ = ensure_agent_source(kstore)
         await add_agent_document(pipeline, title="Doc", content="alphaword body", source_uri=URI)
@@ -967,7 +967,7 @@ class TestReplaceNeverLosesTheSoleCopy:
         # it. It is adopted under no hash: nothing proves the attempt finished.
         import hashlib
 
-        from kiro_crew.knowledge.agent_source import mark_ingesting
+        from aj_crew.knowledge.agent_source import mark_ingesting
 
         sid, _ = ensure_agent_source(kstore)
         await add_agent_document(pipeline, title="Doc", content="gammaword body", source_uri=URI)
@@ -1007,7 +1007,7 @@ class TestReplaceNeverLosesTheSoleCopy:
         # the newer may be a truncated edit and the older the last full version.
         import hashlib
 
-        from kiro_crew.knowledge.agent_source import mark_ingesting
+        from aj_crew.knowledge.agent_source import mark_ingesting
 
         sid, _ = ensure_agent_source(kstore)
         await add_agent_document(pipeline, title="Doc", content="first body", source_uri=URI)
@@ -1062,7 +1062,7 @@ class TestReplaceNeverLosesTheSoleCopy:
         # neither adopted nor deleted.
         import hashlib
 
-        from kiro_crew.knowledge.agent_source import mark_ingesting
+        from aj_crew.knowledge.agent_source import mark_ingesting
 
         sid, _ = ensure_agent_source(kstore)
         text = "shared body"
@@ -1085,7 +1085,7 @@ class TestReplaceNeverLosesTheSoleCopy:
         # exist, so the row keeps its claim and the marked orphan is reaped.
         import hashlib
 
-        from kiro_crew.knowledge.agent_source import mark_ingesting
+        from aj_crew.knowledge.agent_source import mark_ingesting
 
         sid, _ = ensure_agent_source(kstore)
         await add_agent_document(pipeline, title="Doc", content="kept body", source_uri=URI)
@@ -1110,7 +1110,7 @@ class TestReplaceNeverLosesTheSoleCopy:
         # live document does not make the gone document's residue ambiguous.
         import hashlib
 
-        from kiro_crew.knowledge.agent_source import mark_ingesting
+        from aj_crew.knowledge.agent_source import mark_ingesting
 
         sid, _ = ensure_agent_source(kstore)
         await add_agent_document(pipeline, title="A", content="a body", source_uri=URI)
@@ -1214,7 +1214,7 @@ def _legacy_window(kstore, sid, slug, text, started):
     the new version is committed in full, owned by no row, beside its marker."""
     import hashlib
 
-    from kiro_crew.knowledge.agent_source import mark_ingesting
+    from aj_crew.knowledge.agent_source import mark_ingesting
 
     h = hashlib.sha256(text.encode()).hexdigest()
     mark_ingesting(kstore, sid, slug, h, "Doc", source_uri=URI)
@@ -1310,7 +1310,7 @@ class TestAdoptionNeedsCompletionEvidence:
         # reaped in its place: nothing at that slug is deleted while it is unclear.
         import hashlib
 
-        from kiro_crew.knowledge.agent_source import mark_ingesting
+        from aj_crew.knowledge.agent_source import mark_ingesting
 
         sid, _ = ensure_agent_source(kstore)
         shared = hashlib.sha256(b"shared body").hexdigest()
@@ -1340,7 +1340,7 @@ class TestAdoptionNeedsCompletionEvidence:
         # version would go with it.
         import hashlib
 
-        from kiro_crew.knowledge.dedup import dedup_sweep, enumerate_docs
+        from aj_crew.knowledge.dedup import dedup_sweep, enumerate_docs
 
         for m in ("chunk", "chunk_markdown"):
             getattr(pipeline.chunker, m).side_effect = _paragraph_chunks

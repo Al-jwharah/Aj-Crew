@@ -15,8 +15,8 @@ from slack_handler_helpers import FakeProvider, FakeSessionManager
 from test_slack_handler_turn_outcomes import _abandoned, _SequencedProvider
 
 from conftest import MockSlackClient
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.slack.handler import handle_message
+from aj_crew.providers.base import LLMEvent
+from aj_crew.slack.handler import handle_message
 
 
 class TestWorkingIndicatorCleanup:
@@ -150,8 +150,8 @@ class TestWorkingIndicatorCleanup:
     @pytest.mark.asyncio
     async def test_review_cancel_before_draft_lands_clears_status(self, monkeypatch):
         """Review mode keeps its status for the draft; a cancel before it lands clears it."""
-        import kiro_crew.slack.handler as handler_mod
-        from kiro_crew.slack.handler import ACTIVATION_REVIEW
+        import aj_crew.slack.handler as handler_mod
+        from aj_crew.slack.handler import ACTIVATION_REVIEW
 
         async def _cancel_draft(*args, **kwargs):
             raise asyncio.CancelledError()
@@ -181,7 +181,7 @@ class TestWorkingIndicatorCleanup:
     async def test_cancel_after_a_replay_leaves_the_replays_status(self, monkeypatch):
         """A cancel that unwinds the parent after a compaction replay does not clear
         the status the nested turn now owns (e.g. its "Awaiting review…")."""
-        import kiro_crew.slack.handler as handler_mod
+        import aj_crew.slack.handler as handler_mod
 
         real = handler_mod.handle_message
 
@@ -208,7 +208,7 @@ class TestWorkingIndicatorCleanup:
     ):
         """A cancel that lands in the nested replay before it sets its own status
         leaves no "…is working" status from the abandoned first attempt."""
-        import kiro_crew.slack.handler as handler_mod
+        import aj_crew.slack.handler as handler_mod
 
         real = handler_mod.handle_message
 
@@ -254,7 +254,7 @@ class TestEarlyExitsClearBothIndicators:
 
     @pytest.mark.asyncio
     async def test_gateway_shutting_down(self):
-        from kiro_crew.session import SessionClosingError
+        from aj_crew.session import SessionClosingError
 
         class _Closing(FakeSessionManager):
             def begin_turn(self, key):

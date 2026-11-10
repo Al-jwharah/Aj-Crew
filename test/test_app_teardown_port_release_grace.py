@@ -23,9 +23,9 @@ from unittest.mock import patch
 
 import pytest
 
-import kiro_crew.apps.teardown as appteardown
-from kiro_crew.platform_compat import PortListener
-from kiro_crew.testing.clock import ManualClock
+import aj_crew.apps.teardown as appteardown
+from aj_crew.platform_compat import PortListener
+from aj_crew.testing.clock import ManualClock
 
 APP = "port-grace-app"
 PORT = 9137

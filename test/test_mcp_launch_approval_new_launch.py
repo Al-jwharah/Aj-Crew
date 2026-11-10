@@ -5,7 +5,7 @@ A second agent then declares the same server with its own arguments, and the nex
 gateway start refuses the name as ``changed_needs_reapproval``. These tests pin,
 through the real toggle, rewrite and store, that the refusal record carries the
 approved launch unchanged among the live ones (the toggle's display and the
-rewrite's display are the same bytes), so ``kirocrew doctor`` names it a new
+rewrite's display are the same bytes), so ``ajcrew doctor`` names it a new
 launch; that an approved launch which really changed keeps "command changed",
 even when a redaction tag makes its display read as unchanged; and that one
 Approve update still approves every live launch. The dashboard applies
@@ -28,8 +28,8 @@ from mcp_launch_approval_helpers import (  # noqa: F401 -- the fixture is reques
     toggle_home_fixture,
 )
 
-from kiro_crew.doctor_checks import mcp as doctor_mcp
-from kiro_crew.mcp_gateway import rewriter
+from aj_crew.doctor_checks import mcp as doctor_mcp
+from aj_crew.mcp_gateway import rewriter
 
 #: Opts this module out of the conftest fixture that approves every gatewayd launch.
 ENFORCE_LAUNCH_APPROVAL = True

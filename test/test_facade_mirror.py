@@ -1,4 +1,4 @@
-"""``kiro_crew._facade_mirror``: a write through a mirrored facade reaches every reader.
+"""``aj_crew._facade_mirror``: a write through a mirrored facade reaches every reader.
 
 Each case builds the synthetic family in ``facade_mirror_helpers`` and pins one part of the
 mechanism: the index, the read path, and every undo protocol a test harness uses on the
@@ -32,7 +32,7 @@ from facade_mirror_helpers import (
 )
 from mirrored_owner_probe import SENTINEL, one_reexported_pair
 
-from kiro_crew import _facade_mirror
+from aj_crew import _facade_mirror
 
 
 @pytest.fixture
@@ -750,7 +750,7 @@ _OWN_RESOLVER = """
 import importlib as _importlib
 import sys as _sys
 
-from kiro_crew import _facade_mirror
+from aj_crew import _facade_mirror
 
 
 def __getattr__(name):
@@ -849,7 +849,7 @@ _EXT_FACADE = """
 import importlib as _importlib
 import sys as _sys
 
-from kiro_crew import _facade_mirror
+from aj_crew import _facade_mirror
 from {ext} import tool
 
 _OWNERS = ("{a}", "{b}")

@@ -30,7 +30,7 @@ const theme = params.get('theme') || 'dark'
 const width = Number(params.get('width') || 260)
 localStorage.setItem('mc-theme', theme === 'light' ? 'light' : 'dark')
 localStorage.setItem('mc-color-theme', 'kiro')
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 localStorage.setItem('mc-sidebar-lane', 'flat')
 localStorage.setItem('mc-session-stale-collapse-ms', '0')
 localStorage.setItem('mc-sidebar-width', String(width))
@@ -52,7 +52,7 @@ interface Row {
   pinned?: boolean
 }
 const row = (over: Partial<Row> & Pick<Row, 'key' | 'title' | 'last_ts' | 'last_message'>): Row => ({
-  messages: 6, running: false, agent: 'kirocrew', ...over,
+  messages: 6, running: false, agent: 'ajcrew', ...over,
 })
 const ROWS: Row[] = [
   row({ key: 'chat-active', title: 'TCM Game Day Design', last_ts: ago(0.1), last_message: 'Draft is ready for review.' }),
@@ -98,8 +98,8 @@ function Harness() {
         unreadSlots={[]}
         history={[]}
         historyHasMore={false}
-        defaultAgent="kirocrew"
-        installedAgents={[{ name: 'kirocrew', source: 'builtin' }]}
+        defaultAgent="ajcrew"
+        installedAgents={[{ name: 'ajcrew', source: 'builtin' }]}
       />
     </div>
   )

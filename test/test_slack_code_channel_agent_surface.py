@@ -50,16 +50,16 @@ from slack_code_channel_surface_helpers import (  # noqa: F401 - fixtures by nam
 )
 from slack_code_channels_helpers import OWNER
 
-from kiro_crew.config.loader import ACTIVATION_OFF, ACTIVATION_REVIEW
-from kiro_crew.mcp_tools import code_channels as mcp_code_channels
-from kiro_crew.slack import features
-from kiro_crew.slack.code_channels import agent_bar
-from kiro_crew.slack.code_channels import binding as cc_binding
-from kiro_crew.slack.code_channels import commands, status, surface, tools, wrapup
-from kiro_crew.slack.code_channels.surface_store import SurfaceStore
-from kiro_crew.slack.code_channels.surface_store import store as surface_store
-from kiro_crew.slack.code_channels.workspace import service
-from kiro_crew.slack.code_channels.workspace.store import WorkspaceRecord, WorkspaceStore
+from aj_crew.config.loader import ACTIVATION_OFF, ACTIVATION_REVIEW
+from aj_crew.mcp_tools import code_channels as mcp_code_channels
+from aj_crew.slack import features
+from aj_crew.slack.code_channels import agent_bar
+from aj_crew.slack.code_channels import binding as cc_binding
+from aj_crew.slack.code_channels import commands, status, surface, tools, wrapup
+from aj_crew.slack.code_channels.surface_store import SurfaceStore
+from aj_crew.slack.code_channels.surface_store import store as surface_store
+from aj_crew.slack.code_channels.workspace import service
+from aj_crew.slack.code_channels.workspace.store import WorkspaceRecord, WorkspaceStore
 
 # ── Pinning ───────────────────────────────────────────────────────────────
 
@@ -306,7 +306,7 @@ def _our_canvas(monkeypatch: Any, *, user: str = "UBOT", bot: str = "", age: flo
     """files.info for the channel canvas: its creator and when it was made."""
     import time as time_mod
 
-    from kiro_crew.slack import enterprise
+    from aj_crew.slack import enterprise
 
     monkeypatch.setattr(enterprise, "validated_self_user_id", lambda: "UBOT")
     monkeypatch.setattr(enterprise, "validated_self_bot_id", lambda: "BBOT")
@@ -372,7 +372,7 @@ def test_our_canvas_is_adopted_by_bot_id_and_after_two_lost_creates(
         # The second lost create starts long after the first one's canvas was made.
         # Only tools' own clock binding moves: the stdlib time module is shared
         # by the whole worker (every store write and log timestamp reads it).
-        from kiro_crew.testing.clock import ManualClock
+        from aj_crew.testing.clock import ManualClock
 
         ManualClock(start=first + 3600).install(monkeypatch, tools)
         assert not _run(env, tools.PUBLISH_PLAN_CANVAS, {"markdown": "# Plan"}).ok
@@ -396,7 +396,7 @@ def test_an_unverifiable_canvas_is_refused_and_code_channels_stay_on(
     """When who made the canvas can't be told (no files:read, a dropped read, our
     own identity unknown) it is refused, nothing written, and the install-wide
     latch is never tripped by that read."""
-    from kiro_crew.slack import enterprise, features
+    from aj_crew.slack import enterprise, features
 
     _bind(env)
     env.api.responses["conversations.canvases.create"] = ConnectionResetError("socket reset")
@@ -553,7 +553,7 @@ def test_summarize_becomes_a_prompt_for_the_bound_session(env: Any) -> None:
 
 def test_an_archive_finished_during_the_rebind_runs_no_turn(env: Any, monkeypatch: Any) -> None:
     """Stamped and unfenced while the message rebinds: the stored stamp stops it."""
-    from kiro_crew.slack.code_channels import routing
+    from aj_crew.slack.code_channels import routing
 
     _bind(env)
     stored = env.store.get_binding(CH)
@@ -574,7 +574,7 @@ def test_an_archive_finished_during_the_rebind_runs_no_turn(env: Any, monkeypatc
 def test_a_channel_fenced_as_archived_runs_no_turn(env: Any, monkeypatch: Any, when: str) -> None:
     """Slack archived it but both stamp writes failed: the in-process fence alone
     keeps an in-flight message from reaching the session."""
-    from kiro_crew.slack.code_channels import routing
+    from aj_crew.slack.code_channels import routing
 
     _bind(env)
     rebinds: list[int] = []
@@ -698,7 +698,7 @@ def test_a_command_with_the_toggle_off_is_not_ours(env: Any) -> None:
     _bind(env)
     env.on = False
     assert asyncio.run(commands.handle_slash(env.orch, _slash("/summarize"), _noop)) is False
-    assert asyncio.run(commands.handle_slash(env.orch, _slash("/kirocrew"), _noop)) is False
+    assert asyncio.run(commands.handle_slash(env.orch, _slash("/ajcrew"), _noop)) is False
 
 
 def test_command_set_offers_create_pr_only_when_possible(env: Any, monkeypatch: Any) -> None:
@@ -878,8 +878,8 @@ def test_an_archive_whose_answer_was_lost_is_reconciled_with_slack(
 ) -> None:
     """A transport failure may hide an archive Slack applied: Slack's own state
     decides, and only a channel confirmed live gets its button back."""
-    from kiro_crew.slack.code_channels.models import CodeChannelApiError
-    from kiro_crew.slack.code_channels.surface_client import SurfaceClient
+    from aj_crew.slack.code_channels.models import CodeChannelApiError
+    from aj_crew.slack.code_channels.surface_client import SurfaceClient
 
     async def lost(self: Any, *_a: Any, **_k: Any) -> None:
         raise CodeChannelApiError(
@@ -964,7 +964,7 @@ def test_wrap_up_facts_name_the_branch(env: Any, worktree: Any) -> None:
 
 
 def test_the_mcp_tool_forwards_the_strict_key_and_no_channel(monkeypatch: Any) -> None:
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     sent: list[tuple[str, dict, str]] = []
     monkeypatch.setattr(mcp_core, "require_strict_session_key", lambda refusal: (SESSION, ""))
@@ -988,7 +988,7 @@ def test_the_mcp_tool_forwards_the_strict_key_and_no_channel(monkeypatch: Any) -
 
 
 def test_the_mcp_tool_refuses_an_unidentified_caller(monkeypatch: Any) -> None:
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     monkeypatch.setattr(
         mcp_core, "require_strict_session_key", lambda refusal: ("", refusal + " (why)")
@@ -1013,7 +1013,7 @@ def test_the_mcp_tool_refuses_an_unidentified_caller(monkeypatch: Any) -> None:
 def test_the_route_refuses_an_unverified_caller(
     monkeypatch: Any, flags: dict, headers: dict, status: int
 ) -> None:
-    from kiro_crew.dashboard.handlers import slack_code_channel_tools as route
+    from aj_crew.dashboard.handlers import slack_code_channel_tools as route
 
     monkeypatch.setattr(tools, "run_tool", lambda *a, **k: pytest.fail("must not run"))
     monkeypatch.setattr(surface, "audit", lambda *a, **k: None)
@@ -1024,7 +1024,7 @@ def test_the_route_refuses_an_unverified_caller(
 def test_the_route_runs_the_tool_for_the_attested_session(monkeypatch: Any) -> None:
     import json
 
-    from kiro_crew.dashboard.handlers import slack_code_channel_tools as route
+    from aj_crew.dashboard.handlers import slack_code_channel_tools as route
 
     seen: list[tuple] = []
 
@@ -1047,7 +1047,7 @@ def test_the_route_runs_the_tool_for_the_attested_session(monkeypatch: Any) -> N
 def test_set_context_bar_rides_the_workspace_publish(
     env: Any, tmp_path: Path, monkeypatch: Any
 ) -> None:
-    from kiro_crew.slack.code_channels.workspace import core as workspace_core
+    from aj_crew.slack.code_channels.workspace import core as workspace_core
 
     _bind(env)
     sent: list[list[dict]] = []
@@ -1139,7 +1139,7 @@ def test_tools_wrap_up_and_archive_respect_the_outbound_ceiling(env: Any) -> Non
 
 
 def test_exfiltration_urls_are_redacted_and_bad_links_refused(env: Any) -> None:
-    from kiro_crew.security import redact
+    from aj_crew.security import redact
 
     _bind(env)
     leak = "https://attacker.example/c?d=" + "ghp_" + "B" * 36
@@ -1154,7 +1154,7 @@ def test_exfiltration_urls_are_redacted_and_bad_links_refused(env: Any) -> None:
 def test_a_failed_store_write_changes_nothing_and_fails_the_tool(
     env: Any, monkeypatch: Any
 ) -> None:
-    from kiro_crew.slack.code_channels import surface_store as ss
+    from aj_crew.slack.code_channels import surface_store as ss
 
     _bind(env)
     env.api.responses["conversations.canvases.create"] = {"ok": True, "canvas_id": "F1"}
@@ -1198,7 +1198,7 @@ def test_wrap_up_facts_and_identifiers_pass_the_redaction(env: Any, monkeypatch:
 
 
 def test_the_wrap_up_start_hook_runs_before_every_other(monkeypatch: Any) -> None:
-    from kiro_crew.slack.code_channels import hooks
+    from aj_crew.slack.code_channels import hooks
 
     monkeypatch.setattr(hooks, "_START_HOOKS", [status._on_start])
     monkeypatch.setattr(hooks, "_END_HOOKS", [])
@@ -1260,7 +1260,7 @@ def test_a_workspace_the_enterprise_gate_rejects_runs_nothing(env: Any, monkeypa
 
 
 def test_an_archived_channel_fires_no_turn_hooks(env: Any) -> None:
-    from kiro_crew.slack.code_channels import binding as binding_mod
+    from aj_crew.slack.code_channels import binding as binding_mod
 
     binding = _bind(env)
     env.store.update_binding(CH, archived_at=1.0)
@@ -1273,7 +1273,7 @@ def test_an_archived_channel_fires_no_turn_hooks(env: Any) -> None:
 def test_a_channel_with_no_bound_project_cleans_the_worktree_its_bind_made(
     env: Any, worktree: Any, monkeypatch: Any, tmp_path: Path
 ) -> None:
-    from kiro_crew.slack.code_channels.workspace import core as workspace_core
+    from aj_crew.slack.code_channels.workspace import core as workspace_core
 
     root, tree = worktree
     _bind(env)  # no project on the binding: the bind used the dashboard default
@@ -1459,7 +1459,7 @@ def test_archive_keeps_the_tree_when_a_session_cannot_be_moved_off_it(
 def test_archive_keeps_the_tree_while_a_worker_is_mid_turn_in_it(
     env: Any, worktree: Any, monkeypatch: Any, tmp_path: Path
 ) -> None:
-    from kiro_crew.slack.code_channels.workspace import folders as cc_folders
+    from aj_crew.slack.code_channels.workspace import folders as cc_folders
 
     root, tree = worktree
     _bind(env, project=str(root))
@@ -1543,7 +1543,7 @@ def test_archive_keeps_the_tree_when_a_turn_starts_while_sessions_move(
 ) -> None:
     """Idle when checked is not idle at removal: a turn started (or a worker filed)
     while the sessions were being moved keeps the tree, and they move back."""
-    from kiro_crew.slack.code_channels.workspace import folders as cc_folders
+    from aj_crew.slack.code_channels.workspace import folders as cc_folders
 
     root, tree = worktree
     _bind(env, project=str(root))
@@ -1769,17 +1769,17 @@ def test_the_record_lives_in_the_fenced_routing_directory(
     """The record sits beside the core's binding record in ``routing/``, which the
     shared floors fence as a whole: agent file tools can neither read nor write it,
     under either home prefix, while the same basename in a project stays writable."""
-    from kiro_crew.security.paths import is_sensitive_path, is_sensitive_write_path
-    from kiro_crew.slack.code_channels import store as core_store
-    from kiro_crew.slack.code_channels import surface_store
+    from aj_crew.security.paths import is_sensitive_path, is_sensitive_write_path
+    from aj_crew.slack.code_channels import store as core_store
+    from aj_crew.slack.code_channels import surface_store
 
-    monkeypatch.setattr("kiro_crew.config.paths.config_dir", lambda: tmp_path / "home")
+    monkeypatch.setattr("aj_crew.config.paths.config_dir", lambda: tmp_path / "home")
     default = surface_store._default_path()
     assert default.parent == core_store._default_path().parent
     assert default.parent.name == core_store.STORE_DIRNAME == "routing"
 
     home = os.path.expanduser
-    for prefix in ("~/.kirocrew", "~/.kiro/crew"):
+    for prefix in ("~/.ajcrew", "~/.kiro/crew"):
         fenced = home(f"{prefix}/routing/slack-code-channel-surface.json")
         assert is_sensitive_path(fenced), fenced
         assert is_sensitive_write_path(fenced), fenced

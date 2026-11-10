@@ -10,7 +10,7 @@ import json
 
 import pytest
 
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME
 
 
 def _make_app_source(tmp_path, name="test-app", **extras):
@@ -39,16 +39,16 @@ def _make_app_source(tmp_path, name="test-app", **extras):
 
 @pytest.fixture(name="app_env")
 def app_env_fixture(tmp_path, monkeypatch):
-    """Set up isolated KIROCREW_HOME and KIRO agents dir."""
-    home = tmp_path / "kirocrew-home"
+    """Set up isolated AJCREW_HOME and KIRO agents dir."""
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
 
     kiro_agents = tmp_path / "kiro-agents"
     kiro_agents.mkdir()
     # Patch the KIRO_AGENTS_DIR in bridges module
-    import kiro_crew.apps.bridges as bridges_mod
-    import kiro_crew.apps.execution as execution_mod
+    import aj_crew.apps.bridges as bridges_mod
+    import aj_crew.apps.execution as execution_mod
 
     monkeypatch.setattr(bridges_mod, "KIRO_AGENTS_DIR", kiro_agents)
     monkeypatch.setattr(
@@ -71,7 +71,7 @@ def _stub_venv_probe(_floor_monkeypatch):
     The real probe runs under the OS sandbox, so on hosts without one (Windows CI) the
     venv is never preferred and these plumbing tests would flip per platform.
     """
-    from kiro_crew.apps import interpreter as _interp
+    from aj_crew.apps import interpreter as _interp
 
     _floor_monkeypatch.setattr(
         _interp,

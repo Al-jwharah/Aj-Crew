@@ -19,8 +19,8 @@ from pathlib import Path
 import pytest
 from config_loader_helpers import _load_from_dict, _load_from_dict_with_logs
 
-import kiro_crew.config.loader as loader_module
-from kiro_crew.config.loader import DashboardConfig, KiroCrewConfig, WatchdogConfig
+import aj_crew.config.loader as loader_module
+from aj_crew.config.loader import DashboardConfig, AjCrewConfig, WatchdogConfig
 
 
 @pytest.mark.parametrize("enabled,keep", [(False, 30), (True, 2)])
@@ -31,7 +31,7 @@ def test_memory_backup_controls_survive_load_and_save(tmp_path, monkeypatch, ena
         encoding="utf-8",
     )
     monkeypatch.setattr(loader_module, "config_path", lambda: path)
-    config = KiroCrewConfig.load()
+    config = AjCrewConfig.load()
     assert config.memory.backup_enabled is enabled
     assert config.memory.backup_keep == keep
     config.save()
@@ -56,7 +56,7 @@ def test_memory_backup_enabled_requires_json_boolean_without_jsonschema(
     tmp_path, monkeypatch, memory_data, expected
 ):
     """The shipped runtime still enforces the config field's bool contract."""
-    from kiro_crew.config import validation
+    from aj_crew.config import validation
 
     path = tmp_path / "config.json"
     path.write_text(json.dumps({"memory": memory_data}), encoding="utf-8")
@@ -64,7 +64,7 @@ def test_memory_backup_enabled_requires_json_boolean_without_jsonschema(
     monkeypatch.setattr(loader_module, "config_path", lambda: path)
     monkeypatch.setattr(loader_module, "config_local_path", lambda: tmp_path / "missing.local.json")
 
-    config = KiroCrewConfig.load()
+    config = AjCrewConfig.load()
 
     assert config.memory.backup_enabled is expected
 
@@ -85,7 +85,7 @@ def test_dashboard_tailscale_hydrates_and_survives_a_round_trip() -> None:
     reads back as ``False`` and the next ``save()`` rewrites it. Both hydration and
     the round trip are pinned.
     """
-    assert KiroCrewConfig().dashboard.tailscale.enabled is False
+    assert AjCrewConfig().dashboard.tailscale.enabled is False
     assert _load_from_dict({}).dashboard.tailscale.enabled is False
 
     enabled = _load_from_dict({"dashboard": {"tailscale": {"enabled": True}}})
@@ -166,9 +166,9 @@ class TestWidgetDensityRoundTrip:
 
         cfg = _load_from_dict({"dashboard": {"widget_density": "less"}})
         cfg_file = tmp_path / "config.json"
-        with patch("kiro_crew.config.loader.config_path", return_value=cfg_file):
+        with patch("aj_crew.config.loader.config_path", return_value=cfg_file):
             cfg.save()
-            loaded = KiroCrewConfig.load()
+            loaded = AjCrewConfig.load()
         assert loaded.dashboard.widget_density == "less"
 
 
@@ -203,7 +203,7 @@ class TestDefaultMemoryModeRoundTrip:
             return data
 
         with unittest.mock.patch(
-            "kiro_crew.config.loader._validate_config_data",
+            "aj_crew.config.loader._validate_config_data",
             side_effect=assert_normalized,
         ):
             cfg = _load_from_dict({"dashboard": {"default_memory_mode": "surprise"}})
@@ -212,7 +212,7 @@ class TestDefaultMemoryModeRoundTrip:
 
     def test_locked_write_invalidates_unchanged_fingerprint_cache(self, tmp_path: Path) -> None:
         """A successful PUT-equivalent write must be visible with a coarse fingerprint."""
-        from kiro_crew.config.loader import (
+        from aj_crew.config.loader import (
             _invalidate_config_cache,
             update_config_locked,
             write_config_atomically,
@@ -223,7 +223,7 @@ class TestDefaultMemoryModeRoundTrip:
         write_config_atomically(
             cfg_file,
             {
-                "agents": {"default": {"kiro_agent": "kirocrew"}},
+                "agents": {"default": {"kiro_agent": "ajcrew"}},
                 "default_agent": "default",
                 "workspaces": {"default": {"dir": "~/workspace"}},
                 "dashboard": {"default_memory_mode": "incognito"},
@@ -232,16 +232,16 @@ class TestDefaultMemoryModeRoundTrip:
         _invalidate_config_cache()
         try:
             with (
-                unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
+                unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_file),
                 unittest.mock.patch(
-                    "kiro_crew.config.loader.config_local_path", return_value=local_file
+                    "aj_crew.config.loader.config_local_path", return_value=local_file
                 ),
                 unittest.mock.patch(
-                    "kiro_crew.config.loader._config_fingerprint",
+                    "aj_crew.config.loader._config_fingerprint",
                     return_value=(("coarse-filesystem", 1, 1, 0o600),),
                 ),
             ):
-                assert KiroCrewConfig.load().dashboard.default_memory_mode == "incognito"
+                assert AjCrewConfig.load().dashboard.default_memory_mode == "incognito"
 
                 def select_temporary(data: dict) -> dict:
                     data.setdefault("dashboard", {})["default_memory_mode"] = "temporary"
@@ -252,13 +252,13 @@ class TestDefaultMemoryModeRoundTrip:
                     mutate=select_temporary,
                     stamp_meta=False,
                 )
-                assert KiroCrewConfig.load().dashboard.default_memory_mode == "temporary"
+                assert AjCrewConfig.load().dashboard.default_memory_mode == "temporary"
         finally:
             _invalidate_config_cache()
 
     def test_inflight_reader_cannot_restore_stale_cache_after_write(self, tmp_path: Path) -> None:
         """A pre-write read cannot publish after a same-fingerprint write completes."""
-        from kiro_crew.config.loader import (
+        from aj_crew.config.loader import (
             _invalidate_config_cache,
             update_config_locked,
             write_config_atomically,
@@ -269,7 +269,7 @@ class TestDefaultMemoryModeRoundTrip:
         write_config_atomically(
             cfg_file,
             {
-                "agents": {"default": {"kiro_agent": "kirocrew"}},
+                "agents": {"default": {"kiro_agent": "ajcrew"}},
                 "default_agent": "default",
                 "workspaces": {"default": {"dir": "~/workspace"}},
                 "dashboard": {"default_memory_mode": "incognito"},
@@ -296,18 +296,18 @@ class TestDefaultMemoryModeRoundTrip:
 
         def load_during_write() -> None:
             try:
-                observed.append(KiroCrewConfig.load().dashboard.default_memory_mode)
+                observed.append(AjCrewConfig.load().dashboard.default_memory_mode)
             except BaseException as exc:  # pragma: no cover - surfaced below
                 errors.append(exc)
 
         try:
             with (
-                unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
+                unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_file),
                 unittest.mock.patch(
-                    "kiro_crew.config.loader.config_local_path", return_value=local_file
+                    "aj_crew.config.loader.config_local_path", return_value=local_file
                 ),
                 unittest.mock.patch(
-                    "kiro_crew.config.loader._config_fingerprint",
+                    "aj_crew.config.loader._config_fingerprint",
                     return_value=(("coarse-filesystem", 1, 1, 0o600),),
                 ),
                 unittest.mock.patch.object(Path, "read_text", read_then_wait),
@@ -330,7 +330,7 @@ class TestDefaultMemoryModeRoundTrip:
                 assert not reader.is_alive(), "blocked config reader did not finish"
                 assert not errors
                 assert observed == ["incognito"]
-                assert KiroCrewConfig.load().dashboard.default_memory_mode == "temporary"
+                assert AjCrewConfig.load().dashboard.default_memory_mode == "temporary"
         finally:
             release_read.set()
             if reader is not None:
@@ -342,9 +342,9 @@ class TestDefaultMemoryModeRoundTrip:
 
         cfg = _load_from_dict({"dashboard": {"default_memory_mode": "temporary"}})
         cfg_file = tmp_path / "config.json"
-        with patch("kiro_crew.config.loader.config_path", return_value=cfg_file):
+        with patch("aj_crew.config.loader.config_path", return_value=cfg_file):
             cfg.save()
-            loaded = KiroCrewConfig.load()
+            loaded = AjCrewConfig.load()
         assert loaded.dashboard.default_memory_mode == "temporary"
 
 
@@ -432,9 +432,9 @@ class TestKnowledgeAutoIngest:
         assert cfg.knowledge.dedup_every_n_sweeps == 12
 
     def test_new_keys_are_dashboard_editable(self) -> None:
-        # A key absent from the allowlist is rejected by PATCH /api/config/kirocrew,
+        # A key absent from the allowlist is rejected by PATCH /api/config/ajcrew,
         # so its toggle would render and then fail to save.
-        from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+        from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
         for key in (
             "knowledge.auto_add_documents",
@@ -511,7 +511,7 @@ class TestKnowledgePoolIdleTtl:
     def test_integral_float_preserves_legacy_coercion(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.config.validation as validation
+        import aj_crew.config.validation as validation
 
         monkeypatch.setattr(validation, "_HAS_JSONSCHEMA", False)
 
@@ -521,7 +521,7 @@ class TestKnowledgePoolIdleTtl:
     def test_non_integral_float_falls_back_to_default(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.config.validation as validation
+        import aj_crew.config.validation as validation
 
         monkeypatch.setattr(validation, "_HAS_JSONSCHEMA", False)
 
@@ -570,7 +570,7 @@ class TestOrchestratorWatchdogThemeAreParsed:
 
     def test_per_agent_watchdog_overrides_default_to_inherit(self) -> None:
         """An agent entry without overrides parses to 0 (inherit the global)."""
-        cfg = _load_from_dict({"agents": {"builder": {"kiro_agent": "kirocrew"}}})
+        cfg = _load_from_dict({"agents": {"builder": {"kiro_agent": "ajcrew"}}})
         assert cfg.agents["builder"].watchdog_tool_stall_suspect_secs == 0.0
         assert cfg.agents["builder"].watchdog_tool_stall_hard_cap_secs == 0.0
 
@@ -581,7 +581,7 @@ class TestOrchestratorWatchdogThemeAreParsed:
         negative value is clamped to 0 — never an instant-cancel window, never
         a crashed load. jsonschema is disabled so the raw values reach the
         _safe_float guards (with it enabled, validation strips them first)."""
-        import kiro_crew.config.validation as validation
+        import aj_crew.config.validation as validation
 
         monkeypatch.setattr(validation, "_HAS_JSONSCHEMA", False)
 
@@ -589,7 +589,7 @@ class TestOrchestratorWatchdogThemeAreParsed:
             {
                 "agents": {
                     "a": {
-                        "kiro_agent": "kirocrew",
+                        "kiro_agent": "ajcrew",
                         "watchdog_tool_stall_suspect_secs": "junk",
                         "watchdog_tool_stall_hard_cap_secs": -5,
                     }
@@ -624,7 +624,7 @@ class TestOrchestratorWatchdogThemeAreParsed:
         surface (Slack/cron — see _resolve_model_for_agent's surface
         convention) is covered by crew-namespace membership; a non-crew name
         (a kiro template) yields "" so no override can attach to it."""
-        import kiro_crew.providers.acp as acp_mod
+        import aj_crew.providers.acp as acp_mod
 
         captured: list[dict] = []
 
@@ -703,7 +703,7 @@ class TestOrchestratorWatchdogThemeAreParsed:
     def test_import_onboarded_string_false_falls_back_without_jsonschema(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.config.validation as validation
+        import aj_crew.config.validation as validation
 
         monkeypatch.setattr(validation, "_HAS_JSONSCHEMA", False)
 
@@ -714,7 +714,7 @@ class TestOrchestratorWatchdogThemeAreParsed:
     def test_invalid_import_onboarded_inherits_onboarded_without_jsonschema(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.config.validation as validation
+        import aj_crew.config.validation as validation
 
         monkeypatch.setattr(validation, "_HAS_JSONSCHEMA", False)
 

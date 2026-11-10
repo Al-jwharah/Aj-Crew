@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew.crew_log import (
+from aj_crew.crew_log import (
     CODE_BAD_DATA,
     CODE_BAD_DATA_FIELD,
     SESSION_ENTRY_TYPES,
@@ -30,17 +30,17 @@ from kiro_crew.crew_log import (
     declaration_for,
     emit,
 )
-from kiro_crew.crew_log import entry_types as reg
-from kiro_crew.crew_log import (
+from aj_crew.crew_log import entry_types as reg
+from aj_crew.crew_log import (
     lease,
     render_markdown,
 )
-from kiro_crew.crew_log import store as store_mod
-from kiro_crew.crew_log import (
+from aj_crew.crew_log import store as store_mod
+from aj_crew.crew_log import (
     validate_data,
 )
-from kiro_crew.crew_log import writer as writer_mod
-from kiro_crew.crew_log.store import (
+from aj_crew.crew_log import writer as writer_mod
+from aj_crew.crew_log.store import (
     STOP_REASON_INTERRUPTED,
     TOOL_STATUS_UNKNOWN,
     _closer_entries,
@@ -55,7 +55,7 @@ SESSION = "acp-sess-types"
 #: here fails rather than going untested.
 CANONICAL: dict[str, dict] = {
     "session/opened": {
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         "slot": "dashboard:3",
         "model": "",
         "cwd": "/home/u/proj",
@@ -180,7 +180,7 @@ CANONICAL: dict[str, dict] = {
     "subagent/spawned": {
         "agent_id": "sub-9",
         "turn": 3,
-        "agent": "kirocrew-worker",
+        "agent": "ajcrew-worker",
         "model": "claude",
         "scope": {"memory": True, "lessons": True, "project": False},
     },
@@ -238,7 +238,7 @@ CANONICAL: dict[str, dict] = {
     "radar/recorded": {
         "crew_id": "c_0a1b2c3d",
         "owner": "kirodotdev",
-        "repo": "KiroCrew",  # brand-ok: the repository name
+        "repo": "AjCrew",  # brand-ok: the repository name
         "number": 2251,
         "phase": "implementing",
         "next": "add the Windows branch to _safe_chmod",
@@ -374,7 +374,7 @@ CANONICAL: dict[str, dict] = {
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     emit.reset_caches()
     yield
@@ -502,7 +502,7 @@ def test_only_a_vocabulary_the_writer_clamps_is_enforced():
     assert {spec_type for spec_type, _ in closed} <= emitted
 
 
-#: The append primitives in :mod:`kiro_crew.crew_log.emit` and its durable writer,
+#: The append primitives in :mod:`aj_crew.crew_log.emit` and its durable writer,
 #: each mapped to the index of the positional argument that names the entry type.
 #:
 #: Keyed on the CALLEE rather than on any type-shaped literal, because emit_turn.py also
@@ -915,7 +915,7 @@ def _entries(session_id: str = SESSION) -> list[dict]:
 
 
 def _fresh() -> CrewLog:
-    return CrewLog.create("session", SESSION, owner="default", agent="kirocrew")
+    return CrewLog.create("session", SESSION, owner="default", agent="ajcrew")
 
 
 def test_append_refuses_a_bad_payload_and_leaves_the_file_identical():
@@ -993,7 +993,7 @@ def test_every_entry_a_real_turn_produces_validates():
     # checks what actually landed, rather than a hand-written payload.
     emit.on_session_opened(
         SESSION,
-        agent="kirocrew",
+        agent="ajcrew",
         slot="chat-7",
         model="claude-opus-5",
         cwd="/home/dev/project",
@@ -1041,7 +1041,7 @@ def test_every_entry_a_real_turn_produces_validates():
         SESSION,
         1,
         agent_id="sub-1",
-        agent="kirocrew-worker",
+        agent="ajcrew-worker",
         model="claude",
         task="audit the retry path",
         scope={"memory": True, "lessons": False, "project": True},
@@ -1103,7 +1103,7 @@ def test_every_entry_a_real_turn_produces_validates():
 
 
 def test_an_oversize_body_and_its_chunk_group_validate():
-    emit.on_session_opened(SESSION, agent="kirocrew", owner="default")
+    emit.on_session_opened(SESSION, agent="ajcrew", owner="default")
     emit.on_message_sent(SESSION, 1, step=1, text="x" * 200_000)
     assert_drained()
     body = _entries()[1:]
@@ -1141,7 +1141,7 @@ def test_the_loss_marker_the_writer_builds_validates():
 
 
 def test_the_failed_turn_closer_validates_without_credits_or_tokens():
-    emit.on_session_opened(SESSION, agent="kirocrew", owner="default")
+    emit.on_session_opened(SESSION, agent="ajcrew", owner="default")
     emit.on_turn_started(SESSION, 1, "user")
     emit.on_turn_failed(SESSION, 1, error="AcpError", duration_ms=12, model="c", provider="kiro")
     assert_drained()
@@ -1158,7 +1158,7 @@ def test_the_measured_turn_closer_validates_with_credits_and_no_tokens():
     there. The writer must therefore omit the block rather than write four zeros,
     which the fold would count as a report.
     """
-    emit.on_session_opened(SESSION, agent="kirocrew", owner="default")
+    emit.on_session_opened(SESSION, agent="ajcrew", owner="default")
     emit.on_turn_started(SESSION, 1, "user")
     emit.on_turn_completed(
         SESSION,
@@ -1257,16 +1257,16 @@ def test_the_cli_prints_the_tables_and_refuses_anything_else(capsys):
 
 
 def test_the_module_runs_as_a_command():
-    # `python -m kiro_crew.crew_log.entry_types --markdown` is the documented form,
+    # `python -m aj_crew.crew_log.entry_types --markdown` is the documented form,
     # so the module has to be importable AS a script and not only as a library.
     root = Path(__file__).resolve().parents[1]
-    # The venv this suite runs under may have ``kiro_crew`` installed from a
+    # The venv this suite runs under may have ``aj_crew`` installed from a
     # different checkout, so point the child at THIS tree's ``src`` -- the test is
     # about the module having a working entry point, not about it being installed.
     env = dict(os.environ)
     env["PYTHONPATH"] = str(root / "src")
     result = subprocess.run(
-        [sys.executable, "-m", "kiro_crew.crew_log.entry_types", "--markdown"],
+        [sys.executable, "-m", "aj_crew.crew_log.entry_types", "--markdown"],
         cwd=root,
         env=env,
         capture_output=True,

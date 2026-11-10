@@ -14,12 +14,12 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.chat_folders import (
+from aj_crew.dashboard.chat_folders import (
     api_chat_folder_create,
     api_chat_folder_delete,
     api_chat_folder_update,
 )
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 # fldr…01 belongs to the person, …02 to issue-radar, …03 to another app, and
 # …04 predates the field entirely (no key at all) — the legacy row.
@@ -445,7 +445,7 @@ class TestAnAppCannotDeleteFolders:
     @pytest.mark.asyncio
     async def test_an_app_cannot_delete_even_an_empty_folder_it_owns(self) -> None:
         state = _state(_app_slot("chat-1-100", "issue-radar"))
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", AsyncMock()):
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", AsyncMock()):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.delete(
                     f"/api/chat/folders/{RADAR}",
@@ -463,7 +463,7 @@ class TestAnAppCannotDeleteFolders:
         mine = _app_slot("chat-9-900", "issue-radar")
         mine.folder_id = RADAR
         state = _state(_app_slot("chat-1-100", "issue-radar"), mine)
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", AsyncMock()):
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", AsyncMock()):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.delete(
                     f"/api/chat/folders/{RADAR}",
@@ -481,7 +481,7 @@ class TestAnAppCannotDeleteFolders:
         folders = _folders()
         folders.append({"id": "fldr00000006", "name": "Sub", "parent_id": RADAR})
         state = _state(_ChatSlot("chat-1-100"), theirs, folders=folders)
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", AsyncMock()):
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", AsyncMock()):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.delete(
                     f"/api/chat/folders/{RADAR}",
@@ -531,7 +531,7 @@ class TestACallerWhoseSlotIsGoneIsRefused:
         filed = _ChatSlot("chat-9-900")
         filed.folder_id = PERSON
         state = _state(filed)
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", AsyncMock()):
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", AsyncMock()):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.delete(
                     f"/api/chat/folders/{PERSON}",

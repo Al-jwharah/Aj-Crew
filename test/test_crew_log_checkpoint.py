@@ -15,13 +15,13 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import checkpoint as savepoints
-from kiro_crew.crew_log import lease
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import store
-from kiro_crew.projection import checkpoint as projection_checkpoint
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import checkpoint as savepoints
+from aj_crew.crew_log import lease
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import store
+from aj_crew.projection import checkpoint as projection_checkpoint
 
 SESSION = "s-savepoint"
 GATEWAY = "gateway"
@@ -34,7 +34,7 @@ _LONG_TURNS = (savepoints.MIN_ADVANCE_ENTRIES // 4) + 4
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
     """Every test writes into its own data home, never the live one."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     yield
 
 
@@ -199,11 +199,11 @@ _FOLD_STATE_PINS: dict[str, tuple[str, int]] = {
 
 
 def _log(unit_id: str = SESSION) -> CrewLog:
-    handle = CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="kirocrew")
+    handle = CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="ajcrew")
     handle.append(
         "session/opened",
         {
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "slot": "dashboard:1",
             "model": "opus",
             "cwd": "/w",

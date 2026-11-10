@@ -23,13 +23,13 @@ from __future__ import annotations
 import pytest
 
 from conftest import assert_rejected_without_backtracking
-from kiro_crew.constants import (
+from aj_crew.constants import (
     MARKER_WRAPPERS,
     OPTIONS_RE_LINE,
     OPTIONS_RE_TRAILER,
     split_trailing_protocol_suffix,
 )
-from kiro_crew.messaging.renderer import split_options_trailer
+from aj_crew.messaging.renderer import split_options_trailer
 
 WRAPPED = [
     "`[OPTIONS: Alpha | Beta]`",  # backtick-wrapped (the reported shape)

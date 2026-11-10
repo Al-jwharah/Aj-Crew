@@ -10,7 +10,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 vi.mock('../../api/client', () => ({
   api: {
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
     patchConfig: vi.fn(),
     listApps: vi.fn(),
   },
@@ -29,7 +29,7 @@ let serverCfg: { apps?: Record<string, { mute_sessions?: unknown }> }
 beforeEach(() => {
   vi.clearAllMocks()
   serverCfg = { apps: { 'zeta-app': { mute_sessions: true }, 'quiet-app': { mute_sessions: true } } }
-  vi.mocked(api.kirocrewConfig).mockImplementation(async () => structuredClone(serverCfg))
+  vi.mocked(api.ajcrewConfig).mockImplementation(async () => structuredClone(serverCfg))
   vi.mocked(api.patchConfig).mockImplementation(async (path: string, value: unknown) => {
     const [, name] = path.split('.')
     serverCfg.apps = { ...serverCfg.apps, [name]: { mute_sessions: value } }
@@ -64,7 +64,7 @@ describe('AppSessionMuteSection', () => {
   })
 
   it('a failed config load says why the switches are unavailable', async () => {
-    vi.mocked(api.kirocrewConfig).mockRejectedValue(new Error('boom'))
+    vi.mocked(api.ajcrewConfig).mockRejectedValue(new Error('boom'))
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
     render(<QueryClientProvider client={qc}><AppSessionMuteSection /></QueryClientProvider>)
     const notice = await screen.findByTestId('app-session-mutes-error')

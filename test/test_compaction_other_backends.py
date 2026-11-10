@@ -46,10 +46,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.acp.types import STOP_REASON_END_TURN
-from kiro_crew.acp_backends import (
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.acp.types import STOP_REASON_END_TURN
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_COPILOT,
     ACP_BACKEND_DEEPSEEK,
@@ -62,14 +62,14 @@ from kiro_crew.acp_backends import (
     ACP_BACKENDS_INLINE_COMPACTION,
     ACP_BACKENDS_KNOWN,
 )
-from kiro_crew.agent_sdk import backends as sdk_backends
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.messaging import commands as messaging_commands
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.base import LLMProvider
-from kiro_crew.session import SessionManager
-from kiro_crew.session_compaction import CompactionCoordinator
+from aj_crew.agent_sdk import backends as sdk_backends
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.config import AjCrewConfig
+from aj_crew.messaging import commands as messaging_commands
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.base import LLMProvider
+from aj_crew.session import SessionManager
+from aj_crew.session_compaction import CompactionCoordinator
 
 KEY = "dashboard:compaction-other-backends"
 
@@ -359,8 +359,8 @@ class TestCompactionUnmanagedBackend:
 
 
 @pytest.fixture
-def cfg() -> KiroCrewConfig:
-    c = KiroCrewConfig()
+def cfg() -> AjCrewConfig:
+    c = AjCrewConfig()
     c.session.timeout_secs = 2
     return c
 
@@ -372,7 +372,7 @@ async def _drain_background(mgr: SessionManager) -> None:
 
 
 @contextlib.asynccontextmanager
-async def _managed(cfg: KiroCrewConfig, provider_factory: Any):
+async def _managed(cfg: AjCrewConfig, provider_factory: Any):
     """Manager whose teardown always runs, even on a failed assert.
 
     An async CONTEXT MANAGER rather than an async fixture, matching
@@ -528,7 +528,7 @@ class TestTheInlineCompletionLivesOnTheSeam:
         length limit, a reason this build does not recognise, and a turn that
         reported none.
         """
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = AcpClient.__new__(AcpClient)
         client._cancelled = False  # type: ignore[attr-defined]
@@ -744,7 +744,7 @@ class TestABackendNothingCompactsIsRecycled:
         read "was auto-compacted" on a session that had been REPLACED. Same vocabulary,
         same three arms, same rule about which one may name a missing capability.
         """
-        from kiro_crew.dashboard.chat_compaction_notice import notice_text
+        from aj_crew.dashboard.chat_compaction_notice import notice_text
 
         compacted = notice_text("slack", 85.0, success=True, outcome="compacted")
         after_failure = notice_text("slack", 85.0, success=True, outcome="recycled")
@@ -775,7 +775,7 @@ class TestABackendNothingCompactsIsRecycled:
         so a single restart notice claimed those backends cannot compact -- false of a
         harness that can and failed once. Only the uncompactable notice may say that.
         """
-        from kiro_crew.dashboard.state import (
+        from aj_crew.dashboard.state import (
             _AUTO_COMPACT_NOTICE,
             _AUTO_RECYCLE_NOTICE,
             _AUTO_RESTART_UNCOMPACTABLE_NOTICE,
@@ -867,7 +867,7 @@ class TestTheRefusalTextSaysWhatHappens:
         to each and only the CHOICE is shared, so a surface can state the outcome
         and drop the cause on its own.
         """
-        from kiro_crew.imessage.transport_dispatch import _compact_refusal_text as imessage_text
+        from aj_crew.imessage.transport_dispatch import _compact_refusal_text as imessage_text
 
         english = (
             messaging_commands.compact_unsupported_reply,
@@ -913,7 +913,7 @@ class TestTheRefusalTextSaysWhatHappens:
         read from ``messaging.commands``, so a surface can differ in voice and
         cannot differ in which of the three cases it thinks it is in.
         """
-        from kiro_crew.imessage.transport_dispatch import _compact_refusal_text as imessage_text
+        from aj_crew.imessage.transport_dispatch import _compact_refusal_text as imessage_text
 
         # WhatsApp reads ``compact_refusal_plain_text`` at its call site with no
         # wrapper of its own, so the shared helper IS its surface here. iMessage

@@ -24,8 +24,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.cron import CronJob, CronService
-from kiro_crew.cron_service.store import CronStoreUnreadable
+from aj_crew.cron import CronJob, CronService
+from aj_crew.cron_service.store import CronStoreUnreadable
 
 # One xdist worker for the whole file, matching the sibling cron suites. One
 # group PER FILE, never shared: a shared group would serialize unrelated modules.
@@ -36,13 +36,13 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_test_cron_save_failure_roll
 def _disk_full_on_save(during: Callable[[], None] | None = None) -> Iterator[None]:
     """Make the next ``atomic_write`` raise ENOSPC, like a full disk would.
 
-    Injected at ``kiro_crew.atomic_write.atomic_write``, after the ``_load_failed``
+    Injected at ``aj_crew.atomic_write.atomic_write``, after the ``_load_failed``
     guard, so the real ``_save`` raises a bare ``OSError``, not ``CronStoreUnreadable``.
 
     ``during`` runs inside the failing write, standing in for a run on the loop
     thread that writes the same job while the save is in flight.
     """
-    import kiro_crew.atomic_write as aw
+    import aj_crew.atomic_write as aw
 
     real = aw.atomic_write
 
@@ -161,7 +161,7 @@ def test_a_failed_save_does_not_leave_a_loop_stall_pause_in_memory(tmp_path: Pat
     pause back AND report the verdict unsettled, so the breaker does not claim
     the dump and sweep the markers for a pause that never persisted -- which
     would make the next boot skip the still-enabled job."""
-    from kiro_crew import cron_inflight, stall_attribution
+    from aj_crew import cron_inflight, stall_attribution
 
     svc = CronService(base_dir=tmp_path)
     job = svc.add_job(name="stalled", message="m", every_secs=3600)
@@ -305,7 +305,7 @@ def test_a_failed_save_whose_reload_also_fails_reloads_on_the_next_sync(
     job = svc.add_job(name="pausable", message="m", every_secs=3600)
     real_sync = svc._sync
 
-    with caplog.at_level("ERROR", logger="kiro_crew.cron"):
+    with caplog.at_level("ERROR", logger="aj_crew.cron"):
         with _disk_full_on_save():
             with patch.object(svc, "_sync", side_effect=[None, RuntimeError("reload failed")]):
                 with pytest.raises(OSError) as exc:
@@ -340,7 +340,7 @@ def test_a_failed_save_over_an_unreadable_store_refuses_every_later_write(
                 raise OSError(errno.EIO, "Input/output error")
         return real_read(path)
 
-    with caplog.at_level("ERROR", logger="kiro_crew.cron"):
+    with caplog.at_level("ERROR", logger="aj_crew.cron"):
         with _disk_full_on_save():
             with patch.object(Path, "read_bytes", unreadable_after_the_save):
                 with pytest.raises(OSError) as exc:

@@ -21,7 +21,7 @@ import functools
 from pathlib import Path
 from typing import Iterator
 
-SRC = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+SRC = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 
 #: Attributes that read whether a run is live in this process.
 LIVENESS = frozenset({"_agents", "_live_agent_ids", "_live_run_ids", "_registered_run"})
@@ -49,7 +49,7 @@ STARTING = frozenset(
     {"_starting_claims", "starting_claim_of", "starting_claim_ids_for", "_live_agent_ids"}
 )
 
-#: ``(path under src/kiro_crew, qualname)`` of the readers that consult them.
+#: ``(path under src/aj_crew, qualname)`` of the readers that consult them.
 CONSULTS: dict[tuple[str, str], str] = {
     ("shared_crew/admission_entry.py", "subagent_cancel.stop_child"): (
         "stops an admitted child through manager.cancel when starting_claim_of names its run"

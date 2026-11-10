@@ -39,38 +39,38 @@ _SYNC_TRUE = ("app_owns_transcript",)
 #: background walk; the loop update's non-string ``expect_fingerprint`` answers
 #: before it reaches the service.
 _ROUTES = [
-    ("kiro_crew.dashboard.chat_folders", "api_chat_slot_folder", "POST", {"slot": "s1"}, {}),
-    ("kiro_crew.dashboard.chat_folders", "api_chat_slot_pin", "POST", {"slot": "s1"}, {}),
-    ("kiro_crew.dashboard.chat_folders", "api_chat_slot_mode", "POST", {"slot": "s1"}, {}),
-    ("kiro_crew.dashboard.handlers.autonudge", "api_autonudge_start", "POST", {}, {}),
+    ("aj_crew.dashboard.chat_folders", "api_chat_slot_folder", "POST", {"slot": "s1"}, {}),
+    ("aj_crew.dashboard.chat_folders", "api_chat_slot_pin", "POST", {"slot": "s1"}, {}),
+    ("aj_crew.dashboard.chat_folders", "api_chat_slot_mode", "POST", {"slot": "s1"}, {}),
+    ("aj_crew.dashboard.handlers.autonudge", "api_autonudge_start", "POST", {}, {}),
     (
-        "kiro_crew.dashboard.handlers.autonudge",
+        "aj_crew.dashboard.handlers.autonudge",
         "api_autonudge_update",
         "PATCH",
         {"loop_id": "L1"},
         {"expect_fingerprint": 7},
     ),
-    ("kiro_crew.dashboard.handlers.core_config_view", "api_kirocrew_config", "PUT", {}, {}),
-    ("kiro_crew.dashboard.handlers.prompts_skill_edits", "api_skill_pin", "POST", {}, {}),
+    ("aj_crew.dashboard.handlers.core_config_view", "api_ajcrew_config", "PUT", {}, {}),
+    ("aj_crew.dashboard.handlers.prompts_skill_edits", "api_skill_pin", "POST", {}, {}),
     (
-        "kiro_crew.dashboard.handlers.prompts_skill_edits",
+        "aj_crew.dashboard.handlers.prompts_skill_edits",
         "_skill_detail_verbs",
         "PUT",
         {"name": "s"},
         {},
     ),
-    ("kiro_crew.dashboard.handlers.prompts_skill_edits", "api_skills_create", "POST", {}, {}),
-    ("kiro_crew.dashboard.handlers.steering", "api_steering_create", "POST", {}, {}),
-    ("kiro_crew.dashboard.handlers.steering", "api_steering_detail", "PUT", {"key": "a.md"}, {}),
+    ("aj_crew.dashboard.handlers.prompts_skill_edits", "api_skills_create", "POST", {}, {}),
+    ("aj_crew.dashboard.handlers.steering", "api_steering_create", "POST", {}, {}),
+    ("aj_crew.dashboard.handlers.steering", "api_steering_detail", "PUT", {"key": "a.md"}, {}),
     (
-        "kiro_crew.dashboard.handlers.updates_apply",
+        "aj_crew.dashboard.handlers.updates_apply",
         "api_update_simulate",
         "POST",
         {},
         {"reject": True},
     ),
-    ("kiro_crew.dashboard.handlers.updates_streams", "api_log_level", "POST", {}, {}),
-    ("kiro_crew.dashboard.openai_compat", "api_completions", "POST", {}, {}),
+    ("aj_crew.dashboard.handlers.updates_streams", "api_log_level", "POST", {}, {}),
+    ("aj_crew.dashboard.openai_compat", "api_completions", "POST", {}, {}),
 ]
 
 _NON_OBJECTS = [[1, 2], [], "text", 7, None]
@@ -127,7 +127,7 @@ def _open_gates(monkeypatch: pytest.MonkeyPatch, mod: Any) -> None:
 @pytest.fixture()
 def drive(tmp_path, monkeypatch):
     """Call one handler with *body*, its gates open; returns ``(request, response)``."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     steering = tmp_path / "steering"
     steering.mkdir()
     (steering / "a.md").write_text("hello\n", encoding="utf-8")
@@ -194,7 +194,7 @@ async def test_skills_create_refuses_a_non_string_field(drive, field, value) -> 
     400."""
     body = {"name": "my-skill", "content": "# Skill\n", field: value}
     _req, resp = await drive(
-        "kiro_crew.dashboard.handlers.prompts_skill_edits", "api_skills_create", "POST", {}, body
+        "aj_crew.dashboard.handlers.prompts_skill_edits", "api_skills_create", "POST", {}, body
     )
     assert resp.status == 400, resp.text
     assert _code(resp) == "invalid_field_type"

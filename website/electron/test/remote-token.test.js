@@ -13,7 +13,7 @@ const {
 
 describe("REMOTE_BIN_CANDIDATES", () => {
   it("lists the toolbox path first (most common install)", () => {
-    assert.equal(REMOTE_BIN_CANDIDATES[0], "~/.toolbox/bin/kirocrew");
+    assert.equal(REMOTE_BIN_CANDIDATES[0], "~/.toolbox/bin/ajcrew");
   });
 
   it("includes the legacy default path", () => {
@@ -45,9 +45,9 @@ describe("buildCandidateTokenCommand", () => {
     assert.doesNotMatch(cmd, /:\$PATH/, "must not reference existing $PATH (spaces cause remote shell errors)");
   });
 
-  it("includes KIROCREW_PORT when port option is provided", () => {
+  it("includes AJCREW_PORT when port option is provided", () => {
     const cmd = buildCandidateTokenCommand(REMOTE_BIN_CANDIDATES, { port: "7778" });
-    assert.match(cmd, /KIROCREW_PORT=7778/);
+    assert.match(cmd, /AJCREW_PORT=7778/);
   });
 
   it("uses custom remotePath when provided", () => {
@@ -80,33 +80,33 @@ describe("buildRemoteTokenCommand", () => {
   });
 
   it("respects a user-customized binPath", () => {
-    const cmd = buildRemoteTokenCommand("/opt/custom/kirocrew");
+    const cmd = buildRemoteTokenCommand("/opt/custom/ajcrew");
     assert.doesNotMatch(cmd, /for b in /);
-    assert.match(cmd, /"\/opt\/custom\/kirocrew" token/);
+    assert.match(cmd, /"\/opt\/custom\/ajcrew" token/);
   });
 
-  it("includes KIROCREW_PORT for custom binPath", () => {
-    const cmd = buildRemoteTokenCommand("/opt/custom/kirocrew", { port: "7778" });
-    assert.match(cmd, /KIROCREW_PORT=7778/);
-    assert.match(cmd, /"\/opt\/custom\/kirocrew" token/);
+  it("includes AJCREW_PORT for custom binPath", () => {
+    const cmd = buildRemoteTokenCommand("/opt/custom/ajcrew", { port: "7778" });
+    assert.match(cmd, /AJCREW_PORT=7778/);
+    assert.match(cmd, /"\/opt\/custom\/ajcrew" token/);
   });
 
   it("rewrites a leading ~/ to $HOME/ so it expands inside double quotes", () => {
     // Use a non-default custom path so this takes the user-binPath branch
     // (the default sentinel would take the candidate-sweep branch instead).
-    const cmd = buildRemoteTokenCommand("~/apps/kirocrew");
-    assert.match(cmd, /"\$HOME\/apps\/kirocrew" token/);
+    const cmd = buildRemoteTokenCommand("~/apps/ajcrew");
+    assert.match(cmd, /"\$HOME\/apps\/ajcrew" token/);
     assert.doesNotMatch(cmd, /"~\//);
   });
 
   it("leaves absolute and $HOME-prefixed paths untouched", () => {
-    assert.match(buildRemoteTokenCommand("/opt/x/kirocrew"), /"\/opt\/x\/kirocrew" token/);
-    assert.match(buildRemoteTokenCommand("$HOME/x/kirocrew"), /"\$HOME\/x\/kirocrew" token/);
+    assert.match(buildRemoteTokenCommand("/opt/x/ajcrew"), /"\/opt\/x\/ajcrew" token/);
+    assert.match(buildRemoteTokenCommand("$HOME/x/ajcrew"), /"\$HOME\/x\/ajcrew" token/);
   });
 
   it("passes port through to candidate command", () => {
     const cmd = buildRemoteTokenCommand(DEFAULT_REMOTE_BIN, { port: "8080" });
-    assert.match(cmd, /KIROCREW_PORT=8080/);
+    assert.match(cmd, /AJCREW_PORT=8080/);
   });
 
   it("accepts a custom candidate list via options", () => {
@@ -144,8 +144,8 @@ describe("parseTokenFromStdout", () => {
 describe("buildRemoteTokenSshArgs", () => {
   it("closes ssh's stdin, fails fast, and connects inside the kill budget", () => {
     assert.deepStrictEqual(
-      buildRemoteTokenSshArgs("devbox", "kirocrew token", { timeoutMs: 20000 }),
-      ["-n", "-o", "BatchMode=yes", "-o", "ConnectTimeout=18", "devbox", "kirocrew token"],
+      buildRemoteTokenSshArgs("devbox", "ajcrew token", { timeoutMs: 20000 }),
+      ["-n", "-o", "BatchMode=yes", "-o", "ConnectTimeout=18", "devbox", "ajcrew token"],
     );
   });
 

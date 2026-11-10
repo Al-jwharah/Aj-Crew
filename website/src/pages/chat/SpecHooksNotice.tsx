@@ -17,11 +17,11 @@ import NoticeCard from './NoticeCard'
  * Written only by the click, through `savePrefExplicitly`, and backed up to the
  * host (`lib/uiPrefs.ts`).
  */
-export const SPEC_HOOKS_RUN_NOWHERE_DISMISSED_KEY = 'kirocrew:spec-hooks-run-nowhere-notice-dismissed'
+export const SPEC_HOOKS_RUN_NOWHERE_DISMISSED_KEY = 'ajcrew:spec-hooks-run-nowhere-notice-dismissed'
 
 /**
  * The row's tags, mirroring `SPEC_HOOKS_NOTICE_KIND` and
- * `SPEC_HOOKS_RUN_NOWHERE_NOTICE` in `src/kiro_crew/dashboard/chat_utils_injected_rows.py`
+ * `SPEC_HOOKS_RUN_NOWHERE_NOTICE` in `src/aj_crew/dashboard/chat_utils_injected_rows.py`
  * (`test/test_crew_fired_spec_hooks.py` pins both sides).
  */
 const SPEC_HOOKS_KIND = 'spec_hooks'

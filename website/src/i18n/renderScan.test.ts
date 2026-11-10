@@ -118,7 +118,7 @@ describe('latinLeaks', () => {
 
   it('ignores the markup and nesting regions the generator preserves', () => {
     expect(latinLeaks('<your-host>')).toEqual([])
-    expect(latinLeaks('kirocrew app install <path>'.replace(/kirocrew/, ''))).toEqual(['app', 'install'])
+    expect(latinLeaks('ajcrew app install <path>'.replace(/ajcrew/, ''))).toEqual(['app', 'install'])
     expect(latinLeaks('$t(app.name)')).toEqual([])
   })
 

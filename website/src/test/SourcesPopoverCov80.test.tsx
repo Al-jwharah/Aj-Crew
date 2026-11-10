@@ -131,13 +131,13 @@ describe('SourcesPopover — install-from-path hint', () => {
 
   it('reads as one English sentence with the command in a code element', () => {
     wrap(<SourcesPopover open onOpenChange={() => {}} onError={() => {}} />)
-    expect(hint()).toHaveTextContent('Developer install of a local app directory (equivalent to kirocrew app install <path>).')
-    expect(hint().querySelector('code')).toHaveTextContent('kirocrew app install <path>')
+    expect(hint()).toHaveTextContent('Developer install of a local app directory (equivalent to ajcrew app install <path>).')
+    expect(hint().querySelector('code')).toHaveTextContent('ajcrew app install <path>')
   })
 
   it('places the command before the Japanese verb and closes the full-width bracket', async () => {
     await act(async () => { await i18next.changeLanguage('ja') })
     wrap(<SourcesPopover open onOpenChange={() => {}} onError={() => {}} />)
-    expect(hint()).toHaveTextContent('ローカルアプリディレクトリの開発者インストール（kirocrew app install <path> と同等）。')
+    expect(hint()).toHaveTextContent('ローカルアプリディレクトリの開発者インストール（ajcrew app install <path> と同等）。')
   })
 })

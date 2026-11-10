@@ -33,7 +33,7 @@ const count = Number(params.get('count') || '16')
 /** `?fail=1` photographs the read-failure branch instead of the count. */
 const fail = params.get('fail') === '1'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // A dismissal is remembered per count, so a stale one from an earlier frame in
 // the same browser would silence the next shot.

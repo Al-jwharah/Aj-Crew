@@ -19,13 +19,13 @@ from pid_lifecycle_helpers import (  # noqa: F401 -- fixtures are requested by n
     session_pid_file_fixture,
 )
 
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
 
 class TestCleanupOrphanedMcpServers:
     def test_dead_child_pruned(self, pid_file: Path) -> None:
         """Dead child PIDs should be removed from the file silently."""
-        from kiro_crew.session_pid import _cleanup_orphaned_mcp_servers
+        from aj_crew.session_pid import _cleanup_orphaned_mcp_servers
 
         pid_file.write_text("99999:1\n")  # child=99999, parent=1
         _cleanup_orphaned_mcp_servers()
@@ -33,7 +33,7 @@ class TestCleanupOrphanedMcpServers:
 
     def test_alive_child_with_alive_parent_survives(self, pid_file: Path) -> None:
         """Child whose parent session is still alive should NOT be killed."""
-        from kiro_crew.session_pid import _cleanup_orphaned_mcp_servers
+        from aj_crew.session_pid import _cleanup_orphaned_mcp_servers
 
         my_pid = os.getpid()
         child_pid = 77777
@@ -42,7 +42,7 @@ class TestCleanupOrphanedMcpServers:
         def fake_pid_exists(pid: int) -> bool:
             return pid in (child_pid, my_pid)  # both alive
 
-        with patch("kiro_crew.session_pid.platform_compat.pid_exists", side_effect=fake_pid_exists):
+        with patch("aj_crew.session_pid.platform_compat.pid_exists", side_effect=fake_pid_exists):
             killed = _cleanup_orphaned_mcp_servers()
 
         assert killed == 0
@@ -50,7 +50,7 @@ class TestCleanupOrphanedMcpServers:
 
     def test_alive_child_with_dead_parent_killed(self, pid_file: Path) -> None:
         """Child whose parent session died should be killed (PPid=1 confirms orphan)."""
-        from kiro_crew.session_pid import _cleanup_orphaned_mcp_servers
+        from aj_crew.session_pid import _cleanup_orphaned_mcp_servers
 
         pid_file.write_text("77777:99999\n")  # parent 99999 is dead
 
@@ -58,9 +58,9 @@ class TestCleanupOrphanedMcpServers:
             return pid == 77777  # child alive, parent dead
 
         with (
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", side_effect=fake_pid_exists),
-            patch("kiro_crew.session_pid.platform_compat.kill_pid"),
-            patch("kiro_crew.platform_compat.get_ppid", return_value=1),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", side_effect=fake_pid_exists),
+            patch("aj_crew.session_pid.platform_compat.kill_pid"),
+            patch("aj_crew.platform_compat.get_ppid", return_value=1),
         ):
             killed = _cleanup_orphaned_mcp_servers()
 
@@ -68,7 +68,7 @@ class TestCleanupOrphanedMcpServers:
 
     def test_alive_child_with_dead_parent_pid_reused(self, pid_file: Path) -> None:
         """Child PID reused by unrelated process should NOT be killed."""
-        from kiro_crew.session_pid import _cleanup_orphaned_mcp_servers
+        from aj_crew.session_pid import _cleanup_orphaned_mcp_servers
 
         pid_file.write_text("77777:99999\n")
 
@@ -76,9 +76,9 @@ class TestCleanupOrphanedMcpServers:
             return pid == 77777  # child alive (reused PID), parent dead
 
         with (
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", side_effect=fake_pid_exists),
-            patch("kiro_crew.platform_compat.get_ppid", return_value=5555),
-            patch("kiro_crew.session_pid._accepted_subreaper_pids", return_value={1}),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", side_effect=fake_pid_exists),
+            patch("aj_crew.platform_compat.get_ppid", return_value=5555),
+            patch("aj_crew.session_pid._accepted_subreaper_pids", return_value={1}),
         ):
             killed = _cleanup_orphaned_mcp_servers()
 
@@ -93,9 +93,9 @@ class TestCleanupOrphanedMcpServers:
         ``(1, parent_pid)`` misreads that orphan as PID reuse and prunes it
         WITHOUT killing -- leaking the runtime where no other reaper can see
         it. The guard must accept the shared subreaper set instead, gated on
-        the KIROCREW_SPAWNED environ marker as positive identity.
+        the AJCREW_SPAWNED environ marker as positive identity.
         """
-        from kiro_crew.session_pid import _cleanup_orphaned_mcp_servers
+        from aj_crew.session_pid import _cleanup_orphaned_mcp_servers
 
         systemd_user_pid = 4242  # same-uid systemd --user manager
         pid_file.write_text("77777:99999\n")  # parent 99999 is dead
@@ -105,16 +105,16 @@ class TestCleanupOrphanedMcpServers:
 
         kill_mock = MagicMock()
         with (
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", side_effect=fake_pid_exists),
-            patch("kiro_crew.session_pid.platform_compat.kill_pid", kill_mock),
-            patch("kiro_crew.platform_compat.get_ppid", return_value=systemd_user_pid),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", side_effect=fake_pid_exists),
+            patch("aj_crew.session_pid.platform_compat.kill_pid", kill_mock),
+            patch("aj_crew.platform_compat.get_ppid", return_value=systemd_user_pid),
             patch(
-                "kiro_crew.session_pid._accepted_subreaper_pids",
+                "aj_crew.session_pid._accepted_subreaper_pids",
                 return_value={1, systemd_user_pid},
             ),
-            patch("kiro_crew.session_pid._env_has_kirocrew_marker", return_value=True),
+            patch("aj_crew.session_pid._env_has_ajcrew_marker", return_value=True),
             patch(
-                "kiro_crew.session_pid._tracked_child_has_runtime_identity",
+                "aj_crew.session_pid._tracked_child_has_runtime_identity",
                 return_value=True,
             ),
         ):
@@ -128,12 +128,12 @@ class TestCleanupOrphanedMcpServers:
     def test_marked_survivor_without_runtime_identity_not_killed(self, pid_file: Path) -> None:
         """A marker-carrying intentional survivor is outside the kill authority.
 
-        The KIROCREW_SPAWNED marker is tree-wide: a detached survivor (e.g. a
+        The AJCREW_SPAWNED marker is tree-wide: a detached survivor (e.g. a
         preview server) inherits it, so the systemd arm demands positive
         runtime argv identity on top of the marker. A tracking entry naming
         such a PID -- stale or forged -- is pruned without killing.
         """
-        from kiro_crew.session_pid import _cleanup_orphaned_mcp_servers
+        from aj_crew.session_pid import _cleanup_orphaned_mcp_servers
 
         systemd_user_pid = 4242
         pid_file.write_text("77777:99999\n")
@@ -143,16 +143,16 @@ class TestCleanupOrphanedMcpServers:
 
         kill_mock = MagicMock()
         with (
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", side_effect=fake_pid_exists),
-            patch("kiro_crew.session_pid.platform_compat.kill_pid", kill_mock),
-            patch("kiro_crew.platform_compat.get_ppid", return_value=systemd_user_pid),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", side_effect=fake_pid_exists),
+            patch("aj_crew.session_pid.platform_compat.kill_pid", kill_mock),
+            patch("aj_crew.platform_compat.get_ppid", return_value=systemd_user_pid),
             patch(
-                "kiro_crew.session_pid._accepted_subreaper_pids",
+                "aj_crew.session_pid._accepted_subreaper_pids",
                 return_value={1, systemd_user_pid},
             ),
-            patch("kiro_crew.session_pid._env_has_kirocrew_marker", return_value=True),
+            patch("aj_crew.session_pid._env_has_ajcrew_marker", return_value=True),
             patch(
-                "kiro_crew.session_pid._tracked_child_has_runtime_identity",
+                "aj_crew.session_pid._tracked_child_has_runtime_identity",
                 return_value=False,
             ),
         ):
@@ -168,10 +168,10 @@ class TestCleanupOrphanedMcpServers:
         Under ``systemd --user`` every manager-started service carries the
         manager's PID as its PPid for its whole life, so PPid membership in
         the subreaper set alone does not prove the PID is ours. Without the
-        KIROCREW_SPAWNED environ marker the sweep must treat the entry as PID
+        AJCREW_SPAWNED environ marker the sweep must treat the entry as PID
         reuse: prune the stale line, never SIGKILL the innocent process.
         """
-        from kiro_crew.session_pid import _cleanup_orphaned_mcp_servers
+        from aj_crew.session_pid import _cleanup_orphaned_mcp_servers
 
         systemd_user_pid = 4242
         pid_file.write_text("77777:99999\n")  # parent 99999 is dead
@@ -181,14 +181,14 @@ class TestCleanupOrphanedMcpServers:
 
         kill_mock = MagicMock()
         with (
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", side_effect=fake_pid_exists),
-            patch("kiro_crew.session_pid.platform_compat.kill_pid", kill_mock),
-            patch("kiro_crew.platform_compat.get_ppid", return_value=systemd_user_pid),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", side_effect=fake_pid_exists),
+            patch("aj_crew.session_pid.platform_compat.kill_pid", kill_mock),
+            patch("aj_crew.platform_compat.get_ppid", return_value=systemd_user_pid),
             patch(
-                "kiro_crew.session_pid._accepted_subreaper_pids",
+                "aj_crew.session_pid._accepted_subreaper_pids",
                 return_value={1, systemd_user_pid},
             ),
-            patch("kiro_crew.session_pid._env_has_kirocrew_marker", return_value=False),
+            patch("aj_crew.session_pid._env_has_ajcrew_marker", return_value=False),
         ):
             killed = _cleanup_orphaned_mcp_servers()
 
@@ -206,7 +206,7 @@ class TestCleanupOrphanedMcpServers:
         a same-uid ``systemd`` comm is accepted, a non-systemd comm and a
         non-numeric entry are not, and pid 1 is always present.
         """
-        import kiro_crew.session_pid as session_pid_mod
+        import aj_crew.session_pid as session_pid_mod
 
         (tmp_path / "4242").mkdir()
         (tmp_path / "4242" / "comm").write_text("systemd\n")
@@ -232,7 +232,7 @@ class TestCleanupOrphanedMcpServers:
         proceeds to the reparent heuristic (here: orphan reparented to init),
         which authorizes the kill exactly as it always has.
         """
-        from kiro_crew.session_pid import _cleanup_orphaned_mcp_servers
+        from aj_crew.session_pid import _cleanup_orphaned_mcp_servers
 
         pid_file.write_text("77777:99999:123456\n")  # parent 99999 dead
 
@@ -241,10 +241,10 @@ class TestCleanupOrphanedMcpServers:
 
         kill_mock = MagicMock()
         with (
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", side_effect=fake_pid_exists),
-            patch("kiro_crew.session_pid.platform_compat.kill_pid", kill_mock),
-            patch("kiro_crew.session_pid._pid_start_token", return_value="123456"),
-            patch("kiro_crew.platform_compat.get_ppid", return_value=1),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", side_effect=fake_pid_exists),
+            patch("aj_crew.session_pid.platform_compat.kill_pid", kill_mock),
+            patch("aj_crew.session_pid._pid_start_token", return_value="123456"),
+            patch("aj_crew.platform_compat.get_ppid", return_value=1),
         ):
             killed = _cleanup_orphaned_mcp_servers()
 
@@ -260,7 +260,7 @@ class TestCleanupOrphanedMcpServers:
         arbitrary process: token agreement never grants kill authority that
         the reparent heuristic would refuse.
         """
-        from kiro_crew.session_pid import _cleanup_orphaned_mcp_servers
+        from aj_crew.session_pid import _cleanup_orphaned_mcp_servers
 
         pid_file.write_text("77777:99999:123456\n")
 
@@ -269,11 +269,11 @@ class TestCleanupOrphanedMcpServers:
 
         kill_mock = MagicMock()
         with (
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", side_effect=fake_pid_exists),
-            patch("kiro_crew.session_pid.platform_compat.kill_pid", kill_mock),
-            patch("kiro_crew.session_pid._pid_start_token", return_value="123456"),
-            patch("kiro_crew.platform_compat.get_ppid", return_value=5555),
-            patch("kiro_crew.session_pid._accepted_subreaper_pids", return_value={1}),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", side_effect=fake_pid_exists),
+            patch("aj_crew.session_pid.platform_compat.kill_pid", kill_mock),
+            patch("aj_crew.session_pid._pid_start_token", return_value="123456"),
+            patch("aj_crew.platform_compat.get_ppid", return_value=5555),
+            patch("aj_crew.session_pid._accepted_subreaper_pids", return_value={1}),
         ):
             killed = _cleanup_orphaned_mcp_servers()
 
@@ -285,12 +285,12 @@ class TestCleanupOrphanedMcpServers:
         """A reused PID fails the start-token check and is pruned, never killed.
 
         This is per-process identity, checked before the reparent heuristic:
-        even a PID recycled by another process spawned by Kiro Crew (which
-        carries the tree-wide KIROCREW_SPAWNED marker and may be init- or
+        even a PID recycled by another process spawned by Aj Crew (which
+        carries the tree-wide AJCREW_SPAWNED marker and may be init- or
         systemd-parented) has a different start identity, so the sweep prunes
         it without ever reaching the kill arms.
         """
-        from kiro_crew.session_pid import _cleanup_orphaned_mcp_servers
+        from aj_crew.session_pid import _cleanup_orphaned_mcp_servers
 
         pid_file.write_text("77777:99999:123456\n")
 
@@ -299,13 +299,13 @@ class TestCleanupOrphanedMcpServers:
 
         kill_mock = MagicMock()
         with (
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", side_effect=fake_pid_exists),
-            patch("kiro_crew.session_pid.platform_compat.kill_pid", kill_mock),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", side_effect=fake_pid_exists),
+            patch("aj_crew.session_pid.platform_compat.kill_pid", kill_mock),
             patch(
-                "kiro_crew.session_pid._pid_start_token",
+                "aj_crew.session_pid._pid_start_token",
                 return_value="999999",  # different incarnation
             ),
-            patch("kiro_crew.platform_compat.get_ppid", return_value=1),
+            patch("aj_crew.platform_compat.get_ppid", return_value=1),
         ):
             killed = _cleanup_orphaned_mcp_servers()
 
@@ -315,50 +315,50 @@ class TestCleanupOrphanedMcpServers:
 
     def test_track_child_pids_records_start_token(self, pid_file: Path) -> None:
         """_track_child_pids persists the child's start identity as field 3."""
-        from kiro_crew.session_pid import _track_child_pids
+        from aj_crew.session_pid import _track_child_pids
 
-        with patch("kiro_crew.session_pid._pid_start_token", return_value="424242"):
+        with patch("aj_crew.session_pid._pid_start_token", return_value="424242"):
             _track_child_pids({555: None}, parent_pid=111)
 
         lines = pid_file.read_text(encoding="utf-8").strip().splitlines()
         assert lines == ["555:111:424242"]
 
         # Unreadable identity at track time degrades to the legacy shape.
-        with patch("kiro_crew.session_pid._pid_start_token", return_value=None):
+        with patch("aj_crew.session_pid._pid_start_token", return_value=None):
             _track_child_pids({556: None}, parent_pid=111)
         lines = pid_file.read_text(encoding="utf-8").strip().splitlines()
         assert "556:111" in lines
 
     def test_bare_pid_dead_pruned(self, pid_file: Path) -> None:
         """Dead bare PIDs should be pruned from the file."""
-        from kiro_crew.session_pid import _cleanup_orphaned_mcp_servers
+        from aj_crew.session_pid import _cleanup_orphaned_mcp_servers
 
         pid_file.write_text("99999\n")
 
-        with patch("kiro_crew.session_pid.platform_compat.pid_exists", return_value=False):
+        with patch("aj_crew.session_pid.platform_compat.pid_exists", return_value=False):
             killed = _cleanup_orphaned_mcp_servers()
         assert killed == 0
         assert "99999" not in pid_file.read_text(encoding="utf-8")
 
     def test_bare_pid_alive_kept(self, pid_file: Path) -> None:
         """Alive bare PIDs should be kept in the file."""
-        from kiro_crew.session_pid import _cleanup_orphaned_mcp_servers
+        from aj_crew.session_pid import _cleanup_orphaned_mcp_servers
 
         pid_file.write_text("88888\n")
 
-        with patch("kiro_crew.session_pid.platform_compat.pid_exists", return_value=True):
+        with patch("aj_crew.session_pid.platform_compat.pid_exists", return_value=True):
             killed = _cleanup_orphaned_mcp_servers()
         assert killed == 0
         assert "88888" in pid_file.read_text(encoding="utf-8")
 
     def test_empty_file(self, pid_file: Path) -> None:
-        from kiro_crew.session_pid import _cleanup_orphaned_mcp_servers
+        from aj_crew.session_pid import _cleanup_orphaned_mcp_servers
 
         pid_file.write_text("")
         assert _cleanup_orphaned_mcp_servers() == 0
 
     def test_no_file(self, pid_file: Path) -> None:
-        from kiro_crew.session_pid import _cleanup_orphaned_mcp_servers
+        from aj_crew.session_pid import _cleanup_orphaned_mcp_servers
 
         assert _cleanup_orphaned_mcp_servers() == 0
 
@@ -367,7 +367,7 @@ class TestCleanupOrphanedSessions:
     @_POSIX_ONLY
     def test_preserves_non_kiro_pids(self, session_pid_file: Path) -> None:
         """Bug fix: non-kiro PIDs (MCP servers) must survive — not killed."""
-        from kiro_crew.session_pid import cleanup_orphaned_sessions
+        from aj_crew.session_pid import cleanup_orphaned_sessions
 
         session_pid_file.write_text("99998\n99999\n")
 
@@ -380,16 +380,16 @@ class TestCleanupOrphanedSessions:
         # _is_managed_agent_process(False) branch.
         with (
             patch(
-                "kiro_crew.session_pid._is_managed_agent_process", side_effect=lambda p: p == 99998
+                "aj_crew.session_pid._is_managed_agent_process", side_effect=lambda p: p == 99998
             ),
-            patch("kiro_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0),
-            patch("kiro_crew.session_pid._pid_in_spawn_grace", return_value=False),
+            patch("aj_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0),
+            patch("aj_crew.session_pid._pid_in_spawn_grace", return_value=False),
             patch(
-                "kiro_crew.session_pid.platform_compat.pid_liveness",
+                "aj_crew.session_pid.platform_compat.pid_liveness",
                 return_value=platform_compat.PID_ALIVE,
             ),
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.session_pid.platform_compat.kill_pid"),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.session_pid.platform_compat.kill_pid"),
         ):
             cleanup_orphaned_sessions()
 
@@ -400,7 +400,7 @@ class TestCleanupOrphanedSessions:
     @_POSIX_ONLY
     def test_kiro_pids_killed(self, session_pid_file: Path) -> None:
         """Kiro PIDs should be SIGKILL'd."""
-        from kiro_crew.session_pid import cleanup_orphaned_sessions
+        from aj_crew.session_pid import cleanup_orphaned_sessions
 
         session_pid_file.write_text("99998\n")
 
@@ -410,18 +410,18 @@ class TestCleanupOrphanedSessions:
             kills.append((pid, sig))
 
         with (
-            patch("kiro_crew.session_pid._is_managed_agent_process", return_value=True),
+            patch("aj_crew.session_pid._is_managed_agent_process", return_value=True),
             # The sweep's liveness gate is pid_liveness() (tri-state), not pid_exists();
             # ALIVE -> falls through to the kill path. pid_exists is still patched for
             # the post-kill re-probe branch.
             patch(
-                "kiro_crew.session_pid.platform_compat.pid_liveness",
+                "aj_crew.session_pid.platform_compat.pid_liveness",
                 return_value=platform_compat.PID_ALIVE,
             ),
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.session_pid.platform_compat.kill_pid", side_effect=fake_kill),
-            patch("kiro_crew.session_pid._pid_in_spawn_grace", return_value=False),
-            patch("kiro_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.session_pid.platform_compat.kill_pid", side_effect=fake_kill),
+            patch("aj_crew.session_pid._pid_in_spawn_grace", return_value=False),
+            patch("aj_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0),
         ):
             cleanup_orphaned_sessions()
 
@@ -431,9 +431,9 @@ class TestCleanupOrphanedSessions:
         self, tmp_path: Path, session_pid_file: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Malformed session_pid_*.txt files (e.g. MagicMock leak) should be deleted."""
-        from kiro_crew.session_pid import cleanup_orphaned_sessions
+        from aj_crew.session_pid import cleanup_orphaned_sessions
 
-        monkeypatch.setattr("kiro_crew.session_pid.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_pid.config_dir", lambda: tmp_path)
         session_pid_file.write_text("")  # no kiro PIDs to kill
 
         # Create one valid (dead process) and one malformed pid file
@@ -441,7 +441,7 @@ class TestCleanupOrphanedSessions:
         (tmp_path / "session_pid_mock.get_pid().txt").write_text("sess-mock")
 
         with (
-            patch("kiro_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0),
+            patch("aj_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0),
             patch("os.kill", side_effect=ProcessLookupError),
         ):
             cleanup_orphaned_sessions()
@@ -454,9 +454,9 @@ class TestCleanupOrphanedSessions:
         self, tmp_path: Path, session_pid_file: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """OSError on malformed pid file unlink should not abort the cleanup loop."""
-        from kiro_crew.session_pid import cleanup_orphaned_sessions
+        from aj_crew.session_pid import cleanup_orphaned_sessions
 
-        monkeypatch.setattr("kiro_crew.session_pid.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_pid.config_dir", lambda: tmp_path)
         session_pid_file.write_text("")
 
         # Create malformed + valid pid files
@@ -473,7 +473,7 @@ class TestCleanupOrphanedSessions:
         monkeypatch.setattr(Path, "unlink", unlink_that_fails_on_bad)
 
         with (
-            patch("kiro_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0),
+            patch("aj_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0),
             patch("os.kill", side_effect=ProcessLookupError),
         ):
             cleanup_orphaned_sessions()  # should not raise
@@ -498,9 +498,9 @@ class TestCleanupOrphanedSessions:
         Uses a real live thread's native tid rather than a fake ``/proc``, so
         the test exercises the same kernel behaviour that produced the bug.
         """
-        from kiro_crew.session_pid import cleanup_orphaned_sessions
+        from aj_crew.session_pid import cleanup_orphaned_sessions
 
-        monkeypatch.setattr("kiro_crew.session_pid.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_pid.config_dir", lambda: tmp_path)
         session_pid_file.write_text("")
 
         tid_box: dict[str, int] = {}
@@ -526,7 +526,7 @@ class TestCleanupOrphanedSessions:
 
             # NOT patching os.kill: both pids are genuinely signalable here,
             # which is exactly the condition the old predicate could not split.
-            with patch("kiro_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0):
+            with patch("aj_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0):
                 cleanup_orphaned_sessions()
 
             assert not thread_map.exists(), "a pid that is only a thread must be pruned"
@@ -546,18 +546,18 @@ class TestCleanupOrphanedSessions:
         ``/proc`` scan back on the boot path, where the readiness cost of it is
         not visible to anyone reading the sweep.
         """
-        from kiro_crew.session_pid import cleanup_orphaned_sessions
+        from aj_crew.session_pid import cleanup_orphaned_sessions
 
-        monkeypatch.setattr("kiro_crew.session_pid.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_pid.config_dir", lambda: tmp_path)
         session_pid_file.write_text("")
 
         def _refuse() -> set[int] | None:
             raise AssertionError("the boot setting must not read /proc for leaders")
 
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.live_thread_group_leaders", _refuse
+            "aj_crew.session_pid.platform_compat.live_thread_group_leaders", _refuse
         )
-        with patch("kiro_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0):
+        with patch("aj_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0):
             cleanup_orphaned_sessions(narrow_with_leaders=False)
 
     def test_prune_pass_leaves_the_shared_pid_file_alone(
@@ -570,9 +570,9 @@ class TestCleanupOrphanedSessions:
         ``kiro_session_pids.txt`` it would race the spawns that append to it once
         the gateway is serving, and a lost entry is an unkillable orphan.
         """
-        from kiro_crew.session_pid import _prune_stale_session_pid_files
+        from aj_crew.session_pid import _prune_stale_session_pid_files
 
-        monkeypatch.setattr("kiro_crew.session_pid.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_pid.config_dir", lambda: tmp_path)
         session_pid_file.write_text("111:222\n")
         (tmp_path / "session_pid_99999.txt").write_text("sess-dead")
 
@@ -603,16 +603,16 @@ class TestCleanupOrphanedSessions:
         load-bearing -- it keeps the guarantee a property of the function instead of
         of where it happens to be called from.
         """
-        from kiro_crew.session_pid import _prune_stale_session_pid_files
+        from aj_crew.session_pid import _prune_stale_session_pid_files
 
-        monkeypatch.setattr("kiro_crew.session_pid.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_pid.config_dir", lambda: tmp_path)
         live = tmp_path / f"session_pid_{os.getpid()}.txt"
         live.write_text("sess-published-after-the-snapshot")
 
         # A snapshot from before this process existed: the pid is signalable and
         # is a real thread-group leader, yet absent from the set.
         monkeypatch.setattr(
-            "kiro_crew.session_pid.platform_compat.live_thread_group_leaders",
+            "aj_crew.session_pid.platform_compat.live_thread_group_leaders",
             lambda: frozenset({1}),
         )
 
@@ -628,9 +628,9 @@ class TestCleanupOrphanedSessions:
 
     @staticmethod
     def _live_mapping(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, live: str | None):
-        from kiro_crew import session_pid_sig
+        from aj_crew import session_pid_sig
 
-        monkeypatch.setattr("kiro_crew.session_pid.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_pid.config_dir", lambda: tmp_path)
         monkeypatch.setattr(platform_compat, "get_process_start_id", lambda _pid: live)
         txt = tmp_path / f"session_pid_{os.getpid()}.txt"
         txt.write_text("previous-owner-session\nrecorded-token-aaa", encoding="utf-8")
@@ -646,7 +646,7 @@ class TestCleanupOrphanedSessions:
         The lenient client resolver cannot tell such a record from a planted one,
         so while it sits in a caller's ancestry that caller's walk is refused.
         """
-        from kiro_crew.session_pid import _prune_stale_session_pid_files
+        from aj_crew.session_pid import _prune_stale_session_pid_files
 
         _, txt, sig = self._live_mapping(tmp_path, monkeypatch, "live-token-bbb")
 
@@ -670,7 +670,7 @@ class TestCleanupOrphanedSessions:
         live: str | None,
     ) -> None:
         """Only a readable live token that DIFFERS retracts; unknown is not proof."""
-        from kiro_crew.session_pid import _prune_stale_session_pid_files
+        from aj_crew.session_pid import _prune_stale_session_pid_files
 
         _, txt, sig = self._live_mapping(tmp_path, monkeypatch, live)
 
@@ -682,7 +682,7 @@ class TestCleanupOrphanedSessions:
         self, tmp_path: Path, session_pid_file: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The boot path carries no new work, so the live-pid arm is off there."""
-        from kiro_crew.session_pid import _prune_stale_session_pid_files
+        from aj_crew.session_pid import _prune_stale_session_pid_files
 
         _, txt, _sig = self._live_mapping(tmp_path, monkeypatch, "live-token-bbb")
 
@@ -698,8 +698,8 @@ class TestCleanupOrphanedSessions:
         move picked up is the NEW mapping, so it must end up back at its path with
         its sidecar, not deleted as the stale one.
         """
-        from kiro_crew import session_pid
-        from kiro_crew.session_pid import _prune_stale_session_pid_files
+        from aj_crew import session_pid
+        from aj_crew.session_pid import _prune_stale_session_pid_files
 
         _, txt, sig = self._live_mapping(tmp_path, monkeypatch, "live-token-bbb")
         real_check = session_pid._is_recycled_record
@@ -729,7 +729,7 @@ class TestCleanupOrphanedSessions:
 
         A live process's leftover may be in flight and stays untouched.
         """
-        from kiro_crew.session_pid import _prune_stale_session_pid_files
+        from aj_crew.session_pid import _prune_stale_session_pid_files
 
         _, txt, sig = self._live_mapping(tmp_path, monkeypatch, "live-token-bbb")
         txt.unlink()
@@ -769,8 +769,8 @@ class TestCleanupOrphanedSessions:
         A reaches the sidecar the public ``.txt`` is empty, yet B will put it back,
         so the current ``.sig`` must stay.
         """
-        from kiro_crew import session_pid
-        from kiro_crew.session_pid import _prune_stale_session_pid_files
+        from aj_crew import session_pid
+        from aj_crew.session_pid import _prune_stale_session_pid_files
 
         _, txt, sig = self._live_mapping(tmp_path, monkeypatch, "live-token-bbb")
         held_by_b = tmp_path / f".session_pid_{os.getpid()}.txt.retract-1-bbbb"
@@ -799,9 +799,9 @@ class TestCleanupOrphanedSessions:
         kind: str,
     ) -> None:
         """A symlink at a private name is unlinked; its target never gains a public name."""
-        from kiro_crew.session_pid import _prune_stale_session_pid_files
+        from aj_crew.session_pid import _prune_stale_session_pid_files
 
-        monkeypatch.setattr("kiro_crew.session_pid.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_pid.config_dir", lambda: tmp_path)
         secret = tmp_path / "outside" / "secret.env"
         secret.parent.mkdir()
         secret.write_text("TOKEN=x", encoding="utf-8")
@@ -823,7 +823,7 @@ class TestCleanupOrphanedSessions:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A restore landing between the public and private checks is still seen."""
-        from kiro_crew.session_pid import _mapping_may_return
+        from aj_crew.session_pid import _mapping_may_return
 
         txt = tmp_path / "session_pid_77.txt"
         private = tmp_path / ".session_pid_77.txt.retract-1-aaaa"
@@ -848,7 +848,7 @@ class TestCleanupOrphanedSessions:
         Settling the sidecar first, while its mapping is still private, must keep
         it; the pass then restores the mapping and the sidecar beside it.
         """
-        from kiro_crew.session_pid import (
+        from aj_crew.session_pid import (
             _prune_stale_session_pid_files,
             _settle_retraction_leftover,
         )
@@ -879,8 +879,8 @@ class TestCleanupOrphanedSessions:
         Restoring by rename could replace a mapping published in the meantime, so
         the pass keeps the file under its private name instead.
         """
-        from kiro_crew import session_pid
-        from kiro_crew.session_pid import _prune_stale_session_pid_files
+        from aj_crew import session_pid
+        from aj_crew.session_pid import _prune_stale_session_pid_files
 
         _, txt, sig = self._live_mapping(tmp_path, monkeypatch, "live-token-bbb")
         real_check = session_pid._is_recycled_record
@@ -924,8 +924,8 @@ class TestCleanupOrphanedSessions:
         The publisher writes both after the stale record was moved, so the sidecar
         the sweep then finds is the new one and must not be removed.
         """
-        from kiro_crew import session_pid
-        from kiro_crew.session_pid import _prune_stale_session_pid_files
+        from aj_crew import session_pid
+        from aj_crew.session_pid import _prune_stale_session_pid_files
 
         _, txt, sig = self._live_mapping(tmp_path, monkeypatch, "live-token-bbb")
         real_sidecar = session_pid._retract_sidecar
@@ -947,7 +947,7 @@ class TestCleanupOrphanedSessions:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A FIFO swapped in after the ``lstat`` must not park the sweep on ``open``."""
-        from kiro_crew.session_pid import _is_recycled_record
+        from aj_crew.session_pid import _is_recycled_record
 
         monkeypatch.setattr(platform_compat, "get_process_start_id", lambda _pid: "live")
         regular = tmp_path / "vetted.txt"
@@ -974,7 +974,7 @@ class TestCleanupOrphanedSessions:
 class TestCleanupOrphanedMcpServersExtra:
     def test_bare_pid_non_numeric_skipped(self, pid_file: Path) -> None:
         """A bare (no-colon) line that is not an int is skipped via ValueError."""
-        from kiro_crew.session_pid import _cleanup_orphaned_mcp_servers
+        from aj_crew.session_pid import _cleanup_orphaned_mcp_servers
 
         pid_file.write_text("not_a_number\n")
 
@@ -986,7 +986,7 @@ class TestCleanupOrphanedMcpServersExtra:
 
     def test_orphan_kill_oserror_swallowed(self, pid_file: Path) -> None:
         """kill_pid raising OSError on an orphaned child is swallowed; entry pruned."""
-        from kiro_crew.session_pid import _cleanup_orphaned_mcp_servers
+        from aj_crew.session_pid import _cleanup_orphaned_mcp_servers
 
         pid_file.write_text("77777:99999\n")  # parent 99999 dead
 
@@ -998,12 +998,12 @@ class TestCleanupOrphanedMcpServersExtra:
 
         with (
             patch(
-                "kiro_crew.session_pid.platform_compat.pid_exists",
+                "aj_crew.session_pid.platform_compat.pid_exists",
                 side_effect=fake_pid_exists,
             ),
-            patch("kiro_crew.platform_compat.get_ppid", return_value=1),
+            patch("aj_crew.platform_compat.get_ppid", return_value=1),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=fake_kill,
             ),
         ):

@@ -13,10 +13,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.hooks import TOOL_ALLOW, TOOL_DENY, ToolHookResult
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.sel import SecurityEventLog
-from kiro_crew.task_planner import decompose
+from aj_crew.hooks import TOOL_ALLOW, TOOL_DENY, ToolHookResult
+from aj_crew.providers.base import LLMEvent
+from aj_crew.sel import SecurityEventLog
+from aj_crew.task_planner import decompose
 
 
 def _sessions_with(provider: MagicMock) -> MagicMock:

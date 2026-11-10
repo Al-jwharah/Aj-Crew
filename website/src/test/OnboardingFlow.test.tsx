@@ -14,7 +14,7 @@ vi.mock('../api/client', async importOriginal => {
     ...mod,
     api: {
       ...mod.api,
-      kirocrewConfig: vi.fn().mockResolvedValue({
+      ajcrewConfig: vi.fn().mockResolvedValue({
         dashboard: { user_role: '', user_technical_level: '' },
       }),
       patchConfig: vi.fn().mockResolvedValue({}),
@@ -25,14 +25,14 @@ vi.mock('../api/client', async importOriginal => {
         reason: 'ready',
         endpoint_configured: true,
         env_override: false,
-        env_var: 'KIROCREW_TELEMETRY_DISABLED',
+        env_var: 'AJCREW_TELEMETRY_DISABLED',
       }),
     },
   }
 })
 
 const patchConfig = vi.mocked(api.patchConfig)
-const kirocrewConfig = vi.mocked(api.kirocrewConfig)
+const ajcrewConfig = vi.mocked(api.ajcrewConfig)
 
 // The flow saves its first-run step in localStorage so a reload resumes it;
 // the store outlives a test, so start each one from step 1.
@@ -42,7 +42,7 @@ beforeEach(() => {
 
 const advanceToStep2 = () => {
   fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
-  expect(screen.getByText('Tell Kiro about you')).toBeInTheDocument()
+  expect(screen.getByText('Tell Aj about you')).toBeInTheDocument()
 }
 
 describe('OnboardingFlow — About You step', () => {
@@ -51,8 +51,8 @@ describe('OnboardingFlow — About You step', () => {
     // can't leak across tests.
     patchConfig.mockReset()
     patchConfig.mockResolvedValue({})
-    kirocrewConfig.mockReset()
-    kirocrewConfig.mockResolvedValue({
+    ajcrewConfig.mockReset()
+    ajcrewConfig.mockResolvedValue({
       dashboard: { user_role: '', user_technical_level: '' },
     })
   })
@@ -105,7 +105,7 @@ describe('OnboardingFlow — About You step', () => {
   })
 
   it('on a replay, clicking the preselected answer again does not clear it', async () => {
-    kirocrewConfig.mockResolvedValue({
+    ajcrewConfig.mockResolvedValue({
       dashboard: { user_role: 'developer', user_technical_level: 'codes' },
     })
     renderWithProviders(<OnboardingFlow initialOpen onComplete={vi.fn()} />)
@@ -171,7 +171,7 @@ describe('OnboardingFlow — About You step', () => {
     fireEvent.click(screen.getByRole('button', { name: /Skip/ }))
     expect(await screen.findByRole('alert')).toHaveTextContent(/Skip again/)
     expect(onComplete).not.toHaveBeenCalled()
-    expect(screen.getByText('Tell Kiro about you')).toBeInTheDocument()
+    expect(screen.getByText('Tell Aj about you')).toBeInTheDocument()
     // Second Skip: explicit discard → dismissed
     fireEvent.click(screen.getByRole('button', { name: /Skip/ }))
     await waitFor(() => expect(onComplete).toHaveBeenCalled())
@@ -186,7 +186,7 @@ describe('OnboardingFlow — About You step', () => {
   })
 
   it('preselects previously saved answers for /onboarding replays', async () => {
-    kirocrewConfig.mockResolvedValue({
+    ajcrewConfig.mockResolvedValue({
       dashboard: { user_role: 'developer', user_technical_level: 'codes' },
     })
     renderWithProviders(<OnboardingFlow initialOpen onComplete={vi.fn()} />)
@@ -215,7 +215,7 @@ describe('OnboardingFlow — About You step', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
     // Error surfaces, still on step 2, tour NOT shown
     expect(await screen.findByRole('alert')).toHaveTextContent(/Couldn't save/)
-    expect(screen.getByText('Tell Kiro about you')).toBeInTheDocument()
+    expect(screen.getByText('Tell Aj about you')).toBeInTheDocument()
     expect(screen.queryByText('Work that runs on time')).not.toBeInTheDocument()
   })
 
@@ -350,7 +350,7 @@ describe('OnboardingFlow — About You step', () => {
   })
 
   it('switching from Other to a real chip leaves the stored free text alone', async () => {
-    kirocrewConfig.mockResolvedValue({
+    ajcrewConfig.mockResolvedValue({
       dashboard: {
         user_role: 'other',
         user_role_other: 'solutions architect',
@@ -587,8 +587,8 @@ describe('OnboardingFlow — end of the tour', () => {
   beforeEach(() => {
     patchConfig.mockReset()
     patchConfig.mockResolvedValue({})
-    kirocrewConfig.mockReset()
-    kirocrewConfig.mockResolvedValue({
+    ajcrewConfig.mockReset()
+    ajcrewConfig.mockResolvedValue({
       dashboard: { user_role: '', user_technical_level: '' },
     })
   })

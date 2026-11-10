@@ -21,9 +21,9 @@ from pathlib import Path
 import pytest
 
 from conftest import requires_symlinks
-from kiro_crew import portability
-from kiro_crew import snapshot as snapshot_mod
-from kiro_crew import snapshot_merge
+from aj_crew import portability
+from aj_crew import snapshot as snapshot_mod
+from aj_crew import snapshot_merge
 
 pytestmark = pytest.mark.skipif(os.name != "posix", reason="POSIX link fixtures")
 
@@ -137,7 +137,7 @@ def test_a_staged_link_is_refused_where_open_cannot_refuse_links(tmp_path, monke
     """
     import errno
 
-    from kiro_crew import pinned_fs, platform_compat
+    from aj_crew import pinned_fs, platform_compat
 
     snap, mc, outside = _dirs(tmp_path)
     secret = outside / "credential"
@@ -228,7 +228,7 @@ def test_a_link_that_reuses_the_read_inode_number_is_still_refused(tmp_path, mon
     regular file, so the link is refused whatever number it was given; reuse is
     simulated here by reporting the read inode's number for the planted entry.
     """
-    from kiro_crew import pinned_fs
+    from aj_crew import pinned_fs
 
     src, dst, outside = _cron_pair(tmp_path)
     victim = outside / "victim.json"
@@ -291,8 +291,8 @@ def test_the_rewrite_keeps_the_live_stores_access_control_acl(tmp_path):
     if not hasattr(os, "setxattr"):
         pytest.skip("no os xattr API on this platform (macOS)")
     try:
-        os.setxattr(dst, "user.kirocrew-probe", b"1")
-        os.removexattr(dst, "user.kirocrew-probe")
+        os.setxattr(dst, "user.ajcrew-probe", b"1")
+        os.removexattr(dst, "user.ajcrew-probe")
     except OSError:
         pytest.skip("filesystem has no xattrs")
     import shutil
@@ -382,7 +382,7 @@ def test_the_dashboard_import_reports_a_leftover_index_as_refused(tmp_path):
     (target / "memory_index.db").write_bytes(b"old index")
 
     with patch.object(portability, "config_dir", return_value=target):
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
             summary = portability.apply_import_zip(z, mode="merge")
 
     assert (target / "memory_index.db").read_bytes() == b"old index"
@@ -403,7 +403,7 @@ def _simulate_macos(monkeypatch) -> None:
 
     A simulation: no real Mac runs this, and a native macOS ACL is not created.
     """
-    from kiro_crew import atomic_write
+    from aj_crew import atomic_write
 
     monkeypatch.setattr(atomic_write, "ACCESS_CONTROL_XATTRS_SUPPORTED", False)
 
@@ -442,7 +442,7 @@ def test_the_in_place_rewrite_still_refuses_a_store_swapped_after_the_read(tmp_p
 
 
 def test_where_the_acl_can_be_carried_the_store_is_still_replaced_atomically(tmp_path):
-    from kiro_crew import atomic_write
+    from aj_crew import atomic_write
 
     if not atomic_write.ACCESS_CONTROL_XATTRS_SUPPORTED:
         pytest.skip("this platform takes the in-place path")

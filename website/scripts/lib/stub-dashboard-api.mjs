@@ -20,8 +20,8 @@ export const json = (route, body, status = 200) => route.fulfill({
 })
 
 /**
- * The `/api/config/kirocrew` body, matching `KiroCrewCfg` in
- * `website/src/pages/overview/KiroCrewCfgTab.tsx`.
+ * The `/api/config/ajcrew` body, matching `AjCrewCfg` in
+ * `website/src/pages/overview/AjCrewCfgTab.tsx`.
  *
  * Named ahead of the catch-all because that tab does
  * `Object.entries(cfg.agents)` on mount. Under the catch-all's `{}`,
@@ -36,11 +36,11 @@ export const json = (route, body, status = 200) => route.fulfill({
  * where the component reads `dir`, so those rows rendered blank in the
  * screenshots that were supposed to prove them.
  */
-export const KIROCREW_CONFIG_FIXTURE = {
+export const AJCREW_CONFIG_FIXTURE = {
   agents: {
-    kirocrew: { kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default' },
+    ajcrew: { kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default' },
   },
-  default_agent: 'kirocrew',
+  default_agent: 'ajcrew',
   workspaces: { default: { dir: '~/.kiro/crew/workspace' } },
   default_workspace: 'default',
   memory_stores: {
@@ -48,13 +48,13 @@ export const KIROCREW_CONFIG_FIXTURE = {
   },
   default_memory_store: 'default',
   agent: {
-    default_agent: 'kirocrew', provider: 'acp', model: 'auto',
+    default_agent: 'ajcrew', provider: 'acp', model: 'auto',
     approval_mode: 'interactive', sandbox: 'auto',
     subagent_max_turns: 100, max_subagents: 3, subagent_auto_max: 16,
     tool_search: true,
     max_channels: 8, max_channel_agents: 4,
   },
-  session: { timeout_secs: 1800, pool_size: 2, pool_agent: 'kirocrew', pool_ttl_secs: 600 },
+  session: { timeout_secs: 1800, pool_size: 2, pool_agent: 'ajcrew', pool_ttl_secs: 600 },
   memory: { embedding_provider: 'local' },
   auto_update: true,
 }
@@ -67,8 +67,8 @@ export const KIROCREW_CONFIG_FIXTURE = {
  * the modal, so those frames never render.
  */
 export const KIRO_BACKEND_CONFIG_FIXTURE = {
-  ...KIROCREW_CONFIG_FIXTURE,
-  agent: { ...KIROCREW_CONFIG_FIXTURE.agent, acp_backend: 'kiro' },
+  ...AJCREW_CONFIG_FIXTURE,
+  agent: { ...AJCREW_CONFIG_FIXTURE.agent, acp_backend: 'kiro' },
 }
 
 /**
@@ -91,13 +91,13 @@ export const KAS_BUNDLE_STATUS_FIXTURE = {
 }
 
 /** The `/api/agent/config` body — the per-agent MCP view. */
-export const AGENT_CONFIG_FIXTURE = { name: 'kirocrew', mcpServers: {} }
+export const AGENT_CONFIG_FIXTURE = { name: 'ajcrew', mcpServers: {} }
 
 /**
  * The `/api/knowledge/stats` body, matching `get_stats` in
- * `src/kiro_crew/dashboard/handlers/knowledge.py`.
+ * `src/aj_crew/dashboard/handlers/knowledge.py`.
  *
- * Named ahead of the catch-all for the same reason as KIROCREW_CONFIG_FIXTURE,
+ * Named ahead of the catch-all for the same reason as AJCREW_CONFIG_FIXTURE,
  * but with a failure mode that is intermittent rather than fatal. `stats` does
  * not match `objectish`, so the guess is `[]` — and `[]` is TRUTHY, so the
  * knowledge page's `{stats && (…)}` stats bar renders, with every
@@ -163,11 +163,11 @@ export async function stubDashboardApi(page, opts = {}) {
     // instead.
     localStorageEntries = null,
     // The backend's own default (`api_branding`: `cfg.dashboard.bot_name or
-    // "Kiro Crew"`). It must stay TWO WORDS: the nav brand row accents the last
+    // "Aj Crew"`). It must stay TWO WORDS: the nav brand row accents the last
     // word only, and the composer placeholder interpolates the whole name — so
     // a single-word "Kiro" here silently produced screenshots with no "CREW"
     // and a "Message Kiro…" composer, in every harness in this folder.
-    botName = 'Kiro Crew',
+    botName = 'Aj Crew',
     extra = null,
     // Receives the dashboard's mocked websocket, so a harness can push frames
     // to the page. The socket never reaches a server either way.
@@ -219,18 +219,18 @@ export async function stubDashboardApi(page, opts = {}) {
       })
     }
     if (path === '/api/agents' || path === '/api/chat/agents') {
-      // Object, not a bare array: every reader (useAgents, KiroCrewAgentsPage,
+      // Object, not a bare array: every reader (useAgents, AjCrewAgentsPage,
       // AgentTemplateDetail) takes the roster off `d.agents` and the default off
       // `d.default_agent`. An array left both undefined, so the roster was empty
       // and every configured default rendered as an orphan "(not installed)".
       // `workspace` / `memory_store` carry the record defaults the handler
-      // serializes (`KiroCrewAgentConfig`), not blanks: the agents page counts
+      // serializes (`AjCrewAgentConfig`), not blanks: the agents page counts
       // them to decide which crews SHARE a workspace or store, and an absent key
       // renders the row's Workspace and Memory cells empty.
       const row = { kiro_agent: '', workspace: 'default', memory_store: 'default' }
       return json(route, {
-        agents: [{ name: 'kirocrew', source: 'builtin', ...row }, { name: 'oncall', source: 'aim', ...row }],
-        default_agent: 'kirocrew',
+        agents: [{ name: 'ajcrew', source: 'builtin', ...row }, { name: 'oncall', source: 'aim', ...row }],
+        default_agent: 'ajcrew',
       })
     }
     // The crewmates roster, as an owner with no crewmates gets it. The
@@ -242,8 +242,8 @@ export async function stubDashboardApi(page, opts = {}) {
     if (path === '/api/members') return json(route, { members: [] })
     // Named BEFORE the catch-all: both paths match its `config` test, and the
     // `{}` it would return blanks the whole Developer > Config surface (see
-    // KIROCREW_CONFIG_FIXTURE for why).
-    if (path === '/api/config/kirocrew') return json(route, KIROCREW_CONFIG_FIXTURE)
+    // AJCREW_CONFIG_FIXTURE for why).
+    if (path === '/api/config/ajcrew') return json(route, AJCREW_CONFIG_FIXTURE)
     if (path === '/api/agent/config') return json(route, AGENT_CONFIG_FIXTURE)
     if (path === '/api/kas-bundle') return json(route, KAS_BUNDLE_STATUS_FIXTURE)
     if (path === '/api/knowledge/stats') return json(route, KNOWLEDGE_STATS_FIXTURE)
@@ -252,7 +252,7 @@ export async function stubDashboardApi(page, opts = {}) {
     // the cases where it does not, the endpoint belongs above this line.
     //
     // Announced once per path per run. The fixture gap this catch-all produced
-    // for /api/config/kirocrew was silent AND fatal, and a harness author with
+    // for /api/config/ajcrew was silent AND fatal, and a harness author with
     // no reason to suspect the stub had nothing to go on: the page just came
     // back blank. A guess is a reasonable default, but it should say so, so the
     // NEXT unmapped endpoint is discoverable rather than mysterious.

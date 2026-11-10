@@ -35,7 +35,7 @@ const LEAD = 'chat-2201'
 const WORKERS = ['chat-2202', 'chat-2203', 'chat-2204', 'chat-2205']
 
 const peerRow = (key: string, title: string, msAgo: number, extra: Partial<PeerRow> = {}): PeerRow => ({
-  key, title, agent: 'kirocrew-worker', running: false, pending_approval: false,
+  key, title, agent: 'ajcrew-worker', running: false, pending_approval: false,
   last_turn_ts: at(msAgo), last_ts: at(msAgo), created: at(msAgo + 30 * MIN),
   row_identity: `${PEER}:${key}`,
   ...extra,
@@ -51,11 +51,11 @@ const PEER_ROWS: PeerRow[] = [
 /** The hub's own local sessions: the remote-executed lead, and one unrelated chat. */
 const LOCAL: LocalRow[] = [
   {
-    key: LEAD, title: 'Dispatch subsession workers from briefs', messages: 10, running: true, agent: 'kirocrew-lead',
+    key: LEAD, title: 'Dispatch subsession workers from briefs', messages: 10, running: true, agent: 'ajcrew-lead',
     last_ts: at(MIN), last_message: 'Loop 81/220 · four workers out, waiting on their reports.',
     executor: 'remote', instance_id: PEER,
   },
-  { key: 'chat-2188', title: 'Fargate feature progress check', messages: 17, running: false, agent: 'kirocrew', last_ts: at(12 * MIN), last_message: 'Loop 17/40 · Update monitor.' },
+  { key: 'chat-2188', title: 'Fargate feature progress check', messages: 17, running: false, agent: 'ajcrew', last_ts: at(12 * MIN), last_message: 'Loop 17/40 · Update monitor.' },
 ]
 
 installPeerFetch(PEER, params.get('hub') === '1' ? PEER_ROWS : stripParent(PEER_ROWS))

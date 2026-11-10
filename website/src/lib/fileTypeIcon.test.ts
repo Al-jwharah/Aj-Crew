@@ -75,6 +75,6 @@ describe('fileTypeLabel', () => {
     expect(fileTypeLabel('blob')).toBe('')
     expect(fileTypeLabel('.env')).toBe('ENV')
     expect(fileTypeLabel('gateway.log.1')).toBe('')
-    expect(fileTypeLabel('KiroCrew-1.4.0')).toBe('')
+    expect(fileTypeLabel('AjCrew-1.4.0')).toBe('')
   })
 })

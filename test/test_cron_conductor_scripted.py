@@ -12,8 +12,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.dashboard.handlers import _shared
-from kiro_crew.mate_worker import MATE_CONDUCTOR_AGENT
+from aj_crew.dashboard.handlers import _shared
+from aj_crew.mate_worker import MATE_CONDUCTOR_AGENT
 
 CONDUCTOR = SimpleNamespace(selection_kind="member", template_id=MATE_CONDUCTOR_AGENT)
 
@@ -33,8 +33,8 @@ class _Request(dict):
 
 @pytest.mark.parametrize("field", ["script", "command"])
 def test_a_scripted_cron_from_the_conductor_is_dispatched(monkeypatch, field):
-    from kiro_crew import mcp_cron, member_memory_auth
-    from kiro_crew.dashboard.handlers import cron
+    from aj_crew import mcp_cron, member_memory_auth
+    from aj_crew.dashboard.handlers import cron
 
     session = "dashboard_member-ada"
     dispatched = []

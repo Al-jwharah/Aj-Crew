@@ -4,7 +4,7 @@ A burst of first-touch requests on one uncached store -- ``member-memory.spec.ts
 seeds 65 facts five ``PUT /api/memory/semantic`` at a time -- reaches
 ``ContextBuilder.ensure_store`` while ``_vector_stores`` has no entry yet. Without
 the single-flight every request launches its own ``_prepare`` worker: two
-``KiroCrewConfig.load()`` each, an identity check with ``PRAGMA quick_check``, a
+``AjCrewConfig.load()`` each, an identity check with ``PRAGMA quick_check``, a
 SQLite open plus migrations under the exclusive namespace lock, and then all but
 the first discard their store at publication. A loop-stall dump of the E2E gateway
 shows four such workers for one store at the instant the alarm fires.
@@ -26,7 +26,7 @@ open to be in flight gate ``declared_store``, and the gate is always released in
 ``finally`` so a failed assertion cannot leave a worker thread parked on it.
 
 Every wait in this file is bounded by the lost-run bound of
-:mod:`kiro_crew.testing.wait` and fails by name: the worker's wait at the gate, the
+:mod:`aj_crew.testing.wait` and fails by name: the worker's wait at the gate, the
 test's wait for a worker to reach it, and every await of a caller or of the shared
 open. A caller's task finishes only when an executor thread does. The bound is the
 loop's own timer, which needs no signal, so an open that never returns fails the
@@ -43,9 +43,9 @@ import threading
 import pytest
 from member_memory_helpers import forget_declared_stores, write_member_home
 
-from kiro_crew import context, vector_memory
-from kiro_crew.memory_stores import UnknownMemoryStore
-from kiro_crew.testing.wait import async_wait_until, await_until, default_timeout, finished
+from aj_crew import context, vector_memory
+from aj_crew.memory_stores import UnknownMemoryStore
+from aj_crew.testing.wait import async_wait_until, await_until, default_timeout, finished
 
 STORE = "member-alice"
 BURST = 5
@@ -53,7 +53,7 @@ BURST = 5
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     write_member_home(tmp_path, "alice")
     forget_declared_stores(monkeypatch)
     monkeypatch.setattr(context, "_vector_stores", {})

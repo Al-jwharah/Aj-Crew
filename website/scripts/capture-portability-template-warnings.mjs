@@ -27,8 +27,8 @@ async function extra(path, route) {
       status: 200,
       contentType: 'application/zip',
       headers: {
-        'Content-Disposition': 'attachment; filename="kirocrew-export.zip"',
-        'X-Kirocrew-Unbundled-Templates': JSON.stringify(['reviewer', 'triage-bot', '+4']),
+        'Content-Disposition': 'attachment; filename="ajcrew-export.zip"',
+        'X-Ajcrew-Unbundled-Templates': JSON.stringify(['reviewer', 'triage-bot', '+4']),
       },
       body: 'PK',
     })
@@ -76,7 +76,7 @@ try {
   await exportWarning.waitFor({ state: 'visible', timeout: 15000 })
   if (!(await exportWarning.textContent()).includes('reviewer, triage-bot, 4 more')) throw new Error('export warning text wrong')
 
-  await main$.locator('#portability-import-file').setInputFiles({ name: 'kirocrew-export.zip', mimeType: 'application/zip', buffer: Buffer.from('PK') })
+  await main$.locator('#portability-import-file').setInputFiles({ name: 'ajcrew-export.zip', mimeType: 'application/zip', buffer: Buffer.from('PK') })
   const importBtn = main$.getByRole('button', { name: /^import$/i })
   await importBtn.waitFor({ state: 'visible' })
   await page.waitForFunction(() => {

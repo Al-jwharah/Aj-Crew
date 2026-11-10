@@ -15,14 +15,14 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.chat_handlers import (
+from aj_crew.dashboard.chat_handlers import (
     _is_interrupted,
     api_chat_slot_continue,
     session_start_failure_streak,
 )
-from kiro_crew.dashboard.chat_utils import SESSION_START_FAILED_KIND, SYNTHETIC_RECOVERY_KIND
-from kiro_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.chat_utils import SESSION_START_FAILED_KIND, SYNTHETIC_RECOVERY_KIND
+from aj_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 
 def _make_app(state: DashboardState) -> web.Application:
@@ -60,8 +60,8 @@ def _patched(monkeypatch):
     mock_sel.log_tool_invocation = MagicMock()
     started = AsyncMock(return_value=True)
     with (
-        patch("kiro_crew.dashboard.chat_handlers.sel", return_value=mock_sel),
-        patch("kiro_crew.dashboard.chat_handlers._start_next_queued_turn", started),
+        patch("aj_crew.dashboard.chat_handlers.sel", return_value=mock_sel),
+        patch("aj_crew.dashboard.chat_handlers._start_next_queued_turn", started),
     ):
         yield started
 
@@ -117,7 +117,7 @@ class TestContinueSlotTurnRestored:
         # default). Even when the slot is interrupted and every queue entry is
         # restored, the agent-tool path refuses with slot_queue_pending.
         # Restored cards must not be auto-dispatched by an agent call.
-        from kiro_crew.dashboard.chat_handlers import continue_slot_turn
+        from aj_crew.dashboard.chat_handlers import continue_slot_turn
 
         slot = _ChatSlot("s")
         slot.append("user", "hi", "msg msg-u")
@@ -130,7 +130,7 @@ class TestContinueSlotTurnRestored:
         slot.queue_append("restored item")
         slot._queue[-1][RESTORED_QUEUE_KEY] = True
         state = _mock_state(slot)
-        from kiro_crew.dashboard.chat_handlers import SlotContinueRefusal
+        from aj_crew.dashboard.chat_handlers import SlotContinueRefusal
 
         with pytest.raises(SlotContinueRefusal) as exc_info:
             await continue_slot_turn(
@@ -152,7 +152,7 @@ class TestQueueEntryViewRestored:
     """queue_entry_view projects restored=True for entries tagged RESTORED_QUEUE_KEY."""
 
     def test_restored_entry_carries_meta_restored(self):
-        from kiro_crew.dashboard.chat_delivery import queue_entry_view
+        from aj_crew.dashboard.chat_delivery import queue_entry_view
 
         entry = {
             "id": "q1",
@@ -163,7 +163,7 @@ class TestQueueEntryViewRestored:
         assert view.get("meta", {}).get("restored") is True
 
     def test_live_entry_has_no_meta_restored(self):
-        from kiro_crew.dashboard.chat_delivery import queue_entry_view
+        from aj_crew.dashboard.chat_delivery import queue_entry_view
 
         live_entry = {"id": "q2", "content": "do something else"}
         view = queue_entry_view(live_entry)
@@ -308,8 +308,8 @@ class TestChatSlotContinue:
         # Parked: _start_next_queued_turn returns False; recovery stays at head.
         started = AsyncMock(return_value=False)
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel", return_value=mock_sel),
-            patch("kiro_crew.dashboard.chat_handlers._start_next_queued_turn", started),
+            patch("aj_crew.dashboard.chat_handlers.sel", return_value=mock_sel),
+            patch("aj_crew.dashboard.chat_handlers._start_next_queued_turn", started),
         ):
             slot = _ChatSlot("s")
             slot.append("user", "hi", "msg msg-u")
@@ -795,7 +795,7 @@ class TestChatSlotContinueAfterRepeatedStartFailures:
             assert resp.status == 409
             body = await resp.json()
         assert body["code"] == "session_start_repeat"
-        assert "kirocrew restart" in body["error"]
+        assert "ajcrew restart" in body["error"]
         assert not slot._queue
         _patched.assert_not_awaited()
 
@@ -845,8 +845,8 @@ async def test_a_failing_audit_write_does_not_strand_the_queued_continue():
     mock_sel.log_tool_invocation = MagicMock(side_effect=OSError("sel disk full"))
     started = AsyncMock(return_value=True)
     with (
-        patch("kiro_crew.dashboard.chat_handlers.sel", return_value=mock_sel),
-        patch("kiro_crew.dashboard.chat_handlers._start_next_queued_turn", started),
+        patch("aj_crew.dashboard.chat_handlers.sel", return_value=mock_sel),
+        patch("aj_crew.dashboard.chat_handlers._start_next_queued_turn", started),
     ):
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post("/api/chat/slots/s/continue")
@@ -863,7 +863,7 @@ class TestContinueOfACardTurn:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("card_row", [True, False])
     async def test_the_queued_continuation_carries_the_cards_mark(self, _patched, card_row):
-        from kiro_crew.dashboard.card_send import CARD_ORIGIN_META_KEY
+        from aj_crew.dashboard.card_send import CARD_ORIGIN_META_KEY
 
         slot = _ChatSlot("s")
         meta = {CARD_ORIGIN_META_KEY: True} if card_row else None

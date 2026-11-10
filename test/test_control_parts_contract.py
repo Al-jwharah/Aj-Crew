@@ -1,9 +1,9 @@
 """``mcp_tools/control.py`` is a mirrored facade over ``mcp_tools/control_parts``.
 
 The descriptors, the session-directive tools and the monitoring-loop tools live in the
-owner modules under ``kiro_crew.mcp_tools.control_parts``; ``kiro_crew.mcp_tools.control``
+owner modules under ``aj_crew.mcp_tools.control_parts``; ``aj_crew.mcp_tools.control``
 stays the domain module ``mcp_tools.DOMAIN_MODULES`` names, the import path and the patch
-seam, built on ``kiro_crew._facade_mirror``. The contract every mirrored facade holds to
+seam, built on ``aj_crew._facade_mirror``. The contract every mirrored facade holds to
 (one object per name, the ``TYPE_CHECKING`` manifest, no owner importing the facade,
 every patched name reaching every reader) is ``test_facade_mirror_guards.py``'s. These
 cases pin what is particular to this family: its owners are exactly the package's modules
@@ -27,10 +27,10 @@ from types import ModuleType
 
 import pytest
 
-import kiro_crew
-from kiro_crew import _facade_mirror
-from kiro_crew.mcp_tools import DOMAIN_MODULES, control, control_parts
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew
+from aj_crew import _facade_mirror
+from aj_crew.mcp_tools import DOMAIN_MODULES, control, control_parts
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 # One worker per file, so the shared checks run beside the tests that load this module.
 pytestmark = pytest.mark.xdist_group(name="control_parts_contract")
@@ -89,7 +89,7 @@ def test_both_halves_of_every_tool_resolve_on_the_facade() -> None:
     """``build_tool_list`` reads ``control.schemas`` and ``dispatch`` reads
     ``control.HANDLERS``; the descriptor builder is the owner's own function, so the
     ``names_only`` keyword the names-only build detects is still on it."""
-    from kiro_crew.mcp_tools import _schemas_accepts_names_only
+    from aj_crew.mcp_tools import _schemas_accepts_names_only
 
     assert control.schemas is vars(importlib.import_module(f"{_PACKAGE}.schemas"))["schemas"]
     assert _schemas_accepts_names_only(control.schemas)
@@ -109,13 +109,13 @@ def test_every_owner_logs_under_the_module_s_original_logger_name() -> None:
 
 
 def test_the_facade_still_runs_as_main(tmp_path: Path) -> None:
-    """``python -m kiro_crew.mcp_tools.control`` imported cleanly before the split. Run as
+    """``python -m aj_crew.mcp_tools.control`` imported cleanly before the split. Run as
     ``__main__``, the facade's ``__name__`` is not its dotted name, so a logger bound from
     ``__name__`` would be a second object beside the owners' and the mirror would refuse
     the install; the facade binds it by name. Run in a child, from ``tmp_path``, so the
     import touches nothing of this process."""
     env = dict(os.environ)
-    src = str(Path(kiro_crew.__file__).resolve().parents[1])
+    src = str(Path(aj_crew.__file__).resolve().parents[1])
     env["PYTHONPATH"] = src + os.pathsep + env.get("PYTHONPATH", "")
     result = subprocess.run(
         [sys.executable, "-m", _FACADE],
@@ -141,14 +141,14 @@ def _reexport_group() -> set[str]:
 
 
 def test_the_names_owners_import_from_elsewhere_stay_visible_to_type_checkers() -> None:
-    """A served name an owner imports from another ``kiro_crew`` module was the facade's
+    """A served name an owner imports from another ``aj_crew`` module was the facade's
     own import before the split; the last ``TYPE_CHECKING`` block keeps it there for
     mypy and IDEs, and names nothing else."""
     imported_from_elsewhere = set()
     for name, owner_name in _MIRROR.exports.items():
         owner = importlib.import_module(owner_name)
         for node in _tree(owner).body:
-            if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("kiro_crew"):
+            if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("aj_crew"):
                 bound = {alias.asname or alias.name for alias in node.names}
                 if name in bound and not _in_family(node.module or ""):
                     imported_from_elsewhere.add(name)

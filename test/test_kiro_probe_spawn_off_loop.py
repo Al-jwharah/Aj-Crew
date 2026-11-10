@@ -44,10 +44,10 @@ from typing import Any
 
 import pytest
 
-import kiro_crew.kiro_prerequisite as prerequisite_module
-from kiro_crew import platform_compat
-from kiro_crew.executors import kiro_spawn_executor, subprocess_executor
-from kiro_crew.kiro_prerequisite import _run_process
+import aj_crew.kiro_prerequisite as prerequisite_module
+from aj_crew import platform_compat
+from aj_crew.executors import kiro_spawn_executor, subprocess_executor
+from aj_crew.kiro_prerequisite import _run_process
 
 # Long enough that a caller-loop heartbeat at _TICK_SECS could not plausibly
 # advance by _MIN_TICKS if the spawn held the loop, short enough to keep the

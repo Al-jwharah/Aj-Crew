@@ -25,8 +25,8 @@ from stray_line_helpers import STRAY_LINES
 
 # Bound at import, before the autouse fixture swaps the module attribute out, so the
 # live loopback cases can put the real connector back.
-from kiro_crew.link_unfurl import pinned_connector as _real_pinned_connector
-from kiro_crew.mcp_discovery import (
+from aj_crew.link_unfurl import pinned_connector as _real_pinned_connector
+from aj_crew.mcp_discovery import (
     MCP_CLIENT_PROTOCOL_VERSION,
     MCP_REDACTED_HEADER_VALUE,
     McpServerInfo,
@@ -37,7 +37,7 @@ from kiro_crew.mcp_discovery import (
     probe_metadata,
     probe_server,
 )
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 
 class TestReadJsonrpcResponse:
@@ -142,7 +142,7 @@ class TestProbeRemote:
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
             result = await _probe_remote(server)
 
         assert result.status == "ok"
@@ -185,7 +185,7 @@ class TestProbeRemote:
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
             result = await _probe_remote(server)
 
         assert result.status == "ok"
@@ -207,7 +207,7 @@ class TestProbeRemote:
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
             result = await _probe_remote(server)
 
         assert result.status == "error"
@@ -233,7 +233,7 @@ class TestProbeRemote:
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
             result = await _probe_remote(server)
 
         assert result.status == "needs_auth"
@@ -257,7 +257,7 @@ class TestProbeRemote:
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
             result = await _probe_remote(server)
 
         assert result.status == "needs_auth"
@@ -279,7 +279,7 @@ class TestProbeRemote:
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
             result = await _probe_remote(server)
 
         assert result.status == "error"
@@ -309,7 +309,7 @@ class TestProbeRemote:
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
             result = await _probe_remote(server)
 
         assert result.status == "error"
@@ -328,7 +328,7 @@ class TestProbeRemote:
             headers={"x-api-key": "secret://MY_TOKEN", "X-Other": "plain"},
         )
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession") as session_cls:
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession") as session_cls:
             result = await _probe_remote(server)
 
         session_cls.assert_not_called()
@@ -341,7 +341,7 @@ class TestProbeRemote:
 
     def test_needs_authorization_predicate(self) -> None:
         """Unit-level truth table for _needs_authorization."""
-        from kiro_crew.mcp_discovery import _needs_authorization
+        from aj_crew.mcp_discovery import _needs_authorization
 
         # Tokenless 401 → authenticate.
         assert _needs_authorization(401, {}, {}) is True
@@ -359,7 +359,7 @@ class TestProbeRemote:
 
     def test_a_real_oauth_challenge_is_recognised(self) -> None:
         """The two pieces of evidence that make a 401 an OAuth challenge."""
-        from kiro_crew.mcp_discovery import _is_bearer_challenge
+        from aj_crew.mcp_discovery import _is_bearer_challenge
 
         assert _is_bearer_challenge(
             'Bearer resource_metadata="https://mcp.example.ai/.well-known/'
@@ -397,7 +397,7 @@ class TestProbeRemote:
         An http or javascript metadata URL from an unauthenticated endpoint is not
         evidence of anything, so it does not count toward recognition.
         """
-        from kiro_crew.mcp_discovery import _is_bearer_challenge
+        from aj_crew.mcp_discovery import _is_bearer_challenge
 
         assert _is_bearer_challenge(challenge) is False
 
@@ -421,8 +421,8 @@ class TestProbeRemote:
         mock_session.__aexit__ = AsyncMock(return_value=False)
 
         with (
-            patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session),
-            patch("kiro_crew.mcp_discovery._runtime_grant_present", AsyncMock(return_value=False)),
+            patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session),
+            patch("aj_crew.mcp_discovery._runtime_grant_present", AsyncMock(return_value=False)),
         ):
             result = await _probe_remote(server)
 
@@ -450,8 +450,8 @@ class TestProbeRemote:
         mock_session.__aexit__ = AsyncMock(return_value=False)
 
         with (
-            patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session),
-            patch("kiro_crew.mcp_discovery._runtime_grant_present", AsyncMock(return_value=True)),
+            patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session),
+            patch("aj_crew.mcp_discovery._runtime_grant_present", AsyncMock(return_value=True)),
         ):
             result = await _probe_remote(server)
 
@@ -462,7 +462,7 @@ class TestProbeRemote:
     @pytest.mark.asyncio
     async def test_a_crew_held_grant_reads_from_crew_not_the_runtimes(self, monkeypatch) -> None:
         """Crew custody: the row reads Crew's vault, so it is signed in through Crew."""
-        from kiro_crew.connections import crew_oauth
+        from aj_crew.connections import crew_oauth
 
         monkeypatch.setattr(crew_oauth, "owns", lambda slug: slug == "github")
         monkeypatch.setattr(crew_oauth, "holds_grant", lambda slug: True)
@@ -481,8 +481,8 @@ class TestProbeRemote:
 
         runtime = AsyncMock(return_value=False)
         with (
-            patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session),
-            patch("kiro_crew.mcp_discovery._runtime_grant_present", runtime),
+            patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session),
+            patch("aj_crew.mcp_discovery._runtime_grant_present", runtime),
         ):
             result = await _probe_remote(server)
 
@@ -517,8 +517,8 @@ class TestProbeRemote:
 
         grant_lookup = AsyncMock(return_value=False)
         with (
-            patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session),
-            patch("kiro_crew.mcp_discovery._runtime_grant_present", grant_lookup),
+            patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session),
+            patch("aj_crew.mcp_discovery._runtime_grant_present", grant_lookup),
         ):
             result = await _probe_remote(server)
 
@@ -538,7 +538,7 @@ class TestProbeRemote:
 
     def test_the_probe_cache_round_trips_the_authorization_evidence(self) -> None:
         """The panel is served from this cache, so the evidence has to survive it."""
-        from kiro_crew.mcp_discovery import _cache_probe, probe_metadata
+        from aj_crew.mcp_discovery import _cache_probe, probe_metadata
 
         server = McpServerInfo(
             name="cached-remote",
@@ -577,8 +577,8 @@ class TestProbeRemote:
         mock_session.__aexit__ = AsyncMock(return_value=False)
 
         with (
-            patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session),
-            patch("kiro_crew.mcp_discovery._runtime_grant_present", AsyncMock(return_value=None)),
+            patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session),
+            patch("aj_crew.mcp_discovery._runtime_grant_present", AsyncMock(return_value=None)),
         ):
             result = await _probe_remote(server)
 
@@ -596,10 +596,10 @@ class TestProbeRemote:
         ``grant_observed`` records only positives by default (the mint polls); the probe's
         one negative read drives "Sign-in required" and must leave a trail.
         """
-        from kiro_crew.mcp_discovery import _runtime_grant_present
+        from aj_crew.mcp_discovery import _runtime_grant_present
 
         lookup = AsyncMock(return_value=False)
-        with patch("kiro_crew.mcp_discovery.grant_observed", lookup):
+        with patch("aj_crew.mcp_discovery.grant_observed", lookup):
             assert await _runtime_grant_present("https://example.com/mcp", "remote") is False
 
         lookup.assert_awaited_once_with("https://example.com/mcp", audit_absence=True)
@@ -611,8 +611,8 @@ class TestProbeRemote:
         ACP layers. Run in a subprocess: this test module already imports the mint.
         """
         probe = (
-            "import sys; import kiro_crew.mcp_discovery;"
-            " print('MINT' if 'kiro_crew.connections.mint' in sys.modules else 'CLEAN')"
+            "import sys; import aj_crew.mcp_discovery;"
+            " print('MINT' if 'aj_crew.connections.mint' in sys.modules else 'CLEAN')"
         )
         out = subprocess.run(
             [sys.executable, "-c", probe], capture_output=True, timeout=180, **UTF8_TEXT
@@ -645,7 +645,7 @@ class TestProbeRemote:
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
             result = await _probe_remote(server)
 
         assert result.status == "needs_auth"
@@ -661,14 +661,14 @@ class TestProbeRemote:
         The probe's own failure path therefore names the server, never the url —
         this line lands in gateway.log, which is not a credential store.
         """
-        from kiro_crew.mcp_discovery import _runtime_grant_present
+        from aj_crew.mcp_discovery import _runtime_grant_present
 
         secret_url = "https://user:sup3r-secret@mcp.example.com/mcp?token=abcd1234"
 
         # ``None`` is what an unreadable cache home resolves to: ``grant_presence``
         # classifies the failed stat itself, so nothing raises out to this caller.
-        with patch("kiro_crew.mcp_discovery.grant_observed", AsyncMock(return_value=None)):
-            with caplog.at_level(logging.DEBUG, logger="kiro_crew.mcp_discovery"):
+        with patch("aj_crew.mcp_discovery.grant_observed", AsyncMock(return_value=None)):
+            with caplog.at_level(logging.DEBUG, logger="aj_crew.mcp_discovery"):
                 present = await _runtime_grant_present(secret_url, "higgsfield")
 
         # None, not False: the lookup could not answer, and the payload must not
@@ -691,7 +691,7 @@ class TestProbeRemote:
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
             result = await _probe_remote(server)
 
         assert result.status == "error"
@@ -701,7 +701,7 @@ class TestProbeRemote:
         """probe_server dispatches to _probe_remote for url-based servers."""
         server = McpServerInfo(name="remote", url="https://example.com/mcp")
 
-        with patch("kiro_crew.mcp_discovery._probe_remote", new_callable=AsyncMock) as mock_remote:
+        with patch("aj_crew.mcp_discovery._probe_remote", new_callable=AsyncMock) as mock_remote:
             mock_remote.return_value = server
             result = await probe_server(server)
 
@@ -713,7 +713,7 @@ class TestProbeRemote:
         """probe_server does NOT dispatch to _probe_remote for command-based servers."""
         server = McpServerInfo(name="local", command="nonexistent-cmd-xyz")
 
-        with patch("kiro_crew.mcp_discovery._probe_remote", new_callable=AsyncMock) as mock_remote:
+        with patch("aj_crew.mcp_discovery._probe_remote", new_callable=AsyncMock) as mock_remote:
             result = await probe_server(server)
 
         mock_remote.assert_not_awaited()
@@ -753,7 +753,7 @@ class TestProbeRemoteTimeout:
         server = McpServerInfo(name="remote", url="https://example.com/mcp")
 
         with (
-            patch("kiro_crew.config.loader.KiroCrewConfig") as mock_cls,
+            patch("aj_crew.config.loader.AjCrewConfig") as mock_cls,
             patch("aiohttp.ClientSession") as mock_session_cls,
         ):
             mock_cfg = MagicMock()
@@ -827,7 +827,7 @@ class TestProbeHeaderReferenceExpansion:
         )
 
         mock_session = self._session_returning(self._resp(401))
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
             result = await _probe_remote(server)
 
         sent = mock_session.post.call_args_list[0].kwargs["headers"]
@@ -853,7 +853,7 @@ class TestProbeHeaderReferenceExpansion:
         )
 
         mock_session = self._session_returning(self._resp(401))
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
             result = await _probe_remote(server)
 
         sent = mock_session.post.call_args_list[0].kwargs["headers"]
@@ -874,7 +874,7 @@ class TestProbeHeaderReferenceExpansion:
         )
 
         mock_session = self._session_returning(self._resp(401))
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
             result = await _probe_remote(server)
 
         sent = mock_session.post.call_args_list[0].kwargs["headers"]
@@ -910,7 +910,7 @@ class TestProbeHeaderReferenceExpansion:
             },
         )
         mock_session = self._session_returning(init_resp)
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
             result = await _probe_remote(server)
 
         assert result.status == "error"
@@ -949,7 +949,7 @@ class TestProbeHeaderReferenceExpansion:
             },
         )
         mock_session = self._session_returning(init_resp)
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
             result = await _probe_remote(server)
 
         assert result.status == "error"
@@ -987,7 +987,7 @@ class TestProbeHeaderReferenceExpansion:
             },
         )
         mock_session = self._session_returning(init_resp)
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
             result = await _probe_remote(server)
 
         assert result.status == "error"
@@ -999,7 +999,7 @@ class TestProbeHeaderReferenceExpansion:
         """An Authorization value still carrying ``${VAR}`` is not a supplied
         credential: the premise behind "any auth key present means a credential
         was rejected" does not hold, so a 401 is an authenticate prompt."""
-        from kiro_crew.mcp_discovery import _needs_authorization
+        from aj_crew.mcp_discovery import _needs_authorization
 
         assert _needs_authorization(401, {}, {"Authorization": "Bearer ${TOKEN}"}) is True
         assert (
@@ -1075,7 +1075,7 @@ class TestProtocolVersionNegotiation:
         replies = [_http_reply(200, _refusal(["2025-03-26", "2024-11-05"])), _http_reply(200, ok)]
         session = self._session([*replies, _http_reply(202), _http_reply(200, tools)])
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=session):
             result = await _probe_remote(server)
 
         assert result.status == "ok"
@@ -1091,7 +1091,7 @@ class TestProtocolVersionNegotiation:
         boom = {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "boom"}}
         session = self._session([_http_reply(200, boom)])
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=session):
             result = await _probe_remote(server)
 
         assert (result.status, result.error) == ("error", "boom")
@@ -1164,7 +1164,7 @@ class TestProbeRemoteRejectsNonPublicUrls:
     ) -> None:
         server = McpServerInfo(name="remote", url=url)
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession") as session_cls:
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession") as session_cls:
             result = await _probe_remote(server)
 
         session_cls.assert_not_called()
@@ -1191,7 +1191,7 @@ class TestProbeRemoteRejectsNonPublicUrls:
         app backend registered on loopback -- probes as it did before the vet."""
         server = McpServerInfo(name="local", url=url)
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=_ok_session()):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=_ok_session()):
             result = await _probe_remote(server)
 
         assert result.status == "ok"
@@ -1202,14 +1202,14 @@ class TestProbeRemoteRejectsNonPublicUrls:
         """DNS-rebinding guard: the vet checks EVERY resolved address, so a name
         that answers with a public AND a metadata address is refused. Drives the
         REAL vet with its resolver pointed at that answer."""
-        from kiro_crew import link_unfurl as lu
+        from aj_crew import link_unfurl as lu
 
         monkeypatch.setattr(
             lu, "_default_resolve", lambda _h, _p: ["93.184.216.34", "169.254.169.254"]
         )
         server = McpServerInfo(name="remote", url="https://rebind.example/mcp")
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession") as session_cls:
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession") as session_cls:
             result = await _probe_remote(server)
 
         session_cls.assert_not_called()
@@ -1223,12 +1223,12 @@ class TestProbeRemoteRejectsNonPublicUrls:
     ) -> None:
         """A LAN name (an mDNS ``.local`` one included) that answers with a
         private address is probed: only link-local and metadata answers refuse."""
-        from kiro_crew import link_unfurl as lu
+        from aj_crew import link_unfurl as lu
 
         monkeypatch.setattr(lu, "_default_resolve", lambda _h, _p: ["10.1.2.3"])
         server = McpServerInfo(name="lan", url=f"http://{host}:8000/mcp")
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=_ok_session()):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=_ok_session()):
             result = await _probe_remote(server)
 
         assert result.status == "ok"
@@ -1237,7 +1237,7 @@ class TestProbeRemoteRejectsNonPublicUrls:
     async def test_an_unresolvable_host_is_refused_without_contact(self, monkeypatch) -> None:
         """The vet fails closed on a host it could not resolve: no address was
         checked, so none may be dialed, and the row says why."""
-        from kiro_crew import link_unfurl as lu
+        from aj_crew import link_unfurl as lu
 
         def _nxdomain(_host: str, _port: int) -> list[str]:
             raise OSError("Name or service not known")
@@ -1245,7 +1245,7 @@ class TestProbeRemoteRejectsNonPublicUrls:
         monkeypatch.setattr(lu, "_default_resolve", _nxdomain)
         server = McpServerInfo(name="typo", url="https://mcp.exmaple.invalid/mcp")
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession") as session_cls:
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession") as session_cls:
             result = await _probe_remote(server)
 
         session_cls.assert_not_called()
@@ -1259,8 +1259,8 @@ class TestProbeRemoteRejectsNonPublicUrls:
         instead of holding it until the OS gives up."""
         import threading
 
-        from kiro_crew import link_unfurl as lu
-        from kiro_crew import mcp_discovery
+        from aj_crew import link_unfurl as lu
+        from aj_crew import mcp_discovery
 
         release = threading.Event()
 
@@ -1274,7 +1274,7 @@ class TestProbeRemoteRejectsNonPublicUrls:
         monkeypatch.setattr(mcp_discovery, "_get_probe_timeout", lambda: 0.05)
         server = McpServerInfo(name="slow-dns", url="https://slow.example/mcp")
         try:
-            with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession") as session_cls:
+            with patch("aj_crew.mcp_discovery.aiohttp.ClientSession") as session_cls:
                 result = await _probe_remote(server)
         finally:
             release.set()
@@ -1288,7 +1288,7 @@ class TestProbeRemoteRejectsNonPublicUrls:
         the row names that cause rather than an address one."""
         server = McpServerInfo(name="remote", url="https://user:pw@mcp.example.com/mcp")
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession") as session_cls:
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession") as session_cls:
             result = await _probe_remote(server)
 
         session_cls.assert_not_called()
@@ -1306,7 +1306,7 @@ class TestProbeRemoteRejectsNonPublicUrls:
             headers={"Authorization": "Bearer plain-token"},
         )
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession") as session_cls:
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession") as session_cls:
             result = await _probe_remote(server)
 
         session_cls.assert_not_called()
@@ -1345,7 +1345,7 @@ class TestProbeRemoteRejectsNonPublicUrls:
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
             result = await _probe_remote(server)
 
         assert result.status == "ok"
@@ -1382,7 +1382,7 @@ class TestProbeRemoteRejectsNonPublicUrls:
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=mock_session):
             result = await _probe_remote(server)
 
         assert result.status == "ok"
@@ -1402,7 +1402,7 @@ class TestProbeRemoteRejectsNonPublicUrls:
         link-local or metadata target is refused on any port."""
         server = McpServerInfo(name="remote", url=url)
 
-        with patch("kiro_crew.mcp_discovery.aiohttp.ClientSession") as session_cls:
+        with patch("aj_crew.mcp_discovery.aiohttp.ClientSession") as session_cls:
             result = await _probe_remote(server)
 
         session_cls.assert_not_called()
@@ -1438,7 +1438,7 @@ class TestProbeRemoteAgainstLoopbackStubs:
     async def test_an_app_backend_on_loopback_probes_ok(self, monkeypatch) -> None:
         """An app's MCP backend is registered at ``http://127.0.0.1:<port>/mcp``
         (``apps/bridges_mcp._resolve_live_mcp_url``); the probe must list its tools."""
-        from kiro_crew import link_unfurl as lu
+        from aj_crew import link_unfurl as lu
 
         monkeypatch.setattr(lu, "pinned_connector", _real_pinned_connector)
 
@@ -1482,7 +1482,7 @@ class TestProbeRemoteAgainstLoopbackStubs:
         without asking the pinned resolver, so a followed redirect would reach an
         address the vet never checked. The first stub answers every POST with a
         307 to the second, which must never be contacted."""
-        from kiro_crew import link_unfurl as lu
+        from aj_crew import link_unfurl as lu
 
         monkeypatch.setattr(lu, "pinned_connector", _real_pinned_connector)
         reached: list[str] = []

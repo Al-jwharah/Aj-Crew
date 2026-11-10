@@ -1,11 +1,11 @@
 """The platform server on every crewmate, and the first crewmate's creation.
 
-``kirocrew-guide`` is a platform capability: mounted on the default template,
+``ajcrew-guide`` is a platform capability: mounted on the default template,
 on every spec derived from it and so on every crewmate and dashboard session,
-with exactly the reviewed :data:`kiro_crew.agent._GUIDE_AUTO_GRANTS` granted
+with exactly the reviewed :data:`aj_crew.agent._GUIDE_AUTO_GRANTS` granted
 through the shared ceiling.
 The first crewmate is created once, bound to the crewmate conductor
-(``kirocrew-mate-conductor``), which carries the same guide set.
+(``ajcrew-mate-conductor``), which carries the same guide set.
 Every test writes under the isolated data home; nothing touches a live
 ``~/.kiro``.
 """
@@ -18,20 +18,20 @@ from typing import Any
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-from kiro_crew import agent
-from kiro_crew.agent_files import (
+import aj_crew.config.paths as paths_mod
+from aj_crew import agent
+from aj_crew.agent_files import (
     AGENT_FILENAME,
     ASSISTANT_MEMBER_NAME,
     MATE_CONDUCTOR_AGENT_FILENAME,
     MATE_WORKER_AGENT_FILENAME,
     WORKER_AGENT_FILENAME,
 )
-from kiro_crew.agent_materialization import first_crewmate, guide_platform
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
-from kiro_crew.mate_worker import MATE_CONDUCTOR_AGENT
+from aj_crew.agent_materialization import first_crewmate, guide_platform
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.mate_worker import MATE_CONDUCTOR_AGENT
 
-GUIDE_SERVER = "kirocrew-guide"
+GUIDE_SERVER = "ajcrew-guide"
 GUIDE_REF = f"@{GUIDE_SERVER}"
 GRANTS = set(agent._GUIDE_AUTO_GRANTS)
 
@@ -44,7 +44,7 @@ def agents_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", directory)
     monkeypatch.setattr(paths_mod, "mate_agents_dir", lambda: tmp_path / "mates" / "agents")
     monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version", lambda: SPEC_PERMISSIONS_MIN_VERSION
+        "aj_crew.kiro_cli.installed_kiro_cli_version", lambda: SPEC_PERMISSIONS_MIN_VERSION
     )
     return directory
 
@@ -54,14 +54,14 @@ def rebuildable(agents_dir: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
     """An agents dir a full ``rebuild_agent_config`` can write into."""
     bindir = tmp_path / "bin"
     bindir.mkdir()
-    launcher = bindir / "kirocrew"
+    launcher = bindir / "ajcrew"
     launcher.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
     launcher.chmod(0o755)
-    monkeypatch.setattr(agent, "_KIROCREW_BIN", str(launcher))
+    monkeypatch.setattr(agent, "_AJCREW_BIN", str(launcher))
     monkeypatch.setattr(agent, "_KIRO_MCP_JSON", tmp_path / "kiro-global-mcp.json")
     monkeypatch.setattr(agent, "_DEFAULT_KIRO_HOOKS_DIR", tmp_path / "hooks")
     monkeypatch.setattr(
-        "kiro_crew.apps.bridges._mcp_json_path", lambda: agents_dir / AGENT_FILENAME
+        "aj_crew.apps.bridges._mcp_json_path", lambda: agents_dir / AGENT_FILENAME
     )
     return agents_dir
 
@@ -79,13 +79,13 @@ def _guide_grants(spec: dict[str, Any]) -> set[str]:
 
 
 def _saved() -> dict:
-    from kiro_crew.config.loader import config_path
+    from aj_crew.config.loader import config_path
 
     return json.loads(config_path().read_text(encoding="utf-8"))
 
 
 def _seed(doc: dict) -> None:
-    from kiro_crew.config.loader import update_config_locked
+    from aj_crew.config.loader import update_config_locked
 
     update_config_locked(mutate=lambda _: json.loads(json.dumps(doc)))
 
@@ -107,14 +107,14 @@ def test_the_guide_server_is_always_emitted_and_never_auto_approved() -> None:
 
 
 def test_the_grants_name_exactly_the_servers_tools() -> None:
-    from kiro_crew import mcp_guide
+    from aj_crew import mcp_guide
 
     assert {g.rsplit("/", 1)[1] for g in GRANTS} == {t["name"] for t in mcp_guide._list_tools()}
 
 
 def test_the_server_accepts_every_name_its_schema_advertises() -> None:
-    from kiro_crew import mcp_guide
-    from kiro_crew.validation import MCP_GUIDE_SCHEMAS, validate_tool_args
+    from aj_crew import mcp_guide
+    from aj_crew.validation import MCP_GUIDE_SCHEMAS, validate_tool_args
 
     (tool,) = [t for t in mcp_guide._list_tools() if t["name"] == "find_setting"]
     longest = tool["inputSchema"]["properties"]["query"]["maxLength"]
@@ -140,7 +140,7 @@ def test_the_governance_ceiling_still_withholds_a_guide_grant(
 
 
 def test_every_crewmate_spec_mounts_the_same_guide_set(rebuildable: Path) -> None:
-    _seed({"agents": {"default": {"kiro_agent": "kirocrew"}}})
+    _seed({"agents": {"default": {"kiro_agent": "ajcrew"}}})
     agent.rebuild_agent_config()
     default = _spec(rebuildable, AGENT_FILENAME)
     worker = _spec(rebuildable, WORKER_AGENT_FILENAME)
@@ -163,9 +163,9 @@ def test_every_crewmate_spec_mounts_the_same_guide_set(rebuildable: Path) -> Non
 
 def test_conductors_and_background_agents_do_not_mount_the_guide_set(rebuildable: Path) -> None:
     """They are driven by patrols and loops, never by a person at the dashboard."""
-    from kiro_crew import agent_files
+    from aj_crew import agent_files
 
-    _seed({"agents": {"default": {"kiro_agent": "kirocrew"}}})
+    _seed({"agents": {"default": {"kiro_agent": "ajcrew"}}})
     agent.rebuild_agent_config()
     narrow = (
         agent_files.CONDUCTOR_AGENT_FILENAME,
@@ -184,7 +184,7 @@ def test_conductors_and_background_agents_do_not_mount_the_guide_set(rebuildable
 
 
 def test_an_existing_spec_gains_the_guide_set_once(rebuildable: Path) -> None:
-    _seed({"agents": {"default": {"kiro_agent": "kirocrew"}}})
+    _seed({"agents": {"default": {"kiro_agent": "ajcrew"}}})
     agent.rebuild_agent_config()
     path = rebuildable / AGENT_FILENAME
     # An install from before the guide set was a platform capability.
@@ -250,7 +250,7 @@ def _assert_private_first_crewmate(saved: dict, template: str = MATE_CONDUCTOR_A
 @pytest.mark.parametrize(
     "default_row",
     [
-        {"kiro_agent": "kirocrew", "display_name": "Mochi", "workspace": "work"},
+        {"kiro_agent": "ajcrew", "display_name": "Mochi", "workspace": "work"},
         {"kiro_agent": "custom-template"},
     ],
 )
@@ -269,7 +269,7 @@ def test_a_fresh_install_keeps_plain_chats_off_the_conductor(agents_dir):
     _seed({})
     first_crewmate.create_first_crewmate_once()
     saved = _saved()
-    assert saved["agents"]["default"]["kiro_agent"] == "kirocrew"
+    assert saved["agents"]["default"]["kiro_agent"] == "ajcrew"
 
 
 def test_it_runs_the_configured_default_template(agents_dir):
@@ -281,9 +281,9 @@ def test_it_runs_the_configured_default_template(agents_dir):
 
 
 def test_a_deleted_first_crewmate_is_not_recreated(agents_dir):
-    from kiro_crew.config.loader import config_path
+    from aj_crew.config.loader import config_path
 
-    _seed({"agents": {"default": {"kiro_agent": "kirocrew"}}})
+    _seed({"agents": {"default": {"kiro_agent": "ajcrew"}}})
     first_crewmate.create_first_crewmate_once()
     saved = _saved()
     del saved["agents"][ASSISTANT_MEMBER_NAME]
@@ -295,13 +295,13 @@ def test_a_deleted_first_crewmate_is_not_recreated(agents_dir):
 
 @pytest.mark.parametrize("where", ["base", "overlay"])
 def test_an_existing_key_is_left_alone(agents_dir, where):
-    from kiro_crew.config.loader import config_local_path, config_path, update_config_locked
+    from aj_crew.config.loader import config_local_path, config_path, update_config_locked
 
     mine = {"kiro_agent": "my-template"}
     if where == "base":
-        _seed({"agents": {"default": {"kiro_agent": "kirocrew"}, ASSISTANT_MEMBER_NAME: mine}})
+        _seed({"agents": {"default": {"kiro_agent": "ajcrew"}, ASSISTANT_MEMBER_NAME: mine}})
     else:
-        _seed({"agents": {"default": {"kiro_agent": "kirocrew"}}})
+        _seed({"agents": {"default": {"kiro_agent": "ajcrew"}}})
         update_config_locked(
             config_local_path(),
             mutate=lambda _: {"agents": {ASSISTANT_MEMBER_NAME: mine}},
@@ -316,9 +316,9 @@ def test_a_failed_creation_leaves_nothing_and_is_tried_again(
     agents_dir, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Mate never runs on Global: no private store means no row and no marker."""
-    from kiro_crew import memory_stores
+    from aj_crew import memory_stores
 
-    _seed({"agents": {"default": {"kiro_agent": "kirocrew"}}})
+    _seed({"agents": {"default": {"kiro_agent": "ajcrew"}}})
     real = memory_stores.persist_member_config
 
     def refuse(*_a, **_k):
@@ -337,10 +337,10 @@ def test_a_failed_creation_leaves_nothing_and_is_tried_again(
 
 def test_a_deleted_predecessors_identity_is_not_inherited(agents_dir) -> None:
     """A deleted ``mate`` whose DM binding was kept reserves its slug."""
-    from kiro_crew.members import member_slot_key, write_dm_binding
+    from aj_crew.members import member_slot_key, write_dm_binding
 
     write_dm_binding("mate", member="mate", slot_key=member_slot_key("mate"))
-    _seed({"agents": {"default": {"kiro_agent": "kirocrew"}}})
+    _seed({"agents": {"default": {"kiro_agent": "ajcrew"}}})
     first_crewmate.create_first_crewmate_once()
     assert _assert_private_first_crewmate(_saved()) != "mate"
 
@@ -348,9 +348,9 @@ def test_a_deleted_predecessors_identity_is_not_inherited(agents_dir) -> None:
 def test_a_legacy_member_whose_name_slugs_to_mate_keeps_its_slug(agents_dir) -> None:
     """An upgrade that already has a legacy ``Mate`` row: the created first
     crewmate gets an identity of its own, so the two never resolve to one slug."""
-    from kiro_crew.members import slug_for_name
+    from aj_crew.members import slug_for_name
 
-    _seed({"agents": {"default": {"kiro_agent": "kirocrew"}, "Mate": {"kiro_agent": "kirocrew"}}})
+    _seed({"agents": {"default": {"kiro_agent": "ajcrew"}, "Mate": {"kiro_agent": "ajcrew"}}})
     first_crewmate.create_first_crewmate_once()
     saved = _saved()
     assert saved["agents"]["Mate"].get("member_id", "") == ""
@@ -365,19 +365,19 @@ def test_a_foreign_template_and_its_member_are_left_exactly_as_they_are(
     The rebuild neither rewrites the file, nor rebinds, relabels or re-stores the
     member bound to it, nor treats the member as the first crewmate.
     """
-    foreign = {"name": "kirocrew-mate", "prompt": "mine", "hooks": {"auto_approve_tools": []}}
-    path = rebuildable / "kirocrew-mate.json"
+    foreign = {"name": "ajcrew-mate", "prompt": "mine", "hooks": {"auto_approve_tools": []}}
+    path = rebuildable / "ajcrew-mate.json"
     path.write_text(json.dumps(foreign), encoding="utf-8")
     row = {
-        "kiro_agent": "kirocrew-mate",
+        "kiro_agent": "ajcrew-mate",
         "memory_store": "default",
         "display_name": "Skipper",
     }
-    _seed({"agents": {"default": {"kiro_agent": "kirocrew"}, "kirocrew-mate": row}})
+    _seed({"agents": {"default": {"kiro_agent": "ajcrew"}, "ajcrew-mate": row}})
     agent.repair_agent_configs()
     agent.rebuild_agent_config()
     assert json.loads(path.read_text(encoding="utf-8")) == foreign
-    assert _saved()["agents"]["kirocrew-mate"] == row
+    assert _saved()["agents"]["ajcrew-mate"] == row
 
 
 # ── the tools off the dashboard ──
@@ -405,7 +405,7 @@ def test_every_gateway_admission_refusal_is_said_as_off_the_dashboard(
     Which caller gets which refusal is pinned against the real admission in
     ``test_guide_admission.py``; this pins only the wording of the result.
     """
-    from kiro_crew import mcp_guide
+    from aj_crew import mcp_guide
 
     reply = {"error": "this message came from a messaging channel", "code": code}
     monkeypatch.setattr(mcp_guide, "_strict_session_key", lambda: ("dashboard:c", ""))
@@ -423,7 +423,7 @@ def test_every_gateway_admission_refusal_is_said_as_off_the_dashboard(
 
 
 def test_an_unidentified_caller_gets_the_same_refusal(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew import mcp_guide
+    from aj_crew import mcp_guide
 
     monkeypatch.setattr(mcp_guide, "_strict_session_key", lambda: ("", "no identity"))
     out = mcp_guide._call_tool_inner("guide_status", {})
@@ -433,7 +433,7 @@ def test_an_unidentified_caller_gets_the_same_refusal(monkeypatch: pytest.Monkey
 def test_find_ui_and_search_docs_still_answer_off_the_dashboard(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew import mcp_guide
+    from aj_crew import mcp_guide
 
     refused = {"error": "this message came from a messaging channel", "code": "channel_caller"}
     monkeypatch.setattr(mcp_guide, "_strict_session_key", lambda: ("slack:C1:t", ""))
@@ -447,7 +447,7 @@ def test_find_ui_and_search_docs_still_answer_off_the_dashboard(
 
 
 def test_an_offer_result_tells_the_model_how_to_reply(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew import mcp_guide
+    from aj_crew import mcp_guide
 
     reply: dict[str, Any] = {}
     monkeypatch.setattr(mcp_guide, "_strict_session_key", lambda: ("dashboard:c", ""))
@@ -464,7 +464,7 @@ def test_an_offer_result_tells_the_model_how_to_reply(monkeypatch: pytest.Monkey
 
 
 def test_a_refused_guide_start_says_no_card_was_shown(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew import mcp_guide
+    from aj_crew import mcp_guide
 
     monkeypatch.setattr(mcp_guide, "_strict_session_key", lambda: ("dashboard:c", ""))
     monkeypatch.setattr(mcp_guide, "_post", lambda *a, **k: {"error": "no such action"})
@@ -474,7 +474,7 @@ def test_a_refused_guide_start_says_no_card_was_shown(monkeypatch: pytest.Monkey
 
 
 def test_a_dashboard_session_gets_a_card(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew import mcp_guide
+    from aj_crew import mcp_guide
 
     monkeypatch.setattr(mcp_guide, "_strict_session_key", lambda: ("dashboard:c", ""))
     monkeypatch.setattr(
@@ -487,7 +487,7 @@ def test_a_dashboard_session_gets_a_card(monkeypatch: pytest.MonkeyPatch) -> Non
 
 
 def test_a_card_result_tells_the_model_how_to_reply(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew import mcp_guide
+    from aj_crew import mcp_guide
 
     reply: dict[str, Any] = {}
     monkeypatch.setattr(mcp_guide, "_strict_session_key", lambda: ("dashboard:c", ""))
@@ -509,7 +509,7 @@ def test_a_card_result_tells_the_model_how_to_reply(monkeypatch: pytest.MonkeyPa
 def test_an_unidentified_caller_gets_the_same_refusal_for_a_card_read(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew import mcp_guide
+    from aj_crew import mcp_guide
 
     monkeypatch.setattr(mcp_guide, "_strict_session_key", lambda: ("", "no identity"))
     out = mcp_guide._call_tool_inner("list_change_kinds", {})

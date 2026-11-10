@@ -9,7 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from kiro_crew import platform_compat, windows_acl
+from aj_crew import platform_compat, windows_acl
 
 
 def check_paths() -> None:

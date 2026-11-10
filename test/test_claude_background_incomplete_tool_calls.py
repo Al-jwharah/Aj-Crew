@@ -22,13 +22,13 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.acp.claude_background_calls import incomplete_tool_call_ids
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.transport_errors import AcpError
-from kiro_crew.acp.types import EVENT_COMPLETE, STOP_REASON_END_TURN, JsonRpcMessage
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_PI
-from kiro_crew.agent_sdk.claude_transcripts import claude_project_dir_name
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.acp.claude_background_calls import incomplete_tool_call_ids
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.transport_errors import AcpError
+from aj_crew.acp.types import EVENT_COMPLETE, STOP_REASON_END_TURN, JsonRpcMessage
+from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_PI
+from aj_crew.agent_sdk.claude_transcripts import claude_project_dir_name
+from aj_crew.testing.wait import default_timeout
 
 SESSION = "6f1b0d2e-3c4a-4b5d-8e9f-0a1b2c3d4e5f"
 WORKFLOW = "wf_6a29223b-ba6"
@@ -266,7 +266,7 @@ async def test_another_harness_keeps_the_error(store) -> None:
 @pytest.mark.asyncio
 async def test_a_call_past_the_tail_read_keeps_the_error(store, monkeypatch) -> None:
     work, project = store
-    monkeypatch.setattr("kiro_crew.acp.claude_background_calls._TRANSCRIPT_TAIL_BYTES", 512)
+    monkeypatch.setattr("aj_crew.acp.claude_background_calls._TRANSCRIPT_TAIL_BYTES", 512)
     # The first agent wrote more than the tail after its call.
     filler = {"type": "user", "message": {"role": "user", "content": "y" * 1024}}
     _append(project / SESSION / "subagents" / "workflows" / WORKFLOW / "agent-1.jsonl", filler)

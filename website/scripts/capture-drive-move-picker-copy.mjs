@@ -39,7 +39,7 @@ const ACCOUNTS = {
   generatedAt: '2026-10-29T08:00:00Z',
 }
 const DRIVE = {
-  exists: true, bucket: `kirocrew-drive-${ACC}-usw2`, region: 'us-west-2',
+  exists: true, bucket: `ajcrew-drive-${ACC}-usw2`, region: 'us-west-2',
   usage: { bytes: 3.2 * GiB, objects: 128, sections: {
     drive: { objects: 97, bytes: 1.9 * GiB }, library: { objects: 23, bytes: 0.4 * GiB }, backup: { objects: 8, bytes: 0.9 * GiB },
   } },

@@ -23,8 +23,8 @@ from session_control_helpers import (  # noqa: F401 -- the autouse fixtures regi
     _steerable,
 )
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard import session_control as sc
+from aj_crew.testing.wait import await_until
 
 
 def test_an_identical_steer_is_refused_while_the_first_is_still_in_flight(tmp_path):
@@ -33,7 +33,7 @@ def test_an_identical_steer_is_refused_while_the_first_is_still_in_flight(tmp_pa
     A consumed steer still owns its `_steer_delivery_ids` entry; a second identical
     steer would overwrite it and the first's row would persist twice.
     """
-    from kiro_crew.dashboard import chat_delivery
+    from aj_crew.dashboard import chat_delivery
 
     state = _make_state(tmp_path)
     slot = _busy(_slot(state, "chat-2"))
@@ -63,7 +63,7 @@ def test_an_unrelated_identical_queue_item_is_not_read_as_our_requeue(tmp_path):
     Another client may queue the same words in the same window; reading that as our
     requeue would skip persisting, and the consumed steer would lose its row.
     """
-    from kiro_crew.dashboard import chat_delivery
+    from aj_crew.dashboard import chat_delivery
 
     state = _make_state(tmp_path)
     slot = _busy(_slot(state, "chat-2"))
@@ -91,8 +91,8 @@ def test_the_delivery_path_never_claims_a_turn_consumed_a_steer(tmp_path, monkey
     A delivered steer can still be requeued to a later turn by the teardown, and an
     append-only ledger entry cannot be moved, so this path writes none.
     """
-    from kiro_crew.crew_log import emit as crew_log_emit
-    from kiro_crew.dashboard import chat_delivery
+    from aj_crew.crew_log import emit as crew_log_emit
+    from aj_crew.dashboard import chat_delivery
 
     state = _make_state(tmp_path)
     slot = _busy(_slot(state, "chat-2"))
@@ -135,8 +135,8 @@ def test_a_stop_race_that_only_expects_a_requeue_records_nothing(tmp_path, monke
     A second stop can hard-kill and discard the pending steer, so a `message/queued`
     written here could claim a queue entry that was never made.
     """
-    from kiro_crew.crew_log import emit as crew_log_emit
-    from kiro_crew.dashboard import chat_delivery
+    from aj_crew.crew_log import emit as crew_log_emit
+    from aj_crew.dashboard import chat_delivery
 
     state = _make_state(tmp_path)
     slot = _busy(_slot(state, "chat-2"))
@@ -166,8 +166,8 @@ def test_a_requeued_steer_is_recorded_as_a_queued_message(tmp_path, monkeypatch)
     The id recorded is the queue entry's own, as `queue_for_next_turn` records it.
     The client's `sendId` is a different namespace that only looks like a queue id.
     """
-    from kiro_crew.crew_log import emit as crew_log_emit
-    from kiro_crew.dashboard import chat_delivery
+    from aj_crew.crew_log import emit as crew_log_emit
+    from aj_crew.dashboard import chat_delivery
 
     state = _make_state(tmp_path)
     slot = _busy(_slot(state, "chat-2"))
@@ -207,7 +207,7 @@ def test_our_own_requeue_is_still_detected_by_its_delivery_id(tmp_path):
 
     Reported as delivered, the drain would append the row a second time.
     """
-    from kiro_crew.dashboard import chat_delivery
+    from aj_crew.dashboard import chat_delivery
 
     state = _make_state(tmp_path)
     slot = _busy(_slot(state, "chat-2"))
@@ -234,7 +234,7 @@ def test_a_steer_a_hard_kill_discarded_is_not_reported_as_delivered(tmp_path):
     A hard kill drops the `_steer_delivery_ids` entry; a consume leaves it. Here
     `STEER_UNAVAILABLE` falls through to the queue, which cannot duplicate anything.
     """
-    from kiro_crew.dashboard import chat_delivery
+    from aj_crew.dashboard import chat_delivery
 
     state = _make_state(tmp_path)
     slot = _busy(_slot(state, "chat-2"))
@@ -263,7 +263,7 @@ def test_a_steer_consumed_before_a_stop_is_still_reported_as_delivered(tmp_path)
 
     Telling that caller to resend is the one answer that can run the text twice.
     """
-    from kiro_crew.dashboard import chat_delivery
+    from aj_crew.dashboard import chat_delivery
 
     state = _make_state(tmp_path)
     slot = _busy(_slot(state, "chat-2"))
@@ -299,7 +299,7 @@ async def test_a_failed_containment_stop_still_reports_the_delivery(tmp_path, mo
     async def _exploding_stop(_state, _slot, **kwargs):
         raise RuntimeError("session was already gone")
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.stop_slot_turn", _exploding_stop)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.stop_slot_turn", _exploding_stop)
 
     audits: list[dict] = []
     monkeypatch.setattr(sc, "_audit", lambda **kw: audits.append(kw))
@@ -352,7 +352,7 @@ async def test_a_rolled_over_turn_is_not_cancelled_by_containment(tmp_path, monk
         stops.append(_slot.key)
         return {"stopped": True}
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop)
 
     audits: list[dict] = []
     monkeypatch.setattr(sc, "_audit", lambda **kw: audits.append(kw))
@@ -390,7 +390,7 @@ async def test_a_rolled_over_turn_is_not_cancelled_by_containment(tmp_path, monk
 def test_the_post_rpc_regate_warms_the_config_first():
     """The fallback gate sits after an await, so it needs its own warm.
 
-    On a cold cache `authorize_target` runs `KiroCrewConfig.load()` on the loop, and the
+    On a cold cache `authorize_target` runs `AjCrewConfig.load()` on the loop, and the
     top-of-function warm is voided by the steer RPC. Asserted on source order.
     """
     send = inspect.getsource(sc.send_to_target)
@@ -470,7 +470,7 @@ async def test_a_requeue_onto_a_replaced_slot_is_refused_not_reported_as_sent(
     # Patched on chat_delivery, NOT on sc: `send_to_target` imports this name
     # through a deferred import inside the function, so a patch on the importing
     # module is never consulted.
-    import kiro_crew.dashboard.chat_delivery as cd
+    import aj_crew.dashboard.chat_delivery as cd
 
     async def _fake_steer(*_a, **_kw):
         await _requeue_then_replace_the_slot()

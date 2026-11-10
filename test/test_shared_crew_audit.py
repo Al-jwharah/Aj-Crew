@@ -8,16 +8,16 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.shared_crew import audit
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew import audit
+from aj_crew.shared_crew.contracts import (
     ActionOutcome,
     ActionType,
     ActorContext,
     Provenance,
     Transport,
 )
-from kiro_crew.shared_crew.identity import tailnet_principal
-from kiro_crew.testing.wait import await_until
+from aj_crew.shared_crew.identity import tailnet_principal
+from aj_crew.testing.wait import await_until
 
 ALICE = tailnet_principal("alice@example.com", "a", Provenance.TAILSCALE_SERVE)
 BOB = tailnet_principal("bob@example.com", "b", Provenance.TAILSCALE_DIRECT)

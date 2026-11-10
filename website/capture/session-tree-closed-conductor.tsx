@@ -41,7 +41,7 @@ const CONDUCTOR = 'chat-2552'
 const LEAD_ROW: LocalSidebarRow = localRow({
   key: LEAD,
   title: 'Remote crew lane: drive the three PRs to green',
-  agent: 'kirocrew-lead',
+  agent: 'ajcrew-lead',
   running: true,
   messages: 164,
   last_ts: at(35_000),
@@ -74,7 +74,7 @@ const crew: LocalSidebarRow[] = CREW.map(({ key, title, note, waiting }, i) =>
   localRow({
     key,
     title,
-    agent: 'kirocrew-worker',
+    agent: 'ajcrew-worker',
     running: !waiting,
     needs_input: waiting,
     messages: 24 + i * 7,
@@ -91,5 +91,5 @@ const crew: LocalSidebarRow[] = CREW.map(({ key, title, note, waiting }, i) =>
 
 mountLocalSidebar(
   [LEAD_ROW, ...crew, SEPARATE],
-  ['kirocrew', 'kirocrew-worker', 'kirocrew-lead'],
+  ['ajcrew', 'ajcrew-worker', 'ajcrew-lead'],
 )

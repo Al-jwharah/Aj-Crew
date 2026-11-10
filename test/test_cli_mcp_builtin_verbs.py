@@ -12,20 +12,20 @@ import types
 
 import pytest
 
-from kiro_crew import cli
-from kiro_crew.apps.builtins import BUILTIN_NAMES
+from aj_crew import cli
+from aj_crew.apps.builtins import BUILTIN_NAMES
 
 
 def _run_cli(monkeypatch, tmp_path, argv):
-    """Drive ``kirocrew <argv>`` through the real ``main()`` in isolation."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "data"))
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+    """Drive ``ajcrew <argv>`` through the real ``main()`` in isolation."""
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "data"))
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
     monkeypatch.setattr(cli, "boot_platform", lambda *_a, **_k: None)
     # _setup_cli_logging attaches a file handler under tmp_path to the global
     # logger; the retained open file blocks Windows cleanup and accumulates
     # handlers across tests.
     monkeypatch.setattr(cli, "_setup_cli_logging", lambda *_a, **_k: None)
-    monkeypatch.setattr(sys, "argv", ["kirocrew", *argv])
+    monkeypatch.setattr(sys, "argv", ["ajcrew", *argv])
     cli.main()
 
 
@@ -76,7 +76,7 @@ class TestPredicate:
 
 class TestParserRegistration:
     def test_mochi_verb_is_registered(self, monkeypatch, tmp_path, capsys):
-        """``kirocrew mcp-mochi --help`` parses: the verb exists."""
+        """``ajcrew mcp-mochi --help`` parses: the verb exists."""
         with pytest.raises(SystemExit) as excinfo:
             _run_cli(monkeypatch, tmp_path, ["mcp-mochi", "--help"])
         assert excinfo.value.code == 0
@@ -110,8 +110,8 @@ class TestDispatch:
     def test_verb_delegates_to_the_shared_app_mcp_helper(self, monkeypatch, tmp_path):
         """Dispatch is a delegation to ``_run_app_mcp_server`` — the ONE
         spelling of "import the builtin's mcp_server and run it or refuse
-        cleanly", shared with the ``kirocrew app mcp <name>`` manifest path."""
-        from kiro_crew import cli_commands
+        cleanly", shared with the ``ajcrew app mcp <name>`` manifest path."""
+        from aj_crew import cli_commands
 
         calls: list[str] = []
         monkeypatch.setattr(cli_commands, "_run_app_mcp_server", calls.append)
@@ -135,14 +135,14 @@ class TestDispatch:
     def test_resolvable_builtin_runs_its_mcp_server(self, monkeypatch, tmp_path):
         """A registered verb reaches ``run_mcp_server()`` on the real module
         resolution path (import stubbed at the module seam)."""
-        from kiro_crew import cli_commands
+        from aj_crew import cli_commands
 
         ran = {"hit": False}
         stub = types.SimpleNamespace(run_mcp_server=lambda: ran.__setitem__("hit", True))
         real_import = cli_commands.importlib.import_module
 
         def stubbing_import(module, *a, **k):
-            if module == "kiro_crew.apps.builtins.mochi.mcp_server":
+            if module == "aj_crew.apps.builtins.mochi.mcp_server":
                 return stub
             return real_import(module, *a, **k)
 

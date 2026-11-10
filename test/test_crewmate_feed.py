@@ -17,13 +17,13 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import member_goals
-from kiro_crew.crew_log import CrewLog, emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import schema as lg
-from kiro_crew.dashboard import crewmate_feed
-from kiro_crew.history import HUMAN_TURN_META_KEY
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import member_goals
+from aj_crew.crew_log import CrewLog, emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import schema as lg
+from aj_crew.dashboard import crewmate_feed
+from aj_crew.history import HUMAN_TURN_META_KEY
+from aj_crew.testing.wait import async_wait_until
 
 ASK = "Open a PR for the docs fix? [OPTIONS: Open the PR | Not yet]"
 SLOT = "member-dm:atlas"
@@ -58,7 +58,7 @@ def _reset_feed_state() -> None:
 
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     crew_log.forget_slot_folds()
     _reset_feed_state()
     yield
@@ -153,7 +153,7 @@ class _Cards:
 
 
 def _cards(monkeypatch, cards: list[dict[str, Any]]) -> None:
-    from kiro_crew.dashboard import change_cards
+    from aj_crew.dashboard import change_cards
 
     monkeypatch.setattr(change_cards, "card_store_for", lambda _s: _Cards(cards))
 
@@ -254,7 +254,7 @@ _units = iter(range(1000))
 def _fold(name: str, entries: list[tuple[str, dict]]) -> dict[str, Any]:
     unit = f"s-feed-{next(_units)}"
     slot = f"{SLOT}-{unit}"
-    handle = CrewLog.create(lg.KIND_SESSION, unit, owner="raymond", agent="kirocrew", slot=slot)
+    handle = CrewLog.create(lg.KIND_SESSION, unit, owner="raymond", agent="ajcrew", slot=slot)
     for entry_type, data in entries:
         handle.append(entry_type, data, src="gateway")
     handle.release_ownership()
@@ -281,7 +281,7 @@ def test_a_goal_edited_while_the_thread_is_closed_is_read_when_it_reopens(append
     assert len([e for e in appended if e[0] == "goal"]) == 1  # no thread to log into
     monkeypatch.setattr(crewmate_feed, "_state", lambda: state)
     monkeypatch.setattr(member_goals, "read_goals", lambda slug, member: new)
-    from kiro_crew import members as members_mod
+    from aj_crew import members as members_mod
 
     monkeypatch.setattr(members_mod, "member_slug", lambda member: "atlas")
 
@@ -351,7 +351,7 @@ def test_the_waiting_fold_counts_what_the_list_cut():
 
 
 def test_the_producer_cuts_at_the_folds_bound_and_records_the_total(appended, monkeypatch):
-    from kiro_crew.dashboard import member_waiting
+    from aj_crew.dashboard import member_waiting
 
     assert member_waiting.MAX_ITEMS == crew_log.CREWMATE_WAITING_LIMIT
     cards = [
@@ -651,7 +651,7 @@ def test_growth_scans_once_per_distinct_session_at_scale(monkeypatch):
 
 def test_dm_slot_mode_is_read_once_per_scan(monkeypatch):
     """The members facade resolves each attribute read in Python, so a scan reads it once."""
-    import kiro_crew._facade_mirror as facade_mirror
+    import aj_crew._facade_mirror as facade_mirror
 
     reads: list[str] = []
     real = facade_mirror.MirroredModule.__getattr__
@@ -689,8 +689,8 @@ def test_retired_questions_do_not_walk_every_slot(monkeypatch):
 
 
 def test_a_goal_of_wide_characters_still_fits_one_log_line():
-    from kiro_crew.crew_log import emit_text
-    from kiro_crew.crew_log.emit_state import _SRC_GATEWAY
+    from aj_crew.crew_log import emit_text
+    from aj_crew.crew_log.emit_state import _SRC_GATEWAY
 
     # An astral character escapes to twelve bytes on the log line.
     wide = "\U0001f600" * 2000
@@ -733,7 +733,7 @@ def test_a_goal_snapshot_redacts_a_credential_in_goal_and_milestone_text():
 def test_a_goal_write_during_the_bootstrap_read_is_not_overwritten(appended, monkeypatch):
     """The bootstrap reads the goal off the loop; a goal write that lands meanwhile is
     newer, so the bootstrap must not append the older record after it."""
-    from kiro_crew import members as members_mod
+    from aj_crew import members as members_mod
 
     slot = _Slot([])
     state = _State(slot)
@@ -762,7 +762,7 @@ def test_an_empty_goal_record_is_recorded_after_a_restart(appended, monkeypatch)
     """After a restart no digest is held, yet the log may still carry a goal deleted
     before it: the first read records the empty record, or the page keeps the deleted
     goal."""
-    from kiro_crew import members as members_mod
+    from aj_crew import members as members_mod
 
     slot = _Slot([])
     monkeypatch.setattr(members_mod, "member_slug", lambda _n, _c=None: "atlas")
@@ -779,7 +779,7 @@ def test_a_damaged_options_field_reads_as_no_choices():
     older build): the reader parses it, and the fold must not crash on it."""
     from types import SimpleNamespace
 
-    from kiro_crew.crew_log import projection_crewmate as pc
+    from aj_crew.crew_log import projection_crewmate as pc
 
     bad = {"kind": "options", "text": "Pick", "options": 1, "asked_at": "t"}
     entry = SimpleNamespace(
@@ -823,7 +823,7 @@ def test_the_waiting_fold_empties_on_the_next_snapshot_and_reclamps():
 
 
 def test_start_listens_to_log_growth_and_goal_writes(monkeypatch):
-    import kiro_crew.constants as constants
+    import aj_crew.constants as constants
 
     grown: list[Any] = []
     monkeypatch.setattr(constants, "crew_log_enabled", lambda: True)
@@ -836,7 +836,7 @@ def test_start_listens_to_log_growth_and_goal_writes(monkeypatch):
 
 
 def test_a_save_reply_lists_each_field_with_its_source_and_flags_the_manual_ones():
-    from kiro_crew.dashboard.handlers import agent_panel
+    from aj_crew.dashboard.handlers import agent_panel
 
     package = {
         "model": {
@@ -859,7 +859,7 @@ def test_a_goal_set_before_the_thread_had_a_session_is_recorded_on_its_first_gro
 ):
     """The create flow sets the goal before the thread's first turn opens a session,
     so the write's own snapshot had nowhere to land; the thread's first growth records it."""
-    from kiro_crew import members as members_mod
+    from aj_crew import members as members_mod
 
     _cards(monkeypatch, [])
     slot = _Slot([])
@@ -884,8 +884,8 @@ def test_both_gateway_entrypoints_start_the_feed():
     import ast
     import inspect
 
-    from kiro_crew.dashboard import server
-    from kiro_crew.dashboard.server_runtime import api_entrypoint
+    from aj_crew.dashboard import server
+    from aj_crew.dashboard.server_runtime import api_entrypoint
 
     starters = set()
     source = inspect.getsource(server) + "\n" + inspect.getsource(api_entrypoint)
@@ -907,8 +907,8 @@ def test_both_gateway_entrypoints_start_the_feed():
 def test_a_retired_question_refreshes_the_waiting_list_with_no_log_growth(appended, monkeypatch):
     """Dismissing or answering a card writes no log entry, so the retirement itself
     hands the thread to the settle pass."""
-    from kiro_crew import member_goals
-    from kiro_crew import members as members_mod
+    from aj_crew import member_goals
+    from aj_crew import members as members_mod
 
     slot = _Slot([])
     state = _State(slot)
@@ -931,7 +931,7 @@ def test_a_retired_question_refreshes_the_waiting_list_with_no_log_growth(append
 
 
 def test_retiring_a_question_tells_the_feed(monkeypatch):
-    from kiro_crew.dashboard.state_parts import dashboard_services
+    from aj_crew.dashboard.state_parts import dashboard_services
 
     told: list[str] = []
     monkeypatch.setattr(crewmate_feed, "question_retired", told.append)
@@ -951,7 +951,7 @@ def test_retiring_a_question_tells_the_feed(monkeypatch):
 def test_opening_a_question_tells_the_feed(monkeypatch):
     """A retried open can land after its tool call's growth settled, so registering
     the question refreshes the waiting list itself."""
-    from kiro_crew.dashboard.state_parts import dashboard_services
+    from aj_crew.dashboard.state_parts import dashboard_services
 
     told: list[str] = []
     monkeypatch.setattr(crewmate_feed, "question_retired", told.append)
@@ -988,7 +988,7 @@ def test_a_new_session_on_the_same_thread_records_its_snapshots_afresh(monkeypat
 
 
 def test_the_goal_and_waiting_folds_read_units_in_succession(monkeypatch):
-    from kiro_crew.crew_log import projection_readers as readers
+    from aj_crew.crew_log import projection_readers as readers
 
     monkeypatch.setattr(readers, "units_in_succession", lambda slot: ("chain", slot))
     for name in ("goal", "waiting"):

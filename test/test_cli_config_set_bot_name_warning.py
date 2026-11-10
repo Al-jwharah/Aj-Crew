@@ -1,4 +1,4 @@
-"""``kirocrew config set agent.bot_name`` warns when the loader will change the name.
+"""``ajcrew config set agent.bot_name`` warns when the loader will change the name.
 
 ``config set`` stores and echoes the raw value, but the loader runs ``bot_name``
 through ``_sanitize_bot_name`` before any session reads it — dropping emoji,
@@ -21,7 +21,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.cli_config import _config_cmd
+from aj_crew.cli_config import _config_cmd
 
 BOT_NAME = "agent.bot_name"
 _ROBOT = "\U0001f916"  # ROBOT FACE emoji (category So), dropped by the sanitizer
@@ -38,11 +38,11 @@ def _set(home: Path, key: str, value: str, *, local: bool = False) -> None:
         local=local,
     )
     with (
-        patch("kiro_crew.cli_config.config_path", return_value=home / "config.json"),
-        patch("kiro_crew.cli_config.config_local_path", return_value=home / "config.local.json"),
-        patch("kiro_crew.config.loader.config_path", return_value=home / "config.json"),
-        patch("kiro_crew.config.loader.config_dir", return_value=home),
-        patch("kiro_crew.cli_config.sel"),
+        patch("aj_crew.cli_config.config_path", return_value=home / "config.json"),
+        patch("aj_crew.cli_config.config_local_path", return_value=home / "config.local.json"),
+        patch("aj_crew.config.loader.config_path", return_value=home / "config.json"),
+        patch("aj_crew.config.loader.config_dir", return_value=home),
+        patch("aj_crew.cli_config.sel"),
     ):
         _config_cmd(args)
 
@@ -178,14 +178,14 @@ class TestBaseWriteShadowedByOverlay:
     def test_non_object_overlay_ancestor_is_reported_as_the_owner(self, home):
         # The deep merge puts a non-object overlay value in place of the whole
         # base subtree, so a leaf written under it is decided by that ancestor.
-        from kiro_crew.cli_config import _overlay_shadowing_keys
+        from aj_crew.cli_config import _overlay_shadowing_keys
 
         (home / "config.local.json").write_text(
             json.dumps({"workspaces": {"project": "/projects/old"}, "agent": {"model": "m"}}),
             encoding="utf-8",
         )
         with patch(
-            "kiro_crew.cli_config.config_local_path", return_value=home / "config.local.json"
+            "aj_crew.cli_config.config_local_path", return_value=home / "config.local.json"
         ):
             found = _overlay_shadowing_keys(
                 [
@@ -199,7 +199,7 @@ class TestBaseWriteShadowedByOverlay:
     def test_mapping_key_with_a_literal_dot_stays_one_segment(self, home):
         # Model ids such as "custom.v1" key agent.model_context_tokens; split on
         # the dot, the overlay entry would never be found.
-        from kiro_crew.cli_config import (
+        from aj_crew.cli_config import (
             _addressable_key,
             _overlay_shadowing_keys,
             _written_leaf_paths,
@@ -212,7 +212,7 @@ class TestBaseWriteShadowedByOverlay:
         paths = _written_leaf_paths("agent.model_context_tokens", {"custom.v1": 4096})
         assert paths == [("agent", "model_context_tokens", "custom.v1")]
         with patch(
-            "kiro_crew.cli_config.config_local_path", return_value=home / "config.local.json"
+            "aj_crew.cli_config.config_local_path", return_value=home / "config.local.json"
         ):
             found = _overlay_shadowing_keys(paths)
         assert found == {("agent", "model_context_tokens", "custom.v1")}

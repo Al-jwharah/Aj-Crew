@@ -21,9 +21,9 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp import web
 
-import kiro_crew
-import kiro_crew.dashboard.token_auth as ta
-from kiro_crew.sel import SecurityEvent, SecurityEventLog
+import aj_crew
+import aj_crew.dashboard.token_auth as ta
+from aj_crew.sel import SecurityEvent, SecurityEventLog
 
 _FORWARDED_HEADERS = {"X-Forwarded-For": "203.0.113.7"}
 
@@ -69,9 +69,9 @@ def test_log_api_access_without_forwarded_writes_no_key() -> None:
 
 @pytest.fixture
 def _clean_token_state(tmp_path, monkeypatch):
-    import kiro_crew.dashboard.revocation_gen as _rg
+    import aj_crew.dashboard.revocation_gen as _rg
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     monkeypatch.setattr(_rg, "_gen", 0)
     monkeypatch.setattr(ta, "_revoked_store_singleton", None)
     ta._state.clear_all()
@@ -145,7 +145,7 @@ async def test_a_boundary_refusal_records_forwarded_beside_the_kept_suffix(monke
     """``_audit_denied`` rows gain the field; the ``_via_proxy`` suffix is unchanged."""
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard import server as server_mod
+    from aj_crew.dashboard import server as server_mod
 
     @web.middleware
     async def refuses(request: web.Request, handler: object) -> web.StreamResponse:
@@ -221,7 +221,7 @@ def _calls_missing_forwarded(path: Path) -> tuple[int, list[int]]:
 @pytest.mark.parametrize("rel", _REQUEST_BOUND_WRITERS)
 def test_every_request_bound_sel_writer_records_forwarded(rel: str) -> None:
     """Exhaustive over each writer module: no request-bound row can skip the field."""
-    path = Path(kiro_crew.__file__).parent / rel
+    path = Path(aj_crew.__file__).parent / rel
     checked, missing = _calls_missing_forwarded(path)
     assert checked, f"{rel}: found no request-bound log_api_access call; the walk is broken"
     assert not missing, f"{rel}: log_api_access without forwarded= at lines {missing}"
@@ -234,7 +234,7 @@ class _RealHelperCapture(_Capture):
 
 
 def _boundary_app(monkeypatch, cap: _RealHelperCapture, handler) -> web.Application:
-    from kiro_crew.dashboard import server as server_mod
+    from aj_crew.dashboard import server as server_mod
 
     monkeypatch.setattr(server_mod, "sel", lambda: cap)
     app = web.Application(middlewares=[server_mod._make_deny_audit_middleware("dashboard_user")])
@@ -320,7 +320,7 @@ async def test_provenance_lives_as_long_as_the_request(monkeypatch) -> None:
 
 def test_the_binding_is_closed_and_restored_when_the_request_ends() -> None:
     """Nested binds restore the outer verdict; leaving the last one leaves none."""
-    from kiro_crew.sel_request_provenance import (
+    from aj_crew.sel_request_provenance import (
         bind_request_forwarded,
         current_request_forwarded,
     )

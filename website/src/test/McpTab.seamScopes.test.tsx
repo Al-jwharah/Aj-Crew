@@ -26,7 +26,7 @@ const SERVER = {
   source: 'agent',
   enabled: true,
   disabledTools: [],
-  presence: { kirocrew: true, kiroGlobal: true, ccGlobal: false },
+  presence: { ajcrew: true, kiroGlobal: true, ccGlobal: false },
 }
 
 function renderTab() {
@@ -72,7 +72,7 @@ describe('McpTab — seam-aware Globals column', () => {
     // Core scopes preserved, companion scope enabled.
     expect(changes[0]).toMatchObject({
       name: 'aws-outlook-mcp',
-      kirocrew: true,
+      ajcrew: true,
       kiroGlobal: true,
       ccGlobal: true,
     })

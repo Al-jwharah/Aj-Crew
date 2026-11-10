@@ -24,9 +24,9 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.sections import UPLOAD_MAX_MB_MAX, UPLOAD_MAX_MB_MIN, DashboardConfig
-from kiro_crew.dashboard import upload_limits
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.sections import UPLOAD_MAX_MB_MAX, UPLOAD_MAX_MB_MIN, DashboardConfig
+from aj_crew.dashboard import upload_limits
 
 MB = 1024 * 1024
 
@@ -45,7 +45,7 @@ def _zip_bytes(pad: int = 0) -> bytes:
 def cfg_file(tmp_path):
     p = tmp_path / "config.json"
     p.write_text("{}", encoding="utf-8")
-    with patch("kiro_crew.config.loader.config_path", return_value=p):
+    with patch("aj_crew.config.loader.config_path", return_value=p):
         yield p
 
 
@@ -75,7 +75,7 @@ def test_default_is_100_mb() -> None:
 )
 def test_loader_bounds_the_stored_value(cfg_file, stored, loaded) -> None:
     _set_limit(cfg_file, stored)
-    assert KiroCrewConfig.load().dashboard.upload_max_mb == loaded
+    assert AjCrewConfig.load().dashboard.upload_max_mb == loaded
 
 
 def test_upload_max_bytes_reads_the_config(cfg_file) -> None:
@@ -84,7 +84,7 @@ def test_upload_max_bytes_reads_the_config(cfg_file) -> None:
 
 
 def test_upload_max_bytes_falls_back_when_config_is_unreadable() -> None:
-    with patch.object(KiroCrewConfig, "load", side_effect=OSError("boom")):
+    with patch.object(AjCrewConfig, "load", side_effect=OSError("boom")):
         assert upload_limits.upload_max_bytes() == upload_limits.DEFAULT_UPLOAD_MAX_BYTES
 
 
@@ -94,19 +94,19 @@ def test_upload_max_bytes_falls_back_when_config_is_unreadable() -> None:
 @pytest.fixture
 def upload_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     target = tmp_path / "uploads"
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.files._UPLOAD_DIR", target)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.files._UPLOAD_DIR", target)
     return target
 
 
 @pytest.fixture
 def files_sel():
-    with patch("kiro_crew.dashboard.handlers.files._sel") as sel:
+    with patch("aj_crew.dashboard.handlers.files._sel") as sel:
         sel.return_value = MagicMock()
         yield sel.return_value
 
 
 async def _post_upload(payload: bytes, filename: str) -> tuple[int, dict]:
-    from kiro_crew.dashboard.handlers.files import api_upload_file
+    from aj_crew.dashboard.handlers.files import api_upload_file
 
     app = web.Application()
     app["state"] = MagicMock()
@@ -130,7 +130,7 @@ async def test_zip_over_the_configured_cap_is_413_naming_the_limit(
     assert "(max 1 MB)" in body["error"]
     assert (
         "To share it anyway, type @ followed by its location on the computer running "
-        "Kiro Crew, for example @~/Downloads/project.zip." in body["error"]
+        "Aj Crew, for example @~/Downloads/project.zip." in body["error"]
     )
     assert "project.zip" in body["error"]
     assert list(upload_dir.glob("*")) == []
@@ -143,8 +143,8 @@ async def test_zip_over_the_old_50_mb_line_is_accepted_under_the_new_default(
     """The reported case: a file past the old fixed cap now lands. Scaled down --
     the old fixed cap is shrunk to 1 MB and the configured default to 2 MB -- so
     the test proves WHICH ceiling the handler consults without a 50 MB body."""
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.files._MAX_UPLOAD_BYTES", MB)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.files.upload_max_bytes", lambda: 2 * MB)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.files._MAX_UPLOAD_BYTES", MB)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.files.upload_max_bytes", lambda: 2 * MB)
     payload = _zip_bytes(pad=MB + 1024)
     status, body = await _post_upload(payload, "project.zip")
     assert status == 200, body
@@ -162,8 +162,8 @@ async def test_upload_diagnostic_hashes_off_the_event_loop(
     import sys
     import threading
 
-    from kiro_crew.dashboard.file_api import uploads as uploads_owner
-    from kiro_crew.dashboard.handlers import files as files_mod
+    from aj_crew.dashboard.file_api import uploads as uploads_owner
+    from aj_crew.dashboard.handlers import files as files_mod
 
     real_sha256 = hashlib.sha256
     loop_thread = threading.get_ident()
@@ -201,7 +201,7 @@ async def test_cancellation_during_the_diagnostic_removes_the_stored_file(
     evidence, since the file exists by the time the diagnostic runs."""
     import asyncio
 
-    from kiro_crew.dashboard.handlers import files as files_mod
+    from aj_crew.dashboard.handlers import files as files_mod
 
     written: list[bool] = []
 
@@ -233,10 +233,10 @@ async def test_an_edit_takes_effect_on_the_next_upload(cfg_file, upload_dir, fil
 
 @pytest.fixture()
 def config_app(cfg_file):
-    from kiro_crew.dashboard.handlers.files import api_dashboard_config
+    from aj_crew.dashboard.handlers.files import api_dashboard_config
 
     m = MagicMock()
-    with patch("kiro_crew.dashboard.handlers.sel", return_value=m):
+    with patch("aj_crew.dashboard.handlers.sel", return_value=m):
         app = web.Application()
         app.router.add_get("/api/dashboard/config", api_dashboard_config)
         app.router.add_put("/api/dashboard/config", api_dashboard_config)
@@ -262,7 +262,7 @@ async def test_dashboard_config_serves_the_limit_read_only(config_app, cfg_file)
         body["knowledge_upload_max_bytes"] = 1024
         resp = await client.put("/api/dashboard/config", json=body)
         assert resp.status == 200, await resp.text()
-    assert KiroCrewConfig.load().dashboard.upload_max_mb == 250
+    assert AjCrewConfig.load().dashboard.upload_max_mb == 250
 
 
 # ---------- knowledge ingest ----------
@@ -282,7 +282,7 @@ class _FakeStore:
 
 
 async def _post_ingest(payload: bytes, filename: str) -> tuple[int, dict]:
-    from kiro_crew.dashboard.handlers.knowledge import ingest_file
+    from aj_crew.dashboard.handlers.knowledge import ingest_file
 
     app = web.Application()
     app["state"] = SimpleNamespace(knowledge_store=_FakeStore())
@@ -303,7 +303,7 @@ async def _post_ingest(payload: bytes, filename: str) -> tuple[int, dict]:
 @pytest.mark.asyncio
 async def test_knowledge_ingest_enforces_and_names_the_configured_limit(cfg_file) -> None:
     _set_limit(cfg_file, 1)
-    with patch("kiro_crew.dashboard.handlers.knowledge.sel") as sel:
+    with patch("aj_crew.dashboard.handlers.knowledge.sel") as sel:
         sel.return_value = MagicMock()
         status, body = await _post_ingest(b"a" * (MB + 1), "notes.txt")
     assert status == 413, body
@@ -330,7 +330,7 @@ def test_bytes_to_mb_figure() -> None:
 
 
 def test_knowledge_upload_max_bytes_falls_back_when_config_is_unreadable() -> None:
-    with patch("kiro_crew.config.loader.KiroCrewConfig.load", side_effect=RuntimeError("boom")):
+    with patch("aj_crew.config.loader.AjCrewConfig.load", side_effect=RuntimeError("boom")):
         assert upload_limits.knowledge_upload_max_bytes() == upload_limits.DEFAULT_UPLOAD_MAX_BYTES
 
 
@@ -342,7 +342,7 @@ async def test_knowledge_ingest_is_bounded_by_max_ingest_file_mb(cfg_file) -> No
         json.dumps({"dashboard": {"upload_max_mb": 200}, "knowledge": {"max_ingest_file_mb": 1}}),
         encoding="utf-8",
     )
-    with patch("kiro_crew.dashboard.handlers.knowledge.sel") as sel:
+    with patch("aj_crew.dashboard.handlers.knowledge.sel") as sel:
         sel.return_value = MagicMock()
         status, body = await _post_ingest(b"a" * (MB + 1), "notes.txt")
     assert status == 413, body

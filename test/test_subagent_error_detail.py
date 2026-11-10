@@ -12,21 +12,21 @@ import sqlite3
 
 import pytest
 
-from kiro_crew.dashboard.chat_runner import _MAX_NATIVE_CARD_ERROR, _clip_card_error
-from kiro_crew.process_identity import MAX_ERROR_DETAIL_LEN
-from kiro_crew.subagent import (
+from aj_crew.dashboard.chat_runner import _MAX_NATIVE_CARD_ERROR, _clip_card_error
+from aj_crew.process_identity import MAX_ERROR_DETAIL_LEN
+from aj_crew.subagent import (
     _MAX_ERROR_CHAIN,
     SubagentInfo,
     SubagentManager,
     _describe_exception,
 )
-from kiro_crew.testing.wait import finished
+from aj_crew.testing.wait import finished
 
 
 @pytest.fixture()
 def agent_root(tmp_path, monkeypatch):
     """Point persistence at a temp directory."""
-    monkeypatch.setattr("kiro_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path)
+    monkeypatch.setattr("aj_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path)
     return tmp_path
 
 
@@ -76,7 +76,7 @@ class TestDescribeException:
         ``AcpRuntimeError``. Each wrapper quotes its cause, so rendering every
         link's message writes the same remedy three times.
         """
-        from kiro_crew.acp import kas_bundle, kas_engine_install, session_handle
+        from aj_crew.acp import kas_bundle, kas_engine_install, session_handle
 
         inner = "This host's glibc 2.26 is older than the 2.28 the KAS engine needs."
         try:
@@ -94,9 +94,9 @@ class TestDescribeException:
             outer_message = str(outer)
 
         assert rendered == (
-            f"kiro_crew.acp.session_handle.AcpRuntimeError: {outer_message} <- caused by "
-            "kiro_crew.acp.kas_bundle.KasBundleError <- caused by "
-            "kiro_crew.acp.kas_bundle.KasHostUnsupported"
+            f"aj_crew.acp.session_handle.AcpRuntimeError: {outer_message} <- caused by "
+            "aj_crew.acp.kas_bundle.KasBundleError <- caused by "
+            "aj_crew.acp.kas_bundle.KasHostUnsupported"
         )
         assert rendered.count(inner) == 1
 
@@ -151,7 +151,7 @@ class TestTombstoneCarriesTheReason:
 
     def test_records_the_specific_reason_not_just_the_bucket(self, agent_root):
         """``cause`` is a bucket; without ``detail`` the reason dies with the process."""
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.subagent_persistence import create_agent_folder
 
         create_agent_folder("deadbeef", task="t")
         info = SubagentInfo(id="deadbeef", task="t")
@@ -164,7 +164,7 @@ class TestTombstoneCarriesTheReason:
         assert tomb["detail"] == "sqlite3.InterfaceError: bad parameter or other API misuse"
 
     def test_absent_error_yields_an_empty_detail(self, agent_root):
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.subagent_persistence import create_agent_folder
 
         create_agent_folder("nodetail", task="t")
         SubagentManager._write_tombstone(SubagentInfo(id="nodetail", task="t"), "reaped")
@@ -172,7 +172,7 @@ class TestTombstoneCarriesTheReason:
         assert self._tombstone(agent_root, "nodetail")["detail"] == ""
 
     def test_detail_is_bounded(self, agent_root):
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.subagent_persistence import create_agent_folder
 
         create_agent_folder("longone", task="t")
         info = SubagentInfo(id="longone", task="t")
@@ -195,7 +195,7 @@ class TestTombstoneResolvesRecoveryAction:
         return tomb["recovery_action"]
 
     def test_a_retrievable_result_makes_recovery_a_read(self, agent_root):
-        from kiro_crew.subagent_persistence import create_agent_folder, update_state
+        from aj_crew.subagent_persistence import create_agent_folder, update_state
 
         create_agent_folder("withresult", task="t")
         (agent_root / "withresult" / "result.txt").write_text("the answer", encoding="utf-8")
@@ -236,7 +236,7 @@ class TestTombstoneResolvesRecoveryAction:
         ],
     )
     def test_without_a_complete_result(self, agent_root, agent_id, result_text, cause, expected):
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.subagent_persistence import create_agent_folder
 
         create_agent_folder(agent_id, task="t")
         if result_text is not None:
@@ -254,7 +254,7 @@ class TestTerminalArmUsesTheDescription:
     async def test_run_records_the_exception_type(self, agent_root):
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.subagent_persistence import create_agent_folder
 
         sessions = MagicMock()
         sessions.release = MagicMock()
@@ -271,8 +271,8 @@ class TestTerminalArmUsesTheDescription:
 
         with (
             patch.object(manager, "_run_inner", _raise_sqlite_misuse),
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(manager, "_fire_event", new_callable=AsyncMock),
             patch.object(manager, "_on_done", new_callable=AsyncMock),
         ):
@@ -320,7 +320,7 @@ class TestClipCardError:
         """Pins the call site: the native card is where the clip is applied."""
         from unittest.mock import MagicMock
 
-        from kiro_crew.dashboard.chat_runner import _native_subagent_sync
+        from aj_crew.dashboard.chat_runner import _native_subagent_sync
 
         state = MagicMock()
         state.broadcast_ws = MagicMock()

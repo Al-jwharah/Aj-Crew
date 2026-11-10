@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        This covers the README, `CONTRIBUTING.md`, the docs under `src/kiro_crew/docs/`,
+        This covers the README, `CONTRIBUTING.md`, the docs under `src/aj_crew/docs/`,
         skill files, and in-product help text. If the docs are correct but the
         behaviour is wrong, file a bug report instead.
 
@@ -16,7 +16,7 @@ body:
       description: >-
         File path, doc page, or the UI surface carrying the text. A permalink is
         ideal.
-      placeholder: src/kiro_crew/docs/... , or Settings > Channels help text
+      placeholder: src/aj_crew/docs/... , or Settings > Channels help text
     validations:
       required: true
 

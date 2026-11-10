@@ -14,8 +14,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.platform import governance_profiles
-from kiro_crew.platform.governance import parse_policy
+from aj_crew.platform import governance_profiles
+from aj_crew.platform.governance import parse_policy
 
 pytestmark = pytest.mark.asyncio
 
@@ -24,13 +24,13 @@ _PIN_OFF = {"version": 1, "boot": {}, "capabilities": {"tailnet_origin": {"enabl
 
 @pytest.fixture
 def lts(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 def _install_policy(monkeypatch: pytest.MonkeyPatch, doc: dict | None) -> None:
-    from kiro_crew.platform import context as pc
+    from aj_crew.platform import context as pc
 
     ctx = SimpleNamespace(governance=parse_policy(doc) if doc is not None else None)
     monkeypatch.setattr(pc, "current_context", lambda: ctx)
@@ -49,7 +49,7 @@ _ROUTES = [
 
 
 async def _statuses(monkeypatch: pytest.MonkeyPatch) -> list[int]:
-    from kiro_crew.shared_crew import routes_invites
+    from aj_crew.shared_crew import routes_invites
 
     async def _not_reached(_request):
         pytest.fail("a pinned route must not reach its owner check")
@@ -76,7 +76,7 @@ async def test_pinned_off_invite_and_credential_routes_answer_404(lts, monkeypat
 
 
 async def test_unpinned_routes_reach_the_owner_check(lts, monkeypatch):
-    from kiro_crew.shared_crew import routes_invites
+    from aj_crew.shared_crew import routes_invites
 
     _install_policy(monkeypatch, None)
     reached: list[str] = []
@@ -97,8 +97,8 @@ async def test_unpinned_routes_reach_the_owner_check(lts, monkeypatch):
 
 
 async def test_pinned_off_poller_does_not_start(lts, monkeypatch):
-    from kiro_crew.shared_crew import routes_invites
-    from kiro_crew.shared_crew import tailscale_invites as invites
+    from aj_crew.shared_crew import routes_invites
+    from aj_crew.shared_crew import tailscale_invites as invites
 
     _install_policy(monkeypatch, _PIN_OFF)
 
@@ -114,8 +114,8 @@ async def test_pinned_off_poller_does_not_start(lts, monkeypatch):
 async def test_unpinned_poller_starts(lts, monkeypatch):
     import asyncio
 
-    from kiro_crew.shared_crew import routes_invites
-    from kiro_crew.shared_crew import tailscale_invites as invites
+    from aj_crew.shared_crew import routes_invites
+    from aj_crew.shared_crew import tailscale_invites as invites
 
     _install_policy(monkeypatch, None)
     started = asyncio.Event()
@@ -135,8 +135,8 @@ async def test_unpinned_poller_starts(lts, monkeypatch):
 async def test_capabilities_route_runs_the_probe_off_the_event_loop(lts, monkeypatch):
     import threading
 
-    from kiro_crew.dashboard import tailnet
-    from kiro_crew.shared_crew import routes_capabilities
+    from aj_crew.dashboard import tailnet
+    from aj_crew.shared_crew import routes_capabilities
 
     _install_policy(monkeypatch, _PIN_OFF)
     loop_thread = threading.get_ident()
@@ -157,7 +157,7 @@ async def test_capabilities_route_runs_the_probe_off_the_event_loop(lts, monkeyp
 
 
 def test_capabilities_report_invites_unavailable_when_pinned(lts, monkeypatch):
-    from kiro_crew.shared_crew import capabilities
+    from aj_crew.shared_crew import capabilities
 
     _install_policy(monkeypatch, _PIN_OFF)
     assert capabilities.invites_capability() == {
@@ -171,7 +171,7 @@ def test_capabilities_report_invites_unavailable_when_pinned(lts, monkeypatch):
 
 async def test_a_running_poller_sync_reads_nothing_once_pinned(lts, monkeypatch):
     """A live policy refresh can pin tailnet access off after the poller started."""
-    from kiro_crew.shared_crew import tailscale_invites as invites
+    from aj_crew.shared_crew import tailscale_invites as invites
 
     _install_policy(monkeypatch, _PIN_OFF)
     monkeypatch.setattr(invites, "_api", lambda: pytest.fail("a pinned sync reads no Tailscale"))
@@ -181,7 +181,7 @@ async def test_a_running_poller_sync_reads_nothing_once_pinned(lts, monkeypatch)
 
 
 async def test_a_pin_that_lands_mid_sync_admits_nobody(lts, monkeypatch):
-    from kiro_crew.shared_crew import tailscale_invites as invites
+    from aj_crew.shared_crew import tailscale_invites as invites
 
     answers = iter([False, True])
     asked: list[str] = []

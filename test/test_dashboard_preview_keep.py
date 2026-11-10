@@ -17,8 +17,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import member_dashboard as routes
-from kiro_crew.dashboard_templates import catalog, instance
+from aj_crew.dashboard.handlers import member_dashboard as routes
+from aj_crew.dashboard_templates import catalog, instance
 
 SLUG = "fleet-conductor"
 MEMBER = "Fleet Conductor"
@@ -50,7 +50,7 @@ async def _none(*_a: Any, **_k: Any) -> None:
 @pytest.fixture(autouse=True)
 def _home(tmp_path, _floor_monkeypatch):
     """An isolated data home, two fixture built-ins, the member checks and owner gate open."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     root = tmp_path / "builtin"
     for template_id, page in (("fixture-board", PAGE), ("fixture-other", OTHER_PAGE)):
         directory = root / template_id
@@ -61,7 +61,7 @@ def _home(tmp_path, _floor_monkeypatch):
         (directory / "template.html").write_text(page, encoding="utf-8")
     _floor_monkeypatch.setattr(catalog, "builtin_dir", lambda: root)
     cfg = SimpleNamespace(agents={MEMBER: SimpleNamespace(member_id="")})
-    _floor_monkeypatch.setattr(routes.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+    _floor_monkeypatch.setattr(routes.AjCrewConfig, "load", staticmethod(lambda: cfg))
     _floor_monkeypatch.setattr(routes.members_mod, "member_slug", lambda name, config=None: SLUG)
     _floor_monkeypatch.setattr(routes.members_mod, "validate_slug", lambda slug: slug)
     _floor_monkeypatch.setattr(routes.members_mod, "is_dispatchable_member_name", bool)
@@ -226,7 +226,7 @@ async def test_a_non_owner_is_refused(url: str, _floor_monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_the_real_owner_gate_guards_keep(_floor_monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers._shared import require_owner_dashboard_request
+    from aj_crew.dashboard.handlers._shared import require_owner_dashboard_request
 
     _floor_monkeypatch.setattr(routes, "_owner_only", require_owner_dashboard_request)
 
@@ -323,7 +323,7 @@ async def test_a_bound_composed_package_never_reaches_keep(_floor_monkeypatch) -
         served.append("package")
         return web.json_response({"error": "package served", "code": "package"}, status=500)
 
-    from kiro_crew.artifact_store import dashboard_package
+    from aj_crew.artifact_store import dashboard_package
 
     # The crewmate IS bound to a package: the resolver the read route asks says so.
     _floor_monkeypatch.setattr(dashboard_package, "resolve_bound_slug", lambda owner: "crew-board")
@@ -350,7 +350,7 @@ def test_the_deferred_binder_registers_both_routes() -> None:
     from pathlib import Path
 
     text = (
-        Path(__file__).resolve().parents[1] / "src/kiro_crew/dashboard/server_runtime/mcp_routes.py"
+        Path(__file__).resolve().parents[1] / "src/aj_crew/dashboard/server_runtime/mcp_routes.py"
     ).read_text(encoding="utf-8")
     for path, name in (
         ("preview/apply", "api_member_dashboard_preview_apply"),

@@ -28,7 +28,7 @@ from pinned_staging_helpers import (
     pinned_only,
 )
 
-from kiro_crew import pinned_fs, snapshot
+from aj_crew import pinned_fs, snapshot
 
 #: Windows implements only the read-only bit, so an exact permission-bit assertion is a
 #: POSIX statement. Everything else in these tests (content, mtime, which file exists)
@@ -572,10 +572,10 @@ def test_no_name_based_filesystem_question_where_a_descriptor_is_held() -> None:
     offenders: list[str] = []
 
     for module in (
-        "src/kiro_crew/pinned_fs.py",
-        "src/kiro_crew/pinned_fs_primitives.py",
-        "src/kiro_crew/pinned_fs_dirs.py",
-        "src/kiro_crew/pinned_fs_files.py",
+        "src/aj_crew/pinned_fs.py",
+        "src/aj_crew/pinned_fs_primitives.py",
+        "src/aj_crew/pinned_fs_dirs.py",
+        "src/aj_crew/pinned_fs_files.py",
     ):
         path = repo_root / module
         tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -1059,7 +1059,7 @@ def test_the_import_audit_line_records_the_staging_mode() -> None:
     """
     import inspect
 
-    from kiro_crew.dashboard.handlers import portability as handler
+    from aj_crew.dashboard.handlers import portability as handler
 
     source = inspect.getsource(handler)
     assert "staging={summary.get('staging'" in source, (

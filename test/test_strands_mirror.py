@@ -16,24 +16,24 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.validation  # noqa: F401 - break the legacy import cycle first
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_STRANDS, ACP_BACKENDS_SESSION_MCP_ARRAY
-from kiro_crew.providers.mirrors import MIRRORS, PROJECTIONS, ProjectionKind, mirror_for
-from kiro_crew.providers.mirrors.base import Concern, Disposition
-from kiro_crew.providers.mirrors.registry import PerToolDeny
-from kiro_crew.providers.mirrors.strands import StrandsMirror
+import aj_crew.validation  # noqa: F401 - break the legacy import cycle first
+from aj_crew.acp import client as acp_client
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_STRANDS, ACP_BACKENDS_SESSION_MCP_ARRAY
+from aj_crew.providers.mirrors import MIRRORS, PROJECTIONS, ProjectionKind, mirror_for
+from aj_crew.providers.mirrors.base import Concern, Disposition
+from aj_crew.providers.mirrors.registry import PerToolDeny
+from aj_crew.providers.mirrors.strands import StrandsMirror
 
-CONTROL_PLANE_SERVER = "kirocrew-core"
+CONTROL_PLANE_SERVER = "ajcrew-core"
 THIRD_PARTY_SERVER = "notes"
 
 
 @pytest.fixture
 def agents_dir(tmp_path, monkeypatch):
     """An agent spec on disk declaring Crew's control plane and one third-party server."""
-    import kiro_crew.agent as agent_mod
-    from kiro_crew.acp import session_mcp
+    import aj_crew.agent as agent_mod
+    from aj_crew.acp import session_mcp
 
     d = tmp_path / "agents"
     d.mkdir()
@@ -41,12 +41,12 @@ def agents_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(agent_mod, "_KIRO_MCP_JSON", tmp_path / "settings-mcp.json")
     monkeypatch.setattr(session_mcp, "ensure_agent_materialized", lambda _a: True)
     monkeypatch.setattr(session_mcp, "_mcp_registry_mode", lambda: False)
-    (d / "kirocrew.json").write_text(
+    (d / "ajcrew.json").write_text(
         json.dumps(
             {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "mcpServers": {
-                    CONTROL_PLANE_SERVER: {"command": "/opt/kirocrew", "args": ["mcp-core"]},
+                    CONTROL_PLANE_SERVER: {"command": "/opt/ajcrew", "args": ["mcp-core"]},
                     THIRD_PARTY_SERVER: {"command": "/opt/notes", "args": ["serve"]},
                 },
                 "tools": ["@" + CONTROL_PLANE_SERVER, "@" + THIRD_PARTY_SERVER],
@@ -62,7 +62,7 @@ def _client(tmp_path: Path) -> AcpClient:
     client = object.__new__(AcpClient)
     client._acp_backend = ACP_BACKEND_STRANDS
     client._mcp_gateway_overlay = None  # shared gateway off: no broker stubs
-    client._agent = "kirocrew"
+    client._agent = "ajcrew"
     client._work_dir = tmp_path / "work"
     client._session_key = "dashboard_abc123"
     client._channel_id = "dashboard"
@@ -142,10 +142,10 @@ def test_the_report_and_ref_guard_read_the_launch_composition(agents_dir, tmp_pa
     """The wire array is empty for Strands, so judging refs against it would call
     every ``@server`` the launch file mounts unconfigured. The roster the session
     report and the ref guard read is the launch composition instead."""
-    from kiro_crew.acp.client_start import _roster_of
-    from kiro_crew.agent_sdk.mcp_refs import unresolved_server_refs
+    from aj_crew.acp.client_start import _roster_of
+    from aj_crew.agent_sdk.mcp_refs import unresolved_server_refs
 
-    spec = json.loads((agents_dir / "kirocrew.json").read_text(encoding="utf-8"))
+    spec = json.loads((agents_dir / "ajcrew.json").read_text(encoding="utf-8"))
     client = _client(tmp_path)
     # Before a Strands spawn sets it, the wire array is the roster, as on every harness.
     client._launch_mcp_servers = None
@@ -162,7 +162,7 @@ def test_the_report_and_ref_guard_read_the_launch_composition(agents_dir, tmp_pa
 
 def test_the_strands_spawn_records_its_launch_composition() -> None:
     """The adapter hands the pruned launch array to the client for that reading."""
-    from kiro_crew.acp.harness import strands as strands_mod
+    from aj_crew.acp.harness import strands as strands_mod
 
     source = inspect.getsource(strands_mod.StrandsLaunch.resolve_spawn)
     assert "session._launch_mcp_servers = list(kept)" in source

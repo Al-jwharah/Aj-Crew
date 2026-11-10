@@ -24,9 +24,9 @@ from pathlib import Path
 import pytest
 from test_theme_clone_stderr_redact_before_bound import _find_slice_before_redact_offenders
 
-import kiro_crew.apps.builtins.dev_fleet.repository as repository
-import kiro_crew.apps.builtins.dev_fleet.runtime as runtime
-import kiro_crew.apps.builtins.dev_fleet.worktree_ops as worktree_ops
+import aj_crew.apps.builtins.dev_fleet.repository as repository
+import aj_crew.apps.builtins.dev_fleet.runtime as runtime
+import aj_crew.apps.builtins.dev_fleet.worktree_ops as worktree_ops
 
 # The bound applied at the rebase-conflict tail site in _rebase_locked.
 _REBASE_TAIL_BOUND = 200

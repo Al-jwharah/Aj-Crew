@@ -17,8 +17,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.chat_folders import api_chat_slot_folder
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.chat_folders import api_chat_slot_folder
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 
 def _make_app(state: DashboardState, *, declared_app: str = "") -> web.Application:
@@ -58,8 +58,8 @@ class TestFolderFilingIsAppScoped:
         caller = _app_slot("chat-1-100", "issue-radar")
         target = _app_slot("chat-2-200", "spec-builder")
         state = _state(caller, target)
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop"), patch(
-            "kiro_crew.dashboard.chat_folders._unhide_folder", AsyncMock(return_value=True)
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop"), patch(
+            "aj_crew.dashboard.chat_folders._unhide_folder", AsyncMock(return_value=True)
         ):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.patch(
@@ -78,8 +78,8 @@ class TestFolderFilingIsAppScoped:
         caller = _app_slot("chat-1-100", "issue-radar")
         target = _ChatSlot("chat-2-200")  # no _app — created by the human
         state = _state(caller, target)
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop"), patch(
-            "kiro_crew.dashboard.chat_folders._unhide_folder", AsyncMock(return_value=True)
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop"), patch(
+            "aj_crew.dashboard.chat_folders._unhide_folder", AsyncMock(return_value=True)
         ):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.patch(
@@ -95,8 +95,8 @@ class TestFolderFilingIsAppScoped:
         caller = _app_slot("chat-1-100", "issue-radar")
         target = _app_slot("chat-2-200", "issue-radar")
         state = _state(caller, target)
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop"), patch(
-            "kiro_crew.dashboard.chat_folders._unhide_folder", AsyncMock(return_value=True)
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop"), patch(
+            "aj_crew.dashboard.chat_folders._unhide_folder", AsyncMock(return_value=True)
         ):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.patch(
@@ -113,8 +113,8 @@ class TestFolderFilingIsAppScoped:
         caller = _ChatSlot("chat-1-100")
         target = _app_slot("chat-2-200", "issue-radar")
         state = _state(caller, target)
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop"), patch(
-            "kiro_crew.dashboard.chat_folders._unhide_folder", AsyncMock(return_value=True)
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop"), patch(
+            "aj_crew.dashboard.chat_folders._unhide_folder", AsyncMock(return_value=True)
         ):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.patch(
@@ -131,8 +131,8 @@ class TestFolderFilingIsAppScoped:
         caller = _app_slot("chat-1-100", "issue-radar")
         target = _app_slot("chat-2-200", "spec-builder")
         state = _state(caller, target)
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop"), patch(
-            "kiro_crew.dashboard.chat_folders._unhide_folder", AsyncMock(return_value=True)
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop"), patch(
+            "aj_crew.dashboard.chat_folders._unhide_folder", AsyncMock(return_value=True)
         ):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.patch(
@@ -148,8 +148,8 @@ class TestFolderFilingIsAppScoped:
         """The token path keeps working — it is not replaced, only backstopped."""
         target = _app_slot("chat-2-200", "spec-builder")
         state = _state(target)
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop"), patch(
-            "kiro_crew.dashboard.chat_folders._unhide_folder", AsyncMock(return_value=True)
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop"), patch(
+            "aj_crew.dashboard.chat_folders._unhide_folder", AsyncMock(return_value=True)
         ):
             app = _make_app(state, declared_app="issue-radar")
             async with TestClient(TestServer(app)) as client:

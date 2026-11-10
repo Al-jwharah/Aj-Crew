@@ -14,8 +14,8 @@ from types import SimpleNamespace
 import pytest
 from aiohttp import web
 
-from kiro_crew.config.loader import KiroCrewConfig, SttConfig
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.config.loader import AjCrewConfig, SttConfig
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 async def _recv_json(ws):
@@ -60,21 +60,21 @@ async def _await_end_audit(outcomes: list[str]) -> None:
 
 
 def _make_app() -> web.Application:
-    from kiro_crew.dashboard import stt_stream
+    from aj_crew.dashboard import stt_stream
 
     app = web.Application()
     app.router.add_get("/api/ws/stt", stt_stream.api_ws_stt)
     return app
 
 
-def _cfg(**kwargs) -> KiroCrewConfig:
+def _cfg(**kwargs) -> AjCrewConfig:
     stt = SttConfig(
         enabled=kwargs.pop("enabled", True),
         provider=kwargs.pop("provider", "transcribe"),
         streaming=kwargs.pop("streaming", True),
         **kwargs,
     )
-    return KiroCrewConfig(stt=stt)
+    return AjCrewConfig(stt=stt)
 
 
 def _arm_cap(monkeypatch) -> asyncio.Event:
@@ -90,7 +90,7 @@ def _arm_cap(monkeypatch) -> asyncio.Event:
     coroutine in the worker keeps the real stdlib sleep (tests-are-deterministic,
     item 11: never rebind a stdlib clock).
     """
-    from kiro_crew.dashboard import stt_stream
+    from aj_crew.dashboard import stt_stream
 
     sentinel = 12_345.0
     fire = asyncio.Event()
@@ -124,9 +124,9 @@ def transcribe_consented_fixture(tmp_path_factory, monkeypatch):
     these cases are about the stream, not the identity probe.
     """
     home = tmp_path_factory.mktemp("stt-consent-home")
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
-    from kiro_crew import aws_consent
-    from kiro_crew.config.loader import config_dir
+    monkeypatch.setenv("AJCREW_HOME", str(home))
+    from aj_crew import aws_consent
+    from aj_crew.config.loader import config_dir
 
     config_dir().mkdir(parents=True, exist_ok=True)
     cfg = _cfg()

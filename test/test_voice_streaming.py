@@ -12,8 +12,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import chat_voice
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard import chat_voice
+from aj_crew.testing.wait import await_until
 
 
 @pytest.fixture

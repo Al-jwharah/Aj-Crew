@@ -20,9 +20,9 @@ import stat
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.dashboard.ws import (
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.dashboard.ws import (
     build_persisted_subagent_frame,
     fold_subagent_outcome,
     read_fold_subagent_records,
@@ -35,7 +35,7 @@ DAY = 86_400.0
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
     """Every test writes into its own data home, never the live one."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     yield
 
 
@@ -47,14 +47,14 @@ def _log(unit_id: str, *, slot: str = "chat-1", app: str = "") -> CrewLog:
     session key -- and a test whose unit id happened to BE the session key passed
     while production folded an empty log.
     """
-    handle = CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="kirocrew", slot=slot)
+    handle = CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="ajcrew", slot=slot)
     recorded: dict = {"memory": "persistent"}
     if app:
         recorded["app"] = app
     handle.append(
         "session/opened",
         {
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "slot": slot,
             "model": "opus",
             "cwd": "/w",
@@ -104,7 +104,7 @@ def _stamps_and_seqs(units) -> set[tuple[float, int]]:
     tie that did not happen makes every assertion below it pass for the wrong
     reason, and that is indistinguishable from the code being right.
     """
-    from kiro_crew.crew_log import projection as crew_log
+    from aj_crew.crew_log import projection as crew_log
 
     pairs = set()
     for unit in units:
@@ -123,7 +123,7 @@ def _frozen_clock():
     fixed past instant, so the rows stay inside the replay's age window and the read is
     not empty.
     """
-    from kiro_crew.crew_log import store
+    from aj_crew.crew_log import store
 
     real = store.now_ms
     stamp_ms = real()
@@ -137,7 +137,7 @@ def _frozen_clock():
 class TestWhatTheFoldGivesACard:
     def test_a_finished_child_rebuilds_with_its_task_outcome_duration_and_cost(self):
         handle = _log("acp-1")
-        _spawn(handle, "a-1", agent="kirocrew-worker", model="opus", task="audit the gate")
+        _spawn(handle, "a-1", agent="ajcrew-worker", model="opus", task="audit the gate")
         _done(handle, "a-1", ms=4200, credits=1.5)
 
         records, overflow = _read([("chat-1", "acp-1")])
@@ -146,7 +146,7 @@ class TestWhatTheFoldGivesACard:
         record = records[0]
         assert record["id"] == "a-1"
         assert record["task"] == "audit the gate"
-        assert record["agent"] == "kirocrew-worker"
+        assert record["agent"] == "ajcrew-worker"
         assert record["model"] == "opus"
         assert record["outcome"] == "completed"
         assert record["elapsed"] == 4.2
@@ -245,7 +245,7 @@ class TestALogWrittenBeforeTheTaskFieldDrawsNoTaskLine:
         string would overwrite it and the card would draw an empty block.
         """
         handle = _log("acp-1")
-        _spawn(handle, "old-1", agent="kirocrew-worker")  # no `task`, as older writers wrote
+        _spawn(handle, "old-1", agent="ajcrew-worker")  # no `task`, as older writers wrote
         _done(handle, "old-1", ms=5)
 
         records, _ = _read([("chat-1", "acp-1")])
@@ -254,7 +254,7 @@ class TestALogWrittenBeforeTheTaskFieldDrawsNoTaskLine:
         assert "task" not in frame["data"]
         # The rest of the card is whole, so the absence costs it only that line.
         assert frame["data"]["outcome"] == "completed"
-        assert frame["data"]["agent"] == "kirocrew-worker"
+        assert frame["data"]["agent"] == "ajcrew-worker"
 
     def test_a_recorded_task_is_present_on_the_frame(self):
         """Control: the assertion above fails for the right reason."""
@@ -297,7 +297,7 @@ class TestTheCrossAppGuardStillRefusesAReMintedSlotKey:
         guard compares the live owner against the LOG's recorded owner and
         refuses, so the old app's run is never handed to the new one.
         """
-        from kiro_crew.dashboard.ws_event_scope import persisted_replay_denial_reason
+        from aj_crew.dashboard.ws_event_scope import persisted_replay_denial_reason
 
         handle = _log("acp-1", app="mochi-pet")
         _spawn(handle, "a-1", task="the first app's work")
@@ -315,7 +315,7 @@ class TestTheCrossAppGuardStillRefusesAReMintedSlotKey:
 
     def test_a_person_never_receives_an_apps_run_and_an_app_never_a_persons(self):
         """Equality both ways, which is what fail-closed means here."""
-        from kiro_crew.dashboard.ws_event_scope import persisted_replay_denial_reason
+        from aj_crew.dashboard.ws_event_scope import persisted_replay_denial_reason
 
         owned = _log("acp-app", app="mochi-pet")
         _spawn(owned, "app-1")
@@ -378,7 +378,7 @@ class TestADismissedCardDoesNotComeBack:
         which is also the state every run reaches once its folder is pruned. The
         dismissal still holds, because the record is the log entry.
         """
-        from kiro_crew.subagent_persistence import (
+        from aj_crew.subagent_persistence import (
             DISMISSAL_NO_FOLDER,
             record_panel_dismissal_outcome,
         )
@@ -421,7 +421,7 @@ class TestADismissedCardDoesNotComeBack:
         The row leaves the drawn set; the totals are facts about the session and
         stay where they are, reconciled by the published ``dismissed`` count.
         """
-        from kiro_crew.crew_log import projection as crew_log
+        from aj_crew.crew_log import projection as crew_log
 
         handle = _log("acp-1")
         _spawn(handle, "a-1")
@@ -530,7 +530,7 @@ class TestASlotsUnitsAreFoundByItsLogHeadersNotItsSessionKey:
     """
 
     def test_the_slots_units_come_from_the_headers_that_name_it(self):
-        from kiro_crew.dashboard.ws import crew_log_panel_units
+        from aj_crew.dashboard.ws import crew_log_panel_units
 
         _log("acp-live", slot="chat-1")
         assert crew_log_panel_units(["chat-1"]) == [("chat-1", "acp-live")]
@@ -540,7 +540,7 @@ class TestASlotsUnitsAreFoundByItsLogHeadersNotItsSessionKey:
 
     def test_a_slot_that_has_run_under_several_ids_offers_every_one(self):
         """A child dispatched before a reset is in a unit the current id does not name."""
-        from kiro_crew.dashboard.ws import crew_log_panel_units
+        from aj_crew.dashboard.ws import crew_log_panel_units
 
         retired = _log("acp-before-reset", slot="chat-1")
         _spawn(retired, "old-1", task="dispatched before the reset")
@@ -555,7 +555,7 @@ class TestASlotsUnitsAreFoundByItsLogHeadersNotItsSessionKey:
 
     def test_every_slots_units_come_back_from_one_scan(self):
         """The caller serves every slot at once, so it asks once rather than per slot."""
-        from kiro_crew.dashboard.ws import crew_log_panel_units
+        from aj_crew.dashboard.ws import crew_log_panel_units
 
         _log("acp-a", slot="chat-1")
         _log("acp-b", slot="chat-2")
@@ -606,7 +606,7 @@ class TestFindingTheUnitThatHoldsAChild:
     """
 
     def test_the_unit_holding_the_row_is_the_one_returned(self):
-        from kiro_crew.crew_log.resolve import unit_holding_child
+        from aj_crew.crew_log.resolve import unit_holding_child
 
         _log("acp-other", slot="chat-1")
         held = _log("acp-holder", slot="chat-1")
@@ -616,7 +616,7 @@ class TestFindingTheUnitThatHoldsAChild:
         assert unit_holding_child("chat-1", "a-1") == "acp-holder"
 
     def test_a_child_dispatched_before_a_reset_is_found_in_the_retired_unit(self):
-        from kiro_crew.crew_log.resolve import unit_holding_child
+        from aj_crew.crew_log.resolve import unit_holding_child
 
         retired = _log("acp-before", slot="chat-1")
         _spawn(retired, "old-1")
@@ -627,7 +627,7 @@ class TestFindingTheUnitThatHoldsAChild:
 
     def test_an_already_dismissed_row_answers_nothing(self):
         """The render stopped offering it, so there is no card left to clear."""
-        from kiro_crew.crew_log.resolve import unit_holding_child
+        from aj_crew.crew_log.resolve import unit_holding_child
 
         handle = _log("acp-1", slot="chat-1")
         _spawn(handle, "a-1")
@@ -638,7 +638,7 @@ class TestFindingTheUnitThatHoldsAChild:
         assert unit_holding_child("chat-1", "a-1") == ""
 
     def test_an_unknown_child_and_an_unknown_slot_both_answer_nothing(self):
-        from kiro_crew.crew_log.resolve import unit_holding_child
+        from aj_crew.crew_log.resolve import unit_holding_child
 
         handle = _log("acp-1", slot="chat-1")
         _spawn(handle, "a-1")
@@ -737,7 +737,7 @@ class TestADismissalMadeBeforeTheLogHeldOneIsCorrectedIntoTheLog:
 
     def _legacy_dismissal(self, monkeypatch, dismissed: set[str], asked: list[str]):
         """The legacy registry, as a read-only input that counts its own reads."""
-        import kiro_crew.subagent_persistence as persistence
+        import aj_crew.subagent_persistence as persistence
 
         def _recorded(agent_id: str) -> bool:
             asked.append(agent_id)
@@ -746,9 +746,9 @@ class TestADismissalMadeBeforeTheLogHeldOneIsCorrectedIntoTheLog:
         monkeypatch.setattr(persistence, "panel_dismissal_recorded", _recorded)
 
     def test_a_pre_upgrade_dismissal_stays_hidden_across_two_reconnects(self, monkeypatch):
-        from kiro_crew.dashboard.ws import backfill_legacy_panel_dismissals
+        from aj_crew.dashboard.ws import backfill_legacy_panel_dismissals
 
-        monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+        monkeypatch.setenv("AJCREW_CREW_LOG", "1")
         handle = _log("acp-1", slot="chat-1")
         for agent_id in ("kept-1", "cleared-1"):
             _spawn(handle, agent_id)
@@ -776,7 +776,7 @@ class TestADismissalMadeBeforeTheLogHeldOneIsCorrectedIntoTheLog:
 
     def test_a_child_the_registry_does_not_mark_is_left_alone(self, monkeypatch):
         """Reading the registry must not itself clear anything."""
-        from kiro_crew.dashboard.ws import backfill_legacy_panel_dismissals
+        from aj_crew.dashboard.ws import backfill_legacy_panel_dismissals
 
         handle = _log("acp-1", slot="chat-1")
         _spawn(handle, "a-1")
@@ -788,7 +788,7 @@ class TestADismissalMadeBeforeTheLogHeldOneIsCorrectedIntoTheLog:
 
     def test_a_child_still_running_is_not_corrected(self, monkeypatch):
         """Its card is live, so no row this reads was ever offered for dismissal."""
-        from kiro_crew.dashboard.ws import backfill_legacy_panel_dismissals
+        from aj_crew.dashboard.ws import backfill_legacy_panel_dismissals
 
         handle = _log("acp-1", slot="chat-1")
         _spawn(handle, "a-1")
@@ -806,19 +806,19 @@ class TestTheGatesReadASlotFromWhicheverKeyTheRecordCarries:
     """
 
     def test_a_folder_records_session_key_maps_to_its_slot(self):
-        from kiro_crew.dashboard.ws import _replay_record_slot
+        from aj_crew.dashboard.ws import _replay_record_slot
 
         assert _replay_record_slot({"parent_session": "dashboard:chat-1"}) == "chat-1"
 
     def test_a_folded_records_own_slot_is_taken_as_it_stands(self):
         """Its unit id is an ACP session id, which yields no slot."""
-        from kiro_crew.dashboard.ws import _replay_record_slot
+        from aj_crew.dashboard.ws import _replay_record_slot
 
         assert _replay_record_slot({"slot": "chat-7", "unit": "acp-1"}) == "chat-7"
 
     def test_a_record_naming_no_conversation_answers_nothing(self):
         """Which both gates refuse, rather than routing to the active tab."""
-        from kiro_crew.dashboard.ws import _replay_record_slot
+        from aj_crew.dashboard.ws import _replay_record_slot
 
         assert _replay_record_slot({}) == ""
         assert _replay_record_slot({"slot": "", "parent_session": ""}) == ""
@@ -833,11 +833,11 @@ class TestTheDismissalEmitterReportsWhetherItsAppendCommitted:
 
     @pytest.fixture(autouse=True)
     def _crew_log_on(self, monkeypatch):
-        monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+        monkeypatch.setenv("AJCREW_CREW_LOG", "1")
         yield
 
     def test_a_committed_append_reports_true(self):
-        from kiro_crew.crew_log import emit
+        from aj_crew.crew_log import emit
 
         _log("acp-commit", slot="chat-1")
         seen: list[bool] = []
@@ -847,7 +847,7 @@ class TestTheDismissalEmitterReportsWhetherItsAppendCommitted:
 
     def test_a_job_that_finds_no_log_reports_false(self, monkeypatch):
         """One of the two cases that never reach the append at all."""
-        from kiro_crew.crew_log import emit
+        from aj_crew.crew_log import emit
 
         _log("acp-nolog", slot="chat-1")
         monkeypatch.setattr(emit, "_handle", lambda session_id: None)
@@ -862,16 +862,16 @@ class TestTheDismissalEmitterReportsWhetherItsAppendCommitted:
         Staying silent would leave a caller that waits for this answer waiting out
         its whole bound for a callback that is never coming.
         """
-        from kiro_crew.crew_log import emit
+        from aj_crew.crew_log import emit
 
-        monkeypatch.setenv("KIROCREW_CREW_LOG", "0")
+        monkeypatch.setenv("AJCREW_CREW_LOG", "0")
         seen: list[bool] = []
         emit.on_subagent_dismissed("acp-off", agent_id="a-1", on_settled=seen.append)
         assert seen == [False]
 
     def test_the_pinned_arm_carries_the_same_answer(self, monkeypatch):
         """``dismiss_child``'s return says a unit was NAMED, not that it landed."""
-        from kiro_crew.crew_log import emit
+        from aj_crew.crew_log import emit
 
         _log("acp-pin", slot="chat-1")
         emit.forget_child_origin("a-1")
@@ -897,7 +897,7 @@ class TestTheDismissalEmitterReportsWhetherItsAppendCommitted:
         Resolving it as a failure here would spend the caller's whole commit bound
         before the search that is the real answer.
         """
-        from kiro_crew.crew_log import emit
+        from aj_crew.crew_log import emit
 
         emit.forget_child_origin("never-pinned")
         seen: list[bool] = []
@@ -949,7 +949,7 @@ class TestAPermanentlyDeletedConversationsUnitsAreNotFolded:
     """
 
     def test_an_excluded_unit_contributes_no_pair(self, monkeypatch):
-        from kiro_crew.dashboard.ws import crew_log_panel_units
+        from aj_crew.dashboard.ws import crew_log_panel_units
 
         _log("acp-kept", slot="chat-1")
         _log("acp-deleted", slot="chat-1")
@@ -959,15 +959,15 @@ class TestAPermanentlyDeletedConversationsUnitsAreNotFolded:
             "acp-deleted",
         }
 
-        import kiro_crew.session_ledger as ledger
+        import aj_crew.session_ledger as ledger
 
         monkeypatch.setattr(ledger, "_excluded_units", lambda slot_key: frozenset({"acp-deleted"}))
         assert crew_log_panel_units(["chat-1"]) == [("chat-1", "acp-kept")]
 
     def test_an_excluded_units_cards_do_not_reach_the_panel(self, monkeypatch):
         """The whole point: the read is bounded by the pairs, so exclusion is enough."""
-        import kiro_crew.session_ledger as ledger
-        from kiro_crew.dashboard.ws import crew_log_panel_units
+        import aj_crew.session_ledger as ledger
+        from aj_crew.dashboard.ws import crew_log_panel_units
 
         kept = _log("acp-kept", slot="chat-1")
         _spawn(kept, "mine-1")
@@ -986,8 +986,8 @@ class TestAPermanentlyDeletedConversationsUnitsAreNotFolded:
         Answering with nothing for EVERY slot would blank a panel because one
         unrelated slot's control file could not be read.
         """
-        import kiro_crew.session_ledger as ledger
-        from kiro_crew.dashboard.ws import crew_log_panel_units
+        import aj_crew.session_ledger as ledger
+        from aj_crew.dashboard.ws import crew_log_panel_units
 
         _log("acp-a", slot="chat-1")
         _log("acp-b", slot="chat-2")
@@ -1012,13 +1012,13 @@ class TestAUnitWhoseOwnerCannotBeReadIsSkippedNotPublishedAsUnowned:
     def _unclassed_log(self, unit_id: str, slot: str = "chat-1"):
         """A log that never records a class, which is one of the three refusals."""
         handle = CrewLog.create(
-            lg.KIND_SESSION, unit_id, owner="raymond", agent="kirocrew", slot=slot
+            lg.KIND_SESSION, unit_id, owner="raymond", agent="ajcrew", slot=slot
         )
         # No ``session/opened``, so nothing ever states this unit's class.
         return handle
 
     def test_a_unit_that_never_recorded_a_class_contributes_no_cards(self):
-        from kiro_crew.crew_log import read as crew_log_read
+        from aj_crew.crew_log import read as crew_log_read
 
         handle = self._unclassed_log("acp-unclassed")
         _spawn(handle, "theirs-1", task="an app-owned run")
@@ -1030,7 +1030,7 @@ class TestAUnitWhoseOwnerCannotBeReadIsSkippedNotPublishedAsUnowned:
 
     def test_a_unit_that_did_record_its_class_still_contributes(self):
         """Control: the refusal must not swallow every unit."""
-        from kiro_crew.crew_log import read as crew_log_read
+        from aj_crew.crew_log import read as crew_log_read
 
         handle = _log("acp-classed", slot="chat-1", app="mochi-pet")
         _spawn(handle, "mine-1")
@@ -1064,8 +1064,8 @@ class TestAFailedUnitSearchIsNotReadAsNoObligation:
     """
 
     def test_an_unlistable_slot_raises_rather_than_answering_nothing(self, monkeypatch):
-        import kiro_crew.session_ledger as ledger
-        from kiro_crew.crew_log.resolve import UnitSearchFailed, unit_holding_child
+        import aj_crew.session_ledger as ledger
+        from aj_crew.crew_log.resolve import UnitSearchFailed, unit_holding_child
 
         handle = _log("acp-1", slot="chat-1")
         _spawn(handle, "a-1")
@@ -1082,8 +1082,8 @@ class TestAFailedUnitSearchIsNotReadAsNoObligation:
 
     def test_a_unit_whose_fold_will_not_read_raises_rather_than_being_skipped(self, monkeypatch):
         """Skipping it would answer "no unit holds it" from a search that did not finish."""
-        from kiro_crew.crew_log import projection as crew_log
-        from kiro_crew.crew_log.resolve import UnitSearchFailed, unit_holding_child
+        from aj_crew.crew_log import projection as crew_log
+        from aj_crew.crew_log.resolve import UnitSearchFailed, unit_holding_child
 
         handle = _log("acp-1", slot="chat-1")
         _spawn(handle, "a-1")
@@ -1103,9 +1103,9 @@ class TestAFailedUnitSearchIsNotReadAsNoObligation:
         at the top never fires. The failure is injected at the store's root check, not via
         ``chmod``: mode 0 does not deny reads on Windows. The next test covers the real OS.
         """
-        from kiro_crew.crew_log import store
-        from kiro_crew.crew_log.resolve import UnitSearchFailed, unit_holding_child
-        from kiro_crew.session_ledger import crew_log_units
+        from aj_crew.crew_log import store
+        from aj_crew.crew_log.resolve import UnitSearchFailed, unit_holding_child
+        from aj_crew.session_ledger import crew_log_units
 
         handle = _log("acp-1", slot="chat-1")
         _spawn(handle, "a-1")
@@ -1136,15 +1136,15 @@ class TestAFailedUnitSearchIsNotReadAsNoObligation:
         Without this the chain is only ever tested against a stub, and a store that
         answered some other way on a real unreadable directory would go unnoticed.
         """
-        from kiro_crew.crew_log import store
-        from kiro_crew.crew_log.resolve import UnitSearchFailed, unit_holding_child
+        from aj_crew.crew_log import store
+        from aj_crew.crew_log.resolve import UnitSearchFailed, unit_holding_child
 
         handle = _log("acp-1", slot="chat-1")
         _spawn(handle, "a-1")
         _done(handle, "a-1", ms=5)
         assert unit_holding_child("chat-1", "a-1") == "acp-1"
 
-        root = pathlib.Path(os.environ["KIROCREW_HOME"]) / "crew-log" / "sessions"
+        root = pathlib.Path(os.environ["AJCREW_HOME"]) / "crew-log" / "sessions"
         # The directory's OWN mode is restored, not a literal: a hard-coded
         # permissive mode would widen whatever the store actually created, and the
         # restore has to put back what was there rather than what a test assumed.
@@ -1163,8 +1163,8 @@ class TestAFailedUnitSearchIsNotReadAsNoObligation:
         Raising here would make every dismissal on a new install permanently
         retryable, since the condition never clears on its own.
         """
-        from kiro_crew.crew_log.resolve import unit_holding_child
-        from kiro_crew.session_ledger import crew_log_units
+        from aj_crew.crew_log.resolve import unit_holding_child
+        from aj_crew.session_ledger import crew_log_units
 
         # No log is created in this test, so the session root does not exist.
         assert crew_log_units("chat-1", strict=True) == ()
@@ -1176,7 +1176,7 @@ class TestAFailedUnitSearchIsNotReadAsNoObligation:
         A child whose dispatch this slot's logs never recorded has no row for a
         later fact to be about, and the caller must be free to proceed.
         """
-        from kiro_crew.crew_log.resolve import unit_holding_child
+        from aj_crew.crew_log.resolve import unit_holding_child
 
         handle = _log("acp-1", slot="chat-1")
         _spawn(handle, "a-1")
@@ -1189,8 +1189,8 @@ class TestAFailedUnitSearchIsNotReadAsNoObligation:
         Writing a later fact into a deleted conversation's log would put it back in
         a record a permanent delete removed from this slot.
         """
-        import kiro_crew.session_ledger as ledger
-        from kiro_crew.crew_log.resolve import unit_holding_child
+        import aj_crew.session_ledger as ledger
+        from aj_crew.crew_log.resolve import unit_holding_child
 
         handle = _log("acp-deleted", slot="chat-1")
         _spawn(handle, "a-1")

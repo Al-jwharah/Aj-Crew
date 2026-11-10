@@ -25,7 +25,7 @@ FIXTURES = ROOT / "test" / "fixtures" / "take_away"
 WORKFLOW = ROOT / ".github" / "workflows" / "pr-hygiene.yml"
 TEMPLATE = ROOT / ".github" / "PULL_REQUEST_TEMPLATE.md"
 
-READER = "Reader: src/kiro_crew/cron_script.py:run_script -- cron -- test_app_cron_imports_own_src"
+READER = "Reader: src/aj_crew/cron_script.py:run_script -- cron -- test_app_cron_imports_own_src"
 
 
 def _load():
@@ -84,19 +84,19 @@ class TestShapes:
     @pytest.mark.parametrize(
         ("diff", "kind"),
         [
-            (_diff("src/kiro_crew/x_migration.py", ["pass"]), "migration:"),
-            (_diff("src/kiro_crew/a.py", ["    run(argv, extra_hidden_dirs=(root,))"]), "hide:"),
+            (_diff("src/aj_crew/x_migration.py", ["pass"]), "migration:"),
+            (_diff("src/aj_crew/a.py", ["    run(argv, extra_hidden_dirs=(root,))"]), "hide:"),
             (
                 _diff(
-                    "src/kiro_crew/a.py",
+                    "src/aj_crew/a.py",
                     ["    run(argv, extra_hidden_dirs=extra_hidden_dirs + (apps,))"],
                 ),
                 "hide:",
             ),
-            (_diff("src/kiro_crew/a.py", ["        del cfg.agents[name]"]), "delete:"),
-            (_diff("src/kiro_crew/a.py", ["        config.agents.pop(name)"]), "delete:"),
-            (_diff("src/kiro_crew/a.py", [], ["def public_api(x):"]), "remove:"),
-            (_diff("src/kiro_crew/a.py", [], ["async def public_api(x):"]), "remove:"),
+            (_diff("src/aj_crew/a.py", ["        del cfg.agents[name]"]), "delete:"),
+            (_diff("src/aj_crew/a.py", ["        config.agents.pop(name)"]), "delete:"),
+            (_diff("src/aj_crew/a.py", [], ["def public_api(x):"]), "remove:"),
+            (_diff("src/aj_crew/a.py", [], ["async def public_api(x):"]), "remove:"),
         ],
     )
     def test_each_shape_is_detected(self, diff: str, kind: str) -> None:
@@ -111,19 +111,19 @@ class TestShapes:
             _diff("test/test_a.py", ["        del cfg.agents[name]"]),
             # a re-wrapped call is not a new hide
             _diff(
-                "src/kiro_crew/a.py",
+                "src/aj_crew/a.py",
                 ["    run(", "        argv,", "        extra_hidden_dirs=hidden,", "    )"],
                 ["    run(argv, extra_hidden_dirs=hidden)"],
             ),
             # a re-signatured def and a private def
-            _diff("src/kiro_crew/a.py", ["def public_api(x, y):"], ["def public_api(x):"]),
-            _diff("src/kiro_crew/a.py", [], ["def _private(x):"]),
+            _diff("src/aj_crew/a.py", ["def public_api(x, y):"], ["def public_api(x):"]),
+            _diff("src/aj_crew/a.py", [], ["def _private(x):"]),
             # an indented def: a method or a docstring example, not a module API
-            _diff("src/kiro_crew/a.py", [], ["    def run(ctx):"]),
+            _diff("src/aj_crew/a.py", [], ["    def run(ctx):"]),
             # forwarding a mask is not adding one
-            _diff("src/kiro_crew/a.py", ["    wrap(argv, extra_hidden_dirs=extra_hidden_dirs,)"]),
+            _diff("src/aj_crew/a.py", ["    wrap(argv, extra_hidden_dirs=extra_hidden_dirs,)"]),
             # a comment-only edit to a migration file
-            _diff("src/kiro_crew/x_migration.py", ["# reworded"], ["# old wording"]),
+            _diff("src/aj_crew/x_migration.py", ["# reworded"], ["# old wording"]),
             # outside product code: CI tooling naming the shapes in prose
             _diff(
                 ".github/scripts/c.py",
@@ -131,30 +131,30 @@ class TestShapes:
             ),
             _diff("scripts/old_migration.py", ["x = 1"]),
             # a pure addition
-            _diff("src/kiro_crew/a.py", ["def new_api(x):", "    return x"]),
+            _diff("src/aj_crew/a.py", ["def new_api(x):", "    return x"]),
         ],
     )
     def test_non_take_away_diffs_are_not_flagged(self, diff: str) -> None:
         assert mod.detect(diff) == []
 
     def test_a_def_moved_to_another_module_is_a_removal(self) -> None:
-        diff = _diff("src/kiro_crew/a.py", [], ["def moved(x):"]) + _diff(
-            "src/kiro_crew/b.py", ["def moved(x):"]
+        diff = _diff("src/aj_crew/a.py", [], ["def moved(x):"]) + _diff(
+            "src/aj_crew/b.py", ["def moved(x):"]
         )
         assert any("a.py removes public def moved" in h for h in mod.detect(diff))
 
     def test_a_same_named_test_helper_does_not_hide_a_removed_api(self) -> None:
-        diff = _diff("src/kiro_crew/a.py", [], ["def public_api(x):"]) + _diff(
+        diff = _diff("src/aj_crew/a.py", [], ["def public_api(x):"]) + _diff(
             "test/test_a.py", ["def public_api(x):"]
         )
         assert any("public_api" in h for h in mod.detect(diff))
 
 
 class TestBody:
-    HIT = _diff("src/kiro_crew/a.py", ["        del cfg.agents[name]"])
+    HIT = _diff("src/aj_crew/a.py", ["        del cfg.agents[name]"])
 
     def test_no_hit_passes_with_any_body(self) -> None:
-        ok, _ = mod.check(_diff("src/kiro_crew/a.py", ["x = 1"]), "")
+        ok, _ = mod.check(_diff("src/aj_crew/a.py", ["x = 1"]), "")
         assert ok
 
     def test_missing_section_fails(self) -> None:
@@ -168,7 +168,7 @@ class TestBody:
 
     @pytest.mark.parametrize("entry", ["chat", "cron", "subagent", "app", "crew page", "release"])
     def test_every_entry_point_is_accepted(self, entry: str) -> None:
-        line = f"Reader: src/kiro_crew/chat.py:resume -- {entry} -- test_resume_keeps_row"
+        line = f"Reader: src/aj_crew/chat.py:resume -- {entry} -- test_resume_keeps_row"
         ok, msg = mod.check(self.HIT, _body(line))
         assert ok, msg
 
@@ -179,10 +179,10 @@ class TestBody:
     @pytest.mark.parametrize(
         "line",
         [
-            "Reader: src/kiro_crew/chat.py -- chat -- fine",  # no :symbol
-            "Reader: src/kiro_crew/chat.py:resume -- dashboard -- fine",  # unknown entry
-            "Reader: src/kiro_crew/chat.py:resume -- chat --",  # no why
-            "Reader: src/kiro_crew/chat.py:resume - chat - fine",  # wrong separator
+            "Reader: src/aj_crew/chat.py -- chat -- fine",  # no :symbol
+            "Reader: src/aj_crew/chat.py:resume -- dashboard -- fine",  # unknown entry
+            "Reader: src/aj_crew/chat.py:resume -- chat --",  # no why
+            "Reader: src/aj_crew/chat.py:resume - chat - fine",  # wrong separator
         ],
     )
     def test_malformed_reader_lines_fail_and_are_named(self, line: str) -> None:
@@ -229,7 +229,7 @@ class TestCli:
 
     def test_body_is_data_not_code(self, tmp_path: Path) -> None:
         body = _body('$(touch pwned) `touch pwned` "; import os; os.system("touch pwned")')
-        r = self._run(tmp_path, _diff("src/kiro_crew/a.py", ["x = 1"]), body)
+        r = self._run(tmp_path, _diff("src/aj_crew/a.py", ["x = 1"]), body)
         assert r.returncode == 0
         assert not (tmp_path / "pwned").exists()
 

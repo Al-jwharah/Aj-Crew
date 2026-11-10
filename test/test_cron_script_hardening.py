@@ -1,6 +1,6 @@
 """A cron run's failure paths, the secret a script run is handed, and each run's sandbox tier.
 
-This file pins, for ``kiro_crew.cron_script``, the redaction of a failed script's output
+This file pins, for ``aj_crew.cron_script``, the redaction of a failed script's output
 and stderr before either is cut to size, the timeout handler that reaps the child, the
 guard that keeps a kill from becoming ``kill(-1)`` and the pipe drain after a kill, plus
 the internal secret a script child is handed and the sandbox tier both cron spawn paths
@@ -18,8 +18,8 @@ from cron_script_helpers import (  # noqa: F401 -- the autouse fixtures register
     _crons_dir_tracks_patched_home,
 )
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.cron_script import (
+from aj_crew import platform_compat as pc
+from aj_crew.cron_script import (
     _MAX_BAD_OUTPUT_HEAD,
     _MAX_SCRIPT_STDERR_TAIL,
     _REDACT_STRADDLE_MARGIN,
@@ -33,7 +33,7 @@ class TestRunScriptSandboxedErrorPaths:
     """Tests for run_script_sandboxed subprocess error paths (lines 333, 337-338)."""
 
     def _write_script(self, tmp_path, code):
-        crons_dir = tmp_path / ".kirocrew" / "crons"
+        crons_dir = tmp_path / ".ajcrew" / "crons"
         crons_dir.mkdir(parents=True)
         script = crons_dir / "err_test.py"
         script.write_text(code)
@@ -45,8 +45,8 @@ class TestRunScriptSandboxedErrorPaths:
         mock_proc.returncode = 1
         mock_proc.communicate.return_value = ("", "segfault")
         with (
-            patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+            patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
             patch("subprocess.Popen", return_value=mock_proc),
         ):
             result = run_script_sandboxed("/f.py:run", "j1", "")
@@ -59,8 +59,8 @@ class TestRunScriptSandboxedErrorPaths:
         mock_proc.returncode = 0
         mock_proc.communicate.return_value = ("not json at all\n", "")
         with (
-            patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+            patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
             patch("subprocess.Popen", return_value=mock_proc),
         ):
             result = run_script_sandboxed("/f.py:run", "j1", "")
@@ -85,8 +85,8 @@ class TestRunScriptSandboxedErrorPaths:
         mock_proc.returncode = 0
         mock_proc.communicate.return_value = (stdout_text, "")
         with (
-            patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+            patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
             patch("subprocess.Popen", return_value=mock_proc),
         ):
             result = run_script_sandboxed("/f.py:run", "j1", "")
@@ -109,7 +109,7 @@ class TestRunScriptSandboxedErrorPaths:
         Asserted on redact's INPUT: the output cannot show whether truncated text
         was scanned. A credential straddling -500 proves the overshoot still works.
         """
-        from kiro_crew import cron_script
+        from aj_crew import cron_script
 
         seen: list[int] = []
         real_redact = cron_script.redact
@@ -131,8 +131,8 @@ class TestRunScriptSandboxedErrorPaths:
         mock_proc.returncode = 1
         mock_proc.communicate.return_value = ("", stderr_text)
         with (
-            patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+            patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
             patch("subprocess.Popen", return_value=mock_proc),
         ):
             result = run_script_sandboxed("/f.py:run", "j1", "")
@@ -154,7 +154,7 @@ class TestRunScriptSandboxedErrorPaths:
         before them. A credential straddling the 200-char boundary proves the
         overshoot still lets the pattern see it whole.
         """
-        from kiro_crew import cron_script
+        from aj_crew import cron_script
 
         seen: list[int] = []
         real_redact = cron_script.redact
@@ -172,8 +172,8 @@ class TestRunScriptSandboxedErrorPaths:
         mock_proc.returncode = 0
         mock_proc.communicate.return_value = (stdout_text, "")
         with (
-            patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+            patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
             patch("subprocess.Popen", return_value=mock_proc),
         ):
             result = run_script_sandboxed("/f.py:run", "j1", "")
@@ -207,15 +207,15 @@ class TestRunScriptSandboxedErrorPaths:
         mock_proc.communicate.return_value = ("", stderr_text)
         with (
             patch(
-                "kiro_crew.cron_script._read_script_body",
+                "aj_crew.cron_script._read_script_body",
                 return_value=b"def run(ctx):\n    return None\n",
             ),
             patch(
-                "kiro_crew.cron_script._secret_env_precheck",
+                "aj_crew.cron_script._secret_env_precheck",
                 return_value=({"TOKEN": secret_value}, None),
             ),
-            patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+            patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
             patch("subprocess.Popen", return_value=mock_proc),
         ):
             result = run_script_sandboxed(
@@ -249,8 +249,8 @@ class TestRunScriptSandboxedErrorPaths:
         mock_proc.returncode = 1
         mock_proc.communicate.return_value = ("", stderr_text)
         with (
-            patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+            patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
             patch("subprocess.Popen", return_value=mock_proc),
         ):
             result = run_script_sandboxed("/f.py:run", "j1", "")
@@ -270,8 +270,8 @@ class TestRunScriptSandboxedErrorPaths:
         mock_proc.returncode = 1
         mock_proc.communicate.return_value = ("", stderr_text)
         with (
-            patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+            patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
             patch("subprocess.Popen", return_value=mock_proc),
         ):
             result = run_script_sandboxed("/f.py:run", "j1", "")
@@ -293,8 +293,8 @@ class TestRunScriptSandboxedErrorPaths:
         mock_proc.returncode = 1
         mock_proc.communicate.return_value = ("", stderr_text)
         with (
-            patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+            patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
             patch("subprocess.Popen", return_value=mock_proc),
         ):
             result = run_script_sandboxed("/f.py:run", "j1", "")
@@ -322,8 +322,8 @@ class TestRunScriptSandboxedErrorPaths:
         mock_proc.returncode = 1
         mock_proc.communicate.return_value = ("", stderr_text)
         with (
-            patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+            patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
             patch("subprocess.Popen", return_value=mock_proc),
         ):
             result = run_script_sandboxed("/f.py:run", "j1", "")
@@ -342,8 +342,8 @@ class TestRunScriptSandboxedErrorPaths:
         mock_proc.returncode = 1
         mock_proc.communicate.return_value = ("", stderr_text)
         with (
-            patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+            patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
             patch("subprocess.Popen", return_value=mock_proc),
         ):
             result = run_script_sandboxed("/f.py:run", "j1", "")
@@ -377,8 +377,8 @@ class TestRunScriptSandboxedErrorPaths:
         mock_proc.returncode = 1
         mock_proc.communicate.return_value = ("", stderr_text)
         with (
-            patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+            patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
             patch("subprocess.Popen", return_value=mock_proc),
         ):
             result = run_script_sandboxed("/f.py:run", "j1", "")
@@ -414,8 +414,8 @@ class TestRunScriptSandboxedErrorPaths:
         mock_proc.returncode = 1
         mock_proc.communicate.return_value = ("", stderr_text)
         with (
-            patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+            patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
             patch("subprocess.Popen", return_value=mock_proc),
         ):
             result = run_script_sandboxed("/f.py:run", "j1", "")
@@ -450,8 +450,8 @@ class TestRunScriptSandboxedErrorPaths:
         mock_proc.returncode = 1
         mock_proc.communicate.return_value = ("", stderr_text)
         with (
-            patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+            patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
             patch("subprocess.Popen", return_value=mock_proc),
         ):
             result = run_script_sandboxed("/f.py:run", "j1", "")
@@ -487,8 +487,8 @@ class TestRunScriptSandboxedErrorPaths:
         mock_proc.returncode = 1
         mock_proc.communicate.return_value = ("", stderr_text)
         with (
-            patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+            patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
             patch("subprocess.Popen", return_value=mock_proc),
         ):
             result = run_script_sandboxed("/f.py:run", "j1", "")
@@ -508,18 +508,18 @@ class TestRunScriptSandboxedTimeout:
         # timeout cleanup path would then run os.killpg(1, SIGKILL) ==
         # kill(-1, SIGKILL) — SIGKILLing every process this uid owns.
         # Always give mocked Popen objects a real, nonexistent int pid.
-        # nosemgrep: kirocrew.mock-pid-allocatable -- pre-existing literal pid on a mocked process moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.mock-pid-allocatable -- pre-existing literal pid on a mocked process moved verbatim; tracked for a de-flake pass
         mock_proc.pid = 2**22 + 12345  # > PID_MAX default, never a real pid
         mock_proc.communicate.side_effect = [sp.TimeoutExpired("cmd", 30), ("", "")]
         with (
-            patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+            patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
             patch("subprocess.Popen", return_value=mock_proc),
             patch(
                 # Stub the reap at the shim: on Windows it runs `taskkill` through
                 # subprocess.run, which the Popen patch above would hijack. The kill
                 # itself is covered in TestKillBroadcastGuard.
-                "kiro_crew.platform_compat.kill_process_tree",
+                "aj_crew.platform_compat.kill_process_tree",
                 return_value=True,
             ) as mock_tree,
         ):
@@ -542,28 +542,28 @@ class TestKillBroadcastGuard:
     """_resolve_safe_pgid must never let a kill path degenerate into kill(-1)."""
 
     def test_mock_pid_refused(self):
-        from kiro_crew.cron_script import _resolve_safe_pgid
+        from aj_crew.cron_script import _resolve_safe_pgid
 
         assert _resolve_safe_pgid(MagicMock()) is None  # MagicMock pid -> not int
 
     def test_pid_one_refused(self):
-        from kiro_crew.cron_script import _resolve_safe_pgid
+        from aj_crew.cron_script import _resolve_safe_pgid
 
         proc = MagicMock()
-        # nosemgrep: kirocrew.mock-pid-allocatable -- pre-existing pid the broadcast guard must refuse moved verbatim; only the pgid resolver reads it
+        # nosemgrep: ajcrew.mock-pid-allocatable -- pre-existing pid the broadcast guard must refuse moved verbatim; only the pgid resolver reads it
         proc.pid = 1
         assert _resolve_safe_pgid(proc) is None
 
     def test_negative_pid_refused(self):
-        from kiro_crew.cron_script import _resolve_safe_pgid
+        from aj_crew.cron_script import _resolve_safe_pgid
 
         proc = MagicMock()
-        # nosemgrep: kirocrew.mock-pid-allocatable -- pre-existing pid the broadcast guard must refuse moved verbatim; only the pgid resolver reads it
+        # nosemgrep: ajcrew.mock-pid-allocatable -- pre-existing pid the broadcast guard must refuse moved verbatim; only the pgid resolver reads it
         proc.pid = -1
         assert _resolve_safe_pgid(proc) is None
 
     def test_bool_pid_refused(self):
-        from kiro_crew.cron_script import _resolve_safe_pgid
+        from aj_crew.cron_script import _resolve_safe_pgid
 
         proc = MagicMock()
         proc.pid = True  # bool is an int subclass; type() check must reject it
@@ -572,7 +572,7 @@ class TestKillBroadcastGuard:
     def test_own_pgid_refused(self):
         import os
 
-        from kiro_crew.cron_script import _resolve_safe_pgid
+        from aj_crew.cron_script import _resolve_safe_pgid
 
         proc = MagicMock()
         proc.pid = os.getpid()  # our own group -> must refuse (self-kill)
@@ -587,7 +587,7 @@ class TestKillBroadcastGuard:
         (on Windows ``_resolve_safe_pgid`` returns None so the killpg branch is
         unreachable, and ``kill_process_tree`` takes the taskkill path).
         """
-        from kiro_crew.cron_script import _kill_proc_group
+        from aj_crew.cron_script import _kill_proc_group
 
         proc = MagicMock()  # bare mock pid — the original footgun
         with (
@@ -595,7 +595,7 @@ class TestKillBroadcastGuard:
             patch(
                 # Windows: _kill_proc_group reaps via taskkill before the
                 # single-process fallback. Stub it so the test never shells out.
-                "kiro_crew.platform_compat.kill_process_tree",
+                "aj_crew.platform_compat.kill_process_tree",
                 side_effect=OSError("stubbed"),
             ),
         ):
@@ -611,7 +611,7 @@ class TestKillBroadcastGuard:
         """platform_compat.kill_process_tree: non-int pid must raise, never killpg."""
         import pytest as _pytest
 
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         with patch("os.killpg") as mock_killpg, patch("os.kill") as mock_kill:
             with _pytest.raises(ValueError):
@@ -625,7 +625,7 @@ class TestKillBroadcastGuard:
     )
     def test_shim_kill_process_tree_broadcast_pgid_degrades_to_pid_kill(self):
         """platform_compat.kill_process_tree: pgid<=1 degrades to scoped os.kill."""
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         target = 2**22 + 31337
         with (
@@ -647,7 +647,7 @@ class TestKillBroadcastGuard:
         """
         import ntpath
 
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         target = 2**22 + 31337
         completed = MagicMock(returncode=0, stdout=b"", stderr=b"")
@@ -667,14 +667,14 @@ class TestKillBroadcastGuard:
         Otherwise a later natural completion would be misreported as cancelled
         by _unregister_proc.
         """
-        from kiro_crew.cron_script import (
+        from aj_crew.cron_script import (
             _CANCELLED_PROC_JOBS,
             _RUNNING_PROCS,
             kill_running_process,
         )
 
         proc = MagicMock()
-        # nosemgrep: kirocrew.mock-pid-allocatable -- pre-existing literal pid on a mocked process moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.mock-pid-allocatable -- pre-existing literal pid on a mocked process moved verbatim; tracked for a de-flake pass
         proc.pid = 2**22 + 54321  # nonexistent real int pid
         proc.poll.return_value = None  # "still running"
         proc.terminate.side_effect = OSError("terminate failed")
@@ -692,34 +692,34 @@ class TestResolveInternalSecret:
 
     def test_uses_env_when_set(self, tmp_path):
         with (
-            patch.dict(os.environ, {"KIROCREW_INTERNAL_SECRET": "fromenv"}),
-            patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
+            patch.dict(os.environ, {"AJCREW_INTERNAL_SECRET": "fromenv"}),
+            patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
         ):
             (tmp_path / ".local_secret").write_text("fromfile")
             assert _resolve_internal_secret(5476) == "fromenv"
 
     def test_falls_back_to_local_secret_file(self, tmp_path):
         (tmp_path / ".local_secret").write_text("filesecret\n")
-        env = {k: v for k, v in os.environ.items() if k != "KIROCREW_INTERNAL_SECRET"}
+        env = {k: v for k, v in os.environ.items() if k != "AJCREW_INTERNAL_SECRET"}
         with (
             patch.dict(os.environ, env, clear=True),
-            patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
+            patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
         ):
             assert _resolve_internal_secret(5476) == "filesecret"
 
     def test_empty_when_neither_present(self, tmp_path):
-        env = {k: v for k, v in os.environ.items() if k != "KIROCREW_INTERNAL_SECRET"}
+        env = {k: v for k, v in os.environ.items() if k != "AJCREW_INTERNAL_SECRET"}
         with (
             patch.dict(os.environ, env, clear=True),
-            patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
+            patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
         ):
             assert _resolve_internal_secret(5476) == ""
 
     def test_env_empty_string_falls_back_to_file(self, tmp_path):
         (tmp_path / ".local_secret").write_text("filesecret")
         with (
-            patch.dict(os.environ, {"KIROCREW_INTERNAL_SECRET": ""}),
-            patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
+            patch.dict(os.environ, {"AJCREW_INTERNAL_SECRET": ""}),
+            patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
         ):
             assert _resolve_internal_secret(5476) == "filesecret"
 
@@ -729,19 +729,19 @@ class TestResolveInternalSecret:
         captured = {}
 
         def fake_popen(argv, **kwargs):
-            sf = kwargs.get("env", {}).get("_KIROCREW_SECRET_FILE")
+            sf = kwargs.get("env", {}).get("_AJCREW_SECRET_FILE")
             captured["secret"] = open(sf).read() if sf else None
             proc = MagicMock()
             proc.returncode = 0
             proc.communicate.return_value = ('{"status": "ok"}', "")
             return proc
 
-        env = {k: v for k, v in os.environ.items() if k != "KIROCREW_INTERNAL_SECRET"}
+        env = {k: v for k, v in os.environ.items() if k != "AJCREW_INTERNAL_SECRET"}
         with (
             patch.dict(os.environ, env, clear=True),
-            patch("kiro_crew.config.loader.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+            patch("aj_crew.config.loader.config_dir", return_value=tmp_path),
+            patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
             patch("subprocess.Popen", side_effect=fake_popen),
         ):
             run_script_sandboxed("/f.py:run", "j1", "", timeout=30)
@@ -763,18 +763,18 @@ class TestPostKillDrainTimeoutHardening:
         mock_proc = MagicMock()
         # A bare MagicMock pid coerces to 1 via __index__, and os.killpg(1, sig)
         # is kill(-1, sig) — see TestKillBroadcastGuard.
-        # nosemgrep: kirocrew.mock-pid-allocatable -- pre-existing literal pid on a mocked process moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.mock-pid-allocatable -- pre-existing literal pid on a mocked process moved verbatim; tracked for a de-flake pass
         mock_proc.pid = 2**22 + 12345  # > PID_MAX default, never a real pid
         # BOTH the initial read and the post-kill drain time out.
         mock_proc.communicate.side_effect = sp.TimeoutExpired("cmd", 30)
         with (
-            patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+            patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
             patch("subprocess.Popen", return_value=mock_proc),
             patch(
                 # Stub the reap at the shim, NOT via the subprocess.Popen patch above:
                 # same reason as TestRunScriptSandboxedTimeout.
-                "kiro_crew.platform_compat.kill_process_tree",
+                "aj_crew.platform_compat.kill_process_tree",
                 return_value=True,
             ),
         ):
@@ -790,15 +790,15 @@ class TestPostKillDrainTimeoutHardening:
 
         # See TestRunCommandSandboxed._passthrough_sandbox: bypass the OS-sandbox
         # wrap and the runtime shell probe so this exercises only the kill path.
-        monkeypatch.setattr("kiro_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
-        monkeypatch.setattr("kiro_crew.cron_script._resolve_command_shell", lambda: "sh")
+        monkeypatch.setattr("aj_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
+        monkeypatch.setattr("aj_crew.cron_script._resolve_command_shell", lambda: "sh")
         mock_proc = MagicMock()
-        # nosemgrep: kirocrew.mock-pid-allocatable -- pre-existing literal pid on a mocked process moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.mock-pid-allocatable -- pre-existing literal pid on a mocked process moved verbatim; tracked for a de-flake pass
         mock_proc.pid = 2**22 + 12345  # > PID_MAX default, never a real pid
         mock_proc.communicate.side_effect = sp.TimeoutExpired("cmd", 30)
         with (
             patch("subprocess.Popen", return_value=mock_proc),
-            patch("kiro_crew.platform_compat.kill_process_tree", return_value=True),
+            patch("aj_crew.platform_compat.kill_process_tree", return_value=True),
         ):
             result = run_command_sandboxed("sleep 30", timeout=30)
         # A timed-out command must report the timeout, not "Command failed".
@@ -827,7 +827,7 @@ class TestCronSpawnTiersAreAligned:
             seen.append(kwargs.get("mode", "<default>"))
             return (list(argv), None)
 
-        monkeypatch.setattr("kiro_crew.cron_script.wrap_argv", _fake)
+        monkeypatch.setattr("aj_crew.cron_script.wrap_argv", _fake)
         return seen
 
     def test_an_ungranted_script_asks_for_the_same_tier_as_a_command(
@@ -835,10 +835,10 @@ class TestCronSpawnTiersAreAligned:
     ):
         """The alignment itself: neither path may be wider than the other."""
         monkeypatch.setattr(
-            "kiro_crew.cron_script._resolve_command_shell", lambda: posix_test_shell
+            "aj_crew.cron_script._resolve_command_shell", lambda: posix_test_shell
         )
-        monkeypatch.setattr("kiro_crew.cron_script.Path.home", lambda: tmp_path)
-        crons_dir = tmp_path / ".kirocrew" / "crons"
+        monkeypatch.setattr("aj_crew.cron_script.Path.home", lambda: tmp_path)
+        crons_dir = tmp_path / ".ajcrew" / "crons"
         crons_dir.mkdir(parents=True)
         script = crons_dir / "aligned.py"
         script.write_text("def run(ctx):\n    return None\n")
@@ -857,8 +857,8 @@ class TestCronSpawnTiersAreAligned:
 
     def test_an_ungranted_script_is_not_handed_the_wide_profile(self, tmp_path, monkeypatch):
         """``standard`` leaves every credential store open — never the default here."""
-        monkeypatch.setattr("kiro_crew.cron_script.Path.home", lambda: tmp_path)
-        crons_dir = tmp_path / ".kirocrew" / "crons"
+        monkeypatch.setattr("aj_crew.cron_script.Path.home", lambda: tmp_path)
+        crons_dir = tmp_path / ".ajcrew" / "crons"
         crons_dir.mkdir(parents=True)
         script = crons_dir / "narrow.py"
         script.write_text("def run(ctx):\n    return None\n")
@@ -876,15 +876,15 @@ class TestCronSpawnTiersAreAligned:
         must keep running ``strict`` — the alignment above must not have
         widened the granted branch to ``cc``.
         """
-        monkeypatch.setattr("kiro_crew.cron_script.Path.home", lambda: tmp_path)
-        crons_dir = tmp_path / ".kirocrew" / "crons"
+        monkeypatch.setattr("aj_crew.cron_script.Path.home", lambda: tmp_path)
+        crons_dir = tmp_path / ".ajcrew" / "crons"
         crons_dir.mkdir(parents=True)
         script = crons_dir / "granted.py"
         script.write_text("def run(ctx):\n    return None\n")
 
         modes = self._capture_mode(monkeypatch)
         monkeypatch.setattr(
-            "kiro_crew.cron_script._secret_env_precheck",
+            "aj_crew.cron_script._secret_env_precheck",
             lambda *a, **k: ({"TOKEN": "v"}, ""),
         )
         run_script_sandboxed(

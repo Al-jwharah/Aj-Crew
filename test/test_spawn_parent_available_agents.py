@@ -1,9 +1,9 @@
 """The parent agent's ``toolsSettings.subagent.availableAgents`` gates ``spawn_run``.
 
 kiro-cli defines that key for its own built-in ``subagent`` tool: a glob list
-of the agents THIS agent may spawn, and omitting it allows all. Kiro Crew's
+of the agents THIS agent may spawn, and omitting it allows all. Aj Crew's
 sub-agents come through ``spawn_run`` / ``spawn_sub_agents`` instead, whose
-admission only ever asked "does the target exist" plus Kiro Crew's own
+admission only ever asked "does the target exist" plus Aj Crew's own
 governance -- so an operator who declared the allowlist on their agent spec
 saw it silently ignored and the spawn tool advertised every installed agent as
 valid.
@@ -34,10 +34,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import agent_discovery
-from kiro_crew import subagent as sa
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-from kiro_crew.mcp_tools import spawn as spawn_tools
+from aj_crew import agent_discovery
+from aj_crew import subagent as sa
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+from aj_crew.mcp_tools import spawn as spawn_tools
 
 
 def _write_spec(agents_dir: Path, name: str, **extra: Any) -> None:
@@ -382,7 +382,7 @@ class TestVetAgainstParentSpec:
         self, triage_fixture: Path, caplog: pytest.LogCaptureFixture
     ) -> None:
         planted = "ghp_abcdefghijklmnopqrstuvwxyz0123456789"
-        with caplog.at_level("WARNING", logger="kiro_crew.subagent"):
+        with caplog.at_level("WARNING", logger="aj_crew.subagent"):
             assert _vet("orchestrator", planted) is not None
         joined = "\n".join(r.getMessage() for r in caplog.records)
         assert "refusing spawn" in joined
@@ -406,7 +406,7 @@ class TestVetAgainstParentSpec:
         """The no-regression control: every pre-existing spawn from a parent that
         never wrote ``availableAgents`` still goes through, rogue included."""
         for parent in ("plain", "trust-only", "no-such-agent", ""):
-            for child in ("agent1", "rogue", "orchestrator", "kirocrew"):
+            for child in ("agent1", "rogue", "orchestrator", "ajcrew"):
                 assert _vet(parent, child) is None, (parent, child)
 
     def test_empty_child_is_not_vetted_here(self, triage_fixture: Path) -> None:
@@ -444,17 +444,17 @@ class TestGateWiring:
     is persisted, and reports its own code on the refused ``SubagentInfo``."""
 
     async def _spawn(self, parent_template: str, agent: str) -> Any:
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         manager = SubagentManager(sessions=_mock_sessions(), ctx_builder=_mock_ctx_builder())
         await manager.wait_taskq_ready()
         sel_mock = MagicMock()
         parent = _parent_execution(parent_template)
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel", return_value=sel_mock),
-            patch("kiro_crew.execution_context.read_session_execution", return_value=parent),
-            patch("kiro_crew.subagent.read_session_execution", return_value=parent),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel", return_value=sel_mock),
+            patch("aj_crew.execution_context.read_session_execution", return_value=parent),
+            patch("aj_crew.subagent.read_session_execution", return_value=parent),
         ):
             info = manager.spawn("t", parent_session_key="chat-parent", agent=agent)
         return manager, info, sel_mock
@@ -485,8 +485,8 @@ class TestGateWiring:
         """A crewmate's own chat runs on the conductor and hands work to a worker
         session; the gate refuses its spawns whatever the child and whatever its
         spec declares, and points at the hand-off it does have."""
-        for child in ("kirocrew", "agent1", ""):
-            manager, info, _sel = await self._spawn("kirocrew-mate-conductor", child)
+        for child in ("ajcrew", "agent1", ""):
+            manager, info, _sel = await self._spawn("ajcrew-mate-conductor", child)
             assert info is not None and info.done is True
             assert info.error_code == sa.AGENT_NOT_AVAILABLE_CODE
             assert "session_create" in info.error
@@ -533,16 +533,16 @@ class TestGateWiring:
     ) -> None:
         """The event-loop entry points hand the gate the parent's declaration
         they read off-loop; with it present the gate must not scan inline."""
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         manager = SubagentManager(sessions=_mock_sessions(), ctx_builder=_mock_ctx_builder())
         await manager.wait_taskq_ready()
         parent = _parent_execution("orchestrator")
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.execution_context.read_session_execution", return_value=parent),
-            patch("kiro_crew.subagent.read_session_execution", return_value=parent),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.execution_context.read_session_execution", return_value=parent),
+            patch("aj_crew.subagent.read_session_execution", return_value=parent),
             patch.object(
                 sa, "parent_spawn_policy", side_effect=AssertionError("scanned on the loop")
             ),
@@ -559,7 +559,7 @@ class TestGateWiring:
     async def test_spawn_async_resolves_the_policy_off_the_loop(self, triage_fixture: Path) -> None:
         import threading
 
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         manager = SubagentManager(sessions=_mock_sessions(), ctx_builder=_mock_ctx_builder())
         await manager.wait_taskq_ready()
@@ -573,10 +573,10 @@ class TestGateWiring:
             return (("agent1", "agent2", "agent3"),)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.execution_context.read_session_execution", return_value=parent),
-            patch("kiro_crew.subagent.read_session_execution", return_value=parent),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.execution_context.read_session_execution", return_value=parent),
+            patch("aj_crew.subagent.read_session_execution", return_value=parent),
             patch.object(sa, "parent_spawn_allowlists", side_effect=resolver),
             patch.object(sa, "parent_spawn_policy", side_effect=AssertionError("re-read parent")),
         ):
@@ -591,7 +591,7 @@ class TestGateWiring:
         """A queued entry waits on capacity, so the declaration it was admitted
         under may be tightened while it waits. Neither the in-memory entry nor
         the durable row stores the policy; every drain reads it fresh."""
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         manager = SubagentManager(
             sessions=_mock_sessions(), ctx_builder=_mock_ctx_builder(), max_concurrent=1
@@ -600,10 +600,10 @@ class TestGateWiring:
         parent = _parent_execution("plain")
         policy = ("plain", ())
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.execution_context.read_session_execution", return_value=parent),
-            patch("kiro_crew.subagent.read_session_execution", return_value=parent),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.execution_context.read_session_execution", return_value=parent),
+            patch("aj_crew.subagent.read_session_execution", return_value=parent),
             patch.object(SubagentManager, "_run", new=AsyncMock()),
         ):
             manager.spawn("occupy", parent_session_key="chat-parent", _parent_spawn_policy=policy)
@@ -634,7 +634,7 @@ class TestGateWiring:
         parked on capacity while the operator tightens ``availableAgents`` to
         exclude its target, is refused when it drains -- the gate re-reads the
         declaration instead of reusing the one it was admitted under."""
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         manager = SubagentManager(
             sessions=_mock_sessions(), ctx_builder=_mock_ctx_builder(), max_concurrent=1
@@ -645,10 +645,10 @@ class TestGateWiring:
         tightened = ("orchestrator", (("agent2",),))
         drained: list[Any] = []
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.execution_context.read_session_execution", return_value=parent),
-            patch("kiro_crew.subagent.read_session_execution", return_value=parent),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.execution_context.read_session_execution", return_value=parent),
+            patch("aj_crew.subagent.read_session_execution", return_value=parent),
             patch.object(SubagentManager, "_run", new=AsyncMock()),
             patch.object(sa, "parent_spawn_policy", return_value=tightened) as fresh_read,
         ):
@@ -947,21 +947,21 @@ class TestQueuedRowKeepsTheParentProjectScope:
     def _patches(self) -> Any:
         from contextlib import ExitStack
 
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         parent = _parent_execution("proj-lead")
         stack = ExitStack()
-        stack.enter_context(patch("kiro_crew.subagent.Stats"))
-        stack.enter_context(patch("kiro_crew.subagent.sel"))
+        stack.enter_context(patch("aj_crew.subagent.Stats"))
+        stack.enter_context(patch("aj_crew.subagent.sel"))
         stack.enter_context(
-            patch("kiro_crew.execution_context.read_session_execution", return_value=parent)
+            patch("aj_crew.execution_context.read_session_execution", return_value=parent)
         )
-        stack.enter_context(patch("kiro_crew.subagent.read_session_execution", return_value=parent))
+        stack.enter_context(patch("aj_crew.subagent.read_session_execution", return_value=parent))
         stack.enter_context(patch.object(SubagentManager, "_run", new=AsyncMock()))
         return stack
 
     async def _queued(self) -> tuple[Any, dict]:
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         manager = SubagentManager(
             sessions=_mock_sessions(), ctx_builder=_mock_ctx_builder(), max_concurrent=1
@@ -1013,8 +1013,8 @@ class TestQueuedRowKeepsTheParentProjectScope:
     async def test_pump_dispatch_after_the_parent_ended_reads_the_accepted_scope(
         self, project: Path, live_dirs: list[str], monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
-        from kiro_crew.testing.wait import finished
+        from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+        from aj_crew.testing.wait import finished
 
         monkeypatch.setattr(SpawnAdmissionCoordinator, "pump_off_loop", True)
         with self._patches():
@@ -1035,7 +1035,7 @@ class TestQueuedRowKeepsTheParentProjectScope:
         """The parent's session ends while ``spawn_async`` awaits the parent
         record read: the request is still checked against the project scope it
         had when it asked, not the empty scope it has after the await."""
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         _write_spec(
             project / ".kiro" / "agents",
@@ -1051,13 +1051,13 @@ class TestQueuedRowKeepsTheParentProjectScope:
         manager = SubagentManager(sessions=_mock_sessions(), ctx_builder=_mock_ctx_builder())
         await manager.wait_taskq_ready()
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch(
-                "kiro_crew.execution_context.read_session_execution",
+                "aj_crew.execution_context.read_session_execution",
                 side_effect=_read_then_end_parent,
             ),
-            patch("kiro_crew.subagent.read_session_execution", return_value=parent),
+            patch("aj_crew.subagent.read_session_execution", return_value=parent),
             patch.object(SubagentManager, "_run", new=AsyncMock()),
         ):
             info = await manager.spawn_async("t", parent_session_key=self.PARENT, agent="rogue")
@@ -1098,12 +1098,12 @@ class TestSessionProjectForSpawnGate:
         return state
 
     def test_a_slot_answers_its_own_project_only(self, tmp_path: Path) -> None:
-        from kiro_crew.dashboard.handlers._shared import session_project_for_spawn_gate
+        from aj_crew.dashboard.handlers._shared import session_project_for_spawn_gate
 
         slot = MagicMock(project=str(tmp_path), project_dir=None)
         state = self._state({"a": slot})
         with patch(
-            "kiro_crew.dashboard.chat_utils.effective_session_key",
+            "aj_crew.dashboard.chat_utils.effective_session_key",
             side_effect=lambda s: "dashboard:a" if s is slot else "",
         ):
             assert session_project_for_spawn_gate(state, "dashboard:a") == [tmp_path]
@@ -1114,13 +1114,13 @@ class TestSessionProjectForSpawnGate:
         """``set_project(clear=true)`` stages an empty project and resets the
         runtime only on the next message: the running agent still loaded its
         spec from the old directory, so that directory is still returned."""
-        from kiro_crew.dashboard.handlers._shared import session_project_for_spawn_gate
+        from aj_crew.dashboard.handlers._shared import session_project_for_spawn_gate
 
         old, new = tmp_path / "old", tmp_path / "new"
         cleared = MagicMock(project="", project_dir=None)
         moved = MagicMock(project=str(new), project_dir=None)
         with patch(
-            "kiro_crew.dashboard.chat_utils.effective_session_key",
+            "aj_crew.dashboard.chat_utils.effective_session_key",
             side_effect=lambda s: "dashboard:a",
         ):
             state = self._state({"a": cleared}, live_cwd=str(old))
@@ -1129,7 +1129,7 @@ class TestSessionProjectForSpawnGate:
             assert session_project_for_spawn_gate(state, "dashboard:a") == [old, new]
 
     def test_a_subagent_parent_answers_its_run_cwd(self, tmp_path: Path) -> None:
-        from kiro_crew.dashboard.handlers._shared import session_project_for_spawn_gate
+        from aj_crew.dashboard.handlers._shared import session_project_for_spawn_gate
 
         state = self._state({})
         state.subagents._agents = {"abc": MagicMock(cwd=str(tmp_path)), "nocwd": MagicMock(cwd="")}
@@ -1143,10 +1143,10 @@ class TestBotWorkerAllowlist:
     """A Bot's worker runs its session's merged spec, kept in the Bot's folder, so
     the gate reads that spec's ``availableAgents`` as well as ``~/.kiro/agents``."""
 
-    WORKER = "kirocrew-mate-worker"
+    WORKER = "ajcrew-mate-worker"
 
     def _merged(self, monkeypatch: pytest.MonkeyPatch, answer: Any) -> list[str]:
-        from kiro_crew import mate_worker
+        from aj_crew import mate_worker
 
         asked: list[str] = []
 
@@ -1181,7 +1181,7 @@ class TestBotWorkerAllowlist:
     def test_an_unreadable_merged_spec_refuses(
         self, agents_dir: Path, monkeypatch: pytest.MonkeyPatch, answer: str
     ) -> None:
-        from kiro_crew.mate_worker import WorkerKitUnreadable
+        from aj_crew.mate_worker import WorkerKitUnreadable
 
         self._merged(
             monkeypatch,

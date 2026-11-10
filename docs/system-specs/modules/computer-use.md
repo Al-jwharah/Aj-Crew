@@ -40,7 +40,7 @@ about to land. Cursor Motion is **not** the pointer and is deliberately invisibl
 > Prior art: the tool surface and the per-turn element-index discipline are
 > modelled on the open-source `open-codex-computer-use` MCP contract (MIT),
 > which we probed to validate the shape. No code is derived from it — the driver,
-> the compression pipeline and the security floors are all Kiro Crew's own.
+> the compression pipeline and the security floors are all Aj Crew's own.
 
 ---
 
@@ -48,7 +48,7 @@ about to land. Cursor Motion is **not** the pointer and is deliberately invisibl
 
 ```
 kiro-cli
-  └─ spawns  kirocrew mcp-computer            (stdio MCP server: kirocrew-computer)
+  └─ spawns  ajcrew mcp-computer            (stdio MCP server: ajcrew-computer)
        │      THIN SHIM — resolves session identity strictly, forwards, returns text
        ▼
      POST /api/computer-use/invoke            (loopback, X-Internal-Secret)
@@ -76,7 +76,7 @@ back. Everything of consequence happens in the gateway.
 
 ### The shim is not spawned at all unless it can be used
 
-`agent._computer_use_spec_gate()` decides whether `kirocrew-computer` appears in
+`agent._computer_use_spec_gate()` decides whether `ajcrew-computer` appears in
 the **emitted agent spec**: the keystone enable **and** a supported driver, or no
 entry. This is a separate control from the two in-process checks, and it has to be,
 because those run inside a process the spec already caused kiro-cli to spawn — they
@@ -88,7 +88,7 @@ never have done anything at all.
 The support half asks **which platforms have a driver at all**
 (`backend.platform_could_be_supported()`), never an inline `IS_MACOS`. That
 distinction is what kept the server out of the spec on Windows after the Windows
-read-path driver shipped: a hardcoded OS check left `@kirocrew-computer` in `tools`,
+read-path driver shipped: a hardcoded OS check left `@ajcrew-computer` in `tools`,
 so the model was told the tools existed while no server was ever spawned to serve
 them. `test_the_gate_names_no_operating_system` pins the predicate against that
 regression.
@@ -144,7 +144,7 @@ keystone flipping **off** mid-session, after the spec was written and the backen
 spawned. The gate covers what they cannot: the process existing.
 
 **The usage text follows the same gate.** How to call the `computer_*` tools is
-`kirocrew-computer`'s own MCP `instructions` (`kiro_crew.mcp_instructions.COMPUTER`),
+`ajcrew-computer`'s own MCP `instructions` (`aj_crew.mcp_instructions.COMPUTER`),
 so it reaches a session exactly when the server is mounted, in the harness's own
 system prompt ([mcp.md](../../architecture/mcp.md), "Server instructions travel
 with the server"). The default agent prompt (`config/prompt.md`) holds a
@@ -165,7 +165,7 @@ text: one copied before the slot existed still carries the section inline and
 keeps it whatever the gate says. Pinned by `test_context_computer_use_block.py`,
 `test_prompt_compact_contract.py` and `test_mcp_instructions.py`.
 
-`tools` is **not** touched. The `@kirocrew-computer` ref the shipped
+`tools` is **not** touched. The `@ajcrew-computer` ref the shipped
 `defaults.json` grants stays where it is: a ref resolves against the agent's own
 `mcpServers` plus the global `mcp.json`, so once the entry is withheld the ref names
 nothing and launches nothing. Removing it would destroy a mount the user may have
@@ -194,14 +194,14 @@ Three reasons the split is worth the extra hop, none of them governance:
 
 **The shim MUST be told the data home.** Both processes read the keystone
 `computer_use.json`, and a child does **not** inherit the gateway's
-`KIROCREW_HOME` — the managed spec's `env` map is the only channel, so
+`AJCREW_HOME` — the managed spec's `env` map is the only channel, so
 `agent._managed_mcp_env()` pins it there (for every managed server, not just this
 one). Without the pin the two sides read DIFFERENT homes, and the failure mode is
 worse than a plain error because it is silent and self-contradictory: Settings writes
 `enabled: true` to the override home, `mcp_computer` reads `false` from the default
 one and publishes an empty `tools/list`, so the panel shows the feature ON while the
 agent truthfully reports it has no computer-use tools. Both are telling the truth
-about different files. Found by running the feature under `KIROCREW_HOME` in dev mode.
+about different files. Found by running the feature under `AJCREW_HOME` in dev mode.
 
 The pin is resolved through `paths._valid_override_home()` rather than reading the env
 var, so an override the loader itself REFUSES is not handed to a child that would then
@@ -214,20 +214,20 @@ all, so the spec is byte-for-byte unchanged there. Pinned by
 
 **Session identity.** The shim resolves it with
 `mcp_core._resolve_session_key_strict()` — the gateway-injected per-call caller
-block first (the shim advertises `kirocrew.caller-identity`, so gatewayd injects
+block first (the shim advertises `ajcrew.caller-identity`, so gatewayd injects
 one whenever it can name the caller — the only source that holds on a pooled
-backend serving many sessions), else the env `KIROCREW_SESSION_KEY`, else
-`KIROCREW_HOST_PID` plus the HMAC sidecar signed with the keystone-protected
+backend serving many sessions), else the env `AJCREW_SESSION_KEY`, else
+`AJCREW_HOST_PID` plus the HMAC sidecar signed with the keystone-protected
 `sel_hmac.key`. It is used for the audit record and for the live-view relay's
 attribution, **not** as an authorization input: an unresolved key does not refuse the
 call, because there is no per-surface ceiling left for it to select.
 
 That is enforced in the SHIM as well as the gateway, and it has to be: neither
 accepted source exists for a GUI-launched kiro-cli on **macOS**, the only platform
-with a driver. `KIROCREW_SESSION_KEY` reaches a child only from a launcher that
+with a driver. `AJCREW_SESSION_KEY` reaches a child only from a launcher that
 already knows which session it is spawning for — the ACP spawn path
 (`acp/client.py`) and the script-cron launcher (`cron_script.py`, which spawns one
-process per job under `cron:<job id>`) — and `KIROCREW_HOST_PID` only from the Linux
+process per job under `cron:<job id>`) — and `AJCREW_HOST_PID` only from the Linux
 sandbox launcher (`sandbox.main`, which exports it before re-exec). A GUI-launched kiro-cli has no such launcher
 above it, so it carries neither. An earlier revision refused in the shim on the
 reasoning that an unproven key is indistinguishable from an unattended surface —
@@ -255,7 +255,7 @@ sessions are genuinely separate — in the 1:1 shim topology. On a POOLED backen
 process serves many sessions, so the pid separates only what the injected caller
 block does not already name: co-tenants gatewayd CAN name get real per-session keys,
 and the ones it cannot are separated by the **per-connection nonce** gatewayd injects
-alongside the caller block (`_meta."kirocrew.tenant".nonce`, #5322). The nonce is
+alongside the caller block (`_meta."ajcrew.tenant".nonce`, #5322). The nonce is
 gateway-minted and stripped on every inbound frame like the caller block, so a stub
 cannot choose to share a peer's namespace; it carries no session key, so
 `CallerContext.from_meta` still finds no identity and nothing is laundered into
@@ -276,7 +276,7 @@ against a daemon that does not advertise it runs `fallback_exec` instead
 (`stub.must_degrade_nonce_blind`, scoped by `mcp_caller.POOLING_REQUIRES_TENANT_NONCE`).
 An exclusive backend is exactly the topology where `unresolved:<pid>` is right, so the
 separation is restored rather than approximated — which is what lets
-`_MANAGED_SERVERS_CALLER_AWARE` carry `kirocrew-computer` even though the classification
+`_MANAGED_SERVERS_CALLER_AWARE` carry `ajcrew-computer` even though the classification
 is a config WRITE via `seed.py`. A stub that reconnects gets a fresh nonce and therefore a
 fresh namespace: its earlier snapshots become unreachable, which surfaces as "call
 `computer_get_state` first" rather than as an action against a stale tree.
@@ -288,7 +288,7 @@ key differs from the declared one, which is the same-uid impersonation case that
 exists to close. A placeholder names no session, so it can never equal a recovered key,
 and declaring it made every Computer Use call from a dashboard-launched kiro-cli fail
 with a bare `Error: Forbidden` on macOS, where the ancestry file always resolves
-(#9841; `kirocrew computer apps` worked because the CLI never takes that leg). The
+(#9841; `ajcrew computer apps` worked because the CLI never takes that leg). The
 shim therefore decides by the key's own prefix (`mcp_computer._declares_identity`):
 a strictly-resolved key is declared in the header and kernel-verified as before; an
 `unresolved:` key is carried in the body only, and the request has no `X-Session-Key`,
@@ -305,12 +305,12 @@ specifically **because** the alternative — refusing an empty key — is the li
 made the feature unusable on macOS; the security posture is unchanged, only the cache
 key is.
 
-### Why a separate MCP server rather than folding into `kirocrew-core`
+### Why a separate MCP server rather than folding into `ajcrew-core`
 
-`config/defaults.json` blanket-allowlists `@kirocrew-core` in `allowedTools`.
+`config/defaults.json` blanket-allowlists `@ajcrew-core` in `allowedTools`.
 Riding inside it would inherit that blanket auto-approve for `computer_click`. A
-separate slash-free server key also lets a fleet deny `@kirocrew-computer` with
-one `mcp`-scope pattern. `@kirocrew-computer` is added to `tools` but
+separate slash-free server key also lets a fleet deny `@ajcrew-computer` with
+one `mcp`-scope pattern. `@ajcrew-computer` is added to `tools` but
 deliberately **not** to `allowedTools`, and the managed server spec carries **no
 `autoApprove` key** — an autoApproved MCP tool is approved locally by kiro-cli,
 emits no permission request, and never reaches `hooks.on_tool_call`.
@@ -337,7 +337,7 @@ returns the same typed refusal, so a new unsupported platform is ~10 lines and
 cannot accidentally implement half a driver (`windows_driver.py`,
 `linux_driver.py`).
 
-`kiro_crew/testing/fake_computer_use.py` ships a `FakeComputerUseBackend` in the
+`aj_crew/testing/fake_computer_use.py` ships a `FakeComputerUseBackend` in the
 runtime wheel (alongside `fake_acp_backend.py`), so a downstream suite can drive
 the whole stack with no framework, no window, no application and no permission
 grant. Its fixtures exist to make the security branches *reachable*: a node with
@@ -347,7 +347,7 @@ blocked (terminal) app in the catalog, and a real decodable 1x1 JPEG. The suite
 registers it process-wide; combined with the structural guarantee that no module
 in the package calls `CDLL` at import scope, CI can never touch the native path.
 
-Importing `kiro_crew.computer_use` is side-effect free: no framework load, no
+Importing `aj_crew.computer_use` is side-effect free: no framework load, no
 file read, no platform branch until `get_shared_backend()` is called.
 `select_default_backend()` is the ONLY platform branch in the package and it asks
 `platform_compat.IS_MACOS` / `IS_WINDOWS` / `IS_LINUX`, never `sys.platform` —
@@ -358,7 +358,7 @@ flipping one flag.
 
 ## The 11-tool contract
 
-Server `kirocrew-computer` (slash-free: kiro-cli splits an agent `@server`
+Server `ajcrew-computer` (slash-free: kiro-cli splits an agent `@server`
 reference on `/`). All tools prefixed `computer_` so the GUI plane is
 namespace-distinct from every other server's tools.
 
@@ -411,7 +411,7 @@ mandatory, not tidiness: an unregistered tool's arguments pass RAW through
 stdio loop and kills the server.
 
 `computer_list_apps` and `computer_get_state` are the observation tools;
-`computer_end_turn` is control-plane (it drops Kiro Crew's *own* cached snapshots
+`computer_end_turn` is control-plane (it drops Aj Crew's *own* cached snapshots
 and touches no other application, so it is neither observe nor mutate). The
 class labels above are the code-owned `governance._CU_ACTION_CLASSES` table —
 see [governance.md](governance.md).
@@ -467,7 +467,7 @@ Window: "Documents", App: Finder.
       7 textfield <secure>
 [tree truncated at 1200 nodes]
 
-Screenshot: /var/folders/…/kirocrew-computer-shots/shot-1769472013411.jpeg
+Screenshot: /var/folders/…/ajcrew-computer-shots/shot-1769472013411.jpeg
   (1280x604 jpeg, 24.2 KB) — DOWNSCALED from the window size printed above, so
   image pixels are not window coordinates. Take coordinates from an element's own
   frame. Read the file with the fs_read tool only if the tree is insufficient.
@@ -599,16 +599,16 @@ extra_denied_apps, policy_error, permissions{accessibility,
 screen_recording, responsible_hint}, limits{field: [min, max]}}`.
 
 - `permissions` comes from a short-lived child,
-  `<gateway interpreter> [-s] -P -m kiro_crew.computer_use.permission_probe`
+  `<gateway interpreter> [-s] -P -m aj_crew.computer_use.permission_probe`
   (`asyncio.create_subprocess_exec`, fixed argv, 5s timeout, one
   `test_spawn_audit.BENIGN_SPAWNS` entry), which prints the driver's
   `probe_permissions()` block as one JSON object. It is not
-  `kirocrew computer doctor --json`, which asks the same driver: the CLI's start-up
+  `ajcrew computer doctor --json`, which asks the same driver: the CLI's start-up
   plus the doctor's agent-spec projection measure 3.5s warm and over 11s on a cold
   file cache on macOS, so on a busy host that probe outlasts the timeout and both
   rows read "Could not check" while both grants are held. The child imports only the driver
   seam (about half a second), and `test_computer_use_permission_probe.py` fails if
-  it loads `kiro_crew.cli` or `kiro_crew.agent`. Degrades to `unknown` on timeout,
+  it loads `aj_crew.cli` or `aj_crew.agent`. Degrades to `unknown` on timeout,
   non-zero exit or unparseable output, and reports `unsupported` when the current
   platform has no probe; macOS and Windows both probe. A timed-out child is killed —
   the panel polls every 5s while a
@@ -702,7 +702,7 @@ and gives a downstream edition one place to reintroduce a decision.
 | Refusal | Where | Why it survived |
 |---|---|---|
 | Feature off | `enable_state` + `tools` step 2 | The keystone is on `security._SENSITIVE_HOME_DIRS`, so the agent can neither read nor write it. This is the whole security model now. |
-| Kiro Crew's own window | `policy.check_app` | Driving our own Settings UI would let the agent click the enable above — a self-escalation loop that would make the keystone pointless. Matched on bundle id, process name **and window title** — see below. |
+| Aj Crew's own window | `policy.check_app` | Driving our own Settings UI would let the agent click the enable above — a self-escalation loop that would make the keystone pointless. Matched on bundle id, process name **and window title** — see below. |
 | Password fields | `policy.check_input_target` + `render` + `capture_macos` | A privacy floor, not a policy knob: the value is never read, never rendered, and a window holding one is never photographed. |
 | Operator's own app lists | `policy.check_app` | `allowed_apps` / `extra_denied_apps` on the keystone. The operator's choice, not a shipped ceiling. |
 | Stale / drifted element index | `index` + `service.verify_fingerprint` | Correctness, not authorization — acting on a stale index clicks the wrong control. |
@@ -1062,7 +1062,7 @@ exactly as a running app is already evaluated.
 Every other verb resolves an `AppRef` from the window list first, so `policy.check_app`
 sees a bundle id, a process name and a window title. A launch has only the name the
 caller typed, so `tools._dispatch` synthesizes an `AppRef` from it. The self-target
-rule — the one that keeps the agent out of Kiro Crew's own Settings — matches on name
+rule — the one that keeps the agent out of Aj Crew's own Settings — matches on name
 **substrings**, so it does fire on a name-only ref; a hypothetical denylist entry
 naming only a bundle prefix would not. What closes the rest is a **second**
 `check_app` after the launch, against the identity the OS actually reported: an app
@@ -1487,7 +1487,7 @@ exception.
 `kAXErrorCannotComplete = -25204` for every attribute read. Setting
 `AXManualAccessibility = kCFBooleanTrue` on the app element and waiting ~2s
 unlocked **1431 nodes in 0.07s**. Without this, Slack, VS Code, Obsidian and
-Kiro Crew's own desktop app appear permanently empty. Order of operations:
+Aj Crew's own desktop app appear permanently empty. Order of operations:
 create the app element, immediately
 `AXUIElementSetMessagingTimeout(app_elem, AX_MESSAGING_TIMEOUT_SECS)` —
 mandatory, because ctypes releases the GIL around the C call and a genuinely hung
@@ -1681,7 +1681,7 @@ the reference runtime attached a native-resolution PNG unconditionally and no
 parameter capped it — a Slack window measured **~437KB base64 ≈ 109K tokens** on
 one call.
 
-Files land in `os.path.join(tempfile.gettempdir(), "kirocrew-computer-shots")`
+Files land in `os.path.join(tempfile.gettempdir(), "ajcrew-computer-shots")`
 (the idiom its test pins by source text), created `mode=0o700`, each file passed
 through `platform_compat.restrict_to_owner`, ring-trimmed to
 `SCREENSHOT_KEEP = 200`. Only the **path** is ever relayed; the bytes never enter
@@ -1818,7 +1818,7 @@ that never happens.
 
 AppKit needs a main-thread run loop and the gateway's main thread **is** the
 asyncio loop, so the overlay cannot live in the gateway at all. `overlay_proc.py`
-is therefore its own process (`python -m kiro_crew.computer_use.overlay_proc`,
+is therefore its own process (`python -m aj_crew.computer_use.overlay_proc`,
 fixed argv, nothing agent-supplied in it) driven by newline-delimited JSON on
 stdin. It has its **own ctypes surface**, which is the one documented exception to
 "`macos_ffi.py` and its owners are the only modules that touch ctypes": that invariant exists so a
@@ -1828,7 +1828,7 @@ child costs one animation. The child's docstring says so.
 `overlay.py` serializes on one `asyncio.Lock` — the child's stdin is an ordered
 byte stream and two concurrent writers would interleave half-lines — and the lock
 is created lazily, because an `asyncio.Lock` built outside a running loop is the
-cross-loop hazard `kiro_crew/__init__.py` documents.
+cross-loop hazard `aj_crew/__init__.py` documents.
 
 Off macOS, and whenever the opt-in is off, `cursor_motion_enabled()` returns False
 before anything else in every method, so a Linux CI shard exercises these bodies
@@ -1886,7 +1886,7 @@ touch them. They sit with `_SENSITIVE_HOME_DIRS` and the AKIA redaction:
   it replaces every quoted fragment with `<redacted:policy>`, keeping only the
   actionable "call `computer_get_state` again" half. Without this, provoking a drift
   would be the one path around both the redaction pass and the observation ceiling.
-  Refusals that are 100% Kiro Crew's own static prose (the primary-enable refusal, the
+  Refusals that are 100% Aj Crew's own static prose (the primary-enable refusal, the
   generic governance denials, the "pass an `element_index`" hint) skip it by
   construction: no desktop text to leak, and redaction could only mangle them.
 - **Per-call SEL audit** — every permitted call emits `log_tool_invocation`, every
@@ -2275,7 +2275,7 @@ Every asymmetry below follows from that:
 - **The secure-field floor is re-read LIVE at the driver**, not inherited from the
   snapshot the model was shown: a field can flip plain to password on the
   application's own timer in between, and the driver is reachable without the
-  dispatch chokepoint (`kirocrew computer call`). `tools._SECURE_TARGET_TOOLS` also
+  dispatch chokepoint (`ajcrew computer call`). `tools._SECURE_TARGET_TOOLS` also
   widens the chokepoint's own check to `perform_action` and `scroll`, so the floor
   holds for every backend rather than only this one.
 
@@ -2311,9 +2311,9 @@ buffer and the blank-frame gate rejects it with no cause anyone can report. The
 tree is still returned — the UIA tree of a minimized window reads perfectly well.
 
 The gateway reads the Settings permission rows from a short-lived child,
-`python -m kiro_crew.computer_use.permission_probe`, deliberately NOT an
+`python -m aj_crew.computer_use.permission_probe`, deliberately NOT an
 in-gateway ctypes call, so a native fault cannot take the gateway (and with it
-cron, Slack and the dashboard WS) down. `kirocrew computer doctor --json` reports
+cron, Slack and the dashboard WS) down. `ajcrew computer doctor --json` reports
 the same `probe_permissions()` answer, but is too slow to start for that budget.
 
 ### An app's own popups are not addressable surfaces
@@ -2445,7 +2445,7 @@ other editor URL, such as an extension URI handler
 
 ---
 
-## The CLI (`kirocrew computer`) — and what is deliberately not ported
+## The CLI (`ajcrew computer`) — and what is deliberately not ported
 
 `computer_use/cli.py`. Three verbs, hand-rolled dispatch rather than argparse
 subparsers (the parent CLI forwards `REMAINDER`). Full command reference in
@@ -2473,18 +2473,18 @@ With the feature on, `doctor` also says when chats on the configured
 `agent.acp_backend` will not load these tools: a `Chat backend:` line naming the
 backend and a remedy, and the same name under `withheld_on_backend` in `--json`.
 Both are absent when the tools load. The answer is the backend's own projection of
-the default `kirocrew` spec, read through `agent_sdk.drivers.acp.agent_spec_mcp_refs`
-(the seam behind `kirocrew doctor`'s `mcp tool refs` rows) for that one backend: it
-is named when `@kirocrew-computer` resolves to no server there. Codex withholds
+the default `ajcrew` spec, read through `agent_sdk.drivers.acp.agent_spec_mcp_refs`
+(the seam behind `ajcrew doctor`'s `mcp tool refs` rows) for that one backend: it
+is named when `@ajcrew-computer` resolves to no server there. Codex withholds
 Crew's identity-bound servers from the spec half of its array, so a default codex
 chat has no computer-use tools even though the Settings toggle is on. Reading that
-spec is the same read `kirocrew doctor` makes, so on a home with no managed agent
+spec is the same read `ajcrew doctor` makes, so on a home with no managed agent
 spec yet it writes the managed specs first.
 
 That seam does not model the MCP gateway's broker stub. Codex is the one backend
 whose projection is measured to admit the stub for this server
 (`is_session_bound_crew_stub`); the single-binary harnesses withhold it as well. So
-on codex the line names two remedies (route `kirocrew-computer` in MCP Management
+on codex the line names two remedies (route `ajcrew-computer` in MCP Management
 and restart, or use the Kiro CLI backend), and it is absent once the running gateway
 routes the server: `gateway_routed_names()`, the saved routing and a stub in the
 overlay built at the gateway's start, the answer the MCP tab gives. On every other
@@ -2513,7 +2513,7 @@ desktop content.
 
 **Why a whole array in one process.** `element_index` values only mean anything
 relative to the `computer_get_state` that produced them, and that mapping lives in
-a per-process `SnapshotIndex` with a 90s TTL. Two separate `kirocrew computer call`
+a per-process `SnapshotIndex` with a 90s TTL. Two separate `ajcrew computer call`
 invocations therefore cannot share indices at all — the second refuses with "no
 state for …". `--calls '[{"tool": …, "args": {…}}, …]'` exists so a
 snapshot-then-act sequence is reproducible from one command line. It runs
@@ -2532,9 +2532,9 @@ tools would let a model launder one per-call gate decision into many.
 | Reference surface | Why not |
 |---|---|
 | ~~`sky_click` (a fifth `click_method`)~~ | **Now ported** — see "`sky_click` — the private path, and why it IS shipped" above. Kept in this table as a pointer, because the reasoning that once excluded it (do not depend on private ABI) still governs how it is contained: quarantined in `macos_skylight.py`, never reachable from `auto`, and fully degrading when a symbol is missing. |
-| `install-codex-mcp`, `install-claude-mcp`, `install-gemini-mcp`, `install-opencode-mcp`, `install-codex-plugin` | N/A by design. Kiro Crew **self-registers**: `kirocrew-computer` is a managed server in `agent.py:_MANAGED_MCP_SERVERS`, auto-written into the agent config and refreshed while preserving user customizations. There is no external host to install into, so an install verb would have nothing to do. |
+| `install-codex-mcp`, `install-claude-mcp`, `install-gemini-mcp`, `install-opencode-mcp`, `install-codex-plugin` | N/A by design. Aj Crew **self-registers**: `ajcrew-computer` is a managed server in `agent.py:_MANAGED_MCP_SERVERS`, auto-written into the agent config and refreshed while preserving user customizations. There is no external host to install into, so an install verb would have nothing to do. |
 | `snapshot <app>` | covered by `apps` + `computer_get_state`, and a CLI spelling of an LLM-facing capability is exactly what the MCP-first rule asks us not to add. |
-| `turn-ended [--previous-notify]` (a host notify hook) | same intent, different shape: `computer_end_turn` is an MCP tool, so the model drops its own snapshot cache rather than relying on a host lifecycle hook Kiro Crew does not have. |
+| `turn-ended [--previous-notify]` (a host notify hook) | same intent, different shape: `computer_end_turn` is an MCP tool, so the model drops its own snapshot cache rather than relying on a host lifecycle hook Aj Crew does not have. |
 
 ---
 
@@ -2566,7 +2566,7 @@ that read the final state. It is a plain reacquisition: the write block has alre
 exited its own, and `rebuild_agent_config` never takes this lock.
 
 App agents are rewritten in the same step, after the host rebuild and before the
-reset. An app agent that references `@kirocrew-computer` gets the entry in its
+reset. An app agent that references `@ajcrew-computer` gets the entry in its
 materialized config (`<app>--<agent>.json`) only while the gate is open, so the
 handler re-materializes every enabled app's agents through
 `apps.bridges.refresh_app_agents_if_enabled`, one app at a time under that app's
@@ -2618,20 +2618,20 @@ ONLY one, and the consequences should be stated rather than discovered:
 * once the operator enables the feature, prompt injection that reaches the agent
   reaches the desktop. There is no per-app, per-action or per-surface ceiling left
   to contain it;
-* the one structural defence is that the agent cannot drive Kiro Crew's own window
+* the one structural defence is that the agent cannot drive Aj Crew's own window
   (`policy.check_app`), so it cannot click the enable itself. If that entry is ever
   removed, the keystone stops meaning anything. It matches THREE signals, and the
   third is load-bearing: the dashboard is also reachable as a **browser tab**, where
   the app identity is Chrome's or Safari's and a bundle/name rule cannot fire at all
   (reviewer finding). `DeniedApp.title_substrings` matches the resolved window title,
-  as a substring — the tab title takes a badge prefix (`(3) Kiro Crew`) and popouts a
-  `… — Kiro Crew` suffix. And because input is delivered per-PID
+  as a substring — the tab title takes a badge prefix (`(3) Aj Crew`) and popouts a
+  `… — Aj Crew` suffix. And because input is delivered per-PID
   (`CGEventPostToPid`), `apps_macos.list_apps` prefers a DENIED title over an
   innocuous one when one process owns several windows: a dashboard in a background
   tab must refuse the whole browser, not just that window.
 
   Accepted false positive, stated rather than discovered: any window whose title
-  merely contains "kiro crew" is refused — an editor with this repo open, a browser
+  merely contains "aj crew" is refused — an editor with this repo open, a browser
   reading this PR. The failure directions are not symmetric. Refusing an unrelated
   window is visible and recoverable (the refusal names the target); failing to refuse
   our own dashboard silently hands the agent its own security settings. A title is
@@ -2730,7 +2730,7 @@ computer use.
 |---|---|
 | `computer_use/types.py` | Every constant + frozen dataclass; dependency-free and platform-free |
 | `computer_use/keymap.py` | The platform-free spec grammar (`parse_spec()` → `KeySpec`, `KEY_ALIASES` / `MODIFIER_ALIASES` and their canonicalizers) over macOS's Carbon keycodes + CG flag masks (`parse_key()`) |
-| `computer_use/policy.py` | The one retained app refusal (Kiro Crew's own window) + the operator's allow/deny lists, secure-target + text refusals, the click-target/method/button refusals + `resolve_click_method`, `redact_result` |
+| `computer_use/policy.py` | The one retained app refusal (Aj Crew's own window) + the operator's allow/deny lists, secure-target + text refusals, the click-target/method/button refusals + `resolve_click_method`, `redact_result` |
 | `computer_use/render.py` | Tree/app-list rendering, `fingerprint`, secure placeholder |
 | `computer_use/index.py` | `SnapshotIndex`: TTL, cap, `resolve`, `end_turn`, drift message |
 | `computer_use/enable_state.py` | The keystone primary enable + the operator's app allow/deny lists (read fail-soft to off) |
@@ -2765,14 +2765,14 @@ computer use.
 | `computer_use/permissions.py` | Advisory TCC probe + `responsible_hint` |
 | `computer_use/permission_probe.py` | The Settings panel's permission-probe CHILD (`python -m …permission_probe`): the driver's `probe_permissions()` as one JSON line, without the CLI's start-up |
 | `computer_use/macos_driver.py` | `MacOSBackend` glue |
-| `computer_use/cli.py` | `kirocrew computer doctor [--json] \| apps \| call` |
-| `mcp_computer.py` | The thin stdio shim (`kirocrew mcp-computer`) |
+| `computer_use/cli.py` | `ajcrew computer doctor [--json] \| apps \| call` |
+| `mcp_computer.py` | The thin stdio shim (`ajcrew mcp-computer`) |
 | `testing/fake_computer_use.py` | `FakeComputerUseBackend`, shipped in the wheel |
 | `dashboard/handlers/computer_use.py` | `/api/computer-use/{config,invoke,frame}` |
 | `website/src/pages/settings/ComputerUsePanel.tsx` | Settings → Computer Use |
 | `website/src/components/ComputerUseLiveView.tsx` | The floating live view (PiP) panel |
 | `website/src/hooks/useComputerUseFrame.ts` | Frame-stream subscription + session-title lookup |
-| `src/kiro_crew/builtin_skills/computer-use/SKILL.md` | The agent-facing workflow. **Bundled**, not in the top-level `skills/` dir: `kirocrew-computer`'s MCP instructions (`mcp_instructions.COMPUTER`) and the agent prompt's closed-gate pointer (`context_assembly/sections.py::computer_use_block`) tell the model to read it by name, so per AGENTS.md it is load-bearing and must reach every pip/DMG install |
+| `src/aj_crew/builtin_skills/computer-use/SKILL.md` | The agent-facing workflow. **Bundled**, not in the top-level `skills/` dir: `ajcrew-computer`'s MCP instructions (`mcp_instructions.COMPUTER`) and the agent prompt's closed-gate pointer (`context_assembly/sections.py::computer_use_block`) tell the model to read it by name, so per AGENTS.md it is load-bearing and must reach every pip/DMG install |
 
 Cross-references: [governance.md](governance.md) for why computer use is
 deliberately NOT governed; [security.md](security.md) for the keystone leaf and the

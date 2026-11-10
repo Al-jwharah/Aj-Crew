@@ -68,7 +68,7 @@ function MembersPageStub() {
 }
 vi.mock('../pages/members/MembersPage', () => ({ default: MembersPageStub }))
 vi.mock('../hooks/useWebSocket', () => ({ useWebSocket: () => ({ subscribeLogs: () => {} }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'kirocrew' }], defaultAgent: 'kirocrew' })) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'ajcrew' }], defaultAgent: 'ajcrew' })) }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span>, Lightbox: () => null }))
 vi.mock('../api/client', () => ({
@@ -78,7 +78,7 @@ vi.mock('../api/client', () => ({
     status: vi.fn().mockResolvedValue({ uptime: '1h', sessions: 0, messages: 0, cron_jobs: 0, subagents: 0, lessons: 0 }),
     sessionsUsage: vi.fn().mockResolvedValue({ usage: null }),
     listApps: vi.fn().mockResolvedValue([]),
-    kirocrewConfig: vi.fn().mockResolvedValue({ agent: { acp_backend: 'claude' } }),
+    ajcrewConfig: vi.fn().mockResolvedValue({ agent: { acp_backend: 'claude' } }),
     system: vi.fn().mockResolvedValue({ mem_used_gb: 4.0, mem_total_gb: 16.0, cpu_pct: 25.0, disk_total_gb: 100.0, disk_free_gb: 60.0 }),
     chatSlotAgent: vi.fn().mockResolvedValue({}),
     chatSlotReasoningEffort: vi.fn().mockResolvedValue({}),
@@ -91,7 +91,7 @@ vi.mock('../api/client', () => ({
     updateThemeConfig: vi.fn().mockResolvedValue({}),
     onboardingImportScan: vi.fn().mockResolvedValue({ sources: [], skipped: [], merge_only: true }),
     onboardingImportState: vi.fn().mockResolvedValue({}),
-    beaconStatus: vi.fn().mockResolvedValue({ enabled: true, would_send: true, reason: 'ready', endpoint_configured: true, env_override: false, env_var: 'KIROCREW_TELEMETRY_DISABLED' }),
+    beaconStatus: vi.fn().mockResolvedValue({ enabled: true, would_send: true, reason: 'ready', endpoint_configured: true, env_override: false, env_var: 'AJCREW_TELEMETRY_DISABLED' }),
     patchConfig: vi.fn().mockResolvedValue({}),
     createChatSlot: vi.fn().mockResolvedValue({ key: 's', title: 's', messages: 0, running: false }),
     chatSlotContext: vi.fn().mockResolvedValue({ ok: true }),
@@ -442,7 +442,7 @@ describe('phone chat page: one top bar', () => {
   it('puts a Kiro Account tile in the rail and a row in the nav drawer on the Kiro backend, opening the account modal', async () => {
     localStorage.setItem('mc-onboarded', '1')
     const { api } = await import('../api/client')
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ agent: { acp_backend: 'kiro' } })
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ agent: { acp_backend: 'kiro' } })
     try {
       const { unmount } = renderWithProviders(<App />, { route: '/chat' })
       const rail = await screen.findByTestId('mobile-nav-rail')
@@ -463,7 +463,7 @@ describe('phone chat page: one top bar', () => {
       fireEvent.click(await within(nav).findByRole('button', { name: 'Kiro Account' }))
       expect(await screen.findByRole('dialog', { name: 'Kiro Account' })).toBeInTheDocument()
     } finally {
-      vi.mocked(api.kirocrewConfig).mockResolvedValue({ agent: { acp_backend: 'claude' } })
+      vi.mocked(api.ajcrewConfig).mockResolvedValue({ agent: { acp_backend: 'claude' } })
     }
   })
 

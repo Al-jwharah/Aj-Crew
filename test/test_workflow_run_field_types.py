@@ -16,7 +16,7 @@ import pytest
 from member_memory_helpers import env as _member_env
 from member_memory_helpers import make_request
 
-from kiro_crew.dashboard.handlers import workflows
+from aj_crew.dashboard.handlers import workflows
 
 pytestmark = pytest.mark.xdist_group("memory_workflow_http")
 env = _member_env

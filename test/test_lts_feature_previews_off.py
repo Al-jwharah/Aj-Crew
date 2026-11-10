@@ -17,9 +17,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import edition_locks
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.sections import FEATURE_PREVIEW_FLAGS
+from aj_crew import edition_locks
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.sections import FEATURE_PREVIEW_FLAGS
 
 ALL_ON = {name: True for name in FEATURE_PREVIEW_FLAGS}
 
@@ -33,25 +33,25 @@ def _fresh_lock_log():
 
 @pytest.fixture
 def lts(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 @pytest.fixture
 def all_on(tmp_path):
     cfg_path = tmp_path / "config.json"
     cfg_path.write_text(json.dumps({"dashboard": {"feature_previews": ALL_ON}}), encoding="utf-8")
-    with patch("kiro_crew.config.loader.config_path", return_value=cfg_path):
+    with patch("aj_crew.config.loader.config_path", return_value=cfg_path):
         yield cfg_path
 
 
 def _readers() -> dict[str, bool]:
-    from kiro_crew import crew_mode, dashboard_agentic, session_harness_preview
-    from kiro_crew.connections import crew_oauth
-    from kiro_crew.dashboard import stale_wake
+    from aj_crew import crew_mode, dashboard_agentic, session_harness_preview
+    from aj_crew.connections import crew_oauth
+    from aj_crew.dashboard import stale_wake
 
     return {
         "crew_oauth": crew_oauth.enabled(),
-        "mate_sessions": crew_mode.mate_sessions_hidden(KiroCrewConfig.load()),
+        "mate_sessions": crew_mode.mate_sessions_hidden(AjCrewConfig.load()),
         "dashboard_stale_fields": dashboard_agentic.stale_fields_enabled(),
         "dashboard_stale_wake": stale_wake.enabled(),
         "session_harness": session_harness_preview.session_harness_enabled(),
@@ -59,7 +59,7 @@ def _readers() -> dict[str, bool]:
 
 
 def test_lts_server_readers_read_every_preview_off(lts, all_on):
-    assert KiroCrewConfig.load().dashboard.feature_previews == ALL_ON  # stored value kept
+    assert AjCrewConfig.load().dashboard.feature_previews == ALL_ON  # stored value kept
     readers = _readers()
     assert not any(readers.values()), readers
 
@@ -91,11 +91,11 @@ async def _owner_identity(request, handler):
 
 
 def _patch_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import api_kirocrew_config_patch
+    from aj_crew.dashboard.handlers import api_ajcrew_config_patch
 
     app = web.Application(middlewares=[_owner_identity])
     app["state"] = MagicMock()
-    app.router.add_patch("/api/config/kirocrew", api_kirocrew_config_patch)
+    app.router.add_patch("/api/config/ajcrew", api_ajcrew_config_patch)
     return app
 
 
@@ -105,7 +105,7 @@ async def test_lts_patch_refuses_every_preview_switch(lts, all_on, name):
     before = all_on.read_bytes()
     async with TestClient(TestServer(_patch_app())) as c:
         resp = await c.patch(
-            "/api/config/kirocrew",
+            "/api/config/ajcrew",
             json={"path": f"dashboard.feature_previews.{name}", "value": False},
         )
         assert resp.status == 409, await resp.text()
@@ -114,18 +114,18 @@ async def test_lts_patch_refuses_every_preview_switch(lts, all_on, name):
 
 
 def _get_config() -> dict:
-    from kiro_crew.dashboard.handlers import api_kirocrew_config
+    from aj_crew.dashboard.handlers import api_ajcrew_config
 
     req = MagicMock()
     req.method = "GET"
-    return json.loads(asyncio.run(api_kirocrew_config(req)).body)
+    return json.loads(asyncio.run(api_ajcrew_config(req)).body)
 
 
 def test_lts_config_read_reports_previews_off_and_the_locks(lts, all_on, monkeypatch):
     # The masking pass reads the platform context, which an LTS boot installs and
     # this test does not; it is not what is under test here.
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.core_config_view._masked_config_dict",
+        "aj_crew.dashboard.handlers.core_config_view._masked_config_dict",
         lambda cfg: cfg.to_dict(),
     )
     body = _get_config()
@@ -146,12 +146,12 @@ async def test_lts_patch_reply_keeps_the_edition_view(lts, all_on, monkeypatch):
     # The dashboard caches a PATCH reply in place of the GET body, so it must carry
     # the same lock; the masking pass needs a booted context (see above).
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.core_config_view._masked_config_dict",
+        "aj_crew.dashboard.handlers.core_config_view._masked_config_dict",
         lambda cfg: cfg.to_dict(),
     )
     async with TestClient(TestServer(_patch_app())) as c:
         resp = await c.patch(
-            "/api/config/kirocrew", json={"path": "dashboard.folder_sort", "value": "name"}
+            "/api/config/ajcrew", json={"path": "dashboard.folder_sort", "value": "name"}
         )
         assert resp.status == 200, await resp.text()
         body = await resp.json()
@@ -162,15 +162,15 @@ async def test_lts_patch_reply_keeps_the_edition_view(lts, all_on, monkeypatch):
 
 
 def test_lts_change_card_proposal_refuses_a_preview_switch(lts):
-    from kiro_crew import change_card_catalog as catalog
-    from kiro_crew.dashboard.change_cards_settings import resolve_setting
+    from aj_crew import change_card_catalog as catalog
+    from aj_crew.dashboard.change_cards_settings import resolve_setting
 
     with pytest.raises(catalog.CardCatalogError):
         resolve_setting({"path": "dashboard.feature_previews.explore", "value": True})
 
 
 def test_oss_change_card_proposal_resolves_a_preview_switch():
-    from kiro_crew.dashboard.change_cards_settings import resolve_setting
+    from aj_crew.dashboard.change_cards_settings import resolve_setting
 
     assert resolve_setting({"path": "dashboard.feature_previews.explore"})["key"] == (
         "dashboard.feature_previews.explore"
@@ -178,14 +178,14 @@ def test_oss_change_card_proposal_resolves_a_preview_switch():
 
 
 def test_lts_change_card_refuses_a_preview_switch(lts):
-    from kiro_crew import change_card_catalog as catalog
-    from kiro_crew.dashboard.change_cards_settings import setting_spec
+    from aj_crew import change_card_catalog as catalog
+    from aj_crew.dashboard.change_cards_settings import setting_spec
 
     with pytest.raises(catalog.CardCatalogError):
         setting_spec("dashboard.feature_previews.explore")
 
 
 def test_oss_change_card_offers_a_preview_switch():
-    from kiro_crew.dashboard.change_cards_settings import setting_spec
+    from aj_crew.dashboard.change_cards_settings import setting_spec
 
     assert setting_spec("dashboard.feature_previews.explore") == {"type": "bool"}

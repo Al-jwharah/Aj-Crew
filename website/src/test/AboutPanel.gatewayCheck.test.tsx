@@ -49,7 +49,7 @@ function stubFetch(
   const spy = vi.fn(async (input: unknown, init?: RequestInit) => {
     const url = String(input)
     if (url.includes('/api/update/check')) return json({ status: 200, body: check })
-    if (url.includes('/api/config/kirocrew')) return json(await config())
+    if (url.includes('/api/config/ajcrew')) return json(await config())
     if (url.includes('/api/update/auto') && (init?.method ?? 'GET').toUpperCase() === 'GET') {
       return json(autoUpdatePin ? autoUpdatePin() : { status: 200, body: { overlay_override: false } })
     }
@@ -120,7 +120,7 @@ describe('AboutPanel gateway update check', () => {
   })
 
   it('a check that could not run reports the failure, not "up to date"', async () => {
-    stubFetch({ check_status: 'failed', update_available: null, error_code: 'feed_unreachable', managed_by: 'kirocrew' })
+    stubFetch({ check_status: 'failed', update_available: null, error_code: 'feed_unreachable', managed_by: 'ajcrew' })
     mountWeb()
     await pressCheck()
 
@@ -142,7 +142,7 @@ describe('AboutPanel gateway update check', () => {
   })
 
   it('reports up to date only when a comparison actually completed', async () => {
-    stubFetch({ check_status: 'succeeded', update_available: false, error_code: null, managed_by: 'kirocrew' })
+    stubFetch({ check_status: 'succeeded', update_available: false, error_code: null, managed_by: 'ajcrew' })
     mountWeb()
     await pressCheck()
 
@@ -319,7 +319,7 @@ describe('AboutPanel gateway update check', () => {
       check_status: 'succeeded',
       update_available: true,
       error_code: null,
-      managed_by: 'kirocrew',
+      managed_by: 'ajcrew',
       can_apply: false,
       channel: 'insider',
       latest_version: '0.1.3rc2',
@@ -343,13 +343,13 @@ describe('AboutPanel gateway update check', () => {
     store.dispatch(sseStatus({
       ...BLANK_STATUS,
       update_can_arm: false,
-      update_managed_by: 'kirocrew',
+      update_managed_by: 'ajcrew',
     } as never))
     stubFetch({
       check_status: 'succeeded',
       update_available: true,
       error_code: null,
-      managed_by: 'kirocrew',
+      managed_by: 'ajcrew',
       can_apply: false,
       can_arm: true,
       channel: 'stable',
@@ -369,13 +369,13 @@ describe('AboutPanel gateway update check', () => {
     store.dispatch(sseStatus({
       ...BLANK_STATUS,
       update_can_arm: true,
-      update_managed_by: 'kirocrew',
+      update_managed_by: 'ajcrew',
     } as never))
     stubFetch({
       check_status: 'succeeded',
       update_available: true,
       error_code: null,
-      managed_by: 'kirocrew',
+      managed_by: 'ajcrew',
       can_apply: false,
       can_arm: false,
       channel: 'stable',
@@ -399,12 +399,12 @@ describe('AboutPanel gateway update check', () => {
       check_status: 'succeeded',
       update_available: true,
       error_code: null,
-      managed_by: 'kirocrew',
+      managed_by: 'ajcrew',
       can_apply: false,
       channel: 'stable',
       latest_version: '0.4.0rc14',
       latest_version_display: '0.4.0',
-      remediation: { kind: 'command', message: '', command: 'kirocrew update' },
+      remediation: { kind: 'command', message: '', command: 'ajcrew update' },
     })
     mountWeb()
     await pressCheck()
@@ -421,11 +421,11 @@ describe('AboutPanel gateway update check', () => {
       check_status: 'succeeded',
       update_available: true,
       error_code: null,
-      managed_by: 'kirocrew',
+      managed_by: 'ajcrew',
       can_apply: false,
       channel: 'stable',
       latest_version: '0.4.0rc14',
-      remediation: { kind: 'command', message: '', command: 'kirocrew update' },
+      remediation: { kind: 'command', message: '', command: 'ajcrew update' },
     })
     mountWeb()
     await pressCheck()
@@ -463,7 +463,7 @@ describe('AboutPanel gateway update check', () => {
     stubFetch({
       check_status: 'succeeded',
       update_available: true,
-      managed_by: 'kirocrew',
+      managed_by: 'ajcrew',
       can_apply: false,
       channel: 'stable',
       remediation: { kind: 'command', message: '', command },
@@ -828,7 +828,7 @@ describe('AboutPanel gateway update check', () => {
     await waitFor(() => expect(screen.getByRole('switch', { name: LABEL })).toHaveAttribute('aria-checked', 'false'))
 
     fail = true
-    await act(async () => { await qc.invalidateQueries({ queryKey: ['kirocrewConfig'] }) })
+    await act(async () => { await qc.invalidateQueries({ queryKey: ['ajcrewConfig'] }) })
     expect(await screen.findByTestId('auto-update-refresh-error')).toBeTruthy()
     live()
     expect(screen.getByRole('switch', { name: LABEL })).toHaveAttribute('aria-checked', 'false')
@@ -991,7 +991,7 @@ describe('AboutPanel gateway update check', () => {
 
     // Another tab or the CLI turns it back on: the cleared failure stays cleared.
     saved = true
-    await act(async () => { await qc.invalidateQueries({ queryKey: ['kirocrewConfig'] }) })
+    await act(async () => { await qc.invalidateQueries({ queryKey: ['ajcrewConfig'] }) })
     await waitFor(() => expect(screen.getByRole('switch', { name: LABEL })).toHaveAttribute('aria-checked', 'true'))
     expect(screen.queryByTestId('auto-update-save-error')).toBeNull()
   })
@@ -1033,8 +1033,8 @@ describe('AboutPanel gateway update check', () => {
     expect(await screen.findByTestId('auto-update-read-error')).toBeTruthy()
 
     fail = false
-    act(() => { void qc.invalidateQueries({ queryKey: ['kirocrewConfig'] }) })
-    await waitFor(() => expect(qc.getQueryState(['kirocrewConfig'])?.fetchStatus).toBe('fetching'))
+    act(() => { void qc.invalidateQueries({ queryKey: ['ajcrewConfig'] }) })
+    await waitFor(() => expect(qc.getQueryState(['ajcrewConfig'])?.fetchStatus).toBe('fetching'))
     expect(screen.getByTestId('auto-update-read-error')).toBeTruthy()
     act(() => release())
     await waitFor(() => expect(screen.queryByTestId('auto-update-read-error')).toBeNull())

@@ -18,11 +18,11 @@ from types import SimpleNamespace
 import pytest
 from acp_session_mcp_helpers import isolated_seed_provenance  # noqa: F401
 
-from kiro_crew import mate_worker
-from kiro_crew.acp import session_mcp
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.session_mcp_crewmate import crewmate_worker_deny_rules, worker_deny_rules
-from kiro_crew.acp_backends import (
+from aj_crew import mate_worker
+from aj_crew.acp import session_mcp
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.session_mcp_crewmate import crewmate_worker_deny_rules, worker_deny_rules
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KAS,
@@ -30,8 +30,8 @@ from kiro_crew.acp_backends import (
     ACP_BACKENDS_MATE_WORKER_MCP_TOOL_LIMITS,
     ACP_BACKENDS_MATE_WORKER_TOOL_LIMITS,
 )
-from kiro_crew.mate_worker import MATE_WORKER_AGENT
-from kiro_crew.session_capabilities import CapabilityStartupError
+from aj_crew.mate_worker import MATE_WORKER_AGENT
+from aj_crew.session_capabilities import CapabilityStartupError
 
 FIXTURES = Path(__file__).parent / "fixtures" / "acp_frames" / "claude"
 KEY = "dashboard:chat-9"
@@ -59,7 +59,7 @@ SIBLINGS = ("mcp__limit-probe__probe_echo", "mcp__base-probe__base_echo")
 @pytest.fixture
 def pixel_worker(tmp_path, monkeypatch):
     """``pixel``'s file beside the worker base; its worker session is ``chat-9``."""
-    from kiro_crew.config import paths as paths_mod
+    from aj_crew.config import paths as paths_mod
 
     mates = tmp_path / "mates"
     mates.mkdir()
@@ -70,7 +70,7 @@ def pixel_worker(tmp_path, monkeypatch):
     monkeypatch.setattr(mate_worker, "globally_disabled_refs", lambda names: [])
     monkeypatch.setattr(session_mcp, "_global_settings", lambda: {})
     monkeypatch.setattr(
-        "kiro_crew.execution_context.read_session_execution",
+        "aj_crew.execution_context.read_session_execution",
         lambda key, **_kw: SimpleNamespace(member_id="pixel") if key == KEY else None,
     )
     return mates
@@ -189,7 +189,7 @@ def test_a_limit_no_deny_carries_is_still_refused_on_claude(pixel_worker, exclud
         crewmate_worker_deny_rules(
             MATE_WORKER_AGENT, work_dir=None, session_key=KEY, backend=ACP_BACKEND_CLAUDE
         )
-    from kiro_crew.session_allocation_parts.get_or_create import _worker_tool_limited_servers
+    from aj_crew.session_allocation_parts.get_or_create import _worker_tool_limited_servers
 
     assert _worker_tool_limited_servers(KEY, True) == tuple(sorted(excluded))
 
@@ -223,14 +223,14 @@ def test_codex_still_refuses_any_limit(pixel_worker):
         crewmate_worker_deny_rules(
             MATE_WORKER_AGENT, work_dir=None, session_key=KEY, backend=ACP_BACKEND_CODEX
         )
-    from kiro_crew.session_allocation_parts.get_or_create import _worker_tool_limited_servers
+    from aj_crew.session_allocation_parts.get_or_create import _worker_tool_limited_servers
 
     assert _worker_tool_limited_servers(KEY) == ("base-probe", "limit-probe", "whole-probe")
     assert _worker_tool_limited_servers(KEY, True) == ()
 
 
 def test_the_claude_mirror_builds_a_limited_workers_array(pixel_worker):
-    from kiro_crew.providers.mirrors.registry import mirror_for
+    from aj_crew.providers.mirrors.registry import mirror_for
 
     projection = mirror_for(ACP_BACKEND_CLAUDE).session_projection(
         MATE_WORKER_AGENT, permission_surface_owned=True, session_key=KEY
@@ -250,9 +250,9 @@ def test_the_seed_carries_the_workers_rules(tmp_path, pixel_worker):
 
 def test_membership_is_positive_and_nests():
     """H6: the MCP half is an opt-in set; the whole-limits set sits inside it."""
-    from kiro_crew.acp.session_provider import AcpSessionProvider
-    from kiro_crew.providers.acp import AcpProvider
-    from kiro_crew.providers.base import LLMProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.providers.acp import AcpProvider
+    from aj_crew.providers.base import LLMProvider
 
     assert ACP_BACKENDS_MATE_WORKER_MCP_TOOL_LIMITS == frozenset(
         {ACP_BACKEND_KAS, ACP_BACKEND_CLAUDE}
@@ -311,7 +311,7 @@ class TestTheArrayIsHeldToTheSettingsInForce:
 
     def test_the_inline_settings_are_what_is_judged(self, tmp_path, pixel_worker):
         """With the project's file excluded, the inline settings are what ships."""
-        from kiro_crew.acp.client_mcp_array import _claude_worker_settings_lag
+        from aj_crew.acp.client_mcp_array import _claude_worker_settings_lag
 
         client = self._seeded(tmp_path)
         spec = mate_worker.worker_session_spec(dict(BASE), KEY, mcp_tool_limits_carried=True)
@@ -330,7 +330,7 @@ class TestTheArrayIsHeldToTheSettingsInForce:
         the read refuses the link (POSIX ``O_NOFOLLOW``) or follows it and finds bytes
         that are not the recorded seed (Windows has no ``O_NOFOLLOW``).
         """
-        from kiro_crew.acp.client_mcp_array import _claude_worker_settings_lag
+        from aj_crew.acp.client_mcp_array import _claude_worker_settings_lag
 
         client = self._seeded(tmp_path)
         spec = mate_worker.worker_session_spec(dict(BASE), KEY, mcp_tool_limits_carried=True)
@@ -351,7 +351,7 @@ class TestTheArrayIsHeldToTheSettingsInForce:
         assert _claude_worker_settings_lag(client, spec) is False
 
     def test_no_spec_reads_nothing(self, tmp_path, pixel_worker, monkeypatch):
-        from kiro_crew.acp.client_mcp_array import _claude_worker_settings_lag
+        from aj_crew.acp.client_mcp_array import _claude_worker_settings_lag
 
         client = self._seeded(tmp_path)
 
@@ -362,7 +362,7 @@ class TestTheArrayIsHeldToTheSettingsInForce:
         assert _claude_worker_settings_lag(client, None) is False
 
     def test_an_ordinary_session_is_never_held(self, tmp_path):
-        from kiro_crew.acp.client_mcp_array import _claude_worker_settings_lag
+        from aj_crew.acp.client_mcp_array import _claude_worker_settings_lag
 
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         assert _claude_worker_settings_lag(client, {"excludedTools": ["@srv/t"]}) is False

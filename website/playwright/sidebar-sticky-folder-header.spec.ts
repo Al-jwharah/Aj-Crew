@@ -17,7 +17,7 @@ import { test, expect, Page, APIRequestContext } from '@playwright/test'
  *   4. the pinned header is opaque and paints the card's own surface, so rows do
  *      not show through it and it does not read as a separate band. That is
  *      checked on every surface that paints the card differently: the default
- *      theme, kiro-light (card on --panel) and /embed/sessions (card on --bg).
+ *      theme, aj-light (card on --panel) and /embed/sessions (card on --bg).
  *
  * The nested case is the one that regressed silently in design: FolderBody's
  * inner box used `overflow: hidden`, which made it the nested header's scroll
@@ -122,9 +122,9 @@ async function scrollRowToMiddle(page: Page, folderId: string, rowKey: string, h
 /** Each surface paints the sidebar card differently, so each needs its own
  *  pinned-row surface; `theme` is the expected `<html data-theme>`. */
 const SURFACES = [
-  { name: 'default theme', path: '/chat', mode: 'dark', theme: 'kiro-dark' },
-  { name: 'kiro-light', path: '/chat', mode: 'light', theme: 'kiro-light' },
-  { name: 'embedded sessions view', path: '/embed/sessions', mode: 'dark', theme: 'kiro-dark' },
+  { name: 'default theme', path: '/chat', mode: 'dark', theme: 'aj-dark' },
+  { name: 'aj-light', path: '/chat', mode: 'light', theme: 'aj-light' },
+  { name: 'embedded sessions view', path: '/embed/sessions', mode: 'dark', theme: 'aj-dark' },
 ] as const
 
 test.describe('Sidebar folder headers pin while scrolling', () => {

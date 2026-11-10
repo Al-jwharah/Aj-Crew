@@ -10,11 +10,11 @@ import { test, expect, type APIRequestContext, type Page, type TestInfo } from '
 // shared-gateway suite (test_playwright_e2e.py) never collects it.
 //
 // The driver sets an absolute per-scenario output under its temporary home,
-// or KIROCREW_MEMORY_UI_EVIDENCE_DIR in CI (runner.temp/memory-embedding-evidence).
+// or AJCREW_MEMORY_UI_EVIDENCE_DIR in CI (runner.temp/memory-embedding-evidence).
 // The uploader collects memory-v2-embedding-*.png and the manifest from that
 // dedicated directory, not the shared suite's website/test-results directory.
 
-const SCENARIO = process.env.KIROCREW_E2E_MEMORY_SCENARIO || ''
+const SCENARIO = process.env.AJCREW_E2E_MEMORY_SCENARIO || ''
 
 type Status = {
   model_id?: string
@@ -94,7 +94,7 @@ async function manifest(testInfo: TestInfo, scenario: string, before: Status, im
 }
 
 test.beforeEach(async ({ page }) => {
-  expect(process.env.KIROCREW_E2E_EPHEMERAL, 'Use the isolated gateway E2E harness').toBe('1')
+  expect(process.env.AJCREW_E2E_EPHEMERAL, 'Use the isolated gateway E2E harness').toBe('1')
   expect(SCENARIO, 'the Python driver names the scenario this gateway was prepared for').not.toBe('')
   await page.emulateMedia({ reducedMotion: 'reduce' })
 })

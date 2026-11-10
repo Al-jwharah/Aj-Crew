@@ -180,7 +180,7 @@ export default function PrivacyChapter({
       if (choice === 'off') {
         qc.invalidateQueries({ queryKey: ['beaconStatus'] })
         qc.invalidateQueries({ queryKey: ['telemetryCollection'] })
-        qc.invalidateQueries({ queryKey: ['kirocrewConfig'] })
+        qc.invalidateQueries({ queryKey: ['ajcrewConfig'] })
       }
     }
   }

@@ -19,7 +19,7 @@
  * contract with the backend, and a reader can see all of it at once.
  *
  * Keep in sync with `BREAK_NUDGES` in
- * `src/kiro_crew/apps/builtins/crew_companion/reminders.py` — four kinds, five
+ * `src/aj_crew/apps/builtins/crew_companion/reminders.py` — four kinds, five
  * phrasings each. The variety is deliberate: one fixed sentence per kind becomes
  * wallpaper within a day, so the backend rotates and avoids the previous one.
  */

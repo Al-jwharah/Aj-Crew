@@ -51,7 +51,7 @@ import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/decision-compaction-keep'
 const SLOT = 'chat-compaction-keep'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -206,7 +206,7 @@ const slots = [
     running: false,
     last_message: 'Auto-compacted.',
     messages: 3,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     memory_mode: 'persistent',
     project: PROJECT,
     modified: Math.floor(Date.now() / 1000),

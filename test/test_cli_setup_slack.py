@@ -1,4 +1,4 @@
-"""``kirocrew setup --slack`` — the tokens are checked BEFORE they are stored.
+"""``ajcrew setup --slack`` — the tokens are checked BEFORE they are stored.
 
 Rules pinned:
 
@@ -22,8 +22,8 @@ from pathlib import Path
 import pytest
 from slack_sdk.errors import SlackApiError
 
-import kiro_crew.cli_setup as cs
-from kiro_crew.config.loader import CRED_OWNER_ID, CRED_SLACK_APP_TOKEN, CRED_SLACK_BOT_TOKEN
+import aj_crew.cli_setup as cs
+from aj_crew.config.loader import CRED_OWNER_ID, CRED_SLACK_APP_TOKEN, CRED_SLACK_BOT_TOKEN
 
 
 class _FakeWebClient:
@@ -62,7 +62,7 @@ def _install(monkeypatch: pytest.MonkeyPatch, client: type[_FakeWebClient]) -> N
     Patched at the CONSUMER: ``cli_setup`` imports the class at module scope, so
     patching ``slack_sdk.web.WebClient`` would no-op and reach real Slack.
     """
-    monkeypatch.setattr("kiro_crew.cli_setup.WebClient", client)
+    monkeypatch.setattr("aj_crew.cli_setup.WebClient", client)
 
 
 @pytest.fixture()
@@ -122,10 +122,10 @@ def no_restart(monkeypatch: pytest.MonkeyPatch) -> None:
         raise AssertionError("a test tried to restart the gateway")
 
     monkeypatch.setattr(cs, "_configured_port", lambda: 6473)
-    monkeypatch.setattr("kiro_crew.service.controller.is_service_active", lambda: False)
+    monkeypatch.setattr("aj_crew.service.controller.is_service_active", lambda: False)
     monkeypatch.setattr(cs.platform_compat, "find_listening_pids", lambda port: [])
     monkeypatch.setattr(cs.platform_compat, "listening_pid_tool_available", lambda: True)
-    monkeypatch.setattr("kiro_crew.cli_server._restart", _never)
+    monkeypatch.setattr("aj_crew.cli_server._restart", _never)
 
 
 class TestSetupSlackTokens:
@@ -240,7 +240,7 @@ class TestSetupSlackTokens:
     ) -> None:
         """A verdict nobody can see cannot be acted on, and re-asking would eat
         the next line of a piped answer file and misassign every later answer.
-        So an automated run (``kirocrew update`` re-runs setup with its output
+        So an automated run (``ajcrew update`` re-runs setup with its output
         captured and stdin on /dev/null) stays byte-for-byte the pre-check
         behaviour: no Slack round-trip, no extra prompt, tokens written as
         typed."""
@@ -269,7 +269,7 @@ class TestSetupSlackTokens:
     ) -> None:
         """Only the Slack lines change: comments, blank lines, an indented
         comment and a spaced unrelated key keep their exact text and order."""
-        kept = ["# Kiro Crew credentials", "", "# Weixin", "WEIXIN_TOKEN = w  ", "  # FLAG=off"]
+        kept = ["# Aj Crew credentials", "", "# Weixin", "WEIXIN_TOKEN = w  ", "  # FLAG=off"]
         env_file.write_text(
             "\n".join([kept[0], f"{CRED_SLACK_APP_TOKEN}=xapp-old", *kept[1:]]) + "\n",
             encoding="utf-8",
@@ -296,7 +296,7 @@ class TestOtherSpellingsOfASavedName:
     _OLD = (
         "slack_app_token=xapp-old\n"
         "slack_bot_token=xoxb-old\n"
-        "kirocrew_owner_id=U0OLDOWNER1\n"
+        "ajcrew_owner_id=U0OLDOWNER1\n"
         "OTHER_KEY=keep\n"
     )
 
@@ -328,7 +328,7 @@ class TestOtherSpellingsOfASavedName:
         self, env_file: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(cs.platform_compat, "IS_WINDOWS", True)
-        env_file.write_text(f"{CRED_OWNER_ID}=\nkirocrew_owner_id=U0SAVED0001\n", encoding="utf-8")
+        env_file.write_text(f"{CRED_OWNER_ID}=\najcrew_owner_id=U0SAVED0001\n", encoding="utf-8")
         _tty(monkeypatch, True)
         prompts = _answers(monkeypatch, "y", "xapp-new", "xoxb-new", "")
 
@@ -456,7 +456,7 @@ class TestRejectedOwnerIdKeepsVerifiedTokens:
     """A rejected OPTIONAL field must not cost the operator a verified REQUIRED one.
 
     Every test takes ``env_file``: the real write resolves ``cs.env_path()``, which
-    ``cs.KIROCREW_HOME`` does not redirect, so without it the developer's own
+    ``cs.AJCREW_HOME`` does not redirect, so without it the developer's own
     ``~/.kiro/crew/.env`` would be overwritten.
     """
 
@@ -470,10 +470,10 @@ class TestRejectedOwnerIdKeepsVerifiedTokens:
         _install(monkeypatch, Client)
         _tty(monkeypatch, True)
         # The `env_file` fixture is what actually redirects the write: the writer
-        # resolves its target through `cs.env_path()`, so patching `cs.KIROCREW_HOME`
+        # resolves its target through `cs.env_path()`, so patching `cs.AJCREW_HOME`
         # alone leaves it pointed at the developer's REAL ~/.kiro/crew/.env — and
         # this test writes Slack tokens, so it would overwrite live credentials.
-        monkeypatch.setattr(cs, "KIROCREW_HOME", tmp_path, raising=False)
+        monkeypatch.setattr(cs, "AJCREW_HOME", tmp_path, raising=False)
 
         # A supplier rather than a fixed iterator: the member ID is re-asked
         # `_SLACK_VERIFY_ATTEMPTS` times, and a short list would raise StopIteration
@@ -498,7 +498,7 @@ class TestRejectedOwnerIdKeepsVerifiedTokens:
     ) -> None:
         """A rejected member ID must not leave the PREVIOUS one paired with NEW tokens.
 
-        The merge re-reads .env under the lock, so an existing ``KIROCREW_OWNER_ID``
+        The merge re-reads .env under the lock, so an existing ``AJCREW_OWNER_ID``
         survives unless something removes it. Pointed at a different workspace, that
         pairs fresh credentials with an owner who does not belong to them.
         """
@@ -512,15 +512,15 @@ class TestRejectedOwnerIdKeepsVerifiedTokens:
         _install(monkeypatch, Client)
         _tty(monkeypatch, True)
         # The `env_file` fixture is what actually redirects the write: the writer
-        # resolves its target through `cs.env_path()`, so patching `cs.KIROCREW_HOME`
+        # resolves its target through `cs.env_path()`, so patching `cs.AJCREW_HOME`
         # alone leaves it pointed at the developer's REAL ~/.kiro/crew/.env — and
         # this test writes Slack tokens, so it would overwrite live credentials.
-        monkeypatch.setattr(cs, "KIROCREW_HOME", tmp_path, raising=False)
+        monkeypatch.setattr(cs, "AJCREW_HOME", tmp_path, raising=False)
         env = env_file
         env.write_text(
-            "KIROCREW_SLACK_APP_TOKEN=xapp-old\n"
-            "KIROCREW_SLACK_BOT_TOKEN=xoxb-old\n"
-            "KIROCREW_OWNER_ID=U0STALEOWNER\n",
+            "AJCREW_SLACK_APP_TOKEN=xapp-old\n"
+            "AJCREW_SLACK_BOT_TOKEN=xoxb-old\n"
+            "AJCREW_OWNER_ID=U0STALEOWNER\n",
             encoding="utf-8",
         )
 
@@ -558,12 +558,12 @@ class TestRejectedOwnerIdKeepsVerifiedTokens:
         _install(monkeypatch, Client)
         _tty(monkeypatch, True)
         # The `env_file` fixture is what actually redirects the write: the writer
-        # resolves its target through `cs.env_path()`, so patching `cs.KIROCREW_HOME`
+        # resolves its target through `cs.env_path()`, so patching `cs.AJCREW_HOME`
         # alone leaves it pointed at the developer's REAL ~/.kiro/crew/.env — and
         # this test writes Slack tokens, so it would overwrite live credentials.
-        monkeypatch.setattr(cs, "KIROCREW_HOME", tmp_path, raising=False)
+        monkeypatch.setattr(cs, "AJCREW_HOME", tmp_path, raising=False)
         env = env_file
-        env.write_text("KIROCREW_OWNER_ID=U0GOODOWNER\n", encoding="utf-8")
+        env.write_text("AJCREW_OWNER_ID=U0GOODOWNER\n", encoding="utf-8")
 
         def answer(prompt: str = "") -> str:
             if "App-Level Token" in prompt or "App Token" in prompt or "xapp" in prompt:

@@ -13,16 +13,16 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard import chat_tags_store
-from kiro_crew.dashboard.chat_utils import run_to_completion
-from kiro_crew.dashboard.folder_repository import FolderRepository
-from kiro_crew.dashboard.snapshot_commit import (
+from aj_crew.dashboard import chat_tags_store
+from aj_crew.dashboard.chat_utils import run_to_completion
+from aj_crew.dashboard.folder_repository import FolderRepository
+from aj_crew.dashboard.snapshot_commit import (
     VocabularyDeleteCancellations,
     close_in_flight,
     slots_with_a_close_in_flight,
 )
-from kiro_crew.loop_lock import LoopBoundLock
-from kiro_crew.testing.wait import await_until, until_parked
+from aj_crew.loop_lock import LoopBoundLock
+from aj_crew.testing.wait import await_until, until_parked
 
 
 async def _cancel_once_suspended(task):

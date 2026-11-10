@@ -15,7 +15,7 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.state import _ChatSlot
 
 SETTLED = 12
 OLDER = 4  # rows above the live window -> _disk_older_count
@@ -117,9 +117,9 @@ class TestContentDisagreement:
         self, state: Any, tmp_path: Any, monkeypatch: Any
     ) -> None:
         """The same switch on a real transcript, read through the indexed page."""
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         slot = state.get_or_create_slot("indexed")
         slot.append("user", "q1")
         slot.append("assistant", "first reply")

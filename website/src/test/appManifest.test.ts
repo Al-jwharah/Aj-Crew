@@ -38,7 +38,7 @@ describe('APP_MANIFEST_KEY', () => {
    * simply is not in the object and fails here.
    */
   it('has an entry for every built-in that ships an app.json', () => {
-    const dir = resolve(__dirname, '../../../src/kiro_crew/apps/builtins')
+    const dir = resolve(__dirname, '../../../src/aj_crew/apps/builtins')
     const shipped = readdirSync(dir, { withFileTypes: true })
       .filter(e => e.isDirectory() && !e.name.startsWith('.') && !e.name.startsWith('_'))
       .map(e => join(dir, e.name, 'app.json'))

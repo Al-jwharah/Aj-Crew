@@ -1,7 +1,7 @@
 ---
 title: Worker messaging — routing, receipts and asks on the existing work report
 status: draft
-author: kirocrew agent session, directed by zejiangg
+author: ajcrew agent session, directed by zejiangg
 created: 2026-10-31
 last-audited: 2026-10-31
 audited-at: f358d9a217
@@ -20,7 +20,7 @@ was read at `f358d9a217`.
 The worker-debate protocol
 ([#26316](https://github.com/kirodotdev/KiroCrew/pull/26316), merged) is phase 1.
 It is skill text only:
-[`goal-conductor/references/worker-debate.md`](../../src/kiro_crew/builtin_skills/goal-conductor/references/worker-debate.md).
+[`goal-conductor/references/worker-debate.md`](../../src/aj_crew/builtin_skills/goal-conductor/references/worker-debate.md).
 A code-level approval exemption for Conductor relays
 ([#26485](https://github.com/kirodotdev/KiroCrew/pull/26485)) was closed on
 2026-10-31 as not needed. On main, a Conductor chat with session trust runs its

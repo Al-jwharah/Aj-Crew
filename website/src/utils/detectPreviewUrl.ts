@@ -5,7 +5,7 @@ import type { ChatMessage } from '../types'
  *
  * Two signals:
  *  1. **Explicit marker** — a hidden HTML comment the agent emits when it starts
- *     a dev server: `<!-- kirocrew:preview url="http://127.0.0.1:8080" -->`.
+ *     a dev server: `<!-- ajcrew:preview url="http://127.0.0.1:8080" -->`.
  *     rehypeRaw drops HTML comments from the rendered message, so it's invisible
  *     to the user. Precise — it never fires on an unrelated URL.
  *  2. **Heuristic fallback** — a localhost/loopback dev-server URL mentioned in
@@ -25,8 +25,8 @@ export interface PreviewUrlHit {
   source: 'marker' | 'heuristic'
 }
 
-// `<!-- kirocrew:preview url="..." -->` — tolerant of surrounding whitespace.
-const MARKER_RE = /<!--\s*kirocrew:preview\s+url="([^"]+)"\s*-->/gi
+// `<!-- ajcrew:preview url="..." -->` — tolerant of surrounding whitespace.
+const MARKER_RE = /<!--\s*ajcrew:preview\s+url="([^"]+)"\s*-->/gi
 // Loopback dev-server URLs only (localhost / 127.0.0.1 / 0.0.0.0 / [::1]),
 // optional port + path. Excludes quotes/brackets/whitespace from the path so a
 // trailing `)` or `"` in prose isn't swallowed.

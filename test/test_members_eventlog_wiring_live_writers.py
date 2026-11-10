@@ -16,9 +16,9 @@ from chat_test_helpers import _make_state
 from members_eventlog_wiring_helpers import _fresh_eventlog  # noqa: F401
 from members_eventlog_wiring_helpers import CREW, _agent, _fake_config
 
-from kiro_crew import eventlog_hooks, members
-from kiro_crew.eventlog import types
-from kiro_crew.eventlog.service import get_service
+from aj_crew import eventlog_hooks, members
+from aj_crew.eventlog import types
+from aj_crew.eventlog.service import get_service
 
 
 # 4. record_activity -> read_activity round trip + dedupe
@@ -43,17 +43,17 @@ class TestActivityRoundTrip:
 # 5. PUT /api/agents/{name}: member/config only on a real roster-field change
 class TestAgentPutConfigHook:
     def _app(self, state, cfg, monkeypatch):
-        from kiro_crew.dashboard.handlers.agents import api_kirocrew_agent_update
+        from aj_crew.dashboard.handlers.agents import api_ajcrew_agent_update
 
-        # api_kirocrew_agent_update reloads and SAVES the config; patch both the
+        # api_ajcrew_agent_update reloads and SAVES the config; patch both the
         # module-level loader and the instance's save so the PUT stays in-memory.
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.agents.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.agents.AjCrewConfig.load", lambda: cfg)
         cfg.save = lambda: None
         # main routes the write through memory_stores.persist_member_config, which
         # reloads config from disk under a lock; stub it so the PUT stays in-memory
         # (this fake cfg is not persisted) and the eventlog hook still fires.
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.agents.persist_member_config",
+            "aj_crew.dashboard.handlers.agents.persist_member_config",
             lambda *a, **k: None,
         )
 
@@ -65,7 +65,7 @@ class TestAgentPutConfigHook:
 
         app = web.Application(middlewares=[_auth])
         app["state"] = state
-        app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+        app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
         return app
 
     @pytest.mark.asyncio
@@ -238,12 +238,12 @@ def test_the_connect_baseline_call_site_exists_in_the_ws_handler():
     """
     from pathlib import Path as _Path
 
-    ws = _Path(__file__).resolve().parents[1] / "src/kiro_crew/dashboard/ws.py"
+    ws = _Path(__file__).resolve().parents[1] / "src/aj_crew/dashboard/ws.py"
     source = ws.read_text(encoding="utf-8")
     assert (
         "await state.send_members_subscribed(ws)" in source
     ), "the connect path must send the members_subscribed baseline"
-    hub = _Path(__file__).resolve().parents[1] / "src/kiro_crew/dashboard/websocket_hub.py"
+    hub = _Path(__file__).resolve().parents[1] / "src/aj_crew/dashboard/websocket_hub.py"
     assert "def send_members_subscribed" in hub.read_text(encoding="utf-8")
 
     # The baseline is sent AFTER the connect snapshot, and that position is not

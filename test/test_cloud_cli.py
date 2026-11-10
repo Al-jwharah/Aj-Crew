@@ -9,11 +9,11 @@ import shutil
 
 import pytest
 
-from kiro_crew import cli_cloud, platform_compat
-from kiro_crew.cloud import connect as connect_mod
-from kiro_crew.cloud import ec2
-from kiro_crew.cloud.config import CloudConfig
-from kiro_crew.cloud.launch_state import LaunchState
+from aj_crew import cli_cloud, platform_compat
+from aj_crew.cloud import connect as connect_mod
+from aj_crew.cloud import ec2
+from aj_crew.cloud.config import CloudConfig
+from aj_crew.cloud.launch_state import LaunchState
 
 
 def _args(**kw):
@@ -29,7 +29,7 @@ class TestDispatch:
 
     def test_no_action_prints_help(self, capsys):
         assert cli_cloud.handle_cloud(_args(cloud_action=None)) == 0
-        assert "kirocrew cloud" in capsys.readouterr().out
+        assert "ajcrew cloud" in capsys.readouterr().out
 
     def test_iam_policy(self, capsys):
         assert cli_cloud.handle_cloud(_args(cloud_action="iam-policy")) == 0
@@ -78,8 +78,8 @@ class TestDispatch:
         assert "Interrupted" in capsys.readouterr().out
 
     def test_setup_cloud_step_skips_on_eof(self, monkeypatch, capsys):
-        # Piped `kirocrew setup` (no stdin) must skip the cloud step, not crash.
-        from kiro_crew import cli_setup
+        # Piped `ajcrew setup` (no stdin) must skip the cloud step, not crash.
+        from aj_crew import cli_setup
 
         def raise_eof(_prompt):
             raise EOFError
@@ -91,7 +91,7 @@ class TestDispatch:
     def test_dispatch_validation_error_fails_cleanly(self, monkeypatch, capsys):
         # A malformed user value (e.g. --tag with a bad charset) must render
         # the same clean one-liner as AWSError — never a raw traceback.
-        from kiro_crew.validation import ValidationError
+        from aj_crew.validation import ValidationError
 
         def raise_validation(_args):
             raise ValidationError("tag", "invalid characters")
@@ -106,7 +106,7 @@ class TestDispatch:
     def test_dispatch_aws_error_fails_cleanly(self, monkeypatch, capsys):
         # AWS failures outside an action's own try/except (e.g. the
         # ec2.describe() in status) must also render the clean one-liner.
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         def raise_aws(_args):
             raise AWSError("token has expired", action="sts:GetCallerIdentity")
@@ -125,7 +125,7 @@ class TestDispatch:
         # render that as the clean host-setup one-liner and exit non-zero -- never
         # a raw Python traceback -- while the sandbox requirement stands (the verb
         # still refuses to run).
-        from kiro_crew.sandbox import SandboxUnavailableError
+        from aj_crew.sandbox import SandboxUnavailableError
 
         monkeypatch.setattr(cli_cloud, "_resolve", lambda _a: ("dev", "us-east-1"))
         monkeypatch.setattr(cli_cloud, "discover_local_identity", lambda: {})
@@ -212,7 +212,7 @@ class TestListStatus:
     def test_list_empty(self, monkeypatch, capsys):
         monkeypatch.setattr(ec2, "list_instances", lambda *a, **k: [])
         assert cli_cloud._cloud_list(_args(profile="", region="")) == 0
-        assert "No KiroCrew cloud instances" in capsys.readouterr().out
+        assert "No AjCrew cloud instances" in capsys.readouterr().out
 
     def test_list_rows(self, monkeypatch, capsys):
         monkeypatch.setattr(
@@ -286,7 +286,7 @@ class TestDestroy:
         """
         import os
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         real = tmp_path / "somewhere-else.json"
         real.write_text('{"profile": "p", "region": "us-east-1", "last_tag": "kc-theirs"}')
         record = tmp_path / "cloud_launch_state.json"
@@ -328,9 +328,9 @@ class TestDestroy:
         under ``--yes`` it keeps it without asking. So the same read refuses here, and the
         wizard is never entered.
         """
-        from kiro_crew.cloud import wizard
+        from aj_crew.cloud import wizard
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         real = tmp_path / "somewhere-else.json"
         real.write_text('{"profile": "p", "region": "us-east-1", "last_tag": "kc-theirs"}')
         (tmp_path / "cloud_launch_state.json").symlink_to(real)
@@ -359,7 +359,7 @@ class TestDestroy:
         )
         monkeypatch.setattr(ec2, "destroy", lambda *a, **k: {"destroyed": True})
         monkeypatch.setattr(connect_mod, "unregister_instance", lambda *a, **k: True)
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         monkeypatch.setattr(
             source_mod, "delete_source", lambda *a, **k: {"removed": True, "uri": "", "error": ""}
@@ -389,7 +389,7 @@ class TestDestroy:
         command. The pre-created empty record is the default state on any install that has
         spawned an agent, so the fallback is the normal path rather than an exotic one.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         real = tmp_path / "dotfiles-cloud.json"
         real.write_text('{"last_tag": "kc-theirs"}')
         (tmp_path / "cloud.json").symlink_to(real)
@@ -417,7 +417,7 @@ class TestDestroy:
             ec2,
             "destroy",
             lambda *a, **k: {
-                "argv": ["cloudformation", "delete-stack", "--stack-name", "kirocrew-kc-1"]
+                "argv": ["cloudformation", "delete-stack", "--stack-name", "ajcrew-kc-1"]
             },
         )
         rc = cli_cloud._cloud_destroy(
@@ -445,7 +445,7 @@ class TestDestroy:
             ec2, "destroy", lambda *a, **k: destroyed.update(called=True) or {"destroyed": True}
         )
         monkeypatch.setattr(connect_mod, "unregister_instance", lambda *a, **k: True)
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         monkeypatch.setattr(
             source_mod, "delete_source", lambda *a, **k: {"removed": True, "uri": "", "error": ""}
@@ -470,14 +470,14 @@ class TestDestroy:
         )
         monkeypatch.setattr(ec2, "destroy", lambda *a, **k: {"destroyed": True})
         monkeypatch.setattr(connect_mod, "unregister_instance", lambda *a, **k: True)
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         monkeypatch.setattr(
             source_mod,
             "delete_source",
             lambda *a, **k: {
                 "removed": False,
-                "uri": "s3://kirocrew-src-1/kc-1/kirocrew-src.tar.gz",
+                "uri": "s3://ajcrew-src-1/kc-1/ajcrew-src.tar.gz",
                 "error": "AccessDenied",
             },
         )
@@ -491,7 +491,7 @@ class TestDestroy:
         assert rc == 0
         out = capsys.readouterr().out
         assert "could not be removed" in out
-        assert "aws s3 rm s3://kirocrew-src-1/kc-1/kirocrew-src.tar.gz" in out
+        assert "aws s3 rm s3://ajcrew-src-1/kc-1/ajcrew-src.tar.gz" in out
         # The object may still be in S3, so the last line must not claim everything is gone.
         assert "all AWS resources deleted" not in out
         assert "Removed the 'kc-1' stack" in out
@@ -506,11 +506,11 @@ class TestDestroy:
         )
         monkeypatch.setattr(ec2, "destroy", lambda *a, **k: {"destroyed": True})
         monkeypatch.setattr(connect_mod, "unregister_instance", lambda *a, **k: True)
-        import kiro_crew.cloud.source as source_mod
-        from kiro_crew.cloud import aws
+        import aj_crew.cloud.source as source_mod
+        from aj_crew.cloud import aws
 
         monkeypatch.setattr(
-            source_mod, "bucket_name", lambda *a: "kirocrew-src-123456789012-us-east-1"
+            source_mod, "bucket_name", lambda *a: "ajcrew-src-123456789012-us-east-1"
         )
         no_bucket = (
             "An error occurred (NoSuchBucket) when calling the DeleteObject operation: "
@@ -547,7 +547,7 @@ class TestDestroy:
             ec2, "describe", lambda *a, **k: {"exists": True, "instance_id": "i-0abc"}
         )
         monkeypatch.setattr(ec2, "destroy", lambda *a, **k: {"destroyed": False})
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         def _boom(*a, **k):  # pragma: no cover - must not run on unconfirmed delete
             raise AssertionError("source must not be deleted when teardown is unconfirmed")
@@ -588,7 +588,7 @@ class TestCloudLogin:
         assert "already signed in" in capsys.readouterr().out
 
     def test_login_surfaces_device_url_and_waits(self, monkeypatch, capsys):
-        from kiro_crew.cloud.login import LoginPrompt
+        from aj_crew.cloud.login import LoginPrompt
 
         monkeypatch.setattr(cli_cloud, "_resolve", lambda _a: ("dev", "us-east-1"))
         monkeypatch.setattr(cli_cloud, "_resolve_tag", lambda _a: "kc-1")
@@ -616,7 +616,7 @@ class TestCloudLogin:
         assert "Signed in" in out
 
     def test_login_not_approved_returns_1(self, monkeypatch, capsys):
-        from kiro_crew.cloud.login import LoginPrompt
+        from aj_crew.cloud.login import LoginPrompt
 
         monkeypatch.setattr(cli_cloud, "_resolve", lambda _a: ("dev", "us-east-1"))
         monkeypatch.setattr(cli_cloud, "_resolve_tag", lambda _a: "kc-1")
@@ -680,7 +680,7 @@ class TestCloudLogin:
         out = capsys.readouterr().out
         assert rc == 0
         assert "Signed out" in out
-        assert "kirocrew cloud login" in out
+        assert "ajcrew cloud login" in out
 
     def test_logout_fails_when_session_survives(self, monkeypatch, capsys):
         monkeypatch.setattr(cli_cloud, "_resolve", lambda _a: ("dev", "us-east-1"))
@@ -721,7 +721,7 @@ class TestCloudLogin:
 class TestEnsurePlugin:
     def test_a_refused_plugin_is_named_not_offered_an_install(self, monkeypatch, capsys):
         """Reinstalling a found-but-refused plugin rewrites the same file."""
-        from kiro_crew.cloud import ssm
+        from aj_crew.cloud import ssm
 
         refusal = ssm.PluginRefusal(
             path="/usr/local/sessionmanagerplugin/bin/session-manager-plugin",
@@ -947,7 +947,7 @@ class _FakeIam:
 
 def _expected_boundaries():
     """Every boundary the admin step owns, as ``{arn: content-fixed document}``."""
-    from kiro_crew.cloud import iam
+    from aj_crew.cloud import iam
 
     return {
         iam.boundary_arn(_ACCT): iam.boundary_policy_document(_ACCT),
@@ -957,12 +957,12 @@ def _expected_boundaries():
 
 
 class TestIamBoundary:
-    """``kirocrew cloud iam-boundary`` drives the real create-once-and-verify
+    """``ajcrew cloud iam-boundary`` drives the real create-once-and-verify
     sequence in ``cloud.source`` against a fake IAM store."""
 
     @pytest.fixture
     def fake_iam(self, monkeypatch):
-        from kiro_crew.cloud import aws, source
+        from aj_crew.cloud import aws, source
 
         def install(**kw):
             fake = _FakeIam(**kw)
@@ -976,7 +976,7 @@ class TestIamBoundary:
         return install
 
     def test_creates_all_three_boundaries_from_their_fixed_documents(self, fake_iam, capsys):
-        from kiro_crew.cloud import iam
+        from aj_crew.cloud import iam
 
         fake = fake_iam()
         assert cli_cloud.handle_cloud(_args(cloud_action="iam-boundary")) == 0
@@ -1003,7 +1003,7 @@ class TestIamBoundary:
         assert fake.policies == _expected_boundaries()
         assert capsys.readouterr().out.count(" ready: arn:aws:iam::") == 3
 
-    @pytest.mark.parametrize("drifted", ["kirocrew-crew-boundary", "kirocrew-crew-exec-boundary"])
+    @pytest.mark.parametrize("drifted", ["ajcrew-crew-boundary", "ajcrew-crew-exec-boundary"])
     def test_a_drifted_crew_boundary_is_refused_not_overwritten(self, fake_iam, capsys, drifted):
         permissive = {
             "Version": "2012-10-17",
@@ -1026,7 +1026,7 @@ class TestIamBoundary:
         assert "Keep the iam:CreatePolicy action" in out
 
     def test_a_denied_create_names_the_admin_step_and_the_rest_still_run(self, fake_iam, capsys):
-        from kiro_crew.cloud import iam
+        from aj_crew.cloud import iam
 
         fake = fake_iam(deny_create={iam.CREW_BOUNDARY_NAME})
         assert cli_cloud.handle_cloud(_args(cloud_action="iam-boundary")) == 1
@@ -1034,11 +1034,11 @@ class TestIamBoundary:
         assert iam.crew_exec_boundary_arn(_ACCT) in fake.policies
         out = capsys.readouterr().out
         head = out[out.index("could not create the permissions boundary") :][:200]
-        assert "kirocrew cloud iam-boundary" in head
+        assert "ajcrew cloud iam-boundary" in head
         assert "Grant `iam:CreatePolicy` and retry." in out
 
     def test_an_unresolved_account_is_reported_once(self, fake_iam, monkeypatch, capsys):
-        from kiro_crew.cloud import source
+        from aj_crew.cloud import source
 
         fake = fake_iam()
         monkeypatch.setattr(source, "_account_id", lambda *_a: "")

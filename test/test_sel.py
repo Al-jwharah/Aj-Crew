@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.sel — Security Event Log.
+"""Tests for aj_crew.sel — Security Event Log.
 
 This module keeps the core contract: HMAC key management, event logging, integrity
 verification, ``recent()``, ``prune()``, the forward callback, thread and cross-process
@@ -32,14 +32,14 @@ from sel_helpers import (  # noqa: F401 -- fixtures are requested by name
     sel_dir_fixture,
 )
 
-import kiro_crew.sel as sel_mod
+import aj_crew.sel as sel_mod
 from conftest import requires_symlinks
-from kiro_crew import platform_compat
-from kiro_crew import sel as kiro_crew_sel
-from kiro_crew import sel_append as kiro_crew_sel_append
-from kiro_crew import sel_chain_lock as kiro_crew_sel_chain_lock
-from kiro_crew.sel import SecurityEvent, SecurityEventLog, _infer_source, sel
-from kiro_crew.testing.wait import async_wait_until, wait_until
+from aj_crew import platform_compat
+from aj_crew import sel as aj_crew_sel
+from aj_crew import sel_append as aj_crew_sel_append
+from aj_crew import sel_chain_lock as aj_crew_sel_chain_lock
+from aj_crew.sel import SecurityEvent, SecurityEventLog, _infer_source, sel
+from aj_crew.testing.wait import async_wait_until, wait_until
 
 
 class TestHmacKeyManagement:
@@ -70,7 +70,7 @@ class TestHmacKeyManagement:
             # locked down before we read its descriptor. _apply_owner_only_dacl
             # is the real engine both restrict_to_owner and restrict_dir_to_owner
             # route through and is itself never stubbed.
-            from kiro_crew import windows_acl
+            from aj_crew import windows_acl
 
             monkeypatch.setattr(
                 platform_compat,
@@ -108,7 +108,7 @@ class TestEventLogging:
             timestamp="2026-01-01T00:00:00+00:00",
             event_type="tool_invocation",
             caller_identity="dashboard:slot0",
-            agent="kirocrew",
+            agent="ajcrew",
             source="dashboard",
             operation="execute_bash",
         )
@@ -124,7 +124,7 @@ class TestEventLogging:
             timestamp="2026-01-01T00:00:00+00:00",
             event_type="tool_invocation",
             caller_identity="cli_chat",
-            agent="kirocrew",
+            agent="ajcrew",
             source="cli",
             operation="fs_write",
         )
@@ -143,7 +143,7 @@ class TestEventLogging:
                 timestamp="2026-01-01T00:00:00+00:00",
                 event_type="tool_invocation",
                 caller_identity="dashboard:slot0",
-                agent="kirocrew",
+                agent="ajcrew",
                 source="dashboard",
                 operation=f"op{i}",
             ))
@@ -235,7 +235,7 @@ class TestVerifyIntegrity:
                 timestamp="2026-01-01T00:00:00+00:00",
                 event_type="tool_invocation",
                 caller_identity="dashboard:slot0",
-                agent="kirocrew",
+                agent="ajcrew",
                 source="dashboard",
                 operation=f"op{i}",
             ))
@@ -249,7 +249,7 @@ class TestVerifyIntegrity:
             timestamp="2026-01-01T00:00:00+00:00",
             event_type="tool_invocation",
             caller_identity="dashboard:slot0",
-            agent="kirocrew",
+            agent="ajcrew",
             source="dashboard",
             operation="op0",
         ))
@@ -258,7 +258,7 @@ class TestVerifyIntegrity:
             timestamp="2026-01-01T00:00:00+00:00",
             event_type="tool_invocation",
             caller_identity="dashboard:slot0",
-            agent="kirocrew",
+            agent="ajcrew",
             source="dashboard",
             operation="op1",
         ))
@@ -284,7 +284,7 @@ class TestRecent:
                 timestamp=f"2026-01-01T00:0{i}:00+00:00",
                 event_type="tool_invocation",
                 caller_identity="dashboard:slot0",
-                agent="kirocrew",
+                agent="ajcrew",
                 source="dashboard",
                 operation=f"op{i}",
             ))
@@ -305,7 +305,7 @@ class TestPrune:
             timestamp="2020-01-01T00:00:00+00:00",
             event_type="tool_invocation",
             caller_identity="dashboard:slot0",
-            agent="kirocrew",
+            agent="ajcrew",
             source="dashboard",
             operation="old_op",
         ))
@@ -314,7 +314,7 @@ class TestPrune:
             timestamp="2099-01-01T00:00:00+00:00",
             event_type="tool_invocation",
             caller_identity="dashboard:slot0",
-            agent="kirocrew",
+            agent="ajcrew",
             source="dashboard",
             operation="new_op",
         ))
@@ -338,7 +338,7 @@ class TestForwardCallback:
             timestamp="2026-01-01T00:00:00+00:00",
             event_type="tool_invocation",
             caller_identity="dashboard:slot0",
-            agent="kirocrew",
+            agent="ajcrew",
             source="dashboard",
             operation="test_op",
         ))
@@ -355,7 +355,7 @@ class TestForwardCallback:
             timestamp="2026-01-01T00:00:00+00:00",
             event_type="tool_invocation",
             caller_identity="dashboard:slot0",
-            agent="kirocrew",
+            agent="ajcrew",
             source="dashboard",
             operation="test_op",
         ))
@@ -375,7 +375,7 @@ class TestThreadSafety:
                     timestamp="2026-01-01T00:00:00+00:00",
                     event_type="tool_invocation",
                     caller_identity="dashboard:slot0",
-                    agent="kirocrew",
+                    agent="ajcrew",
                     source="dashboard",
                     operation=f"op{start_id}_{i}",
                 ))
@@ -408,7 +408,7 @@ import sys
 import time
 from pathlib import Path
 
-from kiro_crew.sel import SecurityEvent, SecurityEventLog
+from aj_crew.sel import SecurityEvent, SecurityEventLog
 
 sel_dir, sync_dir, tag, count = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3], int(sys.argv[4])
 log = SecurityEventLog(base_dir=sel_dir, sync=True)
@@ -428,7 +428,7 @@ for i in range(count):
         timestamp="2026-01-01T00:00:00+00:00",
         event_type="tool_invocation",
         caller_identity="dashboard:" + tag,
-        agent="kirocrew",
+        agent="ajcrew",
         source="dashboard",
         operation="op-" + tag + "-" + str(i),
     ))
@@ -446,15 +446,15 @@ log.flush()
         # processes racing to create it would sign with different keys, which
         # would fail this test for a reason that is not the chain ordering.
         SecurityEventLog(base_dir=sel_dir, sync=True)
-        assert (sel_dir / kiro_crew_sel._TRUST_SUBDIR / kiro_crew_sel._HMAC_KEY_FILE).exists()
+        assert (sel_dir / aj_crew_sel._TRUST_SUBDIR / aj_crew_sel._HMAC_KEY_FILE).exists()
 
         child = tmp_path / "sel_child.py"
         child.write_text(self._CHILD, encoding="utf-8")
 
         env = dict(os.environ)
-        # parents[1] is the src/ root holding kiro_crew, so the children import
+        # parents[1] is the src/ root holding aj_crew, so the children import
         # the same tree as this test rather than any installed copy.
-        env["PYTHONPATH"] = str(Path(kiro_crew_sel.__file__).parents[1])
+        env["PYTHONPATH"] = str(Path(aj_crew_sel.__file__).parents[1])
 
         procs = [
             subprocess.Popen(
@@ -521,7 +521,7 @@ log.flush()
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
         log.log(_make_event(event_id="lockloc-1"))
 
-        expected = tmp_path / kiro_crew_sel._TRUST_SUBDIR / kiro_crew_sel._SEL_LOCK_FILE
+        expected = tmp_path / aj_crew_sel._TRUST_SUBDIR / aj_crew_sel._SEL_LOCK_FILE
         assert expected.exists(), "lock sidecar was not created under the trust dir"
         assert not list(tmp_path.glob("*.lock")), "a lock file sits beside the log"
 
@@ -538,12 +538,12 @@ log.flush()
         install (see
         ``test_a_planted_legacy_key_does_not_arm_the_fallback_on_a_healthy_install``).
         """
-        legacy = tmp_path / kiro_crew_sel._HMAC_KEY_FILE
+        legacy = tmp_path / aj_crew_sel._HMAC_KEY_FILE
         # Windows' CRT text mode treats a trailing 0x1A as DOS EOF. Keep this
         # input deterministic so opening the binary key as a lock can never
         # regress to text mode and silently truncate its final byte.
         legacy.write_bytes(b"k" * 63 + b"\x1a")
-        trust = tmp_path / kiro_crew_sel._TRUST_SUBDIR
+        trust = tmp_path / aj_crew_sel._TRUST_SUBDIR
 
         real_mkdir = os.mkdir
 
@@ -582,9 +582,9 @@ log.flush()
         both states yield one value.
         """
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
-        migrated = tmp_path / kiro_crew_sel._TRUST_SUBDIR / kiro_crew_sel._HMAC_KEY_FILE
-        legacy = tmp_path / kiro_crew_sel._HMAC_KEY_FILE
-        sidecar = tmp_path / kiro_crew_sel._TRUST_SUBDIR / kiro_crew_sel._SEL_LOCK_FILE
+        migrated = tmp_path / aj_crew_sel._TRUST_SUBDIR / aj_crew_sel._HMAC_KEY_FILE
+        legacy = tmp_path / aj_crew_sel._HMAC_KEY_FILE
+        sidecar = tmp_path / aj_crew_sel._TRUST_SUBDIR / aj_crew_sel._SEL_LOCK_FILE
 
         log._hmac_key_file = migrated
         as_migrated = log._chain_lock_path()
@@ -609,8 +609,8 @@ log.flush()
         """
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
         log.log(_make_event(event_id="nocreate-1"))
-        legacy = tmp_path / kiro_crew_sel._HMAC_KEY_FILE
-        trust = tmp_path / kiro_crew_sel._TRUST_SUBDIR
+        legacy = tmp_path / aj_crew_sel._HMAC_KEY_FILE
+        trust = tmp_path / aj_crew_sel._TRUST_SUBDIR
         assert not legacy.exists(), "precondition: the key migrated out of the log dir"
 
         # The directory exists here, so refuse the acquire's creation step
@@ -619,7 +619,7 @@ log.flush()
             assert Path(path) == trust
             raise PermissionError("read-only config dir")
 
-        with patch.object(kiro_crew_sel_chain_lock, "mkdirs_owner_only", uncreatable_trust):
+        with patch.object(aj_crew_sel_chain_lock, "mkdirs_owner_only", uncreatable_trust):
             with pytest.raises(OSError):
                 log._chain_lock_target()
 
@@ -644,9 +644,9 @@ log.flush()
         """
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
         log.log(_make_event(event_id="planted-1"))
-        legacy = tmp_path / kiro_crew_sel._HMAC_KEY_FILE
-        trust = tmp_path / kiro_crew_sel._TRUST_SUBDIR
-        assert log._hmac_key_file == trust / kiro_crew_sel._HMAC_KEY_FILE, (
+        legacy = tmp_path / aj_crew_sel._HMAC_KEY_FILE
+        trust = tmp_path / aj_crew_sel._TRUST_SUBDIR
+        assert log._hmac_key_file == trust / aj_crew_sel._HMAC_KEY_FILE, (
             "precondition: this process signs from the trust dir"
         )
 
@@ -659,7 +659,7 @@ log.flush()
             assert Path(path) == trust
             raise PermissionError("agent-triggered refusal")
 
-        with patch.object(kiro_crew_sel_chain_lock, "mkdirs_owner_only", uncreatable_trust):
+        with patch.object(aj_crew_sel_chain_lock, "mkdirs_owner_only", uncreatable_trust):
             with pytest.raises(OSError):
                 log._chain_lock_target()
 
@@ -684,9 +684,9 @@ log.flush()
         the most permissive state the fallback has, to show the pin's refusal is
         not admitted by either condition.
         """
-        legacy = tmp_path / kiro_crew_sel._HMAC_KEY_FILE
+        legacy = tmp_path / aj_crew_sel._HMAC_KEY_FILE
         legacy.write_bytes(b"k" * 64)
-        trust = tmp_path / kiro_crew_sel._TRUST_SUBDIR
+        trust = tmp_path / aj_crew_sel._TRUST_SUBDIR
 
         real_mkdir = os.mkdir
 
@@ -703,7 +703,7 @@ log.flush()
         healthy_path, _, healthy_fd = log._chain_lock_target()
         if healthy_fd is not None:
             os.close(healthy_fd)
-        assert healthy_path == trust / kiro_crew_sel._SEL_LOCK_FILE, (
+        assert healthy_path == trust / aj_crew_sel._SEL_LOCK_FILE, (
             "precondition: the healthy path is reached once trust/ is creatable"
         )
 
@@ -748,7 +748,7 @@ log.flush()
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
         log.log(_make_event(event_id="sidecar-1"))
         log.log(_make_event(event_id="sidecar-2"))
-        sidecar = tmp_path / kiro_crew_sel._TRUST_SUBDIR / kiro_crew_sel._SEL_LOCK_FILE
+        sidecar = tmp_path / aj_crew_sel._TRUST_SUBDIR / aj_crew_sel._SEL_LOCK_FILE
         assert sidecar.exists(), "precondition: the chain lock was taken on the sidecar"
         assert sidecar.stat().st_size == 0, "a byte was written on the way to the lock"
 
@@ -760,7 +760,7 @@ log.flush()
         now must wait for the lock and then append, not fail on the way to it.
         """
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
-        sidecar = tmp_path / kiro_crew_sel._TRUST_SUBDIR / kiro_crew_sel._SEL_LOCK_FILE
+        sidecar = tmp_path / aj_crew_sel._TRUST_SUBDIR / aj_crew_sel._SEL_LOCK_FILE
         sidecar.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
         holder = os.open(sidecar, os.O_CREAT | os.O_RDWR | getattr(os, "O_BINARY", 0), 0o600)
         release = threading.Event()
@@ -812,7 +812,7 @@ log.flush()
         log = SecurityEventLog()  # async writer in the session-scoped dir
         log.log(_make_event(event_id="drain-preheat"))
         log.flush()
-        lock_path = log._dir / kiro_crew_sel._TRUST_SUBDIR / kiro_crew_sel._SEL_LOCK_FILE
+        lock_path = log._dir / aj_crew_sel._TRUST_SUBDIR / aj_crew_sel._SEL_LOCK_FILE
         lock_path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
 
         # Stand in for another process holding the chain lock (e.g. prune).
@@ -958,8 +958,8 @@ log.flush()
             assert entered.wait(5)
 
             def _hold_kind() -> str | None:
-                with kiro_crew_sel._CHAIN_HOLDS_MUTEX:
-                    hold = kiro_crew_sel._CHAIN_HOLDS.get(key)
+                with aj_crew_sel._CHAIN_HOLDS_MUTEX:
+                    hold = aj_crew_sel._CHAIN_HOLDS.get(key)
                 return None if hold is None else hold.kind
 
             await async_wait_until(
@@ -1078,7 +1078,7 @@ log.flush()
         """
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
         log.log(_make_event(event_id="preheat-1"))  # materialize dir + sidecar
-        lock_path = tmp_path / kiro_crew_sel._TRUST_SUBDIR / kiro_crew_sel._SEL_LOCK_FILE
+        lock_path = tmp_path / aj_crew_sel._TRUST_SUBDIR / aj_crew_sel._SEL_LOCK_FILE
 
         # A second open file description contends with the writer's own, so this
         # stands in for another process holding the lock.
@@ -1105,11 +1105,11 @@ log.flush()
         locks on different inodes, which is the fork this serialization prevents.
         """
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
-        trust = tmp_path / kiro_crew_sel._TRUST_SUBDIR
+        trust = tmp_path / aj_crew_sel._TRUST_SUBDIR
         trust.mkdir(mode=0o700, parents=True, exist_ok=True)
         elsewhere = tmp_path / "planted-target"
         elsewhere.write_text("", encoding="utf-8")
-        (trust / kiro_crew_sel._SEL_LOCK_FILE).symlink_to(elsewhere)
+        (trust / aj_crew_sel._SEL_LOCK_FILE).symlink_to(elsewhere)
 
         with pytest.raises(OSError):
             log.log(_make_event(event_id="symlink-1"), critical=True)
@@ -1120,9 +1120,9 @@ log.flush()
     def test_hard_linked_sidecar_is_refused(self, tmp_path):
         """A second name for the same inode is outside the deny-list's reach."""
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
-        trust = tmp_path / kiro_crew_sel._TRUST_SUBDIR
+        trust = tmp_path / aj_crew_sel._TRUST_SUBDIR
         trust.mkdir(mode=0o700, parents=True, exist_ok=True)
-        sidecar = trust / kiro_crew_sel._SEL_LOCK_FILE
+        sidecar = trust / aj_crew_sel._SEL_LOCK_FILE
         sidecar.write_text("", encoding="utf-8")
         os.link(sidecar, tmp_path / "second-name")
 
@@ -1163,7 +1163,7 @@ log.flush()
         """
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
         log.log(_make_event(event_id="order-preheat"))
-        lock_path = tmp_path / kiro_crew_sel._TRUST_SUBDIR / kiro_crew_sel._SEL_LOCK_FILE
+        lock_path = tmp_path / aj_crew_sel._TRUST_SUBDIR / aj_crew_sel._SEL_LOCK_FILE
 
         # Stand in for another process holding the sidecar (e.g. tail recovery).
         holder = os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o600)
@@ -1233,7 +1233,7 @@ log.flush()
         """
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
         log.log(_make_event(event_id="single-shot-preheat"))
-        lock_path = tmp_path / kiro_crew_sel._TRUST_SUBDIR / kiro_crew_sel._SEL_LOCK_FILE
+        lock_path = tmp_path / aj_crew_sel._TRUST_SUBDIR / aj_crew_sel._SEL_LOCK_FILE
 
         # Stand in for a sibling process holding the sidecar.
         holder = os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o600)
@@ -1249,11 +1249,11 @@ log.flush()
         def _blocking_acquire_is_a_bug(*_args, **_kwargs):
             pytest.fail("on-loop chain-lock acquire used a blocking primitive")
 
-        monkeypatch.setattr(kiro_crew_sel.platform_compat, "try_acquire_lock", _counting_try)
+        monkeypatch.setattr(aj_crew_sel.platform_compat, "try_acquire_lock", _counting_try)
         monkeypatch.setattr(
-            kiro_crew_sel.platform_compat, "acquire_lock", _blocking_acquire_is_a_bug
+            aj_crew_sel.platform_compat, "acquire_lock", _blocking_acquire_is_a_bug
         )
-        monkeypatch.setattr(kiro_crew_sel.platform_compat, "file_lock", _blocking_acquire_is_a_bug)
+        monkeypatch.setattr(aj_crew_sel.platform_compat, "file_lock", _blocking_acquire_is_a_bug)
         try:
             with pytest.raises(OSError):
                 log.log(_make_event(event_id="single-shot-critical"), critical=True)
@@ -1272,11 +1272,11 @@ log.flush()
         would be reintroduced as a sleep call, and a wall-clock bound alone
         would tolerate a short one.
         """
-        src = inspect.getsource(kiro_crew_sel._acquire_chain_lock_on_loop)
+        src = inspect.getsource(aj_crew_sel._acquire_chain_lock_on_loop)
         body = src.split('"""')[-1]
         assert "sleep" not in body, "on-loop chain-lock acquire sleeps on the event loop"
-        assert not hasattr(kiro_crew_sel, "time"), (
-            "kiro_crew.sel imports time again — the on-loop path must not sleep"
+        assert not hasattr(aj_crew_sel, "time"), (
+            "aj_crew.sel imports time again — the on-loop path must not sleep"
         )
 
     @pytest.mark.asyncio
@@ -1312,8 +1312,8 @@ log.flush()
             # on the gate, then promote the hold the way rotation's relabel
             # does. 0.2s spans several poll slices.
             release.wait(timeout=0.2)
-            with kiro_crew_sel._CHAIN_HOLDS_MUTEX:
-                hold = kiro_crew_sel._CHAIN_HOLDS.get(key)
+            with aj_crew_sel._CHAIN_HOLDS_MUTEX:
+                hold = aj_crew_sel._CHAIN_HOLDS.get(key)
                 if hold is not None:
                     hold.kind = "rotation"
 
@@ -1333,8 +1333,8 @@ log.flush()
         assert "promoted-critical" not in log._path.read_text(encoding="utf-8")
         # The refused joiner must have left the hold: once the holder exits,
         # the registry entry is gone and a fresh append works normally.
-        with kiro_crew_sel._CHAIN_HOLDS_MUTEX:
-            assert key not in kiro_crew_sel._CHAIN_HOLDS, "hold leaked after refusal"
+        with aj_crew_sel._CHAIN_HOLDS_MUTEX:
+            assert key not in aj_crew_sel._CHAIN_HOLDS, "hold leaked after refusal"
         log.log(_make_event(event_id="after-promotion-1"))
         assert "after-promotion-1" in log._path.read_text(encoding="utf-8")
 
@@ -1358,7 +1358,7 @@ class TestInferSource:
         ("cli_chat", "cli"),
         # Namespaced messaging channels are attributed to their transport,
         # matching context._runtime_display_name's set — via ``{ns}:`` …
-        ("discord:123:kirocrew", "discord"),
+        ("discord:123:ajcrew", "discord"),
         ("telegram:456", "telegram"),
         ("wecom:c1", "wecom"),
         ("weixin:c1", "weixin"),
@@ -1423,7 +1423,7 @@ class TestSingleton:
 
     def test_sel_accessor(self, sel_dir):
         """The module-level sel() function returns the singleton."""
-        with patch("kiro_crew.sel._default_dir", lambda: sel_dir):
+        with patch("aj_crew.sel._default_dir", lambda: sel_dir):
             instance = sel()
             assert isinstance(instance, SecurityEventLog)
 
@@ -1435,7 +1435,7 @@ class TestReadLastHash:
             timestamp="2026-01-01T00:00:00+00:00",
             event_type="tool_invocation",
             caller_identity="dashboard:slot0",
-            agent="kirocrew",
+            agent="ajcrew",
             source="dashboard",
             operation="op1",
         ))
@@ -1494,4 +1494,4 @@ def _hold_live_log(mp: pytest.MonkeyPatch, path: Path) -> None:
             raise PermissionError(13, "held open without sharing", os.fspath(file))
         return open(file, *args, **kwargs)
 
-    mp.setattr(kiro_crew_sel_append, "open", held_open, raising=False)
+    mp.setattr(aj_crew_sel_append, "open", held_open, raising=False)

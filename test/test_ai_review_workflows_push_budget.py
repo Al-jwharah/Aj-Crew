@@ -36,7 +36,7 @@ from workflow_token_scopes import WORKFLOWS, load_workflow, missing_scopes
 PROMPT_NAME = "gpt-push-budget.md"
 STEP = "Write review prompt"
 HEAD = "a" * 40
-COUNTER_TREE = "src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/scripts"
+COUNTER_TREE = "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts"
 ROOT = REVIEW_PROMPTS.parents[1]
 
 

@@ -38,7 +38,7 @@ const BG = 'chat-background'
 const slots = [
   {
     key: LONG, title: 'Release checklist review', messages: 120, running: false,
-    agent: 'kirocrew', created: '2026-06-01T09:00:00Z', last_ts: '2026-08-13T10:00:00Z', folder_id: '',
+    agent: 'ajcrew', created: '2026-06-01T09:00:00Z', last_ts: '2026-08-13T10:00:00Z', folder_id: '',
   },
   {
     key: SHORT, title: 'Pipeline triage', messages: 6, running: false,
@@ -46,7 +46,7 @@ const slots = [
   },
   {
     key: BG, title: 'Migration notes', messages: 90, running: false,
-    agent: 'kirocrew', created: '2026-07-10T09:00:00Z', last_ts: '2026-08-13T08:00:00Z', folder_id: '',
+    agent: 'ajcrew', created: '2026-07-10T09:00:00Z', last_ts: '2026-08-13T08:00:00Z', folder_id: '',
   },
 ]
 

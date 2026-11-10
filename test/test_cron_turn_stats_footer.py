@@ -22,19 +22,19 @@ from test_cron_thread_routing import (  # noqa: F401 -- the fixture is used by n
     _use_real_slots,
 )
 
-from kiro_crew.acp.types import TurnUsage
-from kiro_crew.dashboard.chat_runner import turn_stats_meta
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.acp.types import TurnUsage
+from aj_crew.dashboard.chat_runner import turn_stats_meta
+from aj_crew.dashboard.state import _ChatSlot
 
 
 def _run_with_usage(gateway, job, result: str) -> None:
     with (
         patch(
-            "kiro_crew.slack.gateway.provider_last_turn_usage",
+            "aj_crew.slack.gateway.provider_last_turn_usage",
             return_value=TurnUsage(credits=1.23456, duration_ms=4200),
         ),
-        patch("kiro_crew.slack.gateway.read_turn_model", return_value="claude-sonnet-4.5"),
-        patch("kiro_crew.slack.gateway.persist_token_record_async", new_callable=AsyncMock),
+        patch("aj_crew.slack.gateway.read_turn_model", return_value="claude-sonnet-4.5"),
+        patch("aj_crew.slack.gateway.persist_token_record_async", new_callable=AsyncMock),
     ):
         _run_callback(gateway, job, stream_result=result)
 

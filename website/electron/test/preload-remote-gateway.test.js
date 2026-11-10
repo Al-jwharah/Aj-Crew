@@ -51,7 +51,7 @@ test("a remote-crew window gets no local-only bridge; a local window keeps them"
   assert.equal("notifyPolicyGoverned" in remote.updateAPI, false);
   assert.equal(typeof local.updateAPI.notifyPolicyGoverned, "function");
   // Bridges about the window itself are unaffected.
-  for (const bridge of ["kirocrew", "localGatewayAPI", "closeActionAPI", "zoomAPI", "updateAPI"]) {
+  for (const bridge of ["ajcrew", "localGatewayAPI", "closeActionAPI", "zoomAPI", "updateAPI"]) {
     assert.equal(typeof remote[bridge], "object", `${bridge} must still be exposed`);
   }
 });

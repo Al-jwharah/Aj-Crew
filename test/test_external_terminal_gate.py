@@ -16,8 +16,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import external_terminal as ext
-from kiro_crew.dashboard.handlers import terminal
+from aj_crew.dashboard.handlers import external_terminal as ext
+from aj_crew.dashboard.handlers import terminal
 
 REPO = pathlib.Path(__file__).resolve().parents[1]
 OWNER = "owner-user"
@@ -170,7 +170,7 @@ async def test_refused_for_a_project_path_that_is_not_an_existing_directory(monk
 
 def test_the_request_body_never_names_the_program():
     # Only `cwd` is read from the body; the app comes from config alone.
-    source = (REPO / "src/kiro_crew/dashboard/handlers/external_terminal.py").read_text(
+    source = (REPO / "src/aj_crew/dashboard/handlers/external_terminal.py").read_text(
         encoding="utf-8"
     )
     reads = set(re.findall(r'body\.get\("([a-z_]+)"\)', source))
@@ -289,7 +289,7 @@ def test_the_gateway_allowlist_equals_the_desktop_allowlist():
 
 
 def test_the_setting_is_declared_unset_by_default_with_the_allowlist_as_its_choices():
-    from kiro_crew.config.schema import SCHEMA_REGISTRY
+    from aj_crew.config.schema import SCHEMA_REGISTRY
 
     entry = next(e for e in SCHEMA_REGISTRY if e.path == "dashboard.terminal.external_app")
     assert entry.default_value == ""
@@ -297,7 +297,7 @@ def test_the_setting_is_declared_unset_by_default_with_the_allowlist_as_its_choi
 
 
 def test_the_dashboard_may_set_only_an_allowlisted_app():
-    from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+    from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
     spec = _EDITABLE_CONFIG["dashboard.terminal.external_app"]
     assert spec["type"] == "enum"
@@ -305,11 +305,11 @@ def test_the_dashboard_may_set_only_an_allowlisted_app():
 
 
 def test_the_redemption_route_is_machine_only_and_both_routes_are_registered():
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     assert "/api/terminal/external-grant" in server._STRICT_INTERNAL_API_PATHS
     assert "/api/terminal/external" not in server._STRICT_INTERNAL_API_PATHS
-    routes = (REPO / "src/kiro_crew/dashboard/routes/connections.py").read_text(encoding="utf-8")
+    routes = (REPO / "src/aj_crew/dashboard/routes/connections.py").read_text(encoding="utf-8")
     for path, handler in [
         ("/api/terminal/external", "api_terminal_external"),
         ("/api/terminal/external-grant", "api_terminal_external_grant"),

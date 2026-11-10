@@ -9,12 +9,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from kiro_crew import agent
+from aj_crew import agent
 
 SKILL = (
     Path(__file__).resolve().parent.parent
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
     / "goal-conductor"
     / "SKILL.md"
@@ -37,4 +37,4 @@ def test_every_granted_dashboard_and_work_verb_is_named() -> None:
 def test_ledger_rebuild_is_named_as_the_cache_dirty_recovery() -> None:
     text = SKILL.read_text(encoding="utf-8")
     assert "`cache_dirty`" in text
-    assert "kirocrew-work::work_ledger_rebuild" in text
+    assert "ajcrew-work::work_ledger_rebuild" in text

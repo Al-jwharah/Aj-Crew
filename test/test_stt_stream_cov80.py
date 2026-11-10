@@ -1,4 +1,4 @@
-"""Coverage for the defensive edges of :mod:`kiro_crew.dashboard.stt_stream`.
+"""Coverage for the defensive edges of :mod:`aj_crew.dashboard.stt_stream`.
 
 Companion to ``test_stt_stream.py``, which owns this module's main behaviour; this file
 only closes the coverage gaps left at its edges. New behaviour cases belong
@@ -23,7 +23,7 @@ import pytest
 
 pytest.importorskip("amazon_transcribe", reason="STT stream tests require amazon-transcribe-streaming-sdk")
 
-from kiro_crew.dashboard import stt_stream  # noqa: E402
+from aj_crew.dashboard import stt_stream  # noqa: E402
 
 
 def _fake_ws(*, closed: bool = False, close_raises: bool = False):

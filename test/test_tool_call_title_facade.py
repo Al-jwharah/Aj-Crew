@@ -1,8 +1,8 @@
-"""``kiro_crew.tool_call_title`` keeps every name the one module had, as the same object.
+"""``aj_crew.tool_call_title`` keeps every name the one module had, as the same object.
 
 The shell half of the tool-call title rules lives in two owners,
 ``tool_call_title_shell_parse`` and ``tool_call_title_shell_classify``, and
-``kiro_crew.tool_call_title`` re-exports every name they define for importers: a plain
+``aj_crew.tool_call_title`` re-exports every name they define for importers: a plain
 facade, because nothing patches the module. These tests pin that shape: the owners are
 exactly the ``tool_call_title_shell_*.py`` siblings, each importing only the owner before
 it and never the facade; every name an owner defines is bound on the facade, statically
@@ -22,7 +22,7 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import tool_call_title
+from aj_crew import tool_call_title
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_tool_call_title_facade")
 
@@ -30,12 +30,12 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_tool_call_title_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("corpus_gate",)
 
-FACADE = "kiro_crew.tool_call_title"
+FACADE = "aj_crew.tool_call_title"
 SRC_DIR = Path(tool_call_title.__file__).resolve().parent
 #: The owners, lowest layer first.
 OWNERS = (
-    "kiro_crew.tool_call_title_shell_parse",
-    "kiro_crew.tool_call_title_shell_classify",
+    "aj_crew.tool_call_title_shell_parse",
+    "aj_crew.tool_call_title_shell_classify",
 )
 _THIS_FILE = Path(__file__).resolve()
 
@@ -74,7 +74,7 @@ def _static_bindings(path: Path) -> dict[str, str]:
 
 def test_the_owners_are_the_shell_siblings_in_layer_order() -> None:
     """Each owner imports only the owners listed before it, and none imports the facade."""
-    on_disk = sorted(f"kiro_crew.{p.stem}" for p in SRC_DIR.glob("tool_call_title_*.py"))
+    on_disk = sorted(f"aj_crew.{p.stem}" for p in SRC_DIR.glob("tool_call_title_*.py"))
     assert on_disk == sorted(OWNERS)
     late: dict[str, list[str]] = {}
     for position, owner in enumerate(OWNERS):
@@ -89,7 +89,7 @@ def test_the_owners_are_the_shell_siblings_in_layer_order() -> None:
 
 
 def test_every_owner_defined_public_name_is_bound_on_the_facade_as_the_owner_object() -> None:
-    """``from kiro_crew.tool_call_title import tokenize_shell`` keeps working, keeps
+    """``from aj_crew.tool_call_title import tokenize_shell`` keeps working, keeps
     type-checking (the facade imports the name itself) and is the owner's object."""
     bound = _static_bindings(Path(tool_call_title.__file__))
     missing: dict[str, list[str]] = {}
@@ -142,12 +142,12 @@ def test_the_patch_scan_answers_both_ways() -> None:
     and ignores a patch of another module."""
     planted = (
         "from unittest import mock\n"
-        "from kiro_crew import tool_call_title as tct\n"
+        "from aj_crew import tool_call_title as tct\n"
         "def test_x(monkeypatch):\n"
         '    monkeypatch.setattr(tct, "tokenize_shell", None)\n'
-        '    with mock.patch("kiro_crew.tool_call_title.split_segments"):\n'
+        '    with mock.patch("aj_crew.tool_call_title.split_segments"):\n'
         "        pass\n"
-        '    monkeypatch.setattr("kiro_crew.other.split_segments", None)\n'
+        '    monkeypatch.setattr("aj_crew.other.split_segments", None)\n'
     )
     assert _patched_through_facade(planted) == {"tokenize_shell", "split_segments"}
 

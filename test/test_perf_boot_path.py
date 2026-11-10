@@ -29,13 +29,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew
-from kiro_crew.config import paths
-from kiro_crew.dashboard import handlers_channel
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.slack.gateway import GatewayOrchestrator
+import aj_crew
+from aj_crew.config import paths
+from aj_crew.dashboard import handlers_channel
+from aj_crew.dashboard.handlers import updates
+from aj_crew.slack.gateway import GatewayOrchestrator
 
-_SRC = str(Path(kiro_crew.__file__).resolve().parents[1])
+_SRC = str(Path(aj_crew.__file__).resolve().parents[1])
 
 
 def _probe(snippet: str) -> dict:
@@ -51,8 +51,8 @@ def _probe(snippet: str) -> dict:
     # pollute the module-count assertions.
     env.pop("COV_CORE_SOURCE", None)
     env.pop("COVERAGE_PROCESS_START", None)
-    # parse_dashboard_url honours KIROCREW_PORT; keep the probe deterministic.
-    env.pop("KIROCREW_PORT", None)
+    # parse_dashboard_url honours AJCREW_PORT; keep the probe deterministic.
+    env.pop("AJCREW_PORT", None)
     proc = subprocess.run(
         [sys.executable, "-X", "utf8", "-c", snippet],
         capture_output=True,
@@ -132,7 +132,7 @@ class TestOtelSdkImportIsDeferred:
     def test_provider_import_does_not_load_otel_sdk(self) -> None:
         result = _probe(
             "import json, sys\n"
-            "import kiro_crew.metrics.provider as p\n"
+            "import aj_crew.metrics.provider as p\n"
             "print(json.dumps({\n"
             "    'sdk': 'opentelemetry.sdk.metrics' in sys.modules,\n"
             "    'available': p._OTEL_AVAILABLE,\n"
@@ -148,7 +148,7 @@ class TestOtelSdkImportIsDeferred:
     def test_disabled_recorder_does_not_load_otel_sdk(self) -> None:
         result = _probe(
             "import json, sys\n"
-            "import kiro_crew.metrics.provider as p\n"
+            "import aj_crew.metrics.provider as p\n"
             "rec = p.get_recorder()\n"
             "print(json.dumps({\n"
             "    'sdk': 'opentelemetry.sdk.metrics' in sys.modules,\n"
@@ -162,9 +162,9 @@ class TestOtelSdkImportIsDeferred:
         """The deferral must not break the opt-in path."""
         result = _probe(
             "import json, sys\n"
-            "import kiro_crew.metrics.provider as p\n"
-            f"import os; os.environ['KIROCREW_HOME'] = {str(tmp_path)!r}\n"
-            "os.environ['KIROCREW_TELEMETRY'] = '1'\n"
+            "import aj_crew.metrics.provider as p\n"
+            f"import os; os.environ['AJCREW_HOME'] = {str(tmp_path)!r}\n"
+            "os.environ['AJCREW_TELEMETRY'] = '1'\n"
             "rec = p.get_recorder()\n"
             "print(json.dumps({\n"
             "    'sdk': 'opentelemetry.sdk.metrics' in sys.modules,\n"
@@ -186,7 +186,7 @@ class TestConfigDirMemo:
     def test_repeat_calls_do_not_redo_breadcrumb(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
         monkeypatch.setattr(paths, "_resolved_home", None)
         monkeypatch.setattr(paths, "_config_dir_memo", None, raising=False)
@@ -209,14 +209,14 @@ class TestConfigDirMemo:
     def test_override_change_is_honoured(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        """The memo must not pin a stale home when KIROCREW_HOME is repointed —
+        """The memo must not pin a stale home when AJCREW_HOME is repointed —
         pods, worktrees and the test suite all repoint it at runtime."""
         monkeypatch.setattr(paths, "_config_dir_memo", None, raising=False)
         a, b = tmp_path / "a", tmp_path / "b"
-        monkeypatch.setenv("KIROCREW_HOME", str(a))
+        monkeypatch.setenv("AJCREW_HOME", str(a))
         assert paths.config_dir() == a.resolve()
         assert paths.config_dir() == a.resolve()  # memo hit
-        monkeypatch.setenv("KIROCREW_HOME", str(b))
+        monkeypatch.setenv("AJCREW_HOME", str(b))
         assert paths.config_dir() == b.resolve()
 
     def test_clearing_resolved_home_invalidates_the_memo(
@@ -224,7 +224,7 @@ class TestConfigDirMemo:
     ) -> None:
         """The suite's isolation fixture resets ``_resolved_home`` per test; the
         memo is keyed on it so a default-path result cannot outlive that reset."""
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path / "h1"))
         monkeypatch.setattr(paths, "_resolved_home", None)
         monkeypatch.setattr(paths, "_config_dir_memo", None, raising=False)
@@ -250,10 +250,10 @@ class TestDashboardImportIsLeaf:
     def test_importing_urls_pulls_no_handler_tree_and_no_aiohttp(self) -> None:
         result = _probe(
             "import json, sys\n"
-            "from kiro_crew.dashboard.urls import parse_dashboard_url\n"
+            "from aj_crew.dashboard.urls import parse_dashboard_url\n"
             "print(json.dumps({\n"
-            "    'server': 'kiro_crew.dashboard.server' in sys.modules,\n"
-            "    'handlers': 'kiro_crew.dashboard.handlers' in sys.modules,\n"
+            "    'server': 'aj_crew.dashboard.server' in sys.modules,\n"
+            "    'handlers': 'aj_crew.dashboard.handlers' in sys.modules,\n"
             "    'aiohttp': 'aiohttp' in sys.modules,\n"
             "    'parsed': list(parse_dashboard_url('http://h:9999')),\n"
             "}))\n"
@@ -273,11 +273,11 @@ class TestDashboardImportIsLeaf:
         against once closed a boot-order cycle through session_control."""
         result = _probe(
             "import json, sys\n"
-            "import kiro_crew.dashboard.server\n"
-            "import kiro_crew.dashboard.chat_folders\n"
+            "import aj_crew.dashboard.server\n"
+            "import aj_crew.dashboard.chat_folders\n"
             "print(json.dumps({\n"
-            "    'mcp_apps': 'kiro_crew.dashboard.handlers.mcp_apps' in sys.modules,\n"
-            "    'backend': 'kiro_crew.mcp_gateway.backend' in sys.modules,\n"
+            "    'mcp_apps': 'aj_crew.dashboard.handlers.mcp_apps' in sys.modules,\n"
+            "    'backend': 'aj_crew.mcp_gateway.backend' in sys.modules,\n"
             "}))\n"
         )
         assert result["mcp_apps"] is False, "mcp_apps must load on first request, not at boot"
@@ -286,10 +286,10 @@ class TestDashboardImportIsLeaf:
     def test_importing_origin_pulls_no_handler_tree(self) -> None:
         result = _probe(
             "import json, sys\n"
-            "import kiro_crew.dashboard.origin as o\n"
+            "import aj_crew.dashboard.origin as o\n"
             "print(json.dumps({\n"
-            "    'server': 'kiro_crew.dashboard.server' in sys.modules,\n"
-            "    'handlers': 'kiro_crew.dashboard.handlers' in sys.modules,\n"
+            "    'server': 'aj_crew.dashboard.server' in sys.modules,\n"
+            "    'handlers': 'aj_crew.dashboard.handlers' in sys.modules,\n"
             "    'aiohttp': 'aiohttp' in sys.modules,\n"
             "    'modules': len(sys.modules),\n"
             "    'reexports_ok': all(hasattr(o, n) for n in (\n"
@@ -319,9 +319,9 @@ class TestDashboardImportIsLeaf:
     def test_lazy_package_attributes_still_resolve(self) -> None:
         result = _probe(
             "import json\n"
-            "from kiro_crew.dashboard import (start_dashboard, start_api_server,\n"
+            "from aj_crew.dashboard import (start_dashboard, start_api_server,\n"
             "    DashboardState, _ChatSlot, _fmt_duration)\n"
-            "import kiro_crew.dashboard as d\n"
+            "import aj_crew.dashboard as d\n"
             "print(json.dumps({\n"
             "    'callables': all(callable(x) for x in (start_dashboard,\n"
             "        start_api_server, DashboardState, _ChatSlot, _fmt_duration)),\n"
@@ -336,9 +336,9 @@ class TestDashboardImportIsLeaf:
         optional numpy/faiss imports, ~175ms) for one enum on one error branch."""
         result = _probe(
             "import json, sys\n"
-            "import kiro_crew.dashboard.handlers.memory  # noqa: F401\n"
+            "import aj_crew.dashboard.handlers.memory  # noqa: F401\n"
             "print(json.dumps({\n"
-            "    'vector_memory': 'kiro_crew.vector_memory' in sys.modules,\n"
+            "    'vector_memory': 'aj_crew.vector_memory' in sys.modules,\n"
             "    'snowballstemmer': 'snowballstemmer' in sys.modules,\n"
             "}))\n"
         )
@@ -379,11 +379,11 @@ class TestFolderWatcherScanQueryCount:
 
     @pytest.mark.asyncio
     async def test_pause_check_and_last_seen_are_not_per_file(self, tmp_path: Path, opened) -> None:
-        from kiro_crew.knowledge.folder_watcher import (
+        from aj_crew.knowledge.folder_watcher import (
             _PAUSE_RECHECK_FILES,
             FolderWatcher,
         )
-        from kiro_crew.knowledge.store import KnowledgeStore
+        from aj_crew.knowledge.store import KnowledgeStore
 
         n_files = 40
         assert n_files < _PAUSE_RECHECK_FILES  # so one up-front check suffices
@@ -444,8 +444,8 @@ class TestFolderWatcherScanQueryCount:
     @pytest.mark.asyncio
     async def test_last_seen_is_still_written(self, tmp_path: Path, opened) -> None:
         """The batching must not drop the touches it defers."""
-        from kiro_crew.knowledge.folder_watcher import FolderWatcher
-        from kiro_crew.knowledge.store import KnowledgeStore
+        from aj_crew.knowledge.folder_watcher import FolderWatcher
+        from aj_crew.knowledge.store import KnowledgeStore
 
         vault = tmp_path / "vault"
         vault.mkdir()
@@ -485,8 +485,8 @@ class TestFolderWatcherScanQueryCount:
     @pytest.mark.asyncio
     async def test_pause_still_stops_a_scan(self, tmp_path: Path, opened) -> None:
         """Bounding the re-check must not remove the pause path."""
-        from kiro_crew.knowledge.folder_watcher import FolderWatcher
-        from kiro_crew.knowledge.store import KnowledgeStore
+        from aj_crew.knowledge.folder_watcher import FolderWatcher
+        from aj_crew.knowledge.store import KnowledgeStore
 
         vault = tmp_path / "vault"
         vault.mkdir()
@@ -526,7 +526,7 @@ class TestChangelogReadIsCached:
         proj.mkdir()
         changelog = proj / "CHANGELOG.md"
         changelog.write_text("# Changelog\n\n## [1.0.0]\n", encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(proj))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(proj))
         monkeypatch.setattr(updates, "_changelog_cache", None, raising=False)
 
         reads = {"n": 0}
@@ -554,7 +554,7 @@ class TestChangelogReadIsCached:
         proj.mkdir()
         changelog = proj / "CHANGELOG.md"
         changelog.write_text("first\n", encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(proj))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(proj))
         monkeypatch.setattr(updates, "_changelog_cache", None, raising=False)
 
         assert json.loads((await updates.api_changelog(MagicMock())).body)["content"] == "first\n"
@@ -624,7 +624,7 @@ class TestChannelPresetsReadIsCached:
 
 
 class TestOptionalMcpServersAreNotImportedByTheCli:
-    """`kirocrew gateway` boots through ``cli``, so a module-scope import of an
+    """`ajcrew gateway` boots through ``cli``, so a module-scope import of an
     optional, default-OFF subsystem runs on every gateway start and every other
     command that will never dispatch to it. Each MCP server module is therefore
     loaded inside its own dispatch branch.
@@ -636,14 +636,14 @@ class TestOptionalMcpServersAreNotImportedByTheCli:
     def test_importing_cli_does_not_pull_the_mcp_server_modules(self) -> None:
         got = _probe(
             "import json, sys\n"
-            "import kiro_crew.cli\n"
+            "import aj_crew.cli\n"
             "print(json.dumps({\n"
-            "    'dashboard': 'kiro_crew.mcp_dashboard' in sys.modules,\n"
-            "    'computer': 'kiro_crew.mcp_computer' in sys.modules,\n"
+            "    'dashboard': 'aj_crew.mcp_dashboard' in sys.modules,\n"
+            "    'computer': 'aj_crew.mcp_computer' in sys.modules,\n"
             "}))\n"
         )
         assert got["dashboard"] is False, (
-            "kiro_crew.mcp_dashboard is imported at cli module scope — move it "
+            "aj_crew.mcp_dashboard is imported at cli module scope — move it "
             "into the mcp-dashboard dispatch branch (importlib) so a "
             "default-disabled server costs gateway boot nothing"
         )
@@ -662,10 +662,10 @@ class TestPanelSubsystemIsNotLoadedAtBoot:
     def test_handlers_import_does_not_load_agent_panel(self) -> None:
         result = _probe(
             "import json, sys\n"
-            "import kiro_crew.dashboard.handlers  # noqa: F401\n"
+            "import aj_crew.dashboard.handlers  # noqa: F401\n"
             "print(json.dumps({\n"
-            "    'panel': 'kiro_crew.agent_panel' in sys.modules,\n"
-            "    'members': 'kiro_crew.dashboard.handlers.members' in sys.modules,\n"
+            "    'panel': 'aj_crew.agent_panel' in sys.modules,\n"
+            "    'members': 'aj_crew.dashboard.handlers.members' in sys.modules,\n"
             "}))\n"
         )
         # Pin the assumption the guard rests on: the boot chain really does pull
@@ -677,4 +677,4 @@ class TestPanelSubsystemIsNotLoadedAtBoot:
         )
         assert (
             result["panel"] is False
-        ), "importing the dashboard handlers must not load kiro_crew.agent_panel"
+        ), "importing the dashboard handlers must not load aj_crew.agent_panel"

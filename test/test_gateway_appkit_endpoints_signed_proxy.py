@@ -14,8 +14,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME
-from kiro_crew.apps.routes import register_app_routes
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME
+from aj_crew.apps.routes import register_app_routes
 
 
 class TestSignedPrincipalProxy:
@@ -31,10 +31,10 @@ class TestSignedPrincipalProxy:
 
     @pytest.fixture(autouse=True)
     def _proxy_env(self, tmp_path: Path, _floor_monkeypatch: pytest.MonkeyPatch):
-        home = tmp_path / "kirocrew-home"
+        home = tmp_path / "ajcrew-home"
         app_dir = home / "apps" / "proxy-app"
         app_dir.mkdir(parents=True)
-        _floor_monkeypatch.setenv("KIROCREW_HOME", str(home))
+        _floor_monkeypatch.setenv("AJCREW_HOME", str(home))
         (app_dir / ".app_secret").write_text(self._SECRET)
         (app_dir / "installed.json").write_text(
             json.dumps(
@@ -50,9 +50,9 @@ class TestSignedPrincipalProxy:
                 }
             )
         )
-        import kiro_crew.apps.backend as bmod
-        import kiro_crew.apps.bridges as bridges_mod
-        from kiro_crew.apps.routes import _app_secret_cache
+        import aj_crew.apps.backend as bmod
+        import aj_crew.apps.bridges as bridges_mod
+        from aj_crew.apps.routes import _app_secret_cache
 
         kiro_agents = tmp_path / "kiro-agents"
         kiro_agents.mkdir()
@@ -97,8 +97,8 @@ class TestSignedPrincipalProxy:
         """
         from types import SimpleNamespace
 
-        import kiro_crew.apps.routes as routes
-        from kiro_crew.dashboard.token_auth import token_auth_middleware
+        import aj_crew.apps.routes as routes
+        from aj_crew.dashboard.token_auth import token_auth_middleware
 
         self._write_manifest(opted_in=opted_in)
         received: dict[str, list[str]] = {}
@@ -170,13 +170,13 @@ class TestSignedPrincipalProxy:
         return values[0]
 
     def _claim(self, received: dict[str, list[str]], target: str = "/api/claim-test"):
-        from kiro_crew.apps.proxy_auth import (
+        from aj_crew.apps.proxy_auth import (
             ProxyPrincipalReplayCache,
             verify_proxy_principal_claim,
         )
 
         return verify_proxy_principal_claim(
-            self._only(received, "x-kirocrew-principal"),
+            self._only(received, "x-ajcrew-principal"),
             method="GET",
             target=target,
             body=b"",
@@ -230,12 +230,12 @@ class TestSignedPrincipalProxy:
 
     @pytest.mark.asyncio
     async def test_app_without_opt_in_gets_no_principal_and_keeps_proxy_hmac(self, monkeypatch):
-        from kiro_crew.apps.proxy_auth import verify_proxy_request
+        from aj_crew.apps.proxy_auth import verify_proxy_request
 
         received, _ = await self._proxy(monkeypatch, opted_in=False, context=self._OWNER_CONTEXT)
-        assert "x-kirocrew-principal" not in received
+        assert "x-ajcrew-principal" not in received
         assert verify_proxy_request(
-            self._only(received, "x-kirocrew-proxy"),
+            self._only(received, "x-ajcrew-proxy"),
             method="GET",
             target="/api/claim-test",
             body=b"",
@@ -243,7 +243,7 @@ class TestSignedPrincipalProxy:
         )
 
     @pytest.mark.parametrize(
-        "header_name", ["X-KiroCrew-Principal", "x-kirocrew-principal", "X-KiRoCrEw-PrInCiPaL"]
+        "header_name", ["X-AjCrew-Principal", "x-ajcrew-principal", "X-AjCrEw-PrInCiPaL"]
     )
     @pytest.mark.parametrize("opted_in", [False, True])
     @pytest.mark.asyncio
@@ -257,24 +257,24 @@ class TestSignedPrincipalProxy:
             headers={header_name: "forged"},
         )
         if not opted_in:
-            assert "x-kirocrew-principal" not in received
+            assert "x-ajcrew-principal" not in received
         else:
-            assert self._only(received, "x-kirocrew-principal") != "forged"
+            assert self._only(received, "x-ajcrew-principal") != "forged"
             claim = self._claim(received)
             assert claim is not None and claim.kind == "owner-session"
 
     @pytest.mark.asyncio
     async def test_caller_sent_proxy_header_is_replaced_by_the_gateway_one(self, monkeypatch):
-        from kiro_crew.apps.proxy_auth import verify_proxy_request
+        from aj_crew.apps.proxy_auth import verify_proxy_request
 
         received, _ = await self._proxy(
             monkeypatch,
             opted_in=False,
             context=self._OWNER_CONTEXT,
-            headers={"x-kirocrew-proxy": "forged"},
+            headers={"x-ajcrew-proxy": "forged"},
         )
         assert verify_proxy_request(
-            self._only(received, "x-kirocrew-proxy"),
+            self._only(received, "x-ajcrew-proxy"),
             method="GET",
             target="/api/claim-test",
             body=b"",
@@ -282,11 +282,11 @@ class TestSignedPrincipalProxy:
         )
 
     def _v2_verifies(self, received: dict[str, list[str]], cache=None) -> bool:
-        from kiro_crew.apps.proxy_auth import ProxyPrincipalReplayCache, verify_proxy_request_v2
+        from aj_crew.apps.proxy_auth import ProxyPrincipalReplayCache, verify_proxy_request_v2
 
         return verify_proxy_request_v2(
-            self._only(received, "x-kirocrew-proxy-v2"),
-            self._only(received, "x-kirocrew-proxy-nonce"),
+            self._only(received, "x-ajcrew-proxy-v2"),
+            self._only(received, "x-ajcrew-proxy-nonce"),
             method="GET",
             target="/api/claim-test",
             body=b"",
@@ -299,15 +299,15 @@ class TestSignedPrincipalProxy:
     async def test_every_app_receives_a_v2_signature_beside_an_unchanged_v1(
         self, monkeypatch, opted_in
     ):
-        from kiro_crew.apps.proxy_auth import ProxyPrincipalReplayCache, verify_proxy_request
+        from aj_crew.apps.proxy_auth import ProxyPrincipalReplayCache, verify_proxy_request
 
         received, _ = await self._proxy(monkeypatch, opted_in=opted_in, context=self._OWNER_CONTEXT)
-        v1 = self._only(received, "x-kirocrew-proxy")
+        v1 = self._only(received, "x-ajcrew-proxy")
         assert verify_proxy_request(
             v1, method="GET", target="/api/claim-test", body=b"", secret=self._SECRET
         )
         # Both signatures carry the same issue time, and only v1 lives in v1's header.
-        assert v1.partition(":")[0] == self._only(received, "x-kirocrew-proxy-v2").partition(":")[0]
+        assert v1.partition(":")[0] == self._only(received, "x-ajcrew-proxy-v2").partition(":")[0]
         cache = ProxyPrincipalReplayCache()
         assert self._v2_verifies(received, cache)
         assert not self._v2_verifies(received, cache)
@@ -316,17 +316,17 @@ class TestSignedPrincipalProxy:
     async def test_each_proxied_request_gets_its_own_nonce(self, monkeypatch):
         first, _ = await self._proxy(monkeypatch, opted_in=False, context=self._OWNER_CONTEXT)
         second, _ = await self._proxy(monkeypatch, opted_in=False, context=self._OWNER_CONTEXT)
-        assert self._only(first, "x-kirocrew-proxy-nonce") != self._only(
-            second, "x-kirocrew-proxy-nonce"
+        assert self._only(first, "x-ajcrew-proxy-nonce") != self._only(
+            second, "x-ajcrew-proxy-nonce"
         )
 
     @pytest.mark.parametrize(
         "header_name",
         [
-            "X-KiroCrew-Proxy-V2",
-            "x-kirocrew-proxy-v2",
-            "X-KiroCrew-Proxy-Nonce",
-            "x-KIROCREW-proxy-nonce",
+            "X-AjCrew-Proxy-V2",
+            "x-ajcrew-proxy-v2",
+            "X-AjCrew-Proxy-Nonce",
+            "x-AJCREW-proxy-nonce",
         ],
     )
     @pytest.mark.asyncio
@@ -339,7 +339,7 @@ class TestSignedPrincipalProxy:
             context=self._OWNER_CONTEXT,
             headers={header_name: "0123456789abcdef0123456789abcdef"},
         )
-        assert self._only(received, "x-kirocrew-proxy-nonce") != (
+        assert self._only(received, "x-ajcrew-proxy-nonce") != (
             "0123456789abcdef0123456789abcdef"
         )
         assert self._v2_verifies(received)
@@ -348,7 +348,7 @@ class TestSignedPrincipalProxy:
         # Spellings other than the gateway's own key: those are the ones a plain
         # dict would keep beside it.
         "header_name",
-        ["x-kirocrew-proxy-nonce", "X-KIROCREW-PROXY-NONCE"],
+        ["x-ajcrew-proxy-nonce", "X-AJCREW-PROXY-NONCE"],
     )
     @pytest.mark.asyncio
     async def test_caller_sent_nonce_is_stripped_before_the_gateway_sets_its_own(
@@ -368,7 +368,7 @@ class TestSignedPrincipalProxy:
 
         def spy(session, method, url, **kwargs):
             headers = kwargs.get("headers") or {}
-            if isinstance(headers, dict) and "X-KiroCrew-Proxy" in headers:
+            if isinstance(headers, dict) and "X-AjCrew-Proxy" in headers:
                 sent.append(dict(headers))
             return real_request(session, method, url, **kwargs)
 
@@ -381,7 +381,7 @@ class TestSignedPrincipalProxy:
             headers={header_name: forged},
         )
         assert len(sent) == 1, "the proxy never sent the backend request"
-        nonces = [v for k, v in sent[0].items() if k.lower() == "x-kirocrew-proxy-nonce"]
+        nonces = [v for k, v in sent[0].items() if k.lower() == "x-ajcrew-proxy-nonce"]
         assert len(nonces) == 1, f"caller nonce survived the strip: {nonces!r}"
         assert nonces[0] != forged
 
@@ -398,7 +398,7 @@ class TestSignedPrincipalProxy:
 
     @pytest.mark.asyncio
     async def test_real_middleware_owner_cookie_receives_owner_claim(self, monkeypatch):
-        from kiro_crew.dashboard.token_auth import generate_token
+        from aj_crew.dashboard.token_auth import generate_token
 
         received, _ = await self._proxy(
             monkeypatch, cookie_from=f"/cookie-bootstrap?token={generate_token('owner')}"
@@ -409,7 +409,7 @@ class TestSignedPrincipalProxy:
 
     @pytest.mark.asyncio
     async def test_real_middleware_owner_query_link_receives_none(self, monkeypatch):
-        from kiro_crew.dashboard.token_auth import generate_token
+        from aj_crew.dashboard.token_auth import generate_token
 
         target = f"/api/claim-test?token={generate_token('owner')}"
         received, _ = await self._proxy(monkeypatch, target=f"/apps/proxy-app{target}")
@@ -423,7 +423,7 @@ class TestSignedPrincipalProxy:
     async def test_real_middleware_bearer_owner_credential_never_reaches_the_proxy(
         self, monkeypatch
     ):
-        from kiro_crew.dashboard.token_auth import generate_token
+        from aj_crew.dashboard.token_auth import generate_token
 
         received, _ = await self._proxy(
             monkeypatch,
@@ -434,7 +434,7 @@ class TestSignedPrincipalProxy:
 
     @pytest.mark.asyncio
     async def test_real_middleware_internal_call_with_owner_cookie_is_agent_tool(self, monkeypatch):
-        from kiro_crew.dashboard.token_auth import generate_token
+        from aj_crew.dashboard.token_auth import generate_token
 
         secret = "test-internal-secret"
         received, _ = await self._proxy(
@@ -452,7 +452,7 @@ class TestSignedPrincipalProxy:
         self, monkeypatch
     ):
         """The internal-path browser branch marks a cookie credential like the main path."""
-        from kiro_crew.dashboard.token_auth import generate_token
+        from aj_crew.dashboard.token_auth import generate_token
 
         received, _ = await self._proxy(
             monkeypatch,
@@ -467,7 +467,7 @@ class TestSignedPrincipalProxy:
     async def test_real_middleware_owner_query_link_on_mixed_internal_path_receives_none(
         self, monkeypatch
     ):
-        from kiro_crew.dashboard.token_auth import generate_token
+        from aj_crew.dashboard.token_auth import generate_token
 
         target = f"/api/claim-test?token={generate_token('owner')}"
         received, _ = await self._proxy(
@@ -487,9 +487,9 @@ class TestSignedPrincipalProxy:
         A dead ``?token=`` beside a live cookie authenticates on the cookie, so the
         caller is the owner's session even though the URL still carries a link.
         """
-        from kiro_crew.dashboard.token_auth import generate_token
+        from aj_crew.dashboard.token_auth import generate_token
 
-        with patch("kiro_crew.dashboard.token_auth.time") as mock_time:
+        with patch("aj_crew.dashboard.token_auth.time") as mock_time:
             mock_time.time.return_value = 1000.0
             stale = generate_token("owner", ttl_seconds=300)
         target = f"/api/claim-test?token={stale}"

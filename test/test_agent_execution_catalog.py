@@ -13,14 +13,14 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import agent_files, member_goals, member_notes, members
-from kiro_crew.agent_discovery import AgentInfo
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.sections import KiroCrewAgentConfig
-from kiro_crew.dashboard.handlers import agent_catalog
-from kiro_crew.platform import build_default_context, set_context
-from kiro_crew.platform.context import PlatformCompositionError
-from kiro_crew.platform.defaults import DefaultProviderRegistry
+from aj_crew import agent_files, member_goals, member_notes, members
+from aj_crew.agent_discovery import AgentInfo
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.sections import AjCrewAgentConfig
+from aj_crew.dashboard.handlers import agent_catalog
+from aj_crew.platform import build_default_context, set_context
+from aj_crew.platform.context import PlatformCompositionError
+from aj_crew.platform.defaults import DefaultProviderRegistry
 
 
 def _template(name: str, **kwargs) -> AgentInfo:
@@ -31,19 +31,19 @@ def _template(name: str, **kwargs) -> AgentInfo:
 
 def _owned(name: str, **kwargs) -> AgentInfo:
     """A spec the runtime writes itself, as global discovery reports it."""
-    source = "kirocrew" if name in ("kirocrew", "kirocrew-lite", "kirocrew-guest") else "builtin"
-    return _template(name, source=source, kirocrew_owned=True, **kwargs)
+    source = "ajcrew" if name in ("ajcrew", "ajcrew-lite", "ajcrew-guest") else "builtin"
+    return _template(name, source=source, ajcrew_owned=True, **kwargs)
 
 
 @pytest.fixture
 def catalog(monkeypatch, tmp_path):
-    config = KiroCrewConfig()
+    config = AjCrewConfig()
     config.agents = {
-        "reviewer": KiroCrewAgentConfig(kiro_agent="reviewer", memory_store="retained-store"),
-        "retained-member": KiroCrewAgentConfig(kiro_agent="missing-template", source="package"),
+        "reviewer": AjCrewAgentConfig(kiro_agent="reviewer", memory_store="retained-store"),
+        "retained-member": AjCrewAgentConfig(kiro_agent="missing-template", source="package"),
     }
     config.default_agent = "reviewer"
-    monkeypatch.setattr(KiroCrewConfig, "load", lambda: config)
+    monkeypatch.setattr(AjCrewConfig, "load", lambda: config)
     discovery = Mock(return_value=[_template("reviewer"), _template("test-writer")])
     monkeypatch.setattr(agent_catalog, "list_agents", discovery)
     # The refresh scans the real agents dir and would replace a snapshot a test
@@ -56,8 +56,8 @@ def catalog(monkeypatch, tmp_path):
     monkeypatch.setattr(agent_catalog.agent_state, "all_fork_info", lambda: {})
     save = Mock(side_effect=AssertionError("Catalog must not persist config"))
     allocate = Mock(side_effect=AssertionError("Catalog must not allocate member memory"))
-    monkeypatch.setattr(KiroCrewConfig, "save", save)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.agents.provision_member_memory", allocate)
+    monkeypatch.setattr(AjCrewConfig, "save", save)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.agents.provision_member_memory", allocate)
     state = SimpleNamespace(
         owner_id="catalog-owner",
         _slots={
@@ -105,7 +105,7 @@ async def test_catalog_keeps_namespaces_and_never_changes_registry(catalog):
     ]
     # The picker's default is the one for NEW SESSIONS: the default template, not
     # the roster's default crewmate alias (`config.default_agent == "reviewer"`).
-    assert result["default_agent"] == "kirocrew"
+    assert result["default_agent"] == "ajcrew"
     assert result["agents"][0]["memory_store"] == "retained-store"
     assert "memory_store" not in result["agents"][-1]
     assert dataclasses.asdict(catalog.config) == before
@@ -138,7 +138,7 @@ async def test_catalog_fetch_refreshes_the_snapshot_before_reading_the_default(
         return catalog.config
 
     catalog.discovery.side_effect = discover
-    monkeypatch.setattr(KiroCrewConfig, "load", load_config)
+    monkeypatch.setattr(AjCrewConfig, "load", load_config)
     async with TestClient(TestServer(catalog.app)) as client:
         response = await client.get("/api/agents/catalog")
         assert response.status == 200
@@ -218,7 +218,7 @@ async def test_a_named_project_the_path_screen_refuses_is_never_resolved(
     # resolves, is never reached for a refused or relative path. The screen
     # also fences sensitive paths, so its refusal is the one that is audited.
     if screen_refuses:
-        monkeypatch.setattr("kiro_crew.hooks.validate_file_path", lambda raw: None)
+        monkeypatch.setattr("aj_crew.hooks.validate_file_path", lambda raw: None)
     validator = Mock(side_effect=AssertionError("resolved before the path screen"))
     monkeypatch.setattr(agent_catalog, "_validate_project_dir", validator)
     audit = Mock()
@@ -275,9 +275,9 @@ async def test_private_and_background_templates_are_not_standalone_choices(catal
         _template("shared"),
         _template("private", private_to="reviewer"),
         _template("hidden-by-lineage"),
-        _owned("kirocrew"),
-        _owned("kirocrew-lite"),
-        _owned("kirocrew-conductor"),
+        _owned("ajcrew"),
+        _owned("ajcrew-lite"),
+        _owned("ajcrew-conductor"),
     ]
     monkeypatch.setattr(
         agent_catalog.agent_state,
@@ -290,32 +290,32 @@ async def test_private_and_background_templates_are_not_standalone_choices(catal
     # offered and leads the list. The background-only cheap agent is withheld;
     # a shipped-but-ordinary owned spec (the conductor) stays selectable.
     assert [row["name"] for row in rows if row["selection_kind"] == "template"] == [
-        "kirocrew",
+        "ajcrew",
         "shared",
-        "kirocrew-conductor",
+        "ajcrew-conductor",
     ]
-    kirocrew = next(row for row in rows if row["name"] == "kirocrew")
-    assert kirocrew["selection_kind"] == "template"
-    assert kirocrew["kiro_agent"] == "kirocrew"
-    assert kirocrew["source"] == "kirocrew"
+    ajcrew = next(row for row in rows if row["name"] == "ajcrew")
+    assert ajcrew["selection_kind"] == "template"
+    assert ajcrew["kiro_agent"] == "ajcrew"
+    assert ajcrew["source"] == "ajcrew"
 
 
 def test_background_exclusion_is_by_owned_file_not_by_name():
-    # A project checkout's own ``kirocrew-lite.json`` is the user's template,
+    # A project checkout's own ``ajcrew-lite.json`` is the user's template,
     # not the runtime's background agent, so it remains an ordinary choice.
-    project_lite = _template("kirocrew-lite", scope="project", kirocrew_owned=False)
+    project_lite = _template("ajcrew-lite", scope="project", ajcrew_owned=False)
     assert not agent_catalog._is_background_only(project_lite)
-    assert agent_catalog._is_background_only(_owned("kirocrew-lite"))
-    assert agent_catalog._is_background_only(_owned("kirocrew-guest"))
+    assert agent_catalog._is_background_only(_owned("ajcrew-lite"))
+    assert agent_catalog._is_background_only(_owned("ajcrew-guest"))
     # Withheld for what it CANNOT do: the panel server and ``fs_read`` and nothing
     # else, so a chat run as it would be an agent that cannot answer anything.
-    assert agent_catalog._is_background_only(_owned("kirocrew-dashboard-manager"))
+    assert agent_catalog._is_background_only(_owned("ajcrew-dashboard-manager"))
     # Withheld because it is not a deliberate pick: it is the default template
     # under its own filename (rfc-mate-owned-agent-config.md, migration step 1),
     # reached only through a crewmate's own binding.
-    assert agent_catalog._is_background_only(_owned("kirocrew-mate-conductor"))
-    assert not agent_catalog._is_background_only(_owned("kirocrew"))
-    assert not agent_catalog._is_background_only(_owned("kirocrew-worker"))
+    assert agent_catalog._is_background_only(_owned("ajcrew-mate-conductor"))
+    assert not agent_catalog._is_background_only(_owned("ajcrew"))
+    assert not agent_catalog._is_background_only(_owned("ajcrew-worker"))
 
 
 def test_every_owned_spec_is_classified_for_the_picker():
@@ -349,7 +349,7 @@ async def test_catalog_failure_is_explicit_without_partial_success(catalog, monk
     elif failure == "lineage":
         monkeypatch.setattr(agent_catalog.agent_state, "all_fork_info", broken)
     else:
-        monkeypatch.setattr(KiroCrewConfig, "load", broken)
+        monkeypatch.setattr(AjCrewConfig, "load", broken)
     async with TestClient(TestServer(catalog.app)) as client:
         response = await client.get("/api/agents/catalog")
         assert response.status == 503
@@ -408,7 +408,7 @@ async def test_member_rows_carry_the_companion_runtime_policy(catalog, engine_id
 async def test_file_name_bound_member_asks_the_policy_for_the_declared_agent(catalog, monkeypatch):
     # A row that recorded the engine's FILE name runs the agent that file
     # declares, so the companion is asked about that agent, not the file name.
-    import kiro_crew.config.loader as loader
+    import aj_crew.config.loader as loader
 
     catalog.config.agents["reviewer"].kiro_agent = "Pkg-review-engine"
     monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"review-engine"}))
@@ -483,8 +483,8 @@ async def test_catalog_fetches_share_the_refresh_memo(catalog, monkeypatch, tmp_
     # Two owner fetches and one non-owner fetch over unchanged agents
     # directories: the real refresh on each fetch, one scan between them, and
     # the heal on each owner fetch.
-    from kiro_crew import agent_discovery
-    from kiro_crew.config import loader
+    from aj_crew import agent_discovery
+    from aj_crew.config import loader
 
     monkeypatch.setattr(agent_discovery, "AGENTS_DIR_MEMO_ENABLED", True)
     monkeypatch.setattr(loader, "kiro_agents_dir", lambda: tmp_path / "no-agents")
@@ -530,7 +530,7 @@ def test_runtime_policy_lookup_preserves_composition_failures(catalog, failure, 
         with pytest.raises(PlatformCompositionError, match="lookup failed"):
             agent_catalog._agent_runtime_policy("reviewer", "review-engine")
     else:
-        with caplog.at_level("DEBUG", logger="kiro_crew.platform.context"):
+        with caplog.at_level("DEBUG", logger="aj_crew.platform.context"):
             assert agent_catalog._agent_runtime_policy("reviewer", "review-engine") is None
         assert "Failed to read runtime policy for crew reviewer" in caplog.text
     provider.agent_runtime_policy.assert_called_once_with("review-engine")
@@ -571,7 +571,7 @@ async def test_catalog_marks_markdown_only_templates_and_the_members_bound_to_th
 
 @pytest.mark.asyncio
 async def test_catalog_names_the_harness_facts_without_hard_coding_one(catalog):
-    from kiro_crew.acp_backends import ACP_BACKENDS_MARKDOWN_AGENT_SPECS, backend_to_stored
+    from aj_crew.acp_backends import ACP_BACKENDS_MARKDOWN_AGENT_SPECS, backend_to_stored
 
     catalog.config.agent.acp_backend = ""  # the runtime id for kiro-cli
     async with TestClient(TestServer(catalog.app)) as client:
@@ -618,10 +618,10 @@ async def test_session_backend_follows_the_member_split(catalog, session_key, ex
 @pytest.mark.parametrize(("default", "member"), [("", "kas"), ("kas", ""), ("kas", "kas")])
 def test_session_backend_matches_the_provider_selection(session_key, default, member):
     """The picker's harness is the one the provider factory starts for that key."""
-    from kiro_crew.acp_backends import backend_to_stored
-    from kiro_crew.members import select_provider_backend
+    from aj_crew.acp_backends import backend_to_stored
+    from aj_crew.members import select_provider_backend
 
-    config = KiroCrewConfig()
+    config = AjCrewConfig()
     config.agent.acp_backend = default
     config.agent.member_acp_backend = member
     expected = backend_to_stored(select_provider_backend(session_key, member, default))
@@ -631,12 +631,12 @@ def test_session_backend_matches_the_provider_selection(session_key, default, me
 @pytest.mark.parametrize("stored,expected", [("nope", "unknown"), ("claude", "claude")])
 def test_session_backend_shows_an_unstartable_pin_without_raising(monkeypatch, stored, expected):
     """A display read names known pins even when this gateway cannot start them."""
-    from kiro_crew.agent_sdk import backends
+    from aj_crew.agent_sdk import backends
 
     monkeypatch.setattr(backends, "selectable_backends", lambda: frozenset({"", "kas"}))
-    config = KiroCrewConfig()
+    config = AjCrewConfig()
     config.agents = {
-        "atlas": KiroCrewAgentConfig(
+        "atlas": AjCrewAgentConfig(
             member_id="atlas-0123456789ab", kiro_agent="atlas", acp_backend=stored
         ),
     }
@@ -646,10 +646,10 @@ def test_session_backend_shows_an_unstartable_pin_without_raising(monkeypatch, s
 
 @pytest.mark.asyncio
 async def test_catalog_answers_for_a_crewmate_whose_pin_cannot_start(catalog, monkeypatch):
-    from kiro_crew.agent_sdk import backends
+    from aj_crew.agent_sdk import backends
 
     monkeypatch.setattr(backends, "selectable_backends", lambda: frozenset({"", "kas"}))
-    catalog.config.agents["atlas"] = KiroCrewAgentConfig(
+    catalog.config.agents["atlas"] = AjCrewAgentConfig(
         member_id="atlas-0123456789ab", kiro_agent="atlas", acp_backend="nope"
     )
     catalog.state._slots["member-atlas-0123456789ab"] = SimpleNamespace(project="", _app="")
@@ -667,8 +667,8 @@ def test_refused_backends_are_the_hosts_whose_activation_guard_refuses():
     cannot read markdown. The catalog derives the set from the routing table (the
     dashboard may not import the ACP layer), so this pins the two to one answer.
     """
-    from kiro_crew.acp.harness import harness_for
-    from kiro_crew.acp_backends import ACP_BACKENDS_KNOWN, backend_to_stored
+    from aj_crew.acp.harness import harness_for
+    from aj_crew.acp_backends import ACP_BACKENDS_KNOWN, backend_to_stored
 
     expected = set()
     for backend in ACP_BACKENDS_KNOWN:
@@ -697,9 +697,9 @@ async def test_catalog_sends_the_refused_backends(catalog):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("owner", [False, True], ids=["non-owner", "owner"])
-@pytest.mark.parametrize("name", ["AKIAIOSFODNN7EXAMPLE", "kirocrew-conductor"])
+@pytest.mark.parametrize("name", ["AKIAIOSFODNN7EXAMPLE", "ajcrew-conductor"])
 async def test_catalog_masks_crew_mode_names_only_for_non_owners(catalog, monkeypatch, owner, name):
-    from kiro_crew.dashboard.handlers.core import _SENSITIVE_MASK
+    from aj_crew.dashboard.handlers.core import _SENSITIVE_MASK
 
     crew_mode = agent_catalog.crew_mode
     monkeypatch.setattr(crew_mode, "_configured", crew_mode.DEFAULT_CREW_MODE_AGENT)
@@ -707,14 +707,14 @@ async def test_catalog_masks_crew_mode_names_only_for_non_owners(catalog, monkey
     catalog.config.agent.crew_mode_agent = name
     if not owner:
         catalog.caller.user = "another-user"
-    expected = name if owner or name == "kirocrew-conductor" else _SENSITIVE_MASK
+    expected = name if owner or name == "ajcrew-conductor" else _SENSITIVE_MASK
     async with TestClient(TestServer(catalog.app)) as client:
         response = await client.get("/api/agents/catalog")
         assert response.status == 200
         body = await response.json()
     assert body["crew_mode_agent"] == expected
     assert expected in body["conductor_agents"]
-    assert "kirocrew-conductor" in body["conductor_agents"]
+    assert "ajcrew-conductor" in body["conductor_agents"]
     if expected != name:
         assert name not in body["conductor_agents"]
     assert catalog.config.agent.crew_mode_agent == name
@@ -726,7 +726,7 @@ async def test_catalog_names_the_configured_crew_mode_agent_and_the_conductor_fa
 ):
     from types import SimpleNamespace
 
-    from kiro_crew import crew_mode
+    from aj_crew import crew_mode
 
     # The catalog read remembers the configured agent for config-less readers; put
     # the default back so the next test in this worker does not inherit it.
@@ -739,7 +739,7 @@ async def test_catalog_names_the_configured_crew_mode_agent_and_the_conductor_fa
     assert body["crew_mode_agent"] == "better-conductor"
     # Every conductor stays out of a normal chat's picker.
     assert "better-conductor" in body["conductor_agents"]
-    assert "kirocrew-pipeline-conductor" in body["conductor_agents"]
+    assert "ajcrew-pipeline-conductor" in body["conductor_agents"]
 
 
 @pytest.mark.asyncio
@@ -752,7 +752,7 @@ async def test_catalog_pin_display_is_safe_for_every_caller(
 ):
     if not owner:
         catalog.caller.user = "another-user"
-    catalog.config.agents["atlas"] = KiroCrewAgentConfig(
+    catalog.config.agents["atlas"] = AjCrewAgentConfig(
         member_id="atlas-0123456789ab", kiro_agent="atlas", acp_backend=stored
     )
     catalog.state._slots["member-atlas-0123456789ab"] = SimpleNamespace(project="", _app="")
@@ -782,7 +782,7 @@ _TRACKER = "atzptl-tracker"
 def tracker(catalog):
     """A crewmate upgraded from shared memory: default store and workspace, a listed
     template, and nothing on its row. Returns its slug."""
-    catalog.config.agents[_TRACKER] = KiroCrewAgentConfig(kiro_agent="reviewer")
+    catalog.config.agents[_TRACKER] = AjCrewAgentConfig(kiro_agent="reviewer")
     return members.member_slug(_TRACKER, catalog.config)
 
 

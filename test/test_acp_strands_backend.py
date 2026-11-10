@@ -23,12 +23,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.acp._dispatch_parts.permission_requests import build_permission_event, gate_envelope
-from kiro_crew.acp.harness import pi as pi_mod
-from kiro_crew.acp.harness import strands as strands_mod
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.agent_sdk import tool_gate as gate
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.acp._dispatch_parts.permission_requests import build_permission_event, gate_envelope
+from aj_crew.acp.harness import pi as pi_mod
+from aj_crew.acp.harness import strands as strands_mod
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.agent_sdk import tool_gate as gate
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_STRANDS,
     ACP_BACKENDS_MODEL_AT_LAUNCH,
     STRANDS_VERIFIED_VERSION,
@@ -101,7 +101,7 @@ def test_the_gate_module_names_the_envelope_and_probe_crew_reads() -> None:
     source = Path(strands_mod.strands_gate_module_path()).read_text(encoding="utf-8")
     # The two spellings the client keys on, so a rename on one side fails here.
     assert f'GATE_NAME = "{strands_mod.STRANDS_GATE_NAME}"' in source
-    assert 'ENVELOPE_MARKER = "kiro-crew-gate"' in source
+    assert 'ENVELOPE_MARKER = "aj-crew-gate"' in source
     for name in (
         strands_mod._ENV_GATE_SESSION,
         strands_mod._ENV_GATE_MARKER,
@@ -153,7 +153,7 @@ def test_this_sessions_marker_from_crews_module_passes() -> None:
     [
         ({"plugin": "something-else"}, "does not name"),
         ({"nonce": "an-earlier-session"}, "another session's nonce"),
-        ({"module": "/home/me/agent.py"}, "not Kiro Crew's gate"),
+        ({"module": "/home/me/agent.py"}, "not Aj Crew's gate"),
         ({"child_env": None}, "no child-environment proof"),
     ],
 )
@@ -348,7 +348,7 @@ def test_every_provider_name_the_cli_reads_is_accepted() -> None:
         ("OPENAI_API_KEY", "sk-live", "literal value"),
         ("NODE_OPTIONS", "secret://x", "not one of the provider settings"),
         ("STRANDS_CLI_MCP_DISCOVERY", "secret://x", "not a provider setting"),
-        ("KIROCREW_SESSION_KEY", "secret://x", "not a provider setting"),
+        ("AJCREW_SESSION_KEY", "secret://x", "not a provider setting"),
         ("AWS_SECRET_ACCESS_KEY", "secret://x", "not one of the provider settings"),
         ("bad name", "secret://x", "not a provider setting"),
     ],
@@ -361,7 +361,7 @@ def test_a_mapping_this_harness_would_not_honour_is_refused(key, value, fragment
 
 
 def test_no_mapped_name_is_one_the_agent_scrub_strips() -> None:
-    from kiro_crew.sandbox import agent_env_scrub_prefixes
+    from aj_crew.sandbox import agent_env_scrub_prefixes
 
     prefixes = agent_env_scrub_prefixes()
     for name in strands_mod.STRANDS_ENV_NAMES:
@@ -397,7 +397,7 @@ def test_a_strands_provider_pin_is_kept_even_when_another_catalog_lists_it(monke
 
 
 def test_the_model_is_a_launch_argument_and_an_unchanged_pin_sends_nothing() -> None:
-    from kiro_crew.acp import client_model_selection as selection
+    from aj_crew.acp import client_model_selection as selection
 
     assert STRANDS in ACP_BACKENDS_MODEL_AT_LAUNCH
     client = SimpleNamespace(
@@ -481,17 +481,17 @@ def test_the_child_gets_discovery_off_the_nonce_and_its_state_dir() -> None:
     launch.apply_spawn_env(env)
     assert env["STRANDS_CLI_MCP_DISCOVERY"] == "off"
     assert env["STRANDS_CLI_SKILL_DISCOVERY"] == "off"
-    assert env["KIROCREW_STRANDS_GATE_SESSION"] == NONCE
-    assert env["KIROCREW_STRANDS_STATE_DIR"] == "/state"
-    assert "KIROCREW_STRANDS_GATE_MARKER" not in env
-    assert "KIROCREW_STRANDS_PROJECT" not in env
+    assert env["AJCREW_STRANDS_GATE_SESSION"] == NONCE
+    assert env["AJCREW_STRANDS_STATE_DIR"] == "/state"
+    assert "AJCREW_STRANDS_GATE_MARKER" not in env
+    assert "AJCREW_STRANDS_PROJECT" not in env
 
 
 def test_vault_keys_go_to_a_one_time_file_never_the_launch_env(monkeypatch, tmp_path) -> None:
     """No provider key in the launch environment: ``/proc/<pid>/environ`` would show it
     to every shell the agent runs. The keys go to an owner-only file in the session's
     private scratch window, and only its path is in the environment."""
-    from kiro_crew.acp.harness import strands_keys
+    from aj_crew.acp.harness import strands_keys
 
     monkeypatch.setattr(strands_mod, "_strands_vault_env", lambda: {"OPENAI_API_KEY": "sk"})
     launch = strands_mod.StrandsLaunch()
@@ -504,7 +504,7 @@ def test_vault_keys_go_to_a_one_time_file_never_the_launch_env(monkeypatch, tmp_
     asyncio.run(launch.prepare_spawn_env(env, to_thread=to_thread))
     assert "OPENAI_API_KEY" not in env
     assert "sk" not in env.values()
-    withheld = env["KIROCREW_STRANDS_WITHHELD"].split(":")
+    withheld = env["AJCREW_STRANDS_WITHHELD"].split(":")
     assert "OPENAI_API_KEY" in withheld
     assert set(strands_mod.STRANDS_CREDENTIAL_NAMES) <= set(withheld)
     path = Path(env[strands_keys.KEYS_FILE_ENV])
@@ -523,7 +523,7 @@ def test_vault_keys_with_no_private_window_refuse_the_session(monkeypatch) -> No
     async def to_thread(fn, *args):
         return fn(*args)
 
-    from kiro_crew.acp.client import AcpToolGateUnroutable
+    from aj_crew.acp.client import AcpToolGateUnroutable
 
     env: dict[str, str] = {}
     with pytest.raises(AcpToolGateUnroutable, match="nowhere private"):
@@ -532,7 +532,7 @@ def test_vault_keys_with_no_private_window_refuse_the_session(monkeypatch) -> No
 
 
 def test_a_key_file_an_earlier_spawn_left_is_swept_before_the_next(monkeypatch, tmp_path) -> None:
-    from kiro_crew.acp.harness import strands_keys
+    from aj_crew.acp.harness import strands_keys
 
     stale = strands_keys.write_keys_file(str(tmp_path), {"OPENAI_API_KEY": "old"})
     monkeypatch.setattr(strands_mod, "_strands_vault_env", lambda: {"OPENAI_API_KEY": "sk"})
@@ -550,7 +550,7 @@ def test_a_key_file_an_earlier_spawn_left_is_swept_before_the_next(monkeypatch, 
 
 def test_a_left_key_file_is_swept_even_when_the_mapping_is_now_empty(monkeypatch, tmp_path) -> None:
     """The operator cleared agent.strands_env before the respawn: the old file still goes."""
-    from kiro_crew.acp.harness import strands_keys
+    from aj_crew.acp.harness import strands_keys
 
     own = tmp_path / "own"
     shared = tmp_path / "shared"
@@ -574,7 +574,7 @@ def test_a_left_key_file_is_swept_even_when_the_mapping_is_now_empty(monkeypatch
 def test_the_shared_window_is_swept_when_the_session_has_no_private_one(
     monkeypatch, tmp_path
 ) -> None:
-    from kiro_crew.acp.harness import strands_keys
+    from aj_crew.acp.harness import strands_keys
 
     stale = strands_keys.write_keys_file(str(tmp_path), {"OPENAI_API_KEY": "old"})
     monkeypatch.setattr(strands_mod, "_strands_vault_env", lambda: {})
@@ -593,8 +593,8 @@ def test_an_old_key_file_that_cannot_be_removed_refuses_the_spawn(
     monkeypatch, tmp_path, window
 ) -> None:
     """Fail closed: a sweep that cannot prove the window clear starts no child."""
-    from kiro_crew.acp.client import AcpToolGateUnroutable
-    from kiro_crew.acp.harness import strands_keys
+    from aj_crew.acp.client import AcpToolGateUnroutable
+    from aj_crew.acp.harness import strands_keys
 
     stale = strands_keys.write_keys_file(str(tmp_path), {"OPENAI_API_KEY": "old"})
     # The removal fails (as on a read-only key directory) and leaves the file.
@@ -610,12 +610,12 @@ def test_an_old_key_file_that_cannot_be_removed_refuses_the_spawn(
     with pytest.raises(AcpToolGateUnroutable, match="could not remove") as refused:
         asyncio.run(launch.prepare_spawn_env({}, to_thread=to_thread))
     assert Path(stale).exists()
-    # The text is Kiro Crew's own: nothing the sweep read is echoed.
+    # The text is Aj Crew's own: nothing the sweep read is echoed.
     assert "keys.json" not in str(refused.value)
 
 
 def test_a_window_that_cannot_be_listed_refuses_the_spawn(monkeypatch, tmp_path) -> None:
-    from kiro_crew.acp.client import AcpToolGateUnroutable
+    from aj_crew.acp.client import AcpToolGateUnroutable
 
     real_listdir = os.listdir
 
@@ -640,7 +640,7 @@ def test_a_key_directory_written_after_the_listing_is_left_to_its_spawn(
     monkeypatch, tmp_path
 ) -> None:
     """Another spawn of the tree writing its own live file mid-sweep is not a refusal."""
-    from kiro_crew.acp.harness import strands_keys
+    from aj_crew.acp.harness import strands_keys
 
     old = strands_keys.write_keys_file(str(tmp_path), {"OPENAI_API_KEY": "old"})
     real_remove = strands_mod.remove_keys_dir
@@ -656,7 +656,7 @@ def test_a_key_directory_written_after_the_listing_is_left_to_its_spawn(
 
 
 def test_a_prefixed_directory_with_no_key_file_is_not_a_refusal(monkeypatch, tmp_path) -> None:
-    from kiro_crew.acp.harness import strands_keys
+    from aj_crew.acp.harness import strands_keys
 
     planted = tmp_path / f"{strands_keys.KEYS_DIR_PREFIX}empty"
     planted.mkdir()
@@ -665,7 +665,7 @@ def test_a_prefixed_directory_with_no_key_file_is_not_a_refusal(monkeypatch, tmp
 
 
 def test_a_key_file_that_cannot_be_inspected_refuses_the_spawn(monkeypatch, tmp_path) -> None:
-    from kiro_crew.acp.harness import strands_keys
+    from aj_crew.acp.harness import strands_keys
 
     stale = strands_keys.write_keys_file(str(tmp_path), {"OPENAI_API_KEY": "old"})
     monkeypatch.setattr(strands_mod, "remove_keys_dir", lambda directory: None)
@@ -683,7 +683,7 @@ def test_a_key_file_that_cannot_be_inspected_refuses_the_spawn(monkeypatch, tmp_
 def test_a_planted_link_with_the_key_prefix_is_neither_followed_nor_a_refusal(
     tmp_path,
 ) -> None:
-    from kiro_crew.acp.harness import strands_keys
+    from aj_crew.acp.harness import strands_keys
 
     if sys.platform == "win32":
         pytest.skip("symlinks")
@@ -771,7 +771,7 @@ def test_a_bad_mapping_refuses_the_session(monkeypatch) -> None:
     async def to_thread(fn, *args):
         return fn(*args)
 
-    from kiro_crew.acp.client import AcpToolGateUnroutable
+    from aj_crew.acp.client import AcpToolGateUnroutable
 
     with pytest.raises(AcpToolGateUnroutable, match="not a provider setting"):
         asyncio.run(strands_mod.StrandsLaunch().prepare_spawn_env({}, to_thread=to_thread))
@@ -781,10 +781,10 @@ def test_a_bad_mapping_refuses_the_session(monkeypatch) -> None:
 
 
 def test_no_project_runs_the_bundled_one(monkeypatch) -> None:
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     monkeypatch.setattr(
-        loader.KiroCrewConfig,
+        loader.AjCrewConfig,
         "load",
         classmethod(
             lambda cls: SimpleNamespace(
@@ -796,13 +796,13 @@ def test_no_project_runs_the_bundled_one(monkeypatch) -> None:
 
 
 def test_a_project_folder_resolves_to_its_agent_py(tmp_path, monkeypatch) -> None:
-    from kiro_crew.acp.harness.strands_project_pin import project_fingerprint
-    from kiro_crew.config import loader
+    from aj_crew.acp.harness.strands_project_pin import project_fingerprint
+    from aj_crew.config import loader
 
     (tmp_path / "agent.py").write_text("agent = None\n", encoding="utf-8")
     pin = project_fingerprint(tmp_path / "agent.py")[0]
     monkeypatch.setattr(
-        loader.KiroCrewConfig,
+        loader.AjCrewConfig,
         "load",
         classmethod(
             lambda cls: SimpleNamespace(
@@ -814,10 +814,10 @@ def test_a_project_folder_resolves_to_its_agent_py(tmp_path, monkeypatch) -> Non
 
 
 def test_a_path_that_is_no_project_refuses(tmp_path, monkeypatch) -> None:
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     monkeypatch.setattr(
-        loader.KiroCrewConfig,
+        loader.AjCrewConfig,
         "load",
         classmethod(
             lambda cls: SimpleNamespace(
@@ -833,7 +833,7 @@ def test_a_path_that_is_no_project_refuses(tmp_path, monkeypatch) -> None:
 
 def test_bedrock_auth_failure_names_the_strands_env_setting():
     """Strands runs sandboxed with ~/.aws masked, so the remedy names the vault mapping."""
-    from kiro_crew.acp.transport_errors import _format_acp_error
+    from aj_crew.acp.transport_errors import _format_acp_error
 
     frame = {"code": -32603, "message": "Internal error", "data": "AccessDeniedException: denied"}
     strands_text = _format_acp_error(frame, None, backend=ACP_BACKEND_STRANDS)
@@ -866,7 +866,7 @@ def test_the_configured_provider_and_model_build_the_launch_model(provider, mode
 
 
 def test_the_setting_defaults_pass_no_model_and_name_no_model_id() -> None:
-    from kiro_crew.config.sections_agent import AgentConfig
+    from aj_crew.config.sections_agent import AgentConfig
 
     agent = AgentConfig()
     assert (agent.strands_provider, agent.strands_model) == ("bedrock", "auto")
@@ -885,7 +885,7 @@ def test_the_setting_defaults_pass_no_model_and_name_no_model_id() -> None:
 def test_the_provider_list_is_the_one_the_setting_offers() -> None:
     from dataclasses import fields
 
-    from kiro_crew.config.sections_agent import AgentConfig
+    from aj_crew.config.sections_agent import AgentConfig
 
     field = next(f for f in fields(AgentConfig) if f.name == "strands_provider")
     assert set(field.metadata["enum"]) == strands_mod.STRANDS_PROVIDERS
@@ -983,7 +983,7 @@ def test_the_read_back_sends_its_frames_through_the_bounded_blocking_writer() ->
     """Two fixed frames, written once through ``transport_framing``, under its cap."""
     import io
 
-    from kiro_crew.acp.transport_framing import write_frames_blocking
+    from aj_crew.acp.transport_framing import write_frames_blocking
 
     sink = io.BytesIO()
     write_frames_blocking(sink, strands_mod._readback_requests("/work"))
@@ -997,7 +997,7 @@ def test_the_read_back_sends_its_frames_through_the_bounded_blocking_writer() ->
 def test_the_stale_key_sweep_never_follows_a_planted_link(monkeypatch, tmp_path) -> None:
     """A prefixed entry in the scratch window may be the agent's link to elsewhere: the
     sweep removes only real one-time directories and leaves the link's target alone."""
-    from kiro_crew.acp.harness import strands_keys
+    from aj_crew.acp.harness import strands_keys
 
     outside = tmp_path / "outside"
     outside.mkdir()
@@ -1023,7 +1023,7 @@ def test_the_node_floor_is_measured_as_the_cli_child_will_see_it(monkeypatch) ->
     A version-manager shim picks Node by directory and by PATH, so the check runs
     where and with what the child runs, each ``node --version`` confined.
     """
-    from kiro_crew.acp.harness import pi_node
+    from aj_crew.acp.harness import pi_node
 
     seen: dict = {}
 
@@ -1173,7 +1173,7 @@ def test_project_dir_is_created_owner_only_under_the_gate_artifact_dir(monkeypat
 
 
 def test_project_dir_that_is_not_a_directory_refuses_the_harness(monkeypatch, tmp_path):
-    from kiro_crew.acp.transport_errors import AcpToolGateUnroutable
+    from aj_crew.acp.transport_errors import AcpToolGateUnroutable
 
     (tmp_path / "strands").write_text("not a dir", encoding="utf-8")
     monkeypatch.setattr(pi_mod, "_pi_gate_artifact_dir", lambda: str(tmp_path))
@@ -1182,10 +1182,10 @@ def test_project_dir_that_is_not_a_directory_refuses_the_harness(monkeypatch, tm
 
 
 def test_env_mapping_is_read_from_config(monkeypatch):
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     fake = SimpleNamespace(agent=SimpleNamespace(strands_env={"OPENAI_API_KEY": "secret://k"}))
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(lambda cls: fake))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(lambda cls: fake))
     assert strands_mod._strands_env_mapping() == {"OPENAI_API_KEY": "secret://k"}
 
 
@@ -1233,7 +1233,7 @@ def test_vault_env_resolves_the_mapping_through_the_vault(monkeypatch):
 
 def test_state_dir_is_under_the_cli_home_never_the_work_dir(tmp_path):
     assert strands_mod._state_dir(tmp_path) == str(
-        tmp_path / ".strands" / "cli" / "kirocrew-sessions"
+        tmp_path / ".strands" / "cli" / "ajcrew-sessions"
     )
 
 
@@ -1315,7 +1315,7 @@ def test_key_file_left_refuses_when_it_cannot_inspect(monkeypatch, tmp_path):
 
 
 def test_keys_file_write_failure_removes_its_directory(monkeypatch, tmp_path):
-    from kiro_crew.acp.harness import strands_keys
+    from aj_crew.acp.harness import strands_keys
 
     with pytest.raises(TypeError):
         strands_keys.write_keys_file(str(tmp_path), {"K": object()})  # type: ignore[dict-item]
@@ -1323,7 +1323,7 @@ def test_keys_file_write_failure_removes_its_directory(monkeypatch, tmp_path):
 
 
 def test_keys_dir_removal_skips_foreign_and_missing_entries(tmp_path):
-    from kiro_crew.acp.harness import strands_keys
+    from aj_crew.acp.harness import strands_keys
 
     strands_keys.discard_keys_file("")  # nothing named: nothing removed
     foreign = tmp_path / "not-ours"
@@ -1338,7 +1338,7 @@ def test_keys_dir_removal_skips_foreign_and_missing_entries(tmp_path):
 
 def test_sign_in_remedy_names_the_bedrock_vault_mapping_not_the_aws_chain() -> None:
     """The sandbox masks ``~/.aws`` and the launch strips ``AWS_*``: the remedy says so."""
-    from kiro_crew.agent_sdk import host_auth
+    from aj_crew.agent_sdk import host_auth
 
     for text in (
         host_auth.sign_in_remedy(STRANDS),

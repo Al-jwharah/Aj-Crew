@@ -1,7 +1,7 @@
-"""The port `kirocrew doctor` prints, in the order docs/guides/remote-crew-on-ec2.md states.
+"""The port `ajcrew doctor` prints, in the order docs/guides/remote-crew-on-ec2.md states.
 
 The guide's "Port/tunnel mismatch" section says the doctor's ``dashboard:`` line
-takes the shell's ``KIROCREW_PORT`` first, then a port written in ``dashboard.url``,
+takes the shell's ``AJCREW_PORT`` first, then a port written in ``dashboard.url``,
 then 5476. This drives the doctor's own Configuration section so the guide and the
 code cannot drift apart.
 """
@@ -12,7 +12,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.doctor_checks import services
+from aj_crew.doctor_checks import services
 
 
 def _printed_dashboard_line(monkeypatch, capsys, url: str) -> str:
@@ -40,8 +40,8 @@ def test_doctor_dashboard_port_follows_shell_env_then_url_then_default(
     monkeypatch, capsys, env_port, url, expected
 ):
     if env_port is None:
-        monkeypatch.delenv("KIROCREW_PORT", raising=False)
+        monkeypatch.delenv("AJCREW_PORT", raising=False)
     else:
-        monkeypatch.setenv("KIROCREW_PORT", env_port)
+        monkeypatch.setenv("AJCREW_PORT", env_port)
 
     assert _printed_dashboard_line(monkeypatch, capsys, url).endswith(expected)

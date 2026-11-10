@@ -188,7 +188,7 @@ function listOp(card: Pick<Card, 'kind' | 'params'>): ListOp | null {
 }
 
 /** The one card that lets a crewmate ask the user for its worker's tools
- *  (`kiro_crew/mate_tool_access.py`): a `crewmate.update` writing only its
+ *  (`aj_crew/mate_tool_access.py`): a `crewmate.update` writing only its
  *  `dynamic_capabilities` flag on. It is a preview opt-in, so it carries the
  *  Preview badge the Profile card's switch shows. */
 export function isToolAccessCard(card: Pick<Card, 'kind' | 'params'>): boolean {

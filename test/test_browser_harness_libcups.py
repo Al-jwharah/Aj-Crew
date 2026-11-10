@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.browser_harness import libcups
+from aj_crew.browser_harness import libcups
 
 _X86_64 = 62
 _AARCH64 = 183

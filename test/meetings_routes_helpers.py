@@ -6,8 +6,8 @@ The fixtures and the fake session manager are in ``meetings_helpers``.
 
 from __future__ import annotations
 
-from kiro_crew.apps.builtins.meetings.backend import constants as k
-from kiro_crew.apps.builtins.meetings.backend.routes import _common
+from aj_crew.apps.builtins.meetings.backend import constants as k
+from aj_crew.apps.builtins.meetings.backend.routes import _common
 
 BASE = k.API_BASE
 

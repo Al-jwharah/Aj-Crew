@@ -24,7 +24,7 @@
     "error": {
       "code": -32603,
       "data": {
-        "details": "mcp-client(kirocrew-core): initial connection or tool synchronization failed"
+        "details": "mcp-client(ajcrew-core): initial connection or tool synchronization failed"
       },
       "message": "Internal error"
     },

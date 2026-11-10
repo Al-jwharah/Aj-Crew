@@ -47,11 +47,11 @@ from issue_radar_crew_runtime_helpers import (  # noqa: F401 -- the autouse fixt
 )
 from off_loop_helpers import off_loop
 
-from kiro_crew.apps.builtins.issue_radar.backend import crew_runtime as cr
-from kiro_crew.apps.builtins.issue_radar.backend import crew_store as cs
-from kiro_crew.apps.builtins.issue_radar.backend import provider
-from kiro_crew.apps.builtins.issue_radar.backend import store as store_mod
-from kiro_crew.safety_override import reset_singleton, safety_override
+from aj_crew.apps.builtins.issue_radar.backend import crew_runtime as cr
+from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs
+from aj_crew.apps.builtins.issue_radar.backend import provider
+from aj_crew.apps.builtins.issue_radar.backend import store as store_mod
+from aj_crew.safety_override import reset_singleton, safety_override
 
 
 class TestSeedingSurvivesABriefLogLock:
@@ -65,9 +65,9 @@ class TestSeedingSurvivesABriefLogLock:
         the lock was held. Off the loop the probe then releases the holder; on the loop
         nothing does, so every attempt meets a held lock.
         """
-        from kiro_crew import platform_lock_compat
-        from kiro_crew.crew_log import store as log_store
-        from kiro_crew.crew_log.schema import KIND_SESSION
+        from aj_crew import platform_lock_compat
+        from aj_crew.crew_log import store as log_store
+        from aj_crew.crew_log.schema import KIND_SESSION
 
         real_landed = cs._landed_since
         real_file_lock = log_store.file_lock
@@ -139,7 +139,7 @@ class TestSeedingSurvivesABriefLogLock:
         on-loop acquire tries once. Both are settled first, so the only holder met is
         the planted one.
         """
-        from kiro_crew.crew_log import eager as crew_log_eager
+        from aj_crew.crew_log import eager as crew_log_eager
 
         crew = _crew(tmp_path, unattended=True)
         _item(tmp_path, crew["id"], 2201, phase="awaiting-ci")
@@ -557,7 +557,7 @@ class TestCrewStoreScoping(unittest.TestCase):
         return False
 
     def test_no_unscoped_crew_store_call_survives(self):
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_routes
+        from aj_crew.apps.builtins.issue_radar.backend import crew_routes
 
         for module in (crew_routes, *_runtime_modules()):
             offenders = self._offenders(module)
@@ -610,13 +610,13 @@ class TestSession(unittest.IsolatedAsyncioTestCase):
         self.addCleanup(reset_singleton)
 
     async def test_session_key_agent_workspace_and_model_come_from_the_record(self):
-        crew = _crew(self.root, agent="kirocrew", model="claude-opus-5")
+        crew = _crew(self.root, agent="ajcrew", model="claude-opus-5")
         state = _FakeState()
         slot = await cr.ensure_crew_session(state, OWNER, REPO, crew)
         self.assertEqual(slot.key, f"crew-{crew['id']}")
         created = state.created[-1]
         self.assertEqual(created["name"], f"crew-{crew['id']}")
-        self.assertEqual(created["agent"], "kirocrew")
+        self.assertEqual(created["agent"], "ajcrew")
         self.assertEqual(created["app"], "issue-radar")
         # The record's model is passed EXPLICITLY, which is what overrides the
         # agent's own pin.
@@ -699,7 +699,7 @@ class TestSession(unittest.IsolatedAsyncioTestCase):
         auto-approving tools with no record that it was ever allowed to."""
         crew = _crew(self.root, unattended=True)
         with mock.patch(
-            "kiro_crew.safety_override.sel", side_effect=OSError("SEL unavailable")
+            "aj_crew.safety_override.sel", side_effect=OSError("SEL unavailable")
         ):
             slot = await cr.ensure_crew_session(_FakeState(), OWNER, REPO, crew)
         self.assertFalse(_effectively_trusted(slot))
@@ -1490,7 +1490,7 @@ class TestAStoodDownLoopStaysDown(unittest.IsolatedAsyncioTestCase):
         self.root = Path(self._tmp.name)
         reset_singleton()
         self.addCleanup(reset_singleton)
-        from kiro_crew.autonudge import AutoNudgeService
+        from aj_crew.autonudge import AutoNudgeService
 
         self.svc = AutoNudgeService(base_dir=self.root / "autonudge")
         await self.svc.start()
@@ -1530,7 +1530,7 @@ class TestAStoodDownLoopStaysDown(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(self.svc._loops[self.loop_id].active)
 
     async def test_a_failure_stand_down_pauses_the_crew_instead_of_reviving(self):
-        from kiro_crew.autonudge import CONSECUTIVE_FAILURE_REASON
+        from aj_crew.autonudge import CONSECUTIVE_FAILURE_REASON
 
         await self._stand_down("consecutive_failed_cycles")
         self.assertEqual(
@@ -1553,7 +1553,7 @@ class TestAStoodDownLoopStaysDown(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(self.svc.get_by_slot(self.slot_key))
 
     async def test_a_start_failure_stand_down_pauses_the_crew_too(self):
-        from kiro_crew.autonudge import SESSION_START_FAILURE_REASON
+        from aj_crew.autonudge import SESSION_START_FAILURE_REASON
 
         await self._stand_down("consecutive_start_failures")
         self.assertEqual(

@@ -19,17 +19,17 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew import mate_worker
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.dashboard import mate_thread_wakes as wakes
-from kiro_crew.dashboard.session_control_parts import session_revive
-from kiro_crew.dashboard.session_control_parts.session_status import process_state
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-from kiro_crew.session import SessionManager
+from aj_crew import mate_worker
+from aj_crew.config import AjCrewConfig
+from aj_crew.dashboard import mate_thread_wakes as wakes
+from aj_crew.dashboard.session_control_parts import session_revive
+from aj_crew.dashboard.session_control_parts.session_status import process_state
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+from aj_crew.session import SessionManager
 
 WORKER_KEY = "dashboard:chat-9-1790000000"
 WORKER = ExecutionContext(
-    "pixel", MemoryStoreRef("member-pixel", "pixel"), "member", "kirocrew"
+    "pixel", MemoryStoreRef("member-pixel", "pixel"), "member", "ajcrew"
 ).with_template(mate_worker.MATE_WORKER_AGENT, mate_worker.MATE_WORKER_AGENT)
 
 
@@ -47,7 +47,7 @@ def _provider_factory():
 async def test_an_idle_worker_is_released_then_resumed_in_the_same_conversation(
     monkeypatch, caplog
 ):
-    manager = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory())
+    manager = SessionManager(AjCrewConfig(), provider_factory=_provider_factory())
     await manager.get_or_create(WORKER_KEY)
     manager.release(WORKER_KEY)
     # KAS decides a resume by `session/load` itself, so no transcript file is needed.
@@ -75,7 +75,7 @@ async def test_an_idle_worker_is_released_then_resumed_in_the_same_conversation(
 
     # Its kit is read from the same execution record, which the release left alone.
     monkeypatch.setattr(
-        "kiro_crew.execution_context.read_session_execution",
+        "aj_crew.execution_context.read_session_execution",
         lambda key: WORKER if key == WORKER_KEY else None,
     )
     monkeypatch.setattr(mate_worker, "resolve_worker_spec", lambda base, member: {"m": member})
@@ -93,11 +93,11 @@ def _send_env(monkeypatch, caller_execution, revive_result=None, revive_error=No
 
     monkeypatch.setattr(session_revive, "revive_session", revive)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.session_control._resolve_slot",
+        "aj_crew.dashboard.session_control._resolve_slot",
         lambda state, target: None,
     )
     monkeypatch.setattr(
-        "kiro_crew.execution_context.read_session_execution", lambda key: caller_execution
+        "aj_crew.execution_context.read_session_execution", lambda key: caller_execution
     )
     return calls
 
@@ -114,7 +114,7 @@ def test_a_conductor_messaging_its_archived_worker_revives_it_first(monkeypatch)
 
 
 def test_a_refused_revive_and_any_other_caller_keep_target_not_found(monkeypatch):
-    from kiro_crew.dashboard.session_control_parts.caller_access import SessionControlError
+    from aj_crew.dashboard.session_control_parts.caller_access import SessionControlError
 
     calls = _send_env(
         monkeypatch, CONDUCTOR, revive_error=SessionControlError("no", code="not_creator")
@@ -122,7 +122,7 @@ def test_a_refused_revive_and_any_other_caller_keep_target_not_found(monkeypatch
     assert asyncio.run(session_revive.revive_own_archived_worker(object(), "k", "t")) == "t"
     assert calls == ["t"]
 
-    plain = SimpleNamespace(selection_kind="member", template_id="kirocrew")
+    plain = SimpleNamespace(selection_kind="member", template_id="ajcrew")
     calls = _send_env(monkeypatch, plain, revive_result={"target": "x"})
     assert asyncio.run(session_revive.revive_own_archived_worker(object(), "k", "t")) == "t"
     assert calls == []
@@ -141,7 +141,7 @@ def _thread_and_worker():
 
 def test_a_restored_worker_reports_when_the_lineage_names_its_crewmate(monkeypatch):
     monkeypatch.setattr(
-        "kiro_crew.dashboard.session_control._slot_tree_parent",
+        "aj_crew.dashboard.session_control._slot_tree_parent",
         lambda key: (True, "member-pixel", {}),
     )
     state, thread, worker = _thread_and_worker()
@@ -151,11 +151,11 @@ def test_a_restored_worker_reports_when_the_lineage_names_its_crewmate(monkeypat
 def test_transcript_metadata_alone_still_wakes_nobody(monkeypatch):
     state, _thread, worker = _thread_and_worker()
     monkeypatch.setattr(
-        "kiro_crew.dashboard.session_control._slot_tree_parent", lambda key: (False, "", {})
+        "aj_crew.dashboard.session_control._slot_tree_parent", lambda key: (False, "", {})
     )
     assert wakes.reporting_creator(state, worker) is None
     monkeypatch.setattr(
-        "kiro_crew.dashboard.session_control._slot_tree_parent",
+        "aj_crew.dashboard.session_control._slot_tree_parent",
         lambda key: (True, "member-other", {}),
     )
     assert wakes.reporting_creator(state, worker) is None

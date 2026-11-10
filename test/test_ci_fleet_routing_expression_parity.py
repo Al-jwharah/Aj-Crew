@@ -30,13 +30,13 @@ _FAST_GATE_PUSH_SKIP_CLAUSE = (
 
 _ACTOR_PREDICATE = "contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id)"
 # A route the fleet did not admit falls back TWICE. In this repository it takes the
-# `kirocrew-runners` group label, off the enterprise-shared standard pool. A fork cannot
+# `ajcrew-runners` group label, off the enterprise-shared standard pool. A fork cannot
 # reach an org runner group, so it stays hosted; a label no runner carries would queue
 # until GitHub cancelled the job. The repository test here is separate from the one in
 # fleet eligibility. Resolver-consumer constants skip this tail: an EMPTY resolver
 # output means the resolver did not run, and hosted is the only safe answer.
 _GROUP_THEN_HOSTED_TAIL = (
-    "|| github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' "
+    "|| github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' "
     "|| 'ubuntu-latest' }}"
 )
 _CANONICAL_ROUTING_EXPR = (
@@ -45,7 +45,7 @@ _CANONICAL_ROUTING_EXPR = (
     + " && (github.event_name == 'push' || (github.event_name == 'pull_request' && "
     "(github.event.action == 'opened' || github.event.action == 'synchronize') && "
     "github.event.pull_request.head.repo.full_name == github.repository)) && "
-    "format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) "
+    "format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) "
     + _GROUP_THEN_HOSTED_TAIL
 )
 # The same policy at LARGE fleet compute, for a lane the fleet's default would
@@ -56,8 +56,8 @@ _CANONICAL_ROUTING_EXPR = (
 # emit from their resolvers, and it selects 8 vCPU / 15 GB against the default
 # `BUILD_GENERAL1_MEDIUM`'s 4 vCPU / 7 GB.
 _CANONICAL_ROUTING_EXPR_LARGE = _CANONICAL_ROUTING_EXPR.replace(
-    "format('codebuild-kirocrew-gha-linux-{0}-{1}'",
-    "format('codebuild-kirocrew-gha-linux-{0}-{1} instance-size:large'",
+    "format('codebuild-ajcrew-gha-linux-{0}-{1}'",
+    "format('codebuild-ajcrew-gha-linux-{0}-{1} instance-size:large'",
 )
 # The workflows the merge queue runs. A merge_group run's actor is the person
 # who queued the pull request, so the same actor predicate admits it; the event
@@ -69,21 +69,21 @@ _CANONICAL_MERGE_GROUP_ROUTING_EXPR = (
     "(github.event_name == 'pull_request' && "
     "(github.event.action == 'opened' || github.event.action == 'synchronize') && "
     "github.event.pull_request.head.repo.full_name == github.repository)) && "
-    "format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) "
+    "format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) "
     + _GROUP_THEN_HOSTED_TAIL
 )
 _CANONICAL_PUSH_EXPR = (
     "${{ github.repository == 'kirodotdev/KiroCrew' && "
     + _ACTOR_PREDICATE
     + " && github.event_name == 'push' && "
-    "format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) "
+    "format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) "
     + _GROUP_THEN_HOSTED_TAIL
 )
 _CANONICAL_DISPATCH_EXPR = (
     "${{ github.repository == 'kirodotdev/KiroCrew' && "
     + _ACTOR_PREDICATE
     + " && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && "
-    "format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) "
+    "format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) "
     + _GROUP_THEN_HOSTED_TAIL
 )
 # The sensitive-change gate runs only default-branch scripts, never PR code, so
@@ -92,7 +92,7 @@ _CANONICAL_BASE_ONLY_PR_EXPR = (
     "${{ github.repository == 'kirodotdev/KiroCrew' && "
     + _ACTOR_PREDICATE
     + " && github.event.pull_request.head.repo.full_name == github.repository && "
-    "format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) "
+    "format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) "
     + _GROUP_THEN_HOSTED_TAIL
 )
 # PR Readiness runs only default-branch code too. Only its pull_request_target
@@ -104,7 +104,7 @@ _CANONICAL_READINESS_EXPR = (
     + _ACTOR_PREDICATE
     + " && github.event_name == 'pull_request_target' && "
     "github.event.pull_request.head.repo.full_name == github.repository && "
-    "format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) "
+    "format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) "
     + _GROUP_THEN_HOSTED_TAIL
 )
 # The ratchet audit: push, manual dispatch, and the merge group, which is the
@@ -114,7 +114,7 @@ _CANONICAL_DISPATCH_MERGE_GROUP_EXPR = (
     + _ACTOR_PREDICATE
     + " && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || "
     "github.event_name == 'merge_group') && "
-    "format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) "
+    "format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) "
     + _GROUP_THEN_HOSTED_TAIL
 )
 
@@ -194,101 +194,101 @@ _PERMANENT_EXCEPTIONS = {
 }
 
 # A permanent exception stays OFF the CodeBuild fleet but may run on the
-# `kirocrew-runners` group: GitHub-hosted Ubuntu VMs with no fleet credentials, so the
+# `ajcrew-runners` group: GitHub-hosted Ubuntu VMs with no fleet credentials, so the
 # isolation contracts above hold. Pinned per job so drift to a third runner fails.
 #
 # `group:` resolves only inside the org, so a fork's copy waits forever; the LABEL
 # spelling carries a fork fallback in its `||` leg. A lane a fork never runs may use either.
 _GROUP_LABEL_EXPR = (
     "${{ github.repository == 'kirodotdev/KiroCrew' && "
-    "'kirocrew-linux-4-core' || 'ubuntu-latest' }}"
+    "'ajcrew-linux-4-core' || 'ubuntu-latest' }}"
 )
 _HOSTED_EXCEPTION_RUNNERS: dict[tuple[str, str], object] = {
-    ("first-principles-review.yml", "first-principles-review"): {"group": "kirocrew-runners"},
-    ("ux-review.yml", "ux-review"): {"group": "kirocrew-runners"},
-    ("design-review.yml", "design-review"): {"group": "kirocrew-runners"},
-    ("release.yml", "version"): {"group": "kirocrew-runners"},
-    ("release.yml", "resolve-promotion"): {"group": "kirocrew-runners"},
-    ("release.yml", "stable-gate"): {"group": "kirocrew-runners"},
-    ("release.yml", "github-release"): {"group": "kirocrew-runners"},
-    ("release.yml", "record-promotion"): {"group": "kirocrew-runners"},
-    ("fork-internal-content-scan.yml", "fork-internal-content-scan"): {"group": "kirocrew-runners"},
-    ("fork-pr-description.yml", "describe"): {"group": "kirocrew-runners"},
-    ("fork-workflow-guard.yml", "guard"): {"group": "kirocrew-runners"},
-    ("fork-workflow-guard.yml", "strip-stale-override"): {"group": "kirocrew-runners"},
+    ("first-principles-review.yml", "first-principles-review"): {"group": "ajcrew-runners"},
+    ("ux-review.yml", "ux-review"): {"group": "ajcrew-runners"},
+    ("design-review.yml", "design-review"): {"group": "ajcrew-runners"},
+    ("release.yml", "version"): {"group": "ajcrew-runners"},
+    ("release.yml", "resolve-promotion"): {"group": "ajcrew-runners"},
+    ("release.yml", "stable-gate"): {"group": "ajcrew-runners"},
+    ("release.yml", "github-release"): {"group": "ajcrew-runners"},
+    ("release.yml", "record-promotion"): {"group": "ajcrew-runners"},
+    ("fork-internal-content-scan.yml", "fork-internal-content-scan"): {"group": "ajcrew-runners"},
+    ("fork-pr-description.yml", "describe"): {"group": "ajcrew-runners"},
+    ("fork-workflow-guard.yml", "guard"): {"group": "ajcrew-runners"},
+    ("fork-workflow-guard.yml", "strip-stale-override"): {"group": "ajcrew-runners"},
     ("issue-summary.yml", "summarize"): _GROUP_LABEL_EXPR,
     ("issue-triage.yml", "triage"): _GROUP_LABEL_EXPR,
     # The AI-review override handler: same `issue_comment` trigger and the same
     # actor-allowlist reason for staying off the fleet as the two above.
     ("ai-review-human-override.yml", "record"): _GROUP_LABEL_EXPR,
     ("nightly.yml", "version"): _GROUP_LABEL_EXPR,
-    ("ci-runner-watchdog.yml", "watchdog"): {"group": "kirocrew-runners"},
-    ("merge-queue-ruleset.yml", "check"): {"group": "kirocrew-runners"},
+    ("ci-runner-watchdog.yml", "watchdog"): {"group": "ajcrew-runners"},
+    ("merge-queue-ruleset.yml", "check"): {"group": "ajcrew-runners"},
     ("scheduled-failure-watch.yml", "surface"): _GROUP_LABEL_EXPR,
     # The two nightly publish callees a fork can start take the LABEL spelling,
     # for the fork-fallback reason given above; the rest are repository-only.
     ("publish-cli.yml", "publish-cli"): _GROUP_LABEL_EXPR,
     ("publish-docker.yml", "publish-docker"): _GROUP_LABEL_EXPR,
-    ("publish-installer.yml", "publish-installer"): {"group": "kirocrew-runners"},
-    ("publish-linux.yml", "publish-linux"): {"group": "kirocrew-runners"},
-    ("publish-windows.yml", "publish-windows"): {"group": "kirocrew-runners"},
-    ("release.yml", "release-candidate-tests"): {"group": "kirocrew-runners"},
-    ("release.yml", "record-stable-promotion"): {"group": "kirocrew-runners"},
+    ("publish-installer.yml", "publish-installer"): {"group": "ajcrew-runners"},
+    ("publish-linux.yml", "publish-linux"): {"group": "ajcrew-runners"},
+    ("publish-windows.yml", "publish-windows"): {"group": "ajcrew-runners"},
+    ("release.yml", "release-candidate-tests"): {"group": "ajcrew-runners"},
+    ("release.yml", "record-stable-promotion"): {"group": "ajcrew-runners"},
     # These dispatchable jobs use the group label upstream, but a personal
     # fork cannot reach the org group and must retain the hosted fallback.
     ("memory-benchmark.yml", "accept"): (
-        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}"
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}"
     ),
     ("add-contributor.yml", "add"): (
-        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}"
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}"
     ),
     ("connections-l0.yml", "probe"): (
-        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}"
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}"
     ),
     ("deferred-findings-audit.yml", "audit"): (
-        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}"
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}"
     ),
     ("fix-loop-analysis.yml", "metrics"): (
-        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}"
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}"
     ),
     ("fix-loop-analysis.yml", "analyze"): (
-        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}"
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}"
     ),
     ("ship-report.yml", "report"): (
-        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}"
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}"
     ),
     ("test-durations.yml", "refresh"): (
-        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}"
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}"
     ),
     # A personal fork cannot reach the org group; preserve its hosted fallback.
     ("issue-gate.yml", "issue-gate"): (
-        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' "
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' "
         "|| 'ubuntu-latest' }}"
     ),
     ("issue-gate-retrigger.yml", "retrigger"): _GROUP_LABEL_EXPR,
     ("pr-size-override.yml", "record"): (
-        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' "
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' "
         "|| 'ubuntu-latest' }}"
     ),
     ("disposition-deferral-check.yml", "validate-deferral"): (
-        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' "
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' "
         "|| 'ubuntu-latest' }}"
     ),
     ("sensitive-change-review-comment.yml", "rerun"): (
-        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' "
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' "
         "|| 'ubuntu-latest' }}"
     ),
     # The same-repo scope lane's three non-matrix jobs: a group label is not a fleet
     # route. The label form, not `group:`, because the workflow fires on `pull_request`
     # and a contributor's fork cannot reach an org group.
     ("security-scope-review.yml", "generate"): (
-        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}"
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}"
     ),
     ("security-scope-review.yml", "validate"): (
-        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}"
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}"
     ),
     ("security-scope-review.yml", "publish"): (
-        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}"
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}"
     ),
 }
 _DEFAULT_HOSTED_EXCEPTION_RUNNER = "ubuntu-latest"
@@ -371,9 +371,9 @@ def _fleet_or_resolved(output: str, label: str, hosted: str) -> str:
     )
 
 
-_LINUX_LABEL = "codebuild-kirocrew-gha-linux-{0}-{1}"
+_LINUX_LABEL = "codebuild-ajcrew-gha-linux-{0}-{1}"
 _LINUX_LARGE_LABEL = _LINUX_LABEL + " instance-size:large"
-_WINDOWS_LARGE_LABEL = "codebuild-kirocrew-gha-windows-{0}-{1} instance-size:large"
+_WINDOWS_LARGE_LABEL = "codebuild-ajcrew-gha-windows-{0}-{1} instance-size:large"
 _LINUX_CONSUMER = _fleet_or_resolved(
     "needs.changes.outputs.linux_runner", _LINUX_LABEL, "ubuntu-latest"
 )
@@ -600,7 +600,7 @@ def test_ci_resolvers_share_actor_policy_and_emit_large_labels() -> None:
         assert step["env"]["ELIGIBLE"] == expected_eligibility
         assert changes["outputs"][output] == f"${{{{ steps.{step_id}.outputs.{output} }}}}"
         assert step["env"]["LABEL"] == (
-            f"codebuild-kirocrew-gha-{os_name}-${{{{ github.run_id }}}}-"
+            f"codebuild-ajcrew-gha-{os_name}-${{{{ github.run_id }}}}-"
             "${{ github.run_attempt }}"
         )
         script = step["run"]
@@ -612,8 +612,8 @@ def test_ci_resolvers_share_actor_policy_and_emit_large_labels() -> None:
         # LABEL: a bare `group:` dispatches to any member, so a mixed group could put
         # a Linux consumer on Windows.
         group_label, hosted = {
-            "linux": ("kirocrew-linux-4-core", "ubuntu-latest"),
-            "windows": ("kirocrew-windows-4-core", "windows-latest"),
+            "linux": ("ajcrew-linux-4-core", "ubuntu-latest"),
+            "windows": ("ajcrew-windows-4-core", "windows-latest"),
         }[os_name]
         assert step["env"]["IN_REPO"] == "${{ github.repository == 'kirodotdev/KiroCrew' }}"
         assert 'elif [ "$IN_REPO" = "true" ]; then' in script
@@ -635,7 +635,7 @@ def test_build_desktop_routes_only_the_x64_leg_through_the_shared_policy() -> No
     step = {s.get("id"): s for s in resolver["steps"]}["runner"]
     assert step["env"]["ELIGIBLE"] == expected_eligibility
     assert step["env"]["LABEL"] == (
-        "codebuild-kirocrew-gha-linux-${{ github.run_id }}-${{ github.run_attempt }}"
+        "codebuild-ajcrew-gha-linux-${{ github.run_id }}-${{ github.run_attempt }}"
     )
     assert resolver["outputs"]["linux_x64_runner"] == "${{ steps.runner.outputs.linux_x64_runner }}"
     script = step["run"]
@@ -663,9 +663,9 @@ def test_both_ci_label_matrix_lanes_route_each_leg_to_its_own_group() -> None:
     workflow = yaml.safe_load((_WORKFLOWS_DIR / "ci.yml").read_text(encoding="utf-8"))
     expected = (
         "${{ matrix.os == 'ubuntu-latest' && "
-        "(github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' "
+        "(github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' "
         "|| 'ubuntu-latest') || matrix.os == 'windows-latest' && "
-        "(github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-windows-4-core' "
+        "(github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-windows-4-core' "
         "|| 'windows-latest') || matrix.os }}"
     )
     for job_name, rendered in (

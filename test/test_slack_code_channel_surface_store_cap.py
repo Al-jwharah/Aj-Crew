@@ -19,9 +19,9 @@ from slack_code_channel_surface_helpers import (  # noqa: F401 - fixtures by nam
 )
 from slack_code_channels_helpers import OWNER
 
-from kiro_crew.slack.code_channels import surface_store as ss
-from kiro_crew.slack.code_channels import wrapup
-from kiro_crew.slack.code_channels.surface_store import SurfaceStore
+from aj_crew.slack.code_channels import surface_store as ss
+from aj_crew.slack.code_channels import wrapup
+from aj_crew.slack.code_channels.surface_store import SurfaceStore
 
 
 @pytest.fixture(name="store")

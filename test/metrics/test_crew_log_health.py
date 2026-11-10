@@ -1,4 +1,4 @@
-"""The ``kirocrew.crew_log.*`` health instruments, batch 2.
+"""The ``ajcrew.crew_log.*`` health instruments, batch 2.
 
 WHAT THIS FILE IS FOR, beyond "the counters count". The hard constraint on this
 change is that it adds NO work to the crew log's write path, which is on the
@@ -11,7 +11,7 @@ guarantee                                        one-line change that reddens it
 the batch pass makes no metrics call and reads   add any ``emit_counter`` /
 no clock                                         ``get_recorder`` / ``time.monotonic``
 (``TestTheWritePathIsUntouched``)                call inside ``_write_batch``
-the write path's two modules name nothing from   add any ``kiro_crew.metrics`` import
+the write path's two modules name nothing from   add any ``aj_crew.metrics`` import
 telemetry at all, even lazily                    to ``writer.py`` or
                                                  ``store_segment_writes.py``
 the sync funnel keeps no accounting              re-add a byte accumulator to
@@ -42,11 +42,11 @@ import pytest
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
-import kiro_crew.metrics as metrics_pkg
-from kiro_crew.crew_log import bus
-from kiro_crew.metrics import crew_log_health as clh
-from kiro_crew.metrics.recorder import MetricsRecorder
-from kiro_crew.metrics.schema import validate_name
+import aj_crew.metrics as metrics_pkg
+from aj_crew.crew_log import bus
+from aj_crew.metrics import crew_log_health as clh
+from aj_crew.metrics.recorder import MetricsRecorder
+from aj_crew.metrics.schema import validate_name
 
 # --------------------------------------------------------------------------- #
 # helpers
@@ -69,7 +69,7 @@ class _CapturingRecorder:
 @pytest.fixture
 def rec():
     r = _CapturingRecorder()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=r):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=r):
         yield r
 
 
@@ -118,7 +118,7 @@ class _FakeWriter:
     """The one shape the backlog reader touches: ``.stats().buffered``."""
 
     def __init__(self, *, buffered=0) -> None:
-        from kiro_crew.crew_log.writer import WriterStats
+        from aj_crew.crew_log.writer import WriterStats
 
         self._stats = WriterStats(
             buffered=buffered,
@@ -134,7 +134,7 @@ class _FakeWriter:
 
 def _install_writer(writer):
     """Patch the installed writer instance the backlog reader looks at."""
-    return patch("kiro_crew.crew_log.emit_runtime._writer_instance", writer)
+    return patch("aj_crew.crew_log.emit_runtime._writer_instance", writer)
 
 
 # --------------------------------------------------------------------------- #
@@ -196,7 +196,7 @@ class TestSavepointWriteAtTheCallSite:
     """
 
     def test_one_session_pass_that_lands_is_exactly_one_written_point(self, rec):
-        from kiro_crew.crew_log import checkpoint
+        from aj_crew.crew_log import checkpoint
 
         checkpoint._count_savepoint_write(kind="session", written=True, elapsed_ms=4.0)
         calls = _named(rec, clh.COUNTER_SAVEPOINT_WRITE)
@@ -209,7 +209,7 @@ class TestSavepointWriteAtTheCallSite:
         }
 
     def test_a_session_and_a_slot_pass_are_separable(self, rec):
-        from kiro_crew.crew_log import checkpoint
+        from aj_crew.crew_log import checkpoint
 
         checkpoint._count_savepoint_write(kind="session", written=True, elapsed_ms=1.0)
         checkpoint._count_savepoint_write(kind="slot", written=True, elapsed_ms=1.0)
@@ -217,7 +217,7 @@ class TestSavepointWriteAtTheCallSite:
         assert kinds == ["session", "slot"]
 
     def test_a_store_that_refuses_the_payload_is_a_failed_point(self, rec):
-        from kiro_crew.crew_log import checkpoint
+        from aj_crew.crew_log import checkpoint
 
         checkpoint._count_savepoint_write(kind="slot", written=False, elapsed_ms=1.0)
         assert _named(rec, clh.COUNTER_SAVEPOINT_WRITE)[-1]["attrs"]["outcome"] == "failed"
@@ -231,7 +231,7 @@ class TestSavepointWriteAtTheCallSite:
         not say.
         """
         attempted, written, bundle_size = 2, 2, 3
-        from kiro_crew.crew_log import checkpoint
+        from aj_crew.crew_log import checkpoint
 
         checkpoint._count_savepoint_write(
             kind="session", written=written == attempted, elapsed_ms=1.0
@@ -247,7 +247,7 @@ class TestSavepointWriteAtTheCallSite:
             try:
                 raise RuntimeError("store blew up")
             finally:
-                from kiro_crew.crew_log import checkpoint
+                from aj_crew.crew_log import checkpoint
 
                 checkpoint._count_savepoint_write(
                     kind="slot",
@@ -259,7 +259,7 @@ class TestSavepointWriteAtTheCallSite:
         assert calls[0]["attrs"] == {"kind": "slot", "outcome": "failed", "bucket": "ge_1s"}
 
     def test_telemetry_failing_never_reaches_the_savepoint(self):
-        from kiro_crew.crew_log import checkpoint
+        from aj_crew.crew_log import checkpoint
 
         with patch.object(clh, "savepoint_write", side_effect=RuntimeError("boom")):
             checkpoint._count_savepoint_write(kind="slot", written=True, elapsed_ms=1.0)
@@ -273,18 +273,18 @@ class TestSavepointWriteAtTheCallSite:
         (``TestTheWritePathIsUntouched``). Off that thread, this site can afford
         the import, so the first savepoint of a process is counted.
         """
-        from kiro_crew.crew_log import checkpoint
+        from aj_crew.crew_log import checkpoint
 
         # Evicting the module makes the call site re-import it, which rebinds
-        # ``crew_log_health`` as an attribute of the ``kiro_crew.metrics`` PACKAGE
+        # ``crew_log_health`` as an attribute of the ``aj_crew.metrics`` PACKAGE
         # to the fresh module object. ``patch.dict`` restores the registry entry
         # and not that attribute, so both bindings are restored here: the entry by
         # ``patch.dict``, the parent attribute by ``patch``. Restoring only one
         # leaves a duplicate module behind for every later test.
-        with patch.dict(sys.modules), patch("kiro_crew.metrics.crew_log_health", clh):
-            sys.modules.pop("kiro_crew.metrics.crew_log_health", None)
+        with patch.dict(sys.modules), patch("aj_crew.metrics.crew_log_health", clh):
+            sys.modules.pop("aj_crew.metrics.crew_log_health", None)
             checkpoint._count_savepoint_write(kind="session", written=True, elapsed_ms=1.0)
-        assert sys.modules["kiro_crew.metrics.crew_log_health"] is clh
+        assert sys.modules["aj_crew.metrics.crew_log_health"] is clh
         assert metrics_pkg.crew_log_health is clh
         assert len(_named(rec, clh.COUNTER_SAVEPOINT_WRITE)) == 1
 
@@ -300,7 +300,7 @@ class TestSavepointWriteAtTheCallSite:
         exercised from two plain numbers. Nothing here needs the clock module
         rebound, which would replace the reader for the whole worker.
         """
-        from kiro_crew.crew_log import checkpoint
+        from aj_crew.crew_log import checkpoint
 
         started, finished = 10.0, 10.0 + elapsed_secs
         checkpoint._count_savepoint_write(
@@ -323,7 +323,7 @@ class TestTheCallSitesAreWired:
         import ast
         from pathlib import Path
 
-        from kiro_crew.crew_log import checkpoint
+        from aj_crew.crew_log import checkpoint
 
         return ast.parse(Path(checkpoint.__file__).read_text(encoding="utf-8"))
 
@@ -460,10 +460,10 @@ class TestBusSubscriberError:
             raise RuntimeError("swallowed")
 
         bus.subscribe(bus.FOLD_ADVANCED, boom)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.crew_log.bus"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.crew_log.bus"):
             bus.publish(bus.FOLD_ADVANCED, object())  # no raise
         # The failure the publisher is not told about is still written down.
-        logged = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.crew_log.bus"]
+        logged = [r.getMessage() for r in caplog.records if r.name == "aj_crew.crew_log.bus"]
         assert len(logged) == 1
         assert logged[0].startswith("crew log bus subscriber for fold_advanced failed")
         assert "RuntimeError: swallowed" in logged[0]
@@ -474,10 +474,10 @@ class TestBusSubscriberError:
 
         bus.subscribe(bus.FOLD_ADVANCED, boom)
         with patch.object(clh, "bus_subscriber_error", side_effect=RuntimeError("telemetry")):
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.crew_log.bus"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.crew_log.bus"):
                 bus.publish(bus.FOLD_ADVANCED, object())  # still no raise
         # Broken telemetry costs the point, not the log line for the subscriber.
-        logged = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.crew_log.bus"]
+        logged = [r.getMessage() for r in caplog.records if r.name == "aj_crew.crew_log.bus"]
         assert len(logged) == 1
         assert "RuntimeError: subscriber" in logged[0]
 
@@ -491,7 +491,7 @@ class TestGauges:
     def test_an_empty_queue_reports_zero_and_an_absent_one_reports_nothing(self):
         import queue as queue_mod
 
-        from kiro_crew.crew_log import eager
+        from aj_crew.crew_log import eager
 
         with patch.object(eager, "_queue", queue_mod.Queue(maxsize=8)):
             assert clh.read_eager_queue_depth() == 0
@@ -501,7 +501,7 @@ class TestGauges:
     def test_the_queue_gauge_equals_the_live_size_at_collection(self):
         import queue as queue_mod
 
-        from kiro_crew.crew_log import eager
+        from aj_crew.crew_log import eager
 
         pending = queue_mod.Queue(maxsize=8)
         pending.put_nowait(("a",))
@@ -512,7 +512,7 @@ class TestGauges:
         assert [p.value for p in points] == [2]
 
     def test_reading_the_depth_never_starts_the_fold_thread(self):
-        from kiro_crew.crew_log import eager
+        from aj_crew.crew_log import eager
 
         with patch.object(eager, "_queue", None):
             with patch.object(eager, "_ensure_worker", side_effect=AssertionError("built")):
@@ -538,7 +538,7 @@ class TestGauges:
         unwinds correctly, which is what ``test_facade_mirror_guards`` requires.
         """
         with _install_writer(None):
-            with patch("kiro_crew.crew_log.emit._writer", side_effect=AssertionError("built")):
+            with patch("aj_crew.crew_log.emit._writer", side_effect=AssertionError("built")):
                 assert clh.read_writer_buffered() is None
 
     def test_a_raising_reader_is_a_gap_not_an_exporter_failure(self, caplog):
@@ -563,8 +563,8 @@ class TestNoReaderEverImportsTheCrewLog:
     @pytest.mark.parametrize(
         "reader,module",
         [
-            ("read_eager_queue_depth", "kiro_crew.crew_log.eager"),
-            ("read_writer_buffered", "kiro_crew.crew_log.emit_runtime"),
+            ("read_eager_queue_depth", "aj_crew.crew_log.eager"),
+            ("read_writer_buffered", "aj_crew.crew_log.emit_runtime"),
         ],
     )
     def test_an_unloaded_source_is_absent_rather_than_imported(self, reader, module):
@@ -596,8 +596,8 @@ class TestTheWritePathIsUntouched:
     """
 
     WRITE_PATH_FILES = (
-        "src/kiro_crew/crew_log/writer.py",
-        "src/kiro_crew/crew_log/store_segment_writes.py",
+        "src/aj_crew/crew_log/writer.py",
+        "src/aj_crew/crew_log/store_segment_writes.py",
     )
 
     def test_the_writer_module_imports_nothing_from_metrics_at_all(self):
@@ -605,8 +605,8 @@ class TestTheWritePathIsUntouched:
         import ast
         from pathlib import Path
 
-        from kiro_crew.crew_log import store_segment_writes as swmod
-        from kiro_crew.crew_log import writer as wmod
+        from aj_crew.crew_log import store_segment_writes as swmod
+        from aj_crew.crew_log import writer as wmod
 
         for module in (wmod, swmod):
             tree = ast.parse(Path(module.__file__).read_text(encoding="utf-8"))
@@ -616,7 +616,7 @@ class TestTheWritePathIsUntouched:
                     imported.append(node.module)
                 elif isinstance(node, ast.Import):
                     imported.extend(alias.name for alias in node.names)
-            assert [name for name in imported if name.startswith("kiro_crew.metrics")] == []
+            assert [name for name in imported if name.startswith("aj_crew.metrics")] == []
 
     def test_the_batch_pass_names_nothing_from_this_module(self):
         """No call in ``_write_batch`` names a clock, a counter or a new lock.
@@ -630,7 +630,7 @@ class TestTheWritePathIsUntouched:
         import ast
         from pathlib import Path
 
-        from kiro_crew.crew_log import writer as wmod
+        from aj_crew.crew_log import writer as wmod
 
         tree = ast.parse(Path(wmod.__file__).read_text(encoding="utf-8"))
         body = [
@@ -662,7 +662,7 @@ class TestTheWritePathIsUntouched:
         import ast
         from pathlib import Path
 
-        from kiro_crew.crew_log import store_segment_writes as swmod
+        from aj_crew.crew_log import store_segment_writes as swmod
 
         tree = ast.parse(Path(swmod.__file__).read_text(encoding="utf-8"))
         funnel = [
@@ -686,7 +686,7 @@ class TestTheWritePathIsUntouched:
         :meth:`test_the_batch_pass_names_nothing_from_this_module`, which reads
         the source and so also covers a branch this pass does not take.
         """
-        from kiro_crew.crew_log.writer import CrewLogWriter, JobKind, _Pending
+        from aj_crew.crew_log.writer import CrewLogWriter, JobKind, _Pending
 
         seen = {"metrics": 0, "clock": 0}
         depth = {"n": 0}
@@ -718,8 +718,8 @@ class TestTheWritePathIsUntouched:
             nbytes=64,
         )
         with patch.object(CrewLogWriter, "_write_batch", traced):
-            with patch("kiro_crew.metrics.provider.get_recorder", _spy_metrics):
-                with patch("kiro_crew.metrics.events.emit_counter", _spy_metrics):
+            with patch("aj_crew.metrics.provider.get_recorder", _spy_metrics):
+                with patch("aj_crew.metrics.events.emit_counter", _spy_metrics):
                     writer._write_batch("unit", [job])
         return seen
 
@@ -765,7 +765,7 @@ class TestTheWritePathIsUntouched:
         calls: list = []
         try:
             bus.subscribe(bus.TREE_ADVANCED, lambda e: (_ for _ in ()).throw(RuntimeError("x")))
-            with patch.dict(sys.modules, {"kiro_crew.metrics.crew_log_health": None}):
+            with patch.dict(sys.modules, {"aj_crew.metrics.crew_log_health": None}):
                 with patch.object(clh, "bus_subscriber_error", calls.append):
                     bus.publish(bus.TREE_ADVANCED, object())
         finally:
@@ -784,7 +784,7 @@ class TestTheSavepointCounterIsOffTheWriteThread:
     """
 
     #: How the two savepoint writers are named by the one module that imports
-    #: them: ``from kiro_crew.crew_log import checkpoint as savepoints``. Matching
+    #: them: ``from aj_crew.crew_log import checkpoint as savepoints``. Matching
     #: the qualified name and not the bare ``save`` keeps ``checkpoint``'s own
     #: calls into the savepoint STORE out of the answer.
     CALLS = {"savepoints.save", "savepoints.save_slot"}
@@ -802,7 +802,7 @@ class TestTheSavepointCounterIsOffTheWriteThread:
     def test_the_savepoint_writers_are_reached_from_only_the_fold_path(self):
         from pathlib import Path
 
-        from kiro_crew.crew_log import checkpoint
+        from aj_crew.crew_log import checkpoint
 
         crew_log = Path(checkpoint.__file__).parent
         reached = {
@@ -819,7 +819,7 @@ class TestTheSavepointCounterIsOffTheWriteThread:
         """
         from pathlib import Path
 
-        from kiro_crew.crew_log import checkpoint
+        from aj_crew.crew_log import checkpoint
 
         crew_log = Path(checkpoint.__file__).parent
         for path in sorted(crew_log.glob("emit*.py")):
@@ -844,10 +844,10 @@ class TestOmissionsAreDeliberate:
 
     def test_the_four_shipped_names_are_exactly_these(self):
         assert clh.ALL_METRIC_NAMES == (
-            "kirocrew.crew_log.savepoint.write",
-            "kirocrew.crew_log.eager.queue_depth",
-            "kirocrew.crew_log.writer.buffered",
-            "kirocrew.crew_log.bus.subscriber_error",
+            "ajcrew.crew_log.savepoint.write",
+            "ajcrew.crew_log.eager.queue_depth",
+            "ajcrew.crew_log.writer.buffered",
+            "ajcrew.crew_log.bus.subscriber_error",
         )
 
     def test_the_metrics_doc_does_not_promise_an_omitted_instrument(self):
@@ -855,9 +855,9 @@ class TestOmissionsAreDeliberate:
 
         repo = Path(clh.__file__).resolve().parents[3]
         table = (repo / "docs/system-specs/modules/metrics.md").read_text(encoding="utf-8")
-        assert "`kirocrew.crew_log.append.bytes`" not in table
-        assert "`kirocrew.crew_log.append.batch`" not in table
-        assert "`kirocrew.crew_log.fold.lag`" not in table
+        assert "`ajcrew.crew_log.append.bytes`" not in table
+        assert "`ajcrew.crew_log.append.batch`" not in table
+        assert "`ajcrew.crew_log.fold.lag`" not in table
 
 
 # --------------------------------------------------------------------------- #
@@ -868,7 +868,7 @@ class TestOmissionsAreDeliberate:
 class TestTelemetryOff:
     def test_a_savepoint_write_records_nothing_with_telemetry_off(self):
         noop = MetricsRecorder(None)
-        with patch("kiro_crew.metrics.provider.get_recorder", return_value=noop):
+        with patch("aj_crew.metrics.provider.get_recorder", return_value=noop):
             clh.savepoint_write(kind="session", written=True, elapsed_ms=1.0)
             clh.bus_subscriber_error("fold_advanced")
         assert noop.enabled is False
@@ -879,7 +879,7 @@ class TestTelemetryOff:
         bus.reset_for_tests()
         try:
             bus.subscribe(bus.FOLD_ADVANCED, lambda e: (_ for _ in ()).throw(RuntimeError("x")))
-            with patch("kiro_crew.metrics.provider.get_recorder", return_value=noop):
+            with patch("aj_crew.metrics.provider.get_recorder", return_value=noop):
                 bus.publish(bus.FOLD_ADVANCED, object())
         finally:
             bus.reset_for_tests()
@@ -888,7 +888,7 @@ class TestTelemetryOff:
     def test_the_observable_instruments_are_registered_only_on_the_live_path(self):
         from pathlib import Path
 
-        from kiro_crew.metrics import provider
+        from aj_crew.metrics import provider
 
         source = Path(provider.__file__).read_text(encoding="utf-8")
         assert "register_crew_log_health_instruments" in source
@@ -921,7 +921,7 @@ class TestProviderWiring:
     def test_the_live_build_path_registers_these_instruments(self):
         from pathlib import Path
 
-        from kiro_crew.metrics import provider
+        from aj_crew.metrics import provider
 
         source = Path(provider.__file__).read_text(encoding="utf-8")
         assert source.count("register_crew_log_health_instruments") == 2

@@ -11,8 +11,8 @@ import weakref
 
 import pytest
 
-from kiro_crew import platform_compat, skill_usage
-from kiro_crew.skill_usage import (
+from aj_crew import platform_compat, skill_usage
+from aj_crew.skill_usage import (
     _MAX_AGE_SECS,
     SkillUsageLedger,
 )

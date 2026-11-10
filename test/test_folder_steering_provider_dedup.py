@@ -18,20 +18,20 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import agent_sdk, folder_steering
-from kiro_crew.acp import skill_projection as projection
-from kiro_crew.acp.types import PROVIDER_LABEL_CODEX, PROVIDER_LABEL_KAS
-from kiro_crew.agent_sdk.provider_identity import PROVIDER_ACP, PROVIDER_CLAUDE_CODE
-from kiro_crew.context import ContextBuilder, _project_steering_delivered
-from kiro_crew.essential_delivery import EssentialDelivery
-from kiro_crew.folder_steering import FOLDER_STEERING_HEADER as _RAW_HEADER
-from kiro_crew.folder_steering import collect_folder_steering
-from kiro_crew.member_essential_context import (
+from aj_crew import agent_sdk, folder_steering
+from aj_crew.acp import skill_projection as projection
+from aj_crew.acp.types import PROVIDER_LABEL_CODEX, PROVIDER_LABEL_KAS
+from aj_crew.agent_sdk.provider_identity import PROVIDER_ACP, PROVIDER_CLAUDE_CODE
+from aj_crew.context import ContextBuilder, _project_steering_delivered
+from aj_crew.essential_delivery import EssentialDelivery
+from aj_crew.folder_steering import FOLDER_STEERING_HEADER as _RAW_HEADER
+from aj_crew.folder_steering import collect_folder_steering
+from aj_crew.member_essential_context import (
     projected_launch_paths,
     projected_resource_documents,
 )
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 _needs_pinned_walk = pytest.mark.skipif(
     not folder_steering.pinned_fs.supports_pinned_tree_walk(),
@@ -122,7 +122,7 @@ def test_the_opt_out_removes_only_the_kiro_cli_path(trees, provider_type, native
 @pytest.mark.parametrize("driver_verdict", [False, True])
 def test_the_kiro_cli_verdict_is_the_drivers(trees, monkeypatch, driver_verdict):
     """On kiro the verdict is the ACP driver's reading of the setting, nothing else."""
-    from kiro_crew.agent_sdk.drivers import acp as acp_driver
+    from aj_crew.agent_sdk.drivers import acp as acp_driver
 
     asked: list[object] = []
 
@@ -241,7 +241,7 @@ def _launch_record(*paths: Path) -> dict[str, str]:
     return dict.fromkeys((str(path) for path in paths), "")
 
 
-def _declare(resources: list[str], name: str = "kirocrew") -> None:
+def _declare(resources: list[str], name: str = "ajcrew") -> None:
     """Write the session agent spec that kiro-cli reads for ``--agent``."""
     spec = {"name": name, "resources": resources}
     _write(Path.home() / ".kiro" / "agents" / f"{name}.json", json.dumps(spec))
@@ -262,19 +262,19 @@ def _prepare_projection(trees, monkeypatch):
         "list_agents",
         lambda **kwargs: [
             SimpleNamespace(
-                name="kirocrew",
-                filename="kirocrew.json",
+                name="ajcrew",
+                filename="ajcrew.json",
                 scope="global",
-                kirocrew_owned=True,
+                ajcrew_owned=True,
             )
         ],
     )
     monkeypatch.setattr(
-        "kiro_crew.agent.managed_mcp_spec_entry",
+        "aj_crew.agent.managed_mcp_spec_entry",
         lambda name, **_kw: {"command": "test-core", "args": []},
     )
     monkeypatch.setattr(
-        "kiro_crew.agent._KIRO_MCP_JSON", trees["home"] / ".kiro" / "settings" / "mcp.json"
+        "aj_crew.agent._KIRO_MCP_JSON", trees["home"] / ".kiro" / "settings" / "mcp.json"
     )
     return projection.prepare_native_skill_projection(trees["project"])
 
@@ -290,11 +290,11 @@ def test_an_opted_out_kiro_chat_receives_declared_trees_once(tmp_path, trees, mo
     _declare([SHIPPED_STEERING_RESOURCE])
     _opt_out(trees["project"])
     prepared = _prepare_projection(trees, monkeypatch)
-    recorded = projected_launch_paths(prepared.specs["kirocrew"], str(trees["project"]))
+    recorded = projected_launch_paths(prepared.specs["ajcrew"], str(trees["project"]))
     # The always documents kiro-cli loads from the declared resources; the
     # record names every declared markdown path, conditional ones included,
     # which the folder leaves to their native trigger anyway.
-    native = projected_resource_documents(prepared.specs["kirocrew"], str(trees["project"]))
+    native = projected_resource_documents(prepared.specs["ajcrew"], str(trees["project"]))
     assert set(native) <= set(recorded)
     provider = _launch_provider(trees["project"], dict.fromkeys(recorded, ""))
     monkeypatch.setattr(agent_sdk, "context_provider_of", lambda value: value)
@@ -337,7 +337,7 @@ def test_opted_out_plain_kiro_without_folder_steering_keeps_managed_declaration(
     prepared = _prepare_projection(trees, monkeypatch)
     message = _kiro_turn(tmp_path, trees, fresh=True, steering_dirs=())
 
-    assert SHIPPED_STEERING_RESOURCE in prepared.specs["kirocrew"]["resources"]
+    assert SHIPPED_STEERING_RESOURCE in prepared.specs["ajcrew"]["resources"]
     assert FOLDER_STEERING_HEADER not in message
 
 
@@ -358,7 +358,7 @@ def test_opted_out_kiro_folder_skips_documents_recorded_at_launch(tmp_path, tree
 
 
 def _bounded_launch_provider(project: Path, documents: dict[str, str], fit):
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     handle = SimpleNamespace(
         native_context_documents=dict(documents),
@@ -372,7 +372,7 @@ def _bounded_launch_provider(project: Path, documents: dict[str, str], fit):
 def test_compaction_render_sends_every_guide_after_declared_files_outgrow_bound(
     tmp_path, trees, monkeypatch
 ):
-    from kiro_crew import member_essential_context
+    from aj_crew import member_essential_context
 
     _opt_out(trees["project"])
     project_rule_path = trees["project"] / ".kiro" / "steering" / "project.md"
@@ -620,7 +620,7 @@ def test_claude_receives_project_steering_and_agents_md_once(
 def test_one_unglobbable_entry_does_not_empty_the_others(tmp_path, trees):
     """An absolute and a ``~/`` entry anchor at their own roots, and neither
     takes the global rule down with it."""
-    from kiro_crew.context import _load_steering_resources
+    from aj_crew.context import _load_steering_resources
 
     _write(tmp_path / "abs-rules" / "abs.md", "ABSOLUTE-RULE-3a9d")
     _write(trees["home"] / "notes" / "note.md", "HOME-NOTE-RULE-8c0f")
@@ -639,7 +639,7 @@ def test_one_unglobbable_entry_does_not_empty_the_others(tmp_path, trees):
 @pytest.mark.skipif(not hasattr(Path, "symlink_to"), reason="no symlinks")
 def test_a_project_steering_link_out_of_the_project_is_refused(tmp_path, trees):
     """A project document is admitted against the project, not the home."""
-    from kiro_crew.context import _load_steering_resources
+    from aj_crew.context import _load_steering_resources
 
     outside = _write(tmp_path / "home" / "elsewhere" / "leak.md", "OUTSIDE-RULE-1d4e")
     link = trees["project"] / ".kiro" / "steering" / "leak.md"
@@ -657,7 +657,7 @@ def test_a_target_under_a_filesystem_root_base_is_admitted(tmp_path):
     """A root anchor (``file:///rules.md``) already ends in a separator, so the
     containment prefix is the root itself, not a doubled separator nothing
     starts with."""
-    from kiro_crew.context import steering_target_admissible
+    from aj_crew.context import steering_target_admissible
 
     doc = _write(tmp_path / "rules.md", "ROOT-ANCHORED-RULE").resolve()
     assert steering_target_admissible(doc, base=Path(doc.anchor))
@@ -677,8 +677,8 @@ def test_a_relocated_kiro_home_keeps_folder_selected_global_steering(
     moved = tmp_path / "kiro-home"
     _write(moved / "steering" / "moved.md", "MOVED-GLOBAL-RULE-7e2c")
     _write(
-        moved / "agents" / "kirocrew.json",
-        json.dumps({"name": "kirocrew", "resources": [SHIPPED_STEERING_RESOURCE]}),
+        moved / "agents" / "ajcrew.json",
+        json.dumps({"name": "ajcrew", "resources": [SHIPPED_STEERING_RESOURCE]}),
     )
     monkeypatch.setenv("KIRO_HOME", str(moved))
     msg = _claude_turn(tmp_path, trees, fresh=fresh, steering_dirs=trees["dirs"])

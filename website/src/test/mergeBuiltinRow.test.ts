@@ -5,8 +5,8 @@ import type { RegistryApp } from '../components/appstore/types'
 /**
  * The precedence IS the contract, and it used to be spelled twice with opposite
  * answers: the browse list preferred the server row while the detail page
- * preferred the local manifest, so one app could read "Kiro Crew ·
- * Developer Tools" in the list and "kirocrew · Productivity" one click later.
+ * preferred the local manifest, so one app could read "Aj Crew ·
+ * Developer Tools" in the list and "ajcrew · Productivity" one click later.
  * These tests pin the single answer both surfaces now share.
  */
 const ROW = {
@@ -90,7 +90,7 @@ describe('mergeBuiltinRow', () => {
   })
 
   it('never invents an author when neither source states one', () => {
-    // The previous browse-side chain ended in a hardcoded 'kirocrew', which
+    // The previous browse-side chain ended in a hardcoded 'ajcrew', which
     // asserted first-party authorship no source had made.
     const merged = mergeBuiltinRow({ ...ROW, author: undefined } as RegistryApp, {})
     expect(merged.author).toBe('')
@@ -124,7 +124,7 @@ describe('mergeBuiltinRow', () => {
   })
 
   it('never invents an author when neither source states one', () => {
-    // The browse chain used to hardcode `|| 'kirocrew'`, asserting authorship no
+    // The browse chain used to hardcode `|| 'ajcrew'`, asserting authorship no
     // source stated; the offline fallback carried the same literal. Both are gone.
     const merged = mergeBuiltinRow({ name: 'meetings', origin: 'builtin' }, {})
     expect(merged.author).toBe('')

@@ -15,7 +15,7 @@ from source_providers_helpers import _mock_source_sel_fixture  # noqa: F401
 from source_providers_helpers import _no_visibility_refresh_side_task  # noqa: F401
 from source_providers_helpers import _app
 
-from kiro_crew.dashboard.handlers import source_providers as source
+from aj_crew.dashboard.handlers import source_providers as source
 
 
 def _pin_local_owner_gate(monkeypatch) -> None:
@@ -30,17 +30,17 @@ def _pin_local_owner_gate(monkeypatch) -> None:
     ``test_dashboard_handlers_core_coverage_security_endpoints.py``.
     Patched on its defining module, which the handler imports at call time.
     """
-    from kiro_crew.member_memory_auth import LocalOwnerProvenance
+    from aj_crew.member_memory_auth import LocalOwnerProvenance
 
     monkeypatch.setattr(
-        "kiro_crew.member_memory_auth.local_owner_bootstrap_provenance",
+        "aj_crew.member_memory_auth.local_owner_bootstrap_provenance",
         lambda _request: LocalOwnerProvenance(),
     )
 
 
 @pytest.mark.asyncio
 async def test_local_token_uses_configured_owner_subject(monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers import core
+    from aj_crew.dashboard.handlers import core
 
     generate = MagicMock(return_value="owner-token")
     audit = MagicMock()
@@ -69,7 +69,7 @@ async def test_local_token_uses_configured_owner_subject(monkeypatch) -> None:
 async def test_local_token_carries_embed_parent_port_claim(monkeypatch) -> None:
     """?embed_parent_port=<port> is baked into the token as a signed claim so the
     embedded remote can authorize that loopback parent origin in frame-ancestors."""
-    from kiro_crew.dashboard.handlers import core
+    from aj_crew.dashboard.handlers import core
 
     generate = MagicMock(return_value="owner-token")
     monkeypatch.setattr(core, "generate_token", generate)
@@ -96,7 +96,7 @@ async def test_local_token_carries_embed_parent_port_claim(monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_local_token_uses_local_owner_subject_without_configured_owner(monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers import core
+    from aj_crew.dashboard.handlers import core
 
     generate = MagicMock(return_value="local-token")
     audit = MagicMock()

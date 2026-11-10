@@ -18,10 +18,10 @@ import inspect
 
 import pytest
 
-from kiro_crew.acp.types import STOP_REASON_CANCELLED, STOP_REASON_END_TURN, STOP_REASON_REFUSAL
-from kiro_crew.dashboard import chat_utils as _chat_utils
-from kiro_crew.dashboard import chat_utils as chat_utils_module
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.acp.types import STOP_REASON_CANCELLED, STOP_REASON_END_TURN, STOP_REASON_REFUSAL
+from aj_crew.dashboard import chat_utils as _chat_utils
+from aj_crew.dashboard import chat_utils as chat_utils_module
+from aj_crew.dashboard.chat_utils import (
     CRON_NOTIFICATION_KIND,
     SUBAGENT_COMPLETION_KIND,
     SYNTHETIC_RECOVERY_KIND,
@@ -318,7 +318,7 @@ def test_ordinary_informational_answer_lands():
     for text in (
         "The root cause is a race in the writer; the fix is a lock.",
         "There are three options here, and I'd lean toward the second.",
-        "That file lives under src/kiro_crew/dashboard/.",
+        "That file lives under src/aj_crew/dashboard/.",
     ):
         assert is_promise_only_terminal(text) is False
         assert _recover(final_segment_text=text) is False
@@ -598,8 +598,8 @@ def test_completed_tool_call_does_not_trigger():
 def test_has_user_queued_followup_excludes_system_injections():
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.chat_runner import _has_user_queued_followup
-    from kiro_crew.dashboard.state import CRON_NOTIFY_PREFIX
+    from aj_crew.dashboard.chat_runner import _has_user_queued_followup
+    from aj_crew.dashboard.state import CRON_NOTIFY_PREFIX
 
     user = {"id": "u", "content": "don't do that", "kind": "", "payload": ""}
     # REAL cron notification: the scheduler tags it CRON_NOTIFICATION_KIND at
@@ -654,8 +654,8 @@ def test_has_user_queued_followup_excludes_system_injections():
 def test_has_user_queued_followup_ignores_unsent_restored_cards():
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.chat_runner import _has_user_queued_followup
-    from kiro_crew.dashboard.slot_queue_repository import (
+    from aj_crew.dashboard.chat_runner import _has_user_queued_followup
+    from aj_crew.dashboard.slot_queue_repository import (
         RESTORED_QUEUE_KEY,
         RESTORED_SEND_CHOSEN_KEY,
     )
@@ -763,13 +763,13 @@ async def test_session_rebind_after_enqueue_purges_false_blocker_replay(tmp_path
 
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard.chat_runner import _start_next_queued_turn
-    from kiro_crew.dashboard.chat_utils import (
+    from aj_crew.dashboard.chat_runner import _start_next_queued_turn
+    from aj_crew.dashboard.chat_utils import (
         FALSE_TOOL_BLOCKER_REPLAY_KIND,
         RecoveryPayload,
         effective_session_key,
     )
-    from kiro_crew.dashboard.recovery_replays import LiveSlot, ReplayFamily
+    from aj_crew.dashboard.recovery_replays import LiveSlot, ReplayFamily
 
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
@@ -803,9 +803,9 @@ async def test_session_rebind_after_enqueue_purges_false_blocker_replay(tmp_path
         raise AssertionError("recovery replay dispatched after a session rebind")
 
     with (
-        patch("kiro_crew.dashboard.chat_runner.KiroCrewConfig.load", return_value=cfg),
+        patch("aj_crew.dashboard.chat_runner.AjCrewConfig.load", return_value=cfg),
         patch(
-            "kiro_crew.dashboard.chat_runner.spawn_guarded_turn",
+            "aj_crew.dashboard.chat_runner.spawn_guarded_turn",
             side_effect=_unexpected_dispatch,
         ),
     ):

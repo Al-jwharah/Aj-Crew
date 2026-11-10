@@ -27,7 +27,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import NoConfiguredOwner, as_owner
 
-from kiro_crew.dashboard.handlers import (
+from aj_crew.dashboard.handlers import (
     api_member_thread,
     api_workspaces,
     api_workspaces_create,
@@ -63,7 +63,7 @@ def _members_app() -> web.Application:
 @pytest.fixture()
 def cfg_env(tmp_path, monkeypatch):
     """A config dir carrying a default workspace plus one deletable extra."""
-    cfg_dir = tmp_path / ".kirocrew"
+    cfg_dir = tmp_path / ".ajcrew"
     cfg_dir.mkdir()
     cfg_file = cfg_dir / "config.json"
     cfg_file.write_text(
@@ -77,10 +77,10 @@ def cfg_env(tmp_path, monkeypatch):
             }
         )
     )
-    monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: cfg_file)
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: cfg_dir)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.config_dir", lambda: cfg_dir)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.files.data_home", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: cfg_file)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: cfg_dir)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.config_dir", lambda: cfg_dir)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.files.data_home", lambda: tmp_path)
     return cfg_dir
 
 
@@ -88,8 +88,8 @@ def cfg_env(tmp_path, monkeypatch):
 def _quiet_sel():
     """Keep both the handlers' success audit and the gate's denial audit off disk."""
     with (
-        patch("kiro_crew.dashboard.handlers.sel") as handler_sel,
-        patch("kiro_crew.sel.sel") as gate_sel,
+        patch("aj_crew.dashboard.handlers.sel") as handler_sel,
+        patch("aj_crew.sel.sel") as gate_sel,
     ):
         handler_sel.return_value = MagicMock()
         gate_sel.return_value = MagicMock()

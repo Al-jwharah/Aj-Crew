@@ -14,11 +14,11 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import dashboard_agentic
-from kiro_crew.dashboard_templates.manifest import ManifestError, load_template, parse_manifest
-from kiro_crew.mcp_panel import _render_fields
+from aj_crew import dashboard_agentic
+from aj_crew.dashboard_templates.manifest import ManifestError, load_template, parse_manifest
+from aj_crew.mcp_panel import _render_fields
 
-BUILTIN = Path(__file__).resolve().parents[1] / "src/kiro_crew/dashboard_templates/builtin"
+BUILTIN = Path(__file__).resolve().parents[1] / "src/aj_crew/dashboard_templates/builtin"
 FIXTURES = Path(__file__).resolve().parent / "fixtures/dashboard_templates"
 
 
@@ -305,7 +305,7 @@ class TestWhatDashboardFieldsReturns:
 
 class TestTheTurnBlock:
     def test_the_block_names_the_template_and_its_agentic_fields(self) -> None:
-        from kiro_crew.dashboard_templates import instance
+        from aj_crew.dashboard_templates import instance
 
         # An ADOPTED page: an unadopted one shows the suggestions page and offers no fields.
         instance.adopt("code-reviewer", "project-report")
@@ -332,7 +332,7 @@ class TestTheTurnBlock:
         assert "Upkeep:" not in block
 
     def test_an_adopted_page_keeps_the_plain_line(self) -> None:
-        from kiro_crew.dashboard_templates import instance
+        from aj_crew.dashboard_templates import instance
 
         instance.adopt("code-reviewer", "project-report")
         block = dashboard_agentic.turn_block("code-reviewer")
@@ -340,21 +340,21 @@ class TestTheTurnBlock:
         assert "Your Dashboard tab shows template project-report" in block
 
     def test_the_page_named_for_the_crewmate_keeps_the_plain_line(self) -> None:
-        block = dashboard_agentic.turn_block("kirocrew-conductor")
+        block = dashboard_agentic.turn_block("ajcrew-conductor")
         assert "suggestions page" not in block, block
-        assert "Your Dashboard tab shows template kirocrew-conductor" in block
+        assert "Your Dashboard tab shows template ajcrew-conductor" in block
 
     def test_the_member_section_carries_the_block(self) -> None:
-        from kiro_crew.dashboard_templates import instance
+        from aj_crew.dashboard_templates import instance
 
         # An ADOPTED page: an unadopted one shows the suggestions page and offers no fields.
         instance.adopt("code-reviewer", "project-report")
-        from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-        from kiro_crew.context_assembly.member import build_member_section
+        from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+        from aj_crew.context_assembly.member import build_member_section
 
-        cfg = KiroCrewConfig()
-        cfg.agents = {"code-reviewer": KiroCrewAgentConfig(kiro_agent="kirocrew-autofix")}
-        with patch("kiro_crew.context.KiroCrewConfig.load", return_value=cfg):
+        cfg = AjCrewConfig()
+        cfg.agents = {"code-reviewer": AjCrewAgentConfig(kiro_agent="ajcrew-autofix")}
+        with patch("aj_crew.context.AjCrewConfig.load", return_value=cfg):
             section = build_member_section("code-reviewer")
             withheld = build_member_section("code-reviewer", desk_withheld=True)
         start = section.index("[DASHBOARD]")
@@ -364,5 +364,5 @@ class TestTheTurnBlock:
         assert "[DASHBOARD]" not in withheld, "a turn off the desk is not told about the tab"
 
     def test_an_unreadable_dashboard_costs_only_the_block(self) -> None:
-        with patch("kiro_crew.dashboard_templates.instance.read", side_effect=RuntimeError("boom")):
+        with patch("aj_crew.dashboard_templates.instance.read", side_effect=RuntimeError("boom")):
             assert dashboard_agentic.turn_block("code-reviewer") == ""

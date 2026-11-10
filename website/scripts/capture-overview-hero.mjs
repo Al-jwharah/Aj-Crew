@@ -21,7 +21,7 @@ import { handleBootRoute, json, makeFixedApi } from './lib/boot-api.mjs'
 import { serveDist } from './lib/serve-dist.mjs'
 
 const OUT = process.argv[2] || '/tmp/shots'
-const PROJECT = '/home/kirocrew/workspace'
+const PROJECT = '/home/ajcrew/workspace'
 mkdirSync(OUT, { recursive: true })
 
 const { srv, base } = await serveDist()
@@ -38,7 +38,7 @@ const fixedApi = makeFixedApi(PROJECT)
 fixedApi.set('/api/status', STATUS)
 // TWO WORDS, matching the backend default: the nav brand row accents the last
 // word only, so a single-word name renders the mark without its "CREW" half.
-fixedApi.set('/api/dashboard/branding', { bot_name: 'Kiro Crew', avatar: '/logo.png' })
+fixedApi.set('/api/dashboard/branding', { bot_name: 'Aj Crew', avatar: '/logo.png' })
 
 const browser = await chromium.launch()
 const context = await browser.newContext({

@@ -27,8 +27,8 @@ from unittest.mock import patch
 
 import pytest
 
-import kiro_crew.sandbox as sandbox_mod
-from kiro_crew.sandbox import CRON_SCRIPT_CHILD_ENV, UnauditedSpawnRefused, reset_backend, wrap_argv
+import aj_crew.sandbox as sandbox_mod
+from aj_crew.sandbox import CRON_SCRIPT_CHILD_ENV, UnauditedSpawnRefused, reset_backend, wrap_argv
 
 # Shares the subprocess_spawn group with test_sandbox_argv.py /
 # test_sandbox_nested_tier.py: same module under test, same cached-backend
@@ -39,12 +39,12 @@ pytestmark = pytest.mark.xdist_group(name="subprocess_spawn")
 @pytest.fixture(autouse=True)
 def clean_state(monkeypatch):
     """Isolate marker/level env vars, cached backend, and the one-shot log flag."""
-    monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
-    monkeypatch.delenv("KIROCREW_SANDBOX_LEVEL", raising=False)
+    monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
+    monkeypatch.delenv("AJCREW_SANDBOX_LEVEL", raising=False)
     monkeypatch.delenv(CRON_SCRIPT_CHILD_ENV, raising=False)
     monkeypatch.setattr(
-        "kiro_crew.sandbox._KIRO_INTERNAL_SETTINGS_PATH",
-        "/nonexistent/kirocrew-test/amazon-internal.json",
+        "aj_crew.sandbox._KIRO_INTERNAL_SETTINGS_PATH",
+        "/nonexistent/ajcrew-test/amazon-internal.json",
     )
     had_flag = getattr(sandbox_mod.wrap_argv, "_nested_passthrough_logged", None)
     if had_flag is not None:
@@ -61,8 +61,8 @@ def clean_state(monkeypatch):
 @pytest.fixture
 def inside_sandbox(monkeypatch):
     """Put ``wrap_argv`` on the nested-sandbox passthrough branch."""
-    monkeypatch.setenv("KIROCREW_SANDBOX_ACTIVE", "1")
-    monkeypatch.setenv("KIROCREW_SANDBOX_LEVEL", "standard")
+    monkeypatch.setenv("AJCREW_SANDBOX_ACTIVE", "1")
+    monkeypatch.setenv("AJCREW_SANDBOX_LEVEL", "standard")
     monkeypatch.setattr(sandbox_mod, "_macos_sandbox_state", lambda: None)
     # Keep the return value a verbatim passthrough: an empty scrub delta means no
     # `env -u` prefix, so the assertions below read the audit decision only.
@@ -72,12 +72,12 @@ def inside_sandbox(monkeypatch):
 class TestNestedPassthroughAuditFailure:
     """The one site a torn-down cron child reaches, in all three combinations."""
 
-    @patch("kiro_crew.sandbox.detect_backend")
+    @patch("aj_crew.sandbox.detect_backend")
     def test_enosys_in_a_cron_child_refuses_the_spawn(
         self, mock_detect, inside_sandbox, monkeypatch
     ):
         monkeypatch.setenv(CRON_SCRIPT_CHILD_ENV, "1")
-        with patch("kiro_crew.sel.sel", side_effect=OSError(errno.ENOSYS, "nope")):
+        with patch("aj_crew.sel.sel", side_effect=OSError(errno.ENOSYS, "nope")):
             with pytest.raises(UnauditedSpawnRefused) as exc_info:
                 wrap_argv(["git", "status"], mode="standard")
 
@@ -85,7 +85,7 @@ class TestNestedPassthroughAuditFailure:
         assert "ENOSYS" in str(exc_info.value)
         mock_detect.assert_not_called()
 
-    @patch("kiro_crew.sandbox.detect_backend")
+    @patch("aj_crew.sandbox.detect_backend")
     def test_enosys_reached_through_the_cause_chain_refuses(
         self, mock_detect, inside_sandbox, monkeypatch
     ):
@@ -96,42 +96,42 @@ class TestNestedPassthroughAuditFailure:
         except OSError as inner:
             wrapped = RuntimeError("SEL flush failed")
             wrapped.__cause__ = inner
-        with patch("kiro_crew.sel.sel", side_effect=wrapped):
+        with patch("aj_crew.sel.sel", side_effect=wrapped):
             with pytest.raises(UnauditedSpawnRefused):
                 wrap_argv(["git", "status"], mode="standard")
 
-    @patch("kiro_crew.sandbox.detect_backend")
+    @patch("aj_crew.sandbox.detect_backend")
     def test_enosys_in_the_gateway_still_proceeds(
         self, mock_detect, inside_sandbox, monkeypatch, caplog
     ):
         """Unchanged behaviour off the cron path: confinement over audit."""
         argv = ["git", "status"]
-        with patch("kiro_crew.sel.sel", side_effect=OSError(errno.ENOSYS, "nope")):
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.sandbox"):
+        with patch("aj_crew.sel.sel", side_effect=OSError(errno.ENOSYS, "nope")):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.sandbox"):
                 result, cleanup = wrap_argv(argv, mode="standard")
 
         assert result == argv
         assert cleanup is None
         assert any("proceeding " in r.message for r in caplog.records)
 
-    @patch("kiro_crew.sandbox.detect_backend")
+    @patch("aj_crew.sandbox.detect_backend")
     def test_other_errno_in_a_cron_child_still_proceeds(
         self, mock_detect, inside_sandbox, monkeypatch
     ):
         """A permission or disk hiccup is what the best-effort posture is for."""
         monkeypatch.setenv(CRON_SCRIPT_CHILD_ENV, "1")
         argv = ["git", "status"]
-        with patch("kiro_crew.sel.sel", side_effect=OSError(errno.EACCES, "denied")):
+        with patch("aj_crew.sel.sel", side_effect=OSError(errno.EACCES, "denied")):
             result, cleanup = wrap_argv(argv, mode="standard")
 
         assert result == argv
         assert cleanup is None
 
-    @patch("kiro_crew.sandbox.detect_backend")
+    @patch("aj_crew.sandbox.detect_backend")
     def test_a_healthy_audit_is_untouched(self, mock_detect, inside_sandbox, monkeypatch):
         monkeypatch.setenv(CRON_SCRIPT_CHILD_ENV, "1")
         argv = ["git", "status"]
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             result, cleanup = wrap_argv(argv, mode="standard")
 
         assert result == argv
@@ -140,7 +140,7 @@ class TestNestedPassthroughAuditFailure:
 
 
 #: The one SEL-failure handler that is not a degrade: it refuses the delegation
-#: and hands the spawn back to Kiro Crew's own audited policy -- macOS seatbelt,
+#: and hands the spawn back to Aj Crew's own audited policy -- macOS seatbelt,
 #: or a fail-closed error on Windows -- so a cron child already gets a loud
 #: failure there and needs no carve-out. Asserted to still match exactly one
 #: handler, so it cannot quietly grow to cover a site that proceeds unaudited.

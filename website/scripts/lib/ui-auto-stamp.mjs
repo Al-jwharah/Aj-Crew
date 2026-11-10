@@ -70,7 +70,7 @@ export function applyAutoStamps(code, entry) {
  * does nothing at all, so a test never depends on whether a build ran.
  */
 export function uiAutoStampPlugin({ root, manifestPath, artifactPath, readFile, exists, env = process.env }) {
-  const name = 'kirocrew-ui-auto-stamp'
+  const name = 'ajcrew-ui-auto-stamp'
   if (env.VITEST) return { name }
   const manifest = exists(manifestPath) ? JSON.parse(readFile(manifestPath)) : null
   const files = manifest?.files ?? {}

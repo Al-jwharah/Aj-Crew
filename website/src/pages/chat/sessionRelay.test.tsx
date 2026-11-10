@@ -66,7 +66,7 @@ describe('sessionRelay helpers', () => {
   it('isSessionSendTool / parseSessionSend read the trusted tool name, args and success result', () => {
     const send = msg('tool', {
       content: '🔧 Session send',
-      meta: { tool_name: 'session_send', mcp_server: 'kirocrew-dashboard', input: '{"target":"chat-1","message":"go"}', sessionSend: { outcome: 'delivered', target: 'chat-1' } },
+      meta: { tool_name: 'session_send', mcp_server: 'ajcrew-dashboard', input: '{"target":"chat-1","message":"go"}', sessionSend: { outcome: 'delivered', target: 'chat-1' } },
     })
     expect(isSessionSendTool(send)).toBe(true)
     expect(parseSessionSend(send)).toEqual({ target: 'chat-1', message: 'go', delivered: 'chat-1' })
@@ -114,7 +114,7 @@ describe('readSessionSendResult', () => {
 describe('Surface 3 — outgoing (this session sent a message)', () => {
   const sent = msg('tool', {
     content: '🔧 Session send',
-    meta: { tool_name: 'session_send', mcp_server: 'kirocrew-dashboard', input: '{"target":"chat-9","message":"plan is ready"}', sessionSend: { outcome: 'delivered', target: 'chat-9' } },
+    meta: { tool_name: 'session_send', mcp_server: 'ajcrew-dashboard', input: '{"target":"chat-9","message":"plan is ready"}', sessionSend: { outcome: 'delivered', target: 'chat-9' } },
   })
 
   it('a delivered session_send tool row resolves to the outgoing card entry', () => {
@@ -122,7 +122,7 @@ describe('Surface 3 — outgoing (this session sent a message)', () => {
   })
 
   it('a call with no receipt stays the generic tool line, which shows its state', () => {
-    const base = { tool_name: 'session_send', mcp_server: 'kirocrew-dashboard', input: '{"target":"chat-9","message":"plan is ready"}' }
+    const base = { tool_name: 'session_send', mcp_server: 'ajcrew-dashboard', input: '{"target":"chat-9","message":"plan is ready"}' }
     // Still running: no result yet.
     expect(idFor(msg('tool', { content: '🔧 Session send', meta: base }))).toBe('tool')
     // Refused by the gateway.
@@ -143,12 +143,12 @@ describe('Surface 3 — outgoing (this session sent a message)', () => {
 
   it('reads the arguments out of a wrapper only when it names the gateway session_send', () => {
     const receipt = { outcome: 'delivered', target: 'chat-9' }
-    const row = (input: unknown) => msg('tool', { content: '🔧 Session send', meta: { tool_name: 'session_send', mcp_server: 'kirocrew-dashboard', input: JSON.stringify(input), sessionSend: receipt } })
+    const row = (input: unknown) => msg('tool', { content: '🔧 Session send', meta: { tool_name: 'session_send', mcp_server: 'ajcrew-dashboard', input: JSON.stringify(input), sessionSend: receipt } })
     const args = { target: 'chat-9', message: 'plan is ready' }
     // Codex records the call with its server and tool around the arguments.
-    expect(parseSessionSend(row({ server: 'kirocrew-dashboard', tool: 'session_send', arguments: args }))).toEqual({ ...args, delivered: 'chat-9' })
+    expect(parseSessionSend(row({ server: 'ajcrew-dashboard', tool: 'session_send', arguments: args }))).toEqual({ ...args, delivered: 'chat-9' })
     // A Tool Search deferred call names it as `<server>::<tool>`.
-    expect(parseSessionSend(row({ tool_id: 'kirocrew-dashboard::session_send', arguments: args }))).toEqual({ ...args, delivered: 'chat-9' })
+    expect(parseSessionSend(row({ tool_id: 'ajcrew-dashboard::session_send', arguments: args }))).toEqual({ ...args, delivered: 'chat-9' })
     // A wrapper naming another tool is not unwrapped.
     expect(parseSessionSend(row({ tool_id: 'evil::session_send', arguments: args }))).toBeNull()
   })
@@ -156,7 +156,7 @@ describe('Surface 3 — outgoing (this session sent a message)', () => {
   it('a send addressed by title links to the slot the gateway resolved, not the alias', () => {
     const byTitle = msg('tool', {
       content: '🔧 Session send',
-      meta: { tool_name: 'session_send', mcp_server: 'kirocrew-dashboard', input: '{"target":"Planner","message":"plan is ready"}', sessionSend: { outcome: 'queued', target: 'chat-9' } },
+      meta: { tool_name: 'session_send', mcp_server: 'ajcrew-dashboard', input: '{"target":"Planner","message":"plan is ready"}', sessionSend: { outcome: 'queued', target: 'chat-9' } },
     })
     const onOpen = vi.fn()
     const entry = resolveRenderer(byTitle, registry({ ...baseOpts, onSessionOpen: onOpen }))!

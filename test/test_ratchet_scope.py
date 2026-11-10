@@ -32,7 +32,7 @@ from pathlib import Path
 import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS, git_command_env
+from aj_crew.platform.update_governance import _GIT_LOCATION_VARS, git_command_env
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "ratchet_scope.py"

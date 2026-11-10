@@ -2,7 +2,7 @@
 """PR Hygiene: a `fix:` pull request says whether its tests fail without the fix.
 
 A test that still passes with the bug put back does not test the fix. `prove.py`
-(in the kirocrew-prepare-pr skill) reverts the production hunks in a throwaway
+(in the ajcrew-prepare-pr skill) reverts the production hunks in a throwaway
 worktree and re-runs the changed tests. This check asks the author to paste the
 result as ONE line under the existing `## Tests` heading (no new section):
 

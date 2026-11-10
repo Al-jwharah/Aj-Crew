@@ -32,9 +32,9 @@ from member_goals_helpers import (  # noqa: F401 -- the autouse fixtures registe
 )
 from test_member_goals_cards import _CardState, _propose_card, _run_card_plan
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew import member_goals
-from kiro_crew.dashboard import goal_setup
+from aj_crew import change_card_catalog as catalog
+from aj_crew import member_goals
+from aj_crew.dashboard import goal_setup
 
 KIND = catalog.KIND_CREWMATE_GOAL
 
@@ -42,7 +42,7 @@ KIND = catalog.KIND_CREWMATE_GOAL
 @pytest.fixture
 def _card_owner(_floor_monkeypatch):
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
@@ -215,7 +215,7 @@ def test_the_checkbox_is_an_editable_field_of_the_card() -> None:
 
 def test_a_goal_card_stored_before_the_checkbox_still_rebuilds(tmp_path: Path, _card_owner) -> None:
     """Its snapshot has no ``heartbeat`` and its editable list is the old one."""
-    from kiro_crew.dashboard.change_cards_records import rebuild_record
+    from aj_crew.dashboard.change_cards_records import rebuild_record
 
     _seed()
     state = _CardState(tmp_path)

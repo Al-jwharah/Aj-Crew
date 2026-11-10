@@ -9,9 +9,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.coder import session_launch
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.testing.wait import await_until
+from aj_crew.coder import session_launch
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.testing.wait import await_until
 
 
 def _make_manager() -> SubagentManager:

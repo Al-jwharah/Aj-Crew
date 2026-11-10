@@ -9,8 +9,8 @@ import zlib
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.security import StreamRedactor, redact, redact_credentials
-from kiro_crew.security import redaction as _redaction
+from aj_crew.security import StreamRedactor, redact, redact_credentials
+from aj_crew.security import redaction as _redaction
 
 # The canonical AWS documentation example secret key, never a live credential.
 KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"

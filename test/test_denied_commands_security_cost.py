@@ -26,10 +26,10 @@ from denied_commands_security_helpers import (
 )
 
 from conftest import assert_rejected_without_backtracking
-from kiro_crew import security
-from kiro_crew.security import _GIT_PUBLISH_RULE_PATTERNS, BUILTIN_DENIED_RULES
-from kiro_crew.security import argv_floor as _argv_floor
-from kiro_crew.security import is_denied, is_safe_user_regex
+from aj_crew import security
+from aj_crew.security import _GIT_PUBLISH_RULE_PATTERNS, BUILTIN_DENIED_RULES
+from aj_crew.security import argv_floor as _argv_floor
+from aj_crew.security import is_denied, is_safe_user_regex
 
 # Each test starts with the macOS libc and libproc handle caches unbuilt and puts them
 # back after, as every test of the test_denied_commands_security family does (see conftest.py).
@@ -90,7 +90,7 @@ class TestUserRegexReDoSGate:
         inherit the built-in scrub: wrapping the fragment in an outer quantifier
         nests its ``*`` and backtracks catastrophically.  Only a COMPLETE
         built-in pattern is exempt."""
-        from kiro_crew.security import (
+        from aj_crew.security import (
             _DANGEROUS_AWS_FLAG_RUN,
             _LINEARIZED_AWS_FLAG_RUN,
         )
@@ -203,7 +203,7 @@ class TestBuiltinRuleMatcherShape:
         assert unsafe == [], f"these built-ins would be DISABLED at runtime: {unsafe}"
 
     def test_no_regex_tier_matcher_is_disabled(self):
-        from kiro_crew.security import _deny_matcher
+        from aj_crew.security import _deny_matcher
 
         disabled = [r.id for r in self._regex_tier_rules() if _deny_matcher(r.pattern)._disabled]
         assert disabled == [], f"these built-ins match nothing: {disabled}"
@@ -212,7 +212,7 @@ class TestBuiltinRuleMatcherShape:
         # Both rules were narrowed away from ``.*``-gapped co-occurrence, so each
         # reduces to a single fragment matched with exact ``re.search`` over the
         # WHOLE command — not the length-capped bounded scan.
-        from kiro_crew.security import _deny_matcher
+        from aj_crew.security import _deny_matcher
 
         for rule_id in (_RULE_KILL, _RULE_MINT):
             matcher = _deny_matcher(_rule_pattern(rule_id))
@@ -223,7 +223,7 @@ class TestBuiltinRuleMatcherShape:
     def test_interpreter_rules_stay_linear_on_one_plain_long_word(self, rule_id):
         # A hex blob is one long run of word characters, which an optional ``\w+\.``
         # in front of the sink names rescans from every start.
-        from kiro_crew.security import _deny_matcher
+        from aj_crew.security import _deny_matcher
 
         matcher = _deny_matcher(_rule_pattern(rule_id))
 
@@ -245,7 +245,7 @@ class TestSelfFloorShortCircuit:
     """
 
     def _descent_calls(self, monkeypatch, text: str) -> int:
-        from kiro_crew import security
+        from aj_crew import security
 
         calls = {"n": 0}
         real = security._self_token_frames
@@ -275,27 +275,27 @@ class TestSelfFloorShortCircuit:
 
     def test_name_carrying_command_still_descends(self, monkeypatch):
         # A real candidate must reach the full structural scan.
-        assert self._descent_calls(monkeypatch, "kirocrew token") >= 1
-        assert self._descent_calls(monkeypatch, "pkill -f kirocrew") >= 1
+        assert self._descent_calls(monkeypatch, "ajcrew token") >= 1
+        assert self._descent_calls(monkeypatch, "pkill -f ajcrew") >= 1
 
     def test_gate_is_a_necessary_condition_not_a_name_grep(self):
         """Every obfuscated spelling the floor denies must pass the gate.
 
         Gating on a raw ``_SELF_NAME_RE`` search would be UNSOUND — each input below fires a predicate today while its raw text
-        never matches ``kiro[-.]?crew``. The gate must answer True for all of
+        never matches ``aj[-.]?crew``. The gate must answer True for all of
         them (over-matching is safe; under-matching is a bypass).
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         for evasive in (
-            "python -m kiro_crew token",  # underscored module spelling
-            "[k]irocrew token",  # one-char bracket class
-            "kiro$()crew token",  # empty command substitution
-            "kiro${x:-crew} token",  # parameter default
-            'bash -c "\\x6birocrew token"',  # printf hex escape
-            'k""iro""crew token',  # empty-string concatenation
-            "kiro?rew token",  # glob the shell expands before exec
-            "kill $(pgrep -f kirocrew)",  # bare kill via substitution
+            "python -m aj_crew token",  # underscored module spelling
+            "[a]jcrew token",  # one-char bracket class
+            "aj$()crew token",  # empty command substitution
+            "aj${x:-crew} token",  # parameter default
+            'bash -c "\\x61jcrew token"',  # printf hex escape
+            'a""j""crew token',  # empty-string concatenation
+            "aj?rew token",  # glob the shell expands before exec
+            "kill $(pgrep -f ajcrew)",  # bare kill via substitution
             "python -c \"exec(__import__('base64').b64decode('x'))\" token",
         ):
             assert security._self_floor_can_fire(
@@ -304,22 +304,22 @@ class TestSelfFloorShortCircuit:
 
     def test_gated_predicates_still_deny_the_obfuscation_corpus(self):
         """End-to-end: the predicates (with the gate in front) keep firing."""
-        from kiro_crew import security
+        from aj_crew import security
 
         for mint in (
-            "[k]irocrew token",
-            "kiro$()crew token",
-            "kiro${x:-crew} token",
-            'bash -c "\\x6birocrew token"',
-            'k""iro""crew token',
-            "kiro?rew token",
+            "[a]jcrew token",
+            "aj$()crew token",
+            "aj${x:-crew} token",
+            'bash -c "\\x61jcrew token"',
+            'a""j""crew token',
+            "aj?rew token",
         ):
             assert security._is_credential_mint(mint), f"mint not caught: {mint!r}"
-        assert security._is_self_kill("kill $(pgrep -f kirocrew)")
-        assert security._is_self_kill("pkill -f kirocrew")
+        assert security._is_self_kill("kill $(pgrep -f ajcrew)")
+        assert security._is_self_kill("pkill -f ajcrew")
 
     def test_gate_declines_plain_text_without_machinery(self):
-        from kiro_crew import security
+        from aj_crew import security
 
         for plain in (
             "ls -la /tmp/foo",
@@ -336,12 +336,12 @@ class TestSelfFloorShortCircuit:
         ``~`` must therefore be in the machinery class, or the gate opens a
         real bypass.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         # expanduser reads HOME on POSIX but USERPROFILE on Windows — set
         # both so the tilde target resolves under the product tree everywhere.
-        monkeypatch.setenv("HOME", "/opt/kiro-crew")
-        monkeypatch.setenv("USERPROFILE", "/opt/kiro-crew")
+        monkeypatch.setenv("HOME", "/opt/aj-crew")
+        monkeypatch.setenv("USERPROFILE", "/opt/aj-crew")
         for kill in ("pkill -f ~", "killall ~", "pkill -f ~/"):
             assert security._self_floor_can_fire(kill), f"gate would bypass the floor for {kill!r}"
         # End-to-end: the gated predicate still denies it.
@@ -362,7 +362,7 @@ class TestSelfFloorShortCircuit:
         concedes protects nothing, since ``python /tmp/s.py`` reads the same file
         unhindered.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         glued = "ex" + '""' + "ec"
         cmd = f'python -c "{glued}(open(chr(47)).read())"'
@@ -380,7 +380,7 @@ class TestSelfFloorShortCircuit:
         assert not security._is_credential_mint(cmd)
         assert security.is_denied(cmd) is None
         # The same glue around a payload that DOES name the surface is still denied.
-        reach = f"python -c \"{glued}('import kiro_crew.cli')\""
+        reach = f"python -c \"{glued}('import aj_crew.cli')\""
         assert security._is_credential_mint(reach)
 
 
@@ -397,7 +397,7 @@ class TestSelfModuleIndexIsLinear:
     Reaching it needs only one product word anywhere in the text, which is what opens
     the floor's cheap keyword gate (``_self_floor_can_fire``).  Padding alone does NOT
     reproduce it -- ``python ... restart`` leaves that gate shut and the path is linear,
-    which is why the shape below carries ``kirocrew``.  Measured on base:
+    which is why the shape below carries ``ajcrew``.  Measured on base:
     0.035 s / 0.125 s / 0.490 s / 1.937 s / 7.704 s at 250/500/1000/2000/4000 tokens,
     4x per doubling, against 0.0027 s -> 0.0414 s after -- 186x at 4 000 tokens, and
     the negative-verdict spelling pays the same cost to decide nothing.
@@ -409,25 +409,25 @@ class TestSelfModuleIndexIsLinear:
 
     # Every branch of the scan, with the index it must return for the interpreter at 0.
     SHAPES: "list[tuple[list[str], object]]" = [
-        (["python", "-m", "kiro_crew", "restart"], 2),
-        (["python", "-mkiro_crew", "restart"], 1),
+        (["python", "-m", "aj_crew", "restart"], 2),
+        (["python", "-maj_crew", "restart"], 1),
         # A -m<something-else> is an ordinary interpreter flag: the scan must CONTINUE
         # past it rather than stop, or the real module flag after it is never seen.
-        (["python", "-mjson", "-m", "kiro_crew"], 3),
-        (["python", "-msomething", "-mkiro_crew"], 2),
-        (["python", "-u", "-O", "-m", "kiro_crew"], 4),
+        (["python", "-mjson", "-m", "aj_crew"], 3),
+        (["python", "-msomething", "-maj_crew"], 2),
+        (["python", "-u", "-O", "-m", "aj_crew"], 4),
         # -m present but the module is not ours, and -m as the final token.
         (["python", "-m", "json"], None),
         (["python", "-m"], None),
         (["python"], None),
         (["python", "-mjson"], None),
         # Quoting and dotted submodules the normalizer resolves.
-        (["python", "-m", "'kiro_crew'"], 2),
-        (["python", "-m", "kiro_crew.cli"], 2),
+        (["python", "-m", "'aj_crew'"], 2),
+        (["python", "-m", "aj_crew.cli"], 2),
     ]
 
     def test_the_returned_index_is_unchanged(self):
-        from kiro_crew import security
+        from aj_crew import security
 
         for tokens, expected in self.SHAPES:
             scan = security._self_module_flag_scan(list(tokens))
@@ -438,7 +438,7 @@ class TestSelfModuleIndexIsLinear:
         stale or mismatched table would answer differently from one built for the call.
         Pinned at every interpreter position, since that reuse is the whole optimization.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         for tokens, expected in self.SHAPES:
             shared = security._self_module_flag_scan(list(tokens))
@@ -455,44 +455,44 @@ class TestSelfModuleIndexIsLinear:
         quadratic. A type error is the point."""
         import inspect
 
-        from kiro_crew import security
+        from aj_crew import security
 
         for fn in (security._self_module_name_index, security._self_program_index):
             param = inspect.signature(fn).parameters["scan"]
             assert param.default is inspect.Parameter.empty, fn.__name__
 
     def test_the_floor_verdicts_are_unchanged(self):
-        from kiro_crew import security
+        from aj_crew import security
 
         for text in (
-            "kirocrew restart",
-            "python -m kiro_crew restart",
-            "python -mkiro_crew restart",
-            "python -mjson -m kiro_crew restart",
-            "python -msomething -m kiro_crew restart",
-            "python -u -O -m kiro_crew restart",
-            "python -m 'kiro_crew' restart",
-            "python -m kiro_crew -v restart",
-            "python python -m kiro_crew restart",
+            "ajcrew restart",
+            "python -m aj_crew restart",
+            "python -maj_crew restart",
+            "python -mjson -m aj_crew restart",
+            "python -msomething -m aj_crew restart",
+            "python -u -O -m aj_crew restart",
+            "python -m 'aj_crew' restart",
+            "python -m aj_crew -v restart",
+            "python python -m aj_crew restart",
         ):
             assert security._is_self_restart(text), text
 
         for text in (
-            "kirocrew doctor",
-            "python -m kiro_crew",
+            "ajcrew doctor",
+            "python -m aj_crew",
             "python restart",
             "python -m pytest test/test_restart.py",
-            "echo kirocrew restart",
+            "echo ajcrew restart",
         ):
             assert not security._is_self_restart(text), text
 
     def test_the_stop_predicate_matches_the_handling(self):
-        from kiro_crew import security
+        from aj_crew import security
 
-        for token in ("-m", "-mkiro_crew", "-mkiro_crew.cli"):
+        for token in ("-m", "-maj_crew", "-maj_crew.cli"):
             assert security._is_self_module_flag(token), token
         # Not a stop: the scan has to keep going past these.
-        for token in ("-mjson", "-msomething", "python", "-u", "", "kiro_crew"):
+        for token in ("-mjson", "-msomething", "python", "-u", "", "aj_crew"):
             assert not security._is_self_module_flag(token), token
 
     def test_the_scan_is_linear_not_quadratic(self, monkeypatch):
@@ -532,10 +532,10 @@ class TestSelfModuleIndexIsLinear:
         """
         import time
 
-        from kiro_crew import security
+        from aj_crew import security
 
         def build(n: int) -> str:
-            return " ".join(["python"] * n + ["kirocrew", "restart"])
+            return " ".join(["python"] * n + ["ajcrew", "restart"])
 
         # Backstop budget, measured BEFORE instrumenting (the counting wrappers
         # below would bill their own overhead against it). The input is built
@@ -607,10 +607,10 @@ class TestSelfModuleIndexIsLinear:
     def test_the_padded_shape_that_does_not_open_the_gate_stays_cheap(self):
         """Pins the reason the reported reproduction did not reproduce: without a
         product word the floor's keyword gate stays shut and nothing is scanned."""
-        from kiro_crew import security
+        from aj_crew import security
 
         assert not security._self_floor_can_fire("python restart")
-        assert security._self_floor_can_fire("python kirocrew")
+        assert security._self_floor_can_fire("python ajcrew")
 
 
 class TestNestedPayloadExtractionIsLinear:
@@ -658,7 +658,7 @@ class TestNestedPayloadExtractionIsLinear:
     ]
 
     def test_the_payload_set_is_unchanged(self):
-        from kiro_crew import security
+        from aj_crew import security
 
         for tokens, expected in self.SHAPES:
             assert security._nested_shell_payloads(list(tokens)) == expected, tokens
@@ -702,7 +702,7 @@ class TestNestedPayloadExtractionIsLinear:
         line events, not algorithmic cost, and the counts see
         every cost shape this function can otherwise regress to.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         real_stop_tables = security._next_stop_indexes
         real_basename = security._program_basename
@@ -809,7 +809,7 @@ class TestNestedPayloadExtractionIsLinear:
         line events, not algorithmic cost; the counts are the
         guard.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         real_stop_tables = security._next_stop_indexes
         real_dash = security._is_not_double_dash
@@ -861,7 +861,7 @@ class TestNestedPayloadExtractionIsLinear:
         """The precomputed index and the branch taken at that index are two places
         that must agree.  Each predicate is therefore asserted to hold exactly on the
         tokens its handler knows how to process."""
-        from kiro_crew import security
+        from aj_crew import security
 
         for token in ("-c", "-lc", "--command"):
             assert security._is_shell_command_flag(token), token
@@ -898,7 +898,7 @@ class TestNestedPayloadExtractionIsLinear:
             assert security._is_not_double_dash(token), token
 
     def test_the_index_table_reads_as_no_such_token_past_the_end(self):
-        from kiro_crew import security
+        from aj_crew import security
 
         table = security._next_stop_indexes(["a", "-c", "b"], lambda t: t == "-c")
         assert table == [1, 1, 3, 3], table
@@ -1442,7 +1442,7 @@ class TestOneDecisionWalksEachTextOnce:
     _HEREDOC = "git add f && python3 - <<'PY'\n" + "print('a $b \"c\" `d` $(e) f')\n" * 20 + "PY"
 
     def test_each_decision_walks_each_text_once(self, monkeypatch):
-        from kiro_crew.security import shell_normalizer
+        from aj_crew.security import shell_normalizer
 
         walked: Counter[str] = Counter()
         real = shell_normalizer._self_tokens
@@ -1459,7 +1459,7 @@ class TestOneDecisionWalksEachTextOnce:
         assert whole and set(whole.values()) == {2}, whole
 
     def test_a_span_without_a_brace_is_walked_once(self, monkeypatch):
-        from kiro_crew.security import shell_normalizer_walk as walk
+        from aj_crew.security import shell_normalizer_walk as walk
 
         modes: list[bool] = []
         real = walk._close_paren_walk

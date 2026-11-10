@@ -16,13 +16,13 @@ import json
 
 import pytest
 
-from kiro_crew.apps import default_installs as di
-from kiro_crew.apps import execution as exec_mod
-from kiro_crew.apps import manager as manager_mod
-from kiro_crew.apps import registry as reg_mod
-from kiro_crew.config.loader import KiroCrewConfig, _invalidate_config_cache, config_path
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.defaults import DefaultAppsLoader
+from aj_crew.apps import default_installs as di
+from aj_crew.apps import execution as exec_mod
+from aj_crew.apps import manager as manager_mod
+from aj_crew.apps import registry as reg_mod
+from aj_crew.config.loader import AjCrewConfig, _invalidate_config_cache, config_path
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.defaults import DefaultAppsLoader
 
 REGISTRY_REPO = "https://forge.example.com/org/app-registry.git"
 APP_REPO = "https://forge.example.com/org/chorus-app.git"
@@ -58,16 +58,16 @@ MARKED = [_row(defaultInstall=True)]
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setattr(
-        KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: _load_isolated(cls))
+        AjCrewConfig, "load", classmethod(lambda cls, *a, **k: _load_isolated(cls))
     )
     _invalidate_config_cache()
     yield tmp_path
     _invalidate_config_cache()
 
 
-_REAL_LOAD = KiroCrewConfig.load
+_REAL_LOAD = AjCrewConfig.load
 
 
 def _load_isolated(cls):
@@ -82,7 +82,7 @@ class _World:
 
     def __init__(self, monkeypatch, *, registries, fresh=None, resolved=None, install_ok=True):
         ctx = dataclasses.replace(
-            build_default_context(KiroCrewConfig()), apps_loader=_Loader(registries)
+            build_default_context(AjCrewConfig()), apps_loader=_Loader(registries)
         )
         monkeypatch.setattr(di, "current_context", lambda: ctx)
         monkeypatch.setattr(reg_mod, "current_context", lambda: ctx)
@@ -229,14 +229,14 @@ async def test_an_opted_in_registry_contested_by_an_operator_row_drives_nothing(
     # An operator row under the pinned name but another repo: _effective_registries
     # serves neither, so the opt-in must not reach either repository.
     world = _World(monkeypatch, registries=_pinned())
-    from kiro_crew.config.loader import ExternalRegistryConfig
+    from aj_crew.config.loader import ExternalRegistryConfig
 
     def _load(cls, *a, **k):
         cfg = _REAL_LOAD()
         cfg.registries = [ExternalRegistryConfig(name="internal", repo=OTHER_REPO, branch="main")]
         return cfg
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_load))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_load))
 
     assert await di.reconcile_default_installs() == {}
     assert world.fetched == []
@@ -251,14 +251,14 @@ async def test_an_operator_row_cannot_inherit_an_opt_in_the_build_row_lost(home,
         {"name": "internal", "repo": "http://forge.example.com/r.git", "allowDefaultInstall": True}
     ]
     world = _World(monkeypatch, registries=registries)
-    from kiro_crew.config.loader import ExternalRegistryConfig
+    from aj_crew.config.loader import ExternalRegistryConfig
 
     def _load(cls, *a, **k):
         cfg = _REAL_LOAD()
         cfg.registries = [ExternalRegistryConfig(name="internal", repo=OTHER_REPO, branch="main")]
         return cfg
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_load))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_load))
     monkeypatch.setattr(reg_mod, "_registry_trust_tier_of", lambda reg: reg_mod._TRUST_OWNER)
 
     assert await di.reconcile_default_installs() == {}
@@ -356,7 +356,7 @@ async def test_a_corrupt_config_installs_nothing(home, monkeypatch):
 
 
 def _seed_overlay(agent: dict) -> None:
-    from kiro_crew.config.loader import config_local_path
+    from aj_crew.config.loader import config_local_path
 
     config_local_path().write_text(json.dumps({"agent": agent}))
     _invalidate_config_cache()
@@ -437,7 +437,7 @@ async def test_an_unreadable_applied_list_installs_nothing(home, monkeypatch):
 
 def test_the_applied_marker_survives_a_config_round_trip(home):
     _seed_agent({"apps_default_installs_applied": ["chorus", 5, ""]})
-    assert KiroCrewConfig.load().agent.apps_default_installs_applied == ["chorus"]
+    assert AjCrewConfig.load().agent.apps_default_installs_applied == ["chorus"]
 
 
 @pytest.mark.asyncio
@@ -512,7 +512,7 @@ async def test_a_failed_install_restores_an_operator_local_marker(home, monkeypa
 
 @pytest.mark.asyncio
 async def test_install_from_registry_uses_a_resolved_entry_without_a_lookup(home, monkeypatch):
-    from kiro_crew.apps.registry_pipeline import install as install_mod
+    from aj_crew.apps.registry_pipeline import install as install_mod
 
     def _no_lookup(name):
         raise AssertionError("a resolved entry must replace the lookup")
@@ -527,7 +527,7 @@ async def test_install_from_registry_uses_a_resolved_entry_without_a_lookup(home
 
 @pytest.mark.asyncio
 async def test_a_resolved_entry_is_refused_for_an_installed_app(home, monkeypatch):
-    from kiro_crew.apps.registry_pipeline import install as install_mod
+    from aj_crew.apps.registry_pipeline import install as install_mod
 
     monkeypatch.setattr(install_mod, "get_app", lambda name: {"name": name})
 
@@ -610,9 +610,9 @@ class _Lifecycle:
     ):
         # Lifecycle helpers are patched on ``routes``, the facade: they are shared by
         # the routes family, and the facade mirror test refuses a patch on one owner.
-        from kiro_crew.apps import manager as mgr
-        from kiro_crew.apps import routes as rl
-        from kiro_crew.apps.manager_records import AppResult
+        from aj_crew.apps import manager as mgr
+        from aj_crew.apps import routes as rl
+        from aj_crew.apps.manager_records import AppResult
 
         self.calls: list[str] = []
         self.record = {

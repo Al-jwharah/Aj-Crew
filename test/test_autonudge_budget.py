@@ -16,9 +16,9 @@ import pytest
 from autonudge_helpers import _enable  # noqa: F401
 from autonudge_helpers import svc_fixture  # noqa: F401
 
-from kiro_crew import autonudge as _an
-from kiro_crew import autonudge_authz as _autonudge_mod
-from kiro_crew.autonudge import (
+from aj_crew import autonudge as _an
+from aj_crew import autonudge_authz as _autonudge_mod
+from aj_crew.autonudge import (
     APPROVAL_STALL_REASON,
     AUTONUDGE_STOP_REASON,
     CYCLE_CAP_REASON,
@@ -30,8 +30,8 @@ from kiro_crew.autonudge import (
     NudgeLoop,
     runtime_budget_exceeded,
 )
-from kiro_crew.monitoring.decision import monitor_budget_reason
-from kiro_crew.monitoring.models import MonitorBudgets
+from aj_crew.monitoring.decision import monitor_budget_reason
+from aj_crew.monitoring.models import MonitorBudgets
 
 #: Lost-run ceiling for synchronization the test itself must release. It is a
 #: hang guard whose expiry fails at the awaited line, never a performance
@@ -41,7 +41,7 @@ _LOST_RUN_SECS = 30.0
 
 @pytest.mark.asyncio
 async def test_max_cycles_deactivates(svc, monkeypatch):
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def _nosleep(_secs):
         return None
@@ -67,7 +67,7 @@ async def test_max_cycles_emits_expired_event(svc, monkeypatch):
     line plus an ``updated`` event indistinguishable from the user pressing
     Stop, so a capped-out loop looked the same as the agent stopping itself.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def _nosleep(_secs):
         return None
@@ -94,7 +94,7 @@ async def test_no_expired_event_on_manual_deactivate(svc, monkeypatch):
     ``expired`` drives a user-visible notification, so overloading it onto
     every deactivation would notify the user about their own Stop click.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def _nosleep(_secs):
         return None
@@ -112,7 +112,7 @@ async def test_no_expired_event_on_manual_deactivate(svc, monkeypatch):
 @pytest.mark.asyncio
 async def test_unlimited_loop_never_expires(svc, monkeypatch):
     """max_cycles=0 means unlimited — the cap branch must not fire at all."""
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def _nosleep(_secs):
         return None
@@ -137,7 +137,7 @@ async def test_unlimited_loop_never_expires(svc, monkeypatch):
 def test_runtime_budget_exceeded_predicate():
     """Direct contract of the shared predicate: 0 = unlimited, missing
     created_ts never trips (no anchor to measure from), boundary is >=."""
-    from kiro_crew.autonudge import runtime_budget_exceeded
+    from aj_crew.autonudge import runtime_budget_exceeded
 
     base = NudgeLoop(id="x", slot_key="s", message="m", created_ts=1000.0)
     # No budget → never exceeded, however old the loop is.
@@ -190,7 +190,7 @@ def test_runtime_budget_is_measured_on_the_monotonic_clock(monkeypatch, passed, 
     step stopped a loop armed seconds earlier as ``runtime_budget``, and a 3 h
     backward step let a loop 2 h into a 1 h budget buy more unattended turns.
     """
-    from kiro_crew.autonudge_service import model
+    from aj_crew.autonudge_service import model
 
     clock = _BudgetClock()
     monkeypatch.setattr(model, "time", clock)
@@ -204,7 +204,7 @@ def test_runtime_budget_is_measured_on_the_monotonic_clock(monkeypatch, passed, 
 
 def test_runtime_budget_counts_the_time_spent_before_a_load(monkeypatch):
     """The stored ``created_ts`` still carries the budget across a restart."""
-    from kiro_crew.autonudge_service import model
+    from aj_crew.autonudge_service import model
 
     clock = _BudgetClock()
     monkeypatch.setattr(model, "time", clock)
@@ -224,7 +224,7 @@ def test_a_suspend_spends_no_runtime_budget_until_a_restart(monkeypatch):
     restart after the same sleep reads the stored ``created_ts`` on the wall clock
     and finds the budget spent.
     """
-    from kiro_crew.autonudge_service import model
+    from aj_crew.autonudge_service import model
 
     clock = _BudgetClock()
     monkeypatch.setattr(model, "time", clock)
@@ -260,7 +260,7 @@ class _SteppedTime:
 
 def _held_wall_clock(monkeypatch) -> _SteppedTime:
     """Hold the wall clock the budget code reads at one base; the test steps it via ``step``."""
-    from kiro_crew.autonudge_service import model, mutations
+    from aj_crew.autonudge_service import model, mutations
 
     clock = _SteppedTime(time.time())
     for module in (model, mutations):
@@ -366,7 +366,7 @@ async def test_a_released_hold_hands_back_the_time_it_really_held(
     20 min run of a 40 min budget, 30 min held, released: 20 min left, spent 20 min
     later. Wall-clock steps before or during the hold must not change that.
     """
-    from kiro_crew.autonudge_service import firing, model, timers
+    from aj_crew.autonudge_service import firing, model, timers
 
     loop = await svc.add("s1", "check the PR", idle_secs=600, max_runtime_secs=2400)
     try:
@@ -412,8 +412,8 @@ async def test_a_failed_resume_write_leaves_the_budget_clock_as_it_was(
     The rollback restores ``created_ts`` but the budget anchor lives outside it, so a
     stale anchor would read spent time off the wall clock and its steps.
     """
-    from kiro_crew.autonudge import nudge_cycle_header
-    from kiro_crew.autonudge_service import model, mutations
+    from aj_crew.autonudge import nudge_cycle_header
+    from aj_crew.autonudge_service import model, mutations
 
     loop = await svc.add("s1", "check the PR", idle_secs=600, max_runtime_secs=3600)
     try:
@@ -456,7 +456,7 @@ async def test_runtime_budget_deactivates_and_emits_expired(svc, monkeypatch):
     """A spent wall-clock budget stops the loop BEFORE it buys another turn,
     with the same terminal treatment as the cycle cap: deactivate (not
     remove) + ``expired`` so the user-visible notification fires."""
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def _nosleep(_secs):
         return None
@@ -488,7 +488,7 @@ async def test_runtime_budget_deactivates_and_emits_expired(svc, monkeypatch):
 @pytest.mark.asyncio
 async def test_runtime_budget_unspent_fires_normally(svc, monkeypatch):
     """A loop within its budget behaves exactly like an unbudgeted one."""
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def _nosleep(_secs):
         return None
@@ -514,7 +514,7 @@ async def test_runtime_budget_unspent_fires_normally(svc, monkeypatch):
 @pytest.mark.asyncio
 async def test_runtime_budget_zero_is_unlimited(svc, monkeypatch):
     """max_runtime_secs=0 means unlimited — an arbitrarily old loop still fires."""
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def _nosleep(_secs):
         return None
@@ -563,7 +563,7 @@ async def test_stopped_reason_records_why_and_clears_on_revival(svc, monkeypatch
     'cycle_cap'/'runtime_budget', a plain update(active=False) tags 'manual',
     and any revival clears the tag. This is what lets revival logic refuse to
     resume a manual pause whose budget has since elapsed."""
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def _nosleep(_secs):
         return None
@@ -808,7 +808,7 @@ async def test_budget_expiring_mid_turn_deactivates_post_delivery(svc, monkeypat
     in-flight turn — but once a slow turn ENDS with the budget spent, the loop
     deactivates immediately (tagged runtime_budget, expired emitted) instead
     of arming another idle cycle. Channel loops must not self-re-arm."""
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def _nosleep(_secs):
         return None
@@ -872,9 +872,9 @@ async def test_load_leaves_an_inactive_loop_with_an_over_ceiling_budget_untouche
     svc._loops[loop.id].next_due_ts = 0.0
     svc._save()
     svc.stop()
-    monkeypatch.setattr("kiro_crew.monitoring.limits.runtime_ceiling_secs", lambda: 3600)
+    monkeypatch.setattr("aj_crew.monitoring.limits.runtime_ceiling_secs", lambda: 3600)
     restored = AutoNudgeService(base_dir=svc._base_dir)
-    with caplog.at_level(logging.INFO, logger="kiro_crew.autonudge"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.autonudge"):
         restored._load()
     try:
         row = restored.get_by_id(loop.id)
@@ -897,7 +897,7 @@ async def test_load_keeps_an_active_loop_with_an_over_ceiling_budget_running(svc
     loop = await svc.add(slot_key="chat-1-123", message="go", max_runtime_secs=7200)
     created_ts = loop.created_ts
     svc.stop()
-    monkeypatch.setattr("kiro_crew.monitoring.limits.runtime_ceiling_secs", lambda: 3600)
+    monkeypatch.setattr("aj_crew.monitoring.limits.runtime_ceiling_secs", lambda: 3600)
     restored = AutoNudgeService(base_dir=svc._base_dir)
     restored._load()
     try:
@@ -936,9 +936,9 @@ async def test_load_keeps_an_active_structured_monitor_with_an_over_ceiling_budg
     )
     created_ts = loop.monitor.created_ts
     svc.stop()
-    monkeypatch.setattr("kiro_crew.monitoring.limits.runtime_ceiling_secs", lambda: 3600)
+    monkeypatch.setattr("aj_crew.monitoring.limits.runtime_ceiling_secs", lambda: 3600)
     restored = AutoNudgeService(base_dir=svc._base_dir)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.autonudge"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.autonudge"):
         restored._load()
     try:
         row = restored.get_by_id(loop.id)
@@ -971,7 +971,7 @@ async def test_stop_sentinel_keeps_the_record_finished(svc, tmp_path, monkeypatc
     to its empty form. Every other effect of the old removal is kept: the timer
     is gone, the stop line names the reason, the file is left where the agent
     wrote it, and nothing announces a stop-short (``expired``)."""
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     events: list[str] = []
     svc.subscribe(lambda ev, lp: events.append(ev))
@@ -982,7 +982,7 @@ async def test_stop_sentinel_keeps_the_record_finished(svc, tmp_path, monkeypatc
     )
     sentinel.write_text("halt")
     svc._cancel_timer(loop.id)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.autonudge"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.autonudge"):
         # delay=0: the timer's own sleep is a single loop turn, so nothing is
         # patched and the stdlib asyncio.sleep stays the worker's.
         await svc._timer(loop, delay=0)
@@ -1048,7 +1048,7 @@ async def test_a_stop_file_finish_is_revived_only_once_the_file_is_gone(svc, tmp
     re-arm is declined (and writes nothing); once the operator deletes the file
     the same re-arm runs the loop again. A finished watch has no file to lift
     and stays finished."""
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def _nosleep(_secs):
         return None
@@ -1085,7 +1085,7 @@ async def test_a_finished_loop_is_displaced_by_a_new_arm_not_by_a_create(svc, tm
     stopped one goal through its stop file can arm the next, as it could when
     the row was removed. The popover's create-only POST still meets the row and
     refuses, so Clear stays the person's step."""
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     await svc.start()
     loop = await svc.add(slot_key="chat-1-123", message="go", idle_secs=15)

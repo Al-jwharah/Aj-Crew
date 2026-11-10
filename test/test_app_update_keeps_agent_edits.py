@@ -21,9 +21,9 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from apps_routes_coverage_helpers import APP, _make_app, _setup_env
 
-import kiro_crew.apps.routes as routes_mod
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME, enable_app, install_app, update_app
-from kiro_crew.apps.routes import register_app
+import aj_crew.apps.routes as routes_mod
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME, enable_app, install_app, update_app
+from aj_crew.apps.routes import register_app
 
 
 def _source(root: Path, version: str, template: dict[str, Any]) -> Path:
@@ -143,8 +143,8 @@ class TestUpdateKeepsAgentEdits:
     ) -> None:
         """A data home that does not own a shared agents directory declines the
         rewrite, and a full disk fails it: the user's file must still be there."""
-        from kiro_crew import agent as agent_mod
-        from kiro_crew.apps import bridges
+        from aj_crew import agent as agent_mod
+        from aj_crew.apps import bridges
 
         v2 = _installed_with_edits(tmp_path, monkeypatch)
         before = _agent_file(tmp_path).read_bytes()
@@ -293,7 +293,7 @@ class TestSnapshotAppAgentConfigs:
     def test_reads_only_this_apps_regular_agent_files(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.apps.bridges import snapshot_app_agent_configs
+        from aj_crew.apps.bridges import snapshot_app_agent_configs
 
         _setup_env(tmp_path, monkeypatch)
         agents = tmp_path / "kiro-agents"
@@ -314,7 +314,7 @@ class TestSnapshotAppAgentConfigs:
     def test_a_missing_agents_dir_is_an_empty_snapshot(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.apps.bridges import snapshot_app_agent_configs
+        from aj_crew.apps.bridges import snapshot_app_agent_configs
 
         _setup_env(tmp_path, monkeypatch)
         (tmp_path / "kiro-agents").rmdir()

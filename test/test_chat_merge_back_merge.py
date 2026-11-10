@@ -41,23 +41,23 @@ from chat_merge_back_helpers import (  # noqa: F401
 )
 from chat_test_helpers import close_before_resume
 
-from kiro_crew.dashboard import chat_handlers, chat_merge_back, chat_persistence, workflow_inject
-from kiro_crew.dashboard.chat_merge_back import (
+from aj_crew.dashboard import chat_handlers, chat_merge_back, chat_persistence, workflow_inject
+from aj_crew.dashboard.chat_merge_back import (
     MERGE_NOTE_SOURCE,
     covered_digest,
     merge_cards,
     message_key,
 )
-from kiro_crew.dashboard.chat_persistence import _rehydrate_slot_from_history, _save_slot_to_history
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard.chat_persistence import _rehydrate_slot_from_history, _save_slot_to_history
+from aj_crew.dashboard.chat_utils import (
     adopt_variant_text,
     effective_session_key,
     slot_history_key,
     transcripts_share_file,
 )
-from kiro_crew.dashboard.slot_buffers import AWAITING_DURABLE_WRITE, MERGED_FROM_META_KEY
-from kiro_crew.dashboard.state import _MAX_CONTEXT_PER_SOURCE
-from kiro_crew.testing.wait import async_wait_until, await_until, default_timeout
+from aj_crew.dashboard.slot_buffers import AWAITING_DURABLE_WRITE, MERGED_FROM_META_KEY
+from aj_crew.dashboard.state import _MAX_CONTEXT_PER_SOURCE
+from aj_crew.testing.wait import async_wait_until, await_until, default_timeout
 
 
 class TestMerge:
@@ -1326,7 +1326,7 @@ class TestMerge:
             return append_pending_context(slot, entry)
 
         monkeypatch.setattr(type(parent), "append_pending_context", refuse_the_flush_once)
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.state"):
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.state"):
             async with _client(state) as client:
                 _, draft = await _draft(client)
                 status, body = await _merge(client, "late summary", draft)
@@ -1477,7 +1477,7 @@ class TestMerge:
     async def test_a_stale_save_defers_consumed_card_retirement_until_it_writes_the_row(
         self, chats, monkeypatch
     ):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = chats.state
         key = slot_history_key(chats.parent)
@@ -1553,7 +1553,7 @@ class TestMerge:
 
     @pytest.mark.asyncio
     async def test_a_clean_restart_does_not_queue_consumed_delivered_context(self, chats):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = chats.state
         await _place_merge_card(state, chats.parent, chats.fork, "restart consumed summary")
@@ -1573,7 +1573,7 @@ class TestMerge:
         assert restored._pending_context == []
 
     def test_union_carries_consumed_and_delivered_from_disk(self):
-        from kiro_crew.dashboard.slot_buffers import union_deferred_notes
+        from aj_crew.dashboard.slot_buffers import union_deferred_notes
 
         disk = [{"id": "card", "merged_from": {}, "consumed": True, "delivered": True}]
         live = [{"id": "card", "merged_from": {}}]
@@ -1587,7 +1587,7 @@ class TestMerge:
     async def test_stamp_failure_logs_and_the_process_guard_stops_replay(
         self, chats, monkeypatch, caplog
     ):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = chats.state
         await _place_merge_card(state, chats.parent, chats.fork, "failed stamp summary")
@@ -1612,7 +1612,7 @@ class TestMerge:
 
     @staticmethod
     def _full_line(slot, existing_meta, window):
-        from kiro_crew.dashboard.slot_persistence import metadata_line
+        from aj_crew.dashboard.slot_persistence import metadata_line
 
         meta_line, _mode, _queue, retired, _tab_id = metadata_line.build_full_line(
             slot,
@@ -1722,8 +1722,8 @@ class TestMerge:
     @staticmethod
     def _kept_reply(*events_before_end):
         """A reply kiro-cli keeps: *events_before_end*, then a normal ``end_turn``."""
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         async def events():
             for event in events_before_end:
@@ -1734,7 +1734,7 @@ class TestMerge:
 
     @staticmethod
     def _text(text: str):
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         return LLMEvent(kind=EVENT_TEXT_CHUNK, text=text)
 
@@ -1807,7 +1807,7 @@ class TestMerge:
     @pytest.mark.asyncio
     async def test_a_turn_cut_by_a_completed_compaction_retires_the_card(self, chats, model):
         """The summarized session was built from a prompt that carried the frame."""
-        from kiro_crew.providers.base import EVENT_COMPACTION_STATUS, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPACTION_STATUS, LLMEvent
 
         note_id = await self._merged_card(chats, "compaction summary")
         first = await _run_turn(
@@ -1888,7 +1888,7 @@ class TestMerge:
     @pytest.mark.asyncio
     async def test_an_empty_continuation_after_productive_work_returns_the_card(self, chats, model):
         """A give-up reads only its own attempt, so the card comes back once."""
-        from kiro_crew.providers.base import EVENT_TOOL_CALL, LLMEvent
+        from aj_crew.providers.base import EVENT_TOOL_CALL, LLMEvent
 
         state = chats.state
         note_id = await self._merged_card(chats, "productive empty summary")
@@ -1923,7 +1923,7 @@ class TestMerge:
     @pytest.mark.asyncio
     async def test_a_productive_empty_give_up_consumes_the_card(self, chats, model):
         """Work in the attempt that gives up answers its prompt, so the card is spent."""
-        from kiro_crew.providers.base import EVENT_TOOL_CALL, LLMEvent
+        from aj_crew.providers.base import EVENT_TOOL_CALL, LLMEvent
 
         def productive_empty_reply(call_id):
             return self._kept_reply(
@@ -1960,7 +1960,7 @@ class TestMerge:
     @pytest.mark.asyncio
     async def test_stale_episode_productivity_does_not_consume_an_app_turn_card(self, chats, model):
         """A discarded recovery gives an unrelated synthetic turn no productivity."""
-        from kiro_crew.providers.base import EVENT_TOOL_CALL, LLMEvent
+        from aj_crew.providers.base import EVENT_TOOL_CALL, LLMEvent
 
         state = chats.state
         await _run_turn(

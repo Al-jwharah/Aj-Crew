@@ -19,7 +19,7 @@ import ast
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCAN_ROOTS = (ROOT / "src" / "kiro_crew", ROOT / "test", ROOT / "scripts")
+SCAN_ROOTS = (ROOT / "src" / "aj_crew", ROOT / "test", ROOT / "scripts")
 
 
 def _is_json_decode_error(node: ast.expr) -> bool:

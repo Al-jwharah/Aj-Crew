@@ -25,7 +25,7 @@ const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 const scene = params.get('scene') || 'refused'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const zeroPeriod = { sessions: 0, messages: 0, tool_calls: 0 }
 const refusedPayload = {

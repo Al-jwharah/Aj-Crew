@@ -53,7 +53,7 @@ describe('DirectDeployFlow — one affordance per phase', () => {
       refusal: {
         code: 'reaper_required',
         error: 'Your AWS account has no auto-cleanup installed yet.',
-        details: 'kirocrew-deploy-base',
+        details: 'ajcrew-deploy-base',
         remediation: '/s/install-reaper.sh --profile ship',
       },
       preview: PREVIEW,

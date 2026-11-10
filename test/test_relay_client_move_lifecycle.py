@@ -27,10 +27,10 @@ from relay_client_helpers import (
     valid_message,
 )
 
-from kiro_crew.relay_client.client import STATE_CONNECTED, STATE_ERROR
-from kiro_crew.relay_client.connection import HostConnection, RelayTimings
-from kiro_crew.relay_client.token_source import HostCredential
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.relay_client.client import STATE_CONNECTED, STATE_ERROR
+from aj_crew.relay_client.connection import HostConnection, RelayTimings
+from aj_crew.relay_client.token_source import HostCredential
+from aj_crew.testing.wait import async_wait_until, await_until
 
 pytestmark = pytest.mark.asyncio
 

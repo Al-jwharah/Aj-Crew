@@ -34,7 +34,7 @@ website node dependency tree (the ``yaml`` package the mirror imports, and esbui
 to transpile the component). It runs only where both are present: when a runtime
 or the website deps are absent, it skips with a named reason rather than
 half-guarding against a partial environment. Setting
-``KIROCREW_SKILLFORM_PARITY_REQUIRE=1`` turns such a skip into a hard failure, so a
+``AJCREW_SKILLFORM_PARITY_REQUIRE=1`` turns such a skip into a hard failure, so a
 lane that is meant to run this guard cannot report green having run nothing. The
 CI lane that sets that variable and runs this file is the ``e2e`` job -- the one
 pull-request lane that installs both runtimes -- wired by a companion workflow
@@ -58,7 +58,7 @@ from pathlib import Path
 import pytest
 
 from conftest import make_dir_link
-from kiro_crew.frontmatter import SKILL_LOADER, parse_frontmatter
+from aj_crew.frontmatter import SKILL_LOADER, parse_frontmatter
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _WEBSITE = _REPO_ROOT / "website"
@@ -68,7 +68,7 @@ _NODE = shutil.which("node")
 # When set (the e2e CI job sets it), a missing prerequisite is a HARD failure
 # instead of a skip -- the lane that is meant to run this guard must not report
 # green having skipped it. Everywhere else a genuine absence skips with a reason.
-_REQUIRE = os.environ.get("KIROCREW_SKILLFORM_PARITY_REQUIRE") == "1"
+_REQUIRE = os.environ.get("AJCREW_SKILLFORM_PARITY_REQUIRE") == "1"
 
 
 def _prereqs_missing() -> str | None:

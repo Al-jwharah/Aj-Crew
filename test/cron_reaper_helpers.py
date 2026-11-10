@@ -17,12 +17,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.cron import _JOB_TIMEOUT_SECS, CronJob, CronSchedule, CronService, _RunClaim
-from kiro_crew.cron_history import CronHistoryStore
-from kiro_crew.process_identity import ProcessHandle, process_handle_of
-from kiro_crew.session_lifecycle import TornDown, _TeardownScope
-from kiro_crew.testing.wait import finished
+from aj_crew import platform_compat
+from aj_crew.cron import _JOB_TIMEOUT_SECS, CronJob, CronSchedule, CronService, _RunClaim
+from aj_crew.cron_history import CronHistoryStore
+from aj_crew.process_identity import ProcessHandle, process_handle_of
+from aj_crew.session_lifecycle import TornDown, _TeardownScope
+from aj_crew.testing.wait import finished
 
 #: The platform kill primitives the kill path can reach. Each is pinned to a
 #: refusal for the whole module (``_kill_seam``): a test that drives one patches
@@ -153,7 +153,7 @@ def _group_gone() -> Any:
     ``os.killpg(number, 0)`` otherwise, and a made-up pid may name a live group
     on the host running the suite.
     """
-    return patch("kiro_crew.platform_compat.pgroup_exists", return_value=False)
+    return patch("aj_crew.platform_compat.pgroup_exists", return_value=False)
 
 
 @contextmanager
@@ -180,8 +180,8 @@ def _root_reads_back(start_id: str = _START_ID) -> Iterator[None]:
     targets that captured group. To capture no group, patch ``os.getpgid`` in the block.
     """
     with (
-        patch("kiro_crew.platform_compat.get_process_start_id", return_value=start_id),
-        patch("kiro_crew.platform_compat.pid_exists", return_value=True),
+        patch("aj_crew.platform_compat.get_process_start_id", return_value=start_id),
+        patch("aj_crew.platform_compat.pid_exists", return_value=True),
         _isolated_leader(),
         _group_gone(),
     ):
@@ -191,9 +191,9 @@ def _root_reads_back(start_id: str = _START_ID) -> Iterator[None]:
 def _kill_path_stubs() -> Any:
     """The child-tree probe, the root reads and the sweep stubbed so only the kill decides."""
     return (
-        patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
+        patch("aj_crew.acp.client._get_child_pids", return_value=[]),
         _root_reads_back(),
-        patch("kiro_crew.acp.client._kill_escaped_children"),
+        patch("aj_crew.acp.client._kill_escaped_children"),
     )
 
 

@@ -16,8 +16,8 @@ import sys
 
 import pytest
 
-from kiro_crew import env as env_mod
-from kiro_crew.cron_script import _clean_cron_env
+from aj_crew import env as env_mod
+from aj_crew.cron_script import _clean_cron_env
 
 pytestmark = pytest.mark.skipif(
     sys.platform == "win32", reason="POSIX fixture (an executable shell script)"
@@ -66,10 +66,10 @@ def test_a_contributed_mcp_dir_trails_the_path(monkeypatch, tmp_path) -> None:
 
 
 def test_denied_keys_are_still_stripped_and_an_absent_path_stays_absent(monkeypatch) -> None:
-    monkeypatch.setenv("KIROCREW_INTERNAL_SECRET", "s3cret")
+    monkeypatch.setenv("AJCREW_INTERNAL_SECRET", "s3cret")
     monkeypatch.delenv("PATH", raising=False)
 
     env = _clean_cron_env()
 
-    assert "KIROCREW_INTERNAL_SECRET" not in env
+    assert "AJCREW_INTERNAL_SECRET" not in env
     assert "PATH" not in env

@@ -28,11 +28,11 @@ import pytest
 from non_utf8_comm import comm_is_settable, renamed_child
 
 from conftest import _find_posix_test_shell
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 _SKILL = (
     Path(__file__).resolve().parent.parent
-    / "src/kiro_crew/apps/builtins/dev_fleet/skills/pod-e2e"
+    / "src/aj_crew/apps/builtins/dev_fleet/skills/pod-e2e"
 )
 _DRIVER = _SKILL / "scripts/pod-playwright.py"
 _RUNNER = _SKILL / "scripts/pod-e2e.sh"
@@ -282,7 +282,7 @@ class _FakePage:
         Path(path).write_bytes(b"")
 
     def text_content(self, _sel):
-        return "KiroCrew dashboard shell rendered fine"
+        return "AjCrew dashboard shell rendered fine"
 
     def unroute_all(self):
         self.unrouted = True
@@ -471,7 +471,7 @@ def test_verdict_is_truncated_on_every_invocation():
     GPT on `e4618909` caught the driver-dies-early case; the Arbiter on
     `0a853308` caught that truncating inside the Playwright branch still leaves
     stale rows for every skip path (--api-only, unhealthy pod, no
-    KIROCREW_PW_PY). So it must run unconditionally, right after mkdir.
+    AJCREW_PW_PY). So it must run unconditionally, right after mkdir.
     """
     lines = _runner_text().splitlines()
 
@@ -481,7 +481,7 @@ def test_verdict_is_truncated_on_every_invocation():
     mkdir = _index('mkdir -p "$ARTIFACT_DIR"')
     truncate = _index(': > "$ARTIFACT_DIR/verdict.jsonl"')
     fe_branch = _index('if [ "$RUN_FE" -eq 1 ]')
-    launch = _index('KIROCREW_POD_TOKEN="$TOKEN" "${PW_CMD[@]}"')
+    launch = _index('AJCREW_POD_TOKEN="$TOKEN" "${PW_CMD[@]}"')
 
     assert truncate is not None, "verdict.jsonl is never truncated"
     assert mkdir is not None and fe_branch is not None and launch is not None
@@ -560,7 +560,7 @@ def test_teardown_bail_row_matches_the_summary_grep(driver, tmp_path):
 def test_missing_playwright_interpreter_fails_the_run():
     """A run that captured ZERO screenshots must not report a green summary.
 
-        A `warn` when KIROCREW_PW_PY is unset produces a summary that says
+        A `warn` when AJCREW_PW_PY is unset produces a summary that says
         "N passed, 0 failed" with no evidence on disk — which is how "capture
     is in flight" becomes a believable but false statement. It must `fail`.
     """
@@ -583,7 +583,7 @@ def test_missing_playwright_interpreter_fails_the_run():
     branch = "\n".join(lines[no_interp:launch_else])
     assert "warn " not in branch, "a zero-screenshot branch still only warns"
     assert branch.count("fail ") == 2, "both zero-screenshot branches must fail"
-    assert "KIROCREW_PW_PY" in branch
+    assert "AJCREW_PW_PY" in branch
 
 
 def test_missing_playwright_message_names_the_pinned_version_and_the_opt_out():
@@ -592,7 +592,7 @@ def test_missing_playwright_message_names_the_pinned_version_and_the_opt_out():
     any other version triggers a fresh ~170MB download."""
     body = _runner_text()
     assert "playwright==1.61.0" in body
-    assert "export KIROCREW_PW_PY=" in body
+    assert "export AJCREW_PW_PY=" in body
     # --api-only stays the one clean way to skip the frontend phase.
     assert "--api-only" in body
     assert "--api-only) RUN_FE=0 ;;" in body

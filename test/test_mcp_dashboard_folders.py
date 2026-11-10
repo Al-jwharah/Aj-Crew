@@ -1,4 +1,4 @@
-"""Tests for the chat (sidebar) folder tools on the kirocrew-dashboard server.
+"""Tests for the chat (sidebar) folder tools on the ajcrew-dashboard server.
 
 Covers ``chat_folder_tree/create/move/move_session/delete``, the folder-name rules
 and the folder policy. Each case runs one tools/call frame through
@@ -27,16 +27,16 @@ from mcp_dashboard_folders_helpers import (
     _writes,
 )
 
-from kiro_crew import mcp_dashboard, mcp_dashboard_caller_scope
-from kiro_crew.mcp_tools.dashboard_client import DashboardRequest
-from kiro_crew.mcp_tools.table import Caller
+from aj_crew import mcp_dashboard, mcp_dashboard_caller_scope
+from aj_crew.mcp_tools.dashboard_client import DashboardRequest
+from aj_crew.mcp_tools.table import Caller
 
 
 class TestFolderTree:
     def test_renders_paths_sessions_and_unfiled(self) -> None:
         out, _ = _call("chat_folder_tree", {})
         # Derived human path, not just the leaf name.
-        assert "kirocrew/0811" in out
+        assert "ajcrew/0811" in out
         # Sessions nest under their folder, with the slot key the move tool takes.
         assert "chat-2-200" in out and "Folder MCP" in out
         assert "running" in out  # live state surfaces
@@ -135,13 +135,13 @@ class TestFolderCreate:
         made = {"id": "dddddddddddd", "name": "0812", "parent_id": "aaaaaaaaaaaa"}
         out, dash = _call(
             "chat_folder_create",
-            {"name": "0812", "parent": "kirocrew"},
+            {"name": "0812", "parent": "ajcrew"},
             {**_reads(), "POST /api/chat/folders": made},
         )
         (post,) = _writes(dash)
         assert post.path == "/api/chat/folders"
         assert post.body == {"name": "0812", "parent_id": "aaaaaaaaaaaa"}
-        assert "kirocrew/0812" in out and "dddddddddddd" in out
+        assert "ajcrew/0812" in out and "dddddddddddd" in out
 
     def test_accepts_parent_by_id(self) -> None:
         made = {"id": "dddddddddddd", "name": "x", "parent_id": "bbbbbbbbbbbb"}
@@ -221,11 +221,11 @@ class TestFolderCreate:
     def test_mkdir_p_creates_missing_parent_segments(self) -> None:
         out, dash = _call(
             "chat_folder_create",
-            {"name": "week1", "parent": "kirocrew/2026/august"},
+            {"name": "week1", "parent": "ajcrew/2026/august"},
             {**_reads(), "POST /api/chat/folders": _minting_post()},
         )
         posts = [r.body for r in _writes(dash)]
-        # "kirocrew" exists; "2026" and "august" are created, then the leaf.
+        # "ajcrew" exists; "2026" and "august" are created, then the leaf.
         assert [p["name"] for p in posts] == ["2026", "august", "week1"]
         assert posts[0]["parent_id"] == "aaaaaaaaaaaa"
         # Each created segment becomes the next one's parent — the walk threads
@@ -262,7 +262,7 @@ class TestFolderCreate:
     def test_name_is_required(self) -> None:
         # The schema is registered in validation's dashboard registry, so the
         # table refuses the call before the tool runs, as a clean "Error: ...".
-        out, dash = _call("chat_folder_create", {"parent": "kirocrew"})
+        out, dash = _call("chat_folder_create", {"parent": "ajcrew"})
         assert out == "Error: name: required"
         assert dash.requests == []
 
@@ -276,7 +276,7 @@ class TestAmbiguousFolderPaths:
 
     # Two folders named "0811" under the same parent, as the sidebar allows.
     DUPES = [
-        {"id": "aaaaaaaaaaaa", "name": "kirocrew", "parent_id": ""},
+        {"id": "aaaaaaaaaaaa", "name": "ajcrew", "parent_id": ""},
         {"id": "bbbbbbbbbbbb", "name": "0811", "parent_id": "aaaaaaaaaaaa"},
         {"id": "cccccccccccc", "name": "0811", "parent_id": "aaaaaaaaaaaa"},
     ]
@@ -288,7 +288,7 @@ class TestAmbiguousFolderPaths:
 
     def test_create_refuses_an_ambiguous_parent_path(self) -> None:
         out, dash = _call(
-            "chat_folder_create", {"name": "x", "parent": "kirocrew/0811"}, self.ROUTES
+            "chat_folder_create", {"name": "x", "parent": "ajcrew/0811"}, self.ROUTES
         )
         assert out.startswith("Error:")
         assert "bbbbbbbbbbbb" in out and "cccccccccccc" in out
@@ -296,7 +296,7 @@ class TestAmbiguousFolderPaths:
 
     def test_move_refuses_an_ambiguous_destination_path(self) -> None:
         out, dash = _call(
-            "chat_folder_move", {"folder": "kirocrew", "new_parent": "kirocrew/0811"}, self.ROUTES
+            "chat_folder_move", {"folder": "ajcrew", "new_parent": "ajcrew/0811"}, self.ROUTES
         )
         assert out.startswith("Error:") and "pass the folder id" in out
         assert _writes(dash) == []
@@ -304,7 +304,7 @@ class TestAmbiguousFolderPaths:
     def test_session_move_refuses_an_ambiguous_destination_path(self) -> None:
         out, dash = _call(
             "chat_folder_move_session",
-            {"session": "chat-1-100", "folder": "kirocrew/0811"},
+            {"session": "chat-1-100", "folder": "ajcrew/0811"},
             self.ROUTES,
         )
         assert out.startswith("Error:")
@@ -322,7 +322,7 @@ class TestAmbiguousFolderPaths:
 
     def test_mkdir_p_does_not_add_a_third_duplicate_sibling(self) -> None:
         out, dash = _call(
-            "chat_folder_create", {"name": "leaf", "parent": "kirocrew/0811/deeper"}, self.ROUTES
+            "chat_folder_create", {"name": "leaf", "parent": "ajcrew/0811/deeper"}, self.ROUTES
         )
         # Ambiguity found mid-walk (not at the final segment), so this is the
         # segment refusal — it must name both duplicates.
@@ -510,7 +510,7 @@ class TestFolderNameRedaction:
     def test_created_parent_segments_are_redacted_before_the_write(self) -> None:
         out, dash = _call(
             "chat_folder_create",
-            {"name": "leaf", "parent": f"kirocrew/{self.LEAKY}"},
+            {"name": "leaf", "parent": f"ajcrew/{self.LEAKY}"},
             {**_reads(), "POST /api/chat/folders": _minting_post()},
         )
         assert all(self.LEAKY not in r.body["name"] for r in _writes(dash))
@@ -521,7 +521,7 @@ class TestFolderMove:
     def test_reparents_by_path(self) -> None:
         out, dash = _call(
             "chat_folder_move",
-            {"folder": "Travel", "new_parent": "kirocrew"},
+            {"folder": "Travel", "new_parent": "ajcrew"},
             {
                 **_reads(),
                 "PATCH /api/chat/folders/{folder}": {
@@ -534,12 +534,12 @@ class TestFolderMove:
         (patch,) = _writes(dash)
         assert patch.path == "/api/chat/folders/cccccccccccc"
         assert patch.body == {"parent_id": "aaaaaaaaaaaa"}
-        assert "kirocrew/Travel" in out
+        assert "ajcrew/Travel" in out
 
     def test_move_to_root(self) -> None:
         out, dash = _call(
             "chat_folder_move",
-            {"folder": "kirocrew/0811", "new_parent": "root"},
+            {"folder": "ajcrew/0811", "new_parent": "root"},
             {
                 **_reads(),
                 "PATCH /api/chat/folders/{folder}": {
@@ -560,7 +560,7 @@ class TestFolderMove:
     def test_cycle_verdict_comes_from_the_endpoint(self) -> None:
         out, _ = _call(
             "chat_folder_move",
-            {"folder": "kirocrew", "new_parent": "kirocrew/0811"},
+            {"folder": "ajcrew", "new_parent": "ajcrew/0811"},
             {
                 **_reads(),
                 "PATCH /api/chat/folders/{folder}": {
@@ -579,13 +579,13 @@ class TestFolderMove:
     def test_resolve_only_walk_refuses_a_mid_path_duplicate(self) -> None:
         """Ambiguity below the addressed path is refused in resolve mode too."""
         dupes = [
-            {"id": "aaaaaaaaaaaa", "name": "kirocrew", "parent_id": ""},
+            {"id": "aaaaaaaaaaaa", "name": "ajcrew", "parent_id": ""},
             {"id": "bbbbbbbbbbbb", "name": "0811", "parent_id": "aaaaaaaaaaaa"},
             {"id": "cccccccccccc", "name": "0811", "parent_id": "aaaaaaaaaaaa"},
         ]
         out, dash = _call(
             "chat_folder_move",
-            {"folder": "kirocrew/0811/deeper"},
+            {"folder": "ajcrew/0811/deeper"},
             _reads(folders=dupes, slots=_slots_with_caller()),
         )
         assert out.startswith("Error:") and "share the same parent" in out
@@ -618,7 +618,7 @@ class TestFolderDelete:
         """
         out, dash = _call(
             "chat_folder_delete",
-            {"folder": "kirocrew"},
+            {"folder": "ajcrew"},
             self._routes({"error": "folder has subfolders", "code": "folder_not_empty"}),
         )
         assert _writes(dash)[-1].path.endswith("?if_empty=true")
@@ -692,7 +692,7 @@ class TestFolderMoveSession:
         """
         out, dash = _call(
             "chat_folder_move_session",
-            {"session": "chat-3-300", "folder": "kirocrew/0811"},
+            {"session": "chat-3-300", "folder": "ajcrew/0811"},
             self._routes(),
             _UNVERIFIED,
         )
@@ -709,7 +709,7 @@ class TestFolderMoveSession:
         """
         _, dash = _call(
             "chat_folder_move_session",
-            {"session": "chat-3-300", "folder": "kirocrew/0811"},
+            {"session": "chat-3-300", "folder": "ajcrew/0811"},
             self._routes(),
             Caller.strict("dashboard:chat-2-200"),
         )
@@ -718,13 +718,13 @@ class TestFolderMoveSession:
     def test_moves_by_slot_key_into_a_path(self) -> None:
         out, dash = _call(
             "chat_folder_move_session",
-            {"session": "chat-3-300", "folder": "kirocrew/0811"},
+            {"session": "chat-3-300", "folder": "ajcrew/0811"},
             self._routes(reply={"ok": True, "folder_id": "bbbbbbbbbbbb"}),
         )
         (patch,) = _writes(dash)
         assert patch.path == "/api/chat/slots/chat-3-300/folder"
         assert patch.body == {"folder_id": "bbbbbbbbbbbb"}
-        assert "kirocrew/0811" in out
+        assert "ajcrew/0811" in out
 
     def test_accepts_a_dashboard_session_key(self) -> None:
         _, dash = _call(
@@ -954,7 +954,7 @@ class TestASubagentCannotOutrankItsParent:
         """The resolver reads the withheld list, so the write is refused too."""
         out, dash = _call(
             "chat_folder_move_session",
-            {"session": "chat-1-100", "folder": "kirocrew/0811"},
+            {"session": "chat-1-100", "folder": "ajcrew/0811"},
             self.MIXED,
             Caller.strict("subagent:abc123"),
         )
@@ -1068,7 +1068,7 @@ class TestTheFolderPolicyIsTheEndpointsNotThisServers:
         moved = {"id": "fldr00000002", "name": "0811", "parent_id": "fldr00000003"}
         out, dash = _call(
             "chat_folder_move",
-            {"folder": "kirocrew/0811", "new_parent": "Travel"},
+            {"folder": "ajcrew/0811", "new_parent": "Travel"},
             {**self.MIXED, "PATCH /api/chat/folders/{folder}": moved},
             self.RADAR,
         )
@@ -1081,7 +1081,7 @@ class TestTheFolderPolicyIsTheEndpointsNotThisServers:
         denied = {"error": "this app does not own that folder", "code": "folder_not_owned"}
         out, _ = _call(
             "chat_folder_move",
-            {"folder": "kirocrew/0811", "new_parent": "Travel"},
+            {"folder": "ajcrew/0811", "new_parent": "Travel"},
             {**self.MIXED, "PATCH /api/chat/folders/{folder}": denied},
             self.RADAR,
         )
@@ -1091,7 +1091,7 @@ class TestTheFolderPolicyIsTheEndpointsNotThisServers:
     def test_an_app_can_still_file_its_own_session(self) -> None:
         out, dash = _call(
             "chat_folder_move_session",
-            {"session": "chat-1-100", "folder": "kirocrew/0811"},
+            {"session": "chat-1-100", "folder": "ajcrew/0811"},
             {**self.MIXED, "PATCH /api/chat/slots/{slot}/folder": {"ok": True}},
             self.RADAR,
         )
@@ -1101,7 +1101,7 @@ class TestTheFolderPolicyIsTheEndpointsNotThisServers:
     def test_an_app_can_still_read_the_tree(self) -> None:
         out, _ = _call("chat_folder_tree", {}, self.MIXED, self.RADAR)
         assert not out.startswith("Error:")
-        assert "kirocrew" in out
+        assert "ajcrew" in out
 
     def test_the_person_keeps_full_authority(self) -> None:
         """Reorganising sessions is the point of the tools — an unscoped caller

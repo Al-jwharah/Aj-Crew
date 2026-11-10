@@ -28,12 +28,12 @@ from job_sdk_helpers import (  # noqa: F401 -- the fixture is requested by name
 )
 
 from conftest import requires_symlinks
-from kiro_crew.apps import job_routes, job_sdk
-from kiro_crew.apps.builtins.aws_control import hooks
-from kiro_crew.apps.builtins.aws_control.backend import backup as backup_mod
-from kiro_crew.apps.builtins.aws_control.backend import routes as routes_mod
-from kiro_crew.apps.job_sdk import DONE, RUNNING, JobRun, JobSDK, forget_sdk
-from kiro_crew.apps.manager import app_data_dir
+from aj_crew.apps import job_routes, job_sdk
+from aj_crew.apps.builtins.aws_control import hooks
+from aj_crew.apps.builtins.aws_control.backend import backup as backup_mod
+from aj_crew.apps.builtins.aws_control.backend import routes as routes_mod
+from aj_crew.apps.job_sdk import DONE, RUNNING, JobRun, JobSDK, forget_sdk
+from aj_crew.apps.manager import app_data_dir
 
 ACCOUNT = "111122223333"
 
@@ -200,7 +200,7 @@ class TestTheCap:
                 if not gated:
                     _wait_until(lambda: _swept(sdk, late[0]))
 
-        monkeypatch.setattr("kiro_crew.apps.job_sdk_retention._sweep", sweep_then_finish_another)
+        monkeypatch.setattr("aj_crew.apps.job_sdk_retention._sweep", sweep_then_finish_another)
         first = sdk.start("k")
         _wait_until(lambda: bool(late) and _swept(sdk, first) and _swept(sdk, late[0]))
         assert _ids_on_disk(sdk) == {late[0]}
@@ -393,7 +393,7 @@ class TestTheBackupJobsOptIn:
     ) -> None:
         # The security lists protect this app's data dir from agent reads, so a
         # scan through the agent-facing read would see no record there at all.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         sdk = JobSDK(backup_mod.APP_NAME, app_data_dir(backup_mod.APP_NAME))
         try:
             sdk.register("k", lambda h: None, retention=1)

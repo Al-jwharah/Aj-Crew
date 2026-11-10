@@ -30,11 +30,11 @@ from crew_log_fold_eager_helpers import (  # noqa: F401 - autouse fixture
 )
 from test_crew_log_fold_delta import _publish_now, _Writer
 
-from kiro_crew import conductor_wake
-from kiro_crew.crew_log import bus, eager, fold_delta
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.dashboard.handlers.crew_log import CrewLogPublisher
-from kiro_crew.testing.wait import wait_until
+from aj_crew import conductor_wake
+from aj_crew.crew_log import bus, eager, fold_delta
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.dashboard.handlers.crew_log import CrewLogPublisher
+from aj_crew.testing.wait import wait_until
 
 
 @pytest.fixture(autouse=True)
@@ -197,7 +197,7 @@ def test_a_publish_with_no_recorded_render_goes_to_an_old_tab_bare():
 
 
 def _counting_dumps(monkeypatch) -> "list[str]":
-    from kiro_crew.dashboard import websocket_hub as hub
+    from aj_crew.dashboard import websocket_hub as hub
 
     kinds: "list[str]" = []
     real = json.dumps
@@ -239,7 +239,7 @@ DELTA = {"v": 1, "slot": "A", "fold": "work", "kind": "delta", "revision": 7, "b
 def test_no_whole_frame_is_serialized_when_every_watcher_applies_deltas(tmp_path, monkeypatch):
     from test_fold_watch_routing import _make_state
 
-    from kiro_crew.dashboard import websocket_hub as hub
+    from aj_crew.dashboard import websocket_hub as hub
 
     state = _make_state(tmp_path)
     applies = _socket(state, caps=(True, True), watch=["A"])
@@ -254,7 +254,7 @@ def test_no_whole_frame_is_serialized_when_every_watcher_applies_deltas(tmp_path
 def test_old_and_watch_only_tabs_get_the_whole_frame_serialized_once(tmp_path, monkeypatch):
     from test_fold_watch_routing import _make_state
 
-    from kiro_crew.dashboard import websocket_hub as hub
+    from aj_crew.dashboard import websocket_hub as hub
 
     state = _make_state(tmp_path)
     applies = _socket(state, caps=(True, True), watch=["A"])
@@ -327,7 +327,7 @@ def test_conductor_wake_reads_the_board_on_a_value_less_snapshot(monkeypatch):
 
 
 def test_dashboard_feed_takes_the_published_render_on_a_value_less_snapshot_then_applies():
-    from kiro_crew.dashboard_feed import DashboardFeed, _Cell
+    from aj_crew.dashboard_feed import DashboardFeed, _Cell
 
     changes: "list[str]" = []
     feed = DashboardFeed(WORK_SLOT, on_change=changes.append)
@@ -361,7 +361,7 @@ def test_dashboard_feed_takes_the_published_render_on_a_value_less_snapshot_then
 
 
 def test_a_one_shot_read_waits_for_the_feeds_re_read(monkeypatch):
-    from kiro_crew.dashboard_feed import DashboardFeed, _Cell
+    from aj_crew.dashboard_feed import DashboardFeed, _Cell
 
     feed = DashboardFeed(WORK_SLOT)
     feed._cells["work"] = _Cell()
@@ -386,7 +386,7 @@ def test_a_one_shot_read_waits_for_the_feeds_re_read(monkeypatch):
 
 
 def test_a_one_shot_read_gives_up_on_a_re_read_at_its_deadline(monkeypatch):
-    from kiro_crew.dashboard_feed import DashboardFeed, _Cell
+    from aj_crew.dashboard_feed import DashboardFeed, _Cell
 
     feed = DashboardFeed(WORK_SLOT)
     feed._cells["work"] = _Cell()
@@ -404,7 +404,7 @@ def test_a_board_too_big_to_keep_warm_still_reaches_the_feed(monkeypatch):
     """A board above the warm-cache budget with no savepoint: a warm read refuses it.
     The value-less ``snapshot_needed`` still gives the feed its value, from the render
     the publisher recorded for that revision, and a one-shot read sees it."""
-    from kiro_crew.dashboard_feed import DashboardFeed, _Cell
+    from aj_crew.dashboard_feed import DashboardFeed, _Cell
 
     writer = _Writer()
     writer.create("it_a")
@@ -437,7 +437,7 @@ def test_a_replayed_event_and_a_publish_never_deadlock_on_the_two_locks(monkeypa
     subscriber's delivery guard, while ``_release_baseline`` holds that guard and
     replays a value-less work event into ``DashboardFeed._accept``, which looks up the
     published render. The lookup must not wait on the publisher's lock."""
-    from kiro_crew.dashboard_feed import DashboardFeed, _Cell
+    from aj_crew.dashboard_feed import DashboardFeed, _Cell
 
     feed = DashboardFeed(WORK_SLOT)
     feed._cells["work"] = _Cell()

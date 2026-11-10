@@ -20,9 +20,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.cron import CronService
-from kiro_crew.cron_history import CronRunRecord
-from kiro_crew.dashboard.handlers.cron import (
+from aj_crew.cron import CronService
+from aj_crew.cron_history import CronRunRecord
+from aj_crew.dashboard.handlers.cron import (
     api_cron_history,
     api_cron_history_all,
     api_cron_history_detail,

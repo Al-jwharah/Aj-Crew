@@ -24,9 +24,9 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import irq
-from kiro_crew.monitoring.decision import decide_monitor, stamp_monitor_alerted
-from kiro_crew.monitoring.models import (
+from aj_crew import irq
+from aj_crew.monitoring.decision import decide_monitor, stamp_monitor_alerted
+from aj_crew.monitoring.models import (
     DEFAULT_MONITOR_COALESCE_SECS,
     MAX_MONITOR_CHECK_IDENTITIES_PER_BUCKET,
     MAX_MONITOR_CONDITION_KEY_CHARS,
@@ -45,7 +45,7 @@ from kiro_crew.monitoring.models import (
     ProviderErrorKind,
     monitor_condition_dedupe_key,
 )
-from kiro_crew.monitoring.pull_request import (
+from aj_crew.monitoring.pull_request import (
     PullRequestCheck,
     PullRequestFacts,
     build_pull_request_probe_result,

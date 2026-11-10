@@ -1,6 +1,6 @@
-"""``kiro_crew.acp.liveness`` keeps the surface and the patch seams the one module had.
+"""``aj_crew.acp.liveness`` keeps the surface and the patch seams the one module had.
 
-``liveness.py`` keeps the oracle (:class:`~kiro_crew.acp.liveness.LivenessOracle`) and the
+``liveness.py`` keeps the oracle (:class:`~aj_crew.acp.liveness.LivenessOracle`) and the
 offloaded-consult guard, and re-exports every name its sibling owners define:
 ``liveness_evidence``, ``liveness_proc``, ``liveness_command``, ``liveness_interactive``,
 ``liveness_tool_state`` and ``liveness_cleanup``. It is a plain facade, with no module ``__getattr__`` and no
@@ -24,7 +24,7 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew.acp import liveness
+from aj_crew.acp import liveness
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_liveness_facade")
 
@@ -32,15 +32,15 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_liveness_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.acp.liveness"
+FACADE = "aj_crew.acp.liveness"
 #: The owners, lowest layer first: each imports only owners listed before it.
 OWNERS = (
-    "kiro_crew.acp.liveness_evidence",
-    "kiro_crew.acp.liveness_proc",
-    "kiro_crew.acp.liveness_command",
-    "kiro_crew.acp.liveness_interactive",
-    "kiro_crew.acp.liveness_tool_state",
-    "kiro_crew.acp.liveness_cleanup",
+    "aj_crew.acp.liveness_evidence",
+    "aj_crew.acp.liveness_proc",
+    "aj_crew.acp.liveness_command",
+    "aj_crew.acp.liveness_interactive",
+    "aj_crew.acp.liveness_tool_state",
+    "aj_crew.acp.liveness_cleanup",
 )
 #: Names the test trees are known to patch through the facade, both read by the oracle:
 #: the boot-clock converter and the darwin backend selector. The scan must find them, so a
@@ -63,7 +63,7 @@ def _owner_sources() -> dict[str, str]:
 
 def _test_tree_files() -> Iterator[Path]:
     """Every file pytest collects tests or fixtures from: the root conftest, ``test/``,
-    and the test modules and conftests under ``src/kiro_crew/apps/builtins``."""
+    and the test modules and conftests under ``src/aj_crew/apps/builtins``."""
     root = source_corpus.repo_root()
     test_root = source_corpus.repo_root() / "test"
     for path in source_corpus.repo_files_named(".py"):
@@ -71,7 +71,7 @@ def _test_tree_files() -> Iterator[Path]:
         name = path.name
         if rel == "conftest.py" or path.is_relative_to(test_root):
             yield path
-        elif rel.startswith("src/kiro_crew/apps/builtins/") and (
+        elif rel.startswith("src/aj_crew/apps/builtins/") and (
             "/tests/" in rel
             or name.startswith("test_")
             or name.endswith("_test.py")
@@ -144,11 +144,11 @@ def test_the_scan_and_the_read_detector_catch_a_planted_seam() -> None:
     a global is reported, so the reach test below cannot pass over a shape it misses."""
     planted = (
         "from unittest.mock import patch\n"
-        "from kiro_crew.acp import liveness\n"
-        "import kiro_crew.acp.liveness as liveness_mod\n"
+        "from aj_crew.acp import liveness\n"
+        "import aj_crew.acp.liveness as liveness_mod\n"
         "def test_x(monkeypatch):\n"
         '    monkeypatch.setattr(liveness, "read_pid_stat", None)\n'
-        '    monkeypatch.setattr("kiro_crew.acp.liveness.match_fragment", None)\n'
+        '    monkeypatch.setattr("aj_crew.acp.liveness.match_fragment", None)\n'
         '    with patch.object(liveness_mod, "first_program"):\n'
         "        pass\n"
     )
@@ -179,7 +179,7 @@ def test_a_module_valued_seam_is_the_one_module_object_in_every_holder() -> None
 
 
 def test_every_name_an_owner_defines_is_the_facades_name() -> None:
-    """``from kiro_crew.acp.liveness import X`` keeps working for every moved ``X``,
+    """``from aj_crew.acp.liveness import X`` keeps working for every moved ``X``,
     private helpers included, and hands out the owner's own object."""
     missing: dict[str, list[str]] = {}
     for module in _owner_modules():
@@ -209,7 +209,7 @@ def test_the_owners_import_downward_and_never_the_facade() -> None:
             late[owner] = wrong
     assert late == {}
     assert sorted(OWNERS) == sorted(
-        f"kiro_crew.acp.{p.stem}"
+        f"aj_crew.acp.{p.stem}"
         for p in Path(liveness.__file__).resolve().parent.glob("liveness_*.py")
     )
 
@@ -234,34 +234,34 @@ def _owner_importers(sources: dict[str, str]) -> dict[str, list[str]]:
 
 
 def test_only_the_facade_imports_an_owner_in_production_code() -> None:
-    """Callers import ``kiro_crew.acp.liveness``; an owner is the family's own business."""
+    """Callers import ``aj_crew.acp.liveness``; an owner is the family's own business."""
     package = source_corpus.src_root()
     sources = {}
     for path in sorted(package.rglob("*.py")):
         text = path.read_text(encoding="utf-8", errors="replace")
         if "liveness" in text:
             parts = path.relative_to(package).with_suffix("").parts
-            sources[".".join(("kiro_crew", *parts))] = text
+            sources[".".join(("aj_crew", *parts))] = text
     assert set(OWNERS) <= set(sources), "the scan no longer sees the owners themselves"
     assert _owner_importers(sources) == {}
 
 
 def test_the_owner_import_scan_catches_each_spelling() -> None:
     planted = {
-        "kiro_crew.planted_a": "from kiro_crew.acp.liveness_proc import read_pid_stat\n",
-        "kiro_crew.planted_b": "from kiro_crew.acp import liveness_command\n",
-        "kiro_crew.planted_c": "import kiro_crew.acp.liveness_tool_state\n",
-        "kiro_crew.acp.liveness_interactive": "from kiro_crew.acp.liveness_command import x\n",
+        "aj_crew.planted_a": "from aj_crew.acp.liveness_proc import read_pid_stat\n",
+        "aj_crew.planted_b": "from aj_crew.acp import liveness_command\n",
+        "aj_crew.planted_c": "import aj_crew.acp.liveness_tool_state\n",
+        "aj_crew.acp.liveness_interactive": "from aj_crew.acp.liveness_command import x\n",
     }
     assert _owner_importers(planted) == {
-        "kiro_crew.planted_a": ["kiro_crew.acp.liveness_proc"],
-        "kiro_crew.planted_b": ["kiro_crew.acp.liveness_command"],
-        "kiro_crew.planted_c": ["kiro_crew.acp.liveness_tool_state"],
+        "aj_crew.planted_a": ["aj_crew.acp.liveness_proc"],
+        "aj_crew.planted_b": ["aj_crew.acp.liveness_command"],
+        "aj_crew.planted_c": ["aj_crew.acp.liveness_tool_state"],
     }
 
 
 def test_the_family_logs_through_one_logger_named_for_the_facade() -> None:
-    """``caplog`` filters keyed on ``kiro_crew.acp.liveness`` keep seeing the moved code."""
+    """``caplog`` filters keyed on ``aj_crew.acp.liveness`` keep seeing the moved code."""
     assert liveness.logger.name == FACADE
     loggers = [m for m in _owner_modules() if "logger" in vars(m)]
     assert loggers, "an owner that logs is expected (the interactive classifier)"

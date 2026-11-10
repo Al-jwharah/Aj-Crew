@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Release-captain tool for ``src/kiro_crew/apps/adoption-pins.json``.
+"""Release-captain tool for ``src/aj_crew/apps/adoption-pins.json``.
 
     adoption_pin.py compute <repository-url> <commit> [--min-sdk-level N]
                                                         print the pin row for that commit
@@ -19,7 +19,7 @@ its own. The tree is scanned for the App Kit seams above level 1 it uses
 
 Networked: run by hand or in a network-allowed release job, never in the offline
 test suite. The digest and the checks are the gateway's own
-(``kiro_crew.apps.builtin_adoption_fetch`` / ``builtin_adoption_checks``), so the
+(``aj_crew.apps.builtin_adoption_fetch`` / ``builtin_adoption_checks``), so the
 tool and the runtime cannot disagree.
 """
 
@@ -41,10 +41,10 @@ from typing import Any
 _ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_ROOT / "src"))
 
-from kiro_crew.apps import builtin_adoption_fetch as fetch  # noqa: E402
-from kiro_crew.apps.app_sdk_level import APP_SDK_LEVEL  # noqa: E402
-from kiro_crew.apps.builtin_adoption_checks import pinned_tree_refusal  # noqa: E402
-from kiro_crew.apps.builtin_adoption_pins import (  # noqa: E402
+from aj_crew.apps import builtin_adoption_fetch as fetch  # noqa: E402
+from aj_crew.apps.app_sdk_level import APP_SDK_LEVEL  # noqa: E402
+from aj_crew.apps.builtin_adoption_checks import pinned_tree_refusal  # noqa: E402
+from aj_crew.apps.builtin_adoption_pins import (  # noqa: E402
     _COMMIT_RE,
     _PINS_PATH,
     _REPOSITORY_RE,
@@ -153,7 +153,7 @@ def _sdk_level_refusal(name: str, level: int, uses: dict[str, int]) -> str | Non
 
 
 def _shipped(name: str) -> tuple[Path, dict[str, Any]] | None:
-    from kiro_crew.apps.execution import _shipped_builtin_apps
+    from aj_crew.apps.execution import _shipped_builtin_apps
 
     for root, manifest_name in _shipped_builtin_apps():
         if manifest_name == name:
@@ -168,7 +168,7 @@ def _clone(repository: str, commit: str, dest: Path) -> None:
     ``core.autocrlf`` (Git for Windows' installer default) or LFS filter rewrites
     the checkout into a tree the runtime would not measure.
     """
-    from kiro_crew.apps.registry_pipeline.subprocess_env import anonymous_git_env
+    from aj_crew.apps.registry_pipeline.subprocess_env import anonymous_git_env
 
     env = anonymous_git_env()
     subprocess.run(
@@ -193,7 +193,7 @@ def _clone(repository: str, commit: str, dest: Path) -> None:
 
 
 def _download(url: str, dest: Path) -> str:
-    request = urllib.request.Request(url, headers={"User-Agent": "kiro-crew-adoption-pin"})
+    request = urllib.request.Request(url, headers={"User-Agent": "aj-crew-adoption-pin"})
     digest = hashlib.sha256()
     with fetch._open_archive(request) as response, open(dest, "wb") as out:
         while chunk := response.read(1 << 20):
@@ -204,7 +204,7 @@ def _download(url: str, dest: Path) -> str:
 
 def _measure(pin: AdoptionPin, work: Path) -> dict[str, Any]:
     """Fetch *pin* both ways under *work* and return the row it should be."""
-    from kiro_crew.apps.manifest import AppManifest
+    from aj_crew.apps.manifest import AppManifest
 
     checkout = work / "checkout"
     _clone(pin.repository, pin.commit, checkout)

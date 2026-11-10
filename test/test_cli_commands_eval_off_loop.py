@@ -1,4 +1,4 @@
-"""``kirocrew eval`` keeps its filesystem work off the event loop.
+"""``ajcrew eval`` keeps its filesystem work off the event loop.
 
 ``_run_eval`` is a coroutine that runs every scenario's sessions concurrently on
 one loop. Finding the scenario files (``resolve``, ``exists``, ``iterdir``),
@@ -20,8 +20,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from cli_commands_coverage_helpers import _ns
 
-from kiro_crew import cli_commands as cc
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew import cli_commands as cc
+from aj_crew.config.loader import AjCrewConfig
 
 _SCENARIOS_DIR = Path(cc.__file__).resolve().parent / "eval" / "scenarios"
 
@@ -57,21 +57,21 @@ def calls(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[dict[str,
         return_value=[SimpleNamespace(passed=True, sessions=[], summary=lambda: {})]
     )
     with (
-        patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()),
-        patch("kiro_crew.cli_commands.build_provider_factory", return_value=MagicMock()),
-        patch("kiro_crew.cli_commands.EvalRunner", return_value=runner),
-        patch("kiro_crew.cli_commands.format_results", return_value="## Report"),
-        patch("kiro_crew.cli_commands.score_by_dimension", return_value={}),
+        patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()),
+        patch("aj_crew.cli_commands.build_provider_factory", return_value=MagicMock()),
+        patch("aj_crew.cli_commands.EvalRunner", return_value=runner),
+        patch("aj_crew.cli_commands.format_results", return_value="## Report"),
+        patch("aj_crew.cli_commands.score_by_dimension", return_value={}),
         patch(
-            "kiro_crew.cli_commands.load_scenario",
+            "aj_crew.cli_commands.load_scenario",
             _recording(recorded, "load_scenario", cc.load_scenario),
         ),
         patch(
-            "kiro_crew.cli_commands.load_scenarios",
+            "aj_crew.cli_commands.load_scenarios",
             _recording(recorded, "load_scenarios", cc.load_scenarios),
         ),
         patch(
-            "kiro_crew.cli_commands.write_eval_artifacts",
+            "aj_crew.cli_commands.write_eval_artifacts",
             _recording(recorded, "write_eval_artifacts", cc.write_eval_artifacts),
         ),
     ):

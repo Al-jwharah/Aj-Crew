@@ -168,7 +168,7 @@ function server(over: Record<string, unknown> = {}) {
     can_stub: true,
     in_allowlist: true,
     entry_poolable: false,
-    agents: ['kirocrew', 'second-agent'],
+    agents: ['ajcrew', 'second-agent'],
     transport: 'stdio',
     denylisted: false,
     ...over,

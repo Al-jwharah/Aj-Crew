@@ -92,13 +92,13 @@ describe('DevFleetPage row rendering helpers', () => {
   it('surfaces the inferred main checkout once above the fleet', async () => {
     installFetch({
       ...fleetOf(MAIN_ROW),
-      main_repo: '/Users/dev/work/KiroCrew',
+      main_repo: '/Users/dev/work/AjCrew',
       main_repo_inferred: true,
     })
     renderPage()
     const note = await screen.findByTestId('inferred-main-checkout')
     expect(note).toHaveTextContent('The primary checkout this fleet is discovered from')
-    expect(note).toHaveTextContent('/Users/dev/work/KiroCrew')
+    expect(note).toHaveTextContent('/Users/dev/work/AjCrew')
     expect(screen.getAllByTestId('inferred-main-checkout')).toHaveLength(1)
   })
 
@@ -906,7 +906,7 @@ describe('DevFleetPage provision failures', () => {
       '  $ /w/new/.venv/bin/pip install --editable /w/new  (cwd=/w/new)',
       'ERROR: Could not install packages due to an OSError: [Errno 13] Permission denied',
       'Consider using the `--user` option or check the permissions.',
-      'Collecting kiro-crew',
+      'Collecting aj-crew',
       '::steperr::2::ERROR: Could not install packages due to an OSError: [Errno 13] Permission denied',
       '::steperr::2::Consider using the `--user` option or check the permissions.',
       "pod: provisioning 'wt-new' failed (see output above)",
@@ -925,14 +925,14 @@ describe('DevFleetPage provision failures', () => {
     expect(notice.textContent).toContain('Permission denied')
     expect(notice.textContent).toContain('Consider using the `--user` option')
     // Neither the stdout progress line nor the CLI's closing line names the failure.
-    expect(notice.textContent).not.toContain('Collecting kiro-crew')
+    expect(notice.textContent).not.toContain('Collecting aj-crew')
     expect(notice.textContent).not.toContain('see output above')
     expect(notice.textContent).not.toContain('::steperr::')
 
     // The log is the transcript once: markers filtered, tail not duplicated.
     const pre = await waitFor(() => document.querySelector('pre') as HTMLPreElement)
     expect(pre.textContent).not.toContain('::steperr::')
-    expect(pre.textContent).toContain('Collecting kiro-crew')
+    expect(pre.textContent).toContain('Collecting aj-crew')
     expect(pre.textContent?.match(/Consider using the/g)).toHaveLength(1)
   }, 20000)
 })
@@ -1102,7 +1102,7 @@ describe('DevFleetPage make live', () => {
           readyRow({ name: 'wt-live', path: '/w/wt-live', is_live: true }),
         ),
         gateway_service_active: false,
-        manual_restart: 'kirocrew restart',
+        manual_restart: 'ajcrew restart',
         undo_target: { name: 'main', path: '/w/main' },
       },
       (u, opts) => {
@@ -1196,7 +1196,7 @@ describe('DevFleetPage make live', () => {
         gateway_service_active: false,
         staged_target: '/w/wt-staged',
         staged_cancel_available: true,
-        manual_restart: 'kirocrew restart',
+        manual_restart: 'ajcrew restart',
       },
       (u, opts) => {
         if (u.includes('/make-live') && isPost(opts)) {

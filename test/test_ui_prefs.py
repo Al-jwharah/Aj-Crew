@@ -1,4 +1,4 @@
-"""Tests for the browser UI preference backup store (kiro_crew.ui_prefs)."""
+"""Tests for the browser UI preference backup store (aj_crew.ui_prefs)."""
 
 from __future__ import annotations
 
@@ -6,8 +6,8 @@ import json
 
 import pytest
 
-from kiro_crew import ui_prefs
-from kiro_crew.ui_prefs import (
+from aj_crew import ui_prefs
+from aj_crew.ui_prefs import (
     MAX_KEYS,
     MAX_TOTAL_BYTES,
     MAX_VALUE_BYTES,
@@ -112,7 +112,7 @@ def test_a_document_one_byte_under_the_cap_round_trips():
 
 @pytest.mark.parametrize(
     "key",
-    ["kiro_crew_token", "some_api_key", "GITHUB_TOKEN", "user-password", "aws-credential"],
+    ["aj_crew_token", "some_api_key", "GITHUB_TOKEN", "user-password", "aws-credential"],
 )
 def test_credential_shaped_keys_are_refused(key):
     with pytest.raises(UiPrefsError):
@@ -159,7 +159,7 @@ def test_too_many_keys_is_refused():
 def test_a_rejected_patch_writes_nothing():
     merge_ui_prefs({"keep": "me"})
     with pytest.raises(UiPrefsError):
-        merge_ui_prefs({"keep": "changed", "kiro_crew_token": "leak"})
+        merge_ui_prefs({"keep": "changed", "aj_crew_token": "leak"})
     # Whole-patch rejection: the legitimate half must not have landed either.
     assert load_ui_prefs() == {"keep": "me"}
 
@@ -176,7 +176,7 @@ def test_unusable_file_degrades_to_empty(body):
 def test_credential_key_already_on_disk_is_not_served():
     """A file written by an older or hostile client must not vend a token back."""
     ui_prefs_path().write_text(
-        json.dumps({"version": 1, "prefs": {"mc-zoom": "1", "kiro_crew_token": "leak"}}),
+        json.dumps({"version": 1, "prefs": {"mc-zoom": "1", "aj_crew_token": "leak"}}),
         encoding="utf-8",
     )
     assert load_ui_prefs() == {"mc-zoom": "1"}
@@ -204,7 +204,7 @@ def test_a_value_carrying_a_credential_is_not_served(_isolated_home):
 
 
 def test_a_value_carrying_an_exfiltration_url_is_not_served(_isolated_home):
-    from kiro_crew.security import redact_exfiltration_urls
+    from aj_crew.security import redact_exfiltration_urls
 
     # Use whatever the shared redactor itself considers suspicious, so this test
     # tracks its vocabulary rather than hard-coding one URL shape.
@@ -354,7 +354,7 @@ class TestImportingAnArchiveCopy:
             {
                 "prefs": {
                     "mc-nav": "kept",
-                    "kiro_crew_token": "bearer",
+                    "aj_crew_token": "bearer",
                     "my_api_key": "x",
                     "mc-null": None,
                     "mc-number": 3,
@@ -402,7 +402,7 @@ class TestImportingAnArchiveCopy:
             ui_prefs.parse_imported_ui_prefs(src)
         # Dropped entries do not count: the bound is on what would be written.
         prefs["k7"] = "z" * (fill - 1)
-        prefs["kiro_crew_token"] = "bearer"
+        prefs["aj_crew_token"] = "bearer"
         src = self._archive(tmp_path, {"prefs": prefs})
         assert src.stat().st_size <= MAX_TOTAL_BYTES
         patch, dropped = ui_prefs.parse_imported_ui_prefs(src)

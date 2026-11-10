@@ -14,15 +14,15 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.notifications.bus import MONITOR_CHANNEL
-from kiro_crew.notifications.settings import ChannelSettings
+from aj_crew.notifications.bus import MONITOR_CHANNEL
+from aj_crew.notifications.settings import ChannelSettings
 
 _STORED = {"channel_settings": {"a.one": {"muted": True}, "b.two": {"priority": "critical"}}}
 
 
 @pytest.fixture()
 def path(monkeypatch, tmp_path) -> Path:
-    monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
     return tmp_path / "notification_settings.json"
 
 
@@ -70,7 +70,7 @@ def test_an_unparseable_file_is_kept_aside_and_the_update_still_lands(path, capl
     settings = ChannelSettings()
     assert settings.all_settings() == {}
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.notifications.settings"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.notifications.settings"):
         entry = settings.update("c.three", muted=True)
 
     assert entry == {"muted": True}

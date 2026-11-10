@@ -1,6 +1,6 @@
 """The runtime frontend rebuild must recompose the EDITION, not stage stock over it.
 
-``POST /api/update``, ``kirocrew update``, and the gateway's auto-apply all shell
+``POST /api/update``, ``ajcrew update``, and the gateway's auto-apply all shell
 ``npm run build`` and stage the result over the served ``static/dist``. Vite reads
 the edition composition root from the environment
 (``website/vite.config.ts``::``editionExtensionPlugin``), so what those rebuilds
@@ -11,7 +11,7 @@ comment: the rebuild would build the STOCK SPA and stage it over the edition
 dashboard, and because the build SUCCEEDS nothing raises — the dashboard just
 becomes upstream's.
 
-The opt-in is READ, never synthesized. ``KIROCREW_ALLOW_EDITION=1`` gates
+The opt-in is READ, never synthesized. ``AJCREW_ALLOW_EDITION=1`` gates
 compiling an edition's proprietary sources into ``website/dist``, which is staged
 into the packaged wheel; a published release cannot be unpublished, so that is a
 one-way door and ``website/AGENTS.md`` says never to set the opt-in outside the
@@ -32,10 +32,10 @@ from pathlib import Path
 import pytest
 
 from conftest import make_dir_link
-from kiro_crew import frontend, platform_compat
+from aj_crew import frontend, platform_compat
 
-_DIR_ENV = "KIROCREW_EDITION_DIR"
-_OPT_IN_ENV = "KIROCREW_ALLOW_EDITION"
+_DIR_ENV = "AJCREW_EDITION_DIR"
+_OPT_IN_ENV = "AJCREW_ALLOW_EDITION"
 
 
 @pytest.fixture(autouse=True)
@@ -81,7 +81,7 @@ def test_edition_dir_is_forwarded(monkeypatch, tmp_path):
 def test_the_opt_in_is_never_synthesized(monkeypatch, tmp_path):
     """A dir WITHOUT the operator's opt-in must not be turned into an edition build.
 
-    `KIROCREW_ALLOW_EDITION=1` is the fail-closed gate on compiling an edition's
+    `AJCREW_ALLOW_EDITION=1` is the fail-closed gate on compiling an edition's
     proprietary sources into `website/dist`, which is staged into the packaged
     wheel — a one-way door, which is why `website/AGENTS.md` says never to set the
     opt-in outside the edition's own build. Forcing it here would defeat that gate
@@ -94,7 +94,7 @@ def test_the_opt_in_is_never_synthesized(monkeypatch, tmp_path):
 
 
 def test_an_explicitly_disabled_opt_in_is_honored(monkeypatch, tmp_path):
-    """`KIROCREW_ALLOW_EDITION=0` is a refusal, not noise to override."""
+    """`AJCREW_ALLOW_EDITION=0` is a refusal, not noise to override."""
     monkeypatch.setenv(_DIR_ENV, str(_edition_dir(tmp_path)))
     monkeypatch.setenv(_OPT_IN_ENV, "0")
 
@@ -112,12 +112,12 @@ def test_the_rest_of_the_environment_is_preserved(monkeypatch, tmp_path):
     """npm/node need PATH et al — the helper must ADD to the env, not replace it."""
     monkeypatch.setenv(_DIR_ENV, str(_edition_dir(tmp_path)))
     monkeypatch.setenv(_OPT_IN_ENV, "1")
-    monkeypatch.setenv("KIROCREW_TEST_SENTINEL", "keep-me")
+    monkeypatch.setenv("AJCREW_TEST_SENTINEL", "keep-me")
 
     env = frontend._edition_build_env()
 
     assert env is not None
-    assert env["KIROCREW_TEST_SENTINEL"] == "keep-me"
+    assert env["AJCREW_TEST_SENTINEL"] == "keep-me"
     assert "PATH" in env
 
 
@@ -352,7 +352,7 @@ def test_stage_built_dist_copies_website_dist_into_static_dist(tmp_path):
     built.mkdir(parents=True)
     (built / "index.html").write_text("<html>fresh</html>")
     frontend.stage_built_dist(tmp_path, log=lambda _m: None)
-    staged = tmp_path / "src" / "kiro_crew" / "static" / "dist" / "index.html"
+    staged = tmp_path / "src" / "aj_crew" / "static" / "dist" / "index.html"
     assert staged.read_text() == "<html>fresh</html>"
 
 
@@ -366,7 +366,7 @@ def test_stage_built_dist_replaces_a_stale_symlink(tmp_path):
     built = tmp_path / "website" / "dist"
     built.mkdir(parents=True)
     (built / "index.html").write_text("<html>fresh</html>")
-    static_parent = tmp_path / "src" / "kiro_crew" / "static"
+    static_parent = tmp_path / "src" / "aj_crew" / "static"
     static_parent.mkdir(parents=True)
     make_dir_link(static_parent / "dist", built)  # a junction on Windows
     frontend.stage_built_dist(tmp_path, log=lambda _m: None)
@@ -384,7 +384,7 @@ def test_stage_built_dist_fails_loudly_without_a_build(tmp_path):
     right after `npm run build` reported success, so a MISSING build output means
     something is genuinely wrong and must not be reported as a successful sync.
     """
-    static_dist = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    static_dist = tmp_path / "src" / "aj_crew" / "static" / "dist"
     static_dist.mkdir(parents=True)
     (static_dist / "index.html").write_text("<html>previous</html>")
     messages: list = []
@@ -405,7 +405,7 @@ def test_stage_built_dist_raises_when_staging_did_not_happen(tmp_path, monkeypat
     built = tmp_path / "website" / "dist"
     built.mkdir(parents=True)
     (built / "index.html").write_text("<html>fresh</html>")
-    served = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    served = tmp_path / "src" / "aj_crew" / "static" / "dist"
     served.mkdir(parents=True)
     (served / "index.html").write_text("<html>previous</html>")
     monkeypatch.setattr(frontend, "_stage_dist", lambda *_a, **_k: False)
@@ -423,7 +423,7 @@ def test_stage_dist_keeps_the_served_bundle_when_the_copy_fails(tmp_path, monkey
     built = tmp_path / "website" / "dist"
     built.mkdir(parents=True)
     (built / "index.html").write_text("<html>fresh</html>")
-    served = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    served = tmp_path / "src" / "aj_crew" / "static" / "dist"
     served.mkdir(parents=True)
     (served / "index.html").write_text("<html>previous</html>")
 
@@ -444,7 +444,7 @@ def test_stage_dist_replaces_the_served_bundle_on_success(tmp_path):
     built = tmp_path / "website" / "dist"
     built.mkdir(parents=True)
     (built / "index.html").write_text("<html>fresh</html>")
-    served = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    served = tmp_path / "src" / "aj_crew" / "static" / "dist"
     served.mkdir(parents=True)
     (served / "index.html").write_text("<html>previous</html>")
     (served / "stale-asset.js").write_text("old")
@@ -474,7 +474,7 @@ def test_stage_dist_replaces_a_dangling_dist_link_and_publishes(tmp_path):
     built = tmp_path / "website" / "dist"
     built.mkdir(parents=True)
     (built / "index.html").write_text("<html>fresh</html>")
-    static_dir = tmp_path / "src" / "kiro_crew" / "static"
+    static_dir = tmp_path / "src" / "aj_crew" / "static"
     static_dir.mkdir(parents=True)
     served = static_dir / "dist"
     gone = tmp_path / "removed-target"
@@ -563,9 +563,9 @@ def test_discard_path_still_removes_a_real_tree_and_a_plain_file(tmp_path):
 
 def test_edition_configured_tracks_the_env_var(monkeypatch):
     """The predicate callers use to decide whether staging is safe at all."""
-    monkeypatch.delenv("KIROCREW_EDITION_DIR", raising=False)
+    monkeypatch.delenv("AJCREW_EDITION_DIR", raising=False)
     assert frontend.edition_configured() is False
-    monkeypatch.setenv("KIROCREW_EDITION_DIR", "/opt/edition")
+    monkeypatch.setenv("AJCREW_EDITION_DIR", "/opt/edition")
     assert frontend.edition_configured() is True
 
 
@@ -579,17 +579,17 @@ def test_edition_dir_survives_the_app_backend_env_allowlist(monkeypatch):
     this: without it the guard can never fire and a stock SPA would be staged
     over an edition dashboard.
     """
-    from kiro_crew.apps.registry import minimal_env
+    from aj_crew.apps.registry import minimal_env
 
-    monkeypatch.setenv("KIROCREW_EDITION_DIR", "/opt/edition")
+    monkeypatch.setenv("AJCREW_EDITION_DIR", "/opt/edition")
     # The generic allowlist does NOT carry it -- that is the trap this guards.
-    assert "KIROCREW_EDITION_DIR" not in minimal_env()
+    assert "AJCREW_EDITION_DIR" not in minimal_env()
 
     # apps/backend.py must therefore add it to the explicit platform extras.
     src = Path(frontend.__file__).parent / "apps" / "backend.py"
     body = src.read_text(encoding="utf-8")
-    assert '_platform_extra["KIROCREW_EDITION_DIR"]' in body, \
+    assert '_platform_extra["AJCREW_EDITION_DIR"]' in body, \
         "app backends can no longer detect an edition install"
     # The opt-in must NOT be propagated: a backend may detect an edition but
     # never manufacture consent to compile edition sources into a package.
-    assert '_platform_extra["KIROCREW_ALLOW_EDITION"]' not in body
+    assert '_platform_extra["AJCREW_ALLOW_EDITION"]' not in body

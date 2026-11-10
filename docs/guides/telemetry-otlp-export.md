@@ -1,6 +1,6 @@
-# Exporting Kiro Crew metrics over OTLP
+# Exporting Aj Crew metrics over OTLP
 
-Kiro Crew records its metrics through the OpenTelemetry SDK. By default they go
+Aj Crew records its metrics through the OpenTelemetry SDK. By default they go
 nowhere but this machine: a local JSONL sink under `~/.kiro/crew/metrics`, which
 the dashboard's Telemetry panel reads. This page is about the other option —
 pushing the same metrics to an **OpenTelemetry Collector**, and from there to
@@ -32,7 +32,7 @@ local copy.
 ### 1. Install the exporter
 
 From a source checkout, install the declared extra without replacing the editable
-Kiro Crew install:
+Aj Crew install:
 
 ```bash
 pip install -e ".[otlp]"
@@ -45,11 +45,11 @@ pip install "opentelemetry-exporter-otlp-proto-http==1.44.0"
 ```
 
 The project is not published on the default package index, so
-`pip install "kirocrew[otlp]"` is not a supported command. The exporter uses
+`pip install "ajcrew[otlp]"` is not a supported command. The exporter uses
 **OTLP over HTTP only** — there is no gRPC exporter, so your collector needs its
 OTLP receiver's `http` protocol enabled (port 4318 by convention, not 4317).
 
-If the exporter package is missing but an endpoint is configured, Kiro Crew logs
+If the exporter package is missing but an endpoint is configured, Aj Crew logs
 a warning and stays local-only rather than failing to start.
 
 ### 2. Enable collection
@@ -69,7 +69,7 @@ or set the environment variable, which overrides the config flag in both
 directions and is the convenient form for containers and one-off debugging:
 
 ```bash
-KIROCREW_TELEMETRY=1 kirocrew gateway
+AJCREW_TELEMETRY=1 ajcrew gateway
 ```
 
 **`otlp_endpoint` is the full signal URL, including `/v1/metrics`.** It is passed
@@ -127,7 +127,7 @@ as above; the list adds to it.
 | `enabled` | no | `false` turns the entry off. A disabled entry is not checked. |
 | `headers_env` | no | Header name -> environment variable name. The value is read from the gateway's environment when the exporter is built, so a secret is never in `config.json`. If the variable is unset or blank, that entry sends nothing and a warning names the variable. There is no key for a literal header value: an entry with a `headers` key is skipped with a warning that points here. |
 | `temporality` | no | `""` (the default described in [Temporality](#temporality-the-setting-that-decides-whether-your-backend-accepts-the-data)), `"cumulative"` or `"delta"`. A value here pins every instrument kind for this entry only, and `OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE` no longer moves it. `"delta"` is the OpenTelemetry delta preset: counters and histograms delta, up-down counters cumulative. |
-| `allow` | no | A list of full metric names, or the preset name `"PRODUCT_METRICS"` (the reviewed list in `src/kiro_crew/metrics/product_metrics.py`). Without it the entry gets every metric. An unknown preset name refuses the entry rather than sending everything. |
+| `allow` | no | A list of full metric names, or the preset name `"PRODUCT_METRICS"` (the reviewed list in `src/aj_crew/metrics/product_metrics.py`). Without it the entry gets every metric. An unknown preset name refuses the entry rather than sending everything. |
 | `point_attributes` | no | Fixed labels added to every data point of this entry. Keys come from a reviewed set (`ClientType` today); values are short constants (letters, digits, `.`, `_`, `-`). |
 | `resource_allow` | no | Keep only these resource keys on this entry's batches. |
 
@@ -144,7 +144,7 @@ never a value, and the other entries keep working. At most 16 entries are read;
 the bound only stops a pasted list from starting hundreds of export threads.
 
 Every entry goes through the same gates as `otlp_endpoint`: nothing is sent while
-collection is off (`telemetry.enabled`, `KIROCREW_TELEMETRY`), a policy's
+collection is off (`telemetry.enabled`, `AJCREW_TELEMETRY`), a policy's
 `capabilities.telemetry` `otlp_hosts` list decides which hosts may receive
 metrics, and Settings -> Privacy lists every entry by name as a place metrics go.
 An entry counts there even while it sends nothing for a reason that can clear on
@@ -162,7 +162,7 @@ feedback survey, and does not show the first-run Privacy chapter.
 
 #### Collectors a build ships
 
-A build of Kiro Crew can ship a collector of its own. It does so in code, through
+A build of Aj Crew can ship a collector of its own. It does so in code, through
 its telemetry provider (`TelemetryProvider.otlp_destinations`), not as an entry in
 your `config.json`; the public build ships none. What that means for you:
 
@@ -195,7 +195,7 @@ disagree about which they want, and sending the wrong one is the most common
 reason metrics arrive but look wrong — a cumulative counter graphed as a rate, or
 a delta counter treated as a total that appears to reset constantly.
 
-Kiro Crew exports **delta** by default, for counters, up-down counters and
+Aj Crew exports **delta** by default, for counters, up-down counters and
 histograms alike. That is the same encoding its local JSONL sink uses, so both
 destinations describe the same instrument the same way; it is also the cheaper
 one, because a cumulative histogram re-sends every bucket of every series on
@@ -203,7 +203,7 @@ every interval whether or not anything happened, while an idle delta series send
 nothing at all.
 
 To match a backend that wants something else, set the standard OpenTelemetry
-variable. When it is set, Kiro Crew passes no preference of its own and the
+variable. When it is set, Aj Crew passes no preference of its own and the
 setting is in full control:
 
 ```bash
@@ -211,16 +211,16 @@ setting is in full control:
 OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE=CUMULATIVE
 
 # Delta — what Datadog and most product-analytics ingests expect. Equivalent
-# to the unset default for every instrument Kiro Crew currently emits (the
+# to the unset default for every instrument Aj Crew currently emits (the
 # unset default also maps up-down counters to delta; this value keeps them
-# cumulative, and Kiro Crew emits none).
+# cumulative, and Aj Crew emits none).
 OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE=DELTA
 
 # Delta for counters and histograms, cumulative for up-down counters.
 OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE=LOWMEMORY
 ```
 
-Set it in the gateway's environment, not the collector's — it governs how Kiro
+Set it in the gateway's environment, not the collector's — it governs how Aj
 Crew *encodes* what it sends.
 
 Two things are unaffected by this setting, and knowing that saves debugging time:
@@ -228,7 +228,7 @@ Two things are unaffected by this setting, and knowing that saves debugging time
 - **Gauges have no temporality at all.** Every instrument reporting a
   point-in-time reading (thread counts, memory, CPU and GC totals, install
   inventory, the probe-failure count) is a gauge, so the preference does not
-  apply to them. Nothing Kiro Crew exports is a cumulative sum, which is what
+  apply to them. Nothing Aj Crew exports is a cumulative sum, which is what
   lets a consumer aggregate one datapoint at a time instead of holding
   whole-hour state per host.
 - **The local JSONL sink always uses delta** for counters and histograms,
@@ -240,11 +240,11 @@ Two things are unaffected by this setting, and knowing that saves debugging time
 These five instruments are gauges that hold lifetime totals, under these
 names:
 
-- `kirocrew.process.cpu.seconds`
-- `kirocrew.process.gc.collections`
-- `kirocrew.process.gc.collected`
-- `kirocrew.process.gc.uncollectable`
-- `kirocrew.inventory.probe.failures`
+- `ajcrew.process.cpu.seconds`
+- `ajcrew.process.gc.collections`
+- `ajcrew.process.gc.collected`
+- `ajcrew.process.gc.uncollectable`
+- `ajcrew.inventory.probe.failures`
 
 Each reading is the total since the exporting process started, carried as a
 gauge rather than a monotonic sum. Do not apply a counter function (`rate()`,
@@ -260,7 +260,7 @@ zero, so one consecutive-sample difference across that boundary comes out
 negative. That is one datapoint at a restart boundary, not a corrupted series, and
 a clamp is the standard treatment.
 
-Kiro Crew's own dashboard is not exposed to this: the local JSONL exporter stamps
+Aj Crew's own dashboard is not exposed to this: the local JSONL exporter stamps
 each record with the writing process's OS start-time token, and the aggregator
 keys each stream by (PID, that token), so a reused PID lands in a brand-new
 stream. The token is deliberately host-local and reboot-unique, so it never leaves
@@ -272,7 +272,7 @@ two backends that disagree.
 
 ## Collector configuration
 
-The examples below are collector configs. Point Kiro Crew at the collector's OTLP
+The examples below are collector configs. Point Aj Crew at the collector's OTLP
 HTTP receiver and let the collector fan out.
 
 **Distribution matters.** The `otelcol` core distribution ships the OTLP receiver
@@ -283,7 +283,7 @@ are only in **`otelcol-contrib`**. Using core and wondering why an exporter is
 **These samples are illustrative, not tracked.** Vendor exporter options change
 with collector and vendor releases that this repository does not follow, so treat
 each vendor's own collector documentation as authoritative and these blocks as a
-starting shape. What is stable — and what this page actually owns — is the Kiro
+starting shape. What is stable — and what this page actually owns — is the Aj
 Crew side: the two consent switches, the full-signal-URL requirement, and the
 temporality preference.
 
@@ -312,8 +312,8 @@ metric into a CloudWatch metric via a log group.
 exporters:
   awsemf:
     region: us-west-2
-    namespace: KiroCrew
-    log_group_name: /kirocrew/metrics
+    namespace: AjCrew
+    log_group_name: /ajcrew/metrics
 
 service:
   pipelines:
@@ -379,19 +379,19 @@ collector at all rather than pointing the gateway straight at a vendor.
 ## What gets exported
 
 The OTLP reader shares one meter provider with the local JSONL sink, so every
-`kirocrew.*` instrument the process records is exported — counters, histograms
+`ajcrew.*` instrument the process records is exported — counters, histograms
 and gauges alike. The full roster lives under "Instrumented signals" in
 [`../system-specs/modules/metrics.md`](../system-specs/modules/metrics.md). The
 gauge families are these two:
 
-- **`kirocrew.process.*`** — this process's own resource behavior: Python and OS
+- **`ajcrew.process.*`** — this process's own resource behavior: Python and OS
   thread counts, open file descriptors, current and peak RSS, cumulative CPU
   seconds, and per-generation GC counters. This family also carries histograms
   (sampled RSS and CPU utilization).
-- **`kirocrew.inventory.*`** — what this install has configured: active cron jobs,
+- **`ajcrew.inventory.*`** — what this install has configured: active cron jobs,
   armed monitor loops, installed skills, whether memory has been migrated,
   knowledge-source and lesson counts, MCP server counts by class, and a
-  fixed set of feature switches. Plus `kirocrew.inventory.probe.failures`, which is
+  fixed set of feature switches. Plus `ajcrew.inventory.probe.failures`, which is
   absent on a healthy host and appears only when a probe cannot read its source —
   that is how you tell a broken probe from a host that stopped exporting, since
   both otherwise look like a missing series.
@@ -399,16 +399,16 @@ gauge families are these two:
 One threshold is worth knowing when you set alerts on the counts, because it is
 the product's own limit rather than a round number: `200` is the point the lesson
 store starts pruning. The gauges publish the raw number and leave the banding to
-your queries, so you can move that line without a Kiro Crew change.
+your queries, so you can move that line without a Aj Crew change.
 
 Resource attributes identify the sending process and are attached to every
-series, so they are what you group by. `service.name` is always `kirocrew`.
+series, so they are what you group by. `service.name` is always `ajcrew`.
 
 ### A destination can receive less than everything
 
 The paragraph above describes the destination you configure: `otlp_endpoint`
 sends your own collector every instrument the process records, under the full
-resource, with no attribute Kiro Crew added on its way out. That is unchanged and
+resource, with no attribute Aj Crew added on its way out. That is unchanged and
 is what this guide is about.
 
 A destination is also allowed to receive only PART of that. `OtlpDestination`
@@ -439,11 +439,11 @@ Three things to take from this if you operate a collector:
 ### The `PRODUCT_METRICS` preset
 
 `"allow": "PRODUCT_METRICS"` sends only the reviewed names below, from
-`src/kiro_crew/metrics/product_metrics.py`. Each is a counter or a gauge, and
+`src/aj_crew/metrics/product_metrics.py`. Each is a counter or a gauge, and
 every attribute value on it comes from a closed set. Histograms,
-`kirocrew.process.*` and `kirocrew.turn.tokens` are not in it.
+`ajcrew.process.*` and `ajcrew.turn.tokens` are not in it.
 
-| Group | Metrics (`kirocrew.` prefix omitted) |
+| Group | Metrics (`ajcrew.` prefix omitted) |
 |---|---|
 | Sessions and turns | `session.started`, `session.idle_expired`, `subagent.spawned`, `subagent.completed`, `context.compactions`, `turn.completed`, `turn.timeout.cause` |
 | Crew sessions | `crew.session.started`, `crew.turn.started`, `crew.session.tree.depth`, `crew.session.tree.child`, `crew.session_control.calls` |
@@ -457,17 +457,17 @@ in-product recommendations (feature tips, the Explore panel, feature videos):
 
 | Metric | Attributes |
 |---|---|
-| `kirocrew.tips.feedback` | `Feature` = `tips`, `Activity` (the action: `shown` / `ack` / `dismiss` / `snooze` / `helpful` / `optout` / `optin` / `other`), `Entity` (a shipped curated tip id, a shipped feature doc name, or `other`), `source` (`curated` / `catalog` / `generated` / `other`) |
-| `kirocrew.feature_video.status` | `Feature` = `feature_video`, `Activity` (the status: `seen` / `dismissed` / `other`), `Entity` (a shipped feature key or `other`) |
-| `kirocrew.milestone.starter_clicked`, `.skipped` | `Feature` = `milestone`, `Activity` = the last name segment, `Entity` (a catalog milestone id, `all` or `other`), `surface`, and `send` on `starter_clicked` |
-| `kirocrew.milestone.reached` | `Feature` = `milestone`, `Activity` = `reached`, `Entity` (a catalog milestone id), `group`, `via`, `recommended_by` (`tip` / `explore` / `video` / `several` / `none`) |
-| `kirocrew.milestone.panel_opened`, `.mark_all_done`, `.notice_shown`, `.features_completed` | `Feature` = `milestone`, `Activity` = the last name segment, plus `group` on `notice_shown` and `via` on `features_completed` |
+| `ajcrew.tips.feedback` | `Feature` = `tips`, `Activity` (the action: `shown` / `ack` / `dismiss` / `snooze` / `helpful` / `optout` / `optin` / `other`), `Entity` (a shipped curated tip id, a shipped feature doc name, or `other`), `source` (`curated` / `catalog` / `generated` / `other`) |
+| `ajcrew.feature_video.status` | `Feature` = `feature_video`, `Activity` (the status: `seen` / `dismissed` / `other`), `Entity` (a shipped feature key or `other`) |
+| `ajcrew.milestone.starter_clicked`, `.skipped` | `Feature` = `milestone`, `Activity` = the last name segment, `Entity` (a catalog milestone id, `all` or `other`), `surface`, and `send` on `starter_clicked` |
+| `ajcrew.milestone.reached` | `Feature` = `milestone`, `Activity` = `reached`, `Entity` (a catalog milestone id), `group`, `via`, `recommended_by` (`tip` / `explore` / `video` / `several` / `none`) |
+| `ajcrew.milestone.panel_opened`, `.mark_all_done`, `.notice_shown`, `.features_completed` | `Feature` = `milestone`, `Activity` = the last name segment, plus `group` on `notice_shown` and `via` on `features_completed` |
 
 These nine are the behavioral metrics (`BEHAVIORAL_METRICS` in
-`src/kiro_crew/metrics/behavioral_metrics.py`): each records one thing a person
-did. They are exported under the instrumentation scope `kiro.crew`, so a
+`src/aj_crew/metrics/behavioral_metrics.py`): each records one thing a person
+did. They are exported under the instrumentation scope `aj.crew`, so a
 collector can admit user behavior by scope without taking the inventory gauges.
-Every other metric uses the scope `kiro_crew`. `Feature` and `Activity` are
+Every other metric uses the scope `aj_crew`. `Feature` and `Activity` are
 constants or values the emit site already closed; `Entity` carries the closed
 target id that earlier releases sent as `feature` or `milestone`.
 
@@ -479,7 +479,7 @@ in [`../system-specs/modules/metrics.md`](../system-specs/modules/metrics.md),
 
 ### Before you build a per-host dashboard
 
-Kiro Crew sets `service.instance.id` explicitly to a random, persisted install
+Aj Crew sets `service.instance.id` explicitly to a random, persisted install
 identifier, so group by that attribute to distinguish machines and follow an
 install across gateway restarts. It is not derived from a hostname or username.
 `process.pid` is a separate resource attribute: it prevents the gateway, agents,
@@ -489,7 +489,7 @@ That process attribute means an individual series normally turns over when a
 restart receives a different PID even though the install identity stays stable.
 For longitudinal host panels, aggregate the relevant process series by
 `service.instance.id`; for lifetime-total gauges, also treat a new PID as a reset.
-If the data home is unwritable and the install-id mint fails, Kiro Crew omits its
+If the data home is unwritable and the install-id mint fails, Aj Crew omits its
 explicit id and the SDK may fall back to a per-process identity, so cross-restart
 continuity is unavailable on that broken host.
 
@@ -499,12 +499,12 @@ They describe **the machines you run and have opted in**, and nothing wider. Bot
 switches default off and OTLP additionally needs the optional exporter package,
 so an aggregate over these gauges is a statement about your own fleet — useful
 for spotting a host that stopped scheduling crons or whose skills tree drifted,
-not a measurement of how a feature is used in general. Kiro Crew's own install
+not a measurement of how a feature is used in general. Aj Crew's own install
 analytics are a separate, deliberately unrelated channel (`beacon.py`), for
 reasons its docstring sets out.
 
-One practical consequence: `kirocrew.inventory.*` comes from the **gateway process
-only**, while `kirocrew.process.*` comes from every telemetry-enabled process
+One practical consequence: `ajcrew.inventory.*` comes from the **gateway process
+only**, while `ajcrew.process.*` comes from every telemetry-enabled process
 (gateway, MCP gateway daemon, spawned agents). Install-level facts are identical
 across those processes, so publishing them from each one would count a single host
 once per process. If you see process metrics from a host but no inventory metrics,
@@ -513,7 +513,7 @@ a gap in collection.
 
 ### Traces are not exported
 
-Kiro Crew emits the OpenTelemetry **metrics** signal only. There are no spans
+Aj Crew emits the OpenTelemetry **metrics** signal only. There are no spans
 and no log records, so a trace-oriented backend (Langfuse, Jaeger, Tempo, or a
 vendor's trace view) receives nothing from it, and nothing in this page turns
 traces on. Pointing `otlp_endpoint` at a `/v1/traces` or `/v1/logs` URL does not
@@ -555,13 +555,13 @@ skips unless the OTLP exporter package is installed.
 
 ### Against a real collector
 
-The automated tiers stop at the process boundary: they prove what Kiro Crew
+The automated tiers stop at the process boundary: they prove what Aj Crew
 serializes and puts on the wire, not what a collector does with it. Closing that
 last gap needs a collector binary and outbound network, so it is a manual step —
 and one worth doing once against whatever collector you actually run, rather than
 against a stand-in.
 
-Point a collector at Kiro Crew using the [Shared receiver](#shared-receiver)
+Point a collector at Aj Crew using the [Shared receiver](#shared-receiver)
 config above, and give it an exporter you can read directly instead of a vendor
 backend, so the payload is inspectable:
 
@@ -580,14 +580,14 @@ service:
 ```
 
 Then start the gateway with `otlp_endpoint` set to that collector, wait one export
-interval, and read what arrived. Expect the `kirocrew.process.*` and
-`kirocrew.inventory.*` gauges, any other `kirocrew.*` instruments the process has
+interval, and read what arrived. Expect the `ajcrew.process.*` and
+`ajcrew.inventory.*` gauges, any other `ajcrew.*` instruments the process has
 recorded since start, and the resource attributes described above.
 
 Some instruments are legitimately absent and their silence is not a failure: the
 Linux-only thread and file-descriptor gauges on macOS, and the knowledge, MCP, and
 monitor-loop gauges on an install that has never ingested a document, configured a
-server, or armed a loop. `kirocrew.inventory.probe.failures` is the series that
+server, or armed a loop. `ajcrew.inventory.probe.failures` is the series that
 distinguishes a probe that broke from a source that is simply not there.
 
 If you fetch a collector binary rather than using one you already run, verify it
@@ -601,7 +601,7 @@ The quickest smoke test is to watch the local sink, which is fed by the same
 recorder:
 
 ```bash
-KIROCREW_TELEMETRY=1 kirocrew gateway
+AJCREW_TELEMETRY=1 ajcrew gateway
 # after one export interval (60s by default)
 ls ~/.kiro/crew/metrics/
 latest="$(ls -t ~/.kiro/crew/metrics/metrics-*.jsonl | head -1)"
@@ -618,8 +618,8 @@ the collector, or temporality — not collection.
 | No `telemetry OTLP export active` line | `otlp_endpoint` empty, or the OTLP exporter package is not installed — check for the warning naming the missing package. |
 | `OTLP exporter init failed` warning | Malformed endpoint. The message deliberately omits the URL, since it can carry a credential. |
 | Local shards fill, nothing at the backend | Endpoint missing `/v1/metrics`, collector on 4317 (gRPC) instead of 4318 (HTTP), or the collector's `http` protocol not enabled. |
-| `points at an OTLP traces route` warning | The endpoint ends in `/v1/traces` (or `/v1/logs`). Kiro Crew exports metrics only, so a trace backend such as Langfuse receives nothing. See "Traces are not exported". |
+| `points at an OTLP traces route` warning | The endpoint ends in `/v1/traces` (or `/v1/logs`). Aj Crew exports metrics only, so a trace backend such as Langfuse receives nothing. See "Traces are not exported". |
 | Metrics arrive but counters look like resets | Temporality mismatch. See the temporality section. |
 | `unknown type: "awsemf"` at collector startup | Running the core `otelcol`; vendor exporters need `otelcol-contrib`. |
 | One expected series is absent | That probe could not read its source. Absence is a gap, never a zero. |
-| Nothing recorded at all | Collection consent: `telemetry.enabled` is `false` and `KIROCREW_TELEMETRY` is unset. |
+| Nothing recorded at all | Collection consent: `telemetry.enabled` is `false` and `AJCREW_TELEMETRY` is unset. |

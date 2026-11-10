@@ -13,14 +13,14 @@
  */
 
 export const OWNER = 'kirodotdev'
-export const REPO = 'KiroCrew' // brand-ok: the repository name
+export const REPO = 'AjCrew' // brand-ok: the repository name
 export const REPO_REF = { owner: OWNER, repo: REPO, provider: 'github', host: 'github.com' }
 
 export const SETTINGS = {
   schema: 1,
   claim_ttl_hours: 48,
   needs_human_label: 'crew: needs human',
-  commit_trailer: 'Crew: {name} (Kiro Crew Issue Radar)',
+  commit_trailer: 'Crew: {name} (Aj Crew Issue Radar)',
 }
 
 /** One crew record. `status` is DERIVED BY THE ROUTE (`_crew_status` in
@@ -34,7 +34,7 @@ export function crew(id, name, over = {}) {
     name,
     avatar_seed: name,
     avatar_variant: null,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     model: '',
     extra_prompt: '',
     labels: ['area: dashboard', 'area: gateway'],

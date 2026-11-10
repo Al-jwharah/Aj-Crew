@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import http_proxy
+from aj_crew import http_proxy
 
 _HTTPS_PROXY = "http://https-proxy.example:3128"
 _HTTP_PROXY = "http://http-proxy.example:3128"

@@ -5,7 +5,7 @@ inode. It is gated on "does any credential have more than one link", because
 walking $CWD and /tmp costs real time and the healthy-host answer is no.
 
 These tests call the shipped stage, ``refuse_hardlinked_credentials`` in
-``kiro_crew.sandbox_launcher_program``, on a ``Launch`` whose protected lists name
+``aj_crew.sandbox_launcher_program``, on a ``Launch`` whose protected lists name
 paths under ``tmp_path``, and hand it ``tmp_path`` as its only walk root -- so the
 verdict is independent of the host's real credentials AND of how full its /tmp
 happens to be, which matters twice over here, since a full /tmp is the condition
@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 from test_sandbox_launcher_program import RecordingLibc, launch, payload, refusal
 
-from kiro_crew import sandbox_launcher_program
+from aj_crew import sandbox_launcher_program
 
 program = sandbox_launcher_program
 

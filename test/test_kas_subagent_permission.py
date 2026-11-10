@@ -15,10 +15,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import cli_chat
-from kiro_crew.acp._dispatch import build_permission_event, kas_consent_tool
-from kiro_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO, AcpPromptStats, JsonRpcMessage
-from kiro_crew.hooks import TOOL_DENY, HookManager, HooksConfig
+from aj_crew import cli_chat
+from aj_crew.acp._dispatch import build_permission_event, kas_consent_tool
+from aj_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO, AcpPromptStats, JsonRpcMessage
+from aj_crew.hooks import TOOL_DENY, HookManager, HooksConfig
 
 TOOL_CALL_ID = "invoke_subagent_toolu_01"
 
@@ -173,7 +173,7 @@ def test_a_real_shell_with_no_command_is_still_denied():
 class TestTheTransportsWireTheFlagByBackend:
     @staticmethod
     def _client(backend: str):
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = AcpClient.__new__(AcpClient)
         client._acp_backend = backend

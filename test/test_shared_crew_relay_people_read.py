@@ -20,7 +20,7 @@ from aiohttp.test_utils import TestClient, TestServer
 from shared_crew_host_isolation import host_isolation  # noqa: F401
 from token_auth_helpers import clear_nonces  # noqa: F401 -- the autouse fixture registers by import
 
-from kiro_crew.dashboard.kiro_relay.caller import (
+from aj_crew.dashboard.kiro_relay.caller import (
     RELAY_CALLER_KEY,
     RELAY_HANDOVER_HEADER,
     RELAY_USER_HEADER,
@@ -29,23 +29,23 @@ from kiro_crew.dashboard.kiro_relay.caller import (
     RelayCaller,
     RelayCallerKind,
 )
-from kiro_crew.dashboard.kiro_relay.ingress import (
+from aj_crew.dashboard.kiro_relay.ingress import (
     RELAY_INGRESS_APP_KEY,
     RelayIngress,
     relay_ingress_middleware,
 )
-from kiro_crew.dashboard.relay_headers import relay_header_strip_middleware
-from kiro_crew.dashboard.server_internal_paths import _STRICT_INTERNAL_API_PATHS
-from kiro_crew.dashboard.token_auth import generate_token, token_auth_middleware
-from kiro_crew.history import ConversationLog
-from kiro_crew.shared_crew import owner, people, routes_identity, routes_invites, routes_people
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.dashboard.relay_headers import relay_header_strip_middleware
+from aj_crew.dashboard.server_internal_paths import _STRICT_INTERNAL_API_PATHS
+from aj_crew.dashboard.token_auth import generate_token, token_auth_middleware
+from aj_crew.history import ConversationLog
+from aj_crew.shared_crew import owner, people, routes_identity, routes_invites, routes_people
+from aj_crew.shared_crew.contracts import (
     ACTOR_REQUEST_KEY,
     ActorContext,
     Transport,
     principal_id_for,
 )
-from kiro_crew.shared_crew.identity import relay_principal
+from aj_crew.shared_crew.identity import relay_principal
 
 pytestmark = pytest.mark.usefixtures("host_isolation")
 
@@ -56,7 +56,7 @@ READS = (routes_identity.PEOPLE_PATH, routes_identity.SESSIONS_PATH, routes_iden
 
 @pytest.fixture(autouse=True)
 def _fresh(_floor_monkeypatch: pytest.MonkeyPatch):
-    _floor_monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    _floor_monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
     people.reset_for_tests()
     yield
     people.reset_for_tests()

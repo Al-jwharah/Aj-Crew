@@ -37,7 +37,7 @@ def test_data_file_excluded():
 
 
 def test_src_file_excluded():
-    assert filter_stability_scope(["src/kiro_crew/session.py"], set()) == []
+    assert filter_stability_scope(["src/aj_crew/session.py"], set()) == []
 
 
 def test_subdirectory_test_excluded():
@@ -85,7 +85,7 @@ def test_empty_inputs():
 
 def test_mixed_pr_diff_keeps_only_test_files():
     paths = [
-        "src/kiro_crew/agent.py",
+        "src/aj_crew/agent.py",
         "test/test_agent.py",
         "test/conftest.py",
         "pyproject.toml",

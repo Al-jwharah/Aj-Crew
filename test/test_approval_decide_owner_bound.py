@@ -24,22 +24,22 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_approve
-from kiro_crew.dashboard.handlers.sessions import api_approval_resolve
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard.chat_handlers import api_chat_slot_approve
+from aj_crew.dashboard.handlers.sessions import api_approval_resolve
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.testing.wait import async_wait_until, await_until
 
 SLOT = "dashboard:selected"
 
 
 @pytest.fixture(autouse=True)
 def _hermetic_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
 
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.push_slots_update = MagicMock()
@@ -88,7 +88,7 @@ class _Req(dict):
 
 
 def test_predicate_admits_only_the_dashboard_user():
-    from kiro_crew.dashboard.chat_handlers import bare_approval_decide_allowed
+    from aj_crew.dashboard.chat_handlers import bare_approval_decide_allowed
 
     assert bare_approval_decide_allowed(_Req(app="", user="local-app")) is True
     assert bare_approval_decide_allowed(_Req(internal_auth=True)) is False

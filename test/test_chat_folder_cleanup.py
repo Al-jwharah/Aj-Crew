@@ -14,10 +14,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.chat_folder_cleanup import api_chat_folders_cleanup, removable_folder_ids
-from kiro_crew.dashboard.folder_repository import FolderRepository
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.loop_lock import LoopBoundLock
+from aj_crew.dashboard.chat_folder_cleanup import api_chat_folders_cleanup, removable_folder_ids
+from aj_crew.dashboard.folder_repository import FolderRepository
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.loop_lock import LoopBoundLock
 
 
 def _f(fid: str, parent: str = "", order: int = 0, **extra: Any) -> dict[str, Any]:
@@ -72,7 +72,7 @@ class TestRemovableFolderIds:
         "field,value",
         [
             ("project_dir", "/srv/x"),
-            ("default_agent", "kirocrew-worker"),
+            ("default_agent", "ajcrew-worker"),
             ("steering_dirs", ["/srv/steer"]),
             ("tags", ["t1"]),
             ("color", "#3b82f6"),
@@ -206,7 +206,7 @@ class TestCleanupRoute:
             under_lock.append(state.folder_lock.locked())
             return {"travel"}
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_folder_cleanup.channel_folder_names", _names)
+        monkeypatch.setattr("aj_crew.dashboard.chat_folder_cleanup.channel_folder_names", _names)
         async with TestClient(TestServer(_app(state))) as client:
             resp = await client.post(
                 "/api/chat/folders/cleanup", json={"dry_run": True, "include_top_level": True}
@@ -245,7 +245,7 @@ class TestCleanupRoute:
         # An empty folder picked in Settings as the default still receives every
         # later New chat; deleting it would leave them all unfiled.
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_folder_cleanup.default_session_folder_ids",
+            "aj_crew.dashboard.chat_folder_cleanup.default_session_folder_ids",
             lambda: {"worker"},
         )
         state = _state(_slot("chat-1-1", "lead"))
@@ -295,7 +295,7 @@ class TestCleanupRoute:
         def _broken() -> set[str]:
             raise OSError("config.json unreadable")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_folder_cleanup.channel_folder_names", _broken)
+        monkeypatch.setattr("aj_crew.dashboard.chat_folder_cleanup.channel_folder_names", _broken)
         state = _state(_slot("chat-1-1", "lead"))
         before = _ids(state)
         async with TestClient(TestServer(_app(state))) as client:
@@ -480,7 +480,7 @@ class TestCleanupRoute:
         reason: str | None,
     ) -> None:
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_folder_cleanup.default_session_folder_ids",
+            "aj_crew.dashboard.chat_folder_cleanup.default_session_folder_ids",
             lambda: default,
         )
         state = _state(job_folders=jobs)
@@ -517,7 +517,7 @@ class TestCronChatFolderIds:
     async def test_reads_every_job_folder_and_fails_closed_on_a_bad_store(
         self, tmp_path: Any
     ) -> None:
-        from kiro_crew.cron import CronService, CronStoreUnreadable
+        from aj_crew.cron import CronService, CronStoreUnreadable
 
         svc = CronService(base_dir=tmp_path)
         svc.add_job("a", "m", every_secs=300, persistent_session=True, chat_folder_id="f1")
@@ -536,24 +536,24 @@ class TestChannelFolderNames:
     ) -> None:
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard import chat_folder_cleanup as mod
+        from aj_crew.dashboard import chat_folder_cleanup as mod
 
         cfg = SimpleNamespace(degraded_sections=frozenset(degraded))
-        monkeypatch.setattr(mod.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+        monkeypatch.setattr(mod.AjCrewConfig, "load", staticmethod(lambda: cfg))
         with pytest.raises(mod._ConfigUnreadable):
             mod.channel_folder_names()
 
     def test_reads_every_channel_s_folder_name(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard import chat_folder_cleanup as mod
+        from aj_crew.dashboard import chat_folder_cleanup as mod
 
         cfg = SimpleNamespace(
             degraded_sections=frozenset({"memory"}),
             slack=SimpleNamespace(session_folder=" Slack Inbox "),
             discord=SimpleNamespace(session_folder=""),
         )
-        monkeypatch.setattr(mod.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+        monkeypatch.setattr(mod.AjCrewConfig, "load", staticmethod(lambda: cfg))
         assert mod.channel_folder_names() == {"slack inbox"}
 
 
@@ -564,10 +564,10 @@ class TestDefaultSessionFolderIds:
     ) -> None:
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard import chat_folder_cleanup as mod
+        from aj_crew.dashboard import chat_folder_cleanup as mod
 
         cfg = SimpleNamespace(degraded_sections=frozenset(degraded))
-        monkeypatch.setattr(mod.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+        monkeypatch.setattr(mod.AjCrewConfig, "load", staticmethod(lambda: cfg))
         with pytest.raises(mod._ConfigUnreadable):
             mod.default_session_folder_ids()
 
@@ -577,11 +577,11 @@ class TestDefaultSessionFolderIds:
     ) -> None:
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard import chat_folder_cleanup as mod
+        from aj_crew.dashboard import chat_folder_cleanup as mod
 
         cfg = SimpleNamespace(
             degraded_sections=frozenset({"memory"}),
             dashboard=SimpleNamespace(default_session_folder=value),
         )
-        monkeypatch.setattr(mod.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+        monkeypatch.setattr(mod.AjCrewConfig, "load", staticmethod(lambda: cfg))
         assert mod.default_session_folder_ids() == expected

@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat as pc
+from aj_crew import platform_compat as pc
 
 # Each test starts with the macOS libc and libproc handle caches unbuilt and puts them
 # back after, as every test of the test_platform_compat family does (see conftest.py).
@@ -272,7 +272,7 @@ class TestPinDirectoryLinksOnly:
 
     @pytest.fixture
     def windows_pin(self, tmp_path, monkeypatch):
-        import kiro_crew.platform_compat_links as links
+        import aj_crew.platform_compat_links as links
 
         stand_in = tmp_path / "stand-in"
         stand_in.write_text("x")
@@ -511,7 +511,7 @@ class TestMountIdentity:
         assert pc.mount_identity(str(tmp_path / "absent")) is None
 
     def test_without_statx_it_is_unknown(self, monkeypatch, tmp_path):
-        from kiro_crew import platform_compat_files
+        from aj_crew import platform_compat_files
 
         monkeypatch.setattr(platform_compat_files, "_statx_call", lambda: None)
         assert pc.mount_identity(str(tmp_path)) is None
@@ -521,7 +521,7 @@ class TestMountIdentity:
         never will on that kernel, so the next call skips the syscall."""
         import struct
 
-        from kiro_crew import platform_compat_files
+        from aj_crew import platform_compat_files
 
         calls = []
 
@@ -658,7 +658,7 @@ class TestOpenLockFile:
         # helper's non-truncation property.
         lock = tmp_path / "x.lock"
         lock.write_text("holder-pid 1234")
-        from kiro_crew.platform_compat import file_lock, open_lock_file
+        from aj_crew.platform_compat import file_lock, open_lock_file
 
         with open_lock_file(lock) as fd:
             assert isinstance(fd, int)
@@ -670,7 +670,7 @@ class TestOpenLockFile:
     def test_creates_missing_file_and_is_lockable(self, tmp_path):
         lock = tmp_path / "sub" / "y.lock"
         lock.parent.mkdir(parents=True)
-        from kiro_crew.platform_compat import flock_exclusive, open_lock_file
+        from aj_crew.platform_compat import flock_exclusive, open_lock_file
 
         with open_lock_file(lock) as fd:
             with flock_exclusive(fd):
@@ -679,7 +679,7 @@ class TestOpenLockFile:
         assert lock.read_bytes() == b""
 
     def test_non_creating_open_refuses_a_missing_file_and_creates_nothing(self, tmp_path):
-        from kiro_crew.platform_compat import open_lock_file
+        from aj_crew.platform_compat import open_lock_file
 
         lock = tmp_path / "absent.lock"
         with pytest.raises(FileNotFoundError):
@@ -690,7 +690,7 @@ class TestOpenLockFile:
     def test_non_creating_open_preserves_existing_content(self, tmp_path):
         lock = tmp_path / "held.lock"
         lock.write_text("holder-pid 1234")
-        from kiro_crew.platform_compat import file_lock, open_lock_file
+        from aj_crew.platform_compat import file_lock, open_lock_file
 
         with open_lock_file(lock, create=False) as fd:
             assert lock.read_text() == "holder-pid 1234"  # open did not truncate
@@ -704,9 +704,9 @@ class TestOpenLockFile:
         # file_lock-family acquire within the next two lines. Every site was
         # converted to open_lock_file in this change; a new offender fails
         # here with its file and line.
-        import kiro_crew
+        import aj_crew
 
-        src_root = os.path.dirname(os.path.abspath(kiro_crew.__file__))
+        src_root = os.path.dirname(os.path.abspath(aj_crew.__file__))
         offenders = []
         open_w = re.compile(r"""\bopen\([^)]*["']wb?["']\)""")
         acquire = re.compile(r"\b(file_lock|flock_exclusive|acquire_lock)\(\s*\w+\.fileno\(\)")
@@ -763,13 +763,13 @@ class TestStripExtendedLengthPrefix:
         Identity is the property, not equal behaviour: a second copy answers the
         same values on these inputs and still drifts when one side is edited.
         """
-        from kiro_crew import session_ledger
+        from aj_crew import session_ledger
 
         assert session_ledger.strip_extended_length_prefix is pc.strip_extended_length_prefix
 
     def test_the_workflow_guard_shares_the_one_fold(self, monkeypatch, tmp_path):
         """``workflow_memory`` must reach the same helper on its guarded path."""
-        from kiro_crew import workflow_memory
+        from aj_crew import workflow_memory
 
         calls = []
         real = pc.strip_extended_length_prefix

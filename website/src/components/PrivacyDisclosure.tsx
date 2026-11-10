@@ -9,8 +9,8 @@ import { SettingRef } from './settingRef/SettingRef'
 /** Read-only CLI twins of the toggle, kept for headless hosts and for the one
  * case the toggle cannot win: a `config.local.json` overlay or the env var. */
 export const COMMANDS = [
-  'kirocrew telemetry status',
-  'kirocrew telemetry disable',
+  'ajcrew telemetry status',
+  'ajcrew telemetry disable',
 ] as const
 
 // Keys held in an indexed `as const` map of full literals rather than inline on each
@@ -26,9 +26,9 @@ const SHELL_LABEL_KEY = {
 /** The three per-shell env-var forms, keyed by the same shell ids as
  * `SHELL_LABEL_KEY` so a new shell cannot be added without its label. */
 export const SHELL_COMMANDS = [
-  { shell: 'macos', command: 'export KIROCREW_TELEMETRY_DISABLED=1' },
-  { shell: 'powershell', command: "$env:KIROCREW_TELEMETRY_DISABLED = '1'" },
-  { shell: 'cmd', command: 'set KIROCREW_TELEMETRY_DISABLED=1' },
+  { shell: 'macos', command: 'export AJCREW_TELEMETRY_DISABLED=1' },
+  { shell: 'powershell', command: "$env:AJCREW_TELEMETRY_DISABLED = '1'" },
+  { shell: 'cmd', command: 'set AJCREW_TELEMETRY_DISABLED=1' },
 ] as const satisfies ReadonlyArray<{
   shell: keyof typeof SHELL_LABEL_KEY
   command: string
@@ -72,7 +72,7 @@ export interface BeaconStatus {
  * The heartbeat opt-out control.
  *
  * The toggle writes `telemetry.beacon_enabled` (the same key
- * `kirocrew telemetry disable` persists), so the choice survives restarts and
+ * `ajcrew telemetry disable` persists), so the choice survives restarts and
  * upgrades. It reports the EFFECTIVE state, not just the stored flag: an
  * enterprise governance ceiling, the env var, a CI host, a non-default data
  * home, or a `config.local.json` overlay can all suppress sending
@@ -125,7 +125,7 @@ export function TelemetryToggle({ renderControl }: TelemetryToggleProps = {}) {
     // effective verdict, and only it knows whether an overlay shadowed the write.
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ['beaconStatus'] })
-      qc.invalidateQueries({ queryKey: ['kirocrewConfig'] })
+      qc.invalidateQueries({ queryKey: ['ajcrewConfig'] })
     },
   })
 
@@ -177,7 +177,7 @@ export function TelemetryToggle({ renderControl }: TelemetryToggleProps = {}) {
           <Trans
             i18nKey="privacyDisclosure.envOverrideWithSettingRef"
             components={{
-              settingRef: <SettingRef kind="env" configKey={statusQ.data?.env_var ?? 'KIROCREW_TELEMETRY_DISABLED'} envIntent="unset" />,
+              settingRef: <SettingRef kind="env" configKey={statusQ.data?.env_var ?? 'AJCREW_TELEMETRY_DISABLED'} envIntent="unset" />,
             }}
           />
         </p>

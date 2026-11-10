@@ -15,9 +15,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.chat import api_chat_slot_queue_edit
-from kiro_crew.dashboard.chat_utils import _edit_queued_by_id
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.chat import api_chat_slot_queue_edit
+from aj_crew.dashboard.chat_utils import _edit_queued_by_id
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 # ── Unit tests: _ChatSlot.queue_edit_by_id ──
 
@@ -136,7 +136,7 @@ class TestQueueEditEndpoint:
         qid = slot.queue_append("old text", directive_user_origin=True)
         slot.append("queued", "old text", json.dumps({"queue_id": qid}))
 
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             app = _make_app(state)
             async with TestClient(TestServer(app)) as client:
@@ -166,7 +166,7 @@ class TestQueueEditEndpoint:
             request["app"] = "app-A"
             return await handler(request)
 
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             app = _make_app(state)
             app.middlewares.insert(0, inject_app)
@@ -183,7 +183,7 @@ class TestQueueEditEndpoint:
     @pytest.mark.asyncio
     async def test_edit_slot_not_found(self):
         state = _make_state()
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             app = _make_app(state)
             async with TestClient(TestServer(app)) as client:
@@ -195,7 +195,7 @@ class TestQueueEditEndpoint:
         state = _make_state()
         slot = state.get_or_create_slot("chat-1")
         slot.queue_append("keep")
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             app = _make_app(state)
             async with TestClient(TestServer(app)) as client:
@@ -210,7 +210,7 @@ class TestQueueEditEndpoint:
         state = _make_state()
         slot = state.get_or_create_slot("chat-1")
         qid = slot.queue_append("old")
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             app = _make_app(state)
             async with TestClient(TestServer(app)) as client:
@@ -225,7 +225,7 @@ class TestQueueEditEndpoint:
         state = _make_state()
         slot = state.get_or_create_slot("chat-1")
         qid = slot.queue_append("old")
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             app = _make_app(state)
             async with TestClient(TestServer(app)) as client:
@@ -243,7 +243,7 @@ class TestQueueEditEndpoint:
         qid = slot.queue_append("old")
         state.broadcast_ws = MagicMock()
 
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             app = _make_app(state)
             async with TestClient(TestServer(app)) as client:
@@ -263,7 +263,7 @@ class TestQueueEditEndpoint:
         slot.append("queued", "same", json.dumps({"queue_id": id1}))
         slot.append("queued", "same", json.dumps({"queue_id": id2}))
 
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             app = _make_app(state)
             async with TestClient(TestServer(app)) as client:

@@ -20,16 +20,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.handlers import _shared, cron
-from kiro_crew.learn import Lesson, LessonStore
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.handlers import _shared, cron
+from aj_crew.learn import Lesson, LessonStore
 
 SLACK_KEY = "slack:1760000000.000001"
 
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     return _make_state(tmp_path)
 
 
@@ -76,7 +76,7 @@ def test_a_channel_born_slot_resolves_through_its_session_key(state):
 
 def test_an_unbound_channel_slot_resolves_through_its_effective_key(state):
     """Surfaced without a binding, a channel slot's turns run as ``dashboard:<slot>``."""
-    from kiro_crew.dashboard.chat_utils import effective_session_key
+    from aj_crew.dashboard.chat_utils import effective_session_key
 
     slot = _slot(state, SLACK_KEY.replace(":", "_"), "client-a", channel_origin=True)
     _slot(state, "chat-busy", "client-b", 500)
@@ -95,8 +95,8 @@ def test_session_control_guard_is_unchanged_only_the_lesson_path_matches_effecti
     so the two diverge for exactly this key, keeping the self-target guard off
     the widened path.
     """
-    from kiro_crew.dashboard.chat_utils import effective_session_key
-    from kiro_crew.dashboard.session_control import caller_slot_key
+    from aj_crew.dashboard.chat_utils import effective_session_key
+    from aj_crew.dashboard.session_control import caller_slot_key
 
     slot = _slot(state, SLACK_KEY.replace(":", "_"), "client-a", channel_origin=True)
     key = effective_session_key(slot)
@@ -176,7 +176,7 @@ async def _list(
         patch.object(cron, "resolve_lesson_memory_store", new=AsyncMock(return_value=(None, None))),
         patch.object(cron, "_prepare_member_lesson_store", new=AsyncMock(return_value=None)),
         patch.object(cron, "_get_memory", return_value=MagicMock(vector_store=None)),
-        patch.object(cron.KiroCrewConfig, "load", return_value=configured),
+        patch.object(cron.AjCrewConfig, "load", return_value=configured),
     ):
         resp = await cron.api_lessons(request)
     return [(row["rule"], row.get("workspace")) for row in json.loads(resp.text)["lessons"]]
@@ -291,7 +291,7 @@ async def _create(state, tmp_path, session_key: str, body: dict, *, is_dashboard
         patch.object(cron, "resolve_lesson_memory_store", new=AsyncMock(return_value=(None, None))),
         patch.object(cron, "_prepare_member_lesson_store", new=AsyncMock(return_value=None)),
         patch.object(cron, "_get_memory", return_value=MagicMock(vector_store=None)),
-        patch.object(cron.KiroCrewConfig, "load", return_value=configured),
+        patch.object(cron.AjCrewConfig, "load", return_value=configured),
     ):
         resp = await cron.api_lessons_create(request)
     return resp, stores

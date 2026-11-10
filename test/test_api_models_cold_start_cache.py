@@ -24,8 +24,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard.handlers import agents
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
+from aj_crew.dashboard.handlers import agents
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService
 
 
 def _drain_catalog_task():
@@ -153,13 +153,13 @@ class _GatedProc:
 
 def _base_patches():
     return [
-        patch.object(agents.KiroCrewConfig, "load", return_value=_kiro_cfg()),
-        patch("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", return_value="/usr/bin/kiro-cli"),
-        patch("kiro_crew.acp.client._resolve_ssh_auth_sock", lambda env: None),
-        patch("kiro_crew.env.augmented_path", lambda p: p),
-        patch("kiro_crew.dashboard.handlers.agents.wrap_argv", _stub_wrap_argv),
-        patch("kiro_crew.dashboard.handlers.agents.cgroup_scope_argv", lambda argv: argv),
-        patch("kiro_crew.sandbox.resource_limit_preexec", lambda: None),
+        patch.object(agents.AjCrewConfig, "load", return_value=_kiro_cfg()),
+        patch("aj_crew.acp.client._resolve_kiro_bin_for_spawn", return_value="/usr/bin/kiro-cli"),
+        patch("aj_crew.acp.client._resolve_ssh_auth_sock", lambda env: None),
+        patch("aj_crew.env.augmented_path", lambda p: p),
+        patch("aj_crew.dashboard.handlers.agents.wrap_argv", _stub_wrap_argv),
+        patch("aj_crew.dashboard.handlers.agents.cgroup_scope_argv", lambda argv: argv),
+        patch("aj_crew.sandbox.resource_limit_preexec", lambda: None),
     ]
 
 
@@ -250,9 +250,9 @@ def test_fresh_cache_is_served_without_a_spawn(tmp_path):
 
     async def _drive():
         with (
-            patch.object(agents.KiroCrewConfig, "load", return_value=_kiro_cfg()),
+            patch.object(agents.AjCrewConfig, "load", return_value=_kiro_cfg()),
             patch(
-                "kiro_crew.acp.client._resolve_kiro_bin_for_spawn", return_value="/usr/bin/kiro-cli"
+                "aj_crew.acp.client._resolve_kiro_bin_for_spawn", return_value="/usr/bin/kiro-cli"
             ),
             # The handler's own single-flight entry, which it calls synchronously:
             # any fetch started on a fresh cache, in the request or behind it,
@@ -274,7 +274,7 @@ def test_bounded_catalog_caps_rows_fields_and_scalar_size():
     gateway's resident memory without limit (the ``_catalog_cache.models`` write).
     The bound reuses the repo's one shared admission (``model_registry``).
     """
-    from kiro_crew import model_registry
+    from aj_crew import model_registry
 
     max_rows = model_registry.ADVERTISED_MODELS_MAX_IDS
     max_chars = model_registry.ADVERTISED_MODEL_ID_MAX_CHARS
@@ -308,7 +308,7 @@ def test_bounded_catalog_refuses_over_long_id_rows():
     ``model_scope`` would read a native pin as foreign — the same ``REFUSED, not
     truncated`` invariant ``model_registry.admit_catalog_rows`` enforces.
     """
-    from kiro_crew import model_registry
+    from aj_crew import model_registry
 
     max_chars = model_registry.ADVERTISED_MODEL_ID_MAX_CHARS
     rows = [
@@ -326,7 +326,7 @@ def test_bounded_catalog_skips_over_long_field_keys():
     Pins the ``a-bound-bounds-every-field-it-retains`` property for keys: a
     pathological JSON key must not enter the cache even when its value is small.
     """
-    from kiro_crew import model_registry
+    from aj_crew import model_registry
 
     max_chars = model_registry.ADVERTISED_MODEL_ID_MAX_CHARS
     row = {"model_name": "ok", "x" * (max_chars + 1): "small"}

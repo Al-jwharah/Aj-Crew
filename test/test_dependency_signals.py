@@ -6,12 +6,12 @@ from email.utils import formatdate
 
 import pytest
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.monitoring import github_pull_request, github_workflow_run
-from kiro_crew.monitoring.models import ProviderErrorKind
-from kiro_crew.taskq import dependency
-from kiro_crew.taskq.adapters import acp_provider, github, http
-from kiro_crew.taskq.dependency import (
+from aj_crew.acp.client import AcpError
+from aj_crew.monitoring import github_pull_request, github_workflow_run
+from aj_crew.monitoring.models import ProviderErrorKind
+from aj_crew.taskq import dependency
+from aj_crew.taskq.adapters import acp_provider, github, http
+from aj_crew.taskq.dependency import (
     KIND_AUTH_FAILED,
     KIND_CONCURRENCY_EXCEEDED,
     KIND_DEPENDENCY_UNAVAILABLE,
@@ -354,7 +354,7 @@ class TestAcpProviderAdapter:
         self, backend: str, data: str
     ) -> None:
         """These harnesses' signed-out text names no 401 or expiry, so only the frame tag can."""
-        from kiro_crew.acp import client as acp_client
+        from aj_crew.acp import client as acp_client
 
         with pytest.raises(AcpError) as caught:
             acp_client._raise_acp_error(
@@ -376,7 +376,7 @@ class TestAmbiguousDeliveryIsNeverADependency:
         """A stdin-stall death whose attribution folds in a retained "HTTP 429"
         stderr line would read as rate_limited, and the dependency retry would
         replay a prompt the live child may already have run."""
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         text = "Runtime process died during prompt — stderr_tail: HTTP 429 Too Many Requests"
         assert classify_exception(AcpProcessDied(text)) is not None

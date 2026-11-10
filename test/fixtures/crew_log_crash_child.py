@@ -26,8 +26,8 @@ import sys
 import time
 from pathlib import Path
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, emit
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, emit
 
 SESSION = "crash-child-session"
 
@@ -45,7 +45,7 @@ def _park(marker: Path, value: str) -> None:
 
 def main() -> int:
     failpoint, marker_path = sys.argv[1], Path(sys.argv[2])
-    CrewLog.create(lg.KIND_SESSION, SESSION, owner="crash-crew", agent="kirocrew")
+    CrewLog.create(lg.KIND_SESSION, SESSION, owner="crash-crew", agent="ajcrew")
 
     if failpoint == "open-turn":
         emit.on_turn_started(SESSION, 1, "user")

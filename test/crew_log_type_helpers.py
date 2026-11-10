@@ -2,7 +2,7 @@
 
 A test that asserts on segments, ownership or the append path needs a well-formed
 entry of some type without caring what it says. Building that payload from the
-declarations in :mod:`kiro_crew.crew_log.entry_types` rather than writing it out
+declarations in :mod:`aj_crew.crew_log.entry_types` rather than writing it out
 keeps a caller from holding a payload the format refuses.
 
 This lives in the test suite, not beside the declarations, because every caller is
@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from kiro_crew.crew_log.entry_types import (
+from aj_crew.crew_log.entry_types import (
     JSON_ARRAY,
     JSON_BOOL,
     JSON_FLOAT,

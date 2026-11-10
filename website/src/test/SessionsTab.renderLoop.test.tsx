@@ -185,7 +185,7 @@ describe('SessionsTab render stability', () => {
     const payload = {
       sessions: [{
         key: 'dashboard:chat-1-1', title: 'Live session', slot_key: 'chat-1-1', untitled: false,
-        agent: 'kirocrew', channel: 'dashboard', pid: 4242, owns_runtime: true, prompts: 3,
+        agent: 'ajcrew', channel: 'dashboard', pid: 4242, owns_runtime: true, prompts: 3,
         rss_mb: 512, peak_mb: 600, cpu_cores: 0.4, procs: 2, mcp: 1, uptime_s: 300,
         shared: false, credits: 1, turns: 2,
       }],

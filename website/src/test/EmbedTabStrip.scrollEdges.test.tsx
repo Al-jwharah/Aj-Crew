@@ -43,8 +43,8 @@ const SLOTS = [
 
 /** Tab state the host plugin injects onto `window`. */
 interface EmbedTabsWindow extends Window {
-  __kirocrewTabs?: string[]
-  __kirocrewActiveTabIndex?: number
+  __ajcrewTabs?: string[]
+  __ajcrewActiveTabIndex?: number
 }
 const tabsWindow = window as EmbedTabsWindow
 
@@ -70,8 +70,8 @@ const scrollerOf = (container: HTMLElement) =>
 
 beforeEach(() => {
   sessionStorage.clear()
-  tabsWindow.__kirocrewTabs = ['chat-1', 'chat-2']
-  tabsWindow.__kirocrewActiveTabIndex = 0
+  tabsWindow.__ajcrewTabs = ['chat-1', 'chat-2']
+  tabsWindow.__ajcrewActiveTabIndex = 0
   if (!window.ResizeObserver) {
     window.ResizeObserver = class {
       observe() {}
@@ -83,8 +83,8 @@ beforeEach(() => {
 afterEach(() => {
   vi.restoreAllMocks()
   cleanup()
-  delete tabsWindow.__kirocrewTabs
-  delete tabsWindow.__kirocrewActiveTabIndex
+  delete tabsWindow.__ajcrewTabs
+  delete tabsWindow.__ajcrewActiveTabIndex
   sessionStorage.clear()
 })
 
@@ -150,7 +150,7 @@ describe('EmbedTabStrip all-tabs menu', () => {
     store: createTestStore({ dashboard: { ...createTestStore().getState().dashboard, slots: SLOTS } }),
     route: '/embed/chat/chat-1',
   })
-  beforeEach(() => { tabsWindow.__kirocrewTabs = ['chat-1', 'chat-2', 'chat-3'] })
+  beforeEach(() => { tabsWindow.__ajcrewTabs = ['chat-1', 'chat-2', 'chat-3'] })
 
   it('lists every tab and switches to the one picked', () => {
     renderTabs()
@@ -164,7 +164,7 @@ describe('EmbedTabStrip all-tabs menu', () => {
     const { container } = renderTabs()
     const row = stubTabRow(scrollerOf(container))
     act(() => {
-      window.dispatchEvent(new CustomEvent('kirocrew-tab-state', { detail: { tabs: ['chat-1', 'chat-2', 'chat-3'], activeIndex: 2 } }))
+      window.dispatchEvent(new CustomEvent('ajcrew-tab-state', { detail: { tabs: ['chat-1', 'chat-2', 'chat-3'], activeIndex: 2 } }))
     })
     expect(row.tabRect('chat-3').right).toBeLessThanOrEqual(100)
     expect(row.left()).toBeGreaterThan(0)

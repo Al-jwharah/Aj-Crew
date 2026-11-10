@@ -20,10 +20,10 @@ from issue_radar_crew_routes_helpers import (
 )
 from off_loop_helpers import off_loop
 
-from kiro_crew import mcp_core
-from kiro_crew.apps.builtins.issue_radar.backend import crew_routes, crew_store
-from kiro_crew.crew_log.schema import KIND_SESSION
-from kiro_crew.crew_log.store import CrewLog
+from aj_crew import mcp_core
+from aj_crew.apps.builtins.issue_radar.backend import crew_routes, crew_store
+from aj_crew.crew_log.schema import KIND_SESSION
+from aj_crew.crew_log.store import CrewLog
 
 # ── PUT /crew/work ──────────────────────────────────────────────────────────
 
@@ -147,7 +147,7 @@ class TestWorkItems(_CrewRouteCase):
         """A drained writer whose entry is not in the log refused it. The caller is
         told so -- 503 `ledger_not_recorded`, retryable -- and is never handed an
         item that exists nowhere (the old answer was 200 with `durable: false`)."""
-        from kiro_crew.crew_log import emit as crew_log_emit
+        from aj_crew.crew_log import emit as crew_log_emit
 
         crew = self.crew("Andromeda")
         with mock.patch.object(crew_log_emit, "on_radar_recorded", lambda *_a, **_k: None):
@@ -369,8 +369,8 @@ class TestTheRecordToolEmptiesLabelsWithClear(_CrewRouteCase):
         from aiohttp.test_utils import make_mocked_request
         from issue_radar_agent_tools_helpers import shipped
 
-        from kiro_crew.apps import app_agent_tools
-        from kiro_crew.apps.builtins.issue_radar.backend import agent_tools
+        from aj_crew.apps import app_agent_tools
+        from aj_crew.apps.builtins.issue_radar.backend import agent_tools
 
         loop = asyncio.get_running_loop()
 

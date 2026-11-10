@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 from test_sandbox_launcher_program import RecordingLibc, payload
 
-from kiro_crew import sandbox_launcher_program as program
+from aj_crew import sandbox_launcher_program as program
 
 pytestmark = pytest.mark.skipif(
     sys.platform == "win32",

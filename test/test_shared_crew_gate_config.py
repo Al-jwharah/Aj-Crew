@@ -7,18 +7,18 @@ import subprocess
 
 import pytest
 
-from kiro_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import containment as _containment
-from kiro_crew.shared_crew import turn_gate
-from kiro_crew.shared_crew.admission import (
+from aj_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import containment as _containment
+from aj_crew.shared_crew import turn_gate
+from aj_crew.shared_crew.admission import (
     Liveness,
     OperationKind,
     OperationState,
     ReasonCode,
 )
-from kiro_crew.shared_crew.containment import ContainmentReport, SliceManager
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew.containment import ContainmentReport, SliceManager
+from aj_crew.shared_crew.contracts import (
     DisplaySnapshot,
     EnforcementLevel,
     Principal,
@@ -26,10 +26,10 @@ from kiro_crew.shared_crew.contracts import (
     Provenance,
     principal_id_for,
 )
-from kiro_crew.shared_crew.work_store import WorkStore
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import await_until
+from aj_crew.shared_crew.work_store import WorkStore
+from aj_crew.taskq.store import TaskStore
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import await_until
 
 
 def _person(login: str) -> Principal:
@@ -172,7 +172,7 @@ def test_concurrent_service_callers_share_initialization_across_loops(
     import threading
     from unittest.mock import Mock
 
-    from kiro_crew.testing.wait import await_until
+    from aj_crew.testing.wait import await_until
 
     limits = _limits()
     store = WorkStore(TaskStore(tmp_path / "singleton.db").open())
@@ -236,8 +236,8 @@ async def test_gateway_start_builds_the_service_before_any_restored_turn(monkeyp
     """
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard import server
-    from kiro_crew.shared_crew import wiring
+    from aj_crew.dashboard import server
+    from aj_crew.shared_crew import wiring
 
     order: list[str] = []
     state = MagicMock()
@@ -295,7 +295,7 @@ async def test_disabling_containment_resets_only_owned_instance_quota(
 
     monkeypatch.setattr(slices, "_runner", run)
     monkeypatch.setattr(slices, "populated", lambda _name: True)
-    monkeypatch.setattr(svc, "_slice_busy", lambda _name: ["kirocrew-rt-busy.scope"])
+    monkeypatch.setattr(svc, "_slice_busy", lambda _name: ["ajcrew-rt-busy.scope"])
     monkeypatch.setattr(ag, "_SERVICE", svc)
     monkeypatch.setattr(ag, "_SERVICE_LOOP", asyncio.get_running_loop())
     monkeypatch.setattr(ag, "_start_ticker", lambda _service: None)
@@ -369,7 +369,7 @@ async def test_quota_reset_failure_keeps_limits_for_retry(tmp_path, monkeypatch)
 async def test_disable_waits_for_inflight_slice_preparation(tmp_path, monkeypatch):
     from unittest.mock import AsyncMock
 
-    from kiro_crew.testing.wait import await_until
+    from aj_crew.testing.wait import await_until
 
     svc = _service(tmp_path)
     entered, release = asyncio.Event(), asyncio.Event()

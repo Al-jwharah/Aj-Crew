@@ -52,7 +52,7 @@ async function capture(theme) {
     slots: [],
     // `return json(...), true` -- the comma marks the request handled.
     extra: async (path, route) => {
-      if (path === '/api/config/kirocrew') return json(route, { connections_ui: true }), true
+      if (path === '/api/config/ajcrew') return json(route, { connections_ui: true }), true
       if (path === '/api/theme/boot') return json(route, { mode: theme, theme: '' }), true
       if (path === '/api/mcp' || path === '/api/mcp/probe') return json(route, []), true
       if (path === '/api/connections/status') {

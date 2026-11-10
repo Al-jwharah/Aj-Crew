@@ -14,7 +14,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
 from conftest import make_dir_link
-from kiro_crew.dashboard import pinned_session_order as pso
+from aj_crew.dashboard import pinned_session_order as pso
 
 # ── Pure store rules ──
 
@@ -171,8 +171,8 @@ class TestStoreRules:
 
 
 def _app(state) -> web.Application:
-    from kiro_crew.dashboard.chat import api_chat_slots
-    from kiro_crew.dashboard.chat_folders import api_chat_pinned_order, api_chat_slot_pin
+    from aj_crew.dashboard.chat import api_chat_slots
+    from aj_crew.dashboard.chat_folders import api_chat_pinned_order, api_chat_slot_pin
 
     app = web.Application()
     app["state"] = state
@@ -185,7 +185,7 @@ def _app(state) -> web.Application:
 def _state(tmp_path, monkeypatch, keys=("a", "b", "c"), pinned=("a", "b", "c")):
     from chat_test_helpers import _make_state
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     for key in keys:
         slot = state.get_or_create_slot(key)
@@ -365,7 +365,7 @@ async def test_an_app_or_member_caller_cannot_reorder(tmp_path, monkeypatch) -> 
     """The order is the person's preference across sessions no app owns."""
     state = _state(tmp_path, monkeypatch)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_folders.folder_principal", lambda _state, _req: "some-app"
+        "aj_crew.dashboard.chat_folders.folder_principal", lambda _state, _req: "some-app"
     )
     async with TestClient(TestServer(_app(state))) as client:
         resp = await client.post("/api/chat/pinned-order", json={"keys": ["c", "a", "b"]})
@@ -396,8 +396,8 @@ async def test_pinned_order_channel_containment(
     import asyncio
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard import chat_folders
-    from kiro_crew.messaging.link import ChannelLink
+    from aj_crew.dashboard import chat_folders
+    from aj_crew.messaging.link import ChannelLink
 
     state = _state(tmp_path, monkeypatch)
     async with TestClient(TestServer(_app(state))) as client:
@@ -431,7 +431,7 @@ async def test_pinned_order_channel_containment(
         monkeypatch.setattr(chat_folders, "read_bounded_json", read_body)
         headers = {"X-Session-Key": caller_key}
         if internal:
-            headers |= {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "kirocrew-dashboard"}
+            headers |= {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "ajcrew-dashboard"}
         if operation == "pin-cycle":
             contained = internal and binding != "unlinked"
             for pinned in (False, True):
@@ -464,7 +464,7 @@ async def test_pinned_order_channel_containment(
             assert resp.status == 403 and body["code"] == "channel_reachable_caller"
             read_body.assert_not_awaited()
             audit.log_api_access.assert_called_once_with(
-                caller="kirocrew-dashboard",
+                caller="ajcrew-dashboard",
                 operation="chat.pinned_order",
                 outcome="denied",
                 source="channel_containment",
@@ -487,8 +487,8 @@ async def test_pinned_order_writer_channel_containment(tmp_path, monkeypatch) ->
 
     from aiohttp.test_utils import make_mocked_request
 
-    from kiro_crew.dashboard.chat_folders import _write_pinned_order
-    from kiro_crew.messaging.link import ChannelLink
+    from aj_crew.dashboard.chat_folders import _write_pinned_order
+    from aj_crew.messaging.link import ChannelLink
 
     state = _state(tmp_path, monkeypatch)
     app = _app(state)
@@ -510,7 +510,7 @@ async def test_pinned_order_writer_channel_containment(tmp_path, monkeypatch) ->
         "POST",
         "/api/chat/pinned-order",
         headers=headers
-        | {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "kirocrew-dashboard"},
+        | {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "ajcrew-dashboard"},
         app=app,
     )
     assert await _write_pinned_order(state, ["c", "a", "b"], request=agent) is None
@@ -531,13 +531,13 @@ async def test_pinned_order_writer_channel_containment(tmp_path, monkeypatch) ->
 @pytest.mark.asyncio
 async def test_an_app_or_member_caller_reads_no_ranks(tmp_path, monkeypatch) -> None:
     """A rank is a place in the person's whole order, so a scoped list omits it."""
-    from kiro_crew.dashboard.ws_event_scope import _strip_pin_rank
+    from aj_crew.dashboard.ws_event_scope import _strip_pin_rank
 
     state = _state(tmp_path, monkeypatch)
     async with TestClient(TestServer(_app(state))) as client:
         await client.post("/api/chat/pinned-order", json={"keys": ["c", "a", "b"]})
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.folder_principal", lambda _state, _req: "some-app"
+            "aj_crew.dashboard.chat_handlers.folder_principal", lambda _state, _req: "some-app"
         )
         resp = await client.get("/api/chat/slots")
         assert resp.status == 200
@@ -550,7 +550,7 @@ async def test_an_app_or_member_caller_reads_no_ranks(tmp_path, monkeypatch) -> 
 
 def test_a_scoped_sse_slots_frame_carries_no_ranks() -> None:
     """``/api/stream`` sends the bare list; a non-dashboard reader gets it rank-free."""
-    from kiro_crew.dashboard.handlers.updates import _without_pin_ranks
+    from aj_crew.dashboard.handlers.updates import _without_pin_ranks
 
     frame = json.dumps(
         [{"key": "a", "pin_rank": 0, "pin_rev": 3}, {"key": "b", "pin_rank": None, "pin_rev": 3}]
@@ -566,7 +566,7 @@ def test_save_refuses_a_planted_pinned_order_directory_link(tmp_path, monkeypatc
     """
     home = tmp_path / "datahome"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     elsewhere = tmp_path / "elsewhere"
     elsewhere.mkdir()
     make_dir_link(home / pso.PINNED_ORDER_DIR, elsewhere)
@@ -577,7 +577,7 @@ def test_save_refuses_a_planted_pinned_order_directory_link(tmp_path, monkeypatc
 
 def test_the_create_route_answers_a_scoped_caller_without_a_rank(tmp_path, monkeypatch) -> None:
     """A create that answers with an existing pinned session keeps its rank private."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _state(tmp_path, monkeypatch)
     state._pinned_session_order = ["b", "a"]
@@ -618,7 +618,7 @@ async def test_a_pin_whose_order_write_fails_is_kept_and_answered_as_an_error(
 
     async with TestClient(TestServer(_app(state))) as client:
         await client.post("/api/chat/pinned-order", json={"keys": ["b", "a"]})
-        monkeypatch.setattr("kiro_crew.dashboard.chat_folders._write_pinned_order", _fail)
+        monkeypatch.setattr("aj_crew.dashboard.chat_folders._write_pinned_order", _fail)
         resp = await client.patch("/api/chat/slots/c/pin", json={"pinned": True})
         assert resp.status == 500
         body = await resp.json()
@@ -634,7 +634,7 @@ async def test_retrying_a_pin_whose_order_write_failed_repairs_the_order(
     tmp_path, monkeypatch
 ) -> None:
     """An unchanged retry still writes the rank the failed write left out."""
-    from kiro_crew.dashboard import chat_folders
+    from aj_crew.dashboard import chat_folders
 
     state = _state(tmp_path, monkeypatch, keys=("a", "b", "c"), pinned=("a", "b"))
     real_write = chat_folders._write_pinned_order
@@ -732,7 +732,7 @@ async def test_a_reorder_survives_a_gateway_restart(tmp_path, monkeypatch) -> No
     """A second gateway over the same home serves the order the first one stored."""
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard.chat_folders import load_pinned_order_after_listen
+    from aj_crew.dashboard.chat_folders import load_pinned_order_after_listen
 
     first = _state(tmp_path, monkeypatch)
     async with TestClient(TestServer(_app(first))) as client:
@@ -751,7 +751,7 @@ async def test_a_reorder_survives_a_gateway_restart(tmp_path, monkeypatch) -> No
 async def test_the_post_listen_load_publishes_the_ranks(tmp_path, monkeypatch) -> None:
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard.chat_folders import load_pinned_order_after_listen
+    from aj_crew.dashboard.chat_folders import load_pinned_order_after_listen
 
     pso.save(pso.store_path(tmp_path), ["c", "a"])
     state = _state(tmp_path, monkeypatch)
@@ -805,17 +805,17 @@ class TestStoreFencedFromAgents:
     """Only the person may set the order, so agents must not write it on disk."""
 
     def test_store_path_is_sensitive_on_the_file_tool_plane(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.security.paths import is_sensitive_path
+        from aj_crew.security.paths import is_sensitive_path
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.config.paths import config_dir
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.config.paths import config_dir
 
         store = pso.store_path(config_dir())
         assert is_sensitive_path(str(store))
         assert is_sensitive_path(str(store.parent))
 
     def test_store_leaf_is_sandbox_hidden_and_precreated(self) -> None:
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert pso.PINNED_ORDER_DIR in sandbox._CREW_HIDDEN_LEAVES
         assert pso.PINNED_ORDER_DIR in sandbox._CREW_PRECREATE_HIDDEN_DIR_LEAVES
@@ -862,7 +862,7 @@ async def test_an_app_pin_toggle_does_not_move_the_persons_order(tmp_path, monke
     async with TestClient(TestServer(_app(state))) as client:
         await client.post("/api/chat/pinned-order", json={"keys": ["a", "b", "c"]})
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_folders.folder_principal", lambda _state, _req: "some-app"
+            "aj_crew.dashboard.chat_folders.folder_principal", lambda _state, _req: "some-app"
         )
         assert (await client.patch("/api/chat/slots/a/pin", json={"pinned": False})).status == 200
         assert (await client.patch("/api/chat/slots/a/pin", json={"pinned": True})).status == 200
@@ -881,7 +881,7 @@ async def test_an_app_re_pin_that_brings_back_a_rank_sends_the_full_list(
     async with TestClient(TestServer(_app(state))) as client:
         await client.post("/api/chat/pinned-order", json={"keys": ["a", "b", "c"]})
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_folders.folder_principal", lambda _state, _req: "some-app"
+            "aj_crew.dashboard.chat_folders.folder_principal", lambda _state, _req: "some-app"
         )
         state.push_slots_update = MagicMock()
         state.push_slot_patch = MagicMock()

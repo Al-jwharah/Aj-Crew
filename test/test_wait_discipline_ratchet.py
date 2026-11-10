@@ -8,7 +8,7 @@ was written on, takes longer. The bet loses often enough to red unrelated pull
 requests (the tracking issue for this gate lists the fixes it is drawn from).
 
 The discipline, "wait on signals, not clocks": a test awaits the event, future or
-state the code emits (``kiro_crew.testing.wait``: ``await_until``,
+state the code emits (``aj_crew.testing.wait``: ``await_until``,
 ``async_wait_until``, ``wait_until``, ``LoopHop``). A ceiling exists only to turn a
 hang into a failure that names itself, so it is LARGE -- the helpers default to
 half the test's own timeout -- and it never decides pass versus fail.
@@ -123,7 +123,7 @@ _SCOPES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)
 
 #: The one file under ``test/`` the scan does not read: this one. Everything else,
 #: conftest and helpers included, is held to its count. The shared helpers live in
-#: ``src/kiro_crew/testing/wait.py``, outside the scanned tree.
+#: ``src/aj_crew/testing/wait.py``, outside the scanned tree.
 EXCLUDED = frozenset({"test_wait_discipline_ratchet.py"})
 
 #: Per file: the short fixed waits it held when this gate landed, one ``<count>
@@ -161,7 +161,7 @@ DRIFT_HINT = (
 
 HELPERS_HINT = (
     "Wait on the signal instead: await the event, future or state the code emits with "
-    "kiro_crew.testing.wait (await_until for an Event or a future; "
+    "aj_crew.testing.wait (await_until for an Event or a future; "
     "async_wait_until / wait_until for a state; LoopHop for an off-loop hop onto the "
     "loop). Their default ceiling is half the test's timeout and only names a hang; a "
     "wait_for that must stay takes a ceiling of 30 s or more for the same reason. A "
@@ -871,7 +871,7 @@ _NEGATIVE = {
     ),
     "a name in a string": "def t():\n    s = 'time.sleep(0.5)'\n",
     "the helper, with a short bound": (
-        "from kiro_crew.testing.wait import await_until\nasync def t():\n"
+        "from aj_crew.testing.wait import await_until\nasync def t():\n"
         "    await await_until(ev, timeout=0.1)\n"
     ),
     "asyncio.wait, which never cancels and is a different shape": (

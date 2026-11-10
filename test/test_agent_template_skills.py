@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 from conftest import requires_symlinks
-from kiro_crew.agent_discovery import (
+from aj_crew.agent_discovery import (
     _extract_skills,
     agent_skill_globs,
     clear_list_agents_cache,
@@ -30,8 +30,8 @@ from kiro_crew.agent_discovery import (
     list_agents,
     skill_resource_uris,
 )
-from kiro_crew.context import ContextBuilder
-from kiro_crew.dashboard.handlers._shared import (
+from aj_crew.context import ContextBuilder
+from aj_crew.dashboard.handlers._shared import (
     agent_skill_keys,
     agent_unmanaged_skill_uris,
     apply_skill_mapping,
@@ -40,9 +40,9 @@ from kiro_crew.dashboard.handlers._shared import (
     skill_uri_for_key,
     walk_skill_catalog,
 )
-from kiro_crew.learn import LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew.learn import LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 
 @pytest.fixture(autouse=True)
@@ -52,7 +52,7 @@ def _owner_caller(monkeypatch):
     its own enumerate-the-invariant coverage in
     test_agents_endpoints_owner_auth.py."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
@@ -71,7 +71,7 @@ def fake_home(tmp_path, monkeypatch):
     # ``_KIRO_AGENTS_DIR`` is computed at import time from the real home, so the
     # Path.home patch alone does not redirect the default-argument lookups that
     # agent_skill_globs / list_agents use.
-    monkeypatch.setattr("kiro_crew.agent_discovery._KIRO_AGENTS_DIR", tmp_path / ".kiro" / "agents")
+    monkeypatch.setattr("aj_crew.agent_discovery._KIRO_AGENTS_DIR", tmp_path / ".kiro" / "agents")
     return tmp_path
 
 
@@ -129,13 +129,13 @@ class TestExtractSkills:
             "resources": [
                 "file://.kiro/steering/**/*.md",
                 "skill://~/.kiro/skills/babysit/SKILL.md",
-                "skill://~/.kiro/skills/kirocrew-prepare-pr/SKILL.md",
+                "skill://~/.kiro/skills/ajcrew-prepare-pr/SKILL.md",
             ]
         }
-        assert _extract_skills(data) == ["babysit", "kirocrew-prepare-pr"]
+        assert _extract_skills(data) == ["babysit", "ajcrew-prepare-pr"]
         assert skill_resource_uris(data) == [
             "skill://~/.kiro/skills/babysit/SKILL.md",
-            "skill://~/.kiro/skills/kirocrew-prepare-pr/SKILL.md",
+            "skill://~/.kiro/skills/ajcrew-prepare-pr/SKILL.md",
         ]
 
     def test_unions_builder_mcp_filter_without_duplicates(self):
@@ -347,7 +347,7 @@ class TestEnumerateSkillCatalog:
         creds = fake_home / ".aws"
         _make_skill(creds, "looks-legit")
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers._shared._skill_key_roots",
+            "aj_crew.dashboard.handlers._shared._skill_key_roots",
             lambda state, session_key="": [("kiro-user/", creds)],
         )
         assert enumerate_skill_catalog(_State()) == {}
@@ -419,12 +419,12 @@ class TestSkillCatalogWalkBench:
     signature or the root resolver moves. Tiny tree, two runs, no duration asserted.
     """
 
-    _PINNED = ("HOME", "USERPROFILE", "KIROCREW_HOME")
+    _PINNED = ("HOME", "USERPROFILE", "AJCREW_HOME")
 
     def test_the_benchmark_builds_its_tree_and_prints_the_table(self, capsys):
         import skill_catalog_walk_bench as bench
 
-        # The script pins HOME, USERPROFILE and KIROCREW_HOME at its temporary
+        # The script pins HOME, USERPROFILE and AJCREW_HOME at its temporary
         # tree for the run and must hand this process its own back afterwards.
         before = {name: os.environ.get(name) for name in self._PINNED}
 
@@ -584,8 +584,8 @@ class TestPatchRejectionLeavesStateIntact:
     def test_unknown_skill_does_not_freeze_the_model(self, fake_home, monkeypatch):
         import asyncio
 
-        from kiro_crew import agent_state
-        from kiro_crew.dashboard.handlers import agents as agents_handlers
+        from aj_crew import agent_state
+        from aj_crew.dashboard.handlers import agents as agents_handlers
 
         _make_skill(fake_home / ".kiro" / "skills", "one")
         d = _agents_dir(fake_home)
@@ -593,7 +593,7 @@ class TestPatchRejectionLeavesStateIntact:
         (d / "victim.json").write_text(json.dumps(spec), encoding="utf-8")
 
         monkeypatch.setattr(agents_handlers, "KIRO_AGENTS_DIR", d, raising=False)
-        monkeypatch.setattr("kiro_crew.agent.KIRO_AGENTS_DIR", d, raising=False)
+        monkeypatch.setattr("aj_crew.agent.KIRO_AGENTS_DIR", d, raising=False)
 
         managed_calls: list[tuple[str, bool]] = []
         monkeypatch.setattr(
@@ -622,11 +622,11 @@ class TestPatchRejectionLeavesStateIntact:
         follows raised TypeError, surfacing as HTTP 500."""
         import asyncio
 
-        from kiro_crew.dashboard.handlers import agents as agents_handlers
+        from aj_crew.dashboard.handlers import agents as agents_handlers
 
         d = _agents_dir(fake_home)
         (d / "victim.json").write_text(json.dumps({"name": "victim"}), encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.agent.KIRO_AGENTS_DIR", d, raising=False)
+        monkeypatch.setattr("aj_crew.agent.KIRO_AGENTS_DIR", d, raising=False)
 
         for body in (["skills"], "skills", 42):
             request = _FakeRequest("PATCH", {"name": "victim"}, body, _State())
@@ -654,7 +654,7 @@ class TestPatchReordersManagedSkills:
     THREE = "skill://~/.kiro/skills/three/SKILL.md"
 
     def _agent(self, fake_home: Path, monkeypatch, resources: list) -> Path:
-        from kiro_crew.dashboard.handlers import agents as agents_handlers
+        from aj_crew.dashboard.handlers import agents as agents_handlers
 
         monkeypatch.setenv("KIRO_HOME", str(fake_home / "ambient-kiro"))
         _make_skill(fake_home / ".kiro" / "skills", "one")
@@ -668,14 +668,14 @@ class TestPatchReordersManagedSkills:
             encoding="utf-8",
         )
         monkeypatch.setattr(agents_handlers, "KIRO_AGENTS_DIR", d, raising=False)
-        monkeypatch.setattr("kiro_crew.agent.KIRO_AGENTS_DIR", d, raising=False)
+        monkeypatch.setattr("aj_crew.agent.KIRO_AGENTS_DIR", d, raising=False)
         return cfg
 
     @staticmethod
     def _patch(skills: list[str]):
         import asyncio
 
-        from kiro_crew.dashboard.handlers import agents as agents_handlers
+        from aj_crew.dashboard.handlers import agents as agents_handlers
 
         request = _FakeRequest("PATCH", {"name": "victim"}, {"skills": skills}, _RefreshingState())
         resp = asyncio.run(agents_handlers.api_agent_detail(request))
@@ -742,7 +742,7 @@ class TestPatchReordersManagedSkills:
         FIRST: a slot-pairing merge would write it back into slot 0, while named last it
         would fall off the pairing unseen.
         """
-        from kiro_crew.dashboard.handlers import agents as agents_handlers
+        from aj_crew.dashboard.handlers import agents as agents_handlers
 
         cfg = self._agent(fake_home, monkeypatch, [self.ONE, self.TWO, self.THREE])
         _make_skill(fake_home / ".kiro" / "skills", "three")
@@ -775,7 +775,7 @@ class TestPatchReordersManagedSkills:
         The editor takes the reply as its next state, so a skill a co-owner mapped
         meanwhile must be in it, or the next toggle unmaps it.
         """
-        from kiro_crew.dashboard.handlers import agents as agents_handlers
+        from aj_crew.dashboard.handlers import agents as agents_handlers
 
         cfg = self._agent(fake_home, monkeypatch, [self.ONE, self.TWO])
         _make_skill(fake_home / ".kiro" / "skills", "three")
@@ -830,7 +830,7 @@ class TestPatchReordersManagedSkills:
         The mapping's catalog cannot name a skill installed after it walked, so the reply
         must notice the roots moved and walk again. Two walks here, and only here.
         """
-        from kiro_crew.dashboard.handlers import agents as agents_handlers
+        from aj_crew.dashboard.handlers import agents as agents_handlers
 
         cfg = self._agent(fake_home, monkeypatch, [self.ONE, self.TWO])
         _settle(fake_home / ".kiro" / "skills")
@@ -869,7 +869,7 @@ class TestPatchReordersManagedSkills:
     @staticmethod
     def _count_walks(monkeypatch) -> dict[str, int]:
         """Count every walk of the skill roots, whichever caller asks for it."""
-        from kiro_crew.dashboard.handlers import _shared
+        from aj_crew.dashboard.handlers import _shared
 
         real_walk = _shared.walk_skill_catalog
         walks = {"n": 0}
@@ -887,14 +887,14 @@ class TestExtraSkillPathsAreAbsolute:
         """A relative ``skills.extra_paths`` entry would key the catalog by a
         relative root, so the persisted ``skill://`` URI would resolve against
         whatever cwd the next session starts in."""
-        from kiro_crew.dashboard.handlers._shared import _skill_key_roots
+        from aj_crew.dashboard.handlers._shared import _skill_key_roots
 
         class _Cfg:
             class skills:
                 extra_paths = ["relative/skills"]
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers._shared.KiroCrewConfig",
+            "aj_crew.dashboard.handlers._shared.AjCrewConfig",
             type("C", (), {"load": staticmethod(lambda: _Cfg)}),
         )
         roots = [root for _, root in _skill_key_roots(_State())]
@@ -975,9 +975,9 @@ class TestSessionContextGate:
         "agent",
         [
             pytest.param("specialist", id="test_mapped_custom_agent_gets_its_skills_on_cc"),
-            # The mapping bounds the kirocrew agent too: it does not receive the
+            # The mapping bounds the ajcrew agent too: it does not receive the
             # entire catalog.
-            pytest.param("kirocrew", id="test_mapped_kirocrew_is_scoped_not_full_catalog"),
+            pytest.param("ajcrew", id="test_mapped_ajcrew_is_scoped_not_full_catalog"),
         ],
     )
     def test_a_mapped_agent_gets_exactly_its_skills_on_cc(self, fake_home, agent):
@@ -1035,21 +1035,21 @@ class TestSessionContextGate:
             agent="plain", provider_type="claude_code"
         )
         assert "[Skills:]" not in ctx
-        from kiro_crew.agent_discovery import session_skill_globs
+        from aj_crew.agent_discovery import session_skill_globs
 
         assert session_skill_globs("", "plain") == []
-        assert session_skill_globs("", "kirocrew") is None
+        assert session_skill_globs("", "ajcrew") is None
 
-    def test_mapped_kirocrew_on_kiro_gets_scoped_discovery(self, fake_home):
+    def test_mapped_ajcrew_on_kiro_gets_scoped_discovery(self, fake_home):
         """A mapped default agent gets only its scoped discovery directory."""
         skills_root = fake_home / "skills"
         _make_skill(skills_root, "alpha")
         _make_skill(skills_root, "beta")
         d = _agents_dir(fake_home)
-        (d / "kirocrew.json").write_text(
+        (d / "ajcrew.json").write_text(
             json.dumps(
                 {
-                    "name": "kirocrew",
+                    "name": "ajcrew",
                     "resources": [f"skill://{(skills_root / 'alpha' / 'SKILL.md').as_posix()}"],
                 }
             ),
@@ -1057,20 +1057,20 @@ class TestSessionContextGate:
         )
 
         ctx = self._builder(fake_home, skills_root).build_session_context(
-            agent="kirocrew", provider_type="acp"
+            agent="ajcrew", provider_type="acp"
         )
         assert "skill_search" in ctx
         assert "alpha" in ctx and "beta" not in ctx
         assert "Body of alpha" not in ctx
 
-    def test_unmapped_kirocrew_gets_short_discovery(self, fake_home):
+    def test_unmapped_ajcrew_gets_short_discovery(self, fake_home):
         skills_root = fake_home / "skills"
         _make_skill(skills_root, "alpha")
         _make_skill(skills_root, "beta")
         _agents_dir(fake_home)
 
         ctx = self._builder(fake_home, skills_root).build_session_context(
-            agent="kirocrew", provider_type="claude_code"
+            agent="ajcrew", provider_type="claude_code"
         )
         # The default entry is the bounded usage-ranked index; an unmapped agent
         # gets it rather than a full catalog dump.

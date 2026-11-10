@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.validation import (
+from aj_crew.validation import (
     FieldSpec,
     ToolSchema,
     ValidationError,

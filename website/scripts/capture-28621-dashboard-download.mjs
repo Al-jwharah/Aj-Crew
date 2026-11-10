@@ -44,7 +44,7 @@ const PAGE = `
 <script>
   document.getElementById('bar').style.width = '64%';
   document.getElementById('drawn').textContent = 'Drawn by the page script: 64%';
-  parent.postMessage({type:'kirocrew-dashboard:ready'},'*');
+  parent.postMessage({type:'ajcrew-dashboard:ready'},'*');
 </script>`
 
 const browser = await chromium.launch()
@@ -62,11 +62,11 @@ async function open(theme) {
     const url = new URL(route.request().url())
     const path = url.pathname
     const json = (body, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) })
-    if (path === '/api/members') return json({ members: MEMBERS, default_agent: 'kirocrew' })
+    if (path === '/api/members') return json({ members: MEMBERS, default_agent: 'ajcrew' })
     if (path === '/api/crons') return json({ jobs: [] })
     if (path === '/api/webhooks') return json({ tokens: [] })
     if (path === '/api/teams') return json({ teams: [] })
-    if (path === '/api/agents') return json({ agents: [], default_agent: 'kirocrew' })
+    if (path === '/api/agents') return json({ agents: [], default_agent: 'ajcrew' })
     if (path === '/api/sandbox-doc' && route.request().method() === 'POST') {
       const { html } = JSON.parse(route.request().postData() || '{}')
       return json({ url: 'data:text/html;base64,' + Buffer.from(html).toString('base64') })

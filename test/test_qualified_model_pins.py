@@ -8,7 +8,7 @@ Load-time config accepts the same id (``normalize_agent_model`` /
 ``model_registry.to_provider_id`` pass it through), so the PATCH gate is the only
 place that can refuse it.
 
-These run the real ``PATCH /api/config/kirocrew`` handler against a temp
+These run the real ``PATCH /api/config/ajcrew`` handler against a temp
 ``config.json`` and pin, for each pin:
 
 * a provider-qualified id is stored as sent;
@@ -26,8 +26,8 @@ from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
 _BASE_CONFIG = {
-    "agents": {"kirocrew": {"kiro_agent": "kirocrew"}},
-    "default_agent": "kirocrew",
+    "agents": {"ajcrew": {"kiro_agent": "ajcrew"}},
+    "default_agent": "ajcrew",
 }
 
 # Every PATCH-editable model pin whose picker lists the advertised model names
@@ -57,11 +57,11 @@ _WAKE_JUDGE_PIN = "decisions.nudge_wake.llm_model"
 
 
 def _app() -> web.Application:
-    from kiro_crew.dashboard.handlers import api_kirocrew_config, api_kirocrew_config_patch
+    from aj_crew.dashboard.handlers import api_ajcrew_config, api_ajcrew_config_patch
 
     app = web.Application()
-    app.router.add_patch("/api/config/kirocrew", api_kirocrew_config_patch)
-    app.router.add_get("/api/config/kirocrew", api_kirocrew_config)
+    app.router.add_patch("/api/config/ajcrew", api_ajcrew_config_patch)
+    app.router.add_get("/api/config/ajcrew", api_ajcrew_config)
     return as_owner(app)
 
 
@@ -69,12 +69,12 @@ def _app() -> web.Application:
 def config_file(tmp_path, monkeypatch):
     path = tmp_path / "config.json"
     path.write_text(json.dumps(_BASE_CONFIG), encoding="utf-8")
-    monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: path)
+    monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: path)
     return path
 
 
 async def _patch(client, path, value):
-    return await client.patch("/api/config/kirocrew", json={"path": path, "value": value})
+    return await client.patch("/api/config/ajcrew", json={"path": path, "value": value})
 
 
 def _stored(config_file, dotted):
@@ -134,8 +134,8 @@ async def test_a_grammar_only_pin_refuses_a_malformed_id(config_file, pin, value
 def test_every_model_pin_shares_the_tier_grammar(pin):
     """One pattern for every validated model pin, so a picker cannot offer an id
     that one of its siblings refuses."""
-    from kiro_crew.config.sections import DECISION_MODEL_ROUTE_TIERS
-    from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+    from aj_crew.config.sections import DECISION_MODEL_ROUTE_TIERS
+    from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
     tier = _EDITABLE_CONFIG[f"decisions.model_route.{DECISION_MODEL_ROUTE_TIERS[0]}"]
     assert _EDITABLE_CONFIG[pin]["pattern"] == tier["pattern"]
@@ -151,7 +151,7 @@ async def test_the_extraction_pin_saves_what_its_picker_offers_on_any_harness(co
     advertise it."""
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+    from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
     assert "validate_fn" not in _EDITABLE_CONFIG[_EXTRACTION_PIN]
     assert _EDITABLE_CONFIG[_EXTRACTION_PIN]["max_len"] == 64
@@ -177,7 +177,7 @@ async def test_the_extraction_pin_saves_what_its_picker_offers_on_any_harness(co
 @pytest.mark.asyncio
 async def test_the_wake_judge_pin_refuses_an_id_its_gate_would_scrub(config_file):
     """Settings must not show a saved wake-judge pin the judge never runs on."""
-    from kiro_crew.decisions.types import is_model_id
+    from aj_crew.decisions.types import is_model_id
 
     model = "example-provider/example-model"
     assert not is_model_id(model)
@@ -190,7 +190,7 @@ async def test_the_wake_judge_pin_refuses_an_id_its_gate_would_scrub(config_file
 @pytest.mark.asyncio
 async def test_the_wake_judge_pin_still_saves_a_bare_id(config_file):
     """A bare id passes both the PATCH gate and the decision gate's model check."""
-    from kiro_crew.decisions.types import is_model_id
+    from aj_crew.decisions.types import is_model_id
 
     model = "example-model"
     assert is_model_id(model)

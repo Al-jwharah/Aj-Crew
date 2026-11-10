@@ -21,8 +21,8 @@ from git_maintenance_helpers import git_maintenance_off_entries
 from installer_test_helpers import run_bounded
 from skill_script_helpers import load_skill_script
 
-from kiro_crew import platform_compat
-from kiro_crew.testing.wait import wait_until
+from aj_crew import platform_compat
+from aj_crew.testing.wait import wait_until
 
 ROOT = Path(__file__).resolve().parents[1]
 HELPER = ROOT / "packaging" / "signing" / "cli-manifest.py"
@@ -31,7 +31,7 @@ CLI_WORKFLOW = ROOT / ".github" / "workflows" / "publish-cli.yml"
 PINNED_PUBLIC_KEY = ROOT / "packaging" / "signing" / "cli-manifest-public.pem"
 VERSION = "1.2.3"
 CHANNEL = "stable"
-WHEEL_NAME = f"kirocrew-{VERSION}-py3-none-any.whl"
+WHEEL_NAME = f"ajcrew-{VERSION}-py3-none-any.whl"
 CDN_BASE = "https://fixtures.invalid"
 
 
@@ -229,7 +229,7 @@ def test_helper_builds_a_canonical_independently_verifiable_manifest(
     manifest_path = _build_manifest(tmp_path, test_key, wheel)
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
-    assert manifest["schema"] == "kirocrew-cli-artifact-manifest-v1"
+    assert manifest["schema"] == "ajcrew-cli-artifact-manifest-v1"
     assert manifest["algorithm"] == "RSASSA_PKCS1_V1_5_SHA_256"
     assert manifest["key_id"] == test_key.key_id
     assert manifest["sha256"] == hashlib.sha256(wheel.read_bytes()).hexdigest()
@@ -592,7 +592,7 @@ def _run_installer(
         {
             "PATH": f"{tools}{os.pathsep}{env['PATH']}",
             "HOME": str(root / "home"),
-            "KIROCREW_HOME": str(root / "data-home"),
+            "AJCREW_HOME": str(root / "data-home"),
             "FAKE_CDN_ROOT": str(cdn),
             "FAKE_CURL_MARKER": str(curl_marker),
             "FAKE_INSTALL_MARKER": str(install_marker),
@@ -1143,8 +1143,8 @@ def test_publish_workflow_signing_step_runs_verbatim_against_the_helper(
     wheel = dist / WHEEL_NAME
     with zipfile.ZipFile(wheel, "w") as archive:
         archive.writestr(
-            f"kirocrew-{VERSION}.dist-info/METADATA",
-            f"Metadata-Version: 2.1\nName: kirocrew\nVersion: {VERSION}\nRequires-Python: >=3.12\n",
+            f"ajcrew-{VERSION}.dist-info/METADATA",
+            f"Metadata-Version: 2.1\nName: ajcrew\nVersion: {VERSION}\nRequires-Python: >=3.12\n",
         )
 
     # Drop the whole GIT_* namespace: an inherited GIT_DIR or GIT_CONFIG_* (git exports

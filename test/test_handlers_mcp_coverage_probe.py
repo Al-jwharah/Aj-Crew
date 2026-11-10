@@ -16,9 +16,9 @@ import pytest
 from handlers_mcp_coverage_helpers import sandbox_fixture  # noqa: F401
 from handlers_mcp_coverage_helpers import _payload, _read_global, _request, _State, _write_global
 
-from kiro_crew.dashboard.handlers import mcp as mcp_mod
-from kiro_crew.mcp_discovery import McpServerInfo
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.handlers import mcp as mcp_mod
+from aj_crew.mcp_discovery import McpServerInfo
+from aj_crew.testing.wait import await_until
 
 # ── /api/mcp/probe (POST live, GET cached) ──────────────────────────────
 
@@ -35,7 +35,7 @@ class TestProbe:
     async def test_live_probe_overlays_enabled_and_disabled_tools(
         self, sandbox: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         _write_global(
             sandbox,
@@ -65,7 +65,7 @@ class TestProbe:
     async def test_live_probe_tolerates_a_missing_global_config(
         self, sandbox: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         sandbox.global_json.unlink(missing_ok=True)
         monkeypatch.setattr(disc, "probe_all", AsyncMock(return_value=[_probed("on")]))
@@ -80,12 +80,12 @@ class TestProbe:
         """The probe response REPLACES the table's list on the client,
         so its rows must say what ``GET /api/mcp`` says. A store-disabled
         (consent) row and a row ``list_servers`` flagged disabled from another
-        scope both read disabled, and ``kirocrewManaged`` rides along so the
+        scope both read disabled, and ``ajcrewManaged`` rides along so the
         Edit action does not vanish between a probe and the next GET."""
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         _write_global(sandbox, {"on": {"command": "x"}})
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(
             json.dumps(
@@ -116,17 +116,17 @@ class TestProbe:
 
         rows = {r["name"]: r for r in _payload(await mcp_mod.api_mcp_probe(_request({})))}
         assert rows["on"]["enabled"] is True
-        assert rows["on"]["kirocrewManaged"] is True
+        assert rows["on"]["ajcrewManaged"] is True
         assert rows["on"]["disabledIn"] is None
         assert rows["consent"]["enabled"] is False
         assert rows["consent"]["status"] == "disabled"
-        assert rows["consent"]["kirocrewManaged"] is True
+        assert rows["consent"]["ajcrewManaged"] is True
         # The store's own flag: the consent step in the table lifts it.
-        assert rows["consent"]["disabledIn"] == "kirocrew"
+        assert rows["consent"]["disabledIn"] == "ajcrew"
         assert rows["consent"]["disabledInFile"] is None
         assert rows["shared-off"]["enabled"] is False
         assert rows["shared-off"]["status"] == "disabled"
-        assert rows["shared-off"]["kirocrewManaged"] is False
+        assert rows["shared-off"]["ajcrewManaged"] is False
         # Only the aggregate flag says so: inert here, and no file to name.
         assert rows["shared-off"]["disabledIn"] == "shared"
         assert rows["shared-off"]["disabledInFile"] is None
@@ -138,10 +138,10 @@ class TestProbe:
         """A hand-edited store whose ``mcpServers`` is a list must not turn the
         probe response into a 500 after the fan-out already ran: it reads as an
         empty map, so the row keeps the state the other sources give it."""
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         _write_global(sandbox, {"on": {"command": "x"}})
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(json.dumps({"mcpServers": []}), encoding="utf-8")
         monkeypatch.setattr(disc, "probe_all", AsyncMock(return_value=[_probed("on")]))
@@ -151,13 +151,13 @@ class TestProbe:
         assert resp.status == 200
         row = _payload(resp)[0]
         assert row["enabled"] is True
-        assert row["kirocrewManaged"] is False
+        assert row["ajcrewManaged"] is False
 
     def test_stamp_config_state_tolerates_non_mapping_inputs(self) -> None:
         d: dict[str, Any] = {"name": "srv", "status": "ok"}
         mcp_mod._stamp_config_state(d, [], "not a map")
         assert d["enabled"] is True
-        assert d["kirocrewManaged"] is False
+        assert d["ajcrewManaged"] is False
         assert d["status"] == "ok"
         assert d["disabledIn"] is None
         assert d["disabledInFile"] is None
@@ -167,7 +167,7 @@ class TestProbe:
     ) -> None:
         """``disabledIn`` is the backend's own answer to "which config switched
         this off", so the table never infers it from ``enabled`` +
-        ``kirocrewManaged``. The shared Kiro-global flag names its file; the
+        ``ajcrewManaged``. The shared Kiro-global flag names its file; the
         store's flag is the consent state the table can lift itself."""
         shared: dict[str, Any] = {"name": "figma", "status": "ok"}
         mcp_mod._stamp_config_state(shared, {"figma": {"command": "x", "disabled": True}}, {})
@@ -180,8 +180,8 @@ class TestProbe:
         consent: dict[str, Any] = {"name": "weather", "status": "ok"}
         mcp_mod._stamp_config_state(consent, {}, {"weather": {"command": "y", "disabled": True}})
         assert consent["enabled"] is False
-        assert consent["kirocrewManaged"] is True
-        assert consent["disabledIn"] == "kirocrew"
+        assert consent["ajcrewManaged"] is True
+        assert consent["disabledIn"] == "ajcrew"
         assert consent["disabledInFile"] is None
 
     def test_stamp_config_state_dual_scope_disable_reads_shared(
@@ -197,7 +197,7 @@ class TestProbe:
             {"figma": {"command": "x", "disabled": True}},
             {"figma": {"command": "x"}},
         )
-        assert managed_shared_off["kirocrewManaged"] is True
+        assert managed_shared_off["ajcrewManaged"] is True
         assert managed_shared_off["enabled"] is False
         assert managed_shared_off["disabledIn"] == "shared"
         assert managed_shared_off["disabledInFile"] == mcp_mod._KIRO_GLOBAL_SURFACE
@@ -217,7 +217,7 @@ class TestProbe:
         reads) and in the store is inert, not a consent row: ``list_servers``
         records the provider-global mute on the row (``disabledInShared``), and
         that verdict outranks the store flag the two maps in hand explain. Red
-        under ``store_off and not shared_off -> "kirocrew"``, which offered a
+        under ``store_off and not shared_off -> "ajcrew"``, which offered a
         consent step that lifted the store flag and left the provider-global one
         standing. The row's marker is consumed, not forwarded."""
         row: dict[str, Any] = {
@@ -227,7 +227,7 @@ class TestProbe:
             "disabledInShared": True,
         }
         mcp_mod._stamp_config_state(row, {}, {"figma": {"command": "x", "disabled": True}})
-        assert row["kirocrewManaged"] is True
+        assert row["ajcrewManaged"] is True
         assert row["enabled"] is False
         assert row["disabledIn"] == "shared"
         # Not the Kiro-global file: the helper cannot name a provider global.
@@ -237,7 +237,7 @@ class TestProbe:
         # The same store flag WITHOUT the row's verdict is the consent row.
         consent: dict[str, Any] = {"name": "figma", "status": "ok", "disabled": True}
         mcp_mod._stamp_config_state(consent, {}, {"figma": {"command": "x", "disabled": True}})
-        assert consent["disabledIn"] == "kirocrew"
+        assert consent["disabledIn"] == "ajcrew"
 
     def test_stamp_config_state_resolves_a_slash_named_entry_by_its_alias(
         self, sandbox: SimpleNamespace
@@ -254,7 +254,7 @@ class TestProbe:
             {"npm:@playwright/mcp": {"command": "npx", "disabled": True}},
             {"npm:@playwright/mcp": {"command": "npx"}},
         )
-        assert row["kirocrewManaged"] is True
+        assert row["ajcrewManaged"] is True
         assert row["enabled"] is False
         assert row["disabledIn"] == "shared"
         assert row["disabledInFile"] == mcp_mod._KIRO_GLOBAL_SURFACE
@@ -318,8 +318,8 @@ class TestProbe:
         assert shared["disabledIn"] == "shared"
         assert shared["disabledInFile"] == "~/.kiro/settings/mcp.json"
         assert shared["disabledReason"] == "invalid"
-        assert shared["kirocrewManaged"] is True
-        assert consent["disabledIn"] == "kirocrew"
+        assert shared["ajcrewManaged"] is True
+        assert consent["disabledIn"] == "ajcrew"
         assert consent["disabledInFile"] is None
 
     def test_config_key_for_resolves_to_one_key_or_refuses(self) -> None:
@@ -368,8 +368,8 @@ class TestProbe:
             store: dict[str, Any] = {"name": "srv", "status": "ok"}
             mcp_mod._stamp_config_state(store, {}, {"srv": {"command": "x", "disabled": value}})
             assert store["enabled"] is False, value
-            assert store["kirocrewManaged"] is True, value
-            assert store["disabledIn"] == "kirocrew", value
+            assert store["ajcrewManaged"] is True, value
+            assert store["disabledIn"] == "ajcrew", value
             assert store["disabledReason"] == "invalid", value
         # A real switch: off, and no reason to add. An enabled row carries the
         # key too, as ``None``, so a client never reads absence as a reason.
@@ -409,28 +409,28 @@ class TestProbe:
         put as a "noop" and the row could never be switched on from here. The
         disable direction still writes the boolean over an odd value (a repair),
         and a spec edit keeps a muted entry muted, as the boolean."""
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(
             json.dumps({"mcpServers": {"srv": {"command": "x", "disabled": "false"}}}),
             encoding="utf-8",
         )
-        assert mcp_mod._set_kirocrew_entry("srv", enabled=True) == "enabled"
+        assert mcp_mod._set_ajcrew_entry("srv", enabled=True) == "enabled"
         assert "disabled" not in json.loads(store.read_text())["mcpServers"]["srv"]
         # Disable over an odd value: written as the boolean, not a no-op.
         store.write_text(
             json.dumps({"mcpServers": {"srv": {"command": "x", "disabled": "yes"}}}),
             encoding="utf-8",
         )
-        assert mcp_mod._set_kirocrew_entry("srv", enabled=False) == "disabled"
+        assert mcp_mod._set_ajcrew_entry("srv", enabled=False) == "disabled"
         assert json.loads(store.read_text())["mcpServers"]["srv"]["disabled"] is True
-        assert mcp_mod._set_kirocrew_entry("srv", enabled=False) == "noop"
+        assert mcp_mod._set_ajcrew_entry("srv", enabled=False) == "noop"
         # A spec edit is not consent: the mute survives, as the boolean.
         store.write_text(
             json.dumps({"mcpServers": {"srv": {"command": "x", "disabled": "false"}}}),
             encoding="utf-8",
         )
-        assert mcp_mod._replace_kirocrew_spec("srv", {"command": "y", "disabled": "false"})
+        assert mcp_mod._replace_ajcrew_spec("srv", {"command": "y", "disabled": "false"})
         assert json.loads(store.read_text())["mcpServers"]["srv"] == {
             "command": "y",
             "disabled": True,
@@ -447,14 +447,14 @@ class TestProbe:
     def test_edit_reaches_a_raw_keyed_store_entry_through_its_canonical_row(
         self, sandbox: SimpleNamespace
     ) -> None:
-        """The table stamps ``kirocrewManaged`` from the store entry the row's
+        """The table stamps ``ajcrewManaged`` from the store entry the row's
         canonical name resolves to (``npm:@playwright/mcp`` for ``playwright-mcp``)
         and advertises Edit on it; the editor's GET and PUT must resolve the same
         way, or the action it offers answers 404. The PUT replaces the entry under
         its OWN raw key -- one entry, not a canonical twin beside it -- and keeps
         a mute as the boolean. An ambiguous name reads as absent, as the row's
         stamping does. Red under the exact-key reads: ``None`` / ``False``."""
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(
             json.dumps(
@@ -462,11 +462,11 @@ class TestProbe:
             ),
             encoding="utf-8",
         )
-        assert mcp_mod._get_kirocrew_entry("playwright-mcp") == {
+        assert mcp_mod._get_ajcrew_entry("playwright-mcp") == {
             "command": "npx",
             "disabled": "false",
         }
-        assert mcp_mod._replace_kirocrew_spec("playwright-mcp", {"command": "npx", "args": ["-y"]})
+        assert mcp_mod._replace_ajcrew_spec("playwright-mcp", {"command": "npx", "args": ["-y"]})
         assert json.loads(store.read_text())["mcpServers"] == {
             "npm:@playwright/mcp": {"command": "npx", "args": ["-y"], "disabled": True}
         }
@@ -482,38 +482,38 @@ class TestProbe:
             ),
             encoding="utf-8",
         )
-        assert mcp_mod._get_kirocrew_entry("team-foo") is None
-        assert mcp_mod._replace_kirocrew_spec("team-foo", {"command": "c"}) is False
+        assert mcp_mod._get_ajcrew_entry("team-foo") is None
+        assert mcp_mod._replace_ajcrew_spec("team-foo", {"command": "c"}) is False
         assert set(json.loads(store.read_text())["mcpServers"]) == {
             "npm:@team/foo",
             "other:team/foo",
         }
 
     def test_consent_lifts_a_raw_keyed_store_entry_in_place(self, sandbox: SimpleNamespace) -> None:
-        """The table offers the consent step (Kiro Crew badge + Apply) on a
-        ``disabledIn: "kirocrew"`` row stamped from a raw-keyed store entry; the
+        """The table offers the consent step (Aj Crew badge + Apply) on a
+        ``disabledIn: "ajcrew"`` row stamped from a raw-keyed store entry; the
         writer must reach that same entry. Red under ``servers.get(name)``:
         without a spec it answered ``noop`` (row stuck Disabled), and with the
         preserved spec the apply passes it wrote a canonical twin beside the muted
         raw entry -- the row stayed Disabled and its provenance read ``shared``."""
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         muted = {"mcpServers": {"npm:@playwright/mcp": {"command": "npx", "disabled": True}}}
         store.write_text(json.dumps(muted), encoding="utf-8")
         assert mcp_mod._scope_has_entry("playwright-mcp", store) is True
-        assert mcp_mod._set_kirocrew_entry("playwright-mcp", enabled=True) == "enabled"
+        assert mcp_mod._set_ajcrew_entry("playwright-mcp", enabled=True) == "enabled"
         assert json.loads(store.read_text())["mcpServers"] == {
             "npm:@playwright/mcp": {"command": "npx"}
         }
         # With the preserved spec the apply passes: still the one entry, lifted.
         store.write_text(json.dumps(muted), encoding="utf-8")
         assert (
-            mcp_mod._set_kirocrew_entry("playwright-mcp", enabled=True, spec={"command": "npx"})
+            mcp_mod._set_ajcrew_entry("playwright-mcp", enabled=True, spec={"command": "npx"})
             == "enabled"
         )
         assert set(json.loads(store.read_text())["mcpServers"]) == {"npm:@playwright/mcp"}
         # Disable lands on the same entry, and an ambiguous name writes nothing.
-        assert mcp_mod._set_kirocrew_entry("playwright-mcp", enabled=False) == "disabled"
+        assert mcp_mod._set_ajcrew_entry("playwright-mcp", enabled=False) == "disabled"
         assert (
             json.loads(store.read_text())["mcpServers"]["npm:@playwright/mcp"]["disabled"] is True
         )
@@ -530,7 +530,7 @@ class TestProbe:
         )
         before = store.read_bytes()
         assert (
-            mcp_mod._set_kirocrew_entry("team-foo", enabled=True, spec={"command": "c"})
+            mcp_mod._set_ajcrew_entry("team-foo", enabled=True, spec={"command": "c"})
             == "ambiguous"
         )
         assert mcp_mod._scope_has_entry("team-foo", store) is False
@@ -544,9 +544,9 @@ class TestProbe:
         goes, in every scope and in the rendered agent file. Red under
         ``name not in servers``: both scopes answered ``noop`` and the
         definitions stayed while the table reported the row removed."""
-        import kiro_crew.dashboard.handlers.mcp as handler
+        import aj_crew.dashboard.handlers.mcp as handler
 
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(
             json.dumps({"mcpServers": {"npm:@playwright/mcp": {"command": "npx"}}}),
@@ -561,19 +561,19 @@ class TestProbe:
         )
         agents_dir = tmp_path / "agents"
         agents_dir.mkdir()
-        rendered = agents_dir / "kirocrew.json"
+        rendered = agents_dir / "ajcrew.json"
         rendered.write_text(
             json.dumps({"mcpServers": {"playwright-mcp": {"command": "npx"}}}), encoding="utf-8"
         )
         monkeypatch.setattr(handler, "kiro_agents_dir", lambda: agents_dir)
         actions = mcp_mod._purge_server_config("playwright-mcp")
-        assert actions == {"kirocrew": "removed", "kiroGlobal": "removed"}
+        assert actions == {"ajcrew": "removed", "kiroGlobal": "removed"}
         assert json.loads(store.read_text())["mcpServers"] == {}
         assert _read_global(sandbox) == {"other": {"command": "y"}}
         assert json.loads(rendered.read_text())["mcpServers"] == {}
         # Idempotent: a second purge finds nothing.
         assert mcp_mod._purge_server_config("playwright-mcp") == {
-            "kirocrew": "noop",
+            "ajcrew": "noop",
             "kiroGlobal": "noop",
         }
 
@@ -585,10 +585,10 @@ class TestProbe:
         ``team/foo`` byte for byte; the row the survivor then stands for is
         uninstalled by its own, second, Uninstall. Red under the collision set
         ``_config_keys_for`` returned: one Uninstall deleted both configurations."""
-        import kiro_crew.dashboard.handlers.mcp as handler
+        import aj_crew.dashboard.handlers.mcp as handler
 
         survivor = {"command": "uvx", "args": ["team-foo-server", "--port", "9"], "env": {"A": "1"}}
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(json.dumps({"mcpServers": {"team-foo": {"command": "npx"}}}))
         _write_global(
@@ -598,11 +598,11 @@ class TestProbe:
         survivor_bytes = json.dumps(_read_global(sandbox)["team/foo"], sort_keys=True)
         agents_dir = tmp_path / "agents"
         agents_dir.mkdir()
-        (agents_dir / "kirocrew.json").write_text(json.dumps({"mcpServers": {}}), encoding="utf-8")
+        (agents_dir / "ajcrew.json").write_text(json.dumps({"mcpServers": {}}), encoding="utf-8")
         monkeypatch.setattr(handler, "kiro_agents_dir", lambda: agents_dir)
 
         actions = mcp_mod._purge_server_config("team-foo")
-        assert actions == {"kirocrew": "removed", "kiroGlobal": "removed"}
+        assert actions == {"ajcrew": "removed", "kiroGlobal": "removed"}
         assert json.loads(store.read_text())["mcpServers"] == {}
         remaining = _read_global(sandbox)
         assert set(remaining) == {"team/foo"}
@@ -618,7 +618,7 @@ class TestProbe:
         nothing says which the row is, so the scope reports ``ambiguous`` and the
         file is untouched byte for byte -- a guess either way edits or deletes a
         server the user did not name."""
-        import kiro_crew.dashboard.handlers.mcp as handler
+        import aj_crew.dashboard.handlers.mcp as handler
 
         _write_global(
             sandbox,
@@ -629,7 +629,7 @@ class TestProbe:
         agents_dir.mkdir()
         monkeypatch.setattr(handler, "kiro_agents_dir", lambda: agents_dir)
         actions = mcp_mod._purge_server_config("team-foo")
-        assert actions == {"kirocrew": "noop", "kiroGlobal": "ambiguous"}
+        assert actions == {"ajcrew": "noop", "kiroGlobal": "ambiguous"}
         assert sandbox.global_json.read_bytes() == before
         assert (
             mcp_mod._set_scope_entry(sandbox.global_json, "team-foo", enabled=True) == "ambiguous"
@@ -645,15 +645,15 @@ class TestProbe:
         other read of a store is the read-only preflight, which runs BEFORE the
         lock and decides nothing about presence. With reads and writes adjacent
         under one lock, nothing a dashboard writer does can land between them."""
-        import kiro_crew.dashboard.handlers.mcp as handler
+        import aj_crew.dashboard.handlers.mcp as handler
 
-        store = mcp_mod._kirocrew_mcp_json()
+        store = mcp_mod._ajcrew_mcp_json()
         store.parent.mkdir(parents=True, exist_ok=True)
         store.write_text(json.dumps({"mcpServers": {"npm:@team/foo": {"command": "s"}}}))
         _write_global(sandbox, {"npm:@team/foo": {"command": "a"}, "other": {"command": "o"}})
         agents_dir = tmp_path / "agents"
         agents_dir.mkdir()
-        rendered = agents_dir / "kirocrew.json"
+        rendered = agents_dir / "ajcrew.json"
         rendered.write_text(json.dumps({"mcpServers": {"team-foo": {"command": "s"}}}))
         monkeypatch.setattr(handler, "kiro_agents_dir", lambda: agents_dir)
 
@@ -722,7 +722,7 @@ class TestProbe:
         read resolves the alias and removes it. Red under the pinned design: the
         pinned key ``team-foo`` is absent from the file, so the store answers
         ``noop`` and the server the user uninstalled stays configured."""
-        import kiro_crew.dashboard.handlers.mcp as handler
+        import aj_crew.dashboard.handlers.mcp as handler
 
         _write_global(sandbox, {"team-foo": {"command": "a"}})
         agents_dir = tmp_path / "agents"
@@ -745,7 +745,7 @@ class TestProbe:
         stood for -- the preflight's key, the one tie the read cannot break alone
         -- is the one removed. A read that stays ambiguous with no usable
         tiebreaker writes nothing to that store."""
-        import kiro_crew.dashboard.handlers.mcp as handler
+        import aj_crew.dashboard.handlers.mcp as handler
 
         _write_global(sandbox, {"npm:@team/foo": {"command": "a"}})
         agents_dir = tmp_path / "agents"
@@ -931,8 +931,8 @@ class TestMeasureProgressPayload:
         ``AttributeError`` with nothing measured. The healthy row is measured and
         the readout closes clean; the disabled row is never spawned.
         """
-        import kiro_crew.mcp_discovery as disc
-        import kiro_crew.mcp_gateway.evaluate as ev
+        import aj_crew.mcp_discovery as disc
+        import aj_crew.mcp_gateway.evaluate as ev
 
         runtime = tmp_path / "runtime"
         runtime.mkdir()

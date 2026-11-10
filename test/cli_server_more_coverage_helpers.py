@@ -8,11 +8,11 @@ result usable as a context manager. ``test_cli_server_more_coverage.py`` and its
 
 import pytest
 
-from kiro_crew import cli_server
+from aj_crew import cli_server
 
 
 class _SelRecorder:
-    """Stand-in for :func:`kiro_crew.sel.sel` that records audit calls."""
+    """Stand-in for :func:`aj_crew.sel.sel` that records audit calls."""
 
     def __init__(self) -> None:
         self.calls: list[dict] = []

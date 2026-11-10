@@ -21,13 +21,13 @@ import asyncio
 from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from kiro_crew.cron import CronJob, CronSchedule
-from kiro_crew.slack.gateway import _GateTally, _result_hash
+from aj_crew.cron import CronJob, CronSchedule
+from aj_crew.slack.gateway import _GateTally, _result_hash
 
 GateScript = list[tuple[str, bool, bool]]
 
 READ = ("Read README.md", True, False)
-SEND = ("Running: @kirocrew-core/send_message", True, False)
+SEND = ("Running: @ajcrew-core/send_message", True, False)
 BLOCKED = ("echo hi", False, True)
 
 # The display strings, on bytes: the dedup key is derived from them and must
@@ -98,7 +98,7 @@ def test_the_dedup_twin_differs_from_the_display_only_in_the_count_slot() -> Non
 
 
 def test_dedup_text_swaps_the_placeholder_and_keeps_the_annotations() -> None:
-    from kiro_crew.slack.gateway import _dedup_text
+    from aj_crew.slack.gateway import _dedup_text
 
     tally = _tally(READ, READ)
     prefix = "⚠️ Model 'x' unavailable; ran with default.\n\n"
@@ -118,7 +118,7 @@ def test_dedup_text_is_the_delivered_text_when_the_model_wrote_prose() -> None:
     The tally is built so its own placeholder IS the prose in the last case:
     the flag, not a text match, decides whether the swap happens.
     """
-    from kiro_crew.slack.gateway import _dedup_text
+    from aj_crew.slack.gateway import _dedup_text
 
     tally = _tally(READ, READ)
     assert tally.empty_reply_placeholder() == WORK_TWO
@@ -137,7 +137,7 @@ def _make_gateway():
     Mirrors ``test_cron_dedup._make_gateway``; add an attribute here if the
     orchestrator grows one the cron path reads.
     """
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     gw = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gw.sessions = MagicMock()
@@ -188,8 +188,8 @@ def _run(gw, job: CronJob, gate: GateScript, reply: str = "") -> None:
 
     captured_cb = None
     with (
-        patch("kiro_crew.slack.gateway.stream_and_collect", fake_stream),
-        patch("kiro_crew.slack.gateway.CronService") as mock_cron_cls,
+        patch("aj_crew.slack.gateway.stream_and_collect", fake_stream),
+        patch("aj_crew.slack.gateway.CronService") as mock_cron_cls,
     ):
 
         def capture_cron(on_job=None, **kw):

@@ -20,9 +20,9 @@ from session_control_helpers import (  # noqa: F401 -- the autouse fixtures regi
     _slot,
 )
 
-from kiro_crew.config import loader
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.testing.wait import await_until
+from aj_crew.config import loader
+from aj_crew.dashboard import session_control as sc
+from aj_crew.testing.wait import await_until
 
 
 def test_create_refuses_the_caller_classes_authorize_target_refuses(tmp_path):
@@ -87,15 +87,15 @@ def test_created_session_inherits_the_callers_workspace(tmp_path, monkeypatch):
 @pytest.fixture
 def private_dispatch(tmp_path, monkeypatch):
 
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-    from kiro_crew.memory_stores import provision_member_memory
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+    from aj_crew.memory_stores import provision_member_memory
 
-    cfg = KiroCrewConfig.load()
-    cfg.agents["writer"] = KiroCrewAgentConfig(kiro_agent="kirocrew", triggers="write")
+    cfg = AjCrewConfig.load()
+    cfg.agents["writer"] = AjCrewAgentConfig(kiro_agent="ajcrew", triggers="write")
     store = provision_member_memory(cfg, "writer")
     cfg.save()
     state = _make_state(tmp_path)
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     state.conversation_log = ConversationLog()
     caller = _slot(state, "chat-conductor")
@@ -120,7 +120,7 @@ def test_create_refuses_unreadable_delegation_identity(private_dispatch, monkeyp
 
 @pytest.mark.parametrize("explicit", [False, True])
 def test_private_creator_keeps_its_memory(private_dispatch, explicit):
-    from kiro_crew.member_memory_auth import bind_private_session_store, read_private_session_store
+    from aj_crew.member_memory_auth import bind_private_session_store, read_private_session_store
 
     state, caller, store = private_dispatch
     caller.agent = "writer"
@@ -177,9 +177,9 @@ def test_create_rechecks_caller_identity_after_delegation(
 
 @pytest.mark.parametrize("restored", [False, True])
 def test_created_private_worker_can_start_after_birth_history(private_dispatch, tmp_path, restored):
-    from kiro_crew.dashboard.chat_runner import _require_session_memory_assignment
-    from kiro_crew.history import ConversationLog
-    from kiro_crew.member_memory_auth import read_private_session_store
+    from aj_crew.dashboard.chat_runner import _require_session_memory_assignment
+    from aj_crew.history import ConversationLog
+    from aj_crew.member_memory_auth import read_private_session_store
 
     state, caller, store = private_dispatch
     created = asyncio.run(sc.create_session(state, caller_session_key=_key(caller), agent="writer"))
@@ -197,7 +197,7 @@ def test_created_private_worker_can_start_after_birth_history(private_dispatch, 
 
 
 def test_private_worker_assignment_precedes_birth_history(private_dispatch, monkeypatch):
-    from kiro_crew.member_memory_auth import read_private_session_store
+    from aj_crew.member_memory_auth import read_private_session_store
 
     state, caller, store = private_dispatch
     log = state.conversation_log
@@ -219,10 +219,10 @@ def test_private_worker_assignment_precedes_birth_history(private_dispatch, monk
 @pytest.mark.parametrize("explicit", [False, True])
 def test_created_template_keeps_namespace_after_member_discovery(tmp_path, monkeypatch, explicit):
 
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, resolve_agent_bindings
-    from kiro_crew.member_memory_auth import read_private_session_store
-    from kiro_crew.memory_stores import provision_member_memory
-    from kiro_crew.session_agent_selection import resolve_session_agent_bindings
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, resolve_agent_bindings
+    from aj_crew.member_memory_auth import read_private_session_store
+    from aj_crew.memory_stores import provision_member_memory
+    from aj_crew.session_agent_selection import resolve_session_agent_bindings
 
     template = "dispatched-template"
     monkeypatch.setattr(
@@ -230,7 +230,7 @@ def test_created_template_keeps_namespace_after_member_discovery(tmp_path, monke
         "_materialized_kiro_agent",
         lambda name, project_dir=None: template if name == template else "",
     )
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert template not in cfg.agents
     cfg.save()
     state = _make_state(tmp_path)
@@ -248,11 +248,11 @@ def test_created_template_keeps_namespace_after_member_discovery(tmp_path, monke
 
     # Discovery imports the same template as a private roster member before
     # this empty conversation's first turn. The earlier choice must survive.
-    cfg = KiroCrewConfig.load()
-    cfg.agents[template] = KiroCrewAgentConfig(kiro_agent=template)
+    cfg = AjCrewConfig.load()
+    cfg.agents[template] = AjCrewAgentConfig(kiro_agent=template)
     member_store = provision_member_memory(cfg, template)
     cfg.save()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert resolve_agent_bindings(cfg, template, child.project).memory_store_name == member_store
     chosen = resolve_session_agent_bindings(
         resolve_agent_bindings, cfg, key, template, child.project
@@ -267,16 +267,16 @@ def test_created_template_keeps_namespace_after_member_discovery(tmp_path, monke
 def test_failed_private_birth_retains_its_permanent_assignment(
     private_dispatch, monkeypatch, preexisting, started_turn
 ):
-    from kiro_crew.dashboard.chat_runner import _require_session_memory_assignment
-    from kiro_crew.member_memory_auth import bind_private_session_store, read_private_session_store
-    from kiro_crew.memory_stores import UnknownMemoryStore
-    from kiro_crew.session_agent_selection import session_agent_selection_kind
+    from aj_crew.dashboard.chat_runner import _require_session_memory_assignment
+    from aj_crew.member_memory_auth import bind_private_session_store, read_private_session_store
+    from aj_crew.memory_stores import UnknownMemoryStore
+    from aj_crew.session_agent_selection import session_agent_selection_kind
 
     state, caller, store = private_dispatch
     before = set(state._slots)
     child_name = "chat-failed-private-birth"
     key = f"dashboard:{child_name}"
-    monkeypatch.setattr("kiro_crew.dashboard.state._mint_slot_key", lambda *args: child_name)
+    monkeypatch.setattr("aj_crew.dashboard.state._mint_slot_key", lambda *args: child_name)
     if preexisting:
         bind_private_session_store(key, store)
 
@@ -304,8 +304,8 @@ def test_failed_private_birth_retains_its_permanent_assignment(
 
 
 def test_cancelled_private_birth_drains_before_returning(private_dispatch, monkeypatch):
-    from kiro_crew.member_memory_auth import read_private_session_store
-    from kiro_crew.session_agent_selection import session_agent_selection_kind
+    from aj_crew.member_memory_auth import read_private_session_store
+    from aj_crew.session_agent_selection import session_agent_selection_kind
 
     state, caller, store = private_dispatch
     entered = threading.Event()
@@ -360,14 +360,14 @@ def test_cancelled_private_birth_drains_before_returning(private_dispatch, monke
 def test_private_worker_creation_cannot_adopt_an_old_session(
     private_dispatch, monkeypatch, prior_context
 ):
-    from kiro_crew.member_memory_auth import read_private_session_store
-    from kiro_crew.memory_stores import UnknownMemoryStore
+    from aj_crew.member_memory_auth import read_private_session_store
+    from aj_crew.memory_stores import UnknownMemoryStore
 
     state, caller, _store = private_dispatch
     before = set(state._slots)
     child_name = "chat-private-worker-collision"
     key = f"dashboard:{child_name}"
-    monkeypatch.setattr("kiro_crew.dashboard.state._mint_slot_key", lambda *args: child_name)
+    monkeypatch.setattr("aj_crew.dashboard.state._mint_slot_key", lambda *args: child_name)
     if prior_context == "history":
         state.conversation_log.append(key, "user", "Existing conversation", agent="default")
     else:

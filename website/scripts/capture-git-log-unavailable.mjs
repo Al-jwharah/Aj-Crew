@@ -34,7 +34,7 @@ const slots = [{
   running: false,
   last_message: 'A failed history read no longer reads as an empty history.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

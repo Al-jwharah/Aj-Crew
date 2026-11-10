@@ -18,8 +18,8 @@ from typing import Any
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import guide as guide_routes
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.handlers import guide as guide_routes
+from aj_crew.dashboard.state import _ChatSlot
 
 CREWMATE = [{"id": "crewmate.create", "params": {"name": "Scout"}}]
 

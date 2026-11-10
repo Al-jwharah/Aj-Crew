@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Populate a throwaway KIROCREW_HOME for the GUI user-test target.
+"""Populate a throwaway AJCREW_HOME for the GUI user-test target.
 
-Copies a named fixture (``kiro_crew.seed``, the same code path as
-``kirocrew gateway --seed``) and then patches ``config.json`` so the dashboard
+Copies a named fixture (``aj_crew.seed``, the same code path as
+``ajcrew gateway --seed``) and then patches ``config.json`` so the dashboard
 renders as a fully onboarded install with a crew roster:
 
 * ``dashboard.onboarded`` / ``import_onboarded`` -> true (no setup wizard);
@@ -23,7 +23,7 @@ renders as a fully onboarded install with a crew roster:
   runs on), and only this one session gets it so the other seeded chats keep
   reading as project-less conversations.
 
-Run with ``KIROCREW_HOME`` pointing at an EMPTY scratch directory. The seed
+Run with ``AJCREW_HOME`` pointing at an EMPTY scratch directory. The seed
 module refuses the real data home, so this cannot touch an operator's install.
 """
 
@@ -54,22 +54,22 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument(
         "--print-fake-backend",
         action="store_true",
-        help="print the path of the packaged fake ACP backend (for KIROCREW_KIRO_BIN) and exit",
+        help="print the path of the packaged fake ACP backend (for AJCREW_KIRO_BIN) and exit",
     )
     args = p.parse_args(argv)
 
     if args.print_fake_backend:
-        from kiro_crew.testing import fake_acp_backend
+        from aj_crew.testing import fake_acp_backend
 
         print(fake_acp_backend.__file__)
         return 0
 
-    home = os.environ.get("KIROCREW_HOME")
+    home = os.environ.get("AJCREW_HOME")
     if not home:
-        print("KIROCREW_HOME must point at the scratch home to seed", file=sys.stderr)
+        print("AJCREW_HOME must point at the scratch home to seed", file=sys.stderr)
         return 2
 
-    from kiro_crew.seed import SeedError, seed
+    from aj_crew.seed import SeedError, seed
 
     try:
         seed(args.fixture)
@@ -84,7 +84,7 @@ def main(argv: list[str] | None = None) -> int:
     dashboard["crewmates_onboarded"] = True
     cfg["import_onboarded"] = True
     agents = cfg.setdefault("agents", {})
-    default_kiro_agent = cfg.get("agent", {}).get("default_agent", "kirocrew")
+    default_kiro_agent = cfg.get("agent", {}).get("default_agent", "ajcrew")
     agents.setdefault(
         "default",
         {

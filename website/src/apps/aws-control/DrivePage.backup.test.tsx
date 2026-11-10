@@ -433,7 +433,7 @@ describe('DrivePage sections: backup, access, CLI drawer', () => {
     // scoped to the artifacts/ prefix of the account's bucket.
     fireEvent.click(await screen.findByTestId('cli-drawer-toggle'))
     const body = await screen.findByTestId('cli-drawer-body')
-    expect(body).toHaveTextContent('aws s3 ls s3://kirocrew-drive-abc123/artifacts/')
+    expect(body).toHaveTextContent('aws s3 ls s3://ajcrew-drive-abc123/artifacts/')
   })
 })
 

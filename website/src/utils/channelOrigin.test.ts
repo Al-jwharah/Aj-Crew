@@ -6,7 +6,7 @@ describe.each([
   ['feishu', 'Feishu'],
 ])('%s channel origin', (namespace, brand) => {
   it.each([':', '_'])('recognizes keys using %s and preserves the brand spelling', (separator) => {
-    const key = [namespace, 'kirocrew', 'direct', 'U1'].join(separator)
+    const key = [namespace, 'ajcrew', 'direct', 'U1'].join(separator)
     expect(slotChannelNamespace(key)).toBe(namespace)
     expect(slotChannelLabel(key)).toBe(brand)
   })
@@ -39,21 +39,21 @@ describe.each([
 describe('slotChannelLabel', () => {
   it('labels every channel namespace', () => {
     expect(slotChannelLabel('slack:1785370133.085469')).toBe('Slack')
-    expect(slotChannelLabel('discord:kirocrew:direct:U1')).toBe('Discord')
-    expect(slotChannelLabel('telegram:kirocrew:direct:U1')).toBe('Telegram')
-    expect(slotChannelLabel('whatsapp:kirocrew:direct:U1')).toBe('WhatsApp')
-    expect(slotChannelLabel('webex:kirocrew:direct:U1')).toBe('Webex')
-    expect(slotChannelLabel('wecom:kirocrew:direct:U1')).toBe('WeCom')
-    expect(slotChannelLabel('teams:kirocrew:direct:U1')).toBe('Teams')
-    expect(slotChannelLabel('weixin:kirocrew:direct:U1')).toBe('Weixin')
-    expect(slotChannelLabel('unified:kirocrew')).toBe('Direct message')
+    expect(slotChannelLabel('discord:ajcrew:direct:U1')).toBe('Discord')
+    expect(slotChannelLabel('telegram:ajcrew:direct:U1')).toBe('Telegram')
+    expect(slotChannelLabel('whatsapp:ajcrew:direct:U1')).toBe('WhatsApp')
+    expect(slotChannelLabel('webex:ajcrew:direct:U1')).toBe('Webex')
+    expect(slotChannelLabel('wecom:ajcrew:direct:U1')).toBe('WeCom')
+    expect(slotChannelLabel('teams:ajcrew:direct:U1')).toBe('Teams')
+    expect(slotChannelLabel('weixin:ajcrew:direct:U1')).toBe('Weixin')
+    expect(slotChannelLabel('unified:ajcrew')).toBe('Direct message')
   })
 
   it('labels the persisted filename-stem form too', () => {
     // list_sessions() reports the stem, where history._safe_key folded ':' -> '_'.
     expect(slotChannelLabel('slack_1785370133.085469')).toBe('Slack')
-    expect(slotChannelLabel('discord_kirocrew_direct_U1')).toBe('Discord')
-    expect(slotChannelLabel('unified_kirocrew')).toBe('Direct message')
+    expect(slotChannelLabel('discord_ajcrew_direct_U1')).toBe('Discord')
+    expect(slotChannelLabel('unified_ajcrew')).toBe('Direct message')
   })
 
   it('returns empty for non-channel producers so no glyph renders', () => {
@@ -94,8 +94,8 @@ describe('slotChannelNamespace', () => {
   it('singles out unified, which has no proper-noun label to interpolate', () => {
     // The tooltip routes this namespace to its own locale key so a translated
     // sentence never has to embed the English article form.
-    expect(slotChannelNamespace('unified:kirocrew')).toBe('unified')
-    expect(slotChannelNamespace('unified_kirocrew')).toBe('unified')
+    expect(slotChannelNamespace('unified:ajcrew')).toBe('unified')
+    expect(slotChannelNamespace('unified_ajcrew')).toBe('unified')
   })
 
   it('returns empty for dashboard sessions and non-channel keys', () => {
@@ -107,7 +107,7 @@ describe('slotChannelNamespace', () => {
   })
 
   it('agrees with slotChannelLabel on what counts as channel-origin', () => {
-    for (const key of ['slack:1.1', 'unified_kirocrew', 'dashboard:chat-1', 'Slack_x', '']) {
+    for (const key of ['slack:1.1', 'unified_ajcrew', 'dashboard:chat-1', 'Slack_x', '']) {
       expect(Boolean(slotChannelNamespace(key))).toBe(Boolean(slotChannelLabel(key)))
     }
   })

@@ -13,8 +13,8 @@ from unittest.mock import patch
 
 import pytest
 
-import kiro_crew.subagent_persistence as sp
-import kiro_crew.subagent_persistence_layout as layout
+import aj_crew.subagent_persistence as sp
+import aj_crew.subagent_persistence_layout as layout
 
 _AGENTS = 3
 

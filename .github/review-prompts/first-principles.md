@@ -25,7 +25,7 @@ The message that pointed you here names the pull request, its HEAD sha,
 where to read the change, and the RFC status list taken from the BASE
 commit (lens 9). Use those; do not look for them elsewhere.
 
-REPO CONTEXT: Kiro Crew is an open-source AI agent platform (Python
+REPO CONTEXT: Aj Crew is an open-source AI agent platform (Python
 backend + React/TS dashboard), a de-Amazoned public fork. Do NOT flag
 the absence of Brazil/AUTOSDE build tooling or internal-only infra.
 
@@ -588,7 +588,7 @@ A (c) blocker names the missing record instead of a subtraction; its
 title opens `product-shape change without accepted RFC`; its Trigger is
 the inventory item that changes the shape and its Outcome is the
 decision nobody recorded. A Blocker without a Trigger line and an
-Outcome line is read as PASS. The kirocrew-prepare-pr loop reads
+Outcome line is read as PASS. The ajcrew-prepare-pr loop reads
 everything after `Clears when:` to the end of the item as the
 clearance, so no line may follow it.>
 

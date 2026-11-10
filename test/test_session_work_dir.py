@@ -23,11 +23,11 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from conftest import requires_symlinks
-from kiro_crew import session_pid, session_work_dir
-from kiro_crew.acp.types import ACP_BACKEND_KIRO
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.testing.wait import async_wait_until
-from kiro_crew.workspace_cli_settings import CLI_SETTINGS_LOCK_NAME
+from aj_crew import session_pid, session_work_dir
+from aj_crew.acp.types import ACP_BACKEND_KIRO
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.testing.wait import async_wait_until
+from aj_crew.workspace_cli_settings import CLI_SETTINGS_LOCK_NAME
 
 OTHER_HOME = "f" * 24
 PREDECESSOR_PID = 12345
@@ -210,7 +210,7 @@ class TestDisposableSessionKey:
         monkeypatch.setattr(session_work_dir.pinned_fs, "supports_pinned_walk", lambda: True)
         import uuid
 
-        from kiro_crew.memory_stores import memory_store_name_defect
+        from aj_crew.memory_stores import memory_store_name_defect
 
         key = f"memory-consolidation:{store}:{uuid.uuid4().hex}"
         valid = memory_store_name_defect(store) is None
@@ -231,7 +231,7 @@ class TestDisposableSessionKey:
 
     def test_the_store_component_is_the_memory_store_grammar(self) -> None:
         """The sampled names above cannot catch a widening, so the copy is pinned to the source."""
-        from kiro_crew.memory_stores import _STORE_NAME_RE
+        from aj_crew.memory_stores import _STORE_NAME_RE
 
         assert _STORE_NAME_RE.pattern == rf"^{session_work_dir._MEMORY_STORE_NAME}\Z"
 
@@ -299,7 +299,7 @@ class TestDisposableSessionKey:
     ) -> None:
         """The four ``_run_oneshot_model`` keys carry ``/`` and ``#``; their folder is
         named by ``_session_work_dir``, which writes ``_`` for each ``/``."""
-        from kiro_crew.config import loader_locations
+        from aj_crew.config import loader_locations
 
         monkeypatch.setattr(loader_locations, "workspace_root", lambda: tmp_path)
         name = loader_locations._session_work_dir(key).name
@@ -315,7 +315,7 @@ class TestDisposableSessionKey:
         """Mirrors the f-strings in ``ai.py``, ``recommendations.py`` and ``tagging.py``."""
         import uuid
 
-        from kiro_crew.config import loader_locations
+        from aj_crew.config import loader_locations
 
         monkeypatch.setattr(loader_locations, "workspace_root", lambda: tmp_path)
         owner, repo, number = "octo-org", "hello-world", 23880
@@ -1160,8 +1160,8 @@ class TestGatewayWiring:
     def test_the_boot_sweep_follows_the_ledger_reap_and_precedes_every_session_writer(
         self,
     ) -> None:
-        from kiro_crew.slack import gateway
-        from kiro_crew.slack.gateway_runtime import process_entry, service_boot
+        from aj_crew.slack import gateway
+        from aj_crew.slack.gateway_runtime import process_entry, service_boot
 
         # ``run`` holds the boot sequence; ``run_gateway``'s hourly wake comes after it.
         source = "\n".join(
@@ -1171,13 +1171,13 @@ class TestGatewayWiring:
         reap = source.index(
             "await asyncio.to_thread(cleanup_orphaned_sessions, narrow_with_leaders=False)"
         )
-        ready = source.index('print(f"KIROCREW_READY:{json.dumps(ready_payload)}", flush=True)')
+        ready = source.index('print(f"AJCREW_READY:{json.dumps(ready_payload)}", flush=True)')
         sweep = source.index("_sweep_predecessor_session_work_dirs,\n", reap)
         writers = source.index("await self._ensure_subagent_coordinator()", ready)
         hourly = source.index("_sweep_predecessor_session_work_dirs,\n", sweep + 1)
         assert reap < ready < sweep < writers, (
             "the boot sweep must run after cleanup_orphaned_sessions reaped the ledger, "
-            "past KIROCREW_READY (no-new-work-on-gateway-boot-path), and before the "
+            "past AJCREW_READY (no-new-work-on-gateway-boot-path), and before the "
             "first session writer starts"
         )
         assert (
@@ -1192,7 +1192,7 @@ class TestGatewayWiring:
     def test_the_wrapper_hands_the_sweep_this_homes_ledger_and_live_dirs(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.slack import gateway
+        from aj_crew.slack import gateway
 
         seen: dict = {}
 
@@ -1214,7 +1214,7 @@ class TestGatewayWiring:
     def test_an_unreadable_ledger_sweeps_nothing(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.slack import gateway
+        from aj_crew.slack import gateway
 
         monkeypatch.setattr(gateway, "workspace_root", lambda: tmp_path)
         monkeypatch.setattr(
@@ -1231,7 +1231,7 @@ class TestGatewayWiring:
             gateway._sweep_predecessor_session_work_dirs([])
 
     def test_live_work_dirs_are_the_registered_providers_cwds(self) -> None:
-        from kiro_crew.slack import gateway
+        from aj_crew.slack import gateway
 
         assert gateway._live_session_work_dirs(None) == []
         sessions = MagicMock()
@@ -1243,14 +1243,14 @@ class TestGatewayWiring:
         assert gateway._live_session_work_dirs(sessions) == ["/w/one"]
 
 
-def _cfg(tmp_path: Path) -> KiroCrewConfig:
-    cfg_file = tmp_path / "kirocrew.json"
+def _cfg(tmp_path: Path) -> AjCrewConfig:
+    cfg_file = tmp_path / "ajcrew.json"
     cfg_file.write_text(
         json.dumps({"agent": {"provider": "acp", "acp_backend": ACP_BACKEND_KIRO}}),
         encoding="utf-8",
     )
-    with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_file):
-        return KiroCrewConfig.load()
+    with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_file):
+        return AjCrewConfig.load()
 
 
 class TestFactoryMarksOnlyDerivedOneRunDirectories:
@@ -1258,9 +1258,9 @@ class TestFactoryMarksOnlyDerivedOneRunDirectories:
 
     @staticmethod
     def _captured(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, **factory_kwargs) -> dict:
-        import kiro_crew.providers.acp as acp_mod
+        import aj_crew.providers.acp as acp_mod
 
-        monkeypatch.setenv("KIROCREW_WORKSPACE", str(tmp_path / "ws"))
+        monkeypatch.setenv("AJCREW_WORKSPACE", str(tmp_path / "ws"))
         seen: list[dict] = []
 
         class _FakeProvider:
@@ -1322,9 +1322,9 @@ class TestFactoryMarksOnlyDerivedOneRunDirectories:
 class TestProviderReclaimsAtShutdown:
     @staticmethod
     def _provider(work_dir: Path, *, disposable: bool, claimed: bool = True):
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
-        with unittest.mock.patch("kiro_crew.providers.acp.AcpClient"):
+        with unittest.mock.patch("aj_crew.providers.acp.AcpClient"):
             provider = AcpProvider(acp_backend=ACP_BACKEND_KIRO, disposable_work_dir=disposable)
         provider._client = MagicMock()
         provider._client.backend = ACP_BACKEND_KIRO
@@ -1490,7 +1490,7 @@ class TestProviderReclaimsAtShutdown:
         def boom(*args, **kwargs):
             raise RuntimeError("filesystem said no")
 
-        import kiro_crew.providers.acp as acp_mod
+        import aj_crew.providers.acp as acp_mod
 
         monkeypatch.setattr(acp_mod, "reclaim_session_work_dir", boom)
         await provider.shutdown()
@@ -1525,7 +1525,7 @@ class TestProviderReclaimsAtShutdown:
             events.append("worker-return")
             return True
 
-        import kiro_crew.providers.acp as acp_mod
+        import aj_crew.providers.acp as acp_mod
 
         provider.set_work_dir_claim_probe(claim)
         monkeypatch.setattr(acp_mod, "reclaim_session_work_dir", blocked_reclaim)
@@ -1609,7 +1609,7 @@ class TestRegistryLeavesASiblingsDirectory:
     async def test_the_loser_of_a_cold_start_race_leaves_the_winners_directory(
         self, tmp_path: Path
     ) -> None:
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         work_dir = _residue_dir(tmp_path, "subagent_0123abcd")
         made: list = []
@@ -1669,7 +1669,7 @@ class TestRegistryLeavesASiblingsDirectory:
     async def test_a_recycled_session_leaves_its_registered_successors_directory(
         self, tmp_path: Path
     ) -> None:
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         work_dir = _residue_dir(tmp_path, "subagent_0123abcd")
         made: list = []
@@ -1702,7 +1702,7 @@ class TestRegistryLeavesASiblingsDirectory:
         self, tmp_path: Path
     ) -> None:
         """The final registry claim spans process teardown and filesystem reclaim."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         work_dir = _residue_dir(tmp_path, "subagent_0123abcd")
         made: list = []
@@ -1729,7 +1729,7 @@ class TestRegistryLeavesASiblingsDirectory:
     @pytest.mark.asyncio
     async def test_a_recycle_with_no_successor_still_reclaims(self, tmp_path: Path) -> None:
         """The disown is keyed on a successor being registered, not on recycling."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         work_dir = _residue_dir(tmp_path, "subagent_0123abcd")
         made: list = []
@@ -1747,7 +1747,7 @@ class TestRegistryLeavesASiblingsDirectory:
         self, tmp_path: Path
     ) -> None:
         """A bootstrap provider borrows the PARENT's key, so it derives the parent's cwd."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         work_dir = _residue_dir(tmp_path, "subagent_0123abcd")
         made: list = []
@@ -1757,7 +1757,7 @@ class TestRegistryLeavesASiblingsDirectory:
 
         # ``_runtime`` is None on the bootstrap provider's client, so no runtime
         # is adopted and the provider is shut down instead.
-        assert await mgr._get_or_bootstrap_run_runtime(self.KEY, agent="kirocrew") is adopted
+        assert await mgr._get_or_bootstrap_run_runtime(self.KEY, agent="ajcrew") is adopted
 
         (bootstrap,) = made
         bootstrap._client.shutdown.assert_awaited_once()

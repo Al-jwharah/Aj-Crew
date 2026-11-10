@@ -12,15 +12,15 @@ import json
 
 import pytest
 
-from kiro_crew.apps.manager import _read_installed, register_external_app
+from aj_crew.apps.manager import _read_installed, register_external_app
 
 
 @pytest.fixture()
 def app_home(tmp_path, monkeypatch):
-    """Set KIROCREW_HOME to a temp directory that admits a third-party app."""
-    home = tmp_path / "kirocrew-home"
+    """Set AJCREW_HOME to a temp directory that admits a third-party app."""
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     (home / "config.json").write_text(
         json.dumps({"agent": {"apps_allow_third_party": True}}), encoding="utf-8"
     )

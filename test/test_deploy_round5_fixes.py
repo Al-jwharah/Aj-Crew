@@ -11,7 +11,7 @@ import pytest
 
 from conftest import requires_symlinks
 
-SCRIPTS_DIR = Path(__file__).parent.parent / "src" / "kiro_crew" / "deploy" / "skills" / "artifact-deploy" / "scripts"
+SCRIPTS_DIR = Path(__file__).parent.parent / "src" / "aj_crew" / "deploy" / "skills" / "artifact-deploy" / "scripts"
 
 
 def _load_script(name: str):
@@ -61,9 +61,9 @@ class TestAttachBackendTOCTOU:
 
     @requires_symlinks
     def test_safe_read_file_rejects_symlink_atomically(self, tmp_path: Path):
-        """When kiro_crew.hooks.safe_read_file is importable, a symlink is
+        """When aj_crew.hooks.safe_read_file is importable, a symlink is
         rejected atomically (no TOCTOU window)."""
-        from kiro_crew.hooks import safe_read_file
+        from aj_crew.hooks import safe_read_file
 
         real = tmp_path / "target"
         real.write_text("secret_value")
@@ -262,7 +262,7 @@ class TestReaperOACPending:
         # Manifest was deleted
         mock_s3.delete_object.assert_called_once()
         call_args = mock_s3.delete_object.call_args
-        assert "test-app/.kirocrew-deploy.json" in str(call_args)
+        assert "test-app/.ajcrew-deploy.json" in str(call_args)
 
     def test_oac_pending_still_in_use_retains(self):
         """Second sweep with oac_pending but OAC still InUse -> stays reaping."""

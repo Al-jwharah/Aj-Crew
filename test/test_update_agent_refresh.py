@@ -1,4 +1,4 @@
-"""The ``kirocrew update`` agent-only refresh must be hardened at its call site.
+"""The ``ajcrew update`` agent-only refresh must be hardened at its call site.
 
 The refresh runs ``setup --agent-only`` as a child with ``capture_output=True``,
 so two properties are load-bearing:
@@ -8,7 +8,7 @@ so two properties are load-bearing:
   silently until the timeout.
 * ``subprocess.TimeoutExpired`` is swallowed — the refresh is best-effort and
   runs after the update already succeeded, so a timeout must downgrade to a
-  warning, never traceback out of ``kirocrew update``.
+  warning, never traceback out of ``ajcrew update``.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ import inspect
 import subprocess
 import sys
 
-from kiro_crew import cli_server
+from aj_crew import cli_server
 
 
 class _RunRecorder:
@@ -85,7 +85,7 @@ class TestRefreshAgentConfigTimeout:
 
         out = capsys.readouterr().out
         assert "Agent config refresh timed out" in out
-        assert "kirocrew setup --agent-only" in out
+        assert "ajcrew setup --agent-only" in out
         assert any("timed out" in rec.message for rec in caplog.records)
 
 
@@ -108,6 +108,6 @@ class TestUpdateWiring:
         other branch cannot be misread as a duplicated spawn.
         """
         module_src = "".join(
-            inspect.getsource(sys.modules[m]) for m in ("kiro_crew.cli_server", *cli_server._OWNERS)
+            inspect.getsource(sys.modules[m]) for m in ("aj_crew.cli_server", *cli_server._OWNERS)
         )
         assert module_src.count('"setup", "--agent-only"') == 1

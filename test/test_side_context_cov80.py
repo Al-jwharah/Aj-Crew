@@ -1,4 +1,4 @@
-"""Coverage for the side-chat history block in :mod:`kiro_crew.dashboard.side_context`.
+"""Coverage for the side-chat history block in :mod:`aj_crew.dashboard.side_context`.
 
 ``test_side_context.py`` covers the PARENT snapshot. What is untested there is
 the sibling block: the prior *side* turns replayed on a cold-start first turn,
@@ -10,8 +10,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from kiro_crew.dashboard import side_context as sc
-from kiro_crew.dashboard.side_state import SideState
+from aj_crew.dashboard import side_context as sc
+from aj_crew.dashboard.side_state import SideState
 
 
 def _slot(*, messages=None, side_messages=None, side=True):

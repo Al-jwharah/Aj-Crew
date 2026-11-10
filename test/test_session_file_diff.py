@@ -21,13 +21,13 @@ from test_session_files import (  # noqa: F401
     mock_sel,
 )
 
-from kiro_crew.dashboard import session_files
-from kiro_crew.dashboard.session_files import (
+from aj_crew.dashboard import session_files
+from aj_crew.dashboard.session_files import (
     api_project_session_file_diff,
     change_pair,
     latest_change,
 )
-from kiro_crew.history import ConversationLog
+from aj_crew.history import ConversationLog
 
 
 async def _diff(

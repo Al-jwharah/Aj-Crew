@@ -14,20 +14,20 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.acp import _dispatch
-from kiro_crew.acp._dispatch_parts.permission_requests import (
+from aj_crew.acp import _dispatch
+from aj_crew.acp._dispatch_parts.permission_requests import (
     STRANDS_BUILTIN_TOOL_KINDS,
     strands_envelope_identity,
 )
-from kiro_crew.acp.harness_tool_names import (
+from aj_crew.acp.harness_tool_names import (
     STRANDS_TOOL_IDS_BY_KIRO_TOOL,
     harness_tool_match_names,
     qualified_harness_tool_id,
 )
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.acp_backends import ACP_BACKEND_PI, ACP_BACKEND_STRANDS
-from kiro_crew.agent_sdk.backends_routing import ACP_BACKENDS_CREW_FIRES_SPEC_HOOKS
-from kiro_crew.hook_runtime.tool_identity import _is_host_read_only_builtin
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.acp_backends import ACP_BACKEND_PI, ACP_BACKEND_STRANDS
+from aj_crew.agent_sdk.backends_routing import ACP_BACKENDS_CREW_FIRES_SPEC_HOOKS
+from aj_crew.hook_runtime.tool_identity import _is_host_read_only_builtin
 
 NONCE = "a" * 32
 TOOL_USE_ID = "tooluse_abc123"
@@ -35,7 +35,7 @@ TOOL_USE_ID = "tooluse_abc123"
 
 def _envelope(tool: str, owner: str | None, **extra: Any) -> dict[str, Any]:
     body: dict[str, Any] = {
-        "kiro-crew-gate": 1,
+        "aj-crew-gate": 1,
         "nonce": NONCE,
         "tool": tool,
         "toolCallId": TOOL_USE_ID,
@@ -204,7 +204,7 @@ def test_a_strands_frame_that_is_not_the_gate_envelope_is_refused(msg, nonce):
 
 def test_the_refusal_reaches_the_hook_gate():
     """An unreadable identity is denied at Crew's own PreToolUse gate too."""
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     event, _ = _build(_frame(_envelope("read", "owner-from-the-future")))
     decision = hooks.HookManager().on_tool_call(event.title, **hooks.hook_gate_kwargs(event))
@@ -256,9 +256,9 @@ def test_a_strands_card_shell_guess_never_names_a_post_tool_hook():
     """PostToolUse ids on Strands come from the envelope only, never the card's kind."""
     from types import SimpleNamespace
 
-    from kiro_crew.acp_backends import ACP_BACKEND_GOOSE
-    from kiro_crew.agent_sdk.capabilities import capabilities_for
-    from kiro_crew.agent_sdk.spec_hooks import post_tool_hook_tool_id
+    from aj_crew.acp_backends import ACP_BACKEND_GOOSE
+    from aj_crew.agent_sdk.capabilities import capabilities_for
+    from aj_crew.agent_sdk.spec_hooks import post_tool_hook_tool_id
 
     strands = SimpleNamespace(capabilities=capabilities_for(ACP_BACKEND_STRANDS))
     # A project tool named ``bash_runner``: the card guessed ``execute``, the
@@ -288,7 +288,7 @@ def test_an_mcp_tool_whose_fused_name_spells_a_builtin_meets_only_its_mcp_forms(
 
 def test_a_strands_mcp_tool_never_meets_a_builtin_spec_hook_by_its_bare_name():
     """``@docs/web_fetch`` is a server's tool: a ``web_fetch`` spec hook must not run on it."""
-    from kiro_crew.hooks import pre_tool_match_names
+    from aj_crew.hooks import pre_tool_match_names
 
     event, _ = _build(_frame(_envelope("mcp__docs__web_fetch", "mcp:docs")))
     every, spec = pre_tool_match_names(
@@ -312,7 +312,7 @@ def test_a_strands_mcp_tool_never_meets_a_builtin_spec_hook_by_its_bare_name():
 
 
 def test_other_harnesses_keep_the_bare_mcp_name():
-    from kiro_crew.hooks import pre_tool_match_names
+    from aj_crew.hooks import pre_tool_match_names
 
     _, spec = pre_tool_match_names(
         "x", tool_identity="web_fetch", mcp_server="docs", harness_tool_id="goose#web_fetch"

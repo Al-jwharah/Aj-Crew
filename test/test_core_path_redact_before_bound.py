@@ -27,10 +27,10 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-from kiro_crew.acp import _dispatch as acp_dispatch
-from kiro_crew.dashboard.handlers import artifacts as artifacts_handlers
-from kiro_crew.security import redact_credentials
-from kiro_crew.telegram import renderer as tg_renderer
+from aj_crew.acp import _dispatch as acp_dispatch
+from aj_crew.dashboard.handlers import artifacts as artifacts_handlers
+from aj_crew.security import redact_credentials
+from aj_crew.telegram import renderer as tg_renderer
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -178,19 +178,19 @@ def _package_modules(package: str) -> list[str]:
 # stops reaching the package's owners instead of passing on nothing.
 _SCANNED_PACKAGES = {
     # The Research Lab facade and the campaign engine it is composed from.
-    "src/kiro_crew/apps/builtins/auto_research": 8,
+    "src/aj_crew/apps/builtins/auto_research": 8,
     # The owners composed into the Slack gateway facade, slack/gateway.py.
-    "src/kiro_crew/slack/gateway_runtime": 5,
+    "src/aj_crew/slack/gateway_runtime": 5,
     # The owners composed into the dashboard chat runner, dashboard/chat_runner.py.
-    "src/kiro_crew/dashboard/chat_turn": 25,
+    "src/aj_crew/dashboard/chat_turn": 25,
     # The owners mirrored beside the session control tools, mcp_tools/control.py.
-    "src/kiro_crew/mcp_tools/control_parts": 1,
+    "src/aj_crew/mcp_tools/control_parts": 1,
     # The owners mirrored beside the spawn tools, mcp_tools/spawn.py.
-    "src/kiro_crew/mcp_tools/spawn_parts": 2,
+    "src/aj_crew/mcp_tools/spawn_parts": 2,
     # The owners of the ACP dispatch facade, acp/_dispatch.py.
-    "src/kiro_crew/acp/_dispatch_parts": 5,
+    "src/aj_crew/acp/_dispatch_parts": 5,
     # The owners behind the dashboard artifact routes' facade, dashboard/handlers/artifacts.py.
-    "src/kiro_crew/dashboard/handlers/artifacts_parts": 10,
+    "src/aj_crew/dashboard/handlers/artifacts_parts": 10,
 }
 
 # Every module the issue names, then every module of the packages scanned whole,
@@ -198,55 +198,55 @@ _SCANNED_PACKAGES = {
 # lines, so a new slice-before-redact call shape in these files goes red
 # immediately.
 _SCANNED_MODULES = [
-    "src/kiro_crew/channel.py",
-    "src/kiro_crew/dashboard/chat_runner.py",
-    "src/kiro_crew/acp/_dispatch.py",
+    "src/aj_crew/channel.py",
+    "src/aj_crew/dashboard/chat_runner.py",
+    "src/aj_crew/acp/_dispatch.py",
     # Its near-twin: AcpClient carries a hand-copied tool-result extractor with
     # the same shape, and its absence from this list is why the bound-then-redact
     # ordering survived there. NOTE the scan would not have caught
     # that instance -- the slice was a separate statement, not an argument to the
     # redactor -- so the behavioural pin for it lives in
     # test_acp_client_tool_call_updates.py::test_credential_straddling_the_bound_is_still_redacted.
-    "src/kiro_crew/acp/client.py",
+    "src/aj_crew/acp/client.py",
     # The client's owner modules.
-    "src/kiro_crew/acp/client_class.py",
-    "src/kiro_crew/acp/client_claude_seed.py",
-    "src/kiro_crew/acp/client_claude_session.py",
-    "src/kiro_crew/acp/client_lifecycle.py",
-    "src/kiro_crew/acp/client_mcp_array.py",
-    "src/kiro_crew/acp/client_model_selection.py",
-    "src/kiro_crew/acp/client_permissions.py",
-    "src/kiro_crew/acp/client_seed_ownership.py",
-    "src/kiro_crew/acp/client_spawn_env.py",
-    "src/kiro_crew/acp/client_start.py",
-    "src/kiro_crew/acp/client_timeouts.py",
-    "src/kiro_crew/acp/client_tool_events.py",
-    "src/kiro_crew/acp/client_transport.py",
-    "src/kiro_crew/acp/client_turn.py",
-    "src/kiro_crew/acp/client_turn_control.py",
-    "src/kiro_crew/acp/client_usage.py",
+    "src/aj_crew/acp/client_class.py",
+    "src/aj_crew/acp/client_claude_seed.py",
+    "src/aj_crew/acp/client_claude_session.py",
+    "src/aj_crew/acp/client_lifecycle.py",
+    "src/aj_crew/acp/client_mcp_array.py",
+    "src/aj_crew/acp/client_model_selection.py",
+    "src/aj_crew/acp/client_permissions.py",
+    "src/aj_crew/acp/client_seed_ownership.py",
+    "src/aj_crew/acp/client_spawn_env.py",
+    "src/aj_crew/acp/client_start.py",
+    "src/aj_crew/acp/client_timeouts.py",
+    "src/aj_crew/acp/client_tool_events.py",
+    "src/aj_crew/acp/client_transport.py",
+    "src/aj_crew/acp/client_turn.py",
+    "src/aj_crew/acp/client_turn_control.py",
+    "src/aj_crew/acp/client_usage.py",
     # The client's error formatter and classifiers, with their redactor calls.
-    "src/kiro_crew/acp/transport_errors.py",
-    "src/kiro_crew/dashboard/handlers/artifacts.py",
-    "src/kiro_crew/dashboard/handlers/discover.py",
-    "src/kiro_crew/mcp_tools/control.py",
-    "src/kiro_crew/mcp_tools/spawn.py",
-    "src/kiro_crew/vector_memory.py",
+    "src/aj_crew/acp/transport_errors.py",
+    "src/aj_crew/dashboard/handlers/artifacts.py",
+    "src/aj_crew/dashboard/handlers/discover.py",
+    "src/aj_crew/mcp_tools/control.py",
+    "src/aj_crew/mcp_tools/spawn.py",
+    "src/aj_crew/vector_memory.py",
     # The owners bound into the vector memory store beside its facade.
-    "src/kiro_crew/vector_memory_inventory.py",
-    "src/kiro_crew/vector_memory_lifecycle.py",
-    "src/kiro_crew/vector_memory_member.py",
-    "src/kiro_crew/vector_memory_semantic_write.py",
-    "src/kiro_crew/slack/gateway.py",
-    "src/kiro_crew/telegram/renderer.py",
+    "src/aj_crew/vector_memory_inventory.py",
+    "src/aj_crew/vector_memory_lifecycle.py",
+    "src/aj_crew/vector_memory_member.py",
+    "src/aj_crew/vector_memory_semantic_write.py",
+    "src/aj_crew/slack/gateway.py",
+    "src/aj_crew/telegram/renderer.py",
     # The owners the Telegram renderer is composed from, beside its facade.
-    "src/kiro_crew/telegram/renderer_approval.py",
-    "src/kiro_crew/telegram/renderer_display.py",
-    "src/kiro_crew/telegram/renderer_live.py",
-    "src/kiro_crew/telegram/renderer_status.py",
-    "src/kiro_crew/telegram/renderer_tables.py",
-    "src/kiro_crew/telegram/renderer_uploads.py",
-    "src/kiro_crew/subagent_manager/continuation.py",
+    "src/aj_crew/telegram/renderer_approval.py",
+    "src/aj_crew/telegram/renderer_display.py",
+    "src/aj_crew/telegram/renderer_live.py",
+    "src/aj_crew/telegram/renderer_status.py",
+    "src/aj_crew/telegram/renderer_tables.py",
+    "src/aj_crew/telegram/renderer_uploads.py",
+    "src/aj_crew/subagent_manager/continuation.py",
     *(rel for package in _SCANNED_PACKAGES for rel in _package_modules(package)),
 ]
 

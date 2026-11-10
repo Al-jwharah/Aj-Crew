@@ -114,7 +114,7 @@ await page.waitForSelector(`[data-slot-key="${LANE}"]`)
 const theme = await settleTheme()
 // Exact, not just "settled": the appearance is part of the evidence, and a theme read
 // off a live gateway is how a clip ends up looking different on the next machine.
-check('theme is the pinned Kiro dark', theme === 'kiro-dark', String(theme))
+check('theme is the pinned Aj dark', theme === 'aj-dark', String(theme))
 
 // ── Beat 1: at rest. Two conductors at the top level, the second one collapsed over a
 // branch of its own -- the state every session starts in.

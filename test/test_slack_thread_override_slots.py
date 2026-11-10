@@ -15,17 +15,17 @@ import threading
 
 import pytest
 
-from kiro_crew.testing.wait import LoopHop, await_until
+from aj_crew.testing.wait import LoopHop, await_until
 
 try:
-    from kiro_crew.slack.thread_override_slots import THREAD_SLOTS
+    from aj_crew.slack.thread_override_slots import THREAD_SLOTS
 except ImportError:  # the unbounded shape: assert against the intended bound
     THREAD_SLOTS = 4096
 
 
 def _slots():
     try:
-        from kiro_crew.slack import thread_override_slots
+        from aj_crew.slack import thread_override_slots
     except ImportError:
         return None
     return thread_override_slots
@@ -43,14 +43,14 @@ def _home(tmp_path, _floor_monkeypatch):
     """Pin the data home and workspace to ``tmp_path`` through the isolation
     floor's own ``MonkeyPatch``, so a test's ``monkeypatch.undo()`` cannot lift
     the pins."""
-    for var, sub in (("KIROCREW_HOME", "home"), ("KIROCREW_WORKSPACE", "workspace")):
+    for var, sub in (("AJCREW_HOME", "home"), ("AJCREW_WORKSPACE", "workspace")):
         (tmp_path / sub).mkdir()
         _floor_monkeypatch.setenv(var, str(tmp_path / sub))
 
 
 @pytest.fixture
 def handler():
-    from kiro_crew.slack import handler as h
+    from aj_crew.slack import handler as h
 
     def _reset() -> None:
         h._hydrated_sessions.clear()
@@ -423,7 +423,7 @@ async def test_hydration_keeps_no_16_mib_override_from_the_metadata(handler, tmp
 
     huge = "x" * (16 * 1024 * 1024)
     key = _key(0)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.slack.thread_override_slots"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.slack.thread_override_slots"):
         await handler._hydrate_thread_overrides(
             key, _Log({"agent": huge, "project": f"{tmp_path}/{huge}"})
         )
@@ -506,7 +506,7 @@ async def test_project_refuses_a_path_over_the_limit_and_sets_nothing(
     import os
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.slack import handler as h
+    from aj_crew.slack import handler as h
 
     slots = _slots()
     short = tmp_path / "p"
@@ -593,7 +593,7 @@ class _PersistingLog(_Log):
 
 def _template_meta(template: str, project: str) -> dict:
     """The metadata of a cron-created thread: a recorded execution template, and its agent."""
-    from kiro_crew import execution_context
+    from aj_crew import execution_context
 
     record = execution_context.ExecutionContext(
         None,
@@ -614,7 +614,7 @@ async def test_ta_off_on_a_thread_with_a_recorded_template_stays_reset_after_evi
     reset holds for the life of the process, as it does on main, where nothing evicts."""
     from unittest.mock import AsyncMock
 
-    from kiro_crew.messaging.session_resume import session_agent_from_metadata
+    from aj_crew.messaging.session_resume import session_agent_from_metadata
 
     slots = _slots()
     assert slots is not None, "the bound does not exist"

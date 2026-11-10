@@ -91,15 +91,15 @@ describe('AboutPanel update refused on a dirty checkout', () => {
     expect(error.textContent).toContain('(3)')
     expect(error.textContent).toContain('Commit or stash them')
     expect(error.textContent).toContain('press Update now again')
-    expect(error.textContent).toContain('in your Kiro Crew folder')
+    expect(error.textContent).toContain('in your Aj Crew folder')
     const command = screen.getByTestId('update-dirty-stash-command')
-    expect(command.querySelector('code')?.textContent).toBe('git stash push -u -m "before kirocrew update"')
+    expect(command.querySelector('code')?.textContent).toBe('git stash push -u -m "before ajcrew update"')
     // The shared copy block, so it copies like every other command in the app.
     expect(within(command).getByRole('button', { name: /copy command/i })).toBeTruthy()
   })
 
   it('any other 409 shows the server text and no stash command', async () => {
-    stubFetch({ error: 'Not a git checkout — update this install with `kirocrew update`' })
+    stubFetch({ error: 'Not a git checkout — update this install with `ajcrew update`' })
     mountWeb()
     await pressUpdateNow()
 

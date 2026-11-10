@@ -22,8 +22,8 @@ from slack_gateway_helpers import (
     _mock_sessions,
 )
 
-from kiro_crew.autonudge import NudgeLoop
-from kiro_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.autonudge import NudgeLoop
+from aj_crew.slack.gateway import GatewayOrchestrator
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Tests: _init_heartbeat
@@ -42,7 +42,7 @@ class TestInitHeartbeat:
         orch.ctx_builder.hooks = MagicMock()
         orch.consolidator = MagicMock()
         orch.dashboard_state = _mock_dashboard_state()
-        with patch("kiro_crew.slack.gateway.HeartbeatService") as mock_hs:
+        with patch("aj_crew.slack.gateway.HeartbeatService") as mock_hs:
             mock_hs_inst = MagicMock()
             mock_hs_inst.start = AsyncMock()
             mock_hs.return_value = mock_hs_inst
@@ -67,7 +67,7 @@ class TestInitTaskRunner:
         orch.conv_log = MagicMock()
         orch.consolidator = MagicMock()
         orch.dashboard_state = _mock_dashboard_state()
-        with patch("kiro_crew.slack.gateway.TaskRunner") as mock_tr:
+        with patch("aj_crew.slack.gateway.TaskRunner") as mock_tr:
             mock_tr_inst = MagicMock()
             mock_tr.return_value = mock_tr_inst
             orch._init_task_runner()
@@ -83,7 +83,7 @@ class TestInitTaskRunner:
         orch.dashboard_state = _mock_dashboard_state()
         orch._cfg.taskrunner.test_command = ["python", "-m", "pytest", "-q"]
         orch._cfg.taskrunner.require_verification = True
-        with patch("kiro_crew.slack.gateway.TaskRunner") as mock_tr:
+        with patch("aj_crew.slack.gateway.TaskRunner") as mock_tr:
             orch._init_task_runner()
         kw = mock_tr.call_args.kwargs
         assert kw["test_cmd"] == ["python", "-m", "pytest", "-q"]
@@ -165,8 +165,8 @@ class TestNotifyNudgeExpired:
         be false about the one outcome that needs them. The wording follows the
         monitor's recorded outcome rather than lumping both under a finish.
         """
-        import kiro_crew.autonudge as _an
-        from kiro_crew.monitoring.models import MonitorOutcome, MonitorState
+        import aj_crew.autonudge as _an
+        from aj_crew.monitoring.models import MonitorOutcome, MonitorState
 
         for outcome, expect_no_action in (
             (MonitorOutcome.SUCCESS, True),
@@ -213,7 +213,7 @@ class TestNotifyNudgeExpired:
         channel, and a Discord loop got a Slack URL. Asserting only "not a
         slot" passed on exactly that bogus link, so assert the value exactly.
         """
-        for key in ("slack:1700000000.123456", "discord:kirocrew:direct:42"):
+        for key in ("slack:1700000000.123456", "discord:ajcrew:direct:42"):
             state = MagicMock()
             loop = self._loop(slot_key=key)
             assert GatewayOrchestrator._notify_nudge_expired(self._orch(state), loop) is True, key
@@ -245,14 +245,14 @@ class TestInitAutonudge:
     @pytest.mark.asyncio
     async def test_disabled_when_feature_flag_off(self):
         orch = _make_orchestrator()
-        with patch("kiro_crew.slack.gateway.autonudge_enabled", return_value=False):
+        with patch("aj_crew.slack.gateway.autonudge_enabled", return_value=False):
             await orch._init_autonudge()
         assert not hasattr(orch, "autonudge_svc") or orch.autonudge_svc is None  # noqa: E501
 
     def test_disabled_gateway_import_does_not_load_monitor_runtime(self, tmp_path):
         env = os.environ.copy()
-        env["KIROCREW_AUTONUDGE"] = "0"
-        env["KIROCREW_HOME"] = str(tmp_path / "crew")
+        env["AJCREW_AUTONUDGE"] = "0"
+        env["AJCREW_HOME"] = str(tmp_path / "crew")
         env["KIRO_HOME"] = str(tmp_path / "kiro")
         # flake-ok: pre-existing literal bound on the cold-import child, moved verbatim; tracked for a de-flake pass
         result = subprocess.run(
@@ -260,13 +260,13 @@ class TestInitAutonudge:
                 sys.executable,
                 "-c",
                 (
-                    "import sys; import kiro_crew.slack.gateway; "
+                    "import sys; import aj_crew.slack.gateway; "
                     "print(sorted(name for name in sys.modules if name in {"
-                    "'kiro_crew.monitoring.controller',"
-                    "'kiro_crew.monitoring.github_pull_request',"
-                    "'kiro_crew.monitoring.gitlab_merge_request',"
-                    "'kiro_crew.monitoring.azure_devops_pull_request',"
-                    "'kiro_crew.monitoring.bitbucket_pull_request'}))"
+                    "'aj_crew.monitoring.controller',"
+                    "'aj_crew.monitoring.github_pull_request',"
+                    "'aj_crew.monitoring.gitlab_merge_request',"
+                    "'aj_crew.monitoring.azure_devops_pull_request',"
+                    "'aj_crew.monitoring.bitbucket_pull_request'}))"
                 ),
             ],
             cwd=tmp_path,
@@ -284,8 +284,8 @@ class TestInitAutonudge:
     async def test_enabled_creates_service(self):
         orch = _make_orchestrator()
         orch.dashboard_state = _mock_dashboard_state()
-        with patch("kiro_crew.slack.gateway.autonudge_enabled", return_value=True):
-            with patch("kiro_crew.slack.gateway.AutoNudgeService") as mock_ans:
+        with patch("aj_crew.slack.gateway.autonudge_enabled", return_value=True):
+            with patch("aj_crew.slack.gateway.AutoNudgeService") as mock_ans:
                 mock_inst = MagicMock()
                 mock_inst.start = AsyncMock()
                 mock_inst.subscribe = MagicMock()
@@ -318,7 +318,7 @@ class TestHeartbeatCallback:
         orch.slack.post_message = AsyncMock()
         orch._deliver_result = AsyncMock()
 
-        with patch("kiro_crew.slack.gateway.HeartbeatService") as mock_hs:
+        with patch("aj_crew.slack.gateway.HeartbeatService") as mock_hs:
             mock_hs_inst = MagicMock()
             mock_hs_inst.start = AsyncMock()
             mock_hs.return_value = mock_hs_inst
@@ -327,7 +327,7 @@ class TestHeartbeatCallback:
         callback = mock_hs.call_args[1]["on_task"]
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             return_value="heartbeat done",
         ):
@@ -349,7 +349,7 @@ class TestHeartbeatCallback:
         orch.dashboard_state = None
         orch._deliver_result = AsyncMock()
 
-        with patch("kiro_crew.slack.gateway.HeartbeatService") as mock_hs:
+        with patch("aj_crew.slack.gateway.HeartbeatService") as mock_hs:
             mock_hs_inst = MagicMock()
             mock_hs_inst.start = AsyncMock()
             mock_hs.return_value = mock_hs_inst
@@ -358,7 +358,7 @@ class TestHeartbeatCallback:
         callback = mock_hs.call_args[1]["on_task"]
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             return_value="still checking HEARTBEAT_KEEP",
         ):
@@ -379,7 +379,7 @@ class TestHeartbeatCallback:
         orch.consolidator = MagicMock()
         orch.dashboard_state = None
 
-        with patch("kiro_crew.slack.gateway.HeartbeatService") as mock_hs:
+        with patch("aj_crew.slack.gateway.HeartbeatService") as mock_hs:
             mock_hs_inst = MagicMock()
             mock_hs_inst.start = AsyncMock()
             mock_hs.return_value = mock_hs_inst
@@ -388,7 +388,7 @@ class TestHeartbeatCallback:
         callback = mock_hs.call_args[1]["on_task"]
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             side_effect=RuntimeError("llm error"),
         ):
@@ -415,7 +415,7 @@ class TestDeliverResultTruncation:
         ds.resolve_slot = MagicMock(return_value=slot)
         orch.dashboard_state = ds
         large_result = "x" * 200000
-        with patch("kiro_crew.slack.gateway.sel") as mock_sel:
+        with patch("aj_crew.slack.gateway.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock()
             await orch._deliver_result("T", "s", large_result, "prompt:dashboard:s1")
         slot.enqueue_or_run_prompt.assert_called_once()
@@ -436,8 +436,8 @@ class TestAutonudgeFire:
         """Fire with no dashboard → returns False."""
         orch = _make_orchestrator()
         orch.dashboard_state = None
-        with patch("kiro_crew.slack.gateway.autonudge_enabled", return_value=True):
-            with patch("kiro_crew.slack.gateway.AutoNudgeService") as mock_ans:
+        with patch("aj_crew.slack.gateway.autonudge_enabled", return_value=True):
+            with patch("aj_crew.slack.gateway.AutoNudgeService") as mock_ans:
                 mock_inst = MagicMock()
                 mock_inst.start = AsyncMock()
                 mock_inst.subscribe = MagicMock()
@@ -465,8 +465,8 @@ class TestAutonudgeFire:
         ds = _mock_dashboard_state()
         ds._slots = {}
         orch.dashboard_state = ds
-        with patch("kiro_crew.slack.gateway.autonudge_enabled", return_value=True):
-            with patch("kiro_crew.slack.gateway.AutoNudgeService") as mock_ans:
+        with patch("aj_crew.slack.gateway.autonudge_enabled", return_value=True):
+            with patch("aj_crew.slack.gateway.AutoNudgeService") as mock_ans:
                 mock_inst = MagicMock()
                 mock_inst.start = AsyncMock()
                 mock_inst.subscribe = MagicMock()
@@ -482,7 +482,7 @@ class TestAutonudgeFire:
         loop.stop_sentinel_path = None
         loop.cycle_count = 0
         with patch(
-            "kiro_crew.slack.gateway.rehydrate_slot_from_history_async",
+            "aj_crew.slack.gateway.rehydrate_slot_from_history_async",
             new=AsyncMock(return_value=None),
         ):
             result = await on_fire(loop)
@@ -498,8 +498,8 @@ class TestAutonudgeFire:
         slot.key = "busy"
         ds._slots = {"busy": slot}
         orch.dashboard_state = ds
-        with patch("kiro_crew.slack.gateway.autonudge_enabled", return_value=True):
-            with patch("kiro_crew.slack.gateway.AutoNudgeService") as mock_ans:
+        with patch("aj_crew.slack.gateway.autonudge_enabled", return_value=True):
+            with patch("aj_crew.slack.gateway.AutoNudgeService") as mock_ans:
                 mock_inst = MagicMock()
                 mock_inst.start = AsyncMock()
                 mock_inst.subscribe = MagicMock()

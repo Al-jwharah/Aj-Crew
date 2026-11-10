@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.security: the bash-command gate and its audits.
+"""Tests for aj_crew.security: the bash-command gate and its audits.
 
 The env-dump narrowing, ``is_sensitive_bash_command`` (IMDS and env-credential detectors, and
 the contract that it matches no paths), ``audit_bash_command`` / ``audit_bash_exfiltration``,
@@ -13,8 +13,8 @@ import logging
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew import security
-from kiro_crew.security import (
+from aj_crew import security
+from aj_crew.security import (
     audit_bash_command,
     audit_bash_exfiltration,
     is_sensitive_bash_command,
@@ -194,7 +194,7 @@ class TestEnvDumpGrepAwsNarrowing:
         # A filter in a LATER statement than the dump.
         "env | head -5; grep -r AWS_ src/",
         "env | wc -l && grep AWS_SECRET f",
-        "env | grep KIROCREW && echo AWS_SECRET",
+        "env | grep AJCREW && echo AWS_SECRET",
         "env | head -1 & grep AWS_SECRET f",
         # ``env`` as another tool's SUBCOMMAND. Anchoring the verb to a command
         # position would drop it, and would also drop ``sudo -E /usr/bin/env | grep
@@ -235,7 +235,7 @@ class TestEnvDumpGrepAwsNarrowing:
         "env | grep AWS-1",
         # No filter at all.
         "env | cut -d= -f1 | sort",
-        "docker exec kirocrew printenv KIROCREW_PORT",
+        "docker exec ajcrew printenv AJCREW_PORT",
         "printenv | wc -l",
         # The dump verb has to END a word, not merely start one.
         "grep -rn AWS_REGION src/environment/",
@@ -307,13 +307,13 @@ class TestEnvDumpGrepAwsNarrowing:
 
     @staticmethod
     def _keystone(cmd: str) -> bool:
-        from kiro_crew.security import _check_env_credential_access
+        from aj_crew.security import _check_env_credential_access
 
         return _check_env_credential_access(cmd) is not None
 
     @staticmethod
     def _rule_matcher(rule_id: str):
-        from kiro_crew import security
+        from aj_crew import security
 
         rule = next(r for r in security.BUILTIN_DENIED_RULES if r.id == rule_id)
         return security._deny_matcher(rule.pattern)
@@ -333,7 +333,7 @@ class TestEnvDumpGrepAwsNarrowing:
         ],
     )
     def test_catalog_rule_and_keystone_share_one_regex(self, rule_id, pattern_name) -> None:
-        from kiro_crew.security import denied_rules
+        from aj_crew.security import denied_rules
 
         rule = next(r for r in security.BUILTIN_DENIED_RULES if r.id == rule_id)
         assert rule.pattern == getattr(denied_rules, pattern_name)
@@ -366,7 +366,7 @@ class TestEnvDumpGrepAwsNarrowing:
         # tier is already linear on. Pinned as SHAPE, not as a duration: the tier must
         # route through ``_deny_matcher``, and no compiled duplicate may remain in the
         # raw list to reintroduce the cost behind the shared one.
-        from kiro_crew import security
+        from aj_crew import security
 
         shared = {rule.pattern for rule in security._ENV_CRED_SHARED_RULES}
         assert all(compiled.pattern not in shared for compiled in security._ENV_CRED_PATTERNS)
@@ -395,7 +395,7 @@ class TestEnvDumpGrepAwsNarrowing:
         # was narrowed. Assert on the matcher, not on ``re.search``: the fragment path
         # is also what makes both tiers linear, and a pattern that lost it would keep
         # matching while silently becoming length-capped and superlinear.
-        from kiro_crew.security import is_safe_user_regex
+        from aj_crew.security import is_safe_user_regex
 
         matcher = self._rule_matcher(rule_id)
         assert not matcher._disabled
@@ -436,13 +436,13 @@ class TestEnvDumpGrepAwsNarrowing:
     )
 
     def test_a_markdown_tool_body_passes_the_command_rules(self) -> None:
-        from kiro_crew.llm_helpers import _first_tool_input_denial
+        from aj_crew.llm_helpers import _first_tool_input_denial
 
         assert _first_tool_input_denial([self.MARKDOWN_TOOL_BODY], None, command_rules=True) is None
 
     def test_a_dump_in_a_tool_argument_is_still_refused(self) -> None:
-        from kiro_crew.llm_helpers import _first_tool_input_denial
-        from kiro_crew.security import _ENV_CRED_DENIAL_REASON
+        from aj_crew.llm_helpers import _first_tool_input_denial
+        from aj_crew.security import _ENV_CRED_DENIAL_REASON
 
         denial = _first_tool_input_denial(["env | egrep AWS_SECRET"], None, command_rules=True)
         assert denial is not None
@@ -460,7 +460,7 @@ class TestEnvDumpGrepAwsNarrowing:
 
     @pytest.mark.parametrize("cmd", DENIED + PRINTENV_DENIED)
     def test_full_gate_denies(self, cmd: str) -> None:
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied(cmd) is not None, cmd
 
@@ -468,7 +468,7 @@ class TestEnvDumpGrepAwsNarrowing:
     def test_full_gate_allows(self, cmd: str) -> None:
         # The whole gate, not just the two touched tiers: a benign shape that one
         # rule stops refusing while a sibling rule still refuses it is not fixed.
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied(cmd) is None, cmd
 
@@ -540,7 +540,7 @@ class TestIsSensitiveBashCommand:
     # each of these resolves to 169.254.169.254.
 
     def test_imds_shortform_encodings_blocked(self) -> None:
-        from kiro_crew.security import _check_imds_access, canonicalize_ip
+        from aj_crew.security import _check_imds_access, canonicalize_ip
 
         # Each of these genuinely resolves to 169.254.169.254 via inet_aton.
         for host in ("169.254.43518", "169.16689662", "169.254.0xA9FE", "169.0xFEA9FE"):
@@ -550,13 +550,13 @@ class TestIsSensitiveBashCommand:
             assert is_sensitive_bash_command(cmd) is not None, host
 
     def test_imds_plainform_still_blocked(self) -> None:
-        from kiro_crew.security import _check_imds_access
+        from aj_crew.security import _check_imds_access
 
         cmd = "curl http://169.254.169.254/latest/meta-data/"
         assert _check_imds_access(cmd) is not None
 
     def test_non_imds_shortform_not_overblocked(self) -> None:
-        from kiro_crew.security import _check_imds_access, canonicalize_ip
+        from aj_crew.security import _check_imds_access, canonicalize_ip
 
         # 169.254.11207422 is an ILLEGAL inet_aton form (final part > 65535); it
         # does not resolve, so it must NOT be canonicalized to IMDS or flagged.
@@ -575,7 +575,7 @@ class TestIsSensitiveBashCommand:
     # ($VAR/${..}/$(..)/backtick) is left alone -- unknown means allow.
 
     def test_imds_arithmetic_resolving_to_254_blocked(self) -> None:
-        from kiro_crew.security import _check_imds_access
+        from aj_crew.security import _check_imds_access
 
         for cmd in (
             "curl http://169.254.169.25$((2+2))/latest/meta-data/iam/security-credentials/",
@@ -603,7 +603,7 @@ class TestIsSensitiveBashCommand:
 
     def test_imds_expansion_reason_names_unexpanded_token(self) -> None:
         # The deny reason carries the UNEXPANDED token, never expanded bytes.
-        from kiro_crew.security import _check_imds_access
+        from aj_crew.security import _check_imds_access
 
         reason = _check_imds_access("curl http://169.254.169.25$((2+2))/x")
         assert reason is not None
@@ -618,7 +618,7 @@ class TestIsSensitiveBashCommand:
         # are documented under-block residuals; the literal deny tier still catches the
         # resolved form. This is what keeps the benign `ping 169.254.169.$o` loop and
         # ordinary commands out of the gate.
-        from kiro_crew.security import _check_imds_access
+        from aj_crew.security import _check_imds_access
 
         for cmd in (
             "for o in 123 253; do ping 169.254.169.$o; done",  # the ping loop
@@ -642,7 +642,7 @@ class TestIsSensitiveBashCommand:
         # Arithmetic that resolves to something OTHER than .254, or in a non-IMDS
         # prefix, is not IMDS. Also the scanner edge cases: an empty octet, an
         # unterminated or non-arithmetic span, a non-IMDS leading-zero octet.
-        from kiro_crew.security import _check_imds_access
+        from aj_crew.security import _check_imds_access
 
         for cmd in (
             "curl http://169.254.169.$((2+2))/x",  # -> .4
@@ -661,7 +661,7 @@ class TestIsSensitiveBashCommand:
     def test_imds_expansion_non_imds_prefix_allowed(self) -> None:
         # An expansion in any of the first three octets, a link-local assignment and
         # a version string are not IMDS-shaped and are left alone.
-        from kiro_crew.security import _check_imds_access
+        from aj_crew.security import _check_imds_access
 
         for cmd in (
             "ping -c1 ${NET_A}.${NET_B}.${NET_C}.254",
@@ -679,7 +679,7 @@ class TestIsSensitiveBashCommand:
     def test_imds_literal_subnet_addresses_pass(self) -> None:
         # A purely LITERAL address in the IMDS /24 that is NOT .254 is left alone (the
         # canonicalizer path only refuses the literal metadata IP itself).
-        from kiro_crew.security import _check_imds_access
+        from aj_crew.security import _check_imds_access
 
         for cmd in (
             "curl http://169.254.169.123/status",
@@ -692,7 +692,7 @@ class TestIsSensitiveBashCommand:
         # buluoray's regex end-anchor rows, backtick code spans, and quoted-heredoc
         # commit/PR/issue bodies carry no resolvable arithmetic, so they pass -- as do
         # the double-quoted ssh/bash -c/container wrappers around them.
-        from kiro_crew.security import _check_imds_access
+        from aj_crew.security import _check_imds_access
 
         for cmd in (
             "grep -q '^nameserver 169.254.169.253$' /etc/resolv.conf",
@@ -715,7 +715,7 @@ class TestIsSensitiveBashCommand:
     def test_imds_arith_evaluator_is_safe_and_bounded(self) -> None:
         # The arithmetic evaluator runs no names, calls or exotic operators, and is
         # size-bounded, so a crafted $((..)) cannot execute, over-resolve or stall.
-        from kiro_crew.security import _check_imds_access
+        from aj_crew.security import _check_imds_access
 
         for cmd in (
             "curl http://169.254.169.$(($(whoami)))/x",  # command sub inside -> unresolved
@@ -731,7 +731,7 @@ class TestIsSensitiveBashCommand:
         # limit (4300 digits) with an 8/9 (read as decimal, not octal) must read as
         # "not a numeric octet" and leave the command alone, not raise and crash the
         # gate. Guards the shared octet parser keeping every int() in its try/except.
-        from kiro_crew.security import _check_imds_access, canonicalize_ip
+        from aj_crew.security import _check_imds_access, canonicalize_ip
 
         huge = "0" + "9" * 4400
         assert canonicalize_ip(huge) == huge
@@ -741,7 +741,7 @@ class TestIsSensitiveBashCommand:
     def test_imds_literal_and_quote_only_controls_unchanged(self) -> None:
         # The literal IMDS IP stays refused by the always-on gate, and the
         # quote-only splits stay blocked by the deny tier's quote-normalized view.
-        from kiro_crew.security import _check_imds_access
+        from aj_crew.security import _check_imds_access
 
         assert _check_imds_access("curl http://169.254.169.254/latest/meta-data/") is not None
         for quoted in (
@@ -798,14 +798,14 @@ class TestTheBashGateMatchesNoPaths:
         assert reason is not None and "environment" in reason
 
     def test_an_oversized_subject_is_still_refused_unscanned(self) -> None:
-        from kiro_crew.security import MAX_SCANNABLE_COMMAND_CHARS
+        from aj_crew.security import MAX_SCANNABLE_COMMAND_CHARS
 
         reason = is_sensitive_bash_command("y" * (MAX_SCANNABLE_COMMAND_CHARS + 1))
         assert reason is not None and "too large to security-scan" in reason
 
     def test_the_path_matchers_are_absent(self) -> None:
         """Names, not behaviour: a reinstated matcher fails loudly here."""
-        from kiro_crew import security
+        from aj_crew import security
 
         for name in (
             "_build_sensitive_regex",
@@ -983,7 +983,7 @@ class TestImdsMixedBaseEncodings:
     )
 
     def test_mixed_base_imds_encodings_blocked(self) -> None:
-        from kiro_crew.security import _check_imds_access, canonicalize_ip
+        from aj_crew.security import _check_imds_access, canonicalize_ip
 
         for host in self.IMDS_FORMS:
             assert canonicalize_ip(host) == "169.254.169.254", host
@@ -1000,7 +1000,7 @@ class TestImdsMixedBaseEncodings:
         IMDS. The components are plain character classes with no nested
         quantifier, so an unbounded run is linear and the cap bought nothing.
         """
-        from kiro_crew.security import _check_imds_access, canonicalize_ip
+        from aj_crew.security import _check_imds_access, canonicalize_ip
 
         for host in (
             "0x0a9fea9fe",  # leading-zero hex, 9 digits
@@ -1015,7 +1015,7 @@ class TestImdsMixedBaseEncodings:
     def test_unbounded_extraction_stays_linear(self) -> None:
         import time
 
-        from kiro_crew.security import _check_imds_access
+        from aj_crew.security import _check_imds_access
 
         # Guards the reason the caps are gone: unbounded runs over plain
         # character classes must not backtrack. Generous bound -- the observed
@@ -1027,7 +1027,7 @@ class TestImdsMixedBaseEncodings:
             assert time.monotonic() - start < 5.0, payload
 
     def test_mixed_base_non_imds_not_overblocked(self) -> None:
-        from kiro_crew.security import _check_imds_access, canonicalize_ip
+        from aj_crew.security import _check_imds_access, canonicalize_ip
 
         # 169.0000254.169.254 is a legal mixed encoding that resolves to
         # 169.172.169.254 (0254 octal == 172), NOT to IMDS -- widening the
@@ -1092,7 +1092,7 @@ class TestTraversalSimulationIsGone:
         simulation is present and happens to allow this input", which is how a
         reinstated pass would slip back in under the tests above.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         for name in (
             "_check_find_traversal_reaches_fence",
@@ -1151,8 +1151,8 @@ class TestARefusalNamesItsRuleAndSpan:
         the shape stops at its own ceiling for the same reason the scan does: this
         subject is by definition larger than the gate will walk on the event loop.
         """
-        from kiro_crew.security import MAX_SCANNABLE_COMMAND_CHARS
-        from kiro_crew.security.diagnostics import _MAX_CENSUS_CHARS
+        from aj_crew.security import MAX_SCANNABLE_COMMAND_CHARS
+        from aj_crew.security.diagnostics import _MAX_CENSUS_CHARS
 
         line = self._diagnostic("y" * (MAX_SCANNABLE_COMMAND_CHARS + 1))
         assert "rule=keystone-scan-ceiling" in line
@@ -1167,13 +1167,13 @@ class TestARefusalNamesItsRuleAndSpan:
         line is what makes the refusal attributable anyway: it names the rule id an
         operator actually toggles, and the component that decided.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
-        payload = "imp" + "ort " + "kiro" + "_" + "crew" + ".cli"
+        payload = "imp" + "ort " + "aj" + "_" + "crew" + ".cli"
         reason = is_denied("pyth" + 'on -c "' + payload + '"')
         assert reason is not None
         line = reason.splitlines()[-1]
-        assert "rule=credential-exfil-kirocrew-token" in line
+        assert "rule=credential-exfil-ajcrew-token" in line
         assert "component=argv-floor" in line
 
     def test_an_unresolvable_governance_pin_names_itself(
@@ -1187,7 +1187,7 @@ class TestARefusalNamesItsRuleAndSpan:
         log line quoting it would put a policy body in the log on every failed
         lookup. Resolution itself is unchanged -- this names, it does not widen.
         """
-        from kiro_crew.security import BUILTIN_DENIED_RULES, _resolved_pin_ids
+        from aj_crew.security import BUILTIN_DENIED_RULES, _resolved_pin_ids
 
         first = BUILTIN_DENIED_RULES[0]
         absent = "no-such-pattern-anywhere"
@@ -1210,7 +1210,7 @@ class TestARefusalNamesItsRuleAndSpan:
         for no information, and the first line is a parsed micro-format whose
         readers count on what follows it.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         reason = is_denied("r" + "m -rf /")
         assert reason is not None
@@ -1225,7 +1225,7 @@ class TestARefusalNamesItsRuleAndSpan:
         over-ceiling subject that carries a credential path, which is the one shape
         this gate still refuses with a diagnostic that spans the whole subject.
         """
-        from kiro_crew.security import MAX_SCANNABLE_COMMAND_CHARS
+        from aj_crew.security import MAX_SCANNABLE_COMMAND_CHARS
 
         padding = "y" * (MAX_SCANNABLE_COMMAND_CHARS + 1)
         line = self._diagnostic("c" + "at ~/." + self.AWS + " " + padding)
@@ -1239,7 +1239,7 @@ class TestARefusalNamesItsRuleAndSpan:
         A caller passing the wrong argument -- agent text where a rule id belongs --
         yields a missing name rather than unscreened bytes on a security message.
         """
-        from kiro_crew.security import refusal_diagnostic
+        from aj_crew.security import refusal_diagnostic
 
         smuggled = "c" + "at ~/." + self.AWS
         line = refusal_diagnostic(smuggled, smuggled, "abc").as_line()

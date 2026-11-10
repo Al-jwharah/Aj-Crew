@@ -24,7 +24,7 @@ function setup() {
   const store = createTestStore()
   const slot = 'chat-tool-timeline'
   store.dispatch(setActiveSlot(slot))
-  store.dispatch(sseSubagentSpawn({ slot, id: ID, task: 't', agent: 'kirocrew' }))
+  store.dispatch(sseSubagentSpawn({ slot, id: ID, task: 't', agent: 'ajcrew' }))
   return { store, slot }
 }
 const sub = (store: ReturnType<typeof createTestStore>) => store.getState().chat.subagents[ID]
@@ -112,7 +112,7 @@ describe('subagent tool-call timeline', () => {
     const { store, slot } = setup()
     store.dispatch(sseSubagentTool({ slot, id: ID, tool: 'a', tool_count: 1 }))
     store.dispatch(sseSubagentTool({ slot, id: ID, tool: 'b', tool_count: 2 }))
-    store.dispatch(sseSubagentSnapshot({ id: ID, slot, task: 't', agent: 'kirocrew', streaming: '', last_tool: 'b', started: 1, tool_count: 2 }))
+    store.dispatch(sseSubagentSnapshot({ id: ID, slot, task: 't', agent: 'ajcrew', streaming: '', last_tool: 'b', started: 1, tool_count: 2 }))
     expect(tools(store)).toEqual(['a', 'b'])
   })
 
@@ -122,7 +122,7 @@ describe('subagent tool-call timeline', () => {
     const store = createTestStore()
     const slot = 'chat-tool-timeline'
     store.dispatch(setActiveSlot(slot))
-    store.dispatch(sseSubagentSnapshot({ id: ID, slot, task: 't', agent: 'kirocrew', streaming: '', last_tool: 'spawn child', started: 1, tool_count: 1 }))
+    store.dispatch(sseSubagentSnapshot({ id: ID, slot, task: 't', agent: 'ajcrew', streaming: '', last_tool: 'spawn child', started: 1, tool_count: 1 }))
     expect(tools(store)).toEqual(['spawn child'])
     store.dispatch(sseSubagentTool({ slot, id: ID, tool: 'child: Running: rm x', tool_count: 1, tool_call_id: 'k1' }))
     expect(tools(store)).toEqual(['spawn child', 'child: Running: rm x'])

@@ -17,12 +17,12 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import _facade_mirror
-from kiro_crew.dashboard import chat_folders
+from aj_crew import _facade_mirror
+from aj_crew.dashboard import chat_folders
 
-FACADE = "kiro_crew.dashboard.chat_folders"
+FACADE = "aj_crew.dashboard.chat_folders"
 _OWNERS = tuple(
-    f"kiro_crew.dashboard.chat_folders_{name}" for name in ("icons", "paths", "records", "routes")
+    f"aj_crew.dashboard.chat_folders_{name}" for name in ("icons", "paths", "records", "routes")
 )
 
 #: Every name the facade's import statements bound before its owners moved out. They
@@ -46,7 +46,7 @@ _GLUE_IMPORTS = frozenset({"TYPE_CHECKING", "_facade_mirror", "_importlib", "_sy
 
 #: What the routes the facade keeps read from an owner, bound here by import.
 _KEPT_ROUTE_READS = {
-    "kiro_crew.dashboard.chat_folders_records": {
+    "aj_crew.dashboard.chat_folders_records": {
         "_agent_in_channel_reachable_session",
         "_audit_origin",
         "_unhide_folder",
@@ -134,7 +134,7 @@ def test_owners_are_every_chat_folders_sibling_lowest_layer_first() -> None:
     assert (index.owners, index.excluded, dict(index.forwards)) == (_OWNERS, (), {})
     assert index.divergent() == ()
     siblings = sorted(
-        f"kiro_crew.dashboard.{path.stem}"
+        f"aj_crew.dashboard.{path.stem}"
         for path in Path(chat_folders.__file__).parent.glob("chat_folders_*.py")
     )
     assert siblings == sorted(_OWNERS)
@@ -181,7 +181,7 @@ def test_a_moved_exception_keeps_the_facade_module_name() -> None:
 
 
 def test_every_owner_logs_under_the_facade_logger_name() -> None:
-    """Log capture and filters key on ``kiro_crew.dashboard.chat_folders``."""
+    """Log capture and filters key on ``aj_crew.dashboard.chat_folders``."""
     logged = 0
     for owner in _OWNERS:
         for call in ast.walk(_tree(owner)):
@@ -199,8 +199,8 @@ def test_every_owner_logs_under_the_facade_logger_name() -> None:
 
 
 def test_a_patch_through_the_facade_reaches_the_owner_that_reads_it() -> None:
-    routes = importlib.import_module("kiro_crew.dashboard.chat_folders_routes")
-    icons = importlib.import_module("kiro_crew.dashboard.chat_folders_icons")
+    routes = importlib.import_module("aj_crew.dashboard.chat_folders_routes")
+    icons = importlib.import_module("aj_crew.dashboard.chat_folders_icons")
     before_save, before_emoji = routes.save_slot_off_loop, icons.generate_emoji_for_name
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(chat_folders, "save_slot_off_loop", "patched-save")
@@ -224,10 +224,10 @@ def test_the_inventory_check_reports_a_planted_import() -> None:
     source = Path(chat_folders.__file__).read_text(encoding="utf-8")
     planted = source + (
         "\nimport shutil\nimport fnmatch\n"
-        "from kiro_crew.dashboard.chat_folders_icons import create_folder_record\n"
+        "from aj_crew.dashboard.chat_folders_icons import create_folder_record\n"
     )
     family_reads = read_names(*_family_sources(), "_uses = fnmatch.fnmatch\n")
     assert unexpected_imports(planted, _owner_names(), family_reads) == [
         "shutil",
-        "kiro_crew.dashboard.chat_folders_icons.create_folder_record",
+        "aj_crew.dashboard.chat_folders_icons.create_folder_record",
     ]

@@ -6,7 +6,7 @@ import enum
 
 import pytest
 
-from kiro_crew.shared_crew.codec import (
+from aj_crew.shared_crew.codec import (
     ContractError,
     enum_or,
     merge_extra,

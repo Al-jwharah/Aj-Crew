@@ -10,16 +10,16 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.coder import session_browse, session_launch
-from kiro_crew.coder.client import CoderClient, CoderClientError
-from kiro_crew.config import live, paths
-from kiro_crew.session_environment import SessionEnvironmentUnavailable
+from aj_crew.coder import session_browse, session_launch
+from aj_crew.coder.client import CoderClient, CoderClientError
+from aj_crew.config import live, paths
+from aj_crew.session_environment import SessionEnvironmentUnavailable
 
 
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments are reachable only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 pytestmark = pytest.mark.asyncio
@@ -524,7 +524,7 @@ async def test_unsaved_work_passes_the_guest_cut_flag(browse_target):
 @pytest.mark.parametrize("side", ["old", "new"])
 @pytest.mark.parametrize("label", ["RSA PRIVATE KEY", "CUSTOM-LABEL"])
 def test_unclosed_pem_is_withheld_in_a_complete_body(side, label):
-    from kiro_crew.security import REDACTED_CREDENTIAL_TAG
+    from aj_crew.security import REDACTED_CREDENTIAL_TAG
 
     body = f"visible\n\t-----BEGIN {label}-----\n    YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4\nlast"
     reply = {"git": True, "old": None, "new": None, side: body}
@@ -539,7 +539,7 @@ def test_unclosed_pem_is_withheld_in_a_complete_body(side, label):
 
 @pytest.mark.parametrize("footer", ["-----END CERTIFICATE-----", "-----END PRIVATE KEY-----"])
 def test_only_a_matching_footer_after_a_pem_begin_closes_it(footer):
-    from kiro_crew.security import REDACTED_CREDENTIAL_TAG
+    from aj_crew.security import REDACTED_CREDENTIAL_TAG
 
     body = "-----END CUSTOM LABEL-----\n  -----BEGIN CUSTOM LABEL-----\n  opaque\n" + footer + "\n"
     reply = {"git": True, "old": None, "new": body}
@@ -562,7 +562,7 @@ def test_a_field_prefixed_unclosed_pem_is_withheld(opener):
     import base64
     import secrets
 
-    from kiro_crew.security import REDACTED_CREDENTIAL_TAG
+    from aj_crew.security import REDACTED_CREDENTIAL_TAG
 
     blob = base64.b64encode(secrets.token_bytes(600)).decode()
     key_lines = ["  " + blob[i : i + 32] for i in range(0, len(blob), 32)]

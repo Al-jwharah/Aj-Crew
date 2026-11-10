@@ -106,7 +106,7 @@ def seed_history(directory: Path, *, per_class: int, cron_every: int = 10) -> di
             elif cls == "untitled":
                 write_transcript(directory, stem, user_line=f"question {n}", mtime=mtime)
             else:
-                write_transcript(directory, stem, agent="kirocrew", mtime=mtime)
+                write_transcript(directory, stem, agent="ajcrew", mtime=mtime)
             counts[cls] += 1
             if stem.startswith("cron_"):
                 counts["cron"] += 1
@@ -152,7 +152,7 @@ class TranscriptIO:
         import builtins
         import io
 
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         real_open = builtins.open
         real_io_open = io.open
@@ -362,21 +362,21 @@ def fake_clock(monkeypatch: pytest.MonkeyPatch) -> FakeClock:
     # Patched through the ``state`` facade, which mirrors the name into every
     # owner that binds it; a patch on ``slots_push`` alone would be undone
     # wrongly by the facade's teardown.
-    monkeypatch.setattr("kiro_crew.dashboard.state._slots_broadcast_clock", clock)
-    refresh = optional_module("kiro_crew.dashboard.state_parts.refresh_coalesce")
+    monkeypatch.setattr("aj_crew.dashboard.state._slots_broadcast_clock", clock)
+    refresh = optional_module("aj_crew.dashboard.state_parts.refresh_coalesce")
     if refresh is not None:
         monkeypatch.setattr(refresh, "_clock", clock)
-    listing_memo = optional_module("kiro_crew.history_listing_memo")
+    listing_memo = optional_module("aj_crew.history_listing_memo")
     if listing_memo is not None:
         monkeypatch.setattr(listing_memo, "time", _DelegatingTime(monotonic=clock))
-    index = optional_module("kiro_crew.history_listing_index")
+    index = optional_module("aj_crew.history_listing_index")
     if index is not None:
-        from kiro_crew import history
+        from aj_crew import history
 
         base = getattr(history, "SessionListingIndex", None)
         if base is None:
             harness_fail(
-                "kiro_crew.history_listing_index exists but kiro_crew.history no longer "
+                "aj_crew.history_listing_index exists but aj_crew.history no longer "
                 "builds SessionListingIndex; point fake_clock at the new seam"
             )
 
@@ -430,14 +430,14 @@ class FakeWs(dict):
 
     def __init__(self, *, owner: bool, slot_patch: bool = True, slot_diff: bool = False) -> None:
         super().__init__()
-        from kiro_crew.dashboard.websocket_hub import SLOT_PATCH_WS_FLAG
+        from aj_crew.dashboard.websocket_hub import SLOT_PATCH_WS_FLAG
 
         self.closed = False
         self.owner = owner
         self.frames: list[str] = []
         self["_is_dashboard_user"] = True
         self[SLOT_PATCH_WS_FLAG] = slot_patch
-        hub = importlib.import_module("kiro_crew.dashboard.websocket_hub")
+        hub = importlib.import_module("aj_crew.dashboard.websocket_hub")
         flag = getattr(hub, "SLOT_DIFF_WS_FLAG", None)
         if flag is not None:
             self[flag] = slot_diff
@@ -472,17 +472,17 @@ def budget_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, clock: FakeClo
     spawned as tasks, so every frame a push produces is visible as soon as the
     push returns.
     """
-    from kiro_crew.dashboard.state import DashboardState
-    from kiro_crew.session_map import SessionMap
-    from kiro_crew.session_parts import links as session_links
+    from aj_crew.dashboard.state import DashboardState
+    from aj_crew.session_map import SessionMap
+    from aj_crew.session_parts import links as session_links
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers._session_card_chips_snapshot", True
+        "aj_crew.dashboard.handlers.source_providers._session_card_chips_snapshot", True
     )
     # ``state`` re-exports these, but ``source_links`` calls its own module globals.
-    for owner in ("kiro_crew.dashboard.state", "kiro_crew.dashboard.state_parts.source_links"):
+    for owner in ("aj_crew.dashboard.state", "aj_crew.dashboard.state_parts.source_links"):
         monkeypatch.setattr(
             f"{owner}._cached_check_status", lambda url: {"ci": "passed", "state": "OPEN"}
         )

@@ -1,15 +1,15 @@
 """The session watchdog must not recycle a session whose harness is still working.
 
-A free semaphore only proves Kiro Crew's OWN prompt returned. Claude Code, behind
+A free semaphore only proves Aj Crew's OWN prompt returned. Claude Code, behind
 claude-agent-acp, runs a backgrounded Bash command or a Workflow in the session's
 own process tree after the prompt has answered ``end_turn``. The RSS recycle and
-the idle sweep read the free semaphore, the Kiro Crew sub-agent probe and the
+the idle sweep read the free semaphore, the Aj Crew sub-agent probe and the
 injection counter -- none of which can see that work -- so a session whose tree
 crossed ``session.watchdog_rss_max_mb`` while its workflow ran was reset on the
 next tick, killing the workflow it had promised to report on.
 
 What a live capture off claude-agent-acp 0.84.0 (driven over stdio, no AIR
-capabilities declared, the shape Kiro Crew's client sends) establishes:
+capabilities declared, the shape Aj Crew's client sends) establishes:
 
 1. The launch is reported on the launching call's PostToolUse ``tool_call_update``
    as ``_meta.claudeCode.toolResponse``: a Bash command carries
@@ -43,17 +43,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import session
-from kiro_crew.acp._dispatch import (
+from aj_crew import session
+from aj_crew.acp._dispatch import (
     BACKGROUND_LAUNCH_LABELS_MAX,
     BackgroundLaunchRecord,
     parse_background_launch,
     unrecognised_background_launch,
 )
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE, JsonRpcMessage
-from kiro_crew.session_background_hold import HARNESS_BACKGROUND_WORK_HOLD_SECS
-from kiro_crew.session_cleanup import HARNESS_BACKGROUND_WORK_HARD_CEILING_FACTOR
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE, JsonRpcMessage
+from aj_crew.session_background_hold import HARNESS_BACKGROUND_WORK_HOLD_SECS
+from aj_crew.session_cleanup import HARNESS_BACKGROUND_WORK_HARD_CEILING_FACTOR
 
 # --------------------------------------------------------------------------- #
 # Captured frames (claude-agent-acp 0.84.0; ids and paths shortened)
@@ -396,7 +396,7 @@ class TestTheDedicatedClientRecordsIt:
     ) -> None:
         client = _bare_client()
         renamed = _claude_update({"background_task_id": "b1"})
-        with caplog.at_level("INFO", logger="kiro_crew.acp.client"):
+        with caplog.at_level("INFO", logger="aj_crew.acp.client"):
             client._note_background_launch(_update_msg(renamed))
             client._note_background_launch(_update_msg(renamed))
             client._note_background_launch(_update_msg(FOREGROUND_BASH))
@@ -463,7 +463,7 @@ class TestProviderExposesIt:
 
 
 def _make_manager(rss_max_mb: int):
-    from kiro_crew.session import SessionManager
+    from aj_crew.session import SessionManager
 
     cfg = MagicMock()
     cfg.session.pool_size = 0
@@ -501,8 +501,8 @@ def _notice_recorder(notices: list[tuple[str, str]]):
 
 async def _rss_tick(manager: Any, rss: int = 2514) -> None:
     with (
-        patch("kiro_crew.session._build_child_map", return_value={}),
-        patch("kiro_crew.session._rss_mb_from_tree", return_value=rss),
+        patch("aj_crew.session._build_child_map", return_value={}),
+        patch("aj_crew.session._rss_mb_from_tree", return_value=rss),
     ):
         await manager._rss_threshold_check()
 
@@ -518,7 +518,7 @@ class TestRssRecycleHonoursHarnessWork:
         manager.reset = AsyncMock(return_value=True)
         manager.get_pid = MagicMock(return_value=4242)
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.session"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.session"):
             await _rss_tick(manager, rss=1500)
 
         manager.reset.assert_not_awaited()
@@ -609,7 +609,7 @@ class TestIdleSweepHonoursHarnessWork:
         manager._sessions["dashboard:x"] = sess
         manager.reset = AsyncMock(return_value=True)
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.session"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.session"):
             await manager._expire_idle(timeout_secs=1)
 
         manager.reset.assert_not_awaited()
@@ -628,7 +628,7 @@ class TestIdleSweepHonoursHarnessWork:
         manager.set_active_dashboard_slots({"dashboard:x"})
         manager.set_active_dashboard_slots({"dashboard:other"})  # x's tab closed
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.session"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.session"):
             await manager._expire_idle(timeout_secs=9999)
 
         manager.reset.assert_not_awaited()
@@ -663,12 +663,12 @@ class TestIdleSweepHonoursHarnessWork:
         manager._sessions["dashboard:x"] = sess
         manager.reset = AsyncMock(return_value=True)
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.session"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.session"):
             await manager._expire_idle(timeout_secs=1)
 
         manager.reset.assert_awaited_once()
         assert manager.reset.await_args.args[0] == "dashboard:x"
-        own = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.session"]
+        own = [r.getMessage() for r in caplog.records if r.name == "aj_crew.session"]
         assert "Expiring idle session: dashboard:x" in own
 
 
@@ -688,9 +688,9 @@ def _manager_with_hold(hold_secs: object, rss_max_mb: int = 0):
 
 class TestTheHoldIsConfigurable:
     def test_the_default_is_still_one_hour(self) -> None:
-        from kiro_crew.config.loader_builders import _build_session_config
-        from kiro_crew.config.sections import SessionConfig
-        from kiro_crew.session_background_hold import background_hold_secs
+        from aj_crew.config.loader_builders import _build_session_config
+        from aj_crew.config.sections import SessionConfig
+        from aj_crew.session_background_hold import background_hold_secs
 
         assert HARNESS_BACKGROUND_WORK_HOLD_SECS == 3600.0
         assert SessionConfig().harness_background_hold_secs == 3600
@@ -699,7 +699,7 @@ class TestTheHoldIsConfigurable:
         assert background_hold_secs(MagicMock()) == 3600.0
 
     def test_a_value_in_range_loads_as_written(self) -> None:
-        from kiro_crew.config.loader_builders import _build_session_config
+        from aj_crew.config.loader_builders import _build_session_config
 
         cfg = _build_session_config({"harness_background_hold_secs": 7200})
         assert cfg.harness_background_hold_secs == 7200
@@ -709,9 +709,9 @@ class TestTheHoldIsConfigurable:
         [(0, 300), (-5, 300), (299, 300), (86401, 86400), (10**9, 86400)],
     )
     def test_an_out_of_range_value_is_not_taken(self, raw: int, loaded: int, caplog) -> None:
-        from kiro_crew.config.loader_builders import _build_session_config
+        from aj_crew.config.loader_builders import _build_session_config
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             cfg = _build_session_config({"harness_background_hold_secs": raw})
 
         assert cfg.harness_background_hold_secs == loaded
@@ -722,7 +722,7 @@ class TestTheHoldIsConfigurable:
 
     @pytest.mark.parametrize("raw", ["abc", True, 12.5, None])
     def test_a_value_that_is_not_an_int_loads_as_the_default(self, raw: object) -> None:
-        from kiro_crew.config.loader_builders import _build_session_config
+        from aj_crew.config.loader_builders import _build_session_config
 
         assert (
             _build_session_config(
@@ -733,7 +733,7 @@ class TestTheHoldIsConfigurable:
 
     @pytest.mark.parametrize(("raw", "read"), [(0, 300.0), (10**9, 86400.0), (True, 3600.0)])
     def test_the_sweep_reapplies_the_bounds(self, raw: object, read: float) -> None:
-        from kiro_crew.session_background_hold import background_hold_secs
+        from aj_crew.session_background_hold import background_hold_secs
 
         cfg = MagicMock()
         cfg.session.harness_background_hold_secs = raw
@@ -747,7 +747,7 @@ class TestTheHoldIsConfigurable:
         manager._sessions["dashboard:x"] = sess
         manager.reset = AsyncMock(return_value=True)
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.session"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.session"):
             await manager._expire_idle(timeout_secs=1)
 
         manager.reset.assert_not_awaited()
@@ -793,7 +793,7 @@ class TestExpiryPastTheHoldIsAnnounced:
         notices: list[tuple[str, str]] = []
         manager.set_recycle_callback(_notice_recorder(notices))
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session"):
             await manager._expire_idle(timeout_secs=1)
 
         manager.reset.assert_awaited_once()
@@ -849,7 +849,7 @@ class TestExpiryPastTheHoldIsAnnounced:
         manager.set_active_dashboard_slots({"dashboard:x"})
         manager.set_active_dashboard_slots({"dashboard:other"})
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session"):
             await manager._expire_idle(timeout_secs=9999)
 
         manager.reset.assert_awaited_once()
@@ -860,7 +860,7 @@ class TestExpiryPastTheHoldIsAnnounced:
 
 
 def test_a_launch_just_past_the_hold_never_reads_as_equal_to_it() -> None:
-    from kiro_crew.session_background_hold import hold_expired_reason
+    from aj_crew.session_background_hold import hold_expired_reason
 
     reason = hold_expired_reason((3601.0, "command"), 3600.0, orphaned=False)
     assert "started background work 61 min ago (command), longer than the 60 min hold" in reason

@@ -23,8 +23,8 @@ from slack_code_channel_surface_helpers import (  # noqa: F401 - fixtures by nam
 )
 from slack_code_channels_helpers import OWNER
 
-from kiro_crew.slack.code_channels import cleanup, wrapup
-from kiro_crew.slack.code_channels.workspace.store import WorkspaceRecord, WorkspaceStore
+from aj_crew.slack.code_channels import cleanup, wrapup
+from aj_crew.slack.code_channels.workspace.store import WorkspaceRecord, WorkspaceStore
 
 
 def _rebuilt(root: Any, tree: Any, subdir: str = "") -> None:

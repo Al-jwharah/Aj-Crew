@@ -31,7 +31,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.service.common import SERVICE_NAME
+from aj_crew.service.common import SERVICE_NAME
 
 
 @pytest.fixture(autouse=True)
@@ -53,15 +53,15 @@ def _no_host_env_file(_floor_monkeypatch, tmp_path):
 
     Uninstall reads ``ENV_FILE_PATH`` directly to decide whether it still holds
     our untouched seed, and issues ``rm``/``rmdir`` if so. On a host where a real
-    install left that seed in ``/etc/kirocrew``, every uninstall test here would
+    install left that seed in ``/etc/ajcrew``, every uninstall test here would
     see a file it never wrote. Point both paths at an absent directory; a test
     that needs the file writes its own and re-points them.
     """
-    from kiro_crew.service import linux as svc_linux
+    from aj_crew.service import linux as svc_linux
 
-    env_dir = tmp_path / "absent-etc-kirocrew"
+    env_dir = tmp_path / "absent-etc-ajcrew"
     _floor_monkeypatch.setattr(svc_linux, "ENV_DIR", env_dir)
-    _floor_monkeypatch.setattr(svc_linux, "ENV_FILE_PATH", env_dir / "kirocrew.env")
+    _floor_monkeypatch.setattr(svc_linux, "ENV_FILE_PATH", env_dir / "ajcrew.env")
 
 
 @pytest.fixture(autouse=True)
@@ -80,7 +80,7 @@ def _no_host_unit_files(_floor_monkeypatch, tmp_path, tmp_path_factory):
     ``monkeypatch.undo()`` reverts every record on that instance, and would lift the
     home redirection and the guard with it.
     """
-    from kiro_crew.service import linux as svc_linux
+    from aj_crew.service import linux as svc_linux
 
     monkeypatch = _floor_monkeypatch
     real_dirs = tuple(
@@ -122,7 +122,7 @@ def _booted_with_systemd(_floor_monkeypatch, tmp_path):
     and check nothing else. Point the marker at a directory that exists; a test
     of the refusal re-points it at an absent path with its own ``monkeypatch``.
     """
-    from kiro_crew.service import linux as svc_linux
+    from aj_crew.service import linux as svc_linux
 
     booted = tmp_path / "run-systemd-system"
     booted.mkdir()
@@ -155,7 +155,7 @@ def _restart_settle_without_waiting(_floor_monkeypatch):
     """Every ``restart()`` here confirms the unit through a fake clock: the
     window (``_RESTART_SETTLE_SECS``) is still walked, poll by poll, but takes
     no wall time. Tests reach the clock as ``svc_linux.time``."""
-    from kiro_crew.service import linux as svc_linux
+    from aj_crew.service import linux as svc_linux
 
     _floor_monkeypatch.setattr(svc_linux, "time", _FakeClock(), raising=False)
 
@@ -166,12 +166,12 @@ _UNIT = f"{SERVICE_NAME}.service"
 # A unit file the installer wrote: it carries the managed marker `uninstall`
 # decides ownership by, wherever the test puts it.
 _OURS_UNIT_TEXT = (
-    '[Unit]\nDescription=Kiro Crew gateway\n[Service]\nEnvironment="KIROCREW_SERVICE_MANAGED=1"\n'
+    '[Unit]\nDescription=Aj Crew gateway\n[Service]\nEnvironment="AJCREW_SERVICE_MANAGED=1"\n'
 )
 
 
 def _svc_linux():
-    from kiro_crew.service import linux as svc_linux
+    from aj_crew.service import linux as svc_linux
 
     return svc_linux
 
@@ -297,7 +297,7 @@ def _fake_systemctl(
                 )
             rc = 0 if props["ActiveState"] == "active" else 3
             block = (
-                f"● {_UNIT} - Kiro Crew gateway ({scope} scope block)\n"
+                f"● {_UNIT} - Aj Crew gateway ({scope} scope block)\n"
                 f"     Active: {props['ActiveState']} ({props['SubState']})\n"
             )
             return subprocess.CompletedProcess(tokens, rc, block, "")
@@ -343,7 +343,7 @@ def durable_dir_fixture(tmp_path, monkeypatch):
     ``test_rejects_a_world_writable_location`` and the ``_substitutable_by_others``
     tests deliberately do NOT use this fixture: they assert the refusals.
     """
-    from kiro_crew.service import apparmor as aa
+    from aj_crew.service import apparmor as aa
 
     monkeypatch.setattr(aa, "_UNSAFE_EXEC_PARENTS", ())
     monkeypatch.setattr(

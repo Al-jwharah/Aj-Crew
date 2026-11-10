@@ -21,7 +21,7 @@ from test_state_parts_facade import (
     _owner_modules,
 )
 
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.state import DashboardState
 
 #: ``DashboardState`` members before the split: name -> (kind, coroutine, async
 #: generator, ``inspect.signature``).

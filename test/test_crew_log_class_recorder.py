@@ -20,7 +20,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-SRC = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+SRC = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 
 #: The recorder every link-commit site must reach.
 RECORDER = "note_crew_log_class"
@@ -29,7 +29,7 @@ RECORDER = "note_crew_log_class"
 ANNOUNCER = "_note_bind"
 
 #: Sites that assign a link WITHOUT recording, and why each is sound. Keyed by
-#: ``<path relative to src/kiro_crew>:<function>``. A site missing from both this map and
+#: ``<path relative to src/aj_crew>:<function>``. A site missing from both this map and
 #: the recorder's callers fails; an entry here naming a site that does not assign a
 #: link fails as well.
 LINK_EXEMPT: dict[str, str] = {
@@ -207,7 +207,7 @@ def test_every_committed_binding_is_announced_to_the_recorder():
     records. Functions that write and persist a binding key are found by inspection, so a
     new bind path is caught without being named.
     """
-    from kiro_crew import session_map
+    from aj_crew import session_map
 
     owners = [f"{name.rpartition('.')[2]}.py" for name in session_map._OWNERS]
     paths = [SRC / "session_map.py", *(SRC / owner for owner in owners)]
@@ -241,7 +241,7 @@ def test_the_manager_exposes_both_listener_sinks():
     ``wire_session_bind_listener`` goes through the manager's wrapper methods; a missing
     wrapper only fails at gateway boot, so this asks for both names.
     """
-    from kiro_crew.session import SessionManager
+    from aj_crew.session import SessionManager
 
     for name in ("set_unbind_listener", "set_bind_listener"):
         assert callable(getattr(SessionManager, name, None)), (
@@ -276,8 +276,8 @@ def test_a_binding_before_the_log_exists_survives_being_removed():
     opens: the class would then read never-published for a log holding channel words. The
     mark is never cleared, matching the fold's most-restrictive rule.
     """
-    from kiro_crew.dashboard.chat_runner import PENDING_CHANNEL_ATTR, _crew_log_class
-    from kiro_crew.dashboard.state import note_crew_log_class
+    from aj_crew.dashboard.chat_runner import PENDING_CHANNEL_ATTR, _crew_log_class
+    from aj_crew.dashboard.state import note_crew_log_class
 
     class _Slot:
         key = "chat-1"
@@ -302,8 +302,8 @@ def test_a_binding_before_the_log_exists_survives_being_removed():
 
 def test_a_slot_that_was_never_bound_is_not_marked():
     """The accepting case: the mark is not a blanket restriction on every idle slot."""
-    from kiro_crew.dashboard.chat_runner import PENDING_CHANNEL_ATTR, _crew_log_class
-    from kiro_crew.dashboard.state import note_crew_log_class
+    from aj_crew.dashboard.chat_runner import PENDING_CHANNEL_ATTR, _crew_log_class
+    from aj_crew.dashboard.state import note_crew_log_class
 
     class _Slot:
         key = "chat-2"
@@ -325,9 +325,9 @@ def test_a_live_session_id_does_not_stop_the_mark(monkeypatch):
     nothing and records no loss. Both halves are asserted: the append is still attempted,
     and the mark backs it rather than replacing it.
     """
-    from kiro_crew.crew_log import emit as crew_log_emit
-    from kiro_crew.dashboard.chat_runner import PENDING_CHANNEL_ATTR, _crew_log_class
-    from kiro_crew.dashboard.state import note_crew_log_class
+    from aj_crew.crew_log import emit as crew_log_emit
+    from aj_crew.dashboard.chat_runner import PENDING_CHANNEL_ATTR, _crew_log_class
+    from aj_crew.dashboard.state import note_crew_log_class
 
     seen: list[tuple[str, bool, str]] = []
     monkeypatch.setattr(
@@ -373,9 +373,9 @@ def test_a_real_chat_slot_holds_the_mark_and_keeps_the_record(monkeypatch):
     ``AttributeError``, which the recorder swallows; the mark comes first, so the append
     would be skipped too.
     """
-    from kiro_crew.crew_log import emit as crew_log_emit
-    from kiro_crew.dashboard.chat_runner import PENDING_CHANNEL_ATTR, _crew_log_class
-    from kiro_crew.dashboard.state import _ChatSlot, note_crew_log_class
+    from aj_crew.crew_log import emit as crew_log_emit
+    from aj_crew.dashboard.chat_runner import PENDING_CHANNEL_ATTR, _crew_log_class
+    from aj_crew.dashboard.state import _ChatSlot, note_crew_log_class
 
     seen: list[tuple[str, str, str, bool, str]] = []
     monkeypatch.setattr(

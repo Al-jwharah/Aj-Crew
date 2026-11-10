@@ -44,15 +44,15 @@ import threading
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import chat_persistence
-from kiro_crew.dashboard.chat_persistence import (
+from aj_crew.dashboard import chat_persistence
+from aj_crew.dashboard.chat_persistence import (
     rehydrate_slot_from_history_async,
     save_slot_off_loop,
 )
-from kiro_crew.dashboard.chat_utils import slot_history_key, slot_transcript_key
-from kiro_crew.dashboard.slot_persistence import metadata_line, transcript_merge
-from kiro_crew.dashboard.slot_registry import SlotRegistry, TruncationClaim
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard.chat_utils import slot_history_key, slot_transcript_key
+from aj_crew.dashboard.slot_persistence import metadata_line, transcript_merge
+from aj_crew.dashboard.slot_registry import SlotRegistry, TruncationClaim
+from aj_crew.testing.wait import async_wait_until, await_until
 
 NAME = "chat-1-1785"
 
@@ -707,7 +707,7 @@ async def test_a_watch_admits_a_bounded_number_of_declared_transcripts(tmp_path)
     nothing -- no count bump, no claim marked -- and the resume behind it is
     refused with the retryable lock-contention error rather than read.
     """
-    from kiro_crew.dashboard.slot_registry import _MAX_NOTED_TRANSCRIPTS_PER_WATCH
+    from aj_crew.dashboard.slot_registry import _MAX_NOTED_TRANSCRIPTS_PER_WATCH
 
     state, slot = _state_with_saved_transcript(tmp_path)
     await _persist_baseline(state, slot)
@@ -754,7 +754,7 @@ def test_archive_dedup_resolves_the_physical_stem_of_a_legacy_transcript(tmp_pat
     derived the archive stem from the logical key would look for
     ``slack_<ts>__*``, find nothing, and append an archived row a second time.
     """
-    from kiro_crew.history import ConversationLog, _archive_lines
+    from aj_crew.history import ConversationLog, _archive_lines
 
     log = ConversationLog(base_dir=tmp_path)
     ts = "1700000000.000100"
@@ -986,8 +986,8 @@ async def test_commit_gate_fallback_lands_private_rows_under_a_restricted_line(
     replacement's own fields kept, so the takeover's read finds a transcript
     the derivation seam already withholds.
     """
-    from kiro_crew.execution_context import EXECUTION_CONTEXT_KEY, ExecutionContext, MemoryStoreRef
-    from kiro_crew.history import transcript_withholds_derivation
+    from aj_crew.execution_context import EXECUTION_CONTEXT_KEY, ExecutionContext, MemoryStoreRef
+    from aj_crew.history import transcript_withholds_derivation
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME, memory_mode="incognito")
@@ -1092,8 +1092,8 @@ async def test_commit_gate_fallback_does_not_duplicate_rows_rotated_into_archive
     window reaching past the live file's rotation cut would otherwise re-land
     every archived row.
     """
-    monkeypatch.setattr("kiro_crew.history._SESSION_MAX_BYTES", 1200)
-    monkeypatch.setattr("kiro_crew.history._SESSION_KEEP_LINES", 3)
+    monkeypatch.setattr("aj_crew.history._SESSION_MAX_BYTES", 1200)
+    monkeypatch.setattr("aj_crew.history._SESSION_KEEP_LINES", 3)
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)
     for i in range(12):
@@ -1154,7 +1154,7 @@ async def test_drain_reports_a_mid_save_takeover_refusal_as_the_append_it_become
     append-safe arm (idempotent, verifying) rather than report the close's tail
     as unrecoverable.
     """
-    from kiro_crew.dashboard import chat_handlers as handlers
+    from aj_crew.dashboard import chat_handlers as handlers
 
     state, slot = _state_with_saved_transcript(tmp_path)
     await _persist_baseline(state, slot)
@@ -1206,7 +1206,7 @@ async def test_resume_waits_for_a_save_still_in_dispatch_under_an_open_watch(tmp
     staged by parking the worker at the claim registration itself, with the
     resume dispatched mid-park.
     """
-    from kiro_crew.dashboard import chat_handlers as handlers
+    from aj_crew.dashboard import chat_handlers as handlers
 
     state, slot = _state_with_saved_transcript(tmp_path)
     await _persist_baseline(state, slot)
@@ -1429,7 +1429,7 @@ async def test_append_safe_fallback_never_lands_a_row_that_sorts_before_the_one_
     clock-stamped one: kept when it already falls after the last row, else one
     microsecond past it.
     """
-    from kiro_crew.history_schema import transcript_sort_key
+    from aj_crew.history_schema import transcript_sort_key
 
     state, slot = _state_with_saved_transcript(tmp_path)
     await _persist_baseline(state, slot)

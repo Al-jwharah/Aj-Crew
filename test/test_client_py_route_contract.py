@@ -10,19 +10,19 @@ from pathlib import Path
 import pytest
 from aiohttp import web
 
-from kiro_crew.dashboard.chat_handlers import (
+from aj_crew.dashboard.chat_handlers import (
     api_chat_mode,
     api_chat_slot_approve,
     apply_approval_mode,
 )
-from kiro_crew.dashboard.handlers.cron import api_crons, api_lessons
-from kiro_crew.dashboard.handlers.memory import api_memory_episodic_search
-from kiro_crew.dashboard.handlers.messaging import api_spawn_list
-from kiro_crew.dashboard.routes import register_all
-from kiro_crew.dashboard.server import _register_mcp_routes
+from aj_crew.dashboard.handlers.cron import api_crons, api_lessons
+from aj_crew.dashboard.handlers.memory import api_memory_episodic_search
+from aj_crew.dashboard.handlers.messaging import api_spawn_list
+from aj_crew.dashboard.routes import register_all
+from aj_crew.dashboard.server import _register_mcp_routes
 
 _CLIENT_SOURCE = (
-    Path(__file__).parents[1] / "packages" / "kirocrew-client-py" / "kirocrew_client" / "client.py"
+    Path(__file__).parents[1] / "packages" / "ajcrew-client-py" / "ajcrew_client" / "client.py"
 )
 _HELPER_METHODS = {
     "_get": "GET",
@@ -76,7 +76,7 @@ _EXPECTED_CLIENT_ROUTES = {
     ("GET", "/api/memory/episodic/search"),
     ("POST", "/api/chat/slots/{}/context"),
 }
-_CONFIG_PATHS = {"kirocrew", "stt", "theme", "default-agent"}
+_CONFIG_PATHS = {"ajcrew", "stt", "theme", "default-agent"}
 
 
 def _path_template(node: ast.expr) -> str | None:
@@ -127,7 +127,7 @@ def _public_async_route_methods(source: str) -> tuple[set[str], dict[str, set[tu
     client = next(
         node
         for node in tree.body
-        if isinstance(node, ast.ClassDef) and node.name == "KiroCrewClient"
+        if isinstance(node, ast.ClassDef) and node.name == "AjCrewClient"
     )
     callers: set[str] = set()
     routes: dict[str, set[tuple[str, str]]] = {}

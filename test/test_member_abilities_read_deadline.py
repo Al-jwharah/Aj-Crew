@@ -18,11 +18,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import mate_worker_kit
-from kiro_crew.dashboard.handlers import agent_capabilities as capabilities_handler
-from kiro_crew.dashboard.handlers import member_worker_kit as worker_kit_handler
-from kiro_crew.dashboard.routes.agents import register
-from kiro_crew.testing.wait import finished
+from aj_crew import mate_worker_kit
+from aj_crew.dashboard.handlers import agent_capabilities as capabilities_handler
+from aj_crew.dashboard.handlers import member_worker_kit as worker_kit_handler
+from aj_crew.dashboard.routes.agents import register
+from aj_crew.testing.wait import finished
 
 
 class _BlockedRead:

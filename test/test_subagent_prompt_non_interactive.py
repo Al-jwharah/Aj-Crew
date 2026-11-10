@@ -20,12 +20,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.context import ContextBuilder
-from kiro_crew.learn import LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.subagent import SubagentManager
+from aj_crew.context import ContextBuilder
+from aj_crew.learn import LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.skills import SkillsLoader
+from aj_crew.subagent import SubagentManager
 
 # ``SubagentManager.spawn`` refuses while the host looks short of memory, and
 # the real builder reads host resources; neither is this test's input.
@@ -76,7 +76,7 @@ async def _child_build_call() -> tuple[tuple, dict]:
     ctx.hooks.auto_approve_subagent_tools = False
     mgr = SubagentManager(sessions=_mock_sessions(), ctx_builder=ctx)
     mgr._should_use_session_sharing = MagicMock(return_value=False)  # type: ignore[method-assign]
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("pick the better of two designs")
         assert info is not None
         await asyncio.wait_for(mgr._tasks[info.id], _RUN_CEILING)

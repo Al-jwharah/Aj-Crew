@@ -12,8 +12,8 @@ const {
   promptRestartForPrunedBundle,
 } = require(path.join(__dirname, "..", "shell-bundle-watch.js"));
 
-const EXEC_PATH = "/Apps/0.8.0.3/KiroCrew.app/Contents/MacOS/Kiro Crew";
-const RESOURCES = "/Apps/0.8.0.3/KiroCrew.app/Contents/Resources";
+const EXEC_PATH = "/Apps/0.8.0.3/AjCrew.app/Contents/MacOS/Aj Crew";
+const RESOURCES = "/Apps/0.8.0.3/AjCrew.app/Contents/Resources";
 const ASAR = `${RESOURCES}/app.asar`;
 
 // A filesystem whose contents a test edits in place: `present` holds every path
@@ -256,7 +256,7 @@ test("the restart prompt quits only when the user chooses to", async () => {
     });
     assert.strictEqual(quit, expectQuit);
     assert.strictEqual(quits, expectQuit ? 1 : 0);
-    assert.deepStrictEqual(options.buttons, ["Quit Kiro Crew", "Later"]);
+    assert.deepStrictEqual(options.buttons, ["Quit Aj Crew", "Later"]);
     assert.strictEqual(options.cancelId, 1, "dismissing the dialog keeps the app running");
     assert.strictEqual(options.defaultId, 1, "Return on an unprompted dialog keeps the app running");
     assert.match(options.message, /Quit and reopen/, "the instruction is in the text macOS renders");
@@ -276,16 +276,16 @@ test("a restart prompt that cannot be shown keeps the app running", async () => 
 test("the probe reads a real directory tree: an intact bundle, then a deleted one", (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "shell-bundle-watch-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
-  const app = path.join(root, "KiroCrew.app", "Contents");
+  const app = path.join(root, "AjCrew.app", "Contents");
   fs.mkdirSync(path.join(app, "MacOS"), { recursive: true });
   fs.mkdirSync(path.join(app, "Resources"), { recursive: true });
-  const execPath = path.join(app, "MacOS", "Kiro Crew");
+  const execPath = path.join(app, "MacOS", "Aj Crew");
   fs.writeFileSync(execPath, "");
   fs.writeFileSync(path.join(app, "Resources", "app.asar"), "");
   const processObj = { execPath, resourcesPath: path.join(app, "Resources") };
 
   assert.deepStrictEqual(missingShellBundleParts({ fs, path, processObj }), []);
-  fs.rmSync(path.join(root, "KiroCrew.app"), { recursive: true, force: true });
+  fs.rmSync(path.join(root, "AjCrew.app"), { recursive: true, force: true });
   assert.deepStrictEqual(
     missingShellBundleParts({ fs, path, processObj }),
     [execPath, path.join(app, "Resources", "app.asar")],

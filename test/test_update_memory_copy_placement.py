@@ -1,6 +1,6 @@
 """Every call that rewrites this install is preceded by the pre-update memory copy.
 
-`kirocrew update`, the dashboard's apply button and the gateway's unattended applier
+`ajcrew update`, the dashboard's apply button and the gateway's unattended applier
 each take a fresh copy of every memory store before they rewrite the install, and refuse
 when it did not land. The behaviour is tested per applier; this test pins the PLACEMENT,
 so a rewrite added to one of these files without the copy fails here rather than relying
@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-_SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+_SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 # The files whose functions rewrite this install. The managed-venv engine copies through
 # its own ``before_promote`` hook (``wheel_apply.memory_snapshot_hook``), tested apart.

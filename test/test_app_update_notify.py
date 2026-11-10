@@ -18,8 +18,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.apps import update_notify
-from kiro_crew.notifications.bus import SYSTEM_CHANNELS, payload_from_legacy
+from aj_crew.apps import update_notify
+from aj_crew.notifications.bus import SYSTEM_CHANNELS, payload_from_legacy
 
 
 class FakeState:
@@ -333,7 +333,7 @@ class TestRegistryRoute:
 
     @pytest.fixture(name="routes")
     def routes_fixture(self, monkeypatch, ledger):
-        from kiro_crew.apps import routes
+        from aj_crew.apps import routes
 
         monkeypatch.setattr(routes, "load_category_order", lambda: [])
         monkeypatch.setattr(routes, "load_sections", lambda: [])

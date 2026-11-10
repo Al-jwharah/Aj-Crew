@@ -20,17 +20,17 @@ from unittest.mock import AsyncMock, MagicMock
 
 from test_slack_renderer import _Provider, _RecSlack
 
-import kiro_crew.slack.handler as handler
-from kiro_crew.acp.types import (
+import aj_crew.slack.handler as handler
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TOOL_CALL,
     AcpEvent,
 )
-from kiro_crew.messaging import APPROVAL_INTERACTIVE, PROMPT_CHOICE, OutputEvent, TurnDriver
-from kiro_crew.slack import renderer as slack_renderer
-from kiro_crew.slack.handler import _TRUNCATION_MARKER
-from kiro_crew.slack.renderer import (
+from aj_crew.messaging import APPROVAL_INTERACTIVE, PROMPT_CHOICE, OutputEvent, TurnDriver
+from aj_crew.slack import renderer as slack_renderer
+from aj_crew.slack.handler import _TRUNCATION_MARKER
+from aj_crew.slack.renderer import (
     TOOL_APPROVE_ACTION_PREFIX,
     TOOL_DENY_ACTION_PREFIX,
     TOOL_TRUST_ACTION_PREFIX,
@@ -253,7 +253,7 @@ class TestTheCardScansOnlyWhatItShows:
     def _bound() -> int:
         # Imported at call time: on a tree without the module (the fix reverted), an
         # import at the top would fail collection and hide every other test's verdict.
-        from kiro_crew.slack import approval_card
+        from aj_crew.slack import approval_card
 
         return approval_card._SCAN_CHARS
 

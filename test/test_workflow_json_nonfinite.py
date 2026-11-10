@@ -16,9 +16,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import workflows as handlers
-from kiro_crew.workflows.context import Budget
-from kiro_crew.workflows.store import WorkflowRunStore
+from aj_crew.dashboard.handlers import workflows as handlers
+from aj_crew.workflows.context import Budget
+from aj_crew.workflows.store import WorkflowRunStore
 
 
 def _strict_loads(text: str):

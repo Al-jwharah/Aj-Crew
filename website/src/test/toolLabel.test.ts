@@ -74,7 +74,7 @@ describe('deriveShellSummary', () => {
   })
 
   it('returns null for MCP invocations and non-shell titles', () => {
-    expect(deriveShellSummary('Running: @kirocrew-core/spawn_run')).toBeNull()
+    expect(deriveShellSummary('Running: @ajcrew-core/spawn_run')).toBeNull()
     expect(deriveShellSummary('Editing AGENTS.md')).toBeNull()
   })
 
@@ -86,7 +86,7 @@ describe('deriveShellSummary', () => {
     expect(deriveShellSummary(bare)).toBeNull()
     expect(deriveShellSummary(bare, { bareCommand: true })).toBe('ls, grep')
     // The vouch does not let MCP-shaped labels through.
-    expect(deriveShellSummary('@kirocrew-core/spawn_run', { bareCommand: true })).toBeNull()
+    expect(deriveShellSummary('@ajcrew-core/spawn_run', { bareCommand: true })).toBeNull()
   })
 
   it('pickToolLabel still falls back to the raw label the summary substitutes for', () => {

@@ -17,9 +17,9 @@ const now = Math.floor(Date.now() / 1000)
 
 const mate = (name, display_name, extra = {}) => ({
   name, slug: name, display_name, slot_key: '', running: false,
-  last_active_ts: now - 600, last_message: '', kiro_agent: 'kirocrew',
+  last_active_ts: now - 600, last_message: '', kiro_agent: 'ajcrew',
   workspace: 'default', memory_store: 'default', memory_version: 2, memory_owner: name,
-  model: '', avatar: {}, source: 'kirocrew', starred: false, dashboard_created: true,
+  model: '', avatar: {}, source: 'ajcrew', starred: false, dashboard_created: true,
   has_dm_message: true, has_goal: true, projections: { asOfSeq: -1, values: {} }, ...extra,
 })
 const BASE = [
@@ -37,8 +37,8 @@ const APPS = ['Ledger Lens','Task Runner','Code Review','Notebook','Meetings','R
     manifest: { name, version: '1.0.0', displayName: label, description: 'x', ui: { entry: 'index.mjs', pages: [{ route: '/apps/' + name, label }] } } }
 })
 const SLOT = 'chat-1-1'
-const SLOTS = [{ key: SLOT, title: 'Fix the flaky shard', running: false, last_message: 'ok', messages: 1, agent: 'kirocrew', memory_mode: 'persistent', project: 'default', modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0 }]
-const crew = m => ({ name: m.name, display_name: m.display_name, scope: 'global', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', model: '', reasoning_effort: '', description: '', triggers: '', source: 'kirocrew', session_color: '', avatar: {}, starred: !!m.starred, paused: false, last_active_ts: 0 })
+const SLOTS = [{ key: SLOT, title: 'Fix the flaky shard', running: false, last_message: 'ok', messages: 1, agent: 'ajcrew', memory_mode: 'persistent', project: 'default', modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0 }]
+const crew = m => ({ name: m.name, display_name: m.display_name, scope: 'global', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', model: '', reasoning_effort: '', description: '', triggers: '', source: 'ajcrew', session_color: '', avatar: {}, starred: !!m.starred, paused: false, last_active_ts: 0 })
 
 let VIEW = { width: 1280, height: 760 }
 const { srv, base } = await serveDist()
@@ -65,7 +65,7 @@ async function scene(file, { starred = [], count = 4, collapsed = false, url = '
       return json(route, { ok: true }), true
     }
     if (path === '/api/agents' || path === '/api/agents/catalog') {
-      return json(route, { agents: [crew({ name: 'kirocrew', display_name: '' }), ...members.map(crew)], default_agent: 'kirocrew' }), true
+      return json(route, { agents: [crew({ name: 'ajcrew', display_name: '' }), ...members.map(crew)], default_agent: 'ajcrew' }), true
     }
     if (path === '/api/crons') return json(route, { jobs: [] }), true
     if (/^\/api\/chat\/slots\/[^/]+/.test(path)) return json(route, { running: false, has_more: false, total: 0, queue: [], messages: [] }), true

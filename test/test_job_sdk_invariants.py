@@ -31,8 +31,8 @@ from job_sdk_helpers import (  # noqa: F401 -- the fixture is requested by name
     sdk_fixture,
 )
 
-from kiro_crew.apps import job_sdk
-from kiro_crew.apps.job_sdk import (
+from aj_crew.apps import job_sdk
+from aj_crew.apps.job_sdk import (
     _CLEANUP_JOIN_SECS,
     CANCELLED,
     DONE,
@@ -51,7 +51,7 @@ from kiro_crew.apps.job_sdk import (
     forget_sdk,
     register_sdk,
 )
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 # 7. JobHandle.progress and bounded line tail
 
@@ -124,7 +124,7 @@ class TestDefensiveBranches:
         def boom(_text):
             raise RuntimeError("redaction backend down")
 
-        monkeypatch.setattr("kiro_crew.security.pass_compose.compose", boom)
+        monkeypatch.setattr("aj_crew.security.pass_compose.compose", boom)
 
         def failer(h, **kw):
             raise ValueError("SENTINEL-ERR-TEXT")
@@ -137,7 +137,7 @@ class TestDefensiveBranches:
 
     def test_audit_failure_is_swallowed(self, sdk: JobSDK, monkeypatch) -> None:
         """A SEL audit failure must not fail the job."""
-        import kiro_crew.apps.job_sdk as m
+        import aj_crew.apps.job_sdk as m
 
         def boom():
             raise RuntimeError("sel down")
@@ -429,7 +429,7 @@ class TestClaimAndWriteFailurePaths:
             sdk.start("work", dedupe_key="k")
 
         # Claim released: with a working store the same key starts a real run.
-        # nosemgrep: kirocrew.test-bare-monkeypatch-undo -- pre-existing undo that lifts the failing write stub before the same key starts a real run, moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-bare-monkeypatch-undo -- pre-existing undo that lifts the failing write stub before the same key starts a real run, moved verbatim; tracked for a de-flake pass
         monkeypatch.undo()
         run_id = sdk.start("work", dedupe_key="k")
         assert run_id
@@ -776,7 +776,7 @@ class TestDisableIsTerminalForTheSDK:
         app code still running, not a missing error message.
         """
         # flake-ok: pre-existing 30 s stand-in runner body that never runs because every start is refused
-        # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing stand-in runner body that the refused starts never call, moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing stand-in runner body that the refused starts never call, moved verbatim; tracked for a de-flake pass
         sdk.register("work", lambda h: time.sleep(30))
         asyncio.run(sdk.remove_all_async())
         for _ in range(5):
@@ -803,7 +803,7 @@ class TestDedupeKeyIsNotLogged:
         sdk.register("slow", lambda h: gate.acquire(timeout=10))
 
         first = sdk.start("slow", dedupe_key=secret)
-        with caplog.at_level(logging.INFO, logger="kiro_crew.apps.job_sdk"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.apps.job_sdk"):
             second = sdk.start("slow", dedupe_key=secret)
         assert second == first, "the second start should have adopted the first"
 
@@ -830,7 +830,7 @@ class TestEnableReconcilesStaleRecords:
     ) -> None:
         from types import SimpleNamespace
 
-        from kiro_crew.apps import hooks_integration as hi
+        from aj_crew.apps import hooks_integration as hi
 
         sdk = JobSDK("enable-app", tmp_path)
         sdk.register("work", lambda h: None)
@@ -872,7 +872,7 @@ class TestEnableReconcilesStaleRecords:
         """Enable must survive it: a stale record is worth less than the app."""
         from types import SimpleNamespace
 
-        from kiro_crew.apps import hooks_integration as hi
+        from aj_crew.apps import hooks_integration as hi
 
         sdk = JobSDK("enable-app", tmp_path)
 
@@ -959,7 +959,7 @@ class TestDisableCleansUpRegardlessOfTheGrant:
     def test_cleanup_runs_for_an_app_whose_grant_was_revoked(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.apps import hooks_integration as hi
+        from aj_crew.apps import hooks_integration as hi
 
         sdk = JobSDK("revoked-app", tmp_path)
         started = threading.Event()
@@ -1218,7 +1218,7 @@ class TestThreadStartFailure:
         monkeypatch.setattr(threading.Thread, "start", refuse)
         with pytest.raises(JobError):
             sdk.start("work", dedupe_key="k")
-        # nosemgrep: kirocrew.test-bare-monkeypatch-undo -- pre-existing undo that restores Thread.start before the same key starts again, moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-bare-monkeypatch-undo -- pre-existing undo that restores Thread.start before the same key starts again, moved verbatim; tracked for a de-flake pass
         monkeypatch.undo()
 
         # No run is left claiming to be active, and the key is free again.

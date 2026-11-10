@@ -57,7 +57,7 @@ function chip({ parked = 0, running = 0, seed }: {
     store.dispatch(sseSubagentPending({ slot: SLOT, id: `p${i}`, task: `parked ${i}`, approval_id: `spawn:p${i}` }))
   }
   for (let i = 0; i < running; i++) {
-    store.dispatch(sseSubagentSpawn({ slot: SLOT, id: `r${i}`, task: `running ${i}`, agent: 'kirocrew' }))
+    store.dispatch(sseSubagentSpawn({ slot: SLOT, id: `r${i}`, task: `running ${i}`, agent: 'ajcrew' }))
   }
   seed?.(store.dispatch as unknown as (a: unknown) => void)
   const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
@@ -189,7 +189,7 @@ describe('subagent whose spawn approval is gone', () => {
       parked: 1,
       seed: d => {
         goneSeed(d)
-        d(sseSubagentSpawn({ slot: SLOT, id: 'p0', task: 'launched elsewhere', agent: 'kirocrew' }))
+        d(sseSubagentSpawn({ slot: SLOT, id: 'p0', task: 'launched elsewhere', agent: 'ajcrew' }))
         d(sseSubagentTool({ slot: SLOT, id: 'p0', tool: 'shell' }))
       },
     })
@@ -275,7 +275,7 @@ describe('liveness poll for a gone spawn approval', () => {
 
     // Settled by a spawn frame, not by the poll: the poll never gets to clear it.
     await act(async () => {
-      store.dispatch(sseSubagentSpawn({ slot: SLOT, id: 'p0', task: 'launched elsewhere', agent: 'kirocrew' }))
+      store.dispatch(sseSubagentSpawn({ slot: SLOT, id: 'p0', task: 'launched elsewhere', agent: 'ajcrew' }))
       store.dispatch(sseSubagentTool({ slot: SLOT, id: 'p0', tool: 'shell' }))
     })
     expect(unresolvedCount(container)).toBe('')

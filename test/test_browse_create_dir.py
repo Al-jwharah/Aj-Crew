@@ -19,12 +19,12 @@ from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
 from conftest import make_dir_link
-from kiro_crew import platform_compat
-from kiro_crew.dashboard import handlers
-from kiro_crew.dashboard.handlers import api_browse_create_dir
-from kiro_crew.dashboard.handlers import files as files_mod
-from kiro_crew.dashboard.handlers.files import _create_browse_dir_sync
-from kiro_crew.dashboard.routes import taskrunner
+from aj_crew import platform_compat
+from aj_crew.dashboard import handlers
+from aj_crew.dashboard.handlers import api_browse_create_dir
+from aj_crew.dashboard.handlers import files as files_mod
+from aj_crew.dashboard.handlers.files import _create_browse_dir_sync
+from aj_crew.dashboard.routes import taskrunner
 
 ROUTE = "/api/browse-dirs/create"
 
@@ -39,7 +39,7 @@ def _make_app() -> web.Application:
 
 @pytest.fixture()
 def mock_sel():
-    with patch("kiro_crew.dashboard.handlers.sel") as m:
+    with patch("aj_crew.dashboard.handlers.sel") as m:
         m.return_value = MagicMock()
         yield m.return_value
 

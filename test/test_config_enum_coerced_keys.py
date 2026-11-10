@@ -1,7 +1,7 @@
 """Keys whose loader silently coerces an unknown value declare that set as an enum.
 
 The write gate (``cli_config._declared_enum_value``) fires only for a key whose
-schema declares ``enum``. Without one, ``kirocrew config set
+schema declares ``enum``. Without one, ``ajcrew config set
 heartbeat.default_deliver telegram`` would store a value the loader reads back as
 ``slack``. Each test pins one direction of the agreement:
 the gate refuses what the loader would drop, and the loader keeps every value the
@@ -17,8 +17,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.schema import SCHEMA_REGISTRY
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.schema import SCHEMA_REGISTRY
 
 # (dotted key, enum the loader keeps, a value it would coerce away, attribute path)
 _KEYS = [
@@ -37,19 +37,19 @@ def test_the_schema_declares_the_set_the_loader_keeps(key, enum, _bad, _attr) ->
 
 @pytest.mark.parametrize(("key", "_enum", "bad", "_attr"), _KEYS)
 def test_the_write_gate_refuses_what_the_loader_would_drop(key, _enum, bad, _attr) -> None:
-    from kiro_crew.cli_config import _declared_enum_value
+    from aj_crew.cli_config import _declared_enum_value
 
     with pytest.raises(ValueError, match="selectable values"):
         _declared_enum_value(key, bad)
 
 
-def _load(tmp_path: Path, key: str, value: str) -> KiroCrewConfig:
+def _load(tmp_path: Path, key: str, value: str) -> AjCrewConfig:
     section, leaf = key.split(".", 1)
-    config_dir = tmp_path / ".kirocrew"
+    config_dir = tmp_path / ".ajcrew"
     config_dir.mkdir(exist_ok=True)
     (config_dir / "config.json").write_text(json.dumps({section: {leaf: value}}))
-    with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-        return KiroCrewConfig.load()
+    with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+        return AjCrewConfig.load()
 
 
 @pytest.mark.parametrize(
@@ -80,9 +80,9 @@ def test_a_stored_spelling_the_loader_folds_still_loads(
 
 def test_config_set_refuses_the_reported_value_and_writes_nothing(tmp_path: Path, capsys) -> None:
     """The issue's own command: refused with the selectable values, file untouched."""
-    from kiro_crew.cli_config import _config_cmd
+    from aj_crew.cli_config import _config_cmd
 
-    config_dir = tmp_path / ".kirocrew"
+    config_dir = tmp_path / ".ajcrew"
     config_dir.mkdir()
     before = json.dumps({"heartbeat": {"default_deliver": "slack"}})
     (config_dir / "config.json").write_text(before)
@@ -94,13 +94,13 @@ def test_config_set_refuses_the_reported_value_and_writes_nothing(tmp_path: Path
         local=False,
     )
     with (
-        patch("kiro_crew.cli_config.config_path", return_value=config_dir / "config.json"),
+        patch("aj_crew.cli_config.config_path", return_value=config_dir / "config.json"),
         patch(
-            "kiro_crew.cli_config.config_local_path",
+            "aj_crew.cli_config.config_local_path",
             return_value=config_dir / "config.local.json",
         ),
-        patch("kiro_crew.config.loader.config_dir", return_value=config_dir),
-        patch("kiro_crew.cli_config.sel"),
+        patch("aj_crew.config.loader.config_dir", return_value=config_dir),
+        patch("aj_crew.cli_config.sel"),
         pytest.raises(SystemExit) as exc,
     ):
         _config_cmd(args)

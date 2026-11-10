@@ -1,4 +1,4 @@
-"""The whole ``kirocrew doctor`` report, frozen as text.
+"""The whole ``ajcrew doctor`` report, frozen as text.
 
 The section tests beside this file each pin one section. What none of them pins is
 the ORCHESTRATION: which sections run, in what order, which headers and rows the
@@ -8,7 +8,7 @@ the loaded credentials), how every section's issues aggregate into the closing
 verdict, and the exit status. This file pins those, byte for byte, on four hosts.
 
 Every section the orchestrator calls BY NAME is replaced with a marker through
-``kiro_crew.cli_doctor`` -- the patch target every other doctor test uses -- so a
+``aj_crew.cli_doctor`` -- the patch target every other doctor test uses -- so a
 marker that stops printing is also a patch seam that stopped reaching its call site.
 The rows the orchestrator composes from its own probes run for real, against probes
 pinned here. Linux only: the rows describe a Linux host, and the platform branches
@@ -26,12 +26,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import _llama_lib_path, cli_doctor, loopback_http
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.doctor_checks import access, install, services
-from kiro_crew.platform import PlatformCompositionError
-from kiro_crew.service import live_target
+from aj_crew import _llama_lib_path, cli_doctor, loopback_http
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.doctor_checks import access, install, services
+from aj_crew.platform import PlatformCompositionError
+from aj_crew.service import live_target
 
 pytestmark = pytest.mark.skipif(
     not sys.platform.startswith("linux"), reason="the frozen report describes a Linux host"
@@ -115,7 +115,7 @@ _FAMILY_ONLY = {
     "_doctor_service_launch": install,
 }
 
-_GATED_OFF = frozenset({"kirocrew-computer"})
+_GATED_OFF = frozenset({"ajcrew-computer"})
 _KIRO = "/opt/kiro/bin/kiro-cli"
 
 
@@ -155,7 +155,7 @@ class _Host:
         self.home.mkdir()
         self.agents = tmp_path / "agents"
         self.agents.mkdir()
-        self.cfg = KiroCrewConfig()
+        self.cfg = AjCrewConfig()
         self.cfg.stt.enabled = False
         self.cfg.agent.model = "auto"
         self.cfg.agent.approval_mode = "reads"
@@ -167,14 +167,14 @@ class _Host:
     def install(self) -> None:
         mp = self.mp
         for var in (
-            "KIROCREW_PROJECT_DIR",
+            "AJCREW_PROJECT_DIR",
             "SSH_CONNECTION",
             "SSH_CLIENT",
-            "KIROCREW_PORT",
+            "AJCREW_PORT",
             "LLAMA_CPP_LIB_PATH",
         ):
             mp.delenv(var, raising=False)
-        mp.setattr(cli_doctor, "__file__", str(self.tmp / "pkg" / "src" / "kiro_crew" / "x.py"))
+        mp.setattr(cli_doctor, "__file__", str(self.tmp / "pkg" / "src" / "aj_crew" / "x.py"))
         mp.setattr(cli_doctor, "KIRO_AGENTS_DIR", self.agents)
         mp.setattr(cli_doctor, "config_dir", lambda: self.home)
         mp.setattr(cli_doctor, "data_home", lambda: self.home)
@@ -182,8 +182,8 @@ class _Host:
         mp.setattr(cli_doctor, "_mc_version", "9.9.9")
         mp.setattr(live_target, "selected_version", lambda: ("9.9.9", None))
         mp.setattr(cli_doctor, "MIN_NODE_VERSION", (20, 0, 0))
-        mp.setattr(KiroCrewConfig, "load", classmethod(lambda cls: self.cfg))
-        mp.setattr(KiroCrewConfig, "load_credentials", lambda cfg, **kw: dict(self.creds))
+        mp.setattr(AjCrewConfig, "load", classmethod(lambda cls: self.cfg))
+        mp.setattr(AjCrewConfig, "load_credentials", lambda cfg, **kw: dict(self.creds))
         mp.setattr(cli_doctor, "resolve_kiro_cli", lambda: self.kiro)
         mp.setattr(cli_doctor.shutil, "which", lambda name, **_kw: self.which.get(name))
         mp.setattr(cli_doctor.gateway_lock, "lock_holder", self._lock_holder)
@@ -231,8 +231,8 @@ class _Host:
         mp.setattr(cli_doctor, "job_pause_state_from_disk", lambda job_id: self.paused)
         mp.setattr(cli_doctor, "machine_hostname", lambda: "devbox")
         mp.setattr(cli_doctor, "is_local_only", lambda host, has_slack: self.local)
-        import kiro_crew._sqlite_compat as sqlite_compat
-        import kiro_crew.channels as channels
+        import aj_crew._sqlite_compat as sqlite_compat
+        import aj_crew.channels as channels
 
         mp.setattr(sqlite_compat, "fts5_available", lambda: self.fts5)
         # The timezone-data row reads the host's zone files; pin both probes so
@@ -240,7 +240,7 @@ class _Host:
         mp.setattr(install, "_tz_probe_offset", lambda: self.tz_offset)
         mp.setattr(install, "_tz_data_from_system", lambda: True)
         mp.setattr(channels, "channel_readiness", lambda cfg, creds: tuple(self.readiness))
-        import kiro_crew.doctor_checks.resources as resources
+        import aj_crew.doctor_checks.resources as resources
 
         # Added after the sections moved, so the facade does not forward it: the
         # marker goes on the family that defines it. The real section reads the
@@ -248,7 +248,7 @@ class _Host:
         mp.setattr(resources, "_doctor_acp_runtimes", self._marker("_doctor_acp_runtimes"))
         # Same reason: the real section reads the host's kernel limits and cgroup tree.
         mp.setattr(resources, "_doctor_task_ceilings", self._marker("_doctor_task_ceilings"))
-        import kiro_crew.doctor_checks.workload as workload
+        import aj_crew.doctor_checks.workload as workload
 
         # Same reason: added after the move. The real section walks the host's
         # ledger stores, which no frozen report can pin.
@@ -376,7 +376,7 @@ def host(tmp_path, monkeypatch) -> _Host:
 
 
 _READY = """\
-Kiro Crew Doctor 👻
+Aj Crew Doctor 👻
 
 Platform
   edition:     ✅ standalone
@@ -390,11 +390,11 @@ Dependencies
   node:        ✅ /usr/bin/node (v22.3.0)
 
 Project
-  source dir:  ✅ <TMP>/checkout (Kiro Crew source checkout)
+  source dir:  ✅ <TMP>/checkout (Aj Crew source checkout)
   git repo:    ✅
 
 Agent
-  config:      ✅ <TMP>/agents/kirocrew.json
+  config:      ✅ <TMP>/agents/ajcrew.json
   model pins:  ✅ no unusable spellings in agent specs
 
 Configuration
@@ -451,7 +451,7 @@ MCP Tools
 
 Runtime
   python:      ✅ <PYTHON> (<PYVER>)
-  kiro_crew:   ✅ 9.9.9
+  aj_crew:   ✅ 9.9.9
   deps:        ✅ websockets, slack_sdk, aiohttp available
   <<_doctor_import_path>>
   sqlite fts5: ✅ available
@@ -470,7 +470,7 @@ Speech-to-Text
 
 Slack Integration
   status:      ⏭  not configured (optional)
-  setup:       run 'kirocrew setup --slack', or connect any channel
+  setup:       run 'ajcrew setup --slack', or connect any channel
                (Slack, Discord, Telegram, …) from the dashboard
   <<_doctor_discord>>
   <<_doctor_whatsapp>>
@@ -488,16 +488,16 @@ Connectivity
   <<_doctor_kiro_chat_delegate>>
   gateway:     ⏹  not running
 
-✅ Kiro Crew is ready!
+✅ Aj Crew is ready!
 """
 
 
 def _ready(host: _Host) -> None:
     checkout = host.tmp / "checkout"
-    for marker in ("skills", "src/kiro_crew", ".git"):
+    for marker in ("skills", "src/aj_crew", ".git"):
         (checkout / marker).mkdir(parents=True)
-    host.mp.setenv("KIROCREW_PROJECT_DIR", str(checkout))
-    (host.agents / "kirocrew.json").write_text("{}", encoding="utf-8")
+    host.mp.setenv("AJCREW_PROJECT_DIR", str(checkout))
+    (host.agents / "ajcrew.json").write_text("{}", encoding="utf-8")
     host.which.update(git="/usr/bin/git", node="/usr/bin/node")
     host.runs[("/usr/bin/node", "-v")] = _done("v22.3.0\n")
     host.runs[(_KIRO, "--version")] = _done("kiro-cli 1.2.3\n")
@@ -524,9 +524,9 @@ def test_a_ready_host_prints_every_section_in_order_and_passes(host, capsys) -> 
     args, _ = host.called("_doctor_effective_model")
     assert args[0] is host.cfg and args[1] == str(host.tmp / "checkout")
     args, kwargs = host.called("_doctor_mcp_tools")
-    assert args[0] == host.agents / "kirocrew.json" and kwargs == {"gated_off": _GATED_OFF}
+    assert args[0] == host.agents / "ajcrew.json" and kwargs == {"gated_off": _GATED_OFF}
     args, kwargs = host.called("_doctor_mcp_governance")
-    assert args[0] == host.agents / "kirocrew.json" and kwargs["gated_off"] is _GATED_OFF
+    assert args[0] == host.agents / "ajcrew.json" and kwargs["gated_off"] is _GATED_OFF
     args, kwargs = host.called("doctor_dead_paths")
     assert kwargs == {"agents_dir": host.agents}
     args, _ = host.called("_doctor_agents_janitor")
@@ -659,7 +659,7 @@ def test_a_start_up_record_of_an_inherited_lib_path_leaves_the_report_unchanged(
 ) -> None:
     """A start-up step that ran earlier in the process records the lib path it removed."""
     _ready(host)
-    installed = host.tmp / "old" / "kiro_crew" / "_vendor" / "llama_cpp_libs" / "linux_x86_64"
+    installed = host.tmp / "old" / "aj_crew" / "_vendor" / "llama_cpp_libs" / "linux_x86_64"
     host.mp.setattr(_llama_lib_path, "_dropped_inherited", str(installed))
 
     out, code = host.run(capsys)
@@ -669,7 +669,7 @@ def test_a_start_up_record_of_an_inherited_lib_path_leaves_the_report_unchanged(
 
 
 _BROKEN = """\
-Kiro Crew Doctor 👻
+Aj Crew Doctor 👻
 
 Platform
   edition:     ❌ composition failed: companion missing
@@ -678,17 +678,17 @@ Dependencies
                Install kiro-cli per its docs, then: kiro-cli login
   <<_doctor_claude_backend>>
   <<_doctor_agent_auth>>
-  git:         ❌ not found (needed for kirocrew update)
+  git:         ❌ not found (needed for ajcrew update)
   node:        ❌ v18.19.0 < v20.0.0
-               Fix: Node.js v18.19.0 is too old: Kiro Crew needs v20.0.0 or newer. Update Node.js: install 24 LTS from https://nodejs.org, or run `nvm install 24` / `mise use -g node@24`.
+               Fix: Node.js v18.19.0 is too old: Aj Crew needs v20.0.0 or newer. Update Node.js: install 24 LTS from https://nodejs.org, or run `nvm install 24` / `mise use -g node@24`.
 
 Project
   source dir:  ❌ stale — points to deleted <TMP>/gone
                Fix: rm <TMP>/datahome/project_dir
 
 Agent
-  config:      ❌ not found (run kirocrew setup)
-  model pin:   ❌ 'kirocrew': 'claude-4' is not a model kiro-cli serves
+  config:      ❌ not found (run ajcrew setup)
+  model pin:   ❌ 'ajcrew': 'claude-4' is not a model kiro-cli serves
                   the registry maps that spelling to 'claude-sonnet-4'
 
 Configuration
@@ -744,7 +744,7 @@ MCP Tools
 
 Runtime
   python:      ✅ <TMP>/pkg/.venv/bin/python3 (Python 3.12.1)
-  kiro_crew:   ✅ 9.9.9
+  aj_crew:   ✅ 9.9.9
   deps:        ❌ missing modules (websockets/slack_sdk/aiohttp)
   <<_doctor_import_path>>
   sqlite fts5: ❌ missing (memory/knowledge search will fail)
@@ -760,7 +760,7 @@ Vector Memory (in-process embeddings)
   runtime:     ❌ vendored runtime failed to load
                Missing native libs for linux-x86_64: libllama.so, libggml.so
                This install's vendored llama.cpp is incomplete (packaging
-               defect, not an unsupported platform) — reinstall Kiro Crew
+               defect, not an unsupported platform) — reinstall Aj Crew
                from a current release to restore vector memory.
   faiss:       ⏹ not installed (optional) — episodic recall uses the stdlib fallback; installing faiss-cpu accelerates it
   model:       ❌ custom model unusable — not a GGUF file
@@ -775,7 +775,7 @@ Speech-to-Text
 
 Slack Integration
   status:      ⏭  not configured (optional)
-  setup:       run 'kirocrew setup --slack', or connect any channel
+  setup:       run 'ajcrew setup --slack', or connect any channel
                (Slack, Discord, Telegram, …) from the dashboard
   <<_doctor_discord>>
   <<_doctor_whatsapp>>
@@ -799,11 +799,11 @@ Connectivity
   <<_doctor_kiro_chat_delegate>>
   gateway:     ✅ running (token auth enabled)
   running:     ⚠️  8.8.8, on disk 9.9.9 (restart needed)
-               Fix: `kirocrew restart` (the gateway still runs the old code)
+               Fix: `ajcrew restart` (the gateway still runs the old code)
 
   💡 Remote access: Run on your LOCAL machine:
      ssh -NL 9999:localhost:9999 devbox
-     Then run: kirocrew token
+     Then run: ajcrew token
   auth check:  ❌ external access allowed without token!
 
 ❌ Fix these issues: platform composition failed: companion missing, git, node, stale project_dir, agent config, agent model pin, dashboard auth: remote bind without Slack, _doctor_effective_model issue, render_doctor_section issue, _doctor_credentials issue, _doctor_sandbox issue, _doctor_live_target_pointer issue, doctor_dead_paths issue, python deps, _doctor_import_path issue, sqlite fts5, timezone data out of date, embedding runtime, custom embedding model unusable, _doctor_discord issue, _doctor_whatsapp issue, telegram: missing TELEGRAM_BOT_TOKEN and telegram.allowed_chat_ids, loop-stall dump attributed to cron job 'nightly' ('job-7'), recent loop-stall crash dump (2h ago), gateway restart needed (running version differs from on-disk), dashboard auth: no token required on external interface
@@ -821,7 +821,7 @@ def test_a_broken_host_reports_every_issue_in_order_and_exits_one(host, capsys) 
     # The frozen report asserts the DEFAULT (nodejs.org / nvm) node remedy. Pin a
     # modern glibc so node_too_old_message does not switch to the old-glibc branch
     # on an AL2 (glibc 2.26) developer host and redden this byte-for-byte report.
-    from kiro_crew import constants as _constants
+    from aj_crew import constants as _constants
 
     host.mp.setattr(_constants, "_host_glibc_version", lambda: (2, 35))
     venv_py = host.tmp / "pkg" / ".venv" / "bin" / "python3"
@@ -830,7 +830,7 @@ def test_a_broken_host_reports_every_issue_in_order_and_exits_one(host, capsys) 
     host.runs[(str(venv_py), "--version")] = _done("Python 3.12.1\n")
     host.venv_deps_ok = False
     (host.home / "project_dir").write_text(str(host.tmp / "gone") + "\n", encoding="utf-8")
-    host.pins = [("kirocrew", "claude-4", "claude-sonnet-4")]
+    host.pins = [("ajcrew", "claude-4", "claude-sonnet-4")]
     host.cfg.dashboard.url = "http://0.0.0.0:9999"
     host.local = False
     host.cfg.stt.enabled = True
@@ -903,12 +903,12 @@ def test_a_fresh_wheel_install_without_git_or_agent_spec_passes(host, capsys) ->
     """Right after cli.sh: no git, no gateway run yet. Both are normal, not faults."""
     _ready(host)
     del host.which["git"]
-    (host.agents / "kirocrew.json").unlink()
+    (host.agents / "ajcrew.json").unlink()
 
     out, code = host.run(capsys)
 
     assert "  git:         ⏭  not found (not needed: this install updates without git)\n" in out
-    assert "  config:      ⏭  not created yet (kirocrew gateway creates it on start)\n" in out
+    assert "  config:      ⏭  not created yet (ajcrew gateway creates it on start)\n" in out
     assert "❌" not in out
     assert code is None
 
@@ -916,12 +916,12 @@ def test_a_fresh_wheel_install_without_git_or_agent_spec_passes(host, capsys) ->
 def test_a_missing_agent_spec_stays_red_when_the_lock_probe_cannot_answer(host, capsys) -> None:
     """No proof that no gateway runs: the missing spec is still reported as a fault."""
     _ready(host)
-    (host.agents / "kirocrew.json").unlink()
+    (host.agents / "ajcrew.json").unlink()
     host.gateway_pid = "indeterminate"
 
     out, code = host.run(capsys)
 
-    assert "  config:      ❌ not found (run kirocrew setup)\n" in out
+    assert "  config:      ❌ not found (run ajcrew setup)\n" in out
     assert "agent config" in out.splitlines()[-1]
     assert code == 1
 
@@ -941,7 +941,7 @@ def test_slack_and_cloud_transcription_rows(host, capsys) -> None:
     host.creds = {
         "SLACK_APP_TOKEN": "xapp-1",
         "SLACK_BOT_TOKEN": "xoxb-1",
-        "KIROCREW_OWNER_ID": "U123",
+        "AJCREW_OWNER_ID": "U123",
     }
     host.ctx.slack_gate = SimpleNamespace(validate_enterprise=lambda token, extra_ids: False)
     host.cfg.stt.enabled = True
@@ -1025,7 +1025,7 @@ def test_kiro_sandbox_row_is_fatal_only_for_a_harness_that_spawns_kiro_cli(
     host, capsys, monkeypatch, backend, member_backend, kas_bundle, required
 ) -> None:
     """kiro-cli's own sandbox blocks Crew's MCP servers only in a kiro-cli spawn."""
-    from kiro_crew.doctor_checks import confinement
+    from aj_crew.doctor_checks import confinement
 
     _ready(host)
     host.cfg.agent.acp_backend = backend
@@ -1044,7 +1044,7 @@ def test_kiro_sandbox_row_is_fatal_only_for_a_harness_that_spawns_kiro_cli(
 
 
 _BUNDLE = """\
-Kiro Crew Doctor 👻
+Aj Crew Doctor 👻
 
 Collecting diagnostics bundle (secrets are redacted)...
 

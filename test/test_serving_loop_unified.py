@@ -25,10 +25,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.dashboard import state as state_mod
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard import state as state_mod
+from aj_crew.dashboard.handlers import updates
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.history import ConversationLog
 
 
 def _make_state(tmp_path) -> DashboardState:
@@ -111,7 +111,7 @@ async def test_log_handler_uses_the_states_loop(tmp_path) -> None:
     handler.set_state(state)
 
     handler.emit(
-        logging.LogRecord("kiro_crew", logging.INFO, __file__, 1, "hello", None, None)
+        logging.LogRecord("aj_crew", logging.INFO, __file__, 1, "hello", None, None)
     )
 
     assert state.serving_loop.call_soon_threadsafe.called, (
@@ -250,7 +250,7 @@ def test_no_latched_loop_held_across_a_closure() -> None:
         r"[A-Za-z_][A-Za-z0-9_]*\s*:\s*\"?asyncio\.AbstractEventLoop\s*\|\s*None\"?\s*"
         r"=\s*asyncio\.get_running_loop\(\)"
     )
-    from kiro_crew.dashboard import server as server_mod
+    from aj_crew.dashboard import server as server_mod
 
     # The server_runtime owners server.py composes hold its startup closures too.
     owners = sorted((Path(server_mod.__file__).parent / "server_runtime").glob("[!_]*.py"))

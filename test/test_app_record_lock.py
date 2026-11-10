@@ -17,10 +17,10 @@ import pytest
 from app_manager_helpers import app_home_fixture  # noqa: F401 - fixture
 from app_manager_helpers import _make_app_source
 
-from kiro_crew import platform_compat
-from kiro_crew.apps import manager as manager_mod
-from kiro_crew.apps.dev_mode import set_dev_mode
-from kiro_crew.apps.manager import (
+from aj_crew import platform_compat
+from aj_crew.apps import manager as manager_mod
+from aj_crew.apps.dev_mode import set_dev_mode
+from aj_crew.apps.manager import (
     INSTALLED_META_FILENAME,
     app_dir,
     app_record_lock,
@@ -29,8 +29,8 @@ from kiro_crew.apps.manager import (
     install_app,
     update_app,
 )
-from kiro_crew.apps.permissions import app_can_manage_session_approvals
-from kiro_crew.testing.wait import wait_until
+from aj_crew.apps.permissions import app_can_manage_session_approvals
+from aj_crew.testing.wait import wait_until
 
 _KEY = "sessionApprovalConsentPending"
 
@@ -60,7 +60,7 @@ def test_another_process_cannot_take_a_held_lock(app_home, tmp_path):
     lock_path = manager_mod._record_lock_path("test-app")
     probe = (
         "import os, sys\n"
-        "from kiro_crew import platform_compat\n"
+        "from aj_crew import platform_compat\n"
         "fd = platform_compat.open_create_or_existing(sys.argv[1], os.O_RDWR)\n"
         "try:\n"
         "    with platform_compat.file_lock(fd, exclusive=True, wait=False):\n"
@@ -68,7 +68,7 @@ def test_another_process_cannot_take_a_held_lock(app_home, tmp_path):
         "except BlockingIOError:\n"
         "    sys.exit(3)\n"
     )
-    env = {**os.environ, "KIROCREW_HOME": str(app_home)}
+    env = {**os.environ, "AJCREW_HOME": str(app_home)}
     with app_record_lock("test-app"):
         held = subprocess.run(
             [sys.executable, "-c", probe, str(lock_path)], cwd=tmp_path, env=env, timeout=120
@@ -149,7 +149,7 @@ def test_every_record_writer_takes_the_lock_before_it_reads():
     import ast
     from pathlib import Path
 
-    import kiro_crew.apps as apps_pkg
+    import aj_crew.apps as apps_pkg
 
     missing = []
     for path in sorted(Path(apps_pkg.__file__).parent.glob("*.py")):

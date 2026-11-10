@@ -182,11 +182,11 @@ describe('ToolCallLine wait countdown — rendering and ticking', () => {
 
 describe('ToolCallLine wait countdown — transport-shaped tool titles', () => {
   // The title on the transcript's tool entry is decided by the TRANSPORT, not by
-  // the tool: `wait` direct over MCP, `kirocrew-core___wait` through the pooled
+  // the tool: `wait` direct over MCP, `ajcrew-core___wait` through the pooled
   // gateway's namespacing, `wait (mcp)` where a suffix is appended. The
   // `toolName === 'wait'` check this replaced matched only the first, so on the
   // other two the countdown never appeared at all.
-  for (const toolName of ['wait', 'kirocrew-core___wait', 'wait (mcp)']) {
+  for (const toolName of ['wait', 'ajcrew-core___wait', 'wait (mcp)']) {
     it(`renders the countdown when the log entry's title reads "${toolName}"`, () => {
       freezeClock()
       renderWait(makeStore({ toolName }))

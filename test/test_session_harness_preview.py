@@ -26,10 +26,10 @@ import pytest
 from chat_test_helpers import _make_state
 from member_memory_helpers import make_request
 
-from kiro_crew import session_harness_preview
-from kiro_crew.dashboard import create_rate_limit
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.handlers.session_control import api_session_control_create
+from aj_crew import session_harness_preview
+from aj_crew.dashboard import create_rate_limit
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.handlers.session_control import api_session_control_create
 
 
 @pytest.fixture(autouse=True)
@@ -49,9 +49,9 @@ def preview(monkeypatch):
 
 @pytest.fixture
 def selectable(monkeypatch):
-    from kiro_crew import acp_backends
-    from kiro_crew.agent_sdk import backend_install
-    from kiro_crew.agent_sdk.backend_install import INSTALLED, BackendInstallState
+    from aj_crew import acp_backends
+    from aj_crew.agent_sdk import backend_install
+    from aj_crew.agent_sdk.backend_install import INSTALLED, BackendInstallState
 
     monkeypatch.setattr(acp_backends, "selectable_backend_values", lambda: ["", "claude"])
     monkeypatch.setattr(
@@ -78,7 +78,7 @@ def _post(state, caller, body: dict):
 
 
 def _props(tool_name: str) -> dict:
-    from kiro_crew import mcp_dashboard
+    from aj_crew import mcp_dashboard
 
     tools = {t["name"]: t for t in mcp_dashboard._list_tools()}
     return tools[tool_name]["inputSchema"]["properties"]
@@ -98,7 +98,7 @@ class TestTheSchema:
         assert "backend" in _props(tool)
 
     def test_off_leaves_spawn_runs_own_backend_alone(self):
-        from kiro_crew.session_harness_preview import with_backend_schema
+        from aj_crew.session_harness_preview import with_backend_schema
 
         spawn = {"name": "spawn_run", "inputSchema": {"properties": {"backend": {}}}}
         assert with_backend_schema([spawn], False) == [spawn]
@@ -141,9 +141,9 @@ class TestTheRoute:
 
 class TestTheTools:
     def _call(self, tool: str, args: dict):
-        from kiro_crew.mcp_dashboard import TABLE
-        from kiro_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
-        from kiro_crew.mcp_tools.table import Caller, ToolContext
+        from aj_crew.mcp_dashboard import TABLE
+        from aj_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
+        from aj_crew.mcp_tools.table import Caller, ToolContext
 
         dash = InMemoryDashboardClient(
             {
@@ -177,7 +177,7 @@ class TestTheTools:
             {
                 "title": "item",
                 "acceptance": {"kind": "human_approval"},
-                "agent": "kirocrew-worker",
+                "agent": "ajcrew-worker",
                 "seed": "go",
                 "backend": "claude",
             },
@@ -202,18 +202,18 @@ class TestTheTools:
     ],
 )
 def test_the_preview_reads_off_unless_set(monkeypatch, previews, on):
-    from kiro_crew.config import KiroCrewConfig
+    from aj_crew.config import AjCrewConfig
 
     cfg = SimpleNamespace(dashboard=SimpleNamespace(feature_previews=previews))
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
     assert session_harness_preview.session_harness_enabled() is on
 
 
 def test_an_unreadable_config_reads_as_off(monkeypatch):
-    from kiro_crew.config import KiroCrewConfig
+    from aj_crew.config import AjCrewConfig
 
     def _boom(cls):
         raise OSError("unreadable")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_boom))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_boom))
     assert session_harness_preview.session_harness_enabled() is False

@@ -35,20 +35,20 @@ from chat_merge_back_helpers import (  # noqa: F401
 )
 from chat_test_helpers import _make_state, drain_background_tasks
 
-from kiro_crew.dashboard import chat_handlers, chat_merge_back, chat_persistence, workflow_inject
-from kiro_crew.dashboard.chat_api.slot_lifecycle import close_slot
-from kiro_crew.dashboard.chat_merge_back import (
+from aj_crew.dashboard import chat_handlers, chat_merge_back, chat_persistence, workflow_inject
+from aj_crew.dashboard.chat_api.slot_lifecycle import close_slot
+from aj_crew.dashboard.chat_merge_back import (
     MERGE_NOTE_SOURCE,
     api_chat_slot_merge_back,
     api_chat_slot_merge_back_draft,
     covered_digest,
 )
-from kiro_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
-from kiro_crew.dashboard.chat_utils import effective_session_key, slot_history_key
-from kiro_crew.dashboard.slot_buffers import MAX_FORK_PARENT_KEY_CHARS, MERGED_FROM_META_KEY
-from kiro_crew.dashboard.state import _MAX_PENDING_CONTEXT
-from kiro_crew.dashboard.transcript_binding import bind_transcript
-from kiro_crew.testing.wait import async_wait_until, await_until, default_timeout
+from aj_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
+from aj_crew.dashboard.chat_utils import effective_session_key, slot_history_key
+from aj_crew.dashboard.slot_buffers import MAX_FORK_PARENT_KEY_CHARS, MERGED_FROM_META_KEY
+from aj_crew.dashboard.state import _MAX_PENDING_CONTEXT
+from aj_crew.dashboard.transcript_binding import bind_transcript
+from aj_crew.testing.wait import async_wait_until, await_until, default_timeout
 
 
 class TestSidebarRowParent:
@@ -131,9 +131,9 @@ class TestSidebarRowParent:
 
     @pytest.mark.asyncio
     async def test_a_pending_sidebar_twin_settles_after_reconciliation_without_replay(self, chats):
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.slot_persistence import metadata_codec
-        from kiro_crew.dashboard.state import load_window_off_loop
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.slot_persistence import metadata_codec
+        from aj_crew.dashboard.state import load_window_off_loop
 
         state = chats.state
         key = slot_history_key(chats.parent)
@@ -160,7 +160,7 @@ class TestSidebarRowParent:
 
     @pytest.mark.asyncio
     async def test_consumption_does_not_load_a_pending_sidebar_twin(self, chats, caplog):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = chats.state
         key = slot_history_key(chats.parent)
@@ -313,7 +313,7 @@ class TestEndToEndWithTheForkRoute:
     async def test_a_chat_made_on_a_deleted_parents_key_gets_nothing(
         self, tmp_path, monkeypatch, model
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         parent = state.get_or_create_slot("parent")
         parent.created_at = "2026-10-01T12:00:00+00:00"
@@ -495,7 +495,7 @@ class TestEndToEndWithTheForkRoute:
 class TestMergeBackDashboardAuthorization:
     @staticmethod
     def _real_auth_app(state, internal_secret: str) -> web.Application:
-        from kiro_crew.dashboard.token_auth import token_auth_middleware
+        from aj_crew.dashboard.token_auth import token_auth_middleware
 
         app = web.Application(
             middlewares=[
@@ -551,7 +551,7 @@ class TestMergeBackDashboardAuthorization:
 
     @pytest.mark.asyncio
     async def test_real_dashboard_token_still_drafts_and_merges(self, chats, model):
-        from kiro_crew.dashboard.token_auth import generate_token
+        from aj_crew.dashboard.token_auth import generate_token
 
         app = self._real_auth_app(chats.state, "test-internal-secret")
         token = generate_token("local-app", ttl_seconds=300)  # flake-ok: token lifetime, not a wait

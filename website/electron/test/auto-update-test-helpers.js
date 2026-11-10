@@ -16,7 +16,7 @@ function makeDeps(opts = {}) {
     // Bundle location seams. Default to a normal /Applications install so every
     // pre-existing test keeps arming the updater; the bundle-location guard
     // tests drive these to the refused states.
-    resourcesPath = "/Applications/Kiro Crew.app/Contents/Resources",
+    resourcesPath = "/Applications/Aj Crew.app/Contents/Resources",
     bundleWritable = true,
     // Externally-managed verdict. null (the default) = not managed, decided
     // here so no test's outcome depends on the host filesystem.

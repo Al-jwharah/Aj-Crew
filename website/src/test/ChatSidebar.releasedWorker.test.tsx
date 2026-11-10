@@ -105,7 +105,7 @@ function renderSidebar(slots: ChatSlot[]) {
             <ChatSidebar
               slots={slots} activeSlot={null} unreadSlots={[]}
               history={[]} historyHasMore={false}
-              defaultAgent="kirocrew" installedAgents={[]}
+              defaultAgent="ajcrew" installedAgents={[]}
             />
           </MemoryRouter>
         </ThemeProvider>
@@ -139,9 +139,9 @@ afterEach(() => {
 
 describe('chat sidebar session row — released worker marker', () => {
   const SLOTS = [
-    { key: 'w-asleep', title: 'asleep', running: false, messages: 2, agent: 'kirocrew', created_by: 'dashboard_member-mate', process: 'released', tags: [], last_ts: LAST_TS },
-    { key: 'w-awake', title: 'awake', running: false, messages: 2, agent: 'kirocrew', created_by: 'dashboard_member-mate', process: 'live', tags: [], last_ts: LAST_TS },
-    { key: 'k-ordinary', title: 'ordinary', running: false, messages: 2, agent: 'kirocrew', tags: [], last_ts: LAST_TS },
+    { key: 'w-asleep', title: 'asleep', running: false, messages: 2, agent: 'ajcrew', created_by: 'dashboard_member-mate', process: 'released', tags: [], last_ts: LAST_TS },
+    { key: 'w-awake', title: 'awake', running: false, messages: 2, agent: 'ajcrew', created_by: 'dashboard_member-mate', process: 'live', tags: [], last_ts: LAST_TS },
+    { key: 'k-ordinary', title: 'ordinary', running: false, messages: 2, agent: 'ajcrew', tags: [], last_ts: LAST_TS },
   ] as unknown as ChatSlot[]
 
   it('marks a released worker, named for screen readers', () => {
@@ -159,7 +159,7 @@ describe('chat sidebar session row — released worker marker', () => {
 
   it('shows the marker even when the row has no activity time', () => {
     const { container } = renderSidebar([
-      { key: 'w-quiet', title: 'quiet', running: false, messages: 0, agent: 'kirocrew', created_by: 'dashboard_member-mate', process: 'released', tags: [] },
+      { key: 'w-quiet', title: 'quiet', running: false, messages: 0, agent: 'ajcrew', created_by: 'dashboard_member-mate', process: 'released', tags: [] },
     ] as unknown as ChatSlot[])
     expect(row(container, 'quiet').querySelector('[data-testid="session-row-released"]')).not.toBeNull()
   })

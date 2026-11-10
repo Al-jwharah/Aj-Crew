@@ -19,9 +19,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from service_helpers import _clear_sudo_user  # noqa: F401 -- an autouse fixture, found by name
 
-from kiro_crew.service import common, controller
-from kiro_crew.service.common import Platform, service_environment
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew.service import common, controller
+from aj_crew.service.common import Platform, service_environment
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 BEARER = "tok-not-for-disclosure"
 
@@ -50,7 +50,7 @@ _CHECKED_NAMES = (
 
 def _inherited_env():
     """The module under test, imported per test so a missing one fails each test."""
-    from kiro_crew.service import inherited_env
+    from aj_crew.service import inherited_env
 
     return inherited_env
 
@@ -58,9 +58,9 @@ def _inherited_env():
 @pytest.fixture(autouse=True)
 def overrides(_floor_monkeypatch, tmp_path):
     """Point the unit's overrides file at an absent temp path, so the host's is never read."""
-    from kiro_crew.service import linux
+    from aj_crew.service import linux
 
-    target = tmp_path / "etc-kirocrew" / "kirocrew.env"
+    target = tmp_path / "etc-ajcrew" / "ajcrew.env"
     _floor_monkeypatch.setattr(linux, "ENV_FILE_PATH", target)
     return target
 
@@ -171,7 +171,7 @@ class TestDroppedHostEnvNames:
         assert mod.dropped_host_env_names({"AWS_REGION": "us-west-2"}, Platform.SYSTEMD) == []
 
     def test_a_name_the_systemd_overrides_file_sets_is_not_dropped(self, dotenv, overrides):
-        """Both unit scopes read ``/etc/kirocrew/kirocrew.env``; launchd does not."""
+        """Both unit scopes read ``/etc/ajcrew/ajcrew.env``; launchd does not."""
         overrides.parent.mkdir()
         overrides.write_text("AWS_REGION=us-east-1\n", encoding="utf-8")
         mod = _inherited_env()
@@ -191,7 +191,7 @@ class TestDroppedHostEnvNames:
     @pytest.mark.skipif(not sys.platform.startswith("linux"), reason="the resolver's Linux branch")
     def test_the_unnamed_socket_paths_are_the_ones_sessions_search(self, monkeypatch):
         """Pinned to ``_resolve_ssh_auth_sock`` so the two lists cannot drift apart."""
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         searched: list[str] = []
         monkeypatch.setattr(client.glob, "glob", lambda p: searched.append(p) or [])
@@ -206,7 +206,7 @@ class TestDroppedHostEnvNames:
         ``dotenv`` stands for root's file, which the service never reads, so a name
         it supplies is still dropped, and the remedy names the account's file.
         """
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         dotenv.write_text("AWS_REGION=us-east-1\n", encoding="utf-8")
         alice_home = tmp_path / "alice"
@@ -318,7 +318,7 @@ class TestDroppedHostEnvRemedy:
 
 
 def test_no_dropped_variable_is_baked_into_the_service_environment(host_shell):
-    """The unit, the plist and kirocrew.env are world-readable; these stay out."""
+    """The unit, the plist and ajcrew.env are world-readable; these stay out."""
     env = service_environment("/home/tester")
     for name in (
         "AWS_CONTAINER_AUTHORIZATION_TOKEN",
@@ -333,8 +333,8 @@ class TestDoctorReportsDroppedHostEnv:
     """`doctor` reports the same names, only when a service definition exists."""
 
     def _run(self, monkeypatch, unit, warning="Note: dropped host env"):
-        from kiro_crew import cli_doctor
-        from kiro_crew.doctor_checks import services
+        from aj_crew import cli_doctor
+        from aj_crew.doctor_checks import services
 
         mod = _inherited_env()
         monkeypatch.setattr(cli_doctor.service_controller, "installed_unit_path", lambda: unit)
@@ -344,7 +344,7 @@ class TestDoctorReportsDroppedHostEnv:
         return issues
 
     def test_reports_when_a_service_is_installed(self, monkeypatch, capsys, tmp_path):
-        issues = self._run(monkeypatch, tmp_path / "kirocrew.service")
+        issues = self._run(monkeypatch, tmp_path / "ajcrew.service")
         out = capsys.readouterr().out
         assert "Note: dropped host env" in out
         assert issues == [], "the report is advisory and never fails doctor"
@@ -355,8 +355,8 @@ class TestDoctorReportsDroppedHostEnv:
         assert capsys.readouterr().out == ""
 
     def test_a_failing_probe_cannot_break_doctor(self, monkeypatch, capsys, tmp_path):
-        from kiro_crew import cli_doctor
-        from kiro_crew.doctor_checks import services
+        from aj_crew import cli_doctor
+        from aj_crew.doctor_checks import services
 
         def boom():
             raise OSError("environment resolution exploded")
@@ -364,7 +364,7 @@ class TestDoctorReportsDroppedHostEnv:
         monkeypatch.setattr(
             cli_doctor.service_controller,
             "installed_unit_path",
-            lambda: tmp_path / "kirocrew.service",
+            lambda: tmp_path / "ajcrew.service",
         )
         monkeypatch.setattr(_inherited_env(), "dropped_host_env_warning", boom)
         issues: list[str] = []
@@ -374,8 +374,8 @@ class TestDoctorReportsDroppedHostEnv:
 
     def test_nothing_to_report_skips_the_unit_probe(self, monkeypatch, capsys):
         """The gate may spawn `systemctl --user show`; an empty note needs no answer."""
-        from kiro_crew import cli_doctor
-        from kiro_crew.doctor_checks import services
+        from aj_crew import cli_doctor
+        from aj_crew.doctor_checks import services
 
         probe = MagicMock(return_value=None)
         monkeypatch.setattr(cli_doctor.service_controller, "installed_unit_path", probe)
@@ -388,6 +388,6 @@ class TestDoctorReportsDroppedHostEnv:
 
     def test_doctor_actually_calls_the_check(self):
         """Asserted on `_doctor`'s source, since running it probes the live host."""
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         assert "_doctor_dropped_host_env(issues)" in inspect.getsource(cli_doctor._doctor)

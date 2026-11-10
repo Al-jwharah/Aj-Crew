@@ -24,8 +24,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.apps import routes as app_routes
-from kiro_crew.testing.wait import await_until
+from aj_crew.apps import routes as app_routes
+from aj_crew.testing.wait import await_until
 
 APP = "demo-app"
 
@@ -57,7 +57,7 @@ def installed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     }
     monkeypatch.setattr(app_routes, "apps_dir", lambda: root)
     monkeypatch.setattr(
-        "kiro_crew.apps.routes.get_app_manifest",
+        "aj_crew.apps.routes.get_app_manifest",
         lambda name: _FakeManifest(manifest) if name == APP else None,
     )
     return app_dir
@@ -160,7 +160,7 @@ async def test_a_declared_path_escaping_the_directory_by_symlink_is_refused(
     link = installed / "assets" / "linked.webp"
     link.symlink_to(outside)
     monkeypatch.setattr(
-        "kiro_crew.apps.routes.get_app_manifest",
+        "aj_crew.apps.routes.get_app_manifest",
         lambda name: _FakeManifest({"iconPath": "assets/linked.webp"}),
     )
     status, _ = await _get(f"/apps/{APP}/art/assets/linked.webp")
@@ -179,7 +179,7 @@ async def test_a_declared_path_whose_symlink_loops_answers_404_not_500(
     link = installed / "assets" / "loop.webp"
     link.symlink_to("loop.webp")  # points at itself, in its own directory
     monkeypatch.setattr(
-        "kiro_crew.apps.routes.get_app_manifest",
+        "aj_crew.apps.routes.get_app_manifest",
         lambda name: _FakeManifest({"iconPath": "assets/loop.webp"}),
     )
     status, _ = await _get(f"/apps/{APP}/art/assets/loop.webp")
@@ -196,7 +196,7 @@ async def test_a_mutual_symlink_pair_also_answers_404(
     a.symlink_to("b.webp")
     b.symlink_to("a.webp")
     monkeypatch.setattr(
-        "kiro_crew.apps.routes.get_app_manifest",
+        "aj_crew.apps.routes.get_app_manifest",
         lambda name: _FakeManifest({"iconPath": "assets/a.webp"}),
     )
     status, _ = await _get(f"/apps/{APP}/art/assets/a.webp")
@@ -218,7 +218,7 @@ async def test_a_symlink_at_the_declared_NAME_is_refused_even_inside_the_root(
     link = installed / "assets" / "aliased.webp"
     link.symlink_to("icon.webp")  # inside the root, and a real file
     monkeypatch.setattr(
-        "kiro_crew.apps.routes.get_app_manifest",
+        "aj_crew.apps.routes.get_app_manifest",
         lambda name: _FakeManifest({"iconPath": "assets/aliased.webp"}),
     )
     status, body = await _get(f"/apps/{APP}/art/assets/aliased.webp")
@@ -241,7 +241,7 @@ async def test_a_declared_path_under_a_SYMLINKED_DIRECTORY_is_refused(
     linked = installed / "linkdir"
     linked.symlink_to(outside, target_is_directory=True)
     monkeypatch.setattr(
-        "kiro_crew.apps.routes.get_app_manifest",
+        "aj_crew.apps.routes.get_app_manifest",
         lambda name: _FakeManifest({"iconPath": "linkdir/icon.webp"}),
     )
     status, body = await _get(f"/apps/{APP}/art/linkdir/icon.webp")
@@ -259,7 +259,7 @@ async def test_a_file_over_the_size_ceiling_is_refused(
     big = installed / "assets" / "big.webp"
     big.write_bytes(b"x" * 65)
     monkeypatch.setattr(
-        "kiro_crew.apps.routes.get_app_manifest",
+        "aj_crew.apps.routes.get_app_manifest",
         lambda name: _FakeManifest({"iconPath": "assets/big.webp"}),
     )
     status, _ = await _get(f"/apps/{APP}/art/assets/big.webp")
@@ -295,7 +295,7 @@ async def test_a_declared_NUL_name_answers_404_not_500(
     """
     declared = "assets/bad\x00.png"
     monkeypatch.setattr(
-        "kiro_crew.apps.routes.get_app_manifest",
+        "aj_crew.apps.routes.get_app_manifest",
         lambda name: _FakeManifest({"iconPath": declared}),
     )
     # Requested exactly as declared: the declaration check compares the request
@@ -328,7 +328,7 @@ def test_an_unencodable_declared_name_is_refused_at_the_resolver(
     404 on the declaration check and never reach the open.
     """
     monkeypatch.setattr(
-        "kiro_crew.apps.routes.get_app_manifest",
+        "aj_crew.apps.routes.get_app_manifest",
         lambda name: _FakeManifest({"iconPath": declared}),
     )
     assert declared in app_routes._declared_art_paths(APP), "precondition: it IS declared"
@@ -348,7 +348,7 @@ def test_the_windows_branch_also_refuses_an_unencodable_name(
     monkeypatch.setattr(app_routes, "supports_pinned_walk", lambda: False)
     declared = "assets/bad\x00.png"
     monkeypatch.setattr(
-        "kiro_crew.apps.routes.get_app_manifest",
+        "aj_crew.apps.routes.get_app_manifest",
         lambda name: _FakeManifest({"iconPath": declared}),
     )
     assert app_routes._read_declared_art(APP, declared) is None
@@ -380,7 +380,7 @@ async def test_a_declared_path_that_is_a_HARDLINK_is_refused(
     assert not alias.is_symlink(), "precondition: no symlink guard can see this"
     assert alias.stat().st_nlink == 2, "precondition: the alias is a second name"
     monkeypatch.setattr(
-        "kiro_crew.apps.routes.get_app_manifest",
+        "aj_crew.apps.routes.get_app_manifest",
         lambda name: _FakeManifest({"iconPath": "assets/aliased-icon.webp"}),
     )
     status, body = await _get(f"/apps/{APP}/art/assets/aliased-icon.webp")
@@ -414,7 +414,7 @@ async def test_a_declared_FIFO_does_not_hang_the_request(
     fifo = installed / "assets" / "piped.webp"
     os.mkfifo(fifo)
     monkeypatch.setattr(
-        "kiro_crew.apps.routes.get_app_manifest",
+        "aj_crew.apps.routes.get_app_manifest",
         lambda name: _FakeManifest({"iconPath": "assets/piped.webp"}),
     )
     status, _ = await await_until(
@@ -431,7 +431,7 @@ async def test_a_declared_DIRECTORY_is_refused(
     """The other non-regular shape reachable through a declaration."""
     (installed / "assets" / "adir.webp").mkdir()
     monkeypatch.setattr(
-        "kiro_crew.apps.routes.get_app_manifest",
+        "aj_crew.apps.routes.get_app_manifest",
         lambda name: _FakeManifest({"iconPath": "assets/adir.webp"}),
     )
     status, _ = await _get(f"/apps/{APP}/art/assets/adir.webp")
@@ -452,7 +452,7 @@ async def test_the_response_neuters_a_scripted_svg_on_this_origin(
         b'<svg xmlns="http://www.w3.org/2000/svg"><script>fetch("/api/apps")' b"</script></svg>"
     )
     monkeypatch.setattr(
-        "kiro_crew.apps.routes.get_app_manifest",
+        "aj_crew.apps.routes.get_app_manifest",
         lambda name: _FakeManifest({"iconPath": "assets/scripted.svg"}),
     )
     async with TestClient(TestServer(_make_app())) as client:
@@ -511,7 +511,7 @@ async def test_a_declared_path_whose_file_is_missing_answers_the_same_404(
     """One answer for undeclared, escaping and missing, so a probe cannot use the
     status to map which paths a manifest declares."""
     monkeypatch.setattr(
-        "kiro_crew.apps.routes.get_app_manifest",
+        "aj_crew.apps.routes.get_app_manifest",
         lambda name: _FakeManifest({"iconPath": "assets/gone.webp"}),
     )
     status, _ = await _get(f"/apps/{APP}/art/assets/gone.webp")
@@ -522,7 +522,7 @@ async def test_a_declared_path_whose_file_is_missing_answers_the_same_404(
 async def test_an_app_with_no_manifest_serves_nothing(
     installed: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr("kiro_crew.apps.routes.get_app_manifest", lambda name: None)
+    monkeypatch.setattr("aj_crew.apps.routes.get_app_manifest", lambda name: None)
     status, _ = await _get(f"/apps/{APP}/art/assets/icon.webp")
     assert status == 404
 
@@ -534,7 +534,7 @@ async def test_a_manifest_whose_art_fields_are_the_wrong_type_serves_nothing(
     """``app.json`` is JSON from disk, so its field TYPES are not guaranteed
     either -- a dict where a string belongs must not reach a string operation."""
     monkeypatch.setattr(
-        "kiro_crew.apps.routes.get_app_manifest",
+        "aj_crew.apps.routes.get_app_manifest",
         lambda name: _FakeManifest({"iconPath": {}, "screenshots": {}, "heroImage": 42}),
     )
     status, _ = await _get(f"/apps/{APP}/art/assets/icon.webp")

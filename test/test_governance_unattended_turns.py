@@ -29,10 +29,10 @@ from slack_gateway_cron_exec_coverage_helpers import (
     _mock_dashboard_state,
 )
 
-from kiro_crew import hooks
-from kiro_crew.hooks import HookManager, HooksConfig, unattended_turn
-from kiro_crew.llm_helpers import ToolApprovalPolicy, stream_and_collect
-from kiro_crew.providers.base import (
+from aj_crew import hooks
+from aj_crew.hooks import HookManager, HooksConfig, unattended_turn
+from aj_crew.llm_helpers import ToolApprovalPolicy, stream_and_collect
+from aj_crew.providers.base import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
@@ -47,7 +47,7 @@ def _broken_profile_lookup(monkeypatch: pytest.MonkeyPatch) -> list[bool]:
 
     Returns the ``failed_closed`` flag of every degrade audit the gate records.
     """
-    from kiro_crew.platform import governance_profiles
+    from aj_crew.platform import governance_profiles
 
     def _boom(*_args: object, **_kwargs: object) -> None:
         raise RuntimeError("profile store unreadable")
@@ -196,7 +196,7 @@ class TestCronTurnPassesItsIdentity:
     async def test_cron_turn_hands_the_gate_its_session_key_and_marks_itself_unattended(
         self, monkeypatch
     ):
-        from kiro_crew.slack import gateway as gw
+        from aj_crew.slack import gateway as gw
 
         monkeypatch.setattr(gw.live, "snapshot", lambda: None)
         orch = _make_orchestrator()
@@ -220,7 +220,7 @@ class TestCronTurnPassesItsIdentity:
         # A task profile bound to an agent is looked up by the agent the gate is
         # given; a cron turn names the alias, as a chat turn does, while the
         # session runs the template the alias collapses to.
-        from kiro_crew.slack import gateway as gw
+        from aj_crew.slack import gateway as gw
 
         monkeypatch.setattr(gw.live, "snapshot", lambda: None)
         orch = _make_orchestrator()
@@ -238,7 +238,7 @@ class TestCronTurnPassesItsIdentity:
         assert turn.await_args.kwargs["agent"] == "researcher"
 
     def test_a_task_profile_bound_to_the_cron_agent_governs_its_turn(self, monkeypatch):
-        from kiro_crew.platform import governance_profiles as gp
+        from aj_crew.platform import governance_profiles as gp
 
         bound = SimpleNamespace(name="researcher-tight")
         monkeypatch.setattr(gp._STORE, "resolved", lambda: True)
@@ -260,9 +260,9 @@ class TestCronTurnPassesItsIdentity:
         # member: its template is the member's kiro_agent, and a crewmate's turn
         # is swapped onto the worker template. Neither is the name a chat turn
         # on the member hands the gate; the member's alias is.
-        from kiro_crew import mate_worker
-        from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-        from kiro_crew.slack import gateway as gw
+        from aj_crew import mate_worker
+        from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+        from aj_crew.slack import gateway as gw
 
         monkeypatch.setattr(gw.live, "snapshot", lambda: None)
         monkeypatch.setattr(
@@ -309,7 +309,7 @@ class TestCronTurnPassesItsIdentity:
         ("agent_id", "live_alias"),
         [
             # The dashboard saves a member schedule with a template in `agent`.
-            ("kirocrew-lite", "beta"),
+            ("ajcrew-lite", "beta"),
             # cron_update set `agent` to another member's name on beta's job.
             ("researcher", "beta"),
             # The member was renamed since capture: the live alias is its name.
@@ -323,17 +323,17 @@ class TestCronTurnPassesItsIdentity:
         # The turn runs as the captured member: _resolve_cron_agent pins dispatch
         # to the member's live record through member_config_for_id. The gate gets
         # that same record's alias, not the name the job carries in agent_id.
-        from kiro_crew import mate_worker
-        from kiro_crew.config.loader import KiroCrewAgentConfig
-        from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-        from kiro_crew.slack import gateway as gw
+        from aj_crew import mate_worker
+        from aj_crew.config.loader import AjCrewAgentConfig
+        from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+        from aj_crew.slack import gateway as gw
 
         monkeypatch.setattr(gw.live, "snapshot", lambda: None)
         monkeypatch.setattr(mate_worker, "cron_worker_execution", lambda *_a: None)
         orch = _make_orchestrator()
         orch._cfg.agents = {
-            live_alias: KiroCrewAgentConfig(kiro_agent="beta-mode", member_id="beta-id"),
-            "researcher": KiroCrewAgentConfig(
+            live_alias: AjCrewAgentConfig(kiro_agent="beta-mode", member_id="beta-id"),
+            "researcher": AjCrewAgentConfig(
                 kiro_agent="researcher-mode", member_id="researcher-id"
             ),
         }
@@ -376,7 +376,7 @@ class TestOtherUnattendedSurfacesMarkTheirTurns:
         from test_heartbeat_task_timeout import _capture_task
         from test_heartbeat_task_timeout import _make_orchestrator as _heartbeat_orchestrator
 
-        import kiro_crew.slack.gateway as gw_mod
+        import aj_crew.slack.gateway as gw_mod
 
         orch, _sessions = _heartbeat_orchestrator()
         stream = AsyncMock(return_value="all good")
@@ -389,9 +389,9 @@ class TestOtherUnattendedSurfacesMarkTheirTurns:
     def test_channel_monitor_wake_streams_as_unattended(self, monkeypatch):
         from test_turn_duration_slack import _build_orchestrator, _fake_client
 
-        from kiro_crew.acp.types import TurnUsage
-        from kiro_crew.autonudge import NudgeLoop
-        from kiro_crew.slack import gateway as gw
+        from aj_crew.acp.types import TurnUsage
+        from aj_crew.autonudge import NudgeLoop
+        from aj_crew.slack import gateway as gw
 
         orch = _build_orchestrator(_fake_client())
         monkeypatch.setattr(gw, "provider_last_turn_usage", lambda _c: TurnUsage())
@@ -416,8 +416,8 @@ class TestDashboardMonitorWakeIsJudgedUnattended:
             _permission_event,
         )
 
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.hooks import ToolHookResult
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.hooks import ToolHookResult
 
         seen: list[bool] = []
 
@@ -459,7 +459,7 @@ class TestDashboardMonitorWakeIsJudgedUnattended:
 class TestChannelToolGateCarriesTheMarker:
     @pytest.mark.parametrize("unattended", [True, False])
     def test_the_gate_consults_the_hooks_under_its_turns_marker(self, unattended):
-        from kiro_crew.messaging.dispatch_tools import build_tool_gate
+        from aj_crew.messaging.dispatch_tools import build_tool_gate
 
         seen: list[bool] = []
 

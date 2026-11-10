@@ -1270,7 +1270,7 @@ describe('chatSlice message patching', () => {
     expect(chat(store).messages[1].meta?.output).toBeUndefined()
   })
 
-  it('copies answered output onto a kirocrew-core ask_question row', () => {
+  it('copies answered output onto a ajcrew-core ask_question row', () => {
     const store = makeStore()
     store.dispatch(setActiveSlot('A'))
     store.dispatch(replaceMessages([
@@ -1426,7 +1426,7 @@ describe('chatSlice sub-agent cards', () => {
   it('marks an approving sub-agent that lives under a background slot', () => {
     const store = makeStore()
     store.dispatch(setActiveSlot('A'))
-    store.dispatch(sseSubagentSpawn({ slot: 'B', id: 'ag-1', task: 'read specs', agent: 'kirocrew' }))
+    store.dispatch(sseSubagentSpawn({ slot: 'B', id: 'ag-1', task: 'read specs', agent: 'ajcrew' }))
     store.dispatch(markSubagentApproving({ id: 'ag-1', approving: true }))
     expect(chat(store).slotActivity.B.subagents['ag-1'].approving).toBe(true)
     // An id nobody holds is a silent no-op rather than a crash.
@@ -1437,7 +1437,7 @@ describe('chatSlice sub-agent cards', () => {
   it('truncates a runaway sub-agent stream from the front', () => {
     const store = makeStore()
     store.dispatch(setActiveSlot('A'))
-    store.dispatch(sseSubagentSpawn({ slot: 'A', id: 'ag-1', task: 't', agent: 'kirocrew' }))
+    store.dispatch(sseSubagentSpawn({ slot: 'A', id: 'ag-1', task: 't', agent: 'ajcrew' }))
     store.dispatch(sseSubagentBatchChunks({ chunks: [{ slot: 'A', id: 'ag-1', text: 'x'.repeat(50_001) }] }))
     const streamed = chat(store).subagents['ag-1'].streaming
     expect(streamed.length).toBeLessThan(50_001)
@@ -1448,7 +1448,7 @@ describe('chatSlice sub-agent cards', () => {
   it('truncates a runaway stream delivered as a coalesced batch too', () => {
     const store = makeStore()
     store.dispatch(setActiveSlot('A'))
-    store.dispatch(sseSubagentSpawn({ slot: 'A', id: 'ag-1', task: 't', agent: 'kirocrew' }))
+    store.dispatch(sseSubagentSpawn({ slot: 'A', id: 'ag-1', task: 't', agent: 'ajcrew' }))
     store.dispatch(sseSubagentBatchChunks({ chunks: [{ id: 'ag-1', slot: 'A', text: 'y'.repeat(50_001) }] }))
     expect(chat(store).subagents['ag-1'].streaming.length).toBeLessThan(50_001)
   })
@@ -1456,7 +1456,7 @@ describe('chatSlice sub-agent cards', () => {
   it('finds a finishing card filed under a different slot key', () => {
     const store = makeStore()
     store.dispatch(setActiveSlot('A'))
-    store.dispatch(sseSubagentSpawn({ slot: 'B', id: 'ag-7', task: 'read specs', agent: 'kirocrew' }))
+    store.dispatch(sseSubagentSpawn({ slot: 'B', id: 'ag-7', task: 'read specs', agent: 'ajcrew' }))
     store.dispatch(sseSubagentDone({ slot: 'C', id: 'ag-7', elapsed: 12, outcome: 'completed' }))
     expect(chat(store).slotActivity.B.subagents['ag-7'].status).toBe('done')
     expect(chat(store).slotActivity.B.subagents['ag-7'].elapsed).toBe(12)
@@ -1475,7 +1475,7 @@ describe('chatSlice sub-agent cards', () => {
     expect(card.result).toBe('all green')
     // A spawn with no agent falls back to the default name, so `agent` is
     // already set and the done payload must not overwrite it.
-    expect(card.agent).toBe('kirocrew')
+    expect(card.agent).toBe('ajcrew')
   })
 
   it('names the agent on a card that finished straight from the approval queue', () => {

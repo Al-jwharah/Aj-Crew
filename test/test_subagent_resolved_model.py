@@ -13,7 +13,7 @@ model-less client.
 
 from __future__ import annotations
 
-from kiro_crew.subagent import _resolved_model_of
+from aj_crew.subagent import _resolved_model_of
 
 
 class _Client:

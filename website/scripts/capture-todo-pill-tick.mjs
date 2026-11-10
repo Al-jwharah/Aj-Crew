@@ -55,7 +55,7 @@ const slots = () => [{
   running: false,
   last_message: 'The work behind all four is done.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   folder_id: '',

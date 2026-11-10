@@ -98,7 +98,7 @@ const slots = [
     running: false,
     last_message: 'Cleared the tree and rewrote the config.',
     messages: 11,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     memory_mode: 'persistent',
     project: PROJECT,
     modified: now,

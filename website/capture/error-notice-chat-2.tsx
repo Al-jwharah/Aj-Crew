@@ -33,7 +33,7 @@ const params = new URLSearchParams(location.search)
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 
 document.documentElement.dataset.mode = theme
-document.documentElement.dataset.theme = theme === 'light' ? 'kiro-light' : 'kiro-dark'
+document.documentElement.dataset.theme = theme === 'light' ? 'aj-light' : 'aj-dark'
 
 initI18n()
 
@@ -48,8 +48,8 @@ const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
 const SLOT = 'chat-capture'
 store.dispatch(setActiveSlot(SLOT))
-store.dispatch(sseSubagentSpawn({ slot: SLOT, id: 'sa-1', task: 'Audit the settings pages for hand-written error surfaces', agent: 'kirocrew-lite' }))
-store.dispatch(sseSubagentSpawn({ slot: SLOT, id: 'sa-2', task: 'Summarize the CI log for run 8704', agent: 'kirocrew-lite' }))
+store.dispatch(sseSubagentSpawn({ slot: SLOT, id: 'sa-1', task: 'Audit the settings pages for hand-written error surfaces', agent: 'ajcrew-lite' }))
+store.dispatch(sseSubagentSpawn({ slot: SLOT, id: 'sa-2', task: 'Summarize the CI log for run 8704', agent: 'ajcrew-lite' }))
 
 function Scene({ label, children }: { label: string; children: React.ReactNode }) {
   return (

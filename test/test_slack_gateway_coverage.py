@@ -1,4 +1,4 @@
-"""Additional coverage for ``kiro_crew.slack.gateway``.
+"""Additional coverage for ``aj_crew.slack.gateway``.
 
 Focuses on the orchestrator surfaces the existing ``test_slack_gateway.py`` and
 ``test_turn_duration_slack.py`` do not reach:
@@ -45,21 +45,21 @@ from slack_gateway_coverage_helpers import (
     _within_lost_run,
 )
 
-from kiro_crew import session_directive
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TOOL_CALL, EVENT_TOOL_RESULT, AcpEvent
-from kiro_crew.autonudge import (
+from aj_crew import session_directive
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TOOL_CALL, EVENT_TOOL_RESULT, AcpEvent
+from aj_crew.autonudge import (
     AutoNudgeService,
 )
-from kiro_crew.monitoring import models as monitor_models
-from kiro_crew.monitoring.completion import MonitorCompletionHook
-from kiro_crew.monitoring.models import (
+from aj_crew.monitoring import models as monitor_models
+from aj_crew.monitoring.completion import MonitorCompletionHook
+from aj_crew.monitoring.models import (
     MonitorActionDisposition,
     MonitorBudgets,
     MonitorOutcome,
     MonitorState,
 )
-from kiro_crew.session import SessionBusyError, SessionClosingError
-from kiro_crew.slack import gateway as gw
+from aj_crew.session import SessionBusyError, SessionClosingError
+from aj_crew.slack import gateway as gw
 
 # ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -69,7 +69,7 @@ def _discord_transport(*, authorized: bool = True, current_key: str | None = Non
     dispatcher = MagicMock()
     dispatcher.is_authorized = MagicMock(return_value=authorized)
     dispatcher.current_session_key = MagicMock(
-        return_value=current_key if current_key is not None else "discord:kirocrew:direct:U9"
+        return_value=current_key if current_key is not None else "discord:ajcrew:direct:U9"
     )
     dispatcher.handle_message = AsyncMock(
         return_value=monitor_models.MonitorDispatchResult.DISPATCHED
@@ -120,7 +120,7 @@ class TestFireDiscordNudge:
     async def test_unsupported_key_shape_retires_loop(self):
         """A key that is not ``discord:{agent}:direct:{user}`` can never route."""
         orch = _discord_orchestrator(_discord_transport())
-        assert await orch._fire_discord_nudge(_loop("discord:kirocrew:channel")) is False
+        assert await orch._fire_discord_nudge(_loop("discord:ajcrew:channel")) is False
         orch.autonudge_svc.remove.assert_awaited_once_with("loop-1", stop_reason="unsupported_key")
 
     @pytest.mark.asyncio
@@ -135,7 +135,7 @@ class TestFireDiscordNudge:
     @pytest.mark.asyncio
     async def test_rotated_session_retires_loop(self):
         """A `!new` generation bump means the monitored conversation is gone."""
-        transport = _discord_transport(current_key="discord:kirocrew:direct:U9:gen2")
+        transport = _discord_transport(current_key="discord:ajcrew:direct:U9:gen2")
         orch = _discord_orchestrator(transport)
         assert await orch._fire_discord_nudge(_loop(_DKEY)) is False
         orch.autonudge_svc.remove.assert_awaited_once_with("loop-1", stop_reason="session_rotated")
@@ -166,7 +166,7 @@ class TestFireDiscordNudge:
         busy_transport.dispatcher.sessions.is_busy.return_value = True
         busy = _discord_orchestrator(busy_transport)
         unavailable = _discord_orchestrator(
-            _discord_transport(current_key="discord:kirocrew:direct:U9:gen2")
+            _discord_transport(current_key="discord:ajcrew:direct:U9:gen2")
         )
 
         assert await busy._fire_discord_nudge(_loop(_DKEY), "[Monitor wake]") is (
@@ -680,7 +680,7 @@ class TestFireSlackNudgeGuards:
 
         orch.sessions.get_or_create = AsyncMock(return_value=(_DirectiveProvider(), False, False))
         orch.autonudge_svc = service
-        monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: service)
+        monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: service)
         monkeypatch.setattr(gw, "_persist_turn_row", AsyncMock())
 
         result = await orch._fire_slack_nudge(loop, "[Monitor wake]")

@@ -4,7 +4,7 @@ Discord publishes no app manifest, so the authorize URL IS the install surface,
 and its permissions bitfield is a magic number nobody can check by eye. These
 tests pin that number from two directions at once: to the named bits the module
 builds it from, and to the number
-``src/kiro_crew/docs/discord-integration.md`` publishes for operators to paste.
+``src/aj_crew/docs/discord-integration.md`` publishes for operators to paste.
 Either one drifting alone would hand somebody a bot that can read a thread but
 not reply in it, with nothing going red.
 """
@@ -18,17 +18,17 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 
-from kiro_crew.discord import install_url
+from aj_crew.discord import install_url
 
 _APP_ID = "123456789012345678"
 
-_DOC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "docs" / "discord-integration.md"
+_DOC = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "docs" / "discord-integration.md"
 
 #: The bitfield the setup doc publishes. Spelled out here rather than imported
 #: so this file states the expected value independently of the code under test.
 _DOCUMENTED_PERMISSIONS = 309237711936
 
-#: Discord's SEND_MESSAGES bit, deliberately NOT requested: a Kiro Crew turn
+#: Discord's SEND_MESSAGES bit, deliberately NOT requested: a Aj Crew turn
 #: runs in a thread, and the bot must not be able to post in a shared channel.
 _PERM_SEND_MESSAGES = 1 << 11
 
@@ -90,7 +90,7 @@ class TestDocAgreement:
 
     def test_doc_url_matches_the_built_url(self) -> None:
         # The doc's URL is the manual fallback an operator pastes; it has to be
-        # the same URL, parameter for parameter, that Kiro Crew builds.
+        # the same URL, parameter for parameter, that Aj Crew builds.
         doc_urls = [
             line.strip()
             for line in _doc_text().splitlines()

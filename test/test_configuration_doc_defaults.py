@@ -42,9 +42,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.config import sections as S
+from aj_crew.config import sections as S
 
-DOC = Path(__file__).parent.parent / "src" / "kiro_crew" / "docs" / "configuration.md"
+DOC = Path(__file__).parent.parent / "src" / "aj_crew" / "docs" / "configuration.md"
 
 #: Doc section prefix -> the dataclass that owns those keys. Every prefix the page
 #: uses in a default-bearing row must be here; ``test_every_documented_section_is_mapped``

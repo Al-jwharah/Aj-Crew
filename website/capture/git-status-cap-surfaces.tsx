@@ -47,7 +47,7 @@ const capped = params.get('capped') !== 'false'
 // `ThemeProvider` is the authority: it reads `mc-theme` and applies the palette
 // itself, so setting `data-theme` alone is clobbered on mount.
 localStorage.setItem('mc-theme', theme)
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const PROJECT = '/home/dev/acme-api'
 

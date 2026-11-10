@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import memory as memory_module
-from kiro_crew import platform_compat
-from kiro_crew.memory import MemoryStore
+from aj_crew import memory as memory_module
+from aj_crew import platform_compat
+from aj_crew.memory import MemoryStore
 
 posix_only = pytest.mark.skipif(not platform_compat.IS_POSIX, reason="POSIX mode bits")
 

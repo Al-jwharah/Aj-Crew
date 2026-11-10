@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.feishu.transport (FeishuTransport, Layer 1)."""
+"""Tests for aj_crew.feishu.transport (FeishuTransport, Layer 1)."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from kiro_crew.feishu.client import LarkInbound
-from kiro_crew.feishu.transport import (
+from aj_crew.feishu.client import LarkInbound
+from aj_crew.feishu.transport import (
     _SEEN_KEEP,
     _SEEN_MAX,
     FEISHU_CAPABILITIES,
@@ -17,7 +17,7 @@ from kiro_crew.feishu.transport import (
     SPOOL_GROUP_ROUTE_PREFIX,
     FeishuTransport,
 )
-from kiro_crew.messaging.transport import InboundMessage
+from aj_crew.messaging.transport import InboundMessage
 
 
 class FakeClient:
@@ -142,19 +142,19 @@ class TestAuthorize:
 
     def test_unknown_open_id_denied(self) -> None:
         t = FeishuTransport(FakeClient(), allowed_open_ids=["ou_abc"])
-        with patch("kiro_crew.feishu.transport.sel") as mock_sel:
+        with patch("aj_crew.feishu.transport.sel") as mock_sel:
             assert t.authorize(_msg("ou_stranger")) is False
         mock_sel().log_api_access.assert_called_once()
 
     def test_empty_open_id_denied(self) -> None:
         t = FeishuTransport(FakeClient(), allowed_open_ids=["ou_abc"])
-        with patch("kiro_crew.feishu.transport.sel") as mock_sel:
+        with patch("aj_crew.feishu.transport.sel") as mock_sel:
             assert t.authorize(_msg("")) is False
         mock_sel().log_api_access.assert_called_once()
 
     def test_empty_allowlist_denies_everyone(self) -> None:
         t = FeishuTransport(FakeClient(), allowed_open_ids=[])
-        with patch("kiro_crew.feishu.transport.sel") as mock_sel:
+        with patch("aj_crew.feishu.transport.sel") as mock_sel:
             assert t.authorize(_msg("ou_abc")) is False
         mock_sel().log_api_access.assert_called_once()
 
@@ -184,7 +184,7 @@ class TestChatTypeGate:
     async def test_absent_chat_type_is_denied(self) -> None:
         dispatched: list[LarkInbound] = []
         t = self._t(dispatched)
-        with patch("kiro_crew.feishu.transport.sel") as mock_sel:
+        with patch("aj_crew.feishu.transport.sel") as mock_sel:
             await t.receive(_inbound("ou_abc", "hi", chat_type="", chat_id=""))
         assert dispatched == []
         mock_sel().log_api_access.assert_called_once()
@@ -199,7 +199,7 @@ class TestChatTypeGate:
         # code does not recognise.
         dispatched: list[LarkInbound] = []
         t = self._t(dispatched)
-        with patch("kiro_crew.feishu.transport.sel") as mock_sel:
+        with patch("aj_crew.feishu.transport.sel") as mock_sel:
             await t.receive(
                 _inbound("ou_abc", "hi", chat_type="topic_group", chat_id="grp_allowed")
             )
@@ -210,7 +210,7 @@ class TestChatTypeGate:
     async def test_explicit_p2p_still_serves(self) -> None:
         dispatched: list[LarkInbound] = []
         t = self._t(dispatched)
-        with patch("kiro_crew.feishu.transport.sel"):
+        with patch("aj_crew.feishu.transport.sel"):
             await t.receive(_inbound("ou_abc", "hi", chat_type="p2p", chat_id=""))
         assert len(dispatched) == 1
 
@@ -218,7 +218,7 @@ class TestChatTypeGate:
     async def test_allowlisted_group_still_serves(self) -> None:
         dispatched: list[LarkInbound] = []
         t = self._t(dispatched)
-        with patch("kiro_crew.feishu.transport.sel"):
+        with patch("aj_crew.feishu.transport.sel"):
             await t.receive(
                 _inbound(
                     "ou_abc", "hi", chat_type="group", chat_id="grp_allowed", bot_mentioned=True
@@ -241,7 +241,7 @@ class TestGroupGate:
             allow_group=False,
             dispatch=dispatch,
         )
-        with patch("kiro_crew.feishu.transport.sel") as mock_sel:
+        with patch("aj_crew.feishu.transport.sel") as mock_sel:
             await t.receive(_inbound("ou_abc", "hi", chat_type="group", chat_id="grp1"))
         assert dispatched == []
         mock_sel().log_api_access.assert_called_once()
@@ -260,7 +260,7 @@ class TestGroupGate:
             allowed_group_ids=["grp_allowed"],
             dispatch=dispatch,
         )
-        with patch("kiro_crew.feishu.transport.sel") as mock_sel:
+        with patch("aj_crew.feishu.transport.sel") as mock_sel:
             await t.receive(_inbound("ou_abc", "hi", chat_type="group", chat_id="grp_other"))
         assert dispatched == []
         mock_sel().log_api_access.assert_called_once()
@@ -313,7 +313,7 @@ class TestGroupMentionGate:
     async def test_unmentioned_group_message_from_allowed_sender_is_dropped(self) -> None:
         dispatched: list[LarkInbound] = []
         t = self._t(dispatched)
-        with patch("kiro_crew.feishu.transport.sel") as mock_sel:
+        with patch("aj_crew.feishu.transport.sel") as mock_sel:
             await t.receive(_inbound("ou_abc", "nice", chat_type="group", chat_id="grp_allowed"))
         assert dispatched == []
         # Chatter is not an access attempt: no audit record, and authorize()
@@ -333,7 +333,7 @@ class TestGroupMentionGate:
     async def test_mentioned_group_message_from_unlisted_sender_is_still_denied(self) -> None:
         dispatched: list[LarkInbound] = []
         t = self._t(dispatched)
-        with patch("kiro_crew.feishu.transport.sel") as mock_sel:
+        with patch("aj_crew.feishu.transport.sel") as mock_sel:
             await t.receive(
                 _inbound(
                     "ou_stranger",
@@ -778,7 +778,7 @@ class TestUnreadableInboundIsAnswered:
     async def test_a_message_with_files_drives_a_turn_only_for_an_allowed_sender(self) -> None:
         """Files ride to the dispatcher, which fetches them; a refused sender's
         files never get that far, so nothing is downloaded for them."""
-        from kiro_crew.messaging.attachments import Attachment
+        from aj_crew.messaging.attachments import Attachment
 
         client = FakeClient()
         t = self._transport(client, allowed_open_ids=["ou_abc"])
@@ -827,7 +827,7 @@ class TestUnreadableInboundIsAnswered:
         client = FakeClient()
         t = self._transport(client, allowed_open_ids=["ou_abc"])
         with patch(
-            "kiro_crew.feishu.transport.inbound_permitted",
+            "aj_crew.feishu.transport.inbound_permitted",
             new=AsyncMock(return_value=False),
         ):
             await t.receive(
@@ -868,7 +868,7 @@ class TestUnreadableInboundIsAnswered:
             chat_id="",
             unsupported_type="image",
         )
-        with caplog.at_level(logging.ERROR, logger="kiro_crew.feishu.transport"):
+        with caplog.at_level(logging.ERROR, logger="aj_crew.feishu.transport"):
             # Does NOT raise: the failure is handled, not propagated.
             await t.receive(frame)
         assert client.replies == []

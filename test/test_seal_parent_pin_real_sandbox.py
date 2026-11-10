@@ -21,10 +21,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import sandbox
-from kiro_crew.config import paths
-from kiro_crew.sandbox import userns_available
-from kiro_crew.testing.wait import default_timeout
+from aj_crew import sandbox
+from aj_crew.config import paths
+from aj_crew.sandbox import userns_available
+from aj_crew.testing.wait import default_timeout
 
 pytestmark = [
     pytest.mark.skipif(sys.platform != "linux", reason="the namespace launcher is Linux-only"),
@@ -49,7 +49,7 @@ def attempt(step):
         return errno.errorcode.get(exc.errno, str(exc.errno))
 
 report = {
-    "marker": os.environ.get("KIROCREW_SANDBOX_ACTIVE"),
+    "marker": os.environ.get("AJCREW_SANDBOX_ACTIVE"),
     "sibling": attempt(lambda: open(os.path.join(kiro, "sibling.txt"), "w").close()),
     "rename": attempt(lambda: os.rename(held, held + ".moved")),
     "unlink": attempt(lambda: os.unlink(held)),
@@ -85,10 +85,10 @@ def home(
         for leaf in ("agents", "crew"):
             (kiro / leaf).mkdir(parents=True)
     monkeypatch.setenv("HOME", str(home))
-    monkeypatch.setenv("KIROCREW_HOME", str(home / ".kiro" / "crew"))
-    monkeypatch.setenv("KIROCREW_ASSUME_GATEWAY_RUNNING", "0")
+    monkeypatch.setenv("AJCREW_HOME", str(home / ".kiro" / "crew"))
+    monkeypatch.setenv("AJCREW_ASSUME_GATEWAY_RUNNING", "0")
     # A passing test's tmp path is removed and its name reused, so two layouts can share
-    # one ``KIROCREW_HOME`` string, and the memo would hand the second the first's home.
+    # one ``AJCREW_HOME`` string, and the memo would hand the second the first's home.
     monkeypatch.setattr(paths, "_config_dir_memo", None)
     sandbox.reset_backend()
     yield home
@@ -99,7 +99,7 @@ def home(
 def test_a_sandboxed_process_cannot_move_the_names_holding_a_sealed_tree(
     home: Path, mode: str
 ) -> None:
-    env = {k: v for k, v in os.environ.items() if k != "KIROCREW_SANDBOX_ACTIVE"}
+    env = {k: v for k, v in os.environ.items() if k != "AJCREW_SANDBOX_ACTIVE"}
     agents = home / ".kiro" / "agents"
     current = home / "links" / "current"
     held = next((p for p in (agents, current) if p.is_symlink()), home / ".kiro")

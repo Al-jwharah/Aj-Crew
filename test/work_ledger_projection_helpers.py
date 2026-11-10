@@ -14,8 +14,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.crew_log import projection
-from kiro_crew.dashboard.handlers import work_ledger as routes
+from aj_crew.crew_log import projection
+from aj_crew.dashboard.handlers import work_ledger as routes
 
 CONDUCTOR = "chat-9-conductor"
 WORKER = "chat-9-worker"
@@ -37,7 +37,7 @@ _SLOTS: dict[str, _Slot] = {}
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, _floor_monkeypatch):
     """An isolated data home and an open route; the gate itself stays live."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _SLOTS.clear()
     # Each test runs on its own event loop and an ``asyncio.Lock`` binds to the
     # loop it is first contended on, so a lock left from one test would fail the
@@ -187,16 +187,16 @@ def _width(entry: dict[str, Any]) -> int:
 
 def _real_units(monkeypatch, *, worker_lands: bool = True) -> None:
     """Real conductor and worker units; the routes' appends go to them for real."""
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     monkeypatch.setattr(routes.crew_log_emit, "enabled", lambda: True)
     units = {CONDUCTOR: "u-conductor", WORKER: "u-worker"}
     monkeypatch.setattr(routes, "unit_for_session_key", lambda sessions, key: units[key])
     CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
-    CrewLog.create(lg.KIND_SESSION, "u-worker", owner="raymond", agent="kirocrew", slot=WORKER)
+    CrewLog.create(lg.KIND_SESSION, "u-worker", owner="raymond", agent="ajcrew", slot=WORKER)
 
     def _append(unit: str, data: dict[str, Any]) -> bool:
         # ``worker_lands=False`` is a worker's report whose record does not land: the

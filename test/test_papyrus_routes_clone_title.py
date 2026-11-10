@@ -19,7 +19,7 @@ from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
 from conftest import requires_symlinks
-from kiro_crew.apps.builtins.papyrus.backend import gitops, routes, store
+from aj_crew.apps.builtins.papyrus.backend import gitops, routes, store
 
 _CLONE = "/api/apps/papyrus/projects/clone"
 _URL = "https://example.com/g/6a16ddbf.git"

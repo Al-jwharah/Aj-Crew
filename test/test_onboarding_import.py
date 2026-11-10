@@ -34,9 +34,9 @@ from onboarding_import_helpers import (  # noqa: F401 -- the autouse fixture reg
     _write_openclaw_session,
 )
 
-from kiro_crew import onboarding_plan, onboarding_scan, onboarding_sources, platform_compat
-from kiro_crew.onboarding_sources import gemini as gemini_source
-from kiro_crew.platform_compat import IS_WINDOWS
+from aj_crew import onboarding_plan, onboarding_scan, onboarding_sources, platform_compat
+from aj_crew.onboarding_sources import gemini as gemini_source
+from aj_crew.platform_compat import IS_WINDOWS
 
 # Keep apply_import's MCP sidecar lock off the real ~/.kiro/settings (see the
 # shared fixture in test/conftest.py).
@@ -45,9 +45,9 @@ pytestmark = pytest.mark.usefixtures("isolate_mcp_host_paths")
 
 def _api() -> ModuleType:
     try:
-        return importlib.import_module("kiro_crew.onboarding_import")
+        return importlib.import_module("aj_crew.onboarding_import")
     except ModuleNotFoundError:
-        pytest.fail("kiro_crew.onboarding_import is not implemented")
+        pytest.fail("aj_crew.onboarding_import is not implemented")
 
 
 class TestSourceDetection:
@@ -1019,7 +1019,7 @@ class TestPreview:
     def test_openclaw_explicit_sensitive_config_path_is_rejected(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import security
+        from aj_crew import security
 
         home = tmp_path / "home"
         state = home / ".openclaw"

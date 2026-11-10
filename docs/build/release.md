@@ -1,6 +1,6 @@
 # Release Reference
 
-The single reference for how a Kiro Crew release is cut, what CI does at each
+The single reference for how a Aj Crew release is cut, what CI does at each
 step, where the artifacts land, and how to verify one.
 
 Ownership boundary: this file owns the whole release process — the **human**
@@ -27,7 +27,7 @@ mapping to get wrong. `test_publish_feed_contract.py` pins the channel set
 against `publish-cli.yml`, and `cli.sh` rejects anything outside it before
 touching the CDN.
 
-Nightly builds also run Kiro Crew's own KAS engine by default: `nightly.yml`
+Nightly builds also run Aj Crew's own KAS engine by default: `nightly.yml`
 passes `build_channel: nightly` to `build-wheel.yml`, `build-desktop.yml` and
 `build-windows.yml`, `scripts/stamp-distribution.sh` bakes it into
 `_build_info.BUILD_CHANNEL`, and an unset `agent.kas_bundle` reads that stamp
@@ -79,7 +79,7 @@ mechanism:
   and the publish lanes move stable pointers to those exact bytes. Use it when
   stable must run the identical binary that was validated. The cost is the whole
   reason it is not the default — those bytes advertise the candidate's `rcN`
-  stamp in the wheel name, the feed, `pip show`, and `kirocrew --version`. The
+  stamp in the wheel name, the feed, `pip show`, and `ajcrew --version`. The
   variable is scoped to one version so it cannot be left switched on, and the
   gate prints a warning naming the consequence.
 - **Everything fails closed.** No successful same-commit prerelease run, an
@@ -115,7 +115,7 @@ mechanism:
   The contract:
 
   - *Fold rule*: `_display_version()` in
-    `src/kiro_crew/dashboard/handlers/updates_verdict.py` folds a version to its bare
+    `src/aj_crew/dashboard/handlers/updates_verdict.py` folds a version to its bare
     `X.Y.Z` on the **stable** channel only (insider/nightly keep the full
     stamp, where the prerelease number is meaningful information). The SPA
     mirror for desktop-reported versions that never cross the gateway is
@@ -231,7 +231,7 @@ code.
      `<version>/kiro-cli-x86_64-pc-windows-msvc.msi`, and the two
      `<version>/kirocli-<arch>-linux-musl.zip`) as
      `<sha>  <version>/<file>` lines, replacing the previous version's. The
-     EC2 bootstrap (`src/kiro_crew/cloud/templates/kirocrew-ec2.yaml`) carries
+     EC2 bootstrap (`src/aj_crew/cloud/templates/ajcrew-ec2.yaml`) carries
      the version and the two musl sha256s as literals, and
      `test/test_cloud_ec2.py` fails until they match both files. A
      Linux pin bump must also measure each staged binary's highest `GLIBC_*`
@@ -267,7 +267,7 @@ code.
      release at least 7 days old, record each artifact's sha256 (mise: its
      release `SHASUMS256.txt`; AWS: two downloads that match), keep
      `AWSCLI_VERSION` equal to the crew runtime Dockerfile's and the plugin
-     pins equal to the copy in `src/kiro_crew/cloud/ssm.py` (the gateway's own
+     pins equal to the copy in `src/aj_crew/cloud/ssm.py` (the gateway's own
      installer), and run
      `test/test_installer_tool_pins.py`. The procedure is in each file's header. A
      stale pin is not a failure; the pinned artifacts stay downloadable.
@@ -275,7 +275,7 @@ code.
    `github-release` has an `if:`; `CHANGELOG.md` line 5 is `## [X.Y.Z]` with zero
    non-bare-release `##` headings; no `### Contributors` (the GitHub Release
    page renders its own); no em or en dash anywhere in the new section;
-   `__version__ = "X.Y.Z"` **in all three version files** (`src/kiro_crew/__init__.py`,
+   `__version__ = "X.Y.Z"` **in all three version files** (`src/aj_crew/__init__.py`,
    `pyproject.toml`, `website/electron/package.json` — the 0.4.0 promotion was
    nearly tagged on a commit still declaring `0.4.0-rc.9` because only the tag
    name was checked); the display-fold
@@ -297,8 +297,8 @@ code.
    commit is SUCCESS — `stable-gate` requires it, so a candidate whose run was
    cancelled or failed cannot be released. Push a bare `vX.Y.Z` tag on that
    commit. The build lanes RUN: stable is rebuilt from this commit with `X.Y.Z`
-   stamped in, so the shipped wheel is `kirocrew-X.Y.Z-py3-none-any.whl` and
-   `kirocrew --version` prints `X.Y.Z`. Expect the full build time, not a
+   stamped in, so the shipped wheel is `ajcrew-X.Y.Z-py3-none-any.whl` and
+   `ajcrew --version` prints `X.Y.Z`. Expect the full build time, not a
    pointer move. `Create GitHub Release` runs (the `if:` fix) and renders
    GitHub's own contributor block, so the body must not carry a second one —
    see "What the release body must not contain" below, because the body is
@@ -330,12 +330,12 @@ concurrency group, and their version derivation.
 | `dependency-vulnerability.yml` | reusable gate | `scripts/check_npm_audit.py`. On a release every build job needs it; on a nightly every **publish** job needs it and no build job does, so a slow registry delays publication rather than failing the build. |
 | `build-wheel.yml` | reusable build | Stamps the PEP 440 version into `pyproject.toml` and `__init__.py`, stamps the distribution channel, builds the frontend and stages it into the package, then `python -m build`. Uploads artifact `cli-wheel` (wheel + sdist). Credential-free. |
 | `build-desktop.yml` | reusable build | Matrix `macos-15` (universal macOS app) and `ubuntu-22.04` / `ubuntu-22.04-arm` (AppImage + deb + rpm) via `packaging/build-desktop.sh`, then a `smoke-linux-packages` job that installs the deb and rpm in Ubuntu 24.04 and Amazon Linux 2023 containers. Deliberately credential-free (`contents: read` only, pinned by `test_workflow_permissions.py`), so it builds **unsigned** and hands the `.app` downstream. `nightly.yml` passes `soft_fail_arm64: true`, which marks the arm64 leg alone `continue-on-error` so a failed arm64 build cannot skip the x64 publishers; the smoke never carries it, so a package that will not install still holds both arches. A second macOS job, `build-desktop-mac-single-arch`, builds arm64-only and x86_64-only DMGs behind the `mac_single_arch` input (`nightly.yml` and `release.yml` both pass true). It is `continue-on-error` only under `soft_fail_mac_single_arch: true`, which `nightly.yml` passes and `release.yml` does not: on release both DMGs are required promotion-bundle roles, so a failed single-arch build fails the aggregate before any publisher writes an immutable key. Each DMG is then signed and fed by its own `sign-and-notarize.yml` call (`mac_variant`), and the universal call excludes both artifact names when flattening, so the universal DMG stays the only mac bytes the universal leg signs and feeds. |
-| `build-windows.yml` | reusable build | `kirocrew-windows-4-core` on this repository and `windows-latest` on a fork, an NSIS `Setup.exe`. Separate from `build-desktop.yml` because Authenticode signing has to happen *inside* the build (the installer compresses its own already-signed executable), so this job holds an AWS Signer identity and `build-desktop.yml` can stay credential-free. Callers pass `soft_fail: true`, so a Windows failure cannot skip the mac/Linux lanes. |
+| `build-windows.yml` | reusable build | `ajcrew-windows-4-core` on this repository and `windows-latest` on a fork, an NSIS `Setup.exe`. Separate from `build-desktop.yml` because Authenticode signing has to happen *inside* the build (the installer compresses its own already-signed executable), so this job holds an AWS Signer identity and `build-desktop.yml` can stay credential-free. Callers pass `soft_fail: true`, so a Windows failure cannot skip the mac/Linux lanes. |
 | `publish-windows.yml` | reusable publish | Publishes the signed x64 installer and blockmap, then `feed/<channel>/latest.yml` and the `latest/` installer alias. It probes the soft-failed build artifact and skips when none exists; stable uses the fresh build by default or the optional candidate pair in byte-reuse mode. |
 | `publish-cli.yml` | reusable publish | Wheel + `SHA256SUMS` + KMS-signed `cli-manifest.json` to `cli/<channel>/<version>/`, the same signed manifest to `feed/<channel>/latest-cli.json`, and a PEP 503 index under `feed/<channel>/simple/`. A stable release repeats the first two for insider with an insider-signed manifest when the insider guard advances. |
 | `publish-linux.yml` | reusable publish | One Linux artifact to `desktop/<channel>/<version>/`, its channel file under `<feed prefix>/latest-linux[-arm64].yml`, then the `latest/` alias. Invoked ONCE PER (ARCH, FORMAT) PAIR — `arch: x64\|arm64` × `format: appimage\|deb\|rpm`, six callers — each with its own keys and feed, so no two ever share one. |
 | `sign-and-notarize.yml` | reusable publish | Three chained jobs (`sign`, `notarize`, `publish`) covering the whole macOS trust chain and the mac feed write. Called THREE TIMES by each trigger: once for the universal DMG (`feed/<channel>/latest-mac.yml`) and once per single-arch DMG with `mac_variant: arm64 \| x64` + `mac_artifact`, which suffixes every shared key, artifact and in-artifact zip name with the arch and writes `feed/<channel>/<arch>/latest-mac.yml`. All three are required lanes on `release.yml`, and the promotion bundle carries all three zip/DMG pairs (`mac_zip[_<arch>]` / `dmg[_<arch>]` roles). |
-| `publish-docker.yml` | reusable publish | Multi-arch (`linux/amd64,linux/arm64`) image built from the same wheel, pushed to `ghcr.io/<owner>/kirocrew`. |
+| `publish-docker.yml` | reusable publish | Multi-arch (`linux/amd64,linux/arm64`) image built from the same wheel, pushed to `ghcr.io/<owner>/ajcrew`. |
 | `publish-installer.yml` | independent publish | Publishes `cli.sh` to the distribution bucket root. Triggered by a push to `main` touching `cli.sh` (path-filtered), plus manual dispatch. **Not** part of a channel release. |
 
 Release-adjacent, deliberately outside the release path:
@@ -367,27 +367,27 @@ hostnames means future protective policy on the byte surface can never touch the
 availability-critical feed path.
 
 ```
-cli/<channel>/<version>/kirocrew-<version>-py3-none-any.whl  immutable
+cli/<channel>/<version>/ajcrew-<version>-py3-none-any.whl  immutable
 cli/<channel>/<version>/SHA256SUMS                           immutable
 cli/<channel>/<version>/cli-manifest.json                    immutable
-desktop/<channel>/<version>/KiroCrew.zip                     immutable
-desktop/<channel>/<version>/KiroCrew.dmg                     immutable (universal)
-desktop/<channel>/<version>/KiroCrew-{arm64,x64}.{zip,dmg}   immutable (single-arch)
-desktop/<channel>/<version>/KiroCrew-x86_64.AppImage         immutable
-desktop/<channel>/<version>/KiroCrew-aarch64.AppImage        immutable
-desktop/<channel>/<version>/KiroCrew-x86_64.deb              immutable
-desktop/<channel>/<version>/KiroCrew-aarch64.deb             immutable
-desktop/<channel>/<version>/KiroCrew-x86_64.rpm              immutable
-desktop/<channel>/<version>/KiroCrew-aarch64.rpm             immutable
-desktop/<channel>/<version>/KiroCrew-Setup.exe               immutable
-desktop/<channel>/<version>/KiroCrew-Setup.exe.blockmap      immutable
-desktop/<channel>/latest/KiroCrew.dmg                        pointer, max-age=300 (universal)
-desktop/<channel>/latest/KiroCrew-{arm64,x64}.dmg            pointer, max-age=300 (single-arch)
-desktop/<channel>/latest/KiroCrew-x86_64.AppImage            pointer, max-age=300
-desktop/<channel>/latest/KiroCrew-aarch64.AppImage           pointer, max-age=300
-desktop/<channel>/latest/KiroCrew-<arch>.deb                 pointer, max-age=300
-desktop/<channel>/latest/KiroCrew-<arch>.rpm                 pointer, max-age=300
-desktop/<channel>/latest/KiroCrew-Setup.exe                   pointer, max-age=300
+desktop/<channel>/<version>/AjCrew.zip                     immutable
+desktop/<channel>/<version>/AjCrew.dmg                     immutable (universal)
+desktop/<channel>/<version>/AjCrew-{arm64,x64}.{zip,dmg}   immutable (single-arch)
+desktop/<channel>/<version>/AjCrew-x86_64.AppImage         immutable
+desktop/<channel>/<version>/AjCrew-aarch64.AppImage        immutable
+desktop/<channel>/<version>/AjCrew-x86_64.deb              immutable
+desktop/<channel>/<version>/AjCrew-aarch64.deb             immutable
+desktop/<channel>/<version>/AjCrew-x86_64.rpm              immutable
+desktop/<channel>/<version>/AjCrew-aarch64.rpm             immutable
+desktop/<channel>/<version>/AjCrew-Setup.exe               immutable
+desktop/<channel>/<version>/AjCrew-Setup.exe.blockmap      immutable
+desktop/<channel>/latest/AjCrew.dmg                        pointer, max-age=300 (universal)
+desktop/<channel>/latest/AjCrew-{arm64,x64}.dmg            pointer, max-age=300 (single-arch)
+desktop/<channel>/latest/AjCrew-x86_64.AppImage            pointer, max-age=300
+desktop/<channel>/latest/AjCrew-aarch64.AppImage           pointer, max-age=300
+desktop/<channel>/latest/AjCrew-<arch>.deb                 pointer, max-age=300
+desktop/<channel>/latest/AjCrew-<arch>.rpm                 pointer, max-age=300
+desktop/<channel>/latest/AjCrew-Setup.exe                   pointer, max-age=300
 feed/<channel>/latest-mac.yml                                pointer, max-age=300 (universal)
 feed/<channel>/latest-mac.json                               pointer, max-age=300 (legacy bridge)
 feed/<channel>/{arm64,x64}/latest-mac.yml                    pointer, max-age=300 (single-arch)
@@ -398,7 +398,7 @@ feed/<channel>/{deb,rpm}/latest-linux.yml                    pointer, max-age=30
 feed/<channel>/{deb,rpm}/latest-linux-arm64.yml              pointer, max-age=300 (arm64 package)
 feed/<channel>/latest.yml                                    pointer, max-age=300 (Windows)
 feed/<channel>/latest-cli.json                               pointer, no-cache
-feed/<channel>/simple/ + feed/<channel>/simple/kirocrew/     pointer, no-cache
+feed/<channel>/simple/ + feed/<channel>/simple/ajcrew/     pointer, no-cache
 cli.sh                                                       pointer, no-cache (only root object)
 ```
 
@@ -449,7 +449,7 @@ costs nothing.
 
 ### GitHub Container Registry
 
-`ghcr.io/<owner>/kirocrew`, resolved from `github.repository_owner` so forks
+`ghcr.io/<owner>/ajcrew`, resolved from `github.repository_owner` so forks
 publish into their own namespace. Tag discipline mirrors the CDN keys: the
 **version** tag is immutable (a re-run that finds it present skips the build,
 verifies the existing digest already carries this repo's provenance via
@@ -475,14 +475,14 @@ and authenticate with a token carrying `read:packages`.
 `release.yml`'s `github-release` job attaches the wheel, sdist, all six Linux
 artifacts, the available Windows installer, per-build symbols manifests, and
 three gated macOS zip/DMG pairs renamed
-`KiroCrew-<version>-{universal,arm64,x64}-mac.zip` and
-`KiroCrew-<version>-{universal,arm64,x64}.dmg`. All three pairs are required:
+`AjCrew-<version>-{universal,arm64,x64}-mac.zip` and
+`AjCrew-<version>-{universal,arm64,x64}.dmg`. All three pairs are required:
 the three `sign-and-notarize` callers are required lanes. It accepts macOS bytes
 **only** from the exact name-bound artifacts the notarize jobs attached after the Gatekeeper gate, and re-validates them structurally
 before publishing (ZIP CRC plus exactly one top-level `.app`; DMG `koly` UDIF
 trailer). The unsigned electron-builder zip and DMG are inter-job handoffs and
 never become release assets. Windows remains optional: when present, exactly one
-installer is attached as `KiroCrew-<version>-Setup-x64.exe`; its blockmap stays
+installer is attached as `AjCrew-<version>-Setup-x64.exe`; its blockmap stays
 on the update feed path rather than becoming a human download. The release is
 marked `prerelease` when the channel is insider, and notes are generated.
 
@@ -581,20 +581,20 @@ and this job downloads no artifacts to race.
 
 ### There is no PyPI publish
 
-Nothing in the repository publishes to PyPI, and `pip install kirocrew` from
+Nothing in the repository publishes to PyPI, and `pip install ajcrew` from
 PyPI is not a supported path. `publish-cli.yml` builds a **private static PEP 503
 index** per channel under `feed/<channel>/simple/` and installs go through it:
 
 ```bash
-pip install --pre kirocrew --extra-index-url https://updates.crew.kiro.dev/feed/insider/simple/
+pip install --pre ajcrew --extra-index-url https://updates.crew.kiro.dev/feed/insider/simple/
 ```
 
 `--extra-index-url` (not `--index-url`) is deliberate: the channel index carries
-only `kirocrew`, so cutting off PyPI would fail on dependency resolution. pip
+only `ajcrew`, so cutting off PyPI would fail on dependency resolution. pip
 verifies the `#sha256=` fragment on each link, giving the same fail-closed
 integrity as the feed. Because CloudFront with OAC does not resolve directory
-indexes, the workflow uploads both `.../simple/kirocrew/index.html` and the
-literal trailing-slash key `.../simple/kirocrew/` that pip requests, using
+indexes, the workflow uploads both `.../simple/ajcrew/index.html` and the
+literal trailing-slash key `.../simple/ajcrew/` that pip requests, using
 `s3api put-object` (an `s3 cp` to a trailing-slash destination silently writes a
 different key). The project page is merged with the live one so prior versions
 stay installable, and a non-200/non-404 fetch aborts the step rather than
@@ -616,7 +616,7 @@ leg downloads that one bundle and picks its own zip and DMG out of it by name,
 the same name the fresh path wrote into its own gated artifact. On `release.yml`
 the two single-arch callers are required lanes beside the universal one:
 `record-promotion`, `github-release` and `record-stable-promotion` all wait on
-all three, and the release page carries `KiroCrew-<v>-{universal,arm64,x64}.dmg`
+all three, and the release page carries `AjCrew-<v>-{universal,arm64,x64}.dmg`
 with the matching `*-mac.zip`.
 
 1. **sign** (ubuntu). Flattens the build artifacts, attests SLSA provenance for
@@ -652,7 +652,7 @@ with the matching `*-mac.zip`.
    `GITHUB_ENV`, a file, or a log.
 3. **publish** (ubuntu). Copies the gated zip and DMG to the distribution
    bucket, writes `latest-mac.yml`, writes the legacy `latest-mac.json` bridge,
-   then the human `latest/KiroCrew.dmg` alias. Separate from notarize so a
+   then the human `latest/AjCrew.dmg` alias. Separate from notarize so a
    transient S3 failure retries as a two-minute ubuntu job instead of repeating
    two Apple submissions, and so the expensive macOS runner never burns minutes
    on uploads. Its custom `if:` uses `always()` and checks the dependency result
@@ -686,7 +686,7 @@ runs still publish immutable versioned assets but do not move feeds or aliases.
 
 ## Version stamping
 
-The in-code `__version__` in `src/kiro_crew/__init__.py` is the source of truth
+The in-code `__version__` in `src/aj_crew/__init__.py` is the source of truth
 for non-tag builds. A tagged release overrides all three manifests at build
 time. [Runbook: promoting an RC to stable](#runbook-promoting-an-rc-to-stable)
 names the three files and why the base must stay a bare `X.Y.Z`.
@@ -736,7 +736,7 @@ Stick to one convention (`-rc.N`) per base version.
 
 ### Version numbering policy
 
-`__version__` in `src/kiro_crew/__init__.py` is the branch's DECLARED identity.
+`__version__` in `src/aj_crew/__init__.py` is the branch's DECLARED identity.
 A tagged build overrides all three manifests from the tag (the table above), so
 the in-code value is what a non-tag build reports and what the promote sequence
 manipulates — the final byte stamp is decided by the tag, not this value.
@@ -745,7 +745,7 @@ manipulates — the final byte stamp is decided by the tag, not this value.
   tag matches.** The branch reads as what it is: `__version__ = "X.Y.Z-rc.N"`,
   tags `vX.Y.Z-rc.N`. Do not leave a release branch declaring a bare
   `X.Y.Z` while it is still cutting RCs. All three version files
-  (`src/kiro_crew/__init__.py`, `pyproject.toml`,
+  (`src/aj_crew/__init__.py`, `pyproject.toml`,
   `website/electron/package.json`) use the **same dual-valid spelling**
   `X.Y.Z-rc.N` — valid SemVer and valid (non-canonical) PEP 440. The canonical
   PEP 440 form (`0.4.0rc4`) is forbidden in `__init__.py`:
@@ -804,11 +804,11 @@ signed with a non-exportable RSA KMS key:
   "key_id": "sha256:<SubjectPublicKeyInfo DER digest>",
   "pub_date": "2026-07-18T06:15:00Z",
   "python_requires": ">=3.12",
-  "schema": "kirocrew-cli-artifact-manifest-v1",
+  "schema": "ajcrew-cli-artifact-manifest-v1",
   "sha256": "<wheel digest>",
   "signature": "<base64 RSA signature over canonical JSON without this field>",
   "version": "0.2.0rc1",
-  "wheel_url": "https://download.crew.kiro.dev/cli/insider/0.2.0rc1/kirocrew-0.2.0rc1-py3-none-any.whl"
+  "wheel_url": "https://download.crew.kiro.dev/cli/insider/0.2.0rc1/ajcrew-0.2.0rc1-py3-none-any.whl"
 }
 ```
 
@@ -845,9 +845,9 @@ one key) are in [../../packaging/signing/README.md](../../packaging/signing/READ
 
 **The pinned key has three consumers, not two.** `cli.sh` and the gateway's
 update-feed reader verify `cli-manifest.json` against it, and the gateway's
-feature-video manifest (`src/kiro_crew/feature_videos_manifest.py`, schema
-`kirocrew-feature-videos-manifest-v1`, using the shared verify core in
-`src/kiro_crew/platform/feed_trust.py`) verifies against the same key. A rotation therefore
+feature-video manifest (`src/aj_crew/feature_videos_manifest.py`, schema
+`ajcrew-feature-videos-manifest-v1`, using the shared verify core in
+`src/aj_crew/platform/feed_trust.py`) verifies against the same key. A rotation therefore
 moves `cli.sh`, the feed publisher and the feature-video manifest publisher
 together, and every hosted manifest a release still reads back (this release,
 this minor's `.0`, and the `.0` of up to three earlier minors) must be re-signed
@@ -1010,7 +1010,7 @@ The client resolves `{feedBase}/{channel}/` as a **directory** (the trailing
 slash matters: without it `new URL("latest-mac.yml", base)` replaces the last
 segment and resolves the wrong channel) and the library appends the platform
 filename. The feed base defaults to `https://updates.crew.kiro.dev/feed` and is
-overridable through `KIROCREW_UPDATE_FEED`, which enforces HTTPS except on
+overridable through `AJCREW_UPDATE_FEED`, which enforces HTTPS except on
 loopback so the local harness works. The yml lives on the pointer host while
 `files[].url` entries are absolute byte-host URLs; electron-updater's
 `newUrlFromBase` ignores the base for absolute URLs, which is what preserves the
@@ -1023,13 +1023,13 @@ electron-updater string-compares it and a hex value fails every download:
 ```yaml
 version: 0.1.0-nightly.20260721t061155
 files:
-  - url: https://download.crew.kiro.dev/desktop/nightly/0.1.0-nightly.20260721t061155/KiroCrew.zip
+  - url: https://download.crew.kiro.dev/desktop/nightly/0.1.0-nightly.20260721t061155/AjCrew.zip
     sha512: '<base64>'
     size: 123456789
-  - url: https://download.crew.kiro.dev/desktop/nightly/0.1.0-nightly.20260721t061155/KiroCrew.dmg
+  - url: https://download.crew.kiro.dev/desktop/nightly/0.1.0-nightly.20260721t061155/AjCrew.dmg
     sha512: '<base64>'
     size: 234567890
-path: https://download.crew.kiro.dev/desktop/nightly/0.1.0-nightly.20260721t061155/KiroCrew.zip
+path: https://download.crew.kiro.dev/desktop/nightly/0.1.0-nightly.20260721t061155/AjCrew.zip
 sha512: '<base64>'
 releaseDate: '2026-07-21T06:22:13Z'
 releaseNotes: ""
@@ -1037,7 +1037,7 @@ releaseNotes: ""
 
 The zip is the update payload (the updater's `findFile` skips dmg/pkg); the DMG
 entry is listed for tooling parity and stays the human first-install download,
-which is why it also gets its own `desktop/<channel>/latest/KiroCrew.dmg`
+which is why it also gets its own `desktop/<channel>/latest/AjCrew.dmg`
 permalink. Downloads are verified fail-closed against the feed's `sha512` before
 install, and on macOS Squirrel.Mac additionally validates the swapped bundle's
 code signature, which is precisely why the feed may only ever point at signed
@@ -1143,7 +1143,7 @@ the dispatch (possible only when the stage carries no version, so the gate had
 nothing to wait for), because only the first is a retraction, the second waits
 for the selected channel's answer, and the third re-offers the same build next
 launch. The dashboard's arm endpoint (`api_update_arm` in
-`src/kiro_crew/dashboard/handlers/updates_step_up.py`) re-checks the feed the
+`src/aj_crew/dashboard/handlers/updates_step_up.py`) re-checks the feed the
 same way, and awaits an already-running check rather than arming its cached
 verdict.
 
@@ -1190,7 +1190,7 @@ The consequences to know:
   about the bytes and stays literally true on a promoted stable install.
 - **An LTS build has no opt-in.** It follows `lts`, the edition's own channel (RFC crew-lts-edition, D11), whatever the preference or a policy `updates.channel` pin says. `lts` is not a channel an oss build offers, so neither edition reads the other's feed. `release-lts.yml` publishes `lts` (see "LTS edition releases"), and neither edition falls back to the other's channel. `runtime/update/policy-channel.js` reads the baked edition, `resolveChannel()` lets that channel replace the preference, About shows the channel read-only with the "Locked by policy" badge, and `update:set-channel` refuses with `locked_by_policy`. A build that cannot follow the required channel (a nightly install) gets no update lane (`disabled: "policy-channel"`); About names the required channel and links that channel's build. An oss build is unchanged.
 
-The specific to Kiro Crew part is install ordering: the app supervises a bundled
+The specific to Aj Crew part is install ordering: the app supervises a bundled
 Python gateway child, so before `quitAndInstall` the client stops it gracefully
 (`POST /api/shutdown`, then SIGTERM, then SIGKILL) and disarms the liveness
 watchdog that would otherwise resurrect it mid-swap. Choosing "Later" defers to
@@ -1202,7 +1202,7 @@ notification saying why, rather than applying whatever was staged at the time.
 ## Windows
 
 `build-windows.yml` builds and **Authenticode-signs** the NSIS `Setup.exe`
-through AWS Signer during the build (signing profile `KiroCrewWindowsExe`),
+through AWS Signer during the build (signing profile `AjCrewWindowsExe`),
 whenever `AWS_WINDOWS_SIGNING_ROLE_ARN` is present and the caller passed
 `use_prod_environment: true`. Signing happens inside the build because the NSIS
 installer compresses its own already-signed executables.
@@ -1214,9 +1214,9 @@ Nightly and insider publish a fresh signed build. Stable publishes a fresh
 bare-version build by default; only `STABLE_PROMOTE_BYTES` republishes the
 verified candidate bundle's installer.
 
-    desktop/<channel>/<version>/KiroCrew-Setup.exe            immutable
-    desktop/<channel>/<version>/KiroCrew-Setup.exe.blockmap   immutable
-    desktop/<channel>/latest/KiroCrew-Setup.exe               pointer, max-age=300
+    desktop/<channel>/<version>/AjCrew-Setup.exe            immutable
+    desktop/<channel>/<version>/AjCrew-Setup.exe.blockmap   immutable
+    desktop/<channel>/latest/AjCrew-Setup.exe               pointer, max-age=300
     feed/<channel>/latest.yml                                 pointer, max-age=300
 
 Three things about this lane are deliberate rather than incidental:
@@ -1270,7 +1270,7 @@ Three things about this lane are deliberate rather than incidental:
   forces that job's result to `success` even on failure, so the check would assert
   nothing.
 
-The `KiroCrew-Setup.exe` basename is a public contract: it is what
+The `AjCrew-Setup.exe` basename is a public contract: it is what
 `manualDownloadUrl()` hands a user whose in-app update failed, which is why it
 carries neither the version nor electron-builder's spaces. The blockmap must
 travel with the installer or electron-updater silently falls back to a full
@@ -1345,11 +1345,11 @@ CH=stable
 BYTES=https://download.crew.kiro.dev
 PTR=https://updates.crew.kiro.dev
 
-curl -fsSI "$BYTES/desktop/$CH/latest/KiroCrew.dmg" | head -1
-curl -fsSI "$BYTES/desktop/$CH/latest/KiroCrew-arm64.dmg" | head -1
-curl -fsSI "$BYTES/desktop/$CH/latest/KiroCrew-x64.dmg" | head -1
-curl -fsSI "$BYTES/desktop/$CH/latest/KiroCrew-x86_64.AppImage" | head -1
-curl -fsSI "$BYTES/desktop/$CH/latest/KiroCrew-aarch64.AppImage" | head -1
+curl -fsSI "$BYTES/desktop/$CH/latest/AjCrew.dmg" | head -1
+curl -fsSI "$BYTES/desktop/$CH/latest/AjCrew-arm64.dmg" | head -1
+curl -fsSI "$BYTES/desktop/$CH/latest/AjCrew-x64.dmg" | head -1
+curl -fsSI "$BYTES/desktop/$CH/latest/AjCrew-x86_64.AppImage" | head -1
+curl -fsSI "$BYTES/desktop/$CH/latest/AjCrew-aarch64.AppImage" | head -1
 curl -fsS  "$PTR/feed/$CH/latest-mac.yml"
 curl -fsS  "$PTR/feed/$CH/arm64/latest-mac.yml"
 curl -fsS  "$PTR/feed/$CH/x64/latest-mac.yml"
@@ -1361,7 +1361,7 @@ curl -fsS  "$PTR/feed/$CH/rpm/latest-linux.yml"
 curl -fsS  "$PTR/feed/$CH/rpm/latest-linux-arm64.yml"
 curl -fsS  "$PTR/feed/$CH/latest.yml"
 curl -fsS  "$PTR/feed/$CH/latest-cli.json" > /tmp/feed.json
-curl -fsS  "$PTR/feed/$CH/simple/kirocrew/" | head -5
+curl -fsS  "$PTR/feed/$CH/simple/ajcrew/" | head -5
 
 # authenticate the CLI feed with the same checks cli.sh runs
 python3 packaging/signing/cli-manifest.py verify \
@@ -1406,7 +1406,7 @@ for f in latest-cli.json latest-mac.yml arm64/latest-mac.yml x64/latest-mac.yml 
 done
 
 # 2. The wheel's EMBEDDED version, not just its filename. This is what
-#    `pip show` and `kirocrew --version` print, and a promotion cannot change it.
+#    `pip show` and `ajcrew --version` print, and a promotion cannot change it.
 curl -fsS "$PTR/feed/$CH/latest-cli.json" > /tmp/feed.json
 python3 - <<'PY'
 import hashlib, io, json, re, urllib.request, zipfile
@@ -1533,7 +1533,7 @@ Every release lands a `## [X.Y.Z] - YYYY-MM-DD` section in `CHANGELOG.md`
 through a normal PR, alongside any version bump. The section format (ordering,
 tone, the three-sentence budget per subsection) is specified once in
 [changelog.md](changelog.md). The dashboard reads the
-changelog from `KIROCREW_PROJECT_DIR/CHANGELOG.md` for source installs and from
+changelog from `AJCREW_PROJECT_DIR/CHANGELOG.md` for source installs and from
 the bundled copy inside the package for wheel installs.
 
 **`main` holds the canonical copy.** A release branch necessarily carries its
@@ -1590,7 +1590,7 @@ The LTS edition (RFC crew-lts-edition, D11) ships from its own tag, `lts-vX.Y.Z`
 | Build | `build-wheel.yml`, `build-desktop.yml`, `build-windows.yml` with `edition: lts` |
 | Sign + publish | `sign-and-notarize.yml` (3 legs), `publish-linux.yml` (6), `publish-windows.yml`, `publish-cli.yml`, all with `channel: lts` |
 
-It writes only lts paths: `feed/lts/`, `cli/lts/`, `desktop/lts/` and the signing bucket's `lts/` keys. Every published file uses the LTS stem: `KiroCrew-LTS.dmg`, `KiroCrew-LTS-arm64.dmg`, `KiroCrew-LTS-x86_64.AppImage`, `KiroCrew-LTS-Setup.exe`, and the wheel `kirocrew_lts-X.Y.Z-py3-none-any.whl` of the distribution `kirocrew-lts`. The desktop app is a side-by-side `KiroCrew LTS` app, built like nightly (`packaging/build-desktop.sh`): its own product name, Linux package and executable names, npm name, `nsis.guid` and Windows app ID, with the shared macOS bundle id, so no new signing identifier. There is no Docker image and no GitHub release. `cli.sh --channel lts` installs the LTS wheel.
+It writes only lts paths: `feed/lts/`, `cli/lts/`, `desktop/lts/` and the signing bucket's `lts/` keys. Every published file uses the LTS stem: `AjCrew-LTS.dmg`, `AjCrew-LTS-arm64.dmg`, `AjCrew-LTS-x86_64.AppImage`, `AjCrew-LTS-Setup.exe`, and the wheel `ajcrew_lts-X.Y.Z-py3-none-any.whl` of the distribution `ajcrew-lts`. The desktop app is a side-by-side `AjCrew LTS` app, built like nightly (`packaging/build-desktop.sh`): its own product name, Linux package and executable names, npm name, `nsis.guid` and Windows app ID, with the shared macOS bundle id, so no new signing identifier. There is no Docker image and no GitHub release. `cli.sh --channel lts` installs the LTS wheel.
 
 Every input these workflows gained (`edition`) defaults to `oss`, and every LTS name is chosen only when the channel or edition is `lts`, so a `v*` release is unchanged (`test/test_release_lts_workflow.py`). To try an LTS desktop build without publishing, run `build-desktop.yml` or `build-windows.yml` by hand with `edition: lts`.
 

@@ -10,7 +10,7 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app_with_agent_routes, _make_state
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config.loader import ResolvedBindings
+from aj_crew.config.loader import ResolvedBindings
 
 # ── Runtime wiring tests (multi-agent-orchestration) ──
 
@@ -27,7 +27,7 @@ class TestRuntimeWiring:
 
         Requirements: 1.3
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("s1")
         state.sessions.reset = AsyncMock()
@@ -45,31 +45,31 @@ class TestRuntimeWiring:
             workspace_dir=tmp_path,
             memory_store_name="",
             effective_memory_config={},
-            kiro_agent="kirocrew",
+            kiro_agent="ajcrew",
             selection_kind="template",
         )
         mock_bindings.workspace_dir = Path("/tmp/oncall")
         mock_bindings.memory_store_name = "oncall-mem"
         mock_bindings.model = ""
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat.KiroCrewConfig.load", lambda: mock_cfg)
+        monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", lambda: mock_cfg
+            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat.resolve_agent_bindings",
+            "aj_crew.dashboard.chat.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.resolve_agent_bindings",
+            "aj_crew.dashboard.chat_handlers.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat._workspace_name_for_dir",
+            "aj_crew.dashboard.chat._workspace_name_for_dir",
             lambda cfg, ws_dir: "oncall-ws",
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._workspace_name_for_dir",
+            "aj_crew.dashboard.chat_handlers._workspace_name_for_dir",
             lambda cfg, ws_dir: "oncall-ws",
         )
 
@@ -91,7 +91,7 @@ class TestRuntimeWiring:
         The response must name slot.workspace's kept value: the tab writes it into its
         store optimistically, and with the websocket down nothing corrects it.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.workspace = "research-ws"
@@ -100,8 +100,8 @@ class TestRuntimeWiring:
         def _boom():
             raise RuntimeError("config unreadable")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat.KiroCrewConfig.load", _boom)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", _boom)
+        monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", _boom)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", _boom)
 
         async with TestClient(TestServer(as_owner(_make_app_with_agent_routes(state)))) as client:
             resp = await client.post("/api/chat/slots/s1/agent", json={"agent": "oncall"})
@@ -123,7 +123,7 @@ class TestRuntimeWiring:
         The session is popped before shutdown fails, so the switch took; a 500 would
         make performSlotSwitch keep the OLD store value.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.agent = "oncall"
@@ -154,30 +154,30 @@ class TestRuntimeWiring:
             workspace_dir=tmp_path,
             memory_store_name="",
             effective_memory_config={},
-            kiro_agent="kirocrew",
+            kiro_agent="ajcrew",
             selection_kind="template",
         )
         mock_bindings.workspace_dir = Path("/tmp/research")
         mock_bindings.memory_store_name = "default"
         mock_bindings.model = ""
-        monkeypatch.setattr("kiro_crew.dashboard.chat.KiroCrewConfig.load", lambda: mock_cfg)
+        monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", lambda: mock_cfg
+            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat.resolve_agent_bindings",
+            "aj_crew.dashboard.chat.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.resolve_agent_bindings",
+            "aj_crew.dashboard.chat_handlers.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat._workspace_name_for_dir",
+            "aj_crew.dashboard.chat._workspace_name_for_dir",
             lambda cfg, ws_dir: "research-ws",
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._workspace_name_for_dir",
+            "aj_crew.dashboard.chat_handlers._workspace_name_for_dir",
             lambda cfg, ws_dir: "research-ws",
         )
 
@@ -205,7 +205,7 @@ class TestRuntimeWiring:
         The project endpoint does not take the slot lock, so restoring captured
         priors on failure would erase its concurrent write.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.agent = "oncall"
@@ -237,30 +237,30 @@ class TestRuntimeWiring:
             workspace_dir=tmp_path,
             memory_store_name="",
             effective_memory_config={},
-            kiro_agent="kirocrew",
+            kiro_agent="ajcrew",
             selection_kind="template",
         )
         mock_bindings.workspace_dir = Path("/tmp/research")
         mock_bindings.memory_store_name = "default"
         mock_bindings.model = ""
-        monkeypatch.setattr("kiro_crew.dashboard.chat.KiroCrewConfig.load", lambda: mock_cfg)
+        monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", lambda: mock_cfg
+            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat.resolve_agent_bindings",
+            "aj_crew.dashboard.chat.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.resolve_agent_bindings",
+            "aj_crew.dashboard.chat_handlers.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat._workspace_name_for_dir",
+            "aj_crew.dashboard.chat._workspace_name_for_dir",
             lambda cfg, ws_dir: "research-ws",
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._workspace_name_for_dir",
+            "aj_crew.dashboard.chat_handlers._workspace_name_for_dir",
             lambda cfg, ws_dir: "research-ws",
         )
 
@@ -286,30 +286,30 @@ class TestRuntimeWiring:
             workspace_dir=Path("/tmp/research"),
             memory_store_name="",
             effective_memory_config={},
-            kiro_agent="kirocrew",
+            kiro_agent="ajcrew",
             selection_kind="template",
         )
         mock_bindings.workspace_dir = Path("/tmp/research")
         mock_bindings.memory_store_name = "default"
         mock_bindings.model = ""
-        monkeypatch.setattr("kiro_crew.dashboard.chat.KiroCrewConfig.load", lambda: mock_cfg)
+        monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", lambda: mock_cfg
+            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat.resolve_agent_bindings",
+            "aj_crew.dashboard.chat.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.resolve_agent_bindings",
+            "aj_crew.dashboard.chat_handlers.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat._workspace_name_for_dir",
+            "aj_crew.dashboard.chat._workspace_name_for_dir",
             lambda cfg, ws_dir: "research-ws",
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._workspace_name_for_dir",
+            "aj_crew.dashboard.chat_handlers._workspace_name_for_dir",
             lambda cfg, ws_dir: "research-ws",
         )
 
@@ -322,9 +322,9 @@ class TestRuntimeWiring:
         The same provider instance before and after means the raise came before the
         pop, so the old session still runs the old agent and the commit is rolled back.
         """
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.agent = "oncall"
@@ -360,9 +360,9 @@ class TestRuntimeWiring:
         The probe compares instance identity, so a concurrent send's successor still
         counts as post-pop and the answer is 200 + warning.
         """
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.agent = "oncall"
@@ -397,7 +397,7 @@ class TestRuntimeWiring:
         The project/workspace endpoints do not take the slot lock, so the commit is
         compare-and-set against a pre-await baseline. `agent` still commits.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.agent = "oncall"
@@ -428,30 +428,30 @@ class TestRuntimeWiring:
             workspace_dir=tmp_path,
             memory_store_name="",
             effective_memory_config={},
-            kiro_agent="kirocrew",
+            kiro_agent="ajcrew",
             selection_kind="template",
         )
         mock_bindings.workspace_dir = Path("/tmp/research")
         mock_bindings.memory_store_name = "default"
         mock_bindings.model = ""
-        monkeypatch.setattr("kiro_crew.dashboard.chat.KiroCrewConfig.load", lambda: mock_cfg)
+        monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", lambda: mock_cfg
+            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat.resolve_agent_bindings",
+            "aj_crew.dashboard.chat.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.resolve_agent_bindings",
+            "aj_crew.dashboard.chat_handlers.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat._workspace_name_for_dir",
+            "aj_crew.dashboard.chat._workspace_name_for_dir",
             lambda cfg, ws_dir: "research-ws",
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._workspace_name_for_dir",
+            "aj_crew.dashboard.chat_handlers._workspace_name_for_dir",
             lambda cfg, ws_dir: "research-ws",
         )
 
@@ -480,7 +480,7 @@ class TestRuntimeWiring:
         A send during the reset builds a session from the CURRENT bindings, which
         would otherwise cold-start on the OLD agent.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.agent = "oncall"
@@ -496,8 +496,8 @@ class TestRuntimeWiring:
             raise RuntimeError("config unreadable")
 
         # Resolution outcome is irrelevant to the visibility property.
-        monkeypatch.setattr("kiro_crew.dashboard.chat.KiroCrewConfig.load", _boom)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", _boom)
+        monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", _boom)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", _boom)
 
         async with TestClient(TestServer(as_owner(_make_app_with_agent_routes(state)))) as client:
             resp = await client.post("/api/chat/slots/s1/agent", json={"agent": "research"})
@@ -514,7 +514,7 @@ class TestRuntimeWiring:
         The persist yields the loop, so a /workspace pick in that window must be what
         the response names; the tab writes it into its store optimistically.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.workspace = "oncall-ws"
@@ -524,8 +524,8 @@ class TestRuntimeWiring:
             raise RuntimeError("config unreadable")
 
         # Resolution outcome is irrelevant; keep the derived commit a no-op.
-        monkeypatch.setattr("kiro_crew.dashboard.chat.KiroCrewConfig.load", _boom)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", _boom)
+        monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", _boom)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", _boom)
 
         # A conversation_log whose update_metadata simulates a concurrent
         # /workspace pick landing while the persist thread runs.
@@ -552,7 +552,7 @@ class TestRuntimeWiring:
         Without this, the dashboard file search stays scoped to the previous
         workspace even after the user selects a different agent.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.project = "/old/project"
@@ -570,35 +570,35 @@ class TestRuntimeWiring:
             workspace_dir=tmp_path,
             memory_store_name="",
             effective_memory_config={},
-            kiro_agent="kirocrew",
+            kiro_agent="ajcrew",
             selection_kind="template",
         )
         mock_bindings.workspace_dir = Path("/workspace/dev")
         mock_bindings.memory_store_name = "default"
         mock_bindings.model = ""
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat.KiroCrewConfig.load", lambda: mock_cfg)
+        monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", lambda: mock_cfg
+            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat.resolve_agent_bindings",
+            "aj_crew.dashboard.chat.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.resolve_agent_bindings",
+            "aj_crew.dashboard.chat_handlers.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat._workspace_name_for_dir",
+            "aj_crew.dashboard.chat._workspace_name_for_dir",
             lambda cfg, ws_dir: "dev-ws",
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._workspace_name_for_dir",
+            "aj_crew.dashboard.chat_handlers._workspace_name_for_dir",
             lambda cfg, ws_dir: "dev-ws",
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.default_project_dir",
+            "aj_crew.dashboard.chat_handlers.default_project_dir",
             lambda ws: "/workspace/dev",
         )
 
@@ -616,7 +616,7 @@ class TestRuntimeWiring:
         turn: the slot advertises it while the default answers — the
         silent-substitution bug this exists to remove.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.project = str(tmp_path / "repo")
@@ -629,32 +629,32 @@ class TestRuntimeWiring:
             workspace_dir=tmp_path,
             memory_store_name="",
             effective_memory_config={},
-            kiro_agent="kirocrew",
+            kiro_agent="ajcrew",
             selection_kind="template",
         )
         mock_bindings.workspace_dir = Path("/workspace/default")
         mock_bindings.requested_resolved = True
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", lambda: mock_cfg
+            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.resolve_agent_bindings",
+            "aj_crew.dashboard.chat_handlers.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._workspace_name_for_dir",
+            "aj_crew.dashboard.chat_handlers._workspace_name_for_dir",
             lambda cfg, ws_dir: "default",
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.warm_project_agent_names", AsyncMock()
+            "aj_crew.dashboard.chat_handlers.warm_project_agent_names", AsyncMock()
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.cached_project_agent_names",
+            "aj_crew.dashboard.chat_handlers.cached_project_agent_names",
             lambda project_dir: frozenset({"repo-bot"}),
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.default_project_dir",
+            "aj_crew.dashboard.chat_handlers.default_project_dir",
             lambda ws: "/workspace/default",
         )
 
@@ -668,14 +668,14 @@ class TestRuntimeWiring:
     @pytest.mark.asyncio
     async def test_api_chat_slot_workspace_updates_project_dir(self, tmp_path, monkeypatch):
         """Switching workspace also updates slot.project to the new workspace dir."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.project = "/old/project"
         state.sessions.reset = AsyncMock()
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.default_project_dir",
+            "aj_crew.dashboard.chat_handlers.default_project_dir",
             lambda ws: "/workspace/new-ws",
         )
 
@@ -693,7 +693,7 @@ class TestRuntimeWiring:
         The pin is kept (the read side withholds it); the fallback walk is reset.
         Without persistence a resumed session reverts to the initial metadata's agent.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.agent = "old-agent"
@@ -723,7 +723,7 @@ class TestRuntimeWiring:
         # workspace-focused test above; here we only care about persistence).
         mock_cfg = MagicMock()
         mock_cfg.agents = {}
-        monkeypatch.setattr("kiro_crew.dashboard.chat.KiroCrewConfig.load", lambda: mock_cfg)
+        monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", lambda: mock_cfg)
 
         async with TestClient(TestServer(as_owner(_make_app_with_agent_routes(state)))) as client:
             resp = await client.post("/api/chat/slots/s1/agent", json={"agent": "new-agent"})
@@ -748,7 +748,7 @@ class TestRuntimeWiring:
 
     @pytest.mark.asyncio
     async def test_api_chat_slot_agent_same_agent_keeps_model_state(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.agent = "same-agent"
@@ -762,12 +762,12 @@ class TestRuntimeWiring:
 
         mock_cfg = MagicMock()
         mock_cfg.agents = {}
-        monkeypatch.setattr("kiro_crew.dashboard.chat.KiroCrewConfig.load", lambda: mock_cfg)
+        monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", lambda: mock_cfg)
         # The handler imports the owner check locally from source_providers, so
         # that is the namespace to patch; short-circuiting it keeps this test on
         # the same-agent path instead of the binding-resolution refusal.
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             lambda request: True,
         )
 
@@ -793,7 +793,7 @@ class TestRuntimeWiring:
         is reset. Only the kind distinguishes the two picks, so the reset
         keys on it as well as the name.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.agent = "same-agent"
@@ -808,20 +808,20 @@ class TestRuntimeWiring:
 
         mock_cfg = MagicMock()
         mock_cfg.agents = {}
-        monkeypatch.setattr("kiro_crew.dashboard.chat.KiroCrewConfig.load", lambda: mock_cfg)
+        monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             lambda request: True,
         )
         mock_bindings = ResolvedBindings(
             workspace_dir=tmp_path,
             memory_store_name="",
             effective_memory_config={},
-            kiro_agent="kirocrew",
+            kiro_agent="ajcrew",
             selection_kind="template",
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.resolve_agent_bindings",
+            "aj_crew.dashboard.chat_handlers.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
         )
 
@@ -844,7 +844,7 @@ class TestRuntimeWiring:
         self, tmp_path, monkeypatch
     ):
         """A refused agent switch preserves the pin in memory and metadata."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.agent = "oncall"
@@ -858,7 +858,7 @@ class TestRuntimeWiring:
         state.sessions.reset = AsyncMock()
         state.sessions.get_provider = MagicMock(return_value=None)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._record_explicit_agent_selection",
+            "aj_crew.dashboard.chat_handlers._record_explicit_agent_selection",
             AsyncMock(side_effect=ValueError("member memory write failed")),
         )
         self._patch_agent_resolution(monkeypatch)
@@ -879,7 +879,7 @@ class TestRuntimeWiring:
 
         Requirements: 2.4
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         mock_cfg = MagicMock()
@@ -894,31 +894,31 @@ class TestRuntimeWiring:
             workspace_dir=tmp_path,
             memory_store_name="",
             effective_memory_config={},
-            kiro_agent="kirocrew",
+            kiro_agent="ajcrew",
             selection_kind="template",
         )
         mock_bindings.workspace_dir = Path("/tmp/research")
         mock_bindings.memory_store_name = "default"
         mock_bindings.model = ""
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat.KiroCrewConfig.load", lambda: mock_cfg)
+        monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", lambda: mock_cfg
+            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat.resolve_agent_bindings",
+            "aj_crew.dashboard.chat.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.resolve_agent_bindings",
+            "aj_crew.dashboard.chat_handlers.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat._workspace_name_for_dir",
+            "aj_crew.dashboard.chat._workspace_name_for_dir",
             lambda cfg, ws_dir: "research-ws",
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._workspace_name_for_dir",
+            "aj_crew.dashboard.chat_handlers._workspace_name_for_dir",
             lambda cfg, ws_dir: "research-ws",
         )
 
@@ -936,7 +936,7 @@ class TestRuntimeWiring:
 
         Requirements: 2.3
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         slot = state.get_or_create_slot("ws-test", agent="oncall", workspace="oncall-ws")

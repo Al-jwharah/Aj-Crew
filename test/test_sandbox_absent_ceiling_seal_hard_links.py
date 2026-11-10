@@ -29,7 +29,7 @@ from sandbox_absent_ceiling_seal_helpers import (  # noqa: F401 -- fixtures are 
 )
 from test_sandbox_launcher_program import launch, payload, refusal
 
-from kiro_crew import sandbox, sandbox_aliases
+from aj_crew import sandbox, sandbox_aliases
 
 #: Masked FILE leaves deliberately left on the warning side, listed rather than derived so
 #: the boundary is asserted from both directions: a leaf moved into
@@ -150,7 +150,7 @@ class TestAMaskedCredentialLeafRefusesASecondHardLink:
         """Every masked spelling is INSPECTED, and a locatable alias there is MASKED.
 
         ``_crew_home_entries`` expands every hidden leaf across both ``_CREW_HOME_PREFIXES``,
-        so ``~/.kirocrew/.env`` holds live channel tokens whichever spelling ``config_dir()``
+        so ``~/.ajcrew/.env`` holds live channel tokens whichever spelling ``config_dir()``
         resolves to, and a second hard link on it reaches those bytes under a name no mask
         covers.
 
@@ -163,7 +163,7 @@ class TestAMaskedCredentialLeafRefusesASecondHardLink:
         name is under a home the walk covers, so it is found and hidden, and the bytes are
         unreachable without anything being refused.
         """
-        legacy = tmp_path / ".kirocrew"
+        legacy = tmp_path / ".ajcrew"
         legacy.mkdir()
         target = legacy / ".env"
         target.write_text("SLACK_BOT_TOKEN=x\n", encoding="utf-8")
@@ -184,7 +184,7 @@ class TestAMaskedCredentialLeafRefusesASecondHardLink:
     def test_a_credential_leaf_left_in_the_DEFAULT_home_by_a_relocation_is_reported(
         self, tmp_path, monkeypatch, caplog
     ):
-        """A relocated ``KIROCREW_HOME`` needs no migration history to reach this.
+        """A relocated ``AJCREW_HOME`` needs no migration history to reach this.
 
         ``_relocated_crew_targets`` masks the resolved home ON TOP of the ``$HOME``-relative
         spellings, so a signing key left in the default home is masked and would otherwise
@@ -215,7 +215,7 @@ class TestAMaskedCredentialLeafRefusesASecondHardLink:
         ``ln`` would stop every agent launch on the host until an operator found a dotfile in
         a directory they had never used. The spawn must proceed.
         """
-        planted = tmp_path / ".kirocrew"
+        planted = tmp_path / ".ajcrew"
         planted.mkdir()
         leaf = planted / ".env"
         leaf.write_text("SLACK_BOT_TOKEN=planted\n", encoding="utf-8")
@@ -238,7 +238,7 @@ class TestAMaskedCredentialLeafRefusesASecondHardLink:
         different rule in each home.
         """
         leaf = _HARDLINK_TOLERATED_FILE_LEAVES[0]
-        legacy = tmp_path / ".kirocrew"
+        legacy = tmp_path / ".ajcrew"
         target = legacy / leaf
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text("{}\n", encoding="utf-8")
@@ -257,7 +257,7 @@ class TestAMaskedCredentialLeafRefusesASecondHardLink:
         then reach ONE inode, whose link count the live home's own pass already judges, so
         refusing here would break a working host to close nothing.
         """
-        (tmp_path / ".kirocrew").symlink_to(crew_home, target_is_directory=True)
+        (tmp_path / ".ajcrew").symlink_to(crew_home, target_is_directory=True)
         target = crew_home / ".env"
         target.write_text("SLACK_BOT_TOKEN=x\n", encoding="utf-8")
         assert target.stat().st_nlink == 1
@@ -280,7 +280,7 @@ class TestAMaskedCredentialLeafRefusesASecondHardLink:
         This list is written out by hand for exactly that reason: changing the set must also
         change this literal, which is a decision someone makes rather than a side effect.
         """
-        from kiro_crew.identity_stores import AUTH_SQLITE_DB, AUTH_SQLITE_SIDECAR_SUFFIXES
+        from aj_crew.identity_stores import AUTH_SQLITE_DB, AUTH_SQLITE_SIDECAR_SUFFIXES
 
         expected = {
             # signs dashboard access and refresh tokens
@@ -325,7 +325,7 @@ class TestAMaskedCredentialLeafRefusesASecondHardLink:
 
     def test_the_sqlite_sidecars_come_from_the_shared_suffix_constant(self):
         """Re-listing the suffixes is how one gets forgotten when a fourth is added."""
-        from kiro_crew.identity_stores import AUTH_SQLITE_DB, AUTH_SQLITE_SIDECAR_SUFFIXES
+        from aj_crew.identity_stores import AUTH_SQLITE_DB, AUTH_SQLITE_SIDECAR_SUFFIXES
 
         for suffix in AUTH_SQLITE_SIDECAR_SUFFIXES:
             assert f"{AUTH_SQLITE_DB}{suffix}" in sandbox._CREW_HARDLINK_REFUSED_LEAVES
@@ -560,7 +560,7 @@ class TestTheDoctorReadOfMaskedCredentialAliases:
         outage this read exists to pre-empt. So the probe walks the same homes the refusal
         does.
         """
-        legacy = tmp_path / ".kirocrew"
+        legacy = tmp_path / ".ajcrew"
         legacy.mkdir()
         stranded = legacy / "token_signing.key"
         stranded.write_bytes(b"k" * 32)
@@ -652,7 +652,7 @@ class TestTheDoctorReadOfMaskedCredentialAliases:
         leaf whose root IS the live home. The remedy command must survive, because finding the
         extra link is still the action.
         """
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         target = crew_home / "token_signing.key"
         target.write_bytes(b"key")
@@ -691,7 +691,7 @@ class TestTheDoctorReadOfMaskedCredentialAliases:
         A platform with no confined launch path is skipped, so the section is silent rather
         than naming an outage that cannot arrive.
         """
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         for platform, expected in (("linux", True), ("darwin", True), ("win32", False)):
             asked: list[bool] = []
@@ -784,7 +784,7 @@ class TestTheDoctorReadOfMaskedCredentialAliases:
     def test_the_pass_runs_after_every_materialiser(self):
         """Order is load-bearing: a leaf with its own sentence must answer first.
 
-        ``live_target.json`` shares its wording with ``kirocrew doctor`` and the
+        ``live_target.json`` shares its wording with ``ajcrew doctor`` and the
         md-notebook leaves name their own documents, so a generic message arriving first
         would replace a sentence another surface is pinned to.
         """
@@ -948,7 +948,7 @@ class TestTheAliasReachesTheSpawnsHiddenSet:
         create it and plant both names. Refusing there hands it a way to stop every launch on
         the host; masking the sibling closes the bytes and costs no spawn.
         """
-        planted = tmp_path / ".kirocrew"
+        planted = tmp_path / ".ajcrew"
         planted.mkdir()
         leaf = planted / ".env"
         leaf.write_text("SLACK_BOT_TOKEN=planted\n", encoding="utf-8")
@@ -973,7 +973,7 @@ class TestTheAliasReachesTheSpawnsHiddenSet:
         up short against ``st_nlink`` and refuse -- a spawn-wide outage over a name it could
         have masked, which is the failure mode this whole split exists to avoid.
         """
-        legacy = tmp_path / ".kirocrew"
+        legacy = tmp_path / ".ajcrew"
         legacy.mkdir()
         monkeypatch.setattr(
             sandbox, "_masked_crew_home_roots", lambda: [str(crew_home), str(legacy)]
@@ -1038,7 +1038,7 @@ class TestTheAliasReachesTheSpawnsHiddenSet:
         overshoots ``st_nlink``, the equality test fails, and the live home refuses a spawn
         over a single link.
         """
-        legacy = tmp_path / ".kirocrew"
+        legacy = tmp_path / ".ajcrew"
         legacy.symlink_to(crew_home, target_is_directory=True)
         monkeypatch.setattr(sandbox, "credential_mask_applies", lambda _mode: True)
         roots = sandbox._masked_crew_home_roots()

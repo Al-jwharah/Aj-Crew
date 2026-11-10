@@ -21,7 +21,7 @@ export function lookPreviewSlots() {
   return [{
     key: LOOK_PREVIEW_SLOT_KEY,
     title: i18nT('components.lookPreview.session_title'),
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     running: false,
     messages: 9,
     tags: [],

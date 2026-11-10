@@ -4,7 +4,7 @@
 adapter, measured here against a real ``codex-acp``:
 
 * an ``sse`` element is dropped: codex-acp would accept it silently and never wire it;
-* Crew's own servers carry ``KIROCREW_SESSION_KEY`` on the element, because ``codex-rs``
+* Crew's own servers carry ``AJCREW_SESSION_KEY`` on the element, because ``codex-rs``
   starts a stdio server with ``env_clear()``. Which servers are Crew's is decided by the
   resolved invocation, never the name, since that key authenticates a session claim.
 
@@ -26,14 +26,14 @@ from pathlib import Path
 import pytest
 from real_adapter_gate import MEASURED_CODEX_ACP_VERSION, require_real_adapter
 
-from kiro_crew.acp import runtime as acp_runtime
-from kiro_crew.acp import session_mcp
-from kiro_crew.acp.harness.codex import CodexHarness
-from kiro_crew.providers.mirrors.codex import (
+from aj_crew.acp import runtime as acp_runtime
+from aj_crew.acp import session_mcp
+from aj_crew.acp.harness.codex import CodexHarness
+from aj_crew.providers.mirrors.codex import (
     codex_name,
     drop_unadvertised_transports,
 )
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 # ── the real adapter ────────────────────────────────────────────────────────
 
@@ -125,10 +125,10 @@ def drive(element):
 
 
 stdio_el = {
-    "name": "kirocrew-core", "type": "stdio", "command": sys.executable,
+    "name": "ajcrew-core", "type": "stdio", "command": sys.executable,
     "args": [stub],
     "env": [{"name": "STUB_MCP_REPORT", "value": report},
-            {"name": "KIROCREW_SESSION_KEY", "value": "probe-session-key"}],
+            {"name": "AJCREW_SESSION_KEY", "value": "probe-session-key"}],
 }
 init, new = drive(stdio_el)
 out = {
@@ -283,7 +283,7 @@ def _run_driver_reaping_group(
     exit), through ``platform_compat.kill_process_tree`` for Windows and the broadcast
     guard. ``cwd`` is required so the tree does not run in the checkout.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     proc = subprocess.Popen(
         argv,
@@ -327,7 +327,7 @@ def _codex_acp_entry() -> Path | None:
     what this test must exercise is the adapter a real session would spawn, on the
     same ladder (``CODEX_ACP_BIN``, project ``node_modules``, mise, PATH).
     """
-    from kiro_crew.acp.client import _resolve_codex_acp_bin
+    from aj_crew.acp.client import _resolve_codex_acp_bin
 
     argv, _search = _resolve_codex_acp_bin()
     if not argv:
@@ -341,7 +341,7 @@ _ENTRY = _codex_acp_entry()
 def _require_codex_acp(*, with_node: bool = False) -> None:
     """Gate a live measurement on the adapter, without a skip a lane can hide behind.
 
-    Absent locally, the test skips. Under ``KIROCREW_E2E_REQUIRE=1`` it fails, since a lane
+    Absent locally, the test skips. Under ``AJCREW_E2E_REQUIRE=1`` it fails, since a lane
     that only skipped would report success having measured nothing. The pinned version comes
     from ``real_adapter_gate``.
     """
@@ -366,13 +366,13 @@ def test_the_driver_runner_reaps_descendants_on_the_timeout_path():
     By the time the pid is read the group is dead and the pid may be reissued, so the driver
     also prints the start-time identity, and both "gone" and the failure-path kill use it.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     src_root = Path(platform_compat.__file__).resolve().parents[1]
     parent = (
         "import subprocess, sys, time\n"
         f"sys.path.insert(0, {str(src_root)!r})\n"
-        "from kiro_crew.platform_compat import get_process_start_id\n"
+        "from aj_crew.platform_compat import get_process_start_id\n"
         'g = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(300)"])\n'
         "print(g.pid, get_process_start_id(g.pid) or '', flush=True)\n"
         "time.sleep(300)\n"
@@ -421,7 +421,7 @@ def test_real_codex_acp_accepts_the_crew_stdio_element():
     1. Crew's stdio element (the claude shape) is accepted, though ACP v1 makes stdio the
        untagged fallback of ``serde(tag = "type")``.
     2. The server is launched: the child answers ``initialize`` and ``tools/list``.
-    3. ``codex-rs`` runs ``env_clear()``, so ``KIROCREW_SESSION_KEY`` arrives only on the
+    3. ``codex-rs`` runs ``env_clear()``, so ``AJCREW_SESSION_KEY`` arrives only on the
        element, which is why ``codex_elements`` carries it.
     4. One bad element fails the whole ``session/new``: a complete ``sse`` element gets
        ``-32600``; on 2.3.0+ a nonsense type, a headerless ``sse`` and a stdio element with
@@ -484,7 +484,7 @@ def test_real_codex_acp_accepts_the_crew_stdio_element():
         )
 
         # 3: the env allowlist, which is the whole reason for the carriage rule.
-        assert child["env"].get("KIROCREW_SESSION_KEY") == "probe-session-key"
+        assert child["env"].get("AJCREW_SESSION_KEY") == "probe-session-key"
         assert "PATH" in child["env"]
         assert "STUB_MCP_REPORT" in child["env"]
 
@@ -724,7 +724,7 @@ import json, os, queue, subprocess, sys, threading, time
 root, entry, node, src_root, max_depth = sys.argv[1:6]
 max_depth = int(max_depth)
 sys.path.insert(0, src_root)
-from kiro_crew.acp.runtime import _iter_descendant_pids
+from aj_crew.acp.runtime import _iter_descendant_pids
 
 work = os.path.join(root, "work")
 env = dict(os.environ)
@@ -923,13 +923,13 @@ def test_the_real_adapter_guard_is_reachable_at_all(monkeypatch):
     """A skip-only guard is a guard nobody notices has stopped running.
 
     It asserts the resolver the guard reads is the spawn's own, so a rename there cannot
-    turn the guard green unseen; presence is enforced by ``KIROCREW_E2E_REQUIRE``.
+    turn the guard green unseen; presence is enforced by ``AJCREW_E2E_REQUIRE``.
 
     ``_mise_which`` is a recording fake because a real ``mise`` may fetch toolchains; that
     the ladder asked mise for this adapter is the fact pinned.
     """
-    from kiro_crew.acp import client as client_mod
-    from kiro_crew.acp.client import CODEX_ACP_BIN, _resolve_codex_acp_bin
+    from aj_crew.acp import client as client_mod
+    from aj_crew.acp.client import CODEX_ACP_BIN, _resolve_codex_acp_bin
 
     asked: list[str] = []
 
@@ -1184,8 +1184,8 @@ command = "/bin/sh"
 
 
 @pytest.mark.skipif(
-    os.environ.get("KIROCREW_LIVE_CODEX_PROMPT_TESTS") != "1",
-    reason=("spends real model tokens; set KIROCREW_LIVE_CODEX_PROMPT_TESTS=1 to opt in"),
+    os.environ.get("AJCREW_LIVE_CODEX_PROMPT_TESTS") != "1",
+    reason=("spends real model tokens; set AJCREW_LIVE_CODEX_PROMPT_TESTS=1 to opt in"),
 )
 def test_real_codex_acp_load_after_close_restores():
     """ANTI-DRIFT GUARD for codex's membership in ``ACP_BACKENDS_SESSION_SHARING``.
@@ -1205,7 +1205,7 @@ def test_real_codex_acp_load_after_close_restores():
     """
     if _ENTRY is None:
         pytest.fail(
-            "codex-acp is not installed, and KIROCREW_LIVE_CODEX_PROMPT_TESTS=1: the "
+            "codex-acp is not installed, and AJCREW_LIVE_CODEX_PROMPT_TESTS=1: the "
             "opt-in declares this host can prompt a real codex. Install it with: "
             f"npm i -g @agentclientprotocol/codex-acp@{MEASURED_CODEX_ACP_VERSION}"
         )
@@ -1214,14 +1214,14 @@ def test_real_codex_acp_load_after_close_restores():
     if not os.environ.get("CODEX_PATH"):
         pytest.fail(
             "CODEX_PATH is unset, so there is no codex build to prompt; unset "
-            "KIROCREW_LIVE_CODEX_PROMPT_TESTS on a host that cannot prompt one"
+            "AJCREW_LIVE_CODEX_PROMPT_TESTS on a host that cannot prompt one"
         )
 
     ambient = Path(os.environ.get("CODEX_HOME") or (Path.home() / ".codex")) / "config.toml"
     if not ambient.is_file():
         pytest.fail(
             f"no codex config.toml at {ambient} to resolve a provider from, so this "
-            "opt-in test cannot prompt; unset KIROCREW_LIVE_CODEX_PROMPT_TESTS on a "
+            "opt-in test cannot prompt; unset AJCREW_LIVE_CODEX_PROMPT_TESTS on a "
             "host without a configured codex"
         )
 
@@ -1249,8 +1249,8 @@ def test_real_codex_acp_load_after_close_restores():
         except (ValueError, IndexError):
             pytest.fail("the codex-acp load driver produced no measurement\n" + context)
 
-        # ``KIROCREW_LIVE_CODEX_PROMPT_TESTS=1`` is a DECLARATION that this host has
-        # a working credentialled codex, the way ``KIROCREW_E2E_REQUIRE=1`` is used in
+        # ``AJCREW_LIVE_CODEX_PROMPT_TESTS=1`` is a DECLARATION that this host has
+        # a working credentialled codex, the way ``AJCREW_E2E_REQUIRE=1`` is used in
         # ``real_adapter_gate``. Under a declaration an absent precondition is a
         # failure rather than a skip: a host that cannot meet it unsets the opt-in,
         # and a run that reports success having measured nothing is what the
@@ -1372,10 +1372,10 @@ with open(os.path.join(root, "codex_home", "config.toml"), "w") as fh:
     fh.write('model = "gpt-5-codex"\nmodel_provider = "stub"\n'
              '[model_providers.stub]\nname = "stub"\n'
              'base_url = "http://127.0.0.1:%d/v1"\nwire_api = "responses"\n'
-             'env_key = "KIROCREW_STUB_MODEL_KEY"\n'
+             'env_key = "AJCREW_STUB_MODEL_KEY"\n'
              'request_max_retries = 0\nstream_max_retries = 0\n' % server.server_address[1])
 env = dict(os.environ, CODEX_HOME=os.path.join(root, "codex_home"), NO_BROWSER="1",
-           KIROCREW_STUB_MODEL_KEY="stub-key")
+           AJCREW_STUB_MODEL_KEY="stub-key")
 
 
 class Agent:
@@ -1562,7 +1562,7 @@ def test_real_codex_acp_advertises_image_prompts(codex_turns):
 @pytest.mark.real_adapter
 def test_real_codex_acp_steer_is_injected_into_the_running_turn(codex_turns):
     """Codex's membership in ``ACP_BACKENDS_STEERING_REQUEST`` (see ``backends_turns``)."""
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         STEERING_INJECTED,
         STEERING_STARTED_NEW_TURN,
         steering_advertised,
@@ -1599,7 +1599,7 @@ def test_real_codex_acp_compact_pair_reads_as_started_then_completed(codex_turns
     Threaded the way both consumers thread it: the start's ``toolCallId`` is what
     lets an unmarked (2.2.2) terminal be matched, so the marker is not required.
     """
-    from kiro_crew.acp._dispatch import parse_codex_compaction_update
+    from aj_crew.acp._dispatch import parse_codex_compaction_update
 
     m, ctx = codex_turns, codex_turns["_context"]
     pending: object = False

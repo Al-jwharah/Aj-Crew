@@ -1,7 +1,7 @@
 ---
 title: Official App Registry + Editorial Feed
 status: partial
-author: KiroCrew contributors
+author: AjCrew contributors
 created: 2026-07-29
 last-audited: 2026-08-19
 audited-at: cdd8b301
@@ -17,13 +17,13 @@ superseded-by: []
 > for the official-catalog and editorial surface that ships. Signature
 > verification and tombstone resolution are deliberately absent and fail
 > closed. §4 carries its own revision note naming the four category decisions
-> reversed in the sibling `KiroCrewApps` repo.
+> reversed in the sibling `AjCrewApps` repo.
 
-**Author:** KiroCrew contributors
+**Author:** AjCrew contributors
 **Date:** 2026-07-29
 **Status:** partial, **and diverged** — this document's failure mode is the first one the [directory README](README.md) names: *the plan was overtaken.* Rollout step R1 shipped **in the sibling `kirodotdev/KiroCrewApps` repo**, but §4 was reversed on four decisions while it did, so §4 is now a record of what was decided rather than a description of the contract. **Read the note at the head of §4 before trusting anything below about categories.** The schema files in that repository are the current source of truth.
 
-On the Kiro Crew side, R3 and R4 are both started, and neither is finished. The official **fetch** is live and so is editorial-driven Discover (`apps/official_catalog.py`, `apps/official_editorial.py`). The **signature gate is not**: that module's own header lists three deliberate omissions, and the first is "No signature verification" — the `.sig` sidecar is published and nothing checks it, so trust is TLS to our own domain, and the consequence is enforced rather than ignored (a curated author does not mint the verified mark while that holds). **Tombstone resolution is absent** on the same terms: a document carrying a non-empty `removed` or `reinstated` list is refused outright rather than half-resolved. The rail order has its own published document, and the client reads it: `apps/official_category_order.py::load_category_order` fetches it and `GET /api/apps/registry` returns it as `categoryOrder`. The editorial document carries no order.
+On the Aj Crew side, R3 and R4 are both started, and neither is finished. The official **fetch** is live and so is editorial-driven Discover (`apps/official_catalog.py`, `apps/official_editorial.py`). The **signature gate is not**: that module's own header lists three deliberate omissions, and the first is "No signature verification" — the `.sig` sidecar is published and nothing checks it, so trust is TLS to our own domain, and the consequence is enforced rather than ignored (a curated author does not mint the verified mark while that holds). **Tombstone resolution is absent** on the same terms: a document carrying a non-empty `removed` or `reinstated` list is refused outright rather than half-resolved. The rail order has its own published document, and the client reads it: `apps/official_category_order.py::load_category_order` fetches it and `GET /api/apps/registry` returns it as `categoryOrder`. The editorial document carries no order.
 
 What ships differs from the design below in three places, each marked where it appears. The §3.7 manifest additions (`resources`/`lifecycle` in `app.json`, `platform.externalInstall`, `searchAliases`, structured `author`) are not implemented: install reads `resources` from the registry entry, and an entry's `detectInstalled` still runs as a sandboxed probe. The `_tier` refactor of §6 and §7 step 2 is superseded by server-computed `provenance`. The bundled `app-registry.json` is hand-curated, not generated. Each §9 criterion carries a shipped / not-shipped marker.
 
@@ -31,11 +31,11 @@ What ships differs from the design below in three places, each marked where it a
 
 ## 1. Problem Statement
 
-The App Store's catalog and its merchandising are frozen into each KiroCrew
+The App Store's catalog and its merchandising are frozen into each AjCrew
 release. Two concrete gaps:
 
 1. **No first-party remote registry.** The curated catalog is the bundled
-   `kiro_crew/apps/app-registry.json`, compiled into the wheel next to
+   `aj_crew/apps/app-registry.json`, compiled into the wheel next to
    `registry.py` (read through `_REGISTRY_FILE`, `apps/registry_pipeline/sources.py`). Changing the catalog — adding an app,
    fixing a repo URL, pulling a broken one — requires shipping a new app
    release. User-configured *external* registries exist
@@ -58,9 +58,9 @@ release. Two concrete gaps:
 
 ### Goals
 
-- A KiroCrew-owned **official registry** the client pulls at runtime, trusted
+- A AjCrew-owned **official registry** the client pulls at runtime, trusted
   enough to drive featuring, updatable without an app release.
-- A KiroCrew-owned **editorial feed** describing the Discover page
+- A AjCrew-owned **editorial feed** describing the Discover page
   declaratively, that is **fail-safe** (degrades gracefully when unreachable or
   malformed) and **schema-versioned** (new layouts reach new clients while old
   clients keep working).
@@ -104,22 +104,22 @@ mechanism*):
 
 | Layer | Home | Contents |
 |-------|------|----------|
-| **Contract (schema)** | `KiroCrewApps` *(now; migrates to `KiroCrewAppSDK` later)* | JSON Schema + generated TS types for the registry entry and the editorial document. Starts co-located with the data it validates; extracted to the SDK once there are external consumers (published app-author tooling). |
-| **Data (source of truth)** | `KiroCrewApps` | `official-registry.json` + `editorial.json`, hand-curated. A publish CI workflow validates against the co-located schema and pushes to the distribution CDN. |
-| **Client + fallback** | `KiroCrew` | Fetch / validate / layered-fallback code, **plus** the bundled fallback snapshot `kiro_crew/apps/app-registry.json`. That file is hand-curated today, in the legacy flat `name`/`gitUrl`/`repo`/`branch` shape; no generator exists. The intended end state is a snapshot **generated** from `KiroCrewApps` at build time (or a bot sync PR), never hand-authored, so the offline floor cannot drift from canonical (§8, *snapshot-sync mechanism*). |
+| **Contract (schema)** | `AjCrewApps` *(now; migrates to `AjCrewAppSDK` later)* | JSON Schema + generated TS types for the registry entry and the editorial document. Starts co-located with the data it validates; extracted to the SDK once there are external consumers (published app-author tooling). |
+| **Data (source of truth)** | `AjCrewApps` | `official-registry.json` + `editorial.json`, hand-curated. A publish CI workflow validates against the co-located schema and pushes to the distribution CDN. |
+| **Client + fallback** | `AjCrew` | Fetch / validate / layered-fallback code, **plus** the bundled fallback snapshot `aj_crew/apps/app-registry.json`. That file is hand-curated today, in the legacy flat `name`/`gitUrl`/`repo`/`branch` shape; no generator exists. The intended end state is a snapshot **generated** from `AjCrewApps` at build time (or a bot sync PR), never hand-authored, so the offline floor cannot drift from canonical (§8, *snapshot-sync mechanism*). |
 
 Rationale: the entire premise of goal 1 is to decouple catalog + merchandising
-cadence from app releases. Co-locating the data in `KiroCrew` re-couples them —
+cadence from app releases. Co-locating the data in `AjCrew` re-couples them —
 every catalog tweak or featured swap would go through the product repo's
 CODEOWNERS, review, and commit history, and force curators (PM/devrel) to hold
 product-code write access. A dedicated catalog repo gives a separate write/trust
 boundary and a clean audit trail. Precedent: Obsidian's `obsidian-releases`
 holds `community-plugins.json` + featured lists separate from the app; Homebrew
-taps; Raycast's extensions repo. `KiroCrewApps` already exists (currently an
+taps; Raycast's extensions repo. `AjCrewApps` already exists (currently an
 empty stub) as the intended home.
 
-The schema **starts in `KiroCrewApps`, co-located with the data it validates**,
-and migrates to `KiroCrewAppSDK` later. Its only consumer at launch is the
+The schema **starts in `AjCrewApps`, co-located with the data it validates**,
+and migrates to `AjCrewAppSDK` later. Its only consumer at launch is the
 catalog's own validate-and-publish workflow; the client read-path and published
 app-author tooling that would justify a separately-versioned SDK package aren't
 wired yet. Keeping it next to the data avoids a premature cross-repo release
@@ -133,13 +133,13 @@ published doc has to change when the schema's *home* changes.
 
 The CDN artifact is **generated by CI from the curated files**, not the curated
 file copied verbatim. Curators edit a human-friendly source of truth in
-`KiroCrewApps`; the publish workflow emits the machine-facing document:
+`AjCrewApps`; the publish workflow emits the machine-facing document:
 
 ```
-KiroCrewApps (authored, reviewed)
+AjCrewApps (authored, reviewed)
    → CI: validate against schema · normalize · resolve · stamp · integrity · SIGN
       → published document on the CDN (generated, immutable per revision)
-         → client fetch  /  generated bundled snapshot in KiroCrew
+         → client fetch  /  generated bundled snapshot in AjCrew
 ```
 
 What the generator adds that hand-authoring cannot guarantee:
@@ -163,7 +163,7 @@ API from `formulae.brew.sh`; the tap is never the read surface. Same split here.
 Two consequences worth stating: published documents must be treated as
 **immutable per revision** (never rewrite a published payload with different
 bytes — that is the CloudFront edge-skew failure mode the release system already
-learned), and the bundled fallback snapshot in `KiroCrew` is generated from the
+learned), and the bundled fallback snapshot in `AjCrew` is generated from the
 *published* document, not from the authored file, so the offline floor is
 byte-consistent with what the CDN serves.
 
@@ -266,7 +266,7 @@ Notes that make this work in practice:
   doesn't recognize is dropped from the installable set — never partially
   handled. Because dropping an *entry* hides an app (unlike dropping an editorial
   section, which only hides a layout), the UI should surface "N apps require a
-  newer KiroCrew" rather than silently shrinking the catalog.
+  newer AjCrew" rather than silently shrinking the catalog.
 - **Every new type costs a fetcher + a trust gate**, not just a schema variant.
   Adding one is a client change; the schema slot alone doesn't make it live.
 - **The v1 JSON Schema must model `source` as a *closed* discriminated union** —
@@ -506,7 +506,7 @@ which is itself the finding: they were only ever *derived*.
 | `lifecycle` | same | declared in `app.json` |
 | `detectInstalled` | a **shell command** in the registry, executed on the listing path | replaced by declarative `platform.externalInstall` |
 
-**`resources` / `lifecycle`.** These decide whether KiroCrew copies files and
+**`resources` / `lifecycle`.** These decide whether AjCrew copies files and
 registers resources or the app self-registers. Their current wiring is thinner
 than it looks:
 
@@ -529,7 +529,7 @@ fetched document and run by the client is the same class of mistake as the
 `delegates[]` list removed in §3.3: the document reaching into client *behavior*
 rather than describing apps. It is also self-evidently app knowledge ("does my
 bundle exist at this path"). The replacement is declarative and evaluated by
-KiroCrew, never by a shell:
+AjCrew, never by a shell:
 
 ```jsonc
 "platform": {
@@ -550,7 +550,7 @@ fingerprint installed apps. Our `detectInstalled` is that same shape — a probe
 supplied by a third party — and it runs on the *listing* path (for every entry
 that declares one and is not already locally installed), not just at install.
 
-So installed-state resolution becomes: **local receipt** (apps KiroCrew installed
+So installed-state resolution becomes: **local receipt** (apps AjCrew installed
 — already the source of truth) **∪ declarative probe** (`externalInstall`,
 evaluated natively). Conservative by default: detect and report, never act.
 Homebrew Cask's own history is the caution — a pre-existing-artifact check once
@@ -698,8 +698,8 @@ clients is the **tolerant reader** with **additive-only** evolution:
    `md`) is dropped individually; the rest of the page still renders.
 
 The contract (allowed `type`s, required/optional fields per type, the tolerant-
-reader + additive rules) is the JSON Schema in `KiroCrewApps` (co-located with
-the data now, migrating to `KiroCrewAppSDK` later — §2), so
+reader + additive rules) is the JSON Schema in `AjCrewApps` (co-located with
+the data now, migrating to `AjCrewAppSDK` later — §2), so
 client, curator tooling, and validator share one definition.
 
 ### Fail-safe fallback ladder
@@ -729,7 +729,7 @@ The official registry needs a tier **between** bundled and user-external:
 | Tier | Source | Featuring / editorial | Clone credentials | Authenticity |
 |------|--------|-----------------------|-------------------|--------------|
 | **Bundled** | compiled `app-registry.json` | honored | ambient (owner-designated) | ships in the wheel |
-| **Official** *(new)* | KiroCrew-owned CDN doc | **honored** (only once the signature verifies) | **credential-free + strict sandbox** | host-pin **and** required detached signature |
+| **Official** *(new)* | AjCrew-owned CDN doc | **honored** (only once the signature verifies) | **credential-free + strict sandbox** | host-pin **and** required detached signature |
 | **External (user)** | user-configured repos | ignored | credential-free + strict sandbox | none |
 
 Two properties of this table are load-bearing and were nearly got wrong:
@@ -794,7 +794,7 @@ two documents must not be read as using one shared tier vocabulary.
 
 ---
 
-## 6. Client changes (KiroCrew)
+## 6. Client changes (AjCrew)
 
 - **One authenticated fetcher, one cache dir, one validator** for both docs,
   reusing the manifest-cache machinery (`_manifest_cache_dir()`, atomic writes,
@@ -879,7 +879,7 @@ two documents must not be read as using one shared tier vocabulary.
   uninstall). This is the only path by which an already-installed app learns it
   was pulled.
 - **Bundled fallback generation**: a build step (or bot PR) pulls the current
-  *published* document (§2) and writes `kiro_crew/apps/app-registry.json` as the
+  *published* document (§2) and writes `aj_crew/apps/app-registry.json` as the
   compiled snapshot — including its tombstones, so an offline client still
   honors removals.
 
@@ -887,7 +887,7 @@ two documents must not be read as using one shared tier vocabulary.
 
 ## 7. Rollout
 
-1. **Contract + data + generated publish.** In `KiroCrewApps`, land the two JSON
+1. **Contract + data + generated publish.** In `AjCrewApps`, land the two JSON
    Schemas (co-located, versioned from `schemaVersion: 1`, `source` as a closed
    discriminated union with `git` only) and populate the authored catalog (seeded
    from the current bundled entries) + an initial `editorial.json`. Build the
@@ -908,7 +908,7 @@ two documents must not be read as using one shared tier vocabulary.
    floor. Ship the first curated layout.
 5. **Schema → SDK migration (later).** Once published app-author tooling or the
    client consume the schema directly, move the schema files to
-   `KiroCrewAppSDK`, publish them from there, and repoint the validator import.
+   `AjCrewAppSDK`, publish them from there, and repoint the validator import.
    The wire `schemaVersion` is unchanged, so no published-doc consumer is
    affected.
 
@@ -919,12 +919,12 @@ two documents must not be read as using one shared tier vocabulary.
 Cross-references to these use **names, not numbers**, so resolving one never
 leaves a stale pointer elsewhere in the document.
 
-1. **Editorial cadence & authoring UX** — hand-edited JSON in `KiroCrewApps`
+1. **Editorial cadence & authoring UX** — hand-edited JSON in `AjCrewApps`
    with schema validation in CI (proposed) vs a small authoring tool. Who
    curates, and how often?
 2. **Snapshot-sync mechanism** — build-time generation vs scheduled bot PR into
-   `KiroCrew`. Trade-off: build-time is always fresh but couples the KiroCrew
-   build to a `KiroCrewApps` fetch; a bot PR keeps the build hermetic but can
+   `AjCrew`. Trade-off: build-time is always fresh but couples the AjCrew
+   build to a `AjCrewApps` fetch; a bot PR keeps the build hermetic but can
    lag. *(This is why §2's table marks that row open rather than settled.)*
 3. **Schema version scheme** — integer majors (proposed, matches the installed-
    app `schemaVersion: int`) vs semver on the schema. Integer is simpler for the
@@ -946,7 +946,7 @@ leaves a stale pointer elsewhere in the document.
    per-repository grant look like, who authors it, and is it owner-local config
    rather than anything a fetched index can influence?
 
-7. **Who evaluates `platform.externalInstall`, and when?** "Evaluated by KiroCrew,
+7. **Who evaluates `platform.externalInstall`, and when?** "Evaluated by AjCrew,
    never by a shell" does not name the evaluating process, the cadence (on browse vs
    on `refresh_registries()`), or the result for a platform the descriptor omits —
    the example covers macOS and Linux, leaving Windows undefined (not-installed vs
@@ -983,13 +983,13 @@ relitigated):
 ## 9. Success criteria
 
 Markers: **[shipped]**, **[partial]**, **[not shipped]**, **[superseded]**, and
-**[KiroCrewApps]** for a criterion enforced by the sibling repository's publish
+**[AjCrewApps]** for a criterion enforced by the sibling repository's publish
 pipeline rather than by this client. Tombstones, the signature gate and key
 rotation are not shipped. Re-featuring ships; removal waits on tombstones. The
 mutable-ref criterion is partial: a catalog row's commit pin is honoured or the
 install is refused, while bundled seed rows install from a branch.
 
-- **[partial]** Adding/removing/re-featuring an app is a `KiroCrewApps` PR that reaches
+- **[partial]** Adding/removing/re-featuring an app is a `AjCrewApps` PR that reaches
   clients within one cache TTL — **no app release**.
 - **[shipped]** A new editorial section `type` renders on new clients and is invisible (not
   broken) on old ones.
@@ -1010,7 +1010,7 @@ install is refused, while bundled seed rows install from a branch.
 - **[superseded]** **Official apps are featurable and show as verified**, proving the `_tier`
   refactor actually landed (the `_registry` boolean would have made both false).
   Met through server-computed `provenance` instead of `_tier` (§6).
-- **[KiroCrewApps]** **An invalid catalog cannot reach the CDN** — the publish workflow is the only
+- **[AjCrewApps]** **An invalid catalog cannot reach the CDN** — the publish workflow is the only
   write path and validates first.
 - **[partial]** **No official entry can be installed from a mutable ref** — every
   such entry carries an immutable pin, enforced at publish AND at install.
@@ -1026,7 +1026,7 @@ install is refused, while bundled seed rows install from a branch.
   touches the catalog, and the client runs no command supplied by a fetched
   document. (Changing an app's own generated `displayName`/`summary` does ride a
   republish, by design — §3.4.)
-- **[KiroCrewApps]** **An app cannot place itself in a curated category** by editing its own
+- **[AjCrewApps]** **An app cannot place itself in a curated category** by editing its own
   manifest, and an app in two categories fails the publish gate.
-- **[KiroCrewApps]** Adding a second `source.type` requires no schema-major bump and no change to
+- **[AjCrewApps]** Adding a second `source.type` requires no schema-major bump and no change to
   any existing entry.

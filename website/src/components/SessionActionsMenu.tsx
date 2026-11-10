@@ -173,7 +173,7 @@ function useFailedUntilCopied(status: 'idle' | 'copied' | 'failed'): boolean {
  * with dividers auto-collapsing between them):
  *   [informational]  MCP servers ▸  (header only)
  *   [tab modifiers]  Rename · Mark read/unread · Pin · Move to folder ▸ · Tags…
- *   [nav / access]   Reveal in sidebar (header only) · Crew board (conductors only) · Pop out · Split down (header only) · Reference in chat (sidebar rows only) · Copy link · Copy Kiro Crew session ID · Send a copy ▸ · Export for import (JSON) · Export as readable Markdown · Connected surfaces
+ *   [nav / access]   Reveal in sidebar (header only) · Crew board (conductors only) · Pop out · Split down (header only) · Reference in chat (sidebar rows only) · Copy link · Copy Aj Crew session ID · Send a copy ▸ · Export for import (JSON) · Export as readable Markdown · Connected surfaces
  *   [colour]         colour swatches
  *   [close]          Close session
  */
@@ -215,7 +215,7 @@ export default function SessionActionsMenu({
   // and this is the only place that disagreement is said.
   const mutesOpenedError = useAppSelector(s => s.dashboard.slotMuteFlagError?.[muteFlagErrorKey('mutes_opened', slotKey)])
   const mutesOpenedErrorId = React.useId()
-  // "Copy Kiro Crew session ID" acknowledges a successful copy in place through
+  // "Copy Aj Crew session ID" acknowledges a successful copy in place through
   // the shared copy-ack hook (the same one the file-path menu's Copy path uses):
   // the item reads "Copied" with a check, then returns to its label. A stale
   // resolution from an earlier press is dropped by the hook's attempt guard.
@@ -543,7 +543,7 @@ export default function SessionActionsMenu({
         i18nT('components.sessionActionsMenu.copy_session_id_failed_detail'),
         'session-menu-copy-id-error',
       ),
-      // Copy this session to another Kiro Crew instance. Sits in nav/access
+      // Copy this session to another Aj Crew instance. Sits in nav/access
       // rather than the tab-modifier group above because it changes nothing
       // about this tab — the peer gets its own copy under its own key.
       // Self-hiding when no instances are configured.

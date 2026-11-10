@@ -6,7 +6,7 @@ import pytest
 from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F401 - fixture
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
-import kiro_crew.acp.client as acp_client
+import aj_crew.acp.client as acp_client
 
 
 class TestIsTransientRawError:
@@ -32,13 +32,13 @@ class TestIsTransientRawError:
         ],
     )
     def test_internal_error_is_transient(self, data):
-        from kiro_crew.acp.client import _is_transient_raw_error
+        from aj_crew.acp.client import _is_transient_raw_error
 
         err = {"code": -32603, "message": "Internal error", "data": data}
         assert _is_transient_raw_error(err) is True
 
     def test_status_50x_and_hint_are_transient(self):
-        from kiro_crew.acp.client import _is_transient_raw_error
+        from aj_crew.acp.client import _is_transient_raw_error
 
         assert _is_transient_raw_error({"data": "HTTP 503 Service Unavailable"}) is True
         assert _is_transient_raw_error({"data": "HTTP 504 Gateway Timeout"}) is True
@@ -48,7 +48,7 @@ class TestIsTransientRawError:
         assert _is_transient_raw_error({"data": "please try again"}) is True
 
     def test_5xx_token_in_message_field_is_transient(self):
-        from kiro_crew.acp.client import _is_transient_raw_error
+        from aj_crew.acp.client import _is_transient_raw_error
 
         # 5xx signal carried in `message` (not `data`) must still be caught:
         # the classifier scans the combined haystack, so this does not fail
@@ -64,14 +64,14 @@ class TestIsTransientRawError:
         )
 
     def test_throttle_and_model_unavailable_are_transient(self):
-        from kiro_crew.acp.client import _is_transient_raw_error
+        from aj_crew.acp.client import _is_transient_raw_error
 
         assert _is_transient_raw_error({"data": "ThrottlingException: slow down"}) is True
         assert _is_transient_raw_error({"message": "Rate limit exceeded", "data": ""}) is True
         assert _is_transient_raw_error({"data": "The model 'opus' is not available."}) is True
 
     def test_auth_and_unknown_are_not_transient(self):
-        from kiro_crew.acp.client import _is_transient_raw_error
+        from aj_crew.acp.client import _is_transient_raw_error
 
         # Auth is terminal — a retry can't fix an expired/denied credential.
         assert _is_transient_raw_error({"data": "AccessDeniedException: nope"}) is False
@@ -95,7 +95,7 @@ class TestIsTransientRawError:
         error is enough to make it look retryable, spending the whole ladder on
         a credential no retry can revive.
         """
-        from kiro_crew.acp.client import _is_transient_raw_error
+        from aj_crew.acp.client import _is_transient_raw_error
 
         assert (
             _is_transient_raw_error(
@@ -129,7 +129,7 @@ class TestIsTransientRawError:
         also carried DispatchFailure/ConnectionResetError), telling the user to
         retry when re-authentication was required.
         """
-        from kiro_crew.acp.client import _is_transient_raw_error
+        from aj_crew.acp.client import _is_transient_raw_error
 
         # Direct session-expired wording from kiro-cli.
         assert _is_transient_raw_error({"data": "session expired"}) is False
@@ -180,7 +180,7 @@ class TestIsTransientRawError:
         ],
     )
     def test_wrapper_phrase_scoped_to_data_and_loses_to_auth(self, phrase):
-        from kiro_crew.acp.client import _is_transient_raw_error
+        from aj_crew.acp.client import _is_transient_raw_error
 
         # Phrase only in `message` (data carries a deterministic failure):
         # scoped match must not fire — stays terminal.
@@ -195,7 +195,7 @@ class TestIsTransientRawError:
         assert _is_transient_raw_error({"data": f"AccessDeniedException: {phrase}"}) is False
 
     def test_kiro_process_failure_is_transient(self):
-        from kiro_crew.acp.client import _is_transient_raw_error, classify_provider_error
+        from aj_crew.acp.client import _is_transient_raw_error, classify_provider_error
 
         # kiro-cli's post-stream sibling of the generation-failure wrapper: a
         # request_id is present, no error class, none of the 5xx tokens. This
@@ -211,7 +211,7 @@ class TestIsTransientRawError:
         assert verdict.matched == "failed to process the request"
 
     def test_prose_spelled_dispatch_failure_is_transient(self):
-        from kiro_crew.acp.client import _is_transient_raw_error
+        from aj_crew.acp.client import _is_transient_raw_error
 
         # The AWS Rust SDK spells ONE connector fault two ways: the Debug repr
         # is CamelCase (DispatchFailure) and the Display impl is prose
@@ -235,7 +235,7 @@ class TestIsTransientRawError:
         assert _is_transient_raw_error({"data": "connection reset by peer"}) is True
 
     def test_bare_internal_error_stays_terminal(self):
-        from kiro_crew.acp.client import _is_transient_raw_error
+        from aj_crew.acp.client import _is_transient_raw_error
 
         # -32603's canonical message is literally "Internal error". The
         # separator tolerance loosens only the gaps BETWEEN words, never the
@@ -250,7 +250,7 @@ class TestIsTransientRawError:
         )
 
     def test_terminal_branches_outrank_a_co_occurring_dispatch_failure(self):
-        from kiro_crew.acp.client import _is_transient_raw_error
+        from aj_crew.acp.client import _is_transient_raw_error
 
         # Every terminal branch is checked BEFORE the 5xx family, so widening
         # the 5xx pattern must not let a connector token rescue an error that
@@ -266,8 +266,8 @@ class TestIsTransientRawError:
     def test_prose_dispatch_failure_reaches_the_retry_decider(self):
         import pytest
 
-        from kiro_crew.acp.client import AcpError, _raise_acp_error
-        from kiro_crew.llm_helpers import acp_error_is_transient
+        from aj_crew.acp.client import AcpError, _raise_acp_error
+        from aj_crew.llm_helpers import acp_error_is_transient
 
         # The classifier and the retry decider are two different layers, and
         # the gap between them is what broke: acp_error_is_transient prefers the
@@ -296,7 +296,7 @@ class TestIsTransientRawError:
         assert exc.connection_failure is True
 
     def test_dispatch_failure_card_matches_the_connection_verdict(self):
-        from kiro_crew.acp.transport_errors import _format_acp_error, classify_provider_error
+        from aj_crew.acp.transport_errors import _format_acp_error, classify_provider_error
 
         # The card and the classifier read the same frame: a connector failure
         # carrying a request_id gets the connection card, keeps the request_id,
@@ -315,7 +315,7 @@ class TestIsTransientRawError:
             assert card.endswith("(request_id: 908f5c86-7a02-44a3-a852-9aa64aa90779)")
 
     def test_provider_5xx_answer_keeps_the_5xx_card(self):
-        from kiro_crew.acp.transport_errors import _format_acp_error
+        from aj_crew.acp.transport_errors import _format_acp_error
 
         err = {
             "code": -32603,
@@ -329,7 +329,7 @@ class TestIsTransientRawError:
     def test_raise_acp_error_carries_transient_flag_and_formatted_message(self):
         import pytest
 
-        from kiro_crew.acp.client import AcpError, _raise_acp_error
+        from aj_crew.acp.client import AcpError, _raise_acp_error
 
         transient_err = {
             "code": -32603,
@@ -354,9 +354,9 @@ class TestIsTransientRawError:
     def test_context_window_overflow_is_structural_and_non_transient(self):
         import pytest
 
-        import kiro_crew.acp as acp_package
-        from kiro_crew.acp import transport_errors
-        from kiro_crew.acp.client import AcpError, _raise_acp_error
+        import aj_crew.acp as acp_package
+        from aj_crew.acp import transport_errors
+        from aj_crew.acp.client import AcpError, _raise_acp_error
 
         error = {
             "code": -32603,
@@ -386,7 +386,7 @@ class TestIsTransientRawError:
         assert not hasattr(acp_package, "AcpContextOverflow")
 
     def test_context_window_overflow_tag_is_data_field_only(self):
-        from kiro_crew.acp.client import AcpError, _raise_acp_error
+        from aj_crew.acp.client import AcpError, _raise_acp_error
 
         error = {
             "code": -32603,
@@ -407,7 +407,7 @@ class TestIsTransientRawError:
         # ``subagent_manager/run_lifecycle.py`` appends this text after its own
         # post-activity reason, so a startup-only claim would contradict the
         # caller. Both causes and both remedies must be named.
-        from kiro_crew.acp.client import AcpError, _raise_acp_error
+        from aj_crew.acp.client import AcpError, _raise_acp_error
 
         error = {
             "code": -32603,
@@ -431,7 +431,7 @@ class TestIsTransientRawError:
     def test_raise_acp_error_types_thinking_conversation_binding_mismatch(self):
         import pytest
 
-        from kiro_crew.acp.client import (
+        from aj_crew.acp.client import (
             AcpConversationBindingMismatch,
             AcpError,
             _raise_acp_error,
@@ -505,7 +505,7 @@ class TestIsTransientRawError:
         """
         import pytest
 
-        from kiro_crew.acp.client import AcpConversationBindingMismatch, _raise_acp_error
+        from aj_crew.acp.client import AcpConversationBindingMismatch, _raise_acp_error
 
         frame = {
             "code": -32603,
@@ -521,7 +521,7 @@ class TestIsTransientRawError:
         assert getattr(raised.value, "usage_limit", False) is True
 
     def test_acp_error_default_transient_is_none(self):
-        from kiro_crew.acp.client import AcpError
+        from aj_crew.acp.client import AcpError
 
         assert AcpError("plain").transient is None
         assert AcpError("flagged", transient=True).transient is True
@@ -549,13 +549,13 @@ class TestClaudeOverloadedIsTransient:
         ],
     )
     def test_the_overload_frame_is_a_retryable_5xx(self, message):
-        from kiro_crew.acp.client import (
+        from aj_crew.acp.client import (
             AcpError,
             _format_acp_error,
             _is_transient_raw_error,
             _raise_acp_error,
         )
-        from kiro_crew.acp.transport_errors import (
+        from aj_crew.acp.transport_errors import (
             PROVIDER_ERROR_HTTP_5XX,
             classify_provider_error,
         )
@@ -582,8 +582,8 @@ class TestClaudeOverloadedIsTransient:
         ],
     )
     def test_the_neighbours_stay_terminal(self, message):
-        from kiro_crew.acp.client import _is_transient_raw_error
-        from kiro_crew.acp.transport_errors import classify_provider_error
+        from aj_crew.acp.client import _is_transient_raw_error
+        from aj_crew.acp.transport_errors import classify_provider_error
 
         frame = {"code": -32603, "message": message, "data": {"errorKind": "unknown"}}
         assert _is_transient_raw_error(frame) is False
@@ -592,7 +592,7 @@ class TestClaudeOverloadedIsTransient:
     def test_the_adapter_size_verdict_outranks_the_new_prefix(self):
         """The retry verdict reads the adapter's overflow ahead of the 5xx family,
         so a 5xx status after the same prefix cannot spend the ladder on it."""
-        from kiro_crew.acp.client import _is_transient_raw_error
+        from aj_crew.acp.client import _is_transient_raw_error
 
         frame = {
             "code": -32603,

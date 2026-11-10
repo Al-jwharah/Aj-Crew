@@ -2,7 +2,7 @@
 //
 // The default TTL used to be 72 hours and nothing in the page's setup guide
 // installed the reaper, so a first confirm reliably hit a 409 whose text was
-// "Finite-TTL deploys require the reaper base stack (kirocrew-deploy-base). Use
+// "Finite-TTL deploys require the reaper base stack (ajcrew-deploy-base). Use
 // ttl_hours=0 for persistent or install the reaper (install-reaper.sh)." — four
 // product nouns in a red banner and no way forward.
 //
@@ -20,9 +20,9 @@ const REAPER_409 = {
     + 'auto-cleanup installed yet. Deploy it as permanent instead, or install '
     + 'auto-cleanup first.',
   code: 'reaper_required',
-  details: 'Finite-TTL deploys require the reaper base stack (kirocrew-deploy-base). '
+  details: 'Finite-TTL deploys require the reaper base stack (ajcrew-deploy-base). '
     + 'Use ttl_hours=0 for persistent or install the reaper (install-reaper.sh).',
-  remediation: '/home/u/.kirocrew/skills/artifact-deploy/scripts/install-reaper.sh '
+  remediation: '/home/u/.ajcrew/skills/artifact-deploy/scripts/install-reaper.sh '
     + '--profile ship --region us-west-2',
 }
 
@@ -112,7 +112,7 @@ describe('Artifact Deploy — the auto-cleanup precondition', () => {
 
     expect(await screen.findByText(/no auto-cleanup installed yet/)).toBeInTheDocument()
     // The banner names no stack and no parameter. That was the complaint.
-    expect(screen.queryByText(/kirocrew-deploy-base/)).toBeNull()
+    expect(screen.queryByText(/ajcrew-deploy-base/)).toBeNull()
     expect(screen.queryByText(/ttl_hours/)).toBeNull()
   })
 
@@ -127,7 +127,7 @@ describe('Artifact Deploy — the auto-cleanup precondition', () => {
     // what proves the TOGGLE revealed one rather than the guide already having.
     const before = screen.queryAllByText(cmd).length
     fireEvent.click(screen.getByRole('button', { name: 'Details' }))
-    expect(await screen.findByText(/kirocrew-deploy-base/)).toBeInTheDocument()
+    expect(await screen.findByText(/ajcrew-deploy-base/)).toBeInTheDocument()
     // The command is absolute — the bare script name is on nobody's PATH.
     expect(screen.queryAllByText(cmd).length).toBe(before + 1)
   })

@@ -19,21 +19,21 @@ import pytest
 import test_member_mount_deepseek as deepseek_mount
 from real_adapter_gate import MEASURED_PI_ACP_VERSION, MEASURED_PI_VERSION
 
-import kiro_crew.validation  # noqa: F401 - break the legacy import cycle first
-from kiro_crew import agent_state
-from kiro_crew.acp import client_mcp_array, client_start, session_mcp
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.mcp_session_report import McpSessionReport
-from kiro_crew.acp.transport_errors import AcpError
-from kiro_crew.acp.types import (
+import aj_crew.validation  # noqa: F401 - break the legacy import cycle first
+from aj_crew import agent_state
+from aj_crew.acp import client_mcp_array, client_start, session_mcp
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.mcp_session_report import McpSessionReport
+from aj_crew.acp.transport_errors import AcpError
+from aj_crew.acp.types import (
     ACP_BACKEND_KIRO,
     ACP_BACKEND_PI,
     ACP_BACKENDS_MEMBER_CAPABILITIES,
     ACP_BACKENDS_MEMBER_TOOL_LIMITS,
 )
-from kiro_crew.agent_capabilities import _digest, member_backend_gap
-from kiro_crew.platform.governance_profiles import governance_answer_generation
-from kiro_crew.session_capabilities import LoadedCapabilities, runtime_view
+from aj_crew.agent_capabilities import _digest, member_backend_gap
+from aj_crew.platform.governance_profiles import governance_answer_generation
+from aj_crew.session_capabilities import LoadedCapabilities, runtime_view
 
 FIXTURE = (
     Path(__file__).parent / "fixtures" / "acp_frames" / "pi" / "saved-spec-projection-live.jsonl"
@@ -42,11 +42,11 @@ FIXTURE = (
 agents_dir = deepseek_mount.agents_dir
 MEMBER_KEY = deepseek_mount.MEMBER_KEY
 
-SAVED = {"name": "kirocrew", "description": "a saved member", "tools": ["*"]}
+SAVED = {"name": "ajcrew", "description": "a saved member", "tools": ["*"]}
 
 
 def _write(agents_dir: Path, spec: dict) -> dict:
-    (agents_dir / "kirocrew.json").write_text(json.dumps(spec), encoding="utf-8")
+    (agents_dir / "ajcrew.json").write_text(json.dumps(spec), encoding="utf-8")
     return spec
 
 
@@ -100,7 +100,7 @@ def test_a_saved_spec_is_confirmed_on_pi(agents_dir, tmp_path, monkeypatch) -> N
     client = _pi_member(tmp_path)
     client._resolve_session_mcp_servers()
     asyncio.run(client.confirm_member_projection())
-    assert client._loaded_capability_template == "kirocrew"
+    assert client._loaded_capability_template == "ajcrew"
     assert client.capability_projection_gaps == ()
     assert client._confirmed_capability_session == "pi-session-1"
 
@@ -178,7 +178,7 @@ def test_a_switched_off_server_is_not_mounted_as_a_stub_on_a_member(agents_dir, 
 
 def test_a_member_spec_with_no_tools_key_mounts_no_stub(agents_dir, tmp_path) -> None:
     """A missing ``tools`` is an empty allowlist, as on a mirror: nothing referenced."""
-    _write(agents_dir, {"name": "kirocrew", "description": "no tools key"})
+    _write(agents_dir, {"name": "ajcrew", "description": "no tools key"})
     assert _stub_names(_pi_member(tmp_path), member=True) == []
 
 
@@ -194,7 +194,7 @@ def test_an_unreadable_member_spec_mounts_no_stub(agents_dir, tmp_path, monkeypa
 
 def test_a_missing_member_spec_mounts_no_stub(agents_dir, tmp_path) -> None:
     """No spec file: nothing referenced, so no stub (its confirmation refuses too)."""
-    (agents_dir / "kirocrew.json").unlink()
+    (agents_dir / "ajcrew.json").unlink()
     assert _stub_names(_pi_member(tmp_path), member=True) == []
 
 
@@ -264,7 +264,7 @@ def test_kiro_stubs_are_never_filtered(agents_dir, tmp_path) -> None:
 
 
 def test_the_allowlist_is_dropped_with_the_session(tmp_path) -> None:
-    client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_PI)
+    client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_PI)
     client._member_stub_allowlist = session_mcp._tools_allowlist({"tools": ["@docs"]})
     client._reset_state()
     assert client._member_stub_allowlist is None
@@ -273,7 +273,7 @@ def test_the_allowlist_is_dropped_with_the_session(tmp_path) -> None:
 def _view(provider, mcp_servers: tuple[str, ...]) -> dict:
     stamp = LoadedCapabilities(
         "A",
-        "kirocrew",
+        "ajcrew",
         "rev-1",
         "proc-1",
         "pi-session-1",
@@ -297,7 +297,7 @@ def _confirmed_pi_provider() -> SimpleNamespace:
         is_process_alive=lambda: True,
         process_instance="proc-1",
         session_id="pi-session-1",
-        loaded_capability_template="kirocrew",
+        loaded_capability_template="ajcrew",
         capability_projection_gaps=(),
         mcp_session_report=McpSessionReport,
     )

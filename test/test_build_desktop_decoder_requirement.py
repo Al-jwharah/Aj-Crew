@@ -3,7 +3,7 @@
 ``packaging/build-desktop.sh`` installs the decoder into every backend but the
 macOS Intel one, which resolves a system FFmpeg instead.
 ``install_desktop_decoder`` is the one place that decides this, and it must get
-the bytes from ``kiro_crew.stt.decoder``'s own pin table. The helpers are
+the bytes from ``aj_crew.stt.decoder``'s own pin table. The helpers are
 extracted from the shipped script rather than copied, so editing the real ones is
 what this test runs against.
 """
@@ -79,14 +79,14 @@ def test_the_macos_intel_backend_installs_no_decoder(tmp_path, os_name, host_arc
 def test_every_other_backend_installs_the_pinned_decoder(tmp_path, os_name, host_arch, want_arch):
     argv = _install_argv(tmp_path, os_name, host_arch, want_arch)
     # The pin table's own installer, into the directory the runtime resolves.
-    assert argv == "-s -m kiro_crew.stt.decoder --install-into /sp/kirocrew_ffmpeg/bin"
+    assert argv == "-s -m aj_crew.stt.decoder --install-into /sp/ajcrew_ffmpeg/bin"
 
 
 def test_the_install_dir_is_the_one_the_runtime_resolves() -> None:
-    from kiro_crew.stt import decoder
+    from aj_crew.stt import decoder
 
-    assert "/".join(decoder.PACKAGED_DIR) == "kirocrew_ffmpeg/bin"
-    assert '"$2/kirocrew_ffmpeg/bin"' in _extract("install_desktop_decoder")
+    assert "/".join(decoder.PACKAGED_DIR) == "ajcrew_ffmpeg/bin"
+    assert '"$2/ajcrew_ffmpeg/bin"' in _extract("install_desktop_decoder")
 
 
 def test_no_build_path_installs_imageio_ffmpeg() -> None:

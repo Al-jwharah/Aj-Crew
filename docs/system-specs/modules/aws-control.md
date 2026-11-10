@@ -3,7 +3,7 @@
 AWS Control is the builtin account portal and S3-backed drive. It registers
 selected local AWS profiles, groups their live identity probes by AWS account,
 and exposes Drive, Library, Backup, cost, share, and IAM-policy views. The
-builtin is declared by `kiro_crew.apps.builtins` and mounted by
+builtin is declared by `aj_crew.apps.builtins` and mounted by
 `aws_control.backend.routes.register_routes`; the dashboard surface is
 `website/src/apps/aws-control/`.
 
@@ -11,9 +11,9 @@ builtin is declared by `kiro_crew.apps.builtins` and mounted by
 
 The whole app is meant to leave this repository intact: `backend/`, `hooks.py`,
 `crew/packaging/` (the bundle builder), `crew/runtime/` (the container runtime) and
-`crew/scripts/` (the image producers and planner). Kiro Crew core does not import any
+`crew/scripts/` (the image producers and planner). Aj Crew core does not import any
 of it. The three core features that need the app's code ask the seams in
-`kiro_crew.apps.seams` (`app-kit-platform.md`, "A core feature that needs an app's
+`aj_crew.apps.seams` (`app-kit-platform.md`, "A core feature that needs an app's
 code asks a seam"), and `seams.py` at the package root fills all three: `crew_runtime` from `crew/runtime/` and `crew/packaging/build.py`,
 `aws_account_policy` from `backend/accounts.py`, and `transfer_staging` from
 `backend/storage.py`. Each provider method looks its target up on the owning module at
@@ -192,7 +192,7 @@ bucket is left untagged rather than becoming a usable drive without versioning.
 `test_aws_control_storage.py::TestCreateDrive.test_versioning_is_enabled_before_hardening_tags_land`
 pins the sequence.
 
-Before the discovery tags, `storage.ensure_tls_only_policy` merges a `KiroCrewDenyInsecureTransport` statement (`aws:SecureTransport=false`) into the bucket policy. It rewrites only a statement under its own Sid and keeps every other statement as written, so an owner's own transport rule, however strict, is never removed. It runs in `create_drive` rather than in the shared `_harden_bucket`, because deploy-web later replaces its bucket policy with `put_oac_bucket_policy`. It is best effort: the recommended drive IAM tier deliberately has no `s3:PutBucketPolicy`, since with it the same principal could grant itself reads of the write-only `backup/` prefix, so a denied call is logged and the drive is still created (`TestCreateDrive.test_a_failed_tls_policy_still_creates_the_drive`). A drive created before this statement existed gets it on its first upload in each gateway process; that check runs once per process, is best effort, and never fails the upload. `TestCreateDrive.test_a_new_drive_gets_a_tls_only_bucket_policy_before_its_tags`, `TestEnsureTlsOnlyPolicy` and `test_aws_control_routes.py::TestDriveUpload.test_an_upload_confirms_the_tls_only_policy_once_per_drive` pin this.
+Before the discovery tags, `storage.ensure_tls_only_policy` merges a `AjCrewDenyInsecureTransport` statement (`aws:SecureTransport=false`) into the bucket policy. It rewrites only a statement under its own Sid and keeps every other statement as written, so an owner's own transport rule, however strict, is never removed. It runs in `create_drive` rather than in the shared `_harden_bucket`, because deploy-web later replaces its bucket policy with `put_oac_bucket_policy`. It is best effort: the recommended drive IAM tier deliberately has no `s3:PutBucketPolicy`, since with it the same principal could grant itself reads of the write-only `backup/` prefix, so a denied call is logged and the drive is still created (`TestCreateDrive.test_a_failed_tls_policy_still_creates_the_drive`). A drive created before this statement existed gets it on its first upload in each gateway process; that check runs once per process, is best effort, and never fails the upload. `TestCreateDrive.test_a_new_drive_gets_a_tls_only_bucket_policy_before_its_tags`, `TestEnsureTlsOnlyPolicy` and `test_aws_control_routes.py::TestDriveUpload.test_an_upload_confirms_the_tls_only_policy_once_per_drive` pin this.
 
 Drive objects live beneath the `artifacts/`, `drive/`, and `backup/` prefixes.
 `storage.validate_key` rejects paths that could escape a section. Folder deletion
@@ -262,7 +262,7 @@ sandboxed CLI, so the per-call directory is granted to that one fixed-argv spawn
 through `engine.run_aws(extra_visible_dirs=...)`. That grant cancels any mask
 CONTAINING the path it names, so the transfer first asks
 `sandbox.carveout_shadowed_by_foreign_mask` about the staging ROOT: on a data
-home relocated beneath another masked tree (`KIROCREW_HOME` under `~/.gnupg`)
+home relocated beneath another masked tree (`AJCREW_HOME` under `~/.gnupg`)
 the grant would hand that whole tree to the CLI child, and the transfer raises
 before the spawn instead — a refused preview, never an unmasked credential
 directory. The root is the entry the grant cancels and is exempt from its own
@@ -1079,7 +1079,7 @@ registered in `security._CREW_SECRET_LEAVES` -- the read+write keystone floor,
 beside the `nightly` bit. It is deliberately NOT a `config.json` key.
 `config.json` is an ordinary settings file: the sandbox seals it read-only against
 an in-sandbox agent shell, but every general settings writer (the config PATCH,
-`kirocrew config set`) still reaches it without an owner gate, so a permission
+`ajcrew config set`) still reaches it without an owner gate, so a permission
 honoured from there is one settings edit away from being granted by something other
 than the owner, and an unredacted archive already in a bucket cannot be recalled;
 an authorization that lives beside ordinary settings is not an authorization. The sole writer is the owner-gated
@@ -1989,7 +1989,7 @@ private package `backend.routes_parts`, lowest layer first:
 | `routes_parts/library.py` | `_reconciled_remote_slugs` and the Library list, push and remove routes |
 | `routes_parts/backups.py` | `_account_jobs`, backup status and run, both nightly toggles, retention, Layer B, restore and the install label |
 
-`routes` is a mirrored facade (`kiro_crew._facade_mirror`): a read of a name is served by
+`routes` is a mirrored facade (`aj_crew._facade_mirror`): a read of a name is served by
 the owner that binds it, and a write through `routes` -- `monkeypatch.setattr`,
 `mock.patch.object` -- reaches every owner holding the name, so a patch of
 `routes.is_app_enabled` or `routes._require_drive` reaches every handler that reads it.
@@ -2061,7 +2061,7 @@ which has no `configure list-profiles`, is answered 501 `unsupported_aws_cli_v1`
 by both the listing and the register route (`deploy.profiles.aws_cli_is_v1` asks
 `aws --version` once the scan failed), and its notice names the version and the
 remedy, AWS CLI v2 first on the gateway's PATH, with no Try again, because no
-retry clears it; `kirocrew doctor` names the same cause on its profiles line.
+retry clears it; `ajcrew doctor` names the same cause on its profiles line.
 Two states are deliberately NOT errors: a 403 whose code is
 `app_disabled` renders the disabled-app copy (any other 403 — a non-owner
 caller's `dashboard_owner_required` — is an error to diagnose and goes to the
@@ -2078,15 +2078,15 @@ localised lead, so the hand-off carries the text AWS returned.
 copies in: `agent.json`, `mcp.json`, `manifest.json` and `skills/`. It runs as
 `python -m packaging.build` with the crew directory on the import path (the
 `crew/__init__.py` docstring records why that package file has to exist), and it imports as
-`kiro_crew.apps.builtins.aws_control.crew.packaging.build`. `plan` writes a deny-by-default
+`aj_crew.apps.builtins.aws_control.crew.packaging.build`. `plan` writes a deny-by-default
 review template into `--out` and prints the decision set; `build`, the default verb, writes
 the bundle and prints `SMC_BUNDLE_JSON=<report path>` as its last line. Every refusal is an
 `ExportRefused`, printed as `refused: <reason>` with exit status 2.
 
 The build fails closed. It refuses at its entry on a platform with no descriptor-relative
 no-follow open (Windows, feature-detected rather than named). It refuses a read when
-`kiro_crew.hooks` -- the hard-link, sensitive-path and UNC authority -- is not importable, and
-it refuses an external prompt reference when `kiro_crew.security.is_sensitive_path` is not. It
+`aj_crew.hooks` -- the hard-link, sensitive-path and UNC authority -- is not importable, and
+it refuses an external prompt reference when `aj_crew.security.is_sensitive_path` is not. It
 ships a skill or MCP server only when a
 signed plan selects it and its content still matches the pin the review recorded. And it
 refuses, rather than skips, anything it cannot read, scan or hash.
@@ -2150,7 +2150,7 @@ refused, and one deliberate demonstration is exempt by file and enclosing test. 
 standard-library names the one-module builder bound stay bound in the facade, so each still
 resolves there. Importing the facade imports every owner at the end of its body, not on a
 first read: an owner binds what it imports by name when it first runs (`pipeline/scan.py` takes
-`redact_credentials` from `kiro_crew.security`), and a first read inside a test's patch of that
+`redact_credentials` from `aj_crew.security`), and a first read inside a test's patch of that
 source would leave the owner holding the patched value for the rest of the process. Run as
 `python -m packaging.build` the facade is `__main__`, so it resolves its owners against
 `__package__` rather than `__name__`; run by file path (`python .../build.py`) it has no package
@@ -2166,14 +2166,14 @@ against the owners' own definitions, that the facade's own code reads no forward
 bare global, that a loaded owner is read and written without calling
 `importlib.import_module`, the layer order, the late-binding rule and the write rule above.
 `test/test_packaging_build_refactor_facade.py` pins, in a fresh interpreter, that importing
-the facade has loaded every owner before a test can patch `kiro_crew.security`, and that both
+the facade has loaded every owner before a test can patch `aj_crew.security`, and that both
 entries above still hold.
 
 ## The crew container runtime
 
 `crew/runtime/` is the source of a Linux container image, not code the owner's
 gateway runs. It is what a remote crew runs AS: a supervisor that orders and
-watches the task's processes, a front process that receives a turn, and Kiro
+watches the task's processes, a front process that receives a turn, and Aj
 Crew's own backend executing it. The design of record is
 [rfc-remote-instance-on-fargate](../../request-for-change/rfc-remote-instance-on-fargate.md).
 
@@ -2214,7 +2214,7 @@ superseded versions and a pin would break on every security update.
 |---|---|---|
 | Supervisor | process order, the crew bundle install, the container's own config, the restore phase, teardown | no listener; it is the task's init process |
 | Front | receiving a turn, stripping any route prefix, forwarding over loopback | the only listener, port 8080 |
-| Kiro Crew backend | sessions, conversations, transcripts, MCP, subagents, skills, memory | loopback only (`127.0.0.1`, not configurable) |
+| Aj Crew backend | sessions, conversations, transcripts, MCP, subagents, skills, memory | loopback only (`127.0.0.1`, not configurable) |
 | Backup sidecar | copying transcripts, archived segments and the two authority files to S3 | no listener; started only when a bucket is configured |
 
 Nothing serves a user interface. `config_dir` equals `data_home`: the gateway's
@@ -2253,18 +2253,18 @@ The startup order is a correctness requirement rather than a preference:
    is already serving.
 
 **The task owns its agent-spec directory, and that is what lets the backend write
-it.** `KIRO_HOME` is set to `<data home>/kiro`, so the crew's spec and Kiro Crew's own
-`kirocrew.json` share one directory under the volume. The default is wrong here and
+it.** `KIRO_HOME` is set to `<data home>/kiro`, so the crew's spec and Aj Crew's own
+`ajcrew.json` share one directory under the volume. The default is wrong here and
 fails in a way nothing reports: with `KIRO_HOME` unset the specs resolve to the process
 HOME's `~/.kiro/agents`, which every instance under that `$HOME` shares, and a backend
-on a non-default data home (`KIROCREW_HOME=<data home>`) REFUSES to rewrite a shared
+on a non-default data home (`AJCREW_HOME=<data home>`) REFUSES to rewrite a shared
 agents directory -- the specs it writes pin the writer's data home into every managed
 MCP server entry, which breaks strict session identity for a default-home gateway
 (#9690). The refusal is correct and stays. Its consequence in the container was that the
 supervisor's crew spec landed in the shared directory carrying no ownership provenance,
 the backend read it as another home's, declined, and never wrote the default spec at
 all; the boot looked healthy and every turn died at `DerivedSpecStale: the default agent
-spec .../kirocrew.json is missing`.
+spec .../ajcrew.json is missing`.
 
 `<data home>/kiro` is that guard's own private-target case: `<data home>/kiro/agents` is
 exactly `config.paths.isolated_agents_dir(data home)`, a directory this task's teardown
@@ -2275,7 +2275,7 @@ machine-wide directory as private whenever the data home is an ancestor of it --
 
 Two processes have to agree on that one directory and they reach it by different routes:
 the supervisor's installer mirrors kiro-cli's own `$KIRO_HOME`-or-`~/.kiro` rule from the
-environment (it imports no `kiro_crew`), while the backend goes through Kiro Crew's
+environment (it imports no `aj_crew`), while the backend goes through Aj Crew's
 resolver. So the value is exported into the supervisor's environment *and* set on the
 backend's from the settings, and the export then asserts that the installer's resolver
 answers the same path -- a rename on either side fails at boot instead of installing the
@@ -2444,11 +2444,11 @@ serving the grant would be the unaudited grant the record exists to prevent, and
 the deny would leave a denial nobody can later account for. 503 rather than 403 says the
 failure is the container's, not the caller's.
 
-The record mirrors `kiro_crew.sel` -- the `SecurityEvent` field names, its `event_type`
+The record mirrors `aj_crew.sel` -- the `SecurityEvent` field names, its `event_type`
 vocabulary (`tool_approval` / `tool_denial`), and the audit-or-deny discipline
 `log_tool_invocation(critical=True)` exists for -- and is mirrored rather than called
 because of the SINK, not importability. The wheel is installed in this image, so
-`kiro_crew.sel` would import; what does not survive the move is where SEL keeps its log.
+`aj_crew.sel` would import; what does not survive the move is where SEL keeps its log.
 `sel._default_dir()` resolves under `config_dir()` with the HMAC key in `trust/` beside
 it, which here means the persistent volume, and the supervisor and the model worker run as
 the same user -- so the audited party could delete both and write a self-consistent
@@ -2527,7 +2527,7 @@ The front forwards to the gateway's own `POST /v1/chat/completions` with
 The value it carries is the crew's AGENT ID -- `crew-<crew_name>`, the name inside the
 crew namespace the supervisor installs the crew's spec under -- rather than the bare
 crew name. The bare name resolves to whatever else in the agents directory declares it,
-and for a crew sharing a name with one of Kiro Crew's own derived specs that is the
+and for a crew sharing a name with one of Aj Crew's own derived specs that is the
 derived spec. The namespace does not leave this process in either direction: a customer
 addresses the crew by its own name, and the front puts that name back into the `model`
 of the completion it returns and of every projected chunk, so a client that reads the
@@ -2578,12 +2578,12 @@ next cycle replace its history. A local transcript is never overwritten by a fet
 ### Launching the backend
 
 Verified names only, because the plausible ones are read by nothing:
-`KIROCREW_BIND=127.0.0.1` (the published image sets `0.0.0.0`, and a deployment
+`AJCREW_BIND=127.0.0.1` (the published image sets `0.0.0.0`, and a deployment
 that does not override it puts the backend on the network while every local test
-still passes); `KIROCREW_HOME` equal to `SMC_DATA_HOME`, which is what makes the
-boot secret path resolve; `KIROCREW_TELEMETRY_DISABLED=1` to silence the beacon;
+still passes); `AJCREW_HOME` equal to `SMC_DATA_HOME`, which is what makes the
+boot secret path resolve; `AJCREW_TELEMETRY_DISABLED=1` to silence the beacon;
 `--no-crons`, because arming the scheduler fires any overdue job immediately; and
-`--approval yolo`, which the gateway refuses unless `KIROCREW_HOME` is explicitly
+`--approval yolo`, which the gateway refuses unless `AJCREW_HOME` is explicitly
 non-default. Nothing in the container is there to click Approve, so an interactive
 prompt would be an indefinite stall rather than a question, and the cost is stated
 plainly: every tool the crew carries is auto-approved for whatever a caller's
@@ -2613,11 +2613,11 @@ environment.
 
 **The crew's spec is installed inside a namespace the derivation cannot own.** It lands
 at `<kiro agents>/crew-<crew_name>.json` and DECLARES `crew-<crew_name>`; `mcp.json` and
-`skills/` go to the data home unchanged. Kiro Crew derives specs of its own into the same
-agents directory -- `kirocrew.json`, `kirocrew-lite.json`, and the `kirocrew-worker.json`
+`skills/` go to the data home unchanged. Aj Crew derives specs of its own into the same
+agents directory -- `ajcrew.json`, `ajcrew-lite.json`, and the `ajcrew-worker.json`
 mirror it rebuilds from the default -- and rewrites them without reading who wrote what,
 so a crew occupying one of those names is installed, digest-checked and then replaced
-before the first turn. A crew called `kirocrew-worker` is not hypothetical: it is a
+before the first turn. A crew called `ajcrew-worker` is not hypothetical: it is a
 crew the deployment ships.
 
 The namespace covers the declared name as well as the filename because only one of them
@@ -2628,13 +2628,13 @@ while the namespaced one is declared by nothing and falls back to the default ag
 declared name is therefore the one field the install rewrites; every other key is the
 bundle's own, and the digest still covers the bundle's bytes in the image layer. A crew
 name whose namespaced id cannot fit the gateway's 64-character agent-name grammar is
-refused at boot rather than answering 400 per turn. `crew-` is free of every name Kiro
-Crew manages, and because the container imports no `kiro_crew` that claim is pinned by a
+refused at boot rather than answering 400 per turn. `crew-` is free of every name Aj
+Crew manages, and because the container imports no `aj_crew` that claim is pinned by a
 test that imports both rather than by a comment.
 
-The derivation holds the other end: it refuses to overwrite a `kirocrew-worker.json` that
+The derivation holds the other end: it refuses to overwrite a `ajcrew-worker.json` that
 does not carry the marks every derived mirror carries -- its declared name and a
-reference to the `kirocrew-work` server -- on the boot path and on the spawn path alike.
+reference to the `ajcrew-work` server -- on the boot path and on the spawn path alike.
 Provenance, not existence, which is what covers a spec placed by hand or by an older
 exporter, neither of which the namespace reaches.
 

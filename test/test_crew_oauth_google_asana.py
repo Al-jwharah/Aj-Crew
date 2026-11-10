@@ -18,11 +18,11 @@ from aiohttp import web
 from aiohttp.test_utils import TestServer
 from kas_agents_helpers import _spec
 
-from kiro_crew.acp import kas_agents
-from kiro_crew.connections import crew_oauth, crew_oauth_proxy, registry
-from kiro_crew.connections.crew_oauth import CrewOAuthError, Tokens, TokenStore
-from kiro_crew.secrets import SecretVault
-from kiro_crew.testing.wait import async_wait_until, finished
+from aj_crew.acp import kas_agents
+from aj_crew.connections import crew_oauth, crew_oauth_proxy, registry
+from aj_crew.connections.crew_oauth import CrewOAuthError, Tokens, TokenStore
+from aj_crew.secrets import SecretVault
+from aj_crew.testing.wait import async_wait_until, finished
 
 GOOGLE = (
     "google-drive",
@@ -41,14 +41,14 @@ def _pinned_modules(_floor_monkeypatch):
     """The code under test imports these at call time; pin them to this file's."""
     import sys
 
-    import kiro_crew.connections as connections_pkg
+    import aj_crew.connections as connections_pkg
 
     for name, module in (("crew_oauth", crew_oauth), ("crew_oauth_proxy", crew_oauth_proxy)):
-        _floor_monkeypatch.setitem(sys.modules, f"kiro_crew.connections.{name}", module)
+        _floor_monkeypatch.setitem(sys.modules, f"aj_crew.connections.{name}", module)
         _floor_monkeypatch.setattr(connections_pkg, name, module, raising=False)
     crew_oauth._refresh_locks.clear()
     crew_oauth_proxy._bridges.clear()
-    _floor_monkeypatch.setenv("KIROCREW_BOUND_PORT", "8765")
+    _floor_monkeypatch.setenv("AJCREW_BOUND_PORT", "8765")
     yield
     crew_oauth_proxy._bridges.clear()
 
@@ -87,7 +87,7 @@ def test_the_consent_url_carries_the_registry_scopes_and_provider_extras(slug):
         assert query["access_type"] == "offline" and query["prompt"] == "consent"
     else:
         assert "access_type" not in query and "prompt" not in query
-    from kiro_crew.security import oauth_url_contains_credential
+    from aj_crew.security import oauth_url_contains_credential
 
     assert oauth_url_contains_credential(url) is False
 
@@ -492,7 +492,7 @@ def test_a_pair_without_its_account_or_client_is_not_shared(tmp_path, account, c
 
 @pytest.mark.parametrize("slug", NEW)
 def test_the_bridge_projects_for_the_slug_on_kas(tmp_path, monkeypatch, slug):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setattr(crew_oauth, "enabled", lambda: True)
     monkeypatch.setattr(crew_oauth, "_chat_backend_bridged", lambda: True)
     url = registry.get_provider(slug)["mcp_url"]
@@ -501,7 +501,7 @@ def test_the_bridge_projects_for_the_slug_on_kas(tmp_path, monkeypatch, slug):
         allowedTools=[f"@{slug}"],
         mcpServers={slug: {"url": url, "oauth": {"clientId": "c", "clientSecret": "s"}}},
     )
-    out = kas_agents.to_client_custom_agent("kirocrew", spec, "p", session_key=SESSION)
+    out = kas_agents.to_client_custom_agent("ajcrew", spec, "p", session_key=SESSION)
     entry = out["mcpServers"][slug]
     assert "url" not in entry and "oauth" not in entry
     assert url not in json.dumps(out)

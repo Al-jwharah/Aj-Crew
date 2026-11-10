@@ -14,16 +14,16 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from kiro_crew.auth.login import builder_id, control_plane
-from kiro_crew.auth.store import KasToken, TokenStore
-from kiro_crew.auth.whoami import (
+from aj_crew.auth.login import builder_id, control_plane
+from aj_crew.auth.store import KasToken, TokenStore
+from aj_crew.auth.whoami import (
     START_URL_EXTRA_KEY,
     account_type_for,
     resolve_signed_in,
     vault_owns_sign_in,
     whoami_document,
 )
-from kiro_crew.cloud.login_target import (
+from aj_crew.cloud.login_target import (
     KiroLoginTarget,
     identity_matches_target,
     is_personal_account_type,
@@ -142,7 +142,7 @@ def test_resolve_signed_in_answers_none_for_an_unreadable_vault():
 
 
 def test_agent_owns_sign_in_is_the_one_predicate():
-    from kiro_crew.auth.whoami import agent_owns_sign_in
+    from aj_crew.auth.whoami import agent_owns_sign_in
 
     class _A:
         def __init__(self, b, k):
@@ -155,15 +155,15 @@ def test_agent_owns_sign_in_is_the_one_predicate():
 
 
 def test_a_degraded_config_load_is_refused_for_the_owner_decision(monkeypatch):
-    from kiro_crew.auth.whoami import ConfigUnreadable, load_sign_in_owner_config
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.auth.whoami import ConfigUnreadable, load_sign_in_owner_config
+    from aj_crew.config.loader import AjCrewConfig
 
     class _Cfg:
         agent = object()
         _base_unreadable = True
         _overlay_unreadable = False
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: _Cfg()))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: _Cfg()))
     with pytest.raises(ConfigUnreadable, match="config.json"):
         load_sign_in_owner_config()
     # The in-process reader keeps its kiro-cli fallback over the same refusal.
@@ -171,7 +171,7 @@ def test_a_degraded_config_load_is_refused_for_the_owner_decision(monkeypatch):
 
 
 def test_vault_owns_sign_in_is_positive_on_both_halves(monkeypatch):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     class _Agent:
         def __init__(self, backend, bundle):
@@ -190,14 +190,14 @@ def test_vault_owns_sign_in_is_positive_on_both_halves(monkeypatch):
     }
     for (backend, bundle), expected in cases.items():
         monkeypatch.setattr(
-            KiroCrewConfig, "load", classmethod(lambda cls, b=backend, k=bundle: _Cfg(b, k))
+            AjCrewConfig, "load", classmethod(lambda cls, b=backend, k=bundle: _Cfg(b, k))
         )
         assert vault_owns_sign_in() is expected, (backend, bundle)
 
     def _boom(cls):
         raise OSError("config unreadable")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_boom))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_boom))
     assert vault_owns_sign_in() is False
 
 
@@ -232,7 +232,7 @@ def _oidc_auth() -> builder_id.DeviceAuthorization:
 async def test_an_oidc_sign_in_records_its_start_url_on_the_stored_token(
     tmp_path, monkeypatch, provider, kwargs, expected_url
 ):
-    from kiro_crew.auth.service import KasLoginService
+    from aj_crew.auth.service import KasLoginService
 
     async def _fake_register(region, *, session):
         return builder_id.RegisteredClient(client_id="cid-1", client_secret="csec-1")

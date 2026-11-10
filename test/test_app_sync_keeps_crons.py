@@ -27,12 +27,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew.apps.execution as execution_mod
-from kiro_crew.apps import hooks_integration as hi
-from kiro_crew.apps.bridges import _register_crons, register_app_crons_with_service
-from kiro_crew.apps.cron_sdk import CronSDK
-from kiro_crew.apps.manifest import AppManifest
-from kiro_crew.cron import CronService
+import aj_crew.apps.execution as execution_mod
+from aj_crew.apps import hooks_integration as hi
+from aj_crew.apps.bridges import _register_crons, register_app_crons_with_service
+from aj_crew.apps.cron_sdk import CronSDK
+from aj_crew.apps.manifest import AppManifest
+from aj_crew.cron import CronService
 
 pytestmark = pytest.mark.usefixtures("command_crons_run_here")
 
@@ -67,11 +67,11 @@ def _weekly() -> dict:
 @pytest.fixture()
 def home(tmp_path, monkeypatch):
     """An isolated crew home with one installed app bundle."""
-    root = tmp_path / "kirocrew-home"
+    root = tmp_path / "ajcrew-home"
     bundle = root / "apps" / APP
     bundle.mkdir(parents=True)
     (root / "crons").mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(root))
+    monkeypatch.setenv("AJCREW_HOME", str(root))
     (bundle / "app.json").write_text(
         json.dumps(
             {
@@ -84,7 +84,7 @@ def home(tmp_path, monkeypatch):
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr("kiro_crew.apps.bridges._registration_denied", lambda *a, **k: False)
+    monkeypatch.setattr("aj_crew.apps.bridges._registration_denied", lambda *a, **k: False)
     monkeypatch.setattr(execution_mod, "third_party_execution_allowed", lambda: True)
     monkeypatch.setattr(hi, "sel", lambda: MagicMock())
     return root
@@ -266,8 +266,8 @@ def test_a_reload_judges_jobs_written_by_another_process(home, monkeypatch):
 
 def test_a_busy_store_during_a_reload_is_logged_and_raised(home, monkeypatch):
     """The reload cleanup leaves the same trace a disable's cleanup does."""
-    from kiro_crew.apps import bridges
-    from kiro_crew.cron import CronStoreBusy
+    from aj_crew.apps import bridges
+    from aj_crew.cron import CronStoreBusy
 
     audit = MagicMock()
     monkeypatch.setattr(bridges, "sel", lambda: audit)
@@ -341,7 +341,7 @@ def _reconciler_stub(svc: CronService, monkeypatch, enable_outcomes: list[str]) 
     from *enable_outcomes*: ``"raise"`` fails the reimport, ``"ok"`` records the
     hooks as loaded.
     """
-    from kiro_crew.apps import hook_reconcile as hr
+    from aj_crew.apps import hook_reconcile as hr
 
     state: dict = {"current": None}
     monkeypatch.setattr(hi, "hook_signature", lambda info: ("sig", info.get("version")))
@@ -366,7 +366,7 @@ def _reconciler_stub(svc: CronService, monkeypatch, enable_outcomes: list[str]) 
 
 
 def test_a_reconciler_reload_that_succeeds_keeps_the_job_and_its_pause(home, monkeypatch):
-    from kiro_crew.apps import hook_reconcile as hr
+    from aj_crew.apps import hook_reconcile as hr
 
     async def scenario(svc):
         _dispatcher_stub(svc, monkeypatch)
@@ -393,7 +393,7 @@ def test_a_reconciler_reload_whose_enable_fails_rolls_back_retries_and_tears_dow
     must not keep running for an app with no healthy hook wiring, so the
     reconciler removes it. The next tick retries the load and registers the
     manifest crons again; a later disable removes them like any other."""
-    from kiro_crew.apps import hook_reconcile as hr
+    from aj_crew.apps import hook_reconcile as hr
 
     async def scenario(svc):
         _dispatcher_stub(svc, monkeypatch)
@@ -432,7 +432,7 @@ def test_a_disable_that_removes_the_jobs_settles_an_owed_rollback(home, monkeypa
     removes every job) and re-enables it (which registers fresh ones and records
     the hooks as loaded). The owed removal was settled by the disable, so the
     reconciler must not delete the jobs the successful re-enable just made."""
-    from kiro_crew.apps import hook_reconcile as hr
+    from aj_crew.apps import hook_reconcile as hr
 
     async def scenario(svc):
         _dispatcher_stub(svc, monkeypatch)
@@ -468,9 +468,9 @@ def test_a_disable_that_removes_the_jobs_settles_an_owed_rollback(home, monkeypa
 def test_a_busy_disable_leaves_the_rollback_owed(home, monkeypatch):
     """Only a removal that completes settles it: a disable whose cron cleanup
     hits a busy store leaves the jobs on disk, so the reconciler still owes it."""
-    from kiro_crew.apps import hook_reconcile as hr
-    from kiro_crew.apps.cron_sdk import CronSDK as _SDK
-    from kiro_crew.cron import CronStoreBusy
+    from aj_crew.apps import hook_reconcile as hr
+    from aj_crew.apps.cron_sdk import CronSDK as _SDK
+    from aj_crew.cron import CronStoreBusy
 
     async def scenario(svc):
         _dispatcher_stub(svc, monkeypatch)
@@ -499,9 +499,9 @@ def test_an_enable_after_a_busy_disable_settles_the_owed_rollback(home, monkeypa
     before the next tick. The enable must settle the owed removal itself, or the
     tick deletes the jobs this enable kept and, seeing the hooks loaded, never
     registers them again."""
-    from kiro_crew.apps import hook_reconcile as hr
-    from kiro_crew.apps.cron_sdk import CronSDK as _SDK
-    from kiro_crew.cron import CronStoreBusy
+    from aj_crew.apps import hook_reconcile as hr
+    from aj_crew.apps.cron_sdk import CronSDK as _SDK
+    from aj_crew.cron import CronStoreBusy
 
     async def scenario(svc):
         _dispatcher_stub(svc, monkeypatch)
@@ -545,9 +545,9 @@ def test_an_enable_whose_owed_rollback_is_still_busy_registers_nothing(home, mon
     """The owed removal still cannot complete at enable time, so the enable stops
     before registering on top of the kept jobs and leaves the mark for the
     reconciler, which retries the whole enable."""
-    from kiro_crew.apps import hook_reconcile as hr
-    from kiro_crew.apps.cron_sdk import CronSDK as _SDK
-    from kiro_crew.cron import CronStoreBusy
+    from aj_crew.apps import hook_reconcile as hr
+    from aj_crew.apps.cron_sdk import CronSDK as _SDK
+    from aj_crew.cron import CronStoreBusy
 
     async def scenario(svc):
         _dispatcher_stub(svc, monkeypatch)
@@ -585,7 +585,7 @@ def test_an_app_job_the_store_upgrade_keeps_on_utc_stays_there(home, monkeypatch
     unchanged manifest leaves the stamp alone: it re-applies only a manifest field
     that changed, and the entry's timezone did not."""
     monkeypatch.setattr(
-        "kiro_crew.cron_service.zone_default_migration.configured_default_zone", lambda: ""
+        "aj_crew.cron_service.zone_default_migration.configured_default_zone", lambda: ""
     )
     nine = {"name": "digest", "cron_expr": "0 9 * * *", "message": "digest the inbox"}
 

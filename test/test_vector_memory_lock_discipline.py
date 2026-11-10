@@ -16,8 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.testing.wait import default_timeout, drained_progress
-from kiro_crew.vector_memory import (
+from aj_crew.testing.wait import default_timeout, drained_progress
+from aj_crew.vector_memory import (
     _HAS_FAISS,
     _HAS_NUMPY,
     _MAX_EPISODIC_RETIRED_PER_WRITE,
@@ -950,7 +950,7 @@ class TestDbLockGuard:
     @staticmethod
     def _runtime_sources() -> dict[str, str]:
         """Every ``vector_memory_runtime`` module's source, keyed by file name."""
-        from kiro_crew import vector_memory
+        from aj_crew import vector_memory
 
         root = Path(vector_memory.__file__).resolve().with_name("vector_memory_runtime")
         return {path.name: path.read_text(encoding="utf-8") for path in sorted(root.glob("*.py"))}
@@ -960,14 +960,14 @@ class TestDbLockGuard:
         import importlib
         import inspect
 
-        from kiro_crew import vector_memory
+        from aj_crew import vector_memory
 
-        # The facade and every owner beside it (``from kiro_crew import vector_memory_<x>``);
+        # The facade and every owner beside it (``from aj_crew import vector_memory_<x>``);
         # the vector_memory_runtime modules have their own test below.
         owners = [
-            importlib.import_module(f"kiro_crew.{alias.name}")
+            importlib.import_module(f"aj_crew.{alias.name}")
             for node in ast.parse(inspect.getsource(vector_memory)).body
-            if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew"
+            if isinstance(node, ast.ImportFrom) and node.module == "aj_crew"
             for alias in node.names
             if alias.name.startswith("vector_memory_")
         ]
@@ -1100,7 +1100,7 @@ class TestDbLockGuard:
         import ast
         import inspect
 
-        from kiro_crew import vector_memory
+        from aj_crew import vector_memory
 
         source = inspect.getsource(vector_memory)
         acquisition = "resources.enter_context(self._db_lock)"

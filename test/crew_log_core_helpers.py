@@ -11,8 +11,8 @@ import json
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, CrewLogError, lease
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, CrewLogError, lease
 
 CREW = "qa"
 SESSION = "s-7f3a"
@@ -21,7 +21,7 @@ SESSION = "s-7f3a"
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch):
     """Every test writes into its own data home, never the live one."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     yield
     # The write lease is released when the handle that adopted it is dropped, and
     # the holder table is process-global, so a handle a test here keeps reachable
@@ -42,7 +42,7 @@ def _crew(unit_id: str = CREW, **fields) -> CrewLog:
 
 def _session(unit_id: str = SESSION, **fields) -> CrewLog:
     fields.setdefault("owner", CREW)
-    fields.setdefault("agent", "kirocrew")
+    fields.setdefault("agent", "ajcrew")
     return CrewLog.create(lg.KIND_SESSION, unit_id, **fields)
 
 

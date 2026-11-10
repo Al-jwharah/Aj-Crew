@@ -34,10 +34,10 @@ from typing import List, Optional
 
 import pytest
 
-from kiro_crew import embeddings
-from kiro_crew.apps import registry as app_registry
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.platform import (
+from aj_crew import embeddings
+from aj_crew.apps import registry as app_registry
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.platform import (
     PROFILE_ENTERPRISE,
     build_default_context,
     current_context,
@@ -45,14 +45,14 @@ from kiro_crew.platform import (
 )
 
 # ── Sentinel enterprise values the test asserts on ──
-# A *second* internal git host NOT in KiroCrew's Default trusted set, so the
+# A *second* internal git host NOT in AjCrew's Default trusted set, so the
 # overlay must extend the set for an SSH clone to it to become "standard".
 _ENT_GIT_HOST = "git.internal.example.com"
 _ENT_EMBED_MODEL = "enterprise-embed:1.0"
 _ENT_EMBED_ENDPOINT = "https://embed.internal.example.com"
 _ENT_RUM_CONFIG = {
     "identityPoolId": "us-east-1:fake-pool",
-    "applicationId": "kirocrew-enterprise",
+    "applicationId": "ajcrew-enterprise",
     "region": "us-east-1",
 }
 _ENT_FEATURE_APPS = [
@@ -81,7 +81,7 @@ class _EnterpriseAppsLoader:
 
 class _EnterpriseRegistryPolicy:
     def public_git_hosts(self):
-        # The KiroCrew Default trusted set PLUS an extra internal git host.
+        # The AjCrew Default trusted set PLUS an extra internal git host.
         return app_registry._PUBLIC_GIT_HOSTS | frozenset({_ENT_GIT_HOST})
 
     def clone_sandbox_mode(self, git_url, trusted_hosts):
@@ -106,7 +106,7 @@ class _EnterpriseCredentialPolicy:
     def redact(self, text: str) -> str:
         # Delegate to the core redaction (so baseline credential redaction is
         # preserved) and add one internal-token redaction on top.
-        from kiro_crew import security
+        from aj_crew import security
 
         return security.redact(text).replace("SSO-COOKIE", "[REDACTED-SSO]")
 
@@ -166,7 +166,7 @@ def manifest_dir(tmp_path: Path) -> Path:
 @pytest.fixture
 def enterprise_ctx(manifest_dir: Path):
     """Install an inline enterprise PlatformContext with the wave-2 overlays."""
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     base = build_default_context(cfg, profile=PROFILE_ENTERPRISE)
     ctx = dataclasses.replace(
         base,
@@ -185,7 +185,7 @@ def enterprise_ctx(manifest_dir: Path):
 
 
 def test_edition_builtin_apps_discovered_from_manifest_sources(enterprise_ctx) -> None:
-    from kiro_crew.apps.manager import _edition_builtin_apps
+    from aj_crew.apps.manager import _edition_builtin_apps
 
     apps = _edition_builtin_apps()
     names = {a["name"] for a in apps}
@@ -198,26 +198,26 @@ def test_edition_builtin_apps_discovered_from_manifest_sources(enterprise_ctx) -
 
 
 def test_edition_bundled_app_names_reflect_enterprise(enterprise_ctx) -> None:
-    from kiro_crew.apps.manager import _edition_bundled_app_names
+    from aj_crew.apps.manager import _edition_bundled_app_names
 
     assert set(_edition_bundled_app_names()) == set(_ENT_FEATURE_APPS)
 
 
 def test_missing_manifest_source_is_skipped_gracefully(tmp_path: Path) -> None:
     """A non-existent manifest_sources dir must not raise — discovery skips it."""
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     base = build_default_context(cfg, profile=PROFILE_ENTERPRISE)
     missing = tmp_path / "does_not_exist"
     ctx = dataclasses.replace(base, apps_loader=_EnterpriseAppsLoader(missing))
     set_context(ctx)
-    from kiro_crew.apps.manager import _edition_builtin_apps
+    from aj_crew.apps.manager import _edition_builtin_apps
 
     assert _edition_builtin_apps() == []
 
 
 def test_register_builtin_apps_includes_feature_apps(enterprise_ctx, tmp_path, monkeypatch) -> None:
     """register_builtin_apps installs the companion feature apps as builtins."""
-    from kiro_crew.apps import manager
+    from aj_crew.apps import manager
 
     apps_root = tmp_path / "apps"
     apps_root.mkdir()
@@ -311,7 +311,7 @@ def test_embedding_backend_swap_seam(enterprise_ctx) -> None:
 
 def test_context_redact_runs_enterprise_policy(enterprise_ctx) -> None:
     """The mcp_core + agent context-routed redact uses the enterprise policy."""
-    from kiro_crew import agent, mcp_core
+    from aj_crew import agent, mcp_core
 
     # Internal token redaction (enterprise overlay) applies through both callers.
     assert "[REDACTED-SSO]" in mcp_core.redact("token=SSO-COOKIE")
@@ -339,16 +339,16 @@ def test_record_event_captured_by_enterprise_telemetry(enterprise_ctx) -> None:
 
 def test_register_acp_backends_called_once_at_boot(monkeypatch, manifest_dir) -> None:
     """bootstrap_context invokes register_acp_backends exactly once after set_context."""
-    import kiro_crew.platform.bootstrap as bootstrap
+    import aj_crew.platform.bootstrap as bootstrap
 
     counting = _CountingProviderRegistry()
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
 
     def _fake_discover(profile, cfg_, **_kwargs):
         base = build_default_context(cfg_, profile=PROFILE_ENTERPRISE)
         return dataclasses.replace(base, providers=counting)
 
-    monkeypatch.setenv("KIROCREW_PROFILE", "enterprise")
+    monkeypatch.setenv("AJCREW_PROFILE", "enterprise")
     monkeypatch.setattr(bootstrap, "plugin_entry_points", lambda: ["enterprise"])
     monkeypatch.setattr(bootstrap, "discover_companion_context", _fake_discover)
 

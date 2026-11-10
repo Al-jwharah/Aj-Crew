@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import mcp_apps_render
+from aj_crew import mcp_apps_render
 
 
 def _hex() -> str:
@@ -27,7 +27,7 @@ def _hex() -> str:
 def spool_fixture(tmp_path, monkeypatch):
     d = tmp_path / "mcp-apps"
     d.mkdir()
-    monkeypatch.setenv("KIROCREW_MCP_APPS_SPOOL", str(d))
+    monkeypatch.setenv("AJCREW_MCP_APPS_SPOOL", str(d))
     return d
 
 

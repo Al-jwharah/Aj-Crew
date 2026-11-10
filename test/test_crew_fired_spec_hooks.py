@@ -16,11 +16,11 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-import kiro_crew.hooks as hooks_mod
-from kiro_crew.acp.kas_permissions import kas_tool_match_names
-from kiro_crew.agent_sdk import spec_hooks
-from kiro_crew.agent_sdk.backends import (
+import aj_crew.config.paths as paths_mod
+import aj_crew.hooks as hooks_mod
+from aj_crew.acp.kas_permissions import kas_tool_match_names
+from aj_crew.agent_sdk import spec_hooks
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_GOOSE,
@@ -29,9 +29,9 @@ from kiro_crew.agent_sdk.backends import (
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_PI,
 )
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.hooks import (
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard import chat_runner
+from aj_crew.hooks import (
     HOOK_EVENT_AGENT_SPAWN,
     HOOK_EVENT_POST_TOOL_USE,
     HOOK_EVENT_PRE_TOOL_USE,
@@ -206,8 +206,8 @@ def test_only_the_run_nowhere_notice_carries_the_tag_its_dismiss_link_reads(
 
     The tag changes only the row: the turn's hooks are what they were without it.
     """
-    from kiro_crew.dashboard.chat_utils import SPEC_HOOKS_NOTICE_KIND
-    from kiro_crew.dashboard.chat_utils_injected_rows import SPEC_HOOKS_RUN_NOWHERE_NOTICE
+    from aj_crew.dashboard.chat_utils import SPEC_HOOKS_NOTICE_KIND
+    from aj_crew.dashboard.chat_utils_injected_rows import SPEC_HOOKS_RUN_NOWHERE_NOTICE
 
     _write_spec(agents_dir, "a1", hooks=_PROMPT_AND_STOP_HOOKS)
     assert _prepare(_client(ACP_BACKEND_PI), "a1", is_new=True) == ([], False, None)
@@ -232,7 +232,7 @@ def test_a_run_nowhere_notice_naming_a_pre_tool_use_hook_gets_no_dismiss_tag(
     agents_dir, notice_rows
 ):
     """A preToolUse hook is there to refuse calls, so its notice is never hidden."""
-    from kiro_crew.dashboard.chat_utils import SPEC_HOOKS_NOTICE_KIND
+    from aj_crew.dashboard.chat_utils import SPEC_HOOKS_NOTICE_KIND
 
     _write_spec(agents_dir, "a1", hooks={**_PROMPT_AND_STOP_HOOKS, **_OBJECT_HOOKS})
     assert _prepare(_client(ACP_BACKEND_PI), "a1", is_new=True) == ([], False, None)
@@ -243,8 +243,8 @@ def test_a_run_nowhere_notice_naming_a_pre_tool_use_hook_gets_no_dismiss_tag(
 
 
 def test_the_dashboard_matches_the_run_nowhere_tag_byte_for_byte():
-    from kiro_crew.dashboard.chat_utils import SPEC_HOOKS_NOTICE_KIND
-    from kiro_crew.dashboard.chat_utils_injected_rows import SPEC_HOOKS_RUN_NOWHERE_NOTICE
+    from aj_crew.dashboard.chat_utils import SPEC_HOOKS_NOTICE_KIND
+    from aj_crew.dashboard.chat_utils_injected_rows import SPEC_HOOKS_RUN_NOWHERE_NOTICE
 
     source = (
         Path(__file__).resolve().parents[1]
@@ -263,8 +263,8 @@ def test_pi_spec_hooks_count_as_run_nowhere_until_crew_fires_them(monkeypatch):
     """pi is handed no spec and Crew does not fire its hooks, so they run nowhere."""
     assert spec_hooks.spec_hooks_run_nowhere(_client(ACP_BACKEND_PI)) is True
     # The ruling follows the Crew-fires set: once pi joins it, the notice goes.
-    import kiro_crew.agent_sdk.backends as backends_mod
-    from kiro_crew.agent_sdk.backend_mcp_ability import ability_for
+    import aj_crew.agent_sdk.backends as backends_mod
+    from aj_crew.agent_sdk.backend_mcp_ability import ability_for
 
     monkeypatch.setattr(
         backends_mod,
@@ -301,7 +301,7 @@ def test_disabled_and_confirm_documents_do_not_run():
 
 
 def test_every_skipped_spec_hook_is_audited_once(monkeypatch):
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     audited: list = []
     monkeypatch.setattr(
@@ -433,13 +433,13 @@ def test_an_object_form_command_past_4096_characters_still_runs():
 
 
 def test_the_command_bound_is_the_shell_gate_scan_ceiling():
-    from kiro_crew.security.paths import MAX_SCANNABLE_COMMAND_CHARS
+    from aj_crew.security.paths import MAX_SCANNABLE_COMMAND_CHARS
 
     assert spec_hooks._MAX_COMMAND_LEN == MAX_SCANNABLE_COMMAND_CHARS
 
 
 def test_a_command_past_the_bound_is_dropped_with_its_length_and_the_fix(monkeypatch, caplog):
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     audited: list = []
     monkeypatch.setattr(
@@ -468,7 +468,7 @@ def test_conversion_stops_at_the_hook_cap():
 def test_spec_array_over_the_cap_drops_the_remainder_and_audits(monkeypatch):
     # A spec ``hooks`` ARRAY of 21 runnable command documents: the first 20 are
     # read, and the one past the cap is counted and named in one audit.
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     reasons: list = []
     monkeypatch.setattr(agent_mod, "_sel_hook_rejected", lambda *a, **k: reasons.append(a[-1]))
@@ -505,8 +505,8 @@ def test_extra_hooks_fire_but_are_never_persisted(tmp_path, monkeypatch):
 
 
 def _passthrough_sandbox(monkeypatch):
-    monkeypatch.setattr("kiro_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
-    monkeypatch.setattr("kiro_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
+    monkeypatch.setattr("aj_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
+    monkeypatch.setattr("aj_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
 
 
 def test_a_spec_pre_tool_use_hook_exit_2_blocks(tmp_path, agents_dir, monkeypatch, notices):
@@ -547,7 +547,7 @@ def _session_id_probe(tmp_path: Path, out_name: str) -> str:
         " 'stdin': event.get('acp_session_id', '<absent>'),"
         " 'stdin_session_id': event.get('session_id', '<absent>'),"
         " 'secret': os.environ.get('KC_TEST_HOOK_SECRET'),"
-        " 'spawned': os.environ.get('KIROCREW_SPAWNED')}, f)\n",
+        " 'spawned': os.environ.get('AJCREW_SPAWNED')}, f)\n",
         encoding="utf-8",
     )
     return f'"{sys.executable}" "{script}" "{tmp_path / out_name}"'
@@ -586,14 +586,14 @@ def test_every_spec_hook_event_gets_the_session_id_as_kiro_cli_names_it(
     """KIRO_SESSION_ID in env and ``session_id`` on stdin, kiro-cli's names, on every event.
 
     The gateway's other env is still not forwarded (an ambient secret does not
-    reach the hook). KIROCREW_SPAWNED is the sandbox spawn's own marker, set on
+    reach the hook). AJCREW_SPAWNED is the sandbox spawn's own marker, set on
     the hook even when the gateway's env has none, as kiro-cli's hooks inherit it.
     """
     _passthrough_sandbox(monkeypatch)
     monkeypatch.setattr(hooks_mod, "_script_hooks_capability_denied", lambda sk="": None)
     monkeypatch.setenv("KIRO_SESSION_ID", "ambient_bogus")
     monkeypatch.setenv("KC_TEST_HOOK_SECRET", "s3cret")
-    monkeypatch.delenv("KIROCREW_SPAWNED", raising=False)
+    monkeypatch.delenv("AJCREW_SPAWNED", raising=False)
     seen = _fire_one(tmp_path, event, "sess_abc")
     assert seen == {
         "env": "sess_abc",
@@ -674,7 +674,7 @@ def test_an_unknown_acp_session_id_leaves_kiro_session_id_unset(tmp_path, monkey
 
 @pytest.mark.parametrize(("sid", "expected"), [("sess_abc", "sess_abc"), ("", None)])
 def test_the_chat_turn_hands_the_spec_hooks_its_session_id(sid, expected):
-    from kiro_crew.dashboard.chat_turn import turn_spec_hooks
+    from aj_crew.dashboard.chat_turn import turn_spec_hooks
 
     seen: dict = {}
 
@@ -701,7 +701,7 @@ def test_the_chat_turn_hands_the_spec_hooks_its_session_id(sid, expected):
     ("served", "expected"), [("model-x", "model-x"), ("", None), ("auto", None)]
 )
 def test_the_chat_turn_hands_its_hooks_the_served_model(served, expected):
-    from kiro_crew.dashboard.chat_turn import turn_spec_hooks
+    from aj_crew.dashboard.chat_turn import turn_spec_hooks
 
     seen: dict = {}
 
@@ -754,12 +754,12 @@ _PRE_PROMPT = (HOOK_EVENT_USER_PROMPT_SUBMIT, HOOK_EVENT_AGENT_SPAWN)
     + [("", "auto", e, None) for e in _PRE_PROMPT],
 )
 def test_a_turn_scoped_fallback_hands_hooks_the_model_that_runs(pin, resolved, event, expected):
-    from kiro_crew.acp.engine_fallback import (
+    from aj_crew.acp.engine_fallback import (
         TRACKER_ATTR,
         EngineFallbackTracker,
         ModelFallbackNotice,
     )
-    from kiro_crew.dashboard.chat_turn import turn_spec_hooks
+    from aj_crew.dashboard.chat_turn import turn_spec_hooks
 
     seen: dict = {}
 
@@ -791,10 +791,10 @@ def test_a_subagent_run_hands_its_spec_hooks_its_own_session_id(sid, expected):
     """Every spec hook event of a KAS child run carries the child's ACP session id."""
     from unittest.mock import AsyncMock, MagicMock, patch
 
-    from kiro_crew import subagent
-    from kiro_crew.execution_context import execution_for_store
-    from kiro_crew.hooks import TOOL_AUTO_APPROVE, ToolHookResult
-    from kiro_crew.providers.base import (
+    from aj_crew import subagent
+    from aj_crew.execution_context import execution_for_store
+    from aj_crew.hooks import TOOL_AUTO_APPROVE, ToolHookResult
+    from aj_crew.providers.base import (
         EVENT_PERMISSION_REQUEST,
         EVENT_TOOL_CALL,
         EVENT_TOOL_RESULT,
@@ -853,7 +853,7 @@ def test_a_governance_denied_spec_hook_does_not_spawn(tmp_path, monkeypatch):
     async def no_spawn(*a, **k):
         raise AssertionError("a denied hook must not spawn")
 
-    monkeypatch.setattr("kiro_crew.sandbox.create_subprocess_limited", no_spawn)
+    monkeypatch.setattr("aj_crew.sandbox.create_subprocess_limited", no_spawn)
     hooks = spec_hooks.spec_script_hooks("a1", {"hooks": _OBJECT_HOOKS})
     results = asyncio.run(
         ScriptHookStore(tmp_path).fire(
@@ -879,10 +879,10 @@ async def test_an_in_turn_agent_switch_reloads_the_new_agents_spec_hooks(tmp_pat
 
     from chat_test_helpers import _make_state
 
-    from kiro_crew.agent_discovery import clear_list_agents_cache
-    from kiro_crew.config.loader import refresh_materialized_agents
-    from kiro_crew.config.paths import kiro_agents_dir
-    from kiro_crew.providers.base import EVENT_AGENT_SWITCHED, EVENT_COMPLETE, LLMEvent
+    from aj_crew.agent_discovery import clear_list_agents_cache
+    from aj_crew.config.loader import refresh_materialized_agents
+    from aj_crew.config.paths import kiro_agents_dir
+    from aj_crew.providers.base import EVENT_AGENT_SWITCHED, EVENT_COMPLETE, LLMEvent
 
     d = kiro_agents_dir()
     d.mkdir(parents=True, exist_ok=True)
@@ -954,11 +954,11 @@ async def test_an_in_turn_switch_that_leaves_the_session_stale_stops_the_turn(
 
     from chat_test_helpers import _make_state
 
-    from kiro_crew.agent_discovery import clear_list_agents_cache
-    from kiro_crew.agent_sdk import spec_hooks
-    from kiro_crew.config.loader import refresh_materialized_agents
-    from kiro_crew.config.paths import kiro_agents_dir
-    from kiro_crew.providers.base import (
+    from aj_crew.agent_discovery import clear_list_agents_cache
+    from aj_crew.agent_sdk import spec_hooks
+    from aj_crew.config.loader import refresh_materialized_agents
+    from aj_crew.config.paths import kiro_agents_dir
+    from aj_crew.providers.base import (
         EVENT_AGENT_SWITCHED,
         EVENT_COMPLETE,
         EVENT_PERMISSION_REQUEST,
@@ -1065,8 +1065,8 @@ def test_no_unread_steering_notice_where_resources_are_read_or_nothing_is_ruled(
 
 
 def test_the_default_agent_gets_no_unread_steering_notice(agents_dir, notices):
-    _write_spec(agents_dir, "kirocrew", resources=["file://.kiro/steering/**/*.md"])
-    _prepare(_client(ACP_BACKEND_CODEX), "kirocrew", is_new=True)
+    _write_spec(agents_dir, "ajcrew", resources=["file://.kiro/steering/**/*.md"])
+    _prepare(_client(ACP_BACKEND_CODEX), "ajcrew", is_new=True)
     assert not any(_UNREAD_STEERING in t for t in notices)
 
 
@@ -1084,9 +1084,9 @@ def test_an_unreadable_spec_renders_no_unread_steering_notice(agents_dir, notice
 
 @pytest.mark.parametrize("backend", [ACP_BACKEND_CLAUDE, ACP_BACKEND_CODEX, ACP_BACKEND_OPENCODE])
 def test_the_resources_ruling_says_no_reader_not_injected_steering(backend):
-    from kiro_crew.agent_sdk.backend_mcp_ability import OFF_CARD_CONCERNS
-    from kiro_crew.providers.mirrors import mirror_for
-    from kiro_crew.providers.mirrors.base import Concern
+    from aj_crew.agent_sdk.backend_mcp_ability import OFF_CARD_CONCERNS
+    from aj_crew.providers.mirrors import mirror_for
+    from aj_crew.providers.mirrors.base import Concern
 
     reason = mirror_for(backend).rulings()[Concern.RESOURCES].reason
     assert reason.startswith("no-reader:")
@@ -1112,9 +1112,9 @@ def test_the_spec_fields_doc_no_longer_calls_the_resources_reasons_wrong():
     """Footnote 6 names the reason each mirror gives ``resources``."""
     from pathlib import Path
 
-    import kiro_crew
+    import aj_crew
 
-    doc = (Path(kiro_crew.__file__).parent / "docs" / "agent-spec-fields.md").read_text(
+    doc = (Path(aj_crew.__file__).parent / "docs" / "agent-spec-fields.md").read_text(
         encoding="utf-8"
     )
     assert "reason the\n   code does not support" not in doc
@@ -1126,14 +1126,14 @@ def test_the_spec_fields_doc_gives_goose_its_withheld_ruling():
     """Footnote 6 matches goose's real ``resources`` disposition."""
     from pathlib import Path
 
-    import kiro_crew
-    from kiro_crew.providers.mirrors import mirror_for
-    from kiro_crew.providers.mirrors.base import Concern, Disposition
+    import aj_crew
+    from aj_crew.providers.mirrors import mirror_for
+    from aj_crew.providers.mirrors.base import Concern, Disposition
 
     assert mirror_for(ACP_BACKEND_GOOSE).rulings()[Concern.RESOURCES].disposition == (
         Disposition.WITHHELD
     )
-    doc = (Path(kiro_crew.__file__).parent / "docs" / "agent-spec-fields.md").read_text(
+    doc = (Path(aj_crew.__file__).parent / "docs" / "agent-spec-fields.md").read_text(
         encoding="utf-8"
     )
     assert "`goose` rules it `withheld` too" in doc

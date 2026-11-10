@@ -7,14 +7,14 @@ The entrypoint owns three container-boundary behaviors:
   permits it; the unsandboxed opt-out is seeded only when no backend works.
   "First run" means ``config.json`` is absent: an EMPTY mounted volume is
   still a first run, while any existing config is operator-owned and a
-  legacy ``~/.kirocrew`` is owned by the product's migrator.
+  legacy ``~/.ajcrew`` is owned by the product's migrator.
 * Channel credentials arriving as container env are moved into the
   product's credential file (``.env``, 0600) and scrubbed from the
   environment BEFORE the gateway is exec'd, so the gateway's
   ``/proc/<pid>/environ`` snapshot never carries a credential.
-* Explicit ``KIROCREW_HOME`` / legacy-home resolution mirrors the backend.
+* Explicit ``AJCREW_HOME`` / legacy-home resolution mirrors the backend.
 
-These tests execute the REAL script with stubbed ``kirocrew`` and
+These tests execute the REAL script with stubbed ``ajcrew`` and
 ``python3`` binaries on PATH (the python3 stub makes the sandbox probe
 outcome deterministic per test), in a throwaway ``$HOME``.
 
@@ -58,7 +58,7 @@ def _run_entrypoint(
     resolver_python: str | None = None,
     extra_env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
-    """Run the real entrypoint with fake ``kirocrew``/``python3``/``tini``
+    """Run the real entrypoint with fake ``ajcrew``/``python3``/``tini``
     on PATH.
 
     The ``python3`` stub DISPATCHES on the ``-c`` code: the data-home
@@ -68,15 +68,15 @@ def _run_entrypoint(
     throwaway ``$HOME``), while the sandbox probe (``detect_backend``)
     returns a scripted exit so posture tests are deterministic on any host.
     ``resolver_python`` overrides the resolver interpreter (e.g.
-    ``/usr/bin/false`` to simulate a broken install). The ``kirocrew`` shim
+    ``/usr/bin/false`` to simulate a broken install). The ``ajcrew`` shim
     dumps its inherited environment to ``$HOME/captured-env`` for
     credential-scrub assertions; the ``tini`` stub mirrors exec-through.
     """
     shim_dir = home / ".shim-bin"
     shim_dir.mkdir(parents=True, exist_ok=True)
     _write_stub(
-        shim_dir / "kirocrew",
-        '#!/bin/sh\nenv > "$ENTRYPOINT_TEST_ENV_CAPTURE"\necho "shim:kirocrew $@"\nexit 0\n',
+        shim_dir / "ajcrew",
+        '#!/bin/sh\nenv > "$ENTRYPOINT_TEST_ENV_CAPTURE"\necho "shim:ajcrew $@"\nexit 0\n',
     )
     _write_stub(
         shim_dir / "python3",
@@ -93,7 +93,7 @@ def _run_entrypoint(
     )
 
     env = {
-        # Minimal, hermetic environment: no inherited KIROCREW_HOME and no
+        # Minimal, hermetic environment: no inherited AJCREW_HOME and no
         # inherited real HOME so the resolver sees exactly what we lay out.
         "HOME": str(home),
         "PATH": f"{shim_dir}:{os.environ.get('PATH', '')}",
@@ -150,27 +150,27 @@ def test_first_run_without_backend_stays_fail_closed_without_consent(tmp_path: P
     )
     assert json.loads(config.read_text(encoding="utf-8")) == SEED_AUTO_JSON
     assert "DISABLED (fail-closed)" in result.stdout
-    assert "KIROCREW_ALLOW_UNSANDBOXED=1" in result.stdout, (
+    assert "AJCREW_ALLOW_UNSANDBOXED=1" in result.stdout, (
         "the message must document the explicit consent path"
     )
 
 
 def test_first_run_without_backend_seeds_opt_out_with_explicit_consent(tmp_path: Path) -> None:
-    """With -e KIROCREW_ALLOW_UNSANDBOXED=1 the operator has explicitly
+    """With -e AJCREW_ALLOW_UNSANDBOXED=1 the operator has explicitly
     accepted container-as-boundary. The opt-out rides WITH sandbox="auto"
     so the allowance flows through the guard's audited opt-in path rather
     than mode-off's silent bypass."""
     result = _run_entrypoint(
         tmp_path,
         probe_backend_available=False,
-        extra_env={"KIROCREW_ALLOW_UNSANDBOXED": "1"},
+        extra_env={"AJCREW_ALLOW_UNSANDBOXED": "1"},
     )
     assert result.returncode == 0, result.stderr
 
     config = tmp_path / ".kiro" / "crew" / "config.json"
     assert config.is_file(), "explicit consent must seed the opt-out"
     assert json.loads(config.read_text(encoding="utf-8")) == SEED_CONSENT_JSON
-    assert "KIROCREW_ALLOW_UNSANDBOXED=1 given" in result.stdout
+    assert "AJCREW_ALLOW_UNSANDBOXED=1 given" in result.stdout
 
 
 def test_empty_mounted_home_is_still_a_first_run(tmp_path: Path) -> None:
@@ -182,7 +182,7 @@ def test_empty_mounted_home_is_still_a_first_run(tmp_path: Path) -> None:
     result = _run_entrypoint(
         tmp_path,
         probe_backend_available=False,
-        extra_env={"KIROCREW_ALLOW_UNSANDBOXED": "1"},
+        extra_env={"AJCREW_ALLOW_UNSANDBOXED": "1"},
     )
     assert result.returncode == 0, result.stderr
 
@@ -228,16 +228,16 @@ def test_existing_config_without_key_gets_note_but_no_write(tmp_path: Path) -> N
     assert "sandbox_allow_unsandboxed_exec is not set" in result.stdout
 
 
-def test_explicit_kirocrew_home_env_is_honored(tmp_path: Path) -> None:
-    """KIROCREW_HOME overrides the default seed location (parity with the
+def test_explicit_ajcrew_home_env_is_honored(tmp_path: Path) -> None:
+    """AJCREW_HOME overrides the default seed location (parity with the
     backend's env handling)."""
     custom = tmp_path / "custom-home"
     result = _run_entrypoint(
         tmp_path,
         probe_backend_available=False,
         extra_env={
-            "KIROCREW_HOME": str(custom),
-            "KIROCREW_ALLOW_UNSANDBOXED": "1",
+            "AJCREW_HOME": str(custom),
+            "AJCREW_ALLOW_UNSANDBOXED": "1",
         },
     )
     assert result.returncode == 0, result.stderr
@@ -246,8 +246,8 @@ def test_explicit_kirocrew_home_env_is_honored(tmp_path: Path) -> None:
     assert not (tmp_path / ".kiro" / "crew").exists()
 
 
-def test_kirocrew_home_tilde_is_expanded_like_the_backend(tmp_path: Path) -> None:
-    """A tilde override (docker -e KIROCREW_HOME=~/crew-data arrives
+def test_ajcrew_home_tilde_is_expanded_like_the_backend(tmp_path: Path) -> None:
+    """A tilde override (docker -e AJCREW_HOME=~/crew-data arrives
     unexpanded) must land under $HOME exactly as the backend resolves it —
     the resolver delegation makes this the REAL product expansion, not a
     shell reimplementation."""
@@ -255,9 +255,9 @@ def test_kirocrew_home_tilde_is_expanded_like_the_backend(tmp_path: Path) -> Non
         tmp_path,
         probe_backend_available=False,
         extra_env={
-            "KIROCREW_HOME": "~/crew-data",
+            "AJCREW_HOME": "~/crew-data",
             "SLACK_BOT_TOKEN": "tilde-secret",
-            "KIROCREW_ALLOW_UNSANDBOXED": "1",
+            "AJCREW_ALLOW_UNSANDBOXED": "1",
         },
     )
     assert result.returncode == 0, result.stderr
@@ -268,11 +268,11 @@ def test_kirocrew_home_tilde_is_expanded_like_the_backend(tmp_path: Path) -> Non
     # The override passes through VERBATIM — the gateway applies the
     # identical product expansion at boot, so both resolve the same dir.
     captured = (tmp_path / "captured-env").read_text(encoding="utf-8")
-    assert "KIROCREW_HOME=~/crew-data" in captured
+    assert "AJCREW_HOME=~/crew-data" in captured
 
 
 def test_system_dir_override_is_rejected_like_the_backend(tmp_path: Path) -> None:
-    """KIROCREW_HOME pointing at a system directory is ignored by the
+    """AJCREW_HOME pointing at a system directory is ignored by the
     backend's validation; the entrypoint must follow the resolver to the
     default home instead of aborting on an unwritable config path or
     writing credentials where the gateway will never look. Uses /usr:
@@ -283,8 +283,8 @@ def test_system_dir_override_is_rejected_like_the_backend(tmp_path: Path) -> Non
         tmp_path,
         probe_backend_available=False,
         extra_env={
-            "KIROCREW_HOME": "/usr",
-            "KIROCREW_ALLOW_UNSANDBOXED": "1",
+            "AJCREW_HOME": "/usr",
+            "AJCREW_ALLOW_UNSANDBOXED": "1",
         },
     )
     assert result.returncode == 0, result.stderr
@@ -303,7 +303,7 @@ def test_broken_resolver_falls_back_to_default_home(tmp_path: Path) -> None:
         tmp_path,
         probe_backend_available=False,
         resolver_python="/usr/bin/false",
-        extra_env={"KIROCREW_ALLOW_UNSANDBOXED": "1"},
+        extra_env={"AJCREW_ALLOW_UNSANDBOXED": "1"},
     )
     assert result.returncode == 0, result.stderr
     assert "could not resolve the data home" in result.stderr

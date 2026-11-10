@@ -25,13 +25,13 @@ from autonudge_helpers import _enable  # noqa: F401
 from autonudge_helpers import _structured_monitor
 from autonudge_shutdown_drain_helpers import _LOST_RUN_SECS, _wait_until
 
-from kiro_crew import autonudge as _an
-from kiro_crew.autonudge import (
+from aj_crew import autonudge as _an
+from aj_crew.autonudge import (
     AutoNudgeService,
     NudgeLoop,
 )
-from kiro_crew.monitoring import models as monitor_models
-from kiro_crew.monitoring.models import (
+from aj_crew.monitoring import models as monitor_models
+from aj_crew.monitoring.models import (
     MONITOR_STATE_VERSION,
     MonitorBudgets,
     MonitorOutcome,
@@ -47,7 +47,7 @@ def _reading(state: str = "MERGED", *, status: str = "ok", head: str = "a" * 40)
     the kernel verdict would test a state the code cannot reach: the fetcher emits no
     terminal observation, so no kernel verdict is ever TERMINAL.
     """
-    from kiro_crew.probes import gh_pr
+    from aj_crew.probes import gh_pr
 
     return gh_pr.PrObservation(
         repo="acme/widgets",

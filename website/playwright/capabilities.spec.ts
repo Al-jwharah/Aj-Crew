@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 /**
  * /capabilities — Customize page (formerly Agent Capabilities).
  * SidePanelLayout with 6 tabs: Agents, Connections,
- * Skills, Steering, Hooks, Prompts. Default tab is "crews" (KiroCrewAgentsPage).
+ * Skills, Steering, Hooks, Prompts. Default tab is "crews" (AjCrewAgentsPage).
  *
  * Covers: page load + heading, tab navigation with content change assertion,
  * the crew roster read + a create/delete round-trip mutation through the
@@ -23,7 +23,7 @@ test.describe('Capabilities Page — /capabilities', () => {
     // Default tab description from the content area header
     // Prose deliberately: on /capabilities this string is a TAB DESCRIPTION
     // (CapabilitiesPage.tsx:16), not a PageHeader subtitle, so there is no
-    // page-subtitle testid on this route. KiroCrewAgentsPage renders the same
+    // page-subtitle testid on this route. AjCrewAgentsPage renders the same
     // string as a real PageHeader subtitle, hence the #main-content scope.
     await expect(page.locator('#main-content').getByText('Always-on AI agents', { exact: false })).toBeVisible({ timeout: 5000 })
   })
@@ -46,12 +46,12 @@ test.describe('Capabilities Page — /capabilities', () => {
     const cards = page.getByTestId('crew-card')
     await expect(cards.first()).toBeVisible({ timeout: 5000 })
 
-    // The minimal fixture seeds one crew bound to the "kirocrew" agent template.
+    // The minimal fixture seeds one crew bound to the "ajcrew" agent template.
     // The crew's own NAME is "default" there (config/loader.py seeds
     // agents["default"] when config.json has no agents section), so the template
     // value is what identifies it — the same string the retired assertion
     // matched, which was a table cell in the Built from column, not a name.
-    const seeded = cards.filter({ hasText: 'kirocrew' }).first()
+    const seeded = cards.filter({ hasText: 'ajcrew' }).first()
     await expect(seeded).toBeVisible({ timeout: 5000 })
 
     // Every card labels the four bindings the table used to carry as columns.
@@ -93,7 +93,7 @@ test.describe('Capabilities Page — /capabilities', () => {
       await expect(createSheet).toBeVisible({ timeout: 5000 })
 
       // Name by placeholder (its label is a <span>, not a <label for>). "Built
-      // from" defaults to the built-in kirocrew template, so no pick is needed;
+      // from" defaults to the built-in ajcrew template, so no pick is needed;
       // everything else sits behind the Advanced fold and keeps its defaults.
       await createSheet.getByPlaceholder('e.g. Radar or Dr. Eggbot').fill(agentName)
       // This page opens the card with Advanced settings unfolded; the one

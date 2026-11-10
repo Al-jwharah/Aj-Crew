@@ -1,4 +1,4 @@
-"""Tests for ``kiro_crew.workflows.preview`` — the static plan behind the graph view.
+"""Tests for ``aj_crew.workflows.preview`` — the static plan behind the graph view.
 
 Every assertion here is about a DECISION the previewer makes, because the whole value
 of the module is what it refuses to predict. The sharp cases:
@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.workflows.preview import (
+from aj_crew.workflows.preview import (
     MAX_LABEL_CHARS,
     MAX_PHASE_TITLE_CHARS,
     MAX_PLAN_NODES,
@@ -533,7 +533,7 @@ class TestThePreviewerTracksTheDSL:
         Derived from the Protocol, never listed here -- a hand-written copy would be
         exactly the enumeration that goes stale, which is the reason this test exists.
         """
-        from kiro_crew.workflows import WorkflowContext
+        from aj_crew.workflows import WorkflowContext
 
         return {
             name
@@ -591,7 +591,7 @@ class TestThePreviewerTracksTheDSL:
         """
         import inspect
 
-        from kiro_crew.workflows import runner
+        from aj_crew.workflows import runner
 
         expected = f"label or prompt[:{RUNNER_PROMPT_LABEL_CHARS}]"
         assert expected in inspect.getsource(runner), (

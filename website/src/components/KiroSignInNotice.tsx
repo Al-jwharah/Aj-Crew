@@ -91,8 +91,8 @@ export default function KiroSignInNotice() {
   // `<which read>:<its dataUpdatedAt>` when its failure was dismissed.
   const [dismissedFailure, setDismissedFailure] = useState<string | null>(null)
   const cfgQuery = useQuery<AcpBackendConfig>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
   })
   const kas = cfgQuery.data?.agent?.acp_backend === KIRO_SIGN_IN_BACKEND
   // The shell's own outage surfaces: the offline capsule, and the banner that

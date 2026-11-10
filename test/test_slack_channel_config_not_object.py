@@ -10,7 +10,7 @@ log it. The list buttons keep their order and let the error end the click, as an
 unreadable config does, so none reports a success it did not save. The config
 modal logs a warning and writes nothing.
 
-Config writes land in the per-test ``KIROCREW_HOME`` that ``conftest.py`` pins.
+Config writes land in the per-test ``AJCREW_HOME`` that ``conftest.py`` pins.
 """
 
 from __future__ import annotations
@@ -34,10 +34,10 @@ from slack_interactions_coverage_helpers import sel_log_fixture  # noqa: F401
 from slack_interactions_coverage_helpers import _ix_messages, _payload
 
 from conftest import MockSlackClient
-from kiro_crew.config.loader import config_path
-from kiro_crew.slack import handler as sh
-from kiro_crew.slack import interactions as ix
-from kiro_crew.slack.allowlist import (
+from aj_crew.config.loader import config_path
+from aj_crew.slack import handler as sh
+from aj_crew.slack import interactions as ix
+from aj_crew.slack.allowlist import (
     ACTION_ALLOWLIST_APPROVE,
     ACTION_ALLOWLIST_DENY,
     ACTION_TRACK_APPROVE,

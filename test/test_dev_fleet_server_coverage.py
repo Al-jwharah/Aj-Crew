@@ -1,7 +1,7 @@
 """Coverage-focused tests for the Dev Fleet standalone backend.
 
 Targets uncovered helper branches and pod-guard refusals of
-``kiro_crew.apps.builtins.dev_fleet.server``.
+``aj_crew.apps.builtins.dev_fleet.server``.
 
 Everything is injected: no real git, no real subprocess, no network, and no
 writes outside ``tmp_path``. Where the module reads its config home the
@@ -39,7 +39,7 @@ from dev_fleet_server_coverage_helpers import (  # noqa: F401 -- the autouse fix
     _same,
 )
 
-from kiro_crew.apps.builtins.dev_fleet import (
+from aj_crew.apps.builtins.dev_fleet import (
     fleet_state,
     gateway_service,
     live,
@@ -48,7 +48,7 @@ from kiro_crew.apps.builtins.dev_fleet import (
     worktree_ops,
     worktree_ops_pods,
 )
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 # The launchd label derivation imports the pod launchd module for its label
 # prefix; on a host where that optional module is unavailable the function
@@ -68,7 +68,7 @@ def test_load_dev_fleet_cfg_overlay_wins(monkeypatch, tmp_path):
     (tmp_path / "config.local.json").write_text(
         json.dumps({"dev_fleet": {"a": 2, "b": 3}}), encoding="utf-8", newline="\n"
     )
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
 
     assert repository._load_dev_fleet_cfg() == {"a": 2, "keep": "yes", "b": 3}
 
@@ -79,7 +79,7 @@ def test_load_dev_fleet_cfg_ignores_unusable_files(monkeypatch, tmp_path):
     (tmp_path / "config.local.json").write_text(
         json.dumps({"dev_fleet": "nope"}), encoding="utf-8", newline="\n"
     )
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
 
     assert repository._load_dev_fleet_cfg() == {}
 
@@ -90,7 +90,7 @@ def test_load_dev_fleet_cfg_config_dir_failure_is_empty(monkeypatch):
     def _boom():
         raise RuntimeError("no home")
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", _boom)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", _boom)
     assert repository._load_dev_fleet_cfg() == {}
 
 
@@ -109,7 +109,7 @@ def test_launchd_live_worktree_missing_launcher_is_none(monkeypatch, tmp_path):
     "script",
     [
         "#!/bin/sh\nexport FOO=1\n",  # no exec line at all
-        "#!/bin/sh\nexec '/usr/local/bin/kirocrew' gateway\n",  # not a venv binary
+        "#!/bin/sh\nexec '/usr/local/bin/ajcrew' gateway\n",  # not a venv binary
     ],
 )
 def test_launchd_live_worktree_unusable_exec_is_none(monkeypatch, tmp_path, script):
@@ -124,8 +124,8 @@ def test_launchd_live_worktree_unusable_exec_is_none(monkeypatch, tmp_path, scri
 @_LAUNCHD_ONLY
 def test_launchd_live_worktree_resolves_checkout(monkeypatch, tmp_path):
     """A venv binary in the exec line resolves to its checkout grandparent."""
-    checkout = tmp_path / "kirocrew-wt-alpha"
-    kcbin = checkout / ".venv" / "bin" / "kirocrew"
+    checkout = tmp_path / "ajcrew-wt-alpha"
+    kcbin = checkout / ".venv" / "bin" / "ajcrew"
     kcbin.parent.mkdir(parents=True)
     kcbin.write_text("", encoding="utf-8", newline="\n")
     launcher = tmp_path / "live-gateway"
@@ -155,14 +155,14 @@ async def test_load_fallback_repos_collects_ancestor_remotes(monkeypatch):
             # pre-rename name, not a fork of upstream under another owner — so
             # its ancestor main still qualifies as a fallback repo.
             if remote == "origin":
-                return 0, "git@github.com:kirodotdev/KiroCrew.git\n", ""
-            return 0, "git@github.com:someone/kirocrew-old.git\n", ""
+                return 0, "git@github.com:Al-jwharah/Aj-Crew.git\n", ""
+            return 0, "git@github.com:someone/ajcrew-old.git\n", ""
         return 1, "", "unexpected"
 
     monkeypatch.setattr(repository, "_repo", lambda: "/fake/repo")
     monkeypatch.setattr(runtime, "_run_cmd", fake_run)
     await repository._load_fallback_repos()
-    assert repository._FALLBACK_REPOS == ["someone/kirocrew-old"]
+    assert repository._FALLBACK_REPOS == ["someone/ajcrew-old"]
 
 
 @pytest.mark.asyncio
@@ -184,16 +184,16 @@ async def test_load_fallback_repos_skips_duplicate_upstream_alias(monkeypatch):
 
     async def fake_run(cmd, **kw):
         if cmd[-1] == "remote":
-            return 0, "kirocrew\norigin\n", ""
+            return 0, "ajcrew\norigin\n", ""
         if "--is-ancestor" in cmd:
             return 0, "", ""  # identical refs -> trivially an ancestor
         if "get-url" in cmd:
             # Both remotes point at the SAME upstream repository.
-            return 0, "https://github.com/kirodotdev/KiroCrew.git\n", ""
+            return 0, "https://github.com/Al-jwharah/Aj-Crew.git\n", ""
         return 1, "", "unexpected"
 
     monkeypatch.setattr(repository, "_repo", lambda: "/fake/repo")
-    monkeypatch.setattr(repository, "_UPSTREAM_REMOTE", "kirocrew")
+    monkeypatch.setattr(repository, "_UPSTREAM_REMOTE", "ajcrew")
     monkeypatch.setattr(runtime, "_run_cmd", fake_run)
     await repository._load_fallback_repos()
     assert repository._FALLBACK_REPOS == []
@@ -210,18 +210,18 @@ async def test_load_fallback_repos_recognizes_scp_and_git_suffix_as_same(monkeyp
 
     async def fake_run(cmd, **kw):
         if cmd[-1] == "remote":
-            return 0, "kirocrew\norigin\n", ""
+            return 0, "ajcrew\norigin\n", ""
         if "--is-ancestor" in cmd:
             return 0, "", ""
         if "get-url" in cmd:
             remote = cmd[-1]
-            if remote == "kirocrew":
-                return 0, "https://github.com/kirodotdev/KiroCrew.git\n", ""
-            return 0, "git@github.com:KiroDotDev/kirocrew\n", ""
+            if remote == "ajcrew":
+                return 0, "https://github.com/Al-jwharah/Aj-Crew.git\n", ""
+            return 0, "git@github.com:Al-jwharah/Aj-Crew\n", ""
         return 1, "", "unexpected"
 
     monkeypatch.setattr(repository, "_repo", lambda: "/fake/repo")
-    monkeypatch.setattr(repository, "_UPSTREAM_REMOTE", "kirocrew")
+    monkeypatch.setattr(repository, "_UPSTREAM_REMOTE", "ajcrew")
     monkeypatch.setattr(runtime, "_run_cmd", fake_run)
     await repository._load_fallback_repos()
     assert repository._FALLBACK_REPOS == []
@@ -233,24 +233,24 @@ async def test_load_fallback_repos_dedupes_multiple_aliases_of_one_repo(monkeypa
 
     async def fake_run(cmd, **kw):
         if cmd[-1] == "remote":
-            return 0, "kirocrew\nold-a\nold-b\n", ""
+            return 0, "ajcrew\nold-a\nold-b\n", ""
         if "--is-ancestor" in cmd:
             # Both aliases' mains are ancestors of upstream's.
             return 0, "", ""
         if "get-url" in cmd:
             remote = cmd[-1]
-            if remote == "kirocrew":
-                return 0, "https://github.com/kirodotdev/KiroCrew.git\n", ""
+            if remote == "ajcrew":
+                return 0, "https://github.com/Al-jwharah/Aj-Crew.git\n", ""
             if remote == "old-a":
-                return 0, "git@github.com:someone/kirocrew-old.git\n", ""
-            return 0, "https://github.com/someone/KiroCrew-Old\n", ""  # same repo, other spelling
+                return 0, "git@github.com:someone/ajcrew-old.git\n", ""
+            return 0, "https://github.com/someone/AjCrew-Old\n", ""  # same repo, other spelling
         return 1, "", "unexpected"
 
     monkeypatch.setattr(repository, "_repo", lambda: "/fake/repo")
-    monkeypatch.setattr(repository, "_UPSTREAM_REMOTE", "kirocrew")
+    monkeypatch.setattr(repository, "_UPSTREAM_REMOTE", "ajcrew")
     monkeypatch.setattr(runtime, "_run_cmd", fake_run)
     await repository._load_fallback_repos()
-    assert repository._FALLBACK_REPOS == ["someone/kirocrew-old"]
+    assert repository._FALLBACK_REPOS == ["someone/ajcrew-old"]
 
 
 @pytest.mark.asyncio
@@ -266,19 +266,19 @@ async def test_load_fallback_repos_skips_same_named_fork(monkeypatch):
 
     async def fake_run(cmd, **kw):
         if cmd[-1] == "remote":
-            return 0, "kirocrew\nfork\n", ""
+            return 0, "ajcrew\nfork\n", ""
         if "--is-ancestor" in cmd:
             return 0, "", ""  # the fork's main has not diverged yet
         if "get-url" in cmd:
             remote = cmd[-1]
-            if remote == "kirocrew":
-                return 0, "https://github.com/kirodotdev/KiroCrew.git\n", ""
+            if remote == "ajcrew":
+                return 0, "https://github.com/Al-jwharah/Aj-Crew.git\n", ""
             # Same repo NAME, different owner — a fork, not a pre-rename repo.
-            return 0, "git@github.com:someone/KiroCrew.git\n", ""
+            return 0, "git@github.com:someone/AjCrew.git\n", ""
         return 1, "", "unexpected"
 
     monkeypatch.setattr(repository, "_repo", lambda: "/fake/repo")
-    monkeypatch.setattr(repository, "_UPSTREAM_REMOTE", "kirocrew")
+    monkeypatch.setattr(repository, "_UPSTREAM_REMOTE", "ajcrew")
     monkeypatch.setattr(runtime, "_run_cmd", fake_run)
     await repository._load_fallback_repos()
     assert repository._FALLBACK_REPOS == []
@@ -294,20 +294,20 @@ async def test_load_fallback_repos_keeps_renamed_repo_alongside_a_fork(monkeypat
 
     async def fake_run(cmd, **kw):
         if cmd[-1] == "remote":
-            return 0, "kirocrew\nfork\nold\n", ""
+            return 0, "ajcrew\nfork\nold\n", ""
         if "--is-ancestor" in cmd:
             return 0, "", ""
         if "get-url" in cmd:
             remote = cmd[-1]
-            if remote == "kirocrew":
-                return 0, "https://github.com/kirodotdev/KiroCrew.git\n", ""
+            if remote == "ajcrew":
+                return 0, "https://github.com/Al-jwharah/Aj-Crew.git\n", ""
             if remote == "fork":
-                return 0, "git@github.com:someone/KiroCrew.git\n", ""
+                return 0, "git@github.com:someone/AjCrew.git\n", ""
             return 0, "git@github.com:kirodotdev/kirocrew-old.git\n", ""
         return 1, "", "unexpected"
 
     monkeypatch.setattr(repository, "_repo", lambda: "/fake/repo")
-    monkeypatch.setattr(repository, "_UPSTREAM_REMOTE", "kirocrew")
+    monkeypatch.setattr(repository, "_UPSTREAM_REMOTE", "ajcrew")
     monkeypatch.setattr(runtime, "_run_cmd", fake_run)
     await repository._load_fallback_repos()
     assert repository._FALLBACK_REPOS == ["kirodotdev/kirocrew-old"]
@@ -315,8 +315,8 @@ async def test_load_fallback_repos_keeps_renamed_repo_alongside_a_fork(monkeypat
 
 def test_normalize_repo_identity_spellings_and_host():
     """Same repo across https/scp/.git spellings is one identity; host matters."""
-    https = repository._normalize_repo_identity("https://github.com/kirodotdev/KiroCrew.git")
-    scp = repository._normalize_repo_identity("git@github.com:KiroDotDev/kirocrew")
+    https = repository._normalize_repo_identity("https://github.com/Al-jwharah/Aj-Crew.git")
+    scp = repository._normalize_repo_identity("git@github.com:Al-jwharah/Aj-Crew")
     assert https == scp == ("github.com", "kirodotdev/kirocrew")
     # Same owner/repo on a different forge is a DISTINCT identity.
     other = repository._normalize_repo_identity("https://gitlab.com/kirodotdev/kirocrew.git")

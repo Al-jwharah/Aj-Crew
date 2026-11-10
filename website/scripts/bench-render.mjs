@@ -33,7 +33,7 @@
 //   --viewport desktop|mobile  --cpu N (CDP throttle during the window)
 //   --why A,B  (classify why each render of these components happened)
 //   --check FILE  --fail-on a,b (counters --check may fail on; default all)
-//   --out DIR (default $KIROCREW_SCRATCH/bench-render or /tmp)
+//   --out DIR (default $AJCREW_SCRATCH/bench-render or /tmp)
 import { chromium, devices } from 'playwright'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -69,7 +69,7 @@ const TICKS = Number(args.ticks || 300)
 const VIEWPORT = args.viewport || 'desktop'
 const CPU = Number(args.cpu || 1)
 const WHY = args.why && args.why !== true ? String(args.why).split(',') : []
-const OUT = resolve(args.out || join(process.env.KIROCREW_SCRATCH || '/tmp', 'bench-render'))
+const OUT = resolve(args.out || join(process.env.AJCREW_SCRATCH || '/tmp', 'bench-render'))
 const SETTLE_MS = Number(process.env.SETTLE_MS || 3000)
 
 for (const s of scenarios) if (!SCENARIOS[s]) throw new Error(`unknown scenario ${s}; one of ${Object.keys(SCENARIOS).join(', ')}`)

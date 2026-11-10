@@ -20,12 +20,12 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew import autonudge
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.crew_log import emit as _emit_module
-from kiro_crew.dashboard import chat_handlers as handlers
-from kiro_crew.monitoring.models import MonitorBudgets, MonitorOutcome
-from kiro_crew.testing.wait import async_wait_until, default_timeout
+from aj_crew import autonudge
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.crew_log import emit as _emit_module
+from aj_crew.dashboard import chat_handlers as handlers
+from aj_crew.monitoring.models import MonitorBudgets, MonitorOutcome
+from aj_crew.testing.wait import async_wait_until, default_timeout
 
 NAME = "chat-1-1785"
 
@@ -113,7 +113,7 @@ async def test_nudge_expiring_during_the_persist_cannot_resurrect(tmp_path, monk
         pytest.fail("close cleanup must snapshot live execution without a disk read")
 
     monkeypatch.setattr(
-        "kiro_crew.execution_context.read_session_execution", refuse_durable_execution_read
+        "aj_crew.execution_context.read_session_execution", refuse_durable_execution_read
     )
 
     # The loop's idle timer is armed and about to expire. Collapsing its delay
@@ -295,7 +295,7 @@ async def test_failed_persist_restores_the_budget_the_timer_reads_as_left(
     The loop is 30 minutes into a 3 hour budget. Read as ``time.time() - created_ts``,
     a 2 hour forward step leaves the replacement 30 minutes instead of 2.5 hours.
     """
-    from kiro_crew.autonudge_service.model import runtime_budget_exceeded
+    from aj_crew.autonudge_service.model import runtime_budget_exceeded
 
     state = _state_with_slot(tmp_path)
     svc = await _service(tmp_path, monkeypatch)
@@ -310,7 +310,7 @@ async def test_failed_persist_restores_the_budget_the_timer_reads_as_left(
         raise RuntimeError("disk wedged")
 
     monkeypatch.setattr(handlers, "save_slot_off_loop", _persist)
-    from kiro_crew.autonudge_service import model, mutations
+    from aj_crew.autonudge_service import model, mutations
 
     # The close path's components read ``time`` through the chat_handlers facade.
     for module in (handlers, model, mutations):
@@ -409,8 +409,8 @@ async def test_a_failed_persist_takes_the_app_dismissal_back(tmp_path, monkeypat
     async def _persist(*_a, **_kw) -> None:
         raise OSError("no space left on device")
 
-    monkeypatch.setattr("kiro_crew.apps.teardown.notify_slot_closed", _told)
-    monkeypatch.setattr("kiro_crew.apps.teardown.notify_slot_close_undone", _undo)
+    monkeypatch.setattr("aj_crew.apps.teardown.notify_slot_closed", _told)
+    monkeypatch.setattr("aj_crew.apps.teardown.notify_slot_close_undone", _undo)
     monkeypatch.setattr(handlers, "save_slot_off_loop", _persist)
 
     resp = await handlers.api_chat_slot_delete(_Req(state, NAME))
@@ -450,7 +450,7 @@ async def test_an_app_that_cannot_be_told_aborts_the_close(tmp_path, monkeypatch
         await original_restore(retired_loop, admission_check)
 
     monkeypatch.setattr(handlers, "save_slot_off_loop", _persist)
-    monkeypatch.setattr("kiro_crew.apps.teardown.notify_slot_closed", _hook_fails)
+    monkeypatch.setattr("aj_crew.apps.teardown.notify_slot_closed", _hook_fails)
     monkeypatch.setattr(handlers, "_restore_slot_nudge_loop", _restore)
 
     resp = await handlers.api_chat_slot_delete(_Req(state, NAME))
@@ -479,7 +479,7 @@ async def test_app_close_retires_a_loop_armed_during_the_close_hook(tmp_path, mo
         await release_hook.wait()
         return True
 
-    monkeypatch.setattr("kiro_crew.apps.teardown.notify_slot_closed", _hook)
+    monkeypatch.setattr("aj_crew.apps.teardown.notify_slot_closed", _hook)
     close = asyncio.create_task(handlers.api_chat_slot_delete(_Req(state, NAME)))
     await hook_entered.wait()
 
@@ -512,7 +512,7 @@ async def test_app_close_waits_for_a_queued_direct_arm(tmp_path, monkeypatch) ->
         await release_hook.wait()
         return True
 
-    monkeypatch.setattr("kiro_crew.apps.teardown.notify_slot_closed", _hook)
+    monkeypatch.setattr("aj_crew.apps.teardown.notify_slot_closed", _hook)
     close = asyncio.create_task(handlers.api_chat_slot_delete(_Req(state, NAME)))
     await hook_entered.wait()
 
@@ -561,7 +561,7 @@ async def test_app_close_retires_the_latest_queued_arm_generation(tmp_path, monk
         await release_hook.wait()
         return True
 
-    monkeypatch.setattr("kiro_crew.apps.teardown.notify_slot_closed", _hook)
+    monkeypatch.setattr("aj_crew.apps.teardown.notify_slot_closed", _hook)
     close = asyncio.create_task(handlers.api_chat_slot_delete(_Req(state, NAME)))
     await hook_entered.wait()
     first = await svc.add(NAME, "first arm", idle_secs=300)
@@ -621,9 +621,9 @@ async def test_a_replacement_armed_during_the_history_write_wait_keeps_its_monit
     tmp_path, monkeypatch, caller
 ) -> None:
     """A close whose slot lost its name during the guarded-write wait retires nothing by key."""
-    from kiro_crew.dashboard import session_control as sc
-    from kiro_crew.dashboard.chat_utils import slot_history_key
-    from kiro_crew.dashboard.slot_retention import _still_idle_check
+    from aj_crew.dashboard import session_control as sc
+    from aj_crew.dashboard.chat_utils import slot_history_key
+    from aj_crew.dashboard.slot_retention import _still_idle_check
 
     # The arm below writes the registry; the wait's ceiling must not end the scenario first.
     monkeypatch.setattr(handlers, "_GUARDED_WRITE_WAIT_SECS", default_timeout())
@@ -683,8 +683,8 @@ async def test_a_replacement_armed_during_the_app_close_hook_keeps_its_monitor(
         undone.append(slot_key)
         return True
 
-    monkeypatch.setattr("kiro_crew.apps.teardown.notify_slot_closed", _hook)
-    monkeypatch.setattr("kiro_crew.apps.teardown.notify_slot_close_undone", _undo)
+    monkeypatch.setattr("aj_crew.apps.teardown.notify_slot_closed", _hook)
+    monkeypatch.setattr("aj_crew.apps.teardown.notify_slot_close_undone", _undo)
     close = asyncio.create_task(handlers.api_chat_slot_delete(_Req(state, NAME)))
     try:
         await async_wait_until(hook_entered.is_set)
@@ -873,11 +873,11 @@ async def test_a_deliberate_close_emits_a_removed_crew_log_edge(tmp_path, monkey
         if on_settled is not None:
             on_settled(True)
 
-    with patch("kiro_crew.crew_log.emit.on_session_closed", side_effect=_emit) as on_closed:
+    with patch("aj_crew.crew_log.emit.on_session_closed", side_effect=_emit) as on_closed:
         resp = await handlers.api_chat_slot_delete(_Req(state, NAME))
 
     assert resp.status == 200
-    from kiro_crew.metrics.sessions import END_REASON_REMOVED
+    from aj_crew.metrics.sessions import END_REASON_REMOVED
 
     on_closed.assert_called_once()
     args, kwargs = on_closed.call_args
@@ -896,7 +896,7 @@ async def test_a_deliberate_close_with_no_mapped_sid_emits_nothing(tmp_path, mon
     state = _state_with_slot(tmp_path)
     state.sessions.mapped_sid = lambda _key: ""
 
-    with patch("kiro_crew.crew_log.emit.on_session_closed") as on_closed:
+    with patch("aj_crew.crew_log.emit.on_session_closed") as on_closed:
         resp = await handlers.api_chat_slot_delete(_Req(state, NAME))
 
     assert resp.status == 200
@@ -935,8 +935,8 @@ async def test_a_deliberate_close_commits_the_removed_edge_before_waking_the_con
         _record_settle(result)
         return result
 
-    with patch("kiro_crew.crew_log.emit.on_session_closed", side_effect=_emit):
-        with patch("kiro_crew.crew_log.emit.awaiting_commit", side_effect=_traced_awaiting):
+    with patch("aj_crew.crew_log.emit.on_session_closed", side_effect=_emit):
+        with patch("aj_crew.crew_log.emit.awaiting_commit", side_effect=_traced_awaiting):
             resp = await handlers.api_chat_slot_delete(_Req(state, NAME))
 
     assert resp.status == 200
@@ -963,7 +963,7 @@ async def test_a_deliberate_close_still_succeeds_when_the_removed_edge_write_is_
         if on_settled is not None:
             on_settled(False)  # writer dropped it
 
-    with patch("kiro_crew.crew_log.emit.on_session_closed", side_effect=_emit):
+    with patch("aj_crew.crew_log.emit.on_session_closed", side_effect=_emit):
         resp = await handlers.api_chat_slot_delete(_Req(state, NAME))
 
     assert resp.status == 200

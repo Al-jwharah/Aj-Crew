@@ -26,15 +26,15 @@ import { json } from './lib/boot-api.mjs'
 import { serveDist, DEFAULT_DIST } from './lib/serve-dist.mjs'
 import { stubDashboardApi, logPageProblems } from './lib/stub-dashboard-api.mjs'
 
-const OUT = process.argv[2] || join(process.env.KIROCREW_SCRATCH || '/tmp', 'switcher-unread-column')
+const OUT = process.argv[2] || join(process.env.AJCREW_SCRATCH || '/tmp', 'switcher-unread-column')
 const DIST = process.argv[3] ? resolve(process.argv[3]) : DEFAULT_DIST
 mkdirSync(OUT, { recursive: true })
 
 const now = Math.floor(Date.now() / 1000)
 const member = (name, display, secsAgo, last, extra = {}) => ({
   name, slug: name, display_name: display, bound: true, slot_key: `member-${name}`, running: false,
-  kiro_agent: 'kirocrew', workspace: '/srv/repos/kirocrew', memory_store: `member-${name}`,
-  memory_version: 2, memory_owner: name, model: '', source: 'kirocrew',
+  kiro_agent: 'ajcrew', workspace: '/srv/repos/ajcrew', memory_store: `member-${name}`,
+  memory_version: 2, memory_owner: name, model: '', source: 'ajcrew',
   has_dm_message: true, dashboard_created: true, last_active_ts: now - secsAgo, last_message: last, ...extra,
 })
 const MEMBERS = [
@@ -55,7 +55,7 @@ const iso = (secsAgo) => new Date((now - secsAgo) * 1000).toISOString()
 const SLOTS = MEMBERS.map((m) => ({
   key: m.slot_key, title: m.display_name, mode: 'member',
   created: iso(86400), last_ts: iso(now - m.last_active_ts), running: !!m.running,
-  project: '/srv/repos/kirocrew', agent: m.name,
+  project: '/srv/repos/ajcrew', agent: m.name,
 }))
 
 const extra = async (path, route) => {

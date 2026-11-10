@@ -36,7 +36,7 @@ const folders = [
 
 const NOW = Date.now()
 const slot = (key, title, folder_id, last_ts, running = false) => ({
-  key, title, messages: 4, running, agent: 'kirocrew',
+  key, title, messages: 4, running, agent: 'ajcrew',
   created: '2026-07-20T01:00:00Z',
   // Re-base the fixture dates onto "now" (keeping their order) so the rows
   // render instead of folding into the dormant-sessions expander.

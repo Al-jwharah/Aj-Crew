@@ -13,15 +13,15 @@ from pathlib import Path, PurePosixPath
 
 import pytest
 
-from kiro_crew.agent_sdk import host_auth
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_OPENCODE, ACP_BACKENDS_KNOWN
-from kiro_crew.agent_sdk.native_allow_stores import (
+from aj_crew.agent_sdk import host_auth
+from aj_crew.agent_sdk.backends import ACP_BACKEND_OPENCODE, ACP_BACKENDS_KNOWN
+from aj_crew.agent_sdk.native_allow_stores import (
     NATIVE_ALLOW_STORES,
     NATIVE_ALLOW_STORES_NONE,
     PROJECT_ALLOW_STORES,
     NativeAllowStore,
 )
-from kiro_crew.security import (
+from aj_crew.security import (
     is_sensitive_path,
     is_sensitive_write_path,
     write_protected_home_paths,
@@ -112,7 +112,7 @@ def test_a_project_claude_settings_file_is_refused_in_any_directory(
 
 def test_agent_env_refuses_every_variable_that_moves_a_store() -> None:
     # A store moved for the child alone would sit outside the gate's anchors.
-    from kiro_crew.config.sections_agent_env import agent_env_refusal
+    from aj_crew.config.sections_agent_env import agent_env_refusal
 
     for store in (s for stores in NATIVE_ALLOW_STORES.values() for s in stores):
         for env, _ in store.overrides:

@@ -8,7 +8,7 @@ import json
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.cloud import aws, iam
+from aj_crew.cloud import aws, iam
 
 # The interactive Session Manager documents AWS ships today. These are the concrete
 # sample DenyStartSessionOutsideTheLane's inversion is measured against: none of them
@@ -75,14 +75,14 @@ class TestPolicyDocument:
             "cloudformation:ExecuteChangeSet",
             "cloudformation:DescribeChangeSet",
             "cloudformation:DeleteChangeSet",
-            # `kirocrew cloud list` discovers instances via the tagging API.
+            # `ajcrew cloud list` discovers instances via the tagging API.
             "tag:GetResources",
         ):
             assert needed in actions, f"missing {needed}"
 
     def test_passrole_scoped_to_role_path_and_ec2(self):
         st = next(s for s in iam.policy_document()["Statement"] if s["Sid"] == "IamPassRoleToEc2")
-        assert st["Resource"] == "arn:aws:iam::*:role/kirocrew-ec2/kirocrew-ec2-*"
+        assert st["Resource"] == "arn:aws:iam::*:role/ajcrew-ec2/ajcrew-ec2-*"
         assert st["Resource"] == iam.INSTANCE_ROLE_ARN
         assert st["Condition"]["StringEquals"]["iam:PassedToService"] == "ec2.amazonaws.com"
 
@@ -96,7 +96,7 @@ class TestPolicyDocument:
 
     def test_root_path_role_can_be_neither_created_nor_passed(self):
         # The path replaces the PassRole tag gate: a pre-existing root-path
-        # kirocrew-ec2-* role must match no CreateRole, PassRole, PutRolePolicy
+        # ajcrew-ec2-* role must match no CreateRole, PassRole, PutRolePolicy
         # or TagRole resource.
         for st in iam.policy_document()["Statement"]:
             actions = set(st["Action"])
@@ -108,10 +108,10 @@ class TestPolicyDocument:
     def test_template_puts_instance_role_under_role_path(self):
         import pathlib
 
-        import kiro_crew.cloud as cloud_pkg
+        import aj_crew.cloud as cloud_pkg
 
         text = (
-            pathlib.Path(cloud_pkg.__file__).parent / "templates" / "kirocrew-ec2.yaml"
+            pathlib.Path(cloud_pkg.__file__).parent / "templates" / "ajcrew-ec2.yaml"
         ).read_text(encoding="utf-8")
         role = text.split("  InstanceRole:\n", 1)[1].split("\n  InstanceProfile:", 1)[0]
         assert f"      Path: {iam.ROLE_PATH}\n" in role
@@ -135,9 +135,9 @@ class TestPolicyDocument:
         ],
     )
     def test_the_role_policy_statement_is_tag_scoped(self):
-        # PutRolePolicy and TagRole are both gated on aws:ResourceTag/kirocrew:managed=true,
+        # PutRolePolicy and TagRole are both gated on aws:ResourceTag/ajcrew:managed=true,
         # so a leaked credential cannot inline a policy onto, or tag as managed, a
-        # pre-existing unbounded kirocrew-ec2-* role. CreateRole tags atomically, so the
+        # pre-existing unbounded ajcrew-ec2-* role. CreateRole tags atomically, so the
         # CFN deploy still passes (validated live).
         st = next(
             s
@@ -154,7 +154,7 @@ class TestPolicyDocument:
         assert "iam:PermissionsBoundary" not in str(st["Condition"])
 
     def test_put_role_policy_not_tag_scoped_regression(self):
-        # Guard: PutRolePolicy on a kirocrew-ec2-* role ARN must carry the
+        # Guard: PutRolePolicy on a ajcrew-ec2-* role ARN must carry the
         # managed-tag condition — a regression that drops it re-opens the
         # pre-existing-unbounded-role escalation. PutRolePolicy lives in the
         # merged IamPutRolePolicyAndTagRoleOnManaged statement.
@@ -163,18 +163,18 @@ class TestPolicyDocument:
         se = st.get("Condition", {}).get("StringEquals", {})
         assert (
             se.get(f"aws:ResourceTag/{iam.MANAGED_TAG_KEY}") == "true"
-        ), f"{sid} lost its aws:ResourceTag/kirocrew:managed gate"
+        ), f"{sid} lost its aws:ResourceTag/ajcrew:managed gate"
 
     def test_tag_role_not_unconditioned_anywhere(self):
         # Guard: iam:TagRole must NOT appear in any statement WITHOUT the
-        # aws:ResourceTag/kirocrew:managed=true gate — an unconditioned TagRole
+        # aws:ResourceTag/ajcrew:managed=true gate — an unconditioned TagRole
         # (e.g. re-added to IamRoleForInstance) re-opens the tag-spoofing hole.
         for st in iam.policy_document()["Statement"]:
             if "iam:TagRole" in st.get("Action", []):
                 se = st.get("Condition", {}).get("StringEquals", {})
                 assert se.get(f"aws:ResourceTag/{iam.MANAGED_TAG_KEY}") == "true", (
                     f"{st['Sid']} grants iam:TagRole without the "
-                    "aws:ResourceTag/kirocrew:managed=true gate"
+                    "aws:ResourceTag/ajcrew:managed=true gate"
                 )
         # And specifically not in the plain role-management statement.
         base = next(
@@ -182,12 +182,12 @@ class TestPolicyDocument:
         )
         assert "iam:TagRole" not in base["Action"]
 
-    def test_cloudformation_mutation_scoped_to_kirocrew_stacks(self):
+    def test_cloudformation_mutation_scoped_to_ajcrew_stacks(self):
         st = next(
             s for s in iam.policy_document()["Statement"] if s["Sid"] == "CloudFormationStackMutate"
         )
         assert "cloudformation:DeleteStack" in st["Action"]
-        # scoped to kirocrew-* stacks, not "*"
+        # scoped to ajcrew-* stacks, not "*"
         assert st["Resource"] == f"arn:aws:cloudformation:*:*:stack/{iam.STACK_PREFIX}*/*"
         # read-only enumerate/validate stays account-wide (can't be stack-scoped);
         # it now lives in the merged CloudFormationAndResourceDiscovery statement.
@@ -202,7 +202,7 @@ class TestPolicyDocument:
         # `aws cloudformation deploy` authorizes change-set verbs on the
         # changeSet ARN (not just the stack ARN) — scoping to stack/* only would
         # deny the launch under the generated policy. Both ARN forms must be
-        # present, still kirocrew-*-scoped.
+        # present, still ajcrew-*-scoped.
         st = next(
             s for s in iam.policy_document()["Statement"] if s["Sid"] == "CloudFormationChangeSet"
         )
@@ -216,16 +216,16 @@ class TestPolicyDocument:
         res = st["Resource"]
         assert any("changeSet/" in r for r in res), "changeSet ARN missing"
         assert any(":stack/" in r for r in res), "stack ARN missing"
-        assert all(iam.STACK_PREFIX in r for r in res)  # all kirocrew-*-scoped
+        assert all(iam.STACK_PREFIX in r for r in res)  # all ajcrew-*-scoped
 
     def test_stack_prefix_matches_ec2(self):
-        from kiro_crew.cloud import ec2
+        from aj_crew.cloud import ec2
 
         assert iam.STACK_PREFIX == ec2.STACK_PREFIX
 
     def test_create_role_requires_boundary_with_arnlike(self):
         # iam:CreateRole is the boundary enforcement point: a created
-        # kirocrew-ec2-* role MUST carry our permissions boundary. The condition
+        # ajcrew-ec2-* role MUST carry our permissions boundary. The condition
         # MUST be ArnLike (not StringEquals) — the value is a wildcard ARN pattern
         # (account id is `*`) and StringEquals would literal-match and DENY
         # CreateRole for anyone using the generated policy. The boundary name is
@@ -246,7 +246,7 @@ class TestPolicyDocument:
 
     def test_put_role_policy_scoped_no_dead_boundary_condition(self):
         # PutRolePolicy is a SEPARATE statement scoped to the role ARN prefix. It
-        # carries the aws:ResourceTag/kirocrew:managed gate (see
+        # carries the aws:ResourceTag/ajcrew:managed gate (see
         # test_put_role_policy_is_tag_scoped) but must NOT carry an
         # iam:PermissionsBoundary condition — that key isn't in PutRolePolicy's
         # request context, so it would never match and DENY the call. The boundary
@@ -305,7 +305,7 @@ class TestPolicyDocument:
         assert isinstance(resources, list), resources
         assert f"arn:aws:iam::*:policy/{iam.BOUNDARY_NAME}" in resources
         # No glob character anywhere in the policy NAME of ANY resource in the grant
-        # (a `*`, `kirocrew-*` or `kirocrew-ec2-*` name would let CreatePolicy target
+        # (a `*`, `ajcrew-*` or `ajcrew-ec2-*` name would let CreatePolicy target
         # other, e.g. permissive, boundary-prefixed names). The account segment may
         # be `*`; only what follows `policy/` is the name.
         for resource in resources:
@@ -339,10 +339,10 @@ class TestPolicyDocument:
         # The boundary is a single shared account-level policy with a FIXED name —
         # no per-StackTag suffix — so its content is identical for every launch
         # and it can be created once and reused immutably.
-        assert iam.BOUNDARY_NAME == "kirocrew-ec2-boundary"
+        assert iam.BOUNDARY_NAME == "ajcrew-ec2-boundary"
         assert not iam.BOUNDARY_NAME.endswith("-")  # not a prefix awaiting a suffix
         assert iam.boundary_arn("123456789012") == (
-            "arn:aws:iam::123456789012:policy/kirocrew-ec2-boundary"
+            "arn:aws:iam::123456789012:policy/ajcrew-ec2-boundary"
         )
 
     def test_boundary_document_shape(self):
@@ -364,12 +364,12 @@ class TestPolicyDocument:
             assert act in ssm_core["Action"]
         s3 = next(s for s in doc["Statement"] if s["Sid"] == "SourceBucketRead")
         assert s3["Action"] == ["s3:GetObject"]
-        assert s3["Resource"] == "arn:aws:s3:::kirocrew-src-123456789012-*/*"
+        assert s3["Resource"] == "arn:aws:s3:::ajcrew-src-123456789012-*/*"
         # roundtrips as JSON
         assert json.loads(iam.boundary_policy_json("123456789012")) == doc
 
     def test_authorize_security_group_is_tag_gated(self):
-        # SG rule mutation must be gated to kirocrew:managed=true SGs so a leaked
+        # SG rule mutation must be gated to ajcrew:managed=true SGs so a leaked
         # credential can't open ingress on unrelated security groups. It lives in
         # the merged Ec2ManagedResourceMutateTagged statement (same Effect +
         # Resource "*" + managed-tag Condition as the destructive/lifecycle verbs).
@@ -412,7 +412,7 @@ class TestPolicyDocument:
         assert "ec2:AuthorizeSecurityGroupIngress" not in prov_actions
 
     def test_run_instances_request_tag_gated_on_instance_only(self):
-        # ec2:RunInstances must require aws:RequestTag/kirocrew:managed=true, but
+        # ec2:RunInstances must require aws:RequestTag/ajcrew:managed=true, but
         # ONLY on the instance ARN — RunInstances authorizes per-resource across
         # the instance it creates AND the volume/ENI it creates + the referenced
         # image/subnet/security-group, none of which carry the request tag; a
@@ -487,7 +487,7 @@ class TestPolicyDocument:
         return next(s for s in iam.policy_document()["Statement"] if s["Sid"] == sid)
 
     def test_ssm_session_and_sendcommand_gated_to_managed_instances(self):
-        # The RCE-adjacent verbs must be tag-scoped to KiroCrew instances so a
+        # The RCE-adjacent verbs must be tag-scoped to AjCrew instances so a
         # leaked launcher credential can't run commands account-wide.
         st = self._stmt("SsmSessionOnManagedInstances")
         assert set(st["Action"]) == {"ssm:StartSession", "ssm:SendCommand"}
@@ -534,7 +534,7 @@ class TestPolicyDocument:
 
     def test_create_tags_only_on_create(self):
         # ec2:CreateTags must be gated by ec2:CreateAction so a leaked credential
-        # can't tag arbitrary existing resources as kirocrew:managed=true and
+        # can't tag arbitrary existing resources as ajcrew:managed=true and
         # bring them under the tag-gated Stop/Terminate/Delete statements.
         st = self._stmt("Ec2TagOnCreate")
         assert st["Action"] == ["ec2:CreateTags"]
@@ -556,7 +556,7 @@ class TestPolicyDocument:
     def test_attach_role_policy_pinned_to_ssm_core(self):
         # AttachRolePolicy must be constrained by iam:PolicyARN to exactly the
         # SSM-core managed policy, else a holder could attach AdministratorAccess
-        # to a kirocrew-ec2-* role and pass it to EC2 (full escalation).
+        # to a ajcrew-ec2-* role and pass it to EC2 (full escalation).
         st = self._stmt("IamAttachManagedPolicyForInstance")
         assert set(st["Action"]) == {"iam:AttachRolePolicy", "iam:DetachRolePolicy"}
         pinned = st["Condition"]["ArnEquals"]["iam:PolicyARN"]
@@ -666,25 +666,25 @@ class TestPolicyDocument:
         assert json.loads(iam.policy_json()) == iam.policy_document()
 
 
-_TAG_COND = json.dumps({"StringEquals": {"aws:ResourceTag/kirocrew:managed": "true"}})
+_TAG_COND = json.dumps({"StringEquals": {"aws:ResourceTag/ajcrew:managed": "true"}})
 _BOUNDARY_COND = json.dumps(
-    {"ArnLike": {"iam:PermissionsBoundary": "arn:aws:iam::*:policy/kirocrew-ec2-boundary"}}
+    {"ArnLike": {"iam:PermissionsBoundary": "arn:aws:iam::*:policy/ajcrew-ec2-boundary"}}
 )
 _BOUNDARY_OR_KMS_COND = json.dumps(
     {
         "ArnLike": {
             "iam:PermissionsBoundary": [
-                "arn:aws:iam::*:policy/kirocrew-ec2-boundary",
-                "arn:aws:iam::*:policy/kirocrew-ec2-kms-boundary",
+                "arn:aws:iam::*:policy/ajcrew-ec2-boundary",
+                "arn:aws:iam::*:policy/ajcrew-ec2-kms-boundary",
             ]
         }
     }
 )
-_KMS_BOUNDARY_POLICY = "arn:aws:iam::*:policy/kirocrew-ec2-kms-boundary"
+_KMS_BOUNDARY_POLICY = "arn:aws:iam::*:policy/ajcrew-ec2-kms-boundary"
 _SSM_CORE_COND = json.dumps(
     {"ArnEquals": {"iam:PolicyARN": "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"}}
 )
-_ROOT_ROLE = "arn:aws:iam::*:role/kirocrew-ec2-*"
+_ROOT_ROLE = "arn:aws:iam::*:role/ajcrew-ec2-*"
 _EC2_DESCRIBES_REPLACED = (
     "ec2:DescribeInstances",
     "ec2:DescribeInstanceStatus",
@@ -697,7 +697,7 @@ _EC2_DESCRIBES_REPLACED = (
     "ec2:DescribeAvailabilityZones",
     "ec2:DescribeInstanceTypeOfferings",
 )
-_PATH_ROLE = "arn:aws:iam::*:role/kirocrew-ec2/kirocrew-ec2-*"
+_PATH_ROLE = "arn:aws:iam::*:role/ajcrew-ec2/ajcrew-ec2-*"
 _ROLE_MGMT_VERBS = (
     "iam:DeleteRole",
     "iam:GetRole",
@@ -723,7 +723,7 @@ _ROLE_MGMT_VERBS = (
 #  * Role management and the SSM-core attach/detach gain ROLE_PATH beside the
 #    root-path prefix, which stays so pre-path stacks can still be destroyed.
 #  * CreateRole accepts exactly two boundary names, and the launcher may read
-#    (never create) the opt-in kirocrew-ec2-kms-boundary.
+#    (never create) the opt-in ajcrew-ec2-kms-boundary.
 EXPECTED_PERMISSION_DELTA_REMOVED = {
     *(("Allow", a, "Resource", "*", "null") for a in _EC2_DESCRIBES_REPLACED),
     ("Allow", "iam:CreateRole", "Resource", _ROOT_ROLE, _BOUNDARY_COND),
@@ -738,7 +738,7 @@ EXPECTED_PERMISSION_DELTA_REMOVED = {
             {
                 "ArnLike": {"iam:AssociatedResourceArn": "arn:aws:ec2:*:*:instance/*"},
                 "StringEquals": {
-                    "aws:ResourceTag/kirocrew:managed": "true",
+                    "aws:ResourceTag/ajcrew:managed": "true",
                     "iam:PassedToService": "ec2.amazonaws.com",
                 },
             }
@@ -755,7 +755,7 @@ EXPECTED_PERMISSION_DELTA_ADDED = {
         "ec2:DescribeInstanceAttribute",
         "Resource",
         "*",
-        json.dumps({"StringNotEquals": {"aws:ResourceTag/kirocrew:managed": "true"}}),
+        json.dumps({"StringNotEquals": {"aws:ResourceTag/ajcrew:managed": "true"}}),
     ),
     ("Deny", "ec2:DescribeLaunchTemplateVersions", "Resource", "*", "null"),
     ("Deny", "ec2:DescribeSpot*Requests", "Resource", "*", "null"),
@@ -918,14 +918,14 @@ class TestReachabilityCheck:
 class TestAgentDenyListForCloudVerbs:
     """The cloud teardown/provision verbs are human-only; the agent must be
     blocked from the destructive AWS CLI strings. That block is enforced at
-    KiroCrew's own PreToolUse gate (``security.is_denied`` via the ported
+    AjCrew's own PreToolUse gate (``security.is_denied`` via the ported
     ``BUILTIN_DENIED_RULES``), NOT by injecting ``deniedCommands`` into the
     kiro agent config (that path is retired) — guard it so the guarantee can't
     silently regress."""
 
     @staticmethod
     def _denied(cmd: str) -> bool:
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         return is_denied(cmd) is not None
 
@@ -989,17 +989,17 @@ class TestAgentDenyListForCloudVerbs:
         # provision path, not just the destructive verbs. READ/discovery stays
         # allowed.
         must_deny = [
-            "aws cloudformation deploy --template-file t --stack-name kirocrew-x",
+            "aws cloudformation deploy --template-file t --stack-name ajcrew-x",
             "aws --profile dev cloudformation create-stack --stack-name x",
             "aws cloudformation execute-change-set --change-set-name c",
             "aws ec2 run-instances --image-id ami-1",
             "aws --region us-east-1 ec2 create-security-group --group-name g",
             "aws ec2 authorize-security-group-ingress --group-id sg-1",
-            "aws iam create-role --role-name kirocrew-ec2-x",
+            "aws iam create-role --role-name ajcrew-ec2-x",
             "aws iam put-role-policy --role-name r --policy-name p --policy-document {}",
             "aws iam attach-role-policy --role-name r --policy-arn a",
             "aws --profile p iam create-instance-profile --instance-profile-name p",
-            "aws iam create-policy --policy-name kirocrew-ec2-boundary --policy-document {}",
+            "aws iam create-policy --policy-name ajcrew-ec2-boundary --policy-document {}",
             "aws iam create-policy-version --policy-arn a --policy-document {}",
         ]
         still_allowed = [
@@ -1017,7 +1017,7 @@ class TestAgentDenyListForCloudVerbs:
             assert not self._denied(cmd), f"read-only call wrongly denied: {cmd!r}"
 
     def test_s3api_write_verbs_denied(self):
-        # The launcher IAM grants s3:PutObject to kirocrew-src-* buckets; if the
+        # The launcher IAM grants s3:PutObject to ajcrew-src-* buckets; if the
         # agent shell can reach the low-level `aws s3api put-object` (or the
         # multipart / copy / bucket-policy verbs), it has a data-exfiltration
         # path that the high-level `aws s3 cp` denies don't cover. Block the whole
@@ -1041,22 +1041,22 @@ class TestAgentDenyListForCloudVerbs:
         for cmd in still_allowed:
             assert not self._denied(cmd), f"s3api read wrongly denied: {cmd!r}"
 
-    def test_kirocrew_cloud_wrapper_denied(self):
-        # `kirocrew cloud destroy` is a wrapper that internally runs
+    def test_ajcrew_cloud_wrapper_denied(self):
+        # `ajcrew cloud destroy` is a wrapper that internally runs
         # `aws cloudformation delete-stack`; the gate only sees the wrapper
         # string, so it must be blocked in its own right or the agent bypasses
         # the raw-CLI teardown block.
         for cmd in (
-            "kirocrew cloud destroy --yes --tag kc-1",
-            "kirocrew cloud stop",
-            "kiro-crew cloud launch",
-            "kirocrew cloud connect",  # mints/prints a dashboard token
-            "kirocrew cloud tunnel",
-            "kirocrew cloud login",
+            "ajcrew cloud destroy --yes --tag kc-1",
+            "ajcrew cloud stop",
+            "aj-crew cloud launch",
+            "ajcrew cloud connect",  # mints/prints a dashboard token
+            "ajcrew cloud tunnel",
+            "ajcrew cloud login",
         ):
-            assert self._denied(cmd), f"kirocrew cloud wrapper not denied: {cmd!r}"
+            assert self._denied(cmd), f"ajcrew cloud wrapper not denied: {cmd!r}"
         # read-only observation stays allowed
-        for allowed in ("kirocrew cloud list", "kirocrew cloud status"):
+        for allowed in ("ajcrew cloud list", "ajcrew cloud status"):
             assert not self._denied(allowed), f"read-only wrongly denied: {allowed!r}"
 
 
@@ -1083,10 +1083,10 @@ class TestFargateSessionGrants:
         """
         statement = self._by_sid("SsmSessionOnCrewTasks")
         assert statement["Effect"] == "Allow"
-        assert statement["Resource"] == "arn:aws:ecs:*:*:task/kirocrew-crew-*/*"
+        assert statement["Resource"] == "arn:aws:ecs:*:*:task/ajcrew-crew-*/*"
         # Scoped to the crew clusters this launcher creates, not to every task in the account.
         assert statement["Resource"] != "arn:aws:ecs:*:*:task/*/*"
-        assert "task/kirocrew-crew-" in statement["Resource"]
+        assert "task/ajcrew-crew-" in statement["Resource"]
 
     def test_that_statement_grants_no_send_command(self):
         """SendCommand on a task would be a permission with no reachable use.
@@ -1110,7 +1110,7 @@ class TestFargateSessionGrants:
         assert set(statement["NotResource"]) == {
             "arn:aws:ssm:*::document/AWS-StartPortForwardingSession",
             "arn:aws:ec2:*:*:instance/*",
-            "arn:aws:ecs:*:*:task/kirocrew-crew-*/*",
+            "arn:aws:ecs:*:*:task/ajcrew-crew-*/*",
             "arn:aws:ssm:*:*:session/*",
         }, statement["NotResource"]
         assert len(statement["NotResource"]) == 4, "a duplicate would pass the set check"
@@ -1261,13 +1261,13 @@ class TestCrewPermissionsBoundary:
 
     def test_the_boundary_arn_names_the_pinned_policy(self):
         arn = iam.crew_boundary_arn("123456789012")
-        assert arn == "arn:aws:iam::123456789012:policy/kirocrew-crew-boundary"
-        assert iam.CREW_BOUNDARY_NAME == "kirocrew-crew-boundary"
+        assert arn == "arn:aws:iam::123456789012:policy/ajcrew-crew-boundary"
+        assert iam.CREW_BOUNDARY_NAME == "ajcrew-crew-boundary"
 
     def test_the_create_once_grant_names_both_boundaries_exactly(self):
         """Three exact names and create-once verbs, never a prefix.
 
-        ``policy/kirocrew-*`` would let a leaked credential author and attach any such
+        ``policy/ajcrew-*`` would let a leaked credential author and attach any such
         policy. The opt-in KMS-session boundary is absent: the launcher only reads it.
         """
         statement = next(
@@ -1282,7 +1282,7 @@ class TestCrewPermissionsBoundary:
         }, statement["Resource"]
         assert len(statement["Resource"]) == 3, "a duplicate would pass the set check"
         for resource in statement["Resource"]:
-            assert not resource.endswith("kirocrew-*"), resource
+            assert not resource.endswith("ajcrew-*"), resource
         assert set(statement["Action"]) == {
             "iam:CreatePolicy",
             "iam:GetPolicy",
@@ -1299,14 +1299,14 @@ class TestCrewPermissionsBoundary:
     def test_the_template_parameter_pins_this_exact_policy_name(self):
         """The template and this module must not drift on the boundary's name.
 
-        ``kirocrew-fargate-crew.yaml`` accepts only an ARN ending in this policy
+        ``ajcrew-fargate-crew.yaml`` accepts only an ARN ending in this policy
         name, so a rename here without a matching edit there would produce a
         boundary nothing can reference.
         """
         from pathlib import Path
 
         template = (
-            Path(iam.__file__).resolve().parent / "templates" / "kirocrew-fargate-crew.yaml"
+            Path(iam.__file__).resolve().parent / "templates" / "ajcrew-fargate-crew.yaml"
         ).read_text(encoding="utf-8")
         assert f"policy/{iam.CREW_BOUNDARY_NAME}$" in template
 
@@ -1356,14 +1356,14 @@ class TestCrewExecutionBoundary:
 
     def test_the_boundary_arn_names_the_pinned_policy(self):
         arn = iam.crew_exec_boundary_arn("123456789012")
-        assert arn == "arn:aws:iam::123456789012:policy/kirocrew-crew-exec-boundary"
-        assert iam.CREW_EXEC_BOUNDARY_NAME == "kirocrew-crew-exec-boundary"
+        assert arn == "arn:aws:iam::123456789012:policy/ajcrew-crew-exec-boundary"
+        assert iam.CREW_EXEC_BOUNDARY_NAME == "ajcrew-crew-exec-boundary"
         assert iam.CREW_EXEC_BOUNDARY_NAME != iam.CREW_BOUNDARY_NAME
 
     def test_the_template_parameter_pins_this_exact_policy_name(self):
         from pathlib import Path
 
         template = (
-            Path(iam.__file__).resolve().parent / "templates" / "kirocrew-fargate-crew.yaml"
+            Path(iam.__file__).resolve().parent / "templates" / "ajcrew-fargate-crew.yaml"
         ).read_text(encoding="utf-8")
         assert f"policy/{iam.CREW_EXEC_BOUNDARY_NAME}$" in template

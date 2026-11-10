@@ -16,8 +16,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew import platform_compat, sandbox_plan
-from kiro_crew.subagent import SubagentManager, validate_cwd
+from aj_crew import platform_compat, sandbox_plan
+from aj_crew.subagent import SubagentManager, validate_cwd
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -226,7 +226,7 @@ class TestSpawnCwd:
             ctx_builder=_mock_ctx_builder_auto_spawn(),
         )
         await manager.wait_taskq_ready()
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = manager.spawn("t")
         assert info is not None
         assert info.cwd == ""
@@ -249,9 +249,9 @@ class TestSpawnCwd:
         mock_cfg.agent.spawn_min_memory_gb = 0
         mock_cfg.agent.subagent_cwd_allowed_roots = [str(tmp_path)]
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent.KiroCrewConfig.load", return_value=mock_cfg),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent.AjCrewConfig.load", return_value=mock_cfg),
         ):
             info = manager.spawn("t", cwd=str(project))
 
@@ -282,9 +282,9 @@ class TestSpawnCwd:
 
         sel_mock = MagicMock()
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel", return_value=sel_mock),
-            patch("kiro_crew.subagent.KiroCrewConfig.load", return_value=mock_cfg),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel", return_value=sel_mock),
+            patch("aj_crew.subagent.AjCrewConfig.load", return_value=mock_cfg),
         ):
             info = manager.spawn("t", cwd="/etc")
 
@@ -318,9 +318,9 @@ class TestSpawnCwd:
         mock_cfg.agent.spawn_min_memory_gb = 0
         mock_cfg.agent.subagent_cwd_allowed_roots = []
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent.KiroCrewConfig.load", return_value=mock_cfg),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent.AjCrewConfig.load", return_value=mock_cfg),
         ):
             info = manager.spawn("t", cwd=str(project))
         assert info is not None
@@ -351,9 +351,9 @@ class TestSpawnCwd:
         mock_cfg.agent.spawn_min_memory_gb = 0
         mock_cfg.agent.subagent_cwd_allowed_roots = [str(tmp_path)]
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent.KiroCrewConfig.load", return_value=mock_cfg),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent.AjCrewConfig.load", return_value=mock_cfg),
         ):
             info = manager.spawn("t", cwd=str(project))
 
@@ -390,10 +390,10 @@ class TestSpawnCwd:
         mock_cfg = MagicMock()
         mock_cfg.agent.spawn_min_memory_gb = 0
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent._vet_spawn_governance", return_value=None),
-            patch("kiro_crew.subagent.KiroCrewConfig.load", return_value=mock_cfg),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent._vet_spawn_governance", return_value=None),
+            patch("aj_crew.subagent.AjCrewConfig.load", return_value=mock_cfg),
         ):
             info = manager.spawn(
                 "t",
@@ -413,7 +413,7 @@ class TestSpawnCwd:
         self,
         tmp_path: Path,
     ) -> None:
-        """If KiroCrewConfig.load raises, reject cwd (fail-closed).
+        """If AjCrewConfig.load raises, reject cwd (fail-closed).
 
         Defaulting to the permissive ``["~/workspace"]`` would silently
         re-enable the feature for admins who explicitly disabled it with
@@ -427,10 +427,10 @@ class TestSpawnCwd:
         )
         await manager.wait_taskq_ready()
         load_mock = patch(
-            "kiro_crew.subagent.KiroCrewConfig.load",
+            "aj_crew.subagent.AjCrewConfig.load",
             side_effect=OSError("config unreadable"),
         )
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"), load_mock:
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"), load_mock:
             info = manager.spawn("t", cwd=str(project))
 
         assert info is not None

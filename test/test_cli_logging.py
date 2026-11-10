@@ -25,9 +25,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew.cli as cli_mod
+import aj_crew.cli as cli_mod
 from conftest import requires_symlinks
-from kiro_crew.cli import (
+from aj_crew.cli import (
     _CliLogQueueHandler,
     _fd_targets_file,
     _FdTrackingRotatingFileHandler,
@@ -36,12 +36,12 @@ from kiro_crew.cli import (
     _stop_log_queue_listener,
     drain_log_queue_before_hard_exit,
 )
-from kiro_crew.cli_log_files import boot_log_dir, boot_log_paths, older_boot_logs
-from kiro_crew.cli_logging import _chat_console_filter
-from kiro_crew.cli_logging import _fd_is_regular_file as _real_fd_is_regular_file
-from kiro_crew.cli_logging import _rotate_boot_logs, _start_gateway_log_after_lock
-from kiro_crew.config import config_dir, loader_credentials, loader_pipeline
-from kiro_crew.dashboard import token_secret
+from aj_crew.cli_log_files import boot_log_dir, boot_log_paths, older_boot_logs
+from aj_crew.cli_logging import _chat_console_filter
+from aj_crew.cli_logging import _fd_is_regular_file as _real_fd_is_regular_file
+from aj_crew.cli_logging import _rotate_boot_logs, _start_gateway_log_after_lock
+from aj_crew.config import config_dir, loader_credentials, loader_pipeline
+from aj_crew.dashboard import token_secret
 
 
 @pytest.fixture(autouse=True)
@@ -49,7 +49,7 @@ def _stderr_is_not_a_file(_floor_monkeypatch):
     """pytest's fd capture points fd 2 at a temp FILE, which a gateway reads as
     a service manager's error file. Tests model a console unless they opt in
     (TestSetupCliLoggingServiceErrorFile)."""
-    _floor_monkeypatch.setattr("kiro_crew.cli._fd_is_regular_file", lambda fd: False)
+    _floor_monkeypatch.setattr("aj_crew.cli._fd_is_regular_file", lambda fd: False)
 
 
 @pytest.fixture(autouse=True)
@@ -61,7 +61,7 @@ def _pristine_logging():
     the tmpdir, and the QueueListener is stopped so its thread and fd never leak.
     """
     root = logging.getLogger()
-    kc = logging.getLogger("kiro_crew")
+    kc = logging.getLogger("aj_crew")
     saved_root = (root.handlers[:], root.level)
     saved_kc = (kc.handlers[:], kc.level)
     root.handlers[:] = []
@@ -196,7 +196,7 @@ class TestAppendOnlyLogFileHandler:
         handler = cli_mod._AppendOnlyLogFileHandler(log, encoding="utf-8")
         try:
             assert handler.stream is None
-            record = logging.LogRecord("kiro_crew.t", logging.WARNING, "", 0, "one", None, None)
+            record = logging.LogRecord("aj_crew.t", logging.WARNING, "", 0, "one", None, None)
             handler.handle(record)
             handler.handle(record)
             assert handler.stream is None
@@ -210,7 +210,7 @@ class TestAppendOnlyLogFileHandler:
         handler = cli_mod._AppendOnlyLogFileHandler(log, encoding="utf-8")
         try:
             handler.handle(
-                logging.LogRecord("kiro_crew.t", logging.WARNING, "", 0, "tail", None, None)
+                logging.LogRecord("aj_crew.t", logging.WARNING, "", 0, "tail", None, None)
             )
         finally:
             handler.close()
@@ -233,7 +233,7 @@ class TestAppendOnlyLogFileHandler:
             raise PermissionError(errno.EACCES, "denied")
 
         monkeypatch.setattr(handler, "_open", _deny)
-        record = logging.LogRecord("kiro_crew.t", logging.WARNING, "", 0, "lost", None, None)
+        record = logging.LogRecord("aj_crew.t", logging.WARNING, "", 0, "lost", None, None)
         handler.handle(record)  # must not raise into the caller
         assert reported == [record]
         handler.close()
@@ -250,7 +250,7 @@ class TestAppendOnlyLogFileHandler:
             raise RecursionError("maximum recursion depth exceeded")
 
         monkeypatch.setattr(handler, "format", _recurse)
-        record = logging.LogRecord("kiro_crew.t", logging.WARNING, "", 0, "deep", None, None)
+        record = logging.LogRecord("aj_crew.t", logging.WARNING, "", 0, "deep", None, None)
         with pytest.raises(RecursionError):
             handler.emit(record)
         assert reported == []
@@ -281,7 +281,7 @@ class TestAppendOnlyLogFileHandler:
             return stream
 
         monkeypatch.setattr(handler, "_open", _open_with_failing_close)
-        record = logging.LogRecord("kiro_crew.t", logging.WARNING, "", 0, "kept", None, None)
+        record = logging.LogRecord("aj_crew.t", logging.WARNING, "", 0, "kept", None, None)
         handler.handle(record)  # must not raise into the caller
         assert closes == [True]
         assert handler.stream is None
@@ -292,19 +292,19 @@ class TestAppendOnlyLogFileHandler:
     @pytest.mark.skipif(not Path("/proc/self/fd").is_dir(), reason="needs /proc fd listing")
     @pytest.mark.parametrize("command", ["mcp-core", "mcp-cron", "chat", "status"])
     def test_non_gateway_command_holds_no_handle_on_gateway_log(self, command, monkeypatch):
-        monkeypatch.setattr("kiro_crew.cli._fd_targets_file", lambda fd, path: False)
+        monkeypatch.setattr("aj_crew.cli._fd_targets_file", lambda fd, path: False)
         log_file = config_dir() / "gateway.log"
         _setup_cli_logging(command, 1)
-        logging.getLogger("kiro_crew.holder").warning("from-%s", command)
+        logging.getLogger("aj_crew.holder").warning("from-%s", command)
         _stop_log_queue_listener()  # chat writes through the listener thread
         assert f"from-{command}" in log_file.read_text(encoding="utf-8")
         assert _open_fds_on(log_file) == []
 
     @pytest.mark.skipif(not Path("/proc/self/fd").is_dir(), reason="needs /proc fd listing")
     def test_gateway_is_the_only_holder(self, monkeypatch):
-        monkeypatch.setattr("kiro_crew.cli._fd_targets_file", lambda fd, path: False)
+        monkeypatch.setattr("aj_crew.cli._fd_targets_file", lambda fd, path: False)
         _setup_cli_logging("gateway", 1)
-        logging.getLogger("kiro_crew.holder").warning("gateway-record")
+        logging.getLogger("aj_crew.holder").warning("gateway-record")
         listener = cli_mod._LOG_QUEUE_LISTENER
         assert listener is not None
         (fh,) = listener.handlers
@@ -324,7 +324,7 @@ def _boot() -> None:
 
 class TestBootRotationFailureIsReported:
     def test_failed_boot_rotation_logs_a_warning(self, monkeypatch):
-        monkeypatch.setattr("kiro_crew.cli._fd_targets_file", lambda fd, path: False)
+        monkeypatch.setattr("aj_crew.cli._fd_targets_file", lambda fd, path: False)
         log_file = config_dir() / "gateway.log"
         log_file.write_text("previous run\n", encoding="utf-8")
 
@@ -375,12 +375,12 @@ class TestBootLogGenerations:
 
     def test_two_restarts_keep_the_run_before_the_last(self, monkeypatch):
         # The reported failure: run A fails, the user restarts twice, and A's log was gone.
-        monkeypatch.setattr("kiro_crew.cli._fd_targets_file", lambda fd, path: False)
-        monkeypatch.setattr("kiro_crew.cli._redirect_fds_to", MagicMock())
+        monkeypatch.setattr("aj_crew.cli._fd_targets_file", lambda fd, path: False)
+        monkeypatch.setattr("aj_crew.cli._redirect_fds_to", MagicMock())
         log_file = config_dir() / "gateway.log"
         log_file.write_text("run A failed\n", encoding="utf-8")
         _boot()  # boot B
-        logging.getLogger("kiro_crew.test_boot_gen").warning("run B record")
+        logging.getLogger("aj_crew.test_boot_gen").warning("run B record")
         _stop_log_queue_listener()
         _boot()  # boot C
         _stop_log_queue_listener()
@@ -405,7 +405,7 @@ class TestBootLogGenerations:
         ]
 
     def test_size_budget_drops_older_boots_but_never_prev(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.cli.BOOT_LOG_GENERATIONS_MAX_BYTES", 10)
+        monkeypatch.setattr("aj_crew.cli.BOOT_LOG_GENERATIONS_MAX_BYTES", 10)
         log_file = tmp_path / "gateway.log"
         _keep(log_file, ["111\n", "2222\n"])
         log_file.write_text("0" * 20 + "\n", encoding="utf-8")  # alone over budget
@@ -413,7 +413,7 @@ class TestBootLogGenerations:
         assert _boot_logs(log_file) == ["0" * 20 + "\n"]
 
     def test_size_budget_keeps_boots_that_fit(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.cli.BOOT_LOG_GENERATIONS_MAX_BYTES", 14)
+        monkeypatch.setattr("aj_crew.cli.BOOT_LOG_GENERATIONS_MAX_BYTES", 14)
         log_file = tmp_path / "gateway.log"
         _keep(log_file, ["bbb\n", "cccc\n"])
         log_file.write_text("aaaaaaa\n", encoding="utf-8")
@@ -472,15 +472,15 @@ class TestBootLogGenerations:
         # A second gateway start the gateway lock refuses has already set up
         # logging: the running gateway's log stays the same file, in place, every
         # kept boot stays as it was, and the refused start's lines land in it.
-        monkeypatch.setattr("kiro_crew.cli._fd_targets_file", lambda fd, path: False)
-        monkeypatch.setattr("kiro_crew.cli._redirect_fds_to", MagicMock())
+        monkeypatch.setattr("aj_crew.cli._fd_targets_file", lambda fd, path: False)
+        monkeypatch.setattr("aj_crew.cli._redirect_fds_to", MagicMock())
         log_file = config_dir() / "gateway.log"
         kept = ["older run\n", "boot 2 back\n", "boot 3 back\n", "boot 4 back\n"]
         _keep(log_file, kept)
         log_file.write_text("running gateway\n", encoding="utf-8")
         before = log_file.stat()
         _setup_cli_logging("gateway", 1)  # the lock refuses: no rotation follows
-        logging.getLogger("kiro_crew.test_boot_gen").warning("refused start's record")
+        logging.getLogger("aj_crew.test_boot_gen").warning("refused start's record")
         _stop_log_queue_listener()
         after = log_file.stat()
         assert (after.st_dev, after.st_ino) == (before.st_dev, before.st_ino)
@@ -493,8 +493,8 @@ class TestBootLogGenerations:
         # already past the 2 MiB size rollover. Five stray starts the lock refuses
         # neither rename it (boot or size rotation) nor delete it, and nothing
         # kept is pruned.
-        monkeypatch.setattr("kiro_crew.cli._fd_targets_file", lambda fd, path: False)
-        monkeypatch.setattr("kiro_crew.cli._redirect_fds_to", MagicMock())
+        monkeypatch.setattr("aj_crew.cli._fd_targets_file", lambda fd, path: False)
+        monkeypatch.setattr("aj_crew.cli._redirect_fds_to", MagicMock())
         log_file = config_dir() / "gateway.log"
         kept = ["older run\n", "boot 2 back\n", "boot 3 back\n", "boot 4 back\n"]
         _keep(log_file, kept)
@@ -504,7 +504,7 @@ class TestBootLogGenerations:
         try:
             for start in range(5):
                 _setup_cli_logging("gateway", 1)
-                logging.getLogger("kiro_crew.test_boot_gen").warning("stray start %d", start)
+                logging.getLogger("aj_crew.test_boot_gen").warning("stray start %d", start)
                 _stop_log_queue_listener()
             os.write(writer, b"running gateway still writing\n")
         finally:
@@ -521,17 +521,17 @@ class TestBootLogGenerations:
         # The start that holds the lock rotates: the lines it wrote before the
         # lock stay at the end of .prev, and what it writes after starts the
         # fresh gateway.log.
-        monkeypatch.setattr("kiro_crew.cli._fd_targets_file", lambda fd, path: False)
-        monkeypatch.setattr("kiro_crew.cli._redirect_fds_to", MagicMock())
+        monkeypatch.setattr("aj_crew.cli._fd_targets_file", lambda fd, path: False)
+        monkeypatch.setattr("aj_crew.cli._redirect_fds_to", MagicMock())
         log_file = config_dir() / "gateway.log"
         log_file.write_text("last run\n", encoding="utf-8")
         _setup_cli_logging("gateway", 1)
         (fh,) = cli_mod._LOG_QUEUE_LISTENER.handlers
-        logging.getLogger("kiro_crew.test_boot_gen").warning("before the lock")
+        logging.getLogger("aj_crew.test_boot_gen").warning("before the lock")
         _stop_log_queue_listener()  # drain, so the record is on disk first
         assert not log_file.with_name("gateway.log.prev").exists()
         _start_gateway_log_after_lock()
-        fh.handle(logging.LogRecord("kiro_crew.t", logging.WARNING, "", 0, "after", None, None))
+        fh.handle(logging.LogRecord("aj_crew.t", logging.WARNING, "", 0, "after", None, None))
         fh.close()
         prev = log_file.with_name("gateway.log.prev").read_text(encoding="utf-8")
         assert prev.startswith("last run\n") and "before the lock" in prev
@@ -623,8 +623,8 @@ class TestBootLogGenerations:
         ]
 
     def test_empty_log_shifts_nothing(self, monkeypatch):
-        monkeypatch.setattr("kiro_crew.cli._fd_targets_file", lambda fd, path: False)
-        monkeypatch.setattr("kiro_crew.cli._redirect_fds_to", MagicMock())
+        monkeypatch.setattr("aj_crew.cli._fd_targets_file", lambda fd, path: False)
+        monkeypatch.setattr("aj_crew.cli._redirect_fds_to", MagicMock())
         log_file = config_dir() / "gateway.log"
         log_file.with_name("gateway.log.prev").write_text("kept run\n", encoding="utf-8")
         log_file.write_bytes(b"")
@@ -682,7 +682,7 @@ class TestFdTrackingRotatingFileHandler:
     def test_do_rollover_calls_fd_redirect(self, tmp_path, monkeypatch):
         """The subclass must re-point fds 1/2 at the new base file on every
         rollover — pin the doRollover hook itself."""
-        import kiro_crew.cli as cli_mod
+        import aj_crew.cli as cli_mod
 
         calls: list[Path] = []
         monkeypatch.setattr(
@@ -859,9 +859,9 @@ class TestSetupCliLoggingDetached:
         # Force detached detection instead of dup2-ing over the REAL fd 2,
         # which would fight pytest's capture machinery. The detection
         # primitive itself is covered by TestFdTargetsFile.
-        monkeypatch.setattr("kiro_crew.cli._fd_targets_file", lambda fd, path: True)
+        monkeypatch.setattr("aj_crew.cli._fd_targets_file", lambda fd, path: True)
         self.redirect = MagicMock()
-        monkeypatch.setattr("kiro_crew.cli._redirect_fds_to", self.redirect)
+        monkeypatch.setattr("aj_crew.cli._redirect_fds_to", self.redirect)
 
     def test_no_console_handler_installed(self):
         _setup_cli_logging("gateway", 1)
@@ -870,17 +870,17 @@ class TestSetupCliLoggingDetached:
         ]
         assert stream_handlers == []
 
-    def test_queue_handler_on_root_not_kiro_crew(self):
+    def test_queue_handler_on_root_not_aj_crew(self):
         _setup_cli_logging("gateway", 1)
         root_qhs = [h for h in logging.getLogger().handlers if isinstance(h, _CliLogQueueHandler)]
         assert len(root_qhs) == 1
         kc_qhs = [
-            h for h in logging.getLogger("kiro_crew").handlers if isinstance(h, _CliLogQueueHandler)
+            h for h in logging.getLogger("aj_crew").handlers if isinstance(h, _CliLogQueueHandler)
         ]
         assert kc_qhs == []
         # The file handler must never sit on a logger directly — inline emit
         # on the event-loop thread is the loop-stall bug this fix removes.
-        for logger in (logging.getLogger(), logging.getLogger("kiro_crew")):
+        for logger in (logging.getLogger(), logging.getLogger("aj_crew")):
             assert not any(isinstance(h, RotatingFileHandler) for h in logger.handlers)
         listener = cli_mod._LOG_QUEUE_LISTENER
         assert listener is not None
@@ -890,9 +890,9 @@ class TestSetupCliLoggingDetached:
         assert isinstance(fh, _FdTrackingRotatingFileHandler)
         assert Path(fh.baseFilename) == config_dir() / "gateway.log"
 
-    def test_kiro_crew_record_written_exactly_once(self):
+    def test_aj_crew_record_written_exactly_once(self):
         _setup_cli_logging("gateway", 1)
-        logging.getLogger("kiro_crew.test_doublewrite").warning("sentinel-record")
+        logging.getLogger("aj_crew.test_doublewrite").warning("sentinel-record")
         _stop_log_queue_listener()  # deterministic drain to disk
         text = (config_dir() / "gateway.log").read_text(encoding="utf-8")
         assert text.count("sentinel-record") == 1
@@ -926,31 +926,31 @@ class TestSetupCliLoggingDetached:
         self.redirect.assert_not_called()
 
     def test_handlers_carry_no_level_third_party_warning_still_lands(self, monkeypatch):
-        """The ``kiro_crew`` logger is the SINGLE level gate. Neither the file
+        """The ``aj_crew`` logger is the SINGLE level gate. Neither the file
         handler nor the queue handler carries a level of its own: a stricter
-        persisted kiro_crew level gates kiro_crew records at the kiro_crew
+        persisted aj_crew level gates aj_crew records at the aj_crew
         logger, third-party records are gated at the root logger's WARNING,
         and nothing is re-judged on the way to the file. A level on either
         handler would be a boot-time copy that a runtime ``agent.log_level``
         change does not reach."""
-        from kiro_crew.config import KiroCrewConfig
+        from aj_crew.config import AjCrewConfig
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.log_level = "ERROR"
-        monkeypatch.setattr("kiro_crew.cli.KiroCrewConfig.load", staticmethod(lambda: cfg))
+        monkeypatch.setattr("aj_crew.cli.AjCrewConfig.load", staticmethod(lambda: cfg))
         _setup_cli_logging("gateway", 0)
         (fh,) = cli_mod._LOG_QUEUE_LISTENER.handlers
         (qh,) = [h for h in logging.getLogger().handlers if isinstance(h, _CliLogQueueHandler)]
         assert fh.level == logging.NOTSET
         assert qh.level == logging.NOTSET
         assert cli_mod._LOG_QUEUE_LISTENER.respect_handler_level is False
-        assert logging.getLogger("kiro_crew").level == logging.ERROR
+        assert logging.getLogger("aj_crew").level == logging.ERROR
         logging.getLogger("somelib.test_single_gate").warning("thirdparty-still-flows")
-        logging.getLogger("kiro_crew.test_single_gate").warning("kiro-crew-gated")
+        logging.getLogger("aj_crew.test_single_gate").warning("aj-crew-gated")
         _stop_log_queue_listener()  # deterministic drain to disk
         text = (config_dir() / "gateway.log").read_text(encoding="utf-8")
         assert "thirdparty-still-flows" in text
-        assert "kiro-crew-gated" not in text
+        assert "aj-crew-gated" not in text
 
     def test_unwritable_gateway_log_fails_loudly(self, monkeypatch):
         """A DETACHED process must not soft-fail an unopenable ``gateway.log``.
@@ -962,8 +962,8 @@ class TestSetupCliLoggingDetached:
         def _deny(*_a, **_k):
             raise PermissionError(1, "Operation not permitted")
 
-        monkeypatch.setattr("kiro_crew.cli._OwnerOnlyRotatingFileHandler", _deny)
-        monkeypatch.setattr("kiro_crew.cli._FdTrackingRotatingFileHandler", _deny)
+        monkeypatch.setattr("aj_crew.cli._OwnerOnlyRotatingFileHandler", _deny)
+        monkeypatch.setattr("aj_crew.cli._FdTrackingRotatingFileHandler", _deny)
         with pytest.raises(PermissionError):
             _setup_cli_logging("gateway", 1)
 
@@ -995,9 +995,9 @@ class TestSetupCliLoggingServiceErrorFile:
 
     @pytest.fixture(autouse=True)
     def _service_stderr(self, _floor_monkeypatch):
-        _floor_monkeypatch.setattr("kiro_crew.cli._fd_targets_file", lambda fd, path: False)
-        _floor_monkeypatch.setattr("kiro_crew.cli._fd_is_regular_file", lambda fd: True)
-        _floor_monkeypatch.setattr("kiro_crew.cli._redirect_fds_to", MagicMock())
+        _floor_monkeypatch.setattr("aj_crew.cli._fd_targets_file", lambda fd, path: False)
+        _floor_monkeypatch.setattr("aj_crew.cli._fd_is_regular_file", lambda fd: True)
+        _floor_monkeypatch.setattr("aj_crew.cli._redirect_fds_to", MagicMock())
         # pytest's own capture handler on root turns the real basicConfig into
         # a no-op, so stand in for it with the console handler it would add.
         self.console = io.StringIO()
@@ -1009,8 +1009,8 @@ class TestSetupCliLoggingServiceErrorFile:
 
     def test_gateway_echoes_only_warnings_to_the_stderr_file(self):
         _setup_cli_logging("gateway", 1)
-        logging.getLogger("kiro_crew.test_service").info("kc-info-record")
-        logging.getLogger("kiro_crew.test_service").warning("kc-warn-record")
+        logging.getLogger("aj_crew.test_service").info("kc-info-record")
+        logging.getLogger("aj_crew.test_service").warning("kc-warn-record")
         _stop_log_queue_listener()
         assert "kc-info-record" not in self.console.getvalue()
         assert "kc-warn-record" in self.console.getvalue()
@@ -1020,17 +1020,17 @@ class TestSetupCliLoggingServiceErrorFile:
 
     def test_other_commands_keep_echoing_every_level(self):
         _setup_cli_logging("status", 1)
-        logging.getLogger("kiro_crew.test_service").info("kc-info-record")
+        logging.getLogger("aj_crew.test_service").info("kc-info-record")
         assert "kc-info-record" in self.console.getvalue()
 
 
 class TestChatConsoleShowsErrorsOnly:
-    """``kirocrew chat`` without ``-v`` keeps its own records below ERROR out of
+    """``ajcrew chat`` without ``-v`` keeps its own records below ERROR out of
     the terminal; ``gateway.log`` still gets them."""
 
     @pytest.fixture(autouse=True)
     def _console(self, _floor_monkeypatch):
-        _floor_monkeypatch.setattr("kiro_crew.cli._fd_targets_file", lambda fd, path: False)
+        _floor_monkeypatch.setattr("aj_crew.cli._fd_targets_file", lambda fd, path: False)
         self.console = io.StringIO()
 
         def _basic_config(**_kwargs):
@@ -1040,10 +1040,10 @@ class TestChatConsoleShowsErrorsOnly:
 
     def test_chat_warning_reaches_the_log_file_only(self):
         _setup_cli_logging("chat", 0)
-        logging.getLogger("kiro_crew.test_chat").warning("kc-warn-record")
-        logging.getLogger("kiro_crew.test_chat").error("kc-error-record")
-        logging.getLogger("kiro_crew.cli_chat").warning("chat-warn-record")
-        logging.getLogger("kiro_crew.sandbox").warning("SECURITY: sandbox-warn-record")
+        logging.getLogger("aj_crew.test_chat").warning("kc-warn-record")
+        logging.getLogger("aj_crew.test_chat").error("kc-error-record")
+        logging.getLogger("aj_crew.cli_chat").warning("chat-warn-record")
+        logging.getLogger("aj_crew.sandbox").warning("SECURITY: sandbox-warn-record")
         logging.getLogger("third_party_lib").warning("lib-warn-record")
         _stop_log_queue_listener()
         console = self.console.getvalue()
@@ -1057,16 +1057,16 @@ class TestChatConsoleShowsErrorsOnly:
 
     def test_verbose_chat_echoes_its_records(self):
         _setup_cli_logging("chat", 1)
-        logging.getLogger("kiro_crew.test_chat").info("kc-info-record")
+        logging.getLogger("aj_crew.test_chat").info("kc-info-record")
         assert "kc-info-record" in self.console.getvalue()
 
     def test_chat_without_a_log_file_keeps_the_echo(self, _floor_monkeypatch):
         def _deny(*_a, **_k):
             raise PermissionError(1, "Operation not permitted")
 
-        _floor_monkeypatch.setattr("kiro_crew.cli._AppendOnlyLogFileHandler", _deny)
+        _floor_monkeypatch.setattr("aj_crew.cli._AppendOnlyLogFileHandler", _deny)
         _setup_cli_logging("chat", 0)
-        logging.getLogger("kiro_crew.test_chat").warning("kc-warn-record")
+        logging.getLogger("aj_crew.test_chat").warning("kc-warn-record")
         assert "kc-warn-record" in self.console.getvalue()
 
 
@@ -1096,14 +1096,14 @@ def _signing_key_cannot_be_locked_down() -> None:
 def test_permission_warnings_stay_on_the_chat_terminal(emit, _floor_monkeypatch, caplog):
     """A file other users can read or write is the user's to fix, so chat still shows it."""
     # Through the facade: more than one loader owner binds this name.
-    _floor_monkeypatch.setattr("kiro_crew.config.loader.read_config_text", lambda _p: "{}")
+    _floor_monkeypatch.setattr("aj_crew.config.loader.read_config_text", lambda _p: "{}")
     _floor_monkeypatch.setattr(loader_credentials.platform_compat, "IS_POSIX", True)
 
     def _refuse(_path):
         raise OSError("not supported")
 
     _floor_monkeypatch.setattr(token_secret.platform_compat, "restrict_to_owner", _refuse)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew"):
         emit()
     owners = {loader_pipeline.logger.name, token_secret.logger.name}
     [record] = [r for r in caplog.records if r.name in owners and r.levelno == logging.WARNING]
@@ -1115,24 +1115,24 @@ class TestSetupCliLoggingForeground:
 
     @pytest.fixture(autouse=True)
     def _foreground(self, monkeypatch):
-        monkeypatch.setattr("kiro_crew.cli._fd_targets_file", lambda fd, path: False)
+        monkeypatch.setattr("aj_crew.cli._fd_targets_file", lambda fd, path: False)
         self.redirect = MagicMock()
-        monkeypatch.setattr("kiro_crew.cli._redirect_fds_to", self.redirect)
+        monkeypatch.setattr("aj_crew.cli._redirect_fds_to", self.redirect)
 
-    def test_queue_handler_on_kiro_crew_logger(self):
+    def test_queue_handler_on_aj_crew_logger(self):
         _setup_cli_logging("gateway", 1)
         kc_qhs = [
-            h for h in logging.getLogger("kiro_crew").handlers if isinstance(h, _CliLogQueueHandler)
+            h for h in logging.getLogger("aj_crew").handlers if isinstance(h, _CliLogQueueHandler)
         ]
         assert len(kc_qhs) == 1
-        # The level lives on the kiro_crew logger alone; the queue handler and
+        # The level lives on the aj_crew logger alone; the queue handler and
         # the file handler carry none (a copy here is one a runtime change
         # does not reach).
         assert kc_qhs[0].level == logging.NOTSET
-        assert logging.getLogger("kiro_crew").level == logging.INFO
+        assert logging.getLogger("aj_crew").level == logging.INFO
         assert not any(isinstance(h, _CliLogQueueHandler) for h in logging.getLogger().handlers)
         # No inline file handler on either logger.
-        for logger in (logging.getLogger(), logging.getLogger("kiro_crew")):
+        for logger in (logging.getLogger(), logging.getLogger("aj_crew")):
             assert not any(isinstance(h, RotatingFileHandler) for h in logger.handlers)
         (fh,) = cli_mod._LOG_QUEUE_LISTENER.handlers
         # Foreground keeps the plain (owner-only) handler: no fds were redirected,
@@ -1142,7 +1142,7 @@ class TestSetupCliLoggingForeground:
 
     def test_record_written_once_to_file(self):
         _setup_cli_logging("gateway", 1)
-        logging.getLogger("kiro_crew.test_foreground").warning("fg-sentinel")
+        logging.getLogger("aj_crew.test_foreground").warning("fg-sentinel")
         _stop_log_queue_listener()  # deterministic drain to disk
         text = (config_dir() / "gateway.log").read_text(encoding="utf-8")
         assert text.count("fg-sentinel") == 1
@@ -1158,18 +1158,18 @@ class TestSetupCliLoggingForeground:
     def test_unwritable_gateway_log_soft_fails(self, monkeypatch):
         """Seatbelt may deny ``gateway.log``; a CONSOLE-backed setup must not raise.
 
-        Sandboxed MCP children (e.g. ``kirocrew mcp-core``) cannot open the log path;
+        Sandboxed MCP children (e.g. ``ajcrew mcp-core``) cannot open the log path;
         the console handler takes the warning and the MCP handshake must still start.
         """
 
         def _deny(*_a, **_k):
             raise PermissionError(1, "Operation not permitted")
 
-        monkeypatch.setattr("kiro_crew.cli._AppendOnlyLogFileHandler", _deny)
+        monkeypatch.setattr("aj_crew.cli._AppendOnlyLogFileHandler", _deny)
         _setup_cli_logging("mcp-core", 0)  # must not raise
         assert cli_mod._LOG_QUEUE_LISTENER is None
         assert not any(
-            isinstance(h, logging.FileHandler) for h in logging.getLogger("kiro_crew").handlers
+            isinstance(h, logging.FileHandler) for h in logging.getLogger("aj_crew").handlers
         )
 
     def test_unwritable_gateway_log_still_redacts_for_long_lived(self, monkeypatch):
@@ -1179,21 +1179,21 @@ class TestSetupCliLoggingForeground:
             raise PermissionError(1, "Operation not permitted")
 
         redaction = MagicMock()
-        monkeypatch.setattr("kiro_crew.cli._OwnerOnlyRotatingFileHandler", _deny)
-        monkeypatch.setattr("kiro_crew.cli._FdTrackingRotatingFileHandler", _deny)
-        monkeypatch.setattr("kiro_crew.cli.install_log_redaction", redaction)
+        monkeypatch.setattr("aj_crew.cli._OwnerOnlyRotatingFileHandler", _deny)
+        monkeypatch.setattr("aj_crew.cli._FdTrackingRotatingFileHandler", _deny)
+        monkeypatch.setattr("aj_crew.cli.install_log_redaction", redaction)
         _setup_cli_logging("gateway", 1)  # must not raise
         redaction.assert_called_once_with([])
         assert cli_mod._LOG_QUEUE_LISTENER is None
         assert not any(
-            isinstance(h, logging.FileHandler) for h in logging.getLogger("kiro_crew").handlers
+            isinstance(h, logging.FileHandler) for h in logging.getLogger("aj_crew").handlers
         )
 
 
 class TestRuntimeLevelReachesFileLog:
     """A runtime ``agent.log_level`` change reaches ``gateway.log`` without a restart.
 
-    ``apply_log_level`` moves the ``kiro_crew`` logger, the single level gate, so
+    ``apply_log_level`` moves the ``aj_crew`` logger, the single level gate, so
     neither the file handler nor the queue handler may carry a boot-time level.
     """
 
@@ -1203,33 +1203,33 @@ class TestRuntimeLevelReachesFileLog:
         level from config (no ``--verbose``), foreground or detach-spawned.
         The config handed to boot is a fresh default object, never the one a
         real ``load()`` returned, so no cached document is mutated."""
-        from kiro_crew.config import KiroCrewConfig
+        from aj_crew.config import AjCrewConfig
 
-        monkeypatch.setattr("kiro_crew.cli._fd_targets_file", lambda fd, path: detached)
-        monkeypatch.setattr("kiro_crew.cli._redirect_fds_to", MagicMock())
-        cfg = KiroCrewConfig()
+        monkeypatch.setattr("aj_crew.cli._fd_targets_file", lambda fd, path: detached)
+        monkeypatch.setattr("aj_crew.cli._redirect_fds_to", MagicMock())
+        cfg = AjCrewConfig()
         cfg.agent.log_level = persisted
-        monkeypatch.setattr("kiro_crew.cli.KiroCrewConfig.load", staticmethod(lambda: cfg))
+        monkeypatch.setattr("aj_crew.cli.AjCrewConfig.load", staticmethod(lambda: cfg))
         _setup_cli_logging("gateway", 0)
 
     @staticmethod
     def _sinks(detached: bool):
-        producer = logging.getLogger() if detached else logging.getLogger("kiro_crew")
+        producer = logging.getLogger() if detached else logging.getLogger("aj_crew")
         (qh,) = [h for h in producer.handlers if isinstance(h, _CliLogQueueHandler)]
         (fh,) = cli_mod._LOG_QUEUE_LISTENER.handlers
         return fh, qh
 
     def test_raised_info_record_reaches_gateway_log(self, monkeypatch):
-        from kiro_crew.dashboard.handlers.updates import apply_log_level
+        from aj_crew.dashboard.handlers.updates import apply_log_level
 
         self._boot(monkeypatch, detached=False)
         fh, qh = self._sinks(detached=False)
-        assert logging.getLogger("kiro_crew").level == logging.WARNING
+        assert logging.getLogger("aj_crew").level == logging.WARNING
 
         assert apply_log_level("INFO", source="dashboard") is True
 
-        assert logging.getLogger("kiro_crew").level == logging.INFO
-        logging.getLogger("kiro_crew.test_runtime_level").info("raised-info-record")
+        assert logging.getLogger("aj_crew").level == logging.INFO
+        logging.getLogger("aj_crew.test_runtime_level").info("raised-info-record")
         _stop_log_queue_listener()  # deterministic drain to disk
         text = (config_dir() / "gateway.log").read_text(encoding="utf-8")
         assert "raised-info-record" in text, "raised INFO record never reached gateway.log"
@@ -1240,39 +1240,39 @@ class TestRuntimeLevelReachesFileLog:
         assert fh.level == qh.level == logging.NOTSET
 
     def test_detached_tightening_keeps_third_party_warnings_flowing(self, monkeypatch):
-        """A stricter kiro_crew level gates kiro_crew records at the kiro_crew
+        """A stricter aj_crew level gates aj_crew records at the aj_crew
         logger; third-party records on the shared root handler stay gated at
         the root logger's WARNING. Neither handler holds a level to do it."""
-        from kiro_crew.dashboard.handlers.updates import apply_log_level
+        from aj_crew.dashboard.handlers.updates import apply_log_level
 
         self._boot(monkeypatch, detached=True)
         fh, qh = self._sinks(detached=True)
 
         assert apply_log_level("ERROR", source="config") is True
 
-        assert logging.getLogger("kiro_crew").level == logging.ERROR
+        assert logging.getLogger("aj_crew").level == logging.ERROR
         assert fh.level == qh.level == logging.NOTSET
         logging.getLogger("somelib.test_runtime_level").warning("thirdparty-still-flows")
-        logging.getLogger("kiro_crew.test_runtime_level").warning("kiro-crew-gagged")
+        logging.getLogger("aj_crew.test_runtime_level").warning("aj-crew-gagged")
         _stop_log_queue_listener()
         text = (config_dir() / "gateway.log").read_text(encoding="utf-8")
         assert "thirdparty-still-flows" in text
-        assert "kiro-crew-gagged" not in text
+        assert "aj-crew-gagged" not in text
 
     def test_detached_raise_does_not_open_the_root_to_third_party_info(self, monkeypatch):
-        """Raising kiro_crew to INFO admits kiro_crew INFO; third-party INFO
+        """Raising aj_crew to INFO admits aj_crew INFO; third-party INFO
         stays gated at the root logger's WARNING, exactly as a boot at INFO."""
-        from kiro_crew.dashboard.handlers.updates import apply_log_level
+        from aj_crew.dashboard.handlers.updates import apply_log_level
 
         self._boot(monkeypatch, detached=True)
 
         assert apply_log_level("INFO", source="dashboard") is True
 
-        logging.getLogger("kiro_crew.test_runtime_level").info("kiro-crew-info")
+        logging.getLogger("aj_crew.test_runtime_level").info("aj-crew-info")
         logging.getLogger("somelib.test_runtime_level").info("thirdparty-info")
         _stop_log_queue_listener()
         text = (config_dir() / "gateway.log").read_text(encoding="utf-8")
-        assert "kiro-crew-info" in text
+        assert "aj-crew-info" in text
         assert "thirdparty-info" not in text
 
     def test_tightening_keeps_records_already_queued(self, monkeypatch):
@@ -1281,14 +1281,14 @@ class TestRuntimeLevelReachesFileLog:
         handler-level re-check at dequeue, nothing judges a queued record by a
         level set after it was logged -- a queue backed up behind a rollover
         on a slow disk holds hundreds of them."""
-        from kiro_crew.dashboard.handlers.updates import apply_log_level
+        from aj_crew.dashboard.handlers.updates import apply_log_level
 
         self._boot(monkeypatch, detached=False, persisted="INFO")
         listener = cli_mod._LOG_QUEUE_LISTENER
         assert listener is not None
         listener.stop()  # park the consumer: records now sit in the queue
         try:
-            logging.getLogger("kiro_crew.test_runtime_level").info("queued-before-tightening")
+            logging.getLogger("aj_crew.test_runtime_level").info("queued-before-tightening")
 
             assert apply_log_level("ERROR", source="dashboard") is True
         finally:
@@ -1311,8 +1311,8 @@ class TestQueueOffLoop:
 
     @pytest.fixture(autouse=True)
     def _foreground(self, monkeypatch):
-        monkeypatch.setattr("kiro_crew.cli._fd_targets_file", lambda fd, path: False)
-        monkeypatch.setattr("kiro_crew.cli._redirect_fds_to", MagicMock())
+        monkeypatch.setattr("aj_crew.cli._fd_targets_file", lambda fd, path: False)
+        monkeypatch.setattr("aj_crew.cli._redirect_fds_to", MagicMock())
 
     def test_file_emit_runs_on_listener_thread(self):
         _setup_cli_logging("gateway", 1)
@@ -1325,7 +1325,7 @@ class TestQueueOffLoop:
             orig_emit(record)
 
         fh.emit = recording_emit  # type: ignore[method-assign]
-        logging.getLogger("kiro_crew.offloop").warning("off-loop-sentinel")
+        logging.getLogger("aj_crew.offloop").warning("off-loop-sentinel")
         _stop_log_queue_listener()  # drains the queue through recording_emit
         assert emit_threads, "record never reached the file handler"
         caller = threading.current_thread()
@@ -1333,7 +1333,7 @@ class TestQueueOffLoop:
 
     def test_stop_drains_pending_records(self):
         _setup_cli_logging("gateway", 1)
-        log = logging.getLogger("kiro_crew.drain")
+        log = logging.getLogger("aj_crew.drain")
         for i in range(50):
             log.warning("drain-record-%d", i)
         _stop_log_queue_listener()
@@ -1344,7 +1344,7 @@ class TestQueueOffLoop:
         _setup_cli_logging("gateway", 1)
         _setup_cli_logging("gateway", 1)
         kc_qhs = [
-            h for h in logging.getLogger("kiro_crew").handlers if isinstance(h, _CliLogQueueHandler)
+            h for h in logging.getLogger("aj_crew").handlers if isinstance(h, _CliLogQueueHandler)
         ]
         assert len(kc_qhs) == 1
         assert cli_mod._LOG_QUEUE_LISTENER is not None
@@ -1357,11 +1357,11 @@ class TestQueueOffLoop:
         protect."""
         _setup_cli_logging("status", 1)
         assert cli_mod._LOG_QUEUE_LISTENER is None
-        kc = logging.getLogger("kiro_crew")
+        kc = logging.getLogger("aj_crew")
         assert not any(isinstance(h, _CliLogQueueHandler) for h in kc.handlers)
         sync_fhs = [h for h in kc.handlers if isinstance(h, logging.FileHandler)]
         assert len(sync_fhs) == 1
-        logging.getLogger("kiro_crew.short").warning("short-lived-record")
+        logging.getLogger("aj_crew.short").warning("short-lived-record")
         for h in kc.handlers:
             h.flush()
         text = (config_dir() / "gateway.log").read_text(encoding="utf-8")
@@ -1376,7 +1376,7 @@ class TestQueueOffLoop:
     def test_bounded_stop_still_drains_when_healthy(self):
         """The force-exit path (timeout=) must still flush a healthy queue."""
         _setup_cli_logging("gateway", 1)
-        logging.getLogger("kiro_crew.bounded").warning("bounded-record")
+        logging.getLogger("aj_crew.bounded").warning("bounded-record")
         _stop_log_queue_listener(timeout=5.0)
         text = (config_dir() / "gateway.log").read_text(encoding="utf-8")
         assert "bounded-record" in text
@@ -1397,7 +1397,7 @@ class TestQueueOffLoop:
             orig_emit(record)
 
         fh.emit = wedged_emit  # type: ignore[method-assign]
-        logging.getLogger("kiro_crew.wedged").warning("wedged-record")
+        logging.getLogger("aj_crew.wedged").warning("wedged-record")
         t0 = time.monotonic()
         _stop_log_queue_listener(timeout=0.2)
         elapsed = time.monotonic() - t0
@@ -1413,15 +1413,15 @@ class TestDrainBeforeHardExit:
 
     @pytest.fixture(autouse=True)
     def _foreground(self, monkeypatch):
-        monkeypatch.setattr("kiro_crew.cli._fd_targets_file", lambda fd, path: False)
-        monkeypatch.setattr("kiro_crew.cli._redirect_fds_to", MagicMock())
+        monkeypatch.setattr("aj_crew.cli._fd_targets_file", lambda fd, path: False)
+        monkeypatch.setattr("aj_crew.cli._redirect_fds_to", MagicMock())
 
     @pytest.mark.asyncio
     async def test_queued_tail_reaches_disk(self):
         """The records logged immediately before a hard exit - the ones a
         post-mortem actually needs - are on disk when the drain returns."""
         _setup_cli_logging("gateway", 1)
-        logging.getLogger("kiro_crew.shutdown").warning("shutdown-tail-record")
+        logging.getLogger("aj_crew.shutdown").warning("shutdown-tail-record")
         await drain_log_queue_before_hard_exit()
         text = (config_dir() / "gateway.log").read_text(encoding="utf-8")
         assert "shutdown-tail-record" in text
@@ -1463,7 +1463,7 @@ class TestDrainBeforeHardExit:
             orig_emit(record)
 
         fh.emit = wedged_emit  # type: ignore[method-assign]
-        logging.getLogger("kiro_crew.wedged").warning("wedged-shutdown-record")
+        logging.getLogger("aj_crew.wedged").warning("wedged-shutdown-record")
         t0 = time.monotonic()
         await drain_log_queue_before_hard_exit(timeout=0.2)
         elapsed = time.monotonic() - t0
@@ -1507,13 +1507,13 @@ class TestEveryGatewayHardExitDrainsTheQueue:
     per-function, so a drain in a sibling closure cannot vouch for its parent."""
 
     _MODULES = (
-        Path(__file__).resolve().parents[1] / "src/kiro_crew/slack/gateway.py",
+        Path(__file__).resolve().parents[1] / "src/aj_crew/slack/gateway.py",
         *sorted(
-            (Path(__file__).resolve().parents[1] / "src/kiro_crew/slack/gateway_runtime").glob(
+            (Path(__file__).resolve().parents[1] / "src/aj_crew/slack/gateway_runtime").glob(
                 "*.py"
             )
         ),
-        *sorted((Path(__file__).resolve().parents[1] / "src/kiro_crew/slack").glob("events*.py")),
+        *sorted((Path(__file__).resolve().parents[1] / "src/aj_crew/slack").glob("events*.py")),
     )
     _DRAINS = {"_stop_log_queue_listener", "drain_log_queue_before_hard_exit"}
 

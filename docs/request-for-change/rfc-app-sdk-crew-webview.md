@@ -20,7 +20,7 @@ superseded-by: []
 
 ## Summary
 
-The Crew Webview is the drawer on the Crew page where a crew publishes JSON data into a human-authored HTML template (`src/kiro_crew/agent_panel.py`). An App Store app can make that drawer much more useful, and today it can only do so by writing a file into the operator's template directory. This RFC turns what one real app needed into five generic App SDK capabilities: four for the Crew Webview, and one for the skill the app ships beside its template.
+The Crew Webview is the drawer on the Crew page where a crew publishes JSON data into a human-authored HTML template (`src/aj_crew/agent_panel.py`). An App Store app can make that drawer much more useful, and today it can only do so by writing a file into the operator's template directory. This RFC turns what one real app needed into five generic App SDK capabilities: four for the Crew Webview, and one for the skill the app ships beside its template.
 
 | # | Capability | Manifest / SDK surface | Replaces |
 |---|---|---|---|
@@ -28,7 +28,7 @@ The Crew Webview is the drawer on the Crew page where a crew publishes JSON data
 | 2 | Live data push | a `postMessage` handshake between host and template | a frame remount on every publish |
 | 3 | Lifecycle feed | `permissions.lifecycle`, `ctx.lifecycle.subscribe()`, frame lifecycle messages | the crew spending model tokens to report its own state |
 | 4 | Lane publishing | `panel_publish` from any session bound to the crew, stored as a lane | the `no_dashboard_slot` refusal |
-| 5 | App skills for every crew | enabled apps' skills join every crew member agent's skill scope | a skill only the built-in `kirocrew` agent sees |
+| 5 | App skills for every crew | enabled apps' skills join every crew member agent's skill scope | a skill only the built-in `ajcrew` agent sees |
 
 The sandbox (`allow-scripts` only) does not change, and the widget CSP does not change. An app template gets a narrower CSP of its own, without the two script CDNs (§3.4). Every capability that runs or feeds app code sits behind an owner decision: the app execution trust grant for templates (§3.4), install-time consent for any lifecycle scope wider than the app's own sessions, backend or frame (§5.3, §5.4), and a per-crew switch for app skills (§7).
 
@@ -40,7 +40,7 @@ The sandbox (`allow-scripts` only) does not change, and the widget CSP does not 
 - Its `on_shutdown` swaps in `fallback.html` instead of deleting the file, because a stored template id with no file makes every drawer read of that crew answer 503 (`xiaoya/hooks.py` `on_shutdown`). It cannot tell a disable from an uninstall or a gateway stop. Capability 1 defines the withdrawn state in core.
 - Its skill tells the crew to call `panel_publish` whenever its state or mood changes (`xiaoya/skills/xiaoya-react/SKILL.md`). Each reaction costs model tokens, and each publish remounts the frame, so the companion's animation restarts. Capabilities 2 and 3 fix both.
 - A crew that fans work out to subagents cannot show their progress, because those sessions cannot publish. Capability 4 fixes that.
-- Its skill reaches a crew running the built-in `kirocrew` agent and does not reach a crew running a custom agent such as `kirocrew-worker`, so that crew has a companion template and no instructions for feeding it (§2.5). Capability 5 fixes that.
+- Its skill reaches a crew running the built-in `ajcrew` agent and does not reach a crew running a custom agent such as `ajcrew-worker`, so that crew has a companion template and no instructions for feeding it (§2.5). Capability 5 fixes that.
 
 The design is generic. Nothing below names Xiaoya, a pet, or a mood.
 
@@ -50,10 +50,10 @@ Verified on origin/main at the commit named in `audited-at`.
 
 ### 2.1 Templates
 
-- A template is resolved from two roots, operator override first: `override_templates_dir()` (`<data home>/panel-templates/`) then `shipped_templates_dir()` (`src/kiro_crew/agent_panel_templates/`, which holds `default.html`, `kirocrew-conductor.html` and `kirocrew-pipeline-conductor.html`). See `resolve_template`.
+- A template is resolved from two roots, operator override first: `override_templates_dir()` (`<data home>/panel-templates/`) then `shipped_templates_dir()` (`src/aj_crew/agent_panel_templates/`, which holds `default.html`, `ajcrew-conductor.html` and `ajcrew-pipeline-conductor.html`). See `resolve_template`.
 - A template id must match `TEMPLATE_ID_RE` (lowercase letters, digits and dashes, 1-64 characters, starting and ending with a letter or digit; consecutive dashes are allowed; no dots). `template_for_crew` gives a crew the template whose id equals its slugified name, else `default`. `available_templates` lists both roots and backs the `panel_templates` MCP tool (`api_agent_panel_templates` in `dashboard/handlers/agent_panel_publish.py`).
 - The module docstring states the trust split: the template is "HTML a human wrote and reviewed", and only the data comes from the crew. `panel-templates` is sealed read-only for a sandboxed shell (`sandbox._CREW_READONLY_LEAVES`), write-protected for agent file tools (`security/paths_lists.py`, the `panel-templates` entry), and refused when it is a symlink (`_real_dir_under_data_home`, `sandbox._CREW_NO_ALIAS_LEAVES`).
-- Composition happens on READ: `render_record` calls `resolve_template` for the stored id on every drawer open, and `compose` fills `DATA_MARKER` with an inert `application/json` island (`kirocrew-panel-data`). A stored id that does not resolve raises `PanelError("unknown_template")`, which `_read_and_compose` turns into a 503 `panel_render_failed` from `api_member_panel`.
+- Composition happens on READ: `render_record` calls `resolve_template` for the stored id on every drawer open, and `compose` fills `DATA_MARKER` with an inert `application/json` island (`ajcrew-panel-data`). A stored id that does not resolve raises `PanelError("unknown_template")`, which `_read_and_compose` turns into a 503 `panel_render_failed` from `api_member_panel`.
 - App Kit has no template contribution. `Contributes` in `apps/manifest_contributes.py` holds `commands`, `sessionControls`, `panelTabs` (chat side-panel tabs, unrelated to the Crew Webview) and `fileMenuItems`.
 
 ### 2.2 Frame updates
@@ -77,12 +77,12 @@ Verified on origin/main at the commit named in `audited-at`.
 - The crew is read from the live allocation (`SessionAllocationService.get_agent_selection` in `session_allocation.py`, which returns `("member", capability_member)`), never from the request body.
 - The MCP side refuses first: `mcp_panel._strict_session_key` routes through `mcp_core.require_strict_session_key`, and its refusal text says subagents inherit no session identity of their own.
 - Ownership is the exact crew name: `publish` stores `crew_key(crew)` (SHA-256 of the exact name) and, inside the record lock, refuses `crew_slug_collision` when a live different owner holds the slug. `api_member_panel` re-checks the digest on read.
-- A crew member's settings live in `KiroCrewAgentConfig` (`config/sections_session.py`, one entry per crew under `agents`), which holds, among others, `kiro_agent`, `workspace`, `memory_store`, `model` and `reasoning_effort`. It has no template field. That section lives in `config.json`, which the agent file-edit gate write-protects but the OS sandbox leaves writable to a shell, so it cannot hold an owner-only decision. Owner-only controls such as `computer_use.json` live instead in `_CREW_SECRET_LEAVES` (`security/paths_lists.py`, read- and write-protected on the tool path) and in `sandbox._CREW_READONLY_LEAVES` (read-only for the shell), with the dashboard handler as the sole writer.
+- A crew member's settings live in `AjCrewAgentConfig` (`config/sections_session.py`, one entry per crew under `agents`), which holds, among others, `kiro_agent`, `workspace`, `memory_store`, `model` and `reasoning_effort`. It has no template field. That section lives in `config.json`, which the agent file-edit gate write-protects but the OS sandbox leaves writable to a shell, so it cannot hold an owner-only decision. Owner-only controls such as `computer_use.json` live instead in `_CREW_SECRET_LEAVES` (`security/paths_lists.py`, read- and write-protected on the tool path) and in `sandbox._CREW_READONLY_LEAVES` (read-only for the shell), with the dashboard handler as the sole writer.
 
 ### 2.5 App skills
 
 - `_register_skills` in `apps/bridges_skills.py`, called from `register_app`, installs an app's skills by symlinking each declared skill directory into the crew skills root twice: namespaced as `skills/<app>/<skill>` and flat as `skills/<skill>` (the flat link is skipped for reserved names). `deregister_app` removes them.
-- Whether a session sees those skills is decided by `_skills_injection_plan` in `context.py`, the single seam shared by session-start injection and post-compaction re-injection. It injects the catalog for the default `kirocrew` agent, and for a custom agent only when `agent_skill_globs` (`agent_discovery.py`) finds `skill://` mappings in that agent's spec, restricted to those globs.
+- Whether a session sees those skills is decided by `_skills_injection_plan` in `context.py`, the single seam shared by session-start injection and post-compaction re-injection. It injects the catalog for the default `ajcrew` agent, and for a custom agent only when `agent_skill_globs` (`agent_discovery.py`) finds `skill://` mappings in that agent's spec, restricted to those globs.
 - So a custom agent with no mapping gets no skill catalog at all, and a mapped one gets only what its spec names. An app's spec cannot name the data-home path its skills land in; the `app_skills_dir` docstring in `apps/bridges_sources.py` records this and hands the path to apps that render their agent prompt at runtime. An app that ships a skill for crews in general has no way to reach a crew whose agent is custom.
 
 ## 3. Capability 1 — app-contributed templates
@@ -144,16 +144,16 @@ This is the behaviour the motivating app hand-builds with `fallback.html`, done 
 
 Opt-in by the template, so `default.html`, the conductor template and every operator template keep today's behaviour untouched.
 
-1. The template, after reading its island at load, posts `{"type": "kirocrew-panel:ready", "v": 1}` to `parent`.
+1. The template, after reading its island at load, posts `{"type": "ajcrew-panel:ready", "v": 1}` to `parent`.
 2. `CrewWebview` accepts it only when `event.source === iframe.contentWindow` and the frame has not navigated. The navigation guard is the one `McpAppFrame.tsx` already uses: the first `load` is ours, and any later `load` or the pre-navigation signal marks the channel dead until a fresh mint. The pre-navigation signal comes from a bootstrap `mcpAppSrcdoc.ts` injects and `buildSrcdoc` does not, so P2 adds the same bootstrap to the crew webview document; without it the channel would have only the load-count backstop and the pre-`load` window that bootstrap exists to close.
-3. On the next `panel_published` refetch, the host posts `{"type": "kirocrew-panel:data", "v": 1, "data": …, "lanes": …}` to `contentWindow` and does not remint only when all three hold: the document on screen sent `kirocrew-panel:ready`, the navigation guard has not marked its channel dead, and the new `panel.template` and `panel.template_digest` equal those of the document on screen. In every other case it remints as today, so a template that never opts in, one that has not finished the handshake, and a dead channel all get a fresh document on every publish.
+3. On the next `panel_published` refetch, the host posts `{"type": "ajcrew-panel:data", "v": 1, "data": …, "lanes": …}` to `contentWindow` and does not remint only when all three hold: the document on screen sent `ajcrew-panel:ready`, the navigation guard has not marked its channel dead, and the new `panel.template` and `panel.template_digest` equal those of the document on screen. In every other case it remints as today, so a template that never opts in, one that has not finished the handshake, and a dead channel all get a fresh document on every publish.
 4. The template updates its DOM from the message with the same text-only rendering it uses for the island.
 
 ### 4.2 What does not change
 
 - `CREW_WEBVIEW_SANDBOX` stays `allow-scripts`, and `cspFor` is untouched. `postMessage` is not governed by `connect-src`.
 - The target origin is `'*'`, which an opaque-origin frame requires; confidentiality rests on posting only to this iframe's own `contentWindow` behind the navigation guard, the same argument `McpAppFrame.tsx` records.
-- The message carries exactly the two islands' content: `data` is the `panel.data` the route already returns beside `html`, from the same record snapshot (`_read_and_compose`), and `lanes` is what the `kirocrew-panel-lanes` island (§6.2) carries. No other record field reaches the frame.
+- The message carries exactly the two islands' content: `data` is the `panel.data` the route already returns beside `html`, from the same record snapshot (`_read_and_compose`), and `lanes` is what the `ajcrew-panel-lanes` island (§6.2) carries. No other record field reaches the frame.
 
 ### 4.3 Server change
 
@@ -212,7 +212,7 @@ A Mochi-style companion declares `slots:user` and asks for it at install.
 This is the zero-token path for a webview companion. The frame feed carries one crew's lifecycle into app code, which is wider than `slots:own`, so it takes the same consent as a backend scope. A template may declare `"lifecycle": true` (§3.1) only when its manifest also declares the scope `crew:frame` in `permissions.lifecycle`; the install dialog discloses it with the §5.3 scopes ("sees when a crew that uses this template starts, stops, calls a tool or asks for approval"), and the template picker shows the flag beside `title`. `crew:frame` is not a slot scope and never reaches `_slot_visible`: `CrewWebview` checks the app's recorded install-time grant for `crew:frame` before forwarding anything. For a template whose `crew:frame` grant the owner gave and that has completed the §4.1 handshake:
 
 - The gateway sends the dashboard owner a new frame `crew_lifecycle` `{member, kind, ts, tool?}` for sessions whose allocation is bound to a crew, where `member` is the crew's exact name from that allocation. It is classified in `_OWNER_ONLY_EVENTS`, so no app token receives it, and the owner already sees crew names. It is keyed on the exact name, not the slug, because `members.slug_for_name` is not guaranteed unique and `crew_slug_collision` only refuses a second writer once a record exists.
-- `CrewWebview` forwards events only when `member` equals the exact crew name the drawer was opened for, as `{"type": "kirocrew-panel:lifecycle", "v": 1, "kind": …, "ts": …, "tool": …}`, over the channel from §4.
+- `CrewWebview` forwards events only when `member` equals the exact crew name the drawer was opened for, as `{"type": "ajcrew-panel:lifecycle", "v": 1, "kind": …, "ts": …, "tool": …}`, over the channel from §4.
 - The frame learns what kind of step its own crew is on, and nothing about any other crew.
 
 The companion then animates from the feed, and the crew publishes only when it has something worth saying.
@@ -233,14 +233,14 @@ The rule becomes: the crew's own dashboard thread writes the panel's main docume
 - A lane publish replaces only its own lane, inside the same record lock and after the same exact-crew `crew_key` check `publish` already performs. A lane can never write the main `data`, and the thread can never be overwritten by a child.
 - Caps: lanes have a per-lane size, a lane count, and a total budget that keeps the main `data` plus every lane under the existing `_MAX_RECORD_BYTES` ceiling; the numbers are the implementation PR's. A lane publish that would pass the count or the budget evicts the oldest lanes by `published_at` until it fits, so a lane publish never makes the crew's own record write fail with `record_too_large`.
 - Lifetime: lanes are kept until the crew's next main-panel publish, which drops all of them. A fan-out's final lanes therefore stay on screen after its children finish, until the crew's own thread says something new.
-- `compose` adds a second inert island, `kirocrew-panel-lanes`, only when lanes exist. A template that does not read it is unaffected; `default.html` gains a plain list of lanes under its main content.
+- `compose` adds a second inert island, `ajcrew-panel-lanes`, only when lanes exist. A template that does not read it is unaffected; `default.html` gains a plain list of lanes under its main content.
 - The `panel_published` frame is unchanged, and §4's data message carries `lanes`.
 
 ## 7. Capability 5 — app skills reach every crew member
 
 An enabled app's skills reach every crew member's agent, built-in or custom, unless the owner turns that off for a crew.
 
-- The default `kirocrew` agent is unchanged: it already sees the whole catalog, app skills included, and keeps `only=None`.
+- The default `ajcrew` agent is unchanged: it already sees the whole catalog, app skills included, and keeps `only=None`.
 - For a custom agent, `_skills_injection_plan` in `context.py` returns a restriction today, and both consumers spend it as one (`only=skill_globs or None`, and `discovery_only=not lazy_skills and not skill_globs`). Under the default `skills.lazy_load=True`, `discovery_only` is `False` either way, so for an unmapped custom agent the app globs only decide which skills the lazy index lists. P5 adds one glob per skill an enabled app registered to that restriction: the resolved real path of that skill's directory inside the app bundle, as `_register_skills` in `apps/bridges_skills.py` links it. `_matches_any` compares real filesystem paths, so the glob is absolute, and because both the namespaced and the flat link resolve to that same bundle path, it matches whichever link catalog deduplication keeps: a mapped custom agent gets its own mapping plus the app globs, and an unmapped custom agent, which gets no skills today, gets the app globs only, never the whole catalog. The plan's first return value turns true for an unmapped custom agent exactly when the app globs are non-empty.
 - One seam for injection, so session-start injection and post-compaction re-injection cannot disagree, which is that function's stated purpose. `skill_search` resolves its scope through a second resolver, `session_skill_globs` in `agent_discovery.py`, so P5 adds the same app globs there too; the two share one helper that lists them, so they cannot drift.
 - Owner control is per crew: `app_skills` (default `true` for new crews; see Upgrade below for existing custom-agent crews) is stored in the same owner-only `crew_member_owner_settings.json` record as `panel_template` (§3.2), set from the member settings page beside it. `false` keeps a crew's agent at its own mapping.
@@ -257,7 +257,7 @@ Each phase is one implementation PR, merged after this RFC is `accepted`, and up
 | P2 | Live data handshake | `CrewWebview.tsx`, `lib/widgetSrcdoc.ts` (pre-navigation bootstrap), `handlers/agent_panel_read.py` (`template_digest`) | `api-reference.md` (Crew Webview template protocol) | an opted-in template keeps its state across publishes; `default.html` still remints on every publish |
 | P3 | Lifecycle feed and frame lifecycle | broadcast projector, `apps/context.py`, `apps/lifecycle.py`, `ws_event_scope.py`, `CrewWebview.tsx` | `manifest-reference.md` (`permissions.lifecycle`, template `lifecycle` flag), `api-reference.md` (`ctx.lifecycle`, lifecycle message), `docs/system-specs/modules/app-kit-platform.md` | one `turn.started` per turn through a subagent wait; an ungranted scope delivers nothing |
 | P4 | Lane publishing (needs the spawned-child identity RFC) | `handlers/agent_panel_publish.py`, `agent_panel.py`, `mcp_panel.py`, `default.html` | `api-reference.md` (lanes island and lane message fields) | a child's publish lands in its own lane; a 17th lane or a full budget evicts the oldest; the next main publish drops all lanes |
-| P5 | App skills for every crew | `context.py` (`_skills_injection_plan`), `agent_discovery.py` (`session_skill_globs`), `apps/bridges_skills.py` (registered-skill path list), `app_skills` in `crew_member_owner_settings.json` | `manifest-reference.md` (`skills`: who sees them), `src/kiro_crew/docs/agent-spec-fields.md` (skill injection table), `docs/system-specs/modules/memory-skills-hooks.md` | an unmapped custom agent sees an enabled app's skill and nothing else; `app_skills: false` removes it; the PR description names the default-on for new crews for reviewers |
+| P5 | App skills for every crew | `context.py` (`_skills_injection_plan`), `agent_discovery.py` (`session_skill_globs`), `apps/bridges_skills.py` (registered-skill path list), `app_skills` in `crew_member_owner_settings.json` | `manifest-reference.md` (`skills`: who sees them), `src/aj_crew/docs/agent-spec-fields.md` (skill injection table), `docs/system-specs/modules/memory-skills-hooks.md` | an unmapped custom agent sees an enabled app's skill and nothing else; `app_skills: false` removes it; the PR description names the default-on for new crews for reviewers |
 
 P1 is first because P2 and P3's frame half need a template worth updating live. P3's backend half is independent of P1 and P2. P4 waits for the separate spawned-child identity RFC and is otherwise independent of the rest on the server; it uses P2 for live lane updates. P5 is independent of all of them and can land first. The motivating app migrates after P3: it drops its hooks and its fallback file, and its skill keeps only the one short line the crew chooses to say.
 

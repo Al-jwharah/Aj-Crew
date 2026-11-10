@@ -14,7 +14,7 @@ from typing import Any, Iterator
 
 import pytest
 
-from kiro_crew.feishu.client import LarkClient
+from aj_crew.feishu.client import LarkClient
 
 
 class _Fields:

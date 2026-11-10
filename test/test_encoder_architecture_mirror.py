@@ -18,14 +18,14 @@ gateway.
 An architecture the bump ADDS to the cache-less set is invisible to this test:
 its name is in the binary but not in the set, and no byte pattern says which
 switch case it belongs to. That direction stays a manual step of the bump
-procedure in `src/kiro_crew/_vendor/README.md`.
+procedure in `src/aj_crew/_vendor/README.md`.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from kiro_crew.embeddings import _ENCODER_ARCHITECTURES, _LIBS_DIR_NAME, _VENDOR_DIR
+from aj_crew.embeddings import _ENCODER_ARCHITECTURES, _LIBS_DIR_NAME, _VENDOR_DIR
 
 _LIBS_ROOT = _VENDOR_DIR / _LIBS_DIR_NAME
 
@@ -69,5 +69,5 @@ def test_every_encoder_architecture_is_spelled_by_every_vendored_runtime() -> No
         assert not missing, (
             f"{library.relative_to(_LIBS_ROOT)} does not spell architecture(s) {missing}; "
             "re-mirror _ENCODER_ARCHITECTURES against llama_model::create_memory in the "
-            "vendored llama.cpp (see src/kiro_crew/_vendor/README.md)"
+            "vendored llama.cpp (see src/aj_crew/_vendor/README.md)"
         )

@@ -7,10 +7,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew import mcp_cron
-from kiro_crew.cron import CronSchedule, CronService
-from kiro_crew.mcp_cron import _call_tool_inner, _call_tool_locally
-from kiro_crew.validation import (
+from aj_crew import mcp_cron
+from aj_crew.cron import CronSchedule, CronService
+from aj_crew.mcp_cron import _call_tool_inner, _call_tool_locally
+from aj_crew.validation import (
     CRON_ADD_SCHEMA,
     MCP_CRON_SCHEMAS,
     ValidationError,
@@ -30,7 +30,7 @@ def _cron_caller_is_named(named_cron_caller):
 
 class TestCronAddThreadTs:
     def test_add_with_thread_ts(self, tmp_path: Path) -> None:
-        with patch("kiro_crew.mcp_cron.CronService") as mock_svc_cls:
+        with patch("aj_crew.mcp_cron.CronService") as mock_svc_cls:
             mock_svc = mock_svc_cls.return_value
             mock_job = type(
                 "Job",
@@ -65,7 +65,7 @@ class TestCronAddThreadTs:
             assert "abc" in result
 
     def test_add_without_thread_ts(self, tmp_path: Path) -> None:
-        with patch("kiro_crew.mcp_cron.CronService") as mock_svc_cls:
+        with patch("aj_crew.mcp_cron.CronService") as mock_svc_cls:
             mock_svc = mock_svc_cls.return_value
             mock_job = type(
                 "Job",
@@ -125,10 +125,10 @@ class TestCronAddInheritsCallerThread:
         # is scoped to its channel, so the inherit requires the resolved channel
         # to BE the caller's channel -- here the caller is in C0AP77JJSN6 and the
         # cron targets that same channel.
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "slack:1789696119.009399")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "slack:1789696119.009399")
         with (
-            patch("kiro_crew.mcp_cron._caller_channel_id", return_value="C0AP77JJSN6"),
-            patch("kiro_crew.mcp_cron.CronService") as mock_svc_cls,
+            patch("aj_crew.mcp_cron._caller_channel_id", return_value="C0AP77JJSN6"),
+            patch("aj_crew.mcp_cron.CronService") as mock_svc_cls,
         ):
             mock_svc = mock_svc_cls.return_value
             mock_svc.add_job.return_value = self._mock_job()
@@ -146,8 +146,8 @@ class TestCronAddInheritsCallerThread:
             assert kw.get("thread_ts") == "1789696119.009399", "caller thread not inherited"
 
     def test_explicit_thread_ts_wins_over_caller(self, tmp_path: Path, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "slack:1789696119.009399")
-        with patch("kiro_crew.mcp_cron.CronService") as mock_svc_cls:
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "slack:1789696119.009399")
+        with patch("aj_crew.mcp_cron.CronService") as mock_svc_cls:
             mock_svc = mock_svc_cls.return_value
             mock_svc.add_job.return_value = self._mock_job()
             _call_tool_locally(
@@ -170,10 +170,10 @@ class TestCronAddInheritsCallerThread:
         # passes ``"thread_ts": ""`` is asking for top-level delivery -- it must
         # NOT be overridden with the inherited caller thread. The inherit fires
         # only when the key is ABSENT.
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "slack:1789696119.009399")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "slack:1789696119.009399")
         with (
-            patch("kiro_crew.mcp_cron._caller_channel_id", return_value="C0AP77JJSN6"),
-            patch("kiro_crew.mcp_cron.CronService") as mock_svc_cls,
+            patch("aj_crew.mcp_cron._caller_channel_id", return_value="C0AP77JJSN6"),
+            patch("aj_crew.mcp_cron.CronService") as mock_svc_cls,
         ):
             mock_svc = mock_svc_cls.return_value
             mock_svc.add_job.return_value = self._mock_job()
@@ -194,8 +194,8 @@ class TestCronAddInheritsCallerThread:
 
     def test_non_slack_caller_gets_no_thread(self, tmp_path: Path, monkeypatch) -> None:
         # Dashboard caller: no thread to inherit.
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:conftest-slot")
-        with patch("kiro_crew.mcp_cron.CronService") as mock_svc_cls:
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:conftest-slot")
+        with patch("aj_crew.mcp_cron.CronService") as mock_svc_cls:
             mock_svc = mock_svc_cls.return_value
             mock_svc.add_job.return_value = self._mock_job()
             _call_tool_locally(
@@ -207,10 +207,10 @@ class TestCronAddInheritsCallerThread:
 
     def test_no_channel_no_thread_inherit(self, tmp_path: Path, monkeypatch) -> None:
         # Even a Slack caller: without a channel a thread_ts is meaningless.
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "slack:1789696119.009399")
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
-        with patch("kiro_crew.mcp_cron._caller_channel_id", return_value=""):
-            with patch("kiro_crew.mcp_cron.CronService") as mock_svc_cls:
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "slack:1789696119.009399")
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
+        with patch("aj_crew.mcp_cron._caller_channel_id", return_value=""):
+            with patch("aj_crew.mcp_cron.CronService") as mock_svc_cls:
                 mock_svc = mock_svc_cls.return_value
                 mock_svc.add_job.return_value = self._mock_job()
                 _call_tool_locally("cron_add", {"name": "ops", "message": "check", "every": 300})
@@ -227,11 +227,11 @@ class TestCronAddInheritsCallerThread:
         # into the other channel would name a thread that does not exist there --
         # the job would post into an invalid thread forever. The thread must NOT
         # be inherited across channels; the explicit channel still stands.
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "slack:1789696119.009399")
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "slack:1789696119.009399")
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         with (
-            patch("kiro_crew.mcp_cron._caller_channel_id", return_value="C0CALLER0OWN"),
-            patch("kiro_crew.mcp_cron.CronService") as mock_svc_cls,
+            patch("aj_crew.mcp_cron._caller_channel_id", return_value="C0CALLER0OWN"),
+            patch("aj_crew.mcp_cron.CronService") as mock_svc_cls,
         ):
             mock_svc = mock_svc_cls.return_value
             mock_svc.add_job.return_value = self._mock_job()
@@ -256,11 +256,11 @@ class TestCronAddInheritsCallerThread:
     ) -> None:
         # The guard above is scoped to a DIFFERENT channel: when the explicit
         # channel equals the caller's own channel, the thread still inherits.
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "slack:1789696119.009399")
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "slack:1789696119.009399")
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         with (
-            patch("kiro_crew.mcp_cron._caller_channel_id", return_value="C0SAME0CHAN"),
-            patch("kiro_crew.mcp_cron.CronService") as mock_svc_cls,
+            patch("aj_crew.mcp_cron._caller_channel_id", return_value="C0SAME0CHAN"),
+            patch("aj_crew.mcp_cron.CronService") as mock_svc_cls,
         ):
             mock_svc = mock_svc_cls.return_value
             mock_svc.add_job.return_value = self._mock_job()
@@ -288,7 +288,7 @@ class TestCronAddThreadInheritAcrossGateway:
 
     @staticmethod
     def _forwarded_args(monkeypatch, *, caller_key: str, caller_channel: str, call_args: dict):
-        from kiro_crew.mcp_caller import CallerContext, set_current_caller
+        from aj_crew.mcp_caller import CallerContext, set_current_caller
 
         captured: dict = {}
 
@@ -296,9 +296,9 @@ class TestCronAddThreadInheritAcrossGateway:
             captured["payload"] = payload
             return {"result": "Added job abc"}
 
-        monkeypatch.setattr("kiro_crew.mcp_core._post", fake_post)
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", caller_key)
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setattr("aj_crew.mcp_core._post", fake_post)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", caller_key)
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         set_current_caller(
             CallerContext(
                 session_key=caller_key,
@@ -465,7 +465,7 @@ class TestCronUpdateThreadTs:
     """
 
     def test_update_sets_thread_ts(self, tmp_path: Path, named_cron_caller: str) -> None:
-        with patch("kiro_crew.mcp_cron.CronService") as mock_svc_cls:
+        with patch("aj_crew.mcp_cron.CronService") as mock_svc_cls:
             mock_svc = mock_svc_cls.return_value
             fake_job = MagicMock()
             fake_job.id = "abc"
@@ -532,8 +532,8 @@ class TestCronThreadTsEndToEnd:
     def test_cron_update_persists_thread_ts(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         svc = CronService(base_dir=tmp_path)
         job = svc.add_job(
             name="e2e", message="m", every_secs=3600, session_key="dashboard:conftest-slot"
@@ -548,8 +548,8 @@ class TestCronThreadTsEndToEnd:
     def test_cron_update_clears_thread_ts(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         svc = CronService(base_dir=tmp_path)
         job = svc.add_job(
             name="e2e-clear",

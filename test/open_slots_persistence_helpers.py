@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from kiro_crew.dashboard.chat_utils import _history_key_for
+from aj_crew.dashboard.chat_utils import _history_key_for
 
 
 def _seed_session(state, slot_key: str, *, closed: bool = False) -> None:

@@ -7,9 +7,9 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from kiro_crew.dashboard import chat_title
-from kiro_crew.dashboard.chat_title import _TITLE_ORIGIN_AUTO
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard import chat_title
+from aj_crew.dashboard.chat_title import _TITLE_ORIGIN_AUTO
+from aj_crew.dashboard.state import _ChatSlot
 
 
 def _fake_state(*slots):

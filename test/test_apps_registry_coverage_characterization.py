@@ -1,4 +1,4 @@
-"""Characterization of ``kiro_crew.apps.registry``: behaviour a structural move of the
+"""Characterization of ``aj_crew.apps.registry``: behaviour a structural move of the
 module must not change.
 """
 
@@ -15,21 +15,21 @@ import pytest
 from apps_registry_coverage_helpers import _explicit_registry_execution_admission  # noqa: F401
 from apps_registry_coverage_helpers import cache_dir_fixture  # noqa: F401
 
-from kiro_crew.apps import registry
-from kiro_crew.testing.wait import finished
+from aj_crew.apps import registry
+from aj_crew.testing.wait import finished
 
 # Characterization: behaviour a structural move of this module must not change
 #
 # Each case below pins a value the registry derives from where its code lives
 # (``__file__``), a byte-exact cache identity, a fixed classification, or a
 # module-level seam that one function reads while another defines it. Every case
-# goes through ``kiro_crew.apps.registry`` only, so it answers the same way against
+# goes through ``aj_crew.apps.registry`` only, so it answers the same way against
 # the one-module registry and against the split one.
 
 
 class TestTheBundledSeedIsTheWheelsOwnFile:
     def test_the_seed_path_sits_beside_the_registry_module(self):
-        # The seed ships as ``kiro_crew/apps/app-registry.json``; a module that
+        # The seed ships as ``aj_crew/apps/app-registry.json``; a module that
         # derived the path from its OWN ``__file__`` after moving would look in the
         # wrong directory and silently list no seed rows at all.
         assert registry._REGISTRY_FILE == Path(registry.__file__).parent / "app-registry.json"

@@ -6,7 +6,7 @@ slot's metadata disagrees with what actually answers, and the dashboard footer
 chip renders its literal ``'default'`` fallback. The dashboard's auto-create
 races the agents fetch, so agent-less creates are a common path, not an edge.
 
-What is stamped is the default template (``agent.default_agent``, ``kirocrew``
+What is stamped is the default template (``agent.default_agent``, ``ajcrew``
 when unset) in the ``template`` namespace -- never the ``default`` crewmate
 alias: a plain session is a template on the default folder and
 memory store, and the alias stamp made every plain chat that crewmate's.
@@ -25,15 +25,15 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.testing.wait import await_until
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard import chat_handlers
+from aj_crew.testing.wait import await_until
 
 
-def _stub_config(default_agent: str, default_template: str = "") -> KiroCrewConfig:
+def _stub_config(default_agent: str, default_template: str = "") -> AjCrewConfig:
     """A real config object (all sections present) with the default crewmate
-    alias pinned and, optionally, a default template other than ``kirocrew``."""
-    cfg = KiroCrewConfig()
+    alias pinned and, optionally, a default template other than ``ajcrew``."""
+    cfg = AjCrewConfig()
     cfg.default_agent = default_agent
     cfg.agent.default_agent = default_template
     return cfg
@@ -59,12 +59,12 @@ async def _create_slot(state: Any, payload: dict[str, Any]) -> None:
 async def test_owner_create_waits_for_memory_recovery_before_allocating(
     dashboard_state, monkeypatch, agent, recovery_error
 ):
-    from kiro_crew import memory_startup
-    from kiro_crew.session_agent_selection import session_agent_selection_name
+    from aj_crew import memory_startup
+    from aj_crew.session_agent_selection import session_agent_selection_name
 
-    cfg = _alias_config(default={"kiro_agent": "kirocrew"}, worker={"kiro_agent": "kirocrew"})
+    cfg = _alias_config(default={"kiro_agent": "ajcrew"}, worker={"kiro_agent": "ajcrew"})
     cfg.save()
-    monkeypatch.setattr(chat_handlers, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+    monkeypatch.setattr(chat_handlers, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
     monkeypatch.setattr(chat_handlers, "schedule_eager_spawn", lambda *args, **kwargs: None)
     dashboard_state.sessions.get_provider.return_value = None
     dashboard_state.sessions.resumable_sid.return_value = ""
@@ -133,15 +133,15 @@ async def test_agentless_create_stamps_the_declared_name_not_a_file_stem(
     """``agent.default_agent`` may spell a spec's file stem. The stamp must carry the
     name kiro-cli declares: it outlives a later change of the default, and a stem
     recorded verbatim would resolve nowhere once the default moved on."""
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     monkeypatch.setattr(
         chat_handlers,
-        "KiroCrewConfig",
+        "AjCrewConfig",
         SimpleNamespace(load=lambda: _stub_config("sales-agent", "KiroPkg-captain")),
     )
     monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS_READY", True)
-    monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"captain", "kirocrew"}))
+    monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"captain", "ajcrew"}))
     monkeypatch.setattr(loader, "_MATERIALIZED_STEMS", {"KiroPkg-captain": "captain"})
     monkeypatch.setattr(loader, "_edition_agent_names", lambda: frozenset())
     await _create_slot(dashboard_state, {"name": "stem"})
@@ -157,11 +157,11 @@ async def test_agentless_create_warms_a_cold_snapshot_before_stamping(
     """During the boot window the materialized snapshot is cold. The stamp runs
     off-loop so ``dispatch_kiro_agent`` can warm it, instead of returning the
     stem unchanged as it must on the event loop."""
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     monkeypatch.setattr(
         chat_handlers,
-        "KiroCrewConfig",
+        "AjCrewConfig",
         SimpleNamespace(load=lambda: _stub_config("sales-agent", "KiroPkg-captain")),
     )
     monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS_READY", False)
@@ -170,7 +170,7 @@ async def test_agentless_create_warms_a_cold_snapshot_before_stamping(
     monkeypatch.setattr(loader, "_edition_agent_names", lambda: frozenset())
 
     def _warm(*, heal_default: bool = False) -> None:
-        loader._MATERIALIZED_AGENTS = frozenset({"captain", "kirocrew"})
+        loader._MATERIALIZED_AGENTS = frozenset({"captain", "ajcrew"})
         loader._MATERIALIZED_STEMS = {"KiroPkg-captain": "captain"}
         loader._MATERIALIZED_AGENTS_READY = True
 
@@ -182,31 +182,31 @@ async def test_agentless_create_warms_a_cold_snapshot_before_stamping(
 def test_the_blank_switch_stamp_is_the_declared_name_too(monkeypatch: pytest.MonkeyPatch) -> None:
     """The blank ``/agent`` switch stamps through the same helper as the create,
     so a file-stem default is stamped as the name kiro-cli declares there too."""
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS_READY", True)
-    monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"captain", "kirocrew"}))
+    monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"captain", "ajcrew"}))
     monkeypatch.setattr(loader, "_MATERIALIZED_STEMS", {"KiroPkg-captain": "captain"})
     monkeypatch.setattr(loader, "_edition_agent_names", lambda: frozenset())
     assert chat_handlers._default_template_stamp(_stub_config("x", "KiroPkg-captain")) == "captain"
-    assert chat_handlers._default_template_stamp(_stub_config("x", "")) == "kirocrew"
+    assert chat_handlers._default_template_stamp(_stub_config("x", "")) == "ajcrew"
     # Pinned by source: the switch path stamps through the helper, off-loop.
     import inspect
 
     src = inspect.getsource(chat_handlers.switch_slot_agent)
-    assert "_default_template_stamp(KiroCrewConfig.load())" in src
+    assert "_default_template_stamp(AjCrewConfig.load())" in src
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    ("default_template", "stamped"), [("", "kirocrew"), ("sales-template", "sales-template")]
+    ("default_template", "stamped"), [("", "ajcrew"), ("sales-template", "sales-template")]
 )
 async def test_agentless_create_stamps_the_default_template(
     dashboard_state: Any, monkeypatch: pytest.MonkeyPatch, default_template: str, stamped: str
 ) -> None:
     monkeypatch.setattr(
         chat_handlers,
-        "KiroCrewConfig",
+        "AjCrewConfig",
         SimpleNamespace(load=lambda: _stub_config("sales-agent", default_template)),
     )
     await _create_slot(dashboard_state, {"name": "agentless"})
@@ -223,7 +223,7 @@ async def test_explicit_agent_is_stored_verbatim(
     """The stamp must not touch a caller-named agent (the verbatim-intent rule)."""
     monkeypatch.setattr(
         chat_handlers,
-        "KiroCrewConfig",
+        "AjCrewConfig",
         SimpleNamespace(load=lambda: _stub_config("sales-agent")),
     )
     await _create_slot(dashboard_state, {"name": "explicit", "agent": "custom-x"})
@@ -239,7 +239,7 @@ async def test_unloadable_config_still_creates_with_empty_agent(
     def _boom() -> Any:
         raise RuntimeError("config unreadable")
 
-    monkeypatch.setattr(chat_handlers, "KiroCrewConfig", SimpleNamespace(load=_boom))
+    monkeypatch.setattr(chat_handlers, "AjCrewConfig", SimpleNamespace(load=_boom))
     await _create_slot(dashboard_state, {"name": "no-config"})
     assert dashboard_state._slots["no-config"].agent == ""
 
@@ -253,13 +253,13 @@ async def test_unloadable_config_still_creates_with_empty_agent(
 # auditability of every outcome.
 
 
-def _alias_config(**aliases: Any) -> KiroCrewConfig:
+def _alias_config(**aliases: Any) -> AjCrewConfig:
     """A real config with each named member bound to its own private store."""
-    from kiro_crew.config.loader import KiroCrewAgentConfig
-    from kiro_crew.memory_stores import provision_member_memory
+    from aj_crew.config.loader import AjCrewAgentConfig
+    from aj_crew.memory_stores import provision_member_memory
 
-    cfg = KiroCrewConfig()
-    cfg.agents = {name: KiroCrewAgentConfig(**fields) for name, fields in aliases.items()}
+    cfg = AjCrewConfig()
+    cfg.agents = {name: AjCrewAgentConfig(**fields) for name, fields in aliases.items()}
     cfg.default_agent = next(iter(cfg.agents))
     for name in cfg.agents:
         if name != "default":
@@ -281,12 +281,12 @@ class TestSameBindingGuard:
     async def test_comparison_runs_off_loop_and_refuses_changed_selection(
         self, dashboard_state, monkeypatch, change_project
     ):
-        import kiro_crew.config.loader as loader_mod
+        import aj_crew.config.loader as loader_mod
 
-        cfg = _alias_config(default={"kiro_agent": "kirocrew"})
+        cfg = _alias_config(default={"kiro_agent": "ajcrew"})
         monkeypatch.setattr(loader_mod, "_MATERIALIZED_AGENTS_READY", True)
-        monkeypatch.setattr(loader_mod, "_MATERIALIZED_AGENTS", {"kirocrew"})
-        monkeypatch.setattr(chat_handlers, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+        monkeypatch.setattr(loader_mod, "_MATERIALIZED_AGENTS", {"ajcrew"})
+        monkeypatch.setattr(chat_handlers, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
         slot = dashboard_state.get_or_create_slot("comparison", agent="default")
         loop = asyncio.get_running_loop()
         original = chat_handlers.resolve_agent_bindings
@@ -307,10 +307,10 @@ class TestSameBindingGuard:
         app.router.add_post("/api/chat", chat_handlers.api_chat)
         async with TestClient(TestServer(app)) as client:
             response = await client.post(
-                "/api/chat?ws=1", json={"message": "", "slot": slot.key, "agent": "kirocrew"}
+                "/api/chat?ws=1", json={"message": "", "slot": slot.key, "agent": "ajcrew"}
             )
             data = await response.json()
-        assert [call[0] for call in calls] == ["default", "kirocrew"]
+        assert [call[0] for call in calls] == ["default", "ajcrew"]
         assert calls[0][1] == calls[1][1]
         assert response.status == (409 if change_project else 400)
         assert data["code"] == ("session_rebound" if change_project else "message_required")
@@ -325,12 +325,12 @@ class TestSameBindingGuard:
         alias's memory store."""
         cfg = _alias_config(
             **{
-                "alias-a": {"kiro_agent": "kirocrew"},
-                "alias-b": {"kiro_agent": "kirocrew"},
+                "alias-a": {"kiro_agent": "ajcrew"},
+                "alias-b": {"kiro_agent": "ajcrew"},
             }
         )
         assert cfg.agents["alias-a"].memory_store != cfg.agents["alias-b"].memory_store
-        monkeypatch.setattr(chat_handlers, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+        monkeypatch.setattr(chat_handlers, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
         slot = dashboard_state.get_or_create_slot("pinned")
         slot.agent = "alias-a"
         events: list[Any] = []
@@ -351,12 +351,12 @@ class TestSameBindingGuard:
     ) -> None:
         """Two names resolving to the same binding pass the guard, and the
         bypass of the 409 boundary emits its own SEL outcome."""
-        import kiro_crew.config.loader as loader_mod
+        import aj_crew.config.loader as loader_mod
 
-        cfg = _alias_config(default={"kiro_agent": "kirocrew"})
+        cfg = _alias_config(default={"kiro_agent": "ajcrew"})
         monkeypatch.setattr(loader_mod, "_MATERIALIZED_AGENTS_READY", True)
-        monkeypatch.setattr(loader_mod, "_MATERIALIZED_AGENTS", {"kirocrew"})
-        monkeypatch.setattr(chat_handlers, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+        monkeypatch.setattr(loader_mod, "_MATERIALIZED_AGENTS", {"ajcrew"})
+        monkeypatch.setattr(chat_handlers, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
         slot = dashboard_state.get_or_create_slot("pinned2")
         slot.agent = "default"
         events: list[str] = []
@@ -366,7 +366,7 @@ class TestSameBindingGuard:
             lambda key, agent, outcome="applied": events.append(outcome),
         )
         resp, _ = await _post_chat(
-            dashboard_state, {"message": "hi", "slot": "pinned2", "agent": "kirocrew"}
+            dashboard_state, {"message": "hi", "slot": "pinned2", "agent": "ajcrew"}
         )
         assert resp.status == 200
         assert "allowed_same_binding" in events
@@ -379,10 +379,10 @@ class TestSameBindingGuard:
         request naming the default alias: without the slot's project scope both
         names resolve to default bindings and the guard would wave the request
         through while dispatch runs the project agent."""
-        import kiro_crew.config.loader as loader_mod
+        import aj_crew.config.loader as loader_mod
 
-        cfg = _alias_config(default={"kiro_agent": "kirocrew"})
-        monkeypatch.setattr(chat_handlers, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+        cfg = _alias_config(default={"kiro_agent": "ajcrew"})
+        monkeypatch.setattr(chat_handlers, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
         # The project declares "proj-agent"; resolution must see it ONLY when
         # the guard passes the slot's project scope through.
         monkeypatch.setattr(
@@ -420,10 +420,10 @@ class TestSameBindingGuard:
         a resolution failure, not an agent mismatch, so operators triage the
         config problem instead of agent naming."""
 
-        def _boom() -> KiroCrewConfig:
+        def _boom() -> AjCrewConfig:
             raise OSError("config unreadable")
 
-        monkeypatch.setattr(chat_handlers, "KiroCrewConfig", SimpleNamespace(load=_boom))
+        monkeypatch.setattr(chat_handlers, "AjCrewConfig", SimpleNamespace(load=_boom))
         slot = dashboard_state.get_or_create_slot("pinned3")
         slot.agent = "alias-a"
         events: list[str] = []
@@ -444,10 +444,10 @@ class TestSameBindingGuard:
 async def test_create_resolves_off_loop_without_adopting_a_concurrent_slot(
     dashboard_state, monkeypatch, replace_slot
 ):
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.state import _ChatSlot
 
-    cfg = _alias_config(default={"kiro_agent": "kirocrew"}, worker={"kiro_agent": "kirocrew"})
-    monkeypatch.setattr(chat_handlers, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+    cfg = _alias_config(default={"kiro_agent": "ajcrew"}, worker={"kiro_agent": "ajcrew"})
+    monkeypatch.setattr(chat_handlers, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
     monkeypatch.setattr(chat_handlers, "schedule_eager_spawn", lambda *args, **kwargs: None)
     loop = asyncio.get_running_loop()
     original = chat_handlers.resolve_agent_bindings
@@ -491,11 +491,11 @@ async def test_create_resolves_off_loop_without_adopting_a_concurrent_slot(
 async def test_switch_resolves_off_loop_and_refuses_rebound_slot_before_reset(
     dashboard_state, monkeypatch, change
 ):
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.state import _ChatSlot
 
-    cfg = _alias_config(default={"kiro_agent": "kirocrew"}, worker={"kiro_agent": "kirocrew"})
+    cfg = _alias_config(default={"kiro_agent": "ajcrew"}, worker={"kiro_agent": "ajcrew"})
     await asyncio.to_thread(cfg.save)
-    monkeypatch.setattr(chat_handlers, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+    monkeypatch.setattr(chat_handlers, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
     monkeypatch.setattr(chat_handlers, "schedule_eager_spawn", lambda *args, **kwargs: None)
     slot = dashboard_state.get_or_create_slot("offloop-switch", agent="default")
     replacement = _ChatSlot(slot.key, agent="another-owner")

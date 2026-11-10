@@ -33,7 +33,7 @@ import '../src/styles/message-font-size.css'
 
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 initI18n(params.get('lang') || 'en')
 
 const LARGE = Number(params.get('size') || 20)
@@ -51,7 +51,7 @@ export const INPUT_TYPO = 'px-4 pt-3 pb-1 text-sm font-body leading-normal'
 | Inline code | pinned \`13px\` | \`0.9286em\` |
 | Composer | \`text-sm\` | setting var |
 
-See \`/Volumes/workplace/KiroCrew/website/src/components/PasteHighlightLayer.tsx\` line 7 and [PR #12665](https://github.com/kirodotdev/KiroCrew/pull/12665).`
+See \`/Volumes/workplace/AjCrew/website/src/components/PasteHighlightLayer.tsx\` line 7 and [PR #12665](https://github.com/kirodotdev/KiroCrew/pull/12665).`
 
 const FOLLOW_UPS = ['Extend messageFontSize to the composer', 'Add a separate composer font-size setting', 'Just show me the diff']
 

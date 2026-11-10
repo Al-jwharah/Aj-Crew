@@ -1,6 +1,6 @@
 """Kiro CLI prerequisite tests: the dashboard routes and the detect-only contract.
 
-The status, update and repair routes and who may read what, and the contract that Kiro
+The status, update and repair routes and who may read what, and the contract that Aj
 Crew detects Kiro CLI but never installs it or signs in for the user (including the
 read-only-probe tripwire over the source of ``kiro_prerequisite.py`` and its owners).
 """
@@ -24,17 +24,17 @@ from kiro_prerequisite_helpers import _agents_dir_never_the_real_home  # noqa: F
 from kiro_prerequisite_helpers import _isolate_agent_specs  # noqa: F401
 from kiro_prerequisite_helpers import _FakeRuntime, _make_executable, _no_audit
 
-from kiro_crew import kiro_prerequisite as prerequisite_module
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_create
-from kiro_crew.dashboard.chat_regenerate import api_chat_slot_edit_resend, api_chat_slot_regenerate
-from kiro_crew.dashboard.chat_rewind import api_chat_slot_rewind
-from kiro_crew.dashboard.chat_runner import _run_chat
-from kiro_crew.dashboard.handlers.kiro_prerequisite import (
+from aj_crew import kiro_prerequisite as prerequisite_module
+from aj_crew.dashboard.chat_handlers import api_chat_slot_create
+from aj_crew.dashboard.chat_regenerate import api_chat_slot_edit_resend, api_chat_slot_regenerate
+from aj_crew.dashboard.chat_rewind import api_chat_slot_rewind
+from aj_crew.dashboard.chat_runner import _run_chat
+from aj_crew.dashboard.handlers.kiro_prerequisite import (
     api_kiro_prerequisite_repair_specs,
     api_kiro_prerequisite_status,
     api_kiro_prerequisite_update_cli,
 )
-from kiro_crew.kiro_prerequisite import (
+from aj_crew.kiro_prerequisite import (
     KIRO_CLI_LOGIN_COMMAND,
     KIRO_CLI_SSO_LOGIN_COMMAND,
     KIRO_CLI_UPDATE_COMMAND,
@@ -44,7 +44,7 @@ from kiro_crew.kiro_prerequisite import (
     ProcessResult,
     _run_process,
 )
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.testing.wait import await_until, finished
 
 
 class TestKiroPrerequisiteHandlers:
@@ -85,7 +85,7 @@ class TestKiroPrerequisiteHandlers:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        # The owner can READ readiness. Neither setup step is a Kiro Crew verb:
+        # The owner can READ readiness. Neither setup step is a Aj Crew verb:
         # obtaining the CLI and signing in both belong to Kiro CLI, so both
         # routes are absent by construction rather than guarded.
         service = KiroPrerequisiteService(
@@ -285,7 +285,7 @@ class TestKiroPrerequisiteHandlers:
         Slack is not left without a response when the CLI is signed out.
         """
 
-        from kiro_crew.acp.client import AcpAuthRequired
+        from aj_crew.acp.client import AcpAuthRequired
 
         service = KiroPrerequisiteService(
             platform_name="linux",
@@ -428,7 +428,7 @@ class TestKiroPrerequisiteHandlers:
         stay visible and individually cancellable).
         """
 
-        from kiro_crew.acp.client import AcpAuthRequired
+        from aj_crew.acp.client import AcpAuthRequired
 
         service = KiroPrerequisiteService(
             platform_name="linux",
@@ -492,7 +492,7 @@ class TestKiroPrerequisiteHandlers:
         attempt reports the real auth state.
         """
 
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         service = KiroPrerequisiteService(
             platform_name="linux",
@@ -556,8 +556,8 @@ class TestKiroPrerequisiteHandlers:
     ) -> None:
         """Post-fan-out synthesis runs rather than waiting on latched readiness."""
 
-        from kiro_crew.dashboard.state import SUBAGENT_SYNTHESIS_PROMPT
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.state import SUBAGENT_SYNTHESIS_PROMPT
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         service = KiroPrerequisiteService(
             platform_name="linux",
@@ -722,10 +722,10 @@ class TestKiroPrerequisiteHandlers:
         owner_id: str,
         expect_hints: bool,
     ) -> None:
-        from kiro_crew import kiro_prerequisite_service as service_module
-        from kiro_crew.kiro_prerequisite_status import config_set_hints_for_launcher
+        from aj_crew import kiro_prerequisite_service as service_module
+        from aj_crew.kiro_prerequisite_status import config_set_hints_for_launcher
 
-        hints = config_set_hints_for_launcher(r"C:\Kiro Crew\bin\kirocrew.cmd", "win32")
+        hints = config_set_hints_for_launcher(r"C:\Aj Crew\bin\ajcrew.cmd", "win32")
         monkeypatch.setattr(service_module, "_resolve_config_set_hints", lambda: hints)
         service = KiroPrerequisiteService(
             platform_name="linux",
@@ -815,8 +815,8 @@ class TestKiroPrerequisiteHandlers:
             assert (await client.get("/api/kiro-prerequisite")).status == 200
 
 
-class TestKiroCrewNeverSetsUpKiroCli:
-    """Kiro Crew DETECTS Kiro CLI. It never installs it and never signs in.
+class TestAjCrewNeverSetsUpKiroCli:
+    """Aj Crew DETECTS Kiro CLI. It never installs it and never signs in.
 
     These are contract tests, not behavior tests: they pin the ABSENCE of both
     setup capabilities. The removed install path downloaded a remote shell script

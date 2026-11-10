@@ -12,7 +12,7 @@ import random
 
 import pytest
 
-from kiro_crew import security
+from aj_crew import security
 
 # A URL to an unknown host whose query carries a credential-shaped value. The
 # composed pass removes the whole URL.

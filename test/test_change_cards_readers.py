@@ -18,13 +18,13 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew import mcp_discovery
-from kiro_crew.config import loader
-from kiro_crew.cron_service import schedule
-from kiro_crew.dashboard import change_cards as cards
-from kiro_crew.dashboard.handlers import mcp as mcp_handlers
-from kiro_crew.dashboard.handlers import mcp_discover
+from aj_crew import change_card_catalog as catalog
+from aj_crew import mcp_discovery
+from aj_crew.config import loader
+from aj_crew.cron_service import schedule
+from aj_crew.dashboard import change_cards as cards
+from aj_crew.dashboard.handlers import mcp as mcp_handlers
+from aj_crew.dashboard.handlers import mcp_discover
 
 
 def _discovered(monkeypatch: pytest.MonkeyPatch, *names: str) -> None:
@@ -100,7 +100,7 @@ def test_a_scope_file_that_is_not_utf8_is_unreadable_not_an_error(tmp_path, monk
     monkeypatch.setattr(
         mcp_handlers,
         "_uninstall_scope_files",
-        lambda: [("kiroGlobal", legacy), ("kirocrew", readable)],
+        lambda: [("kiroGlobal", legacy), ("ajcrew", readable)],
     )
     monkeypatch.setattr(cards, "_mcp_value_key", lambda: b"k" * 32)
 
@@ -110,7 +110,7 @@ def test_a_scope_file_that_is_not_utf8_is_unreadable_not_an_error(tmp_path, monk
         pytest.fail(f"an undecodable scope raised instead of reading as unreadable: {exc}")
 
     assert scopes["kiroGlobal"] == "unreadable"
-    assert scopes["kirocrew"] not in ("", "unreadable")
+    assert scopes["ajcrew"] not in ("", "unreadable")
 
 
 # ── the server names an MCP undo plan removes ──
@@ -232,7 +232,7 @@ def test_a_crewmate_is_labelled_by_its_display_name_else_its_key(monkeypatch):
         "bob": SimpleNamespace(display_name="   "),
         "cy": SimpleNamespace(display_name=None),
     }
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", lambda: SimpleNamespace(agents=agents))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", lambda: SimpleNamespace(agents=agents))
 
     assert cards._crewmate_label("ada") == "Ada Lovelace"
     assert cards._crewmate_label("bob") == "bob"

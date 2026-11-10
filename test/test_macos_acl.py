@@ -16,8 +16,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import macos_acl, platform_compat
-from kiro_crew.owner_only_files import OWNER_ONLY_FILE_MODE
+from aj_crew import macos_acl, platform_compat
+from aj_crew.owner_only_files import OWNER_ONLY_FILE_MODE
 
 pytestmark = [
     pytest.mark.usefixtures("fresh_darwin_libc_handles"),

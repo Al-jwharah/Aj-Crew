@@ -1,7 +1,7 @@
-"""``kiro_crew.cli_doctor`` composes its split-out rows onto one namespace.
+"""``aj_crew.cli_doctor`` composes its split-out rows onto one namespace.
 
-:func:`kiro_crew._facade_compose.compose` runs every ``kiro_crew.cli_doctor_parts`` owner
-function on ``kiro_crew.cli_doctor``'s globals. These tests pin that composition:
+:func:`aj_crew._facade_compose.compose` runs every ``aj_crew.cli_doctor_parts`` owner
+function on ``aj_crew.cli_doctor``'s globals. These tests pin that composition:
 
 * every owner function runs on the facade's globals, names the facade as its module, is
   the object the facade binds, and every global it reads -- nested code included -- is
@@ -15,7 +15,7 @@ function on ``kiro_crew.cli_doctor``'s globals. These tests pin that composition
 * the facade composes through the shared helper, once, and the package defines nothing;
 * the facade imports nothing its family does not account for, which stands in for the
   F401 check ``setup.cfg`` switches off for it; and
-* a fresh ``import kiro_crew.cli`` composes every owner and still loads no
+* a fresh ``import aj_crew.cli`` composes every owner and still loads no
   ``doctor_checks`` family.
 """
 
@@ -38,9 +38,9 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror, cli_doctor, cli_doctor_parts
-from kiro_crew._facade_compose import compose as facade_compose
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import _facade_mirror, cli_doctor, cli_doctor_parts
+from aj_crew._facade_compose import compose as facade_compose
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_cli_doctor_parts")
 
@@ -96,7 +96,7 @@ _BASE_SURFACE: dict[str, dict[str, str]] = {
     },
     "model_section": {
         "_agent_spec_model_problems": "(agents_dir: 'Path | None' = None, project_dir: 'str | Path | None' = None, provider: 'str' = 'acp') -> 'list[tuple[str, str, str]] | None'",
-        "_doctor_effective_model": "(cfg: 'KiroCrewConfig', project_dir: 'str', issues: 'list[str]') -> 'None'",
+        "_doctor_effective_model": "(cfg: 'AjCrewConfig', project_dir: 'str', issues: 'list[str]') -> 'None'",
         "_format_model_pin_problem": "(name: 'str', pin: 'str', correction: 'str') -> 'tuple[str, str]'",
         "_strict_agent_json_specs": "(directory: 'Path') -> 'list[Path]'",
     },
@@ -145,7 +145,7 @@ _BASE_IMPORTS = frozenset("""
     job_pause_state_from_disk json kas_auth_client_flag_supported kas_engine_gap
     KAS_RELAY_ENGINE kas_relay_help
     kas_verified_releases kas_vocabulary_drift kiro_agents_dir KIRO_CLI_BIN
-    KiroCrewConfig LEGACY_CONFIG_DIR_NAME logging machine_hostname may_skip_gate_now
+    AjCrewConfig LEGACY_CONFIG_DIR_NAME logging machine_hostname may_skip_gate_now
     mcp_governance_may_apply mcp_ref_owned_by McpServerInfo MIN_NODE_VERSION
     model_file_present ModuleType NATIVE_SKILL_ALIAS_PREFIX newest_dump_with_stacks
     node_too_old_message node_version_meets_floor normalize_agent_model
@@ -274,7 +274,7 @@ def _spellings() -> dict[str, str]:
             continue
         module = ".".join(path.relative_to(_SRC.parent).with_suffix("").parts)
         for node in ast.parse(text).body:
-            if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew" and not node.level:
+            if isinstance(node, ast.ImportFrom) and node.module == "aj_crew" and not node.level:
                 for alias in node.names:
                     if alias.name == "cli_doctor":
                         spellings[f"{module}.{alias.asname or alias.name}"] = FACADE
@@ -329,23 +329,23 @@ def test_the_spellings_include_a_family_binding_of_the_facade() -> None:
     ("source", "expected"),
     [
         (
-            "from kiro_crew import cli_doctor\n"
+            "from aj_crew import cli_doctor\n"
             "def t(monkeypatch):\n    monkeypatch.setattr(cli_doctor, 'A', 1)\n",
             {"A"},
         ),
         (
             "from unittest.mock import patch\n"
-            "def t():\n    with patch('kiro_crew.cli_doctor.B'):\n        pass\n",
+            "def t():\n    with patch('aj_crew.cli_doctor.B'):\n        pass\n",
             {"B"},
         ),
         (
-            "from kiro_crew.doctor_checks import access\n"
+            "from aj_crew.doctor_checks import access\n"
             "def t(monkeypatch):\n    monkeypatch.setattr(access.cli_doctor, 'C', 1)\n",
             {"C"},
         ),
         (
             "from unittest.mock import patch\n"
-            "def t():\n    with patch('kiro_crew.cli_doctor_parts.host_probes.D'):\n        pass\n",
+            "def t():\n    with patch('aj_crew.cli_doctor_parts.host_probes.D'):\n        pass\n",
             set(),
         ),
     ],
@@ -446,7 +446,7 @@ def _bad_owner_imports(tree: ast.Module) -> list[str]:
     bad = [
         f"{line}: {mod}"
         for line, mod in _runtime_imports(tree)
-        if mod == "kiro_crew" or mod.startswith("kiro_crew.")
+        if mod == "aj_crew" or mod.startswith("aj_crew.")
     ]
     for node in ast.walk(tree):
         if isinstance(node, ast.If) and ast.unparse(node.test) == "TYPE_CHECKING":
@@ -462,11 +462,11 @@ def _bad_owner_imports(tree: ast.Module) -> list[str]:
     ("source", "flagged"),
     [
         ("import os\nfrom pathlib import Path\n", False),
-        ("if TYPE_CHECKING:\n    from kiro_crew.cli_doctor import sel\n", False),
-        ("from kiro_crew.cli_doctor import sel\n", True),
-        ("from kiro_crew import sandbox\n", True),
-        ("import kiro_crew.cli_doctor\n", True),
-        ("if TYPE_CHECKING:\n    from kiro_crew.sandbox import warm_backend\n", True),
+        ("if TYPE_CHECKING:\n    from aj_crew.cli_doctor import sel\n", False),
+        ("from aj_crew.cli_doctor import sel\n", True),
+        ("from aj_crew import sandbox\n", True),
+        ("import aj_crew.cli_doctor\n", True),
+        ("if TYPE_CHECKING:\n    from aj_crew.sandbox import warm_backend\n", True),
     ],
 )
 def test_the_owner_import_check_sees_every_spelling(source: str, flagged: bool) -> None:
@@ -513,11 +513,11 @@ def _imports_an_owner(source: str) -> bool:
 @pytest.mark.parametrize(
     ("source", "flagged"),
     [
-        ("from kiro_crew.cli_doctor_parts import host_probes\n", True),
-        ("from kiro_crew.cli_doctor_parts.kas_relay import _doctor_kas\n", True),
-        ("import kiro_crew.cli_doctor_parts.mcp_sections\n", True),
-        ("from kiro_crew import cli_doctor_parts\n", True),
-        ("from kiro_crew.cli_doctor import _doctor_kas\n", False),
+        ("from aj_crew.cli_doctor_parts import host_probes\n", True),
+        ("from aj_crew.cli_doctor_parts.kas_relay import _doctor_kas\n", True),
+        ("import aj_crew.cli_doctor_parts.mcp_sections\n", True),
+        ("from aj_crew import cli_doctor_parts\n", True),
+        ("from aj_crew.cli_doctor import _doctor_kas\n", False),
     ],
 )
 def test_the_importer_check_sees_every_spelling(source: str, flagged: bool) -> None:
@@ -565,7 +565,7 @@ def test_the_agent_sdk_boundary_edges_stay_in_the_facade() -> None:
 
 
 @pytest.mark.parametrize(
-    "source", ["from ..acp.client import KIRO_CLI_BIN\n", "from kiro_crew.acp import types\n"]
+    "source", ["from ..acp.client import KIRO_CLI_BIN\n", "from aj_crew.acp import types\n"]
 )
 def test_the_boundary_check_sees_an_owner_import_of_the_acp_layer(source: str) -> None:
     """The gate resolves a relative import against the repository path it is given."""
@@ -650,11 +650,11 @@ def test_the_inventory_check_reports_a_planted_import() -> None:
     of a name that owner does not define, are both reported."""
     planted = (
         Path(cli_doctor.__file__).read_text(encoding="utf-8")
-        + "\nimport pickle\nfrom kiro_crew.cli_doctor_parts.kas_relay import _git_line\n"
+        + "\nimport pickle\nfrom aj_crew.cli_doctor_parts.kas_relay import _git_line\n"
     )
     assert unexpected_imports(planted, _owner_names(), _family_reads()) == [
         "pickle",
-        "kiro_crew.cli_doctor_parts.kas_relay._git_line",
+        "aj_crew.cli_doctor_parts.kas_relay._git_line",
     ]
 
 
@@ -662,10 +662,10 @@ def test_a_fresh_cli_import_composes_every_owner_and_loads_no_family() -> None:
     """``cli.py`` imports ``_doctor`` for every command, so the doctor's owners load then,
     composed; the ``doctor_checks`` families still load only when a report runs."""
     probe = (
-        "import sys, kiro_crew.cli\n"
-        "from kiro_crew import cli_doctor\n"
-        "loaded = sorted(m for m in sys.modules if m.startswith('kiro_crew.cli_doctor_parts.'))\n"
-        "families = sorted(m for m in sys.modules if m.startswith('kiro_crew.doctor_checks'))\n"
+        "import sys, aj_crew.cli\n"
+        "from aj_crew import cli_doctor\n"
+        "loaded = sorted(m for m in sys.modules if m.startswith('aj_crew.cli_doctor_parts.'))\n"
+        "families = sorted(m for m in sys.modules if m.startswith('aj_crew.doctor_checks'))\n"
         "composed = all(getattr(cli_doctor, n).__globals__ is vars(cli_doctor)\n"
         "    for m in loaded for n, v in vars(sys.modules[m]).items()\n"
         "    if type(v).__name__ == 'function'\n"

@@ -13,8 +13,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.remote_session import workspace_tools
-from kiro_crew.remote_session.git_gateway import HOSTS
+from aj_crew.remote_session import workspace_tools
+from aj_crew.remote_session.git_gateway import HOSTS
 
 PROXY_SECRET = "a" * 64
 #: The guest proxy runs inside the remote workspace, which is always POSIX.
@@ -170,7 +170,7 @@ def test_the_tool_server_reads_the_gateways_proxy_state_from_stdin(
 
 
 def test_the_guest_and_gateway_spell_the_failure_marker_the_same():
-    from kiro_crew.coder import remote_worker
+    from aj_crew.coder import remote_worker
 
     assert remote_worker.GIT_PROXY_FAILED_SUFFIX == workspace_tools.GIT_PROXY_FAILED_SUFFIX
 
@@ -216,7 +216,7 @@ def test_a_partial_first_list_keeps_the_command_waiting(tmp_path, monkeypatch):
 
 
 def test_the_guest_proxy_marks_a_partial_list(tmp_path):
-    from kiro_crew.remote_session import git_proxy
+    from aj_crew.remote_session import git_proxy
 
     path = str(tmp_path / "git-proxy.port.lend")
     git_proxy._write_lend(40000, ["github.com"], path, True)

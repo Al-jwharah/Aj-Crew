@@ -1,4 +1,4 @@
-"""Coverage for the thinly-tested command dispatchers in ``kiro_crew.cli_server``.
+"""Coverage for the thinly-tested command dispatchers in ``aj_crew.cli_server``.
 
 Fakes sit at the seams the product reaches: ``subprocess.run`` / ``os.execvp`` (a CI
 runner has no systemd, launchd or writable checkout), ``current_platform`` and the log
@@ -23,9 +23,9 @@ from cli_server_more_coverage_helpers import (  # noqa: F401 -- the fixture is r
     sel_rec_fixture,
 )
 
-from kiro_crew import cli_server, kiro_cli, platform_compat
-from kiro_crew.frontend import FrontendBuildResult
-from kiro_crew.platform.update_layout import InstallLayout
+from aj_crew import cli_server, kiro_cli, platform_compat
+from aj_crew.frontend import FrontendBuildResult
+from aj_crew.platform.update_layout import InstallLayout
 
 # _update — git checkout path
 
@@ -106,7 +106,7 @@ class _GitStub:
         if Path(argv[0]).name == "kiro-cli":
             # The pinned absolute path is argv0, never the bare name.
             return subprocess.CompletedProcess(argv, 0, "", "")
-        if argv[1:] == ["-I", "-X", "utf8", "-c", "import kiro_crew"]:
+        if argv[1:] == ["-I", "-X", "utf8", "-c", "import aj_crew"]:
             # The full-reinstall success contract probes the target interpreter
             # in isolation from the caller's CWD and PYTHONPATH.
             return subprocess.CompletedProcess(argv, 0, b"", b"")
@@ -119,32 +119,32 @@ class _GitStub:
 
 @pytest.fixture
 def git_checkout(monkeypatch, tmp_path):
-    """A KIROCREW_PROJECT_DIR that looks like a git checkout, with git stubbed out."""
+    """A AJCREW_PROJECT_DIR that looks like a git checkout, with git stubbed out."""
     proj = tmp_path / "proj"
     (proj / ".git").mkdir(parents=True)
     # ``.git/HEAD``, not just ``.git/``: the install shape is derived by asking
     # git and falling back to the on-disk markers of a working tree's own root,
     # and a bare ``.git`` directory is refused by both on purpose.
     (proj / ".git" / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(proj))
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(proj))
     # The git lane requires provenance as well as the path probe; this fixture
     # exercises the git path with a fabricated tree the test process does not
     # run from, so provenance is declared rather than derived.
     monkeypatch.setattr(
-        "kiro_crew.platform.update_capability.running_from_checkout",
+        "aj_crew.platform.update_capability.running_from_checkout",
         lambda root, **kw: True,
     )
     monkeypatch.setattr(
-        "kiro_crew.platform.update_governance.resolve_remote_url",
-        lambda p, remote="", branch="", **_k: "https://github.com/kirodotdev/KiroCrew.git",
+        "aj_crew.platform.update_governance.resolve_remote_url",
+        lambda p, remote="", branch="", **_k: "https://github.com/Al-jwharah/Aj-Crew.git",
     )
     monkeypatch.setattr(
-        "kiro_crew.platform.update_governance.update_blocked_reason", lambda url: ""
+        "aj_crew.platform.update_governance.update_blocked_reason", lambda url: ""
     )
     # The fake `subprocess.run` below cannot answer the repo-config probe; that
     # refusal is covered against a real repo in test_host_git_repo_exec_neutralization.
     monkeypatch.setattr(
-        "kiro_crew.platform.update_governance.repo_exec_config_reason", lambda proj, **_k: ""
+        "aj_crew.platform.update_governance.repo_exec_config_reason", lambda proj, **_k: ""
     )
     monkeypatch.setattr(cli_server.shutil, "which", lambda name: None)
     # The optional kiro-cli step spawns only a PINNED install (resolved with the
@@ -153,13 +153,13 @@ def git_checkout(monkeypatch, tmp_path):
     # one explicitly.
     monkeypatch.setattr(kiro_cli, "resolve_kiro_cli", lambda **kw: None)
     monkeypatch.setattr(cli_server, "build_frontend_sync", lambda p: FrontendBuildResult("built"))
-    monkeypatch.setattr("kiro_crew.cli._ensure_node", lambda *a: None)
+    monkeypatch.setattr("aj_crew.cli._ensure_node", lambda *a: None)
     # The update puts the recorded node dirs first on PATH; restore it at teardown.
     monkeypatch.setenv("PATH", os.environ.get("PATH", ""))
     # Pin the install ROUTE. The real probe reads the test interpreter's own
     # Scripts dir, so on a Windows dev box running from a checkout these tests
     # would silently take the dependency-only branch instead of the reinstall
-    # they assert. `kirocrew update`'s own substitute behaviour is covered in
+    # they assert. `ajcrew update`'s own substitute behaviour is covered in
     # test/test_dep_sync.py.
     monkeypatch.setattr(cli_server.dep_sync, "locked_console_scripts", lambda target: [])
     # A successful fake pip install must satisfy the shared artifact postcondition.
@@ -199,7 +199,7 @@ class TestUpdateGitPath:
         stub.remote_heads = ("main",)
         monkeypatch.setattr(subprocess, "run", stub)
         monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.update_blocked_reason",
+            "aj_crew.platform.update_governance.update_blocked_reason",
             lambda url: "remote not on the fleet allowlist",
         )
         with pytest.raises(SystemExit) as exc:
@@ -296,8 +296,8 @@ class TestUpdateGitPath:
         assert fetch[-2:] == ["origin", "main"]
 
     def test_the_detached_order_is_exactly_the_reviewed_primary_branches(self) -> None:
-        from kiro_crew import cli_server_update
-        from kiro_crew.platform.update_governance import PRIMARY_BRANCHES
+        from aj_crew import cli_server_update
+        from aj_crew.platform.update_governance import PRIMARY_BRANCHES
 
         order = cli_server_update._DETACHED_BRANCH_ORDER
         assert order[0] == "main"
@@ -346,7 +346,7 @@ class TestUpdateGitPath:
         assert exc.value.code == 1
         out = capsys.readouterr().out
         assert "diverged" in out
-        assert "kirocrew update --force" in out
+        assert "ajcrew update --force" in out
         assert not any(c[:2] == ["git", "reset"] for c in stub.calls)
 
     def test_diverged_checkout_resets_under_force(self, monkeypatch, git_checkout, capsys) -> None:
@@ -362,7 +362,7 @@ class TestUpdateGitPath:
         self, monkeypatch, git_checkout, capsys
     ) -> None:
         """A failed `git show` is not "no floor declared": the reset must not run."""
-        from kiro_crew import dep_sync
+        from aj_crew import dep_sync
 
         stub = _GitStub()
         stub.show_fails = True
@@ -384,10 +384,10 @@ class TestUpdateGitPath:
         `reset --hard` had already moved the checkout to code this interpreter
         cannot import -- the stranded state every later run then repeats.
         """
-        from kiro_crew import dep_sync
+        from aj_crew import dep_sync
 
         stub = _GitStub()
-        stub.show_out = b'[project]\nname = "kirocrew"\nrequires-python = ">=3.12"\n'
+        stub.show_out = b'[project]\nname = "ajcrew"\nrequires-python = ">=3.12"\n'
         # Tracked edits present: the refusal must land BEFORE the operator is
         # asked whether to discard them, so the prompt is never reached.
         stub.status_out = " M src/a.py\n"
@@ -411,10 +411,10 @@ class TestUpdateGitPath:
     def test_a_venv_that_meets_the_incoming_floor_still_resets(
         self, monkeypatch, git_checkout, capsys
     ) -> None:
-        from kiro_crew import dep_sync
+        from aj_crew import dep_sync
 
         stub = _GitStub()
-        stub.show_out = b'[project]\nname = "kirocrew"\nrequires-python = ">=3.12"\n'
+        stub.show_out = b'[project]\nname = "ajcrew"\nrequires-python = ">=3.12"\n'
         monkeypatch.setattr(subprocess, "run", stub)
         monkeypatch.setattr(dep_sync, "interpreter_version", lambda *a, **k: (3, 12, 0))
         cli_server._update()
@@ -497,7 +497,7 @@ class TestUpdateGitPath:
         monkeypatch.setattr("builtins.input", lambda prompt="": "Y")
         cli_server._update()
         assert any(c[:2] == ["git", "reset"] for c in stub.calls)
-        assert "Kiro Crew updated!" in capsys.readouterr().out
+        assert "Aj Crew updated!" in capsys.readouterr().out
 
     def test_reset_failure_exits(self, monkeypatch, git_checkout, capsys) -> None:
         monkeypatch.setattr(subprocess, "run", _GitStub(reset=1))
@@ -518,7 +518,7 @@ class TestUpdateGitPath:
         self, monkeypatch, git_checkout, capsys
     ) -> None:
         """The moved tree still gets its install; the update then fails and names its log."""
-        from kiro_crew.platform import release_apply
+        from aj_crew.platform import release_apply
 
         monkeypatch.setattr(subprocess, "run", _GitStub())
         log_path = git_checkout / "frontend-build.log"
@@ -536,7 +536,7 @@ class TestUpdateGitPath:
         out = capsys.readouterr().out
         assert str(log_path) in out
         assert "vite: build failed" in out
-        assert "Kiro Crew updated!" not in out
+        assert "Aj Crew updated!" not in out
 
     def test_frontend_build_sees_the_node_ensure_node_recorded(
         self, monkeypatch, git_checkout, tmp_path
@@ -546,10 +546,10 @@ class TestUpdateGitPath:
         Without it the build's npm lookup missed that node, skipped with "npm not
         found", and the update still reported success over the old dashboard.
         """
-        from kiro_crew import env
+        from aj_crew import env
 
         monkeypatch.setattr(subprocess, "run", _GitStub())
-        monkeypatch.delenv("KIROCREW_NODE_BIN_DIR", raising=False)
+        monkeypatch.delenv("AJCREW_NODE_BIN_DIR", raising=False)
         node_dir = tmp_path / "mise" / "node" / "24" / "bin"
         node_dir.mkdir(parents=True)
         node = node_dir / ("node.exe" if platform_compat.IS_WINDOWS else "node")
@@ -561,7 +561,7 @@ class TestUpdateGitPath:
             (env.data_home() / "node-bin-dir").write_text(f"{node_dir}\n", encoding="utf-8")
             return True
 
-        monkeypatch.setattr("kiro_crew.cli._ensure_node", _ensure_node)
+        monkeypatch.setattr("aj_crew.cli._ensure_node", _ensure_node)
         seen: list[str] = []
         monkeypatch.setattr(
             cli_server,
@@ -580,7 +580,7 @@ class TestUpdateGitPath:
             cli_server, "build_frontend_sync", lambda p: FrontendBuildResult("skipped")
         )
         cli_server._update()
-        assert "Kiro Crew updated!" in capsys.readouterr().out
+        assert "Aj Crew updated!" in capsys.readouterr().out
 
     def test_success_updates_kiro_cli_and_refreshes_agent_config(
         self, monkeypatch, git_checkout, capsys
@@ -596,7 +596,7 @@ class TestUpdateGitPath:
         )
         cli_server._update()
         out = capsys.readouterr().out
-        assert "Kiro Crew updated!" in out
+        assert "Aj Crew updated!" in out
         assert "Agent config refreshed" in out
         assert built == [git_checkout]
         assert ["/usr/bin/kiro-cli", "update"] in stub.calls
@@ -608,7 +608,7 @@ class TestUpdateGitPath:
         monkeypatch.setattr(subprocess, "run", _GitStub(setup=1))
         cli_server._update()  # non-fatal
         out = capsys.readouterr().out
-        assert "Kiro Crew updated!" in out
+        assert "Aj Crew updated!" in out
         assert "Agent config refresh failed" in out
 
     def test_success_pokes_the_running_gateway_to_revalidate(
@@ -625,7 +625,7 @@ class TestUpdateGitPath:
             cli_server, "_revalidate_gateway_update_check", lambda: poked.append(True)
         )
         cli_server._update()
-        assert "Kiro Crew updated!" in capsys.readouterr().out
+        assert "Aj Crew updated!" in capsys.readouterr().out
         assert poked == [True], "the completed update never poked the gateway"
 
     def test_success_tells_the_user_to_restart(self, monkeypatch, git_checkout, capsys) -> None:
@@ -634,8 +634,8 @@ class TestUpdateGitPath:
         cli_server._update()
         out = capsys.readouterr().out
         assert "Restart the gateway to use the new version:" in out
-        assert "kirocrew restart" in out
-        assert out.index("Kiro Crew updated!") < out.index("kirocrew restart")
+        assert "ajcrew restart" in out
+        assert out.index("Aj Crew updated!") < out.index("ajcrew restart")
 
     def test_a_failed_update_prints_no_restart_hint(
         self, monkeypatch, git_checkout, capsys
@@ -643,7 +643,7 @@ class TestUpdateGitPath:
         monkeypatch.setattr(subprocess, "run", _GitStub(reset=1))
         with pytest.raises(SystemExit):
             cli_server._update()
-        assert "kirocrew restart" not in capsys.readouterr().out
+        assert "ajcrew restart" not in capsys.readouterr().out
 
 
 class TestUpdateGatewayPoke:
@@ -798,7 +798,7 @@ class TestUpdateSubprocessHardening:
         # A pinned kiro-cli makes the sixth (best-effort) site reachable.
         monkeypatch.setattr(kiro_cli, "resolve_kiro_cli", lambda **kw: "/usr/bin/kiro-cli")
         cli_server._update()
-        assert "Kiro Crew updated!" in capsys.readouterr().out
+        assert "Aj Crew updated!" in capsys.readouterr().out
 
         six = [
             ["git", "rev-parse"],
@@ -820,7 +820,7 @@ class TestUpdateSubprocessHardening:
         """Gap class (b), exit-1 sites: a timeout must not traceback out.
 
         RED-BEFORE: on unmodified main this raises TimeoutExpired straight
-        through ``kirocrew update`` instead of the SystemExit(1) the fetch
+        through ``ajcrew update`` instead of the SystemExit(1) the fetch
         failure path already defines.
         """
         monkeypatch.setattr(subprocess, "run", self._timeout_on(["git", "fetch"], _GitStub()))
@@ -841,7 +841,7 @@ class TestUpdateSubprocessHardening:
         out = capsys.readouterr().out
         assert "git diff timed out" in out
         # The update still completed through the guard + reset path.
-        assert "Kiro Crew updated!" in out
+        assert "Aj Crew updated!" in out
         assert any(c[:2] == ["git", "reset"] for c in stub.calls)
 
     def test_status_timeout_refuses_the_reset(self, monkeypatch, git_checkout, capsys) -> None:
@@ -868,18 +868,18 @@ class TestUpdateSubprocessHardening:
         cli_server._update()
         out = capsys.readouterr().out
         assert "kiro-cli update timed out" in out
-        assert "Kiro Crew updated!" in out
+        assert "Aj Crew updated!" in out
 
 
 class TestUpdateWheelDispatch:
     """No git checkout means the wheel path gets a correctly shaped layout."""
 
     def test_layout_is_built_from_the_distribution(self, monkeypatch, capsys) -> None:
-        monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+        monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
         # Both bindings: the capability derives WHO owns the update from the
         # stamp, and cli_server names the layout kind from its own import.
-        monkeypatch.setattr("kiro_crew.platform.update_capability.distribution", lambda: "wheel")
-        monkeypatch.setattr("kiro_crew.cli_server.distribution", lambda: "wheel")
+        monkeypatch.setattr("aj_crew.platform.update_capability.distribution", lambda: "wheel")
+        monkeypatch.setattr("aj_crew.cli_server.distribution", lambda: "wheel")
         seen: list[InstallLayout] = []
         monkeypatch.setattr(cli_server, "_update_wheel", lambda layout: seen.append(layout))
         cli_server._update()
@@ -889,9 +889,9 @@ class TestUpdateWheelDispatch:
         assert seen[0].is_externally_managed is False
 
     def test_unknown_distribution_defaults_to_wheel(self, monkeypatch) -> None:
-        monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
-        monkeypatch.setattr("kiro_crew.platform.update_capability.distribution", lambda: "")
-        monkeypatch.setattr("kiro_crew.cli_server.distribution", lambda: "")
+        monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
+        monkeypatch.setattr("aj_crew.platform.update_capability.distribution", lambda: "")
+        monkeypatch.setattr("aj_crew.cli_server.distribution", lambda: "")
         seen: list[InstallLayout] = []
         monkeypatch.setattr(cli_server, "_update_wheel", lambda layout: seen.append(layout))
         cli_server._update()
@@ -910,19 +910,19 @@ _LAYOUT = InstallLayout(
 def wheel_feed(monkeypatch):
     """Pin the CDN bases, channel, and installer command; return a payload setter."""
     monkeypatch.setattr(
-        "kiro_crew.platform.update_layout.cdn_bases",
+        "aj_crew.platform.update_layout.cdn_bases",
         lambda: ("https://cdn.example.com", "https://cdn.example.com"),
     )
-    monkeypatch.setattr("kiro_crew.platform.update_layout.release_channel", lambda: "stable")
+    monkeypatch.setattr("aj_crew.platform.update_layout.release_channel", lambda: "stable")
     monkeypatch.setattr(
-        "kiro_crew.platform.update_layout.wheel_update_command",
+        "aj_crew.platform.update_layout.wheel_update_command",
         lambda channel=None: "curl -fsSL https://cdn.example.com/cli.sh | sh",
     )
     monkeypatch.setattr(
-        "kiro_crew.platform.update_governance.update_blocked_reason", lambda url: ""
+        "aj_crew.platform.update_governance.update_blocked_reason", lambda url: ""
     )
     monkeypatch.setattr(
-        "kiro_crew.platform.update_governance.repo_exec_config_reason", lambda proj, **_k: ""
+        "aj_crew.platform.update_governance.repo_exec_config_reason", lambda proj, **_k: ""
     )
 
     def _no_network(*a, **k):
@@ -943,7 +943,7 @@ class TestUpdateWheelFeedValidation:
 
     def test_pinned_feed_base_blocks_the_update(self, monkeypatch, wheel_feed, capsys) -> None:
         monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.update_blocked_reason",
+            "aj_crew.platform.update_governance.update_blocked_reason",
             lambda url: "source pinned to an internal mirror",
         )
         with pytest.raises(SystemExit) as exc:
@@ -955,11 +955,11 @@ class TestUpdateWheelFeedValidation:
         self, monkeypatch, wheel_feed, capsys
     ) -> None:
         monkeypatch.setattr(
-            "kiro_crew.platform.update_layout.cdn_bases",
+            "aj_crew.platform.update_layout.cdn_bases",
             lambda: ("https://feed.example.com", "https://artifacts.example.com"),
         )
         monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.update_blocked_reason",
+            "aj_crew.platform.update_governance.update_blocked_reason",
             lambda url: "" if "feed" in url else "artifact host not allowed",
         )
         with pytest.raises(SystemExit) as exc:
@@ -971,7 +971,7 @@ class TestUpdateWheelFeedValidation:
         self, monkeypatch, wheel_feed, capsys
     ) -> None:
         monkeypatch.setattr(
-            "kiro_crew.platform.update_layout.cdn_bases",
+            "aj_crew.platform.update_layout.cdn_bases",
             lambda: ("https://cdn.example.com;id", "https://cdn.example.com"),
         )
         with pytest.raises(SystemExit) as exc:
@@ -1002,7 +1002,7 @@ class TestUpdateWheelFeedValidation:
 
     def test_channel_mismatch_is_refused(self, wheel_feed, capsys) -> None:
         wheel_feed(
-            b'{"schema": "kirocrew-cli-artifact-manifest-v1", '
+            b'{"schema": "ajcrew-cli-artifact-manifest-v1", '
             b'"channel": "insider", "version": "9.9.9"}'
         )
         with pytest.raises(SystemExit) as exc:
@@ -1012,7 +1012,7 @@ class TestUpdateWheelFeedValidation:
 
     def test_a_non_string_version_is_refused(self, wheel_feed, capsys) -> None:
         wheel_feed(
-            b'{"schema": "kirocrew-cli-artifact-manifest-v1", "channel": "stable", '
+            b'{"schema": "ajcrew-cli-artifact-manifest-v1", "channel": "stable", '
             b'"version": 999}'
         )
         with pytest.raises(SystemExit) as exc:
@@ -1021,7 +1021,7 @@ class TestUpdateWheelFeedValidation:
         assert "No version in release feed" in capsys.readouterr().out
 
     def test_missing_version_is_refused(self, wheel_feed, capsys) -> None:
-        wheel_feed(b'{"schema": "kirocrew-cli-artifact-manifest-v1", "channel": "stable"}')
+        wheel_feed(b'{"schema": "ajcrew-cli-artifact-manifest-v1", "channel": "stable"}')
         with pytest.raises(SystemExit) as exc:
             cli_server._update_wheel(_LAYOUT)
         assert exc.value.code == 1
@@ -1071,14 +1071,14 @@ class TestUpdateWheelInstaller:
     @pytest.fixture(autouse=True)
     def _newer_feed(self, wheel_feed, monkeypatch):
         wheel_feed(
-            b'{"schema": "kirocrew-cli-artifact-manifest-v1", '
+            b'{"schema": "ajcrew-cli-artifact-manifest-v1", '
             b'"channel": "stable", "version": "999.0.0"}'
         )
         monkeypatch.setattr(sys, "platform", "linux")
         # These tests exercise the installer re-run, which is the path a pipx
         # install takes. A plain-pip install refuses before it (covered in
         # test_update_wheel_dispatch.py), so pin the pipx shape here.
-        from kiro_crew.platform import wheel_apply, wheel_engine
+        from aj_crew.platform import wheel_apply, wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: False)
         monkeypatch.setattr(wheel_engine, "running_from_pipx", lambda: True)
@@ -1184,10 +1184,10 @@ class TestUpdateWheelInstaller:
 
         The failure text quotes the URL the engine tried, and the fallback
         installer command embeds the CDN base — with a token-bearing
-        KIROCREW_CDN_BASE either would land credentials in terminal history.
+        AJCREW_CDN_BASE either would land credentials in terminal history.
         """
-        from kiro_crew.platform import wheel_engine
-        from kiro_crew.platform.wheel_engine import WheelUpdateError
+        from aj_crew.platform import wheel_engine
+        from aj_crew.platform.wheel_engine import WheelUpdateError
 
         # _update_wheel imports these from wheel_engine lazily (kept off the
         # gateway boot path), so patch the SOURCE module, not cli_server —
@@ -1202,7 +1202,7 @@ class TestUpdateWheelInstaller:
 
         monkeypatch.setattr(wheel_engine, "apply_wheel_update", _boom)
         monkeypatch.setattr(
-            "kiro_crew.platform.update_layout.wheel_update_command",
+            "aj_crew.platform.update_layout.wheel_update_command",
             lambda channel=None: (
                 "curl -fsSL https://user:tok-SECRET99@cdn.example.com/cli.sh | sh"
             ),
@@ -1222,7 +1222,7 @@ class TestUpdateWheelInstaller:
         A full disk at mkdir/tempdir time raises OSError outside the WheelUpdateError
         wrapping; it takes the same redacted message, fallback command and exit 1.
         """
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
 
@@ -1243,7 +1243,7 @@ class TestUpdateWheelInstaller:
         """The managed venv takes the shared path: the memory snapshot runs as the
         engine's last step before promotion, and a promotion that moves the launcher
         a userns AppArmor profile applies to prints how to re-attach it."""
-        from kiro_crew.platform import wheel_apply, wheel_engine
+        from aj_crew.platform import wheel_apply, wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         monkeypatch.setattr(wheel_apply, "userns_reattach_needed", lambda _version: True)
@@ -1262,20 +1262,20 @@ class TestUpdateWheelInstaller:
         out = capsys.readouterr().out
         assert early == [], "the snapshot is the engine's step, not a separate one"
         assert "Memory snapshot: 3 store(s) copied" in out
-        assert "kirocrew service install" in out
+        assert "ajcrew service install" in out
         # Said after the update finished: it is installed, and only the re-attach is left.
         assert "999.0.0 is installed" in out
-        assert "Run `kirocrew update`" not in out
+        assert "Run `ajcrew update`" not in out
 
     def test_a_feed_version_outside_the_release_grammar_is_an_update_failure(
         self, wheel_feed, monkeypatch, capsys, tmp_path
     ) -> None:
         """An unsigned feed version that cannot name a tree is refused by the REAL
         engine as an update failure: an exit, never a traceback, nothing built."""
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         wheel_feed(
-            b'{"schema": "kirocrew-cli-artifact-manifest-v1", '
+            b'{"schema": "ajcrew-cli-artifact-manifest-v1", '
             b'"channel": "stable", "version": "999/0"}'
         )
         layout = wheel_engine.ManagedVenvLayout(
@@ -1298,7 +1298,7 @@ class TestUpdateWheelInstaller:
     ) -> None:
         """The AppArmor probe names the promoted tree too, so it runs inside the
         failure handling rather than ahead of it."""
-        from kiro_crew.platform import wheel_apply, wheel_engine
+        from aj_crew.platform import wheel_apply, wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
 
@@ -1319,7 +1319,7 @@ class TestUpdateWheelInstaller:
     @pytest.mark.parametrize(
         ("exc_name", "message"),
         [
-            ("WheelUpdateBusy", "another kirocrew update is already in progress"),
+            ("WheelUpdateBusy", "another ajcrew update is already in progress"),
             ("WheelUpdateSnapshotFailed", "Pre-update memory snapshot failed: 1 store(s)"),
         ],
     )
@@ -1328,7 +1328,7 @@ class TestUpdateWheelInstaller:
     ) -> None:
         """The installer re-run would race the other update's promotion (busy), or
         perform exactly the un-copied update the snapshot refusal stops."""
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
 
@@ -1345,13 +1345,13 @@ class TestUpdateWheelInstaller:
 
     def test_an_incompatible_release_names_the_installer_rerun(self, monkeypatch, capsys) -> None:
         """Only the installer moves an install onto a Python the release accepts."""
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
 
         def _refuse(**kw):
             raise wheel_engine.WheelUpdateIncompatible(
-                "kirocrew 999.0.0 requires Python >= 3.99", version="999.0.0", sha256="a" * 64
+                "ajcrew 999.0.0 requires Python >= 3.99", version="999.0.0", sha256="a" * 64
             )
 
         monkeypatch.setattr(wheel_engine, "apply_wheel_update", _refuse)
@@ -1366,7 +1366,7 @@ class TestUpdateWheelInstaller:
     def test_shadow_children_get_this_shells_environment_and_memory_is_checked_first(
         self, monkeypatch, capsys
     ) -> None:
-        from kiro_crew.platform import wheel_apply, wheel_engine
+        from aj_crew.platform import wheel_apply, wheel_engine
 
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: True)
         seen: dict[str, object] = {}
@@ -1385,7 +1385,7 @@ class TestUpdateWheelInstaller:
         cli_server._update_wheel(_LAYOUT)
         out = capsys.readouterr().out
         assert "updated to 999.0.0" in out
-        assert "kirocrew restart" in out
+        assert "ajcrew restart" in out
         assert spawned[0].argv[:2] == ["sh", "-c"]
 
     def test_unparseable_remote_version_updates_anyway(
@@ -1393,7 +1393,7 @@ class TestUpdateWheelInstaller:
     ) -> None:
         """``_is_newer`` returning None must fail OPEN — an update is safer than a stall."""
         wheel_feed(
-            b'{"schema": "kirocrew-cli-artifact-manifest-v1", '
+            b'{"schema": "ajcrew-cli-artifact-manifest-v1", '
             b'"channel": "stable", "version": "not-a-version"}'
         )
         _installer(monkeypatch)
@@ -1405,10 +1405,10 @@ class TestUpdateWheelInstaller:
     def test_already_latest_returns_without_running_the_installer(
         self, monkeypatch, wheel_feed, capsys
     ) -> None:
-        from kiro_crew import __version__ as local_version
+        from aj_crew import __version__ as local_version
 
         wheel_feed(
-            b'{"schema": "kirocrew-cli-artifact-manifest-v1", "channel": "stable", '
+            b'{"schema": "ajcrew-cli-artifact-manifest-v1", "channel": "stable", '
             + f'"version": "{local_version}"'.encode()
             + b"}"
         )
@@ -1422,7 +1422,7 @@ class TestUpdateWheelInstaller:
 
 
 class TestStatusCountLines:
-    """`kirocrew status` renders the two cached counts `/api/status` publishes,
+    """`ajcrew status` renders the two cached counts `/api/status` publishes,
     and an unknown count (``null`` while the shared cache has not refreshed)
     as a dash rather than ``None`` or a fabricated zero."""
 
@@ -1465,7 +1465,7 @@ class TestStatusCountLines:
 
 
 class TestStatusMemoryLine:
-    """`kirocrew status` prints the gateway RSS and the session ceiling from the
+    """`ajcrew status` prints the gateway RSS and the session ceiling from the
     two fields `/api/status` publishes for it."""
 
     def test_formats_rss_and_ceiling(self) -> None:
@@ -1532,7 +1532,7 @@ class TestApproveBusyVsDown:
     """
 
     def test_update_approve_timeout_reports_busy(self, monkeypatch, capsys) -> None:
-        from kiro_crew.platform import update_capability, update_stepup
+        from aj_crew.platform import update_capability, update_stepup
 
         monkeypatch.setattr(
             update_capability,

@@ -13,12 +13,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp import launch as launch_mod
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.harness import deepseek as deepseek_mod
-from kiro_crew.acp.harness.base import SpawnContext
-from kiro_crew.acp_backends import ACP_BACKEND_DEEPSEEK
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.acp import launch as launch_mod
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.harness import deepseek as deepseek_mod
+from aj_crew.acp.harness.base import SpawnContext
+from aj_crew.acp_backends import ACP_BACKEND_DEEPSEEK
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
 
 @pytest.fixture(autouse=True)
@@ -27,14 +27,14 @@ def _pinned_kiro_cli_version(_floor_monkeypatch):
 
     A client start here materialises the agent spec (``ensure_agent_materialized``
     -> ``rebuild_agent_config`` -> ``_write_derived_permissions``), which reads
-    ``installed_kiro_cli_version`` function-locally from ``kiro_crew.kiro_cli``:
+    ``installed_kiro_cli_version`` function-locally from ``aj_crew.kiro_cli``:
     one real ``kiro-cli --version`` spawn per binary identity, process-cached, so
     whichever test in the worker starts first pays it against the HOST's install
     with the checkout as the child's cwd. Pinned to the floor release, as
     ``test_agent.py`` and the generated-writer suites pin it.
     """
     _floor_monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version",
+        "aj_crew.kiro_cli.installed_kiro_cli_version",
         lambda: SPEC_PERMISSIONS_MIN_VERSION,
     )
 
@@ -58,15 +58,15 @@ class _DeepseekLaunchRig:
     """
 
     ARGV = ["/opt/bin/dsh", "--profile", "acp"]
-    SEALED = "/opt/run/kirocrew_dsh_gate_1.mjs"
-    PATCH = "/opt/run/kirocrew_dsh_gate_1.patch.yml"
+    SEALED = "/opt/run/ajcrew_dsh_gate_1.mjs"
+    PATCH = "/opt/run/ajcrew_dsh_gate_1.patch.yml"
     HIDDEN = ("/opt/creds/.aws",)
-    SANDBOX = ["/opt/run/kirocrew_sandbox_launcher"]
-    CLEANUP = "/opt/run/kirocrew_sandbox_readback"
+    SANDBOX = ["/opt/run/ajcrew_sandbox_launcher"]
+    CLEANUP = "/opt/run/ajcrew_sandbox_readback"
     MODE = "standard"
 
     def __init__(self, monkeypatch, tmp_path, *, routing=("", ""), names=()):
-        from kiro_crew import agent_scratch
+        from aj_crew import agent_scratch
 
         self.events: list[tuple] = []
         self.loop_thread: int | None = None
@@ -137,7 +137,7 @@ class _DeepseekLaunchRig:
             self.loop_thread = threading.get_ident()
             return await self.adapter.resolve_spawn(
                 SpawnContext(
-                    agent="kirocrew",
+                    agent="ajcrew",
                     work_dir=self._tmp_path,
                     model=None,
                     environ={},

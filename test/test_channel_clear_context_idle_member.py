@@ -13,8 +13,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.session import SessionManager
+from aj_crew.config import AjCrewConfig
+from aj_crew.session import SessionManager
 
 
 def _provider_factory(*, active_turn: bool):
@@ -44,7 +44,7 @@ class TestAnIdleListeningMemberDoesNotRefuseForever:
     @pytest.mark.asyncio
     async def test_clear_context_clears_while_a_member_holds_its_lifecycle_lease(self):
         mgr = SessionManager(
-            KiroCrewConfig(), provider_factory=_provider_factory(active_turn=False)
+            AjCrewConfig(), provider_factory=_provider_factory(active_turn=False)
         )
         key = "channel:ch-ops:analyst"
         await _member_holding_its_lifetime_lease(mgr, key)
@@ -75,7 +75,7 @@ class TestAnIdleListeningMemberDoesNotRefuseForever:
         stays armed, and the live session keeps serving the directory the user left.
         """
         mgr = SessionManager(
-            KiroCrewConfig(), provider_factory=_provider_factory(active_turn=False)
+            AjCrewConfig(), provider_factory=_provider_factory(active_turn=False)
         )
         key = "channel:ch-ops:scribe"
         await _member_holding_its_lifetime_lease(mgr, key)
@@ -102,7 +102,7 @@ class TestAnIdleListeningMemberDoesNotRefuseForever:
     @pytest.mark.asyncio
     async def test_a_deferred_project_reset_still_defers_for_a_declared_turn(self):
         """The sibling case must keep working: a real in-flight reply is still refused."""
-        mgr = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory(active_turn=True))
+        mgr = SessionManager(AjCrewConfig(), provider_factory=_provider_factory(active_turn=True))
         key = "channel:ch-ops:editor"
         await _member_holding_its_lifetime_lease(mgr, key)
 
@@ -114,7 +114,7 @@ class TestAnIdleListeningMemberDoesNotRefuseForever:
 
     @pytest.mark.asyncio
     async def test_a_member_with_a_reply_in_flight_still_refuses(self):
-        mgr = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory(active_turn=True))
+        mgr = SessionManager(AjCrewConfig(), provider_factory=_provider_factory(active_turn=True))
         key = "channel:ch-ops:researcher"
         await _member_holding_its_lifetime_lease(mgr, key)
 
@@ -131,7 +131,7 @@ class TestAnIdleListeningMemberDoesNotRefuseForever:
         # The dashboard holder takes the lease for ONE turn, and may hold it before any prompt
         # is in flight, which `has_active_turn` cannot see. That holder must stay strict.
         mgr = SessionManager(
-            KiroCrewConfig(), provider_factory=_provider_factory(active_turn=False)
+            AjCrewConfig(), provider_factory=_provider_factory(active_turn=False)
         )
         key = "dashboard:chat-1"
         await mgr.get_or_create(key)
@@ -154,7 +154,7 @@ class TestAClearDuringPreStreamSetupDoesNotDestroyTheSession:
     @pytest.mark.asyncio
     async def test_a_declared_turn_refuses_the_clear_before_the_prompt_is_in_flight(self):
         mgr = SessionManager(
-            KiroCrewConfig(), provider_factory=_provider_factory(active_turn=False)
+            AjCrewConfig(), provider_factory=_provider_factory(active_turn=False)
         )
         key = "channel:ch-ops:dev"
         await _member_holding_its_lifetime_lease(mgr, key)
@@ -181,7 +181,7 @@ class TestAClearDuringPreStreamSetupDoesNotDestroyTheSession:
     async def test_the_clear_succeeds_once_the_turn_is_released(self):
         # The refusal must be the retryable kind the banner promises, not a new permanent one.
         mgr = SessionManager(
-            KiroCrewConfig(), provider_factory=_provider_factory(active_turn=False)
+            AjCrewConfig(), provider_factory=_provider_factory(active_turn=False)
         )
         key = "channel:ch-ops:dev"
         await _member_holding_its_lifetime_lease(mgr, key)
@@ -207,10 +207,10 @@ class TestAReacquiredSessionKeepsItsTurnProtection:
 
     @pytest.mark.asyncio
     async def test_a_clear_cannot_tear_down_a_session_reacquired_mid_turn(self):
-        import kiro_crew.channel as channel_mod
+        import aj_crew.channel as channel_mod
 
         mgr = SessionManager(
-            KiroCrewConfig(), provider_factory=_provider_factory(active_turn=False)
+            AjCrewConfig(), provider_factory=_provider_factory(active_turn=False)
         )
         key = "channel:ch-ops:dev"
         agent = SimpleNamespace(
@@ -245,7 +245,7 @@ class TestABackgroundSweepLeavesAListeningMemberAlone:
     @pytest.mark.asyncio
     async def test_an_idle_sweep_does_not_recycle_a_member_that_holds_its_lease(self):
         mgr = SessionManager(
-            KiroCrewConfig(), provider_factory=_provider_factory(active_turn=False)
+            AjCrewConfig(), provider_factory=_provider_factory(active_turn=False)
         )
         key = "channel:ch-ops:scribe"
         await _member_holding_its_lifetime_lease(mgr, key)
@@ -278,7 +278,7 @@ class TestABackgroundSweepLeavesAListeningMemberAlone:
         # The two callers must not collapse back into one answer: the sweep above is refused
         # while this clear, on an identical idle member, still succeeds.
         mgr = SessionManager(
-            KiroCrewConfig(), provider_factory=_provider_factory(active_turn=False)
+            AjCrewConfig(), provider_factory=_provider_factory(active_turn=False)
         )
         key = "channel:ch-ops:scribe"
         await _member_holding_its_lifetime_lease(mgr, key)
@@ -298,14 +298,14 @@ class TestABackgroundSweepLeavesAListeningMemberAlone:
         Each acquire path is driven. The check names no mechanism, so any rewrite that
         keeps clears working passes.
         """
-        import kiro_crew.channel as channel_mod
+        import aj_crew.channel as channel_mod
 
         for helper in (
             channel_mod._reacquire_cleared_session,
             channel_mod._reset_busy_session,
         ):
             mgr = SessionManager(
-                KiroCrewConfig(), provider_factory=_provider_factory(active_turn=False)
+                AjCrewConfig(), provider_factory=_provider_factory(active_turn=False)
             )
             key = f"channel:ch-ops:{helper.__name__.strip('_')}"
             agent = SimpleNamespace(
@@ -343,7 +343,7 @@ class TestABackgroundSweepLeavesAListeningMemberAlone:
         import re
         from pathlib import Path
 
-        import kiro_crew.channel as channel_mod
+        import aj_crew.channel as channel_mod
 
         # Explicit encoding: the default is the PLATFORM codec, and this module carries
         # non-ASCII, so a Windows runner decodes it as cp1252 and raises.
@@ -382,10 +382,10 @@ class TestTheDiscardOrderingTheClearReadsBack:
 
     @pytest.mark.asyncio
     async def test_the_session_and_its_sid_are_gone_before_the_shutdown_runs(self):
-        from kiro_crew.session_map import canonical_key
+        from aj_crew.session_map import canonical_key
 
         mgr = SessionManager(
-            KiroCrewConfig(), provider_factory=_provider_factory(active_turn=False)
+            AjCrewConfig(), provider_factory=_provider_factory(active_turn=False)
         )
         key = "channel:ch-ops:archivist"
         provider, _, _ = await mgr.get_or_create(key)

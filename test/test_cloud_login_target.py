@@ -17,10 +17,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.cloud import launch_engine as le
-from kiro_crew.cloud import launch_job as lj
-from kiro_crew.cloud import login, ssm
-from kiro_crew.cloud.login_target import (
+from aj_crew.cloud import launch_engine as le
+from aj_crew.cloud import launch_job as lj
+from aj_crew.cloud import login, ssm
+from aj_crew.cloud.login_target import (
     ACCOUNT_TYPE_IDENTITY_CENTER,
     KiroLoginTarget,
     LoginTargetError,
@@ -59,10 +59,10 @@ class TestLoginTargetValidation:
         TARGET: Identity Center flags for a pinned target, the bare command for
         the Builder ID default."""
         assert (
-            KiroLoginTarget().recovery_command() == "kirocrew cloud logout && kirocrew cloud login"
+            KiroLoginTarget().recovery_command() == "ajcrew cloud logout && ajcrew cloud login"
         )
         assert IDC.recovery_command() == (
-            "kirocrew cloud logout && kirocrew cloud login "
+            "ajcrew cloud logout && ajcrew cloud login "
             f"--identity-provider {IDC.start_url} --license pro --idp-region us-east-1"
         )
 
@@ -306,7 +306,7 @@ class TestLoginModule:
         assert login.remote_identity_state("i-1", "p", "r", target=IDC) == "unknown"
         # send-command itself failing (throttled / denied) is the same unknown,
         # surfaced as the documented None rather than an escaping exception.
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         def throttled(*a, **k):
             raise AWSError("ThrottlingException: Rate exceeded", action="ssm:SendCommand")
@@ -391,10 +391,10 @@ class TestLoginModule:
         failure to stage it aborts the launch with a sentinel instead of running
         whatever sits at the path. Builder ID keeps the plain background process."""
         pinned = login._device_login_command(replace_existing=False, **IDC.login_kwargs())
-        assert 'mktemp -d "${TMPDIR:-/tmp}/kirocrew-login-pty.XXXXXXXX"' in pinned
+        assert 'mktemp -d "${TMPDIR:-/tmp}/ajcrew-login-pty.XXXXXXXX"' in pinned
         assert "python3" in pinned and "--use-device-flow --identity-provider" in pinned
         assert "stdbuf" not in pinned
-        assert "/tmp/kirocrew-kiro-login-pty.py" not in pinned
+        assert "/tmp/ajcrew-kiro-login-pty.py" not in pinned
         # Staging failures (no directory, write failed) print the sentinel and stop.
         assert pinned.count(login._DRIVER_SETUP_FAILED_SENTINEL) == 2
         assert pinned.index("umask 077") < pinned.index("mktemp -d")
@@ -404,7 +404,7 @@ class TestLoginModule:
         # No driver staging for Builder ID: no python3, no pty directory. (The route
         # prelude's own one-line `mktemp` for the probe's stderr is not that.)
         assert "python3" not in plain and "nohup stdbuf" in plain
-        assert "kirocrew-login-pty" not in plain and "mktemp -d" not in plain
+        assert "ajcrew-login-pty" not in plain and "mktemp -d" not in plain
 
     def test_driver_staging_failure_is_reported_by_name(self, monkeypatch):
         _ssm_script(
@@ -746,7 +746,7 @@ class TestEngineForwarding:
 
 
 def _h_state(tmp_path):
-    from kiro_crew.cloud import launch_job as _lj
+    from aj_crew.cloud import launch_job as _lj
 
     class _Handle:
         already_logged_in = True
@@ -811,7 +811,7 @@ def _h_body(resp):
 class TestHandlerBoundary:
     @pytest.fixture(autouse=True)
     def _posix(self, monkeypatch):
-        from kiro_crew.dashboard import handlers_cloud as hc
+        from aj_crew.dashboard import handlers_cloud as hc
 
         monkeypatch.setattr(hc.sys, "platform", "linux")
 
@@ -819,7 +819,7 @@ class TestHandlerBoundary:
         return _h_state(tmp_path)
 
     async def _post(self, tmp_path, body):
-        from kiro_crew.dashboard import handlers_cloud as hc
+        from aj_crew.dashboard import handlers_cloud as hc
 
         state = self._state(tmp_path)
         resp = await hc.api_cloud_launch_create(
@@ -861,7 +861,7 @@ class TestHandlerBoundary:
     async def test_invalid_target_is_a_coded_400_not_a_fallback(
         self, tmp_path, target, monkeypatch
     ):
-        from kiro_crew.dashboard import handlers_cloud as hc
+        from aj_crew.dashboard import handlers_cloud as hc
 
         audits: list[tuple] = []
         monkeypatch.setattr(hc, "_audit", lambda *a, **kw: audits.append((a, kw)))
@@ -878,7 +878,7 @@ class TestHandlerBoundary:
         assert "invalid login target" in audits[0][1]["error"]
 
     async def test_non_owner_denied_before_target_parsing(self, tmp_path):
-        from kiro_crew.dashboard import handlers_cloud as hc
+        from aj_crew.dashboard import handlers_cloud as hc
 
         resp = await hc.api_cloud_launch_create(
             _h_req(
@@ -892,7 +892,7 @@ class TestHandlerBoundary:
         assert resp.status == 403
 
     async def test_identity_endpoint_is_owner_only_and_suggests_target(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_cloud as hc
+        from aj_crew.dashboard import handlers_cloud as hc
 
         async def fake_bin():
             return "/bin/kiro-cli"
@@ -901,10 +901,10 @@ class TestHandlerBoundary:
             return parse_whoami_output(IDC_WHOAMI)
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.sessions._resolve_kiro_bin_for_spawn", fake_bin
+            "aj_crew.dashboard.handlers.sessions._resolve_kiro_bin_for_spawn", fake_bin
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.sessions._fetch_whoami_or_none", fake_whoami
+            "aj_crew.dashboard.handlers.sessions._fetch_whoami_or_none", fake_whoami
         )
         resp = await hc.api_cloud_identity(
             _h_req("GET", "/api/cloud/identity", state=self._state(tmp_path))
@@ -930,15 +930,15 @@ class TestHandlerBoundary:
 
         ``fetch_local_identity`` in the sessions module is the one dashboard
         door to ``kiro-cli whoami``; the agent-sdk-boundary gate fails any new
-        ``kiro_crew.acp`` import outside it, and a missing kiro-cli must read as
+        ``aj_crew.acp`` import outside it, and a missing kiro-cli must read as
         "no identity", not an error.
         """
         import inspect
 
-        from kiro_crew.dashboard import handlers_cloud as hc
-        from kiro_crew.dashboard.handlers import sessions as sessions_mod
+        from aj_crew.dashboard import handlers_cloud as hc
+        from aj_crew.dashboard.handlers import sessions as sessions_mod
 
-        assert "kiro_crew.acp" not in inspect.getsource(hc)
+        assert "aj_crew.acp" not in inspect.getsource(hc)
 
         async def no_bin():
             return None
@@ -962,8 +962,8 @@ class TestHandlerBoundary:
         target, so the form cannot present the Builder ID default as though the
         launching computer's sign-in had been read. The credit readout's own
         wrapper keeps its ``{}`` contract."""
-        from kiro_crew.dashboard import handlers_cloud as hc
-        from kiro_crew.dashboard.handlers import sessions as sessions_mod
+        from aj_crew.dashboard import handlers_cloud as hc
+        from aj_crew.dashboard.handlers import sessions as sessions_mod
 
         async def a_bin():
             return "/bin/kiro-cli"
@@ -1012,7 +1012,7 @@ class TestHandlerBoundary:
         identity is returned whatever the exit code."""
         import asyncio
 
-        from kiro_crew.dashboard.handlers import sessions as sessions_mod
+        from aj_crew.dashboard.handlers import sessions as sessions_mod
 
         class _Proc:
             def __init__(self, rc, out):
@@ -1063,7 +1063,7 @@ class TestCliResolution:
         return argparse.Namespace(**base)
 
     def test_explicit_flags_win_and_are_validated(self, monkeypatch):
-        from kiro_crew import cli_cloud
+        from aj_crew import cli_cloud
 
         monkeypatch.setattr(
             cli_cloud, "discover_local_identity", lambda: parse_whoami_output(BUILDER_WHOAMI)
@@ -1077,7 +1077,7 @@ class TestCliResolution:
             cli_cloud._resolve_login_target(self._args(license="pro"), inherit=True)
 
     def test_inherits_identity_center_without_region_and_no_inherit_opts_out(self, monkeypatch):
-        from kiro_crew import cli_cloud
+        from aj_crew import cli_cloud
 
         monkeypatch.setattr(
             cli_cloud, "discover_local_identity", lambda: parse_whoami_output(IDC_WHOAMI)
@@ -1095,7 +1095,7 @@ class TestCliResolution:
         itself COMPLETES the inherited Identity Center target rather than
         replacing it, so the strict 'region without a start URL' refusal only
         fires when there is no inherited Identity Center to attach it to."""
-        from kiro_crew import cli_cloud
+        from aj_crew import cli_cloud
 
         monkeypatch.setattr(
             cli_cloud, "discover_local_identity", lambda: parse_whoami_output(IDC_WHOAMI)
@@ -1112,7 +1112,7 @@ class TestCliResolution:
             cli_cloud._resolve_login_target(self._args(idp_region="us-east-1"), inherit=True)
 
     def test_launch_threads_target_into_wizard(self, monkeypatch):
-        from kiro_crew import cli_cloud
+        from aj_crew import cli_cloud
 
         seen = {}
         monkeypatch.setattr(cli_cloud, "_resolve", lambda a: ("p", "r"))
@@ -1126,7 +1126,7 @@ class TestCliResolution:
         inheritance the resolver refuses (naming both ways forward) rather than
         signing the crew in as Builder ID; ``--no-inherit-identity`` and explicit
         flags still resolve without consulting discovery's answer."""
-        from kiro_crew import cli_cloud
+        from aj_crew import cli_cloud
 
         monkeypatch.setattr(cli_cloud, "discover_local_identity", lambda: None)
         with pytest.raises(LoginTargetError, match="--no-inherit-identity"):
@@ -1164,7 +1164,7 @@ class TestCliResolution:
         )
 
     def test_launch_refuses_on_failed_discovery_before_the_wizard(self, monkeypatch):
-        from kiro_crew import cli_cloud
+        from aj_crew import cli_cloud
 
         monkeypatch.setattr(cli_cloud, "_resolve", lambda a: ("p", "r"))
         monkeypatch.setattr(cli_cloud, "discover_local_identity", lambda: None)
@@ -1178,7 +1178,7 @@ class TestCliResolution:
     def test_discover_local_identity_reports_could_not_run_as_none(self, monkeypatch):
         import subprocess
 
-        from kiro_crew.cloud import login_target as lt
+        from aj_crew.cloud import login_target as lt
 
         def timed_out(*a, **kw):
             raise subprocess.TimeoutExpired(cmd=a[0], timeout=kw.get("timeout", 0))
@@ -1229,7 +1229,7 @@ class TestCliResolution:
     def test_setup_namespace_inherits_by_default(self):
         import inspect
 
-        from kiro_crew import cli_setup
+        from aj_crew import cli_setup
 
         src = inspect.getsource(cli_setup._maybe_setup_cloud)
         assert "no_inherit_identity=False" in src and "identity_provider=" in src
@@ -1240,10 +1240,10 @@ class TestCliResolution:
 
         def _parse(argv):
             with (
-                patch.object(sys, "argv", ["kirocrew", *argv]),
-                patch("kiro_crew.cli.handle_cloud", return_value=0) as h,
+                patch.object(sys, "argv", ["ajcrew", *argv]),
+                patch("aj_crew.cli.handle_cloud", return_value=0) as h,
             ):
-                from kiro_crew.cli import main
+                from aj_crew.cli import main
 
                 with pytest.raises(SystemExit):
                     main()
@@ -1275,7 +1275,7 @@ class TestCliResolution:
 
 class TestWizardTargetCompletion:
     def test_assume_yes_without_region_refuses_instead_of_builder_id(self, monkeypatch):
-        from kiro_crew.cloud import wizard
+        from aj_crew.cloud import wizard
 
         monkeypatch.setattr(
             wizard.LaunchState,

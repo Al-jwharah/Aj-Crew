@@ -18,9 +18,9 @@ from agent_capabilities_helpers import capability_app_fixture  # noqa: F401
 from agent_capabilities_helpers import editor_fixture  # noqa: F401
 from agent_capabilities_helpers import save, spec_for
 
-from kiro_crew import agent_state
-from kiro_crew.agent_capabilities import CapabilityError, prepare_member_capabilities
-from kiro_crew.config import loader
+from aj_crew import agent_state
+from aj_crew.agent_capabilities import CapabilityError, prepare_member_capabilities
+from aj_crew.config import loader
 
 
 @pytest.mark.asyncio
@@ -142,9 +142,9 @@ async def test_resolved_removals_respect_ambient_mcp(
 ):
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.agent_capabilities import reconcile_member_capabilities
-    from kiro_crew.config import live as _live
-    from kiro_crew.config.loader import KiroCrewConfig as _Cfg
+    from aj_crew.agent_capabilities import reconcile_member_capabilities
+    from aj_crew.config import live as _live
+    from aj_crew.config.loader import AjCrewConfig as _Cfg
 
     # The subject is capability reconcile. The ``autoApprove`` parametrization
     # hand-writes a grant on a user server, which the undeclared-grant floor drops
@@ -478,7 +478,7 @@ async def test_http_inherit_and_accept_same_parent_change(
 ):
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.agent_capabilities import _rows
+    from aj_crew.agent_capabilities import _rows
 
     service, home, specs, parent = editor
     app, refreshes = capability_app
@@ -785,7 +785,7 @@ async def test_basic_auth_http_projection_retention_and_stale_refusal(
     ],
 )
 def test_basic_auth_short_option_does_not_guess_other_argv(args):
-    from kiro_crew.agent_capabilities import safe_view
+    from aj_crew.agent_capabilities import safe_view
 
     transport = {"command": "python", "args": args}
     assert safe_view(transport) == transport
@@ -793,7 +793,7 @@ def test_basic_auth_short_option_does_not_guess_other_argv(args):
 
 @pytest.mark.parametrize("args", [["--user", ":x"], ["--user=:x"]])
 def test_basic_auth_nested_reflection_retains_original_scalars(args):
-    from kiro_crew.agent_capabilities import _retain_transport, safe_view
+    from aj_crew.agent_capabilities import _retain_transport, safe_view
 
     original = {"command": "other-program", "args": args, "metadata": {"copies": ["copy=:x"]}}
     shown = safe_view(original)
@@ -918,7 +918,7 @@ async def test_legacy_guard_http_healthy_controls(
 
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import agents as handlers
+    from aj_crew.dashboard.handlers import agents as handlers
 
     service, home, specs, _ = editor
     app, _ = capability_app
@@ -960,7 +960,7 @@ async def test_legacy_patch_final_guard_precedes_bookkeeping(
 ):
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import agents as handlers
+    from aj_crew.dashboard.handlers import agents as handlers
 
     _, home, _, _ = editor
     app, refreshes = capability_app
@@ -1001,7 +1001,7 @@ async def test_legacy_rebind_late_unavailable_preserves_binding_and_rolls_back(
 ):
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import agents as handlers
+    from aj_crew.dashboard.handlers import agents as handlers
 
     _, home, specs, _ = editor
     app, refreshes = capability_app
@@ -1042,7 +1042,7 @@ async def test_legacy_patch_divergent_file_identity(
 ):
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import agents as handlers
+    from aj_crew.dashboard.handlers import agents as handlers
 
     service, home, specs, parent = editor
     app, refreshes = capability_app
@@ -1100,7 +1100,7 @@ async def test_legacy_patch_checks_fresh_declared_identity_before_bookkeeping(
 ):
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import agents as handlers
+    from aj_crew.dashboard.handlers import agents as handlers
 
     service, home, specs, parent = editor
     app, refreshes = capability_app

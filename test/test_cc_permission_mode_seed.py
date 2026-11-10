@@ -29,30 +29,30 @@ from test_acp_seed_provenance import (  # noqa: F401 -- autouse fixture
     isolated_records,
 )
 
-from kiro_crew.acp import seed_provenance as sp
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import CC_PERMISSION_MODE_AUTO, CC_PERMISSION_MODE_BYPASS
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.acp import seed_provenance as sp
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import CC_PERMISSION_MODE_AUTO, CC_PERMISSION_MODE_BYPASS
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_KIRO,
     CC_PERMISSION_MODE_ENV,
     resolve_cc_permission_mode,
 )
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config.loader import AjCrewConfig
 
 
-def _cfg(backend: str, tmp_path: Path) -> KiroCrewConfig:
+def _cfg(backend: str, tmp_path: Path) -> AjCrewConfig:
     """A config whose provider factory builds sessions on *backend*.
 
     Written inside the test's own ``tmp_path`` -- nothing this file creates may
     outlive the run (AUTOSDE ``no-test-side-effects``).
     """
-    cfg_file = tmp_path / "kirocrew.json"
+    cfg_file = tmp_path / "ajcrew.json"
     cfg_file.write_text(
         json.dumps({"agent": {"provider": "acp", "acp_backend": backend}}), encoding="utf-8"
     )
-    with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_file):
-        return KiroCrewConfig.load()
+    with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_file):
+        return AjCrewConfig.load()
 
 
 @pytest.fixture(autouse=True)
@@ -131,7 +131,7 @@ class TestFactoryThreadsTheMode:
 
     @staticmethod
     def _captured(backend: str, tmp_path: Path, **factory_kwargs: object) -> dict:
-        import kiro_crew.providers.acp as acp_mod
+        import aj_crew.providers.acp as acp_mod
 
         seen: list[dict] = []
 

@@ -20,11 +20,11 @@ import sys
 
 import pytest
 
-from kiro_crew import safety_override
+from aj_crew import safety_override
 
-GOVERNANCE_PROFILES = "kiro_crew.platform.governance_profiles"
-GOVERNANCE = "kiro_crew.platform.governance"
-LOGGER = "kiro_crew.safety_override"
+GOVERNANCE_PROFILES = "aj_crew.platform.governance_profiles"
+GOVERNANCE = "aj_crew.platform.governance"
+LOGGER = "aj_crew.safety_override"
 
 
 def _fallback_records(caplog: pytest.LogCaptureFixture, marker: str) -> list[str]:

@@ -71,7 +71,7 @@ class TestDedupeIdentity:
             "--severity",
             "Critical",  # a re-report is not evidence to overwrite the record
             "--path",
-            "src/kiro_crew/security.py",
+            "src/aj_crew/security.py",
         )
         again = out_json(capsys)
         assert again["id"] == first
@@ -95,9 +95,9 @@ class TestDedupeIdentity:
             "--severity",
             "Medium",
             "--path",
-            "src/kiro_crew/webhooks.py",
+            "src/aj_crew/webhooks.py",
             "--path",
-            "src/kiro_crew/hooks.py",
+            "src/aj_crew/hooks.py",
         )
         first = out_json(capsys)["id"]
         run(
@@ -111,11 +111,11 @@ class TestDedupeIdentity:
             "--severity",
             "Medium",
             "--path",
-            "src/kiro_crew/hooks.py",
+            "src/aj_crew/hooks.py",
             "--path",
-            "src/kiro_crew/webhooks.py",
+            "src/aj_crew/webhooks.py",
             "--path",
-            "src/kiro_crew/hooks.py",
+            "src/aj_crew/hooks.py",
         )
         assert out_json(capsys)["id"] == first
 
@@ -132,7 +132,7 @@ class TestDedupeIdentity:
             "--severity",
             "High",
             "--path",
-            "src/kiro_crew/platform/security_authority.py",
+            "src/aj_crew/platform/security_authority.py",
         )
         second = out_json(capsys)
         assert second["id"] != first
@@ -447,7 +447,7 @@ class TestDedupeSurvivesTheRace:
                     surface="security.is_denied",
                     title="fence bypass",
                     severity="High",
-                    paths=["src/kiro_crew/security.py"],
+                    paths=["src/aj_crew/security.py"],
                     poc=None,
                     round_id=None,
                 )
@@ -467,7 +467,7 @@ class TestDedupeSurvivesTheRace:
                 conn.execute(
                     "INSERT INTO findings (surface, severity, title, paths, status, created)"
                     " VALUES ('security.is_denied', 'Low', 'fence bypass',"
-                    " '[\"src/kiro_crew/security.py\"]', 'open',"
+                    " '[\"src/aj_crew/security.py\"]', 'open',"
                     " '2026-09-07T00:00:00+00:00')"
                 )
                 conn.commit()

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Boot the GUI user-test target on a CI runner: a private Xvfb display, a seeded
-# Kiro Crew gateway on the packaged fake ACP backend, and a plain Chromium window
+# Aj Crew gateway on the packaged fake ACP backend, and a plain Chromium window
 # pointed at the dashboard. Nothing here needs kiro-cli, a login, or a pod.
 #
 #   GUI_OUT       directory for logs / pids / target.env      (required)
 #   GUI_DISPLAY   X display to create                         (default :99)
 #   GUI_SCREEN    Xvfb screen WxHxDEPTH                       (default 1600x1000x24)
-#   GUI_SEED      KIROCREW_HOME fixture                       (default rich)
+#   GUI_SEED      AJCREW_HOME fixture                       (default rich)
 #   GUI_MEMBERS   comma-separated crew member slugs to add    (default nova-sky)
 #   GUI_CHROME    browser binary override                     (auto-detected)
 #
@@ -14,7 +14,7 @@
 # gateway's one-time token, mode 0600) and $GUI_OUT/pids lists the process
 # groups teardown.sh kills. The token is a throwaway CI value for a gateway that
 # dies with the job; it never leaves the runner. Three sample markdown notes are
-# also staged at the fixed path /tmp/kirocrew-gui-user-test/team-notes -- not
+# also staged at the fixed path /tmp/ajcrew-gui-user-test/team-notes -- not
 # configurable, because the Knowledge scenarios type that path verbatim.
 #
 # Local reproduction: docs/build/gui-user-test.md.
@@ -71,7 +71,7 @@ done
 # planted symlink in its place -- refuses the boot instead of being removed or
 # reused. `mkdir` without -p fails closed if the path is taken again in between.
 # teardown.sh applies the same ownership test before it removes the tree.
-GUI_NOTES_DIR="/tmp/kirocrew-gui-user-test/team-notes"
+GUI_NOTES_DIR="/tmp/ajcrew-gui-user-test/team-notes"
 notes_root="$(dirname "$GUI_NOTES_DIR")"
 notes_marker="$notes_root/.owned-by-gui-user-test"
 if [ -e "$notes_root" ] || [ -L "$notes_root" ]; then
@@ -102,10 +102,10 @@ mkdir -m 0700 -- "$GUI_PROJECT_DIR" "$GUI_PROJECT_DIR/docs"
 cp -- "$(dirname "$0")/knowledge-notes/"*.md "$GUI_PROJECT_DIR/docs/"
 printf '# Sample project\n\nA small tree the GUI user test browses from the chat Files view.\n' > "$GUI_PROJECT_DIR/README.md"
 
-KIROCREW_HOME="$HOME_DIR" python3 "$(dirname "$0")/seed_home.py" --fixture "$GUI_SEED" "${member_args[@]}" --project "$GUI_PROJECT_DIR"
+AJCREW_HOME="$HOME_DIR" python3 "$(dirname "$0")/seed_home.py" --fixture "$GUI_SEED" "${member_args[@]}" --project "$GUI_PROJECT_DIR"
 
 # ---- 3. gateway ------------------------------------------------------------
-# Same shape as kiro_crew.testing.harness.spawn_feature_gateway (the E2E job's
+# Same shape as aj_crew.testing.harness.spawn_feature_gateway (the E2E job's
 # boot): isolated data + agent homes, the packaged fake ACP backend as the
 # "kiro-cli", yolo approval so the tester never meets an approval prompt, no
 # crons, and --test-mode (= --port auto --no-open --json-ready) so the READY
@@ -113,13 +113,13 @@ KIROCREW_HOME="$HOME_DIR" python3 "$(dirname "$0")/seed_home.py" --fixture "$GUI
 FAKE_BACKEND="$(python3 "$(dirname "$0")/seed_home.py" --print-fake-backend)"
 GATEWAY_LOG="$GUI_OUT/gateway.log"
 env \
-  KIROCREW_HOME="$HOME_DIR" \
+  AJCREW_HOME="$HOME_DIR" \
   KIRO_HOME="$HOME_DIR/kiro" \
-  KIROCREW_FAKE_ACP_TEST_MODE=1 \
-  KIROCREW_KIRO_BIN="$FAKE_BACKEND" \
-  KIROCREW_SKIP_MODEL_DOWNLOAD=1 \
+  AJCREW_FAKE_ACP_TEST_MODE=1 \
+  AJCREW_KIRO_BIN="$FAKE_BACKEND" \
+  AJCREW_SKIP_MODEL_DOWNLOAD=1 \
   PYTHONUNBUFFERED=1 \
-  setsid python3 -m kiro_crew gateway --test-mode --approval yolo --no-crons \
+  setsid python3 -m aj_crew gateway --test-mode --approval yolo --no-crons \
   > "$GATEWAY_LOG" 2> "$GUI_OUT/gateway.err" &
 GW_PID="$!"
 echo "$GW_PID" >> "$PIDS"
@@ -131,16 +131,16 @@ for _ in $(seq 1 300); do
     tail -n 40 "$GUI_OUT/gateway.err" >&2 || true
     exit 1
   fi
-  READY_LINE="$(grep -m1 '^KIROCREW_READY:' "$GATEWAY_LOG" || true)"
+  READY_LINE="$(grep -m1 '^AJCREW_READY:' "$GATEWAY_LOG" || true)"
   [ -n "$READY_LINE" ] && break
   sleep 1
 done
-[ -n "$READY_LINE" ] || { echo "::error::gateway did not print KIROCREW_READY within 300s" >&2; tail -n 40 "$GUI_OUT/gateway.err" >&2 || true; exit 1; }
+[ -n "$READY_LINE" ] || { echo "::error::gateway did not print AJCREW_READY within 300s" >&2; tail -n 40 "$GUI_OUT/gateway.err" >&2 || true; exit 1; }
 
 # Parse port + token in Python (jq is not guaranteed); write target.env 0600 and
 # mask the token in the job log before anything else can echo it.
 umask 077
-printf '%s\n' "${READY_LINE#KIROCREW_READY:}" | python3 -c '
+printf '%s\n' "${READY_LINE#AJCREW_READY:}" | python3 -c '
 import json, sys
 ready = json.loads(sys.stdin.read())
 port, token = int(ready["port"]), str(ready["token"])

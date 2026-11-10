@@ -24,8 +24,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps.admission import app_admission_denied, verified_signer
-from kiro_crew.apps.manifest import AppManifest
+from aj_crew.apps.admission import app_admission_denied, verified_signer
+from aj_crew.apps.manifest import AppManifest
 
 SIGNER = "acme"
 SECRET = "publisher-trust-key"
@@ -63,7 +63,7 @@ PUBLISHED_PLAIN: dict = {
     "permissions": {"api": ["/api/chat"]},
 }
 
-BUILTINS_DIR = Path(__file__).resolve().parent.parent / "src/kiro_crew/apps/builtins"
+BUILTINS_DIR = Path(__file__).resolve().parent.parent / "src/aj_crew/apps/builtins"
 
 
 def _sign(manifest: dict) -> str:
@@ -94,7 +94,7 @@ def _tampered(**overrides: object) -> dict:
 @pytest.fixture()
 def enforcing_fleet(tmp_path, monkeypatch):
     """A fleet policy demanding a signature, written as the file the gate reads."""
-    from kiro_crew.apps import admission
+    from aj_crew.apps import admission
 
     cfg = tmp_path / "config"
     cfg.mkdir()
@@ -225,11 +225,11 @@ def test_no_shipped_builtin_carries_a_signature(manifest_path, enforcing_fleet):
 
 def test_a_builtin_is_not_refused_by_admission_under_require_signature(tmp_path, monkeypatch):
     """An unsigned builtin stays enableable on a fleet demanding signatures."""
-    from kiro_crew.apps.manager import InstalledApp, _write_installed, enable_app
+    from aj_crew.apps.manager import InstalledApp, _write_installed, enable_app
 
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     (home / "app_admission.json").write_text(
         json.dumps(
             {
@@ -268,11 +268,11 @@ def test_an_unsigned_declaring_app_installs_on_a_non_enforcing_fleet(tmp_path, m
     the open fast path before any signature work, so an unsigned app is
     admitted exactly as it was.
     """
-    from kiro_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
+    from aj_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
 
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     (home / "config.json").write_text(
         json.dumps({"agent": {"apps_allow_third_party": True}}), encoding="utf-8"
     )

@@ -3,7 +3,7 @@
 App-ownership checks gate on ``request["app"]``. The app-token branch publishes
 it; the internal-secret branch (the managed MCP set) carried no app claim at
 all, so every one of those checks became a NO-OP on that transport and an app
-agent granted ``@kirocrew-dashboard`` arrived indistinguishable from the
+agent granted ``@ajcrew-dashboard`` arrived indistinguishable from the
 dashboard user.
 
 ``token_auth.derive_caller_app`` is the single rule, resolved once in the
@@ -29,7 +29,7 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew.dashboard.token_auth import (
+from aj_crew.dashboard.token_auth import (
     caller_names_a_missing_slot,
     caller_record_is_missing,
     derive_caller_app,
@@ -328,7 +328,7 @@ class TestTheAgentNotificationRouteRefusesAnUnattributableCaller:
 
     @pytest.mark.asyncio
     async def test_a_caller_whose_slot_is_gone_is_refused(self) -> None:
-        from kiro_crew.dashboard.handlers import messaging
+        from aj_crew.dashboard.handlers import messaging
 
         req = MagicMock(spec=web.Request)
         req.headers = {"X-Session-Key": "dashboard:closed-tab"}
@@ -355,7 +355,7 @@ class TestTheAgentNotificationRouteRefusesAnUnattributableCaller:
         than raising, so an exception from deeper in the handler is positive
         evidence the cron caller was not refused here.
         """
-        from kiro_crew.dashboard.handlers import messaging
+        from aj_crew.dashboard.handlers import messaging
 
         req = MagicMock(spec=web.Request)
         req.headers = {"X-Session-Key": "cron:job-9"}
@@ -664,7 +664,7 @@ class TestTheRuleIsPureAndShared:
         assert derive_caller_app(None, "cron:j", [_Job("j", "app:mochi")]) == "mochi"
 
     def test_the_folder_route_reads_the_same_rule(self) -> None:
-        from kiro_crew.dashboard import chat_folders
+        from aj_crew.dashboard import chat_folders
 
         state = MagicMock()
         state._slots = {"slot-1": _Slot("file-explorer")}
@@ -674,7 +674,7 @@ class TestTheRuleIsPureAndShared:
         assert chat_folders._effective_request_app(state, req) == "file-explorer"
 
     def test_the_folder_route_prefers_a_published_claim(self) -> None:
-        from kiro_crew.dashboard import chat_folders
+        from aj_crew.dashboard import chat_folders
 
         state = MagicMock()
         state._slots = {}
@@ -712,7 +712,7 @@ class TestTheMcpToolLayerResolvesLinkedKeysToo:
     """
 
     def test_a_channel_linked_app_row_is_resolved(self) -> None:
-        from kiro_crew.mcp_dashboard import _caller_app_scope
+        from aj_crew.mcp_dashboard import _caller_app_scope
 
         rows = [
             {
@@ -724,7 +724,7 @@ class TestTheMcpToolLayerResolvesLinkedKeysToo:
         assert _caller_app_scope("slack:C123:169.1", rows) == "file-explorer"
 
     def test_the_direct_key_match_still_wins(self) -> None:
-        from kiro_crew.mcp_dashboard import _caller_app_scope
+        from aj_crew.mcp_dashboard import _caller_app_scope
 
         rows = [
             {"key": "slot-1", "app": "named-app", "linked_session_key": ""},
@@ -734,7 +734,7 @@ class TestTheMcpToolLayerResolvesLinkedKeysToo:
 
     def test_an_unplaceable_delegated_caller_is_still_refused(self) -> None:
         """The MCP layer's own fail-closed rule must survive the new lookup."""
-        from kiro_crew.mcp_dashboard import _caller_app_scope
+        from aj_crew.mcp_dashboard import _caller_app_scope
 
         assert _caller_app_scope("subagent:abc", []) is None
         assert _caller_app_scope("cron:job-9", []) is None
@@ -744,18 +744,18 @@ class TestTheMcpToolLayerResolvesLinkedKeysToo:
         """A cron-born row carries no ``app``, so returning on that match would
         answer "" (the person) for a delegated caller this layer fails closed on
         -- weakening it instead of extending it."""
-        from kiro_crew.mcp_dashboard import _caller_app_scope
+        from aj_crew.mcp_dashboard import _caller_app_scope
 
         rows = [{"key": "cron-tab", "app": "", "linked_session_key": "cron:job-9"}]
         assert _caller_app_scope("cron:job-9", rows) is None
 
     def test_an_app_owned_linked_row_is_still_resolved(self) -> None:
-        from kiro_crew.mcp_dashboard import _caller_app_scope
+        from aj_crew.mcp_dashboard import _caller_app_scope
 
         rows = [{"key": "cron-tab", "app": "mochi", "linked_session_key": "cron:job-9"}]
         assert _caller_app_scope("cron:job-9", rows) == "mochi"
 
     def test_a_slotless_caller_is_still_unscoped(self) -> None:
-        from kiro_crew.mcp_dashboard import _caller_app_scope
+        from aj_crew.mcp_dashboard import _caller_app_scope
 
         assert _caller_app_scope("slack:C1:2", []) == ""

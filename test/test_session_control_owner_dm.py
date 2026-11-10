@@ -18,23 +18,23 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer, make_mocked_request
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import create_rate_limit
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.handlers import work_ledger as ledger_routes
-from kiro_crew.messaging.link import ChannelLink, parse_session_key, release_conversation_location
-from kiro_crew.messaging.transport import ConfiguredChannelTarget
-from kiro_crew.session import _opt_out_key
-from kiro_crew.session_map import MIRROR_OPT_OUT_FLAG, SessionMap
+from aj_crew.dashboard import create_rate_limit
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.handlers import work_ledger as ledger_routes
+from aj_crew.messaging.link import ChannelLink, parse_session_key, release_conversation_location
+from aj_crew.messaging.transport import ConfiguredChannelTarget
+from aj_crew.session import _opt_out_key
+from aj_crew.session_map import MIRROR_OPT_OUT_FLAG, SessionMap
 
 OWNER = "123456789012345678"
 GUEST = "111111111111111111"
 THREAD = "987654321098765432"
 
-DISCORD_DM = f"discord:kirocrew-conductor:direct:{OWNER}:gen5"
-DISCORD_THREAD = f"discord:kirocrew-conductor:group:{THREAD}:gen2"
-TELEGRAM_DM = f"telegram:kirocrew:direct:{OWNER}:gen4"
-TELEGRAM_FORUM = "telegram:kirocrew:forum:-1001:77:gen1"
+DISCORD_DM = f"discord:ajcrew-conductor:direct:{OWNER}:gen5"
+DISCORD_THREAD = f"discord:ajcrew-conductor:group:{THREAD}:gen2"
+TELEGRAM_DM = f"telegram:ajcrew:direct:{OWNER}:gen4"
+TELEGRAM_FORUM = "telegram:ajcrew:forum:-1001:77:gen1"
 
 DISCORD_DM_CONVERSATION = ChannelLink("discord", channel_id="dm-channel-4242")
 TELEGRAM_DM_CONVERSATION = ChannelLink("telegram", channel_id=OWNER)
@@ -103,7 +103,7 @@ class _Transport:
 
 
 def _state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     # The session manager's in-memory record of the conversation each channel
     # session was started from, as the dispatchers write it on every inbound turn.
@@ -122,7 +122,7 @@ def _with_real_mirror_store(state, tmp_path, monkeypatch) -> SessionMap:
     ``slack_channel_id`` field, ``clear_mirror_link`` pops only ``mirror``, and
     ``get_mirror_link`` must read that threadless row as no mirror.
     """
-    monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
     store = SessionMap()
     sessions = state.sessions
     for name in (
@@ -473,7 +473,7 @@ def test_a_group_key_naming_the_owner_is_refused_on_its_chat_type(tmp_path, monk
     """
     state = _state(tmp_path, monkeypatch)
     _owner_discord(state)
-    group_of_one = f"discord:kirocrew-conductor:group:{OWNER}:gen1"
+    group_of_one = f"discord:ajcrew-conductor:group:{OWNER}:gen1"
     slot = _channel_slot(state, group_of_one, origin=DISCORD_DM_CONVERSATION)
     assert sc.owner_dm_refusal(state, slot) == "the conversation is not a 1:1 direct message"
     assert sc.owner_dm_refusal(state, slot) != ""
@@ -493,10 +493,10 @@ def test_an_unreadable_mirror_store_fails_closed(tmp_path, monkeypatch):
         "",  # a dashboard-born slot: the question does not arise
         "cron:job-1",  # a cron tab's link is not a channel
         "slack:1786300000.000200",  # the legacy two-segment shape does not parse
-        "unified:kirocrew:gen3",  # a unified bucket names no peer
-        "webex:kirocrew:direct:someone@example.com",  # a surface not verified for this
-        "discord:kirocrew:direct",  # too short to be an address
-        f"discord:kirocrew:direct:{OWNER}:extra",  # a DM scope is exactly the peer
+        "unified:ajcrew:gen3",  # a unified bucket names no peer
+        "webex:ajcrew:direct:someone@example.com",  # a surface not verified for this
+        "discord:ajcrew:direct",  # too short to be an address
+        f"discord:ajcrew:direct:{OWNER}:extra",  # a DM scope is exactly the peer
     ],
 )
 def test_keys_the_predicate_cannot_read_as_an_owner_dm(tmp_path, monkeypatch, linked):
@@ -785,7 +785,7 @@ def test_a_read_records_the_readers_audience_so_a_retarget_before_publication_wi
     The read is judged against the audience now but published later, so the gate
     records it and ``cross_surface_withheld`` compares at delivery. A mirror that did
     not move, or moved back, publishes."""
-    from kiro_crew.dashboard.chat_runner import cross_surface_withheld
+    from aj_crew.dashboard.chat_runner import cross_surface_withheld
 
     state = _state(tmp_path, monkeypatch)
     _owner_discord(state, dm_pairings=DISCORD_DM_PAIRING)
@@ -827,7 +827,7 @@ def test_a_read_by_an_unmirrored_tab_withholds_a_mirror_gained_before_publicatio
     """The same record for the ordinary shape: a plain dashboard tab reads a peer
     under no mirror, gains one before its reply publishes, and the reply is withheld
     from the channel -- the transcript keeps it."""
-    from kiro_crew.dashboard.chat_runner import cross_surface_withheld
+    from aj_crew.dashboard.chat_runner import cross_surface_withheld
 
     state = _state(tmp_path, monkeypatch)
     _owner_discord(state, dm_pairings=DISCORD_DM_PAIRING)
@@ -851,7 +851,7 @@ def test_every_admission_gate_records_the_audience_not_only_the_transcript_read(
     gate every session-control verb passes and at the ledger's one gate, never per
     verb -- so a status read or a ledger read alone arms the publisher's fence, and
     a retarget before the reply publishes withholds it."""
-    from kiro_crew.dashboard.chat_runner import cross_surface_withheld
+    from aj_crew.dashboard.chat_runner import cross_surface_withheld
 
     state = _state(tmp_path, monkeypatch)
     _owner_discord(state, dm_pairings=DISCORD_DM_PAIRING)
@@ -915,7 +915,7 @@ def test_a_retarget_landing_between_validation_and_record_is_never_the_admitted_
     With two reads, a retarget between them would be recorded unjudged and the
     publisher would find nothing changed. The store answers the DM (A) for N reads and
     a guild thread (B) after, N walking every read the gate might make."""
-    from kiro_crew.dashboard.chat_runner import cross_surface_withheld
+    from aj_crew.dashboard.chat_runner import cross_surface_withheld
 
     state = _state(tmp_path, monkeypatch)
     _owner_discord(state, dm_pairings=DISCORD_DM_PAIRING)
@@ -981,7 +981,7 @@ def test_a_retarget_landing_during_publication_never_reaches_the_new_room(
     The mirror-link writer runs in ``asyncio.to_thread``, so with two reads a retarget
     could be judged on one row and sent to another. The store answers the DM (A) for N
     reads and a guild thread (B) after; B never receives the reply."""
-    from kiro_crew.dashboard.chat_runner import _deliver_cross_surface_reply
+    from aj_crew.dashboard.chat_runner import _deliver_cross_surface_reply
 
     state = _state(tmp_path, monkeypatch)
     _owner_discord(state, dm_pairings=DISCORD_DM_PAIRING)
@@ -1033,7 +1033,7 @@ def test_the_slack_legs_judge_the_thread_they_cached_not_the_live_binding(tmp_pa
     Unlinking the thread mid-turn leaves record and live binding both naming the DM, so
     ``cross_surface_withheld`` sees no change; ``slack_publication_withheld`` refuses a
     room no recorded admission saw."""
-    from kiro_crew.dashboard.chat_runner import (
+    from aj_crew.dashboard.chat_runner import (
         cross_surface_withheld,
         slack_publication_withheld,
     )
@@ -1094,7 +1094,7 @@ def test_a_binding_that_moves_after_turn_start_is_judged_per_destination(tmp_pat
     The Slack legs use the thread cached at turn start and the channel-neutral leg the
     row read at delivery, so a mid-turn move gives them different rooms. Either way no
     room the admissions never saw receives the reply."""
-    from kiro_crew.dashboard.chat_runner import (
+    from aj_crew.dashboard.chat_runner import (
         cross_surface_withheld,
         slack_publication_withheld,
     )
@@ -1140,7 +1140,7 @@ def test_a_channel_turn_records_no_audience_so_a_later_dashboard_reply_is_not_wi
 
     Only the runner's teardown empties the record, so a channel turn's admission would
     go stale and later withhold an unrelated dashboard reply."""
-    from kiro_crew.dashboard.chat_runner import cross_surface_withheld
+    from aj_crew.dashboard.chat_runner import cross_surface_withheld
 
     state = _state(tmp_path, monkeypatch)
     _owner_discord(state, dm_pairings=DISCORD_DM_PAIRING)
@@ -1178,8 +1178,8 @@ def test_a_runner_turn_still_records_and_the_marker_is_the_runners_own(tmp_path,
 
     from turn_harness import Do, TurnScript, run_turn
 
-    from kiro_crew.dashboard import chat_runner
-    from kiro_crew.messaging import dispatch, driver
+    from aj_crew.dashboard import chat_runner
+    from aj_crew.messaging import dispatch, driver
 
     state = _state(tmp_path, monkeypatch)
     _owner_discord(state, dm_pairings=DISCORD_DM_PAIRING)
@@ -1217,7 +1217,7 @@ def test_a_turn_whose_only_call_is_create_session_still_records_its_audience(tmp
     exactly as a read does. The creator gate therefore records the verdict's
     admission on its admitted path too, so a conductor turn that only dispatches is
     fenced like one that reads."""
-    from kiro_crew.dashboard.chat_runner import cross_surface_withheld
+    from aj_crew.dashboard.chat_runner import cross_surface_withheld
 
     state = _state(tmp_path, monkeypatch)
     _owner_discord(state, dm_pairings=DISCORD_DM_PAIRING)
@@ -1613,7 +1613,7 @@ def test_the_predicate_reads_every_audience_accessor_the_reply_delivery_legs_rea
     import inspect
     import re
 
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     accessor = re.compile(r"\b(get_\w+_link)\b")
     delivery_reads: set[str] = set()
@@ -1663,14 +1663,14 @@ def test_every_owner_dm_surface_opens_the_crew_log_from_its_dispatcher():
     import inspect
     import pkgutil
 
-    from kiro_crew.messaging import dispatch as pipeline
+    from aj_crew.messaging import dispatch as pipeline
 
     for surface in sorted(sc.OWNER_DM_CONDUCTOR_SURFACES):
-        dispatcher = importlib.import_module(f"kiro_crew.{surface}.transport_dispatch")
+        dispatcher = importlib.import_module(f"aj_crew.{surface}.transport_dispatch")
         source = inspect.getsource(dispatcher)
         # A dispatcher composed from owners in its channel's ``dispatch`` package opens the
         # log from one of them (Telegram's turn engine), so its source is read with theirs.
-        owners = f"kiro_crew.{surface}.dispatch"
+        owners = f"aj_crew.{surface}.dispatch"
         if importlib.util.find_spec(owners) is not None:
             package = importlib.import_module(owners)
             source += "".join(
@@ -1719,7 +1719,7 @@ async def test_mirror_unlink_clears_the_mirror_and_nothing_else(tmp_path, monkey
     ``slack_channel_id`` field, and ``get_mirror_link`` must read that threadless row
     as no mirror or the unlink would refuse the owner's own DM.
     """
-    from kiro_crew.dashboard.chat_mirror import api_chat_slot_mirror_unlink
+    from aj_crew.dashboard.chat_mirror import api_chat_slot_mirror_unlink
 
     state = _state(tmp_path, monkeypatch)
     _owner_discord(state)
@@ -1770,13 +1770,13 @@ def test_the_owner_dm_surfaces_are_channels_that_draw_targets_from_configured_st
     import importlib
     import inspect
 
-    from kiro_crew.constants import CHANNEL_OWNER_DM_NAMESPACES
-    from kiro_crew.messaging.transport import MessagingTransport
+    from aj_crew.constants import CHANNEL_OWNER_DM_NAMESPACES
+    from aj_crew.messaging.transport import MessagingTransport
 
     assert sc.OWNER_DM_CONDUCTOR_SURFACES == frozenset({"discord", "telegram"})
     assert sc.OWNER_DM_CONDUCTOR_SURFACES <= set(CHANNEL_OWNER_DM_NAMESPACES)
     for surface in sorted(sc.OWNER_DM_CONDUCTOR_SURFACES):
-        module = importlib.import_module(f"kiro_crew.{surface}.transport")
+        module = importlib.import_module(f"aj_crew.{surface}.transport")
         transports = [
             cls
             for _name, cls in inspect.getmembers(module, inspect.isclass)
@@ -1793,8 +1793,8 @@ def test_the_discord_transport_places_a_dm_only_by_the_pairing_its_client_record
     nothing else -- a guild room, a thread, an unknown id and a blank all read as
     not on record, and the answer names the peer, not whether the roster admits it
     (the predicate compares that against the sole owner itself)."""
-    from kiro_crew.discord.client import DiscordClient
-    from kiro_crew.discord.transport import DiscordTransport
+    from aj_crew.discord.client import DiscordClient
+    from aj_crew.discord.transport import DiscordTransport
 
     client = DiscordClient(token="bot-secret")
     transport = DiscordTransport(
@@ -1813,7 +1813,7 @@ def test_the_telegram_transport_places_a_private_chat_as_its_own_peer():
     """A private ``chat_id`` IS the user id, for the chats this transport opens --
     the allow-listed users' -- while a group or forum chat id is never on the user
     roster and reads as not on record."""
-    from kiro_crew.telegram.transport import TelegramTransport
+    from aj_crew.telegram.transport import TelegramTransport
 
     transport = TelegramTransport(MagicMock(), allowed_user_ids={int(OWNER), int(GUEST)})
     assert transport.direct_peer_of(OWNER) == OWNER
@@ -1843,7 +1843,7 @@ def test_a_tab_mirrored_to_a_group_id_pasted_into_the_telegram_allow_list_is_ref
     would make that group read as the sole owner's own DM, admit the mirrored
     conductor, and put its private reads in front of the group. With the real
     transport, the mirrored tab stays refused on the peer clause."""
-    from kiro_crew.telegram.transport import TelegramTransport
+    from aj_crew.telegram.transport import TelegramTransport
 
     group = "-1001234567890"
     state = _state(tmp_path, monkeypatch)
@@ -1864,8 +1864,8 @@ def test_a_tab_mirrored_to_a_group_id_pasted_into_the_telegram_allow_list_is_ref
 
 
 def test_sole_direct_target_is_the_one_owner_rule():
-    from kiro_crew.dashboard.handlers.messaging import _owner_dm_target
-    from kiro_crew.messaging.transport import sole_direct_target
+    from aj_crew.dashboard.handlers.messaging import _owner_dm_target
+    from aj_crew.messaging.transport import sole_direct_target
 
     one = _Transport("discord", users=[OWNER], threads=[THREAD])
     many = _Transport("discord", users=[OWNER, GUEST])

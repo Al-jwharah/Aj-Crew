@@ -221,7 +221,7 @@ Worked cases:
 | — | `chat_folder_create("x", parent="Flaky tests")` | refused: file yourself in `Flaky tests` first |
 | — | `session_create()` | allowed, top level |
 | — | `session_create(folder="Finance/Q4")` | refused |
-| `Ops` | `session_create(folder="Ops/kirocrew-worker")` | allowed |
+| `Ops` | `session_create(folder="Ops/ajcrew-worker")` | allowed |
 | `Ops` | `session_create()` | allowed, filed in `Ops` |
 | `Ops` | `chat_folder_create("wave3", parent="Ops")` | allowed |
 | `Ops` | `chat_folder_create("Ops2")` at top level | refused |
@@ -324,7 +324,7 @@ updates, and the pipeline conductor's self-filing: `pipeline-conductor/SKILL.md`
 gains a `chat_folder_file_self` into the pipeline folder right after its
 `chat_folder_create` and before the first claim, and
 `_PIPELINE_CONDUCTOR_DASHBOARD_GRANTS` in `spec_grants.py` gains
-`@kirocrew-dashboard/chat_folder_file_self`. The security conductor's tuple is
+`@ajcrew-dashboard/chat_folder_file_self`. The security conductor's tuple is
 built from the pipeline one plus that same grant, so it drops its own addition
 and inherits the grant instead of listing it twice.
 
@@ -379,7 +379,7 @@ at `0be5bcd9ea`, the pipeline conductor re-checked at `d42544f622`:
   does not file itself yet"), so it cannot take the recovery §3 tells it to.
   Phase 1 therefore adds a self-filing step to the skill and the grant to
   `_PIPELINE_CONDUCTOR_DASHBOARD_GRANTS`.
-- `kirocrew-dashboard-author`, `kirocrew-research`, `kirocrew-knowledge`: no
+- `ajcrew-dashboard-author`, `ajcrew-research`, `ajcrew-knowledge`: no
   `folder=` use in their prompts.
 - A person who asks their own chat (team lead) "open a session in Finance/Q4"
   while that chat sits in `Ops`: refused. The recovery is the message in §3.
@@ -409,8 +409,8 @@ caller slot's `folder_id` and the tree alone.
 
 ## Alternatives considered
 
-- **Key on agent name (a conductor list).** `kirocrew-conductor`,
-  `kirocrew-team-lead`, `kirocrew-pipeline-conductor`, … is a list that rots,
+- **Key on agent name (a conductor list).** `ajcrew-conductor`,
+  `ajcrew-team-lead`, `ajcrew-pipeline-conductor`, … is a list that rots,
   and the team lead is the default agent for the person's own tabs, so "is a
   conductor" is not a property of the template. `agent_creator_key` already
   separates agent calls from browser calls with no list.

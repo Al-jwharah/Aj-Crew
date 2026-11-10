@@ -19,37 +19,37 @@ import pytest
 from chat_test_helpers import _make_state
 from turn_harness import ScriptedProvider, TurnContext, TurnRecord, TurnScript, run_turn
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.acp_backends import (
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
 )
-from kiro_crew.agent_sdk.backends import ACP_BACKENDS_HARNESS_OWNED_SLASH_COMMANDS
-from kiro_crew.agent_sdk.capabilities import UNKNOWN_BACKEND_CAPABILITIES, capabilities_for
-from kiro_crew.dashboard import chat_slack
-from kiro_crew.dashboard.chat_handlers import _send_harness_command
-from kiro_crew.dashboard.chat_runner import (
+from aj_crew.agent_sdk.backends import ACP_BACKENDS_HARNESS_OWNED_SLASH_COMMANDS
+from aj_crew.agent_sdk.capabilities import UNKNOWN_BACKEND_CAPABILITIES, capabilities_for
+from aj_crew.dashboard import chat_slack
+from aj_crew.dashboard.chat_handlers import _send_harness_command
+from aj_crew.dashboard.chat_runner import (
     _forwards_harness_command,
     _run_chat,
     effective_session_key,
 )
-from kiro_crew.dashboard.chat_slack import maybe_auto_link_slack
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.dashboard.chat_slack import maybe_auto_link_slack
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.providers.acp import AcpProvider
 
 
 @pytest.fixture(autouse=True)
 def _no_spec_hooks(_floor_monkeypatch):
     """These doubles carry no spec projection to refresh."""
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_runner._prepare_spec_hooks",
+        "aj_crew.dashboard.chat_runner._prepare_spec_hooks",
         AsyncMock(return_value=([], False, None)),
     )
 
@@ -57,7 +57,7 @@ def _no_spec_hooks(_floor_monkeypatch):
         return claimed
 
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_runner.reproject_claimed_session", _claimed
+        "aj_crew.dashboard.chat_runner.reproject_claimed_session", _claimed
     )
 
 
@@ -180,7 +180,7 @@ class TestBackendResolution:
         state = _make_state(tmp_path)
         state.sessions.get_provider = MagicMock(return_value=None)
         with patch(
-            "kiro_crew.dashboard.chat_runner.select_provider_backend",
+            "aj_crew.dashboard.chat_runner.select_provider_backend",
             return_value=ACP_BACKEND_CLAUDE,
         ):
             assert await _forwards_harness_command(
@@ -194,7 +194,7 @@ class TestBackendResolution:
         state.sessions.get_provider = MagicMock(return_value=_provider(ACP_BACKEND_KIRO))
         state.sessions.is_provider_alive = AsyncMock(return_value=True)
         with patch(
-            "kiro_crew.dashboard.chat_runner.select_provider_backend",
+            "aj_crew.dashboard.chat_runner.select_provider_backend",
             return_value=ACP_BACKEND_CLAUDE,
         ):
             assert not await _forwards_harness_command(
@@ -241,7 +241,7 @@ class TestOtherSurfaces:
     @pytest.mark.asyncio
     async def test_slack_opens_a_thread_for_a_claude_command(self, tmp_path, monkeypatch) -> None:
         """Its answer is mirrored like a prompt's, so the thread it opens holds it."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state, _slot, _commands, _prompts = _live(tmp_path, ACP_BACKEND_CLAUDE)
         state.slack_client = MagicMock()
         state.slack_client.open_dm = AsyncMock(return_value="D_OWNER")

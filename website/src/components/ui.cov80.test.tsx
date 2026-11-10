@@ -151,7 +151,7 @@ describe('ui badges', () => {
 
   it.each([
     ['package', 'bg-aim-subtle'],
-    ['kirocrew', 'text-muted'],
+    ['ajcrew', 'text-muted'],
     ['project', 'text-ok'],
     ['zzq-unknown', 'text-muted'],
   ])('SourceBadge %s renders its own chrome', (source, cls) => {

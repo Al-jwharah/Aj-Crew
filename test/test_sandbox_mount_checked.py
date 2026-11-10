@@ -10,8 +10,8 @@ because there is no post-mount emptiness check, the launcher has no logger, and 
 pre-exec hardlink scan only fires when a credential happens to carry an extra link.
 
 These tests drive the launcher program's own stages
-(:func:`~kiro_crew.sandbox_launcher_program.enter_namespaces`, then
-:func:`~kiro_crew.sandbox_launcher_program.place_masks`) with the shared stand-in libc
+(:func:`~aj_crew.sandbox_launcher_program.enter_namespaces`, then
+:func:`~aj_crew.sandbox_launcher_program.place_masks`) with the shared stand-in libc
 from ``test_sandbox_launcher_program``, whose ``mount`` fails on a chosen call. That is
 the only way to exercise the failure path at all: this test process cannot create a
 user namespace (a nested ``unshare`` is seccomp-denied inside an agent sandbox), and
@@ -37,7 +37,7 @@ from pathlib import Path
 import pytest
 from test_sandbox_launcher_program import CoveringLibc, identity, launch, payload, refusal
 
-from kiro_crew import sandbox, sandbox_launcher, sandbox_launcher_program
+from aj_crew import sandbox, sandbox_launcher, sandbox_launcher_program
 
 program = sandbox_launcher_program
 
@@ -76,7 +76,7 @@ def _pin_ssh_accept_new(monkeypatch: pytest.MonkeyPatch) -> None:
     launcher suites is about (test-hygiene class 7). ``True`` is what a modern host
     answers.
     """
-    monkeypatch.setattr("kiro_crew.sandbox._ssh_supports_accept_new", lambda: True)
+    monkeypatch.setattr("aj_crew.sandbox._ssh_supports_accept_new", lambda: True)
 
 
 class _Libc(CoveringLibc):
@@ -126,7 +126,7 @@ def _run(
 
     Returns ``(libc, refusal_message_or_None, launch)``. By default every mount the
     child makes before it scrubs the environment runs: the propagation mount, then
-    :func:`~kiro_crew.sandbox_launcher_program.place_masks`. With no overrides that is
+    :func:`~aj_crew.sandbox_launcher_program.place_masks`. With no overrides that is
     six sites, in this order: 1 = propagation, 2 = read-only bind, 3 = read-only
     remount, 4 = first credential dir, 5 = first sensitive file, 6 = ~/.ssh. The seal
     pair comes BEFORE the credential hide on purpose: a hidden leaf under a sealed
@@ -641,7 +641,7 @@ def test_break_arm_hide_before_seal_is_caught(tmp_path: Path) -> None:
     """Running the hide stage ahead of the seal stage must falsify the ordering assertion.
 
     The same stages, composed in the other order, so the run differs from
-    :func:`~kiro_crew.sandbox_launcher_program.place_masks` in ORDER only.
+    :func:`~aj_crew.sandbox_launcher_program.place_masks` in ORDER only.
     """
     parent, leaf = _nested_pair(tmp_path)
     parent_id, leaf_id = identity(parent), identity(leaf)

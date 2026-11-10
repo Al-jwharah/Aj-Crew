@@ -59,7 +59,7 @@ const DIFF = `--- a/website/src/pierre/config.ts
 
 const slots = [{
   key: SLOT, title: 'Caret alignment', running: false, last_message: 'caret',
-  messages: 2, agent: 'kirocrew', memory_mode: 'persistent', project: PROJECT,
+  messages: 2, agent: 'ajcrew', memory_mode: 'persistent', project: PROJECT,
   modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0,
 }]
 const t0 = Math.floor(Date.now() / 1000) - 900
@@ -160,7 +160,7 @@ async function main() {
     localStorage.setItem('mc-file-collapse-unchanged', '0')
     localStorage.setItem('mc-files-rail-open', '0')
     localStorage.setItem('mc-side-panel-width', '900')
-    localStorage.setItem('kirocrew:comment-hint-dismissed', '1')
+    localStorage.setItem('ajcrew:comment-hint-dismissed', '1')
     localStorage.setItem('mc-git-panel-opened:' + slot + ':' + project, '1')
     localStorage.setItem('mc-chat-config', JSON.stringify({ pinLastPrompt: false, streamMode: 'immediate' }))
   }, [SLOT, PROJECT, bucket([{ id: 'files', kind: 'files', title: 'Files' }, tab], tab.id), SPLIT ? '1' : '0'])

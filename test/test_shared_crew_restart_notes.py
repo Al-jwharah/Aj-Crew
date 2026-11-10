@@ -19,20 +19,20 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
-from kiro_crew.shared_crew import admission_entry
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import host_hooks
-from kiro_crew.shared_crew.admission import (
+from aj_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
+from aj_crew.shared_crew import admission_entry
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import host_hooks
+from aj_crew.shared_crew.admission import (
     Liveness,
     OperationKind,
     OperationState,
     RuntimeOwnershipRef,
 )
-from kiro_crew.shared_crew.contracts import ACTOR_REQUEST_KEY, ActorContext, Principal, Transport
-from kiro_crew.shared_crew.work_store import WorkStore
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.shared_crew.contracts import ACTOR_REQUEST_KEY, ActorContext, Principal, Transport
+from aj_crew.shared_crew.work_store import WorkStore
+from aj_crew.taskq.store import TaskStore
+from aj_crew.testing.clock import ManualClock
 
 S = OperationState
 BOUND = 30.0
@@ -77,8 +77,8 @@ def clock() -> ManualClock:
 def dash_state(tmp_path, monkeypatch):
     from chat_test_helpers import _make_state
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.push_slots_update = MagicMock()
@@ -151,7 +151,7 @@ async def test_a_session_the_crash_left_unopened_opens_with_its_prompt_and_note(
 ):
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard.chat_utils import slot_history_key
+    from aj_crew.dashboard.chat_utils import slot_history_key
 
     # Before the crash: the session's metadata line is on disk, nothing else.
     slot = dash_state.get_or_create_slot("l-run")
@@ -188,7 +188,7 @@ async def test_a_recovered_card_row_keeps_its_card_marker(tmp_path, dash_state):
     """
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard.card_send import CARD_ORIGIN_META_KEY
+    from aj_crew.dashboard.card_send import CARD_ORIGIN_META_KEY
 
     # Before the crash: only the session's metadata line is on disk (as the
     # unopened-session recovery test does), so _deliver opens it from disk.
@@ -285,7 +285,7 @@ async def test_chat_send_payload_keeps_the_normalized_user_row_identity(
     from chat_test_helpers import drain_background_tasks
     from test_handlers_taskrunner_coverage import _request as chat_request
 
-    from kiro_crew.dashboard import chat_handlers as chat
+    from aj_crew.dashboard import chat_handlers as chat
 
     svc = _service(_open(tmp_path / "send.db", clock), clock)
     monkeypatch.setattr(ag, "current_service", AsyncMock(return_value=svc))

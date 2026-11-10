@@ -24,7 +24,7 @@ from cron_script_helpers import (  # noqa: F401 -- the autouse fixtures register
     _crons_dir_tracks_patched_home,
 )
 
-from kiro_crew.cron_script import run_script_sandboxed
+from aj_crew.cron_script import run_script_sandboxed
 
 # A body's own JSON summary, shaped like the launcher's ``done`` status.
 _STATUS_SHAPED = "    print(json.dumps({'status': 'done', 'found': 0}), flush=True)\n"
@@ -36,12 +36,12 @@ def _passthrough_sandbox(_floor_monkeypatch):
     src_dir = str(Path(__file__).resolve().parents[1] / "src")
     _floor_monkeypatch.setenv("PYTHONPATH", src_dir)
     _floor_monkeypatch.setattr(
-        "kiro_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None)
+        "aj_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None)
     )
 
 
 def _run_body(tmp_path: Path, body: str) -> dict:
-    crons = tmp_path / ".kirocrew" / "crons"
+    crons = tmp_path / ".ajcrew" / "crons"
     crons.mkdir(parents=True)
     script = crons / "scan.py"
     script.write_text("import json, os, sys\n" + body, newline="\n", encoding="utf-8")
@@ -92,7 +92,7 @@ async def test_a_body_that_prints_a_status_shaped_line_and_returns_is_an_ok_run(
 async def test_done_raised_by_the_body_still_removes_the_job(tmp_path):
     result = _run_body(
         tmp_path,
-        "from kiro_crew.cron_script import Done\n"
+        "from aj_crew.cron_script import Done\n"
         "def check(ctx):\n" + _STATUS_SHAPED + "    raise Done('finished')\n",
     )
 

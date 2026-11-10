@@ -9,7 +9,7 @@
 // dev-serve / build-emit paths.
 //
 // A fourth consumer reads the same asset from DISK, not this URL path:
-// src/kiro_crew/publish_sync.py inlines it into published widget documents,
+// src/aj_crew/publish_sync.py inlines it into published widget documents,
 // which are viewed away from the dashboard origin and so cannot resolve a
 // same-origin path. It resolves the build-emit location
 // (static/dist/vendor/tailwindcss-browser.js) and depends on the emit filename

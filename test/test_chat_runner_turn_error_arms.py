@@ -28,27 +28,27 @@ from typing import Any
 import pytest
 from turn_harness import Do, Raise, SlotSpec, Step, TurnContext, TurnRecord, TurnScript, run_turn
 
-from kiro_crew import runtime_death
-from kiro_crew.acp.transport_errors import AcpAuthRequired, AcpError, AcpProcessDied
-from kiro_crew.acp.types import EVENT_TEXT_CHUNK, AcpEvent
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS
-from kiro_crew.config.sections import ResolvedBindings
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_runner import (
+from aj_crew import runtime_death
+from aj_crew.acp.transport_errors import AcpAuthRequired, AcpError, AcpProcessDied
+from aj_crew.acp.types import EVENT_TEXT_CHUNK, AcpEvent
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS
+from aj_crew.config.sections import ResolvedBindings
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_runner import (
     SESSION_NOT_FOUND_GIVE_UP_TEXT,
     SESSION_NOT_FOUND_RETRY_TEXT,
 )
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard.chat_utils import (
     AUTH_REQUIRED_KIND,
     TRANSIENT_NOTICE_META_KEY,
     TRANSIENT_NOTICE_RESUMING,
     TRANSIENT_NOTICE_RETRYING,
     TRANSIENT_RETRY_KIND,
 )
-from kiro_crew.dashboard.recovery_replays import ReplayFamily
-from kiro_crew.llm_helpers import TRANSIENT_RETRIES, PromptBusyExhaustedError
-from kiro_crew.recovery.ladder import SESSION_RECOVERY_MAX_ATTEMPTS
-from kiro_crew.session_allocation import SessionClosingError
+from aj_crew.dashboard.recovery_replays import ReplayFamily
+from aj_crew.llm_helpers import TRANSIENT_RETRIES, PromptBusyExhaustedError
+from aj_crew.recovery.ladder import SESSION_RECOVERY_MAX_ATTEMPTS
+from aj_crew.session_allocation import SessionClosingError
 
 _REPLY = AcpEvent(kind=EVENT_TEXT_CHUNK, text="the reply")
 _CLAUDE_START_FAILED = (
@@ -420,7 +420,7 @@ class TestArmSpecifics:
     ) -> None:
         cold = ResolvedBindings(
             workspace_dir=tmp_path / "workspace",
-            kiro_agent="kirocrew",
+            kiro_agent="ajcrew",
             resolved_alias="default",
             memory_store_name="default",
             effective_memory_config={},
@@ -463,6 +463,6 @@ class TestArmSpecifics:
 def test_pipe_death_is_the_clients_own_words_not_an_answered_frame(
     exc: BaseException, expected: bool
 ) -> None:
-    from kiro_crew.llm_helpers import acp_error_is_pipe_death
+    from aj_crew.llm_helpers import acp_error_is_pipe_death
 
     assert acp_error_is_pipe_death(exc) is expected

@@ -20,10 +20,10 @@ from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 from chat_test_helpers import _make_state
 
-from kiro_crew.artifact_store import dashboard_package as dp
-from kiro_crew.config.loader import KiroCrewAgentConfig
-from kiro_crew.crew_log import bus as crew_log_bus
-from kiro_crew.dashboard.handlers import member_dashboard as md
+from aj_crew.artifact_store import dashboard_package as dp
+from aj_crew.config.loader import AjCrewAgentConfig
+from aj_crew.crew_log import bus as crew_log_bus
+from aj_crew.dashboard.handlers import member_dashboard as md
 
 
 def _owner_write(store: Any, slug: str, **kwargs: Any) -> Any:
@@ -51,7 +51,7 @@ _REVISION_BASE = 2_000_000
 
 PAGE = (
     '<p data-dashboard-field="goal"></p>'
-    "<script>window.kirocrew.subscribe('goal', (v) => v);</script>"
+    "<script>window.ajcrew.subscribe('goal', (v) => v);</script>"
 )
 
 
@@ -77,7 +77,7 @@ def _package(bound_to: str = f"crewmate:{SLUG}", *, html: str = PAGE) -> dict[st
 
 def _fake_cfg() -> Any:
     return SimpleNamespace(
-        agents={CREW: KiroCrewAgentConfig(kiro_agent="kirocrew", description="d", model="m1")},
+        agents={CREW: AjCrewAgentConfig(kiro_agent="ajcrew", description="d", model="m1")},
         default_agent=CREW,
         memory_stores={},
         workspaces={"default": SimpleNamespace(dir="workspace")},
@@ -111,11 +111,11 @@ class _Store:
 
     def get(self, slug: str, *, version: int | None = None) -> Any:
         if slug != PACKAGE_SLUG:
-            from kiro_crew.artifacts import ArtifactError
+            from aj_crew.artifacts import ArtifactError
 
             raise ArtifactError(f"no artifact {slug!r}")
         if version is not None:
-            from kiro_crew.artifacts import ArtifactError
+            from aj_crew.artifacts import ArtifactError
 
             self.version_reads.append(version)
             if version != APPLIED_VERSION:
@@ -141,12 +141,12 @@ def wired_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
     app = web.Application()
     app["state"] = state
     store = _Store(dp.dump_package(_package()))
-    monkeypatch.setattr("kiro_crew.artifacts.get_default_store", lambda: store)
+    monkeypatch.setattr("aj_crew.artifacts.get_default_store", lambda: store)
     # The slot the fold values are keyed by, resolved rather than guessed in
     # production; pinned here so the publish below names the same one.
     monkeypatch.setattr(md, "_dashboard_slot", lambda member, slug: SLUG)
     monkeypatch.setattr(md, "_write_session", lambda slug, member: "")
-    monkeypatch.setattr("kiro_crew.members.member_slug", lambda name, config=None: SLUG)
+    monkeypatch.setattr("aj_crew.members.member_slug", lambda name, config=None: SLUG)
     yield SimpleNamespace(app=app, frames=frames, store=store)
     for page in list(app.get("member_dashboard_live_pages", {}).values()):
         page.disarm()
@@ -160,7 +160,7 @@ def _request(app: web.Application, method: str, path: str) -> web.Request:
 
 
 async def _call(handler: Any, req: web.Request) -> tuple[int, Any]:
-    with patch.object(md.KiroCrewConfig, "load", return_value=_fake_cfg()):
+    with patch.object(md.AjCrewConfig, "load", return_value=_fake_cfg()):
         resp = await handler(req)
     return resp.status, json.loads(resp.body)
 

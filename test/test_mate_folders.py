@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.dashboard import mate_folders as mf
+from aj_crew.dashboard import mate_folders as mf
 
 PRINCIPAL = "member:member-radar-0123"
 OTHER = "member:member-fixer-4567"
@@ -130,7 +130,7 @@ def test_in_mate_home_walks_the_whole_subtree():
     home = _run(mf.ensure_mate_home(state, PRINCIPAL, "Radar"))
     state._folders += [
         {"id": "a", "name": "PR review", "parent_id": home, "owner_app": PRINCIPAL},
-        {"id": "b", "name": "kirocrew-worker", "parent_id": "a", "owner_app": PRINCIPAL},
+        {"id": "b", "name": "ajcrew-worker", "parent_id": "a", "owner_app": PRINCIPAL},
         {"id": "p", "name": "Finance", "parent_id": ""},
         # A cycle must not hang the walk.
         {"id": "c1", "name": "c1", "parent_id": "c2"},
@@ -266,7 +266,7 @@ def test_only_the_owning_mate_may_write_into_its_home():
 
 
 def test_the_home_takes_only_layout_changes():
-    from kiro_crew.dashboard.chat_folders_records import LAYOUT_ONLY_FIELDS
+    from aj_crew.dashboard.chat_folders_records import LAYOUT_ONLY_FIELDS
 
     assert LAYOUT_ONLY_FIELDS == {"collapsed", "order"}
 
@@ -371,7 +371,7 @@ def test_subtree_ids_are_what_home_owner_of_locks():
 
 
 def test_folder_cleanup_never_removes_a_mate_home_or_its_subtree():
-    from kiro_crew.dashboard.chat_folder_cleanup import removable_folder_ids
+    from aj_crew.dashboard.chat_folder_cleanup import removable_folder_ids
 
     state, home = _state_with_home()
     state._folders.append({"id": "q", "name": "Empty", "parent_id": "p"})
@@ -387,7 +387,7 @@ def test_folder_cleanup_never_removes_a_mate_home_or_its_subtree():
 
 
 def test_create_folder_record_keeps_outsiders_out_of_a_mate_home():
-    from kiro_crew.dashboard.chat_folders_records import (
+    from aj_crew.dashboard.chat_folders_records import (
         FolderMateHomeLockedError,
         FolderOwnershipError,
         create_folder_record,
@@ -416,7 +416,7 @@ def test_execution_principal():
 
 
 def test_fork_and_revive_filing_refuses_an_outsider(monkeypatch):
-    import kiro_crew.execution_context as ec
+    import aj_crew.execution_context as ec
 
     state, home = _state_with_home()
     records = {
@@ -453,7 +453,7 @@ def test_a_refile_checks_both_ends_of_the_move():
 
 
 def test_revive_filing_refuses_an_outsider_moving_a_session_out_of_a_home(monkeypatch):
-    import kiro_crew.execution_context as ec
+    import aj_crew.execution_context as ec
 
     state, home = _state_with_home()
     records = {
@@ -473,8 +473,8 @@ def test_revive_filing_refuses_an_outsider_moving_a_session_out_of_a_home(monkey
 
 
 def test_name_lookups_never_adopt_a_folder_in_a_mate_home():
-    from kiro_crew.dashboard.arrival_folders import _find
-    from kiro_crew.dashboard.channel_folders import _find_folder
+    from aj_crew.dashboard.arrival_folders import _find
+    from aj_crew.dashboard.channel_folders import _find_folder
 
     state, home = _state_with_home()
     folders = state._folders
@@ -501,7 +501,7 @@ def test_a_fork_keeps_a_mate_home_folder_only_for_that_mate():
 
 
 def test_session_folder_principal(monkeypatch):
-    import kiro_crew.execution_context as ec
+    import aj_crew.execution_context as ec
 
     records = {"person": None, "worker": _execution("member-radar-0123", "radar")}
 
@@ -517,7 +517,7 @@ def test_session_folder_principal(monkeypatch):
 
 
 def test_a_cron_tab_is_kept_out_of_a_foreign_mate_home():
-    from kiro_crew.dashboard.cron_inject import chat_folder_refuses_store
+    from aj_crew.dashboard.cron_inject import chat_folder_refuses_store
 
     state, home = _state_with_home()
     for target in (home, "a"):
@@ -561,7 +561,7 @@ class TestCronSaveIntoAMateHome:
     def _sel(monkeypatch):
         from unittest.mock import MagicMock
 
-        import kiro_crew.dashboard.handlers as handlers_pkg
+        import aj_crew.dashboard.handlers as handlers_pkg
 
         audit = MagicMock()
         monkeypatch.setattr(handlers_pkg, "sel", lambda: audit)
@@ -580,7 +580,7 @@ class TestCronSaveIntoAMateHome:
 
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew.dashboard.handlers.cron import api_crons_create
+        from aj_crew.dashboard.handlers.cron import api_crons_create
 
         audit = self._sel(monkeypatch)
         state, home = await _build_state_with_home()
@@ -603,14 +603,14 @@ class TestCronSaveIntoAMateHome:
 
         from aiohttp.test_utils import TestClient, TestServer
 
-        import kiro_crew.dashboard.handlers.cron as handler_mod
-        from kiro_crew.dashboard.handlers.cron import api_crons_create
+        import aj_crew.dashboard.handlers.cron as handler_mod
+        from aj_crew.dashboard.handlers.cron import api_crons_create
 
         self._sel(monkeypatch)
         monkeypatch.setattr(handler_mod, "_member_store", lambda member: "member-radar-0123")
         state, home = await _build_state_with_home()
         add = AsyncMock(return_value=SimpleNamespace(id="job42"))
-        monkeypatch.setattr("kiro_crew.dashboard.change_cards.cron_job_revision", lambda job: "rev")
+        monkeypatch.setattr("aj_crew.dashboard.change_cards.cron_job_revision", lambda job: "rev")
         app = _cron_app(api_crons_create, "/api/crons", state, add_job_async=add)
         async with TestClient(TestServer(app)) as client:
             resp = await client.post(
@@ -624,7 +624,7 @@ class TestCronSaveIntoAMateHome:
 
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew.dashboard.handlers.cron import api_cron_update
+        from aj_crew.dashboard.handlers.cron import api_cron_update
 
         audit = self._sel(monkeypatch)
         state, home = await _build_state_with_home()
@@ -652,7 +652,7 @@ class TestCronSaveIntoAMateHome:
 
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew.dashboard.handlers.cron import api_cron_update
+        from aj_crew.dashboard.handlers.cron import api_cron_update
 
         audit = self._sel(monkeypatch)
         state, home = await _build_state_with_home()
@@ -690,7 +690,7 @@ class TestCronSaveIntoAMateHome:
     async def test_moving_an_existing_tab_rechecks_its_current_folder(self, monkeypatch):
         from unittest.mock import AsyncMock
 
-        from kiro_crew.dashboard import cron_inject
+        from aj_crew.dashboard import cron_inject
 
         state, home = await _build_state_with_home()
         slot = SimpleNamespace(key="cron-job42", folder_id="a", memory_store="")

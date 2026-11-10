@@ -1,5 +1,5 @@
 #!/bin/sh
-# KiroCrew container entrypoint.
+# AjCrew container entrypoint.
 #
 # Responsibilities (deliberately minimal — real logic lives in the product):
 #
@@ -36,26 +36,26 @@
 #   3. Print how to mint a dashboard login link. Links are minted via
 #      docker exec, never read out of logs: a gateway whose stdout is not a
 #      terminal (`docker run -d`, compose) prints its startup URL without the
-#      link and names `kirocrew token`, and a link a terminal got expires
+#      link and names `ajcrew token`, and a link a terminal got expires
 #      minutes after minting.
 #
 # Contract: `docker run <image>` starts the gateway; any explicit args are
-# passed through to the kirocrew CLI instead (e.g. `docker run <image>
-# doctor`, `docker exec <ctr> kirocrew-entrypoint gateway --slack-only`).
+# passed through to the ajcrew CLI instead (e.g. `docker run <image>
+# doctor`, `docker exec <ctr> ajcrew-entrypoint gateway --slack-only`).
 
 set -eu
 
 # ── Data-home resolution: ask the PRODUCT, never re-implement ────────────
-# ensure_data_home() (kiro_crew.config.paths) is the backend's single
-# source of truth: KIROCREW_HOME validation (system-dir rejection,
+# ensure_data_home() (aj_crew.config.paths) is the backend's single
+# source of truth: AJCREW_HOME validation (system-dir rejection,
 # expanduser) and the default home. A shell mirror of that logic drifted
 # from the backend twice in review; delegating closes the entire divergence
 # class — the entrypoint writes exactly where the gateway will read, by
-# construction. KIROCREW_HOME itself passes through unmodified — the backend
+# construction. AJCREW_HOME itself passes through unmodified — the backend
 # applies the identical interpretation to it.
-if ! ACTIVE_HOME=$(python3 -c 'from kiro_crew.config.paths import ensure_data_home; print(ensure_data_home())' 2>/dev/null) || [ -z "$ACTIVE_HOME" ]; then
+if ! ACTIVE_HOME=$(python3 -c 'from aj_crew.config.paths import ensure_data_home; print(ensure_data_home())' 2>/dev/null) || [ -z "$ACTIVE_HOME" ]; then
     ACTIVE_HOME="$HOME/.kiro/crew"
-    echo "[entrypoint] WARNING: could not resolve the data home via kiro_crew" \
+    echo "[entrypoint] WARNING: could not resolve the data home via aj_crew" \
          "(broken install?); defaulting to $ACTIVE_HOME." >&2
 fi
 CONFIG="$ACTIVE_HOME/config.json"
@@ -67,7 +67,7 @@ ENV_FILE="$ACTIVE_HOME/.env"
 # key added to one without the other fails CI. Replace-or-append line-wise so
 # operator-added lines and comments in .env survive; grep -v (not sed) avoids
 # escaping issues with arbitrary secret bytes.
-CRED_KEYS="SLACK_BOT_TOKEN SLACK_APP_TOKEN KIROCREW_OWNER_ID DISCORD_BOT_TOKEN TELEGRAM_BOT_TOKEN WECOM_BOT_ID WECOM_SECRET WEBEX_BOT_TOKEN MICROSOFT_APP_ID MICROSOFT_APP_PASSWORD MICROSOFT_APP_TENANT_ID WEIXIN_TOKEN FEISHU_APP_ID FEISHU_APP_SECRET JIRA_API_TOKEN AZURE_DEVOPS_EXT_PAT BITBUCKET_EMAIL BITBUCKET_API_TOKEN KIRO_API_KEY"
+CRED_KEYS="SLACK_BOT_TOKEN SLACK_APP_TOKEN AJCREW_OWNER_ID DISCORD_BOT_TOKEN TELEGRAM_BOT_TOKEN WECOM_BOT_ID WECOM_SECRET WEBEX_BOT_TOKEN MICROSOFT_APP_ID MICROSOFT_APP_PASSWORD MICROSOFT_APP_TENANT_ID WEIXIN_TOKEN FEISHU_APP_ID FEISHU_APP_SECRET JIRA_API_TOKEN AZURE_DEVOPS_EXT_PAT BITBUCKET_EMAIL BITBUCKET_API_TOKEN KIRO_API_KEY"
 # Append any per-host Jira tokens (JIRA_TOKEN_<hex>) — dynamic keys not in the
 # static list above. Same persist-then-unset treatment in the single loop below.
 JIRA_DYNAMIC=$(env | grep -oE '^JIRA_TOKEN_[0-9A-Fa-f]+' 2>/dev/null || true)
@@ -115,7 +115,7 @@ done
 # Signal to the gateway's load_credentials() that credentials were
 # deliberately scrubbed from the process environ and must NOT be
 # re-injected (which would leak into /proc/<pid>/environ).
-export _KIROCREW_CREDS_SCRUBBED=1
+export _AJCREW_CREDS_SCRUBBED=1
 # The resolver above has resolved the data home, so $CONFIG is authoritative:
 # present means operator-owned state (never rewrite), absent means genuine
 # first run.
@@ -134,14 +134,14 @@ else
     # which needs the same kernel facilities and cannot help here). Only
     # mode "auto" routes a missing backend into the audited fail-closed
     # refusal, so "auto" is the floor for all three container postures.
-    if python3 -c 'from kiro_crew.sandbox import detect_backend; raise SystemExit(0 if detect_backend() != "none" else 1)' 2>/dev/null; then
+    if python3 -c 'from aj_crew.sandbox import detect_backend; raise SystemExit(0 if detect_backend() != "none" else 1)' 2>/dev/null; then
         mkdir -p "$ACTIVE_HOME"
         printf '%s\n' '{"agent": {"sandbox": "auto"}}' > "$CONFIG"
         echo "[entrypoint] First run: inner sandbox backend available — seeded" \
              "$CONFIG with agent.sandbox=auto so agent subprocesses run" \
              "namespace-isolated from gateway credentials."
-    elif [ "${KIROCREW_ALLOW_UNSANDBOXED:-}" = "1" ]; then
-        # EXPLICIT operator consent (-e KIROCREW_ALLOW_UNSANDBOXED=1): the
+    elif [ "${AJCREW_ALLOW_UNSANDBOXED:-}" = "1" ]; then
+        # EXPLICIT operator consent (-e AJCREW_ALLOW_UNSANDBOXED=1): the
         # opt-out rides WITH mode=auto so the allowance flows through the
         # guard's audited opt-in path (SEL-logged, governance floors apply)
         # instead of mode-off's silent bypass. The container remains the OS
@@ -150,7 +150,7 @@ else
         mkdir -p "$ACTIVE_HOME"
         printf '%s\n' '{"agent": {"sandbox": "auto", "sandbox_allow_unsandboxed_exec": true}}' > "$CONFIG"
         echo "[entrypoint] First run: NO inner sandbox backend under this runtime's" \
-             "seccomp policy; KIROCREW_ALLOW_UNSANDBOXED=1 given — seeded $CONFIG" \
+             "seccomp policy; AJCREW_ALLOW_UNSANDBOXED=1 given — seeded $CONFIG" \
              "with sandbox=auto + sandbox_allow_unsandboxed_exec=true. Agent" \
              "subprocesses share the container user and can read files owned by" \
              "the gateway."
@@ -165,15 +165,15 @@ else
              "execution is DISABLED (fail-closed) until you choose one of:" \
              "(a) permit user namespaces (--security-opt seccomp=<profile permitting" \
              "unshare/clone>) and restart to get the inner sandbox, or" \
-             "(b) restart with -e KIROCREW_ALLOW_UNSANDBOXED=1 to explicitly accept" \
+             "(b) restart with -e AJCREW_ALLOW_UNSANDBOXED=1 to explicitly accept" \
              "unsandboxed agent execution (the container is then the only isolation" \
              "boundary)."
     fi
 fi
 
 if [ "${1:-gateway}" = "gateway" ]; then
-    PORT="${KIROCREW_PORT:-5476}"
-    echo "[entrypoint] Dashboard login: run  docker exec <container> kirocrew token --ttl 2h"
+    PORT="${AJCREW_PORT:-5476}"
+    echo "[entrypoint] Dashboard login: run  docker exec <container> ajcrew token --ttl 2h"
     echo "[entrypoint] then open the printed link, replacing the host with how you reach"
     echo "[entrypoint] this container (e.g. http://localhost:${PORT}/?token=... with -p ${PORT}:${PORT})."
     echo "[entrypoint] Chat sessions need a logged-in kiro-cli:  docker exec -it <container> kiro-cli login"
@@ -190,7 +190,7 @@ fi
 # --no-open: no browser in a container. Applies only to the gateway command.
 if [ "$1" = "gateway" ]; then
     shift
-    exec tini -- kirocrew gateway --no-open "$@"
+    exec tini -- ajcrew gateway --no-open "$@"
 fi
 
-exec tini -- kirocrew "$@"
+exec tini -- ajcrew "$@"

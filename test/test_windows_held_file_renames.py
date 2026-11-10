@@ -26,9 +26,9 @@ from md_notebook_helpers import _seed_template  # noqa: F401 - fixture
 from md_notebook_helpers import fixtures_fixture  # noqa: F401 - fixture
 from md_notebook_helpers import _clone, signed_client
 
-from kiro_crew import atomic_write as aw
-from kiro_crew.apps.builtins.md_notebook import git_ops
-from kiro_crew.apps.builtins.mochi.appearance_store import (
+from aj_crew import atomic_write as aw
+from aj_crew.apps.builtins.md_notebook import git_ops
+from aj_crew.apps.builtins.mochi.appearance_store import (
     MANIFEST_FILE,
     appearances_dir,
     save_sprite_pack,

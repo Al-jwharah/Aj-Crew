@@ -338,7 +338,7 @@ export function metricsSegment(metrics: MetricsReadout, seg: string): ReactNode 
           is keyed off the button's `aria-expanded` in CSS rather than
           by a class chosen here, so the band sees the same contents
           (see popoverTrigger). The muted variant is `!important`: a
-          theme's own `.text-accent` override (kiro-dark, index.css)
+          theme's own `.text-accent` override (aj-dark, index.css)
           matches at the same specificity and later, so a plain variant
           loses to it and the unpinned glyph stays accent. */}
       <AudioWaveform size={12} className="tb-narrow-only text-accent group-aria-[expanded=false]:!text-muted" />

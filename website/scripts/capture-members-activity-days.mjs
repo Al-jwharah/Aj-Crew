@@ -3,7 +3,7 @@
  * "Recent activity by day" change (before/after). Not a test — a screenshot harness.
  *
  * Usage:
- *   POD_INFO="$KIROCREW_SCRATCH/pod-info.json" \
+ *   POD_INFO="$AJCREW_SCRATCH/pod-info.json" \
  *     node scripts/capture-members-activity-days.mjs <outDir> <prefix> [lang]
  *
  * Writes <outDir>/<prefix>-light.png and <outDir>/<prefix>-dark.png (zh-CN),

@@ -23,7 +23,7 @@ const theme = params.get('theme') || 'dark'
 const width = Number(params.get('width')) || 640
 const frameless = params.get('frameless') === '1'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const SLOT = 'chat-embed-stop-hint-capture'
 const transcript = {

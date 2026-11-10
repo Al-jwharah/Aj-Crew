@@ -18,8 +18,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from kiro_crew.cron import CronJob, CronSchedule
-from kiro_crew.slack.gateway import _FAILURE_REMINDER_SECS, GatewayOrchestrator
+from aj_crew.cron import CronJob, CronSchedule
+from aj_crew.slack.gateway import _FAILURE_REMINDER_SECS, GatewayOrchestrator
 
 #: A class-body binding of an owner's method (``name = _owner.name``): it names the
 #: method without spelling the mechanism, so it is not a site.
@@ -27,7 +27,7 @@ _BINDING = re.compile(r"^    \w+ = (?:staticmethod\(|classmethod\()?_\w+\.\w+\)?
 
 
 def _source() -> str:
-    import kiro_crew.slack.gateway as mod
+    import aj_crew.slack.gateway as mod
 
     slack_dir = Path(mod.__file__).resolve().parent
     return "\n".join(

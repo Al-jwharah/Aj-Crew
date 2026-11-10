@@ -20,7 +20,7 @@ from deploy_web_handlers_helpers import _isolate_config  # noqa: F401
 from deploy_web_handlers_helpers import _mock_base_stack  # noqa: F401
 from deploy_web_handlers_helpers import _fake_store, _run, _set_profile
 
-from kiro_crew.deploy import engine, handlers
+from aj_crew.deploy import engine, handlers
 
 # On native Windows the deploy handlers hard-gate on ``os.name == "nt"`` (the
 # deploy scripts need a POSIX bash shell), so every handler test would receive
@@ -138,7 +138,7 @@ def test_deploy_info_finding_overridable(monkeypatch):
         captured["src_dir"] = src_dir
         captured["index"] = Path(src_dir, "index.html").read_text(encoding="utf-8")
         return {"site_id": site_id, "url": "https://d.cloudfront.net/", "reused": False,
-                "bucket": "kirocrew-web-x", "distribution_id": "D1", "status": "InProgress"}
+                "bucket": "ajcrew-web-x", "distribution_id": "D1", "status": "InProgress"}
 
     monkeypatch.setattr(engine, "deploy", fake_deploy)
     # Without override_scan -> blocked
@@ -195,7 +195,7 @@ def test_deploy_rejects_local_dir_outside_allowed_roots(monkeypatch, tmp_path):
 
 def test_deploy_missing_artifact_404(monkeypatch):
     _set_profile(monkeypatch)
-    from kiro_crew.artifacts import ArtifactNotFoundError
+    from aj_crew.artifacts import ArtifactNotFoundError
 
     def boom():
         return SimpleNamespace(get=lambda slug: (_ for _ in ()).throw(ArtifactNotFoundError("x")))
@@ -210,7 +210,7 @@ def test_deploy_missing_artifact_404(monkeypatch):
 
 def test_recall_preview_then_confirm(monkeypatch):
     _set_profile(monkeypatch)
-    site = {"bucket": "kirocrew-web-x", "distribution_id": "D1", "distribution_arn": "arn"}
+    site = {"bucket": "ajcrew-web-x", "distribution_id": "D1", "distribution_arn": "arn"}
     monkeypatch.setattr(engine, "find_site_by_tag", lambda sid, p, r=None: site)
     # preview (no confirm)
     status, payload = _run(handlers._do_recall({"site_id": "s"}))
@@ -223,12 +223,12 @@ def test_recall_preview_then_confirm(monkeypatch):
 
 def test_destroy_preview_echoes_resources(monkeypatch):
     _set_profile(monkeypatch)
-    site = {"bucket": "kirocrew-web-x", "distribution_id": "D1"}
+    site = {"bucket": "ajcrew-web-x", "distribution_id": "D1"}
     monkeypatch.setattr(engine, "find_site_by_tag", lambda sid, p, r=None: site)
     status, payload = _run(handlers._do_destroy({"site_id": "s"}))
     assert status == 200
     assert payload["requires_confirm"] is True and payload["destructive"] is True
-    assert "kirocrew-web-x" in payload["message"] and "D1" in payload["message"]
+    assert "ajcrew-web-x" in payload["message"] and "D1" in payload["message"]
 
 
 def test_destroy_confirm_runs_engine(monkeypatch):
@@ -398,7 +398,7 @@ def test_teardown_persistent_manifest_unreachable_returns_502(monkeypatch):
     tombstoning (card retains Tear down button for retry)."""
     # F2 (r4): teardown validates metadata profile against the registry —
     # register the fake profile so these tests exercise the paths under test.
-    from kiro_crew.deploy import profiles as _profiles_mod
+    from aj_crew.deploy import profiles as _profiles_mod
     monkeypatch.setattr(_profiles_mod, "load_registry", lambda: {
         "version": 2,
         "profiles": [{"name": "p", "region": "us-west-2"}],
@@ -501,7 +501,7 @@ def test_expire_manifest_uses_art_slug_not_meta_slug(monkeypatch):
     assert s3_cmd  # R12 F2: read + write — check every s3 call uses art.slug
     for cmd in s3_cmd:
         s3_args_str = " ".join(cmd)
-        assert "real-slug/.kirocrew-deploy.json" in s3_args_str
+        assert "real-slug/.ajcrew-deploy.json" in s3_args_str
         assert "FORGED-SLUG" not in s3_args_str
 
 
@@ -605,7 +605,7 @@ def test_deploy_rejects_on_windows(monkeypatch):
     """_do_deploy returns 400 with clear message on Windows (os.name == 'nt')."""
     import asyncio
 
-    from kiro_crew.deploy import handlers
+    from aj_crew.deploy import handlers
 
     class _NtNameOs:
         """Delegate everything to the real ``os`` except ``name``."""
@@ -632,13 +632,13 @@ def test_teardown_reaper_present_tombstones(monkeypatch):
     """Teardown proceeds (tombstones) when the reaper stack exists."""
     # F2 (r4): teardown validates metadata profile against the registry —
     # register the fake profile so these tests exercise the paths under test.
-    from kiro_crew.deploy import profiles as _profiles_mod
+    from aj_crew.deploy import profiles as _profiles_mod
     monkeypatch.setattr(_profiles_mod, "load_registry", lambda: {
         "version": 2,
         "profiles": [{"name": "p", "region": "us-west-2"}],
         "default": "p",
     })
-    from kiro_crew.deploy import handlers
+    from aj_crew.deploy import handlers
 
     monkeypatch.setattr(handlers, "_check_reaper_installed", lambda p, r: True)
 
@@ -664,7 +664,7 @@ def test_teardown_reaper_present_tombstones(monkeypatch):
             super().__init__(body={"confirm": True}, match_info={"slug": "test-slug"})
 
     # Patch _serialize to avoid import issues
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.artifacts._serialize",
+    monkeypatch.setattr("aj_crew.dashboard.handlers.artifacts._serialize",
                         lambda a, include_content=False: {
                             "webapp_metadata": {"teardown": {}, "architecture": {}},
                         })
@@ -677,13 +677,13 @@ def test_teardown_reaper_absent_returns_409(monkeypatch):
     """Teardown returns 409 when the reaper stack is not installed."""
     # F2 (r4): teardown validates metadata profile against the registry —
     # register the fake profile so these tests exercise the paths under test.
-    from kiro_crew.deploy import profiles as _profiles_mod
+    from aj_crew.deploy import profiles as _profiles_mod
     monkeypatch.setattr(_profiles_mod, "load_registry", lambda: {
         "version": 2,
         "profiles": [{"name": "p", "region": "us-west-2"}],
         "default": "p",
     })
-    from kiro_crew.deploy import handlers
+    from aj_crew.deploy import handlers
 
     monkeypatch.setattr(handlers, "_check_reaper_installed", lambda p, r: False)
 
@@ -711,7 +711,7 @@ def test_teardown_reaper_absent_returns_409(monkeypatch):
 
 def test_do_deploy_local_dir_stages_public_dir(monkeypatch, tmp_path):
     """_do_deploy with local_dir correctly stages the directory for static deploy."""
-    from kiro_crew.deploy import engine, handlers
+    from aj_crew.deploy import engine, handlers
 
     # Create a fullstack-layout dir: public/ + api/
     public = tmp_path / "myapp" / "public"
@@ -801,7 +801,7 @@ def test_ttl_hours_overflow_blocked(monkeypatch, tmp_path):
     """F4: ttl_hours > 8760 returns 400 BEFORE any engine call."""
     _set_profile(monkeypatch, "p")
 
-    from kiro_crew.artifacts import ArtifactStore
+    from aj_crew.artifacts import ArtifactStore
 
     store = ArtifactStore(tmp_path / "store")
     store.create(name="myart", content="<p>test</p>", kind="widget")
@@ -830,7 +830,7 @@ def test_internal_secret_strips_confirm_enforces_preview():
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.token_auth import token_auth_middleware
+    from aj_crew.dashboard.token_auth import token_auth_middleware
 
     _internal_secret = "test-secret-12345678"
 
@@ -852,7 +852,7 @@ def test_internal_secret_strips_confirm_enforces_preview():
 
         engine_called = []
 
-        import kiro_crew.deploy.engine as _eng
+        import aj_crew.deploy.engine as _eng
         orig_deploy = _eng.deploy
 
         def _fake_deploy(*a, **kw):
@@ -891,7 +891,7 @@ def test_internal_secret_teardown_denied_403():
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.token_auth import token_auth_middleware
+    from aj_crew.dashboard.token_auth import token_auth_middleware
 
     _internal_secret = "test-secret-12345678"
 
@@ -953,8 +953,8 @@ def test_scan_tree_unreadable_file_produces_finding(tmp_path):
 
 def test_migrated_builtin_cleans_hyphenated_name(tmp_path, monkeypatch):
     """Migration cleans up a 'deploy-web' legacy app install."""
-    from kiro_crew.apps import manager as mgr
-    from kiro_crew.apps.builtins import _MIGRATED_BUILTINS
+    from aj_crew.apps import manager as mgr
+    from aj_crew.apps.builtins import _MIGRATED_BUILTINS
 
     # Verify "deploy-web" is in the list
     assert "deploy-web" in _MIGRATED_BUILTINS
@@ -1126,7 +1126,7 @@ def test_internal_secret_profiles_post_denied():
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.token_auth import token_auth_middleware
+    from aj_crew.dashboard.token_auth import token_auth_middleware
 
     _internal_secret = "test-secret-12345678"
 
@@ -1166,7 +1166,7 @@ def test_internal_secret_list_allowed():
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.token_auth import token_auth_middleware
+    from aj_crew.dashboard.token_auth import token_auth_middleware
 
     _internal_secret = "test-secret-12345678"
 
@@ -1240,8 +1240,8 @@ def test_deploy_local_dir_staged_copy_cleaned(tmp_path, monkeypatch):
 
 def test_allowed_local_roots_no_bare_tmp(monkeypatch, tmp_path):
     """F2: _allowed_local_roots does NOT include bare /tmp."""
-    from kiro_crew.config.loader import KiroCrewConfig
-    monkeypatch.setattr(KiroCrewConfig, "load", lambda: type("C", (), {
+    from aj_crew.config.loader import AjCrewConfig
+    monkeypatch.setattr(AjCrewConfig, "load", lambda: type("C", (), {
         "agent": type("A", (), {"subagent_cwd_allowed_roots": ["/home/testuser/workplace"]})()
     })())
     monkeypatch.setattr(handlers, "config_dir", lambda: tmp_path)

@@ -1,4 +1,4 @@
-"""Tests for the `kirocrew doctor` OS-aware fix hints.
+"""Tests for the `ajcrew doctor` OS-aware fix hints.
 
 Guards _os_fix_hint: Homebrew on Darwin, Linux/AL2023 guidance otherwise.
 Other doctor sections are tested in the sibling ``test_cli_doctor_*.py`` files.
@@ -17,8 +17,8 @@ from unittest.mock import MagicMock
 import pytest
 
 from conftest import make_dir_link
-from kiro_crew import cli_doctor
-from kiro_crew.doctor_checks import resources as doctor_resources
+from aj_crew import cli_doctor
+from aj_crew.doctor_checks import resources as doctor_resources
 
 
 class TestManagedServicePolicyDoctor:
@@ -42,7 +42,7 @@ class TestManagedServicePolicyDoctor:
         issues: list[str] = []
         cli_doctor._doctor_managed_service_policy(issues)
         output = capsys.readouterr().out
-        assert "kirocrew service install" in output
+        assert "ajcrew service install" in output
         assert "managed-service defaults" in output
         assert issues == ["managed service definition is outdated"]
 
@@ -59,7 +59,7 @@ class TestManagedServicePolicyDoctor:
 
 
 class TestFixHint:
-    """OS-aware `kirocrew doctor` fix hints."""
+    """OS-aware `ajcrew doctor` fix hints."""
 
     def test_os_fix_hint_macos_returns_brew(self, monkeypatch) -> None:
         monkeypatch.setattr(cli_doctor._plat, "system", lambda: "Darwin")
@@ -95,7 +95,7 @@ class TestFfmpegLinuxHintResolvable:
         assert ".local/bin" not in cli_doctor._FFMPEG_LINUX_HINT
 
     def test_every_directory_named_is_actually_searched(self) -> None:
-        from kiro_crew import transcribe
+        from aj_crew import transcribe
 
         dirs = re.findall(r"/[A-Za-z0-9._/-]+", cli_doctor._FFMPEG_LINUX_HINT)
         assert dirs, "the hint must name at least one concrete install directory"
@@ -110,7 +110,7 @@ class TestFfmpegLinuxHintResolvable:
         # Anchored to the decoder table, not the prose alone: if the pinned Linux
         # artifacts were ever dropped, the hint would promise a download the
         # gateway refuses (409 decoder_unsupported_platform).
-        from kiro_crew.stt import decoder
+        from aj_crew.stt import decoder
 
         assert "dashboard" in cli_doctor._FFMPEG_LINUX_HINT
         assert decoder.artifact_for("Linux", "x86_64") is not None
@@ -136,7 +136,7 @@ class TestSttSettingsPathMatchesTheDashboard:
         return f"Settings → {tab} → {section}"
 
     def test_the_path_matches_the_dashboard_labels(self) -> None:
-        from kiro_crew.doctor_checks import features
+        from aj_crew.doctor_checks import features
 
         assert features._STT_SETTINGS_PATH == self._ui_path()
 
@@ -145,15 +145,15 @@ class TestSttSettingsPathMatchesTheDashboard:
 
 
 class TestDataHome:
-    """`kirocrew doctor` Data Home section — location + leftover legacy home."""
+    """`ajcrew doctor` Data Home section — location + leftover legacy home."""
 
     def test_legacy_present_default_path_says_not_the_data_home(
         self, monkeypatch, tmp_path: Path, capsys
     ) -> None:
-        # A leftover top-level ~/.kirocrew on the default path is not the data
+        # A leftover top-level ~/.ajcrew on the default path is not the data
         # home — the doctor notes it as safe to delete, never as active state.
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)  # default-path case
+        monkeypatch.delenv("AJCREW_HOME", raising=False)  # default-path case
         home = tmp_path / ".kiro" / "crew"
         monkeypatch.setattr(cli_doctor, "config_dir", lambda: home)
         home.mkdir(parents=True)
@@ -170,13 +170,13 @@ class TestDataHome:
     def test_legacy_override_points_at_legacy_says_active_not_ignored(
         self, monkeypatch, tmp_path: Path, capsys
     ) -> None:
-        # KIROCREW_HOME=~/.kirocrew makes the legacy dir the ACTIVE home, not
+        # AJCREW_HOME=~/.ajcrew makes the legacy dir the ACTIVE home, not
         # ignored debris — the doctor must not mislabel the home the process is
         # actually using (GPT 5.6 MEDIUM).
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
         legacy = tmp_path / cli_doctor.LEGACY_CONFIG_DIR_NAME
         legacy.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(legacy))
+        monkeypatch.setenv("AJCREW_HOME", str(legacy))
         # config_dir() resolves to the override (== legacy) when set
         monkeypatch.setattr(cli_doctor, "config_dir", lambda: legacy.resolve())
 
@@ -190,12 +190,12 @@ class TestDataHome:
     def test_legacy_with_venv_is_never_advised_deletable(
         self, monkeypatch, tmp_path: Path, capsys
     ) -> None:
-        # An older wheel install could nest its managed venv inside ~/.kirocrew,
+        # An older wheel install could nest its managed venv inside ~/.ajcrew,
         # so the leftover dir may hold the running interpreter. The doctor must
         # NOT tell the user it is safe to delete — that would remove their live
         # install.
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
         monkeypatch.setattr(cli_doctor, "config_dir", lambda: tmp_path / ".kiro" / "crew")
         legacy = tmp_path / cli_doctor.LEGACY_CONFIG_DIR_NAME
         (legacy / "venv" / "bin").mkdir(parents=True)
@@ -240,7 +240,7 @@ class TestDataHome:
 
 
 class TestPodSessionBus:
-    """`kirocrew doctor` Pods section — the systemd --user session bus.
+    """`ajcrew doctor` Pods section — the systemd --user session bus.
 
     Without a per-user systemd instance every pod verb fails with "No medium found".
     Doctor reports the three states but never gates its exit code on them (pods are
@@ -249,7 +249,7 @@ class TestPodSessionBus:
 
     @staticmethod
     def _linux(monkeypatch, tmp_path: Path, *, bus: bool, template: bool = True) -> Path:
-        from kiro_crew.pod import runtime as rt
+        from aj_crew.pod import runtime as rt
 
         monkeypatch.setattr(cli_doctor.sys, "platform", "linux")
         monkeypatch.setattr(cli_doctor.shutil, "which", lambda n: f"/usr/bin/{n}")
@@ -263,7 +263,7 @@ class TestPodSessionBus:
         # Patched on the runtime module because the doctor imports the name
         # locally at call time, which keeps the pod package out of the CLI's
         # import graph for every other command.
-        from kiro_crew.pod import runtime as _rt
+        from aj_crew.pod import runtime as _rt
 
         monkeypatch.setattr(
             _rt,
@@ -285,7 +285,7 @@ class TestPodSessionBus:
     def test_sandboxed_away_bus_names_outer_layer_and_host_shell(
         self, monkeypatch, tmp_path: Path, capsys
     ) -> None:
-        from kiro_crew.pod import runtime as rt
+        from aj_crew.pod import runtime as rt
 
         sock = self._linux(monkeypatch, tmp_path, bus=True)
         monkeypatch.setattr(
@@ -319,7 +319,7 @@ class TestPodSessionBus:
         # A container / CI runner / headless server has no per-user systemd
         # instance. That is an unavailable optional feature, not a broken
         # install, so it must NOT gate doctor's exit code — otherwise every
-        # such host is told its setup is broken (and `kirocrew doctor` starts
+        # such host is told its setup is broken (and `ajcrew doctor` starts
         # exiting 1 in CI).
         sock = self._linux(monkeypatch, tmp_path, bus=False)
         issues: list[str] = ["pre-existing"]
@@ -441,7 +441,7 @@ class TestLingerProbe:
     def _run(self, monkeypatch, *, stdout: str, returncode: int = 0):
         import subprocess
 
-        from kiro_crew.service import linux as service_linux
+        from aj_crew.service import linux as service_linux
 
         monkeypatch.setattr(service_linux, "trusted_system_bin", lambda _n: "/usr/bin/loginctl")
         monkeypatch.setattr(
@@ -466,14 +466,14 @@ class TestLingerProbe:
         assert self._run(monkeypatch, stdout="", returncode=1) is None
 
     def test_absent_loginctl_is_unknown(self, monkeypatch) -> None:
-        from kiro_crew.service import linux as service_linux
+        from aj_crew.service import linux as service_linux
 
         monkeypatch.setattr(service_linux, "trusted_system_bin", lambda _n: None)
         assert cli_doctor._linger_enabled("tester") is None
 
 
 class TestTrustRoot:
-    """`kirocrew doctor` reports whether session identities can be signed.
+    """`ajcrew doctor` reports whether session identities can be signed.
 
     Publication reports the same failure, but only once a session is actually
     claimed; doctor answers without waiting for one. It must not, however, cry
@@ -517,7 +517,7 @@ class TestTrustRoot:
 
 
 class TestUnresolvedMcpRefs:
-    """`kirocrew doctor` answers "why does my agent have no tools here?" statically.
+    """`ajcrew doctor` answers "why does my agent have no tools here?" statically.
 
     The runtime detector in ``acp/mcp_ref_guard`` reports the same thing from inside
     a session; this row reports it before one, per selectable harness. Advisory by
@@ -532,16 +532,16 @@ class TestUnresolvedMcpRefs:
         imports it lazily. One return value, because the row asks one boundary-clean
         question, which keeps `doctor_checks/mcp.py` off the agent-sdk-boundary baseline.
         """
-        from kiro_crew.agent_sdk.drivers import acp as acp_driver
+        from aj_crew.agent_sdk.drivers import acp as acp_driver
 
         monkeypatch.setattr(acp_driver, "agent_spec_mcp_refs", lambda _agent: (spec_found, rows))
 
     def test_a_backend_with_no_projection_names_the_unprojected_refs(self, monkeypatch, capsys):
-        self._arrange(monkeypatch, [("codex", ["@kirocrew-core"], False)])
+        self._arrange(monkeypatch, [("codex", ["@ajcrew-core"], False)])
         cli_doctor._doctor_unresolved_mcp_refs()
         out = capsys.readouterr().out
         assert "codex has no mirror" in out
-        assert "@kirocrew-core" in out
+        assert "@ajcrew-core" in out
 
     def test_the_no_mirror_verdict_claims_only_what_the_wire_proves(self, monkeypatch, capsys):
         """The static half hedges exactly as the runtime line does, on every backend.
@@ -550,7 +550,7 @@ class TestUnresolvedMcpRefs:
         half reads, so the row says a ref may still be served, never that tools are
         absent. Called at its home in ``doctor_checks.mcp`` (``cli_doctor`` re-exports it).
         """
-        from kiro_crew.doctor_checks import mcp as doctor_mcp
+        from aj_crew.doctor_checks import mcp as doctor_mcp
 
         for backend in ("goose", ""):
             self._arrange(monkeypatch, [(backend, ["@ghost"], False)])
@@ -638,34 +638,34 @@ class TestUnresolvedMcpRefs:
         permission file, a per-session fact. False would flag every ref as unresolved
         on the one backend whose projection works.
         """
-        from kiro_crew import acp_backends, providers
-        from kiro_crew.acp import session_mcp
-        from kiro_crew.agent_sdk.drivers import acp as acp_driver
+        from aj_crew import acp_backends, providers
+        from aj_crew.acp import session_mcp
+        from aj_crew.agent_sdk.drivers import acp as acp_driver
 
         seen: dict = {}
 
         class _Mirror:
             def session_params(self, _agent, **kw):
                 seen.update(kw)
-                return {"mcpServers": [{"name": "kirocrew-core"}]}
+                return {"mcpServers": [{"name": "ajcrew-core"}]}
 
         monkeypatch.setattr(
             session_mcp,
             "agent_spec_snapshot",
-            lambda _a: {"tools": ["@kirocrew-core"], "mcpServers": {"kirocrew-core": {}}},
+            lambda _a: {"tools": ["@ajcrew-core"], "mcpServers": {"ajcrew-core": {}}},
         )
         monkeypatch.setattr(acp_backends, "selectable_backend_values", lambda: ["claude"])
         # The PACKAGE module: the driver imports both names from ``providers.mirrors``.
         monkeypatch.setattr(providers.mirrors, "mirror_for", lambda _b: _Mirror())
 
-        found, rows = acp_driver.agent_spec_mcp_refs("kirocrew")
+        found, rows = acp_driver.agent_spec_mcp_refs("ajcrew")
 
         assert found is True
         assert seen.get("permission_surface_owned") is True
         assert rows == [("claude", [], True)]
 
     def test_an_unreadable_registry_does_not_break_triage(self, monkeypatch, capsys):
-        from kiro_crew.agent_sdk.drivers import acp as acp_driver
+        from aj_crew.agent_sdk.drivers import acp as acp_driver
 
         def _boom(*_a, **_k):
             raise RuntimeError("spec unreadable")
@@ -690,7 +690,7 @@ class TestBackendAbilityCardRows:
 
     def test_the_section_reports_the_install_and_the_cross_harness_cost(self, capsys):
         """What the section claims to answer, and nothing wider."""
-        from kiro_crew.providers.mirrors import PROJECTIONS, PerToolDeny
+        from aj_crew.providers.mirrors import PROJECTIONS, PerToolDeny
 
         cli_doctor._doctor_backend_ability_cards(self._cfg("claude"))
         out = capsys.readouterr().out
@@ -702,7 +702,7 @@ class TestBackendAbilityCardRows:
 
     def test_only_the_harness_in_use_gets_a_row(self, capsys):
         """One card, for the install being diagnosed, and none for the rest."""
-        from kiro_crew.acp_backends import selectable_backend_values
+        from aj_crew.acp_backends import selectable_backend_values
 
         cli_doctor._doctor_backend_ability_cards(self._cfg("claude"))
         out = capsys.readouterr().out
@@ -722,11 +722,11 @@ class TestBackendAbilityCardRows:
         exactly what a reader DIAGNOSING a session wants, so it prints here, as the
         declaration's own value.
         """
-        from kiro_crew.providers.mirrors import PROJECTIONS
+        from aj_crew.providers.mirrors import PROJECTIONS
 
         for backend, declared in PROJECTIONS.items():
             if backend not in set(
-                __import__("kiro_crew.acp_backends", fromlist=["x"]).selectable_backend_values()
+                __import__("aj_crew.acp_backends", fromlist=["x"]).selectable_backend_values()
             ):
                 continue
             cli_doctor._doctor_backend_ability_cards(self._cfg(backend))
@@ -735,7 +735,7 @@ class TestBackendAbilityCardRows:
 
     def test_the_in_use_row_states_the_declared_reach(self, capsys):
         """The line the maintainer's ruling turned into a row."""
-        from kiro_crew.providers.mirrors import PROJECTIONS, PerToolDeny
+        from aj_crew.providers.mirrors import PROJECTIONS, PerToolDeny
 
         declared = sorted(
             backend
@@ -756,7 +756,7 @@ class TestBackendAbilityCardRows:
         """The consequence a reader cannot recover from the declared value alone."""
         import re as _re
 
-        from kiro_crew.providers.mirrors import PROJECTIONS, PerToolDeny
+        from aj_crew.providers.mirrors import PROJECTIONS, PerToolDeny
 
         declared = sorted(
             b for b, p in PROJECTIONS.items() if p.per_tool_deny is PerToolDeny.WHOLE_SERVER
@@ -765,8 +765,8 @@ class TestBackendAbilityCardRows:
         cli_doctor._doctor_backend_ability_cards(self._cfg("claude"))
         out = capsys.readouterr().out
         flat = " ".join(out.split())
-        assert "where that server is kirocrew-core" in flat
-        assert flat.count("kirocrew-core") == 1, "one sentence, not one per harness"
+        assert "where that server is ajcrew-core" in flat
+        assert flat.count("ajcrew-core") == 1, "one sentence, not one per harness"
         named = _re.search(r"On (.+?), switching a single MCP tool off", flat)
         assert named, flat
         for backend in declared:
@@ -776,7 +776,7 @@ class TestBackendAbilityCardRows:
         """The sentence holds for the reach it describes, and for no other."""
         import re as _re
 
-        from kiro_crew.providers.mirrors import PROJECTIONS, PerToolDeny
+        from aj_crew.providers.mirrors import PROJECTIONS, PerToolDeny
 
         spared = sorted(
             b
@@ -836,7 +836,7 @@ class TestBackendAbilityCardRows:
 
     def test_an_unreadable_registry_does_not_break_triage(self, monkeypatch, capsys):
         """Advisory rows, so a broken tree is reported by something else."""
-        from kiro_crew.agent_sdk import backend_mcp_ability
+        from aj_crew.agent_sdk import backend_mcp_ability
 
         def _boom(*_a, **_k):
             raise RuntimeError("registry unreadable")
@@ -847,8 +847,8 @@ class TestBackendAbilityCardRows:
 
     def test_a_kind_this_build_has_no_phrase_for_prints_the_raw_value(self, monkeypatch, capsys):
         """Honest rather than silent, and scrubbed on the way out."""
-        from kiro_crew.agent_sdk import backend_mcp_ability
-        from kiro_crew.agent_sdk.backend_mcp_ability import McpAbility
+        from aj_crew.agent_sdk import backend_mcp_ability
+        from aj_crew.agent_sdk.backend_mcp_ability import McpAbility
 
         monkeypatch.setattr(
             backend_mcp_ability,
@@ -885,8 +885,8 @@ class TestSelectedBackendProjectionRow:
         The shipped tables hold no ``no-channel`` entry, but the row must still render
         for a future harness with no channel, so the declaration is supplied here.
         """
-        from kiro_crew.agent_sdk import backend_mcp_ability
-        from kiro_crew.agent_sdk.backend_mcp_ability import McpAbility
+        from aj_crew.agent_sdk import backend_mcp_ability
+        from aj_crew.agent_sdk.backend_mcp_ability import McpAbility
 
         monkeypatch.setattr(
             backend_mcp_ability,
@@ -904,7 +904,7 @@ class TestSelectedBackendProjectionRow:
         cli_doctor._doctor_selected_backend_projection(self._cfg("some-harness"))
         out = capsys.readouterr().out
         assert "some-harness" in out
-        assert "none of Kiro Crew's own tools" in out
+        assert "none of Aj Crew's own tools" in out
         assert "Would need:" in out
         assert "Tracked at:" in out
 
@@ -929,7 +929,7 @@ class TestSelectedBackendProjectionRow:
         None ships: pi gets Crew's servers through its gate extension and is declared
         ``broker-only`` like deepseek, so its row is silent (next case).
         """
-        from kiro_crew.providers.mirrors import PROJECTIONS, ProjectionKind
+        from aj_crew.providers.mirrors import PROJECTIONS, ProjectionKind
 
         gaps = {
             backend
@@ -941,7 +941,7 @@ class TestSelectedBackendProjectionRow:
     def test_the_real_pi_declaration_prints_no_channel_row(self, capsys):
         """Read off the SHIPPED declaration: pi's servers arrive, so nothing is said."""
         cli_doctor._doctor_selected_backend_projection(self._cfg("pi"))
-        assert "carries none of Kiro Crew's own tools" not in capsys.readouterr().out
+        assert "carries none of Aj Crew's own tools" not in capsys.readouterr().out
 
     def test_a_backend_that_does_receive_its_servers_prints_nothing(self, capsys):
         """Silence is the whole point on a stock install.
@@ -964,8 +964,8 @@ class TestSelectedBackendProjectionRow:
         Same rule as the refs row: anything a party other than this file wrote
         goes through ``_safe_display`` before reaching a terminal.
         """
-        from kiro_crew.agent_sdk import backend_mcp_ability
-        from kiro_crew.agent_sdk.backend_mcp_ability import McpAbility
+        from aj_crew.agent_sdk import backend_mcp_ability
+        from aj_crew.agent_sdk.backend_mcp_ability import McpAbility
 
         monkeypatch.setattr(
             backend_mcp_ability,
@@ -989,7 +989,7 @@ class TestSelectedBackendProjectionRow:
 
         Choosing a harness whose transport cannot carry Crew's tools is a
         supported configuration with a declared reason, so it must not make
-        ``kirocrew doctor`` exit 1.
+        ``ajcrew doctor`` exit 1.
         """
         import inspect
 
@@ -1089,7 +1089,7 @@ class TestOomKillerProbe:
 
 
 class TestMemoryPressure:
-    """`kirocrew doctor` Memory Pressure section — freeze-preparedness verdict.
+    """`ajcrew doctor` Memory Pressure section — freeze-preparedness verdict.
 
     Zero swap AND no userspace OOM killer livelocks a Linux host before the kernel OOM
     killer fires. Doctor warns only then, reports "unknown" when detection is
@@ -1197,7 +1197,7 @@ class TestMemoryPressure:
 
 
 class TestRuntimeTmpfs:
-    """`kirocrew doctor` Runtime tmpfs section — early warning before the
+    """`ajcrew doctor` Runtime tmpfs section — early warning before the
     sandbox's mount-source roots run out of space or inodes and every tool
     spawn degrades to a bare ``rc=1``."""
 
@@ -1208,7 +1208,7 @@ class TestRuntimeTmpfs:
         # Names added after the facade split live on the family module only.
         monkeypatch.setattr(doctor_resources, "_measured_tmp_roots", lambda: list(usage_by_root))
         # The real roots are host directories; never scan them from a test.
-        monkeypatch.setattr(doctor_resources, "_kirocrew_test_homes", lambda root: (0, False))
+        monkeypatch.setattr(doctor_resources, "_ajcrew_test_homes", lambda root: (0, False))
         return ["pre-existing"]
 
     def test_healthy_roots_pass(self, monkeypatch, capsys) -> None:
@@ -1219,7 +1219,7 @@ class TestRuntimeTmpfs:
         cli_doctor._doctor_runtime_tmpfs(issues)
         out = capsys.readouterr().out
         assert "Runtime tmpfs" in out
-        assert "/run/user/1000: ✅" in out and "3 kirocrew_sb_* entries" in out
+        assert "/run/user/1000: ✅" in out and "3 ajcrew_sb_* entries" in out
         assert "⚠️" not in out
         assert issues == ["pre-existing"]
 
@@ -1229,7 +1229,7 @@ class TestRuntimeTmpfs:
         cli_doctor._doctor_runtime_tmpfs(issues)
         out = capsys.readouterr().out
         assert "/run/user/1000: ⚠️  low on inodes" in out
-        assert "18231 kirocrew_sb_* entries" in out and "rc=1" in out
+        assert "18231 ajcrew_sb_* entries" in out and "rc=1" in out
         assert len(issues) == 2 and "low on inodes" in issues[1]
 
     def test_inode_floor_warns_even_above_ten_percent(self, monkeypatch, capsys) -> None:
@@ -1267,7 +1267,7 @@ class TestRuntimeTmpfs:
         assert called == [] and issues == []
 
     def test_roots_come_from_the_sandbox_chooser(self, monkeypatch) -> None:
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         monkeypatch.setattr(
             sandbox, "_mount_source_candidate_roots", lambda: ["/run/user/7", "/dev/shm", "/tmp"]
@@ -1275,7 +1275,7 @@ class TestRuntimeTmpfs:
         assert cli_doctor._runtime_tmpfs_roots() == ["/run/user/7", "/dev/shm", "/tmp"]
 
     def test_roots_append_pull_diagnostic_roots_missing_from_sandbox(self, monkeypatch) -> None:
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         monkeypatch.setattr(
             sandbox,
@@ -1295,7 +1295,7 @@ class TestRuntimeTmpfs:
         ]
 
     def test_roots_do_not_repeat_tmp(self, monkeypatch) -> None:
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         monkeypatch.setattr(sandbox, "_mount_source_candidate_roots", lambda: ["/dev/shm", "/tmp"])
         monkeypatch.setattr(doctor_resources, "_resource_status_tmp_roots", lambda: ["/tmp"])
@@ -1303,7 +1303,7 @@ class TestRuntimeTmpfs:
 
     def test_low_root_names_leftover_test_homes(self, monkeypatch, capsys) -> None:
         issues = self._arrange(monkeypatch, {"/tmp": (86.0, 2.0, 20000, 0)})
-        monkeypatch.setattr(doctor_resources, "_kirocrew_test_homes", lambda root: (47, False))
+        monkeypatch.setattr(doctor_resources, "_ajcrew_test_homes", lambda root: (47, False))
         cli_doctor._doctor_runtime_tmpfs(issues)
         out = capsys.readouterr().out
         assert "/tmp: ⚠" in out and "low on inodes" in out
@@ -1313,7 +1313,7 @@ class TestRuntimeTmpfs:
 
     def test_capped_test_home_count_says_at_least(self, monkeypatch, capsys) -> None:
         issues = self._arrange(monkeypatch, {"/tmp": (86.0, 2.0, 20000, 0)})
-        monkeypatch.setattr(doctor_resources, "_kirocrew_test_homes", lambda root: (3, True))
+        monkeypatch.setattr(doctor_resources, "_ajcrew_test_homes", lambda root: (3, True))
         cli_doctor._doctor_runtime_tmpfs(issues)
         assert "at least 3 top-level dirs" in capsys.readouterr().out
 
@@ -1322,7 +1322,7 @@ class TestRuntimeTmpfs:
         scanned: list[str] = []
         monkeypatch.setattr(
             doctor_resources,
-            "_kirocrew_test_homes",
+            "_ajcrew_test_homes",
             lambda root: scanned.append(root) or (0, False),
         )
         cli_doctor._doctor_runtime_tmpfs(issues)
@@ -1330,25 +1330,25 @@ class TestRuntimeTmpfs:
 
     def test_test_homes_counts_dirs_holding_the_cache_marker(self, tmp_path) -> None:
         for name in ("kc-sq-home9", "p14-home"):
-            (tmp_path / name / ".cache" / "kirocrew").mkdir(parents=True)
+            (tmp_path / name / ".cache" / "ajcrew").mkdir(parents=True)
         (tmp_path / "plain-dir" / ".cache").mkdir(parents=True)
         (tmp_path / "a-file").write_text("x")
-        assert doctor_resources._kirocrew_test_homes(str(tmp_path)) == (2, False)
+        assert doctor_resources._ajcrew_test_homes(str(tmp_path)) == (2, False)
 
     def test_test_homes_scan_stops_at_the_cap(self, monkeypatch, tmp_path) -> None:
         for i in range(5):
-            (tmp_path / f"home{i}" / ".cache" / "kirocrew").mkdir(parents=True)
+            (tmp_path / f"home{i}" / ".cache" / "ajcrew").mkdir(parents=True)
         monkeypatch.setattr(doctor_resources, "_TEST_HOME_SCAN_CAP", 3)
-        count, capped = doctor_resources._kirocrew_test_homes(str(tmp_path))
+        count, capped = doctor_resources._ajcrew_test_homes(str(tmp_path))
         assert capped and count == 3
 
     def test_test_homes_unreadable_root_counts_zero(self, tmp_path) -> None:
-        assert doctor_resources._kirocrew_test_homes(str(tmp_path / "absent")) == (0, False)
+        assert doctor_resources._ajcrew_test_homes(str(tmp_path / "absent")) == (0, False)
 
     def test_usage_reads_statvfs_and_counts_sandbox_entries(self, monkeypatch, tmp_path) -> None:
         # Only the sandbox launcher's own mount-source dirs count; a foreign
         # ``tmp*`` entry is somebody else's and must not inflate the advice.
-        for name in ("kirocrew_sb_41_a", "kirocrew_sb_42_b", "tmpabc", "other"):
+        for name in ("ajcrew_sb_41_a", "ajcrew_sb_42_b", "tmpabc", "other"):
             (tmp_path / name).mkdir()
         # A plain namespace rather than ``os.statvfs_result``: neither that type
         # nor ``os.statvfs`` exists on Windows, and the production code only
@@ -1395,7 +1395,7 @@ class TestRuntimeTmpfs:
 
 
 class TestTempDirectories:
-    """`kirocrew doctor` Temp directories section — the directory this doctor
+    """`ajcrew doctor` Temp directories section — the directory this doctor
     run resolves as ``TMPDIR``. Reports its filesystem type and mount source,
     whether swap backs the host, and whether a ``tmpfiles.d`` rule ages it.
     Warns (advisory, never an ``issues`` entry) when it is tmpfs with no swap.
@@ -1416,7 +1416,7 @@ class TestTempDirectories:
         monkeypatch.setattr(cli_doctor.sys, "platform", platform)
         monkeypatch.setattr(cli_doctor.tempfile, "gettempdir", lambda: temp_dir)
         # The row reads the filesystem type through taskq's resolver.
-        from kiro_crew.taskq import store as _store
+        from aj_crew.taskq import store as _store
 
         monkeypatch.setattr(_store, "_linux_mount_type", lambda _p: fs_type)
         monkeypatch.setattr(cli_doctor, "_swap_total_kib", lambda: swap_kib)
@@ -1505,7 +1505,7 @@ class TestTempDirectories:
         called: list[str] = []
         issues = self._arrange(monkeypatch, temp_dir="/var/folders/xy/T", platform="darwin")
         # The Linux-only probes must not run on macOS/Windows.
-        from kiro_crew.taskq import store as _store
+        from aj_crew.taskq import store as _store
 
         monkeypatch.setattr(_store, "_linux_mount_type", lambda _p: called.append("fs") or "apfs")
         monkeypatch.setattr(cli_doctor, "_swap_total_kib", lambda: called.append("swap") or 0)
@@ -1681,7 +1681,7 @@ class TestGatewayMemoryLines:
     def _cfg(monkeypatch, ceiling: int) -> None:
         cfg = MagicMock()
         cfg.session.watchdog_rss_max_mb = ceiling
-        monkeypatch.setattr(cli_doctor.KiroCrewConfig, "load", lambda: cfg)
+        monkeypatch.setattr(cli_doctor.AjCrewConfig, "load", lambda: cfg)
 
     def test_reports_ceiling_and_live_rss(self, monkeypatch) -> None:
         self._cfg(monkeypatch, 1536)
@@ -1696,7 +1696,7 @@ class TestGatewayMemoryLines:
         assert "412 MiB" in rss and "4242" in rss
 
     def test_disabled_ceiling_is_called_out(self, monkeypatch) -> None:
-        from kiro_crew.doctor_checks import resources
+        from aj_crew.doctor_checks import resources
 
         self._cfg(monkeypatch, 0)
         monkeypatch.setattr(cli_doctor, "_read_gateway_pid", lambda: None)
@@ -1711,7 +1711,7 @@ class TestGatewayMemoryLines:
         The same run's Connectivity row says the gateway is running; this row
         must say the probe could not locate it rather than contradict that.
         """
-        from kiro_crew import gateway_lock
+        from aj_crew import gateway_lock
 
         self._cfg(monkeypatch, 1536)
         monkeypatch.setattr(cli_doctor, "_read_gateway_pid", lambda: None)
@@ -1726,7 +1726,7 @@ class TestGatewayMemoryLines:
         assert "does not mean it is stopped" in rss
 
     def test_free_lock_still_reads_as_not_running(self, monkeypatch) -> None:
-        from kiro_crew import gateway_lock
+        from aj_crew import gateway_lock
 
         self._cfg(monkeypatch, 1536)
         monkeypatch.setattr(cli_doctor, "_read_gateway_pid", lambda: None)
@@ -1739,7 +1739,7 @@ class TestGatewayMemoryLines:
         assert "⏹ not running" in rss
 
     def test_unreadable_rss_and_config_never_raise(self, monkeypatch) -> None:
-        monkeypatch.setattr(cli_doctor.KiroCrewConfig, "load", MagicMock(side_effect=OSError))
+        monkeypatch.setattr(cli_doctor.AjCrewConfig, "load", MagicMock(side_effect=OSError))
         monkeypatch.setattr(cli_doctor, "_read_gateway_pid", lambda: 7)
         monkeypatch.setattr(cli_doctor.platform_compat, "proc_rss_bytes_for_pid", lambda pid: None)
         monkeypatch.setattr(cli_doctor.platform_compat, "trusted_system_bin", lambda name: None)

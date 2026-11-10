@@ -14,14 +14,14 @@ from body_stream_helpers import attach_body
 from chat_test_helpers import _make_ready_kiro_prerequisite
 from turn_harness import SlotSpec, TurnScript, run_turn
 
-from kiro_crew import milestones as m
-from kiro_crew.acp.types import (
+from aj_crew import milestones as m
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.dashboard import milestones_api as api
+from aj_crew.dashboard import milestones_api as api
 
 _REAL_POLICY_PERMITS = api._policy_permits
 _REAL_MILESTONES_POLICY = m._policy_permits
@@ -29,7 +29,7 @@ _REAL_MILESTONES_POLICY = m._policy_permits
 
 @pytest.fixture(autouse=True)
 def _home(tmp_path: Path, _floor_monkeypatch: pytest.MonkeyPatch) -> Path:
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _floor_monkeypatch.setattr(m, "_catalog_cache", None)
     # No platform context is installed in a unit test; the policy itself is
     # covered by the tests that restore the real check.
@@ -89,19 +89,19 @@ class TestGet:
     async def test_config_switch_off(self) -> None:
         cfg = MagicMock()
         cfg.dashboard.milestones_enabled = False
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.config.loader.AjCrewConfig.load", return_value=cfg):
             assert _json(await api.api_milestones_get(_request())) == {"enabled": False}
 
     @pytest.mark.asyncio
     async def test_policy_outranks_config(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(api, "_policy_permits", _REAL_POLICY_PERMITS)
         monkeypatch.setattr(m, "_policy_permits", _REAL_MILESTONES_POLICY)
-        monkeypatch.setattr("kiro_crew.platform.context.installed_context", lambda: object())
+        monkeypatch.setattr("aj_crew.platform.context.installed_context", lambda: object())
         cfg = MagicMock()
         cfg.dashboard.milestones_enabled = True
         with (
-            patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=cfg),
-            patch("kiro_crew.edition_locks.policy_permits", return_value=False) as permits,
+            patch("aj_crew.config.loader.AjCrewConfig.load", return_value=cfg),
+            patch("aj_crew.edition_locks.policy_permits", return_value=False) as permits,
         ):
             assert _json(await api.api_milestones_get(_request())) == {"enabled": False}
             resp = await api.api_milestones_mark_done(_request({"id": "slack"}))
@@ -110,7 +110,7 @@ class TestGet:
         permits.assert_called_with("capabilities.milestones")
 
     def test_config_key_defaults_on(self) -> None:
-        from kiro_crew.config.sections_dashboard import DashboardConfig
+        from aj_crew.config.sections_dashboard import DashboardConfig
 
         cfg = DashboardConfig()
         assert cfg.milestones_enabled is True
@@ -224,7 +224,7 @@ class TestEvent:
 
 class TestArtifactHook:
     def test_counts_after_a_successful_create_only(self, tmp_path: Path) -> None:
-        from kiro_crew.artifacts import ArtifactStore, ArtifactValidationError
+        from aj_crew.artifacts import ArtifactStore, ArtifactValidationError
 
         store = ArtifactStore(root=tmp_path / "artifacts")
         with pytest.raises(ArtifactValidationError):
@@ -238,7 +238,7 @@ class TestArtifactHook:
 
 class TestCronHook:
     def test_counts_after_the_job_is_stored_only(self, tmp_path: Path) -> None:
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         svc = CronService(base_dir=tmp_path / "cron")
         with pytest.raises(ValueError):
@@ -255,8 +255,8 @@ class TestCronHook:
 
 class TestSlotBirthHook:
     def test_counts_person_started_chats_only(self, tmp_path: Path) -> None:
-        from kiro_crew.dashboard.state import DashboardState, SlotOrigin
-        from kiro_crew.history import ConversationLog
+        from aj_crew.dashboard.state import DashboardState, SlotOrigin
+        from aj_crew.history import ConversationLog
 
         sessions = MagicMock(count=0)
         sessions.remove = AsyncMock()
@@ -399,7 +399,7 @@ class TestDirectiveHook:
     def _apply(self, monkeypatch: pytest.MonkeyPatch, result: object) -> list[str]:
         import asyncio as aio
 
-        from kiro_crew.dashboard import session_directive_apply as sda
+        from aj_crew.dashboard import session_directive_apply as sda
 
         seen: list[str] = []
         monkeypatch.setattr(m, "record", seen.append)
@@ -430,7 +430,7 @@ class TestDirectiveHook:
         assert self._apply(monkeypatch, "Error: no client attached.") == []
 
     def test_a_refusal_counts_nothing(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.dashboard import session_directive_apply as sda
+        from aj_crew.dashboard import session_directive_apply as sda
 
         monkeypatch.setattr(sda, "_surface_arm_refusal", lambda *a, **k: None)
         assert self._apply(monkeypatch, sda._DirectiveDenied("occupied")) == []

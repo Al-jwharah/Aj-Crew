@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.monitoring.azure_devops_pull_request import AzureDevOpsPullRequestProvider
+from aj_crew.monitoring.azure_devops_pull_request import AzureDevOpsPullRequestProvider
 
 _TARGET = "https://dev.azure.com/acme/project/_git/widgets/pullrequest/9"
 
@@ -19,7 +19,7 @@ def _isolate_azure_cli_config_dirs(_floor_monkeypatch):
     """Provider tests must not inherit Azure CLI paths from the CI host."""
     _floor_monkeypatch.delenv("AZURE_CONFIG_DIR", raising=False)
     _floor_monkeypatch.delenv("AZURE_EXTENSION_DIR", raising=False)
-    _floor_monkeypatch.delenv("KIROCREW_POD", raising=False)
+    _floor_monkeypatch.delenv("AJCREW_POD", raising=False)
 
 
 @pytest.mark.parametrize(

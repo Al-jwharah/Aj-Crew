@@ -1,6 +1,6 @@
 """A sub-agent's skill triggers match the task it was given, nothing else.
 
-``run_turn`` prepends Kiro Crew's own text to the task: ``_SYSTEM_PREFIX`` for
+``run_turn`` prepends Aj Crew's own text to the task: ``_SYSTEM_PREFIX`` for
 an unnamed child, the cancel-resume preamble on a retry, and the MCP notice.
 Unless ``build_message`` gets ``skill_trigger_text``, triggers match against
 that whole message, so a skill whose trigger is a word of the prefix
@@ -20,13 +20,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
-from kiro_crew.context import ContextBuilder
-from kiro_crew.memory import MemoryStore
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.subagent import SubagentManager
-from kiro_crew.subagent_parts.run_limits import _SYSTEM_PREFIX
+from aj_crew.config.loader import AjCrewConfig, SkillsConfig
+from aj_crew.context import ContextBuilder
+from aj_crew.memory import MemoryStore
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.skills import SkillsLoader
+from aj_crew.subagent import SubagentManager
+from aj_crew.subagent_parts.run_limits import _SYSTEM_PREFIX
 
 # ``SubagentManager.spawn`` refuses while the host looks short of memory, and
 # the real builder reads host resources; neither is this test's input.
@@ -80,7 +80,7 @@ async def _child_build_call(task: str) -> tuple[tuple, dict]:
     ctx.hooks.auto_approve_subagent_tools = False
     mgr = SubagentManager(sessions=_mock_sessions(), ctx_builder=ctx)
     mgr._should_use_session_sharing = MagicMock(return_value=False)  # type: ignore[method-assign]
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn(task)
         assert info is not None
         await asyncio.wait_for(mgr._tasks[info.id], _RUN_CEILING)
@@ -103,7 +103,7 @@ def _builder(tmp_path: Path) -> ContextBuilder:
     loader = SkillsLoader(
         skills_path=skills,
         install_builtins=False,
-        config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+        config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
     )
     return ContextBuilder(memory=MemoryStore(workspace=tmp_path / "ws"), skills=loader)
 

@@ -12,7 +12,7 @@ const mockApi = vi.hoisted(() => ({
   mcpApply: vi.fn(),
   mcpGlobalScopes: vi.fn(),
   mcpResetProbeFailures: vi.fn(),
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
 }))
 vi.mock('../api/client', () => ({ api: mockApi }))
 vi.mock('../providers', () => ({
@@ -64,7 +64,7 @@ function rowOf(name: string): HTMLElement {
 beforeEach(() => {
   Object.values(mockApi).forEach(m => m.mockReset())
   mockApi.mcpGlobalScopes.mockResolvedValue({ scopes: [] })
-  mockApi.kirocrewConfig.mockResolvedValue({})
+  mockApi.ajcrewConfig.mockResolvedValue({})
 })
 
 describe('McpTab: an outdated row that was not probed', () => {
@@ -89,7 +89,7 @@ describe('McpTab: an outdated row that was not probed', () => {
     const link = within(reason).getByRole('link', { name: 'How to route this server through the MCP gateway' })
     expect(link).toHaveAttribute(
       'href',
-      'https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/secrets-env.md#route-the-server-through-the-gateway',
+      'https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/guides/secrets-env.md#route-the-server-through-the-gateway',
     )
     expect(link).toHaveAttribute('target', '_blank')
     expect(link).toHaveAttribute('rel', 'noopener noreferrer')

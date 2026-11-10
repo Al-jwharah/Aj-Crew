@@ -38,10 +38,10 @@ from crew_log_routes_helpers import (
 )
 from off_loop_helpers import off_loop
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, Ref
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.dashboard.handlers import crew_log as routes
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, Ref
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.dashboard.handlers import crew_log as routes
 
 
 def _page_request(session_id: str = SESSION, query: str = "") -> object:
@@ -71,10 +71,10 @@ async def test_both_reads_refuse_a_caller_that_is_not_the_owner():
     _opened(_log())
     with (
         patch(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             return_value=False,
         ),
-        patch("kiro_crew.dashboard.handlers._shared.logger"),
+        patch("aj_crew.dashboard.handlers._shared.logger"),
     ):
         page = await routes.api_session_crew_log(_page_request())
         fold = await routes.api_session_crew_log_projection(_projection_request("status"))
@@ -102,7 +102,7 @@ def test_every_crew_log_route_is_reachable_from_the_router():
     """
     from aiohttp import web as _web
 
-    from kiro_crew.dashboard.routes import sessions as sessions_routes
+    from aj_crew.dashboard.routes import sessions as sessions_routes
 
     app = _web.Application()
     sessions_routes.register(app)
@@ -266,7 +266,7 @@ def test_every_route_that_takes_a_projection_name_is_one_of_the_two_that_refuse_
 
     Read off the registered route table, so a third ``{name}`` route fails here.
     """
-    from kiro_crew.dashboard.routes import sessions as session_routes
+    from aj_crew.dashboard.routes import sessions as session_routes
 
     app = web.Application()
     session_routes.register(app)
@@ -508,21 +508,21 @@ async def test_the_fold_read_says_whether_the_gateway_is_recording(monkeypatch):
     """An empty fold cannot say why, so the read names the flag state beside it."""
     handle = _log()
     _opened(handle)
-    monkeypatch.delenv("KIROCREW_CREW_LOG", raising=False)
+    monkeypatch.delenv("AJCREW_CREW_LOG", raising=False)
     on = _body(
         await routes.api_session_crew_log_projections(_request_with_sessions("folds", SESSION, {}))
     )
     assert on["recording"] is True
     assert "flag_value" not in on
     assert "env_file" not in on
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "off")
+    monkeypatch.setenv("AJCREW_CREW_LOG", "off")
     off = _body(
         await routes.api_session_crew_log_projections(_request_with_sessions("folds", SESSION, {}))
     )
     assert off["recording"] is False
     assert off["flag_value"] == "off"
     assert off["flag_recognised"] is True
-    from kiro_crew.constants import env_file_display
+    from aj_crew.constants import env_file_display
 
     assert off["env_file"] == env_file_display()
 
@@ -534,8 +534,8 @@ async def test_the_fold_read_quotes_only_the_flag_value_that_switched_recording_
     """The panel names the typo; nothing else from the environment is sent."""
     handle = _log()
     _opened(handle)
-    monkeypatch.setenv("KIROCREW_CREW_LOG", " fasle\x1b[31m" + "x" * 80 + " ")
-    monkeypatch.setenv("KIROCREW_TEST_SECRET_NEIGHBOUR", "do-not-send")
+    monkeypatch.setenv("AJCREW_CREW_LOG", " fasle\x1b[31m" + "x" * 80 + " ")
+    monkeypatch.setenv("AJCREW_TEST_SECRET_NEIGHBOUR", "do-not-send")
     off = _body(
         await routes.api_session_crew_log_projections(_request_with_sessions("folds", SESSION, {}))
     )
@@ -554,7 +554,7 @@ async def test_the_settle_step_waits_on_the_emitter_s_own_flush():
     A batch the writer has already claimed is gone from the per-session queue, so only
     ``emit.flush`` sees it. The wait is bounded.
     """
-    from kiro_crew.crew_log import emit
+    from aj_crew.crew_log import emit
 
     with patch.object(emit, "flush", return_value=True) as flush:
         assert routes._settle_writes() is True
@@ -709,7 +709,7 @@ async def test_a_page_past_its_ref_budget_says_how_many_it_left():
     for index in range(routes.MAX_PAGE_REFS + extra):
         # A DISTINCT ref each time, so the budget rather than the dedupe is what
         # bounds the work.
-        CrewLog.create(lg.KIND_SESSION, f"s-kid{index}", owner="raymond", agent="kirocrew")
+        CrewLog.create(lg.KIND_SESSION, f"s-kid{index}", owner="raymond", agent="ajcrew")
         parent.append(
             "subagent/spawned",
             {"turn": 1, "agent_id": f"sub-{index}", "agent": "worker", "model": "opus"},
@@ -999,7 +999,7 @@ def test_notify_before_the_publisher_is_bound_is_a_no_op():
 
 @pytest.mark.asyncio
 async def test_installing_the_publisher_registers_exactly_one_growth_listener(monkeypatch):
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import emit as crew_log_emit
 
     monkeypatch.setenv(routes.CREW_LOG_ENV, "1")
     with (
@@ -1016,8 +1016,8 @@ async def test_installing_the_publisher_registers_exactly_one_growth_listener(mo
 @pytest.mark.asyncio
 async def test_a_reinstall_swaps_the_bus_subscriptions_rather_than_doubling_them(monkeypatch):
     """The publisher keeps its two scoped disposers, so a re-install replaces the pair."""
-    from kiro_crew.crew_log import bus as crew_log_bus
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import bus as crew_log_bus
+    from aj_crew.crew_log import emit as crew_log_emit
 
     monkeypatch.setenv(routes.CREW_LOG_ENV, "1")
     crew_log_bus.reset_for_tests()
@@ -1058,7 +1058,7 @@ def _slot_fold_frame(fold: str) -> dict:
     Driven through the bus subscriber the publisher really installs, and through the
     loop hop it really takes, so the frame is the one a socket would receive.
     """
-    from kiro_crew.crew_log import bus as crew_log_bus
+    from aj_crew.crew_log import bus as crew_log_bus
 
     state = _Sockets()
     publisher = routes.CrewLogPublisher(state)
@@ -1096,7 +1096,7 @@ def test_every_other_slot_fold_frame_omits_its_value(fold):
 
 def test_omitting_the_value_from_the_frame_leaves_the_bus_event_whole():
     """Other in-process subscribers of the same event still read the whole value."""
-    from kiro_crew.crew_log import bus as crew_log_bus
+    from aj_crew.crew_log import bus as crew_log_bus
 
     crew_log_bus.reset_for_tests()
     try:
@@ -1139,8 +1139,8 @@ def test_this_module_does_not_load_the_storage_package_at_import():
     """
     probe = (
         "import importlib, json, sys;"
-        "importlib.import_module('kiro_crew.dashboard.handlers.crew_log');"
-        "print(json.dumps(sorted(k for k in sys.modules if k.startswith('kiro_crew.crew_log'))))"
+        "importlib.import_module('aj_crew.dashboard.handlers.crew_log');"
+        "print(json.dumps(sorted(k for k in sys.modules if k.startswith('aj_crew.crew_log'))))"
     )
     done = subprocess.run(  # noqa: S603 - fixed argv, no shell
         [os.path.abspath(sys.executable), "-B", "-c", probe],
@@ -1151,7 +1151,7 @@ def test_this_module_does_not_load_the_storage_package_at_import():
         env={
             **os.environ,
             "PYTHONPATH": str(Path(__file__).resolve().parents[1] / "src"),
-            "KIROCREW_HOME": os.environ.get("KIROCREW_HOME", ""),
+            "AJCREW_HOME": os.environ.get("AJCREW_HOME", ""),
         },
         capture_output=True,
         text=True,
@@ -1328,7 +1328,7 @@ def test_the_flag_name_matches_the_emitters_own_constant():
     flag exists to avoid, so the name is spelled in the handler. That is only safe
     while something proves the spelling still matches.
     """
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import emit as crew_log_emit
 
     assert routes.CREW_LOG_ENV == crew_log_emit.CREW_LOG_ENV
 
@@ -1343,7 +1343,7 @@ async def test_installing_with_the_flag_off_builds_nothing(monkeypatch):
     """
     monkeypatch.setenv(routes.CREW_LOG_ENV, "0")
     monkeypatch.setattr(routes, "_publisher", None)
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import emit as crew_log_emit
 
     with patch.object(crew_log_emit, "_growth_listeners", []):
         assert routes.install_crew_log_publisher(_Sockets()) is None
@@ -1359,7 +1359,7 @@ async def test_the_session_route_serves_the_work_fold_through_the_slot():
     """`GET .../projection/work` on a session resolves the slot its unit's header
     names and folds every unit of that slot -- the same path `ledger` takes."""
     handle = CrewLog.create(
-        lg.KIND_SESSION, "s-conductor", owner="raymond", agent="kirocrew", slot="chat-9"
+        lg.KIND_SESSION, "s-conductor", owner="raymond", agent="ajcrew", slot="chat-9"
     )
     handle.append(
         "work/recorded",
@@ -1406,7 +1406,7 @@ def test_the_publisher_is_installed_after_the_listener_binds():
     """
     import inspect
 
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     source = inspect.getsource(server.start_dashboard)
     # The boot phases it calls before the bind live in its server_runtime owners.

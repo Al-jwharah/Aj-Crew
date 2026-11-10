@@ -9,10 +9,10 @@ import pytest
 from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F401 - fixture
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
-import kiro_crew.acp.client as acp_client
-from kiro_crew.acp.client import _DRAIN_DURATION, _DRAIN_IDLE_EXIT, AcpClient, AcpError
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
-from kiro_crew.testing.clock import ManualClock
+import aj_crew.acp.client as acp_client
+from aj_crew.acp.client import _DRAIN_DURATION, _DRAIN_IDLE_EXIT, AcpClient, AcpError
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE
+from aj_crew.testing.clock import ManualClock
 
 # ── Coverage push: session lifecycle ──
 
@@ -93,7 +93,7 @@ class TestInitializeSession:
     @pytest.mark.asyncio
     async def test_session_resume_fallback_to_new(self, tmp_path):
         """session/load fails → falls back to session/new."""
-        from kiro_crew.acp.client import AcpError
+        from aj_crew.acp.client import AcpError
 
         client = self._make_client(tmp_path)
         client._resume_session_id = "bad-sess"
@@ -130,7 +130,7 @@ class TestInitializeSession:
         """claude backend: a stale persisted sid with NO transcript on disk
         must fall back to session/new (a fresh start), not replay via
         session/load. Guards against the ~38%-on-'hi' base-context bloat."""
-        from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
+        from aj_crew.acp.types import ACP_BACKEND_CLAUDE
 
         client = self._make_client(tmp_path, acp_backend=ACP_BACKEND_CLAUDE)
         client._resume_session_id = "ghost-sess"  # no transcript exists for it
@@ -222,7 +222,7 @@ class TestWaitForResponse:
     @pytest.mark.asyncio
     async def test_matching_response_returned(self, tmp_path):
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(id=5, result={"data": "ok"})
         client._read_message = AsyncMock(return_value=msg)
@@ -233,7 +233,7 @@ class TestWaitForResponse:
     @pytest.mark.asyncio
     async def test_error_response_raises(self, tmp_path):
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(id=5, error={"code": -1, "message": "fail"})
         client._read_message = AsyncMock(return_value=msg)
@@ -244,7 +244,7 @@ class TestWaitForResponse:
     @pytest.mark.asyncio
     async def test_notification_buffered(self, tmp_path):
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         notif = JsonRpcMessage(method="mcp/serverReady", params={"name": "builder"})
         response = JsonRpcMessage(id=3, result={"ok": True})
@@ -257,7 +257,7 @@ class TestWaitForResponse:
     @pytest.mark.asyncio
     async def test_non_matching_response_buffered(self, tmp_path):
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         other = JsonRpcMessage(id=99, result={"other": True})
         target = JsonRpcMessage(id=3, result={"target": True})
@@ -269,7 +269,7 @@ class TestWaitForResponse:
 
     @pytest.mark.asyncio
     async def test_timeout_raises(self, tmp_path):
-        from kiro_crew.acp.client import AcpTimeoutError
+        from aj_crew.acp.client import AcpTimeoutError
 
         client = AcpClient(work_dir=tmp_path)
         client._read_message = AsyncMock(return_value=None)
@@ -282,7 +282,7 @@ class TestWaitForResponse:
         client = AcpClient(work_dir=tmp_path)
         client._read_message = AsyncMock(return_value=None)
 
-        with patch("kiro_crew.shutdown_event") as mock_ev:
+        with patch("aj_crew.shutdown_event") as mock_ev:
             mock_ev.is_set.return_value = True
             with pytest.raises(AcpError, match="Shutdown"):
                 await client._wait_for_response(1, timeout=5.0)
@@ -291,7 +291,7 @@ class TestWaitForResponse:
     async def test_server_request_warned_and_dropped(self, tmp_path):
         """Unexpected server request (method + id) is warned and dropped."""
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         server_req = JsonRpcMessage(id=50, method="unexpected/request", params={})
         response = JsonRpcMessage(id=3, result={"ok": True})
@@ -307,7 +307,7 @@ class TestDrainNotifications:
     @pytest.mark.asyncio
     async def test_drains_buffered_notifications(self, tmp_path):
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client._mcp_notifications = [
             JsonRpcMessage(method="mcp/serverReady", params={"name": "builder-mcp"}),
@@ -322,7 +322,7 @@ class TestDrainNotifications:
     @pytest.mark.asyncio
     async def test_drains_live_messages(self, tmp_path):
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         live_msg = JsonRpcMessage(method="mcp/serverReady", params={"name": "core"})
         client._mcp_notifications = []
@@ -358,7 +358,7 @@ class TestDrainNotifications:
     async def test_captures_buffered_mcp_oauth_request(self, tmp_path):
         """OAuth notifications buffered during init are captured into pending list."""
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import METHOD_MCP_OAUTH_REQUEST, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_MCP_OAUTH_REQUEST, JsonRpcMessage
 
         url = "https://mcp.linear.app/authorize?response_type=code&client_id=abc"
         client._mcp_notifications = [
@@ -383,7 +383,7 @@ class TestDrainNotifications:
     async def test_captures_live_mcp_oauth_request(self, tmp_path):
         """OAuth notifications arriving live during drain are also captured."""
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import METHOD_MCP_OAUTH_REQUEST, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_MCP_OAUTH_REQUEST, JsonRpcMessage
 
         url = "https://auth.smithery.ai/neon/authorize?client_id=xyz"
         oauth_msg = JsonRpcMessage(
@@ -412,7 +412,7 @@ class TestDrainNotifications:
     async def test_oauth_request_without_url_not_captured(self, tmp_path):
         """Malformed oauth notifications (no oauthUrl) are ignored."""
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import METHOD_MCP_OAUTH_REQUEST, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_MCP_OAUTH_REQUEST, JsonRpcMessage
 
         client._mcp_notifications = [
             JsonRpcMessage(
@@ -430,7 +430,7 @@ class TestDrainNotifications:
     async def test_oauth_request_dedupes_per_server(self, tmp_path):
         """kiro-cli may emit oauth_request multiple times per server probe — dedupe."""
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import METHOD_MCP_OAUTH_REQUEST, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_MCP_OAUTH_REQUEST, JsonRpcMessage
 
         url = "https://mcp.linear.app/authorize?client_id=abc"
         client._mcp_notifications = [
@@ -455,7 +455,7 @@ class TestDrainNotifications:
         """Unsafe-scheme URL must be rejected *before* the dedupe key is recorded,
         so a later safe retry for the same server still surfaces."""
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import METHOD_MCP_OAUTH_REQUEST, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_MCP_OAUTH_REQUEST, JsonRpcMessage
 
         client._mcp_notifications = [
             JsonRpcMessage(
@@ -484,7 +484,7 @@ class TestDrainNotifications:
         recording a banner with empty server_name would create a permanently-
         stuck dedupe entry.  Drop instead."""
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import METHOD_MCP_OAUTH_REQUEST, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_MCP_OAUTH_REQUEST, JsonRpcMessage
 
         client._mcp_notifications = [
             JsonRpcMessage(
@@ -529,7 +529,7 @@ class TestCaptureAvailableModels:
         # A session born in an entitlement/token-refresh race advertises a
         # degraded subset. The cache that seeds later sessions keeps the full
         # list until a second session reads the same smaller one.
-        from kiro_crew import model_registry as mr
+        from aj_crew import model_registry as mr
 
         def resp(*ids):
             return {"models": {"availableModels": [{"modelId": i} for i in ids]}}
@@ -611,9 +611,9 @@ class TestCaptureAvailableModels:
 
         Depends on the function-local import in ``_capture_available_models``;
         if that import is ever hoisted to module scope, patch
-        ``kiro_crew.acp.client.parse_advertised_models`` instead.
+        ``aj_crew.acp.client.parse_advertised_models`` instead.
         """
-        from kiro_crew.acp import session_handle as sh
+        from aj_crew.acp import session_handle as sh
 
         sentinel = [
             {"modelId": "sentinel-a", "name": "A", "description": ""},
@@ -668,7 +668,7 @@ class TestAcpClientDrainEarlyExit:
 
     @pytest.mark.asyncio
     async def test_drain_exits_early_when_quiet(self, tmp_path, monkeypatch):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         # The drain reads the virtual clock below, so a quiet poll costs exactly the time it
         # was asked to wait. Starting at zero keeps the idle window's float arithmetic exact.
@@ -718,7 +718,7 @@ class TestAcpClientDrainEarlyExit:
 
     @pytest.mark.asyncio
     async def test_drain_respects_hard_cap_when_chatty(self, tmp_path, monkeypatch):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         # The drain reads the virtual clock below; each message of the chatty stream
         # arrives 0.1s after the previous one, so the cap is reached after a fixed number

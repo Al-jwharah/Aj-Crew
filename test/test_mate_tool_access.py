@@ -2,7 +2,7 @@
 """The Preview opt-in card a crewmate's first ``request_capabilities`` raises while its flag is off.
 
 ``request_capabilities`` stays mounted with a crewmate's Dynamic capabilities off
-(``kiro_crew.mate_tool_access``). Its first call raises ONE ``crewmate.update``
+(``aj_crew.mate_tool_access``). Its first call raises ONE ``crewmate.update``
 card writing ``dynamic_capabilities: true`` for that crewmate alone, instead of
 the capabilities card, and holds the request. Turn on raises the held request as
 its own capabilities card; Not now leaves the flag off, and every later call is
@@ -28,11 +28,11 @@ from member_goals_helpers import (  # noqa: F401 -- the autouse fixtures registe
     _thread,
 )
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew import crewmate_dynamic_capabilities as dyn
-from kiro_crew import crewmate_prompts, mate_tool_access
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.dashboard.handlers import member_self as self_routes
+from aj_crew import change_card_catalog as catalog
+from aj_crew import crewmate_dynamic_capabilities as dyn
+from aj_crew import crewmate_prompts, mate_tool_access
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.dashboard.handlers import member_self as self_routes
 
 DRAFT = {"operations": [{"section": "skills", "id": "triage", "action": "set", "value": True}]}
 REQUEST = {"request": "capabilities", "params": {"draft": DRAFT}, "reason": "the task triages"}
@@ -55,7 +55,7 @@ def proposals(_floor_monkeypatch):
     A card id *statuses* does not hold is one the store has pruned; one it maps
     to ``None`` is a store that cannot be read.
     """
-    from kiro_crew.dashboard.handlers import change_cards as card_routes
+    from aj_crew.dashboard.handlers import change_cards as card_routes
 
     seen: list[dict] = []
     statuses: dict[str, str] = {}
@@ -133,8 +133,8 @@ def test_the_turn_on_apply_hands_the_app_and_thread_to_the_nudge(monkeypatch):
     """``_complete`` passes what ``continue_after_opt_in`` needs to raise the held request."""
     import inspect
 
-    from kiro_crew.dashboard import goal_setup
-    from kiro_crew.dashboard.handlers import change_cards as card_routes
+    from aj_crew.dashboard import goal_setup
+    from aj_crew.dashboard.handlers import change_cards as card_routes
 
     source = inspect.getsource(card_routes._complete)
     assert "schedule_tool_access_nudge(" in source
@@ -180,8 +180,8 @@ def test_a_waiting_opt_in_is_not_raised_twice(off, proposals):
 def test_the_opt_in_is_per_crewmate(off, proposals):
     seen, statuses = proposals
     _seed()
-    cfg = KiroCrewConfig.load()
-    cfg.agents["briar"] = KiroCrewAgentConfig(kiro_agent=cfg.default_agent)
+    cfg = AjCrewConfig.load()
+    cfg.agents["briar"] = AjCrewAgentConfig(kiro_agent=cfg.default_agent)
     cfg.save()
     state = FakeState()
     assert _request(state, _thread(state, ORDINARY))[0] == 200
@@ -224,7 +224,7 @@ def test_an_offer_that_cannot_be_recorded_raises_no_card(off, proposals, monkeyp
 
 
 def test_a_card_that_is_not_raised_takes_its_record_back(off, proposals, monkeypatch):
-    from kiro_crew.dashboard.handlers import change_cards as card_routes
+    from aj_crew.dashboard.handlers import change_cards as card_routes
 
     seen, _ = proposals
 
@@ -241,7 +241,7 @@ def test_a_card_that_is_not_raised_takes_its_record_back(off, proposals, monkeyp
 
 def test_the_record_is_written_before_the_card(off, proposals, monkeypatch):
     """The card's id is filled in after; a lost second write keeps the held request."""
-    from kiro_crew.dashboard.handlers import change_cards as card_routes
+    from aj_crew.dashboard.handlers import change_cards as card_routes
 
     seen, statuses = proposals
     real = card_routes.propose_for_caller
@@ -280,7 +280,7 @@ def test_the_record_is_written_before_the_card(off, proposals, monkeypatch):
 
 
 def test_a_reservation_whose_card_never_came_ages_out(off, proposals, monkeypatch):
-    from kiro_crew.testing.clock import ManualClock
+    from aj_crew.testing.clock import ManualClock
 
     seen, _ = proposals
     clock = ManualClock()
@@ -362,7 +362,7 @@ def test_an_unreadable_card_store_leaves_the_opt_in_waiting(off, proposals):
 
 
 def test_card_status_tells_a_gone_card_from_an_unreadable_store(monkeypatch):
-    from kiro_crew.dashboard import change_cards
+    from aj_crew.dashboard import change_cards
 
     class Store:
         def __init__(self, error):

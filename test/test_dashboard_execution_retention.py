@@ -10,18 +10,18 @@ from unittest.mock import AsyncMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.chat_handlers import close_slot
-from kiro_crew.dashboard.chat_persistence import _save_slot_to_history, save_slot_off_loop
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.execution_context import (
+from aj_crew.dashboard.chat_handlers import close_slot
+from aj_crew.dashboard.chat_persistence import _save_slot_to_history, save_slot_off_loop
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.execution_context import (
     ExecutionContext,
     MemoryStoreRef,
     bind_session_execution,
     read_session_execution,
     read_vouched_session_execution,
 )
-from kiro_crew.history import ConversationLog
-from kiro_crew.testing.wait import await_until
+from aj_crew.history import ConversationLog
+from aj_crew.testing.wait import await_until
 
 
 def _state(tmp_path):
@@ -37,7 +37,7 @@ def _execution(mode, member_id=None):
     # A member is only ever paired with a NON-default store: MemoryStoreRef refuses a
     # member on Global, and ExecutionContext requires the two ids to agree.
     store = MemoryStoreRef("default" if member_id is None else "retained-store", member_id)
-    return ExecutionContext(member_id, store, "template", "kirocrew", mode)
+    return ExecutionContext(member_id, store, "template", "ajcrew", mode)
 
 
 @pytest.mark.parametrize("mode", ["incognito", "temporary"])
@@ -108,7 +108,7 @@ async def test_cancelled_guarded_save_adopts_mode_when_worker_finishes(tmp_path,
 
     monkeypatch.setattr(state.conversation_log, "_locked", block_worker)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_utils.apply_pending_slot_memory_mode",
+        "aj_crew.dashboard.chat_utils.apply_pending_slot_memory_mode",
         fail_if_periodic_adopter_runs,
     )
     save_task = asyncio.create_task(
@@ -137,7 +137,7 @@ async def test_cancelled_guarded_save_adopts_mode_when_worker_finishes(tmp_path,
 @pytest.mark.asyncio
 @pytest.mark.parametrize("mode", ["incognito", "temporary"])
 async def test_close_releases_only_own_live_execution(tmp_path, monkeypatch, mode):
-    monkeypatch.setattr("kiro_crew.autonudge._INSTANCE", None)
+    monkeypatch.setattr("aj_crew.autonudge._INSTANCE", None)
     state, slot, key = _state(tmp_path)
     slot.memory_mode = mode
     execution = _execution(mode)
@@ -163,9 +163,9 @@ async def test_a_non_destructive_close_keeps_a_persistent_sessions_vouch(
     # bounds the retained entry instead, evicting it before a live one.
     from test_slot_close_recreation_race import _Req
 
-    from kiro_crew.dashboard.chat_handlers import api_chat_slots_cleanup
+    from aj_crew.dashboard.chat_handlers import api_chat_slots_cleanup
 
-    monkeypatch.setattr("kiro_crew.autonudge._INSTANCE", None)
+    monkeypatch.setattr("aj_crew.autonudge._INSTANCE", None)
     state, slot, key = _state(tmp_path)
     # A member is required, not decoration: only a member-bearing execution can be
     # vouched at all, because a member-less one could never pass the admission.
@@ -187,7 +187,7 @@ async def test_a_non_destructive_close_keeps_a_persistent_sessions_vouch(
 
 @pytest.mark.asyncio
 async def test_close_keeps_identity_until_cancelled_consumer_finishes(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.autonudge._INSTANCE", None)
+    monkeypatch.setattr("aj_crew.autonudge._INSTANCE", None)
     state, slot, key = _state(tmp_path)
     slot.memory_mode = "temporary"
     execution = _execution("temporary")
@@ -220,9 +220,9 @@ async def test_close_keeps_identity_until_cancelled_consumer_finishes(tmp_path, 
 async def test_idle_cleanup_releases_closed_restricted_identity(tmp_path, monkeypatch, mode):
     from test_slot_close_recreation_race import _Req
 
-    from kiro_crew.dashboard.chat_handlers import api_chat_slots_cleanup
+    from aj_crew.dashboard.chat_handlers import api_chat_slots_cleanup
 
-    monkeypatch.setattr("kiro_crew.autonudge._INSTANCE", None)
+    monkeypatch.setattr("aj_crew.autonudge._INSTANCE", None)
     state, slot, key = _state(tmp_path)
     slot.memory_mode = mode
     slot.created_at = "2020-01-01T00:00:00+00:00"
@@ -236,9 +236,9 @@ async def test_idle_cleanup_releases_closed_restricted_identity(tmp_path, monkey
 @pytest.mark.asyncio
 @pytest.mark.parametrize("mode", ["incognito", "temporary"])
 async def test_late_queue_flush_keeps_closed_slot_restricted(tmp_path, monkeypatch, mode):
-    from kiro_crew.dashboard.chat_delivery import start_queue_persist
+    from aj_crew.dashboard.chat_delivery import start_queue_persist
 
-    monkeypatch.setattr("kiro_crew.autonudge._INSTANCE", None)
+    monkeypatch.setattr("aj_crew.autonudge._INSTANCE", None)
     state, slot, key = _state(tmp_path)
     bind_session_execution(key, _execution(mode))
     assert slot.memory_mode == "persistent"
@@ -295,7 +295,7 @@ async def test_guarded_save_adopts_mode_on_live_same_key_replacement(tmp_path, m
         pytest.fail("the periodic pending-mode adopter ran during the guarded save")
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_utils.apply_pending_slot_memory_mode",
+        "aj_crew.dashboard.chat_utils.apply_pending_slot_memory_mode",
         fail_if_periodic_adopter_runs,
     )
 
@@ -318,7 +318,7 @@ async def test_guarded_save_adopts_mode_on_live_same_key_replacement(tmp_path, m
 @pytest.mark.asyncio
 async def test_title_write_adopts_mode_on_live_same_key_replacement(tmp_path, monkeypatch):
     """Title completion applies a line fold to the slot that received its witness."""
-    from kiro_crew.dashboard.chat_title import _persist_title
+    from aj_crew.dashboard.chat_title import _persist_title
 
     state, original, key = _state(tmp_path)
     await asyncio.to_thread(
@@ -333,7 +333,7 @@ async def test_title_write_adopts_mode_on_live_same_key_replacement(tmp_path, mo
         pytest.fail("the periodic pending-mode adopter ran during title persistence")
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_utils.apply_pending_slot_memory_mode",
+        "aj_crew.dashboard.chat_utils.apply_pending_slot_memory_mode",
         fail_if_periodic_adopter_runs,
     )
 

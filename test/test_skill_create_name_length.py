@@ -13,7 +13,7 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.dashboard.handlers.prompts as prompts_mod
+import aj_crew.dashboard.handlers.prompts as prompts_mod
 
 BUDGET = prompts_mod.MAX_PROMPT_NAME_BYTES
 

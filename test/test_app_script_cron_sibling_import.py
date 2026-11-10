@@ -28,8 +28,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import cron_script, sandbox
-from kiro_crew.cron_script import run_command_sandboxed, run_script_sandboxed
+from aj_crew import cron_script, sandbox
+from aj_crew.cron_script import run_command_sandboxed, run_script_sandboxed
 
 APP = "sibling-app"
 
@@ -52,7 +52,7 @@ _NO_BACKEND = pytest.mark.skipif(
 @pytest.fixture(autouse=True)
 def _session_key(monkeypatch):
     """Cron spawn bookkeeping wants a nameable caller; stated without the conftest."""
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:sibling-import-test")
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:sibling-import-test")
 
 
 @pytest.fixture()
@@ -69,8 +69,8 @@ def bundle(tmp_path, monkeypatch) -> Path:
     (app / "lib" / "values.py").write_text("ANSWER = 42\n")
     (app / "job.py").write_text(SCRIPT)
     (app / "run.py").write_text(COMMAND_SCRIPT)
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
-    # The fresh child interpreter imports ``kiro_crew``; a source checkout is not on its
+    monkeypatch.setenv("AJCREW_HOME", str(home))
+    # The fresh child interpreter imports ``aj_crew``; a source checkout is not on its
     # path unless it is put there.
     src_dir = str(Path(__file__).resolve().parents[1] / "src")
     existing = os.environ.get("PYTHONPATH", "")
@@ -101,10 +101,10 @@ def _record_spawns(monkeypatch) -> list[tuple[list[str], dict[str, Any]]]:
         seen.append((list(argv), kwargs))
         return list(argv), None
 
-    monkeypatch.setattr("kiro_crew.cron_script.wrap_argv", _passthrough)
+    monkeypatch.setattr("aj_crew.cron_script.wrap_argv", _passthrough)
     monkeypatch.setattr(sandbox, "credential_mask_applies", lambda mode: True)
     monkeypatch.setattr(
-        "kiro_crew.cron_script.credential_mask_applies", lambda mode: True, raising=False
+        "aj_crew.cron_script.credential_mask_applies", lambda mode: True, raising=False
     )
     return seen
 

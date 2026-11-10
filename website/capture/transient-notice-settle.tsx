@@ -29,7 +29,7 @@ import type { ChatMessage } from '../src/types'
 import '../src/index.css'
 
 const theme = new URLSearchParams(location.search).get('theme') || 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 const SLOT = 'main'
 
 let seq = 0

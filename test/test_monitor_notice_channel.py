@@ -16,24 +16,24 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.autonudge import NudgeLoop
-from kiro_crew.dashboard.handlers.messaging import api_notification_channels
-from kiro_crew.dashboard.notification_coordinator import unread_count
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.monitoring.models import MonitorOutcome, MonitorState
-from kiro_crew.notifications.bus import (
+from aj_crew.autonudge import NudgeLoop
+from aj_crew.dashboard.handlers.messaging import api_notification_channels
+from aj_crew.dashboard.notification_coordinator import unread_count
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.monitoring.models import MonitorOutcome, MonitorState
+from aj_crew.notifications.bus import (
     MONITOR_CHANNEL,
     SYSTEM_CHANNELS,
     NotificationValidationError,
     payload_from_legacy,
 )
-from kiro_crew.notifications.settings import PROTECTED_CHANNELS
-from kiro_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.notifications.settings import PROTECTED_CHANNELS
+from aj_crew.slack.gateway import GatewayOrchestrator
 
 
 def _make_state(monkeypatch, tmp_path) -> DashboardState:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
     return DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(),

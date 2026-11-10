@@ -11,9 +11,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import kiro_on_kas_notice as notice
-from kiro_crew.agent_sdk import backends as registry
-from kiro_crew.config import loader, loader_document
+from aj_crew import kiro_on_kas_notice as notice
+from aj_crew.agent_sdk import backends as registry
+from aj_crew.config import loader, loader_document
 
 KAS = registry.ACP_BACKEND_KAS
 KIRO = registry.ACP_BACKEND_KIRO
@@ -36,7 +36,7 @@ def _stored(monkeypatch, value: bool, *, bundle: bool = False) -> None:
     import tempfile
     from pathlib import Path
 
-    from kiro_crew.config.loader import _invalidate_config_cache
+    from aj_crew.config.loader import _invalidate_config_cache
 
     agent = {"acp_backend": "kiro" if value else "kas", "kas_bundle": bundle}
     path = Path(tempfile.mkdtemp(dir=loader.config_dir())) / "config.json"
@@ -153,7 +153,7 @@ def test_a_failed_floor_sends_nothing(home, monkeypatch):
 
 
 def test_the_panel_flag_reads_the_same_answer(home, monkeypatch):
-    from kiro_crew.dashboard.handlers import acp_backend_status
+    from aj_crew.dashboard.handlers import acp_backend_status
 
     _stored(monkeypatch, True)
     assert acp_backend_status._kiro_selection_runs_on_kas() is True

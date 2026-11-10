@@ -1,9 +1,9 @@
-"""The one-way dependency of ``kiro_crew.messaging``, enforced over every edge.
+"""The one-way dependency of ``aj_crew.messaging``, enforced over every edge.
 
 ``docs/system-specs/modules/messaging.md`` states the invariant twice — the
 neutral messaging package imports nothing from a channel package and nothing from
 ``dashboard`` — and until this file it had no gate. The one check that existed
-lived inside ``test_teams_transport.py`` and named ``kiro_crew.teams`` only, so
+lived inside ``test_teams_transport.py`` and named ``aj_crew.teams`` only, so
 a ``dashboard`` import was added to ``messaging/upload_gate.py`` while hoisting
 shared code out of a channel, and nothing went red.
 
@@ -14,7 +14,7 @@ channel half of ``_FORBIDDEN`` is derived from the roster, because a hand-kept l
 fails OPEN and had already missed two channels.
 
 A function-local import does not escape it. ``ast.walk`` descends into function
-bodies, and a guarded ``try: from kiro_crew.dashboard import x`` is the same edge
+bodies, and a guarded ``try: from aj_crew.dashboard import x`` is the same edge
 as a module-level one: it still couples the packages, and it fails at call time
 instead of at import time, which is strictly worse. Where the neutral module
 genuinely needs something a channel owns, the caller passes it in — see
@@ -26,7 +26,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-import kiro_crew.messaging as messaging_pkg
+import aj_crew.messaging as messaging_pkg
 
 
 def _channel_packages() -> tuple[str, ...]:
@@ -45,17 +45,17 @@ def _channel_packages() -> tuple[str, ...]:
     dropping out of the forbidden set. It is not re-checked here: a second copy of
     the check would be one nothing exercises.
     """
-    from kiro_crew.channels import builtin_channel_descriptors
+    from aj_crew.channels import builtin_channel_descriptors
 
     names = sorted({d.channel_type for d in builtin_channel_descriptors()})
-    return tuple(f"kiro_crew.{name}" for name in names)
+    return tuple(f"aj_crew.{name}" for name in names)
 
 
-#: Every package ``kiro_crew.messaging`` may not depend on. The channels are
+#: Every package ``aj_crew.messaging`` may not depend on. The channels are
 #: forbidden because messaging is the layer they all sit on; ``dashboard`` is
 #: forbidden because the dashboard gateway imports the channel transports, so the
 #: edge is also a cycle. Only the non-channel entry is written out.
-_FORBIDDEN = ("kiro_crew.dashboard",) + _channel_packages()
+_FORBIDDEN = ("aj_crew.dashboard",) + _channel_packages()
 
 #: Dynamic-import call names. Enumerated because they are the only way to reach a
 #: module without an import statement, and therefore the only way an edge could be
@@ -71,7 +71,7 @@ _DYNAMIC_IMPORTERS = ("import_module", "__import__")
 #: PARAMETER from a caller that may legally hold it. A row belongs here only while
 #: that change is genuinely out of the current change's scope.
 _KNOWN_VIOLATIONS: dict[tuple[str, str], str] = {
-    ("dispatch.py", "kiro_crew.dashboard"): (
+    ("dispatch.py", "aj_crew.dashboard"): (
         "build_directive_consumer reaches dashboard.session_directive_apply through a "
         "function-local import. The applier is the shared security core both the "
         "dashboard and the channel consumers run through, so it is not dashboard-"
@@ -86,8 +86,8 @@ _KNOWN_VIOLATIONS: dict[tuple[str, str], str] = {
 def _forbidden_prefix(module: str) -> str:
     """The ``_FORBIDDEN`` entry *module* names, or ``""``.
 
-    Prefix-matched on a dotted boundary so a future ``kiro_crew.slackbot`` is not
-    mistaken for ``kiro_crew.slack``.
+    Prefix-matched on a dotted boundary so a future ``aj_crew.slackbot`` is not
+    mistaken for ``aj_crew.slack``.
     """
     for banned in _FORBIDDEN:
         if module == banned or module.startswith(banned + "."):
@@ -152,7 +152,7 @@ class TestMessagingImportPurity:
             line for py in modules for line in _offenders(py) if not _is_known(py.name, line)
         ]
         assert not offenders, (
-            "kiro_crew.messaging must not import a channel package or dashboard; "
+            "aj_crew.messaging must not import a channel package or dashboard; "
             "pass what it needs in as a parameter instead. Offending edges: " + str(offenders)
         )
 
@@ -175,9 +175,9 @@ class TestMessagingImportPurity:
     def test_a_violation_outside_the_table_is_still_caught(self) -> None:
         """The exemption is scoped to one module AND one package, not blanket."""
         # dispatch.py is exempt for `dashboard` only.
-        assert _is_known("dispatch.py", "dispatch.py:1: from kiro_crew.dashboard.x import y")
-        assert not _is_known("dispatch.py", "dispatch.py:1: from kiro_crew.slack.x import y")
-        assert not _is_known("driver.py", "driver.py:1: from kiro_crew.dashboard.x import y")
+        assert _is_known("dispatch.py", "dispatch.py:1: from aj_crew.dashboard.x import y")
+        assert not _is_known("dispatch.py", "dispatch.py:1: from aj_crew.slack.x import y")
+        assert not _is_known("driver.py", "driver.py:1: from aj_crew.dashboard.x import y")
 
     def test_a_type_checking_only_import_is_still_refused(self) -> None:
         """A ``TYPE_CHECKING`` guard does not make the edge acceptable.
@@ -185,25 +185,25 @@ class TestMessagingImportPurity:
         Duck-typing under ``TYPE_CHECKING`` is the sanctioned way for a neutral
         module to *annotate* a channel-owned service (``messaging/commands.py``
         does exactly that), and it does so WITHOUT naming the package — the type
-        is `Any`-shaped. An actual ``from kiro_crew.slack import ...`` inside the
+        is `Any`-shaped. An actual ``from aj_crew.slack import ...`` inside the
         guard would still couple the two at type-check time and would still be a
         lie about the layering, so the scan does not special-case it.
         """
-        src = "from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    from kiro_crew.slack import x\n"
+        src = "from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    from aj_crew.slack import x\n"
         assert _offenders_in(
             src, "probe.py"
         ), "a TYPE_CHECKING-guarded forbidden import went undetected"
 
     def test_a_dynamic_import_does_not_escape_the_scan(self) -> None:
         """``importlib.import_module`` is the obvious bypass, so it is covered."""
-        src = 'import importlib\nm = importlib.import_module("kiro_crew.dashboard.handlers")\n'
+        src = 'import importlib\nm = importlib.import_module("aj_crew.dashboard.handlers")\n'
         assert _offenders_in(src, "probe.py"), "a dynamic forbidden import went undetected"
 
     def test_a_lookalike_package_is_not_a_false_positive(self) -> None:
         """Prefix matching is on a dotted boundary, not a bare ``startswith``."""
-        assert _forbidden_prefix("kiro_crew.slackbot") == ""
-        assert _forbidden_prefix("kiro_crew.slack") == "kiro_crew.slack"
-        assert _forbidden_prefix("kiro_crew.slack.handler") == "kiro_crew.slack"
+        assert _forbidden_prefix("aj_crew.slackbot") == ""
+        assert _forbidden_prefix("aj_crew.slack") == "aj_crew.slack"
+        assert _forbidden_prefix("aj_crew.slack.handler") == "aj_crew.slack"
 
     def test_a_relative_import_inside_messaging_is_allowed(self) -> None:
         """``from . import x`` cannot leave the package, so it must not be flagged."""
@@ -217,10 +217,10 @@ class TestMessagingImportPurity:
         the failure mode here is a channel silently NOT being covered — so each one
         is named by the roster and checked through the same predicate the scan uses.
         """
-        from kiro_crew.channels import builtin_channel_descriptors
+        from aj_crew.channels import builtin_channel_descriptors
 
         for descriptor in builtin_channel_descriptors():
-            package = f"kiro_crew.{descriptor.channel_type}"
+            package = f"aj_crew.{descriptor.channel_type}"
             assert _forbidden_prefix(package) == package, f"{package} is not covered"
             assert _offenders_in(
                 f"from {package}.transport import X\n", "probe.py"

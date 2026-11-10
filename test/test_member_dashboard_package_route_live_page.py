@@ -41,11 +41,11 @@ from member_dashboard_package_route_helpers import (
     _Store,
 )
 
-from kiro_crew.artifact_store import dashboard_package as dp
-from kiro_crew.dashboard.handlers import artifacts as artifacts_handler
-from kiro_crew.dashboard.handlers import member_dashboard as md
-from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
-from kiro_crew.platform.context import redact_via_context
+from aj_crew.artifact_store import dashboard_package as dp
+from aj_crew.dashboard.handlers import artifacts as artifacts_handler
+from aj_crew.dashboard.handlers import member_dashboard as md
+from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
+from aj_crew.platform.context import redact_via_context
 
 
 @pytest.mark.asyncio
@@ -57,7 +57,7 @@ async def test_the_route_serves_the_owners_own_page_through_the_frame(wired: Any
     assert status == 200
     page = body["rendered_html"]
     assert PAGE in page, "the page is not placed verbatim"
-    assert "kirocrew-dashboard-data" in page
+    assert "ajcrew-dashboard-data" in page
     assert body["fields"] == ["goal"], "the body does not name the allowlist"
     assert body["instance_version"] == 4
 
@@ -75,7 +75,7 @@ async def test_the_route_serves_a_script_as_written_and_still_masks_visible_text
     key = base64.b64encode(hashlib.sha256(b"kc-bare-0").digest()).decode()[:40]
     page = (
         '<p data-dashboard-field="goal"></p>'
-        f"<script>var ART_CHARS = '{palette}'; window.kirocrew.subscribe('goal', (v) => v);</script>"
+        f"<script>var ART_CHARS = '{palette}'; window.ajcrew.subscribe('goal', (v) => v);</script>"
         f"<p>{key}</p>"
     )
     assert redact_via_context(page) != page, "the premise: the whole-page pass rewrites it"
@@ -105,7 +105,7 @@ async def test_the_persons_lock_outranks_the_crewmates_package(
 
     import dataclasses
 
-    from kiro_crew.dashboard_templates import instance as instance_mod
+    from aj_crew.dashboard_templates import instance as instance_mod
 
     monkeypatch.setattr(md.instance, "is_locked", lambda slug: True)
     monkeypatch.setattr(md, "_serve_package", _no_package)
@@ -136,7 +136,7 @@ async def test_a_locked_pinned_package_tells_the_tab_it_is_locked(wired: Any) ->
     The Profile switch and the Dashboard's lock badge read ``structure_locked`` from
     this body; a package page that left it out read as unlocked after a refetch.
     """
-    from kiro_crew.dashboard_templates import instance as instance_mod
+    from aj_crew.dashboard_templates import instance as instance_mod
 
     instance_mod.apply_package(
         SLUG,
@@ -164,7 +164,7 @@ async def test_an_unlocked_crewmate_still_gets_its_package(wired: Any) -> None:
 
 def _page_at_the_ceiling() -> str:
     """A page of exactly the frame's ceiling: :data:`PAGE` plus an inlined script."""
-    from kiro_crew import dashboard_frame
+    from aj_crew import dashboard_frame
 
     head, tail = PAGE + "<script>", "</script>"
     return head + "x" * (dashboard_frame.MAX_PAGE_BYTES - len(head) - len(tail)) + tail
@@ -363,7 +363,7 @@ async def test_a_non_owner_is_refused_before_the_package_is_read(wired: Any) -> 
     def _no_read() -> Any:
         raise AssertionError("a refused caller must not reach the artifact store")
 
-    with patch("kiro_crew.artifacts.get_default_store", side_effect=_no_read):
+    with patch("aj_crew.artifacts.get_default_store", side_effect=_no_read):
         status, body = await _call(md.api_member_dashboard, req)
     assert status == 403
     assert body["code"] == "owner_only"
@@ -380,11 +380,11 @@ class TestTheWorkerIsRefusedAtTheRealWritePath:
         so a test that patched the slug function alone left that count reading
         whatever roster the machine happened to hold.
         """
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
-        monkeypatch.setattr("kiro_crew.members.member_slug", lambda name, config=None: name.lower())
+        monkeypatch.setattr("aj_crew.members.member_slug", lambda name, config=None: name.lower())
         monkeypatch.setattr(
-            loader_mod.KiroCrewConfig,
+            loader_mod.AjCrewConfig,
             "load",
             staticmethod(lambda *a, **k: SimpleNamespace(agents=dict.fromkeys(names, None))),
         )
@@ -528,10 +528,10 @@ def tree_wired(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
     app = web.Application()
     app["state"] = state
     store = _Store(GALLERY.read_text(encoding="utf-8"))
-    monkeypatch.setattr("kiro_crew.artifacts.get_default_store", lambda: store)
+    monkeypatch.setattr("aj_crew.artifacts.get_default_store", lambda: store)
     monkeypatch.setattr(md, "_dashboard_slot", lambda member, slug: SLUG)
     monkeypatch.setattr(md, "_write_session", lambda slug, member: "")
-    monkeypatch.setattr("kiro_crew.members.member_slug", lambda name, config=None: SLUG)
+    monkeypatch.setattr("aj_crew.members.member_slug", lambda name, config=None: SLUG)
     # The gallery package ships bound to the example crewmate; this route serves the
     # crewmate it is bound to, so the binding is the thing a copier changes first.
     store.content = store.content.replace('"crewmate:example"', f'"crewmate:{SLUG}"')
@@ -540,7 +540,7 @@ def tree_wired(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
         calls.append((root, name))
         return SimpleNamespace(value=value["v"], seq=1)
 
-    monkeypatch.setattr("kiro_crew.crew_log.projection.read_tree_projection", _read_tree)
+    monkeypatch.setattr("aj_crew.crew_log.projection.read_tree_projection", _read_tree)
     yield SimpleNamespace(app=app, frames=frames, calls=calls, value=value, store=store)
     for page in list(app.get("member_dashboard_live_pages", {}).values()):
         page.disarm()
@@ -563,7 +563,7 @@ async def test_the_route_reads_the_tree_fold_for_this_slot(tree_wired: Any) -> N
 async def test_the_tree_value_is_on_the_page_the_route_serves(tree_wired: Any) -> None:
     status, body = await _call(md.api_member_dashboard, _request(tree_wired.app, "GET", TREE_PATH))
     assert status == 200
-    island = body["rendered_html"].split('id="kirocrew-dashboard-data">')[1].split("</script>")[0]
+    island = body["rendered_html"].split('id="ajcrew-dashboard-data">')[1].split("</script>")[0]
     read = json.loads(island.replace("\\u003c", "<").replace("\\u003e", ">"))
     assert read["fields"]["boards"][0]["goal"] == "ship the host"
     assert read["fields"]["roots"] == ["chat-1-1790"]
@@ -576,7 +576,7 @@ async def test_a_tree_bound_page_does_not_fly_the_stale_band(tree_wired: Any) ->
     permanently -- over values that are current -- and a band a reader learns to ignore
     is worse than no band."""
     _status, body = await _call(md.api_member_dashboard, _request(tree_wired.app, "GET", TREE_PATH))
-    island = body["rendered_html"].split('id="kirocrew-dashboard-data">')[1].split("</script>")[0]
+    island = body["rendered_html"].split('id="ajcrew-dashboard-data">')[1].split("</script>")[0]
     read = json.loads(island.replace("\\u003c", "<").replace("\\u003e", ">"))
     assert "stale" not in read
     assert "boards" not in read["missing"]
@@ -609,7 +609,7 @@ async def test_a_child_board_dispatched_after_arm_reaches_the_open_page(tree_wir
     """
     status, first = await _call(md.api_member_dashboard, _request(tree_wired.app, "GET", TREE_PATH))
     assert status == 200
-    island = first["rendered_html"].split('id="kirocrew-dashboard-data">')[1].split("</script>")[0]
+    island = first["rendered_html"].split('id="ajcrew-dashboard-data">')[1].split("</script>")[0]
     before = json.loads(island.replace("\\u003c", "<").replace("\\u003e", ">"))
     assert [b["board"] for b in before["fields"]["boards"]] == ["chat-1-1790"]
     armed = dict(tree_wired.app["member_dashboard_live_pages"])
@@ -656,7 +656,7 @@ async def test_a_work_ledger_push_still_rides_beside_the_tree(tree_wired: Any) -
 
 @pytest.mark.asyncio
 async def test_the_gallery_pages_own_subscriber_receives_the_tree(tree_wired: Any) -> None:
-    """The gallery page's ``window.kirocrew.subscribe('boards', draw)`` gets the tree.
+    """The gallery page's ``window.ajcrew.subscribe('boards', draw)`` gets the tree.
 
     Scripts run in Node under the ``test_dashboard_frame_subscribe`` DOM shim: a page
     that never calls its callback renders an empty tree no html assertion would see.
@@ -664,7 +664,7 @@ async def test_the_gallery_pages_own_subscriber_receives_the_tree(tree_wired: An
     from test_dashboard_frame_subscribe import _run
 
     _status, body = await _call(md.api_member_dashboard, _request(tree_wired.app, "GET", TREE_PATH))
-    island = body["rendered_html"].split('id="kirocrew-dashboard-data">')[1].split("</script>")[0]
+    island = body["rendered_html"].split('id="ajcrew-dashboard-data">')[1].split("</script>")[0]
     read = json.loads(island.replace("\\u003c", "<").replace("\\u003e", ">"))
     # The page's own script is replayed verbatim out of the stored package, so what is
     # exercised is the gallery artifact rather than a line retyped in this test.
@@ -674,7 +674,7 @@ async def test_the_gallery_pages_own_subscriber_receives_the_tree(tree_wired: An
         .split("</script>")[0]
     )
     calls = _run(
-        __import__("kiro_crew.dashboard_frame", fromlist=["x"])._BOOTSTRAP_JS,
+        __import__("aj_crew.dashboard_frame", fromlist=["x"])._BOOTSTRAP_JS,
         read,
         # The shim answers only for the data island, so the page's own two elements and
         # `createElement` are supplied here, RECORDING instead of building: what this
@@ -808,13 +808,13 @@ async def test_a_live_backed_artifact_is_not_armed_even_bound_to_this_crewmate(
     """
     linked = _Linked(dp.dump_package(_package()))
     monkeypatch.setattr(
-        "kiro_crew.artifacts.get_default_store", lambda: SimpleNamespace(get=lambda slug: linked)
+        "aj_crew.artifacts.get_default_store", lambda: SimpleNamespace(get=lambda slug: linked)
     )
 
     def _never(*_a: Any, **_k: Any) -> Any:
         raise AssertionError("a live-backed artifact reached the package parser")
 
-    monkeypatch.setattr("kiro_crew.artifact_store.dashboard_package.parse_package", _never)
+    monkeypatch.setattr("aj_crew.artifact_store.dashboard_package.parse_package", _never)
     status, body = await _call(md.api_member_dashboard, _request(wired.app, "GET", PATH))
     assert status == 409
     assert body["code"] == "dashboard_live_source"
@@ -831,7 +831,7 @@ async def test_an_artifact_of_another_kind_is_not_parsed_as_a_package(
         slug=PACKAGE_SLUG, content=dp.dump_package(_package()), version=1, kind="note"
     )
     monkeypatch.setattr(
-        "kiro_crew.artifacts.get_default_store", lambda: SimpleNamespace(get=lambda slug: note)
+        "aj_crew.artifacts.get_default_store", lambda: SimpleNamespace(get=lambda slug: note)
     )
     status, body = await _call(md.api_member_dashboard, _request(wired.app, "GET", PATH))
     assert status == 409
@@ -868,7 +868,7 @@ def _tree_package() -> dict[str, Any]:
             # this model declares the tree field rather than the shared page's.
             "view": {
                 "html": '<p data-dashboard-field="roots"></p>'
-                "<script>window.kirocrew.subscribe('roots', (v) => v);</script>"
+                "<script>window.ajcrew.subscribe('roots', (v) => v);</script>"
             },
             "theme": {"tokens": {}},
         }
@@ -905,7 +905,7 @@ def test_two_refetches_cannot_publish_an_older_tree_under_a_newer_version(
             return SimpleNamespace(value=_tree_value("older"), seq=1)
         return SimpleNamespace(value=_tree_value("newer"), seq=2)
 
-    monkeypatch.setattr("kiro_crew.crew_log.projection.read_tree_projection", _read_tree)
+    monkeypatch.setattr("aj_crew.crew_log.projection.read_tree_projection", _read_tree)
     live.arm()
     try:
 
@@ -1048,7 +1048,7 @@ async def test_two_packages_for_one_crewmate_do_not_feed_each_other(
     second = "atlas-dashboard-2"
     store = {PACKAGE_SLUG: _package(), second: _package()}
     monkeypatch.setattr(
-        "kiro_crew.artifacts.get_default_store",
+        "aj_crew.artifacts.get_default_store",
         lambda: SimpleNamespace(
             get=lambda slug, version=None: SimpleNamespace(
                 slug=slug,

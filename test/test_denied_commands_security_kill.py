@@ -37,13 +37,13 @@ class TestSelfProtectionCommandBoundaries:
     @pytest.mark.parametrize(
         "command",
         [
-            "awk '{print $1}'\ncat \"$KIROCREW_SCRATCH/log\"\ngrep -E PASS report",
+            "awk '{print $1}'\ncat \"$AJCREW_SCRATCH/log\"\ngrep -E PASS report",
             "printf x | awk '{print $1}'\n"
-            'python3 verify/audit_logs.py > "$KIROCREW_SCRATCH/audit.txt"\n'
-            'grep -E "PASS|FAIL" "$KIROCREW_SCRATCH/audit.txt"',
-            "awk '{print $1}'\r\ncat \"$KIROCREW_SCRATCH/log\"\r\ngrep -E PASS report",
+            'python3 verify/audit_logs.py > "$AJCREW_SCRATCH/audit.txt"\n'
+            'grep -E "PASS|FAIL" "$AJCREW_SCRATCH/audit.txt"',
+            "awk '{print $1}'\r\ncat \"$AJCREW_SCRATCH/log\"\r\ngrep -E PASS report",
             "bash -c \"printf x | awk '{print \\$1}'\n"
-            'cat \\"\\$KIROCREW_SCRATCH/log\\"\ngrep -E PASS report"',
+            'cat \\"\\$AJCREW_SCRATCH/log\\"\ngrep -E PASS report"',
         ],
     )
     def test_later_command_is_not_an_awk_argument(self, command):
@@ -178,9 +178,9 @@ class TestSelfProtectionKillTargetScoping:
             # The glue-evasion can sit in the TARGET as well as the program name.
             *_named(
                 "test_empty_substitution_inside_the_target_is_still_a_kill",
-                f"{_PK} -f kiro$()crew",
-                f"{_PK} -f kiro``crew",
-                f"{_KA} kiro$()crew",
+                f"{_PK} -f aj$()crew",
+                f"{_PK} -f aj``crew",
+                f"{_KA} aj$()crew",
             ),
             # QUOTED-LITERAL construct text: bash passes these patterns with
             # the $()/backticks as literal ERE characters, so they cannot
@@ -192,10 +192,10 @@ class TestSelfProtectionKillTargetScoping:
             # window-sensitivity from the existing fail-closed posture.
             *_named(
                 "test_a_quoted_literal_construct_pattern_stays_denied",
-                "kill $(case x in x) :;; esac; pgrep -f 'kiro$()crew')",
-                "kill $(case x in x) :;; esac; pgrep -f 'kiro``crew')",
-                "kill $(case x in x) :;; esac; pgrep -f kiro'$()'crew)",
-                "kill $(case x in x) :;; esac; pgrep -f kiro\\$\\(\\)crew)",
+                "kill $(case x in x) :;; esac; pgrep -f 'aj$()crew')",
+                "kill $(case x in x) :;; esac; pgrep -f 'aj``crew')",
+                "kill $(case x in x) :;; esac; pgrep -f aj'$()'crew)",
+                "kill $(case x in x) :;; esac; pgrep -f aj\\$\\(\\)crew)",
             ),
         ],
     )
@@ -255,7 +255,7 @@ class TestSelfProtectionKillTargetScoping:
         assert _denied_by(inner) == _RULE_KILL
 
     def test_empty_substitution_glue_is_still_a_mint(self):
-        assert _denied_by(f"kiro$()crew {_TOK}") == _RULE_MINT
+        assert _denied_by(f"aj$()crew {_TOK}") == _RULE_MINT
 
     @pytest.mark.parametrize(
         ("origin", "cmd", "rule"),
@@ -431,13 +431,13 @@ class TestSelfProtectionKillTargetScoping:
                 "X=$(date); echo $X {v}",
                 "X=$(cat /workplace/alice/{n}-wt-x/f); echo $X {v}",
             ),
-            # Expandability is the test, not the mere presence of a glob: `kiro[x]few` cannot
+            # Expandability is the test, not the mere presence of a glob: `aj[x]few` cannot
             # expand to the CLI, `ls` is not an invocation of it, and `echo` treats it as data.
             *_named(
                 "test_glob_that_cannot_name_the_cli_allowed",
-                "kiro[x]few {v}",
-                "ls ./bin/kiro*rew",
-                "echo kiro[c]rew {v}",
+                "aj[x]few {v}",
+                "ls ./bin/aj*rew",
+                "echo aj[c]rew {v}",
             ),
             *_named(
                 "test_ordinary_text_processing_still_allowed",
@@ -617,10 +617,10 @@ class TestSelfProtectionKillTargetScoping:
             # the target.
             *_named(
                 "test_globbed_program_name_still_blocked",
-                ("./bin/kiro[c]rew {v}", _RULE_MINT),
-                ("kiro?rew {v}", _RULE_MINT),
-                ("kiro*rew {v}", _RULE_MINT),
-                ("/usr/local/bin/kiro[c]rew {v}", _RULE_MINT),
+                ("./bin/aj[c]rew {v}", _RULE_MINT),
+                ("aj?rew {v}", _RULE_MINT),
+                ("aj*rew {v}", _RULE_MINT),
+                ("/usr/local/bin/aj[c]rew {v}", _RULE_MINT),
                 ("p[k]ill -f {n}", _RULE_KILL),
             ),
             # A value can be built FROM an already-tracked variable.  Expanding before
@@ -630,8 +630,8 @@ class TestSelfProtectionKillTargetScoping:
                 "test_name_assembled_across_assignments",
                 ("x=p; x=${{x}}kill; $x -f {n}", _RULE_KILL),
                 ("x=pk; y=${{x}}ill; $y -f {n}", _RULE_KILL),
-                ("a=kiro; b=$a; c=${{b}}crew; $c {v}", _RULE_MINT),
-                ("n=kiro; n=${{n}}crew; $n {v}", _RULE_MINT),
+                ("a=aj; b=$a; c=${{b}}crew; $c {v}", _RULE_MINT),
+                ("n=aj; n=${{n}}crew; $n {v}", _RULE_MINT),
             ),
         ],
     )
@@ -643,11 +643,11 @@ class TestSelfProtectionKillTargetScoping:
         [
             # A brace group expands to the real name before exec, so it is treated like any
             # other glob: translated to a regex and tested for whether it COULD name the
-            # target.  `kiro{{x,y}}few` cannot, and stays allowed.
+            # target.  `aj{{x,y}}few` cannot, and stays allowed.
             *_named(
                 "test_brace_expansion_in_program_name_blocked",
-                "kiro{{c..c}}rew {v}",
-                "kiro{{c,c}}rew {v}",
+                "aj{{c..c}}rew {v}",
+                "aj{{c,c}}rew {v}",
                 "p{{k,k}}ill -f {n}",
             ),
             # `awk` has `system()` and pipe-to-command; GNU `sed` has the `e` flag.  The
@@ -673,7 +673,7 @@ class TestSelfProtectionKillTargetScoping:
         assert _denied_by(cmd.format(n=_NAME, v=_TOK)) is not None
 
     def test_brace_expansion_that_cannot_name_the_cli_allowed(self):
-        assert _denied_by("kiro{x,y}few " + _TOK) is None
+        assert _denied_by("aj{x,y}few " + _TOK) is None
 
     @pytest.mark.parametrize(
         "cmd",
@@ -707,7 +707,7 @@ class TestSelfProtectionKillTargetScoping:
             ("{n}\\040{v}", _RULE_MINT),
             ("{n}\\x20{v}", _RULE_MINT),
             ("{n}\\11{v}", _RULE_MINT),
-            ("\\x6birocrew {v}", _RULE_MINT),
+            ("\\x61jcrew {v}", _RULE_MINT),
             ("PKILL -f\\040{n}", _RULE_KILL),
         ],
     )
@@ -835,7 +835,7 @@ class TestSelfProtectionKillTargetScoping:
         ],
     )
     def test_bracket_idiom_names_the_protected_program(self, cmd, rule):
-        # `[k]irocrew` is the standard idiom for matching a process without matching the
+        # `[a]jcrew` is the standard idiom for matching a process without matching the
         # grep itself.  A one-character bracket class expands to that character, so it
         # names the protected program; the class is collapsed before comparison.
         bracketed = "[" + _NAME[0] + "]" + _NAME[1:]
@@ -914,7 +914,7 @@ class TestSelfProtectionKillTargetScoping:
     def test_default_form_keeps_its_own_meaning(self):
         # `${x:-crew}` carries its own LITERAL and is resolved separately; the
         # transformation handling must not shadow it.
-        assert _denied_by(f"kiro${{x:-crew}} {_TOK}") == _RULE_MINT
+        assert _denied_by(f"aj${{x:-crew}} {_TOK}") == _RULE_MINT
 
     def test_computed_value_that_is_not_the_verb_allowed(self):
         assert _denied_by("T=$(printf hello); echo $T") is None
@@ -1134,7 +1134,7 @@ class TestSelfKillArgvWindowIsQuoteAware:
         ],
     )
     def test_pipe_still_separates_the_argv_window(self, cmd):
-        from kiro_crew import security
+        from aj_crew import security
 
         assert security._is_self_kill(cmd.format(n=_NAME).lower()) is False
 
@@ -1150,7 +1150,7 @@ class TestSelfKillRawWindowSearchesDequotedView:
     command list falls outside its window.  The RAW window is immune to that --
     it extracts the body whole through the quote-aware span scan -- but raw text
     and ``_resolve_param_defaults`` remove no quotes, so an adjacent-quote
-    concatenation of the product name (``'kiro''crew'``) does not read as the
+    concatenation of the product name (``'aj''crew'``) does not read as the
     name there.  Either miss alone is survivable (the unquoted ``esac``-tail
     spelling is denied by the raw window; the quote-spliced name in a plain list
     is denied by the token window); the combination would return ``None`` while
@@ -1163,15 +1163,15 @@ class TestSelfKillRawWindowSearchesDequotedView:
     collapsed, bracket classes removed), so quote removal composes with the
     transforms the ``pkill`` leg gets from ``_normalize_operand``.  Single
     transforms are not enough: a name needing two of them at once
-    (``'kiro''[c]rew'``, ``'kiro'${x:-crew}``, ``kiro$()crew``) sits in the
+    (``'aj''[c]rew'``, ``'aj'${x:-crew}``, ``aj$()crew``) sits in the
     seam between any pair of single-transform searches.  Both members carry
     weight in opposite directions: the composed transform reveals a name
     de-quoting alone leaves hidden, and the bare search keeps a name the
     transform DESTROYS -- a pattern-substitution expansion
-    (``${PATH/usr/|'kiro''crew'|zz-}``) de-quotes to a word carrying the name,
+    (``${PATH/usr/|'aj''crew'|zz-}``) de-quotes to a word carrying the name,
     then resolves to an empty default, and bash runs it.  The transform is
     deliberately NOT ``_normalize_operand``: a de-quoted pgrep pattern is an
-    ERE whose own characters (``'zz|kiro'crew``, ``'>kiro'crew``) an operand
+    ERE whose own characters (``'zz|aj'crew``, ``'>aj'crew``) an operand
     view truncates at, discarding exactly the protected alternative.
     Monotone in the deny direction: the de-quoted view only adds searches; it
     narrows or replaces none.
@@ -1200,36 +1200,36 @@ class TestSelfKillRawWindowSearchesDequotedView:
             # default resolution, in tail and head position -- each transform
             # alone leaves the name invisible, so per-word operand
             # normalization is what reaches these
-            "kill $(case x in x) :;; esac; pgrep -f 'kiro'${{x:-crew}})",
-            "kill $(case x in x) :;; esac; pgrep -f ${{x:-kiro}}'crew')",
-            "kill $(case x in x) :;; esac; pgrep -f $'kiro'${{x:-crew}})",
+            "kill $(case x in x) :;; esac; pgrep -f 'aj'${{x:-crew}})",
+            "kill $(case x in x) :;; esac; pgrep -f ${{x:-aj}}'crew')",
+            "kill $(case x in x) :;; esac; pgrep -f $'aj'${{x:-crew}})",
             # a statically EMPTY substitution splices the name (both spellings)
-            "kill $(case x in x) :;; esac; pgrep -f kiro$()crew)",
-            "kill $(case x in x) :;; esac; pgrep -f kiro``crew)",
+            "kill $(case x in x) :;; esac; pgrep -f aj$()crew)",
+            "kill $(case x in x) :;; esac; pgrep -f aj``crew)",
             # the [c] bracket-class trick composed with the quote splice --
             # the de-quoted word still needs the bracket removal its two
             # sibling searches already apply
-            "kill $(case x in x) :;; esac; pgrep -f 'kiro''[c]rew')",
-            "kill $(case x in x) :;; esac; pgrep -f '[k]iro''crew')",
+            "kill $(case x in x) :;; esac; pgrep -f 'aj''[c]rew')",
+            "kill $(case x in x) :;; esac; pgrep -f '[a]j''crew')",
             # all three transforms at once: bracket class + empty substitution
             # + parameter default
-            "kill $(case x in x) :;; esac; pgrep -f '[k]iro'$()${{x:-crew}})",
+            "kill $(case x in x) :;; esac; pgrep -f '[a]j'$()${{x:-crew}})",
             # a line continuation splits the name across raw lines; only the
             # continuation-folded token view reads it whole
-            "kill $(case x in x) :;; esac; pgrep -f kiro\\\ncrew)",
+            "kill $(case x in x) :;; esac; pgrep -f aj\\\ncrew)",
             # a quoted ERE alternation prefix: the pattern bash passes is
-            # zz|kirocrew, whose second alternative matches protected
+            # zz|ajcrew, whose second alternative matches protected
             # processes -- an operator-truncating transform discards exactly
             # the protected half, so the per-word transform must resolve
             # defaults, empty substitutions and bracket classes WITHOUT
             # treating the de-quoted pattern's own characters as boundaries
-            "kill $(case x in x) :;; esac; pgrep -f 'zz|kiro'${{x:-crew}})",
-            "kill $(case x in x) :;; esac; pgrep -f 'zz|kiro'$()crew)",
-            "kill $(case x in x) :;; esac; pgrep -f 'zz|[k]iro'$()${{x:-crew}})",
+            "kill $(case x in x) :;; esac; pgrep -f 'zz|aj'${{x:-crew}})",
+            "kill $(case x in x) :;; esac; pgrep -f 'zz|aj'$()crew)",
+            "kill $(case x in x) :;; esac; pgrep -f 'zz|[a]j'$()${{x:-crew}})",
             # a redirect-prefixed ERE (the pkill leg's own documented case: a
             # ``>`` inside a pattern is part of the TARGET) -- pins that the
             # word search never routes through an operator-truncating view
-            "kill $(case x in x) :;; esac; pgrep -f '>kiro''crew')",
+            "kill $(case x in x) :;; esac; pgrep -f '>aj''crew')",
             # a pattern-substitution expansion DESTROYS the de-quote-visible
             # name (the ${{...}} name class swallows it and the resolved
             # default is the empty tail), so the untransformed word view is

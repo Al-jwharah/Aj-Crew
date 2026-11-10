@@ -131,7 +131,7 @@ function renderSidebar(onOpenSlotInNewTab?: (key: string, opts?: { background?: 
           <MemoryRouter>
             <ChatSidebar
               slots={SLOTS} activeSlot={ORIGIN} unreadSlots={[]}
-              history={[]} historyHasMore={false} defaultAgent="kirocrew" installedAgents={[]}
+              history={[]} historyHasMore={false} defaultAgent="ajcrew" installedAgents={[]}
               onOpenSlotInNewTab={onOpenSlotInNewTab}
             />
           </MemoryRouter>

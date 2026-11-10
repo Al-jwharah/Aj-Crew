@@ -102,11 +102,11 @@ describe('AboutPanel disabled-update reasons', () => {
       packaged: true,
       channelSwitchable: false,
       managedBy: 'internal-registry',
-      updateCommand: 'pkgtool update kirocrew',
+      updateCommand: 'pkgtool update ajcrew',
     })
     expect(await screen.findByText(/managed by internal-registry/i)).toBeTruthy()
     expect(screen.getByTestId('managed-update-command').textContent).toBe(
-      'pkgtool update kirocrew',
+      'pkgtool update ajcrew',
     )
     // The Check button is present because the managed lane IS armed.
     expect(screen.getByText(/check for updates/i)).toBeTruthy()

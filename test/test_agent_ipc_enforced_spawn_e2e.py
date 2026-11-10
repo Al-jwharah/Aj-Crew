@@ -1,4 +1,4 @@
-"""``kirocrew-core`` under an enforced harness's credential mask, end to end.
+"""``ajcrew-core`` under an enforced harness's credential mask, end to end.
 
 The real server process, launched through the real sandbox chokepoint with the mask
 codex sessions get (``adapter_hidden_credential_dirs("codex")``), calls
@@ -25,8 +25,8 @@ from pathlib import Path
 import pytest
 from aiohttp import web
 
-from kiro_crew.agent_ipc_wire import GATEWAY_PID_ENV, PICKUP_ENV
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.agent_ipc_wire import GATEWAY_PID_ENV, PICKUP_ENV
+from aj_crew.testing.wait import default_timeout
 
 pytestmark = [
     pytest.mark.skipif(not sys.platform.startswith("linux"), reason="Linux namespace mask"),
@@ -55,7 +55,7 @@ def _src_spellings() -> tuple[str, ...]:
     return tuple(sorted(out))
 
 
-_SERVER = "from kiro_crew.mcp_core import run_mcp_core_server; run_mcp_core_server()"
+_SERVER = "from aj_crew.mcp_core import run_mcp_core_server; run_mcp_core_server()"
 
 
 def _frames() -> bytes:
@@ -128,18 +128,18 @@ def _call_through_mask(argv: list[str], env: dict[str, str]) -> str:
 
 
 @pytest.mark.asyncio
-async def test_kirocrew_core_reaches_the_gateway_through_the_codex_mask_only_by_capability(
+async def test_ajcrew_core_reaches_the_gateway_through_the_codex_mask_only_by_capability(
     short_sock_dir, monkeypatch
 ):
-    from kiro_crew.agent_sdk.tool_gate import adapter_hidden_credential_dirs
-    from kiro_crew.dashboard import agent_ipc
-    from kiro_crew.dashboard.token_auth import token_auth_middleware
-    from kiro_crew.sandbox import SandboxUnavailableError
-    from kiro_crew.sandbox_spawn import sandboxed_spawn_argv_async
+    from aj_crew.agent_sdk.tool_gate import adapter_hidden_credential_dirs
+    from aj_crew.dashboard import agent_ipc
+    from aj_crew.dashboard.token_auth import token_auth_middleware
+    from aj_crew.sandbox import SandboxUnavailableError
+    from aj_crew.sandbox_spawn import sandboxed_spawn_argv_async
 
     home = short_sock_dir / "h"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.setattr(agent_ipc, "STORE", agent_ipc.CapabilityStore())
     monkeypatch.setattr(
         agent_ipc, "verify_session_token", lambda tok: _SESSION if tok == _TOKEN else ""
@@ -185,10 +185,10 @@ async def test_kirocrew_core_reaches_the_gateway_through_the_codex_mask_only_by_
             "HOME": os.environ.get("HOME", str(home)),
             "PATH": os.environ.get("PATH", ""),
             "LANG": "C.UTF-8",
-            "KIROCREW_HOME": str(home),
-            "KIROCREW_BOUND_PORT": str(port),
-            "KIROCREW_SESSION_KEY": _SESSION,
-            "KIROCREW_STUB_SESSION_TOKEN": _TOKEN,
+            "AJCREW_HOME": str(home),
+            "AJCREW_BOUND_PORT": str(port),
+            "AJCREW_SESSION_KEY": _SESSION,
+            "AJCREW_STUB_SESSION_TOKEN": _TOKEN,
             "PYTHONPATH": os.pathsep.join(_src_spellings()),
         }
         try:
@@ -217,7 +217,7 @@ async def test_kirocrew_core_reaches_the_gateway_through_the_codex_mask_only_by_
         # This test process is the session runtime's root: the server descends from it.
         def _with_pickup(base: dict[str, str]) -> dict[str, str]:
             pickup = agent_ipc.issue_pickup(
-                server="kirocrew-core", session_token=_TOKEN, runtime_pid=os.getpid
+                server="ajcrew-core", session_token=_TOKEN, runtime_pid=os.getpid
             )
             # This process is also the gateway that serves the agent socket.
             return {**base, PICKUP_ENV: pickup, GATEWAY_PID_ENV: str(os.getpid())}
@@ -231,7 +231,7 @@ async def test_kirocrew_core_reaches_the_gateway_through_the_codex_mask_only_by_
         # A warm-pool runtime starts its servers before a session claims it, so the
         # element names no session; through the mask the child cannot verify the token
         # mapping either, and learns its session from the gateway instead.
-        warm = {k: v for k, v in env.items() if k != "KIROCREW_SESSION_KEY"}
+        warm = {k: v for k, v in env.items() if k != "AJCREW_SESSION_KEY"}
         claimed = await asyncio.wait_for(
             loop.run_in_executor(None, _call_through_mask, argv, _with_pickup(warm)), 120
         )

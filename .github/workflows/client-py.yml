@@ -1,6 +1,6 @@
 name: Python Client Tests
 
-# The standalone `kirocrew-client` package (packages/kirocrew-client-py) is its
+# The standalone `ajcrew-client` package (packages/ajcrew-client-py) is its
 # own distribution with its own pytest config, so the repo-wide backend suite
 # never collects it (scripts/check_testpaths_coverage.py exempts nested
 # distributions on the understanding that they run on their own). This is that
@@ -10,12 +10,12 @@ name: Python Client Tests
 on:
   pull_request:
     paths:
-      - "packages/kirocrew-client-py/**"
+      - "packages/ajcrew-client-py/**"
       - ".github/workflows/client-py.yml"
   push:
     branches: [main]
     paths:
-      - "packages/kirocrew-client-py/**"
+      - "packages/ajcrew-client-py/**"
       - ".github/workflows/client-py.yml"
   # The merge queue's required check waits on this run, so every merge group
   # gets one. `paths:` is not honoured on merge_group, and that is acceptable:
@@ -41,8 +41,8 @@ concurrency:
 
 jobs:
   test:
-    name: kirocrew-client (py${{ matrix.python }})
-    # `kirocrew-runners` larger-runner group, reached by its runner LABEL rather
+    name: ajcrew-client (py${{ matrix.python }})
+    # `ajcrew-runners` larger-runner group, reached by its runner LABEL rather
     # than by GROUP. A fork PR arrives on `pull_request`, which executes here,
     # so it takes the group too; the fallback is for a fork running its own copy
     # of this file on `push` or `workflow_dispatch`, where an organization
@@ -50,7 +50,7 @@ jobs:
     # carries would wait out GitHub's pending limit instead of running. See
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 10
     strategy:
       max-parallel: 4
@@ -60,7 +60,7 @@ jobs:
         python: ["3.9", "3.12"]
     defaults:
       run:
-        working-directory: packages/kirocrew-client-py
+        working-directory: packages/ajcrew-client-py
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

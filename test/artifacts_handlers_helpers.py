@@ -1,6 +1,6 @@
 """Shared pieces for ``test_artifacts_handlers.py`` and its item, actions and update parts.
 
-``isolated_store`` swaps ``kiro_crew.artifacts``' default :class:`ArtifactStore` for one rooted
+``isolated_store`` swaps ``aj_crew.artifacts``' default :class:`ArtifactStore` for one rooted
 at the test's tmp dir, ``_request`` builds the MagicMock aiohttp request the handlers read,
 ``patch_restricted`` makes the restricted-session check read
 ``req.app['_restricted_session']``, and ``_json_body`` decodes a handler's JSON response.
@@ -15,8 +15,8 @@ from unittest.mock import MagicMock
 import pytest
 from body_stream_helpers import attach_json_body
 
-from kiro_crew import artifacts as art_mod
-from kiro_crew.artifacts import ArtifactStore
+from aj_crew import artifacts as art_mod
+from aj_crew.artifacts import ArtifactStore
 
 
 @pytest.fixture(name="isolated_store")
@@ -68,7 +68,7 @@ def _request(
 @pytest.fixture(name="patch_restricted")
 def patch_restricted_fixture(monkeypatch):
     """Make _is_restricted_session read req.app['_restricted_session']."""
-    from kiro_crew.dashboard.handlers import artifacts as art_handlers
+    from aj_crew.dashboard.handlers import artifacts as art_handlers
 
     def _stub(_state, req) -> bool:
         return req.app.get("_restricted_session", False)

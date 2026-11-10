@@ -17,7 +17,7 @@
  * does for an SVG in a vault. The frames therefore show the production path,
  * not a harness shortcut.
  *
- * kiro-dark only: images carry their own colours, so more themes would
+ * aj-dark only: images carry their own colours, so more themes would
  * photograph the pictures rather than this change.
  *
  * Runs the REAL built SPA (website/dist) behind the shared loopback static
@@ -170,7 +170,7 @@ async function shoot(browser, base, doc, { file, edit = false, fallback = false 
   await page.waitForTimeout(500)
 
   const applied = await page.evaluate(() => document.documentElement.dataset.theme || '')
-  if (applied !== 'kiro-dark') throw new Error(`theme mismatch: wanted kiro-dark, got ${applied || '(none)'}`)
+  if (applied !== 'aj-dark') throw new Error(`theme mismatch: wanted aj-dark, got ${applied || '(none)'}`)
 
   if (edit) {
     await page.locator(NOTE_IMG).first().click()

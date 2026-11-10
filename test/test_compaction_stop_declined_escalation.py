@@ -13,13 +13,13 @@ import pytest
 from compaction_stop_declined_helpers import _clear_channel_decline_markers  # noqa: F401
 from compaction_stop_declined_helpers import KEY, _run_slack_stop, _setup, _slack_orch
 
-from kiro_crew.session_compaction import COMPACT_OUTCOME_CANCELLED
+from aj_crew.session_compaction import COMPACT_OUTCOME_CANCELLED
 
 
 def test_a_parked_entry_past_the_field_bounds_is_refused_not_retained(caplog):
     from unittest.mock import MagicMock
 
-    from kiro_crew import session_lifecycle as sl
+    from aj_crew import session_lifecycle as sl
 
     sessions = MagicMock()
     sessions._fold_key = lambda k: k
@@ -40,7 +40,7 @@ async def test_a_reset_that_raises_after_the_pop_parks_the_detached_queue():
     detached entries are parked for the next start instead of unwinding away."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew import session_lifecycle as sl
+    from aj_crew import session_lifecycle as sl
 
     sessions = MagicMock()
     bob = ("ts-b", "bob's", {})
@@ -77,8 +77,8 @@ async def test_clear_queue_only_unlinks_the_handles_even_when_the_session_is_gon
 
 
 def test_decline_markers_are_count_bounded_and_the_overflow_is_counted(caplog, monkeypatch):
-    from kiro_crew import session_lifecycle as sl
-    from kiro_crew.session_lifecycle_parts import stop_decline
+    from aj_crew import session_lifecycle as sl
+    from aj_crew.session_lifecycle_parts import stop_decline
 
     # The drop counter is module-wide; start this test's count from zero.
     monkeypatch.setattr(stop_decline, "_stop_declined_dropped", 0)
@@ -94,7 +94,7 @@ def test_decline_markers_are_count_bounded_and_the_overflow_is_counted(caplog, m
 
 
 def test_expired_decline_markers_are_swept_on_the_next_write():
-    from kiro_crew import session_lifecycle as sl
+    from aj_crew import session_lifecycle as sl
 
     for i in range(10):
         sl.note_stop_declined(f"k{i}", "u", now=100.0)
@@ -103,7 +103,7 @@ def test_expired_decline_markers_are_swept_on_the_next_write():
 
 
 def test_a_decline_marker_key_past_the_string_bound_is_refused_not_retained(caplog):
-    from kiro_crew import session_lifecycle as sl
+    from aj_crew import session_lifecycle as sl
 
     long_key = "k" * (sl.STOP_DECLINED_KEY_MAX_CHARS + 1)
     with caplog.at_level("WARNING", logger=sl.__name__):
@@ -115,8 +115,8 @@ def test_a_decline_marker_key_past_the_string_bound_is_refused_not_retained(capl
 
 
 def test_the_escalation_window_is_one_constant_for_dashboard_and_channels():
-    from kiro_crew import session_lifecycle as sl
-    from kiro_crew.dashboard import slot_projection as sp
+    from aj_crew import session_lifecycle as sl
+    from aj_crew.dashboard import slot_projection as sp
 
     assert sp.STOP_DECLINED_ESCALATION_SECS is sl.STOP_DECLINED_ESCALATION_SECS
 
@@ -125,7 +125,7 @@ def test_the_escalation_window_is_one_constant_for_dashboard_and_channels():
 async def test_a_cancelled_successor_handoff_parks_the_entries_before_unwinding():
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew import session_lifecycle as sl
+    from aj_crew import session_lifecycle as sl
 
     sessions = MagicMock()
     sessions._fold_key = lambda k: k
@@ -154,8 +154,8 @@ async def test_clear_queue_only_drops_the_detached_entries():
 
 
 def test_the_cancelled_notice_names_the_users_stop_as_the_cause_of_the_restart():
-    from kiro_crew.dashboard.chat_compaction_notice import notice_text
-    from kiro_crew.dashboard.state import (
+    from aj_crew.dashboard.chat_compaction_notice import notice_text
+    from aj_crew.dashboard.state import (
         _AUTO_COMPACT_CANCELLED_NOTICE,
         _AUTO_COMPACT_FAILED_NOTICE,
         _AUTO_RECYCLE_NOTICE,
@@ -194,7 +194,7 @@ def test_the_cancelled_notice_names_the_users_stop_as_the_cause_of_the_restart()
 def test_decline_stop_arms_only_after_the_warning_is_delivered():
     """The marker is what makes the next press a hard reset; the sentence is what
     makes that press informed. Send first, arm second."""
-    import kiro_crew.session_lifecycle as sl
+    import aj_crew.session_lifecycle as sl
 
     order: list[str] = []
 
@@ -212,7 +212,7 @@ def test_decline_stop_arms_nothing_when_the_send_raises():
     """A transport error is ordinary, and it makes the retry MORE likely: a user
     who saw no answer presses again within seconds. That retry must be a first
     press, not a silent session reset."""
-    import kiro_crew.session_lifecycle as sl
+    import aj_crew.session_lifecycle as sl
 
     async def _deliver() -> bool:
         raise RuntimeError("transport down")
@@ -226,7 +226,7 @@ def test_decline_stop_arms_nothing_when_the_send_raises():
 def test_decline_stop_arms_nothing_when_the_send_reports_it_could_not_run():
     """Some sends are conditional on a client or a message id rather than on an
     exception, and some swallow their own transport error. Those report False."""
-    import kiro_crew.session_lifecycle as sl
+    import aj_crew.session_lifecycle as sl
 
     async def _no_client() -> bool:
         return False
@@ -242,7 +242,7 @@ def test_decline_stop_arms_nothing_unless_delivery_is_reported_as_true(reported)
     returns when nothing landed, so reading an unknown value as success would
     reset the session of a user who was never warned; anything that is not the
     explicit yes leaves the next press a first press."""
-    import kiro_crew.session_lifecycle as sl
+    import aj_crew.session_lifecycle as sl
 
     async def _sent():
         return reported
@@ -257,15 +257,15 @@ def test_the_shared_channel_decline_sends_before_it_arms(monkeypatch):
     that posted the text after the arm could leave the escalation live."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.session_lifecycle_parts import stop_decline
-    from kiro_crew.testing.clock import ManualClock
+    from aj_crew.session_lifecycle_parts import stop_decline
+    from aj_crew.testing.clock import ManualClock
 
     # Arm and read on one frozen clock, so the escalation window cannot lapse
     # between the two reads on a slow host.
     ManualClock().install(monkeypatch, stop_decline)
 
-    import kiro_crew.session_lifecycle as sl
-    from kiro_crew.messaging.commands import STOP_REPLY_COMPACTING, stop_running_turn
+    import aj_crew.session_lifecycle as sl
+    from aj_crew.messaging.commands import STOP_REPLY_COMPACTING, stop_running_turn
 
     sessions = MagicMock()
     sessions.is_compacting = MagicMock(return_value=True)
@@ -298,8 +298,8 @@ def test_the_shared_channel_decline_sends_before_it_arms(monkeypatch):
 def test_the_shared_channel_decline_arms_nothing_when_its_send_fails():
     from unittest.mock import AsyncMock, MagicMock
 
-    import kiro_crew.session_lifecycle as sl
-    from kiro_crew.messaging.commands import stop_running_turn
+    import aj_crew.session_lifecycle as sl
+    from aj_crew.messaging.commands import stop_running_turn
 
     sessions = MagicMock()
     sessions.is_compacting = MagicMock(return_value=True)
@@ -331,7 +331,7 @@ def test_the_shared_channel_stop_delivers_every_reply_itself():
     path and cannot answer a Stop twice."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.messaging.commands import STOP_REPLY_CANCELLED, stop_running_turn
+    from aj_crew.messaging.commands import STOP_REPLY_CANCELLED, stop_running_turn
 
     sessions = MagicMock()
     sessions.is_compacting = MagicMock(return_value=False)
@@ -362,7 +362,7 @@ def test_slack_stop_arms_nothing_when_the_decline_post_never_lands():
     forcing second press the unseen warning would have promised."""
     from unittest.mock import AsyncMock, MagicMock
 
-    import kiro_crew.session_lifecycle as sl
+    import aj_crew.session_lifecycle as sl
 
     sl._stop_declined_markers.clear()
     orch, _task = _slack_orch()
@@ -381,8 +381,8 @@ def test_the_shared_channel_decline_arms_nothing_when_the_send_reports_nothing_l
     is not a delivered warning, so the escalation stays unarmed."""
     from unittest.mock import AsyncMock, MagicMock
 
-    import kiro_crew.session_lifecycle as sl
-    from kiro_crew.messaging.commands import STOP_REPLY_COMPACTING, stop_running_turn
+    import aj_crew.session_lifecycle as sl
+    from aj_crew.messaging.commands import STOP_REPLY_COMPACTING, stop_running_turn
 
     sl._stop_declined_markers.clear()
     sessions = MagicMock()

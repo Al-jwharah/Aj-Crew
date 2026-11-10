@@ -73,7 +73,7 @@ export function useComposerSessionControls({ activeSlot, currentSlot, queryClien
   const [mobileNewSessionBusy, setMobileNewSessionBusy] = useState(false)
   // The sidebar's folder sort mode, for the folder-suggestion card's option list:
   // the card draws the same tree the sidebar draws and must list it in the same
-  // order. Read here (shared kirocrewConfig query) so the card stays pure. The
+  // order. Read here (shared ajcrewConfig query) so the card stays pure. The
   // read's failure travels too, for the one case the sidebar's banner cannot
   // cover: this screen with no sidebar on it (see `sidebarOnScreen` below).
   const { mode: folderSortMode, error: folderSortError } = useFolderSortMode()

@@ -13,8 +13,8 @@ import logging
 import native_skill_projection_helpers
 import pytest
 
-from kiro_crew import agent_spec_format
-from kiro_crew.acp import skill_projection as projection
+from aj_crew import agent_spec_format
+from aj_crew.acp import skill_projection as projection
 
 _no_eager_prune = native_skill_projection_helpers._no_eager_prune
 _prune_on_every_spawn = native_skill_projection_helpers._prune_on_every_spawn

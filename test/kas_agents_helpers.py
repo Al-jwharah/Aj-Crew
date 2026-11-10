@@ -9,11 +9,11 @@ from __future__ import annotations
 
 def _spec(**over):
     base = {
-        "name": "kirocrew",
+        "name": "ajcrew",
         "description": "the crew agent",
         "prompt": "You are Kiro.",
-        "tools": ["fs_read", "fs_write", "@kirocrew-core"],
-        "mcpServers": {"kirocrew-core": {"command": "x"}},
+        "tools": ["fs_read", "fs_write", "@ajcrew-core"],
+        "mcpServers": {"ajcrew-core": {"command": "x"}},
         "model": "auto",
         "includeMcpJson": False,
     }

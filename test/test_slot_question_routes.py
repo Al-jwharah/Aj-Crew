@@ -32,17 +32,17 @@ from slot_ownership_checkpoint_helpers import (  # noqa: F401 -- fixtures are re
     state_fixture,
 )
 
-from kiro_crew.dashboard import interaction_coordinator, slot_ownership
-from kiro_crew.dashboard.handlers.ask_question import (
+from aj_crew.dashboard import interaction_coordinator, slot_ownership
+from aj_crew.dashboard.handlers.ask_question import (
     api_ask_question_answer,
     api_ask_question_pending,
 )
-from kiro_crew.dashboard.handlers.slot_question import (
+from aj_crew.dashboard.handlers.slot_question import (
     api_chat_slot_question,
     api_chat_slot_question_answer,
 )
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.testing.wait import await_until
 
 _QUESTIONS = [{"question": "Which branch?", "options": [{"label": "main"}, {"label": "dev"}]}]
 
@@ -154,7 +154,7 @@ async def test_the_polled_read_does_not_write_an_allow_row_per_call(
 ) -> None:
     """An embed polls every 1.5 s: its allows go through the 5-minute window."""
     # The approval module reads `sel` from chat_handlers at call time.
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     caller_rows: list[dict] = []
 

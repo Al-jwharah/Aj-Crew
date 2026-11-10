@@ -46,7 +46,7 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_source_pin_budget")
 
 #: The modules whose source a test must not read: the runner, and the owner
 #: package its ``compose`` runs on the runner's globals.
-_TURN_MODULES = ("kiro_crew.dashboard.chat_runner", "kiro_crew.dashboard.chat_turn")
+_TURN_MODULES = ("aj_crew.dashboard.chat_runner", "aj_crew.dashboard.chat_turn")
 _TURN_FILES = ("dashboard/chat_runner.py", "dashboard/chat_turn/")
 _READERS = frozenset({"getsource", "getsourcelines", "getsourcefile", "getfile", "findsource"})
 _TEXT_READERS = frozenset({"read_text", "read_bytes"})
@@ -66,7 +66,7 @@ BUDGET: dict[str, int] = {
     "test/test_chat_runner_compose_binding.py": 2,
     "test/test_chat_runner_turn_plumbing.py": 2,
     # Other scopes' reads, frozen as measured; each may only fall.
-    "src/kiro_crew/apps/builtins/spec_builder/tests/test_routes_delete.py": 1,
+    "src/aj_crew/apps/builtins/spec_builder/tests/test_routes_delete.py": 1,
     "test/metrics/test_context_trace.py": 2,
     "test/metrics/test_usage_turns.py": 1,
     "test/test_autonudge_banner.py": 1,
@@ -446,7 +446,7 @@ def _is_a_test_module(rel: Path) -> bool:
         parts[0] == "test"
         or (
             len(parts) > 5
-            and parts[:4] == ("src", "kiro_crew", "apps", "builtins")
+            and parts[:4] == ("src", "aj_crew", "apps", "builtins")
             and "tests" in parts
         )
     )
@@ -511,172 +511,172 @@ def test_a_budget_falls_with_the_reads_it_covers() -> None:
 
 _COUNTED = [
     (
-        "from kiro_crew.dashboard import chat_runner\n"
+        "from aj_crew.dashboard import chat_runner\n"
         "import inspect\n"
         "src = inspect.getsource(chat_runner._run_chat)\n",
         1,
     ),
     (
         "import inspect as _inspect\n"
-        "from kiro_crew.dashboard import chat_runner as cr\n"
+        "from aj_crew.dashboard import chat_runner as cr\n"
         "mod = cr\n"
         "_inspect.getsource(mod._steer_policy_notice)\n",
         1,
     ),
     (
-        "from kiro_crew.dashboard.chat_runner import _run_chat\n"
+        "from aj_crew.dashboard.chat_runner import _run_chat\n"
         "import ast, inspect\n"
         "ast.parse(inspect.getsource(_run_chat))\n",
         1,
     ),
     (
-        "import inspect\nimport kiro_crew.dashboard.chat_runner as runner\n"
+        "import inspect\nimport aj_crew.dashboard.chat_runner as runner\n"
         "inspect.getsource(runner)\n",
         1,
     ),
     (
         "import inspect, sys\n"
-        "inspect.getsource(sys.modules['kiro_crew.dashboard.chat_runner'])\n",
+        "inspect.getsource(sys.modules['aj_crew.dashboard.chat_runner'])\n",
         1,
     ),
     (
         "from pathlib import Path\n"
-        "from kiro_crew.dashboard import chat_runner\n"
+        "from aj_crew.dashboard import chat_runner\n"
         "Path(chat_runner.__file__).read_text()\n",
         1,
     ),
     (
         "from pathlib import Path\n"
-        "RUNNER = Path(__file__).parents[1] / 'src/kiro_crew/dashboard/chat_runner.py'\n"
+        "RUNNER = Path(__file__).parents[1] / 'src/aj_crew/dashboard/chat_runner.py'\n"
         "text = RUNNER.read_text(encoding='utf-8')\n",
         1,
     ),
     (
         "from pathlib import Path\n"
-        "from kiro_crew.dashboard import chat_runner, chat_turn\n"
+        "from aj_crew.dashboard import chat_runner, chat_turn\n"
         "sources = [Path(chat_runner.__file__)] + sorted(Path(chat_turn.__file__).parent.glob('*.py'))\n"
         "found = [p for path in sources for p in path.read_text().split()]\n",
         1,
     ),
     (
         "import inspect\n"
-        "from kiro_crew.dashboard.chat_turn import tool_approval\n"
+        "from aj_crew.dashboard.chat_turn import tool_approval\n"
         "inspect.getsource(tool_approval)\n",
         1,
     ),
     (
-        "import inspect\nfrom kiro_crew.dashboard import chat_runner, chat_handlers\n"
+        "import inspect\nfrom aj_crew.dashboard import chat_runner, chat_handlers\n"
         "for module in (chat_runner, chat_handlers):\n"
         "    inspect.getsource(module)\n",
         1,
     ),
-    ("with open('src/kiro_crew/dashboard/chat_runner.py') as fh:\n    fh.read()\n", 1),
+    ("with open('src/aj_crew/dashboard/chat_runner.py') as fh:\n    fh.read()\n", 1),
     (
-        "from pathlib import Path\nfrom kiro_crew.dashboard import chat_runner\n"
+        "from pathlib import Path\nfrom aj_crew.dashboard import chat_runner\n"
         "with Path(chat_runner.__file__).open() as fh:\n    fh.read()\n",
         1,
     ),
     (
-        "import io\nio.open('src/kiro_crew/dashboard/chat_runner.py').read()\n",
+        "import io\nio.open('src/aj_crew/dashboard/chat_runner.py').read()\n",
         1,
     ),
     (
-        "from inspect import getsource as gs\nfrom kiro_crew.dashboard import chat_runner\n"
+        "from inspect import getsource as gs\nfrom aj_crew.dashboard import chat_runner\n"
         "gs(chat_runner._run_chat)\n",
         1,
     ),
     (
-        "import inspect\nfrom kiro_crew.dashboard import chat_runner\n"
+        "import inspect\nfrom aj_crew.dashboard import chat_runner\n"
         "inspect.getsource(getattr(chat_runner, '_run_chat'))\n",
         1,
     ),
     (
         "import importlib, inspect\n"
-        "inspect.getsource(importlib.import_module('kiro_crew.dashboard.chat_runner')._run_chat)\n",
+        "inspect.getsource(importlib.import_module('aj_crew.dashboard.chat_runner')._run_chat)\n",
         1,
     ),
     (
         "import inspect\n"
-        "runner = __import__('kiro_crew.dashboard.chat_runner', fromlist=['x'])\n"
+        "runner = __import__('aj_crew.dashboard.chat_runner', fromlist=['x'])\n"
         "inspect.getsourcelines(runner)\n",
         1,
     ),
     (
-        "import inspect\nfrom kiro_crew.dashboard import chat_runner\n"
+        "import inspect\nfrom aj_crew.dashboard import chat_runner\n"
         "read_source = inspect.getsource\nread_source(chat_runner._run_chat)\n",
         1,
     ),
     (
         "from pathlib import Path\nclass TestX:\n"
-        "    RUNNER = Path(__file__).parents[1] / 'src/kiro_crew/dashboard/chat_runner.py'\n"
+        "    RUNNER = Path(__file__).parents[1] / 'src/aj_crew/dashboard/chat_runner.py'\n"
         "    def test_it(self):\n        self.RUNNER.read_text()\n",
         1,
     ),
     (
-        "import inspect\nfrom kiro_crew import dashboard\n"
+        "import inspect\nfrom aj_crew import dashboard\n"
         "inspect.getsource(dashboard.chat_runner._run_chat)\n",
         1,
     ),
-    ("import inspect\nimport kiro_crew.dashboard as d\ninspect.getsource(d.chat_runner)\n", 1),
+    ("import inspect\nimport aj_crew.dashboard as d\ninspect.getsource(d.chat_runner)\n", 1),
     (
         "import importlib, pkgutil\nfrom pathlib import Path\n"
-        "from kiro_crew.dashboard import chat_turn\n"
+        "from aj_crew.dashboard import chat_turn\n"
         "owners = [importlib.import_module(f'{chat_turn.__name__}.{i.name}')\n"
         "          for i in pkgutil.iter_modules(chat_turn.__path__)]\n"
         "texts = [Path(m.__file__).read_text() for m in owners]\n",
         1,
     ),
     (
-        "from pathlib import Path\nimport kiro_crew.dashboard as pkg\n"
+        "from pathlib import Path\nimport aj_crew.dashboard as pkg\n"
         "root = Path(pkg.__file__).parent\n"
         "for name in ('state.py', 'chat_runner.py'):\n    (root / name).read_text()\n",
         1,
     ),
     (
-        "from inspect import *\nfrom kiro_crew.dashboard import chat_runner\n"
+        "from inspect import *\nfrom aj_crew.dashboard import chat_runner\n"
         "getsource(chat_runner._run_chat)\n",
         1,
     ),
     (
         "from pathlib import Path\nROOT = Path(__file__).parent\n"
-        "pkg = ROOT / 'src' / 'kiro_crew' / 'dashboard' / 'chat_turn'\n"
+        "pkg = ROOT / 'src' / 'aj_crew' / 'dashboard' / 'chat_turn'\n"
         "for path in sorted(pkg.glob('*.py')):\n    path.read_text()\n",
         1,
     ),
 ]
 
 _NOT_COUNTED = [
-    "import inspect\nfrom kiro_crew.dashboard import chat_handlers\n"
+    "import inspect\nfrom aj_crew.dashboard import chat_handlers\n"
     "inspect.getsource(chat_handlers.api_chat)\n",
     "import inspect, sys\ninspect.getsource(sys.modules[__name__])\n",
     "from pathlib import Path\nPath('docs/system-specs/modules/learn-cron-dashboard.md').read_text()\n",
-    "import inspect\nfrom kiro_crew.messaging import identity\n"
+    "import inspect\nfrom aj_crew.messaging import identity\n"
     "inspect.getsource(identity.publish_turn_identity)\n",
-    "from kiro_crew.dashboard import chat_runner\nchat_runner._run_chat.__wrapped__\n",
-    "import inspect\nfrom kiro_crew.dashboard import chat_runner\n"
+    "from aj_crew.dashboard import chat_runner\nchat_runner._run_chat.__wrapped__\n",
+    "import inspect\nfrom aj_crew.dashboard import chat_runner\n"
     "inspect.signature(chat_runner._run_chat)\n",
-    "PATHS = ['src/kiro_crew/dashboard/chat_runner.py']\nprint(PATHS)\n",
-    "import kiro_crew.config\nimport inspect\ninspect.getsource(kiro_crew.config)\n",
-    "from inspect import signature as getsource\nfrom kiro_crew.dashboard import chat_runner\n"
+    "PATHS = ['src/aj_crew/dashboard/chat_runner.py']\nprint(PATHS)\n",
+    "import aj_crew.config\nimport inspect\ninspect.getsource(aj_crew.config)\n",
+    "from inspect import signature as getsource\nfrom aj_crew.dashboard import chat_runner\n"
     "getsource(chat_runner._run_chat)\n",
     "import importlib, inspect\n"
-    "inspect.getsource(importlib.import_module('kiro_crew.dashboard.chat_handlers'))\n",
-    "from kiro_crew.dashboard import chat_runner\nopen('notes.txt').read()\n",
-    "import inspect\ninspect.getsource(__import__('kiro_crew.dashboard.chat_runner'))\n",
+    "inspect.getsource(importlib.import_module('aj_crew.dashboard.chat_handlers'))\n",
+    "from aj_crew.dashboard import chat_runner\nopen('notes.txt').read()\n",
+    "import inspect\ninspect.getsource(__import__('aj_crew.dashboard.chat_runner'))\n",
     "from pathlib import Path\nPath('test/test_chat_runner.py').read_text()\n",
-    "from pathlib import Path\nPath('src/kiro_crew/telegram/chat_runner.py').read_text()\n",
-    "import mylib\nfrom kiro_crew.dashboard import chat_runner\nmylib.getsource(chat_runner._run_chat)\n",
-    "import inspect\nfrom kiro_crew import dashboard\ninspect.getsource(dashboard.chat_handlers)\n",
-    "from pathlib import Path\nimport kiro_crew.dashboard as pkg\n"
+    "from pathlib import Path\nPath('src/aj_crew/telegram/chat_runner.py').read_text()\n",
+    "import mylib\nfrom aj_crew.dashboard import chat_runner\nmylib.getsource(chat_runner._run_chat)\n",
+    "import inspect\nfrom aj_crew import dashboard\ninspect.getsource(dashboard.chat_handlers)\n",
+    "from pathlib import Path\nimport aj_crew.dashboard as pkg\n"
     "(Path(pkg.__file__).parent / 'state.py').read_text()\n",
     "from pathlib import Path\nclass TestX:\n"
-    "    OTHER = Path(__file__).parents[1] / 'src/kiro_crew/dashboard/chat_handlers.py'\n"
+    "    OTHER = Path(__file__).parents[1] / 'src/aj_crew/dashboard/chat_handlers.py'\n"
     "    def test_it(self):\n        self.OTHER.read_text()\n",
-    "import importlib\nfrom pathlib import Path\nfrom kiro_crew.dashboard import chat_handlers\n"
+    "import importlib\nfrom pathlib import Path\nfrom aj_crew.dashboard import chat_handlers\n"
     "module = importlib.import_module(f'{chat_handlers.__name__}')\n"
     "Path(module.__file__).read_text()\n",
     "from pathlib import Path\nROOT = Path(__file__).parent\n"
-    "(ROOT / 'src' / 'kiro_crew' / 'dashboard' / 'chat_handlers.py').read_text()\n",
+    "(ROOT / 'src' / 'aj_crew' / 'dashboard' / 'chat_handlers.py').read_text()\n",
 ]
 
 

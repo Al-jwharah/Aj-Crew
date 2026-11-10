@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import AgentSelector, { crewDisplayName } from '../components/AgentSelector'
-import type { KiroCrewAgent } from '../components/AgentSelector'
+import type { AjCrewAgent } from '../components/AgentSelector'
 
-const agents: KiroCrewAgent[] = [
-  { name: 'coding', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default' },
+const agents: AjCrewAgent[] = [
+  { name: 'coding', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default' },
   { name: 'oncall', kiro_agent: 'oncall-agent', workspace: 'oncall', memory_store: 'oncall-kb' },
-  { name: 'research', kiro_agent: 'kirocrew', workspace: 'research', memory_store: 'research-mem' },
+  { name: 'research', kiro_agent: 'ajcrew', workspace: 'research', memory_store: 'research-mem' },
 ]
 
 describe('AgentSelector', () => {
@@ -33,7 +33,7 @@ describe('AgentSelector', () => {
     expect(screen.getByText('default')).toBeInTheDocument()
   })
 
-  it('calls onChange with KiroCrew agent name on selection', () => {
+  it('calls onChange with AjCrew agent name on selection', () => {
     const onChange = vi.fn()
     render(<AgentSelector agents={agents} defaultAgent="coding" value="coding" onChange={onChange} />)
     fireEvent.click(screen.getByLabelText('Switch agent'))
@@ -49,14 +49,14 @@ describe('AgentSelector', () => {
 
 describe('crewDisplayName', () => {
   it('names the first mate by its localized label on any template; default keeps its name', () => {
-    expect(crewDisplayName({ name: 'mate', kiro_agent: 'kirocrew' })).toBe('Bot')
+    expect(crewDisplayName({ name: 'mate', kiro_agent: 'ajcrew' })).toBe('Bot')
     // A label of the user's own wins.
-    expect(crewDisplayName({ name: 'mate', kiro_agent: 'kirocrew', display_name: 'Ada' })).toBe('Ada')
+    expect(crewDisplayName({ name: 'mate', kiro_agent: 'ajcrew', display_name: 'Ada' })).toBe('Ada')
     // The reserved default member is presented exactly as before.
-    expect(crewDisplayName({ name: 'default', kiro_agent: 'kirocrew' })).toBe('default')
+    expect(crewDisplayName({ name: 'default', kiro_agent: 'ajcrew' })).toBe('default')
     expect(crewDisplayName({ name: 'default' })).toBe('default')
     // The first crewmate is its key, whatever template it runs.
-    expect(crewDisplayName({ name: 'mate', kiro_agent: 'kirocrew' })).toBe('Bot')
-    expect(crewDisplayName({ name: 'helper', kiro_agent: 'kirocrew' })).toBe('helper')
+    expect(crewDisplayName({ name: 'mate', kiro_agent: 'ajcrew' })).toBe('Bot')
+    expect(crewDisplayName({ name: 'helper', kiro_agent: 'ajcrew' })).toBe('helper')
   })
 })

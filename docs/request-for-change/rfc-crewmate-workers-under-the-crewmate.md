@@ -35,12 +35,12 @@ Crew Mode keeps a conductor's workers out of the person's lists and shows them u
 
 | Step | What | Where |
 |---|---|---|
-| Root test | A slot with no creator, Persistent memory, and `runs_crew_mode(...)` true. `runs_crew_mode` is false for a member thread, so a mate thread is never a root | `src/kiro_crew/crew_mode.py` (`runs_crew_mode`, `_row_is_root`) |
-| Stamps | `crew_mode_root` on a root, `crew_root` on each descendant, `crew_dispatched_by` (`DISPATCHER_FIELD`) for the direct creator | `src/kiro_crew/crew_mode.py` (`ROOT_FIELD`, `WORKER_FIELD`, `DISPATCHER_FIELD`) |
-| Walk | `stamp_rows` walks creators up to a root, past closed creators through the session tree | `src/kiro_crew/crew_mode.py` (`stamp_rows`), called from `src/kiro_crew/dashboard/state_parts/slots_frame.py` |
-| Server list | `list_view` drops `crew_root` rows from a person's read | `src/kiro_crew/crew_mode.py` (`list_view`) |
+| Root test | A slot with no creator, Persistent memory, and `runs_crew_mode(...)` true. `runs_crew_mode` is false for a member thread, so a mate thread is never a root | `src/aj_crew/crew_mode.py` (`runs_crew_mode`, `_row_is_root`) |
+| Stamps | `crew_mode_root` on a root, `crew_root` on each descendant, `crew_dispatched_by` (`DISPATCHER_FIELD`) for the direct creator | `src/aj_crew/crew_mode.py` (`ROOT_FIELD`, `WORKER_FIELD`, `DISPATCHER_FIELD`) |
+| Walk | `stamp_rows` walks creators up to a root, past closed creators through the session tree | `src/aj_crew/crew_mode.py` (`stamp_rows`), called from `src/aj_crew/dashboard/state_parts/slots_frame.py` |
+| Server list | `list_view` drops `crew_root` rows from a person's read | `src/aj_crew/crew_mode.py` (`list_view`) |
 | Client list | `crewModeView` drops a row whose `crew_root` is a row of the same list; `autoOpenRows` never auto-opens one; gated by `PREVIEW_CREW_MODE` | `website/src/lib/crewMode.ts` (`crewModeView`, `autoOpenRows`, `crewModeEnabled`) |
-| Status view | `GET /api/chat/slots/{slot}/crew-workers` returns live and closed workers in groups `approval`, `working`, `with_conductor`, `waiting`, `done`; owner only; 404 `not_crew_mode_root` for any other slot | `src/kiro_crew/dashboard/handlers/crew_workers.py` (`_gate`, `_closed_workers`, `api_crew_workers`); route in `src/kiro_crew/dashboard/server_runtime/mcp_routes.py` |
+| Status view | `GET /api/chat/slots/{slot}/crew-workers` returns live and closed workers in groups `approval`, `working`, `with_conductor`, `waiting`, `done`; owner only; 404 `not_crew_mode_root` for any other slot | `src/aj_crew/dashboard/handlers/crew_workers.py` (`_gate`, `_closed_workers`, `api_crew_workers`); route in `src/aj_crew/dashboard/server_runtime/mcp_routes.py` |
 | Client groups | Same five groups, Done folded by default | `website/src/lib/crewWorkers.ts` (`CrewWorkerGroup`, `CREW_GROUP_ORDER`), `website/src/pages/chat/command-center/CrewWorkerList.tsx` |
 | Approvals | Worker approvals show as cards on the root's pane | `website/src/components/crew/CrewApprovalCards.tsx` |
 | Counts and badges | Person-facing counts skip hidden crew members; a crew member's pending permission prompt also badges its live root | `website/src/store/dashboard/unread.ts` (`crewMemberKeys`), `website/src/hooks/websocket/chatStream.ts` (`crewWorkerRoot`) |
@@ -51,9 +51,9 @@ The person likes this view. The 2026-10-27 decision records it: crew members "ar
 
 | Part | Today | Where |
 |---|---|---|
-| Mate thread | A DM slot with `mode == "member"` (`DM_SLOT_MODE`), listed on the Mates page, not the chat page | `src/kiro_crew/members_parts/member_space.py` (`DM_SLOT_MODE`); `website/src/pages/chat-sidebar/conductor.ts` |
-| Lineage | Each child carries `created_by = <mate thread key>` | read by `src/kiro_crew/crew_mode.py` (`_creator_of`) |
-| Ownership fence | A mate may act only on sessions it created, or, for run verbs such as `stop` and `close`, sessions it manages after a handoff | `src/kiro_crew/dashboard/session_control_parts/caller_access.py` (`member_owns_slot`), `src/kiro_crew/dashboard/session_control_parts/target_authorization.py` (`authorize_target`) |
+| Mate thread | A DM slot with `mode == "member"` (`DM_SLOT_MODE`), listed on the Mates page, not the chat page | `src/aj_crew/members_parts/member_space.py` (`DM_SLOT_MODE`); `website/src/pages/chat-sidebar/conductor.ts` |
+| Lineage | Each child carries `created_by = <mate thread key>` | read by `src/aj_crew/crew_mode.py` (`_creator_of`) |
+| Ownership fence | A mate may act only on sessions it created, or, for run verbs such as `stop` and `close`, sessions it manages after a handoff | `src/aj_crew/dashboard/session_control_parts/caller_access.py` (`member_owns_slot`), `src/aj_crew/dashboard/session_control_parts/target_authorization.py` (`authorize_target`) |
 | Sidebar | Children are ordinary sidebar rows, grouped under "From Mates" when the person groups by kind | `website/src/pages/chat-sidebar/kindSections.tsx` (`SESSION_KIND_ORDER`) |
 | Sessions tab | The mate Profile card lists live slots whose `created_by` is the mate thread. Direct children only, live only, one status dot each. No groups, no closed rows, no grandchildren | `website/src/pages/members/MembersPageSidePanel.tsx` (`drivingSessions`), `website/src/pages/members/MembersPageProfile.tsx` |
 | Recorded design | Mate workers "appear in the sidebar"; "delegated work stays visible as the worker sessions themselves in the sidebar" | `docs/decisions/2026-10-17-crewmate-chat-hands-off-to-worker-sessions.md`, Decision section |
@@ -106,7 +106,7 @@ flowchart LR
 - A mate can also run from an ordinary `chat-*` slot bound to its own store (`_member_caller` in `caller_access.py`). That slot is not a mate root, and sessions it dispatches stay in the sidebar. Covering it is out of scope here.
 - The same walk as `stamp_rows`, in the same pass, stopping at the nearest root of either kind. A conductor a mate opened is a mate descendant, and so are its workers.
 - Later, behind the preview flag (PR 6), `list_view` also drops `mate_root` rows from a person's read, as it does `crew_root` rows. Agents still see everything. Until then the stamps change no list.
-- `live_stamps` (`src/kiro_crew/crew_mode.py`) restates the two new fields on `slot_patch` frames.
+- `live_stamps` (`src/aj_crew/crew_mode.py`) restates the two new fields on `slot_patch` frames.
 
 Why a separate field: every `crew_root` consumer would otherwise start firing on mate workers. Backend consumers include tool approval routing, agent switch, Crew Mode migration, crew filing, caller scope, folder runs, warm task briefs and Crew Mode metrics; the frontend has about twenty `crewRootOf` call sites. Each one that should also apply to mates is opted in on purpose, in its own PR.
 
@@ -137,7 +137,7 @@ flowchart TD
 
 ### 4. Approvals and unread reach the mate chat
 
-A hidden worker still needs the person for tool approvals and question cards. `CrewApprovalCards`, filtered by `mate_root`, shows in the mate chat on the Mates page. A worker's open question card shows there too; this is new, since Crew Mode does not route question cards to the root today (its worker refusal in `src/kiro_crew/dashboard/handlers/ask_question.py` is inert while `APPROVAL_ROUTING_LIVE` is `False`). A pending prompt badges the mate's row on the Mates roster, the way `crewWorkerRoot` badges a Crew Mode root, and counts skip hidden mate workers, the way `crewMemberKeys` does. This lands before hiding is turned on, or an approval could sit unseen.
+A hidden worker still needs the person for tool approvals and question cards. `CrewApprovalCards`, filtered by `mate_root`, shows in the mate chat on the Mates page. A worker's open question card shows there too; this is new, since Crew Mode does not route question cards to the root today (its worker refusal in `src/aj_crew/dashboard/handlers/ask_question.py` is inert while `APPROVAL_ROUTING_LIVE` is `False`). A pending prompt badges the mate's row on the Mates roster, the way `crewWorkerRoot` badges a Crew Mode root, and counts skip hidden mate workers, the way `crewMemberKeys` does. This lands before hiding is turned on, or an approval could sit unseen.
 
 ### 5. Cleanup: the AI closes its own sessions
 
@@ -170,11 +170,11 @@ stateDiagram-v2
 
 What exists:
 
-- `session_close` archives and is reopenable (`_run_session_close` in `src/kiro_crew/mcp_dashboard_session_runs.py`).
-- The goal-conductor skill already tells a conductor to close a child once its item is terminal (`src/kiro_crew/builtin_skills/goal-conductor/SKILL.md`), and the conductor prompt names the verb (`src/kiro_crew/agent_parts/spec_prompts.py`).
+- `session_close` archives and is reopenable (`_run_session_close` in `src/aj_crew/mcp_dashboard_session_runs.py`).
+- The goal-conductor skill already tells a conductor to close a child once its item is terminal (`src/aj_crew/builtin_skills/goal-conductor/SKILL.md`), and the conductor prompt names the verb (`src/aj_crew/agent_parts/spec_prompts.py`).
 - Closed workers are already listed under Done and can be reopened (`_closed_workers`).
 
-What is missing today: `session_close` is not in `_MEMBER_DASHBOARD_GRANTS` (`src/kiro_crew/agent_parts/spec_grants.py`), so an unattended mate stalls on an approval prompt or leaves sessions open, and the mate has no written close rule. A sibling PR adds the mate `session_close` grant and the close rule now. It is bounded by the same fence as `session_stop`: for `close` and `stop`, `authorize_target` admits a mate only on a session it manages, which is a session it created unless a handoff moved it (`_outside_reach`, `HANDOFF_WIDENED_OPERATIONS` in `caller_access.py`). This RFC does not depend on that PR's number.
+What is missing today: `session_close` is not in `_MEMBER_DASHBOARD_GRANTS` (`src/aj_crew/agent_parts/spec_grants.py`), so an unattended mate stalls on an approval prompt or leaves sessions open, and the mate has no written close rule. A sibling PR adds the mate `session_close` grant and the close rule now. It is bounded by the same fence as `session_stop`: for `close` and `stop`, `authorize_target` admits a mate only on a session it manages, which is a session it created unless a handoff moved it (`_outside_reach`, `HANDOFF_WIDENED_OPERATIONS` in `caller_access.py`). This RFC does not depend on that PR's number.
 
 There is no "close all finished" button and no close-finished route. The person can still close any one session the ordinary way, but nothing in this design asks them to.
 
@@ -182,18 +182,18 @@ One limit stays: a conductor holds neither `session_close` nor `session_stop` as
 
 ### 6. Consequence: dispatchers lose folder tools
 
-Once conductor workers and mate workers both live under their root, no dispatcher needs folders. Three paths file a session today: the `chat_folder_*` tools; `folder=` on `session_create`, which creates a missing folder on its own (`_resolve_folder_for_new_session` in `src/kiro_crew/mcp_dashboard_session_runs.py`); and, for a mate, automatic filing into the mate's home folder (`mate_home_filing` in `src/kiro_crew/dashboard/mate_folders.py`, called from `src/kiro_crew/dashboard/session_control_parts/session_create.py`). In each case a named folder can also give the child its project directory, and that part stays.
+Once conductor workers and mate workers both live under their root, no dispatcher needs folders. Three paths file a session today: the `chat_folder_*` tools; `folder=` on `session_create`, which creates a missing folder on its own (`_resolve_folder_for_new_session` in `src/aj_crew/mcp_dashboard_session_runs.py`); and, for a mate, automatic filing into the mate's home folder (`mate_home_filing` in `src/aj_crew/dashboard/mate_folders.py`, called from `src/aj_crew/dashboard/session_control_parts/session_create.py`). In each case a named folder can also give the child its project directory, and that part stays.
 
 | Thing | Disposition |
 |---|---|
-| `chat_folder_file_self` (`src/kiro_crew/mcp_dashboard.py`, `_run_chat_folder_file_self` in `src/kiro_crew/mcp_dashboard_folder_runs.py`) | remove. Only conductor specs auto-grant it and only conductor guidance uses it, but any agent could call it under an approval; removal takes self-filing away from ordinary agents too, and the person files such a chat by hand |
-| Folder entries in `_CONDUCTOR_DASHBOARD_GRANTS` and the pipeline and security conductor sets in `spec_grants.py`; `src/kiro_crew/agent_materialization/conductor_agents.py` | remove; mates inherit the conductor set, so theirs go too |
-| `folder=` from a caller in a turned-on Crew Mode tree | already dropped, with an answer that says so, while the folder still supplies the project directory (`slot_in_turned_on_tree` in `src/kiro_crew/crew_mode.py`, `src/kiro_crew/dashboard/session_control_parts/crew_filing.py`). A conductor root without the Crew Mode stamp, or a worker of a closed root, keeps its folders |
+| `chat_folder_file_self` (`src/aj_crew/mcp_dashboard.py`, `_run_chat_folder_file_self` in `src/aj_crew/mcp_dashboard_folder_runs.py`) | remove. Only conductor specs auto-grant it and only conductor guidance uses it, but any agent could call it under an approval; removal takes self-filing away from ordinary agents too, and the person files such a chat by hand |
+| Folder entries in `_CONDUCTOR_DASHBOARD_GRANTS` and the pipeline and security conductor sets in `spec_grants.py`; `src/aj_crew/agent_materialization/conductor_agents.py` | remove; mates inherit the conductor set, so theirs go too |
+| `folder=` from a caller in a turned-on Crew Mode tree | already dropped, with an answer that says so, while the folder still supplies the project directory (`slot_in_turned_on_tree` in `src/aj_crew/crew_mode.py`, `src/aj_crew/dashboard/session_control_parts/crew_filing.py`). A conductor root without the Crew Mode stamp, or a worker of a closed root, keeps its folders |
 | Filing for a caller in a mate tree, with the preview flag on | dropped the same way: no `folder=` filing and no mate-home filing, project directory kept. A mate's `session_create(folder=...)` still succeeds, unfiled |
-| Member admission to the folder routes (`_member_admitted_to_chat_folder_tag_route` in `src/kiro_crew/dashboard/handlers/_shared_route_guards.py`) | remove the folder part only; the tag, pin, column and session-list admissions it also grants stay |
+| Member admission to the folder routes (`_member_admitted_to_chat_folder_tag_route` in `src/aj_crew/dashboard/handlers/_shared_route_guards.py`) | remove the folder part only; the tag, pin, column and session-list admissions it also grants stay |
 | Folder steps in conductor prompts and the goal, security and pipeline conductor skills | remove; `session_create` without `folder` |
 | Other `chat_folder_*` tools, and `folder=` for callers outside both trees | keep; an ordinary agent can still be asked to file chats |
-| The person's folders, `src/kiro_crew/dashboard/chat_folders.py` and its routes, the sidebar folder UI | keep |
+| The person's folders, `src/aj_crew/dashboard/chat_folders.py` and its routes, the sidebar folder UI | keep |
 | Mate home folders that already exist | unchanged: mate-owned and locked, released to the person when the mate is deleted, as today |
 
 [rfc-conductor-folder-scope.md](rfc-conductor-folder-scope.md) (`draft`) bounds where an agent on the person's store may create sessions and folders; crew members were never in its scope. This RFC does not supersede it. After PR 7 its remaining population is ordinary agent tabs, and a conductor outside a Crew Mode tree that still passes `folder=`. That document is not edited here.
@@ -252,5 +252,5 @@ The mate `session_close` grant and close rule are not in this list; the sibling 
 
 1. **Flag.** A new preview flag for mate workers, or ride the existing Crew Mode flag (`PREVIEW_CREW_MODE`, default off)? A new flag lets mates ship without Crew Mode.
 2. **Where the status view lives.** Only the mate Profile card's Sessions tab, or also a right-side panel next to the mate chat, like the Crew tab?
-3. **Who decides mate worker approvals.** The person in the mate chat (proposed), or the mate itself, as the Crew Mode approval-routing plan does (`APPROVAL_ROUTING_LIVE` in `src/kiro_crew/crew_mode.py`, still `False`)? Letting the mate decide takes the person out of the approval loop for sessions they no longer see, so it needs its own security review.
+3. **Who decides mate worker approvals.** The person in the mate chat (proposed), or the mate itself, as the Crew Mode approval-routing plan does (`APPROVAL_ROUTING_LIVE` in `src/aj_crew/crew_mode.py`, still `False`)? Letting the mate decide takes the person out of the approval loop for sessions they no longer see, so it needs its own security review.
 4. **Conductor closes.** Keep the approval prompt on each conductor `session_close` (today), or auto-approve it for conductors that are ownership-fenced, as the sibling PR does for mates?

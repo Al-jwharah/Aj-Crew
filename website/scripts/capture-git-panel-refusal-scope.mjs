@@ -49,17 +49,17 @@ mkdirSync(OUT, { recursive: true })
 
 /** The shipped English copy, so a frame cannot disagree with the catalog. */
 const COPY = {
-  titleBoth: "Kiro can't show changes or history for this repository",
-  titleChanges: "Kiro can't show changes for this repository",
-  titleHistory: "Kiro can't show history for this repository",
-  titleBothNow: "Kiro can't show changes or history right now",
-  titleChangesNow: "Kiro can't show changes right now",
-  titleHistoryNow: "Kiro can't show history right now",
+  titleBoth: "Aj can't show changes or history for this repository",
+  titleChanges: "Aj can't show changes for this repository",
+  titleHistory: "Aj can't show history for this repository",
+  titleBothNow: "Aj can't show changes or history right now",
+  titleChangesNow: "Aj can't show changes right now",
+  titleHistoryNow: "Aj can't show history right now",
   declared: 'Git LFS or another conversion program is set up',
   // The cause sentence, not the retry cue: the cue is deliberately NOT in
   // the shared body, because two of its three surfaces have no refresh
   // control. What tells the two causes apart is the cause itself.
-  unreadable: "Kiro couldn't read this repository's Git config.",
+  unreadable: "Aj couldn't read this repository's Git config.",
   retryCue: 'Refresh to try again.',
   separate: 'A separate problem',
   askChanges: 'Ask the agent about the changes',
@@ -72,7 +72,7 @@ const slots = [{
   running: false,
   last_message: 'A refusal now names the half it is reporting on.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

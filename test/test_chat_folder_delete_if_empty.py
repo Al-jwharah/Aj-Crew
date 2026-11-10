@@ -13,7 +13,7 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_folder_app, _make_state
 
-from kiro_crew.dashboard import chat_folders
+from aj_crew.dashboard import chat_folders
 
 #: The agent session the folders below are created and deleted by.
 AGENT = "conductor"
@@ -28,7 +28,7 @@ def _agent(state: Any, slot: str = AGENT) -> dict[str, str]:
     state.get_or_create_slot(slot)
     return {
         "X-Internal-Secret": "s3cret",
-        "X-Internal-Caller": "kirocrew-dashboard",
+        "X-Internal-Caller": "ajcrew-dashboard",
         "X-Session-Key": f"dashboard:{slot}",
     }
 
@@ -59,7 +59,7 @@ def _ids(state: Any) -> set[str]:
 class TestIfEmptyDelete:
     @pytest.mark.asyncio
     async def test_an_empty_folder_is_deleted(self, tmp_path, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         async with TestClient(TestServer(_make_folder_app(state))) as client:
             folder = await _create(client, state, "Empty")
@@ -69,7 +69,7 @@ class TestIfEmptyDelete:
 
     @pytest.mark.asyncio
     async def test_a_live_session_keeps_the_folder(self, tmp_path, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         async with TestClient(TestServer(_make_folder_app(state))) as client:
             folder = await _create(client, state, "Work")
@@ -84,7 +84,7 @@ class TestIfEmptyDelete:
 
     @pytest.mark.asyncio
     async def test_a_subfolder_keeps_the_folder(self, tmp_path, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         async with TestClient(TestServer(_make_folder_app(state))) as client:
             parent = await _create(client, state, "Parent")
@@ -97,7 +97,7 @@ class TestIfEmptyDelete:
 
     @pytest.mark.asyncio
     async def test_an_archived_session_keeps_the_folder(self, tmp_path, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         async with TestClient(TestServer(_make_folder_app(state))) as client:
             folder = await _create(client, state, "Old")
@@ -120,7 +120,7 @@ class TestIfEmptyDelete:
         A pre-check before that await would pass here, and the delete would
         then unfile the session that landed.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         async with TestClient(TestServer(_make_folder_app(state))) as client:
             folder = await _create(client, state, "Racy")
@@ -140,7 +140,7 @@ class TestIfEmptyDelete:
 
     @pytest.mark.asyncio
     async def test_a_folder_gone_before_the_lock_is_not_found(self, tmp_path, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         async with TestClient(TestServer(_make_folder_app(state))) as client:
             folder = await _create(client, state, "Vanishing")
@@ -158,7 +158,7 @@ class TestIfEmptyDelete:
         self, tmp_path, monkeypatch
     ) -> None:
         """The person's own sidebar delete keeps unfiling, as it always did."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         async with TestClient(TestServer(_make_folder_app(state))) as client:
             folder = await _create(client, state, "Full")
@@ -183,7 +183,7 @@ class TestOnlyTheCreatingAgentsUntouchedFolder:
 
     @pytest.fixture
     def state(self, tmp_path, monkeypatch) -> Any:
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         return _make_state(tmp_path)
 
     async def _refused(self, client: TestClient, state: Any, fid: str, slot: str = AGENT) -> None:

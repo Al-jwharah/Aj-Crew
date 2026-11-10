@@ -837,7 +837,7 @@ export default function MembersPage() {
           otherwise crush the flex-1 thread to zero at narrow widths.
           The card, header line, list body and rows are the Sessions sidebar's
           own recipes (components/listShell) so the two conversation lists read
-          as one surface — including the kiro-light shell hook that steps the
+          as one surface — including the aj-light shell hook that steps the
           card back from the white canvas. */}
       {placeRoster(<MembersPageRosterColumn
         rosterRead={rosterRead} teamsRead={teamsRead} layout={layout} drawers={drawers}

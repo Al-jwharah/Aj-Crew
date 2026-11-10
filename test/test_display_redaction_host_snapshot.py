@@ -15,9 +15,9 @@ from collections.abc import Iterator
 
 import pytest
 
-import kiro_crew.dashboard.chat_utils as chat_utils
-from kiro_crew.dashboard.display_battery import display_battery
-from kiro_crew.security import exfil
+import aj_crew.dashboard.chat_utils as chat_utils
+from aj_crew.dashboard.display_battery import display_battery
+from aj_crew.security import exfil
 
 TENANT = "docs.contoso.sharepoint.com"
 # A long query trips the query-length rule on every host that is not exempt and

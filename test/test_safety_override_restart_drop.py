@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 from conftest import requires_symlinks
-from kiro_crew import safety_override as so
+from aj_crew import safety_override as so
 
 
 @pytest.fixture(autouse=True)
@@ -416,8 +416,8 @@ class TestOneRecordPerHomeIsSafe:
     """
 
     def test_the_record_sits_in_the_directory_the_gateway_lock_guards(self) -> None:
-        from kiro_crew import gateway_lock
-        from kiro_crew.config.loader import config_dir
+        from aj_crew import gateway_lock
+        from aj_crew.config.loader import config_dir
 
         # Built from the module constant rather than from ``_breadcrumb_path()``,
         # which the autouse fixture redirects into tmp_path -- asserting on the
@@ -431,7 +431,7 @@ class TestOneRecordPerHomeIsSafe:
     def test_a_second_gateway_on_the_same_home_is_refused(self, tmp_path: Path) -> None:
         # The invariant itself, exercised rather than asserted from the docstring:
         # the second acquire raises instead of proceeding alongside the first.
-        from kiro_crew.gateway_lock import GatewayLock, GatewayLockError
+        from aj_crew.gateway_lock import GatewayLock, GatewayLockError
 
         first = GatewayLock(tmp_path).acquire()
         try:

@@ -180,7 +180,7 @@ export default function ShareMessageModal({ onClose, messageText, prevUserText, 
   const handleDownload = async () => {
     setBusy('download'); setFeedback(null); setExportError(null)
     try {
-      await saveBlob(await exportBlob(), `kiro-crew-share-${Date.now()}.png`)
+      await saveBlob(await exportBlob(), `aj-crew-share-${Date.now()}.png`)
     } catch {
       setExportError(i18nT('pages.chat.share.export_failed'))
     } finally { setBusy(null) }
@@ -195,7 +195,7 @@ export default function ShareMessageModal({ onClose, messageText, prevUserText, 
       } else {
         // No clipboard (Firefox, permissions): the image still reaches the
         // user as a download rather than the button silently doing nothing.
-        await saveBlob(blob, `kiro-crew-share-${Date.now()}.png`)
+        await saveBlob(blob, `aj-crew-share-${Date.now()}.png`)
         setFeedback('copy_unavailable')
       }
     } catch {
@@ -221,7 +221,7 @@ export default function ShareMessageModal({ onClose, messageText, prevUserText, 
       if (await copyImageWithText(blob, caption)) {
         setFeedback('copied')
       } else {
-        await saveBlob(blob, `kiro-crew-share-${Date.now()}.png`)
+        await saveBlob(blob, `aj-crew-share-${Date.now()}.png`)
         setFeedback('copy_unavailable')
       }
     } catch {

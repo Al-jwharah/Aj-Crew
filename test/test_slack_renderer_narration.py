@@ -10,15 +10,15 @@ import asyncio
 
 from test_slack_renderer import _Provider, _RecSlack
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
     EVENT_TOOL_RESULT,
     AcpEvent,
 )
-from kiro_crew.messaging import TurnDriver
-from kiro_crew.slack.renderer import _STATUS_WORKING, SlackRenderer
+from aj_crew.messaging import TurnDriver
+from aj_crew.slack.renderer import _STATUS_WORKING, SlackRenderer
 
 
 class TestNarrationFoldsIntoSteps:
@@ -192,7 +192,7 @@ class TestNarrationFoldsIntoSteps:
         assert updates and updates[-1].strip() == "I will wait for CI to finish.", rec.calls
 
     def test_an_unfinished_turn_ending_on_a_tool_keeps_its_last_text(self):
-        from kiro_crew.messaging.empty_turn_copy import UNFINISHED_TURN_NOTICE
+        from aj_crew.messaging.empty_turn_copy import UNFINISHED_TURN_NOTICE
 
         _, streamed, _ = self._run(
             [
@@ -358,7 +358,7 @@ class TestNarrationImages:
     def test_narration_and_reply_images_share_one_message_budget(self, tmp_path):
         # Six images in the narration and six in the answer: one reply, so one
         # budget of SLACK_MAX_UPLOAD_FILES; the rest are refused with a note.
-        from kiro_crew.slack.files import SLACK_MAX_UPLOAD_FILES
+        from aj_crew.slack.files import SLACK_MAX_UPLOAD_FILES
 
         png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
         refs = []

@@ -1,4 +1,4 @@
-"""``KiroCrewConfig.save()`` holds the sidecar advisory lock.
+"""``AjCrewConfig.save()`` holds the sidecar advisory lock.
 
 Unlocked, its rename could land inside an ``update_config_locked`` read-modify-write
 and drop the other change. Pinned in two halves:
@@ -22,9 +22,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.config import loader as loader_module
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew import platform_compat
+from aj_crew.config import loader as loader_module
+from aj_crew.config.loader import AjCrewConfig
 
 
 def _write_config(directory: Path, data: dict) -> Path:
@@ -57,7 +57,7 @@ class TestSaveHoldsTheAdvisoryLock:
         participates in that lock", with no second writer's semantics mixed in.
         """
         _write_config(cfg_home, {"agent": {"log_level": "INFO"}})
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
 
         lock_fd = os.open(str(cfg_home / "config.json.lock"), os.O_RDWR | os.O_CREAT, 0o600)
         saver = threading.Thread(target=cfg.save, daemon=True)
@@ -86,7 +86,7 @@ class TestSaveHoldsTheAdvisoryLock:
         ``save()`` is paused between building its document and the rename.
         """
         _write_config(cfg_home, {"agent": {"log_level": "INFO"}})
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.log_level = "DEBUG"  # save()'s own change, must survive
 
         entered = threading.Event()
@@ -158,7 +158,7 @@ class TestSaveRefusesASnapshotOfAnUnreadableFile:
     def test_a_degraded_whole_load_is_refused_and_the_file_kept(self, cfg_home, raw):
         path = cfg_home / "config.json"
         path.write_bytes(raw)
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert "*config.json" in cfg.degraded_sections, "the load did not degrade"
         with pytest.raises(loader_module.ConfigReadError):
             cfg.save()
@@ -167,21 +167,21 @@ class TestSaveRefusesASnapshotOfAnUnreadableFile:
     def test_the_create_when_absent_callers_still_write(self, cfg_home):
         """The gateway's boot default and ``config edit`` save a FRESH instance,
         which carries no degradation, so they are unaffected."""
-        KiroCrewConfig().save()
+        AjCrewConfig().save()
         assert "agent" in _read_config(cfg_home)
 
     def test_a_degraded_instance_may_create_a_file_that_is_gone(self, cfg_home):
         """Nothing to clobber: the refusal is about an EXISTING file."""
         path = cfg_home / "config.json"
         path.write_text("{", encoding="utf-8")
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         path.unlink()
         cfg.save()
         assert path.is_file()
 
     def test_a_healthy_load_still_saves(self, cfg_home):
         _write_config(cfg_home, {"timezone": "Asia/Shanghai"})
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agent.log_level = "DEBUG"
         cfg.save()
         saved = _read_config(cfg_home)
@@ -198,7 +198,7 @@ class TestSidecarLifecycle:
 
     def test_save_leaves_only_the_shared_sidecar(self, cfg_home):
         _write_config(cfg_home, {"agent": {}})
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.save()
         after_save = {p.name for p in cfg_home.iterdir()}
         assert after_save == {
@@ -228,7 +228,7 @@ class TestSidecarLifecycle:
             pytest.skip("symlinks unavailable on this platform/runner")
         monkeypatch.setattr(loader_module, "config_dir", lambda: home)
 
-        KiroCrewConfig().save()
+        AjCrewConfig().save()
 
         assert (elsewhere / "real-config.json.lock").exists(), (
             "the sidecar must land beside the resolved target, where "
@@ -255,7 +255,7 @@ class TestAsyncCallersOffload:
         the persist -- a delta RMW through update_config_locked, whose flock
         wait blocks its thread -- must run in a worker, never inline on the
         loop, and must write only the key this endpoint owns."""
-        from kiro_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers import updates
 
         seen: dict[str, object] = {}
 
@@ -284,28 +284,28 @@ class TestAsyncCallersOffload:
 
 
 class TestNoInlineSaveOnTheEventLoop:
-    """Structural ratchet over ``src/kiro_crew``: no coroutine calls
-    ``KiroCrewConfig.save()`` inline.
+    """Structural ratchet over ``src/aj_crew``: no coroutine calls
+    ``AjCrewConfig.save()`` inline.
 
     A contended ``flock`` in ``save()`` would block the event loop. Allowed:
     ``await run_config_write(...)`` or ``await asyncio.to_thread(...)``, with ``.save``
     passed as a reference.
 
     Inside every ``async def``, ``X.save()`` offends when ``X`` is bound from
-    ``KiroCrewConfig(...)`` / ``KiroCrewConfig.load(...)`` in the same function or
+    ``AjCrewConfig(...)`` / ``AjCrewConfig.load(...)`` in the same function or
     chained on one. Nested sync functions are skipped: they are what gets offloaded.
     """
 
     @staticmethod
-    def _is_kirocrew_config_source(node: ast.AST) -> bool:
-        """True for ``KiroCrewConfig(...)`` and ``KiroCrewConfig.load(...)``."""
+    def _is_ajcrew_config_source(node: ast.AST) -> bool:
+        """True for ``AjCrewConfig(...)`` and ``AjCrewConfig.load(...)``."""
         if not isinstance(node, ast.Call):
             return False
         func = node.func
         if isinstance(func, ast.Name):
-            return func.id == "KiroCrewConfig"
+            return func.id == "AjCrewConfig"
         if isinstance(func, ast.Attribute) and func.attr == "load":
-            return isinstance(func.value, ast.Name) and func.value.id == "KiroCrewConfig"
+            return isinstance(func.value, ast.Name) and func.value.id == "AjCrewConfig"
         return False
 
     @classmethod
@@ -315,7 +315,7 @@ class TestNoInlineSaveOnTheEventLoop:
         for func in async_funcs:
             config_names: set[str] = set()
             for node in ast.walk(func):
-                if isinstance(node, ast.Assign) and cls._is_kirocrew_config_source(node.value):
+                if isinstance(node, ast.Assign) and cls._is_ajcrew_config_source(node.value):
                     for tgt in node.targets:
                         if isinstance(tgt, ast.Name):
                             config_names.add(tgt.id)
@@ -328,7 +328,7 @@ class TestNoInlineSaveOnTheEventLoop:
                     continue
                 recv = f.value
                 hit = (isinstance(recv, ast.Name) and recv.id in config_names) or (
-                    cls._is_kirocrew_config_source(recv)
+                    cls._is_ajcrew_config_source(recv)
                 )
                 if hit:
                     offenders.append(f"{filename}:{node.lineno} ({func.name})")
@@ -346,13 +346,13 @@ class TestNoInlineSaveOnTheEventLoop:
             stack.extend(ast.iter_child_nodes(node))
 
     def test_no_coroutine_calls_save_inline(self):
-        root = pathlib.Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+        root = pathlib.Path(__file__).resolve().parents[1] / "src" / "aj_crew"
         offenders: list[str] = []
         for path in root.rglob("*.py"):
             if "_vendor" in path.parts:
                 continue
             src = path.read_text(encoding="utf-8", errors="replace")
-            if ".save()" not in src or "KiroCrewConfig" not in src:
+            if ".save()" not in src or "AjCrewConfig" not in src:
                 continue
             try:
                 tree = ast.parse(src)
@@ -360,7 +360,7 @@ class TestNoInlineSaveOnTheEventLoop:
                 continue
             offenders.extend(self._offenders_in(tree, path.name))
         assert not offenders, (
-            "KiroCrewConfig.save() holds the sidecar advisory flock (#4767); a "
+            "AjCrewConfig.save() holds the sidecar advisory flock (#4767); a "
             "coroutine must never call it inline on the event loop. Offload via "
             "dashboard/chat_utils.run_config_write (preferred) or "
             "asyncio.to_thread when the asyncio config lock is already held.\n  "
@@ -372,19 +372,19 @@ class TestNoInlineSaveOnTheEventLoop:
         the two sanctioned shapes are not."""
         source = (
             "async def offender_via_binding():\n"
-            "    cfg = KiroCrewConfig.load()\n"
+            "    cfg = AjCrewConfig.load()\n"
             "    cfg.save()\n"
             "\n"
             "async def offender_chained():\n"
-            "    KiroCrewConfig().save()\n"
+            "    AjCrewConfig().save()\n"
             "\n"
             "async def sanctioned_to_thread():\n"
-            "    cfg = KiroCrewConfig.load()\n"
+            "    cfg = AjCrewConfig.load()\n"
             "    await asyncio.to_thread(cfg.save)\n"
             "\n"
             "async def sanctioned_nested_worker():\n"
             "    def _persist():\n"
-            "        cfg = KiroCrewConfig.load()\n"
+            "        cfg = AjCrewConfig.load()\n"
             "        cfg.save()\n"
             "    await run_config_write(_persist)\n"
         )
@@ -394,14 +394,14 @@ class TestNoInlineSaveOnTheEventLoop:
 
 
 class TestNoDashboardModuleSavesTheWholeConfig:
-    """Structural ratchet over ``src/kiro_crew/dashboard``: no ``KiroCrewConfig.save``.
+    """Structural ratchet over ``src/aj_crew/dashboard``: no ``AjCrewConfig.save``.
 
     ``save()`` publishes the loaded snapshot, which may be defaults or stale, so even
     an offloaded save resets settings. Dashboard writes are deltas through
     ``update_config_locked`` (via ``run_config_write``).
 
     Matches a reference as well as a call, in sync and async functions, including a
-    config bound from ``await asyncio.to_thread(KiroCrewConfig.load)``. Baseline: empty.
+    config bound from ``await asyncio.to_thread(AjCrewConfig.load)``. Baseline: empty.
     """
 
     @staticmethod
@@ -410,22 +410,22 @@ class TestNoDashboardModuleSavesTheWholeConfig:
             isinstance(node, ast.Attribute)
             and node.attr == "load"
             and isinstance(node.value, ast.Name)
-            and node.value.id == "KiroCrewConfig"
+            and node.value.id == "AjCrewConfig"
         )
 
     @classmethod
-    def _names_kirocrew_config(cls, node: ast.AST) -> bool:
-        """True for an expression that yields a ``KiroCrewConfig`` instance."""
+    def _names_ajcrew_config(cls, node: ast.AST) -> bool:
+        """True for an expression that yields a ``AjCrewConfig`` instance."""
         if isinstance(node, ast.Await):
             node = node.value
         if not isinstance(node, ast.Call):
             return False
         func = node.func
-        if isinstance(func, ast.Name) and func.id == "KiroCrewConfig":
+        if isinstance(func, ast.Name) and func.id == "AjCrewConfig":
             return True
         if cls._is_loader_reference(func):
             return True
-        # ``asyncio.to_thread(KiroCrewConfig.load)`` and friends: an offloader
+        # ``asyncio.to_thread(AjCrewConfig.load)`` and friends: an offloader
         # handed the loader itself.
         return any(cls._is_loader_reference(arg) for arg in node.args)
 
@@ -436,7 +436,7 @@ class TestNoDashboardModuleSavesTheWholeConfig:
             n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
         ]
         for func in funcs:
-            config_names: set[str] = {"KiroCrewConfig"}
+            config_names: set[str] = {"AjCrewConfig"}
             for node in ast.walk(func):
                 if isinstance(node, ast.Assign):
                     targets = node.targets
@@ -444,7 +444,7 @@ class TestNoDashboardModuleSavesTheWholeConfig:
                     targets = [node.target]
                 else:
                     continue
-                if cls._names_kirocrew_config(node.value):
+                if cls._names_ajcrew_config(node.value):
                     config_names.update(t.id for t in targets if isinstance(t, ast.Name))
             for node in ast.walk(func):
                 if not (isinstance(node, ast.Attribute) and node.attr == "save"):
@@ -452,20 +452,20 @@ class TestNoDashboardModuleSavesTheWholeConfig:
                 recv = node.value
                 if (
                     isinstance(recv, ast.Name) and recv.id in config_names
-                ) or cls._names_kirocrew_config(recv):
+                ) or cls._names_ajcrew_config(recv):
                     offenders.append(f"{filename}:{node.lineno} ({func.name})")
         return offenders
 
     def test_no_dashboard_module_saves_the_whole_config(self):
-        root = pathlib.Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard"
+        root = pathlib.Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard"
         offenders: list[str] = []
         for path in root.rglob("*.py"):
             src = path.read_text(encoding="utf-8", errors="replace")
-            if "KiroCrewConfig" not in src or ".save" not in src:
+            if "AjCrewConfig" not in src or ".save" not in src:
                 continue
             offenders.extend(self._offenders_in(ast.parse(src), path.name))
         assert not offenders, (
-            "A dashboard writer must not publish a whole KiroCrewConfig snapshot: "
+            "A dashboard writer must not publish a whole AjCrewConfig snapshot: "
             "a load that could not read config.json is defaults, and saving it "
             "erases every setting. Write the keys you own through "
             "run_config_write(update_config_locked, config_path(), mutate=...).\n  "
@@ -477,22 +477,22 @@ class TestNoDashboardModuleSavesTheWholeConfig:
         and a non-config ``.save`` is not."""
         source = (
             "async def offloaded_reference():\n"
-            "    cfg = await asyncio.to_thread(KiroCrewConfig.load)\n"
+            "    cfg = await asyncio.to_thread(AjCrewConfig.load)\n"
             "    await asyncio.to_thread(cfg.save)\n"
             "\n"
             "def sync_call():\n"
-            "    cfg = KiroCrewConfig.load()\n"
+            "    cfg = AjCrewConfig.load()\n"
             "    cfg.save()\n"
             "\n"
             "async def annotated():\n"
-            "    cfg: KiroCrewConfig = KiroCrewConfig()\n"
+            "    cfg: AjCrewConfig = AjCrewConfig()\n"
             "    await run_config_write(cfg.save)\n"
             "\n"
             "def chained():\n"
-            "    KiroCrewConfig.load().save()\n"
+            "    AjCrewConfig.load().save()\n"
             "\n"
             "def unbound():\n"
-            "    KiroCrewConfig.save(obj)\n"
+            "    AjCrewConfig.save(obj)\n"
             "\n"
             "async def unrelated_store():\n"
             "    await asyncio.to_thread(store.save, fresh)\n"

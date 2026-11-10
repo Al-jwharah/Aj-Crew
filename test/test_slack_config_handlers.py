@@ -9,9 +9,9 @@ from pathlib import Path
 
 from aiohttp.test_utils import make_mocked_request
 
-import kiro_crew.config.loader as loader
-from kiro_crew.dashboard.handlers.messaging import _mask_secret, _write_env_updates
-from kiro_crew.secrets import SecretVault
+import aj_crew.config.loader as loader
+from aj_crew.dashboard.handlers.messaging import _mask_secret, _write_env_updates
+from aj_crew.secrets import SecretVault
 
 
 def _vault_value(env: Path, key: str) -> str | None:
@@ -64,7 +64,7 @@ def test_write_env_updates_deletes_on_none(tmp_path: Path, monkeypatch) -> None:
 
 def _set_windows(monkeypatch, windows: bool) -> None:
     """Model the platform's os.environ case rule (``_env_name_key`` reads it live)."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", windows, raising=False)
 
@@ -145,14 +145,14 @@ def test_write_env_updates_handles_missing_file(tmp_path: Path, monkeypatch) -> 
     env = tmp_path / "sub" / ".env"  # parent dir does not exist yet
     monkeypatch.setattr(loader, "env_path", lambda: env)
 
-    _write_env_updates({"KIROCREW_OWNER_ID": "U0123ABC456"})
+    _write_env_updates({"AJCREW_OWNER_ID": "U0123ABC456"})
 
-    assert env.read_text(encoding="utf-8").strip() == "KIROCREW_OWNER_ID=U0123ABC456"
+    assert env.read_text(encoding="utf-8").strip() == "AJCREW_OWNER_ID=U0123ABC456"
 
 
 def test_save_denies_non_loopback(monkeypatch) -> None:
     """Config writes are loopback-only: remote sessions are read-only."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     monkeypatch.setattr(mod, "is_direct_local_request", lambda req: False)
     req = make_mocked_request(
@@ -197,7 +197,7 @@ class _StubRequest:
 
 
 def test_direct_local_requires_loopback_and_no_forward_headers() -> None:
-    from kiro_crew.dashboard.origin import is_direct_local_request
+    from aj_crew.dashboard.origin import is_direct_local_request
 
     # Genuine local: loopback peer, no proxy headers.
     assert is_direct_local_request(_StubRequest("127.0.0.1"))
@@ -209,7 +209,7 @@ def test_direct_local_requires_loopback_and_no_forward_headers() -> None:
 def test_forwarded_loopback_request_is_not_direct_local() -> None:
     """A proxied/tunneled request arrives FROM a real loopback peer but must
     be treated as remote: any standard forwarding header flips the gate."""
-    from kiro_crew.dashboard.origin import is_direct_local_request
+    from aj_crew.dashboard.origin import is_direct_local_request
 
     headers = ("Forwarded", "X-Forwarded-For", "X-Forwarded-Host", "X-Forwarded-Proto", "X-Real-IP")
     for header in headers:
@@ -220,7 +220,7 @@ def test_forwarded_loopback_request_is_not_direct_local() -> None:
 def test_save_denies_forwarded_loopback_request() -> None:
     """End-to-end: a reverse-proxied request (loopback peer + XFF) cannot
     write config or plant tokens — 403 before any parsing."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     req = make_mocked_request(
         "PUT",
@@ -245,7 +245,7 @@ def test_save_syncs_process_environ(tmp_path: Path, monkeypatch) -> None:
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     env = tmp_path / ".env"
     env.write_text("SLACK_BOT_TOKEN=xoxb-OLD\n", encoding="utf-8")
@@ -259,7 +259,7 @@ def test_save_syncs_process_environ(tmp_path: Path, monkeypatch) -> None:
 
     monkeypatch.setattr(mod, "_validate_slack_token", _accept)
     monkeypatch.setenv("SLACK_BOT_TOKEN", "xoxb-OLD")
-    monkeypatch.setenv("KIROCREW_OWNER_ID", "U0123ABC456")
+    monkeypatch.setenv("AJCREW_OWNER_ID", "U0123ABC456")
 
     async def _run() -> int:
         app = web.Application()
@@ -273,10 +273,10 @@ def test_save_syncs_process_environ(tmp_path: Path, monkeypatch) -> None:
     assert asyncio.run(_run()) == 200
     # Replaced in-process with the value the .env line now holds.
     assert os.environ["SLACK_BOT_TOKEN"] == "secret://SLACK_BOT_TOKEN"
-    assert "KIROCREW_OWNER_ID" not in os.environ  # cleared key removed
+    assert "AJCREW_OWNER_ID" not in os.environ  # cleared key removed
     assert "SLACK_BOT_TOKEN=secret://SLACK_BOT_TOKEN" in env.read_text(encoding="utf-8")
     assert _vault_value(env, "SLACK_BOT_TOKEN") == "xoxb-NEW"
-    assert loader.KiroCrewConfig().load_credentials()["SLACK_BOT_TOKEN"] == "xoxb-NEW"
+    assert loader.AjCrewConfig().load_credentials()["SLACK_BOT_TOKEN"] == "xoxb-NEW"
 
 
 def _client_put(mod, monkeypatch, tmp_path, body):
@@ -303,7 +303,7 @@ def _client_put(mod, monkeypatch, tmp_path, body):
 
 def test_save_rejects_token_slack_refuses(tmp_path, monkeypatch) -> None:
     """A token Slack rejects (invalid_auth) fails the save; nothing written."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     async def _reject(key, token):
         return "invalid_auth"
@@ -318,7 +318,7 @@ def test_save_rejects_token_slack_refuses(tmp_path, monkeypatch) -> None:
 
 def test_save_proceeds_with_warning_when_slack_unreachable(tmp_path, monkeypatch) -> None:
     """Being offline must not block a save — token stored, warning returned."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     async def _unreachable(key, token):
         raise ConnectionError("no route to slack.com")
@@ -335,25 +335,25 @@ def test_save_proceeds_with_warning_when_slack_unreachable(tmp_path, monkeypatch
 def test_manifest_endpoint_renders_alias_and_url(monkeypatch) -> None:
     """Manifest endpoint uses a non-identifying default alias (never $USER)
     and builds Slack's deep link; explicit ?alias= is honored."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     monkeypatch.setenv("USER", "hostaccount")
     req = make_mocked_request("GET", "/api/slack/manifest")
     resp = asyncio.run(mod.api_slack_manifest(req))
     assert resp.status == 200
     body = json.loads(resp.text)
-    assert body["alias"] == "kirocrew"  # $USER must NOT leak as the default
+    assert body["alias"] == "ajcrew"  # $USER must NOT leak as the default
     assert "hostaccount" not in body["manifest"]
     assert body["create_url"].startswith("https://api.slack.com/apps?new_app=1&manifest_yaml=")
 
     req = make_mocked_request("GET", "/api/slack/manifest?alias=myteam")
     body = json.loads(asyncio.run(mod.api_slack_manifest(req)).text)
     assert body["alias"] == "myteam"
-    assert "KiroCrew-myteam" in body["manifest"]
+    assert "AjCrew-myteam" in body["manifest"]
 
 
 def test_manifest_endpoint_rejects_bad_alias() -> None:
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     req = make_mocked_request("GET", "/api/slack/manifest?alias=../evil")
     resp = asyncio.run(mod.api_slack_manifest(req))
@@ -362,7 +362,7 @@ def test_manifest_endpoint_rejects_bad_alias() -> None:
 
 def test_clear_flags_must_be_strict_booleans(tmp_path, monkeypatch) -> None:
     """Truthy non-bool clear flags (e.g. "false", 1) must not delete tokens."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     env = tmp_path / ".env"
     env.write_text("SLACK_BOT_TOKEN=xoxb-KEEP\n", encoding="utf-8")
@@ -390,16 +390,16 @@ def test_clear_flags_must_be_strict_booleans(tmp_path, monkeypatch) -> None:
 def test_restart_required_only_on_actual_change(tmp_path, monkeypatch) -> None:
     """The UI sends every field on save; unchanged boot-read fields and an
     unchanged owner must NOT flag restart_required (it was always-True)."""
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     env = tmp_path / ".env"
     env.write_text("", encoding="utf-8")
     cfg = tmp_path / "config.json"
-    cfg.write_text('{"slack": {"command": "kirocrew"}}', encoding="utf-8")
+    cfg.write_text('{"slack": {"command": "ajcrew"}}', encoding="utf-8")
     monkeypatch.setattr(loader, "env_path", lambda: env)
     monkeypatch.setattr(loader, "config_path", lambda: cfg)
     monkeypatch.setattr(mod, "is_direct_local_request", lambda req: True)
-    monkeypatch.delenv("KIROCREW_OWNER_ID", raising=False)
+    monkeypatch.delenv("AJCREW_OWNER_ID", raising=False)
 
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
@@ -412,7 +412,7 @@ def test_restart_required_only_on_actual_change(tmp_path, monkeypatch) -> None:
             return await resp.json()
 
     # Unchanged command + empty owner + live-applied toggle: no restart.
-    body = asyncio.run(_run({"command": "kirocrew", "owner_id": "", "reactions_enabled": True}))
+    body = asyncio.run(_run({"command": "ajcrew", "owner_id": "", "reactions_enabled": True}))
     assert body["restart_required"] is False
     # Changed command (boot-read): restart.
     body = asyncio.run(_run({"command": "myclaw"}))
@@ -427,8 +427,8 @@ def test_webex_held_env_lock_leaves_legacy_credential_intact(tmp_path, monkeypat
     import asyncio
     import json
 
-    import kiro_crew.config.loader as loader
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.config.loader as loader
+    import aj_crew.dashboard.handlers.messaging as mod
 
     env = tmp_path / ".env"
     env.write_text("WEBEX_BOT_TOKEN=old-env-token\n", encoding="utf-8")
@@ -486,8 +486,8 @@ def test_teams_held_env_lock_leaves_legacy_credential_intact(tmp_path, monkeypat
     import asyncio
     import json
 
-    import kiro_crew.config.loader as loader
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.config.loader as loader
+    import aj_crew.dashboard.handlers.messaging as mod
 
     env = tmp_path / ".env"
     env.write_text("MICROSOFT_APP_PASSWORD=old-pass\n", encoding="utf-8")
@@ -557,8 +557,8 @@ def test_teams_config_json_write_failure_leaves_consistent_pair(tmp_path, monkey
     """
     import json
 
-    import kiro_crew.config.loader as loader
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.config.loader as loader
+    import aj_crew.dashboard.handlers.messaging as mod
 
     env = tmp_path / ".env"
     env.write_text("MICROSOFT_APP_PASSWORD=old-pass\n", encoding="utf-8")
@@ -655,8 +655,8 @@ def test_teams_config_write_failure_preserves_process_only_credential(
     """
     import json
 
-    import kiro_crew.config.loader as loader
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.config.loader as loader
+    import aj_crew.dashboard.handlers.messaging as mod
 
     # .env has NO password entry — credential exists only in os.environ.
     env = tmp_path / ".env"
@@ -732,8 +732,8 @@ def test_teams_legacy_config_only_password_preserved_on_metadata_only_save(
     import asyncio
     import json
 
-    import kiro_crew.config.loader as loader
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.config.loader as loader
+    import aj_crew.dashboard.handlers.messaging as mod
 
     env = tmp_path / ".env"
     env.write_text("", encoding="utf-8")  # no MICROSOFT_APP_PASSWORD in .env
@@ -820,8 +820,8 @@ def test_teams_cancellation_after_successful_env_write_does_not_rollback_config(
     import asyncio
     import json
 
-    import kiro_crew.config.loader as loader
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.config.loader as loader
+    import aj_crew.dashboard.handlers.messaging as mod
 
     env = tmp_path / ".env"
     env.write_text("MICROSOFT_APP_PASSWORD=old-pass\n", encoding="utf-8")
@@ -906,7 +906,7 @@ def test_slack_cancellation_after_successful_env_write_does_not_rollback_config(
     """
     import json
 
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     env = tmp_path / ".env"
     env.write_text("SLACK_BOT_TOKEN=xoxb-OLD\n", encoding="utf-8")

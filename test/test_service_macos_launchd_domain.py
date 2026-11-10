@@ -14,9 +14,9 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.service import controller
-from kiro_crew.service import macos as svc_macos
-from kiro_crew.service.common import LAUNCHD_LABEL, Platform
+from aj_crew.service import controller
+from aj_crew.service import macos as svc_macos
+from aj_crew.service.common import LAUNCHD_LABEL, Platform
 
 UID = 501
 GUI = f"gui/{UID}"
@@ -129,14 +129,14 @@ def mac(tmp_path, monkeypatch):
     monkeypatch.setattr(svc_macos, "STDOUT_LOG", log_dir / "gateway.log")
     monkeypatch.setattr(svc_macos, "STDERR_LOG", log_dir / "gateway.err")
     monkeypatch.setattr(svc_macos, "LIVE_PROGRAM", tmp_path / "gateway-live")
-    monkeypatch.setattr(svc_macos, "kirocrew_bin", lambda: "/opt/homebrew/bin/kirocrew")
+    monkeypatch.setattr(svc_macos, "ajcrew_bin", lambda: "/opt/homebrew/bin/ajcrew")
     monkeypatch.setattr(svc_macos.os, "getuid", lambda: UID, raising=False)
     monkeypatch.setattr(svc_macos, "_BOOTOUT_POLL_SECS", 0.0, raising=False)
     return svc_macos
 
 
 def _run(fake):
-    return patch("kiro_crew.service.macos.subprocess.run", side_effect=fake)
+    return patch("aj_crew.service.macos.subprocess.run", side_effect=fake)
 
 
 def _with_plist(mac) -> None:
@@ -158,14 +158,14 @@ def test_install_from_ssh_lands_where_restart_and_stop_address_it(mac):
     assert not any(c[1] in ("load", "unload") for c in fake.calls), fake.calls
 
 
-def test_kirocrew_stop_from_ssh_boots_out_the_gui_job(mac):
-    """`kirocrew stop` over SSH: the caller-domain `list` misses the gui/<uid>
+def test_ajcrew_stop_from_ssh_boots_out_the_gui_job(mac):
+    """`ajcrew stop` over SSH: the caller-domain `list` misses the gui/<uid>
     job, and stop_service must still boot it out rather than report nothing
     to stop (which would leave KeepAlive respawning a SIGTERMed gateway)."""
     fake = FakeLaunchctl(session=USER)
     with (
         _run(fake),
-        patch("kiro_crew.service.controller.current_platform", return_value=Platform.LAUNCHD),
+        patch("aj_crew.service.controller.current_platform", return_value=Platform.LAUNCHD),
     ):
         mac.install()
         assert mac.is_active() is False  # the caller-domain probe misses it
@@ -173,11 +173,11 @@ def test_kirocrew_stop_from_ssh_boots_out_the_gui_job(mac):
     assert fake.loaded == set()
 
 
-def test_kirocrew_stop_with_nothing_loaded_reports_no_stop(mac):
+def test_ajcrew_stop_with_nothing_loaded_reports_no_stop(mac):
     fake = FakeLaunchctl(session=USER)
     with (
         _run(fake),
-        patch("kiro_crew.service.controller.current_platform", return_value=Platform.LAUNCHD),
+        patch("aj_crew.service.controller.current_platform", return_value=Platform.LAUNCHD),
     ):
         mac.install()
         assert controller.stop_service() is True
@@ -185,8 +185,8 @@ def test_kirocrew_stop_with_nothing_loaded_reports_no_stop(mac):
 
 
 @pytest.mark.parametrize("desktop", [True, False], ids=["desktop", "no-desktop"])
-def test_kirocrew_restart_from_ssh_kickstarts_the_service_job(mac, desktop):
-    """`kirocrew restart` over SSH: the caller-domain `list` misses the job, and
+def test_ajcrew_restart_from_ssh_kickstarts_the_service_job(mac, desktop):
+    """`ajcrew restart` over SSH: the caller-domain `list` misses the job, and
     restart_service must still kickstart it rather than return an empty report
     (which sends the CLI to SIGTERM-by-port + a detached spawn beside the
     KeepAlive job)."""
@@ -194,7 +194,7 @@ def test_kirocrew_restart_from_ssh_kickstarts_the_service_job(mac, desktop):
     job = GUI if desktop else USER
     with (
         _run(fake),
-        patch("kiro_crew.service.controller.current_platform", return_value=Platform.LAUNCHD),
+        patch("aj_crew.service.controller.current_platform", return_value=Platform.LAUNCHD),
     ):
         mac.install()
         report = controller.restart_service()
@@ -202,12 +202,12 @@ def test_kirocrew_restart_from_ssh_kickstarts_the_service_job(mac, desktop):
     assert ["launchctl", "kickstart", "-k", f"{job}/{LAUNCHD_LABEL}"] in fake.calls
 
 
-def test_kirocrew_restart_with_nothing_loaded_leaves_it_to_the_foreground_path(mac):
+def test_ajcrew_restart_with_nothing_loaded_leaves_it_to_the_foreground_path(mac):
     fake = FakeLaunchctl(session=USER)
     _with_plist(mac)
     with (
         _run(fake),
-        patch("kiro_crew.service.controller.current_platform", return_value=Platform.LAUNCHD),
+        patch("aj_crew.service.controller.current_platform", return_value=Platform.LAUNCHD),
     ):
         report = controller.restart_service()
     assert not report and report.attempted is False
@@ -346,7 +346,7 @@ def test_uninstall_boots_out_by_domain_and_removes_the_plist(mac):
 @pytest.mark.parametrize("stopped", [True, False])
 def test_stop_service_propagates_the_launchd_answer(stopped):
     with (
-        patch("kiro_crew.service.controller.current_platform", return_value=Platform.LAUNCHD),
+        patch("aj_crew.service.controller.current_platform", return_value=Platform.LAUNCHD),
         patch.object(svc_macos, "stop", return_value=stopped),
     ):
         assert controller.stop_service() is stopped

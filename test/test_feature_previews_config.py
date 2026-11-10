@@ -16,9 +16,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.loader_builders import _feature_previews
-from kiro_crew.config.sections import FEATURE_PREVIEW_FLAGS
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.loader_builders import _feature_previews
+from aj_crew.config.sections import FEATURE_PREVIEW_FLAGS
 
 REPO = Path(__file__).resolve().parents[1]
 PREVIEW_FLAGS_TS = REPO / "website/src/utils/previewFlags.ts"
@@ -35,11 +35,11 @@ async def _owner_identity(request, handler):
 
 
 def _make_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import api_kirocrew_config_patch
+    from aj_crew.dashboard.handlers import api_ajcrew_config_patch
 
     app = web.Application(middlewares=[_owner_identity])
     app["state"] = MagicMock()
-    app.router.add_patch("/api/config/kirocrew", api_kirocrew_config_patch)
+    app.router.add_patch("/api/config/ajcrew", api_ajcrew_config_patch)
     return app
 
 
@@ -47,7 +47,7 @@ def _make_app() -> web.Application:
 def tmp_config(tmp_path):
     cfg_path = tmp_path / "config.json"
     cfg_path.write_text(json.dumps({"dashboard": {"folder_sort": "name"}}), encoding="utf-8")
-    with patch("kiro_crew.config.loader.config_path", return_value=cfg_path):
+    with patch("aj_crew.config.loader.config_path", return_value=cfg_path):
         yield cfg_path
 
 
@@ -70,7 +70,7 @@ def test_the_gateway_list_equals_the_dashboard_flags():
 
 
 def test_nothing_is_on_by_default():
-    assert KiroCrewConfig().dashboard.feature_previews == {}
+    assert AjCrewConfig().dashboard.feature_previews == {}
 
 
 @pytest.mark.parametrize(
@@ -93,8 +93,8 @@ def test_a_stored_switch_loads(tmp_config):
     tmp_config.write_text(
         json.dumps({"dashboard": {"feature_previews": {"crew_mode": True}}}), encoding="utf-8"
     )
-    assert KiroCrewConfig.load().dashboard.feature_previews == {"crew_mode": True}
-    assert KiroCrewConfig.load().to_dict()["dashboard"]["feature_previews"] == {"crew_mode": True}
+    assert AjCrewConfig.load().dashboard.feature_previews == {"crew_mode": True}
+    assert AjCrewConfig.load().to_dict()["dashboard"]["feature_previews"] == {"crew_mode": True}
 
 
 @pytest.mark.asyncio
@@ -102,14 +102,14 @@ def test_a_stored_switch_loads(tmp_config):
 async def test_each_known_switch_is_writable(tmp_config, name):
     async with TestClient(TestServer(_make_app())) as c:
         resp = await c.patch(
-            "/api/config/kirocrew",
+            "/api/config/ajcrew",
             json={"path": f"dashboard.feature_previews.{name}", "value": True},
         )
         assert resp.status == 200, await resp.text()
     stored = json.loads(tmp_config.read_text(encoding="utf-8"))
     assert stored["dashboard"]["feature_previews"] == {name: True}
     assert stored["dashboard"]["folder_sort"] == "name"
-    assert KiroCrewConfig.load().dashboard.feature_previews == {name: True}
+    assert AjCrewConfig.load().dashboard.feature_previews == {name: True}
 
 
 @pytest.mark.asyncio
@@ -126,7 +126,7 @@ async def test_each_known_switch_is_writable(tmp_config, name):
 async def test_an_unknown_name_or_non_boolean_writes_nothing(tmp_config, path, value):
     before = tmp_config.read_bytes()
     async with TestClient(TestServer(_make_app())) as c:
-        resp = await c.patch("/api/config/kirocrew", json={"path": path, "value": value})
+        resp = await c.patch("/api/config/ajcrew", json={"path": path, "value": value})
         assert resp.status == 400, await resp.text()
     assert tmp_config.read_bytes() == before
 
@@ -135,13 +135,13 @@ async def test_an_unknown_name_or_non_boolean_writes_nothing(tmp_config, path, v
 async def test_the_one_time_carry_up_writes_a_switch_the_gateway_does_not_hold(tmp_config):
     async with TestClient(TestServer(_make_app())) as c:
         resp = await c.patch(
-            "/api/config/kirocrew",
+            "/api/config/ajcrew",
             json={"path": "dashboard.feature_previews.crew_mode", "value": True, "if_unset": True},
         )
         assert resp.status == 200, await resp.text()
     stored = json.loads(tmp_config.read_text(encoding="utf-8"))
     assert stored["dashboard"]["feature_previews"] == {"crew_mode": True}
-    assert KiroCrewConfig.load().dashboard.feature_previews == {"crew_mode": True}
+    assert AjCrewConfig.load().dashboard.feature_previews == {"crew_mode": True}
 
 
 @pytest.mark.asyncio
@@ -152,7 +152,7 @@ async def test_the_one_time_carry_up_never_replaces_a_stored_switch(tmp_config):
     before = tmp_config.read_bytes()
     async with TestClient(TestServer(_make_app())) as c:
         resp = await c.patch(
-            "/api/config/kirocrew",
+            "/api/config/ajcrew",
             json={"path": "dashboard.feature_previews.crew_mode", "value": True, "if_unset": True},
         )
         assert resp.status == 409, await resp.text()
@@ -164,12 +164,12 @@ async def test_the_one_time_carry_up_never_replaces_a_stored_switch(tmp_config):
 async def test_a_non_owner_cannot_write_a_switch(tmp_config):
     before = tmp_config.read_bytes()
     with patch(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         return_value=False,
     ):
         async with TestClient(TestServer(_make_app())) as c:
             resp = await c.patch(
-                "/api/config/kirocrew",
+                "/api/config/ajcrew",
                 json={"path": "dashboard.feature_previews.crew_mode", "value": True},
             )
             assert resp.status in (401, 403), await resp.text()

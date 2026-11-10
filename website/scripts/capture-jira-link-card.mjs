@@ -30,7 +30,7 @@ import { json, makeFixedApi, handleBootRoute } from './lib/boot-api.mjs'
 const OUT = process.argv[2] || '../temp-screenshots/jira-link-card'
 const LABEL = process.argv[3] || 'after'
 const SLOT = 'chat-jira-link-card'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 const JIRA_URL = 'https://acme.atlassian.net/browse/PROJ-123'
 // The inline line uses a DIFFERENT issue so the no-fetch assertion can be made
 // per-URL: MdAnchor's pre-existing (discarded) unfurl probe for inline links
@@ -46,7 +46,7 @@ const slots = [{
   running: false,
   last_message: 'readiness: passed',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

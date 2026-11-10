@@ -17,9 +17,9 @@ import threading
 
 import pytest
 
-from kiro_crew import autonudge
-from kiro_crew.dashboard import chat_handlers as handlers
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import autonudge
+from aj_crew.dashboard import chat_handlers as handlers
+from aj_crew.testing.wait import async_wait_until, await_until
 
 NAME = "chat-1-1785"
 
@@ -278,8 +278,8 @@ async def _close_handed_over_to_a_parked_taker(state, monkeypatch, *, close):
     """
     import threading
 
-    from kiro_crew.dashboard import chat_persistence
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard import chat_persistence
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
 
     slot = state.get_or_create_slot(NAME)
     for row in ("first question", "first answer", "second question", "second answer"):

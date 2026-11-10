@@ -1,6 +1,6 @@
 """The dashboard's signed-in identity from Crew's vault, in whoami's field vocabulary.
 
-Covers ``kiro_crew.dashboard.handlers.kiro_vault_identity`` (the slot/provider ->
+Covers ``aj_crew.dashboard.handlers.kiro_vault_identity`` (the slot/provider ->
 ``account_type`` mapping, the one-read snapshot and the identity door's
 fields / ``{}`` / ``None`` answer) and the auth bridge's
 ``vault_identity_claims`` it reads, driven over a real ``TokenStore``.
@@ -14,10 +14,10 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.auth.bridge import vault_identity_claims, vault_identity_fingerprint
-from kiro_crew.auth.store import KNOWN_IDENTITIES, KasToken, TokenStore
-from kiro_crew.auth.whoami import START_URL_EXTRA_KEY, whoami_document
-from kiro_crew.dashboard.handlers import kiro_vault_identity as kvi
+from aj_crew.auth.bridge import vault_identity_claims, vault_identity_fingerprint
+from aj_crew.auth.store import KNOWN_IDENTITIES, KasToken, TokenStore
+from aj_crew.auth.whoami import START_URL_EXTRA_KEY, whoami_document
+from aj_crew.dashboard.handlers import kiro_vault_identity as kvi
 
 
 def _token(identity: str = "social", **overrides) -> KasToken:
@@ -38,7 +38,7 @@ def data_home(tmp_path):
     """Point the bridge's vault root at a temp directory."""
     home = tmp_path / "data-home"
     home.mkdir()
-    with patch("kiro_crew.auth.bridge.data_home", return_value=home):
+    with patch("aj_crew.auth.bridge.data_home", return_value=home):
         yield home
 
 
@@ -95,7 +95,7 @@ _EVERY_SLOT = tuple(
 
 
 class TestOneMappingWithWhoami:
-    """The dashboard and ``kirocrew kas whoami`` spell every slot from ONE table.
+    """The dashboard and ``ajcrew kas whoami`` spell every slot from ONE table.
 
     The account modal's badge (``identity_fields``) and the remote sign-in's
     identity match (``whoami_document``) read the same vault; if their
@@ -117,7 +117,7 @@ class TestOneMappingWithWhoami:
         # Respell one slot in auth/whoami's table: the dashboard reading MUST follow,
         # which it cannot if it keeps a table of its own that happens to agree today.
         with patch.dict(
-            "kiro_crew.auth.whoami._ACCOUNT_TYPE_BY_SLOT", {"identity_center": "Respelled"}
+            "aj_crew.auth.whoami._ACCOUNT_TYPE_BY_SLOT", {"identity_center": "Respelled"}
         ):
             doc = whoami_document(
                 _token("identity_center", provider="Enterprise", profile_arn=None)
@@ -149,7 +149,7 @@ class TestVaultClaims:
 
     def test_unreadable_vault_is_absent(self, data_home):
         TokenStore(data_home).save(_token())
-        with patch("kiro_crew.auth.store.TokenStore.resolve", side_effect=RuntimeError("boom")):
+        with patch("aj_crew.auth.store.TokenStore.resolve", side_effect=RuntimeError("boom")):
             assert vault_identity_claims() == ("", {})
             assert kvi.vault_identity_snapshot_sync() == ("", {})
 
@@ -169,7 +169,7 @@ def _idc_token(**extra) -> KasToken:
 
 
 class TestStartUrlParity:
-    """The account modal shows the Identity Center portal ``kirocrew kas whoami`` prints.
+    """The account modal shows the Identity Center portal ``ajcrew kas whoami`` prints.
 
     The sign-in records the start URL on the token (``START_URL_EXTRA_KEY``);
     the dashboard's vault reading must carry it as ``start_url`` -- the field
@@ -249,7 +249,7 @@ class TestIdentityDoorAnswer:
 
     def test_failed_emptiness_probe_is_unknown(self, data_home):
         with patch(
-            "kiro_crew.auth.store.TokenStore.holds_no_identity", side_effect=RuntimeError("boom")
+            "aj_crew.auth.store.TokenStore.holds_no_identity", side_effect=RuntimeError("boom")
         ):
             assert kvi.vault_identity_sync() is None
 

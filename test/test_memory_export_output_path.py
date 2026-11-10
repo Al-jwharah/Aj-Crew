@@ -15,10 +15,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_commands as cc
-from kiro_crew.memory_stores import DEFAULT_MEMORY_STORE, resolve_store_path
-from kiro_crew.terminal_safe import safe_terminal_line
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import cli_commands as cc
+from aj_crew.memory_stores import DEFAULT_MEMORY_STORE, resolve_store_path
+from aj_crew.terminal_safe import safe_terminal_line
+from aj_crew.vector_memory import VectorMemoryStore
 
 
 def _seed_default_store() -> None:

@@ -26,15 +26,15 @@ from subagent_turn_resilience_helpers import (  # noqa: F401 -- the autouse fixt
     _TransientError,
 )
 
-from kiro_crew.acp.transport_errors import AcpError
-from kiro_crew.llm_helpers import TRANSIENT_RETRIES
-from kiro_crew.providers.base import EVENT_COMPLETE
-from kiro_crew.subagent import (
+from aj_crew.acp.transport_errors import AcpError
+from aj_crew.llm_helpers import TRANSIENT_RETRIES
+from aj_crew.providers.base import EVENT_COMPLETE
+from aj_crew.subagent import (
     _TRANSIENT_CONTINUE_MSG,
     SubagentInfo,
     SubagentManager,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -58,7 +58,7 @@ class _TimeoutCapableProvider:
         self.available_models = MagicMock(return_value=[])
 
     def prompt_timeout_for_deadline(self, deadline: float) -> float:
-        from kiro_crew.acp.client import resolve_prompt_timeout_for_deadline
+        from aj_crew.acp.client import resolve_prompt_timeout_for_deadline
 
         return resolve_prompt_timeout_for_deadline(deadline)
 
@@ -77,7 +77,7 @@ class _TimeoutCapableProvider:
 
 @pytest.mark.asyncio
 async def test_default_budget_allows_work_past_one_hundred_tools():
-    from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+    from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
 
     async def stream(*_args, **_kwargs):
         for request_id in range(101):
@@ -126,7 +126,7 @@ async def test_transient_error_pretoken_retries_same_prompt():
 
     mgr._fire_event = _spy
 
-    with patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0):
+    with patch("aj_crew.subagent.transient_retry_delay", return_value=0.0):
         info = await _spawn_and_wait(mgr)
 
     assert info.error == ""
@@ -141,7 +141,7 @@ async def test_registration_rate_limited_death_retries_pretoken_and_recovers():
     a throttled dynamic registration) rides the same zero-activity ladder as any
     transient: the SAME prompt is re-sent after backoff and the run completes,
     instead of surfacing a terminal generic process death."""
-    from kiro_crew.acp.client import registration_rate_limited_error
+    from aj_crew.acp.client import registration_rate_limited_error
 
     calls: list[str] = []
     throttled = registration_rate_limited_error(
@@ -166,7 +166,7 @@ async def test_registration_rate_limited_death_retries_pretoken_and_recovers():
     # drive; a null coordinator pins the IN-TURN ladder, which is the seam
     # under test.
     mgr.dependency_coordinator_async = AsyncMock(return_value=None)
-    with patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0):
+    with patch("aj_crew.subagent.transient_retry_delay", return_value=0.0):
         info = await _spawn_and_wait(mgr)
 
     assert info.error == ""
@@ -180,7 +180,7 @@ async def test_registration_rate_limited_death_retries_pretoken_and_recovers():
 async def test_registration_rate_limited_exhaustion_surfaces_typed_message():
     """Persistent registration throttling fails after the bounded budget with
     the typed message (guidance, one retained cause) — not a stderr wall."""
-    from kiro_crew.acp.client import registration_rate_limited_error
+    from aj_crew.acp.client import registration_rate_limited_error
 
     calls: list[str] = []
 
@@ -201,8 +201,8 @@ async def test_registration_rate_limited_exhaustion_surfaces_typed_message():
     # classify as a dependency signal and wait on an undriven coordinator.
     mgr.dependency_coordinator_async = AsyncMock(return_value=None)
     with (
-        patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0),
-        patch("kiro_crew.subagent.configured_fallback_chain", return_value=()),
+        patch("aj_crew.subagent.transient_retry_delay", return_value=0.0),
+        patch("aj_crew.subagent.configured_fallback_chain", return_value=()),
     ):
         info = await _spawn_and_wait(mgr)
 
@@ -230,7 +230,7 @@ async def test_transient_error_posttoken_sends_continue_prompt():
         return _gen()
 
     mgr = _manager(_mock_sessions(stream_factory))
-    with patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0):
+    with patch("aj_crew.subagent.transient_retry_delay", return_value=0.0):
         info = await _spawn_and_wait(mgr)
 
     assert info.error == ""
@@ -241,15 +241,15 @@ async def test_transient_error_posttoken_sends_continue_prompt():
 
 @pytest.mark.asyncio
 async def test_captured_timeout_survives_config_cut_across_all_recovery_prompts(monkeypatch):
-    from kiro_crew.acp.client import _PROMPT_TIMEOUT_MARGIN_SECS, resolve_prompt_timeout
-    from kiro_crew.acp.types import STOP_REASON_TOOL_STALL
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.providers.base import LLMEvent
+    from aj_crew.acp.client import _PROMPT_TIMEOUT_MARGIN_SECS, resolve_prompt_timeout
+    from aj_crew.acp.types import STOP_REASON_TOOL_STALL
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.providers.base import LLMEvent
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.chat_turn_timeout_secs = 3600
     cfg.agent.subagent_timeout_secs = 21600
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
 
     calls: list[tuple[str, float | None]] = []
 
@@ -279,7 +279,7 @@ async def test_captured_timeout_survives_config_cut_across_all_recovery_prompts(
     sessions._provider = provider
     mgr = _manager(sessions)
     mgr._default_timeout = 21600
-    with patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0):
+    with patch("aj_crew.subagent.transient_retry_delay", return_value=0.0):
         info = await _spawn_and_wait(mgr)
 
     expected = 21600.0 + _PROMPT_TIMEOUT_MARGIN_SECS
@@ -292,13 +292,13 @@ async def test_captured_timeout_survives_config_cut_across_all_recovery_prompts(
 
 @pytest.mark.asyncio
 async def test_cancel_recovery_preserves_captured_timeout_after_config_cut(monkeypatch):
-    from kiro_crew.acp.client import _PROMPT_TIMEOUT_MARGIN_SECS, resolve_prompt_timeout
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.acp.client import _PROMPT_TIMEOUT_MARGIN_SECS, resolve_prompt_timeout
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.chat_turn_timeout_secs = 3600
     cfg.agent.subagent_timeout_secs = 21600
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
 
     calls: list[tuple[str, float | None]] = []
     first_started = asyncio.Event()
@@ -329,7 +329,7 @@ async def test_cancel_recovery_preserves_captured_timeout_after_config_cut(monke
     mgr = _manager(sessions)
     mgr._default_timeout = 21600
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("resumable six-hour job")
         assert info is not None
         assert info.timeout_secs == 0
@@ -366,13 +366,13 @@ async def test_cancel_recovery_preserves_captured_timeout_after_config_cut(monke
 
 @pytest.mark.asyncio
 async def test_fresh_run_captures_current_lowered_timeout(monkeypatch):
-    from kiro_crew.acp.client import resolve_prompt_timeout_for_deadline
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.acp.client import resolve_prompt_timeout_for_deadline
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.chat_turn_timeout_secs = 3600
     cfg.agent.subagent_timeout_secs = 10800
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
 
     calls: list[tuple[str, float | None]] = []
 
@@ -391,7 +391,7 @@ async def test_fresh_run_captures_current_lowered_timeout(monkeypatch):
     mgr = _manager(sessions)
     mgr._default_timeout = 10800
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("fresh lowered-deadline job")
         assert info is not None
         assert info.timeout_secs == 0
@@ -418,7 +418,7 @@ async def _one_reaper_sweep(monkeypatch, mgr: SubagentManager) -> list[str]:
     ``_force_reap`` is a recorder that only marks the run done, and the sweep's
     unrelated passes are stubbed, so the wall-clock check is what decides.
     """
-    import kiro_crew.subagent as subagent_mod
+    import aj_crew.subagent as subagent_mod
 
     reaped: list[str] = []
 
@@ -561,7 +561,7 @@ async def test_reload_during_the_recovery_capacity_wait_keeps_the_captured_deadl
     sessions.forget_conversation_if_sid = MagicMock(return_value=(True, "rejected-sid"))
     provider.stream = MagicMock(side_effect=stream_factory)
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("evaluate bounded evidence")
         assert info is not None
         first = mgr._tasks[info.id]
@@ -634,7 +634,7 @@ async def test_reap_record_names_the_deadline_the_reaper_enforced(run_timeout, n
     manager._agents[info.id] = info
     manager._running_count = 1
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         await manager._force_reap(info.id, info, 10870.0)
 
     assert info.done and info.reaped
@@ -652,7 +652,7 @@ async def test_timeout_record_names_the_runs_captured_deadline():
     manager._release_slot = MagicMock(return_value=False)
     info = SubagentInfo(id="captured-hour", task="test", timeout_secs=3600)
 
-    with patch("kiro_crew.subagent.Stats"):
+    with patch("aj_crew.subagent.Stats"):
         await manager._run(info)
 
     assert info.timeout_secs == 3600
@@ -694,10 +694,10 @@ async def test_transient_budget_exhausted_propagates():
 
     mgr = _manager(_mock_sessions(stream_factory))
     with (
-        patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0),
+        patch("aj_crew.subagent.transient_retry_delay", return_value=0.0),
         # fallback_model="" (disabled): this test pins the PRE-FEATURE budget
         # behavior — the default is now "auto", which would walk the chain.
-        patch("kiro_crew.subagent.configured_fallback_chain", return_value=()),
+        patch("aj_crew.subagent.configured_fallback_chain", return_value=()),
     ):
         info = await _spawn_and_wait(mgr)
 
@@ -745,8 +745,8 @@ async def test_throttle_fallback_chain_swaps_model_and_annotates():
 
     mgr = _manager(sessions)
     with (
-        patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0),
-        patch("kiro_crew.subagent.configured_fallback_chain", return_value=("fb-1",)),
+        patch("aj_crew.subagent.transient_retry_delay", return_value=0.0),
+        patch("aj_crew.subagent.configured_fallback_chain", return_value=("fb-1",)),
     ):
         info = await _spawn_and_wait(mgr)
 
@@ -765,7 +765,7 @@ async def test_throttle_fallback_chain_swaps_model_and_annotates():
 async def test_throttle_fallback_chain_exhausted_propagates():
     """Every candidate also fails: the error surfaces after the bounded
     per-candidate attempts, exactly like today's exhaustion."""
-    from kiro_crew.llm_helpers import FALLBACK_CANDIDATE_ATTEMPTS
+    from aj_crew.llm_helpers import FALLBACK_CANDIDATE_ATTEMPTS
 
     calls: list[str] = []
 
@@ -794,8 +794,8 @@ async def test_throttle_fallback_chain_exhausted_propagates():
 
     mgr = _manager(sessions)
     with (
-        patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0),
-        patch("kiro_crew.subagent.configured_fallback_chain", return_value=("fb-1",)),
+        patch("aj_crew.subagent.transient_retry_delay", return_value=0.0),
+        patch("aj_crew.subagent.configured_fallback_chain", return_value=("fb-1",)),
     ):
         info = await _spawn_and_wait(mgr)
 
@@ -816,7 +816,7 @@ async def test_throttle_fallback_ladder_routes_through_shared_budget_body():
     the shared body to refuse retries changes the attempt count — proof the
     budget is not re-encoded locally (mirror of the stream_and_collect pin in
     test_llm_helpers_fallback_restore.py)."""
-    from kiro_crew.llm_helpers import FallbackState
+    from aj_crew.llm_helpers import FallbackState
 
     calls: list[str] = []
 
@@ -843,8 +843,8 @@ async def test_throttle_fallback_ladder_routes_through_shared_budget_body():
 
     mgr = _manager(sessions)
     with (
-        patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0),
-        patch("kiro_crew.subagent.configured_fallback_chain", return_value=("fb-1",)),
+        patch("aj_crew.subagent.transient_retry_delay", return_value=0.0),
+        patch("aj_crew.subagent.configured_fallback_chain", return_value=("fb-1",)),
         patch.object(FallbackState, "should_retry_active", return_value=False),
     ):
         info = await _spawn_and_wait(mgr)
@@ -859,7 +859,7 @@ async def test_throttle_fallback_story_survives_a_verbose_error():
     """A verbose backend error fills _describe_exception to its cap — the
     story must still be present in info.error (the error tail is what gets
     trimmed, never the walk), and the total stays bounded."""
-    from kiro_crew.process_identity import MAX_ERROR_DETAIL_LEN
+    from aj_crew.process_identity import MAX_ERROR_DETAIL_LEN
 
     calls: list[str] = []
 
@@ -886,8 +886,8 @@ async def test_throttle_fallback_story_survives_a_verbose_error():
 
     mgr = _manager(sessions)
     with (
-        patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0),
-        patch("kiro_crew.subagent.configured_fallback_chain", return_value=("fb-1",)),
+        patch("aj_crew.subagent.transient_retry_delay", return_value=0.0),
+        patch("aj_crew.subagent.configured_fallback_chain", return_value=("fb-1",)),
     ):
         info = await _spawn_and_wait(mgr)
 
@@ -963,9 +963,9 @@ async def _queued_manager(stream_factory) -> tuple[SubagentManager, list[object]
 
 async def _spawn_with_queue(mgr: SubagentManager, **spawn_kw) -> SubagentInfo:
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.transient_retry_delay", return_value=0.0),
     ):
         info = mgr.spawn("do work", **spawn_kw)
         assert info is not None
@@ -1008,7 +1008,7 @@ async def test_throttle_on_a_run_with_a_task_row_waits_on_the_coordinator():
 async def test_a_coordinator_give_up_still_fails_the_run():
     """When the coordinator ends the scope (its deadline or attempts cap), the row is
     already failed, so the run fails with the throttle and is not retried in turn."""
-    from kiro_crew.taskq.dependency import OUTCOME_DEADLINE, Verdict
+    from aj_crew.taskq.dependency import OUTCOME_DEADLINE, Verdict
 
     calls, factory = _throttle_first_prompt()
     mgr, parks = await _queued_manager(factory)

@@ -64,7 +64,7 @@ class TestCopyAppTreeAsInstalled:
         fold (APFS, NTFS) `dest / "data"` IS the shipped `Data/` and it goes; where
         they do not (ext4) `Data/` is the app's own directory and stays. Checked
         against a direct look at this host, not a platform guess."""
-        from kiro_crew.apps.manager import copy_app_tree_as_installed
+        from aj_crew.apps.manager import copy_app_tree_as_installed
 
         root = self._source(tmp_path)
         (root / "Data").mkdir()
@@ -104,7 +104,7 @@ class TestCopyAppTreeAsInstalled:
         copies the source's `data/` and leaves it: an entry point under it is the
         source's there, so the preview keeps it. `.app_secret` is the gateway's on
         every install (written after the copy) and goes regardless."""
-        from kiro_crew.apps.manager import copy_app_tree_as_installed
+        from aj_crew.apps.manager import copy_app_tree_as_installed
 
         root = self._source(tmp_path)
         (root / "data").mkdir()
@@ -125,7 +125,7 @@ class TestCopyAppTreeAsInstalled:
         the gate turns the tree away before any transaction touches the app
         directory. With a preserved `data/` awaiting, the copied entry is removed
         (the install puts the directory back) and the same source passes."""
-        from kiro_crew.apps.manager import (
+        from aj_crew.apps.manager import (
             InstalledTreeRefused,
             copy_app_tree_as_installed,
             gateway_data_dir_obstruction,
@@ -159,7 +159,7 @@ class TestCopyAppTreeAsInstalled:
         shape as a refusal, never let the raise out (which the install's copy branch
         would report as a failed copy). Pinned on every host by making the follow
         fail the way that platform does."""
-        from kiro_crew.apps.manager import gateway_data_dir_obstruction
+        from aj_crew.apps.manager import gateway_data_dir_obstruction
 
         root = tmp_path / "installed"
         root.mkdir()
@@ -188,7 +188,7 @@ class TestCopyAppTreeAsInstalled:
         link relocated out of its tree dangles and loses the directory it named.
         The copy keeps the link as a link and the target directory stays where it
         is; nothing is judged by what the link resolves to."""
-        from kiro_crew.apps.manager import InstalledTreeRefused, copy_app_tree_as_installed
+        from aj_crew.apps.manager import InstalledTreeRefused, copy_app_tree_as_installed
 
         root = self._source(tmp_path)
         (root / "state").mkdir()
@@ -213,8 +213,8 @@ class TestCopyAppTreeAsInstalled:
         """The three things `install_app` / `update_app` restore over the copied
         `data/`: the installed app's own directory, one a default uninstall left
         behind (same place), and a crashed sibling's `.{name}-data-tmp` copy."""
-        from kiro_crew.apps import manager as manager_mod
-        from kiro_crew.apps.manager import preserved_data_awaits
+        from aj_crew.apps import manager as manager_mod
+        from aj_crew.apps.manager import preserved_data_awaits
 
         apps = tmp_path / "apps"
         apps.mkdir()
@@ -237,8 +237,8 @@ class TestCopyAppTreeAsInstalled:
         directory the gateway can move aside and put back, so nothing is preserved
         over the copy for it -- the preview keeps the source's own `data`, exactly
         as the update that refuses to move the link would have."""
-        from kiro_crew.apps import manager as manager_mod
-        from kiro_crew.apps.manager import preserved_data_awaits
+        from aj_crew.apps import manager as manager_mod
+        from aj_crew.apps.manager import preserved_data_awaits
 
         apps = tmp_path / "apps"
         (apps / "demo" / "state").mkdir(parents=True)
@@ -251,7 +251,7 @@ class TestCopyAppTreeAsInstalled:
 
     @requires_symlinks
     def test_a_root_file_or_link_named_like_a_gateway_entry_is_removed_too(self, tmp_path):
-        from kiro_crew.apps.manager import copy_app_tree_as_installed
+        from aj_crew.apps.manager import copy_app_tree_as_installed
 
         root = self._source(tmp_path)
         (root / "data").write_text("a regular file so named\n", encoding="utf-8")
@@ -271,7 +271,7 @@ class TestCopyAppTreeAsInstalled:
         dangling, an escaping link omitted, an absolute in-tree link rewritten, and a
         text that climbs above the root and re-enters by naming the checkout kept
         verbatim -- so it resolves to the CHECKOUT's file from the copy."""
-        from kiro_crew.apps.manager import copy_app_tree_as_installed
+        from aj_crew.apps.manager import copy_app_tree_as_installed
 
         root = self._source(tmp_path)
         (root / "requirements.txt").symlink_to(Path("requirements") / "prod.txt")

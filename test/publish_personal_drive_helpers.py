@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import publish_provider as pp
-from kiro_crew.publish import personal_drive as pd
+from aj_crew import publish_provider as pp
+from aj_crew.publish import personal_drive as pd
 
 BUCKET = f"{pd.BUCKET_PREFIX}abc123def456"
 POLICY_NEW = "RHP-NEW"

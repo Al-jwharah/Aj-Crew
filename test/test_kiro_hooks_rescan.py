@@ -14,8 +14,8 @@ from unittest.mock import MagicMock
 import pytest
 from webhooks_api_helpers import _payload, _req
 
-from kiro_crew import agent
-from kiro_crew.dashboard.handlers import hooks as H
+from aj_crew import agent
+from aj_crew.dashboard.handlers import hooks as H
 
 pytestmark = pytest.mark.asyncio
 

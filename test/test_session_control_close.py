@@ -29,9 +29,9 @@ from session_control_helpers import (  # noqa: F401 -- the autouse fixtures regi
     _slot,
 )
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.members import DM_SLOT_MODE
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.members import DM_SLOT_MODE
 
 # ── Close (archive) ──────────────────────────────────────────────────────────
 
@@ -168,7 +168,7 @@ def test_close_maps_a_close_failure_to_its_code(tmp_path, monkeypatch):
     caller = _slot(state, "chat-1")
     target = _peer_target(state, "chat-2", caller)
 
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     async def _boom(_state, _slot, _name, *, pre_pop_check=None):
         raise chat_handlers.SlotCloseError("failed to notify the app", code="app_close_hook_failed")
@@ -186,7 +186,7 @@ def test_close_maps_a_close_failure_to_its_code(tmp_path, monkeypatch):
             detail=detail,
         )
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.close_slot", _boom)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.close_slot", _boom)
     monkeypatch.setattr(sc, "_audit", _audit)
 
     with pytest.raises(sc.SessionControlError) as exc:
@@ -225,7 +225,7 @@ def test_close_authorizes_then_acts_with_nothing_in_between(tmp_path, monkeypatc
 
     monkeypatch.setattr(sc, "sel", _sel)
     monkeypatch.setattr(sc, "authorize_target", _authorize)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.close_slot", _fake_close)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.close_slot", _fake_close)
 
     asyncio.run(sc.close_target(state, caller_session_key=_key(caller), target=target.key))
 
@@ -255,7 +255,7 @@ def test_close_reauthorizes_at_the_point_of_no_return(tmp_path, monkeypatch):
         pre_pop_check()  # re-runs authorize_target -> raises for the new mirror
         raise AssertionError("close must not reach the pop after a stale-auth abort")
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.close_slot", _fake_close)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.close_slot", _fake_close)
 
     with pytest.raises(sc.SessionControlError) as exc:
         asyncio.run(sc.close_target(state, caller_session_key=_key(caller), target=target.key))
@@ -270,7 +270,7 @@ def test_close_slot_pre_pop_abort_rolls_back_and_does_not_pop(tmp_path):
     """A `pre_pop_check` that raises `SlotCloseError` aborts the close at the point
     of no return: the slot stays in `_slots` and the per-tab session is never torn
     down. The human ✕ path (pre_pop_check=None) is unaffected."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("chat-1")
@@ -309,7 +309,7 @@ def test_close_aborts_if_the_key_was_reminted_during_the_close(tmp_path, monkeyp
         pre_pop_check()  # authorize_target resolves the replacement -> identity mismatch
         raise AssertionError("close must not pop after a re-mint abort")
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.close_slot", _fake_close)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.close_slot", _fake_close)
 
     with pytest.raises(sc.SessionControlError) as exc:
         asyncio.run(sc.close_target(state, caller_session_key=_key(caller), target=original_key))
@@ -331,7 +331,7 @@ def test_close_slot_runs_the_pre_pop_check_synchronously_after_retirement(tmp_pa
     then the pop) and by the callback being a plain synchronous function."""
     import inspect
 
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("chat-1")

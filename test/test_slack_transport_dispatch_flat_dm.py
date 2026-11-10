@@ -25,11 +25,11 @@ from slack_transport_dispatch_helpers import (
     make_event,
 )
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
-from kiro_crew.messaging.link import canonical_key
-from kiro_crew.session import BACKGROUND_KEY
-from kiro_crew.slack import handler as slack_handler
-from kiro_crew.slack import transport_dispatch
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
+from aj_crew.messaging.link import canonical_key
+from aj_crew.session import BACKGROUND_KEY
+from aj_crew.slack import handler as slack_handler
+from aj_crew.slack import transport_dispatch
 
 
 class _LinkCapturingSessions(FakeSessions):
@@ -100,7 +100,7 @@ class TestFlatDmSessionKey:
 
 class TestFlatDmTransportWiring:
     def _prep(self, monkeypatch):
-        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
         monkeypatch.setattr(
             transport_dispatch, "_hydrate_thread_overrides", AsyncMock(return_value=None)
         )

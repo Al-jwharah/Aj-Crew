@@ -21,8 +21,8 @@ import pytest
 from link_unfurl_helpers import _isolate  # noqa: F401
 from link_unfurl_helpers import _public, _set_enabled
 
-from kiro_crew import link_unfurl as lu
-from kiro_crew.dashboard.handlers import link_meta as lm
+from aj_crew import link_unfurl as lu
+from aj_crew.dashboard.handlers import link_meta as lm
 
 
 def _run(coro):
@@ -1548,7 +1548,7 @@ def test_a_url_the_redactors_would_change_is_never_previewed(monkeypatch) -> Non
     """A preview is a fetch nobody clicked, so a link whose query the exfil check
     blocks is refused even when a reader allowed its host for opening: it is
     neither fetched nor cached."""
-    from kiro_crew.security.exfil import scoped_exempt_hosts
+    from aj_crew.security.exfil import scoped_exempt_hosts
 
     _set_enabled(monkeypatch, True)
     transport = _install(monkeypatch, {})

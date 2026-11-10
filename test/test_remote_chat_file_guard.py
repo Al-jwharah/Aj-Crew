@@ -1,6 +1,6 @@
 """The gateway's file, diff and Git routes refuse a chat that runs remotely.
 
-``kiro_crew.dashboard.remote_chat_guard`` wraps each route that reads or writes this
+``aj_crew.dashboard.remote_chat_guard`` wraps each route that reads or writes this
 machine's files. These rows register the real route table over stand-in handlers, so
 each one shows which requests reach the route and which are refused before it runs:
 a remote chat named by ``?slot=`` is refused on every guarded route; a local chat, a
@@ -17,10 +17,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.dashboard import chat_utils, handlers
-from kiro_crew.dashboard import remote_chat_guard as guard
-from kiro_crew.dashboard.handlers import source_providers
-from kiro_crew.dashboard.routes import taskrunner
+from aj_crew.dashboard import chat_utils, handlers
+from aj_crew.dashboard import remote_chat_guard as guard
+from aj_crew.dashboard.handlers import source_providers
+from aj_crew.dashboard.routes import taskrunner
 
 pytestmark = pytest.mark.asyncio
 
@@ -61,9 +61,9 @@ def table(monkeypatch: pytest.MonkeyPatch):
     slots = {REMOTE: SimpleNamespace(key=REMOTE), LOCAL: SimpleNamespace(key=LOCAL)}
     app["state"] = SimpleNamespace(get_slot=slots.get)
     monkeypatch.setattr(chat_utils, "effective_session_key", lambda slot: slot.key)
-    monkeypatch.setattr("kiro_crew.session_environment.session_environments_enabled", lambda: True)
+    monkeypatch.setattr("aj_crew.session_environment.session_environments_enabled", lambda: True)
     monkeypatch.setattr(
-        "kiro_crew.session_environment.session_runs_remotely", lambda key: key == REMOTE
+        "aj_crew.session_environment.session_runs_remotely", lambda key: key == REMOTE
     )
     monkeypatch.setattr(source_providers, "is_owner_dashboard_request", lambda request: True)
     routes = {
@@ -105,8 +105,8 @@ async def test_with_the_developer_flag_off_a_remote_chat_reaches_the_route(
     def never_read(key: str) -> bool:
         raise AssertionError("placement read with the flag off")
 
-    monkeypatch.setattr("kiro_crew.session_environment.session_environments_enabled", lambda: False)
-    monkeypatch.setattr("kiro_crew.session_environment.session_runs_remotely", never_read)
+    monkeypatch.setattr("aj_crew.session_environment.session_environments_enabled", lambda: False)
+    monkeypatch.setattr("aj_crew.session_environment.session_runs_remotely", never_read)
     response = await _call(table, path, f"&slot={REMOTE}")
     assert json.loads(response.body) == {"served": GUARDED[path][0]}
 
@@ -121,7 +121,7 @@ async def test_a_non_owner_gets_the_routes_own_answer_not_the_chats_placement(
 
 async def test_an_unreadable_placement_is_refused(table, monkeypatch: pytest.MonkeyPatch) -> None:
     """``session_runs_remotely`` answers True for an unreadable store; the guard keeps it."""
-    monkeypatch.setattr("kiro_crew.session_environment.session_runs_remotely", lambda key: True)
+    monkeypatch.setattr("aj_crew.session_environment.session_runs_remotely", lambda key: True)
     response = await _call(table, "/api/file-diff", f"&slot={LOCAL}")
     assert response.status == 409
 

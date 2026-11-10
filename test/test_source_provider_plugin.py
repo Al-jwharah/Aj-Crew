@@ -15,9 +15,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import history, history_search
-from kiro_crew.dashboard.handlers import source_providers as source
-from kiro_crew.dashboard.slot_projection import SlotProjection
+from aj_crew import history, history_search
+from aj_crew.dashboard.handlers import source_providers as source
+from aj_crew.dashboard.slot_projection import SlotProjection
 
 CR_URL = "https://review.acme.example/cr/123"
 
@@ -269,7 +269,7 @@ async def test_a_plugin_returning_only_ci_and_state_stays_steady_while_checks_ru
     the next chip read must match it, or every refresh reads a change, drops
     the full payload and refetches it.
     """
-    from kiro_crew.dashboard.source_providers import chip_status
+    from aj_crew.dashboard.source_providers import chip_status
 
     monkeypatch.setattr(chip_status, "_check_cache", {})
     monkeypatch.setattr(chip_status, "_status_delta_sinks", [])
@@ -478,7 +478,7 @@ def test_plugin_issue_refs_are_refused_at_admission(plugin) -> None:
 
 def test_sidebar_source_links_include_the_plugin_chip(plugin) -> None:
     """The sidebar chip scanner must reach a plugin URL and label it."""
-    from kiro_crew.dashboard import state as state_mod
+    from aj_crew.dashboard import state as state_mod
 
     slot = object.__new__(state_mod._ChatSlot)
     slot.messages = [{"role": "assistant", "content": f"Raised {CR_URL} for review."}]
@@ -527,7 +527,7 @@ def _parse_with_revision_pin(raw_url: str) -> source.SourceRef | None:
 
 
 def _revision_slot(*contents: str) -> Any:
-    from kiro_crew.dashboard import state as state_mod
+    from aj_crew.dashboard import state as state_mod
 
     slot = object.__new__(state_mod._ChatSlot)
     slot.messages = [{"role": "assistant", "content": text} for text in contents]
@@ -542,7 +542,7 @@ def _revision_slot(*contents: str) -> Any:
 @pytest.fixture
 def per_revision_status(plugin, monkeypatch):
     """Chip status as a per-revision provider reports it: rev 1 OPEN, rev 2 SHIPPED."""
-    from kiro_crew.dashboard import state as state_mod
+    from aj_crew.dashboard import state as state_mod
 
     plugin.parse = _parse_with_revision_pin  # type: ignore[attr-defined]
     statuses = {
@@ -556,7 +556,7 @@ def per_revision_status(plugin, monkeypatch):
 
 def test_chip_status_comes_from_the_latest_revision(per_revision_status) -> None:
     """A review whose revision 2 shipped reads merged, not revision 1's open."""
-    from kiro_crew.dashboard import state as state_mod
+    from aj_crew.dashboard import state as state_mod
 
     slot = _revision_slot(
         f"Published {CR_URL}/revisions/1 for review.",
@@ -572,7 +572,7 @@ def test_chip_status_comes_from_the_latest_revision(per_revision_status) -> None
 
 def test_a_review_mentioned_at_one_revision_keeps_that_status(per_revision_status) -> None:
     """Older single-revision transcripts are read exactly as before."""
-    from kiro_crew.dashboard import state as state_mod
+    from aj_crew.dashboard import state as state_mod
 
     slot = _revision_slot(f"Published {CR_URL}/revisions/1 for review.")
     payload = state_mod._ChatSlot.source_links_payload(slot, include_check_status=True)
@@ -591,7 +591,7 @@ def test_sidebar_dedups_on_ref_identity_not_canonical_url(plugin) -> None:
     change. Keying the dedup on the ref identity collapses them; the backwards
     walk makes the most recent mention's URL the chip's link target.
     """
-    from kiro_crew.dashboard import state as state_mod
+    from aj_crew.dashboard import state as state_mod
 
     plugin.parse = _parse_with_revision_pin  # type: ignore[attr-defined]
 
@@ -621,7 +621,7 @@ def test_sidebar_dedups_on_ref_identity_not_canonical_url(plugin) -> None:
 
 def test_sidebar_keeps_same_numbered_changes_on_different_repos_distinct(plugin) -> None:
     """Identity keying must not over-collapse: same number, different repo."""
-    from kiro_crew.dashboard import state as state_mod
+    from aj_crew.dashboard import state as state_mod
 
     slot = object.__new__(state_mod._ChatSlot)
     slot.messages = [
@@ -651,7 +651,7 @@ def test_sidebar_keeps_same_host_jira_context_paths_distinct(plugin, monkeypatch
     identity that dropped the URL entirely would collide them and one link
     would silently disappear from the sidebar.
     """
-    from kiro_crew.dashboard import state as state_mod
+    from aj_crew.dashboard import state as state_mod
 
     monkeypatch.setattr(source, "_jira_hosts_snapshot", frozenset({"jira.acme.internal"}))
     monkeypatch.setattr(source, "_gitlab_hosts_loaded_at", 1.0)

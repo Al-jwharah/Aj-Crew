@@ -7,7 +7,7 @@ unlinks the temp launcher/profile, rather than leaking it.
 Executor test: the caller's pool is honoured, so consolidating the shield does
 not silently collapse each site's ``executors.py`` pool onto the default one.
 
-AST guard test: scans ``src/kiro_crew/`` for bare ``run_in_executor`` AND
+AST guard test: scans ``src/aj_crew/`` for bare ``run_in_executor`` AND
 ``asyncio.to_thread`` hops referencing ``sandboxed_spawn_argv`` (the sync
 version) without going through the shared shield. Prevents regressions.
 """
@@ -30,7 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from source_corpus import parsed_candidates, src_root  # noqa: E402
 
-from kiro_crew.sandbox import (  # noqa: E402
+from aj_crew.sandbox import (  # noqa: E402
     sandboxed_spawn_argv_async,
     shielded_prepare_off_loop,
     wrap_argv,
@@ -40,7 +40,7 @@ from kiro_crew.sandbox import (  # noqa: E402
 
 def _prepare(argv: list[str]):
     """Bind the chokepoint the way every production call site does."""
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     return functools.partial(sandbox.sandboxed_spawn_argv, argv)
 
@@ -73,7 +73,7 @@ class TestSandboxOffLoopCancellation:
     @pytest.mark.asyncio
     async def test_cancel_during_hop_drops_launcher(self, tmp_path):
         fake, entered, release, created = self._blocking_sandbox(tmp_path)
-        with patch("kiro_crew.sandbox.sandboxed_spawn_argv", side_effect=fake):
+        with patch("aj_crew.sandbox.sandboxed_spawn_argv", side_effect=fake):
             task = asyncio.create_task(shielded_prepare_off_loop(_prepare(["/bin/true"])))
             # Wait for the worker to enter the stub (implies awaiter is
             # suspended at the shielded hop).
@@ -92,7 +92,7 @@ class TestSandboxOffLoopCancellation:
         """The recovery works on a caller-supplied pool, not just the default one."""
         fake, entered, release, created = self._blocking_sandbox(tmp_path)
         with ThreadPoolExecutor(max_workers=2) as pool:
-            with patch("kiro_crew.sandbox.sandboxed_spawn_argv", side_effect=fake):
+            with patch("aj_crew.sandbox.sandboxed_spawn_argv", side_effect=fake):
                 task = asyncio.create_task(
                     shielded_prepare_off_loop(_prepare(["/bin/true"]), executor=pool)
                 )
@@ -119,7 +119,7 @@ class TestSandboxOffLoopCancellation:
                 names.append(threading.current_thread().name)
                 return argv, {}, None
 
-            with patch("kiro_crew.sandbox.sandboxed_spawn_argv", side_effect=_fake):
+            with patch("aj_crew.sandbox.sandboxed_spawn_argv", side_effect=_fake):
                 await shielded_prepare_off_loop(_prepare(["/bin/true"]), executor=pool)
         assert names and names[0].startswith("pinned-pool"), names
 
@@ -132,7 +132,7 @@ class TestSandboxOffLoopCancellation:
         def _fake(argv, mode="standard", **_kwargs):
             return ["wrapped"] + argv, {"PATH": "/usr/bin"}, str(launcher)
 
-        with patch("kiro_crew.sandbox.sandboxed_spawn_argv", side_effect=_fake):
+        with patch("aj_crew.sandbox.sandboxed_spawn_argv", side_effect=_fake):
             result = await shielded_prepare_off_loop(_prepare(["/bin/true"]))
         assert result == (
             ["wrapped", "/bin/true"],

@@ -19,9 +19,9 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from history_consolidation_retry_helpers import KEY, _make_consolidator, _seed_log
 
-from kiro_crew import history as history_mod
-from kiro_crew import history_consolidation as consolidation_facade
-from kiro_crew.history_consolidation import (
+from aj_crew import history as history_mod
+from aj_crew import history_consolidation as consolidation_facade
+from aj_crew.history_consolidation import (
     _CONSOLIDATION_BACKOFF_BASE_SECS,
     _CONSOLIDATION_BACKOFF_MAX_SECS,
     _CONSOLIDATION_EMPTY,
@@ -30,7 +30,7 @@ from kiro_crew.history_consolidation import (
     _ConsolidationReplyUnusable,
     _no_pass_ran,
 )
-from kiro_crew.llm_helpers import parse_llm_json
+from aj_crew.llm_helpers import parse_llm_json
 
 THRESHOLD = history_mod._CONSOLIDATION_THRESHOLD
 BASE = _CONSOLIDATION_BACKOFF_BASE_SECS

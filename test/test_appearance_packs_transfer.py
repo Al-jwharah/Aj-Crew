@@ -18,8 +18,8 @@ import urllib.error
 
 import pytest
 
-from kiro_crew.appearance_packs import transfer as pack_transfer
-from kiro_crew.appearance_packs.store import AppearanceStore
+from aj_crew.appearance_packs import transfer as pack_transfer
+from aj_crew.appearance_packs.store import AppearanceStore
 
 PNG = base64.b64encode(b"\x89PNG\r\n\x1a\n" + b"x" * 64).decode("ascii")
 

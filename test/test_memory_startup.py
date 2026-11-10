@@ -15,19 +15,19 @@ import pytest
 from member_memory_helpers import env as _member_env
 from member_memory_helpers import request
 
-from kiro_crew import embeddings, memory_backup
-from kiro_crew.context import ContextBuilder, prepare_store_vectors
-from kiro_crew.dashboard.handlers import memory_admin, memory_member
-from kiro_crew.memory import MemoryStore
-from kiro_crew.memory_startup import (
+from aj_crew import embeddings, memory_backup
+from aj_crew.context import ContextBuilder, prepare_store_vectors
+from aj_crew.dashboard.handlers import memory_admin, memory_member
+from aj_crew.memory import MemoryStore
+from aj_crew.memory_startup import (
     MemoryStartup,
     MemoryStartupUnavailable,
     require_memory_ready,
     wait_for_memory_preparation,
 )
-from kiro_crew.slack.gateway import GatewayOrchestrator
-from kiro_crew.testing.wait import async_wait_until, await_until, wait_until
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.testing.wait import async_wait_until, await_until, wait_until
+from aj_crew.vector_memory import VectorMemoryStore
 
 env = _member_env
 
@@ -89,7 +89,7 @@ def _gateway(monkeypatch):
     gateway.vector_memory.init.side_effect = require_memory_ready
     gateway._auto_migrate_memory = AsyncMock()
     gateway._repair_member_memory = AsyncMock()
-    monkeypatch.setattr("kiro_crew.context.reset_memory_caches", lambda memory: None)
+    monkeypatch.setattr("aj_crew.context.reset_memory_caches", lambda memory: None)
     return gateway
 
 
@@ -253,11 +253,11 @@ def test_run_publishes_ready_before_wait_and_starts_dispatchers_afterward():
         and any(
             isinstance(part, ast.Constant)
             and isinstance(part.value, str)
-            and "KIROCREW_READY:" in part.value
+            and "AJCREW_READY:" in part.value
             for part in ast.walk(node)
         )
     )
-    ready = source.index('print(f"KIROCREW_READY:')
+    ready = source.index('print(f"AJCREW_READY:')
     signals = source.index("self._install_shutdown_signal_handlers()")
     waited = source.index("await self._wait_for_memory_preparation()")
     subagent_dispatch = source.index("await self._start_subagent_dispatch_after_memory_ready()")
@@ -294,18 +294,18 @@ def test_run_publishes_ready_before_wait_and_starts_dispatchers_afterward():
 def test_the_crew_log_child_liveness_probe_is_registered_after_ready():
     """Registering the probe imports the emitter, so it stays off the boot path.
 
-    After ``KIROCREW_READY`` keeps the import off launch; before the dashboard workers and
+    After ``AJCREW_READY`` keeps the import off launch; before the dashboard workers and
     cron start keeps it ahead of any repair, which without a probe could close a live child.
     """
     source = inspect.getsource(GatewayOrchestrator.run)
-    ready = source.index('print(f"KIROCREW_READY:')
+    ready = source.index('print(f"AJCREW_READY:')
     register = source.index("self._register_child_liveness()")
     dashboard_workers = source.index("self._start_dashboard_workers_after_memory_ready()")
     assert ready < register < dashboard_workers
 
     # ``_init_subagents`` and the completion consumer's phases it calls, which the
     # facade composes from its sub-agent owners.
-    from kiro_crew.slack.gateway import _compose_subagent_completion
+    from aj_crew.slack.gateway import _compose_subagent_completion
 
     boot = "\n".join(
         inspect.getsource(fn)
@@ -385,7 +385,7 @@ async def test_one_worker_finishes_restore_before_open_and_starts_migration(monk
 
 
 def _stub_preparation_steps(monkeypatch, restore=None):
-    monkeypatch.setattr("kiro_crew.memory_stores.repair_legacy_member_stores", lambda: [])
+    monkeypatch.setattr("aj_crew.memory_stores.repair_legacy_member_stores", lambda: [])
     monkeypatch.setattr(
         memory_backup, "apply_pending_member_restores", restore or (lambda **kwargs: {})
     )
@@ -476,12 +476,12 @@ def _begin_when_released(timeout=5.0):
 
 
 def test_invalid_declared_store_is_scoped_without_failing_global_startup(monkeypatch):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     startup = MemoryStartup.begin()
     visited = []
     monkeypatch.setattr(
-        KiroCrewConfig,
+        AjCrewConfig,
         "load",
         classmethod(
             lambda cls: SimpleNamespace(
@@ -587,7 +587,7 @@ async def test_turn_admission_requires_preparation_success(outcome):
 async def test_owner_shutdown_wins_while_restore_worker_remains_fenced(monkeypatch):
     gateway = _gateway(monkeypatch)
     stopping = asyncio.Event()
-    monkeypatch.setattr("kiro_crew.slack.gateway.shutdown_event", stopping)
+    monkeypatch.setattr("aj_crew.slack.gateway.shutdown_event", stopping)
     started = asyncio.Event()
     release = threading.Event()
     loop = asyncio.get_running_loop()
@@ -630,8 +630,8 @@ async def test_stuck_preparation_past_deadline_fails_instead_of_blocking_forever
     # answering that recovery is still running.
     gateway = _gateway(monkeypatch)
     stopping = asyncio.Event()
-    monkeypatch.setattr("kiro_crew.slack.gateway.shutdown_event", stopping)
-    monkeypatch.setattr("kiro_crew.memory_startup.MEMORY_PREPARATION_DEADLINE_SECONDS", 0.05)
+    monkeypatch.setattr("aj_crew.slack.gateway.shutdown_event", stopping)
+    monkeypatch.setattr("aj_crew.memory_startup.MEMORY_PREPARATION_DEADLINE_SECONDS", 0.05)
     started = asyncio.Event()
     release = threading.Event()
     loop = asyncio.get_running_loop()
@@ -692,7 +692,7 @@ async def test_owner_stop_during_waiter_cleanup_prevents_consumer_admission(monk
         gateway._memory_startup.complete()
 
     monkeypatch.setattr(stopping, "wait", wait_for_stop)
-    monkeypatch.setattr("kiro_crew.slack.gateway.shutdown_event", stopping)
+    monkeypatch.setattr("aj_crew.slack.gateway.shutdown_event", stopping)
     gateway._memory_startup_task = asyncio.create_task(prepare())
     try:
         assert await gateway._wait_for_memory_preparation() is False
@@ -772,8 +772,8 @@ async def test_a_subagent_run_fails_on_a_closed_memory_fence_instead_of_running_
     state; the run fails with the fence's own reason."""
     from test_subagent import _mock_ctx_builder_auto_spawn, _mock_sessions
 
-    from kiro_crew.execution_context import execution_for_store
-    from kiro_crew.subagent import SubagentInfo, SubagentManager
+    from aj_crew.execution_context import execution_for_store
+    from aj_crew.subagent import SubagentInfo, SubagentManager
 
     sessions = _mock_sessions()
     manager = SubagentManager(sessions=sessions, ctx_builder=_mock_ctx_builder_auto_spawn())
@@ -787,9 +787,9 @@ async def test_a_subagent_run_fails_on_a_closed_memory_fence_instead_of_running_
     prepare = AsyncMock(
         side_effect=MemoryStartupUnavailable("Memory is being restored and prepared")
     )
-    monkeypatch.setattr("kiro_crew.context.prepare_store_vectors", prepare)
+    monkeypatch.setattr("aj_crew.context.prepare_store_vectors", prepare)
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             with pytest.raises(MemoryStartupUnavailable, match="restored and prepared"):
                 await await_until(
                     asyncio.ensure_future(manager._run_inner(info, "subagent:fenced01"))
@@ -893,14 +893,14 @@ def test_member_repair_revalidates_and_rotates_past_an_unavailable_member(env, m
     gateway._memory_startup.complete()
     alice, bob = env.tiers["member-alice"], env.tiers["member-bob"]
     monkeypatch.setattr(
-        "kiro_crew.context.cached_vector_store_entries",
+        "aj_crew.context.cached_vector_store_entries",
         lambda: (("member-alice", alice), ("member-bob", bob)),
     )
-    monkeypatch.setattr("kiro_crew.slack.gateway.peek_ready_shared_embedder", lambda: object())
+    monkeypatch.setattr("aj_crew.slack.gateway.peek_ready_shared_embedder", lambda: object())
     monkeypatch.setattr(
-        "kiro_crew.slack.gateway.reembed_progress", lambda: SimpleNamespace(is_active=lambda: False)
+        "aj_crew.slack.gateway.reembed_progress", lambda: SimpleNamespace(is_active=lambda: False)
     )
-    monkeypatch.setattr("kiro_crew.slack.gateway.reconcile_store_embedding_space", lambda store: 0)
+    monkeypatch.setattr("aj_crew.slack.gateway.reconcile_store_embedding_space", lambda store: 0)
     visits = []
 
     def validate(name):
@@ -909,7 +909,7 @@ def test_member_repair_revalidates_and_rotates_past_an_unavailable_member(env, m
             raise ValueError("Alice ownership is unavailable")
         return name
 
-    monkeypatch.setattr("kiro_crew.memory_stores.require_memory_store", validate)
+    monkeypatch.setattr("aj_crew.memory_stores.require_memory_store", validate)
     monkeypatch.setattr(bob, "has_pending_embeddings", lambda: True)
     repair = MagicMock()
     monkeypatch.setattr(bob, "backfill_missing_embeddings", repair)
@@ -938,21 +938,21 @@ def test_repair_rotates_across_active_global_and_cached_v1_v2_without_opening(mo
         store.embed_fn = None
         store.has_pending_embeddings.return_value = True
     monkeypatch.setattr(
-        "kiro_crew.context.cached_vector_store_entries",
+        "aj_crew.context.cached_vector_store_entries",
         lambda: (("member-v2", named_v2), ("member-v1", named_v1)),
     )
-    monkeypatch.setattr("kiro_crew.slack.gateway.peek_ready_shared_embedder", lambda: object())
+    monkeypatch.setattr("aj_crew.slack.gateway.peek_ready_shared_embedder", lambda: object())
     monkeypatch.setattr(
-        "kiro_crew.slack.gateway.reembed_progress", lambda: SimpleNamespace(is_active=lambda: False)
+        "aj_crew.slack.gateway.reembed_progress", lambda: SimpleNamespace(is_active=lambda: False)
     )
     reconciled = []
     monkeypatch.setattr(
-        "kiro_crew.slack.gateway.reconcile_store_embedding_space",
+        "aj_crew.slack.gateway.reconcile_store_embedding_space",
         lambda store: reconciled.append(store),
     )
     validated = []
     monkeypatch.setattr(
-        "kiro_crew.memory_stores.require_memory_store", lambda name: validated.append(name) or name
+        "aj_crew.memory_stores.require_memory_store", lambda name: validated.append(name) or name
     )
     unopened = MagicMock(side_effect=AssertionError("repair must not open a memory store"))
     monkeypatch.setattr(ContextBuilder, "ensure_store", unopened)
@@ -983,13 +983,13 @@ def test_global_repair_waits_for_boot_migration(monkeypatch):
     migration = MagicMock()
     migration.done.return_value = False
     gateway._auto_migrate_task = migration
-    monkeypatch.setattr("kiro_crew.context.cached_vector_store_entries", lambda: ())
-    monkeypatch.setattr("kiro_crew.slack.gateway.peek_ready_shared_embedder", lambda: object())
+    monkeypatch.setattr("aj_crew.context.cached_vector_store_entries", lambda: ())
+    monkeypatch.setattr("aj_crew.slack.gateway.peek_ready_shared_embedder", lambda: object())
     monkeypatch.setattr(
-        "kiro_crew.slack.gateway.reembed_progress", lambda: SimpleNamespace(is_active=lambda: False)
+        "aj_crew.slack.gateway.reembed_progress", lambda: SimpleNamespace(is_active=lambda: False)
     )
     reconcile = MagicMock()
-    monkeypatch.setattr("kiro_crew.slack.gateway.reconcile_store_embedding_space", reconcile)
+    monkeypatch.setattr("aj_crew.slack.gateway.reconcile_store_embedding_space", reconcile)
     try:
         gateway._repair_member_memory_once()
         assert gateway.vector_memory.embed_fn is None
@@ -1012,13 +1012,13 @@ def test_global_repair_readiness_failure_does_not_starve_a_named_store(env, monk
     named = env.tiers["member-bob"]
     gateway.vector_memory = env.tiers[""]
     monkeypatch.setattr(
-        "kiro_crew.context.cached_vector_store_entries", lambda: (("member-bob", named),)
+        "aj_crew.context.cached_vector_store_entries", lambda: (("member-bob", named),)
     )
-    monkeypatch.setattr("kiro_crew.slack.gateway.peek_ready_shared_embedder", lambda: object())
+    monkeypatch.setattr("aj_crew.slack.gateway.peek_ready_shared_embedder", lambda: object())
     monkeypatch.setattr(
-        "kiro_crew.slack.gateway.reembed_progress", lambda: SimpleNamespace(is_active=lambda: False)
+        "aj_crew.slack.gateway.reembed_progress", lambda: SimpleNamespace(is_active=lambda: False)
     )
-    monkeypatch.setattr("kiro_crew.slack.gateway.reconcile_store_embedding_space", lambda store: 0)
+    monkeypatch.setattr("aj_crew.slack.gateway.reconcile_store_embedding_space", lambda store: 0)
     monkeypatch.setattr(named, "has_pending_embeddings", lambda: True)
     repair = MagicMock()
     monkeypatch.setattr(named, "backfill_missing_embeddings", repair)
@@ -1069,7 +1069,7 @@ def test_stopped_inference_never_commits_a_late_vector(env):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("surface", ["preferences", "projects", "history", "context_preview"])
 async def test_unreadable_private_tier_returns_named_503_before_access(env, surface):
-    from kiro_crew.dashboard.handlers import memory as handlers
+    from aj_crew.dashboard.handlers import memory as handlers
 
     private = env.tiers["member-alice"]
     private.close()
@@ -1098,8 +1098,8 @@ async def test_unreadable_private_tier_returns_named_503_before_access(env, surf
 async def test_recovery_starting_after_tier_lookup_is_still_a_structured_503(
     env, monkeypatch, store, surface, reader
 ):
-    from kiro_crew.dashboard.handlers import memory as handlers
-    from kiro_crew.dashboard.handlers._shared import markdown_memory_for_store
+    from aj_crew.dashboard.handlers import memory as handlers
+    from aj_crew.dashboard.handlers._shared import markdown_memory_for_store
 
     memory = await markdown_memory_for_store(env.state, store if store != "default" else "")
     if store == "default":
@@ -1141,9 +1141,9 @@ async def test_recovery_starting_after_tier_lookup_is_still_a_structured_503(
 async def test_profile_identity_failure_is_503_instead_of_invalid_content_400(
     env, monkeypatch, document
 ):
-    from kiro_crew.dashboard.handlers import memory as handlers
-    from kiro_crew.dashboard.handlers._shared import markdown_memory_for_store
-    from kiro_crew.memory_stores import UnknownMemoryStore
+    from aj_crew.dashboard.handlers import memory as handlers
+    from aj_crew.dashboard.handlers._shared import markdown_memory_for_store
+    from aj_crew.memory_stores import UnknownMemoryStore
 
     memory = await markdown_memory_for_store(env.state, "member-alice")
     before = memory.read_preferences(), memory.read_projects()

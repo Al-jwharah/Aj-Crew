@@ -12,7 +12,7 @@ import aiohttp
 import pytest
 
 # The handlers facade binds the shared names (the verify timeouts) its owner modules read.
-from kiro_crew.dashboard.handlers import messaging
+from aj_crew.dashboard.handlers import messaging
 
 #: Every variable the channels' proxy rule reads, cleared so the host's own cannot leak in.
 _PROXY_VARS = ("HTTPS_PROXY", "HTTP_PROXY", "ALL_PROXY", "https_proxy", "http_proxy", "all_proxy")

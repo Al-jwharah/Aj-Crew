@@ -8,7 +8,7 @@
  *
  * Each copied file replaces exactly that ONE line with `import { api } from
  * '../mochiApi'`. That keeps the components structurally identical to upstream
- * (so `git diff` against the pristine copy stays readable when KiroCrew's Mochi
+ * (so `git diff` against the pristine copy stays readable when AjCrew's Mochi
  * lands here) while fixing three things the global handle got wrong:
  *
  *  1. It was `any`, so a missing method compiled fine and was then swallowed by
@@ -26,12 +26,12 @@
  * every call with `?.`, so an absent method is a no-op rather than a throw — but
  * the corresponding UI is REMOVED rather than left dead:
  *   - self-updater: mochiCheckUpdate, mochiReinstall, devTestUpdate,
- *     devForceUpdateUI, devReinstall — KiroCrew owns updates.
+ *     devForceUpdateUI, devReinstall — AjCrew owns updates.
  *   - backend switching / tunnel: tunnelConnect, tunnelStatus, onTunnelStatus,
  *     onBackendSwitching, onBackendSwitchError, onBackendResolved — the builtin
  *     is same-origin, so there is no backend to repoint.
  *   - soul: getSoul, setSoul — each avatar carries its own persona.
- *   - themes: broadcastTheme — Mochi follows the KiroCrew theme.
+ *   - themes: broadcastTheme — Mochi follows the AjCrew theme.
  *   - dictation: sendDictationTranscript, cancelDictation, onDictationState,
  *     onDictationStopRecording — push-to-talk is not ported.
  *   - voice config write: updateSttConfig — no Mochi UI edits voice settings;
@@ -141,7 +141,7 @@ function shellChannels(): ShellChannels {
  * must be a decision, not a shortcut.
  */
 interface UnimplementedUpstream {
-  /** Self-updater — KiroCrew owns updates. */
+  /** Self-updater — AjCrew owns updates. */
   mochiCheckUpdate?: () => Promise<string>
   mochiReinstall?: () => Promise<void>
   devTestUpdate?: () => Promise<void>
@@ -157,7 +157,7 @@ interface UnimplementedUpstream {
   tunnelConnect?: (host: string) => Promise<unknown>
   tunnelStatus?: () => Promise<unknown>
   onTunnelStatus?: (cb: (info: unknown) => void) => () => void
-  /** Themes — Mochi follows the KiroCrew theme. */
+  /** Themes — Mochi follows the AjCrew theme. */
   broadcastTheme?: (id: string) => void
   /** Soul — each avatar carries its own persona. */
   getSoul?: () => Promise<unknown>
@@ -231,12 +231,12 @@ export function nestConfig(s: MochiSettings): NestedConfig {
       // The original named the behaviour mode `activityMode`; the builtin's key
       // is `mode`. Both are published so either spelling reads correctly.
       activityMode: flat.mode,
-      // Owned by KiroCrew core (Settings -> Chat), not by Mochi. Reported as the
+      // Owned by AjCrew core (Settings -> Chat), not by Mochi. Reported as the
       // core default so nothing reads `undefined` during the subtraction pass.
       autoCompactEnabled: true,
       autoCompactThresholdPct: 60,
       soul: '',
-      theme: 'kirocrew',
+      theme: 'ajcrew',
     },
     shortcuts: (flat.shortcuts ?? {}) as Record<string, string>,
     window: { chatAlwaysOnTop: (flat.chatAlwaysOnTop as boolean | undefined) ?? true },
@@ -311,7 +311,7 @@ export interface McpServerRow {
  * Kept as a predicate rather than a literal list so the `<app>:<server>` form
  * matches whatever the app is called.
  */
-const HOST_MANAGED_MCP = new Set(['kirocrew-cron', 'kirocrew-core'])
+const HOST_MANAGED_MCP = new Set(['ajcrew-cron', 'ajcrew-core'])
 
 function isBaselineMcpServer(name: string): boolean {
   return name.startsWith('mochi:') || HOST_MANAGED_MCP.has(name)
@@ -681,7 +681,7 @@ function openWidgetExternal(srcdoc: string, title?: string): void {
  *
  * The original shelled out to macOS's `/usr/sbin/screencapture -i`, which is
  * Darwin-only — this build ships on Windows too. Capture therefore runs on
- * KiroCrew's OWN mechanism (`captureScreen` + `SnipOverlay`, with
+ * AjCrew's OWN mechanism (`captureScreen` + `SnipOverlay`, with
  * `session.setDisplayMediaRequestHandler` already registered in the shell and
  * the macOS Screen Recording permission already gated + explained there). One
  * capture path, one permission path, all three platforms.
@@ -720,14 +720,14 @@ export function onCaptureRequested(cb: () => void): () => void {
 /**
  * Reset Mochi: forget everything and go back to the orange cat.
  *
- * Two steps, in this order and for a reason. The chat SLOT belongs to KiroCrew
+ * Two steps, in this order and for a reason. The chat SLOT belongs to AjCrew
  * core, so it is cleared through core's own endpoint rather than by the app
  * reaching into another subsystem's storage; the app route then clears Mochi's
  * own state and rewrites its settings to defaults.
  *
  * The history goes FIRST: if it fails the user still has their settings, which is
  * the recoverable half. It is a real DELETE, not a new session — archiving the
- * slot left the conversation (and its preview) in KiroCrew's session list, so a
+ * slot left the conversation (and its preview) in AjCrew's session list, so a
  * reset looked like it had not happened until the next message forced a reload.
  *
  * User-imported appearance packs are deliberately kept —

@@ -15,12 +15,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard import mcp_oauth_provenance
-from kiro_crew.dashboard.chat_runner import _emit_mcp_oauth_request, _mark_mcp_oauth_completed
-from kiro_crew.dashboard.chat_utils import _prepare_messages, _redact_meta_for_role
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.dashboard.state_parts.transcript_rows import chat_message_note
-from kiro_crew.security import oauth_url_contains_credential
+from aj_crew.dashboard import mcp_oauth_provenance
+from aj_crew.dashboard.chat_runner import _emit_mcp_oauth_request, _mark_mcp_oauth_completed
+from aj_crew.dashboard.chat_utils import _prepare_messages, _redact_meta_for_role
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.state_parts.transcript_rows import chat_message_note
+from aj_crew.security import oauth_url_contains_credential
 
 LIVE_CHILD = "c0ffee0123456789"
 STATE = "opaque-state-123"

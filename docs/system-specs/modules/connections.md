@@ -3,7 +3,7 @@
 Third-party account connections: the provider registry and its tiers, the mint
 endpoints a card drives, where credential custody sits, warm prewarming, owner-only
 disconnect, the automated L0/L1 gates, and the manual L2 gate. The subsystem is
-`src/kiro_crew/connections/` (`registry.py`, `mint.py`, `warm.py`, `status.py`,
+`src/aj_crew/connections/` (`registry.py`, `mint.py`, `warm.py`, `status.py`,
 `ownership.py`, `oauth_clients.py`, `tool_aliases.py`, `alias_record.py`,
 `l0_probe.py`, `l0_drift.py`, `l0_record.py`, `l1_smoke.py`, `tool_test.py`, `warm_runtime/`, and
 `control_plane/`), plus `dashboard/handlers/connections.py` and
@@ -28,8 +28,8 @@ than this subsystem's OAuth-grant plumbing. Their current contracts include the
 [Microsoft Graph](microsoft-graph-runtime.md), and [Zoom](connector-zoom.md)
 specs.
 
-**Kiro Crew never holds a connection's credential.** kiro-cli owns the OAuth chain
-end to end; Kiro Crew observes grant presence by `stat`, and every rule below follows
+**Aj Crew never holds a connection's credential.** kiro-cli owns the OAuth chain
+end to end; Aj Crew observes grant presence by `stat`, and every rule below follows
 from that boundary. The credential-boundary detail lives in
 [`../architecture/design-notes/mcp-oauth-ownership.md`](../../architecture/design-notes/mcp-oauth-ownership.md).
 
@@ -38,7 +38,7 @@ refuses dynamic client registration (`auth.mode: "preregistered"` in the
 registry — GitHub, Asana and the six Google Workspace entries today) needs an OAuth **app** an operator registered
 in the vendor console, and a confidential app comes with a `client_secret`. That
 secret is the operator's *application* credential, not any user's grant: the
-grant still lives with kiro-cli and nothing here reads it. Kiro Crew keeps the
+grant still lives with kiro-cli and nothing here reads it. Aj Crew keeps the
 secret in the encrypted vault (`CONNECTIONS_<SLUG>_CLIENT_SECRET`) as the source
 of truth and writes it into the emitted agent spec as `oauth.clientSecret` only
 because that file is the one thing kiro-cli reads — **the same footing the
@@ -64,7 +64,7 @@ original defect:
 | Reachability | does the endpoint answer? | `/api/mcp` (a real kiro-cli handshake) |
 | Authorization | does kiro-cli hold a grant? | `/api/connections/status` (this note) |
 
-The status probe carries no OAuth token — kiro-cli owns token custody and Kiro
+The status probe carries no OAuth token — kiro-cli owns token custody and Aj
 Crew stores no credential — so a remote OAuth server answers it with 401 and the
 gateway reports `needs_auth`. **Two different situations produce that identical
 answer**: a provider nobody has authorized, and a provider authorized *outside*
@@ -140,7 +140,7 @@ Status vocabulary, all judged from local facts:
 | `awaiting_consent` | no grant, but a mint is in flight (`minting`/`waiting`) |
 | `not_connected` | no grant and nothing pending |
 
-`accountLabel` is deliberately **absent**. Kiro Crew never sees a provider
+`accountLabel` is deliberately **absent**. Aj Crew never sees a provider
 credential, and neither the unauthenticated handshake nor the runtime's
 notifications carry an account identity, so there is nothing truthful to report;
 inventing a label locally would put an unverified identity on the card.
@@ -364,12 +364,12 @@ module prefix, so a `warm_runtime` owner reached without its facade is caught to
 
 ## Minting and the warm table
 
-Cold mint (`kiro_crew.connections.mint`) spawns one kiro-cli process per provider for one
-approval URL: ~7.5s per card. `kiro_crew.connections.warm` serves the whole gallery from one
+Cold mint (`aj_crew.connections.mint`) spawns one kiro-cli process per provider for one
+approval URL: ~7.5s per card. `aj_crew.connections.warm` serves the whole gallery from one
 process, and every rule below answers an observed failure.
 
-**Placement.** `src/kiro_crew/connections/warm.py` is the warm engine's one import and patch
-surface, and it composes eight private owners under `kiro_crew.connections.warm_runtime`; the
+**Placement.** `src/aj_crew/connections/warm.py` is the warm engine's one import and patch
+surface, and it composes eight private owners under `aj_crew.connections.warm_runtime`; the
 dashboard handler adds only endpoint wiring -- `expire_dead_mints` on the status path,
 `_audited_mintable_providers` plus `warm_mint_all` on the premint path, and `adopt_shared_mint`
 on the mint path. The dashboard server registers two lifecycle hooks in both full and headless
@@ -380,18 +380,18 @@ no boot-path module loads a `warm_runtime` owner either.
 
 | Owner | Holds | Why there |
 |---|---|---|
-| `src/kiro_crew/connections/warm_runtime/spec_plan.py` | `_WarmSpecPlan`; the reuse rules `_plan_is_servable` and `_resident_roster_is_asked_for`; per-provider entry derivation (`_registry_server_entry`, `_operator_oauth_client`, `_auth_shape`, `_warm_mintable_entry`); `_wanted_aliases` | rules over registry and configured entries; `_operator_oauth_client` reads config, env and the vault on every call, so callers reach it only from sync helpers behind `asyncio.to_thread` |
-| `src/kiro_crew/connections/warm_runtime/start_identity.py` | `_process_identity_live` and the start-identity helpers it compares with | the tri-state PID-reuse verdict both generation readers act on |
-| `src/kiro_crew/connections/warm_runtime/shared_rows.py` | the two-axis predicates (`_warm_table_row`, the counts built on it, `_mint_is_cold_held`, `_mint_is_adopted`); the atomic `_claim_shared_mints`, `_dispose_displaced_rows` and `_release_shared_claims` (shielded whole: it takes every row out of the table with no await, then disposes outside the lock, so a second cancel during a rollback strands no `minting` row) | one claim transaction over the cold engine's table, bound from `mint` exactly as the facade binds it |
-| `src/kiro_crew/connections/warm_runtime/spec_body.py` | the fixed warm names (`_WARM_AGENT_PREFIX`, `_WARM_NAME_RE`, `_WARM_BASE_AGENT`, `_WARM_ALL_AGENT`) and `_WARM_SPEC_SENTINEL`; the sentinel-first body (`_warm_spec_description`, `_warm_spec_body`) with `connections_tool_aliases`; the stale-name predicate `_is_stale_warm_spec` and the ownership marks `_warm_ownership_marks` | the text a plan writes and the ownership judge compares; the judge and its private-scope reader stay in the facade as link-screen sites, and the gated writer stays beside them as a seam tests substitute |
-| `src/kiro_crew/connections/warm_runtime/generation_tree.py` | the generation root and its marker constants; the owner-marker writer (`_warm_generation_owner`, `_write_warm_generation_owner`); `_create_warm_generation_dir`, `_bind_warm_generation` and `_remove_warm_generation_dir`; the proven release (`_spawn_left_no_process`, `_release_runtime_generation`) | one directory's lifetime; the marker reader, the plain-directory screen, the death verdict and the boot scavenger stay in the facade |
-| `src/kiro_crew/connections/warm_runtime/mint_process.py` | `_acp_runtime_factory`, `_warm_session_mcp_servers` and `_runtime_alive`; the `_WarmSession` and `_WarmMintResult` records; `_collect_oauth_requests`; the reporting teardown `_destroy_session_quietly` and `_kill_quietly` | the primitives `_WarmMintRuntime` calls; the timeouts and drain bounds stay in the facade's tunables, some of which tests substitute |
-| `src/kiro_crew/connections/warm_runtime/rearms.py` | `_rearm_dead_warm_mint`; the per-provider invalidation re-arms (`rearm_invalidated_provider`, `_rearm_invalidated_provider`, the `_invalidation_rearms` registry, `_forget_invalidation_rearm`) and their teardown `_settle_invalidation_rearms` | automatic replacement, which re-enters the ordinary scan and `warm_mint_all` |
-| `src/kiro_crew/connections/warm_runtime/table_flow.py` | `warm_mint_all`; `_absorb_warm_requests`; the handoff (`adopt_shared_mint`, `_adopt_shared_row`); late-frame recovery (`_recover_redrained_requests`, `_providers_with_requests`) | the premint and mint request paths over the table |
-| `src/kiro_crew/connections/warm.py` | the public API; every patch seam and tunable; the provider scan; `_warm_spec_plan`; spec ownership (judge, private-scope reader, gated writer); the generation marker reader, plain-directory screen, death verdict and boot scavenger; `_WarmMintRuntime` and its singleton; `_warm_row_alive`, expiry, `_warm_activate`, the drain and the reaper; `_credential_bearing_slugs` | pinned to the file by the link-screen baseline, the agent-spec call-site ratchet, the session-registry gate, the security spec's citation of `warm._credential_bearing_slugs` and the composition contract's pinned-construct list (the death verdict and the boot scavenger), or the runtime and the seams the owners call into |
+| `src/aj_crew/connections/warm_runtime/spec_plan.py` | `_WarmSpecPlan`; the reuse rules `_plan_is_servable` and `_resident_roster_is_asked_for`; per-provider entry derivation (`_registry_server_entry`, `_operator_oauth_client`, `_auth_shape`, `_warm_mintable_entry`); `_wanted_aliases` | rules over registry and configured entries; `_operator_oauth_client` reads config, env and the vault on every call, so callers reach it only from sync helpers behind `asyncio.to_thread` |
+| `src/aj_crew/connections/warm_runtime/start_identity.py` | `_process_identity_live` and the start-identity helpers it compares with | the tri-state PID-reuse verdict both generation readers act on |
+| `src/aj_crew/connections/warm_runtime/shared_rows.py` | the two-axis predicates (`_warm_table_row`, the counts built on it, `_mint_is_cold_held`, `_mint_is_adopted`); the atomic `_claim_shared_mints`, `_dispose_displaced_rows` and `_release_shared_claims` (shielded whole: it takes every row out of the table with no await, then disposes outside the lock, so a second cancel during a rollback strands no `minting` row) | one claim transaction over the cold engine's table, bound from `mint` exactly as the facade binds it |
+| `src/aj_crew/connections/warm_runtime/spec_body.py` | the fixed warm names (`_WARM_AGENT_PREFIX`, `_WARM_NAME_RE`, `_WARM_BASE_AGENT`, `_WARM_ALL_AGENT`) and `_WARM_SPEC_SENTINEL`; the sentinel-first body (`_warm_spec_description`, `_warm_spec_body`) with `connections_tool_aliases`; the stale-name predicate `_is_stale_warm_spec` and the ownership marks `_warm_ownership_marks` | the text a plan writes and the ownership judge compares; the judge and its private-scope reader stay in the facade as link-screen sites, and the gated writer stays beside them as a seam tests substitute |
+| `src/aj_crew/connections/warm_runtime/generation_tree.py` | the generation root and its marker constants; the owner-marker writer (`_warm_generation_owner`, `_write_warm_generation_owner`); `_create_warm_generation_dir`, `_bind_warm_generation` and `_remove_warm_generation_dir`; the proven release (`_spawn_left_no_process`, `_release_runtime_generation`) | one directory's lifetime; the marker reader, the plain-directory screen, the death verdict and the boot scavenger stay in the facade |
+| `src/aj_crew/connections/warm_runtime/mint_process.py` | `_acp_runtime_factory`, `_warm_session_mcp_servers` and `_runtime_alive`; the `_WarmSession` and `_WarmMintResult` records; `_collect_oauth_requests`; the reporting teardown `_destroy_session_quietly` and `_kill_quietly` | the primitives `_WarmMintRuntime` calls; the timeouts and drain bounds stay in the facade's tunables, some of which tests substitute |
+| `src/aj_crew/connections/warm_runtime/rearms.py` | `_rearm_dead_warm_mint`; the per-provider invalidation re-arms (`rearm_invalidated_provider`, `_rearm_invalidated_provider`, the `_invalidation_rearms` registry, `_forget_invalidation_rearm`) and their teardown `_settle_invalidation_rearms` | automatic replacement, which re-enters the ordinary scan and `warm_mint_all` |
+| `src/aj_crew/connections/warm_runtime/table_flow.py` | `warm_mint_all`; `_absorb_warm_requests`; the handoff (`adopt_shared_mint`, `_adopt_shared_row`); late-frame recovery (`_recover_redrained_requests`, `_providers_with_requests`) | the premint and mint request paths over the table |
+| `src/aj_crew/connections/warm.py` | the public API; every patch seam and tunable; the provider scan; `_warm_spec_plan`; spec ownership (judge, private-scope reader, gated writer); the generation marker reader, plain-directory screen, death verdict and boot scavenger; `_WarmMintRuntime` and its singleton; `_warm_row_alive`, expiry, `_warm_activate`, the drain and the reaper; `_credential_bearing_slugs` | pinned to the file by the link-screen baseline, the agent-spec call-site ratchet, the session-registry gate, the security spec's citation of `warm._credential_bearing_slugs` and the composition contract's pinned-construct list (the death verdict and the boot scavenger), or the runtime and the seams the owners call into |
 
 `warm.py` re-exports every owner name as the same object, and no owner imports the facade,
-`kiro_crew.acp` or `kiro_crew.providers` at module scope. An owner reads every name the facade
+`aj_crew.acp` or `aj_crew.providers` at module scope. An owner reads every name the facade
 defines, and every name a test or caller substitutes on it, through `_warm_facade()` at call
 time and never by its bare name: `shared_rows` disposes a row through `warm._dispose_mint`,
 and the other owners reach the runtime singleton, the tunables, the generation screens and
@@ -722,12 +722,12 @@ hold. Splitting them produced three data-loss paths of the same shape — owners
 decided over an incomplete census, or acted on outside the lock that judged it:
 
 - **The census was incomplete.** Discovery merges exactly one agent spec
-  (`kirocrew.json`), so a spec the user wrote by hand, or one an app materialized,
+  (`ajcrew.json`), so a spec the user wrote by hand, or one an app materialized,
   was invisible — while kiro-cli authorizes from it and shares the pair the
   endpoint names. `spec_census` globs the whole agents directory alongside the
-  `mcp.json` scopes, precisely because the specs that matter are the ones Kiro
+  `mcp.json` scopes, precisely because the specs that matter are the ones Aj
   Crew does *not* own. An agent spec contributes sharers but is never a purge
-  target: Kiro Crew does not own a user's agent file.
+  target: Aj Crew does not own a user's agent file.
 - **The purge was wider than the judgement.** Ownership was read from the merged
   winner while `_purge_server_config` removed the name from *every* scope, so a
   same-named entry in a lower-priority scope pointing elsewhere was deleted
@@ -817,7 +817,7 @@ a configured provider with a dead credential, reachable with two dashboard tabs.
 Nesting it is safe for a reason worth recording, because the opposite was assumed
 once and was wrong: this endpoint holds the `~/.kiro/settings/mcp.lock` sidecar,
 while `rebuild_agent_config`'s internal lock defaults to
-`~/.kiro/agents/kirocrew.lock` (`apps/bridges._mcp_lock`). They are different
+`~/.kiro/agents/ajcrew.lock` (`apps/bridges._mcp_lock`). They are different
 flocks, so the non-reentrancy that would otherwise deadlock never applies.
 
 ### Identity is the endpoint, never the entry name
@@ -860,12 +860,12 @@ pair says nothing about an owned trailing-slash pair nobody else uses, and one
 flat flag skipped that pair's revoke while the purge still removed its entry.
 
 **A mirror is not a sharer.** `_purge_server_config` strips the entry from the
-rendered `<agents>/kirocrew.json` and from every `scope.agent_mcp_file` itself, so
+rendered `<agents>/ajcrew.json` and from every `scope.agent_mcp_file` itself, so
 those entries are reflections of the scopes this transaction is purging rather
 than independent grant holders — counting them made an ordinary Disconnect see its
 own reflection as a sharer and skip the revoke *every time*, which is the failure
 mode where the feature silently never fires and no census-mocking test can see it.
-A hand-written agent spec is the opposite: Kiro Crew never writes it, so its entry
+A hand-written agent spec is the opposite: Aj Crew never writes it, so its entry
 keeps its own grant and must be able to block a revoke. The exclusion is scoped to
 the justification — with nothing owned the purge does not run, so a mirrored entry
 is a real holder again and blocks normally.
@@ -915,7 +915,7 @@ every time. L1 sits between: one consent click, then automated.
 
 ### What a green L1 run actually proves
 
-**Kiro Crew holds no token.** kiro-cli owns the OAuth chain and injects the
+**Aj Crew holds no token.** kiro-cli owns the OAuth chain and injects the
 bearer inside its own process ([mcp-oauth-ownership.md](../../architecture/design-notes/mcp-oauth-ownership.md)),
 so an exchange opened from the harness carries no credential for a managed
 provider, and the live endpoint answers with an OAuth challenge -- exactly as it
@@ -990,7 +990,7 @@ artifact exists and the live endpoint still issues a valid challenge.
 
 The Connections card's owner-only `POST /api/connections/test` closes the
 listing gap through the runtime instead of widening this harness. It starts a
-promptless kiro-cli ACP session under the real `kirocrew` agent and executes two
+promptless kiro-cli ACP session under the real `ajcrew` agent and executes two
 native commands, with no model turn:
 
 1. `/mcp` reads kiro-cli's MCP-manager status and per-server tool count. A
@@ -1010,13 +1010,13 @@ governed, audited agent path.
 
 ### Running it by hand
 
-`python3 -m kiro_crew.connections.l1_smoke --report connections-l1-report.json` (under a
+`python3 -m aj_crew.connections.l1_smoke --report connections-l1-report.json` (under a
 pipx/venv install, use that environment's interpreter). `--min-exercised 1`
 reproduces the lane's gate; `--concurrency`/`--timeout` are in `--help`.
 
 ## The registry roster
 
-Every entry in `src/kiro_crew/connections/registry.json`, what stands between it
+Every entry in `src/aj_crew/connections/registry.json`, what stands between it
 and the Connect grid, and the category it fills. `category` is a closed
 vocabulary (`registry.PROVIDER_CATEGORIES`) so the coverage diff against the
 ChatGPT and Claude connector directories is bucket-for-bucket; nothing mints,
@@ -1159,7 +1159,7 @@ the registry endpoint) stays **Not connected**, for example when the endpoint is
 configured only in a user's own agent spec, which `/api/mcp` does not list: the
 card has no entry for Disconnect or Test to act on (#30393). The status feed
 still reports `grantPresent: true`, so the tip beside **Connect** says the user is
-already signed in but Kiro Crew is not set up to use it yet, and that Connect sets
+already signed in but Aj Crew is not set up to use it yet, and that Connect sets
 it up, using the saved sign-in when it can, so it may still ask to sign in again
 (`stored_sign_in_no_server`). The hedge is deliberate: the kiro-cli mint
 validates and reuses an existing grant for the same endpoint URL, but a
@@ -1187,7 +1187,7 @@ callback path is the constant `CALLBACK_PATH = "/callback"`, so
 `registry.redirect_uri(provider)` is the one string both the runbook prints and
 the runtime pins: `http://<host>:<port>/callback`. A shipped `redirect_host` /
 `redirect_port` is immutable: every operator who followed the runbook has
-registered that exact URI in a vendor console Kiro Crew cannot reach, so changing
+registered that exact URI in a vendor console Aj Crew cannot reach, so changing
 it silently breaks each of their apps until they re-register. Retire a port by
 adding a provider, never by renumbering one;
 `test_connections_registry_auth.py` pins the shipped values so a change fails
@@ -1205,7 +1205,7 @@ six; a shared Google client card is a separate, not-yet-decided change.
 
 **Where the client lives.** `connections/oauth_clients.py` resolves it with a
 fixed precedence — environment
-(`KIROCREW_CONNECTIONS_<SLUG>_CLIENT_ID` / `_CLIENT_SECRET`, the container and
+(`AJCREW_CONNECTIONS_<SLUG>_CLIENT_ID` / `_CLIENT_SECRET`, the container and
 CI shape) over `config.json` (`connections.oauth_clients.<slug>.client_id`, the
 public half) and the vault (`CONNECTIONS_<SLUG>_CLIENT_SECRET`, the secret
 half), with the registry's own `client_id` as a last-resort default for the id
@@ -1337,7 +1337,7 @@ Vercel, GitLab: `crew_oauth.DCR_SLUGS`), with no operator client
 from its `mcp_url` (401 challenge, then RFC 9728 and RFC 8414 documents), refuses
 an issuer other than the committed `l0_expectations.authorization_server`
 (`issuer_changed`), an AS without S256 or a `registration_endpoint`, and never
-guesses an endpoint. Crew registers its own client (`client_name` "Kiro Crew",
+guesses an endpoint. Crew registers its own client (`client_name` "Aj Crew",
 or the entry's `dcr_client_name`) once per card in the vault entry
 `CONNECTIONS_<SLUG>_OAUTH_CLIENT`, with the token auth method the AS lists
 (`none` first), and registers again when the redirect or issuer differs, the
@@ -1413,7 +1413,7 @@ channel.** A typed error's `detail` can reflect provider-returned text, so it
 goes through the SAME redact-then-truncate discipline as
 `l1_smoke._redacted_detail`, capped at the same 200 characters. `redacted_detail`
 (and the `operation_error` constructor that calls it) delegate to
-`kiro_crew.security.redact_and_truncate`, which runs the site-wide credential /
+`aj_crew.security.redact_and_truncate`, which runs the site-wide credential /
 exfiltration-URL scanners over the whole string BEFORE the slice — truncating
 first would bisect a credential straddling the boundary and leak the prefix past
 the regex. There is no un-redacted path onto `detail`.
@@ -1483,6 +1483,6 @@ PEP 420 namespace packages let `vendors.<slug>` import regardless). Second,
 several streams landing in parallel from each trying to create `vendors/` and
 colliding. **W01 creates the anchor and nothing under it** — no `vendors/<slug>/`
 subdirectory is this slice's to make. The name is `vendors`, not `providers`,
-deliberately: `src/kiro_crew/providers/` already exists and means LLM providers,
+deliberately: `src/aj_crew/providers/` already exists and means LLM providers,
 so a `connections/providers/` here would be one word for two different things in
 one package tree.

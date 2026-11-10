@@ -19,10 +19,10 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-import kiro_crew
-from kiro_crew.config.loader import KiroCrewConfig, config_path
-from kiro_crew.config.sections import VERBOSITY_LEVELS, normalize_verbosity
-from kiro_crew.context import (
+import aj_crew
+from aj_crew.config.loader import AjCrewConfig, config_path
+from aj_crew.config.sections import VERBOSITY_LEVELS, normalize_verbosity
+from aj_crew.context import (
     _MULTIBYTE_TABLE,
     _RESPONSE_PREFERENCES_FOOTER,
     _RESPONSE_PREFERENCES_HEADER,
@@ -31,9 +31,9 @@ from kiro_crew.context import (
     _neutralize_structural_markers,
     _reply_style_rules,
 )
-from kiro_crew.learn import LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew.learn import LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 
 def _section(verbosity: str = "default") -> str:
@@ -45,7 +45,7 @@ def _section(verbosity: str = "default") -> str:
 
 
 def _seed_verbosity(level: str) -> None:
-    """Write dashboard.verbosity into the test-isolated home so KiroCrewConfig.load() sees it."""
+    """Write dashboard.verbosity into the test-isolated home so AjCrewConfig.load() sees it."""
     p = config_path()
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps({"dashboard": {"verbosity": level}}), encoding="utf-8")
@@ -189,8 +189,8 @@ class TestRetiredUltraLevel:
     def test_load_maps_a_stored_ultra_to_answer_only(self, tmp_path):
         p = tmp_path / "config.json"
         p.write_text(json.dumps({"dashboard": {"verbosity": "ultra"}}), encoding="utf-8")
-        with patch("kiro_crew.config.loader.config_path", return_value=p):
-            assert KiroCrewConfig.load().dashboard.verbosity == "answer_only"
+        with patch("aj_crew.config.loader.config_path", return_value=p):
+            assert AjCrewConfig.load().dashboard.verbosity == "answer_only"
 
 
 class TestUnknownLevel:
@@ -447,12 +447,12 @@ class TestTokenRetired:
     """
 
     def test_no_shipped_prompt_file_carries_the_token(self):
-        cfg_dir = Path(kiro_crew.__file__).parent / "config"
+        cfg_dir = Path(aj_crew.__file__).parent / "config"
         for name in ("prompt.md",):
             assert "{{VERBOSITY_BLOCK}}" not in (cfg_dir / name).read_text(encoding="utf-8"), name
 
     def test_no_builtin_agent_prompt_carries_the_token(self):
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         for attr in dir(agent_mod):
             if attr.endswith("_SYSTEM_PROMPT"):
@@ -464,7 +464,7 @@ class TestTokenRetired:
         fake_cfg = SimpleNamespace(
             dashboard=SimpleNamespace(widget_density="more", verbosity="concise")
         )
-        with patch("kiro_crew.context.KiroCrewConfig.load", return_value=fake_cfg):
+        with patch("aj_crew.context.AjCrewConfig.load", return_value=fake_cfg):
             result = ContextBuilder._resolve_prompt_templates(
                 "a {{VERBOSITY_BLOCK}} b", "dashboard:x"
             )
@@ -684,75 +684,75 @@ class TestVerbosityRoundTrip:
     def cfg_file(self, tmp_path):
         p = tmp_path / "config.json"
         p.write_text("{}", encoding="utf-8")
-        with patch("kiro_crew.config.loader.config_path", return_value=p):
+        with patch("aj_crew.config.loader.config_path", return_value=p):
             yield p
 
     def test_fresh_install_defaults_to_answer_only(self):
-        assert KiroCrewConfig().dashboard.verbosity == "answer_only"
+        assert AjCrewConfig().dashboard.verbosity == "answer_only"
 
     def test_config_without_the_key_loads_answer_only(self, cfg_file):
-        assert KiroCrewConfig.load().dashboard.verbosity == "answer_only"
+        assert AjCrewConfig.load().dashboard.verbosity == "answer_only"
 
     def test_a_stored_default_is_kept(self, cfg_file):
         """Every full save writes the key, so an existing install keeps its level."""
         cfg_file.write_text(json.dumps({"dashboard": {"verbosity": "default"}}), encoding="utf-8")
-        assert KiroCrewConfig.load().dashboard.verbosity == "default"
-        cfg = KiroCrewConfig.load()
+        assert AjCrewConfig.load().dashboard.verbosity == "default"
+        cfg = AjCrewConfig.load()
         cfg.save()
         assert json.loads(cfg_file.read_text())["dashboard"]["verbosity"] == "default"
 
     def test_first_save_materializes_answer_only(self, cfg_file):
-        KiroCrewConfig.load().save()
+        AjCrewConfig.load().save()
         assert json.loads(cfg_file.read_text())["dashboard"]["verbosity"] == "answer_only"
 
     def test_answer_only_is_an_advertised_enum_value(self):
         """The Settings UI and the config-patch validator both read this enum;
         a level missing here is a level the user cannot select.
         """
-        field = KiroCrewConfig().dashboard.__dataclass_fields__["verbosity"]
+        field = AjCrewConfig().dashboard.__dataclass_fields__["verbosity"]
         assert field.metadata["enum"] == ["default", "concise", "answer_only"]
 
     def test_answer_only_round_trips(self, cfg_file):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.dashboard.verbosity = "answer_only"
         cfg.save()
-        assert KiroCrewConfig.load().dashboard.verbosity == "answer_only"
+        assert AjCrewConfig.load().dashboard.verbosity == "answer_only"
 
     def test_save_load(self, cfg_file):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.dashboard.verbosity = "concise"
         cfg.save()
         assert json.loads(cfg_file.read_text())["dashboard"]["verbosity"] == "concise"
-        assert KiroCrewConfig.load().dashboard.verbosity == "concise"
+        assert AjCrewConfig.load().dashboard.verbosity == "concise"
 
     def test_load_from_existing(self, cfg_file):
         cfg_file.write_text(json.dumps({"dashboard": {"verbosity": "concise"}}), encoding="utf-8")
-        assert KiroCrewConfig.load().dashboard.verbosity == "concise"
+        assert AjCrewConfig.load().dashboard.verbosity == "concise"
 
 
 @pytest.fixture()
 def cfg_file(tmp_path):
     p = tmp_path / "config.json"
     p.write_text("{}", encoding="utf-8")
-    with patch("kiro_crew.config.loader.config_path", return_value=p):
+    with patch("aj_crew.config.loader.config_path", return_value=p):
         yield p
 
 
 @pytest.fixture()
 def mock_sel():
     try:
-        import kiro_crew.dashboard.handlers  # noqa: F401
+        import aj_crew.dashboard.handlers  # noqa: F401
     except ImportError:
         pytest.skip("dashboard handler deps not available locally")
     m = MagicMock()
     m.log_tool_invocation = MagicMock()
-    with patch("kiro_crew.dashboard.handlers.sel", return_value=m):
+    with patch("aj_crew.dashboard.handlers.sel", return_value=m):
         yield m
 
 
 @pytest.fixture()
 def handler_app(cfg_file, mock_sel):
-    from kiro_crew.dashboard.handlers.files import api_dashboard_config
+    from aj_crew.dashboard.handlers.files import api_dashboard_config
 
     app = web.Application()
     app.router.add_put("/api/dashboard/config", api_dashboard_config)
@@ -765,7 +765,7 @@ async def test_handler_put_verbosity_concise(handler_app, cfg_file):
     async with TestClient(TestServer(handler_app)) as client:
         resp = await client.put("/api/dashboard/config", json={"verbosity": "concise"})
         assert resp.status == 200
-    assert KiroCrewConfig.load().dashboard.verbosity == "concise"
+    assert AjCrewConfig.load().dashboard.verbosity == "concise"
 
 
 @pytest.mark.asyncio
@@ -774,7 +774,7 @@ async def test_handler_put_retired_ultra_stores_answer_only(handler_app, cfg_fil
     async with TestClient(TestServer(handler_app)) as client:
         resp = await client.put("/api/dashboard/config", json={"verbosity": "ultra"})
         assert resp.status == 200
-    assert KiroCrewConfig.load().dashboard.verbosity == "answer_only"
+    assert AjCrewConfig.load().dashboard.verbosity == "answer_only"
 
 
 @pytest.mark.asyncio
@@ -782,7 +782,7 @@ async def test_handler_put_verbosity_answer_only(handler_app, cfg_file):
     async with TestClient(TestServer(handler_app)) as client:
         resp = await client.put("/api/dashboard/config", json={"verbosity": "answer_only"})
         assert resp.status == 200
-    assert KiroCrewConfig.load().dashboard.verbosity == "answer_only"
+    assert AjCrewConfig.load().dashboard.verbosity == "answer_only"
 
 
 @pytest.mark.asyncio
@@ -803,7 +803,7 @@ async def test_handler_put_verbosity_rejects_invalid(handler_app, cfg_file):
         resp = await client.put("/api/dashboard/config", json={"verbosity": "aggressive"})
         assert resp.status == 400
     # bad value must not be persisted
-    assert KiroCrewConfig.load().dashboard.verbosity == "answer_only"
+    assert AjCrewConfig.load().dashboard.verbosity == "answer_only"
 
 
 @pytest.mark.asyncio

@@ -39,7 +39,7 @@ export function row(overrides: Record<string, unknown> = {}) {
     bound: false,
     slot_key: '',
     running: false,
-    kiro_agent: 'kirocrew',
+    kiro_agent: 'ajcrew',
     workspace: 'default',
     memory_store: 'default',
     model: '',
@@ -79,7 +79,7 @@ export function row(overrides: Record<string, unknown> = {}) {
  *  `mate`), separate from the reserved `default` member. The gateway reports
  *  its welcome as owed and its marker as unclaimed unless a case says otherwise. */
 export function assistantRow(overrides: Record<string, unknown> = {}) {
-  return row({ name: 'mate', slug: 'mate', kiro_agent: 'kirocrew', source: 'builtin', memory_store: 'default', welcome_owed: true, welcome_claimed: false, ...overrides })
+  return row({ name: 'mate', slug: 'mate', kiro_agent: 'ajcrew', source: 'builtin', memory_store: 'default', welcome_owed: true, welcome_claimed: false, ...overrides })
 }
 /** The reserved `default` member, as the backend lists it. */
 export function defaultRow(overrides: Record<string, unknown> = {}) {
@@ -141,7 +141,7 @@ export const stepCreateClock = (ms: number, action: () => void = () => {}) =>
  *  nothing remembered opens no one (#11763). */
 export async function renderPage(
   members = [row()],
-  defaultAgent = 'kirocrew',
+  defaultAgent = 'ajcrew',
   {
     route = '/members',
     thread,

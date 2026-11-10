@@ -6,10 +6,10 @@ import logging
 
 import pytest
 
-from kiro_crew.apps import official_catalog as oc
-from kiro_crew.apps.manifest import AppManifest
-from kiro_crew.apps.registry import _merge_manifest
-from kiro_crew.apps.store_links import MAX_LINKS, sanitize_links
+from aj_crew.apps import official_catalog as oc
+from aj_crew.apps.manifest import AppManifest
+from aj_crew.apps.registry import _merge_manifest
+from aj_crew.apps.store_links import MAX_LINKS, sanitize_links
 
 GOOD = {"label": "Wiki", "url": "https://wiki.example.com/my-app"}
 GUIDE = {"label": "User guide", "url": "https://example.com/guide?x=1#top"}
@@ -54,14 +54,14 @@ def test_label_is_trimmed_and_extra_keys_dropped():
     ],
 )
 def test_each_bad_kind_is_dropped_and_logged(entry, caplog):
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.store_links"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.apps.store_links"):
         assert sanitize_links([entry, GOOD], app_name="demo") == [GOOD]
     assert sum("dropped 1 invalid" in r.getMessage() for r in caplog.records) == 1
 
 
 def test_entries_past_the_cap_are_dropped_and_logged_as_over_the_cap(caplog):
     links = [{"label": f"L{i}", "url": f"https://example.com/{i}"} for i in range(MAX_LINKS + 2)]
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.store_links"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.apps.store_links"):
         assert sanitize_links(links) == links[:MAX_LINKS]
     (record,) = caplog.records
     assert "dropped 0 invalid" in record.getMessage()

@@ -41,17 +41,17 @@ from chat_merge_back_helpers import (  # noqa: F401
 )
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import chat_merge_back, slot_buffers
-from kiro_crew.dashboard.chat_merge_back import (
+from aj_crew.dashboard import chat_merge_back, slot_buffers
+from aj_crew.dashboard.chat_merge_back import (
     MergePlan,
     covered_digest,
     merge_cards,
     message_key,
     plan_merge,
 )
-from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-from kiro_crew.dashboard.chat_utils import effective_session_key, slot_history_key
-from kiro_crew.dashboard.slot_buffers import (
+from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+from aj_crew.dashboard.chat_utils import effective_session_key, slot_history_key
+from aj_crew.dashboard.slot_buffers import (
     MAX_DEFERRED_NOTE_CHARS,
     MAX_SLOT_KEY_CHARS,
     MERGED_FROM_MAX_KEY_CHARS,
@@ -61,11 +61,11 @@ from kiro_crew.dashboard.slot_buffers import (
     sanitize_restored_deferred_notes,
     serialize_deferred_notes,
 )
-from kiro_crew.dashboard.state import _normalize_slot_key
-from kiro_crew.history import TranscriptBusy, TranscriptWithheld
-from kiro_crew.messaging.link import ChannelLink
-from kiro_crew.security import redact as baseline_redact
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.state import _normalize_slot_key
+from aj_crew.history import TranscriptBusy, TranscriptWithheld
+from aj_crew.messaging.link import ChannelLink
+from aj_crew.security import redact as baseline_redact
+from aj_crew.testing.wait import await_until
 
 
 class TestPlanMerge:
@@ -452,8 +452,8 @@ class TestHeldMergeNote:
     @pytest.mark.asyncio
     async def test_an_uncommitted_rowless_card_keeps_its_durable_hold(self, tmp_path, monkeypatch):
         """A failed save plus window trimming must not retire the card's last copy."""
-        from kiro_crew.dashboard import chat_persistence, chat_runner
-        from kiro_crew.dashboard import state as dashboard_state
+        from aj_crew.dashboard import chat_persistence, chat_runner
+        from aj_crew.dashboard import state as dashboard_state
 
         state = _make_state(tmp_path)
         parent = state.get_or_create_slot("parent")
@@ -500,8 +500,8 @@ class TestHeldMergeNote:
         self, tmp_path, monkeypatch
     ):
         """The atomic delivered stamp permits retirement after the row leaves memory."""
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard import state as dashboard_state
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard import state as dashboard_state
 
         state = _make_state(tmp_path)
         parent = state.get_or_create_slot("parent")
@@ -1131,7 +1131,7 @@ class TestDraft:
         def failing_save(*args, **kwargs):
             raise OSError("disk full")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat._save_slot_to_history", failing_save)
+        monkeypatch.setattr("aj_crew.dashboard.chat._save_slot_to_history", failing_save)
         async with _client(state) as client:
             status, body = await _draft(client)
 
@@ -1262,7 +1262,7 @@ class TestDraft:
 
         cfg = SimpleNamespace(agent=SimpleNamespace(resolve_model=lambda role: "m"))
         monkeypatch.setattr(chat_merge_back, "run_bg_oneliner", private_meanwhile)
-        monkeypatch.setattr(chat_merge_back, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+        monkeypatch.setattr(chat_merge_back, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
 
         async with _client(chats.state) as client:
             status, body = await _draft(client)
@@ -1280,7 +1280,7 @@ class TestDraft:
 
         cfg = SimpleNamespace(agent=SimpleNamespace(resolve_model=lambda role: "m"))
         monkeypatch.setattr(chat_merge_back, "run_bg_oneliner", closed_meanwhile)
-        monkeypatch.setattr(chat_merge_back, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+        monkeypatch.setattr(chat_merge_back, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
 
         async with _client(chats.state) as client:
             status, body = await _draft(client)
@@ -1300,7 +1300,7 @@ class TestDraft:
 
         cfg = SimpleNamespace(agent=SimpleNamespace(resolve_model=lambda role: "m"))
         monkeypatch.setattr(chat_merge_back, "run_bg_oneliner", private_meanwhile)
-        monkeypatch.setattr(chat_merge_back, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+        monkeypatch.setattr(chat_merge_back, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
 
         async with _client(chats.state) as client:
             status, body = await _draft(client)
@@ -1349,7 +1349,7 @@ class TestDraft:
 
         cfg = SimpleNamespace(agent=SimpleNamespace(resolve_model=lambda role: "m"))
         monkeypatch.setattr(chat_merge_back, "run_bg_oneliner", slow)
-        monkeypatch.setattr(chat_merge_back, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+        monkeypatch.setattr(chat_merge_back, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
 
         async with _client(chats.state) as client:
             first = asyncio.create_task(_draft(client))

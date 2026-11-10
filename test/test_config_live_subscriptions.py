@@ -15,8 +15,8 @@ from config_live_helpers import (  # noqa: F401 -- fixtures are used by name
     cfg_file_fixture,
 )
 
-from kiro_crew.config.live import ConfigChange, ConfigWatch
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config.live import ConfigChange, ConfigWatch
+from aj_crew.config.loader import AjCrewConfig
 
 # ── subscription lifecycle ────────────────────────────────────────────────
 
@@ -28,7 +28,7 @@ class TestSubscriptionLifecycle:
     @pytest.mark.asyncio
     async def test_a_cancelled_subscription_stops_firing(self, cfg_file: Path) -> None:
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
         fired: list[str] = []
         sub = w.subscribe("agent", callback=lambda c: fired.append("ran"), name="one")
         _write(cfg_file, {"agent": {"model": "model-1", "log_level": "INFO"}})
@@ -60,7 +60,7 @@ class TestSubscriptionLifecycle:
         assert sub.prefixes == ()
         # An empty prefix tuple is the documented catch-all: _dispatch skips the
         # touched() filter entirely for it.
-        change = ConfigChange(old=None, new=KiroCrewConfig(), changed=frozenset({"anything.at"}))
+        change = ConfigChange(old=None, new=AjCrewConfig(), changed=frozenset({"anything.at"}))
         assert not change.touched("agent")
         assert not sub.prefixes  # so the dispatcher does not consult touched()
 
@@ -88,14 +88,14 @@ class TestOwnedAppliers:
     """
 
     @staticmethod
-    def _change(new: KiroCrewConfig, *paths: str) -> ConfigChange:
+    def _change(new: AjCrewConfig, *paths: str) -> ConfigChange:
         return ConfigChange(old=None, new=new, changed=frozenset(paths))
 
     @staticmethod
-    def _wecom_cfg(**kw: Any) -> KiroCrewConfig:
+    def _wecom_cfg(**kw: Any) -> AjCrewConfig:
         from dataclasses import replace
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         return replace(cfg, wecom=replace(cfg.wecom, **kw))
 
     class _Transport:
@@ -142,7 +142,7 @@ class TestOwnedAppliers:
         t = self._Transport()
         d = self._Dispatcher(w, t)  # held: the owner is weakly referenced
         cfg = replace(self._wecom_cfg(), _degraded_sections=frozenset({"wecom"}))
-        with caplog.at_level("WARNING", logger="kiro_crew.config.live"):
+        with caplog.at_level("WARNING", logger="aj_crew.config.live"):
             await w._dispatch(self._change(cfg, "wecom.allow_all_users"))
         assert "degraded" in caplog.text
         assert t.seen == [], "a discarded section never rebuilds authorization state"
@@ -179,7 +179,7 @@ class TestOwnedAppliers:
                 self.cfgs.append(cfg)
 
         s = Store()
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         await w._dispatch(self._change(cfg, "agent.model"))
         await w._dispatch(self._change(cfg, "skills.max_skills"))
         await w._dispatch(self._change(cfg, "memory.decay_days"))
@@ -207,8 +207,8 @@ class TestOwnedAppliers:
 
         m = Manager()
         for degraded in ({"agent"}, {"subagent"}):
-            cfg = replace(KiroCrewConfig(), _degraded_sections=frozenset(degraded))
-            with caplog.at_level("WARNING", logger="kiro_crew.config.live"):
+            cfg = replace(AjCrewConfig(), _degraded_sections=frozenset(degraded))
+            with caplog.at_level("WARNING", logger="aj_crew.config.live"):
                 await w._dispatch(self._change(cfg, "agent.subagent_max_turns"))
             assert "degraded" in caplog.text
         assert m.cfgs == []
@@ -217,7 +217,7 @@ class TestOwnedAppliers:
         # that is torn NOW, so on a dispatched change that flag is the loader's
         # process-long memory of a tear that has since been repaired.
         for degraded in ({"slack"}, {"*", "*config.json"}):
-            cfg = replace(KiroCrewConfig(), _degraded_sections=frozenset(degraded))
+            cfg = replace(AjCrewConfig(), _degraded_sections=frozenset(degraded))
             await w._dispatch(self._change(cfg, "agent.subagent_max_turns"))
             assert m.cfgs[-1] is cfg
         assert len(m.cfgs) == 2
@@ -229,7 +229,7 @@ class TestOwnedAppliers:
         w = ConfigWatch()
         got: list[int] = []
         sub = w.bind("agent.max_channel_agents", got.append)
-        cfg = replace(KiroCrewConfig(), agent=replace(KiroCrewConfig().agent, max_channel_agents=7))
+        cfg = replace(AjCrewConfig(), agent=replace(AjCrewConfig().agent, max_channel_agents=7))
         await w._dispatch(self._change(cfg, "agent.max_channels"))
         assert got == [], "a sibling leaf does not fire the binding"
         await w._dispatch(self._change(cfg, "agent.max_channel_agents"))
@@ -249,8 +249,8 @@ class TestOwnedAppliers:
 
         m = Mgr()
         w.bind("agent.max_channels", m.set_cap)
-        await w._dispatch(self._change(KiroCrewConfig(), "agent.max_channels"))
-        assert m.cap == KiroCrewConfig().agent.max_channels
+        await w._dispatch(self._change(AjCrewConfig(), "agent.max_channels"))
+        assert m.cap == AjCrewConfig().agent.max_channels
         del m
         gc.collect()
         assert list(w.subscriptions()) == []
@@ -265,8 +265,8 @@ class TestOwnedAppliers:
         w = ConfigWatch()
         got: list[int] = []
         w.bind("agent.max_channels", got.append)
-        cfg = replace(KiroCrewConfig(), _degraded_sections=frozenset({"agent"}))
-        with caplog.at_level("WARNING", logger="kiro_crew.config.live"):
+        cfg = replace(AjCrewConfig(), _degraded_sections=frozenset({"agent"}))
+        with caplog.at_level("WARNING", logger="aj_crew.config.live"):
             await w._dispatch(self._change(cfg, "agent.max_channels"))
         assert "degraded" in caplog.text
         assert got == [], "a degraded section never reaches the setter"
@@ -274,9 +274,9 @@ class TestOwnedAppliers:
         # A different section's degradation does not gate this leaf, nor does the
         # sticky whole-config flag of a repaired tear (see the object test above).
         for degraded in ({"slack"}, {"*", "*config.json"}):
-            cfg = replace(KiroCrewConfig(), _degraded_sections=frozenset(degraded))
+            cfg = replace(AjCrewConfig(), _degraded_sections=frozenset(degraded))
             await w._dispatch(self._change(cfg, "agent.max_channels"))
-        assert got == [KiroCrewConfig().agent.max_channels] * 2
+        assert got == [AjCrewConfig().agent.max_channels] * 2
 
 
 # ── replay on registration ────────────────────────────────────────────────
@@ -285,11 +285,11 @@ class TestOwnedAppliers:
 class _ModelOwner:
     """An owner that, like a store built from a loaded config, applies its own copy."""
 
-    def __init__(self, cfg: KiroCrewConfig) -> None:
+    def __init__(self, cfg: AjCrewConfig) -> None:
         self.models: list[str] = []
         self.reconfigure(cfg)
 
-    def reconfigure(self, cfg: KiroCrewConfig) -> None:
+    def reconfigure(self, cfg: AjCrewConfig) -> None:
         self.models.append(cfg.agent.model)
 
 
@@ -306,14 +306,14 @@ class TestReplayOnRegistration:
         """Write *doc* and let the loader's migration write-back land now, so the
         file's fingerprint afterwards is the one the watcher records."""
         _write(path, doc)
-        KiroCrewConfig.load()
+        AjCrewConfig.load()
 
     @pytest.mark.asyncio
     async def test_a_reload_that_missed_the_registration_is_replayed(self, cfg_file: Path) -> None:
         w = ConfigWatch(poll_interval_secs=0.05)
         self._write_settled(cfg_file, {"agent": {"model": "model-a", "log_level": "INFO"}})
-        w.prime(KiroCrewConfig.load(), ConfigWatch._current_fingerprint())
-        owned = KiroCrewConfig.load()  # the owner's own load, before the reload
+        w.prime(AjCrewConfig.load(), ConfigWatch._current_fingerprint())
+        owned = AjCrewConfig.load()  # the owner's own load, before the reload
         self._write_settled(cfg_file, {"agent": {"model": "model-bbbb", "log_level": "INFO"}})
         assert await w.refresh_now() is not None  # dispatched to nobody
 
@@ -334,10 +334,10 @@ class TestReplayOnRegistration:
         even when that tick leaves the owner's prefix unchanged."""
         w = ConfigWatch(poll_interval_secs=0.05)
         self._write_settled(cfg_file, {"agent": {"model": "model-a", "log_level": "INFO"}})
-        w.prime(KiroCrewConfig.load(), ConfigWatch._current_fingerprint())
+        w.prime(AjCrewConfig.load(), ConfigWatch._current_fingerprint())
         self._write_settled(cfg_file, {"agent": {"model": "model-bbbb", "log_level": "INFO"}})
         assert await w.refresh_now() is not None  # adopts model-bbbb
-        stale = KiroCrewConfig()  # an owner holding a copy older than the snapshot
+        stale = AjCrewConfig()  # an owner holding a copy older than the snapshot
         stale.agent.model = "model-a"
         # The file moves again, on a field outside the owner's prefix.
         self._write_settled(cfg_file, {"agent": {"model": "model-bbbb", "log_level": "DEBUG"}})
@@ -353,19 +353,19 @@ class TestReplayOnRegistration:
     def test_a_reload_landing_mid_replay_is_not_undone(self, cfg_file: Path) -> None:
         w = ConfigWatch(poll_interval_secs=0.05)
         self._write_settled(cfg_file, {"agent": {"model": "model-a", "log_level": "INFO"}})
-        first = KiroCrewConfig.load()
+        first = AjCrewConfig.load()
         w.prime(first, ConfigWatch._current_fingerprint())
-        second = KiroCrewConfig()
+        second = AjCrewConfig()
         second.agent.model = "model-cccc"
 
         class Racing(_ModelOwner):
-            def reconfigure(self, cfg: KiroCrewConfig) -> None:
+            def reconfigure(self, cfg: AjCrewConfig) -> None:
                 super().reconfigure(cfg)
                 if cfg is first:
                     # A reload adopted while the replay was applying the older one.
                     w._cfg = second
 
-        owner = Racing(KiroCrewConfig())
+        owner = Racing(AjCrewConfig())
         w.replay(w.watch_object(owner, "agent", name="owner"))
         assert owner.models[-1] == "model-cccc"
 
@@ -380,11 +380,11 @@ class TestReplayOnRegistration:
 
         w = ConfigWatch(poll_interval_secs=0.05)
         self._write_settled(cfg_file, {"agent": {"model": "model-a", "log_level": "INFO"}})
-        degraded = replace(KiroCrewConfig.load(), _degraded_sections=frozenset({"agent"}))
+        degraded = replace(AjCrewConfig.load(), _degraded_sections=frozenset({"agent"}))
         w.prime(degraded, ConfigWatch._current_fingerprint())
 
-        owner = _ModelOwner(KiroCrewConfig())
-        caplog.set_level("ERROR", logger="kiro_crew.config.live")
+        owner = _ModelOwner(AjCrewConfig())
+        caplog.set_level("ERROR", logger="aj_crew.config.live")
         sub = w.watch_object(owner, "agent", name="owner")
         w.replay(sub)
 
@@ -394,7 +394,7 @@ class TestReplayOnRegistration:
 
     def test_replay_is_a_no_op_before_anything_is_adopted(self) -> None:
         w = ConfigWatch(poll_interval_secs=0.05)
-        owner = _ModelOwner(KiroCrewConfig())
+        owner = _ModelOwner(AjCrewConfig())
         w.replay(w.watch_object(owner, "agent", name="owner"))
         assert len(owner.models) == 1
         assert w._stale == {}

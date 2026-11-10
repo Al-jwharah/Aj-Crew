@@ -140,7 +140,7 @@ describe('permissionApprovalFromFrame carries the scope fields', () => {
         request_id: 'r1',
         tool_title: 'T',
         tool_input: JSON.stringify({
-          tool_id: 'kirocrew-core::monitor_start',
+          tool_id: 'ajcrew-core::monitor_start',
           arguments: { __tool_use_purpose: 'Watch the build' },
         }),
         tool_purpose: 'Watch the build',

@@ -17,7 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
 CATALOG = ROOT / "website" / "src" / "i18n" / "locales" / "en.manual.json"
-DOC_ROOTS = (ROOT / "src" / "kiro_crew" / "docs", ROOT / "docs")
+DOC_ROOTS = (ROOT / "src" / "aj_crew" / "docs", ROOT / "docs")
 
 
 def _labels() -> tuple[str, str, str]:

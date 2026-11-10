@@ -36,7 +36,7 @@ const isScene = (v: string | null): v is Scene => SCENES.includes(v as Scene)
 const scene: Scene | 'before' = isScene(rawScene) ? rawScene : 'before'
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const realFetch = globalThis.fetch.bind(globalThis)
 globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {

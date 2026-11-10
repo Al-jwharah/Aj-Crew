@@ -19,8 +19,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from test_taskrunner_v2_scenarios import _make_provider, _mock_sessions
 
-from kiro_crew.task_reporter import load_checkpoint
-from kiro_crew.taskrunner import Step, StepStatus, TaskRunner
+from aj_crew.task_reporter import load_checkpoint
+from aj_crew.taskrunner import Step, StepStatus, TaskRunner
 
 
 @pytest.fixture(autouse=True)
@@ -28,7 +28,7 @@ def _home(tmp_path, _floor_monkeypatch):
     """Pin the data home and workspace to ``tmp_path`` through the isolation
     floor's own ``MonkeyPatch``: a test's ``monkeypatch.undo()`` cannot lift
     these pins, so no path here ever resolves to the operator's real home."""
-    for var, sub in (("KIROCREW_HOME", "home"), ("KIROCREW_WORKSPACE", "workspace")):
+    for var, sub in (("AJCREW_HOME", "home"), ("AJCREW_WORKSPACE", "workspace")):
         (tmp_path / sub).mkdir()
         _floor_monkeypatch.setenv(var, str(tmp_path / sub))
 
@@ -51,7 +51,7 @@ async def _run(tmp_path: Path, spec: Path, plan: list[Step], *, fresh: bool = Fa
     with (
         patch.object(runner, "_decompose", return_value=plan),
         patch.object(runner, "_execute_tasks", side_effect=_exec),
-        patch("kiro_crew.taskrunner.git_coord") as git,
+        patch("aj_crew.taskrunner.git_coord") as git,
     ):
         git.init_workspace = _git_init
         git.finalize = AsyncMock(return_value="")

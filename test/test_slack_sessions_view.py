@@ -1,9 +1,9 @@
 """Tests for the shared Slack sessions view.
 
-Covers the helpers in ``kiro_crew.slack.sessions_view`` that the slash command
+Covers the helpers in ``aj_crew.slack.sessions_view`` that the slash command
 ``/<command> sessions``, the ``sessions`` keyword in DMs, and the App
 Home Tab all share, plus the keyword handler in
-``kiro_crew.slack.handler`` which delegates to those helpers.
+``aj_crew.slack.handler`` which delegates to those helpers.
 """
 
 from __future__ import annotations
@@ -21,9 +21,9 @@ import pytest
 from source_corpus import parsed_candidates
 
 from conftest import MockSlackClient
-from kiro_crew.slack import sessions_view
-from kiro_crew.slack.handler import _handle_sessions_command, _is_sessions_keyword
-from kiro_crew.slack.sessions_view import (
+from aj_crew.slack import sessions_view
+from aj_crew.slack.handler import _handle_sessions_command, _is_sessions_keyword
+from aj_crew.slack.sessions_view import (
     _SESSION_KIND_DASHBOARD,
     _SESSION_KIND_OTHER,
     _SESSION_KIND_TASKRUNNER,
@@ -35,7 +35,7 @@ from kiro_crew.slack.sessions_view import (
     _default_session_title,
     sessions_include_ended,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 
 def _write_jsonl(
@@ -148,19 +148,19 @@ class TestCollectRecentSessions:
     def sess_dir(self, tmp_path, monkeypatch):
         d = tmp_path / "sessions"
         d.mkdir()
-        monkeypatch.setattr("kiro_crew.slack.sessions_view._SESSIONS_DIR", d)
+        monkeypatch.setattr("aj_crew.slack.sessions_view._SESSIONS_DIR", d)
         return d
 
     def test_missing_dir_returns_empty(self, tmp_path, monkeypatch):
         # Point at a directory that doesn't exist
-        monkeypatch.setattr("kiro_crew.slack.sessions_view._SESSIONS_DIR", tmp_path / "nope")
+        monkeypatch.setattr("aj_crew.slack.sessions_view._SESSIONS_DIR", tmp_path / "nope")
         assert _collect_recent_sessions(None) == []
 
     def test_reads_dashboard_session(self, sess_dir):
         _write_jsonl(
             sess_dir / "dashboard_chat-1-100.jsonl",
             title="Hello world",
-            agent="kirocrew",
+            agent="ajcrew",
             messages=[("user", "hi"), ("assistant", "hello")],
         )
         rows = _collect_recent_sessions(None)
@@ -169,7 +169,7 @@ class TestCollectRecentSessions:
         # Filename uses _ but the canonical key uses :
         assert row["key"] == "dashboard:chat-1-100"
         assert row["title"] == "Hello world"
-        assert row["agent"] == "kirocrew"
+        assert row["agent"] == "ajcrew"
         assert row["kind"] == _SESSION_KIND_DASHBOARD
         assert row["active"] is False
         assert row["msgs"] == [
@@ -189,8 +189,8 @@ class TestCollectRecentSessions:
         assert row["kind"] == _SESSION_KIND_TASKRUNNER
         # No metadata line → default title kicks in
         assert row["title"] == "Task Runner run-foo"
-        # No metadata agent → defaults to kirocrew
-        assert row["agent"] == "kirocrew"
+        # No metadata agent → defaults to ajcrew
+        assert row["agent"] == "ajcrew"
 
     def test_filters_by_kind(self, sess_dir):
         _write_jsonl(sess_dir / "dashboard_a.jsonl", title="A", messages=[("user", "x")])
@@ -345,7 +345,7 @@ class TestEndedRowsLeaveTheList:
     def sess_dir(self, tmp_path, monkeypatch):
         d = tmp_path / "sessions"
         d.mkdir()
-        monkeypatch.setattr("kiro_crew.slack.sessions_view._SESSIONS_DIR", d)
+        monkeypatch.setattr("aj_crew.slack.sessions_view._SESSIONS_DIR", d)
         return d
 
     def test_dismissed_row_is_left_out(self, sess_dir):
@@ -455,7 +455,7 @@ class TestChannelStemsResolveToTheirRealKey:
     def sess_dir(self, tmp_path, monkeypatch):
         d = tmp_path / "sessions"
         d.mkdir()
-        monkeypatch.setattr("kiro_crew.slack.sessions_view._SESSIONS_DIR", d)
+        monkeypatch.setattr("aj_crew.slack.sessions_view._SESSIONS_DIR", d)
         return d
 
     def test_live_channel_session_is_not_read_as_idle(self, sess_dir):
@@ -526,7 +526,7 @@ class TestEndedRowRendering:
         row = {
             "key": "slack_C1.200",
             "title": "ended by me",
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "mtime": 0.0,
             "active": False,
             "ended": True,
@@ -619,7 +619,7 @@ class TestSessionsIncludeEndedArgument:
             return []
 
         slack = MockSlackClient()
-        with patch("kiro_crew.slack.handler._collect_recent_sessions_off_loop", _fake):
+        with patch("aj_crew.slack.handler._collect_recent_sessions_off_loop", _fake):
             await _handle_sessions_command(command, slack, "C1", "1.0", "1.0", "slack:C1", None)
         assert seen["include_ended"] is include_ended
 
@@ -634,7 +634,7 @@ class TestBuildSessionsBlocks:
             {
                 "key": "dashboard:chat-1",
                 "title": "Hello",
-                "agent": "kirocrew",
+                "agent": "ajcrew",
                 "mtime": 0.0,
                 "active": False,
                 "kind": _SESSION_KIND_DASHBOARD,
@@ -656,7 +656,7 @@ class TestBuildSessionsBlocks:
             {
                 "key": f"dashboard:chat-{i}",
                 "title": f"t{i}",
-                "agent": "kirocrew",
+                "agent": "ajcrew",
                 "mtime": 0.0,
                 "active": False,
                 "kind": _SESSION_KIND_DASHBOARD,
@@ -696,7 +696,7 @@ class TestBuildSessionsBlocks:
             {
                 "key": key,
                 "title": title,
-                "agent": "kirocrew",
+                "agent": "ajcrew",
                 "mtime": 0.0,
                 "active": active,
                 "kind": _SESSION_KIND_DASHBOARD,
@@ -712,7 +712,7 @@ class TestBuildSessionsBlocks:
         [
             # ASK-style credential pattern is redacted by redact_credentials
             pytest.param(
-                "AKIAIOSFODNN7EXAMPLE secret", "kirocrew", id="test_redacts_credentials_in_title"
+                "AKIAIOSFODNN7EXAMPLE secret", "ajcrew", id="test_redacts_credentials_in_title"
             ),
             # Parity with title: agent strings are redacted before reaching session_task_card.
             pytest.param("ok", "AKIAIOSFODNN7EXAMPLE", id="test_redacts_credentials_in_agent"),
@@ -739,7 +739,7 @@ class TestBuildSessionsBlocks:
             {
                 "key": "dashboard:k",
                 "title": "ok",
-                "agent": "kirocrew",
+                "agent": "ajcrew",
                 "mtime": 0.0,
                 "active": False,
                 "kind": _SESSION_KIND_DASHBOARD,
@@ -768,7 +768,7 @@ class TestBuildSessionsBlocks:
             {
                 "key": "dashboard:k",
                 "title": "ok",
-                "agent": "kirocrew",
+                "agent": "ajcrew",
                 "mtime": 0.0,
                 "active": False,
                 "kind": _SESSION_KIND_DASHBOARD,
@@ -794,7 +794,7 @@ class TestBuildSessionsBlocks:
             {
                 "key": "dashboard:k",
                 "title": f"AKIAIOSFODNN7EXAMPLE {url}",
-                "agent": "kirocrew",
+                "agent": "ajcrew",
                 "mtime": 0.0,
                 "active": False,
                 "kind": _SESSION_KIND_DASHBOARD,
@@ -815,7 +815,7 @@ class TestHandleSessionsCommandDelegation:
     async def test_empty_posts_no_recent_sessions_message(self, tmp_path, monkeypatch):
         sess_dir = tmp_path / "sessions"
         sess_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
+        monkeypatch.setattr("aj_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
 
         slack = MockSlackClient()
         await _handle_sessions_command(
@@ -831,7 +831,7 @@ class TestHandleSessionsCommandDelegation:
     async def test_renders_blocks_via_shared_builder(self, tmp_path, monkeypatch):
         sess_dir = tmp_path / "sessions"
         sess_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
+        monkeypatch.setattr("aj_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
         _write_jsonl(
             sess_dir / "dashboard_chat-1.jsonl",
             title="Hello",
@@ -863,11 +863,11 @@ class TestHandleSessionsCommandDelegation:
     async def test_logs_sel_audit_on_access(self, tmp_path, monkeypatch):
         sess_dir = tmp_path / "sessions"
         sess_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
+        monkeypatch.setattr("aj_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
         _write_jsonl(sess_dir / "dashboard_a.jsonl", title="t", messages=[("user", "x")])
 
         slack = MockSlackClient()
-        with patch("kiro_crew.slack.handler.sel") as mock_sel:
+        with patch("aj_crew.slack.handler.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock()
             await _handle_sessions_command(
                 "sessions",
@@ -893,7 +893,7 @@ class TestHandleSessionsCommandDelegation:
         so a card for a live session renders as ``in_progress`` (🟢)."""
         sess_dir = tmp_path / "sessions"
         sess_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
+        monkeypatch.setattr("aj_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
         _write_jsonl(
             sess_dir / "dashboard_chat-1.jsonl",
             title="Live chat",
@@ -929,10 +929,10 @@ class TestHandleSessionsCommandDelegation:
         slack = MockSlackClient()
         with (
             patch(
-                "kiro_crew.slack.sessions_view._collect_recent_sessions",
+                "aj_crew.slack.sessions_view._collect_recent_sessions",
                 side_effect=OSError("disk error"),
             ),
-            patch("kiro_crew.slack.handler.sel") as mock_sel,
+            patch("aj_crew.slack.handler.sel") as mock_sel,
         ):
             mock_sel.return_value.log_api_access = MagicMock()
             await _handle_sessions_command(
@@ -970,10 +970,10 @@ class TestHandleSessionsCommandDelegation:
         leaked_key = "AKIAIOSFODNN7EXAMPLE"
         with (
             patch(
-                "kiro_crew.slack.sessions_view._collect_recent_sessions",
+                "aj_crew.slack.sessions_view._collect_recent_sessions",
                 side_effect=OSError(f"failed reading {leaked_key} from path"),
             ),
-            patch("kiro_crew.slack.handler.sel") as mock_sel,
+            patch("aj_crew.slack.handler.sel") as mock_sel,
         ):
             mock_sel.return_value.log_api_access = MagicMock()
             await _handle_sessions_command(
@@ -1007,11 +1007,11 @@ class TestSlashSessionsAudit:
     async def test_slash_logs_sel_audit_with_caller_and_count(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.slack.events import _handle_sessions
+        from aj_crew.slack.events import _handle_sessions
 
         sess_dir = tmp_path / "sessions"
         sess_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
+        monkeypatch.setattr("aj_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
         _write_jsonl(
             sess_dir / "dashboard_chat-1.jsonl",
             title="t",
@@ -1027,9 +1027,9 @@ class TestSlashSessionsAudit:
             respond(*a, **kw)
 
         with (
-            patch("kiro_crew.slack.events.sel") as mock_sel,
-            patch("kiro_crew.slack.events.is_owner", return_value=True),
-            patch("kiro_crew.slack.events.is_allowed_user", return_value=False),
+            patch("aj_crew.slack.events.sel") as mock_sel,
+            patch("aj_crew.slack.events.is_owner", return_value=True),
+            patch("aj_crew.slack.events.is_allowed_user", return_value=False),
         ):
             mock_sel.return_value.log_api_access = MagicMock()
             await _handle_sessions(orch, "UCALLER", "", _arespond)
@@ -1048,11 +1048,11 @@ class TestSlashSessionsAudit:
     ):
         """The audit fires before the empty-rows check so the access
         attempt is recorded even when there is nothing to display."""
-        from kiro_crew.slack.events import _handle_sessions
+        from aj_crew.slack.events import _handle_sessions
 
         sess_dir = tmp_path / "sessions"
         sess_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
+        monkeypatch.setattr("aj_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
 
         orch = MagicMock()
         orch.sessions = MagicMock()
@@ -1062,9 +1062,9 @@ class TestSlashSessionsAudit:
             respond(*a, **kw)
 
         with (
-            patch("kiro_crew.slack.events.sel") as mock_sel,
-            patch("kiro_crew.slack.events.is_owner", return_value=True),
-            patch("kiro_crew.slack.events.is_allowed_user", return_value=False),
+            patch("aj_crew.slack.events.sel") as mock_sel,
+            patch("aj_crew.slack.events.is_owner", return_value=True),
+            patch("aj_crew.slack.events.is_allowed_user", return_value=False),
         ):
             mock_sel.return_value.log_api_access = MagicMock()
             await _handle_sessions(orch, "UCALLER", "", _arespond)
@@ -1086,11 +1086,11 @@ class TestSlashSessionsAudit:
         Callers neither owner nor allowed are rejected (deny by default), and the
         rejection is recorded via SEL with outcome=denied. Mirrors the keyword path's gate.
         """
-        from kiro_crew.slack.events import _handle_sessions
+        from aj_crew.slack.events import _handle_sessions
 
         sess_dir = tmp_path / "sessions"
         sess_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
+        monkeypatch.setattr("aj_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
         # Real session on disk so we can prove the collector was NOT called
         # via the absence of the success-path audit (only the denied audit
         # should fire, and the response should be the permission-denied msg).
@@ -1108,9 +1108,9 @@ class TestSlashSessionsAudit:
             respond(*a, **kw)
 
         with (
-            patch("kiro_crew.slack.events.sel") as mock_sel,
-            patch("kiro_crew.slack.events.is_owner", return_value=False),
-            patch("kiro_crew.slack.events.is_allowed_user", return_value=False),
+            patch("aj_crew.slack.events.sel") as mock_sel,
+            patch("aj_crew.slack.events.is_owner", return_value=False),
+            patch("aj_crew.slack.events.is_allowed_user", return_value=False),
         ):
             mock_sel.return_value.log_api_access = MagicMock()
             await _handle_sessions(orch, "UATTACKER", "skim", _arespond)
@@ -1143,11 +1143,11 @@ class TestSlashSessionsAudit:
         still grants access. Locks in that the auth check accepts allowed-list
         users, not just the owner.
         """
-        from kiro_crew.slack.events import _handle_sessions
+        from aj_crew.slack.events import _handle_sessions
 
         sess_dir = tmp_path / "sessions"
         sess_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
+        monkeypatch.setattr("aj_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
         _write_jsonl(
             sess_dir / "dashboard_chat-1.jsonl",
             title="t",
@@ -1163,9 +1163,9 @@ class TestSlashSessionsAudit:
             respond(*a, **kw)
 
         with (
-            patch("kiro_crew.slack.events.sel") as mock_sel,
-            patch("kiro_crew.slack.events.is_owner", return_value=False),
-            patch("kiro_crew.slack.events.is_allowed_user", return_value=True),
+            patch("aj_crew.slack.events.sel") as mock_sel,
+            patch("aj_crew.slack.events.is_owner", return_value=False),
+            patch("aj_crew.slack.events.is_allowed_user", return_value=True),
         ):
             mock_sel.return_value.log_api_access = MagicMock()
             await _handle_sessions(orch, "UALLOWED", "", _arespond)
@@ -1181,7 +1181,7 @@ class TestSlashSessionsAudit:
         raises, mirroring the Home Tab error-path pattern. Without this, an
         IO failure would skip the audit entirely.
         """
-        from kiro_crew.slack.events import _handle_sessions
+        from aj_crew.slack.events import _handle_sessions
 
         orch = MagicMock()
         orch.sessions = MagicMock()
@@ -1191,11 +1191,11 @@ class TestSlashSessionsAudit:
             respond(*a, **kw)
 
         with (
-            patch("kiro_crew.slack.events.sel") as mock_sel,
-            patch("kiro_crew.slack.events.is_owner", return_value=True),
-            patch("kiro_crew.slack.events.is_allowed_user", return_value=False),
+            patch("aj_crew.slack.events.sel") as mock_sel,
+            patch("aj_crew.slack.events.is_owner", return_value=True),
+            patch("aj_crew.slack.events.is_allowed_user", return_value=False),
             patch(
-                "kiro_crew.slack.sessions_view._collect_recent_sessions",
+                "aj_crew.slack.sessions_view._collect_recent_sessions",
                 side_effect=OSError("disk error"),
             ),
         ):
@@ -1225,7 +1225,7 @@ class TestSlashSessionsAudit:
         leaked AWS access key), the SEL audit's ``error=`` field MUST be
         redacted before truncation. Locks in redact-then-truncate ordering.
         """
-        from kiro_crew.slack.events import _handle_sessions
+        from aj_crew.slack.events import _handle_sessions
 
         orch = MagicMock()
         orch.sessions = MagicMock()
@@ -1236,11 +1236,11 @@ class TestSlashSessionsAudit:
 
         leaked_key = "AKIAIOSFODNN7EXAMPLE"
         with (
-            patch("kiro_crew.slack.events.sel") as mock_sel,
-            patch("kiro_crew.slack.events.is_owner", return_value=True),
-            patch("kiro_crew.slack.events.is_allowed_user", return_value=False),
+            patch("aj_crew.slack.events.sel") as mock_sel,
+            patch("aj_crew.slack.events.is_owner", return_value=True),
+            patch("aj_crew.slack.events.is_allowed_user", return_value=False),
             patch(
-                "kiro_crew.slack.sessions_view._collect_recent_sessions",
+                "aj_crew.slack.sessions_view._collect_recent_sessions",
                 side_effect=OSError(f"failed reading {leaked_key} from path"),
             ),
         ):
@@ -1271,13 +1271,13 @@ class TestWithMessagesBoundsTheRead:
         _write_jsonl(
             p,
             title="huge",
-            agent="kirocrew",
+            agent="ajcrew",
             messages=[("user", "x" * 2000) for _ in range(50)],
         )
         return d, p
 
     def test_it_reads_only_the_metadata_line(self, tmp_path, monkeypatch):
-        from kiro_crew.messaging import sessions_view as sv
+        from aj_crew.messaging import sessions_view as sv
 
         d, path = self._seed(tmp_path)
         # Measured on the FILE, so this cannot pass by the collector reading
@@ -1298,13 +1298,13 @@ class TestWithMessagesBoundsTheRead:
         # Still a usable row: the header fields the caller actually asked for.
         assert len(rows) == 1
         assert rows[0]["title"] == "huge"
-        assert rows[0]["agent"] == "kirocrew"
+        assert rows[0]["agent"] == "ajcrew"
         # Shape does not fork: msgs is present and empty.
         assert rows[0]["msgs"] == []
 
     def test_the_default_still_reads_the_preview(self, tmp_path):
         """Non-vacuity: the bound is scoped to the flag, not applied always."""
-        from kiro_crew.messaging import sessions_view as sv
+        from aj_crew.messaging import sessions_view as sv
 
         d, _ = self._seed(tmp_path)
         rows = sv._collect_recent_sessions(None, limit=5, sessions_dir=d)
@@ -1316,7 +1316,7 @@ class TestBoundedTranscriptReads:
     def sess_dir(self, tmp_path, monkeypatch):
         d = tmp_path / "sessions"
         d.mkdir()
-        monkeypatch.setattr("kiro_crew.slack.sessions_view._SESSIONS_DIR", d)
+        monkeypatch.setattr("aj_crew.slack.sessions_view._SESSIONS_DIR", d)
         return d
 
     def _seed_many(self, sess_dir: Path, count: int, *, prefix: str = "dashboard_chat-") -> None:
@@ -1386,7 +1386,7 @@ class TestCollectorEventLoopOffload:
     async def test_off_loop_wrapper_runs_collector_in_worker_thread(self, tmp_path, monkeypatch):
         sess_dir = tmp_path / "sessions"
         sess_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
+        monkeypatch.setattr("aj_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
         _write_jsonl(sess_dir / "dashboard_a.jsonl", title="t", messages=[("user", "x")])
 
         seen: dict = {}
@@ -1412,7 +1412,7 @@ class TestCollectorEventLoopOffload:
         """
         sess_dir = tmp_path / "sessions"
         sess_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
+        monkeypatch.setattr("aj_crew.slack.sessions_view._SESSIONS_DIR", sess_dir)
         for i in range(25):
             _write_jsonl(
                 sess_dir / f"dashboard_chat-{i}.jsonl",
@@ -1508,7 +1508,7 @@ class TestOffLoopStructuralRatchet:
         import ast
         import importlib
 
-        import kiro_crew.slack.interactions as interactions_mod
+        import aj_crew.slack.interactions as interactions_mod
 
         # The facade and every owner its handlers moved to.
         trees = {

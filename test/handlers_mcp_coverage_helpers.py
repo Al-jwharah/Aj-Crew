@@ -19,7 +19,7 @@ from aiohttp import web
 from body_stream_helpers import BodyStreamPayload
 from dashboard_owner_helpers import owner_claims
 
-from kiro_crew.dashboard.handlers import mcp as mcp_mod
+from aj_crew.dashboard.handlers import mcp as mcp_mod
 
 # ── harness ─────────────────────────────────────────────────────────────
 
@@ -46,7 +46,7 @@ def _request(
             and isinstance(body.get("name"), str)
             and "expected_launch" not in body
         ):
-            from kiro_crew.mcp_gateway import launch_approval
+            from aj_crew.mcp_gateway import launch_approval
 
             env_hash = launch_approval.env_fingerprint({})
             expected = launch_approval.launch_pair(
@@ -96,7 +96,7 @@ def _effective_stubs(section: dict[str, Any]) -> list[str]:
     toggle behaviour should assert. Reads the production resolver so these tests
     cannot drift from the runtime's own answer.
     """
-    from kiro_crew.config.loader import _resolve_stub_servers
+    from aj_crew.config.loader import _resolve_stub_servers
 
     return _resolve_stub_servers(section)
 
@@ -111,7 +111,7 @@ def _payload(resp: web.Response) -> Any:
 def sandbox_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
     """Point every mcp.py filesystem + audit seam at ``tmp_path``.
 
-    The agent-config sync (``kirocrew.json`` read-modify-write) belongs to
+    The agent-config sync (``ajcrew.json`` read-modify-write) belongs to
     ``handlers.agents`` and has its own suite — record the calls instead of
     re-testing it here.
     """
@@ -119,7 +119,7 @@ def sandbox_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SimpleNa
     global_json.parent.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(mcp_mod, "_GLOBAL_MCP_JSON", global_json)
     monkeypatch.setattr(mcp_mod, "_MCP_LOCK_PATH", global_json.with_suffix(".lock"))
-    monkeypatch.setattr(mcp_mod, "_KIROCREW_MCP_JSON", tmp_path / "crew" / "mcp.json")
+    monkeypatch.setattr(mcp_mod, "_AJCREW_MCP_JSON", tmp_path / "crew" / "mcp.json")
     monkeypatch.setattr(mcp_mod, "_extra_mcp_scopes", list)
     sel = MagicMock()
     monkeypatch.setattr(mcp_mod, "sel", lambda: sel)
@@ -158,7 +158,7 @@ def _read_global(sandbox: SimpleNamespace) -> dict[str, Any]:
 @pytest.fixture(name="agents_dir")
 def agents_dir_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Redirect ``kiro_agents_dir_path()`` at a tmp agents directory."""
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     d = tmp_path / "agents"
     d.mkdir(parents=True, exist_ok=True)

@@ -21,7 +21,7 @@ text mode without pinning the decode. Text mode is requested by a ``text=`` or
 dict-literal splat carrying such a key. The decode is pinned by an ``encoding=``
 keyword whose value is not the literal ``None`` (``encoding=None`` is byte-for-
 byte the locale fallback this gate exists to stop), or by a ``**UTF8_TEXT``
-splat (the shared mapping from ``kiro_crew.subprocess_utf8``, which carries the
+splat (the shared mapping from ``aj_crew.subprocess_utf8``, which carries the
 encoding).
 
 Matching is BY NAME, deliberately: resolving imports would miss the wrappers
@@ -113,7 +113,7 @@ HEADER = """\
 # grow, so this list can only shrink.
 #
 # Do NOT add or raise a line to make a red gate green: a new offender needs
-# `encoding="utf-8"` / `**UTF8_TEXT` (see src/kiro_crew/subprocess_utf8.py), or
+# `encoding="utf-8"` / `**UTF8_TEXT` (see src/aj_crew/subprocess_utf8.py), or
 # the `# subprocess-encoding: locale` marker if locale decoding is deliberate.
 # The refresh command below only lowers counts and deletes lines.
 #
@@ -341,7 +341,7 @@ def _fix_hint(path: str) -> str:
     return (
         f"::error file={path}::text-mode subprocess call without encoding= "
         "(decodes with the Windows ANSI code page). Pin it with "
-        'encoding="utf-8" / **UTF8_TEXT (src/kiro_crew/subprocess_utf8.py), '
+        'encoding="utf-8" / **UTF8_TEXT (src/aj_crew/subprocess_utf8.py), '
         f"or mark deliberate locale decoding with `# {MARKER}`."
     )
 
@@ -433,7 +433,7 @@ def _self_test() -> int:
             ")\n"
         ),
         "wrapper run_limited": (
-            "from kiro_crew.sandbox import run_limited\n" "run_limited(['git', 'st'], text=True)\n"
+            "from aj_crew.sandbox import run_limited\n" "run_limited(['git', 'st'], text=True)\n"
         ),
         "non-literal text value": (
             "import subprocess\n" "def f(mode):\n" "    subprocess.run(['git', 'st'], text=mode)\n"
@@ -459,12 +459,12 @@ def _self_test() -> int:
         ),
         "UTF8_TEXT splat": (
             "import subprocess\n"
-            "from kiro_crew.subprocess_utf8 import UTF8_TEXT\n"
+            "from aj_crew.subprocess_utf8 import UTF8_TEXT\n"
             "subprocess.run(['git', 'st'], **UTF8_TEXT)\n"
         ),
         "attribute UTF8_TEXT splat": (
             "import subprocess\n"
-            "from kiro_crew import subprocess_utf8\n"
+            "from aj_crew import subprocess_utf8\n"
             "subprocess.run(['git', 'st'], **subprocess_utf8.UTF8_TEXT)\n"
         ),
         "opt-out marker": (

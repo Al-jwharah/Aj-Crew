@@ -30,7 +30,7 @@ const params = new URLSearchParams(location.search)
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 const lang = params.get('lang') || 'zh-CN'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 initI18n(lang)
 
 /** Verbatim gateway-authored rows from the field report. */
@@ -39,7 +39,7 @@ const NOTICE_2 =
   'ℹ️ The model returned nothing this turn (it was retried and auto-continued ' +
   'automatically). Just send your message again to continue.'
 const NOTICE_WARN = '⚠️ Queued message dropped: the session reset while it was waiting.'
-const NOTICE_BLOCKED = '⛔ Tool call blocked by a Kiro Crew safety policy.'
+const NOTICE_BLOCKED = '⛔ Tool call blocked by a Aj Crew safety policy.'
 const RECOVERY = parseRecoveryMessage(
   '[Empty response — automatic recovery]\n' +
     'Your previous turn produced no output (the model returned an empty ' +

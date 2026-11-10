@@ -28,12 +28,12 @@ import CrewmateSwitcher, { CrewmateUnreadColumn } from './CrewmateSwitcher'
 
 const row = (name: string, overrides: Partial<MemberRosterRow> = {}): MemberRosterRow => ({
   name, slug: name.toLowerCase().replace(/\s+/g, '-'), bound: true, slot_key: `member-${name}`, running: false,
-  kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', model: '',
+  kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', model: '',
   ...overrides,
 } as MemberRosterRow)
 
 const MEMBERS = [
-  row('oncall', { kiro_agent: 'kirocrew-oncall' }),
+  row('oncall', { kiro_agent: 'ajcrew-oncall' }),
   row('scribe', { running: true }),
   row('Radar One', { display_name: 'Radar One', kiro_agent: 'radar-template', last_message: 'Swept the board' } as Partial<MemberRosterRow>),
   row('fixer'),
@@ -138,7 +138,7 @@ describe('CrewmateSwitcher open list', () => {
     // The second line is the roster row's: the last-message preview, never the
     // agent template or a Working word (presence rides the avatar dot).
     expect(opts[2]).toHaveTextContent('Swept the board')
-    expect(opts[1]).not.toHaveTextContent('kirocrew-oncall')
+    expect(opts[1]).not.toHaveTextContent('ajcrew-oncall')
     // Working is spoken, not shown: the dot carries it visibly.
     expect(within(opts[0]).getByTestId('crewmate-switcher-row-working-label')).toHaveClass('sr-only')
     expect(opts[0]).toHaveAccessibleName(/scribe.*Working/)
@@ -170,7 +170,7 @@ describe('CrewmateSwitcher open list', () => {
     // `has_dm_message: false` + `dashboard_created: false` is exactly what the
     // column hides -- a row created by sync or an app that nobody has chatted
     // with. The chip used to list it, so the two disagreed about the crew.
-    const hidden = row('ghostwriter', { kiro_agent: 'kirocrew-ghost', has_dm_message: false, dashboard_created: false } as Partial<MemberRosterRow>)
+    const hidden = row('ghostwriter', { kiro_agent: 'ajcrew-ghost', has_dm_message: false, dashboard_created: false } as Partial<MemberRosterRow>)
     setup({ members: [...MEMBERS, hidden] })
     const list = await open()
     expect(options(list).map((o) => within(o).getByTestId('avatar-stub').textContent)).toEqual(['scribe', 'oncall', 'Radar One', 'fixer'])

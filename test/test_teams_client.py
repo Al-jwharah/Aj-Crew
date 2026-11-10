@@ -1,7 +1,7 @@
 """Tests for the Microsoft Teams client (JWT validation, inbound webhook,
 outbound Connector REST).
 
-JWT tests require PyJWT (the ``kirocrew[teams]`` extra) and are skipped when it
+JWT tests require PyJWT (the ``ajcrew[teams]`` extra) and are skipped when it
 is absent. Inbound/outbound tests are fully mocked -- no network.
 """
 
@@ -15,8 +15,8 @@ from typing import Any
 
 import pytest
 
-import kiro_crew.teams.client as teams_client_mod
-from kiro_crew.teams.client import (
+import aj_crew.teams.client as teams_client_mod
+from aj_crew.teams.client import (
     JwtValidator,
     TeamsAuthError,
     TeamsClient,
@@ -213,7 +213,7 @@ class TestInboundWebhook:
         from unittest import mock
 
         c = _client_with_validator(accept=False)
-        with mock.patch("kiro_crew.teams.client.sel") as m_sel:
+        with mock.patch("aj_crew.teams.client.sel") as m_sel:
             resp = await c.on_activity(
                 _FakeRequest({"Authorization": "Bearer bad"}, _msg_activity())
             )
@@ -232,7 +232,7 @@ class TestInboundWebhook:
         from unittest import mock
 
         c = _client_with_validator(accept=False)
-        with mock.patch("kiro_crew.teams.client.sel") as m_sel:
+        with mock.patch("aj_crew.teams.client.sel") as m_sel:
             m_sel.return_value.log_api_access.side_effect = RuntimeError("corrupt SEL key")
             resp = await c.on_activity(
                 _FakeRequest({"Authorization": "Bearer bad"}, _msg_activity())
@@ -418,7 +418,7 @@ class TestTheDenialAuditStaysOffTheLoop:
                 except RuntimeError:
                     loops.append(False)
 
-        monkeypatch.setattr("kiro_crew.teams.client.sel", lambda: _BlockingSel())
+        monkeypatch.setattr("aj_crew.teams.client.sel", lambda: _BlockingSel())
         c = _client_with_validator(accept=False)
 
         resp = await c.on_activity(_FakeRequest({"Authorization": "Bearer nope"}, _msg_activity()))
@@ -433,7 +433,7 @@ class TestIngressSaturation:
     @staticmethod
     def _saturate(client: TeamsClient) -> list[asyncio.Task]:
         """Fill the in-flight set with tasks that never finish on their own."""
-        from kiro_crew.teams.client import _MAX_INFLIGHT_TURNS
+        from aj_crew.teams.client import _MAX_INFLIGHT_TURNS
 
         async def _park() -> None:
             await asyncio.sleep(3600)
@@ -514,7 +514,7 @@ class TestIngressSaturation:
 
     def test_the_relief_aliases_come_from_the_command_table(self) -> None:
         """A hand-copied list here would drift the moment an alias is renamed."""
-        from kiro_crew.teams.commands import COMMAND_SPEC, STOP_ALIASES
+        from aj_crew.teams.commands import COMMAND_SPEC, STOP_ALIASES
 
         expected = next(aliases for canonical, aliases, _d in COMMAND_SPEC if canonical == "stop")
         assert STOP_ALIASES == frozenset(expected)
@@ -530,7 +530,7 @@ class TestJwksRefetchDamper:
 
     @staticmethod
     def _validator(fetches: list[int]) -> Any:
-        from kiro_crew.teams.client import JwtValidator
+        from aj_crew.teams.client import JwtValidator
 
         class _Jwks:
             def __init__(self) -> None:
@@ -552,7 +552,7 @@ class TestJwksRefetchDamper:
     def test_a_repeated_unknown_kid_refetches_at_most_once(self, monkeypatch) -> None:
         import jwt as pyjwt
 
-        from kiro_crew.teams.client import TeamsAuthError
+        from aj_crew.teams.client import TeamsAuthError
 
         monkeypatch.setattr(pyjwt, "get_unverified_header", lambda token: {"kid": "bogus"})
         fetches: list[int] = []
@@ -567,11 +567,11 @@ class TestJwksRefetchDamper:
     def test_the_damper_lifts_after_its_interval(self, monkeypatch) -> None:
         import jwt as pyjwt
 
-        from kiro_crew.teams import client as mod
+        from aj_crew.teams import client as mod
 
         monkeypatch.setattr(pyjwt, "get_unverified_header", lambda token: {"kid": "bogus"})
         clock = [1000.0]
-        monkeypatch.setattr("kiro_crew.teams.client.time.monotonic", lambda: clock[0])
+        monkeypatch.setattr("aj_crew.teams.client.time.monotonic", lambda: clock[0])
         fetches: list[int] = []
         v = self._validator(fetches)
 
@@ -586,7 +586,7 @@ class TestJwksRefetchDamper:
     def test_a_known_kid_costs_no_refetch_at_all(self, monkeypatch) -> None:
         import jwt as pyjwt
 
-        from kiro_crew.teams.client import JwtValidator
+        from aj_crew.teams.client import JwtValidator
 
         monkeypatch.setattr(pyjwt, "get_unverified_header", lambda token: {"kid": "known"})
         fetches: list[int] = []

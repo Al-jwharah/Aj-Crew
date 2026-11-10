@@ -14,11 +14,11 @@ import pytest
 from test_pod_windows_liveness import supervisor as supervisor
 from test_pod_windows_run import model as model
 
-from kiro_crew import cli as kc_cli
-from kiro_crew import platform_compat
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod import windows as win
-from kiro_crew.pod.config import PodConfig, environment_vars
+from aj_crew import cli as kc_cli
+from aj_crew import platform_compat
+from aj_crew.pod import runtime as rt
+from aj_crew.pod import windows as win
+from aj_crew.pod.config import PodConfig, environment_vars
 
 __all__ = ["model", "supervisor"]
 
@@ -27,10 +27,10 @@ __all__ = ["model", "supervisor"]
 def cfg(tmp_path, monkeypatch) -> PodConfig:
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-    monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods-env"))
-    monkeypatch.setenv("KIROCREW_POD_ARTIFACTS_DIR", str(tmp_path / "artifacts"))
-    monkeypatch.delenv("KIROCREW_POD_KIRO_BIN", raising=False)
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+    monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods-env"))
+    monkeypatch.setenv("AJCREW_POD_ARTIFACTS_DIR", str(tmp_path / "artifacts"))
+    monkeypatch.delenv("AJCREW_POD_KIRO_BIN", raising=False)
     c = PodConfig.load()
     c.pods_dir.mkdir(parents=True, exist_ok=True)
     return c
@@ -194,7 +194,7 @@ def test_ensure_node_spawns_no_shell_on_windows(monkeypatch, tmp_path):
     """
     script = tmp_path / "ensure-node.sh"
     script.write_text("#!/bin/sh\nexit 0\n")
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
     monkeypatch.setattr(kc_cli.platform_compat, "IS_WINDOWS", True)
     monkeypatch.setattr(kc_cli, "_node_ok", lambda: True)
     monkeypatch.setattr(
@@ -207,7 +207,7 @@ def test_ensure_node_spawns_no_shell_on_windows(monkeypatch, tmp_path):
 def test_ensure_node_reports_the_hosts_own_node_answer_on_windows(monkeypatch, tmp_path):
     """Skipping is not a degraded answer: `_node_ok` already sees a real Node."""
     (tmp_path / "ensure-node.sh").write_text("#!/bin/sh\nexit 0\n")
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
     monkeypatch.setattr(kc_cli.platform_compat, "IS_WINDOWS", True)
     monkeypatch.setattr(kc_cli, "_node_ok", lambda: False)
     monkeypatch.setattr(kc_cli.subprocess, "run", lambda *a, **k: pytest.fail("no spawn on win32"))
@@ -240,7 +240,7 @@ def test_posix_still_runs_the_script(monkeypatch, tmp_path):
     """The POSIX behaviour is unchanged, so the guard is win32-only."""
     script = tmp_path / "ensure-node.sh"
     script.write_text("#!/bin/sh\nexit 0\n")
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
     monkeypatch.setattr(kc_cli.platform_compat, "IS_WINDOWS", False)
     seen: list[list[str]] = []
 
@@ -268,13 +268,13 @@ def test_the_pod_wrapper_spawns_no_posix_shell(cfg):
 
 # 3. The agent-backend pin reaches the pod gateway on Windows
 def test_the_plane_translates_the_pod_pin_to_the_gateway_variable(monkeypatch, tmp_path):
-    """The knob is `KIROCREW_POD_KIRO_BIN`; the gateway reads `KIROCREW_KIRO_BIN`."""
+    """The knob is `AJCREW_POD_KIRO_BIN`; the gateway reads `AJCREW_KIRO_BIN`."""
     fake = tmp_path / "fake-kiro.cmd"
     fake.write_text("@echo off\r\n", newline="")
-    monkeypatch.setenv("KIROCREW_POD_KIRO_BIN", str(fake))
+    monkeypatch.setenv("AJCREW_POD_KIRO_BIN", str(fake))
     selected = environment_vars(PodConfig.load())
-    assert selected["KIROCREW_KIRO_BIN"] == str(fake)
-    assert "KIROCREW_POD_KIRO_BIN" not in selected
+    assert selected["AJCREW_KIRO_BIN"] == str(fake)
+    assert "AJCREW_POD_KIRO_BIN" not in selected
 
 
 def test_the_windows_wrapper_pins_the_agent_backend(monkeypatch, tmp_path):
@@ -286,22 +286,22 @@ def test_the_windows_wrapper_pins_the_agent_backend(monkeypatch, tmp_path):
     """
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-    monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods-env"))
-    monkeypatch.setenv("KIROCREW_POD_ARTIFACTS_DIR", str(tmp_path / "artifacts"))
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+    monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods-env"))
+    monkeypatch.setenv("AJCREW_POD_ARTIFACTS_DIR", str(tmp_path / "artifacts"))
     fake = tmp_path / "fake-kiro.cmd"
     fake.write_text("@echo off\r\n", newline="")
-    monkeypatch.setenv("KIROCREW_POD_KIRO_BIN", str(fake))
+    monkeypatch.setenv("AJCREW_POD_KIRO_BIN", str(fake))
     c = PodConfig.load()
     c.pods_dir.mkdir(parents=True, exist_ok=True)
 
     body = win.render_task_script(c, "demo")
-    assert f'set "KIROCREW_KIRO_BIN={fake}"' in body
+    assert f'set "AJCREW_KIRO_BIN={fake}"' in body
 
 
 def test_the_wrapper_omits_the_pin_when_the_plane_did_not_ask(cfg):
     """A default plane stays byte-identical, so the seam costs nothing unused."""
-    assert "KIROCREW_KIRO_BIN" not in win.render_task_script(cfg, "demo")
+    assert "AJCREW_KIRO_BIN" not in win.render_task_script(cfg, "demo")
 
 
 def test_the_booted_gateway_environment_carries_the_pin(cfg, monkeypatch, tmp_path):
@@ -312,28 +312,28 @@ def test_the_booted_gateway_environment_carries_the_pin(cfg, monkeypatch, tmp_pa
     Asserted at the spawn boundary rather than in the middle, because the middle
     is where the canary's chain looked fine and the end is where it broke.
     """
-    monkeypatch.setenv("KIROCREW_KIRO_BIN", str(tmp_path / "fake-kiro.cmd"))
+    monkeypatch.setenv("AJCREW_KIRO_BIN", str(tmp_path / "fake-kiro.cmd"))
     env = rt.build_pod_env(cfg, cfg.home_dir("demo"), 8610, tmp_path / "worktree")
-    assert env["KIROCREW_KIRO_BIN"] == str(tmp_path / "fake-kiro.cmd")
+    assert env["AJCREW_KIRO_BIN"] == str(tmp_path / "fake-kiro.cmd")
 
 
 def test_supervise_gateway_hands_the_pin_to_the_child(supervisor, tmp_path):
     _cfg, state, run = supervisor
-    binary = tmp_path / "kirocrew.exe"
+    binary = tmp_path / "ajcrew.exe"
     fake = tmp_path / "fake-kiro.cmd"
     state.binary = binary
     state.argv = ["gateway", "--no-crons"]
-    state.env = {"KIROCREW_KIRO_BIN": str(fake)}
+    state.env = {"AJCREW_KIRO_BIN": str(fake)}
     assert run() == 0
     assert state.spawn_args[0] == [str(binary), "gateway", "--no-crons"]
-    assert state.spawn_kwargs["env"]["KIROCREW_KIRO_BIN"] == str(fake)
+    assert state.spawn_kwargs["env"]["AJCREW_KIRO_BIN"] == str(fake)
 
 
 def test_the_canary_pins_a_fake_backend(monkeypatch):
     """The canary must set the seam, or it asserts a pod that cannot serve a turn."""
     source = Path(__file__).resolve().parent / "test_pod_windows_boot.py"
     text = source.read_text(encoding="utf-8")
-    assert "KIROCREW_POD_KIRO_BIN" in text
+    assert "AJCREW_POD_KIRO_BIN" in text
     assert "fake_acp_backend_launcher" in text
 
 

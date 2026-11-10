@@ -25,10 +25,10 @@ from unittest import mock
 import pytest
 
 from conftest import make_dir_link
-from kiro_crew import memory_backup as mb
-from kiro_crew.memory_stores import DEFAULT_MEMORY_STORE, resolve_store_path
-from kiro_crew.testing.wait import wait_until
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import memory_backup as mb
+from aj_crew.memory_stores import DEFAULT_MEMORY_STORE, resolve_store_path
+from aj_crew.testing.wait import wait_until
+from aj_crew.vector_memory import VectorMemoryStore
 
 pytestmark = pytest.mark.xdist_group("memory_backup")
 
@@ -68,19 +68,19 @@ def cyclic_gc_quiesced():
 def _point_home_at(monkeypatch: pytest.MonkeyPatch, data_home: Path) -> None:
     """Make *data_home* the data home, with the default store and one silo declared.
 
-    The config goes to the ``Path.resolve()`` form of ``KIROCREW_HOME``: on Windows the
+    The config goes to the ``Path.resolve()`` form of ``AJCREW_HOME``: on Windows the
     raw path can differ (8.3 names, drive casing), leaving the ``fin`` silo unknown.
 
     The three resolution memos are reset explicitly: a coarse filesystem clock can give
     two homes the same config fingerprint.
     """
-    import kiro_crew.config.paths as paths
-    from kiro_crew import memory_stores
-    from kiro_crew.config.loader import _invalidate_config_cache
+    import aj_crew.config.paths as paths
+    from aj_crew import memory_stores
+    from aj_crew.config.loader import _invalidate_config_cache
 
     resolved_home = data_home.resolve()
     (resolved_home / "config.json").write_text(json.dumps(_CONFIG), encoding="utf-8")
-    monkeypatch.setenv("KIROCREW_HOME", str(resolved_home))
+    monkeypatch.setenv("AJCREW_HOME", str(resolved_home))
 
     monkeypatch.setattr(paths, "_resolved_home", None, raising=False)
     monkeypatch.setattr(paths, "_config_dir_memo", None, raising=False)
@@ -370,7 +370,7 @@ class TestABackupIsConsistentUnderALiveWriter:
 
 class TestEveryDeclaredStoreIsCovered:
     def test_both_the_default_store_and_a_silo_are_backed_up(self, home: Path) -> None:
-        from kiro_crew.memory_stores import ensure_memory_store_dir
+        from aj_crew.memory_stores import ensure_memory_store_dir
 
         ensure_memory_store_dir(_FIN)
         default = VectorMemoryStore()
@@ -395,7 +395,7 @@ class TestEveryDeclaredStoreIsCovered:
         A glob would adopt a restored or abandoned directory the operator never
         declared, and then copy it forever.
         """
-        from kiro_crew.memory_stores import memory_stores_root
+        from aj_crew.memory_stores import memory_stores_root
 
         stray = memory_stores_root() / "abandoned"
         stray.mkdir(parents=True)
@@ -452,7 +452,7 @@ class TestEveryDeclaredStoreIsCovered:
     def test_no_copy_is_counted_without_pruning_history_or_stopping_other_stores(
         self, home: Path, missing: bool
     ) -> None:
-        from kiro_crew.memory_stores import ensure_memory_store_dir
+        from aj_crew.memory_stores import ensure_memory_store_dir
 
         start = datetime(2026, 3, 1, 12, tzinfo=timezone.utc)
         global_path = resolve_store_path(DEFAULT_MEMORY_STORE)
@@ -588,7 +588,7 @@ class TestARestartCannotShrinkTheRetentionWindow:
 
 
 class TestTheManualVerbTakesTheCopyItWasAskedFor:
-    """``kirocrew memory backup`` is an operator asking for a copy NOW.
+    """``ajcrew memory backup`` is an operator asking for a copy NOW.
 
     The interval guard is for the heartbeat, which would otherwise copy on every
     restart. The CLI verb bypasses it, like the dashboard's "back up now".
@@ -598,7 +598,7 @@ class TestTheManualVerbTakesTheCopyItWasAskedFor:
     def _run_cli_backup(keep: int = 7) -> None:
         from types import SimpleNamespace
 
-        from kiro_crew.cli_commands import _memory_backup_cmd
+        from aj_crew.cli_commands import _memory_backup_cmd
 
         _memory_backup_cmd("backup", SimpleNamespace(keep=keep))
 
@@ -630,18 +630,18 @@ class TestTheManualVerbTakesTheCopyItWasAskedFor:
         import logging
         from unittest.mock import MagicMock
 
-        from kiro_crew.heartbeat import HeartbeatService
+        from aj_crew.heartbeat import HeartbeatService
 
         src = resolve_store_path(DEFAULT_MEMORY_STORE)
         assert mb.back_up_all_stores(keep=7)["backed_up"] == 1  # the sweep, seconds ago
         service = HeartbeatService(MagicMock(), consolidator=MagicMock())
         try:
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.heartbeat"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.heartbeat"):
                 await service._back_up_memory()
         finally:
             service.stop()
 
-        assert not [r for r in caplog.records if r.name == "kiro_crew.heartbeat"], caplog.text
+        assert not [r for r in caplog.records if r.name == "aj_crew.heartbeat"], caplog.text
         assert len(mb.list_backups(src)) == 1
 
     def test_the_summary_line_reports_the_skipped_count(
@@ -687,7 +687,7 @@ class TestAFailedCopyIsCountedAndNotMistakenForASkip:
         """
         from types import SimpleNamespace
 
-        from kiro_crew.cli_commands import _memory_backup_cmd
+        from aj_crew.cli_commands import _memory_backup_cmd
 
         with mock.patch.object(mb, "backup_store", side_effect=mb.MemoryBackupFailed("disk full")):
             with pytest.raises(SystemExit) as exc:
@@ -928,8 +928,8 @@ class TestRestoreIsNonDestructive:
     def test_wrong_sqlite_source_is_refused_without_staging_or_displacing_memory(
         self, live_store, home, store_name, source_kind
     ):
-        from kiro_crew import memory_schema
-        from kiro_crew.memory_stores import ensure_memory_store_dir
+        from aj_crew import memory_schema
+        from aj_crew.memory_stores import ensure_memory_store_dir
 
         source = resolve_store_path(DEFAULT_MEMORY_STORE)
         if store_name != DEFAULT_MEMORY_STORE:
@@ -977,7 +977,7 @@ class TestRestoreIsNonDestructive:
         assert len(live_store.get_all_semantic()) == 21
 
     def test_a_v1_backup_restores_a_named_v1_store(self, live_store):
-        from kiro_crew.memory_stores import ensure_memory_store_dir
+        from aj_crew.memory_stores import ensure_memory_store_dir
 
         source = resolve_store_path(DEFAULT_MEMORY_STORE)
         snapshot = mb.backup_store(source)
@@ -993,8 +993,8 @@ class TestRestoreIsNonDestructive:
         assert len(live_store.get_all_semantic()) == 20
 
     def test_markerless_crew_schema_restores_only_to_named_legacy_v1(self, home):
-        from kiro_crew import memory_schema
-        from kiro_crew.memory_stores import ensure_memory_store_dir
+        from aj_crew import memory_schema
+        from aj_crew.memory_stores import ensure_memory_store_dir
 
         ensure_memory_store_dir(_FIN)
         target = resolve_store_path(_FIN)
@@ -1018,7 +1018,7 @@ class TestRestoreIsNonDestructive:
         assert not mb.pending_restore_status(resolve_store_path(DEFAULT_MEMORY_STORE))["pending"]
 
     def test_named_legacy_restore_can_cancel_an_unreadable_unactivated_journal(self, home):
-        from kiro_crew.memory_stores import ensure_memory_store_dir
+        from aj_crew.memory_stores import ensure_memory_store_dir
 
         ensure_memory_store_dir(_FIN)
         target = resolve_store_path(_FIN)
@@ -1042,7 +1042,7 @@ class TestRestoreIsNonDestructive:
         self, home, cyclic_gc_quiesced
     ):
         """Nesting past the recursion limit is refused like any invalid journal."""
-        from kiro_crew.memory_stores import ensure_memory_store_dir
+        from aj_crew.memory_stores import ensure_memory_store_dir
 
         ensure_memory_store_dir(_FIN)
         target = resolve_store_path(_FIN)
@@ -1342,13 +1342,13 @@ def test_bad_v1_journal_can_be_quarantined_only_with_intact_current_memory(live_
 
 
 def test_bad_v1_journal_can_be_cancelled_through_a_linked_default_home(tmp_path, monkeypatch):
-    from kiro_crew.config import paths
+    from aj_crew.config import paths
 
     physical_home = tmp_path / "physical-home"
     data_home = physical_home / ".kiro" / "crew"
     data_home.mkdir(parents=True)
     (data_home / "config.json").write_text(json.dumps(_CONFIG), encoding="utf-8")
-    monkeypatch.setenv("KIROCREW_HOME", str(data_home))
+    monkeypatch.setenv("AJCREW_HOME", str(data_home))
     monkeypatch.setattr(paths, "_resolved_home", None)
     monkeypatch.setattr(paths, "_config_dir_memo", None)
     store = VectorMemoryStore()
@@ -1372,7 +1372,7 @@ def test_bad_v1_journal_can_be_cancelled_through_a_linked_default_home(tmp_path,
     make_dir_link(alias_home, physical_home)
     monkeypatch.setenv("HOME", str(alias_home))
     monkeypatch.setenv("USERPROFILE", str(alias_home))
-    monkeypatch.delenv("KIROCREW_HOME")
+    monkeypatch.delenv("AJCREW_HOME")
     monkeypatch.setattr(paths, "_resolved_home", None)
     monkeypatch.setattr(paths, "_config_dir_memo", None)
     path = resolve_store_path(DEFAULT_MEMORY_STORE)

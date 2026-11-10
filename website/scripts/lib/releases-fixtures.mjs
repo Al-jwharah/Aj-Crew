@@ -19,7 +19,7 @@ export function realReleasePayloads(scenarios = [['real', '0.2.0'], ['prerelease
   const py = [
     'import json, pathlib, sys',
     'sys.path.insert(0, "src")',
-    'from kiro_crew.changelog import build_release_list',
+    'from aj_crew.changelog import build_release_list',
     'md = pathlib.Path("CHANGELOG.md").read_text()',
     'out = {}',
     `for name, ver in ${JSON.stringify(scenarios)}:`,

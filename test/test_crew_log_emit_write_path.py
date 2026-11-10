@@ -28,12 +28,12 @@ from crew_log_emit_helpers import (  # noqa: F401 -- the autouse fixture registe
     _store_root,
 )
 
-from kiro_crew import crew_log as lg
-from kiro_crew import executors
-from kiro_crew.crew_log import emit
-from kiro_crew.crew_log.writer import DEFAULT_LIMITS, WriterLimits
-from kiro_crew.dashboard import server as server_module
-from kiro_crew.testing.wait import default_timeout
+from aj_crew import crew_log as lg
+from aj_crew import executors
+from aj_crew.crew_log import emit
+from aj_crew.crew_log.writer import DEFAULT_LIMITS, WriterLimits
+from aj_crew.dashboard import server as server_module
+from aj_crew.testing.wait import default_timeout
 
 
 def test_no_second_thread_appends_while_a_writer_batch_is_claimed(monkeypatch):
@@ -106,7 +106,7 @@ def test_every_gateway_mode_drains_the_log_before_a_hard_exit():
     import importlib
     import inspect
 
-    gateway_module = importlib.import_module("kiro_crew.slack.gateway_runtime.exit_path")
+    gateway_module = importlib.import_module("aj_crew.slack.gateway_runtime.exit_path")
     tree = ast.parse(inspect.getsource(gateway_module))
     fn = next(
         node
@@ -272,7 +272,7 @@ def test_events_for_a_session_with_no_log_create_nothing():
 
 
 def test_a_missing_session_id_is_a_no_op():
-    emit.on_session_opened("", agent="kirocrew")
+    emit.on_session_opened("", agent="ajcrew")
     emit.on_turn_started("", 1, "user")
     emit.on_session_closed("", "reset")
     assert not _store_root().exists()
@@ -979,7 +979,7 @@ def test_queued_terminal_write_keeps_ownership_until_it_lands(monkeypatch):
     # One lane: the closer must queue behind the held writer, not land on a spare lane.
     emit.reset_caches(limits=WriterLimits(lanes=1))
     _open_session()
-    emit.on_session_opened(blocker, agent="kirocrew", slot="chat-b")
+    emit.on_session_opened(blocker, agent="ajcrew", slot="chat-b")
     emit.on_turn_started(SESSION, 1, "user")
     assert_drained()
 
@@ -1091,7 +1091,7 @@ def test_overflow_while_the_creating_record_is_queued_still_creates_the_log(monk
     # and the turn's start, which is not exempt, is refused.
     # One lane, so the second session's entries queue behind the held writer.
     emit.reset_caches(limits=WriterLimits(max_pending_count=1, lanes=1))
-    emit.on_session_opened(blocker, agent="kirocrew", slot="chat-b")
+    emit.on_session_opened(blocker, agent="ajcrew", slot="chat-b")
     assert_drained()
 
     writer_entered = threading.Event()
@@ -1111,7 +1111,7 @@ def test_overflow_while_the_creating_record_is_queued_still_creates_the_log(monk
             emit.on_turn_started(blocker, 1, "user")
             assert writer_entered.wait(20.0), "the writer was never occupied"
             emit.on_turn_started(blocker, 2, "user")
-            emit.on_session_opened(SESSION, agent="kirocrew", slot="chat-7")
+            emit.on_session_opened(SESSION, agent="ajcrew", slot="chat-7")
             emit.on_turn_started(SESSION, 1, "user")
 
         asyncio.run(_under_pressure())
@@ -1146,7 +1146,7 @@ def _fail_creation_permanently() -> None:
 
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(lg.CrewLog, "create", _refuse_create)
-        emit.on_session_opened(SESSION, agent="kirocrew", slot="chat-7")
+        emit.on_session_opened(SESSION, agent="ajcrew", slot="chat-7")
         assert_drained()
 
 

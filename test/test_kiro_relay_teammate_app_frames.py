@@ -17,8 +17,8 @@ from aiohttp.test_utils import TestClient, TestServer, make_mocked_request
 from chat_test_helpers import _make_state
 from token_auth_helpers import clear_nonces  # noqa: F401 -- the autouse fixture registers by import
 
-from kiro_crew.dashboard.handlers.messaging import api_notifications
-from kiro_crew.dashboard.kiro_relay.caller import (
+from aj_crew.dashboard.handlers.messaging import api_notifications
+from aj_crew.dashboard.kiro_relay.caller import (
     RELAY_CALLER_KEY,
     RELAY_TEAMMATE_WS_FLAG,
     CrewKind,
@@ -27,16 +27,16 @@ from kiro_crew.dashboard.kiro_relay.caller import (
     RelayCallerKind,
     is_relay_teammate,
 )
-from kiro_crew.dashboard.kiro_relay.ingress import (
+from aj_crew.dashboard.kiro_relay.ingress import (
     RELAY_INGRESS_APP_KEY,
     RelayIngress,
     relay_ingress_middleware,
 )
-from kiro_crew.dashboard.notification_coordinator import unread_count
-from kiro_crew.dashboard.server_internal_paths import _STRICT_INTERNAL_API_PATHS
-from kiro_crew.dashboard.token_auth import token_auth_middleware
-from kiro_crew.dashboard.ws_event_scope import app_origin_frame
-from kiro_crew.testing.wait import finished
+from aj_crew.dashboard.notification_coordinator import unread_count
+from aj_crew.dashboard.server_internal_paths import _STRICT_INTERNAL_API_PATHS
+from aj_crew.dashboard.token_auth import token_auth_middleware
+from aj_crew.dashboard.ws_event_scope import app_origin_frame
+from aj_crew.testing.wait import finished
 
 OWNER = "kiro-user.owner-0001"
 TEAMMATE = "kiro-user.teammate-0002"
@@ -88,7 +88,7 @@ def _fan_out(tmp_path, monkeypatch, msg_type: str, data: dict) -> tuple[_WS, _WS
 @pytest.fixture
 def withheld(monkeypatch) -> list[str]:
     """The event types a relayed teammate was withheld, as their SEL rows record them."""
-    from kiro_crew.dashboard import ws_event_scope
+    from aj_crew.dashboard import ws_event_scope
 
     rows: list[str] = []
 
@@ -188,8 +188,8 @@ _NOTES = [
 @pytest.mark.parametrize("who", ["owner", "teammate"])
 async def test_a_relayed_socket_is_marked_by_who_opened_it(tmp_path, monkeypatch, who):
     """``/api/ws`` marks the socket a relayed teammate opens, and only that one."""
-    from kiro_crew.dashboard import ws as ws_module
-    from kiro_crew.dashboard import ws_event_scope
+    from aj_crew.dashboard import ws as ws_module
+    from aj_crew.dashboard import ws_event_scope
 
     stopped = asyncio.Event()
     monkeypatch.setattr(ws_module, "shutdown_event", stopped)
@@ -275,13 +275,13 @@ class _SelRecorder:
 async def test_a_teammate_neither_sees_nor_sets_an_apps_channels(
     tmp_path, monkeypatch, withheld, who
 ):
-    from kiro_crew.dashboard.handlers.messaging import (
+    from aj_crew.dashboard.handlers.messaging import (
         api_notification_channel_settings,
         api_notification_channels,
     )
 
     sel_rows = _SelRecorder()
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: sel_rows)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: sel_rows)
     state = _make_state(tmp_path)
     store = _Channels()
     state.notification_bus = store
@@ -332,7 +332,7 @@ async def test_a_teammate_neither_sees_nor_sets_an_apps_channels(
 
 
 def _feed_app(state, ingress: RelayIngress) -> web.Application:
-    from kiro_crew.dashboard.handlers import messaging
+    from aj_crew.dashboard.handlers import messaging
 
     app = _relay_app(state, ingress)
     app.router.add_post("/api/notifications/clear", messaging.api_notifications_clear)
@@ -416,7 +416,7 @@ async def test_a_teammate_cannot_change_an_app_notification_by_name(
     tmp_path, monkeypatch, method, path
 ):
     sel_rows = _SelRecorder()
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: sel_rows)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: sel_rows)
     state, _ = _feed_state(tmp_path, monkeypatch)
     before = [dict(note) for note in state._notification_log]
     ingress = _team()
@@ -441,7 +441,7 @@ async def test_a_teammate_cannot_change_an_app_notification_by_name(
 
 @pytest.mark.asyncio
 async def test_the_sse_stream_withholds_app_pushes_from_a_teammate(tmp_path, monkeypatch, withheld):
-    from kiro_crew.dashboard.handlers import updates
+    from aj_crew.dashboard.handlers import updates
 
     stopped = asyncio.Event()
     monkeypatch.setattr(updates, "shutdown_event", stopped)

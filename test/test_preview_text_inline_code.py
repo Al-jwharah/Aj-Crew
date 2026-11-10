@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.preview_text import speech_preview, strip_markdown_preview
+from aj_crew.preview_text import speech_preview, strip_markdown_preview
 
 
 def _named(prefix, rows):

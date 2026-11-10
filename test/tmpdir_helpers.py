@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import os
 
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
 #: ``prefix=`` for every ``mkdtemp`` that takes :func:`short_tmp_base`.
 #:
@@ -39,7 +39,7 @@ from kiro_crew import platform_compat
 SHORT_TMP_PREFIX = "kc-tmp-"
 
 #: Published by the rootdir conftest's ``_install_short_tmp_root`` (see that docstring).
-_SHORT_TMP_ROOT_ENV = "KIROCREW_TEST_SHORT_TMP_ROOT"
+_SHORT_TMP_ROOT_ENV = "AJCREW_TEST_SHORT_TMP_ROOT"
 
 
 def short_tmp_base() -> str | None:

@@ -20,9 +20,9 @@ from types import SimpleNamespace
 import pytest
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import work_ledger as wl
-from kiro_crew.dashboard.handlers import work_ledger as wlh
-from kiro_crew.dashboard.handlers import work_ledger_board as board
+from aj_crew import work_ledger as wl
+from aj_crew.dashboard.handlers import work_ledger as wlh
+from aj_crew.dashboard.handlers import work_ledger_board as board
 
 CONDUCTOR = "chat-1-conductor"
 OTHER_CONDUCTOR = "chat-9-other-conductor"
@@ -35,7 +35,7 @@ NON_OWNER = "some-other-subject"
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
     """Every test writes into its own data home, never the live one."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     yield
 
 
@@ -441,7 +441,7 @@ def _stop_calls(monkeypatch):
         return {"ok": True}
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop, raising=True
+        "aj_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop, raising=True
     )
     return calls
 
@@ -507,7 +507,7 @@ async def test_an_unreachable_worker_is_audited_as_a_failure(monkeypatch, _audit
         return {"ok": False, "code": "remote_stop_unreachable"}
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_handlers.stop_slot_turn", _unreachable, raising=True
+        "aj_crew.dashboard.chat_handlers.stop_slot_turn", _unreachable, raising=True
     )
 
     item_id = _orphaned_item()

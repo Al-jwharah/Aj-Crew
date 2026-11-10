@@ -20,8 +20,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import dist_file_response
-from kiro_crew.dashboard.handlers import core as core_mod
+from aj_crew.dashboard import dist_file_response
+from aj_crew.dashboard.handlers import core as core_mod
 
 _ERRORS = [(errno.EIO, 404), (errno.ENOSYS, 404), (errno.EACCES, 403)]
 
@@ -67,10 +67,10 @@ def _app() -> web.Application:
 def _avatar_config(monkeypatch: pytest.MonkeyPatch, avatar: str) -> None:
     cfg = SimpleNamespace(dashboard=SimpleNamespace(avatar=avatar))
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.KiroCrewConfig", SimpleNamespace(load=lambda: cfg)
+        "aj_crew.dashboard.handlers.AjCrewConfig", SimpleNamespace(load=lambda: cfg)
     )
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.is_sensitive_path", lambda _p: False)
-    monkeypatch.setattr("kiro_crew.hooks.validate_file_path", lambda p: p or None)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.is_sensitive_path", lambda _p: False)
+    monkeypatch.setattr("aj_crew.hooks.validate_file_path", lambda p: p or None)
 
 
 def _assert_one_warning(caplog: pytest.LogCaptureFixture, target: Path, err: int) -> None:
@@ -135,11 +135,11 @@ async def test_an_unopenable_default_logo_logs_once_and_keeps_its_status(
     err: int,
     status: int,
 ) -> None:
-    logo = tmp_path / "kirocrew-logo.png"
+    logo = tmp_path / "ajcrew-logo.png"
     logo.write_bytes(b"png")
     _avatar_config(monkeypatch, "")
-    monkeypatch.setattr("kiro_crew.dashboard.handlers._STATIC_DIR", tmp_path)
-    monkeypatch.setattr("kiro_crew.__version__", "9.9.9")
+    monkeypatch.setattr("aj_crew.dashboard.handlers._STATIC_DIR", tmp_path)
+    monkeypatch.setattr("aj_crew.__version__", "9.9.9")
     _fail_open_for(monkeypatch, logo, err)
     async with TestClient(TestServer(_app())) as client:
         first = await client.get("/logo.png")
@@ -159,9 +159,9 @@ async def test_served_and_missing_pwa_files_and_logos_log_no_open_warning(
     monkeypatch.setattr(core_mod, "_DIST_DIR", dist)
     static = tmp_path / "static"
     static.mkdir()
-    (static / "kirocrew-logo.png").write_bytes(b"png")
-    monkeypatch.setattr("kiro_crew.dashboard.handlers._STATIC_DIR", static)
-    monkeypatch.setattr("kiro_crew.__version__", "9.9.9")
+    (static / "ajcrew-logo.png").write_bytes(b"png")
+    monkeypatch.setattr("aj_crew.dashboard.handlers._STATIC_DIR", static)
+    monkeypatch.setattr("aj_crew.__version__", "9.9.9")
     _avatar_config(monkeypatch, "")
     async with TestClient(TestServer(_app())) as client:
         manifest = await client.get("/manifest.webmanifest")
@@ -171,7 +171,7 @@ async def test_served_and_missing_pwa_files_and_logos_log_no_open_warning(
         served_logo = await client.get("/logo.png")
         assert served_logo.status == 200
         assert await served_logo.read() == b"png"
-    monkeypatch.setattr("kiro_crew.dashboard.handlers._STATIC_DIR", tmp_path / "empty")
+    monkeypatch.setattr("aj_crew.dashboard.handlers._STATIC_DIR", tmp_path / "empty")
     async with TestClient(TestServer(_app())) as client:
         assert (await client.get("/logo.png")).status == 404
     assert _unopenable_warnings(caplog) == []

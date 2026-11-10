@@ -15,10 +15,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.shared_crew import admission_gate, audit, routes_admission
-from kiro_crew.shared_crew.admission import OperationKind, StaleRevision
-from kiro_crew.shared_crew.collab import DecisionKind
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew import admission_gate, audit, routes_admission
+from aj_crew.shared_crew.admission import OperationKind, StaleRevision
+from aj_crew.shared_crew.collab import DecisionKind
+from aj_crew.shared_crew.contracts import (
     ACTOR_REQUEST_KEY,
     ActorContext,
     DisplaySnapshot,
@@ -28,7 +28,7 @@ from kiro_crew.shared_crew.contracts import (
     Transport,
     principal_id_for,
 )
-from kiro_crew.shared_crew.decisions import DecisionRegistry
+from aj_crew.shared_crew.decisions import DecisionRegistry
 
 
 def _person(login: str) -> Principal:
@@ -181,7 +181,7 @@ async def test_a_late_different_response_is_audited_as_conflict(events):
 async def test_only_the_owner_cancels_a_planned_task_or_schedule_run(
     events, monkeypatch, operation, owner, status
 ):
-    from kiro_crew.dashboard.handlers import source_providers
+    from aj_crew.dashboard.handlers import source_providers
 
     monkeypatch.setattr(source_providers, "is_owner_dashboard_request", lambda _r: owner)
     service = _Service()

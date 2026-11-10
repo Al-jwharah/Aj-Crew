@@ -7,9 +7,9 @@ import json
 import pytest
 from knowledge_helpers import store_fixture  # noqa: F401
 
-from kiro_crew.knowledge import ingestion as ingestion_module
-from kiro_crew.knowledge import store as store_module
-from kiro_crew.knowledge.ingestion import IngestionPipeline
+from aj_crew.knowledge import ingestion as ingestion_module
+from aj_crew.knowledge import store as store_module
+from aj_crew.knowledge.ingestion import IngestionPipeline
 
 
 def _ingest(store, name, aliases=(), entity_type="service"):
@@ -248,7 +248,7 @@ def test_malformed_canonical_never_reaches_lookup(store, monkeypatch, name):
 
 
 def test_decision_normalization_preserves_storage_and_lookup(identity_store):
-    from kiro_crew.knowledge.entity_resolution import alias_merge_allowed
+    from aj_crew.knowledge.entity_resolution import alias_merge_allowed
 
     eid = identity_store.add_entity("뮤직뱅크", "service", aliases=["Ｍｕｓｉｃ Ｂａｎｋ"])
     assert _ingest(identity_store, "Ｍｕｓｉｃ Ｂａｎｋ") == eid
@@ -258,7 +258,7 @@ def test_decision_normalization_preserves_storage_and_lookup(identity_store):
 
 
 def test_redacted_empty_alias_does_not_restore_original(monkeypatch):
-    monkeypatch.setattr("kiro_crew.knowledge.ingestion._redact", lambda text: "")
+    monkeypatch.setattr("aj_crew.knowledge.ingestion._redact", lambda text: "")
     assert ingestion_module._coerce_aliases(["sensitive original"], "Example") is None
 
 

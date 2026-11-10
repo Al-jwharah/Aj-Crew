@@ -19,13 +19,13 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.dashboard.handlers import taskrunner as handlers
-from kiro_crew.dashboard.handlers.taskrunner import api_taskrunner_to_chat
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-from kiro_crew.taskrunner import Step, StepStatus, TaskRun
+from aj_crew.dashboard.handlers import taskrunner as handlers
+from aj_crew.dashboard.handlers.taskrunner import api_taskrunner_to_chat
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+from aj_crew.taskrunner import Step, StepStatus, TaskRun
 
 _EXECUTION = ExecutionContext(
-    "alice", MemoryStoreRef("alice-store", "alice"), "member", "kirocrew", "persistent"
+    "alice", MemoryStoreRef("alice-store", "alice"), "member", "ajcrew", "persistent"
 )
 
 
@@ -129,7 +129,7 @@ def _hermetic():
 
 @pytest.fixture
 def chat():
-    with patch("kiro_crew.dashboard.chat._run_chat", AsyncMock()) as run_chat:
+    with patch("aj_crew.dashboard.chat._run_chat", AsyncMock()) as run_chat:
         yield run_chat
 
 
@@ -159,7 +159,7 @@ async def test_a_click_while_the_first_turn_runs_starts_no_turn(_hermetic) -> No
         await release.wait()
 
     state = _state(_run())
-    with patch("kiro_crew.dashboard.chat._run_chat", new=slow_turn):
+    with patch("aj_crew.dashboard.chat._run_chat", new=slow_turn):
         first = await _post(state)
         await asyncio.sleep(0)
         assert state._slots[first].task is not None and not state._slots[first].task.done()

@@ -43,7 +43,7 @@ async def _post_steer(state, message: str) -> dict:
 
 
 def _slot_with_client(tmp_path, monkeypatch, client):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     slot = _running_slot(state)

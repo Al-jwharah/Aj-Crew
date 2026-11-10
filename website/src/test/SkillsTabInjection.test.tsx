@@ -23,10 +23,10 @@ vi.mock('../components/SkillDirectoryBrowser', () => ({
 import SkillsTab from '../pages/overview/SkillsTab'
 
 const BASE = {
-  key: 'kirocrew-commands',
-  name: 'kirocrew-commands',
+  key: 'ajcrew-commands',
+  name: 'ajcrew-commands',
   description: 'CLI reference',
-  source: 'kirocrew',
+  source: 'ajcrew',
   inject_on_trigger: true,
   size_bytes: 21728,
   deliveries: 616,
@@ -92,7 +92,7 @@ describe('injection control on the Skills page', () => {
     fireEvent.click(await findToggle())
 
     await waitFor(() =>
-      expect(mockApi.setSkillInjectOnTrigger).toHaveBeenCalledWith('kirocrew-commands', false))
+      expect(mockApi.setSkillInjectOnTrigger).toHaveBeenCalledWith('ajcrew-commands', false))
   })
 
   it('writes the opt-in when an opted-out skill is switched back on', async () => {
@@ -103,7 +103,7 @@ describe('injection control on the Skills page', () => {
     fireEvent.click(toggle)
 
     await waitFor(() =>
-      expect(mockApi.setSkillInjectOnTrigger).toHaveBeenCalledWith('kirocrew-commands', true))
+      expect(mockApi.setSkillInjectOnTrigger).toHaveBeenCalledWith('ajcrew-commands', true))
   })
 
   it('surfaces a failed write instead of leaving the toggle looking applied', async () => {
@@ -170,8 +170,8 @@ describe('injection control on the Skills page', () => {
     expect(screen.queryByRole('switch', { name: /inject full content/i })).toBeNull()
   })
 
-  it('hides the control for a skill outside the directory Kiro Crew owns', async () => {
-    /* A `skills.extra_paths` skill still reports source `kirocrew`, but the
+  it('hides the control for a skill outside the directory Aj Crew owns', async () => {
+    /* A `skills.extra_paths` skill still reports source `ajcrew`, but the
        writer refuses to rewrite it. Offering a toggle that always errors is
        worse than not offering one, so the gate follows the reported writability. */
     mount([{ ...BASE, owned: false }])

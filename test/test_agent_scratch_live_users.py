@@ -30,9 +30,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent_scratch as sc
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
-from kiro_crew.testing.wait import default_timeout
+from aj_crew import agent_scratch as sc
+from aj_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.testing.wait import default_timeout
 
 _LINUX_ONLY = pytest.mark.skipif(
     sys.platform != "linux", reason="the live-user signal reads /proc, which only Linux has"
@@ -47,7 +47,7 @@ _UNTIL_STDIN_CLOSES = "import sys; print('ready', flush=True); sys.stdin.read()"
 #: start, then runs one sweep judged from the time in its first argument.
 _SWEEP_ONCE = (
     f"import sys; sys.path.insert(0, {str(_SRC)!r})\n"
-    "from kiro_crew import agent_scratch as sc\n"
+    "from aj_crew import agent_scratch as sc\n"
     "sc.drop_own_inherited_scratch_env()\n"
     "print(sc.sweep_dead_scratch(now=float(sys.argv[1])))\n"
 )
@@ -124,7 +124,7 @@ def test_a_live_user_outside_the_owner_groups_keeps_the_tree(
     later = time.time() + 2 * sc._UNOWNED_GRACE_SECONDS
 
     with _live_user(tree, tmp_path, use) as user:
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent_scratch"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent_scratch"):
             assert sc.sweep_dead_scratch(now=later) == 0
         assert tree.is_dir(), "a live user the marker does not name keeps the tree"
         assert f"live pid {user.pid} still uses it" in caplog.text
@@ -144,7 +144,7 @@ def test_the_launcher_above_the_sweeper_does_not_keep_the_tree_it_was_started_in
     tree = sc.allocate_scratch("dashboard-chat-89")
     assert sc.record_owner(tree, _exited_launcher_pid()) == "recorded"
     later = time.time() + 2 * sc._UNOWNED_GRACE_SECONDS
-    env = {**os.environ, **sc.scratch_env(tree), "KIROCREW_HOME": str(scratch_root.parent)}
+    env = {**os.environ, **sc.scratch_env(tree), "AJCREW_HOME": str(scratch_root.parent)}
     sweeper = [sys.executable, "-I", "-B", "-c", _SWEEP_ONCE, str(later)]
 
     # The trailing ":" keeps the shell from exec-ing the sweeper, so the shell
@@ -167,14 +167,14 @@ def test_only_scratch_exports_count_and_never_the_sweepers_own(tmp_path: Path) -
     """The kernel keeps a process's exec-time environment for its whole life, so
     a gateway started from an agent shell still shows that shell's ``TMPDIR``
     there after dropping it; reading its own would keep that tree for good."""
-    from kiro_crew import agent_scratch_users
+    from aj_crew import agent_scratch_users
 
     root = tmp_path / "scratch"
     proc = tmp_path / "proc"
     other = os.getpid() + 1
     environs = {
         os.getpid(): {"TMPDIR": "gateway-shell-1"},
-        other: {"HOME": "fake-home-3", "KIROCREW_SCRATCH": "runtime-2"},
+        other: {"HOME": "fake-home-3", "AJCREW_SCRATCH": "runtime-2"},
     }
     for pid, exports in environs.items():
         (proc / str(pid)).mkdir(parents=True)

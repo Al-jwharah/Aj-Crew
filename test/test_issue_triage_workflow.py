@@ -280,7 +280,7 @@ def _form_body(channel_answer: str | None, *, extra: str = "") -> str:
         # main. The parser under test slices the body by these exact `### `
         # lines, so "correcting" the spelling here would test a body GitHub
         # never produces. Renaming the template's label is a separate change.
-        "### KiroCrew version",  # brand-ok
+        "### AjCrew version",  # brand-ok
         "",
         "0.1.4rc4",
         "",
@@ -486,7 +486,7 @@ def test_fully_labelled_issue_is_left_alone(runner: Runner) -> None:
 def test_existing_dimension_is_not_overridden(runner: Runner) -> None:
     """An area chosen elsewhere stands; only the empty dimensions get filled."""
     assert runner.triage(
-        title="Add a --json flag to kirocrew status",
+        title="Add a --json flag to ajcrew status",
         labels=("area: core",),
         model_reply=json.dumps(
             {
@@ -540,7 +540,7 @@ def test_model_output_cannot_forge_workflow_commands(runner: Runner) -> None:
     on stdout and into the job summary — so they must be flattened to one line
     before they get there.
     """
-    forged_label = "harmless\n::error file=src/kiro_crew/cli.py,line=1::forged"
+    forged_label = "harmless\n::error file=src/aj_crew/cli.py,line=1::forged"
     assert (
         runner.triage(
             title="Please label this",

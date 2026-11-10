@@ -16,7 +16,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.deploy import engine, handlers
+from aj_crew.deploy import engine, handlers
 
 
 @pytest.fixture(autouse=True)
@@ -52,9 +52,9 @@ def _force_posix_shell(_floor_monkeypatch):
 @pytest.fixture(autouse=True)
 def _isolate_config(tmp_path: Path, _floor_monkeypatch):
     # Patch config_dir on all deploy submodules so paths resolve under tmp_path.
-    import kiro_crew.deploy as _deploy_pkg
-    from kiro_crew.deploy import pending as _pending_mod
-    from kiro_crew.deploy import profiles as _profiles_mod
+    import aj_crew.deploy as _deploy_pkg
+    from aj_crew.deploy import pending as _pending_mod
+    from aj_crew.deploy import profiles as _profiles_mod
 
     _floor_monkeypatch.setattr(handlers, "config_dir", lambda: tmp_path)
     _floor_monkeypatch.setattr(_profiles_mod, "config_dir", lambda: tmp_path)
@@ -74,7 +74,7 @@ def _mock_base_stack(_floor_monkeypatch):
     import json as _json
 
     _base_outputs = _json.dumps(
-        [{"OutputKey": "BucketName", "OutputValue": "kirocrew-base-bucket"}]
+        [{"OutputKey": "BucketName", "OutputValue": "ajcrew-base-bucket"}]
     )
     _floor_monkeypatch.setattr(engine, "run_aws", lambda *a, **kw: (0, _base_outputs, ""))
 

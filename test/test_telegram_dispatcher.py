@@ -34,14 +34,14 @@ from telegram_helpers import (
     _tg_origin,
 )
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.messaging.queue_drain import person_tag
-from kiro_crew.messaging.renderer import session_provenance_tag
-from kiro_crew.messaging.session_resume import RoutingDecision
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.telegram.renderer import TelegramApprovalDecider
-from kiro_crew.telegram.transport import TelegramInboundMessage
-from kiro_crew.telegram.transport_dispatch import _MODEL_PICKER_TTL_SECS
+from aj_crew.acp.client import AcpError
+from aj_crew.messaging.queue_drain import person_tag
+from aj_crew.messaging.renderer import session_provenance_tag
+from aj_crew.messaging.session_resume import RoutingDecision
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.telegram.renderer import TelegramApprovalDecider
+from aj_crew.telegram.transport import TelegramInboundMessage
+from aj_crew.telegram.transport_dispatch import _MODEL_PICKER_TTL_SECS
 
 
 def _deny_channel_profile(monkeypatch, tmp_path, allow=("slack",)):
@@ -50,7 +50,7 @@ def _deny_channel_profile(monkeypatch, tmp_path, allow=("slack",)):
     store so the next resolve sees the profile."""
     import json
 
-    from kiro_crew.platform import governance_profiles as gp
+    from aj_crew.platform import governance_profiles as gp
 
     pdir = tmp_path / "profiles"
     pdir.mkdir(exist_ok=True)
@@ -72,7 +72,7 @@ class TestDispatcher:
         # A channels DENY must stop handle_message from driving a turn. This
         # locks the Telegram inbound chokepoint — removing the gate makes this
         # test fail (a turn would run).
-        from kiro_crew.platform import governance_profiles as gp
+        from aj_crew.platform import governance_profiles as gp
 
         _deny_channel_profile(monkeypatch, tmp_path)
         d, cli, sess = _dispatcher({7})
@@ -92,7 +92,7 @@ class TestDispatcher:
     def test_channels_deny_drops_callback_approval(self, tmp_path, monkeypatch) -> None:
         # A callback press must not resolve a pending tool approval on a denied
         # channel. This locks the on_callback gate.
-        from kiro_crew.platform import governance_profiles as gp
+        from aj_crew.platform import governance_profiles as gp
 
         _deny_channel_profile(monkeypatch, tmp_path)
         d, cli, _ = _dispatcher({7})
@@ -130,7 +130,7 @@ class TestDispatcher:
         # pending approval as refused (False) — a reject is a denial, and dropping
         # it would strand the pending future until timeout. Only APPROVE is gated
         # out.
-        from kiro_crew.platform import governance_profiles as gp
+        from aj_crew.platform import governance_profiles as gp
 
         _deny_channel_profile(monkeypatch, tmp_path)
         d, cli, _ = _dispatcher({7})
@@ -175,8 +175,8 @@ class TestDispatcher:
 
         asyncio.run(_go())
         assert cli.final_text() == "Answer: hello world"
-        assert sess.successes == ["telegram:kirocrew:direct:7"]
-        assert sess.released == ["telegram:kirocrew:direct:7"]
+        assert sess.successes == ["telegram:ajcrew:direct:7"]
+        assert sess.released == ["telegram:ajcrew:direct:7"]
         # Pins that the pre-dispatch closing gate is consulted on the normal
         # path, so it cannot be dropped or renamed into a no-op unnoticed.
         assert sess.begin_turns == 1
@@ -216,13 +216,13 @@ class TestDispatcher:
         assert sess.successes == []
         assert sess.failures == []
         # Refused is not leaked -- the session-keyed semaphore still comes back.
-        assert sess.released == ["telegram:kirocrew:direct:7"]
+        assert sess.released == ["telegram:ajcrew:direct:7"]
 
     def test_a_shutdown_refusal_is_spooled_for_a_persistent_session(
         self, tmp_path, monkeypatch
     ) -> None:
         """The durable inbound spool receives the refused message."""
-        from kiro_crew.messaging import inbound_spool as S
+        from aj_crew.messaging import inbound_spool as S
 
         monkeypatch.setattr(S, "data_home", lambda: tmp_path)
         d, _cli, sess = _dispatcher({7})
@@ -245,9 +245,9 @@ class TestDispatcher:
         self, tmp_path, monkeypatch, admission_closed: bool
     ) -> None:
         """Both refusal sites keep each ``file_name``, so the notice can name the files."""
-        from kiro_crew.messaging import inbound_spool as S
-        from kiro_crew.messaging.attachments import IngestResult
-        from kiro_crew.telegram.dispatch import turn_engine
+        from aj_crew.messaging import inbound_spool as S
+        from aj_crew.messaging.attachments import IngestResult
+        from aj_crew.telegram.dispatch import turn_engine
 
         monkeypatch.setattr(S, "data_home", lambda: tmp_path)
         monkeypatch.setattr(
@@ -280,7 +280,7 @@ class TestDispatcher:
         private message is written verbatim to ``refused.jsonl``. The same
         predicate that gates the durable-history write gates this one.
         """
-        from kiro_crew.messaging import inbound_spool as S
+        from aj_crew.messaging import inbound_spool as S
 
         monkeypatch.setattr(S, "data_home", lambda: tmp_path)
         d, _cli, sess = _dispatcher({7})
@@ -309,9 +309,9 @@ class TestDispatcher:
         assert not spool.exists(), "an incognito message was persisted to the spool"
         assert sess.released == [], "paused admission must not acquire or release a session"
 
-    def test_agent_resolves_to_kirocrew_when_unset(self) -> None:
-        # agent=None + empty default_agent must fall back to "kirocrew" so the
-        # session loads kirocrew-core (spawn_run), not kiro-cli's bare default.
+    def test_agent_resolves_to_ajcrew_when_unset(self) -> None:
+        # agent=None + empty default_agent must fall back to "ajcrew" so the
+        # session loads ajcrew-core (spawn_run), not kiro-cli's bare default.
         d, cli, sess = _dispatcher({7})
 
         async def _go() -> None:
@@ -320,7 +320,7 @@ class TestDispatcher:
             )
 
         asyncio.run(_go())
-        assert sess.last_agent == "kirocrew"
+        assert sess.last_agent == "ajcrew"
 
     def test_cold_start_failure_finalizes_and_skips_release(self) -> None:
         # If get_or_create raises (cold-start), the turn must still be finalized
@@ -438,7 +438,7 @@ class TestDispatcher:
             )
 
         asyncio.run(_go())
-        assert "Kiro Crew" in cli.sent[-1][0]
+        assert "Aj Crew" in cli.sent[-1][0]
 
     def test_compact_refused_while_turn_running(self) -> None:
         # /compact must NOT drive the same provider while a turn streams. The
@@ -473,8 +473,8 @@ class TestDispatcher:
             )
 
         asyncio.run(_go())
-        assert sess.acquired == ["telegram:kirocrew:direct:7"]  # acquired the turn semaphore
-        assert sess.released == ["telegram:kirocrew:direct:7"]  # and released it in finally
+        assert sess.acquired == ["telegram:ajcrew:direct:7"]  # acquired the turn semaphore
+        assert sess.released == ["telegram:ajcrew:direct:7"]  # and released it in finally
         assert any("Compact" in s[0] for s in cli.sent) or any("Compact" in e[1] for e in cli.edits)
 
     def test_compact_declined_on_auto_managed_backend(self) -> None:
@@ -500,7 +500,7 @@ class TestDispatcher:
         visible = " ".join([text for text, _ in cli.sent] + [text for _, text, _ in cli.edits])
         assert "manages compaction automatically" in visible
         assert calls == []
-        assert sess.released == ["telegram:kirocrew:direct:7"]  # semaphore still handed back
+        assert sess.released == ["telegram:ajcrew:direct:7"]  # semaphore still handed back
 
     def test_compact_none_capability_preserves_dispatch(self) -> None:
         # The ABC's None (supported) default keeps the existing dispatch.
@@ -589,7 +589,7 @@ class TestDispatcher:
         assert all(mid != 99 for mid, _, _ in cli.edits)  # original text never clobbered
         assert "Say Hi" in cli.sent[0][0]  # choice echoed as its own block first
         assert cli.final_text() == "Answer: Say Hi"  # answer streamed as a NEW message
-        assert sess.successes == ["telegram:kirocrew:direct:7"]
+        assert sess.successes == ["telegram:ajcrew:direct:7"]
 
     def test_callback_option_label_is_literal_not_a_command(self) -> None:
         d, cli, sess = _dispatcher({7})
@@ -604,7 +604,7 @@ class TestDispatcher:
         )
 
         assert d._conv.current_gen(route) == before
-        assert sess.successes == ["telegram:kirocrew:direct:7"]
+        assert sess.successes == ["telegram:ajcrew:direct:7"]
         assert not any("New conversation started" in text for text, _ in cli.sent)
         assert "Answer: /new" in (cli.final_text() or "")
 
@@ -922,7 +922,7 @@ class TestModelPicker:
 class TestQueueOrSteerDecision:
     """How a mid-turn message chooses between the running turn and the queue."""
 
-    _KEY = "telegram:kirocrew:direct:7"
+    _KEY = "telegram:ajcrew:direct:7"
 
     def test_the_steer_flag_is_read_per_message(self) -> None:
         d, _cli, sess = _dispatcher({7})
@@ -1048,7 +1048,7 @@ class TestQueueOrSteerDecision:
         ]
 
     def test_an_enqueue_miss_reruns_the_original_message(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         privacy_mode.reset()
         try:
@@ -1138,7 +1138,7 @@ class TestQueueOrSteerDecision:
         assert [t for t, _ in cli.sent] == ["⏳ Queued (1): “later”"]
 
     def test_a_busy_option_press_is_refused_byte_exact(self) -> None:
-        from kiro_crew.telegram import transport_dispatch as td
+        from aj_crew.telegram import transport_dispatch as td
 
         busy = (
             "🔘 That conversation is busy with another turn, so your choice was NOT "
@@ -1162,8 +1162,8 @@ class TestQueueOrSteerDecision:
         assert sess.queued == [] and sess._gp.steered == []
 
     def test_a_press_staled_by_rotation_runs_nothing(self, monkeypatch: Any) -> None:
-        from kiro_crew.messaging import privacy_mode
-        from kiro_crew.telegram import transport_dispatch as td
+        from aj_crew.messaging import privacy_mode
+        from aj_crew.telegram import transport_dispatch as td
 
         stale = (
             "🔘 These buttons belong to a conversation this chat has since moved away "
@@ -1197,7 +1197,7 @@ class TestQueueOrSteerDecision:
         assert d._conv.current_gen(route) == 1
 
     def test_an_untagged_press_is_refused_byte_exact(self) -> None:
-        from kiro_crew.telegram import transport_dispatch as td
+        from aj_crew.telegram import transport_dispatch as td
 
         untagged = (
             "🔘 These buttons predate a session-safety update, so which conversation "
@@ -1219,7 +1219,7 @@ def _facade_audits(monkeypatch: Any) -> list[dict[str, Any]]:
     """Capture every SEL row the dispatcher writes, through its own module binding."""
     rows: list[dict[str, Any]] = []
     monkeypatch.setattr(
-        "kiro_crew.telegram.transport_dispatch.sel",
+        "aj_crew.telegram.transport_dispatch.sel",
         lambda: SimpleNamespace(log_api_access=lambda **kw: rows.append(kw)),
     )
     return rows
@@ -1228,7 +1228,7 @@ def _facade_audits(monkeypatch: Any) -> list[dict[str, Any]]:
 class TestModelPickerOutcomes:
     """The exact text, keyboard and side effects of every /model branch."""
 
-    _KEY = "telegram:kirocrew:direct:7"
+    _KEY = "telegram:ajcrew:direct:7"
     _AUTO = "Auto (let the backend choose)"
 
     def _post(self, models: list | None = None) -> tuple[Any, Any, Any]:
@@ -1414,7 +1414,7 @@ class TestModelPickerOutcomes:
     def test_apply_then_audit_then_one_edit(self, monkeypatch: Any) -> None:
         order: list[Any] = []
         monkeypatch.setattr(
-            "kiro_crew.telegram.transport_dispatch.sel",
+            "aj_crew.telegram.transport_dispatch.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: order.append("audit")),
         )
         d, cli, _sess = self._post()
@@ -1592,7 +1592,7 @@ class TestCallbackRouting:
             order.append(f"gov:{channel}")
             return False
 
-        monkeypatch.setattr("kiro_crew.telegram.transport_dispatch.channel_inbound_permitted", _gov)
+        monkeypatch.setattr("aj_crew.telegram.transport_dispatch.channel_inbound_permitted", _gov)
         d, cli, _sess = _dispatcher({7})
 
         async def _ack(callback_query_id: str, text: str = "") -> None:
@@ -1610,7 +1610,7 @@ class TestCallbackRouting:
             calls.append(channel)
             return False
 
-        monkeypatch.setattr("kiro_crew.telegram.transport_dispatch.channel_inbound_permitted", _gov)
+        monkeypatch.setattr("aj_crew.telegram.transport_dispatch.channel_inbound_permitted", _gov)
         d, cli, _sess = _dispatcher({7})
         asyncio.run(d.on_callback(_press("a:rq1:n1:0")))
         assert calls == [] and cli.edits[-1][1] == "⌛ This approval already expired."
@@ -1625,7 +1625,7 @@ class TestCallbackRouting:
         async def _gov(channel: str) -> bool:
             return allow["value"]
 
-        monkeypatch.setattr("kiro_crew.telegram.transport_dispatch.channel_inbound_permitted", _gov)
+        monkeypatch.setattr("aj_crew.telegram.transport_dispatch.channel_inbound_permitted", _gov)
         d, cli, sess = TestModelPicker()._with_models()
         asyncio.run(d.handle_message(_dm("/model")))
         allow["value"] = False
@@ -1714,7 +1714,7 @@ class TestCallbackRouting:
         assert sess.successes == []
 
     def test_an_untagged_press_is_refused_before_its_label_is_read(self) -> None:
-        from kiro_crew.telegram import transport_dispatch as td
+        from aj_crew.telegram import transport_dispatch as td
 
         for data in ("opt:0", "opt:0:"):
             d, cli, _sess = _dispatcher({7})
@@ -1783,7 +1783,7 @@ class TestCallbackRouting:
             calls.append(channel)
             return True
 
-        monkeypatch.setattr("kiro_crew.telegram.transport_dispatch.channel_inbound_permitted", _gov)
+        monkeypatch.setattr("aj_crew.telegram.transport_dispatch.channel_inbound_permitted", _gov)
         d, cli, _sess = _dispatcher({7})
         for data in ("noop", "", "zzz", "x:1"):
             asyncio.run(d.on_callback(_press(data)))
@@ -1796,7 +1796,7 @@ class TestABusyReplyCarriesItsContext:
     """A reply arriving while the session is busy still reaches the agent with
     its quoted parent — framed once, on whichever busy path it takes."""
 
-    _KEY = "telegram:kirocrew:direct:7"
+    _KEY = "telegram:ajcrew:direct:7"
 
     @staticmethod
     def _reply_dm(text: str, reply_context: str):
@@ -1810,7 +1810,7 @@ class TestABusyReplyCarriesItsContext:
         )
 
     def test_the_steer_path_frames_the_reply_context_once(self) -> None:
-        from kiro_crew.context_assembly import markers as _markers
+        from aj_crew.context_assembly import markers as _markers
 
         d, _cli, sess = _dispatcher({7})
         sess._busy = True
@@ -1835,7 +1835,7 @@ class TestABusyReplyCarriesItsContext:
     def test_the_drain_frames_each_entrys_own_context_once(self) -> None:
         from unittest.mock import AsyncMock
 
-        from kiro_crew.context_assembly import markers as _markers
+        from aj_crew.context_assembly import markers as _markers
 
         d, _cli, sess = _dispatcher({7})
         # Two queued replies from the same sender, each with its own parent.
@@ -1868,7 +1868,7 @@ class TestABusyReplyCarriesItsContext:
         # not one at enqueue AND one at the drain. The non-steer path leaves the
         # reply unframed at enqueue; the drain is the single consumer that frames
         # (and audits) it.
-        import kiro_crew.context as _ctx
+        import aj_crew.context as _ctx
 
         audits: list[str] = []
         monkeypatch.setattr(
@@ -1900,7 +1900,7 @@ class TestABusyReplyCarriesItsContext:
         # message falls through to the queue still carrying the raw reply_context,
         # and the drain is the one consumer that frames and audits it. The
         # declined steer audits nothing.
-        import kiro_crew.context as _ctx
+        import aj_crew.context as _ctx
 
         audits: list[str] = []
         monkeypatch.setattr(
@@ -1936,7 +1936,7 @@ class TestABusyReplyCarriesItsContext:
         # as a fresh turn. The declined steer audits nothing, and the re-run
         # receives the message still carrying its raw reply_context — so the
         # fresh turn (_run_turn) is the one consumer that frames and audits it.
-        import kiro_crew.context as _ctx
+        import aj_crew.context as _ctx
 
         audits: list[str] = []
         monkeypatch.setattr(
@@ -1971,7 +1971,7 @@ class TestABusyReplyCarriesItsContext:
     def test_a_landed_steer_with_an_injection_parent_audits_once(self, monkeypatch: Any) -> None:
         # steer() LANDS (returns True): the steer is the message's one consumer,
         # so it records exactly one drop event, and nothing is left on the queue.
-        import kiro_crew.context as _ctx
+        import aj_crew.context as _ctx
 
         audits: list[str] = []
         monkeypatch.setattr(

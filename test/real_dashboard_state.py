@@ -1,7 +1,7 @@
 """A real ``DashboardState`` for tests, and readers for what it delivered.
 
 ``real_dashboard_state(tmp_path)`` is the production
-``kiro_crew.dashboard.state.DashboardState`` built by ``chat_test_helpers._make_state``:
+``aj_crew.dashboard.state.DashboardState`` built by ``chat_test_helpers._make_state``:
 its notification bus, slot directory and SSE fan-out are the real ones, and only
 its outer services (the session manager, cron, lessons) are stand-ins. Nothing is
 patched on the state itself, so a test can read what the code under test left
@@ -33,8 +33,8 @@ from typing import Any
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.dashboard.state_parts.notification_log import _notification_io_executor
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.state_parts.notification_log import _notification_io_executor
 
 #: How long teardown waits for queued notification writes before failing the test.
 SETTLE_TIMEOUT_S = 30.0

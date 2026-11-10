@@ -20,8 +20,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.apps import app_frame as lp
-from kiro_crew.dashboard.token_auth_paths import (
+from aj_crew.apps import app_frame as lp
+from aj_crew.dashboard.token_auth_paths import (
     _BYPASS_PREFIXES,
     SPA_FALLBACK_EXCLUDED_PREFIXES,
     is_csrf_exempt,
@@ -58,10 +58,10 @@ async def _client(
         "_provider_entry",
         lambda name, pid=None: entry if name == APP and pid in (None, PID) else None,
     )
-    monkeypatch.setattr("kiro_crew.apps.hooks_integration.get_route_registry", lambda: registry)
+    monkeypatch.setattr("aj_crew.apps.hooks_integration.get_route_registry", lambda: registry)
     # The mint request's validated embed-parent claim; a test sets it on the caller.
     monkeypatch.setattr(
-        "kiro_crew.dashboard.server._embed_parent_port",
+        "aj_crew.dashboard.server._embed_parent_port",
         lambda request, app: request.get("embed_parent_port_for_test"),
     )
     caller = {"is_dashboard_user": True} if session is None else session
@@ -174,7 +174,7 @@ globalThis.document = {
 };
 """
 _BOOTSTRAP_DRIVER = r"""
-const deliver = (data) => (listeners.message || []).forEach((f) => f({ source: parent, data: { 'kirocrew-app-frame': 1, ...data } }));
+const deliver = (data) => (listeners.message || []).forEach((f) => f({ source: parent, data: { 'ajcrew-app-frame': 1, ...data } }));
 const done = (async () => {
   deliver({ type: 'init', capability: 'c' });
   for (let i = 0; i < 50 && !posted.some((m) => m.type === 'ready'); i++) await new Promise((r) => setTimeout(r, 10));
@@ -449,12 +449,12 @@ async def test_a_preflight_grants_nothing(monkeypatch: pytest.MonkeyPatch) -> No
             headers={
                 "Origin": "null",
                 "Access-Control-Request-Method": "POST",
-                "Access-Control-Request-Headers": "content-type, x-kirocrew-capability",
+                "Access-Control-Request-Headers": "content-type, x-ajcrew-capability",
             },
         )
         assert resp.status == 204
         assert resp.headers["Access-Control-Allow-Origin"] == "null"
-        assert "x-kirocrew-capability" in resp.headers["Access-Control-Allow-Headers"]
+        assert "x-ajcrew-capability" in resp.headers["Access-Control-Allow-Headers"]
         assert registry.calls == []
 
 
@@ -468,7 +468,7 @@ async def test_a_process_backend_goes_through_the_signed_proxy(
         seen.append((request.match_info["name"], request.match_info["path"], request.get("app")))
         return web.json_response({"proxied": True})
 
-    monkeypatch.setattr("kiro_crew.apps.routes.handle_app_api_proxy", proxy)
+    monkeypatch.setattr("aj_crew.apps.routes.handle_app_api_proxy", proxy)
     async with _client(monkeypatch, entry=("dist/lp.mjs", True, APP)) as (client, registry):
         cap = (await _mint(client))["capability"]
         resp = await client.get(
@@ -511,7 +511,7 @@ async def test_the_capability_is_no_credential_anywhere_else(path: str) -> None:
     send); with the capability header, without it, or with a session-looking cookie
     the middleware still finds no dashboard credential.
     """
-    from kiro_crew.dashboard import token_auth as auth
+    from aj_crew.dashboard import token_auth as auth
 
     async def ok(_request: web.Request) -> web.Response:
         return web.json_response({"reached": True})
@@ -563,7 +563,7 @@ async def test_fetch_refuses_other_methods(monkeypatch: pytest.MonkeyPatch, meth
 @pytest.mark.asyncio
 async def test_fetch_reaches_only_a_registered_method_and_path() -> None:
     """The real route table: an app route answers its own method and path, nothing else."""
-    from kiro_crew.apps.route_registry import RouteRegistry, _RegisteredRoute
+    from aj_crew.apps.route_registry import RouteRegistry, _RegisteredRoute
 
     async def status(request: web.Request, ctx: Any) -> web.Response:
         return web.json_response({"ok": True})
@@ -576,7 +576,7 @@ async def test_fetch_reaches_only_a_registered_method_and_path() -> None:
     registry._contexts[APP] = object()  # type: ignore[assignment]
     lp.register_app_frame_routes(app)
     fid = "f" * 16
-    import kiro_crew.apps.hooks_integration as hooks
+    import aj_crew.apps.hooks_integration as hooks
 
     old = hooks.get_route_registry
     old_entry = lp._provider_entry

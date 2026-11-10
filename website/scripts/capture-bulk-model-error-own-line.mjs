@@ -7,7 +7,7 @@
  *
  * The scene-specific stub is one route, `POST /api/chat/slots/model`, answered
  * two ways the endpoint really answers today (`api_chat_slots_model` in
- * `src/kiro_crew/dashboard/chat_api/slot_model.py`):
+ * `src/aj_crew/dashboard/chat_api/slot_model.py`):
  *   1. `200 {ok: true, failed: [...]}` — the routine partial outcome: some
  *      slots' resets raised, the panel stays open and reports the count.
  *   2. `400 {error: "..."}` — the model-validation refusal. The message mirrors
@@ -39,9 +39,9 @@ mkdirSync(OUT, { recursive: true })
 const SIDEBAR_WIDTH = 280
 
 const SLOTS = [
-  { key: 'chat-1', title: 'Refactor the auth middleware', messages: 12, running: false, agent: 'kirocrew', mode: '' },
-  { key: 'chat-2', title: 'Weekly report draft', messages: 4, running: false, agent: 'kirocrew', mode: '' },
-  { key: 'chat-3', title: 'Debug the flaky e2e suite', messages: 27, running: true, agent: 'kirocrew', mode: '' },
+  { key: 'chat-1', title: 'Refactor the auth middleware', messages: 12, running: false, agent: 'ajcrew', mode: '' },
+  { key: 'chat-2', title: 'Weekly report draft', messages: 4, running: false, agent: 'ajcrew', mode: '' },
+  { key: 'chat-3', title: 'Debug the flaky e2e suite', messages: 27, running: true, agent: 'ajcrew', mode: '' },
 ]
 
 // Sentence shape of `_model_rejected_reason` — long enough that character-wise

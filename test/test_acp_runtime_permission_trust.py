@@ -23,9 +23,9 @@ from acp_runtime_helpers import (
     _stop_reader,
 )
 
-from kiro_crew.acp.runtime import AcpSessionHandle
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.runtime import AcpSessionHandle
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.testing.wait import await_until
 
 
 async def _drain_answers(rt) -> None:
@@ -39,7 +39,7 @@ def test_child_low_fidelity_requires_structured_security_context():
     """A rendered-diff tool_input alone is NOT fidelity: the child gate
     requires cache-provenance structured params, a resolved shell
     classification, and (for shells) a recoverable command."""
-    from kiro_crew.acp.types import AcpEvent
+    from aj_crew.acp.types import AcpEvent
 
     # Child edit refinement: diff text cached, no structured params → LOW.
     ev = AcpEvent(kind="permission_request", sub_session_id="child-a", tool_input="--- a\n+++ b")
@@ -93,7 +93,7 @@ def test_child_mcp_identity_trusted_isolates_verified_identity():
     """The identity half of the fidelity split: verified server/tool pair on a
     child event whose ARGUMENTS never reached the cache. Each requirement is
     individually load-bearing (fail-closed on its own cache miss)."""
-    from kiro_crew.acp.types import AcpEvent
+    from aj_crew.acp.types import AcpEvent
 
     def _ev(**overrides):
         base: dict = dict(
@@ -145,7 +145,7 @@ def test_mcp_identity_trusted_defaults_false():
     """The provenance flag is opt-in at trusted population sites only: a bare
     construction (the shape any future untrusted path would produce) reads
     False."""
-    from kiro_crew.acp.types import AcpEvent
+    from aj_crew.acp.types import AcpEvent
 
     assert AcpEvent(kind="permission_request").mcp_identity_trusted is False
 
@@ -155,7 +155,7 @@ def test_child_unconditional_grant_eligible_matches_consumer_shapes():
     ``not child_low_fidelity or child_mcp_identity_trusted`` — pinned across
     every fidelity/identity combination the three approval surfaces
     (dashboard runner, Slack gateway, subagent manager) can see."""
-    from kiro_crew.acp.types import AcpEvent
+    from aj_crew.acp.types import AcpEvent
 
     # Full-fidelity child (low_fidelity False): eligible regardless of identity.
     full = AcpEvent(
@@ -229,7 +229,7 @@ def test_remote_mcp_empty_rawinput_keeps_identity_through_dispatch():
     tool_call frame with EMPTY/absent rawInput leaves the params cache empty
     (low fidelity) while the _meta.kiro identity still reaches the permission
     event's trusted fields — the split the grant paths rely on."""
-    from kiro_crew.acp._dispatch import build_permission_event, parse_session_update
+    from aj_crew.acp._dispatch import build_permission_event, parse_session_update
 
     for raw_input_shape in ({}, None):
         caches: dict = {
@@ -286,7 +286,7 @@ def test_permission_event_cache_miss_does_not_earn_identity_flag():
     preceding tool_call) must read mcp_identity_trusted False — the flag
     reports where the values CAME FROM, so a future inline fallback that
     populates the identity fields on a miss stays untrusted."""
-    from kiro_crew.acp._dispatch import build_permission_event
+    from aj_crew.acp._dispatch import build_permission_event
 
     class _Msg:
         id = 91
@@ -362,8 +362,8 @@ def test_missing_kind_is_not_a_resolved_shell_classification():
     classification: the miss-default False would otherwise read as a RESOLVED
     non-shell on the later permission frame (shell_classified=True), skipping
     the low-fidelity downgrade without any classification having happened."""
-    from kiro_crew.acp._dispatch import _build_tool_call_event, build_permission_event
-    from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION
+    from aj_crew.acp._dispatch import _build_tool_call_event, build_permission_event
+    from aj_crew.acp.types import METHOD_REQUEST_PERMISSION
 
     shell_cache: dict[str, bool] = {}
     raw_cache: dict[str, dict] = {}
@@ -411,8 +411,8 @@ def test_trusted_mcp_transport_earns_identity_trust_without_a_classification():
     child_low_fidelity stays True, keeping every content-matching auto-approve
     path (title-keyed auto_approve_tools) gated against the agent-authored
     title."""
-    from kiro_crew.acp._dispatch import _build_tool_call_event, build_permission_event
-    from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION
+    from aj_crew.acp._dispatch import _build_tool_call_event, build_permission_event
+    from aj_crew.acp.types import METHOD_REQUEST_PERMISSION
 
     shell_cache: dict[str, bool] = {}
     raw_cache: dict[str, dict] = {}
@@ -468,8 +468,8 @@ def test_trusted_mcp_transport_never_waives_a_reported_shell_kind():
     waive a shell check: an execute-kind frame still caches True even with a
     server name, so the command-bytes gates keep firing -- and the identity
     split stays closed for it."""
-    from kiro_crew.acp._dispatch import _build_tool_call_event, build_permission_event
-    from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION
+    from aj_crew.acp._dispatch import _build_tool_call_event, build_permission_event
+    from aj_crew.acp.types import METHOD_REQUEST_PERMISSION
 
     shell_cache: dict[str, bool] = {}
     server_cache: dict[str, str] = {}
@@ -514,8 +514,8 @@ def test_inline_mcp_server_name_on_a_permission_frame_earns_no_classification():
     """The agent-reachable permission payload is not a provenance channel: an
     inline `_meta`/`mcpServerName` there cannot manufacture the identity trust
     that only the preceding tool_call's cache write can grant."""
-    from kiro_crew.acp._dispatch import build_permission_event
-    from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION
+    from aj_crew.acp._dispatch import build_permission_event
+    from aj_crew.acp.types import METHOD_REQUEST_PERMISSION
 
     shell_cache: dict[str, bool] = {}
     msg = JsonRpcMessage.from_dict(
@@ -550,8 +550,8 @@ def test_shared_permission_event_carries_redaction_provenance_without_secret():
     command trust needs the separate boolean while the removed bytes stay out
     of the event's display input.
     """
-    from kiro_crew.acp._dispatch import _build_tool_call_event, build_permission_event
-    from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION
+    from aj_crew.acp._dispatch import _build_tool_call_event, build_permission_event
+    from aj_crew.acp.types import METHOD_REQUEST_PERMISSION
 
     input_cache: dict[str, str] = {}
     redacted_cache: dict[str, bool] = {}
@@ -606,8 +606,8 @@ def test_refinement_fills_raw_params_cache_for_following_permission():
     permission frame full-provenance (raw_params_trusted=True) — this is the
     path that keeps backends streaming an empty initial rawInput out of the
     low-fidelity downgrade. Pins the required frame ordering explicitly."""
-    from kiro_crew.acp._dispatch import build_permission_event, parse_session_update
-    from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION
+    from aj_crew.acp._dispatch import build_permission_event, parse_session_update
+    from aj_crew.acp.types import METHOD_REQUEST_PERMISSION
 
     shell_cache: dict[str, bool] = {}
     raw_cache: dict[str, dict] = {}
@@ -662,7 +662,7 @@ async def test_fidelity_unaware_consumer_gate_rejects_and_audits():
     a low-fidelity child permission request reaching _dispatch_events on a
     handle whose consumer never opted in must be REJECTED (answered, never
     yielded as a permission event) and SEL-audited."""
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         EVENT_PERMISSION_REQUEST,
         METHOD_REQUEST_PERMISSION,
     )
@@ -736,11 +736,11 @@ async def test_fidelity_unaware_consumer_gate_rejects_and_audits():
 async def test_aware_consumer_receives_kindless_mcp_child_permission():
     """The end of the auto-deny, driven through the handle's own dispatch
     loop: a consumer that opted into the child-fidelity contract (as
-    `kirocrew chat` now does) receives the low-fidelity permission event for
+    `ajcrew chat` now does) receives the low-fidelity permission event for
     a kindless MCP child call -- yielded with the trusted transport identity
     attached -- instead of the handle rejecting it as
     `child_low_fidelity_unaware_consumer`."""
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         EVENT_PERMISSION_REQUEST,
         METHOD_REQUEST_PERMISSION,
         METHOD_SESSION_UPDATE,
@@ -1040,8 +1040,8 @@ def test_cross_session_toolcallid_replay_does_not_inherit_provenance():
     cache keys are origin-scoped, so cross-session replay misses and the
     request stays low fidelity, while a SAME-origin repeat frame still
     resolves."""
-    from kiro_crew.acp._dispatch import build_permission_event, parse_session_update
-    from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION
+    from aj_crew.acp._dispatch import build_permission_event, parse_session_update
+    from aj_crew.acp.types import METHOD_REQUEST_PERMISSION
 
     shell_cache: dict[str, bool] = {}
     raw_cache: dict[str, dict] = {}

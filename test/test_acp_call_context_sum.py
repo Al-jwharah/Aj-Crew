@@ -19,11 +19,11 @@ from datetime import datetime, timezone
 import pytest
 from acp_runtime_helpers import _make_runtime, _register
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.runtime import AcpSessionHandle
-from kiro_crew.acp.types import AcpPromptStats, JsonRpcMessage, TurnUsage
-from kiro_crew.dashboard.handlers import usage as usage_mod
-from kiro_crew.llm_helpers import _sum_usage
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.runtime import AcpSessionHandle
+from aj_crew.acp.types import AcpPromptStats, JsonRpcMessage, TurnUsage
+from aj_crew.dashboard.handlers import usage as usage_mod
+from aj_crew.llm_helpers import _sum_usage
 
 WINDOW = 1_000_000
 # A fixed clock for the usage row: no assertion reads the timestamp, and a

@@ -16,16 +16,16 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import crew_mode
-from kiro_crew.dashboard.state import DashboardState, SlotOrigin
-from kiro_crew.dashboard.websocket_hub import SLOT_PATCH_WS_FLAG
-from kiro_crew.members_parts.member_space import DM_SLOT_MODE
+from aj_crew import crew_mode
+from aj_crew.dashboard.state import DashboardState, SlotOrigin
+from aj_crew.dashboard.websocket_hub import SLOT_PATCH_WS_FLAG
+from aj_crew.members_parts.member_space import DM_SLOT_MODE
 
 MATE = "dm-ada"
 CHILD = "chat-child"
 GRAND = "chat-grand"
 ROOT = "chat-root"
-PLAIN = "kirocrew-research"
+PLAIN = "ajcrew-research"
 CREW_FIELDS = (crew_mode.ROOT_FIELD, crew_mode.WORKER_FIELD, crew_mode.DISPATCHER_FIELD)
 MATE_FIELDS = (crew_mode.MATE_ROOT_FIELD, crew_mode.MATE_DISPATCHER_FIELD)
 
@@ -72,7 +72,7 @@ def test_a_mate_thread_is_a_root_and_holds_its_child_and_grandchild() -> None:
         [
             _mate(),
             _row(CHILD, created_by=MATE),
-            _row(GRAND, "kirocrew-worker", created_by=CHILD),
+            _row(GRAND, "ajcrew-worker", created_by=CHILD),
         ]
     )
     assert crew_mode.known_mate_roots() == {MATE}
@@ -90,7 +90,7 @@ def test_a_conductor_a_mate_opened_is_a_mate_descendant_with_its_workers() -> No
         [
             _mate(),
             _row(CHILD, crew_mode.DEFAULT_CREW_MODE_AGENT, created_by=MATE),
-            _row(GRAND, "kirocrew-worker", created_by=CHILD),
+            _row(GRAND, "ajcrew-worker", created_by=CHILD),
         ]
     )
     assert _mate_of(rows[CHILD]) == (MATE, MATE)
@@ -130,8 +130,8 @@ def _crew_fixture() -> list[dict[str, Any]]:
     """A Crew Mode tree, a mate tree and plain rows side by side."""
     return [
         _row(ROOT, crew_mode.DEFAULT_CREW_MODE_AGENT),
-        _row("w1", "kirocrew-worker", created_by=ROOT),
-        _row("w2", "kirocrew-worker", created_by="w1"),
+        _row("w1", "ajcrew-worker", created_by=ROOT),
+        _row("w2", "ajcrew-worker", created_by="w1"),
         _row("w3", created_by="closed-w", parent={"slot": "closed-w", "key": ROOT}),
         _mate(),
         _row(CHILD, created_by=MATE),
@@ -195,7 +195,7 @@ class _WS:
 def state(monkeypatch: pytest.MonkeyPatch, tmp_path: Any) -> Any:
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(crew_mode, "lineage_is_settled", lambda: False)
     yield DashboardState(
         sessions=MagicMock(count=0), crons=MagicMock(), lessons=MagicMock(), start_time=0.0
@@ -218,7 +218,7 @@ def test_the_lineage_patch_restates_the_mate_stamps_only_when_they_move(
         for row in rows:
             row["parent"] = parents.get(row["key"])
 
-    monkeypatch.setattr("kiro_crew.dashboard.state._attach_slot_parents", fake_attach)
+    monkeypatch.setattr("aj_crew.dashboard.state._attach_slot_parents", fake_attach)
 
     state.push_lineage_patch()
     child._created_by = MATE

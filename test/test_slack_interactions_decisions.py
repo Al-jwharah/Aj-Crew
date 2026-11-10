@@ -1,4 +1,4 @@
-"""Decision buttons in ``kiro_crew.slack.interactions``, read back from real stores.
+"""Decision buttons in ``aj_crew.slack.interactions``, read back from real stores.
 
 The transport-path tool-approval press (``mc_tool_*``) resolves a real reserved
 ``SlackApprovalDecider`` prompt and writes a real security event log; the cron and
@@ -23,11 +23,11 @@ from slack_interactions_coverage_helpers import orch_fixture  # noqa: F401
 from slack_interactions_coverage_helpers import _action_payload, _ix_messages, _payload
 from slack_wire_helpers import slack_wire
 
-from kiro_crew import sel as sel_mod
-from kiro_crew.messaging.session_trust import clear_trusted_sessions, is_session_trusted
-from kiro_crew.slack import interactions as ix
-from kiro_crew.slack.renderer import SlackApprovalDecider
-from kiro_crew.testing.wait import await_until
+from aj_crew import sel as sel_mod
+from aj_crew.messaging.session_trust import clear_trusted_sessions, is_session_trusted
+from aj_crew.slack import interactions as ix
+from aj_crew.slack.renderer import SlackApprovalDecider
+from aj_crew.testing.wait import await_until
 
 
 @pytest.fixture(name="audit")
@@ -81,7 +81,7 @@ class TestDispatchTransportToolApproval:
     async def test_approve_resolves_and_labels(
         self, orch: MagicMock, _decider: MagicMock, audit: Any
     ) -> None:
-        from kiro_crew.slack.renderer import TOOL_APPROVE_ACTION_PREFIX
+        from aj_crew.slack.renderer import TOOL_APPROVE_ACTION_PREFIX
 
         _, nonce, waiter = _prompt("sess1", "rid1")
         await ix.dispatch(
@@ -98,7 +98,7 @@ class TestDispatchTransportToolApproval:
     async def test_deny_resolves_false(
         self, orch: MagicMock, _decider: MagicMock, audit: Any
     ) -> None:
-        from kiro_crew.slack.renderer import TOOL_DENY_ACTION_PREFIX
+        from aj_crew.slack.renderer import TOOL_DENY_ACTION_PREFIX
 
         _, nonce, waiter = _prompt("sess1", "rid2")
         await ix.dispatch(_action_payload(f"{TOOL_DENY_ACTION_PREFIX}rid2", f"sess1:rid2|{nonce}"))
@@ -113,7 +113,7 @@ class TestDispatchTransportToolApproval:
     async def test_trust_grants_session_trust_before_resolving(
         self, orch: MagicMock, _decider: MagicMock, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.slack.renderer import TOOL_TRUST_ACTION_PREFIX
+        from aj_crew.slack.renderer import TOOL_TRUST_ACTION_PREFIX
 
         trust = MagicMock(wraps=ix.add_trusted_session)
         monkeypatch.setattr(ix, "add_trusted_session", trust)
@@ -135,8 +135,8 @@ class TestDispatchTransportToolApproval:
     ) -> None:
         """A ``permission_mode`` deny of ``trust`` that lands during the channels await
         approves the one tool, and the label and audit do not claim a grant."""
-        from kiro_crew.messaging import session_trust
-        from kiro_crew.slack.renderer import TOOL_TRUST_ACTION_PREFIX
+        from aj_crew.messaging import session_trust
+        from aj_crew.slack.renderer import TOOL_TRUST_ACTION_PREFIX
 
         allowed = {"trust": True}
         monkeypatch.setattr(ix, "trust_permitted", lambda: allowed["trust"])
@@ -160,7 +160,7 @@ class TestDispatchTransportToolApproval:
     async def test_expired_approval_reports_expiry(
         self, orch: MagicMock, _decider: MagicMock, audit: Any
     ) -> None:
-        from kiro_crew.slack.renderer import TOOL_APPROVE_ACTION_PREFIX
+        from aj_crew.slack.renderer import TOOL_APPROVE_ACTION_PREFIX
 
         # No prompt is open at this key: the window already closed.
         await ix.dispatch(_action_payload(f"{TOOL_APPROVE_ACTION_PREFIX}rid4", "sess1:rid4"))
@@ -173,7 +173,7 @@ class TestDispatchTransportToolApproval:
     async def test_approval_key_falls_back_to_action_id_suffix(
         self, orch: MagicMock, _decider: MagicMock
     ) -> None:
-        from kiro_crew.slack.renderer import TOOL_APPROVE_ACTION_PREFIX
+        from aj_crew.slack.renderer import TOOL_APPROVE_ACTION_PREFIX
 
         dec = SlackApprovalDecider()
         nonce = dec.reserve("rid5")
@@ -194,7 +194,7 @@ class TestDispatchTransportToolApproval:
         audit: Any,
     ) -> None:
         """A channels-deny must refuse the tool, not strand the pending future."""
-        from kiro_crew.slack.renderer import TOOL_APPROVE_ACTION_PREFIX
+        from aj_crew.slack.renderer import TOOL_APPROVE_ACTION_PREFIX
 
         monkeypatch.setattr(ix, "channel_inbound_permitted", AsyncMock(return_value=False))
         _, nonce, waiter = _prompt("sess1", "rid6")
@@ -212,7 +212,7 @@ class TestDispatchTransportToolApproval:
     async def test_update_message_failure_is_swallowed(
         self, orch: MagicMock, _decider: MagicMock, ix_logs: pytest.LogCaptureFixture
     ) -> None:
-        from kiro_crew.slack.renderer import TOOL_APPROVE_ACTION_PREFIX
+        from aj_crew.slack.renderer import TOOL_APPROVE_ACTION_PREFIX
 
         orch.slack.update_message = AsyncMock(side_effect=RuntimeError("api down"))
         await ix.dispatch(_action_payload(f"{TOOL_APPROVE_ACTION_PREFIX}rid7", "sess1:rid7"))
@@ -228,9 +228,9 @@ class TestDispatchTransportToolApproval:
 
 def _dashboard_with_notes(monkeypatch: pytest.MonkeyPatch, tmp_path: Any, notes: list[dict]) -> Any:
     """A real ``DashboardState`` holding *notes*, its writes landing under tmp_path."""
-    from kiro_crew.dashboard.state import DashboardState
+    from aj_crew.dashboard.state import DashboardState
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = DashboardState(
         sessions=MagicMock(count=0), crons=MagicMock(), lessons=MagicMock(), start_time=0.0
     )
@@ -250,7 +250,7 @@ def _acked_by_ts(tmp_path: Any) -> dict[str, bool]:
 class TestAckHandlers:
     @pytest.mark.asyncio
     async def test_cron_ack_calls_service(self, orch: MagicMock, tmp_path: Any) -> None:
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         svc = CronService(base_dir=tmp_path / "cron")
         job = await svc.add_job_async(name="j", message="m", every_secs=60)
@@ -275,7 +275,7 @@ class TestAckHandlers:
     async def test_cron_ack_survives_busy_store(
         self, orch: MagicMock, ix_logs: pytest.LogCaptureFixture
     ) -> None:
-        from kiro_crew.cron import CronStoreBusy
+        from aj_crew.cron import CronStoreBusy
 
         orch.cron_svc.ack_job_async = AsyncMock(side_effect=CronStoreBusy("busy"))
         orch.dashboard_state = None

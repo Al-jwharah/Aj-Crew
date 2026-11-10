@@ -26,12 +26,12 @@ from conductor_wake_helpers import CONDUCTOR as LOOP_CONDUCTOR
 from conductor_wake_helpers import _Loop, _Svc
 from test_work_ledger_tools import CONDUCTOR_A, WORKER_A, _dispatch, _record, _report
 
-from kiro_crew import conductor_wake, ledger_wake, mcp_work
-from kiro_crew import work_ledger as wl
-from kiro_crew import work_preview
-from kiro_crew.config.loader import KiroCrewConfig, _invalidate_config_cache
-from kiro_crew.validation import ValidationError
-from kiro_crew.work_vocab import WORK_WAKE_STATUSES, wake_statuses, worker_statuses
+from aj_crew import conductor_wake, ledger_wake, mcp_work
+from aj_crew import work_ledger as wl
+from aj_crew import work_preview
+from aj_crew.config.loader import AjCrewConfig, _invalidate_config_cache
+from aj_crew.validation import ValidationError
+from aj_crew.work_vocab import WORK_WAKE_STATUSES, wake_statuses, worker_statuses
 
 # The route harness's fixtures, bound here by name so pytest registers them.
 _isolated_home = tools._isolated_home
@@ -74,7 +74,7 @@ def _item(title: str = "answer a follow-up") -> str:
 
 
 def test_the_preview_is_off_by_default():
-    assert KiroCrewConfig.load().work_ledger.remote_dispatch is False
+    assert AjCrewConfig.load().work_ledger.remote_dispatch is False
     assert work_preview.remote_dispatch() is False
 
 
@@ -95,7 +95,7 @@ def test_an_unreadable_config_reads_as_off(monkeypatch: pytest.MonkeyPatch):
     def _boom(*_a, **_k):
         raise OSError("config unreadable")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", _boom)
+    monkeypatch.setattr(AjCrewConfig, "load", _boom)
     assert work_preview.remote_dispatch() is False
 
 
@@ -266,9 +266,9 @@ def _ctx():
 
 def _gate_tick():
     """One run of the work-ledger watch: ``Report`` is a wake, ``Skip`` is quiet."""
-    from kiro_crew import irq
-    from kiro_crew.cron_script import Report, Skip
-    from kiro_crew.probes.work_ledger import WorkLedgerProbe
+    from aj_crew import irq
+    from aj_crew.cron_script import Report, Skip
+    from aj_crew.probes.work_ledger import WorkLedgerProbe
 
     try:
         irq.run(_ctx(), WorkLedgerProbe(worker_running=lambda _key: True))

@@ -169,7 +169,7 @@ export default function ChatPage({ mode, embedded, embedMode, popout, noUrlSync 
     }
   }, [mcpAppPanel, activeSlot, appToolCallIds, dispatch, boundStore])
   const {
-    messages, messagesRef, kiroCrewVersion, completedTurnCount, knowledgeFetch, knowledgeFetchRef, softStopAtMapRef, sentMessages, slotRunning, slotRunningRef, turnDisclosure, setTurnDisclosureFor,
+    messages, messagesRef, ajCrewVersion, completedTurnCount, knowledgeFetch, knowledgeFetchRef, softStopAtMapRef, sentMessages, slotRunning, slotRunningRef, turnDisclosure, setTurnDisclosureFor,
     toolDisclosure, setToolDisclosureFor, turnRowMayBeLive, composerBusy, projectLocked, slotStopping, slotLoading, slotSwitchTarget, pendingQuestion, restoredQuestionNotice, pendingFollowup,
     folderSuggestion, followupTsBySlot, splitMode, setSplitMode, clearSplitOnSelect, crewWindow, openEmbeddedCrewWindow, navigateToEmbeddedSlot, splitAnchor, setSplitAnchor, activeTip, dismissTip,
     slotState, contextPct, contextTokens, activityOpen, slotHasMore, slotOldestIndex, cursorIsForActiveSlot, loadingOlder, olderFailed, activeViewIsBoundedPage, history, historyHasMore, environmentStart,
@@ -1179,7 +1179,7 @@ export default function ChatPage({ mode, embedded, embedMode, popout, noUrlSync 
             <ChatDropOverlay active={dragOver} />
             <ChatTranscriptView
               embedded={embedded} popout={popout} activeSlot={activeSlot} appToolCallIds={appToolCallIds} titleInTopbar={titleInTopbar} workerBreadcrumb={workerBreadcrumb} activityOpen={activityOpen}
-              completedTurnCount={completedTurnCount} cursorIsForActiveSlot={cursorIsForActiveSlot} kiroCrewVersion={kiroCrewVersion} loadingOlder={loadingOlder} olderFailed={olderFailed}
+              completedTurnCount={completedTurnCount} cursorIsForActiveSlot={cursorIsForActiveSlot} ajCrewVersion={ajCrewVersion} loadingOlder={loadingOlder} olderFailed={olderFailed}
               setTurnDisclosureFor={setTurnDisclosureFor} slotHasMore={slotHasMore} slotLoading={slotLoading} slotRunning={slotRunning} slotState={slotState} environmentStart={environmentStart} slotStopping={slotStopping}
               slotSwitchTarget={slotSwitchTarget} turnDisclosure={turnDisclosure} turnRowMayBeLive={turnRowMayBeLive} setInput={setInput} isWelcomeState={transcriptWelcome} crewModeOn={crewModeOn || crewWelcomeHeld} openTaskBoard={openTaskBoard} chatConfig={chatConfig}
               scrollerRef={scrollerRef} bindScroller={bindScroller} handleSurveyLayoutChange={handleSurveyLayoutChange} onScrollPin={onScrollPin} pinned={pinned} approve={approve}

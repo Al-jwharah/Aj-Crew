@@ -139,7 +139,7 @@ describe('RunYourselfCard', () => {
 
   it('still says Copy in the dialog when Run in terminal copies', async () => {
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    qc.setQueryData(['kirocrewConfig'], { dashboard: { terminal: { reuse_current: true } } })
+    qc.setQueryData(['ajcrewConfig'], { dashboard: { terminal: { reuse_current: true } } })
     renderWithProviders(<QueryClientProvider client={qc}><RunYourselfCard code={INSTALL} /></QueryClientProvider>)
     fireEvent.click(screen.getByRole('button', { name: 'Run in terminal' }))
     expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'Copy' })).toBeInTheDocument()

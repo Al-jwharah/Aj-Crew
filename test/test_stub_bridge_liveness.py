@@ -21,13 +21,13 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.mcp_gateway.stub import (
+from aj_crew.mcp_gateway.stub import (
     _BRIDGE_PING_TYPE,
     _BRIDGE_PONG_TYPE,
     StubSession,
     run_bridge,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -567,7 +567,7 @@ class TestLivenessIsNegotiated:
         """`peer_supports_ping` defaults to False, so the gate fails closed."""
         import inspect
 
-        from kiro_crew.mcp_gateway.stub import run_bridge
+        from aj_crew.mcp_gateway.stub import run_bridge
 
         assert inspect.signature(run_bridge).parameters["peer_supports_ping"].default is False
 
@@ -578,7 +578,7 @@ class TestLivenessIsNegotiated:
         a grep for one literal breaks whenever an unrelated capability is added,
         and passes if the list is built but never sent.
         """
-        from kiro_crew.mcp_gateway.gatewayd import REGISTERED_CAPABILITIES
+        from aj_crew.mcp_gateway.gatewayd import REGISTERED_CAPABILITIES
 
         assert "bridge_ping" in REGISTERED_CAPABILITIES
 
@@ -594,7 +594,7 @@ class TestLivenessIsNegotiated:
         ``fallback_exec``, and a reconnect is actually attempted rather than the
         outage being merely reported.
         """
-        src = (_REPO_ROOT / "src/kiro_crew/mcp_gateway/stub.py").read_text(encoding="utf-8")
+        src = (_REPO_ROOT / "src/aj_crew/mcp_gateway/stub.py").read_text(encoding="utf-8")
         # Anchor where the stub starts owning cross-connection state: every
         # pre-flight fallback site sits above it.
         marker = "    session = StubSession()"

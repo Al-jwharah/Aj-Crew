@@ -16,10 +16,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.context import ContextBuilder
-from kiro_crew.context_assembly import agent_spec, sections
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew.context import ContextBuilder
+from aj_crew.context_assembly import agent_spec, sections
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 _SHIPPED_PROMPT = Path(sections.__file__).resolve().parents[1] / "config" / "prompt.md"
 _BEGIN = "{{BROWSER_BEGIN}}"
@@ -54,14 +54,14 @@ class _Gate:
 @pytest.fixture
 def gate(monkeypatch: pytest.MonkeyPatch) -> _Gate:
     g = _Gate()
-    monkeypatch.setattr("kiro_crew.browser_harness.ops.browsing_available", g)
+    monkeypatch.setattr("aj_crew.browser_harness.ops.browsing_available", g)
     return g
 
 
 @pytest.fixture
 def builder(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> ContextBuilder:
     # The SHIPPED contract, not a data-home override a host may carry.
-    monkeypatch.setattr("kiro_crew.context._prompt_path", lambda **_kw: _SHIPPED_PROMPT)
+    monkeypatch.setattr("aj_crew.context._prompt_path", lambda **_kw: _SHIPPED_PROMPT)
     return ContextBuilder(
         memory=MemoryStore(workspace=tmp_path / "ws"),
         skills=SkillsLoader(skills_path=tmp_path / "skills", install_builtins=False),
@@ -141,7 +141,7 @@ class TestTheShippedContract:
         def boom(home: Path) -> bool:
             raise OSError("install state unreadable")
 
-        monkeypatch.setattr("kiro_crew.browser_harness.ops.browsing_available", boom)
+        monkeypatch.setattr("aj_crew.browser_harness.ops.browsing_available", boom)
         assert agent_spec._live_browser_gate() is True
         assert _marked_text() in _resolve(builder)
 
@@ -189,7 +189,7 @@ class TestTheMarkers:
         ContextBuilder._resolve_prompt_templates("no section here", "cli:local")
         custom = tmp_path / "custom.md"
         custom.write_text("You are {bot_name}.", encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.context._prompt_path", lambda **_kw: custom)
+        monkeypatch.setattr("aj_crew.context._prompt_path", lambda **_kw: custom)
         _resolve(builder)
         assert gate.calls == 0
 
@@ -229,8 +229,8 @@ class TestThePremise:
     def test_not_installed_means_every_op_is_refused_after_the_post(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.dashboard.handlers import browser_ops as route
-        from kiro_crew.mcp_tools import browser as tool
+        from aj_crew.dashboard.handlers import browser_ops as route
+        from aj_crew.mcp_tools import browser as tool
 
         async def _none(_hub: object, _key: str) -> None:
             return None
@@ -254,7 +254,7 @@ class TestThePremise:
     ) -> None:
         import asyncio
 
-        from kiro_crew.dashboard.handlers import browser_ops as route
+        from aj_crew.dashboard.handlers import browser_ops as route
 
         gate.open = False
         assert asyncio.run(route._supervisor(object(), "k")) is None

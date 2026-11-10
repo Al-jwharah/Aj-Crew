@@ -29,14 +29,14 @@ mkdirSync(OUT, { recursive: true })
 const now = Math.floor(Date.now() / 1000)
 const ROWS = [
   { name: 'main', is_main: true, running: false, has_dist: true, behind: 0, branch: 'main', path: '/w/main', last_updated_at: now - 900 },
-  { name: 'kirocrew-wt-widgets', is_main: false, running: true, port: 7780, health: 200, has_dist: true, behind: 2, branch: 'feat/widgets', path: '/w/kirocrew-wt-widgets', last_updated_at: now - 3600 },
+  { name: 'ajcrew-wt-widgets', is_main: false, running: true, port: 7780, health: 200, has_dist: true, behind: 2, branch: 'feat/widgets', path: '/w/ajcrew-wt-widgets', last_updated_at: now - 3600 },
 ]
 // Outage: rows come back, nothing is badged, and the payload says the state is
 // UNKNOWN rather than empty.
 const FLEET_UNKNOWN = {
   base_branch: 'main',
   gateway_service_active: false,
-  manual_restart: 'kirocrew restart',
+  manual_restart: 'ajcrew restart',
   live_state_known: false,
   staged_target: null,
   staged_cancel_available: false,
@@ -70,12 +70,12 @@ async function main() {
 
   await page.goto(base + '/dev-fleet', { waitUntil: 'domcontentloaded' })
   await page.getByTestId('fleet-live-state-unknown').waitFor({ state: 'visible', timeout: 15000 })
-  await page.getByText('kirocrew-wt-widgets').first().waitFor({ state: 'visible', timeout: 15000 })
+  await page.getByText('ajcrew-wt-widgets').first().waitFor({ state: 'visible', timeout: 15000 })
   await page.screenshot({ path: `${OUT}/01-outage-notice-above-rows.png`, fullPage: false })
 
   fleet = FLEET_KNOWN
   await page.goto(base + '/dev-fleet', { waitUntil: 'domcontentloaded' })
-  await page.getByText('kirocrew-wt-widgets').first().waitFor({ state: 'visible', timeout: 15000 })
+  await page.getByText('ajcrew-wt-widgets').first().waitFor({ state: 'visible', timeout: 15000 })
   if (await page.getByTestId('fleet-live-state-unknown').count() !== 0) {
     throw new Error('notice rendered although live_state_known is true')
   }

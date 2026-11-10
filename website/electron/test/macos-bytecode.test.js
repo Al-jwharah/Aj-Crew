@@ -10,7 +10,7 @@ it("ships macOS caches for the closure only and bars every other bytecode write"
   // there after signing makes Gatekeeper refuse the app as "damaged". The
   // signing service also reads the whole tree on every request, so a cache
   // for every module costs signing time on every release. The macOS backend
-  // therefore ships checked-hash caches for the standard library, kiro_crew
+  // therefore ships checked-hash caches for the standard library, aj_crew
   // and the traced closure of its dependencies, and the bundled interpreter
   // refuses to write any other: a module outside that set compiles in memory.
   const buildScript = fs.readFileSync(
@@ -52,11 +52,11 @@ it("ships macOS caches for the closure only and bars every other bytecode write"
     macBytecode,
     /precompile_windows\.py" --root "\$out" \\\n\s*--invalidation-mode checked-hash "\$\{trace\[@\]\}" --ban-bytecode-writes "\$sp"/
   );
-  assert.match(macBytecode, /for module in kiro_crew\.cli_server /);
-  assert.match(macBytecode, /from kiro_crew\.mcp_entry import SLIM_SERVERS/);
+  assert.match(macBytecode, /for module in aj_crew\.cli_server /);
+  assert.match(macBytecode, /from aj_crew\.mcp_entry import SLIM_SERVERS/);
   assert.doesNotMatch(macBytecode, /--module lark_oapi|lark_oapi; do/);
-  // The standard library and kiro_crew stay whole; the rest of the tree does not.
-  assert.match(macBytecode, /whole\+=\( "\$sp\/kiro_crew" \)/);
+  // The standard library and aj_crew stay whole; the rest of the tree does not.
+  assert.match(macBytecode, /whole\+=\( "\$sp\/aj_crew" \)/);
   assert.match(macBytecode, /\[ "\$entry" = "\$sp" \] \|\| whole\+=\( "\$entry" \)/);
   assert.match(
     macBytecode,
@@ -73,7 +73,7 @@ it("ships macOS caches for the closure only and bars every other bytecode write"
   // process, the whole-compiled trees, and the write ban itself.
   assert.match(macBytecode, /--invalidation-mode checked-hash "\$\{trace\[@\]\}" --verify/);
   assert.match(macBytecode, /bytecode_coverage_gate "\$out" "\$out\/lib" "\$sp"/);
-  assert.match(macBytecode, /bytecode_coverage_gate "\$out" "\$sp\/kiro_crew" ""/);
+  assert.match(macBytecode, /bytecode_coverage_gate "\$out" "\$sp\/aj_crew" ""/);
   assert.match(
     macBytecode,
     /env -u PYTHONDONTWRITEBYTECODE [^\n]*"\$py" -s -c \\\n\s*'import sys; raise SystemExit\(0 if sys\.dont_write_bytecode else 1\)'/

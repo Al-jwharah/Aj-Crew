@@ -55,7 +55,7 @@ function cleanPanePorts(ports, port) {
  * The SSH forward a client-only launch reaches its remote crew through, kept
  * open by this app instead of by a terminal the user has to remember.
  *
- * The forward itself is supervised by `kirocrew desktop tunnel`, which runs the
+ * The forward itself is supervised by `ajcrew desktop tunnel`, which runs the
  * same tunnel supervisor and backoff Remote Crew uses inside a gateway. This
  * module only owns that one process: start it when the crew opted in, respawn
  * it if it dies, bounce it on wake so the forward is rebuilt at once rather than

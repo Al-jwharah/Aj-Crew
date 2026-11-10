@@ -15,11 +15,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config import live
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_runner import _eager_spawn, schedule_eager_spawn
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.config import live
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_runner import _eager_spawn, schedule_eager_spawn
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 
 @pytest.fixture(autouse=True)
@@ -29,10 +29,10 @@ def _isolate(monkeypatch):
     monkeypatch.setattr(
         chat_runner, "_prewarm_allowance", lambda: chat_runner._RESUME_PREFETCH_MAX_LIVE
     )
-    cfg = KiroCrewConfig(agents={"default": KiroCrewAgentConfig()})
+    cfg = AjCrewConfig(agents={"default": AjCrewAgentConfig()})
     cfg.session.eager_spawn = True
     live.watch().prime(cfg)
-    with patch.object(chat_runner.KiroCrewConfig, "load", MagicMock(return_value=cfg)):
+    with patch.object(chat_runner.AjCrewConfig, "load", MagicMock(return_value=cfg)):
         yield
     chat_runner._armed_prefetches.clear()
 
@@ -152,7 +152,7 @@ async def test_a_binding_write_failure_does_not_count_toward_the_cap():
 @pytest.mark.asyncio
 async def test_a_shutdown_or_ending_refusal_is_not_a_failed_start():
     """A closing gateway or a key being ended refused the start; nothing failed to start."""
-    from kiro_crew.session import SessionClosingError, SessionEndingError
+    from aj_crew.session import SessionClosingError, SessionEndingError
 
     for refusal in (SessionClosingError("closing"), SessionEndingError("ending")):
         slot = _ChatSlot("t1")
@@ -183,8 +183,8 @@ async def test_the_stop_is_logged_and_announced_once(caplog):
 @pytest.mark.asyncio
 async def test_a_pre_spawn_capability_refusal_is_not_a_failed_start():
     """A member's capability refusal ran no process; it must not stop background starts."""
-    from kiro_crew.agent_capabilities import CapabilityError
-    from kiro_crew.session_capabilities import CapabilityStartupError
+    from aj_crew.agent_capabilities import CapabilityError
+    from aj_crew.session_capabilities import CapabilityStartupError
 
     refusals = [CapabilityError("invalid_spec")] + [
         CapabilityStartupError(code) for code in sorted(chat_runner._PRE_SPAWN_CAPABILITY_CODES)
@@ -207,7 +207,7 @@ async def test_a_capability_failure_after_the_process_ran_still_counts():
     race codes come from a check that runs both before and after it, so they are
     counted too rather than risk leaving a churning start unbounded.
     """
-    from kiro_crew.session_capabilities import CapabilityStartupError
+    from aj_crew.session_capabilities import CapabilityStartupError
 
     for code in (
         "capability_runtime_unverified",
@@ -272,8 +272,8 @@ def _user_turn(tmp_path, monkeypatch, reproject):
 
     from chat_test_helpers import _make_state
 
-    from kiro_crew.agent_sdk import spec_hooks
-    from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+    from aj_crew.agent_sdk import spec_hooks
+    from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
     async def fresh(sessions, session_key, agent_id):
         return spec_hooks.PROJECTION_FRESH
@@ -339,7 +339,7 @@ def test_a_users_successful_turn_re_enables_background_starts(tmp_path, monkeypa
 
 def test_a_turn_whose_claim_is_refused_leaves_the_cap_in_place(tmp_path, monkeypatch):
     """A re-claim refused after the claim is not a successful start."""
-    from kiro_crew.agent_sdk import spec_hooks
+    from aj_crew.agent_sdk import spec_hooks
 
     async def refuse(claimed):
         raise spec_hooks.StaleProjectionError("still stale")

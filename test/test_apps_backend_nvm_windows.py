@@ -1,6 +1,6 @@
 """The nvm resolver never shells out on Windows.
 
-``_resolve_nvm_path`` in ``kiro_crew.apps.backend`` sources ``nvm.sh`` through
+``_resolve_nvm_path`` in ``aj_crew.apps.backend`` sources ``nvm.sh`` through
 ``bash -c`` to find an nvm-managed node. nvm (nvm-sh) is a POSIX-shell tool, and
 on Windows the bare name ``bash`` resolves through ``CreateProcess`` to
 ``C:\\Windows\\System32\\bash.exe`` -- the WSL launcher -- which cannot source a
@@ -24,7 +24,7 @@ from typing import Any
 
 import pytest
 
-import kiro_crew.apps.backend as bmod
+import aj_crew.apps.backend as bmod
 
 
 def _nvm_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:

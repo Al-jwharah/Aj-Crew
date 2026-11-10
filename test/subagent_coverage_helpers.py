@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
 
-from kiro_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent import SubagentInfo, SubagentManager
 
 # ── Fixtures / builders ───────────────────────────────────────────────────
 

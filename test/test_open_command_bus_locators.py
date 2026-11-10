@@ -28,9 +28,9 @@ from pathlib import Path
 import pytest
 from test_s29_spawn_env_regression import BUS_LOCATOR_KEYS, open_app_spawn
 
-from kiro_crew import sandbox
-from kiro_crew.apps import routes
-from kiro_crew.apps.registry_pipeline import subprocess_env
+from aj_crew import sandbox
+from aj_crew.apps import routes
+from aj_crew.apps.registry_pipeline import subprocess_env
 
 
 @pytest.mark.asyncio

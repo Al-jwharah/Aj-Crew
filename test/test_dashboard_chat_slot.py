@@ -11,7 +11,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard.state import _MAX_SLOT_MESSAGES, _MAX_SOURCE_LINKS_PER_SLOT, _ChatSlot
+from aj_crew.dashboard.state import _MAX_SLOT_MESSAGES, _MAX_SOURCE_LINKS_PER_SLOT, _ChatSlot
 
 # ── Slot unit tests ──
 
@@ -181,7 +181,7 @@ class TestChatSlot:
 
     def test_jira_issue_links_reevaluated_when_jira_allowlist_loads(self, monkeypatch):
         """Self-hosted Jira inherits the generation-keyed cache invalidation."""
-        from kiro_crew.dashboard.handlers import source_providers as sp
+        from aj_crew.dashboard.handlers import source_providers as sp
 
         monkeypatch.setattr(sp, "_gitlab_hosts_snapshot", frozenset())
         monkeypatch.setattr(sp, "_jira_hosts_snapshot", frozenset())
@@ -221,7 +221,7 @@ class TestChatSlot:
         """The sync scan can run BEFORE the first off-loop allowlist load, so the
         cold-snapshot rejection must not stay memoized until the next message
         mutation -- the allowlist generation is part of the cache key."""
-        from kiro_crew.dashboard.handlers import source_providers as sp
+        from aj_crew.dashboard.handlers import source_providers as sp
 
         monkeypatch.setattr(sp, "_gitlab_hosts_snapshot", frozenset())
         monkeypatch.setattr(sp, "_gitlab_hosts_loaded_at", 0.0)
@@ -372,7 +372,7 @@ class TestChatSlot:
         """The per-message walk must stop AT the cap, not collect the whole message
         first. One message can carry thousands of urls and this runs synchronously
         on the serialization path."""
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard.handlers import source_providers
 
         calls = 0
         real = source_providers.parse_source_url
@@ -425,7 +425,7 @@ class TestChatSlot:
         `len(found)` advances only on a new valid url, so one repeated rejected candidate
         would reach the parser every time (a 58 MB body froze the loop for ~13.6s).
         """
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard.handlers import source_providers
 
         calls = 0
         real = source_providers.parse_source_url
@@ -548,7 +548,7 @@ class TestChatSlot:
     def test_issue_links_never_inherit_a_chip_status(self, monkeypatch):
         """The chip-status cache is pull-request-only, so an issue entry must
         stay bare even when the cache would answer for its URL."""
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
         monkeypatch.setattr(
             state_module, "_cached_check_status", lambda _url: {"ci": "passed", "state": "open"}
@@ -567,7 +567,7 @@ class TestChatSlot:
 
     def test_source_links_without_kind_are_treated_as_changes(self, monkeypatch):
         """Older cached payloads have no `kind`; they must keep their status."""
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
         monkeypatch.setattr(state_module, "_cached_check_status", lambda _url: {"ci": "failed"})
         slot = _ChatSlot("s1")
@@ -581,7 +581,7 @@ class TestChatSlot:
         assert slot.to_dict(include_check_status=True)["source_links"][0]["ci"] == "failed"
 
     def test_gitlab_issue_link_requires_the_allowlist(self, monkeypatch):
-        from kiro_crew.dashboard.handlers import source_providers as sp
+        from aj_crew.dashboard.handlers import source_providers as sp
 
         monkeypatch.setattr(sp, "_gitlab_hosts_snapshot", frozenset())
         monkeypatch.setattr(sp, "_gitlab_hosts_loaded_at", 0.0)
@@ -636,7 +636,7 @@ class TestChatSlot:
 class TestMultiSlotIsolation:
     @pytest.mark.asyncio
     async def test_slots_have_independent_messages(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         s1 = state.get_or_create_slot("s1")
         s2 = state.get_or_create_slot("s2")
@@ -661,7 +661,7 @@ class TestHasReaderFlag:
     """Verify _has_reader prevents duplicate message delivery."""
 
     def test_broadcast_skipped_when_reader_active(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         received: list[dict] = []
@@ -672,7 +672,7 @@ class TestHasReaderFlag:
         assert len(received) == 0
 
     def test_broadcast_fires_when_no_reader(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         received: list[dict] = []
@@ -684,7 +684,7 @@ class TestHasReaderFlag:
         assert received[0]["role"] == "assistant"
 
     def test_chunk_never_broadcast(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         received: list[dict] = []
@@ -696,7 +696,7 @@ class TestHasReaderFlag:
 
     def test_user_never_broadcast(self, tmp_path, monkeypatch):
         """User messages are added optimistically by frontend — no SSE broadcast."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         received: list[dict] = []
@@ -707,7 +707,7 @@ class TestHasReaderFlag:
         assert len(received) == 0
 
     def test_tool_and_permission_broadcast(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         received: list[dict] = []
@@ -754,8 +754,8 @@ class TestSlotsGetWarmsGitLabAllowlist:
         from aiohttp import web
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slots
-        from kiro_crew.dashboard.handlers import source_providers as sp
+        from aj_crew.dashboard.chat_handlers import api_chat_slots
+        from aj_crew.dashboard.handlers import source_providers as sp
 
         url = "https://gitlab.acme.internal/team/api/-/merge_requests/7"
         order: list[str] = []
@@ -821,11 +821,11 @@ class TestSourceLinkUrlsExcludeIssues:
 
     @pytest.mark.asyncio
     async def test_slots_get_schedules_only_change_links(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers import source_providers as sp
+        from aj_crew.dashboard.handlers import source_providers as sp
 
         scheduler = MagicMock(return_value=[])
         monkeypatch.setattr(sp, "schedule_check_refresh", scheduler)
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.owner_id = "U_OWNER"
         slot = state.get_or_create_slot("source")

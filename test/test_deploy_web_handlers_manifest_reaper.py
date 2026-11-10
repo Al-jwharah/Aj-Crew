@@ -1,6 +1,6 @@
 """The deploy manifest, and the reaper Lambda that reaps by it.
 
-A successful deploy writes ``.kirocrew-deploy.json`` with its TTL to the base stack's
+A successful deploy writes ``.ajcrew-deploy.json`` with its TTL to the base stack's
 shared bucket; ``ttl_hours`` is type-checked before any AWS call and ``expires_at`` is
 the deploy time plus the TTL, not the creation time; the manifest names the engine
 architecture, its bucket and its distribution. The reaper deletes an already-disabled
@@ -18,14 +18,14 @@ from deploy_web_handlers_helpers import _mock_base_stack  # noqa: F401
 from deploy_web_handlers_helpers import _fake_store, _run, _set_profile
 from skill_script_helpers import load_skill_script
 
-from kiro_crew.deploy import engine, handlers
-from kiro_crew.deploy import profiles as profiles_mod
+from aj_crew.deploy import engine, handlers
+from aj_crew.deploy import profiles as profiles_mod
 
 # --- item 6: ttl_hours manifest write ---
 
 
 def test_do_deploy_writes_manifest_with_ttl(tmp_path, monkeypatch):
-    """After successful deploy, _do_deploy writes .kirocrew-deploy.json with TTL."""
+    """After successful deploy, _do_deploy writes .ajcrew-deploy.json with TTL."""
     public = tmp_path / "site"
     public.mkdir()
     (public / "index.html").write_text("<h1>hi</h1>")
@@ -73,9 +73,9 @@ def test_do_deploy_writes_manifest_with_ttl(tmp_path, monkeypatch):
     assert status == 200
 
     # Verify an S3 cp command was issued for the manifest
-    manifest_calls = [c for c in captured_s3_calls if ".kirocrew-deploy.json" in " ".join(c)]
+    manifest_calls = [c for c in captured_s3_calls if ".ajcrew-deploy.json" in " ".join(c)]
     assert len(manifest_calls) == 1
-    assert "s3://test-bucket/my-ttl-app/.kirocrew-deploy.json" in " ".join(manifest_calls[0])
+    assert "s3://test-bucket/my-ttl-app/.ajcrew-deploy.json" in " ".join(manifest_calls[0])
 
     # Verify the temp manifest file contents (the s3 cp source)
     src_file = manifest_calls[0][2]  # ["s3", "cp", <local_file>, "s3://..."]
@@ -192,7 +192,7 @@ def test_deploy_manifest_written_to_base_stack_bucket(monkeypatch):
             "site_id": site_id,
             "url": "https://d.cloudfront.net/",
             "reused": False,
-            "bucket": "kirocrew-web-random123",
+            "bucket": "ajcrew-web-random123",
             "distribution_id": "D1",
             "status": "Deployed",
         }
@@ -200,7 +200,7 @@ def test_deploy_manifest_written_to_base_stack_bucket(monkeypatch):
     def fake_run_aws(cmd, profile, timeout=15):
         import json as _j
 
-        if "describe-stacks" in cmd and "kirocrew-deploy-base" in cmd:
+        if "describe-stacks" in cmd and "ajcrew-deploy-base" in cmd:
             return (
                 0,
                 _j.dumps(
@@ -225,10 +225,10 @@ def test_deploy_manifest_written_to_base_stack_bucket(monkeypatch):
 
     # The manifest must target the SHARED base bucket, not the per-site random one
     assert len(s3_calls) == 1
-    s3_dest = s3_calls[0][3]  # "s3://shared-base-bucket/mysite/.kirocrew-deploy.json"
+    s3_dest = s3_calls[0][3]  # "s3://shared-base-bucket/mysite/.ajcrew-deploy.json"
     assert "shared-base-bucket" in s3_dest
-    assert "kirocrew-web-random123" not in s3_dest
-    assert "mysite/.kirocrew-deploy.json" in s3_dest
+    assert "ajcrew-web-random123" not in s3_dest
+    assert "mysite/.ajcrew-deploy.json" in s3_dest
 
 
 # --- F1: manifest includes arch/bucket/distribution_id fields ----------------
@@ -238,7 +238,7 @@ def test_deploy_manifest_includes_engine_arch_fields(monkeypatch, tmp_path):
     """F1: _do_deploy must write arch, bucket, distribution_id to the manifest."""
     _set_profile(monkeypatch, "p")
 
-    from kiro_crew.artifacts import ArtifactStore
+    from aj_crew.artifacts import ArtifactStore
 
     store = ArtifactStore(tmp_path / "store")
     store.create(name="mywidget", content="<p>Hello</p>", kind="widget")
@@ -249,7 +249,7 @@ def test_deploy_manifest_includes_engine_arch_fields(monkeypatch, tmp_path):
     def fake_deploy(site_id, src_dir, profile, region):
         return {
             "site_id": site_id,
-            "bucket": "kirocrew-web-abc123",
+            "bucket": "ajcrew-web-abc123",
             "distribution_id": "E1234XYZ",
             "url": "https://d.cf.net/",
             "status": "Deployed",
@@ -257,7 +257,7 @@ def test_deploy_manifest_includes_engine_arch_fields(monkeypatch, tmp_path):
 
     def fake_run_aws(args, profile, timeout=30):
         # Capture the manifest write
-        if args[:2] == ["s3", "cp"] and ".kirocrew-deploy.json" in str(args):
+        if args[:2] == ["s3", "cp"] and ".ajcrew-deploy.json" in str(args):
             import json as _json
 
             # Read the temp file that was written
@@ -285,7 +285,7 @@ def test_deploy_manifest_includes_engine_arch_fields(monkeypatch, tmp_path):
     assert len(manifest_data) == 1
     man = manifest_data[0]
     assert man["arch"] == "engine"
-    assert man["bucket"] == "kirocrew-web-abc123"
+    assert man["bucket"] == "ajcrew-web-abc123"
     assert man["distribution_id"] == "E1234XYZ"
 
 
@@ -293,7 +293,7 @@ def test_deploy_manifest_includes_engine_arch_fields(monkeypatch, tmp_path):
 
 _REAPER_LAMBDA_INDEX = (
     Path(__file__).resolve().parent.parent
-    / "src/kiro_crew/deploy/skills/artifact-deploy/scripts/reaper_lambda/index.py"
+    / "src/aj_crew/deploy/skills/artifact-deploy/scripts/reaper_lambda/index.py"
 )
 
 
@@ -333,10 +333,10 @@ def test_reaper_engine_arch_happy_path(monkeypatch):
 
     # R19 F4: tag verification mocks — distribution and bucket tags match slug
     mock_cf.list_tags_for_resource.return_value = {
-        "Tags": {"Items": [{"Key": "kirocrew:site", "Value": "mysite"}]}
+        "Tags": {"Items": [{"Key": "ajcrew:site", "Value": "mysite"}]}
     }
     mock_s3.get_bucket_tagging.return_value = {
-        "TagSet": [{"Key": "kirocrew:site", "Value": "mysite"}]
+        "TagSet": [{"Key": "ajcrew:site", "Value": "mysite"}]
     }
 
     # Distribution is already disabled (Enabled=False)
@@ -357,7 +357,7 @@ def test_reaper_engine_arch_happy_path(monkeypatch):
     man = {
         "slug": "mysite",
         "arch": "engine",
-        "bucket": "kirocrew-web-mysite",
+        "bucket": "ajcrew-web-mysite",
         "distribution_id": "E999",
         "expires_at": "2020-01-01T00:00:00Z",
         "persistent": False,
@@ -369,7 +369,7 @@ def test_reaper_engine_arch_happy_path(monkeypatch):
     mock_cf.delete_distribution.assert_called_once_with(Id="E999", IfMatch="etag1")
     # destructive S3 calls now pin ExpectedBucketOwner (from ACCOUNT_ID).
     mock_s3.delete_bucket.assert_called_once_with(
-        Bucket="kirocrew-web-mysite", ExpectedBucketOwner="123456789012"
+        Bucket="ajcrew-web-mysite", ExpectedBucketOwner="123456789012"
     )
     mock_s3.delete_object.assert_called_once()
 
@@ -407,7 +407,7 @@ def test_reaper_engine_arch_distribution_not_disabled_retries(monkeypatch):
 
     # R19 F4: tag verification mocks — distribution tags match slug
     mock_cf.list_tags_for_resource.return_value = {
-        "Tags": {"Items": [{"Key": "kirocrew:site", "Value": "retrysite"}]}
+        "Tags": {"Items": [{"Key": "ajcrew:site", "Value": "retrysite"}]}
     }
 
     # Distribution is disabled but delete fails with DistributionNotDisabled
@@ -421,7 +421,7 @@ def test_reaper_engine_arch_distribution_not_disabled_retries(monkeypatch):
     man = {
         "slug": "retrysite",
         "arch": "engine",
-        "bucket": "kirocrew-web-retrysite",
+        "bucket": "ajcrew-web-retrysite",
         "distribution_id": "EXYZ",
         "expires_at": "2020-01-01T00:00:00Z",
         "persistent": False,

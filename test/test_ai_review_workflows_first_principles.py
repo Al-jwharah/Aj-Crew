@@ -175,7 +175,7 @@ class TestFirstPrinciplesProblemsFirstContract:
         assert contract.startswith("SYSTEM RULES (non-negotiable")
         assert "EVERY suggestion you emit must be a SUBTRACTION" in contract
         # Security boundaries, repo context and the user-count rule stay.
-        assert "REPO CONTEXT: Kiro Crew is an open-source AI agent platform" in contract
+        assert "REPO CONTEXT: Aj Crew is an open-source AI agent platform" in contract
         assert "DO NOT REASON FROM AN ASSUMED USER COUNT, in either direction" in contract
         assert "the AGENT is untrusted with respect to its own governance" in contract
 
@@ -232,7 +232,7 @@ class TestFirstPrinciplesOneStatementPerProblem:
         assert "the\nworkflow counts them and flags an overrun" in contract
 
     def test_the_rule_the_local_loop_parses_still_holds(self) -> None:
-        # The kirocrew-prepare-pr loop reads items out of `### Blockers` by
+        # The ajcrew-prepare-pr loop reads items out of `### Blockers` by
         # bullet + continuation lines, so an entry shaped as the contract asks
         # (title, then Trigger / Outcome / Subtraction / Clears when) must yield
         # ONE item carrying every line, not four.
@@ -400,18 +400,18 @@ class TestFirstPrinciplesScopeGateBehavior:
         [
             # A plain FIX of existing backend code now RUNS: judging whether it
             # reached the cause is this lane's whole point.
-            ("src/kiro_crew/session.py", True),
+            ("src/aj_crew/session.py", True),
             ("website/src/pages/Thing.tsx", True),
             ("config/defaults.json", True),
             ("scripts/check_brand_name.py", True),
             # This lane reviews its own kind of change too.
             (".github/workflows/first-principles-review.yml", True),
             # A mixed diff runs on the strength of its one source file.
-            ("docs/guides/x.md\nsrc/kiro_crew/session.py", True),
+            ("docs/guides/x.md\nsrc/aj_crew/session.py", True),
             # Capability-free diffs skip: tests ship no capability, and docs,
             # screenshots and generated files never match at all.
             ("test/test_session.py", False),
-            ("src/kiro_crew/apps/builtins/meetings/tests/test_routes.py", False),
+            ("src/aj_crew/apps/builtins/meetings/tests/test_routes.py", False),
             ("website/src/pages/Thing.test.tsx", False),
             ("docs/ci/ci-and-reviews.md", False),
             ("temp-screenshots/feature/shot.png", False),

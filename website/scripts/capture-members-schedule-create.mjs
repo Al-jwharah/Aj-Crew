@@ -29,7 +29,7 @@ mkdirSync(OUT, { recursive: true })
 const NOW = Date.now() / 1000
 const member = (name, extra = {}) => ({
   name, slug: name, bound: true, slot_key: `member-${name}`, running: false,
-  kiro_agent: 'kirocrew-autofix', workspace: 'autofix', memory_store: 'default', model: '',
+  kiro_agent: 'ajcrew-autofix', workspace: 'autofix', memory_store: 'default', model: '',
   last_active_ts: NOW - 300, last_message: '', ...extra,
 })
 const MEMBERS = [
@@ -42,12 +42,12 @@ const MEMBERS = [
 const JOBS = [
   {
     id: 'j1', name: 'nightly-triage', message: 'Sweep the issue queue.', enabled: true,
-    schedule: '0 2 * * *', last_status: 'ok', agent: 'kirocrew-autofix', member_id: 'oncall',
+    schedule: '0 2 * * *', last_status: 'ok', agent: 'ajcrew-autofix', member_id: 'oncall',
     last_run_ts: NOW - 8 * 3600, next_run_ts: NOW + 16 * 3600,
   },
   {
     id: 'j2', name: 'ledger-reconcile', message: 'Reconcile the ledger.', enabled: true,
-    schedule: '@hourly', last_status: 'ok', agent: 'kirocrew-autofix', member_id: 'ledger',
+    schedule: '@hourly', last_status: 'ok', agent: 'ajcrew-autofix', member_id: 'ledger',
   },
 ]
 const SLOTS = MEMBERS.map((m) => ({
@@ -86,7 +86,7 @@ async function openMembers(theme, { jobs = JOBS, hangCreate = false } = {}) {
     slots: SLOTS,
     extra: async (path, route) => {
       if (path === '/api/members') {
-        await json(route, { members: MEMBERS, default_agent: 'kirocrew' })
+        await json(route, { members: MEMBERS, default_agent: 'ajcrew' })
         return true
       }
       const thread = path.match(/^\/api\/members\/([^/]+)\/thread$/)

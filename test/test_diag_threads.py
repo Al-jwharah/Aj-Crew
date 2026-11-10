@@ -1,4 +1,4 @@
-"""Tests for :mod:`kiro_crew.diag.threads`.
+"""Tests for :mod:`aj_crew.diag.threads`.
 
 The procfs parsers and the interpretation rule are pure functions and are tested
 as such. The probe thread is exercised for real but only ever asserted on shape
@@ -16,9 +16,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import perf_sampler
-from kiro_crew.diag import threads as dt
-from kiro_crew.testing.wait import wait_until
+from aj_crew import perf_sampler
+from aj_crew.diag import threads as dt
+from aj_crew.testing.wait import wait_until
 
 
 @pytest.fixture(autouse=True)
@@ -399,17 +399,17 @@ def test_a_frame_label_drops_the_absolute_path_prefix() -> None:
     HTTP route — so the frame keeps enough to navigate by and nothing that
     identifies the machine's owner.
     """
-    label = dt._redact_frame("/home/someuser/oss/kirocrew/src/kiro_crew/thing.py", 42, "run")
+    label = dt._redact_frame("/home/someuser/oss/ajcrew/src/aj_crew/thing.py", 42, "run")
     assert "someuser" not in label
     assert "/home/" not in label
     assert "thing.py" in label and "42" in label and "run" in label
 
 
 def test_a_frame_label_with_spaces_drops_the_absolute_path_prefix() -> None:
-    label = dt._redact_frame("/home/Jane Doe/oss/kirocrew/src/kiro_crew/thing.py", 42, "run")
+    label = dt._redact_frame("/home/Jane Doe/oss/ajcrew/src/aj_crew/thing.py", 42, "run")
     assert "Jane Doe" not in label
     assert "/home/" not in label
-    assert "kiro_crew/thing.py" in label
+    assert "aj_crew/thing.py" in label
     assert "42" in label and "run" in label
 
 
@@ -556,8 +556,8 @@ def test_the_diag_directory_is_masked_and_fenced() -> None:
     session that could read the rows directly would collect the frame labels and
     folded stacks the owner-gated routes exist to scrub.
     """
-    from kiro_crew import sandbox
-    from kiro_crew.security import paths as secure_paths
+    from aj_crew import sandbox
+    from aj_crew.security import paths as secure_paths
 
     assert "diag" in sandbox._CREW_HIDDEN_LEAVES
     assert "diag" in secure_paths._CREW_SECRET_LEAVES
@@ -571,7 +571,7 @@ def test_two_deep_samples_stage_to_different_private_paths(monkeypatch, tmp_path
     """
     import stat as stat_mod
 
-    from kiro_crew.config import paths as cfg_paths
+    from aj_crew.config import paths as cfg_paths
 
     monkeypatch.setattr(cfg_paths, "config_dir", lambda: tmp_path)
     first = dt._pyspy_output_path()
@@ -592,7 +592,7 @@ def test_two_deep_samples_stage_to_different_private_paths(monkeypatch, tmp_path
 
 def test_a_symlink_left_at_a_staging_name_cannot_be_followed(monkeypatch, tmp_path) -> None:
     """Nothing can sit at the path already: ``mkdtemp`` creates what it names."""
-    from kiro_crew.config import paths as cfg_paths
+    from aj_crew.config import paths as cfg_paths
 
     monkeypatch.setattr(cfg_paths, "config_dir", lambda: tmp_path)
     got = dt._pyspy_output_path()
@@ -604,7 +604,7 @@ def test_stale_gil_staging_directories_are_reaped(monkeypatch, tmp_path) -> None
     """A command that is never run still leaves a directory, so the next call reaps."""
     import os as _os
 
-    from kiro_crew.config import paths as cfg_paths
+    from aj_crew.config import paths as cfg_paths
 
     monkeypatch.setattr(cfg_paths, "config_dir", lambda: tmp_path)
     old = dt._pyspy_output_path().parent
@@ -660,7 +660,7 @@ def test_read_dump_scrubs_paths_and_credentials(
     Read time is therefore the only point at which redaction can happen, which is
     why the dumps stay in the fenced directory and only come out through here.
     """
-    from kiro_crew.dashboard import crash_dump_store
+    from aj_crew.dashboard import crash_dump_store
 
     dumps = tmp_path / "crash-dumps"
     dumps.mkdir(parents=True)
@@ -671,7 +671,7 @@ def test_read_dump_scrubs_paths_and_credentials(
         "# If thread stacks appear below, the event loop wedged.\n"
         "\n"
         "Current thread 0x00007f0000000000 (most recent call first):\n"
-        '  File "/home/someuser/oss/kirocrew/src/kiro_crew/dashboard/server.py", '
+        '  File "/home/someuser/oss/ajcrew/src/aj_crew/dashboard/server.py", '
         "line 5087 in _start\n",
         encoding="utf-8",
     )
@@ -686,7 +686,7 @@ def test_read_dump_scrubs_paths_and_credentials(
 def test_list_dumps_labels_each_dump_with_its_attributed_surface(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.dashboard import crash_dump_store
+    from aj_crew.dashboard import crash_dump_store
 
     dumps = tmp_path / "crash-dumps"
     dumps.mkdir(parents=True)
@@ -697,7 +697,7 @@ def test_list_dumps_labels_each_dump_with_its_attributed_surface(
         "# header line three\n"
         "\n"
         "Current thread 0x00007f0000000000 (most recent call first):\n"
-        '  File "/opt/kirocrew/src/kiro_crew/cron.py", line 10 in _cron_callback\n',
+        '  File "/opt/ajcrew/src/aj_crew/cron.py", line 10 in _cron_callback\n',
         encoding="utf-8",
     )
     monkeypatch.setattr(crash_dump_store, "get_dumps_dir", lambda: dumps)
@@ -713,7 +713,7 @@ def test_list_dumps_labels_each_dump_with_its_attributed_surface(
 def test_list_dumps_is_empty_when_there_are_no_dumps(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.dashboard import crash_dump_store
+    from aj_crew.dashboard import crash_dump_store
 
     empty = tmp_path / "crash-dumps"
     empty.mkdir(parents=True)
@@ -991,7 +991,7 @@ def test_quiet_interpretation_does_not_trigger_rankings_by_substring(
         "name": "quiet-worker",
         "native_id": 123,
         "state": "R",
-        "top_frame": "kiro_crew/worker.py:1:run",
+        "top_frame": "aj_crew/worker.py:1:run",
         "cpu_delta_ms": 10.0,
         "runqueue_wait_delta_ms": 2.0,
     }

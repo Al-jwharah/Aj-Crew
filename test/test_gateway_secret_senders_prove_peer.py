@@ -1,6 +1,6 @@
 """Every CLI sender of the gateway's local/internal secret proves its peer first.
 
-The value ``kirocrew`` reads from the local secret file is the gateway's
+The value ``ajcrew`` reads from the local secret file is the gateway's
 ``X-Local-Secret`` and also its ``X-Internal-Secret``. These tests pin that the
 spawn and artifact senders hand their request to the
 shared connection-bound proof (``cli_server_peer._owner_verified_secret_urlopen``)
@@ -20,10 +20,10 @@ from unittest.mock import patch
 
 import pytest
 
-import kiro_crew.cli_commands as cc
-from kiro_crew import app_lifecycle_client
-from kiro_crew.cli_server_peer import _GatewayPeerRefused
-from kiro_crew.config.loader import KiroCrewConfig
+import aj_crew.cli_commands as cc
+from aj_crew import app_lifecycle_client
+from aj_crew.cli_server_peer import _GatewayPeerRefused
+from aj_crew.config.loader import AjCrewConfig
 
 _PORT = 5476
 
@@ -65,14 +65,14 @@ def _ns(**kw: Any) -> argparse.Namespace:
 
 @pytest.fixture
 def secret() -> Any:
-    with patch("kiro_crew.cli_commands._internal_secret", return_value="s"):
+    with patch("aj_crew.cli_commands._internal_secret", return_value="s"):
         yield
 
 
 class TestSpawnSendsThroughThePeerProof:
     def test_list_goes_through_the_proof(self, secret: None, capsys: Any) -> None:
         sender = _ProvenSender([{"agents": [], "queued": []}])
-        with patch("kiro_crew.cli_server._owner_verified_secret_urlopen", sender):
+        with patch("aj_crew.cli_server._owner_verified_secret_urlopen", sender):
             cc._spawn(_ns(spawn_action="list", port=_PORT))
         [(req, port, operation)] = sender.sent
         assert port == _PORT
@@ -83,9 +83,9 @@ class TestSpawnSendsThroughThePeerProof:
     def test_run_and_its_poll_go_through_the_proof(self, secret: None, capsys: Any) -> None:
         sender = _ProvenSender([{"id": "ag1", "task": "t"}, {"done": True, "result": "finished"}])
         with (
-            patch("kiro_crew.cli_server._owner_verified_secret_urlopen", sender),
+            patch("aj_crew.cli_server._owner_verified_secret_urlopen", sender),
             # The module's own clock binding, so no other code sees the stub.
-            patch("kiro_crew.cli_commands._time", SimpleNamespace(sleep=lambda _s: None)),
+            patch("aj_crew.cli_commands._time", SimpleNamespace(sleep=lambda _s: None)),
         ):
             cc._spawn(_ns(spawn_action="run", port=_PORT, task="t", fire_and_forget=False))
         assert [op for _req, _port, op in sender.sent] == ["cli_spawn_run", "cli_spawn_poll"]
@@ -98,7 +98,7 @@ class TestSpawnSendsThroughThePeerProof:
     ) -> None:
         sender = _ProvenSender([_GatewayPeerRefused("peer not proven")])
         with (
-            patch("kiro_crew.cli_server._owner_verified_secret_urlopen", sender),
+            patch("aj_crew.cli_server._owner_verified_secret_urlopen", sender),
             pytest.raises(SystemExit) as exc,
         ):
             cc._spawn(_ns(spawn_action=action, port=_PORT, task="t", fire_and_forget=True))
@@ -110,10 +110,10 @@ class TestSpawnSendsThroughThePeerProof:
 class TestArtifactSendsThroughThePeerProof:
     def _run(self, sender: _ProvenSender) -> None:
         with (
-            patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()),
-            patch("kiro_crew.cli_commands.parse_dashboard_url", return_value=("localhost", _PORT)),
-            patch("kiro_crew.cli_commands._internal_secret", return_value="s"),
-            patch("kiro_crew.cli_server._owner_verified_secret_urlopen", sender),
+            patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()),
+            patch("aj_crew.cli_commands.parse_dashboard_url", return_value=("localhost", _PORT)),
+            patch("aj_crew.cli_commands._internal_secret", return_value="s"),
+            patch("aj_crew.cli_server._owner_verified_secret_urlopen", sender),
         ):
             cc._artifact(_ns(artifact_action="list", tag=None, kind=None, q=None))
 
@@ -144,13 +144,13 @@ class TestAppLifecycleChecksTheSocketPeer:
 
         with (
             patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex",
+                "aj_crew.app_lifecycle_client.resolve_client_port_ex",
                 return_value=(_PORT, True),
             ),
-            patch("kiro_crew.app_lifecycle_client.read_local_secret", return_value="s"),
-            patch("kiro_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=_open),
+            patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="s"),
+            patch("aj_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=_open),
             patch(
-                "kiro_crew.cli_server._connected_unix_peer_is_recorded_gateway",
+                "aj_crew.cli_server._connected_unix_peer_is_recorded_gateway",
                 return_value=peer_is_gateway,
             ),
         ):
@@ -159,7 +159,7 @@ class TestAppLifecycleChecksTheSocketPeer:
     @pytest.mark.parametrize(("peer_is_gateway", "outcome"), [(True, "allowed"), (False, "denied")])
     def test_each_peer_decision_is_audited(self, peer_is_gateway: bool, outcome: str) -> None:
         sent: list[urllib.request.Request] = []
-        with patch("kiro_crew.cli_server.sel") as sel:
+        with patch("aj_crew.cli_server.sel") as sel:
             try:
                 self._run(sent, peer_is_gateway=peer_is_gateway)
             except app_lifecycle_client.AppGatewayError:

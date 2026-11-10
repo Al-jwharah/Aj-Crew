@@ -31,9 +31,9 @@ from discord_helpers import (  # noqa: F401
     _prime_live,
 )
 
-from kiro_crew.discord import renderer as discord_renderer
-from kiro_crew.discord.attachments import process_discord_attachments
-from kiro_crew.discord.client import (
+from aj_crew.discord import renderer as discord_renderer
+from aj_crew.discord.attachments import process_discord_attachments
+from aj_crew.discord.client import (
     _INTENT_DIRECT_MESSAGES,
     _INTENT_GUILD_MESSAGES,
     _INTENT_MESSAGE_CONTENT,
@@ -43,22 +43,22 @@ from kiro_crew.discord.client import (
     DiscordInbound,
     _find_button_label,
 )
-from kiro_crew.discord.commands import parse_command, parse_mid_turn_override
-from kiro_crew.discord.renderer import (
+from aj_crew.discord.commands import parse_command, parse_mid_turn_override
+from aj_crew.discord.renderer import (
     DiscordRenderer,
     _extract_options,
     _strip_steering,
     build_option_components,
 )
-from kiro_crew.discord.transport import (
+from aj_crew.discord.transport import (
     DISCORD_CAPABILITIES,
     DiscordInboundMessage,
     DiscordTransport,
 )
-from kiro_crew.messaging import driver as messaging_driver
-from kiro_crew.messaging.attachments import cleanup
-from kiro_crew.messaging.split import split_markdown_safe
-from kiro_crew.messaging.transport import InboundMessage
+from aj_crew.messaging import driver as messaging_driver
+from aj_crew.messaging.attachments import cleanup
+from aj_crew.messaging.split import split_markdown_safe
+from aj_crew.messaging.transport import InboundMessage
 
 _cfg = discord_helpers._cfg  # assigned, not imported: a parameter here shadows it
 
@@ -171,7 +171,7 @@ class TestRotationSplitting:
         # stability promise and would interleave with the sealed frames. Holding
         # it back leaves ``cli.sent`` as exactly the sealed chunks, in order,
         # which is the channel every assertion below reads.
-        monkeypatch.setattr("kiro_crew.discord.renderer._EDIT_THROTTLE_S", 1e9)
+        monkeypatch.setattr("aj_crew.discord.renderer._EDIT_THROTTLE_S", 1e9)
         return r, cli
 
     async def _rotate(
@@ -187,7 +187,7 @@ class TestRotationSplitting:
     async def test_pathological_rotation_work_is_offloaded(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.discord import renderer as renderer_module
+        from aj_crew.discord import renderer as renderer_module
 
         r, _ = self._renderer(monkeypatch, 100)
         source = "`" * 5_000
@@ -1002,9 +1002,9 @@ class TestDiscordAttachmentAdapter:
             transcribed.append(path)
             return "spoken words"
 
-        monkeypatch.setattr("kiro_crew.transcribe.is_available", lambda: True)
-        monkeypatch.setattr("kiro_crew.transcribe.batch_duration_cap_secs", lambda _cfg: None)
-        monkeypatch.setattr("kiro_crew.transcribe.transcribe_audio", _transcribe)
+        monkeypatch.setattr("aj_crew.transcribe.is_available", lambda: True)
+        monkeypatch.setattr("aj_crew.transcribe.batch_duration_cap_secs", lambda _cfg: None)
+        monkeypatch.setattr("aj_crew.transcribe.transcribe_audio", _transcribe)
 
         result = await process_discord_attachments(
             client,  # type: ignore[arg-type]
@@ -1036,7 +1036,7 @@ class TestDiscordAttachmentAdapter:
             observed.append(threading.get_ident())
             return False
 
-        monkeypatch.setattr("kiro_crew.transcribe.is_available", _available)
+        monkeypatch.setattr("aj_crew.transcribe.is_available", _available)
         result = await process_discord_attachments(
             client,  # type: ignore[arg-type]
             [
@@ -1143,7 +1143,7 @@ class TestPublicInjectionSurface:
         assert d.is_authorized("99") is False
 
     def test_current_session_key_matches_inbound_derivation(self) -> None:
-        d, _cli, _sess = _dispatcher({"42"}, default_agent="kirocrew")
+        d, _cli, _sess = _dispatcher({"42"}, default_agent="ajcrew")
         # Must agree with the private derivation the inbound path uses — the
         # generation guard compares a stored loop key against this value.
         assert d.current_session_key("42") == d._session_key("42")
@@ -1215,7 +1215,7 @@ class TestTransportReceive:
     ) -> None:
         events: list[dict[str, Any]] = []
         monkeypatch.setattr(
-            "kiro_crew.discord.transport.sel",
+            "aj_crew.discord.transport.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kwargs: events.append(kwargs)),
         )
         t, dispatched, _ = self._transport(["u1"], ["t1"])
@@ -1229,7 +1229,7 @@ class TestTransportReceive:
     ) -> None:
         events: list[dict[str, Any]] = []
         monkeypatch.setattr(
-            "kiro_crew.discord.transport.sel",
+            "aj_crew.discord.transport.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kwargs: events.append(kwargs)),
         )
         t, dispatched, _ = self._transport(["u1"], ["t1"])
@@ -1306,7 +1306,7 @@ class TestTransportReceive:
         async def _denied(_channel_type: str) -> bool:
             return False
 
-        monkeypatch.setattr("kiro_crew.discord.transport.channel_inbound_permitted", _denied)
+        monkeypatch.setattr("aj_crew.discord.transport.channel_inbound_permitted", _denied)
         t, dispatched, client = self._transport(["u1"], allowed_channels=["c1"])
         await t.receive(
             DiscordInbound(

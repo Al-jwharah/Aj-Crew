@@ -48,7 +48,7 @@ const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 const scenario = params.get('scenario') || 'gone'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const realFetch = globalThis.fetch.bind(globalThis)
 globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
@@ -96,7 +96,7 @@ const TASKS = [
 const pendingSpawn = (n: number): SubagentActivity => ({
   id: `a${n}`,
   task: TASKS[n - 1],
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   status: 'pending',
   streaming: '',
   lastTool: '',

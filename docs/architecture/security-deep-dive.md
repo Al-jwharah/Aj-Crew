@@ -1,6 +1,6 @@
 # Security Deep Dive
 
-The security **architecture**: what Kiro Crew defends against, where its trust
+The security **architecture**: what Aj Crew defends against, where its trust
 boundaries sit, and how the layers compose. Mechanism detail (exact rule tables,
 regex shapes, per-function algorithms) lives in the module specs and is linked
 from here rather than restated:
@@ -21,7 +21,7 @@ while the code it describes keeps changing.
 
 ## Threat model
 
-Kiro Crew runs an LLM agent with filesystem and shell access on the operator's own
+Aj Crew runs an LLM agent with filesystem and shell access on the operator's own
 machine. The dominant threat is **prompt injection from content the agent reads**
 (web pages, repository files, Slack thread history, imported documents): text
 that is data as far as the operator is concerned, but that the model may follow as
@@ -50,7 +50,7 @@ DNS rebinding, unauthenticated remote access, and the rest) is in
 
 | Boundary | Trusted side | Untrusted side | Enforced by |
 |---|---|---|---|
-| Gateway process ↔ agent subprocess | Kiro Crew gateway | `kiro-cli` + every tool/MCP descendant | OS sandbox (`sandbox.py`), env scrub, cgroup scope |
+| Gateway process ↔ agent subprocess | Aj Crew gateway | `kiro-cli` + every tool/MCP descendant | OS sandbox (`sandbox.py`), env scrub, cgroup scope |
 | Agent tool request ↔ execution | the PreToolUse gate's decision | the tool call as the model phrased it | `hooks.py:HookManager.on_tool_call` |
 | Operator ceiling ↔ agent | keystone files under the data home | every agent read/write path | `security.is_sensitive_path` / `is_sensitive_write_path` |
 | Agent output ↔ any human or external service | nothing | all agent-derived text | `redact_credentials` / `redact_exfiltration_urls` / `StreamRedactor` |
@@ -58,7 +58,7 @@ DNS rebinding, unauthenticated remote access, and the rest) is in
 | Slack workspace ↔ gateway | owner + allowlisted users | every other Slack sender | owner lock, `is_allowed_user`, Enterprise Grid check |
 
 The single most important structural property: **the PreToolUse gate is
-Kiro Crew's own gate, not the agent's.** Denied commands and the governance
+Aj Crew's own gate, not the agent's.** Denied commands and the governance
 ceiling are evaluated in `hooks.py` and are never written into a `kiro-cli` agent
 JSON, so an agent config that omits or edits its own deny list cannot weaken the
 ceiling.
@@ -89,7 +89,7 @@ active YOLO grant can never route around a hard deny.
 Confines the `kiro-cli` subprocess tree with platform-native isolation, hiding
 credential directories by bind-mount (Linux user + mount namespaces) or file-read
 denial (macOS Seatbelt), and scrubbing credential-bearing environment variables
-on the way in. Windows has no Kiro Crew OS wrapper, so positively identified
+on the way in. Windows has no Aj Crew OS wrapper, so positively identified
 official Kiro CLI spawns delegate to the CLI's built-in sandbox; their environment
 is scrubbed by the parent before spawn. The parent gateway process is unaffected.
 
@@ -130,7 +130,7 @@ Two properties are load-bearing at the architecture level:
   directions, a governance `sandbox.min_level` floor outranks the declaration,
   and every unconfined spawn is SEL-audited `unconfined` naming the permitting
   party — the platform grant has no config file standing as its record.
-  `kirocrew setup` still asks, in the direction that matches the default: the
+  `ajcrew setup` still asks, in the direction that matches the default: the
   opt-IN where it is fail-closed, and the exposure stated plus the opt-OUT where
   it is allow, writing nothing on a decline so the host stays undeclared.
 - **Windows Kiro delegation is not a global fail-open.** `is_kiro_cli=True` from a
@@ -141,13 +141,13 @@ Two properties are load-bearing at the architecture level:
 - **Delegation is audited, never silent.** When `kiro-cli`'s internal sandbox owns
   isolation for a spawn, the decision is config-driven (never a reaction to a wrap
   failure), logged once per process, and SEL-audited on an audit-or-deny basis: if
-  the audit cannot be written, the delegation is refused. Kiro Crew's own Seatbelt
+  the audit cannot be written, the delegation is refused. Aj Crew's own Seatbelt
   takes the spawn on macOS; Windows returns to its no-backend fail-closed policy.
 
 **The crew-home masks do NOT apply on the delegated path, and that is a stated
-residual rather than an oversight.** Kiro Crew's built-in HIDDEN leaves — the
+residual rather than an oversight.** Aj Crew's built-in HIDDEN leaves — the
 credential homes, `.env`, `live_target.json`, `inbound-spool`, `whatsapp`,
-`tasks`, `scratch` — are applied by Kiro Crew's OWN launcher (bind mounts on
+`tasks`, `scratch` — are applied by Aj Crew's OWN launcher (bind mounts on
 Linux, Seatbelt on macOS). A delegated spawn returns before that launcher runs
 (`wrap_argv` → `_delegate_to_kiro_internal_sandbox`), so inside a delegated child
 a shell can open any of them. The residual is the same for every leaf and is not
@@ -200,7 +200,7 @@ described honestly for the tier it runs at:
   layer above the sandbox fences the path. `agent.sandbox="strict"` is the
   opt-in tier that masks those directories (Linux bind mount, macOS Seatbelt
   deny), at the cost of those same tools inside the agent; it does not tighten a
-  spawn Kiro Crew does not wrap (Windows, or a macOS spawn delegated to
+  spawn Aj Crew does not wrap (Windows, or a macOS spawn delegated to
   kiro-cli's internal sandbox).
 - Anything that still reaches tool output is caught by redaction (Layer 4) before
   it reaches a human or an external service — but that boundary is the human
@@ -218,11 +218,11 @@ agent can use the operator's ssh-agent there, including a forwarded one. Under
 records consent in the keystone leaf `ssh_auth_sock_consent.json`.
 
 To grant that consent, write `{"enabled": true}` to
-`<config_dir>/ssh_auth_sock_consent.json` from a terminal outside Kiro Crew;
+`<config_dir>/ssh_auth_sock_consent.json` from a terminal outside Aj Crew;
 the next agent that starts picks it up. It applies to every agent whose
 sandbox hides `~/.ssh`. When a spawn starts without the socket for lack of this
 consent, the gateway log carries one warning per harness that names the file and
-this remedy, and `kirocrew doctor` lists those harnesses under Sandbox.
+this remedy, and `ajcrew doctor` lists those harnesses under Sandbox.
 
 A Kerberos `KEYRING:persistent:` or `KEYRING:user:` ticket cache does not
 cross into the sandbox: the Linux launcher enters a new user namespace, and the
@@ -230,7 +230,7 @@ kernel keeps those keyrings per user namespace, so the child resolves an empty
 keyring of the same name. `env.resolve_krb5_ccname` points children at a
 uid-owned `/tmp/krb5cc_<uid>` (or `/tmp/krb5cc_<user>`) FILE cache when one
 exists; when none does and the cache a child would use is one of those keyring
-kinds, it logs one warning per process and `kirocrew doctor` prints an advisory
+kinds, it logs one warning per process and `ajcrew doctor` prints an advisory
 Credentials row naming the remedy. The check opens only regular files (and
 lists the directories `includedir` names), and no ticket is copied or moved
 across the boundary.
@@ -245,7 +245,7 @@ marker, whose mere presence is a trust signal). Path matching checks the fully
 symlink-resolved target as well as the lexically normalized and raw forms, so a
 workspace symlink into a blocked directory is refused through the link.
 
-`hooks.safe_read_file()` is the guarded read used by Kiro Crew's own non-tool file
+`hooks.safe_read_file()` is the guarded read used by Aj Crew's own non-tool file
 access. It lives in `hook_runtime/safe_reads.py` and `hooks.py` re-exports it. It
 re-checks the resolved target and then opens the canonical path through
 `jsonl_util.open_regular_nofollow` (`O_NOFOLLOW`), which closes the TOCTOU window
@@ -353,7 +353,7 @@ model's title **and** the raw command:
   human `description`, optional agent-facing refusal `note`) covering
   credential exfiltration, destructive infrastructure and data operations,
   publishing to a protected branch, and self-protection (the agent disabling
-  Kiro Crew or minting its own dashboard token). Default-ON, user-configurable from Settings → Security; the governance
+  Aj Crew or minting its own dashboard token). Default-ON, user-configurable from Settings → Security; the governance
   `commands` scope is the enterprise force-pin that cannot be opted out of
   (tightest-wins).
 - **Sensitive-bash detection** (`is_sensitive_bash_command`): refuses commands
@@ -372,7 +372,7 @@ matches flags and command forms, so it cannot close every way a client that
 talks to a remote service, such as `gh`, can send local bytes; each flag it
 added would also refuse ordinary use of that client. What keeps a credential
 store out of a shell's reach is the OS sandbox (Layer 0) at a tier that masks
-it, on a spawn Kiro Crew wraps: Kiro Crew's own secret stores are hidden in
+it, on a spawn Aj Crew wraps: Aj Crew's own secret stores are hidden in
 every tier, while `~/.aws`, `~/.kube` and the `gh` config are masked under
 `strict` but not by the default `standard` tier (the per-tier lists
 in `sandbox_tiers.py`; `security/paths.py::sandbox_credential_targets` is the
@@ -383,7 +383,7 @@ that sends local bytes past this check is a gap in an extra layer, and closing
 it for credentials is the sandbox tier's job, not a longer flag list.
 
 `SUSPICIOUS_BASH_PATTERNS` / `audit_bash_command()` are a **separate, advisory**
-surface: they back the `kirocrew security audit` history scan and the posture
+surface: they back the `ajcrew security audit` history scan and the posture
 count, and are not enforced at the gate. The gate enforces the narrower checks
 above. Conflating the two is the historical error here, so keep the distinction
 explicit.
@@ -400,7 +400,7 @@ granted).
 
 ## Layer 3: Input validation (`validation.py`)
 
-Every Kiro Crew-owned MCP tool call is checked against a declarative
+Every Aj Crew-owned MCP tool call is checked against a declarative
 `FieldSpec` + `ToolSchema` before the handler sees it: NFC unicode normalization with hidden-character
 stripping (control, format and surrogate code points, preserving `\n`/`\r`/`\t`
 plus the four shaping marks in `_ALLOWED_FORMAT` when they sit next to non-ASCII
@@ -450,7 +450,7 @@ credential and exfiltration-URL chain before reaching the dashboard or MCP calle
   base64 blobs and heavy URL-encoding are heuristics. A flagged URL is replaced
   with a redaction marker. Some destinations get narrower treatment: a valid S3
   presigned URL is exempt; the ACP OAuth banner path spares standard OAuth
-  parameters at approved authorization endpoints; Kiro Crew's own Slack app-create
+  parameters at approved authorization endpoints; Aj Crew's own Slack app-create
   link keeps only its alias under the heuristics; and a companion's exact hosts and
   a reader's allowed hosts (*Allow for this host*, kept per workspace in a
   read-only leaf) skip only the length and base64 heuristics. The credential
@@ -534,7 +534,7 @@ names. A refusal whose audit call failed is the rule working.
 Governance is a second, orthogonal axis to the layers above:
 `effective = POLICY ∩ PROFILE`, tightest-wins. Level 1 POLICY is loaded at boot
 from the trust-root path and is never merged from `config.json`; Level 2 PROFILE
-is a per-surface, narrow-only ceiling. Both are enforced at Kiro Crew's own
+is a per-surface, narrow-only ceiling. Both are enforced at Aj Crew's own
 PreToolUse gate, which is what lets a policy deny a tool or MCP call **even when
 the `kiro-cli` agent config granted it**.
 
@@ -595,7 +595,7 @@ Slack messages are processed **inline** and reach the agent directly, gated by
 `is_allowed_user` and the workspace origin check. There is no challenge-and-
 redirect interception; `send_channel_challenge()` does not exist and must not be
 reintroduced on an upstream sync. The generic signed-token helpers remain and
-back the explicit `/kirocrew dashboard` link command.
+back the explicit `/ajcrew dashboard` link command.
 
 Enterprise Grid validation is a two-layer, **default-open** control: with no
 `slack.allowed_enterprise_ids` configured, every reachable workspace is allowed.
@@ -603,7 +603,7 @@ Enterprise Grid validation is a two-layer, **default-open** control: with no
 Grid) at startup, and each inbound event's `team` is compared against the cached
 allowlist. A governance `channels.posture` policy is the agent-unweakenable
 ceiling on top of the operator-editable config allowlist. A corrupt `config.json`
-does not reopen the control: because `KiroCrewConfig.load()` degrades a torn
+does not reopen the control: because `AjCrewConfig.load()` degrades a torn
 config to defaults rather than raising, the module positively detects that case (a
 config file that exists but does not parse) and fails CLOSED, keeping the allowlist
 enforced and admitting NO origin -- not even the just-validated workspace,
@@ -615,7 +615,7 @@ allowlist would have decided -- rather than reverting to default-open.
 Dashboard tool approvals offer four decisions, in widening scope: `trust_command`
 (this exact command, session-scoped), `trust_base` (the base command glob, e.g.
 `ls *`, plus the bare binary, session-scoped), `trust_reads` (read-only bash for
-the slot, plus Kiro Crew's own read-only MCP tools -- `@kirocrew-core/memory_recall`
+the slot, plus Aj Crew's own read-only MCP tools -- `@ajcrew-core/memory_recall`
 and the rest of the closed `hooks._FIRST_PARTY_READ_ONLY_MCP_TOOLS` set, matched on
 the trusted `(server, tool)` identity the transport stamped, never on the title; every
 other MCP call still prompts), and `trust` (all tools for the slot). `yolo` is the
@@ -745,7 +745,7 @@ carries exemptions and still misreads some benign values. The recorded direction
 replaces it with case-insensitive labels and key-ID pairing; see
 [the redaction tier decision](../decisions/2026-10-20-redaction-classifies-by-what-a-value-can-do.md).
 
-**Write protection covers Kiro Crew's own trust root, not the user's shell
+**Write protection covers Aj Crew's own trust root, not the user's shell
 startup files.** Credential directories and the keystone are read+write blocked,
 and `config.json` plus the migration marker are write-blocked, but ordinary
 persistence targets such as `~/.bashrc` or `~/.zshrc` are not: they are not
@@ -772,7 +772,7 @@ The mechanism that would close it is *rejected by design*, not missing by
 oversight: see
 [`security.md` § Kiro prerequisite setup boundary](../system-specs/modules/security.md),
 which records that trust is "the CLI runs, and it has a valid login" regardless
-of install source, owner, or fixed path, because Kiro Crew is not the authority
+of install source, owner, or fixed path, because Aj Crew is not the authority
 on where Kiro CLI lives and its own self-updater legitimately rewrites those
 bytes as the user — an owner / path / Developer-ID gate would strand real
 installs (toolbox, Homebrew, winget, a self-updated `/Applications` bundle) with
@@ -784,11 +784,11 @@ write access as the operator, which is outside this product's threat model (an
 attacker holding the operator's UID already owns the account) and is not
 defended against anywhere else — `~/.bashrc`, above, is the same class. Residual
 blast radius is bounded on the confined spawn paths (Linux namespace, macOS
-seatbelt) which run even a poisoned launcher inside Kiro Crew's own sandbox;
+seatbelt) which run even a poisoned launcher inside Aj Crew's own sandbox;
 only macOS internal-sandbox delegation exec's it directly. A multi-tenant or
 enterprise posture would need signing infrastructure, key management and an
 install-layout decision, and any such gate must default **off** — the
-`KIROCREW_PROVIDER_BIN_STRICT` precedent
+`AJCREW_PROVIDER_BIN_STRICT` precedent
 (`github_runner.py:validate_provider_executable`) records that requiring a
 root-owned copy made every stock package-manager install fail.
 

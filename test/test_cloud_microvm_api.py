@@ -20,7 +20,7 @@ import pathlib
 
 import pytest
 
-from kiro_crew.cloud.microvm import api
+from aj_crew.cloud.microvm import api
 
 
 @pytest.fixture()
@@ -282,14 +282,14 @@ class TestMicroVmReaders:
         assert vm.endpoint == ""
 
     def test_a_non_object_response_is_refused(self):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         with pytest.raises(AWSError, match="expected a MicroVM object"):
             api.MicroVm.from_response(["not", "a", "dict"])
 
     def test_a_response_missing_a_required_member_is_refused(self):
         """A ``GetMicrovm`` answer without an endpoint is one this lane rejects."""
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         with pytest.raises(AWSError, match="missing"):
             api.MicroVm.from_response({"microvmId": "mvm-9", "state": "RUNNING"})
@@ -402,13 +402,13 @@ class TestRunMicrovmValidation:
             maximum_duration_in_seconds=900,
             client_token="tok",
             execution_role_arn="arn:aws:iam::1:role/exec",
-            log_group="/kirocrew/vm",
+            log_group="/ajcrew/vm",
             region="us-east-1",
         )
         argv = captured[0]
         assert _value_after(argv, "--execution-role-arn") == "arn:aws:iam::1:role/exec"
         logging_cfg = json.loads(_value_after(argv, "--logging"))
-        assert logging_cfg["cloudWatch"]["logGroup"] == "/kirocrew/vm"
+        assert logging_cfg["cloudWatch"]["logGroup"] == "/ajcrew/vm"
 
     def test_a_launch_returns_the_state_the_service_answered_with(self, captured):
         """``PENDING`` on the first answer is the contract, not a slow path."""
@@ -452,14 +452,14 @@ class TestListMicrovmsPagination:
         assert seen_tokens == ["", "t2"]
 
     def test_a_repeated_page_token_is_refused(self, monkeypatch):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         monkeypatch.setattr(api, "checked_json", lambda *a, **k: {"items": [], "nextToken": "same"})
         with pytest.raises(AWSError, match="repeated a page token"):
             api.list_microvms(region="us-east-1")
 
     def test_a_non_object_list_response_is_refused(self, monkeypatch):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         monkeypatch.setattr(api, "checked_json", lambda *a, **k: ["nope"])
         with pytest.raises(AWSError, match="expected an object"):
@@ -477,7 +477,7 @@ class TestLifecycleCalls:
 
 class TestAuthTokenResponse:
     def test_a_response_without_an_auth_token_map_is_refused(self, monkeypatch):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         monkeypatch.setattr(api, "checked_json", lambda *a, **k: {"authToken": "not-a-map"})
         with pytest.raises(AWSError, match="no authToken map"):
@@ -499,7 +499,7 @@ class TestMicrovmStatus:
         assert api.microvm_status("mvm-1", region="us-east-1") == "PENDING"
 
     def test_a_gone_vm_reports_none(self, monkeypatch):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         def fake(args, profile="", region="", *, action="", timeout=0, visible_dirs=()):
             raise AWSError("ResourceNotFoundException: no such microvm", action=action)
@@ -508,7 +508,7 @@ class TestMicrovmStatus:
         assert api.microvm_status("mvm-gone", region="us-east-1") is None
 
     def test_any_other_error_propagates(self, monkeypatch):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         def fake(args, profile="", region="", *, action="", timeout=0, visible_dirs=()):
             raise AWSError("AccessDeniedException", action=action)
@@ -518,7 +518,7 @@ class TestMicrovmStatus:
             api.microvm_status("mvm-1", region="us-east-1")
 
     def test_a_not_found_is_matched_on_the_error_name(self):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         assert api.is_not_found(AWSError("ResourceNotFoundException")) is True
         assert api.is_not_found(AWSError("ValidationException")) is False
@@ -552,13 +552,13 @@ class TestMicroVmImageReader:
         assert image.launchable_version == ""
 
     def test_a_non_object_image_response_is_refused(self):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         with pytest.raises(AWSError, match="expected a MicroVM image object"):
             api.MicroVmImage.from_response("nope")
 
     def test_an_image_response_missing_a_required_member_is_refused(self):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         with pytest.raises(AWSError, match="missing"):
             api.MicroVmImage.from_response({"imageArn": "arn:img"})
@@ -627,14 +627,14 @@ class TestCreateMicrovmImage:
 
         api.create_microvm_image(
             **self._kwargs(
-                environment_variables={"KIROCREW_SKIP_MODEL_DOWNLOAD": "1"},
+                environment_variables={"AJCREW_SKIP_MODEL_DOWNLOAD": "1"},
                 tags={"crew": "kc-abc"},
                 client_token="ct",
             )
         )
         argv = image_calls[0]
         assert json.loads(_value_after(argv, "--environment-variables")) == {
-            "KIROCREW_SKIP_MODEL_DOWNLOAD": "1"
+            "AJCREW_SKIP_MODEL_DOWNLOAD": "1"
         }
         assert json.loads(_value_after(argv, "--tags")) == {"crew": "kc-abc"}
         assert _value_after(argv, "--client-token") == "ct"
@@ -650,7 +650,7 @@ class TestGetMicrovmImage:
         assert image.image_arn == "arn:img"
 
     def test_a_missing_image_reports_none(self, monkeypatch):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         def fake(args, profile="", region="", *, action="", timeout=0, visible_dirs=()):
             raise AWSError("ResourceNotFoundException", action=action)
@@ -659,7 +659,7 @@ class TestGetMicrovmImage:
         assert api.get_microvm_image("arn:gone", region="us-east-1") is None
 
     def test_any_other_error_propagates(self, monkeypatch):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         def fake(args, profile="", region="", *, action="", timeout=0, visible_dirs=()):
             raise AWSError("AccessDeniedException", action=action)
@@ -691,14 +691,14 @@ class TestListMicrovmImages:
         assert _value_after(calls[0], "--name-filter") == "kc-image"
 
     def test_a_non_object_response_is_refused(self, monkeypatch):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         monkeypatch.setattr(api, "checked_json", lambda *a, **k: ["nope"])
         with pytest.raises(AWSError, match="expected an object"):
             api.list_microvm_images(region="us-east-1")
 
     def test_a_repeated_page_token_is_refused(self, monkeypatch):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         monkeypatch.setattr(api, "checked_json", lambda *a, **k: {"items": [], "nextToken": "same"})
         with pytest.raises(AWSError, match="repeated a page token"):
@@ -713,7 +713,7 @@ class TestImageVersionStatus:
         assert api.image_version_status("arn:img", "3", region="us-east-1") == "ACTIVE"
 
     def test_a_missing_version_reports_none(self, monkeypatch):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         def fake(args, profile="", region="", *, action="", timeout=0, visible_dirs=()):
             raise AWSError("ResourceNotFoundException", action=action)
@@ -808,7 +808,7 @@ class TestPutSecret:
             api.put_secret("kc/abc", "", region="us-east-1")
 
     def test_an_existing_secret_falls_back_to_put_secret_value(self, monkeypatch):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         actions: list[str] = []
 
@@ -826,7 +826,7 @@ class TestPutSecret:
     def test_a_create_failure_that_is_not_already_exists_propagates(self, monkeypatch):
         import os
 
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         seen: dict[str, str] = {}
 
@@ -840,7 +840,7 @@ class TestPutSecret:
         assert not os.path.exists(seen["path"]), "the value file is removed even on failure"
 
     def test_a_write_that_returns_no_arn_is_refused(self, monkeypatch):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         monkeypatch.setattr(api, "checked_json", lambda *a, **k: {})
         with pytest.raises(AWSError, match="no ARN"):
@@ -901,13 +901,13 @@ class TestCredentialsAreStagedUnderTheMaskedRoot:
         return seen
 
     def _root(self):
-        from kiro_crew.apps.builtins.aws_control.backend.storage import staging_root
+        from aj_crew.apps.builtins.aws_control.backend.storage import staging_root
 
         return staging_root().resolve()
 
     def test_the_secret_is_staged_under_the_masked_root(self, monkeypatch):
         seen = self._capture(monkeypatch, {"ARN": "arn:secret"})
-        api.put_secret("kirocrew/crew/c/CONTROL_SECRET", "v4lue", region="us-east-1")
+        api.put_secret("ajcrew/crew/c/CONTROL_SECRET", "v4lue", region="us-east-1")
         (call,) = seen
         staged = pathlib.Path(call["path"]).resolve()
         assert self._root() in staged.parents, staged

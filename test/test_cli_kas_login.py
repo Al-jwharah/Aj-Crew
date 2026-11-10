@@ -1,4 +1,4 @@
-"""``kirocrew kas login | whoami | logout | route``: the vault sign-in from a shell.
+"""``ajcrew kas login | whoami | logout | route``: the vault sign-in from a shell.
 
 These verbs are what the cloud sign-in runs on a bundle-route box over SSM, so their
 OUTPUT is a contract: the device prompt must parse through ``parse_login_output``
@@ -15,17 +15,17 @@ from datetime import datetime, timezone
 
 import pytest
 
-from kiro_crew import cli_kas, cli_kas_login
-from kiro_crew.auth.store import KasToken, TokenStore
-from kiro_crew.cloud import login_vault
-from kiro_crew.cloud.login import parse_login_output
-from kiro_crew.cloud.login_target import parse_whoami_output
+from aj_crew import cli_kas, cli_kas_login
+from aj_crew.auth.store import KasToken, TokenStore
+from aj_crew.cloud import login_vault
+from aj_crew.cloud.login import parse_login_output
+from aj_crew.cloud.login_target import parse_whoami_output
 
 _FUTURE = datetime(2099, 1, 1, tzinfo=timezone.utc)
 
 
 def _parse(*argv: str) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(prog="kirocrew kas")
+    parser = argparse.ArgumentParser(prog="ajcrew kas")
     cli_kas.add_kas_parser(parser)
     return parser.parse_args(list(argv))
 
@@ -44,7 +44,7 @@ def _token(identity="builder_id", provider="BuilderId") -> KasToken:
 @pytest.fixture
 def home_store(tmp_path, monkeypatch) -> TokenStore:
     """Point the verbs' ``default_token_store`` at a vault under tmp_path."""
-    from kiro_crew.auth import bridge
+    from aj_crew.auth import bridge
 
     store = TokenStore(tmp_path)
     monkeypatch.setattr(bridge, "default_token_store", lambda: store)
@@ -77,7 +77,7 @@ class TestRoute:
         assert cli_kas_login.ROUTE_KAS_BUNDLE == login_vault.ROUTE_KAS_BUNDLE
         assert cli_kas_login.ROUTE_KAS_BUNDLE != cli_kas_login.ROUTE_KIRO_CLI
         # The "unknown" exit must stay apart from argparse's 2 (verb absent) and the
-        # shell's 127 (kirocrew absent), which the remote scripts read as "no answer".
+        # shell's 127 (ajcrew absent), which the remote scripts read as "no answer".
         assert cli_kas_login.ROUTE_UNKNOWN_EXIT == login_vault.ROUTE_UNKNOWN_EXIT
         assert cli_kas_login.ROUTE_UNKNOWN_EXIT not in (0, 2, 127)
         # A no-action `kas` call is argparse's 2 territory, never the unknown exit.
@@ -88,7 +88,7 @@ class TestRoute:
         [("kas", True, "kas-bundle"), ("kas", False, "kiro-cli"), ("kiro", True, "kiro-cli")],
     )
     def test_route_prints_the_owner(self, monkeypatch, capsys, backend, bundle, expected):
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         class _Agent:
             acp_backend = backend
@@ -97,23 +97,23 @@ class TestRoute:
         class _Cfg:
             agent = _Agent()
 
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: _Cfg()))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: _Cfg()))
         assert cli_kas.kas_cmd(_parse("route")) == 0
         assert capsys.readouterr().out.strip() == expected
 
     def test_an_unreadable_config_is_a_readable_error_not_kiro_cli(self, monkeypatch, capsys):
         """Printed from this verb, a silent `kiro-cli` would send a bundle-route box
         down a branch it cannot run; the owner is UNKNOWN and the verb says why."""
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         def _boom(cls):
             raise ValueError("Expecting value: line 1 column 1")
 
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_boom))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(_boom))
         assert cli_kas.kas_cmd(_parse("route")) == cli_kas_login.ROUTE_UNKNOWN_EXIT == 1
         out = capsys.readouterr()
         assert out.out == ""
-        assert "could not read the Kiro Crew config" in out.err
+        assert "could not read the Aj Crew config" in out.err
         assert "Expecting value" in out.err
         assert "fix the config" in out.err
 
@@ -122,7 +122,7 @@ class TestRoute:
         """The loader does not raise on a malformed config.json: it returns DEFAULTS
         with a flag set. Defaults say "kiro-cli" about a host that may be on the
         bundle route, and a sign-out acting on that would empty the wrong store."""
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         class _Agent:
             acp_backend = "kas"
@@ -135,7 +135,7 @@ class TestRoute:
 
         cfg = _Cfg()
         setattr(cfg, flag, True)
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
         assert cli_kas.kas_cmd(_parse("route")) == 1
         out = capsys.readouterr()
         assert out.out == ""
@@ -193,8 +193,8 @@ class _FakeService:
         self.store = store
 
     async def begin_device(self, provider, *, start_url="", region="", replaces=""):
-        from kiro_crew.auth.login.builder_id import StartUrlRejectedError
-        from kiro_crew.auth.service import InvalidStartUrlError
+        from aj_crew.auth.login.builder_id import StartUrlRejectedError
+        from aj_crew.auth.service import InvalidStartUrlError
 
         _FakeService.begun.append(
             {"provider": provider, "start_url": start_url, "region": region, "replaces": replaces}
@@ -220,7 +220,7 @@ class _FakeService:
 
 @pytest.fixture
 def fake_service(monkeypatch):
-    from kiro_crew.auth import service
+    from aj_crew.auth import service
 
     _FakeService.polls = []
     _FakeService.begun = []
@@ -243,7 +243,7 @@ class TestLogin:
         assert prompt.url == "https://device.sso.us-east-1.amazonaws.com/?user_code=WXYZ-1234"
         assert prompt.code == "WXYZ-1234"
         assert not prompt.already_logged_in
-        assert "Signed in to Kiro Crew" in out
+        assert "Signed in to Aj Crew" in out
         assert fake_service.closed == 1
         assert fake_service.begun == [
             {"provider": "builder_id", "start_url": "", "region": "", "replaces": ""}
@@ -331,7 +331,7 @@ class TestLogin:
     def test_a_sign_out_during_the_login_is_a_line_not_a_traceback(
         self, home_store, fake_service, capsys, monkeypatch
     ):
-        from kiro_crew.auth.service import UnknownLoginError
+        from aj_crew.auth.service import UnknownLoginError
 
         async def _gone(self, login_id):
             raise UnknownLoginError(login_id)

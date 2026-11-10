@@ -26,18 +26,18 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.config.sections import (
+from aj_crew.config.sections import (
     DECISION_PROVIDER_ENDPOINT_DEFAULT,
     DecisionProviderConfig,
     DecisionsConfig,
     NudgeWakeConfig,
 )
-from kiro_crew.decisions import gate as gate_mod
-from kiro_crew.decisions import local_models
-from kiro_crew.decisions import provider as provider_mod
-from kiro_crew.decisions.types import Answer, Choice, Noul
+from aj_crew.decisions import gate as gate_mod
+from aj_crew.decisions import local_models
+from aj_crew.decisions import provider as provider_mod
+from aj_crew.decisions.types import Answer, Choice, Noul
 
-REPO_SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+REPO_SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 QUESTIONS = [Choice(id="verdict", prompt="Which skill?", options=["NONE", "DUP"])]
 JUDGE_QUESTIONS = [Noul(id="quiet", prompt="Hold this wake?")]
@@ -55,7 +55,7 @@ def _config(*, timeout_ms: int = 1000, judge_provider: str | None = None):
 def keystone(tmp_path, monkeypatch):
     """A real keystone file under *tmp_path*; returns a writer. Absent by default."""
     path = tmp_path / "decisions_consent.json"
-    monkeypatch.setattr("kiro_crew.config.loader.decisions_consent_path", lambda: path)
+    monkeypatch.setattr("aj_crew.config.loader.decisions_consent_path", lambda: path)
 
     def _write(state: dict | None) -> None:
         if state is None:
@@ -237,8 +237,8 @@ class TestRegistrySelection:
 
     def test_the_gate_builds_through_the_registry(self, monkeypatch):
         """``gate._oracle`` constructs what the selected spec's implementation is."""
-        import kiro_crew.decisions.impl_llm as impl_llm
-        import kiro_crew.decisions.impl_systemone as impl_systemone
+        import aj_crew.decisions.impl_llm as impl_llm
+        import aj_crew.decisions.impl_systemone as impl_systemone
 
         endpoint_double, llm_models = object(), []
         monkeypatch.setattr(impl_systemone, "SystemOneProvider", lambda provider: endpoint_double)
@@ -291,8 +291,8 @@ class TestResolutionMatchesLegacy:
     def test_provider_resolution_matches_legacy(
         self, keystone, no_rows, no_network, monkeypatch, point, consented, judge_provider
     ):
-        import kiro_crew.decisions.impl_llm as impl_llm
-        import kiro_crew.decisions.impl_systemone as impl_systemone
+        import aj_crew.decisions.impl_llm as impl_llm
+        import aj_crew.decisions.impl_systemone as impl_systemone
 
         is_judge = point == gate_mod.JUDGE_POINT
         built: list[str] = []
@@ -354,7 +354,7 @@ class TestPolicyDenial:
     @pytest.fixture
     def denied(self, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.decisions.capability.is_decisions_denied",
+            "aj_crew.decisions.capability.is_decisions_denied",
             lambda *_a, **_k: True,
         )
 
@@ -375,7 +375,7 @@ class TestPolicyDenial:
         endpoint = local_models.endpoint_for(preset.default_port)
         keystone({"enabled": True, "endpoint": endpoint})
         monkeypatch.setattr(
-            "kiro_crew.decisions.capability.is_local_preset", lambda *_a, **_k: True
+            "aj_crew.decisions.capability.is_local_preset", lambda *_a, **_k: True
         )
         cfg = SimpleNamespace(
             decisions=DecisionsConfig(
@@ -411,8 +411,8 @@ class TestUnconsentedEndpointFallsToTheSessionModel:
         self, keystone, selections, no_rows, no_network, monkeypatch
     ):
         """No endpoint consent: ``auto`` lands on the session-LLM provider, never the endpoint."""
-        import kiro_crew.decisions.impl_llm as impl_llm
-        import kiro_crew.decisions.impl_systemone as impl_systemone
+        import aj_crew.decisions.impl_llm as impl_llm
+        import aj_crew.decisions.impl_systemone as impl_systemone
 
         keystone(None)
         monkeypatch.setattr(gate_mod, "_capability_denied", lambda *_a, **_k: False)
@@ -438,7 +438,7 @@ class TestProviderFailureFallsBack:
         keystone({"enabled": True, "endpoint": DECISION_PROVIDER_ENDPOINT_DEFAULT})
 
     def _install(self, monkeypatch, oracle):
-        import kiro_crew.decisions.impl_systemone as impl_systemone
+        import aj_crew.decisions.impl_systemone as impl_systemone
 
         monkeypatch.setattr(impl_systemone, "SystemOneProvider", lambda provider: oracle)
 
@@ -472,7 +472,7 @@ class TestProviderFailureFallsBack:
         def _broken(provider):
             raise ImportError("no transport")
 
-        import kiro_crew.decisions.impl_systemone as impl_systemone
+        import aj_crew.decisions.impl_systemone as impl_systemone
 
         monkeypatch.setattr(impl_systemone, "SystemOneProvider", _broken)
         assert (
@@ -492,16 +492,16 @@ class TestPersistedSpellings:
         assert gate_mod.judge_lane(cfg, endpoint_consented=False) == gate_mod.LANE_ENDPOINT
 
     def test_auto_jev_slot_model_still_resolves(self):
-        from kiro_crew.dashboard.chat_handlers import JEV_ROUTE_MODEL
-        from kiro_crew.dashboard.session_control_parts.model_switch import _JEV_ROUTE_SPELLINGS
+        from aj_crew.dashboard.chat_handlers import JEV_ROUTE_MODEL
+        from aj_crew.dashboard.session_control_parts.model_switch import _JEV_ROUTE_SPELLINGS
 
         assert JEV_ROUTE_MODEL == "auto:jev"
         assert "auto:jev" in _JEV_ROUTE_SPELLINGS
 
     def test_former_python_names_are_the_same_objects(self):
-        import kiro_crew.decisions.impl_jev as impl_jev
-        import kiro_crew.decisions.impl_llm as impl_llm
-        import kiro_crew.decisions.impl_systemone as impl_systemone
+        import aj_crew.decisions.impl_jev as impl_jev
+        import aj_crew.decisions.impl_llm as impl_llm
+        import aj_crew.decisions.impl_systemone as impl_systemone
 
         assert impl_jev is impl_systemone
         assert impl_systemone.JevOracle is impl_systemone.SystemOneProvider
@@ -511,7 +511,7 @@ class TestPersistedSpellings:
         assert local_models.PRESET_JEV == local_models.PRESET_HOSTED == "jev"
 
     def test_hosted_profile_keeps_the_shipped_values(self):
-        import kiro_crew.decisions.impl_systemone as impl_systemone
+        import aj_crew.decisions.impl_systemone as impl_systemone
 
         profile = impl_systemone.HOSTED_TYPESAFE
         assert profile.endpoint == DECISION_PROVIDER_ENDPOINT_DEFAULT
@@ -519,7 +519,7 @@ class TestPersistedSpellings:
         assert impl_systemone._REQUEST_ID_HEADER == profile.request_id_header
 
     def test_feedback_side_jev_still_reads(self):
-        from kiro_crew.decisions.log import FEEDBACK_SIDES
+        from aj_crew.decisions.log import FEEDBACK_SIDES
 
         assert "jev" in FEEDBACK_SIDES
 
@@ -549,13 +549,13 @@ def _imports_decisions(path: Path) -> bool:
     nodes = tree.body if hooks else list(ast.walk(tree))
     for node in nodes:
         if isinstance(node, ast.Import):
-            if any(a.name.startswith("kiro_crew.decisions") for a in node.names):
+            if any(a.name.startswith("aj_crew.decisions") for a in node.names):
                 return True
         elif isinstance(node, ast.ImportFrom):
             module = node.module or ""
-            if module.startswith("kiro_crew.decisions"):
+            if module.startswith("aj_crew.decisions"):
                 return True
-            if module == "kiro_crew" and any(a.name == "decisions" for a in node.names):
+            if module == "aj_crew" and any(a.name == "decisions" for a in node.names):
                 return True
     return False
 
@@ -574,13 +574,13 @@ def test_the_browser_hooks_reach_the_seam_only_through_the_gate():
         node.module
         for node in ast.walk(tree)
         if isinstance(node, ast.ImportFrom)
-        and (node.module or "").startswith("kiro_crew.decisions")
+        and (node.module or "").startswith("aj_crew.decisions")
     }
-    assert modules == {"kiro_crew.decisions.types"} | (modules & {"kiro_crew.decisions"})
+    assert modules == {"aj_crew.decisions.types"} | (modules & {"aj_crew.decisions"})
     names = {
         alias.name
         for node in ast.walk(tree)
-        if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew.decisions"
+        if isinstance(node, ast.ImportFrom) and node.module == "aj_crew.decisions"
         for alias in node.names
     }
     assert names == {"gate"}

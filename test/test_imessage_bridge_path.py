@@ -12,8 +12,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.config.loader import IMessageConfig
-from kiro_crew.imessage import bridge_path as bp
+from aj_crew.config.loader import IMessageConfig
+from aj_crew.imessage import bridge_path as bp
 
 
 class TestResolution:

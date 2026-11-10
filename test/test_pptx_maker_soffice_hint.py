@@ -1,7 +1,7 @@
 """PPTX Maker — ``/deps`` forwards the core's LibreOffice install hint.
 
 The hint itself (which command each host is told, and which hosts get none) is the
-core's ``kiro_crew.soffice_discovery.soffice_install_hint``, pinned by
+core's ``aj_crew.soffice_discovery.soffice_install_hint``, pinned by
 ``test/test_soffice_discovery.py``. What is pinned here is that this app's ``/deps``
 carries that hint through the real ``_deps_status`` and drops the key when there is no
 command to give.
@@ -13,7 +13,7 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import os_release, soffice_discovery
+from aj_crew import os_release, soffice_discovery
 
 _YUM = "sudo yum install libreoffice"
 
@@ -45,7 +45,7 @@ def linux_host(monkeypatch):
 
 def test_deps_carry_the_probed_manager(linux_host, monkeypatch) -> None:
     """``/deps`` forwards the hint through the real ``_deps_status``, not a stand-in."""
-    from kiro_crew.apps.builtins.pptx_maker.backend import routes
+    from aj_crew.apps.builtins.pptx_maker.backend import routes
 
     linux_host(_CENTOS7, {"yum"})
     monkeypatch.setattr(routes.engine, "optional_dep_path", lambda name: None)
@@ -57,7 +57,7 @@ def test_deps_carry_the_probed_manager(linux_host, monkeypatch) -> None:
 )
 def test_deps_omit_a_missing_hint(linux_host, monkeypatch, release) -> None:
     """``/deps`` drops the hint key rather than sending an empty command."""
-    from kiro_crew.apps.builtins.pptx_maker.backend import routes
+    from aj_crew.apps.builtins.pptx_maker.backend import routes
 
     linux_host(release, {"dnf", "yum"})
     monkeypatch.setattr(routes.engine, "optional_dep_path", lambda name: None)

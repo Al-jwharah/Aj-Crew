@@ -34,7 +34,7 @@ const OUT = process.argv[2] || '../temp-screenshots/nav-shortcut-hint'
 const AWAY = { x: 1000, y: 380 }
 
 const slots = [
-  { key: 's1', title: 'Nav shortcut hint', messages: 4, running: false, agent: 'kirocrew', mode: '', created: '2026-08-05T01:00:00Z', last_ts: '2026-08-05T04:00:00Z', folder_id: '' },
+  { key: 's1', title: 'Nav shortcut hint', messages: 4, running: false, agent: 'ajcrew', mode: '', created: '2026-08-05T01:00:00Z', last_ts: '2026-08-05T04:00:00Z', folder_id: '' },
 ]
 
 mkdirSync(OUT, { recursive: true })
@@ -72,7 +72,7 @@ async function openRail(browser, base, collapsed) {
   await stubDashboardApi(page, { slots, theme: 'dark' })
   logPageProblems(page)
   await page.addInitScript(c => {
-    localStorage.setItem('mc-color-theme', 'kiro-dark')
+    localStorage.setItem('mc-color-theme', 'aj-dark')
     localStorage.setItem('mc-privacy-notice-v1', '1')
     localStorage.setItem('mc-nav', c ? '1' : '0')
     // A disabled toggle would suppress every hint, making an empty rail look
@@ -82,7 +82,7 @@ async function openRail(browser, base, collapsed) {
   await page.goto(base + '/chat', { waitUntil: 'domcontentloaded' })
   await page.waitForFunction(
     t => document.documentElement.getAttribute('data-theme') === t,
-    'kiro-dark', { timeout: 15000 })
+    'aj-dark', { timeout: 15000 })
   const row = page.locator('.nav-item[data-onboarding-nav="chat"]')
   await row.waitFor({ state: 'visible', timeout: 15000 })
   await page.mouse.move(AWAY.x, AWAY.y)

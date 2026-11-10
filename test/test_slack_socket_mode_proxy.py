@@ -18,9 +18,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 import websockets
 
-import kiro_crew.slack.socket_mode_proxy as smp
-from kiro_crew.slack.events import WSSocketModeClient
-from kiro_crew.slack.socket_mode_proxy import SocksProxyUnavailable, select_socket_mode_proxy
+import aj_crew.slack.socket_mode_proxy as smp
+from aj_crew.slack.events import WSSocketModeClient
+from aj_crew.slack.socket_mode_proxy import SocksProxyUnavailable, select_socket_mode_proxy
 
 WSS = "wss://wss-primary.slack.com/link/?ticket=t&app_id=a"
 

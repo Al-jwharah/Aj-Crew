@@ -1,4 +1,4 @@
-"""Managed-MCP registration for ``kirocrew-computer`` — and the parity tax.
+"""Managed-MCP registration for ``ajcrew-computer`` — and the parity tax.
 
 Adding a managed MCP server touches EIGHT places, and every one of them is a
 place a future author can forget. The second half of this file exists to pay that
@@ -16,13 +16,13 @@ Two properties are security-critical rather than merely tidy:
   request and therefore **never reaches ``hooks.on_tool_call``**. Auto-approving
   ``computer_click`` would silently delete the entire PreToolUse plane for this
   feature.
-* **A fresh install adds ``@kirocrew-computer`` to ``tools`` but NOT to
+* **A fresh install adds ``@ajcrew-computer`` to ``tools`` but NOT to
   ``allowedTools``.** ``agent.py`` documents the rule ("new MCPs may have
   destructive tools; user opts in"), and ``config/defaults.json`` blanket-allows
-  ``@kirocrew-core`` — which is exactly why computer use is its own server rather
+  ``@ajcrew-core`` — which is exactly why computer use is its own server rather
   than riding inside that one.
 
-Every test patches ``kiro_crew.agent``'s module globals with the
+Every test patches ``aj_crew.agent``'s module globals with the
 ``patch.multiple`` + ``ExitStack`` idiom from ``agent_helpers.py``, so the real
 ``~/.kiro`` is never read or written.
 """
@@ -37,10 +37,10 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import agent, agent_state, mcp_cleanup, mcp_discovery, onboarding_import
-from kiro_crew.agent import install_agent
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
-from kiro_crew.platform_compat import IS_POSIX
+from aj_crew import agent, agent_state, mcp_cleanup, mcp_discovery, onboarding_import
+from aj_crew.agent import install_agent
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.platform_compat import IS_POSIX
 
 
 @pytest.fixture(autouse=True)
@@ -49,18 +49,18 @@ def _pinned_kiro_cli_version(monkeypatch):
 
     Every ``install_agent`` here ends in ``_write_derived_permissions``, which
     reads ``installed_kiro_cli_version`` function-locally from
-    ``kiro_crew.kiro_cli``: one real ``kiro-cli --version`` spawn per binary
+    ``aj_crew.kiro_cli``: one real ``kiro-cli --version`` spawn per binary
     identity, process-cached, so whichever test in the worker installs first pays
     it against the HOST's install with the checkout as the child's cwd. Pinned to
     the floor release, as ``test_agent.py`` and the generated-writer suites pin it.
     """
     monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version",
+        "aj_crew.kiro_cli.installed_kiro_cli_version",
         lambda: SPEC_PERMISSIONS_MIN_VERSION,
     )
 
 
-CU_SERVER = "kirocrew-computer"
+CU_SERVER = "ajcrew-computer"
 CU_REF = f"@{CU_SERVER}"
 CU_SUBCOMMAND = "mcp-computer"
 
@@ -68,19 +68,19 @@ CU_SUBCOMMAND = "mcp-computer"
 # each in the real ``invocation_fn`` shape so ``build_agent_config`` and
 # ``_refresh_dynamic_fields`` take their production code paths.
 _MANAGED = {
-    "kirocrew-cron": {"invocation_fn": lambda: ("/usr/bin/kirocrew", ["mcp-cron"])},
-    "kirocrew-core": {"invocation_fn": lambda: ("/usr/bin/kirocrew", ["mcp-core"])},
-    CU_SERVER: {"invocation_fn": lambda: ("/usr/bin/kirocrew", [CU_SUBCOMMAND])},
+    "ajcrew-cron": {"invocation_fn": lambda: ("/usr/bin/ajcrew", ["mcp-cron"])},
+    "ajcrew-core": {"invocation_fn": lambda: ("/usr/bin/ajcrew", ["mcp-core"])},
+    CU_SERVER: {"invocation_fn": lambda: ("/usr/bin/ajcrew", [CU_SUBCOMMAND])},
 }
 
 # The same set with the REAL gate on the computer-use row. ``_MANAGED`` above
 # deliberately carries none, so the pre-existing emission tests keep exercising
 # the ungated path; the gate's own tests stage this one.
 _GATED_MANAGED = {
-    "kirocrew-cron": {"invocation_fn": lambda: ("/usr/bin/kirocrew", ["mcp-cron"])},
-    "kirocrew-core": {"invocation_fn": lambda: ("/usr/bin/kirocrew", ["mcp-core"])},
+    "ajcrew-cron": {"invocation_fn": lambda: ("/usr/bin/ajcrew", ["mcp-cron"])},
+    "ajcrew-core": {"invocation_fn": lambda: ("/usr/bin/ajcrew", ["mcp-core"])},
     CU_SERVER: {
-        "invocation_fn": lambda: ("/usr/bin/kirocrew", [CU_SUBCOMMAND]),
+        "invocation_fn": lambda: ("/usr/bin/ajcrew", [CU_SUBCOMMAND]),
         "spec_gate": agent._computer_use_spec_gate,
     },
 }
@@ -89,7 +89,7 @@ _GATED_MANAGED = {
 def _bundled_defaults(tmp_path: Path) -> Path:
     """Write a minimal bundled ``defaults.json`` and return its directory.
 
-    Mirrors the shipped file's shape for the keys under test: ``@kirocrew-computer``
+    Mirrors the shipped file's shape for the keys under test: ``@ajcrew-computer``
     in ``tools`` and deliberately absent from ``allowedTools``.
     """
     cfg_dir = tmp_path / "config"
@@ -98,8 +98,8 @@ def _bundled_defaults(tmp_path: Path) -> Path:
         json.dumps(
             {
                 "model": "claude-default",
-                "tools": ["ReadFile", "@kirocrew-cron", "@kirocrew-core", CU_REF],
-                "allowedTools": ["ReadFile", "@kirocrew-core"],
+                "tools": ["ReadFile", "@ajcrew-cron", "@ajcrew-core", CU_REF],
+                "allowedTools": ["ReadFile", "@ajcrew-core"],
                 "mcpServers": {},
                 "hooks": {"preToolUse": "audit"},
             }
@@ -129,21 +129,21 @@ def _run_install(tmp_path: Path, cfg_dir: Path, *, managed: "dict | None" = None
 
     patches = [
         patch.multiple(
-            "kiro_crew.agent",
+            "aj_crew.agent",
             KIRO_AGENTS_DIR=kiro_dir,
             _BUNDLED_CFG_DIR=cfg_dir,
-            _KIROCREW_BIN="/usr/bin/kirocrew",
+            _AJCREW_BIN="/usr/bin/ajcrew",
             _MANAGED_MCP_SERVERS=_MANAGED if managed is None else managed,
             _KIRO_MCP_JSON=tmp_path / "fake_kiro_mcp.json",
             _CC_MCP_JSON=tmp_path / "fake_cc_mcp.json",
         ),
-        patch("kiro_crew.agent._user_dir", lambda: tmp_path / "home"),
-        patch("kiro_crew.agent._prompt_path", return_value=cfg_dir / "prompt.md"),
-        patch("kiro_crew.agent._shipped_defaults", return_value=cfg_dir / "defaults.json"),
-        patch("kiro_crew.agent._project_dir", return_value=None),
-        patch("kiro_crew.agent._aim_skill_paths", return_value=[]),
-        patch("kiro_crew.agent.shutil.which", side_effect=lambda c, **kw: c),
-        patch("kiro_crew.agent._mc_config_path", return_value=mc_config),
+        patch("aj_crew.agent._user_dir", lambda: tmp_path / "home"),
+        patch("aj_crew.agent._prompt_path", return_value=cfg_dir / "prompt.md"),
+        patch("aj_crew.agent._shipped_defaults", return_value=cfg_dir / "defaults.json"),
+        patch("aj_crew.agent._project_dir", return_value=None),
+        patch("aj_crew.agent._aim_skill_paths", return_value=[]),
+        patch("aj_crew.agent.shutil.which", side_effect=lambda c, **kw: c),
+        patch("aj_crew.agent._mc_config_path", return_value=mc_config),
     ]
     with ExitStack() as stack:
         for p in patches:
@@ -164,24 +164,24 @@ def test_managed_spec_is_built_with_a_resolvable_command(tmp_path: Path):
     with ExitStack() as stack:
         stack.enter_context(
             patch.multiple(
-                "kiro_crew.agent",
+                "aj_crew.agent",
                 _BUNDLED_CFG_DIR=cfg_dir,
                 _MANAGED_MCP_SERVERS=_MANAGED,
             )
         )
         stack.enter_context(
-            patch("kiro_crew.agent._shipped_defaults", return_value=cfg_dir / "defaults.json")
+            patch("aj_crew.agent._shipped_defaults", return_value=cfg_dir / "defaults.json")
         )
         stack.enter_context(
-            patch("kiro_crew.agent._prompt_path", return_value=cfg_dir / "prompt.md")
+            patch("aj_crew.agent._prompt_path", return_value=cfg_dir / "prompt.md")
         )
-        stack.enter_context(patch("kiro_crew.agent._project_dir", return_value=None))
+        stack.enter_context(patch("aj_crew.agent._project_dir", return_value=None))
         stack.enter_context(
-            patch("kiro_crew.agent._mc_config_path", return_value=tmp_path / "none.json")
+            patch("aj_crew.agent._mc_config_path", return_value=tmp_path / "none.json")
         )
         config = agent.build_agent_config()
     spec = config["mcpServers"][CU_SERVER]
-    assert spec["command"] == "/usr/bin/kirocrew"
+    assert spec["command"] == "/usr/bin/ajcrew"
     assert spec["args"] == [CU_SUBCOMMAND]
 
 
@@ -204,11 +204,11 @@ def test_managed_spec_contains_no_auto_approve(tmp_path: Path):
 
 
 def test_real_managed_entry_uses_the_shared_invocation_resolver():
-    """The shipped row resolves its command through ``_kirocrew_mcp_invocation``.
+    """The shipped row resolves its command through ``_ajcrew_mcp_invocation``.
 
     Not a hardcoded path: that helper is the single source of truth for every
     install layout (a console script when one resolves, otherwise
-    ``<interpreter> -m kiro_crew``), and the permission-probe shell-out in the
+    ``<interpreter> -m aj_crew``), and the permission-probe shell-out in the
     dashboard handler reuses it so the probe runs the SAME install as the gateway.
     """
     spec = agent._MANAGED_MCP_SERVERS[CU_SERVER]
@@ -226,7 +226,7 @@ def test_fresh_install_adds_the_ref_to_tools_but_not_allowed_tools(tmp_path: Pat
 
     ``agent.py`` states the rule: "new MCPs may have destructive tools; user opts
     in". This is also the whole reason computer use is its own server —
-    ``config/defaults.json`` blanket-allows ``@kirocrew-core``, so riding inside it
+    ``config/defaults.json`` blanket-allows ``@ajcrew-core``, so riding inside it
     would have inherited that auto-approve for ``computer_click``.
     """
     cfg_dir = _bundled_defaults(tmp_path)
@@ -258,10 +258,10 @@ def test_fresh_install_registers_the_server(tmp_path: Path):
 
 
 def _existing_config(tmp_path: Path, cu_spec: dict) -> Path:
-    """Seed an existing ``kirocrew.json`` whose computer-use entry is *cu_spec*."""
+    """Seed an existing ``ajcrew.json`` whose computer-use entry is *cu_spec*."""
     kiro_dir = tmp_path / "kiro_agents"
     kiro_dir.mkdir(exist_ok=True)
-    path = kiro_dir / "kirocrew.json"
+    path = kiro_dir / "ajcrew.json"
     path.write_text(
         json.dumps(
             {
@@ -279,9 +279,9 @@ def _existing_config(tmp_path: Path, cu_spec: dict) -> Path:
 def test_refresh_re_resolves_a_stale_command(tmp_path: Path):
     """A path from a previous install is re-resolved on every refresh."""
     cfg_dir = _bundled_defaults(tmp_path)
-    _existing_config(tmp_path, {"command": "/old/dead/path/kirocrew", "args": [CU_SUBCOMMAND]})
+    _existing_config(tmp_path, {"command": "/old/dead/path/ajcrew", "args": [CU_SUBCOMMAND]})
     config = _installed(_run_install(tmp_path, cfg_dir))
-    assert config["mcpServers"][CU_SERVER]["command"] == "/usr/bin/kirocrew"
+    assert config["mcpServers"][CU_SERVER]["command"] == "/usr/bin/ajcrew"
     assert config["mcpServers"][CU_SERVER]["args"] == [CU_SUBCOMMAND]
 
 
@@ -295,7 +295,7 @@ def test_refresh_strips_a_stale_remote_transport(tmp_path: Path):
     _existing_config(
         tmp_path,
         {
-            "command": "/usr/bin/kirocrew",
+            "command": "/usr/bin/ajcrew",
             "args": [CU_SUBCOMMAND],
             "url": "http://127.0.0.1:9999/mcp",
             "headers": {"X-Stale": "1"},
@@ -319,7 +319,7 @@ def test_refresh_keeps_a_user_added_auto_approve(tmp_path: Path):
     _existing_config(
         tmp_path,
         {
-            "command": "/usr/bin/kirocrew",
+            "command": "/usr/bin/ajcrew",
             "args": [CU_SUBCOMMAND],
             "autoApprove": [f"{CU_SERVER}/computer_get_state"],
         },
@@ -337,10 +337,10 @@ def test_refresh_drops_a_user_added_auto_approve_when_opted_out(
     ``autoApprove`` no server spec declares is dropped, the server itself stays, and
     the tool goes through the approval card instead.
     """
-    from kiro_crew.config import live
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config import live
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.mcp.honour_auto_approve = False
     monkeypatch.setattr(live, "snapshot", lambda: cfg)
 
@@ -348,7 +348,7 @@ def test_refresh_drops_a_user_added_auto_approve_when_opted_out(
     _existing_config(
         tmp_path,
         {
-            "command": "/usr/bin/kirocrew",
+            "command": "/usr/bin/ajcrew",
             "args": [CU_SUBCOMMAND],
             "autoApprove": [f"{CU_SERVER}/computer_get_state"],
         },
@@ -368,14 +368,14 @@ def test_refresh_does_not_add_the_ref_to_allowed_tools(tmp_path: Path):
     pre-approve them.
     """
     cfg_dir = _bundled_defaults(tmp_path)
-    _existing_config(tmp_path, {"command": "/usr/bin/kirocrew", "args": [CU_SUBCOMMAND]})
+    _existing_config(tmp_path, {"command": "/usr/bin/ajcrew", "args": [CU_SUBCOMMAND]})
     config = _installed(_run_install(tmp_path, cfg_dir))
     assert CU_REF not in config["allowedTools"]
     assert not [t for t in config["allowedTools"] if t.startswith(f"{CU_REF}/")]
 
 
 def test_refresh_adds_the_tools_ref_to_an_upgrading_config(tmp_path: Path):
-    """**An UPGRADING install must gain ``@kirocrew-computer`` in ``tools``.**
+    """**An UPGRADING install must gain ``@ajcrew-computer`` in ``tools``.**
 
     The fresh-install branch that registers managed refs runs only when the config
     is being CREATED, so without an add-only exception on the refresh path a
@@ -389,7 +389,7 @@ def test_refresh_adds_the_tools_ref_to_an_upgrading_config(tmp_path: Path):
     shim answers an empty ``tools/list`` until the user opts in from Settings.
     """
     cfg_dir = _bundled_defaults(tmp_path)
-    path = _existing_config(tmp_path, {"command": "/usr/bin/kirocrew", "args": [CU_SUBCOMMAND]})
+    path = _existing_config(tmp_path, {"command": "/usr/bin/ajcrew", "args": [CU_SUBCOMMAND]})
     assert CU_REF not in _installed(path)["tools"]  # the pre-upgrade state
     config = _installed(_run_install(tmp_path, cfg_dir))
     assert CU_REF in config["tools"]
@@ -403,14 +403,14 @@ def test_refresh_does_not_re_add_other_managed_refs(tmp_path: Path):
     """The upgrade exception is scoped to computer use alone.
 
     ``tools``/``allowedTools`` remain user-owned for every other server, so a user
-    who removed ``@kirocrew-cron`` does not get it silently restored. Scoping the
+    who removed ``@ajcrew-cron`` does not get it silently restored. Scoping the
     carve-out is what keeps "the user controls their tool lists" true.
     """
     cfg_dir = _bundled_defaults(tmp_path)
-    _existing_config(tmp_path, {"command": "/usr/bin/kirocrew", "args": [CU_SUBCOMMAND]})
+    _existing_config(tmp_path, {"command": "/usr/bin/ajcrew", "args": [CU_SUBCOMMAND]})
     config = _installed(_run_install(tmp_path, cfg_dir))
-    assert "@kirocrew-cron" not in config["tools"]
-    assert "@kirocrew-core" not in config["tools"]
+    assert "@ajcrew-cron" not in config["tools"]
+    assert "@ajcrew-core" not in config["tools"]
 
 
 def test_refresh_respects_a_template_that_drops_computer_use(tmp_path: Path):
@@ -425,7 +425,7 @@ def test_refresh_respects_a_template_that_drops_computer_use(tmp_path: Path):
     defaults["tools"] = [t for t in defaults["tools"] if t != CU_REF]
     defaults_path.write_text(json.dumps(defaults))
 
-    _existing_config(tmp_path, {"command": "/usr/bin/kirocrew", "args": [CU_SUBCOMMAND]})
+    _existing_config(tmp_path, {"command": "/usr/bin/ajcrew", "args": [CU_SUBCOMMAND]})
     config = _installed(_run_install(tmp_path, cfg_dir))
     assert CU_REF not in config["tools"]
 
@@ -435,7 +435,7 @@ def test_refresh_adds_a_missing_managed_server(tmp_path: Path):
     cfg_dir = _bundled_defaults(tmp_path)
     kiro_dir = tmp_path / "kiro_agents"
     kiro_dir.mkdir(exist_ok=True)
-    (kiro_dir / "kirocrew.json").write_text(
+    (kiro_dir / "ajcrew.json").write_text(
         json.dumps(
             {
                 "model": "m",
@@ -459,14 +459,14 @@ def test_managed_server_name_appears_in_every_registry():
 
     Enumerated explicitly because each omission fails DIFFERENTLY and none of them
     is loud: a missing ``mcp_cleanup`` entry leaves a stale binary path after an
-    install-method change (and silently drops ``kirocrew doctor``'s probe, which
+    install-method change (and silently drops ``ajcrew doctor``'s probe, which
     imports the same tuple); a missing ``mcp_discovery`` entry makes "Discover &
     Sync" mis-resolve the command; a missing ``handlers/mcp.py`` entry hides the
     server from the dashboard's MCP list; a missing ``onboarding_import`` entry
     lets an imported config carry a foreign copy of it.
     """
     assert CU_SERVER in agent._MANAGED_MCP_SERVERS
-    assert CU_SERVER in mcp_cleanup.KIROCREW_BIN_MCP_SERVERS
+    assert CU_SERVER in mcp_cleanup.AJCREW_BIN_MCP_SERVERS
     assert mcp_discovery._MANAGED_SERVER_SUBCOMMANDS.get(CU_SERVER) == CU_SUBCOMMAND
     assert CU_SERVER in mcp_discovery._MANAGED_SERVER_NAMES
     assert CU_SERVER in onboarding_import._managed_mcp_names()
@@ -477,7 +477,7 @@ def test_managed_server_name_appears_in_every_registry():
     # mention elsewhere in the file could not make this pass vacuously.
     import inspect
 
-    from kiro_crew.dashboard.handlers import mcp as mcp_handlers
+    from aj_crew.dashboard.handlers import mcp as mcp_handlers
 
     assert CU_SERVER in inspect.getsource(mcp_handlers.api_mcp_active)
 
@@ -493,13 +493,13 @@ def test_managed_sets_are_identical_across_agent_and_discovery():
 
 
 def test_cleanup_tuple_is_ordered_and_covers_every_managed_server():
-    """``KIROCREW_BIN_MCP_SERVERS`` is a TUPLE (deterministic doctor order).
+    """``AJCREW_BIN_MCP_SERVERS`` is a TUPLE (deterministic doctor order).
 
     ``cli_doctor`` iterates it to probe each server, so a set would make the
     doctor's output order vary between runs.
     """
-    assert isinstance(mcp_cleanup.KIROCREW_BIN_MCP_SERVERS, tuple)
-    assert set(mcp_cleanup.KIROCREW_BIN_MCP_SERVERS) == set(agent._MANAGED_MCP_SERVERS)
+    assert isinstance(mcp_cleanup.AJCREW_BIN_MCP_SERVERS, tuple)
+    assert set(mcp_cleanup.AJCREW_BIN_MCP_SERVERS) == set(agent._MANAGED_MCP_SERVERS)
 
 
 def test_managed_set_includes_the_predecessor_brand():
@@ -514,7 +514,7 @@ def test_managed_set_includes_the_predecessor_brand():
 def test_server_key_is_slash_free():
     """kiro-cli splits an agent ``@server`` reference on ``/``.
 
-    A slash in the key would make ``@kirocrew-computer/...`` unparseable and the
+    A slash in the key would make ``@ajcrew-computer/...`` unparseable and the
     whole server unreachable.
     """
     for name in agent._MANAGED_MCP_SERVERS:
@@ -522,7 +522,7 @@ def test_server_key_is_slash_free():
 
 
 def test_cli_exposes_the_hidden_subcommand():
-    """``kirocrew mcp-computer`` must parse and dispatch.
+    """``ajcrew mcp-computer`` must parse and dispatch.
 
     Hidden (``argparse.SUPPRESS``) because it is spawned by the agent backend, not
     typed by a user — but if the parser lacks it, every managed spec points at a
@@ -530,7 +530,7 @@ def test_cli_exposes_the_hidden_subcommand():
     """
     import inspect
 
-    from kiro_crew import cli
+    from aj_crew import cli
 
     src = inspect.getsource(cli)
     assert f'sub.add_parser("{CU_SUBCOMMAND}"' in src
@@ -565,10 +565,10 @@ class TestGatedEntryIsNotPreserved:
 
     @pytest.fixture(autouse=True)
     def _isolated_sidecar(self, tmp_path, monkeypatch):
-        import kiro_crew.config.paths as paths
+        import aj_crew.config.paths as paths
 
         monkeypatch.setattr(paths, "_resolved_home", None)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         (tmp_path / "home").mkdir(parents=True, exist_ok=True)
         yield
         monkeypatch.setattr(paths, "_resolved_home", None)
@@ -577,30 +577,30 @@ class TestGatedEntryIsNotPreserved:
     def _refresh(cfg: dict, *, macos: bool) -> None:
         with ExitStack() as stack:
             stack.enter_context(
-                patch.multiple("kiro_crew.agent", _MANAGED_MCP_SERVERS=_GATED_MANAGED)
+                patch.multiple("aj_crew.agent", _MANAGED_MCP_SERVERS=_GATED_MANAGED)
             )
             stack.enter_context(
-                patch("kiro_crew.agent._prompt_path", return_value=Path("/tmp/p.md"))
+                patch("aj_crew.agent._prompt_path", return_value=Path("/tmp/p.md"))
             )
-            stack.enter_context(patch("kiro_crew.platform_compat.IS_MACOS", macos))
+            stack.enter_context(patch("aj_crew.platform_compat.IS_MACOS", macos))
             stack.enter_context(
                 patch(
-                    "kiro_crew.computer_use.backend.platform_could_be_supported",
+                    "aj_crew.computer_use.backend.platform_could_be_supported",
                     return_value=macos,
                 )
             )
             if macos:
                 stack.enter_context(
-                    patch("kiro_crew.computer_use.enable_state.is_enabled", return_value=True)
+                    patch("aj_crew.computer_use.enable_state.is_enabled", return_value=True)
                 )
             agent._refresh_dynamic_fields(cfg)
 
     def _cfg(self) -> dict:
         return {
-            "name": "kirocrew",
+            "name": "ajcrew",
             "mcpServers": {
                 CU_SERVER: {
-                    "command": "/usr/bin/kirocrew",
+                    "command": "/usr/bin/ajcrew",
                     "args": [CU_SUBCOMMAND],
                     "autoApprove": [f"{CU_SERVER}/computer_get_state"],
                     "env": {"MY_VAR": "keep"},
@@ -619,7 +619,7 @@ class TestGatedEntryIsNotPreserved:
         assert "autoApprove" not in entry, "an auto-approve grant came back on its own"
         assert "MY_VAR" not in entry.get("env", {})
         # Our own half is regenerated, so the server still works.
-        assert entry["command"] == "/usr/bin/kirocrew"
+        assert entry["command"] == "/usr/bin/ajcrew"
         assert entry["args"] == [CU_SUBCOMMAND]
 
     def test_NOTHING_about_the_entry_reaches_the_sidecar(self):
@@ -672,10 +672,10 @@ class TestGatedRefsAreLeftALONE:
 
     @pytest.fixture(autouse=True)
     def _isolated_sidecar(self, tmp_path, monkeypatch):
-        import kiro_crew.config.paths as paths
+        import aj_crew.config.paths as paths
 
         monkeypatch.setattr(paths, "_resolved_home", None)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         (tmp_path / "home").mkdir(parents=True, exist_ok=True)
         yield
         monkeypatch.setattr(paths, "_resolved_home", None)
@@ -684,21 +684,21 @@ class TestGatedRefsAreLeftALONE:
     def _refresh(cfg: dict, *, macos: bool) -> None:
         with ExitStack() as stack:
             stack.enter_context(
-                patch.multiple("kiro_crew.agent", _MANAGED_MCP_SERVERS=_GATED_MANAGED)
+                patch.multiple("aj_crew.agent", _MANAGED_MCP_SERVERS=_GATED_MANAGED)
             )
             stack.enter_context(
-                patch("kiro_crew.agent._prompt_path", return_value=Path("/tmp/p.md"))
+                patch("aj_crew.agent._prompt_path", return_value=Path("/tmp/p.md"))
             )
-            stack.enter_context(patch("kiro_crew.platform_compat.IS_MACOS", macos))
+            stack.enter_context(patch("aj_crew.platform_compat.IS_MACOS", macos))
             stack.enter_context(
                 patch(
-                    "kiro_crew.computer_use.backend.platform_could_be_supported",
+                    "aj_crew.computer_use.backend.platform_could_be_supported",
                     return_value=macos,
                 )
             )
             if macos:
                 stack.enter_context(
-                    patch("kiro_crew.computer_use.enable_state.is_enabled", return_value=True)
+                    patch("aj_crew.computer_use.enable_state.is_enabled", return_value=True)
                 )
             agent._refresh_dynamic_fields(cfg)
 
@@ -706,15 +706,15 @@ class TestGatedRefsAreLeftALONE:
         """The defect class this replaces, asserted end to end.
 
         One per-tool ref, a full disable, a full re-enable. If anything strips and
-        re-adds refs, the bare ``@kirocrew-computer`` appears here and the user who
+        re-adds refs, the bare ``@ajcrew-computer`` appears here and the user who
         chose exactly one tool silently gets all of them.
         """
         narrowed = f"{CU_REF}/computer_get_state"
         cfg = {
-            "name": "kirocrew",
+            "name": "ajcrew",
             "tools": ["ReadFile", narrowed],
             "allowedTools": [narrowed],
-            "mcpServers": {CU_SERVER: {"command": "/usr/bin/kirocrew", "args": [CU_SUBCOMMAND]}},
+            "mcpServers": {CU_SERVER: {"command": "/usr/bin/ajcrew", "args": [CU_SUBCOMMAND]}},
         }
 
         def _cu_refs() -> list:
@@ -748,9 +748,9 @@ class TestGatedRefsAreLeftALONE:
         from being spawned.
         """
         cfg = {
-            "name": "kirocrew",
+            "name": "ajcrew",
             "tools": [CU_REF],
-            "mcpServers": {CU_SERVER: {"command": "/usr/bin/kirocrew", "args": [CU_SUBCOMMAND]}},
+            "mcpServers": {CU_SERVER: {"command": "/usr/bin/ajcrew", "args": [CU_SUBCOMMAND]}},
         }
         self._refresh(cfg, macos=False)
         assert CU_REF in cfg["tools"]
@@ -760,15 +760,15 @@ class TestGatedRefsAreLeftALONE:
         """The derived agents take this dict as-is, so it must not diverge."""
         with ExitStack() as stack:
             stack.enter_context(
-                patch.multiple("kiro_crew.agent", _MANAGED_MCP_SERVERS=_GATED_MANAGED)
+                patch.multiple("aj_crew.agent", _MANAGED_MCP_SERVERS=_GATED_MANAGED)
             )
             stack.enter_context(
-                patch("kiro_crew.agent._prompt_path", return_value=Path("/tmp/p.md"))
+                patch("aj_crew.agent._prompt_path", return_value=Path("/tmp/p.md"))
             )
-            stack.enter_context(patch("kiro_crew.platform_compat.IS_MACOS", False))
+            stack.enter_context(patch("aj_crew.platform_compat.IS_MACOS", False))
             stack.enter_context(
                 patch(
-                    "kiro_crew.computer_use.backend.platform_could_be_supported",
+                    "aj_crew.computer_use.backend.platform_could_be_supported",
                     return_value=False,
                 )
             )
@@ -814,7 +814,7 @@ class _FakeSupport:
         self._supported = supported
 
     def status(self):
-        from kiro_crew.computer_use.types import BackendStatus
+        from aj_crew.computer_use.types import BackendStatus
 
         return BackendStatus(supported=self._supported, platform_id="probe", reason="")
 
@@ -867,35 +867,35 @@ class TestSpecEmissionGate:
         with ExitStack() as stack:
             stack.enter_context(
                 patch.multiple(
-                    "kiro_crew.agent",
+                    "aj_crew.agent",
                     _BUNDLED_CFG_DIR=cfg_dir,
                     _MANAGED_MCP_SERVERS=TestSpecEmissionGate._GATED,
                 )
             )
             stack.enter_context(
-                patch("kiro_crew.agent._shipped_defaults", return_value=cfg_dir / "defaults.json")
+                patch("aj_crew.agent._shipped_defaults", return_value=cfg_dir / "defaults.json")
             )
             stack.enter_context(
-                patch("kiro_crew.agent._prompt_path", return_value=cfg_dir / "prompt.md")
+                patch("aj_crew.agent._prompt_path", return_value=cfg_dir / "prompt.md")
             )
-            stack.enter_context(patch("kiro_crew.agent._project_dir", return_value=None))
+            stack.enter_context(patch("aj_crew.agent._project_dir", return_value=None))
             stack.enter_context(
-                patch("kiro_crew.agent._mc_config_path", return_value=tmp_path / "none.json")
+                patch("aj_crew.agent._mc_config_path", return_value=tmp_path / "none.json")
             )
-            stack.enter_context(patch("kiro_crew.platform_compat.IS_MACOS", macos))
+            stack.enter_context(patch("aj_crew.platform_compat.IS_MACOS", macos))
             # The gate reads the BACKEND's support through the REGISTRY, so that is
             # what a supported/unsupported case must control. The suite registers a
             # fake backend process-wide that reports supported=True on every
             # platform, so patching the platform flag alone would leave the gate open.
             stack.enter_context(
                 patch(
-                    "kiro_crew.computer_use.backend.platform_could_be_supported",
+                    "aj_crew.computer_use.backend.platform_could_be_supported",
                     return_value=macos,
                 )
             )
             stack.enter_context(
                 patch(
-                    "kiro_crew.computer_use.enable_state.computer_use_state_path",
+                    "aj_crew.computer_use.enable_state.computer_use_state_path",
                     return_value=state_path,
                 )
             )
@@ -918,8 +918,8 @@ class TestSpecEmissionGate:
         config = self._build(tmp_path, macos=False, keystone={"enabled": True})
         assert CU_SERVER not in config["mcpServers"]
         # The always-on servers are untouched — this is one gate, not a purge.
-        assert "kirocrew-core" in config["mcpServers"]
-        assert "kirocrew-cron" in config["mcpServers"]
+        assert "ajcrew-core" in config["mcpServers"]
+        assert "ajcrew-cron" in config["mcpServers"]
 
     @pytest.mark.parametrize(
         "keystone",
@@ -993,8 +993,8 @@ class TestSpecEmissionGate:
         assert CU_SERVER not in config["mcpServers"], "the entry is the control"
         assert CU_REF in config["tools"], "the user's ref must survive the withhold"
         # Scoped: the always-on servers are untouched, entry and ref alike.
-        assert "kirocrew-core" in config["mcpServers"]
-        assert "@kirocrew-core" in config["tools"]
+        assert "ajcrew-core" in config["mcpServers"]
+        assert "@ajcrew-core" in config["tools"]
 
     @pytest.mark.parametrize(
         ("supported", "keystone"),
@@ -1027,34 +1027,34 @@ class TestSpecEmissionGate:
         with ExitStack() as stack:
             stack.enter_context(
                 patch.multiple(
-                    "kiro_crew.agent",
+                    "aj_crew.agent",
                     _BUNDLED_CFG_DIR=cfg_dir,
                     _MANAGED_MCP_SERVERS=self._GATED,
                 )
             )
             stack.enter_context(
-                patch("kiro_crew.agent._shipped_defaults", return_value=cfg_dir / "defaults.json")
+                patch("aj_crew.agent._shipped_defaults", return_value=cfg_dir / "defaults.json")
             )
             stack.enter_context(
-                patch("kiro_crew.agent._user_overrides_path", return_value=override)
+                patch("aj_crew.agent._user_overrides_path", return_value=override)
             )
             stack.enter_context(
-                patch("kiro_crew.agent._prompt_path", return_value=cfg_dir / "prompt.md")
+                patch("aj_crew.agent._prompt_path", return_value=cfg_dir / "prompt.md")
             )
-            stack.enter_context(patch("kiro_crew.agent._project_dir", return_value=None))
+            stack.enter_context(patch("aj_crew.agent._project_dir", return_value=None))
             stack.enter_context(
-                patch("kiro_crew.agent._mc_config_path", return_value=tmp_path / "none.json")
+                patch("aj_crew.agent._mc_config_path", return_value=tmp_path / "none.json")
             )
-            stack.enter_context(patch("kiro_crew.platform_compat.IS_MACOS", supported))
+            stack.enter_context(patch("aj_crew.platform_compat.IS_MACOS", supported))
             stack.enter_context(
                 patch(
-                    "kiro_crew.computer_use.backend.platform_could_be_supported",
+                    "aj_crew.computer_use.backend.platform_could_be_supported",
                     return_value=supported,
                 )
             )
             stack.enter_context(
                 patch(
-                    "kiro_crew.computer_use.enable_state.computer_use_state_path",
+                    "aj_crew.computer_use.enable_state.computer_use_state_path",
                     return_value=state_path,
                 )
             )
@@ -1092,13 +1092,13 @@ class TestSpecEmissionGate:
         with ExitStack() as stack:
             stack.enter_context(
                 patch(
-                    "kiro_crew.computer_use.backend.platform_could_be_supported",
+                    "aj_crew.computer_use.backend.platform_could_be_supported",
                     return_value=False,
                 )
             )
             stack.enter_context(
                 patch(
-                    "kiro_crew.computer_use.enable_state.computer_use_state_path",
+                    "aj_crew.computer_use.enable_state.computer_use_state_path",
                     return_value=state_path,
                 )
             )
@@ -1115,21 +1115,21 @@ class TestSpecEmissionGate:
         """
         cfg = {
             "mcpServers": {
-                CU_SERVER: {"command": "/usr/bin/kirocrew", "args": [CU_SUBCOMMAND]},
-                "kirocrew-core": {"command": "/usr/bin/kirocrew", "args": ["mcp-core"]},
+                CU_SERVER: {"command": "/usr/bin/ajcrew", "args": [CU_SUBCOMMAND]},
+                "ajcrew-core": {"command": "/usr/bin/ajcrew", "args": ["mcp-core"]},
             },
-            "tools": ["ReadFile", CU_REF, "@kirocrew-core"],
+            "tools": ["ReadFile", CU_REF, "@ajcrew-core"],
             "allowedTools": [f"{CU_REF}/computer_get_state"],
         }
         with ExitStack() as stack:
-            stack.enter_context(patch.multiple("kiro_crew.agent", _MANAGED_MCP_SERVERS=self._GATED))
+            stack.enter_context(patch.multiple("aj_crew.agent", _MANAGED_MCP_SERVERS=self._GATED))
             stack.enter_context(
-                patch("kiro_crew.agent._prompt_path", return_value=Path("/tmp/p.md"))
+                patch("aj_crew.agent._prompt_path", return_value=Path("/tmp/p.md"))
             )
-            stack.enter_context(patch("kiro_crew.platform_compat.IS_MACOS", False))
+            stack.enter_context(patch("aj_crew.platform_compat.IS_MACOS", False))
             agent._refresh_dynamic_fields(cfg)
         assert CU_SERVER not in cfg["mcpServers"]
-        assert "kirocrew-core" in cfg["mcpServers"]
+        assert "ajcrew-core" in cfg["mcpServers"]
         # Withholding the ENTRY is the whole control. The refs name a server this
         # spec does not define, which resolves to nothing and mounts nothing, so
         # they are left exactly as the user left them.
@@ -1145,10 +1145,10 @@ class TestSpecEmissionGate:
         desktop.
         """
         with ExitStack() as stack:
-            stack.enter_context(patch("kiro_crew.platform_compat.IS_MACOS", True))
+            stack.enter_context(patch("aj_crew.platform_compat.IS_MACOS", True))
             stack.enter_context(
                 patch(
-                    "kiro_crew.computer_use.enable_state.is_enabled",
+                    "aj_crew.computer_use.enable_state.is_enabled",
                     side_effect=OSError("boom"),
                 )
             )
@@ -1161,13 +1161,13 @@ class TestSpecEmissionGate:
             raise RuntimeError("gate is broken")
 
         managed = {CU_SERVER: {"invocation_fn": lambda: ("x", []), "spec_gate": _explode}}
-        with patch.multiple("kiro_crew.agent", _MANAGED_MCP_SERVERS=managed):
+        with patch.multiple("aj_crew.agent", _MANAGED_MCP_SERVERS=managed):
             assert agent._gated_off_servers() == frozenset({CU_SERVER})
 
     def test_only_computer_use_is_gated(self):
         """The always-on servers carry NO gate.
 
-        A ``spec_gate`` accidentally added to ``kirocrew-core`` would remove the
+        A ``spec_gate`` accidentally added to ``ajcrew-core`` would remove the
         agent's whole first-party tool surface, and the failure would look like a
         model problem rather than a config one.
         """
@@ -1189,7 +1189,7 @@ class TestSpecEmissionGate:
         """
         import inspect
 
-        from kiro_crew.dashboard.handlers import computer_use as handler
+        from aj_crew.dashboard.handlers import computer_use as handler
 
         save_src = inspect.getsource(handler.api_computer_use_config_save)
         assert "await apply_enable_change(request)" in save_src
@@ -1209,17 +1209,17 @@ class TestSpecEmissionGate:
         spec at all — a far worse outcome than an odd ``tools`` value surviving.
         """
         cfg = {
-            "name": "kirocrew",
+            "name": "ajcrew",
             "tools": {"not": "a list"},
             "allowedTools": None,
             "mcpServers": {CU_SERVER: {"command": "x", "args": []}},
         }
         with ExitStack() as stack:
-            stack.enter_context(patch.multiple("kiro_crew.agent", _MANAGED_MCP_SERVERS=self._GATED))
+            stack.enter_context(patch.multiple("aj_crew.agent", _MANAGED_MCP_SERVERS=self._GATED))
             stack.enter_context(
-                patch("kiro_crew.agent._prompt_path", return_value=Path("/tmp/p.md"))
+                patch("aj_crew.agent._prompt_path", return_value=Path("/tmp/p.md"))
             )
-            stack.enter_context(patch("kiro_crew.platform_compat.IS_MACOS", False))
+            stack.enter_context(patch("aj_crew.platform_compat.IS_MACOS", False))
             agent._refresh_dynamic_fields(cfg)
         assert CU_SERVER not in cfg["mcpServers"], "the withhold must still happen"
         assert cfg["tools"] == {"not": "a list"}
@@ -1244,15 +1244,15 @@ class TestSpecEmissionGate:
         cfg_dir = _bundled_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
         kiro_dir.mkdir(exist_ok=True)
-        (kiro_dir / "kirocrew.json").write_text(
+        (kiro_dir / "ajcrew.json").write_text(
             json.dumps(
                 {
                     "model": "claude-user-custom",
-                    "tools": ["ReadFile", CU_REF, "@kirocrew-core"],
+                    "tools": ["ReadFile", CU_REF, "@ajcrew-core"],
                     "allowedTools": ["ReadFile", f"{CU_REF}/computer_get_state"],
                     "mcpServers": {
-                        CU_SERVER: {"command": "/usr/bin/kirocrew", "args": [CU_SUBCOMMAND]},
-                        "kirocrew-core": {"command": "/usr/bin/kirocrew", "args": ["mcp-core"]},
+                        CU_SERVER: {"command": "/usr/bin/ajcrew", "args": [CU_SUBCOMMAND]},
+                        "ajcrew-core": {"command": "/usr/bin/ajcrew", "args": ["mcp-core"]},
                     },
                     "hooks": {"preToolUse": "audit"},
                 }
@@ -1268,8 +1268,8 @@ class TestSpecEmissionGate:
                 return lambda *a, **k: None
 
         with ExitStack() as stack:
-            stack.enter_context(patch("kiro_crew.platform_compat.IS_MACOS", False))
-            stack.enter_context(patch("kiro_crew.agent.sel", lambda: _Sel()))
+            stack.enter_context(patch("aj_crew.platform_compat.IS_MACOS", False))
+            stack.enter_context(patch("aj_crew.agent.sel", lambda: _Sel()))
             path = _run_install(tmp_path, cfg_dir, managed=self._GATED)
 
         config = _installed(path)
@@ -1279,8 +1279,8 @@ class TestSpecEmissionGate:
         assert CU_REF in config["tools"]
         assert f"{CU_REF}/computer_get_state" in config["allowedTools"]
         # The always-on servers still ship — the gate is one row, not a purge.
-        assert "kirocrew-core" in config["mcpServers"]
-        assert "@kirocrew-core" in config["tools"]
+        assert "ajcrew-core" in config["mcpServers"]
+        assert "@ajcrew-core" in config["tools"]
         # And the user's own entries are untouched.
         assert "ReadFile" in config["tools"]
 
@@ -1321,8 +1321,8 @@ class TestSpecEmissionGate:
                 return lambda *a, **k: None
 
         with ExitStack() as stack:
-            stack.enter_context(patch("kiro_crew.platform_compat.IS_MACOS", False))
-            stack.enter_context(patch("kiro_crew.agent.sel", lambda: _Sel()))
+            stack.enter_context(patch("aj_crew.platform_compat.IS_MACOS", False))
+            stack.enter_context(patch("aj_crew.agent.sel", lambda: _Sel()))
             path = _run_install(tmp_path, cfg_dir, managed=self._GATED)
 
         assert CU_SERVER not in _installed(path)["mcpServers"]
@@ -1352,8 +1352,8 @@ class TestSpecEmissionGate:
                 return lambda *a, **k: None
 
         with ExitStack() as stack:
-            stack.enter_context(patch("kiro_crew.platform_compat.IS_MACOS", False))
-            stack.enter_context(patch("kiro_crew.agent.sel", lambda: _Sel()))
+            stack.enter_context(patch("aj_crew.platform_compat.IS_MACOS", False))
+            stack.enter_context(patch("aj_crew.agent.sel", lambda: _Sel()))
             _run_install(tmp_path, cfg_dir, managed=self._GATED)
 
         assert [e for e in events if e.get("operation") == "mcp_server_withheld"] == []
@@ -1374,9 +1374,9 @@ def _fake_host_home(monkeypatch, host_home: Path) -> None:
 
 
 class TestDataHomePin:
-    """``KIROCREW_HOME`` must reach the stdio shims, or they read a DIFFERENT home.
+    """``AJCREW_HOME`` must reach the stdio shims, or they read a DIFFERENT home.
 
-    A child process does NOT inherit the gateway's ``KIROCREW_HOME``; the spec's
+    A child process does NOT inherit the gateway's ``AJCREW_HOME``; the spec's
     ``env`` map is the only channel. Without the pin the gateway writes
     ``computer_use.json`` to the override home while ``mcp_computer`` reads the
     DEFAULT one, and the failure is silent AND self-contradictory: Settings shows
@@ -1391,33 +1391,33 @@ class TestDataHomePin:
     @staticmethod
     def _entries(monkeypatch, home: "str | None", default_home: Path) -> dict:
         """Build a fresh spec with (or without) an override in effect."""
-        import kiro_crew.config.paths as paths
+        import aj_crew.config.paths as paths
 
         if home is None:
-            monkeypatch.delenv("KIROCREW_HOME", raising=False)
+            monkeypatch.delenv("AJCREW_HOME", raising=False)
         else:
-            monkeypatch.setenv("KIROCREW_HOME", home)
+            monkeypatch.setenv("AJCREW_HOME", home)
         monkeypatch.setattr(paths, "_resolved_home", None)
         # With no (valid) override the resolver falls through to the DEFAULT home.
         # Relocate the WHOLE host home, not just the resolver: left alone, this helper
         # resolved, and created, the operator's real ~/.kiro/crew, and a resolver-only
-        # stand-in still wrote the real ~/.kirocrew.breadcrumb beside it (audit 3).
+        # stand-in still wrote the real ~/.ajcrew.breadcrumb beside it (audit 3).
         _fake_host_home(monkeypatch, default_home)
-        with patch.multiple("kiro_crew.agent", _MANAGED_MCP_SERVERS=_MANAGED):
-            with patch("kiro_crew.agent._prompt_path", return_value=Path("/tmp/p.md")):
+        with patch.multiple("aj_crew.agent", _MANAGED_MCP_SERVERS=_MANAGED):
+            with patch("aj_crew.agent._prompt_path", return_value=Path("/tmp/p.md")):
                 return agent.build_agent_config()["mcpServers"]
 
     def test_every_managed_server_is_pinned_under_an_override(self, tmp_path, monkeypatch):
         servers = self._entries(monkeypatch, str(tmp_path), tmp_path / "default")
         for name in _MANAGED:
-            assert servers[name]["env"]["KIROCREW_HOME"] == str(tmp_path.resolve()), name
+            assert servers[name]["env"]["AJCREW_HOME"] == str(tmp_path.resolve()), name
 
     def test_a_default_install_emits_no_env_at_all(self, tmp_path, monkeypatch):
         """The emitted spec must be byte-for-byte unchanged where there is no override.
 
         An empty ``env`` is a launch-behaviour no-op but a real diff in the file, and
         ``_prune_empty`` treats present-but-empty as equivalent — so emitting one
-        would churn every existing user's ``kirocrew.json`` for nothing.
+        would churn every existing user's ``ajcrew.json`` for nothing.
         """
         servers = self._entries(monkeypatch, None, tmp_path)
         for name in _MANAGED:
@@ -1464,31 +1464,31 @@ class TestDataHomePin:
         shim is told to use is the SAME one the gateway resolved. Parametrised over
         the awkward values so a future resolver change cannot silently split them.
         """
-        import kiro_crew.config.paths as paths
+        import aj_crew.config.paths as paths
 
         for candidate in (str(tmp_path), "/", "/usr", "/etc", "/System"):
-            monkeypatch.setenv("KIROCREW_HOME", candidate)
+            monkeypatch.setenv("AJCREW_HOME", candidate)
             monkeypatch.setattr(paths, "_resolved_home", None)
             expected = paths._valid_override_home()
-            pinned = agent._managed_mcp_env().get("KIROCREW_HOME")
+            pinned = agent._managed_mcp_env().get("AJCREW_HOME")
             assert pinned == (str(expected) if expected else None), candidate
 
     def test_a_refresh_pins_an_existing_config_and_keeps_user_env(self, tmp_path, monkeypatch):
         """The pin is OURS to refresh, unlike ``autoApprove`` which is preserved."""
-        import kiro_crew.config.paths as paths
+        import aj_crew.config.paths as paths
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         monkeypatch.setattr(paths, "_resolved_home", None)
         cfg = {
             "mcpServers": {
                 CU_SERVER: {"command": "old", "args": [], "env": {"MY_VAR": "keep"}},
             }
         }
-        with patch.multiple("kiro_crew.agent", _MANAGED_MCP_SERVERS=_MANAGED):
-            with patch("kiro_crew.agent._prompt_path", return_value=Path("/tmp/p.md")):
+        with patch.multiple("aj_crew.agent", _MANAGED_MCP_SERVERS=_MANAGED):
+            with patch("aj_crew.agent._prompt_path", return_value=Path("/tmp/p.md")):
                 agent._refresh_dynamic_fields(cfg)
         env = cfg["mcpServers"][CU_SERVER]["env"]
-        assert env["KIROCREW_HOME"] == str(tmp_path.resolve())
+        assert env["AJCREW_HOME"] == str(tmp_path.resolve())
         # A user's own variable must survive the merge.
         assert env["MY_VAR"] == "keep"
 
@@ -1498,17 +1498,17 @@ class TestDataHomePin:
         Leaving the old value would point the shims at a home the gateway is no
         longer using — the same desync, one release later.
         """
-        import kiro_crew.config.paths as paths
+        import aj_crew.config.paths as paths
 
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
         monkeypatch.setattr(paths, "_resolved_home", None)
         _fake_host_home(monkeypatch, tmp_path / "default")
         cfg = {
             "mcpServers": {
-                CU_SERVER: {"command": "old", "args": [], "env": {"KIROCREW_HOME": "/stale"}},
+                CU_SERVER: {"command": "old", "args": [], "env": {"AJCREW_HOME": "/stale"}},
             }
         }
-        with patch.multiple("kiro_crew.agent", _MANAGED_MCP_SERVERS=_MANAGED):
-            with patch("kiro_crew.agent._prompt_path", return_value=Path("/tmp/p.md")):
+        with patch.multiple("aj_crew.agent", _MANAGED_MCP_SERVERS=_MANAGED):
+            with patch("aj_crew.agent._prompt_path", return_value=Path("/tmp/p.md")):
                 agent._refresh_dynamic_fields(cfg)
         assert "env" not in cfg["mcpServers"][CU_SERVER]

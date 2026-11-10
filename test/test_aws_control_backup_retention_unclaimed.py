@@ -28,7 +28,7 @@ from aws_control_backup_retention_helpers import (
     _write_account,
 )
 
-from kiro_crew.apps.builtins.aws_control.backend import backup
+from aj_crew.apps.builtins.aws_control.backend import backup
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 audit = aws_control_backup_retention_helpers.audit
@@ -404,7 +404,7 @@ class TestVersionRecordsOutliveThePanelHistory:
         state(3)
         rows = _archives(backup.KIND_SNAPSHOT, ["02", "03"])
         drive.rows = rows
-        gone = f"snapshots/{INSTALL}/kirocrew-snapshot-01.tar.gz"
+        gone = f"snapshots/{INSTALL}/ajcrew-snapshot-01.tar.gz"
         _write_account(
             {
                 "uploads": {_key_of(row): "fp" for row in rows},
@@ -453,7 +453,7 @@ class TestVersionRecordsOutliveThePanelHistory:
         state(3)
         rows = _archives(backup.KIND_SNAPSHOT, ["01", "02"])
         drive.rows = rows
-        absent = f"snapshots/{INSTALL}/kirocrew-snapshot-09.tar.gz"
+        absent = f"snapshots/{INSTALL}/ajcrew-snapshot-09.tar.gz"
         recorded = {**{_key_of(row): str(row["versionId"]) for row in rows}, absent: "v-absent"}
         _write_account(
             {"uploads": {_key_of(row): "fp" for row in rows}, "upload_versions": recorded}
@@ -467,7 +467,7 @@ class TestVersionRecordsOutliveThePanelHistory:
         state(3)
         rows = _archives(backup.KIND_SNAPSHOT, ["01", "02"])
         drive.rows = rows
-        sessions_key = f"sessions/{INSTALL}/kirocrew-sessions-01.tar.gz"
+        sessions_key = f"sessions/{INSTALL}/ajcrew-sessions-01.tar.gz"
         _write_account(
             {
                 "uploads": {_key_of(row): "fp" for row in rows},
@@ -484,7 +484,7 @@ class TestVersionRecordsOutliveThePanelHistory:
         state(3)
         rows = _archives(backup.KIND_SNAPSHOT, ["01", "02"])
         drive.rows = rows
-        other = f"snapshots/{'b' * 32}/kirocrew-snapshot-01.tar.gz"
+        other = f"snapshots/{'b' * 32}/ajcrew-snapshot-01.tar.gz"
         _write_account(
             {
                 "uploads": {_key_of(row): "fp" for row in rows},
@@ -504,7 +504,7 @@ class TestVersionRecordsOutliveThePanelHistory:
         state(3)
         rows = _archives(backup.KIND_SNAPSHOT, ["01", "02"])
         drive.rows = rows
-        landed = f"snapshots/{INSTALL}/kirocrew-snapshot-99.tar.gz"
+        landed = f"snapshots/{INSTALL}/ajcrew-snapshot-99.tar.gz"
         _write_account(
             {
                 "uploads": {_key_of(row): "fp" for row in rows},
@@ -655,7 +655,7 @@ class TestUnrecordedObjectsAreCountedWithoutBeingClaimed:
         """A listing holding one object the state file has no record of. Returns rows."""
         rows = _archives(backup.KIND_SNAPSHOT, ["01", "02"])
         stranger = _version(
-            f"snapshots/{INSTALL}/kirocrew-snapshot-00.tar.gz", "2026-01-00T00:00:00Z"
+            f"snapshots/{INSTALL}/ajcrew-snapshot-00.tar.gz", "2026-01-00T00:00:00Z"
         )
         drive.rows = [stranger, *rows]
         return rows, stranger
@@ -689,7 +689,7 @@ class TestUnrecordedObjectsAreCountedWithoutBeingClaimed:
         state(1)
         rows = _archives(backup.KIND_SNAPSHOT, ["01", "02"])
         stranger = _version(
-            f"snapshots/{INSTALL}/kirocrew-snapshot-00.tar.gz", "2026-01-00T00:00:00Z"
+            f"snapshots/{INSTALL}/ajcrew-snapshot-00.tar.gz", "2026-01-00T00:00:00Z"
         )
         older = dict(stranger)
         older["versionId"] = "v-older"
@@ -802,7 +802,7 @@ class TestUnrecordedObjectsAreCountedWithoutBeingClaimed:
         state(1)
         rows = _archives(backup.KIND_SNAPSHOT, ["01", "02"])
         marker = _version(
-            f"snapshots/{INSTALL}/kirocrew-snapshot-00.tar.gz",
+            f"snapshots/{INSTALL}/ajcrew-snapshot-00.tar.gz",
             "2026-01-00T00:00:00Z",
             deleteMarker=True,
             size=0,
@@ -822,7 +822,7 @@ class TestUnrecordedObjectsAreCountedWithoutBeingClaimed:
         # those bytes exist and are billed whatever sits on top of them.
         state(1)
         rows = _archives(backup.KIND_SNAPSHOT, ["01", "02"])
-        stranger_key = f"snapshots/{INSTALL}/kirocrew-snapshot-00.tar.gz"
+        stranger_key = f"snapshots/{INSTALL}/ajcrew-snapshot-00.tar.gz"
         marker = _version(
             stranger_key, "2026-01-00T00:00:00Z", "v-marker", deleteMarker=True, size=0
         )
@@ -841,7 +841,7 @@ class TestUnrecordedObjectsAreCountedWithoutBeingClaimed:
         # record wrongly dropped is unrecoverable proof.
         state(1)
         rows = _archives(backup.KIND_SNAPSHOT, ["01", "02"])
-        gone_key = f"snapshots/{INSTALL}/kirocrew-snapshot-00.tar.gz"
+        gone_key = f"snapshots/{INSTALL}/ajcrew-snapshot-00.tar.gz"
         marker = _version(gone_key, "2026-01-00T00:00:00Z", deleteMarker=True, size=0)
         drive.rows = [marker, *rows]
         recorded = {_key_of(row): str(row["versionId"]) for row in rows}

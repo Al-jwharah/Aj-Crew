@@ -125,7 +125,7 @@ export const ALL_UNAVAILABLE: SharedCrewCapabilities = {
   reasons: {},
 }
 
-/** Whether the gateway runs the Shared Crew preview (`KIROCREW_SHARED_CREW_PREVIEW=1`).
+/** Whether the gateway runs the Shared Crew preview (`AJCREW_SHARED_CREW_PREVIEW=1`).
  *  Only a literal `true` turns it on: a missing field, an older gateway or a
  *  failed read all keep the sharing surfaces hidden. */
 export function sharedCrewPreviewOn(capabilities: SharedCrewCapabilities): boolean {

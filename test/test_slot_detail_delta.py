@@ -6,7 +6,7 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard.slot_detail_delta import (
+from aj_crew.dashboard.slot_detail_delta import (
     DeltaCursor,
     DeltaQueryError,
     parse_delta_query,
@@ -16,7 +16,7 @@ from kiro_crew.dashboard.slot_detail_delta import (
 
 
 def _state(tmp_path, monkeypatch, name: str, count: int):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(name)
     for i in range(count):
@@ -102,7 +102,7 @@ class TestCursorReads:
     @pytest.mark.asyncio
     async def test_assistant_and_tool_rows_hash_the_same_on_every_poll(self, tmp_path, monkeypatch):
         """Rows a running turn writes must not churn the hash, or every poll is a full page."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("t")
         slot.append("user", "go")
@@ -126,7 +126,7 @@ class TestCursorReads:
     @pytest.mark.asyncio
     async def test_a_cursor_read_renders_about_one_page(self, tmp_path, monkeypatch):
         """Rows read only to reach the span are not rendered."""
-        from kiro_crew.dashboard import wire_render
+        from aj_crew.dashboard import wire_render
 
         state, slot = _state(tmp_path, monkeypatch, "r", 60)
         rendered: list[int] = []
@@ -231,7 +231,7 @@ class TestPlanPage:
 
 class TestRowIdentities:
     def test_identity_tracks_the_stored_row_not_the_object(self):
-        from kiro_crew.dashboard.wire_render import prepare_message_rows
+        from aj_crew.dashboard.wire_render import prepare_message_rows
 
         rows = [{"role": "assistant", "content": "x", "cls": "msg msg-a"}]
         _, first = prepare_message_rows(rows, False, live_child="")
@@ -241,7 +241,7 @@ class TestRowIdentities:
         assert edited != first
 
     def test_oauth_and_chunk_rows_have_no_identity(self):
-        from kiro_crew.dashboard.wire_render import prepare_message_rows
+        from aj_crew.dashboard.wire_render import prepare_message_rows
 
         rows = [
             {"role": "mcp_oauth", "content": "sign in", "cls": "msg", "meta": {}},
@@ -251,7 +251,7 @@ class TestRowIdentities:
         assert ids == [None, None]
 
     def test_owner_view_rows_have_no_identity(self, monkeypatch):
-        from kiro_crew.dashboard import wire_render
+        from aj_crew.dashboard import wire_render
 
         monkeypatch.setattr(wire_render, "credential_pass_bypassed", lambda: True)
         _, ids = wire_render.prepare_message_rows(
@@ -264,7 +264,7 @@ class TestRowIdentities:
         self, monkeypatch, use_memo
     ):
         """The event loop edits rows in place while the worker thread renders them."""
-        from kiro_crew.dashboard import wire_render
+        from aj_crew.dashboard import wire_render
 
         wire_render.clear_render_memo()
         live = {"role": "assistant", "content": "before", "cls": "msg msg-a"}

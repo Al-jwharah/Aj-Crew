@@ -261,7 +261,7 @@ describe('TelemetryPanel startup faults', () => {
   it('does not count a recovered watchdog stall as a fault', async () => {
     // The API's _TERMINAL_FAULT_OUTCOMES excludes both recovery outcomes -- a
     // recovered stall is re-driven in place and tracked under
-    // kirocrew.watchdog.recovery.outcome. The tile's complement rule counted
+    // ajcrew.watchdog.recovery.outcome. The tile's complement rule counted
     // them anyway, so it reported a fault count over a population the
     // percentage next to it did not use. `stall_exhausted` (the budget-spent
     // case) IS a fault on both sides and must still be counted.

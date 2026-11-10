@@ -1,4 +1,4 @@
-"""``kiro_crew.taskq.adapters.runner`` stays the one import path of the runner adapters.
+"""``aj_crew.taskq.adapters.runner`` stays the one import path of the runner adapters.
 
 The lane, the claimed-row handle and the vocabulary every runner piece shares live in the
 ``runner_lane``, ``runner_handle`` and ``runner_vocab`` owners beside it. ``runner.py``
@@ -8,7 +8,7 @@ bound as one file. This file pins that plain-facade contract:
 * the owners are exactly the ``runner_*`` siblings, listed lowest layer first in
   ``_RUNNER_OWNERS``; each imports only owners listed before it, none imports the facade
   at run time, and nothing else in ``src/`` imports an owner;
-* an owner that logs does so under the ``kiro_crew.taskq.adapters.runner`` logger;
+* an owner that logs does so under the ``aj_crew.taskq.adapters.runner`` logger;
 * the three refusals render under the facade path, and each class an owner defines
   carries its frozen ``__module__``;
 * every module-level name the one-module file bound still resolves on the facade, to the
@@ -33,12 +33,12 @@ import pytest
 import source_corpus
 from facade_mirror_scan import global_reads, patched_names
 
-from kiro_crew.taskq.adapters import runner as runner_module
+from aj_crew.taskq.adapters import runner as runner_module
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_runner_facade")
 
-_FACADE = "kiro_crew.taskq.adapters.runner"
-_PACKAGE = "kiro_crew.taskq.adapters"
+_FACADE = "aj_crew.taskq.adapters.runner"
+_PACKAGE = "aj_crew.taskq.adapters"
 _TEST_ROOT = Path(__file__).resolve().parent
 _REPO_ROOT = _TEST_ROOT.parent
 
@@ -128,12 +128,12 @@ def _runtime_imports(tree: ast.Module, package: str = _PACKAGE) -> set[str]:
 def test_the_runtime_import_scan_can_fail() -> None:
     tree = ast.parse(
         "from typing import TYPE_CHECKING\n"
-        "from kiro_crew.taskq.adapters import runner_vocab\n"
+        "from aj_crew.taskq.adapters import runner_vocab\n"
         "if TYPE_CHECKING:\n"
         "    from .runner import RunnerAdmission\n"
         "from .runner_lane import RunnerLane\n"
         "def f():\n"
-        "    import kiro_crew.taskq.adapters.runner\n"
+        "    import aj_crew.taskq.adapters.runner\n"
         "def g():\n"
         "    from . import runner\n"
     )
@@ -224,22 +224,22 @@ def _owner_importers(src: Path, owners: frozenset[str]) -> list[str]:
 
 
 def test_the_owner_importer_scan_can_fail(tmp_path: Path) -> None:
-    pkg = tmp_path / "kiro_crew" / "taskq" / "adapters"
+    pkg = tmp_path / "aj_crew" / "taskq" / "adapters"
     pkg.mkdir(parents=True)
     (pkg / "other.py").write_text("from .runner_lane import RunnerLane\n", encoding="utf-8")
     (pkg / "__init__.py").write_text("from . import runner_vocab\n", encoding="utf-8")
     (pkg / "fine.py").write_text(
-        "from kiro_crew.taskq.adapters.runner import RunnerLane\n", encoding="utf-8"
+        "from aj_crew.taskq.adapters.runner import RunnerLane\n", encoding="utf-8"
     )
     owners = frozenset({f"{_PACKAGE}.runner_lane", f"{_PACKAGE}.runner_vocab"})
     assert _owner_importers(tmp_path, owners) == [
-        "kiro_crew/taskq/adapters/__init__.py",
-        "kiro_crew/taskq/adapters/other.py",
+        "aj_crew/taskq/adapters/__init__.py",
+        "aj_crew/taskq/adapters/other.py",
     ]
 
 
 def test_nothing_else_in_src_imports_an_owner() -> None:
-    """``kiro_crew.taskq.adapters.runner`` is the one import path of the runner adapters."""
+    """``aj_crew.taskq.adapters.runner`` is the one import path of the runner adapters."""
     src = Path(runner_module.__file__).resolve().parents[3]
     assert _owner_importers(src, frozenset(runner_module._RUNNER_OWNERS)) == []
 
@@ -266,17 +266,17 @@ def _foreign_loggers(tree: ast.Module) -> list[str]:
 def test_the_logger_scan_can_fail() -> None:
     tree = ast.parse(
         "import logging\n"
-        "logger = logging.getLogger('kiro_crew.taskq.adapters.runner')\n"
+        "logger = logging.getLogger('aj_crew.taskq.adapters.runner')\n"
         "_log = logging.getLogger(__name__)\n"
         "from logging import getLogger\n"
-        "other = getLogger('kiro_crew.taskq.adapters.runner_lane')\n"
+        "other = getLogger('aj_crew.taskq.adapters.runner_lane')\n"
     )
     assert [line.split(":")[0] for line in _foreign_loggers(tree)] == ["3", "5"]
 
 
 @pytest.mark.parametrize("owner", runner_module._RUNNER_OWNERS)
 def test_an_owner_that_logs_uses_the_runner_logger(owner: str) -> None:
-    """The runner logs under ``kiro_crew.taskq.adapters.runner``, which log captures and
+    """The runner logs under ``aj_crew.taskq.adapters.runner``, which log captures and
     filters name; an owner with a logger of its own would log where none of them look."""
     module = importlib.import_module(owner)
     assert _foreign_loggers(_tree(module)) == []
@@ -355,7 +355,7 @@ def _test_tree_files() -> list[Path]:
         name = path.name
         if rel == "conftest.py" or path.is_relative_to(test_root):
             files.append(path)
-        elif rel.startswith("src/kiro_crew/apps/builtins/") and (
+        elif rel.startswith("src/aj_crew/apps/builtins/") and (
             "/tests/" in rel
             or name.startswith("test_")
             or name.endswith("_test.py")
@@ -392,18 +392,18 @@ def _facade_spellings(src: Path) -> dict[str, str]:
 
 
 def test_the_spelling_scan_sees_an_aliased_binding(tmp_path: Path) -> None:
-    pkg = tmp_path / "kiro_crew" / "dashboard"
+    pkg = tmp_path / "aj_crew" / "dashboard"
     pkg.mkdir(parents=True)
     (pkg / "tasks.py").write_text(
-        "from kiro_crew.taskq.adapters import runner as taskq_runner\n", encoding="utf-8"
+        "from aj_crew.taskq.adapters import runner as taskq_runner\n", encoding="utf-8"
     )
-    adapters = tmp_path / "kiro_crew" / "taskq" / "adapters"
+    adapters = tmp_path / "aj_crew" / "taskq" / "adapters"
     adapters.mkdir(parents=True)
     (adapters / "rel.py").write_text("from . import runner\n", encoding="utf-8")
     assert _facade_spellings(tmp_path) == {
         _FACADE: _FACADE,
-        "kiro_crew.dashboard.tasks.taskq_runner": _FACADE,
-        "kiro_crew.taskq.adapters.rel.runner": _FACADE,
+        "aj_crew.dashboard.tasks.taskq_runner": _FACADE,
+        "aj_crew.taskq.adapters.rel.runner": _FACADE,
     }
 
 
@@ -466,24 +466,24 @@ def test_no_name_patched_through_the_facade_is_read_by_an_owner() -> None:
 def test_the_reach_scan_can_fail(tmp_path: Path) -> None:
     probe = tmp_path / "test_probe.py"
     probe.write_text(
-        "from kiro_crew.taskq.adapters import runner as runner_mod\n"
+        "from aj_crew.taskq.adapters import runner as runner_mod\n"
         "def test_x(monkeypatch):\n"
         "    monkeypatch.setattr(runner_mod, 'MODE_FIXED', 'pinned')\n"
         "def test_y():\n"
         "    from unittest import mock\n"
-        "    with mock.patch('kiro_crew.taskq.adapters.runner.TaskStoreUnavailable', OSError):\n"
+        "    with mock.patch('aj_crew.taskq.adapters.runner.TaskStoreUnavailable', OSError):\n"
         "        pass\n",
         encoding="utf-8",
     )
     via_handler = tmp_path / "test_probe_handler.py"
     via_handler.write_text(
-        "from kiro_crew.dashboard.handlers import tasks as tasks_mod\n"
+        "from aj_crew.dashboard.handlers import tasks as tasks_mod\n"
         "def test_z(monkeypatch):\n"
         "    monkeypatch.setattr(tasks_mod.taskq_runner, 'deque', list)\n",
         encoding="utf-8",
     )
     spellings = _facade_spellings(_REPO_ROOT / "src")
-    assert "kiro_crew.dashboard.handlers.tasks.taskq_runner" in spellings
+    assert "aj_crew.dashboard.handlers.tasks.taskq_runner" in spellings
     patched = _patched_through_the_facade([probe, via_handler], spellings)
     assert patched == {"MODE_FIXED", "TaskStoreUnavailable", "deque"}
     gaps = _reach_gaps(patched, _owner_reads())

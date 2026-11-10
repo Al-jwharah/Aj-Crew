@@ -21,9 +21,9 @@ from md_notebook_helpers import _seed_template  # noqa: F401 - fixture
 from md_notebook_helpers import fixtures_fixture  # noqa: F401 - fixture
 from md_notebook_helpers import _clone, _git, _wait_for, signed_client
 
-from kiro_crew.apps.builtins.md_notebook import git_ops
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import await_until
+from aj_crew.apps.builtins.md_notebook import git_ops
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import await_until
 
 # ---------------------------------------------------------------------------
 # External change detection
@@ -323,7 +323,7 @@ def loop_syncer(monkeypatch: pytest.MonkeyPatch):
     (1440) intact, so the interval assertions below hold with a wide margin
     instead of depending on the scheduler's cooperation.
     """
-    from kiro_crew.apps.builtins.md_notebook import syncer as syncer_mod
+    from aj_crew.apps.builtins.md_notebook import syncer as syncer_mod
 
     monkeypatch.setattr(syncer_mod, "TICK_SEC", 0.005)
     monkeypatch.setattr(syncer_mod, "SECONDS_PER_MINUTE", 0.005)
@@ -445,7 +445,7 @@ async def test_settings_writes_apply_in_arrival_order(fixtures) -> None:
 async def test_auto_sync_permission_flip_is_audited(fixtures) -> None:
     """Enabling autoSync authorizes unattended `git push`; the permission flip
     MUST leave a SEL record. A no-op re-write (True->True) writes nothing."""
-    from kiro_crew.sel import sel
+    from aj_crew.sel import sel
 
     server_mod, _remote, _seed = fixtures
     fingerprint = "autoSyncMins=1439"  # unique to this test, so it isolates its events
@@ -586,7 +586,7 @@ async def test_create_app_wires_the_auto_sync_loop(fixtures) -> None:
     lifecycle it would stop the moment the Notes tab closed, which is the whole
     defect this replaces."""
     server_mod, _remote, _seed = fixtures
-    from kiro_crew.apps.builtins.md_notebook import syncer as syncer_mod
+    from aj_crew.apps.builtins.md_notebook import syncer as syncer_mod
 
     app = server_mod.create_app()
     assert syncer_mod.start_syncer in app.on_startup
@@ -759,7 +759,7 @@ async def test_a_raising_vault_does_not_stop_the_others(
     """Per-vault containment: an unreachable remote costs that vault one cycle,
     not auto-sync for every other vault until the gateway restarts."""
     server_mod, _remote, _seed = fixtures
-    from kiro_crew.apps.builtins.md_notebook import syncer as syncer_mod
+    from aj_crew.apps.builtins.md_notebook import syncer as syncer_mod
 
     await server_mod.write_vaults(
         [
@@ -791,7 +791,7 @@ async def test_the_loop_skips_read_only_vaults(fixtures, monkeypatch: pytest.Mon
     """sync commits, merges and pushes — all writes — so a read-only vault must
     not reach it, exactly as on the manual path."""
     server_mod, _remote, _seed = fixtures
-    from kiro_crew.apps.builtins.md_notebook import syncer as syncer_mod
+    from aj_crew.apps.builtins.md_notebook import syncer as syncer_mod
 
     await server_mod.write_vaults(
         [
@@ -823,7 +823,7 @@ async def test_a_vault_forgotten_mid_cycle_is_skipped(
     mid-cycle has had its authorization revoked and must not be pushed from the
     stale snapshot. It is skipped while the still-connected vaults sync."""
     server_mod, _remote, _seed = fixtures
-    from kiro_crew.apps.builtins.md_notebook import syncer as syncer_mod
+    from aj_crew.apps.builtins.md_notebook import syncer as syncer_mod
 
     full = [
         {"id": "a", "localPath": "/vaults/a"},
@@ -863,7 +863,7 @@ async def test_a_mid_cycle_revocation_stops_the_remaining_vaults(
     """A cycle pushes every vault in turn; disabling auto-sync mid-cycle must stop
     the run rather than finish pushing the rest against a revoked authorization."""
     server_mod, _remote, _seed = fixtures
-    from kiro_crew.apps.builtins.md_notebook import syncer as syncer_mod
+    from aj_crew.apps.builtins.md_notebook import syncer as syncer_mod
 
     await server_mod.write_vaults(
         [
@@ -903,7 +903,7 @@ async def test_the_loop_passes_the_anti_tamper_pins(
     one. Nobody is watching this run, so a repointed remote that was not refused
     would send the user's notes somewhere new with no step to intervene at."""
     server_mod, _remote, _seed = fixtures
-    from kiro_crew.apps.builtins.md_notebook import syncer as syncer_mod
+    from aj_crew.apps.builtins.md_notebook import syncer as syncer_mod
 
     vault = {
         "id": "v1",
@@ -950,7 +950,7 @@ async def test_conflicts_do_not_record_a_sync_time(
     """A conflicted merge was aborted and pushed nothing, so stamping it would
     tell the user their notes are backed up when they are still only local."""
     server_mod, _remote, _seed = fixtures
-    from kiro_crew.apps.builtins.md_notebook import syncer as syncer_mod
+    from aj_crew.apps.builtins.md_notebook import syncer as syncer_mod
 
     await server_mod.write_vaults([{"id": "v1", "localPath": "/vaults/v1"}])
 
@@ -978,7 +978,7 @@ async def test_a_cycle_never_overlaps_the_previous_one(
     """Two concurrent commits in one repository race on index.lock, and the
     loser drops that cycle's notes from history."""
     server_mod, _remote, _seed = fixtures
-    from kiro_crew.apps.builtins.md_notebook import syncer as syncer_mod
+    from aj_crew.apps.builtins.md_notebook import syncer as syncer_mod
 
     await server_mod.write_vaults([{"id": "v1", "localPath": "/vaults/v1"}])
     started = asyncio.Event()

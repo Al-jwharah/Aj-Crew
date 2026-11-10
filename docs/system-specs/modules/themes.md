@@ -7,7 +7,7 @@ up to a full "experience pack" (fonts, sandboxed overlays, audio, persona). A
 color theme is the degenerate case of a pack — the whole spectrum lives behind
 **one Theme dropdown** in Settings → Display: install many, select one.
 
-Themes are a **standalone subsystem built on `useTheme`**, not Kiro Crew apps. This document is the **source of truth** for the end-to-end subsystem.
+Themes are a **standalone subsystem built on `useTheme`**, not Aj Crew apps. This document is the **source of truth** for the end-to-end subsystem.
 The frontend pack-author contract (the CSS-var surface and the
 `overrides.css` selector allowlist) lives in
 [`website/docs/theming-contract.md`](../../../website/docs/theming-contract.md);
@@ -18,8 +18,8 @@ where the two overlap, this spec governs.
 `theme.json` MUST declare `"formatVersion": 1` (required integer major,
 mirroring the platform layer's pinned-`CONTRACT_VERSION` precedent). Validation
 rejects a missing/non-integer value, and rejects an unknown major with an
-explicit *"this pack requires a newer version of Kiro Crew"* message — never the
-opaque generic-validation errors — so an older Kiro Crew degrades honestly when
+explicit *"this pack requires a newer version of Aj Crew"* message — never the
+opaque generic-validation errors — so an older Aj Crew degrades honestly when
 handed a newer pack. Semantics changes within a major stay backward-tolerant;
 breaking manifest changes bump the major.
 
@@ -222,7 +222,7 @@ predate this subsystem and remain the color-theme surface.)
 ### Asset, overlay and topbar responses revalidate, never expire
 
 All three serving routes answer through one helper (`_theme_asset_response`),
-which itself calls the dashboard-wide `kiro_crew.dashboard.conditional_get`
+which itself calls the dashboard-wide `aj_crew.dashboard.conditional_get`
 (the same compare the appearance-media, app-art and crew-avatar routes use).
 A `200` carries `ETag: W/"<hex>"` — the 8-byte blake2b digest of the body bytes
 just read — and `Cache-Control: private, max-age=0, must-revalidate`. A request
@@ -497,6 +497,6 @@ a persona or third-party-derived branding.
 
 This covers **art assets too**, not just personas and manifests. When retiring
 a theme, delete its art in the same change: `MANIFEST.in`'s
-`recursive-include src/kiro_crew/static *` ships every file under
-`src/kiro_crew/static/` in the sdist, wheel and DMG, so an orphan there is a
+`recursive-include src/aj_crew/static *` ships every file under
+`src/aj_crew/static/` in the sdist, wheel and DMG, so an orphan there is a
 shipped orphan, not dead weight in a dev tree.

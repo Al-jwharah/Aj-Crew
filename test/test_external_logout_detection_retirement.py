@@ -19,24 +19,24 @@ from external_logout_detection_helpers import (
 )
 from source_corpus import parsed_candidates, src_root
 
-from kiro_crew import kiro_prerequisite as kp
-from kiro_crew.session_allocation import (
+from aj_crew import kiro_prerequisite as kp
+from aj_crew.session_allocation import (
     FOREGROUND_COLD_START_RESERVE as _COLD_START_RESERVE_FOR_TEST,
 )
-from kiro_crew.session_allocation import MAX_CONCURRENT_COLD_STARTS as _MAX_COLD_STARTS_FOR_TEST
-from kiro_crew.testing.wait import async_wait_until, await_until, until_parked
+from aj_crew.session_allocation import MAX_CONCURRENT_COLD_STARTS as _MAX_COLD_STARTS_FOR_TEST
+from aj_crew.testing.wait import async_wait_until, await_until, until_parked
 
 
 class TestProviderMembership:
     def test_kiro_backend_is_a_member(self) -> None:
-        from kiro_crew.session import _provider_uses_kiro_identity_store
+        from aj_crew.session import _provider_uses_kiro_identity_store
 
         assert _provider_uses_kiro_identity_store(_FakeProvider(""))
 
     def test_unknown_backend_fails_closed(self) -> None:
         """An object that declares nothing must be left running, not recycled."""
 
-        from kiro_crew.session import _provider_uses_kiro_identity_store
+        from aj_crew.session import _provider_uses_kiro_identity_store
 
         assert not _provider_uses_kiro_identity_store(object())
         assert not _provider_uses_kiro_identity_store(_FakeProvider("claude"))
@@ -49,13 +49,13 @@ class TestProviderMembership:
         so a harness that never states the claim cannot inherit it.
         """
 
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         assert "uses_kiro_identity_store" in vars(LLMProvider)
         assert LLMProvider.uses_kiro_identity_store.fget(object()) is False  # type: ignore[attr-defined]
 
     def test_a_non_declaring_provider_is_not_swept(self) -> None:
-        from kiro_crew.session import _provider_uses_kiro_identity_store
+        from aj_crew.session import _provider_uses_kiro_identity_store
 
         class _Bare:
             pass
@@ -68,12 +68,12 @@ class TestRetirementCoverage:
 
     @staticmethod
     def _manager():
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
         # pool_size 0 so construction never pre-spawns; the pool is populated
         # explicitly by the test that cares about it.
-        return SessionManager(KiroCrewConfig())
+        return SessionManager(AjCrewConfig())
 
     @staticmethod
     def _stored_sid(smap, key: str) -> str:
@@ -85,14 +85,14 @@ class TestRetirementCoverage:
         dropped the pointer, so read the entry.
         """
 
-        from kiro_crew.session_map import canonical_key
+        from aj_crew.session_map import canonical_key
 
         entry = smap._session_map._data.get(canonical_key(key)) or {}
         return entry.get("sid", "")
 
     @staticmethod
     def _session(provider: object, *, busy: bool = False):
-        from kiro_crew.session import _Session
+        from aj_crew.session import _Session
 
         sess = _Session(provider=provider)  # type: ignore[arg-type]
         if busy:
@@ -694,7 +694,7 @@ class TestRetirementCoverage:
     async def test_the_runtime_predicate_counts_inits_in_flight(self) -> None:
         """Pins the real AcpRuntime property, not just the test double."""
 
-        from kiro_crew.acp.runtime import AcpRuntime
+        from aj_crew.acp.runtime import AcpRuntime
 
         runtime = AcpRuntime.__new__(AcpRuntime)
         runtime._session_queues = {}  # type: ignore[attr-defined]
@@ -717,7 +717,7 @@ class TestRetirementCoverage:
         instead. Two concurrent sweeps are the common boot case, not an exotic one:
         with ``_session_identity`` unset, every in-flight turn sees a change at once.
         """
-        from kiro_crew.start_priority import StartPriority
+        from aj_crew.start_priority import StartPriority
 
         smap = self._manager()
         # Every permit held -- background its full width, a person the reserve -- so
@@ -758,7 +758,7 @@ class TestRetirementCoverage:
         previous account would still win registration and serve it.
         """
 
-        from kiro_crew.start_priority import StartPriority
+        from aj_crew.start_priority import StartPriority
 
         smap = self._manager()
         await await_until(asyncio.ensure_future(smap._start_sem.acquire(StartPriority.BACKGROUND)))
@@ -1186,7 +1186,7 @@ class TestRetirementCoverage:
 
         unmarked = _FakeProvider("", sid="sid-current-account")
         smap._sessions["unmarked"] = self._session(unmarked)
-        monkeypatch.setattr("kiro_crew.session._load_acp_provider_type", lambda: _FakeProvider)
+        monkeypatch.setattr("aj_crew.session._load_acp_provider_type", lambda: _FakeProvider)
 
         await smap.close_all()
 
@@ -1197,7 +1197,7 @@ class TestRetirementCoverage:
     def test_marked_replay_settlement_consumes_lease_without_republishing_sid(self) -> None:
         """A landed replay cannot restore the identity sweep's discarded sid."""
 
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         smap = self._manager()
         provider = object.__new__(AcpProvider)
@@ -1305,10 +1305,10 @@ class TestWarmPoolIdentityFence:
 
     @staticmethod
     def _manager():
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
-        return SessionManager(KiroCrewConfig())
+        return SessionManager(AjCrewConfig())
 
     @staticmethod
     def _record_discards(smap) -> list:

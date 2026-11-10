@@ -47,7 +47,7 @@ Two changes about the same thing landed one day apart, in different directions:
 
 ### What path A is, on main
 
-`src/kiro_crew/dashboard/mate_folders.py` (447 lines, from #25994):
+`src/aj_crew/dashboard/mate_folders.py` (447 lines, from #25994):
 
 - `ensure_mate_home` makes one top-level folder per mate, marked `MATE_HOME_KEY` (`"mate_home"`) and owned by `mate_principal(store)` (`"member:<store>"`). It is made the first time the mate opens a chat or folder, and renamed when the mate is renamed (`follow_display_name`, called from `crew_update.py`).
 - `mate_home_filing`, called from `session_create.py`, files every session the mate's own conductor chat opens into the home, or a folder inside it. That chat is any slot running as the mate on the mate conductor (`_conducts_for_a_worker`, which reads the run record through `_dispatching_crewmate`).
@@ -56,7 +56,7 @@ Two changes about the same thing landed one day apart, in different directions:
 
 ### What path B has so far
 
-#26952 at head `4bf644a704` adds `MATE_ROOT_FIELD` and `MATE_DISPATCHER_FIELD` to `stamp_rows` in `src/kiro_crew/crew_mode.py`. A slot whose `mode` is `"member"` and that has no creator is a mate root. The walk stamps every session below it, at any depth, and stops at the nearest root of either kind. `slots_push.py` sends the two stamps on patch frames. Nothing reads them yet. #26643 steps 3 to 6 add the reader (grouped route, Sessions tab, approvals in the mate chat, hiding behind a flag); steps 7 and 8 drop mate-tree filing and dispatcher folder grants.
+#26952 at head `4bf644a704` adds `MATE_ROOT_FIELD` and `MATE_DISPATCHER_FIELD` to `stamp_rows` in `src/aj_crew/crew_mode.py`. A slot whose `mode` is `"member"` and that has no creator is a mate root. The walk stamps every session below it, at any depth, and stops at the nearest root of either kind. `slots_push.py` sends the two stamps on patch frames. Nothing reads them yet. #26643 steps 3 to 6 add the reader (grouped route, Sessions tab, approvals in the mate chat, hiding behind a flag); steps 7 and 8 drop mate-tree filing and dispatcher folder grants.
 
 ## Cases
 
@@ -82,7 +82,7 @@ The owner chose this, for both paths. In a mate's profile, on its Sessions tab, 
 
 Today the click leaves the page. The row (`crew-profile-driving-row` in `website/src/pages/members/MembersPageProfile.tsx`) calls `openSessionGuarded`, which asks first when a Schedules draft is unsaved, then `openSessionOnChatPage` (`MembersPageSidePanel.tsx`) navigates to `/chat?sid=<key>`. The tab lists `drivingSessions`, the live slots whose `created_by` is the mate.
 
-**Source: the crew log only, no model call.** The recap is a plain render of records the crew log already holds. It does not use the model-written intent summary (`read_cached_intent_summary` in `src/kiro_crew/dashboard/chat_summary.py`), so it costs no model call.
+**Source: the crew log only, no model call.** The recap is a plain render of records the crew log already holds. It does not use the model-written intent summary (`read_cached_intent_summary` in `src/aj_crew/dashboard/chat_summary.py`), so it costs no model call.
 
 | Recap line | Crew log record |
 |---|---|
@@ -92,16 +92,16 @@ Today the click leaves the page. The row (`crew-profile-driving-row` in `website
 | PR link | The item's `pr` and `artifacts` (`report`) |
 | Conductor's decision | The item's `decision` (`decide`) |
 | Last update | The item's `last_report_at`, else the session's newest `turn/completed` |
-| Open approvals | The `pending` entries of the session's existing approvals fold (`_approvals_step` in `src/kiro_crew/crew_log/projection_side_panel.py`, from `approval/requested` and `approval/decided`) |
+| Open approvals | The `pending` entries of the session's existing approvals fold (`_approvals_step` in `src/aj_crew/crew_log/projection_side_panel.py`, from `approval/requested` and `approval/decided`) |
 | Open questions | The session's open `ask_question` calls in the same file's tools fold (`_tools_step`): a `tool/called` with no `tool/completed` yet |
 
-The item fields are `work/recorded` entries (`WORK_ENTRY_TYPE` in `src/kiro_crew/crew_log/entry_types_ledgers.py`), written for each `work_ledger_record` and `work_report`. The board files are a cache of them (`rebuild_from_projection` in `src/kiro_crew/work_ledger.py`). The Crew panel already reads that board for its worker line, through `work_ledger_board.task_records`, and the recap reads it the same way (`src/kiro_crew/dashboard/handlers/crew_workers.py`). `_ledger_items(root)` reads only the root's own ledger; `_crew_ledger_items(root, members)` adds each member's, so a sub-conductor's workers show their reports too. As there, the server checks the session key against the mate's rows from its own stamps and refuses any other. The log holds no question text or answer: `ask_question` leaves a `tool/called` entry and, once answered, a `tool/completed` with a result digest only, so the recap shows a count. `dashboard/waiting_changed` lists only the mate's own waits, so it is not used.
+The item fields are `work/recorded` entries (`WORK_ENTRY_TYPE` in `src/aj_crew/crew_log/entry_types_ledgers.py`), written for each `work_ledger_record` and `work_report`. The board files are a cache of them (`rebuild_from_projection` in `src/aj_crew/work_ledger.py`). The Crew panel already reads that board for its worker line, through `work_ledger_board.task_records`, and the recap reads it the same way (`src/aj_crew/dashboard/handlers/crew_workers.py`). `_ledger_items(root)` reads only the root's own ledger; `_crew_ledger_items(root, members)` adds each member's, so a sub-conductor's workers show their reports too. As there, the server checks the session key against the mate's rows from its own stamps and refuses any other. The log holds no question text or answer: `ask_question` leaves a `tool/called` entry and, once answered, a `tool/completed` with a result digest only, so the recap shows a count. `dashboard/waiting_changed` lists only the mate's own waits, so it is not used.
 
 **When the crew log has nothing.** A session bound to no work item, or with no report yet, shows its title and "no report yet". Open approvals and questions still show if any are open.
 
 **What the person can do without leaving.** The recap is read-only. Approvals and question cards from the mate's sessions are answered in the mate chat (#26643 section 4, step 5).
 
-**The full transcript.** It is not reached from this click. It stays reachable from History and search (`api_sessions_search` in `src/kiro_crew/dashboard/handlers/sessions_parts/history_reads.py`). #26643 section 2 says a hidden worker opens from the Sessions tab with a breadcrumb back to the mate. With this decision the Sessions tab no longer opens it; the breadcrumb stays for History, search and links in the mate chat.
+**The full transcript.** It is not reached from this click. It stays reachable from History and search (`api_sessions_search` in `src/aj_crew/dashboard/handlers/sessions_parts/history_reads.py`). #26643 section 2 says a hidden worker opens from the Sessions tab with a breadcrumb back to the mate. With this decision the Sessions tab no longer opens it; the breadcrumb stays for History, search and links in the mate chat.
 
 **Both paths.** The recap reads work boards and the session's own crew log, not folders or stamps, so its lines are the same under A and B. The rows and boards differ. Under A, the rows are the sessions the mate created, and the mate's own board (`_ledger_items`) holds their items. Under B, the rows are every session stamped `mate_root` for the mate (#26643 section 3), so the recap needs `_crew_ledger_items` to reach a sub-conductor's board.
 

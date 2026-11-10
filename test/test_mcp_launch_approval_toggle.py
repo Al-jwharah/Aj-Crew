@@ -37,7 +37,7 @@ from mcp_launch_approval_helpers import (  # noqa: F401 -- the fixture is reques
     toggle_home_fixture,
 )
 
-from kiro_crew.mcp_gateway import rewriter
+from aj_crew.mcp_gateway import rewriter
 
 #: Opts this module out of the conftest fixture that approves every gatewayd launch.
 ENFORCE_LAUNCH_APPROVAL = True
@@ -53,7 +53,7 @@ def _declare_two(agents: Path, first: list[str], second: list[str]) -> None:
 
 @pytest.mark.asyncio
 async def test_first_toggle_requires_the_displayed_launch(toggle_home):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     _declare(toggle_home, "agent spec", _APPROVED_CMD, [])
     response = await mcp_mod.api_mcp_gateway_set_stub(_stub_request({"name": "srv", "stub": True}))
@@ -64,7 +64,7 @@ async def test_first_toggle_requires_the_displayed_launch(toggle_home):
 
 @pytest.mark.asyncio
 async def test_launch_endpoint_returns_the_first_toggle_compare_and_set(toggle_home):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     _declare(toggle_home, "agent spec", _APPROVED_CMD, [])
     request = _stub_request({})
@@ -91,7 +91,7 @@ def _past_the_display_bound(shape: str) -> list[str]:
 @pytest.mark.asyncio
 @pytest.mark.parametrize("shape", ["args", "chars"])
 async def test_partial_launch_display_cannot_be_approved(toggle_home, shape):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     padded = _past_the_display_bound(shape)
     _declare(toggle_home, "agent spec", _APPROVED_CMD, padded)
@@ -125,7 +125,7 @@ _INCLUDE_TOOLS = [
 
 @pytest.mark.asyncio
 async def test_a_long_include_tools_launch_is_shown_in_full_and_approved(toggle_home):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     mod = _approval_module()
     _declare_two(toggle_home, ["--short"], _INCLUDE_TOOLS)
@@ -172,7 +172,7 @@ async def test_a_long_include_tools_launch_put_on_the_list_by_hand_can_be_approv
 
 @pytest.mark.asyncio
 async def test_batch_toggle_on_requires_individual_launch_displays(toggle_home):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     response = await mcp_mod.api_mcp_gateway_set_stub(
         _stub_request({"names": ["srv"], "stub": True})
@@ -236,7 +236,7 @@ async def test_a_changed_launch_identity_set_still_rejects_reapprove(tmp_path, t
 
 async def _live_display(name: str = "srv") -> dict:
     """What the launch read shows for *name* right now."""
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     launches = await asyncio.to_thread(
         mcp_mod.launch_resolve.resolve_launches, [name], refresh_specs=False
@@ -290,7 +290,7 @@ async def test_approving_a_refusal_the_launch_moved_past_answers_with_the_launch
 ):
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     mod = _approval_module()
     assert mod is not None
@@ -338,7 +338,7 @@ async def test_a_launch_moved_since_its_read_with_no_refusal_keeps_the_changed_c
 async def test_toggle_reads_the_refusal_store_off_the_event_loop(
     tmp_path, toggle_home, monkeypatch
 ):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     _declare(toggle_home, "agent spec", _APPROVED_CMD, [])
     event_loop_thread = threading.get_ident()
@@ -373,8 +373,8 @@ async def test_a_toggle_with_no_launch_to_approve_changes_nothing(tmp_path, togg
 async def test_a_toggle_whose_launches_exceed_the_cap_changes_nothing(
     tmp_path, toggle_home, monkeypatch
 ):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
-    from kiro_crew.mcp_gateway import launch_resolve
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.mcp_gateway import launch_resolve
 
     mod = _approval_module()
     cap = getattr(mod, "_MAX_SERVER_LAUNCHES")
@@ -412,7 +412,7 @@ async def test_a_toggle_whose_launches_exceed_the_cap_changes_nothing(
 async def test_a_toggle_at_the_store_record_cap_changes_neither_store(
     tmp_path, toggle_home, monkeypatch
 ):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     mod = _approval_module()
     assert mod is not None
@@ -433,7 +433,7 @@ async def test_a_toggle_at_the_store_record_cap_changes_neither_store(
     store.parent.mkdir(parents=True, exist_ok=True)
     mod._write(store, mod._document(approvals, {}))
     config = tmp_path / "config.json"
-    mcp_mod.KiroCrewConfig.load()
+    mcp_mod.AjCrewConfig.load()
     before_config = config.read_bytes()
     before_store = store.read_bytes()
     events = []
@@ -459,7 +459,7 @@ async def test_a_toggle_at_the_store_record_cap_changes_neither_store(
 async def test_an_approval_write_failure_does_not_admit_the_launch(
     tmp_path, toggle_home, monkeypatch
 ):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     _declare(toggle_home, "agent spec", _APPROVED_CMD, [])
     monkeypatch.setattr(mcp_mod, "approve", lambda launches: (_ for _ in ()).throw(OSError()))
@@ -479,7 +479,7 @@ async def test_reapprove_rejects_a_launch_changed_after_it_was_shown(
 ):
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     mod = _approval_module()
     assert mod is not None
@@ -535,7 +535,7 @@ async def test_reapprove_matching_the_shown_launch_replaces_the_approval(tmp_pat
 
 @pytest.mark.asyncio
 async def test_turning_the_stub_off_forgets_the_approval(tmp_path, toggle_home):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     _declare(toggle_home, "agent spec", _APPROVED_CMD, [])
     assert (await _toggle_on())[0] == 200
@@ -553,8 +553,8 @@ async def test_turning_the_stub_off_forgets_the_approval(tmp_path, toggle_home):
 async def test_stub_off_restores_approval_when_config_does_not_commit(
     tmp_path, toggle_home, monkeypatch, failure
 ):
-    import kiro_crew.config.loader as loader_mod
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    import aj_crew.config.loader as loader_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     _declare(toggle_home, "agent spec", _APPROVED_CMD, [])
     assert (await _toggle_on())[0] == 200
@@ -588,7 +588,7 @@ async def test_stub_off_restores_approval_when_config_does_not_commit(
 async def test_stub_off_revocation_failure_preserves_config_and_approval(
     tmp_path, toggle_home, monkeypatch
 ):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     _declare(toggle_home, "agent spec", _APPROVED_CMD, [])
     assert (await _toggle_on())[0] == 200

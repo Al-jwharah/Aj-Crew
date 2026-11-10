@@ -31,8 +31,8 @@ mkdirSync(OUT, { recursive: true })
 const GATEWAY_STATUS = { enabled: true, stub: ['filesystem'], stub_count: 1, running: true, ping_ok: true, supported: true }
 const GATEWAY_SERVERS = {
   servers: [
-    { name: 'filesystem', stub: true, can_stub: true, in_allowlist: true, entry_poolable: false, agents: ['kirocrew'], transport: 'stdio', denylisted: false },
-    { name: 'git', stub: false, can_stub: true, in_allowlist: false, entry_poolable: false, agents: ['kirocrew'], transport: 'stdio', denylisted: false },
+    { name: 'filesystem', stub: true, can_stub: true, in_allowlist: true, entry_poolable: false, agents: ['ajcrew'], transport: 'stdio', denylisted: false },
+    { name: 'git', stub: false, can_stub: true, in_allowlist: false, entry_poolable: false, agents: ['ajcrew'], transport: 'stdio', denylisted: false },
   ],
 }
 

@@ -20,7 +20,7 @@ const now = Math.floor(Date.now() / 1000)
 /** One ordinary, fully-shaped slot so the sidebar providers boot cleanly. */
 const slot = {
   key: 'chat-active', title: 'A session', running: false, messages: 1,
-  agent: 'kirocrew', modified: now, last_ts: new Date().toISOString(), folder_id: '',
+  agent: 'ajcrew', modified: now, last_ts: new Date().toISOString(), folder_id: '',
   last_message: 'Hi.', source_links: [], source_links_total: 0, tags: [],
 }
 const EMPTY_COL = { id: 'c-empty', name: '', tag_ids: [], mode: 'any', order: 0, include_untagged: true }

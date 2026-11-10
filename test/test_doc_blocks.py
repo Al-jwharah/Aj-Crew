@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.doc_blocks — structured block extraction for docx.
+"""Tests for aj_crew.doc_blocks — structured block extraction for docx.
 
 What is pinned here is the block CONTRACT the dashboard renders against
 (heading level, list orderedness, table grid, bold/italic runs) and the one
@@ -15,10 +15,10 @@ import sys
 import pytest
 from ooxml_fixtures import docx_para, docx_styles_xml, docx_table, write_docx
 
-from kiro_crew import doc_blocks
-from kiro_crew.doc_blocks import extract_blocks
-from kiro_crew.doc_parser import extract_text
-from kiro_crew.security import redact_credentials
+from aj_crew import doc_blocks
+from aj_crew.doc_blocks import extract_blocks
+from aj_crew.doc_parser import extract_text
+from aj_crew.security import redact_credentials
 
 
 def _kinds(blocks: list[dict]) -> list[str]:

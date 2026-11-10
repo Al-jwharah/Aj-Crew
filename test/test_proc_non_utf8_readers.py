@@ -19,11 +19,11 @@ from unittest.mock import MagicMock, mock_open, patch
 import pytest
 from non_utf8_comm import BAD_COMM, comm_is_settable, renamed_child
 
-from kiro_crew import platform_compat, runtime_reconcile
-from kiro_crew import session_pid as sp
-from kiro_crew.acp import runtime_process_tree as tree
-from kiro_crew.dashboard.handlers import terminal
-from kiro_crew.diag import recorder
+from aj_crew import platform_compat, runtime_reconcile
+from aj_crew import session_pid as sp
+from aj_crew.acp import runtime_process_tree as tree
+from aj_crew.dashboard.handlers import terminal
+from aj_crew.diag import recorder
 
 live_rename = pytest.mark.skipif(not comm_is_settable(), reason="renames a real Linux process")
 

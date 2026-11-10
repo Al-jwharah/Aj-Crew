@@ -22,7 +22,7 @@ from skill_script_helpers import load_skill_script
 
 _REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 _REFS = (
-    _REPO_ROOT / "src/kiro_crew/apps/builtins/dev_fleet/skills/feature-demo-recording/references"
+    _REPO_ROOT / "src/aj_crew/apps/builtins/dev_fleet/skills/feature-demo-recording/references"
 )
 
 _RESOLVED = "/opt/aws-cli/aws"
@@ -77,11 +77,11 @@ class TestDepsSpeechProbe:
         assert _RESOLVED in probed
         assert "aws" not in probed  # the bare-name probe is the defect
 
-    def test_resolver_degrades_to_bare_name_without_kiro_crew(self, monkeypatch):
-        # A None entry makes ``from kiro_crew.deploy.engine import ...`` raise
+    def test_resolver_degrades_to_bare_name_without_aj_crew(self, monkeypatch):
+        # A None entry makes ``from aj_crew.deploy.engine import ...`` raise
         # ImportError, which is the standalone-interpreter environment the
         # doctor must keep diagnosing instead of crashing on import.
-        monkeypatch.setitem(sys.modules, "kiro_crew.deploy.engine", None)
+        monkeypatch.setitem(sys.modules, "aj_crew.deploy.engine", None)
         deps = load_skill_script("kc_video_deps_aws_fallback", _REFS / "deps.py")
         assert deps.resolve_aws_bin() == "aws"
 

@@ -28,8 +28,8 @@ from test_worktree_create import (
     _sandbox_exec_reason,
 )
 
-from kiro_crew import crewmate_worktree as cw
-from kiro_crew.dashboard import chat_runner
+from aj_crew import crewmate_worktree as cw
+from aj_crew.dashboard import chat_runner
 
 
 def _git(cwd, *args: str) -> str:
@@ -51,7 +51,7 @@ def git_here(monkeypatch):
     if sys.platform == "win32":
         pytest.skip("sandboxed git does not run on Windows (no backend)")
     if _sandbox_exec_reason():
-        from kiro_crew.dashboard.handlers import worktree as wt
+        from aj_crew.dashboard.handlers import worktree as wt
 
         monkeypatch.setattr(wt, "sandboxed_spawn_argv", _passthrough_spawn)
 
@@ -149,12 +149,12 @@ def edition_runtime():
     """
     import dataclasses
 
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.platform.bootstrap import build_default_context
-    from kiro_crew.platform.context import reset_context, set_context
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.platform.bootstrap import build_default_context
+    from aj_crew.platform.context import reset_context, set_context
 
     def install(runtime) -> None:
-        base = build_default_context(KiroCrewConfig())
+        base = build_default_context(AjCrewConfig())
         set_context(dataclasses.replace(base, agent_runtime=runtime))
 
     yield install
@@ -165,7 +165,7 @@ def test_a_repository_the_edition_works_in_place_has_no_worktree(
     repo, tmp_path, monkeypatch, edition_runtime
 ):
     """A build that needs its checkout where it is: the worker stays in that checkout."""
-    from kiro_crew.platform.defaults import DefaultAgentRuntime
+    from aj_crew.platform.defaults import DefaultAgentRuntime
 
     asked: list[str] = []
     kept = os.path.realpath(repo)
@@ -196,7 +196,7 @@ def test_a_repository_the_edition_works_in_place_has_no_worktree(
 def test_the_public_build_and_an_older_edition_give_every_repository_a_worktree(
     repo, tmp_path, edition_runtime
 ):
-    from kiro_crew.platform.defaults import DefaultAgentRuntime
+    from aj_crew.platform.defaults import DefaultAgentRuntime
 
     assert DefaultAgentRuntime().works_in_place(repo) is False
 
@@ -334,7 +334,7 @@ def test_a_folder_git_does_not_register_is_refused(repo, tmp_path):
 
 
 def test_an_unlistable_worktree_table_is_refused(repo, tmp_path, monkeypatch):
-    from kiro_crew.dashboard.handlers import worktree as wt
+    from aj_crew.dashboard.handlers import worktree as wt
 
     monkeypatch.setattr(wt, "_worktree_branches", lambda _r: None)
     with pytest.raises(cw.WorktreeRefused, match="could not list"):
@@ -360,7 +360,7 @@ def test_a_repository_with_no_commit_is_refused(tmp_path, git_here):
 
 def test_a_worktree_add_that_times_out_leaves_no_branch_and_no_folder(repo, tmp_path, monkeypatch):
     """A half-made worktree and its claimed branch would be reused by the next turn."""
-    from kiro_crew.dashboard.handlers import worktree as wt
+    from aj_crew.dashboard.handlers import worktree as wt
 
     real = wt._run_git
 
@@ -385,7 +385,7 @@ def test_a_worktree_add_that_times_out_leaves_no_branch_and_no_folder(repo, tmp_
 
 
 def test_a_failed_add_keeps_a_branch_it_did_not_cut(repo, tmp_path, monkeypatch):
-    from kiro_crew.dashboard.handlers import worktree as wt
+    from aj_crew.dashboard.handlers import worktree as wt
 
     ws = str(tmp_path / "ws-atlas")
     found = cw.ensure("atlas", ws, repo)
@@ -418,8 +418,8 @@ def test_a_failed_add_removes_the_empty_folder_where_a_tree_walk_cannot_pin(
     ``remove_tree_pinned`` then refuses and the ``os.rmdir`` fallback must clear the
     folder so the next turn builds the worktree. ``git_here`` skips win32 up front.
     """
-    from kiro_crew import pinned_fs
-    from kiro_crew.dashboard.handlers import worktree as wt
+    from aj_crew import pinned_fs
+    from aj_crew.dashboard.handlers import worktree as wt
 
     monkeypatch.setattr(pinned_fs, "supports_pinned_tree_walk", lambda: False)
     ws = str(tmp_path / "ws-atlas")
@@ -451,8 +451,8 @@ def test_a_folder_with_content_is_kept_even_where_a_tree_walk_cannot_pin(
     drop an empty folder, never a tree. A folder git added a file to before failing is
     left in place with its warning, as on the pinned path.
     """
-    from kiro_crew import pinned_fs
-    from kiro_crew.dashboard.handlers import worktree as wt
+    from aj_crew import pinned_fs
+    from aj_crew.dashboard.handlers import worktree as wt
 
     monkeypatch.setattr(pinned_fs, "supports_pinned_tree_walk", lambda: False)
     ws = str(tmp_path / "ws-atlas")
@@ -483,8 +483,8 @@ def test_a_real_posix_refusal_still_warns_and_leaves_the_folder(
     ``remove_tree_pinned`` forced to refuse) must still log "left in place after a
     failed add" and leave the folder, exactly as before this change.
     """
-    from kiro_crew import pinned_fs
-    from kiro_crew.dashboard.handlers import worktree as wt
+    from aj_crew import pinned_fs
+    from aj_crew.dashboard.handlers import worktree as wt
 
     def refuse(*_a, refusal=OSError, **_k):
         raise refusal("forced refusal")
@@ -500,7 +500,7 @@ def test_a_real_posix_refusal_still_warns_and_leaves_the_folder(
         return real(args, cwd, **kw)
 
     monkeypatch.setattr(wt, "_run_git", fail)
-    with caplog.at_level("WARNING", logger="kiro_crew.crewmate_worktree"):
+    with caplog.at_level("WARNING", logger="aj_crew.crewmate_worktree"):
         with pytest.raises(cw.WorktreeRefused, match="add failed"):
             cw.ensure("atlas", ws, repo)
     assert os.path.isdir(dest)
@@ -510,7 +510,7 @@ def test_a_real_posix_refusal_still_warns_and_leaves_the_folder(
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX links and no-follow descriptors")
 def test_a_failed_add_never_removes_what_a_swapped_parent_points_at(repo, tmp_path, monkeypatch):
     """``worktrees/<slug>`` swapped for a link to the crew home before the cleanup: it stays."""
-    from kiro_crew.dashboard.handlers import worktree as wt
+    from aj_crew.dashboard.handlers import worktree as wt
 
     crew_home = tmp_path / "crew-home"
     ws = str(tmp_path / "ws-atlas")
@@ -624,7 +624,7 @@ def test_removal_keeps_a_worktree_whose_repository_names_a_filter(repo, tmp_path
 
 
 def test_removal_keeps_a_worktree_git_will_not_remove(repo, tmp_path, monkeypatch):
-    from kiro_crew.dashboard.handlers import worktree as wt
+    from aj_crew.dashboard.handlers import worktree as wt
 
     ws = str(tmp_path / "ws-atlas")
     found = cw.ensure("atlas", ws, repo)
@@ -649,8 +649,8 @@ def test_the_ignored_list_is_bounded(monkeypatch):
 
 
 def test_remove_for_member_never_raises(monkeypatch, caplog):
-    import kiro_crew.config.loader as loader
-    import kiro_crew.members as members
+    import aj_crew.config.loader as loader
+    import aj_crew.members as members
 
     config = SimpleNamespace(agents={"Atlas": SimpleNamespace(workspace="")})
     cw.remove_for_member("Nobody", config)  # no record: nothing to do
@@ -672,9 +672,9 @@ def test_remove_for_member_never_raises(monkeypatch, caplog):
 
 
 def _scope_env(monkeypatch, ws):
-    import kiro_crew.config.loader as loader
-    import kiro_crew.members as members
-    from kiro_crew.dashboard import crewmate_worktree_scope as scope
+    import aj_crew.config.loader as loader
+    import aj_crew.members as members
+    from aj_crew.dashboard import crewmate_worktree_scope as scope
 
     monkeypatch.setattr(members, "member_slug", lambda _n, _c: "atlas")
     monkeypatch.setattr(loader, "workspace_dir_for", lambda _w: ws)
@@ -682,9 +682,9 @@ def _scope_env(monkeypatch, ws):
 
 
 def test_only_a_crewmates_worker_is_scoped(monkeypatch):
-    from kiro_crew.dashboard import crewmate_approval
-    from kiro_crew.dashboard import crewmate_worktree_scope as scope
-    from kiro_crew.mate_worker import MATE_WORKER_AGENT
+    from aj_crew.dashboard import crewmate_approval
+    from aj_crew.dashboard import crewmate_worktree_scope as scope
+    from aj_crew.mate_worker import MATE_WORKER_AGENT
 
     conductor = SimpleNamespace(selection_kind="agent", template_id="")
     assert scope._worker_crewmate(None, conductor) == ""
@@ -716,7 +716,7 @@ def test_each_candidate_is_tried_in_turn(monkeypatch, tmp_path):
     assert got is hit and tried == ["/r/named", "/r/bad", "/r/x", "/r/project"]
     assert scope.resolve_worker_project(config, "Atlas", "", "see /r/named") is None
 
-    from kiro_crew.dashboard.handlers import worktree as wt
+    from aj_crew.dashboard.handlers import worktree as wt
 
     def no_sandbox(*_a):
         raise wt.SandboxUnavailable("no backend")
@@ -755,8 +755,8 @@ def test_a_brief_naming_another_repository_moves_the_turn_there(tmp_path, git_he
 
 
 def test_a_new_worktree_moves_the_project_and_resets_a_running_session(monkeypatch):
-    from kiro_crew.dashboard import chat_utils
-    from kiro_crew.dashboard import crewmate_worktree_scope as scope
+    from aj_crew.dashboard import chat_utils
+    from aj_crew.dashboard import crewmate_worktree_scope as scope
 
     hit = cw.CrewmateWorktree(repo="/r", path="/ws/wt/atlas/r", branch="crew/atlas/r", cwd="/ws/a")
     pushes: list[int] = []
@@ -814,7 +814,7 @@ def _profile(name: str) -> dict[str, str]:
 
 def test_a_worker_in_its_worktree_keeps_the_repositorys_aws_profile(repo, tmp_path):
     """``/repos/app -> sandbox``: the worktree sits in the workspace, not under ``/repos/app``."""
-    from kiro_crew.aws_project_profiles import bound_profile_env
+    from aj_crew.aws_project_profiles import bound_profile_env
 
     ws = str(tmp_path / "ws-atlas")
     real = os.path.realpath(repo)
@@ -833,7 +833,7 @@ def test_a_worker_in_its_worktree_keeps_the_repositorys_aws_profile(repo, tmp_pa
 
 def test_the_binding_is_read_from_git_so_it_holds_after_a_restart(repo, tmp_path):
     """A worktree an earlier gateway made (plain git here): nothing in this process knew it."""
-    from kiro_crew.aws_project_profiles import resolve_project_profile
+    from aj_crew.aws_project_profiles import resolve_project_profile
 
     ws = str(tmp_path / "ws-atlas")
     dest = cw.path_for(ws, "atlas", repo)
@@ -879,7 +879,7 @@ def test_only_a_registered_worktree_at_the_crewmate_layout_is_mapped(repo, tmp_p
 
 
 def test_a_path_with_no_worktrees_folder_runs_no_git(monkeypatch, tmp_path):
-    from kiro_crew.dashboard.handlers import worktree as wt
+    from aj_crew.dashboard.handlers import worktree as wt
 
     ran: list[list[str]] = []
     monkeypatch.setattr(wt, "_run_git", lambda args, *_a, **_k: ran.append(list(args)))
@@ -899,7 +899,7 @@ def test_a_path_with_no_worktrees_folder_runs_no_git(monkeypatch, tmp_path):
 async def test_a_session_started_in_the_worktree_gets_the_repositorys_profile(repo, tmp_path):
     from test_aws_project_profiles import _cfg, _recording_factory
 
-    from kiro_crew.session import SessionManager
+    from aj_crew.session import SessionManager
 
     found = await asyncio.to_thread(cw.ensure, "atlas", str(tmp_path / "ws-atlas"), repo)
     calls: list[dict] = []
@@ -919,9 +919,9 @@ async def test_a_session_started_in_the_worktree_gets_the_repositorys_profile(re
 async def test_a_workers_cwd_is_its_crewmates_worktree(home, repo, monkeypatch):  # noqa: F811
     from test_chat_agent_selection import _turn_state
 
-    from kiro_crew.config.loader import KiroCrewConfig, workspace_dir_for
-    from kiro_crew.history import ConversationLog
-    from kiro_crew.members import member_slug
+    from aj_crew.config.loader import AjCrewConfig, workspace_dir_for
+    from aj_crew.history import ConversationLog
+    from aj_crew.members import member_slug
 
     state, caller, _execution, tmp_path = home
     created = state.get_slot((await asyncio.to_thread(_create, state, caller))["target"])
@@ -944,7 +944,7 @@ async def test_a_workers_cwd_is_its_crewmates_worktree(home, repo, monkeypatch):
         "worker turn",
     )
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     ws = str(workspace_dir_for(cfg.agents["pixel"].workspace))
     expected = cw.path_for(ws, member_slug("pixel", cfg), repo)
     assert seen.get("cwd") == expected, f"worker ran in {seen.get('cwd')}, not its worktree"
@@ -959,25 +959,25 @@ async def test_removing_the_crewmate_removes_its_worktrees_and_keeps_dirty_ones(
 ):
     from test_agent_delete_prunes_private_copy import _delete_request
 
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, WorkspaceConfig
-    from kiro_crew.dashboard.handlers.agents import api_kirocrew_agent_delete
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, WorkspaceConfig
+    from aj_crew.dashboard.handlers.agents import api_ajcrew_agent_delete
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
     clean_ws, dirty_ws = tmp_path / "ws-clean", tmp_path / "ws-dirty"
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.workspaces = {
         "m-clean": WorkspaceConfig(dir=str(clean_ws)),
         "m-dirty": WorkspaceConfig(dir=str(dirty_ws)),
     }
     cfg.agents = {
-        "kirocrew": KiroCrewAgentConfig(kiro_agent="kirocrew"),
-        "Atlas": KiroCrewAgentConfig(kiro_agent="kirocrew", workspace="m-clean"),
-        "Briar": KiroCrewAgentConfig(kiro_agent="kirocrew", workspace="m-dirty"),
+        "ajcrew": AjCrewAgentConfig(kiro_agent="ajcrew"),
+        "Atlas": AjCrewAgentConfig(kiro_agent="ajcrew", workspace="m-clean"),
+        "Briar": AjCrewAgentConfig(kiro_agent="ajcrew", workspace="m-dirty"),
     }
-    cfg.default_agent = "kirocrew"
+    cfg.default_agent = "ajcrew"
     await asyncio.to_thread(cfg.save)
     clean = await asyncio.to_thread(cw.ensure, "atlas", str(clean_ws), repo)
     dirty = await asyncio.to_thread(cw.ensure, "briar", str(dirty_ws), repo)
@@ -987,7 +987,7 @@ async def test_removing_the_crewmate_removes_its_worktrees_and_keeps_dirty_ones(
         fh.write("the user's own work\n")
 
     for name in ("Atlas", "Briar"):
-        resp = await api_kirocrew_agent_delete(_delete_request(name))
+        resp = await api_ajcrew_agent_delete(_delete_request(name))
         assert resp.status == 200
 
     assert not os.path.exists(clean.path)

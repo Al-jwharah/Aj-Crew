@@ -23,14 +23,14 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from conftest import MockSlackClient
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.messaging.link import ChannelLink
-from kiro_crew.session import SessionManager
+from aj_crew.config import AjCrewConfig
+from aj_crew.messaging.link import ChannelLink
+from aj_crew.session import SessionManager
 
 
 @pytest.fixture
 def cfg():
-    c = KiroCrewConfig()
+    c = AjCrewConfig()
     c.session.timeout_secs = 2
     return c
 
@@ -70,7 +70,7 @@ class TestCompactFailurePreservesChannelIdentity:
         with it, so the next reply mints a brand-new ``slack:<ts>`` session with
         none of the conversation's context.
         """
-        from kiro_crew.slack import handler as h
+        from aj_crew.slack import handler as h
 
         mgr = SessionManager(cfg, provider_factory=_compact_raising_factory())
         key = await _live_session(mgr, "dashboard:chat-7")
@@ -91,7 +91,7 @@ class TestCompactFailurePreservesChannelIdentity:
     @pytest.mark.asyncio
     async def test_discord_compact_failure_keeps_the_mirror_binding(self, cfg):
         """A Discord conversation must still be mirrored after the teardown."""
-        from kiro_crew.discord.transport_dispatch import DiscordDispatcher
+        from aj_crew.discord.transport_dispatch import DiscordDispatcher
 
         mgr = SessionManager(cfg, provider_factory=_compact_raising_factory())
         dispatcher = DiscordDispatcher(
@@ -121,7 +121,7 @@ class TestCompactFailurePreservesChannelIdentity:
     @pytest.mark.asyncio
     async def test_telegram_compact_failure_keeps_the_mirror_binding(self, cfg):
         """A Telegram conversation must still be mirrored after the teardown."""
-        from kiro_crew.telegram.transport_dispatch import TelegramDispatcher
+        from aj_crew.telegram.transport_dispatch import TelegramDispatcher
 
         mgr = SessionManager(cfg, provider_factory=_compact_raising_factory())
         dispatcher = TelegramDispatcher(
@@ -154,12 +154,12 @@ def _unresolved_compaction_factory(tmp_path, providers: list):
     """A real ``AcpProvider`` whose reader still owes an abandoned compaction's status."""
     from unittest.mock import patch
 
-    from kiro_crew.acp import stale_compaction
-    from kiro_crew.acp.client import AcpClient
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.acp import stale_compaction
+    from aj_crew.acp.client import AcpClient
+    from aj_crew.providers.acp import AcpProvider
 
     def factory(session_key=None, agent=None, channel_id=None, **kwargs):
-        with patch("kiro_crew.providers.acp.AcpClient"):
+        with patch("aj_crew.providers.acp.AcpClient"):
             provider = AcpProvider(acp_backend="")
         reader = AcpClient(work_dir=tmp_path)
         reader.stream_events = MagicMock()
@@ -182,8 +182,8 @@ class TestCompactRefusalKeepsTheConversation:
         self, cfg, tmp_path
     ):
         """A refusal is a plain failure reply, not the exception arm's discard."""
-        from kiro_crew.acp import stale_compaction
-        from kiro_crew.telegram.transport_dispatch import TelegramDispatcher
+        from aj_crew.acp import stale_compaction
+        from aj_crew.telegram.transport_dispatch import TelegramDispatcher
 
         providers: list = []
         mgr = SessionManager(

@@ -12,22 +12,22 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from member_memory_helpers import env as _member_env
 
-from kiro_crew import context, memory_backup, memory_stores
-from kiro_crew._sqlite_compat import sqlite3
-from kiro_crew.config.loader import KiroCrewConfig, MemoryStoreConfig
-from kiro_crew.dashboard.handlers._shared import markdown_memory_for_store
-from kiro_crew.heartbeat import HeartbeatService
-from kiro_crew.memory import MemoryStore
-from kiro_crew.testing.wait import await_until
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import context, memory_backup, memory_stores
+from aj_crew._sqlite_compat import sqlite3
+from aj_crew.config.loader import AjCrewConfig, MemoryStoreConfig
+from aj_crew.dashboard.handlers._shared import markdown_memory_for_store
+from aj_crew.heartbeat import HeartbeatService
+from aj_crew.memory import MemoryStore
+from aj_crew.testing.wait import await_until
+from aj_crew.vector_memory import VectorMemoryStore
 
 env = _member_env
 
 
 @pytest.mark.asyncio
 async def test_member_snapshot_combines_guarded_manual_files_and_database_history(env, monkeypatch):
-    import kiro_crew.memory as module
-    import kiro_crew.memory_files as files_module
+    import aj_crew.memory as module
+    import aj_crew.memory_files as files_module
 
     memory = await markdown_memory_for_store(env.state, "member-alice")
     memory._memory_dir.mkdir(exist_ok=True)
@@ -87,9 +87,9 @@ async def test_late_named_store_construction_cannot_republish_after_eviction(env
         assert release.wait(5)
         return store
 
-    monkeypatch.setattr("kiro_crew.vector_memory.declared_store", initialize)
-    monkeypatch.setattr("kiro_crew.embeddings.model_file_present", lambda: False)
-    monkeypatch.setattr("kiro_crew.embeddings.reconcile_store_embedding_space", lambda store: 0)
+    monkeypatch.setattr("aj_crew.vector_memory.declared_store", initialize)
+    monkeypatch.setattr("aj_crew.embeddings.model_file_present", lambda: False)
+    monkeypatch.setattr("aj_crew.embeddings.reconcile_store_embedding_space", lambda store: 0)
     monkeypatch.setattr(context, "_vector_stores", {})
     monkeypatch.setattr(context, "_memory_stores", {})
     monkeypatch.setattr(context, "_lesson_stores", {})
@@ -108,7 +108,7 @@ async def test_late_named_store_construction_cannot_republish_after_eviction(env
 
 
 def test_unreferenced_member_store_is_retained_but_not_a_routine_backup_target(env):
-    config = KiroCrewConfig.load()
+    config = AjCrewConfig.load()
     del config.agents["alice"]
     config.save()
     assert "member-alice" in memory_stores.declared_store_names()
@@ -146,7 +146,7 @@ def test_automatic_backups_cover_default_and_named_v1_and_preserve_archived_back
     rebuilt from anywhere else; a sweep that enumerated it and then skipped it
     left the largest store with no copy. Archived member backups stay untouched.
     """
-    config = KiroCrewConfig.load()
+    config = AjCrewConfig.load()
     config.memory_stores["legacy-team"] = MemoryStoreConfig(memory_version=1)
     config.save()
     legacy = VectorMemoryStore(db_path=env.home / "memory_stores" / "legacy-team" / "memory.db")
@@ -163,7 +163,7 @@ def test_automatic_backups_cover_default_and_named_v1_and_preserve_archived_back
     archived_path = env.tiers["member-bob"]._db_path
     archived_backup = memory_backup.backup_store(archived_path, now=now - timedelta(days=2))
     assert archived_backup is not None
-    config = KiroCrewConfig.load()
+    config = AjCrewConfig.load()
     del config.agents["bob"]
     config.save()
     archived_dir = archived_backup.parent
@@ -244,7 +244,7 @@ async def test_first_eligible_heartbeat_schedules_one_backup_without_blocking_ti
 
     monkeypatch.setattr(memory_backup, "back_up_all_stores", copy)
     monkeypatch.setattr(
-        "kiro_crew.heartbeat.KiroCrewConfig.load",
+        "aj_crew.heartbeat.AjCrewConfig.load",
         lambda: SimpleNamespace(memory=SimpleNamespace(backup_enabled=True, backup_keep=7)),
     )
     consolidator = MagicMock()

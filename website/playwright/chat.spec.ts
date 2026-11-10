@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test'
 
 // Prompt sentinels understood by the stub ACP backend. Keep in sync with
 // SLOW_TRIGGER / SLOW_NOACK_TRIGGER / SLOW_LATEACK_TRIGGER in
-// src/kiro_crew/testing/fake_acp_backend.py.
+// src/aj_crew/testing/fake_acp_backend.py.
 const SLOW = '[[SLOW]]'
 const SLOW_NOACK = '[[SLOW_NOACK]]'
 const SLOW_LATEACK = '[[SLOW_LATEACK]]'
@@ -15,12 +15,12 @@ const SLOW_LATEACK = '[[SLOW_LATEACK]]'
 const NEW_CHAT_NAME = 'New chat session'
 
 // The stub's whole reply to a prompt that carries no [[...]] sentinel: REPLY_TEXT
-// in src/kiro_crew/testing/fake_acp_backend.py.
+// in src/aj_crew/testing/fake_acp_backend.py.
 const STUB_REPLY = 'pong from the fake ACP backend'
 
 // Named ceiling for the first reply in a NEW slot. A new slot is a new ACP
 // session, and its first prompt waits until the MCP-init drain gives up:
-// `_MCP_DRAIN_NO_REPORT_CEILING` (6 s, src/kiro_crew/acp/session_handle.py) runs
+// `_MCP_DRAIN_NO_REPORT_CEILING` (6 s, src/aj_crew/acp/session_handle.py) runs
 // in full because the stub reports no MCP server. Send to reply measured
 // 7.05-7.10 s (12 runs, two gateways): that fixed 6 s timer plus a ~1.1 s rest
 // that load moves. So the ceiling is the timer plus 10x the rest:
@@ -201,7 +201,7 @@ test.describe('Chat Page E2E Tests', { tag: '@needs-agent' }, () => {
 /**
  * Soft-stop E2E tests.
  *
- * Driven by the stub ACP backend (src/kiro_crew/testing/fake_acp_backend.py), so
+ * Driven by the stub ACP backend (src/aj_crew/testing/fake_acp_backend.py), so
  * these need no model credentials: [[SLOW]] streams a long turn that DOES honour
  * session/cancel, answering stopReason:"cancelled" — the ack the host waits for.
  * They were @needs-live-agent while the stub dropped session/cancel entirely.
@@ -230,7 +230,7 @@ test.describe('Chat Page E2E Tests', { tag: '@needs-agent' }, () => {
 const STOP_CARD = '[data-testid="stop-event-card"]'
 
 // The first streamed chunk from any SLOW* turn: SLOW_CHUNK_TEXT + "0 " in
-// src/kiro_crew/testing/fake_acp_backend.py. Only emitted from inside
+// src/aj_crew/testing/fake_acp_backend.py. Only emitted from inside
 // session/prompt, so its presence in the transcript proves the turn is live.
 const FIRST_SLOW_CHUNK = 'fake slow chunk 0'
 
@@ -385,7 +385,7 @@ test.describe('Soft-Stop E2E Tests', { tag: '@needs-agent' }, () => {
  * The host half is `agent.soft_stop_budget_secs`, read server-side in
  * session.py stop_turn(). A client-side `page.route` override cannot reach it,
  * which is why this spec was dark. The harness fixture now declares 5.0
- * (src/kiro_crew/tests_fixtures/minimal/config.json), comfortably inside the
+ * (src/aj_crew/tests_fixtures/minimal/config.json), comfortably inside the
  * 15s stream, so escalation fires around 5s. The 10.0 default would also
  * escalate before the stream ends, but it leaves only ~4s of headroom against
  * the assertion timeout on a loaded runner. Pinning it makes the dependency

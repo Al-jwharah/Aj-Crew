@@ -17,9 +17,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import portability
-from kiro_crew.dashboard.handlers.files import api_upload_file
-from kiro_crew.dashboard.handlers.knowledge import ingest_file
+from aj_crew.dashboard.handlers import portability
+from aj_crew.dashboard.handlers.files import api_upload_file
+from aj_crew.dashboard.handlers.knowledge import ingest_file
 
 #: (headers, body) pairs that are not a usable multipart request.
 _WRONG_BODIES = [
@@ -68,8 +68,8 @@ def _make_app(tmp_path: Path) -> web.Application:
 async def test_a_non_multipart_body_is_a_coded_400(
     path: str, headers: dict[str, str], body: bytes, tmp_path: Path, monkeypatch
 ) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.files._UPLOAD_DIR", tmp_path / "uploads")
-    with patch("kiro_crew.dashboard.handlers.files._sel"), patch.object(portability, "_sel"):
+    monkeypatch.setattr("aj_crew.dashboard.handlers.files._UPLOAD_DIR", tmp_path / "uploads")
+    with patch("aj_crew.dashboard.handlers.files._sel"), patch.object(portability, "_sel"):
         async with TestClient(TestServer(_make_app(tmp_path))) as client:
             response = await client.post(path, data=body, headers=headers)
             payload = await response.json()
@@ -82,7 +82,7 @@ async def test_a_non_multipart_body_is_a_coded_400(
 async def test_open_multipart_passes_a_real_multipart_request(tmp_path: Path) -> None:
     from aiohttp import FormData
 
-    from kiro_crew.dashboard.handlers._shared import open_multipart
+    from aj_crew.dashboard.handlers._shared import open_multipart
 
     async def handler(request: web.Request) -> web.Response:
         reader, error = await open_multipart(request)

@@ -76,7 +76,7 @@ import type { RootState } from '../store'
 import type { ChatSlot } from '../types'
 import type { MemorySourceRow } from '../lib/agentMemorySource'
 
-const DEFAULT_AGENT = 'kirocrew'
+const DEFAULT_AGENT = 'ajcrew'
 // The clock is pinned to NOW in beforeEach, so the rows' age is a fixed minute
 // whatever day the file runs. The dormant-session collapse is also pinned off.
 const NOW = new Date('2026-10-16T12:00:00Z').getTime()

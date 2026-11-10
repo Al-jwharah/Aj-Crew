@@ -15,8 +15,8 @@ from urllib.parse import urlsplit
 
 import pytest
 
-from kiro_crew.cloud import aws, ec2, sizes
-from kiro_crew.validation import ValidationError
+from aj_crew.cloud import aws, ec2, sizes
+from aj_crew.validation import ValidationError
 
 _ROOT = Path(__file__).resolve().parents[1]
 
@@ -179,15 +179,15 @@ class TestSubTemplateSyntax:
         # surfaces which one it was — the message must simply stop asserting a
         # step it cannot know.
         text = ec2.load_template()
-        assert 'fail "kirocrew source fetch or install failed"' in text
-        assert 'fail "kirocrew install.sh failed"' not in text, (
+        assert 'fail "ajcrew source fetch or install failed"' in text
+        assert 'fail "ajcrew install.sh failed"' not in text, (
             "this message asserts the install step for what may be a fetch fault"
         )
 
 
 class TestValidation:
     def test_valid_tag(self):
-        assert ec2.validate_tag("kirocrew-7f3a") == "kirocrew-7f3a"
+        assert ec2.validate_tag("ajcrew-7f3a") == "ajcrew-7f3a"
 
     def test_empty_tag_rejected(self):
         with pytest.raises(ValidationError):
@@ -198,9 +198,9 @@ class TestValidation:
             ec2.validate_tag("bad;rm -rf")
 
     def test_tag_length_capped_for_iam_role_name(self):
-        # kirocrew-ec2-<tag> must fit IAM's 64-char role-name limit; 13-char
+        # ajcrew-ec2-<tag> must fit IAM's 64-char role-name limit; 13-char
         # prefix + tag <= 64 => tag <= 51.
-        assert len("kirocrew-ec2-") + 51 == 64
+        assert len("ajcrew-ec2-") + 51 == 64
         ec2.validate_tag("a" * 51)  # ok
         with pytest.raises(ValidationError):
             ec2.validate_tag("a" * 52)
@@ -221,7 +221,7 @@ class TestValidation:
             ec2.validate_region("not a region")
 
     def test_stack_name(self):
-        assert ec2.stack_name("abc") == "kirocrew-abc"
+        assert ec2.stack_name("abc") == "ajcrew-abc"
 
     def test_cidr_valid(self):
         assert ec2._validate_cidr("1.2.3.4/32") == "1.2.3.4/32"
@@ -255,20 +255,20 @@ class TestValidation:
     def test_cidr_wide_range_warns(self, caplog):
         import logging
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.cloud.ec2"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.cloud.ec2"):
             assert ec2._validate_cidr("10.1.0.0/16") == "10.1.0.0/16"  # accepted, warned
             # Host bits are normalized away: 10.1.2.0/20 -> 10.1.0.0/20 (the
             # canonical network for that range), so the SG rule is unambiguous.
             assert ec2._validate_cidr("10.1.2.0/20") == "10.1.0.0/20"
         assert sum("wide range" in r.message for r in caplog.records) == 2
         caplog.clear()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.cloud.ec2"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.cloud.ec2"):
             ec2._validate_cidr("192.168.1.0/24")  # /24+ is fine, no warning
             ec2._validate_cidr("1.2.3.4/32")
         assert not caplog.records
 
     def test_repo_ref_charset(self):
-        from kiro_crew.validation import validate_field
+        from aj_crew.validation import validate_field
 
         assert validate_field("https://github.com/x/y.git", ec2._REPO_SPEC)
         assert validate_field("main", ec2._REF_SPEC)
@@ -302,8 +302,8 @@ class TestTemplate:
         # policy below is the one that actually pins the single object.)
         text = ec2.load_template()
         derived = (
-            "arn:aws:s3:::kirocrew-src-${AWS::AccountId}-${AWS::Region}"
-            "/${StackTag}/kirocrew-src.tar.gz"
+            "arn:aws:s3:::ajcrew-src-${AWS::AccountId}-${AWS::Region}"
+            "/${StackTag}/ajcrew-src.tar.gz"
         )
         # Only the inline SourceObjectRead policy uses the derived ARN now.
         assert text.count(derived) == 1
@@ -318,7 +318,7 @@ class TestTemplate:
         text = ec2.load_template()
         # No per-launch managed-policy boundary resource remains.
         assert "InstanceBoundary:" not in text
-        assert "kirocrew-ec2-boundary-${StackTag}" not in text
+        assert "ajcrew-ec2-boundary-${StackTag}" not in text
         # The role references the boundary by the new parameter.
         assert "PermissionsBoundaryArn:" in text
         assert "PermissionsBoundary: !Ref PermissionsBoundaryArn" in text
@@ -334,7 +334,7 @@ class TestTemplate:
         block = _re.search(r"  PermissionsBoundaryArn:\n(?:    .+\n|    #.+\n)+", text)
         assert block, "PermissionsBoundaryArn param missing"
         assert "AllowedPattern" in block.group(0)
-        assert "kirocrew-ec2-boundary" in block.group(0)
+        assert "ajcrew-ec2-boundary" in block.group(0)
 
     def test_userdata_params_have_allowed_patterns(self):
         # Every string parameter that flows into the root user-data script must
@@ -347,8 +347,8 @@ class TestTemplate:
         for param in (
             "SourceBucket",
             "SourceKey",
-            "KirocrewRepo",
-            "KirocrewRef",
+            "AjcrewRepo",
+            "AjcrewRef",
             "AllowSshCidr",
             "ExtraPackages",
         ):
@@ -358,7 +358,7 @@ class TestTemplate:
 
     def test_stacktag_pattern_matches_cli_length_cap(self):
         # The template's StackTag AllowedPattern must cap at 51 (not 63) to mirror
-        # the CLI _TAG_RE: the role name "kirocrew-ec2-${StackTag}" + IAM's 64-char
+        # the CLI _TAG_RE: the role name "ajcrew-ec2-${StackTag}" + IAM's 64-char
         # role-name limit => 13 + 51 = 64. A 52-63 char tag would otherwise pass
         # template validation on a direct deploy, then fail opaquely at role
         # creation. Keep this in lockstep with ec2._TAG_RE.
@@ -386,7 +386,7 @@ class TestTemplate:
         # never loads. The template must verify the built SPA exists and `fail`
         # the WaitCondition otherwise, so a failed build rolls the stack back.
         text = ec2.load_template()
-        assert "src/kiro_crew/static/dist/index.html" in text
+        assert "src/aj_crew/static/dist/index.html" in text
         assert 'fail "dashboard frontend build missing' in text
         # The failure reason must fold the real build error from the setup log, so it
         # is diagnosable even when the crew ran a cloned install.sh that did not itself
@@ -400,7 +400,7 @@ class TestTemplate:
         # default, for local CLI users) — which is what lets the install retry
         # actually re-run a transient first-boot build failure.
         text = ec2.load_template()
-        assert "KIROCREW_REQUIRE_FRONTEND=1" in text
+        assert "AJCREW_REQUIRE_FRONTEND=1" in text
 
     def test_bootstrap_hands_off_to_persistent_oneshot_before_heavy_work(self):
         # State Manager applies wildcard associations when a managed node first comes
@@ -409,17 +409,17 @@ class TestTemplate:
         # start an enabled oneshot before any package/build work, so systemd starts the
         # same rendered script again after that reboot.
         text = ec2.load_template()
-        handoff = text.index("BOOTSTRAP_SCRIPT=/usr/local/sbin/kirocrew-bootstrap")
+        handoff = text.index("BOOTSTRAP_SCRIPT=/usr/local/sbin/ajcrew-bootstrap")
         heavy_work = text.index('echo "--- installing system packages ---"')
         assert handoff < heavy_work
         assert 'if [ "$#" -eq 0 ]; then' in text
         assert 'install -m 0700 "$0" "$BOOTSTRAP_SCRIPT"' in text
         assert "Type=oneshot" in text
-        assert "ExecStart=/usr/local/sbin/kirocrew-bootstrap --resume" in text
+        assert "ExecStart=/usr/local/sbin/ajcrew-bootstrap --resume" in text
         assert "RemainAfterExit=yes" in text
         assert "WantedBy=multi-user.target" in text
-        assert "systemctl enable kirocrew-bootstrap.service" in text
-        assert "systemctl start --no-block kirocrew-bootstrap.service" in text
+        assert "systemctl enable ajcrew-bootstrap.service" in text
+        assert "systemctl start --no-block ajcrew-bootstrap.service" in text
 
     def test_bootstrap_checkpoints_install_and_waitcondition_signal_separately(self):
         # A reboot can land after the gateway is installed but before CloudFormation
@@ -442,10 +442,10 @@ class TestTemplate:
         # and performing the health/signal phase outside the install guard.
         text = ec2.load_template()
         install_guard = text.index('if [ ! -f "$INSTALL_DONE" ]; then')
-        stop_gateway = text.index("systemctl stop kirocrew.service")
-        replace_checkout = text.index("rm -rf kirocrew && mkdir kirocrew")
+        stop_gateway = text.index("systemctl stop ajcrew.service")
+        replace_checkout = text.index("rm -rf ajcrew && mkdir ajcrew")
         install_done = text.index('touch "$INSTALL_DONE"')
-        start_gateway = text.index("systemctl start kirocrew.service")
+        start_gateway = text.index("systemctl start ajcrew.service")
         signal = text.index("/opt/aws/bin/cfn-signal -e 0")
         assert (
             install_guard < stop_gateway < replace_checkout < install_done < start_gateway < signal
@@ -459,7 +459,7 @@ class TestTemplate:
 
     def test_gateway_unit_turns_core_dumps_off(self):
         text = ec2.load_template()
-        unit = text.split("cat > /etc/systemd/system/kirocrew.service <<UNIT", 1)[1]
+        unit = text.split("cat > /etc/systemd/system/ajcrew.service <<UNIT", 1)[1]
         service = unit.split("[Service]", 1)[1].split("[Install]", 1)[0]
         assert "LimitCORE=0" in [line.strip() for line in service.splitlines()]
 
@@ -513,7 +513,7 @@ class TestTemplate:
         log_lines = [b"padding line %d" % i for i in range(25)] + [
             b'step one ok',
             b'Installing npm dependencies for the dashboard',
-            b'INSTALLING KIROCREW AND DEPENDENCIES',
+            b'INSTALLING AJCREW AND DEPENDENCIES',
             b'Building React App (vite)',
             b'\x1b[31mnpm error\x1b[0m: build "failed"',
             b'caf\xc3\xa9 \xe4\xb8\xad\xe6\x96\x87 glyphs',
@@ -523,7 +523,7 @@ class TestTemplate:
         def printable(data: bytes) -> bytes:
             return bytes(b for b in data if 0x20 <= b <= 0x7E)
 
-        noise = re.compile(rb"Installing (npm|kirocrew and) depend|building React app", re.I)
+        noise = re.compile(rb"Installing (npm|ajcrew and) depend|building React app", re.I)
 
         def pipeline(lines: list[bytes], message: bytes, ascii_filter: bool) -> bytes:
             step = printable if ascii_filter else (lambda data: data)
@@ -552,7 +552,7 @@ class TestTemplate:
         # filter dropped both alternation branches case-insensitively.
         assert b"npm error" in reason and b"build failed" in reason
         assert b"\x1b" not in reason
-        assert b"KIROCREW AND" not in reason and b"React App" not in reason
+        assert b"AJCREW AND" not in reason and b"React App" not in reason
 
     def test_no_non_ascii_in_property_values(self):
         """EC2 rejects non-ASCII in values like GroupDescription — guard against it.
@@ -592,8 +592,8 @@ class TestUserDataSize:
         "WaitHandle": "h" * 512,
         "SourceBucket": "b" * 63,
         "SourceKey": "k" * 255,
-        "KirocrewRepo": "r" * 255,
-        "KirocrewRef": "f" * 128,
+        "AjcrewRepo": "r" * 255,
+        "AjcrewRef": "f" * 128,
         "DashboardPort": "65535",
         "ExtraPackages": "p" * 256,
         "StackTag": "t" * 51,
@@ -655,7 +655,7 @@ class TestUserDataSize:
         )
 
 
-_BOUNDARY_ARN = "arn:aws:iam::123456789012:policy/kirocrew-ec2-boundary"
+_BOUNDARY_ARN = "arn:aws:iam::123456789012:policy/ajcrew-ec2-boundary"
 
 
 class TestBuildDeployArgv:
@@ -669,7 +669,7 @@ class TestBuildDeployArgv:
             permissions_boundary_arn=_BOUNDARY_ARN,
         )
         assert argv[:2] == ["cloudformation", "deploy"]
-        assert "--stack-name" in argv and "kirocrew-t1" in argv
+        assert "--stack-name" in argv and "ajcrew-t1" in argv
         assert "CAPABILITY_NAMED_IAM" in argv
         assert f"InstanceType={tier.instance_type}" in argv
         assert "Architecture=arm64" in argv
@@ -679,8 +679,8 @@ class TestBuildDeployArgv:
         # the pre-created shared boundary ARN is passed to the template param
         assert f"PermissionsBoundaryArn={_BOUNDARY_ARN}" in argv
         # discovery tags applied to the stack
-        assert "kirocrew:managed=true" in argv
-        assert "kirocrew:instance=t1" in argv
+        assert "ajcrew:managed=true" in argv
+        assert "ajcrew:instance=t1" in argv
 
     def test_source_params_included_when_set(self):
         tier = sizes.get_tier("balanced")
@@ -690,11 +690,11 @@ class TestBuildDeployArgv:
             vpc_id="v",
             subnet_id="s",
             permissions_boundary_arn=_BOUNDARY_ARN,
-            source_bucket="kirocrew-src-123-us-east-1",
-            source_key="t1/kirocrew-src.tar.gz",
+            source_bucket="ajcrew-src-123-us-east-1",
+            source_key="t1/ajcrew-src.tar.gz",
         )
-        assert "SourceBucket=kirocrew-src-123-us-east-1" in argv
-        assert "SourceKey=t1/kirocrew-src.tar.gz" in argv
+        assert "SourceBucket=ajcrew-src-123-us-east-1" in argv
+        assert "SourceKey=t1/ajcrew-src.tar.gz" in argv
 
     def test_ssh_cidr_and_repo_included_when_set(self):
         tier = sizes.get_tier("balanced")
@@ -708,8 +708,8 @@ class TestBuildDeployArgv:
             ref="dev",
             allow_ssh_cidr="1.2.3.4/32",
         )
-        assert "KirocrewRepo=https://example.com/x.git" in argv
-        assert "KirocrewRef=dev" in argv
+        assert "AjcrewRepo=https://example.com/x.git" in argv
+        assert "AjcrewRef=dev" in argv
         assert "AllowSshCidr=1.2.3.4/32" in argv
 
     def test_ssh_cidr_omitted_by_default(self):
@@ -726,7 +726,7 @@ class TestBuildDeployArgv:
 
 class TestDeployDryRun:
     def test_dry_run_returns_argv_without_aws(self, monkeypatch):
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         # If run_aws is called during a dry run, fail loudly.
         monkeypatch.setattr(source_mod, "find_repo_root", lambda: object())
@@ -767,7 +767,7 @@ class TestDeployDryRun:
         assert not any(a.startswith("SourceBucket=") for a in r.argv)
 
     def test_dry_run_defaults_to_public_clone_without_checkout(self, monkeypatch):
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         monkeypatch.setattr(source_mod, "find_repo_root", lambda: None)
         monkeypatch.setattr(aws, "run_aws", lambda *a, **k: pytest.fail("dry run must not hit AWS"))
@@ -779,7 +779,7 @@ class TestDeployDryRun:
 
 class TestDeployShipsSource:
     def test_deploy_uploads_source_and_passes_params(self, monkeypatch):
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         monkeypatch.setattr(ec2, "find_stack", lambda *a, **k: None)
         monkeypatch.setattr(source_mod, "ensure_instance_boundary", lambda *a, **k: _BOUNDARY_ARN)
@@ -787,8 +787,8 @@ class TestDeployShipsSource:
             source_mod,
             "upload_source",
             lambda tag, profile="", region="": (
-                "kirocrew-src-1-us-east-1",
-                f"{tag}/kirocrew-src.tar.gz",
+                "ajcrew-src-1-us-east-1",
+                f"{tag}/ajcrew-src.tar.gz",
             ),
         )
         monkeypatch.setattr(ec2, "discover_network", lambda *a, **k: ("vpc-1", "subnet-1", "igw"))
@@ -805,14 +805,14 @@ class TestDeployShipsSource:
             lambda *a, **k: {"instance_id": "i-1", "stack_status": "CREATE_COMPLETE"},
         )
         r = ec2.deploy(tag="t1", tier=sizes.default_tier(), profile="dev", region="us-east-1")
-        assert "SourceBucket=kirocrew-src-1-us-east-1" in captured["argv"]
+        assert "SourceBucket=ajcrew-src-1-us-east-1" in captured["argv"]
         # IGW-routed subnet -> the public IP is required for egress
         assert "AssociatePublicIp=true" in captured["argv"]
-        assert "SourceKey=t1/kirocrew-src.tar.gz" in captured["argv"]
+        assert "SourceKey=t1/ajcrew-src.tar.gz" in captured["argv"]
         # the pre-created shared boundary ARN flows into the deploy params
         assert f"PermissionsBoundaryArn={_BOUNDARY_ARN}" in captured["argv"]
         # git repo/ref suppressed when shipping source
-        assert not any(a.startswith("KirocrewRepo=") for a in captured["argv"])
+        assert not any(a.startswith("AjcrewRepo=") for a in captured["argv"])
         assert r.instance_id == "i-1"
 
 
@@ -820,7 +820,7 @@ class TestDeployAbortsOnUnownedStack:
     def test_deploy_aborts_before_upload_on_name_collision(self, monkeypatch):
         # An untagged same-named stack -> find_stack raises -> deploy must abort
         # BEFORE uploading source or calling cloudformation deploy.
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         monkeypatch.setattr(
             ec2,
@@ -845,7 +845,7 @@ class TestDeployCleansSourceOnEarlyFailure:
     def test_network_discovery_failure_deletes_uploaded_source(self, monkeypatch):
         # upload_source runs BEFORE discover_network; a discovery failure must
         # not orphan the just-uploaded tarball in S3.
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         deleted: list[str] = []
         monkeypatch.setattr(ec2, "find_stack", lambda *a, **k: None)
@@ -867,7 +867,7 @@ class TestDeployCleansSourceOnEarlyFailure:
 
 class TestDeployExplicitSubnet:
     def _stub_deploy_deps(self, monkeypatch):
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         monkeypatch.setattr(ec2, "find_stack", lambda *a, **k: None)
         monkeypatch.setattr(source_mod, "ensure_instance_boundary", lambda *a, **k: _BOUNDARY_ARN)
@@ -941,7 +941,7 @@ class TestDeployExplicitSubnet:
     def test_explicit_subnet_failure_deletes_uploaded_source(self, monkeypatch):
         # Same cleanup contract as discovery: a validation failure after the
         # source upload must not orphan the tarball in S3.
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         deleted: list[str] = []
         self._stub_deploy_deps(monkeypatch)
@@ -1419,9 +1419,9 @@ class TestResolveExplicitSubnet:
 class TestStatusAndList:
     def _stack(self, status="CREATE_COMPLETE", instance="i-0abc"):
         return {
-            "StackName": "kirocrew-t1",
+            "StackName": "ajcrew-t1",
             "StackStatus": status,
-            "Tags": [{"Key": "kirocrew:managed", "Value": "true"}],
+            "Tags": [{"Key": "ajcrew:managed", "Value": "true"}],
             "Outputs": [
                 {"OutputKey": "InstanceId", "OutputValue": instance},
                 {"OutputKey": "PublicDnsName", "OutputValue": "ec2-x.compute.amazonaws.com"},
@@ -1430,7 +1430,7 @@ class TestStatusAndList:
         }
 
     def test_find_stack_raises_on_untagged_name_collision(self, monkeypatch):
-        # A stack merely NAMED kirocrew-<tag> but not tagged managed=true is a
+        # A stack merely NAMED ajcrew-<tag> but not tagged managed=true is a
         # foreign collision — find_stack must RAISE (returning None would read as
         # "absent" to deploy(), which would then deploy against the foreign stack).
         monkeypatch.setattr(
@@ -1439,7 +1439,7 @@ class TestStatusAndList:
             lambda *a, **k: (
                 0,
                 json.dumps(
-                    {"Stacks": [{"StackName": "kirocrew-t1", "StackStatus": "CREATE_COMPLETE"}]}
+                    {"Stacks": [{"StackName": "ajcrew-t1", "StackStatus": "CREATE_COMPLETE"}]}
                 ),
                 "",
             ),
@@ -1448,7 +1448,7 @@ class TestStatusAndList:
             ec2.find_stack("t1", "dev", "us-east-1")
 
     def test_find_stack_raises_on_instance_tag_mismatch(self, monkeypatch):
-        # A managed stack named kirocrew-t1 but whose kirocrew:instance tag is a
+        # A managed stack named ajcrew-t1 but whose ajcrew:instance tag is a
         # DIFFERENT value isn't this launch's stack — find_stack must RAISE so
         # destroy/stop/start --tag t1 can't act on it.
         monkeypatch.setattr(
@@ -1460,11 +1460,11 @@ class TestStatusAndList:
                     {
                         "Stacks": [
                             {
-                                "StackName": "kirocrew-t1",
+                                "StackName": "ajcrew-t1",
                                 "StackStatus": "CREATE_COMPLETE",
                                 "Tags": [
-                                    {"Key": "kirocrew:managed", "Value": "true"},
-                                    {"Key": "kirocrew:instance", "Value": "somethingelse"},
+                                    {"Key": "ajcrew:managed", "Value": "true"},
+                                    {"Key": "ajcrew:instance", "Value": "somethingelse"},
                                 ],
                             }
                         ]
@@ -1486,11 +1486,11 @@ class TestStatusAndList:
                     {
                         "Stacks": [
                             {
-                                "StackName": "kirocrew-t1",
+                                "StackName": "ajcrew-t1",
                                 "StackStatus": "CREATE_COMPLETE",
                                 "Tags": [
-                                    {"Key": "kirocrew:managed", "Value": "true"},
-                                    {"Key": "kirocrew:instance", "Value": "t1"},
+                                    {"Key": "ajcrew:managed", "Value": "true"},
+                                    {"Key": "ajcrew:instance", "Value": "t1"},
                                 ],
                             }
                         ]
@@ -1500,7 +1500,7 @@ class TestStatusAndList:
             ),
         )
         st = ec2.find_stack("t1", "dev", "us-east-1")
-        assert st is not None and st["StackName"] == "kirocrew-t1"
+        assert st is not None and st["StackName"] == "ajcrew-t1"
 
     def test_describe_absent(self, monkeypatch):
         monkeypatch.setattr(aws, "run_aws", lambda *a, **k: (255, "", "does not exist"))
@@ -1529,8 +1529,8 @@ class TestStatusAndList:
         with pytest.raises(aws.AWSError) as ei:
             ec2.find_stack("t1", "dev", "us-east-1")
         assert str(ei.value).startswith(
-            "could not query stack kirocrew-t1: grant `cloudformation:DescribeStacks` "
-            "(see `kirocrew cloud iam-policy`) and retry — AccessDenied"
+            "could not query stack ajcrew-t1: grant `cloudformation:DescribeStacks` "
+            "(see `ajcrew cloud iam-policy`) and retry — AccessDenied"
         )
 
     def test_find_stack_raises_on_throttle(self, monkeypatch):
@@ -1559,7 +1559,7 @@ class TestStatusAndList:
                 "ResourceTagMappingList": [
                     {
                         "ResourceARN": "arn:aws:ec2:us-east-1:1:instance/i-0abc",
-                        "Tags": [{"Key": "kirocrew:instance", "Value": "t1"}],
+                        "Tags": [{"Key": "ajcrew:instance", "Value": "t1"}],
                     },
                 ]
             }
@@ -1575,11 +1575,11 @@ class TestStatusAndList:
                 "ResourceTagMappingList": [
                     {
                         "ResourceARN": "arn:aws:ec2:us-east-1:1:instance/i-live",
-                        "Tags": [{"Key": "kirocrew:instance", "Value": "t1"}],
+                        "Tags": [{"Key": "ajcrew:instance", "Value": "t1"}],
                     },
                     {
                         "ResourceARN": "arn:aws:ec2:us-east-1:1:instance/i-dead",
-                        "Tags": [{"Key": "kirocrew:instance", "Value": "t0"}],
+                        "Tags": [{"Key": "ajcrew:instance", "Value": "t0"}],
                     },
                 ]
             }
@@ -1603,7 +1603,7 @@ class TestStatusAndList:
                 "ResourceTagMappingList": [
                     {
                         "ResourceARN": "arn:aws:ec2:us-east-1:1:instance/i-gone",
-                        "Tags": [{"Key": "kirocrew:instance", "Value": "kc-gone"}],
+                        "Tags": [{"Key": "ajcrew:instance", "Value": "kc-gone"}],
                     },
                 ]
             }
@@ -1620,7 +1620,7 @@ class TestStatusAndList:
         monkeypatch.setattr(aws, "run_aws", lambda *a, **k: answer)
         assert ec2._instance_state("i-0abc", "dev", "us-east-1") == state
 
-    def test_list_stacks_filters_kirocrew_prefix(self, monkeypatch):
+    def test_list_stacks_filters_ajcrew_prefix(self, monkeypatch):
         captured = {}
 
         def fake_json(args, profile="", region="", *, action, timeout=aws.DEFAULT_TIMEOUT):
@@ -1628,17 +1628,17 @@ class TestStatusAndList:
             captured["action"] = action
             return {
                 "StackSummaries": [
-                    {"StackName": "kirocrew-kc-b", "StackStatus": "CREATE_COMPLETE"},
+                    {"StackName": "ajcrew-kc-b", "StackStatus": "CREATE_COMPLETE"},
                     {"StackName": "other", "StackStatus": "CREATE_COMPLETE"},
-                    {"StackName": "kirocrew-kc-a", "StackStatus": "UPDATE_COMPLETE"},
+                    {"StackName": "ajcrew-kc-a", "StackStatus": "UPDATE_COMPLETE"},
                 ]
             }
 
         monkeypatch.setattr(aws, "checked_json", fake_json)
         rows = ec2.list_stacks("dev", "us-east-1")
         assert rows == [
-            {"tag": "kc-a", "stack_name": "kirocrew-kc-a", "stack_status": "UPDATE_COMPLETE"},
-            {"tag": "kc-b", "stack_name": "kirocrew-kc-b", "stack_status": "CREATE_COMPLETE"},
+            {"tag": "kc-a", "stack_name": "ajcrew-kc-a", "stack_status": "UPDATE_COMPLETE"},
+            {"tag": "kc-b", "stack_name": "ajcrew-kc-b", "stack_status": "CREATE_COMPLETE"},
         ]
         assert captured["action"] == "cloudformation:ListStacks"
         assert "list-stacks" in captured["args"]
@@ -1653,18 +1653,18 @@ class TestStatusAndList:
                 "Reservations": [
                     {
                         "Instances": [
-                            {"Tags": [{"Key": "kirocrew:instance", "Value": "kc-a"}]},
+                            {"Tags": [{"Key": "ajcrew:instance", "Value": "kc-a"}]},
                             {"Tags": [{"Key": "Name", "Value": "kc-untagged"}]},
                         ]
                     },
-                    {"Instances": [{"Tags": [{"Key": "kirocrew:instance", "Value": "kc-b"}]}]},
+                    {"Instances": [{"Tags": [{"Key": "ajcrew:instance", "Value": "kc-b"}]}]},
                 ]
             }
 
         monkeypatch.setattr(aws, "checked_json", fake_json)
         assert ec2.live_instance_tags("dev", "us-east-1") == {"kc-a", "kc-b"}
         assert captured["action"] == "ec2:DescribeInstances"
-        assert "Name=tag:kirocrew:managed,Values=true" in captured["args"]
+        assert "Name=tag:ajcrew:managed,Values=true" in captured["args"]
         assert "Name=instance-state-name,Values=pending,running,stopping,stopped" in (
             captured["args"]
         )
@@ -1717,7 +1717,7 @@ class TestStackEventsAndFailures:
                 "LogicalResourceId": "WaitCondition",
                 "ResourceStatus": "CREATE_FAILED",
                 "ResourceStatusReason": "WaitCondition received failed message: "
-                "'kirocrew install.sh failed' :: ...node-rc=1|No match for nodejs",
+                "'ajcrew install.sh failed' :: ...node-rc=1|No match for nodejs",
             },
             {
                 "EventId": "e2",
@@ -1728,7 +1728,7 @@ class TestStackEventsAndFailures:
             },
             {
                 "EventId": "e1",
-                "LogicalResourceId": "kirocrew-t1",
+                "LogicalResourceId": "ajcrew-t1",
                 "ResourceStatus": "CREATE_IN_PROGRESS",
                 "ResourceStatusReason": "",
             },
@@ -1762,7 +1762,7 @@ class TestStackEventsAndFailures:
             "StackEvents": [
                 {
                     "EventId": "e3",
-                    "LogicalResourceId": "kirocrew-t1",
+                    "LogicalResourceId": "ajcrew-t1",
                     "ResourceStatus": "CREATE_FAILED",
                     "ResourceStatusReason": (
                         "The following resource(s) failed to create: [WaitCondition]."
@@ -1796,7 +1796,7 @@ class TestStackEventsAndFailures:
             "StackEvents": [
                 {
                     "EventId": "e1",
-                    "LogicalResourceId": "kirocrew-t1",
+                    "LogicalResourceId": "ajcrew-t1",
                     "ResourceStatus": "CREATE_FAILED",
                     "ResourceStatusReason": (
                         "The following resource(s) failed to create: [WaitCondition]."
@@ -1807,10 +1807,10 @@ class TestStackEventsAndFailures:
         monkeypatch.setattr(aws, "run_aws", lambda *a, **k: (0, json.dumps(events), ""))
         fails = ec2.get_stack_failures("t1", "dev", "us-east-1")
         assert len(fails) == 1
-        assert fails[0]["resource"] == "kirocrew-t1"
+        assert fails[0]["resource"] == "ajcrew-t1"
 
     def test_deploy_disable_rollback_appends_flag(self, monkeypatch):
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         monkeypatch.setattr(ec2, "find_stack", lambda *a, **k: None)
         monkeypatch.setattr(source_mod, "ensure_instance_boundary", lambda *a, **k: _BOUNDARY_ARN)
@@ -1837,7 +1837,7 @@ class TestStackEventsAndFailures:
         assert "--disable-rollback" in captured["argv"]
 
     def test_deploy_failure_attaches_root_cause(self, monkeypatch):
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         monkeypatch.setattr(ec2, "find_stack", lambda *a, **k: None)
         monkeypatch.setattr(source_mod, "ensure_instance_boundary", lambda *a, **k: _BOUNDARY_ARN)
@@ -1853,7 +1853,7 @@ class TestStackEventsAndFailures:
                 {
                     "resource": "WaitCondition",
                     "status": "CREATE_FAILED",
-                    "reason": "kirocrew install.sh failed :: node-rc=1",
+                    "reason": "ajcrew install.sh failed :: node-rc=1",
                 }
             ],
         )
@@ -1865,7 +1865,7 @@ class TestStackEventsAndFailures:
     _GENERIC_DEPLOY_ERR = (
         "\naws: [ERROR]: Failed to create/update the stack. Run the following command\n"
         "to fetch the list of events leading up to the failure\n"
-        "aws cloudformation describe-stack-events --stack-name kirocrew-kc-22d3b9\n"
+        "aws cloudformation describe-stack-events --stack-name ajcrew-kc-22d3b9\n"
     )
 
     @pytest.mark.parametrize(
@@ -1875,7 +1875,7 @@ class TestStackEventsAndFailures:
                 "Instance",
                 "iam:PassRole",
                 "cloudformation deploy failed: grant `iam:PassRole` "
-                "(see `kirocrew cloud iam-policy`) and retry — aws: [ERROR]:",
+                "(see `ajcrew cloud iam-policy`) and retry — aws: [ERROR]:",
             ),
             ("WaitCondition", None, "cloudformation deploy failed: aws: [ERROR]:"),
         ],
@@ -1885,7 +1885,7 @@ class TestStackEventsAndFailures:
     ):
         # A resource's denial is the launcher's to grant; the WaitCondition's reason is
         # the instance's own setup log, whose denial no launcher grant fixes.
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         monkeypatch.setattr(ec2, "find_stack", lambda *a, **k: None)
         monkeypatch.setattr(source_mod, "ensure_instance_boundary", lambda *a, **k: _BOUNDARY_ARN)
@@ -1894,7 +1894,7 @@ class TestStackEventsAndFailures:
         monkeypatch.setattr(aws, "run_aws", lambda *a, **k: (1, "", self._GENERIC_DEPLOY_ERR))
         reason = (
             "User: arn:aws:sts::123456789012:assumed-role/launcher/s is not authorized to "
-            "perform: iam:PassRole on resource: arn:aws:iam::123456789012:role/kirocrew-ec2"
+            "perform: iam:PassRole on resource: arn:aws:iam::123456789012:role/ajcrew-ec2"
         )
         monkeypatch.setattr(
             ec2,
@@ -1908,16 +1908,16 @@ class TestStackEventsAndFailures:
         message = str(caught.value)
         assert caught.value.missing_action == expected_missing
         assert message.startswith(expected_start)
-        assert "--stack-name kirocrew-kc-22d3b9 — root cause:" in message
+        assert "--stack-name ajcrew-kc-22d3b9 — root cause:" in message
 
 
 class TestHumanActionGuard:
-    """Mutating cloud ops must refuse from an agent session (KIROCREW_SESSION_KEY
+    """Mutating cloud ops must refuse from an agent session (AJCREW_SESSION_KEY
     set) — closes the bypass where an agent calls ec2.destroy()/deploy() from a
     Python snippet, sidestepping the shell deniedCommands."""
 
     def test_mutations_denied_under_agent_session(self, monkeypatch):
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "sess-123")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "sess-123")
         monkeypatch.setattr(
             aws, "run_aws", lambda *a, **k: pytest.fail("must not reach AWS under agent session")
         )
@@ -1932,14 +1932,14 @@ class TestHumanActionGuard:
 
     def test_dry_run_allowed_under_agent_session(self, monkeypatch):
         # A read-only dry run (no AWS mutation) is fine even from an agent.
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "sess-123")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "sess-123")
         monkeypatch.setattr(aws, "run_aws", lambda *a, **k: pytest.fail("dry run must not hit AWS"))
         r = ec2.destroy("t1", "dev", "us-east-1", dry_run=True)
         assert r["dry_run"] is True
 
     def test_mutations_allowed_without_session_key(self, monkeypatch):
-        # Human terminal: no KIROCREW_SESSION_KEY -> the guard is a no-op.
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
+        # Human terminal: no AJCREW_SESSION_KEY -> the guard is a no-op.
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
         aws.assert_human_action("cloudformation:DeleteStack")  # must not raise
 
 
@@ -1949,14 +1949,14 @@ class TestDestroy:
             "cloudformation",
             "delete-stack",
             "--stack-name",
-            "kirocrew-t1",
+            "ajcrew-t1",
         ]
 
     def test_dry_run(self, monkeypatch):
         monkeypatch.setattr(aws, "run_aws", lambda *a, **k: pytest.fail("dry run must not hit AWS"))
         r = ec2.destroy("t1", "dev", "us-east-1", dry_run=True)
         assert r["dry_run"] is True
-        assert r["argv"] == ["cloudformation", "delete-stack", "--stack-name", "kirocrew-t1"]
+        assert r["argv"] == ["cloudformation", "delete-stack", "--stack-name", "ajcrew-t1"]
 
     def test_already_absent_is_success(self, monkeypatch):
         monkeypatch.setattr(ec2, "find_stack", lambda *a, **k: None)
@@ -1975,7 +1975,7 @@ class TestDestroy:
             ec2.destroy("t1", "dev", "us-east-1")
 
     def test_destroy_deletes_and_waits(self, monkeypatch):
-        monkeypatch.setattr(ec2, "find_stack", lambda *a, **k: {"StackName": "kirocrew-t1"})
+        monkeypatch.setattr(ec2, "find_stack", lambda *a, **k: {"StackName": "ajcrew-t1"})
         calls = {}
         monkeypatch.setattr(
             aws,
@@ -1990,7 +1990,7 @@ class TestDestroy:
         assert calls["action"] == "cloudformation:DeleteStack"
 
     def test_destroy_no_wait(self, monkeypatch):
-        monkeypatch.setattr(ec2, "find_stack", lambda *a, **k: {"StackName": "kirocrew-t1"})
+        monkeypatch.setattr(ec2, "find_stack", lambda *a, **k: {"StackName": "ajcrew-t1"})
         monkeypatch.setattr(aws, "checked", lambda *a, **k: "")
         r = ec2.destroy("t1", "dev", "us-east-1", wait=False)
         assert r["destroyed"] is True

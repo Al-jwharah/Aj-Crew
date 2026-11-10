@@ -5,9 +5,9 @@
  * material as the composer dock. Against a REAL gateway, not fixtures.
  *
  * What the evidence has to show, per frame:
- *   - dark, light and kiro-light: the three pills read as glass (lit top and
+ *   - dark, light and aj-light: the three pills read as glass (lit top and
  *     bottom bands, no border), on the blurred topbar strip, in every polarity
- *     -- kiro-light matters because the old bg-card pills needed an inset ring
+ *     -- aj-light matters because the old bg-card pills needed an inset ring
  *     there and the glass has to carry its own edge instead;
  *   - hover on the search trigger: the `glass-hover` tint step;
  *   - the readout capsule's segments are the pane's children (the Glass layers
@@ -122,11 +122,11 @@ try {
     await page.screenshot({ path: join(OUT, 'topbar-offline.png'), clip: HEADER })
     report.push({ frame: 'topbar-offline', ...facts })
   } else {
-    for (const [name, mode, color] of [['dark', 'dark', ''], ['light', 'light', ''], ['kiro-light', 'light', 'kiro']]) {
+    for (const [name, mode, color] of [['dark', 'dark', ''], ['light', 'light', ''], ['aj-light', 'light', 'kiro']]) {
       const page = await newPage({ viewport: { width: 1400, height: 900 } })
       await prime(page, mode, color)
       const facts = await assertGlass(page, name)
-      check(`${name}: theme attribute applied`, name === 'kiro-light' ? facts.dataTheme === 'kiro-light' : facts.dataTheme?.endsWith(mode) === true, facts.dataTheme)
+      check(`${name}: theme attribute applied`, name === 'aj-light' ? facts.dataTheme === 'aj-light' : facts.dataTheme?.endsWith(mode) === true, facts.dataTheme)
       await page.screenshot({ path: join(OUT, `topbar-${name}.png`), clip: HEADER })
       await page.screenshot({ path: join(OUT, `page-${name}.png`) })
       report.push({ frame: `topbar-${name}`, ...facts })

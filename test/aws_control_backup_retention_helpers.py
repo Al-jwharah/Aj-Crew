@@ -13,7 +13,7 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew.apps.builtins.aws_control.backend import backup
+from aj_crew.apps.builtins.aws_control.backend import backup
 
 ACCOUNT = "111122223333"
 
@@ -24,7 +24,7 @@ PROFILE = "p"
 REGION = "us-east-1"
 
 
-BUCKET = "kirocrew-drive-0123456789ab"
+BUCKET = "ajcrew-drive-0123456789ab"
 
 
 INSTALL = "a" * 32
@@ -48,7 +48,7 @@ def _archives(kind: str, stamps: list[str], install: str = INSTALL) -> list[dict
     """One archive per stamp, newest stamp last, under one install's prefix."""
     sub = backup.KIND_SUBPATHS[kind]
     return [
-        _version(f"{sub}/{install}/kirocrew-snapshot-{s}.tar.gz", f"2026-01-{s}T00:00:00Z")
+        _version(f"{sub}/{install}/ajcrew-snapshot-{s}.tar.gz", f"2026-01-{s}T00:00:00Z")
         for s in stamps
     ]
 

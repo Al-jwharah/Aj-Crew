@@ -22,7 +22,7 @@ matching shape changes, this file has to follow it.
 
 from __future__ import annotations
 
-from kiro_crew.dashboard.server import (
+from aj_crew.dashboard.server import (
     _MIXED_INTERNAL_API_PATHS,
     _STRICT_INTERNAL_API_PATHS,
 )

@@ -1,4 +1,4 @@
-"""`kirocrew memory search` must embed the query, not keyword-match it.
+"""`ajcrew memory search` must embed the query, not keyword-match it.
 
 ``VectorMemoryStore.search_episodic`` falls back to FTS5 when ``query_embedding`` is
 None and does not auto-embed, so without its own query vector ``--layer all`` prints
@@ -15,9 +15,9 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import cli_commands as cc
-from kiro_crew import embeddings as emb
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew import cli_commands as cc
+from aj_crew import embeddings as emb
+from aj_crew.config.loader import AjCrewConfig
 
 _QUERY_VECTOR = [0.25, 0.5, 0.75, 1.0]
 
@@ -100,7 +100,7 @@ class _Harness:
         self.embedder_lookups = 0
         self._patches = [
             patch.object(cc, "declared_store", lambda *a, **k: self.store),
-            patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()),
+            patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()),
             patch.object(cc, "model_file_present", lambda *a, **k: model_present),
             patch.object(emb, "ollama_backend_selected", lambda *a, **k: ollama),
             patch.object(cc, "store_embedding_space_is_stale", lambda _s: stale_space),

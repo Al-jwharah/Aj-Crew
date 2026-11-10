@@ -9,7 +9,7 @@ Three layers, each on the real code:
   cap 2 on a three-level tree, the adaptive lift, and the
   event-driven resume hold behind ``spawn_sub_agents``.
 
-Fake worker, injected store clock, tmp ``KIROCREW_HOME``; no kiro-cli, no sockets.
+Fake worker, injected store clock, tmp ``AJCREW_HOME``; no kiro-cli, no sockets.
 """
 
 from __future__ import annotations
@@ -24,18 +24,18 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from overload_fakes import Clock, ManagerHarness, open_task_store
 
-from kiro_crew import mcp_shared
-from kiro_crew.dashboard.handlers import spawn_resume
-from kiro_crew.mcp_tools import spawn as spawn_tools
-from kiro_crew.subagent import SubagentInfo
-from kiro_crew.subagent_manager.admission import (
+from aj_crew import mcp_shared
+from aj_crew.dashboard.handlers import spawn_resume
+from aj_crew.mcp_tools import spawn as spawn_tools
+from aj_crew.subagent import SubagentInfo
+from aj_crew.subagent_manager.admission import (
     CapacityView,
     FairnessSettings,
 )
-from kiro_crew.taskq import lanes, model
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.taskq.waits import WaitRecord
-from kiro_crew.testing.wait import await_until
+from aj_crew.taskq import lanes, model
+from aj_crew.taskq.store import TaskStore
+from aj_crew.taskq.waits import WaitRecord
+from aj_crew.testing.wait import await_until
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -183,7 +183,7 @@ def test_fetch_dispatchable_fair_children_only(store: TaskStore) -> None:
 
 @pytest.fixture
 def quiet():
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         yield
 
 
@@ -333,7 +333,7 @@ async def test_low_memory_queues_every_subagent_and_defers_only_a_durable_row(h,
     """
     hz = await h(max_concurrent=1)
     with (
-        patch("kiro_crew.subagent.check_memory_available", return_value=(False, 0.5)),
+        patch("aj_crew.subagent.check_memory_available", return_value=(False, 0.5)),
         patch.object(
             type(hz.mgr._admission), "taskq_defer", wraps=hz.mgr._admission.taskq_defer
         ) as defer,
@@ -358,7 +358,7 @@ async def test_low_memory_queues_every_subagent_and_defers_only_a_durable_row(h,
         # between SKIPS the entry -- it neither starts nor re-reads the host,
         # which would otherwise happen on every drain while memory stays low.
         assert entry[key] > time.monotonic()
-        with patch("kiro_crew.subagent.check_memory_available", return_value=(True, 8.0)) as read:
+        with patch("aj_crew.subagent.check_memory_available", return_value=(True, 8.0)) as read:
             hz.mgr._drain_queue()
             await hz.settle()
         assert not hz.started and read.call_count == 0
@@ -402,7 +402,7 @@ async def test_a_durable_floor_defer_refills_as_a_floor_wait_the_pick_leaves_to_
     floor."""
     hz = await h(max_concurrent=2)
     with (
-        patch("kiro_crew.subagent.check_memory_available", return_value=(False, 0.5)),
+        patch("aj_crew.subagent.check_memory_available", return_value=(False, 0.5)),
         patch.object(hz.mgr, "_memory_pressure_hold", return_value=2),
     ):
         info = hz.spawn("below the floor")
@@ -439,7 +439,7 @@ async def test_restricted_admission_diagnostics_exclude_task_bodies(h, caplog, m
     hz = await h(max_concurrent=1)
     sentinel = "task-body-sentinel-for-diagnostics"
     caplog.set_level("INFO")
-    with patch("kiro_crew.subagent.sel") as audit:
+    with patch("aj_crew.subagent.sel") as audit:
         if phase == "drain":
             blocker = hz.spawn("blocker")
             await hz.settle()
@@ -448,7 +448,7 @@ async def test_restricted_admission_diagnostics_exclude_task_bodies(h, caplog, m
             await hz.end(info)
         elif phase in {"pressure", "batch_pressure"}:
             hz.mgr._on_done = AsyncMock(side_effect=RuntimeError(sentinel))
-            with patch("kiro_crew.subagent.check_memory_available", return_value=(False, 0.5)):
+            with patch("aj_crew.subagent.check_memory_available", return_value=(False, 0.5)):
                 info = hz.spawn(
                     sentinel,
                     _memory_mode=mode,
@@ -457,10 +457,10 @@ async def test_restricted_admission_diagnostics_exclude_task_bodies(h, caplog, m
                 )
                 await hz.settle()
         elif phase == "cwd":
-            with patch("kiro_crew.subagent.validate_cwd", return_value=("", sentinel)):
+            with patch("aj_crew.subagent.validate_cwd", return_value=("", sentinel)):
                 info = hz.spawn(sentinel, _memory_mode=mode, cwd="outside")
         elif phase == "governance":
-            with patch("kiro_crew.subagent._vet_spawn_governance", return_value=sentinel):
+            with patch("aj_crew.subagent._vet_spawn_governance", return_value=sentinel):
                 info = hz.spawn(sentinel, _memory_mode=mode)
         else:
             info = hz.spawn(sentinel, _memory_mode=mode)
@@ -486,7 +486,7 @@ async def test_restricted_admission_diagnostics_exclude_task_bodies(h, caplog, m
 async def test_restricted_approval_errors_do_not_echo_callback_bodies(
     h, caplog, mode, unreachable
 ) -> None:
-    from kiro_crew.subagent import SpawnApprovalUnreachable
+    from aj_crew.subagent import SpawnApprovalUnreachable
 
     hz = await h(max_concurrent=1)
     sentinel = "approval-body-sentinel"
@@ -748,7 +748,7 @@ def test_fairness_settings_from_agent_config_clamps() -> None:
 
 
 def test_agent_config_declares_the_keys_with_defaults() -> None:
-    from kiro_crew.config.sections import AgentConfig
+    from aj_crew.config.sections import AgentConfig
 
     cfg = AgentConfig()
     assert not hasattr(cfg, "system_lane_weight")
@@ -951,10 +951,10 @@ def test_spawn_sub_agents_holds_then_returns_children_results() -> None:
         return {"done": True, "agent": "w", "result": "ok"}
 
     with (
-        patch("kiro_crew.mcp_core._post", return_value={"id": "c1"}),
-        patch("kiro_crew.mcp_core._get", side_effect=fake_get),
-        patch("kiro_crew.mcp_core.sel"),
-        patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "subagent:p9"}),
+        patch("aj_crew.mcp_core._post", return_value={"id": "c1"}),
+        patch("aj_crew.mcp_core._get", side_effect=fake_get),
+        patch("aj_crew.mcp_core.sel"),
+        patch.dict("os.environ", {"AJCREW_SESSION_KEY": "subagent:p9"}),
     ):
         out = _settle(
             spawn_tools.spawn_sub_agents(

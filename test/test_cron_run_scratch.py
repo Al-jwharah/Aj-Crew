@@ -16,9 +16,9 @@ from unittest.mock import patch
 
 import pytest
 
-import kiro_crew.cron_script as cron_script
-from kiro_crew import agent_scratch, sandbox
-from kiro_crew.cron_script import run_command_sandboxed, run_script_sandboxed
+import aj_crew.cron_script as cron_script
+from aj_crew import agent_scratch, sandbox
+from aj_crew.cron_script import run_command_sandboxed, run_script_sandboxed
 
 pytestmark = pytest.mark.skipif(os.name == "nt", reason="POSIX spawn plumbing")
 
@@ -31,9 +31,9 @@ def _isolated_home(_floor_monkeypatch, tmp_path, named_cron_caller):
     """A throwaway data home, never the live one, and a passthrough sandbox."""
     home = tmp_path / "crew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
-    monkeypatch.setattr("kiro_crew.cron_script.config_dir", lambda: home)
-    monkeypatch.setattr("kiro_crew.agent_scratch.config_dir", lambda: home)
+    monkeypatch.setenv("AJCREW_HOME", str(home))
+    monkeypatch.setattr("aj_crew.cron_script.config_dir", lambda: home)
+    monkeypatch.setattr("aj_crew.agent_scratch.config_dir", lambda: home)
     # The gateway under the shipped systemd unit carries no TMPDIR at all.
     for key in TEMP_KEYS:
         monkeypatch.delenv(key, raising=False)
@@ -51,8 +51,8 @@ def wrap_calls(monkeypatch, posix_test_shell):
         calls.append(kwargs)
         return list(argv), None
 
-    monkeypatch.setattr("kiro_crew.cron_script.wrap_argv", _wrap)
-    monkeypatch.setattr("kiro_crew.cron_script._resolve_command_shell", lambda: posix_test_shell)
+    monkeypatch.setattr("aj_crew.cron_script.wrap_argv", _wrap)
+    monkeypatch.setattr("aj_crew.cron_script._resolve_command_shell", lambda: posix_test_shell)
     return calls
 
 
@@ -92,7 +92,7 @@ def test_script_cron_gets_its_own_temp_dir(tmp_path, wrap_calls):
     script = crons / "scratch_probe.py"
     script.write_text(
         "import os, tempfile\n"
-        "from kiro_crew.cron_script import Done\n"
+        "from aj_crew.cron_script import Done\n"
         "def run(ctx):\n"
         "    vals = '|'.join(os.environ.get(k, '') for k in ('TMPDIR', 'TMP', 'TEMP'))\n"
         "    assert tempfile.gettempdir() == os.environ['TMPDIR']\n"
@@ -178,7 +178,7 @@ class TestUnderTheRealSandbox:
         script = crons / "real_scratch_probe.py"
         script.write_text(
             "import os, tempfile\n"
-            "from kiro_crew.cron_script import Done\n"
+            "from aj_crew.cron_script import Done\n"
             "def run(ctx):\n"
             "    with tempfile.NamedTemporaryFile('w', delete=False) as fh:\n"
             "        fh.write('ok')\n"

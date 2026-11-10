@@ -17,22 +17,22 @@ from unittest.mock import AsyncMock
 import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from kiro_crew import session_environment as se
-from kiro_crew.coder import client as client_mod
-from kiro_crew.coder import remote_worker, session_browse, session_launch
-from kiro_crew.coder.client import CoderClientError, CoderWorkspace
-from kiro_crew.config import live, paths
-from kiro_crew.platform_compat import file_lock
-from kiro_crew.remote_session import workspace_tools as wt
-from kiro_crew.session_allocation_parts import get_or_create
-from kiro_crew.session_environment import SessionEnvironmentUnavailable
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import session_environment as se
+from aj_crew.coder import client as client_mod
+from aj_crew.coder import remote_worker, session_browse, session_launch
+from aj_crew.coder.client import CoderClientError, CoderWorkspace
+from aj_crew.config import live, paths
+from aj_crew.platform_compat import file_lock
+from aj_crew.remote_session import workspace_tools as wt
+from aj_crew.session_allocation_parts import get_or_create
+from aj_crew.session_environment import SessionEnvironmentUnavailable
+from aj_crew.testing.clock import ManualClock
 
 
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments are reachable only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 URL = "https://coder.example"
@@ -231,7 +231,7 @@ def test_choices_round_trip_owner_only_and_fail_closed(tmp_path):
 
 @sync
 async def test_prepare_for_session_is_none_without_a_choice(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _home(monkeypatch, tmp_path)
     assert await session_launch.prepare_for_session("sess-a") is None
     assert await session_launch.prepare_for_session(None) is None
@@ -290,7 +290,7 @@ async def test_login_runner_drops_an_empty_token(tmp_path, monkeypatch):
 async def test_lifecycle_and_guest_commands_authenticate_the_same_way(tmp_path, monkeypatch):
     # An inherited, expired CODER_SESSION_TOKEN must not reach `coder ssh` when the
     # lifecycle calls ignore it: both use the CLI's stored login.
-    from kiro_crew.coder import remote_worker
+    from aj_crew.coder import remote_worker
 
     for name, value in (
         ("CODER_SESSION_TOKEN", "expired"),
@@ -657,8 +657,8 @@ async def test_an_inherited_session_prepares_its_owners_workspace(tmp_path, monk
     assert await session_launch.prepare_for_session("sub-9") == "prepared"
     assert seen == [("dashboard:root", "dev", "sub-9")]
     # The [RESOURCES] refresh for this session reads its workspace through Coder.
-    from kiro_crew import session_environment as se
-    from kiro_crew.coder import session_browse
+    from aj_crew import session_environment as se
+    from aj_crew.coder import session_browse
 
     try:
         assert se._health_readers["sub-9"] is session_browse.session_health
@@ -753,7 +753,7 @@ def test_git_diff_view_does_not_run_a_repository_textconv(tmp_path):
     import subprocess
     import sys
 
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     if shutil.which("git") is None:
         pytest.skip("git is not installed")
@@ -799,7 +799,7 @@ def test_git_views_do_not_run_a_repository_filter_driver(tmp_path, op):
     import subprocess
     import sys
 
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     if shutil.which("git") is None:
         pytest.skip("git is not installed")
@@ -847,7 +847,7 @@ def test_git_views_never_run_a_submodule_filter_driver(tmp_path, op, path):
     import subprocess
     import sys
 
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     if shutil.which("git") is None:
         pytest.skip("git is not installed")
@@ -926,9 +926,9 @@ def test_a_diff_of_a_key_with_a_middle_line_removed_shows_no_key_line(tmp_path):
     import base64
     import secrets
 
-    from kiro_crew.coder.session_browse import _git_diff_from_bodies
-    from kiro_crew.platform import redact_via_context
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.coder.session_browse import _git_diff_from_bodies
+    from aj_crew.platform import redact_via_context
+    from aj_crew.remote_session import workspace_tools as wt
 
     root, git = _plain_git_repo(tmp_path)
     # Random text in PEM framing, wrapped at 32 columns; never a real key.
@@ -952,7 +952,7 @@ def test_a_diff_of_a_key_with_a_middle_line_removed_shows_no_key_line(tmp_path):
 
 
 def test_an_untracked_nested_repository_is_a_failed_diff_not_an_empty_one(tmp_path):
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     root, git = _plain_git_repo(tmp_path)
     (root / "f.txt").write_text("one\n")
@@ -973,7 +973,7 @@ def test_git_reads_never_lazy_fetch_a_missing_promisor_blob(tmp_path, monkeypatc
     import subprocess
     import sys
 
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     seed, git = _plain_git_repo(tmp_path)
     try:
@@ -1048,7 +1048,7 @@ def test_git_reads_never_lazy_fetch_a_missing_promisor_blob(tmp_path, monkeypatc
     ],
 )
 def test_old_git_refuses_only_bodies_in_a_partial_clone(tmp_path, monkeypatch, op, key, value):
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     root, git = _plain_git_repo(tmp_path)
     (root / "f.txt").write_text("one\n", encoding="utf-8", newline="\n")
@@ -1112,7 +1112,7 @@ def _old_git_without_lazy_fetch_guards(wt, monkeypatch):
 def test_old_git_in_a_partial_clone_never_lazy_fetches(tmp_path, monkeypatch, filter_spec):
     import sys
 
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     seed, git = _plain_git_repo(tmp_path)
     monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
@@ -1172,7 +1172,7 @@ def test_old_git_in_a_partial_clone_never_lazy_fetches(tmp_path, monkeypatch, fi
 
 
 def test_old_git_refuses_a_failed_partial_clone_config_check(tmp_path, monkeypatch):
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     calls = []
 
@@ -1196,7 +1196,7 @@ def test_a_filter_driver_that_cannot_be_named_stops_the_read(tmp_path):
     import shutil
     import subprocess
 
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     if shutil.which("git") is None:
         pytest.skip("git is not installed")
@@ -1226,7 +1226,7 @@ async def test_remote_terminal_argv_is_coder_ssh_without_autostart(tmp_path, mon
 
 
 def test_stats_reports_numbers_only(tmp_path):
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     stats = wt.browse(wt.Workspace(str(tmp_path)), {"op": "stats"})
     assert stats["cpus"] >= 1 and stats["disk"]["total_bytes"] > 0
@@ -1236,14 +1236,14 @@ def test_stats_reports_numbers_only(tmp_path):
 def test_guest_unknown_op_reply_keeps_the_prefix_session_health_matches(tmp_path):
     # _ask reinstalls stale guest files when the guest's reply starts with
     # "op must be"; a reworded reply would switch that fallback off.
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     reply = wt.browse(wt.Workspace(str(tmp_path)), {"op": "no-such-op", "path": "."})
     assert reply["error"].startswith("op must be")
 
 
 def test_container_stats_report_the_cgroup_ceiling_not_the_host_node(tmp_path, monkeypatch):
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     gib = 1024**3
     # The host node: 64 GiB, 40 GiB available, 32 CPUs.
@@ -1269,7 +1269,7 @@ def test_container_stats_report_the_cgroup_ceiling_not_the_host_node(tmp_path, m
 
 
 def test_cgroup_readers_parse_v2_files_and_ignore_max(tmp_path, monkeypatch):
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     (tmp_path / "num").write_text("4294967296\n")
     (tmp_path / "max").write_text("max\n")
@@ -1283,7 +1283,7 @@ def test_cgroup_readers_parse_v2_files_and_ignore_max(tmp_path, monkeypatch):
 
 
 def test_cgroup_working_set_excludes_reclaimable_page_cache(tmp_path, monkeypatch):
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     gib = 1024**3
     files = {
@@ -1309,7 +1309,7 @@ def test_cgroup_working_set_excludes_reclaimable_page_cache(tmp_path, monkeypatc
 def test_guest_meminfo_reads_one_bounded_complete_sample(monkeypatch, sample_kind):
     import io
 
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     sample = b"MemTotal: 8192 kB\nMemAvailable: 2048 kB\n"
     expected = {"MemTotal": 8192 * 1024, "MemAvailable": 2048 * 1024}
@@ -1373,8 +1373,8 @@ async def test_unsaved_work_on_a_stopped_workspace_is_unknown_and_never_starts_i
 async def test_health_installs_current_guest_files_when_the_guest_predates_stats(
     tmp_path, monkeypatch
 ):
-    from kiro_crew.coder import session_browse
-    from kiro_crew.session_environments import browse as vm_browse
+    from aj_crew.coder import session_browse
+    from aj_crew.session_environments import browse as vm_browse
 
     # Driven through the real _ask, which owns the one reinstall path: one
     # install and one retry, even when the reinstall does not take.
@@ -1415,7 +1415,7 @@ async def test_health_installs_current_guest_files_when_the_guest_predates_stats
 
 @sync
 async def test_health_reports_stopped_without_starting(tmp_path, monkeypatch):
-    from kiro_crew.coder import session_browse
+    from aj_crew.coder import session_browse
 
     async def fake_resolve(key, *, wake=True):
         return session_browse._Target(SimpleNamespace(workspace="crewenv-x"), "/w", "b")
@@ -1442,7 +1442,7 @@ async def test_health_reports_stopped_without_starting(tmp_path, monkeypatch):
 
 @sync
 async def test_health_is_unreachable_with_the_developer_flag_off(tmp_path, monkeypatch):
-    # The card's read goes through the real choices gate: with KIROCREW_DEV_MODE
+    # The card's read goes through the real choices gate: with AJCREW_DEV_MODE
     # off even a bound chat reads as local, so nothing is resolved or asked.
     _home(monkeypatch, tmp_path)
     _choices(tmp_path).set("dashboard:bound", "dev")
@@ -1452,15 +1452,15 @@ async def test_health_is_unreachable_with_the_developer_flag_off(tmp_path, monke
         raise AssertionError("flag off must not reach the workspace")
 
     monkeypatch.setattr(session_browse, "_ask", never_asked)
-    monkeypatch.delenv("KIROCREW_DEV_MODE")
+    monkeypatch.delenv("AJCREW_DEV_MODE")
     with pytest.raises(session_browse.NotRemote):
         await session_browse.session_health("dashboard:bound")
 
 
 @sync
 async def test_health_caches_the_workspace_memory_for_the_resources_line(tmp_path, monkeypatch):
-    from kiro_crew import session_environment as se
-    from kiro_crew.coder import session_browse
+    from aj_crew import session_environment as se
+    from aj_crew.coder import session_browse
 
     async def fake_resolve(key, *, wake=True):
         return session_browse._Target(SimpleNamespace(workspace="crewenv-x"), "/w", "b")
@@ -1491,8 +1491,8 @@ async def test_health_caches_the_workspace_memory_for_the_resources_line(tmp_pat
 async def test_a_stale_workspace_memory_reading_refreshes_in_the_background(monkeypatch):
     import asyncio
 
-    from kiro_crew import session_environment as se
-    from kiro_crew.coder import session_browse
+    from aj_crew import session_environment as se
+    from aj_crew.coder import session_browse
 
     calls = []
 
@@ -1521,7 +1521,7 @@ async def test_a_stale_workspace_memory_reading_refreshes_in_the_background(monk
 async def test_a_read_that_caches_nothing_is_not_retried_within_a_minute(monkeypatch):
     import asyncio
 
-    from kiro_crew import session_environment as se
+    from aj_crew import session_environment as se
 
     calls = []
 
@@ -1545,7 +1545,7 @@ async def test_a_read_that_caches_nothing_is_not_retried_within_a_minute(monkeyp
 
 
 def test_workspace_memory_refresh_is_a_no_op_without_an_event_loop(monkeypatch):
-    from kiro_crew import session_environment as se
+    from aj_crew import session_environment as se
 
     monkeypatch.setattr(se, "_refresh_loop", None)
     se.register_remote_health("k-noloop", lambda key: None)
@@ -1560,8 +1560,8 @@ def test_workspace_memory_refresh_is_a_no_op_without_an_event_loop(monkeypatch):
 async def test_a_remote_session_without_a_registered_health_read_is_never_read(monkeypatch):
     import asyncio
 
-    from kiro_crew import session_environment as se
-    from kiro_crew.coder import session_browse
+    from aj_crew import session_environment as se
+    from aj_crew.coder import session_browse
 
     calls = []
 
@@ -1588,9 +1588,9 @@ async def test_a_context_build_off_the_loop_schedules_the_refresh_onto_the_runti
 ):
     import asyncio
 
-    from kiro_crew import session_environment as se
-    from kiro_crew.coder import session_browse
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew import session_environment as se
+    from aj_crew.coder import session_browse
+    from aj_crew.testing.wait import async_wait_until
 
     calls = []
 

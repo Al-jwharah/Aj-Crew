@@ -7,7 +7,7 @@ flag loosens privacy. Only the dashboard's promote route may set it:
 ``api_chat_slot_promote`` passes the constant, ``api_chat_slot_fork`` forwards
 its own parameter into ``fork_slot``. Any other caller, including the
 agent-reachable ``session_fork`` path in ``session_control.py``, must not be
-able to pass it, and this scan of ``src/kiro_crew`` is what enforces that.
+able to pass it, and this scan of ``src/aj_crew`` is what enforces that.
 """
 
 from __future__ import annotations

@@ -119,7 +119,7 @@ describe('interactive approval OS toast from the permission row', () => {
     // unknown session keeps its key, never "Untitled session".
     expect(title).toBe(SLOT)
     expect(opts?.body).toBe('Waiting for your approval: shell')
-    expect(opts).toMatchObject({ silent: true, tag: `kirocrew-approval:${SLOT}:req-1` })
+    expect(opts).toMatchObject({ silent: true, tag: `ajcrew-approval:${SLOT}:req-1` })
   })
 
   // #23084: an untitled session's stored title can be its raw slot key. The

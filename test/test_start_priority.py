@@ -1,4 +1,4 @@
-"""Start priority (``kiro_crew.start_priority``): the primitive and who claims it.
+"""Start priority (``aj_crew.start_priority``): the primitive and who claims it.
 
 The primitive's ordering, reserve and drain are pinned directly. Each queue that
 uses it is pinned by the priority that reaches ``PrioritySemaphore.acquire``, each
@@ -23,20 +23,20 @@ from unittest.mock import MagicMock
 import pytest
 from test_session import _mock_provider_factory
 
-import kiro_crew.acp.runtime as runtime_mod
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.runtime_start import _ColdStartAdmission
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.dashboard.chat_runner import _actor_for_queue_items, _turn_start_priority
-from kiro_crew.messaging.dispatch import ChannelTurn
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.session import SessionManager
-from kiro_crew.session_allocation import (
+import aj_crew.acp.runtime as runtime_mod
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.runtime_start import _ColdStartAdmission
+from aj_crew.config import AjCrewConfig
+from aj_crew.dashboard.chat_runner import _actor_for_queue_items, _turn_start_priority
+from aj_crew.messaging.dispatch import ChannelTurn
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.session import SessionManager
+from aj_crew.session_allocation import (
     FOREGROUND_COLD_START_RESERVE,
     MAX_CONCURRENT_COLD_STARTS,
     new_cold_start_semaphore,
 )
-from kiro_crew.start_priority import (
+from aj_crew.start_priority import (
     _FOREGROUND_BYPASS_LIMIT,
     START_QUEUE_ADMISSION,
     START_QUEUE_COLD_START,
@@ -44,7 +44,7 @@ from kiro_crew.start_priority import (
     StartPriority,
     person_priority,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 #: This module drives real cold starts through ``SessionManager``, and one test
 #: reaches ``SubagentManager.spawn``, which refuses while the host looks short of
@@ -58,7 +58,7 @@ T = TypeVar("T")
 #: Upper bound on a wait a real signal ends. Shared with test_session_start_gate.py.
 SETTLE_BACKSTOP = 10.0
 
-_SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+_SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 
 async def until(predicate: Callable[[], bool], what: str) -> None:
@@ -473,7 +473,7 @@ async def test_the_identity_sweep_barrier_finishes_under_a_foreground_stream():
     """The sweep drains ``_start_sem`` ahead of both priorities: while background
     holds its full width and person-started cold starts keep queueing, it completes
     as soon as the holders it waits for let go."""
-    mgr = SessionManager(KiroCrewConfig(), provider_factory=_mock_provider_factory())
+    mgr = SessionManager(AjCrewConfig(), provider_factory=_mock_provider_factory())
     sem = mgr._start_sem
     order = _Order(sem)
     sweep: asyncio.Task | None = None
@@ -551,7 +551,7 @@ def test_a_dashboard_turn_is_foreground_only_when_a_person_sent_it(flags, expect
     ],
 )
 def test_queue_entries_resolve_through_the_real_actor_rule(item, expected, monkeypatch):
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     kind = item.get("kind")
     if kind:
@@ -611,7 +611,7 @@ async def test_the_cold_start_semaphore_gets_the_callers_priority(key, explicit,
         providers.append(provider)
         return provider
 
-    mgr = SessionManager(KiroCrewConfig(), provider_factory=factory)
+    mgr = SessionManager(AjCrewConfig(), provider_factory=factory)
     sem = _recording_cold_start_semaphore()
     mgr._start_sem = sem
     kwargs = {} if explicit is None else {"start_priority": explicit}
@@ -624,7 +624,7 @@ async def test_the_cold_start_semaphore_gets_the_callers_priority(key, explicit,
 
 
 def test_the_cold_start_semaphore_refuses_a_plain_semaphore():
-    mgr = SessionManager(KiroCrewConfig(), provider_factory=_mock_provider_factory())
+    mgr = SessionManager(AjCrewConfig(), provider_factory=_mock_provider_factory())
     with pytest.raises(TypeError):
         mgr._start_sem = asyncio.Semaphore(1)  # type: ignore[assignment]
 
@@ -633,7 +633,7 @@ def test_the_cold_start_semaphore_refuses_a_plain_semaphore():
 async def test_the_cold_start_semaphore_wait_brackets_the_start_clock():
     """A subagent's start clock pauses while it waits for a cold-start permit."""
     events: list[tuple] = []
-    mgr = SessionManager(KiroCrewConfig(), provider_factory=_mock_provider_factory())
+    mgr = SessionManager(AjCrewConfig(), provider_factory=_mock_provider_factory())
     try:
         await bounded(
             mgr.get_or_create(
@@ -650,7 +650,7 @@ async def test_the_cold_start_semaphore_wait_brackets_the_start_clock():
 
 @pytest.mark.asyncio
 async def test_a_raising_cold_start_callback_returns_the_permit():
-    mgr = SessionManager(KiroCrewConfig(), provider_factory=_mock_provider_factory())
+    mgr = SessionManager(AjCrewConfig(), provider_factory=_mock_provider_factory())
 
     def _boom(ms: float, queue: str) -> None:
         raise KeyboardInterrupt
@@ -753,7 +753,7 @@ async def test_a_chat_is_not_stuck_behind_background_holders_of_the_outer_semaph
         finally:
             permit.release()
 
-    mgr = SessionManager(KiroCrewConfig(), provider_factory=factory)
+    mgr = SessionManager(AjCrewConfig(), provider_factory=factory)
     tasks: list[asyncio.Task] = []
     shared = [f"share{i}" for i in range(4)]
     crons = [f"cron:job-{i}" for i in range(MAX_CONCURRENT_COLD_STARTS)]
@@ -987,7 +987,7 @@ class _Request(dict):
     ],
 )
 def test_a_slot_action_arms_its_eager_spawn_by_who_asked(request_fields, expected):
-    from kiro_crew.dashboard.request_priority import owner_start_priority
+    from aj_crew.dashboard.request_priority import owner_start_priority
 
     assert owner_start_priority(_Request("", **request_fields)) is expected
 
@@ -1146,7 +1146,7 @@ async def test_the_background_session_start_carries_its_callers_priority(priorit
             seen.update(kwargs)
             return object()
 
-    mgr = SessionManager(KiroCrewConfig(), provider_factory=_mock_provider_factory())
+    mgr = SessionManager(AjCrewConfig(), provider_factory=_mock_provider_factory())
     bg = mgr._background_runtime
     bg._bg_runtime = _Runtime()
     try:
@@ -1220,15 +1220,15 @@ def test_the_startup_deadline_covers_every_phase_the_clock_runs_through():
     wait, pausing only in a queue -- so the window must include the ``initialize``
     budget, once per handshake round of a retried start, or the watchdog reaps a
     start whose own budgets have not expired."""
-    from kiro_crew.config import live as _live
-    from kiro_crew.constants import INITIALIZE_TIMEOUT_SECS
-    from kiro_crew.subagent import (
+    from aj_crew.config import live as _live
+    from aj_crew.constants import INITIALIZE_TIMEOUT_SECS
+    from aj_crew.subagent import (
         _STARTUP_COLLECT_GRACE_SECS,
         _STARTUP_LAUNCH_MARGIN_SECS,
         SubagentManager,
     )
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.session_start_timeout_secs = 900
     cfg.agent.start_collect_timeout_secs = 10
     mgr = SubagentManager(sessions=MagicMock(), ctx_builder=MagicMock())

@@ -28,8 +28,8 @@ async def test_imported_rows_are_replayed_silently_not_broadcast(monkeypatch):
     ``broadcast=True`` would push a live ``chat_message`` SSE event, fanning the
     retracted slot's peer content to every client and retiring live question cards.
     """
-    from kiro_crew.dashboard import session_transfer as st
-    from kiro_crew.dashboard.chat_handlers import _ChatSlot
+    from aj_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard.chat_handlers import _ChatSlot
 
     seen_broadcast: list[bool] = []
     real_append = _ChatSlot.append
@@ -61,7 +61,7 @@ async def test_imported_rows_carry_a_minted_mid(monkeypatch):
     Without ``mint_missing_mids=True`` imported rows drop out of every mid-keyed
     feature (row-identity dedup, the non-legacy Fork path).
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     msgs = [
         {"role": "user", "content": "q", "ts": ""},
@@ -82,7 +82,7 @@ async def test_slot_is_unreachable_until_construction_finishes(monkeypatch):
     acquirer such as delete, regenerate or rewind can reach it) but still under
     construction for the cap. Retracting is safe because import mints its own key.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     seen_registered: list[bool] = []
     seen_under_construction: list[bool] = []
@@ -127,7 +127,7 @@ def test_retracted_import_slot_still_counts_against_the_cap():
     Otherwise concurrent imports would each sample a total excluding the others in
     flight, and all would pass a cap that was already full.
     """
-    from kiro_crew.dashboard.state import DashboardState
+    from aj_crew.dashboard.state import DashboardState
 
     state = DashboardState.__new__(DashboardState)
     state._slots = {"chat-1": object()}
@@ -150,7 +150,7 @@ async def test_import_releases_the_construction_count_on_every_exit(monkeypatch)
 
     A leaked key would inflate the cap for the process lifetime.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     async def _boom(*_a, **_k):
         raise RuntimeError("disk gone")
@@ -168,7 +168,7 @@ async def test_import_releases_the_construction_count_on_every_exit(monkeypatch)
 async def test_import_releases_the_construction_count_on_success(monkeypatch):
     """The success path publishes the slot and stops counting it separately, so
     the total does not double-count a landed import."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     state = _stub_state(st, monkeypatch)
     resp = await st.api_chat_slot_import(_make_request(state, _valid()))
@@ -184,8 +184,8 @@ async def test_a_landed_import_refreshes_the_older_sessions_listing(monkeypatch)
     served then shows it under Older Sessions. Creation pushes the first listing
     refresh, the landing's sync pushes the one that corrects that listing, and a
     refused import pushes only the first."""
-    from kiro_crew.dashboard import chat_utils_slots
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import chat_utils_slots
+    from aj_crew.dashboard import session_transfer as st
 
     monkeypatch.setattr(chat_utils_slots, "set_dashboard_surfaced", lambda _keys, _tabs=None: None)
 
@@ -233,7 +233,7 @@ async def test_slot_cap_is_rechecked_after_the_pre_creation_awaits(monkeypatch):
 
     A sibling request is simulated by filling the map during agent resolution.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     state = _stub_state(st, monkeypatch)
 
@@ -282,7 +282,7 @@ async def test_a_plain_json_arrival_is_filed_under_imported_from_sender(monkeypa
 
     A peer-pushed session is filed, not left at the top level.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     state = _stub_state(st, monkeypatch)
     resp = await st.api_chat_slot_import(_make_request(state, _valid(origin="mac")))
@@ -303,7 +303,7 @@ async def test_a_gzipped_arrival_is_filed_exactly_like_the_plain_one(monkeypatch
 
     Both go into one store, so a per-format destination would show as two folders.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     state = _stub_state(st, monkeypatch)
 
@@ -325,7 +325,7 @@ async def test_an_app_scoped_arrival_lands_unfiled_and_creates_no_folder(monkeyp
     """RFC §5.1. The folder store has a global ceiling, so an app token that
     could create a folder per arrival could loop imports with distinct origins
     until the person is refused a folder of their own."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     state = _stub_state(st, monkeypatch)
     request = _make_request(state, _valid(origin="mac"))
@@ -346,8 +346,8 @@ async def test_filing_identity_comes_from_the_shared_caller_rule(monkeypatch):
     The internal-secret transport carries no app claim, so the shared rule derives one
     from the caller's session key; reading the claim alone would file for an app caller.
     """
-    from kiro_crew.dashboard import session_transfer as st
-    from kiro_crew.dashboard.chat_handlers import _ChatSlot
+    from aj_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard.chat_handlers import _ChatSlot
 
     state = _stub_state(st, monkeypatch)
     # A slot an app owns, named by the caller's own session key. Nothing about
@@ -371,7 +371,7 @@ async def test_filing_identity_comes_from_the_shared_caller_rule(monkeypatch):
 async def test_a_second_arrival_from_one_sender_lands_beside_the_first(monkeypatch):
     """The RFC's first acceptance bullet: not in a second folder of the same
     name."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     state = _stub_state(st, monkeypatch)
 
@@ -394,8 +394,8 @@ async def test_a_landed_arrival_records_the_row_it_shares(monkeypatch):
     A CREATED row needs no mark: no other import holds its id. The adopted group row
     stays unmarked because the rollback already spares a row whose child survived.
     """
-    from kiro_crew.dashboard import arrival_folders as af
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import arrival_folders as af
+    from aj_crew.dashboard import session_transfer as st
 
     state = _stub_state(st, monkeypatch)
 
@@ -432,8 +432,8 @@ async def test_a_delete_landing_in_the_shared_row_mark_refuses(monkeypatch):
     can land inside it; below the witness the handler would answer ``200 ok`` for a
     removed transcript. The delete is injected by the mark, so only a later witness sees it.
     """
-    from kiro_crew.dashboard import arrival_folders as af
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import arrival_folders as af
+    from aj_crew.dashboard import session_transfer as st
 
     state = _stub_state(st, monkeypatch)
 
@@ -480,7 +480,7 @@ async def test_a_mark_that_cannot_be_recorded_unfiles_the_session(monkeypatch):
     reads, so only the mark spares the row. Without it the session is unfiled, as the
     folder-gone repair does, rather than left pointing at a row that may vanish.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     state = _stub_state(st, monkeypatch)
 
@@ -507,7 +507,7 @@ async def test_a_mark_that_cannot_be_recorded_unfiles_the_session(monkeypatch):
 async def test_a_recorded_mark_leaves_the_session_filed(monkeypatch):
     """The companion. Without it the unfiling could fire unconditionally and this
     would still look correct, because an unfiled session is also a valid state."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     state = _stub_state(st, monkeypatch)
 
@@ -525,7 +525,7 @@ async def test_a_recorded_mark_leaves_the_session_filed(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_two_senders_get_two_children_under_one_group(monkeypatch):
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     state = _stub_state(st, monkeypatch)
 
@@ -545,7 +545,7 @@ async def test_two_senders_get_two_children_under_one_group(monkeypatch):
 async def test_a_bundle_with_no_sender_is_filed_under_the_group(monkeypatch):
     """A missing ``origin`` names no peer, so inventing "from unknown" would make
     an absent field look like one."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     state = _stub_state(st, monkeypatch)
     resp = await st.api_chat_slot_import(_make_request(state, _valid(origin="")))
@@ -561,7 +561,7 @@ async def test_placement_is_resolved_after_the_slot_exists(monkeypatch):
 
     The cap bites only after the early check, as a real concurrent burst does.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     state = _stub_state(st, monkeypatch)
     calls = {"n": 0}
@@ -587,7 +587,7 @@ async def test_a_folder_deleted_during_finalisation_leaves_no_dangling_id(monkey
     The slot is retracted from ``state._slots``, which the folder delete's unfile sweep
     iterates, so the delete cannot unfile it itself.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     saved: list[str] = []
 
@@ -614,7 +614,7 @@ async def test_a_refused_repair_save_is_not_reported_as_a_landed_import(monkeypa
     That is terminal: ``_dirty`` is cleared, so no later flush would correct an ``ok``
     answer and the slot would stay published as a zombie.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     calls: list[bool] = []
     pushes: list[int] = []
@@ -653,7 +653,7 @@ async def test_the_finalisation_saves_are_pinned_to_this_slot(monkeypatch):
     at the commit boundary only when ``expected_slot_name`` is passed. Asserted on the
     argument because a stub save cannot exercise the real recheck.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     seen: list[dict] = []
 
@@ -683,7 +683,7 @@ async def test_a_close_at_the_repair_saves_commit_boundary_is_not_a_deletion(mon
     Both it and the delete-won guard return ``False``. Here a close won the map and
     the import did land; a ``False`` with the slot still mapped is the 409 case.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     calls: list[bool] = []
 
@@ -721,7 +721,7 @@ async def test_a_close_during_the_folder_check_is_not_undone_by_the_repair(monke
     ``closed=True``; the slot object still says False, so a repair save would revive the
     closed tab. The repair is skipped, not refused. An absent key must not count as ours.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     saves: list[str] = []
     archived = {"closed": False}
@@ -770,7 +770,7 @@ async def test_a_delete_during_the_folder_check_is_not_reported_as_landed(monkey
     The repair branch is keyed on the folder being gone, so only the unconditional
     witness catches this. The folder stays intact on purpose, or the test proves nothing.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     pushes: list[int] = []
     existed: list[bool] = []
@@ -806,7 +806,7 @@ async def test_a_delete_during_the_folder_check_is_not_reported_as_landed(monkey
 @pytest.mark.asyncio
 async def test_the_delete_witness_runs_on_the_ordinary_success_path(monkeypatch):
     """The witness is consulted on a plain import too, not only in the folder-gone branch."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     asked: list[str] = []
     state = _stub_state(st, monkeypatch)
@@ -832,7 +832,7 @@ async def test_the_witness_still_runs_when_the_repair_save_reported_success(monk
     Under best-effort ``save_slot_off_loop`` turns a raising save into ``True``, so a
     ``True`` from the repair save decided nothing about a delete.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     saves: list[bool] = []
 
@@ -862,7 +862,7 @@ async def test_a_refused_import_takes_back_the_folder_it_created(monkeypatch):
 
     There is no orphan-folder sweep to reclaim it later.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     async def _save_fails(*_a, **_k):
         raise OSError("sessions dir is not writable")
@@ -883,7 +883,7 @@ async def test_a_refusal_discloses_a_transcript_it_cannot_remove(monkeypatch):
     cannot be verified. Only the first makes "nothing was kept" true; the others leave a
     file this instance must not unlink, so the answer discloses it.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     state = _stub_state(st, monkeypatch)
     monkeypatch.setattr(st, "session_was_deleted", lambda _s, _slot: True)
@@ -904,7 +904,7 @@ async def test_a_refusal_discloses_a_transcript_it_cannot_remove(monkeypatch):
 async def test_a_refusal_still_promises_a_clean_slate_when_the_file_is_gone(monkeypatch):
     """The companion, and what keeps the disclosure from swallowing the plain
     case: when the transcript really is gone, the refusal says so plainly."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     state = _stub_state(st, monkeypatch)
     monkeypatch.setattr(st, "session_was_deleted", lambda _s, _slot: True)
@@ -925,7 +925,7 @@ async def test_a_refusal_leaves_a_same_key_replacement_alone(monkeypatch):
     A replacement can take the key during the finalisation tail; popping or forgetting
     by key would lose a session this import never owned.
     """
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     forgotten: list[str] = []
     state = _stub_state(st, monkeypatch)
@@ -954,7 +954,7 @@ async def test_a_refusal_leaves_a_same_key_replacement_alone(monkeypatch):
 async def test_a_folder_store_failure_leaves_the_session_filed_nowhere(monkeypatch):
     """RFC §5.6. Filing is convenience; the transcript is the payload, so a store
     failure must not fail an import that works today."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     state = _stub_state(st, monkeypatch)
 

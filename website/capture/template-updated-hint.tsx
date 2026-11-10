@@ -20,7 +20,7 @@ import { SCHEDULE_PRESETS, templateUpdate, presetCanonicalPrompt } from '../src/
 import '../src/index.css'
 
 const params = new URLSearchParams(location.search)
-const theme = params.get('theme') === 'light' ? 'kiro-light' : 'kiro-dark'
+const theme = params.get('theme') === 'light' ? 'aj-light' : 'aj-dark'
 document.documentElement.setAttribute('data-theme', theme)
 
 initI18n('en')

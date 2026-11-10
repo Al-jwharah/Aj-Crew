@@ -18,8 +18,8 @@ from cli_helpers import (  # noqa: F401 -- the autouse fixture registers by impo
     _pin_default_config,
 )
 
-from kiro_crew.cli_doctor import _doctor
-from kiro_crew.cli_server import (
+from aj_crew.cli_doctor import _doctor
+from aj_crew.cli_server import (
     _update,
 )
 
@@ -35,7 +35,7 @@ class TestDoctor:
         """Pin the vendored-runtime probe host-independently: the brazil
         interpreter on a Mac can be darwin/x86_64 under Rosetta, where the
         vendored libs legitimately do not exist (designed degradation)."""
-        import kiro_crew.cli_doctor as _doc
+        import aj_crew.cli_doctor as _doc
 
         _floor_monkeypatch.setattr(_doc, "_load_llama_class", lambda: object)
         _floor_monkeypatch.setattr(_doc, "model_file_present", lambda path=None: False)
@@ -45,8 +45,8 @@ class TestDoctor:
         """Pin the Sandbox section host-independently: a CI runner can restrict
         user namespaces with no profile installed, which is a genuine issue on
         that HOST (doctor exits 1 for it) but not the subject of these tests."""
-        import kiro_crew.cli_doctor as _doc
-        from kiro_crew.doctor_checks import confinement
+        import aj_crew.cli_doctor as _doc
+        from aj_crew.doctor_checks import confinement
 
         _floor_monkeypatch.setattr(
             _doc.sandbox, "detect_backend", lambda config_mode="auto": "namespace"
@@ -64,9 +64,9 @@ class TestDoctor:
         _floor_monkeypatch.setenv("PATH", os.environ.get("PATH", ""))
 
     def test_doctor_with_kiro(self, tmp_path, capsys, monkeypatch):
-        import kiro_crew.cli_doctor as _doc
+        import aj_crew.cli_doctor as _doc
 
-        agent_file = tmp_path / "kirocrew.json"
+        agent_file = tmp_path / "ajcrew.json"
         # A minimally healthy agent config so doctor walks the whole MCP
         # section cleanly and doesn't exit on "missing from mcpServers".
         _healthy_agent_file(agent_file)
@@ -75,20 +75,20 @@ class TestDoctor:
         monkeypatch.setattr(_doc, "ensure_ffmpeg_in_path", lambda: None)
         with (
             patch(
-                "kiro_crew.cli_doctor.shutil.which",
+                "aj_crew.cli_doctor.shutil.which",
                 side_effect=lambda b, **_kw: f"/usr/local/bin/{b}",
             ),
-            patch("kiro_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
-            patch("kiro_crew.cli_doctor.subprocess.run", return_value=mock_run),
+            patch("aj_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
+            patch("aj_crew.cli_doctor.subprocess.run", return_value=mock_run),
             patch("urllib.request.urlopen", side_effect=urllib.error.URLError("no gateway")),
-            patch("kiro_crew.cli_doctor.is_local_only", return_value=True),
-            patch("kiro_crew.cli_doctor.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
+            patch("aj_crew.cli_doctor.is_local_only", return_value=True),
+            patch("aj_crew.cli_doctor.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
         ):
             _doctor()
         out = capsys.readouterr().out
         assert "kiro-cli 1.0.0" in out
-        assert out.endswith("✅ Kiro Crew is ready!\n")
+        assert out.endswith("✅ Aj Crew is ready!\n")
 
     @staticmethod
     def _stt_config(monkeypatch, **fields):
@@ -97,11 +97,11 @@ class TestDoctor:
         The autouse ``_hermetic_config`` fixture pins STT OFF so unrelated doctor
         tests never reach this section, so any test that wants it has to ask.
         """
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_KIRO
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_KIRO
+        from aj_crew.config.loader import AjCrewConfig
 
-        def _cfg() -> KiroCrewConfig:
-            cfg = KiroCrewConfig()
+        def _cfg() -> AjCrewConfig:
+            cfg = AjCrewConfig()
             # kiro-cli, like ``_pin_default_config``: the KAS engine row is not
             # the subject here.
             cfg.agent.acp_backend = ACP_BACKEND_KIRO
@@ -110,7 +110,7 @@ class TestDoctor:
                 setattr(cfg.stt, name, value)
             return cfg
 
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: _cfg()))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: _cfg()))
 
     def test_doctor_windows_missing_stt_engine_and_ffmpeg_is_non_fatal(
         self, tmp_path, capsys, monkeypatch
@@ -119,9 +119,9 @@ class TestDoctor:
         ffmpeg are not dependencies there. Reporting them as hard issues made
         `doctor` exit 1 on a healthy install and broke the guide's
         `doctor && gateway` chain, so they must be non-fatal notes: doctor exits 0."""
-        import kiro_crew.cli_doctor as _doc
+        import aj_crew.cli_doctor as _doc
 
-        agent_file = tmp_path / "kirocrew.json"
+        agent_file = tmp_path / "ajcrew.json"
         _healthy_agent_file(agent_file)
         mock_run = MagicMock(returncode=0, stdout="kiro-cli 1.0.0", stderr="")
         monkeypatch.setattr(_doc.platform_compat, "IS_WINDOWS", True)
@@ -143,20 +143,20 @@ class TestDoctor:
             return f"C:\\tools\\{binary}.exe"
 
         with (
-            patch("kiro_crew.cli_doctor.shutil.which", side_effect=_which),
-            patch("kiro_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
-            patch("kiro_crew.cli_doctor.subprocess.run", return_value=mock_run),
+            patch("aj_crew.cli_doctor.shutil.which", side_effect=_which),
+            patch("aj_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
+            patch("aj_crew.cli_doctor.subprocess.run", return_value=mock_run),
             patch("urllib.request.urlopen", side_effect=urllib.error.URLError("no gateway")),
-            patch("kiro_crew.cli_doctor.is_local_only", return_value=True),
-            patch("kiro_crew.cli_doctor.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
+            patch("aj_crew.cli_doctor.is_local_only", return_value=True),
+            patch("aj_crew.cli_doctor.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
         ):
             # Must NOT raise SystemExit(1): both STT gaps are notes on Windows.
             _doctor()
         out = capsys.readouterr().out
         assert "  engine:      ⚠️  needs the voice extra" in out
         assert "  ffmpeg:      ⚠️  not found" in out
-        assert out.endswith("✅ Kiro Crew is ready!\n")
+        assert out.endswith("✅ Aj Crew is ready!\n")
 
     @pytest.mark.parametrize(
         "is_windows, bundled, expected_mark",
@@ -173,9 +173,9 @@ class TestDoctor:
         space, which keeps the report columns aligned — AND that the twin
         report lines can never disagree, so a one-arm edit to either site
         fails here."""
-        import kiro_crew.cli_doctor as _doc
+        import aj_crew.cli_doctor as _doc
 
-        agent_file = tmp_path / "kirocrew.json"
+        agent_file = tmp_path / "ajcrew.json"
         _healthy_agent_file(agent_file)
         mock_run = MagicMock(returncode=0, stdout="kiro-cli 1.0.0", stderr="")
         monkeypatch.setattr(_doc.platform_compat, "IS_WINDOWS", is_windows)
@@ -198,13 +198,13 @@ class TestDoctor:
             return f"/usr/local/bin/{binary}"
 
         with (
-            patch("kiro_crew.cli_doctor.shutil.which", side_effect=_which),
-            patch("kiro_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
-            patch("kiro_crew.cli_doctor.subprocess.run", return_value=mock_run),
+            patch("aj_crew.cli_doctor.shutil.which", side_effect=_which),
+            patch("aj_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
+            patch("aj_crew.cli_doctor.subprocess.run", return_value=mock_run),
             patch("urllib.request.urlopen", side_effect=urllib.error.URLError("no gateway")),
-            patch("kiro_crew.cli_doctor.is_local_only", return_value=True),
-            patch("kiro_crew.cli_doctor.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
+            patch("aj_crew.cli_doctor.is_local_only", return_value=True),
+            patch("aj_crew.cli_doctor.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
         ):
             # Only the macOS/Linux desktop arm makes the two gaps hard issues
             # (exit 1). Exit semantics are pinned elsewhere — here only the
@@ -225,28 +225,28 @@ class TestDoctor:
         """A PlatformCompositionError from boot must be REPORTED by the doctor,
         not crash it — the doctor is the tool that diagnoses a broken setup, so
         it has to survive the very failure it explains."""
-        import kiro_crew.cli_doctor as _doc
-        from kiro_crew.platform import PlatformCompositionError
+        import aj_crew.cli_doctor as _doc
+        from aj_crew.platform import PlatformCompositionError
 
-        agent_file = tmp_path / "kirocrew.json"
+        agent_file = tmp_path / "ajcrew.json"
         _healthy_agent_file(agent_file)
         mock_run = MagicMock(returncode=0, stdout="kiro-cli 1.0.0", stderr="")
         boot_err = PlatformCompositionError(
-            "profile=amazon resolved no companion; set KIROCREW_PROFILE=standalone"
+            "profile=amazon resolved no companion; set AJCREW_PROFILE=standalone"
         )
         # Left unpatched this mutates the process PATH for every later test.
         monkeypatch.setattr(_doc, "ensure_ffmpeg_in_path", lambda: None)
         with (
             patch(
-                "kiro_crew.cli_doctor.shutil.which",
+                "aj_crew.cli_doctor.shutil.which",
                 side_effect=lambda b, **_kw: f"/usr/local/bin/{b}",
             ),
-            patch("kiro_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
-            patch("kiro_crew.cli_doctor.subprocess.run", return_value=mock_run),
+            patch("aj_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
+            patch("aj_crew.cli_doctor.subprocess.run", return_value=mock_run),
             patch("urllib.request.urlopen", side_effect=urllib.error.URLError("no gateway")),
-            patch("kiro_crew.cli_doctor.is_local_only", return_value=True),
-            patch("kiro_crew.cli_doctor.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
+            patch("aj_crew.cli_doctor.is_local_only", return_value=True),
+            patch("aj_crew.cli_doctor.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
         ):
             # Must not raise — and must exit 1 since a composition failure is a
             # blocking issue.
@@ -255,7 +255,7 @@ class TestDoctor:
         assert exc.value.code == 1
         out = capsys.readouterr().out
         assert "composition failed" in out
-        assert "KIROCREW_PROFILE=standalone" in out
+        assert "AJCREW_PROFILE=standalone" in out
 
     def test_doctor_without_kiro(self, tmp_path, monkeypatch):
         """A host with no kiro-cli: ``which`` and the trusted-directory resolvers find nothing.
@@ -263,7 +263,7 @@ class TestDoctor:
         Unpinned resolvers would run the real ``aws``, ``systemctl`` and ``git`` on the
         host; ``None`` is the product's "cannot ask" arm. ``python3 --version`` has no
         seam, so it is mocked."""
-        import kiro_crew.cli_doctor as _doc
+        import aj_crew.cli_doctor as _doc
 
         monkeypatch.setattr(_doc, "resolve_kiro_cli", lambda: None)
         monkeypatch.setattr(_doc.platform_compat, "trusted_aws_bin", lambda: None)
@@ -271,11 +271,11 @@ class TestDoctor:
         monkeypatch.setattr(_doc.platform_compat, "trusted_git_bin", lambda: None)
         mock_run = MagicMock(returncode=0, stdout="Python 3.10.0", stderr="")
         with (
-            patch("kiro_crew.cli_doctor.shutil.which", return_value=None),
-            patch("kiro_crew.cli_doctor.subprocess.run", return_value=mock_run),
+            patch("aj_crew.cli_doctor.shutil.which", return_value=None),
+            patch("aj_crew.cli_doctor.subprocess.run", return_value=mock_run),
             patch("urllib.request.urlopen", side_effect=urllib.error.URLError("no gateway")),
-            patch("kiro_crew.cli_doctor.is_local_only", return_value=True),
-            patch("kiro_crew.cli_doctor.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_doctor.is_local_only", return_value=True),
+            patch("aj_crew.cli_doctor.config_dir", return_value=tmp_path),
         ):
             try:
                 _doctor()
@@ -284,20 +284,20 @@ class TestDoctor:
 
     @patch.dict("os.environ", {"SSH_CONNECTION": "1.2.3.4 1234 5.6.7.8 22"})
     def test_doctor_remote_shows_ssh_tunnel_hint(self, tmp_path, capsys):
-        agent_file = tmp_path / "kirocrew.json"
+        agent_file = tmp_path / "ajcrew.json"
         agent_file.write_text("{}", encoding="utf-8")
         mock_run = MagicMock(returncode=0, stdout="kiro-cli 1.0.0", stderr="")
         with (
             patch(
-                "kiro_crew.cli_doctor.shutil.which",
+                "aj_crew.cli_doctor.shutil.which",
                 side_effect=lambda b, **_kw: f"/usr/local/bin/{b}",
             ),
-            patch("kiro_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
+            patch("aj_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
             patch("subprocess.run", return_value=mock_run),
             patch("urllib.request.urlopen", side_effect=urllib.error.URLError("no gateway")),
-            patch("kiro_crew.cli_doctor.is_local_only", return_value=False),
-            patch("kiro_crew.cli_doctor.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_doctor.machine_hostname", return_value="myhost"),
+            patch("aj_crew.cli_doctor.is_local_only", return_value=False),
+            patch("aj_crew.cli_doctor.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_doctor.machine_hostname", return_value="myhost"),
         ):
             try:
                 _doctor()
@@ -312,27 +312,27 @@ class TestDoctor:
         mocked True so no live slack_sdk auth.test fires (its own logic is
         covered by test_enterprise.py); this covers the doctor-side success
         branch."""
-        agent_file = tmp_path / "kirocrew.json"
+        agent_file = tmp_path / "ajcrew.json"
         _healthy_agent_file(agent_file)
         mock_run = MagicMock(returncode=0, stdout="kiro-cli 1.0.0", stderr="")
         slack_creds = {
             "SLACK_APP_TOKEN": "xapp-test",
             "SLACK_BOT_TOKEN": "xoxb-test",
-            "KIROCREW_OWNER_ID": "U123",
+            "AJCREW_OWNER_ID": "U123",
         }
         with (
             patch(
-                "kiro_crew.cli_doctor.shutil.which",
+                "aj_crew.cli_doctor.shutil.which",
                 side_effect=lambda b, **_kw: f"/usr/local/bin/{b}",
             ),
-            patch("kiro_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
-            patch("kiro_crew.cli_doctor.subprocess.run", return_value=mock_run),
+            patch("aj_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
+            patch("aj_crew.cli_doctor.subprocess.run", return_value=mock_run),
             patch("urllib.request.urlopen", side_effect=urllib.error.URLError("no gateway")),
-            patch("kiro_crew.cli_doctor.is_local_only", return_value=True),
-            patch("kiro_crew.cli_doctor.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
-            patch("kiro_crew.cli_doctor.KiroCrewConfig.load_credentials", return_value=slack_creds),
-            patch("kiro_crew.slack.enterprise.validate_enterprise", return_value=True) as mock_ve,
+            patch("aj_crew.cli_doctor.is_local_only", return_value=True),
+            patch("aj_crew.cli_doctor.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
+            patch("aj_crew.cli_doctor.AjCrewConfig.load_credentials", return_value=slack_creds),
+            patch("aj_crew.slack.enterprise.validate_enterprise", return_value=True) as mock_ve,
         ):
             _doctor()
         out = capsys.readouterr().out
@@ -345,23 +345,23 @@ class TestDoctor:
         allowlist is a blocking issue: doctor prints the warning and exits 1.
         validate_enterprise is mocked False so no live auth.test fires; covers
         the doctor-side failure branch + the resulting sys.exit(1)."""
-        agent_file = tmp_path / "kirocrew.json"
+        agent_file = tmp_path / "ajcrew.json"
         _healthy_agent_file(agent_file)
         mock_run = MagicMock(returncode=0, stdout="kiro-cli 1.0.0", stderr="")
         slack_creds = {"SLACK_APP_TOKEN": "xapp-test", "SLACK_BOT_TOKEN": "xoxb-test"}
         with (
             patch(
-                "kiro_crew.cli_doctor.shutil.which",
+                "aj_crew.cli_doctor.shutil.which",
                 side_effect=lambda b, **_kw: f"/usr/local/bin/{b}",
             ),
-            patch("kiro_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
-            patch("kiro_crew.cli_doctor.subprocess.run", return_value=mock_run),
+            patch("aj_crew.cli_doctor.KIRO_AGENTS_DIR", tmp_path),
+            patch("aj_crew.cli_doctor.subprocess.run", return_value=mock_run),
             patch("urllib.request.urlopen", side_effect=urllib.error.URLError("no gateway")),
-            patch("kiro_crew.cli_doctor.is_local_only", return_value=True),
-            patch("kiro_crew.cli_doctor.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
-            patch("kiro_crew.cli_doctor.KiroCrewConfig.load_credentials", return_value=slack_creds),
-            patch("kiro_crew.slack.enterprise.validate_enterprise", return_value=False),
+            patch("aj_crew.cli_doctor.is_local_only", return_value=True),
+            patch("aj_crew.cli_doctor.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_doctor.probe_server", side_effect=_noop_probe_server),
+            patch("aj_crew.cli_doctor.AjCrewConfig.load_credentials", return_value=slack_creds),
+            patch("aj_crew.slack.enterprise.validate_enterprise", return_value=False),
         ):
             with pytest.raises(SystemExit) as exc:
                 _doctor()
@@ -396,7 +396,7 @@ def _patch_path():
     mock_path_inst.parent.parent = MagicMock()
     mock_path_inst.parent.parent.__truediv__ = _truediv
     mock_path_inst.parent.parent.__str__ = lambda self: "/fake/ws"
-    return patch("kiro_crew.cli_server.Path", return_value=mock_path_inst)
+    return patch("aj_crew.cli_server.Path", return_value=mock_path_inst)
 
 
 @contextlib.contextmanager
@@ -408,7 +408,7 @@ def _git_resolvable():
     ``subprocess.run``.
     """
     with patch(
-        "kiro_crew.platform.update_capability.trusted_system_bin",
+        "aj_crew.platform.update_capability.trusted_system_bin",
         return_value="/usr/bin/git",
     ):
         yield
@@ -423,9 +423,9 @@ class TestUpdateFailures:
     """
 
     def test_git_fetch_failure_exits(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(
-            "kiro_crew.platform.update_capability.running_from_checkout",
+            "aj_crew.platform.update_capability.running_from_checkout",
             lambda root, **kw: True,
         )
 
@@ -452,11 +452,11 @@ class TestUpdateFailures:
                 assert e.code == 1
 
     def test_pip_install_failure_exits(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         # The update puts the recorded node dirs first on PATH; restore it at teardown.
         monkeypatch.setenv("PATH", os.environ.get("PATH", ""))
         monkeypatch.setattr(
-            "kiro_crew.platform.update_capability.running_from_checkout",
+            "aj_crew.platform.update_capability.running_from_checkout",
             lambda root, **kw: True,
         )
 
@@ -484,14 +484,14 @@ class TestUpdateFailures:
         with (
             _patch_path(),
             _git_resolvable(),
-            patch("kiro_crew.cli_server.shutil.which", return_value=None),
-            patch("kiro_crew.cli_server.build_frontend_sync"),
-            patch("kiro_crew.cli._ensure_node"),
+            patch("aj_crew.cli_server.shutil.which", return_value=None),
+            patch("aj_crew.cli_server.build_frontend_sync"),
+            patch("aj_crew.cli._ensure_node"),
             # Pin the install route to the reinstall this test is about; the real
             # probe reads the test interpreter's own Scripts dir, and the origin
             # guard would otherwise run the stubbed interpreter for its answer.
-            patch("kiro_crew.dep_sync.locked_console_scripts", return_value=[]),
-            patch("kiro_crew.dep_sync.venv_not_mapped_to", return_value=None),
+            patch("aj_crew.dep_sync.locked_console_scripts", return_value=[]),
+            patch("aj_crew.dep_sync.venv_not_mapped_to", return_value=None),
             patch("subprocess.run", side_effect=_side_effect),
         ):
             try:
@@ -505,16 +505,16 @@ class TestBannerBranding:
     """The ASCII banners must spell the product's real name.
 
     All three were figlet-`small` renderings of "KiroClaw"/"KiroClaw Cloud" — a
-    pre-rename name that reached users on `kirocrew` with no args, in the chat
-    REPL, and at the top of every `kirocrew cloud` run.
+    pre-rename name that reached users on `ajcrew` with no args, in the chat
+    REPL, and at the top of every `ajcrew cloud` run.
     """
 
     def _letters(self, banner: str) -> str:
         """Collapse the ASCII art to comparable letter-ish content."""
         return "".join(banner.split())
 
-    def test_main_banner_is_kiro_crew(self):
-        from kiro_crew.cli import BANNER
+    def test_main_banner_is_aj_crew(self):
+        from aj_crew.cli import BANNER
 
         # figlet 'small' renders "Crew" with the distinctive `-_)` in the 'e' row
         # and `_ _` in the 'r'/'C' row; "Claw" instead carries `/ _` + `\ V  V /`.
@@ -528,9 +528,9 @@ class TestBannerBranding:
         both stale. They now re-export the one in constants.py; identity (`is`)
         proves there is no second literal to drift.
         """
-        from kiro_crew.cli import BANNER as MAIN
-        from kiro_crew.cli_chat import BANNER as CHAT
-        from kiro_crew.constants import BANNER as CANON
+        from aj_crew.cli import BANNER as MAIN
+        from aj_crew.cli_chat import BANNER as CHAT
+        from aj_crew.constants import BANNER as CANON
 
         assert MAIN is CANON
         assert CHAT is CANON
@@ -539,8 +539,8 @@ class TestBannerBranding:
         """Guard the fix: neither module may re-inline the art."""
         from pathlib import Path
 
-        import kiro_crew.cli as cli_mod
-        import kiro_crew.cli_chat as chat_mod
+        import aj_crew.cli as cli_mod
+        import aj_crew.cli_chat as chat_mod
 
         # cli.py, every module split out of it, and cli_chat.
         split_out = [sys.modules[name] for name in cli_mod._OWNERS]
@@ -553,8 +553,8 @@ class TestBannerBranding:
             src = Path(mod.__file__).read_text(encoding="utf-8")
             assert "BANNER = r" not in src, f"{mod.__name__} re-inlined the banner literal"
 
-    def test_cloud_banner_is_kiro_crew_cloud(self):
-        from kiro_crew.cloud.ui import BANNER
+    def test_cloud_banner_is_aj_crew_cloud(self):
+        from aj_crew.cloud.ui import BANNER
 
         assert "-_)" in BANNER, "cloud banner does not render 'Crew'"
         assert "|__ ___" not in BANNER, "cloud banner still renders 'Claw'"
@@ -562,8 +562,8 @@ class TestBannerBranding:
         assert "\\___/\\_,_\\__,_|" in BANNER
 
     def test_no_kiroclaw_spelling_anywhere_in_banners(self):
-        from kiro_crew.cloud.ui import BANNER as CLOUD
-        from kiro_crew.constants import BANNER as MAIN
+        from aj_crew.cloud.ui import BANNER as CLOUD
+        from aj_crew.constants import BANNER as MAIN
 
         CHAT = MAIN
 
@@ -583,9 +583,9 @@ class TestConfigSetValueBase64Grammar:
     def _parse(*argv: str):
         import argparse
 
-        from kiro_crew import cli_parser_gateway
+        from aj_crew import cli_parser_gateway
 
-        parser = argparse.ArgumentParser(prog="kirocrew")
+        parser = argparse.ArgumentParser(prog="ajcrew")
         cli_parser_gateway.register_config_parser(parser.add_subparsers(dest="command"))
         return parser.parse_args(["config", "set", *argv])
 

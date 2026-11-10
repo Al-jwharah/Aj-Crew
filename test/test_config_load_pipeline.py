@@ -1,6 +1,6 @@
 """The config load pipeline, tested at its three stages and at the defaults reader.
 
-``KiroCrewConfig.load()`` runs ``read_config_document`` (the only reader of the
+``AjCrewConfig.load()`` runs ``read_config_document`` (the only reader of the
 config files and of the validated-data cache), ``build_config`` (the document
 into a config, with no filesystem I/O) and ``persist_write_back`` (the write-back
 migration a loaded document makes due). The section builders read every default
@@ -17,10 +17,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.config import loader, sections
+from aj_crew.config import loader, sections
 
-_LOGGER = "kiro_crew.config.loader"
-_REAL_CONFIG = loader.KiroCrewConfig
+_LOGGER = "aj_crew.config.loader"
+_REAL_CONFIG = loader.AjCrewConfig
 
 #: Section fields whose empty-section build differs from the bare dataclass ON
 #: PURPOSE, although both start from the field default. Each value is the reason;
@@ -63,10 +63,10 @@ def _write(path: Path, document: object) -> None:
 
 
 def _section_fields() -> list[tuple[str, type]]:
-    cfg = loader.KiroCrewConfig()
+    cfg = loader.AjCrewConfig()
     return [
         (f.name, type(getattr(cfg, f.name)))
-        for f in dataclasses.fields(loader.KiroCrewConfig)
+        for f in dataclasses.fields(loader.AjCrewConfig)
         if not f.name.startswith("_") and dataclasses.is_dataclass(getattr(cfg, f.name))
     ]
 
@@ -151,7 +151,7 @@ class TestBuildConfig:
         predates the key; the bare dataclass is what a home with no file gets.
         """
         built = getattr(loader.build_config(_document(tmp_path, {section: {}})), section)
-        bare = getattr(loader.KiroCrewConfig(), section)
+        bare = getattr(loader.AjCrewConfig(), section)
         drift = {
             f.name: (getattr(built, f.name), getattr(bare, f.name))
             for f in dataclasses.fields(bare)
@@ -181,7 +181,7 @@ class TestBuildConfig:
         ("stamp", "expected"), [("nightly", True), ("stable", False), ("", False)]
     )
     def test_kas_bundle_takes_the_build_default(self, tmp_path, monkeypatch, stamp, expected):
-        from kiro_crew import build_channel
+        from aj_crew import build_channel
 
         monkeypatch.setattr(build_channel, "_BAKED_BUILD_CHANNEL", stamp)
         agent = loader.build_config(_document(tmp_path, {"agent": {}})).agent
@@ -226,9 +226,9 @@ class TestBuildConfig:
     def test_an_unloaded_document_builds_defaults_and_the_default_crew(self, tmp_path):
         cfg = loader.build_config(_document(tmp_path, {}, loaded=False))
         assert cfg.default_agent == "default"
-        assert cfg.agents["default"].kiro_agent == (cfg.agent.default_agent or "kirocrew")
+        assert cfg.agents["default"].kiro_agent == (cfg.agent.default_agent or "ajcrew")
         assert cfg._base_unreadable is False
-        assert cfg.agent == loader.KiroCrewConfig().agent
+        assert cfg.agent == loader.AjCrewConfig().agent
         assert cfg.skills.project_skills_enabled is True
 
     def test_an_unreadable_file_keeps_the_project_skills_switch_off(self, config_home):
@@ -273,8 +273,8 @@ class TestBuildConfig:
                 },
             )
         )
-        bare = loader.KiroCrewConfig()
-        assert cfg.agents["crew"] == loader.KiroCrewAgentConfig()
+        bare = loader.AjCrewConfig()
+        assert cfg.agents["crew"] == loader.AjCrewAgentConfig()
         assert cfg.memory_stores["store"] == loader.MemoryStoreConfig()
         assert cfg.dashboard.jira_auth == [loader.JiraAuthEntry(host="jira.example")]
         for name in (
@@ -307,7 +307,7 @@ class TestBuildConfig:
             )
         )
         assert "memory" in cfg.degraded_sections
-        assert cfg.memory == loader.KiroCrewConfig().memory
+        assert cfg.memory == loader.AjCrewConfig().memory
         assert any(
             "'memory' section is not a JSON object" in r.getMessage()
             for r in caplog.records
@@ -322,8 +322,8 @@ class TestBuildConfig:
     def test_a_rebound_module_config_class_neither_breaks_nor_steers_a_build(
         self, tmp_path, monkeypatch
     ):
-        """Tests rebind ``loader.KiroCrewConfig``; the build never reads that global."""
-        monkeypatch.setattr(loader, "KiroCrewConfig", types.SimpleNamespace(load=lambda: None))
+        """Tests rebind ``loader.AjCrewConfig``; the build never reads that global."""
+        monkeypatch.setattr(loader, "AjCrewConfig", types.SimpleNamespace(load=lambda: None))
         cfg = loader.build_config(_document(tmp_path, {}), _REAL_CONFIG)
         assert type(cfg) is _REAL_CONFIG
         assert (cfg.timezone, cfg.default_workspace, cfg.observe_max_messages) == (
@@ -447,9 +447,9 @@ class TestPersistWriteBack:
         assert cfg.agents == {}
         loader.persist_write_back(cfg, doc)
         assert cfg.default_agent == "default"
-        assert cfg.agents["default"].kiro_agent == "kirocrew"
+        assert cfg.agents["default"].kiro_agent == "ajcrew"
         stored = json.loads((config_home / "config.json").read_text(encoding="utf-8"))
-        assert stored["agents"]["default"]["kiro_agent"] == "kirocrew"
+        assert stored["agents"]["default"]["kiro_agent"] == "ajcrew"
         assert stored["default_agent"] == "default"
         assert stored["workspaces"] == {"default": {"dir": "~/ws"}}
         assert (config_home / "config.json.bak").is_file()
@@ -471,7 +471,7 @@ class TestPersistWriteBack:
         )
 
     def test_a_load_with_no_files_writes_nothing(self, config_home):
-        cfg = loader.KiroCrewConfig.load()
+        cfg = loader.AjCrewConfig.load()
         assert cfg.default_agent == "default"
         assert list(config_home.iterdir()) == []
 
@@ -484,7 +484,7 @@ class TestPersistWriteBack:
     def test_a_subclass_load_reads_the_base_config_top_level_defaults(
         self, config_home, monkeypatch
     ):
-        """An omitted top-level key reads KiroCrewConfig's default, even for a subclass.
+        """An omitted top-level key reads AjCrewConfig's default, even for a subclass.
 
         Only a load with no config file builds the bare subclass, whose own defaults
         then apply. The timezone publication is stubbed so the subclass's value can
@@ -493,7 +493,7 @@ class TestPersistWriteBack:
         monkeypatch.setattr(loader, "publish_config_timezone", lambda *_args, **_kwargs: None)
 
         @dataclasses.dataclass
-        class Sub(loader.KiroCrewConfig):
+        class Sub(loader.AjCrewConfig):
             timezone: str = "Europe/Paris"
             snapshot_dir: str = "/sub/snap"
             default_workspace: str = "sub-ws"
@@ -518,10 +518,10 @@ class TestPersistWriteBack:
 
     def test_load_is_the_three_stages_in_order(self, config_home):
         _write(config_home / "config.json", {"agent": {"model": "m"}})
-        loaded = loader.KiroCrewConfig.load()
+        loaded = loader.AjCrewConfig.load()
         assert loaded.agent.model == "m"
         # The write-back ran: the crew it seeded is in memory and on disk.
         assert loaded.default_agent == "default"
         stored = json.loads((config_home / "config.json").read_text(encoding="utf-8"))
-        assert stored["agents"]["default"]["kiro_agent"] == "kirocrew"
+        assert stored["agents"]["default"]["kiro_agent"] == "ajcrew"
         assert loader.build_config(loader.read_config_document()) == loaded

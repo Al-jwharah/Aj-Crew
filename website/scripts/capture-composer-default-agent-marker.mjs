@@ -6,14 +6,14 @@
  * no dashboard auth, no kiro-cli.
  *
  * The chip names the agent a session runs under. An agent-less slot resolves the
- * CURRENT default (`kirocrew`) at run time, so the accurate chip label is
- * `kirocrew . default`; a slot explicitly pinned to `kirocrew` reads the bare
- * alias. Before this change BOTH read the bare `kirocrew`, so nothing on the chip
+ * CURRENT default (`ajcrew`) at run time, so the accurate chip label is
+ * `ajcrew . default`; a slot explicitly pinned to `ajcrew` reads the bare
+ * alias. Before this change BOTH read the bare `ajcrew`, so nothing on the chip
  * distinguished them -- that is the whole bug, so a single frame that shows the
  * two states side by side IS the before/after.
  *
- *   1. inherited-default slot, comfortable width -> chip reads `kirocrew . default`
- *   2. pinned slot, comfortable width            -> chip reads `kirocrew`
+ *   1. inherited-default slot, comfortable width -> chip reads `ajcrew . default`
+ *   2. pinned slot, comfortable width            -> chip reads `ajcrew`
  *   3. inherited-default slot at a constrained composer width -> the marker
  *      truncates INSIDE the chip's own `max-w-[160px]` span; unlike the sidebar
  *      row it competes with no sibling tag chip, so nothing else is starved.
@@ -35,7 +35,7 @@ const OUT = args.find(a => !a.startsWith('--')) || '../temp-screenshots/8770-com
 
 if (!VERIFY_ONLY) mkdirSync(OUT, { recursive: true })
 
-const DEFAULT_AGENT = 'kirocrew'
+const DEFAULT_AGENT = 'ajcrew'
 /** The marker's visible spelling, English catalog. U+00B7 MIDDLE DOT. */
 const MARKED = `${DEFAULT_AGENT} \u00b7 default`
 
@@ -46,7 +46,7 @@ const INHERITED = 'chat-inherited'
 const PINNED = 'chat-pinned'
 const slots = [
   { key: INHERITED, title: 'Inherited default', messages: 4, running: false, agent: '', mode: '', tags: [], last_ts: NOW_ISO, last_turn_ts: NOW_ISO },
-  { key: PINNED, title: 'Pinned to kirocrew', messages: 4, running: false, agent: 'kirocrew', mode: '', tags: [], last_ts: NOW_ISO, last_turn_ts: NOW_ISO },
+  { key: PINNED, title: 'Pinned to ajcrew', messages: 4, running: false, agent: 'ajcrew', mode: '', tags: [], last_ts: NOW_ISO, last_turn_ts: NOW_ISO },
 ]
 
 const detailFor = (agent) => ({
@@ -67,11 +67,11 @@ async function main() {
     // useAgents expects { agents, default_agent }; the shared stub returns a
     // bare array, which leaves defaultAgent '' and every chip reading 'default'.
     if (path === '/api/agents' || path === '/api/chat/agents') {
-      await json(route, { agents: [{ name: 'kirocrew', source: 'builtin' }, { name: 'oncall', source: 'aim' }], default_agent: DEFAULT_AGENT })
+      await json(route, { agents: [{ name: 'ajcrew', source: 'builtin' }, { name: 'oncall', source: 'aim' }], default_agent: DEFAULT_AGENT })
       return true
     }
     if (path.startsWith('/api/chat/slots/' + INHERITED)) { await json(route, detailFor('')); return true }
-    if (path.startsWith('/api/chat/slots/' + PINNED)) { await json(route, detailFor('kirocrew')); return true }
+    if (path.startsWith('/api/chat/slots/' + PINNED)) { await json(route, detailFor('ajcrew')); return true }
     if (path.startsWith('/api/chat/slots/')) { await json(route, detailFor('')); return true }
     return false
   }
@@ -154,7 +154,7 @@ async function main() {
   }
 
   await frame('01-inherited-default-marked', INHERITED, MARKED)
-  await frame('02-pinned-bare-alias', PINNED, /^kirocrew$/)
+  await frame('02-pinned-bare-alias', PINNED, /^ajcrew$/)
   await frame('03-inherited-narrow-truncates', INHERITED, DEFAULT_AGENT, { narrow: true })
 
   // 4. The inherited chip's explanatory tooltip. A native `title` does not

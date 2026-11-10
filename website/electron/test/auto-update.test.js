@@ -135,7 +135,7 @@ test("a universal mac build (no stamp) reads the channel root, as before", async
     calls.setFeedURL.every((o) => o.url === "https://cdn.example.dev/feed/stable/"),
     `expected the universal channel root, got: ${calls.setFeedURL.map((o) => o.url)}`,
   );
-  assert.strictEqual(u.getInfo().downloadUrl, `${DOWNLOAD_BASE}/desktop/stable/latest/KiroCrew.dmg`);
+  assert.strictEqual(u.getInfo().downloadUrl, `${DOWNLOAD_BASE}/desktop/stable/latest/AjCrew.dmg`);
 });
 
 test("an arm64-only mac build reads feed/<channel>/arm64/ and is offered its own DMG", async () => {
@@ -148,7 +148,7 @@ test("an arm64-only mac build reads feed/<channel>/arm64/ and is offered its own
     calls.setFeedURL.every((o) => o.url === "https://cdn.example.dev/feed/stable/arm64/"),
     `expected the arm64 feed directory, got: ${calls.setFeedURL.map((o) => o.url)}`,
   );
-  assert.strictEqual(u.getInfo().downloadUrl, `${DOWNLOAD_BASE}/desktop/stable/latest/KiroCrew-arm64.dmg`);
+  assert.strictEqual(u.getInfo().downloadUrl, `${DOWNLOAD_BASE}/desktop/stable/latest/AjCrew-arm64.dmg`);
 });
 
 test("an x64-only mac build reads feed/<channel>/x64/ whatever the host arch says", async () => {
@@ -163,26 +163,26 @@ test("an x64-only mac build reads feed/<channel>/x64/ whatever the host arch say
     calls.setFeedURL.every((o) => o.url === "https://cdn.example.dev/feed/stable/x64/"),
     `expected the x64 feed directory, got: ${calls.setFeedURL.map((o) => o.url)}`,
   );
-  assert.strictEqual(u.getInfo().downloadUrl, `${DOWNLOAD_BASE}/desktop/stable/latest/KiroCrew-x64.dmg`);
+  assert.strictEqual(u.getInfo().downloadUrl, `${DOWNLOAD_BASE}/desktop/stable/latest/AjCrew-x64.dmg`);
 });
 
 test("manualDownloadUrl: the mac DMG follows the BUILD arch, not the host arch", () => {
   assert.strictEqual(
     manualDownloadUrl("nightly", "darwin", "arm64", "", ""),
-    `${DOWNLOAD_BASE}/desktop/nightly/latest/KiroCrew.dmg`,
+    `${DOWNLOAD_BASE}/desktop/nightly/latest/AjCrew.dmg`,
   );
   assert.strictEqual(
     manualDownloadUrl("nightly", "darwin", "arm64", "", "arm64"),
-    `${DOWNLOAD_BASE}/desktop/nightly/latest/KiroCrew-arm64.dmg`,
+    `${DOWNLOAD_BASE}/desktop/nightly/latest/AjCrew-arm64.dmg`,
   );
   assert.strictEqual(
     manualDownloadUrl("nightly", "darwin", "arm64", "", "x64"),
-    `${DOWNLOAD_BASE}/desktop/nightly/latest/KiroCrew-x64.dmg`,
+    `${DOWNLOAD_BASE}/desktop/nightly/latest/AjCrew-x64.dmg`,
   );
   // The stamp is mac-only: a Linux install never grows a mac suffix from it.
   assert.strictEqual(
     manualDownloadUrl("stable", "linux", "x64", "", "arm64"),
-    `${DOWNLOAD_BASE}/desktop/stable/latest/KiroCrew-x86_64.AppImage`,
+    `${DOWNLOAD_BASE}/desktop/stable/latest/AjCrew-x86_64.AppImage`,
   );
 });
 
@@ -631,7 +631,7 @@ test("configureUpdater: allowPrerelease=true (nightly/insider stamps are semver 
 test("CONTRACT: absolute artifact urls pass through newUrlFromBase unchanged (pointer/bytes split)", () => {
   const { newBaseUrl, newUrlFromBase } = require("electron-updater/out/util");
   const base = newBaseUrl(buildFeedBase({ base: "https://updates.crew.kiro.dev/feed", channel: "nightly" }));
-  const absolute = "https://download.crew.kiro.dev/desktop/nightly/0.1.0-nightly.20260728t112233/KiroCrew-arm64.dmg";
+  const absolute = "https://download.crew.kiro.dev/desktop/nightly/0.1.0-nightly.20260728t112233/AjCrew-arm64.dmg";
   // Base is on a DIFFERENT host than the artifact: the absolute url must win.
   assert.strictEqual(newUrlFromBase(absolute, base).href, absolute);
 });
@@ -869,7 +869,7 @@ test("dev (unpackaged) build returns disabled:'dev'", () => {
 
 test("translocated bundle returns disabled:'translocated' and never arms the updater", () => {
   const { deps, calls } = makeDeps({
-    resourcesPath: "/private/var/folders/ab/cd/d/AppTranslocation/UUID/d/Kiro Crew.app/Contents/Resources",
+    resourcesPath: "/private/var/folders/ab/cd/d/AppTranslocation/UUID/d/Aj Crew.app/Contents/Resources",
   });
   const u = initAutoUpdate(deps);
   assert.strictEqual(u.disabled, "translocated");
@@ -885,7 +885,7 @@ test("translocated bundle returns disabled:'translocated' and never arms the upd
 
 test("read-only volume returns disabled:'volume' and never arms the updater", () => {
   const { deps, calls } = makeDeps({
-    resourcesPath: "/Volumes/Kiro Crew 1.0.0/Kiro Crew.app/Contents/Resources",
+    resourcesPath: "/Volumes/Aj Crew 1.0.0/Aj Crew.app/Contents/Resources",
     bundleWritable: false,
   });
   const u = initAutoUpdate(deps);
@@ -900,7 +900,7 @@ test("WRITABLE volume still arms: an external disk is not a read-only image", ()
   // it, so refusing on the path alone would strand a legitimately updatable
   // install with no updates and a boot-time nag.
   const { deps, calls } = makeDeps({
-    resourcesPath: "/Volumes/External SSD/Kiro Crew.app/Contents/Resources",
+    resourcesPath: "/Volumes/External SSD/Aj Crew.app/Contents/Resources",
     bundleWritable: true,
   });
   const u = initAutoUpdate(deps);
@@ -916,7 +916,7 @@ test("guard is macOS-only: a linux /Volumes-shaped path still arms", () => {
   // detection; see the comment in auto-update.js.
   const { deps, calls } = makeDeps({
     osPlatform: "linux",
-    resourcesPath: "/Volumes/whatever/Kiro Crew.app/Contents/Resources",
+    resourcesPath: "/Volumes/whatever/Aj Crew.app/Contents/Resources",
     bundleWritable: false,
   });
   const u = initAutoUpdate(deps);
@@ -1136,7 +1136,7 @@ test("every lane hands back the handle shape its callers read", () => {
   }
 
   assert.deepStrictEqual(
-    keys({ resourcesPath: "/Volumes/Kiro Crew/Kiro Crew.app/Contents/Resources", bundleWritable: false }),
+    keys({ resourcesPath: "/Volumes/Aj Crew/Aj Crew.app/Contents/Resources", bundleWritable: false }),
     { keys: stub, disabled: "volume" },
   );
 });

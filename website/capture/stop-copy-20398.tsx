@@ -28,7 +28,7 @@ const surface = params.get('surface') || 'pane'
 const theme = params.get('theme') || 'dark'
 const stopPhase = (params.get('state') || 'idle') as 'idle' | 'soft_pending' | 'killing'
 const fail = params.get('fail') || ''
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const SLOT = surface === 'embed' ? 'chat-embed-stop-copy' : 'chat-1-stop-copy'
 const messages = [

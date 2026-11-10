@@ -161,7 +161,7 @@ export default function ArtifactDeployPage() {
     queryFn: () => jget('/config'),
   })
   const deployCfg = cfgQ.data
-  // Resolved server-side: the install path differs between a ~/.kirocrew and a
+  // Resolved server-side: the install path differs between a ~/.ajcrew and a
   // ~/.kiro/crew root, so the browser cannot spell it. Falls back to the bare
   // name only on an older gateway that does not send it.
   const cleanupScriptPath = deployCfg?.reaperInstallScript || 'install-reaper.sh'
@@ -464,7 +464,7 @@ export default function ArtifactDeployPage() {
         {showGuide && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 13 }}>
             <div>
-              <b>{i18nT('pages.artifactDeployPage.1_authenticate_to_aws')}</b> {i18nT('pages.artifactDeployPage.in_your_terminal_kirocrew_never_sees_your_keys_p')}
+              <b>{i18nT('pages.artifactDeployPage.1_authenticate_to_aws')}</b> {i18nT('pages.artifactDeployPage.in_your_terminal_ajcrew_never_sees_your_keys_p')}
               <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <CmdRow text="aws configure sso        # recommended — short-lived, auto-refreshing" />
                 <CmdRow text="aws configure --profile myweb   # or a long-lived named profile" />
@@ -525,7 +525,7 @@ export default function ArtifactDeployPage() {
         {showSecurity && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 12.5, lineHeight: 1.55 }}>
             <div>
-              <b>{i18nT('pages.artifactDeployPage.your_credentials_never_touch_kirocrew')}</b>{' '}
+              <b>{i18nT('pages.artifactDeployPage.your_credentials_never_touch_ajcrew')}</b>{' '}
               <Trans
                 i18nKey="pages.artifactDeployPage.only_profile_name_is_stored"
                 components={{ b: <b />, aws: <code>{i18nT('pages.artifactDeployPage.aws')}</code>, profile: <code>{i18nT('pages.artifactDeployPage.profile')}</code> }}
@@ -714,7 +714,7 @@ export default function ArtifactDeployPage() {
         {policy && (
           <div style={{ marginTop: 10 }}>
             <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 4 }}>
-              {i18nT('pages.artifactDeployPage.apply_this_policy_yourself_kirocrew_never_edits')}
+              {i18nT('pages.artifactDeployPage.apply_this_policy_yourself_ajcrew_never_edits')}
               {policyTier === 'fullstack' && <span style={{ color: 'var(--accent)' }}> {i18nT('pages.artifactDeployPage.fullstack_tier_includes_lambda_api_gateway_dynam')}</span>}
             </div>
             <pre style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 6, padding: 10, fontSize: 11, maxHeight: 240, overflow: 'auto' }}>{policy}</pre>

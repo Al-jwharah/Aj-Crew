@@ -18,9 +18,9 @@ from session_helpers import (  # noqa: F401 -- the fixture is requested by name
 )
 
 from conftest import requires_symlinks
-from kiro_crew.acp.types import AcpPromptStats
-from kiro_crew.session import SessionEndingError, SessionManager
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.acp.types import AcpPromptStats
+from aj_crew.session import SessionEndingError, SessionManager
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 class TestCancelRaceCondition:
@@ -575,7 +575,7 @@ class TestTheEndingFenceAdmitsNothingUnderTheKey:
 
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         with (
-            patch("kiro_crew.execution_context.read_session_execution", _blocking_first_read),
+            patch("aj_crew.execution_context.read_session_execution", _blocking_first_read),
             patch.object(mgr, "_dispatch_hard_kill") as hard_kill,
         ):
             cold_start = asyncio.create_task(mgr.get_or_create("k1"))
@@ -820,7 +820,7 @@ class TestTheEndingFenceAdmitsNothingUnderTheKey:
     @pytest.mark.asyncio
     async def test_a_fence_held_past_the_wait_bound_refuses_the_held_caller(self, cfg, monkeypatch):
         """The one refusal a held caller can meet: a fence that outlives its bound is a stuck holder, surfaced."""
-        from kiro_crew import session_allocation
+        from aj_crew import session_allocation
 
         # flake-ok: cuts the held caller's fence wait to 50 ms; the test holds the fence across the await so the refusal is certain; moved verbatim
         monkeypatch.setattr(session_allocation, "ENDING_FENCE_WAIT_SECS", 0.05)
@@ -910,7 +910,7 @@ class TestResolveAgentModelResolution:
         agent_file = tmp_path / "test-agent.json"
         agent_file.write_text(json.dumps({"name": "test-agent", "model": "opus-5"}))
 
-        with patch("kiro_crew.agent.KIRO_AGENTS_DIR", tmp_path):
+        with patch("aj_crew.agent.KIRO_AGENTS_DIR", tmp_path):
             result = SessionManager._resolve_agent_model("test-agent")
         assert result == "opus-5"
 
@@ -931,7 +931,7 @@ class TestResolveAgentModelResolution:
             json.dumps({"name": "foreign", "model": {"id": "anthropic:claude-opus-4-8"}})
         )
 
-        with patch("kiro_crew.agent.KIRO_AGENTS_DIR", tmp_path):
+        with patch("aj_crew.agent.KIRO_AGENTS_DIR", tmp_path):
             result = SessionManager._resolve_agent_model("foreign")
         assert result == "auto"
         assert isinstance(result, str)
@@ -944,7 +944,7 @@ class TestResolveAgentModelResolution:
         """
         import json
 
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         if hasattr(SessionManager, "_agent_model_cache"):
             SessionManager._agent_model_cache.clear()
@@ -953,14 +953,14 @@ class TestResolveAgentModelResolution:
             json.dumps({"name": "big", "model": "pinned-by-oversized", "pad": "x" * 1024})
         )
 
-        with patch("kiro_crew.agent.KIRO_AGENTS_DIR", tmp_path):
+        with patch("aj_crew.agent.KIRO_AGENTS_DIR", tmp_path):
             assert SessionManager._resolve_agent_model("big") == "auto"
 
     def test_resolve_agent_model_still_reads_a_spec_under_the_same_cap(self, tmp_path, monkeypatch):
         """A-side of the cap test above: a normal spec still resolves."""
         import json
 
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         if hasattr(SessionManager, "_agent_model_cache"):
             SessionManager._agent_model_cache.clear()
@@ -969,7 +969,7 @@ class TestResolveAgentModelResolution:
             json.dumps({"name": "small", "model": "pinned-by-small"})
         )
 
-        with patch("kiro_crew.agent.KIRO_AGENTS_DIR", tmp_path):
+        with patch("aj_crew.agent.KIRO_AGENTS_DIR", tmp_path):
             assert SessionManager._resolve_agent_model("small") == "pinned-by-small"
 
     @requires_symlinks
@@ -978,7 +978,7 @@ class TestResolveAgentModelResolution:
         so the model is not resolved out of whatever the link names."""
         import json
 
-        from kiro_crew import agent_discovery
+        from aj_crew import agent_discovery
 
         if hasattr(SessionManager, "_agent_model_cache"):
             SessionManager._agent_model_cache.clear()
@@ -991,7 +991,7 @@ class TestResolveAgentModelResolution:
             agent_discovery, "is_sensitive_canonical_path", lambda p: str(target) in str(p)
         )
 
-        with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents):
+        with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents):
             assert SessionManager._resolve_agent_model("linked") == "auto"
 
 
@@ -1029,12 +1029,12 @@ class TestGetOrCreatePoolClaim:
 
     @pytest.mark.asyncio
     async def test_claims_from_pool_on_new_session(self, cfg):
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         cfg.session.pool_size = 1
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         mgr._pool_size = 1
-        mgr._pool_agent = "kirocrew"
+        mgr._pool_agent = "ajcrew"
 
         # Pre-fill pool with a mock provider that looks like AcpProvider
         mock_pooled = AsyncMock(spec=AcpProvider)
@@ -1044,14 +1044,14 @@ class TestGetOrCreatePoolClaim:
         mock_pooled.is_process_alive = lambda: True
         mock_pooled.client = AsyncMock()
         mock_pooled.client._model = "claude-opus-4"
-        mock_pooled.client._agent = "kirocrew"
+        mock_pooled.client._agent = "ajcrew"
         mock_pooled.client._session_id = None
         mock_pooled.client.rekey = lambda *a, **kw: None
         mock_pooled.client.resumed = False
 
         mgr._warm_pool.put_nowait((mock_pooled, time.monotonic()))
 
-        provider, is_new, _ = await mgr.get_or_create("dashboard:slot1", agent="kirocrew")
+        provider, is_new, _ = await mgr.get_or_create("dashboard:slot1", agent="ajcrew")
         mgr.release("dashboard:slot1")
         assert provider is mock_pooled
         assert is_new is True
@@ -1064,14 +1064,14 @@ class TestGetOrCreatePoolClaim:
         path calls client.rekey(), whose reset makes the first turn-end
         check_context_usage read 0%/unknown instead of firing compaction on
         an empty conversation."""
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.providers.acp import AcpProvider
 
         cfg.session.pool_size = 1
         cfg.session.autocompact_pct = 90.0
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         mgr._pool_size = 1
-        mgr._pool_agent = "kirocrew"
+        mgr._pool_agent = "ajcrew"
 
         # Real (unstarted) AcpClient seeded with the PREVIOUS session's stats —
         # the exact leak shape from the issue: high confirmed pct, real counts.
@@ -1097,7 +1097,7 @@ class TestGetOrCreatePoolClaim:
 
         mgr._warm_pool.put_nowait((mock_pooled, time.monotonic()))
 
-        provider, is_new, _ = await mgr.get_or_create("dashboard:slot1", agent="kirocrew")
+        provider, is_new, _ = await mgr.get_or_create("dashboard:slot1", agent="ajcrew")
         mgr.release("dashboard:slot1")
         assert provider is mock_pooled
 
@@ -1155,10 +1155,10 @@ class TestGetOrCreatePoolClaim:
         mgr = SessionManager(cfg, provider_factory=factory)
         stored = {"k-old": str(old_tree), "k-project": str(project), "k-shared": str(old_tree)}
         with (
-            patch("kiro_crew.agent_scratch.scratch_root", return_value=root),
-            patch("kiro_crew.sandbox_tiers.configured_sandbox_mode", return_value="auto"),
-            patch("kiro_crew.platform_compat.IS_WINDOWS", False),
-            patch("kiro_crew.sandbox_tiers._clamp_sandbox_mode", side_effect=lambda mode: mode),
+            patch("aj_crew.agent_scratch.scratch_root", return_value=root),
+            patch("aj_crew.sandbox_tiers.configured_sandbox_mode", return_value="auto"),
+            patch("aj_crew.platform_compat.IS_WINDOWS", False),
+            patch("aj_crew.sandbox_tiers._clamp_sandbox_mode", side_effect=lambda mode: mode),
             patch.object(mgr._session_map, "get", return_value="sid-resume-test"),
             patch.object(mgr._session_map, "get_cwd", side_effect=stored.__getitem__),
             patch.object(mgr._session_map, "get_provider", return_value="acp"),
@@ -1188,9 +1188,9 @@ class TestGetOrCreatePoolClaim:
 
         mgr = SessionManager(cfg, provider_factory=factory)
         with (
-            patch("kiro_crew.agent_scratch.scratch_root", return_value=root),
-            patch("kiro_crew.sandbox_tiers.configured_sandbox_mode", return_value="off"),
-            patch("kiro_crew.sandbox_tiers._clamp_sandbox_mode", side_effect=lambda mode: mode),
+            patch("aj_crew.agent_scratch.scratch_root", return_value=root),
+            patch("aj_crew.sandbox_tiers.configured_sandbox_mode", return_value="off"),
+            patch("aj_crew.sandbox_tiers._clamp_sandbox_mode", side_effect=lambda mode: mode),
             patch.object(mgr._session_map, "get", return_value="sid-resume-test"),
             patch.object(mgr._session_map, "get_cwd", return_value=str(old_tree)),
             patch.object(mgr._session_map, "get_provider", return_value="acp"),
@@ -1215,10 +1215,10 @@ class TestGetOrCreatePoolClaim:
 
         mgr = SessionManager(cfg, provider_factory=factory)
         with (
-            patch("kiro_crew.agent_scratch.scratch_root", return_value=root),
-            patch("kiro_crew.sandbox_tiers.configured_sandbox_mode", return_value="auto"),
-            patch("kiro_crew.sandbox_tiers._clamp_sandbox_mode", side_effect=lambda mode: mode),
-            patch("kiro_crew.platform_compat.IS_WINDOWS", True),
+            patch("aj_crew.agent_scratch.scratch_root", return_value=root),
+            patch("aj_crew.sandbox_tiers.configured_sandbox_mode", return_value="auto"),
+            patch("aj_crew.sandbox_tiers._clamp_sandbox_mode", side_effect=lambda mode: mode),
+            patch("aj_crew.platform_compat.IS_WINDOWS", True),
             patch.object(mgr._session_map, "get", return_value="sid-resume-test"),
             patch.object(mgr._session_map, "get_cwd", return_value=str(old_tree)),
             patch.object(mgr._session_map, "get_provider", return_value="acp"),
@@ -1240,7 +1240,7 @@ class TestGetOrCreatePoolClaim:
         cwd outside the scratch root, or inside the tree the spawn shares, is kept, with
         no notice.
         """
-        from kiro_crew.session_allocation_parts.get_or_create import HIDDEN_SCRATCH_CWD_NOTICE
+        from aj_crew.session_allocation_parts.get_or_create import HIDDEN_SCRATCH_CWD_NOTICE
 
         root = tmp_path / "scratch"
         old_tree = root / "runtime-old" / "checkout"
@@ -1260,10 +1260,10 @@ class TestGetOrCreatePoolClaim:
 
         mgr = SessionManager(cfg, provider_factory=factory)
         with (
-            patch("kiro_crew.agent_scratch.scratch_root", return_value=root),
-            patch("kiro_crew.sandbox_tiers.configured_sandbox_mode", return_value="auto"),
-            patch("kiro_crew.platform_compat.IS_WINDOWS", False),
-            patch("kiro_crew.sandbox_tiers._clamp_sandbox_mode", side_effect=lambda mode: mode),
+            patch("aj_crew.agent_scratch.scratch_root", return_value=root),
+            patch("aj_crew.sandbox_tiers.configured_sandbox_mode", return_value="auto"),
+            patch("aj_crew.platform_compat.IS_WINDOWS", False),
+            patch("aj_crew.sandbox_tiers._clamp_sandbox_mode", side_effect=lambda mode: mode),
         ):
             await mgr.get_or_create("k-old", cwd=str(old_tree), fallback_hidden_cwd=True)
             mgr.release("k-old")
@@ -1440,7 +1440,7 @@ class TestRealClaimJoinsAnInFlightEagerStart:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("priority", ["fg", "bg"])
     async def test_a_send_during_an_eager_start_spawns_one_process(self, cfg, priority):
-        from kiro_crew.start_priority import StartPriority
+        from aj_crew.start_priority import StartPriority
 
         start_priority = StartPriority(priority)
         gate = asyncio.Event()
@@ -1478,7 +1478,7 @@ class TestRealClaimJoinsAnInFlightEagerStart:
         """A BACKGROUND eager start waits in every start queue at BACKGROUND: a
         person's FOREGROUND claim must not inherit that position, so it
         cold-starts at its own priority as before."""
-        from kiro_crew.start_priority import StartPriority
+        from aj_crew.start_priority import StartPriority
 
         providers: list = []
         gate = asyncio.Event()

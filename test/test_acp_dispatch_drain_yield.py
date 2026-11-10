@@ -26,12 +26,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp import _dispatch
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp import session_handle as sh
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp import _dispatch
+from aj_crew.acp import client as acp_client
+from aj_crew.acp import session_handle as sh
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     METHOD_SESSION_UPDATE,

@@ -22,7 +22,7 @@ from conftest import make_dir_link
 SKILL_DIR = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
     / "pipeline-conductor"
 )
@@ -59,11 +59,11 @@ class FleetProbeHarness:
 
     def _config(self, tmp_path: Path, monkeypatch, sessions: list[str], **extra) -> Path:
         """Config file + the env the script derives its paths from: transcripts
-        under $KIROCREW_HOME/sessions, /proc behind the test-only env seam --
+        under $AJCREW_HOME/sessions, /proc behind the test-only env seam --
         neither is a config key (containment: the config is agent-authored)."""
         (tmp_path / "sessions").mkdir(exist_ok=True)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(tmp_path / "no-proc"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(tmp_path / "no-proc"))
         cfg = {"sessions": sessions, **extra}
         cfg_path = tmp_path / "probe-config.json"
         cfg_path.write_text(json.dumps(cfg), encoding="utf-8")

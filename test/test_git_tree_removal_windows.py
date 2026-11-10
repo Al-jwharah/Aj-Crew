@@ -25,10 +25,10 @@ from typing import Iterator
 import pytest
 from windows_sim import readonly_unlink_refused, unlink_sharing_violation
 
-import kiro_crew
-from kiro_crew import platform_compat
-from kiro_crew.apps import registry
-from kiro_crew.apps.builtins.auto_improvement.backend import pr_watchers as W
+import aj_crew
+from aj_crew import platform_compat
+from aj_crew.apps import registry
+from aj_crew.apps.builtins.auto_improvement.backend import pr_watchers as W
 
 #: The real read-only attribute exists only on Windows, so that parameter is collected
 #: only there. The simulated one runs everywhere.
@@ -102,7 +102,7 @@ class TestRule1RemovingAGitTreeClearsTheReadOnlyBit:
     async def test_a_refused_vault_clone_leaves_no_checkout(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, read_only_objects: None
     ) -> None:
-        from kiro_crew.apps.builtins.md_notebook import server
+        from aj_crew.apps.builtins.md_notebook import server
 
         monkeypatch.setattr(server, "_HOME", tmp_path / "home")
 
@@ -190,7 +190,7 @@ class TestRule2TheRestoreLandsWhenTheReplacementSurvives:
         assert any("Restored the previous checkout" in line for line in log)
 
 
-#: (file under src/kiro_crew, function, the tree it removes as written at the call).
+#: (file under src/aj_crew, function, the tree it removes as written at the call).
 #: Each tree is one git produced: a clone, a ``--local`` clone, or a ``.git`` directory.
 _GIT_TREE_SITES = [
     ("apps/builtins/md_notebook/server.py", "api_vault_clone", "str(clone_dir)"),
@@ -269,7 +269,7 @@ class TestRule3EverySiteUsesTheOneHelper:
     def test_a_git_tree_is_never_removed_by_shutil_rmtree(
         self, rel: str, qualname: str, tree: str
     ) -> None:
-        source = (Path(kiro_crew.__file__).parent / rel).read_text(encoding="utf-8")
+        source = (Path(aj_crew.__file__).parent / rel).read_text(encoding="utf-8")
         scope = _find_function(ast.parse(source), qualname)
         assert scope is not None, f"{rel} no longer defines {qualname}; update _GIT_TREE_SITES"
 

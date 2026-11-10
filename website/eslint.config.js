@@ -250,7 +250,7 @@ export default [
       'src/pages/members/NewCrewmateDialog.tsx',
       'src/pages/overview/AgentCfgTab.tsx',
       'src/pages/overview/AgentTemplatesTab.tsx',
-      'src/pages/overview/KiroCrewCfgTab.tsx',
+      'src/pages/overview/AjCrewCfgTab.tsx',
       'src/pages/overview/MemoryTab.tsx',
       'src/pages/overview/PromptsTab.tsx',
       'src/utils/popoutController.ts',

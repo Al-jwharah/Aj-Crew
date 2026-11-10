@@ -18,7 +18,7 @@ from meetings_helpers import (  # noqa: F401
 )
 from meetings_routes_helpers import BASE
 
-from kiro_crew.apps.builtins.meetings.backend import constants as k
+from aj_crew.apps.builtins.meetings.backend import constants as k
 
 
 @pytest.mark.asyncio

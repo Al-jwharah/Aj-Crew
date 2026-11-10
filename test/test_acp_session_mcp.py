@@ -22,13 +22,13 @@ from acp_session_mcp_helpers import agents_dir_fixture  # noqa: F401
 from acp_session_mcp_helpers import isolated_seed_provenance  # noqa: F401
 from acp_session_mcp_helpers import _by_name, _write_project_spec, _write_spec
 
-from kiro_crew import agent as agent_mod
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp import session_mcp
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
-from kiro_crew.providers.mirrors import claude_code as claude_mirror
-from kiro_crew.providers.mirrors.claude_code import ClaudeCodeMirror
+from aj_crew import agent as agent_mod
+from aj_crew.acp import client as client_mod
+from aj_crew.acp import session_mcp
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE
+from aj_crew.providers.mirrors import claude_code as claude_mirror
+from aj_crew.providers.mirrors.claude_code import ClaudeCodeMirror
 
 
 class TestElementShape:
@@ -38,7 +38,7 @@ class TestElementShape:
             servers={"foo": {"command": "/bin/foo", "args": ["--x"], "env": {"K": "v"}}},
             tools=["@foo"],
         )
-        foo = _by_name(session_mcp.session_mcp_servers("kirocrew"))["foo"]
+        foo = _by_name(session_mcp.session_mcp_servers("ajcrew"))["foo"]
         assert foo == {
             "name": "foo",
             "command": "/bin/foo",
@@ -51,7 +51,7 @@ class TestElementShape:
 
     def test_stdio_entry_without_env_still_emits_the_array(self, agents_dir):
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-        foo = _by_name(session_mcp.session_mcp_servers("kirocrew"))["foo"]
+        foo = _by_name(session_mcp.session_mcp_servers("ajcrew"))["foo"]
         assert foo["env"] == []
         assert foo["args"] == []
 
@@ -61,7 +61,7 @@ class TestElementShape:
             servers={"foo": {"command": "/bin/foo", "args": [7], "env": {"PORT": 8080}}},
             tools=["@foo"],
         )
-        foo = _by_name(session_mcp.session_mcp_servers("kirocrew"))["foo"]
+        foo = _by_name(session_mcp.session_mcp_servers("ajcrew"))["foo"]
         assert foo["env"] == [{"name": "PORT", "value": "8080"}]
         assert foo["args"] == ["7"]
 
@@ -71,7 +71,7 @@ class TestElementShape:
             servers={"remote": {"url": "https://example.test/mcp", "headers": {"A": "b"}}},
             tools=["@remote"],
         )
-        remote = _by_name(session_mcp.session_mcp_servers("kirocrew"))["remote"]
+        remote = _by_name(session_mcp.session_mcp_servers("ajcrew"))["remote"]
         assert remote == {
             "name": "remote",
             # Without an explicit type the adapter routes the entry to its stdio
@@ -87,7 +87,7 @@ class TestElementShape:
             servers={"remote": {"url": "https://example.test/sse", "type": "sse"}},
             tools=["@remote"],
         )
-        remote = _by_name(session_mcp.session_mcp_servers("kirocrew"))["remote"]
+        remote = _by_name(session_mcp.session_mcp_servers("ajcrew"))["remote"]
         assert remote["type"] == "sse"
         assert remote["headers"] == []
 
@@ -103,11 +103,11 @@ class TestElementShape:
             servers={"foo": {"command": "/bin/foo", "args": bad_args}},
             tools=["@foo"],
         )
-        assert _by_name(session_mcp.session_mcp_servers("kirocrew"))["foo"]["args"] == []
+        assert _by_name(session_mcp.session_mcp_servers("ajcrew"))["foo"]["args"] == []
 
     def test_entry_with_no_transport_is_skipped(self, agents_dir):
         _write_spec(agents_dir, servers={"broken": {"args": ["--x"]}}, tools=["@broken"])
-        assert "broken" not in _by_name(session_mcp.session_mcp_servers("kirocrew"))
+        assert "broken" not in _by_name(session_mcp.session_mcp_servers("ajcrew"))
 
     def test_kiro_only_keys_are_not_forwarded(self, agents_dir):
         _write_spec(
@@ -122,7 +122,7 @@ class TestElementShape:
             },
             tools=["@foo"],
         )
-        foo = _by_name(session_mcp.session_mcp_servers("kirocrew"))["foo"]
+        foo = _by_name(session_mcp.session_mcp_servers("ajcrew"))["foo"]
         # autoApprove above all: Claude's equivalent means Claude never asks, so
         # the call would never reach the host gate.
         assert set(foo) == {"name", "command", "args", "env", "type"}
@@ -144,7 +144,7 @@ class TestMounting:
             servers={"granted": {"command": "/bin/a"}, "ungranted": {"command": "/bin/b"}},
             tools=["@granted"],
         )
-        names = _by_name(session_mcp.session_mcp_servers("kirocrew"))
+        names = _by_name(session_mcp.session_mcp_servers("ajcrew"))
         assert "granted" in names
         assert "ungranted" not in names
 
@@ -157,7 +157,7 @@ class TestMounting:
     )
     def test_reference_mounts_the_server(self, agents_dir, tools):
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=tools)
-        assert "foo" in _by_name(session_mcp.session_mcp_servers("kirocrew"))
+        assert "foo" in _by_name(session_mcp.session_mcp_servers("ajcrew"))
 
     def test_a_spec_without_tools_mounts_nothing(self, agents_dir):
         """A missing ``tools`` is an EMPTY allowlist, not "no filter".
@@ -168,7 +168,7 @@ class TestMounting:
         unreferenced -- the moment the session ran on claude.
         """
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=None)
-        assert "foo" not in _by_name(session_mcp.session_mcp_servers("kirocrew"))
+        assert "foo" not in _by_name(session_mcp.session_mcp_servers("ajcrew"))
 
     def test_a_non_list_tools_mounts_nothing(self, agents_dir):
         """The spec is hand-editable JSON, so `"tools": "@foo"` is an easy typo.
@@ -179,7 +179,7 @@ class TestMounting:
         """
         for bad in ("@foo", 8080, {"foo": True}, True):
             _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=bad)
-            assert "foo" not in _by_name(session_mcp.session_mcp_servers("kirocrew"))
+            assert "foo" not in _by_name(session_mcp.session_mcp_servers("ajcrew"))
 
     def test_at_wildcard_is_not_a_grant_all(self, agents_dir):
         # kiro documents `*`, `@builtin`, `@server` and `@server/tool` for
@@ -187,7 +187,7 @@ class TestMounting:
         # NOTHING on kiro-cli. Reading it as grant-all here would mount every
         # declared server on this backend alone.
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@*"])
-        assert "foo" not in _by_name(session_mcp.session_mcp_servers("kirocrew"))
+        assert "foo" not in _by_name(session_mcp.session_mcp_servers("ajcrew"))
 
     def test_registry_pointer_is_withheld_outside_registry_mode(self, agents_dir):
         _write_spec(
@@ -195,7 +195,7 @@ class TestMounting:
             servers={"governed": {"command": "/bin/ignored", "type": "registry"}},
             tools=["@governed"],
         )
-        assert "governed" not in _by_name(session_mcp.session_mcp_servers("kirocrew"))
+        assert "governed" not in _by_name(session_mcp.session_mcp_servers("ajcrew"))
 
     def test_registry_mode_withholds_every_spec_declared_server(self, agents_dir, monkeypatch):
         """A marker cannot AUTHORIZE a server here, so a governed install gets none.
@@ -213,25 +213,25 @@ class TestMounting:
             tools=["@marked", "@local_only"],
         )
         monkeypatch.setattr(session_mcp, "_mcp_registry_mode", lambda: True)
-        names = _by_name(session_mcp.session_mcp_servers("kirocrew"))
+        names = _by_name(session_mcp.session_mcp_servers("ajcrew"))
         assert "marked" not in names
         assert "local_only" not in names
 
     def test_registry_mode_still_keeps_crews_own_control_plane(self, agents_dir, monkeypatch):
         """The withholding is scoped to the user-editable spec, not to the host.
 
-        ``kirocrew-core``/``kirocrew-cron`` come from the managed source, not the spec,
+        ``ajcrew-core``/``ajcrew-cron`` come from the managed source, not the spec,
         and are the session's only way to report back to its channel.
         """
         _write_spec(
             agents_dir,
             servers={"marked": {"command": "/bin/marked", "type": "registry"}},
-            tools=["@marked", "@kirocrew-core", "@kirocrew-cron"],
+            tools=["@marked", "@ajcrew-core", "@ajcrew-cron"],
         )
         monkeypatch.setattr(session_mcp, "_mcp_registry_mode", lambda: True)
-        names = _by_name(session_mcp.session_mcp_servers("kirocrew"))
-        assert "kirocrew-core" in names
-        assert "kirocrew-cron" in names
+        names = _by_name(session_mcp.session_mcp_servers("ajcrew"))
+        assert "ajcrew-core" in names
+        assert "ajcrew-cron" in names
 
     def test_an_unreadable_registry_mode_is_read_as_governed(self, agents_dir, monkeypatch):
         """A ceiling that cannot be read is treated as in force, not as absent.
@@ -249,7 +249,7 @@ class TestMounting:
             tools=["@local_only"],
         )
         monkeypatch.setattr(session_mcp, "_mcp_registry_mode", boom)
-        assert "local_only" not in _by_name(session_mcp.session_mcp_servers("kirocrew"))
+        assert "local_only" not in _by_name(session_mcp.session_mcp_servers("ajcrew"))
 
     def test_a_project_only_agents_allowlist_is_honoured(self, tmp_path, agents_dir):
         """A spec kiro-cli WOULD resolve must not read here as "no spec".
@@ -265,11 +265,11 @@ class TestMounting:
             servers={"proj": {"command": "/bin/proj"}},
             tools=["@proj"],
         )
-        names = _by_name(session_mcp.session_mcp_servers("kirocrew", work_dir=tmp_path))
+        names = _by_name(session_mcp.session_mcp_servers("ajcrew", work_dir=tmp_path))
         assert "proj" not in names
         # tools names only @proj, and the control plane is not exempt from it.
-        assert "kirocrew-core" not in names
-        assert "kirocrew-cron" not in names
+        assert "ajcrew-core" not in names
+        assert "ajcrew-cron" not in names
 
     def test_a_project_only_agent_with_no_work_dir_still_finds_nothing(self, tmp_path, agents_dir):
         """The plumbing is what makes it resolvable; without it, nothing changed.
@@ -282,7 +282,7 @@ class TestMounting:
             servers={"proj": {"command": "/bin/proj"}},
             tools=["@proj"],
         )
-        assert "proj" not in _by_name(session_mcp.session_mcp_servers("kirocrew"))
+        assert "proj" not in _by_name(session_mcp.session_mcp_servers("ajcrew"))
 
     def test_the_user_level_spec_wins_over_an_untrusted_project_one(self, tmp_path, agents_dir):
         """A checkout cannot choose a mirrored session's servers, nor displace the user's.
@@ -296,10 +296,10 @@ class TestMounting:
             servers={"proj": {"command": "/bin/proj"}},
             tools=["@proj"],
         )
-        names = _by_name(session_mcp.session_mcp_servers("kirocrew", work_dir=tmp_path))
+        names = _by_name(session_mcp.session_mcp_servers("ajcrew", work_dir=tmp_path))
         assert "proj" not in names
         assert "user" in names
-        snapshot = session_mcp.agent_spec_snapshot("kirocrew", work_dir=tmp_path)
+        snapshot = session_mcp.agent_spec_snapshot("ajcrew", work_dir=tmp_path)
         assert snapshot is not None
         assert "proj" in snapshot["mcpServers"]
 
@@ -314,7 +314,7 @@ class TestMounting:
             servers={"proj": {"command": "/bin/proj", "disabledTools": ["danger"]}},
             tools=["@proj"],
         )
-        assert session_mcp.session_mcp_deny_rules("kirocrew", work_dir=tmp_path) == [
+        assert session_mcp.session_mcp_deny_rules("ajcrew", work_dir=tmp_path) == [
             "mcp__proj__danger"
         ]
         _write_spec(
@@ -322,7 +322,7 @@ class TestMounting:
             servers={"user": {"command": "/bin/user", "disabledTools": ["risky"]}},
             tools=["@user"],
         )
-        assert session_mcp.session_mcp_deny_rules("kirocrew", work_dir=tmp_path) == [
+        assert session_mcp.session_mcp_deny_rules("ajcrew", work_dir=tmp_path) == [
             "mcp__proj__danger",
             "mcp__user__risky",
         ]
@@ -337,17 +337,17 @@ class TestMounting:
         _write_spec(
             agents_dir,
             servers={
-                "kirocrew-core": {"command": "/x", "disabledTools": ["spawn_run"]},
+                "ajcrew-core": {"command": "/x", "disabledTools": ["spawn_run"]},
                 "third": {"command": "/y", "disabledTools": ["a__b", 3, ""]},
                 "clean": {"command": "/z"},
             },
-            tools=["@kirocrew-core", "@third", "@clean"],
+            tools=["@ajcrew-core", "@third", "@clean"],
         )
-        pairs = session_mcp.session_mcp_disabled_tools("kirocrew")
-        assert pairs == frozenset({("kirocrew-core", "spawn_run"), ("third", "a__b")})
+        pairs = session_mcp.session_mcp_disabled_tools("ajcrew")
+        assert pairs == frozenset({("ajcrew-core", "spawn_run"), ("third", "a__b")})
         # The rule spelling is derived from the same pairs, so the two cannot drift.
-        assert session_mcp.session_mcp_deny_rules("kirocrew") == [
-            "mcp__kirocrew-core__spawn_run",
+        assert session_mcp.session_mcp_deny_rules("ajcrew") == [
+            "mcp__ajcrew-core__spawn_run",
             "mcp__third__a__b",
         ]
         assert session_mcp.session_mcp_disabled_tools(None) == frozenset()
@@ -357,19 +357,19 @@ class TestMounting:
     ):
         """The dashboard's tool-off action writes ``disabledTools`` to the GLOBAL
         ``settings/mcp.json`` and nowhere else, and the spec rebuild never copies a
-        global entry onto a managed server -- so a restriction on ``kirocrew-core``
+        global entry onto a managed server -- so a restriction on ``ajcrew-core``
         written the ordinary way lives only there. kiro-cli reads both; so must this,
         or the one path a user actually takes is the one that is missed."""
         _write_spec(
             agents_dir,
-            servers={"kirocrew-core": {"command": "/x"}, "third": {"command": "/y"}},
-            tools=["@kirocrew-core", "@third"],
+            servers={"ajcrew-core": {"command": "/x"}, "third": {"command": "/y"}},
+            tools=["@ajcrew-core", "@third"],
         )
         (tmp_path / "settings-mcp.json").write_text(
             json.dumps(
                 {
                     "mcpServers": {
-                        "kirocrew-core": {"disabledTools": ["spawn_run"]},
+                        "ajcrew-core": {"disabledTools": ["spawn_run"]},
                         "third": {"command": "/y", "disabledTools": ["a"]},
                         "elsewhere": {"disabledTools": ["b"]},
                     }
@@ -377,20 +377,20 @@ class TestMounting:
             ),
             encoding="utf-8",
         )
-        pairs = session_mcp.session_mcp_disabled_tools("kirocrew")
-        assert {("kirocrew-core", "spawn_run"), ("third", "a"), ("elsewhere", "b")} <= pairs
+        pairs = session_mcp.session_mcp_disabled_tools("ajcrew")
+        assert {("ajcrew-core", "spawn_run"), ("third", "a"), ("elsewhere", "b")} <= pairs
         # The withhold set is derived from the SAME pairs: a third-party server the
         # dashboard narrowed globally is withheld, the control plane never is, and a
         # server named only in the global file is a harmless name nothing mounts.
-        restricted = session_mcp.session_mcp_projection("kirocrew").restricted
+        restricted = session_mcp.session_mcp_projection("ajcrew").restricted
         assert "third" in restricted
-        assert "kirocrew-core" not in restricted
+        assert "ajcrew-core" not in restricted
         assert "elsewhere" in restricted
         # Both sources reach claude's deny rules too.
-        assert "mcp__kirocrew-core__spawn_run" in session_mcp.session_mcp_deny_rules("kirocrew")
+        assert "mcp__ajcrew-core__spawn_run" in session_mcp.session_mcp_deny_rules("ajcrew")
         # A malformed or missing global file switches nothing off from that source.
         (tmp_path / "settings-mcp.json").write_text("[not a dict]", encoding="utf-8")
-        assert session_mcp.session_mcp_disabled_tools("kirocrew") == frozenset()
+        assert session_mcp.session_mcp_disabled_tools("ajcrew") == frozenset()
 
     def test_an_explicit_none_spec_is_honoured_not_re_read(self, agents_dir, monkeypatch):
         """``None`` means "there is no spec"; only "not supplied" reads.
@@ -412,21 +412,21 @@ class TestMounting:
 
         monkeypatch.setattr(session_mcp, "_agent_spec_and_snapshot_for", counting)
         # Explicit None: no spec, nothing read, control plane only, nothing switched off.
-        names = [e["name"] for e in session_mcp.session_mcp_servers("kirocrew", spec=None)]
-        assert names == ["kirocrew-core", "kirocrew-cron"]
+        names = [e["name"] for e in session_mcp.session_mcp_servers("ajcrew", spec=None)]
+        assert names == ["ajcrew-core", "ajcrew-cron"]
         assert session_mcp.session_mcp_restricted_servers(frozenset()) == frozenset()
-        assert session_mcp.session_mcp_disabled_tools("kirocrew", spec=None) == frozenset()
+        assert session_mcp.session_mcp_disabled_tools("ajcrew", spec=None) == frozenset()
         assert reads == []
         # Not supplied: read, once per call, and the spec's own answer applies.
-        assert "srv" in [e["name"] for e in session_mcp.session_mcp_servers("kirocrew")]
-        assert reads == ["kirocrew"]
+        assert "srv" in [e["name"] for e in session_mcp.session_mcp_servers("ajcrew")]
+        assert reads == ["ajcrew"]
 
     def test_the_projection_threads_the_answer_even_when_it_is_no_spec(
         self, agents_dir, monkeypatch
     ):
         """The window itself: the first read finds nothing, a spec appears, and no
         helper may see it. Every part of the projection reflects the SAME read."""
-        spec_path = agents_dir / "kirocrew.json"
+        spec_path = agents_dir / "ajcrew.json"
         _write_spec(agents_dir, servers={"late": {"command": "/l"}}, tools=["@late"])
         real = session_mcp._agent_spec_and_snapshot_for
         calls = {"n": 0}
@@ -436,7 +436,7 @@ class TestMounting:
             return (None, None) if calls["n"] == 1 else real(agent, work_dir, **kwargs)
 
         monkeypatch.setattr(session_mcp, "_agent_spec_and_snapshot_for", flapping)
-        projection = session_mcp.session_mcp_projection("kirocrew")
+        projection = session_mcp.session_mcp_projection("ajcrew")
         assert calls["n"] == 1, "a helper read the spec behind the projection's back"
         assert "late" not in [e["name"] for e in projection.servers]
         assert projection.allowlist.applies is False
@@ -454,21 +454,21 @@ class TestMounting:
             tools=["@pooled", "@direct"],
         )
         names = _by_name(
-            session_mcp.session_mcp_servers("kirocrew", stub_server_names=frozenset({"pooled"}))
+            session_mcp.session_mcp_servers("ajcrew", stub_server_names=frozenset({"pooled"}))
         )
         assert "pooled" not in names
         assert "direct" in names
 
     def test_a_stubbed_control_plane_server_also_yields(self, agents_dir):
         # The control plane is re-derived AFTER the registry filter, so the stub
-        # drop has to run after that re-add or a pooled kirocrew-core comes back.
+        # drop has to run after that re-add or a pooled ajcrew-core comes back.
         names = _by_name(
             session_mcp.session_mcp_servers(
-                "kirocrew", stub_server_names=frozenset({"kirocrew-core"})
+                "ajcrew", stub_server_names=frozenset({"ajcrew-core"})
             )
         )
-        assert "kirocrew-core" not in names
-        assert "kirocrew-cron" in names
+        assert "ajcrew-core" not in names
+        assert "ajcrew-cron" in names
 
     def test_registry_type_matches_the_spec_writer(self):
         # A rename in agent.py must not silently stop this filter from matching.
@@ -484,18 +484,18 @@ class TestDenyRules:
             servers={"srv": {"command": "/bin/srv", "disabledTools": ["danger", "worse"]}},
             tools=["@srv"],
         )
-        assert session_mcp.session_mcp_deny_rules("kirocrew") == [
+        assert session_mcp.session_mcp_deny_rules("ajcrew") == [
             "mcp__srv__danger",
             "mcp__srv__worse",
         ]
 
     def test_no_disabled_tools_means_no_rules(self, agents_dir):
         _write_spec(agents_dir, servers={"srv": {"command": "/bin/srv"}}, tools=["@srv"])
-        assert session_mcp.session_mcp_deny_rules("kirocrew") == []
+        assert session_mcp.session_mcp_deny_rules("ajcrew") == []
 
     def test_malformed_spec_yields_no_rules(self, agents_dir):
-        (agents_dir / "kirocrew.json").write_text("{not json", encoding="utf-8")
-        assert session_mcp.session_mcp_deny_rules("kirocrew") == []
+        (agents_dir / "ajcrew.json").write_text("{not json", encoding="utf-8")
+        assert session_mcp.session_mcp_deny_rules("ajcrew") == []
         assert session_mcp.session_mcp_deny_rules(None) == []
 
 
@@ -506,58 +506,58 @@ class TestZeroTools:
 
     def test_an_explicit_empty_list_is_zero_tools(self, agents_dir):
         _write_spec(agents_dir, servers={}, tools=[])
-        assert session_mcp.session_mcp_projection("kirocrew").zero_tools is True
+        assert session_mcp.session_mcp_projection("ajcrew").zero_tools is True
 
     def test_a_missing_tools_key_is_not_zero_tools(self, agents_dir):
         _write_spec(agents_dir, servers={}, tools=None)
-        assert session_mcp.session_mcp_projection("kirocrew").zero_tools is False
+        assert session_mcp.session_mcp_projection("ajcrew").zero_tools is False
 
     def test_a_populated_tools_list_is_not_zero_tools(self, agents_dir):
         _write_spec(agents_dir, servers={"srv": {"command": "/s"}}, tools=["@srv"])
-        assert session_mcp.session_mcp_projection("kirocrew").zero_tools is False
+        assert session_mcp.session_mcp_projection("ajcrew").zero_tools is False
 
     def test_no_agent_is_not_zero_tools(self):
         assert session_mcp.session_mcp_projection(None).zero_tools is False
 
     def test_a_non_list_tools_value_is_not_zero_tools(self, agents_dir):
-        (agents_dir / "kirocrew.json").write_text(
-            json.dumps({"name": "kirocrew", "tools": "none"}), encoding="utf-8"
+        (agents_dir / "ajcrew.json").write_text(
+            json.dumps({"name": "ajcrew", "tools": "none"}), encoding="utf-8"
         )
-        assert session_mcp.session_mcp_projection("kirocrew").zero_tools is False
+        assert session_mcp.session_mcp_projection("ajcrew").zero_tools is False
 
 
 class TestControlPlane:
     def test_loaded_when_no_spec_exists(self, agents_dir):
-        names = _by_name(session_mcp.session_mcp_servers("kirocrew"))
-        assert set(names) == {"kirocrew-core", "kirocrew-cron"}
-        assert names["kirocrew-core"]["args"] == ["mcp-core"]
+        names = _by_name(session_mcp.session_mcp_servers("ajcrew"))
+        assert set(names) == {"ajcrew-core", "ajcrew-cron"}
+        assert names["ajcrew-core"]["args"] == ["mcp-core"]
 
     def test_loaded_when_the_spec_is_malformed(self, agents_dir):
-        (agents_dir / "kirocrew.json").write_text("{not json", encoding="utf-8")
-        assert set(_by_name(session_mcp.session_mcp_servers("kirocrew"))) == {
-            "kirocrew-core",
-            "kirocrew-cron",
+        (agents_dir / "ajcrew.json").write_text("{not json", encoding="utf-8")
+        assert set(_by_name(session_mcp.session_mcp_servers("ajcrew"))) == {
+            "ajcrew-core",
+            "ajcrew-cron",
         }
 
     def test_stale_spec_command_is_refreshed_from_the_managed_source(self, agents_dir):
         _write_spec(
             agents_dir,
-            servers={"kirocrew-core": {"command": "/gone/kirocrew", "args": ["mcp-core"]}},
-            tools=["@kirocrew-core"],
+            servers={"ajcrew-core": {"command": "/gone/ajcrew", "args": ["mcp-core"]}},
+            tools=["@ajcrew-core"],
         )
-        core = _by_name(session_mcp.session_mcp_servers("kirocrew"))["kirocrew-core"]
-        assert core["command"] == "/opt/kirocrew"
+        core = _by_name(session_mcp.session_mcp_servers("ajcrew"))["ajcrew-core"]
+        assert core["command"] == "/opt/ajcrew"
 
     def test_a_spec_that_drops_the_reference_still_drops_the_server(self, agents_dir):
         # The refresh must not become a re-grant: kiro-cli would not mount a
         # server its tools list does not name, and neither may claude.
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-        assert "kirocrew-core" not in _by_name(session_mcp.session_mcp_servers("kirocrew"))
+        assert "ajcrew-core" not in _by_name(session_mcp.session_mcp_servers("ajcrew"))
 
     def test_no_agent_means_control_plane_only(self, agents_dir):
         assert set(_by_name(session_mcp.session_mcp_servers(None))) == {
-            "kirocrew-core",
-            "kirocrew-cron",
+            "ajcrew-core",
+            "ajcrew-cron",
         }
 
 
@@ -584,7 +584,7 @@ class TestWithholdWarningNamesTheCause:
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
         with caplog.at_level("WARNING", logger=claude_mirror.__name__):
             projection = ClaudeCodeMirror().session_projection(
-                "kirocrew", permission_surface_owned=False
+                "ajcrew", permission_surface_owned=False
             )
         assert projection.params == {"mcpServers": []}
         [line] = self._withhold_lines(caplog)
@@ -616,7 +616,7 @@ class TestWithholdWarningNamesTheCause:
             # ``default`` and keeps the array).
             kw["permission_mode"] = "plan"
         client = AcpClient(
-            work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE, **kw
+            work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE, **kw
         )
         if cause == "old-adapter":
             client._claude_adapter_disk_version = "0.83.0"
@@ -653,7 +653,7 @@ class TestPooledStubsOnTheClaudeMirror:
         stubs = [{"name": "granted", "command": "/stub", "args": [], "env": [], "type": "stdio"}]
         mirror = ClaudeCodeMirror()
         projection = mirror.session_projection(
-            "kirocrew",
+            "ajcrew",
             stub_server_names=("granted",),
             stub_elements=stubs,
             permission_surface_owned=True,
@@ -663,7 +663,7 @@ class TestPooledStubsOnTheClaudeMirror:
         # The wire face IS the projection's params, pinned so the two cannot drift.
         assert (
             mirror.session_params(
-                "kirocrew",
+                "ajcrew",
                 stub_server_names=("granted",),
                 stub_elements=stubs,
                 permission_surface_owned=True,
@@ -685,7 +685,7 @@ class TestPooledStubsOnTheClaudeMirror:
         def _names(tools):
             _write_spec(agents_dir, servers={"granted": {"command": "/bin/g"}}, tools=tools)
             projection = mirror.session_projection(
-                "kirocrew",
+                "ajcrew",
                 stub_server_names=("granted", "unreferenced"),
                 stub_elements=stubs,
                 permission_surface_owned=True,
@@ -708,7 +708,7 @@ class TestPooledStubsOnTheClaudeMirror:
         _write_spec(agents_dir, servers={"granted": {"command": "/bin/g"}}, tools=["@granted"])
         stubs = [{"name": "granted", "command": "/stub", "args": [], "env": [], "type": "stdio"}]
         projection = ClaudeCodeMirror().session_projection(
-            "kirocrew",
+            "ajcrew",
             stub_server_names=("granted",),
             stub_elements=stubs,
             permission_surface_owned=False,
@@ -728,7 +728,7 @@ class TestPooledStubsOnTheClaudeMirror:
         )
         stubs = [{"name": "narrowed", "command": "/stub", "args": [], "env": [], "type": "stdio"}]
         projection = ClaudeCodeMirror().session_projection(
-            "kirocrew",
+            "ajcrew",
             stub_server_names=("narrowed",),
             stub_elements=stubs,
             permission_surface_owned=True,
@@ -737,9 +737,9 @@ class TestPooledStubsOnTheClaudeMirror:
 
 
 def _mirror_classes():
-    from kiro_crew.providers.mirrors.codex import CodexMirror
-    from kiro_crew.providers.mirrors.goose import GooseMirror
-    from kiro_crew.providers.mirrors.opencode import OpenCodeMirror
+    from aj_crew.providers.mirrors.codex import CodexMirror
+    from aj_crew.providers.mirrors.goose import GooseMirror
+    from aj_crew.providers.mirrors.opencode import OpenCodeMirror
 
     return [ClaudeCodeMirror, CodexMirror, OpenCodeMirror, GooseMirror]
 
@@ -775,7 +775,7 @@ class TestDisabledServersPooledStub:
     ):
         self._switch_off(agents_dir, tmp_path, source=source, tools=tools)
         projection = mirror_cls().session_projection(
-            "kirocrew",
+            "ajcrew",
             stub_server_names=("my-server", "ok"),
             stub_elements=[dict(s) for s in self._STUBS],
             permission_surface_owned=True,
@@ -790,7 +790,7 @@ class TestDisabledServersPooledStub:
         self, tmp_path, agents_dir, overlay_disabled
     ):
         """The whole client path: overlay stubs in, session array out."""
-        from kiro_crew.mcp_gateway.rewriter import _WRAPPER_MARKER
+        from aj_crew.mcp_gateway.rewriter import _WRAPPER_MARKER
 
         self._switch_off(agents_dir, tmp_path, source="spec", tools=["@my-server", "@ok"])
         overlay = tmp_path / "gw" / "mcp-gateway" / "agents"
@@ -806,10 +806,10 @@ class TestDisabledServersPooledStub:
         }
         if overlay_disabled:
             wrapped["my-server"]["disabled"] = True
-        (overlay / "kirocrew.json").write_text(
-            json.dumps({"name": "kirocrew", "mcpServers": wrapped}), encoding="utf-8"
+        (overlay / "ajcrew.json").write_text(
+            json.dumps({"name": "ajcrew", "mcpServers": wrapped}), encoding="utf-8"
         )
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._write_claude_local_settings()
         assert client._claude_settings_authored is True
         client._mcp_gateway_overlay = overlay
@@ -850,17 +850,17 @@ class TestLocalSettingsSeed:
         (see ``test_seed_omits_both_model_keys_on_a_cold_cache``). Tests that assert
         on those keys therefore have to stand in for a captured ``session/new``.
         """
-        from kiro_crew import model_registry
+        from aj_crew import model_registry
 
         monkeypatch.setattr(model_registry, "_ADVERTISED_MODELS", {"claude_code": list(ids)})
 
     def test_seed_writes_the_model_allowlist(self, tmp_path, monkeypatch):
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
-        from kiro_crew import model_registry
+        from aj_crew import model_registry
 
         self._advertised(monkeypatch)
         client = self._client(tmp_path)
@@ -882,10 +882,10 @@ class TestLocalSettingsSeed:
         the allowlist, so ``haiku`` keeps resolving to its current model. The pinned
         ``model`` is still written, because a model key does not narrow any alias.
         """
-        from kiro_crew import model_registry
+        from aj_crew import model_registry
 
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: False,
         )
         monkeypatch.setattr(
@@ -899,10 +899,10 @@ class TestLocalSettingsSeed:
         assert data["model"] == "haiku"
 
     def test_warm_cache_with_another_source_writes_the_seeded_list(self, tmp_path, monkeypatch):
-        from kiro_crew import model_registry
+        from aj_crew import model_registry
 
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         monkeypatch.setattr(
@@ -920,7 +920,7 @@ class TestLocalSettingsSeed:
         A guessed ``availableModels`` list replaces the adapter's own list, so a model
         missing from it loses its ``[1m]`` id and resolves to 200K.
         """
-        from kiro_crew import model_registry
+        from aj_crew import model_registry
 
         monkeypatch.setattr(model_registry, "_ADVERTISED_MODELS", {})
         client = self._client(tmp_path, model="claude-opus-5", permission_mode="default")
@@ -936,13 +936,13 @@ class TestLocalSettingsSeed:
         # Another settings source defines availableModels, so the list is written too and
         # the folded model can be checked against it.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         # The exact shape observed in the field: "model": "claude-opus-5", a bare
         # id the adapter never advertised, which resolves to 200K. A cold cache
         # writes no model key at all.
-        from kiro_crew import model_registry
+        from aj_crew import model_registry
 
         monkeypatch.setattr(model_registry, "_ADVERTISED_MODELS", {})
         client = self._client(tmp_path, model="claude-opus-5")
@@ -974,7 +974,7 @@ class TestLocalSettingsSeed:
     def test_resolved_model_written_but_auto_omitted(self, tmp_path, monkeypatch):
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         self._advertised(monkeypatch, ["claude-sonnet-4-5"])
@@ -987,7 +987,7 @@ class TestLocalSettingsSeed:
         # its live claim, which the create path now refuses to author under.
         auto._claude_settings_authored = False
         path.unlink()
-        from kiro_crew.acp import seed_provenance
+        from aj_crew.acp import seed_provenance
 
         seed_provenance.release(path, auto._seed_owner)
         pinned = self._client(tmp_path, model="claude-sonnet-4-5")
@@ -1000,7 +1000,7 @@ class TestLocalSettingsSeed:
             servers={"srv": {"command": "/bin/srv", "disabledTools": ["danger"]}},
             tools=["@srv"],
         )
-        client = self._client(tmp_path, agent="kirocrew")
+        client = self._client(tmp_path, agent="ajcrew")
         client._write_claude_local_settings()
         data = json.loads((tmp_path / ".claude" / "settings.local.json").read_text())
         # disabledTools cannot ride along in the mcpServers array, so dropping it
@@ -1147,7 +1147,7 @@ class TestLocalSettingsSeed:
         """
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         self._advertised(monkeypatch, ["claude-sonnet-4-5"])
@@ -1174,7 +1174,7 @@ class TestLocalSettingsSeed:
         substitute, the re-seed writes that model and still no ``availableModels``.
         """
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: False,
         )
         self._advertised(monkeypatch, ["claude-sonnet-4-5"])

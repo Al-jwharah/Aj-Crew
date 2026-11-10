@@ -1,4 +1,4 @@
-"""Size-rotation tests for kiro_crew.sel, and the writers and readers that race it.
+"""Size-rotation tests for aj_crew.sel, and the writers and readers that race it.
 
 Pins rotation at the size cap and segment retention, the cross-process rotation lock,
 which threads may rotate, genesis handling in a fresh log, the collision retry's
@@ -30,10 +30,10 @@ from sel_helpers import (  # noqa: F401 -- fixtures are requested by name
 )
 from windows_sim import replace_sharing_violation
 
-import kiro_crew.sel as sel_mod
-from kiro_crew import atomic_write, platform_compat
-from kiro_crew import sel as kiro_crew_sel
-from kiro_crew.sel import SecurityEventLog
+import aj_crew.sel as sel_mod
+from aj_crew import atomic_write, platform_compat
+from aj_crew import sel as aj_crew_sel
+from aj_crew.sel import SecurityEventLog
 
 
 def _lock_is_held(lock_path: Path) -> bool:
@@ -291,7 +291,7 @@ class TestSizeRotation:
         log = SecurityEventLog(base_dir=sel_dir, sync=True)
         _fill(log, 200)
         before = len(log.recent(limit=10_000))
-        with patch("kiro_crew.sel.os.replace", side_effect=OSError("boom")):
+        with patch("aj_crew.sel.os.replace", side_effect=OSError("boom")):
             _fill(log, 300, start=1000)
         after = log.recent(limit=10_000)
         assert len(after) > before, "events were dropped when rotation failed"
@@ -358,7 +358,7 @@ class TestRotationIsSerializedAcrossProcesses:
         the chain-lock sidecar's fd and nothing else.
         """
         log = SecurityEventLog(base_dir=sel_dir, sync=True)
-        sidecar = sel_dir / kiro_crew_sel._TRUST_SUBDIR / kiro_crew_sel._SEL_LOCK_FILE
+        sidecar = sel_dir / aj_crew_sel._TRUST_SUBDIR / aj_crew_sel._SEL_LOCK_FILE
         real_file_lock = platform_compat.file_lock
 
         def rotation_must_not_block(fd, *, exclusive):
@@ -372,7 +372,7 @@ class TestRotationIsSerializedAcrossProcesses:
             return real_file_lock(fd, exclusive=exclusive)
 
         with patch(
-            "kiro_crew.sel.platform_compat.file_lock",
+            "aj_crew.sel.platform_compat.file_lock",
             side_effect=rotation_must_not_block,
         ):
             _fill(log, 200)
@@ -398,7 +398,7 @@ class TestRotationIsSerializedAcrossProcesses:
         # With the real lock: nothing below the cap ever creates the lock file.
         _fill(log, 3)  # nowhere near the cap
         assert not (sel_dir / "security_events.d" / ".rotate.lock").exists()
-        with patch("kiro_crew.sel.platform_compat.try_acquire_lock") as locker:
+        with patch("aj_crew.sel.platform_compat.try_acquire_lock") as locker:
             _fill(log, 3)  # nowhere near the cap
         locker.assert_not_called()
 
@@ -435,7 +435,7 @@ class TestRotationIsSerializedAcrossProcesses:
 
         log._live_seen = (pre_dev, pre_ino, _pre_size)
         log._last_hash = stale_tip
-        with patch("kiro_crew.sel.platform_compat.try_acquire_lock", return_value=False):
+        with patch("aj_crew.sel.platform_compat.try_acquire_lock", return_value=False):
             with patch.object(
                 SecurityEventLog,
                 "_live_identity",
@@ -509,11 +509,11 @@ class TestRotationIsSerializedAcrossProcesses:
         log = SecurityEventLog(base_dir=sel_dir, sync=True)
         _fill(log, 200)
         before = log._segments_oldest_first()
-        with patch("kiro_crew.sel.platform_compat.is_link_or_junction") as is_link:
+        with patch("aj_crew.sel.platform_compat.is_link_or_junction") as is_link:
             # The segment DIR check must still pass; only the lock path is linked.
             is_link.side_effect = lambda p: Path(p).name == ".rotate.lock"
             with patch(
-                "kiro_crew.sel.platform_compat.unlink_link_or_junction",
+                "aj_crew.sel.platform_compat.unlink_link_or_junction",
                 side_effect=OSError("read-only"),
             ):
                 _fill(log, 300, start=4000)
@@ -774,7 +774,7 @@ class TestTwoWritersCannotBothClaimGenesis:
                 live.write_text(json.dumps(asdict(first)) + "\n", encoding="utf-8")
             return result
 
-        with patch("kiro_crew.sel.os.replace", replace_then_race):
+        with patch("aj_crew.sel.os.replace", replace_then_race):
             with patch.object(
                 SecurityEventLog, "_live_size", return_value=sel_mod._SEGMENT_MAX_BYTES
             ):

@@ -26,40 +26,40 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import autonudge_authz as authz
-from kiro_crew.autonudge import NudgeLoop
-from kiro_crew.dashboard.handlers import autonudge as h
-from kiro_crew.platform import PlatformCompositionError
+from aj_crew import autonudge_authz as authz
+from aj_crew.autonudge import NudgeLoop
+from aj_crew.dashboard.handlers import autonudge as h
+from aj_crew.platform import PlatformCompositionError
 
 SECRET = "AKIAIOSFODNN7EXAMPLE"
 _SAVE_REFUSAL = (
     "Safety checks are temporarily unavailable, so this goal cannot be saved. "
-    "If this keeps happening, restart Kiro Crew."
+    "If this keeps happening, restart Aj Crew."
 )
 
 
 def _install_broken_policy() -> None:
     """Replace the active credential policy with one that cannot compose."""
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.platform import build_default_context, set_context
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.platform import build_default_context, set_context
 
     class _Broken:
         def redact(self, text: str) -> str:
             raise PlatformCompositionError("companion credential policy unreadable")
 
-    base = build_default_context(KiroCrewConfig())
+    base = build_default_context(AjCrewConfig())
     set_context(dataclasses.replace(base, credentials=_Broken()))
 
 
 @pytest.fixture
 def broken_policy() -> Any:
     """Install the uncomposable policy for one test and restore the real one after."""
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.platform import build_default_context, set_context
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.platform import build_default_context, set_context
 
     _install_broken_policy()
     yield
-    set_context(build_default_context(KiroCrewConfig()))
+    set_context(build_default_context(AjCrewConfig()))
 
 
 def _loop(**kw: Any) -> NudgeLoop:
@@ -348,9 +348,9 @@ def _wiring_tree() -> Any:
     import ast
     import pathlib
 
-    import kiro_crew
+    import aj_crew
 
-    path = pathlib.Path(kiro_crew.__file__).parent / "slack" / "gateway_runtime" / "nudge_wiring.py"
+    path = pathlib.Path(aj_crew.__file__).parent / "slack" / "gateway_runtime" / "nudge_wiring.py"
     return ast.parse(path.read_text(encoding="utf-8"))
 
 
@@ -439,14 +439,14 @@ class TestAnUnscrubbableHostStillRecordsThePatrolTransition:
 
 class TestTheSurfacesAreRegisteredInThePosture:
     def test_the_handler_is_a_declared_sink(self) -> None:
-        from kiro_crew.security_posture import _REDACTION_SINKS
+        from aj_crew.security_posture import _REDACTION_SINKS
 
         names = {name for name, _path, _why in _REDACTION_SINKS}
         assert "AutoNudge monitor responses" in names
 
     def test_the_sink_names_the_broadcast_it_also_covers(self) -> None:
         """The frame's rule lives in the handler, so the handler's row declares it."""
-        from kiro_crew.security_posture import _REDACTION_SINKS
+        from aj_crew.security_posture import _REDACTION_SINKS
 
         why = next(w for n, _p, w in _REDACTION_SINKS if n == "AutoNudge monitor responses")
         assert "autonudge_state" in why, "the broadcast is scrubbed but undeclared"

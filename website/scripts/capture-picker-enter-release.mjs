@@ -36,7 +36,7 @@ const slots = [{
   running: false,
   last_message: 'Ready when you are.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   folder_id: '',
@@ -60,8 +60,8 @@ const detail = {
 // A populated skills list that simply does not match the typed token — the
 // zero-match state must come from filtering, not from an empty backend.
 const SKILLS = [
-  { key: 'kirocrew/oncall-handover', name: 'oncall-handover', description: 'Handover report', source: 'kirocrew' },
-  { key: 'kirocrew/ticket-pull', name: 'ticket-pull', description: 'Pull tickets', source: 'kirocrew' },
+  { key: 'ajcrew/oncall-handover', name: 'oncall-handover', description: 'Handover report', source: 'ajcrew' },
+  { key: 'ajcrew/ticket-pull', name: 'ticket-pull', description: 'Pull tickets', source: 'ajcrew' },
 ]
 
 async function main() {

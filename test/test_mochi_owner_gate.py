@@ -17,8 +17,8 @@ import pytest
 from aiohttp.test_utils import make_mocked_request
 from dashboard_owner_helpers import NoConfiguredOwner
 
-from kiro_crew.apps.builtins.mochi import agent_policy, hooks
-from kiro_crew.apps.builtins.mochi.backend import routes
+from aj_crew.apps.builtins.mochi import agent_policy, hooks
+from aj_crew.apps.builtins.mochi.backend import routes
 
 OWNER = "owner-1"
 BASE = "/api/apps/mochi"
@@ -60,7 +60,7 @@ def _refused(resp: Any) -> bool:
 def _enabled():
     with (
         mock.patch.object(routes, "is_app_enabled", return_value=True),
-        mock.patch("kiro_crew.sel.sel"),
+        mock.patch("aj_crew.sel.sel"),
         # No test here may reach petdex.dev: the owner rows pass the gate and
         # would otherwise run the real outbound fetch.
         mock.patch.object(
@@ -201,12 +201,12 @@ async def test_bootstrap_subject_is_refused_once_an_owner_is_configured():
 )
 async def test_settings_grant_written_for_owner_and_own_app(tmp_path, monkeypatch, claims):
     monkeypatch.setattr(agent_policy, "_ambient_servers", lambda: {})
-    monkeypatch.setattr("kiro_crew.apps.bridges.refresh_app_agents", lambda _n: [])
+    monkeypatch.setattr("aj_crew.apps.bridges.refresh_app_agents", lambda _n: [])
     monkeypatch.setattr(
-        "kiro_crew.apps.bridges.get_app_manifest", lambda _n: SimpleNamespace(agents=[])
+        "aj_crew.apps.bridges.get_app_manifest", lambda _n: SimpleNamespace(agents=[])
     )
     monkeypatch.setattr(hooks, "_runtime", SimpleNamespace(data_dir=tmp_path))
-    body = {"extraMcpServers": [{"name": "kirocrew-core", "agents": ["bg"]}]}
+    body = {"extraMcpServers": [{"name": "ajcrew-core", "agents": ["bg"]}]}
 
     resp = await routes._handle_settings_update(_req("POST", f"{BASE}/settings", body, **claims))
 
@@ -217,7 +217,7 @@ async def test_settings_grant_written_for_owner_and_own_app(tmp_path, monkeypatc
 @pytest.mark.asyncio
 async def test_settings_grant_not_written_for_non_owner(tmp_path, monkeypatch):
     monkeypatch.setattr(hooks, "_runtime", SimpleNamespace(data_dir=tmp_path))
-    body = {"extraMcpServers": [{"name": "kirocrew-core", "agents": ["bg"]}]}
+    body = {"extraMcpServers": [{"name": "ajcrew-core", "agents": ["bg"]}]}
 
     resp = await routes._handle_settings_update(
         _req("POST", f"{BASE}/settings", body, user="mallory")

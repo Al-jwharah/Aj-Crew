@@ -16,7 +16,7 @@ from pathlib import Path
 from pipeline_conductor_agent_helpers import FleetProbeHarness
 
 from conftest import make_dir_link
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
 
 class TestFleetProbeCwdScope(FleetProbeHarness):
@@ -36,7 +36,7 @@ class TestFleetProbeCwdScope(FleetProbeHarness):
         cfg = self._config(
             tmp_path, monkeypatch, [], fleet_worktrees=[str(tmp_path / "fleet" / "wt-a")]
         )
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "BANNED pid=5001 rule=" in out and "cwd=fleet" in out
         assert "pid=5002" not in out, "an unrelated checkout is not reported"
@@ -335,7 +335,7 @@ class TestFleetProbeCwdScope(FleetProbeHarness):
         mod = self._mod()
         proc = self._proc(tmp_path, "8001", b"pytest\x00-n\x004\x00", tmp_path / "elsewhere")
         cfg = self._config(tmp_path, monkeypatch, [], fleet_worktrees=[str(tmp_path / "fleet")])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         # A root that cannot be spelled the way any cwd is spelled: the comparison
         # cannot establish ownership, so the answer must be the non-stopping one.
         assert mod._owner_class(proc / "8001", ["\0/broken"], "") != "fleet"
@@ -432,7 +432,7 @@ class TestFleetProbeCwdScope(FleetProbeHarness):
             None,
         )
         cfg = self._config(tmp_path, monkeypatch, [], fleet_worktrees=[str(mine)])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "pid=7001" not in out, "provably not the fleet's, so not the fleet's problem"
         assert "banned 0 | foreign 1" in out
@@ -450,7 +450,7 @@ class TestFleetProbeCwdScope(FleetProbeHarness):
             tmp_path, "7002", f"{my_python}\0-m\0pytest\0-n4\0test/x.py\0".encode(), None
         )
         cfg = self._config(tmp_path, monkeypatch, [], fleet_worktrees=[str(mine)])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "BANNED pid=7002 rule=" in out and "cwd=fleet" in out
         assert "banned 1 | foreign 0" in out
@@ -470,7 +470,7 @@ class TestFleetProbeCwdScope(FleetProbeHarness):
         shim.write_text("", encoding="utf-8")
         proc = self._proc(tmp_path, "7003", f"{shim}\0-m\0pytest\0-n4\0test/x.py\0".encode(), None)
         cfg = self._config(tmp_path, monkeypatch, [], fleet_worktrees=[str(mine)])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "BANNED pid=7003 rule=" in out and "cwd=unknown" in out
         assert "banned 1 | foreign 0" in out, "no venv means no evidence, not evidence of absence"
@@ -494,7 +494,7 @@ class TestFleetProbeCwdScope(FleetProbeHarness):
         cfg = self._config(
             tmp_path, monkeypatch, [], fleet_worktrees=[str(tmp_path / "fleet" / "wt-a")]
         )
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert secret not in out
         assert str(their_python) not in out, "the program path decides; it is not emitted"
@@ -513,7 +513,7 @@ class TestFleetProbeCwdScope(FleetProbeHarness):
             tmp_path, "6002", b"pytest\x00-n4\x00test/y.py\x00", tmp_path / "fleet" / "wt-a-old"
         )
         cfg = self._config(tmp_path, monkeypatch, [], fleet_worktrees=[str(root)])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "pid=6001" in out and "cwd=fleet" in out
         assert "pid=6002" not in out
@@ -527,7 +527,7 @@ class TestFleetProbeCwdScope(FleetProbeHarness):
         directly; case folding is delegated to ``os.path.normcase``, a no-op on Linux.
         """
         mod = self._mod()
-        root = r"D:\a\KiroCrew\fleet\wt-a"
+        root = r"D:\a\AjCrew\fleet\wt-a"
         assert mod._norm_path("\\\\?\\" + root) == mod._norm_path(root)
         assert mod._norm_path("\\\\?\\" + root) == os.path.normcase(os.path.normpath(root))
         # Trailing separators and redundant segments fold on every platform.
@@ -559,7 +559,7 @@ class TestFleetProbeCwdScope(FleetProbeHarness):
         # The process reports the REAL path; the config names the symlinked one.
         proc = self._proc(tmp_path, "5100", b"pytest\x00-n4\x00test/x.py\x00", real)
         cfg = self._config(tmp_path, monkeypatch, [], fleet_worktrees=[str(link / "wt-a")])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "pid=5100" in out and "cwd=fleet" in out
         assert "banned 1 | foreign 0" in out

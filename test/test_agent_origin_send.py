@@ -29,9 +29,9 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 from guide_route_helpers import CREWMATE, FakeState, agent, run_guide_app
 
-from kiro_crew.dashboard import agent_origin
-from kiro_crew.history import HUMAN_TURN_META_KEY
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.dashboard import agent_origin
+from aj_crew.history import HUMAN_TURN_META_KEY
+from aj_crew.testing.wait import async_wait_until
 
 #: Values that must all read as agent-origin: the one
 #: defined value, an unknown word, and malformed shapes.
@@ -40,7 +40,7 @@ _MARKS = ["agent", "person", "", None, 1, True, {"x": 1}, ["agent"]]
 
 @pytest.fixture
 def _sel():
-    with patch("kiro_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
+    with patch("aj_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
         yield
 
 
@@ -53,7 +53,7 @@ async def _send(state, body: dict) -> tuple[dict | None, Any]:
         sl.append("chunk", "ok", "chunk")
 
     state.get_or_create_slot("s1")._titled = True
-    with patch("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat):
+    with patch("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat):
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post(
                 "/api/chat", json={"slot": "s1", "message": "hi", **body}, timeout=None
@@ -104,12 +104,12 @@ class TestStartedTurn:
     ):
         """The unmarked row is the regression pin: a send without the key keeps
         every person-only grant it has today."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot._app = "someapp"  # an app-owned tab: attendance decides its approval window
         nudge = MagicMock()
-        monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: nudge)
+        monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: nudge)
 
         seen, _ = await _send(state, body)
 
@@ -138,7 +138,7 @@ async def test_a_marked_send_is_redacted_like_a_drained_non_user_entry(
     """A ``user`` row is served unredacted, which is right only for the person's
     own words. A marked send gets the drain's non-user redaction on the row and
     the turn input alike; the person's own send stays as typed."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("s1")
     seen_msg: list[str] = []
@@ -149,7 +149,7 @@ async def test_a_marked_send_is_redacted_like_a_drained_non_user_entry(
 
     text = f"use key {_SECRET} now"
     slot._titled = True
-    with patch("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat):
+    with patch("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat):
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post(
                 "/api/chat", json={"slot": "s1", "message": text, **body}, timeout=None
@@ -182,7 +182,7 @@ def _busy_slot(state):
 class TestBusySlot:
     @pytest.mark.parametrize(("body", "person"), [({"turn_origin": "agent"}, False), ({}, True)])
     async def test_a_queued_send_keeps_its_origin(self, tmp_path, monkeypatch, _sel, body, person):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _busy_slot(state)
@@ -207,9 +207,9 @@ class TestBusySlot:
         """A steer would put the agent's text inside the person's running turn,
         whose ``_directive_user_origin`` its directives keep reading; a marked
         send queues instead, without the act-now intent."""
-        from kiro_crew.dashboard.chat_delivery import COMPOSER_SEND_META
+        from aj_crew.dashboard.chat_delivery import COMPOSER_SEND_META
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _busy_slot(state)
@@ -230,13 +230,13 @@ class TestBusySlot:
     async def test_an_auto_steer_asks_jev_only_for_a_person(
         self, tmp_path, monkeypatch, _sel, body, person
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _busy_slot(state)
         slot._turn_user_sent = True
         decide = AsyncMock(return_value=(False, None))
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.decided_message_handling", decide)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.decided_message_handling", decide)
 
         _, resp = await _send(state, {"steer": "auto", **body})
 
@@ -247,12 +247,12 @@ class TestBusySlot:
     async def test_a_send_held_behind_sub_agents_keeps_its_origin(
         self, tmp_path, monkeypatch, _sel, body, person
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("s1")
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.subagents_hold_user_messages",
+            "aj_crew.dashboard.chat_handlers.subagents_hold_user_messages",
             lambda *_a: True,
         )
 
@@ -272,12 +272,12 @@ class TestBusySlot:
     async def test_only_a_persons_steer_skips_the_sub_agent_hold(
         self, tmp_path, monkeypatch, _sel, body, held
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.get_or_create_slot("s1")
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.subagents_hold_user_messages",
+            "aj_crew.dashboard.chat_handlers.subagents_hold_user_messages",
             lambda *_a: True,
         )
 
@@ -295,8 +295,8 @@ async def _turn_user_sent_for(tmp_path, body: dict) -> bool:
     read the ``_turn_user_sent`` the turn records for its duration."""
     from test_acp_tool_identity import _stub_state
 
-    from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
-    from kiro_crew.dashboard import chat_runner as cr
+    from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
+    from aj_crew.dashboard import chat_runner as cr
 
     send_state = _make_state(tmp_path)
     send_state.get_or_create_slot("s1")
@@ -340,7 +340,7 @@ def _start_guide(user_sent: bool) -> tuple[int, dict]:
 
 
 def _propose_card(user_sent: bool) -> tuple[int, dict]:
-    from kiro_crew.dashboard.handlers import change_cards as card_routes
+    from aj_crew.dashboard.handlers import change_cards as card_routes
 
     propose = ("POST", "/api/cards/agent/propose", card_routes.api_cards_agent_propose)
     return _guide_call(
@@ -352,7 +352,7 @@ def _propose_card(user_sent: bool) -> tuple[int, dict]:
 
 
 def _update_self(user_sent: bool) -> tuple[int, dict]:
-    from kiro_crew.dashboard.handlers import member_self as self_routes
+    from aj_crew.dashboard.handlers import member_self as self_routes
 
     route = ("POST", "/api/member/self/update", self_routes.api_member_self_update)
     return _guide_call(
@@ -366,14 +366,14 @@ def _update_self(user_sent: bool) -> tuple[int, dict]:
 @pytest.mark.parametrize("action", [_start_guide, _propose_card, _update_self])
 class TestGuideAndCardActions:
     def test_an_agent_origin_turn_is_refused(self, tmp_path, monkeypatch, _sel, action):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         user_sent = asyncio.run(_turn_user_sent_for(tmp_path, {"turn_origin": "agent"}))
         assert user_sent is False
         status, body = action(user_sent)
         assert (status, body["code"]) == (403, "not_user_turn")
 
     def test_the_same_send_unmarked_is_admitted(self, tmp_path, monkeypatch, _sel, action):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         user_sent = asyncio.run(_turn_user_sent_for(tmp_path, {}))
         assert user_sent is True
         _status, body = action(user_sent)
@@ -389,9 +389,9 @@ class TestUserOriginDirectives:
     async def test_suggest_followup_follows_the_send(
         self, tmp_path, monkeypatch, _sel, body, person
     ):
-        from kiro_crew.dashboard.session_directive_apply import apply_session_directive
+        from aj_crew.dashboard.session_directive_apply import apply_session_directive
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("s1")
         kwargs, _ = await _send(state, body)

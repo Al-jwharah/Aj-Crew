@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.constants import CREW_LOG_ENV, ENV_FALSY, ENV_TRUTHY, crew_log_enabled
+from aj_crew.constants import CREW_LOG_ENV, ENV_FALSY, ENV_TRUTHY, crew_log_enabled
 
 _NAME = CREW_LOG_ENV
 
@@ -42,11 +42,11 @@ def test_a_set_value_switches_the_log(monkeypatch, value, expected):
 
 
 def test_an_unrecognised_value_is_warned_about_once(monkeypatch, caplog):
-    from kiro_crew import constants
+    from aj_crew import constants
 
     monkeypatch.setattr(constants, "_WARNED_UNRECOGNISED", set())
     monkeypatch.setenv(CREW_LOG_ENV, "disable")
-    with caplog.at_level("WARNING", logger="kiro_crew.constants"):
+    with caplog.at_level("WARNING", logger="aj_crew.constants"):
         crew_log_enabled()
         crew_log_enabled()
     warned = [r for r in caplog.records if CREW_LOG_ENV in r.getMessage()]
@@ -57,11 +57,11 @@ def test_an_unrecognised_value_is_warned_about_once(monkeypatch, caplog):
 
 @pytest.mark.parametrize("value", ["", "1", "off"])
 def test_a_recognised_or_empty_value_is_not_warned_about(monkeypatch, caplog, value):
-    from kiro_crew import constants
+    from aj_crew import constants
 
     monkeypatch.setattr(constants, "_WARNED_UNRECOGNISED", set())
     monkeypatch.setenv(CREW_LOG_ENV, value)
-    with caplog.at_level("WARNING", logger="kiro_crew.constants"):
+    with caplog.at_level("WARNING", logger="aj_crew.constants"):
         crew_log_enabled()
     assert not [r for r in caplog.records if CREW_LOG_ENV in r.getMessage()]
 
@@ -72,8 +72,8 @@ def test_the_falsy_and_truthy_sets_do_not_overlap():
 
 def test_the_crew_log_readers_use_the_one_helper(monkeypatch):
     """Both spellings of the crew-log switch read the same default."""
-    from kiro_crew.crew_log import emit
-    from kiro_crew.dashboard.handlers import crew_log as routes
+    from aj_crew.crew_log import emit
+    from aj_crew.dashboard.handlers import crew_log as routes
 
     assert routes.CREW_LOG_ENV == emit.CREW_LOG_ENV
     monkeypatch.delenv(emit.CREW_LOG_ENV, raising=False)

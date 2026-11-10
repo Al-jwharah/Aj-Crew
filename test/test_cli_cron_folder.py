@@ -1,4 +1,4 @@
-"""``kirocrew cron add/update/list --folder``: parity with the ``cron_add`` / ``cron_update`` tools.
+"""``ajcrew cron add/update/list --folder``: parity with the ``cron_add`` / ``cron_update`` tools.
 
 The CLI files a job into a Schedule-page folder through the SAME resolver the MCP
 tools run (``mcp_cron._resolve_cron_folder_via``), and a missing name is created
@@ -8,7 +8,7 @@ the CLI's create leg, ``cli_commands._create_cron_folder``, is replaced by a fak
 that records each call, and every test asserts the folder file the CLI must never
 write is byte-for-byte unchanged.
 
-Every store lives under a per-test ``KIROCREW_HOME`` in ``tmp_path``.
+Every store lives under a per-test ``AJCREW_HOME`` in ``tmp_path``.
 """
 
 from __future__ import annotations
@@ -20,9 +20,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import cli_commands, mcp_cron
-from kiro_crew.config.loader import config_dir
-from kiro_crew.cron import CronService
+from aj_crew import cli_commands, mcp_cron
+from aj_crew.config.loader import config_dir
+from aj_crew.cron import CronService
 
 _FOLDERS = [
     {"id": "aaaa1111", "name": "Veille", "order": 0},
@@ -40,9 +40,9 @@ def _write_folders(entries) -> None:
 
 @pytest.fixture()
 def home(tmp_path, monkeypatch):
-    root = tmp_path / "kirocrew-home"
+    root = tmp_path / "ajcrew-home"
     root.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(root))
+    monkeypatch.setenv("AJCREW_HOME", str(root))
     config_dir().mkdir(parents=True, exist_ok=True)
     _write_folders(_FOLDERS)
     return root
@@ -450,7 +450,7 @@ class _Resp:
 @pytest.fixture()
 def gateway(monkeypatch):
     """Pin the port and secret; return the list of requests ``_gateway_send`` saw."""
-    from kiro_crew import port_resolution
+    from aj_crew import port_resolution
 
     monkeypatch.setattr(port_resolution, "resolve_client_port_ex", lambda _p: (54321, True))
     monkeypatch.setattr(cli_commands, "_internal_secret", lambda port: "s3cret-for-test")
@@ -524,9 +524,9 @@ class TestParser:
     def test_folder_flag_is_documented(self, action, monkeypatch, capsys):
         import sys
 
-        from kiro_crew.cli import main
+        from aj_crew.cli import main
 
-        monkeypatch.setattr(sys, "argv", ["kirocrew", "cron", action, "--help"])
+        monkeypatch.setattr(sys, "argv", ["ajcrew", "cron", action, "--help"])
         with pytest.raises(SystemExit) as exc:
             main()
         assert exc.value.code == 0
@@ -548,10 +548,10 @@ class TestParser:
         # update/list default to None so an absent flag is "not asked", never "ungroup".
         import sys
 
-        from kiro_crew.cli import main
+        from aj_crew.cli import main
 
         seen: list[argparse.Namespace] = []
         monkeypatch.setattr(cli_commands, "_cron", seen.append)
-        monkeypatch.setattr(sys, "argv", ["kirocrew", *argv])
+        monkeypatch.setattr(sys, "argv", ["ajcrew", *argv])
         main()
         assert [a.folder for a in seen] == [want]

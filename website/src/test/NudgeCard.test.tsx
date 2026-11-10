@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import NudgeCard, { parseNudgeMessage, nudgeMatchesLoop } from '../pages/chat/NudgeCard'
 import type { ChatMessage } from '../types'
 
-const BODY = 'Babysit the KiroCrew bug-fix PRs to MERGE-READY\nsecond line of instructions'
+const BODY = 'Babysit the AjCrew bug-fix PRs to MERGE-READY\nsecond line of instructions'
 
 function makeMsg(over: Partial<ChatMessage> = {}): ChatMessage {
   return {
@@ -74,7 +74,7 @@ describe('NudgeCard', () => {
     // The payload's first line is NOT previewed on the collapsed row either: the
     // instruction text is machine-facing, and quoting even one line of it made
     // the row read as a message the user had sent.
-    expect(screen.queryByText(/Babysit the KiroCrew/)).toBeNull()
+    expect(screen.queryByText(/Babysit the AjCrew/)).toBeNull()
     expect(screen.getByTestId('nudge-card-toggle').getAttribute('aria-expanded')).toBe('false')
     expect(screen.getByTestId('nudge-card').getAttribute('data-expanded')).toBe('false')
   })

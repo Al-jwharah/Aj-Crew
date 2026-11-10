@@ -39,7 +39,7 @@ const JOBS = [
   {
     id: 'job-1', name: 'Nightly report', schedule: 'every 1d', timezone: 'America/Los_Angeles',
     message: 'Summarise yesterday\'s CI failures and post the digest to #build-health.',
-    enabled: true, agent: 'kirocrew', model: 'claude-opus-5',
+    enabled: true, agent: 'ajcrew', model: 'claude-opus-5',
     last_status: 'ok', last_run_ts: now - 3600, next_run_ts: now + 7200, has_result: true,
   },
   {
@@ -65,7 +65,7 @@ async function main() {
       if (path === '/api/crons') { await json(route, { jobs: JOBS }); return true }
       if (path === '/api/cron-folders') { await json(route, []); return true }
       if (path === '/api/crons/history') { await json(route, { runs: [] }); return true }
-      if (path === '/api/agents') { await json(route, { agents: [{ name: 'kirocrew' }], default_agent: 'kirocrew' }); return true }
+      if (path === '/api/agents') { await json(route, { agents: [{ name: 'ajcrew' }], default_agent: 'ajcrew' }); return true }
       if (path === '/api/models') { await json(route, []); return true }
       return false
     },

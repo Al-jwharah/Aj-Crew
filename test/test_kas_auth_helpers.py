@@ -6,8 +6,8 @@ file's module-level ``pytestmark = pytest.mark.asyncio``.
 
 from __future__ import annotations
 
-from kiro_crew.auth.login.endpoints import CALLBACK_PORTS
-from kiro_crew.auth.login.portal import (
+from aj_crew.auth.login.endpoints import CALLBACK_PORTS
+from aj_crew.auth.login.portal import (
     build_auth_url,
     generate_code_challenge,
     generate_code_verifier,

@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig, config_local_path, config_path
+from aj_crew.config.loader import AjCrewConfig, config_local_path, config_path
 
 #: Valid JSON shape around one byte UTF-8 cannot decode.
 _NOT_UTF8 = b'{"x_user_note": "caf\xe9"}'
@@ -23,9 +23,9 @@ _NOT_UTF8 = b'{"x_user_note": "caf\xe9"}'
 
 @pytest.fixture
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    from kiro_crew import cli_config
+    from aj_crew import cli_config
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     assert config_path().parent == tmp_path
     # `config set` reads these through its own binding; pin them to the loader's
     # functions so the test does not depend on how an earlier test left them.
@@ -37,7 +37,7 @@ def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 def test_doctor_reports_a_non_utf8_config_as_unreadable(
     home: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from kiro_crew.config.superseded_defaults import render_doctor_section
+    from aj_crew.config.superseded_defaults import render_doctor_section
 
     config_path().write_bytes(_NOT_UTF8)
     issues: list[str] = []
@@ -47,7 +47,7 @@ def test_doctor_reports_a_non_utf8_config_as_unreadable(
 
 
 def test_config_set_ignores_a_non_utf8_overlay(home: Path) -> None:
-    from kiro_crew.cli_config import _run_config_cmd
+    from aj_crew.cli_config import _run_config_cmd
 
     config_path().write_text(json.dumps({"agent": {}}), encoding="utf-8")
     config_local_path().write_bytes(_NOT_UTF8)
@@ -62,21 +62,21 @@ def test_config_set_ignores_a_non_utf8_overlay(home: Path) -> None:
 
 def test_save_ignores_a_non_utf8_overlay(home: Path) -> None:
     config_path().write_text(json.dumps({"agent": {}}), encoding="utf-8")
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     config_local_path().write_bytes(_NOT_UTF8)
     cfg.save()
     assert isinstance(json.loads(config_path().read_text(encoding="utf-8")), dict)
 
 
 def test_raw_config_reads_a_non_utf8_config_as_empty(home: Path) -> None:
-    from kiro_crew.config.loader_document import _raw_config
+    from aj_crew.config.loader_document import _raw_config
 
     config_path().write_bytes(_NOT_UTF8)
     assert _raw_config() == {}
 
 
 def test_computer_use_names_a_non_utf8_config_corrupt(home: Path) -> None:
-    from kiro_crew.dashboard.handlers.computer_use import StateCorruptError, _read_config_strict
+    from aj_crew.dashboard.handlers.computer_use import StateCorruptError, _read_config_strict
 
     config_path().write_bytes(_NOT_UTF8)
     with pytest.raises(StateCorruptError):
@@ -84,7 +84,7 @@ def test_computer_use_names_a_non_utf8_config_corrupt(home: Path) -> None:
 
 
 def test_mcp_gateway_reads_a_non_utf8_overlay_as_absent(home: Path) -> None:
-    from kiro_crew.dashboard.handlers.mcp_gateway_routes import _local_overlay_section
+    from aj_crew.dashboard.handlers.mcp_gateway_routes import _local_overlay_section
 
     config_local_path().write_bytes(_NOT_UTF8)
     assert _local_overlay_section() == {}
@@ -93,7 +93,7 @@ def test_mcp_gateway_reads_a_non_utf8_overlay_as_absent(home: Path) -> None:
 def test_channel_presets_fall_back_to_defaults_on_a_non_utf8_config(
     home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.dashboard import handlers_channel
+    from aj_crew.dashboard import handlers_channel
 
     monkeypatch.setattr(handlers_channel, "_presets_cache", None)
     config_path().write_bytes(_NOT_UTF8)

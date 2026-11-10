@@ -11,9 +11,9 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, eager, emit
-from kiro_crew.crew_log import projection as crew_log
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, eager, emit
+from aj_crew.crew_log import projection as crew_log
 
 GATEWAY = "gateway"
 
@@ -26,7 +26,7 @@ WORK_SLOT = "dashboard:9"
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch):
     """Every test writes into its own data home, never the live one."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     eager.stop_for_tests()
     crew_log.forget_slot_folds()
     emit.reset_caches()
@@ -45,7 +45,7 @@ def _isolated_home(tmp_path, _floor_monkeypatch):
 
 def _slot_log(unit_id: str, slot: str) -> CrewLog:
     """A session log whose HEADER names *slot*, which is what the slot read joins on."""
-    return CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="kirocrew", slot=slot)
+    return CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="ajcrew", slot=slot)
 
 
 def _work_entry(handle: CrewLog, item_id: str, slot: str = WORK_SLOT) -> int:

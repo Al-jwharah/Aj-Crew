@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Turn a Kiro Crew crash artifact into readable frames.
+# Turn a Aj Crew crash artifact into readable frames.
 #
 # The problem this closes: a macOS `.ips` report from a shipped build has
 # `asi: null` and every frame symbol is a NEAREST-NEIGHBOUR GUESS, because the
@@ -32,7 +32,7 @@
 # scripts/emit-symbols-manifest.mjs) or `--electron` if you know the version.
 #
 # Downloads are cached, because these run 128 MB to 1.7 GB per arch:
-#   KIROCREW_SYMBOL_CACHE   default ${XDG_CACHE_HOME:-~/.cache}/kirocrew/electron-symbols
+#   AJCREW_SYMBOL_CACHE   default ${XDG_CACHE_HOME:-~/.cache}/ajcrew/electron-symbols
 set -euo pipefail
 
 ARTIFACT=""
@@ -76,7 +76,7 @@ case "$ARTIFACT" in
     exit 1 ;;
 esac
 
-CACHE="${KIROCREW_SYMBOL_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/kirocrew/electron-symbols}"
+CACHE="${AJCREW_SYMBOL_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/ajcrew/electron-symbols}"
 WORK="$(mktemp -d)"
 # Set early and empty so the trap below can name it under `set -u`. The extraction
 # staging directory has to live inside $CACHE rather than in $WORK, because it is

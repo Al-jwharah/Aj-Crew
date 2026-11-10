@@ -8,7 +8,7 @@ Four false matches put a skill nobody asked for into a turn (27k chars for
   the trigger is marked case-exact (``=Word``);
 * a skill for a feature that is off: a session with no ``computer_*`` tool gets
   the skill describing those tools;
-* Kiro Crew's own words: a recovery continuation ("do NOT restart from scratch")
+* Aj Crew's own words: a recovery continuation ("do NOT restart from scratch")
   fires a skill whose trigger is ``restart``;
 * punctuation the matcher drops: ``missing $`` scores as the lone word
   ``missing`` and fires on any message that uses it.
@@ -26,13 +26,13 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
-from kiro_crew.context import ContextBuilder
-from kiro_crew.frontmatter import SKILL_LOADER, parse_frontmatter
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.skills_discovery import _BUILTIN_SKILLS_DIR
-from kiro_crew.trigger_match import MIN_TRIGGER_OVERLAP, rank_triggered, trigger_score, words_of
+from aj_crew.config.loader import AjCrewConfig, SkillsConfig
+from aj_crew.context import ContextBuilder
+from aj_crew.frontmatter import SKILL_LOADER, parse_frontmatter
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
+from aj_crew.skills_discovery import _BUILTIN_SKILLS_DIR
+from aj_crew.trigger_match import MIN_TRIGGER_OVERLAP, rank_triggered, trigger_score, words_of
 
 #: The prompt the latency study sent as every new chat's first message.
 PONG = "Reply with exactly the word: pong."
@@ -48,7 +48,7 @@ def _loader(skills: Path) -> SkillsLoader:
     return SkillsLoader(
         skills_path=skills,
         install_builtins=False,
-        config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+        config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
     )
 
 
@@ -72,16 +72,16 @@ def _restart_skill(skills: Path) -> None:
 
 @pytest.fixture
 def gate(monkeypatch: pytest.MonkeyPatch) -> dict[str, bool]:
-    """``agent._computer_use_spec_gate``, which mounts ``kirocrew-computer``."""
+    """``agent._computer_use_spec_gate``, which mounts ``ajcrew-computer``."""
     reading = {"open": True}
-    monkeypatch.setattr("kiro_crew.agent._computer_use_spec_gate", lambda: reading["open"])
+    monkeypatch.setattr("aj_crew.agent._computer_use_spec_gate", lambda: reading["open"])
     return reading
 
 
 @pytest.fixture
 def builder(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> ContextBuilder:
     # The shipped contract, so a session start takes its Computer Use reading.
-    monkeypatch.setattr("kiro_crew.context._prompt_path", lambda **_kw: _SHIPPED_PROMPT)
+    monkeypatch.setattr("aj_crew.context._prompt_path", lambda **_kw: _SHIPPED_PROMPT)
     skills = tmp_path / "skills"
     _shipped_computer_use(skills)
     _restart_skill(skills)
@@ -177,7 +177,7 @@ class TestComputerUseSkill:
         # reading itself, so a reused session key must not keep its first one.
         prompt = tmp_path / "operator-prompt.md"
         prompt.write_text("You are the operator's own agent.\n", encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.context._prompt_path", lambda **_kw: prompt)
+        monkeypatch.setattr("aj_crew.context._prompt_path", lambda **_kw: prompt)
         for open_, expected in ((first, first), (then, then)):
             gate["open"] = open_
             message, _ = builder.build_message(APP_REQUEST, is_new_session=True, session_key="s")
@@ -197,7 +197,7 @@ class TestComputerUseSkill:
     ) -> None:
         # A pick replaces the match, so its menu must leave out what the matcher
         # leaves out (the menu side is pinned in test_decisions_points.py).
-        from kiro_crew.decisions.points import skills_select
+        from aj_crew.decisions.points import skills_select
 
         seen: dict = {}
 
@@ -233,10 +233,10 @@ class TestDashboardTurn:
     """The dashboard runner hands the matcher only what the person wrote."""
 
     async def _turn(self, tmp_path, monkeypatch, message, *, prepare=None, **run_kwargs) -> str:
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         skills = tmp_path / "skills"
         _restart_skill(skills)
         builder = ContextBuilder(
@@ -273,7 +273,7 @@ class TestDashboardTurn:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("name", ["_POSTTOKEN_RECOVER_MSG", "_MANUAL_RESUME_MSG"])
     async def test_a_runner_continuation_loads_no_skill(self, tmp_path, monkeypatch, name):
-        from kiro_crew.dashboard import chat_utils
+        from aj_crew.dashboard import chat_utils
 
         continuation = getattr(chat_utils, name)
         assert "restart" in continuation  # the word the skill's trigger fired on

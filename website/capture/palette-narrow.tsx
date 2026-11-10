@@ -32,7 +32,7 @@ import '../src/index.css'
 
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // Every provider search resolves against an empty corpus: the header row is the
 // subject, and a failed request would render an error state over it.

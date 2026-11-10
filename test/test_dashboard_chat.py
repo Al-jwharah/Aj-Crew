@@ -24,7 +24,7 @@ import pytest
 from chat_test_helpers import _make_state
 from dashboard_chat_helpers import _provider_mock
 
-from kiro_crew.testing.wait import await_until, until_parked
+from aj_crew.testing.wait import await_until, until_parked
 
 # ── Tests: AcpProcessDied handler in _run_chat ──
 
@@ -33,7 +33,7 @@ class TestAcpProcessDiedRecovery:
     """Verify _run_chat handles AcpProcessDied with retry logic, redaction, and session reset."""
 
     def _make_state_and_slot(self, tmp_path):
-        from kiro_crew.dashboard.chat_runner import _run_chat
+        from aj_crew.dashboard.chat_runner import _run_chat
 
         state = _make_state(tmp_path)
         state.sessions.get_or_create = AsyncMock(return_value=(MagicMock(), False, False))
@@ -65,13 +65,13 @@ class TestAcpProcessDiedRecovery:
     @pytest.mark.asyncio
     async def test_partial_assistant_text_redacted(self, tmp_path: Path) -> None:
         """Pipe death mid-stream preserves redacted output and queues a continuation."""
-        from kiro_crew.acp.client import AcpProcessDied
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.acp.client import AcpProcessDied
+        from aj_crew.dashboard.chat_utils import (
             _CONN_RECOVER_MSG,
             SYNTHETIC_RECOVERY_KIND,
             RecoveryPayload,
         )
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         slot._titled = True
@@ -86,7 +86,7 @@ class TestAcpProcessDiedRecovery:
         client.stream_command = _stream_then_die
 
         with patch(
-            "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+            "aj_crew.dashboard.chat_runner._start_next_queued_turn",
             new_callable=AsyncMock,
             return_value=False,
         ):
@@ -113,7 +113,7 @@ class TestAcpProcessDiedRecovery:
     @pytest.mark.asyncio
     async def test_cancelled_error_redacts_partial_text(self, tmp_path: Path) -> None:
         """CancelledError mid-stream → partial output redacted before display."""
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
 
@@ -146,7 +146,7 @@ class TestRunChatTransientRetry:
 
     @staticmethod
     def _make_state(tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.push_slots_update = MagicMock()
@@ -235,7 +235,7 @@ class TestRunChatTransientRetry:
 
     @staticmethod
     def _binding_failure():
-        from kiro_crew.acp.client import _raise_acp_error
+        from aj_crew.acp.client import _raise_acp_error
 
         _raise_acp_error(
             {
@@ -253,9 +253,9 @@ class TestRunChatTransientRetry:
         deliberate decision in the EVENT_THINKING_CHUNK branch — if thinking
         ever starts being persisted, this guard must become a turn-emit to
         avoid a double-emit."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import (
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_THINKING_CHUNK,
@@ -320,9 +320,9 @@ class TestRunChatTransientRetry:
         turns must never accrue the discard streak (and so can never reach the
         canary/discard), even though they leave _turn_emitted False for retry
         purposes. Locks in the _turn_thought gate on _prestream_exhausted."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_THINKING_CHUNK, LLMEvent
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_THINKING_CHUNK, LLMEvent
 
         async def _think_then_die(msg):
             yield LLMEvent(kind=EVENT_THINKING_CHUNK, text="reasoning...")
@@ -362,10 +362,10 @@ class TestRunChatModelFallback:
         """The swap moves the LIVE session onto the candidate without a spawn,
         so the spawn-time cache would keep naming the primary; it must follow
         the provider's served model instead."""
-        from kiro_crew.dashboard.chat_runner import _fallback_swap_for_turn
+        from aj_crew.dashboard.chat_runner import _fallback_swap_for_turn
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._agent_fallback_chain",
+            "aj_crew.dashboard.chat_runner._agent_fallback_chain",
             lambda: ("fallback-model",),
         )
         state = self._make_state(tmp_path, monkeypatch)
@@ -394,10 +394,10 @@ class TestRunChatModelFallback:
         and swap all serialise on the same per-slot lock."""
         import asyncio
 
-        from kiro_crew.dashboard.chat_runner import _fallback_swap_for_turn
+        from aj_crew.dashboard.chat_runner import _fallback_swap_for_turn
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._agent_fallback_chain",
+            "aj_crew.dashboard.chat_runner._agent_fallback_chain",
             lambda: ("fallback-model",),
         )
         state = self._make_state(tmp_path, monkeypatch)
@@ -436,12 +436,12 @@ class TestRunChatModelFallback:
         With the lock pre-acquired the swap must not advance until release."""
         import asyncio
 
-        from kiro_crew.dashboard.chat_runner import _fallback_swap_for_turn
-        from kiro_crew.dashboard.chat_utils import effective_session_key
-        from kiro_crew.llm_helpers import slot_switch_session_lock
+        from aj_crew.dashboard.chat_runner import _fallback_swap_for_turn
+        from aj_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.llm_helpers import slot_switch_session_lock
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._agent_fallback_chain",
+            "aj_crew.dashboard.chat_runner._agent_fallback_chain",
             lambda: ("fallback-model",),
         )
         state = self._make_state(tmp_path, monkeypatch)
@@ -478,12 +478,12 @@ class TestRunChatModelFallback:
         fallback backoff sleep resolves while no prompt is active; without the
         post-sleep guard the cancelled prompt is requeued and executes on the
         fallback anyway."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.llm_helpers import TRANSIENT_RETRIES
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.llm_helpers import TRANSIENT_RETRIES
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._agent_fallback_chain",
+            "aj_crew.dashboard.chat_runner._agent_fallback_chain",
             lambda: ("fallback-model",),
         )
         call_count = 0
@@ -560,13 +560,13 @@ class TestRunChatModelFallback:
         """After the same-model budget exhausts, the session is moved onto the
         chain's candidate, the swap is ANNOUNCED as a persisted notice card,
         the turn recovers, and turn stats record the candidate."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.llm_helpers import TRANSIENT_RETRIES
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.llm_helpers import TRANSIENT_RETRIES
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._agent_fallback_chain",
+            "aj_crew.dashboard.chat_runner._agent_fallback_chain",
             lambda: ("fallback-model",),
         )
         call_count = 0
@@ -617,7 +617,7 @@ class TestRunChatModelFallback:
         # candidate. The mocked provider yields no duration, so the stats dict
         # itself is not attached here; the model field's attach contract is
         # already pinned by test_turn_stats.py::test_model_included_when_resolved.
-        from kiro_crew.dashboard.handlers.usage import read_turn_model
+        from aj_crew.dashboard.handlers.usage import read_turn_model
 
         assert read_turn_model(client) == "fallback-model"
 
@@ -626,11 +626,11 @@ class TestRunChatModelFallback:
         """REGRESSION PIN: with no chain configured, budget exhaustion surfaces
         the terminal ❌ exactly as before — no swap, no notice, no extra
         attempts."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.llm_helpers import TRANSIENT_RETRIES
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.llm_helpers import TRANSIENT_RETRIES
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
         call_count = 0
 
         async def _stream(msg):
@@ -660,12 +660,12 @@ class TestRunChatModelFallback:
         """Every candidate also fails: the terminal ❌ carries the chain's
         story (primary throttled + which fallbacks were tried), and each
         candidate got exactly two attempts."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.llm_helpers import TRANSIENT_RETRIES
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.llm_helpers import TRANSIENT_RETRIES
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._agent_fallback_chain",
+            "aj_crew.dashboard.chat_runner._agent_fallback_chain",
             lambda: ("fallback-model",),
         )
         call_count = 0
@@ -703,19 +703,19 @@ class TestRunChatModelFallback:
         from llm_helpers.fallback_rewound_transient_budget — not a re-encoded
         local constant. Patching the shared body to grant no extra pass drops
         the candidate to a single attempt."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.llm_helpers import TRANSIENT_RETRIES
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.llm_helpers import TRANSIENT_RETRIES
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._agent_fallback_chain",
+            "aj_crew.dashboard.chat_runner._agent_fallback_chain",
             lambda: ("fallback-model",),
         )
         # Rewind to the exhaustion threshold: the re-queued attempt runs, and
         # its failure immediately re-enters the fallback branch (no same-model
         # retry pass) — one attempt on the candidate instead of two.
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.fallback_rewound_transient_budget",
+            "aj_crew.dashboard.chat_runner.fallback_rewound_transient_budget",
             lambda: TRANSIENT_RETRIES,
         )
         call_count = 0
@@ -746,8 +746,8 @@ class TestRunChatModelFallback:
         """A sticky fallback from an earlier cycle is probed back to the
         primary at the start of the next genuine user turn — quietly (no
         chat card), clearing the sticky state on success."""
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         async def _stream(msg):
             yield LLMEvent(kind=EVENT_TEXT_CHUNK, text="ok-result")
@@ -778,8 +778,8 @@ class TestRunChatModelFallback:
     async def test_restore_probe_skipped_when_session_moved_on(self, tmp_path, monkeypatch):
         """If the session is not on our fallback (explicit user pick),
         the stale sticky state is dropped WITHOUT touching the model."""
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         async def _stream(msg):
             yield LLMEvent(kind=EVENT_TEXT_CHUNK, text="ok-result")
@@ -797,7 +797,7 @@ class TestRunChatModelFallback:
         # A stale provider marker from the abandoned fallback must be dropped
         # WITH the slot state — a surviving marker would re-seed the long-dead
         # primary into a later, unrelated fallback walk.
-        from kiro_crew.llm_helpers import TURN_FALLBACK_ATTR
+        from aj_crew.llm_helpers import TURN_FALLBACK_ATTR
 
         setattr(client, TURN_FALLBACK_ATTR, ("claude-test-model", "fallback-model"))
 
@@ -817,8 +817,8 @@ class TestRunChatModelFallback:
         model the session fell back to changes slot.model but not the served
         model — the probe must drop the sticky state without restoring the
         old primary over their pick."""
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         async def _stream(msg):
             yield LLMEvent(kind=EVENT_TEXT_CHUNK, text="ok-result")
@@ -860,8 +860,8 @@ class TestRunChatModelFallback:
         probe restores the primary, drops the sticky state, and heals
         slot.model back to the activation snapshot (else the fallback id would
         be re-sent as a pin on resume)."""
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         async def _stream(msg):
             yield LLMEvent(kind=EVENT_TEXT_CHUNK, text="ok-result")
@@ -900,8 +900,8 @@ class TestRunChatModelFallback:
         sticky state is not, so a gateway restart would turn the temporary
         fallback into a permanent pin. An unpinned slot stays unpinned for the
         fallback's duration."""
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         async def _stream(msg):
             yield LLMEvent(kind=EVENT_TEXT_CHUNK, text="ok-result")
@@ -1031,17 +1031,17 @@ class TestFallbackServedTurnAttribution:
     ):
         """A fallback-served turn on a deeply-wrapped provider still attributes
         its credits to the model that ran, instead of landing in ``unknown``."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.acp.types import TurnUsage
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.dashboard.handlers import usage as usage_mod
-        from kiro_crew.llm_helpers import TRANSIENT_RETRIES
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.client import AcpError
+        from aj_crew.acp.types import TurnUsage
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.handlers import usage as usage_mod
+        from aj_crew.llm_helpers import TRANSIENT_RETRIES
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         shard_dir = tmp_path / "usage" / "tokens"
         monkeypatch.setattr(usage_mod, "_TOKEN_USAGE_DIR", shard_dir)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._agent_fallback_chain",
+            "aj_crew.dashboard.chat_runner._agent_fallback_chain",
             lambda: ("fallback-model",),
         )
 
@@ -1098,10 +1098,10 @@ class TestFallbackServedTurnAttribution:
     @pytest.mark.asyncio
     async def test_non_fallback_turn_still_records_the_slot_model(self, tmp_path, monkeypatch):
         """With no fallback active the row keeps recording the slot's own model."""
-        from kiro_crew.acp.types import TurnUsage
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.dashboard.handlers import usage as usage_mod
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.types import TurnUsage
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.handlers import usage as usage_mod
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         shard_dir = tmp_path / "usage" / "tokens"
         monkeypatch.setattr(usage_mod, "_TOKEN_USAGE_DIR", shard_dir)
@@ -1135,10 +1135,10 @@ class TestFallbackServedTurnAttribution:
         switched, so the turn ran on what the provider serves. The row must name
         the served model, and the committed pick must survive — the backfill must
         not overwrite an Auto pick's "" with the served id."""
-        from kiro_crew.acp.types import TurnUsage
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.dashboard.handlers import usage as usage_mod
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.types import TurnUsage
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.handlers import usage as usage_mod
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         shard_dir = tmp_path / "usage" / "tokens"
         monkeypatch.setattr(usage_mod, "_TOKEN_USAGE_DIR", shard_dir)
@@ -1166,7 +1166,7 @@ class TestFallbackServedTurnAttribution:
         # tear down and rebuild a session it does not model. The completion's
         # attribution (the behaviour under test) has already run by then.
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._consume_pending_reset",
+            "aj_crew.dashboard.chat_runner._consume_pending_reset",
             AsyncMock(return_value=False),
         )
 
@@ -1197,10 +1197,10 @@ class TestFallbackServedTurnAttribution:
         can run on the PRIMARY with `_active_fallback_model` still set. The row names
         what the live provider serves.
         """
-        from kiro_crew.acp.types import TurnUsage
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.dashboard.handlers import usage as usage_mod
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.types import TurnUsage
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.handlers import usage as usage_mod
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         shard_dir = tmp_path / "usage" / "tokens"
         monkeypatch.setattr(usage_mod, "_TOKEN_USAGE_DIR", shard_dir)
@@ -1238,15 +1238,15 @@ class TestFallbackServedTurnAttribution:
     async def test_an_engine_turn_hop_bills_the_model_the_engine_ran(self, tmp_path, monkeypatch):
         """kiro-cli moved this one prompt off the pin: the pin stays on the slot,
         and the row names the model that answered (``engine_attributed_model``)."""
-        from kiro_crew.acp.engine_fallback import (
+        from aj_crew.acp.engine_fallback import (
             TRACKER_ATTR,
             EngineFallbackTracker,
             ModelFallbackNotice,
         )
-        from kiro_crew.acp.types import TurnUsage
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.dashboard.handlers import usage as usage_mod
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.types import TurnUsage
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.handlers import usage as usage_mod
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         shard_dir = tmp_path / "usage" / "tokens"
         monkeypatch.setattr(usage_mod, "_TOKEN_USAGE_DIR", shard_dir)
@@ -1283,15 +1283,15 @@ class TestFallbackServedTurnAttribution:
     ):
         """Crew put the turn on its fallback and kiro-cli then moved the prompt
         again: the engine's target answered, so it wins over Crew's fallback."""
-        from kiro_crew.acp.engine_fallback import (
+        from aj_crew.acp.engine_fallback import (
             TRACKER_ATTR,
             EngineFallbackTracker,
             ModelFallbackNotice,
         )
-        from kiro_crew.acp.types import TurnUsage
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.dashboard.handlers import usage as usage_mod
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.types import TurnUsage
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.handlers import usage as usage_mod
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         shard_dir = tmp_path / "usage" / "tokens"
         monkeypatch.setattr(usage_mod, "_TOKEN_USAGE_DIR", shard_dir)

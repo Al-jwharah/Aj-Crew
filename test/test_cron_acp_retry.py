@@ -8,8 +8,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.client import AcpError, AcpProcessDied
-from kiro_crew.cron import CronJob, CronSchedule
+from aj_crew.acp.client import AcpError, AcpProcessDied
+from aj_crew.cron import CronJob, CronSchedule
 
 
 @pytest.fixture
@@ -19,7 +19,7 @@ def gw_and_cb() -> tuple[Any, Callable[[], Any], Callable[..., Any]]:
     Uses __new__ to bypass __init__ and avoid Slack/dashboard dependencies.
     Update this fixture if GatewayOrchestrator gains new required attributes.
     """
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     gw = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gw.sessions = MagicMock()
@@ -80,10 +80,10 @@ class TestCronAcpRetry:
         )
 
         with (
-            patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=mock_stream),
-            patch("kiro_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.redact_credentials", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
+            patch("aj_crew.slack.gateway.stream_and_collect", side_effect=mock_stream),
+            patch("aj_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
+            patch("aj_crew.slack.gateway.redact_credentials", return_value=("", False)),
+            patch("aj_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
         ):
 
             async def _init_and_run() -> str:
@@ -124,10 +124,10 @@ class TestCronAcpRetry:
         )
 
         with (
-            patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=mock_stream),
-            patch("kiro_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.redact_credentials", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
+            patch("aj_crew.slack.gateway.stream_and_collect", side_effect=mock_stream),
+            patch("aj_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
+            patch("aj_crew.slack.gateway.redact_credentials", return_value=("", False)),
+            patch("aj_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
         ):
 
             async def _init_and_run() -> str:
@@ -163,10 +163,10 @@ class TestCronAcpRetry:
         )
 
         with (
-            patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=mock_stream),
-            patch("kiro_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.redact_credentials", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
+            patch("aj_crew.slack.gateway.stream_and_collect", side_effect=mock_stream),
+            patch("aj_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
+            patch("aj_crew.slack.gateway.redact_credentials", return_value=("", False)),
+            patch("aj_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
         ):
 
             async def _init_and_run() -> str:
@@ -202,10 +202,10 @@ class TestCronAcpRetry:
         )
 
         with (
-            patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=mock_stream),
-            patch("kiro_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.redact_credentials", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
+            patch("aj_crew.slack.gateway.stream_and_collect", side_effect=mock_stream),
+            patch("aj_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
+            patch("aj_crew.slack.gateway.redact_credentials", return_value=("", False)),
+            patch("aj_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
         ):
 
             async def _init_and_run() -> str:
@@ -248,11 +248,11 @@ class TestCronAcpRetry:
         )
 
         with (
-            patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=mock_stream),
-            patch("kiro_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.redact_credentials", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.asyncio.sleep", new=AsyncMock()),
-            patch("kiro_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
+            patch("aj_crew.slack.gateway.stream_and_collect", side_effect=mock_stream),
+            patch("aj_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
+            patch("aj_crew.slack.gateway.redact_credentials", return_value=("", False)),
+            patch("aj_crew.slack.gateway.asyncio.sleep", new=AsyncMock()),
+            patch("aj_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
         ):
 
             async def _init_and_run() -> str:
@@ -297,11 +297,11 @@ class TestCronAcpRetry:
         )
 
         with (
-            patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=mock_stream),
-            patch("kiro_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.redact_credentials", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.asyncio.sleep", new=AsyncMock()),
-            patch("kiro_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
+            patch("aj_crew.slack.gateway.stream_and_collect", side_effect=mock_stream),
+            patch("aj_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
+            patch("aj_crew.slack.gateway.redact_credentials", return_value=("", False)),
+            patch("aj_crew.slack.gateway.asyncio.sleep", new=AsyncMock()),
+            patch("aj_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
         ):
 
             async def _init_and_run() -> str:
@@ -334,10 +334,10 @@ class TestCronAcpRetry:
         )
 
         with (
-            patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=mock_stream),
-            patch("kiro_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.redact_credentials", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
+            patch("aj_crew.slack.gateway.stream_and_collect", side_effect=mock_stream),
+            patch("aj_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
+            patch("aj_crew.slack.gateway.redact_credentials", return_value=("", False)),
+            patch("aj_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
         ):
 
             async def _init_and_run() -> str:
@@ -375,10 +375,10 @@ class TestCronAcpRetry:
         )
 
         with (
-            patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=mock_stream),
-            patch("kiro_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.redact_credentials", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
+            patch("aj_crew.slack.gateway.stream_and_collect", side_effect=mock_stream),
+            patch("aj_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
+            patch("aj_crew.slack.gateway.redact_credentials", return_value=("", False)),
+            patch("aj_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
         ):
 
             async def _init_and_run() -> str:
@@ -424,12 +424,12 @@ class TestCronAcpRetry:
         )
 
         with (
-            patch("kiro_crew.slack.gateway.stream_and_collect", new=AsyncMock(return_value="x")),
-            patch("kiro_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.redact_credentials", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.transient_retry_delay", side_effect=backoff_delay),
+            patch("aj_crew.slack.gateway.stream_and_collect", new=AsyncMock(return_value="x")),
+            patch("aj_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
+            patch("aj_crew.slack.gateway.redact_credentials", return_value=("", False)),
+            patch("aj_crew.slack.gateway.transient_retry_delay", side_effect=backoff_delay),
             patch(
-                "kiro_crew.slack.gateway.CronService.create",
+                "aj_crew.slack.gateway.CronService.create",
                 new=AsyncMock(side_effect=capture_cron),
             ),
         ):
@@ -462,10 +462,10 @@ class TestCronAcpRetry:
         )
 
         with (
-            patch("kiro_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
-            patch("kiro_crew.slack.gateway.redact_credentials", return_value=("", False)),
+            patch("aj_crew.slack.gateway.redact_exfiltration_urls", return_value=("", False)),
+            patch("aj_crew.slack.gateway.redact_credentials", return_value=("", False)),
             patch(
-                "kiro_crew.slack.gateway.CronService.create",
+                "aj_crew.slack.gateway.CronService.create",
                 new=AsyncMock(side_effect=capture_cron),
             ),
         ):

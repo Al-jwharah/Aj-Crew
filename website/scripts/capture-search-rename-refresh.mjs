@@ -32,13 +32,13 @@ const ACTIVE = 'chat-active'
 const slots = [
   {
     key: ACTIVE, title: 'Deployment log', messages: 6, running: false,
-    agent: 'kirocrew', created: '2026-08-01T09:00:00Z', last_ts: '2026-08-13T10:00:00Z', folder_id: '',
+    agent: 'ajcrew', created: '2026-08-01T09:00:00Z', last_ts: '2026-08-13T10:00:00Z', folder_id: '',
   },
   {
     // The renamed session. Its title matches the query; the backend does not
     // know that yet, so only the local title match can surface it.
     key: 'chat-renamed', title: 'Quarterly review notes', messages: 42, running: false,
-    agent: 'kirocrew', created: '2026-07-02T09:00:00Z', last_ts: '2026-08-13T09:40:00Z', folder_id: '',
+    agent: 'ajcrew', created: '2026-07-02T09:00:00Z', last_ts: '2026-08-13T09:40:00Z', folder_id: '',
   },
   {
     // Matches the query on AGENT only. The backend deliberately excluded it, so

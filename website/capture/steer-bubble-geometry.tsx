@@ -31,7 +31,7 @@ import '../src/index.css'
 
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 /** Long enough to exceed the 550px bubble cap — the width that made the
  *  animation wrapper inflate. Mixed CJK + latin mirrors the reporting case. */

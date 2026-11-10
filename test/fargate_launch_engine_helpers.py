@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import json
 
-from kiro_crew.cloud import fargate_engine
-from kiro_crew.cloud.fargate import (
+from aj_crew.cloud import fargate_engine
+from aj_crew.cloud.fargate import (
     Placement,
     SecretRef,
     TaskDefinitionSpec,
@@ -18,7 +18,7 @@ from kiro_crew.cloud.fargate import (
     default_log_spec,
     revision_fingerprint,
 )
-from kiro_crew.cloud.fargate_engine import FargateLaunchSpec
+from aj_crew.cloud.fargate_engine import FargateLaunchSpec
 
 TAG = "kc-a1b2c3"
 ARN = "arn:aws:ecs:us-west-2:111122223333:task/crews/1111111111111111"
@@ -28,7 +28,7 @@ OTHER_ARN = "arn:aws:ecs:us-west-2:111122223333:task/crews/2222222222222222"
 #: The tag key carrying launch identity, as the CALLER supplies it. The engine
 #: module refuses to spell this key itself because the module that writes the tag
 #: owns it, so every test hands it over the same way production code must.
-LAUNCH_TAG_KEY = "kirocrew:launch"
+LAUNCH_TAG_KEY = "ajcrew:launch"
 
 #: A task id and ARN the REGISTRY can address, which ``ARN`` above deliberately is
 #: not: an ECS target's task id is 32 hex characters and the shared fixture's is
@@ -44,8 +44,8 @@ EXPECTED_TARGET = f"ecs:crews_{TASK_ID}_{RUNTIME_ID}"
 
 def _secret() -> SecretRef:
     return SecretRef(
-        name="kirocrew/crew/demo/KIRO_IDENTITY",
-        arn="arn:aws:secretsmanager:us-west-2:111122223333:secret:kirocrew/crew/demo/KIRO_IDENTITY-AbCdEf",
+        name="ajcrew/crew/demo/KIRO_IDENTITY",
+        arn="arn:aws:secretsmanager:us-west-2:111122223333:secret:ajcrew/crew/demo/KIRO_IDENTITY-AbCdEf",
     )
 
 
@@ -114,7 +114,7 @@ class _EcsDouble:
             fp = self.described_fingerprint
             if fp == "USE_REAL":
                 fp = revision_fingerprint(_spec_taskdef(region))
-            return {"tags": [{"key": "kirocrew:revision-key", "value": fp}]}
+            return {"tags": [{"key": "ajcrew:revision-key", "value": fp}]}
         if op == "list-tasks":
             # ListTasks documents startedBy as exclusive: "When you specify
             # startedBy as the filter, it must be the only filter that you use."
@@ -179,7 +179,7 @@ def _spec_taskdef(region: str):
 
 
 def _patch_aws(monkeypatch, double: _EcsDouble) -> None:
-    from kiro_crew.cloud import aws as aws_mod
+    from aj_crew.cloud import aws as aws_mod
 
     monkeypatch.setattr(aws_mod, "checked_json", double.checked_json)
     monkeypatch.setattr(aws_mod, "checked", double.checked)

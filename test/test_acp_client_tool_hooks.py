@@ -11,9 +11,9 @@ import pytest
 from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F401 - fixture
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
-import kiro_crew.acp.client as acp_client
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE, ACP_BACKEND_CODEX, ACP_BACKEND_OPENCODE
+import aj_crew.acp.client as acp_client
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE, ACP_BACKEND_CODEX, ACP_BACKEND_OPENCODE
 
 
 class TestAcpClientToolAudit:
@@ -103,7 +103,7 @@ class TestAcpClientToolAudit:
         monkeypatch.setattr(acp_client, "_SEL_AUDIT_TIMEOUT_SECONDS", 0.05)
         client = AcpClient(session_key="sk", audit_source="subagent")
         try:
-            with caplog.at_level("WARNING", logger="kiro_crew.acp.client"):
+            with caplog.at_level("WARNING", logger="aj_crew.acp.client"):
                 await client._maybe_audit_tool_call(self._ev())  # must not raise / hang
             # Returned via the wait_for bound, not the release: the swallowed
             # failure is the bound's TimeoutError.
@@ -137,7 +137,7 @@ class TestAcpClientUnaskedClaudeAutoAudit:
     @staticmethod
     def _client(**kw) -> AcpClient:
         kw.setdefault("permission_mode", "auto")
-        return AcpClient(session_key="sk", agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE, **kw)
+        return AcpClient(session_key="sk", agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE, **kw)
 
     @staticmethod
     def _result_ev(call_id="tc1", status="completed"):
@@ -145,7 +145,7 @@ class TestAcpClientUnaskedClaudeAutoAudit:
 
     @staticmethod
     def _permission_request(call_id="tc1"):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         return JsonRpcMessage(
             id=7,
@@ -166,7 +166,7 @@ class TestAcpClientUnaskedClaudeAutoAudit:
         assert len(calls) == 1
         row = calls[0]
         assert row["session_key"] == "sk"
-        assert row["agent"] == "kirocrew"
+        assert row["agent"] == "ajcrew"
         assert row["source"] == "acp"
         assert row["tool_name"] == "Bash"
         assert row["tool_kind"] == "execute"
@@ -288,7 +288,7 @@ class TestAcpClientUnaskedClaudeAutoAudit:
     @pytest.mark.asyncio
     async def test_the_stream_path_records_an_unasked_call(self, monkeypatch):
         """``_dispatch_events`` writes the row for a call that never asked."""
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         calls = self._sel_calls(monkeypatch)
         client = self._client()
@@ -342,7 +342,7 @@ class TestAcpClientZeroTools:
 
     @staticmethod
     def _permission_request(request_id: int = 1) -> "acp_client.JsonRpcMessage":
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         return JsonRpcMessage(
             id=request_id,
@@ -465,15 +465,15 @@ class TestEffectiveSpecDeclaresZeroTools:
     needs the authored spec to declare an empty list both before the spawn and after
     start."""
 
-    _ALIAS = "kirocrew-view-abc"
+    _ALIAS = "ajcrew-view-abc"
 
     @staticmethod
     def _client_with_projection(specs, errors=None) -> AcpClient:
-        from kiro_crew.acp.skill_projection import NativeSkillProjection
+        from aj_crew.acp.skill_projection import NativeSkillProjection
 
-        client = AcpClient(agent="kirocrew-knowledge")
+        client = AcpClient(agent="ajcrew-knowledge")
         client._native_skill_projection = NativeSkillProjection(
-            {"kirocrew-knowledge": TestEffectiveSpecDeclaresZeroTools._ALIAS} if specs else {},
+            {"ajcrew-knowledge": TestEffectiveSpecDeclaresZeroTools._ALIAS} if specs else {},
             specs,
             errors or {},
         )
@@ -482,7 +482,7 @@ class TestEffectiveSpecDeclaresZeroTools:
     @classmethod
     def _publish(cls, spec: object) -> None:
         """Write the alias file the harness loads, where the projection publishes it."""
-        from kiro_crew.acp import skill_projection
+        from aj_crew.acp import skill_projection
 
         agents = skill_projection.kiro_agents_dir()
         agents.mkdir(parents=True, exist_ok=True)
@@ -491,7 +491,7 @@ class TestEffectiveSpecDeclaresZeroTools:
     def test_an_empty_projected_view_is_confirmed(self):
         self._publish({"name": self._ALIAS, "tools": [], "includeMcpJson": False})
         client = self._client_with_projection(
-            {"kirocrew-knowledge": {"name": self._ALIAS, "tools": [], "includeMcpJson": False}},
+            {"ajcrew-knowledge": {"name": self._ALIAS, "tools": [], "includeMcpJson": False}},
         )
         assert client.effective_spec_declares_zero_tools() is True
 
@@ -506,64 +506,64 @@ class TestEffectiveSpecDeclaresZeroTools:
         view was prepared refuses even though the view itself is still empty."""
         self._publish(published)
         client = self._client_with_projection(
-            {"kirocrew-knowledge": {"name": self._ALIAS, "tools": [], "includeMcpJson": False}},
+            {"ajcrew-knowledge": {"name": self._ALIAS, "tools": [], "includeMcpJson": False}},
         )
         assert client.effective_spec_declares_zero_tools() is False
         assert client.effective_spec_declares_zero_tools(authored_before_spawn=True) is False
 
     def test_an_empty_view_whose_published_file_is_missing_is_not_confirmed(self):
         client = self._client_with_projection(
-            {"kirocrew-knowledge": {"name": self._ALIAS, "tools": [], "includeMcpJson": False}},
+            {"ajcrew-knowledge": {"name": self._ALIAS, "tools": [], "includeMcpJson": False}},
         )
         assert client.effective_spec_declares_zero_tools() is False
 
     def test_an_empty_view_with_no_alias_for_the_agent_is_not_confirmed(self):
-        from kiro_crew.acp.skill_projection import NativeSkillProjection
+        from aj_crew.acp.skill_projection import NativeSkillProjection
 
         self._publish({"name": self._ALIAS, "tools": [], "includeMcpJson": False})
-        client = AcpClient(agent="kirocrew-knowledge")
+        client = AcpClient(agent="ajcrew-knowledge")
         client._native_skill_projection = NativeSkillProjection(
-            {}, {"kirocrew-knowledge": {"name": self._ALIAS, "tools": [], "includeMcpJson": False}}
+            {}, {"ajcrew-knowledge": {"name": self._ALIAS, "tools": [], "includeMcpJson": False}}
         )
         assert client.effective_spec_declares_zero_tools() is False
 
     def test_a_projected_view_carrying_a_tool_is_not_confirmed(self):
         client = self._client_with_projection(
             {
-                "kirocrew-knowledge": {
-                    "name": "kirocrew-view-abc",
-                    "tools": ["@kirocrew-core/skill_search"],
+                "ajcrew-knowledge": {
+                    "name": "ajcrew-view-abc",
+                    "tools": ["@ajcrew-core/skill_search"],
                 }
             },
         )
         assert client.effective_spec_declares_zero_tools() is False
 
     def test_a_projected_view_without_a_tools_list_is_not_confirmed(self):
-        client = self._client_with_projection({"kirocrew-knowledge": {"name": "kirocrew-view-abc"}})
+        client = self._client_with_projection({"ajcrew-knowledge": {"name": "ajcrew-view-abc"}})
         assert client.effective_spec_declares_zero_tools() is False
 
     def test_a_non_list_tools_value_is_not_confirmed(self):
         client = self._client_with_projection(
-            {"kirocrew-knowledge": {"name": "kirocrew-view-abc", "tools": "none"}}
+            {"ajcrew-knowledge": {"name": "ajcrew-view-abc", "tools": "none"}}
         )
         assert client.effective_spec_declares_zero_tools() is False
 
     def test_a_projection_with_an_error_for_the_agent_is_not_confirmed(self):
         client = self._client_with_projection(
-            {}, errors={"kirocrew-knowledge": "skill_search is disabled"}
+            {}, errors={"ajcrew-knowledge": "skill_search is disabled"}
         )
         assert client.effective_spec_declares_zero_tools() is False
 
     def test_a_projection_with_no_view_for_the_agent_is_not_confirmed(self):
         client = self._client_with_projection(
-            {"another-agent": {"name": "kirocrew-view-def", "tools": [], "includeMcpJson": False}}
+            {"another-agent": {"name": "ajcrew-view-def", "tools": [], "includeMcpJson": False}}
         )
         assert client.effective_spec_declares_zero_tools() is False
 
     def test_no_projection_without_a_pre_spawn_read_is_not_confirmed(self, monkeypatch):
         """No pre-spawn confirmation means the bracket is not met, whatever the
         authored spec says now; the post-start read is not even needed."""
-        client = AcpClient(agent="kirocrew-knowledge")
+        client = AcpClient(agent="ajcrew-knowledge")
         client._native_skill_projection = None
         monkeypatch.setattr(
             acp_client,
@@ -574,7 +574,7 @@ class TestEffectiveSpecDeclaresZeroTools:
         assert client.effective_spec_declares_zero_tools(authored_before_spawn=False) is False
 
     def test_a_client_that_never_prepared_a_projection_uses_the_bracket(self, monkeypatch):
-        client = AcpClient(agent="kirocrew-knowledge")
+        client = AcpClient(agent="ajcrew-knowledge")
         assert not hasattr(client, "_native_skill_projection")
         monkeypatch.setattr(
             acp_client,
@@ -585,7 +585,7 @@ class TestEffectiveSpecDeclaresZeroTools:
         assert client.effective_spec_declares_zero_tools(authored_before_spawn=True) is True
 
     def test_no_projection_with_both_reads_empty_is_confirmed(self, monkeypatch):
-        client = AcpClient(agent="kirocrew-knowledge")
+        client = AcpClient(agent="ajcrew-knowledge")
         client._native_skill_projection = None
         monkeypatch.setattr(
             acp_client,
@@ -597,18 +597,18 @@ class TestEffectiveSpecDeclaresZeroTools:
     def test_no_projection_with_a_spec_changed_after_the_pre_spawn_read_is_not_confirmed(
         self, tmp_path, monkeypatch
     ):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         agents = tmp_path / "project" / ".kiro" / "agents"
         agents.mkdir(parents=True)
-        spec_path = agents / "kirocrew-knowledge.json"
+        spec_path = agents / "ajcrew-knowledge.json"
         spec_path.write_text(
-            json.dumps({"name": "kirocrew-knowledge", "tools": [], "includeMcpJson": False})
+            json.dumps({"name": "ajcrew-knowledge", "tools": [], "includeMcpJson": False})
         )
-        client = AcpClient(agent="kirocrew-knowledge", work_dir=tmp_path / "project")
+        client = AcpClient(agent="ajcrew-knowledge", work_dir=tmp_path / "project")
         client._native_skill_projection = None
         before = client.authored_spec_declares_zero_tools()
         assert before is True
-        spec_path.write_text(json.dumps({"name": "kirocrew-knowledge", "tools": ["@builtin"]}))
+        spec_path.write_text(json.dumps({"name": "ajcrew-knowledge", "tools": ["@builtin"]}))
         assert client.effective_spec_declares_zero_tools(authored_before_spawn=before) is False
 
     @pytest.mark.parametrize(
@@ -618,14 +618,14 @@ class TestEffectiveSpecDeclaresZeroTools:
     def test_no_projection_with_an_unconfirming_authored_spec_is_not_confirmed(
         self, monkeypatch, snapshot
     ):
-        client = AcpClient(agent="kirocrew-knowledge")
+        client = AcpClient(agent="ajcrew-knowledge")
         client._native_skill_projection = None
         monkeypatch.setattr(acp_client, "agent_spec_snapshot", lambda *_a, **_k: snapshot)
         assert client.effective_spec_declares_zero_tools(authored_before_spawn=True) is False
 
     def test_a_projected_view_with_tools_ignores_the_authored_spec(self, monkeypatch):
         client = self._client_with_projection(
-            {"kirocrew-knowledge": {"name": "v", "tools": ["@builtin"]}}
+            {"ajcrew-knowledge": {"name": "v", "tools": ["@builtin"]}}
         )
         monkeypatch.setattr(
             acp_client,
@@ -637,7 +637,7 @@ class TestEffectiveSpecDeclaresZeroTools:
     def test_a_zero_tool_projected_view_ignores_the_authored_spec(self, monkeypatch):
         self._publish({"name": self._ALIAS, "tools": [], "includeMcpJson": False})
         client = self._client_with_projection(
-            {"kirocrew-knowledge": {"name": "v", "tools": [], "includeMcpJson": False}}
+            {"ajcrew-knowledge": {"name": "v", "tools": [], "includeMcpJson": False}}
         )
         monkeypatch.setattr(
             acp_client, "agent_spec_snapshot", lambda *_a, **_k: {"tools": ["@builtin"]}
@@ -649,11 +649,11 @@ class TestEffectiveSpecDeclaresZeroTools:
         """With a projection the answer rests on the captured view and the published
         file: a resolver that raises and an authored spec carrying tools on disk
         leave a zero-tool view whose published file is empty confirmed."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         project_agents = tmp_path / "project" / ".kiro" / "agents"
         project_agents.mkdir(parents=True)
-        (project_agents / "kirocrew-knowledge.json").write_text(
-            json.dumps({"name": "kirocrew-knowledge", "tools": ["@builtin"]})
+        (project_agents / "ajcrew-knowledge.json").write_text(
+            json.dumps({"name": "ajcrew-knowledge", "tools": ["@builtin"]})
         )
 
         def _boom(*_args, **_kwargs):
@@ -662,7 +662,7 @@ class TestEffectiveSpecDeclaresZeroTools:
         monkeypatch.setattr(acp_client, "agent_spec_snapshot", _boom)
         self._publish({"name": self._ALIAS, "tools": [], "includeMcpJson": False})
         client = self._client_with_projection(
-            {"kirocrew-knowledge": {"name": self._ALIAS, "tools": [], "includeMcpJson": False}}
+            {"ajcrew-knowledge": {"name": self._ALIAS, "tools": [], "includeMcpJson": False}}
         )
         assert client.effective_spec_declares_zero_tools() is True
         assert client.effective_spec_declares_zero_tools(authored_before_spawn=True) is True
@@ -674,7 +674,7 @@ class TestAuthoredSpecDeclaresZeroTools:
 
     @staticmethod
     def _client(work_dir=None) -> AcpClient:
-        return AcpClient(agent="kirocrew-knowledge", work_dir=work_dir)
+        return AcpClient(agent="ajcrew-knowledge", work_dir=work_dir)
 
     @pytest.mark.parametrize(
         ("snapshot", "expected"),
@@ -698,7 +698,7 @@ class TestAuthoredSpecDeclaresZeroTools:
             raise OSError("unreadable")
 
         monkeypatch.setattr(acp_client, "agent_spec_snapshot", _boom)
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.client"):
+        with caplog.at_level("WARNING", logger="aj_crew.acp.client"):
             assert self._client().authored_spec_declares_zero_tools() is False
         assert any("unreadable" in r.getMessage() for r in caplog.records)
 
@@ -711,29 +711,29 @@ class TestAuthoredSpecDeclaresZeroTools:
 
         monkeypatch.setattr(acp_client, "agent_spec_snapshot", _snap)
         assert self._client(tmp_path).authored_spec_declares_zero_tools() is True
-        assert seen == {"agent": "kirocrew-knowledge", "work_dir": tmp_path}
+        assert seen == {"agent": "ajcrew-knowledge", "work_dir": tmp_path}
 
     def test_the_project_spec_wins_over_the_user_level_one(self, tmp_path, monkeypatch):
         """Project-nearest, as the harness resolves ``--agent``: a project spec
         carrying tools is judged even though the user-level one is empty."""
-        from kiro_crew import agent as agent_mod
-        from kiro_crew.acp import session_mcp
+        from aj_crew import agent as agent_mod
+        from aj_crew.acp import session_mcp
 
         user_agents = tmp_path / "agents"
         user_agents.mkdir()
         monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", user_agents)
         monkeypatch.setattr(session_mcp, "ensure_agent_materialized", lambda _a: True)
-        (user_agents / "kirocrew-knowledge.json").write_text(
-            json.dumps({"name": "kirocrew-knowledge", "tools": [], "includeMcpJson": False})
+        (user_agents / "ajcrew-knowledge.json").write_text(
+            json.dumps({"name": "ajcrew-knowledge", "tools": [], "includeMcpJson": False})
         )
         project = tmp_path / "project"
         project_agents = project / ".kiro" / "agents"
         project_agents.mkdir(parents=True)
-        (project_agents / "kirocrew-knowledge.json").write_text(
-            json.dumps({"name": "kirocrew-knowledge", "tools": ["@builtin"]})
+        (project_agents / "ajcrew-knowledge.json").write_text(
+            json.dumps({"name": "ajcrew-knowledge", "tools": ["@builtin"]})
         )
         assert self._client(project).authored_spec_declares_zero_tools() is False
-        (project_agents / "kirocrew-knowledge.json").unlink()
+        (project_agents / "ajcrew-knowledge.json").unlink()
         assert self._client(project).authored_spec_declares_zero_tools() is True
 
 
@@ -1057,7 +1057,7 @@ class TestSpecIsToolless:
         ],
     )
     def test_an_empty_spec_is_toolless(self, extra):
-        from kiro_crew.acp.client_mcp_array import spec_is_toolless
+        from aj_crew.acp.client_mcp_array import spec_is_toolless
 
         assert spec_is_toolless({**self._EMPTY, **extra}) is True
 
@@ -1081,17 +1081,17 @@ class TestSpecIsToolless:
         ],
     )
     def test_anything_mounted_is_not_toolless(self, change):
-        from kiro_crew.acp.client_mcp_array import spec_is_toolless
+        from aj_crew.acp.client_mcp_array import spec_is_toolless
 
         assert spec_is_toolless({**self._EMPTY, **change}) is False
 
     def test_a_missing_include_mcp_json_is_not_toolless(self):
-        from kiro_crew.acp.client_mcp_array import spec_is_toolless
+        from aj_crew.acp.client_mcp_array import spec_is_toolless
 
         assert spec_is_toolless({"tools": [], "mcpServers": {}}) is False
 
     @pytest.mark.parametrize("spec", [None, [], "tools", {}])
     def test_a_non_spec_is_not_toolless(self, spec):
-        from kiro_crew.acp.client_mcp_array import spec_is_toolless
+        from aj_crew.acp.client_mcp_array import spec_is_toolless
 
         assert spec_is_toolless(spec) is False

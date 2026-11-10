@@ -33,7 +33,7 @@ mkdirSync(OUT, { recursive: true })
 const noop = () => {}
 const deps = (isMac) => ({
   isMac,
-  appName: 'Kiro Crew',
+  appName: 'Aj Crew',
   openSettings: noop,
   openAbout: noop,
   reload: noop,
@@ -91,7 +91,7 @@ const rows = toRows(winItems)
 // chat route a couple of seconds in and the whole <header> unmounts, taking the
 // titlebar rail with it - which reads as the menu refusing to open.
 const SLOTS = [
-  { key: 'chat-1-a', title: 'Settings accelerator', running: false, messages: 2, agent: 'kirocrew', last_ts: new Date().toISOString() },
+  { key: 'chat-1-a', title: 'Settings accelerator', running: false, messages: 2, agent: 'ajcrew', last_ts: new Date().toISOString() },
 ]
 
 const { srv, base } = await serveDist(process.env.DIST || DEFAULT_DIST)
@@ -111,7 +111,7 @@ for (const theme of ['light', 'dark']) {
   // ErrorBoundary crash with an empty header, which looks like the menu refusing
   // to open rather than like a missing stub.
   await page.addInitScript(([menuRows]) => {
-    window.kirocrew = { isElectron: true, platform: 'win32' }
+    window.ajcrew = { isElectron: true, platform: 'win32' }
     window.electronAPI = {
       getAppMenuItems: async (id) => (id === 'file-menu' ? menuRows : []),
       executeAppMenuItem: () => {},

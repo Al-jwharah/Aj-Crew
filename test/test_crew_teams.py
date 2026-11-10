@@ -1,6 +1,6 @@
 """Crewmate teams: the ``crew-teams/teams.json`` store and the ``/api/teams`` routes.
 
-``KIROCREW_HOME`` is pinned per test by the autouse ``_isolate_kirocrew_home``
+``AJCREW_HOME`` is pinned per test by the autouse ``_isolate_ajcrew_home``
 fixture in conftest, so every store read and write here lands in a temp home.
 """
 
@@ -17,9 +17,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import crew_teams as teams
-from kiro_crew import members as members_mod
-from kiro_crew.config.loader import KiroCrewAgentConfig
+from aj_crew import crew_teams as teams
+from aj_crew import members as members_mod
+from aj_crew.config.loader import AjCrewAgentConfig
 
 RADAR = "Radar"
 FIXER = "Fixer"
@@ -76,8 +76,8 @@ class TestTeamsStore:
         crewmates must not be able to rewrite it: masked from every sandboxed
         process (and pre-created so the mask is never vacuous) and fenced from
         agent file tools. Under ``trust/`` it would be sandbox read-write."""
-        from kiro_crew import sandbox
-        from kiro_crew.security import paths as security_paths
+        from aj_crew import sandbox
+        from aj_crew.security import paths as security_paths
 
         leaf = teams.TEAMS_DIR_NAME
         assert leaf in sandbox._CREW_HIDDEN_LEAVES
@@ -246,7 +246,7 @@ class TestTeamsStore:
         assert teams.read_teams()[0].members == [RADAR, FIXER]
 
     def test_writers_hold_a_cross_process_file_lock(self):
-        """``kirocrew agents delete`` writes from ANOTHER process, which the
+        """``ajcrew agents delete`` writes from ANOTHER process, which the
         threading lock cannot reach: every read -> mutate -> rewrite also holds
         the advisory lock on the directory's lock file. A real second process
         holds it here, on every platform, and the store's write fails closed
@@ -260,7 +260,7 @@ class TestTeamsStore:
         assert lock_path.exists()
         holder_src = (
             "import sys\n"
-            "from kiro_crew import platform_compat\n"
+            "from aj_crew import platform_compat\n"
             "with platform_compat.open_lock_file(sys.argv[1]) as fd:\n"
             "    with platform_compat.file_lock(fd, exclusive=True, wait=True):\n"
             "        print('held', flush=True)\n"
@@ -517,7 +517,7 @@ class TestTeamsStore:
 
 
 def _make_app() -> web.Application:
-    from kiro_crew.dashboard.handlers.teams import (
+    from aj_crew.dashboard.handlers.teams import (
         api_teams_create,
         api_teams_delete,
         api_teams_list,
@@ -539,16 +539,16 @@ def _make_app() -> web.Application:
 
 
 def _fake_config():
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig()
-    cfg.agents = {name: KiroCrewAgentConfig(kiro_agent="kirocrew") for name in sorted(KNOWN)}
+    cfg = AjCrewConfig()
+    cfg.agents = {name: AjCrewAgentConfig(kiro_agent="ajcrew") for name in sorted(KNOWN)}
     return cfg
 
 
 def _patched_config():
     return patch(
-        "kiro_crew.dashboard.handlers.teams.KiroCrewConfig.load", return_value=_fake_config()
+        "aj_crew.dashboard.handlers.teams.AjCrewConfig.load", return_value=_fake_config()
     )
 
 
@@ -557,7 +557,7 @@ def _as_owner():
     the deny path is exercised by the repo-wide owner-gate invariant walk, so
     these tests patch the gate open to test the handlers' own contracts."""
     return patch(
-        "kiro_crew.dashboard.handlers.teams.require_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.teams.require_owner_dashboard_request",
         new=AsyncMock(return_value=None),
     )
 
@@ -568,7 +568,7 @@ class TestBackupCoverage:
     that silently dropped every team is the failure these pin."""
 
     def test_the_store_is_a_snapshot_component_restored_as_a_whole_tree(self):
-        from kiro_crew import snapshot as snap
+        from aj_crew import snapshot as snap
 
         assert snap.COMPONENTS["crew-teams"].trees == (teams.TEAMS_DIR_NAME,)
         assert "crew-teams" in snap._WHOLE_TREE_COMPONENTS
@@ -586,7 +586,7 @@ class TestBackupCoverage:
         file the shape check would admit but `read_teams` refuses -- a bad id, an
         over-cap name, a newer version -- never installs. Absent destination on
         merge installs and is checked; a present destination is left alone."""
-        from kiro_crew import snapshot as snap
+        from aj_crew import snapshot as snap
 
         bundle = tmp_path / "bundle"
         (bundle / teams.TEAMS_DIR_NAME).mkdir(parents=True)
@@ -620,7 +620,7 @@ class TestBackupCoverage:
         """A crafted bundle with `crew-teams/teams.json/` (a directory) or a link at
         that name is refused in every mode, never read as "absent" and installed over
         the live document."""
-        from kiro_crew import snapshot as snap
+        from aj_crew import snapshot as snap
 
         bundle = tmp_path / "bundle"
         (bundle / teams.TEAMS_DIR_NAME / teams.TEAMS_FILE_NAME).mkdir(parents=True)
@@ -831,8 +831,8 @@ class TestBackupCoverage:
         """The rollback copy is staged beside its name and renamed in only when the
         copy completed, so a failed copy leaves NO file where recovery reads -- and
         the live document, which the install never reached, stays as it was."""
-        from kiro_crew import pinned_fs
-        from kiro_crew import snapshot as snap
+        from aj_crew import pinned_fs
+        from aj_crew import snapshot as snap
 
         teams.create_team("Docs", [RADAR], known=lambda: KNOWN)
         store = teams.teams_path().parent
@@ -857,7 +857,7 @@ class TestBackupCoverage:
         """The snapshot's replace mutation goes through the locked installer: the
         document changes, the directory and lock file are the same inodes, and a
         bundle tree that carries no document removes the live one."""
-        from kiro_crew import snapshot as snap
+        from aj_crew import snapshot as snap
 
         teams.create_team("Docs", [RADAR], known=lambda: KNOWN)
         store = teams.teams_path().parent
@@ -895,7 +895,7 @@ class TestBackupCoverage:
         shape, not a legacy one. A full replace from it must leave the destination
         with no teams either: the old document goes, is saved for rollback, and the
         directory and lock file stay put."""
-        from kiro_crew import snapshot as snap
+        from aj_crew import snapshot as snap
 
         teams.create_team("Docs", [RADAR], known=lambda: KNOWN)
         store = teams.teams_path().parent
@@ -921,14 +921,14 @@ class TestBackupCoverage:
         `_do_replace` moves anything -- the same reader, the same refusal."""
         import zipfile
 
-        from kiro_crew import portability
-        from kiro_crew import snapshot as snap
+        from aj_crew import portability
+        from aj_crew import snapshot as snap
 
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w") as zf:
-            zf.writestr("kirocrew-export-x/config.json", json.dumps({"agents": {}}))
+            zf.writestr("ajcrew-export-x/config.json", json.dumps({"agents": {}}))
             zf.writestr(
-                f"kirocrew-export-x/{teams.TEAMS_DIR_NAME}/{teams.TEAMS_FILE_NAME}",
+                f"ajcrew-export-x/{teams.TEAMS_DIR_NAME}/{teams.TEAMS_FILE_NAME}",
                 json.dumps({"version": 1, "teams": [{"id": "bad", "name": "A", "members": []}]}),
             )
         home = teams.teams_path().parent.parent
@@ -943,7 +943,7 @@ class TestBackupCoverage:
     def test_the_export_zip_carries_the_document_and_not_the_lock(self):
         import zipfile
 
-        from kiro_crew import portability
+        from aj_crew import portability
 
         teams.create_team("Issue triage", [RADAR], known=lambda: KNOWN)
         home = teams.teams_path().parent.parent
@@ -1001,14 +1001,14 @@ class TestTeamsRoutes:
         """``_known_crews`` is the roster's filter: a free-form display name is
         a known crew; a stored name the roster hides (credential-shaped, or one
         failing the display-name rule) is ``unknown_member`` on every write."""
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         eggbot, hidden = "dr. eggbot", "AKIAIOSFODNN7EXAMPLE"
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agents = {
-            name: KiroCrewAgentConfig(kiro_agent="kirocrew") for name in (eggbot, hidden, RADAR)
+            name: AjCrewAgentConfig(kiro_agent="ajcrew") for name in (eggbot, hidden, RADAR)
         }
-        patched = patch("kiro_crew.dashboard.handlers.teams.KiroCrewConfig.load", return_value=cfg)
+        patched = patch("aj_crew.dashboard.handlers.teams.AjCrewConfig.load", return_value=cfg)
         with _as_owner(), patched:
             async with TestClient(TestServer(_make_app())) as client:
                 resp = await client.post(
@@ -1024,7 +1024,7 @@ class TestTeamsRoutes:
     async def test_an_owner_write_records_the_allow_in_sel(self):
         """The shared gate audits only a denial; the owner's allow on a team
         write is a permission decision too and is recorded (non-fatally)."""
-        with _as_owner(), _patched_config(), patch("kiro_crew.sel.sel") as mock_sel:
+        with _as_owner(), _patched_config(), patch("aj_crew.sel.sel") as mock_sel:
             async with TestClient(TestServer(_make_app())) as client:
                 resp = await client.post("/api/teams", json={"name": "Docs", "members": [RADAR]})
                 assert resp.status == 201
@@ -1113,7 +1113,7 @@ class TestTeamsRoutes:
 
         with (
             patch(
-                "kiro_crew.dashboard.handlers.teams.require_owner_dashboard_request",
+                "aj_crew.dashboard.handlers.teams.require_owner_dashboard_request",
                 new=AsyncMock(side_effect=_refuse),
             ),
             _patched_config(),

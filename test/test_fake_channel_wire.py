@@ -14,9 +14,9 @@ import aiohttp
 import pytest
 from aiohttp import ClientResponse
 
-from kiro_crew.teams.client import TeamsClient, TeamsSendError
-from kiro_crew.testing.channel_fixtures import load_fixture
-from kiro_crew.testing.fake_channel_wire import (
+from aj_crew.teams.client import TeamsClient, TeamsSendError
+from aj_crew.testing.channel_fixtures import load_fixture
+from aj_crew.testing.fake_channel_wire import (
     FakeWireSession,
     UnroutedRequestError,
     WireResponse,

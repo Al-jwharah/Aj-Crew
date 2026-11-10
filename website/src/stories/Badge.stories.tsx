@@ -37,7 +37,7 @@ export const Sources: Story = {
   render: () => (
     <div className="flex flex-wrap items-center gap-3">
       <SourceBadge source="package" />
-      <SourceBadge source="kirocrew" />
+      <SourceBadge source="ajcrew" />
       <SourceBadge source="project" />
       <SourceBadge source="somewhere-else" />
     </div>

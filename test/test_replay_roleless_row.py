@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.context import _recall_rows, build_session_replay
+from aj_crew.context import _recall_rows, build_session_replay
 
 
 class _Log:

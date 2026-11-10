@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.security import BUILTIN_DENIED_RULES
-from kiro_crew.security import argv_floor as _argv_floor
-from kiro_crew.security import is_denied
+from aj_crew.security import BUILTIN_DENIED_RULES
+from aj_crew.security import argv_floor as _argv_floor
+from aj_crew.security import is_denied
 
 # Captured at import, before the autouse fixture stubs the module attribute:
 # the alias-layer tests re-bind this real function and stub the resolver
@@ -53,7 +53,7 @@ def _own_address_probe_stays_local(_floor_monkeypatch):
 
     The first ``is_denied("ssh ...")`` in the process runs ``_own_host_seed``
     (which calls ``_own_interface_addresses``) and, once the backoff allows,
-    starts the ``kirocrew-own-host-resolve`` DNS worker. Whichever test happens
+    starts the ``ajcrew-own-host-resolve`` DNS worker. Whichever test happens
     to run first then carries a real routing-table probe and a daemon thread
     doing real name resolution. Pin both at module level: the probe socket
     stays packet-less and local, and the worker backoff is pushed out so no
@@ -85,8 +85,8 @@ def _own_address_probe_stays_local(_floor_monkeypatch):
 _K = "k" + "ill"
 _PK = "p" + _K
 _KA = _K + "all"
-_NAME = "kiro" + "crew"
-_HYPH = "kiro-" + "crew"
+_NAME = "aj" + "crew"
+_HYPH = "aj-" + "crew"
 _TOK = "to" + "ken"
 
 _RULE_KILL = "self-protection-" + _K

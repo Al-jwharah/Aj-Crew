@@ -9,7 +9,7 @@ seccomp-install time with ``ModuleNotFoundError``, so every sandboxed spawn died
 inside the launcher. The isolation probe in Auto-Improvement then read that crash
 as "push is not disabled".
 
-The launcher is ``kiro_crew.sandbox_launcher_program``; a spawn runs that module's
+The launcher is ``aj_crew.sandbox_launcher_program``; a spawn runs that module's
 source with one plan line substituted. These tests run it:
 
 * in a fresh isolated interpreter with every further import DENIED once the program
@@ -39,7 +39,7 @@ from pathlib import Path
 import pytest
 from test_sandbox_launcher_program import RecordingLibc, launch, payload, refusal
 
-from kiro_crew import sandbox_launcher, sandbox_launcher_program, sandbox_plan
+from aj_crew import sandbox_launcher, sandbox_launcher_program, sandbox_plan
 
 program = sandbox_launcher_program
 
@@ -170,7 +170,7 @@ def test_no_stage_imports_once_the_launcher_has_loaded(tmp_path: Path) -> None:
         gid=os.getgid(),
     )
     plan = sandbox_plan.plan_confinement(sandbox_plan.SandboxRequest(tier="strict"), host)
-    script = _render(tmp_path, plan, "kirocrew_sandbox_imports.py")
+    script = _render(tmp_path, plan, "ajcrew_sandbox_imports.py")
     stand_ins = tmp_path / "stand-ins"
     aside = tmp_path / "under-masks"
     stand_ins.mkdir()
@@ -219,7 +219,7 @@ def test_syspath_purge_precedes_every_filesystem_import(tmp_path: Path) -> None:
     plan = sandbox_plan.plan_confinement(
         sandbox_plan.SandboxRequest(tier="strict"), sandbox_plan.PlanHost(home=str(tmp_path))
     )
-    script = _render(tmp_path, plan, "kirocrew_sandbox_shadowed.py")
+    script = _render(tmp_path, plan, "ajcrew_sandbox_shadowed.py")
     for name in _LAUNCHER_IMPORTS:
         (script.parent / f"{name}.py").write_text(
             "import sys\n"
@@ -312,7 +312,7 @@ _EMITTERS = {
 
 def test_every_probe_failure_marker_has_a_launcher_failure_behind_it() -> None:
     """The prefix list and the failures below are one set, so a new prefix gets one too."""
-    from kiro_crew.apps.builtins.auto_improvement.backend.clone_setup import (
+    from aj_crew.apps.builtins.auto_improvement.backend.clone_setup import (
         _LAUNCHER_EXIT_PREFIXES,
     )
 
@@ -349,10 +349,10 @@ def test_the_traceback_marker_matches_the_launcher_filename() -> None:
     ``mkstemp`` is passed -- never a pin on how ``sandbox_argv.py`` spells that call, which
     would fail on any refactor of the writer while real drift went unnoticed.
     """
-    from kiro_crew.apps.builtins.auto_improvement.backend.clone_setup import (
+    from aj_crew.apps.builtins.auto_improvement.backend.clone_setup import (
         _LAUNCHER_TRACEBACK_RE,
     )
-    from kiro_crew.sandbox import (
+    from aj_crew.sandbox import (
         _LAUNCHER_SCRIPT_SUFFIX,
         _SANDBOX_ARTIFACT_PREFIX,
         namespace_launcher_script_dir,
@@ -372,5 +372,5 @@ def test_the_traceback_marker_matches_the_launcher_filename() -> None:
     assert _LAUNCHER_TRACEBACK_RE.search(f"fatal: could not read {launcher_path}") is None
     # The regex is keyed on THAT prefix and not on any crew-looking name, so a frame from
     # a differently-named file is not classified as a launcher death.
-    other = launcher_path.replace(_SANDBOX_ARTIFACT_PREFIX, "kirocrew_other_")
+    other = launcher_path.replace(_SANDBOX_ARTIFACT_PREFIX, "ajcrew_other_")
     assert _LAUNCHER_TRACEBACK_RE.search(f'  File "{other}", line 1, in <module>') is None

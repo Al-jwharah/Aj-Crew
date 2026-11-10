@@ -22,11 +22,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.cloud import launch_engine as le
-from kiro_crew.cloud import launch_job as lj
-from kiro_crew.cloud import login, ssm
-from kiro_crew.cloud.login_target import KiroLoginTarget
-from kiro_crew.dashboard import handlers_cloud as hc
+from aj_crew.cloud import launch_engine as le
+from aj_crew.cloud import launch_job as lj
+from aj_crew.cloud import login, ssm
+from aj_crew.cloud.login_target import KiroLoginTarget
+from aj_crew.dashboard import handlers_cloud as hc
 
 COMPANY = KiroLoginTarget.from_fields(
     license="pro", start_url="https://amzn.awsapps.com/start", region="us-east-1"
@@ -349,7 +349,7 @@ class TestUnreadableIdentityGuard:
     def test_an_ordinary_error_is_still_cleared(self, tmp_path):
         s = _store(tmp_path)
         job = s.create(profile="dev", region="us-east-1", size_key="balanced")
-        job.error = "Interrupted — Kiro Crew restarted while this setup was running."
+        job.error = "Interrupted — Aj Crew restarted while this setup was running."
         lj.mark_signed_in(job)
         assert job.error == ""
 
@@ -545,13 +545,13 @@ class TestLaunchCancellation:
         docstring, so a cancelled Fargate sign-in records no false note -- and
         `_abort_signin` never infers anything from a missing method.
         """
-        from kiro_crew.cloud.fargate_engine import FargateSigninHandle
+        from aj_crew.cloud.fargate_engine import FargateSigninHandle
 
         h = FargateSigninHandle("arn:aws:ecs:x:1:task/y")
         assert h.abort() is True
         assert "no remote login" in (FargateSigninHandle.abort.__doc__ or "").lower()
         # Every in-tree handle now answers for itself.
-        from kiro_crew.cloud import launch_engine as le_mod
+        from aj_crew.cloud import launch_engine as le_mod
 
         assert callable(getattr(le_mod._RealSigninHandle, "abort", None))
 
@@ -1568,7 +1568,7 @@ class TestSigninRestartRoute:
     async def test_the_route_is_registered(self):
         import inspect
 
-        from kiro_crew.dashboard.routes import connections
+        from aj_crew.dashboard.routes import connections
 
         src = inspect.getsource(connections)
         assert "/api/cloud/launch/{id}/signin/restart" in src
@@ -1631,7 +1631,7 @@ class TestSigninPromptReprobe:
         signed in at once is the state this feature exists to remove."""
         state, job = await self._preserved(tmp_path)
         store = state.cloud_launch_store
-        job.error = "Interrupted — Kiro Crew restarted while the Kiro sign-in was running."
+        job.error = "Interrupted — Aj Crew restarted while the Kiro sign-in was running."
         job.step(lj.STEP_CONNECT).detail = (
             "Added to Your crews. Sign in to Kiro on the crew after you connect."
         )

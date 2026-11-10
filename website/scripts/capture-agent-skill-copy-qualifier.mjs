@@ -14,20 +14,20 @@
 import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
 import { serveDist } from './lib/serve-dist.mjs'
-import { logPageProblems, stubDashboardApi, json, KIROCREW_CONFIG_FIXTURE } from './lib/stub-dashboard-api.mjs'
+import { logPageProblems, stubDashboardApi, json, AJCREW_CONFIG_FIXTURE } from './lib/stub-dashboard-api.mjs'
 import { chromiumExecutable } from './lib/chromium-executable.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/agent-skill-copy-qualifier'
 mkdirSync(OUT, { recursive: true })
 
 const CREWS = [
-  { name: 'default', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: 'Used for all new chats', source: 'user', model: '', triggers: '', session_color: '' },
+  { name: 'default', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: 'Used for all new chats', source: 'user', model: '', triggers: '', session_color: '' },
   { name: 'atlas', kiro_agent: 'atlas', workspace: 'default', memory_store: 'default', description: 'Long-horizon planner', source: 'user', model: '', triggers: 'migration', session_color: '' },
 ]
 
 const INSTALLED = [
-  { name: 'kirocrew', description: 'Built-in', source: 'kirocrew', model: '', skills: [], mcp_servers: ['kirocrew-core'], filename: 'kirocrew.json', kirocrew_owned: true },
-  { name: 'atlas', description: 'Long-horizon planner', source: 'builtin', model: 'claude-opus-4.8', skills: [], mcp_servers: ['kirocrew-core'], filename: 'atlas.json', kirocrew_owned: false },
+  { name: 'ajcrew', description: 'Built-in', source: 'ajcrew', model: '', skills: [], mcp_servers: ['ajcrew-core'], filename: 'ajcrew.json', ajcrew_owned: true },
+  { name: 'atlas', description: 'Long-horizon planner', source: 'builtin', model: 'claude-opus-4.8', skills: [], mcp_servers: ['ajcrew-core'], filename: 'atlas.json', ajcrew_owned: false },
 ]
 
 /* Two bundles ship a `code-review` skill, so its name alone cannot address either
@@ -40,7 +40,7 @@ const OSPRO_COPY = 'package/9d17b8402fc6ea35:code-review'
    marking (the capability-manager source degrades to an empty set with a 200 on
    timeout, so an absent package row is not reliable evidence). A non-package key
    absent from a fully-loaded catalog is a genuine dead mapping, so it warns. */
-const RETIRED_COPY = 'kirocrew/retired-review'
+const RETIRED_COPY = 'ajcrew/retired-review'
 
 const CATALOG = [
   {
@@ -79,7 +79,7 @@ const BASE_DETAIL = {
   prompt: 'Plan before acting. Write the plan to the workspace first, then execute it step by step.',
   tools: ['fs_read', 'fs_write', 'execute_bash'],
   allowedTools: ['fs_read'],
-  mcpServers: { 'kirocrew-core': {} },
+  mcpServers: { 'ajcrew-core': {} },
   unmanaged_skills: [],
 }
 
@@ -110,7 +110,7 @@ async function scene(browser, base, { skills, catalog }) {
   logPageProblems(page)
   await stubDashboardApi(page, {
     extra: async (path, route) => {
-      if (path === '/api/config/kirocrew') { await json(route, KIROCREW_CONFIG_FIXTURE); return true }
+      if (path === '/api/config/ajcrew') { await json(route, AJCREW_CONFIG_FIXTURE); return true }
       if (path === '/api/agents') { await json(route, { agents: CREWS, default_agent: 'default' }); return true }
       if (path === '/api/agents/installed') { await json(route, INSTALLED); return true }
       if (path.startsWith('/api/agents/detail/')) {

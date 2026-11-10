@@ -1,8 +1,8 @@
 """The two programs a spawn writes out, against a fully pinned host.
 
 The Linux namespace launcher and the macOS Seatbelt profile are renderings of one
-confinement plan (``kiro_crew.sandbox_plan``). Each is pinned here by ONE golden, taken
-through the live host adapter (``kiro_crew.sandbox._live_plan_host``) with every host
+confinement plan (``aj_crew.sandbox_plan``). Each is pinned here by ONE golden, taken
+through the live host adapter (``aj_crew.sandbox._live_plan_host``) with every host
 input pinned so the golden does not depend on the machine that computes it: the run
 root is ``tmp_path`` and is folded to ``<ROOT>``, and every table whose entries reach
 either program is replaced by the small stand-in in ``_PINNED_TABLES``, so a leaf
@@ -10,11 +10,11 @@ added to a real table leaves these goldens alone.
 
 * The launcher's golden is the PLAN DATA it carries -- its one substitution -- for a
   spawn that passes every kind of extra path and identity. The program text around it
-  is the ``kiro_crew.sandbox_launcher_program`` module and its parts, which
+  is the ``aj_crew.sandbox_launcher_program`` module and its parts, which
   ``test_sandbox_launcher_program.py`` drives stage by stage.
 * The profile's golden is its full text for a spawn with private windows.
 * Every host reader and table the live host plans from is read off
-  ``kiro_crew.sandbox`` when it runs, so a test that rebinds one there reaches the plan
+  ``aj_crew.sandbox`` when it runs, so a test that rebinds one there reaches the plan
   of either backend.
 
 Both goldens are the output the builders produced before the plan existed, so they
@@ -36,7 +36,7 @@ from typing import Any
 import pytest
 from test_sandbox_launcher_program import program_on_disk, rendered_payload
 
-from kiro_crew import sandbox, sandbox_launcher, sandbox_plan
+from aj_crew import sandbox, sandbox_launcher, sandbox_plan
 
 pytestmark = pytest.mark.skipif(
     sys.platform == "win32",
@@ -44,7 +44,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 #: The launcher docstring line, spelled with the product name in two words.
-_DOC_LINE = '"""Namespace sandbox launcher — spawned by Kiro Crew.'
+_DOC_LINE = '"""Namespace sandbox launcher — spawned by Aj Crew.'
 
 _UID, _GID = 4242, 4343
 
@@ -69,7 +69,7 @@ _READONLY_LEAVES = (
     "mcp-launch-approvals",
     "mcp/resolved",
 )
-_CREW_SPELLINGS = (".kiro/crew", ".kirocrew")
+_CREW_SPELLINGS = (".kiro/crew", ".ajcrew")
 _TIER_ONLY = {"strict": (".aws", ".config/gh", ".kube"), "cc": (".aws", ".kube")}
 _SHARED_DIRS = (
     ".kiro/crew-auth-staging",
@@ -89,10 +89,10 @@ _PINNED_TABLES: dict[str, object] = {
     "_STRICT_DIRS": [*_SHARED_DIRS, *_TIER_ONLY["strict"]],
     "_STANDARD_DIRS": list(_SHARED_DIRS),
     "_CC_DIRS": [*_SHARED_DIRS, *_TIER_ONLY["cc"]],
-    "_CC_FILES": [".npmrc", ".netrc", ".kiro/crew/.env", ".kirocrew/.env"],
+    "_CC_FILES": [".npmrc", ".netrc", ".kiro/crew/.env", ".ajcrew/.env"],
     "_CC_EXPOSE_FILES": [".aws/config"],
     "_POD_OS_HOME_MASKED_SUBLEAVES": (".aws/config", ".aws/credentials"),
-    "_AGENT_DENIED_ENV_KEYS": ["SLACK_BOT_TOKEN", "JIRA_TOKEN_", "KIROCREW_POLICY_URL"],
+    "_AGENT_DENIED_ENV_KEYS": ["SLACK_BOT_TOKEN", "JIRA_TOKEN_", "AJCREW_POLICY_URL"],
     "_SENSITIVE_ENV_PREFIXES": ["AWS_SECRET", "SSH_AUTH_SOCK", "GIT_ASKPASS"],
     "_PYTHON_ENV_PREFIXES": ["PYTHONPATH", "PYTHONHOME"],
 }
@@ -121,7 +121,7 @@ def _pinned_host(root: Path, monkeypatch: pytest.MonkeyPatch) -> _Host:
     pinned = _Host(root.resolve())
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: pinned.home))
     monkeypatch.setenv("HOME", str(pinned.home))
-    for name in ("KIROCREW_POD", "KIROCREW_OS_HOME", "KIRO_HOME"):
+    for name in ("AJCREW_POD", "AJCREW_OS_HOME", "KIRO_HOME"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setattr(sandbox, "config_dir", lambda: pinned.crew)
     monkeypatch.setattr(sandbox, "kiro_agents_dir", lambda: pinned.home / ".kiro" / "agents")
@@ -172,8 +172,8 @@ def _symlinked_home(host: _Host, monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def _pod_home(host: _Host, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("KIROCREW_POD", "1")
-    monkeypatch.setenv("KIROCREW_OS_HOME", str(host.root / "podhome"))
+    monkeypatch.setenv("AJCREW_POD", "1")
+    monkeypatch.setenv("AJCREW_OS_HOME", str(host.root / "podhome"))
 
 
 def _no_accept_new(host: _Host, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -268,10 +268,10 @@ _LAUNCHER_PLAN_GOLDEN: dict[str, Any] = {
         "<ROOT>/op/.gnupg",
         "<ROOT>/op/.config/gcloud",
         "<ROOT>/crew/.vault",
-        "<ROOT>/op/.kirocrew/.vault",
-        "<ROOT>/op/.kirocrew/policy_cache",
+        "<ROOT>/op/.ajcrew/.vault",
+        "<ROOT>/op/.ajcrew/policy_cache",
         "<ROOT>/crew/run/voice-runtime",
-        "<ROOT>/op/.kirocrew/run/voice-runtime",
+        "<ROOT>/op/.ajcrew/run/voice-runtime",
         "<ROOT>/crew/.env",
         "<ROOT>/crew/diag",
         "<ROOT>/crew/apps/aws-control/data",
@@ -279,13 +279,13 @@ _LAUNCHER_PLAN_GOLDEN: dict[str, Any] = {
         "<ROOT>/crew/workspace/md-notebook/vaults.json",
         "<ROOT>/crew/live_target.json",
         "<ROOT>/crew/crew-panels",
-        "<ROOT>/op/.kirocrew/.env",
-        "<ROOT>/op/.kirocrew/diag",
-        "<ROOT>/op/.kirocrew/apps/aws-control/data",
-        "<ROOT>/op/.kirocrew/workspace/md-notebook/pat",
-        "<ROOT>/op/.kirocrew/workspace/md-notebook/vaults.json",
-        "<ROOT>/op/.kirocrew/live_target.json",
-        "<ROOT>/op/.kirocrew/crew-panels",
+        "<ROOT>/op/.ajcrew/.env",
+        "<ROOT>/op/.ajcrew/diag",
+        "<ROOT>/op/.ajcrew/apps/aws-control/data",
+        "<ROOT>/op/.ajcrew/workspace/md-notebook/pat",
+        "<ROOT>/op/.ajcrew/workspace/md-notebook/vaults.json",
+        "<ROOT>/op/.ajcrew/live_target.json",
+        "<ROOT>/op/.ajcrew/crew-panels",
         "<ROOT>/op/.aws",
         "<ROOT>/op/.config/gh",
         "<ROOT>/op/.kube",
@@ -294,10 +294,10 @@ _LAUNCHER_PLAN_GOLDEN: dict[str, Any] = {
         "<ROOT>/podhome/.config/gcloud",
         "<ROOT>/podhome/.kiro/crew/.vault",
         "<ROOT>/podhome/.kiro/crew/policy_cache",
-        "<ROOT>/podhome/.kirocrew/.vault",
-        "<ROOT>/podhome/.kirocrew/policy_cache",
+        "<ROOT>/podhome/.ajcrew/.vault",
+        "<ROOT>/podhome/.ajcrew/policy_cache",
         "<ROOT>/podhome/.kiro/crew/run/voice-runtime",
-        "<ROOT>/podhome/.kirocrew/run/voice-runtime",
+        "<ROOT>/podhome/.ajcrew/run/voice-runtime",
         "<ROOT>/podhome/.kiro/crew/.env",
         "<ROOT>/podhome/.kiro/crew/diag",
         "<ROOT>/podhome/.kiro/crew/apps/aws-control/data",
@@ -305,13 +305,13 @@ _LAUNCHER_PLAN_GOLDEN: dict[str, Any] = {
         "<ROOT>/podhome/.kiro/crew/workspace/md-notebook/vaults.json",
         "<ROOT>/podhome/.kiro/crew/live_target.json",
         "<ROOT>/podhome/.kiro/crew/crew-panels",
-        "<ROOT>/podhome/.kirocrew/.env",
-        "<ROOT>/podhome/.kirocrew/diag",
-        "<ROOT>/podhome/.kirocrew/apps/aws-control/data",
-        "<ROOT>/podhome/.kirocrew/workspace/md-notebook/pat",
-        "<ROOT>/podhome/.kirocrew/workspace/md-notebook/vaults.json",
-        "<ROOT>/podhome/.kirocrew/live_target.json",
-        "<ROOT>/podhome/.kirocrew/crew-panels",
+        "<ROOT>/podhome/.ajcrew/.env",
+        "<ROOT>/podhome/.ajcrew/diag",
+        "<ROOT>/podhome/.ajcrew/apps/aws-control/data",
+        "<ROOT>/podhome/.ajcrew/workspace/md-notebook/pat",
+        "<ROOT>/podhome/.ajcrew/workspace/md-notebook/vaults.json",
+        "<ROOT>/podhome/.ajcrew/live_target.json",
+        "<ROOT>/podhome/.ajcrew/crew-panels",
         "<ROOT>/podhome/.config/gh",
         "<ROOT>/podhome/.kube",
         "<ROOT>/podhome/.aws/config",
@@ -329,9 +329,9 @@ _LAUNCHER_PLAN_GOLDEN: dict[str, Any] = {
         "<ROOT>/op/.kiro/crew",
         "<ROOT>/op/.kiro/crew/apps",
         "<ROOT>/op/.kiro/crew/mcp",
-        "<ROOT>/op/.kirocrew",
-        "<ROOT>/op/.kirocrew/apps",
-        "<ROOT>/op/.kirocrew/mcp",
+        "<ROOT>/op/.ajcrew",
+        "<ROOT>/op/.ajcrew/apps",
+        "<ROOT>/op/.ajcrew/mcp",
         "<ROOT>/crew/apps",
         "<ROOT>/crew/mcp",
     ],
@@ -344,12 +344,12 @@ _LAUNCHER_PLAN_GOLDEN: dict[str, Any] = {
         "<ROOT>/crew/apps/.dev-grants.json",
         "<ROOT>/crew/mcp-launch-approvals",
         "<ROOT>/crew/mcp/resolved",
-        "<ROOT>/op/.kirocrew/subagents",
-        "<ROOT>/op/.kirocrew/security_policy.json",
-        "<ROOT>/op/.kirocrew/profiles",
-        "<ROOT>/op/.kirocrew/apps/.dev-grants.json",
-        "<ROOT>/op/.kirocrew/mcp-launch-approvals",
-        "<ROOT>/op/.kirocrew/mcp/resolved",
+        "<ROOT>/op/.ajcrew/subagents",
+        "<ROOT>/op/.ajcrew/security_policy.json",
+        "<ROOT>/op/.ajcrew/profiles",
+        "<ROOT>/op/.ajcrew/apps/.dev-grants.json",
+        "<ROOT>/op/.ajcrew/mcp-launch-approvals",
+        "<ROOT>/op/.ajcrew/mcp/resolved",
         "<ROOT>/op/.kiro/agents",
     ],
     "writable_dirs": ["<ROOT>/crew/run/mcp-tmp/probe-x"],
@@ -357,27 +357,27 @@ _LAUNCHER_PLAN_GOLDEN: dict[str, Any] = {
         "<ROOT>/op/.npmrc",
         "<ROOT>/op/.netrc",
         "<ROOT>/crew/.env",
-        "<ROOT>/op/.kirocrew/.env",
+        "<ROOT>/op/.ajcrew/.env",
         "<ROOT>/op/.kiro/crew-auth-staging",
         "<ROOT>/op/.gnupg",
         "<ROOT>/op/.config/gcloud",
         "<ROOT>/crew/.vault",
-        "<ROOT>/op/.kirocrew/.vault",
-        "<ROOT>/op/.kirocrew/policy_cache",
+        "<ROOT>/op/.ajcrew/.vault",
+        "<ROOT>/op/.ajcrew/policy_cache",
         "<ROOT>/crew/run/voice-runtime",
-        "<ROOT>/op/.kirocrew/run/voice-runtime",
+        "<ROOT>/op/.ajcrew/run/voice-runtime",
         "<ROOT>/crew/diag",
         "<ROOT>/crew/apps/aws-control/data",
         "<ROOT>/crew/workspace/md-notebook/pat",
         "<ROOT>/crew/workspace/md-notebook/vaults.json",
         "<ROOT>/crew/live_target.json",
         "<ROOT>/crew/crew-panels",
-        "<ROOT>/op/.kirocrew/diag",
-        "<ROOT>/op/.kirocrew/apps/aws-control/data",
-        "<ROOT>/op/.kirocrew/workspace/md-notebook/pat",
-        "<ROOT>/op/.kirocrew/workspace/md-notebook/vaults.json",
-        "<ROOT>/op/.kirocrew/live_target.json",
-        "<ROOT>/op/.kirocrew/crew-panels",
+        "<ROOT>/op/.ajcrew/diag",
+        "<ROOT>/op/.ajcrew/apps/aws-control/data",
+        "<ROOT>/op/.ajcrew/workspace/md-notebook/pat",
+        "<ROOT>/op/.ajcrew/workspace/md-notebook/vaults.json",
+        "<ROOT>/op/.ajcrew/live_target.json",
+        "<ROOT>/op/.ajcrew/crew-panels",
         "<ROOT>/op/.aws",
         "<ROOT>/op/.config/gh",
         "<ROOT>/op/.kube",
@@ -386,10 +386,10 @@ _LAUNCHER_PLAN_GOLDEN: dict[str, Any] = {
         "<ROOT>/podhome/.config/gcloud",
         "<ROOT>/podhome/.kiro/crew/.vault",
         "<ROOT>/podhome/.kiro/crew/policy_cache",
-        "<ROOT>/podhome/.kirocrew/.vault",
-        "<ROOT>/podhome/.kirocrew/policy_cache",
+        "<ROOT>/podhome/.ajcrew/.vault",
+        "<ROOT>/podhome/.ajcrew/policy_cache",
         "<ROOT>/podhome/.kiro/crew/run/voice-runtime",
-        "<ROOT>/podhome/.kirocrew/run/voice-runtime",
+        "<ROOT>/podhome/.ajcrew/run/voice-runtime",
         "<ROOT>/podhome/.kiro/crew/.env",
         "<ROOT>/podhome/.kiro/crew/diag",
         "<ROOT>/podhome/.kiro/crew/apps/aws-control/data",
@@ -397,13 +397,13 @@ _LAUNCHER_PLAN_GOLDEN: dict[str, Any] = {
         "<ROOT>/podhome/.kiro/crew/workspace/md-notebook/vaults.json",
         "<ROOT>/podhome/.kiro/crew/live_target.json",
         "<ROOT>/podhome/.kiro/crew/crew-panels",
-        "<ROOT>/podhome/.kirocrew/.env",
-        "<ROOT>/podhome/.kirocrew/diag",
-        "<ROOT>/podhome/.kirocrew/apps/aws-control/data",
-        "<ROOT>/podhome/.kirocrew/workspace/md-notebook/pat",
-        "<ROOT>/podhome/.kirocrew/workspace/md-notebook/vaults.json",
-        "<ROOT>/podhome/.kirocrew/live_target.json",
-        "<ROOT>/podhome/.kirocrew/crew-panels",
+        "<ROOT>/podhome/.ajcrew/.env",
+        "<ROOT>/podhome/.ajcrew/diag",
+        "<ROOT>/podhome/.ajcrew/apps/aws-control/data",
+        "<ROOT>/podhome/.ajcrew/workspace/md-notebook/pat",
+        "<ROOT>/podhome/.ajcrew/workspace/md-notebook/vaults.json",
+        "<ROOT>/podhome/.ajcrew/live_target.json",
+        "<ROOT>/podhome/.ajcrew/crew-panels",
         "<ROOT>/podhome/.config/gh",
         "<ROOT>/podhome/.kube",
         "<ROOT>/podhome/.aws/config",
@@ -423,7 +423,7 @@ _LAUNCHER_PLAN_GOLDEN: dict[str, Any] = {
         "GIT_ASKPASS",
         "SLACK_BOT_TOKEN",
         "JIRA_TOKEN_",
-        "KIROCREW_POLICY_URL",
+        "AJCREW_POLICY_URL",
         "PYTHONPATH",
         "PYTHONHOME",
     ],
@@ -451,17 +451,17 @@ _PROFILE_GOLDEN = """\
 (deny file-read* (subpath "<ROOT>/op/.kiro/crew/policy_cache"))
 (deny file-write* (subpath "<ROOT>/op/.kiro/crew/policy_cache"))
 (deny file-link (subpath "<ROOT>/op/.kiro/crew/policy_cache"))
-(deny file-read* (subpath "<ROOT>/op/.kirocrew/.vault"))
-(deny file-link (subpath "<ROOT>/op/.kirocrew/.vault"))
-(deny file-read* (subpath "<ROOT>/op/.kirocrew/policy_cache"))
-(deny file-write* (subpath "<ROOT>/op/.kirocrew/policy_cache"))
-(deny file-link (subpath "<ROOT>/op/.kirocrew/policy_cache"))
+(deny file-read* (subpath "<ROOT>/op/.ajcrew/.vault"))
+(deny file-link (subpath "<ROOT>/op/.ajcrew/.vault"))
+(deny file-read* (subpath "<ROOT>/op/.ajcrew/policy_cache"))
+(deny file-write* (subpath "<ROOT>/op/.ajcrew/policy_cache"))
+(deny file-link (subpath "<ROOT>/op/.ajcrew/policy_cache"))
 (deny file-read* (subpath "<ROOT>/op/.kiro/crew/run/voice-runtime"))
 (deny file-write* (subpath "<ROOT>/op/.kiro/crew/run/voice-runtime"))
 (deny file-link (subpath "<ROOT>/op/.kiro/crew/run/voice-runtime"))
-(deny file-read* (subpath "<ROOT>/op/.kirocrew/run/voice-runtime"))
-(deny file-write* (subpath "<ROOT>/op/.kirocrew/run/voice-runtime"))
-(deny file-link (subpath "<ROOT>/op/.kirocrew/run/voice-runtime"))
+(deny file-read* (subpath "<ROOT>/op/.ajcrew/run/voice-runtime"))
+(deny file-write* (subpath "<ROOT>/op/.ajcrew/run/voice-runtime"))
+(deny file-link (subpath "<ROOT>/op/.ajcrew/run/voice-runtime"))
 (deny file-read* (subpath "<ROOT>/op/.kiro/crew/.env"))
 (deny file-write* (subpath "<ROOT>/op/.kiro/crew/.env"))
 (deny file-write* (literal "<ROOT>/op/.kiro/crew/.env"))
@@ -504,48 +504,48 @@ _PROFILE_GOLDEN = """\
 (deny file-link (subpath "<ROOT>/op/.kiro/crew/crew-panels"))
 (deny file-read* (literal "<ROOT>/op/.kiro/crew/crew-panels"))
 (deny file-link (literal "<ROOT>/op/.kiro/crew/crew-panels"))
-(deny file-read* (subpath "<ROOT>/op/.kirocrew/.env"))
-(deny file-write* (subpath "<ROOT>/op/.kirocrew/.env"))
-(deny file-write* (literal "<ROOT>/op/.kirocrew/.env"))
-(deny file-link (subpath "<ROOT>/op/.kirocrew/.env"))
-(deny file-read* (literal "<ROOT>/op/.kirocrew/.env"))
-(deny file-link (literal "<ROOT>/op/.kirocrew/.env"))
-(deny file-read* (subpath "<ROOT>/op/.kirocrew/diag"))
-(deny file-write* (subpath "<ROOT>/op/.kirocrew/diag"))
-(deny file-write* (literal "<ROOT>/op/.kirocrew/diag"))
-(deny file-link (subpath "<ROOT>/op/.kirocrew/diag"))
-(deny file-read* (literal "<ROOT>/op/.kirocrew/diag"))
-(deny file-link (literal "<ROOT>/op/.kirocrew/diag"))
-(deny file-read* (subpath "<ROOT>/op/.kirocrew/apps/aws-control/data"))
-(deny file-write* (subpath "<ROOT>/op/.kirocrew/apps/aws-control/data"))
-(deny file-write* (literal "<ROOT>/op/.kirocrew/apps/aws-control/data"))
-(deny file-link (subpath "<ROOT>/op/.kirocrew/apps/aws-control/data"))
-(deny file-read* (literal "<ROOT>/op/.kirocrew/apps/aws-control/data"))
-(deny file-link (literal "<ROOT>/op/.kirocrew/apps/aws-control/data"))
-(deny file-read* (subpath "<ROOT>/op/.kirocrew/workspace/md-notebook/pat"))
-(deny file-write* (subpath "<ROOT>/op/.kirocrew/workspace/md-notebook/pat"))
-(deny file-write* (literal "<ROOT>/op/.kirocrew/workspace/md-notebook/pat"))
-(deny file-link (subpath "<ROOT>/op/.kirocrew/workspace/md-notebook/pat"))
-(deny file-read* (literal "<ROOT>/op/.kirocrew/workspace/md-notebook/pat"))
-(deny file-link (literal "<ROOT>/op/.kirocrew/workspace/md-notebook/pat"))
-(deny file-read* (subpath "<ROOT>/op/.kirocrew/workspace/md-notebook/vaults.json"))
-(deny file-write* (subpath "<ROOT>/op/.kirocrew/workspace/md-notebook/vaults.json"))
-(deny file-write* (literal "<ROOT>/op/.kirocrew/workspace/md-notebook/vaults.json"))
-(deny file-link (subpath "<ROOT>/op/.kirocrew/workspace/md-notebook/vaults.json"))
-(deny file-read* (literal "<ROOT>/op/.kirocrew/workspace/md-notebook/vaults.json"))
-(deny file-link (literal "<ROOT>/op/.kirocrew/workspace/md-notebook/vaults.json"))
-(deny file-read* (subpath "<ROOT>/op/.kirocrew/live_target.json"))
-(deny file-write* (subpath "<ROOT>/op/.kirocrew/live_target.json"))
-(deny file-write* (literal "<ROOT>/op/.kirocrew/live_target.json"))
-(deny file-link (subpath "<ROOT>/op/.kirocrew/live_target.json"))
-(deny file-read* (literal "<ROOT>/op/.kirocrew/live_target.json"))
-(deny file-link (literal "<ROOT>/op/.kirocrew/live_target.json"))
-(deny file-read* (subpath "<ROOT>/op/.kirocrew/crew-panels"))
-(deny file-write* (subpath "<ROOT>/op/.kirocrew/crew-panels"))
-(deny file-write* (literal "<ROOT>/op/.kirocrew/crew-panels"))
-(deny file-link (subpath "<ROOT>/op/.kirocrew/crew-panels"))
-(deny file-read* (literal "<ROOT>/op/.kirocrew/crew-panels"))
-(deny file-link (literal "<ROOT>/op/.kirocrew/crew-panels"))
+(deny file-read* (subpath "<ROOT>/op/.ajcrew/.env"))
+(deny file-write* (subpath "<ROOT>/op/.ajcrew/.env"))
+(deny file-write* (literal "<ROOT>/op/.ajcrew/.env"))
+(deny file-link (subpath "<ROOT>/op/.ajcrew/.env"))
+(deny file-read* (literal "<ROOT>/op/.ajcrew/.env"))
+(deny file-link (literal "<ROOT>/op/.ajcrew/.env"))
+(deny file-read* (subpath "<ROOT>/op/.ajcrew/diag"))
+(deny file-write* (subpath "<ROOT>/op/.ajcrew/diag"))
+(deny file-write* (literal "<ROOT>/op/.ajcrew/diag"))
+(deny file-link (subpath "<ROOT>/op/.ajcrew/diag"))
+(deny file-read* (literal "<ROOT>/op/.ajcrew/diag"))
+(deny file-link (literal "<ROOT>/op/.ajcrew/diag"))
+(deny file-read* (subpath "<ROOT>/op/.ajcrew/apps/aws-control/data"))
+(deny file-write* (subpath "<ROOT>/op/.ajcrew/apps/aws-control/data"))
+(deny file-write* (literal "<ROOT>/op/.ajcrew/apps/aws-control/data"))
+(deny file-link (subpath "<ROOT>/op/.ajcrew/apps/aws-control/data"))
+(deny file-read* (literal "<ROOT>/op/.ajcrew/apps/aws-control/data"))
+(deny file-link (literal "<ROOT>/op/.ajcrew/apps/aws-control/data"))
+(deny file-read* (subpath "<ROOT>/op/.ajcrew/workspace/md-notebook/pat"))
+(deny file-write* (subpath "<ROOT>/op/.ajcrew/workspace/md-notebook/pat"))
+(deny file-write* (literal "<ROOT>/op/.ajcrew/workspace/md-notebook/pat"))
+(deny file-link (subpath "<ROOT>/op/.ajcrew/workspace/md-notebook/pat"))
+(deny file-read* (literal "<ROOT>/op/.ajcrew/workspace/md-notebook/pat"))
+(deny file-link (literal "<ROOT>/op/.ajcrew/workspace/md-notebook/pat"))
+(deny file-read* (subpath "<ROOT>/op/.ajcrew/workspace/md-notebook/vaults.json"))
+(deny file-write* (subpath "<ROOT>/op/.ajcrew/workspace/md-notebook/vaults.json"))
+(deny file-write* (literal "<ROOT>/op/.ajcrew/workspace/md-notebook/vaults.json"))
+(deny file-link (subpath "<ROOT>/op/.ajcrew/workspace/md-notebook/vaults.json"))
+(deny file-read* (literal "<ROOT>/op/.ajcrew/workspace/md-notebook/vaults.json"))
+(deny file-link (literal "<ROOT>/op/.ajcrew/workspace/md-notebook/vaults.json"))
+(deny file-read* (subpath "<ROOT>/op/.ajcrew/live_target.json"))
+(deny file-write* (subpath "<ROOT>/op/.ajcrew/live_target.json"))
+(deny file-write* (literal "<ROOT>/op/.ajcrew/live_target.json"))
+(deny file-link (subpath "<ROOT>/op/.ajcrew/live_target.json"))
+(deny file-read* (literal "<ROOT>/op/.ajcrew/live_target.json"))
+(deny file-link (literal "<ROOT>/op/.ajcrew/live_target.json"))
+(deny file-read* (subpath "<ROOT>/op/.ajcrew/crew-panels"))
+(deny file-write* (subpath "<ROOT>/op/.ajcrew/crew-panels"))
+(deny file-write* (literal "<ROOT>/op/.ajcrew/crew-panels"))
+(deny file-link (subpath "<ROOT>/op/.ajcrew/crew-panels"))
+(deny file-read* (literal "<ROOT>/op/.ajcrew/crew-panels"))
+(deny file-link (literal "<ROOT>/op/.ajcrew/crew-panels"))
 (deny file-read* (require-all (subpath "<ROOT>/op/.aws") (require-not (literal "<ROOT>/op/.aws/config"))))
 (deny file-link (subpath "<ROOT>/op/.aws"))
 (allow file-read-metadata (literal "<ROOT>/op/.aws"))
@@ -615,9 +615,9 @@ _PROFILE_GOLDEN = """\
 (deny file-write* (literal "<ROOT>/op/.kiro/crew"))
 (deny file-write* (literal "<ROOT>/op/.kiro/crew/apps"))
 (deny file-write* (literal "<ROOT>/op/.kiro/crew/mcp"))
-(deny file-write* (literal "<ROOT>/op/.kirocrew"))
-(deny file-write* (literal "<ROOT>/op/.kirocrew/apps"))
-(deny file-write* (literal "<ROOT>/op/.kirocrew/mcp"))
+(deny file-write* (literal "<ROOT>/op/.ajcrew"))
+(deny file-write* (literal "<ROOT>/op/.ajcrew/apps"))
+(deny file-write* (literal "<ROOT>/op/.ajcrew/mcp"))
 (deny file-write* (literal "<ROOT>/crew/apps"))
 (deny file-write* (literal "<ROOT>/crew/mcp"))
 (deny file-write* (literal "<ROOT>/op/.kiro/crew/subagents"))
@@ -638,24 +638,24 @@ _PROFILE_GOLDEN = """\
 (deny file-write* (literal "<ROOT>/op/.kiro/crew/mcp/resolved"))
 (deny file-write* (subpath "<ROOT>/op/.kiro/crew/mcp/resolved"))
 (deny file-link (subpath "<ROOT>/op/.kiro/crew/mcp/resolved"))
-(deny file-write* (literal "<ROOT>/op/.kirocrew/subagents"))
-(deny file-write* (subpath "<ROOT>/op/.kirocrew/subagents"))
-(deny file-link (subpath "<ROOT>/op/.kirocrew/subagents"))
-(deny file-write* (literal "<ROOT>/op/.kirocrew/security_policy.json"))
-(deny file-write* (subpath "<ROOT>/op/.kirocrew/security_policy.json"))
-(deny file-link (subpath "<ROOT>/op/.kirocrew/security_policy.json"))
-(deny file-write* (literal "<ROOT>/op/.kirocrew/profiles"))
-(deny file-write* (subpath "<ROOT>/op/.kirocrew/profiles"))
-(deny file-link (subpath "<ROOT>/op/.kirocrew/profiles"))
-(deny file-write* (literal "<ROOT>/op/.kirocrew/apps/.dev-grants.json"))
-(deny file-write* (subpath "<ROOT>/op/.kirocrew/apps/.dev-grants.json"))
-(deny file-link (subpath "<ROOT>/op/.kirocrew/apps/.dev-grants.json"))
-(deny file-write* (literal "<ROOT>/op/.kirocrew/mcp-launch-approvals"))
-(deny file-write* (subpath "<ROOT>/op/.kirocrew/mcp-launch-approvals"))
-(deny file-link (subpath "<ROOT>/op/.kirocrew/mcp-launch-approvals"))
-(deny file-write* (literal "<ROOT>/op/.kirocrew/mcp/resolved"))
-(deny file-write* (subpath "<ROOT>/op/.kirocrew/mcp/resolved"))
-(deny file-link (subpath "<ROOT>/op/.kirocrew/mcp/resolved"))
+(deny file-write* (literal "<ROOT>/op/.ajcrew/subagents"))
+(deny file-write* (subpath "<ROOT>/op/.ajcrew/subagents"))
+(deny file-link (subpath "<ROOT>/op/.ajcrew/subagents"))
+(deny file-write* (literal "<ROOT>/op/.ajcrew/security_policy.json"))
+(deny file-write* (subpath "<ROOT>/op/.ajcrew/security_policy.json"))
+(deny file-link (subpath "<ROOT>/op/.ajcrew/security_policy.json"))
+(deny file-write* (literal "<ROOT>/op/.ajcrew/profiles"))
+(deny file-write* (subpath "<ROOT>/op/.ajcrew/profiles"))
+(deny file-link (subpath "<ROOT>/op/.ajcrew/profiles"))
+(deny file-write* (literal "<ROOT>/op/.ajcrew/apps/.dev-grants.json"))
+(deny file-write* (subpath "<ROOT>/op/.ajcrew/apps/.dev-grants.json"))
+(deny file-link (subpath "<ROOT>/op/.ajcrew/apps/.dev-grants.json"))
+(deny file-write* (literal "<ROOT>/op/.ajcrew/mcp-launch-approvals"))
+(deny file-write* (subpath "<ROOT>/op/.ajcrew/mcp-launch-approvals"))
+(deny file-link (subpath "<ROOT>/op/.ajcrew/mcp-launch-approvals"))
+(deny file-write* (literal "<ROOT>/op/.ajcrew/mcp/resolved"))
+(deny file-write* (subpath "<ROOT>/op/.ajcrew/mcp/resolved"))
+(deny file-link (subpath "<ROOT>/op/.ajcrew/mcp/resolved"))
 (deny file-write* (literal "<ROOT>/crew/subagents"))
 (deny file-write* (subpath "<ROOT>/crew/subagents"))
 (deny file-link (subpath "<ROOT>/crew/subagents"))
@@ -683,8 +683,8 @@ _PROFILE_GOLDEN = """\
 (deny file-link (literal "<ROOT>/op/.netrc"))
 (deny file-read* (literal "<ROOT>/op/.kiro/crew/.env"))
 (deny file-link (literal "<ROOT>/op/.kiro/crew/.env"))
-(deny file-read* (literal "<ROOT>/op/.kirocrew/.env"))
-(deny file-link (literal "<ROOT>/op/.kirocrew/.env"))
+(deny file-read* (literal "<ROOT>/op/.ajcrew/.env"))
+(deny file-link (literal "<ROOT>/op/.ajcrew/.env"))
 (deny file-read* (require-all (subpath "<ROOT>/crew/apps") (require-not (subpath "<ROOT>/crew/apps/alpha/data"))))
 (deny file-write* (require-all (subpath "<ROOT>/crew/apps") (require-not (subpath "<ROOT>/crew/apps/alpha/data"))))
 (deny file-link (require-all (subpath "<ROOT>/crew/apps") (require-not (subpath "<ROOT>/crew/apps/alpha/data"))))
@@ -701,11 +701,11 @@ def test_the_launcher_carries_the_golden_plan(
     host: _Host, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     _pod_home(host, monkeypatch)
-    caplog.set_level(logging.WARNING, logger="kiro_crew.sandbox")
+    caplog.set_level(logging.WARNING, logger="aj_crew.sandbox")
     script = sandbox._build_launcher_script("strict", **_everything(host))
     assert _fold(rendered_payload(script), host) == _LAUNCHER_PLAN_GOLDEN
     # The window that holds a masked tree is refused, as a log line naming no path.
-    assert [r.getMessage() for r in caplog.records if r.name == "kiro_crew.sandbox"] == [
+    assert [r.getMessage() for r in caplog.records if r.name == "aj_crew.sandbox"] == [
         sandbox_plan.WINDOW_REFUSAL
     ]
 
@@ -757,7 +757,7 @@ def test_each_pinned_host_input_reaches_the_plan(
 
 
 # --------------------------------------------------------------------------- #
-# The live host reads what it plans from kiro_crew.sandbox when it runs.
+# The live host reads what it plans from aj_crew.sandbox when it runs.
 # --------------------------------------------------------------------------- #
 
 
@@ -777,7 +777,7 @@ def _raiser(label: str) -> Callable[..., object]:
 
 
 #: The host readers ``_live_plan_host`` calls for each backend. A patch of one on
-#: ``kiro_crew.sandbox`` must still reach that backend's plan.
+#: ``aj_crew.sandbox`` must still reach that backend's plan.
 _HOST_READERS: dict[str, tuple[str, ...]] = {
     sandbox_plan.BACKEND_NAMESPACE: (
         "_md_notebook_degraded_mask_dirs",
@@ -913,7 +913,7 @@ def test_namespace_argv_writes_exactly_what_the_builder_renders(
     assert argv[4:] == ["/bin/true", "--flag"]
     launcher = Path(argv[3])
     assert launcher.parent == host.crew / "run"
-    assert launcher.name.startswith(f"kirocrew_sandbox_{os.getpid()}_")
+    assert launcher.name.startswith(f"ajcrew_sandbox_{os.getpid()}_")
     assert launcher.read_bytes() == rendered[0].encode("utf-8")
 
 

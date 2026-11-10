@@ -26,7 +26,7 @@ class TestPersonalShopperEmbedOffload:
     """
 
     def test_store_add_uses_embed_pool(self) -> None:
-        from kiro_crew.apps.builtins.personal_shopper.backend import routes
+        from aj_crew.apps.builtins.personal_shopper.backend import routes
 
         src = inspect.getsource(routes._handle_add_preference)
         assert (
@@ -35,7 +35,7 @@ class TestPersonalShopperEmbedOffload:
         assert "store.add" in src, "handler must call store.add"
 
     def test_store_search_uses_embed_pool(self) -> None:
-        from kiro_crew.apps.builtins.personal_shopper.backend import routes
+        from aj_crew.apps.builtins.personal_shopper.backend import routes
 
         src = inspect.getsource(routes._handle_search_preferences)
         assert (
@@ -44,7 +44,7 @@ class TestPersonalShopperEmbedOffload:
         assert "store.search" in src, "handler must call store.search"
 
     def test_store_reembed_all_uses_embed_pool(self) -> None:
-        from kiro_crew.apps.builtins.personal_shopper.backend import routes
+        from aj_crew.apps.builtins.personal_shopper.backend import routes
 
         src = inspect.getsource(routes._handle_reembed_preferences)
         assert (
@@ -60,7 +60,7 @@ class TestPersonalShopperEmbedOffload:
         a fast metadata write. Pinning it here stops the offload contract from
         being a point patch that leaves one embedding path on the shared pool.
         """
-        from kiro_crew.apps.builtins.personal_shopper.backend import routes, store
+        from aj_crew.apps.builtins.personal_shopper.backend import routes, store
 
         src = inspect.getsource(routes._handle_update_preference)
         assert (
@@ -74,7 +74,7 @@ class TestPersonalShopperEmbedOffload:
 
     def test_non_embed_ops_still_use_to_thread(self) -> None:
         """list_all and delete never embed, so they stay on asyncio.to_thread."""
-        from kiro_crew.apps.builtins.personal_shopper.backend import routes
+        from aj_crew.apps.builtins.personal_shopper.backend import routes
 
         list_src = inspect.getsource(routes._handle_list_preferences)
         assert "asyncio.to_thread" in list_src, "list_all should use asyncio.to_thread"

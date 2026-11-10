@@ -17,9 +17,9 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from apps_routes_coverage_helpers import APP, _install, _make_app, _setup_env
 
-import kiro_crew.apps.routes as routes_mod
-import kiro_crew.dashboard.handlers.template_server_request as tsr
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME, AppResult, app_dir, enable_app
+import aj_crew.apps.routes as routes_mod
+import aj_crew.dashboard.handlers.template_server_request as tsr
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME, AppResult, app_dir, enable_app
 
 #: A backend-less app's HTTP server: registered as declared, with no backend to start.
 _ONE_SERVER = {"srv": {"url": "http://127.0.0.1:7778/mcp"}}
@@ -48,7 +48,7 @@ async def test_lifecycle_route_reaches_open_chats_when_an_enabled_app_has_mcp_se
     _install(tmp_path, mcpServers=declared)
     if enabled:
         assert enable_app(APP).ok
-    spec = tmp_path / "kiro-agents" / "kirocrew.json"
+    spec = tmp_path / "kiro-agents" / "ajcrew.json"
     # Whether the app's server is in the agent spec each time the step runs.
     reached: list[bool] = []
 

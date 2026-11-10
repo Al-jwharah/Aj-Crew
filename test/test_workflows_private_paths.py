@@ -9,16 +9,16 @@ import pytest
 from test_workflows_private_execution import world as _world
 from test_workflows_receipts import ReceiptModel
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.context import store_of_session
-from kiro_crew.member_memory_auth import private_memory_store_for_session
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.session import SessionManager
-from kiro_crew.taskrunner import TaskRunner
-from kiro_crew.testing.wait import await_until
-from kiro_crew.workflow_memory import WorkflowScope
-from kiro_crew.workflows.service import WorkflowService
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.config import AjCrewConfig
+from aj_crew.context import store_of_session
+from aj_crew.member_memory_auth import private_memory_store_for_session
+from aj_crew.providers.base import LLMEvent
+from aj_crew.session import SessionManager
+from aj_crew.taskrunner import TaskRunner
+from aj_crew.testing.wait import await_until
+from aj_crew.workflow_memory import WorkflowScope
+from aj_crew.workflows.service import WorkflowService
 
 world = _world
 
@@ -59,10 +59,10 @@ async def test_saved_task_plan_executes_on_real_private_taskrunner(
         providers.append(model)
         return model
 
-    from kiro_crew.config.sections import WorkspaceConfig
+    from aj_crew.config.sections import WorkspaceConfig
 
     project_dir = tmp_path_factory.mktemp("workflow-project")
-    config = KiroCrewConfig.load()
+    config = AjCrewConfig.load()
     config.workspaces["workflow-project"] = WorkspaceConfig(dir=str(project_dir))
     config.save()
     sessions = SessionManager(config, provider_factory=factory)
@@ -120,7 +120,7 @@ async def test_saved_task_plan_executes_on_real_private_taskrunner(
 
 @pytest.mark.asyncio
 async def test_private_pool_overflow_and_replacement_keep_scope(world, monkeypatch):
-    from kiro_crew.workflows.agent_pool import build_pooled_agent_fn
+    from aj_crew.workflows.agent_pool import build_pooled_agent_fn
 
     scope = await WorkflowScope.admit("wf_overflow", world.builder, "dashboard:alice")
     execute, pool = build_pooled_agent_fn(
@@ -157,8 +157,8 @@ async def test_private_pool_overflow_and_replacement_keep_scope(world, monkeypat
 async def test_unavailable_learned_memory_keeps_member_persona_and_routing(world, pooled):
     from test_workflows_private_execution import SCRIPT, finished
 
-    from kiro_crew.context import release_cached_memory_store
-    from kiro_crew.memory_stores import resolve_store_path
+    from aj_crew.context import release_cached_memory_store
+    from aj_crew.memory_stores import resolve_store_path
 
     store = world.stores["alice"]
     await asyncio.to_thread(release_cached_memory_store, store)
@@ -186,10 +186,10 @@ async def test_http_controls_keep_original_execution_under_ordinary_auth(world, 
     from aiohttp.test_utils import TestClient, TestServer
     from test_workflows_private_execution import SCRIPT, finished
 
-    from kiro_crew import member_memory_auth
-    from kiro_crew.dashboard.handlers import workflows
-    from kiro_crew.dashboard.server import _MIXED_INTERNAL_API_PATHS, _STRICT_INTERNAL_API_PATHS
-    from kiro_crew.dashboard.token_auth import token_auth_middleware
+    from aj_crew import member_memory_auth
+    from aj_crew.dashboard.handlers import workflows
+    from aj_crew.dashboard.server import _MIXED_INTERNAL_API_PATHS, _STRICT_INTERNAL_API_PATHS
+    from aj_crew.dashboard.token_auth import token_auth_middleware
 
     # A loopback TCP caller proves the key it declares with the signed token its
     # launcher published. The stand-in token names its own session, so the

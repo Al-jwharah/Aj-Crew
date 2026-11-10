@@ -8,12 +8,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.state import (
+from aj_crew.dashboard.state import (
     _SLOTS_BROADCAST_INTERVAL_S,
     DashboardState,
     _ChatSlot,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 @pytest.fixture
@@ -39,13 +39,13 @@ class _FakeClock:
 @pytest.fixture
 def clock(monkeypatch):
     fake = _FakeClock()
-    monkeypatch.setattr("kiro_crew.dashboard.state._slots_broadcast_clock", fake)
+    monkeypatch.setattr("aj_crew.dashboard.state._slots_broadcast_clock", fake)
     return fake
 
 
 @pytest.fixture
 def state(monkeypatch, tmp_path, loop, clock):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     s = DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(list_jobs=MagicMock(return_value=[]), status=MagicMock(return_value={})),

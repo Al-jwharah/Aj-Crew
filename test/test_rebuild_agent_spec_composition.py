@@ -12,11 +12,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew.dashboard.handlers._shared import rebuild_agent_spec
-from kiro_crew.platform import PlatformCompositionError
+from aj_crew import agent as agent_mod
+from aj_crew.dashboard.handlers._shared import rebuild_agent_spec
+from aj_crew.platform import PlatformCompositionError
 
-_LOGGER = "kiro_crew.dashboard.handlers._shared"
+_LOGGER = "aj_crew.dashboard.handlers._shared"
 
 
 def _records(caplog: pytest.LogCaptureFixture) -> list[tuple[str, str]]:

@@ -20,9 +20,9 @@ from pathlib import Path
 import pytest
 from test_sandbox_launcher_program import CoveringLibc, identity, launch, payload, refusal
 
-from kiro_crew import sandbox, sandbox_launcher_program
-from kiro_crew.acp import seed_provenance as sp
-from kiro_crew.sandbox_aliases import _referent_identity
+from aj_crew import sandbox, sandbox_launcher_program
+from aj_crew.acp import seed_provenance as sp
+from aj_crew.sandbox_aliases import _referent_identity
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="POSIX launcher only")
 
@@ -32,7 +32,7 @@ def _isolated(monkeypatch, tmp_path):
     """A data home of this test's own, and module state no other test sees."""
     home = tmp_path / "crew"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.setattr(sp, "peek_data_home", lambda: home)
     monkeypatch.setattr(sp, "config_dir", lambda: home)
     monkeypatch.setattr(sp, "_RECORDS", {})

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.platform.governance import CapabilityGate, parse_policy, resolve
+from aj_crew.platform.governance import CapabilityGate, parse_policy, resolve
 
 #: (scope, inner key, matcher, an item the list allows, an item it does not)
 _CASES = (

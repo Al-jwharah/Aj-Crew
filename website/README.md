@@ -1,8 +1,8 @@
-# Kiro Crew Website
+# Aj Crew Website
 
-React + TypeScript + Vite single-page app for the Kiro Crew dashboard. Built assets
+React + TypeScript + Vite single-page app for the Aj Crew dashboard. Built assets
 are emitted to `dist/` and copied into the Python package at
-`../src/kiro_crew/static/dist/` so the gateway can serve them.
+`../src/aj_crew/static/dist/` so the gateway can serve them.
 
 ## Develop
 
@@ -18,7 +18,7 @@ npm run build        # tsc -p tsconfig.app.json && vite build  → dist/
 ```
 
 To serve the dashboard under a URL prefix, build with
-`KIROCREW_BASE_PATH=/your/prefix npm run build`. It is read at build time only;
+`AJCREW_BASE_PATH=/your/prefix npm run build`. It is read at build time only;
 see [Behind a reverse proxy at a sub-path](../docs/guides/remote-and-mobile.md#behind-a-reverse-proxy-at-a-sub-path).
 
 Every Vite build except `--watch` or one into a mount-point `dist/` writes a
@@ -28,10 +28,10 @@ two write in place.
 Then stage it into the backend package so the gateway serves it:
 
 ```bash
-cd .. && PYTHONPATH=src python -m kiro_crew.frontend stage .
+cd .. && PYTHONPATH=src python -m aj_crew.frontend stage .
 ```
 
-The stager points `src/kiro_crew/static/dist` at `dist/` (or, for an edition, at
+The stager points `src/aj_crew/static/dist` at `dist/` (or, for an edition, at
 a fresh private copy); a running gateway follows it on its next request.
 
 ## Test and lint

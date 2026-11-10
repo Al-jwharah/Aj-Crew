@@ -26,14 +26,14 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.acp.client import (
+from aj_crew.acp.client import (
     AcpError,
     _format_acp_error,
     _is_transient_raw_error,
     _raise_acp_error,
 )
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
-from kiro_crew.dashboard.chat_utils import IMAGE_REPAIR_KIND
+from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
+from aj_crew.dashboard.chat_utils import IMAGE_REPAIR_KIND
 
 _MANY_IMAGE = {
     "code": -32603,
@@ -107,7 +107,7 @@ class TestTheUserIsToldTheRepairFix:
         assert "repair" in out.lower()
         assert "repair-images" not in out
         assert "error card" not in out.lower()
-        assert "kirocrew session" not in out
+        assert "ajcrew session" not in out
         assert "Retrying will not help" in out
         assert "switching models" not in out
         # The request_id is preserved for support correlation.
@@ -159,20 +159,20 @@ class TestTheRepairTagIsKiroOnly:
 
 class TestTheDashboardRowCarriesTheKind:
     def test_terminal_meta_is_image_repair(self):
-        from kiro_crew.dashboard.chat_runner import _terminal_error_meta
+        from aj_crew.dashboard.chat_runner import _terminal_error_meta
 
         assert _terminal_error_meta(_raised(_MANY_IMAGE)) == {"kind": IMAGE_REPAIR_KIND}
 
     def test_it_outranks_context_overflow_when_both_are_somehow_set(self):
-        from kiro_crew.dashboard.chat_runner import _terminal_error_meta
+        from aj_crew.dashboard.chat_runner import _terminal_error_meta
 
         err = _raised(_MANY_IMAGE)
         err.context_overflow = True  # should not happen at raise time; pin the order
         assert _terminal_error_meta(err) == {"kind": IMAGE_REPAIR_KIND}
 
     def test_the_sign_in_fix_outranks_it(self):
-        from kiro_crew.dashboard.chat_runner import _terminal_error_meta
-        from kiro_crew.dashboard.chat_utils import AUTH_REQUIRED_KIND
+        from aj_crew.dashboard.chat_runner import _terminal_error_meta
+        from aj_crew.dashboard.chat_utils import AUTH_REQUIRED_KIND
 
         err = _raised(_MANY_IMAGE)
         err.auth_required = True

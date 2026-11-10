@@ -5,7 +5,7 @@ readiness webhook, and negative fault tests 4 (pending read) and 5 (unentitled
 read).
 """
 
-from kiro_crew.connections.vendors.zoom.processing import (
+from aj_crew.connections.vendors.zoom.processing import (
     SummaryState,
     classify_summary_state,
     is_summary_ready_signal,

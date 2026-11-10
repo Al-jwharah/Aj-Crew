@@ -23,11 +23,11 @@ import { serveDist } from './lib/serve-dist.mjs'
 import { json, makeFixedApi, handleBootRoute } from './lib/boot-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/knowledge-effort'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
-/** The knowledge section of GET /api/config/kirocrew. */
+/** The knowledge section of GET /api/config/ajcrew. */
 let knowledge = {}
 
 const { srv, base } = await serveDist()
@@ -63,7 +63,7 @@ await page.route('**/api/**', route => {
       ],
     })
   }
-  if (path === '/api/config/kirocrew') {
+  if (path === '/api/config/ajcrew') {
     // PATCH: apply the dotted key into the fixture so the refetch shows the
     // picked values (the real handler's semantics).
     if (route.request().method() === 'PATCH') {

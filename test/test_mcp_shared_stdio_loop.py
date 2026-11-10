@@ -24,9 +24,9 @@ from mcp_shared_helpers import (  # noqa: F401 -- the autouse fixture registers 
 )
 from stray_line_helpers import STRAY_LINES
 
-import kiro_crew.mcp_shared as mcp_shared
-from kiro_crew.mcp_shared import SKIP
-from kiro_crew.testing.wait import wait_until
+import aj_crew.mcp_shared as mcp_shared
+from aj_crew.mcp_shared import SKIP
+from aj_crew.testing.wait import wait_until
 
 # --- run_mcp_stdio_loop busy-queue behavior ----------------------------------
 #
@@ -446,8 +446,8 @@ class TestStdioLoopStrayFrames:
 class TestStdioLoopExitsWhenItsInstallIsPruned:
     """A backend whose install an update removed must be replaced, not limp on.
 
-    Lazy imports fail there with ``No module named 'kiro_crew.<x>'`` (seen live
-    on ``kirocrew-core``: every ``monitor_*`` and ``session_ledger_record`` call)
+    Lazy imports fail there with ``No module named 'aj_crew.<x>'`` (seen live
+    on ``ajcrew-core``: every ``monitor_*`` and ``session_ledger_record`` call)
     and keep failing until the process is gone. The loop answers the call with a
     retryable refusal, answers anything queued behind it, never runs the tool,
     and exits non-zero so the pool respawns it from the current install.
@@ -461,9 +461,9 @@ class TestStdioLoopExitsWhenItsInstallIsPruned:
     ) -> None:
         import shutil as _shutil
 
-        from kiro_crew import install_liveness
+        from aj_crew import install_liveness
 
-        package = tmp_path / "0.8.0.4" / "kiro_crew"
+        package = tmp_path / "0.8.0.4" / "aj_crew"
         package.mkdir(parents=True)
         (package / "__init__.py").write_text("")
         monkeypatch.setattr(install_liveness, "_PACKAGE_ROOT", package)
@@ -503,9 +503,9 @@ class TestStdioLoopExitsWhenItsInstallIsPruned:
         behind it must get the same retryable answer, not silence."""
         import shutil as _shutil
 
-        from kiro_crew import install_liveness
+        from aj_crew import install_liveness
 
-        package = tmp_path / "0.8.0.4" / "kiro_crew"
+        package = tmp_path / "0.8.0.4" / "aj_crew"
         package.mkdir(parents=True)
         (package / "__init__.py").write_text("")
         monkeypatch.setattr(install_liveness, "_PACKAGE_ROOT", package)
@@ -569,9 +569,9 @@ class TestStdioLoopExitsWhenItsInstallIsPruned:
         assert _audited("cancelled") == [("4", "queued-c")]
 
     def test_an_intact_install_keeps_serving(self, monkeypatch, tmp_path) -> None:
-        from kiro_crew import install_liveness
+        from aj_crew import install_liveness
 
-        package = tmp_path / "kiro_crew"
+        package = tmp_path / "aj_crew"
         package.mkdir()
         (package / "__init__.py").write_text("")
         monkeypatch.setattr(install_liveness, "_PACKAGE_ROOT", package)
@@ -595,13 +595,13 @@ class TestStdioLoopExitsWhenItsInstallIsPruned:
         self, monkeypatch, tmp_path
     ) -> None:
         """Without the pool there is no respawner: exiting would leave the
-        session with no kirocrew-core/kirocrew-cron tools at all. The server
+        session with no ajcrew-core/ajcrew-cron tools at all. The server
         stays up and refuses every call with the restart that recovers it."""
         import shutil as _shutil
 
-        from kiro_crew import install_liveness
+        from aj_crew import install_liveness
 
-        package = tmp_path / "0.8.0.4" / "kiro_crew"
+        package = tmp_path / "0.8.0.4" / "aj_crew"
         package.mkdir(parents=True)
         (package / "__init__.py").write_text("")
         monkeypatch.setattr(install_liveness, "_PACKAGE_ROOT", package)
@@ -646,12 +646,12 @@ class TestStdioLoopExitsWhenItsInstallIsPruned:
         replacement, so the server must stay up and refuse like a direct one."""
         import shutil as _shutil
 
-        from kiro_crew import install_liveness
+        from aj_crew import install_liveness
 
-        package = tmp_path / "0.8.0.4" / "kiro_crew"
+        package = tmp_path / "0.8.0.4" / "aj_crew"
         package.mkdir(parents=True)
         (package / "__init__.py").write_text("")
-        launcher = tmp_path / "0.8.0.4" / "bin" / "kirocrew"
+        launcher = tmp_path / "0.8.0.4" / "bin" / "ajcrew"
         launcher.parent.mkdir(parents=True)
         launcher.write_text("#!/bin/sh\n")
         launcher.chmod(0o755)

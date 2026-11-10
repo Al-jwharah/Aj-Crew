@@ -1,6 +1,6 @@
 # LLM Provider Abstraction
 
-Kiro Crew drives every LLM through one seam: the `LLMProvider` ABC in
+Aj Crew drives every LLM through one seam: the `LLMProvider` ABC in
 `providers/base.py`. `AcpProvider` (`providers/acp.py`) is the only implementation
 the factory selects; `AcpSessionProvider` (`acp/session_provider.py`) is a second
 concrete subclass, the adapter a shared-runtime session is swapped onto once
@@ -147,7 +147,7 @@ reader is behind, holding the guest at its unacked window. The fence needs a
 host whose tool allowlist travels over the wire; only KAS qualifies, so any
 other backend is refused before a workspace is touched
 (`check_remote_workspace_supported`). Crew tools that act on the gateway machine
-are fenced too: the `kirocrew-core` tools in `LOCAL_ONLY_CORE_TOOLS` are left out
+are fenced too: the `ajcrew-core` tools in `LOCAL_ONLY_CORE_TOOLS` are left out
 of the grants (a whole-server grant is narrowed per tool by
 `_without_local_only_grants`, from the declared titles table),
 `LOCAL_ONLY_SERVERS` (computer use, and cron, whose jobs run here) are not sent,
@@ -210,7 +210,7 @@ port answers, or when the launch writes start `n`'s number to
 `<port file>.failed` because that start failed. With no start in flight, a
 missing proxy costs no wait. A host that
 is not routed keeps the workspace's own git login (its SSH key, its
-`GIT_ASKPASS`), exactly as without Kiro Crew, so under `strict` everything goes
+`GIT_ASKPASS`), exactly as without Aj Crew, so under `strict` everything goes
 direct. `GIT_ASKPASS` and the terminal prompt are never changed; a credential
 helper scoped to the proxy's own URL answers `quit=1`, so a routed request
 that ends in a 401 prompts no one. The protected-branch rule below covers
@@ -268,8 +268,8 @@ Basic). The helper is asked with `GIT_TERMINAL_PROMPT=0` and
 prompt or a browser on the gateway. Under the `strict` agent sandbox tier, which
 hides those logins from local agents, the proxy lends none
 (`gateway_logins_lent`: the configured tier and its readability from one
-`KiroCrewConfig.load()`, with the governance floor applied, read per request; an unreadable tier counts as strict, and so does a
-load that `KiroCrewConfig.load()` marked degraded -- an unparseable
+`AjCrewConfig.load()`, with the governance floor applied, read per request; an unreadable tier counts as strict, and so does a
+load that `AjCrewConfig.load()` marked degraded -- an unparseable
 `config.json` or `config.local.json`, or a degraded `agent` section -- because
 that load stands field defaults in rather than raising). Under `strict` the
 guest routes nothing here (the published list is empty); a request that still
@@ -335,7 +335,7 @@ receive flow and git status/log/diff failure reporting through `ErrorNotice`.
 A vendor tunnel is not assumed to deliver ACP byte for byte (an SSM port forward
 rewrote LF into CR; ECS Exec does not forward piped stdin), so tunnels use
 integrity-checked framing with no fixed per-message timeouts, in
-`kiro_crew.remote_session`:
+`aj_crew.remote_session`:
 
 - `wire` (sans-IO): an HMAC-SHA256 handshake over fresh nonces and the resume
   position, base64 data pieces of at most 32 KB, and control lines (ack,
@@ -354,7 +354,7 @@ integrity-checked framing with no fixed per-message timeouts, in
 
 `AcpRuntime.set_remote_workspace` adds the workspace server to every session's
 `mcpServers` (new and resumed). Its command is the bridge
-`python -P -m kiro_crew.remote_session.client --pipe`, exiting 0 when the relay
+`python -P -m aj_crew.remote_session.client --pipe`, exiting 0 when the relay
 ends the stream or 75 when it cannot reach the relay. The bridge never dials: it
 runs in the engine's sandbox, which cannot use the gateway's `coder login`, and
 is launched more than once per runtime. `remote_session.relay.WorkspaceRelay`
@@ -387,13 +387,13 @@ this machine prewarms. `session_environments.default_profile` binds a new owner
 dashboard chat (`apply_default_environment`, only while it has no choice and no
 messages; any failure leaves it local); scheduled jobs, channels and peer chats
 are untouched. A bound session bypasses the warm pool, whose children are local
-engines (`kirocrew.session.pool.decision` outcome `bypass_remote_environment`).
+engines (`ajcrew.session.pool.decision` outcome `bypass_remote_environment`).
 
 Preparing reserves a row in the Coder ownership registry before any compute
 exists (a non-empty `deployment_id` is required and never retargeted; rows of
 another deployment are left alone), then finds, creates (with an auto-stop) or
 starts the workspace with the gateway's `coder login`, adopting it only when
-its owner, template and uuid match. A workspace deleted outside Kiro Crew is
+its owner, template and uuid match. A workspace deleted outside Aj Crew is
 never silently recreated. Every failure raises `SessionEnvironmentUnavailable`;
 an unreadable choice record, or a bound session whose profile is gone, is
 refused, so a bound session never falls back to the gateway machine. When a
@@ -523,7 +523,7 @@ cross-process lock, so every call runs through `asyncio.to_thread`) and
 - `prepare` bumps the owner's `retention.session_lifecycle` generation and runs
   under its lock, as the Coder path does. `check_ready` (a Sprites token in the
   vault, the boxd CLI installed) runs before anything is reserved.
-- A name (`kirocrew-` or `kc-` plus 16 random hex digits) and its row are
+- A name (`ajcrew-` or `kc-` plus 16 random hex digits) and its row are
   written BEFORE the create call, so a failed create is reclaimed immediately or
   by a later prepare or archive; cleanup reads the live VM first. The returned
   provider id is recorded, and a VM answering under the name with another id is
@@ -532,7 +532,7 @@ cross-process lock, so every call runs through `asyncio.to_thread`) and
   starts when either registry exists, even with no profiles or Coder URL (an
   off-loop probe; a metadata failure keeps maintenance enabled, and live config
   is rechecked after it), so archived-row sweeps and boxd shutdown hibernation
-  survive profile removal. A VM deleted outside Kiro Crew is replaced under a
+  survive profile removal. A VM deleted outside Aj Crew is replaced under a
   new name (`created`).
 - `retention._archive` archives Sprites and boxd VMs inside the same lifecycle
   lock and generation check: the row is stamped due in `ARCHIVED_RETENTION_DAYS`
@@ -830,7 +830,7 @@ profile on that template; no match reads `false`. Without systemd the
 ### Kiro Cloud Sessions
 
 Kiro Cloud Sessions is Kiro Agent's feature that runs a whole session in a
-cloud sandbox. Kiro Crew reaches it only through Kiro Agent (the KAS backend),
+cloud sandbox. Aj Crew reaches it only through Kiro Agent (the KAS backend),
 never by calling Kiro's cloud itself. Kiro Cloud Sessions profiles (`session_environments.kiro_cloud_profiles`: `id`, `name`,
 `repositories`, each `name` or `owner/name`, at most 10, no other key) are the
 one provider whose AGENT runs remotely, so the "engine stays on the gateway"
@@ -876,10 +876,10 @@ own `--cloud` flag sends (confirmed against kiro-cli 2.21.1's ACP client
 `sessionSource: "remote"` when KAS lists it in `sessionSources`, and
 `repositories` or `isEmptyWorkspace: true`. `session/load` carries only
 `sessionSource: "remote"`. KAS relays such a session to Kiro's cloud and
-forwards only the mode, target and repositories, so Kiro Crew sends
+forwards only the mode, target and repositories, so Aj Crew sends
 `mcpServers: []`, no `customAgents` and no `set_mode`, and waits for no MCP
 readiness reports. The session runs Kiro's default agent with that sandbox's
-tools; Kiro Crew's MCP servers, agent spec and PreToolUse gate do not apply to
+tools; Aj Crew's MCP servers, agent spec and PreToolUse gate do not apply to
 it, which is what the operator opts into by choosing the profile (the change
 card catalog classes `kiro_cloud_profiles` as code-exec). A start is refused,
 never run locally, when KAS's `initialize` does not list `cloud-sandbox` in
@@ -911,7 +911,7 @@ relay. An explicit user Stop still cancels normally. The cloud teardown policy i
 local-only: chat teardown and post-load setup failures unregister without sending
 KAS delete, which would remove the sandbox. Incognito and temporary chats are no
 exception: the same provider shutdown runs on idle eviction, compaction, resets and
-gateway restarts, so it cannot tell a chat ending from Kiro Crew letting go, and a
+gateway restarts, so it cannot tell a chat ending from Aj Crew letting go, and a
 delete there would destroy the sandbox with any unpushed work in it. Only a start's
 own cleanup of a session it minted and recorded nowhere deletes; other KAS and local
 sessions are unchanged.
@@ -958,12 +958,12 @@ fallback.
 ## Essential-context delivery contract
 
 Application code imports `ContextPromptProvider`, `ContextStreamEvent` and
-`context_provider_of` through `kiro_crew.agent_sdk`, never through the provider
+`context_provider_of` through `aj_crew.agent_sdk`, never through the provider
 or ACP packages. The SDK driver admits real provider classes without evaluating
 dynamic proxy attributes. Event protocols expose only the read-only evidence the
 receipt needs; the receipt stream preserves the caller's concrete event type.
 
-`kiro_crew.agent_sdk.drivers.acp.projected_session_mcp_servers(agent, *, work_dir=None)`
+`aj_crew.agent_sdk.drivers.acp.projected_session_mcp_servers(agent, *, work_dir=None)`
 is a synchronous driver helper for the deterministic workflow test scenario,
 not a top-level SDK export. It returns the existing filtered list of dictionaries
 and preserves resolver errors; async callers offload it. Projection itself neither
@@ -988,7 +988,7 @@ non-control output or tool activity. Empty, synthetic, cancelled and failed
 attempts cannot commit a receipt. Closing a stream after its genuine terminal is
 supported; closing earlier invalidates the receipt. Compaction, conversation
 clear, agent switch and client/process replacement invalidate prior evidence,
-including an in-flight candidate. `kiro_crew.agent_sdk` names every invalidating
+including an in-flight candidate. `aj_crew.agent_sdk` names every invalidating
 observation (`CONTEXT_EVENT_COMPACTION`, `CONTEXT_EVENT_CLEAR`,
 `CONTEXT_EVENT_AGENT_CHANGED`; the set is `essential_delivery
 .RECEIPT_INVALIDATING_EVENTS`). Both ACP providers also invalidate BEFORE
@@ -1072,7 +1072,7 @@ modes, so Kiro uses the fallback selector instead of claiming full native suppor
 
 Folder steering is deliberately NOT part of that launch contract. A chat filed
 into a folder that declares `steering_dirs` (see [config](config.md)) has those
-directories read by `kiro_crew.folder_steering.collect_folder_steering` and the
+directories read by `aj_crew.folder_steering.collect_folder_steering` and the
 resulting documents placed into session-start context by the context builder, for
 EVERY provider — kiro-cli, Claude Code, Codex, KAS, and any config-authored
 harness — with no provider branch on that path. `SpawnContext`, `AcpRuntime` and
@@ -1228,7 +1228,7 @@ These are submitted UTF-8 prompt bytes, not model token counts or proof of nativ
 harness ingestion.
 
 For a before/after measurement, run that same capture test in a separate trusted
-Git snapshot, then pass its log as `KIROCREW_ESSENTIAL_BASELINE` to the current
+Git snapshot, then pass its log as `AJCREW_ESSENTIAL_BASELINE` to the current
 receipt test. This variable now names a UTF-8 capture log, **not a Git ref**.
 The current interpreter reads JSON data only; it never executes source from the
 baseline or replaces loaded modules/classes. All baseline production imports come
@@ -1242,11 +1242,11 @@ never use an untrusted revision. No dependency install or live gateway is needed
 
 ```bash
 set -euo pipefail
-: "${KIROCREW_SCRATCH:?}" "${PYTHON:?}" "${BASELINE_SHA:?}"
+: "${AJCREW_SCRATCH:?}" "${PYTHON:?}" "${BASELINE_SHA:?}"
 root=$(git rev-parse --show-toplevel)
 sha=$(git rev-parse --verify "${BASELINE_SHA}^{commit}")
 [ "$sha" = "$BASELINE_SHA" ]
-measurement=$(mktemp -d "$KIROCREW_SCRATCH/wire.XXXXXX")
+measurement=$(mktemp -d "$AJCREW_SCRATCH/wire.XXXXXX")
 snapshot="$measurement/snapshot"
 mkdir "$snapshot"
 git archive --format=tar "$sha" > "$measurement/source.tar"
@@ -1257,11 +1257,11 @@ cp "$root/test/test_member_essential_context.py" "$snapshot/test/"
 cp "$root/test/member_essential_context_helpers.py" "$snapshot/test/"
 export PYTHONPYCACHEPREFIX="$measurement/pycache"
 export TMPDIR="$measurement"
-export KIROCREW_HOME="$measurement/home"
+export AJCREW_HOME="$measurement/home"
 export KIRO_HOME="$measurement/kiro"
-export KIROCREW_WORKSPACE="$measurement/workspace"
+export AJCREW_WORKSPACE="$measurement/workspace"
 export PYTEST_ADDOPTS=
-unset KIROCREW_ESSENTIAL_BASELINE
+unset AJCREW_ESSENTIAL_BASELINE
 printf 'BASELINE_COMMIT=%s\n' "$sha" > "$measurement/before.log"
 (
   cd "$snapshot"
@@ -1270,7 +1270,7 @@ printf 'BASELINE_COMMIT=%s\n' "$sha" > "$measurement/before.log"
     --basetemp="$measurement/before-tmp" \
     test/test_essential_delivery.py::test_wire_without_receipt_fresh_and_twenty_warm_turns
 ) >> "$measurement/before.log" 2>&1
-PYTHONPATH="$root/src" KIROCREW_ESSENTIAL_BASELINE="$measurement/before.log" \
+PYTHONPATH="$root/src" AJCREW_ESSENTIAL_BASELINE="$measurement/before.log" \
   "$PYTHON" -m pytest -n0 --no-cov -q -s -o addopts= --timeout=60 \
   -p no:cacheprovider --basetemp="$measurement/after-tmp" \
   "$root/test/test_essential_delivery.py::test_actual_wire_fresh_and_twenty_unchanged_warm_turns" \
@@ -1334,7 +1334,7 @@ not exhaustive; the `EVENT_*` constants in `acp/types.py` own the kind list:
 | `mcp_server_init_failure` | MCP server OAuth/init failed (has `server_name`, `text`) |
 
 Terminal events also carry `synthetic_completion`. It is false for a provider's
-raw result frame and true when Kiro Crew fabricates a compatibility terminal
+raw result frame and true when Aj Crew fabricates a compatibility terminal
 because the result frame never arrived; consumers that account completed work
 must require the raw form.
 
@@ -1369,13 +1369,13 @@ the instance; each owner's docstring names the instance fields its members write
 read. A bound member's `__qualname__` and `__module__` name its owner (nothing reads
 them), and `typing.get_type_hints` on one needs `AcpProvider` passed in (`localns`).
 `_ACP_PROVIDER_OWNERS` lists the owners lowest layer first: an owner imports only
-owners listed before it. Owners log under the `kiro_crew.providers.acp` logger, never
+owners listed before it. Owners log under the `aj_crew.providers.acp` logger, never
 import `providers/acp.py` at run time, and read their globals in their own
 namespaces: `providers/acp.py` keeps binding every name it imported, serves each moved
 module-level helper its own code does not read (`_write_cli_overlay`,
 `_RESUME_MAX_ATTEMPTS`, and the rest of `_SERVED`) from the owner that defines it, and
 a write through it reaches every owner binding the same object
-(`kiro_crew._facade_mirror`). `test/test_acp_bindings.py` pins the member inventory,
+(`aj_crew._facade_mirror`). `test/test_acp_bindings.py` pins the member inventory,
 the binding and the reach.
 
 | Provider owner | Owns |
@@ -1421,12 +1421,12 @@ in [agent-host-contract.md](agent-host-contract.md).
 - `is_alive()` → `AcpClient.is_responsive()` (600s stale threshold)
 - `is_process_alive()` → OS-level process check
 
-**Reasoning effort** (Opus/Sonnet/Fable **and GPT-5.x** — shared vocabulary in `effort.py`: levels `low|medium|high|xhigh|max`, resolution via `resolve_effort_for_model` with priority slot-override > workspace default > None). Capability authority is per harness. For kiro and claude the registry answers (`model_supports_effort`). For members of `ACP_BACKENDS_EFFORT_FROM_ADVERTISED_OPTION` (pi, deepseek, goose, opencode) the session's advertised config option answers `supports_effort` (False when the advertised list contains only `off` — an off-only option signals no real thinking level; for every member `_sync_effort_levels` admits the advertised levels to the validation set through `register_reasoning_effort_values` and never replaces the global fallback order, which a slot whose provider advertises no effort option of its own, kiro-cli, is served; after a live `set_model` the option read is the one the `model` write's own `session/set_config_option` result carries, which `AcpClient.set_config_option` stores as `AcpSessionHandle.set_config_option` does, because the `config_option_update` that precedes it is only buffered by `_wait_for_response`) and the allowed levels: `_resolve_effort` passes `levels=` (the advertised list) and `normalize=` (`effort_config_option_value`, the backend's spelling of a level) to `resolve_effort_for_model`, so the fold runs before the advertised-list filter and before the write. A Crew level a member has no spelling for (deepseek's `medium` and `xhigh`) is hidden, not mapped: `AcpProvider.accepts_effort_level` answers False for it, the dashboard effort route refuses it with a 400 `effort_level_not_offered` before anything persists, `change_effort` raises on it, and `_set_effort_config_option` writes nothing for it and walks its step-down over advertised rungs only, so every value pushed to a member is one that session advertised. The registry capability is a conservative allowlist of known-capable families (`opus`/`sonnet`/`fable`/`gpt`, plus Haiku 5.5 and later through a version gate that refuses every older or unversioned `haiku` id before the registry is asked, since the claude_code registry folds `claude-haiku-4.5` onto an effort-capable Sonnet), verified against kiro-cli 2.12/2.13 over ACP and, for `claude-haiku-5.5`, kiro-cli 2.31.1 — kiro rejects `/effort` on the other third-party models (deepseek/minimax/glm/qwen/auto) with "Effort configuration is currently not available on <model>". A new model family lands as unsupported until confirmed (safe default: the slider hides). On kiro-cli (`ACP_BACKENDS_EFFORT_OVERLAY`) it is applied via a workspace `cli.json` overlay at `<work_dir>/.kiro/settings/cli.json` → `chat.modelDefaults.<model>.<key>.effort`, written before every spawn (`_write_cli_overlay`) and read back on init (`_read_cli_overlay`) so the provider's map names the level kiro-cli will run. The overlay's scope is the work dir, so every session in one project shares one entry per model. KAS never opens it and takes the level as the `effortLevel` config option, so the file is neither written, read back nor cleared for it: read back there, it started a new chat at whatever level another chat in the same work dir picked last. A KAS slot keeps its pick across a gateway restart through its own transcript metadata, which the dashboard hands the factory as `reasoning_effort_override`, and across a compaction restart or reset successor through the session's recorded override, which the dashboard effort route replaces with the live pick (`SessionManager.record_effort_override`). A session the dashboard does not start (cron, Slack, webhook) resolves its level from config (crew pin, role, `agent.reasoning_effort`) on every cold start: a level picked live on such a session from a dashboard slot reaches its successors, but a cold start from the channel side reads no dashboard slot, for effort as for the model. The `<key>` sub-object is **family-specific** (`effort_settings_key`): `output_config` for Claude models, `reasoning` for GPT models — kiro silently ignores the wrong key, so a mismatched shape would survive a live push but drop on respawn. `_write_cli_overlay` removes stale effort from the other family key while preserving unrelated settings; `_clear_cli_overlay_effort`/`_read_cli_overlay` sweep both keys. Every in-product writer of that file takes the shared `.kirocrew-cli-settings.lock` sidecar (see [acp-client](acp-client.md)), under one of TWO ceilings: a native launch takes the startup one (it cannot wait, and a launch that loses the lock falls back to authored agents), while an operator action takes a ceiling far above projection's own sub-second critical section. `_clear_cli_overlay_effort` is an operator action, so it runs through `asyncio.to_thread` — waiting that long on the loop would freeze every session — and losing the lock there means a stuck holder rather than routine contention. The WRITE side is the same shape and gets the same treatment: `change_effort` applies the overlay off-loop under the action ceiling and refuses to push live at all unless it persisted, rolling the per-model override back and raising, because the file is what a respawn reads — reporting a live change over a write that did not land promises a level the next reset undoes. The pre-spawn overlay writes keep the startup ceiling and run off the loop in `start()`; the provider constructor writes nothing. A launch cannot wait long, so a write that still loses the lock logs a warning and the spawn reads the file as it stood. That is what keeps its answer two-valued: a failure that happened by design would need a third state for "nothing changed", and one that means something is wrong does not. It returns whether the file stopped naming the model: an absent file, an absent entry and a malformed file are all successes (`_read_cli_overlay` reads a malformed file as `{}` too, so nothing re-seeds), while a lock failure and a read that fails on a file that EXISTS under the held lock leave the level on disk. `clear_effort` answers that case with a THIRD outcome (`None`), not a bool: both bool values make the handler commit the cleared slot value — the reset branch before its teardown, and the success path before its final 200 — so either would show "default" over an overlay that still holds the level, and `False` additionally resets into re-reading that same level. `None` means nothing changed on either side, and the handler answers it with a retryable 409 `effort_overlay_busy` that commits nothing and resets nothing. `change_effort` has no such case: it raises, because a change that did not persist is a failure rather than a no-op. Clearing to a resolvable workspace default runs under the same write-first discipline: it applies the overlay off-loop under the action ceiling and pushes `/effort` only once that landed, because a live push over a write that did not persist reports a default the next spawn replaces with the level just cleared — a failed write there restores the popped override and answers `None` as well. `clear_effort` must not report a clear on that answer — the level is still on disk and `_read_cli_overlay` re-seeds `_effort_per_model` at construction, so the session reset a clear asks for would re-apply it. It restores the popped entry and logs a warning naming the model, and returns True — not False: the handler resets the session on False, and that reset would re-read the same level, so the operator would pay a reset and still run the old effort. True here means "no reset needed", which is the true answer when nothing changed on either side; the warning is what asks for a retry. The `change_effort` rollback path restores the level the same way for the same reason, in both of its shapes: the one that clears an overlay its live push never applied, and the one that rewrites the overlay back to the prior level. When either write loses the lock the file keeps the attempted level and construction re-seeds from it, so the map follows the FILE and a warning names the level a respawn adopts — reporting an undo the next spawn contradicts would be worse than admitting the rollback is incomplete. Live change pushes `/effort` with the TuiCommand args form (`send_command(args={"level": …})`). The factory threads `reasoning_effort_override` → `effort_per_model[current_model]`, keyed by the configured spelling; on the claude client path `start` moves that entry to the model the session records after `ensure_ready` (claude records the advertised spelling, e.g. `claude-opus-5-5[1m]` for a `claude-opus-5.5` pin), and leaves it in place when every spelling was refused and the session runs the backend default. For an advertised-option harness the factory carries the level forward and leaves judgement to `_resolve_effort` once `session/new` has advertised the option, so a cold start does not drop it on the registry's answer. When nothing is pinned (the resolved model is empty, as with an explicitly empty `agent.model` or a pin that collapses to `auto`), the factory passes a valid level, or any level on an advertised-option harness, as `unbound_effort` instead of keying it, because no model id exists until the backend answers `session/new`. Every effort read and write keys on `_effort_model`: the pinned model, else the backend-reported `served_model` once known. `_bind_unbound_effort` runs on every (re)start, after the session is ready and before `_apply_initial_effort`. It stores the level under the served model, replacing any level already stored there: a live change moves the unbound level with it, so a stored level that differs can only be one a previous run left in the workspace overlay, which construction seeds the map from on kiro-cli, and keeping it would run the session at a level the caller did not ask for. On the kiro family, whose level otherwise rides the spawn-time overlay, it pushes the level live through `change_effort` whenever the overlay does not already hold it, which also writes the overlay for the next spawn. That covers an unpinned kiro-cli, which is launched without `--model` and serves its own `chat.defaultModel` when one is set. Before that call the map holds the level the session was spawned with (the overlay's, or none), so a push kiro-cli refuses rolls back to that level rather than leaving the requested one in the map and the overlay while the session runs another. kiro-cli reports `currentModelId` `auto` for an `auto` session, and `served_model` filters that to `""`, so such a session still offers no effort, as before. A level the serving model does not take, or one with no served model at all, is logged as not applied once per provider. `clear_effort` drops the unbound level so the next restart does not bring it back, and a successful `change_effort` replaces it. Otherwise, when a valid requested effort cannot be threaded on a cold start (the resolved model is not effort-capable) the factory's gate logs one warning naming the level, the session, and the resolved model — reporting its own drop decision on surfaces that construct a fresh provider, an explicit `reasoning_effort_override` always warns (a caller's own dropped request is the event the gate exists to surface), while a drop sourced only from the config default (`agent.reasoning_effort`) is deduped once per (model, level) for the factory's lifetime so one static configuration fact does not repeat on every construction. A `reasoning_effort_override` on a warm-pool claim is applied post-claim via `provider.change_effort` (updating `_effort_per_model` and the `cli.json` overlay write) rather than bypassing the pool, recovering pool-hit startup latency; if the claimed model does not support effort, `change_effort` returns False and a corresponding drop warning is logged. The dashboard handler routes through `change_effort`/`clear_effort` and only resets the session when there is no live provider. Non-effort-capable models persist the slot value without a live apply or reset.
+**Reasoning effort** (Opus/Sonnet/Fable **and GPT-5.x** — shared vocabulary in `effort.py`: levels `low|medium|high|xhigh|max`, resolution via `resolve_effort_for_model` with priority slot-override > workspace default > None). Capability authority is per harness. For kiro and claude the registry answers (`model_supports_effort`). For members of `ACP_BACKENDS_EFFORT_FROM_ADVERTISED_OPTION` (pi, deepseek, goose, opencode) the session's advertised config option answers `supports_effort` (False when the advertised list contains only `off` — an off-only option signals no real thinking level; for every member `_sync_effort_levels` admits the advertised levels to the validation set through `register_reasoning_effort_values` and never replaces the global fallback order, which a slot whose provider advertises no effort option of its own, kiro-cli, is served; after a live `set_model` the option read is the one the `model` write's own `session/set_config_option` result carries, which `AcpClient.set_config_option` stores as `AcpSessionHandle.set_config_option` does, because the `config_option_update` that precedes it is only buffered by `_wait_for_response`) and the allowed levels: `_resolve_effort` passes `levels=` (the advertised list) and `normalize=` (`effort_config_option_value`, the backend's spelling of a level) to `resolve_effort_for_model`, so the fold runs before the advertised-list filter and before the write. A Crew level a member has no spelling for (deepseek's `medium` and `xhigh`) is hidden, not mapped: `AcpProvider.accepts_effort_level` answers False for it, the dashboard effort route refuses it with a 400 `effort_level_not_offered` before anything persists, `change_effort` raises on it, and `_set_effort_config_option` writes nothing for it and walks its step-down over advertised rungs only, so every value pushed to a member is one that session advertised. The registry capability is a conservative allowlist of known-capable families (`opus`/`sonnet`/`fable`/`gpt`, plus Haiku 5.5 and later through a version gate that refuses every older or unversioned `haiku` id before the registry is asked, since the claude_code registry folds `claude-haiku-4.5` onto an effort-capable Sonnet), verified against kiro-cli 2.12/2.13 over ACP and, for `claude-haiku-5.5`, kiro-cli 2.31.1 — kiro rejects `/effort` on the other third-party models (deepseek/minimax/glm/qwen/auto) with "Effort configuration is currently not available on <model>". A new model family lands as unsupported until confirmed (safe default: the slider hides). On kiro-cli (`ACP_BACKENDS_EFFORT_OVERLAY`) it is applied via a workspace `cli.json` overlay at `<work_dir>/.kiro/settings/cli.json` → `chat.modelDefaults.<model>.<key>.effort`, written before every spawn (`_write_cli_overlay`) and read back on init (`_read_cli_overlay`) so the provider's map names the level kiro-cli will run. The overlay's scope is the work dir, so every session in one project shares one entry per model. KAS never opens it and takes the level as the `effortLevel` config option, so the file is neither written, read back nor cleared for it: read back there, it started a new chat at whatever level another chat in the same work dir picked last. A KAS slot keeps its pick across a gateway restart through its own transcript metadata, which the dashboard hands the factory as `reasoning_effort_override`, and across a compaction restart or reset successor through the session's recorded override, which the dashboard effort route replaces with the live pick (`SessionManager.record_effort_override`). A session the dashboard does not start (cron, Slack, webhook) resolves its level from config (crew pin, role, `agent.reasoning_effort`) on every cold start: a level picked live on such a session from a dashboard slot reaches its successors, but a cold start from the channel side reads no dashboard slot, for effort as for the model. The `<key>` sub-object is **family-specific** (`effort_settings_key`): `output_config` for Claude models, `reasoning` for GPT models — kiro silently ignores the wrong key, so a mismatched shape would survive a live push but drop on respawn. `_write_cli_overlay` removes stale effort from the other family key while preserving unrelated settings; `_clear_cli_overlay_effort`/`_read_cli_overlay` sweep both keys. Every in-product writer of that file takes the shared `.ajcrew-cli-settings.lock` sidecar (see [acp-client](acp-client.md)), under one of TWO ceilings: a native launch takes the startup one (it cannot wait, and a launch that loses the lock falls back to authored agents), while an operator action takes a ceiling far above projection's own sub-second critical section. `_clear_cli_overlay_effort` is an operator action, so it runs through `asyncio.to_thread` — waiting that long on the loop would freeze every session — and losing the lock there means a stuck holder rather than routine contention. The WRITE side is the same shape and gets the same treatment: `change_effort` applies the overlay off-loop under the action ceiling and refuses to push live at all unless it persisted, rolling the per-model override back and raising, because the file is what a respawn reads — reporting a live change over a write that did not land promises a level the next reset undoes. The pre-spawn overlay writes keep the startup ceiling and run off the loop in `start()`; the provider constructor writes nothing. A launch cannot wait long, so a write that still loses the lock logs a warning and the spawn reads the file as it stood. That is what keeps its answer two-valued: a failure that happened by design would need a third state for "nothing changed", and one that means something is wrong does not. It returns whether the file stopped naming the model: an absent file, an absent entry and a malformed file are all successes (`_read_cli_overlay` reads a malformed file as `{}` too, so nothing re-seeds), while a lock failure and a read that fails on a file that EXISTS under the held lock leave the level on disk. `clear_effort` answers that case with a THIRD outcome (`None`), not a bool: both bool values make the handler commit the cleared slot value — the reset branch before its teardown, and the success path before its final 200 — so either would show "default" over an overlay that still holds the level, and `False` additionally resets into re-reading that same level. `None` means nothing changed on either side, and the handler answers it with a retryable 409 `effort_overlay_busy` that commits nothing and resets nothing. `change_effort` has no such case: it raises, because a change that did not persist is a failure rather than a no-op. Clearing to a resolvable workspace default runs under the same write-first discipline: it applies the overlay off-loop under the action ceiling and pushes `/effort` only once that landed, because a live push over a write that did not persist reports a default the next spawn replaces with the level just cleared — a failed write there restores the popped override and answers `None` as well. `clear_effort` must not report a clear on that answer — the level is still on disk and `_read_cli_overlay` re-seeds `_effort_per_model` at construction, so the session reset a clear asks for would re-apply it. It restores the popped entry and logs a warning naming the model, and returns True — not False: the handler resets the session on False, and that reset would re-read the same level, so the operator would pay a reset and still run the old effort. True here means "no reset needed", which is the true answer when nothing changed on either side; the warning is what asks for a retry. The `change_effort` rollback path restores the level the same way for the same reason, in both of its shapes: the one that clears an overlay its live push never applied, and the one that rewrites the overlay back to the prior level. When either write loses the lock the file keeps the attempted level and construction re-seeds from it, so the map follows the FILE and a warning names the level a respawn adopts — reporting an undo the next spawn contradicts would be worse than admitting the rollback is incomplete. Live change pushes `/effort` with the TuiCommand args form (`send_command(args={"level": …})`). The factory threads `reasoning_effort_override` → `effort_per_model[current_model]`, keyed by the configured spelling; on the claude client path `start` moves that entry to the model the session records after `ensure_ready` (claude records the advertised spelling, e.g. `claude-opus-5-5[1m]` for a `claude-opus-5.5` pin), and leaves it in place when every spelling was refused and the session runs the backend default. For an advertised-option harness the factory carries the level forward and leaves judgement to `_resolve_effort` once `session/new` has advertised the option, so a cold start does not drop it on the registry's answer. When nothing is pinned (the resolved model is empty, as with an explicitly empty `agent.model` or a pin that collapses to `auto`), the factory passes a valid level, or any level on an advertised-option harness, as `unbound_effort` instead of keying it, because no model id exists until the backend answers `session/new`. Every effort read and write keys on `_effort_model`: the pinned model, else the backend-reported `served_model` once known. `_bind_unbound_effort` runs on every (re)start, after the session is ready and before `_apply_initial_effort`. It stores the level under the served model, replacing any level already stored there: a live change moves the unbound level with it, so a stored level that differs can only be one a previous run left in the workspace overlay, which construction seeds the map from on kiro-cli, and keeping it would run the session at a level the caller did not ask for. On the kiro family, whose level otherwise rides the spawn-time overlay, it pushes the level live through `change_effort` whenever the overlay does not already hold it, which also writes the overlay for the next spawn. That covers an unpinned kiro-cli, which is launched without `--model` and serves its own `chat.defaultModel` when one is set. Before that call the map holds the level the session was spawned with (the overlay's, or none), so a push kiro-cli refuses rolls back to that level rather than leaving the requested one in the map and the overlay while the session runs another. kiro-cli reports `currentModelId` `auto` for an `auto` session, and `served_model` filters that to `""`, so such a session still offers no effort, as before. A level the serving model does not take, or one with no served model at all, is logged as not applied once per provider. `clear_effort` drops the unbound level so the next restart does not bring it back, and a successful `change_effort` replaces it. Otherwise, when a valid requested effort cannot be threaded on a cold start (the resolved model is not effort-capable) the factory's gate logs one warning naming the level, the session, and the resolved model — reporting its own drop decision on surfaces that construct a fresh provider, an explicit `reasoning_effort_override` always warns (a caller's own dropped request is the event the gate exists to surface), while a drop sourced only from the config default (`agent.reasoning_effort`) is deduped once per (model, level) for the factory's lifetime so one static configuration fact does not repeat on every construction. A `reasoning_effort_override` on a warm-pool claim is applied post-claim via `provider.change_effort` (updating `_effort_per_model` and the `cli.json` overlay write) rather than bypassing the pool, recovering pool-hit startup latency; if the claimed model does not support effort, `change_effort` returns False and a corresponding drop warning is logged. The dashboard handler routes through `change_effort`/`clear_effort` and only resets the session when there is no live provider. Non-effort-capable models persist the slot value without a live apply or reset.
 
 **MCP Tool Search** (kiro-family backends — see https://kiro.dev/docs/cli/mcp/tool-search/): loads MCP tool specs on demand ("search-and-call") instead of sending every tool definition each turn, keeping the context window clear when many MCP servers are configured. Gated by the `agent.tool_search` config toggle (default **on**; auto-surfaces as a Settings toggle since the schema is generated from the dataclass).
 - **kiro-cli (Rust engine):** applied via the **same** workspace `cli.json` overlay used for effort (`<work_dir>/.kiro/settings/cli.json`), written deterministically before every spawn and on each restart by `_write_tool_search_overlay` (called from `start()`), scoped to `ACP_BACKENDS_TOOL_SEARCH_OVERLAY`. The engine activates deferral only when the agent's `tools` also grants `tool_search`, so on this channel the loader invariant is the engine's. When enabled it writes the flat keys `toolSearch.enabled=true` plus `toolSearch.minPct`/`toolSearch.minTokens`, taken from `agent.tool_search_min_pct` / `agent.tool_search_min_tokens` (defaults `5` / `50000`, mirroring kiro-cli's own thresholds; clamped to 0-100 and >= 0, non-numeric falls back to the default); when disabled it writes `toolSearch.enabled=false` and drops both thresholds.
 - **Why the thresholds are not forced to 0:** deferral costs a round-trip — a deferred tool's spec is absent from the model's tool list, so the first direct call fails with `A tool with the name '<name>' does not exist` and has to be recovered with `tool_search`. That only pays once the specs are genuinely large, which is what the thresholds express (kiro-cli defers when EITHER is exceeded). Setting both to `0` restores unconditional deferral for operators who want it. The thresholds are always written **explicitly** rather than omitted, so a value already in the file is replaced rather than silently kept.
-- Writing both `true` and `false` makes the Kiro Crew toggle authoritative over any value in the user's global `~/.kiro/settings/cli.json`. The write is merge-safe with the effort `chat.modelDefaults` keys in the same file.
+- Writing both `true` and `false` makes the Aj Crew toggle authoritative over any value in the user's global `~/.kiro/settings/cli.json`. The write is merge-safe with the effort `chat.modelDefaults` keys in the same file.
 - kiro-cli reads workspace settings only from `<cwd>/.kiro/settings/cli.json`, so the overlay cannot move out of the work dir. When the work dir is a git work-tree top, the shared overlay lock adds the overlay and its lock to the repository's local `info/exclude`, keeping the user's `git status` clean (see [acp-client](acp-client.md)); an already-tracked `cli.json` is not hidden.
 - **KAS:** never opens `cli.json`; it reads the setting from the ACP `initialize` request, `clientCapabilities._meta.kiro.settings.toolSearch` — a process-wide channel filled by `AcpRuntime._handshake_client_capabilities`, entered from the spawn path only when the harness answers `client_meta_settings` (the harnesses in `ACP_BACKENDS_CLIENT_META_SETTINGS`; every other host reads its constant with no new step), from the same `agent.tool_search*` values (`agent_sdk/tool_search.py`). KAS 2.34's deferral path reads none of `enabled`, `minPct` or `minTokens`: it defers **every** MCP tool whose `<server>::<tool>` id is not on `toolSearch.neverDefer` (and whose server is not an operator mandatory server), and injects its own `tool_load` / `tool_call` to reach them. So the client keeps the invariant: for a spawn agent whose spec grants no `tool_search`, `neverDefer` lists every MCP tool that spec can call (`agent_sdk/tool_search.kas_never_defer_ids`) — `@server/tool` as `server::tool`, a tool glob and a whole-server `@server` grant expanded from the names Crew already holds for that server (`acp/runtime_spawn_launch._known_server_tool_names`: the last probe's `tools/list`, read from the probe cache; it never imports a Crew server's declaration module into the gateway, because that package is writable by the agent's uid), `"*"` as every server in the spec's `mcpServers`; KAS has no server-level or wildcard `neverDefer` form, so a server Crew holds no list for stays deferred and reachable through KAS's `tool_load`, which is the host's behaviour without the list. A spec that grants the loader is sent no `neverDefer`. `enabled` is still sent, as `true` only when the spawn agent's spec grants `tool_search` — named in `tools`, or via `"*"` / `@builtin` — and does not take it back in `excludedTools`; it is sent as an explicit `false` otherwise — never omitted, so a host default cannot flip a session into "deferred, unreachable". The spec judged is the one the KAS projection puts on the wire (`AcpRuntime._projected_spawn_spec`: the freshness gate's snapshot for a derived agent, else `acp/harness/kas.resolve_projected_spec`, the call the projection itself makes, after the same `ensure_agent_materialized` self-heal the projection runs) — so a project checkout's `.kiro/agents` spec is judged exactly when it is the one projected; an unreadable spec grants nothing. The setting is process-wide, so every later `create_session` on a deferral-enabled process judges the payload it is about to send: a projection that grants no loader — another agent, or the same agent whose spec has since lost the grant — is refused with `AcpToolSurfaceBindingError` (an `AcpWorkspaceBindingError`), which the run-runtime caller already answers by giving that session a runtime of its own. The check lives in `AcpRuntime._kas_custom_agents`, the projection seam both `create_session` and `load_session` go through, so a resumed session is judged the same way. It is deliberately one-directional: a process whose handshake sent `enabled: false` may serve a later session whose agent does grant the loader — that session simply runs with full tool specs, today's behaviour and never a loss of tools — whereas the reverse pairing loses every MCP tool, which is the only shape worth a refusal. Every KAS-capable runtime constructor threads the same resolved settings — the foreground provider, its resume-respawn fallback, the companion-runtime kwargs mirror (`session_allocation._collect_parent_runtime_kwargs`, reading the parent's `LLMProvider.tool_search_settings` capability — default `None`, answered by `AcpProvider`; harness-parity H14) and the background runtime (`session_background`) — so no KAS process is left to the host's default. KAS does not honour the toggle or the two thresholds — deferral there is all-or-nothing, with `toolSearch.neverDefer` as its keep-list, so an operator who turns `agent.tool_search` off still gets deferral on KAS for a spec that grants the loader — but they are forwarded verbatim so the setting means one thing.
 - **Non-kiro-family backends** — no-op on both channels. `_apply_tool_search_overlay` returns early when the backend does not read the overlay, the handshake channel is filled only for members of `ACP_BACKENDS_CLIENT_META_SETTINGS`, and both are silent when no toggle value was threaded in (`tool_search is None`).
@@ -1450,7 +1450,7 @@ in [agent-host-contract.md](agent-host-contract.md).
 - `agent.acp_backend` is the harness choice, resolved through `agent_sdk.backends.resolve_selected_backend` (the top-level `acp_backends` module is a re-export shim kept for existing call sites). A stored Kiro CLI pick (`"kiro"`) resolves to KAS once the gateway confirmed the host's kiro-cli offers v3 and while KAS is selectable, so the factory builds a KAS provider for it with KAS's launch, projection, permissions and compaction; it builds the Kiro CLI provider without that confirmation ([harness-parity](harness-parity.md) H1). The Kiro CLI provider, its skill-view aliases and the `cli.json` overlay stay for that case.
 - `create_provider_factory()` returns a `Callable` that builds an `AcpProvider` for the resolved backend.
 
-An agent spec's model is consumed by kiro-cli before Kiro Crew reaches
+An agent spec's model is consumed by kiro-cli before Aj Crew reaches
 `session/new`, so the live-session entitlement guard cannot diagnose a wrong
 wire spelling at spawn time. Agent create/update validate a pin before
 persisting it: they reuse the role-model validator for advertised ids and
@@ -1467,10 +1467,10 @@ spec.
 
 MCP servers are passed directly in the `session/new` params. The managed servers
 are the entries of `agent.py:_MANAGED_MCP_SERVERS` (see also
-[`docs/architecture/mcp.md`](../../architecture/mcp.md)): `kirocrew-core` and
-`kirocrew-cron` are unconditional, `kirocrew-computer` is spec-gated
-(`_computer_use_spec_gate`), and the others (`kirocrew-dashboard`,
-`kirocrew-work`, `kirocrew-crew-log`) are opt-in per their entry.
+[`docs/architecture/mcp.md`](../../architecture/mcp.md)): `ajcrew-core` and
+`ajcrew-cron` are unconditional, `ajcrew-computer` is spec-gated
+(`_computer_use_spec_gate`), and the others (`ajcrew-dashboard`,
+`ajcrew-work`, `ajcrew-crew-log`) are opt-in per their entry.
 User-configured servers from the agent config are merged in.
 
 ## SessionManager (`session.py`)
@@ -1497,7 +1497,7 @@ content or credentials. Pinned by `test/test_workflows_agent_pool_unpooled_teard
 
 ### Workflow sessions publish their own turn identity
 
-A workflow worker's kiro-cli process has no ambient `KIROCREW_SESSION_KEY`
+A workflow worker's kiro-cli process has no ambient `AJCREW_SESSION_KEY`
 (`AcpRuntime` does not export one). Its eligible managed MCP elements carry an
 ordinary signed per-session token, including when the broker is disabled.
 Every workflow send surface also calls
@@ -1524,13 +1524,13 @@ If the parent session is alive but returned no policy, deny-by-default applies �
 
 ## Turn helpers: `llm_helpers.py`
 
-`kiro_crew.llm_helpers` runs one prompt to its answer on any `LLMProvider`: the
+`aj_crew.llm_helpers` runs one prompt to its answer on any `LLMProvider`: the
 unattended surfaces (cron, heartbeat, the task runner, sub-agents, workflows, one-shot
 background prompts) call `stream_and_collect` or `run_bg_oneliner` through it, and the
 interactive `chat_runner` loop reuses its error classifiers and backoff curves. The
-module is a mirror facade (`kiro_crew._facade_mirror`) over the owners in
+module is a mirror facade (`aj_crew._facade_mirror`) over the owners in
 `llm_helpers_parts/`, so every name still imports and patches as
-`kiro_crew.llm_helpers.<name>`, and no owner imports the facade. New code goes to the
+`aj_crew.llm_helpers.<name>`, and no owner imports the facade. New code goes to the
 owner of its responsibility:
 
 | Owner | Owns |
@@ -1557,7 +1557,7 @@ turn it exists to suppress.
 
 The owners read the ACP layer's names (the `EVENT_*` kinds, `LLMEvent`, `LLMProvider`,
 `AcpError`, `TurnUsage` and the rest) from `agent_sdk/drivers/acp_turn_vocab.py`, so no
-owner imports `kiro_crew.acp` or `kiro_crew.providers` itself
+owner imports `aj_crew.acp` or `aj_crew.providers` itself
 (`scripts/check_agent_sdk_boundary.py`).
 
 ## Automatic recovery
@@ -1574,8 +1574,8 @@ A transient 5xx that arrives *after* the turn already emitted output (the `_turn
 
 ## Installation
 
-Kiro Crew drives `kiro-cli` over ACP — install it per its own docs, ensure it is
-on `PATH`, and run `kiro-cli login`. `kirocrew doctor` reports its status.
+Aj Crew drives `kiro-cli` over ACP — install it per its own docs, ensure it is
+on `PATH`, and run `kiro-cli login`. `ajcrew doctor` reports its status.
 
 
 ## AcpProvider: shared-runtime startup
@@ -1704,7 +1704,7 @@ See [ACP client](acp-client.md#native-skill-startup-views).
 
 ### Codex dashboard session mount
 
-For an agent explicitly granted `kirocrew-dashboard`, the Codex mirror rebuilds
+For an agent explicitly granted `ajcrew-dashboard`, the Codex mirror rebuilds
 its direct launch from the gateway-managed entry and injects that session's
 identity. Both creation and resume use this projection. The Codex harness sets
 `DISABLE_MCP_CONFIG_FILTERING=true`: codex-acp otherwise drops a session entry
@@ -1715,8 +1715,8 @@ servers remain withheld. A granted gateway broker stub is also admitted through
 the same restriction checks; gatewayd verifies its claim and supplies per-call
 identity to the managed backend.
 
-Every other identity-bound Crew server (`kirocrew-work`, `kirocrew-guide`,
-`kirocrew-mate` and the rest) is admitted only as that gateway broker stub, and
+Every other identity-bound Crew server (`ajcrew-work`, `ajcrew-guide`,
+`ajcrew-mate` and the rest) is admitted only as that gateway broker stub, and
 only in its exact shape: a stdio element running the broker stub module under
 one `--server <name>`, whose `env` is exactly one stub-token pair equal to this
 session's nonempty token. The server must also consume the per-call caller that
@@ -1727,8 +1727,8 @@ gets Crew's tools by listing those servers in `mcp_gateway.stub_servers`; withou
 that setting nothing changes.
 
 On an enforced sandbox, credential-bearing host readers need the broker route:
-configure `mcp_gateway.stub_servers` to include `kirocrew-core` and
-`kirocrew-dashboard`. Direct children cannot read the gateway credential or SEL
+configure `mcp_gateway.stub_servers` to include `ajcrew-core` and
+`ajcrew-dashboard`. Direct children cannot read the gateway credential or SEL
 trust root there; the Codex dashboard mount does not relax those masks. Global Codex MCP entries
 are not a substitute for this session mount.
 
@@ -1737,9 +1737,9 @@ are not a substitute for this session mount.
 The opencode, goose, copilot, deepseek and strands mirrors place their array
 through the shared `place_single_binary_array` (`providers/mirrors/opencode.py`),
 which withholds every identity-bound Crew server, from both the spec-described
-half of the array and the pooled broker stubs. The work ledger (`kirocrew-work`)
+half of the array and the pooled broker stubs. The work ledger (`ajcrew-work`)
 is admitted only as the gateway's broker stub, and only in its exact shape: a
-stdio element running the broker stub module under one `--server kirocrew-work`,
+stdio element running the broker stub module under one `--server ajcrew-work`,
 whose `env` is exactly one stub-token pair equal to this session's nonempty
 token. It still passes the `tools` allowlist and `disabled`. A switched-off tool
 keeps the stub mounted on opencode only while its deny rule is in force; goose,

@@ -37,7 +37,7 @@ const REPORTS = path.normalize("/reports");
 // `build.productName`, which is the joined form. The collector is handed the
 // spaced display name at runtime and normalizes the difference away, so these
 // fixtures have to spell the on-disk form to be worth anything.
-const APP = "KiroCrew"; // brand-ok: build.productName, an on-disk identifier
+const APP = "AjCrew"; // brand-ok: build.productName, an on-disk identifier
 // Every fixture .ips carries the real `-YYYY-MM-DD-HHMMSS` stamp macOS appends,
 // because that stamp is what gives `ipsBelongsToApp` a boundary to anchor our
 // name against. A convenient shorthand like `${APP}-x.ips` is not a name macOS
@@ -47,8 +47,8 @@ const IPS_NAME = `${APP}-2026-09-03-101530.ips`;
 // The executable basename on Linux and Windows, which is NOT the display name and
 // is not derivable from it: `electron/package.json` sets `executableName`, and
 // `packaging/build-desktop.sh` renames it again for the nightly channel.
-const EXEC = "kirocrew-desktop";
-const NIGHTLY_EXEC = "kirocrew-desktop-nightly";
+const EXEC = "ajcrew-desktop";
+const NIGHTLY_EXEC = "ajcrew-desktop-nightly";
 const PENDING = path.join(DUMPS, "pending");
 const COMPLETED = path.join(DUMPS, "completed");
 // Crashpad's Windows dump folder, not the macOS `.ips` folder `REPORTS` names.
@@ -232,8 +232,8 @@ function withBaseline(fs, extra = {}) {
 
 describe("crashLogPath / crashStatePath", () => {
   it("keeps both files in the logs directory beside chromium.log", () => {
-    assert.equal(crashLogPath("/logs/Kiro Crew"), path.join("/logs/Kiro Crew", CRASH_LOG_BASENAME));
-    assert.equal(crashStatePath("/logs/Kiro Crew"), path.join("/logs/Kiro Crew", CRASH_STATE_BASENAME));
+    assert.equal(crashLogPath("/logs/Aj Crew"), path.join("/logs/Aj Crew", CRASH_LOG_BASENAME));
+    assert.equal(crashStatePath("/logs/Aj Crew"), path.join("/logs/Aj Crew", CRASH_STATE_BASENAME));
   });
 
   it("tolerates a missing directory rather than throwing on a bad launch", () => {
@@ -314,7 +314,7 @@ describe("isOwnModule", () => {
   });
 
   it("ignores spacing and .exe so one app name serves every platform", () => {
-    assert.equal(isOwnModule(`C:\\Program Files\\${APP}\\${APP}.exe`, "Kiro Crew"), true);
+    assert.equal(isOwnModule(`C:\\Program Files\\${APP}\\${APP}.exe`, "Aj Crew"), true);
   });
 
   // A `npm start` dev run is where a crash is most likely to be looked at, and it
@@ -357,26 +357,26 @@ describe("isOwnModule", () => {
   });
 
   // Anchoring on the display name alone was the regression that made ownership an
-  // enumerated set: on Linux and Windows the binary is `kirocrew-desktop`, which
-  // is neither equal to `Kiro Crew` nor a helper of it. Off darwin a minidump is
+  // enumerated set: on Linux and Windows the binary is `ajcrew-desktop`, which
+  // is neither equal to `Aj Crew` nor a helper of it. Off darwin a minidump is
   // the ONLY crash channel, and a dump judged foreign is added to the seen-set —
   // so getting this wrong discarded every Linux crash permanently.
   it("accepts the executable name, which the display name does not imply", () => {
-    assert.equal(isOwnModule(`/opt/${APP}/${EXEC}`, ["Kiro Crew", EXEC]), true);
-    assert.equal(isOwnModule(`C:\\Program Files\\${APP}\\${EXEC}.exe`, ["Kiro Crew", EXEC]), true);
-    // The nightly channel renames the binary again, and `kirocrew-desktop-nightly`
-    // extends `kirocrewnightly` in no direction at all — which is precisely why
+    assert.equal(isOwnModule(`/opt/${APP}/${EXEC}`, ["Aj Crew", EXEC]), true);
+    assert.equal(isOwnModule(`C:\\Program Files\\${APP}\\${EXEC}.exe`, ["Aj Crew", EXEC]), true);
+    // The nightly channel renames the binary again, and `ajcrew-desktop-nightly`
+    // extends `ajcrewnightly` in no direction at all — which is precisely why
     // the name has to be passed in rather than computed from the display name.
-    assert.equal(isOwnModule(`/opt/${APP}/${NIGHTLY_EXEC}`, ["Kiro Crew Nightly", NIGHTLY_EXEC]), true);
+    assert.equal(isOwnModule(`/opt/${APP}/${NIGHTLY_EXEC}`, ["Aj Crew Nightly", NIGHTLY_EXEC]), true);
   });
 
   // Enumerated, not widened. Adding a second name must not turn the rule back
   // into a prefix test, or the sibling-channel defect returns through the door
   // that was opened to fix Linux.
   it("still refuses a sibling channel's binary once two names are in play", () => {
-    assert.equal(isOwnModule(`/opt/${APP}/${NIGHTLY_EXEC}`, ["Kiro Crew", EXEC]), false);
-    assert.equal(isOwnModule(`/opt/${APP}/${EXEC}`, ["Kiro Crew Nightly", NIGHTLY_EXEC]), false);
-    assert.equal(isOwnModule(`${EXEC}-helper-x`, ["Kiro Crew", EXEC]), false);
+    assert.equal(isOwnModule(`/opt/${APP}/${NIGHTLY_EXEC}`, ["Aj Crew", EXEC]), false);
+    assert.equal(isOwnModule(`/opt/${APP}/${EXEC}`, ["Aj Crew Nightly", NIGHTLY_EXEC]), false);
+    assert.equal(isOwnModule(`${EXEC}-helper-x`, ["Aj Crew", EXEC]), false);
   });
 
   // The helper arm is a set too, not an open prefix. Our real helpers are the
@@ -454,7 +454,7 @@ describe("classifyMinidump", () => {
 describe("ipsBelongsToApp", () => {
   it("matches our reports by name before anything is opened", () => {
     assert.equal(ipsBelongsToApp(`${APP}-2026-09-03-101530.ips`, APP), true);
-    assert.equal(ipsBelongsToApp(`${APP}-2026-09-03-101530.ips`, "Kiro Crew"), true);
+    assert.equal(ipsBelongsToApp(`${APP}-2026-09-03-101530.ips`, "Aj Crew"), true);
   });
 
   it("matches our helper processes, which crash under their own names", () => {
@@ -1215,7 +1215,7 @@ describe("collectCrashReports — bounds and failure", () => {
     });
     const scan = collectCrashReports({
       ...withBaseline(fs),
-      appName: "Kiro Crew",
+      appName: "Aj Crew",
       execName: EXEC,
       diagnosticReportsDir: "", // main.js passes "" off darwin, so dumps are all there is
     });
@@ -1244,7 +1244,7 @@ describe("collectCrashReports — bounds and failure", () => {
       [path.join(PENDING, "ruby.dmp")]: buildMinidump({ moduleName: "/usr/bin/ruby" }),
     });
     const scan = collectCrashReports({
-      ...withBaseline(fs), appName: "Kiro Crew", execName: EXEC, diagnosticReportsDir: "",
+      ...withBaseline(fs), appName: "Aj Crew", execName: EXEC, diagnosticReportsDir: "",
     });
     assert.deepEqual(scan.newCrashes, []);
     assert.equal(scan.inspected, 1);

@@ -29,14 +29,14 @@ import asyncio
 
 import pytest
 
-from kiro_crew.apps.builtins.mochi import queue_file as qf
-from kiro_crew.apps.builtins.mochi.queue_poller import (
+from aj_crew.apps.builtins.mochi import queue_file as qf
+from aj_crew.apps.builtins.mochi.queue_poller import (
     FREESTYLE_DECLINE_BACKOFF_MS,
     SPAWN_TIMEOUT_MS,
     QueuePoller,
 )
-from kiro_crew.apps.spawn_sdk import SpawnError
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.apps.spawn_sdk import SpawnError
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 def _execute_queue(n_tasks: int) -> dict:
@@ -379,7 +379,7 @@ async def test_queued_spawn_that_expires_is_fail_counted_not_silently_dropped(
 
 def _spawn_sdk_with_impl(impl):
     """A SpawnSDK whose host-call seam is a direct async ``impl``."""
-    from kiro_crew.apps.spawn_sdk import SpawnSDK
+    from aj_crew.apps.spawn_sdk import SpawnSDK
 
     return SpawnSDK("mochi", impl)
 
@@ -421,7 +421,7 @@ class _FakeManager:
 
 def _patch_ownership(monkeypatch):
     """Let ``build_spawn_impl`` pass its ``mochi--mochi-bg`` ownership scan."""
-    from kiro_crew.apps import spawn_sdk
+    from aj_crew.apps import spawn_sdk
 
     monkeypatch.setattr(
         spawn_sdk,
@@ -433,7 +433,7 @@ def _patch_ownership(monkeypatch):
 
 async def _run_impl(info, monkeypatch):
     """Drive the REAL ``build_spawn_impl`` with a manager returning ``info``."""
-    from kiro_crew.apps import spawn_sdk
+    from aj_crew.apps import spawn_sdk
 
     _patch_ownership(monkeypatch)
     impl = spawn_sdk.build_spawn_impl(_FakeManager(info))
@@ -446,7 +446,7 @@ async def test_build_spawn_impl_memory_refusal_is_a_flagged_decline(monkeypatch)
     ``task_store_unavailable`` raises SpawnError(declined=True) — the real host
     decline this covers. That is the exact record the gate produces when the
     memory floor refuses a wait it has no durable row to park."""
-    from kiro_crew.subagent_manager.admission.types import TASK_STORE_UNAVAILABLE_CODE
+    from aj_crew.subagent_manager.admission.types import TASK_STORE_UNAVAILABLE_CODE
 
     info = _FakeInfo(
         id="spawn-ref-1",
@@ -489,7 +489,7 @@ async def test_build_spawn_impl_none_record_is_an_empty_id_decline(monkeypatch):
 async def test_spawn_sdk_empty_id_raises_a_flagged_decline():
     """An empty spawn id (the host returned nothing) raises
     SpawnError(declined=True) — a real host signal kept as a decline."""
-    from kiro_crew.apps.spawn_sdk import SpawnError
+    from aj_crew.apps.spawn_sdk import SpawnError
 
     async def _declines(task, agent, silent, model, app):
         return ""  # host returned nothing
@@ -503,7 +503,7 @@ async def test_spawn_sdk_empty_id_raises_a_flagged_decline():
 @pytest.mark.asyncio
 async def test_spawn_sdk_impl_fault_is_not_a_decline():
     """A normalised impl exception raises SpawnError with declined=False."""
-    from kiro_crew.apps.spawn_sdk import SpawnError
+    from aj_crew.apps.spawn_sdk import SpawnError
 
     async def _faults(task, agent, silent, model, app):
         raise RuntimeError("boom")
@@ -517,7 +517,7 @@ async def test_spawn_sdk_impl_fault_is_not_a_decline():
 @pytest.mark.asyncio
 async def test_spawn_sdk_empty_agent_is_not_a_decline():
     """An empty agent is refused loudly as a non-decline SpawnError."""
-    from kiro_crew.apps.spawn_sdk import SpawnError
+    from aj_crew.apps.spawn_sdk import SpawnError
 
     async def _never_called(task, agent, silent, model, app):  # pragma: no cover
         raise AssertionError("impl must not be reached for an empty agent")

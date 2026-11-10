@@ -523,7 +523,7 @@ than "not the dashboard":
 | Agent webhooks | `dashboard/handlers/hooks.py` |
 | Workflow phase calls | `workflows/agent_exec.py` |
 | Subagents | `subagent.py` — never a `_ChatSlot` at all, so a `.intents` sidecar is not reachable |
-| `kirocrew chat` | `cli_chat.py`, straight onto the provider |
+| `ajcrew chat` | `cli_chat.py`, straight onto the provider |
 
 Two corollaries the "dashboard only" shorthand gets wrong in both directions.
 The OpenAI-compatible endpoint (`dashboard/openai_compat.py`) calls `_run_chat` on

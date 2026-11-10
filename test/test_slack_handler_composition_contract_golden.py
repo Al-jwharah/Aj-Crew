@@ -1,6 +1,6 @@
 """Golden transcripts of the native Slack handler, one recorded digest per scenario.
 
-Each ``_scenario_*`` drives callbacks and helpers of ``kiro_crew.slack.handler`` against
+Each ``_scenario_*`` drives callbacks and helpers of ``aj_crew.slack.handler`` against
 the shared recording doubles in ``slack_handler_composition_contract_helpers.py``, plus
 the dashboard and history doubles defined here where it needs them, and the SHA-256 of
 its transcript (what reaches Slack, the SEL ledger, the stats counters, the session
@@ -31,12 +31,12 @@ from slack_handler_composition_contract_helpers import (  # noqa: F401 -- the fi
     world_fixture,
 )
 
-from kiro_crew.acp.client import AcpError, AcpProcessDied, AcpPromptBusy, AcpTimeoutError
-from kiro_crew.acp.types import STOP_REASON_COMPACTION_FAILED
-from kiro_crew.config.loader import ACTIVATION_REVIEW
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.slack import handler
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.acp.client import AcpError, AcpProcessDied, AcpPromptBusy, AcpTimeoutError
+from aj_crew.acp.types import STOP_REASON_COMPACTION_FAILED
+from aj_crew.config.loader import ACTIVATION_REVIEW
+from aj_crew.providers.base import LLMEvent
+from aj_crew.slack import handler
+from aj_crew.testing.wait import async_wait_until
 
 # ── golden scenarios ──────────────────────────────────────────────────────────
 
@@ -201,7 +201,7 @@ async def _scenario_interactive_timeout(log):
 
 
 async def _scenario_hook_deny_and_flag(log):
-    from kiro_crew.hooks import HookManager, HooksConfig
+    from aj_crew.hooks import HookManager, HooksConfig
 
     hooks = HookManager(HooksConfig.from_dict({"auto_deny_tools": ["danger*"]}))
     cb = _ContextBuilder(log, hooks)
@@ -365,7 +365,7 @@ async def _scenario_cmd_sessions(log):
 
 
 async def _scenario_mention_prefixed_bang(log):
-    await _command(log, "<@UBOT|kirocrew> !voice")
+    await _command(log, "<@UBOT|ajcrew> !voice")
 
 
 async def _scenario_interaction_edges(log):
@@ -476,7 +476,7 @@ async def _scenario_linked_thread_routes_to_slot(log):
 
     log.monkeypatch.setattr(handler, "append_and_surface", _surface)
     log.monkeypatch.setattr(
-        "kiro_crew.dashboard.session_control.containment_meta", lambda state, slot: {"linked": 1}
+        "aj_crew.dashboard.session_control.containment_meta", lambda state, slot: {"linked": 1}
     )
     slot = _Slot("chat-2", running=True)
     log.monkeypatch.setattr(handler, "_dashboard_state", _Dashboard(log, {}, linked=slot))
@@ -514,7 +514,7 @@ async def _scenario_keyword_commands(log):
 
 
 async def _scenario_privacy_modifiers(log):
-    from kiro_crew.messaging import privacy_mode
+    from aj_crew.messaging import privacy_mode
 
     async def _apply(mode, session_key, **kwargs):
         log.add("privacy.apply_mode", mode=mode, key=session_key, source=kwargs.get("source"))
@@ -640,8 +640,8 @@ class _ConversationLog:
 async def _scenario_turn_with_history(log):
     """A cold start in a thread: replayed history, the cancelled-turn preamble, the
     thread-replies block, re-injection consumed, the replies watermark moved."""
-    from kiro_crew.hooks import HookManager, HooksConfig
-    from kiro_crew.slack.thread_replies import ThreadReplies
+    from aj_crew.hooks import HookManager, HooksConfig
+    from aj_crew.slack.thread_replies import ThreadReplies
 
     def _replay(conversation_log, session_key, *, model_window=None):
         log.add("history.replay", key=session_key, model_window=model_window)
@@ -715,7 +715,7 @@ async def _scenario_agent_commands(log):
     agents = log.tmp / "agents"
     agents.mkdir()
     (agents / "kiro-foo.json").write_text('{"name": "foo-declared"}', encoding="utf-8")
-    (agents / "kirocrew-lite.json").write_text("{}", encoding="utf-8")
+    (agents / "ajcrew-lite.json").write_text("{}", encoding="utf-8")
     project = log.tmp / "proj"
     (project / ".kiro" / "agents").mkdir(parents=True)
     (project / ".kiro" / "agents" / "baz.json").write_text('{"name": "baz"}', encoding="utf-8")
@@ -829,7 +829,7 @@ async def _scenario_reasoning_only(log):
 
 
 async def _scenario_hook_auto_reply(log):
-    from kiro_crew.hooks import AutoReplyHook, HookManager, HooksConfig
+    from aj_crew.hooks import AutoReplyHook, HookManager, HooksConfig
 
     hooks = HookManager(
         HooksConfig(auto_replies=[AutoReplyHook(pattern="ping", reply="pong", exact=True)])
@@ -878,8 +878,8 @@ async def _scenario_cancelled_messages(log):
 
 
 async def _scenario_turn_ceiling_and_shutdown(log):
-    from kiro_crew.messaging import turn_ceiling
-    from kiro_crew.session import SessionClosingError
+    from aj_crew.messaging import turn_ceiling
+    from aj_crew.session import SessionClosingError
 
     class _Refused(turn_ceiling.TurnCeilingExceeded):
         announce = True
@@ -907,7 +907,7 @@ async def _scenario_turn_ceiling_and_shutdown(log):
 
 
 async def _scenario_shared_runtime_deaths(log):
-    from kiro_crew import runtime_death
+    from aj_crew import runtime_death
 
     log.monkeypatch.setattr(runtime_death, "caused_by_this_session", lambda client: False)
     try:

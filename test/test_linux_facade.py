@@ -1,7 +1,7 @@
-"""``kiro_crew.service.linux`` stays the one import path and patch surface of its owners.
+"""``aj_crew.service.linux`` stays the one import path and patch surface of its owners.
 
 The systemd service module was split into sibling owners (``linux_<role>.py``) behind a
-:mod:`kiro_crew._facade_mirror` facade. These tests pin what the split must keep:
+:mod:`aj_crew._facade_mirror` facade. These tests pin what the split must keep:
 
 * the facade serves a mirror over exactly the ``linux_*`` modules beside it, and every
   module-level name the unsplit file bound still resolves through it, to the object each
@@ -10,10 +10,10 @@ The systemd service module was split into sibling owners (``linux_<role>.py``) b
   and its undo restores each one;
 * each owner imports only the owners below it, and nothing outside the family imports
   an owner: callers install, uninstall, query and restart the service through the facade;
-* every owner logs as ``kiro_crew.service.linux``, so its records keep the facade's
+* every owner logs as ``aj_crew.service.linux``, so its records keep the facade's
   dotted name;
 * every name the facade serves from outside the family is named in a ``TYPE_CHECKING``
-  group, so ``from kiro_crew.service.linux import <name>`` stays visible to type checkers;
+  group, so ``from aj_crew.service.linux import <name>`` stays visible to type checkers;
 * ``ServiceInstallError`` keeps the facade's ``__module__``: it is an exception, and its
   dotted name is what a traceback shows.
 
@@ -33,16 +33,16 @@ import owner_import_scan
 import pytest
 import source_corpus
 
-import kiro_crew
-from kiro_crew import _facade_mirror
-from kiro_crew.service import linux as facade
+import aj_crew
+from aj_crew import _facade_mirror
+from aj_crew.service import linux as facade
 
-# Walks src/kiro_crew for owner imports; keep it on one worker.
+# Walks src/aj_crew for owner imports; keep it on one worker.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_linux_facade")
 
-_SRC = Path(kiro_crew.__file__).resolve().parent
-_FACADE = "kiro_crew.service.linux"
-_OWNER_PREFIX = "kiro_crew.service.linux_"
+_SRC = Path(aj_crew.__file__).resolve().parent
+_FACADE = "aj_crew.service.linux"
+_OWNER_PREFIX = "aj_crew.service.linux_"
 
 #: Every module-level name ``service/linux.py`` bound before the split.
 _BASE_MODULE_NAMES = frozenset("""
@@ -60,7 +60,7 @@ _BASE_MODULE_NAMES = frozenset("""
     _stop_and_disable _sudo_capture _sudo_run _sudo_run_checked _systemctl _teardown_owned
     _teardown_refusal _teardown_scope _unit_state _user_scope_remedy
     _user_scope_unreachable_reason _write_unit_via_sudo alias_holder apparmor dataclass
-    install install_apparmor_profile install_launcher_profile is_active is_up kirocrew_bin
+    install install_apparmor_profile install_launcher_profile is_active is_up ajcrew_bin
     linger_warning_for_service_account log logging os remove_apparmor_profile
     remove_launcher_profile render_unit restart selinux selinux_refusal
     selinux_start_failure_hint service_environment shlex shutil status stop subprocess sys
@@ -82,7 +82,7 @@ _PATCHED_THROUGH_THE_FACADE = (
     "_systemctl",
     "_unit_state",
     "_SYSTEMD_BOOTED_DIR",
-    "kirocrew_bin",
+    "ajcrew_bin",
     "time",
 )
 
@@ -107,7 +107,7 @@ def test_the_facade_serves_a_mirror_over_every_sibling_owner() -> None:
     assert isinstance(facade, _facade_mirror.MirroredModule)
     index = _index()
     on_disk = sorted(
-        f"kiro_crew.service.{path.stem}" for path in (_SRC / "service").glob("linux_*.py")
+        f"aj_crew.service.{path.stem}" for path in (_SRC / "service").glob("linux_*.py")
     )
     assert sorted(index.owners) == on_disk
     assert index.owners == facade._OWNERS
@@ -200,12 +200,12 @@ def test_every_served_import_is_named_for_type_checkers() -> None:
     """A name the family imports and the facade serves is in a ``TYPE_CHECKING`` group.
 
     The facade binds none of them, so this group is what keeps
-    ``from kiro_crew.service.linux import kirocrew_bin`` visible to mypy.
+    ``from aj_crew.service.linux import ajcrew_bin`` visible to mypy.
     """
     index = _index()
     served = _served_imports(index)
     named = _typing_names(_source(_FACADE), index.owners)
-    assert {"kirocrew_bin", "subprocess"} <= served, "the census found nothing to check"
+    assert {"ajcrew_bin", "subprocess"} <= served, "the census found nothing to check"
     assert sorted(served - named) == []
     assert sorted(named - served) == []
 
@@ -213,10 +213,10 @@ def test_every_served_import_is_named_for_type_checkers() -> None:
 def test_the_type_checker_census_finds_a_dropped_name() -> None:
     index = _index()
     source = _source(_FACADE)
-    assert "kirocrew_bin" in _typing_names(source, index.owners)
-    pruned = source.replace("        kirocrew_bin,\n", "", 1)
+    assert "ajcrew_bin" in _typing_names(source, index.owners)
+    pruned = source.replace("        ajcrew_bin,\n", "", 1)
     assert pruned != source
-    assert "kirocrew_bin" not in _typing_names(pruned, index.owners)
+    assert "ajcrew_bin" not in _typing_names(pruned, index.owners)
 
 
 # --------------------------------------------------------------------------- #
@@ -242,13 +242,13 @@ def test_only_the_family_imports_an_owner() -> None:
 
 
 def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None:
-    root = tmp_path / "kiro_crew"
+    root = tmp_path / "aj_crew"
     sources = {
-        root / "pkg" / "caller.py": "from kiro_crew.service.linux_unit import render_unit\n",
-        root / "other.py": "from kiro_crew.service import linux_systemctl as low\n",
+        root / "pkg" / "caller.py": "from aj_crew.service.linux_unit import render_unit\n",
+        root / "other.py": "from aj_crew.service import linux_systemctl as low\n",
         root / "service" / "relative.py": "from .linux_install import install\n",
         root / "service" / "deep" / "up.py": "from .. import linux_uninstall\n",
-        root / "facade_user.py": "from kiro_crew.service.linux import install\n",
+        root / "facade_user.py": "from aj_crew.service.linux import install\n",
     }
     assert _owner_importers(sources.items(), root) == {
         "pkg/caller.py",
@@ -287,9 +287,9 @@ def test_each_owner_imports_only_the_owners_before_it() -> None:
 
 
 def test_the_layer_scan_sees_an_upward_import() -> None:
-    planted = "from kiro_crew.service.linux_uninstall import uninstall\n"
-    assert _owner_imports(planted, "kiro_crew.service.linux_unit") == {
-        "kiro_crew.service.linux_uninstall"
+    planted = "from aj_crew.service.linux_uninstall import uninstall\n"
+    assert _owner_imports(planted, "aj_crew.service.linux_unit") == {
+        "aj_crew.service.linux_uninstall"
     }
     guarded = "from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    " + planted
-    assert _owner_imports(guarded, "kiro_crew.service.linux_unit") == set()
+    assert _owner_imports(guarded, "aj_crew.service.linux_unit") == set()

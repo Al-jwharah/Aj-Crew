@@ -13,7 +13,7 @@ import tarfile
 import pytest
 from test_snapshot import snapshot_family_source
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 # A cursor-up plus carriage return: enough to overwrite the line printed above it.
 EVIL = "\x1b[1A\rinnocent-looking"
@@ -87,7 +87,7 @@ class TestArchiveRootNamesAreEscaped:
         """
         bundle = tmp_path / "two-roots.tar.gz"
         with tarfile.open(bundle, "w:gz") as tf:
-            for name in (f"kirocrew-snapshot-{EVIL}", "kirocrew-snapshot-20260101T000000Z"):
+            for name in (f"ajcrew-snapshot-{EVIL}", "ajcrew-snapshot-20260101T000000Z"):
                 info = tarfile.TarInfo(name=name)
                 info.type = tarfile.DIRTYPE
                 info.mode = 0o755

@@ -1,13 +1,13 @@
 """The MCP rewriter's facade and the ``rewriter_*`` owner modules it serves.
 
-``kiro_crew.mcp_gateway.rewriter`` keeps the rewrite pass (``rewrite_agents``) and the
+``aj_crew.mcp_gateway.rewriter`` keeps the rewrite pass (``rewrite_agents``) and the
 fingerprint that decides whether a pass may be skipped, and serves every other name from
-the owner that defines it (``kiro_crew._facade_mirror``). This file pins:
+the owner that defines it (``aj_crew._facade_mirror``). This file pins:
 
 * the owners log under the facade's logger, the name operators and tests filter on;
 * ``_rewrite_inputs_fingerprint`` stays on the facade: a patch of the facade's
   ``__version__``, a dunder the mirror never forwards, reaches no owner;
-* every name an owner imports from the rest of ``kiro_crew`` and the facade serves is
+* every name an owner imports from the rest of ``aj_crew`` and the facade serves is
   named in the facade's ``TYPE_CHECKING`` block, where type checkers read it.
 """
 
@@ -17,14 +17,14 @@ import ast
 import importlib
 from pathlib import Path
 
-from kiro_crew import _facade_mirror
-from kiro_crew.mcp_gateway import rewriter
+from aj_crew import _facade_mirror
+from aj_crew.mcp_gateway import rewriter
 
 _OWNERS = tuple(importlib.import_module(name) for name in rewriter._REWRITER_OWNERS)
 
 
 def test_the_owners_log_under_the_facade_logger() -> None:
-    assert rewriter.logger.name == "kiro_crew.mcp_gateway.rewriter"
+    assert rewriter.logger.name == "aj_crew.mcp_gateway.rewriter"
     logging_owners = [owner for owner in _OWNERS if "logger" in vars(owner)]
     assert logging_owners, "no owner logs: this check would pass vacuously"
     assert all(owner.logger is rewriter.logger for owner in logging_owners)
@@ -37,12 +37,12 @@ def test_the_fingerprint_reads_the_facade_version() -> None:
 
 
 def _home_imports(tree: ast.Module, family: set[str]) -> dict[str, str]:
-    """Name -> module, for each name *tree* imports at its top from kiro_crew outside *family*."""
+    """Name -> module, for each name *tree* imports at its top from aj_crew outside *family*."""
     found: dict[str, str] = {}
     for node in tree.body:
         if isinstance(node, ast.ImportFrom) and node.level == 0:
             module = node.module or ""
-            if module.split(".")[0] == "kiro_crew" and module not in family:
+            if module.split(".")[0] == "aj_crew" and module not in family:
                 found.update({alias.asname or alias.name: module for alias in node.names})
     return found
 

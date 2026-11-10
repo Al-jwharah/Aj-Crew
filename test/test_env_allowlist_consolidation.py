@@ -35,10 +35,10 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import kiro_prerequisite, platform_compat
-from kiro_crew.apps import registry
-from kiro_crew.apps.builtins.dev_fleet import server as dev_fleet_server
-from kiro_crew.dashboard.handlers import source_providers
+from aj_crew import kiro_prerequisite, platform_compat
+from aj_crew.apps import registry
+from aj_crew.apps.builtins.dev_fleet import server as dev_fleet_server
+from aj_crew.dashboard.handlers import source_providers
 
 
 def _oracle_admitted(

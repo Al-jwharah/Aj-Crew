@@ -154,7 +154,7 @@ async function main() {
     const path = url.pathname
     if (path === '/api/chat/slots') return json(route, slots)
     if (path.startsWith('/api/chat/slots/')) return json(route, detail)
-    if (path === '/api/config/kirocrew') {
+    if (path === '/api/config/ajcrew') {
       return json(route, {
         agent: { model: MODEL, reasoning_effort: '', provider: 'acp' },
         session: { autocompact_pct: 90 },
@@ -168,11 +168,11 @@ async function main() {
     if (path === '/api/agents/resolved-model') return json(route, { model: MODEL, agent: AGENT })
     if (path === '/api/agents') {
       return json(route, {
-        agents: [{ name: AGENT, kiro_agent: 'kirocrew', description: 'Default crew agent' }],
+        agents: [{ name: AGENT, kiro_agent: 'ajcrew', description: 'Default crew agent' }],
         default_agent: AGENT,
       })
     }
-    if (path.startsWith('/api/agents/detail/')) return json(route, { name: 'kirocrew', model: MODEL, skills: [] })
+    if (path.startsWith('/api/agents/detail/')) return json(route, { name: 'ajcrew', model: MODEL, skills: [] })
     // Empty: the agent stores NO pin of its own, so the row offers the write
     // instead of reporting an existing default.
     if (path === '/api/agents/installed') return json(route, [])

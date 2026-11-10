@@ -21,17 +21,17 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.acp.types import AcpPromptStats
-from kiro_crew.dashboard.cron_inject import (
+from aj_crew.acp.types import AcpPromptStats
+from aj_crew.dashboard.cron_inject import (
     context_meter_reading,
     inject_cron_result_to_dashboard,
     prefetch_cron_history,
 )
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.providers.acp import AcpProvider
 
 
 def _provider(used: int, window: int, pct: float) -> AcpProvider:
-    with patch("kiro_crew.providers.acp.AcpClient"):
+    with patch("aj_crew.providers.acp.AcpClient"):
         provider = AcpProvider()
     provider._client = MagicMock()
     provider._client.last_prompt_stats = AcpPromptStats(
@@ -79,7 +79,7 @@ def _isolate_snapshot_file(tmp_path, monkeypatch):
     """Point the snapshot sidecar at tmp_path — same isolation as
     test_context_bar_reopen, so a stray entry in the developer's real
     ~/.kiro/crew/context_snapshots.json cannot change what we observe."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
 
 # ── context_meter_reading: capture from a live provider ────────────────────

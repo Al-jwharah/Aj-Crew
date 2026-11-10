@@ -75,7 +75,7 @@ const RUNNING_JOB = {
   steps: [
     { key: 'preflight', label: 'Checked your AWS setup', state: 'done' as const },
     { key: 'provision', label: 'Created the instance', state: 'done' as const },
-    { key: 'install', label: 'Installing Kiro Crew', state: 'active' as const },
+    { key: 'install', label: 'Installing Aj Crew', state: 'active' as const },
     { key: 'connect', label: 'Connect', state: 'pending' as const },
   ],
 }

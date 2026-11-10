@@ -15,12 +15,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.channel import (
+from aj_crew.channel import (
     CHANNEL_AGENT_BLOCKED_DISPATCH_TOOLS,
     CHANNEL_AGENT_BLOCKED_TOOLS,
     _stream_task,
 )
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST
 
 
 def _make_agent():
@@ -62,11 +62,11 @@ def test_blocked_tools_cover_both_messaging_tools():
 @pytest.mark.parametrize("tool", ["send_message", "send_notification"])
 async def test_blocked_tool_rejected_even_on_trusted_channel(monkeypatch, tool):
     sel_mock = MagicMock()
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: sel_mock)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: sel_mock)
     events = [
         SimpleNamespace(
             kind=EVENT_PERMISSION_REQUEST,
-            text=f"{tool} (kirocrew-core)",
+            text=f"{tool} (ajcrew-core)",
             title="",
             request_id=7,
             tool_input="{}",
@@ -91,17 +91,17 @@ async def test_blocked_tool_rejected_even_on_trusted_channel(monkeypatch, tool):
             [
                 # Positive: the tool itself, in every rendered form kiro-cli emits.
                 ("send_message", True),
-                ("send_notification (kirocrew-core)", True),
-                ("kirocrew-core___send_message", True),
-                ("mcp__kirocrew-core__send_message", True),  # canonical MCP prefix
+                ("send_notification (ajcrew-core)", True),
+                ("ajcrew-core___send_message", True),
+                ("mcp__ajcrew-core__send_message", True),  # canonical MCP prefix
                 # opencode joins server and tool with ONE underscore (measured on
                 # 1.18.30), which the 2+ run normalization leaves intact -- and the
                 # boundary lookbehind then refuses the match, so the whole containment
                 # list read as absent on that harness. Both Crew servers whose tools are
                 # on the list spell it this way.
-                ("kirocrew-core_send_message", True),
-                ("kirocrew-work_work_report", True),
-                ("Running: kirocrew-core_session_send", True),
+                ("ajcrew-core_send_message", True),
+                ("ajcrew-work_work_report", True),
+                ("Running: ajcrew-core_session_send", True),
                 ('Tool: "send_notification"', True),
                 # Negative: filenames/paths/identifiers that merely
                 # CONTAIN a blocked tool name must not trip the containment guard.
@@ -114,12 +114,12 @@ async def test_blocked_tool_rejected_even_on_trusted_channel(monkeypatch, tool):
                 # name, and a longer tail is still not the tool.
                 ("do_send_message", False),
                 ("evil_send_notification", False),
-                ("kirocrew-core_send_message_v2", False),
+                ("ajcrew-core_send_message_v2", False),
                 # A rendered PATH is not a tool call, even when a directory happens to
                 # carry the server-prefixed name: the left boundary excludes `/` and `.`
                 # exactly as the blocked-tool pattern's own does.
-                ("cat /tmp/kirocrew-core_send_message", False),
-                ("Reading ./kirocrew-core_send_message.log", False),
+                ("cat /tmp/ajcrew-core_send_message", False),
+                ("Reading ./ajcrew-core_send_message.log", False),
             ],
         ),
         *named_cases(
@@ -128,12 +128,12 @@ async def test_blocked_tool_rejected_even_on_trusted_channel(monkeypatch, tool):
             [
                 # Positive: every rendered form kiro-cli and opencode emit.
                 ("spawn_run", True),
-                ("spawn_sub_agents (kirocrew-core)", True),
-                ("kirocrew-core___spawn_run", True),
-                ("mcp__kirocrew-core__workflow_run", True),
-                ("kirocrew-core_task_run", True),
+                ("spawn_sub_agents (ajcrew-core)", True),
+                ("ajcrew-core___spawn_run", True),
+                ("mcp__ajcrew-core__workflow_run", True),
+                ("ajcrew-core_task_run", True),
                 ('Tool: "register_hook"', True),
-                ("Running: kirocrew-core_spawn_steer", True),
+                ("Running: ajcrew-core_spawn_steer", True),
                 ("workflow_rerun_subtree", True),
                 # Negative: an identifier or filename that merely CONTAINS one of the
                 # names is not a tool call. A longer tail keeps the name from standing
@@ -143,14 +143,14 @@ async def test_blocked_tool_rejected_even_on_trusted_channel(monkeypatch, tool):
                 ("fs_write path=src/workflow_runner.ts", False),
                 ("grep register_hooks", False),
                 ("my_task_run", False),
-                ("kirocrew-core_spawn_run_v2", False),
-                ("cat /tmp/kirocrew-core_spawn_run", False),
+                ("ajcrew-core_spawn_run_v2", False),
+                ("cat /tmp/ajcrew-core_spawn_run", False),
             ],
         ),
     ],
 )
 def test_tool_matcher_precision(rendered, expected):
-    from kiro_crew.channel import _blocked_tool_named
+    from aj_crew.channel import _blocked_tool_named
 
     assert _blocked_tool_named(rendered) is expected
 
@@ -161,7 +161,7 @@ def test_every_session_control_tool_is_contained():
     Pinned against the advertised tool set, so a new verb fails here. `session_create`
     belongs too: it makes a persistent, sidebar-visible session outside containment.
     """
-    from kiro_crew.mcp_dashboard import SESSION_CONTROL_TOOLS
+    from aj_crew.mcp_dashboard import SESSION_CONTROL_TOOLS
 
     missing = sorted(set(SESSION_CONTROL_TOOLS) - set(CHANNEL_AGENT_BLOCKED_TOOLS))
     assert not missing, f"session-control tools reachable from a channel agent: {missing}"
@@ -228,11 +228,11 @@ def test_observe_and_teardown_verbs_stay_reachable(tool):
 @pytest.mark.parametrize("tool", list(CHANNEL_AGENT_BLOCKED_DISPATCH_TOOLS))
 async def test_dispatch_verb_rejected_even_on_trusted_channel(monkeypatch, tool):
     sel_mock = MagicMock()
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: sel_mock)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: sel_mock)
     events = [
         SimpleNamespace(
             kind=EVENT_PERMISSION_REQUEST,
-            text=f"{tool} (kirocrew-core)",
+            text=f"{tool} (ajcrew-core)",
             title="",
             request_id=11,
             tool_input="{}",
@@ -261,17 +261,17 @@ async def test_dispatch_verb_rejected_even_on_trusted_channel(monkeypatch, tool)
 
 def test_session_pin_is_contained():
     """Pinning rearranges the person's sidebar, the reason the tree verbs are blocked."""
-    from kiro_crew.channel import _blocked_tool_named
+    from aj_crew.channel import _blocked_tool_named
 
     assert "chat_session_pin" in CHANNEL_AGENT_BLOCKED_TOOLS
-    assert _blocked_tool_named("kirocrew-dashboard___chat_session_pin") is True
+    assert _blocked_tool_named("ajcrew-dashboard___chat_session_pin") is True
     assert "chat_session_pin_move" in CHANNEL_AGENT_BLOCKED_TOOLS
-    assert _blocked_tool_named("kirocrew-dashboard___chat_session_pin_move") is True
+    assert _blocked_tool_named("ajcrew-dashboard___chat_session_pin_move") is True
 
 
 def test_session_move_to_column_is_contained():
     """Moving a card retags another session on the person's board."""
-    from kiro_crew.channel import _blocked_tool_named
+    from aj_crew.channel import _blocked_tool_named
 
     assert "session_move_to_column" in CHANNEL_AGENT_BLOCKED_TOOLS
-    assert _blocked_tool_named("kirocrew-dashboard___session_move_to_column") is True
+    assert _blocked_tool_named("ajcrew-dashboard___session_move_to_column") is True

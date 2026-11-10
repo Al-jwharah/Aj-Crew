@@ -27,10 +27,10 @@ from subagent_turn_resilience_helpers import (  # noqa: F401 -- the autouse fixt
     _text_event,
 )
 
-from kiro_crew import session_surface
-from kiro_crew import subagent_persistence as sp
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.testing.wait import await_until, default_timeout
+from aj_crew import session_surface
+from aj_crew import subagent_persistence as sp
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.testing.wait import await_until, default_timeout
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -99,7 +99,7 @@ async def _shutdown_cancels_the_pending_recovery(
 
     sessions.reset = AsyncMock(side_effect=_hanging_reset)
     mgr, on_done = _manager_with_recorder(sessions)
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info, _ = await _cancel_unexpectedly(mgr, started, parent)
         await await_until(in_reset, what="the original task's teardown reset")
         recovery = _recovery_of(mgr, info)
@@ -127,7 +127,7 @@ async def test_a_pending_recovery_the_shutdown_cancels_is_announced_by_the_next_
     notify = AsyncMock(return_value=True)
     next_start = SubagentManager(sessions=MagicMock(), ctx_builder=None, on_orphan_notify=notify)
     next_start._is_pid_alive = MagicMock(return_value=False)
-    with patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.sel"):
         await await_until(asyncio.ensure_future(next_start._reconcile_orphans()), what="the sweep")
 
     notify.assert_awaited_once()
@@ -164,9 +164,9 @@ async def _recovery_fails_during_the_in_app_restart(parent: str) -> tuple[Subage
     sessions.final_drain_started = True  # read only by the leave-for-next-start rule here
     mgr, on_done = _manager_with_recorder(sessions)
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent._RECOVERY_SLOT_WAIT_SECS", 0.4),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent._RECOVERY_SLOT_WAIT_SECS", 0.4),
     ):
         info, original = await _cancel_unexpectedly(mgr, started, parent)
         # Filled as soon as the original task's teardown ends, before the recovery's
@@ -204,7 +204,7 @@ async def _assert_the_next_start_announces(info: SubagentInfo) -> None:
     notify = AsyncMock(return_value=True)
     next_start = SubagentManager(sessions=MagicMock(), ctx_builder=None, on_orphan_notify=notify)
     next_start._is_pid_alive = MagicMock(return_value=False)
-    with patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.sel"):
         await await_until(asyncio.ensure_future(next_start._reconcile_orphans()), what="the sweep")
     notify.assert_awaited_once()
     notified_parent, msg = notify.await_args.args[:2]
@@ -231,7 +231,7 @@ async def test_a_context_overflow_give_up_during_the_in_app_restart_is_reported_
         raise _context_overflow_error()
 
     mgr._run_inner = AsyncMock(side_effect=run_inner)
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("overflowing job", parent_session_key=_DASHBOARD_PARENT)
         assert info is not None and info._folder_seeded is True
         original = mgr._tasks[info.id]

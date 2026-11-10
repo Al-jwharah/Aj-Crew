@@ -24,10 +24,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 from oauth_url_corpus import LEGIT_OAUTH_URLS
 
-from kiro_crew import mcp_discovery
-from kiro_crew.connections import get_all_registry_providers, get_visible_providers
-from kiro_crew.dashboard import chat_runner, mcp_oauth_provenance
-from kiro_crew.dashboard.chat_runner import (
+from aj_crew import mcp_discovery
+from aj_crew.connections import get_all_registry_providers, get_visible_providers
+from aj_crew.dashboard import chat_runner, mcp_oauth_provenance
+from aj_crew.dashboard.chat_runner import (
     _connections_managed_mcp_names,
     _drain_session_init_oauth_requests,
     _emit_mcp_oauth_request,
@@ -35,15 +35,15 @@ from kiro_crew.dashboard.chat_runner import (
     _mark_mcp_oauth_completed,
     _supersede_open_mcp_oauth_banners,
 )
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard.chat_utils import (
     _broadcast_expired_oauth_banners,
     _live_child_instance,
     _prepare_messages,
     _redact_meta_for_role,
 )
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.mcp_utils import mcp_server_alias
-from kiro_crew.security import oauth_url_contains_credential
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.mcp_utils import mcp_server_alias
+from aj_crew.security import oauth_url_contains_credential
 
 # ── _is_safe_oauth_url ──
 
@@ -356,7 +356,7 @@ class TestEmitMcpOAuthRequest:
         """The failed banner renders ONLY meta["error"], so the
         oauth_endpoints.json remedy must ride there, as a copy-ready entry --
         and writing exactly that entry must clear the rejection."""
-        from kiro_crew.config.loader import oauth_endpoints_path
+        from aj_crew.config.loader import oauth_endpoints_path
 
         url = self._CF_ACCESS_URL
         assert oauth_url_contains_credential(url), "fixture must trip the gate"
@@ -1245,13 +1245,13 @@ class TestProcessInstanceContract:
     """
 
     def _bare_client(self):
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = object.__new__(AcpClient)
         return client
 
     def _bare_runtime(self):
-        from kiro_crew.acp.runtime import AcpRuntime
+        from aj_crew.acp.runtime import AcpRuntime
 
         runtime = object.__new__(AcpRuntime)
         return runtime
@@ -1423,7 +1423,7 @@ class TestOAuthParamCredentialScan:
         # Pins the entry at the data layer: the pair must be present exactly
         # (host lowercase, path exact), so a rename or move in the set fails
         # loudly rather than silently re-breaking reconnect.
-        from kiro_crew.security import _OAUTH_AUTHORIZATION_ENDPOINTS
+        from aj_crew.security import _OAUTH_AUTHORIZATION_ENDPOINTS
 
         assert (
             "mcp.auth.mail.superhuman.com",
@@ -1448,7 +1448,7 @@ class TestBannerGateIsCanonicalSecurityPredicate:
         assert not hasattr(chat_runner, "_oauth_url_contains_credential")
 
     def test_chat_runner_binding_is_the_canonical_function(self):
-        from kiro_crew import security
+        from aj_crew import security
 
         assert chat_runner.oauth_url_contains_credential is security.oauth_url_contains_credential
 
@@ -1507,11 +1507,11 @@ GATED_MCP_URL = "https://mcp.mail.superhuman.com/mcp"
 
 
 def _own(tmp_path, monkeypatch, servers) -> None:
-    """Point discovery's kirocrew scope at a temp store holding ``servers``.
+    """Point discovery's ajcrew scope at a temp store holding ``servers``.
 
-    Patches the real read path rather than stubbing ``kirocrew_managed_names``, so
+    Patches the real read path rather than stubbing ``ajcrew_managed_names``, so
     the store's own parsing (and its fail-open branches) is what the annotation is
-    tested against. An unrecognized path buckets as ``SCOPE_KIROCREW``, which is
+    tested against. An unrecognized path buckets as ``SCOPE_AJCREW``, which is
     the scope Connect writes to.
     """
     path = tmp_path / "mcp.json"
@@ -1657,12 +1657,12 @@ class TestAnnotationFailsOpen:
         assert _owned_flags(slot) == [False]
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("broken", ["kirocrew_managed_names", "get_visible_providers"])
+    @pytest.mark.parametrize("broken", ["ajcrew_managed_names", "get_visible_providers"])
     async def test_either_lookup_raising_fails_open(self, tmp_path, monkeypatch, broken):
         """Both halves of the predicate must fail open, not just the store read."""
         _own(tmp_path, monkeypatch, {CARDED_SLUG: {"url": "https://mcp.notion.com/mcp"}})
         slot = _ChatSlot("s1")
-        with patch(f"kiro_crew.dashboard.chat_runner.{broken}", side_effect=RuntimeError("boom")):
+        with patch(f"aj_crew.dashboard.chat_runner.{broken}", side_effect=RuntimeError("boom")):
             await _drain_session_init_oauth_requests(MagicMock(), slot, _pending(CARDED_SLUG))
         assert _owned_flags(slot) == [False]
 
@@ -1767,15 +1767,15 @@ class TestConnectionsManagedMcpNames:
         Pinned so the annotation can never drift into its own, laxer rule.
         """
         _own(tmp_path, monkeypatch, {CARDED_SLUG: "not-a-dict"})
-        assert CARDED_SLUG not in mcp_discovery.kirocrew_managed_names()
+        assert CARDED_SLUG not in mcp_discovery.ajcrew_managed_names()
         assert _connections_managed_mcp_names() == frozenset()
 
     def test_a_scope_we_do_not_own_confers_nothing(self):
         """A slug present only in a scope we do not own stays un-annotated."""
         with patch(
-            "kiro_crew.mcp_discovery._load_mcp_json_by_source",
+            "aj_crew.mcp_discovery._load_mcp_json_by_source",
             return_value={
-                mcp_discovery.SCOPE_KIROCREW: {},
+                mcp_discovery.SCOPE_AJCREW: {},
                 mcp_discovery.SCOPE_KIRO_GLOBAL: {CARDED_SLUG: {"url": "https://n"}},
             },
         ):

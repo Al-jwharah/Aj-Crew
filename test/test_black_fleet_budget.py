@@ -268,7 +268,7 @@ def test_floor_runs_the_exact_ci_black_command_and_worker_budget():
 
     profile = (
         ROOT
-        / "src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/profiles/kirocrew.json"
+        / "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/profiles/ajcrew.json"
     )
     gates = json.loads(profile.read_text(encoding="utf-8"))["gates"]
     step = _step()

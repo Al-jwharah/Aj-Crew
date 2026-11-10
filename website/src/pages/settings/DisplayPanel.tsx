@@ -236,9 +236,9 @@ export function DisplayPanel({ basePath }: { basePath?: string } = {}) {
   const defaultSlot = typeof defaultColor === 'number' ? paletteSlot(defaultColor, colors.length) : null
 
   // Recency-tint count is persisted server-side (dashboard.recent_tint_count) via the shared
-  // kirocrewConfig query, so the choice follows the user across browsers/restarts.
+  // ajcrewConfig query, so the choice follows the user across browsers/restarts.
   const qc = useQueryClient()
-  type KirocrewCfg = {
+  type AjcrewCfg = {
     dashboard?: {
       recent_tint_count?: number
       show_unread_dot?: boolean
@@ -247,12 +247,12 @@ export function DisplayPanel({ basePath }: { basePath?: string } = {}) {
       remote_editor?: { editor?: string; host?: string }
     }
   }
-  const mcQ = useQuery<KirocrewCfg>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+  const mcQ = useQuery<AjcrewCfg>({
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
   })
   // Per-path optimistic display shared by the tint and shell saves below.
-  // Both PATCH the same ['kirocrewConfig'] object, so a whole-object
+  // Both PATCH the same ['ajcrewConfig'] object, so a whole-object
   // onMutate snapshot here is a live race: a tint rollback would restore a
   // pre-shell-save snapshot, transiently reverting an in-flight shell save
   // (and vice versa). Each control instead renders `shown(path, server)`;
@@ -270,11 +270,11 @@ export function DisplayPanel({ basePath }: { basePath?: string } = {}) {
   // save resolving after a newer one failed would wipe the newer failure.
   const [tintError, setTintError] = useState<string | null>(null)
   const tintMut = useMutation(overlay.mutationOpts<number>({
-    queryKey: ['kirocrewConfig'],
+    queryKey: ['ajcrewConfig'],
     mutationFn: (value: number) => api.patchConfig('dashboard.recent_tint_count', value),
     path: () => 'dashboard.recent_tint_count',
     displayValue: v => v,
-    applyToCache: (cached, value) => setConfigPathValue(cached as KirocrewCfg, 'dashboard.recent_tint_count', value),
+    applyToCache: (cached, value) => setConfigPathValue(cached as AjcrewCfg, 'dashboard.recent_tint_count', value),
     onFailure: () => setTintError(i18nT('pages.settings.displayPanel.recent_tint_save_failed')),
     onSupersede: () => setTintError(null),
   }))
@@ -287,11 +287,11 @@ export function DisplayPanel({ basePath }: { basePath?: string } = {}) {
   const shownUnreadDot = overlay.shown('dashboard.show_unread_dot', mcQ.data?.dashboard?.show_unread_dot !== false)
   const [unreadDotError, setUnreadDotError] = useState<string | null>(null)
   const unreadDotMut = useMutation(overlay.mutationOpts<boolean>({
-    queryKey: ['kirocrewConfig'],
+    queryKey: ['ajcrewConfig'],
     mutationFn: (value: boolean) => api.patchConfig('dashboard.show_unread_dot', value),
     path: () => 'dashboard.show_unread_dot',
     displayValue: v => v,
-    applyToCache: (cached, value) => setConfigPathValue(cached as KirocrewCfg, 'dashboard.show_unread_dot', value),
+    applyToCache: (cached, value) => setConfigPathValue(cached as AjcrewCfg, 'dashboard.show_unread_dot', value),
     onFailure: () => setUnreadDotError(i18nT('pages.settings.displayPanel.show_unread_dot_save_failed')),
     onSupersede: () => setUnreadDotError(null),
   }))
@@ -307,11 +307,11 @@ export function DisplayPanel({ basePath }: { basePath?: string } = {}) {
   const [milestonesError, setMilestonesError] = useState<string | null>(null)
   const milestonesMutOpts = (path: 'dashboard.milestones_enabled') => {
     const opts = overlay.mutationOpts<boolean>({
-      queryKey: ['kirocrewConfig'],
+      queryKey: ['ajcrewConfig'],
       mutationFn: (value: boolean) => api.patchConfig(path, value),
       path: () => path,
       displayValue: v => v,
-      applyToCache: (cached, value) => setConfigPathValue(cached as KirocrewCfg, path, value),
+      applyToCache: (cached, value) => setConfigPathValue(cached as AjcrewCfg, path, value),
       onFailure: () => setMilestonesError(i18nT('pages.settings.displayPanel.milestones_save_failed')),
       onSupersede: () => setMilestonesError(null),
     })
@@ -342,11 +342,11 @@ export function DisplayPanel({ basePath }: { basePath?: string } = {}) {
   const [shellDraft, setShellDraft] = useState<string | null>(null)
   const [shellError, setShellError] = useState<string | null>(null)
   const shellOpts = overlay.mutationOpts<string>({
-    queryKey: ['kirocrewConfig'],
+    queryKey: ['ajcrewConfig'],
     mutationFn: (value: string) => api.patchConfig('dashboard.terminal.shell', value),
     path: () => 'dashboard.terminal.shell',
     displayValue: v => v,
-    applyToCache: (cached, value) => setConfigPathValue(cached as KirocrewCfg, 'dashboard.terminal.shell', value),
+    applyToCache: (cached, value) => setConfigPathValue(cached as AjcrewCfg, 'dashboard.terminal.shell', value),
     onFailure: e => {
       const code = e instanceof ApiError ? parseErrorCode(e.body) : undefined
       setShellError(i18nT(
@@ -388,12 +388,12 @@ export function DisplayPanel({ basePath }: { basePath?: string } = {}) {
   const shownCompletion = overlay.shown('dashboard.terminal.completion.enabled', serverCompletion)
   const [completionError, setCompletionError] = useState<string | null>(null)
   const completionMut = useMutation(overlay.mutationOpts<boolean>({
-    queryKey: ['kirocrewConfig'],
+    queryKey: ['ajcrewConfig'],
     mutationFn: (value: boolean) => api.patchConfig('dashboard.terminal.completion.enabled', value),
     path: () => 'dashboard.terminal.completion.enabled',
     displayValue: v => v,
     applyToCache: (cached, value) =>
-      setConfigPathValue(cached as KirocrewCfg, 'dashboard.terminal.completion.enabled', value),
+      setConfigPathValue(cached as AjcrewCfg, 'dashboard.terminal.completion.enabled', value),
     onFailure: () => setCompletionError(i18nT('pages.settings.displayPanel.terminal_completion_save_failed')),
     onSupersede: () => setCompletionError(null),
   }))
@@ -415,12 +415,12 @@ export function DisplayPanel({ basePath }: { basePath?: string } = {}) {
   const shownReuseCurrent = overlay.shown('dashboard.terminal.reuse_current', serverReuseCurrent)
   const [reuseCurrentError, setReuseCurrentError] = useState<string | null>(null)
   const reuseCurrentMut = useMutation(overlay.mutationOpts<boolean>({
-    queryKey: ['kirocrewConfig'],
+    queryKey: ['ajcrewConfig'],
     mutationFn: (value: boolean) => api.patchConfig('dashboard.terminal.reuse_current', value),
     path: () => 'dashboard.terminal.reuse_current',
     displayValue: v => v,
     applyToCache: (cached, value) =>
-      setConfigPathValue(cached as KirocrewCfg, 'dashboard.terminal.reuse_current', value),
+      setConfigPathValue(cached as AjcrewCfg, 'dashboard.terminal.reuse_current', value),
     onFailure: () => setReuseCurrentError(i18nT('pages.settings.displayPanel.terminal_reuse_current_save_failed')),
     onSupersede: () => setReuseCurrentError(null),
   }))
@@ -449,12 +449,12 @@ export function DisplayPanel({ basePath }: { basePath?: string } = {}) {
   const pickedExternalApp = externalApps.some(a => a.id === shownExternalApp) ? shownExternalApp : ''
   const [externalAppError, setExternalAppError] = useState<string | null>(null)
   const externalAppMut = useMutation(overlay.mutationOpts<string>({
-    queryKey: ['kirocrewConfig'],
+    queryKey: ['ajcrewConfig'],
     mutationFn: (value: string) => api.patchConfig('dashboard.terminal.external_app', value),
     path: () => 'dashboard.terminal.external_app',
     displayValue: v => v,
     applyToCache: (cached, value) =>
-      setConfigPathValue(cached as KirocrewCfg, 'dashboard.terminal.external_app', value),
+      setConfigPathValue(cached as AjcrewCfg, 'dashboard.terminal.external_app', value),
     onFailure: () => setExternalAppError(i18nT('pages.settings.displayPanel.terminal_external_app_save_failed')),
     onSupersede: () => setExternalAppError(null),
   }))
@@ -469,11 +469,11 @@ export function DisplayPanel({ basePath }: { basePath?: string } = {}) {
     failedMessage: (e: unknown) => string,
   ) => {
     const opts = overlay.mutationOpts<string>({
-      queryKey: ['kirocrewConfig'],
+      queryKey: ['ajcrewConfig'],
       mutationFn: (value: string) => api.patchConfig(path, value),
       path: () => path,
       displayValue: v => v,
-      applyToCache: (cached, value) => setConfigPathValue(cached as KirocrewCfg, path, value),
+      applyToCache: (cached, value) => setConfigPathValue(cached as AjcrewCfg, path, value),
       onFailure: e => setError(failedMessage(e)),
       onSupersede: () => setError(null),
     })

@@ -10,7 +10,7 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 #: An app-worker slot mode, as a built-in would register it (``apps/seams.py``).
 _WORKER_MODE = "some-app"
@@ -21,7 +21,7 @@ class TestApiChatDrainOnDisconnect:
     """Cover the slot.drain() call in chat_handlers' SSE finally block."""
 
     async def test_sse_reader_drains_pending_on_cancel(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
@@ -37,7 +37,7 @@ class TestApiChatDrainOnDisconnect:
             # bounds a lost run; nothing sets the event, so no test waits on it.
             await asyncio.wait_for(parked.wait(), timeout=30)
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
 
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post(
@@ -74,7 +74,7 @@ class TestApiChatMemoryModeForwarding:
     """
 
     async def test_temporary_memory_mode_propagates_to_new_slot(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         async def fake_run_chat(
@@ -83,7 +83,7 @@ class TestApiChatMemoryModeForwarding:
             assert _directive_user_origin is True
             sl.append("chunk", "ack", "chunk")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
 
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post(
@@ -110,7 +110,7 @@ class TestApiChatMemoryModeForwarding:
         assert slot.memory_mode == "temporary"
 
     async def test_missing_memory_mode_defaults_to_persistent(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         async def fake_run_chat(
@@ -119,7 +119,7 @@ class TestApiChatMemoryModeForwarding:
             assert _directive_user_origin is True
             sl.append("chunk", "ack", "chunk")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
 
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post(
@@ -142,7 +142,7 @@ class TestApiChatMemoryModeForwarding:
         assert slot.memory_mode == "persistent"
 
     async def test_invalid_memory_mode_is_dropped(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         async def fake_run_chat(
@@ -151,7 +151,7 @@ class TestApiChatMemoryModeForwarding:
             assert _directive_user_origin is True
             sl.append("chunk", "ack", "chunk")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
 
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post(
@@ -181,8 +181,8 @@ class TestApiChatMemoryModeForwarding:
         from unittest.mock import MagicMock
 
         mock_sel = MagicMock()
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: mock_sel)
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: mock_sel)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         # Pre-create a persistent slot
         state.get_or_create_slot("locked", memory_mode="persistent")
@@ -228,8 +228,8 @@ class TestApiChatModeForwarding:
             sl.append("chunk", "ack", "chunk")
 
         with pytest.MonkeyPatch.context() as mp:
-            mp.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
-            mp.setattr("kiro_crew.dashboard.chat_handlers._CREATABLE_MODES", ("", _WORKER_MODE))
+            mp.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+            mp.setattr("aj_crew.dashboard.chat_handlers._CREATABLE_MODES", ("", _WORKER_MODE))
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post("/api/chat", json=body, timeout=None)
                 assert resp.status == 200
@@ -239,7 +239,7 @@ class TestApiChatModeForwarding:
                 await asyncio.sleep(0.05)
 
     async def test_app_worker_mode_propagates_to_new_slot(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         await self._post_chat(
@@ -260,7 +260,7 @@ class TestApiChatModeForwarding:
         assert slot.mode != ""
 
     async def test_bogus_mode_is_dropped(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         await self._post_chat(
@@ -273,7 +273,7 @@ class TestApiChatModeForwarding:
         assert slot.mode == ""
 
     async def test_non_string_mode_is_dropped(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         await self._post_chat(
@@ -290,7 +290,7 @@ class TestApiChatModeForwarding:
         client, a saved script) gets an ordinary slot, not an error — the mode
         is absent from ``_CREATABLE_MODES``, so it is dropped like any other
         unknown value."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         await self._post_chat(
@@ -305,7 +305,7 @@ class TestApiChatModeForwarding:
     async def test_mode_ignored_for_existing_slot(self, tmp_path, monkeypatch):
         """Repeating mode on send() must be safe when the slot survived: an
         existing slot keeps its stored mode and no error is raised."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("worker-alive", mode=_WORKER_MODE, memory_mode="temporary")
 
@@ -333,7 +333,7 @@ class TestApiChatNoBrowseMarker:
     `browse` field a client might still send."""
 
     async def _send(self, tmp_path, monkeypatch, *, body_extra: dict):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         async def fake_run_chat(
@@ -342,7 +342,7 @@ class TestApiChatNoBrowseMarker:
             assert _directive_user_origin is True
             sl.append("chunk", "ack", "chunk")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
 
         slot_key = body_extra.get("slot", "browse-slot")
         async with TestClient(TestServer(_make_app(state))) as client:
@@ -380,9 +380,9 @@ class TestApiChatNoBrowseMarker:
 class TestApiChatAgentPassing:
     @pytest.mark.asyncio
     async def test_agent_set_on_new_slot(self, tmp_path, monkeypatch):
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         agents_dir = tmp_path / "agents"
         agents_dir.mkdir()
         (agents_dir / "agentrock--my-aim-agent.json").write_text(
@@ -405,7 +405,7 @@ class TestApiChatAgentPassing:
 
     @pytest.mark.asyncio
     async def test_agent_mismatch_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("slot-x")
         slot.agent = "agent-a"
@@ -419,7 +419,7 @@ class TestApiChatAgentPassing:
     @pytest.mark.asyncio
     async def test_empty_agent_on_agent_slot_allowed(self, tmp_path, monkeypatch):
         """Follow-up message with no agent on an agent-bound slot must not 409."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("slot-y")
         slot.agent = "agent-a"
@@ -434,11 +434,11 @@ class TestApiChatAgentPassing:
 
     @pytest.mark.asyncio
     async def test_invalid_agent_name_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         from unittest.mock import patch
 
         state = _make_state(tmp_path)
-        with patch("kiro_crew.dashboard.chat_handlers._emit_agent_assignment") as mock_emit:
+        with patch("aj_crew.dashboard.chat_handlers._emit_agent_assignment") as mock_emit:
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/chat?ws=1",
@@ -449,14 +449,14 @@ class TestApiChatAgentPassing:
 
     @pytest.mark.asyncio
     async def test_credential_shaped_invalid_agent_is_redacted_in_sel(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         from unittest.mock import MagicMock, patch
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("member-dr-eggbot", agent="dr. eggbot", mode="member")
         unsafe = "crew password=shortvalue"
         audit = MagicMock()
-        with patch("kiro_crew.dashboard.chat_utils.sel", return_value=audit):
+        with patch("aj_crew.dashboard.chat_utils.sel", return_value=audit):
             async with TestClient(TestServer(_make_app(state))) as client:
                 response = await client.post(
                     "/api/chat?ws=1",
@@ -471,11 +471,11 @@ class TestApiChatAgentPassing:
     @pytest.mark.asyncio
     async def test_non_string_agent_logs_actual_value(self, tmp_path, monkeypatch):
         """Fix for Post 22: str(agent) preserves malicious input in audit trail."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         from unittest.mock import patch
 
         state = _make_state(tmp_path)
-        with patch("kiro_crew.dashboard.chat_handlers._emit_agent_assignment") as mock_emit:
+        with patch("aj_crew.dashboard.chat_handlers._emit_agent_assignment") as mock_emit:
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/chat?ws=1",
@@ -487,11 +487,11 @@ class TestApiChatAgentPassing:
     @pytest.mark.asyncio
     async def test_no_agent_no_emit(self, tmp_path, monkeypatch):
         """Fix for Post 23: no SEL event when no agent involved (reduces audit noise)."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         from unittest.mock import patch
 
         state = _make_state(tmp_path)
-        with patch("kiro_crew.dashboard.chat_handlers._emit_agent_assignment") as mock_emit:
+        with patch("aj_crew.dashboard.chat_handlers._emit_agent_assignment") as mock_emit:
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/chat?ws=1",
@@ -502,7 +502,7 @@ class TestApiChatAgentPassing:
 
     @pytest.mark.asyncio
     async def test_sel_event_on_running_slot_rejection(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         from unittest.mock import MagicMock, patch
 
         state = _make_state(tmp_path)
@@ -510,7 +510,7 @@ class TestApiChatAgentPassing:
         mock_task = MagicMock()
         mock_task.done.return_value = False
         slot.task = mock_task
-        with patch("kiro_crew.dashboard.chat_handlers._emit_agent_assignment") as mock_emit:
+        with patch("aj_crew.dashboard.chat_handlers._emit_agent_assignment") as mock_emit:
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/chat?ws=1",
@@ -529,7 +529,7 @@ class TestApiChatSendReceiptMid:
 
     @pytest.mark.asyncio
     async def test_idle_steer_echoes_user_before_the_reply(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("echo-slot")
         echoed: list[dict] = []
@@ -550,7 +550,7 @@ class TestApiChatSendReceiptMid:
             assert [(row["slot"], row["role"]) for row in echoed] == [("echo-slot", "user")]
             sl.append("assistant", "reply")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post(
                 "/api/chat?ws=1",
@@ -575,7 +575,7 @@ class TestApiChatSendReceiptMid:
 
     @pytest.mark.asyncio
     async def test_immediate_dispatch_receipt_carries_the_user_row_mid(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         async def fake_run_chat(
@@ -583,7 +583,7 @@ class TestApiChatSendReceiptMid:
         ):
             sl.append("chunk", "ack", "chunk")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
 
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post(
@@ -609,7 +609,7 @@ class TestApiChatSendReceiptMid:
         """A busy slot queues the message and broadcasts its own queue card; the
         optimistic bubble is not this row's receipt, so no `mid` is returned
         (mirrors `confirmedDelivered`, which excludes a queued acceptance)."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("busy-slot")
         mock_task = MagicMock()
@@ -668,10 +668,10 @@ class TestApiChatStalledReader:
     """An SSE reader that stops reading is cut off, so it stops holding its slot."""
 
     async def test_a_stalled_reader_is_cut_off_and_releases_the_slot(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._SSE_WRITE_DEADLINE_SECS", 0.5, raising=False
+            "aj_crew.dashboard.chat_handlers._SSE_WRITE_DEADLINE_SECS", 0.5, raising=False
         )
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
@@ -679,7 +679,7 @@ class TestApiChatStalledReader:
         slot._on_message = lambda _key, msg: broadcast.append(str(msg.get("content", "")))
         finished = asyncio.Event()
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._run_chat", _long_turn(8000, finished)
+            "aj_crew.dashboard.chat_handlers._run_chat", _long_turn(8000, finished)
         )
 
         async with TestClient(TestServer(_make_app(state))) as client:
@@ -713,13 +713,13 @@ class TestApiChatStalledReader:
         )
 
     async def test_a_reading_client_gets_the_whole_turn(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         finished = asyncio.Event()
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._run_chat", _long_turn(8000, finished)
+            "aj_crew.dashboard.chat_handlers._run_chat", _long_turn(8000, finished)
         )
 
         async with TestClient(TestServer(_make_app(state))) as client:

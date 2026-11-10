@@ -12,7 +12,7 @@ import { EMBEDDABLE_LOOPBACK_HOSTS } from '../components/WebPreviewPanel'
 /** The space-separated sources of `_LOOPBACK_FRAME_SRC` in server.py. */
 function loopbackFrameSrc(): string[] {
   const server = readFileSync(
-    join(__dirname, '../../../src/kiro_crew/dashboard/server.py'),
+    join(__dirname, '../../../src/aj_crew/dashboard/server.py'),
     'utf8',
   )
   const block = /^_LOOPBACK_FRAME_SRC = \(([\s\S]*?)\n\)/m.exec(server)

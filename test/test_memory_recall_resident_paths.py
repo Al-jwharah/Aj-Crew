@@ -15,9 +15,9 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from kiro_crew import memory_record_metadata as record_meta
-from kiro_crew.vector_memory import VectorMemoryStore
-from kiro_crew.vector_memory_runtime import lessons, semantic, term_index
+from aj_crew import memory_record_metadata as record_meta
+from aj_crew.vector_memory import VectorMemoryStore
+from aj_crew.vector_memory_runtime import lessons, semantic, term_index
 
 _DIM = 16
 
@@ -177,7 +177,7 @@ def test_lesson_render_memo_matches_the_uncached_render(tmp_path: Path, caplog) 
     rows = store.get_lessons()
     rows.append({"key": "lesson.broken", "value_json": "{not json"})
     lessons._lesson_render_fields.cache_clear()
-    with caplog.at_level("WARNING", logger="kiro_crew.vector_memory"):
+    with caplog.at_level("WARNING", logger="aj_crew.vector_memory"):
         cached = lessons._renderable_entries(rows, None)
     assert "lesson.broken" in caplog.text
     uncached = []
@@ -259,7 +259,7 @@ def test_the_index_is_built_once_per_set_and_patched_by_a_write(
 
 
 def test_term_index_holds_each_text_s_exact_terms() -> None:
-    from kiro_crew.vector_memory_runtime import text_scoring
+    from aj_crew.vector_memory_runtime import text_scoring
 
     texts = ["deploy pipelines", "Rust memory recalls", "", "deploy deploy x"]
     index = term_index.RowTermIndex.build(texts, np)

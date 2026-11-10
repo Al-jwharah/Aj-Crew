@@ -6,9 +6,9 @@ import asyncio
 
 import pytest
 
-from kiro_crew.instances import tunnel_keeper
-from kiro_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.instances import tunnel_keeper
+from aj_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 class _FakeTunnel:

@@ -21,13 +21,13 @@ from dev_fleet_app_helpers import _sweep_staged_sync_tempdirs  # noqa: F401 - fi
 from dev_fleet_app_helpers import _venv_maps_to_the_synced_checkout  # noqa: F401 - fixture
 from dev_fleet_app_helpers import _POSIX_ONLY
 
-import kiro_crew.apps.builtins.dev_fleet.server as mod
-from kiro_crew import platform_compat
-from kiro_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
-from kiro_crew.apps.builtins.dev_fleet import repository as repository_mod
-from kiro_crew.apps.builtins.dev_fleet import runtime as runtime_mod
-from kiro_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
-from kiro_crew.testing.wait import async_wait_until, await_until
+import aj_crew.apps.builtins.dev_fleet.server as mod
+from aj_crew import platform_compat
+from aj_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
+from aj_crew.apps.builtins.dev_fleet import repository as repository_mod
+from aj_crew.apps.builtins.dev_fleet import runtime as runtime_mod
+from aj_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 # --- SEL audit on mutations (Codex R17) ---
@@ -52,7 +52,7 @@ def _fake_sel_capture(events):
 @pytest.mark.asyncio
 async def test_mutation_denied_emits_sel_event(monkeypatch):
     """A rejected worktree remove emits exactly one SEL event with outcome=denied."""
-    from kiro_crew.apps.builtins.dev_fleet.server import api_dev_fleet_worktree_remove
+    from aj_crew.apps.builtins.dev_fleet.server import api_dev_fleet_worktree_remove
 
     events: list = []
     monkeypatch.setattr(runtime_mod, "_sel", lambda: _fake_sel_capture(events)())
@@ -72,7 +72,7 @@ async def test_mutation_denied_emits_sel_event(monkeypatch):
     request.can_read_body = True
 
     with patch(
-        "kiro_crew.apps.builtins.dev_fleet.repository._valid_worktree_names",
+        "aj_crew.apps.builtins.dev_fleet.repository._valid_worktree_names",
         new_callable=AsyncMock,
         return_value={"other"},
     ):
@@ -88,7 +88,7 @@ async def test_mutation_denied_emits_sel_event(monkeypatch):
 @pytest.mark.asyncio
 async def test_mutation_success_emits_sel_event(monkeypatch):
     """A successful pod action emits exactly one SEL event with outcome=success."""
-    from kiro_crew.apps.builtins.dev_fleet.server import api_dev_fleet_pod_down
+    from aj_crew.apps.builtins.dev_fleet.server import api_dev_fleet_pod_down
 
     events: list = []
     monkeypatch.setattr(runtime_mod, "_sel", lambda: _fake_sel_capture(events)())
@@ -109,12 +109,12 @@ async def test_mutation_success_emits_sel_event(monkeypatch):
 
     with (
         patch(
-            "kiro_crew.apps.builtins.dev_fleet.repository._find_worktree",
+            "aj_crew.apps.builtins.dev_fleet.repository._find_worktree",
             new_callable=AsyncMock,
             return_value=({"name": "feature-x"}, None),
         ),
         patch(
-            "kiro_crew.apps.builtins.dev_fleet.worktree_ops._pod_down",
+            "aj_crew.apps.builtins.dev_fleet.worktree_ops._pod_down",
             new_callable=AsyncMock,
             return_value={"ok": True},
         ),
@@ -130,7 +130,7 @@ async def test_mutation_success_emits_sel_event(monkeypatch):
 @pytest.mark.asyncio
 async def test_worktree_remove_non_string_name_is_400(monkeypatch):
     """A list-valued 'name' must be a 400, not a TypeError->500 (Codex R17 #2)."""
-    from kiro_crew.apps.builtins.dev_fleet.server import api_dev_fleet_worktree_remove
+    from aj_crew.apps.builtins.dev_fleet.server import api_dev_fleet_worktree_remove
 
     monkeypatch.setattr(runtime_mod, "_sel", lambda: _fake_sel_capture([])())
 
@@ -158,7 +158,7 @@ async def test_worktree_remove_non_string_name_is_400(monkeypatch):
 async def test_mutation_ok_false_audited_as_denied(monkeypatch):
     """A refused operation reported as {"ok": false} with HTTP 200 must be
     audited as denied, never success (Codex R18 #1)."""
-    from kiro_crew.apps.builtins.dev_fleet.server import api_dev_fleet_worktree_remove
+    from aj_crew.apps.builtins.dev_fleet.server import api_dev_fleet_worktree_remove
 
     events: list = []
     monkeypatch.setattr(runtime_mod, "_sel", lambda: _fake_sel_capture(events)())
@@ -179,12 +179,12 @@ async def test_mutation_ok_false_audited_as_denied(monkeypatch):
 
     with (
         patch(
-            "kiro_crew.apps.builtins.dev_fleet.repository._valid_worktree_names",
+            "aj_crew.apps.builtins.dev_fleet.repository._valid_worktree_names",
             new_callable=AsyncMock,
             return_value={"feature-x"},
         ),
         patch(
-            "kiro_crew.apps.builtins.dev_fleet.worktree_ops._worktree_remove",
+            "aj_crew.apps.builtins.dev_fleet.worktree_ops._worktree_remove",
             new_callable=AsyncMock,
             return_value={"ok": False, "error": "worktree is dirty"},
         ),
@@ -199,7 +199,7 @@ async def test_mutation_ok_false_audited_as_denied(monkeypatch):
 @pytest.mark.asyncio
 async def test_run_record_includes_started():
     """New run records carry a 'started' timestamp for FE reattach (Codex R18 #2)."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     before = time.time()
     rid = await mod._start_run("test-label", ["true"])
@@ -215,7 +215,7 @@ async def test_run_record_includes_started():
 def test_escalation_cleanup_skips_symlinked_app_dir(tmp_path, monkeypatch):
     """A symlinked escalated app dir must never be followed/deleted — the
     link target lives outside the apps tree (Codex R19 #2)."""
-    import kiro_crew.apps.manager as mgr
+    import aj_crew.apps.manager as mgr
 
     apps_root = tmp_path / "apps"
     apps_root.mkdir()
@@ -244,11 +244,11 @@ def test_escalation_cleanup_skips_symlinked_app_dir(tmp_path, monkeypatch):
 @pytest.mark.asyncio
 async def test_pod_guard_rejects_foreign_pinned_checkout(monkeypatch, tmp_path):
     """A pod pinned to another repository's checkout must refuse the operation."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
-    ours = tmp_path / "repo-a" / "kirocrew-wt-feature"
+    ours = tmp_path / "repo-a" / "ajcrew-wt-feature"
     ours.mkdir(parents=True)
-    foreign = tmp_path / "repo-b" / "kirocrew-wt-feature"
+    foreign = tmp_path / "repo-b" / "ajcrew-wt-feature"
     foreign.mkdir(parents=True)
 
     with (
@@ -261,7 +261,7 @@ async def test_pod_guard_rejects_foreign_pinned_checkout(monkeypatch, tmp_path):
         patch.object(runtime_mod, "_load_cfg", return_value=object()),
         patch.object(worktree_ops_mod, "_read_pin_strict", return_value=(True, str(foreign))),
     ):
-        err = await mod._pod_checkout_guard("kirocrew-wt-feature")
+        err = await mod._pod_checkout_guard("ajcrew-wt-feature")
     assert err is not None
     assert "different checkout" in err
 
@@ -269,9 +269,9 @@ async def test_pod_guard_rejects_foreign_pinned_checkout(monkeypatch, tmp_path):
 @pytest.mark.asyncio
 async def test_pod_guard_allows_matching_or_unpinned(monkeypatch, tmp_path):
     """Matching pin or no pin at all proceeds."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
-    ours = tmp_path / "kirocrew-wt-feature"
+    ours = tmp_path / "ajcrew-wt-feature"
     ours.mkdir()
 
     with (
@@ -284,7 +284,7 @@ async def test_pod_guard_allows_matching_or_unpinned(monkeypatch, tmp_path):
         patch.object(runtime_mod, "_load_cfg", return_value=object()),
         patch.object(worktree_ops_mod, "_read_pin_strict", return_value=(True, str(ours))),
     ):
-        assert await mod._pod_checkout_guard("kirocrew-wt-feature") is None
+        assert await mod._pod_checkout_guard("ajcrew-wt-feature") is None
 
     # No pin file + no active unit -> pod never booted -> allow
     with (
@@ -298,15 +298,15 @@ async def test_pod_guard_allows_matching_or_unpinned(monkeypatch, tmp_path):
         patch.object(worktree_ops_mod, "_read_pin_strict", return_value=(False, None)),
         patch.object(runtime_mod.rt, "active_names", return_value=set()),
     ):
-        assert await mod._pod_checkout_guard("kirocrew-wt-feature") is None
+        assert await mod._pod_checkout_guard("ajcrew-wt-feature") is None
 
 
 @pytest.mark.asyncio
 async def test_pod_guard_fails_closed_on_pin_read_error(monkeypatch, tmp_path):
     """Cannot read the pin state -> refuse the pod operation."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
-    ours = tmp_path / "kirocrew-wt-feature"
+    ours = tmp_path / "ajcrew-wt-feature"
     ours.mkdir()
 
     with (
@@ -319,7 +319,7 @@ async def test_pod_guard_fails_closed_on_pin_read_error(monkeypatch, tmp_path):
         patch.object(runtime_mod, "_load_cfg", return_value=object()),
         patch.object(worktree_ops_mod, "_read_pin_strict", side_effect=OSError("boom")),
     ):
-        err = await mod._pod_checkout_guard("kirocrew-wt-feature")
+        err = await mod._pod_checkout_guard("ajcrew-wt-feature")
     assert err is not None
     assert "cannot verify pod checkout pin" in err
 
@@ -328,9 +328,9 @@ async def test_pod_guard_fails_closed_on_pin_read_error(monkeypatch, tmp_path):
 async def test_pod_guard_denies_pin_file_without_checkout(monkeypatch, tmp_path):
     """A pin file that exists but has no verifiable CHECKOUT is ambiguous
     pod identity -> deny (Codex R23 #2)."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
-    ours = tmp_path / "kirocrew-wt-feature"
+    ours = tmp_path / "ajcrew-wt-feature"
     ours.mkdir()
 
     with (
@@ -343,7 +343,7 @@ async def test_pod_guard_denies_pin_file_without_checkout(monkeypatch, tmp_path)
         patch.object(runtime_mod, "_load_cfg", return_value=object()),
         patch.object(worktree_ops_mod, "_read_pin_strict", return_value=(True, None)),
     ):
-        err = await mod._pod_checkout_guard("kirocrew-wt-feature")
+        err = await mod._pod_checkout_guard("ajcrew-wt-feature")
     assert err is not None
     assert "ambiguous pod identity" in err
 
@@ -352,7 +352,7 @@ async def test_pod_guard_denies_pin_file_without_checkout(monkeypatch, tmp_path)
 def test_read_pin_strict_propagates_read_errors(tmp_path):
     """_read_pin_strict must raise (not return empty) when the pin file
     exists but cannot be read."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     pods = tmp_path / "pods"
     pods.mkdir()
@@ -379,7 +379,7 @@ def test_read_pin_strict_propagates_read_errors(tmp_path):
 
 def test_escalation_cleanup_skips_symlinked_meta_file(tmp_path, monkeypatch):
     """A symlinked installed.json must never be read (Codex R23 #1)."""
-    import kiro_crew.apps.manager as mgr
+    import aj_crew.apps.manager as mgr
 
     apps_root = tmp_path / "apps"
     apps_root.mkdir()
@@ -405,7 +405,7 @@ def test_escalation_cleanup_skips_symlinked_meta_file(tmp_path, monkeypatch):
 # --- credential-free build env + pin symlink hardening (Codex R24) ---
 def test_build_env_excludes_credentials(monkeypatch):
     """Build/CLI subprocess env must be allowlisted — gateway tokens excluded."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     monkeypatch.setenv("SLACK_BOT_TOKEN", "xoxb-secret")
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "aws-secret")
@@ -424,11 +424,11 @@ def test_build_env_excludes_credentials(monkeypatch):
     assert "AWS_SECRET_ACCESS_KEY" not in env
 
     assert env["HOME"] == "/home/u"
-    assert env["KIROCREW_POD_REPO"] == mod.MAIN_REPO
+    assert env["AJCREW_POD_REPO"] == mod.MAIN_REPO
 
     benv = mod._build_env()
     assert "SLACK_BOT_TOKEN" not in benv
-    assert "KIROCREW_POD_REPO" not in benv
+    assert "AJCREW_POD_REPO" not in benv
 
     # The credential-bearing tier keeps the bare pinned path — git resolves its
     # own helpers (git-remote-https, credential helpers) through PATH.
@@ -441,7 +441,7 @@ def test_build_env_passes_npm_registry_but_drops_credential_shaped_keys(monkeypa
     build``) so both resolve against the same registry. A credential-shaped
     variable next to it must still be dropped by the same allowlist.
     """
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     monkeypatch.setenv("NPM_CONFIG_REGISTRY", "https://registry.npmjs.org")
     monkeypatch.setenv("NPM_CONFIG__AUTHTOKEN", "npm-secret-token")
@@ -463,7 +463,7 @@ def test_build_env_rejects_npm_registry_values_that_smuggle_credentials(monkeypa
     and an unrelated credential-shaped variable next to it is still dropped
     too.
     """
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     dropped = (
         "https://u:tok@registry.example/",  # userinfo
@@ -557,7 +557,7 @@ def test_build_env_carries_systemroot_on_windows(monkeypatch):
 
 def test_read_pin_strict_rejects_symlinked_env(tmp_path):
     """A symlinked pin file must raise, never be read (Codex R24 #2)."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     pods = tmp_path / "pods"
     pods.mkdir()
@@ -579,7 +579,7 @@ def test_read_pin_strict_rejects_symlinked_env(tmp_path):
 
 def test_read_pin_strict_rejects_escape(tmp_path):
     """A pin path resolving outside pods_dir must raise."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     pods = tmp_path / "pods"
     pods.mkdir()
@@ -599,7 +599,7 @@ def test_read_pin_strict_rejects_escape(tmp_path):
 @pytest.mark.asyncio
 async def test_completed_runs_are_evicted_beyond_cap():
     """Completed run records are bounded; running entries survive (Codex R28)."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     async with mod._RUNS_LOCK:
         saved = dict(mod._RUNS)
@@ -637,9 +637,9 @@ async def test_completed_runs_are_evicted_beyond_cap():
 @pytest.mark.asyncio
 async def test_pod_guard_denies_active_unpinned_pod(tmp_path):
     """No pin + ACTIVE unit under the name = unattributable foreign pod -> deny."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
-    ours = tmp_path / "kirocrew-wt-feature"
+    ours = tmp_path / "ajcrew-wt-feature"
     ours.mkdir()
 
     with (
@@ -651,9 +651,9 @@ async def test_pod_guard_denies_active_unpinned_pod(tmp_path):
         ),
         patch.object(runtime_mod, "_load_cfg", return_value=object()),
         patch.object(worktree_ops_mod, "_read_pin_strict", return_value=(False, None)),
-        patch.object(runtime_mod.rt, "active_names", return_value={"kirocrew-wt-feature"}),
+        patch.object(runtime_mod.rt, "active_names", return_value={"ajcrew-wt-feature"}),
     ):
-        err = await mod._pod_checkout_guard("kirocrew-wt-feature")
+        err = await mod._pod_checkout_guard("ajcrew-wt-feature")
     assert err is not None
     assert "unattributable" in err
 
@@ -669,12 +669,12 @@ async def test_pod_guard_denies_active_unpinned_pod(tmp_path):
         patch.object(worktree_ops_mod, "_read_pin_strict", return_value=(False, None)),
         patch.object(runtime_mod.rt, "active_names", return_value=set()),
     ):
-        assert await mod._pod_checkout_guard("kirocrew-wt-feature") is None
+        assert await mod._pod_checkout_guard("ajcrew-wt-feature") is None
 
 
 def test_escalation_cleanup_keeps_dir_when_data_present(tmp_path, monkeypatch):
     """Non-empty data/ -> whole dir kept, no partial deletion (R29 #2)."""
-    import kiro_crew.apps.manager as mgr
+    import aj_crew.apps.manager as mgr
 
     apps_root = tmp_path / "apps"
     apps_root.mkdir()
@@ -696,7 +696,7 @@ def test_escalation_cleanup_keeps_dir_when_data_present(tmp_path, monkeypatch):
 
 def test_escalation_cleanup_removes_empty_builtin_via_pinned_fd(tmp_path, monkeypatch):
     """No data/ -> dir removed through the pinned descriptor (R29 #2)."""
-    import kiro_crew.apps.manager as mgr
+    import aj_crew.apps.manager as mgr
 
     apps_root = tmp_path / "apps"
     apps_root.mkdir()
@@ -761,7 +761,7 @@ async def test_run_cmd_pins_git_protocols(monkeypatch):
     """Every _run_cmd spawn env carries the full git neutralizer set so an
     ext:: origin / malicious fsmonitor / hooksPath / credential.helper /
     sshCommand from agent-writable .git/config is refused by git itself."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     captured = {}
 
@@ -776,7 +776,7 @@ async def test_run_cmd_pins_git_protocols(monkeypatch):
 
 
 def test_build_env_pins_git_protocols():
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     env = mod._build_env()
     _assert_git_neutralizers(env)
@@ -847,7 +847,7 @@ async def test_start_run_readline_overrun_kills_process_tree(monkeypatch):
     """When the output stream loop raises (e.g. a single line exceeding the
     64 KiB asyncio stream limit), the still-running subprocess tree is
     killed instead of being orphaned past its run record."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     killed: list[int] = []
 
@@ -912,7 +912,7 @@ async def test_sync_fetch_standard_merge_strict(monkeypatch):
     "standard" while the checkout-performing ff-merge (which executes
     repo-controlled smudge filters / merge drivers) runs "strict" with
     credential dirs hidden, like the pip/npm build steps."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     captured: list[tuple[list, str]] = []
 
@@ -947,7 +947,7 @@ async def test_sync_fetch_standard_merge_strict(monkeypatch):
 @pytest.mark.asyncio
 async def test_removal_refuses_when_commit_races_verdict():
     """A commit pushed after merge causes OID divergence -> refuse non-forced removal."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -985,7 +985,7 @@ async def test_removal_refuses_when_commit_races_verdict():
 async def test_owner_repo_failure_not_cached_forever():
     """A transient owner/repo lookup failure retries after the TTL instead
     of disabling PR status until gateway restart; success is cached."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     lookups = AsyncMock(side_effect=[None, "own/repo"])
     fleet_state_mod._OWNER_REPO = None
@@ -1011,7 +1011,7 @@ async def test_owner_repo_failure_not_cached_forever():
 def test_escalation_cleanup_fails_closed_without_dirfd(tmp_path, monkeypatch):
     """Platforms without dir_fd primitives cannot pin validation to the
     deletion, so cleanup must be skipped entirely (fail closed)."""
-    import kiro_crew.apps.manager as mgr
+    import aj_crew.apps.manager as mgr
 
     apps_root = tmp_path / "apps"
     apps_root.mkdir()
@@ -1035,7 +1035,7 @@ def test_escalation_cleanup_swapped_entry_survives(tmp_path, monkeypatch):
     pinned inode."""
     import os as _os
 
-    import kiro_crew.apps.manager as mgr
+    import aj_crew.apps.manager as mgr
 
     apps_root = tmp_path / "apps"
     apps_root.mkdir()

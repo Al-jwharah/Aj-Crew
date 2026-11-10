@@ -8,7 +8,7 @@ cd "$(dirname "$0")/.."
 
 rm -rf build dist *.egg-info src/*.egg-info \
        .mypy_cache .pytest_cache \
-       src/kiro_crew/static/dist src/kiro_crew/static/.dist.* \
+       src/aj_crew/static/dist src/aj_crew/static/.dist.* \
        website/dist website/tsconfig.app.tsbuildinfo \
        website/.dist*.next-* website/.dist*.ready-* website/.dist*.prev-*
 

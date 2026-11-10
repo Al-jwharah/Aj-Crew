@@ -15,7 +15,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.browser_harness import helper_worker
+from aj_crew.browser_harness import helper_worker
 
 
 class _RecordingHelpers:

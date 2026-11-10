@@ -1,5 +1,5 @@
 /**
- * Screenshot harness for granting a custom agent Kiro Crew's spawn tools.
+ * Screenshot harness for granting a custom agent Aj Crew's spawn tools.
  *
  * Runs the REAL built SPA (website/dist) behind the shared in-process static
  * server and answers every /api/** call from fixtures via Playwright route
@@ -11,7 +11,7 @@
  *   draft-unsaved  right after the click: the six spawn chips, each asking
  *                  first, and the Save bar, with nothing saved yet
  *   after-grant    the same agent after saving: the server answers with the
- *                  tools granted and `kirocrew-core` declared, so the MCP
+ *                  tools granted and `ajcrew-core` declared, so the MCP
  *                  servers list carries it and the hint is gone
  *   save-refused   a spec whose mcpServers is not an object: the save is
  *                  refused (409 control_plane_not_declarable) and the save bar
@@ -19,8 +19,8 @@
  *
  * SELF-CHECKS (throw = no stale frame): the hint is visible before and its
  * button's tooltip names the spawn_* family; the draft shows all six chips and
- * no kirocrew-core yet; the PATCH carried all six spawn tools; after the save
- * the hint is gone and the MCP servers list names kirocrew-core; the refusal
+ * no ajcrew-core yet; the PATCH carried all six spawn tools; after the save
+ * the hint is gone and the MCP servers list names ajcrew-core; the refusal
  * shows its sentence and keeps the draft.
  *
  * Usage: node scripts/capture-custom-agent-spawn-tools.mjs [outDir] [prefix]
@@ -29,35 +29,35 @@ import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
 import { serveDist } from './lib/serve-dist.mjs'
 import { chromiumExecutable } from './lib/chromium-executable.mjs'
-import { KIROCREW_CONFIG_FIXTURE, json, logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
+import { AJCREW_CONFIG_FIXTURE, json, logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/custom-agent-spawn-tools'
 const PREFIX = process.argv[3] || 'after'
 mkdirSync(OUT, { recursive: true })
 
 const HINT = /run other agents in the background/
-const FAMILY = '@kirocrew-core/spawn_*'
-const SPAWN_REFS = ['spawn_run', 'spawn_list', 'spawn_status', 'spawn_steer', 'spawn_continue', 'spawn_release'].map(t => `@kirocrew-core/${t}`)
+const FAMILY = '@ajcrew-core/spawn_*'
+const SPAWN_REFS = ['spawn_run', 'spawn_list', 'spawn_status', 'spawn_steer', 'spawn_continue', 'spawn_release'].map(t => `@ajcrew-core/${t}`)
 
 const CREWS = [
-  { name: 'default', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: 'Used for all new chats', source: 'user', model: '', triggers: '', session_color: '' },
+  { name: 'default', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: 'Used for all new chats', source: 'user', model: '', triggers: '', session_color: '' },
 ]
 const INSTALLED = [
-  { name: 'kirocrew', description: 'Built-in', source: 'kirocrew', model: '', skills: [], mcp_servers: ['kirocrew-core'], filename: 'kirocrew.json', kirocrew_owned: true },
-  { name: 'orchestrator', description: 'Hands work to named agents', source: 'user', model: '', skills: [], mcp_servers: [], filename: 'orchestrator.json', kirocrew_owned: false },
+  { name: 'ajcrew', description: 'Built-in', source: 'ajcrew', model: '', skills: [], mcp_servers: ['ajcrew-core'], filename: 'ajcrew.json', ajcrew_owned: true },
+  { name: 'orchestrator', description: 'Hands work to named agents', source: 'user', model: '', skills: [], mcp_servers: [], filename: 'orchestrator.json', ajcrew_owned: false },
 ]
 const tmpl = over => ({
   name: 'x', filename: 'x.json', description: '', model: '', skills: [], mcp_servers: [],
-  source: 'user', package: '', scope: 'global', kirocrew_owned: false, forked_from: '', private_to: '',
+  source: 'user', package: '', scope: 'global', ajcrew_owned: false, forked_from: '', private_to: '',
   read_only: null, used_by: [], ...over,
 })
 const TEMPLATES = [
   tmpl({ name: 'orchestrator', filename: 'orchestrator.json', description: 'Hands work to named agents' }),
-  tmpl({ name: 'kirocrew', filename: 'kirocrew.json', description: 'Built-in', source: 'kirocrew', kirocrew_owned: true, read_only: 'runtime' }),
+  tmpl({ name: 'ajcrew', filename: 'ajcrew.json', description: 'Built-in', source: 'ajcrew', ajcrew_owned: true, read_only: 'runtime' }),
 ]
 const CFG = {
-  ...KIROCREW_CONFIG_FIXTURE,
-  agents: { default: { kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: 'Used for all new chats', source: 'config' } },
+  ...AJCREW_CONFIG_FIXTURE,
+  agents: { default: { kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: 'Used for all new chats', source: 'config' } },
   default_agent: 'default',
   workspaces: { default: { dir: '~/.kiro/crew/workspace' } },
   memory_stores: { default: { description: 'Shared memory', embedding_provider: 'bge-m3' } },
@@ -69,7 +69,7 @@ const wrote = []
 
 // The sentence the server answers a save it cannot declare with (409
 // control_plane_not_declarable), for a spec whose mcpServers is not an object.
-const REFUSAL = "Could not add kirocrew-core: the MCP servers section of this agent's file is malformed, so the tool would never load. Fix that section in the file, then save again."
+const REFUSAL = "Could not add ajcrew-core: the MCP servers section of this agent's file is malformed, so the tool would never load. Fix that section in the file, then save again."
 
 /** One scenario in one theme: `grant` saves the family, `refused` is the 409. */
 const capture = async (theme, scenario) => {
@@ -83,18 +83,18 @@ const capture = async (theme, scenario) => {
   let patched = null
   const extra = async (path, route) => {
     const method = route.request().method()
-    if (path === '/api/config/kirocrew') return json(route, CFG), true
+    if (path === '/api/config/ajcrew') return json(route, CFG), true
     if (path === '/api/agents') return json(route, { agents: CREWS, default_agent: 'default' }), true
     if (path === '/api/agents/installed') return json(route, INSTALLED), true
     if (path === '/api/agents/templates') return json(route, { templates: TEMPLATES }), true
     if (path === '/api/agents/detail/orchestrator' && method === 'PATCH') {
       patched = route.request().postDataJSON() || {}
       if (!spec.mcpServers || typeof spec.mcpServers !== 'object' || Array.isArray(spec.mcpServers)) {
-        return json(route, { error: REFUSAL, code: 'control_plane_not_declarable', server: 'kirocrew-core' }, 409), true
+        return json(route, { error: REFUSAL, code: 'control_plane_not_declarable', server: 'ajcrew-core' }, 409), true
       }
       spec = { ...spec, ...patched }
-      if ((spec.tools || []).some(t => t.startsWith('@kirocrew-core'))) {
-        spec = { ...spec, mcpServers: { ...spec.mcpServers, 'kirocrew-core': { command: 'kirocrew', args: ['mcp-core'] } } }
+      if ((spec.tools || []).some(t => t.startsWith('@ajcrew-core'))) {
+        spec = { ...spec, mcpServers: { ...spec.mcpServers, 'ajcrew-core': { command: 'ajcrew', args: ['mcp-core'] } } }
       }
       return json(route, { ok: true }), true
     }
@@ -141,8 +141,8 @@ const capture = async (theme, scenario) => {
   const centreChips = () => lastChip.evaluate(el => el.scrollIntoView({ block: 'center' }))
   if (scenario === 'grant') {
     // The draft before saving: six chips and the Save bar, and no
-    // kirocrew-core under MCP servers yet.
-    if (await main.getByText('kirocrew-core', { exact: true }).count()) throw new Error(`${theme} draft: kirocrew-core listed before the save`)
+    // ajcrew-core under MCP servers yet.
+    if (await main.getByText('ajcrew-core', { exact: true }).count()) throw new Error(`${theme} draft: ajcrew-core listed before the save`)
     await centreChips()
     await shot('draft-unsaved')
   }
@@ -162,11 +162,11 @@ const capture = async (theme, scenario) => {
   const sent = (patched && patched.tools) || []
   const unsent = SPAWN_REFS.filter(ref => !sent.includes(ref))
   if (unsent.length) throw new Error(`${theme}: the save did not send ${unsent.join(', ')}`)
-  await main.getByText('kirocrew-core', { exact: true }).first().waitFor({ state: 'visible', timeout: 15000 })
+  await main.getByText('ajcrew-core', { exact: true }).first().waitFor({ state: 'visible', timeout: 15000 })
   if (await main.getByText(HINT).count()) throw new Error(`${theme} after: hint still shown once granted`)
   // The saved confirmation sits over the MCP servers row until it fades.
   await main.getByText('Custom agent saved.').waitFor({ state: 'detached', timeout: 15000 }).catch(() => {})
-  await main.getByText('kirocrew-core', { exact: true }).first().scrollIntoViewIfNeeded()
+  await main.getByText('ajcrew-core', { exact: true }).first().scrollIntoViewIfNeeded()
   await shot('after-grant')
   await ctx.close()
 }

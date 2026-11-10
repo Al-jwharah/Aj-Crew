@@ -11,10 +11,10 @@ const sysctl = (value) => (p) => {
 };
 
 describe("describeSandboxProfileNeed", () => {
-  const CLI = "/tmp/.mount_abc123/resources/backend-dist/kirocrew-backend/bin/kirocrew";
+  const CLI = "/tmp/.mount_abc123/resources/backend-dist/ajcrew-backend/bin/ajcrew";
   const restricted = {
     platform: "linux",
-    env: { APPIMAGE: "/home/u/Applications/kirocrew.AppImage" },
+    env: { APPIMAGE: "/home/u/Applications/ajcrew.AppImage" },
     readSysctl: sysctl("1\n"),
     cliBin: CLI,
   };
@@ -23,36 +23,36 @@ describe("describeSandboxProfileNeed", () => {
     const need = describeSandboxProfileNeed(restricted);
 
     assert.ok(need);
-    assert.equal(need.appImagePath, "/home/u/Applications/kirocrew.AppImage");
+    assert.equal(need.appImagePath, "/home/u/Applications/ajcrew.AppImage");
     assert.match(need.command, /sandbox install-profile --path /);
-    assert.match(need.command, /kirocrew\.AppImage/);
+    assert.match(need.command, /ajcrew\.AppImage/);
     assert.match(need.reason, /fail closed/);
   });
 
   // This persona is documented as needing "no Python, pip, npm, or Node", so
-  // there is no `kirocrew` on their PATH -- the CLI lives inside the bundle.
+  // there is no `ajcrew` on their PATH -- the CLI lives inside the bundle.
   // Emitting the bare command would hand exactly the affected user a
   // `command not found` and leave them with only the sandbox opt-out.
   it("names the bundled CLI by absolute path, not as a bare command", () => {
     const need = describeSandboxProfileNeed(restricted);
 
     assert.equal(need.command.startsWith(`'${CLI}'`), true, need.command);
-    assert.equal(need.command.startsWith("kirocrew "), false);
+    assert.equal(need.command.startsWith("ajcrew "), false);
   });
 
   it("falls back to the bare name only when no CLI path is known", () => {
     const need = describeSandboxProfileNeed({ ...restricted, cliBin: undefined });
 
-    assert.match(need.command, /^'kirocrew' sandbox install-profile/);
+    assert.match(need.command, /^'ajcrew' sandbox install-profile/);
   });
 
   it("quotes a CLI path containing spaces", () => {
     const need = describeSandboxProfileNeed({
       ...restricted,
-      cliBin: "/opt/Kiro Crew/bin/kirocrew",
+      cliBin: "/opt/Aj Crew/bin/ajcrew",
     });
 
-    assert.equal(need.command.includes("'/opt/Kiro Crew/bin/kirocrew'"), true);
+    assert.equal(need.command.includes("'/opt/Aj Crew/bin/ajcrew'"), true);
   });
 
   // The sysctl being exactly 1 is the discriminator for the whole feature, not
@@ -100,10 +100,10 @@ describe("describeSandboxProfileNeed", () => {
   it("quotes a path containing spaces", () => {
     const need = describeSandboxProfileNeed({
       ...restricted,
-      env: { APPIMAGE: "/home/u/My Apps/kirocrew.AppImage" },
+      env: { APPIMAGE: "/home/u/My Apps/ajcrew.AppImage" },
     });
 
-    assert.equal(need.command.includes("'/home/u/My Apps/kirocrew.AppImage'"), true);
+    assert.equal(need.command.includes("'/home/u/My Apps/ajcrew.AppImage'"), true);
   });
 
   // A single quote in the path would otherwise close the quoted argument and let
@@ -111,7 +111,7 @@ describe("describeSandboxProfileNeed", () => {
   it("escapes a single quote in the path", () => {
     const need = describeSandboxProfileNeed({
       ...restricted,
-      env: { APPIMAGE: "/home/u/Bob's Apps/kirocrew.AppImage" },
+      env: { APPIMAGE: "/home/u/Bob's Apps/ajcrew.AppImage" },
     });
 
     assert.equal(need.command.includes("Bob'\\''s Apps"), true);

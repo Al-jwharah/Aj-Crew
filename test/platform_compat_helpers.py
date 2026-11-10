@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from kiro_crew import platform_compat as pc
+from aj_crew import platform_compat as pc
 
 
 def _fake_windows_bins(monkeypatch):

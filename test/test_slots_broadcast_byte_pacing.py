@@ -13,7 +13,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.state import (
+from aj_crew.dashboard.state import (
     _SLOTS_BROADCAST_BYTES_PER_S,
     _SLOTS_BROADCAST_INTERVAL_S,
     _SLOTS_BROADCAST_MAX_INTERVAL_S,
@@ -34,7 +34,7 @@ def loop():
 
 @pytest.fixture
 def state(monkeypatch, tmp_path, loop):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     s = DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(list_jobs=MagicMock(return_value=[]), status=MagicMock(return_value={})),
@@ -86,7 +86,7 @@ _BUILD_S = 0.05
 @pytest.fixture
 def clock(monkeypatch):
     fake = _FakeClock()
-    monkeypatch.setattr("kiro_crew.dashboard.state._slots_broadcast_clock", fake)
+    monkeypatch.setattr("aj_crew.dashboard.state._slots_broadcast_clock", fake)
     return fake
 
 

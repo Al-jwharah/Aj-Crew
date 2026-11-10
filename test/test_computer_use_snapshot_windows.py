@@ -16,9 +16,9 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.computer_use import snapshot_windows as S
-from kiro_crew.computer_use import windows_ffi
-from kiro_crew.computer_use.types import (
+from aj_crew.computer_use import snapshot_windows as S
+from aj_crew.computer_use import windows_ffi
+from aj_crew.computer_use.types import (
     WINDOWS_SUPPORTED_ACTIONS,
     AppRef,
     ComputerUseError,
@@ -82,7 +82,7 @@ class TestSecureForRole:
     def _install(monkeypatch, *, is_secure: bool | None) -> None:
         # is_secure=True/False -> is_secure_element verdict; None -> inconclusive
         # (prop_value_ex returns an unsupported sentinel shape).
-        from kiro_crew.computer_use import windows_ffi as W
+        from aj_crew.computer_use import windows_ffi as W
 
         if is_secure is None:
             monkeypatch.setattr(
@@ -110,7 +110,7 @@ class TestSecureForRole:
         """A display role is not consulted via the strict path, but a definite
         ``IsPassword=True`` on it is still honoured through the value-property route
         — so a framework that genuinely masks a Text node is believed."""
-        from kiro_crew.computer_use import windows_ffi as W
+        from aj_crew.computer_use import windows_ffi as W
 
         monkeypatch.setattr(W, "prop_value_ex", lambda elem, pid: (W.S_OK, W.VT_BOOL, True))
         assert S._secure_for_role(_FakeElem({}), "Text") is True
@@ -130,7 +130,7 @@ class TestSecureForRole:
         screenshot. The strict read is NOT consulted for a display role; the
         value-property route is, and an explicit non-boolean there resolves plain.
         """
-        from kiro_crew.computer_use import windows_ffi as W
+        from aj_crew.computer_use import windows_ffi as W
 
         # is_secure_element would say secure, but the role is excluded, so the
         # value-property route decides — and a supported non-True is plain.
@@ -149,7 +149,7 @@ class TestSecureForRole:
         back here and treating them as secure suppressed an ordinary file-manager
         window's screenshot.
         """
-        from kiro_crew.computer_use import windows_ffi as W
+        from aj_crew.computer_use import windows_ffi as W
 
         monkeypatch.setattr(W, "prop_value_ex", lambda elem, pid: (W.S_OK, W.VT_UNKNOWN, 0x1234))
         assert S._secure_for_role(_FakeElem({}), "TreeItem") is False
@@ -181,14 +181,14 @@ class TestSecureForRole:
         not guaranteed to report ``Edit`` — which puts a masked field on exactly the
         roles this branch decides.
         """
-        from kiro_crew.computer_use import windows_ffi as W
+        from aj_crew.computer_use import windows_ffi as W
 
         monkeypatch.setattr(W, "prop_value_ex", lambda elem, pid: (hr, vt, value))
         assert S._secure_for_role(_FakeElem({}), "Text") is True, why
 
     def test_a_raising_read_on_a_display_role_is_secure(self, monkeypatch) -> None:
         """A debug line must not be the only trace of a photographed password."""
-        from kiro_crew.computer_use import windows_ffi as W
+        from aj_crew.computer_use import windows_ffi as W
 
         def boom(elem, pid):
             raise OSError("the element is gone")

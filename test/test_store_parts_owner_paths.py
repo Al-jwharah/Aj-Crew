@@ -19,8 +19,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.knowledge import store as store_module
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge import store as store_module
+from aj_crew.knowledge.store import KnowledgeStore
 
 
 @pytest.fixture()

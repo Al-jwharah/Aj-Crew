@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.mcp_cleanup as cleanup_mod
+import aj_crew.mcp_cleanup as cleanup_mod
 
 
 def _seed_settings(kiro_home: Path) -> Path:
@@ -66,7 +66,7 @@ class TestThePurgeResolvesItsPathFromKiroHome:
         # Give the operator's file an entry the purge WOULD remove by name, so a
         # pass would be visible if the purge reached the wrong file.
         data = json.loads(operator_file.read_text(encoding="utf-8"))
-        data["mcpServers"]["kirocrew-cron"] = {"command": "kirocrew"}
+        data["mcpServers"]["ajcrew-cron"] = {"command": "ajcrew"}
         operator_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
         before = operator_file.read_text(encoding="utf-8")
 
@@ -81,11 +81,11 @@ class TestThePurgeResolvesItsPathFromKiroHome:
         """The isolation must not disarm the real path it protects."""
         path = _seed_settings(tmp_path / ".kiro")
         data = json.loads(path.read_text(encoding="utf-8"))
-        data["mcpServers"]["kirocrew-cron"] = {"command": "kirocrew"}
+        data["mcpServers"]["ajcrew-cron"] = {"command": "ajcrew"}
         path.write_text(json.dumps(data, indent=2), encoding="utf-8")
         monkeypatch.setattr(cleanup_mod, "_KIRO_MCP_JSON", path)
 
-        assert cleanup_mod.clean_stale_managed_mcp() == ["kirocrew-cron"]
+        assert cleanup_mod.clean_stale_managed_mcp() == ["ajcrew-cron"]
 
 
 @pytest.fixture(autouse=True)
@@ -99,7 +99,7 @@ class TestTheDeletedProxyEntryIsSweptOnUpgrade:
     """An upgrade must not leave an entry that spawns a command we deleted.
 
     Before this sweep, an operator who had Browser Mode ON kept a
-    `playwright-mcp` entry whose command was `kirocrew mcp-playwright-proxy`.
+    `playwright-mcp` entry whose command was `ajcrew mcp-playwright-proxy`.
     That subcommand is gone, so kiro-cli hit `ModuleNotFoundError` on EVERY
     session while browsing silently vanished -- the exact defect class this
     migration set out to retire.
@@ -113,7 +113,7 @@ class TestTheDeletedProxyEntryIsSweptOnUpgrade:
                 {
                     "mcpServers": {
                         "playwright-mcp": {
-                            "command": "kirocrew",
+                            "command": "ajcrew",
                             "args": ["mcp-playwright-proxy", "--extension"],
                         }
                     }

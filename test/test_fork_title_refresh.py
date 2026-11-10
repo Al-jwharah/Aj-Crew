@@ -32,15 +32,15 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import TURN_WAIT_SECS, _make_app, _make_state, drain_background_tasks
 
-from kiro_crew.dashboard import chat_title
-from kiro_crew.dashboard.chat_title import (
+from aj_crew.dashboard import chat_title
+from aj_crew.dashboard.chat_title import (
     _TITLE_ORIGIN_AUTO,
     _TITLE_ORIGIN_USER,
     refresh_forked_title,
     title_then_refresh,
 )
-from kiro_crew.history import HUMAN_TURN_META_KEY
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.history import HUMAN_TURN_META_KEY
+from aj_crew.testing.wait import async_wait_until
 
 _HUMAN = {HUMAN_TURN_META_KEY: True}
 _FIRST = "write the database failover drill"
@@ -48,7 +48,7 @@ _FIRST = "write the database failover drill"
 
 @pytest.fixture(autouse=True)
 def _home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    _floor_monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
 
 @pytest.fixture(autouse=True)
@@ -59,7 +59,7 @@ def _instant_turn(_floor_monkeypatch):
         slot.append("assistant", "on it", "msg msg-a")
         slot.append("done", "", "done", broadcast=False)
 
-    _floor_monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", reply)
+    _floor_monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", reply)
 
 
 def _seeded_state(tmp_path, *, origin: str = _TITLE_ORIGIN_AUTO, human: bool = True):
@@ -144,7 +144,7 @@ async def test_forking_alone_keeps_the_fork_title(tmp_path, monkeypatch) -> None
 
 @pytest.mark.asyncio
 async def test_the_first_message_names_the_child(tmp_path, monkeypatch) -> None:
-    from kiro_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
+    from aj_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
 
     gen = _Generator(["Database failover drill"])
     monkeypatch.setattr(chat_title, "_generate_title_via_kiro", gen)
@@ -344,7 +344,7 @@ async def test_a_manual_rename_while_pending_wins(tmp_path, monkeypatch) -> None
 
 @pytest.mark.asyncio
 async def test_a_delete_in_flight_while_pending_writes_no_title(tmp_path, monkeypatch) -> None:
-    from kiro_crew.dashboard.chat_utils import slot_history_key
+    from aj_crew.dashboard.chat_utils import slot_history_key
 
     gen = _Generator(["Database failover drill"])
     gen.hold()
@@ -506,9 +506,9 @@ async def test_a_manually_named_parent_hands_down_a_final_title(tmp_path, monkey
 async def test_an_agent_fork_with_a_title_keeps_it(tmp_path, monkeypatch) -> None:
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard import chat_fork, create_rate_limit
-    from kiro_crew.dashboard import session_control as sc
-    from kiro_crew.dashboard.chat_utils import slot_history_key
+    from aj_crew.dashboard import chat_fork, create_rate_limit
+    from aj_crew.dashboard import session_control as sc
+    from aj_crew.dashboard.chat_utils import slot_history_key
 
     gen = _Generator(["Should not be used"])
     monkeypatch.setattr(chat_title, "_generate_title_via_kiro", gen)

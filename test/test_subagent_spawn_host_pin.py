@@ -200,12 +200,12 @@ class TestThePinnedHostIsHealthyNotInfinite:
     """
 
     def test_a_floor_above_the_pinned_host_is_refused(self) -> None:
-        import kiro_crew.subagent as subagent
+        import aj_crew.subagent as subagent
 
         assert subagent.check_memory_available(min_gb=9.0) == (False, 8.0)
 
     def test_a_floor_the_pinned_host_clears_is_admitted(self) -> None:
-        import kiro_crew.subagent as subagent
+        import aj_crew.subagent as subagent
 
         assert subagent.check_memory_available(min_gb=8.0) == (True, 8.0)
         assert subagent.check_memory_available() == (True, 8.0)

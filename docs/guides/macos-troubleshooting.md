@@ -1,9 +1,9 @@
 # macOS Troubleshooting
 
-Fixes for problems specific to macOS: the desktop app (`KiroCrew.app`) and the
-gateway service that `kirocrew service install` sets up. For
+Fixes for problems specific to macOS: the desktop app (`AjCrew.app`) and the
+gateway service that `ajcrew service install` sets up. For
 install and build steps see [install.md](install.md); for problems that are not
-macOS-specific, start with `kirocrew doctor`.
+macOS-specific, start with `ajcrew doctor`.
 
 ---
 
@@ -47,7 +47,7 @@ the next session picks up an edit and agent shell commands find a name there onl
 when it is on no earlier `PATH` entry. The MCP gateway daemon inherits its `PATH`
 when it starts, so it needs a gateway restart. When other tools are missing too,
 either add the directories as a `PATH=` line in `~/.kiro/crew/.env`
-([Credentials](../../src/kiro_crew/docs/configuration.md#credentials)), which is
+([Credentials](../../src/aj_crew/docs/configuration.md#credentials)), which is
 appended behind the app's `PATH`, or use the launchd fix below.
 
 ### The fix
@@ -61,7 +61,7 @@ appended behind the app's `PATH`, or use the launchd fix below.
 
    Note the scope: the launchd user domain is shared, so every GUI app
    launchd starts for your user afterwards inherits this `PATH` — not just
-   Kiro Crew. You are copying the same value your shells already use, but if
+   Aj Crew. You are copying the same value your shells already use, but if
    you prefer to keep the change minimal, set a `PATH` that starts with the
    system directories and appends only the directories you need.
 
@@ -80,7 +80,7 @@ command now resolves inside the app (an agent shell tool running
 the domain is empty again and the app is back to the minimal `PATH` until the
 command is re-run. Either re-run it when the symptom reappears, or automate it
 with a LaunchAgent that runs at login. Save the following as
-`~/Library/LaunchAgents/dev.kirocrew.path.plist`:
+`~/Library/LaunchAgents/dev.ajcrew.path.plist`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -88,7 +88,7 @@ with a LaunchAgent that runs at login. Save the following as
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>Label</key><string>dev.kirocrew.path</string>
+  <key>Label</key><string>dev.ajcrew.path</string>
   <key>ProgramArguments</key>
   <array>
     <string>/bin/launchctl</string>
@@ -107,7 +107,7 @@ last `<string>`. Keep the system directories first and append your own, as in
 the example. If a directory name contains an XML-reserved character, escape
 it (`&` as `&amp;`, `<` as `&lt;`) — a raw `&` makes the file unparseable and
 the agent silently fails to load. Load it once with
-`launchctl load ~/Library/LaunchAgents/dev.kirocrew.path.plist`; from then on
+`launchctl load ~/Library/LaunchAgents/dev.ajcrew.path.plist`; from then on
 it runs at every login. If the app auto-starts at login, launch order is not
 guaranteed on the first login after adding the agent — quit and relaunch the
 app once if a command is still missing.
@@ -115,13 +115,13 @@ app once if a command is still missing.
 ### What the app does with the launchd `PATH`
 
 - Directories read from the launchd domain are **appended after** the app's
-  inherited `PATH`. Inside Kiro Crew they can make a name resolve that
+  inherited `PATH`. Inside Aj Crew they can make a name resolve that
   resolved nowhere before, but can never shadow a system binary that already
   resolves. (This guarantee is about the app's own merge — the
   `launchctl setenv` step above is governed by whatever ordering you set.)
 - Only absolute entries are added: a relative entry, or one containing a `..`
   segment, is ignored.
-- A Gateway started from a terminal (`kirocrew gateway`) is unaffected — it
+- A Gateway started from a terminal (`ajcrew gateway`) is unaffected — it
   inherits the shell's `PATH` directly and needs none of this.
 
 ---
@@ -172,7 +172,7 @@ quit the app fully and open it again:
   resolves whether the server is routed or not. The log then warns that the key is
   not a recognised credential: it reaches every process the gateway starts, the
   agent included, which is why the vault is the better home for a token. See
-  [Credentials](../../src/kiro_crew/docs/configuration.md#credentials).
+  [Credentials](../../src/aj_crew/docs/configuration.md#credentials).
 
 ---
 
@@ -183,8 +183,8 @@ over SSH or Tailscale, say), the gateway is down after a reboot. Nothing
 answers on the gateway port (5476 by default) until someone logs in at the Mac's login window. Then it
 comes up on its own.
 
-This is expected. `kirocrew service install` sets up a **per-user
-LaunchAgent** (`~/Library/LaunchAgents/dev.kirocrew.gateway.plist`), not a
+This is expected. `ajcrew service install` sets up a **per-user
+LaunchAgent** (`~/Library/LaunchAgents/dev.ajcrew.gateway.plist`), not a
 system daemon. launchd loads it into your login session, the `gui/<uid>`
 domain, and that domain exists only once you log in at the Mac itself. An SSH
 login does not create it. Running in your login session means the gateway
@@ -194,24 +194,24 @@ unlocked only after a login at the Mac. Before that login, it does not run.
 To check from SSH:
 
 ```bash
-launchctl print "gui/$(id -u)/dev.kirocrew.gateway"
+launchctl print "gui/$(id -u)/dev.ajcrew.gateway"
 lsof -nP -iTCP:5476 -sTCP:LISTEN
 ```
 
 Before anyone logs in, the first command says it cannot find the `gui`
 domain, and the second prints nothing. After a login, the first shows the job
 with a `pid`, and the second shows the gateway listening. If your gateway uses
-another port (set by `dashboard.url` in the config or by `KIROCREW_PORT`), put
-yours in place of 5476. If you ran `kirocrew service install` over SSH while nobody
+another port (set by `dashboard.url` in the config or by `AJCREW_PORT`), put
+yours in place of 5476. If you ran `ajcrew service install` over SSH while nobody
 was logged in, the job went into `user/<uid>` for that boot instead; check it
-with `launchctl print "user/$(id -u)/dev.kirocrew.gateway"`.
+with `launchctl print "user/$(id -u)/dev.ajcrew.gateway"`.
 
 If you need the gateway up after every reboot, turn on automatic login for
 that user (System Settings > Users & Groups), or log in once after each
 reboot.
 
 **A `gateway.lock` left over from the last boot is safe.** The file
-`~/.kiro/crew/gateway.lock` (or `$KIROCREW_HOME/gateway.lock`) keeps the pid of
+`~/.kiro/crew/gateway.lock` (or `$AJCREW_HOME/gateway.lock`) keeps the pid of
 the gateway that last ran, but the lock itself is held by a running process,
 and a reboot drops it. The next gateway takes the file over and writes its own
 pid. Do not delete it. If a start is refused because the lock is held, some
@@ -300,6 +300,6 @@ has its own guide:
 [endpoint-security-blocking-spawned-tools.md](endpoint-security-blocking-spawned-tools.md).
 In short: it is a false positive on the way the agent spawns tools, the durable
 fix is an exception scoped to the specific detection id and the exact image path
-that was blocked — the Python interpreter Kiro Crew runs under (owned by whoever
+that was blocked — the Python interpreter Aj Crew runs under (owned by whoever
 administers endpoint security on the device) — and the interim workaround is to
 run `git`/`cr` from your own terminal.

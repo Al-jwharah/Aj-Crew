@@ -23,9 +23,9 @@ from pod_helpers import (  # noqa: F401 -- the autouse fixtures register by impo
 )
 
 from conftest import host_abs
-from kiro_crew import env as env_mod
-from kiro_crew import platform_compat
-from kiro_crew.pod import provision as prov
+from aj_crew import env as env_mod
+from aj_crew import platform_compat
+from aj_crew.pod import provision as prov
 
 
 def _npm(*args: str) -> list[str]:
@@ -46,9 +46,9 @@ class TestProvision:
         here would report a built Windows worktree as unbuilt."""
         got = prov.venv_bin(tmp_path)
         if platform_compat.IS_WINDOWS:
-            assert got == tmp_path / ".venv" / "Scripts" / "kirocrew.exe"
+            assert got == tmp_path / ".venv" / "Scripts" / "ajcrew.exe"
         else:
-            assert got == tmp_path / ".venv" / "bin" / "kirocrew"
+            assert got == tmp_path / ".venv" / "bin" / "ajcrew"
 
     def test_provision_venv_only_skips_build(self, tmp_path: Path) -> None:
         co = _ready_worktree(tmp_path, "be-only", venv=True, dist=False)
@@ -79,7 +79,7 @@ class TestProvisionBuildPaths:
     def test_opted_in_without_uv_runs_the_pip_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """``KIROCREW_PROVISION_USE_UV=1`` on a host where neither the wheel nor
+        """``AJCREW_PROVISION_USE_UV=1`` on a host where neither the wheel nor
         ``PATH`` has uv is not an error: the ladder returns ``None`` through the
         real ``_find_uv`` and the unchanged ``python -m venv`` + pip sequence
         builds the venv, with no uv command ever attempted."""
@@ -222,7 +222,7 @@ class TestProvisionBuildPaths:
     def test_find_uv_is_opt_in_and_pip_is_the_default(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """uv runs only when ``KIROCREW_PROVISION_USE_UV`` is truthy; unset,
+        """uv runs only when ``AJCREW_PROVISION_USE_UV`` is truthy; unset,
         ``0`` and ``false`` all keep the pip default even with uv on PATH. The
         default is unchanged by this change on purpose — flipping it is Phase 2
         of the shared-dependency-cache RFC and waits on that decision."""
@@ -240,7 +240,7 @@ class TestProvisionBuildPaths:
     def test_find_uv_is_the_shared_ladder(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """Pod provisioning resolves uv through ``kiro_crew.env.resolve_uv`` — the
+        """Pod provisioning resolves uv through ``aj_crew.env.resolve_uv`` — the
         one ladder pptx-maker also consumes — so the declared wheel wins over
         PATH and a systemd/launchd gateway with a minimal PATH still finds it."""
         monkeypatch.setenv(prov.USE_UV_ENV, "1")
@@ -279,7 +279,7 @@ class TestProvisionBuildPaths:
         monkeypatch.setattr(prov, "_run", fake_run)
         assert prov.build_dist(co) is True
         # website/dist staged into the served static/dist.
-        assert (co / "src" / "kiro_crew" / "static" / "dist" / "index.html").is_file()
+        assert (co / "src" / "aj_crew" / "static" / "dist" / "index.html").is_file()
 
     def test_build_dist_restages_over_a_dangling_dist_link(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -293,7 +293,7 @@ class TestProvisionBuildPaths:
         """
         co = tmp_path / "wt"
         (co / "website").mkdir(parents=True)
-        served = co / "src" / "kiro_crew" / "static"
+        served = co / "src" / "aj_crew" / "static"
         served.mkdir(parents=True)
         gone = tmp_path / "removed-dist"
         gone.mkdir()
@@ -328,7 +328,7 @@ class TestProvisionBuildPaths:
         work and touches nothing.
         """
         co = tmp_path / "wt"
-        served = co / "src" / "kiro_crew" / "static"
+        served = co / "src" / "aj_crew" / "static"
         served.mkdir(parents=True)
         target = tmp_path / "linked-dist"
         target.mkdir()

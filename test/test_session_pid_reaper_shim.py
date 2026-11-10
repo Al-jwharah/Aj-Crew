@@ -1,6 +1,6 @@
 """The orphan-reaper kill paths route through the platform_compat shim.
 
-The sweep entry point (:func:`kiro_crew.session_pid.kill_orphan_mcps`) is
+The sweep entry point (:func:`aj_crew.session_pid.kill_orphan_mcps`) is
 gated ``IS_WINDOWS``, and the daemon it reaps is a POSIX ``start_new_session``
 process, so none of these sites can fire on Windows today. They still use the
 raw spellings (``os.kill``, ``signal.SIGKILL``) whose Windows failure modes
@@ -23,11 +23,11 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-import kiro_crew.session_pid as sp
+import aj_crew.session_pid as sp
 
 
 def _gatewayd_cmdline(sock) -> bytes:  # type: ignore[no-untyped-def]
-    return f"python\x00-m\x00kiro_crew.mcp_gateway.gatewayd\x00--unix={sock}".encode()
+    return f"python\x00-m\x00aj_crew.mcp_gateway.gatewayd\x00--unix={sock}".encode()
 
 
 class TestGatewaydKillRoutesThroughShim:
@@ -66,7 +66,7 @@ class TestGatewaydKillRoutesThroughShim:
                 # Linux path: identity recheck reads /proc/<pid>/cmdline, which
                 # must still match (not a recycled PID) so the kill proceeds.
                 patch.object(Path, "read_bytes", return_value=_gatewayd_cmdline("gone.sock")),
-                patch("kiro_crew.session_pid.sys") as mock_sys,
+                patch("aj_crew.session_pid.sys") as mock_sys,
                 # Windows' frozen os has no getpgid/getpgrp to patch by name, so
                 # create them: shared group (pgid == our pgrp) takes the direct
                 # SIGKILL branch instead of killpg.
@@ -84,7 +84,7 @@ class TestGatewaydKillRoutesThroughShim:
         with (
             patch.object(sp.platform_compat, "pid_exists", return_value=False) as pe,
             patch.object(sp.platform_compat, "kill_pid", return_value=True),
-            patch("kiro_crew.session_pid.os.kill") as raw_kill,
+            patch("aj_crew.session_pid.os.kill") as raw_kill,
         ):
             assert sp._kill_orphan_gatewayd(902, _gatewayd_cmdline("gone.sock")) == 1
         pe.assert_called_once_with(902)
@@ -102,9 +102,9 @@ class TestSweepDirectKillRoutesThroughShim:
 
     def test_shared_pgid_orphan_killed_via_kill_pid(self) -> None:
         with (
-            patch("kiro_crew.session_pid.platform_compat") as pc,
-            patch("kiro_crew.session_pid.sys") as mock_sys,
-            patch.object(Path, "read_bytes", return_value=b"python3\x00kirocrew_sandbox_x.py"),
+            patch("aj_crew.session_pid.platform_compat") as pc,
+            patch("aj_crew.session_pid.sys") as mock_sys,
+            patch.object(Path, "read_bytes", return_value=b"python3\x00ajcrew_sandbox_x.py"),
         ):
             pc.IS_WINDOWS = False
             pc.kill_pid.return_value = True

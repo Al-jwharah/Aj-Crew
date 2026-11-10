@@ -15,9 +15,9 @@ import logging
 
 import pytest
 
-from kiro_crew.acp import _dispatch
-from kiro_crew.acp._dispatch import parse_metadata, parse_refusal
-from kiro_crew.acp.types import (
+from aj_crew.acp import _dispatch
+from aj_crew.acp._dispatch import parse_metadata, parse_refusal
+from aj_crew.acp.types import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KAS,
@@ -30,7 +30,7 @@ from kiro_crew.acp.types import (
     AcpPromptStats,
     RefusalInfo,
 )
-from kiro_crew.dashboard.chat_runner import refusal_card_text
+from aj_crew.dashboard.chat_runner import refusal_card_text
 
 CANNED = (
     "The selected model cannot continue this conversation. Please select a different "
@@ -79,8 +79,8 @@ class TestCapabilitySet:
         """
         import inspect
 
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.acp.session_handle import AcpSessionHandle
 
         for fn in (AcpClient._track_metadata, AcpSessionHandle._track_metadata):
             source = inspect.getsource(fn)
@@ -179,7 +179,7 @@ class TestClientGate:
 
     @staticmethod
     def _client(backend: str):
-        from kiro_crew.acp import client as acp_client
+        from aj_crew.acp import client as acp_client
 
         c = acp_client.AcpClient.__new__(acp_client.AcpClient)
         c._acp_backend = backend
@@ -189,7 +189,7 @@ class TestClientGate:
         return c
 
     def test_kiro_records_the_refusal(self):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         c = self._client(ACP_BACKEND_KIRO)
         c._track_metadata(JsonRpcMessage(method="_kiro.dev/metadata", params=dict(INCIDENT_FRAME)))
@@ -197,7 +197,7 @@ class TestClientGate:
         assert c.last_prompt_stats.refusal.category == "CYBER"
 
     def test_claude_ignores_the_envelope(self):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         c = self._client(ACP_BACKEND_CLAUDE)
         c._track_metadata(JsonRpcMessage(method="_kiro.dev/metadata", params=dict(INCIDENT_FRAME)))
@@ -297,8 +297,8 @@ class TestEveryFieldIsScrubbed:
 
 class TestProviderForwardsRefusal:
     def test_to_llm_event_carries_refusal(self):
-        from kiro_crew.acp.types import EVENT_COMPLETE, AcpEvent
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.acp.types import EVENT_COMPLETE, AcpEvent
+        from aj_crew.providers.acp import AcpProvider
 
         src = AcpEvent(
             kind=EVENT_COMPLETE,
@@ -316,8 +316,8 @@ class TestErrorFrameTerminal:
 
     @pytest.mark.asyncio
     async def test_client_yields_refusal_terminal_instead_of_raising(self, tmp_path):
-        from kiro_crew.acp import client as acp_client
-        from kiro_crew.acp.types import EVENT_COMPLETE, JsonRpcMessage
+        from aj_crew.acp import client as acp_client
+        from aj_crew.acp.types import EVENT_COMPLETE, JsonRpcMessage
 
         c = acp_client.AcpClient(work_dir=tmp_path)
         c._read_new_tool_results_sync = lambda: []
@@ -340,8 +340,8 @@ class TestErrorFrameTerminal:
 
     @pytest.mark.asyncio
     async def test_error_without_a_refusal_still_raises(self, tmp_path):
-        from kiro_crew.acp import client as acp_client
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp import client as acp_client
+        from aj_crew.acp.types import JsonRpcMessage
 
         c = acp_client.AcpClient(work_dir=tmp_path)
         c._read_new_tool_results_sync = lambda: []
@@ -394,8 +394,8 @@ class TestWorkerPoolPathFoldsRefusal:
 
     @pytest.mark.asyncio
     async def test_error_terminal_returns_streamed_text_under_refusal(self, tmp_path):
-        from kiro_crew.acp import client as acp_client
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp import client as acp_client
+        from aj_crew.acp.types import JsonRpcMessage
 
         c = acp_client.AcpClient(work_dir=tmp_path)
 
@@ -428,8 +428,8 @@ class TestWorkerPoolPathFoldsRefusal:
 
     @pytest.mark.asyncio
     async def test_end_turn_terminal_is_folded(self, tmp_path):
-        from kiro_crew.acp import client as acp_client
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp import client as acp_client
+        from aj_crew.acp.types import JsonRpcMessage
 
         c = acp_client.AcpClient(work_dir=tmp_path)
 
@@ -448,8 +448,8 @@ class TestWorkerPoolPathFoldsRefusal:
     async def test_a_v2_refusal_hop_the_target_answered_ends_end_turn(self, tmp_path):
         # The kiro-cli V2 order: the refusal, then the hop, then the answer's
         # end_turn. The hop unfolds the refusal it moved off, as on the stream.
-        from kiro_crew.acp import client as acp_client
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp import client as acp_client
+        from aj_crew.acp.types import JsonRpcMessage
 
         c = acp_client.AcpClient(work_dir=tmp_path)
         hop = {"sessionUpdate": "model_fallback", "from": "model-a", "to": "model-b"}
@@ -482,8 +482,8 @@ class TestSendMessageStreamFoldsRefusal:
     async def test_error_terminal_ends_under_refusal(self, tmp_path):
         from unittest.mock import AsyncMock
 
-        from kiro_crew.acp import client as acp_client
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp import client as acp_client
+        from aj_crew.acp.types import JsonRpcMessage
 
         c = acp_client.AcpClient(work_dir=tmp_path)
         c.ensure_ready = AsyncMock()
@@ -513,7 +513,7 @@ class TestRefusalTerminalIsScoped:
     REFUSAL = RefusalInfo(category="CYBER")
 
     def test_bare_internal_error_after_refusal_is_the_terminal(self, caplog):
-        from kiro_crew.acp._dispatch import error_is_refusal_terminal
+        from aj_crew.acp._dispatch import error_is_refusal_terminal
 
         with caplog.at_level(logging.WARNING, logger=_dispatch.logger.name):
             assert error_is_refusal_terminal(
@@ -522,7 +522,7 @@ class TestRefusalTerminalIsScoped:
         assert any("consumed as the terminal" in r.getMessage() for r in caplog.records)
 
     def test_no_recorded_refusal_means_ordinary_error(self):
-        from kiro_crew.acp._dispatch import error_is_refusal_terminal
+        from aj_crew.acp._dispatch import error_is_refusal_terminal
 
         assert not error_is_refusal_terminal({"code": -32603, "message": "Internal error"}, None)
 
@@ -538,14 +538,14 @@ class TestRefusalTerminalIsScoped:
         ],
     )
     def test_other_errors_after_a_refusal_keep_their_class(self, error):
-        from kiro_crew.acp._dispatch import error_is_refusal_terminal
+        from aj_crew.acp._dispatch import error_is_refusal_terminal
 
         assert not error_is_refusal_terminal(error, self.REFUSAL)
 
     @pytest.mark.asyncio
     async def test_prompt_busy_after_refusal_still_raises_prompt_busy(self, tmp_path):
-        from kiro_crew.acp import client as acp_client
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp import client as acp_client
+        from aj_crew.acp.types import JsonRpcMessage
 
         c = acp_client.AcpClient(work_dir=tmp_path)
         c._read_new_tool_results_sync = lambda: []
@@ -580,8 +580,8 @@ class TestRefusalTerminalFlushesToolResults:
 
     @pytest.mark.asyncio
     async def test_pending_tool_results_precede_the_refusal_terminal(self, tmp_path):
-        from kiro_crew.acp import client as acp_client
-        from kiro_crew.acp.types import EVENT_COMPLETE, AcpEvent, JsonRpcMessage
+        from aj_crew.acp import client as acp_client
+        from aj_crew.acp.types import EVENT_COMPLETE, AcpEvent, JsonRpcMessage
 
         c = acp_client.AcpClient(work_dir=tmp_path)
         pending = [
@@ -614,7 +614,7 @@ class TestV2EngineFallbackUnfoldsTheRefusal:
 
     @staticmethod
     def _fallback(promoted: bool = False):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         return (
             "model_fallback",
@@ -636,13 +636,13 @@ class TestV2EngineFallbackUnfoldsTheRefusal:
 
     @staticmethod
     def _complete():
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         return ("complete", JsonRpcMessage(id=1, result={"stopReason": STOP_REASON_END_TURN}))
 
     async def _terminal(self, tmp_path, frames):
-        from kiro_crew.acp import client as acp_client
-        from kiro_crew.acp.types import EVENT_COMPLETE
+        from aj_crew.acp import client as acp_client
+        from aj_crew.acp.types import EVENT_COMPLETE
 
         c = acp_client.AcpClient(work_dir=tmp_path)
         c._read_new_tool_results_sync = lambda: []
@@ -659,7 +659,7 @@ class TestV2EngineFallbackUnfoldsTheRefusal:
 
     @pytest.mark.asyncio
     async def test_an_answered_hop_ends_end_turn(self, tmp_path):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         refused = (
             "metadata",
@@ -673,7 +673,7 @@ class TestV2EngineFallbackUnfoldsTheRefusal:
 
     @pytest.mark.asyncio
     async def test_a_target_that_refuses_too_still_ends_refusal(self, tmp_path):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         refused = (
             "metadata",

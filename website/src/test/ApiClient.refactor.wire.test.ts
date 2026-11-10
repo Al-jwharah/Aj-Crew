@@ -93,7 +93,7 @@ describe('raw-fetch reads stay raw', () => {
   })
 
   it('a raw read that must carry the session key adds exactly the shared placeholder', async () => {
-    await api.kirocrewAgents()
+    await api.ajcrewAgents()
     const [url, init] = lastCall()
     expect(url).toBe('/api/agents')
     expect(init).toEqual({ headers: { 'X-Session-Key': 'dashboard:ui' } })

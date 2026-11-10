@@ -1,7 +1,7 @@
 """Idempotency + orphaned-stop-card regression tests for the dashboard stop /
 interrupt handlers (provider-agnostic — ported from the upstream project,
 defect 3). The CC-provider-specific classes in the upstream file are dropped:
-KiroCrew is KiroACP-only and providers/claude_code.py does not exist here."""
+AjCrew is KiroACP-only and providers/claude_code.py does not exist here."""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ class _FakeSlot:
         self.executor = "local"
         self.instance_id = ""
         self.remote_slot = ""
-        self.agent = "kirocrew"
+        self.agent = "ajcrew"
         self.messages: list[dict] = []
         self._dirty = False
         self.source_links_invalidated = 0
@@ -89,7 +89,7 @@ class TestStopHandlerIdempotent:
         """Second non-force stop press while soft_pending returns info."""
         from aiohttp import web
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_stop
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_stop
 
         slot = _FakeSlot()
         # Simulate a stop already in progress (first press completed the guard
@@ -125,7 +125,7 @@ class TestStopHandlerIdempotent:
         """When stop_turn returns 'idle', the stop card is resolved."""
         from aiohttp import web
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_stop
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_stop
 
         slot = _FakeSlot()
         slot.running = True
@@ -144,10 +144,10 @@ class TestStopHandlerIdempotent:
         request.match_info = {"slot": "test-slot"}
         request.query = {}
 
-        with patch("kiro_crew.dashboard.chat_handlers.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat_handlers.sel") as mock_sel:
             mock_sel.return_value.log_tool_invocation = MagicMock()
             mock_sel.return_value.log = MagicMock()
-            with patch("kiro_crew.dashboard.chat_handlers._reject_pending_approvals"):
+            with patch("aj_crew.dashboard.chat_handlers._reject_pending_approvals"):
                 await api_chat_slot_stop(request)
 
         # After the handler, stop state should be back to idle and event_id cleared
@@ -164,7 +164,7 @@ class TestInterruptHandlerIdempotent:
         """Interrupt while already stopping returns info."""
         from aiohttp import web
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_interrupt
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_interrupt
 
         slot = _FakeSlot()
         slot._stop_state = "soft_pending"
@@ -204,7 +204,7 @@ class TestInterruptHandlerIdempotent:
         """
         from aiohttp import web
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_interrupt
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_interrupt
 
         slot = _FakeSlot()
         slot.running = True
@@ -242,7 +242,7 @@ class TestInterruptHandlerIdempotent:
         """
         from aiohttp import web
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_interrupt
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_interrupt
 
         slot = _FakeSlot()
         slot.running = True
@@ -288,7 +288,7 @@ class TestInterruptHandlerIdempotent:
         """
         from aiohttp import web
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_interrupt
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_interrupt
 
         slot = _FakeSlot()
         slot.running = True
@@ -316,10 +316,10 @@ class TestInterruptHandlerIdempotent:
         request.can_read_body = True
         request.charset = None
 
-        with patch("kiro_crew.dashboard.chat_handlers.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat_handlers.sel") as mock_sel:
             mock_sel.return_value.log_tool_invocation = MagicMock()
             mock_sel.return_value.log = MagicMock()
-            with patch("kiro_crew.dashboard.chat_handlers._reject_pending_approvals"):
+            with patch("aj_crew.dashboard.chat_handlers._reject_pending_approvals"):
                 resp = await api_chat_slot_interrupt(request)
         body = json.loads(resp.body)
 
@@ -336,8 +336,8 @@ class TestInterruptHandlerIdempotent:
         restored card does not."""
         from aiohttp import web
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_interrupt
-        from kiro_crew.dashboard.slot_queue_repository import (
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_interrupt
+        from aj_crew.dashboard.slot_queue_repository import (
             RESTORED_QUEUE_KEY,
             RESTORED_SEND_CHOSEN_KEY,
         )
@@ -369,10 +369,10 @@ class TestInterruptHandlerIdempotent:
         request.can_read_body = True
         request.charset = None
 
-        with patch("kiro_crew.dashboard.chat_handlers.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat_handlers.sel") as mock_sel:
             mock_sel.return_value.log_tool_invocation = MagicMock()
             mock_sel.return_value.log = MagicMock()
-            with patch("kiro_crew.dashboard.chat_handlers._reject_pending_approvals"):
+            with patch("aj_crew.dashboard.chat_handlers._reject_pending_approvals"):
                 await api_chat_slot_interrupt(request)
 
         assert [item["id"] for item in slot._queue] == ["q2", "q1"]
@@ -389,8 +389,8 @@ class TestInterruptHandlerIdempotent:
 
         from aiohttp import web
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_interrupt
-        from kiro_crew.dashboard.slot_queue_repository import (
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_interrupt
+        from aj_crew.dashboard.slot_queue_repository import (
             RESTORED_QUEUE_KEY,
             RESTORED_SEND_CHOSEN_KEY,
         )
@@ -428,14 +428,14 @@ class TestInterruptHandlerIdempotent:
 
         start = AsyncMock(return_value=True)
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel") as mock_sel,
-            patch("kiro_crew.dashboard.chat_handlers._reject_pending_approvals"),
-            patch("kiro_crew.dashboard.chat_handlers._start_next_queued_turn", start),
+            patch("aj_crew.dashboard.chat_handlers.sel") as mock_sel,
+            patch("aj_crew.dashboard.chat_handlers._reject_pending_approvals"),
+            patch("aj_crew.dashboard.chat_handlers._start_next_queued_turn", start),
             patch(
-                "kiro_crew.dashboard.chat_handlers._slot_replaced_while_queued",
+                "aj_crew.dashboard.chat_handlers._slot_replaced_while_queued",
                 return_value=False,
             ),
-            patch("kiro_crew.dashboard.chat_handlers._app_cancel_denied", return_value=None),
+            patch("aj_crew.dashboard.chat_handlers._app_cancel_denied", return_value=None),
         ):
             mock_sel.return_value.log_tool_invocation = MagicMock()
             mock_sel.return_value.log = MagicMock()
@@ -454,8 +454,8 @@ class TestInterruptHandlerIdempotent:
 
         from aiohttp import web
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_interrupt
-        from kiro_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_interrupt
+        from aj_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
 
         slot = _FakeSlot()
         slot.running = True
@@ -486,9 +486,9 @@ class TestInterruptHandlerIdempotent:
 
         start = AsyncMock(return_value=True)
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel") as mock_sel,
-            patch("kiro_crew.dashboard.chat_handlers._reject_pending_approvals"),
-            patch("kiro_crew.dashboard.chat_handlers._start_next_queued_turn", start),
+            patch("aj_crew.dashboard.chat_handlers.sel") as mock_sel,
+            patch("aj_crew.dashboard.chat_handlers._reject_pending_approvals"),
+            patch("aj_crew.dashboard.chat_handlers._start_next_queued_turn", start),
         ):
             mock_sel.return_value.log_tool_invocation = MagicMock()
             mock_sel.return_value.log = MagicMock()
@@ -508,8 +508,8 @@ class TestInterruptHandlerIdempotent:
 
         from aiohttp import web
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_interrupt
-        from kiro_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_interrupt
+        from aj_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
 
         slot = _FakeSlot()
         slot.running = True
@@ -542,14 +542,14 @@ class TestInterruptHandlerIdempotent:
 
         start = AsyncMock(return_value=True)
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel") as mock_sel,
-            patch("kiro_crew.dashboard.chat_handlers._reject_pending_approvals"),
-            patch("kiro_crew.dashboard.chat_handlers._start_next_queued_turn", start),
+            patch("aj_crew.dashboard.chat_handlers.sel") as mock_sel,
+            patch("aj_crew.dashboard.chat_handlers._reject_pending_approvals"),
+            patch("aj_crew.dashboard.chat_handlers._start_next_queued_turn", start),
             patch(
-                "kiro_crew.dashboard.chat_handlers._slot_replaced_while_queued",
+                "aj_crew.dashboard.chat_handlers._slot_replaced_while_queued",
                 return_value=False,
             ),
-            patch("kiro_crew.dashboard.chat_handlers._app_cancel_denied", return_value=None),
+            patch("aj_crew.dashboard.chat_handlers._app_cancel_denied", return_value=None),
         ):
             mock_sel.return_value.log_tool_invocation = MagicMock()
             mock_sel.return_value.log = MagicMock()
@@ -568,8 +568,8 @@ class TestInterruptHandlerIdempotent:
 
         from aiohttp import web
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_interrupt
-        from kiro_crew.dashboard.slot_queue_repository import (
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_interrupt
+        from aj_crew.dashboard.slot_queue_repository import (
             RESTORED_QUEUE_KEY,
             RESTORED_SEND_CHOSEN_KEY,
         )
@@ -604,16 +604,16 @@ class TestInterruptHandlerIdempotent:
 
         start = AsyncMock(return_value=True)
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel") as mock_sel,
-            patch("kiro_crew.dashboard.chat_handlers._reject_pending_approvals"),
-            patch("kiro_crew.dashboard.chat_handlers._start_next_queued_turn", start),
+            patch("aj_crew.dashboard.chat_handlers.sel") as mock_sel,
+            patch("aj_crew.dashboard.chat_handlers._reject_pending_approvals"),
+            patch("aj_crew.dashboard.chat_handlers._start_next_queued_turn", start),
             patch(
-                "kiro_crew.dashboard.chat_handlers._slot_replaced_while_queued",
+                "aj_crew.dashboard.chat_handlers._slot_replaced_while_queued",
                 return_value=False,
             ),
-            patch("kiro_crew.dashboard.chat_handlers._app_cancel_denied", return_value=None),
+            patch("aj_crew.dashboard.chat_handlers._app_cancel_denied", return_value=None),
             patch(
-                "kiro_crew.dashboard.chat_handlers.teardown_hold_active",
+                "aj_crew.dashboard.chat_handlers.teardown_hold_active",
                 return_value=hold == "discard",
             ),
         ):
@@ -638,7 +638,7 @@ class TestInterruptHandlerIdempotent:
         """
         from aiohttp import web
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_interrupt
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_interrupt
 
         slot = _FakeSlot()
         slot.running = True
@@ -672,10 +672,10 @@ class TestInterruptHandlerIdempotent:
         request.can_read_body = True
         request.charset = None
 
-        with patch("kiro_crew.dashboard.chat_handlers.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat_handlers.sel") as mock_sel:
             mock_sel.return_value.log_tool_invocation = MagicMock()
             mock_sel.return_value.log = MagicMock()
-            with patch("kiro_crew.dashboard.chat_handlers._reject_pending_approvals"):
+            with patch("aj_crew.dashboard.chat_handlers._reject_pending_approvals"):
                 resp = await api_chat_slot_interrupt(request)
         body = json.loads(resp.body)
 
@@ -697,7 +697,7 @@ class TestInterruptHandlerIdempotent:
         """
         from aiohttp import web
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_interrupt
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_interrupt
 
         slot = _FakeSlot()
         slot.running = True
@@ -729,10 +729,10 @@ class TestInterruptHandlerIdempotent:
         request.can_read_body = True
         request.charset = None
 
-        with patch("kiro_crew.dashboard.chat_handlers.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat_handlers.sel") as mock_sel:
             mock_sel.return_value.log_tool_invocation = MagicMock()
             mock_sel.return_value.log = MagicMock()
-            with patch("kiro_crew.dashboard.chat_handlers._reject_pending_approvals"):
+            with patch("aj_crew.dashboard.chat_handlers._reject_pending_approvals"):
                 resp = await api_chat_slot_interrupt(request)
         body = json.loads(resp.body)
 
@@ -753,7 +753,7 @@ class TestInterruptHandlerIdempotent:
         """
         from aiohttp import web
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_interrupt
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_interrupt
 
         slot = _FakeSlot()
         slot.running = True
@@ -802,7 +802,7 @@ class TestInterruptHandlerIdempotent:
         """
         from aiohttp import web
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_interrupt
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_interrupt
 
         slot = _FakeSlot()
         slot.running = True
@@ -832,10 +832,10 @@ class TestInterruptHandlerIdempotent:
         request.can_read_body = True
         request.charset = None
 
-        with patch("kiro_crew.dashboard.chat_handlers.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat_handlers.sel") as mock_sel:
             mock_sel.return_value.log_tool_invocation = MagicMock()
             mock_sel.return_value.log = MagicMock()
-            with patch("kiro_crew.dashboard.chat_handlers._reject_pending_approvals"):
+            with patch("aj_crew.dashboard.chat_handlers._reject_pending_approvals"):
                 resp = await api_chat_slot_interrupt(request)
         body = json.loads(resp.body)
 
@@ -883,7 +883,7 @@ class TestStopCardTeardownRace:
         This is the mechanism the handler tests below simulate. If this ever
         stops mapping falsy to "idle", those simulations stop being faithful.
         """
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         slot = _ChatSlot("race-slot")
         slot._stop_state = "soft_pending"
@@ -899,7 +899,7 @@ class TestStopCardTeardownRace:
         """Escalation settles the card even when teardown won the race."""
         from aiohttp import web
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_stop
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_stop
 
         slot = _FakeSlot()
         slot.running = True
@@ -926,10 +926,10 @@ class TestStopCardTeardownRace:
         request.match_info = {"slot": "test-slot"}
         request.query = {}
 
-        with patch("kiro_crew.dashboard.chat_handlers.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat_handlers.sel") as mock_sel:
             mock_sel.return_value.log_tool_invocation = MagicMock()
             mock_sel.return_value.log = MagicMock()
-            with patch("kiro_crew.dashboard.chat_handlers._reject_pending_approvals"):
+            with patch("aj_crew.dashboard.chat_handlers._reject_pending_approvals"):
                 await api_chat_slot_stop(request)
 
         stop_id = None
@@ -944,7 +944,7 @@ class TestStopCardTeardownRace:
     @pytest.mark.asyncio
     async def test_late_soft_ack_does_not_relabel_an_escalated_card(self):
         """Precedence survives: a hard kill is not relabelled a clean stop."""
-        from kiro_crew.dashboard.chat_handlers import _make_stop_resolver
+        from aj_crew.dashboard.chat_handlers import _make_stop_resolver
 
         slot = _FakeSlot()
         state = _FakeState(slot)
@@ -972,7 +972,7 @@ class TestStopCardTeardownRace:
         stop for a session that was killed. `_stop_escalated_card_id` is not reset by
         teardown, so the soft callback still defers.
         """
-        from kiro_crew.dashboard.chat_handlers import _make_stop_resolver
+        from aj_crew.dashboard.chat_handlers import _make_stop_resolver
 
         slot = _FakeSlot()
         state = _FakeState(slot)
@@ -991,7 +991,7 @@ class TestStopCardTeardownRace:
 
     def test_stopping_setter_leaves_the_escalation_marker_alone(self):
         """Pin the non-racy property on the real slot, not the stand-in."""
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         slot = _ChatSlot("escalation-slot")
         slot._stop_state = "killing"
@@ -1005,7 +1005,7 @@ class TestStopCardTeardownRace:
     @pytest.mark.asyncio
     async def test_resolver_settles_the_card_once(self):
         """The card id, not the state, is the idempotency token."""
-        from kiro_crew.dashboard.chat_handlers import _make_stop_resolver
+        from aj_crew.dashboard.chat_handlers import _make_stop_resolver
 
         slot = _FakeSlot()
         state = _FakeState(slot)
@@ -1033,7 +1033,7 @@ class TestStopCardTeardownRace:
         posture, so the newer stop's own callback would later find nothing left
         to settle and its card would be wrong rather than merely stranded.
         """
-        from kiro_crew.dashboard.chat_handlers import (
+        from aj_crew.dashboard.chat_handlers import (
             _make_stop_resolver,
             _resolve_stop_event,
         )
@@ -1068,7 +1068,7 @@ class TestStopCardTeardownRace:
         makes the stale marker simply stop matching, so no card-open path has to
         remember to clear it.
         """
-        from kiro_crew.dashboard.chat_handlers import (
+        from aj_crew.dashboard.chat_handlers import (
             _make_stop_resolver,
             _resolve_stop_event,
         )
@@ -1096,7 +1096,7 @@ class TestStopCardTeardownRace:
     @pytest.mark.asyncio
     async def test_a_stale_escalation_marker_does_not_label_a_later_kill_forced(self):
         """Only the escalated card reads force_stopped: a later card's timeout still failed."""
-        from kiro_crew.dashboard.chat_handlers import _make_stop_resolver
+        from aj_crew.dashboard.chat_handlers import _make_stop_resolver
 
         slot = _FakeSlot()
         state = _FakeState(slot)
@@ -1118,7 +1118,7 @@ class TestStopCardTeardownRace:
         to release the posture: a slot left at "killing" suppresses re-queue
         and rejects every later interrupt.
         """
-        from kiro_crew.dashboard.chat_handlers import _make_stop_resolver
+        from aj_crew.dashboard.chat_handlers import _make_stop_resolver
 
         slot = _FakeSlot()
         state = _FakeState(slot)
@@ -1137,7 +1137,7 @@ class TestStopCardTeardownRace:
         The marker holds a real card id, so a None-to-None comparison would
         defer a callback that no hard kill will follow, stranding the posture.
         """
-        from kiro_crew.dashboard.chat_handlers import _make_stop_resolver
+        from aj_crew.dashboard.chat_handlers import _make_stop_resolver
 
         slot = _FakeSlot()
         state = _FakeState(slot)
@@ -1172,12 +1172,12 @@ class TestStopReusesOrphanedCard:
         return rows
 
     async def _press(self, state, slot):
-        from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+        from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
-        with patch("kiro_crew.dashboard.chat_handlers.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat_handlers.sel") as mock_sel:
             mock_sel.return_value.log_tool_invocation = MagicMock()
             mock_sel.return_value.log = MagicMock()
-            with patch("kiro_crew.dashboard.chat_handlers._reject_pending_approvals"):
+            with patch("aj_crew.dashboard.chat_handlers._reject_pending_approvals"):
                 return await stop_slot_turn(state, slot)
 
     @pytest.mark.asyncio
@@ -1212,7 +1212,7 @@ class TestStopReusesOrphanedCard:
         press's cooperative ack defers to a hard callback that already fired,
         stranding the re-armed card at "stopping".
         """
-        from kiro_crew.dashboard.chat_handlers import _make_stop_resolver
+        from aj_crew.dashboard.chat_handlers import _make_stop_resolver
 
         slot = _FakeSlot()
         state = _FakeState(slot)
@@ -1261,7 +1261,7 @@ class TestStopReusesOrphanedCard:
         both the card and the posture. (GPT server-lane blocking finding on
         head 82d79041f.)
         """
-        from kiro_crew.dashboard.chat_handlers import _make_stop_resolver
+        from aj_crew.dashboard.chat_handlers import _make_stop_resolver
 
         slot = _FakeSlot()
         state = _FakeState(slot)
@@ -1356,7 +1356,7 @@ class TestStopReusesOrphanedCard:
         mode reuse exists to avoid. When the re-arm cannot find the row, the
         append mints fresh.
         """
-        from kiro_crew.dashboard import chat_handlers as ch
+        from aj_crew.dashboard import chat_handlers as ch
 
         slot = _FakeSlot()
         state = _FakeState(slot)
@@ -1515,15 +1515,15 @@ class TestStopCancelsTheSessionTheTurnRunsOn:
 
     @pytest.mark.asyncio
     async def test_stop_uses_the_linked_session_key(self):
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_stop
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_stop
 
         slot = _FakeSlot()
         slot.linked_session_key = "cron:40b4958a"
         state = _FakeState(slot)
 
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
-            patch("kiro_crew.dashboard.chat_handlers._reject_pending_approvals"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers._reject_pending_approvals"),
         ):
             await api_chat_slot_stop(self._request(state))
 
@@ -1532,14 +1532,14 @@ class TestStopCancelsTheSessionTheTurnRunsOn:
     @pytest.mark.asyncio
     async def test_stop_falls_back_to_the_dashboard_key(self):
         """A plain chat tab has no linked key, and must keep its own."""
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_stop
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_stop
 
         slot = _FakeSlot()
         state = _FakeState(slot)
 
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
-            patch("kiro_crew.dashboard.chat_handlers._reject_pending_approvals"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers._reject_pending_approvals"),
         ):
             await api_chat_slot_stop(self._request(state))
 
@@ -1547,7 +1547,7 @@ class TestStopCancelsTheSessionTheTurnRunsOn:
 
     @pytest.mark.asyncio
     async def test_interrupt_uses_the_linked_session_key(self):
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_interrupt
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_interrupt
 
         slot = _FakeSlot()
         slot.linked_session_key = "slack:1786000000.1"
@@ -1562,8 +1562,8 @@ class TestStopCancelsTheSessionTheTurnRunsOn:
         request.can_read_body = False
 
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
-            patch("kiro_crew.dashboard.chat_handlers._reject_pending_approvals"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers._reject_pending_approvals"),
         ):
             await api_chat_slot_interrupt(request)
 

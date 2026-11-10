@@ -2,10 +2,10 @@
 
 import pytest
 
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-from kiro_crew.workflows import WorkflowEvent
-from kiro_crew.workflows.registry import RunHandle, RunRegistry, start_background_run
-from kiro_crew.workflows.store import WorkflowRunStore
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+from aj_crew.workflows import WorkflowEvent
+from aj_crew.workflows.registry import RunHandle, RunRegistry, start_background_run
+from aj_crew.workflows.store import WorkflowRunStore
 
 
 @pytest.mark.asyncio
@@ -13,7 +13,7 @@ from kiro_crew.workflows.store import WorkflowRunStore
 async def test_restricted_run_never_writes_registration_events_or_result(tmp_path, mode):
     store = WorkflowRunStore(tmp_path / "workflow-records")
     registry = RunRegistry(store=store)
-    execution = ExecutionContext(None, MemoryStoreRef("default"), "template", "kirocrew", mode)
+    execution = ExecutionContext(None, MemoryStoreRef("default"), "template", "ajcrew", mode)
 
     async def run(record):
         for seq in range(5):
@@ -49,7 +49,7 @@ async def test_restricted_run_never_writes_registration_events_or_result(tmp_pat
 @pytest.mark.parametrize("mode", ["incognito", "temporary"])
 def test_storage_boundary_refuses_restricted_snapshot_even_without_registry(tmp_path, mode):
     store = WorkflowRunStore(tmp_path / "workflow-records")
-    execution = ExecutionContext(None, MemoryStoreRef("default"), "template", "kirocrew", mode)
+    execution = ExecutionContext(None, MemoryStoreRef("default"), "template", "ajcrew", mode)
     # A mistakenly permissive scalar cannot relax the captured execution.
     handle = RunHandle("wf_private", "private", source="secret source", execution_context=execution)
     store.save(handle.run_id, handle.to_store_json())

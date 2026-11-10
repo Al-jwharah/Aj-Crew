@@ -73,14 +73,14 @@ const KINDS = { [FILE]: 'file', [DIR]: 'dir', [LONG_FILE]: 'file' }
 const now = Date.now() / 1000
 const slots = [{
   key: SLOT, title: 'Inline code chips', running: false,
-  last_message: 'where the tests live', messages: 4, agent: 'kirocrew',
+  last_message: 'where the tests live', messages: 4, agent: 'ajcrew',
   memory_mode: 'persistent', project: PROJECT, modified: Math.floor(now),
   source_links: [], source_links_total: 0,
 }, {
   // A second OPEN session, so its key in a message becomes a session chip
   // (the reader's own session never does).
   key: OTHER_SLOT, title: 'Sidebar rewrite', running: false,
-  last_message: 'rebased onto main', messages: 2, agent: 'kirocrew',
+  last_message: 'rebased onto main', messages: 2, agent: 'ajcrew',
   memory_mode: 'persistent', project: PROJECT, modified: Math.floor(now) - 60,
   source_links: [], source_links_total: 0,
 }]
@@ -110,9 +110,9 @@ const detail = {
         '',
         `The gateway reads \`${LONG_COPY}\` at boot, then falls back to defaults.`,
         '',
-        'Override it with `KIROCREW_SETTINGS` when testing; the override wins over the file for that boot only, and the startup log names which one was read.',
+        'Override it with `AJCREW_SETTINGS` when testing; the override wins over the file for that boot only, and the startup log names which one was read.',
         '',
-        'Unset it afterwards with `unset KIROCREW_SETTINGS`.',
+        'Unset it afterwards with `unset AJCREW_SETTINGS`.',
       ].join('\n'),
     },
     { role: 'user', ts: now - 25, content: 'Where did the sidebar work go, and the screenshot?' },
@@ -470,7 +470,7 @@ async function main() {
   // unreachable; the bubble opens above instead, over a line already read. ---
   await h.page.mouse.move(5, 5)
   await h.page.waitForTimeout(1600)
-  const lastLineChip = h.page.locator('code[aria-label="Copy unset KIROCREW_SETTINGS"]')
+  const lastLineChip = h.page.locator('code[aria-label="Copy unset AJCREW_SETTINGS"]')
   await lastLineChip.hover()
   await h.page.waitForTimeout(200)
   const lastGeo = await bubbleGeometry(lastLineChip)
@@ -527,7 +527,7 @@ async function main() {
   await h.page.evaluate(() => window.scrollTo(0, 0))
   await h.page.waitForTimeout(300)
 
-  // --- Session chip, on the default (Kiro dark) theme: recoloured by the same
+  // --- Session chip, on the default (Aj dark) theme: recoloured by the same
   // rule as the path chips, and its Ctrl+click copy gated on the write. ---
   await h.load('dark', { selector: 'textarea[data-composer-input]', settle: 900 })
   await h.page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: h.base })

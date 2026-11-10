@@ -10,11 +10,11 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import security
-from kiro_crew.hooks import TOOL_DENY, HookManager
+from aj_crew import security
+from aj_crew.hooks import TOOL_DENY, HookManager
 
 _LONG = (
-    "git show origin/main:src/kiro_crew/hooks.py > /tmp/h.py; sed -n 518,560p /tmp/h.py; "
+    "git show origin/main:src/aj_crew/hooks.py > /tmp/h.py; sed -n 518,560p /tmp/h.py; "
     "grep -n 'await \\|to_thread\\|subprocess\\|open(' /tmp/h.py | awk -F: '$1>518 && $1<1420' | head -90; "
     'ls -la | head -20; for f in $(ls | head -5); do echo "== $f"; head -c 600 "$f" | cut -c1-600; echo; done; git status --short'
 )
@@ -44,8 +44,8 @@ def _judge(cmd: str, *, title: str | None = None, cwd: str | None = "/tmp"):
         kas_builtin_ids=True,
         harness_builtin_tool="execute_bash",
         session_key="dashboard:test-deny-once",
-        agent="kirocrew",
-        resolved_agent="kirocrew",
+        agent="ajcrew",
+        resolved_agent="ajcrew",
     )
 
 

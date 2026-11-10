@@ -4,7 +4,7 @@
  *
  * `state=refused|unknown|sent` mounts the real `CrewDynamicDashboard` (as
  * `test/CrewDynamicDashboard.test.tsx` does) over a page whose button posts
- * `kirocrew-dashboard:send`; the host's own gates (a real click tied to the frame)
+ * `ajcrew-dashboard:send`; the host's own gates (a real click tied to the frame)
  * decide whether `onSend` runs. `onSend` resolves the named outcome, the way
  * `sendCardReply` would for that gateway answer. The chat box and thread beside
  * the frame are this fixture's stand-ins for the Members page's composer and
@@ -44,7 +44,7 @@ const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 const state = params.get('state') || 'refused'
 localStorage.setItem('mc-theme', theme)
 localStorage.setItem('mc-color-theme', 'kiro')
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const REPLY = 'About "Ship the release notes": Approve the plan'
 const fg = theme === 'light' ? '#222' : '#ddd'
@@ -52,7 +52,7 @@ const PAGE = `<!doctype html><html><body style="font:14px system-ui;margin:16px;
 <h3 style="margin:0 0 6px">Needs you</h3>
 <p style="margin:0 0 10px">Ship the release notes &middot; waiting on your answer</p>
 <button id="answer" style="font:13px system-ui;padding:6px 12px;border-radius:6px;border:1px solid #888;background:transparent;color:${fg}">Approve the plan</button>
-<script>document.getElementById('answer').addEventListener('click',function(){parent.postMessage({type:'kirocrew-dashboard:send',text:${JSON.stringify(REPLY)}},'*')})</script>
+<script>document.getElementById('answer').addEventListener('click',function(){parent.postMessage({type:'ajcrew-dashboard:send',text:${JSON.stringify(REPLY)}},'*')})</script>
 </body></html>`
 
 const READ = {
@@ -89,7 +89,7 @@ store.dispatch(sseConnected())
 
 const MEMBER = {
   name: 'oncall', slug: 'oncall', slot_key: 'member-oncall', running: false, model: '',
-  approval_mode: 'trust', kiro_agent: 'kirocrew', memory_store: 'default', workspace: 'default',
+  approval_mode: 'trust', kiro_agent: 'ajcrew', memory_store: 'default', workspace: 'default',
   dashboard_card_send: true,
 } as MemberRosterRow
 client.setQueryData(MEMBERS_ROSTER_QUERY_KEY, [MEMBER])

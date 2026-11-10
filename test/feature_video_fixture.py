@@ -1,7 +1,7 @@
 """Shared access to the signed feature-video manifest fixture. Not a test module.
 
 Two tools have to agree on one signed byte format: the dashboard's verifier
-(``kiro_crew.platform.feed_trust``) and the publishing tool that produces a release
+(``aj_crew.platform.feed_trust``) and the publishing tool that produces a release
 folder. This module is the single place either side's tests reach that agreement
 through, so a helper cannot drift from the fixture it loads.
 
@@ -102,7 +102,7 @@ def pin_fixture_key(monkeypatch: object, public_key: "Path | None" = None) -> st
     directories (Windows CI's Git-bundled copy), production resolution returns None
     and every positive case would fail for a reason unrelated to what it tests.
     """
-    from kiro_crew.platform import feed_trust
+    from aj_crew.platform import feed_trust
 
     path = public_key or PUBLIC_KEY_PATH
     openssl = openssl_or_skip()

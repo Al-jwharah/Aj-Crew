@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import cli, cli_gateway_boot
-from kiro_crew.dashboard import urls
+from aj_crew import cli, cli_gateway_boot
+from aj_crew.dashboard import urls
 
 
 class _Config:
@@ -41,11 +41,11 @@ def test_the_port_comes_from_the_arguments_when_they_decide_it(
 def test_without_an_override_the_port_is_the_configured_dashboard_port(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Read from the config the facade's ``KiroCrewConfig`` loads, through the gateway's
-    own URL parser: a patch of ``cli.KiroCrewConfig`` reaches the owner that reads it."""
+    """Read from the config the facade's ``AjCrewConfig`` loads, through the gateway's
+    own URL parser: a patch of ``cli.AjCrewConfig`` reaches the owner that reads it."""
     config = _Config("http://127.0.0.1:7345")
     monkeypatch.setattr(
-        cli, "KiroCrewConfig", type("Cfg", (), {"load": staticmethod(lambda: config)})
+        cli, "AjCrewConfig", type("Cfg", (), {"load": staticmethod(lambda: config)})
     )
     assert urls.parse_dashboard_url(config.dashboard.url)[1] == 7345
     assert cli._diagnostic_port({"no_dashboard": False, "port_override": None}) == 7345
@@ -55,7 +55,7 @@ def test_a_config_that_cannot_be_read_names_no_port(monkeypatch: pytest.MonkeyPa
     def unreadable() -> object:
         raise ValueError("corrupt config.json")
 
-    monkeypatch.setattr(cli, "KiroCrewConfig", type("Cfg", (), {"load": staticmethod(unreadable)}))
+    monkeypatch.setattr(cli, "AjCrewConfig", type("Cfg", (), {"load": staticmethod(unreadable)}))
     assert cli._diagnostic_port({"no_dashboard": False, "port_override": None}) is None
 
 

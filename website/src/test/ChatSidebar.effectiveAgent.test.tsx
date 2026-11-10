@@ -101,9 +101,9 @@ import type { ChatSlot } from '../types'
 const LAST_TS = new Date(Date.now() - 60_000).toISOString()
 
 const SLOTS: ChatSlot[] = [
-  // The divergence: bound to a `mochi` that nothing dispatches, so `kirocrew`
+  // The divergence: bound to a `mochi` that nothing dispatches, so `ajcrew`
   // takes the turns.
-  { key: 'k-diverged', title: 'diverged', running: false, messages: 2, agent: 'mochi', effective_agent: 'kirocrew', tags: [], last_ts: LAST_TS },
+  { key: 'k-diverged', title: 'diverged', running: false, messages: 2, agent: 'mochi', effective_agent: 'ajcrew', tags: [], last_ts: LAST_TS },
   // Honored: the backend reports "" rather than repeating the agent name.
   { key: 'k-honored', title: 'honored', running: false, messages: 2, agent: 'mochi', effective_agent: '', tags: [], last_ts: LAST_TS },
   // Field absent entirely — a row from persisted state, or a backend predating it.
@@ -178,7 +178,7 @@ describe('chat sidebar — effective-agent marker', () => {
     const { container } = renderSidebar()
     const marker = markerFor(container, 'diverged')
     expect(marker).not.toBeNull()
-    expect(marker!.textContent).toContain('kirocrew')
+    expect(marker!.textContent).toContain('ajcrew')
   })
 
   it('keeps showing the requested agent alongside it', () => {

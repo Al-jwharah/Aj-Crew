@@ -16,7 +16,7 @@ vi.mock('../api/client', () => ({
 const folder = (id: string, extra: Partial<ChatFolder> = {}): ChatFolder =>
   ({ id, name: id, order: 0, ...extra }) as ChatFolder
 
-const AGENTS = [{ name: 'kirocrew' }, { name: 'kirocrew-dev' }]
+const AGENTS = [{ name: 'ajcrew' }, { name: 'ajcrew-dev' }]
 
 function open(props: Partial<React.ComponentProps<typeof FolderConfigModal>> = {}) {
   const onSubmit = vi.fn().mockResolvedValue(undefined)
@@ -176,7 +176,7 @@ describe('FolderConfigModal', () => {
     // ...and it is a real row in the popup, flagged, so the user can see why it
     // is not running. Ordered right after the inherit/None row, where its
     // <option> used to sit.
-    expect(await openAgents()).toEqual(['None', 'retired-agent (not installed)', 'kirocrew', 'kirocrew-dev'])
+    expect(await openAgents()).toEqual(['None', 'retired-agent (not installed)', 'ajcrew', 'ajcrew-dev'])
     // Escape dismisses the popup alone; the modal beneath must survive it.
     fireEvent.keyDown(document, { key: 'Escape' })
     await waitFor(() => expect(screen.queryByRole('option')).toBeNull())
@@ -185,20 +185,20 @@ describe('FolderConfigModal', () => {
   })
 
   it('does not flag an installed agent as uninstalled', async () => {
-    const f = folder('f1', { name: 'Payments', default_agent: 'kirocrew-dev' })
+    const f = folder('f1', { name: 'Payments', default_agent: 'ajcrew-dev' })
     open({ mode: 'edit', folder: f, folders: [f] })
-    expect(agentTrigger()).toHaveTextContent('kirocrew-dev')
+    expect(agentTrigger()).toHaveTextContent('ajcrew-dev')
     // Open the popup before the negative assertion: the rows only exist while
     // it is up, so asserting the absence of the flag on a closed picker would
     // pass vacuously.
-    expect(await openAgents()).toEqual(['None', 'kirocrew', 'kirocrew-dev'])
+    expect(await openAgents()).toEqual(['None', 'ajcrew', 'ajcrew-dev'])
     expect(screen.queryByText(/not installed/i)).toBeNull()
   })
 
   it.each(['typed', 'inherited'])('lists the agents of the %s project directory', async how => {
     // #10106: the picker listed the active chat's roster, so the agents in the
     // folder's own `<project>/.kiro/agents` were never offered.
-    const loadProjectAgents = vi.fn().mockResolvedValue([{ name: 'kirocrew' }, { name: 'repo-helper' }])
+    const loadProjectAgents = vi.fn().mockResolvedValue([{ name: 'ajcrew' }, { name: 'repo-helper' }])
     const folders = [folder('a', { name: 'Repo', project_dir: '/repo' })]
     open({ loadProjectAgents, ...(how === 'inherited' ? { folders, parentId: 'a' } : {}) })
     if (how === 'typed') {
@@ -207,7 +207,7 @@ describe('FolderConfigModal', () => {
     await waitFor(() => expect(loadProjectAgents).toHaveBeenCalledWith('/repo'))
     await openAgentPopup()
     await screen.findByRole('option', { name: 'repo-helper' })
-    expect(screen.queryByRole('option', { name: 'kirocrew-dev' })).toBeNull()
+    expect(screen.queryByRole('option', { name: 'ajcrew-dev' })).toBeNull()
   })
 
   it('says when the project directory roster fails to load, and retries it', async () => {
@@ -265,7 +265,7 @@ describe('FolderConfigModal', () => {
     })
 
     it('shows the hint and no notice, unassociated, when the agent is installed', () => {
-      const f = folder('f1', { name: 'Payments', default_agent: 'kirocrew-dev' })
+      const f = folder('f1', { name: 'Payments', default_agent: 'ajcrew-dev' })
       open({ mode: 'edit', folder: f, folders: [f] })
       expect(screen.queryByTestId('folder-config-agent-notice')).toBeNull()
       expect(agentTrigger().getAttribute('aria-describedby')).toBeNull()
@@ -277,15 +277,15 @@ describe('FolderConfigModal', () => {
     // '' is a real instruction here — it restores the fall-back to the global
     // default — so it has to survive the round trip rather than arriving as
     // undefined.
-    const f = folder('f1', { name: 'Payments', default_agent: 'kirocrew-dev' })
-    const { onSubmit } = open({ mode: 'edit', folder: f, folders: [f], globalDefaultAgent: 'kirocrew' })
+    const f = folder('f1', { name: 'Payments', default_agent: 'ajcrew-dev' })
+    const { onSubmit } = open({ mode: 'edit', folder: f, folders: [f], globalDefaultAgent: 'ajcrew' })
     // With a global default the top row names it, so the user can see what
     // "inherit" actually resolves to.
-    expect(await openAgents()).toEqual(['Inherit (kirocrew)', 'kirocrew', 'kirocrew-dev'])
+    expect(await openAgents()).toEqual(['Inherit (ajcrew)', 'ajcrew', 'ajcrew-dev'])
     fireEvent.keyDown(document, { key: 'Escape' })
     await waitFor(() => expect(screen.queryByRole('option')).toBeNull())
-    await pickAgent('Inherit (kirocrew)')
-    expect(agentTrigger()).toHaveTextContent('Inherit (kirocrew)')
+    await pickAgent('Inherit (ajcrew)')
+    expect(agentTrigger()).toHaveTextContent('Inherit (ajcrew)')
     fireEvent.click(screen.getByTestId('folder-config-submit'))
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
       defaultAgent: '', touched: ['defaultAgent'],
@@ -295,31 +295,31 @@ describe('FolderConfigModal', () => {
   it('names the nearest ANCESTOR agent in the inherit row, not the global default', async () => {
     // `default_agent: ''` inherits from the nearest ancestor that pins one, the
     // same way `project_dir` does. A row hardcoded to the global default reads
-    // "Inherit (kirocrew)" over a subfolder whose chats will in fact run
-    // kirocrew-dev — the label contradicting the behaviour it describes.
+    // "Inherit (ajcrew)" over a subfolder whose chats will in fact run
+    // ajcrew-dev — the label contradicting the behaviour it describes.
     const folders = [
-      folder('a', { name: 'Kiro', default_agent: 'kirocrew-dev' }),
+      folder('a', { name: 'Kiro', default_agent: 'ajcrew-dev' }),
       folder('b', { name: 'Backend', parent_id: 'a' }),
     ]
-    open({ folders, parentId: 'b', globalDefaultAgent: 'kirocrew' })
-    expect(await openAgents()).toEqual(['Inherit (kirocrew-dev)', 'kirocrew', 'kirocrew-dev'])
+    open({ folders, parentId: 'b', globalDefaultAgent: 'ajcrew' })
+    expect(await openAgents()).toEqual(['Inherit (ajcrew-dev)', 'ajcrew', 'ajcrew-dev'])
   })
 
   it('names what clearing WOULD inherit in edit mode, ignoring the folder own pin', async () => {
     // Clearing removes this folder's own value, so the row must name the parent's
     // agent — never the value the picker is about to drop.
-    const parent = folder('a', { name: 'Kiro', default_agent: 'kirocrew-dev' })
-    const self = folder('b', { name: 'Backend', parent_id: 'a', default_agent: 'kirocrew' })
-    open({ mode: 'edit', folder: self, folders: [parent, self], globalDefaultAgent: 'kirocrew' })
-    expect(await openAgents()).toEqual(['Inherit (kirocrew-dev)', 'kirocrew', 'kirocrew-dev'])
+    const parent = folder('a', { name: 'Kiro', default_agent: 'ajcrew-dev' })
+    const self = folder('b', { name: 'Backend', parent_id: 'a', default_agent: 'ajcrew' })
+    open({ mode: 'edit', folder: self, folders: [parent, self], globalDefaultAgent: 'ajcrew' })
+    expect(await openAgents()).toEqual(['Inherit (ajcrew-dev)', 'ajcrew', 'ajcrew-dev'])
   })
 
   describe('agent filter box', () => {
     // A long agent roster is unscannable in a plain list, so the popup carries the
     // same "Type to filter…" box as the composer's agent picker.
     const MANY = [
-      { name: 'kirocrew' },
-      { name: 'kirocrew-dev' },
+      { name: 'ajcrew' },
+      { name: 'ajcrew-dev' },
       { name: 'gpu-autosde-analyzer' },
     ]
 
@@ -327,7 +327,7 @@ describe('FolderConfigModal', () => {
       open({ installedAgents: MANY })
       fireEvent.change(await openAgentPopup(), { target: { value: 'dev' } })
       const names = screen.getAllByRole('option').map(o => o.textContent)
-      expect(names).toEqual(['kirocrew-dev'])
+      expect(names).toEqual(['ajcrew-dev'])
     })
 
     it('commits the top match on Enter and submits it', async () => {
@@ -405,31 +405,31 @@ describe('FolderConfigModal', () => {
     })
 
     it('finds a mate by its key in the filter', async () => {
-      open({ installedAgents: [{ name: 'crew-7', display_name: 'Reviewer', selection_kind: 'member' as const }, { name: 'kirocrew', selection_kind: 'template' as const }] })
+      open({ installedAgents: [{ name: 'crew-7', display_name: 'Reviewer', selection_kind: 'member' as const }, { name: 'ajcrew', selection_kind: 'template' as const }] })
       fireEvent.change(await openAgentPopup(), { target: { value: 'crew-7' } })
       expect(screen.getAllByRole('option').map(o => o.textContent)).toEqual(['Reviewer'])
     })
 
     it('adds no kind line when no two rows read the same', async () => {
-      open({ installedAgents: [{ name: 'pr-review', display_name: 'PR review', selection_kind: 'member' as const }, { name: 'kirocrew', selection_kind: 'template' as const }] })
+      open({ installedAgents: [{ name: 'pr-review', display_name: 'PR review', selection_kind: 'member' as const }, { name: 'ajcrew', selection_kind: 'template' as const }] })
       await openAgentPopup()
       const rows = screen.getAllByRole('option').map(o => o.textContent)
       expect(rows).toContain('PR review')
-      expect(rows).toContain('kirocrew')
+      expect(rows).toContain('ajcrew')
     })
   })
 
   it('Enter on a typed agent name picks that agent, not the inherit row naming it', async () => {
-    // "Inherit (kirocrew)" sits first and contains "kirocrew", so a top-row
+    // "Inherit (ajcrew)" sits first and contains "ajcrew", so a top-row
     // commit would save '' (inherit) when the user typed the agent to pin.
-    const { onSubmit } = open({ globalDefaultAgent: 'kirocrew' })
+    const { onSubmit } = open({ globalDefaultAgent: 'ajcrew' })
     const box = await openAgentPopup()
-    fireEvent.change(box, { target: { value: 'kirocrew' } })
+    fireEvent.change(box, { target: { value: 'ajcrew' } })
     fireEvent.keyDown(box, { key: 'Enter' })
     await waitFor(() => expect(screen.queryByRole('option')).toBeNull())
     fireEvent.change(screen.getByTestId('folder-config-name'), { target: { value: 'Payments' } })
     fireEvent.click(screen.getByTestId('folder-config-submit'))
-    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ defaultAgent: 'kirocrew' }))
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ defaultAgent: 'ajcrew' }))
   })
 
   it('labels the inherited directory as inherited, not as a value', () => {
@@ -719,7 +719,7 @@ describe('FolderConfigModal', () => {
           installedAgents={AGENTS} onClose={vi.fn()} onSubmit={onSubmit} />
       )
       fireEvent.change(screen.getByTestId('folder-config-project-dir'), { target: { value: '/repo/new' } })
-      await pickAgent('kirocrew-dev')
+      await pickAgent('ajcrew-dev')
       fireEvent.click(screen.getByTestId('folder-config-submit'))
       await waitFor(() => expect(onSubmit).toHaveBeenCalled())
       const t = onSubmit.mock.calls[0][0].touched
@@ -888,14 +888,14 @@ describe('FolderConfigModal', () => {
 
   describe('edit mode', () => {
     const existing = folder('f1', {
-      name: 'Payments', project_dir: '/repo/pay', default_agent: 'kirocrew-dev',
+      name: 'Payments', project_dir: '/repo/pay', default_agent: 'ajcrew-dev',
     })
 
     it('prefills every field from the folder', () => {
       open({ mode: 'edit', folder: existing, folders: [existing], parentId: undefined })
       expect((screen.getByTestId('folder-config-name') as HTMLInputElement).value).toBe('Payments')
       expect((screen.getByTestId('folder-config-project-dir') as HTMLInputElement).value).toBe('/repo/pay')
-      expect(agentTrigger()).toHaveTextContent('kirocrew-dev')
+      expect(agentTrigger()).toHaveTextContent('ajcrew-dev')
     })
 
     it('reset clears the color back to default', () => {

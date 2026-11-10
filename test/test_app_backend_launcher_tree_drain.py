@@ -1,6 +1,6 @@
 """An app backend's tree is drained even when its launcher is already gone.
 
-Three exits of ``kiro_crew.apps.backend`` signal a spawned backend's tree: the
+Three exits of ``aj_crew.apps.backend`` signal a spawned backend's tree: the
 startup-survival failure branch (the launcher died during the bind window), the
 retired-spawn branch (a concurrent start took publication), and
 ``stop_app_backend`` (disable, uninstall, gateway shutdown -- with the root alive
@@ -26,8 +26,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew.apps.backend as bmod
-from kiro_crew.apps.backend import AppProcess
+import aj_crew.apps.backend as bmod
+from aj_crew.apps.backend import AppProcess
 
 SIGTERM = bmod.platform_compat.SIGTERM
 SIGKILL = bmod.platform_compat.SIGKILL
@@ -85,9 +85,9 @@ def _manifest(entry_point: str = "server.py") -> SimpleNamespace:
 @pytest.fixture(autouse=True)
 def _isolated_module_state(tmp_path: Any, monkeypatch: pytest.MonkeyPatch) -> Any:
     """A clean process table, a private pidfile and a silent audit sink per test."""
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.setattr(bmod, "_pidfile_path", lambda: tmp_path / "app_backends.pids.json")
     monkeypatch.setattr(bmod, "sel", lambda: MagicMock())
     # The spawn path rolls a full backend.log aside with rotate_jsonl_at, whose

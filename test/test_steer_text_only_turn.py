@@ -38,8 +38,8 @@ from test_acp_runtime import (
     _stop_reader,
 )
 
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_STEER_CONSUMED,
     EVENT_STEER_QUEUED,
@@ -48,8 +48,8 @@ from kiro_crew.acp.types import (
     METHOD_KIRO_SESSION_UPDATE,
     METHOD_SESSION_UPDATE,
 )
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.testing.wait import await_until
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.testing.wait import await_until
 
 SID = "sA"
 STEER = "go north instead"
@@ -202,10 +202,10 @@ async def test_the_injection_echo_lands_inside_the_text_only_turn(backend):
 @pytest.mark.parametrize("backend", [ACP_BACKEND_KIRO, ACP_BACKEND_KAS], ids=["kiro", "kas"])
 async def test_the_dashboard_settles_the_steer_and_requeues_nothing(tmp_path, monkeypatch, backend):
     """The teardown must not run a steer the turn already consumed a second time."""
-    from kiro_crew.dashboard.chat_delivery import STEER_STEERED, steer_into_running_turn
-    from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers, _settle_consumed_steers
+    from aj_crew.dashboard.chat_delivery import STEER_STEERED, steer_into_running_turn
+    from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers, _settle_consumed_steers
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     slot = state.get_or_create_slot("test")
@@ -220,7 +220,7 @@ async def test_the_dashboard_settles_the_steer_and_requeues_nothing(tmp_path, mo
     outcomes: list[str] = []
 
     async def write_steer():
-        with patch("kiro_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
+        with patch("aj_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
             outcomes.append(await steer_into_running_turn(state, slot, STEER))
 
     events = await _text_only_turn(backend, on_steer_window=write_steer)

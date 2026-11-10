@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.slack import handler
+from aj_crew.slack import handler
 
 pytestmark = pytest.mark.asyncio
 
@@ -43,7 +43,7 @@ async def _deliver(slot: Any, run: AsyncMock, **kw: Any) -> bool:
     with (
         patch.object(handler, "_dashboard_state", state),
         patch.object(handler, "is_allowed_user", return_value=True),
-        patch("kiro_crew.dashboard.chat._run_chat", run),
+        patch("aj_crew.dashboard.chat._run_chat", run),
     ):
         return await handler.maybe_route_linked_thread(
             "Deploy",
@@ -83,7 +83,7 @@ async def test_a_turn_that_ends_without_taking_it_leaves_no_payload_behind() -> 
     with (
         patch.object(handler, "_dashboard_state", state),
         patch.object(handler, "is_allowed_user", return_value=True),
-        patch("kiro_crew.dashboard.chat._run_chat", run),
+        patch("aj_crew.dashboard.chat._run_chat", run),
     ):
         assert await handler.maybe_route_linked_thread(
             "Deploy",
@@ -127,7 +127,7 @@ async def test_a_pinned_handle_message_passes_the_action_context_through() -> No
     """``_dispatch_before_turn`` hands a pinned turn's action context to the
     linked-slot delivery (an unpinned one keeps the native path)."""
     route = AsyncMock(return_value=True)
-    from kiro_crew.slack.handler_runtime import dispatch
+    from aj_crew.slack.handler_runtime import dispatch
 
     turn = MagicMock()
     turn.route_pinned = True
@@ -157,7 +157,7 @@ async def test_an_action_answer_whose_session_closed_after_the_click_is_refused(
     dispatch finds no slot for the pinned name. It must not fall through to a
     plain thread turn; the clicker is told, and no route or turn runs."""
     route = AsyncMock(return_value=False)
-    from kiro_crew.slack.handler_runtime import dispatch
+    from aj_crew.slack.handler_runtime import dispatch
 
     turn = MagicMock()
     turn.route_pinned = True

@@ -34,7 +34,7 @@ import { json, makeFixedApi, handleBootRoute } from './lib/boot-api.mjs'
 const OUT = process.argv[2] || '../temp-screenshots/chat-long-url-linkify'
 const LABEL = process.argv[3] || 'after'
 const SLOT = 'chat-long-url-linkify'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -44,7 +44,7 @@ const slots = [{
   running: false,
   last_message: 'link ready',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),
@@ -53,9 +53,9 @@ const slots = [{
 }]
 
 const PREFILL_SPACED =
-  'https://github.com/kirodotdev/KiroCrew/issues/new?title=Bug: dashboard chat fails&labels=bug, area: dashboard&assignees=someone'
+  'https://github.com/Al-jwharah/Aj-Crew/issues/new?title=Bug: dashboard chat fails&labels=bug, area: dashboard&assignees=someone'
 const LONG_ENCODED =
-  'https://github.com/kirodotdev/KiroCrew/issues/new?title=Bug%3A+dashboard+chat+fails&body=%23%23+What%0A%0AURLs+are+not+clickable%0A%0A%23%23+Why%0A%0AThe+agent+generated+a+link&labels=bug%2Carea%3A+dashboard&assignees=someone&template=bug_report.md&milestone=v2.0'
+  'https://github.com/Al-jwharah/Aj-Crew/issues/new?title=Bug%3A+dashboard+chat+fails&body=%23%23+What%0A%0AURLs+are+not+clickable%0A%0A%23%23+Why%0A%0AThe+agent+generated+a+link&labels=bug%2Carea%3A+dashboard&assignees=someone&template=bug_report.md&milestone=v2.0'
 
 // The reported shape first, then the working control cases.
 const CONTENT = [
@@ -63,7 +63,7 @@ const CONTENT = [
   '',
   `Prefill link (encoded): ${LONG_ENCODED}`,
   '',
-  'The renderer lives at /home/user/workspace/KiroCrew/website/src/components/MarkdownRenderer.tsx — a path, not a link.',
+  'The renderer lives at /home/user/workspace/AjCrew/website/src/components/MarkdownRenderer.tsx — a path, not a link.',
 ].join('\n')
 
 const detail = {

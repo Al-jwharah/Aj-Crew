@@ -21,17 +21,17 @@ import pytest
 from test_kas_spec_builtin_grant import _handle, _permission
 from test_tool_call_classification_kas import _kas_builtin_flow
 
-from kiro_crew.acp import kas_agents
-from kiro_crew.acp._dispatch import attach_kas_custom_agents
-from kiro_crew.acp.harness.kas import KasHarness
-from kiro_crew.acp.kas_permissions import (
+from aj_crew.acp import kas_agents
+from aj_crew.acp._dispatch import attach_kas_custom_agents
+from aj_crew.acp.harness.kas import KasHarness
+from aj_crew.acp.kas_permissions import (
     CREW_ANSWERED_PATHS_KEY,
     CREW_ANSWERED_READ_PATHS_KEY,
     CREW_SHELL_READONLY_KEY,
 )
-from kiro_crew.acp.types import AcpEvent
-from kiro_crew.acp_backends import ACP_BACKEND_KAS
-from kiro_crew.hooks import (
+from aj_crew.acp.types import AcpEvent
+from aj_crew.acp_backends import ACP_BACKEND_KAS
+from aj_crew.hooks import (
     TOOL_ALLOW,
     TOOL_AUTO_APPROVE,
     TOOL_DENY,
@@ -39,9 +39,9 @@ from kiro_crew.hooks import (
     HooksConfig,
     hook_gate_kwargs,
 )
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.testing.links import make_dir_link
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.testing.links import make_dir_link
 
 #: The fields the session handle stamps on its own agent's KAS request.
 _STAMPED = (

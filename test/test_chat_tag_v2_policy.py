@@ -11,11 +11,11 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state, _make_tags_app
 
-from kiro_crew.dashboard import chat_tag_grants
-from kiro_crew.dashboard import chat_tags as chat_tags_module
-from kiro_crew.dashboard.session_directive_apply import apply_session_directive
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
+from aj_crew.dashboard import chat_tag_grants
+from aj_crew.dashboard import chat_tags as chat_tags_module
+from aj_crew.dashboard.session_directive_apply import apply_session_directive
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
 
 
 def _request_identity(*, user: str = "local-app", app_name: str = "", member: str = ""):
@@ -33,10 +33,10 @@ def _request_identity(*, user: str = "local-app", app_name: str = "", member: st
 @pytest.fixture(autouse=True)
 def _isolated_grant_store(tmp_path, monkeypatch):
     """Keep the protected policy store and signing chain inside the test home."""
-    from kiro_crew.dashboard import token_secret
+    from aj_crew.dashboard import token_secret
 
     monkeypatch.setattr(chat_tag_grants, "config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(token_secret, "_get_secret", lambda: b"test-signing-key")
     chat_tag_grants._cache = None
     chat_tag_grants._degraded = None
@@ -79,7 +79,7 @@ class TestTagProvenancePolicy:
         app = _make_tags_app(state, booted_store=False)
         headers = {
             "X-Internal-Secret": "s3cret",
-            "X-Internal-Caller": "kirocrew-dashboard",
+            "X-Internal-Caller": "ajcrew-dashboard",
             "X-Session-Key": "dashboard:caller",
         }
 
@@ -271,7 +271,7 @@ class TestTagProvenancePolicy:
             app.middlewares.append(_request_identity())
             headers = {
                 "X-Internal-Secret": "s3cret",
-                "X-Internal-Caller": "kirocrew-dashboard",
+                "X-Internal-Caller": "ajcrew-dashboard",
             }
         elif caller == "forged":
             body.update({"user": "local-app", "app": ""})
@@ -560,7 +560,7 @@ def _quarantine_vocabulary() -> list[dict]:
 
 def _break_store(monkeypatch, cause: str) -> None:
     """Make the installed store unverifiable the way a boot pass would find it."""
-    from kiro_crew.dashboard import token_secret
+    from aj_crew.dashboard import token_secret
 
     if cause == "stale_signer":
         # A rotated token_signing.key breaks the store key's certificate: a

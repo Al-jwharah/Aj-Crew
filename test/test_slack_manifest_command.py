@@ -1,10 +1,10 @@
 """The Slack manifest's slash command is unique per install.
 
 Slack resolves slash-command names across a whole Enterprise Grid org, so two
-installs that both register ``/kirocrew`` collide and Slack sends the command
+installs that both register ``/ajcrew`` collide and Slack sends the command
 to the wrong app. The manifest therefore names the command after the alias, the
 same way it names the app, and every reader of that name (the exfil validator,
-``kirocrew manifest`` and the dashboard's manifest endpoint) must agree with the
+``ajcrew manifest`` and the dashboard's manifest endpoint) must agree with the
 render.
 """
 
@@ -23,12 +23,12 @@ import pytest
 import yaml
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import cli_setup, slack_manifest
-from kiro_crew.config.sections import SlackConfig
-from kiro_crew.dashboard.handlers import messaging as dashboard_messaging
-from kiro_crew.security import scan_exfiltration_urls
-from kiro_crew.slack import events as slack_events
-from kiro_crew.slack.scope_probe import warn_unreadable_tracked_channels
+from aj_crew import cli_setup, slack_manifest
+from aj_crew.config.sections import SlackConfig
+from aj_crew.dashboard.handlers import messaging as dashboard_messaging
+from aj_crew.security import scan_exfiltration_urls
+from aj_crew.slack import events as slack_events
+from aj_crew.slack.scope_probe import warn_unreadable_tracked_channels
 
 _SLACK_COMMAND_RE = re.compile(r"\A/[a-z0-9_-]{1,31}\Z")
 
@@ -42,7 +42,7 @@ def _rendered_command(alias: str) -> str:
 
 class TestRenderedCommand:
     def test_the_command_is_named_after_the_alias(self) -> None:
-        assert _rendered_command("jdoe") == "/kirocrew-jdoe"
+        assert _rendered_command("jdoe") == "/ajcrew-jdoe"
 
     def test_two_installs_get_two_commands(self) -> None:
         assert _rendered_command("alice") != _rendered_command("bob")
@@ -56,12 +56,12 @@ class TestRenderedCommand:
         assert command == "/" + slack_manifest.slash_command(alias)
 
     def test_the_generic_alias_keeps_the_generic_command(self) -> None:
-        """The dashboard's non-identifying default alias renders ``/kirocrew``.
+        """The dashboard's non-identifying default alias renders ``/ajcrew``.
 
         That path saves no ``slack.command``, so the gateway keeps listening
         for the default; a renamed command there would never be answered.
         """
-        assert _rendered_command(slack_manifest.DEFAULT_ALIAS) == "/kirocrew"
+        assert _rendered_command(slack_manifest.DEFAULT_ALIAS) == "/ajcrew"
 
 
 class TestDeepLinkValidator:
@@ -72,7 +72,7 @@ class TestDeepLinkValidator:
     def test_a_command_that_does_not_match_the_alias_is_redacted(self) -> None:
         payload = (
             slack_manifest.stripped_template()
-            .replace(slack_manifest.COMMAND_PLACEHOLDER, "kirocrew-other")
+            .replace(slack_manifest.COMMAND_PLACEHOLDER, "ajcrew-other")
             .replace(slack_manifest.ALIAS_PLACEHOLDER, "real")
         )
         url = "https://api.slack.com/apps?new_app=1&manifest_yaml=" + quote(payload, safe="")
@@ -84,13 +84,13 @@ class TestSetupWizardDefault:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The wizard cannot know which alias the app was created with, so it
-        keeps ``kirocrew``; ``kirocrew manifest`` prints the matching line."""
+        keeps ``ajcrew``; ``ajcrew manifest`` prints the matching line."""
         target = tmp_path / "config.json"
-        monkeypatch.setattr("kiro_crew.cli_setup.config_path", lambda: target)
-        monkeypatch.setattr("kiro_crew.cli_setup._input_or_skip", lambda prompt: None)
+        monkeypatch.setattr("aj_crew.cli_setup.config_path", lambda: target)
+        monkeypatch.setattr("aj_crew.cli_setup._input_or_skip", lambda prompt: None)
         monkeypatch.setenv("USER", "JDoe")
         cli_setup._setup_slash_command()
-        assert json.loads(target.read_text(encoding="utf-8"))["slack"]["command"] == "kirocrew"
+        assert json.loads(target.read_text(encoding="utf-8"))["slack"]["command"] == "ajcrew"
 
 
 def test_manifest_cli_names_the_command_to_configure(
@@ -98,8 +98,8 @@ def test_manifest_cli_names_the_command_to_configure(
 ) -> None:
     cli_setup._manifest(alias="jdoe", url=True)
     out = capsys.readouterr().out
-    assert "/kirocrew-jdoe" in out
-    assert "kirocrew config set slack.command kirocrew-jdoe" in out
+    assert "/ajcrew-jdoe" in out
+    assert "ajcrew config set slack.command ajcrew-jdoe" in out
 
 
 def test_plain_manifest_names_the_command_on_stderr(
@@ -109,9 +109,9 @@ def test_plain_manifest_names_the_command_on_stderr(
     cli_setup._manifest(alias="jdoe")
     captured = capsys.readouterr()
     assert (
-        yaml.safe_load(captured.out)["features"]["slash_commands"][0]["command"] == "/kirocrew-jdoe"
+        yaml.safe_load(captured.out)["features"]["slash_commands"][0]["command"] == "/ajcrew-jdoe"
     )
-    assert "kirocrew config set slack.command kirocrew-jdoe" in captured.err
+    assert "ajcrew config set slack.command ajcrew-jdoe" in captured.err
 
 
 def _dashboard_manifest(path: str) -> dict:
@@ -127,7 +127,7 @@ class TestDashboardManifest:
 
     def test_a_named_alias_returns_the_command_its_manifest_registers(self) -> None:
         body = _dashboard_manifest("/api/slack/manifest?alias=JDoe")
-        assert body["command"] == "kirocrew-jdoe"
+        assert body["command"] == "ajcrew-jdoe"
         commands = yaml.safe_load(body["manifest"])["features"]["slash_commands"]
         assert [c["command"] for c in commands] == ["/" + body["command"]]
 
@@ -140,11 +140,11 @@ class TestDashboardManifest:
 
 
 async def _slash_on_an_old_install(command: str, *, owner: bool) -> list[dict]:
-    """Send *command* to a gateway with no ``slack.command`` set (``/kirocrew``).
+    """Send *command* to a gateway with no ``slack.command`` set (``/ajcrew``).
 
     Returns the bodies posted to the payload's ``response_url``: what the person
     who typed the command sees in Slack. Every caller sends a name that is not
-    ``/kirocrew``, which must never run, so nothing may be audited as invoked.
+    ``/ajcrew``, which must never run, so nothing may be audited as invoked.
     """
     posted: list[dict] = []
     audit = MagicMock()
@@ -160,7 +160,7 @@ async def _slash_on_an_old_install(command: str, *, owner: bool) -> list[dict]:
             posted.append(kwargs["json"])
 
     orch = MagicMock()
-    orch.slack_command = "kirocrew"
+    orch.slack_command = "ajcrew"
     orch._handler_tasks = set()
     payload = {
         "command": command,
@@ -169,9 +169,9 @@ async def _slash_on_an_old_install(command: str, *, owner: bool) -> list[dict]:
         "response_url": "https://hooks.example.invalid/x",
     }
     with (
-        patch("kiro_crew.slack.events.aiohttp.ClientSession", _Session),
-        patch("kiro_crew.slack.events.is_allowed_user", return_value=owner),
-        patch("kiro_crew.slack.events.sel", return_value=audit),
+        patch("aj_crew.slack.events.aiohttp.ClientSession", _Session),
+        patch("aj_crew.slack.events.is_allowed_user", return_value=owner),
+        patch("aj_crew.slack.events.sel", return_value=audit),
     ):
         await slack_events._handle_slash(orch, payload)
         await asyncio.gather(*list(orch._handler_tasks))
@@ -180,19 +180,19 @@ async def _slash_on_an_old_install(command: str, *, owner: bool) -> list[dict]:
 
 
 class TestAnOldInstallThatReimportsTheManifest:
-    """An install made before the rename answers ``/kirocrew``. The scope-probe
+    """An install made before the rename answers ``/ajcrew``. The scope-probe
     hint and the setup guide's upgrade note both send it back to the bundled
     manifest, and re-importing that renames the app's command to
-    ``/kirocrew-<alias>`` while ``slack.command`` stays ``kirocrew``."""
+    ``/ajcrew-<alias>`` while ``slack.command`` stays ``ajcrew``."""
 
     @pytest.mark.asyncio
     async def test_the_owner_is_told_which_command_to_configure(
         self, caplog: pytest.LogCaptureFixture
     ) -> None:
         renamed = _rendered_command("jdoe")
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.slack.events"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.slack.events"):
             posted = await _slash_on_an_old_install(renamed, owner=True)
-        fix = "kirocrew config set slack.command kirocrew-jdoe"
+        fix = "ajcrew config set slack.command ajcrew-jdoe"
         assert len(posted) == 1
         assert posted[0]["response_type"] == "ephemeral"
         assert fix in posted[0]["text"]
@@ -204,7 +204,7 @@ class TestAnOldInstallThatReimportsTheManifest:
         assert await _slash_on_an_old_install(_rendered_command("jdoe"), owner=False) == []
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("command", ["/other", "/kirocrew-x;id"])
+    @pytest.mark.parametrize("command", ["/other", "/ajcrew-x;id"])
     async def test_a_name_the_manifest_cannot_render_gets_no_reply(self, command: str) -> None:
         assert await _slash_on_an_old_install(command, owner=True) == []
 
@@ -221,5 +221,5 @@ class TestAnOldInstallThatReimportsTheManifest:
             notify=lambda kind, title, body, **kwargs: bodies.append(body),
         )
         assert len(bodies) == 1
-        assert "/kirocrew-<alias>" in bodies[0]
-        assert "kirocrew config set slack.command" in bodies[0]
+        assert "/ajcrew-<alias>" in bodies[0]
+        assert "ajcrew config set slack.command" in bodies[0]

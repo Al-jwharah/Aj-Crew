@@ -40,7 +40,7 @@ const theme = params.get('theme') || 'dark'
 const stream = params.get('stream') === '1'
 const paraCount = Math.max(4, Number(params.get('paras') || 10))
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 /** Sentence-shaped reasoning bodies, cycled and then labelled `[n/N]`. Each is
  *  long enough to wrap to ~3 lines at the panel's measure, so a handful already

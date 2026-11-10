@@ -33,7 +33,7 @@ import { MORE_ACTIONS } from './artifactMoreMenu'
 vi.mock('../api/client')
 vi.mock('../pages/ChatPage', () => ({
   default: () => <div data-testid="chat-page" />,
-  PREFILL_STORAGE_KEY: 'kirocrew_prefill',
+  PREFILL_STORAGE_KEY: 'ajcrew_prefill',
 }))
 /** Jev's consent for `Auto` mode, set per test rather than fetched. */
 const jev = vi.hoisted(() => ({ consented: false }))

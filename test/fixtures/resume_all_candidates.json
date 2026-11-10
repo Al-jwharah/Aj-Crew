@@ -102,7 +102,7 @@
       "slots": [
         {
           "key": "conductor",
-          "facts": {"transcript": "interrupted", "agent": "kirocrew-conductor"},
+          "facts": {"transcript": "interrupted", "agent": "ajcrew-conductor"},
           "row": {"mode": "", "surface": "", "running": false, "interrupted": true, "subagents_running": false, "executor": "local"}
         },
         {
@@ -129,7 +129,7 @@
       "slots": [
         {
           "key": "conductor",
-          "facts": {"transcript": "interrupted", "agent": "kirocrew-conductor"},
+          "facts": {"transcript": "interrupted", "agent": "ajcrew-conductor"},
           "row": {"mode": "", "surface": "", "running": false, "interrupted": true, "subagents_running": false, "executor": "local"}
         },
         {
@@ -156,7 +156,7 @@
       "slots": [
         {
           "key": "conductor",
-          "facts": {"transcript": "finished", "agent": "kirocrew-conductor", "under_construction": true},
+          "facts": {"transcript": "finished", "agent": "ajcrew-conductor", "under_construction": true},
           "row": null
         },
         {

@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.config import loader as cfg_loader
+from aj_crew.config import loader as cfg_loader
 
 #: Bounded so a regression fails the test instead of hanging the suite.
 _TIMEOUT = 30.0
@@ -54,7 +54,7 @@ def cfg_file(tmp_path: Path) -> Path:
 class TestAppsManagerTrustRevoke:
     """``apps.manager._drop_trust_grant`` -- the CLI-side uninstall writer.
 
-    It runs synchronously in the ``kirocrew`` CLI process and in the dashboard's
+    It runs synchronously in the ``ajcrew`` CLI process and in the dashboard's
     ``subprocess_executor()`` worker thread. Neither can take the loop's asyncio
     lock, so the sidecar is the only thing that can serialize it against a
     settings write.
@@ -69,7 +69,7 @@ class TestAppsManagerTrustRevoke:
         holding the sidecar; writer B (the trust revoke) must wait and re-read inside
         its own hold, or one change is lost.
         """
-        from kiro_crew.apps import manager as appmanager
+        from aj_crew.apps import manager as appmanager
 
         monkeypatch.setattr(appmanager, "config_path", lambda: cfg_file)
         monkeypatch.setattr(appmanager, "config_local_path", lambda: cfg_file.parent / "local.json")
@@ -147,7 +147,7 @@ class TestAppsManagerTrustRevoke:
         sidecar exists pins that the revoke reached the primitive at all, which
         the interleave test above can only show indirectly.
         """
-        from kiro_crew.apps import manager as appmanager
+        from aj_crew.apps import manager as appmanager
 
         monkeypatch.setattr(appmanager, "config_path", lambda: cfg_file)
         monkeypatch.setattr(appmanager, "config_local_path", lambda: cfg_file.parent / "local.json")
@@ -170,7 +170,7 @@ class TestAppsManagerTrustRevoke:
         every setting the file holds -- the exact loss ``read_config_for_update``
         exists to prevent -- and the old code raised here for the same reason.
         """
-        from kiro_crew.apps import manager as appmanager
+        from aj_crew.apps import manager as appmanager
 
         monkeypatch.setattr(appmanager, "config_path", lambda: cfg_file)
         monkeypatch.setattr(appmanager, "config_local_path", lambda: cfg_file.parent / "local.json")
@@ -204,7 +204,7 @@ class TestSetupWizardWriters:
         step's own read and strictly before its write. That is the interleave in
         its exact worst case, with no timing to be flaky about.
         """
-        from kiro_crew import cli_setup
+        from aj_crew import cli_setup
 
         monkeypatch.setattr(cli_setup, "config_path", lambda: cfg_file)
 
@@ -234,7 +234,7 @@ class TestSetupWizardWriters:
         self, cfg_file: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Same window on the step with the most prompts, hence the widest one."""
-        from kiro_crew import cli_setup
+        from aj_crew import cli_setup
 
         monkeypatch.setattr(cli_setup, "config_path", lambda: cfg_file)
 
@@ -273,7 +273,7 @@ class TestAForeignSectionIsNeverReplaced:
     def test_the_slash_command_step_leaves_a_scalar_slack_section_alone(
         self, cfg_file: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        from kiro_crew import cli_setup
+        from aj_crew import cli_setup
 
         monkeypatch.setattr(cli_setup, "config_path", lambda: cfg_file)
         monkeypatch.setattr(cli_setup, "_input_or_skip", lambda _prompt: "zibble-cmd")
@@ -293,7 +293,7 @@ class TestAForeignSectionIsNeverReplaced:
     def test_the_slash_command_step_still_creates_an_absent_slack_section(
         self, cfg_file: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import cli_setup
+        from aj_crew import cli_setup
 
         monkeypatch.setattr(cli_setup, "config_path", lambda: cfg_file)
         monkeypatch.setattr(cli_setup, "_input_or_skip", lambda _prompt: "zibble-cmd")
@@ -308,7 +308,7 @@ class TestAForeignSectionIsNeverReplaced:
     def test_the_dashboard_url_step_leaves_a_scalar_dashboard_section_alone(
         self, cfg_file: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        from kiro_crew import cli_setup
+        from aj_crew import cli_setup
 
         monkeypatch.setattr(cli_setup, "config_path", lambda: cfg_file)
         self._seed(cfg_file, "not-an-object", "dashboard")
@@ -320,7 +320,7 @@ class TestAForeignSectionIsNeverReplaced:
             "SLACK_APP_TOKEN": "xapp-fake",
             "SLACK_BOT_TOKEN": "xoxb-fake",
         }
-        monkeypatch.setattr(cli_setup.KiroCrewConfig, "load", staticmethod(lambda: loaded))
+        monkeypatch.setattr(cli_setup.AjCrewConfig, "load", staticmethod(lambda: loaded))
         monkeypatch.setattr(cli_setup.socket, "gethostbyname", lambda _h: "10.0.0.1")
         monkeypatch.setattr(cli_setup.socket, "gethostname", lambda: "zibble-host")
         monkeypatch.setattr("builtins.input", lambda _prompt: "http://zibble-host:5476")
@@ -336,7 +336,7 @@ class TestAForeignSectionIsNeverReplaced:
     def test_the_dashboard_url_step_still_creates_an_absent_dashboard_section(
         self, cfg_file: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import cli_setup
+        from aj_crew import cli_setup
 
         monkeypatch.setattr(cli_setup, "config_path", lambda: cfg_file)
         cfg_file.write_text(json.dumps({"model": "sonnet"}), encoding="utf-8")
@@ -347,7 +347,7 @@ class TestAForeignSectionIsNeverReplaced:
             "SLACK_APP_TOKEN": "xapp-fake",
             "SLACK_BOT_TOKEN": "xoxb-fake",
         }
-        monkeypatch.setattr(cli_setup.KiroCrewConfig, "load", staticmethod(lambda: loaded))
+        monkeypatch.setattr(cli_setup.AjCrewConfig, "load", staticmethod(lambda: loaded))
         monkeypatch.setattr(cli_setup.socket, "gethostbyname", lambda _h: "10.0.0.1")
         monkeypatch.setattr(cli_setup.socket, "gethostname", lambda: "zibble-host")
         monkeypatch.setattr("builtins.input", lambda _prompt: "http://zibble-host:5476")
@@ -371,7 +371,7 @@ class TestTheSeedWritesNoMetaBlock:
     def test_the_seed_adds_no_meta_key(
         self, cfg_file: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import cli_chat
+        from aj_crew import cli_chat
 
         monkeypatch.setattr(cli_chat, "config_path", lambda: cfg_file)
         cfg_file.write_text(json.dumps({"model": "sonnet"}), encoding="utf-8")
@@ -379,7 +379,7 @@ class TestTheSeedWritesNoMetaBlock:
         cli_chat._ensure_default_agent_in_config()
 
         on_disk = json.loads(cfg_file.read_text(encoding="utf-8"))
-        assert on_disk["agents"]["default"]["kiro_agent"] == "kirocrew"
+        assert on_disk["agents"]["default"]["kiro_agent"] == "ajcrew"
         assert on_disk["default_agent"] == "default"
         assert "meta" not in on_disk, (
             "the default-agent seed stamped a meta block -- the writer it "
@@ -391,7 +391,7 @@ class TestTheSeedWritesNoMetaBlock:
         self, cfg_file: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """mutate returns None, so the file is not rewritten at all."""
-        from kiro_crew import cli_chat
+        from aj_crew import cli_chat
 
         monkeypatch.setattr(cli_chat, "config_path", lambda: cfg_file)
         cfg_file.write_text(
@@ -424,7 +424,7 @@ class TestARestoredGrantIsNotDuplicated:
         has been answered and strictly before its acquire. That is the window in
         its exact worst case, with no timing to be flaky about.
         """
-        from kiro_crew.apps import manager as appmanager
+        from aj_crew.apps import manager as appmanager
 
         monkeypatch.setattr(appmanager, "config_path", lambda: cfg_file)
         monkeypatch.setattr(appmanager, "config_local_path", lambda: cfg_file.parent / "local.json")
@@ -468,7 +468,7 @@ class TestARestoredGrantIsNotDuplicated:
         self, cfg_file: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The ordinary path is unchanged: absent means append."""
-        from kiro_crew.apps import manager as appmanager
+        from aj_crew.apps import manager as appmanager
 
         monkeypatch.setattr(appmanager, "config_path", lambda: cfg_file)
         monkeypatch.setattr(appmanager, "config_local_path", lambda: cfg_file.parent / "local.json")

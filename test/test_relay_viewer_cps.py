@@ -18,8 +18,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestServer
 from relay_client_helpers import fixture
 
-from kiro_crew.relay_viewer import cps
-from kiro_crew.relay_viewer.cps import CpsRefused, create_crew_access_token, list_crew_endpoints
+from aj_crew.relay_viewer import cps
+from aj_crew.relay_viewer.cps import CpsRefused, create_crew_access_token, list_crew_endpoints
 
 pytestmark = pytest.mark.asyncio
 
@@ -456,7 +456,7 @@ async def test_a_set_value_that_is_not_a_domain_lists_nothing_and_says_why(
     body = page(1)
     body["crewEndpoints"].insert(0, page(0)["crewEndpoints"][0])
     fake.answer(200, body)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew"):
         assert await list_crew_endpoints(fake.url, BEARER, crew_domain=domain) == ()
     warnings = [r.getMessage() for r in caplog.records if "unusable Crew list" in r.getMessage()]
     assert warnings and "tunnel.relay_viewer_relay_domain is set" in warnings[0]
@@ -469,7 +469,7 @@ async def test_with_no_domain_the_dropped_row_warning_names_no_setting(
     body = page(1)
     body["crewEndpoints"].insert(0, LIST["unusableEntries"][0]["entry"])
     fake.answer(200, body)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew"):
         await list_crew_endpoints(fake.url, BEARER)
     assert "unusable Crew list" in caplog.text
     assert "relay_viewer_relay_domain" not in caplog.text

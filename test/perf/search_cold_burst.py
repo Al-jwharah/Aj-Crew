@@ -6,7 +6,7 @@
 <mode> is ``same`` (six callers, one query) or ``distinct`` (six queries), with
 an optional ``+warm`` suffix that calls ``ConversationLog.warm_search`` first
 (this branch only). Run each arm as its own process with PYTHONPATH=<tree>/src
-and an isolated KIROCREW_HOME, alternating arms within each round.
+and an isolated AJCREW_HOME, alternating arms within each round.
 """
 
 from __future__ import annotations
@@ -19,8 +19,8 @@ import threading
 import time
 from pathlib import Path
 
-import kiro_crew
-from kiro_crew.history import ConversationLog
+import aj_crew
+from aj_crew.history import ConversationLog
 
 WORDS = (
     "deploy pipeline gateway memory session search index cache latency render "
@@ -83,7 +83,7 @@ def run(path: str, mode: str) -> dict:
             log.search_sessions(q, 50)
             warm.append(time.perf_counter() - t)
     return {
-        "src": kiro_crew.__file__,
+        "src": aj_crew.__file__,
         "mode": mode,
         "warm_search_s": round(warmed, 3),
         "burst_wall_s": round(wall, 3),

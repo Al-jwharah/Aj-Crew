@@ -2,7 +2,7 @@
 
 import pytest
 
-from kiro_crew.notifications.bus import (
+from aj_crew.notifications.bus import (
     SYSTEM_CHANNELS,
     NotificationBus,
     NotificationPayload,

@@ -10,10 +10,10 @@ import threading
 
 import pytest
 
-from kiro_crew.testing.wait import await_until
-from kiro_crew.workflows.registry import RunHandle, RunRegistry
-from kiro_crew.workflows.runner import WorkflowRunner
-from kiro_crew.workflows.service import WorkflowService
+from aj_crew.testing.wait import await_until
+from aj_crew.workflows.registry import RunHandle, RunRegistry
+from aj_crew.workflows.runner import WorkflowRunner
+from aj_crew.workflows.service import WorkflowService
 
 pytestmark = pytest.mark.asyncio
 NOW = "2026-09-14T00:00:00Z"

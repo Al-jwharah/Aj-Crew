@@ -15,16 +15,16 @@ superseded-by: []
 # RFC: Pipeline Conductor — the issue pipelines as a conductor use case
 
 > **Partly shipped — see the `pipeline-conductor` skill at
-> [`builtin_skills/pipeline-conductor/SKILL.md`](../../src/kiro_crew/builtin_skills/pipeline-conductor/SKILL.md)
+> [`builtin_skills/pipeline-conductor/SKILL.md`](../../src/aj_crew/builtin_skills/pipeline-conductor/SKILL.md)
 > for what runs today, and [`../system-specs/modules/pipeline-conductor.md`](../system-specs/modules/pipeline-conductor.md)
-> for the contract.** M0 is on main: the `kirocrew-pipeline-conductor` agent is
+> for the contract.** M0 is on main: the `ajcrew-pipeline-conductor` agent is
 > registered in `subagent_parts/agent_policy.py`'s `UNADVERTISED_AGENTS`, and the skill ships with its
 > bundled scripts and the `conductor-status/v1` schema. M1's `PipelineSpec` and
 > SQLite event store, M2's adjudication and SLA machinery, and M3's baking,
 > compensation and per-repo objects are unbuilt — `PipelineSpec` has no code hit
 > outside this document — and five decisions below are still open.
 
-A dedicated `kirocrew-pipeline-conductor` agent and a `pipeline-conductor` builtin skill that run a
+A dedicated `ajcrew-pipeline-conductor` agent and a `pipeline-conductor` builtin skill that run a
 repository pipeline as a supervised worker fleet. The skill is the operating procedure of record;
 this document carries the intent and the decisions.
 
@@ -40,13 +40,13 @@ carries the judgment.
 
 ## Why
 
-Kiro Crew's issue-fixing automation today is three open-loop pipelines (issue → new PR, red PR →
+Aj Crew's issue-fixing automation today is three open-loop pipelines (issue → new PR, red PR →
 green, green PR → merge). They are **agentic workflows wrapped in deterministic scripts**: cron
 scanners and dispatchers own the control flow; agent sessions do the work inside it. The AI-native
 shape is the inversion — **deterministic scripts wrapped in an agentic control plane**, which is
 exactly agent + agent skills.
 
-The refactor is feasible now because most of the conductor architecture already exists in Kiro
+The refactor is feasible now because most of the conductor architecture already exists in Aj
 Crew (see the facts below). What is missing is a conductor **specialized to run a pipeline**, and
 the operating procedure that encodes how.
 
@@ -76,9 +76,9 @@ With a conductor the human appears exactly twice: the merge click, and genuine d
 
 ## Verified facts this plan rests on
 
-- The conductor pattern is already shipped: `kirocrew-conductor` is a generated agent spec, built
+- The conductor pattern is already shipped: `ajcrew-conductor` is a generated agent spec, built
   at gateway boot, with per-verb dashboard grants and installer tests.
-- The session-control surface exists: the `kirocrew-dashboard` MCP server (session
+- The session-control surface exists: the `ajcrew-dashboard` MCP server (session
   create/read/send/stop, chat folders), opt-in per agent.
 - The patrol loop exists (`monitor_start`, deadline-preserving, survives gateway restarts), as do
   the durable session ledger and live host posture (`resource_status`: ample/tight/critical).
@@ -92,7 +92,7 @@ With a conductor the human appears exactly twice: the merge click, and genuine d
 
 ## The agent
 
-`kirocrew-pipeline-conductor` follows the generated-agent pattern of `kirocrew-conductor` and its
+`ajcrew-pipeline-conductor` follows the generated-agent pattern of `ajcrew-conductor` and its
 security invariants:
 
 - **No file-writing tool** (`fs_write`, `code` absent): never doing a work item's work itself is a
@@ -282,7 +282,7 @@ the run instead of defaulting.
 
 ## Phases
 
-- **M0** — the agent and the harness: the generated `kirocrew-pipeline-conductor` spec (installer,
+- **M0** — the agent and the harness: the generated `ajcrew-pipeline-conductor` spec (installer,
   filename constant, roster hiding, docs registry, installer tests mirroring the existing
   conductor's) and the `pipeline-conductor` builtin skill with its scripts, behavior pinned by
   tests (claim verdict precedence, probe classification, handled-set suppression, key containment,

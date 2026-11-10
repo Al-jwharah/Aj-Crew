@@ -93,7 +93,7 @@ VERDICT_RE = re.compile(r"^\s*VERDICT:\s*(PASS|FAIL)\b", re.IGNORECASE | re.MULT
 #: reset keys and PATCHes on that slot name; keying on the stem would miss on
 #: every attempt.
 SEEDED_SLOT_TITLES: dict[str, str] = {
-    "starter": "Welcome to KiroCrew",  # brand-ok: verbatim seeded fixture title
+    "starter": "Welcome to AjCrew",  # brand-ok: verbatim seeded fixture title
 }
 
 

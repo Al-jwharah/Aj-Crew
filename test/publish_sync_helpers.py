@@ -13,9 +13,9 @@ import os
 
 import pytest
 
-from kiro_crew import publish_provider, publish_sync
-from kiro_crew.artifacts import ArtifactStore
-from kiro_crew.publish_provider import (
+from aj_crew import publish_provider, publish_sync
+from aj_crew.artifacts import ArtifactStore
+from aj_crew.publish_provider import (
     Capability,
     PublishError,
     PublishProvider,

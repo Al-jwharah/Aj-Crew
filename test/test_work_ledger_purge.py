@@ -18,8 +18,8 @@ import pytest
 import work_ledger_helpers
 from work_ledger_helpers import CONDUCTOR, WORKER, _new_item
 
-from kiro_crew import platform_compat
-from kiro_crew import work_ledger as wl
+from aj_crew import platform_compat
+from aj_crew import work_ledger as wl
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _isolated_home = work_ledger_helpers._isolated_home
@@ -617,7 +617,7 @@ def test_a_writer_queued_behind_a_purge_refuses_instead_of_publishing():
     lock_path = directory / ".lock"
     import shutil
 
-    from kiro_crew import session_ledger as sl
+    from aj_crew import session_ledger as sl
 
     with open(lock_path, "r+") as handle:
         # The purge runs to completion "while this writer waits": the store and
@@ -637,7 +637,7 @@ def test_a_writer_queued_behind_a_purge_refuses_instead_of_publishing():
 def test_every_store_lock_runs_the_inode_check_after_acquiring(monkeypatch):
     """The check is wired into ``_open_lock`` itself, so no store lock -- conductor,
     item or binding -- can be taken without it."""
-    from kiro_crew import session_ledger as sl
+    from aj_crew import session_ledger as sl
 
     seen: list[str] = []
     real = sl.require_lock_inode

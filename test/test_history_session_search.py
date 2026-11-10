@@ -12,9 +12,9 @@ import os
 
 import pytest
 
-from kiro_crew import history, history_search
-from kiro_crew.history import ConversationLog
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import history, history_search
+from aj_crew.history import ConversationLog
+from aj_crew.testing.clock import ManualClock
 
 
 class TestSearchSessions:
@@ -70,14 +70,14 @@ class TestSearchSessions:
     def test_matches_query_with_json_escaped_chars(self, tmp_path):
         """Query containing backslash/quote must match despite JSON escaping.
 
-        Regression: file paths like ``src\\kiro_crew`` are stored in JSONL
-        as ``src\\\\kiro_crew`` (escaped).  A raw-line substring fast-path
+        Regression: file paths like ``src\\aj_crew`` are stored in JSONL
+        as ``src\\\\aj_crew`` (escaped).  A raw-line substring fast-path
         would miss them; parsing every line ensures the needle is compared
         against the un-escaped ``content`` value.
         """
         log = ConversationLog(base_dir=tmp_path)
-        log.append("alpha", "user", r"edited src\kiro_crew\history.py today")
-        results = log.search_sessions(r"src\kiro_crew")
+        log.append("alpha", "user", r"edited src\aj_crew\history.py today")
+        results = log.search_sessions(r"src\aj_crew")
         assert [s["key"] for s in results] == ["alpha"]
 
     def test_case_insensitive_unicode(self, tmp_path):
@@ -414,7 +414,7 @@ class TestSearchSessions:
         Files outside the window must not appear in results even if they
         would score higher, bounding per-search I/O.
         """
-        monkeypatch.setattr("kiro_crew.history._SEARCH_SCAN_WINDOW", 2)
+        monkeypatch.setattr("aj_crew.history._SEARCH_SCAN_WINDOW", 2)
         log = ConversationLog(base_dir=tmp_path)
         # Oldest: strong match (would win on score if scanned)
         log.append("old-strong", "user", "apollo apollo apollo apollo apollo")
@@ -715,11 +715,11 @@ class TestCjkSearch:
         assert [s["key"] for s in log.search_sessions(query)] == ["longhit"]
 
     def test_mixed_script_token_splits_at_script_boundary(self, tmp_path):
-        """\"kirocrew部署" matches a doc where the ASCII and CJK parts sit apart."""
-        self._write_cjk_session(tmp_path, "hit", "kirocrew 的部署流程记录")
+        """\"ajcrew部署" matches a doc where the ASCII and CJK parts sit apart."""
+        self._write_cjk_session(tmp_path, "hit", "ajcrew 的部署流程记录")
         log = ConversationLog(base_dir=tmp_path)
 
-        results = log.search_sessions("kirocrew部署")
+        results = log.search_sessions("ajcrew部署")
 
         assert [s["key"] for s in results] == ["hit"]
 

@@ -25,9 +25,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.crew_log import store, store_units
-from kiro_crew.crew_log.schema import KIND_SESSION
-from kiro_crew.crew_log.store import CrewLog
+from aj_crew.crew_log import store, store_units
+from aj_crew.crew_log.schema import KIND_SESSION
+from aj_crew.crew_log.store import CrewLog
 
 SLOT = "chat-cache"
 _DAY_NS = 86_400 * 1_000_000_000
@@ -57,7 +57,7 @@ def _root() -> Path:
 
 
 def _create(unit_id: str, slot: str = SLOT) -> None:
-    CrewLog.create(KIND_SESSION, unit_id, owner="owner", agent="kirocrew", slot=slot)
+    CrewLog.create(KIND_SESSION, unit_id, owner="owner", agent="ajcrew", slot=slot)
 
 
 @pytest.fixture
@@ -282,9 +282,9 @@ def test_a_unit_another_process_creates_or_removes_is_seen_on_the_next_read(
     settled = len(listings)
 
     _child(
-        "from kiro_crew.crew_log.store import CrewLog\n"
-        "from kiro_crew.crew_log.schema import KIND_SESSION\n"
-        f"CrewLog.create(KIND_SESSION, 'acp-child', owner='owner', agent='kirocrew', slot={SLOT!r})\n",
+        "from aj_crew.crew_log.store import CrewLog\n"
+        "from aj_crew.crew_log.schema import KIND_SESSION\n"
+        f"CrewLog.create(KIND_SESSION, 'acp-child', owner='owner', agent='ajcrew', slot={SLOT!r})\n",
         tmp_path,
     )
     assert set(store.session_units_for_slot(SLOT)) == {"acp-parent", "acp-child"}
@@ -292,8 +292,8 @@ def test_a_unit_another_process_creates_or_removes_is_seen_on_the_next_read(
 
     assert set(_confirm(clock)[SLOT]) == {"acp-parent", "acp-child"}
     _child(
-        "from kiro_crew.crew_log import store\n"
-        "from kiro_crew.crew_log.schema import KIND_SESSION\n"
+        "from aj_crew.crew_log import store\n"
+        "from aj_crew.crew_log.schema import KIND_SESSION\n"
         "assert store.remove_unit(KIND_SESSION, 'acp-child', guard=lambda _p: True)"
         " == store.REMOVE_REMOVED\n",
         tmp_path,
@@ -325,7 +325,7 @@ BOARD_UNIT = "acp-cache-board"
 
 def _board_work(**fields: Any) -> None:
     """One ``work/recorded`` on BOARD's board, appended and acknowledged."""
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import emit as crew_log_emit
 
     payload: dict[str, Any] = {"slot": BOARD, "actor": "conductor", "by": BOARD}
     payload.update(fields)
@@ -347,12 +347,12 @@ def _append_item(index: int) -> None:
 def eager_board(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """A board in its own data home, with the eager thread silenced so the test drives
     each pass itself and counts only that pass's work."""
-    from kiro_crew.crew_log import eager as crew_log_eager
-    from kiro_crew.crew_log import emit as crew_log_emit
-    from kiro_crew.crew_log import projection as crew_log_projection
+    from aj_crew.crew_log import eager as crew_log_eager
+    from aj_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import projection as crew_log_projection
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     monkeypatch.setattr(crew_log_eager, "note_commit", lambda *a, **k: None)
     crew_log_emit.reset_caches()
     crew_log_eager.stop_for_tests()
@@ -371,8 +371,8 @@ def test_eager_passes_after_appends_do_not_list_the_unit_root_again(
 ) -> None:
     """K appends on an unchanged unit set, each followed by the eager pass that folds
     *fold*: once the listing is confirmed, no pass lists the unit root."""
-    from kiro_crew.crew_log import eager as crew_log_eager
-    from kiro_crew.crew_log import slot_prime
+    from aj_crew.crew_log import eager as crew_log_eager
+    from aj_crew.crew_log import slot_prime
 
     # A pass can hand a cold prime to a background thread that lists the unit root
     # later, so every count is read only once no prime is queued or running.
@@ -412,15 +412,15 @@ def test_the_suite_teardown_forgets_the_index_between_tests(
     The suite's teardown must drop the index between tests, or a unit of the same id
     is filed under the slot the earlier test's header named."""
     pytester.makepyfile(f"""
-        from kiro_crew.crew_log import store_units
-        from kiro_crew.crew_log.schema import KIND_SESSION
-        from kiro_crew.crew_log.store import CrewLog
+        from aj_crew.crew_log import store_units
+        from aj_crew.crew_log.schema import KIND_SESSION
+        from aj_crew.crew_log.store import CrewLog
 
         def _create(slot):
-            CrewLog.create(KIND_SESSION, "reused", owner="owner", agent="kirocrew", slot=slot)
+            CrewLog.create(KIND_SESSION, "reused", owner="owner", agent="ajcrew", slot=slot)
 
         def test_fills_the_index(monkeypatch, tmp_path):
-            monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+            monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
             _create("earlier-test")
             assert store_units.session_units_by_slot() == {{"earlier-test": ("reused",)}}
             assert store_units._PROVED_ROWS[0] is not None
@@ -429,7 +429,7 @@ def test_the_suite_teardown_forgets_the_index_between_tests(
             assert store_units._slot_index is None
             assert store_units._PROVED_ROWS[0] is None
             assert store_units._SLOT_INDEX_TRUST[0] is None
-            monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+            monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
             _create({SLOT!r})
             assert store_units.session_units_by_slot() == {{{SLOT!r}: ("reused",)}}
         """)

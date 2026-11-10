@@ -14,7 +14,7 @@ import pytest
 from member_memory_helpers import env as _member_env
 from vector_memory_coverage_helpers import _store
 
-from kiro_crew.vector_memory_runtime import episodic_search
+from aj_crew.vector_memory_runtime import episodic_search
 
 env = _member_env
 

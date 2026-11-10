@@ -23,10 +23,10 @@ from member_memory_helpers import (
     write_member_home,
 )
 
-from kiro_crew import member_memory_backup as member_backup
-from kiro_crew import memory_backup, memory_stores, platform_compat, platform_owner_compat
-from kiro_crew.config import loader
-from kiro_crew.vector_memory import VectorMemoryStore, open_member_database
+from aj_crew import member_memory_backup as member_backup
+from aj_crew import memory_backup, memory_stores, platform_compat, platform_owner_compat
+from aj_crew.config import loader
+from aj_crew.vector_memory import VectorMemoryStore, open_member_database
 
 pytestmark = pytest.mark.xdist_group("member_memory_backup")
 
@@ -52,7 +52,7 @@ def cyclic_gc_quiesced():
 
 @pytest.fixture
 def env(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     write_member_home(tmp_path, *MEMBERS)
     forget_declared_stores(monkeypatch)
     paths = {
@@ -152,7 +152,7 @@ def test_journal_permission_failure_precedes_content_and_allows_retry(env, monke
 
 
 def test_cli_stages_lost_member_directory_recovery_without_touching_another_member(env, capsys):
-    from kiro_crew.cli_commands import _memory_backup_cmd
+    from aj_crew.cli_commands import _memory_backup_cmd
 
     path = env.paths["alice"]
     backup = memory_backup.backup_store(path)
@@ -425,8 +425,8 @@ def test_pending_restore_refuses_an_open_v2_generation(env):
 
 @pytest.mark.asyncio
 async def test_member_document_facade_open_holds_restore_admission(env):
-    from kiro_crew.context import cached_vector_store_entries, release_cached_memory_store
-    from kiro_crew.dashboard.handlers._shared import (
+    from aj_crew.context import cached_vector_store_entries, release_cached_memory_store
+    from aj_crew.dashboard.handlers._shared import (
         markdown_memory_for_store,
         release_markdown_memory_store,
     )
@@ -628,7 +628,7 @@ def test_cancel_commits_before_best_effort_stage_cleanup(env, monkeypatch):
 
 
 def test_cli_cancel_reports_unchanged_active_memory(env, capsys):
-    from kiro_crew.cli_commands import _memory_backup_cmd
+    from aj_crew.cli_commands import _memory_backup_cmd
 
     path = env.paths["alice"]
     backup = memory_backup.backup_store(path)
@@ -760,7 +760,7 @@ def test_pending_activation_holds_namespace_while_publishing(env, monkeypatch, w
 
 def _declare_member_without_creating_it(tmp_path, monkeypatch) -> Path:
     """Declare ``member-alice`` in config only, leaving nothing on disk. Return its db path."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     config = {
         "memory_stores": {"default": {}, "member-alice": member_manifest("alice")},
         "agents": {"alice": {"memory_store": "member-alice", "member_id": "alice"}},

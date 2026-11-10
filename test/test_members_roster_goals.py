@@ -1,5 +1,5 @@
 """The roster row's goal facts (``has_goal``, ``heartbeat_on``) and the refresh that
-keeps them current (``kiro_crew.dashboard.members_roster_goals``).
+keeps them current (``aj_crew.dashboard.members_roster_goals``).
 
 Pinned here:
 
@@ -24,9 +24,9 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 from member_goals_helpers import ORDINARY
 
-from kiro_crew import member_goals
-from kiro_crew.config.loader import KiroCrewAgentConfig
-from kiro_crew.dashboard import members_roster_goals
+from aj_crew import member_goals
+from aj_crew.config.loader import AjCrewAgentConfig
+from aj_crew.dashboard import members_roster_goals
 
 
 def test_no_record_reads_as_no_goal_and_heartbeat_off() -> None:
@@ -75,7 +75,7 @@ def test_an_unreadable_record_costs_the_row_its_facts_not_the_roster_its_answer(
 
 
 def _members_app(state) -> web.Application:
-    from kiro_crew.dashboard.handlers.members import api_members
+    from aj_crew.dashboard.handlers.members import api_members
 
     @web.middleware
     async def _auth(request: web.Request, handler):
@@ -94,7 +94,7 @@ def _owner_caller(_floor_monkeypatch):
     # The floor's own MonkeyPatch (D11): a test's `monkeypatch.undo()` must not
     # lift this patch.
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
@@ -103,9 +103,9 @@ def _owner_caller(_floor_monkeypatch):
 async def test_the_roster_ships_both_facts_on_every_row(tmp_path) -> None:
     fake = SimpleNamespace(
         agents={
-            "oncall": KiroCrewAgentConfig(kiro_agent="kirocrew"),
-            "scribe": KiroCrewAgentConfig(kiro_agent="kirocrew"),
-            "idle": KiroCrewAgentConfig(kiro_agent="kirocrew"),
+            "oncall": AjCrewAgentConfig(kiro_agent="ajcrew"),
+            "scribe": AjCrewAgentConfig(kiro_agent="ajcrew"),
+            "idle": AjCrewAgentConfig(kiro_agent="ajcrew"),
         },
         default_agent="oncall",
         memory_stores={},
@@ -115,7 +115,7 @@ async def test_the_roster_ships_both_facts_on_every_row(tmp_path) -> None:
     member_goals.set_schedules("oncall", "oncall", {"heartbeat": True})
     member_goals.set_goal("scribe", "scribe", "Ship the notes", by="user")
     state = _make_state(tmp_path)
-    with patch("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", return_value=fake):
+    with patch("aj_crew.dashboard.handlers.members.AjCrewConfig.load", return_value=fake):
         async with TestClient(TestServer(_members_app(state))) as client:
             resp = await client.get("/api/members")
             assert resp.status == 200

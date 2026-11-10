@@ -1,4 +1,4 @@
-"""Unit coverage for :mod:`kiro_crew.apps.backend`: what the spawn body launches.
+"""Unit coverage for :mod:`aj_crew.apps.backend`: what the spawn body launches.
 
 Covers Node / npm resolution, interpreter resolution in ``apps/interpreter.py``, the
 Node and ASGI dispatch and the spawn's ``Popen`` tail. Shared doubles and fixtures
@@ -25,9 +25,9 @@ from apps_backend_coverage_helpers import (
     _StopSpawn,
 )
 
-import kiro_crew.apps.backend as bmod
+import aj_crew.apps.backend as bmod
 from conftest import requires_symlinks
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 # Node / npm binary resolution
 
@@ -215,7 +215,7 @@ def probe_sandbox_passthrough(monkeypatch: pytest.MonkeyPatch) -> None:
     sys.prefix ownership and ABI match against a real venv interpreter - so
     the seams are passed through and the child runs directly.
     """
-    from kiro_crew.apps import interpreter as imod
+    from aj_crew.apps import interpreter as imod
 
     monkeypatch.setattr(imod.sandbox, "wrap_argv", lambda argv, **_k: (list(argv), None))
     monkeypatch.setattr(imod.sandbox, "cgroup_scope_argv", lambda argv: list(argv))
@@ -225,7 +225,7 @@ def probe_sandbox_passthrough(monkeypatch: pytest.MonkeyPatch) -> None:
 def _plant_stamp(app_root: Any) -> None:
     """Command selection requires a CURRENT stamp (stale trees crash at
     import); fixtures that expect deps-dir scripts to resolve plant one."""
-    from kiro_crew.apps.interpreter import app_deps_dir as _add
+    from aj_crew.apps.interpreter import app_deps_dir as _add
 
     d = _add(app_root)
     d.mkdir(parents=True, exist_ok=True)
@@ -234,7 +234,7 @@ def _plant_stamp(app_root: Any) -> None:
 
 class TestInterpreterResolution:
     def _venv_python(self, root: Any) -> Any:
-        from kiro_crew.apps.interpreter import venv_python_path
+        from aj_crew.apps.interpreter import venv_python_path
 
         return venv_python_path(root)
 
@@ -245,7 +245,7 @@ class TestInterpreterResolution:
         return self._venv_python(root)
 
     def test_a_real_venv_is_preferred(self, tmp_path: Any, probe_sandbox_passthrough: Any) -> None:
-        from kiro_crew.apps.interpreter import resolve_app_python
+        from aj_crew.apps.interpreter import resolve_app_python
 
         py = self._real_venv(tmp_path)
         assert resolve_app_python(tmp_path) == str(py)
@@ -258,7 +258,7 @@ class TestInterpreterResolution:
         and whose pyvenv.cfg names the current minor version - a version
         check ACCEPTS it, but its sys.prefix is not this venv (no working
         environment), so the probe rejects it."""
-        from kiro_crew.apps.interpreter import resolve_app_python
+        from aj_crew.apps.interpreter import resolve_app_python
 
         # A stub interpreter that starts but is NOT the venv's own python
         # (its sys.prefix will not point inside <root>/.venv).
@@ -272,7 +272,7 @@ class TestInterpreterResolution:
         assert resolve_app_python(tmp_path) == sys.executable
 
     def test_a_venv_without_an_interpreter_is_not_preferred(self, tmp_path: Any) -> None:
-        from kiro_crew.apps.interpreter import resolve_app_python
+        from aj_crew.apps.interpreter import resolve_app_python
 
         (tmp_path / ".venv").mkdir()
         assert resolve_app_python(tmp_path) == sys.executable
@@ -283,7 +283,7 @@ class TestInterpreterResolution:
         """The probe executable is app-controlled, so it must receive the
         same sanitized environment every app subprocess gets - never the
         gateway's own, which can carry credentials."""
-        from kiro_crew.apps import interpreter as imod
+        from aj_crew.apps import interpreter as imod
 
         _create_real_venv(tmp_path)
         monkeypatch.setenv("GATEWAY_SECRET_CANARY", "leak-me")
@@ -306,7 +306,7 @@ class TestInterpreterResolution:
         OS sandbox; a host where wrap_argv fail-closes (no backend) gets no
         positive evidence and falls back to sys.executable - the exception
         must never propagate into spawn or registration."""
-        from kiro_crew.apps import interpreter as imod
+        from aj_crew.apps import interpreter as imod
 
         _create_real_venv(tmp_path)
 
@@ -327,7 +327,7 @@ class TestInterpreterResolution:
         py.parent.mkdir(parents=True)
         py.write_text("#!/bin/sh\necho '[null, %d, %d]'\n" % sys.version_info[:2])
         py.chmod(0o755)
-        from kiro_crew.apps import interpreter as imod
+        from aj_crew.apps import interpreter as imod
 
         assert imod._venv_is_usable(tmp_path) is False
         assert imod.resolve_app_python(tmp_path) == sys.executable
@@ -342,7 +342,7 @@ class TestInterpreterResolution:
         import sys as _sys
         from unittest import mock
 
-        from kiro_crew.apps import interpreter as imod
+        from aj_crew.apps import interpreter as imod
 
         (tmp_path / "requirements.txt").write_bytes(b"uvicorn\n")
         # No tree + usable venv: the venv wins (the F2 fallback).
@@ -416,8 +416,8 @@ class TestInterpreterResolution:
         """pip --target puts console scripts in <target>/bin (Scripts on
         Windows); the resolver must find them there now that the gateway never
         creates the venv layout that carries them on real installs."""
-        from kiro_crew import platform_compat as _pc
-        from kiro_crew.apps.interpreter import app_deps_dir, venv_provided_command
+        from aj_crew import platform_compat as _pc
+        from aj_crew.apps.interpreter import app_deps_dir, venv_provided_command
 
         scripts = "Scripts" if _pc.IS_WINDOWS else "bin"
         name = "my-tool.exe" if _pc.IS_WINDOWS else "my-tool"
@@ -428,9 +428,9 @@ class TestInterpreterResolution:
         assert venv_provided_command(tmp_path, "my-tool") == str(script)
 
     def test_provisioned_deps_pin_the_gateway_interpreter(self, tmp_path: Any) -> None:
-        """Once the gateway provisioned .kirocrew-deps, those wheels were
+        """Once the gateway provisioned .ajcrew-deps, those wheels were
         built by sys.executable, so the venv is not consulted at all."""
-        from kiro_crew.apps.interpreter import app_deps_dir, resolve_app_python
+        from aj_crew.apps.interpreter import app_deps_dir, resolve_app_python
 
         self._real_venv(tmp_path)
         app_deps_dir(tmp_path).mkdir(parents=True)
@@ -441,8 +441,8 @@ class TestInterpreterResolution:
     def test_a_venv_console_script_wins_only_without_provisioned_deps(
         self, tmp_path: Any, probe_sandbox_passthrough: Any
     ) -> None:
-        from kiro_crew import platform_compat as _pc
-        from kiro_crew.apps.interpreter import app_deps_dir, venv_provided_command
+        from aj_crew import platform_compat as _pc
+        from aj_crew.apps.interpreter import app_deps_dir, venv_provided_command
 
         scripts = "Scripts" if _pc.IS_WINDOWS else "bin"
         name = "my-tool.exe" if _pc.IS_WINDOWS else "my-tool"
@@ -463,8 +463,8 @@ class TestInterpreterResolution:
         """A console script under a NON-usable venv (skeleton / no working
         interpreter) is skipped: its shebang interpreter would not carry the
         app's environment. The deps-dir script is used instead."""
-        from kiro_crew import platform_compat as _pc
-        from kiro_crew.apps.interpreter import app_deps_dir, venv_provided_command
+        from aj_crew import platform_compat as _pc
+        from aj_crew.apps.interpreter import app_deps_dir, venv_provided_command
 
         scripts = "Scripts" if _pc.IS_WINDOWS else "bin"
         name = "my-tool.exe" if _pc.IS_WINDOWS else "my-tool"
@@ -699,7 +699,7 @@ class TestAsgiDispatch:
         # and checks sys.prefix + ABI), so a stub file fails the probe. A
         # bootstrap skeleton or wrong-ABI copy is rejected by that probe;
         # provisioned deps (absent here) would pin sys.executable instead.
-        from kiro_crew.apps.interpreter import venv_python_path
+        from aj_crew.apps.interpreter import venv_python_path
 
         _create_real_venv(spawn_root)
         venv_py = venv_python_path(spawn_root)
@@ -716,10 +716,10 @@ class TestAsgiDispatch:
         nonbundled_python_with_user_site,
     ) -> None:
         """A module-style builtin (entry is None) runs TRUSTED package code.
-        A requirements.txt or .kirocrew-deps sitting in its writable app dir
+        A requirements.txt or .ajcrew-deps sitting in its writable app dir
         must NOT be provisioned or prepended to its PYTHONPATH - that would
         let agent-authored wheels load ahead of the trusted module."""
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.interpreter import app_deps_dir
 
         # Both attack surfaces present in the writable app dir:
         (spawn_root / "requirements.txt").write_bytes(b"requests\n")
@@ -730,11 +730,11 @@ class TestAsgiDispatch:
         # A module-style entry point: dotted, no separator, no extension, and
         # no such file under the app root.
         with pytest.raises(_StopSpawn):
-            bmod._start_app_backend_body("mod-builtin", _manifest("kiro_crew.apps.builtins.demo"))
+            bmod._start_app_backend_body("mod-builtin", _manifest("aj_crew.apps.builtins.demo"))
         assert seen["argv"] == [
             sys.executable,
             "-m",
-            "kiro_crew.apps.builtins.demo",
+            "aj_crew.apps.builtins.demo",
         ]
         # No pip install ran, and the deps dir is NOT on the child PYTHONPATH.
         assert not any("install" in argv for argv in runs), runs
@@ -753,20 +753,20 @@ class TestSpawnEnvironment:
 
         (spawn_root / "server.py").write_text("x = 1\n")
         (spawn_root / ".app_secret").write_text("  s3cr3t  \n")
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", "/checkout")
-        monkeypatch.setenv("KIROCREW_EDITION_DIR", "/edition")
-        monkeypatch.setenv("KIROCREW_DEVFLEET_REPO", "/opt/kirocrew")
-        monkeypatch.setenv("KIROCREW_DEVFLEET_BIN_GH", "/opt/bin/gh")
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", "/checkout")
+        monkeypatch.setenv("AJCREW_EDITION_DIR", "/edition")
+        monkeypatch.setenv("AJCREW_DEVFLEET_REPO", "/opt/ajcrew")
+        monkeypatch.setenv("AJCREW_DEVFLEET_BIN_GH", "/opt/bin/gh")
         seen = _capture_popen(monkeypatch)
         with pytest.raises(_StopSpawn):
             bmod._start_app_backend_body("envapp", _manifest("server.py"))
         env = seen["kwargs"]["env"]
-        assert env["KIROCREW_PROJECT_DIR"] == "/checkout"
-        assert env["KIROCREW_EDITION_DIR"] == "/edition"
-        assert env["KIROCREW_DEVFLEET_REPO"] == "/opt/kirocrew"
-        assert env["KIROCREW_DEVFLEET_BIN_GH"] == "/opt/bin/gh"
-        assert env["KIROCREW_PROXY_SECRET"] == "s3cr3t"
-        assert env["KIROCREW_APP_NAME"] == "envapp"
+        assert env["AJCREW_PROJECT_DIR"] == "/checkout"
+        assert env["AJCREW_EDITION_DIR"] == "/edition"
+        assert env["AJCREW_DEVFLEET_REPO"] == "/opt/ajcrew"
+        assert env["AJCREW_DEVFLEET_BIN_GH"] == "/opt/bin/gh"
+        assert env["AJCREW_PROXY_SECRET"] == "s3cr3t"
+        assert env["AJCREW_APP_NAME"] == "envapp"
 
     def test_a_missing_proxy_secret_is_tolerated(
         self, spawn_root: Any, monkeypatch: pytest.MonkeyPatch
@@ -775,7 +775,7 @@ class TestSpawnEnvironment:
         seen = _capture_popen(monkeypatch)
         with pytest.raises(_StopSpawn):
             bmod._start_app_backend_body("nosecret", _manifest("server.py"))
-        assert "KIROCREW_PROXY_SECRET" not in seen["kwargs"]["env"]
+        assert "AJCREW_PROXY_SECRET" not in seen["kwargs"]["env"]
 
     def test_an_audit_sink_failure_does_not_block_the_spawn(
         self, spawn_root: Any, monkeypatch: pytest.MonkeyPatch

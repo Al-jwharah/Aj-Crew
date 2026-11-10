@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat as pc
+from aj_crew import platform_compat as pc
 
 # This file replaces ctypes.CDLL, find_library or a cached libc handle for a test,
 # so the shared macOS handle caches are put back after each one (see conftest.py).
@@ -145,7 +145,7 @@ class TestPeakRssIsThisProcesss:
     def test_the_two_status_parsers_agree(self):
         # pdf_extract_child keeps its own copy (it must not import this module
         # under a capped address space); the two must read the same text alike.
-        from kiro_crew import pdf_extract_child
+        from aj_crew import pdf_extract_child
 
         for text in (self._STATUS, "VmHWM:\t 1 kB\n", "VmHWM:\t 1 MB\n", ""):
             assert pc._peak_rss_from_status(text) == pdf_extract_child._peak_rss_from_status(text)
@@ -158,7 +158,7 @@ class TestPeakRssIsThisProcesss:
         bar = 256 * 1024 * 1024
         child = textwrap.dedent("""
             import json, sys
-            from kiro_crew import platform_compat as pc
+            from aj_crew import platform_compat as pc
             json.dump(
                 {"own_peak": pc.proc_peak_rss_bytes(),
                  "inherited": pc._ru_maxrss_bytes() if pc.IS_POSIX else None},
@@ -167,7 +167,7 @@ class TestPeakRssIsThisProcesss:
             """)
         parent = textwrap.dedent(f"""
             import json, subprocess, sys
-            from kiro_crew import platform_compat as pc
+            from aj_crew import platform_compat as pc
             blob = bytearray({2 * bar})
             for i in range(0, len(blob), 4096):
                 blob[i] = 1

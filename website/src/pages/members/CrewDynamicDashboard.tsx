@@ -71,16 +71,16 @@ export function isCurrentDashboardDocument({ srcdoc, mint, url, stageUrl, source
 }
 
 /** The gateway's refill message type. Mirrors `dashboard_frame.DATA_MESSAGE_TYPE`. */
-const DATA_MESSAGE_TYPE = 'kirocrew-dashboard:data'
+const DATA_MESSAGE_TYPE = 'ajcrew-dashboard:data'
 
 /** The page's readiness beacon. Mirrors `dashboard_frame.READY_MESSAGE_TYPE`. */
-const READY_MESSAGE_TYPE = 'kirocrew-dashboard:ready'
+const READY_MESSAGE_TYPE = 'ajcrew-dashboard:ready'
 
 /** A page's request to put a reply in the chat box: `{ type, text }`.
  *
  * The page is crewmate-written HTML, so `act` never SENDS anything: the host only
  * fills the composer, and the person presses send. */
-const ACT_MESSAGE_TYPE = 'kirocrew-dashboard:act'
+const ACT_MESSAGE_TYPE = 'ajcrew-dashboard:act'
 /** A page's request to SEND a reply into this crewmate's own thread: `{ type, text }`,
  *  the same text rules as `act`. Still only a request. The host sends it only when
  *  the person interacted with the window in the last few seconds and the page's frame holds focus, only into the
@@ -89,12 +89,12 @@ const ACT_MESSAGE_TYPE = 'kirocrew-dashboard:act'
  *  off, the thread is busy or waiting on an approval or a question). Any refusal
  *  falls back to `act`, so a reply is never lost. The built-in pages post it for a
  *  finished answer (test_dashboard_frame pins the literal against them). */
-const SEND_MESSAGE_TYPE = 'kirocrew-dashboard:send'
+const SEND_MESSAGE_TYPE = 'ajcrew-dashboard:send'
 /** The least time between two sends from one tab. The gateway enforces its own. */
 const SEND_MIN_INTERVAL_MS = 3000
 /** What the page posts when it cannot place a patch in order. Mirrors
  *  `dashboard_frame.REFETCH_MESSAGE_TYPE`. */
-const REFETCH_MESSAGE_TYPE = 'kirocrew-dashboard:refetch'
+const REFETCH_MESSAGE_TYPE = 'ajcrew-dashboard:refetch'
 /** Longest reply a page may put in the composer. Longer is refused, not cut. */
 const ACT_MAX_CHARS = 600
 /** A band's Retry while its re-ask is out: held with `aria-disabled` and a guard in
@@ -173,7 +173,7 @@ function isNothingStaged(e: unknown): boolean {
 }
 
 /** The id of the composed page's data island. Mirrors `dashboard_frame._DATA_ELEMENT_ID`. */
-const DATA_ELEMENT_ID = 'kirocrew-dashboard-data'
+const DATA_ELEMENT_ID = 'ajcrew-dashboard-data'
 
 /**
  * The read a composed page was filled from, taken out of its data island.
@@ -242,7 +242,7 @@ interface Loaded {
  * It renders the INSTANCE -- the crewmate's own copy of a template -- which the
  * registry serves from `GET /api/members/{slug}/dashboard`. The gateway composes
  * the document: it fills every `data-dashboard-field` element from the folded
- * values, sets `window.kirocrew`, and marks the agentic and missing cells. This
+ * values, sets `window.ajcrew`, and marks the agentic and missing cells. This
  * component's jobs are the three the document cannot do for itself:
  * mint it into a sandbox, keep the last page that successfully loaded, and offer a
  * way out when nothing loads at all.

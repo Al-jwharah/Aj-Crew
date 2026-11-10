@@ -1,7 +1,7 @@
 /**
  * Tests for IntelliJ plugin embed mode components:
  * - EmbedTabStrip
- * - KiroCrewNavBridge
+ * - AjCrewNavBridge
  * - EmbedSettingsPage
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
@@ -15,8 +15,8 @@ import type { RootState } from '../store'
 // Tests preload intentionally-incomplete slices; reducers fill in the rest.
 type StoreOverrides = { dashboard?: Partial<RootState['dashboard']>; chat?: Partial<RootState['chat']> }
 
-// Plugin bridge global installed on window (mirrors KiroCrewNavBridge.tsx).
-type BridgeWindow = { __kirocrewReportSlotTitle?: (slug: string, title: string) => void }
+// Plugin bridge global installed on window (mirrors AjCrewNavBridge.tsx).
+type BridgeWindow = { __ajcrewReportSlotTitle?: (slug: string, title: string) => void }
 const bridgeWindow = window as unknown as BridgeWindow
 
 // --- Mocks ---
@@ -37,7 +37,7 @@ vi.mock('../pages/settings/ChatPanel', () => ({ ChatPanel: () => <div data-testi
 vi.mock('../pages/settings/NotificationsPanel', () => ({ NotificationsPanel: () => <div data-testid="notifications-panel" /> }))
 
 import EmbedTabStrip from '../components/EmbedTabStrip'
-import KiroCrewNavBridge from '../components/KiroCrewNavBridge'
+import AjCrewNavBridge from '../components/AjCrewNavBridge'
 import EmbedSettingsPage from '../pages/EmbedSettingsPage'
 
 let queryClient: QueryClient
@@ -78,8 +78,8 @@ describe('EmbedTabStrip', () => {
   })
 
   it('renders tab from sessionStorage', () => {
-    sessionStorage.setItem('kirocrew-embed-tabs', JSON.stringify(['chat-1']))
-    sessionStorage.setItem('kirocrew-embed-active-index', '0')
+    sessionStorage.setItem('ajcrew-embed-tabs', JSON.stringify(['chat-1']))
+    sessionStorage.setItem('ajcrew-embed-active-index', '0')
     wrap(<EmbedTabStrip />)
     expect(screen.getByText('First Chat')).toBeTruthy()
   })
@@ -90,8 +90,8 @@ describe('EmbedTabStrip', () => {
   })
 
   it('clicking + button opens sessions tab', () => {
-    sessionStorage.setItem('kirocrew-embed-tabs', JSON.stringify(['chat-1']))
-    sessionStorage.setItem('kirocrew-embed-active-index', '0')
+    sessionStorage.setItem('ajcrew-embed-tabs', JSON.stringify(['chat-1']))
+    sessionStorage.setItem('ajcrew-embed-active-index', '0')
     wrap(<EmbedTabStrip />)
     fireEvent.click(screen.getByLabelText('New tab'))
     expect(screen.getByText('Sessions')).toBeTruthy()
@@ -99,16 +99,16 @@ describe('EmbedTabStrip', () => {
   })
 
   it('clicking a tab navigates to its chat', () => {
-    sessionStorage.setItem('kirocrew-embed-tabs', JSON.stringify(['chat-1', 'chat-2']))
-    sessionStorage.setItem('kirocrew-embed-active-index', '0')
+    sessionStorage.setItem('ajcrew-embed-tabs', JSON.stringify(['chat-1', 'chat-2']))
+    sessionStorage.setItem('ajcrew-embed-active-index', '0')
     wrap(<EmbedTabStrip />)
     fireEvent.click(screen.getByText('Second Chat'))
     expect(mockNavigate).toHaveBeenCalledWith('/embed/chat/chat-2?sid=chat-2')
   })
 
   it('close button removes tab', () => {
-    sessionStorage.setItem('kirocrew-embed-tabs', JSON.stringify(['chat-1', 'chat-2']))
-    sessionStorage.setItem('kirocrew-embed-active-index', '0')
+    sessionStorage.setItem('ajcrew-embed-tabs', JSON.stringify(['chat-1', 'chat-2']))
+    sessionStorage.setItem('ajcrew-embed-active-index', '0')
     wrap(<EmbedTabStrip />)
     const closeButtons = screen.getAllByLabelText('Close tab')
     fireEvent.click(closeButtons[1]) // close chat-2
@@ -116,8 +116,8 @@ describe('EmbedTabStrip', () => {
   })
 
   it('does not show status dot for sessions tab', () => {
-    sessionStorage.setItem('kirocrew-embed-tabs', JSON.stringify(['', 'chat-1']))
-    sessionStorage.setItem('kirocrew-embed-active-index', '0')
+    sessionStorage.setItem('ajcrew-embed-tabs', JSON.stringify(['', 'chat-1']))
+    sessionStorage.setItem('ajcrew-embed-active-index', '0')
     wrap(<EmbedTabStrip />)
     // Sessions tab (first) should not have a status dot
     const sessionsTab = screen.getByText('Sessions').closest('[class*="group/tab"]')
@@ -125,27 +125,27 @@ describe('EmbedTabStrip', () => {
     expect(dots?.length ?? 0).toBe(0)
   })
 
-  it('dispatches kirocrew-tab-update on tab change', () => {
+  it('dispatches ajcrew-tab-update on tab change', () => {
     const handler = vi.fn()
-    window.addEventListener('kirocrew-tab-update', handler)
-    sessionStorage.setItem('kirocrew-embed-tabs', JSON.stringify(['chat-1']))
-    sessionStorage.setItem('kirocrew-embed-active-index', '0')
+    window.addEventListener('ajcrew-tab-update', handler)
+    sessionStorage.setItem('ajcrew-embed-tabs', JSON.stringify(['chat-1']))
+    sessionStorage.setItem('ajcrew-embed-active-index', '0')
     wrap(<EmbedTabStrip />)
     fireEvent.click(screen.getByLabelText('New tab'))
     expect(handler).toHaveBeenCalled()
-    window.removeEventListener('kirocrew-tab-update', handler)
+    window.removeEventListener('ajcrew-tab-update', handler)
   })
 
   it('navigates on mount to restore active tab URL', () => {
-    sessionStorage.setItem('kirocrew-embed-tabs', JSON.stringify(['chat-2']))
-    sessionStorage.setItem('kirocrew-embed-active-index', '0')
+    sessionStorage.setItem('ajcrew-embed-tabs', JSON.stringify(['chat-2']))
+    sessionStorage.setItem('ajcrew-embed-active-index', '0')
     wrap(<EmbedTabStrip />)
     expect(mockNavigate).toHaveBeenCalledWith('/embed/chat/chat-2?sid=chat-2', { replace: true })
   })
 
   it('handles onPointerCancel by resetting drag state', () => {
-    sessionStorage.setItem('kirocrew-embed-tabs', JSON.stringify(['chat-1', 'chat-2']))
-    sessionStorage.setItem('kirocrew-embed-active-index', '0')
+    sessionStorage.setItem('ajcrew-embed-tabs', JSON.stringify(['chat-1', 'chat-2']))
+    sessionStorage.setItem('ajcrew-embed-active-index', '0')
     const { container } = wrap(<EmbedTabStrip />)
     const strip = container.querySelector('[style*="scrollbar"]')
     // Firing pointercancel should not throw
@@ -157,8 +157,8 @@ describe('EmbedTabStrip', () => {
   })
 
   it('closing active tab navigates to next tab', () => {
-    sessionStorage.setItem('kirocrew-embed-tabs', JSON.stringify(['chat-1', 'chat-2']))
-    sessionStorage.setItem('kirocrew-embed-active-index', '0')
+    sessionStorage.setItem('ajcrew-embed-tabs', JSON.stringify(['chat-1', 'chat-2']))
+    sessionStorage.setItem('ajcrew-embed-active-index', '0')
     wrap(<EmbedTabStrip />)
     const closeButtons = screen.getAllByLabelText('Close tab')
     fireEvent.click(closeButtons[0]) // close active tab (chat-1)
@@ -166,8 +166,8 @@ describe('EmbedTabStrip', () => {
   })
 
   it('closing last tab creates sessions tab and navigates', () => {
-    sessionStorage.setItem('kirocrew-embed-tabs', JSON.stringify(['chat-1']))
-    sessionStorage.setItem('kirocrew-embed-active-index', '0')
+    sessionStorage.setItem('ajcrew-embed-tabs', JSON.stringify(['chat-1']))
+    sessionStorage.setItem('ajcrew-embed-active-index', '0')
     wrap(<EmbedTabStrip />)
     const closeButtons = screen.getAllByLabelText('Close tab')
     fireEvent.click(closeButtons[0])
@@ -175,10 +175,10 @@ describe('EmbedTabStrip', () => {
     expect(screen.getByText('Sessions')).toBeTruthy()
   })
 
-  it('responds to kirocrew-tab-state event from plugin', () => {
+  it('responds to ajcrew-tab-state event from plugin', () => {
     wrap(<EmbedTabStrip />)
     act(() => {
-      window.dispatchEvent(new CustomEvent('kirocrew-tab-state', {
+      window.dispatchEvent(new CustomEvent('ajcrew-tab-state', {
         detail: { tabs: ['chat-2', 'chat-1'], activeIndex: 1 }
       }))
     })
@@ -189,8 +189,8 @@ describe('EmbedTabStrip', () => {
   })
 
   it('slot deletion removes tab and navigates when active tab deleted', () => {
-    sessionStorage.setItem('kirocrew-embed-tabs', JSON.stringify(['chat-1', 'chat-3']))
-    sessionStorage.setItem('kirocrew-embed-active-index', '1') // chat-3 is active
+    sessionStorage.setItem('ajcrew-embed-tabs', JSON.stringify(['chat-1', 'chat-3']))
+    sessionStorage.setItem('ajcrew-embed-active-index', '1') // chat-3 is active
     // Store only has chat-1 and chat-2 — chat-3 is "deleted"
     wrap(<EmbedTabStrip />)
     // chat-3 should be removed, navigate to chat-1
@@ -199,15 +199,15 @@ describe('EmbedTabStrip', () => {
   })
 
   it('mount navigates to sessions when active tab is empty slug', () => {
-    sessionStorage.setItem('kirocrew-embed-tabs', JSON.stringify(['']))
-    sessionStorage.setItem('kirocrew-embed-active-index', '0')
+    sessionStorage.setItem('ajcrew-embed-tabs', JSON.stringify(['']))
+    sessionStorage.setItem('ajcrew-embed-active-index', '0')
     wrap(<EmbedTabStrip />)
     expect(mockNavigate).toHaveBeenCalledWith('/embed/sessions', { replace: true })
   })
 
   it('shows status dot for chat tabs with running state', () => {
-    sessionStorage.setItem('kirocrew-embed-tabs', JSON.stringify(['chat-1']))
-    sessionStorage.setItem('kirocrew-embed-active-index', '0')
+    sessionStorage.setItem('ajcrew-embed-tabs', JSON.stringify(['chat-1']))
+    sessionStorage.setItem('ajcrew-embed-active-index', '0')
     wrap(<EmbedTabStrip />, { dashboard: { slots: [{ key: 'chat-1', title: 'First Chat', running: true }], unreadSlots: [] } })
     const tab = screen.getByText('First Chat').closest('[class*="group/tab"]')
     const dot = tab?.querySelector('[class*="animate-pulse"]')
@@ -215,8 +215,8 @@ describe('EmbedTabStrip', () => {
   })
 
   it('closing non-active tab does not navigate', () => {
-    sessionStorage.setItem('kirocrew-embed-tabs', JSON.stringify(['chat-1', 'chat-2']))
-    sessionStorage.setItem('kirocrew-embed-active-index', '0')
+    sessionStorage.setItem('ajcrew-embed-tabs', JSON.stringify(['chat-1', 'chat-2']))
+    sessionStorage.setItem('ajcrew-embed-active-index', '0')
     wrap(<EmbedTabStrip />)
     mockNavigate.mockClear() // clear mount navigation
     const closeButtons = screen.getAllByLabelText('Close tab')
@@ -227,18 +227,18 @@ describe('EmbedTabStrip', () => {
   })
 })
 
-// ─── KiroCrewNavBridge ───
+// ─── AjCrewNavBridge ───
 
-describe('KiroCrewNavBridge', () => {
+describe('AjCrewNavBridge', () => {
   it('renders nothing (returns null)', () => {
-    const { container } = wrap(<KiroCrewNavBridge />)
+    const { container } = wrap(<AjCrewNavBridge />)
     expect(container.innerHTML).toBe('')
   })
 
-  it('navigates on kirocrew-soft-navigate event', () => {
-    wrap(<KiroCrewNavBridge />)
+  it('navigates on ajcrew-soft-navigate event', () => {
+    wrap(<AjCrewNavBridge />)
     act(() => {
-      window.dispatchEvent(new CustomEvent('kirocrew-soft-navigate', {
+      window.dispatchEvent(new CustomEvent('ajcrew-soft-navigate', {
         detail: { url: '/embed/chat/chat-2?sid=chat-2' }
       }))
     })
@@ -246,25 +246,25 @@ describe('KiroCrewNavBridge', () => {
   })
 
   it('ignores events without url', () => {
-    wrap(<KiroCrewNavBridge />)
+    wrap(<AjCrewNavBridge />)
     act(() => {
-      window.dispatchEvent(new CustomEvent('kirocrew-soft-navigate', { detail: {} }))
+      window.dispatchEvent(new CustomEvent('ajcrew-soft-navigate', { detail: {} }))
     })
     expect(mockNavigate).not.toHaveBeenCalled()
   })
 
   it('reports slot titles to plugin bridge function', () => {
     const reportFn = vi.fn()
-    bridgeWindow.__kirocrewReportSlotTitle = reportFn
-    wrap(<KiroCrewNavBridge />)
+    bridgeWindow.__ajcrewReportSlotTitle = reportFn
+    wrap(<AjCrewNavBridge />)
     expect(reportFn).toHaveBeenCalledWith('chat-1', 'First Chat')
     expect(reportFn).toHaveBeenCalledWith('chat-2', 'Second Chat')
-    delete bridgeWindow.__kirocrewReportSlotTitle
+    delete bridgeWindow.__ajcrewReportSlotTitle
   })
 
   it('does not throw if bridge function is missing', () => {
-    delete bridgeWindow.__kirocrewReportSlotTitle
-    expect(() => wrap(<KiroCrewNavBridge />)).not.toThrow()
+    delete bridgeWindow.__ajcrewReportSlotTitle
+    expect(() => wrap(<AjCrewNavBridge />)).not.toThrow()
   })
 })
 

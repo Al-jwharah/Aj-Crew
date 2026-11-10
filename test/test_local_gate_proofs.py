@@ -480,7 +480,7 @@ def tree_only(gate, monkeypatch):
         ("PYTEST_XDIST_AUTO_NUM_WORKERS", "12"),
         ("I18N_BASE_REF", "base-b"),
         ("PATH", "/usr/bin:/bin"),
-        ("KIROCREW_ANY_NEW_VARIABLE", "1"),
+        ("AJCREW_ANY_NEW_VARIABLE", "1"),
         ("PYTEST_XDIST_AUTO_NUM_WORKERS", None),
     ],
     ids=["worker-cap-2-to-12", "base-ref", "path", "added", "removed"],

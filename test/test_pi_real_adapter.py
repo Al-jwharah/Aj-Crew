@@ -1,4 +1,4 @@
-"""pi driven for real, through Kiro Crew's own launch: the pi half of the Real Adapter lane.
+"""pi driven for real, through Aj Crew's own launch: the pi half of the Real Adapter lane.
 
 pi reaches Crew as TWO third-party packages -- the ``pi-acp`` adapter that serves
 ACP, and the ``pi`` coding agent it spawns -- and every control Crew has over a pi
@@ -72,16 +72,16 @@ from real_adapter_gate import (
     require_real_adapter,
 )
 
-from kiro_crew.acp import launch as launch_mod
-from kiro_crew.acp._dispatch import build_permission_event
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.client_start import PROTOCOL_VERSION_PI
-from kiro_crew.acp.harness import pi as pi_mod
-from kiro_crew.acp.harness.base import SpawnContext
-from kiro_crew.acp.pi_mcp_registration import read_registration
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.acp_backends import ACP_BACKEND_PI, gate_probe_command_for
-from kiro_crew.agent_sdk.drivers.acp import forget_cached_resolution
+from aj_crew.acp import launch as launch_mod
+from aj_crew.acp._dispatch import build_permission_event
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.client_start import PROTOCOL_VERSION_PI
+from aj_crew.acp.harness import pi as pi_mod
+from aj_crew.acp.harness.base import SpawnContext
+from aj_crew.acp.pi_mcp_registration import read_registration
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.acp_backends import ACP_BACKEND_PI, gate_probe_command_for
+from aj_crew.agent_sdk.drivers.acp import forget_cached_resolution
 
 _INSTALL = f"npm ci in test/real_adapters (pins {PI_ACP_PACKAGE} and {PI_PACKAGE})"
 
@@ -459,7 +459,7 @@ def _child_env(client: AcpClient) -> dict[str, str]:
     for the read-back, so the adapter, the read-back and this drive resolve the same
     ``node`` and the same ``pi``.
     """
-    from kiro_crew.acp.client import _resolve_spawn_env, augmented_path
+    from aj_crew.acp.client import _resolve_spawn_env, augmented_path
 
     env = pi_mod.scrub_agent_subprocess_env(
         _resolve_spawn_env(
@@ -557,7 +557,7 @@ def _drive(root: Path) -> dict:
     out: dict = {"root": str(root)}
     adapter: _Adapter | None = None
     with pytest.MonkeyPatch.context() as mp:
-        mp.setenv("KIROCREW_HOME", str(root / "kirocrew-home"))
+        mp.setenv("AJCREW_HOME", str(root / "ajcrew-home"))
         for name, value in isolated.items():
             mp.setenv(name, value)
 
@@ -847,7 +847,7 @@ def test_real_pi_registry_names_crews_sealed_copy(pi_session):
     spelled = pi_mod._same_file_spelling
     assert [spelled(s) for s in sources] == [spelled(sealed)], sources
 
-    from kiro_crew import acp_tool_gate
+    from aj_crew import acp_tool_gate
 
     normalised = pi_mod._same_file_spelling_all(commands)
     assert acp_tool_gate.gate_extension_issue(ACP_BACKEND_PI, normalised, spelled(sealed)) == ""
@@ -871,7 +871,7 @@ def test_real_pi_gated_bash_call_asks_through_request_permission(pi_session):
     raw = frames[0]["params"]["toolCall"]["rawInput"]
     assert raw.get("method") == "confirm" and raw.get("title") == "bash", raw
     envelope = json.loads(raw["message"])
-    assert envelope["kiro-crew-gate"] == 1 and envelope["nonce"] == m["nonce"], envelope
+    assert envelope["aj-crew-gate"] == 1 and envelope["nonce"] == m["nonce"], envelope
     assert envelope["tool"] == "bash" and envelope["input"] == {"command": _BASH_COMMAND}
     asked = [p for p in m["permissions"] if p["title"] == "bash" and p["answered"] == "yes"]
     assert asked and _BASH_COMMAND in asked[0]["tool_input"], m["permissions"]
@@ -886,7 +886,7 @@ def test_real_pi_refused_call_does_not_run(pi_session):
     assert len(_permission_frames(turn["frames"])) == 1, ctx
     assert not m["denied_file_exists"], "the refused command ran anyway"
     results = _tool_results(turn["requests"])
-    assert any("Denied by the Kiro Crew tool gate" in r for r in results), ctx
+    assert any("Denied by the Aj Crew tool gate" in r for r in results), ctx
 
 
 @pytest.mark.real_adapter

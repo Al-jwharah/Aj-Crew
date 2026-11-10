@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.acp.claude_settings_sources import (
+from aj_crew.acp.claude_settings_sources import (
     other_sources_define_available_models,
     read_claude_settings_bytes,
 )
@@ -165,8 +165,8 @@ def test_no_resolvable_home_and_no_project_file_is_false(tmp_path, monkeypatch):
 
 
 def test_managed_settings_dir_is_one_path_per_os(monkeypatch):
-    from kiro_crew import platform_compat
-    from kiro_crew.platform_compat import claude_code_managed_settings_dir
+    from aj_crew import platform_compat
+    from aj_crew.platform_compat import claude_code_managed_settings_dir
 
     assert isinstance(claude_code_managed_settings_dir(), pathlib.PurePath)
     monkeypatch.setattr(platform_compat, "IS_MACOS", True)

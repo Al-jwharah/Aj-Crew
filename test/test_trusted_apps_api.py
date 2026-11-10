@@ -31,16 +31,16 @@ from trusted_apps_api_helpers import home_fixture  # noqa: F401
 from trusted_apps_api_helpers import mock_sel_fixture  # noqa: F401
 from trusted_apps_api_helpers import _APP, _OTHER, _client, _install, _stored
 
-from kiro_crew.apps.manager import (
+from aj_crew.apps.manager import (
     _read_installed,
     _write_installed,
 )
-from kiro_crew.dashboard.handlers import security
-from kiro_crew.dashboard.handlers.security import (
+from aj_crew.dashboard.handlers import security
+from aj_crew.dashboard.handlers.security import (
     build_trusted_apps_snapshot,
 )
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import async_wait_until
 
 # A real builtin: its name is declared by a SHIPPED app.json, so it is exempt at
 # the gate and must never be granted or torn down by this surface.
@@ -56,7 +56,7 @@ async def _noop_hook(name: str, record: dict, **_kw: object) -> dict:
     return {}
 
 # A POPULATED config.json with a syntax error (trailing comma after
-# max_subagents). Every distinctive value below is one ``KiroCrewConfig.load()``
+# max_subagents). Every distinctive value below is one ``AjCrewConfig.load()``
 # would silently replace with a default — so a mutation that loaded this file and
 # saved it back would erase the model, the subagent cap, the external registry
 # and the dashboard settings. The regression assertion is byte-identity, not the
@@ -282,7 +282,7 @@ async def test_revoke_of_disabled_app_reports_not_disabled(home: Path, tmp_path:
 async def test_revoke_tears_down_ineffective_legacy_repository_grant(
     home: Path, tmp_path: Path, mock_sel
 ):
-    import kiro_crew.apps.teardown as appteardown
+    import aj_crew.apps.teardown as appteardown
 
     torn: list[str] = []
 
@@ -352,7 +352,7 @@ async def test_allow_all_rejects_unparseable_body_with_code(home: Path, mock_sel
 
 @pytest.mark.asyncio
 async def test_grant_admits_only_that_app(home: Path, tmp_path: Path, mock_sel):
-    from kiro_crew.apps.execution import app_execution_denied
+    from aj_crew.apps.execution import app_execution_denied
 
     _install(tmp_path, _APP)
     _install(tmp_path, _OTHER)
@@ -401,7 +401,7 @@ def _drive(client: TestClient, op: str, name: str):
 async def test_mutation_on_corrupt_config_409s_without_clobbering(
     home: Path, tmp_path: Path, mock_sel, op: str
 ):
-    # REGRESSION: ``KiroCrewConfig.load()`` degrades an unparseable config.json to
+    # REGRESSION: ``AjCrewConfig.load()`` degrades an unparseable config.json to
     # DEFAULTS. A blind load→mutate→save would therefore write those defaults over
     # a populated file and silently erase the model, the subagent cap, the external
     # registry and the dashboard settings — total config loss from a trailing
@@ -485,7 +485,7 @@ async def test_revoke_stops_the_backend_process_and_the_beacon(
     # backend process kept running with its app secret, its routes stayed proxied
     # and its crons stayed armed — i.e. third-party code the operator had just
     # un-trusted was still executing. The assertion is the PROCESS, not the flag.
-    from kiro_crew.apps import backend as appbackend
+    from aj_crew.apps import backend as appbackend
 
     # This test spawns a REAL backend, and spawning goes through the sandbox. CI
     # runners have no backend for it (Linux ``unshare`` is EPERM in the container,
@@ -548,8 +548,8 @@ async def test_revoke_runs_the_full_teardown_in_order(home: Path, tmp_path: Path
     # Patch on apps.teardown, the module that LOOKS THESE UP: it binds them at
     # import so patching their defining modules would not affect the sequence
     # under test ("patch where it's used, not where it's defined").
-    import kiro_crew.apps.teardown as appteardown
-    from kiro_crew.apps.manager import AppResult
+    import aj_crew.apps.teardown as appteardown
+    from aj_crew.apps.manager import AppResult
 
     calls: list[str] = []
 
@@ -601,7 +601,7 @@ async def test_trust_withdrawal_refuses_before_teardown_when_startup_is_live(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Residual startup ownership leaves every runtime surface unchanged."""
-    import kiro_crew.apps.teardown as appteardown
+    import aj_crew.apps.teardown as appteardown
 
     calls: list[str] = []
 
@@ -651,7 +651,7 @@ async def test_revoke_fails_when_an_untracked_backend_is_still_listening(
     # (`lsof` unavailable, so adoption was skipped) survived the revoke while the
     # endpoint dropped the grant and answered 200. Third variant of the
     # "revocation that revokes nothing" defect this module exists to prevent.
-    import kiro_crew.apps.teardown as appteardown
+    import aj_crew.apps.teardown as appteardown
 
     # The listener never closes, so the probe's release grace runs out on a virtual
     # clock instead of the real one.
@@ -683,7 +683,7 @@ async def test_revoke_succeeds_when_the_backend_was_merely_dead(
     # crashed also yields False. Treating that as a teardown failure would make the
     # grant unrevokable forever — refusing to withdraw a permission is worse than
     # the window it would close.
-    import kiro_crew.apps.teardown as appteardown
+    import aj_crew.apps.teardown as appteardown
 
     with (
         patch.object(appteardown, "stop_app_backend", lambda name: False),
@@ -705,7 +705,7 @@ def test_unstopped_backend_port_only_answers_for_a_declared_fixed_port(
     # The probe must not guess. `port: auto` lived only in the tracking entry
     # `stop_app_backend` just dropped, so there is nothing left to observe and the
     # answer is "cannot tell" (None), never a fabricated port.
-    from kiro_crew.apps import backend as appbackend
+    from aj_crew.apps import backend as appbackend
 
     _install(tmp_path, "auto-port-app", entry_point="main.py", port="auto")
     with patch.object(appbackend, "_port_is_listening", lambda port: True):
@@ -730,12 +730,12 @@ async def test_revoke_tears_down_even_when_metadata_says_disabled(
 ):
     # REGRESSION: teardown was gated on the PERSISTED `enabled` flag, but that flag
     # is metadata rather than evidence about the runtime. `manager.disable_app` is a
-    # pure metadata write, and `kirocrew app disable` calls it from a DIFFERENT
+    # pure metadata write, and `ajcrew app disable` calls it from a DIFFERENT
     # PROCESS that cannot reach the gateway's backend child — so "recorded as
     # disabled" and "its code is running" are routinely both true. The gate
     # therefore skipped teardown for exactly the apps whose recorded state was
     # least trustworthy, and revoke answered 200 while third-party code kept going.
-    import kiro_crew.apps.teardown as appteardown
+    import aj_crew.apps.teardown as appteardown
 
     torn: list[str] = []
 
@@ -786,7 +786,7 @@ async def test_blanket_off_sweeps_an_app_whose_metadata_says_disabled(
     # Same hazard on the falling edge: the candidate query filtered on `enabled`,
     # so an app the CLI had "disabled" while its backend kept running was excluded
     # from the sweep that exists to stop it.
-    import kiro_crew.apps.teardown as appteardown
+    import aj_crew.apps.teardown as appteardown
 
     torn: list[str] = []
 
@@ -821,7 +821,7 @@ async def test_blanket_off_sweeps_an_app_whose_metadata_says_disabled(
 async def test_blanket_off_sweeps_legacy_repository_grant(
     home: Path, tmp_path: Path, mock_sel
 ):
-    import kiro_crew.apps.teardown as appteardown
+    import aj_crew.apps.teardown as appteardown
 
     torn: list[str] = []
 
@@ -888,7 +888,7 @@ async def test_revoke_probes_the_port_even_when_the_stop_reported_success(
     # only says "the process I was TRACKING is gone"; it says nothing about a
     # detached worker the app spawned itself, which keeps the declared fixed port
     # and keeps executing. Revoke then reported success over live code.
-    import kiro_crew.apps.teardown as appteardown
+    import aj_crew.apps.teardown as appteardown
 
     probed: list[str] = []
 
@@ -928,8 +928,8 @@ async def test_blanket_off_sweeps_an_app_that_calls_itself_builtin(
     # out of the sweep that exists to stop it. `builtin_app_names()` is the only
     # forgery-proof source (it requires a SHIPPED app.json), and its own contract
     # says installed.json may narrow trust but never widen it.
-    import kiro_crew.apps.teardown as appteardown
-    from kiro_crew.apps.manager import _read_installed, _write_installed
+    import aj_crew.apps.teardown as appteardown
+    from aj_crew.apps.manager import _read_installed, _write_installed
 
     torn: list[str] = []
 
@@ -970,8 +970,8 @@ async def test_teardown_deregisters_even_when_the_app_calls_itself_self_managed(
     # skip the branch entirely, leaving its agents, skills, crons and MCP servers
     # registered after trust was withdrawn: the same "stale execution surface left
     # behind" defect the branch's own comment describes, through a different door.
-    import kiro_crew.apps.teardown as appteardown
-    from kiro_crew.apps.manager import _read_installed, _write_installed
+    import aj_crew.apps.teardown as appteardown
+    from aj_crew.apps.manager import _read_installed, _write_installed
 
     dereg: list[str] = []
 
@@ -981,7 +981,7 @@ async def test_teardown_deregisters_even_when_the_app_calls_itself_self_managed(
     # Forge the self-report the gate must not blindly trust.
     meta.lifecycle = "app"
     _write_installed(_APP, meta)
-    from kiro_crew.apps.manager import INSTALLED_META_FILENAME, app_dir
+    from aj_crew.apps.manager import INSTALLED_META_FILENAME, app_dir
 
     meta_path = app_dir(_APP) / INSTALLED_META_FILENAME
     raw = json.loads(meta_path.read_text(encoding="utf-8"))
@@ -1010,7 +1010,7 @@ def test_unstopped_backend_port_prefers_the_gateway_recorded_port(
     # INSIDE the app directory — writable by any app trusted to run code. An app
     # could relabel its port (or claim `auto`) and hide from the liveness check that
     # decides whether revoke may report success. The gateway's own record wins.
-    from kiro_crew.apps import backend as appbackend
+    from aj_crew.apps import backend as appbackend
 
     # The app declares `auto`, so the manifest path alone can observe nothing...
     _install(tmp_path, _APP, enabled=True, entry_point="main.py", port="auto")
@@ -1037,8 +1037,8 @@ async def test_disable_honors_the_resources_contract_but_revoke_does_not(
     # REVOKING TRUST is a security operation: `resources` lives in the app's own
     # installed.json, so honoring it there would hand a trusted app a switch for
     # evading its own teardown. Same teardown, opposite treatment of the same field.
-    import kiro_crew.apps.teardown as appteardown
-    from kiro_crew.apps.manager import INSTALLED_META_FILENAME, app_dir
+    import aj_crew.apps.teardown as appteardown
+    from aj_crew.apps.manager import INSTALLED_META_FILENAME, app_dir
 
     dereg: list[str] = []
 
@@ -1080,7 +1080,7 @@ async def test_teardown_runs_the_apps_own_on_disable_when_withdrawing_trust(
     # backend, returned 200, and left that helper executing after its permission to
     # execute had been withdrawn: revoke was WEAKER than a plain off-switch, which
     # is backwards.
-    import kiro_crew.apps.teardown as appteardown
+    import aj_crew.apps.teardown as appteardown
 
     ran: list[tuple[str, int]] = []
 
@@ -1121,10 +1121,10 @@ async def test_a_disabled_apps_own_code_is_not_launched_by_an_ordinary_disable(
     #
     # Deliberately NOT asserted for the revoke path — see
     # test_a_revoke_always_runs_the_shutdown_code_even_when_disabled. A detached
-    # helper survives `kirocrew app disable` (metadata-only, cross-process) with no
+    # helper survives `ajcrew app disable` (metadata-only, cross-process) with no
     # observed port, and `onDisable` is the only thing that can stop it, so a revoke
     # cannot afford to skip it.
-    import kiro_crew.apps.teardown as appteardown
+    import aj_crew.apps.teardown as appteardown
 
     ran: list[str] = []
 
@@ -1174,12 +1174,12 @@ async def test_a_revoke_always_runs_the_shutdown_code_even_when_disabled(
     home: Path, tmp_path: Path
 ):
     # REGRESSION: gating the app's own shutdown code on `enabled or observed port`
-    # reopened a hole on the REVOKE path. `kirocrew app disable` is metadata-only and
+    # reopened a hole on the REVOKE path. `ajcrew app disable` is metadata-only and
     # runs in another process, so `enabled` can read false while a helper the app
     # detached is still alive. That helper is not the tracked backend, so no port is
     # observed either — and `onDisable` is the only thing that knows how to stop it.
     # Skipping it left third-party code running after its permission was revoked.
-    import kiro_crew.apps.teardown as appteardown
+    import aj_crew.apps.teardown as appteardown
 
     ran: list[str] = []
 
@@ -1225,7 +1225,7 @@ async def test_an_observed_port_overrides_a_disabled_flag(home: Path, tmp_path: 
     # `installed.json` is app-writable, so an app could mark itself disabled while its
     # backend keeps serving. An OBSERVED port therefore overrides the metadata and the
     # shutdown path runs anyway.
-    import kiro_crew.apps.teardown as appteardown
+    import aj_crew.apps.teardown as appteardown
 
     ran: list[str] = []
 
@@ -1266,7 +1266,7 @@ async def test_a_failing_on_disable_warns_but_never_refuses_the_withdrawal(
     # any app a switch for blocking the withdrawal of its own trust — exit non-zero
     # and keep the grant. Same call as `hooks_shutdown`, for a sharper reason: a
     # warning the operator sees, and the rest of the teardown still runs.
-    import kiro_crew.apps.teardown as appteardown
+    import aj_crew.apps.teardown as appteardown
 
     async def _script(name, script, **kw):
         return {"output": "refusing to stop", "failed": True}
@@ -1310,7 +1310,7 @@ async def test_teardown_notes_are_scrubbed_of_exfiltration_urls(
     # disable handler happened to apply both passes on the way out via its own
     # `_redact_warning`, but the revoke handler returns `warnings` straight on its
     # 200 with no redaction, so this is the only place it happens for a revoke.
-    import kiro_crew.apps.teardown as appteardown
+    import aj_crew.apps.teardown as appteardown
 
     async def _script(name, script, **kw):
         return {
@@ -1356,7 +1356,7 @@ async def test_an_on_disable_that_raises_is_contained(home: Path, tmp_path: Path
     # The runner itself blowing up (not the script exiting non-zero) must not abort
     # the teardown either — same reasoning, and a teardown that stops halfway leaves
     # the app in a worse state than one that pushes through and reports.
-    import kiro_crew.apps.teardown as appteardown
+    import aj_crew.apps.teardown as appteardown
 
     async def _script(name, script, **kw):
         raise RuntimeError("sandbox unavailable")
@@ -1398,7 +1398,7 @@ async def test_a_failed_shutdown_hook_is_reported_without_blocking_the_revoke(
     # A failed shutdown hook means the app did not FLUSH — the backend stop and
     # deregistration still run, so the code does end up stopped. Refusing here would
     # make trust unrevokable for any app whose cleanup hook is simply broken.
-    import kiro_crew.apps.teardown as appteardown
+    import aj_crew.apps.teardown as appteardown
 
     async def _hook_fails(name: str, record: dict, **_kw: object) -> dict:
         return {"hooks_shutdown": "failed"}
@@ -1428,12 +1428,12 @@ async def test_grant_is_withdrawn_if_the_app_is_uninstalled_mid_write(
     home: Path, tmp_path: Path, mock_sel
 ):
     # REGRESSION: the grant path validated that the app exists, then wrote. The
-    # handler holds `app_lifecycle_lock(name)`, but `kirocrew app uninstall` runs in a
+    # handler holds `app_lifecycle_lock(name)`, but `ajcrew app uninstall` runs in a
     # DIFFERENT PROCESS that no asyncio lock reaches — so the app could vanish
     # between the check and the write, leaving a grant over a name no app occupies.
     # Grants are name-keyed, so the next app installed under it would run its own
     # code with no consent prompt.
-    from kiro_crew.apps import manager as appmanager
+    from aj_crew.apps import manager as appmanager
 
     real_get_app = appmanager.get_app
     calls: list[str] = []
@@ -1498,7 +1498,7 @@ async def test_revoke_of_a_builtin_name_leaves_the_builtin_enabled(
     # refuses builtins — see test 4), which is exactly the hand-edited-config
     # shape the un-validated revoke path exists to clean up.
     _install(tmp_path, _BUILTIN, enabled=True, builtin=True)
-    from kiro_crew.apps.execution import builtin_app_names
+    from aj_crew.apps.execution import builtin_app_names
 
     assert _BUILTIN in builtin_app_names(), "fixture failed to make a real builtin"
     (home / "config.json").write_text(
@@ -1531,7 +1531,7 @@ async def test_grant_of_a_builtin_name_409s_and_persists_nothing(
     # inert while the builtin owned the slot — and went LIVE the moment a
     # third-party app claimed that name, inheriting a grant nobody made for it.
     _install(tmp_path, _BUILTIN, enabled=True, builtin=True)
-    from kiro_crew.apps.execution import builtin_app_names
+    from aj_crew.apps.execution import builtin_app_names
 
     assert _BUILTIN in builtin_app_names()
 
@@ -1560,7 +1560,7 @@ async def test_refused_builtin_grant_is_not_inherited_by_a_later_takeover(
     # this app would execute on a grant the operator never made for it.
     # The POST's status is deliberately not asserted here — the load-bearing
     # assertion is the gate's verdict AFTER the takeover.
-    from kiro_crew.apps.execution import app_execution_denied, builtin_app_names
+    from aj_crew.apps.execution import app_execution_denied, builtin_app_names
 
     _install(tmp_path, _BUILTIN, enabled=True, builtin=True)
     async with _client() as client:

@@ -4,7 +4,7 @@
 file, and Windows editors save UTF-8 "with BOM" by default. ``json.loads`` on
 the decoded text refuses that mark, and the two overlay writers treat a refused
 file as empty, so a reader that kept the mark would replace a BOM-saved file
-with one holding only Kiro Crew's keys on the next spawn.
+with one holding only Aj Crew's keys on the next spawn.
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from __future__ import annotations
 import codecs
 import json
 
-from kiro_crew.providers.acp import (
+from aj_crew.providers.acp import (
     _clear_cli_overlay_effort,
     _read_cli_overlay,
     _write_cli_overlay,

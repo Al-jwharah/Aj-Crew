@@ -63,7 +63,7 @@ function accountsPayload(): AwsAccountsResponse {
 }
 
 const driveExists: DriveStatus = {
-  exists: true, bucket: 'kirocrew-drive-abc123', region: 'us-west-2',
+  exists: true, bucket: 'ajcrew-drive-abc123', region: 'us-west-2',
   usage: { bytes: 1000, objects: 1, sections: {
     drive: { objects: 1, bytes: 1000 }, library: { objects: 0, bytes: 0 }, backup: { objects: 0, bytes: 0 },
   } },

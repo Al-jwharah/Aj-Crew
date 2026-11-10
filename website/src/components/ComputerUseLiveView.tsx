@@ -245,8 +245,8 @@ export default function ComputerUseLiveView() {
   // Also how a reviewer can inspect the pre-first-frame empty state.
   useEffect(() => {
     const onToggle = () => setPhase(current => (current === 'open' ? 'chip' : 'open'))
-    window.addEventListener('kirocrew-toggle-computer-use-live', onToggle)
-    return () => window.removeEventListener('kirocrew-toggle-computer-use-live', onToggle)
+    window.addEventListener('ajcrew-toggle-computer-use-live', onToggle)
+    return () => window.removeEventListener('ajcrew-toggle-computer-use-live', onToggle)
   }, [])
 
   // One gesture pipeline for both moving and resizing, driven by WINDOW-level

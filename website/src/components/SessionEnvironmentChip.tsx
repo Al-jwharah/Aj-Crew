@@ -239,7 +239,7 @@ function SlotEnvironmentChip({ slot, disabled, compact }: Props) {
 
   // Which locked status follows where the chat is BOUND, not a pick still in
   // flight: a switch the lock overtook never ran, so it gets no health card.
-  // A Kiro Cloud sandbox has no machine metrics Kiro Crew can read (only its own
+  // A Kiro Cloud sandbox has no machine metrics Aj Crew can read (only its own
   // agent reaches it), so its fixed chip is the plain status, with no health card.
   const bound = data.profiles.find((p) => p.id === data.profile)
   const cloudSandbox = (data.provider ?? bound?.provider) === 'kiro_cloud'
@@ -323,7 +323,7 @@ function SlotEnvironmentChip({ slot, disabled, compact }: Props) {
                 <span className="flex flex-col min-w-0 flex-1">
                   <span className="truncate">{p.name}</span>
                   {/* Profiles often share a folder; the template tells them apart. A Kiro
-                      Cloud profile has no directory Kiro Crew can see: its repositories. */}
+                      Cloud profile has no directory Aj Crew can see: its repositories. */}
                   <span className="truncate text-[12px] text-muted font-mono">
                     {p.provider === 'kiro_cloud'
                       ? (p.repositories?.join(', ') || t('sessionEnvironments.kiroCloud.emptyWorkspace'))

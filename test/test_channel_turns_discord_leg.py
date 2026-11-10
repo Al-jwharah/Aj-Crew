@@ -2,7 +2,7 @@
 
 The turn cases Discord's own suite drove through ``handle_message``, run on the real
 ``DiscordRenderer`` over a fake REST client with
-:data:`~kiro_crew.messaging.dispatch.DISCORD_DRIFT`. The pipeline itself is in
+:data:`~aj_crew.messaging.dispatch.DISCORD_DRIFT`. The pipeline itself is in
 ``test_channel_turns.py``; the shared keys, autouse stubs and builders are in
 ``channel_turns_helpers.py``.
 """
@@ -25,12 +25,12 @@ from channel_turns_helpers import published_fixture  # noqa: F401
 from channel_turns_helpers import spooled_fixture  # noqa: F401
 from channel_turns_helpers import KEY, ROUTE, _answer, _turns
 
-from kiro_crew.acp.types import STOP_REASON_CANCELLED
-from kiro_crew.discord.renderer import DiscordRenderer
-from kiro_crew.discord.transport import DISCORD_CAPABILITIES
-from kiro_crew.memory_stores import UnknownMemoryStore
-from kiro_crew.messaging import dispatch as D
-from kiro_crew.messaging.dispatch import DISCORD_DRIFT, Verdict
+from aj_crew.acp.types import STOP_REASON_CANCELLED
+from aj_crew.discord.renderer import DiscordRenderer
+from aj_crew.discord.transport import DISCORD_CAPABILITIES
+from aj_crew.memory_stores import UnknownMemoryStore
+from aj_crew.messaging import dispatch as D
+from aj_crew.messaging.dispatch import DISCORD_DRIFT, Verdict
 
 # ── the Discord leg: Discord's drift on its real renderer ────────────────────
 

@@ -31,11 +31,11 @@ from side_helpers import (  # noqa: F401 -- the autouse fixture registers by imp
     _published_readonly_spec_fixture,
 )
 
-from kiro_crew import name_grant
-from kiro_crew.dashboard.handlers.side import _run_side_turn
-from kiro_crew.dashboard.side_prompts import SIDE_BOUNDARY_PROMPT, SIDE_BOUNDARY_PROMPT_NO_SHELL
-from kiro_crew.dashboard.side_state import SideState
-from kiro_crew.name_grant_refusals import Refusal
+from aj_crew import name_grant
+from aj_crew.dashboard.handlers.side import _run_side_turn
+from aj_crew.dashboard.side_prompts import SIDE_BOUNDARY_PROMPT, SIDE_BOUNDARY_PROMPT_NO_SHELL
+from aj_crew.dashboard.side_state import SideState
+from aj_crew.name_grant_refusals import Refusal
 
 
 @pytest.mark.asyncio
@@ -49,8 +49,8 @@ async def test_side_turn_streams_under_read_only_policy(tmp_path, monkeypatch):
     keystone file on the event loop."""
     from types import SimpleNamespace
 
-    from kiro_crew.hooks import HookManager
-    from kiro_crew.llm_helpers import ToolApprovalPolicy
+    from aj_crew.hooks import HookManager
+    from aj_crew.llm_helpers import ToolApprovalPolicy
 
     live_gate = HookManager()
     state = _make_state(tmp_path, context_builder=SimpleNamespace(hooks=live_gate))
@@ -70,7 +70,7 @@ async def test_side_turn_streams_under_read_only_policy(tmp_path, monkeypatch):
     state.sessions.release = MagicMock()
     stream_mock = AsyncMock(return_value=_SIDE_ANSWER)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.side.stream_and_collect",
+        "aj_crew.dashboard.handlers.side.stream_and_collect",
         stream_mock,
     )
 
@@ -98,7 +98,7 @@ async def test_side_turn_without_a_live_gate_passes_no_hooks(tmp_path, monkeypat
     ``hooks=None``, which the policy rejects everything under
     (``read_only_policy_no_hooks``) — never a default-constructed manager, which
     would classify reads against none of the operator's opt-outs or deny rules."""
-    from kiro_crew.llm_helpers import ToolApprovalPolicy
+    from aj_crew.llm_helpers import ToolApprovalPolicy
 
     state = _make_state(tmp_path)
     assert state.context_builder is None
@@ -116,7 +116,7 @@ async def test_side_turn_without_a_live_gate_passes_no_hooks(tmp_path, monkeypat
     state.sessions.release = MagicMock()
     stream_mock = AsyncMock(return_value=_SIDE_ANSWER)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.side.stream_and_collect",
+        "aj_crew.dashboard.handlers.side.stream_and_collect",
         stream_mock,
     )
 
@@ -143,8 +143,8 @@ def test_dashboard_bound_profile_governs_a_side_turn(tmp_path, monkeypatch):
     """
     import json
 
-    from kiro_crew.hooks import TOOL_AUTO_APPROVE, TOOL_DENY, HookManager
-    from kiro_crew.platform import governance_profiles as gp
+    from aj_crew.hooks import TOOL_AUTO_APPROVE, TOOL_DENY, HookManager
+    from aj_crew.platform import governance_profiles as gp
 
     profiles = tmp_path / "profiles"
     profiles.mkdir()
@@ -157,7 +157,7 @@ def test_dashboard_bound_profile_governs_a_side_turn(tmp_path, monkeypatch):
             return gate.on_tool_call(
                 "web_fetch",
                 session_key=session_key,
-                agent="kirocrew",
+                agent="ajcrew",
                 tool_kind="fetch",
                 mcp_tool_name="web_fetch",
                 mcp_identity_trusted=True,
@@ -201,8 +201,8 @@ def test_dashboard_bound_profile_governs_a_claude_side_read(tmp_path, monkeypatc
     rule; without it the read-only proof would approve the denied search."""
     import json
 
-    from kiro_crew.hooks import TOOL_AUTO_APPROVE, TOOL_DENY, HookManager
-    from kiro_crew.platform import governance_profiles as gp
+    from aj_crew.hooks import TOOL_AUTO_APPROVE, TOOL_DENY, HookManager
+    from aj_crew.platform import governance_profiles as gp
 
     profiles = tmp_path / "profiles"
     profiles.mkdir()
@@ -215,7 +215,7 @@ def test_dashboard_bound_profile_governs_a_claude_side_read(tmp_path, monkeypatc
             return gate.on_tool_call(
                 'Search "release notes"',
                 session_key="side:parent",
-                agent="kirocrew",
+                agent="ajcrew",
                 tool_kind="fetch",
                 harness_builtin_tool="web_search",
                 classifier_only=True,
@@ -270,7 +270,7 @@ async def test_side_turn_binds_its_session_to_the_derived_readonly_agent(
     state.sessions.get_or_create = _fake_get_or_create
     state.sessions.release = MagicMock()
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.side.stream_and_collect",
+        "aj_crew.dashboard.handlers.side.stream_and_collect",
         AsyncMock(return_value=_SIDE_ANSWER),
     )
 
@@ -292,12 +292,12 @@ async def test_side_turn_refuses_when_the_readonly_spec_cannot_be_derived(tmp_pa
     The refusal is coded (``ReadOnlySpecError.code``) so the user-facing message
     and the log name the cause, and no session is created, so nothing runs.
     """
-    from kiro_crew.dashboard.side_readonly_spec import ReadOnlySpecError
+    from aj_crew.dashboard.side_readonly_spec import ReadOnlySpecError
 
     def _refuse(base_name: str, project_dir: str | None = None) -> str:
         raise ReadOnlySpecError("base_spec_missing", f"no agent spec declares {base_name!r}")
 
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side.publish_readonly_spec", _refuse)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side.publish_readonly_spec", _refuse)
     state = _make_state(tmp_path)
     events = _capture_broadcasts(state)
     parent = state.get_or_create_slot("parent")
@@ -310,7 +310,7 @@ async def test_side_turn_refuses_when_the_readonly_spec_cannot_be_derived(tmp_pa
         side_effect=AssertionError("must not create a session")
     )
     stream_mock = AsyncMock(return_value=_SIDE_ANSWER)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
 
     await _run_side_turn(state, parent, "run-refused", _SIDE_QUESTION, is_first_turn=True)
 
@@ -343,7 +343,7 @@ async def test_side_turn_rebinds_a_retained_session_whose_binding_changed(
     parent._side.last_run_id = "run-rebind"
     parent._side.is_complete = False
     # A session created for project A, under the same derived agent.
-    parent._side.binding = ("kirocrew--readonly", str(tmp_path / "proj-a"), "d" * 64)
+    parent._side.binding = ("ajcrew--readonly", str(tmp_path / "proj-a"), "d" * 64)
 
     state.sessions.get_provider = MagicMock(return_value=MagicMock(name="retained provider"))
     state.sessions.destroy = AsyncMock()
@@ -365,17 +365,17 @@ async def test_side_turn_rebinds_a_retained_session_whose_binding_changed(
     state.sessions.get_or_create = _fake_get_or_create
     state.sessions.release = MagicMock()
     stream_mock = AsyncMock(return_value=_SIDE_ANSWER)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
     monkeypatch.setattr(name_grant, "environment_refusal", lambda: None)
 
     await _run_side_turn(state, parent, "run-rebind", _SIDE_QUESTION, is_first_turn=False)
 
     assert order == [
         f"destroy:side:parent:{parent._side.gen}",
-        f"create:side:parent:{parent._side.gen}:kirocrew--readonly:{tmp_path / 'proj-b'}",
+        f"create:side:parent:{parent._side.gen}:ajcrew--readonly:{tmp_path / 'proj-b'}",
     ], order
     # The new binding is recorded, so the NEXT turn with the same project keeps it.
-    assert parent._side.binding == ("kirocrew--readonly", str(tmp_path / "proj-b"), "d" * 64)
+    assert parent._side.binding == ("ajcrew--readonly", str(tmp_path / "proj-b"), "d" * 64)
     # The cold-started process has no framing: it gets the full envelope, not
     # the bare follow-up a live session would — the sidecar's transcript alone
     # says "not the first turn", but the session behind it is brand new.
@@ -388,7 +388,7 @@ async def test_side_turn_rebinds_a_retained_session_whose_binding_changed(
     parent._side.is_complete = False
     await _run_side_turn(state, parent, "run-rebind-2", _SIDE_QUESTION, is_first_turn=False)
     assert order == [
-        f"create:side:parent:{parent._side.gen}:kirocrew--readonly:{tmp_path / 'proj-b'}"
+        f"create:side:parent:{parent._side.gen}:ajcrew--readonly:{tmp_path / 'proj-b'}"
     ], order
     # A live session keeps its framing: the follow-up is the bare question.
     assert stream_mock.await_args.args[1] == _SIDE_QUESTION
@@ -408,7 +408,7 @@ async def test_a_close_during_the_rebind_destroy_acquires_nothing(
     old.append_user(_SIDE_QUESTION)
     old.last_run_id = "run-old"
     old.is_complete = False
-    old.binding = ("kirocrew--readonly", "", "stale" * 16)
+    old.binding = ("ajcrew--readonly", "", "stale" * 16)
     parent._side = old
 
     async def _destroy_then_close(key):
@@ -419,7 +419,7 @@ async def test_a_close_during_the_rebind_destroy_acquires_nothing(
     state.sessions.get_or_create = AsyncMock(side_effect=AssertionError("must not acquire"))
     state.sessions.release = MagicMock()
     stream_mock = AsyncMock(return_value=_SIDE_ANSWER)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
 
     await _run_side_turn(state, parent, "run-old", _SIDE_QUESTION, is_first_turn=False)
 
@@ -450,14 +450,14 @@ async def test_a_project_change_during_derivation_does_not_split_check_and_spawn
     derived_for: list[str | None] = []
 
     def _publish_then_switch(base_name: str, project_dir: str | None = None):
-        from kiro_crew.dashboard.side_readonly_spec import PublishedSpec
+        from aj_crew.dashboard.side_readonly_spec import PublishedSpec
 
         derived_for.append(project_dir)
         parent.project = proj_b  # the project changes while the derivation is off-loop
         return PublishedSpec(name=f"{base_name}--readonly", digest="d" * 64)
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.side.publish_readonly_spec", _publish_then_switch
+        "aj_crew.dashboard.handlers.side.publish_readonly_spec", _publish_then_switch
     )
     created: list[dict] = []
 
@@ -469,7 +469,7 @@ async def test_a_project_change_during_derivation_does_not_split_check_and_spawn
     state.sessions.get_or_create = _fake_get_or_create
     state.sessions.release = MagicMock()
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.side.stream_and_collect",
+        "aj_crew.dashboard.handlers.side.stream_and_collect",
         AsyncMock(return_value=_SIDE_ANSWER),
     )
 
@@ -477,7 +477,7 @@ async def test_a_project_change_during_derivation_does_not_split_check_and_spawn
 
     assert derived_for == [proj_a]
     assert created[0]["cwd"] == proj_a
-    assert parent._side.binding == ("kirocrew--readonly", proj_a, "d" * 64)
+    assert parent._side.binding == ("ajcrew--readonly", proj_a, "d" * 64)
 
 
 @pytest.mark.asyncio
@@ -505,7 +505,7 @@ async def test_a_close_during_acquisition_destroys_the_acquired_session(
     state.sessions.destroy = AsyncMock()
     state.sessions.release = MagicMock()
     stream_mock = AsyncMock(return_value=_SIDE_ANSWER)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
 
     await _run_side_turn(state, parent, "run-old", _SIDE_QUESTION, is_first_turn=True)
 
@@ -539,14 +539,14 @@ async def test_side_turn_destroys_a_live_session_no_binding_vouches_for(
     state.sessions.get_or_create = _fake_get_or_create
     state.sessions.release = MagicMock()
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.side.stream_and_collect",
+        "aj_crew.dashboard.handlers.side.stream_and_collect",
         AsyncMock(return_value=_SIDE_ANSWER),
     )
 
     await _run_side_turn(state, parent, "run-unvouched", _SIDE_QUESTION, is_first_turn=False)
 
     state.sessions.destroy.assert_awaited_once_with(f"side:parent:{parent._side.gen}")
-    assert parent._side.binding == ("kirocrew--readonly", "", "d" * 64)
+    assert parent._side.binding == ("ajcrew--readonly", "", "d" * 64)
 
 
 @pytest.mark.asyncio
@@ -568,21 +568,21 @@ async def test_a_turn_from_a_replaced_sidecar_never_touches_the_replacement_sess
     assert replacement.gen != old.gen
 
     def _publish_then_replace(base_name: str, project_dir: str | None = None):
-        from kiro_crew.dashboard.side_readonly_spec import PublishedSpec
+        from aj_crew.dashboard.side_readonly_spec import PublishedSpec
 
         # The close+reopen lands while the derivation is off-loop.
         parent._side = replacement
         return PublishedSpec(name=f"{base_name}--readonly", digest="d" * 64)
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.side.publish_readonly_spec", _publish_then_replace
+        "aj_crew.dashboard.handlers.side.publish_readonly_spec", _publish_then_replace
     )
     state.sessions.get_provider = MagicMock(return_value=MagicMock(name="replacement provider"))
     state.sessions.destroy = AsyncMock()
     state.sessions.get_or_create = AsyncMock(side_effect=AssertionError("must not acquire"))
     state.sessions.release = MagicMock()
     stream_mock = AsyncMock(return_value=_SIDE_ANSWER)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
 
     await _run_side_turn(state, parent, "run-old", _SIDE_QUESTION, is_first_turn=True)
 
@@ -609,17 +609,17 @@ async def test_side_close_destroys_the_closing_generations_session(tmp_path):
 
 
 def _configure_backend(monkeypatch, backend: str) -> None:
-    """Make ``KiroCrewConfig.load()`` in the side handler report *backend*."""
-    from kiro_crew.dashboard.handlers import side as side_mod
+    """Make ``AjCrewConfig.load()`` in the side handler report *backend*."""
+    from aj_crew.dashboard.handlers import side as side_mod
 
-    real_load = side_mod.KiroCrewConfig.load
+    real_load = side_mod.AjCrewConfig.load
 
     def _load(*args, **kwargs):
         cfg = real_load(*args, **kwargs)
         cfg.agent.acp_backend = backend
         return cfg
 
-    monkeypatch.setattr(side_mod.KiroCrewConfig, "load", staticmethod(_load))
+    monkeypatch.setattr(side_mod.AjCrewConfig, "load", staticmethod(_load))
 
 
 @pytest.mark.asyncio
@@ -630,8 +630,8 @@ async def test_side_turn_grants_read_only_tools_on_a_member_backend(
     """On a member of ``ACP_BACKENDS_SIDE_READONLY`` (kiro-cli, KAS) the turn
     derives the read-only spec and streams READ_ONLY; the allowance is positive
     membership, never a negation of some other backend."""
-    from kiro_crew.acp_backends import ACP_BACKENDS_SIDE_READONLY
-    from kiro_crew.llm_helpers import ToolApprovalPolicy
+    from aj_crew.acp_backends import ACP_BACKENDS_SIDE_READONLY
+    from aj_crew.llm_helpers import ToolApprovalPolicy
 
     assert backend in ACP_BACKENDS_SIDE_READONLY
     _configure_backend(monkeypatch, backend)
@@ -651,7 +651,7 @@ async def test_side_turn_grants_read_only_tools_on_a_member_backend(
     state.sessions.get_or_create = _fake_get_or_create
     state.sessions.release = MagicMock()
     stream_mock = AsyncMock(return_value=_SIDE_ANSWER)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
 
     await _run_side_turn(state, parent, "run-kiro", _SIDE_QUESTION, is_first_turn=True)
 
@@ -690,14 +690,14 @@ async def test_side_turn_on_another_backend_runs_no_tools_and_derives_nothing(
     pre-approval surface the gate cannot see, so the turn keeps the pre-allowance
     posture: the base agent under REJECT_ALL, no derived spec, and a prompt and
     fallback that say tools are unavailable."""
-    from kiro_crew.acp_backends import ACP_BACKEND_OPENCODE
-    from kiro_crew.llm_helpers import ToolApprovalPolicy
+    from aj_crew.acp_backends import ACP_BACKEND_OPENCODE
+    from aj_crew.llm_helpers import ToolApprovalPolicy
 
     _configure_backend(monkeypatch, ACP_BACKEND_OPENCODE)
     state, parent, events, created = _side_turn_fixture(tmp_path, "run-opencode")
     # An empty answer exercises the fallback copy for this branch.
     stream_mock = AsyncMock(return_value="")
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
 
     await _run_side_turn(state, parent, "run-opencode", _SIDE_QUESTION, is_first_turn=True)
 
@@ -722,15 +722,15 @@ async def test_side_turn_on_claude_runs_read_only_on_a_confined_session(
     ``side_read_only`` (which the claude client turns into the read-only shape),
     the turn streams READ_ONLY, and the prompt names no shell, because the
     session has none."""
-    from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE
-    from kiro_crew.dashboard.handlers import side as side_mod
-    from kiro_crew.llm_helpers import ToolApprovalPolicy
+    from aj_crew.acp_backends import ACP_BACKEND_CLAUDE
+    from aj_crew.dashboard.handlers import side as side_mod
+    from aj_crew.llm_helpers import ToolApprovalPolicy
 
     _configure_backend(monkeypatch, ACP_BACKEND_CLAUDE)
     monkeypatch.setattr(side_mod, "claude_adapter_honours_session_options", lambda: True)
     state, parent, _events, created = _side_turn_fixture(tmp_path, "run-claude")
     stream_mock = AsyncMock(return_value=_SIDE_ANSWER)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
 
     await _run_side_turn(state, parent, "run-claude", _SIDE_QUESTION, is_first_turn=True)
 
@@ -752,16 +752,16 @@ async def test_side_turn_on_goose_runs_read_only_on_its_own_goose_home(
     """On goose the confinement is the separate goose home its launch builds for
     ``side_read_only``: nothing is derived, the turn streams READ_ONLY, and the
     prompt names neither a shell nor a file-text read, because there is neither."""
-    from kiro_crew.acp_backends import ACP_BACKEND_GOOSE
-    from kiro_crew.dashboard.handlers import side as side_mod
-    from kiro_crew.dashboard.side_prompts import SIDE_BOUNDARY_PROMPT_LISTING
-    from kiro_crew.llm_helpers import ToolApprovalPolicy
+    from aj_crew.acp_backends import ACP_BACKEND_GOOSE
+    from aj_crew.dashboard.handlers import side as side_mod
+    from aj_crew.dashboard.side_prompts import SIDE_BOUNDARY_PROMPT_LISTING
+    from aj_crew.llm_helpers import ToolApprovalPolicy
 
     _configure_backend(monkeypatch, ACP_BACKEND_GOOSE)
     monkeypatch.setattr(side_mod, "goose_side_home_supported", lambda: True)
     state, parent, _events, created = _side_turn_fixture(tmp_path, "run-goose")
     stream_mock = AsyncMock(return_value=_SIDE_ANSWER)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
 
     await _run_side_turn(state, parent, "run-goose", _SIDE_QUESTION, is_first_turn=True)
 
@@ -782,14 +782,14 @@ async def test_side_turn_on_strands_runs_read_only_with_file_reads_alone(
     """On Strands the confinement is the gate module plus a ``side_read_only``
     session: nothing is derived, the turn streams READ_ONLY, and the prompt names
     file reads alone, with no shell, search or web tool."""
-    from kiro_crew.acp_backends import ACP_BACKEND_STRANDS
-    from kiro_crew.dashboard.side_prompts import SIDE_BOUNDARY_PROMPT_FILE_READS
-    from kiro_crew.llm_helpers import ToolApprovalPolicy
+    from aj_crew.acp_backends import ACP_BACKEND_STRANDS
+    from aj_crew.dashboard.side_prompts import SIDE_BOUNDARY_PROMPT_FILE_READS
+    from aj_crew.llm_helpers import ToolApprovalPolicy
 
     _configure_backend(monkeypatch, ACP_BACKEND_STRANDS)
     state, parent, _events, created = _side_turn_fixture(tmp_path, "run-strands")
     stream_mock = AsyncMock(return_value=_SIDE_ANSWER)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
 
     await _run_side_turn(state, parent, "run-strands", _SIDE_QUESTION, is_first_turn=True)
 
@@ -809,15 +809,15 @@ async def test_side_turn_on_claude_with_an_unverified_adapter_runs_no_tools(
 ):
     """An adapter below the verified options floor may ignore the read-only
     shape, so the turn runs REJECT_ALL on an ordinary session instead."""
-    from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE
-    from kiro_crew.dashboard.handlers import side as side_mod
-    from kiro_crew.llm_helpers import ToolApprovalPolicy
+    from aj_crew.acp_backends import ACP_BACKEND_CLAUDE
+    from aj_crew.dashboard.handlers import side as side_mod
+    from aj_crew.llm_helpers import ToolApprovalPolicy
 
     _configure_backend(monkeypatch, ACP_BACKEND_CLAUDE)
     monkeypatch.setattr(side_mod, "claude_adapter_honours_session_options", lambda: False)
     state, parent, _events, created = _side_turn_fixture(tmp_path, "run-old-claude")
     stream_mock = AsyncMock(return_value=_SIDE_ANSWER)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
 
     await _run_side_turn(state, parent, "run-old-claude", _SIDE_QUESTION, is_first_turn=True)
 
@@ -830,7 +830,7 @@ async def test_side_turn_on_claude_with_an_unverified_adapter_runs_no_tools(
 def _claude_adapter_remedy() -> dict[str, str]:
     """The floor and update step the outdated-adapter footer names, from the
     adapter's own constants rather than restated digits."""
-    from kiro_crew.acp.client import CLAUDE_ACP_NPM_PKG, CLAUDE_ACP_SETTING_SOURCES_MIN_VERSION
+    from aj_crew.acp.client import CLAUDE_ACP_NPM_PKG, CLAUDE_ACP_SETTING_SOURCES_MIN_VERSION
 
     return {
         "claude_adapter_min_version": ".".join(map(str, CLAUDE_ACP_SETTING_SOURCES_MIN_VERSION)),
@@ -858,13 +858,13 @@ async def test_side_tools_answers_what_a_side_turn_runs(
     """The footer reads this, so it must give the turn's answer, adapter floor
     included: an old claude adapter must not show a footer that promises lookups,
     and is named as the reason so the footer can say to update it."""
-    from kiro_crew.acp_backends import (
+    from aj_crew.acp_backends import (
         ACP_BACKEND_CLAUDE,
         ACP_BACKEND_GOOSE,
         ACP_BACKEND_KIRO,
         ACP_BACKEND_OPENCODE,
     )
-    from kiro_crew.dashboard.handlers import side as side_mod
+    from aj_crew.dashboard.handlers import side as side_mod
 
     backends = {
         "goose": ACP_BACKEND_GOOSE,
@@ -891,12 +891,12 @@ async def test_side_tools_answers_what_a_side_turn_runs(
 @pytest.mark.asyncio
 async def test_side_tools_is_false_when_the_config_does_not_load(tmp_path, monkeypatch):
     """A turn whose config cannot load runs no tools, so the footer says so too."""
-    from kiro_crew.dashboard.handlers import side as side_mod
+    from aj_crew.dashboard.handlers import side as side_mod
 
     def _unreadable(*args, **kwargs):
         raise OSError("config unreadable")
 
-    monkeypatch.setattr(side_mod.KiroCrewConfig, "load", staticmethod(_unreadable))
+    monkeypatch.setattr(side_mod.AjCrewConfig, "load", staticmethod(_unreadable))
     async with TestClient(TestServer(_make_side_app(_make_state(tmp_path)))) as client:
         resp = await client.get("/api/chat/side/tools")
         assert await resp.json() == {
@@ -923,7 +923,7 @@ def _arm_side_session(state, monkeypatch, *, is_new: bool = True) -> AsyncMock:
     state.sessions.get_or_create = _fake_get_or_create
     state.sessions.release = MagicMock()
     stream_mock = AsyncMock(return_value=_SIDE_ANSWER)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side.stream_and_collect", stream_mock)
     return stream_mock
 
 

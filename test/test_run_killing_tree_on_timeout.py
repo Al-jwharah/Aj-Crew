@@ -13,10 +13,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.sandbox_rlimit import RLIMIT_PROFILE_NONE, run_limited
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew import platform_compat
+from aj_crew.sandbox_rlimit import RLIMIT_PROFILE_NONE, run_limited
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 _ARGV = ["git", "-c", "alias.zz=!sleep 30", "zz"]
 

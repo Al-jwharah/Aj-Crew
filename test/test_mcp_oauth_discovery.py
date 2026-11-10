@@ -3,7 +3,7 @@
 A remote MCP server added straight to ``mcp.json`` whose authorization server is
 outside the builtin and operator endpoint sets fails closed at the banner gate
 unless discovery verifies it, because its PKCE ``code_challenge`` and ``state``
-read as bare secrets. These tests pin ``kiro_crew.mcp_oauth_discovery``: the
+read as bare secrets. These tests pin ``aj_crew.mcp_oauth_discovery``: the
 endpoint is approved only when RFC 9728 / RFC 8414 discovery from the CONFIGURED
 server URL advertises the exact ``(host, path)`` of the consent URL, and nothing
 else about the gate moves.
@@ -19,21 +19,21 @@ from urllib.parse import urlencode
 import pytest
 from turn_harness import TurnScript, run_turn
 
-from kiro_crew import link_unfurl
-from kiro_crew import mcp_oauth_discovery as discovery
-from kiro_crew import security
-from kiro_crew.acp.types import (
+from aj_crew import link_unfurl
+from aj_crew import mcp_oauth_discovery as discovery
+from aj_crew import security
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_MCP_OAUTH_REQUEST,
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.dashboard.chat_runner import _drain_session_init_oauth_requests
-from kiro_crew.dashboard.chat_utils import _redact_meta_for_role
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.security import exfil
-from kiro_crew.sel import SecurityEventLog
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.dashboard.chat_runner import _drain_session_init_oauth_requests
+from aj_crew.dashboard.chat_utils import _redact_meta_for_role
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.security import exfil
+from aj_crew.sel import SecurityEventLog
+from aj_crew.testing.clock import ManualClock
 
 MCP_URL = "https://mcp.unlisted-idp.example/mcp"
 ISSUER = "https://auth.unlisted-idp.example/"
@@ -351,7 +351,7 @@ async def test_failure_cache_keys_are_fixed_size(configured, served):
 class TestTrustedConfigSources:
     def test_project_defaults_are_not_a_trust_source(self, tmp_path, monkeypatch):
         """A writable checkout's ``agents/defaults.json`` must never anchor trust."""
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         project = tmp_path / "project"
         (project / "agents").mkdir(parents=True)
@@ -359,20 +359,20 @@ class TestTrustedConfigSources:
             '{"mcpServers": {"idp": {"url": "https://attacker.example/mcp"}}}',
             encoding="utf-8",
         )
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(project))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(project))
         agents = tmp_path / "agents"
         agents.mkdir()
         monkeypatch.setattr(paths, "kiro_agents_dir", lambda: agents)
         assert discovery._servers_from_agent_spec() == {}
 
     def test_installed_spec_is_read(self, tmp_path, monkeypatch):
-        from kiro_crew.agent import AGENT_FILENAME
-        from kiro_crew.config import paths
+        from aj_crew.agent import AGENT_FILENAME
+        from aj_crew.config import paths
 
         agents = tmp_path / "agents"
         agents.mkdir()
         (agents / AGENT_FILENAME).write_text(
-            '{"name": "kirocrew", "mcpServers": {"idp": {"url": "%s"}}}' % MCP_URL,
+            '{"name": "ajcrew", "mcpServers": {"idp": {"url": "%s"}}}' % MCP_URL,
             encoding="utf-8",
         )
         monkeypatch.setattr(paths, "kiro_agents_dir", lambda: agents)

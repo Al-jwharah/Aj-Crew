@@ -18,7 +18,7 @@ import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-quer
 import type { ReactNode } from 'react'
 import { useFolderSortRead, type FolderSortConfigBody } from './useFolderSortMode'
 
-const KEY = ['kirocrewConfig']
+const KEY = ['ajcrewConfig']
 
 function harness(queryFn: () => Promise<FolderSortConfigBody>) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })

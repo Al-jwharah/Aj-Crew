@@ -18,7 +18,7 @@ import '../src/index.css'
 
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const START = { your_message: 120, memory: 30_000, lessons: 6_000, agent_instructions: 2_000, skill_index: 280 }
 const TURN = { your_message: 800, critical_rules: 4200, lessons: 3100, memory: 1800, surface: 300 }

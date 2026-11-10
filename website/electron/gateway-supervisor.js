@@ -97,12 +97,12 @@ const INSTALLING_STATUS = "Finishing installation…";
 // The splash line behind the pruned-backend dialog: nothing is installing, so
 // it must not say so, and it points at the dialog's Quit, the control that
 // carries the action.
-const PRUNED_STATUS = "Some app files are missing. Use Quit in the dialog, then reopen Kiro Crew.";
+const PRUNED_STATUS = "Some app files are missing. Use Quit in the dialog, then reopen Aj Crew.";
 // relaunchViaConfirmedSuccessor's splash line defaults to the update wording
 // (successor-handoff.js). The handoff also serves a caller that is not
 // updating anything, and the splash is the only surface the user is looking at
 // while it runs, so the reason is the caller's to name.
-const RESTARTING_FOR_LOCAL_GATEWAY_STATUS = "Restarting Kiro Crew to start a local gateway…";
+const RESTARTING_FOR_LOCAL_GATEWAY_STATUS = "Restarting Aj Crew to start a local gateway…";
 const POLL_INTERVAL_MS = 500;
 // The failure dialog's actions that go on to start or reconnect a gateway.
 const RETRY_ACTIONS = new Set(["retry", "force-retry", "enable-retry", "configure-remote"]);
@@ -181,7 +181,7 @@ function createGatewaySupervisor({
   const PORT = port;
   const BACKEND_URL = backendUrl;
   const HEALTH_URL = `${BACKEND_URL}/api/status`;
-  const KIROCREW_HOME = home || resolveHome();
+  const AJCREW_HOME = home || resolveHome();
   const IS_MAC = processObj.platform === "darwin";
   const IS_WIN = processObj.platform === "win32";
 
@@ -255,7 +255,7 @@ function createGatewaySupervisor({
   // across a Retry (which resets reresolveAttempts) and cleared once a launcher
   // resolves to a real backend again.
   let backendPruned = false;
-  // Executables the CURRENT child was actually spawned from. findKirocrewBin
+  // Executables the CURRENT child was actually spawned from. findAjcrewBin
   // re-probes on every call, so after a Toolbox `current` junction is repointed
   // at a newer version it names a backend this shell never started; the child
   // still running is the one spawned before the repoint, and it must keep
@@ -317,7 +317,7 @@ function createGatewaySupervisor({
     runPortStop,
     probeLockHolderPid,
   } = createHomeLock({
-    fs, path, execFile, app, processObj, home: KIROCREW_HOME, port: PORT, isWindows: IS_WIN, log: glog,
+    fs, path, execFile, app, processObj, home: AJCREW_HOME, port: PORT, isWindows: IS_WIN, log: glog,
     lsofHoldsFile, snapshotGatewayPortPids, resolveGatewayBin,
   });
   // The SSH forward a client-only launch reaches its crew through, when the
@@ -331,7 +331,7 @@ function createGatewaySupervisor({
     // Built per spawn, not here: recovering the launchd PATH shells out, and
     // a launch whose crew never opted in must not pay for it.
     getEnv: () => {
-      const { KIROCREW_PORT: _unused, ...tunnelEnv } = processObj.env;
+      const { AJCREW_PORT: _unused, ...tunnelEnv } = processObj.env;
       const recovered = recoverLaunchdPath(tunnelEnv.PATH || "");
       return recovered ? { ...tunnelEnv, PATH: recovered.path } : tunnelEnv;
     },
@@ -517,7 +517,7 @@ function createGatewaySupervisor({
       return classifyPortOwner(probePort, {
         getListenPids: winListenPids,
         getCommand: (p) => windowsProcessCommand(p, { execFileFn: execFile }),
-        isKirocrew: isTrustedWindowsGatewayCommand,
+        isAjcrew: isTrustedWindowsGatewayCommand,
         log: glog,
         holders,
       });
@@ -572,7 +572,7 @@ function createGatewaySupervisor({
   // dispatched since this launch began; the spawn checks it after the probes.
   function startGateway({ isStale = () => false } = {}) {
     reresolveAttempts = 0;
-    glog(`launch: port=${PORT} home=${KIROCREW_HOME} packaged=${app.isPackaged} resourcesPath=${processObj.resourcesPath || "(none)"} log=${gatewayLogPath()}`);
+    glog(`launch: port=${PORT} home=${AJCREW_HOME} packaged=${app.isPackaged} resourcesPath=${processObj.resourcesPath || "(none)"} log=${gatewayLogPath()}`);
     sendStatus("Checking if gateway is running…");
     return new Promise((resolve) => {
       // Both the silent-port and takeover branches funnel through this gate, so
@@ -631,7 +631,7 @@ function createGatewaySupervisor({
           // Not a gate on the button -- only on the wording. One failed handoff
           // does not establish that a second cannot finish: a successor killed at
           // the readiness deadline can be a transient loss, and the remedy the
-          // old copy offered ("quit and open Kiro Crew again") re-execs the app
+          // old copy offered ("quit and open Aj Crew again") re-execs the app
           // exactly as the button does, only by hand. So the attempt is
           // acknowledged and the button is offered again.
           localStartFailed: localStartRelaunchFailed,
@@ -727,7 +727,7 @@ function createGatewaySupervisor({
     });
   }
 
-  // Every call probes the candidate list afresh (findKirocrewBin does live
+  // Every call probes the candidate list afresh (findAjcrewBin does live
   // access() checks), which is what lets a stale-bundle respawn pick up a
   // backend swapped in at the same path. resourcesPath itself is a launch-time
   // snapshot and so is every other Electron path API; there is nothing newer to
@@ -751,13 +751,13 @@ function createGatewaySupervisor({
       return;
     }
     // The gateway owns its data root. Create it before deriving the redirected
-    // bytecode cache, honoring an explicit KIROCREW_HOME without touching the
+    // bytecode cache, honoring an explicit AJCREW_HOME without touching the
     // deprecated legacy directory on a clean install.
-    const kirocrewDir = processObj.env.KIROCREW_HOME || canonicalHome();
+    const ajcrewDir = processObj.env.AJCREW_HOME || canonicalHome();
     try {
-      fs.mkdirSync(kirocrewDir, { recursive: true, mode: 0o700 });
+      fs.mkdirSync(ajcrewDir, { recursive: true, mode: 0o700 });
     } catch (error) {
-      userWarn(`WARN failed to create kirocrew dir ${kirocrewDir}: ${error.message}`);
+      userWarn(`WARN failed to create ajcrew dir ${ajcrewDir}: ${error.message}`);
     }
 
     const bin = resolveGatewayBin();
@@ -768,7 +768,7 @@ function createGatewaySupervisor({
     glog(`no gateway on :${PORT} — spawning bundled backend: bin=${bin} bundled=${bundled} ${execState} staleRetries=${reresolveAttempts}`);
 
     // A packaged Windows app with no backend at any probed path does not hand
-    // the launch to whatever `kirocrew.exe` comes first on PATH. That is the
+    // the launch to whatever `ajcrew.exe` comes first on PATH. That is the
     // state an install manager leaves when it prunes the running version's
     // directory: the shell's own executable and app.asar are mapped, so they
     // survive, and the backend tree under them is gone. What PATH names then
@@ -822,9 +822,9 @@ function createGatewaySupervisor({
     warnSandboxProfileNeed(bin);
 
     // The explicit --port is the single source of truth. Inheriting
-    // KIROCREW_PORT would let the child re-derive a port which differs from the
+    // AJCREW_PORT would let the child re-derive a port which differs from the
     // shell URL and from the gateway's own frame-ancestor claim.
-    const { KIROCREW_PORT: _ignored, ...cleanEnv } = processObj.env;
+    const { AJCREW_PORT: _ignored, ...cleanEnv } = processObj.env;
 
     // A GUI-launched macOS app appends only the launchd domain's additions.
     const gatewayPath = recoverLaunchdPath(cleanEnv.PATH || "");
@@ -846,7 +846,7 @@ function createGatewaySupervisor({
     // spawn only when no stdio entry inherits a descriptor, and without it the
     // gateway gets a console of its own that can show and take the focus. There
     // the child gets the log's path instead, and its entry point re-points its
-    // own stdout/stderr at that file (kiro_crew/desktop_stdio.py). Until it
+    // own stdout/stderr at that file (aj_crew/desktop_stdio.py). Until it
     // does, its stderr is a pipe this shell copies into the log: a pipe is not
     // an inherited descriptor, and it carries the tracebacks of an interpreter
     // that dies before the re-point (the incomplete-bundle check reads them).
@@ -869,7 +869,7 @@ function createGatewaySupervisor({
     if (IS_WIN) {
       if (winLaunchLog) {
         childErr = "pipe";
-        childLogEnv = { KIROCREW_DESKTOP_STDIO_LOG: winLaunchLog };
+        childLogEnv = { AJCREW_DESKTOP_STDIO_LOG: winLaunchLog };
       }
     } else {
       try { childOut = fs.openSync(gatewayLogPath(), "a"); }
@@ -897,13 +897,13 @@ function createGatewaySupervisor({
       env: buildGatewayEnvironment({
         ...cleanEnv,
         ...(gatewayPath ? { PATH: gatewayPath.path } : {}),
-        KIROCREW_PROJECT_DIR: IS_WIN
+        AJCREW_PROJECT_DIR: IS_WIN
           ? resolveProjectDir()
           : path.resolve(dirname, ".."),
         // Tells a signed-out LTS gateway to exit with its refusal instead
         // of serving the browser sign-in screen, which this window cannot open
         // yet (lts_signin_gateway.DESKTOP_GATEWAY_ENV).
-        KIROCREW_DESKTOP_GATEWAY: "1",
+        AJCREW_DESKTOP_GATEWAY: "1",
         // Windows only: where the gateway sends its stdout/stderr (see above).
         ...childLogEnv,
         // The kiro-cli staged into the app's resources at build time; spread
@@ -924,7 +924,7 @@ function createGatewaySupervisor({
         }),
         ...gatewayBytecodeEnvironment(
           processObj.platform,
-          path.join(kirocrewDir, "cache", "pycache"),
+          path.join(ajcrewDir, "cache", "pycache"),
           app.isPackaged,
         ),
       }, { bundled, platform: processObj.platform, discoverProxyEnv: discoverGatewayProxyEnv }),
@@ -1023,7 +1023,7 @@ function createGatewaySupervisor({
       // Node's Windows kill maps both signal names to TerminateProcess. The
       // Gatekeeper hint is meaningful only on macOS, never on normal teardown.
       if (signal === "SIGKILL" && IS_MAC && !expectedExit) {
-        userWarn("HINT: SIGKILL on a freshly-spawned bundled binary almost always means macOS Gatekeeper blocked an unsigned/quarantined nested executable. On the recipient's Mac run: xattr -cr <path to KiroCrew.app>");
+        userWarn("HINT: SIGKILL on a freshly-spawned bundled binary almost always means macOS Gatekeeper blocked an unsigned/quarantined nested executable. On the recipient's Mac run: xattr -cr <path to AjCrew.app>");
       }
       if (!currentChild) return;
       spawnedExecutablePaths = [];
@@ -1165,7 +1165,7 @@ function createGatewaySupervisor({
       return reconnectExternalGateway(window);
     }
     if (strategy === "reconnect-bounded") {
-      glog("liveness: backend unresponsive on an adopted local Kiro Crew gateway — bounded wait, then respawn");
+      glog("liveness: backend unresponsive on an adopted local Aj Crew gateway — bounded wait, then respawn");
       if (!window || window.isDestroyed() || quitting()) return;
       return reconnectOrRespawnAdoptedGateway(window);
     }
@@ -1316,13 +1316,13 @@ function createGatewaySupervisor({
         // a pending fullscreen-exit tray hide cannot re-hide the prompt.
         revealForUserDecision(window);
         leaveImmersiveModes(window);
-        // A packaged AppImage installs no `kirocrew` on PATH, so the page's
-        // "run kirocrew token" instruction is unrunnable for an AppImage-only
+        // A packaged AppImage installs no `ajcrew` on PATH, so the page's
+        // "run ajcrew token" instruction is unrunnable for an AppImage-only
         // user (#16258). The launcher ships inside the image, and
         // resolveGatewayBin() resolves its absolute path; pass it so the page
         // can name a command the user can actually run. Only for an AppImage
         // ($APPIMAGE set) with an absolute, bundled launcher path — a normal
-        // install keeps the on-PATH wording, and a bare "kirocrew" fallback is
+        // install keeps the on-PATH wording, and a bare "ajcrew" fallback is
         // not forwarded. The bundled CLI mints only against OUR gateway's own
         // secret, so this changes the LOCAL recovery wording only and does not
         // touch the refusal of a silent mint against an adopted gateway.
@@ -1403,26 +1403,26 @@ function createGatewaySupervisor({
           : describeIncompleteBundle([]);
       } else if (localGatewayOff) {
         title = remoteTarget
-          ? `Kiro Crew — nothing answering at ${remoteTarget}:${remoteTargetPort}`
-          : `Kiro Crew — no gateway on port ${PORT}`;
+          ? `Aj Crew — nothing answering at ${remoteTarget}:${remoteTargetPort}`
+          : `Aj Crew — no gateway on port ${PORT}`;
         // After a click, the news is what happened to the local start, and the
         // title is what a reader takes in first. Leaving it on the crew made the
         // busy-port and lost-restart dialogs indistinguishable at a glance --
         // same title, same buttons, one word different in the body.
-        if (localStartOutcome) title = `Kiro Crew — ${localStartOutcome}`;
+        if (localStartOutcome) title = `Aj Crew — ${localStartOutcome}`;
         message = error.message;
       } else if (portConflict) {
-        title = `Kiro Crew — port ${PORT} already in use`;
-        message = `Another Kiro Crew gateway is already using port ${PORT} (it may be wedged). `
+        title = `Aj Crew — port ${PORT} already in use`;
+        message = `Another Aj Crew gateway is already using port ${PORT} (it may be wedged). `
           + `Force-stop it and retry, or quit. From a terminal you can also run: `
-          + `kirocrew stop --port ${PORT}`;
+          + `ajcrew stop --port ${PORT}`;
       } else if (failedToStart) {
-        title = "Kiro Crew — gateway failed to start";
+        title = "Aj Crew — gateway failed to start";
         message = error.message;
       } else {
-        title = "Kiro Crew — can't reach the gateway";
-        message = "Could not connect to the Kiro Crew backend. Make sure "
-          + "'kirocrew gateway' is running, or check kirocrew doctor.";
+        title = "Aj Crew — can't reach the gateway";
+        message = "Could not connect to the Aj Crew backend. Make sure "
+          + "'ajcrew gateway' is running, or check ajcrew doctor.";
       }
 
       revealForUserDecision(window);

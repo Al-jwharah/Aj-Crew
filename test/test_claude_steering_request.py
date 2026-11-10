@@ -17,9 +17,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient, steering_advertised
-from kiro_crew.acp.transport_errors import AcpError, AcpProcessDied
-from kiro_crew.acp.types import (
+from aj_crew.acp.client import AcpClient, steering_advertised
+from aj_crew.acp.transport_errors import AcpError, AcpProcessDied
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_STEER_CONSUMED,
@@ -27,14 +27,14 @@ from kiro_crew.acp.types import (
     METHOD_SESSION_STEERING,
     JsonRpcMessage,
 )
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKENDS_STEER,
     ACP_BACKENDS_STEERING_REQUEST,
 )
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import async_wait_until, await_until
 
 PROMPT_ID = 1000
 
@@ -270,7 +270,7 @@ async def test_no_running_turn_sends_nothing():
 @pytest.mark.asyncio
 async def test_a_steer_past_the_text_bound_sends_nothing():
     async with _Tasks() as spawned:
-        from kiro_crew.acp.types import MAX_STEERING_TEXT_CHARS
+        from aj_crew.acp.types import MAX_STEERING_TEXT_CHARS
 
         client = _client()
         wire = _Wire(client)
@@ -361,7 +361,7 @@ async def test_an_answer_behind_a_slow_approval_is_still_read(monkeypatch):
     moves it one second, so the approval outlasts the 8s budget in virtual time
     and nothing before the park can spend any of it.
     """
-    import kiro_crew.acp.client as client_mod
+    import aj_crew.acp.client as client_mod
 
     clock = ManualClock()
     clock.install(monkeypatch, client_mod)
@@ -752,7 +752,7 @@ async def test_a_held_write_in_flight_is_reported_possibly_delivered():
 @pytest.mark.asyncio
 async def test_an_unanswered_held_steer_stays_possibly_delivered_until_the_next_turn(monkeypatch):
     """Spending the answer budget does not prove the adapter ignored the write."""
-    import kiro_crew.acp.client as client_mod
+    import aj_crew.acp.client as client_mod
 
     clock = ManualClock()
     clock.install(monkeypatch, client_mod)
@@ -882,7 +882,7 @@ async def test_a_held_steer_the_adapter_does_not_inject_is_not_reported(outcome)
 
 @pytest.mark.asyncio
 async def test_held_steers_count_toward_the_turn_bound():
-    from kiro_crew.acp.types import MAX_STEERING_ANSWERS
+    from aj_crew.acp.types import MAX_STEERING_ANSWERS
 
     async with _Tasks() as spawned:
         client = _client()

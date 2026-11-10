@@ -22,7 +22,7 @@ import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/ask-answers-focus'
 const SLOT = 'chat-ask-answers-focus'
-const PROJECT = '/home/user/workspace/kirocrew'
+const PROJECT = '/home/user/workspace/ajcrew'
 mkdirSync(OUT, { recursive: true })
 
 // Mirrors ASK_ANSWERED_HEADER / ASK_PAIR_SEPARATOR in src/utils/askQuestionTool.ts.
@@ -36,7 +36,7 @@ const PURPOSE = 'Ask where the fix should land'
 const t0 = Date.now() / 1000 - 600
 const slots = [{
   key: SLOT, title: 'Fix the answers chip focus ring', running: false, last_message: 'Targeting main.', messages: 4,
-  agent: 'kirocrew', memory_mode: 'persistent', project: PROJECT, modified: Math.floor(Date.now() / 1000),
+  agent: 'ajcrew', memory_mode: 'persistent', project: PROJECT, modified: Math.floor(Date.now() / 1000),
   source_links: [], source_links_total: 0,
 }]
 const detail = {
@@ -47,7 +47,7 @@ const detail = {
     {
       role: 'tool', ts: t0 + 7, content: '🔧 ask_question',
       meta: {
-        tool_call_id: 'tc_ask', kind: 'other', purpose: PURPOSE, tool_name: 'ask_question', mcp_server: 'kirocrew-core',
+        tool_call_id: 'tc_ask', kind: 'other', purpose: PURPOSE, tool_name: 'ask_question', mcp_server: 'ajcrew-core',
         input: JSON.stringify({ questions: [{ question: 'Which branch should the fix target?' }], __tool_use_purpose: PURPOSE }),
         output: ANSWERED,
       },

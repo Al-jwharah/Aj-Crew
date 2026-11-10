@@ -1,4 +1,4 @@
-"""``kiro_crew.platform.interfaces`` stays the one import path of every extension point.
+"""``aj_crew.platform.interfaces`` stays the one import path of every extension point.
 
 The boot-layer extension points live in the module itself; the install / structural ones
 (and the feature apps) live in ``interfaces_structural`` and the runtime-service / frontend
@@ -21,24 +21,24 @@ from pathlib import Path
 import pytest
 import source_corpus
 
-from kiro_crew.platform import interfaces
+from aj_crew.platform import interfaces
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_interfaces_facade")
 
-FACADE = "kiro_crew.platform.interfaces"
+FACADE = "aj_crew.platform.interfaces"
 OWNERS = (
-    "kiro_crew.platform.interfaces_runtime",
-    "kiro_crew.platform.interfaces_structural",
+    "aj_crew.platform.interfaces_runtime",
+    "aj_crew.platform.interfaces_structural",
 )
 
 #: One name of each owner, so a definition scan that went blind reads as a mismatch.
 _KNOWN = {
-    "kiro_crew.platform.interfaces_runtime": {
+    "aj_crew.platform.interfaces_runtime": {
         "TunnelProvider",
         "RemoteProvisioner",
         "JailProvider",
     },
-    "kiro_crew.platform.interfaces_structural": {"AppsLoader", "MemoryRoots", "FeatureApp"},
+    "aj_crew.platform.interfaces_structural": {"AppsLoader", "MemoryRoots", "FeatureApp"},
 }
 
 
@@ -69,7 +69,7 @@ def test_every_owner_name_is_bound_on_the_facade_as_the_owners_object() -> None:
 
 
 def test_an_owner_imports_no_project_module_at_run_time_and_never_the_facade() -> None:
-    """Annotations are strings here, so an owner needs ``kiro_crew`` names for type
+    """Annotations are strings here, so an owner needs ``aj_crew`` names for type
     checkers only; a runtime import of one could only ever be a cycle back to the facade."""
     for owner in OWNERS:
         tree = ast.parse(_owner_path(owner).read_text(encoding="utf-8"))
@@ -84,7 +84,7 @@ def test_an_owner_imports_no_project_module_at_run_time_and_never_the_facade() -
             for node in ast.walk(tree)
             if isinstance(node, ast.ImportFrom)
             and id(node) not in typing_only
-            and (node.module or "").startswith("kiro_crew")
+            and (node.module or "").startswith("aj_crew")
         )
         facade = sorted(
             node.module
@@ -95,7 +95,7 @@ def test_an_owner_imports_no_project_module_at_run_time_and_never_the_facade() -
 
 
 def test_no_source_module_outside_the_family_imports_an_owner() -> None:
-    """Callers keep ``kiro_crew.platform.interfaces``: an owner is an implementation detail
+    """Callers keep ``aj_crew.platform.interfaces``: an owner is an implementation detail
     of where the stubs are written down, never a second import path."""
     root = source_corpus.repo_root()
     family = {Path(interfaces.__file__).resolve(), *(_owner_path(o) for o in OWNERS)}
@@ -105,14 +105,14 @@ def test_no_source_module_outside_the_family_imports_an_owner() -> None:
         if path.resolve() in family or not path.relative_to(root).as_posix().startswith("src/"):
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
-        scanned += "kiro_crew.platform.interfaces" in text
+        scanned += "aj_crew.platform.interfaces" in text
         if any(leaf in text for leaf in _OWNER_LEAVES) and _imports_an_owner(text):
             offenders.append(path.relative_to(root).as_posix())
     assert scanned, "no file names the facade -- the scan went blind"
     assert offenders == [], offenders
 
 
-#: The owners' leaf names, for the ``from kiro_crew.platform import <owner>`` spelling.
+#: The owners' leaf names, for the ``from aj_crew.platform import <owner>`` spelling.
 _OWNER_LEAVES = frozenset(owner.rsplit(".", 1)[1] for owner in OWNERS)
 
 
@@ -124,7 +124,7 @@ def _imports_an_owner(text: str) -> bool:
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom) and node.module in OWNERS:
             return True
-        if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew.platform":
+        if isinstance(node, ast.ImportFrom) and node.module == "aj_crew.platform":
             if {a.name for a in node.names} & _OWNER_LEAVES:
                 return True
         if isinstance(node, ast.Import) and {a.name for a in node.names} & set(OWNERS):
@@ -133,11 +133,11 @@ def _imports_an_owner(text: str) -> bool:
 
 
 def test_the_owner_scan_answers_both_ways() -> None:
-    assert _imports_an_owner("from kiro_crew.platform.interfaces_runtime import TunnelProvider\n")
-    assert _imports_an_owner("from kiro_crew.platform import interfaces_structural\n")
-    assert _imports_an_owner("import kiro_crew.platform.interfaces_runtime\n")
-    assert not _imports_an_owner("from kiro_crew.platform.interfaces import TunnelProvider\n")
-    assert not _imports_an_owner("from kiro_crew.platform import interfaces\n")
+    assert _imports_an_owner("from aj_crew.platform.interfaces_runtime import TunnelProvider\n")
+    assert _imports_an_owner("from aj_crew.platform import interfaces_structural\n")
+    assert _imports_an_owner("import aj_crew.platform.interfaces_runtime\n")
+    assert not _imports_an_owner("from aj_crew.platform.interfaces import TunnelProvider\n")
+    assert not _imports_an_owner("from aj_crew.platform import interfaces\n")
 
 
 def test_the_enum_stays_in_the_facade_and_moved_classes_report_their_owner() -> None:
@@ -145,5 +145,5 @@ def test_the_enum_stays_in_the_facade_and_moved_classes_report_their_owner() -> 
     so it keeps the facade's name; the moved Protocols and dataclasses are stubs nothing
     pickles or names by module, and say where they are written down."""
     assert interfaces.InterceptDecision.__module__ == FACADE
-    assert interfaces.RemoteProvisioner.__module__ == "kiro_crew.platform.interfaces_runtime"
-    assert interfaces.MemoryRoots.__module__ == "kiro_crew.platform.interfaces_structural"
+    assert interfaces.RemoteProvisioner.__module__ == "aj_crew.platform.interfaces_runtime"
+    assert interfaces.MemoryRoots.__module__ == "aj_crew.platform.interfaces_structural"

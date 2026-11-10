@@ -12,12 +12,12 @@
  *
  * ## Why the list is short
  *
- * Rows come from {@link https://github.com/kirodotdev/KiroCrew | CHANGELOG.md}'s
+ * Rows come from {@link https://github.com/Al-jwharah/Aj-Crew | CHANGELOG.md}'s
  * sections plus the release the running build belongs to — nothing else. A
  * version that shipped without a section is deliberately absent, because a row
  * that cannot say anything is indistinguishable from a broken one. The running
  * build's release is the single exception: "what am I on?" is the question this
- * page is opened to answer. `kiro_crew/changelog.py` owns that rule.
+ * page is opened to answer. `aj_crew/changelog.py` owns that rule.
  *
  * ## Why prereleases have no rows of their own
  *
@@ -37,7 +37,7 @@ import Clickable from '../../components/Clickable'
 import ErrorNotice from '../../components/ErrorNotice'
 import { i18nT } from '../../i18n/t'
 
-/** Mirrors `kiro_crew.changelog.Release`. */
+/** Mirrors `aj_crew.changelog.Release`. */
 interface Release {
   version: string
   date: string
@@ -52,7 +52,7 @@ interface ReleasesPayload {
   stale: boolean
 }
 
-const REPO = 'https://github.com/kirodotdev/KiroCrew'
+const REPO = 'https://github.com/Al-jwharah/Aj-Crew'
 
 /** Small-print state note for a row, or `''` when the row needs none.
  *

@@ -33,9 +33,9 @@ from crew_log_fold_eager_helpers import (  # noqa: F401 - autouse fixture
 )
 from test_crew_log_fold_delta import _publish_now, _Writer
 
-from kiro_crew import conductor_wake
-from kiro_crew.crew_log import bus, eager, fold_delta
-from kiro_crew.crew_log import projection as crew_log
+from aj_crew import conductor_wake
+from aj_crew.crew_log import bus, eager, fold_delta
+from aj_crew.crew_log import projection as crew_log
 
 FIXTURES = (
     pathlib.Path(__file__).resolve().parent.parent
@@ -248,7 +248,7 @@ def test_conductor_wake_reports_the_same_items_from_deltas_as_from_whole_values(
 
 
 def _feed() -> "Any":
-    from kiro_crew.dashboard_feed import DashboardFeed, _Cell
+    from aj_crew.dashboard_feed import DashboardFeed, _Cell
 
     changes: list[str] = []
     feed = DashboardFeed(WORK_SLOT, on_change=changes.append)
@@ -267,7 +267,7 @@ def _feed() -> "Any":
 
 
 def test_the_rest_snapshot_folds_outside_the_publish_lock(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_log as handler
+    from aj_crew.dashboard.handlers import crew_log as handler
 
     writer = _Writer()
     writer.create("it_a")
@@ -341,7 +341,7 @@ def test_a_snapshot_older_than_the_last_publish_is_labelled_with_its_own_revisio
 
 
 def test_metrics_subscribes_to_session_folds_only_so_never_sees_a_work_delta():
-    from kiro_crew.metrics import crew_log_export
+    from aj_crew.metrics import crew_log_export
 
     seen: list[Any] = []
     bus.subscribe(bus.FOLD_ADVANCED, seen.append, scope=bus.SCOPE_SESSION)
@@ -359,7 +359,7 @@ def test_metrics_subscribes_to_session_folds_only_so_never_sees_a_work_delta():
 def test_the_hub_sends_slot_fold_only_to_watching_sockets_that_apply_deltas(tmp_path):
     from test_fold_watch_routing import _FakeWS, _make_state
 
-    from kiro_crew.dashboard import websocket_hub as hub
+    from aj_crew.dashboard import websocket_hub as hub
 
     state = _make_state(tmp_path)
 
@@ -443,8 +443,8 @@ def test_a_board_that_gains_a_watcher_starts_from_a_snapshot_then_chains():
 def test_the_exporter_narrows_delta_boards_to_what_applying_tabs_watch(tmp_path, monkeypatch):
     from test_fold_watch_routing import _FakeWS, _make_state
 
-    from kiro_crew.crew_log import session_tree_projection
-    from kiro_crew.dashboard.handlers.crew_log import CrewLogPublisher
+    from aj_crew.crew_log import session_tree_projection
+    from aj_crew.dashboard.handlers.crew_log import CrewLogPublisher
 
     tree = {"A": ("A1",), "A1": (), "B": ()}
     monkeypatch.setattr(session_tree_projection, "created_children", lambda s: tree.get(s, ()))
@@ -539,7 +539,7 @@ def test_a_late_publish_after_a_snapshot_is_never_a_delta_on_the_snapshot():
 
 
 def test_the_rest_snapshot_label_is_the_revision_of_its_own_value(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_log as handler
+    from aj_crew.dashboard.handlers import crew_log as handler
 
     writer = _Writer()
     writer.create("it_a")

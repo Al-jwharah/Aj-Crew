@@ -325,7 +325,7 @@ export default function LibraryPage() {
               if (app.manifest?.openCommand) {
                 setError('')
                 api.openApp(app.name).then((res: { remote?: boolean; command?: string; message?: string } | null) => {
-                  if (res?.remote) setRemoteCmd(res.command || res.message || i18nT('components.appstore.installedAppCard.app_cannot_be_opened_kirocrew_is_running_in_a_he'))
+                  if (res?.remote) setRemoteCmd(res.command || res.message || i18nT('components.appstore.installedAppCard.app_cannot_be_opened_ajcrew_is_running_in_a_he'))
                 }).catch((e: unknown) => {
                   setError((e as Error)?.message || i18nT('pages.appsPage.failed_to_open', { name: app.name }))
                 })
@@ -447,7 +447,7 @@ export default function LibraryPage() {
               <div className="text-[13px] text-text mb-4 space-y-1">
                 {uninstallTarget.resources === 'app' && !uninstallTarget.manifest?.setup?.onUninstall && uninstallTarget.origin !== 'registry' && (
                   <div className="bg-bg-elevated border border-border rounded-md px-2.5 py-2 text-[12px] text-muted mb-2">
-                    {i18nT('pages.appsPage.this_is_a_self_managed_app_only_kirocrew_metadat')}
+                    {i18nT('pages.appsPage.this_is_a_self_managed_app_only_ajcrew_metadat')}
                   </div>
                 )}
                 {uninstallTarget.manifest?.setup?.onUninstall && (

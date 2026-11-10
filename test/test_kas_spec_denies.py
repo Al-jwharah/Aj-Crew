@@ -16,12 +16,12 @@ from typing import Any
 import pytest
 from test_tool_call_classification_kas import _kas_builtin_flow
 
-from kiro_crew.acp import kas_agents
-from kiro_crew.acp._dispatch import attach_kas_custom_agents
-from kiro_crew.acp.kas_permissions import CREW_ANSWERED_COMMANDS_KEY, CREW_SPEC_DENIES_KEY
-from kiro_crew.acp.kas_spec_denies import projected_spec_denies
-from kiro_crew.acp.types import AcpEvent
-from kiro_crew.hooks import (
+from aj_crew.acp import kas_agents
+from aj_crew.acp._dispatch import attach_kas_custom_agents
+from aj_crew.acp.kas_permissions import CREW_ANSWERED_COMMANDS_KEY, CREW_SPEC_DENIES_KEY
+from aj_crew.acp.kas_spec_denies import projected_spec_denies
+from aj_crew.acp.types import AcpEvent
+from aj_crew.hooks import (
     TOOL_ALLOW,
     TOOL_AUTO_APPROVE,
     TOOL_DENY,
@@ -29,8 +29,8 @@ from kiro_crew.hooks import (
     HooksConfig,
     hook_gate_kwargs,
 )
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance_profiles as gp
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance_profiles as gp
 
 
 @pytest.fixture(autouse=True)
@@ -266,7 +266,7 @@ def test_two_spellings_of_one_deny_still_grant(tmp_path: Path) -> None:
 def test_only_the_alias_kiro_cli_keeps_is_read() -> None:
     """With both shell spellings set, kiro-cli keeps one; a deny under the other is
     not one it enforces, so the gate does not refuse on it either."""
-    from kiro_crew.platform.tools_settings_aliases import canonical_tools_settings
+    from aj_crew.platform.tools_settings_aliases import canonical_tools_settings
 
     settings = {
         "shell": {"deniedCommands": ["rm .*"]},

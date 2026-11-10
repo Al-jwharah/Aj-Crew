@@ -289,7 +289,7 @@ function renderSidebar(opts: RenderOpts = {}) {
   // re-render of the sidebar rows after the test's last barrier.
   qc.setQueryData(['custom-themes-catalog'], { themes: [], dataMap: new Map() })
   qc.setQueryData(['theme-boot'], {})
-  qc.setQueryData(['kirocrewConfig'], {})
+  qc.setQueryData(['ajcrewConfig'], {})
   qc.setQueryData(['shared-crew', 'capabilities'], {})
   const view = render(
     <QueryClientProvider client={qc}>

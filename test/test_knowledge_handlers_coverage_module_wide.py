@@ -27,8 +27,8 @@ from knowledge_handlers_coverage_helpers import (  # noqa: F401 -- the fixture i
     store_fixture,
 )
 
-from kiro_crew.dashboard.handlers import knowledge as kh
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.handlers import knowledge as kh
+from aj_crew.testing.wait import await_until
 
 # startup / wiring
 
@@ -128,7 +128,7 @@ class TestStartArtifactIngestAsync:
     @pytest.mark.asyncio
     async def test_disabled_toggle_is_a_no_op(self, store, monkeypatch):
         monkeypatch.setattr(
-            f"{MODULE}.KiroCrewConfig.load", staticmethod(lambda: _cfg(auto_ingest=False))
+            f"{MODULE}.AjCrewConfig.load", staticmethod(lambda: _cfg(auto_ingest=False))
         )
         app = _make_app(store, pipeline=MagicMock())
         await kh._start_artifact_ingest_async(app)
@@ -137,7 +137,7 @@ class TestStartArtifactIngestAsync:
     @pytest.mark.asyncio
     async def test_enabled_registers_change_listener_and_starts(self, store, monkeypatch):
         monkeypatch.setattr(
-            f"{MODULE}.KiroCrewConfig.load",
+            f"{MODULE}.AjCrewConfig.load",
             staticmethod(lambda: _cfg(auto_ingest=True, kinds=("webapp",))),
         )
         art_store = MagicMock()
@@ -320,7 +320,7 @@ class TestJsonObjectBodyGuard:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("payload", _NON_OBJECT_BODIES)
     async def test_agent_document_non_object_body_is_400(self, store, monkeypatch, payload):
-        monkeypatch.setattr(f"{MODULE}.KiroCrewConfig.load", staticmethod(_cfg))
+        monkeypatch.setattr(f"{MODULE}.AjCrewConfig.load", staticmethod(_cfg))
         async with _client(_guard_app(store, pipeline=MagicMock())) as client:
             resp = await client.post("/api/knowledge/agent-document", json=payload)
             assert resp.status == 400
@@ -356,7 +356,7 @@ class TestJsonObjectBodyGuard:
     @pytest.mark.asyncio
     async def test_invalid_json_yields_code_at_every_site(self, store, monkeypatch):
         # Every site reports the machine-readable ``code`` on a parse failure.
-        monkeypatch.setattr(f"{MODULE}.KiroCrewConfig.load", staticmethod(_cfg))
+        monkeypatch.setattr(f"{MODULE}.AjCrewConfig.load", staticmethod(_cfg))
         item_id = store.add_item("a", "body", "note")
         sid = store.add_source("s", "web", "https://example.com")
         app = _guard_app(store, pipeline=MagicMock(), embedder=_FakeEmbedder())

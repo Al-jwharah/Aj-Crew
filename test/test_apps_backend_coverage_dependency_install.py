@@ -1,4 +1,4 @@
-"""Unit coverage for :mod:`kiro_crew.apps.backend`: the spawn body's ``requirements.txt`` install.
+"""Unit coverage for :mod:`aj_crew.apps.backend`: the spawn body's ``requirements.txt`` install.
 
 Also the ``deps_boot`` shim, the redacted pip failure in the backend log and the crash
 tail. The npm install is covered in ``_dispatch``; shared doubles and fixtures come
@@ -23,8 +23,8 @@ from apps_backend_coverage_helpers import _isolated_module_state  # noqa: F401
 from apps_backend_coverage_helpers import spawn_root_fixture  # noqa: F401
 from apps_backend_coverage_helpers import _capture_popen, _manifest, _record_runs, _StopSpawn
 
-import kiro_crew.apps.backend as bmod
-from kiro_crew.testing.wait import default_timeout
+import aj_crew.apps.backend as bmod
+from aj_crew.testing.wait import default_timeout
 
 # Spawn body: dependency installation
 
@@ -40,7 +40,7 @@ class TestDependencyInstall:
         but no ensurepip, so venv creation dies after building the directory
         skeleton - which the venv-first interpreter policy then prefers while
         it holds none of the app's dependencies."""
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.interpreter import app_deps_dir
 
         (spawn_root / "server.py").write_text("x = 1\n")
         (spawn_root / "requirements.txt").write_bytes(b"requests\n")
@@ -89,7 +89,7 @@ class TestDependencyInstall:
         # No pip ran, no deps dir was created, and no stamp exists anywhere
         # that could disclose a digest of the outside file's bytes.
         assert not any("install" in argv for argv in runs), runs
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.interpreter import app_deps_dir
 
         assert not app_deps_dir(spawn_root).exists()
         assert not list((spawn_root / "data").glob(f"{bmod._DEPS_STAGING_NAME}*"))
@@ -157,7 +157,7 @@ class TestDependencyInstall:
         the deps_boot shim processes via site.addsitedir - so provisioning
         RETAINS them and swaps the tree live (the refusal that predated the
         shim is gone)."""
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.interpreter import app_deps_dir
 
         (spawn_root / "server.py").write_text("x = 1\n")
         (spawn_root / "requirements.txt").write_bytes(b"-e ./lib\n")
@@ -216,7 +216,7 @@ class TestDependencyInstall:
         final front position when addsitedir runs. A gateway copy of a
         colliding name earlier on sys.path must NOT win (no later reordering
         can evict a wrongly cached module)."""
-        from kiro_crew.apps import deps_boot
+        from aj_crew.apps import deps_boot
 
         gateway = tmp_path / "gateway"
         gateway.mkdir()
@@ -249,7 +249,7 @@ class TestDependencyInstall:
         reach the shim): it must take the script dispatch - the embedded-
         launcher arm's execv fallback would restart its shebang interpreter
         WITHOUT the deps path."""
-        from kiro_crew.apps import deps_boot
+        from aj_crew.apps import deps_boot
 
         deps = tmp_path / "deps"
         deps.mkdir()
@@ -283,7 +283,7 @@ class TestDependencyInstall:
         handed to execv exactly as an unshimmed launch would."""
         import zipfile as _zf
 
-        from kiro_crew.apps import deps_boot
+        from aj_crew.apps import deps_boot
 
         class _ExecvCalled(Exception):
             pass
@@ -337,7 +337,7 @@ class TestDependencyInstall:
         """Path-launch shape: CPython puts the shim script's OWN directory at
         sys.path[0], which would let an app import gateway modules by bare
         name - the shim must drop it before anything resolves."""
-        from kiro_crew.apps import deps_boot
+        from aj_crew.apps import deps_boot
 
         own = os.path.dirname(os.path.abspath(deps_boot.__file__))
         deps = tmp_path / "deps"
@@ -356,7 +356,7 @@ class TestDependencyInstall:
         (with the script dir at sys.path[0]), -m module dispatch (module
         resolved through the addsitedir'd deps dir, moved to the front),
         and the usage error."""
-        from kiro_crew.apps import deps_boot
+        from aj_crew.apps import deps_boot
 
         _clean_path = list(sys.path)  # arms mutate the patched list; reset from this
         deps = tmp_path / "deps"
@@ -514,7 +514,7 @@ class TestDependencyInstall:
             [
                 sys.executable,
                 # Absolute SCRIPT path, not -m: the -m spelling imports the
-                # kiro_crew package and Python writes __pycache__ into the
+                # aj_crew package and Python writes __pycache__ into the
                 # CHECKOUT - a test must not leave artifacts outside
                 # tmp_path. (Production spells it by path for its own
                 # reason: session-cwd shadowing.)
@@ -541,7 +541,7 @@ class TestDependencyInstall:
         """A provisioned backend spawns via deps_boot (which addsitedir()s
         the deps dir, processing .pth) rather than a raw interpreter+entry
         argv - and only for the gateway interpreter."""
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.interpreter import app_deps_dir
 
         (spawn_root / "server.py").write_text("x = 1\n")
         (spawn_root / "requirements.txt").write_bytes(b"requests\n")
@@ -554,7 +554,7 @@ class TestDependencyInstall:
             bmod._start_app_backend_body("deps-shim", _manifest("server.py"))
         argv = seen["argv"]
         assert argv[0] == sys.executable, argv
-        # absolute-path spelling: an app-root kiro_crew.py must not be able
+        # absolute-path spelling: an app-root aj_crew.py must not be able
         # to shadow the shim for -m resolution under cwd=app root
         assert argv[1] == "-s", argv
         assert argv[2].endswith("deps_boot.py"), argv
@@ -633,7 +633,7 @@ class TestDependencyInstall:
             monkeypatch.setattr(bmod.pinned_fs, "supports_pinned_walk", lambda: False)
         parent = spawn_root / "data"
         parent.mkdir()
-        lock = parent / ".kirocrew-deps.lock"
+        lock = parent / ".ajcrew-deps.lock"
         (spawn_root / "requirements.txt").write_text("requests\n")
         if existing:
             lock.write_text("lock contents stay intact\n")
@@ -641,7 +641,7 @@ class TestDependencyInstall:
         real_open = os.open
 
         def record_open(path, flags, mode=0o777, *, dir_fd=None):
-            if str(path).endswith(".kirocrew-deps.lock"):
+            if str(path).endswith(".ajcrew-deps.lock"):
                 calls.append((flags, dir_fd))
             return real_open(path, flags, mode, dir_fd=dir_fd)
 
@@ -676,7 +676,7 @@ class TestDependencyInstall:
         real_open = os.open
 
         def race_open(path, flags, mode=0o777, *, dir_fd=None):
-            if str(path).endswith(".kirocrew-deps.lock"):
+            if str(path).endswith(".ajcrew-deps.lock"):
                 calls.append(flags)
                 if len(calls) == 1:
                     # A contender created the file, then removed it before reopen.
@@ -694,7 +694,7 @@ class TestDependencyInstall:
         assert len(calls) == 2
         assert not calls[1] & (os.O_CREAT | os.O_EXCL)
         assert provisioned == []
-        assert not (spawn_root / "data" / ".kirocrew-deps.lock").exists()
+        assert not (spawn_root / "data" / ".ajcrew-deps.lock").exists()
 
     def test_an_existing_lock_symlink_is_not_followed(
         self, spawn_root: Any, monkeypatch: pytest.MonkeyPatch
@@ -707,7 +707,7 @@ class TestDependencyInstall:
         parent.mkdir()
         target = spawn_root / "unchanged.txt"
         target.write_text("keep this content", encoding="utf-8")
-        lock = parent / ".kirocrew-deps.lock"
+        lock = parent / ".ajcrew-deps.lock"
         lock.symlink_to(target)
         (spawn_root / "requirements.txt").write_text("requests\n", encoding="utf-8")
         provisioned = []
@@ -790,7 +790,7 @@ class TestDependencyInstall:
         assert error, "provisioning through a linked app directory must be refused"
         assert not targets, "pip ran, so a write was already aimed through the link"
         assert not list(
-            (victim / "data").glob(".kirocrew-deps*")
+            (victim / "data").glob(".ajcrew-deps*")
         ), "the refusal came too late: the victim tree already carries staging"
 
     def test_concurrent_provisioning_is_serialized_by_the_deps_lock(
@@ -817,7 +817,7 @@ class TestDependencyInstall:
         real_open = bmod.os.open
 
         def concurrent_open(path, flags, mode=0o777, *, dir_fd=None):
-            if str(path).endswith(".kirocrew-deps.lock") and flags & bmod.os.O_CREAT:
+            if str(path).endswith(".ajcrew-deps.lock") and flags & bmod.os.O_CREAT:
                 ready.wait(timeout=5)
             return real_open(path, flags, mode, dir_fd=dir_fd)
 
@@ -881,7 +881,7 @@ class TestDependencyInstall:
         assert errs == ["", ""], errs
         assert not overlap, "two pip transactions ran concurrently"
         assert len(installs) == 1, "the waiter must reuse the completed install"
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.interpreter import app_deps_dir
 
         assert (app_deps_dir(spawn_root) / "pkg.py").is_file()
 
@@ -1074,7 +1074,7 @@ class TestDependencyInstall:
 
         if not hasattr(_os, "symlink"):
             pytest.skip("no symlink support")
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.interpreter import app_deps_dir
 
         (spawn_root / "server.py").write_text("x = 1\n")
         req = b"requests\n"
@@ -1100,7 +1100,7 @@ class TestDependencyInstall:
         change confined to an included file (-r base.txt) would preserve the
         stamp and serve stale dependencies. Include-bearing requirements
         therefore disable the skip: pip runs even when the stamp matches."""
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.interpreter import app_deps_dir
 
         (spawn_root / "server.py").write_text("x = 1\n")
         req = b"-r base.txt\n"
@@ -1122,7 +1122,7 @@ class TestDependencyInstall:
         install could, so the stamp is what keeps a restart with unchanged
         requirements off the network - and keeps an OFFLINE restart of a
         healthy backend from raising a false provisioning alarm."""
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.interpreter import app_deps_dir
 
         (spawn_root / "server.py").write_text("x = 1\n")
         (spawn_root / "requirements.txt").write_bytes(b"requests\n")
@@ -1138,7 +1138,7 @@ class TestDependencyInstall:
     def test_a_changed_requirements_file_reinstalls(
         self, spawn_root: Any, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.interpreter import app_deps_dir
 
         (spawn_root / "server.py").write_text("x = 1\n")
         (spawn_root / "requirements.txt").write_bytes(b"requests==2.32.0\n")
@@ -1183,7 +1183,7 @@ class TestDependencyInstall:
         prior name only. The next start must put it back - and, with a
         matching stamp inside, skip pip - so an offline restart keeps its
         dependencies instead of spawning bare."""
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.interpreter import app_deps_dir
 
         (spawn_root / "server.py").write_text("x = 1\n")
         (spawn_root / "requirements.txt").write_bytes(b"requests\n")
@@ -1213,7 +1213,7 @@ class TestDependencyInstall:
         import os as _os
         from pathlib import Path
 
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.interpreter import app_deps_dir
 
         victim = tmp_path / "victim-outside-app"
         victim.mkdir()
@@ -1246,7 +1246,7 @@ class TestDependencyInstall:
         """pip fills a staging dir that is swapped in only on success, so a
         failed or interrupted (re)install can never corrupt the live deps dir
         in place - the prior good install keeps serving the spawn."""
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.interpreter import app_deps_dir
 
         (spawn_root / "server.py").write_text("x = 1\n")
         (spawn_root / "requirements.txt").write_bytes(b"requests==2.32.0\n")
@@ -1502,7 +1502,7 @@ class TestDependencyInstall:
         with pytest.raises(_StopSpawn):
             bmod._start_app_backend_body("deps-utf8", _manifest("server.py"))
         raw = (spawn_root / "data" / "logs" / "backend.log").read_bytes()
-        assert b"[kiro-crew] " in raw
+        assert b"[aj-crew] " in raw
         assert glyphs.encode("utf-8") in raw, "the non-ASCII text must round-trip as UTF-8"
 
     def test_the_crash_tail_decodes_the_childs_bytes_with_replacement(
@@ -1515,7 +1515,7 @@ class TestDependencyInstall:
         log_path = spawn_root / "data" / "logs" / "backend.log"
 
         def _popen(*_a: Any, **kwargs: Any) -> Any:
-            kwargs["stdout"].write("[kiro-crew] header\n")
+            kwargs["stdout"].write("[aj-crew] header\n")
             kwargs["stdout"].flush()
             with open(log_path, "ab") as raw:
                 raw.write(b"Error: address already in use \xff\xfe on bind\n")
@@ -1548,7 +1548,7 @@ class TestDependencyInstall:
         log_path = log_dir / "backend.log"
         # A prior session that really did hit a port collision.
         log_path.write_text(
-            "[kiro-crew] previous session\n"
+            "[aj-crew] previous session\n"
             "Error: [Errno 98] address already in use: bind failed\n"
         )
 
@@ -1622,13 +1622,13 @@ class TestDependencyInstall:
     def test_a_shimmed_child_gets_no_deps_pythonpath(
         self, spawn_root: Any, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """Shim XOR PYTHONPATH: `python -m kiro_crew.apps.deps_boot` resolves
-        kiro_crew through sys.path, so a deps-provided kiro_crew copy on
+        """Shim XOR PYTHONPATH: `python -m aj_crew.apps.deps_boot` resolves
+        aj_crew through sys.path, so a deps-provided aj_crew copy on
         PYTHONPATH would SHADOW the gateway's shim - app code running as the
         "shim". A shimmed child therefore launches WITHOUT the deps dir on
         PYTHONPATH; addsitedir supplies the deps only after the trusted shim
         has imported. The operator's own PYTHONPATH still passes through."""
-        from kiro_crew.apps.interpreter import app_deps_dir
+        from aj_crew.apps.interpreter import app_deps_dir
 
         deps_dir = app_deps_dir(spawn_root)
         deps_dir.mkdir(parents=True)

@@ -72,7 +72,7 @@ from computer_use_snapshot_macos_helpers import (  # noqa: F401 -- the fixture i
 # so the bare module name is the form that always resolves.
 from test_computer_use_ffi import _H_ELEMENT, _H_SOURCE, _TID_ELEMENT, _FakeFn, _Fakes
 
-from kiro_crew.computer_use import (
+from aj_crew.computer_use import (
     macos_driver,
     macos_ffi,
     permissions,
@@ -80,7 +80,7 @@ from kiro_crew.computer_use import (
     render,
     snapshot_macos,
 )
-from kiro_crew.computer_use.types import (
+from aj_crew.computer_use.types import (
     CLICK_METHOD_ACCESSIBILITY,
     CLICK_METHOD_APP_POST,
     CLICK_METHOD_GLOBAL,
@@ -275,7 +275,7 @@ class TestWindowSelection:
         app = AppRef(
             name="Fixture",
             pid=4242,
-            bundle_id="dev.kirocrew.fixture",
+            bundle_id="dev.ajcrew.fixture",
             window_id=77,
             window_title="Quarterly Report",
         )
@@ -442,7 +442,7 @@ class TestResponsibleProcessWalk:
         identifies its worker from that same call. *chain* lists the bundle display
         name per level outward, ``""`` for a level with no bundle.
         """
-        from kiro_crew.computer_use import apps_macos
+        from aj_crew.computer_use import apps_macos
 
         pids = [os.getpid()] + [90 - 10 * i for i in range(len(chain) - 1)]
         names = dict(zip(pids, chain))
@@ -466,38 +466,38 @@ class TestResponsibleProcessWalk:
         """macOS grants TCC to the process it considers responsible, which is the
         OUTERMOST identifiable ancestor -- so a nearer name must be overwritten by a
         further one, not kept."""
-        self._tree(monkeypatch, chain=["python3", "kiro-cli", "Kiro Crew"])
-        assert permissions.responsible_process_name() == "Kiro Crew"
+        self._tree(monkeypatch, chain=["python3", "kiro-cli", "Aj Crew"])
+        assert permissions.responsible_process_name() == "Aj Crew"
 
     def test_the_walk_terminates_at_init(self, monkeypatch: pytest.MonkeyPatch):
         """Reaching pid 1 ends the walk. Without this the loop would keep asking the
         OS about pid 1's parent, which on Linux answers 0 forever."""
-        self._tree(monkeypatch, chain=["Kiro Crew"])
-        assert permissions.responsible_process_name() == "Kiro Crew"
+        self._tree(monkeypatch, chain=["Aj Crew"])
+        assert permissions.responsible_process_name() == "Aj Crew"
 
     def test_a_self_referential_parent_does_not_spin(self, monkeypatch: pytest.MonkeyPatch):
         """An unusual or hostile tree can report itself as its own parent."""
-        from kiro_crew.computer_use import apps_macos
+        from aj_crew.computer_use import apps_macos
 
         monkeypatch.setattr(
             apps_macos,
             "resolve_identity",
-            lambda pid: apps_macos.AppIdentity(display_name="Kiro Crew"),
+            lambda pid: apps_macos.AppIdentity(display_name="Aj Crew"),
             raising=False,
         )
         monkeypatch.setattr(permissions.platform_compat, "get_ppid", lambda pid: pid, raising=False)
-        assert permissions.responsible_process_name() == "Kiro Crew"
+        assert permissions.responsible_process_name() == "Aj Crew"
 
     def test_a_failing_ppid_lookup_keeps_the_name_found_so_far(
         self, monkeypatch: pytest.MonkeyPatch
     ):
         """Diagnostic-only: a raising ``get_ppid`` must stop the walk, not the page."""
-        from kiro_crew.computer_use import apps_macos
+        from aj_crew.computer_use import apps_macos
 
         monkeypatch.setattr(
             apps_macos,
             "resolve_identity",
-            lambda pid: apps_macos.AppIdentity(display_name="Kiro Crew"),
+            lambda pid: apps_macos.AppIdentity(display_name="Aj Crew"),
             raising=False,
         )
 
@@ -505,7 +505,7 @@ class TestResponsibleProcessWalk:
             raise OSError("no such process")
 
         monkeypatch.setattr(permissions.platform_compat, "get_ppid", _boom, raising=False)
-        assert permissions.responsible_process_name() == "Kiro Crew"
+        assert permissions.responsible_process_name() == "Aj Crew"
 
     def test_an_unidentifiable_chain_falls_back_to_the_executable(
         self, monkeypatch: pytest.MonkeyPatch
@@ -895,7 +895,7 @@ class TestMacOSPointerPaths:
         warp-before-post, which post symbol is reached — so ownership is granted
         here; the refusal itself is pinned in ``TestReviewerFoundRegressions``.
         """
-        from kiro_crew.computer_use import apps_macos
+        from aj_crew.computer_use import apps_macos
 
         monkeypatch.setattr(apps_macos, "pid_owns_point", lambda pid, x, y: True)
 
@@ -1217,7 +1217,7 @@ class TestChildCapMarksTheWalkTruncated:
         because ``capture_snapshot_image`` reads it as "a secure field may exist
         beyond what was scanned".
         """
-        from kiro_crew.computer_use import capture_macos
+        from aj_crew.computer_use import capture_macos
 
         self._wide_window(fakes, snapshot_macos.MAX_CHILDREN_PER_NODE + 5)
         snap = snapshot_macos.build_snapshot(_APP, _req(max_nodes=100_000))
@@ -1308,22 +1308,22 @@ class TestDenylistCaseFolding:
     """Case-insensitive matching, now over the ONE retained entry.
 
     The terminal / credential-manager / system-settings / auth-prompt entries are
-    gone, so this exercises ``kirocrew_self`` — the rule that keeps the keystone
+    gone, so this exercises ``ajcrew_self`` — the rule that keeps the keystone
     (and therefore the primary enable) out of the agent's reach.
     """
 
     def test_matching_is_case_insensitive_on_both_sides(self):
-        from kiro_crew.computer_use.types import AppRef
+        from aj_crew.computer_use.types import AppRef
 
         for name, bundle in (
-            ("KIRO CREW", "DEV.KIRO.CREW"),
-            ("kiro crew", "dev.kiro.crew"),
-            ("Kiro Crew", "Dev.Kiro.Crew"),
+            ("AJ CREW", "IO.GITHUB.AL-JWHARAH.AJCREW"),
+            ("aj crew", "io.github.al-jwharah.ajcrew"),
+            ("Aj Crew", "Io.Github.Al-Jwharah.Ajcrew"),
         ):
             assert policy.denied_rule_for(AppRef(name=name, pid=1, bundle_id=bundle)) is not None
 
     def test_an_unrelated_app_is_not_matched(self):
-        from kiro_crew.computer_use.types import AppRef
+        from aj_crew.computer_use.types import AppRef
 
         assert (
             policy.denied_rule_for(AppRef(name="Preview", pid=1, bundle_id="com.apple.Preview"))
@@ -1369,8 +1369,8 @@ class TestReviewerFoundRegressions:
         Naming an allowed app while passing coordinates over a denied one would
         otherwise pass the policy check on app A and click app B.
         """
-        from kiro_crew.computer_use import apps_macos, macos_driver
-        from kiro_crew.computer_use.types import ClickRequest
+        from aj_crew.computer_use import apps_macos, macos_driver
+        from aj_crew.computer_use.types import ClickRequest
 
         monkeypatch.setattr(apps_macos, "pid_owns_point", lambda pid, x, y: False)
         result = macos_driver.MacOSBackend().click(
@@ -1384,7 +1384,7 @@ class TestReviewerFoundRegressions:
 
     def test_point_ownership_takes_the_TOPMOST_window(self, fakes: _Fakes, monkeypatch):
         """ "Any window of mine contains it" would permit a click on an overlapper."""
-        from kiro_crew.computer_use import apps_macos
+        from aj_crew.computer_use import apps_macos
 
         mine, theirs = 4242, 9999
         front = macos_ffi.WindowInfo(
@@ -1412,7 +1412,7 @@ class TestReviewerFoundRegressions:
     def test_point_ownership_fails_closed_when_bounds_are_unreadable(
         self, fakes: _Fakes, monkeypatch
     ):
-        from kiro_crew.computer_use import apps_macos
+        from aj_crew.computer_use import apps_macos
 
         unreadable = macos_ffi.WindowInfo(
             window_id=1,
@@ -1438,7 +1438,7 @@ class TestOverlayWindowsBlockPointerClicks:
     """
 
     def test_a_notification_over_the_app_refuses(self, fakes: _Fakes, monkeypatch):
-        from kiro_crew.computer_use import apps_macos
+        from aj_crew.computer_use import apps_macos
 
         banner = macos_ffi.WindowInfo(
             window_id=1,
@@ -1461,7 +1461,7 @@ class TestOverlayWindowsBlockPointerClicks:
 
     def test_the_same_app_still_owns_an_uncovered_point(self, fakes: _Fakes, monkeypatch):
         """The inverse, so the rule cannot refuse everything."""
-        from kiro_crew.computer_use import apps_macos
+        from aj_crew.computer_use import apps_macos
 
         banner = macos_ffi.WindowInfo(
             window_id=1,
@@ -1487,7 +1487,7 @@ class TestOverlayWindowsBlockPointerClicks:
         self, fakes: _Fakes, monkeypatch
     ):
         """A window with no readable bounds could be covering the point."""
-        from kiro_crew.computer_use import apps_macos
+        from aj_crew.computer_use import apps_macos
 
         unknown = macos_ffi.WindowInfo(
             window_id=1,

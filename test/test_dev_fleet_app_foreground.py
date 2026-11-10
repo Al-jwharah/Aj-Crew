@@ -21,14 +21,14 @@ from dev_fleet_app_helpers import _sweep_staged_sync_tempdirs  # noqa: F401 - fi
 from dev_fleet_app_helpers import _venv_maps_to_the_synced_checkout  # noqa: F401 - fixture
 from dev_fleet_app_helpers import _POSIX_ONLY, _mk_make_live_wt, _stub_make_live
 
-import kiro_crew.apps.builtins.dev_fleet.server as mod
-from kiro_crew.apps.builtins.dev_fleet import live as live_mod
-from kiro_crew.apps.builtins.dev_fleet import runtime as runtime_mod
+import aj_crew.apps.builtins.dev_fleet.server as mod
+from aj_crew.apps.builtins.dev_fleet import live as live_mod
+from aj_crew.apps.builtins.dev_fleet import runtime as runtime_mod
 
 # Foreground last-resort restart
 
 
-def _mk_kcbin(tmp_path: Path, name: str = "kirocrew") -> Path:
+def _mk_kcbin(tmp_path: Path, name: str = "ajcrew") -> Path:
     """An executable file that passes ForegroundBackend's launcher validation."""
     d = tmp_path / "bin"
     d.mkdir(parents=True, exist_ok=True)
@@ -52,7 +52,7 @@ def _fg(
     desktop: bool = False,
 ):
     """A ForegroundBackend wired to fakes. Returns (backend, spawned_argvs)."""
-    from kiro_crew.apps.builtins.dev_fleet import gateway_service as gs
+    from aj_crew.apps.builtins.dev_fleet import gateway_service as gs
 
     spawned: list[list[str]] = []
 
@@ -102,7 +102,7 @@ async def test_foreground_backend_unavailable_cases(tmp_path):
 @pytest.mark.asyncio
 async def test_foreground_backend_binary_resolution(tmp_path):
     """ONLY the keystone-fenced marker launcher is trusted — no PATH fallback
-    (an agent can plant a `kirocrew` in ~/.local/bin); invalid recorded
+    (an agent can plant a `ajcrew` in ~/.local/bin); invalid recorded
     launchers are refused rather than guessed around."""
     kc = _mk_kcbin(tmp_path)
     # Marker launcher used, verbatim.
@@ -112,23 +112,23 @@ async def test_foreground_backend_binary_resolution(tmp_path):
     # No recorded launcher (source-tree launch, empty marker): refuse — the
     # PATH fallback is deliberately absent.
     fg, spawned = _fg(tmp_path, launcher=None)
-    assert await fg.status() == "no_kirocrew_binary"
+    assert await fg.status() == "no_ajcrew_binary"
     ok, err = await fg.restart_detached()
     assert not ok and "resolved" in err and spawned == []
-    # A launcher that is not basenamed kirocrew is refused even when executable
+    # A launcher that is not basenamed ajcrew is refused even when executable
     # (the _own_console_script rule: exec the entry point it claims to be).
     impostor = _mk_kcbin(tmp_path / "i", name="systemctl")
     fg, _ = _fg(tmp_path, launcher=str(impostor))
-    assert await fg.status() == "no_kirocrew_binary"
+    assert await fg.status() == "no_ajcrew_binary"
     # A non-executable launcher is refused: it could stop the gateway but never
     # start the replacement.
     limp = _mk_kcbin(tmp_path / "n")
     limp.chmod(0o644)
     fg, _ = _fg(tmp_path, launcher=str(limp))
-    assert await fg.status() == "no_kirocrew_binary"
+    assert await fg.status() == "no_ajcrew_binary"
     # A relative recorded path is refused (never resolved against a cwd).
-    fg, _ = _fg(tmp_path, launcher="bin/kirocrew")
-    assert await fg.status() == "no_kirocrew_binary"
+    fg, _ = _fg(tmp_path, launcher="bin/ajcrew")
+    assert await fg.status() == "no_ajcrew_binary"
 
 
 @pytest.mark.asyncio
@@ -175,12 +175,12 @@ async def test_restart_of_a_desktop_supervised_gateway_names_the_app(monkeypatch
 
 @pytest.mark.asyncio
 async def test_restart_of_a_service_launched_gateway_spawns_nothing(monkeypatch, tmp_path):
-    """A `kirocrew service install` unit's gateway is its manager's to restart: a
+    """A `ajcrew service install` unit's gateway is its manager's to restart: a
     detached restart would run in the unit's cgroup and die with the gateway it
     stops. Restart spawns nothing and names the service, not a foreground one."""
-    from kiro_crew.config.loader import consume_managed_service_launch_environment
+    from aj_crew.config.loader import consume_managed_service_launch_environment
 
-    monkeypatch.setenv("KIROCREW_SERVICE_MANAGED", "1")
+    monkeypatch.setenv("AJCREW_SERVICE_MANAGED", "1")
     # The gateway takes the marker out of its environment at start and keeps it.
     consume_managed_service_launch_environment()
     kc = _mk_kcbin(tmp_path)
@@ -194,15 +194,15 @@ async def test_restart_of_a_service_launched_gateway_spawns_nothing(monkeypatch,
     res = await mod._restart_gateway()
 
     assert res["ok"] is False
-    assert "service install` unit" in res["error"] and "kirocrew restart" in res["error"]
+    assert "service install` unit" in res["error"] and "ajcrew restart" in res["error"]
     assert "foreground" not in res["error"]
     assert spawned == []
     assert mod._MAKE_LIVE_COMMITTED is False
 
 
 def test_default_desktop_supervised_asks_the_cli_check_for_that_port(monkeypatch):
-    from kiro_crew import cli_server_stop
-    from kiro_crew.apps.builtins.dev_fleet import gateway_service as gs
+    from aj_crew import cli_server_stop
+    from aj_crew.apps.builtins.dev_fleet import gateway_service as gs
 
     seen = []
 
@@ -217,12 +217,12 @@ def test_default_desktop_supervised_asks_the_cli_check_for_that_port(monkeypatch
 
 
 def test_default_confinement_detects_sandbox_marker(monkeypatch):
-    """KIROCREW_SANDBOX_ACTIVE — the launcher-exported in-sandbox marker — is
+    """AJCREW_SANDBOX_ACTIVE — the launcher-exported in-sandbox marker — is
     detected as confinement (checked before the cgroup read, so this is
     deterministic on any host)."""
-    from kiro_crew.apps.builtins.dev_fleet import gateway_service as gs
+    from aj_crew.apps.builtins.dev_fleet import gateway_service as gs
 
-    monkeypatch.setenv("KIROCREW_SANDBOX_ACTIVE", "1")
+    monkeypatch.setenv("AJCREW_SANDBOX_ACTIVE", "1")
     reason = gs.default_confinement()
     assert reason is not None and "sandbox" in reason
 
@@ -258,7 +258,7 @@ async def test_foreground_spawn_failure_signals_nothing(tmp_path, monkeypatch):
 async def test_make_live_foreground_last_resort_cutover(monkeypatch, tmp_path):
     """When no manager is drivable but a single live foreground gateway exists,
     make-live finishes the cutover itself: pointer written, detached
-    `kirocrew restart` established, start_id (the pre-restart pid) returned,
+    `ajcrew restart` established, start_id (the pre-restart pid) returned,
     and the committed latch set exactly as on a drivable host."""
     kc = _mk_kcbin(tmp_path)
     for status in ("no_systemd", "no_user_unit", "no_launchd", "no_agent"):
@@ -360,7 +360,7 @@ async def test_make_live_foreground_unavailable_keeps_advisory(monkeypatch, tmp_
         ("service_managed", dict(launcher=str(kc))),
     ):
         if label == "service_managed":
-            monkeypatch.setenv("KIROCREW_SERVICE_MANAGED", "1")
+            monkeypatch.setenv("AJCREW_SERVICE_MANAGED", "1")
         _stub_make_live(monkeypatch, wt, unit_status="no_systemd", pointer_dir=ptr_dir / label)
         monkeypatch.setattr(live_mod, "_MAKE_LIVE_COMMITTED", False, raising=False)
         fg, spawned = _fg(tmp_path, **fg_kwargs)
@@ -441,7 +441,7 @@ async def test_make_live_artifact_changed_before_lock_is_revalidated(monkeypatch
     _stub_make_live(monkeypatch, wt, pointer_dir=ptr_dir)
     monkeypatch.setattr(live_mod, "_MAKE_LIVE_COMMITTED", False)
 
-    kcbin = wt / ".venv" / "bin" / "kirocrew"
+    kcbin = wt / ".venv" / "bin" / "ajcrew"
 
     real_lock = asyncio.Lock()
 
@@ -708,8 +708,8 @@ async def test_service_backend_availability_probe_runs_off_the_loop_thread(platf
 
     be = live_mod.gateway_service.backend(
         _run,
-        unit=lambda: "kirocrew.service",
-        label=lambda: "dev.kirocrew.gateway",
+        unit=lambda: "ajcrew.service",
+        label=lambda: "dev.ajcrew.gateway",
         platform=platform,
         which=_which,
         dropin_path=lambda: tmp_path / "override.conf",

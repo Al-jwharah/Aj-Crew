@@ -1,12 +1,12 @@
-"""Per-session MCP report accumulation (:mod:`kiro_crew.acp.mcp_session_report`)."""
+"""Per-session MCP report accumulation (:mod:`aj_crew.acp.mcp_session_report`)."""
 
 from __future__ import annotations
 
 import inspect
 import sys
 
-from kiro_crew.acp import session_handle
-from kiro_crew.acp.mcp_session_report import (
+from aj_crew.acp import session_handle
+from aj_crew.acp.mcp_session_report import (
     _BUCKET_CAP,
     _ERROR_CAP,
     _NAME_CAP,
@@ -16,7 +16,7 @@ from kiro_crew.acp.mcp_session_report import (
     roster_names,
     server_name_of,
 )
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_MCP_SERVER_INITIALIZED,
     METHOD_KAS_MCP_STATUS,
     METHOD_KAS_TOOLS_CHANGED,
@@ -56,11 +56,11 @@ class TestEmptyState:
 
     def test_roster_alone_makes_it_non_empty(self):
         r = McpSessionReport()
-        r.begin_session([{"name": "kirocrew-core"}])
+        r.begin_session([{"name": "ajcrew-core"}])
         assert r.empty is False
         payload = r.payload()
         assert payload is not None
-        assert payload["configured"] == ["kirocrew-core"]
+        assert payload["configured"] == ["ajcrew-core"]
         assert payload["ready"] == []
 
 
@@ -275,14 +275,14 @@ class TestSanitization:
 class TestSupersetSemantics:
     def test_a_reported_server_need_not_be_in_the_roster(self):
         # The backend starts the agent spec's own servers as well as the ones
-        # Kiro Crew injects, so reports are a SUPERSET of the roster. This is
+        # Aj Crew injects, so reports are a SUPERSET of the roster. This is
         # how a spec-declared server (github-mcp) proves it started.
         r = McpSessionReport()
-        r.begin_session([{"name": "kirocrew-core"}])
+        r.begin_session([{"name": "ajcrew-core"}])
         r.record_frame(_ready("github-mcp"), owned=True)
         payload = r.payload()
         assert payload is not None
-        assert payload["configured"] == ["kirocrew-core"]
+        assert payload["configured"] == ["ajcrew-core"]
         assert payload["ready"] == ["github-mcp"]
 
     def test_an_ownerless_event_is_refused_like_an_ownerless_frame(self):
@@ -454,7 +454,7 @@ class TestEventOwnershipReachesTheReport:
     def test_every_runner_call_site_forwards_it_to_the_report(self):
         from pathlib import Path
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         src = "\n".join(
             turn_file.read_text(encoding="utf-8")
@@ -494,12 +494,12 @@ def _tags(*tags: str, sid: str | None = _SID) -> JsonRpcMessage:
 
 
 def _core(status: str, meta: dict | None = None, *, catalog: bool = True, **extra: object) -> dict:
-    """One ``kirocrew-core`` status entry; ``meta=None`` reproduces the 2.18.0 wire.
+    """One ``ajcrew-core`` status entry; ``meta=None`` reproduces the 2.18.0 wire.
 
     ``catalog=False`` drops the connected entry's ``tools`` list, so exposure can
     only come from a later tag frame.
     """
-    entry: dict = {"name": "kirocrew-core", "status": status, **extra}
+    entry: dict = {"name": "ajcrew-core", "status": status, **extra}
     if status == "connected" and catalog:
         entry["tools"] = [{"name": "ping", "description": "probe", "disabled": False}]
     if meta is not None:
@@ -521,106 +521,106 @@ class TestKasReadinessProvenance:
     """
 
     def test_captured_2_18_0_agent_only_wire_refuses_with_the_compatibility_limit(self):
-        ready = KasMcpReadiness(_SID, ("kirocrew-core",))
+        ready = KasMcpReadiness(_SID, ("ajcrew-core",))
         ready.record(_status(_core("connecting")))
-        assert ready.pending == "kirocrew-core: connecting"
+        assert ready.pending == "ajcrew-core: connecting"
         assert not ready.failure
         ready.record(_status(_core("connected")))
-        ready.record(_tags("@kirocrew-core/ping"))
-        assert ready.states["kirocrew-core"] == STATE_CONNECTED_WITHOUT_PROVENANCE
+        ready.record(_tags("@ajcrew-core/ping"))
+        assert ready.states["ajcrew-core"] == STATE_CONNECTED_WITHOUT_PROVENANCE
         failure = ready.failure
-        assert failure.startswith(f"kirocrew-core: {STATE_CONNECTED_WITHOUT_PROVENANCE}")
+        assert failure.startswith(f"ajcrew-core: {STATE_CONNECTED_WITHOUT_PROVENANCE}")
         # Actionable: names what the backend lacks and what satisfies the barrier.
         assert "reports no MCP server origin" in failure
         assert "_meta.kiro.resource.source.origin" in failure
         # The tag is exposure evidence and is recorded as such; it never turns
         # the refused server into a satisfied requirement.
-        assert "kirocrew-core" in ready.advertised
-        assert ready.pending.startswith(f"kirocrew-core: {STATE_CONNECTED_WITHOUT_PROVENANCE}")
+        assert "ajcrew-core" in ready.advertised
+        assert ready.pending.startswith(f"ajcrew-core: {STATE_CONNECTED_WITHOUT_PROVENANCE}")
 
     def test_captured_2_18_0_injected_wire_is_ready_on_connected_catalog(self):
         # ``2.18.0-newload-global+session.json``: the injected server's own
         # catalog (``session_ping``) is what connects, on new and on load, and
         # that catalog on the connected entry is the exposure evidence.
-        ready = KasMcpReadiness(_SID, ("kirocrew-core",), injected=frozenset({"kirocrew-core"}))
+        ready = KasMcpReadiness(_SID, ("ajcrew-core",), injected=frozenset({"ajcrew-core"}))
         ready.record(_status(_core("connecting")))
-        assert ready.pending == "kirocrew-core: connecting"
+        assert ready.pending == "ajcrew-core: connecting"
         ready.record(_status(_core("connected")))
         assert not ready.pending and not ready.failure
 
     def test_injection_exempts_only_the_injected_name(self):
         ready = KasMcpReadiness(
             _SID,
-            ("kirocrew-core", "kirocrew-dashboard"),
-            injected=frozenset({"kirocrew-dashboard"}),
+            ("ajcrew-core", "ajcrew-dashboard"),
+            injected=frozenset({"ajcrew-dashboard"}),
         )
         ready.record(
-            _status(_core("connected"), {"name": "kirocrew-dashboard", "status": "connected"})
+            _status(_core("connected"), {"name": "ajcrew-dashboard", "status": "connected"})
         )
-        ready.record(_tags("@kirocrew-core/ping", "@kirocrew-dashboard/ping"))
-        assert ready.states["kirocrew-dashboard"] == "connected"
-        assert ready.failure.startswith("kirocrew-core: connected without provenance")
+        ready.record(_tags("@ajcrew-core/ping", "@ajcrew-dashboard/ping"))
+        assert ready.states["ajcrew-dashboard"] == "connected"
+        assert ready.failure.startswith("ajcrew-core: connected without provenance")
 
     def test_injection_does_not_waive_exposure_or_failure_states(self):
-        ready = KasMcpReadiness(_SID, ("kirocrew-core",), injected=frozenset({"kirocrew-core"}))
+        ready = KasMcpReadiness(_SID, ("ajcrew-core",), injected=frozenset({"ajcrew-core"}))
         ready.record(_status(_core("connected", catalog=False)))
-        assert ready.pending == "kirocrew-core: tools not advertised"
+        assert ready.pending == "ajcrew-core: tools not advertised"
         ready.record(_status(_core("connected")))
         assert not ready.pending
         ready.record(_status(_core("failed", errorMessage="boom")))
-        assert ready.failure == "kirocrew-core: failed (boom)"
+        assert ready.failure == "ajcrew-core: failed (boom)"
 
     def test_injection_is_not_consulted_on_a_stamping_backend(self):
         # With provenance present the explicit origin decides, injected or not:
         # a same-named global entry is still skipped.
-        ready = KasMcpReadiness(_SID, ("kirocrew-core",), injected=frozenset({"kirocrew-core"}))
+        ready = KasMcpReadiness(_SID, ("ajcrew-core",), injected=frozenset({"ajcrew-core"}))
         ready.record(_status(_core("connected", _GLOBAL)))
-        ready.record(_tags("@kirocrew-core/ping"))
-        assert ready.pending == "kirocrew-core: unreported"
+        ready.record(_tags("@ajcrew-core/ping"))
+        assert ready.pending == "ajcrew-core: unreported"
         assert not ready.failure
 
     def test_the_limit_outranks_a_backend_error_text_on_the_same_entry(self):
-        ready = KasMcpReadiness(_SID, ("kirocrew-core",))
+        ready = KasMcpReadiness(_SID, ("ajcrew-core",))
         ready.record(_status(_core("connected", errorMessage="irrelevant")))
         assert "reports no MCP server origin" in ready.failure
 
     def test_stamped_client_entry_without_catalog_waits_for_the_tag(self):
-        ready = KasMcpReadiness(_SID, ("kirocrew-core",))
+        ready = KasMcpReadiness(_SID, ("ajcrew-core",))
         ready.record(_status(_core("connected", _CLIENT, catalog=False)))
-        assert ready.pending == "kirocrew-core: tools not advertised"
-        ready.record(_tags("@kirocrew-core/ping"))
+        assert ready.pending == "ajcrew-core: tools not advertised"
+        ready.record(_tags("@ajcrew-core/ping"))
         assert not ready.pending and not ready.failure
 
     def test_explicit_global_origin_is_skipped_not_refused(self):
         # A backend that speaks provenance and reports a same-named global
         # server: the private declaration may still report, so stay pending.
-        ready = KasMcpReadiness(_SID, ("kirocrew-core",))
+        ready = KasMcpReadiness(_SID, ("ajcrew-core",))
         ready.record(_status(_core("connected", _GLOBAL)))
-        ready.record(_tags("@kirocrew-core/ping"))
-        assert ready.pending == "kirocrew-core: unreported"
+        ready.record(_tags("@ajcrew-core/ping"))
+        assert ready.pending == "ajcrew-core: unreported"
         assert not ready.failure
 
     def test_unstamped_entry_on_a_stamping_backend_is_skipped_not_refused(self):
         # Provenance is a property of the SNAPSHOT: when any entry carries it,
         # an unstamped required entry is foreign, not legacy.
-        ready = KasMcpReadiness(_SID, ("kirocrew-core",))
+        ready = KasMcpReadiness(_SID, ("ajcrew-core",))
         ready.record(
             _status(_core("connected"), {"name": "other", "status": "connected", "_meta": _CLIENT})
         )
-        assert ready.pending == "kirocrew-core: unreported"
+        assert ready.pending == "ajcrew-core: unreported"
         assert not ready.failure
 
     def test_legacy_snapshot_for_another_or_no_session_is_ignored(self):
-        ready = KasMcpReadiness(_SID, ("kirocrew-core",))
+        ready = KasMcpReadiness(_SID, ("ajcrew-core",))
         ready.record(_status(_core("connected"), sid="sess_other"))
         ready.record(_status(_core("connected"), sid=None))
-        assert ready.pending == "kirocrew-core: unreported"
+        assert ready.pending == "ajcrew-core: unreported"
         assert not ready.failure
 
     def test_a_later_stamped_snapshot_replaces_the_refusal(self):
         # Snapshots are full state, so the terminal reading is only as durable
         # as the wire that produced it; a stamped client snapshot recovers.
-        ready = KasMcpReadiness(_SID, ("kirocrew-core",))
+        ready = KasMcpReadiness(_SID, ("ajcrew-core",))
         ready.record(_status(_core("connected")))
         assert ready.failure
         ready.record(_status(_core("connected", _CLIENT)))
@@ -632,12 +632,12 @@ class TestKasReadinessExposure:
     """Exposure evidence across the released wires that disagree about it.
 
     Captured kiro-cli 2.22.0 (KAS 0.66.0) off the production relay spawn with a
-    session-level ``kirocrew-core`` injection: the connected status entry carries
+    session-level ``ajcrew-core`` injection: the connected status entry carries
     ``origin: client`` and an 82-entry ``tools`` catalog, and EVERY
     ``_kiro/tools/didChange`` snapshot of the session lists only ``builtin``
     tags (``read``, ``write``, ``shell``, ``web``) -- with or without
     ``tool_search`` in the agent's ``tools``. No MCP tag ever arrives, so a barrier
-    that waits for one times out with ``kirocrew-core: tools not advertised``.
+    that waits for one times out with ``ajcrew-core: tools not advertised``.
     """
 
     def _builtin_tags(self) -> JsonRpcMessage:
@@ -653,10 +653,10 @@ class TestKasReadinessExposure:
         )
 
     def test_captured_2_22_0_wire_is_ready_on_the_connected_catalog_alone(self):
-        ready = KasMcpReadiness(_SID, ("kirocrew-core",))
+        ready = KasMcpReadiness(_SID, ("ajcrew-core",))
         ready.record(self._builtin_tags())
         ready.record(_status(_core("connecting", _CLIENT)))
-        assert ready.pending == "kirocrew-core: connecting"
+        assert ready.pending == "ajcrew-core: connecting"
         ready.record(_status(_core("connected", _CLIENT)))
         # The builtin-only snapshot that arrives WITH the connected status on
         # that release must not retract what the catalog just established.
@@ -664,52 +664,52 @@ class TestKasReadinessExposure:
         assert not ready.pending and not ready.failure
 
     def test_an_empty_catalog_is_not_exposure(self):
-        ready = KasMcpReadiness(_SID, ("kirocrew-core",))
+        ready = KasMcpReadiness(_SID, ("ajcrew-core",))
         ready.record(_status(_core("connected", _CLIENT, catalog=False, tools=[])))
-        assert ready.pending == "kirocrew-core: tools not advertised"
+        assert ready.pending == "ajcrew-core: tools not advertised"
 
     def test_a_reconnect_still_needs_fresh_evidence(self):
-        ready = KasMcpReadiness(_SID, ("kirocrew-core",))
+        ready = KasMcpReadiness(_SID, ("ajcrew-core",))
         ready.record(_status(_core("connected", _CLIENT)))
         assert not ready.pending
         ready.record(_status(_core("connecting", _CLIENT)))
-        assert ready.pending == "kirocrew-core: connecting"
+        assert ready.pending == "ajcrew-core: connecting"
         # Reconnected without a catalog: the earlier catalog is stale.
         ready.record(_status(_core("connected", _CLIENT, catalog=False)))
-        assert ready.pending == "kirocrew-core: tools not advertised"
-        ready.record(_tags("@kirocrew-core/ping"))
+        assert ready.pending == "ajcrew-core: tools not advertised"
+        ready.record(_tags("@ajcrew-core/ping"))
         assert not ready.pending
 
     def test_a_tag_frame_adds_exposure_without_clearing_the_catalog_evidence(self):
-        ready = KasMcpReadiness(_SID, ("kirocrew-core", "kirocrew-dashboard"))
+        ready = KasMcpReadiness(_SID, ("ajcrew-core", "ajcrew-dashboard"))
         ready.record(
             _status(
                 _core("connected", _CLIENT),
-                {"name": "kirocrew-dashboard", "status": "connected", "_meta": _CLIENT},
+                {"name": "ajcrew-dashboard", "status": "connected", "_meta": _CLIENT},
             )
         )
-        assert ready.pending == "kirocrew-dashboard: tools not advertised"
-        ready.record(_tags("@kirocrew-dashboard/ping"))
+        assert ready.pending == "ajcrew-dashboard: tools not advertised"
+        ready.record(_tags("@ajcrew-dashboard/ping"))
         assert not ready.pending
         # A later full tag snapshot without the dashboard tag retracts the TAG
         # evidence, as before this change; the core's catalog evidence stays.
         ready.record(self._builtin_tags())
-        assert ready.pending == "kirocrew-dashboard: tools not advertised"
-        assert "kirocrew-core" in ready.advertised
+        assert ready.pending == "ajcrew-dashboard: tools not advertised"
+        assert "ajcrew-core" in ready.advertised
 
     def test_a_full_tag_snapshot_retracts_a_dropped_tag(self):
-        ready = KasMcpReadiness(_SID, ("kirocrew-core",))
+        ready = KasMcpReadiness(_SID, ("ajcrew-core",))
         ready.record(_status(_core("connected", _CLIENT, catalog=False)))
-        ready.record(_tags("@kirocrew-core/ping"))
+        ready.record(_tags("@ajcrew-core/ping"))
         assert not ready.pending
         ready.record(_tags("@other/ping"))
-        assert ready.pending == "kirocrew-core: tools not advertised"
+        assert ready.pending == "ajcrew-core: tools not advertised"
         # Tag evidence also dies with the connection.
-        ready.record(_tags("@kirocrew-core/ping"))
+        ready.record(_tags("@ajcrew-core/ping"))
         assert not ready.pending
         ready.record(_status(_core("connecting", _CLIENT)))
         ready.record(_status(_core("connected", _CLIENT, catalog=False)))
-        assert ready.pending == "kirocrew-core: tools not advertised"
+        assert ready.pending == "ajcrew-core: tools not advertised"
 
 
 class TestKasStatusReport:
@@ -729,8 +729,8 @@ class TestKasStatusReport:
         assert report.payload()["failed"] == []
         assert report.record_frame(failed, owned=True)
         assert report.payload()["failures"] == {"external": "external failed"}
-        report.include_configured(("kirocrew-core",))
-        assert report.payload()["configured"] == ["external", "kirocrew-core"]
+        report.include_configured(("ajcrew-core",))
+        assert report.payload()["configured"] == ["external", "ajcrew-core"]
         assert report.payload()["failed"] == ["external"]
         assert report.record_frame(status("connecting"), owned=True)
         assert report.payload()["failed"] == []
@@ -747,8 +747,8 @@ class TestKasStatusReport:
         report = McpSessionReport()
         report.begin_session([{"name": "external"}])
         report.record_unresolved_refs(["@missing/tool"])
-        report.include_configured(("kirocrew-core", "external"))
-        assert report.payload()["configured"] == ["external", "kirocrew-core"]
+        report.include_configured(("ajcrew-core", "external"))
+        assert report.payload()["configured"] == ["external", "ajcrew-core"]
         assert report.payload()["unresolved_refs"] == ["@missing/tool"]
 
 

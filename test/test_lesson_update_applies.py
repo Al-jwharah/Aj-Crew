@@ -14,9 +14,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard.handlers import cron
-from kiro_crew.mcp_tools import learn as learn_tools
-from kiro_crew.vector_memory import VectorMemoryStore, create_member_database, open_member_database
+from aj_crew.dashboard.handlers import cron
+from aj_crew.mcp_tools import learn as learn_tools
+from aj_crew.vector_memory import VectorMemoryStore, create_member_database, open_member_database
 
 RULE = "Use one stable re-tier probe"
 
@@ -26,9 +26,9 @@ def _store(tmp_path, monkeypatch, lineage: str) -> VectorMemoryStore:
         store = VectorMemoryStore(db_path=tmp_path / "m.db", embedding_dim=4)
         store.init()
         return store
-    from kiro_crew import memory_stores
+    from aj_crew import memory_stores
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setattr(memory_stores, "memory_stores_root", lambda: tmp_path / "memory_stores")
     path = tmp_path / "memory_stores" / "member-store" / "memory.db"
     create_member_database(path, member_id="member-id", store_id="member-store")

@@ -18,10 +18,10 @@ import pytest
 from kiro_prerequisite_helpers import _agents_dir_never_the_real_home  # noqa: F401
 from kiro_prerequisite_helpers import _isolate_agent_specs  # noqa: F401
 
-from kiro_crew import kiro_prerequisite as prerequisite_module
-from kiro_crew import platform_compat
-from kiro_crew.sandbox import SandboxUnavailableError
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew import kiro_prerequisite as prerequisite_module
+from aj_crew import platform_compat
+from aj_crew.sandbox import SandboxUnavailableError
+from aj_crew.testing.ids import UNALLOCATABLE_PID
 
 
 class _Stream:

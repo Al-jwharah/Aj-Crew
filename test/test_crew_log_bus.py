@@ -13,9 +13,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, bus, eager, emit
-from kiro_crew.crew_log import projection as crew_log
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, bus, eager, emit
+from aj_crew.crew_log import projection as crew_log
 
 GATEWAY = "gateway"
 SLOT = "dashboard:bus-1"
@@ -24,7 +24,7 @@ SLOT = "dashboard:bus-1"
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, monkeypatch):
     """Own data home, no warm cell and no subscriber left over from another case."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     eager.stop_for_tests()
     crew_log.forget_slot_folds()
     crew_log.forget_session_folds()
@@ -270,7 +270,7 @@ def test_a_live_publish_during_the_baseline_release_waits_and_stays_ordered(monk
 def test_a_real_slot_baseline_is_the_current_board_with_its_revision():
     """End to end through the projection read path: a late joiner sees the board as is."""
     handle = CrewLog.create(
-        lg.KIND_SESSION, "s-bus-1", owner="raymond", agent="kirocrew", slot=SLOT
+        lg.KIND_SESSION, "s-bus-1", owner="raymond", agent="ajcrew", slot=SLOT
     )
     entry = handle.append(
         "work/recorded",
@@ -307,7 +307,7 @@ def test_a_real_slot_baseline_is_the_current_board_with_its_revision():
 
 
 def test_a_real_session_baseline_carries_the_warm_revision():
-    handle = CrewLog.create(lg.KIND_SESSION, "s-bus-2", owner="raymond", agent="kirocrew")
+    handle = CrewLog.create(lg.KIND_SESSION, "s-bus-2", owner="raymond", agent="ajcrew")
     handle.append("turn/started", {"turn": 1, "actor": "user", "depth": 0}, src=GATEWAY)
     current = crew_log.read_projection("s-bus-2", "status")
     assert current.revision > 0

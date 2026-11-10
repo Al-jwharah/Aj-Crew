@@ -58,8 +58,8 @@ const detail = {
 }
 
 const SKILLS = [
-  { key: 'kirocrew/oncall-handover', name: 'oncall-handover', description: 'Handover report', source: 'kirocrew' },
-  { key: 'kirocrew/ticket-pull', name: 'ticket-pull', description: 'Pull tickets', source: 'kirocrew' },
+  { key: 'ajcrew/oncall-handover', name: 'oncall-handover', description: 'Handover report', source: 'ajcrew' },
+  { key: 'ajcrew/ticket-pull', name: 'ticket-pull', description: 'Pull tickets', source: 'ajcrew' },
 ]
 
 /** One fresh page per scene: the skills query is cached per (slot, project,

@@ -21,14 +21,14 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import mcp_shared, platform_compat
-from kiro_crew.testing.wait import wait_until
+from aj_crew import mcp_shared, platform_compat
+from aj_crew.testing.wait import wait_until
 
 SRC = str(Path(mcp_shared.__file__).resolve().parents[1])
 
 SERVER = textwrap.dedent("""
     import os, select, sys, time
-    from kiro_crew import mcp_shared
+    from aj_crew import mcp_shared
 
     class _HourLongTimeouts:
         # Every timed wait of the read loop becomes an hour: nothing but the
@@ -72,7 +72,7 @@ class _Server:
         env = {
             "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
             "HOME": str(tmp_path),
-            "KIROCREW_HOME": str(tmp_path / "home"),
+            "AJCREW_HOME": str(tmp_path / "home"),
             "PYTHONPATH": SRC,
             "PYTHONDONTWRITEBYTECODE": "1",
         }

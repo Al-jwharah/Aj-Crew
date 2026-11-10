@@ -1,6 +1,6 @@
 """Tests for crash-dump store — rotation, newest-dump detection, doctor surfacing.
 
-Uses injected temp directories to avoid touching the real ~/.kirocrew/logs/.
+Uses injected temp directories to avoid touching the real ~/.ajcrew/logs/.
 Follows the same injectable-dependency pattern as test_loop_watchdog.py.
 """
 
@@ -18,9 +18,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.dashboard import crash_dump_store
-from kiro_crew.dashboard.crash_dump_store import (
+from aj_crew import platform_compat
+from aj_crew.dashboard import crash_dump_store
+from aj_crew.dashboard.crash_dump_store import (
     DUMP_PREFIX,
     DUMP_SUFFIX,
     dump_age_seconds,
@@ -31,7 +31,7 @@ from kiro_crew.dashboard.crash_dump_store import (
     rotate_dumps,
     sweep_stale_dumps,
 )
-from kiro_crew.testing.wait import async_wait_until, default_timeout
+from aj_crew.testing.wait import async_wait_until, default_timeout
 
 
 @pytest.fixture
@@ -106,7 +106,7 @@ def _create_header_only_dump(
     pid_line = f"# PID: 12345 @ {domain}\n" if domain else "# PID: 12345\n"
     p = dumps_dir / name
     p.write_text(
-        "# KiroCrew loop-stall crash dump — opened 20260717T010000Z "  # brand-ok: dump header
+        "# AjCrew loop-stall crash dump — opened 20260717T010000Z "  # brand-ok: dump header
         + crash_dump_store._CLEAN_EXIT_AWARE_TOKEN
         + "\n"
         + pid_line
@@ -131,16 +131,16 @@ def _create_stacked_dump(dumps_dir: Path, name: str) -> Path:
     """Create a dump file with real stack content (simulating a wedge)."""
     p = dumps_dir / name
     p.write_text(
-        "# KiroCrew loop-stall crash dump — opened 20260717T020000Z\n"
+        "# AjCrew loop-stall crash dump — opened 20260717T020000Z\n"
         f"# PID: 12345 @ {crash_dump_store._pid_domain()}\n"
         "# If thread stacks appear below, the event loop wedged and faulthandler fired.\n"
         "\n"
         "Thread 0x00007f1234 (most recent call first):\n"
         '  File "/usr/lib/python3.12/socket.py", line 704, in close\n'
         "    self._real_close()\n"
-        '  File "/home/user/.kirocrew/src/kiro_crew/acp/client.py", line 312, in _teardown\n'
+        '  File "/home/user/.ajcrew/src/aj_crew/acp/client.py", line 312, in _teardown\n'
         "    self._sock.close()\n"
-        '  File "/home/user/.kirocrew/src/kiro_crew/dashboard/server.py", line 800, in _cleanup\n'
+        '  File "/home/user/.ajcrew/src/aj_crew/dashboard/server.py", line 800, in _cleanup\n'
         "    await self._teardown()\n"
     )
     return p
@@ -193,7 +193,7 @@ def test_open_dump_file_creates_file(dumps_dir: Path) -> None:
         assert files[0].name.endswith(DUMP_SUFFIX)
         # Header should be written
         content = files[0].read_text(encoding="utf-8")
-        assert "KiroCrew loop-stall crash dump" in content
+        assert "AjCrew loop-stall crash dump" in content
         assert "PID:" in content
 
 
@@ -310,13 +310,13 @@ def _create_multi_thread_dump(dumps_dir: Path, name: str, *, idle_workers: int =
         "Thread 0x00007f0000beef (most recent call first):\n"
         '  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 166 in submit\n'
         '  File "/usr/lib/python3.12/asyncio/base_events.py", line 867 in run_in_executor\n'
-        '  File "/home/user/.kirocrew/src/kiro_crew/dashboard/server.py", line 246 in _should_prevent_sleep\n'
+        '  File "/home/user/.ajcrew/src/aj_crew/dashboard/server.py", line 246 in _should_prevent_sleep\n'
         '  File "/usr/lib/python3.12/asyncio/base_events.py", line 645 in run_forever\n'
-        '  File "/home/user/.kirocrew/src/kiro_crew/cli.py", line 2046 in main\n'
+        '  File "/home/user/.ajcrew/src/aj_crew/cli.py", line 2046 in main\n'
     )
     p = dumps_dir / name
     p.write_text(
-        "# KiroCrew loop-stall crash dump — opened 20260717T020000Z\n"  # brand-ok: mirrors production dump header
+        "# AjCrew loop-stall crash dump — opened 20260717T020000Z\n"  # brand-ok: mirrors production dump header
         "# PID: 12345\n"
         "# If thread stacks appear below, the event loop wedged and faulthandler fired.\n"
         "\n"
@@ -338,7 +338,7 @@ def test_dump_first_stack_lines_surfaces_wedged_thread(dumps_dir: Path) -> None:
     lines = dump_first_stack_lines(p, max_lines=8)
     body = "\n".join(lines)
     assert lines[0] == "Timeout (0:00:25)!"
-    assert "_should_prevent_sleep" in body  # the wedged thread's Kiro Crew frame
+    assert "_should_prevent_sleep" in body  # the wedged thread's Aj Crew frame
     assert "queue.py" not in body  # no idle-worker frames
 
 
@@ -346,12 +346,12 @@ def test_dump_first_stack_lines_prefers_current_thread_marker(dumps_dir: Path) -
     """A block explicitly marked ``Current thread`` wins over positional choice."""
     p = dumps_dir / f"{DUMP_PREFIX}20260717T010000Z{DUMP_SUFFIX}"
     p.write_text(
-        "# KiroCrew loop-stall crash dump — opened 20260717T020000Z\n"  # brand-ok: mirrors production dump header
+        "# AjCrew loop-stall crash dump — opened 20260717T020000Z\n"  # brand-ok: mirrors production dump header
         "# PID: 12345\n"
         "# If thread stacks appear below, the event loop wedged and faulthandler fired.\n"
         "\n"
         "Current thread 0x00007f00000001 (most recent call first):\n"
-        '  File "/home/user/.kirocrew/src/kiro_crew/dashboard/state.py", line 100 in _flush\n'
+        '  File "/home/user/.ajcrew/src/aj_crew/dashboard/state.py", line 100 in _flush\n'
         "Thread 0x00007f00000002 (most recent call first):\n"
         '  File "/usr/lib/python3.12/queue.py", line 171 in get\n'
     )
@@ -364,7 +364,7 @@ def test_dump_first_stack_lines_fallback_without_thread_headers(dumps_dir: Path)
     """Unrecognizable content degrades to the raw top-of-file lines."""
     p = dumps_dir / f"{DUMP_PREFIX}20260717T010000Z{DUMP_SUFFIX}"
     p.write_text(
-        "# KiroCrew loop-stall crash dump — opened 20260717T020000Z\n"  # brand-ok: mirrors production dump header
+        "# AjCrew loop-stall crash dump — opened 20260717T020000Z\n"  # brand-ok: mirrors production dump header
         "# PID: 12345\n"
         "# If thread stacks appear below, the event loop wedged and faulthandler fired.\n"
         "\n"
@@ -404,7 +404,7 @@ def test_dump_age_never_negative_with_future_mtime(dumps_dir: Path) -> None:
 
 def test_watchdog_dump_file_param_custom_callback(dumps_dir: Path) -> None:
     """Verify custom dump callback is invoked when dump_file is set (wiring only)."""
-    from kiro_crew.dashboard.loop_watchdog import LoopStallWatchdog
+    from aj_crew.dashboard.loop_watchdog import LoopStallWatchdog
 
     class _Clock:
         def __init__(self) -> None:
@@ -440,7 +440,7 @@ def test_watchdog_soft_only_dump_is_written_to_discoverable_file(
     dumps_dir: Path, monkeypatch
 ) -> None:
     """Without a hard timer, the soft dump must remain visible to doctor."""
-    from kiro_crew.dashboard import loop_watchdog
+    from aj_crew.dashboard import loop_watchdog
 
     class _Clock:
         def __init__(self) -> None:
@@ -481,7 +481,7 @@ def test_watchdog_armed_soft_dump_leaves_crash_sentinel_untouched(
     dumps_dir: Path, monkeypatch
 ) -> None:
     """A recovered managed-service stall must not look like a fatal crash."""
-    from kiro_crew.dashboard import loop_watchdog
+    from aj_crew.dashboard import loop_watchdog
 
     class _Clock:
         def __init__(self) -> None:
@@ -526,7 +526,7 @@ def test_watchdog_rearm_failure_restores_discoverable_soft_dump(
     dumps_dir: Path, monkeypatch
 ) -> None:
     """A cancelled alarm that cannot re-arm must degrade to the file fallback."""
-    from kiro_crew.dashboard import loop_watchdog
+    from aj_crew.dashboard import loop_watchdog
 
     class _Clock:
         def __init__(self) -> None:
@@ -715,7 +715,7 @@ def test_dump_file_fd_survives_dropping_last_python_reference(dumps_dir: Path) -
 
 def test_dump_replay_lines_basic(dumps_dir: Path) -> None:
     """Replay reads all stack lines within limits."""
-    from kiro_crew.dashboard.crash_dump_store import dump_replay_lines
+    from aj_crew.dashboard.crash_dump_store import dump_replay_lines
 
     p = _create_stacked_dump(dumps_dir, f"{DUMP_PREFIX}20260717T030000Z{DUMP_SUFFIX}")
     lines, truncated = dump_replay_lines(p)
@@ -726,7 +726,7 @@ def test_dump_replay_lines_basic(dumps_dir: Path) -> None:
 
 def test_dump_replay_lines_truncates_by_line_count(dumps_dir: Path) -> None:
     """Replay truncates at max_lines."""
-    from kiro_crew.dashboard.crash_dump_store import dump_replay_lines
+    from aj_crew.dashboard.crash_dump_store import dump_replay_lines
 
     p = _create_stacked_dump(dumps_dir, f"{DUMP_PREFIX}20260717T030000Z{DUMP_SUFFIX}")
     lines, truncated = dump_replay_lines(p, max_lines=2)
@@ -736,7 +736,7 @@ def test_dump_replay_lines_truncates_by_line_count(dumps_dir: Path) -> None:
 
 def test_dump_replay_lines_truncates_by_bytes(dumps_dir: Path) -> None:
     """Replay truncates at max_bytes."""
-    from kiro_crew.dashboard.crash_dump_store import dump_replay_lines
+    from aj_crew.dashboard.crash_dump_store import dump_replay_lines
 
     p = _create_stacked_dump(dumps_dir, f"{DUMP_PREFIX}20260717T030000Z{DUMP_SUFFIX}")
     lines, truncated = dump_replay_lines(p, max_bytes=50)
@@ -747,7 +747,7 @@ def test_dump_replay_lines_truncates_by_bytes(dumps_dir: Path) -> None:
 
 def test_dump_replay_lines_header_only(dumps_dir: Path) -> None:
     """Replay returns empty for header-only dumps."""
-    from kiro_crew.dashboard.crash_dump_store import dump_replay_lines
+    from aj_crew.dashboard.crash_dump_store import dump_replay_lines
 
     p = _create_header_only_dump(dumps_dir, f"{DUMP_PREFIX}20260717T030000Z{DUMP_SUFFIX}")
     lines, truncated = dump_replay_lines(p)
@@ -763,7 +763,7 @@ def test_dump_replay_lines_wedged_thread_survives_truncation(dumps_dir: Path) ->
     showed only ``Queue.get`` workers plus ``[truncated]`` — omitting the one
     stack that explains the stall.
     """
-    from kiro_crew.dashboard.crash_dump_store import dump_replay_lines
+    from aj_crew.dashboard.crash_dump_store import dump_replay_lines
 
     # 40 idle workers x 4 lines >> the 12-line cap below; main thread is last.
     p = _create_multi_thread_dump(
@@ -783,7 +783,7 @@ def test_dump_replay_lines_wedged_thread_survives_truncation(dumps_dir: Path) ->
 
 def test_startup_crash_dump_replay_logs_stacks(dumps_dir: Path, caplog: pytest.LogCaptureFixture) -> None:
     """Verify that the journal replay logic logs dump content at WARNING."""
-    from kiro_crew.dashboard.crash_dump_store import (
+    from aj_crew.dashboard.crash_dump_store import (
         dump_replay_lines,
         newest_dump_with_stacks,
     )
@@ -846,7 +846,7 @@ def test_sweep_keeps_own_pid_file(dumps_dir: Path) -> None:
     # injected liveness check lies about it.
     p = dumps_dir / f"{DUMP_PREFIX}20260717T030000Z{DUMP_SUFFIX}"
     p.write_text(
-        "# KiroCrew loop-stall crash dump — opened 20260717T030000Z\n"  # brand-ok: mirrors production dump header
+        "# AjCrew loop-stall crash dump — opened 20260717T030000Z\n"  # brand-ok: mirrors production dump header
         f"# PID: {os.getpid()} @ {crash_dump_store._pid_domain()}\n"
         "# If thread stacks appear below, the event loop wedged and faulthandler fired.\n"
         "\n"
@@ -902,7 +902,7 @@ def test_open_dump_file_header_records_pid_domain(dumps_dir: Path) -> None:
 def test_sweep_keeps_header_only_dump_without_pid_line(dumps_dir: Path) -> None:
     # No parseable PID — cannot attribute the file, so leave it alone.
     p = dumps_dir / f"{DUMP_PREFIX}20260717T040000Z{DUMP_SUFFIX}"
-    p.write_text("# KiroCrew loop-stall crash dump — opened 20260717T040000Z\n\n")  # brand-ok: mirrors production dump header
+    p.write_text("# AjCrew loop-stall crash dump — opened 20260717T040000Z\n\n")  # brand-ok: mirrors production dump header
     removed = sweep_stale_dumps(dumps_dir, is_pid_alive=_dead_pid)
     assert removed == 0
     assert p.exists()
@@ -915,7 +915,7 @@ def test_sweep_treats_oversized_pid_as_unparseable(dumps_dir: Path) -> None:
     for name, digits in (("20260717T050000Z", "9" * 5000), ("20260717T060000Z", str(2**31))):
         p = dumps_dir / f"{DUMP_PREFIX}{name}{DUMP_SUFFIX}"
         p.write_text(
-            "# KiroCrew loop-stall crash dump — opened 20260717T050000Z\n"  # brand-ok: mirrors production dump header
+            "# AjCrew loop-stall crash dump — opened 20260717T050000Z\n"  # brand-ok: mirrors production dump header
             f"# PID: {digits}\n"
             "\n"
         )
@@ -979,7 +979,7 @@ def test_sweep_reads_only_a_bounded_prefix(dumps_dir: Path) -> None:
     # from its leading bytes alone and never load the whole thing.
     p = dumps_dir / f"{DUMP_PREFIX}20260717T080000Z{DUMP_SUFFIX}"
     with p.open("w") as f:
-        f.write("# KiroCrew loop-stall crash dump — opened 20260717T080000Z\n")  # brand-ok: mirrors production dump header
+        f.write("# AjCrew loop-stall crash dump — opened 20260717T080000Z\n")  # brand-ok: mirrors production dump header
         f.write("# PID: 1\n\n")
         f.write("x" * (1024 * 1024))  # single long line, no newlines
     removed = sweep_stale_dumps(dumps_dir, is_pid_alive=_dead_pid)
@@ -1064,9 +1064,9 @@ def _restart_paths(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, exec_stub):
         _update_exec_seams,
     )
 
-    from kiro_crew.dashboard.handlers import updates
-    from kiro_crew.slack import gateway as slack_gateway
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.dashboard.handlers import updates
+    from aj_crew.slack import gateway as slack_gateway
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     seen: list[str] = []
     _dashboard_exec_seams(monkeypatch, seen)
@@ -1085,7 +1085,7 @@ async def test_an_in_place_restart_marks_the_clean_exit_only_at_its_exec(
     # The exec skips the orderly exit that marks the dump, so the restart marks it,
     # but only once nothing that could still wedge and be killed is left before it.
     # The mark never touches the dump's bytes, which three readers slice after the header.
-    from kiro_crew import pre_exec_stops
+    from aj_crew import pre_exec_stops
 
     with opened_dump_file(dumps_dir) as dump:
         header = dump.path.read_bytes()
@@ -1115,7 +1115,7 @@ async def test_a_failed_restart_exec_withdraws_the_clean_exit_mark(
     dumps_dir: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     # The process then exits on the failure, not in order: its dump must read as unexplained.
-    from kiro_crew import platform_compat as compat
+    from aj_crew import platform_compat as compat
 
     def _refuse(*_a, **_k):
         raise OSError("exec format error")
@@ -1128,7 +1128,7 @@ async def test_a_failed_restart_exec_withdraws_the_clean_exit_mark(
             at_exit.append(marker.exists())
 
         monkeypatch.setattr(compat, "exit_after_failed_restart_exec", _exit)
-        from kiro_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers import updates
 
         monkeypatch.setattr(updates, "exit_after_failed_restart_exec", _exit)
         for _name, restart in _restart_paths(monkeypatch, tmp_path, _refuse):
@@ -1141,8 +1141,8 @@ def test_doctor_shows_unexplained_exits_without_raising_an_issue(
     dumps_dir: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     # A hard kill is an ordinary way to end a gateway, so the row informs only.
-    from kiro_crew import cli_doctor
-    from kiro_crew.doctor_checks import workload
+    from aj_crew import cli_doctor
+    from aj_crew.doctor_checks import workload
 
     # Doctor probes liveness for real: this PID can never name a live process.
     killed = _write_dump_with_start(
@@ -1263,7 +1263,7 @@ def test_owner_alive_detects_pid_reuse_via_start_id(dumps_dir: Path) -> None:
     reused_pid = os.getppid()
     p = dumps_dir / f"{DUMP_PREFIX}20260717T110000Z{DUMP_SUFFIX}"
     p.write_text(
-        "# KiroCrew loop-stall crash dump — opened 20260717T110000Z\n"  # brand-ok: mirrors production dump header
+        "# AjCrew loop-stall crash dump — opened 20260717T110000Z\n"  # brand-ok: mirrors production dump header
         f"# PID: {reused_pid} @ {crash_dump_store._pid_domain()} start=0\n"
         "# If thread stacks appear below, the event loop wedged and faulthandler fired.\n"
         "\n"
@@ -1440,7 +1440,7 @@ def test_pid_reuse_detected_without_procfs(
     _stub_identity_sources(monkeypatch, stable="1788432000.999999", coarse=None)
     p = dumps_dir / f"{DUMP_PREFIX}20260717T130000Z{DUMP_SUFFIX}"
     p.write_text(
-        "# KiroCrew loop-stall crash dump — opened 20260717T130000Z\n"  # brand-ok: mirrors production dump header
+        "# AjCrew loop-stall crash dump — opened 20260717T130000Z\n"  # brand-ok: mirrors production dump header
         f"# PID: {_UNREACHABLE_PID} @ {crash_dump_store._pid_domain()} start=1788000000.000001\n"
         "# If thread stacks appear below, the event loop wedged and faulthandler fired.\n"
         "\n"
@@ -1459,7 +1459,7 @@ def test_unknown_live_identity_keeps_the_dump(
     _stub_identity_sources(monkeypatch, stable=None, coarse=None)
     p = dumps_dir / f"{DUMP_PREFIX}20260717T131000Z{DUMP_SUFFIX}"
     p.write_text(
-        "# KiroCrew loop-stall crash dump — opened 20260717T131000Z\n"  # brand-ok: mirrors production dump header
+        "# AjCrew loop-stall crash dump — opened 20260717T131000Z\n"  # brand-ok: mirrors production dump header
         f"# PID: {_UNREACHABLE_PID} @ {crash_dump_store._pid_domain()} start=recorded-token\n"
         "# If thread stacks appear below, the event loop wedged and faulthandler fired.\n"
         "\n"
@@ -1479,7 +1479,7 @@ def test_rotation_reclaims_recycled_pid_dumps_without_procfs(
     for name in ("20260717T140000Z", "20260717T150000Z", "20260717T160000Z"):
         p = dumps_dir / f"{DUMP_PREFIX}{name}{DUMP_SUFFIX}"
         p.write_text(
-            f"# KiroCrew loop-stall crash dump — opened {name}\n"  # brand-ok: mirrors production dump header
+            f"# AjCrew loop-stall crash dump — opened {name}\n"  # brand-ok: mirrors production dump header
             f"# PID: {_UNREACHABLE_PID} @ {crash_dump_store._pid_domain()} start=1788000000.000001\n"
             "# If thread stacks appear below, the event loop wedged and faulthandler fired.\n"
             "\n"
@@ -1504,7 +1504,7 @@ _LIBPROC_TOKEN = "1788432000.123456"
 def _write_dump_with_start(dumps_dir: Path, stamp: str, pid: int, start: str) -> Path:
     p = dumps_dir / f"{DUMP_PREFIX}{stamp}{DUMP_SUFFIX}"
     p.write_text(
-        f"# KiroCrew loop-stall crash dump — opened {stamp} "  # brand-ok: mirrors production dump header
+        f"# AjCrew loop-stall crash dump — opened {stamp} "  # brand-ok: mirrors production dump header
         f"{crash_dump_store._CLEAN_EXIT_AWARE_TOKEN}\n"
         f"# PID: {pid} @ {crash_dump_store._pid_domain()} start={start}\n"
         "# If thread stacks appear below, the event loop wedged and faulthandler fired.\n"
@@ -1662,7 +1662,7 @@ async def test_a_stop_asked_during_the_update_restart_mark_skips_the_exec_unmark
 ) -> None:
     # The stop check comes after the mark, so a stop landing while it is written
     # still wins, and the gateway then stops through the orderly exit, which marks.
-    from kiro_crew.slack import gateway as slack_gateway
+    from aj_crew.slack import gateway as slack_gateway
 
     stop = {"asked": False}
     real_record = crash_dump_store.record_clean_exit
@@ -1798,8 +1798,8 @@ async def test_the_update_restart_marks_only_after_its_final_drain(
     # that cuts the look leaves no marker for the exec that never happens.
     from test_restart_stops_mcp_broker import _executable, _orchestrator, _update_exec_seams
 
-    from kiro_crew.slack import gateway as slack_gateway
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack import gateway as slack_gateway
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     seen: list[str] = []
     _update_exec_seams(monkeypatch, seen)

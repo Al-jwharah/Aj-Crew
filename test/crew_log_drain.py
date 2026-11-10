@@ -20,7 +20,7 @@ writer and a finished one both show.
 
 :func:`settle` is the same barrier for the gap BETWEEN tests. A writer job resolves the
 data home when it RUNS, not when it was queued, so a batch still in flight when a
-test's ``KIROCREW_HOME`` pin lifts lands in whatever home the next test pins. That is
+test's ``AJCREW_HOME`` pin lifts lands in whatever home the next test pins. That is
 how one test's leftover ``tool/called`` entries became the next test's "thread 3:
 expected 15, got 16" on that same shard, right after its teardown warned ``batch in
 flight=True``. Called before the pin lifts, it fails the test that queued the work
@@ -40,7 +40,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.crew_log import KIND_SESSION, crew_log_root, emit, store
+from aj_crew.crew_log import KIND_SESSION, crew_log_root, emit, store
 
 #: How long the writer may land nothing before the barrier reports it stuck. Not a
 #: budget for the drain: a writer that keeps landing bytes keeps the barrier waiting,
@@ -98,7 +98,7 @@ def assert_drained(*, ceiling: float = DRAIN_CEILING_SECONDS) -> None:
 def settle() -> None:
     """Wait out the writer under THIS test's data home, then forget its handles.
 
-    Call it in teardown while the test's ``KIROCREW_HOME`` pin still holds. The reset
+    Call it in teardown while the test's ``AJCREW_HOME`` pin still holds. The reset
     runs even when the wait fails: it discards whatever is still queued, though not a
     batch the writer has already claimed, which is why the wait comes first.
     """

@@ -9,10 +9,10 @@ from __future__ import annotations
 
 import re
 
-from kiro_crew.constants import md_link_destination
-from kiro_crew.messaging import display_safety
-from kiro_crew.messaging.display_safety import canonicalize_display
-from kiro_crew.slack.format import render_one_for_slack
+from aj_crew.constants import md_link_destination
+from aj_crew.messaging import display_safety
+from aj_crew.messaging.display_safety import canonicalize_display
+from aj_crew.slack.format import render_one_for_slack
 
 #: Real URL shapes an answer cites: a Wikipedia disambiguation page and an MSDN
 #: versioned page. Both carry one balanced pair, which is what CommonMark allows.

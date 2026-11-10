@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import json
 
-from kiro_crew.dashboard import chat_handlers
+from aj_crew.dashboard import chat_handlers
 
 
 class _Slot:

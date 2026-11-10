@@ -30,8 +30,8 @@ from token_auth_helpers import (  # noqa: F401 -- the autouse fixture registers 
     clear_nonces,
 )
 
-import kiro_crew.dashboard.token_auth as token_auth_mod
-from kiro_crew.dashboard.token_auth import (
+import aj_crew.dashboard.token_auth as token_auth_mod
+from aj_crew.dashboard.token_auth import (
     MAX_CONCURRENT_NONCES,
     MAX_SESSION_TTL_SECS,
     bind_token_ip,
@@ -163,11 +163,11 @@ def test_try_consume_returns_true_once_then_false() -> None:
 
 def test_expired_token_rejected() -> None:
     """Token link window (5 min) expires — the URL stops being valid."""
-    with patch("kiro_crew.dashboard.token_auth.time") as mock_time:
+    with patch("aj_crew.dashboard.token_auth.time") as mock_time:
         mock_time.time.return_value = 1000.0
         token = generate_token("user6", ttl_seconds=3600)
     # Advance past the 5-minute link window
-    with patch("kiro_crew.dashboard.token_auth.time") as mock_time:
+    with patch("aj_crew.dashboard.token_auth.time") as mock_time:
         mock_time.time.return_value = 1000.0 + 301
         valid, _, reason = validate_token(token)
     assert valid is False
@@ -176,11 +176,11 @@ def test_expired_token_rejected() -> None:
 
 def test_session_exp_still_valid_after_link_window() -> None:
     """Cookie-based access uses session_exp, not the link window."""
-    with patch("kiro_crew.dashboard.token_auth.time") as mock_time:
+    with patch("aj_crew.dashboard.token_auth.time") as mock_time:
         mock_time.time.return_value = 1000.0
         token = generate_token("user6b", ttl_seconds=3600)
     # Past link window but within session TTL
-    with patch("kiro_crew.dashboard.token_auth.time") as mock_time:
+    with patch("aj_crew.dashboard.token_auth.time") as mock_time:
         mock_time.time.return_value = 1000.0 + 301
         valid, uid, _ = validate_token(token, use_session_exp=True)
     assert valid is True
@@ -198,12 +198,12 @@ def test_link_window_never_outlives_a_short_session() -> None:
     the session that authorized it by up to the full window — the residual
     half of the laundering those mints exist to prevent.
     """
-    with patch("kiro_crew.dashboard.token_auth.time") as mock_time:
+    with patch("aj_crew.dashboard.token_auth.time") as mock_time:
         mock_time.time.return_value = 1000.0
         token = generate_token("user6c", ttl_seconds=60)
     # Past the short session but still inside the nominal 5-minute window:
     # the LINK path must refuse too, not just the cookie path.
-    with patch("kiro_crew.dashboard.token_auth.time") as mock_time:
+    with patch("aj_crew.dashboard.token_auth.time") as mock_time:
         mock_time.time.return_value = 1000.0 + 61
         link_valid, _, link_reason = validate_token(token)
         cookie_valid, _, _ = validate_token(token, use_session_exp=True)
@@ -212,10 +212,10 @@ def test_link_window_never_outlives_a_short_session() -> None:
     assert cookie_valid is False
     # A full-length session keeps the whole window: the clamp only ever
     # tightens, so ordinary links are unaffected.
-    with patch("kiro_crew.dashboard.token_auth.time") as mock_time:
+    with patch("aj_crew.dashboard.token_auth.time") as mock_time:
         mock_time.time.return_value = 1000.0
         long_token = generate_token("user6d", ttl_seconds=3600)
-    with patch("kiro_crew.dashboard.token_auth.time") as mock_time:
+    with patch("aj_crew.dashboard.token_auth.time") as mock_time:
         mock_time.time.return_value = 1000.0 + 299
         valid, uid, _ = validate_token(long_token)
     assert valid is True
@@ -325,7 +325,7 @@ async def test_no_refresh_claim_survives_session_exchange() -> None:
     the exact ceiling the claim encodes."""
     import json as _json
 
-    from kiro_crew.dashboard.token_auth import _b64url_decode
+    from aj_crew.dashboard.token_auth import _b64url_decode
 
     mw = token_auth_middleware()
     token = generate_token("qruser", ttl_seconds=300, extra={"no_refresh": "1"})
@@ -368,7 +368,7 @@ async def test_expired_query_token_falls_back_to_valid_cookie() -> None:
     the still-valid session cookie that link was exchanged for. The dead query
     token must be ignored, not act as a one-vote veto over the live cookie."""
     mw = token_auth_middleware()
-    with patch("kiro_crew.dashboard.token_auth.time") as mock_time:
+    with patch("aj_crew.dashboard.token_auth.time") as mock_time:
         mock_time.time.return_value = 1000.0
         stale = generate_token("staleuser", ttl_seconds=300)
     cookie = _session_token("staleuser", ttl_seconds=3600)
@@ -387,7 +387,7 @@ async def test_expired_query_token_without_cookie_still_denied() -> None:
     """The fallback adds no capability: a dead query token alone stays denied
     (the SPA-shell carve-out aside — this data path is not a shell request)."""
     mw = token_auth_middleware()
-    with patch("kiro_crew.dashboard.token_auth.time") as mock_time:
+    with patch("aj_crew.dashboard.token_auth.time") as mock_time:
         mock_time.time.return_value = 1000.0
         stale = generate_token("staleuser2", ttl_seconds=300)
     req = _make_request(path="/api/status", query={"token": stale})
@@ -400,7 +400,7 @@ async def test_expired_query_token_with_expired_cookie_denied() -> None:
     """When BOTH credentials are dead, the query token's failure reason stands
     (the credential the caller actually presented) and the request is denied."""
     mw = token_auth_middleware()
-    with patch("kiro_crew.dashboard.token_auth.time") as mock_time:
+    with patch("aj_crew.dashboard.token_auth.time") as mock_time:
         mock_time.time.return_value = 1000.0
         stale = generate_token("staleuser3", ttl_seconds=300)
         dead_cookie = generate_token("staleuser3", ttl_seconds=300)
@@ -461,7 +461,7 @@ async def test_invalid_query_token_with_valid_cookie_reports_the_cookie_authenti
     The published bit is False, which is what stops a caller exchanging a pasted
     token from reading this 200 as its own token working."""
     mw = token_auth_middleware()
-    with patch("kiro_crew.dashboard.token_auth.time") as mock_time:
+    with patch("aj_crew.dashboard.token_auth.time") as mock_time:
         mock_time.time.return_value = 1000.0
         stale = generate_token("sameuser2", ttl_seconds=300)
     cookie = _session_token("sameuser2", ttl_seconds=3600)
@@ -483,7 +483,7 @@ async def test_internal_path_expired_query_token_falls_back_to_cookie() -> None:
     """The internal-path helper (_extract_and_validate_token) applies the same
     rule: a stale ``?token=`` on a polled internal path must not 401 a request
     whose session cookie is still valid."""
-    with patch("kiro_crew.dashboard.token_auth.time") as mock_time:
+    with patch("aj_crew.dashboard.token_auth.time") as mock_time:
         mock_time.time.return_value = 1000.0
         stale = generate_token("intuser", ttl_seconds=300)
     cookie = _session_token("intuser", ttl_seconds=3600)
@@ -509,7 +509,7 @@ async def test_expired_app_token_does_not_fall_back_to_user_cookie() -> None:
     its secret instead.
     """
     mw = token_auth_middleware()
-    with patch("kiro_crew.dashboard.token_auth.time") as mock_time:
+    with patch("aj_crew.dashboard.token_auth.time") as mock_time:
         mock_time.time.return_value = 1000.0
         stale_app = generate_token("appsub", ttl_seconds=300, app="someapp")
     cookie = generate_token("realuser", ttl_seconds=3600)
@@ -526,7 +526,7 @@ async def test_expired_app_token_does_not_fall_back_to_user_cookie() -> None:
 @pytest.mark.asyncio
 async def test_internal_path_expired_app_token_does_not_fall_back_to_cookie() -> None:
     """The internal-path helper applies the same app-token exception."""
-    with patch("kiro_crew.dashboard.token_auth.time") as mock_time:
+    with patch("aj_crew.dashboard.token_auth.time") as mock_time:
         mock_time.time.return_value = 1000.0
         stale_app = generate_token("appsub2", ttl_seconds=300, app="someapp")
     cookie = generate_token("realuser2", ttl_seconds=3600)
@@ -631,11 +631,11 @@ async def test_static_assets_bypass_auth(path: str) -> None:
 
 # -- Property 8a: CLI endpoints that self-authenticate must bypass the gate --
 #
-# These three carry NO dashboard token: the `kirocrew` CLI authenticates to them
+# These three carry NO dashboard token: the `ajcrew` CLI authenticates to them
 # with loopback + the local secret in an X-Local-Secret header, and each handler
 # re-checks both itself. The middleware only honors X-Internal-Secret, so if one
 # of them is missing from _BYPASS_EXACT the middleware denies it 403 before the
-# handler ever runs — which is exactly how `kirocrew logout` broke.
+# handler ever runs — which is exactly how `ajcrew logout` broke.
 
 _CLI_LOCAL_SECRET_PATHS = ("/api/token/local", "/api/shutdown", "/api/logout")
 
@@ -656,7 +656,7 @@ async def test_cli_local_secret_endpoints_bypass_auth(path: str) -> None:
 
 def test_cli_local_secret_endpoints_are_in_bypass_exact() -> None:
     """The set membership itself, independent of middleware behaviour."""
-    import kiro_crew.dashboard.token_auth as ta
+    import aj_crew.dashboard.token_auth as ta
 
     missing = [p for p in _CLI_LOCAL_SECRET_PATHS if p not in ta._BYPASS_EXACT]
     assert not missing, f"CLI local-secret endpoints missing from _BYPASS_EXACT: {missing}"
@@ -664,7 +664,7 @@ def test_cli_local_secret_endpoints_are_in_bypass_exact() -> None:
 
 # -- Property 7-bis: the update-revalidate poke reaches its handler --
 #
-# `kirocrew update` (git checkout) POSTs to /api/update/revalidate over loopback
+# `ajcrew update` (git checkout) POSTs to /api/update/revalidate over loopback
 # with the local secret and NO dashboard token. The handler re-checks loopback +
 # secret itself, but only if the request gets past this middleware first. It is
 # scoped to POST — the only method routed and the only one the handler's self-
@@ -831,7 +831,7 @@ async def test_bare_app_path_is_spa_shell_request(path: str, method: str) -> Non
     SPA_FALLBACK_EXCLUDED_PREFIXES included '/apps/' wholesale, causing the
     spa_fallback middleware to re-raise HTTPNotFound instead of serving shell.
     """
-    import kiro_crew.dashboard.token_auth as ta
+    import aj_crew.dashboard.token_auth as ta
 
     req = _make_request(path=path, method=method)
     assert ta._is_spa_shell_request(
@@ -851,7 +851,7 @@ async def test_bare_app_path_is_spa_shell_request(path: str, method: str) -> Non
 def test_apps_sub_paths_are_not_spa_shell(path: str) -> None:
     """/apps/{name}/api/* and /apps/{name}/ui/* have real server-side handlers
     and must NOT be treated as SPA shell requests."""
-    import kiro_crew.dashboard.token_auth as ta
+    import aj_crew.dashboard.token_auth as ta
 
     req = _make_request(path=path, method="GET")
     assert not ta._is_spa_shell_request(
@@ -885,7 +885,7 @@ def test_apps_router_subpaths_are_spa_shell(path: str, method: str) -> None:
     shell. Pasting /apps/detail/task-runner into the address bar (or refreshing
     on it) returned 404; the routes worked only via in-app navigation.
     """
-    import kiro_crew.dashboard.token_auth as ta
+    import aj_crew.dashboard.token_auth as ta
 
     req = _make_request(path=path, method=method)
     assert ta._is_spa_shell_request(req), (
@@ -903,8 +903,8 @@ def test_apps_server_routes_are_excluded_from_shell() -> None:
     """
     import re as _re
 
-    import kiro_crew.apps.routes as ar
-    import kiro_crew.dashboard.token_auth as ta
+    import aj_crew.apps.routes as ar
+    import aj_crew.dashboard.token_auth as ta
 
     source = open(ar.__file__, encoding="utf-8").read()
     # add_get("/path", h) / add_route("*", "/path", h) / add_post("/path", h)
@@ -945,7 +945,7 @@ def test_app_assets_paths_are_not_spa_shell(path: str) -> None:
     SPA_FALLBACK_EXCLUDED_PREFIXES, so the SVG requests were served index.html
     (HTML) and every <img> tripped its placeholder fallback.
     """
-    import kiro_crew.dashboard.token_auth as ta
+    import aj_crew.dashboard.token_auth as ta
 
     assert "/app-assets/" in ta.SPA_FALLBACK_EXCLUDED_PREFIXES
     req = _make_request(path=path, method="GET")
@@ -1120,7 +1120,7 @@ async def test_sessions_summarize_is_registered_internal_path() -> None:
 
     Drives the REAL _STRICT_INTERNAL_API_PATHS from server.py through the
     middleware so a future edit that drops the entry fails here."""
-    from kiro_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
+    from aj_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
 
     assert "/api/sessions/summarize" in _STRICT_INTERNAL_API_PATHS
     secret = "test-secret-123"
@@ -1150,7 +1150,7 @@ async def test_knowledge_agent_document_is_registered_internal_path() -> None:
 
     Drives the REAL _STRICT_INTERNAL_API_PATHS from server.py through the
     middleware so a future edit that drops the entry fails here."""
-    from kiro_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
+    from aj_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
 
     assert "/api/knowledge/agent-document" in _STRICT_INTERNAL_API_PATHS
     secret = "test-secret-123"
@@ -1387,7 +1387,7 @@ def test_cookie_auth_survives_nonce_store_wipe() -> None:
     restart. The LINK path still enforces the nonce. We model the restart by
     clearing ONLY the nonce store (gen untouched), not via revoke_all_sessions.
     """
-    from kiro_crew.dashboard.token_auth import _state
+    from aj_crew.dashboard.token_auth import _state
 
     token = generate_token("user_cookie")
     _state.clear_all()  # simulate restart: in-memory nonce store re-initialized empty
@@ -1402,7 +1402,7 @@ def test_cookie_auth_survives_nonce_store_wipe() -> None:
 
 
 def test_revoke_all_sessions_kills_established_cookie() -> None:
-    """Explicit revoke (kirocrew logout) MUST end established cookie sessions.
+    """Explicit revoke (ajcrew logout) MUST end established cookie sessions.
 
     Unlike a restart, revoke_all_sessions() bumps the persisted revocation
     generation, so a cookie minted before the revoke carries a stale gen and is
@@ -1428,11 +1428,11 @@ def test_signing_secret_persisted_across_loads(tmp_path, monkeypatch) -> None:
     the key and invalidated all outstanding tokens/cookies ("invalid
     signature"). The secret is now loaded-or-created from a 0600 key file.
     """
-    from kiro_crew.dashboard import token_auth as ta
+    from aj_crew.dashboard import token_auth as ta
 
     monkeypatch.setattr(ta, "config_dir", lambda: tmp_path, raising=False)
     # First load creates the key file.
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     s1 = ta._load_or_create_secret()
     key_file = tmp_path / ta._SECRET_KEY_FILE
     assert key_file.exists()
@@ -1462,9 +1462,9 @@ def test_signing_secret_concurrent_first_init_converges(tmp_path, monkeypatch) -
     (``O_CREAT | O_EXCL`` + read-the-winner with bounded retry), so every racer
     returns the ONE key that is persisted on disk.
     """
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     key_file = tmp_path / ts._SECRET_KEY_FILE
     assert not key_file.exists()
 
@@ -1519,9 +1519,9 @@ def test_signing_secret_read_contention_retries_not_ephemeral(tmp_path, monkeypa
     """
     import pathlib
 
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     key_file = tmp_path / ts._SECRET_KEY_FILE
     persisted = b"K" * 48  # a valid, already-persisted key (>= 32 bytes)
     key_file.write_bytes(persisted)
@@ -1558,9 +1558,9 @@ def test_signing_secret_create_contention_retries_not_ephemeral(tmp_path, monkey
     """
     from windows_sim import link_sharing_violation
 
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     key_file = tmp_path / ts._SECRET_KEY_FILE
 
     # Fault the FIRST publish of the key file; the retry must succeed.
@@ -1592,10 +1592,10 @@ def test_signing_secret_destination_never_exists_while_incomplete(tmp_path, monk
     This samples the destination on every ``os.write`` that carries key bytes:
     with the fix it is absent throughout; before it, it is present at 0 bytes.
     """
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
     with monkeypatch.context() as mp:
-        mp.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+        mp.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
         key_file = tmp_path / ts._SECRET_KEY_FILE
         assert not key_file.exists()
 
@@ -1631,7 +1631,7 @@ def test_signing_secret_destination_never_exists_while_incomplete(tmp_path, monk
 def _claims_of(token: str) -> dict:
     import json
 
-    from kiro_crew.dashboard.token_auth import _b64url_decode
+    from aj_crew.dashboard.token_auth import _b64url_decode
 
     return json.loads(_b64url_decode(token.split(".", 1)[0]))
 
@@ -1656,7 +1656,7 @@ async def test_link_on_an_internal_path_query_gets_link_rules_not_session_rules(
     api`` relies on that) and stops when the window closes, instead of lasting
     until its ``session_exp``."""
     mw = token_auth_middleware(internal_paths=frozenset({"/api/spawn"}), internal_secret="s")
-    with patch("kiro_crew.dashboard.token_auth.time") as mock_time:
+    with patch("aj_crew.dashboard.token_auth.time") as mock_time:
         mock_time.time.return_value = 1_000_000.0
         link = generate_token("owner")
         fresh = await mw(_make_request(path="/api/spawn", query={"token": link}), _ok_handler)
@@ -1702,7 +1702,7 @@ def test_a_token_without_the_session_claim_is_refused_as_a_session() -> None:
     import json
     import time
 
-    from kiro_crew.dashboard import token_auth as _ta
+    from aj_crew.dashboard import token_auth as _ta
 
     now = time.time()
     payload = {

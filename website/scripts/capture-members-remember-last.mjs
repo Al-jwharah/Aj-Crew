@@ -43,10 +43,10 @@ const member = (name, kiro_agent, extra = {}) => ({
   ...extra,
 })
 const MEMBERS = [
-  member('radar', 'kirocrew-autofix', { bound: true, slot_key: 'member-radar', running: true, workspace: 'autofix', last_active_ts: 1000, last_message: 'Six new issues: four covered by open PRs.' }),
-  member('scout', 'kirocrew-research', { memory_store: 'scout-own', model: 'claude-opus-5' }),
-  member('fixer', 'kirocrew', { bound: true, slot_key: 'member-fixer', last_active_ts: 900, last_message: 'Two PRs opened for the queue.' }),
-  member('scribe', 'kirocrew-lite', { workspace: 'docs' }),
+  member('radar', 'ajcrew-autofix', { bound: true, slot_key: 'member-radar', running: true, workspace: 'autofix', last_active_ts: 1000, last_message: 'Six new issues: four covered by open PRs.' }),
+  member('scout', 'ajcrew-research', { memory_store: 'scout-own', model: 'claude-opus-5' }),
+  member('fixer', 'ajcrew', { bound: true, slot_key: 'member-fixer', last_active_ts: 900, last_message: 'Two PRs opened for the queue.' }),
+  member('scribe', 'ajcrew-lite', { workspace: 'docs' }),
 ]
 
 const browser = await chromium.launch()
@@ -66,10 +66,10 @@ async function newPage(route, viewport = { width: 1280, height: 820 }) {
   await page.route((u) => new URL(u).pathname.startsWith('/api/'), (r) => {
     const path = new URL(r.request().url()).pathname
     const json = (body) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
-    if (path === '/api/members') return json({ members: MEMBERS, default_agent: 'kirocrew' })
+    if (path === '/api/members') return json({ members: MEMBERS, default_agent: 'ajcrew' })
     if (path === '/api/crons') return json({ jobs: [] })
     if (path === '/api/webhooks') return json({ tokens: [] })
-    if (path === '/api/agents') return json({ agents: [], default_agent: 'kirocrew' })
+    if (path === '/api/agents') return json({ agents: [], default_agent: 'ajcrew' })
     const thread = path.match(/^\/api\/members\/([^/]+)\/thread$/)
     if (thread) {
       const slug = decodeURIComponent(thread[1])

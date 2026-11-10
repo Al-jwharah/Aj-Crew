@@ -12,9 +12,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.execution_context import execution_for_store
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.execution_context import execution_for_store
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # ``SubagentManager.spawn`` refuses while the host looks short of memory, which
 # is the runner's state, not this test's input.
@@ -107,9 +107,9 @@ async def test_provenance_written_once_before_the_spawn_event() -> None:
         await orig_fire(kind, *args, **kwargs)
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state", side_effect=_spy_update),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state", side_effect=_spy_update),
         patch.object(manager, "_fire_event", _spy_fire),
     ):
         await manager._run_inner(info, f"subagent:{info.id}")
@@ -170,9 +170,9 @@ async def test_provenance_write_records_the_runs_reasoning_effort(effort: str) -
         return True
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state", side_effect=_spy_update),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state", side_effect=_spy_update),
     ):
         await manager._run_inner(info, f"subagent:{info.id}")
 
@@ -216,10 +216,10 @@ async def test_provenance_write_records_the_callers_own_model_pin(
         return True
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state", side_effect=_spy_update),
-        patch("kiro_crew.subagent._subagent_default_model", return_value=role_pin),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state", side_effect=_spy_update),
+        patch("aj_crew.subagent._subagent_default_model", return_value=role_pin),
     ):
         await manager._run_inner(info, f"subagent:{info.id}")
 
@@ -269,9 +269,9 @@ async def test_provenance_write_retries_once_on_transient_failure() -> None:
         await orig_fire(kind, *args, **kwargs)
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state", side_effect=_flaky_update),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state", side_effect=_flaky_update),
         patch.object(manager, "_fire_event", _spy_fire),
     ):
         await manager._run_inner(info, f"subagent:{info.id}")
@@ -328,9 +328,9 @@ async def test_provenance_write_retries_on_silently_skipped_merge() -> None:
         return True
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state", side_effect=_skippy_update),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state", side_effect=_skippy_update),
     ):
         await manager._run_inner(info, f"subagent:{info.id}")
 
@@ -385,9 +385,9 @@ async def test_session_record_write_retries_once(first_attempt: str) -> None:
         return True
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state", side_effect=_flaky_update),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state", side_effect=_flaky_update),
     ):
         await manager._run_inner(info, f"subagent:{info.id}")
 
@@ -413,10 +413,10 @@ async def test_session_record_write_that_never_lands_is_a_warning(
         return True
 
     with (
-        caplog.at_level("WARNING", logger="kiro_crew"),
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state", side_effect=_broken_update),
+        caplog.at_level("WARNING", logger="aj_crew"),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state", side_effect=_broken_update),
     ):
         await manager._run_inner(info, f"subagent:{info.id}")
 
@@ -466,7 +466,7 @@ async def test_per_turn_diagnostics_write_is_drained_on_cancellation() -> None:
     """
     import asyncio
 
-    from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
+    from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
 
     event = AcpEvent(
         kind=EVENT_PERMISSION_REQUEST,
@@ -502,10 +502,10 @@ async def test_per_turn_diagnostics_write_is_drained_on_cancellation() -> None:
         return True
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state", return_value=True),
-        patch("kiro_crew.subagent.asyncio.to_thread", side_effect=_gated_to_thread),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state", return_value=True),
+        patch("aj_crew.subagent.asyncio.to_thread", side_effect=_gated_to_thread),
     ):
         task = asyncio.ensure_future(manager._run_inner(info, f"subagent:{info.id}"))
         try:
@@ -557,7 +557,7 @@ async def test_no_recovery_scheduled_while_diagnostics_worker_is_live() -> None:
     ``_state_drain_active`` latch must suppress it."""
     import asyncio
 
-    from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
+    from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
 
     event = AcpEvent(
         kind=EVENT_PERMISSION_REQUEST,
@@ -605,10 +605,10 @@ async def test_no_recovery_scheduled_while_diagnostics_worker_is_live() -> None:
         recovery_calls.append(info_)
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state", return_value=True),
-        patch("kiro_crew.subagent.asyncio.to_thread", side_effect=_gated_to_thread),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state", return_value=True),
+        patch("aj_crew.subagent.asyncio.to_thread", side_effect=_gated_to_thread),
         patch.object(manager, "_schedule_cancel_recovery", side_effect=_spy_recovery),
         patch.object(manager, "_write_tombstone"),
     ):
@@ -663,9 +663,9 @@ async def test_recovery_gate_respects_live_drain_latch() -> None:
         recovery_calls: list[Any] = []
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent.update_state", return_value=True),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent.update_state", return_value=True),
             patch.object(manager, "_run_inner", side_effect=_cancelled_inner),
             patch.object(
                 manager,
@@ -697,7 +697,7 @@ async def test_per_turn_diagnostics_drain_is_bounded() -> None:
     completes (same posture as _REPORT_DRAIN_TIMEOUT)."""
     import asyncio
 
-    from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
+    from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
 
     event = AcpEvent(
         kind=EVENT_PERMISSION_REQUEST,
@@ -735,11 +735,11 @@ async def test_per_turn_diagnostics_drain_is_bounded() -> None:
         return True
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state", return_value=True),
-        patch("kiro_crew.subagent.asyncio.to_thread", side_effect=_wedged_to_thread),
-        patch("kiro_crew.subagent._STATE_DRAIN_TIMEOUT", 0.0),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state", return_value=True),
+        patch("aj_crew.subagent.asyncio.to_thread", side_effect=_wedged_to_thread),
+        patch("aj_crew.subagent._STATE_DRAIN_TIMEOUT", 0.0),
     ):
         task = asyncio.ensure_future(manager._run_inner(info, f"subagent:{info.id}"))
         try:
@@ -775,7 +775,7 @@ async def test_abandoned_diagnostics_worker_exception_is_retrieved() -> None:
     add_done_callback line fails this test."""
     import asyncio
 
-    from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
+    from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
 
     event = AcpEvent(
         kind=EVENT_PERMISSION_REQUEST,
@@ -820,14 +820,14 @@ async def test_abandoned_diagnostics_worker_exception_is_retrieved() -> None:
     loop.set_exception_handler(_capture)
     try:
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent.update_state", return_value=True),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent.update_state", return_value=True),
             patch(
-                "kiro_crew.subagent.asyncio.to_thread",
+                "aj_crew.subagent.asyncio.to_thread",
                 side_effect=_wedged_raising_to_thread,
             ),
-            patch("kiro_crew.subagent._STATE_DRAIN_TIMEOUT", 0.0),
+            patch("aj_crew.subagent._STATE_DRAIN_TIMEOUT", 0.0),
         ):
             task = asyncio.ensure_future(manager._run_inner(info, f"subagent:{info.id}"))
             try:
@@ -859,7 +859,7 @@ async def test_abandoned_diagnostics_worker_exception_is_retrieved() -> None:
 def test_update_state_reports_write_vs_skip(tmp_path: object) -> None:
     """The return contract the retry depends on: True when the merge was
     written, False when it was skipped because state.json is unreadable."""
-    from kiro_crew.subagent_persistence import (
+    from aj_crew.subagent_persistence import (
         create_agent_folder,
         read_state,
         update_state,
@@ -901,12 +901,12 @@ async def test_unpinned_spawn_records_requested_model_auto() -> None:
         return True
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state", side_effect=_spy_update),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state", side_effect=_spy_update),
         # Patch _subagent_default_model to return "" (no role pin configured);
         # with eff_model="" the assignment simplifies to "auto" directly.
-        patch("kiro_crew.subagent._subagent_default_model", return_value=""),
+        patch("aj_crew.subagent._subagent_default_model", return_value=""),
     ):
         await manager._run_inner(info, f"subagent:{info.id}")
 
@@ -955,10 +955,10 @@ async def test_provenance_write_is_drained_on_cancellation() -> None:
         return True
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state", return_value=True),
-        patch("kiro_crew.subagent.asyncio.to_thread", side_effect=_gated_to_thread),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state", return_value=True),
+        patch("aj_crew.subagent.asyncio.to_thread", side_effect=_gated_to_thread),
     ):
         task = asyncio.ensure_future(manager._run_inner(info, f"subagent:{info.id}"))
         try:
@@ -999,7 +999,7 @@ async def test_cc_refinement_write_is_drained_on_cancellation() -> None:
     """
     import asyncio
 
-    from kiro_crew.acp.types import EVENT_TEXT_CHUNK, AcpEvent
+    from aj_crew.acp.types import EVENT_TEXT_CHUNK, AcpEvent
 
     # Spawn-time resolve sees nothing; the provider reveals its served model
     # only as the first chunk streams, which is what arms the refinement.
@@ -1038,10 +1038,10 @@ async def test_cc_refinement_write_is_drained_on_cancellation() -> None:
         return True
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state", return_value=True),
-        patch("kiro_crew.subagent.asyncio.to_thread", side_effect=_gated_to_thread),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state", return_value=True),
+        patch("aj_crew.subagent.asyncio.to_thread", side_effect=_gated_to_thread),
     ):
         task = asyncio.ensure_future(manager._run_inner(info, f"subagent:{info.id}"))
         try:
@@ -1071,7 +1071,7 @@ async def test_an_abandoned_state_writer_holds_the_conversation() -> None:
     """
     import asyncio
 
-    from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
+    from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
 
     event = AcpEvent(
         kind=EVENT_PERMISSION_REQUEST,
@@ -1106,13 +1106,13 @@ async def test_an_abandoned_state_writer_holds_the_conversation() -> None:
         return True
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state", return_value=True),
-        patch("kiro_crew.subagent.asyncio.to_thread", side_effect=_wedged_to_thread),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state", return_value=True),
+        patch("aj_crew.subagent.asyncio.to_thread", side_effect=_wedged_to_thread),
         # Expire the drain immediately: this test is about what happens AFTER
         # expiry, not about the bound itself (pinned separately).
-        patch("kiro_crew.subagent._STATE_DRAIN_TIMEOUT", 0.0),
+        patch("aj_crew.subagent._STATE_DRAIN_TIMEOUT", 0.0),
     ):
         task = asyncio.ensure_future(manager._run_inner(info, conv_key))
         await entered.wait()
@@ -1175,7 +1175,7 @@ def test_no_bare_to_thread_update_state_outside_the_drained_helper() -> None:
         "update_state": "_write_state_off_loop_impl",
         "write_finished_result": "_write_finished_result_off_loop_impl",
     }
-    src = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+    src = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
     assert src.is_dir(), src
 
     class _Scan(ast.NodeVisitor):
@@ -1251,7 +1251,7 @@ async def test_the_conversation_hold_covers_the_whole_drain_not_only_expiry() ->
     """
     import asyncio
 
-    from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
+    from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
 
     event = AcpEvent(
         kind=EVENT_PERMISSION_REQUEST,
@@ -1286,10 +1286,10 @@ async def test_the_conversation_hold_covers_the_whole_drain_not_only_expiry() ->
         return True
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state", return_value=True),
-        patch("kiro_crew.subagent.asyncio.to_thread", side_effect=_gated_to_thread),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state", return_value=True),
+        patch("aj_crew.subagent.asyncio.to_thread", side_effect=_gated_to_thread),
     ):
         task = asyncio.ensure_future(manager._run_inner(info, conv_key))
         try:
@@ -1382,9 +1382,9 @@ async def test_pid_and_session_records_are_written_off_loop() -> None:
         return True
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state", side_effect=_spy),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state", side_effect=_spy),
     ):
         await manager._run_inner(info, f"subagent:{info.id}")
 
@@ -1440,10 +1440,10 @@ async def test_pid_record_write_is_drained_on_cancellation() -> None:
         return True
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state", return_value=True),
-        patch("kiro_crew.subagent.asyncio.to_thread", side_effect=_gated_to_thread),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state", return_value=True),
+        patch("aj_crew.subagent.asyncio.to_thread", side_effect=_gated_to_thread),
     ):
         task = asyncio.ensure_future(manager._run_inner(info, f"subagent:{info.id}"))
         try:
@@ -1504,10 +1504,10 @@ async def test_session_record_write_is_drained_on_cancellation() -> None:
         return True
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state", return_value=True),
-        patch("kiro_crew.subagent.asyncio.to_thread", side_effect=_gated_to_thread),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state", return_value=True),
+        patch("aj_crew.subagent.asyncio.to_thread", side_effect=_gated_to_thread),
     ):
         task = asyncio.ensure_future(manager._run_inner(info, f"subagent:{info.id}"))
         try:
@@ -1571,10 +1571,10 @@ async def test_shared_session_pid_write_is_drained_on_cancellation() -> None:
         return True
 
     with (
-        patch("kiro_crew.subagent.SubagentManager._get_parent_runtime", return_value=runtime),
-        patch("kiro_crew.subagent.AcpSessionProvider", MagicMock()),
-        patch("kiro_crew.subagent.update_state", return_value=True),
-        patch("kiro_crew.subagent.asyncio.to_thread", side_effect=_gated_to_thread),
+        patch("aj_crew.subagent.SubagentManager._get_parent_runtime", return_value=runtime),
+        patch("aj_crew.subagent.AcpSessionProvider", MagicMock()),
+        patch("aj_crew.subagent.update_state", return_value=True),
+        patch("aj_crew.subagent.asyncio.to_thread", side_effect=_gated_to_thread),
     ):
         task = asyncio.ensure_future(
             manager._create_shared_session(info, f"subagent:{info.id}", "")
@@ -1609,7 +1609,7 @@ def test_no_on_loop_update_state_inside_a_coroutine() -> None:
     import ast
     from pathlib import Path
 
-    src = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+    src = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
     assert src.is_dir(), src
 
     class _Scan(ast.NodeVisitor):

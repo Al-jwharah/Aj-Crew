@@ -90,7 +90,7 @@ const REGIONS = [
  *  so their props are pinned by their own component suites, not this net.
  *  Every entry needs a reason; an unexplained exclusion defeats the harness. */
 const OUT_OF_SCOPE = [
-  { match: /^\s*(key=|sessionId=|kiroCrewVersion=|turnCount=|slotOrigin=|onLayoutChange=)/, reason: 'SessionPulseSurveyCard props — content child, pinned by its own suite' },
+  { match: /^\s*(key=|sessionId=|ajCrewVersion=|turnCount=|slotOrigin=|onLayoutChange=)/, reason: 'SessionPulseSurveyCard props — content child, pinned by its own suite' },
   { match: /^\s*<ChatFooter .*\/>$/, reason: 'whole footer line — presence+slot membership pinned by the render suite; props by ChatFooter suites' },
   { match: /^\s*<SessionPulseSurveyCard$/, reason: 'opening tag only; presence+order IS pinned, props are the child suite\'s' },
 ]

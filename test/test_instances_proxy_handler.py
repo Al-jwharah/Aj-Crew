@@ -23,10 +23,10 @@ class TestProxyHandlerPolicy:
         # The proxy requires the positively-identified OWNER (same bar as
         # federated search); the fake request has no real token subject, so
         # satisfy the gate explicitly. The deny path has its own test below.
-        from kiro_crew.dashboard.handlers import source_providers as sp
+        from aj_crew.dashboard.handlers import source_providers as sp
 
         monkeypatch.setattr(sp, "is_owner_dashboard_request", lambda r: True)
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
         state = _State(reg, manager if manager != "stub" else object())
@@ -43,7 +43,7 @@ class TestProxyHandlerPolicy:
         After `ConnectionResetError` the handler returns; a `write_eof()` on the dead
         transport would raise again and crash the request.
         """
-        from kiro_crew.dashboard.handlers_instances import api_instances_proxy
+        from aj_crew.dashboard.handlers_instances import api_instances_proxy
 
         writes: list[str] = []
 
@@ -74,7 +74,7 @@ class TestProxyHandlerPolicy:
                     content=types.SimpleNamespace(iter_any=_chunks),
                 )
 
-        from kiro_crew.dashboard import handlers_instances as hi
+        from aj_crew.dashboard import handlers_instances as hi
 
         req = self._req(tmp_path, monkeypatch, path="api/chat/stream", manager=_Mgr())
         req.body_exists = False
@@ -87,8 +87,8 @@ class TestProxyHandlerPolicy:
     async def test_non_owner_identity_is_refused(self, tmp_path, monkeypatch):
         """A Slack-minted dashboard identity passes _guard but must NOT reach
         the peer: the proxy executes with the owner's manager-held credential."""
-        from kiro_crew.dashboard.handlers import source_providers as sp
-        from kiro_crew.dashboard.handlers_instances import api_instances_proxy
+        from aj_crew.dashboard.handlers import source_providers as sp
+        from aj_crew.dashboard.handlers_instances import api_instances_proxy
 
         req = self._req(tmp_path, monkeypatch, path="api/chat/slots")
         monkeypatch.setattr(sp, "is_owner_dashboard_request", lambda r: False)
@@ -99,7 +99,7 @@ class TestProxyHandlerPolicy:
 
     @pytest.mark.asyncio
     async def test_disabled_feature_is_403(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers_instances import api_instances_proxy
+        from aj_crew.dashboard.handlers_instances import api_instances_proxy
 
         req = self._req(tmp_path, monkeypatch, path="api/chat/slots", enabled=False)
         resp = await api_instances_proxy(req)
@@ -107,7 +107,7 @@ class TestProxyHandlerPolicy:
 
     @pytest.mark.asyncio
     async def test_traversal_is_refused_before_any_url_is_built(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers_instances import api_instances_proxy
+        from aj_crew.dashboard.handlers_instances import api_instances_proxy
 
         req = self._req(tmp_path, monkeypatch, path="api/../etc/passwd")
         resp = await api_instances_proxy(req)
@@ -115,7 +115,7 @@ class TestProxyHandlerPolicy:
 
     @pytest.mark.asyncio
     async def test_non_api_path_is_refused(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers_instances import api_instances_proxy
+        from aj_crew.dashboard.handlers_instances import api_instances_proxy
 
         req = self._req(tmp_path, monkeypatch, path="assets/main.js")
         resp = await api_instances_proxy(req)
@@ -127,7 +127,7 @@ class TestProxyHandlerPolicy:
         """The allowlist subsumes the old explicit deny: `api/instances` is not
         an allowed prefix, so one hub still cannot chain through a peer into a
         third machine's SSH control plane."""
-        from kiro_crew.dashboard.handlers_instances import api_instances_proxy
+        from aj_crew.dashboard.handlers_instances import api_instances_proxy
 
         req = self._req(tmp_path, monkeypatch, path="api/instances/other/proxy/api/status")
         resp = await api_instances_proxy(req)
@@ -140,7 +140,7 @@ class TestProxyHandlerPolicy:
         reply passes the content-type gate, so a deny-only policy would carry
         a minted peer token back through the hub in-band. The allowlist is the
         no-remote-credential-on-hub invariant, pinned here rather than in prose."""
-        from kiro_crew.dashboard.handlers_instances import api_instances_proxy
+        from aj_crew.dashboard.handlers_instances import api_instances_proxy
 
         req = self._req(tmp_path, monkeypatch, path="api/token/local")
         resp = await api_instances_proxy(req)
@@ -162,7 +162,7 @@ class TestProxyHandlerPolicy:
         """The vet policy is a positive prefix allowlist (`api/chat` today):
         anything the feature never asked for is refused by default instead of
         proxied silently — including every future sensitive peer endpoint."""
-        from kiro_crew.dashboard.handlers_instances import (
+        from aj_crew.dashboard.handlers_instances import (
             _PROXY_PATH_DENIED_REASON,
             _proxy_canonical_path,
         )
@@ -174,7 +174,7 @@ class TestProxyHandlerPolicy:
     def test_bare_chat_prefix_itself_is_forwarded(self):
         """`POST /api/chat` is the primary send route the feature rides on —
         the prefix itself must pass, not only paths strictly beneath it."""
-        from kiro_crew.dashboard.handlers_instances import _proxy_canonical_path
+        from aj_crew.dashboard.handlers_instances import _proxy_canonical_path
 
         assert _proxy_canonical_path("api/chat") == ("api/chat", "")
         assert _proxy_canonical_path("/api/chat/") == ("api/chat", "")
@@ -184,7 +184,7 @@ class TestProxyHandlerPolicy:
         own SSE broadcast, carrying session-list and slot-state changes while the
         per-turn reply streams back from `api/chat`. It is a leaf endpoint, so
         the bare prefix is the whole surface this row grants."""
-        from kiro_crew.dashboard.handlers_instances import _proxy_canonical_path
+        from aj_crew.dashboard.handlers_instances import _proxy_canonical_path
 
         assert _proxy_canonical_path("api/stream") == ("api/stream", "")
         assert _proxy_canonical_path("/api/stream/") == ("api/stream", "")
@@ -207,7 +207,7 @@ class TestProxyHandlerPolicy:
         Protocols` to pass the reply content-type gate that exists to stop a peer
         serving active content onto the authenticated hub origin.
         """
-        from kiro_crew.dashboard.handlers_instances import (
+        from aj_crew.dashboard.handlers_instances import (
             _PROXY_PATH_DENIED_REASON,
             _proxy_canonical_path,
         )
@@ -223,7 +223,7 @@ class TestProxyHandlerPolicy:
         at `api`) guards the fail-open edits an exact pin alone would also
         catch — kept separate so the failure message names the broken
         invariant."""
-        from kiro_crew.dashboard.handlers_instances import _PROXY_ALLOWED_PREFIXES
+        from aj_crew.dashboard.handlers_instances import _PROXY_ALLOWED_PREFIXES
 
         assert _PROXY_ALLOWED_PREFIXES == (("api", "chat"), ("api", "stream"))
         for prefix in _PROXY_ALLOWED_PREFIXES:
@@ -237,7 +237,7 @@ class TestProxyHandlerPolicy:
         """Even if a bad edit ships an empty or one-segment row, the vet must
         not widen: rows shallower than two segments are ignored, so the
         policy degrades to refusing more, never to forwarding more."""
-        from kiro_crew.dashboard import handlers_instances as hi
+        from aj_crew.dashboard import handlers_instances as hi
 
         monkeypatch.setattr(hi, "_PROXY_ALLOWED_PREFIXES", ((), ("api",)))
         path, reason = hi._proxy_canonical_path("api/token/local")
@@ -260,7 +260,7 @@ class TestProxyHandlerPolicy:
         The path is decoded to a fixed point before vetting, since the peer resolves the
         fully-decoded form (`%252e%252e` -> `..`). Parametrized over depth for that reason.
         """
-        from kiro_crew.dashboard.handlers_instances import _proxy_canonical_path
+        from aj_crew.dashboard.handlers_instances import _proxy_canonical_path
 
         path, reason = _proxy_canonical_path(raw)
         assert path == ""
@@ -270,7 +270,7 @@ class TestProxyHandlerPolicy:
         """The forwarded path is constructed, not merely approved: a caller
         cannot get one string past the policy and a different one onto the
         wire."""
-        from kiro_crew.dashboard.handlers_instances import _proxy_canonical_path
+        from aj_crew.dashboard.handlers_instances import _proxy_canonical_path
 
         assert _proxy_canonical_path("/api/chat/slots/") == ("api/chat/slots", "")
         assert _proxy_canonical_path("api/%63hat/slots") == ("api/chat/slots", "")
@@ -289,7 +289,7 @@ class TestProxyHandlerPolicy:
         ],
     )
     def test_only_plainly_named_segments_are_forwarded(self, raw, expect):
-        from kiro_crew.dashboard.handlers_instances import _proxy_canonical_path
+        from aj_crew.dashboard.handlers_instances import _proxy_canonical_path
 
         path, reason = _proxy_canonical_path(raw)
         assert path == ""
@@ -297,7 +297,7 @@ class TestProxyHandlerPolicy:
 
     @pytest.mark.asyncio
     async def test_disallowed_method_is_405(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers_instances import api_instances_proxy
+        from aj_crew.dashboard.handlers_instances import api_instances_proxy
 
         req = self._req(tmp_path, monkeypatch, path="api/chat/slots", method="OPTIONS")
         resp = await api_instances_proxy(req)
@@ -305,7 +305,7 @@ class TestProxyHandlerPolicy:
 
     @pytest.mark.asyncio
     async def test_missing_manager_is_503(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers_instances import api_instances_proxy
+        from aj_crew.dashboard.handlers_instances import api_instances_proxy
 
         req = self._req(tmp_path, monkeypatch, path="api/chat/slots", manager=None)
         resp = await api_instances_proxy(req)
@@ -316,7 +316,7 @@ class TestProxyHandlerPolicy:
         """The browser's ?token= is the HUB's credential — it must never
         cross the tunnel (a peer receiving it holds a replayable credential
         for this gateway)."""
-        from kiro_crew.dashboard.handlers_instances import api_instances_proxy
+        from aj_crew.dashboard.handlers_instances import api_instances_proxy
 
         captured: dict = {}
 
@@ -339,7 +339,7 @@ class TestProxyHandlerPolicy:
 
     @pytest.mark.asyncio
     async def test_error_bodies_carry_machine_readable_codes(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers_instances import api_instances_proxy
+        from aj_crew.dashboard.handlers_instances import api_instances_proxy
 
         req = self._req(tmp_path, monkeypatch, path="assets/x.js")
         assert _body(await api_instances_proxy(req))["code"] == "proxy_path_denied"
@@ -358,10 +358,10 @@ class TestProxyRedactsPeerReplies:
 
     def _req(self, tmp_path, monkeypatch, *, path, chunks, content_type):
         _enable(tmp_path, monkeypatch)
-        from kiro_crew.dashboard.handlers import source_providers as sp
+        from aj_crew.dashboard.handlers import source_providers as sp
 
         monkeypatch.setattr(sp, "is_owner_dashboard_request", lambda r: True)
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         async def _iter():
             for c in chunks:
@@ -385,7 +385,7 @@ class TestProxyRedactsPeerReplies:
     def test_every_forwarded_content_type_has_a_redaction_path(self):
         """The proxy redacts JSON and SSE only, so it may forward nothing else:
         a third allowed type would reach the window unredacted."""
-        from kiro_crew.dashboard.handlers_instances import _PROXY_RESP_ALLOW_CONTENT_TYPES
+        from aj_crew.dashboard.handlers_instances import _PROXY_RESP_ALLOW_CONTENT_TYPES
 
         assert _PROXY_RESP_ALLOW_CONTENT_TYPES == frozenset(
             {"application/json", "text/event-stream"}
@@ -393,7 +393,7 @@ class TestProxyRedactsPeerReplies:
 
     @pytest.mark.asyncio
     async def test_json_body_strings_are_redacted(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers_instances import api_instances_proxy
+        from aj_crew.dashboard.handlers_instances import api_instances_proxy
 
         doc = {"messages": [{"role": "assistant", "content": f"key {self.SECRET} here"}]}
         raw = json.dumps(doc).encode()
@@ -412,7 +412,7 @@ class TestProxyRedactsPeerReplies:
 
     @pytest.mark.asyncio
     async def test_json_escape_cannot_hide_a_secret(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers_instances import api_instances_proxy
+        from aj_crew.dashboard.handlers_instances import api_instances_proxy
 
         hidden = '{"content": "\\u0041' + self.SECRET[1:] + '"}'
         req = self._req(
@@ -427,7 +427,7 @@ class TestProxyRedactsPeerReplies:
 
     @pytest.mark.asyncio
     async def test_too_deeply_nested_json_is_refused_not_forwarded(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers_instances import api_instances_proxy
+        from aj_crew.dashboard.handlers_instances import api_instances_proxy
 
         deep = (b"[" * 200_000) + b'"' + self.SECRET.encode() + b'"' + (b"]" * 200_000)
         req = self._req(
@@ -443,7 +443,7 @@ class TestProxyRedactsPeerReplies:
 
     @pytest.mark.asyncio
     async def test_a_leading_bom_cannot_hide_an_escaped_secret(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers_instances import api_instances_proxy
+        from aj_crew.dashboard.handlers_instances import api_instances_proxy
 
         body = '\ufeff{"content": "\\u0041' + self.SECRET[1:] + '"}'
         req = self._req(
@@ -458,7 +458,7 @@ class TestProxyRedactsPeerReplies:
 
     @pytest.mark.asyncio
     async def test_json_python_cannot_decode_is_refused_not_forwarded(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers_instances import api_instances_proxy
+        from aj_crew.dashboard.handlers_instances import api_instances_proxy
 
         body = '{"n": ' + "9" * 5000 + ', "content": "\\u0041' + self.SECRET[1:] + '"}'
         req = self._req(
@@ -474,7 +474,7 @@ class TestProxyRedactsPeerReplies:
 
     @pytest.mark.asyncio
     async def test_oversized_json_is_refused_not_forwarded(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as hi
+        from aj_crew.dashboard import handlers_instances as hi
 
         monkeypatch.setattr(hi, "PROXY_REDACT_BUFFER_MAX_BYTES", 16)
         req = self._req(
@@ -490,7 +490,7 @@ class TestProxyRedactsPeerReplies:
 
     @pytest.mark.asyncio
     async def test_sse_frames_are_redacted_across_chunk_splits(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as hi
+        from aj_crew.dashboard import handlers_instances as hi
 
         writes: list[bytes] = []
 
@@ -534,7 +534,7 @@ class TestRedactSseEvent:
     SECRET = "AKIA" + "IOSFODNN7EXAMPLE"
 
     def test_secret_split_over_data_lines_behind_an_escape_is_redacted(self):
-        from kiro_crew.dashboard.handlers_instances import _redact_sse_event
+        from aj_crew.dashboard.handlers_instances import _redact_sse_event
 
         event = (
             'event: chat_message\ndata: {"slot": "s1",\ndata: "content": "\\u0041'
@@ -550,7 +550,7 @@ class TestRedactSseEvent:
 
     @pytest.mark.asyncio
     async def test_a_bom_split_across_chunks_is_stripped(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as hi
+        from aj_crew.dashboard import handlers_instances as hi
 
         writes: list[bytes] = []
 
@@ -584,7 +584,7 @@ class TestRedactSseEvent:
 
     @pytest.mark.asyncio
     async def test_cr_line_ends_are_framed_before_redaction(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as hi
+        from aj_crew.dashboard import handlers_instances as hi
 
         writes: list[bytes] = []
 
@@ -617,7 +617,7 @@ class TestRedactSseEvent:
 
     @pytest.mark.asyncio
     async def test_a_completed_event_over_the_cap_is_dropped(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as hi
+        from aj_crew.dashboard import handlers_instances as hi
 
         writes: list[bytes] = []
 

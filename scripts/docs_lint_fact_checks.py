@@ -75,7 +75,7 @@ _EMPHASIS_UNDERSCORE_RE = re.compile(r"(?<![A-Za-z0-9_])(_+)(?=\S)(.+?)(?<=\S)\1
 # Doc genres that name files and symbols BECAUSE they do not exist yet. Same
 # judgement as ``_PATH_CITE_DOC_PREFIXES``, applied to the fact checks whose
 # subject is existence: a proposal saying "this adds
-# ``src/kiro_crew/run_coordinator/sqlite.py``" is correct writing, and 13 of the 20
+# ``src/aj_crew/run_coordinator/sqlite.py``" is correct writing, and 13 of the 20
 # path findings measured on the shipping tree were exactly that.
 _FORWARD_LOOKING_DOC_PREFIXES: tuple[str, ...] = (
     "docs/request-for-change/",
@@ -85,7 +85,7 @@ _FORWARD_LOOKING_DOC_PREFIXES: tuple[str, ...] = (
 # A source path written from the REPO ROOT, so it resolves or it is wrong. Both
 # boundaries are load-bearing. The lookBEHIND keeps the ``docs/`` and ``src/`` arms
 # from matching the tail of a longer path: without it
-# ``src/kiro_crew/docs/tips.md`` would also be read as a repo-root
+# ``src/aj_crew/docs/tips.md`` would also be read as a repo-root
 # ``docs/tips.md``. The lookAHEAD keeps the extension from being a PREFIX of the
 # real one: without it ``scripts/vendor_manifest.sha256`` reads as
 # ``scripts/vendor_manifest.sh``, ``types.pyi`` as ``types.py``, ``page.mdx`` as
@@ -104,7 +104,7 @@ _REPO_PATH_CITE_RE = re.compile(
 # address format the auto-improvement spine hands an EXTERNAL target repository, so
 # the path names a module in that repo. The syntax alone cannot say which repo is
 # meant: this one uses it for its own code too
-# (``src/kiro_crew/mcp_tools/workflows.py::workflow_run``), and skipping on syntax
+# (``src/aj_crew/mcp_tools/workflows.py::workflow_run``), and skipping on syntax
 # would let a rename leave every such local citation stale with the gate green.
 # What separates them is the DOCUMENT, the same discriminator
 # ``_PATH_CITE_DOC_PREFIXES`` already runs on: these docs describe a run against
@@ -120,9 +120,9 @@ _EXTERNAL_TARGET_COORDINATE_DOCS: frozenset[str] = frozenset(
 _INLINE_CODE_SPAN_RE = re.compile(r"`+([^`\n]*)`+")
 
 # The two fenced-block tokens a reader COPIES instead of reading: an archived task
-# spec's path, and whatever ``kirocrew run`` is handed.
+# spec's path, and whatever ``ajcrew run`` is handed.
 _FENCED_TASK_SPEC_RE = re.compile(r"(?<![A-Za-z0-9_./-])docs/task-specs/[A-Za-z0-9_./-]*\.md")
-_KIROCREW_RUN_RE = re.compile(r"kirocrew\s+run\s+(?:-[^\s]*\s+)*([A-Za-z0-9_][A-Za-z0-9_./-]*)")
+_AJCREW_RUN_RE = re.compile(r"ajcrew\s+run\s+(?:-[^\s]*\s+)*([A-Za-z0-9_][A-Za-z0-9_./-]*)")
 
 # A markdown table's delimiter row, which is what fixes the table's width. Only
 # the three characters a delimiter row is made of: admitting ``.`` would let a
@@ -136,7 +136,7 @@ _TABLE_LINK_CELL_RE = re.compile(r"\|\s*\[")
 # ones nobody recorded. A packaged doc's filename inside a STRING LITERAL is a
 # consumer (a setup-guide URL, a fetch path); the same name in a comment is a
 # citation, which ``check_code_citations`` already covers.
-_PACKAGED_DOCS_DIR = "src/kiro_crew/docs"
+_PACKAGED_DOCS_DIR = "src/aj_crew/docs"
 _COUPLING_SCAN_ROOT = "website/src"
 _COUPLING_SUFFIXES: frozenset[str] = frozenset({".ts", ".tsx"})
 _STRING_LITERAL_RE = re.compile(r"""(['"`])((?:(?!\1).)*)\1""")
@@ -153,7 +153,7 @@ _COUPLING_AMBIGUOUS_NAMES: frozenset[str] = frozenset({"README.md"})
 # Backticked identifiers, and the trees that decide whether one is alive. Every
 # first-party tree is searched, so "dead" means dead repo-wide: restricting the
 # corpus to src/, website/src and scripts/ marks `test_all_exports_exact` dead
-# (it lives in test/) and `KiroCrewClient` dead (it lives in packages/). The tail
+# (it lives in test/) and `AjCrewClient` dead (it lives in packages/). The tail
 # of the list mirrors `_SOURCE_CITE_TREES`, because a symbol defined only in a
 # workflow or in `website/scripts/` is alive and would otherwise read as dead.
 # `website/integration/` holds the vitest integration suite, so a doc naming one
@@ -234,7 +234,7 @@ _IDENT_STOPWORDS: frozenset[str] = frozenset(
         "https",
         "integer",
         "javascript",
-        "kirocrew",
+        "ajcrew",
         "license",
         "linux",
         "localhost",
@@ -372,12 +372,12 @@ def check_fenced_paths(root: Path, docs: list[Path], findings: Findings) -> None
 
     A fenced block is a sample and is exempt everywhere else, which is right for a
     listing a reader only reads. It is wrong for the two shapes a reader PASTES: a
-    ``docs/task-specs/...`` path and the argument of ``kirocrew run``. Both go
+    ``docs/task-specs/...`` path and the argument of ``ajcrew run``. Both go
     straight into a command, so a dead one fails in the reader's terminal.
 
     Three exemptions, each because the path names a file that is not this
     repository's to have. A bare filename is the reader's own
-    (``kirocrew run TASK.md``), so only a path WITH a directory component is a
+    (``ajcrew run TASK.md``), so only a path WITH a directory component is a
     checkable claim. A forward-looking genre names its own planned output, the same
     judgement ``check_cited_paths`` runs on. And the PACKAGED user docs teach a
     reader to write their OWN task spec, so ``docs/task-specs/my-task/spec.md``
@@ -394,8 +394,8 @@ def check_fenced_paths(root: Path, docs: list[Path], findings: Findings) -> None
             continue
         for _lineno, line in _iter_fenced_lines(text):
             tokens = [m.group(0) for m in _FENCED_TASK_SPEC_RE.finditer(line)]
-            tokens += [m.group(1) for m in _KIROCREW_RUN_RE.finditer(line)]
-            # Both patterns match a `kirocrew run docs/task-specs/...` line, and one
+            tokens += [m.group(1) for m in _AJCREW_RUN_RE.finditer(line)]
+            # Both patterns match a `ajcrew run docs/task-specs/...` line, and one
             # pasted command is one finding.
             for token in dict.fromkeys(tokens):
                 if "/" not in token or (root / token).exists():
@@ -806,7 +806,7 @@ def _write_baseline(path: Path, triples: set[tuple[str, str, str]]) -> None:
     the kernel enforces. Staging and renaming also means an interrupted refresh
     leaves the recorded backlog intact rather than truncated.
 
-    ``kiro_crew.atomic_write`` is the repo's helper for this shape and is not used
+    ``aj_crew.atomic_write`` is the repo's helper for this shape and is not used
     here on purpose: this gate is stdlib-only so it runs before the package is
     installed, which is how CI invokes it.
     """

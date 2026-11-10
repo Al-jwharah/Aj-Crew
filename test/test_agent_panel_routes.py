@@ -25,11 +25,11 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from off_loop_helpers import off_loop
 
-from kiro_crew import agent_panel
-from kiro_crew import members as members_mod
-from kiro_crew.config.paths import data_home
-from kiro_crew.crew_log import projection as crew_log_projection
-from kiro_crew.dashboard.handlers import agent_panel as routes
+from aj_crew import agent_panel
+from aj_crew import members as members_mod
+from aj_crew.config.paths import data_home
+from aj_crew.crew_log import projection as crew_log_projection
+from aj_crew.dashboard.handlers import agent_panel as routes
 
 pytestmark = pytest.mark.asyncio
 
@@ -101,19 +101,19 @@ async def test_a_publish_keys_on_the_crews_persisted_member_id(vetted):
     memory provisioning suffixed the id. A name-derived write key stores the record
     where nothing reads it.
     """
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.config.paths import config_dir
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.config.paths import config_dir
 
     # The shape memory provisioning writes: the name-derived slug with a suffix.
     persisted = f"{SLUG}-9f3a2b1c"
     assert persisted != members_mod.slug_for_name(CREW), "the test needs the two to differ"
     (config_dir() / "config.json").write_text(
-        json.dumps({"agents": {CREW: {"kiro_agent": "kirocrew", "member_id": persisted}}}),
+        json.dumps({"agents": {CREW: {"kiro_agent": "ajcrew", "member_id": persisted}}}),
         encoding="utf-8",
     )
     # The read side's own answer, so this pins the write against the resolver the
     # drawer uses rather than against a second copy of the expectation.
-    assert members_mod.member_slug(CREW, KiroCrewConfig.load()) == persisted
+    assert members_mod.member_slug(CREW, AjCrewConfig.load()) == persisted
 
     async with _client() as c:
         resp = await c.post(
@@ -144,8 +144,8 @@ async def test_a_live_owner_with_a_suffixed_member_id_keeps_its_record(vetted):
     The owner's ``member_id`` equals the slug the caller's name derives. Liveness by
     name would read the owner as gone, which the store takes as permission to take over.
     """
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.config.paths import config_dir
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.config.paths import config_dir
 
     owner = "legacy-crew"
     assert members_mod.slug_for_name(owner) != SLUG, "the owner's NAME must miss the slug"
@@ -153,14 +153,14 @@ async def test_a_live_owner_with_a_suffixed_member_id_keeps_its_record(vetted):
         json.dumps(
             {
                 "agents": {
-                    owner: {"kiro_agent": "kirocrew", "member_id": SLUG},
-                    CREW: {"kiro_agent": "kirocrew"},
+                    owner: {"kiro_agent": "ajcrew", "member_id": SLUG},
+                    CREW: {"kiro_agent": "ajcrew"},
                 }
             }
         ),
         encoding="utf-8",
     )
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     # Both halves of the premise, asserted against the resolver itself rather than
     # restated: a fixture that stops producing the collision fails HERE instead of
     # passing the test for the wrong reason.
@@ -457,7 +457,7 @@ def test_the_drawer_serializer_classifies_every_record_key():
     Keyed on the record's own keys, so a new field not classified in
     ``agent_panel_read.py`` fails here.
     """
-    from kiro_crew.crew_log import projection
+    from aj_crew.crew_log import projection
 
     record = projection._panel_owner_record(projection._panel_owner_start())
     classified = routes._PANEL_SERVED_KEYS | routes._PANEL_WITHHELD_KEYS
@@ -559,7 +559,7 @@ async def test_the_drawer_read_refuses_a_hostile_slug(vetted, hostile):
 async def test_the_read_route_is_not_under_the_strict_internal_prefix():
     """The drawer is a browser caller, so its route must not sit behind the
     MCP-only prefix -- it would 403 for the dashboard."""
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     paths = {str(r.resource.canonical) for r in _mounted().router.routes()}
     read_path = "/api/members/{slug}/panel"
@@ -568,7 +568,7 @@ async def test_the_read_route_is_not_under_the_strict_internal_prefix():
 
 
 async def test_the_publish_routes_are_under_the_strict_internal_prefix():
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     for path in ("/api/agent-panel/publish", "/api/agent-panel/templates"):
         assert any(
@@ -682,7 +682,7 @@ def test_the_stub_matches_where_the_real_selection_lives():
     in the wrong place would pass while production raised, so it is checked against
     the real class.
     """
-    from kiro_crew.session import SessionManager
+    from aj_crew.session import SessionManager
 
     assert hasattr(SessionManager, "get_agent_selection")
     assert hasattr(_State(CREW).sessions, "get_agent_selection")

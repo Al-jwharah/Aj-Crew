@@ -25,9 +25,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 # Loaded by path: the publish jobs check the tree out without installing
-# kiro_crew, and changelog.py imports only the standard library.
+# aj_crew, and changelog.py imports only the standard library.
 _spec = importlib.util.spec_from_file_location(
-    "_kc_changelog", ROOT / "src" / "kiro_crew" / "changelog.py"
+    "_kc_changelog", ROOT / "src" / "aj_crew" / "changelog.py"
 )
 assert _spec and _spec.loader
 changelog = importlib.util.module_from_spec(_spec)

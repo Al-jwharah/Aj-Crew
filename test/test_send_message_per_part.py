@@ -23,15 +23,15 @@ from test_send_message_targeted import (
     _permitted,
 )
 
-from kiro_crew.dashboard.handlers import messaging as mod
-from kiro_crew.messaging.link import ChannelLink
-from kiro_crew.messaging.transport import ConfiguredChannelTarget
-from kiro_crew.telegram.client import TELEGRAM_MAX_TEXT
+from aj_crew.dashboard.handlers import messaging as mod
+from aj_crew.messaging.link import ChannelLink
+from aj_crew.messaging.transport import ConfiguredChannelTarget
+from aj_crew.telegram.client import TELEGRAM_MAX_TEXT
 
 
 @pytest.fixture
 def mock_sel():
-    with patch("kiro_crew.sel.sel") as m:
+    with patch("aj_crew.sel.sel") as m:
         instance = MagicMock()
         m.return_value = instance
         yield instance
@@ -104,7 +104,7 @@ class TestPerPartRevalidation:
         state = _channel_state(transport=transport)
 
         with patch(
-            "kiro_crew.platform.governance_profiles.vet_and_audit",
+            "aj_crew.platform.governance_profiles.vet_and_audit",
             side_effect=lambda *a, **k: _permitted(not delivered["any"]),
         ):
             status, data = await _post_parted(state)
@@ -216,7 +216,7 @@ class TestPerPartRevalidation:
         with (
             _governance(True),
             patch(
-                "kiro_crew.platform.governance_profiles.governance_answer_generation",
+                "aj_crew.platform.governance_profiles.governance_answer_generation",
                 side_effect=_gen,
             ),
         ):
@@ -244,7 +244,7 @@ class TestPerPartRevalidation:
         with (
             _governance(True),
             patch(
-                "kiro_crew.platform.governance_profiles.governance_answer_generation",
+                "aj_crew.platform.governance_profiles.governance_answer_generation",
                 side_effect=_ever_moving,
             ),
         ):
@@ -264,7 +264,7 @@ class TestPerPartRevalidation:
         """
         import dataclasses
 
-        from kiro_crew.mirror_admission import sign_mirror_admission
+        from aj_crew.mirror_admission import sign_mirror_admission
 
         key = "dashboard:chat-1-1700000000"
         link = ChannelLink("discord", channel_id="dm-chan-1", principal="42")
@@ -330,7 +330,7 @@ class TestPerPartOnTheOwnerDmLeg:
         transport, delivered = _parted_leg_transport()
 
         with patch(
-            "kiro_crew.platform.governance_profiles.vet_and_audit",
+            "aj_crew.platform.governance_profiles.vet_and_audit",
             side_effect=lambda *a, **k: _permitted(not delivered["any"]),
         ):
             sent, code, detail = await _owner_dm(transport)

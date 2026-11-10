@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps import official_category_order as co
+from aj_crew.apps import official_category_order as co
 
 
 @pytest.fixture(autouse=True)
@@ -184,7 +184,7 @@ class TestIndependenceFromTheEditorialDocument:
     """The separation is the point of the split, so it is asserted, not assumed."""
 
     def test_the_two_documents_do_not_share_a_cache_file(self):
-        from kiro_crew.apps import official_editorial as oe
+        from aj_crew.apps import official_editorial as oe
 
         assert co._cache_path() != oe._cache_path()
 
@@ -192,7 +192,7 @@ class TestIndependenceFromTheEditorialDocument:
         # The reason these are two documents: a version this client does not
         # recognise discards the WHOLE document it appears in. Bundled, a bump made
         # for a new featuring shape would also re-sort every category here.
-        from kiro_crew.apps import official_editorial as oe
+        from aj_crew.apps import official_editorial as oe
 
         monkeypatch.setattr(oe, "_cache_path", lambda: co._cache_path().with_name("ed.json"))
         future = {"schemaVersion": co.SUPPORTED_SCHEMA_VERSION + 1, "sections": []}
@@ -200,14 +200,14 @@ class TestIndependenceFromTheEditorialDocument:
         assert co.load_category_order(fetcher=lambda: _doc(["a", "b"])) == ["a", "b"]
 
     def test_the_editorial_module_no_longer_exposes_a_rail_reader(self):
-        from kiro_crew.apps import official_editorial as oe
+        from aj_crew.apps import official_editorial as oe
 
         assert not hasattr(oe, "load_category_order")
 
 
 class TestFetchSeam:
     def test_the_url_sits_beside_the_registry(self):
-        from kiro_crew.apps import official_catalog as oc
+        from aj_crew.apps import official_catalog as oc
 
         assert co.OFFICIAL_CATEGORY_ORDER_URL.startswith(oc.OFFICIAL_CATALOG_BASE)
         assert co.OFFICIAL_CATEGORY_ORDER_URL.endswith("category-order.json")

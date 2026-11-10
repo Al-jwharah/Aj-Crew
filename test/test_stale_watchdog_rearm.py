@@ -22,9 +22,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_RESULT,
     METHOD_SESSION_UPDATE,
@@ -185,8 +185,8 @@ async def test_client_overlapping_tools_keep_tool_watchdog(monkeypatch, first):
 async def test_client_jsonl_result_retires_call_at_every_flush(monkeypatch, tmp_path, trigger):
     client = AcpClient()
     client._session_id = SESSION
-    monkeypatch.setattr("kiro_crew.acp.client.kiro_sessions_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.acp.client.error_is_refusal_terminal", lambda *_: True)
+    monkeypatch.setattr("aj_crew.acp.client.kiro_sessions_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.acp.client.error_is_refusal_terminal", lambda *_: True)
     monkeypatch.setattr(client, "_emit_tool_interrupted_sel", lambda *_: None)
     jsonl_path = tmp_path / f"{SESSION}.jsonl"
 
@@ -257,7 +257,7 @@ async def test_client_jsonl_result_retires_call_at_every_flush(monkeypatch, tmp_
 @pytest.mark.asyncio
 @pytest.mark.parametrize("first", ["a", "b"])
 async def test_client_jsonl_results_keep_other_calls_active(monkeypatch, first):
-    from kiro_crew.acp.types import AcpEvent
+    from aj_crew.acp.types import AcpEvent
 
     client = AcpClient()
     second = "b" if first == "a" else "a"
@@ -302,10 +302,10 @@ def test_the_liveness_map_is_count_bounded_and_keeps_the_call_in_flight(caplog) 
     the count at the next reset); the turn's clear resets it."""
     import logging
 
-    from kiro_crew.acp.session_handle import MAX_ACTIVE_TOOL_CALLS
+    from aj_crew.acp.session_handle import MAX_ACTIVE_TOOL_CALLS
 
     handle = _handle()
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.session_handle"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.session_handle"):
         for i in range(MAX_ACTIVE_TOOL_CALLS + 5):
             handle._handle_update(_update_msg(_tool_call(f"tc-{i}")))
     assert len(handle._active_tool_calls) == MAX_ACTIVE_TOOL_CALLS
@@ -334,13 +334,13 @@ def test_a_retained_attribution_is_bounded_in_every_field() -> None:
     bounded in the strings it keeps: a frame whose backend-authored title and
     input are megabytes long is retained as a head of each, at the point of
     retention, so the bound on the count is a bound on memory."""
-    from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_ENTRIES
-    from kiro_crew.acp.liveness import (
+    from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_ENTRIES
+    from aj_crew.acp.liveness import (
         MAX_RETAINED_COMMAND_CHARS,
         MAX_RETAINED_TITLE_CHARS,
         ToolCallState,
     )
-    from kiro_crew.acp.session_handle import MAX_ACTIVE_TOOL_CALLS
+    from aj_crew.acp.session_handle import MAX_ACTIVE_TOOL_CALLS
 
     assert MAX_ACTIVE_TOOL_CALLS is TOOL_CALL_CACHE_MAX_ENTRIES
     big = "x" * (2 * 1024 * 1024)
@@ -370,9 +370,9 @@ def test_the_map_key_and_identity_fields_are_bounded_too() -> None:
     as its digest -- the same at dispatch, output and terminal, so the terminal
     still pops it -- and the two names are cut at construction; the output-seen
     set is keyed the same way and pruned to in-flight calls at the cap."""
-    from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_KEY_CHARS, liveness_key
-    from kiro_crew.acp.liveness import MAX_RETAINED_NAME_CHARS, ToolCallState
-    from kiro_crew.acp.session_handle import MAX_ACTIVE_TOOL_CALLS
+    from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_KEY_CHARS, liveness_key
+    from aj_crew.acp.liveness import MAX_RETAINED_NAME_CHARS, ToolCallState
+    from aj_crew.acp.session_handle import MAX_ACTIVE_TOOL_CALLS
 
     big = "n" * (1024 * 1024)
     state = ToolCallState(tool_name=big, mcp_server_name=big)
@@ -414,7 +414,7 @@ def test_after_an_eviction_an_empty_map_does_not_arm_the_stale_clock() -> None:
     running; once the retained rows settle, an empty map must not read as
     "nothing in flight" or the stale clock would cancel-probe the live call.
     After an eviction the turn keeps a tool in flight until its clear()."""
-    from kiro_crew.acp.session_handle import MAX_ACTIVE_TOOL_CALLS
+    from aj_crew.acp.session_handle import MAX_ACTIVE_TOOL_CALLS
 
     handle = _handle()
     for i in range(MAX_ACTIVE_TOOL_CALLS + 1):
@@ -446,7 +446,7 @@ def test_a_raw_id_can_never_equal_another_calls_digest_key() -> None:
     every id that starts with the digest prefix is digested too, whatever its
     length, and the two calls keep separate rows; the one that finishes pops
     only itself."""
-    from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_KEY_CHARS, liveness_key
+    from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_KEY_CHARS, liveness_key
 
     long_id = "L" * (TOOL_CALL_CACHE_MAX_KEY_CHARS + 1)
     digest_key = liveness_key(long_id)
@@ -472,7 +472,7 @@ def test_a_non_string_result_id_is_no_key_and_does_not_crash_the_turn() -> None:
     that spells one as a JSON number reaches the liveness bookkeeping with an
     int; the key helper reads that as no key rather than calling ``len()`` on
     it, and the handle survives the frame with its map untouched."""
-    from kiro_crew.acp._dispatch import liveness_key
+    from aj_crew.acp._dispatch import liveness_key
 
     assert liveness_key(123) == ""
     assert liveness_key(None) == ""
@@ -494,8 +494,8 @@ def test_a_bounded_command_keeps_the_redirect_the_stall_hint_reads() -> None:
     The retained command keeps the head every oracle reader uses AND the tail
     the hint reads, so the hint resolves the same target before and after the
     bound."""
-    from kiro_crew.acp.liveness import MAX_RETAINED_COMMAND_CHARS, ToolCallState
-    from kiro_crew.dashboard.state import extract_log_redirect_target
+    from aj_crew.acp.liveness import MAX_RETAINED_COMMAND_CHARS, ToolCallState
+    from aj_crew.dashboard.state import extract_log_redirect_target
 
     body = "python3 -m pytest " + " ".join(f"test/test_{i}.py" for i in range(1200))
     command = body + " > /tmp/pytest-run.log 2>&1"
@@ -519,7 +519,7 @@ def test_the_editor_hint_beside_a_retained_row_is_bounded_too() -> None:
     arguments, so a long ``git revert`` would keep the whole command a second
     time past the state's bound. The hint is cut like the command, at
     construction, and a short one is kept whole."""
-    from kiro_crew.acp.liveness import (
+    from aj_crew.acp.liveness import (
         MAX_RETAINED_COMMAND_CHARS,
         classify_interactive_command,
     )
@@ -549,7 +549,7 @@ def test_evictions_are_counted_and_said_once_at_the_turn_reset(caplog) -> None:
     clear); a turn that evicted nothing says nothing."""
     import logging
 
-    from kiro_crew.acp.session_handle import MAX_ACTIVE_TOOL_CALLS
+    from aj_crew.acp.session_handle import MAX_ACTIVE_TOOL_CALLS
 
     handle = _handle()
     for i in range(MAX_ACTIVE_TOOL_CALLS + 5):
@@ -558,7 +558,7 @@ def test_evictions_are_counted_and_said_once_at_the_turn_reset(caplog) -> None:
     for i in range(5, MAX_ACTIVE_TOOL_CALLS + 5):
         handle._handle_update(_update_msg(_tool_result(f"tc-{i}")))
     assert not handle._active_tool_calls and handle._tool_tracker.evicted_count == 5
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.session_handle"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.session_handle"):
         handle._report_evicted_attributions()
         handle._tool_tracker.clear()
     said = [r.getMessage() for r in caplog.records if "evicted 5 attribution(s)" in r.getMessage()]
@@ -567,13 +567,13 @@ def test_evictions_are_counted_and_said_once_at_the_turn_reset(caplog) -> None:
     caplog.clear()
     handle._handle_update(_update_msg(_tool_call("quiet")))
     handle._handle_update(_update_msg(_tool_result("quiet")))
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.session_handle"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.session_handle"):
         handle._report_evicted_attributions()
     assert not [r for r in caplog.records if "evicted" in r.getMessage()]
     # Pin by source: the report runs at the turn reset, before the clear.
     import inspect
 
-    from kiro_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.acp.session_handle import AcpSessionHandle
 
     src = inspect.getsource(AcpSessionHandle._run_turn)
     assert src.index("self._report_evicted_attributions()") < src.index(
@@ -591,7 +591,7 @@ async def test_client_open_call_set_is_bounded_under_the_shared_key(monkeypatch,
     clock stays armed and the stale clock disarmed for the rest of the turn."""
     import logging
 
-    from kiro_crew.acp._dispatch import (
+    from aj_crew.acp._dispatch import (
         MAX_ACTIVE_TOOL_CALLS,
         TOOL_CALL_CACHE_MAX_KEY_CHARS,
         InFlightIdSet,
@@ -643,7 +643,7 @@ async def test_client_open_call_set_is_bounded_under_the_shared_key(monkeypatch,
         yield "complete", JsonRpcMessage(id=2, result={"stopReason": "end_turn"})
 
     monkeypatch.setattr(client, "_prompt_loop", quiet_loop)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.client"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.client"):
         async for _ in client._dispatch_events(req_id=2, timeout=5):
             pass
     said = [r.getMessage() for r in caplog.records if "open set evicted 1 id(s)" in r.getMessage()]
@@ -656,7 +656,7 @@ def test_the_output_seen_set_takes_only_a_call_the_map_holds() -> None:
     map's admission gates it: streamed output for an id the map does not hold
     (never dispatched, or evicted at the cap) is not retained, and the set can
     never outgrow the map's bound by one stray id."""
-    from kiro_crew.acp.session_handle import MAX_ACTIVE_TOOL_CALLS
+    from aj_crew.acp.session_handle import MAX_ACTIVE_TOOL_CALLS
 
     handle = _handle()
     handle._handle_update(_update_msg(_tool_result("never-dispatched", status="in_progress")))
@@ -678,7 +678,7 @@ def test_the_match_fragment_never_spans_the_retention_cut() -> None:
     child of a long ``cd repo && ...`` command would go unmatched. The marker
     splits like a redaction marker, and the chosen fragment lies wholly on one
     side of the cut."""
-    from kiro_crew.acp.liveness import (
+    from aj_crew.acp.liveness import (
         _COMMAND_ELISION,
         MAX_RETAINED_COMMAND_CHARS,
         ToolCallState,

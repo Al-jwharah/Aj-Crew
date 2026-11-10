@@ -1,7 +1,7 @@
 ---
 title: Recall process pool -- answer a turn's memory reads in child processes so concurrent sessions use more than one core
 status: in-progress
-author: chenmingwei23, with kirocrew-worker
+author: chenmingwei23, with ajcrew-worker
 created: 2026-11-01
 last-audited: 2026-11-01
 audited-at: 4537582b9b
@@ -152,7 +152,7 @@ method calls `recall_pool.offload` first and falls through to its own code when 
 
 ### 3.2 The children
 
-`python -P -m kiro_crew.recall_pool`, spawned (never forked, the gateway has 200 threads), over
+`python -P -m aj_crew.recall_pool`, spawned (never forked, the gateway has 200 threads), over
 newline-delimited JSON on stdin and stdout, like `consolidation_write_child.py` and
 `embeddings_child.py`, whose connection and store-cache classes it reuses. Each child runs the
 same store method the gateway would have run, against its own `VectorMemoryStore` on the same
@@ -309,7 +309,7 @@ keep their signatures and return the same text.
 
 ## 9. Security considerations
 
-No listener, socket or port: the pool is one `python -P -m kiro_crew.recall_pool` spawn per
+No listener, socket or port: the pool is one `python -P -m aj_crew.recall_pool` spawn per
 child with a fixed argv, and jobs travel on its pipes as data. The child opens only the
 `memory.db` path the gateway names, with the permissions the gateway has, and runs no code from
 the job. A job carries the user's message text, which the gateway would have used in-process

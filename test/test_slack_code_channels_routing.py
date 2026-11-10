@@ -15,20 +15,20 @@ from typing import Any
 import pytest
 from slack_code_channels_helpers import OWNER, SELF_USER, Env, FakeState, make_env, mention
 
-from kiro_crew.config.loader import ACTIVATION_OFF, ACTIVATION_REVIEW
+from aj_crew.config.loader import ACTIVATION_OFF, ACTIVATION_REVIEW
 
 # Imported before any test patches an owner module (``slack.handler``): a facade
 # first imported while an owner's name is patched refuses to load, so a Stop
 # test that reaches it lazily would fail or pass by which tests ran first.
-from kiro_crew.slack import events as _slack_events  # noqa: F401
-from kiro_crew.slack import features
-from kiro_crew.slack.code_channels import binding as binding_mod
-from kiro_crew.slack.code_channels import routing
-from kiro_crew.slack.code_channels.classifier import RouteDecision
-from kiro_crew.slack.code_channels.creation import ORIGIN_CONTEXT_BLOCK_ID, session_id_for
-from kiro_crew.slack.code_channels.routing import Gate
-from kiro_crew.slack.code_channels.store import Binding, StoreWriteError
-from kiro_crew.testing.wait import async_wait_until, until_parked
+from aj_crew.slack import events as _slack_events  # noqa: F401
+from aj_crew.slack import features
+from aj_crew.slack.code_channels import binding as binding_mod
+from aj_crew.slack.code_channels import routing
+from aj_crew.slack.code_channels.classifier import RouteDecision
+from aj_crew.slack.code_channels.creation import ORIGIN_CONTEXT_BLOCK_ID, session_id_for
+from aj_crew.slack.code_channels.routing import Gate
+from aj_crew.slack.code_channels.store import Binding, StoreWriteError
+from aj_crew.testing.wait import async_wait_until, until_parked
 
 pytestmark = pytest.mark.asyncio
 
@@ -323,8 +323,8 @@ async def test_zero_config_files_into_code_channels_led_by_the_conductor(env: En
     assert env.folders_created == ["Code channels"]
     assert env.state is not None
     [folder] = env.state.folders
-    assert folder["default_agent"] == "kirocrew-conductor"
-    assert spec.folder_id == folder["id"] and spec.agent == "kirocrew-conductor"
+    assert folder["default_agent"] == "ajcrew-conductor"
+    assert spec.folder_id == folder["id"] and spec.agent == "ajcrew-conductor"
     assert spec.model == "" and spec.reasoning_effort == "" and spec.project_dir == ""
 
 
@@ -333,11 +333,11 @@ async def test_an_explicit_default_agent_still_wins_over_the_code_channels_folde
 ) -> None:
     env.api.responses["agents.conversations.create"] = {"ok": True, "channel_id": "C0CODE"}
     env.defaults.update(
-        agent="kirocrew-team-lead", model="claude-opus-4.5", reasoning_effort="high"
+        agent="ajcrew-team-lead", model="claude-opus-4.5", reasoning_effort="high"
     )
     assert await _open(env) is True
     spec = env.created_sessions[0]["spec"]
-    assert spec.agent == "kirocrew-team-lead"
+    assert spec.agent == "ajcrew-team-lead"
     assert spec.model == "claude-opus-4.5" and spec.reasoning_effort == "high"
     assert env.state is not None and spec.folder_id == env.state.folders[0]["id"]
 
@@ -350,7 +350,7 @@ async def test_a_saved_default_agent_that_is_gone_is_skipped(env: Env) -> None:
     env.missing_agents.add("retired-template")
     assert await _open(env) is True
     spec = env.created_sessions[0]["spec"]
-    assert spec.agent == "kirocrew-conductor" and spec.agent_kind == ""
+    assert spec.agent == "ajcrew-conductor" and spec.agent_kind == ""
 
 
 async def test_the_picked_default_is_resolved_as_a_template(env: Env) -> None:
@@ -433,7 +433,7 @@ async def test_the_origin_threads_saved_project_is_loaded_before_binding(
 ) -> None:
     """After a restart the thread's ``!project`` is only on disk: binding loads it
     (the same hydration the thread's own message runs) before reading it."""
-    from kiro_crew.slack import handler
+    from aj_crew.slack import handler
 
     key = "slack:1700000000.000100"
     monkeypatch.setitem(handler._thread_projects, key, None)
@@ -679,7 +679,7 @@ async def test_paired_deliveries_of_one_stop_stop_once(
         calls.append(kwargs["escalate"])
         return {"ok": True}
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.stop_slot_turn", stop_slot_turn)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.stop_slot_turn", stop_slot_turn)
     real_classify = routing.recognition.classify_channel
     lookup = asyncio.Event()
 
@@ -726,7 +726,7 @@ async def test_lookup_failure_keeps_the_binding_but_takes_the_normal_path(env: E
 async def test_a_failed_lookup_still_honours_the_stored_origins_gate(
     env: Env, failure: str, activation: str
 ) -> None:
-    from kiro_crew.config.loader import ACTIVATION_REVIEW
+    from aj_crew.config.loader import ACTIVATION_REVIEW
 
     _bind(env, origin_channel_id="C0ORIGIN")
     env.activation["C0ORIGIN"] = ACTIVATION_REVIEW if activation == "review" else ACTIVATION_OFF
@@ -816,10 +816,10 @@ async def test_one_transient_worktree_failure_spends_one_attempt_and_the_next_tu
     one attempt, and the next message's turn still tries, instead of the
     three attempts of one message exhausting the budget and leaving the
     channel on the shared checkout for good."""
-    from kiro_crew.slack.code_channels.workspace import core as ws_core
-    from kiro_crew.slack.code_channels.workspace import service as svc_mod
-    from kiro_crew.slack.code_channels.workspace.store import WorkspaceRecord, WorkspaceStore
-    from kiro_crew.slack.handler import LinkedRoute
+    from aj_crew.slack.code_channels.workspace import core as ws_core
+    from aj_crew.slack.code_channels.workspace import service as svc_mod
+    from aj_crew.slack.code_channels.workspace.store import WorkspaceRecord, WorkspaceStore
+    from aj_crew.slack.handler import LinkedRoute
 
     monkeypatch.setattr(svc_mod, "_gate_open", lambda: True)
     monkeypatch.setattr(svc_mod, "_archived", lambda b: False)
@@ -873,7 +873,7 @@ async def test_a_reopened_session_keeps_or_refreshes_the_remembered_workspace_ro
     """The binding remembers the checkout the channel's worktree was cut from.
     A replacement binding keeps it when nothing new was planned, and takes the
     new plan's root when the reopen cut a worktree (planned_root)."""
-    from kiro_crew.slack.code_channels.workspace import core as ws_core
+    from aj_crew.slack.code_channels.workspace import core as ws_core
 
     for planned, want in (("", "/repo/old"), ("/repo/new", "/repo/new")):
         _bind(env)
@@ -912,8 +912,8 @@ async def test_native_stop_stops_the_bound_session(
         stopped.append((slot.key, kwargs))
         return {"info": "stopping"}
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.stop_slot_turn", stop_slot_turn)
-    monkeypatch.setattr("kiro_crew.slack.handler.is_allowed_user", lambda u: u == OWNER)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.stop_slot_turn", stop_slot_turn)
+    monkeypatch.setattr("aj_crew.slack.handler.is_allowed_user", lambda u: u == OWNER)
     event = {
         "type": "agent_session_stopped",
         "channel": "C0CODE",
@@ -943,8 +943,8 @@ async def test_a_stop_declined_by_compaction_says_so_and_a_fresh_press_can_escal
             return {"ok": True, "info": "compacting", "compacting": True}
         return {"ok": True}
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.stop_slot_turn", stop_slot_turn)
-    monkeypatch.setattr("kiro_crew.slack.handler.is_allowed_user", lambda u: u == OWNER)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.stop_slot_turn", stop_slot_turn)
+    monkeypatch.setattr("aj_crew.slack.handler.is_allowed_user", lambda u: u == OWNER)
     bang = {"type": "message", "user": OWNER, "channel": "C0CODE", "ts": "301.0", "text": "!stop"}
     assert (await _gate(env, bang)).gate is Gate.DROP
     assert (await _gate(env, dict(bang))).gate is Gate.DROP  # Slack's redelivery
@@ -959,7 +959,7 @@ async def test_native_stop_when_idle_clears_the_status(
     env: Env, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _bind(env)
-    monkeypatch.setattr("kiro_crew.slack.handler.is_allowed_user", lambda u: True)
+    monkeypatch.setattr("aj_crew.slack.handler.is_allowed_user", lambda u: True)
     event = {"type": "agent_session_stopped", "channel": "C0CODE", "user": OWNER}
     assert await routing.handle_session_stopped(env.orch, event, OWNER) == "stopped"
     assert (
@@ -973,7 +973,7 @@ async def test_native_stop_from_a_stranger_is_denied(
     env: Env, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _bind(env)
-    monkeypatch.setattr("kiro_crew.slack.handler.is_allowed_user", lambda u: False)
+    monkeypatch.setattr("aj_crew.slack.handler.is_allowed_user", lambda u: False)
     event = {"type": "agent_session_stopped", "channel": "C0CODE", "user": "USTRANGER"}
     assert await routing.handle_session_stopped(env.orch, event, OWNER) == "denied"
     assert env.sel.ops("slack.code_channel.stop")[0]["outcome"] == "denied"
@@ -996,7 +996,7 @@ async def test_a_native_stop_still_stops_a_turn_left_running_when_the_toggle_wen
     on its "Working..." status must still reach it: admitted at the event gate
     and by the channel's handler, with the sender and origin checks kept. An
     idle channel's Stop with the toggle off stays ignored."""
-    from kiro_crew.slack.agent_sessions import session_events
+    from aj_crew.slack.agent_sessions import session_events
 
     _bind(env)
     env.info("C0CODE")
@@ -1007,8 +1007,8 @@ async def test_a_native_stop_still_stops_a_turn_left_running_when_the_toggle_wen
         stopped.append(slot.key)
         return {"info": "stopping"}
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.stop_slot_turn", stop_slot_turn)
-    monkeypatch.setattr("kiro_crew.slack.handler.is_allowed_user", lambda u: u == OWNER)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.stop_slot_turn", stop_slot_turn)
+    monkeypatch.setattr("aj_crew.slack.handler.is_allowed_user", lambda u: u == OWNER)
     session_events.register_channel_stop_handler(
         routing.handle_session_stopped, running=routing.channel_session_running
     )
@@ -1038,11 +1038,11 @@ async def test_bang_stop_in_a_code_channel_stops_the_bound_session(env: Env) -> 
 async def test_whole_channel_stop_reaches_us_through_the_agent_session_runtime(
     env: Env, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.slack.agent_sessions import session_events
+    from aj_crew.slack.agent_sessions import session_events
 
     _bind(env)
-    monkeypatch.setattr("kiro_crew.slack.events.is_allowed_user", lambda u: u == OWNER)
-    monkeypatch.setattr("kiro_crew.slack.handler.is_allowed_user", lambda u: u == OWNER)
+    monkeypatch.setattr("aj_crew.slack.events.is_allowed_user", lambda u: u == OWNER)
+    monkeypatch.setattr("aj_crew.slack.handler.is_allowed_user", lambda u: u == OWNER)
     session_events.register_channel_stop_handler(routing.handle_session_stopped)
     try:
         env.orch.sessions = SimpleNamespace()
@@ -1066,12 +1066,12 @@ async def test_a_refused_whole_channel_stop_is_never_audited_as_allowed(
 ) -> None:
     """The channel's activation does not admit it: the press is refused, and the
     agent-session runtime records no "allowed" row beside the denied one."""
-    from kiro_crew.slack.agent_sessions import session_events
+    from aj_crew.slack.agent_sessions import session_events
 
     _bind(env)
     env.activation["C0CODE"] = ACTIVATION_REVIEW
-    monkeypatch.setattr("kiro_crew.slack.events.is_allowed_user", lambda u: u == OWNER)
-    monkeypatch.setattr("kiro_crew.slack.handler.is_allowed_user", lambda u: u == OWNER)
+    monkeypatch.setattr("aj_crew.slack.events.is_allowed_user", lambda u: u == OWNER)
+    monkeypatch.setattr("aj_crew.slack.handler.is_allowed_user", lambda u: u == OWNER)
     session_events.register_channel_stop_handler(routing.handle_session_stopped)
     try:
         env.orch.sessions = SimpleNamespace()
@@ -1134,7 +1134,7 @@ async def test_a_binding_that_cannot_be_saved_leaves_no_session_behind(
 async def test_a_channel_policy_that_cannot_admit_a_new_channel_keeps_the_request_in_place(
     env: Env, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.slack import channel_policy
+    from aj_crew.slack import channel_policy
 
     # Explicit ids only: the channel Slack would create is not among them.
     monkeypatch.setattr(
@@ -1153,8 +1153,8 @@ async def test_a_channel_policy_that_cannot_admit_a_new_channel_keeps_the_reques
 async def test_a_route_decided_before_the_policy_changed_still_opens_nothing(
     env: Env, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.slack import channel_policy
-    from kiro_crew.slack.code_channels.store import ROUTE_CODE_CHANNEL, Route
+    from aj_crew.slack import channel_policy
+    from aj_crew.slack.code_channels.store import ROUTE_CODE_CHANNEL, Route
 
     event = mention()
     session_id = session_id_for("BBOT", "T1", "C0ORIGIN", event["ts"])
@@ -1181,7 +1181,7 @@ async def test_a_route_decided_before_the_policy_changed_still_opens_nothing(
 async def test_a_created_channel_the_policy_refuses_is_never_bound(
     env: Env, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.slack import channel_policy
+    from aj_crew.slack import channel_policy
 
     # A pattern admits an unknown id but not the one Slack assigned.
     monkeypatch.setattr(channel_policy, "_verdict", lambda ch: "refused" if ch == "C0CODE" else "")
@@ -1209,7 +1209,7 @@ async def test_a_privacy_modifier_keeps_the_request_on_the_normal_path(
 async def test_a_thread_already_in_a_privacy_mode_keeps_the_request_on_the_normal_path(
     env: Env,
 ) -> None:
-    from kiro_crew.messaging import privacy_mode
+    from aj_crew.messaging import privacy_mode
 
     env.api.responses["agents.conversations.create"] = {"ok": True, "channel_id": "C0CODE"}
     event = mention(thread_ts="1700000000.000001")
@@ -1299,7 +1299,7 @@ async def test_queued_uploads_survive_the_turns_ahead_of_them(env: Env, tmp_path
 def test_the_queue_drain_check_reads_the_real_slot_property() -> None:
     """``ChatSlot.queue_depth`` is a property: the drain check reads it as one,
     so a real slot with nothing queued releases its uploads."""
-    from kiro_crew.dashboard.state_parts.chat_slot import _ChatSlot
+    from aj_crew.dashboard.state_parts.chat_slot import _ChatSlot
 
     assert isinstance(_ChatSlot.__dict__["queue_depth"], property)
 
@@ -1368,7 +1368,7 @@ async def test_persisting_the_first_turn_saves_the_bound_session_strictly(
 ) -> None:
     """The real ``_persist_request``: a confirmed save (``best_effort=False``),
     False on a refused or failed save, and False with no session."""
-    from kiro_crew.dashboard import chat_persistence
+    from aj_crew.dashboard import chat_persistence
 
     binding = _bind(env)
     calls: list[dict[str, Any]] = []
@@ -1461,7 +1461,7 @@ async def test_a_follow_up_is_classified_once_however_often_slack_delivers_it(en
         {"subtype": "message_changed"},
         {"subtype": "channel_join"},
         {"text": "<@UALICE> can you take this one?"},
-        {"text": "!agent kirocrew-team-lead"},
+        {"text": "!agent ajcrew-team-lead"},
         {"channel": "D0DM"},
         {"thread_ts": "1700000000.000200"},  # a thread's own root, not a reply
     ],
@@ -1542,7 +1542,7 @@ async def test_a_refused_opening_request_is_never_marked_delivered(env: Env) -> 
     linked-slot route refuses it (and says why in the channel) without
     appending it. The route stays unseeded, so a later re-delivery, once the
     session is switched, still delivers the request instead of it being lost."""
-    from kiro_crew.slack.handler import LinkedRoute
+    from aj_crew.slack.handler import LinkedRoute
 
     env.api.responses["agents.conversations.create"] = {"ok": True, "channel_id": "C0CODE"}
     env.orch.sessions = _Sessions(_ROOT)

@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.dashboard.handlers.secrets."""
+"""Tests for aj_crew.dashboard.handlers.secrets."""
 
 from __future__ import annotations
 
@@ -11,16 +11,16 @@ from unittest.mock import patch
 import pytest
 from aiohttp import web
 
-from kiro_crew.config import loader as config_loader
-from kiro_crew.config.loader import MANAGED_VAULT_FIXED_CONSUMERS
-from kiro_crew.dashboard.handlers.secrets import (
+from aj_crew.config import loader as config_loader
+from aj_crew.config.loader import MANAGED_VAULT_FIXED_CONSUMERS
+from aj_crew.dashboard.handlers.secrets import (
     _managed_secret_catalog,
     _sanitize_for_log,
     _unused_stored_secrets,
     setup_secrets_routes,
 )
-from kiro_crew.platform_compat import symlink_or_junction
-from kiro_crew.secrets import SecretVault
+from aj_crew.platform_compat import symlink_or_junction
+from aj_crew.secrets import SecretVault
 
 
 def _channels_settings_path() -> str:
@@ -29,7 +29,7 @@ def _channels_settings_path() -> str:
     Read from the UI index the dashboard build generates, so a rename of the tab
     fails here instead of leaving the refusal pointing at a tab that is gone.
     """
-    from kiro_crew.ui_index import load_index
+    from aj_crew.ui_index import load_index
 
     idx = load_index()
     english = idx.labels["en"]
@@ -110,7 +110,7 @@ class TestApiSecretsList:
 
         from aiohttp.test_utils import TestClient, TestServer
 
-        with patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(vault_dir)):
+        with patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(vault_dir)):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.get("/api/secrets")
                 assert resp.status == 200
@@ -124,7 +124,7 @@ class TestApiSecretsList:
         from aiohttp.test_utils import TestClient, TestServer
 
         with patch(
-            "kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(empty_vault_dir)
+            "aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(empty_vault_dir)
         ):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.get("/api/secrets")
@@ -148,9 +148,9 @@ class TestApiSecretsList:
             dashboard=SimpleNamespace(jira_auth=[SimpleNamespace(host="example.com")]),
         )
         with (
-            patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)),
+            patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)),
             patch(
-                "kiro_crew.dashboard.handlers.secrets.KiroCrewConfig.load",
+                "aj_crew.dashboard.handlers.secrets.AjCrewConfig.load",
                 return_value=jira_config,
             ),
         ):
@@ -192,9 +192,9 @@ class TestApiSecretsList:
         from aiohttp.test_utils import TestClient, TestServer
 
         with (
-            patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)),
+            patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)),
             patch(
-                "kiro_crew.dashboard.handlers.secrets.KiroCrewConfig.load",
+                "aj_crew.dashboard.handlers.secrets.AjCrewConfig.load",
                 return_value=jira_config,
             ),
         ):
@@ -228,9 +228,9 @@ class TestApiSecretsList:
         from aiohttp.test_utils import TestClient, TestServer
 
         with (
-            patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)),
+            patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)),
             patch(
-                "kiro_crew.dashboard.handlers.secrets.KiroCrewConfig.load",
+                "aj_crew.dashboard.handlers.secrets.AjCrewConfig.load",
                 return_value=jira_config,
             ),
         ):
@@ -250,9 +250,9 @@ class TestApiSecretsList:
         from aiohttp.test_utils import TestClient, TestServer
 
         with (
-            patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)),
+            patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)),
             patch(
-                "kiro_crew.dashboard.handlers.secrets.KiroCrewConfig.load",
+                "aj_crew.dashboard.handlers.secrets.AjCrewConfig.load",
                 return_value=jira_config,
             ),
         ):
@@ -270,9 +270,9 @@ class TestApiSecretsList:
         from aiohttp.test_utils import TestClient, TestServer
 
         with (
-            patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(vault_dir)),
+            patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(vault_dir)),
             patch(
-                "kiro_crew.dashboard.handlers.secrets.KiroCrewConfig.load",
+                "aj_crew.dashboard.handlers.secrets.AjCrewConfig.load",
                 side_effect=ValueError("broken config"),
             ),
         ):
@@ -300,9 +300,9 @@ class TestApiSecretsList:
         from aiohttp.test_utils import TestClient, TestServer
 
         with (
-            patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)),
+            patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)),
             patch(
-                "kiro_crew.dashboard.handlers.secrets.KiroCrewConfig.load",
+                "aj_crew.dashboard.handlers.secrets.AjCrewConfig.load",
                 return_value=config,
             ),
         ):
@@ -333,9 +333,9 @@ class TestApiSecretsList:
         from aiohttp.test_utils import TestClient, TestServer
 
         with (
-            patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)),
+            patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)),
             patch(
-                "kiro_crew.dashboard.handlers.secrets.KiroCrewConfig.load",
+                "aj_crew.dashboard.handlers.secrets.AjCrewConfig.load",
                 return_value=jira_config,
             ),
         ):
@@ -368,9 +368,9 @@ class TestApiSecretsList:
         from aiohttp.test_utils import TestClient, TestServer
 
         with (
-            patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)),
+            patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)),
             patch(
-                "kiro_crew.dashboard.handlers.secrets.KiroCrewConfig.load",
+                "aj_crew.dashboard.handlers.secrets.AjCrewConfig.load",
                 return_value=jira_config,
             ),
         ):
@@ -466,8 +466,8 @@ class TestGerritManagedRows:
         from aiohttp.test_utils import TestClient, TestServer
 
         with (
-            patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)),
-            patch("kiro_crew.dashboard.handlers.secrets.KiroCrewConfig.load", return_value=config),
+            patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)),
+            patch("aj_crew.dashboard.handlers.secrets.AjCrewConfig.load", return_value=config),
         ):
             async with TestClient(TestServer(app)) as client:
                 data = await (await client.get("/api/secrets")).json()
@@ -480,7 +480,7 @@ class TestGerritManagedRows:
 
     def test_row_names_match_the_provider_lookup(self) -> None:
         """The row's name is exactly the vault name the provider reads for the host."""
-        from kiro_crew.dashboard.source_providers import gerrit
+        from aj_crew.dashboard.source_providers import gerrit
 
         assert gerrit.host_credential_name(_GERRIT_ONE) == _GERRIT_ONE_NAME
         assert gerrit.GLOBAL_CREDENTIAL_NAME == "GERRIT_HTTP_CREDENTIAL"
@@ -495,7 +495,7 @@ class TestApiSecretsSet:
 
         from aiohttp.test_utils import TestClient, TestServer
 
-        with patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)):
+        with patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
                     "/api/secrets",
@@ -514,7 +514,7 @@ class TestApiSecretsSet:
 
         from aiohttp.test_utils import TestClient, TestServer
 
-        with patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)):
+        with patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post("/api/secrets", json={"value": "x"})
                 assert resp.status == 400
@@ -525,7 +525,7 @@ class TestApiSecretsSet:
 
         from aiohttp.test_utils import TestClient, TestServer
 
-        with patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)):
+        with patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post("/api/secrets", json={"name": "X"})
                 assert resp.status == 400
@@ -553,7 +553,7 @@ class TestApiSecretsSet:
         # and ``atomic_write`` treat the same way.
         symlink_or_junction(link_target, data_home / ".vault")
 
-        with patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(data_home)):
+        with patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(data_home)):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
                     "/api/secrets", json={"name": "GH_TOKEN", "value": "s3cr3t"}
@@ -596,7 +596,7 @@ class TestApiSecretsSet:
             raise OSError(errno.ENOSPC, "No space left on device")
 
         with (
-            patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)),
+            patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)),
             patch.object(SecretVault, "set_with_revision", _raise_enospc),
         ):
             async with TestClient(TestServer(app)) as client:
@@ -622,7 +622,7 @@ class TestApiSecretsDelete:
 
         from aiohttp.test_utils import TestClient, TestServer
 
-        with patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(vault_dir)):
+        with patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(vault_dir)):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.delete("/api/secrets/TEST_KEY")
                 assert resp.status == 200
@@ -641,7 +641,7 @@ class TestApiSecretsDelete:
 
         from aiohttp.test_utils import TestClient, TestServer
 
-        with patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(vault_dir)):
+        with patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(vault_dir)):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.delete("/api/secrets/TEST_KEY")
                 assert resp.status == 200
@@ -665,7 +665,7 @@ class TestApiSecretsDelete:
 
         from aiohttp.test_utils import TestClient, TestServer
 
-        with patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(vault_dir)):
+        with patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(vault_dir)):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.delete("/api/secrets/NONEXISTENT_NAME")
                 assert resp.status == 404
@@ -701,7 +701,7 @@ class TestApiSecretsOwnerAuthorization:
 
         from aiohttp.test_utils import TestClient, TestServer
 
-        with patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(vault_dir)):
+        with patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(vault_dir)):
             async with TestClient(TestServer(app)) as client:
                 # X-Test-App non-empty => an app-scoped (non-owner) caller.
                 headers = {"X-Test-App": "some-app", "X-Test-User": "some-app-subject"}
@@ -719,7 +719,7 @@ class TestApiSecretsOwnerAuthorization:
 
         from aiohttp.test_utils import TestClient, TestServer
 
-        with patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(vault_dir)):
+        with patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(vault_dir)):
             async with TestClient(TestServer(app)) as client:
                 headers = {"X-Test-User": "U_SOMEONE_ELSE"}
                 resp = await client.post(
@@ -743,8 +743,8 @@ class TestApiSecretsOwnerAuthorization:
 
         sel = MagicMock()
         with (
-            patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(vault_dir)),
-            patch("kiro_crew.dashboard.handlers.secrets._sel", return_value=sel),
+            patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(vault_dir)),
+            patch("aj_crew.dashboard.handlers.secrets._sel", return_value=sel),
         ):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -766,7 +766,7 @@ class TestApiSecretsOwnerAuthorization:
 
         from aiohttp.test_utils import TestClient, TestServer
 
-        with patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(vault_dir)):
+        with patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(vault_dir)):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.get("/api/secrets", headers={"X-Test-User": "U_OWNER"})
                 assert resp.status == 200
@@ -790,9 +790,9 @@ class TestApiSecretsLogInjection:
 
         from aiohttp.test_utils import TestClient, TestServer
 
-        with patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)):
+        with patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)):
             async with TestClient(TestServer(app)) as client:
-                with caplog.at_level(logging.INFO, logger="kiro_crew.dashboard.handlers.secrets"):
+                with caplog.at_level(logging.INFO, logger="aj_crew.dashboard.handlers.secrets"):
                     resp = await client.post("/api/secrets", json={"name": payload, "value": "v"})
                     assert resp.status == 200
 
@@ -823,9 +823,9 @@ class TestApiSecretsLogInjection:
         vault = SecretVault(tmp_path)
         vault._set_sync(injected_name, "v")
 
-        with patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)):
+        with patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(tmp_path)):
             async with TestClient(TestServer(app)) as client:
-                with caplog.at_level(logging.INFO, logger="kiro_crew.dashboard.handlers.secrets"):
+                with caplog.at_level(logging.INFO, logger="aj_crew.dashboard.handlers.secrets"):
                     # aiohttp URL-encodes the path when using client.delete(url)
                     # with a plain string, so percent-encode manually.
                     resp = await client.delete("/api/secrets/x%0d%0aWARNING-forged")
@@ -870,7 +870,7 @@ class TestApiSecretsSetInputValidation:
         from aiohttp.test_utils import TestClient, TestServer
 
         with patch(
-            "kiro_crew.dashboard.handlers.secrets.config_dir",
+            "aj_crew.dashboard.handlers.secrets.config_dir",
             return_value=str(empty_vault_dir),
         ):
             async with TestClient(TestServer(app)) as client:
@@ -889,7 +889,7 @@ class TestApiSecretsSetInputValidation:
         from aiohttp.test_utils import TestClient, TestServer
 
         with patch(
-            "kiro_crew.dashboard.handlers.secrets.config_dir",
+            "aj_crew.dashboard.handlers.secrets.config_dir",
             return_value=str(empty_vault_dir),
         ):
             async with TestClient(TestServer(app)) as client:
@@ -920,7 +920,7 @@ class TestApiSecretsSetWhitespaceValue:
         from aiohttp.test_utils import TestClient, TestServer
 
         with patch(
-            "kiro_crew.dashboard.handlers.secrets.config_dir",
+            "aj_crew.dashboard.handlers.secrets.config_dir",
             return_value=str(empty_vault_dir),
         ):
             async with TestClient(TestServer(app)) as client:
@@ -942,7 +942,7 @@ class TestApiSecretsSetWhitespaceValue:
         from aiohttp.test_utils import TestClient, TestServer
 
         with patch(
-            "kiro_crew.dashboard.handlers.secrets.config_dir",
+            "aj_crew.dashboard.handlers.secrets.config_dir",
             return_value=str(empty_vault_dir),
         ):
             async with TestClient(TestServer(app)) as client:
@@ -960,7 +960,7 @@ class TestApiSecretsSetWhitespaceValue:
         from aiohttp.test_utils import TestClient, TestServer
 
         with patch(
-            "kiro_crew.dashboard.handlers.secrets.config_dir",
+            "aj_crew.dashboard.handlers.secrets.config_dir",
             return_value=str(empty_vault_dir),
         ):
             async with TestClient(TestServer(app)) as client:
@@ -984,7 +984,7 @@ class TestApiSecretsSetWhitespaceValue:
 
         padded = "  sk-live-abc  "
         with patch(
-            "kiro_crew.dashboard.handlers.secrets.config_dir",
+            "aj_crew.dashboard.handlers.secrets.config_dir",
             return_value=str(empty_vault_dir),
         ):
             async with TestClient(TestServer(app)) as client:
@@ -1079,7 +1079,7 @@ class TestApiSecretsChannelCredentialRemote:
 
     @pytest.fixture(autouse=True)
     def _clean_channel_env(self, _floor_monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.dashboard.handlers.secrets import _CHANNEL_ENV_KEYS
+        from aj_crew.dashboard.handlers.secrets import _CHANNEL_ENV_KEYS
 
         for key in _CHANNEL_ENV_KEYS:
             _floor_monkeypatch.delenv(key, raising=False)
@@ -1090,7 +1090,7 @@ class TestApiSecretsChannelCredentialRemote:
     ) -> tuple[int, dict]:
         from aiohttp.test_utils import TestClient, TestServer
 
-        with patch("kiro_crew.dashboard.handlers.secrets.config_dir", return_value=str(home)):
+        with patch("aj_crew.dashboard.handlers.secrets.config_dir", return_value=str(home)):
             async with TestClient(TestServer(_app())) as client:
                 if method == "set":
                     resp = await client.post(

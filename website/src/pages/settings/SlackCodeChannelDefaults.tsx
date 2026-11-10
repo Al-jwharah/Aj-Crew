@@ -149,7 +149,7 @@ export default function SlackCodeChannelDefaults({ data, draft, onChange, readOn
   // Until the draft folder's answer arrives, the saved folder's list stands in
   // for it; a changed folder offers nothing it cannot vouch for.
   const offeredAgents = scopedAgents !== undefined ? scopedAgents : folderChanged ? undefined : data.code_channel_agents
-  // The server's list (the chat picker's choices minus Kiro Crew's internal
+  // The server's list (the chat picker's choices minus Aj Crew's internal
   // agents), so the picker offers exactly what a save accepts. null = it could
   // not be listed.
   const agentsFailed = offeredAgents === null || scopedAgentsQ.isError
@@ -254,14 +254,14 @@ export default function SlackCodeChannelDefaults({ data, draft, onChange, readOn
                   />
                 </Field>
                 <ModelField options={modelOptions} value={draft.model} onChange={v => onChange({ model: v })} disabled={readOnly} hint={i18nT('pages.settings.slackPanel.slackCode.model_hint')} />
-                <Field label={i18nT('pages.kiroCrewAgentsPage.reasoning_effort')} hint={i18nT('pages.settings.slackPanel.slackCode.effort_hint')}>
+                <Field label={i18nT('pages.ajCrewAgentsPage.reasoning_effort')} hint={i18nT('pages.settings.slackPanel.slackCode.effort_hint')}>
                   <SimpleSelect
                     options={[...EFFORT_LEVELS]}
-                    optionLabels={EFFORT_LEVELS.map(l => (l === '' ? i18nT('pages.kiroCrewAgentsPage.inherited') : effortLabel(l)))}
+                    optionLabels={EFFORT_LEVELS.map(l => (l === '' ? i18nT('pages.ajCrewAgentsPage.inherited') : effortLabel(l)))}
                     value={draft.effort}
                     onChange={v => onChange({ effort: v })}
                     disabled={readOnly}
-                    aria-label={i18nT('pages.kiroCrewAgentsPage.edit_reasoning_effort')}
+                    aria-label={i18nT('pages.ajCrewAgentsPage.edit_reasoning_effort')}
                   />
                 </Field>
               </div>

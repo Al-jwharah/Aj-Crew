@@ -12,7 +12,7 @@ import {
 /**
  * UI mode — orthogonal to the theme system.
  *
- *   data-theme : color palette (kiro-dark, monokai-dark, …) — owned by useTheme
+ *   data-theme : color palette (aj-dark, monokai-dark, …) — owned by useTheme
  *   data-mode  : light/dark hint derived from theme — owned by useTheme
  *   data-ui    : interface paradigm (chat | cli) — owned by THIS hook
  *

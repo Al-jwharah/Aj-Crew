@@ -19,15 +19,15 @@ from member_memory_helpers import env as _member_env
 from member_memory_helpers import make_request
 from overload_fakes import mock_ctx, mock_sessions, wait_taskq_open
 
-import kiro_crew.subagent as subagent_mod
-from kiro_crew import taskq
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.chat_utils import subagents_attached_async
-from kiro_crew.dashboard.handlers import messaging
-from kiro_crew.mcp_tools import spawn as spawn_tools
-from kiro_crew.subagent import SubagentManager
-from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
-from kiro_crew.testing.wait import async_wait_until, await_until
+import aj_crew.subagent as subagent_mod
+from aj_crew import taskq
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.chat_utils import subagents_attached_async
+from aj_crew.dashboard.handlers import messaging
+from aj_crew.mcp_tools import spawn as spawn_tools
+from aj_crew.subagent import SubagentManager
+from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+from aj_crew.testing.wait import async_wait_until, await_until
 
 pytestmark = [
     pytest.mark.xdist_group("member_memory_api"),
@@ -56,13 +56,13 @@ async def _deferring_manager(monkeypatch) -> tuple[SubagentManager, list[str], d
 
     The list is the id of every run that started, in start order.
     """
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.subagent_cost_gb = 0.5
     cfg.agent.spawn_min_memory_gb = 4.0
-    monkeypatch.setattr(KiroCrewConfig, "load", lambda: cfg)
+    monkeypatch.setattr(AjCrewConfig, "load", lambda: cfg)
     monkeypatch.setattr(subagent_mod, "Stats", MagicMock())
     monkeypatch.setattr(subagent_mod, "sel", MagicMock())
-    monkeypatch.setattr(subagent_mod, "list_agents", lambda: [SimpleNamespace(name="kirocrew")])
+    monkeypatch.setattr(subagent_mod, "list_agents", lambda: [SimpleNamespace(name="ajcrew")])
     monkeypatch.setattr(SpawnAdmissionCoordinator, "open_store_off_loop", True)
     monkeypatch.setattr(SpawnAdmissionCoordinator, "pump_off_loop", True)
     free = {"gb": 3.0}

@@ -43,9 +43,9 @@ from unittest.mock import MagicMock, patch
 from acp_frame_replay_harness import CORPUS, read_fixture
 from chat_runner_coverage_helpers import _complete, _drive, _runner_state, _set_stream
 
-from kiro_crew.acp._dispatch import classify_notification, parse_session_update
-from kiro_crew.acp.types import AcpEvent, JsonRpcMessage
-from kiro_crew.dashboard import state as dashboard_state
+from aj_crew.acp._dispatch import classify_notification, parse_session_update
+from aj_crew.acp.types import AcpEvent, JsonRpcMessage
+from aj_crew.dashboard import state as dashboard_state
 
 #: The golden files' directory. Resolved from this file so script and test agree.
 GOLDEN_DIR = Path(__file__).resolve().parent / "fixtures" / "turn_golden"

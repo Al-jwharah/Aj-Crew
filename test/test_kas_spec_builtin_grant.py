@@ -27,17 +27,17 @@ from unittest.mock import MagicMock
 import pytest
 from test_tool_call_classification_kas import _kas_builtin_flow
 
-from kiro_crew.acp import kas_agents, kas_spec_carry
-from kiro_crew.acp._dispatch import attach_kas_custom_agents
-from kiro_crew.acp.kas_permissions import (
+from aj_crew.acp import kas_agents, kas_spec_carry
+from aj_crew.acp._dispatch import attach_kas_custom_agents
+from aj_crew.acp.kas_permissions import (
     CREW_ANSWERED_BUILTINS_KEY,
     WITHHELD_FROM_AUTO_APPROVE,
     crew_answered_builtins,
 )
-from kiro_crew.acp.types import AcpEvent, JsonRpcMessage
-from kiro_crew.acp_backends import ACP_BACKEND_KAS
-from kiro_crew.dashboard.chat_turn.tool_approval import _spec_keys_notice
-from kiro_crew.hooks import (
+from aj_crew.acp.types import AcpEvent, JsonRpcMessage
+from aj_crew.acp_backends import ACP_BACKEND_KAS
+from aj_crew.dashboard.chat_turn.tool_approval import _spec_keys_notice
+from aj_crew.hooks import (
     TOOL_ALLOW,
     TOOL_AUTO_APPROVE,
     TOOL_DENY,
@@ -45,10 +45,10 @@ from kiro_crew.hooks import (
     HooksConfig,
     hook_gate_kwargs,
 )
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.governance import parse_policy
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.governance import parse_policy
 
 _HOME = Path.home()
 #: Spelled in two pieces so this file's own text is not one destructive command line.
@@ -67,9 +67,9 @@ def _no_profiles(tmp_path: Path, _floor_monkeypatch: pytest.MonkeyPatch):
 
 
 def _install_governance(body: dict[str, Any]) -> None:
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    base = build_default_context(KiroCrewConfig.load())
+    base = build_default_context(AjCrewConfig.load())
     ctx_mod.set_context(dataclasses.replace(base, governance=parse_policy(body)))
 
 
@@ -186,7 +186,7 @@ def test_a_powershell_grant_answers_a_kas_shell_call() -> None:
 
 
 def _facts(event: AcpEvent, grants: set[str], **surface: Any):
-    from kiro_crew.hooks import GateFacts, ToolCall
+    from aj_crew.hooks import GateFacts, ToolCall
 
     event.spec_granted_builtins = frozenset(grants)
     return GateFacts(
@@ -200,10 +200,10 @@ def _facts(event: AcpEvent, grants: set[str], **surface: Any):
 
 
 def test_the_shared_helper_takes_an_allow_predicate_that_only_narrows() -> None:
-    """``kiro_crew.hooks.grant_spec_builtin`` is the helper another grant reuses:
+    """``aj_crew.hooks.grant_spec_builtin`` is the helper another grant reuses:
     its ``allow`` predicate is asked last, with the facts and the call's names, and
     can only withhold."""
-    from kiro_crew.hooks import grant_spec_builtin
+    from aj_crew.hooks import grant_spec_builtin
 
     seen: list[tuple[str, ...]] = []
 
@@ -546,7 +546,7 @@ def test_only_the_grant_keys_are_not_a_restriction(
 
 
 def test_withhold_answered_reads_every_withheld_name() -> None:
-    from kiro_crew.acp.kas_permissions import withhold_answered_under_authored_rules
+    from aj_crew.acp.kas_permissions import withhold_answered_under_authored_rules
 
     assert withhold_answered_under_authored_rules(WITHHELD_FROM_AUTO_APPROVE, None) == (
         WITHHELD_FROM_AUTO_APPROVE
@@ -563,7 +563,7 @@ def test_a_profile_on_another_scope_does_not_withhold_the_grant(
     """A profile that governs only ``network.egress`` says nothing about a shell
     command: the projection still records the grant and the gate still answers it.
     A profile that governs ``commands`` withholds both."""
-    from kiro_crew.platform import governance as gov
+    from aj_crew.platform import governance as gov
 
     egress = gov.Profile(
         name="egress",
@@ -621,7 +621,7 @@ def test_the_session_record_follows_the_active_agent_and_a_mode_switch() -> None
     ]
     assert kas_agents.projected_crew_answered(batch, "vibe") == {"fs_read"}
     assert kas_agents.projected_crew_answered(batch, "missing") == frozenset()
-    from kiro_crew.agent_files import kas_wire_agent_id
+    from aj_crew.agent_files import kas_wire_agent_id
 
     assert kas_agents.switched_crew_answered(batch, kas_wire_agent_id("vibe")) == {"fs_read"}
     assert kas_agents.switched_crew_answered(batch, "other") == frozenset()
@@ -634,7 +634,7 @@ def test_the_session_record_follows_the_active_agent_and_a_mode_switch() -> None
 
 
 def _handle(backend: str):
-    from kiro_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.acp.session_handle import AcpSessionHandle
 
     rt = MagicMock()
     rt.pid = None
@@ -666,7 +666,7 @@ def test_the_handle_stamps_its_own_kas_request() -> None:
 def test_a_native_kas_child_tool_call_carries_no_grant() -> None:
     """A native KAS sub-agent's tool call shares the parent's sessionId; the id its
     ``agentSubtaskId`` frame recorded marks it, and it runs another agent's spec."""
-    from kiro_crew.acp._dispatch import scoped_tool_cache_key
+    from aj_crew.acp._dispatch import scoped_tool_cache_key
 
     handle = _handle(ACP_BACKEND_KAS)
     handle._native_child_tool_call_ids.add(scoped_tool_cache_key("own-sid", "tc-1"))

@@ -11,11 +11,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers.optimizer import (
+from aj_crew.dashboard.handlers.optimizer import (
     OPTIMIZER_SYSTEM,
     handle_optimize,
 )
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService
 
 
 class _ReadyKiroPrerequisiteService(KiroPrerequisiteService):
@@ -227,7 +227,7 @@ class TestOptimizerEndpoint:
 
     @pytest.mark.asyncio
     async def test_unchanged_response_from_llm(self):
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
 
         mock_client = AsyncMock()
 
@@ -257,7 +257,7 @@ class TestOptimizerEndpoint:
 
     @pytest.mark.asyncio
     async def test_optimized_response_from_llm(self):
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
 
         mock_client = AsyncMock()
         optimized_text = (
@@ -291,7 +291,7 @@ class TestOptimizerEndpoint:
     @pytest.mark.asyncio
     async def test_short_prompt_still_optimized(self):
         """Explicit user action means even short prompts get optimized."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
 
         mock_client = AsyncMock()
 
@@ -338,7 +338,7 @@ class TestOptimizerEndpoint:
 
     @pytest.mark.asyncio
     async def test_quoted_response_stripped(self):
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
 
         mock_client = AsyncMock()
 
@@ -365,7 +365,7 @@ class TestOptimizerEndpoint:
 
     @pytest.mark.asyncio
     async def test_context_truncated_to_2000_chars(self):
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
 
         mock_client = AsyncMock()
         captured_prompt = []
@@ -412,7 +412,7 @@ class TestOptimizerEndpoint:
         content-free marker before it is forwarded; otherwise every optimize
         call that follows a pasted screenshot bloats the request.
         """
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
 
         mock_client = AsyncMock()
         captured_prompt: list[str] = []
@@ -467,7 +467,7 @@ class TestOptimizerEndpoint:
         discards the conversation with replay suppressed after every call, so
         each optimize cold-starts fresh.
         """
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
 
         mock_client = AsyncMock()
 
@@ -530,7 +530,7 @@ class TestOptimizerEndpoint:
 def _paste_mock_state(captured_prompt, reply_text):
     """Build a mocked DashboardState whose optimizer session streams reply_text
     and records the full prompt it was handed into captured_prompt."""
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
 
     mock_client = AsyncMock()
 
@@ -562,7 +562,7 @@ class TestPasteSeqs:
     """Placeholder-seq extraction from draft/rewrite text."""
 
     def test_extracts_seq_numbers(self):
-        from kiro_crew.dashboard.handlers.optimizer import _paste_seqs
+        from aj_crew.dashboard.handlers.optimizer import _paste_seqs
 
         assert _paste_seqs("look at [ Paste #1 · 40 lines ] and [ Paste #2 · 3 lines ]") == {
             "1",
@@ -570,7 +570,7 @@ class TestPasteSeqs:
         }
 
     def test_empty_when_no_placeholders(self):
-        from kiro_crew.dashboard.handlers.optimizer import _paste_seqs
+        from aj_crew.dashboard.handlers.optimizer import _paste_seqs
 
         assert _paste_seqs("no pastes here") == set()
 
@@ -580,7 +580,7 @@ class TestPasteSeqs:
         # fenced by two U+2063 INVISIBLE SEPARATORs — so a recalled token pairs
         # to its own block. The run is invisible and must not stop the backend
         # from scoping paste content by seq. New-form and legacy tokens mix here.
-        from kiro_crew.dashboard.handlers.optimizer import _paste_seqs
+        from aj_crew.dashboard.handlers.optimizer import _paste_seqs
 
         new_form = f"look at [ Paste #1{_invisible_id('mg4kx2a7ab')} · 40 lines ]"
         legacy = "and [ Paste #2 · 3 lines ]"
@@ -590,7 +590,7 @@ class TestPasteSeqs:
         # The multiset guard keys on the FULL token string, which includes the
         # invisible id run; it must count the id-bearing token the frontend
         # substitutes back, or an unchanged draft would read as a dropped token.
-        from kiro_crew.dashboard.handlers.optimizer import _paste_token_counts
+        from aj_crew.dashboard.handlers.optimizer import _paste_token_counts
 
         token = f"[ Paste #1{_invisible_id('mg4kx2a7ab')} · 5 lines ]"
         assert _paste_token_counts(f"see {token} and {token}") == {token: 2}
@@ -600,7 +600,7 @@ class TestBuildPastedContentBlock:
     """`<pasted_content-nonce>` block construction + budgeting."""
 
     def test_includes_only_referenced_blocks(self):
-        from kiro_crew.dashboard.handlers.optimizer import _build_pasted_content_block
+        from aj_crew.dashboard.handlers.optimizer import _build_pasted_content_block
 
         pastes = [{"seq": 1, "content": "AAA"}, {"seq": 2, "content": "BBB"}]
         block = _build_pasted_content_block(pastes, {"1"}, "abc123")
@@ -610,17 +610,17 @@ class TestBuildPastedContentBlock:
         assert block.rstrip().endswith("</pasted_content-abc123>")
 
     def test_empty_when_nothing_referenced(self):
-        from kiro_crew.dashboard.handlers.optimizer import _build_pasted_content_block
+        from aj_crew.dashboard.handlers.optimizer import _build_pasted_content_block
 
         assert _build_pasted_content_block([{"seq": 1, "content": "AAA"}], set(), "n") == ""
 
     def test_empty_on_malformed_input(self):
-        from kiro_crew.dashboard.handlers.optimizer import _build_pasted_content_block
+        from aj_crew.dashboard.handlers.optimizer import _build_pasted_content_block
 
         assert _build_pasted_content_block("not a list", {"1"}, "n") == ""
 
     def test_truncates_over_budget(self):
-        from kiro_crew.dashboard.handlers.optimizer import (
+        from aj_crew.dashboard.handlers.optimizer import (
             _PASTE_CONTENT_BUDGET,
             _build_pasted_content_block,
         )
@@ -864,7 +864,7 @@ class TestOptimizerDraftUrls:
         so the draft check reads that embedded span as the user's too."""
         exempt = "docs.example.com"
         monkeypatch.setattr(
-            "kiro_crew.security.exfil._exfil_exempt_hosts", lambda: frozenset({exempt})
+            "aj_crew.security.exfil._exfil_exempt_hosts", lambda: frozenset({exempt})
         )
         inner = "https://reviews.example.net/view?state=" + "A" * 232
         link = f"`https://{exempt}/r?x=1`[reference]({inner})"
@@ -938,13 +938,13 @@ class TestStripOuterWrapperTag:
     """Unit tests for the model-added XML wrapper strip."""
 
     def test_strips_matching_wrapper(self):
-        from kiro_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
+        from aj_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
 
         wrapped = "<optimized_prompt>\nDo the thing.\n</optimized_prompt>"
         assert _strip_outer_wrapper_tag(wrapped, "refactor the auth module") == "Do the thing."
 
     def test_tag_name_is_the_models_choice(self):
-        from kiro_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
+        from aj_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
 
         assert (
             _strip_outer_wrapper_tag("<answer>Do the thing.</answer>", "refactor the auth module")
@@ -952,7 +952,7 @@ class TestStripOuterWrapperTag:
         )
 
     def test_inner_angle_brackets_survive_unwrap(self):
-        from kiro_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
+        from aj_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
 
         wrapped = "<optimized_prompt>\nRead <a link> and verify it is clear.\n</optimized_prompt>"
         assert (
@@ -961,13 +961,13 @@ class TestStripOuterWrapperTag:
         )
 
     def test_text_with_angle_brackets_untouched(self):
-        from kiro_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
+        from aj_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
 
         text = "Read the requirements in <a link> and verify they are clear."
         assert _strip_outer_wrapper_tag(text, "refactor the auth module") == text
 
     def test_leading_non_identifier_tag_untouched(self):
-        from kiro_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
+        from aj_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
 
         # A draft that BEGINS with an angle-bracket run that is not a bare
         # identifier tag (space or digit) must not be misread as a wrapper.
@@ -978,19 +978,19 @@ class TestStripOuterWrapperTag:
             assert _strip_outer_wrapper_tag(text, "refactor the auth module") == text
 
     def test_mismatched_closing_name_untouched(self):
-        from kiro_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
+        from aj_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
 
         text = "<answer>Do the thing.</reply>"
         assert _strip_outer_wrapper_tag(text, "refactor the auth module") == text
 
     def test_case_mismatched_pair_untouched(self):
-        from kiro_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
+        from aj_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
 
         text = "<Answer>Do the thing.</answer>"
         assert _strip_outer_wrapper_tag(text, "refactor the auth module") == text
 
     def test_unbalanced_pair_untouched(self):
-        from kiro_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
+        from aj_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
 
         for text in (
             "<answer>Do the thing.",
@@ -1000,7 +1000,7 @@ class TestStripOuterWrapperTag:
             assert _strip_outer_wrapper_tag(text, "refactor the auth module") == text
 
     def test_strips_exactly_one_layer(self):
-        from kiro_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
+        from aj_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
 
         # A rewrite that is genuinely a single XML element loses only the
         # model-added outer wrapper, never its own structure.
@@ -1011,12 +1011,12 @@ class TestStripOuterWrapperTag:
         )
 
     def test_empty_wrapper_yields_empty(self):
-        from kiro_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
+        from aj_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
 
         assert _strip_outer_wrapper_tag("<answer></answer>", "refactor the auth module") == ""
 
     def test_tag_already_in_draft_never_stripped(self):
-        from kiro_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
+        from aj_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
 
         # The draft carries its own XML-style structure; a reply enclosed in
         # that same tag is the user's content, not a model-added wrapper.
@@ -1024,13 +1024,13 @@ class TestStripOuterWrapperTag:
         assert _strip_outer_wrapper_tag(reply, "<task>refactor the auth module</task>") == reply
 
     def test_draft_tag_guard_is_case_insensitive(self):
-        from kiro_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
+        from aj_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
 
         reply = "<task>Refactor the auth module cleanly.</task>"
         assert _strip_outer_wrapper_tag(reply, "<Task>refactor the auth module</Task>") == reply
 
     def test_attributed_draft_tag_never_stripped(self):
-        from kiro_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
+        from aj_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
 
         # The draft spells its tag with attributes; a bare wrapper of the same
         # name in the reply is still the draft's own structure, not packaging.
@@ -1039,13 +1039,13 @@ class TestStripOuterWrapperTag:
         assert _strip_outer_wrapper_tag(reply, draft) == reply
 
     def test_self_closing_draft_tag_never_stripped(self):
-        from kiro_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
+        from aj_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
 
         reply = "<task>Refactor the auth module cleanly.</task>"
         assert _strip_outer_wrapper_tag(reply, "expand <task/> into steps") == reply
 
     def test_shared_prefix_tag_in_draft_still_stripped(self):
-        from kiro_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
+        from aj_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
 
         # <taskforce> is a different tag than <task>: the guard must not fire
         # on a name prefix, or every wrapper sharing a prefix with draft text
@@ -1055,7 +1055,7 @@ class TestStripOuterWrapperTag:
         assert _strip_outer_wrapper_tag(reply, draft) == "Refactor the auth module cleanly."
 
     def test_surrounding_whitespace_tolerated(self):
-        from kiro_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
+        from aj_crew.dashboard.handlers.optimizer import _strip_outer_wrapper_tag
 
         assert (
             _strip_outer_wrapper_tag(

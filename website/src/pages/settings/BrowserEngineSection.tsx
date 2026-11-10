@@ -1,6 +1,6 @@
 /**
  * Settings -> Browser -> More -> Engine: one row with the Browser Harness and
- * Kiro's Chromium versions and a Redownload (or Download) button.
+ * Aj's Chromium versions and a Redownload (or Download) button.
  *
  * Installing is not a step here: the gateway installs on its own and the main
  * card reports it. This row is the repair: Redownload REPLACES a Chromium already
@@ -23,7 +23,7 @@ export function BrowserEngineRow({ status, installing, installError, onInstall, 
   installError: string | null
   /** Install both parts; a healthy Chromium already on disk is kept. */
   onInstall: () => void
-  /** Replace Kiro's Chromium even when the copy on disk looks whole (a damaged executable). */
+  /** Replace Aj's Chromium even when the copy on disk looks whole (a damaged executable). */
   onRedownload: () => void
 }) {
   const job = status.install_job

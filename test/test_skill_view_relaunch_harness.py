@@ -19,7 +19,7 @@ code path:
 
 Over N spawns, each switching every agent with ``session/set_mode`` through the
 real ``AcpRuntime`` bracket and the real projection, it asserts: zero set_mode
-failures and no fallback, the host always running the view Kiro Crew
+failures and no fallback, the host always running the view Aj Crew
 published (never a stale one), exactly one alias per agent throughout,
 bounded file counts in the agents directory and the side-file directories, and no
 alias-lock timeout. Each fix, mutated away, fails at least one of these.
@@ -48,11 +48,11 @@ import native_skill_projection_helpers
 import pytest
 from test_update_provider import _UNALLOCATABLE_PID
 
-from kiro_crew.acp import runtime as runtime_mod
-from kiro_crew.acp import skill_projection as projection
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.types import METHOD_SET_MODE
-from kiro_crew.testing.wait import async_wait_until, default_timeout, finished
+from aj_crew.acp import runtime as runtime_mod
+from aj_crew.acp import skill_projection as projection
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.types import METHOD_SET_MODE
+from aj_crew.testing.wait import async_wait_until, default_timeout, finished
 
 _end_projections_before_tmp_path_goes = (
     native_skill_projection_helpers._end_projections_before_tmp_path_goes
@@ -63,7 +63,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 SPAWNS = 50
-AGENTS = ("kirocrew", "ops", "review", "plain")
+AGENTS = ("ajcrew", "ops", "review", "plain")
 
 _IN_MODIFY = 0x002
 _IN_ATTRIB = 0x004
@@ -247,7 +247,7 @@ class _Host:
 
 @pytest.fixture
 def host_tree(tmp_path, monkeypatch):
-    monkeypatch.delenv("KIROCREW_NATIVE_SKILL_PROJECTION", raising=False)
+    monkeypatch.delenv("AJCREW_NATIVE_SKILL_PROJECTION", raising=False)
     home = tmp_path / "kiro"
     crew_home = tmp_path / "crew"
     agents = home / "agents"
@@ -260,7 +260,7 @@ def host_tree(tmp_path, monkeypatch):
     monkeypatch.setattr(projection.platform_compat, "path_volume_is_remote", lambda path: False)
     monkeypatch.setattr(projection.platform_compat, "first_linked_ancestor", lambda path: None)
     monkeypatch.setattr(
-        "kiro_crew.agent.managed_mcp_spec_entry",
+        "aj_crew.agent.managed_mcp_spec_entry",
         lambda name, **_kw: {"command": "test-core", "args": []},
     )
     monkeypatch.setattr(
@@ -270,7 +270,7 @@ def host_tree(tmp_path, monkeypatch):
             SimpleNamespace(name=name, filename=f"{name}.json", scope="global") for name in AGENTS
         ],
     )
-    monkeypatch.setattr("kiro_crew.agent._KIRO_MCP_JSON", home / "settings" / "mcp.json")
+    monkeypatch.setattr("aj_crew.agent._KIRO_MCP_JSON", home / "settings" / "mcp.json")
     monkeypatch.setattr(runtime_mod, "_PROJECTED_MODE_RETRY_DELAYS_SECS", (0.0, 0.0), raising=False)
     # The harness measures what each spawn's own prune leaves between spawns; a
     # dropped projection's eager prune (which runs on a thread off the event
@@ -314,7 +314,7 @@ def _runtime(watcher: FakeKiroWatcher, prepared, work_dir: Path) -> tuple[AcpRun
 
 # The daemon thread a projection ended on the event loop releases its lease on
 # (skill_projection._end_projection): the release is asynchronous by design.
-_END_THREAD = "kirocrew-skill-view-prune"
+_END_THREAD = "ajcrew-skill-view-prune"
 
 
 def _ends_in_flight() -> int:
@@ -372,7 +372,7 @@ def _seed_backlog(agents: Path, count: int) -> None:
     for n in range(count):
         stem = f"{projection.NATIVE_SKILL_ALIAS_PREFIX}{n:024x}"
         raw = json.dumps(
-            {"name": stem, "resources": [], "mcpServers": {"kirocrew-core": {"command": "x"}}}
+            {"name": stem, "resources": [], "mcpServers": {"ajcrew-core": {"command": "x"}}}
         )
         record = {
             projection._MANAGED_MARKER: projection._MANAGED_MARKER_VALUE,
@@ -395,7 +395,7 @@ async def _one_spawn(
     rewriter.launch()  # a sibling launch before this spawn
     prepared = projection.prepare_native_skill_projection(project)
     assert prepared is not None
-    watcher = FakeKiroWatcher(agents, prepared.agent("kirocrew"), broken_watch=broken_watch)
+    watcher = FakeKiroWatcher(agents, prepared.agent("ajcrew"), broken_watch=broken_watch)
     rt, host = _runtime(watcher, prepared, project)
     del prepared
     rewriter.launch()  # another launch while this process runs
@@ -405,7 +405,7 @@ async def _one_spawn(
     await asyncio.sleep(0)
     views: dict[str, str] = {}
     try:
-        with patch("kiro_crew.agent.require_unchanged_derived_spec", return_value=None):
+        with patch("aj_crew.agent.require_unchanged_derived_spec", return_value=None):
             for name in AGENTS:
                 before = len(host.activated)
                 if name in refused:
@@ -431,7 +431,7 @@ async def _one_spawn(
                 views[name] = mode
                 on_disk = agents / f"{mode}.json"
                 if not broken_watch:
-                    # The host runs exactly the spec on disk -- the view Kiro Crew
+                    # The host runs exactly the spec on disk -- the view Aj Crew
                     # published, env values included -- never a stale copy.
                     published = _canon(json.loads(on_disk.read_bytes()))
                     assert _canon(spec) == published, f"stale view of {name}"
@@ -615,7 +615,7 @@ async def test_a_rewriter_that_wins_the_announcement_race_never_runs_an_unverifi
     )
     rewriter = ExternalRewriter(agents)
     prepared = projection.prepare_native_skill_projection(project)
-    watcher = FakeKiroWatcher(agents, prepared.agent("kirocrew"))
+    watcher = FakeKiroWatcher(agents, prepared.agent("ajcrew"))
     rt, host = _runtime(watcher, prepared, project)
     # An operator adds an agent while the process runs; written in place, so
     # the host loads the authored spec.
@@ -637,7 +637,7 @@ async def test_a_rewriter_that_wins_the_announcement_race_never_runs_an_unverifi
     await asyncio.sleep(0)
     try:
         with (
-            patch("kiro_crew.agent.require_unchanged_derived_spec", return_value=None),
+            patch("aj_crew.agent.require_unchanged_derived_spec", return_value=None),
             patch.object(runtime_mod, "emit_counter", lambda n, a: counter.append(a["outcome"])),
             pytest.raises(runtime_mod.AcpRuntimeError, match="Restart the gateway"),
         ):
@@ -689,11 +689,11 @@ async def test_many_agents_with_huge_welcome_messages_keep_session_new_under_the
         ],
     )
     projection._DISPLAY_TEXT_WARNED.clear()
-    caplog.set_level(logging.WARNING, logger="kiro_crew.acp.skill_projection")
+    caplog.set_level(logging.WARNING, logger="aj_crew.acp.skill_projection")
 
     prepared = projection.prepare_native_skill_projection(project)
     assert prepared is not None and set(package) <= set(prepared.aliases)
-    watcher = FakeKiroWatcher(agents, prepared.agent("kirocrew"))
+    watcher = FakeKiroWatcher(agents, prepared.agent("ajcrew"))
     try:
         frame = watcher.session_new_frame()
     finally:
@@ -713,7 +713,7 @@ async def test_a_launcher_nonce_under_an_unknown_key_is_named_and_can_be_declare
     not know mints a view per launch; the census names that key (the doctor line
     prints it), and declaring it volatile stops the growth."""
     agents, project = host_tree
-    monkeypatch.delenv("KIROCREW_SKILL_VIEW_VOLATILE_ENV", raising=False)
+    monkeypatch.delenv("AJCREW_SKILL_VIEW_VOLATILE_ENV", raising=False)
     rewriter = ExternalRewriter(agents, nonce_key="LAUNCH_ID")
     for _ in range(3):
         await _one_spawn(agents, project, rewriter)
@@ -721,7 +721,7 @@ async def test_a_launcher_nonce_under_an_unknown_key_is_named_and_can_be_declare
     grew = _census(agents)["aliases"]
     assert grew > len(AGENTS)
 
-    monkeypatch.setenv("KIROCREW_SKILL_VIEW_VOLATILE_ENV", "LAUNCH_ID")
+    monkeypatch.setenv("AJCREW_SKILL_VIEW_VOLATILE_ENV", "LAUNCH_ID")
     names = set()
     for _ in range(3):
         views, _failures = await _one_spawn(agents, project, rewriter)

@@ -15,7 +15,7 @@ import asyncio
 import pytest
 from slack_handler_helpers import _within_lost_run
 
-from kiro_crew.slack import handler as h
+from aj_crew.slack import handler as h
 
 _LONG_ANSWER = "This reply is comfortably longer than the fifty-character voice threshold."
 

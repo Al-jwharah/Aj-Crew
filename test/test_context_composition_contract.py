@@ -1,4 +1,4 @@
-"""Characterization of what ``kiro_crew.context`` assembles, byte for byte.
+"""Characterization of what ``aj_crew.context`` assembles, byte for byte.
 
 The prompt a session receives is a contract with the model: its block order, the
 framing around each block, which blocks a lifecycle carries and how untrusted
@@ -16,7 +16,7 @@ seeing a different prompt.
   paths), restricted-mode withholding and the off-loop store preparation are
   asserted directly.
 
-The facade's frozen surface and the rules that keep a patch on ``kiro_crew.context``
+The facade's frozen surface and the rules that keep a patch on ``aj_crew.context``
 reaching the ``context_assembly`` owners are in
 ``test_context_composition_contract_facade.py``; the hermetic builder both files use
 lives in ``context_composition_contract_helpers.py``.
@@ -35,12 +35,12 @@ from context_composition_contract_helpers import (  # noqa: F401 -- the fixture 
     rig_fixture,
 )
 
-from kiro_crew import context as ctx
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.context_blocks import measure_prompt
-from kiro_crew.hooks import HookManager, HookResult
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.testing.wait import finished
+from aj_crew import context as ctx
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.context_blocks import measure_prompt
+from aj_crew.hooks import HookManager, HookResult
+from aj_crew.skills import SkillsLoader
+from aj_crew.testing.wait import finished
 
 pytestmark = [
     pytest.mark.xdist_group("context_composition_contract"),
@@ -118,7 +118,7 @@ _STABLE_TEXT_SHA256 = {
 
 
 def _ui_language_block(tag: str) -> str:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.dashboard.language = tag
     return ctx._build_ui_language_section(cfg)
 
@@ -174,13 +174,13 @@ def _fresh_dashboard_from_discord(rig: _Rig) -> str:
 
 
 def _fresh_custom_agent(rig: _Rig) -> str:
-    (rig.agents / "kirocrew-worker.json").write_text(
-        '{"name": "kirocrew-worker", "prompt": "Worker persona for {bot_name}."}',
+    (rig.agents / "ajcrew-worker.json").write_text(
+        '{"name": "ajcrew-worker", "prompt": "Worker persona for {bot_name}."}',
         encoding="utf-8",
         newline="\n",
     )
     rig.seed_memory()
-    return _turn(rig, "build it", True, session_key="dashboard:w", agent="kirocrew-worker")
+    return _turn(rig, "build it", True, session_key="dashboard:w", agent="ajcrew-worker")
 
 
 def _fresh_custom_agent_opted_out(rig: _Rig) -> str:
@@ -376,7 +376,7 @@ def _session_context_small_window(rig: _Rig) -> str:
 
 
 def _session_context_member_mode(rig: _Rig) -> str:
-    return rig.builder.build_session_context("dashboard:m", mode="member", agent="kirocrew")
+    return rig.builder.build_session_context("dashboard:m", mode="member", agent="ajcrew")
 
 
 def _background_overflow(rig: _Rig) -> str:

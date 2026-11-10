@@ -82,7 +82,7 @@ async function drawFrame() {
   await waitFor(() => expect(document.querySelector('[data-testid="crew-dashboard-iframe"]')).not.toBeNull(), { timeout: 5000 })
   const frame = document.querySelector('[data-testid="crew-dashboard-iframe"]') as HTMLIFrameElement
   fireEvent.load(frame)
-  window.dispatchEvent(new MessageEvent('message', { data: { type: 'kirocrew-dashboard:ready' }, source: frame.contentWindow }))
+  window.dispatchEvent(new MessageEvent('message', { data: { type: 'ajcrew-dashboard:ready' }, source: frame.contentWindow }))
 }
 
 const NO_PREVIEW = () => new ApiError(404, 'nothing is staged to preview', JSON.stringify({ error: 'nothing is staged to preview', code: 'no_preview' }))

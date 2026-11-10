@@ -18,8 +18,8 @@ from unittest.mock import patch
 
 import pytest
 
-import kiro_crew.dashboard.handlers.usage as usage_mod
-from kiro_crew.dashboard.handlers.usage import _parse_sessions, daily_credits
+import aj_crew.dashboard.handlers.usage as usage_mod
+from aj_crew.dashboard.handlers.usage import _parse_sessions, daily_credits
 
 
 def _noon(days_ago: int) -> datetime:

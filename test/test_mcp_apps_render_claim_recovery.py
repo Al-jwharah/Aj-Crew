@@ -19,7 +19,7 @@ import pytest
 from mcp_apps_render_helpers import spool_fixture  # noqa: F401
 from mcp_apps_render_helpers import _FakeState, _hex, _write_spool
 
-from kiro_crew import mcp_apps_render
+from aj_crew import mcp_apps_render
 
 
 def _reconcile(slot_key: str, rows: list[dict]) -> int:
@@ -108,7 +108,7 @@ class TestARestoreRecoversAFlagItsClaimOutlived:
     def test_a_missing_spool_logs_no_traceback(self, tmp_path, monkeypatch, caplog):
         """An absent spool is the normal state before any app renders: it is
         logged as a plain debug line, not a stack trace on every rehydrate."""
-        monkeypatch.setenv("KIROCREW_MCP_APPS_SPOOL", str(tmp_path / "never-created"))
+        monkeypatch.setenv("AJCREW_MCP_APPS_SPOOL", str(tmp_path / "never-created"))
 
         with caplog.at_level("DEBUG", logger=mcp_apps_render.logger.name):
             assert mcp_apps_render.load_claimed_row_groups("dashboard:1") == []
@@ -679,7 +679,7 @@ async def test_the_owner_rows_are_persisted_before_the_claim_is_taken(spool, mon
         _FakeState(),
         slot_key="dashboard:9",
         tool_call_id="tc-order",
-        text=f"a [kirocrew-mcp-app:{sid}] b",
+        text=f"a [ajcrew-mcp-app:{sid}] b",
         row_ts=["5.5"],
         row_ids=["m-9"],
         persist_rows=_persist,
@@ -711,7 +711,7 @@ async def test_a_claim_that_names_no_row_persists_nothing(spool):
         _FakeState(),
         slot_key="dashboard:9",
         tool_call_id="tc-norow",
-        text=f"a [kirocrew-mcp-app:{sid}] b",
+        text=f"a [ajcrew-mcp-app:{sid}] b",
         persist_rows=_persist,
     )
     assert flagged is True, "the render-once claim is still taken"
@@ -737,7 +737,7 @@ async def test_a_persist_that_raises_takes_no_claim(spool):
         _FakeState(),
         slot_key="dashboard:9",
         tool_call_id="tc-raise",
-        text=f"a [kirocrew-mcp-app:{sid}] b",
+        text=f"a [ajcrew-mcp-app:{sid}] b",
         row_ts=["7.5"],
         row_ids=["m-7"],
         persist_rows=_persist,

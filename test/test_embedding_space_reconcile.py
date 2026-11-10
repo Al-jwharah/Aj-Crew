@@ -15,8 +15,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from kiro_crew.embeddings import embedding_space_signature
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew.embeddings import embedding_space_signature
+from aj_crew.vector_memory import VectorMemoryStore
 
 _SIG_A = embedding_space_signature("model-a", 1024)
 _SIG_B = embedding_space_signature("model-b", 1024)

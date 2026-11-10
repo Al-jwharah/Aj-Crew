@@ -6,15 +6,15 @@ import threading
 
 import pytest
 
-from kiro_crew.shared_crew.admission import CapacityScope, ReasonCode
-from kiro_crew.shared_crew.scheduler import (
+from aj_crew.shared_crew.admission import CapacityScope, ReasonCode
+from aj_crew.shared_crew.scheduler import (
     Decision,
     FairScheduler,
     SchedulerLimits,
     Ticket,
     WorkClass,
 )
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.testing.clock import ManualClock
 
 A, B, C = "p_alice", "p_bob", "p_carol"
 

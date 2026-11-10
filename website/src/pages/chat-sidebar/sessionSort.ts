@@ -43,7 +43,7 @@ export function useSessionSort({ queryClient }: { queryClient: QueryClient }): S
   // order back with the failure said.
   const sortKey = cfgOverlay.shown(SESSION_SORT_CONFIG_PATH, storedSortKey)
   const overlayOpts = cfgOverlay.mutationOpts<SessionSortWrite>({
-    queryKey: ['kirocrewConfig'],
+    queryKey: ['ajcrewConfig'],
     mutationFn: ({ key, carryOver }) => carryOver
       ? api.patchConfig(SESSION_SORT_CONFIG_PATH, key, { ifUnset: true })
       : api.patchConfig(SESSION_SORT_CONFIG_PATH, key),

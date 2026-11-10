@@ -41,7 +41,7 @@ describe('designCritiqueApi.send — the transport receipt decides', () => {
     expect(JSON.parse(String(init.body))).toEqual({
       message: 'critique this',
       slot: 'dc-1',
-      agent: 'kirocrew',
+      agent: 'ajcrew',
       memory_mode: 'temporary',
       mode: 'design-critique',
     })

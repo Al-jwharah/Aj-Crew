@@ -14,7 +14,7 @@ from external_logout_detection_helpers import _private_sel_root_per_test  # noqa
 from external_logout_detection_helpers import _expire_identity_cache, _FakeProvider, _write_store
 from test_update_provider import _UNALLOCATABLE_PID
 
-from kiro_crew import kiro_prerequisite as kp
+from aj_crew import kiro_prerequisite as kp
 
 
 class TestSpawnIdentityStamp:
@@ -72,8 +72,8 @@ class TestSpawnIdentityStamp:
         recycle, from its own record.
         """
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager, _Session
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager, _Session
 
         db = kp.kiro_identity_store_path("linux", tmp_path, {})
         _write_store(db)
@@ -89,7 +89,7 @@ class TestSpawnIdentityStamp:
         interim_stamp = getattr(provider, "spawn_identity", "")
         assert interim_stamp != "", "the spawn must have recorded the interim account"
 
-        smap = SessionManager(KiroCrewConfig())
+        smap = SessionManager(AjCrewConfig())
         sess = _Session(provider=provider)  # type: ignore[arg-type]
         smap._sessions["victim"] = sess
 
@@ -107,10 +107,10 @@ class TestSpawnIdentityStamp:
     async def test_an_unstamped_child_is_never_flagged(self, tmp_path: Path) -> None:
         """No stamp means no verdict: the pre-stamping protections apply."""
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager, _Session
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager, _Session
 
-        smap = SessionManager(KiroCrewConfig())
+        smap = SessionManager(AjCrewConfig())
         sess = _Session(provider=_FakeProvider(""))  # type: ignore[arg-type]
         smap._sessions["plain"] = sess
 
@@ -128,10 +128,10 @@ class TestSpawnIdentityStamp:
         baseline removed -- and an unreadable live read proves nothing.
         """
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager, _Session
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager, _Session
 
-        smap = SessionManager(KiroCrewConfig())
+        smap = SessionManager(AjCrewConfig())
         provider = _FakeProvider("")
         provider.spawn_identity = "same-fp"  # type: ignore[attr-defined]
         sess = _Session(provider=provider)  # type: ignore[arg-type]
@@ -146,10 +146,10 @@ class TestSpawnIdentityStamp:
     async def test_a_non_kiro_child_is_never_flagged(self, tmp_path: Path) -> None:
         """The store predicate still gates: a claude child never compares."""
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager, _Session
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager, _Session
 
-        smap = SessionManager(KiroCrewConfig())
+        smap = SessionManager(AjCrewConfig())
         provider = _FakeProvider("claude")
         provider.spawn_identity = "cli-b"  # type: ignore[attr-defined]
         sess = _Session(provider=provider)  # type: ignore[arg-type]
@@ -164,10 +164,10 @@ class TestSpawnIdentityStamp:
     ) -> None:
         """A demuxed session's provider inherits its runtime's spawn record."""
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager, _Session
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager, _Session
 
-        smap = SessionManager(KiroCrewConfig())
+        smap = SessionManager(AjCrewConfig())
         provider = _FakeProvider("")
         provider._runtime = SimpleNamespace(spawn_identity="cli-b")  # type: ignore[attr-defined]
         sess = _Session(provider=provider)  # type: ignore[arg-type]
@@ -313,7 +313,7 @@ class TestSpawnIdentityStamp:
         wiring is spelled identically at both sites.
         """
 
-        dashboard = Path(__file__).parents[1] / "src" / "kiro_crew" / "dashboard"
+        dashboard = Path(__file__).parents[1] / "src" / "aj_crew" / "dashboard"
         source = "".join(
             path.read_text(encoding="utf-8")
             for path in (
@@ -337,7 +337,7 @@ class TestSpawnIdentityStamp:
         because unstamped children are (by design) silently skipped.
         """
 
-        src = Path(__file__).parents[1] / "src" / "kiro_crew"
+        src = Path(__file__).parents[1] / "src" / "aj_crew"
         expected = {
             # shared run runtime + direct companion runtime
             "session_allocation_parts/companions.py": 2,
@@ -403,10 +403,10 @@ class TestSpawnIdentityStamp:
         on the pass that proved the mismatch would abort that claim.
         """
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
-        smap = SessionManager(KiroCrewConfig())
+        smap = SessionManager(AjCrewConfig())
         runtime = self._fake_runtime("cli-b")
         smap._bg_runtime = runtime  # type: ignore[assignment]
 
@@ -428,10 +428,10 @@ class TestSpawnIdentityStamp:
         reap, after the park grace.
         """
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
-        smap = SessionManager(KiroCrewConfig())
+        smap = SessionManager(AjCrewConfig())
         runtime = self._fake_runtime("cli-b")
         smap._subagent_runtimes["parent"] = runtime  # type: ignore[index]
 
@@ -454,10 +454,10 @@ class TestSpawnIdentityStamp:
         live account) and parked, unkilled, until its work drains.
         """
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
-        smap = SessionManager(KiroCrewConfig())
+        smap = SessionManager(AjCrewConfig())
         bg = self._fake_runtime("cli-b", busy=True)
         sub = self._fake_runtime("cli-b", busy=True)
         healthy = self._fake_runtime("cli-a", busy=True)
@@ -493,11 +493,11 @@ class TestSpawnIdentityStamp:
 
         import time as _time
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.kiro_prerequisite import IDENTITY_PARK_GRACE_SECS
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.kiro_prerequisite import IDENTITY_PARK_GRACE_SECS
+        from aj_crew.session import SessionManager
 
-        smap = SessionManager(KiroCrewConfig())
+        smap = SessionManager(AjCrewConfig())
         bg = self._fake_runtime("cli-b", busy=True)
         sub = self._fake_runtime("cli-b", busy=True)
         smap._bg_runtime = bg  # type: ignore[assignment]
@@ -535,10 +535,10 @@ class TestSpawnIdentityStamp:
         would be the respawn churn this PR exists to remove.
         """
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
-        smap = SessionManager(KiroCrewConfig())
+        smap = SessionManager(AjCrewConfig())
         healthy = self._fake_runtime("cli-a")
         unstamped = self._fake_runtime("")
         foreign = self._fake_runtime("cli-b", kiro=False)
@@ -562,10 +562,10 @@ class TestSpawnIdentityStamp:
 
         from unittest import mock
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
-        smap = SessionManager(KiroCrewConfig())
+        smap = SessionManager(AjCrewConfig())
 
         async def reader() -> str:
             return "cli-a"
@@ -586,7 +586,7 @@ class TestSpawnIdentityStamp:
             pass
 
         with mock.patch(
-            "kiro_crew.session._load_bg_runtime_types",
+            "aj_crew.session._load_bg_runtime_types",
             return_value=(_FakeRuntime, _FakeDead),
         ):
             runtime = await smap.get_subagent_runtime("parent")
@@ -606,8 +606,8 @@ class TestSpawnIdentityStamp:
         Registration must therefore happen while the permit is still held.
         """
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import BACKGROUND_KEY, SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import BACKGROUND_KEY, SessionManager
 
         class _Prov:
             cwd = "."
@@ -619,10 +619,10 @@ class TestSpawnIdentityStamp:
                 return None
 
         smap = SessionManager(
-            KiroCrewConfig(), provider_factory=lambda key, agent=None, cwd=None: _Prov()
+            AjCrewConfig(), provider_factory=lambda key, agent=None, cwd=None: _Prov()
         )
         # One permit total, so ``locked()`` is True exactly while it is held.
-        from kiro_crew.start_priority import PrioritySemaphore
+        from aj_crew.start_priority import PrioritySemaphore
 
         smap._start_sem = PrioritySemaphore(1)
 
@@ -659,10 +659,10 @@ class TestSpawnIdentityStamp:
 
         from unittest import mock
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
-        smap = SessionManager(KiroCrewConfig())
+        smap = SessionManager(AjCrewConfig())
 
         calls: list[int] = []
 
@@ -696,7 +696,7 @@ class TestSpawnIdentityStamp:
             pass
 
         with mock.patch(
-            "kiro_crew.session._load_bg_runtime_types",
+            "aj_crew.session._load_bg_runtime_types",
             return_value=(_FakeRuntime, _FakeDead),
         ):
             with pytest.raises(asyncio.CancelledError):
@@ -713,8 +713,8 @@ class TestSpawnIdentityStamp:
     async def test_a_cancelled_stamp_read_kills_the_background_provider(self) -> None:
         """The background spawn's stamp window is covered by a kill guard too."""
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import BACKGROUND_KEY, SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import BACKGROUND_KEY, SessionManager
 
         class _Prov:
             cwd = "."
@@ -726,7 +726,7 @@ class TestSpawnIdentityStamp:
                 return None
 
         smap = SessionManager(
-            KiroCrewConfig(), provider_factory=lambda key, agent=None, cwd=None: _Prov()
+            AjCrewConfig(), provider_factory=lambda key, agent=None, cwd=None: _Prov()
         )
 
         calls: list[int] = []
@@ -772,9 +772,9 @@ class TestSpawnIdentityStamp:
         import re
         from pathlib import Path
 
-        import kiro_crew
+        import aj_crew
 
-        src_root = Path(kiro_crew.__file__).parent
+        src_root = Path(aj_crew.__file__).parent
         guarded = 0
         for rel in (
             "session_allocation.py",
@@ -819,10 +819,10 @@ class TestSpawnIdentityStamp:
 
         from unittest import mock
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
-        smap = SessionManager(KiroCrewConfig())
+        smap = SessionManager(AjCrewConfig())
         observed: list[set[int]] = []
 
         async def reader() -> str:
@@ -847,7 +847,7 @@ class TestSpawnIdentityStamp:
             pass
 
         with mock.patch(
-            "kiro_crew.session._load_bg_runtime_types",
+            "aj_crew.session._load_bg_runtime_types",
             return_value=(_FakeRuntime, _FakeDead),
         ):
             runtime = await smap.get_subagent_runtime("parent")
@@ -877,9 +877,9 @@ class TestSpawnIdentityStamp:
 
         from pathlib import Path
 
-        import kiro_crew
+        import aj_crew
 
-        src_root = Path(kiro_crew.__file__).parent
+        src_root = Path(aj_crew.__file__).parent
         scanned = 0
         for rel in (
             "session_allocation.py",
@@ -917,8 +917,8 @@ class TestFlaggedSessionResumePointer:
 
     @pytest.mark.asyncio
     async def test_a_flagged_session_loses_its_resume_pointer(self, tmp_path: Path) -> None:
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager, _Session
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager, _Session
 
         db = kp.kiro_identity_store_path("linux", tmp_path, {})
         _write_store(db)
@@ -942,7 +942,7 @@ class TestFlaggedSessionResumePointer:
         _expire_identity_cache(service)
         live = await service.current_identity_fingerprint(allow_cached=False)
 
-        smap = SessionManager(KiroCrewConfig())
+        smap = SessionManager(AjCrewConfig())
         smap._sessions["victim"] = _Session(provider=victim_provider)  # type: ignore[arg-type]
         keeper_provider = _FakeProvider("")
         keeper_provider.spawn_identity = live  # matches the live account
@@ -993,11 +993,11 @@ class TestDrainReapConcurrentPark:
     async def test_a_runtime_parked_during_the_reap_kill_survives(self) -> None:
         import time as _time
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.kiro_prerequisite import IDENTITY_PARK_GRACE_SECS
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.kiro_prerequisite import IDENTITY_PARK_GRACE_SECS
+        from aj_crew.session import SessionManager
 
-        smap = SessionManager(KiroCrewConfig())
+        smap = SessionManager(AjCrewConfig())
         aged = _time.monotonic() - IDENTITY_PARK_GRACE_SECS - 1.0
         drained = self._runtime(busy=False, parked_at=aged)
         late_park = self._runtime(busy=True, parked_at=_time.monotonic())

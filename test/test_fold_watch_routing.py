@@ -24,11 +24,11 @@ from crew_log_fold_eager_helpers import (  # noqa: F401 -- the autouse fixture r
     _work_entry,
 )
 
-from kiro_crew.crew_log import bus, eager, session_tree_projection
-from kiro_crew.dashboard import websocket_hub as hub_mod
-from kiro_crew.dashboard.handlers.crew_log import SLOT_FRAME, CrewLogPublisher
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.history import ConversationLog
+from aj_crew.crew_log import bus, eager, session_tree_projection
+from aj_crew.dashboard import websocket_hub as hub_mod
+from aj_crew.dashboard.handlers.crew_log import SLOT_FRAME, CrewLogPublisher
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.history import ConversationLog
 
 WILDCARD = frozenset({("*", "*")})
 

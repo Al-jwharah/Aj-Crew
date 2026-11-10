@@ -15,8 +15,8 @@ import crew_log_core_helpers
 import pytest
 from crew_log_core_helpers import SESSION, _raises, _session, _split_into_segments
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, store
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, store
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _isolated_home = crew_log_core_helpers._isolated_home
@@ -91,7 +91,7 @@ def test_repair_drops_a_chunk_group_whose_citing_entry_never_landed(caplog):
     path = lg.crew_log_path(lg.KIND_SESSION, SESSION)
     assert "message/chunk" in path.read_text(encoding="utf-8")
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.crew_log.store"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.crew_log.store"):
         CrewLog.open(lg.KIND_SESSION, SESSION, repair=True)
 
     body = path.read_text(encoding="utf-8")
@@ -242,7 +242,7 @@ def test_a_group_cites_the_seqs_it_was_actually_allocated():
     which parse fine. A hook appends through a second handle just before this group takes
     the lock, so the boundary is real, not simulated.
     """
-    from kiro_crew.crew_log import store as store_mod
+    from aj_crew.crew_log import store as store_mod
 
     session = _session()
     session.append("turn/started", {"turn": 1, "actor": "user", "depth": 0}, src="acp")
@@ -313,7 +313,7 @@ def test_repair_leaves_the_file_alone_when_a_record_cannot_be_accounted_for(capl
     )
     before = path.read_bytes()
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.crew_log.store"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.crew_log.store"):
         CrewLog.open(lg.KIND_SESSION, SESSION, repair=True)
 
     body = path.read_bytes()

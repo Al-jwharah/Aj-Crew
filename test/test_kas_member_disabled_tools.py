@@ -17,10 +17,10 @@ import json
 import pytest
 from kas_agents_helpers import _spec
 
-from kiro_crew import agent as agent_mod
-from kiro_crew.acp.harness import harness_for
-from kiro_crew.acp.kas_agents import KasAgentTranslationError, to_client_custom_agent
-from kiro_crew.acp_backends import (
+from aj_crew import agent as agent_mod
+from aj_crew.acp.harness import harness_for
+from aj_crew.acp.kas_agents import KasAgentTranslationError, to_client_custom_agent
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_DEEPSEEK,
@@ -29,10 +29,10 @@ from kiro_crew.acp_backends import (
     ACP_BACKEND_PI,
     ACP_BACKENDS_MEMBER_TOOL_LIMITS,
 )
-from kiro_crew.agent_capabilities import member_backend_gap, tool_limited_servers
-from kiro_crew.config import paths as paths_mod
-from kiro_crew.mate_worker import disabled_tool_refs
-from kiro_crew.mcp_gateway import session_servers as session_servers_mod
+from aj_crew.agent_capabilities import member_backend_gap, tool_limited_servers
+from aj_crew.config import paths as paths_mod
+from aj_crew.mate_worker import disabled_tool_refs
+from aj_crew.mcp_gateway import session_servers as session_servers_mod
 
 
 def _project(servers, **over):
@@ -149,11 +149,11 @@ async def test_a_switch_in_the_global_settings_file_is_excluded(monkeypatch, tmp
     settings = tmp_path / "settings" / "mcp.json"
     settings.parent.mkdir()
     monkeypatch.setattr(agent_mod, "_KIRO_MCP_JSON", settings)
-    spec = _spec(name="a", mcpServers={"kirocrew-core": {"command": "x"}})
+    spec = _spec(name="a", mcpServers={"ajcrew-core": {"command": "x"}})
     (tmp_path / "a.json").write_text(json.dumps(spec), encoding="utf-8")
-    switch = {"mcpServers": {"kirocrew-core": {"disabledTools": ["memory_store"]}}}
+    switch = {"mcpServers": {"ajcrew-core": {"disabledTools": ["memory_store"]}}}
     settings.write_text(json.dumps(switch), encoding="utf-8")
 
     extras = await harness_for(ACP_BACKEND_KAS).session_extras("a", work_dir=str(tmp_path))
 
-    assert "@kirocrew-core/memory_store" in extras.custom_agents[0].get("excludedTools", [])
+    assert "@ajcrew-core/memory_store" in extras.custom_agents[0].get("excludedTools", [])

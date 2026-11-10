@@ -25,7 +25,7 @@ from dataclasses import fields
 
 import pytest
 
-from kiro_crew.messaging.transport import TransportCapabilities
+from aj_crew.messaging.transport import TransportCapabilities
 
 #: Something behaves differently when the value changes. Cite the behaviour.
 ENFORCED = {
@@ -131,7 +131,7 @@ class TestCorrectedDeclarations:
         # send_message forwards message_thread_id, receive() populates
         # InboundMessage.thread_id, forum_gate_outcome authorizes on it.
         # Declared False until 2026-08 while threading end to end.
-        from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES
+        from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
 
         assert TELEGRAM_CAPABILITIES.threads is True
 
@@ -140,7 +140,7 @@ class TestCorrectedDeclarations:
         # shared messaging/outbound_files.py and uploads them via multipart
         # sendPhoto / sendMediaGroup. Declared False while the channel printed
         # filesystem paths; the declaration and the upload path move together.
-        from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES
+        from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
 
         assert TELEGRAM_CAPABILITIES.files_outbound is True
 
@@ -148,7 +148,7 @@ class TestCorrectedDeclarations:
         # sendRichMessage carries every table-bearing seal (renderer._seal_text)
         # and renders structured markdown natively; inline keyboards carry the
         # interactive half. Declared False while doing both.
-        from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES
+        from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
 
         assert TELEGRAM_CAPABILITIES.rich_blocks is True
 
@@ -156,16 +156,16 @@ class TestCorrectedDeclarations:
         # slack/format.py splits at SLACK_MSG_LIMIT (3900). The old 40000
         # would have let a capability-aware caller emit messages 10x larger
         # than the renderer ever sends.
-        from kiro_crew.slack.format import SLACK_MSG_LIMIT
-        from kiro_crew.slack.transport import SLACK_CAPABILITIES
+        from aj_crew.slack.format import SLACK_MSG_LIMIT
+        from aj_crew.slack.transport import SLACK_CAPABILITIES
 
         assert SLACK_CAPABILITIES.max_message_chars == SLACK_MSG_LIMIT
 
     def test_slack_has_exactly_one_declaration(self) -> None:
         # Two literal copies of one fact let a 40000/3900 divergence survive, so
         # the limit must be declared exactly once.
-        from kiro_crew.slack import renderer as slack_renderer
-        from kiro_crew.slack import transport as slack_transport
+        from aj_crew.slack import renderer as slack_renderer
+        from aj_crew.slack import transport as slack_transport
 
         assert slack_renderer.SLACK_CAPABILITIES is slack_transport.SLACK_CAPABILITIES
 
@@ -174,8 +174,8 @@ class TestCorrectedDeclarations:
         # tail-truncates overflow. The declared CHAR count must be safe at
         # 4 bytes/char, or a caller that can only count chars loses data on CJK
         # text. It stays declared alongside the byte cap as that caller's floor.
-        from kiro_crew.webex.client import WEBEX_MAX_TEXT
-        from kiro_crew.webex.transport import WEBEX_CAPABILITIES
+        from aj_crew.webex.client import WEBEX_MAX_TEXT
+        from aj_crew.webex.transport import WEBEX_CAPABILITIES
 
         assert WEBEX_CAPABILITIES.max_message_chars * 4 <= WEBEX_MAX_TEXT
 
@@ -184,11 +184,11 @@ class TestCorrectedDeclarations:
         # The declared CHAR count must survive the worst case (an astral codepoint
         # is 4 UTF-8 bytes) or the mirror leg silently loses a long non-ASCII reply
         # and a renderer chunk comes back 413.
-        from kiro_crew.teams.client import (
+        from aj_crew.teams.client import (
             _MAX_UTF8_BYTES_PER_CHAR,
             TEAMS_MAX_ACTIVITY_TEXT_BYTES,
         )
-        from kiro_crew.teams.transport import TEAMS_CAPABILITIES
+        from aj_crew.teams.transport import TEAMS_CAPABILITIES
 
         assert (
             TEAMS_CAPABILITIES.max_message_chars * _MAX_UTF8_BYTES_PER_CHAR
@@ -202,7 +202,7 @@ class TestCorrectedDeclarations:
         # for an astral pair -- which triples the worst case and breaks the pin
         # above without changing any number it reads. Asserted on the session the
         # client really builds, not on the literal passed to it.
-        from kiro_crew.teams.client import TeamsClient
+        from aj_crew.teams.client import TeamsClient
 
         client = TeamsClient(app_id="a", app_password="p")
         try:
@@ -217,8 +217,8 @@ class TestCorrectedDeclarations:
         # a CJK reply sits under the character cap and ~3x over the byte cap --
         # and WeCom rejects the whole frame, so the user gets nothing at all.
         # Declared 20000 CHARS until this was corrected.
-        from kiro_crew.wecom.client import WECOM_MAX_REPLY_BYTES
-        from kiro_crew.wecom.transport import WECOM_CAPABILITIES
+        from aj_crew.wecom.client import WECOM_MAX_REPLY_BYTES
+        from aj_crew.wecom.transport import WECOM_CAPABILITIES
 
         assert WECOM_CAPABILITIES.max_message_chars * 4 <= WECOM_MAX_REPLY_BYTES
 
@@ -234,18 +234,18 @@ class TestCorrectedDeclarations:
         (``split_markdown_bytes``), so a platform that measures a TRANSFORM of
         the text cannot be sized this way at all.
         """
-        from kiro_crew.discord.transport import DISCORD_CAPABILITIES
-        from kiro_crew.feishu.transport import FEISHU_CAPABILITIES
-        from kiro_crew.imessage.transport import IMESSAGE_CAPABILITIES
-        from kiro_crew.slack.transport import SLACK_CAPABILITIES
-        from kiro_crew.teams.transport import TEAMS_CAPABILITIES
-        from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES
-        from kiro_crew.webex.client import WEBEX_MAX_TEXT
-        from kiro_crew.webex.transport import WEBEX_CAPABILITIES
-        from kiro_crew.wecom.client import WECOM_MAX_REPLY_BYTES
-        from kiro_crew.wecom.transport import WECOM_CAPABILITIES
-        from kiro_crew.weixin.transport import WEIXIN_CAPABILITIES
-        from kiro_crew.whatsapp.transport import WHATSAPP_CAPABILITIES
+        from aj_crew.discord.transport import DISCORD_CAPABILITIES
+        from aj_crew.feishu.transport import FEISHU_CAPABILITIES
+        from aj_crew.imessage.transport import IMESSAGE_CAPABILITIES
+        from aj_crew.slack.transport import SLACK_CAPABILITIES
+        from aj_crew.teams.transport import TEAMS_CAPABILITIES
+        from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
+        from aj_crew.webex.client import WEBEX_MAX_TEXT
+        from aj_crew.webex.transport import WEBEX_CAPABILITIES
+        from aj_crew.wecom.client import WECOM_MAX_REPLY_BYTES
+        from aj_crew.wecom.transport import WECOM_CAPABILITIES
+        from aj_crew.weixin.transport import WEIXIN_CAPABILITIES
+        from aj_crew.whatsapp.transport import WHATSAPP_CAPABILITIES
 
         # (1) Cap is RAW bytes of the text field: declare it. The char floor
         # alone is 4x pessimistic, which fragmented an ASCII reply into quarters
@@ -302,8 +302,8 @@ class TestCorrectedDeclarations:
         without the code, or shipping the code without flipping it, is the
         drift this ledger exists to catch — so pin them against their consumers.
         """
-        from kiro_crew.webex.cards import MAX_CARD_ACTIONS
-        from kiro_crew.webex.transport import WEBEX_CAPABILITIES
+        from aj_crew.webex.cards import MAX_CARD_ACTIONS
+        from aj_crew.webex.transport import WEBEX_CAPABILITIES
 
         assert WEBEX_CAPABILITIES.files_inbound is True  # webex/attachments.py
         assert WEBEX_CAPABILITIES.files_outbound is True  # client.send_file
@@ -317,7 +317,7 @@ class TestCorrectedDeclarations:
     def test_feishu_declares_the_inbound_files_it_reads(self) -> None:
         # feishu/transport_dispatch.py downloads a message's files after every
         # gate and hands them to the shared ingest.
-        from kiro_crew.feishu.transport import FEISHU_CAPABILITIES
+        from aj_crew.feishu.transport import FEISHU_CAPABILITIES
 
         assert FEISHU_CAPABILITIES.files_inbound is True
 
@@ -325,9 +325,9 @@ class TestCorrectedDeclarations:
         # One boolean was undecidable: the two directions land per channel and in
         # different changes, so a gate reading a single `files` flag got the wrong
         # answer for one of them.
-        from kiro_crew.discord.transport import DISCORD_CAPABILITIES
-        from kiro_crew.feishu.transport import FEISHU_CAPABILITIES
-        from kiro_crew.slack.transport import SLACK_CAPABILITIES
+        from aj_crew.discord.transport import DISCORD_CAPABILITIES
+        from aj_crew.feishu.transport import FEISHU_CAPABILITIES
+        from aj_crew.slack.transport import SLACK_CAPABILITIES
 
         assert DISCORD_CAPABILITIES.files_inbound is True
         assert DISCORD_CAPABILITIES.files_outbound is True
@@ -348,9 +348,9 @@ class TestCorrectedDeclarations:
         # telegram gets the same platform-practical 25 so existing
         # 9-25 choice keyboards keep working — only the genuinely unbounded
         # tail (the API-400 defect) degrades to text.
-        from kiro_crew.discord.transport import DISCORD_CAPABILITIES
-        from kiro_crew.slack.transport import SLACK_CAPABILITIES
-        from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES
+        from aj_crew.discord.transport import DISCORD_CAPABILITIES
+        from aj_crew.slack.transport import SLACK_CAPABILITIES
+        from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
 
         assert SLACK_CAPABILITIES.max_buttons == 10  # checkboxes options[] cap
         assert DISCORD_CAPABILITIES.max_buttons == 25  # 5 rows x 5 buttons
@@ -374,7 +374,7 @@ class TestSessionResumeIsDeclaredOnlyWhereItIsHonoured:
     """
 
     def test_discord_declares_it(self) -> None:
-        from kiro_crew.discord.transport import DISCORD_CAPABILITIES
+        from aj_crew.discord.transport import DISCORD_CAPABILITIES
 
         assert DISCORD_CAPABILITIES.supports_session_resume is True, (
             "Discord stopped declaring session resume — dashboard connects there "
@@ -382,7 +382,7 @@ class TestSessionResumeIsDeclaredOnlyWhereItIsHonoured:
         )
 
     def test_telegram_declares_it(self) -> None:
-        from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES
+        from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
 
         assert TELEGRAM_CAPABILITIES.supports_session_resume is True, (
             "Telegram stopped declaring session resume even though its dispatcher "
@@ -390,14 +390,14 @@ class TestSessionResumeIsDeclaredOnlyWhereItIsHonoured:
         )
 
     def test_no_other_transport_declares_it(self) -> None:
-        from kiro_crew.feishu.transport import FEISHU_CAPABILITIES
-        from kiro_crew.imessage.transport import IMESSAGE_CAPABILITIES
-        from kiro_crew.slack.transport import SLACK_CAPABILITIES
-        from kiro_crew.teams.transport import TEAMS_CAPABILITIES
-        from kiro_crew.webex.transport import WEBEX_CAPABILITIES
-        from kiro_crew.wecom.transport import WECOM_CAPABILITIES
-        from kiro_crew.weixin.transport import WEIXIN_CAPABILITIES
-        from kiro_crew.whatsapp.transport import WHATSAPP_CAPABILITIES
+        from aj_crew.feishu.transport import FEISHU_CAPABILITIES
+        from aj_crew.imessage.transport import IMESSAGE_CAPABILITIES
+        from aj_crew.slack.transport import SLACK_CAPABILITIES
+        from aj_crew.teams.transport import TEAMS_CAPABILITIES
+        from aj_crew.webex.transport import WEBEX_CAPABILITIES
+        from aj_crew.wecom.transport import WECOM_CAPABILITIES
+        from aj_crew.weixin.transport import WEIXIN_CAPABILITIES
+        from aj_crew.whatsapp.transport import WHATSAPP_CAPABILITIES
 
         others = {
             "slack": SLACK_CAPABILITIES,

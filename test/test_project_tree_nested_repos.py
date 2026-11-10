@@ -129,7 +129,7 @@ class TestNestedReposInTheWholeListing:
     @pytest.mark.asyncio
     async def test_an_unreadable_index_leaves_a_gitlink_a_file_row(self, workspace, monkeypatch):
         """The gitlink read failing degrades to the old listing, never to an error."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         real = files_mod._run_git_bounded
 
@@ -148,7 +148,7 @@ class TestNestedReposInTheWholeListing:
 
 def _stage_reads(monkeypatch) -> list[list[str]]:
     """Record every ``git ls-files --stage`` the tree listing starts."""
-    from kiro_crew.dashboard.handlers import files as files_mod
+    from aj_crew.dashboard.handlers import files as files_mod
 
     real = files_mod._run_git_bounded
     seen: list[list[str]] = []
@@ -293,7 +293,7 @@ class TestNestedReposFolderListing:
         git run inside it, from its top, asks which paths it ignores
         (`ls-files --others --ignored --exclude-standard`, `core.fsmonitor=`);
         its answer can only drop rows the walk read."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         real = files_mod._run_git_bounded
         calls: list[tuple[str, list[str]]] = []
@@ -385,7 +385,7 @@ class TestNestedRepoGitignore:
     async def test_a_failed_git_run_hides_nothing(self, workspace, monkeypatch):
         """When git cannot say, nothing is hidden, as the project listing falls
         back to the plain walk when its git fails."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         sub = str(_sub(workspace))
         real = files_mod._run_git_bounded
@@ -404,7 +404,7 @@ class TestNestedRepoGitignore:
     async def test_a_name_only_git_reports_is_never_listed(self, workspace, monkeypatch):
         """Git's answer only drops entries the pinned walk read: a redirected
         run can hide rows but never add one."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         sub = str(_sub(workspace))
         real = files_mod._run_git_bounded
@@ -425,7 +425,7 @@ class TestNestedRepoGitignore:
         of an ignored path still matches the entry the walk read."""
         import os
 
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         sub = str(_sub(workspace))
         real = files_mod._run_git_bounded

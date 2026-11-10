@@ -2,7 +2,7 @@
 title: App-backend adoption is attribution-gated
 status: draft
 kind: decision
-author: kirocrew-worker (drafted for maintainer decision)
+author: ajcrew-worker (drafted for maintainer decision)
 created: 2026-09-25
 last-audited: 2026-09-25
 audited-at: 27dbd6db5f
@@ -25,7 +25,7 @@ instead. Nothing here is implemented by this document; the implementation is
   maintainer's, not the author's.
 - Related: `docs/system-specs/modules/app-kit-platform.md` section 17 (backend health),
   `docs/app-kit/api-reference.md` (gateway origin freshness: the
-  `KIROCREW_GATEWAY_ORIGIN` and `KIROCREW_GATEWAY_ORIGIN_PROOF` rows of Backend
+  `AJCREW_GATEWAY_ORIGIN` and `AJCREW_GATEWAY_ORIGIN_PROOF` rows of Backend
   Environment Variables),
   `docs/system-specs/modules/security.md` (the mask this relies on: the
   `sandbox._CREW_HIDDEN_LEAVES` leaf dispositions).

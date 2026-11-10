@@ -26,10 +26,10 @@ from change_cards_helpers import (
 )
 from named_cases_helpers import named_cases
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew.context_blocks import render_change_card_results, split_blocks
-from kiro_crew.dashboard import change_cards as cards
-from kiro_crew.dashboard.change_cards import CardError, CardStore
+from aj_crew import change_card_catalog as catalog
+from aj_crew.context_blocks import render_change_card_results, split_blocks
+from aj_crew.dashboard import change_cards as cards
+from aj_crew.dashboard.change_cards import CardError, CardStore
 
 # ── catalog ──
 
@@ -234,9 +234,9 @@ def test_crewmate_create_binds_its_schedule_to_the_created_identity():
         "/api/crons",
     ]
     # Built from the Crewmates page's template, and owed the same first message.
-    assert plan[0]["body"]["kiro_agent"] == "kirocrew"
+    assert plan[0]["body"]["kiro_agent"] == "ajcrew"
     assert plan[0]["body"]["first_greeting"] is True
-    assert plan[2]["body"]["agent"] == "kirocrew"
+    assert plan[2]["body"]["agent"] == "ajcrew"
     assert plan[2]["fill"] == [
         {"field": "member_id", "source": "step", "step": 0, "key": "member_id"}
     ]
@@ -418,12 +418,12 @@ def test_crewmate_update_arms_an_approval_mode_write_against_a_newer_permission(
 
 
 def test_template_auto_approved_servers_reads_bare_grants_only(tmp_path, monkeypatch):
-    import kiro_crew.config.paths as paths
+    import aj_crew.config.paths as paths
 
     monkeypatch.setattr(paths, "kiro_agents_dir", lambda: tmp_path)
     (tmp_path / "tpl.json").write_text(
         json.dumps(
-            {"allowedTools": ["@slack-mcp", "@kirocrew-core", "@builder-mcp/read", "fs_read", "@"]}
+            {"allowedTools": ["@slack-mcp", "@ajcrew-core", "@builder-mcp/read", "fs_read", "@"]}
         )
     )
     assert cards.template_auto_approved_servers("tpl") == ["slack-mcp"]
@@ -502,7 +502,7 @@ def test_memory_descriptions_carry_names_only():
     )
     assert SECRET_VALUE not in text and "gh" in text
     text = catalog.describe_manual_change(
-        ("PATCH", "/api/config/kirocrew"),
+        ("PATCH", "/api/config/ajcrew"),
         {},
         {"path": "chat.verbosity", "value": "ultra-brief"},
         "standard",
@@ -535,10 +535,10 @@ def test_every_hooked_route_is_a_real_registered_route():
     sources = "\n".join(
         p.read_text(encoding="utf-8")
         for p in [
-            *sorted((REPO / "src/kiro_crew/dashboard/routes").glob("*.py")),
-            REPO / "src/kiro_crew/dashboard/server.py",
-            *sorted((REPO / "src/kiro_crew/dashboard/server_runtime").glob("*.py")),
-            REPO / "src/kiro_crew/dashboard/handlers/secrets.py",
+            *sorted((REPO / "src/aj_crew/dashboard/routes").glob("*.py")),
+            REPO / "src/aj_crew/dashboard/server.py",
+            *sorted((REPO / "src/aj_crew/dashboard/server_runtime").glob("*.py")),
+            REPO / "src/aj_crew/dashboard/handlers/secrets.py",
         ]
     )
     for method, template in catalog.HOOKED_ROUTES:
@@ -758,7 +758,7 @@ def test_a_malformed_mac_drops_only_its_own_record(tmp_path):
 
 def test_capacity_pruning_keeps_cards_that_still_have_a_step_to_run(monkeypatch):
     """A crewmate card paused between its steps is never evicted for room."""
-    from kiro_crew.dashboard import change_cards as cc
+    from aj_crew.dashboard import change_cards as cc
 
     monkeypatch.setattr(cc, "MAX_STORED_CARDS", 2)
     store = CardStore(None, clock=Clock())
@@ -949,7 +949,7 @@ def test_a_card_reason_carrying_a_credential_is_refused():
 
 
 def test_guide_text_carrying_a_credential_is_refused():
-    from kiro_crew import guide_catalog
+    from aj_crew import guide_catalog
 
     assert guide_catalog.clean_guide_text("Open Settings.", "intro", 300) == "Open Settings."
     with pytest.raises(guide_catalog.GuideCatalogError) as exc:

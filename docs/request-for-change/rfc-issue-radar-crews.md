@@ -2,7 +2,7 @@
 title: Issue Radar Crews — autonomous issue workers with a public claim ledger
 status: partial
 revision: v1
-author: kirocrew agent session, directed by diwm
+author: ajcrew agent session, directed by diwm
 created: 2026-08-08
 last-audited: 2026-10-06
 audited-at: 9348a25a34
@@ -15,18 +15,18 @@ superseded-by: []
 # RFC: Issue Radar Crews — autonomous issue workers with a public claim ledger
 
 Status: partial — the crew ledger and its agent surface are implemented in
-`src/kiro_crew/apps/builtins/issue_radar/backend/crew_runtime.py`,
-`src/kiro_crew/apps/builtins/issue_radar/backend/crew_store.py`,
-`src/kiro_crew/apps/builtins/issue_radar/backend/crew_routes.py`, and the Issue
+`src/aj_crew/apps/builtins/issue_radar/backend/crew_runtime.py`,
+`src/aj_crew/apps/builtins/issue_radar/backend/crew_store.py`,
+`src/aj_crew/apps/builtins/issue_radar/backend/crew_routes.py`, and the Issue
 Radar Crews UI under `website/src/apps/issue-radar/`; the two agent ledger tools
-live in `src/kiro_crew/mcp_tools/apps.py`. This audit did not re-classify every
+live in `src/aj_crew/mcp_tools/apps.py`. This audit did not re-classify every
 later phase of the RFC. The body below remains the historical
 design record and differs from the shipped implementation where later safety
 work superseded a mechanism (for example, a scoped `SafetyOverride` replaces
 `slot._trust`).
 
 **Disambiguation.** "Crews" already names two other things in this repository: the
-agent-template roster at `/capabilities` → Crews (`website/src/pages/KiroCrewAgentsPage.tsx`),
+agent-template roster at `/capabilities` → Crews (`website/src/pages/AjCrewAgentsPage.tsx`),
 and "Crew Mode" in `rfc-orchestrator-chat-sessions.md`. This RFC's crews are
 neither. A crew here is a long-lived worker session that works one repository's
 open issues. The name is kept because it is the one the feature will be called;
@@ -58,9 +58,9 @@ human, so there would be nothing for one to show.
 
 Two companion documents carry the detail this one deliberately does not repeat:
 
-- `src/kiro_crew/apps/builtins/issue_radar/backend/crew_brief.md` — the crew's
+- `src/aj_crew/apps/builtins/issue_radar/backend/crew_brief.md` — the crew's
   behavioural contract, delivered to the model verbatim.
-- `src/kiro_crew/apps/builtins/issue_radar/backend/crew_ledger_spec.md` — record
+- `src/aj_crew/apps/builtins/issue_radar/backend/crew_ledger_spec.md` — record
   schemas, the phase enum, the event log, and the two MCP tools.
 
 ## 2. Why, and the honest ceiling
@@ -71,7 +71,7 @@ worker which reads an issue, recognises it as already fixed, and says so is doin
 real work.
 
 The ceiling is measured, not assumed. An audit of 40 of the 50 most recent
-Kiro Crew issues found:
+Aj Crew issues found:
 
 - **3 of 40 (7.5%)** were cleanly implementable without a human decision.
 - **15 of 40 (37.5%)** were duplicates of work already fixed or already in an open
@@ -103,7 +103,7 @@ per-crew page therefore shows *phase and next step*, not a velocity number.
 | Workspace | one git worktree per issue |
 
 The closest existing precedent is `auto_research`
-(`src/kiro_crew/apps/builtins/auto_research/campaign/agent_mode.py`): an app-owned
+(`src/aj_crew/apps/builtins/auto_research/campaign/agent_mode.py`): an app-owned
 dashboard slot, an autonudge loop, per-slot trust, a STOP sentinel, and a TTL
 watchdog. That launch sequence is the one to copy.
 
@@ -197,7 +197,7 @@ GitHub does not notify subscribers on an edit, so progress edits are silent wher
 new comments would not be. Edit only on real progress.
 
 ```
-👻 **Whirlpool** is on this · Kiro Crew Issue Radar
+👻 **Whirlpool** is on this · Aj Crew Issue Radar
 implementing · PR #2271 · CI round 3 · updated 20:44 UTC
 
 <details><summary>progress</summary>
@@ -208,7 +208,7 @@ implementing · PR #2271 · CI round 3 · updated 20:44 UTC
 
 </details>
 
-<!-- kirocrew-crew v=1 id=c_7f3a phase=implementing pr=2271 updated=2026-08-08T20:44:12Z -->
+<!-- ajcrew-crew v=1 id=c_7f3a phase=implementing pr=2271 updated=2026-08-08T20:44:12Z -->
 ```
 
 Two visible lines, history folded. The HTML comment is the machine payload, and
@@ -343,7 +343,7 @@ whatever agent the user picked. No agent spec is shipped for crews, and nothing
 has to be pasted anywhere.
 
 **Injection is a presence check, not a schedule.** The backend scans
-`slot.messages` for the sentinel `<!-- kirocrew-crew-brief v1 -->`, requiring the
+`slot.messages` for the sentinel `<!-- ajcrew-crew-brief v1 -->`, requiring the
 carrying message to be at least as long as the brief so that a compaction summary
 quoting the sentinel is not a false hit. On a miss, inject. One rule covers session
 start, post-compaction, gateway restart, and any future truncation mechanism, with
@@ -489,7 +489,7 @@ All crews run allow-all-tools and unattended. What that means, and what is left:
 
 **Still enforced in code.** The PreToolUse hook path fires independently of
 `allowedTools` (the PreToolUse paths in `dashboard/chat_turn/tool_rows.py` and `tool_approval.py` — `allowedTools` skips *approval*, not the
-hook), so Kiro Crew's own policy still hard-refuses destructive commands,
+hook), so Aj Crew's own policy still hard-refuses destructive commands,
 force-pushes to protected branches, and credential-file reads. Branch protection
 keeps crews off `main`. Every PR needs human approval before merge, so nothing
 lands unreviewed. `_repo_can_write` fails closed on permission checks

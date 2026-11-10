@@ -30,7 +30,7 @@ import { logPageProblems, stubDashboardApi, json } from './lib/stub-dashboard-ap
 
 const OUT = process.argv[2] || '../temp-screenshots/composer-collapse'
 const SLOT = 'chat-collapse'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 /**
  * A collapsed composer must give back more than a rounding error. MEASURED at this
@@ -57,7 +57,7 @@ const slots = [{
   running: false,
   last_message: 'Because the second listener captured a stale id.',
   messages: 4,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   folder_id: '',
@@ -167,7 +167,7 @@ async function main() {
   // all: the reload came up with the key ABSENT rather than persisted, which is what
   // made this harness report a false negative for "the state survives a reload".
   await stubDashboardApi(page, {
-    folders: [], slots, theme: 'kiro-dark', extra,
+    folders: [], slots, theme: 'aj-dark', extra,
     preserveStorage: true,
     localStorageEntries: { 'mc-active-slot': SLOT },
   })

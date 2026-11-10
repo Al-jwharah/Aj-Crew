@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import shlex
 
-from kiro_crew.cloud import login, ssm
+from aj_crew.cloud import login, ssm
 
 
 class _DummyProcess:
@@ -527,7 +527,7 @@ class TestIdentityProviderFlags:
             )
 
         monkeypatch.setattr(ssm, "run_command", fake_run_command)
-        from kiro_crew.cloud.login_target import KiroLoginTarget
+        from aj_crew.cloud.login_target import KiroLoginTarget
 
         login.start_device_login(
             "i-0abc",

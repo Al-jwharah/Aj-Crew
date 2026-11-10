@@ -27,11 +27,11 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer, make_mocked_request
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import chat_persistence as cp
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard import state as dashboard_state
-from kiro_crew.dashboard.chat_utils import _history_key_for
-from kiro_crew.dashboard.state import load_window_off_loop
+from aj_crew.dashboard import chat_persistence as cp
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard import state as dashboard_state
+from aj_crew.dashboard.chat_utils import _history_key_for
+from aj_crew.dashboard.state import load_window_off_loop
 
 _KEYS = ["chat-1-alpha", "chat-2-beta", "chat-3-gamma"]
 
@@ -64,7 +64,7 @@ def _count_full_reads(monkeypatch, conv_log) -> list[str]:
 
 @pytest.fixture
 def seeded(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     seed_state = _make_state(tmp_path / "sessions")
     for turns, key in enumerate(_KEYS, start=3):
         _seed(seed_state, key, turns)
@@ -96,7 +96,7 @@ def test_only_the_eager_tabs_read_their_whole_transcript(seeded, monkeypatch):
 
 
 def test_a_pending_row_reads_only_the_end_of_its_transcript(seeded, monkeypatch):
-    from kiro_crew import history_projection
+    from aj_crew import history_projection
 
     whole_file_reads: list[str] = []
     projection = history_projection.TranscriptReadProjection
@@ -438,8 +438,8 @@ async def test_a_send_to_a_pending_row_loads_it_off_the_loop(seeded, caplog, mon
         slot.append("assistant", "reply")
         slot.append("done", "", "done", broadcast=False)
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", _reply)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", _reply)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
 
     with caplog.at_level(logging.WARNING):
         async with TestClient(TestServer(_make_app(state))) as client:
@@ -456,8 +456,8 @@ async def test_a_send_to_a_pending_row_loads_it_off_the_loop(seeded, caplog, mon
 async def test_a_bulk_model_switch_loads_a_pending_row_off_the_loop(seeded, caplog):
     # The bulk route names no slot, so no middleware loads the window first;
     # the session-switch notice has to read the history to see a started chat.
-    from kiro_crew.dashboard.chat import api_chat_slots_model
-    from kiro_crew.dashboard.system_notices import SESSION_SWITCH_KIND
+    from aj_crew.dashboard.chat import api_chat_slots_model
+    from aj_crew.dashboard.system_notices import SESSION_SWITCH_KIND
 
     state = await _restore_on_loop(seeded)
     state.sessions.reset = AsyncMock()
@@ -478,8 +478,8 @@ async def test_a_bulk_model_switch_loads_a_pending_row_off_the_loop(seeded, capl
 
 @pytest.mark.asyncio
 async def test_bulk_model_switch_survives_an_unreadable_pending_window(seeded, caplog, monkeypatch):
-    from kiro_crew.dashboard.chat import api_chat_slots_model
-    from kiro_crew.dashboard.system_notices import SESSION_SWITCH_KIND
+    from aj_crew.dashboard.chat import api_chat_slots_model
+    from aj_crew.dashboard.system_notices import SESSION_SWITCH_KIND
 
     state = await _restore_on_loop(seeded)
     key = _pending_key(state)
@@ -535,9 +535,9 @@ def _link_thread(state, key: str) -> None:
 
 
 async def _reply_in_linked_thread(state, monkeypatch, text: str = "hello") -> bool:
-    from kiro_crew.slack import handler
+    from aj_crew.slack import handler
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat._run_chat", AsyncMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat._run_chat", AsyncMock())
     slack = MagicMock(post_message=AsyncMock())
     with (
         patch.object(handler, "_dashboard_state", state),
@@ -592,7 +592,7 @@ async def test_a_thread_relinked_during_the_load_delivers_to_its_new_tab(
 
 
 def _seed_card_rows(seeded, surface: str) -> None:
-    from kiro_crew.dashboard import chat_cards
+    from aj_crew.dashboard import chat_cards
 
     seed_state = _make_state(seeded / "sessions")
     status = chat_cards._PROPOSED[surface]
@@ -608,8 +608,8 @@ def _seed_card_rows(seeded, surface: str) -> None:
 async def test_a_card_outcome_for_a_pending_row_loads_it_off_the_loop(
     seeded, caplog, surface, status
 ):
-    from kiro_crew.dashboard import chat_cards
-    from kiro_crew.dashboard.handlers import change_cards, guide
+    from aj_crew.dashboard import chat_cards
+    from aj_crew.dashboard.handlers import change_cards, guide
 
     _seed_card_rows(seeded, surface)
     state = await _restore_on_loop(seeded)
@@ -672,7 +672,7 @@ async def test_a_delivering_verb_loads_its_target_before_its_gate(tmp_path, monk
 
 @pytest.mark.asyncio
 async def test_the_read_verb_loads_its_target_before_its_gate(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.handlers import session_control as sc_handlers
+    from aj_crew.dashboard.handlers import session_control as sc_handlers
 
     calls: list = []
     monkeypatch.setattr(sc, "load_target_window", _stopping_spy(calls))
@@ -689,7 +689,7 @@ async def test_the_read_verb_loads_its_target_before_its_gate(tmp_path, monkeypa
 
 @pytest.mark.asyncio
 async def test_a_message_to_a_live_session_loads_it_first(monkeypatch):
-    from kiro_crew.dashboard.handlers import messaging
+    from aj_crew.dashboard.handlers import messaging
 
     calls: list = []
     monkeypatch.setattr(messaging, "load_window_off_loop", _stopping_spy(calls))
@@ -701,7 +701,7 @@ async def test_a_message_to_a_live_session_loads_it_first(monkeypatch):
     app["state"] = state
     app.router.add_post("/api/send-message", messaging.api_send_message)
 
-    with patch("kiro_crew.sel.sel"):
+    with patch("aj_crew.sel.sel"):
         async with TestClient(TestServer(app)) as client:
             await client.post(
                 "/api/send-message",
@@ -713,7 +713,7 @@ async def test_a_message_to_a_live_session_loads_it_first(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_a_workflow_result_loads_its_originating_tab_first(monkeypatch):
-    from kiro_crew.dashboard import workflow_inject
+    from aj_crew.dashboard import workflow_inject
 
     calls: list = []
     monkeypatch.setattr(workflow_inject, "load_window_off_loop", _stopping_spy(calls))
@@ -756,7 +756,7 @@ def test_a_pending_rows_tail_is_redacted_like_its_window(seeded, monkeypatch):
 
 
 def test_the_card_seed_asks_a_pending_row_without_loading_it(seeded):
-    from kiro_crew.dashboard.card_lifecycle import CardLifecycle
+    from aj_crew.dashboard.card_lifecycle import CardLifecycle
 
     state, _ = _restore(seeded)
     slot = state._slots[_pending_key(state)]
@@ -782,7 +782,7 @@ def outbox_dir():
     try:
         odir = base / "outbox"
         odir.mkdir()
-        with patch("kiro_crew.config.loader.outbox_dir", return_value=odir):
+        with patch("aj_crew.config.loader.outbox_dir", return_value=odir):
             yield odir
     finally:
         shutil.rmtree(base, ignore_errors=True)
@@ -790,7 +790,7 @@ def outbox_dir():
 
 @pytest.mark.asyncio
 async def test_a_file_sent_to_a_pending_row_loads_it_off_the_loop(seeded, outbox_dir, caplog):
-    from kiro_crew.dashboard.handlers.files import api_outbox_notify
+    from aj_crew.dashboard.handlers.files import api_outbox_notify
 
     state = await _restore_on_loop(seeded)
     key = _pending_key(state)
@@ -800,7 +800,7 @@ async def test_a_file_sent_to_a_pending_row_loads_it_off_the_loop(seeded, outbox
     app["state"] = state
     app.router.add_post("/api/outbox/notify", api_outbox_notify)
 
-    with caplog.at_level(logging.WARNING), patch("kiro_crew.dashboard.handlers.files._sel"):
+    with caplog.at_level(logging.WARNING), patch("aj_crew.dashboard.handlers.files._sel"):
         async with TestClient(TestServer(app)) as client:
             resp = await client.post(
                 "/api/outbox/notify",
@@ -838,7 +838,7 @@ def test_a_pending_rows_tail_keeps_only_bounded_summary_fields():
 
 @pytest.mark.asyncio
 async def test_a_heartbeat_to_a_pending_row_loads_it_off_the_loop(seeded, caplog):
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     state = await _restore_on_loop(seeded)
     key = _pending_key(state)
@@ -854,7 +854,7 @@ async def test_a_heartbeat_to_a_pending_row_loads_it_off_the_loop(seeded, caplog
 
 @pytest.mark.asyncio
 async def test_a_nudge_into_a_pending_row_loads_it_off_the_loop(seeded, caplog):
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     state = await _restore_on_loop(seeded)
     key = _pending_key(state)
@@ -873,7 +873,7 @@ async def test_a_nudge_into_a_pending_row_loads_it_off_the_loop(seeded, caplog):
 
 
 def test_a_banner_sweep_leaves_a_pending_row_pending(seeded):
-    from kiro_crew.dashboard.chat_utils import _broadcast_expired_oauth_banners
+    from aj_crew.dashboard.chat_utils import _broadcast_expired_oauth_banners
 
     state, _ = _restore(seeded)
     slot = state._slots[_pending_key(state)]
@@ -894,7 +894,7 @@ def test_a_pending_rows_loader_keeps_no_raw_metadata_line(seeded):
 
 @pytest.mark.asyncio
 async def test_a_transfer_of_a_pending_row_loads_it_off_the_loop(seeded, caplog):
-    from kiro_crew.dashboard.session_transfer import build_transfer_bundle_async
+    from aj_crew.dashboard.session_transfer import build_transfer_bundle_async
 
     state = await _restore_on_loop(seeded)
     key = _pending_key(state)
@@ -911,7 +911,7 @@ async def test_a_transfer_of_a_pending_row_loads_it_off_the_loop(seeded, caplog)
 @pytest.mark.asyncio
 async def test_a_resume_of_a_live_pending_row_loads_it_off_the_loop(seeded, caplog):
     # Through the facade: the owner's functions run on its namespace.
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = await _restore_on_loop(seeded)
     key = _pending_key(state)
@@ -946,7 +946,7 @@ async def test_closing_a_pending_row_never_loads_it(seeded, caplog):
 
 
 def test_a_health_snapshot_leaves_a_pending_row_pending(seeded):
-    from kiro_crew.dashboard.session_health import snapshot_slot
+    from aj_crew.dashboard.session_health import snapshot_slot
 
     state, _ = _restore(seeded)
     slot = state._slots[_pending_key(state)]

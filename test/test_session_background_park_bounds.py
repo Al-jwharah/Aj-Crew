@@ -16,13 +16,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from acp_runtime_helpers import _make_runtime
 
-from kiro_crew import platform_compat, platform_compat_metrics
-from kiro_crew.acp import runtime_liveness
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.config.paths import KEYLESS_WORK_DIR_NAME, config_dir
-from kiro_crew.kiro_prerequisite_spawn_identity import mark_identity_parked
-from kiro_crew.session import SessionManager
-from kiro_crew.session_background import (
+from aj_crew import platform_compat, platform_compat_metrics
+from aj_crew.acp import runtime_liveness
+from aj_crew.config import AjCrewConfig
+from aj_crew.config.paths import KEYLESS_WORK_DIR_NAME, config_dir
+from aj_crew.kiro_prerequisite_spawn_identity import mark_identity_parked
+from aj_crew.session import SessionManager
+from aj_crew.session_background import (
     _BG_PARKED_AT_ATTR,
     BG_PARK_MAX_SECS,
     BG_PARKED_MAX,
@@ -33,7 +33,7 @@ from kiro_crew.session_background import (
 
 @pytest.fixture
 def mgr():
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session.timeout_secs = 2
     return SessionManager(cfg, provider_factory=MagicMock())
 
@@ -204,7 +204,7 @@ class TestKillNowStaleReasons:
         mgr._bg_runtime = stale
         fresh = _fresh_runtime()
 
-        with patch("kiro_crew.acp.runtime.AcpRuntime", return_value=fresh):
+        with patch("aj_crew.acp.runtime.AcpRuntime", return_value=fresh):
             result = await mgr.get_bg_session()
 
         stale.kill.assert_awaited_once()
@@ -222,7 +222,7 @@ class TestKillNowStaleReasons:
         mgr._bg_runtime = stale
         fresh = _fresh_runtime()
 
-        with patch("kiro_crew.acp.runtime.AcpRuntime", return_value=fresh):
+        with patch("aj_crew.acp.runtime.AcpRuntime", return_value=fresh):
             await mgr.get_bg_session()
 
         stale.kill.assert_not_awaited()
@@ -249,7 +249,7 @@ class TestHandleStaleness:
             "proc_handle_count_for_pid",
             lambda pid: runtime_liveness._MAX_HANDLES + 1,
         )
-        monkeypatch.setattr("kiro_crew.acp.runtime._get_rss_tree_mb", lambda pid, depth=None: 10.0)
+        monkeypatch.setattr("aj_crew.acp.runtime._get_rss_tree_mb", lambda pid, depth=None: 10.0)
         assert await rt._is_stale() == "handles"
 
     @pytest.mark.asyncio
@@ -260,14 +260,14 @@ class TestHandleStaleness:
             "proc_handle_count_for_pid",
             lambda pid: runtime_liveness._MAX_HANDLES,
         )
-        monkeypatch.setattr("kiro_crew.acp.runtime._get_rss_tree_mb", lambda pid, depth=None: 10.0)
+        monkeypatch.setattr("aj_crew.acp.runtime._get_rss_tree_mb", lambda pid, depth=None: 10.0)
         assert await rt._is_stale() is None
 
     @pytest.mark.asyncio
     async def test_no_handle_reading_falls_through_to_rss(self, monkeypatch):
         rt = self._old_runtime()
         monkeypatch.setattr(platform_compat, "proc_handle_count_for_pid", lambda pid: None)
-        monkeypatch.setattr("kiro_crew.acp.runtime._get_rss_tree_mb", lambda pid, depth=None: 900.0)
+        monkeypatch.setattr("aj_crew.acp.runtime._get_rss_tree_mb", lambda pid, depth=None: 900.0)
         assert await rt._is_stale() == "rss"
 
 
@@ -320,21 +320,21 @@ class TestHandleCountProbe:
 
 class TestKeylessWorkDir:
     def test_a_keyless_runtime_starts_in_the_empty_bg_runtime_folder(self):
-        from kiro_crew.acp.runtime import AcpRuntime
+        from aj_crew.acp.runtime import AcpRuntime
 
         rt = AcpRuntime()
         assert rt._work_dir == config_dir() / KEYLESS_WORK_DIR_NAME
         assert KEYLESS_WORK_DIR_NAME == "bg-runtime"
 
     def test_a_keyless_client_starts_in_the_empty_bg_runtime_folder(self):
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = AcpClient()
         assert client._work_dir == config_dir() / KEYLESS_WORK_DIR_NAME
 
     def test_an_explicit_work_dir_is_kept(self, tmp_path):
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.acp.runtime import AcpRuntime
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.acp.runtime import AcpRuntime
 
         assert AcpRuntime(work_dir=tmp_path)._work_dir == tmp_path
         assert AcpClient(work_dir=tmp_path)._work_dir == tmp_path

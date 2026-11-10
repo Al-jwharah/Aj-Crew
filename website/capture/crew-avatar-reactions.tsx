@@ -41,7 +41,7 @@ const retiredCue: RetiredCue | null =
     ? { kind: retiredCueKind, states: ['done', 'error'] }
     : null
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 /** A crew that pinned a face AND chose a reaction for both moments. */
 const RADAR: CrewAvatarOverride = {

@@ -14,11 +14,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import mate_capabilities, mate_spec_policy, mate_worker, mate_worker_kit
-from kiro_crew.acp_backends import ACP_BACKEND_KAS
-from kiro_crew.config import paths
-from kiro_crew.mate_spec_policy import SpecPolicyUncarried
-from kiro_crew.mate_worker_kit import WorkerKitError
+from aj_crew import mate_capabilities, mate_spec_policy, mate_worker, mate_worker_kit
+from aj_crew.acp_backends import ACP_BACKEND_KAS
+from aj_crew.config import paths
+from aj_crew.mate_spec_policy import SpecPolicyUncarried
+from aj_crew.mate_worker_kit import WorkerKitError
 
 HOOK = {"matcher": "execute_bash", "command": "audit-shell.sh"}
 BASE_HOOK = {"command": "crew-base.sh"}
@@ -33,15 +33,15 @@ ALLOW = {
 SETTINGS = {"execute_bash": {"allowedCommands": ["git status"], "deniedCommands": ["rm .*"]}}
 
 WORKER_BASE = {
-    "name": "kirocrew-mate-worker",
+    "name": "ajcrew-mate-worker",
     "prompt": "base",
     "tools": ["*"],
     "allowedTools": ["fs_read"],
     "mcpServers": {},
     "hooks": {"stop": [BASE_HOOK]},
 }
-WORKER = "kirocrew-mate-worker"
-CONDUCTOR = "kirocrew-mate-conductor"
+WORKER = "ajcrew-mate-worker"
+CONDUCTOR = "ajcrew-mate-conductor"
 TEMPLATE = {
     "name": "release-bot",
     "prompt": "Release SOP.",
@@ -56,7 +56,7 @@ TEMPLATE = {
 @pytest.fixture(autouse=True)
 def _no_ceiling(_floor_monkeypatch):
     """The governance ceiling is its own module's concern; here it passes grants."""
-    from kiro_crew.platform import governance
+    from aj_crew.platform import governance
 
     _floor_monkeypatch.setattr(
         governance, "sanitize_agent_config_governance", lambda spec, **_k: None
@@ -144,7 +144,7 @@ def test_only_kas_applies_a_crewmates_policy():
 
 def _worker_session(monkeypatch, tmp_path, file_spec: dict = TEMPLATE) -> None:
     """A crewmate ``m-1`` on its own file ``pixel``, whose worker session is ``worker-1``."""
-    from kiro_crew import execution_context
+    from aj_crew import execution_context
 
     (tmp_path / "pixel.json").write_text(json.dumps(file_spec), encoding="utf-8")
     monkeypatch.setattr(paths, "mate_agents_dir", lambda: tmp_path)
@@ -154,7 +154,7 @@ def _worker_session(monkeypatch, tmp_path, file_spec: dict = TEMPLATE) -> None:
 
 
 def test_the_session_mcp_read_refuses_off_kas_and_layers_on_kas(monkeypatch, tmp_path):
-    from kiro_crew.acp.session_mcp_crewmate import _crewmate_worker_spec
+    from aj_crew.acp.session_mcp_crewmate import _crewmate_worker_spec
 
     _worker_session(monkeypatch, tmp_path)
     with pytest.raises(SpecPolicyUncarried) as caught:
@@ -168,7 +168,7 @@ def test_the_session_mcp_read_refuses_off_kas_and_layers_on_kas(monkeypatch, tmp
 
 
 def test_crew_fired_hooks_read_the_worker_sessions_merged_spec(monkeypatch):
-    from kiro_crew.agent_sdk import spec_hooks
+    from aj_crew.agent_sdk import spec_hooks
 
     merged = {**WORKER_BASE, "hooks": {"preToolUse": [HOOK]}}
     monkeypatch.setattr(
@@ -186,9 +186,9 @@ def test_crew_fired_hooks_read_the_worker_sessions_merged_spec(monkeypatch):
 def stock_conductor(tmp_path, monkeypatch):
     """The stock conductor exactly as the installer writes it, beside a crewmate
     file that sets hooks, permissions and tool settings."""
-    import kiro_crew.config.paths as paths_mod
-    from kiro_crew import agent, execution_context
-    from kiro_crew.agent_materialization import service_agents
+    import aj_crew.config.paths as paths_mod
+    from aj_crew import agent, execution_context
+    from aj_crew.agent_materialization import service_agents
 
     kiro = tmp_path / "kiro"
     user = kiro / "agents"
@@ -210,8 +210,8 @@ def stock_conductor(tmp_path, monkeypatch):
 def test_a_crewmates_chat_runs_the_stock_conductor_whatever_its_file_sets(stock_conductor):
     """Nothing from the crewmate's file reaches its chat: hooks, permissions and
     tool settings stay on the worker."""
-    from kiro_crew.acp.session_mcp_crewmate import _crewmate_worker_spec
-    from kiro_crew.agent_sdk import spec_hooks
+    from aj_crew.acp.session_mcp_crewmate import _crewmate_worker_spec
+    from aj_crew.agent_sdk import spec_hooks
 
     assert mate_worker.MATE_CONDUCTOR_AGENT == CONDUCTOR
     scoped = mate_worker.mate_service_scope_spec(CONDUCTOR, "chat-1")
@@ -245,7 +245,7 @@ def home(tmp_path, monkeypatch):
         json.dumps({"name": "pixel", "prompt": "", "tools": [], "mcpServers": {}}),
         encoding="utf-8",
     )
-    (mates / "kirocrew-mate-worker.json").write_text(json.dumps(WORKER_BASE), encoding="utf-8")
+    (mates / "ajcrew-mate-worker.json").write_text(json.dumps(WORKER_BASE), encoding="utf-8")
     monkeypatch.setattr(paths, "kiro_agents_dir", lambda: user)
     monkeypatch.setattr(paths, "mate_agents_dir", lambda: mates)
     monkeypatch.setattr(mate_capabilities, "binding_is_mate", lambda member: member == "pixel")
@@ -281,7 +281,7 @@ def test_a_template_that_denies_a_hand_off_tool_is_still_added(home):
     """The chat takes nothing from the file, so a rule naming a conductor tool
     narrows only the worker and is carried like any other."""
     user, mates = home
-    deny = {"capability": "mcp", "match": ["kirocrew-dashboard/session_send"], "effect": "deny"}
+    deny = {"capability": "mcp", "match": ["ajcrew-dashboard/session_send"], "effect": "deny"}
     _use(user, {**TEMPLATE, "permissions": {"rules": [deny]}})
     preview = mate_worker_kit.preview("pixel", {"template": "release-bot"})
     mate_worker_kit.apply("pixel", {"template": "release-bot", "revision": preview["revision"]})
@@ -303,17 +303,17 @@ def test_a_bot_following_claude_takes_a_template_with_a_policy_on_kas(home, monk
     """Judged on the spec being written: an unpinned Bot that follows claude and gains
     hooks runs on KAS (``crewmate_harness.worker_backend_for_spec``), so the add
     succeeds as it did when every Bot ran on KAS."""
-    from kiro_crew.config import loader_builders
-    from kiro_crew.config.loader import KiroCrewAgentConfig
-    from kiro_crew.crewmate_harness import worker_backend_for_spec
+    from aj_crew.config import loader_builders
+    from aj_crew.config.loader import AjCrewAgentConfig
+    from aj_crew.crewmate_harness import worker_backend_for_spec
 
     _, mates = home
     agent = SimpleNamespace(acp_backend="claude", member_acp_backend="claude", kas_bundle=False)
     loader_builders.mark_member_backend_inherited(agent, True)
     cfg = SimpleNamespace(
-        agent=agent, agents={"pixel": KiroCrewAgentConfig(member_id="pixel", kiro_agent="pixel")}
+        agent=agent, agents={"pixel": AjCrewAgentConfig(member_id="pixel", kiro_agent="pixel")}
     )
-    monkeypatch.setattr("kiro_crew.config.loader.KiroCrewConfig.load", staticmethod(lambda: cfg))
+    monkeypatch.setattr("aj_crew.config.loader.AjCrewConfig.load", staticmethod(lambda: cfg))
     monkeypatch.setattr(
         mate_worker_kit,
         "_crewmate_backend",
@@ -328,7 +328,7 @@ def test_a_bot_following_claude_takes_a_template_with_a_policy_on_kas(home, monk
     pinned = SimpleNamespace(
         agent=agent,
         agents={
-            "pixel": KiroCrewAgentConfig(
+            "pixel": AjCrewAgentConfig(
                 member_id="pixel", kiro_agent="pixel", acp_backend="claude"
             )
         },
@@ -339,7 +339,7 @@ def test_a_bot_following_claude_takes_a_template_with_a_policy_on_kas(home, monk
 def test_a_template_setting_the_worker_base_sets_differently_is_refused_by_name(home):
     user, mates = home
     base = {**WORKER_BASE, "toolsSettings": {"execute_bash": {"deniedCommands": ["sudo .*"]}}}
-    (mates / "kirocrew-mate-worker.json").write_text(json.dumps(base), encoding="utf-8")
+    (mates / "ajcrew-mate-worker.json").write_text(json.dumps(base), encoding="utf-8")
     with pytest.raises(WorkerKitError) as caught:
         mate_worker_kit.preview("pixel", {"template": "release-bot"})
     assert caught.value.code == "template_restrictions_uncarried"
@@ -373,7 +373,7 @@ def test_an_entry_sharing_a_label_with_one_already_held_still_gets_a_row(home):
 
 
 def _kas_client() -> SimpleNamespace:
-    from kiro_crew.agent_sdk.capabilities import capabilities_for
+    from aj_crew.agent_sdk.capabilities import capabilities_for
 
     return SimpleNamespace(capabilities=capabilities_for(ACP_BACKEND_KAS), cwd="")
 
@@ -381,8 +381,8 @@ def _kas_client() -> SimpleNamespace:
 def test_a_kas_worker_turn_fires_the_hooks_of_the_session_it_holds(monkeypatch):
     import asyncio
 
-    from kiro_crew.agent_sdk import spec_hooks
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.agent_sdk import spec_hooks
+    from aj_crew.dashboard import chat_runner
 
     asked: list[str] = []
 
@@ -408,8 +408,8 @@ def test_a_kas_worker_turn_fires_the_hooks_of_the_session_it_holds(monkeypatch):
 def test_a_stale_check_reads_the_providers_own_session(monkeypatch):
     import asyncio
 
-    from kiro_crew.acp import kas_agents
-    from kiro_crew.agent_sdk import spec_hooks
+    from aj_crew.acp import kas_agents
+    from aj_crew.agent_sdk import spec_hooks
 
     asked: list[str] = []
 
@@ -434,7 +434,7 @@ def test_a_subagent_worker_turn_fires_the_hooks_of_its_own_session(monkeypatch):
     same merged spec the KAS projection was built from."""
     import asyncio
 
-    from kiro_crew.agent_sdk import spec_hooks
+    from aj_crew.agent_sdk import spec_hooks
 
     asked: list[str] = []
 
@@ -554,7 +554,7 @@ def test_a_tool_setting_under_another_spelling_is_refused_by_name(held, added):
 
 def test_a_hook_past_the_runtime_cap_is_refused():
     """Crew fires at most this many spec hooks; one layered past it would never run."""
-    from kiro_crew.agent_sdk.spec_hooks import _MAX_SPEC_HOOKS
+    from aj_crew.agent_sdk.spec_hooks import _MAX_SPEC_HOOKS
 
     held = [{"matcher": "execute_bash", "command": f"held-{i}.sh"} for i in range(_MAX_SPEC_HOOKS)]
     spec = {"hooks": {"preToolUse": held}}
@@ -570,7 +570,7 @@ def test_a_hook_past_the_runtime_cap_is_refused():
 
 
 def _deny_rules(settings: dict) -> list[dict]:
-    from kiro_crew.acp.kas_permissions import tools_settings_to_permissions
+    from aj_crew.acp.kas_permissions import tools_settings_to_permissions
 
     block, lost = tools_settings_to_permissions(settings)
     assert lost == []
@@ -613,7 +613,7 @@ def test_a_subagent_allowlist_kas_cannot_express_is_refused_by_name():
 
 
 def test_a_carried_allowed_command_is_answered_by_crews_gate():
-    from kiro_crew.acp.kas_permissions import crew_answered_commands
+    from aj_crew.acp.kas_permissions import crew_answered_commands
 
     settings = {"execute_bash": {"allowedCommands": ["git status"]}}
     spec: dict = {}
@@ -634,7 +634,7 @@ def test_a_dedicated_worker_provider_fires_its_sessions_hooks(monkeypatch):
     key sits on its ``_client``."""
     import asyncio
 
-    from kiro_crew.agent_sdk import spec_hooks
+    from aj_crew.agent_sdk import spec_hooks
 
     asked: list[str] = []
 
@@ -708,7 +708,7 @@ def test_a_builtin_allow_the_workers_allowed_tools_would_override_is_refused():
 )
 def test_an_mcp_allow_the_workers_list_lacks_is_carried_as_its_refs(match, refs):
     """The allow lands as exactly the refs KAS derives it back from, no wider."""
-    from kiro_crew.agent_sdk.kas_tool_view import allow_granted_by_spec
+    from aj_crew.agent_sdk.kas_tool_view import allow_granted_by_spec
 
     rule = {"capability": "mcp", "match": match, "effect": "allow"}
     spec = {"allowedTools": ["fs_read"]}
@@ -727,7 +727,7 @@ def test_an_mcp_allow_whose_refs_cannot_grant_it_is_still_refused():
 
 
 def test_a_carried_allow_survives_the_workers_kas_projection():
-    from kiro_crew.acp.kas_permissions import merge_user_permissions
+    from aj_crew.acp.kas_permissions import merge_user_permissions
 
     merged = mate_worker.merge_worker_spec(
         WORKER_BASE, mate_worker.worker_additions(WORKER_BASE, TEMPLATE)
@@ -748,7 +748,7 @@ def _put(home, monkeypatch, template: dict) -> list[str]:
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import member_worker_kit as route
+    from aj_crew.dashboard.handlers import member_worker_kit as route
 
     user, _mates = home
     _use(user, template)
@@ -759,7 +759,7 @@ def _put(home, monkeypatch, template: dict) -> list[str]:
 
     monkeypatch.setattr(route, "require_owner_dashboard_request", _owner)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.crewmate_worker_reload.schedule_reload_workers",
+        "aj_crew.dashboard.crewmate_worker_reload.schedule_reload_workers",
         lambda state, member: scheduled.append(member),
     )
 
@@ -782,7 +782,7 @@ def _put(home, monkeypatch, template: dict) -> list[str]:
 def test_adding_a_deny_reloads_the_crewmates_idle_worker(home, monkeypatch):
     """A live KAS worker keeps the batch it registered; the add reloads it onto
     the file, so its next turn runs under the new deny."""
-    from kiro_crew.dashboard import crewmate_worker_reload as reload_mod
+    from aj_crew.dashboard import crewmate_worker_reload as reload_mod
 
     user, _mates = home
     (user / "x.json").write_text(json.dumps({}), encoding="utf-8")
@@ -866,7 +866,7 @@ def test_adding_a_governed_template_with_its_generated_block_succeeds(home):
     }
     _use(user, template)
     base = {**WORKER_BASE, "allowedTools": ["fs_read", "web_fetch"]}
-    (mates / "kirocrew-mate-worker.json").write_text(json.dumps(base), encoding="utf-8")
+    (mates / "ajcrew-mate-worker.json").write_text(json.dumps(base), encoding="utf-8")
     preview = mate_worker_kit.preview("pixel", {"template": "release-bot"})
     mate_worker_kit.apply("pixel", {"template": "release-bot", "revision": preview["revision"]})
     assert "jira" in _file(mates)["mcpServers"]
@@ -907,7 +907,7 @@ def test_a_permissions_block_whose_rules_is_not_a_list_is_refused_not_crashed(ru
 )
 def test_an_mcp_allow_counts_as_granted_only_when_coverage_is_proved(granted, wanted, covered):
     """A grant's pattern text matching another pattern proves nothing about coverage."""
-    from kiro_crew.agent_sdk.kas_tool_view import allow_granted_by_spec
+    from aj_crew.agent_sdk.kas_tool_view import allow_granted_by_spec
 
     rule = {"capability": "mcp", "match": [wanted], "effect": "allow"}
     assert allow_granted_by_spec(rule, {"allowedTools": [granted]}) is covered
@@ -927,7 +927,7 @@ def test_an_allow_for_a_server_the_worker_base_also_declares_does_not_block_the_
     }
     del mate_file["hooks"], mate_file["toolsSettings"]
     merged = mate_worker.merge_worker_spec(base, mate_worker.worker_additions(base, mate_file))
-    from kiro_crew.agent_sdk.kas_tool_view import allow_granted_by_spec
+    from aj_crew.agent_sdk.kas_tool_view import allow_granted_by_spec
 
     assert allow_granted_by_spec(rule, merged)
     assert merged["allowedTools"] == [*WORKER_BASE["allowedTools"], "@notes"]
@@ -966,8 +966,8 @@ def test_an_allow_for_a_server_the_file_adds_keeps_the_files_own_refs():
 def test_the_ceiling_still_withholds_a_carried_allow(_floor_monkeypatch):
     """The carried ref goes through the governance ceiling like any other grant:
     a ceiling that withholds the server leaves the worker no auto-approval for it."""
-    from kiro_crew.acp.kas_permissions import allowed_tools_to_permissions, merge_user_permissions
-    from kiro_crew.platform import governance
+    from aj_crew.acp.kas_permissions import allowed_tools_to_permissions, merge_user_permissions
+    from aj_crew.platform import governance
 
     def ceiling(ref: str) -> bool:
         return not ref.startswith("@notes")
@@ -1088,7 +1088,7 @@ def test_an_allow_the_worker_base_already_grants_adds_no_approval(home):
     applying the add clears no revocation of it), and nothing newly runs unasked."""
     user, mates = home
     base = {**WORKER_BASE, "allowedTools": ["fs_read", "@jira"]}
-    (mates / "kirocrew-mate-worker.json").write_text(json.dumps(base), encoding="utf-8")
+    (mates / "ajcrew-mate-worker.json").write_text(json.dumps(base), encoding="utf-8")
     rule = {"capability": "mcp", "effect": "allow", "match": ["jira/*"]}
     _use(user, {"name": "release-bot", "prompt": "", "permissions": {"rules": [rule]}})
     preview = mate_worker_kit.preview("pixel", {"template": "release-bot"})
@@ -1101,11 +1101,11 @@ def test_an_unreadable_base_at_apply_restores_no_revoked_approval(home, monkeypa
     """The preview judged the allow against a base that grants ``@jira``, so it
     listed no row for it. A base that cannot be read when the add lands cannot show
     that, so the owner's revocation of ``@jira`` stays."""
-    from kiro_crew import mate_approval_revocations as revocations
+    from aj_crew import mate_approval_revocations as revocations
 
     user, mates = home
     base = {**WORKER_BASE, "allowedTools": ["fs_read", "@jira"]}
-    (mates / "kirocrew-mate-worker.json").write_text(json.dumps(base), encoding="utf-8")
+    (mates / "ajcrew-mate-worker.json").write_text(json.dumps(base), encoding="utf-8")
     rule = {"capability": "mcp", "effect": "allow", "match": ["jira/*"]}
     _use(user, {"name": "release-bot", "prompt": "", "permissions": {"rules": [rule]}})
     revocations.record("pixel", ["@jira"], [])

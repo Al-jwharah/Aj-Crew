@@ -16,18 +16,18 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew.acp import session_mcp
-from kiro_crew.acp_backends import (
+from aj_crew import agent as agent_mod
+from aj_crew.acp import session_mcp
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_KIRO,
     ACP_BACKEND_OPENCODE,
 )
-from kiro_crew.providers.mirrors.registry import mirror_for
+from aj_crew.providers.mirrors.registry import mirror_for
 
-_CORE = {"command": "/opt/kirocrew", "args": ["mcp-core"]}
+_CORE = {"command": "/opt/ajcrew", "args": ["mcp-core"]}
 _REPO_CMD = "/nonexistent/project-trust/repo-launcher"
 _USER_CMD = "/nonexistent/project-trust/user-server"
 _MIRRORED = [ACP_BACKEND_CLAUDE, ACP_BACKEND_CODEX, ACP_BACKEND_GOOSE, ACP_BACKEND_OPENCODE]
@@ -44,19 +44,19 @@ def agents_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(
         session_mcp,
         "managed_mcp_spec_entry",
-        lambda name: {"kirocrew-core": dict(_CORE)}.get(name),
+        lambda name: {"ajcrew-core": dict(_CORE)}.get(name),
     )
     monkeypatch.setattr(session_mcp, "_mcp_registry_mode", lambda: False)
     return agents
 
 
 def _write_user_spec(agents: Path) -> None:
-    (agents / "kirocrew.json").write_text(
+    (agents / "ajcrew.json").write_text(
         json.dumps(
             {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "mcpServers": {"user-srv": {"command": _USER_CMD}},
-                "tools": ["@user-srv", "@kirocrew-core"],
+                "tools": ["@user-srv", "@ajcrew-core"],
             }
         ),
         encoding="utf-8",
@@ -70,7 +70,7 @@ def _plant_checkout(root: Path) -> Path:
     (agents / "helper.json").write_text(
         json.dumps(
             {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "mcpServers": {"repo-srv": {"command": _REPO_CMD, "args": []}},
                 "tools": ["@repo-srv"],
             }
@@ -84,7 +84,7 @@ def _array(backend: str, work_dir: Path) -> list[dict]:
     mirror = mirror_for(backend)
     assert mirror is not None, f"precondition: {backend} has a mirror"
     params = mirror.session_params(
-        "kirocrew", work_dir=str(work_dir), permission_surface_owned=True
+        "ajcrew", work_dir=str(work_dir), permission_surface_owned=True
     )
     servers = params.get("mcpServers")
     assert isinstance(servers, list)
@@ -123,7 +123,7 @@ def test_a_project_only_spec_keeps_its_allowlist_but_mounts_no_server_of_its_own
     servers = _array(backend, _plant_checkout(tmp_path))
     assert _REPO_CMD not in _commands(servers)
     # tools names only @repo-srv, so Crew's control plane is withheld as before.
-    assert "kirocrew-core" not in _names(servers)
+    assert "ajcrew-core" not in _names(servers)
 
 
 def test_kiro_clis_own_path_is_unchanged(agents_dir, tmp_path):
@@ -131,10 +131,10 @@ def test_kiro_clis_own_path_is_unchanged(agents_dir, tmp_path):
     _write_user_spec(agents_dir)
     checkout = _plant_checkout(tmp_path)
     assert mirror_for(ACP_BACKEND_KIRO) is None
-    spec, _snapshot = session_mcp._agent_spec_and_snapshot_for("kirocrew", checkout)
+    spec, _snapshot = session_mcp._agent_spec_and_snapshot_for("ajcrew", checkout)
     assert spec is not None
     assert "repo-srv" in spec["mcpServers"]
-    snapshot = session_mcp.agent_spec_snapshot("kirocrew", work_dir=checkout)
+    snapshot = session_mcp.agent_spec_snapshot("ajcrew", work_dir=checkout)
     assert snapshot is not None
     assert "repo-srv" in snapshot["mcpServers"]
 
@@ -150,7 +150,7 @@ def _write_restricting_checkout(root: Path, *, extra: dict | None = None) -> Pat
     agents = checkout / ".kiro" / "agents"
     agents.mkdir(parents=True)
     servers = {
-        "kirocrew-core": {
+        "ajcrew-core": {
             "command": _REPO_CMD,
             "args": ["--evil"],
             "env": {"K": "V"},
@@ -163,9 +163,9 @@ def _write_restricting_checkout(root: Path, *, extra: dict | None = None) -> Pat
     (agents / "helper.json").write_text(
         json.dumps(
             {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "mcpServers": servers,
-                "tools": ["@kirocrew-core", "@only-off", "@user-srv"],
+                "tools": ["@ajcrew-core", "@only-off", "@user-srv"],
             }
         ),
         encoding="utf-8",
@@ -175,26 +175,26 @@ def _write_restricting_checkout(root: Path, *, extra: dict | None = None) -> Pat
 
 def _assert_spawn_run_denied(backend: str, checkout: Path) -> None:
     """Each backend's own channel for a per-tool restriction refuses ``spawn_run``."""
-    projection = session_mcp.session_mcp_projection("kirocrew", work_dir=checkout)
-    assert ("kirocrew-core", "spawn_run") in projection.disabled_tools
+    projection = session_mcp.session_mcp_projection("ajcrew", work_dir=checkout)
+    assert ("ajcrew-core", "spawn_run") in projection.disabled_tools
     mirror = mirror_for(backend)
     assert mirror is not None
     face = mirror.session_projection(
-        "kirocrew", work_dir=str(checkout), permission_surface_owned=True
+        "ajcrew", work_dir=str(checkout), permission_surface_owned=True
     )
     names = _names(face.params["mcpServers"])
     if backend == ACP_BACKEND_CLAUDE:
-        rules = session_mcp.session_mcp_deny_rules("kirocrew", work_dir=checkout)
-        assert "mcp__kirocrew-core__spawn_run" in rules
+        rules = session_mcp.session_mcp_deny_rules("ajcrew", work_dir=checkout)
+        assert "mcp__ajcrew-core__spawn_run" in rules
     elif backend == ACP_BACKEND_CODEX:
-        assert ("kirocrew-core", "spawn_run") in face.denied_tools
+        assert ("ajcrew-core", "spawn_run") in face.denied_tools
     elif backend == ACP_BACKEND_OPENCODE:
         # The server stays mounted and the harness is told to deny the one tool.
-        assert "kirocrew-core_spawn_run" in face.harness_deny_rules
-        assert "kirocrew-core" not in face.unhonoured_servers
+        assert "ajcrew-core_spawn_run" in face.harness_deny_rules
+        assert "ajcrew-core" not in face.unhonoured_servers
     else:
         # goose has no safe per-tool deny channel: the server is withheld.
-        assert "kirocrew-core" not in names
+        assert "ajcrew-core" not in names
 
 
 @pytest.mark.parametrize("backend", _MIRRORED)
@@ -235,10 +235,10 @@ def test_in_a_name_clash_the_projects_restriction_applies(backend, agents_dir, t
 
 @pytest.mark.parametrize("backend", _MIRRORED)
 def test_in_a_name_clash_a_project_cannot_unmute_the_users_server(backend, agents_dir, tmp_path):
-    (agents_dir / "kirocrew.json").write_text(
+    (agents_dir / "ajcrew.json").write_text(
         json.dumps(
             {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "mcpServers": {
                     "user-srv": {"command": _USER_CMD},
                     "muted-srv": {"command": "/nonexistent/project-trust/muted", "disabled": True},
@@ -253,7 +253,7 @@ def test_in_a_name_clash_a_project_cannot_unmute_the_users_server(backend, agent
     checkout = _write_restricting_checkout(
         tmp_path, extra={"muted-srv": {"disabled": False, "disabledTools": ["y"]}}
     )
-    projection = session_mcp.session_mcp_projection("kirocrew", work_dir=checkout)
+    projection = session_mcp.session_mcp_projection("ajcrew", work_dir=checkout)
     # The mute stands and the project's tool restriction is layered on top of it.
     assert "muted-srv" in projection.disabled_servers
     assert ("muted-srv", "y") in projection.disabled_tools
@@ -291,10 +291,10 @@ _STUB_CMD = "/nonexistent/project-trust/pooled-stub"
 
 
 def _write_user_spec_with(agents: Path, servers: dict) -> None:
-    (agents / "kirocrew.json").write_text(
+    (agents / "ajcrew.json").write_text(
         json.dumps(
             {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "mcpServers": servers,
                 "tools": [f"@{name}" for name in servers],
             }
@@ -312,7 +312,7 @@ def _projected(backend: str, work_dir: Path, stub_names: tuple[str, ...] = ()) -
         for n in stub_names
     ]
     face = mirror.session_projection(
-        "kirocrew",
+        "ajcrew",
         stub_server_names=stub_names,
         stub_elements=stubs,
         work_dir=str(work_dir),
@@ -328,7 +328,7 @@ def _project_muting(root: Path, name: str) -> Path:
     agents = checkout / ".kiro" / "agents"
     agents.mkdir(parents=True)
     (agents / "helper.json").write_text(
-        json.dumps({"name": "kirocrew", "mcpServers": {name: {"disabled": True}}}),
+        json.dumps({"name": "ajcrew", "mcpServers": {name: {"disabled": True}}}),
         encoding="utf-8",
     )
     return checkout

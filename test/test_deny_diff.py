@@ -57,13 +57,13 @@ from pathlib import Path
 import pytest
 from skill_script_helpers import load_skill_script
 
-from kiro_crew.agent_sdk.host_auth import home_override_env_vars
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.agent_sdk.host_auth import home_override_env_vars
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "deny_diff.py"
 GOLDEN_PATHS = (
-    ROOT / "src" / "kiro_crew" / "builtin_skills" / "security-conductor" / "golden-paths.json"
+    ROOT / "src" / "aj_crew" / "builtin_skills" / "security-conductor" / "golden-paths.json"
 )
 LEDGER = GOLDEN_PATHS.parent / "scripts" / "ledger.py"
 
@@ -116,8 +116,8 @@ def _scratch_repo(tmp_path: Path) -> Path:
     repository git can see or write is this one.
     """
     repo = tmp_path / "scratch-repo"
-    (repo / "src" / "kiro_crew").mkdir(parents=True)
-    (repo / "src" / "kiro_crew" / "__init__.py").write_text("", encoding="utf-8")
+    (repo / "src" / "aj_crew").mkdir(parents=True)
+    (repo / "src" / "aj_crew" / "__init__.py").write_text("", encoding="utf-8")
     identity = ["-c", "user.name=t", "-c", "user.email=t@example.invalid"]
     for args in (
         ["init", "-q", "-b", "main", "."],
@@ -164,7 +164,7 @@ def _fake_tree(
     *,
     omit: tuple[str, ...] = (),
 ) -> Path:
-    """A minimal importable ``kiro_crew.security`` under *root*.
+    """A minimal importable ``aj_crew.security`` under *root*.
 
     *denied* is either a bare set (assigned to the rule-catalog tier, the common
     case) or a per-tier mapping, which is how a non-catalog regression is staged.
@@ -181,9 +181,9 @@ def _fake_tree(
     source = _FAKE_HEADER.format(tiers=tiers) + "".join(
         body for name, body in _FAKE_TIER_SOURCE.items() if name not in omit
     )
-    package = root / "src" / "kiro_crew" / "security"
+    package = root / "src" / "aj_crew" / "security"
     package.mkdir(parents=True, exist_ok=True)
-    (root / "src" / "kiro_crew" / "__init__.py").write_text("", encoding="utf-8")
+    (root / "src" / "aj_crew" / "__init__.py").write_text("", encoding="utf-8")
     (package / "__init__.py").write_text(source, encoding="utf-8")
     return root
 
@@ -350,7 +350,7 @@ def test_the_measured_checks_are_the_checks_the_tool_gate_applies():
     exactly -- the shell projection of ``hooks.GATE_TIERS`` -- read as text from the
     tree the harness runs from.
     """
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     measured = deny_diff.load_shell_deny_tiers(ROOT)
     assert measured == hooks.SHELL_DENY_TIERS
@@ -361,8 +361,8 @@ def test_the_measured_checks_are_the_checks_the_tool_gate_applies():
 
 
 def _tree_with_hooks(root: Path, text: str) -> Path:
-    (root / "src" / "kiro_crew").mkdir(parents=True, exist_ok=True)
-    (root / "src" / "kiro_crew" / "hooks.py").write_text(text, encoding="utf-8")
+    (root / "src" / "aj_crew").mkdir(parents=True, exist_ok=True)
+    (root / "src" / "aj_crew" / "hooks.py").write_text(text, encoding="utf-8")
     return root
 
 
@@ -428,7 +428,7 @@ def test_both_sides_are_measured_against_the_same_table(staged, monkeypatch):
 
     monkeypatch.setattr(deny_diff, "classify", recording)
     staged([_shell("git status --porcelain")], base_denies=set(), head_denies=set())
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     assert seen == [("base", hooks.SHELL_DENY_TIERS), ("head", hooks.SHELL_DENY_TIERS)]
 
@@ -587,18 +587,18 @@ def test_child_environment_is_scrubbed_of_crew_variables(tmp_path, monkeypatch):
     """The verdict must not be a function of the caller's environment."""
     monkeypatch.setenv("HOME", str(tmp_path / "real-os-home"))
     monkeypatch.setenv("USERPROFILE", str(tmp_path / "real-windows-home"))
-    monkeypatch.setenv("KIROCREW_SANDBOX_ACTIVE", "1")
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "real-home"))
+    monkeypatch.setenv("AJCREW_SANDBOX_ACTIVE", "1")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "real-home"))
     for name in deny_diff._INHERITED_HOME_OVERRIDE_ENV_VARS:
         monkeypatch.setenv(name, str(tmp_path / name.lower()))
 
     throwaway = tmp_path / "throwaway-home"
     env = deny_diff._child_env(tmp_path / "checkout", throwaway)
 
-    assert "KIROCREW_SANDBOX_ACTIVE" not in env
+    assert "AJCREW_SANDBOX_ACTIVE" not in env
     assert env["HOME"] == str(throwaway)
     assert env["USERPROFILE"] == str(throwaway)
-    assert env["KIROCREW_HOME"] == str(throwaway)
+    assert env["AJCREW_HOME"] == str(throwaway)
     assert env["PYTHONPATH"] == str(tmp_path / "checkout" / "src")
     assert throwaway.is_dir()
     assert not set(deny_diff._INHERITED_HOME_OVERRIDE_ENV_VARS) & env.keys()

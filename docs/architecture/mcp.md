@@ -1,7 +1,7 @@
 # MCP Server Architecture
 
 How MCP (Model Context Protocol) servers are configured, merged, probed and
-loaded, plus the two invariants every new Kiro Crew MCP tool must satisfy: it
+loaded, plus the two invariants every new Aj Crew MCP tool must satisfy: it
 ships as an MCP tool (not only a CLI command), and it holds no per-caller state.
 
 Async spawn receipts declare supported parent-work delivery
@@ -15,25 +15,25 @@ ceiling that filters auto-approve is
 [governance](../system-specs/modules/governance.md); the computer-use server's
 own gate model is [computer-use](../system-specs/modules/computer-use.md).
 
-> **Design invariant: Kiro Crew does NOT write to provider globals.**
-> `~/.kiro/settings/mcp.json` is user-owned. Kiro Crew reads it and never mutates
-> it. Kiro Crew's own additions go into the per-agent file it fully owns,
-> `~/.kiro/agents/kirocrew.json`. That keeps tools scoped to Kiro Crew out of every
-> interactive kiro-cli and Kiro IDE session the user runs outside Kiro Crew. If
-> `kirocrew-core` / `kirocrew-cron` ever appear in a provider global, that is
+> **Design invariant: Aj Crew does NOT write to provider globals.**
+> `~/.kiro/settings/mcp.json` is user-owned. Aj Crew reads it and never mutates
+> it. Aj Crew's own additions go into the per-agent file it fully owns,
+> `~/.kiro/agents/ajcrew.json`. That keeps tools scoped to Aj Crew out of every
+> interactive kiro-cli and Kiro IDE session the user runs outside Aj Crew. If
+> `ajcrew-core` / `ajcrew-cron` ever appear in a provider global, that is
 > leftover state from an older install: clean it from the dashboard MCP panel,
-> or run `kirocrew setup`, whose setup path calls the narrowly scoped
+> or run `ajcrew setup`, whose setup path calls the narrowly scoped
 > `mcp_cleanup.clean_stale_managed_mcp()` helper.
 
 ## Config file hierarchy
 
 | File | Owner | Purpose | Read by |
 |------|-------|---------|---------|
-| `~/.kiro/agents/kirocrew.json` | Kiro Crew gateway (`agent.rebuild_agent_config`) | The rendered Kiro agent: model + tools + merged `mcpServers` | kiro-cli, when spawned as the `kirocrew` agent |
-| `~/.kiro/settings/mcp.json` | User | Kiro global MCP servers | kiro-cli for all agents; merged into Kiro Crew's agent file at render time |
-| `~/.kiro/crew/mcp.json` | User, via the dashboard MCP panel | specific to Kiro Crew additions and per-server tool disables | Kiro Crew gateway only |
+| `~/.kiro/agents/ajcrew.json` | Aj Crew gateway (`agent.rebuild_agent_config`) | The rendered Kiro agent: model + tools + merged `mcpServers` | kiro-cli, when spawned as the `ajcrew` agent |
+| `~/.kiro/settings/mcp.json` | User | Kiro global MCP servers | kiro-cli for all agents; merged into Aj Crew's agent file at render time |
+| `~/.kiro/crew/mcp.json` | User, via the dashboard MCP panel | specific to Aj Crew additions and per-server tool disables | Aj Crew gateway only |
 
-Kiro Crew reads every MCP config file (`~/.kiro/crew/mcp.json`,
+Aj Crew reads every MCP config file (`~/.kiro/crew/mcp.json`,
 `~/.kiro/settings/mcp.json`, and every seam-contributed scope global) as JSONC:
 comments and trailing commas are tolerated (`user_json.loads_user_jsonc`), so a
 commented-out server never discards the rest of the file. The dashboard MCP
@@ -42,8 +42,8 @@ trailing commas is refused with a `409 mcp_config_has_comments`
 (`_refuse_commented_config` / `McpConfigHasComments`) rather than rewriting the
 file and dropping them; edit such a file by hand, or remove the comments first.
 
-`rebuild_agent_config()` writes exactly **one** file, `~/.kiro/agents/kirocrew.json`.
-There is no second rendered agent file: Kiro Crew's provider is ACP-only, and
+`rebuild_agent_config()` writes exactly **one** file, `~/.kiro/agents/ajcrew.json`.
+There is no second rendered agent file: Aj Crew's provider is ACP-only, and
 non-kiro ACP harnesses consume projected configuration rather than another Kiro
 agent file.
 
@@ -71,10 +71,10 @@ evidence that the core reads that file.
 
 ### Merge order in `rebuild_agent_config()`
 
-The existing `~/.kiro/agents/kirocrew.json` is the merge **base** when one
+The existing `~/.kiro/agents/ajcrew.json` is the merge **base** when one
 exists and `clean=False`, so any server the user already customized survives
 (`autoApprove` edits, hand-edits, servers added with `kiro-cli mcp add --agent
-kirocrew`). Onto that base:
+ajcrew`). Onto that base:
 
 1. **App-contributed servers** (`_collect_app_mcp_servers()`), keyed
    `{app}:{server}`, are assigned first so an app's namespaced entry outranks a
@@ -110,10 +110,10 @@ kirocrew`). Onto that base:
    global did not: a name step 1 or step 2 already claimed in this pass has been
    retired, so it is left alone. Empty in this build.
 4. **`~/.kiro/crew/mcp.json`** via `update()` on an existing entry, so
-   Kiro Crew's `command`/`args`/`env` win while user-set fields such as
+   Aj Crew's `command`/`args`/`env` win while user-set fields such as
    `autoApprove` survive.
 
-Kiro global outranks any seam-contributed provider global because Kiro Crew is
+Kiro global outranks any seam-contributed provider global because Aj Crew is
 kiro-cli-only. Managed servers are skipped by every merge loop: their
 `command`/`args` are set by `_refresh_dynamic_fields()` and must not be
 overwritten by a stale global entry.
@@ -121,7 +121,7 @@ overwritten by a stale global entry.
 **Resolution-aware fallback.** The same server can be defined in several sources
 with different commands. If the merged winner's `command` does not resolve (a
 bare command whose binary is not on the rebuild PATH), the rebuild retries the
-same server's spec from the other sources in priority order (kirocrew, then
+same server's spec from the other sources in priority order (ajcrew, then
 kiro-global, then provider-global, then the unit a switched source replaced in
 step 2) before dropping it. When it falls back to a
 different source it adopts that source's `command`, `args` and `env` **as a
@@ -150,15 +150,15 @@ check that any of them loads. On Amazon Linux 2 the official Node 18+ builds
 need a newer glibc than the host has, so nvm's newest `node` fails, and an
 `npx` server, whose `#!/usr/bin/env node` resolves against the same PATH,
 never starts. Two dirs name a Node chosen for the host instead
-(`env_node_pins`). The operator's `KIROCREW_NODE_BIN_DIR` comes right after
-this install's own `kirocrew` dir, ahead of every guess and of the inherited
+(`env_node_pins`). The operator's `AJCREW_NODE_BIN_DIR` comes right after
+this install's own `ajcrew` dir, ahead of every guess and of the inherited
 PATH, even one that already lists it behind nvm's bin. The glibc-2.17 tree
 `ensure-node.sh` unpacks into the data home comes just ahead of the
 per-version dirs: it is an unsealed data-home dir, so it never outranks
 `~/.local/bin` or the toolbox. Each counts only when it holds an executable
 `node`, and a caller that pins another account's home gets neither.
 `mcp_search_path`, `mcp_runtime_path` and the agent child's PATH all inherit
-this order. `kirocrew service install` bakes the override into the unit
+this order. `ajcrew service install` bakes the override into the unit
 ([cli](../system-specs/modules/cli.md)).
 
 ### `includeMcpJson` is pinned false
@@ -167,9 +167,9 @@ this order. `kirocrew service install` bakes the override into the unit
 {
   "includeMcpJson": false,
   "mcpServers": {
-    "kirocrew-core":     { "command": "…", "args": ["mcp-core"] },
-    "kirocrew-cron":     { "command": "…", "args": ["mcp-cron"] },
-    "kirocrew-computer": { "command": "…", "args": ["mcp-computer"] }
+    "ajcrew-core":     { "command": "…", "args": ["mcp-core"] },
+    "ajcrew-cron":     { "command": "…", "args": ["mcp-cron"] },
+    "ajcrew-computer": { "command": "…", "args": ["mcp-computer"] }
   }
 }
 ```
@@ -178,9 +178,9 @@ The gateway already merges the Kiro global into the agent file, so the agent
 file is the superset. With `includeMcpJson: true` kiro-cli would merge the
 global a second time at session start, producing duplicate entries and letting a
 stale path in the global shadow the fresh path the gateway just resolved.
-Kiro Crew forces `false` on every agent it manages (the primary agent, every
+Aj Crew forces `false` on every agent it manages (the primary agent, every
 generated agent spec, every recorded fork, and every app agent). Plain kiro-cli
-agents outside Kiro Crew keep kiro-cli's own default.
+agents outside Aj Crew keep kiro-cli's own default.
 
 The generated specs and the fork refresh get the pin from one shared step,
 `auto_approve.write_governed_spec`, which every spec writer under
@@ -209,20 +209,20 @@ same text. A fork already at `false` records nothing.
 ### Managed servers
 
 `agent._MANAGED_MCP_SERVERS` holds the ten servers the gateway owns end to
-end: the always-on `kirocrew-cron`, `kirocrew-core`, `kirocrew-guide` and
-`kirocrew-mate`, the gated `kirocrew-computer`, and the opt-in
-`kirocrew-dashboard`, `kirocrew-work`, `kirocrew-crew-log`, `kirocrew-debug` and
-`kirocrew-panel`. Every emitted or
+end: the always-on `ajcrew-cron`, `ajcrew-core`, `ajcrew-guide` and
+`ajcrew-mate`, the gated `ajcrew-computer`, and the opt-in
+`ajcrew-dashboard`, `ajcrew-work`, `ajcrew-crew-log`, `ajcrew-debug` and
+`ajcrew-panel`. Every emitted or
 explicitly granted entry is refreshed on every rebuild by
 `_refresh_dynamic_fields()`, which rewrites `command`/`args` from the live
-`kirocrew` binary, strips stale remote-transport fields (`url`, `headers`) left by
-older builds, and re-pins `env.KIROCREW_HOME` to the home the gateway is actually
+`ajcrew` binary, strips stale remote-transport fields (`url`, `headers`) left by
+older builds, and re-pins `env.AJCREW_HOME` to the home the gateway is actually
 running under while preserving the user's own env keys.
 User customizations are preserved, `autoApprove` included: a list in the user's own
 MCP config survives the refresh, whoever wrote it, the owner or the agent,
 which is what `mcp.honour_auto_approve` (on by default) decides. It is worth
 knowing what it costs, because the cost is not obvious from the key's name:
-those tools run without a prompt, so Kiro Crew never sees a permission request for
+those tools run without a prompt, so Aj Crew never sees a permission request for
 them and its own tool gate does not run. kiro-cli has no `autoApprove` field and
 ignores the key. What grants the tools there is the agent's skill view, the copy of
 the spec kiro-cli runs, rebuilt at every spawn: it carries each kept verb as an
@@ -230,17 +230,17 @@ the spec kiro-cli runs, rebuilt at every spawn: it carries each kept verb as an
 for every agent, a user's own custom agent included. No spec file is written, so
 the grant goes as soon as the verb does. A session that runs the authored file
 instead (`agent.native_skill_projection` off, or no view could be prepared) and
-`kiro-cli` run outside Kiro Crew get no grant and ask for those tools. Turn the
+`kiro-cli` run outside Aj Crew get no grant and ask for those tools. Turn the
 setting off to drop every verb no server spec declares and put those tools back
 through the gate. A verb a managed or edition spec declares is unaffected either
 way, and a governance ceiling strips the key whatever the setting says.
 
-An app's list and Kiro Crew's own are never honoured.
+An app's list and Aj Crew's own are never honoured.
 An app's `<app>:<server>` entry is granted
 by its manifest rather than chosen by the owner; an agent config materialized for an
 app declines the opt-in for its whole map, since an app's keys arrive from the
 manifest, the shipped spec and the per-agent policy and need not be namespaced; and
-an entry carrying the `x-kirocrew` provenance marker is Kiro Crew's own. All three
+an entry carrying the `x-ajcrew` provenance marker is Aj Crew's own. All three
 stay on the strict floor, as does a value that is not a `list[str]`, which kiro-cli's
 strict parsing would reject with no rebuild able to repair the file. On that app map
 a verb a server spec DECLARES still survives.
@@ -267,7 +267,7 @@ their own session identity and reach the serving instance on a non-default port;
 third-party servers receive neither value.
 
 An entry may also carry a **`spec_gate`** — a predicate consulted at spec
-EMISSION time. `kirocrew-computer` is the one row that has one, and the
+EMISSION time. `ajcrew-computer` is the one row that has one, and the
 distinction it draws is the difference between a capability that advertises no
 tools and one that costs nothing: emitting the entry is what makes kiro-cli spawn
 the backend, so an in-process enable check can only ever refuse work in a process
@@ -293,7 +293,7 @@ advertises no tools, and the managed-server readiness barrier
 every session on that agent would fail to start. The `@server` ref stays, as
 below.
 
-`kirocrew doctor` is a third, read-only consumer: its MCP sections resolve the
+`ajcrew doctor` is a third, read-only consumer: its MCP sections resolve the
 same registry gate (`cli_doctor._spec_gate_closed`) so a gated-off server's
 absence reads as informational rather than as a missing entry, so doctor never
 demands what emission deliberately omits.
@@ -340,7 +340,7 @@ Under an enterprise MCP registry, `_refresh_dynamic_fields()` also maintains a
 maintained rather than preserved because it tracks the account the gateway is
 signed in to, not a user preference, and because the client's filter is
 symmetric: outside registry mode a marked entry is the one that gets dropped.
-The control plane (`kirocrew-core`, `kirocrew-cron`) is left unmarked, and gets
+The control plane (`ajcrew-core`, `ajcrew-cron`) is left unmarked, and gets
 its per-session identity element on kiro-cli, when
 `kiro_cli.registry_governance_known_unreachable()` says no admin registry can
 govern the sign-in (no Identity Center rows, no API key in the environment or
@@ -370,7 +370,7 @@ discovery, `_server_from_spec` flags the same shape as `registry_pointer`;
 spawned, never cached, no quarantine verdict — and the dashboard renders it as
 the muted "Not verified" badge with a hint naming `kiro-cli mcp list`.
 
-`kirocrew-computer` carries **no `autoApprove` key and none may ever be added.**
+`ajcrew-computer` carries **no `autoApprove` key and none may ever be added.**
 A kept verb runs without a prompt (the skill view grants it in `allowedTools`), so
 no permission request is emitted and `hooks.on_tool_call` (the PreToolUse deny floor, sensitive-path
 check and governance ceiling) is never reached for it. For a tool that can click
@@ -387,7 +387,7 @@ final map mounts nothing. Several passes narrow that map without touching either
 list: the resolution pass replaces `mcpServers` wholesale and drops unresolvable
 servers by OMISSION, and the locked app re-merge deletes entries whose app is not
 confirmed enabled. That re-merge judges a colon-keyed name as an app's only when an
-installed app's manifest mints it: a global or Kiro Crew `mcp.json` server keyed
+installed app's manifest mints it: a global or Aj Crew `mcp.json` server keyed
 `npm:foo` that no manifest claims is the user's, kept and refreshed from its source. Because the merge base is the previous rendered config, a ref
 outlives the server it named — across a rename, an uninstall or a disable.
 
@@ -476,7 +476,7 @@ steering prose such as "confirm before making changes" is the only thing between
 the model and its write tools. `hooks.confirm_tools` in `config.json` is the
 structural opt-in: a list of tool patterns in the `auto_approve_tools` spelling
 (`@server`, `@server/tool*`, `Running: @server/*`, or `*` for every MCP server
-the agent's spec grants, Crew's own `@kirocrew-*` servers included; a builtin
+the agent's spec grants, Crew's own `@ajcrew-*` servers included; a builtin
 app agent's calls to its own app-scoped server are approved by the gate's
 `app-own-server` tier, which runs before this list is read, so `*` does not
 reach them). The static side withholds a server's grant whenever a pattern could match any of the gate's identity spellings for a call on it (`@server`, `@server/tool`, `Running: @server/tool`, case-insensitive, wildcards spanning `/`), judged from the pattern's literal prefix, so it errs toward a prompt and never keeps a grant the gate would refuse. A pattern that names a call only by its title acts at the gate alone.
@@ -495,7 +495,7 @@ sandbox. Deny tiers are unchanged, and a session in Trust or YOLO mode
 still approves what the user told it to.
 
 The gate side follows the live `hooks` section. The spec side is decided when a
-writer runs, so a grant already in `kirocrew.json` is withdrawn at the next
+writer runs, so a grant already in `ajcrew.json` is withdrawn at the next
 rebuild (a gateway restart) or the next dashboard enable of that server. The
 schema declares `hooks.confirm_tools` with `restart=True`, so a saved change
 reports that a restart is needed rather than claiming it applied. With the key
@@ -529,7 +529,7 @@ to the builtin floor.
 
 ### Two writers, one lock
 
-`~/.kiro/agents/kirocrew.json` has two independent writers: this whole-file
+`~/.kiro/agents/ajcrew.json` has two independent writers: this whole-file
 regenerator and the app-MCP registration path
 (`apps.bridges._register_mcp_servers`), which does a read-modify-write of the
 same file under `bridges._mcp_lock`. A register landing between the rebuild's
@@ -542,7 +542,7 @@ an enabled app's tools vanish).
 
 ## Discovery and probing
 
-Source: `mcp_discovery.py`, a mirror facade (`kiro_crew._facade_mirror`) over sibling
+Source: `mcp_discovery.py`, a mirror facade (`aj_crew._facade_mirror`) over sibling
 owner modules, so every name they define still reads and patches as
 `mcp_discovery.<name>`. The facade keeps the discovery passes: `probe_all`, with the
 quarantine exclusion, and the discover-and-sync step (`sync_discovered_servers`,
@@ -557,10 +557,10 @@ quarantine exclusion, and the discover-and-sync step (`sync_discovered_servers`,
 | `mcp_discovery_remote.py` | `_probe_remote`: the SSRF vet and pinned connection, the HTTP handshake, header expansion, and the authorization checks |
 | `mcp_discovery_probe.py` | `probe_server`: refusing a disabled server, and the stdio handshake of a local server spawned in the sandbox on a private loop, with its temp refusals |
 
-`list_servers()` reads `~/.kiro/agents/kirocrew.json`, then each scope file with
+`list_servers()` reads `~/.kiro/agents/ajcrew.json`, then each scope file with
 provenance, re-resolves stale managed commands, and overlays cached probe
 results. Every returned `McpServerInfo` carries a `presence` dict so the
-dashboard can render per-scope badges. The `kirocrew` badge is the **effective**
+dashboard can render per-scope badges. The `ajcrew` badge is the **effective**
 state after the merge minus every entry in `~/.kiro/crew/mcp.json` whose
 `disabled` is present and anything but a literal `false`
 (`mcp_cleanup.mcp_entry_is_muted`, which fails closed); the other badges are raw
@@ -867,7 +867,7 @@ Probes run from `POST /api/mcp/probe`:
     - **Fallback, never primary.** When a backend exists the real spawn still runs,
       because it is the only thing that proves the server can **start**.
       `_fix_stale_managed_command` exists precisely because that invocation goes
-      stale ("command not found: kirocrew; the built-in cron/core tools then never
+      stale ("command not found: ajcrew; the built-in cron/core tools then never
       load"), and the probe is the one surface that catches it. Short-circuiting on
       the server *name* would report `ok` for a managed server that cannot run,
       silently changing what `ok` means in the shared `_cache_probe` store.
@@ -911,7 +911,7 @@ fan-out on every request.
 
 `_fix_stale_managed_command()` rewrites a managed server's `command` and `args`
 on every `list_servers()` call, because the stored absolute path goes stale after
-an update. The invocation comes from `agent._kirocrew_mcp_invocation`, the one
+an update. The invocation comes from `agent._ajcrew_mcp_invocation`, the one
 source of truth for every install layout. It is cached per server and resolved
 again only when the cached absolute command no longer exists on disk.
 
@@ -919,16 +919,16 @@ A managed server that keeps running after an update pruned the install it was
 imported from checks for that before each `tools/call`, because anything it
 imports later would fail. It refuses the call with JSON-RPC error `-32000` and a
 SEL `rejected_install_pruned` record. When the gateway pool can respawn it
-(`KIROCREW_MCP_POOLED_BACKEND` is set and `KIROCREW_MCP_POOLED_RESPAWN_COMMAND`
+(`AJCREW_MCP_POOLED_BACKEND` is set and `AJCREW_MCP_POOLED_RESPAWN_COMMAND`
 still resolves), the refusal asks for a retry, every queued call gets the same
 answer, and the process exits with status `75` so the pool relaunches it from the
 current install. Otherwise nothing would bring it back, so it keeps its transport
-and refuses each call with a message to restart Kiro Crew.
+and refuses each call with a message to restart Aj Crew.
 
 ## Servers that ask the person (MCP elicitation)
 
 An MCP server the agent calls may gate a tool on a human answer -- a confirmation,
-a short form, a link to visit -- by sending its agent an `elicitation/create`. Kiro
+a short form, a link to visit -- by sending its agent an `elicitation/create`. Aj
 Crew is the ACP CLIENT of that agent, so the ask reaches it as a server->client
 request (`elicitation/create` on a standard harness, `_kiro/mcp/elicitation` on
 KAS) and is put to the person as a card; no trust tier answers it, and a session
@@ -936,7 +936,7 @@ with no person reachable declines. The wire shapes, the fail-closed parse, the
 consumer opt-in and the dashboard route are in
 [acp-client.md, *MCP elicitation*](../system-specs/modules/acp-client.md#mcp-elicitation-acpelicitationpy).
 This is distinct from everything else in this document, which is about the MCP
-servers Kiro Crew itself SERVES to the agent.
+servers Aj Crew itself SERVES to the agent.
 
 ## Shareability verdicts
 
@@ -945,7 +945,7 @@ server looks safe to stub, and separately whether its backend looks safe to
 share. The verdict is derived on this host from evidence ranked
 observation > measurement > declaration, and a server the gateway has WATCHED
 behave per-client while shared is never offered again. Nothing about which
-servers a machine runs ships with Kiro Crew and nothing leaves the host.
+servers a machine runs ships with Aj Crew and nothing leaves the host.
 
 Full contracts — the two on-disk records, the reason-code vocabulary, what the
 pre-flight can and cannot decide, and the seed-once rule — live in
@@ -980,14 +980,14 @@ withholds that registry shows only its own featured rows.
 
 1. **Uninstalls first.** `_purge_server_config()` removes the entry from
    `~/.kiro/crew/mcp.json`, the Kiro global, every seam-contributed scope, and
-   directly from `~/.kiro/agents/kirocrew.json`. That last targeted delete is
+   directly from `~/.kiro/agents/ajcrew.json`. That last targeted delete is
    required: the rebuild uses the existing agent file as its merge base, so
    without it the additive merge would resurrect the server. Every step is a
    read-modify-write that no-ops when the entry is already absent, so re-running
    the purge changes nothing.
 2. **Scope adds** write the spec into the target scope file.
 3. **Scope removes** strip it. If the server would no longer be inherited into
-   Kiro Crew but the user kept the Kiro Crew badge on, the full spec is first
+   Aj Crew but the user kept the Aj Crew badge on, the full spec is first
    copied into `~/.kiro/crew/mcp.json` (the **preservation rule**), which is why
    "I removed it from the Kiro global and it came back" is correct behavior.
 4. **Per-tool overrides** update `disabledTools` on the entry.
@@ -1002,15 +1002,15 @@ and `"code": "mcp_server_name_ambiguous"` before any write, both by `POST /api/m
 
 `POST /api/mcp/toggle` writes `disabled` into the Kiro global `mcp.json` for a
 server that file holds or that only another scope (an agent file, a provider
-global) holds. A server the Kiro global file does not hold but Kiro Crew's own
+global) holds. A server the Kiro global file does not hold but Aj Crew's own
 store does, such as a custom add, has its flag set in `~/.kiro/crew/mcp.json`
 instead, and the Kiro global file is not created or changed; a name that is the
 alias of several store keys is refused with the same `409`, and a store that does
 not parse is refused with `500` and `"code": "config_corrupt"`. A file holding
 comments blocks only a toggle that would rewrite it.
 
-Listing and probe rows say why a server is off. `disabledIn` is `"kirocrew"` for a
-disable in Kiro Crew's own store, which the Kiro Crew badge plus Apply lifts, and
+Listing and probe rows say why a server is off. `disabledIn` is `"ajcrew"` for a
+disable in Aj Crew's own store, which the Aj Crew badge plus Apply lifts, and
 `"shared"` for a disable in a config this panel does not write, such as the Kiro
 global `mcp.json` or a provider global; it is `null` when the row is enabled.
 `disabledInFile` names the file to edit when the shared flag is the Kiro-global one.
@@ -1052,22 +1052,22 @@ may not match the sources, and that is the one thing the caller needs told.
 
 A server the user approves for an agent template on a change card is recorded in
 `template-mcp-additions/additions.json` under the data home
-(`src/kiro_crew/template_mcp_additions.py`): owner-only, every write atomic, every
+(`src/aj_crew/template_mcp_additions.py`): owner-only, every write atomic, every
 read-modify-write under its own lock. It is kept outside every spec file because a
 spec is not where it would survive: the conductor installers rebuild their map to
 exactly the Crew servers on every pass, and a third-party installer may rewrite its
 own spec. One record keyed by template name.
 
-- **Mount-only for the default agent and the worker.** `kirocrew.json` holds every
+- **Mount-only for the default agent and the worker.** `ajcrew.json` holds every
   server installed through the MCP page, whose add also approves every tool, and
-  `kirocrew-worker` mirrors it. So the record takes a default-agent addition only
-  with `mount_only: true`, under `kirocrew`, and refuses a plain one and any
+  `ajcrew-worker` mirrors it. So the record takes a default-agent addition only
+  with `mount_only: true`, under `ajcrew`, and refuses a plain one and any
   addition under the worker (`DEFAULT_TEMPLATES`, `DEFAULT_REASON`); a hand-edited
   default entry without the flag is skipped on read. The rebuild merges it with
   `reconcile_default_spec` (stamp, Undo removal) and `sync_shared_server_refs`
   withholds its bare grant (see *Asking for an MCP server mid-chat*). A Bot's own service templates are refused
   (`CREWMATE_REASON`): a Bot's servers change through its own capabilities.
-  Every other template Kiro Crew writes (`agent_files.OWNED_KIRO_AGENT_FILES`: the
+  Every other template Aj Crew writes (`agent_files.OWNED_KIRO_AGENT_FILES`: the
   heartbeat, which copies a fixed server list, and the background agents) is refused
   with `BUILT_IN_REASON`. A refused template is never merged, even from a
   hand-edited record.
@@ -1085,14 +1085,14 @@ own spec. One record keyed by template name.
   switch-off keys, `RESTRICTION_KEYS`): the approved entry is its launch and the
   restriction is layered on top, so it narrows the server instead of withholding it. It runs in the conductor
   installers, right after `_conductor_mcp_servers` (the deprecated
-  `kirocrew-ledger-conductor` alias reads and writes its successor's record), and at
-  spawn for every template Kiro Crew does not write (`merge_at_spawn`, never written
+  `ajcrew-ledger-conductor` alias reads and writes its successor's record), and at
+  spawn for every template Aj Crew does not write (`merge_at_spawn`, never written
   to the file): in every branch of the KAS read (user level, Bot folder, project
   checkout after its key filter, keeping only its switch-off keys for an approved
   server, a bound app agent) and in the array hosts' read.
 - **Where it reaches.** A conductor is supported on every backend that runs a spec's
   servers (`agent_sdk.drivers.acp.backend_delivers_spec_servers`) and refused with
-  `NO_SPEC_SERVERS_REASON` on pi, whose projection is broker-only. A template Kiro
+  `NO_SPEC_SERVERS_REASON` on pi, whose projection is broker-only. A template Aj
   Crew does not write is reached at spawn only on
   `ACP_BACKENDS_TEMPLATE_ADDITIONS_AT_SPAWN` (KAS, claude, codex). kiro-cli loads such
   a template from its own file with no per-session channel, and Crew never writes a
@@ -1101,7 +1101,7 @@ own spec. One record keyed by template name.
 - **Reach and removal.** `addition_reach` names every template one addition reaches
   (the goal conductor and its deprecated alias share one record; a refused template
   answers `()`). `remove_addition(..., card_id=...)` takes away only that card's
-  approval. `kirocrew doctor` lists each template's additions.
+  approval. `ajcrew doctor` lists each template's additions.
 - **Applying it.** The record adds no reload path. After a write, the caller
   rebuilds the specs and applies the change to running sessions through the gate
   below (`live_sessions_apply_mcp_live`); a session that cannot apply it live picks it
@@ -1113,7 +1113,7 @@ kiro-cli 2.10.0+ watches `~/.kiro/agents` and `mcp.json` and reconciles a
 RUNNING session against an edit: only the changed servers restart, the
 conversation is kept, and the change applies at the next turn boundary. That
 makes the restart above redundant on that harness — it exists only to make
-kiro-cli re-read a file it already watches. `kiro_crew/mcp_hot_reload.py` owns
+kiro-cli re-read a file it already watches. `aj_crew/mcp_hot_reload.py` owns
 the gate, and it is keyed to the processes actually running, never to the
 binary on disk: every live provider — the registered sessions plus the warm
 pool the reset would drain — must declare `LLMProvider.mcp_config_hot_reload`
@@ -1232,18 +1232,18 @@ Python server configured through `env.PYTHONPATH` fails the probe while working
 in a session, and unexplained that reads as a probe bug rather than the
 launcher boundary it is.
 
-### Managed servers that follow kirocrew-core
+### Managed servers that follow ajcrew-core
 
-When `kirocrew-core` is in the stub set, Kiro Crew's other caller-aware managed
+When `ajcrew-core` is in the stub set, Aj Crew's other caller-aware managed
 servers join it (`config.integration_sections.MANAGED_STUB_FOLLOWERS`), so each
 is one shared backend instead of one process per session. They already need no
 launch approval (managed launch), get the per-session token from gatewayd, and
-consume the injected caller block. `kirocrew-computer` stays out (tenant-nonce
-gated), and so does `kirocrew-cron` (outside what this layer was measured on).
+consume the injected caller block. `ajcrew-computer` stays out (tenant-nonce
+gated), and so does `ajcrew-cron` (outside what this layer was measured on).
 Joining the stub set mounts nothing: only
 servers a spec already declares are wrapped. An operator can turn any one off in
 MCP Management; that choice is stored as an override and survives later
-`kirocrew-core` toggles.
+`ajcrew-core` toggles.
 
 ### Stub launch approval
 
@@ -1263,10 +1263,10 @@ changed command, argument or declared env text is still refused.
 Both halves of the fingerprint fold exactly three gateway-computed spellings
 (`hashing.install_aliases`), each in the ONE slot the gateway's own writer
 (`apps/bridges_mcp.py`) emits it in: `sys.executable` (what the rewriter substitutes
-for a manifest's bare `python3` and for the `kirocrew` host CLI) folds only as
+for a manifest's bare `python3` and for the `ajcrew` host CLI) folds only as
 the command, the absolute path of the `deps_boot` shim folds only as an argument
 (`hashing.launch_token_bytes`, which takes the slot's role from the caller), and
-the directory holding the `kiro_crew` package folds only as an `os.pathsep`
+the directory holding the `aj_crew` package folds only as an `os.pathsep`
 segment of the declared `PYTHONPATH` (`hashing.env_value_bytes`, which takes the
 key). Each hashes by role rather than by the versioned directory a release places
 it in, so the approval survives the upgrade that moves that install. Matching is
@@ -1355,12 +1355,12 @@ match: that miss is `launch_display_stale`, and its `launch` is what the row and
 the bulk review then show and pin in the refusal's place, so the next press
 approves it without a restart. A changed command, arguments, or declared
 environment requires the same re-approve flow.
-`kirocrew config set mcp_gateway.stub_servers` (on `--local` and `--file` too)
+`ajcrew config set mcp_gateway.stub_servers` (on `--local` and `--file` too)
 writes the list unchanged, then names on stderr each listed server the store
 holds no approved launch for: the next gateway start refuses it as
 `added_outside_dashboard` until it is approved in **Customize → Connections →
 MCP Servers**, and a `secret://` reference in its env resolves only once the
-gateway runs it. A reserved `kirocrew-*` server, whose managed launch needs no
+gateway runs it. A reserved `ajcrew-*` server, whose managed launch needs no
 approval, and a never-pooled one are not named.
 
 On the page, the hero card holds the page-wide sharing switch and the
@@ -1402,7 +1402,7 @@ displays (a hidden env value compares by its short hash), so a partial refusal,
 one missing either side, or one whose approved launch shows a redaction tag (two
 different values read as the same tag) keeps **Paused · command changed**, as
 does an approved launch that changed, whatever was added beside it. The control is the
-same **Approve update**, and `kirocrew doctor` names such a server `new launch
+same **Approve update**, and `ajcrew doctor` names such a server `new launch
 not approved yet` from the same record (`doctor_checks/mcp.py`, mirroring
 `refusalOnlyAddsLaunches` in `mcpManagementModel.ts`).
 **Review and approve** opens a dialog over the waiting servers only, one
@@ -1413,7 +1413,7 @@ description of what it installs (the approved `npx` launches of the servers with
 Share on) and of what **Update now** does; that line is also the button's
 accessible description. The hero's **Learn more** and the confirm dialog's
 **Learn more in the docs** both open
-[Sharing MCP servers across chats](../../src/kiro_crew/docs/connections.md#sharing-mcp-servers-across-chats),
+[Sharing MCP servers across chats](../../src/aj_crew/docs/connections.md#sharing-mcp-servers-across-chats),
 the user guide section that explains the page in its own labels.
 
 The gateway-owned `mcp/resolved/`
@@ -1436,9 +1436,9 @@ write applies with no broker restart:
   longer or shorter window takes effect on the next pass. It is read in the
   GATEWAY process, which is where the config watcher runs.
 - **`apps_enabled`** — retired as a preference (nothing writes it; see
-  [mcp-apps.md](../../src/kiro_crew/docs/mcp-apps.md)), but a stored `false` is
+  [mcp-apps.md](../../src/aj_crew/docs/mcp-apps.md)), but a stored `false` is
   still an opt-out. The MCP Apps gate reads it on every call through the
-  fingerprint-cached `KiroCrewConfig.load()`, so the opt-out applies with no
+  fingerprint-cached `AjCrewConfig.load()`, so the opt-out applies with no
   daemon restart, and an unreadable config fails closed.
 
 **`enabled`** is neither per-use nor boot-only. `POST /api/mcp-gateway/enable`
@@ -1451,13 +1451,13 @@ effect at the next gateway start.
 (`gatewayd`), which runs no config watcher — `config.live.snapshot()` is always
 `None` there — so a per-use read of the live snapshot would be inert and the
 field stays boot-only (`RESPONSE_SPILL_THRESHOLD_BYTES`, resolved once at import:
-env pin `KIROCREW_MCP_SPILL_THRESHOLD` → config key → built-in 256 KiB), marked
+env pin `AJCREW_MCP_SPILL_THRESHOLD` → config key → built-in 256 KiB), marked
 `restart=True` like the rest of the section. `read_buffer_limit_bytes` is boot-only
 for a second reason as well: it is handed to asyncio readers as `limit=` when they
 are CONSTRUCTED and cannot be changed afterwards. The stub reads no config: the
 rewriter resolves the config value (ignoring the environment) and stamps it onto
 each stub's argv as `--read-limit`, and the stub resolves its ceiling as
-`KIROCREW_MCP_READ_LIMIT`, then the flag, then the config key, then the 64 MiB
+`AJCREW_MCP_READ_LIMIT`, then the flag, then the config key, then the 64 MiB
 default. Because the value rides the overlay, `read_buffer_limit` is an input to the
 rewrite fingerprint, so changing the key regenerates the overlays.
 `test_mcp_gateway_stub_import_budget.py` pins the module set a running stub holds,
@@ -1510,7 +1510,7 @@ and are **not** dimensions: `sandbox_mode`, `autoapprove_set_hash`,
   processes confined identically, so splitting them buys a second unsandboxed
   process rather than a second sandbox. The compensating controls that do the
   real work here — the target command coming only from the rewriter's
-  `KIROCREW_MCP_TARGET_<SERVER>` vars, credential-env scrubbing before `gatewayd`
+  `AJCREW_MCP_TARGET_<SERVER>` vars, credential-env scrubbing before `gatewayd`
   inherits, and backends running as the invoking user — are all per-host, not
   per-key.
 - **Approval is decided before a call reaches the gateway.** Tool visibility, the
@@ -1609,7 +1609,7 @@ cancelled (releasing their permits neutral), charges are dropped -- then
 proceeds with the existing teardown.
 
 **Wire.** The `registered` reply carries the daemon's `code_fingerprint`.
-A stub whose `--server` names one of Kiro Crew's own MCP servers and whose
+A stub whose `--server` names one of Aj Crew's own MCP servers and whose
 target argv names its managed subcommand also puts its `stub_code_fingerprint`
 on the Register frame and requires the two values to match exactly before it
 keeps the broker connection. A missing value identifies
@@ -1626,11 +1626,11 @@ compatibility check, not an authorization proof. Third-party targets send no
 old-daemon compatibility.
 
 **Fallback identity.** `fallback_exec` keeps the stub's session token
-(`KIROCREW_STUB_SESSION_TOKEN`) only when the target passes the same
+(`AJCREW_STUB_SESSION_TOKEN`) only when the target passes the same
 `_spawns_own_control_plane` vetting gatewayd applies before it hands a pooled
 backend the token: control-plane name, managed binary by real path, exact args,
-no loader or `PYTHON*` overlay in the child env (Kiro Crew's own pinned UTF-8
-values excepted), and no import root shadowing `kiro_crew`. A kept token also
+no loader or `PYTHON*` overlay in the child env (Aj Crew's own pinned UTF-8
+values excepted), and no import root shadowing `aj_crew`. A kept token also
 gets `PYTHONSAFEPATH` (and `PYTHONNOUSERSITE` unless user-site holds this
 package). Every other target has the token removed, so a third-party binary
 never inherits it. Without the token a fallback control plane relies on the
@@ -1712,7 +1712,7 @@ restored before it is spawned or persisted. `which` can append uppercase `.EXE`
 from `PATHEXT` even when the file is named `demo-mcp.exe`. Windows can open
 that path, but a launcher that dispatches by its own basename with a
 case-sensitive lookup can reject it. The repair
-(`kiro_crew.env.resolved_command_casing`) scans the resolved path's parent
+(`aj_crew.env.resolved_command_casing`) scans the resolved path's parent
 directory and substitutes the unique case-insensitive basename match instead of
 canonicalizing the full path.
 
@@ -1720,9 +1720,9 @@ The three MCP server command resolvers share it, next to the `mcp_search_path`
 they already share: the agent-config resolver (`agent._resolve_command`), the
 dashboard probe (`mcp_discovery`) and the rewriter. The respawn lookup of a
 gateway restart in `cli_server` (`_own_console_script` and the PATH fallback in
-`_spawn_detached_gateway`) uses it too. Other resolvers of Kiro Crew's own
-binaries stay outside it: the `kirocrew` lookup in
-`agent._resolve_kirocrew_bin`, and the kiro-cli resolver, whose discovery
+`_spawn_detached_gateway`) uses it too. Other resolvers of Aj Crew's own
+binaries stay outside it: the `ajcrew` lookup in
+`agent._resolve_ajcrew_bin`, and the kiro-cli resolver, whose discovery
 in `kiro_cli.py` does its own Windows `realpath`. So do the ACP adapter
 ladders in `acp/launch.py` and `acp/harness/{claude,pi}.py`, which call
 `acp/launch.py`'s `_normalize_exe_casing`. The agent-config resolver is the one that
@@ -1735,7 +1735,7 @@ recognises the entry and re-derivation stays enabled.
 
 That narrow lookup preserves the lexical parent route (including a directory
 junction) and a file symlink's own name. Explicit absolute commands retain the
-operator's spelling, with one exception: `kiro_crew.env.saved_command_casing`
+operator's spelling, with one exception: `aj_crew.env.saved_command_casing`
 heals an absolute command whose stem matches the directory entry exactly and
 whose extension differs only in case (`demo-mcp.EXE` -> `demo-mcp.exe`). That is
 the spelling an older build persisted from `PATHEXT`, so it repairs itself on
@@ -1819,7 +1819,7 @@ attribution, outside broker governance -- the same direction every other
 unvouchable stub takes here, and the lookup says so at WARNING rather than debug:
 this is an ordinary configuration rather than an error path, so at debug the
 governance downgrade would be exactly as silent as the defect it replaces. Brokering them instead is not an overlay change:
-`gatewayd` resolves a backend command from `KIROCREW_MCP_TARGET_<SERVER>` in its
+`gatewayd` resolves a backend command from `AJCREW_MCP_TARGET_<SERVER>` in its
 OWN process env, written at daemon launch from the rewriter's `target_env`, and a
 stub never tells the daemon its target. An overlay written for a project agent
 after launch therefore has no target the daemon can resolve, so closing that half
@@ -1881,7 +1881,7 @@ kiro-cli 2.22.0, `kiro-cli agent list` run inside a checkout holding both
 `probe-md` does not appear. A newer CLI that does discover project markdown would
 make this backend a member of the markdown set, which is the condition the
 containment pin names. That measurement is not a one-off: the
-`KIROCREW_E2E_REAL_KIRO_CLI`-gated suite pins it beside the session/new precedence
+`AJCREW_E2E_REAL_KIRO_CLI`-gated suite pins it beside the session/new precedence
 guard, and its failure message names the set to join, so an upgrade that adds
 project markdown discovery reports the remedy rather than silently reopening the
 defect.
@@ -1911,7 +1911,7 @@ in any state is a claim on the name, keeps refusing.
 
 ### Bot overlays
 
-A Bot's worker runs on `kirocrew-mate-worker`, and both that base spec and
+A Bot's worker runs on `ajcrew-mate-worker`, and both that base spec and
 the Bot's own file live in `~/.kiro/mates/agents/`, which the agents loop
 above never reads. So the gateway start passes that folder to the same pass
 (`rewrite_kwargs`' `mate_source_dir`), and `mcp_gateway/mate_overlays.py` writes
@@ -1965,7 +1965,7 @@ folder has.
 A worker session finds its stubs by its own execution record, never by the shared
 name, and only on KAS: `_pooled_session_servers_and_ref_spec` passes the session
 key on a positive `backend == kas` check, and `session_servers` answers
-`kirocrew-mate-worker` with that key only through
+`ajcrew-mate-worker` with that key only through
 `mate_overlays.worker_overlay_spec(overlay_dir, session_key)`. Every other host
 passes no key and keeps the by-name lookup it had. The record must be a
 Bot's worker, its Bot must own its file (`mate_file_for_member`), and
@@ -1994,7 +1994,7 @@ An app callback from a Bot's stub is governed as that worker's tool calls
 are. The spool record carries the stub identity `crewmate:<id>`, which no profile
 binds by kind, so `app_call._governance_denial` asks
 `mate_overlays.governance_agents` for every agent whose task profile applies:
-`kirocrew-mate-worker` (the binding its session's own tool calls resolve) and the
+`ajcrew-mate-worker` (the binding its session's own tool calls resolve) and the
 identity itself (the binding it resolved before). The worker's name resolves as
 its tool calls do, task bind over surface; the identity adds only a profile bound
 to it by task (`governance_profiles.resolve_task_bound_profile`), with no surface
@@ -2017,7 +2017,7 @@ picks the edit up.
 ## How app agents reach MCP servers
 
 An app declares MCP servers in its manifest, and
-`apps.bridges._register_mcp_servers()` writes them into Kiro Crew's agent config
+`apps.bridges._register_mcp_servers()` writes them into Aj Crew's agent config
 under a `{app}:{server}` namespace rather than into the shared Kiro global,
 because that global is read by Kiro IDE and every other kiro-cli agent, so an
 app's private tools would leak into surfaces that never installed it.
@@ -2036,19 +2036,19 @@ the reference hides that server's tools from the agent but does not avoid the
 process or connection cost. Isolation and feature gates that must avoid that
 cost therefore remove the server entry itself as well as its tool reference.
 
-An app agent that references a host-managed server (`@kirocrew-core`,
-`@kirocrew-cron`) in its `tools` gets the launch spec copied in by
+An app agent that references a host-managed server (`@ajcrew-core`,
+`@ajcrew-cron`) in its `tools` gets the launch spec copied in by
 `_materialize_managed_refs()`. kiro-cli resolves a `@server` ref against the
 agent's own `mcpServers` plus the global `mcp.json`, and managed specs live in
 the host agent's config only, so without that copy the ref dangles and the tool
 silently never mounts. The copy comes from `managed_mcp_spec_entry(name,
 include_opt_in=True)`: the ref is an explicit grant, so an `opt_in` server is
-copied, but a server whose `spec_gate` is closed (`kirocrew-computer` while
+copied, but a server whose `spec_gate` is closed (`ajcrew-computer` while
 computer use is off or unsupported) is not, as on the host agent. Its backend
 would advertise no tools and hold KAS readiness for its whole timeout, and the
-`@kirocrew-computer` ref it leaves dangling on purpose is not logged as a ref that
+`@ajcrew-computer` ref it leaves dangling on purpose is not logged as a ref that
 will never mount. The copy carries the same managed `env` as the host spec (the
-`KIROCREW_HOME` pin under a non-default data home).
+`AJCREW_HOME` pin under a non-default data home).
 
 Containment for app agents has three layers:
 
@@ -2056,12 +2056,12 @@ Containment for app agents has three layers:
 |-------|-----------|----------------|
 | Agent config | `managedToolPolicy` renders as `disabledTools`; a `neutralize` entry re-declares a server with every tool disabled and does not add it to `tools` | Written at registration, no network |
 | kiro-cli | Reads `disabledTools` and filters before the model sees the list | In-process, no network |
-| MCP server | `GET /api/session-tool-policy` returns the calling session's `managedToolPolicy.exclude`, and the server filters `tools/list` and `tools/call`. A spec that sets `managedToolPolicy.honourToolRefs: true` also gets an `include` entry for each Kiro Crew managed server it grants only through `@<server>/<tool>` refs (`include: {"kirocrew-dashboard": [...]}`): that server lists only those tools and refuses any other call (`rejected_not_included`). Each server named in `managedToolPolicy.excludeServers` is answered as an empty include entry (`include: {"<server>": []}`), overriding any per-tool entry: that server lists nothing and refuses every call; a present `excludeServers` that is not a list of server names makes the policy unreadable. A malformed `include` is `unresolved` like a malformed `exclude`. When that read fails the policy is `unresolved`: `tools/call` refuses with an audited error, `tools/list` still lists everything | Gateway round-trip |
+| MCP server | `GET /api/session-tool-policy` returns the calling session's `managedToolPolicy.exclude`, and the server filters `tools/list` and `tools/call`. A spec that sets `managedToolPolicy.honourToolRefs: true` also gets an `include` entry for each Aj Crew managed server it grants only through `@<server>/<tool>` refs (`include: {"ajcrew-dashboard": [...]}`): that server lists only those tools and refuses any other call (`rejected_not_included`). Each server named in `managedToolPolicy.excludeServers` is answered as an empty include entry (`include: {"<server>": []}`), overriding any per-tool entry: that server lists nothing and refuses every call; a present `excludeServers` that is not a list of server names makes the policy unreadable. A malformed `include` is `unresolved` like a malformed `exclude`. When that read fails the policy is `unresolved`: `tools/call` refuses with an audited error, `tools/list` still lists everything | Gateway round-trip |
 
 Which session that third layer asks for is resolved by `mcp_shared._policy_session_key`
 in the same order the strict resolver uses — the gateway's per-call caller, then the
 protected member binding, then the signed per-session token, then
-`KIROCREW_SESSION_KEY` and the pid sources. The RESOLVED session is what rides the
+`AJCREW_SESSION_KEY` and the pid sources. The RESOLVED session is what rides the
 request's `X-Session-Key` and what keys the per-session policy cache, so the answer
 returned and the answer stored are the same session's. Keyed on the gateway identity
 instead, every caller the gateway could not name shared one entry, and the cache has no
@@ -2087,8 +2087,8 @@ The third layer is defense in depth for hosts that ignore `disabledTools`. When 
 policy cannot be read, what it does depends on WHY, because the reasons differ in
 kind and its two consumers carry different risk.
 
-It runs only in Kiro Crew's own servers. `mcp_shared.serves_managed_tools` checks
-where the loop's `tools/call` handler is defined: under the `kiro_crew` package (the
+It runs only in Aj Crew's own servers. `mcp_shared.serves_managed_tools` checks
+where the loop's `tools/call` handler is defined: under the `aj_crew` package (the
 control plane and the builtin apps) the policy applies; anywhere else -- a
 user-installed app that serves its own tools through `run_mcp_stdio_loop` -- the
 loop answers "nothing excluded" without a read. The policy names managed tools,
@@ -2097,7 +2097,7 @@ server is never handed a session token (identity rides only the
 control plane), so the read could only refuse every call. The app's tools stay gated
 by its spec's `tools` / `allowedTools` and kiro-cli's `disabledTools`. The check runs
 inside the server's own process and is not a boundary against the app; what it must
-not do is let a Kiro Crew server out, so a handler whose code location cannot be read
+not do is let a Aj Crew server out, so a handler whose code location cannot be read
 keeps the policy.
 
 `tools/call` fails **closed** on the four reasons in `_UNRESOLVED_REFUSES_CALL`
@@ -2128,18 +2128,18 @@ ambiguous reason is wrong for half the callers it hits.
 
 `identity_unattestable` is decided before any request. A session key resolved locally
 -- no gateway `caller_session`, no `X-Session-Token` to send with it, and no
-`KIROCREW_SESSION_KEY` in the environment -- carries nothing the gateway could attest,
+`AJCREW_SESSION_KEY` in the environment -- carries nothing the gateway could attest,
 so the dial is skipped, the read is audited as `tool_policy.unattestable_key`, and the
 call is refused with text that names the missing session token without claiming a
 gateway read. It is a separate reason from `identity_unattested` only for that text.
-On an install that declares `agent.mcp_registry_mode`, a refusal from `kirocrew-core`
-or `kirocrew-cron` (and its warning log line) adds the registry cause and the admin's
+On an install that declares `agent.mcp_registry_mode`, a refusal from `ajcrew-core`
+or `ajcrew-cron` (and its warning log line) adds the registry cause and the admin's
 fix (`mcp_shared_policy.registry_identity_note`) while that field is off: the
 registry catalog launches those servers without a session identity, and an
 administrator enables them by setting
 `"mcp_registry_local_control_plane": true` in `security_policy.json`, which makes
 `session_mcp.kiro_control_plane_servers` mount the per-session identity element for
-`kirocrew-core` and `kirocrew-cron` only. Without that field nothing is mounted
+`ajcrew-core` and `ajcrew-cron` only. Without that field nothing is mounted
 under registry mode and the call stays refused, unless
 `kiro_cli.registry_governance_known_unreachable()` says no admin registry can
 govern the sign-in.
@@ -2152,11 +2152,11 @@ onto the same established-session refusal instead of echoing the header name). W
 process carries neither the session token nor a launcher host pid
 (`mcp_shared.spawned_without_gateway_identity`), nothing the gateway does at spawn
 happened to it, and all three append the same `mcp_shared.external_client_identity_note`:
-a server started outside a Kiro Crew session (an editor's own MCP config) has no identity
-channel and its identity-bearing tools are not supported; `KIROCREW_SESSION_KEY` is a
+a server started outside a Aj Crew session (an editor's own MCP config) has no identity
+channel and its identity-bearing tools are not supported; `AJCREW_SESSION_KEY` is a
 gateway-injected fallback, not a credential, and set by hand it turns the partial
 refusals into `identity_unattested` on every call; the read-only tools work without it;
-the supported editor direction is connecting into a Kiro Crew session rather than
+the supported editor direction is connecting into a Aj Crew session rather than
 spawning the server, and that server's entry in `~/.kiro/settings/mcp.json` is the
 leftover state the design invariant at the top of this document names. The note
 decorates a denial and never grants: which calls are refused is unchanged, and a server
@@ -2280,24 +2280,24 @@ need no model round-trip (`cron list`, `spawn list`).
 ### Server and tool inventory
 
 Managed servers, registered by `agent._MANAGED_MCP_SERVERS` and installed into
-`~/.kiro/agents/kirocrew.json`:
+`~/.kiro/agents/ajcrew.json`:
 
 | Server | Process | Tools |
 |--------|---------|-------|
-| `kirocrew-cron` | `kirocrew mcp-cron` (`mcp_cron.py` + `mcp_cron_*.py`) | `cron_add`, `cron_list`, `cron_update`, `cron_remove`, `cron_remove_all`, `cron_pause`, `cron_resume`, `cron_trigger`, `cron_secret_request` |
-| `kirocrew-core` | `kirocrew mcp-core` (`mcp_core.py` + `mcp_core_parts/` + `mcp_tools/`) | spawn/subagent, learn, task, messaging, artifact, workflow, knowledge and session-directive tools (see below) |
-| `kirocrew-computer` | `kirocrew mcp-computer` (`mcp_computer.py`) | `computer_list_apps`, `computer_launch_app`, `computer_get_state`, `computer_click`, `computer_drag`, `computer_type_text`, `computer_press_key`, `computer_set_value`, `computer_scroll`, `computer_perform_action`, `computer_end_turn` |
-| `kirocrew-dashboard` | `kirocrew mcp-dashboard` (`mcp_dashboard.py` + `mcp_dashboard_*.py`) | `chat_folder_tree`, `chat_folder_create`, `chat_folder_move`, `chat_folder_update`, `chat_folder_move_session`, `chat_folder_delete`, `chat_tag_list`, `chat_tag_create`, `chat_tag_update`, `chat_tag_assign`, `chat_tag_column_list`, `chat_tag_column_create`, `chat_tag_column_move`, `session_move_to_column`, `chat_session_pin`, `chat_session_pin_move`, `session_create`, `session_fork`, `session_stop`, `session_end_wait`, `session_retry`, `session_continue`, `session_set_model`, `session_reload`, `session_rename`, `session_generate_title`, `session_set_color`, `session_close`, `session_revive`, `session_history_list`, `session_send`, `session_broadcast`, `session_status`, `session_adopt`, `session_handoff`, `session_release`, `session_read_message`, `session_summary` |
-| `kirocrew-work` | `kirocrew mcp-work` (`mcp_work.py`) | `work_brief`, `work_report`, `work_ledger_read`, `work_ledger_rebuild`, `work_ledger_record` |
-| `kirocrew-crew-log` | `kirocrew mcp-crew-log` (`mcp_crew_log.py`) | `crew_log_list`, `crew_log_read`, `crew_log_projection` |
-| `kirocrew-debug` | `kirocrew mcp-debug` (`mcp_debug.py`) | `debug_gateway`, `debug_refusals`, `debug_threads`, `debug_processes`, `debug_snapshots` |
-| `kirocrew-panel` | `kirocrew mcp-panel` (`mcp_panel.py`) | `panel_publish`, `panel_templates`, `dashboard_fields`, `dashboard_types`, `dashboard_write`, `dashboard_templates`, `dashboard_preview`, `dashboard_apply`, `dashboard_rollback`, `dashboard_snapshot` |
-| `kirocrew-guide` | `kirocrew mcp-guide` (`mcp_guide.py`) | `guide_list_actions`, `guide_start`, `guide_status`, `guide_cancel`, `list_change_kinds`, `find_setting`, `get_member_capabilities`, `diagnose_settings`, `propose_change`, `get_change_status`, `search_docs`, `find_ui` |
-| `kirocrew-mate` | `kirocrew mcp-mate` (`mcp_mate.py`) | `update_self`, `set_model`, `set_approval_mode`, `find_capabilities`, `request_capabilities`, `goal_read`, `set_goal`, `set_key_results`, `key_result_progress`, `save_goal_report`, `save_notes` |
-| `kirocrew-secrets` | `kirocrew mcp-secrets` (`mcp_secrets.py`) | `call_api_with_secret` |
+| `ajcrew-cron` | `ajcrew mcp-cron` (`mcp_cron.py` + `mcp_cron_*.py`) | `cron_add`, `cron_list`, `cron_update`, `cron_remove`, `cron_remove_all`, `cron_pause`, `cron_resume`, `cron_trigger`, `cron_secret_request` |
+| `ajcrew-core` | `ajcrew mcp-core` (`mcp_core.py` + `mcp_core_parts/` + `mcp_tools/`) | spawn/subagent, learn, task, messaging, artifact, workflow, knowledge and session-directive tools (see below) |
+| `ajcrew-computer` | `ajcrew mcp-computer` (`mcp_computer.py`) | `computer_list_apps`, `computer_launch_app`, `computer_get_state`, `computer_click`, `computer_drag`, `computer_type_text`, `computer_press_key`, `computer_set_value`, `computer_scroll`, `computer_perform_action`, `computer_end_turn` |
+| `ajcrew-dashboard` | `ajcrew mcp-dashboard` (`mcp_dashboard.py` + `mcp_dashboard_*.py`) | `chat_folder_tree`, `chat_folder_create`, `chat_folder_move`, `chat_folder_update`, `chat_folder_move_session`, `chat_folder_delete`, `chat_tag_list`, `chat_tag_create`, `chat_tag_update`, `chat_tag_assign`, `chat_tag_column_list`, `chat_tag_column_create`, `chat_tag_column_move`, `session_move_to_column`, `chat_session_pin`, `chat_session_pin_move`, `session_create`, `session_fork`, `session_stop`, `session_end_wait`, `session_retry`, `session_continue`, `session_set_model`, `session_reload`, `session_rename`, `session_generate_title`, `session_set_color`, `session_close`, `session_revive`, `session_history_list`, `session_send`, `session_broadcast`, `session_status`, `session_adopt`, `session_handoff`, `session_release`, `session_read_message`, `session_summary` |
+| `ajcrew-work` | `ajcrew mcp-work` (`mcp_work.py`) | `work_brief`, `work_report`, `work_ledger_read`, `work_ledger_rebuild`, `work_ledger_record` |
+| `ajcrew-crew-log` | `ajcrew mcp-crew-log` (`mcp_crew_log.py`) | `crew_log_list`, `crew_log_read`, `crew_log_projection` |
+| `ajcrew-debug` | `ajcrew mcp-debug` (`mcp_debug.py`) | `debug_gateway`, `debug_refusals`, `debug_threads`, `debug_processes`, `debug_snapshots` |
+| `ajcrew-panel` | `ajcrew mcp-panel` (`mcp_panel.py`) | `panel_publish`, `panel_templates`, `dashboard_fields`, `dashboard_types`, `dashboard_write`, `dashboard_templates`, `dashboard_preview`, `dashboard_apply`, `dashboard_rollback`, `dashboard_snapshot` |
+| `ajcrew-guide` | `ajcrew mcp-guide` (`mcp_guide.py`) | `guide_list_actions`, `guide_start`, `guide_status`, `guide_cancel`, `list_change_kinds`, `find_setting`, `get_member_capabilities`, `diagnose_settings`, `propose_change`, `get_change_status`, `search_docs`, `find_ui` |
+| `ajcrew-mate` | `ajcrew mcp-mate` (`mcp_mate.py`) | `update_self`, `set_model`, `set_approval_mode`, `find_capabilities`, `request_capabilities`, `goal_read`, `set_goal`, `set_key_results`, `key_result_progress`, `save_goal_report`, `save_notes` |
+| `ajcrew-secrets` | `ajcrew mcp-secrets` (`mcp_secrets.py`) | `call_api_with_secret` |
 
-`kirocrew-guide` is a platform capability: it is always emitted (not `opt_in`),
-so the default `kirocrew` template, every Bot built from it, the worker
+`ajcrew-guide` is a platform capability: it is always emitted (not `opt_in`),
+so the default `ajcrew` template, every Bot built from it, the worker
 derived from it, and every dashboard session on them mount it, deferrable by
 Tool Search like any other MCP server. The conductor and background templates
 (`agent_materialization/conductor_agents.py`, the knowledge, research and
@@ -2306,7 +2306,7 @@ are driven by patrols and dispatch, not by a person at the dashboard, so they
 have no one to show a guide or card to. It is its own server because the server
 is the unit of assignment, authorization and governance: an operator or a policy
 can withhold the whole set at once. A fresh build references it from the shipped
-defaults; an existing default spec gains the `@kirocrew-guide` ref and the grants
+defaults; an existing default spec gains the `@ajcrew-guide` ref and the grants
 once (`guide_platform.grant_guide_platform_once`, recorded by the
 `guide_platform_granted.json` marker after the spec is written), and keeps
 whatever its owner does with them afterwards. Its entry carries no `autoApprove`,
@@ -2325,7 +2325,7 @@ permissions derive from that final filtered list. A harness whose projection
 does not carry the server reports it through the ordinary unresolved-ref doctor
 row ([agent host contract](../system-specs/modules/agent-host-contract.md)); nothing special-cases its
 absence.
-`kirocrew-mate` (`mcp_mate.py`) is the Bot's own record, mounted on the
+`ajcrew-mate` (`mcp_mate.py`) is the Bot's own record, mounted on the
 same specs on the same terms (always emitted, no `autoApprove`, its own server so
 the set is withheld as one and the guide set stays the user's help with the
 dashboard; an existing spec gains the ref and `agent._MATE_AUTO_GRANTS` once,
@@ -2404,7 +2404,7 @@ user presses it, so the Bot may raise its own goal, milestones and
 check-ins whenever its work calls for it.
 The workspace, memory store, member id, key and template are not the
 Bot's to change or to ask for.
-Its guide and card tools, and every `kirocrew-mate` tool, work only for a turn
+Its guide and card tools, and every `ajcrew-mate` tool, work only for a turn
 the user sent from the dashboard. The gateway's admission
 (`dashboard.handlers.guide._resolve_agent_caller`, shared by the card and member
 routes) first requires the session key the call names to be attested by
@@ -2629,7 +2629,7 @@ on many settings counting for little. The write target is resolved from data: th
 controls in `change_card_catalog.DASHBOARD_SETTINGS` (Response Verbosity and the
 other Chat toggles) write `PUT /api/dashboard/config` with a one-key partial
 body, a registry `configKey` the config route accepts writes
-`PATCH /api/config/kirocrew`, and anything else is refused `no_write_path` with a
+`PATCH /api/config/ajcrew`, and anything else is refused `no_write_path` with a
 pointer to the `settings.show` guide. The value must be one of the control's
 own options. A string-list setting (`change_card_catalog.DASHBOARD_LIST_SETTINGS`:
 Selectable Models' hidden models) takes `op` (`add`/`remove`) and one `item`
@@ -2680,7 +2680,7 @@ through the credential redactor as a second line of defence. `list_change_kinds`
 because none of them can change anything: the strict-internal
 `/api/cards/agent/*` routes use the guide's caller checks and only create or read
 a card in the caller's own slot. `search_docs(query? | page, offset?)` on the
-same server is a read of the packaged user docs (`kiro_crew/docs/*.md`, pages
+same server is a read of the packaged user docs (`aj_crew/docs/*.md`, pages
 named from the directory's own listing so no caller string becomes a path; up to
 5 results with 3 matching lines, pages in 12,000-character chunks). A query is
 matched word by word at the start of a word, after dropping question words such
@@ -2699,7 +2699,7 @@ part of `agent._GUIDE_AUTO_GRANTS`; so is `find_ui`, the read of the packaged
 dashboard location index described in
 [find_ui and the UI location index](#find_ui-and-the-ui-location-index). `diagnose_settings`
 (`GET /api/cards/agent/diagnose[?topic=]`) is a pure read: every config and
-dashboard-config key whose value differs from its `KiroCrewConfig()` default,
+dashboard-config key whose value differs from its `AjCrewConfig()` default,
 joined to the Settings registry, with credential-like keys (the `find_setting`
 predicate, also split on `_`) reduced to `{set: bool}` and nested credential keys
 scrubbed the same way, plus the newest 50 "Dashboard: ..." lines from Global
@@ -2714,7 +2714,7 @@ reports `unknown`), each strictly read-only -- no `_doctor_*` call, no repair
 path, `memory.db` opened `mode=ro` while its `-wal` exists (so committed but
 uncheckpointed rows count) and `mode=ro&immutable=1` otherwise, the crew log through
 `crew_log.read` -- with strings redacted and lists capped, and never a secret
-value, token or whole MCP spec. The read-only `kirocrew-crew-log` server stays an
+value, token or whole MCP spec. The read-only `ajcrew-crew-log` server stays an
 opt-in set no template mounts by default; an agent granted it in its own spec reads
 under the routes' own scope. The owner's browser renders it, re-reads a stale one through `POST /api/cards/{id}/preview` (a new `revision`), and applies it
 by sending each plan step to the real route with `X-Card-Id`/`X-Card-Revision`/
@@ -2745,7 +2745,7 @@ leaves a different Bot wearing it, so the Undo answers `409
 changed_since_apply` and keeps the replacement and its crew log. The check is
 armed on the owner-authed Undo step alone and runs inside `update_config_locked`
 against the cross-process advisory file lock -- never against the in-process
-`KiroCrewConfig.load()` snapshot, which serializes only same-loop callers and
+`AjCrewConfig.load()` snapshot, which serializes only same-loop callers and
 would wave through a same-name recreate landing from another process. That same
 Undo's first inverse step deletes the schedule the create made, as a
 `crewmate.create` `/api/crons/<id>` DELETE, under the same `after.schedule`
@@ -2852,7 +2852,7 @@ card's proposer, read from the card rather than the page showing it: a card whos
 `slot_key` is a Bot's own chat (the roster row bound to that slot) reads
 "<display name>'s reason" (`cardAuthor.cardProposer`, `{{name}}'s reason` in each
 catalog); a card from the main assistant, or one whose roster row is not loaded
-yet, keeps the page's author, "Kiro Crew" outside a Bot chat. The Affects row is
+yet, keeps the page's author, "Aj Crew" outside a Bot chat. The Affects row is
 left out when it would only repeat the title: the gateway marks its one member as
 the card's own subject (`scope.only_this_member`) and the title names that member
 (`cardRegistry.scopeRepeatsTitle`). An unmarked scope (a template's users, whose
@@ -2866,27 +2866,27 @@ button is a bare verb ("Decline", catalog key `components.changeCards.cancel`)
 unless the kind names its own (`decline` in `cardRegistry`), so it has the same
 short shape as the kind's accept label.
 
-`kiro_crew/change_card_catalog.py` keeps the evidence, undo and result code
+`aj_crew/change_card_catalog.py` keeps the evidence, undo and result code
 (`extract_evidence`, `build_undo`, `result_summary`) and the manual-change memory
 lines (`describe_manual_change`, `HOOKED_ROUTES`, `MEMORY_ROUTES`), and is a mirror
-facade (`kiro_crew._facade_mirror`) over two sibling owners, so every other name
+facade (`aj_crew._facade_mirror`) over two sibling owners, so every other name
 still reads and patches as `change_card_catalog.<name>`. New work goes to the owner
 of its responsibility: `change_card_catalog_kinds.py` (the kind ids, the `KINDS`
 table, the risk and limit constants and the parameter validation) and
 `change_card_catalog_plans.py` (the plan steps and fills, the stores and dashboard
 setting tables, the display helpers and `build_preview`).
 
-`kirocrew-panel` is opt-in and reaches a crew member's DM session the way
-`kirocrew-dashboard` does: as a session-level `mcpServers` entry carrying that
+`ajcrew-panel` is opt-in and reaches a crew member's DM session the way
+`ajcrew-dashboard` does: as a session-level `mcpServers` entry carrying that
 session's identity (`members.member_panel_session_server`), plus
-`@kirocrew-panel` in `tools` and `_MEMBER_PANEL_GRANTS` in `allowedTools` on the
+`@ajcrew-panel` in `tools` and `_MEMBER_PANEL_GRANTS` in `allowedTools` on the
 KAS projection. Neither the Capabilities editor nor any emitted spec can grant
 it -- that list is built from configured connections, and an opt-in managed
 server is not one -- so this mount is the only path to it. The operator ceiling
 is `agent.crew_panel`; see the session-control module spec for the grant
 reasoning and the fail-closed behaviour.
 
-`kirocrew-dashboard` is one transport carrying **two** authorization models, which is
+`ajcrew-dashboard` is one transport carrying **two** authorization models, which is
 what makes its assignment decision larger than its name suggests. The
 `chat_folder_*` verbs are bounded by RESOURCE ownership — a folder created by an app
 carries it in `owner_app`, and an app may reshape only its own. The `session_*` verbs
@@ -2896,7 +2896,7 @@ is their spec and carries that reasoning.
 
 The consequence to know before granting: an agent handed the whole server for folder
 organization has the session verbs too. Whether they prompt depends on how the grant
-is spelled — `_mcp_pattern` maps a bare `@kirocrew-dashboard` entry to a one-level
+is spelled — `_mcp_pattern` maps a bare `@ajcrew-dashboard` entry to a one-level
 glob, so it auto-approves every tool the server advertises, while naming tools individually leaves the rest
 to `hooks.on_tool_call`. `_CONDUCTOR_DASHBOARD_GRANTS` and
 `_MEMBER_DASHBOARD_GRANTS` (`agent_parts/spec_grants.py`) are the shipped examples of the individual
@@ -2909,28 +2909,28 @@ CLI commands and their MCP twins:
 
 | CLI command | MCP tool | Server |
 |-------------|----------|--------|
-| `kirocrew cron add` | `cron_add` | `kirocrew-cron` |
-| `kirocrew cron list` | `cron_list` | `kirocrew-cron` |
-| `kirocrew cron update` | `cron_update` | `kirocrew-cron` |
-| `kirocrew cron remove` | `cron_remove` | `kirocrew-cron` |
-| `kirocrew cron pause` | `cron_pause` | `kirocrew-cron` |
-| `kirocrew cron resume` | `cron_resume` | `kirocrew-cron` |
-| `kirocrew cron trigger` | `cron_trigger` | `kirocrew-cron` |
-| `kirocrew spawn run` | `spawn_run` | `kirocrew-core` |
-| `kirocrew spawn list` | `spawn_list` | `kirocrew-core` |
-| `kirocrew learn add` | `learn_add` | `kirocrew-core` |
-| `kirocrew learn list` | `learn_list` | `kirocrew-core` |
-| `kirocrew learn remove` | `learn_remove` | `kirocrew-core` |
-| `kirocrew run TASK.md` | `task_run` | `kirocrew-core` |
-| `kirocrew computer apps` | `computer_list_apps` | `kirocrew-computer` |
-| `kirocrew knowledge dedup` | `knowledge_dedup` | `kirocrew-core` |
-| `kirocrew knowledge stats` | `knowledge_list_sources` | `kirocrew-core` |
+| `ajcrew cron add` | `cron_add` | `ajcrew-cron` |
+| `ajcrew cron list` | `cron_list` | `ajcrew-cron` |
+| `ajcrew cron update` | `cron_update` | `ajcrew-cron` |
+| `ajcrew cron remove` | `cron_remove` | `ajcrew-cron` |
+| `ajcrew cron pause` | `cron_pause` | `ajcrew-cron` |
+| `ajcrew cron resume` | `cron_resume` | `ajcrew-cron` |
+| `ajcrew cron trigger` | `cron_trigger` | `ajcrew-cron` |
+| `ajcrew spawn run` | `spawn_run` | `ajcrew-core` |
+| `ajcrew spawn list` | `spawn_list` | `ajcrew-core` |
+| `ajcrew learn add` | `learn_add` | `ajcrew-core` |
+| `ajcrew learn list` | `learn_list` | `ajcrew-core` |
+| `ajcrew learn remove` | `learn_remove` | `ajcrew-core` |
+| `ajcrew run TASK.md` | `task_run` | `ajcrew-core` |
+| `ajcrew computer apps` | `computer_list_apps` | `ajcrew-computer` |
+| `ajcrew knowledge dedup` | `knowledge_dedup` | `ajcrew-core` |
+| `ajcrew knowledge stats` | `knowledge_list_sources` | `ajcrew-core` |
 
-`cron_remove_all` and `cron_secret_request` have no CLI twin: `kirocrew cron
-remove` takes one job id, and no `kirocrew cron` subcommand files a secret request.
+`cron_remove_all` and `cron_secret_request` have no CLI twin: `ajcrew cron
+remove` takes one job id, and no `ajcrew cron` subcommand files a secret request.
 
 The last row is the one place a twin does not share its command's name, and it is
-a placement decision rather than an oversight. A tool in `kirocrew-core` costs
+a placement decision rather than an oversight. A tool in `ajcrew-core` costs
 context in every request of every session for as long as the session lives, so a
 fifth knowledge tool would be advertised forever to answer a question
 `knowledge_list_sources` was already 90% of: it opens the same store, over the
@@ -2945,11 +2945,11 @@ have to hold for that reading to be honest, and both are checked in
 `test_knowledge_stats.py`: the tool must actually surface the numbers (its
 descriptor advertises them, so deferral still selects it), and the capability
 must not be one an agent should be granted SEPARATELY, which would make it a
-`kirocrew-dashboard`-shaped opt-in server instead. It is not: anyone who may list
+`ajcrew-dashboard`-shaped opt-in server instead. It is not: anyone who may list
 sources already reads this data from that store, so the counts add no reach.
 
-`kirocrew-core` tools with no CLI twin, grouped by concern (authoritative list:
-`kiro_crew.mcp_tools.build_tool_list()`, which is what `mcp_core._list_tools`
+`ajcrew-core` tools with no CLI twin, grouped by concern (authoritative list:
+`aj_crew.mcp_tools.build_tool_list()`, which is what `mcp_core._list_tools`
 answers `tools/list` from):
 
 - **Subagents:** `spawn_status`, `spawn_continue`, `spawn_steer`,
@@ -3087,15 +3087,15 @@ answers `tools/list` from):
 
 ### Server instructions travel with the server
 
-A Kiro Crew server can describe its own tools in its MCP `instructions`, the
+A Aj Crew server can describe its own tools in its MCP `instructions`, the
 `initialize` result field the spec calls a hint the client MAY add to the system
 prompt. `mcp_shared.run_mcp_stdio_loop(..., instructions=...)` returns the text, and
-`kiro_crew/mcp_instructions.py` holds it, one entry per server in `BY_SERVER`:
-`kirocrew-cron`, `kirocrew-guide`, `kirocrew-dashboard` (session control) and
-`kirocrew-computer`. Text in `config/prompt.md` reaches only the default-named
+`aj_crew/mcp_instructions.py` holds it, one entry per server in `BY_SERVER`:
+`ajcrew-cron`, `ajcrew-guide`, `ajcrew-dashboard` (session control) and
+`ajcrew-computer`. Text in `config/prompt.md` reaches only the default-named
 agents, whatever they mount; as instructions it reaches every agent that mounts
 the server, on every harness, and nothing reaches an agent that does not. The harness places it
-in its own system prompt, so it is not part of what a compaction drops and Kiro
+in its own system prompt, so it is not part of what a compaction drops and Aj
 Crew re-injects.
 
 The prompt keeps only what a server cannot say about itself: that an expected
@@ -3133,9 +3133,9 @@ respawned backend's result replaces the cache. Pinned by
 `test_pooled_stubs_get_the_backends_instructions_after_a_respawn_too` and
 `test_mcp_instructions.py`.
 
-### A `kirocrew-core` tool's own rules live in its description
+### A `ajcrew-core` tool's own rules live in its description
 
-`kirocrew-core` passes no `instructions` yet. Its per-tool text is split by when it
+`ajcrew-core` passes no `instructions` yet. Its per-tool text is split by when it
 matters:
 
 | Rule | Lives in | Why |
@@ -3149,9 +3149,9 @@ their descriptions.
 
 ### Asking for an MCP server mid-chat (`request_server`)
 
-A session on any agent template (the default `kirocrew`, a custom or third-party
+A session on any agent template (the default `ajcrew`, a custom or third-party
 agent, the worker, a conductor) asks for a server it lacks with `request_server`
-on `kirocrew-core`, the one server every session carries
+on `ajcrew-core`, the one server every session carries
 (`mcp_tools/server_request.py`). The user approves one `template.mcp_server`
 change card, and the server is written to the template's additions record
 (`template_mcp_additions`), never into the spec file. A Bot keeps
@@ -3196,15 +3196,15 @@ change card, and the server is written to the template's additions record
   (`template_mcp_additions.DEFAULT_TEMPLATES`), whose add also approves every
   tool of the server; a mid-chat request must not be a second path to that
   grant. So a
-  request from either is recorded on the default `kirocrew` template with
+  request from either is recorded on the default `ajcrew` template with
   `mount_only: true` (the worker mirrors the default spec, so one record reaches
   both). The rebuild merges the entry into `mcpServers`, adds the `@server` ref
   to `tools`, and writes no `allowedTools` grant: its calls still ask. The
   record keeps that disposition across every rebuild, including one where the
   same server is also on the MCP page: the bare `@server` grant is withheld,
   while a per-tool grant the user wrote stays (the card lists it under
-  "Already approved"). Because `kirocrew.json` is rebuilt on top of itself,
-  the merged entry is stamped `x-kirocrew-card-addition`
+  "Already approved"). Because `ajcrew.json` is rebuilt on top of itself,
+  the merged entry is stamped `x-ajcrew-card-addition`
   (`template_mcp_additions.reconcile_default_spec`); a stamped entry whose
   record is gone, after the card's Undo, is removed with its bare `@server`
   refs on the next rebuild, unless an MCP page scope launches that name (an
@@ -3212,7 +3212,7 @@ change card, and the server is written to the template's additions record
   count, `page_launched_names`). A per-tool `@server/tool` ref is kept: it
   reaches nothing without the server, and a failed Undo that puts the record
   back then returns the server with the grants it had. For the default agent
-  the card reads the outcome from `kirocrew.json` itself
+  the card reads the outcome from `ajcrew.json` itself
   (`template_server_request._default_spec_mounts`): Add server succeeded when
   the spec holds the stamped entry, Undo when it no longer does. A rebuild
   that reports failure for another reason (a held conductor spec, another
@@ -3273,10 +3273,10 @@ change card, and the server is written to the template's additions record
   answers `503 spec_not_rewritten`: the card stays as it was (an Undo stays
   available to retry).
 
-### A `kirocrew-core` tool has two halves
+### A `ajcrew-core` tool has two halves
 
 Each tool is declared twice in the same per-domain module under
-`kiro_crew/mcp_tools/` (`learn.py`, `artifacts.py`, `workflows.py`, …), and
+`aj_crew/mcp_tools/` (`learn.py`, `artifacts.py`, `workflows.py`, …), and
 nothing at runtime notices when only one half lands:
 
 - Its **descriptor** — name, model-facing description, JSON Schema — is returned
@@ -3304,7 +3304,7 @@ from `build_tool_list()`, which may legitimately omit a declared tool whose app
 is switched off.
 
 Two domains keep their code in an owner package beside the module: `control.py`
-and `spawn.py` are mirror facades (`kiro_crew._facade_mirror`) over
+and `spawn.py` are mirror facades (`aj_crew._facade_mirror`) over
 `mcp_tools/control_parts/` and `mcp_tools/spawn_parts/`. Both halves are still
 read as `control.schemas()` and `control.HANDLERS`, and every name an owner
 defines reads and patches as `control.<name>` or `spawn.<name>`. The packages are
@@ -3328,7 +3328,7 @@ Every built-in app's agent tools — Design Tweak's, Issue Radar's, Dev Fleet's 
 Mission Control's — are declared in its manifest and listed by the `app_tools` domain;
 the `apps` domain that once held the hand-written ones is gone. `POST
 /api/app-tools/call` refuses a disabled app's call with `app_not_enabled`, on
-`kiro_crew.apps.manager`'s read of the app's `installed.json`. `tools/list` advertised every one of them
+`aj_crew.apps.manager`'s read of the app's `installed.json`. `tools/list` advertised every one of them
 regardless (#16099), so a
 session with none of the apps enabled was told about tools that could only
 refuse — and because kiro-cli reads `tools/list` once per session and Crew's own
@@ -3338,7 +3338,7 @@ every request of that session.
 `mcp_tools.app_tools.advertised()` therefore emits a tool's descriptor only while its
 app is enabled, and the decision reads **the same record the call refusal reads**:
 each declared tool names the app whose manifest declares it, and the listing reads
-that app's `installed.json` through `kiro_crew.apps.manager`, the module the
+that app's `installed.json` through `aj_crew.apps.manager`, the module the
 route's `is_app_enabled` reads it through. One file, one module, two readers:
 the route's binary `is_app_enabled` treats an unreadable record as disabled and
 refuses, while the listing's tri-state `app_enabled_state` hides only on a
@@ -3389,14 +3389,14 @@ Four details of the shape:
 Handlers reach the server's shared plumbing — `_post`/`_get`, the identity
 resolvers, the governance vets — as **attributes of `mcp_core`**, not as direct
 imports. That is deliberate: an attribute lookup resolves at call time, so a test
-that rebinds one (`patch("kiro_crew.mcp_core._post")`, `setattr(mcp_core, "sel",
+that rebinds one (`patch("aj_crew.mcp_core._post")`, `setattr(mcp_core, "sel",
 …)`) still intercepts the handler. A direct import would bind at import time and
 silently escape every such patch. `mcp_core._HANDLER_SURFACE` names the bindings
 that exist only for this purpose, so an import cleanup cannot quietly delete one.
 
 `mcp_core.py` keeps the server itself — `tools/list`, the call path and its call
 context, directive capture, the knowledge cache, `_send` and the five verbs — and is a
-mirror facade (`kiro_crew._facade_mirror`) over the owners in `mcp_core_parts/`, so
+mirror facade (`aj_crew._facade_mirror`) over the owners in `mcp_core_parts/`, so
 every name they define still reads and patches as `mcp_core.<name>`. New plumbing goes
 to the owner of its responsibility:
 
@@ -3428,7 +3428,7 @@ test code than moving the handlers did.
 
 `mcp_shared.py`, the stdio plumbing every managed server shares, keeps the server's entry
 -- `run_mcp_stdio_loop`, the process identity it declares (`set_internal_caller`) and its
-hard-exit signal handlers -- and is a mirror facade (`kiro_crew._facade_mirror`) over four
+hard-exit signal handlers -- and is a mirror facade (`aj_crew._facade_mirror`) over four
 owners, so every name they define still reads and patches as `mcp_shared.<name>`. New work
 goes to the owner of its responsibility:
 
@@ -3441,15 +3441,15 @@ goes to the owner of its responsibility:
 
 A global the family rebinds at run time (the framing, the stdout fd, the policy's failure
 state) lives in the one owner that rebinds it, beside every reader of it, and the owners
-log as `kiro_crew.mcp_shared`. `test/test_mcp_shared_facade.py` pins the contract.
+log as `aj_crew.mcp_shared`. `test/test_mcp_shared_facade.py` pins the contract.
 
 Descriptors carry no per-caller state and are rebuilt per call, not cached: some
 quote a live value (the concurrent sub-agent cap), and a cache would pin the
 first reading for the life of the server process.
 
-### A `kirocrew-dashboard` tool is one row
+### A `ajcrew-dashboard` tool is one row
 
-`kirocrew-dashboard` is built on `mcp_tools.table.ToolTable`: each tool is one
+`ajcrew-dashboard` is built on `mcp_tools.table.ToolTable`: each tool is one
 `Tool` row in `mcp_dashboard.TABLE` carrying its descriptor, its identity
 (`"strict"` for the session-control verbs, `"attribution"` otherwise), the
 dashboard routes it may reach (`"METHOD /api/path/{id}"`), and its `_run_<tool>`
@@ -3478,7 +3478,7 @@ internal allowlists.
 
 `mcp_dashboard.py` keeps the folder, tag and board rows, `TABLE` with its strict gate
 and `SESSION_CONTROL_TOOLS`, and the stdio entry point (`_call_tool`,
-`run_mcp_server`). It is a mirror facade (`kiro_crew._facade_mirror`) over flat
+`run_mcp_server`). It is a mirror facade (`aj_crew._facade_mirror`) over flat
 sibling owners, and binds every name they define, so each still reads and patches as
 `mcp_dashboard.<name>`. New code goes to the owner of its responsibility:
 
@@ -3511,10 +3511,10 @@ See [browser](../system-specs/modules/browser.md).
 ### find_ui and the UI location index
 
 `find_ui(query, lang?, surface?)` (or `find_ui(area, lang?, offset?)`, see
-[Browsing an area](#browsing-an-area)) on `kirocrew-guide` answers "where is X in the
-dashboard?" from `src/kiro_crew/docs/ui-index.generated.json` plus, when the
+[Browsing an area](#browsing-an-area)) on `ajcrew-guide` answers "where is X in the
+dashboard?" from `src/aj_crew/docs/ui-index.generated.json` plus, when the
 dashboard bundle is built, its auto tier `static/dist/ui-index.auto.json`, and
-nothing else (`kiro_crew/ui_index.py`). Like `search_docs` it is dispatched
+nothing else (`aj_crew/ui_index.py`). Like `search_docs` it is dispatched
 before the session lookup, reads packaged files only (cached per mtime and size
 of both, one entry, build data only), and never loads config, contacts the
 gateway, reads user state
@@ -3531,9 +3531,9 @@ A placement in the app shell (the top bar's Search Everywhere trigger) has no
 route or parent path: find_ui returns `on_every_page: true` for it and keeps it
 under any `surface` filter.
 
-`kiro_crew/ui_index.py` keeps the tool's surface -- `find_ui`, `browse_ui` and its
+`aj_crew/ui_index.py` keeps the tool's surface -- `find_ui`, `browse_ui` and its
 areas, the guide bindings `authoritative_find` and `planned_find`, and
-`setting_labels` -- and is a mirror facade (`kiro_crew._facade_mirror`) over three
+`setting_labels` -- and is a mirror facade (`aj_crew._facade_mirror`) over three
 sibling owners, so every other name still reads and patches as `ui_index.<name>`.
 New work goes to the owner of its responsibility: `ui_index_match.py` (the shared
 constants, the question vocabulary and the matcher), `ui_index_load.py` (reading,
@@ -3887,7 +3887,7 @@ and its public record carries `blocker: {kind: "gate_off", gate, setting_id}`
 from the record's own plan (`step_meta`). It recovers (`target_found`) only once
 the gate is on. A selection's reporter is `useGuideSelection(id, {selected,
 available, name?})` in the page owning the picker (`ChatPage`, `MembersPage`,
-`SchedulePage`, `KiroCrewAgentsPage`): two booleans reported, plus the picked
+`SchedulePage`, `AjCrewAgentsPage`): two booleans reported, plus the picked
 entity's name kept in the tab (the same string its row is registered with by
 `guidePick(name)`) to bind a `pick` and name the entity in the confirm line;
 which entity never reaches the gateway. A select step points at its
@@ -4019,15 +4019,15 @@ node_modules/.cache/kc-ui-auto/sites.json`, and the ui-auto-stamp Vite plugin
 emits that artifact into the vite output (see "Auto locations a guide may
 point at"), so the shipped tier is the one the stamps were cut from. It then ships
 wherever the dashboard bundle does, because every packaging path copies the whole
-`website/dist` tree to `src/kiro_crew/static/dist`: `make frontend`, the
+`website/dist` tree to `src/aj_crew/static/dist`: `make frontend`, the
 `build.yml`/`build-wheel.yml`/`ci.yml`/`docker-smoke.yml`/`nightly.yml`/
 `gui-user-test.yml` staging steps, `install.sh`/`setup.sh`/`minimal_install.sh`,
 `packaging/build-desktop.sh` (both desktop targets), `frontend.py`'s staged swap,
 pod provisioning, and the dev symlink `ensure_dev_dist_symlink` makes to
 `website/dist`. The wheel carries it through `BuildWithFrontend` (setup.py copies
-`static/dist`) and the sdist through `recursive-include src/kiro_crew/static *`;
+`static/dist`) and the sdist through `recursive-include src/aj_crew/static *`;
 the Docker image installs that wheel. `ui-index.auto.json` is gitignored
-everywhere, and `--auto-out` refuses `src/kiro_crew/docs/`.
+everywhere, and `--auto-out` refuses `src/aj_crew/docs/`.
 
 The artifact (`buildAutoArtifact` in `scripts/lib/ui-index.mjs`) holds only the
 auto locations and the labels they use, plus `base_input_digest`, the
@@ -4071,7 +4071,7 @@ loader on synthetic file pairs, and runs the real generator with `--out` and
 `--auto-out` into `tmp_path` when node and `website/node_modules` are present
 (otherwise those tests skip). The backend CI lanes have neither, so CI's
 `frontend-ratchets` job, which has both, runs exactly those two tests after
-`gen:ui --check`, with `KIROCREW_UI_GENERATOR_REQUIRED=1` turning the skip into a
+`gen:ui --check`, with `AJCREW_UI_GENERATOR_REQUIRED=1` turning the skip into a
 failure. The other `test_find_ui*.py` files point
 `AUTO_INDEX_PATH` at a missing file, so they test the committed tiers whatever
 the checkout's build holds.
@@ -4130,7 +4130,7 @@ The marker: `npm run build` runs the generator first with
 node_modules/.cache/kc-ui-auto/sites.json`. `sites.json`
 (`autoStampManifest`) lists, per source file, the sha256 of the exact text the
 generator scanned and, per guidable site, the offset right after its tag name,
-the end of its opening tag, its tag and its site id. The `kirocrew-ui-auto-stamp`
+the end of its opening tag, its tag and its site id. The `ajcrew-ui-auto-stamp`
 Vite plugin (`scripts/lib/ui-auto-stamp.mjs`, `enforce: 'pre'`, before JSX is
 compiled) inserts `data-ui-auto="<site id>"` there, on the dev server too. It
 never parses a file or derives an id: it checks the hash (a changed file fails
@@ -4510,9 +4510,9 @@ start, so no batch edits it. A batch validates its work without touching the
 committed index:
 
 ```
-npm run gen:ui -- --out "$KIROCREW_SCRATCH/ui-index.<area>.json"
-UI_INDEX_FILE="$KIROCREW_SCRATCH/ui-index.<area>.json" npx vitest run src/uiLocations/uiIndex.test.ts
-KIROCREW_UI_INDEX="$KIROCREW_SCRATCH/ui-index.<area>.json" pytest test/test_find_ui.py
+npm run gen:ui -- --out "$AJCREW_SCRATCH/ui-index.<area>.json"
+UI_INDEX_FILE="$AJCREW_SCRATCH/ui-index.<area>.json" npx vitest run src/uiLocations/uiIndex.test.ts
+AJCREW_UI_INDEX="$AJCREW_SCRATCH/ui-index.<area>.json" pytest test/test_find_ui.py
 ```
 
 `--out` runs every check and writes the index only to the named file; it refuses
@@ -4525,9 +4525,9 @@ index only, so every area's goldens are checked against the one index that
 ships: the committed index is regenerated once, after the last batch lands,
 followed by `npm run gen:ui -- --check` and every area's goldens together.
 
-## What belongs in `kirocrew-core`, and what does not
+## What belongs in `ajcrew-core`, and what does not
 
-`kirocrew-core` is the surface EVERY session carries. kiro-cli reads `tools/list`
+`ajcrew-core` is the surface EVERY session carries. kiro-cli reads `tools/list`
 once per session, so a tool listed there spends context in every request of every
 session for as long as the session lives — whether or not that session will ever
 use it. With `agent.tool_search` on (the default), kiro defers MCP specs once they
@@ -4545,7 +4545,7 @@ staged engine copy),
 Crew's servers always defer: `tool_load` returns a tool's schema as a tool result and the call runs
 through KAS's fixed `tool_call` meta-tool, so the request's `tools` array never changes
 mid-conversation and a signed thinking block stays valid. Measured on the bundled KAS
-0.66.33 with thinking models across 9-turn chats that loaded `kirocrew-*` and
+0.66.33 with thinking models across 9-turn chats that loaded `ajcrew-*` and
 third-party tools on separate turns: no rejection, and the first request's MCP share
 fell from 156,746 characters to 0. KAS ignores the toggle and the
 thresholds and defers every MCP tool not on its `toolSearch.neverDefer` list, so for an
@@ -4562,7 +4562,7 @@ That makes the placement question a real one rather than a matter of taste:
 - **Core** is for capabilities a session may need *without being asked* —
   subagents, messaging, memory, artifacts, session-bound directives.
 - **Its own server** is for a capability an agent is granted on purpose. Give it
-  the `kirocrew-dashboard` shape: an **assignable set**, marked `opt_in` in
+  the `ajcrew-dashboard` shape: an **assignable set**, marked `opt_in` in
   `_MANAGED_MCP_SERVERS` so neither spec writer adds it to the default agent.
   kiro-cli loads a server only when `tools` names it, so an unassigned set costs
   a session literally zero — which an always-refusing tool in core cannot
@@ -4570,7 +4570,7 @@ That makes the placement question a real one rather than a matter of taste:
 
 **Assignment is the mechanism; a config bool is not.** Which agents get a set is
 decided by their own specs: the entry in `mcpServers` plus the matching
-`@<server>` ref in `tools`. Only `kirocrew.json` is rewritten on install, and a
+`@<server>` ref in `tools`. Only `ajcrew.json` is rewritten on install, and a
 refresh keeps an existing grant's command current without ever introducing one,
 so a hand-granted set survives upgrades and an ungranted one does not come back
 behind the user's back. Adding a second boolean in `config.json` on top of that
@@ -4770,7 +4770,7 @@ the person sees.
 
 That stored order is one of three the sidebar can draw. `dashboard.folder_sort`
 (config.json, written through the config PATCH allowlist from the sidebar's
-sort-and-filter menu; read back by the sidebar through its `GET /api/config/kirocrew`
+sort-and-filter menu; read back by the sidebar through its `GET /api/config/ajcrew`
 query and by the tool from the same file through the loader — that route is
 cookie-only, in neither internal-secret allowlist, and admitting it would open the
 whole config surface to secret-bearing callers to read one enum) selects `custom` —
@@ -4914,7 +4914,7 @@ capability cheap and deliberate; it does not prove the user consented to reach t
 agent does not otherwise have. For that, `config.json` is the WRONG home —
 `security.py` spells out why, and the keystone leaves (`computer_use.json`,
 `browser-mode-enabled`, the Ops Mission Control mode) exist because each grants
-something outside Kiro Crew (desktop input synthesis, the operator's logged-in
+something outside Aj Crew (desktop input synthesis, the operator's logged-in
 browser, writes against production incident tooling) or is the security floor
 itself.
 
@@ -4932,11 +4932,11 @@ without every agent inheriting it.
 
 Adding a managed server is a **parity tax** — the name must appear in
 `agent._MANAGED_MCP_SERVERS`, `mcp_discovery._MANAGED_SERVER_SUBCOMMANDS` and
-`_MANAGED_SERVER_TOOL_MODULES`, `mcp_cleanup.KIROCREW_BIN_MCP_SERVERS`,
+`_MANAGED_SERVER_TOOL_MODULES`, `mcp_cleanup.AJCREW_BIN_MCP_SERVERS`,
 `onboarding_sources._CORE_MANAGED_MCP_NAMES`, and the hidden `cli.py` subcommand.
 `test_computer_use_registration.py` asserts set equality where it can:
 `agent._MANAGED_MCP_SERVERS`, `mcp_discovery._MANAGED_SERVER_SUBCOMMANDS` and
-`mcp_cleanup.KIROCREW_BIN_MCP_SERVERS` must be the same set. The other registries
+`mcp_cleanup.AJCREW_BIN_MCP_SERVERS` must be the same set. The other registries
 are checked per name, so the next server is caught there only once a test names it.
 The onboarding import's managed names are an intentional superset: they include the
 predecessor brand's `openclaw-*` names, so an imported config's foreign copy is not
@@ -4944,7 +4944,7 @@ kept as a user-installed server.
 
 ### The one deliberate exception
 
-`kirocrew computer call <tool>` has **no MCP twin, on purpose.** It is not a
+`ajcrew computer call <tool>` has **no MCP twin, on purpose.** It is not a
 capability; it is a human debug and repro harness that runs the eleven existing
 `computer_*` tools through the same gated chokepoint (optionally a JSON array of
 them in one process, so `element_index` values stay resolvable across calls). The
@@ -4955,7 +4955,7 @@ model launder one per-call gate decision into many, so do NOT add
 
 ## MCP tools MUST be stateless
 
-The direct `kirocrew-cron` server sends member jobs through
+The direct `ajcrew-cron` server sends member jobs through
 `POST /api/crons/tools` using ordinary internal transport and strict session
 identity. The gateway captures the canonical execution record and applies the
 same argument validation, cron ownership, governance and deterministic-job
@@ -4970,7 +4970,7 @@ The ONE exception is not a transport failure: a dial that was **refused**
 (`_post` returns `refused=True` — no gateway is listening, so nothing was
 executed and nothing can be replayed) from a process with NO gateway-injected
 caller whose resolved session key is POSITIVELY the attended CLI's own
-(`validation.infer_use_case(key) == "cli"`, the `cli_chat` key `kirocrew chat`
+(`validation.infer_use_case(key) == "cli"`, the `cli_chat` key `ajcrew chat`
 presents everywhere it is identified) dispatches to the direct host store, which
 is the behaviour that runtime always had before the transport was required. The
 absence of an injected caller alone is not enough: the non-pooled stdio gateway
@@ -4980,7 +4980,7 @@ outage to report, never a licence to write around it. A gateway-injected caller
 likewise proves a gateway exists, so its refused dial is reported as an outage.
 Global V1 direct runtimes retain their existing local cron dispatch.
 
-**A new `kirocrew-core` or `kirocrew-cron` tool MUST NOT keep per-caller or
+**A new `ajcrew-core` or `ajcrew-cron` tool MUST NOT keep per-caller or
 per-session state in the MCP-server process. Resolve the caller's identity on
 every call and keep authoritative state in the gateway.**
 
@@ -4993,7 +4993,7 @@ slot's process tree and talks to the same MCP server. Anything the process
 remembers is therefore shared by every session and sub-agent that touches it.
 Three failure modes follow.
 
-**1. Identity is not the process, it is the call.** `KIROCREW_SESSION_KEY` and
+**1. Identity is not the process, it is the call.** `AJCREW_SESSION_KEY` and
 `os.getppid()` identify the *process*, which is wrong by construction in a shared
 backend: the warm pool spawns with an empty key, and a sub-agent inherits its
 parent's tree. `mcp_core.py` offers two resolvers (both defined in
@@ -5006,15 +5006,15 @@ parent's tree. `mcp_core.py` offers two resolvers (both defined in
   enumerates them; a ratchet test rejects direct calls outside `mcp_core_parts/identity.py`). It
   accepts only the gateway-injected caller context (`mcp_caller.current_caller()`,
   which gatewayd stamps on every forwarded frame after stripping any
-  client-forged `kirocrew.caller` block), the signed per-session token
+  client-forged `ajcrew.caller` block), the signed per-session token
   (`session_token_sig.session_key_from_env_token`), the injected
-  `KIROCREW_SESSION_KEY` (accepted EXCEPT on a host pid the signed session-pid
+  `AJCREW_SESSION_KEY` (accepted EXCEPT on a host pid the signed session-pid
   mapping records as hosting several sessions, where both
   `_resolve_session_key_strict` and the client ladder `resolve_own_identity` drop
   it through the same `host_pid_is_shared` read, an unsigned denies-only read:
   the var is stamped once per runtime and inherited by every MCP child, so on a
   multi-session runtime it names one tenant and cannot say which is calling), or
-  a `KIROCREW_HOST_PID` lookup whose HMAC sidecar verifies against the
+  a `AJCREW_HOST_PID` lookup whose HMAC sidecar verifies against the
   keystone-protected `sel_hmac.key`. It deliberately **drops** the `/proc`
   ancestor walk and the bare `session_pid_<pid>.txt` fallback: the `.txt` file is
   agent-writable and therefore forgeable, and a sub-agent walking ancestors from
@@ -5029,11 +5029,11 @@ parent's tree. `mcp_core.py` offers two resolvers (both defined in
 **What names a session on the stub path: the stub session token.** The injected
 caller context above is the only identity channel a pooled backend has, and every
 input gatewayd had for building it answered per RUNTIME, not per session: the
-stub's own self-report (its `KIROCREW_SESSION_KEY` or `session_pid_<pid>.txt`
+stub's own self-report (its `AJCREW_SESSION_KEY` or `session_pid_<pid>.txt`
 walk), gatewayd's own SO_PEERCRED `/proc` walk, and claim-push, which re-targeted
 every connection indexed under a runtime PID. One kiro-cli process hosts N ACP
 sessions, so all three answered with the parent slot for a `spawn_run` subagent's
-stub, and a parent re-claim overwrote whatever a subagent had. So Kiro Crew mints
+stub, and a parent re-claim overwrote whatever a subagent had. So Aj Crew mints
 one unguessable token per ACP session (`claim.mint_stub_session_token`), puts it
 in the `env` of that session's injected stub entries
 (`session_servers.attach_stub_session_token`), and remembers it on the session
@@ -5103,13 +5103,13 @@ The token is a bearer name for a session's identity, so it is never logged, neve
 in `stats()`, and stripped from the register payload before the prewarm recorder
 can persist it.
 
-**The one place the token is forwarded: Kiro Crew's own pooled control planes.**
+**The one place the token is forwarded: Aj Crew's own pooled control planes.**
 gatewayd spawns a pooled backend from its OWN environment, so the per-session
 token the stub carries never reaches the backend's `os.environ`. That is right
 for a third-party server, which has no business proving a session to anyone.
-`kirocrew-core`, `kirocrew-cron`, `kirocrew-guide` and the opt-in Crew servers
-(`kirocrew-dashboard`, `kirocrew-work`, `kirocrew-crew-log`, `kirocrew-debug`,
-`kirocrew-panel`) are
+`ajcrew-core`, `ajcrew-cron`, `ajcrew-guide` and the opt-in Crew servers
+(`ajcrew-dashboard`, `ajcrew-work`, `ajcrew-crew-log`, `ajcrew-debug`,
+`ajcrew-panel`) are
 different: they
 post back to the gateway over loopback (`/api/crons/tools`, the memory routes,
 the session and folder routes) on behalf of the session they act for, and every
@@ -5117,27 +5117,27 @@ one of them reads the session's tool policy through `mcp_shared`, a read the
 gateway answers only behind the attestation; the gateway requires `X-Session-Token` on that
 transport when no kernel peer attestation is present — which a gatewayd child
 never has. So for exactly `gatewayd.CONTROL_PLANE_BACKENDS` -- every managed
-Crew server, read from `mcp_cleanup.KIROCREW_BIN_MCP_SERVERS` -- the connection
+Crew server, read from `mcp_cleanup.AJCREW_BIN_MCP_SERVERS` -- the connection
 handler copies `conn.stub_session_token` onto the injected `CallerContext`
 (`session_token`), `build_caller_meta` emits it as `sessionToken` only when set,
 and `mcp_core._session_token_header` reads the gateway-injected caller's token
-before falling back to `KIROCREW_STUB_SESSION_TOKEN`. The name alone does not
+before falling back to `AJCREW_STUB_SESSION_TOKEN`. The name alone does not
 earn the token: the server name arrives in the stub's register frame while the
 spawn target resolves separately from the spec-derived
-`KIROCREW_MCP_TARGET_<NAME>` mapping. That mapping is not the spec's word for a
-reserved name, though. The rewriter re-derives every stubbed `kirocrew-*` entry,
+`AJCREW_MCP_TARGET_<NAME>` mapping. That mapping is not the spec's word for a
+reserved name, though. The rewriter re-derives every stubbed `ajcrew-*` entry,
 whether an agent spec declares it or `settings/mcp.json` injects it, from
 `agent.managed_mcp_spec_entry` before it resolves, hashes or bakes anything
 (`rewriter._repair_control_plane_entry`), and holds the entry's
 declared `env` to the managed-entry ownership rule the disk writer
 (`agent._enforce_managed_mcp_ownership`) and the ACP element
-(`session_mcp._managed_element_env`) apply -- reserved `KIROCREW_*` keys, loader
+(`session_mcp._managed_element_env`) apply -- reserved `AJCREW_*` keys, loader
 channels, home-deriving and launcher-exec keys dropped. Of the spec's other keys the
 repaired entry keeps only `type`, `timeout`, `disabled` and `disabledTools`
 (`rewriter._RESERVED_ENTRY_SPEC_KEYS`), which can only narrow the grant. `autoApprove`
 is dropped, because kiro-cli would honour it ahead of the PreToolUse gate, and so is
 every other declared key; each drop is named in a gateway WARNING. So a spec that spells the
-launcher the only way a hand can (`"command": "kirocrew"`, which resolves to the
+launcher the only way a hand can (`"command": "ajcrew"`, which resolves to the
 shared Toolbox dispatcher, not the versioned binary) or pins a path an upgrade
 has since reaped still runs our binary, and a third-party command declared under
 a reserved name runs our binary too, never its own. The gate below is unchanged;
@@ -5146,7 +5146,7 @@ compares the command actually exec'd (by real path) and its args against the
 invocation `agent.managed_mcp_spec_entry` emits for that name and records the
 verdict as `Backend.control_plane`; the handler forwards the token on that flag
 only. The invocation being ours is still not proof of what runs: the managed
-spec falls back to `<python> -m kiro_crew <sub>` when no launcher resolves, and
+spec falls back to `<python> -m aj_crew <sub>` when no launcher resolves, and
 the child's CWD could carry foreign code under our name. Python's `PYTHON*`
 environment namespace is an extensible interpreter control surface: entries can add roots, execute hooks, select an executable, or move
 user-site without changing the command, and the dynamic-loader `LD_*` / `DYLD_*`
@@ -5176,7 +5176,7 @@ removing the surface rather than inspecting it. A `--user` install is the case t
 keeps user-site enabled, because its own package lives there; an unresolvable
 user-site is treated the same way, leaving the child's import behaviour unchanged
 rather than guessing. The verdict is false when either root holds an importable
-`kiro_crew` other than this process's package. A `--user` install therefore keeps
+`aj_crew` other than this process's package. A `--user` install therefore keeps
 its token: its user-site holds the very package this process is running, which
 matches. Disabling user-site instead would break that install shape outright. A namespace directory
 without `__init__.py` does not count, and a dev gateway whose project CWD is its
@@ -5185,10 +5185,10 @@ relax this bearer-token fence: an inert root may cause a safe false-deny, but a
 Python version change cannot create a false-grant.
 
 The verdict is taken BEFORE `spawn_backend` forks, under `asyncio.to_thread`
-(it imports `kiro_crew.agent`, reads config and stats those roots), so foreign
+(it imports `aj_crew.agent`, reads config and stats those roots), so foreign
 code cannot erase its shadow before a post-spawn check. An accepted backend is
 still launched with `PYTHONSAFEPATH=1` as defense in depth. After the verdict,
-and for every pooled backend, the spawn site re-applies Kiro Crew's own UTF-8
+and for every pooled backend, the spawn site re-applies Aj Crew's own UTF-8
 pinning (`platform_compat._UTF8_PROCESS_ENV`: `PYTHONUTF8` and
 `PYTHONIOENCODING`) to the child environment, so a pooled interpreter builds
 its stdio from UTF-8 rather than a Windows ANSI codepage. The order is the
@@ -5208,7 +5208,7 @@ spawned under its name. A denial for a reserved name is logged at spawn
 (`_deny_control_plane`) naming the backend and the condition that failed — no
 spec entry, a different binary, different args, a non-empty `PYTHON*` / `LD_*` /
 `DYLD_*` variable,
-or a root that shadows `kiro_crew` (named in the message, so per-user site-packages
+or a root that shadows `aj_crew` (named in the message, so per-user site-packages
 is distinguishable from the local one) — so an
 install that trips the check has more to read than every cron tool answering
 403. The same reason rides to the denied backend itself: the spawn site records it
@@ -5220,7 +5220,7 @@ in the caller block, emitted only when set), and the backend's
 text pointed at the token and the spec when the cause was neither.
 
 `CONTROL_PLANE_BACKENDS` is named in the daemon itself, in `mcp_gateway/daemon/control_plane.py` (importing
-`acp.session_mcp` would put `kiro_crew.agent` on the daemon's boot path; the
+`acp.session_mcp` would put `aj_crew.agent` on the daemon's boot path; the
 set is read from the `mcp_cleanup` leaf instead). It is
 a superset of `acp.session_mcp.CONTROL_PLANE_SERVERS`, not a mirror, because the
 two answer different questions: `CONTROL_PLANE_SERVERS` decides which servers
@@ -5228,7 +5228,7 @@ every session mounts and which survive a `disabledTools` entry;
 `CONTROL_PLANE_BACKENDS` decides who is handed the token. Containment holds in
 one direction: a server mounted in every session posts back for that session,
 so it needs the token. The opt-in Crew servers are the reverse case --
-`kirocrew-dashboard` posts back for the CALLING session (`session_create`,
+`ajcrew-dashboard` posts back for the CALLING session (`session_create`,
 `session_send`, the folder and tag tools), so it needs the token, but it is
 `opt_in`, so naming it in
 `CONTROL_PLANE_SERVERS` would mount it in every session and make an operator's
@@ -5236,8 +5236,8 @@ decision to switch its tools off unenforceable. A ratchet test pins that
 relationship rather than equality with `CONTROL_PLANE_SERVERS`: it asserts
 `CONTROL_PLANE_SERVERS` is
 contained in `CONTROL_PLANE_BACKENDS`, pins the token-only extras to exactly
-`mcp_cleanup.OPT_IN_BIN_MCP_SERVERS` plus the spec-gated `kirocrew-computer` and
-`kirocrew-guide` (always emitted, but still a spec's to withhold, so not mounted
+`mcp_cleanup.OPT_IN_BIN_MCP_SERVERS` plus the spec-gated `ajcrew-computer` and
+`ajcrew-guide` (always emitted, but still a spec's to withhold, so not mounted
 regardless of the spec the way the control plane is), requires every other extra
 to be a managed server that is not unconditionally mounted (`opt_in`, or behind a
 `spec_gate`), and pins the whole set equal to
@@ -5251,7 +5251,7 @@ yields no invocation, and therefore no token. The stub-strip in
 `backend._strip_caller_meta` removes the whole caller block, so a stub cannot
 forge a `sessionToken` either. A gateway-injected caller also marks the backend
 as gateway-hosted: when its dial to the gateway is refused it reports the
-outage, whereas the attended CLI's own identity (`kirocrew chat` with no gateway
+outage, whereas the attended CLI's own identity (`ajcrew chat` with no gateway
 — no injected caller AND a session key `infer_use_case` classes as `cli` — whose
 `_post` returns `refused=True` meaning nothing was executed) falls back to the
 direct host store the cron tools always had before the transport was required;
@@ -5259,9 +5259,9 @@ a gateway-minted key with no injected caller is the non-pooled topology and
 reports the outage instead.
 
 The kiro-backend element list carries one population `CONTROL_PLANE_BACKENDS`
-does not: the builtin app servers that run Kiro Crew's own code
+does not: the builtin app servers that run Aj Crew's own code
 (`session_mcp.builtin_app_identity_launches`). A shipped, builtin-owned manifest
-that declares `command: "kirocrew"` (Mochi's `mochi:mochi`) is pinned by
+that declares `command: "ajcrew"` (Mochi's `mochi:mochi`) is pinned by
 `bridges._pin_host_cli_command` to the gateway's interpreter and serves through
 `mcp_shared`, so it reads the same attested tool policy. kiro-cli mounts it
 straight from the spec, and without its own element every call refuses as
@@ -5269,20 +5269,20 @@ straight from the spec, and without its own element every call refuses as
 re-declares a granted one after the managed servers, with the launch re-derived
 from the manifest by `apps.execution.builtin_app_host_cli_mcp_launches` and
 pinned exactly as registration pins it, never read from the spec, and with
-`PYTHONPATH` and `KIROCREW_HOME` set from that pin over anything the spec
+`PYTHONPATH` and `AJCREW_HOME` set from that pin over anything the spec
 declares. A user app, a shadowed builtin, or a builtin app that ships its own
-binary is not Kiro Crew's code and gets no element. gatewayd's set stays the
+binary is not Aj Crew's code and gets no element. gatewayd's set stays the
 managed servers: a pooled app server is not handed the token. KAS never reaches
 `kiro_control_plane_servers`; its hoist tokens the same app servers from the
 same manifest launch (`acp/kas_app_identity.py`, see
 [acp-client](../system-specs/modules/acp-client.md)).
 
-A server that is NOT Kiro Crew's code can opt into a much smaller grant: a session
+A server that is NOT Aj Crew's code can opt into a much smaller grant: a session
 LABEL, never the token (`acp/session_label.py`). Its `mcpServers` entry carries
-`"x-kirocrew-session-label": true` (an app manifest's entry reaches the spec
+`"x-ajcrew-session-label": true` (an app manifest's entry reaches the spec
 verbatim, so an app declares it there), and the server receives
-`KIROCREW_SESSION_LABEL` set to the session key, which the dashboard already shows
-in its URL. The name is deliberately not `KIROCREW_SESSION_KEY`, a rung of
+`AJCREW_SESSION_LABEL` set to the session key, which the dashboard already shows
+in its URL. The name is deliberately not `AJCREW_SESSION_KEY`, a rung of
 `mcp_caller.resolve_own_identity`, so the label is readable as a name and as
 nothing else. On kiro the label rides a per-session element built by
 `kiro_session_label_elements` and appended by `AcpRuntime._session_label_elements`
@@ -5340,7 +5340,7 @@ read. The line-oriented JSON-RPC readers on either side of a stdio MCP server
 (the stdio loop, the auto-improvement app's server, the gateway's stdout pump and
 pre-init reader, the stub's and gatewayd's frame readers, the app-call
 round trip, a script cron's `McpToolClient`) parse through
-`kiro_crew.json_line.parse_json_object_line`, which catches `ValueError` (that
+`aj_crew.json_line.parse_json_object_line`, which catches `ValueError` (that
 covers an integer literal past the int-string digit limit too) and
 `RecursionError`, the case a `JSONDecodeError` arm misses, and returns `None` for
 anything that is not an object. `None` there never means end of stream. The
@@ -5512,7 +5512,7 @@ The directive marker is model-visible, since it comes back as tool-result text,
 so the consumer defends against forgery by honoring a directive only when the
 tool call it arrived under was recorded, from kiro-cli's out-of-band `_meta`
 channel, as an MCP-served call whose canonical name (`_meta.kiro.toolName`, with
-`_meta.kiro.mcpServerName` equal to `kirocrew-core`) is in `DIRECTIVE_TOOLS`. The
+`_meta.kiro.mcpServerName` equal to `ajcrew-core`) is in `DIRECTIVE_TOOLS`. The
 LLM-authored `title` is explicitly not accepted, because a shell command titled
 `monitor_start` whose stdout forges the marker must not be honored. The gate fails
 closed when `_meta` identity is absent, and refuses native-sub-agent tool calls,
@@ -5592,7 +5592,7 @@ is flagged or not, and the audit `outcome` derivation does not move.
 `error_prefix_is_error`, default off, and every `tools/call` result on that loop —
 the POSIX worker path, the Windows synchronous path, and the two tool-policy
 refusals (unresolved policy, excluded tool) — goes through one nested
-`_tool_response` helper so a server cannot be half-converted. `kirocrew-cron` is
+`_tool_response` helper so a server cannot be half-converted. `ajcrew-cron` is
 the only server that sets it. The other servers keep their frames unflagged
 deliberately: each has in-tree callers and model-facing prompts that read
 `"Error: …"` prose on purpose, so flipping them together would change what those
@@ -5709,7 +5709,7 @@ time, while the loop keeps reading stdin to answer `ping`, honour
 its whole duration *waiting* on that worker -- `wait` sleeping up to 1800s,
 `spawn_sub_agents` polling for up to 7200s, `ask_question` long-polling until a
 person answers -- parked the worker and every other caller's call behind it. On
-the pooled `kirocrew-core` backend that is every dashboard session at once: one
+the pooled `ajcrew-core` backend that is every dashboard session at once: one
 session's `wait` stalled everyone's `memory_recall` for minutes, and because the
 loop still answered pings the gateway's wedge detector saw a healthy backend and
 never recycled it (the 3-hour hard ceiling was the only exit). A worker pool
@@ -5764,7 +5764,7 @@ carries collected only there, on True -- never in its collect step, in
 only under the attempt that spawned the child,
 the token `(key, task, epoch)` opened at the parent tool's spawn, done read or
 landing note and ended by `settle_turn` or `release`, and only an attempt that
-landed confirms it (`kiro_crew.parent_turns`). The spawn names the attempt that
+landed confirms it (`aj_crew.parent_turns`). The spawn names the attempt that
 held the parent's session, with its prompt in flight, when its request arrived,
 and every member of one call names its first member's attempt (`call_id`). A
 done read under any other attempt, or after the spawning attempt ended, holds
@@ -5827,7 +5827,7 @@ synchronous calls back to back do not age the last one past the ceiling. The
 call RUNNING on the worker is never named, so its stamp freezes at about its
 start and the ceiling bounds how long one call runs. The report is opt-in per
 server (`run_mcp_stdio_loop(..., reports_inflight=True)`), and only
-`kirocrew-core` opts in: it is the one server that parks `DeferredTool` calls,
+`ajcrew-core` opts in: it is the one server that parks `DeferredTool` calls,
 while a server whose every tool is synchronous gains nothing from the report and
 would only have its recycle ceiling lowered under its running call. A server that
 did not opt in neither advertises the key nor sends the frame, even to a client
@@ -5846,7 +5846,7 @@ that old on a reporting backend is a worker call that stopped progressing, and n
 shipped synchronous tool runs that long on purpose (the longest, Dev Fleet's `pod_up`,
 declares a 210s `timeoutSeconds`). A backend that never advertised -- an older install, the Windows
 loop -- keeps the long ceiling, because it cannot tell a parked call from a hung
-one, and so does every server other than `kirocrew-core`. A forwarded
+one, and so does every server other than `ajcrew-core`. A forwarded
 `notifications/cancelled` marks the pending entry cancelled
 (`_PendingRequest.cancelled`). The backend answers a cancelled call with no
 response, so the entry ages forever: the hard ceiling skips it, while the
@@ -5889,8 +5889,8 @@ whichever caller's stub left last.
   module is listed in `mcp_core.REFLEXIVE_TOOL_MODULES`
   (`test_identity_topology.py` enforces both). Read-only paths may use the lenient
   `_resolve_session_key()`.
-- A tool on `kirocrew-core`, `kirocrew-cron` or `kirocrew-dashboard` declares its
-  display title in `src/kiro_crew/data/mcp_tool_titles.json`. The server serves it
+- A tool on `ajcrew-core`, `ajcrew-cron` or `ajcrew-dashboard` declares its
+  display title in `src/aj_crew/data/mcp_tool_titles.json`. The server serves it
   as the MCP `Tool.title`, and the dashboard and channel task labels read the same
   file for the tool-call row's title. `test_mcp_tool_titles.py` fails when a listed
   tool and the table disagree.
@@ -5914,9 +5914,9 @@ whichever caller's stub left last.
 
 ## Troubleshooting
 
-**MCP tools not working.** Check that `~/.kiro/agents/kirocrew.json` contains
-`kirocrew-core` and `kirocrew-cron`, that `includeMcpJson` is `false`, then run
-`kirocrew doctor` (which checks probe status) and read the live probe results in
+**MCP tools not working.** Check that `~/.kiro/agents/ajcrew.json` contains
+`ajcrew-core` and `ajcrew-cron`, that `includeMcpJson` is `false`, then run
+`ajcrew doctor` (which checks probe status) and read the live probe results in
 the dashboard MCP panel.
 
 **Status stays "Unknown".** The handler auto-triggers a probe for a server it has
@@ -5924,19 +5924,19 @@ no cache entry for, but the result only appears on the next refresh. If it stays
 Unknown, the server is failing its handshake: read the dashboard error text or
 the gateway log.
 
-**Tools present in Kiro Crew but absent in interactive kiro-cli.** That is correct.
-`kirocrew-core` / `kirocrew-cron` / `kirocrew-computer` are agent-scoped and must
+**Tools present in Aj Crew but absent in interactive kiro-cli.** That is correct.
+`ajcrew-core` / `ajcrew-cron` / `ajcrew-computer` are agent-scoped and must
 not appear in interactive kiro-cli or Kiro IDE sessions. If they do, something
 wrote them into a provider global.
 
 **A newly added server does not appear in sessions.** On kiro-cli 2.21.0+ the
 running sessions reconcile the agent file themselves and the dashboard skips its
 reset (see "Live reconcile" above); a server that stays absent there means the
-entry never reached `~/.kiro/agents/kirocrew.json` — check `kirocrew doctor` —
+entry never reached `~/.kiro/agents/ajcrew.json` — check `ajcrew doctor` —
 or the watcher failed at runtime, which the skip cannot see: `POST
 /api/sessions/restart` is the recovery. On an older kiro-cli, or another
 harness, the warm pool holds pre-spawned processes carrying the old config. Use
-Apply & Restart or `POST /api/sessions/restart`. `kirocrew config set` restarts
+Apply & Restart or `POST /api/sessions/restart`. `ajcrew config set` restarts
 nothing: a config write only changes the defaults new sessions adopt, and MCP
 servers are not `config.json` keys.
 

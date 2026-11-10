@@ -18,10 +18,10 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from shared_crew_host_isolation import host_isolation  # noqa: F401
 
-from kiro_crew.history import ConversationLog
-from kiro_crew.shared_crew import people, routes_identity
-from kiro_crew.shared_crew.codec import ContractError
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.history import ConversationLog
+from aj_crew.shared_crew import people, routes_identity
+from aj_crew.shared_crew.codec import ContractError
+from aj_crew.shared_crew.contracts import (
     ACTOR_REQUEST_KEY,
     ActorContext,
     AttributionAvailability,
@@ -31,9 +31,9 @@ from kiro_crew.shared_crew.contracts import (
     SessionQuery,
     Transport,
 )
-from kiro_crew.shared_crew.identity import local_operator_principal, tailnet_principal
-from kiro_crew.shared_crew.owner import owner_principal, viewer_ids
-from kiro_crew.shared_crew.session_query import decode_cursor, encode_cursor, query_sessions
+from aj_crew.shared_crew.identity import local_operator_principal, tailnet_principal
+from aj_crew.shared_crew.owner import owner_principal, viewer_ids
+from aj_crew.shared_crew.session_query import decode_cursor, encode_cursor, query_sessions
 
 pytestmark = pytest.mark.usefixtures("host_isolation")
 

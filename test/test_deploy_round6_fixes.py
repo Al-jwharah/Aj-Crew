@@ -4,8 +4,8 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-from kiro_crew.deploy import iam as iam_mod
-from kiro_crew.deploy.scan import Finding, is_credential_finding, summarize
+from aj_crew.deploy import iam as iam_mod
+from aj_crew.deploy.scan import Finding, is_credential_finding, summarize
 
 # ── F1: Scan summary redaction ──────────────────────────────────────────────
 
@@ -46,7 +46,7 @@ def test_summarize_redacts_internal_urls():
 
 def test_409_response_does_not_leak_akia_key():
     """Integration: the 409 scan-blocked response body must not contain raw credentials."""
-    from kiro_crew.deploy.handlers import _redact_text
+    from aj_crew.deploy.handlers import _redact_text
 
     fake_key = "AKIAIOSFODNN7EXAMPLE"
     raw_summary = f"⚠️ 1 potential issue(s):\n  • line 5 [credential]: {fake_key}"
@@ -56,7 +56,7 @@ def test_409_response_does_not_leak_akia_key():
 
 def test_redact_text_passthrough_clean():
     """Clean text passes through _redact_text unchanged."""
-    from kiro_crew.deploy.handlers import _redact_text
+    from aj_crew.deploy.handlers import _redact_text
 
     clean = "No secrets here, just a normal message about deployment."
     assert _redact_text(clean) == clean
@@ -67,7 +67,7 @@ def test_redact_text_passthrough_clean():
 
 def test_binary_file_does_not_crash_scan():
     """A PNG-like binary file must not raise UnicodeDecodeError during scan."""
-    from kiro_crew.deploy.handlers import _scan_tree
+    from aj_crew.deploy.handlers import _scan_tree
 
     with tempfile.TemporaryDirectory() as tmp:
         # Create a fake PNG (starts with PNG magic bytes, contains null bytes)
@@ -82,7 +82,7 @@ def test_binary_file_does_not_crash_scan():
 
 def test_text_file_with_credentials_still_caught():
     """A text file containing credentials is still detected after the binary-skip fix."""
-    from kiro_crew.deploy.handlers import _scan_tree
+    from aj_crew.deploy.handlers import _scan_tree
 
     with tempfile.TemporaryDirectory() as tmp:
         cred_path = Path(tmp) / "config.js"
@@ -97,7 +97,7 @@ def test_text_file_with_credentials_still_caught():
 
 def test_binary_file_with_sensitive_filename_still_blocked():
     """A binary file with a sensitive filename/path is still rejected."""
-    from kiro_crew.deploy.handlers import _scan_tree
+    from aj_crew.deploy.handlers import _scan_tree
 
     with tempfile.TemporaryDirectory() as tmp:
         # Create a binary file — the sensitive-path check happens at the

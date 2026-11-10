@@ -31,8 +31,8 @@ import re
 
 import pytest
 
-from kiro_crew.acp.types import STOP_REASON_CANCELLED, STOP_REASON_END_TURN
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.acp.types import STOP_REASON_CANCELLED, STOP_REASON_END_TURN
+from aj_crew.dashboard.chat_utils import (
     has_leaked_tool_call,
     should_notice_compaction_dropped_leak,
     should_notice_leaked_tool_call,
@@ -440,7 +440,7 @@ class TestTheNoticeDoesNotStarveARecovery:
     outside, which is a structural property no predicate test can observe.
     """
 
-    RUNNER = pathlib.Path(__file__).resolve().parents[1] / "src/kiro_crew/dashboard/chat_runner.py"
+    RUNNER = pathlib.Path(__file__).resolve().parents[1] / "src/aj_crew/dashboard/chat_runner.py"
     CALL = "should_notice_compaction_dropped_leak("
 
     def _call_line(self) -> str:
@@ -506,7 +506,7 @@ class TestTheBoundaryScanRunsBeforeTheReset:
     ``event.synthesized`` guard that identifies this one.
     """
 
-    RUNNER = pathlib.Path(__file__).resolve().parents[1] / "src/kiro_crew/dashboard/chat_runner.py"
+    RUNNER = pathlib.Path(__file__).resolve().parents[1] / "src/aj_crew/dashboard/chat_runner.py"
     GUARD = re.compile(r"^\s*if not event\.synthesized:")
     # ``_cleared_segment_text(slot)`` is the reset that also drops the raw copy.
     RESET = re.compile(r'^\s*(?:turn\.)?assistant_text = (?:""|_cleared_segment_text\(slot\))\s*$')
@@ -680,7 +680,7 @@ def _card_texts(record) -> list[str]:
 async def _leak_turn(*, calls_before: int) -> list[str]:
     from turn_harness import TurnScript, run_turn
 
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         EVENT_COMPLETE,
         EVENT_TEXT_CHUNK,
         EVENT_TOOL_CALL,

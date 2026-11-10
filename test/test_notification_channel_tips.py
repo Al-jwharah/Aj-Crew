@@ -10,7 +10,7 @@ import json
 import re
 from pathlib import Path
 
-from kiro_crew.notifications.bus import SYSTEM_CHANNELS
+from aj_crew.notifications.bus import SYSTEM_CHANNELS
 
 ROOT = Path(__file__).resolve().parent.parent
 PANEL = ROOT / "website" / "src" / "pages" / "settings" / "NotificationsPanel.tsx"

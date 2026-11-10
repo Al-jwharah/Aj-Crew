@@ -11,7 +11,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import kiro_prerequisite as kp
+from aj_crew import kiro_prerequisite as kp
 
 
 @pytest.fixture(autouse=True)
@@ -120,7 +120,7 @@ class _FakeProvider:
 
     @property
     def uses_kiro_identity_store(self) -> bool:
-        from kiro_crew.acp.types import backends_retired_by_host_logout
+        from aj_crew.acp.types import backends_retired_by_host_logout
 
         return self.backend in backends_retired_by_host_logout()
 
@@ -162,7 +162,7 @@ class _FakeRuntime:
 
     @property
     def uses_kiro_identity_store(self) -> bool:
-        from kiro_crew.acp.types import backends_retired_by_host_logout
+        from aj_crew.acp.types import backends_retired_by_host_logout
 
         return self._acp_backend in backends_retired_by_host_logout()
 

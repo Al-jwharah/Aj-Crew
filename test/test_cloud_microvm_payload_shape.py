@@ -19,8 +19,8 @@ import pathlib
 
 import pytest
 
-from kiro_crew.cloud.microvm import payload as _payload_module
-from kiro_crew.cloud.microvm.payload import (
+from aj_crew.cloud.microvm import payload as _payload_module
+from aj_crew.cloud.microvm.payload import (
     RunHookPayload,
     decode_payload,
     payload_encoding,
@@ -48,8 +48,8 @@ def _payload() -> RunHookPayload:
         activation_id="9f806f70-cffe-447e-97d4-e41e7f61b253",
         activation_code="0123456789abcdefghij",
         region="us-east-1",
-        control_secret_ref="kirocrew/crew/l2crew/CONTROL_SECRET",
-        identity_secret_ref="kirocrew/identity/l2crew",
+        control_secret_ref="ajcrew/crew/l2crew/CONTROL_SECRET",
+        identity_secret_ref="ajcrew/identity/l2crew",
         generation=1,
     )
 

@@ -36,7 +36,7 @@ describe('McpTab Integration Tests', () => {
             status: 'ok',
             enabled: true,
             tools: ['ReadInternalWebsites', 'TaskeiGetTask'],
-            presence: { kirocrew: true, kiroGlobal: true, ccGlobal: false },
+            presence: { ajcrew: true, kiroGlobal: true, ccGlobal: false },
           },
           {
             name: 'ai-community-slack-mcp',
@@ -44,7 +44,7 @@ describe('McpTab Integration Tests', () => {
             error: 'Connection failed',
             enabled: false,
             tools: [],
-            presence: { kirocrew: false, kiroGlobal: false, ccGlobal: false },
+            presence: { ajcrew: false, kiroGlobal: false, ccGlobal: false },
           },
         ])
       })
@@ -70,7 +70,7 @@ describe('McpTab Integration Tests', () => {
             tools: ['ToolAlpha', 'ToolBeta', 'ToolGamma'],
             disabledTools: [],
             command: 'node test',
-            presence: { kirocrew: true, kiroGlobal: false, ccGlobal: false },
+            presence: { ajcrew: true, kiroGlobal: false, ccGlobal: false },
           },
         ])
       })
@@ -104,7 +104,7 @@ describe('McpTab Integration Tests', () => {
             tools: ['ToggleTool'],
             disabledTools: [],
             command: 'node toggle',
-            presence: { kirocrew: true, kiroGlobal: false, ccGlobal: false },
+            presence: { ajcrew: true, kiroGlobal: false, ccGlobal: false },
           },
         ])
       }),
@@ -152,7 +152,7 @@ describe('McpTab Integration Tests', () => {
           tools: ['ToggleTool'],
           disabledTools: [],
           command: 'node toggle',
-          presence: { kirocrew: true, kiroGlobal: false, ccGlobal: false },
+          presence: { ajcrew: true, kiroGlobal: false, ccGlobal: false },
         },
       ])),
       http.post('/api/mcp/apply', () => HttpResponse.json({
@@ -176,7 +176,7 @@ describe('McpTab Integration Tests', () => {
     expect(within(screen.getByTestId('agent-spec-not-rewritten')).queryByRole('button')).not.toBeInTheDocument()
   })
 
-  it('stages KiroCrew scope off and commits it via Apply', async () => {
+  it('stages AjCrew scope off and commits it via Apply', async () => {
     const user = userEvent.setup()
 
     let applyPayload: any = null
@@ -193,7 +193,7 @@ describe('McpTab Integration Tests', () => {
       expect(screen.getAllByText('builder-mcp').length).toBeGreaterThan(0)
     })
 
-    // Find the builder-mcp row and click its KiroCrew scope badge
+    // Find the builder-mcp row and click its AjCrew scope badge
     const rows = screen.getAllByRole('row')
     const builderRow = rows.find(row =>
       within(row as HTMLElement).queryByText('builder-mcp')
@@ -201,7 +201,7 @@ describe('McpTab Integration Tests', () => {
     expect(builderRow).toBeDefined()
 
     const mcBadge = within(builderRow as HTMLElement).getByRole('switch', {
-      name: /Kiro Crew.*click to turn off/i,
+      name: /Aj Crew.*click to turn off/i,
     })
     await user.click(mcBadge)
 
@@ -216,7 +216,7 @@ describe('McpTab Integration Tests', () => {
       expect(applyPayload).toBeTruthy()
       expect(applyPayload.changes).toHaveLength(1)
       expect(applyPayload.changes[0].name).toBe('builder-mcp')
-      expect(applyPayload.changes[0].kirocrew).toBe(false)
+      expect(applyPayload.changes[0].ajcrew).toBe(false)
     })
   })
 
@@ -291,7 +291,7 @@ describe('McpTab Integration Tests', () => {
             error: 'Failed to connect',
             enabled: true,
             tools: [],
-            presence: { kirocrew: true, kiroGlobal: false, ccGlobal: false },
+            presence: { ajcrew: true, kiroGlobal: false, ccGlobal: false },
           },
         ])
       })
@@ -341,7 +341,7 @@ describe('McpTab Integration Tests', () => {
             tools: ['T'],
             disabledTools: [],
             command: 'node t',
-            presence: { kirocrew: true, kiroGlobal: false, ccGlobal: false },
+            presence: { ajcrew: true, kiroGlobal: false, ccGlobal: false },
           },
         ])
       ),

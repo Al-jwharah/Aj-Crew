@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from kiro_crew.acp.client import AcpClient
+from aj_crew.acp.client import AcpClient
 
 
 def _live_process() -> MagicMock:

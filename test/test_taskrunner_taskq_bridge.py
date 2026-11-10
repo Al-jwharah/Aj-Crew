@@ -1,6 +1,6 @@
 """The durable task-queue bridge settles a run's row from its status and fails quietly.
 
-Pins the edges of ``kiro_crew.taskrunner_parts.taskq_bridge`` that the queue round trips in
+Pins the edges of ``aj_crew.taskrunner_parts.taskq_bridge`` that the queue round trips in
 ``test_taskrunner_taskq.py`` do not reach, through the runner itself: how a run's container
 row is settled for each final status, what an unreadable row state or a refused run row
 leaves behind, and that attaching the queue outside an event loop arms no adoption sweep.
@@ -15,9 +15,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.taskq.adapters import runner as r
-from kiro_crew.taskq.store import TaskStoreUnavailable
-from kiro_crew.taskrunner import PROGRESS_FILE, Project, TaskRunner
+from aj_crew.taskq.adapters import runner as r
+from aj_crew.taskq.store import TaskStoreUnavailable
+from aj_crew.taskrunner import PROGRESS_FILE, Project, TaskRunner
 
 
 def _runner(tmp_path: Path) -> TaskRunner:
@@ -95,9 +95,9 @@ async def test_an_unreadable_row_state_reads_as_none(
     admission = MagicMock()
     admission.store = store
     runner._task_admission = admission
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.taskrunner"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.taskrunner"):
         assert await runner._taskq_row_state("taskrunner:r1") is None
-    assert [r.getMessage() for r in caplog.records if r.name == "kiro_crew.taskrunner"] == [
+    assert [r.getMessage() for r in caplog.records if r.name == "aj_crew.taskrunner"] == [
         "taskq: state read for taskrunner:r1 failed"
     ]
 
@@ -112,11 +112,11 @@ async def test_a_refused_run_row_leaves_the_run_without_a_handle(
     admission.accept_async = AsyncMock(side_effect=r.RunnerAdmissionRefused("store refused"))
     admission.claim_only_async = AsyncMock()
     runner._task_admission = admission
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.taskrunner"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.taskrunner"):
         await runner._taskq_begin_run(_run(tmp_path, "running"))
     admission.claim_only_async.assert_not_awaited()
     assert runner._run_handles == {}
-    assert [r.getMessage() for r in caplog.records if r.name == "kiro_crew.taskrunner"] == [
+    assert [r.getMessage() for r in caplog.records if r.name == "aj_crew.taskrunner"] == [
         "taskq: run row for r1 not accepted: store refused"
     ]
 

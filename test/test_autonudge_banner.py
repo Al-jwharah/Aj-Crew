@@ -32,15 +32,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-import kiro_crew.mcp_core as mcp_core
-from kiro_crew import autonudge_authz as authz
-from kiro_crew import session_directive
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
-from kiro_crew.autonudge_authz import MAX_BANNER_CHARS
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.mcp_core import _call_tool_inner
-from kiro_crew.slack import gateway as gw
-from kiro_crew.validation import ValidationError
+import aj_crew.mcp_core as mcp_core
+from aj_crew import autonudge_authz as authz
+from aj_crew import session_directive
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew.autonudge_authz import MAX_BANNER_CHARS
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.mcp_core import _call_tool_inner
+from aj_crew.slack import gateway as gw
+from aj_crew.validation import ValidationError
 
 # ── Fire-path harness (mirrors test_autonudge_dashboard_fire.py) ──
 
@@ -86,8 +86,8 @@ def _slot(key: str = "chat-1-1785") -> MagicMock:
 
 
 def _orchestrator() -> gw.GatewayOrchestrator:
-    cfg = KiroCrewConfig()
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U_OWNER"}):
+    cfg = AjCrewConfig()
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U_OWNER"}):
         orch = gw.GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
     orch.dashboard_state = SimpleNamespace(
         get_slot=MagicMock(return_value=None),
@@ -152,7 +152,7 @@ async def _fire_full(loop: NudgeLoop, *, ledger: str = "") -> tuple[str, str, di
     with (
         patch.object(gw, "spawn_guarded_turn", _spawn),
         patch.object(gw, "compose_nudge_body", new=AsyncMock(side_effect=_compose)),
-        patch("kiro_crew.dashboard.chat._run_chat", new=run_chat),
+        patch("aj_crew.dashboard.chat._run_chat", new=run_chat),
     ):
         assert await orch._fire_dashboard_nudge(loop) is True
         await asyncio.gather(*spawned)
@@ -705,7 +705,7 @@ class TestRestSurface:
     def _app(self, monkeypatch, fake_svc):
         from aiohttp import web
 
-        from kiro_crew.dashboard.handlers import autonudge as _handler
+        from aj_crew.dashboard.handlers import autonudge as _handler
 
         monkeypatch.setattr(_handler, "_autonudge_get", lambda: fake_svc)
         state = MagicMock()
@@ -1032,14 +1032,14 @@ class TestMonitorToolsCanSetTheBanner:
         Its call sites name every kwarg explicitly (no ``**patch`` splat), so a missed
         kwarg drops the field silently.
         """
-        from kiro_crew.dashboard import session_directive_apply as sda
+        from aj_crew.dashboard import session_directive_apply as sda
 
         svc = MagicMock()
         authz = AsyncMock(return_value=(SimpleNamespace(id="loop-1"), None, 200))
         with (
             patch.object(sda, "_binding", return_value="chat-9-1"),
-            patch("kiro_crew.autonudge.get_instance", return_value=svc),
-            patch("kiro_crew.autonudge_authz.authorize_and_add_nudge", authz),
+            patch("aj_crew.autonudge.get_instance", return_value=svc),
+            patch("aj_crew.autonudge_authz.authorize_and_add_nudge", authz),
         ):
             result = await sda._monitor_start(
                 MagicMock(),
@@ -1338,7 +1338,7 @@ class TestARealProducerSetsTheBanner:
     def test_the_goal_command_passes_a_banner_to_add(self) -> None:
         from pathlib import Path
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         src = "\n".join(
             turn_file.read_text(encoding="utf-8")
@@ -1356,7 +1356,7 @@ class TestARealProducerSetsTheBanner:
         """``add`` does not validate, so an unbounded objective would be cleared on load."""
         import inspect
 
-        from kiro_crew.autonudge import AutoNudgeService
+        from aj_crew.autonudge import AutoNudgeService
 
         assert "banner" in inspect.signature(AutoNudgeService.add).parameters
         src = inspect.getsource(AutoNudgeService.add)
@@ -1406,7 +1406,7 @@ class TestBanneredRowShowsTheBannerEveryCycle:
 async def test_the_idle_fire_takes_its_row_from_the_wake_origin() -> None:
     """The fire's nudge row comes from ``session_deliver.origin_row`` for an
     ``automation`` origin, the one mapping a steered wake uses too."""
-    from kiro_crew.dashboard import session_deliver
+    from aj_crew.dashboard import session_deliver
 
     real = session_deliver.write_origin_row
     seen: list[tuple[str, int, str]] = []

@@ -11,7 +11,7 @@ import threading
 import pytest
 from instances_helpers import _FakeTunnel
 
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 
 def _forwarder_listener_gone(port: int) -> bool:
@@ -32,7 +32,7 @@ def _route_pinned_kill_to_kill_pid(monkeypatch):
     The real ``kill_pid_pinned`` opens a handle to the (fake) pid on Windows and
     refuses, so the signal-sequence tests below would see no signal there.
     """
-    from kiro_crew import platform_compat as pc
+    from aj_crew import platform_compat as pc
 
     monkeypatch.setattr(pc, "kill_pid_pinned", lambda pid, start, sig: pc.kill_pid(pid, sig))
 
@@ -58,8 +58,8 @@ class TestOrphanForwarderReclaim:
             return s.getsockname()[1]
 
     def _mgr(self, tmp_path):
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         base_port = self._os_assigned_base_port()
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -119,7 +119,7 @@ class TestOrphanForwarderReclaim:
     @staticmethod
     def _fake_orphan(monkeypatch):
         """Make the orphan gate see every pid as init-reparented (test scope)."""
-        from kiro_crew import platform_compat as pc
+        from aj_crew import platform_compat as pc
 
         monkeypatch.setattr(pc, "get_ppid", lambda pid: 1)
 
@@ -134,7 +134,7 @@ class TestOrphanForwarderReclaim:
         compare_digest gate) fully real while making signatures computable by
         the test exactly the way the pre-kill gateway would have.
         """
-        import kiro_crew.instances.ssh_tunnel_manager as stm
+        import aj_crew.instances.ssh_tunnel_manager as stm
 
         monkeypatch.setattr(stm, "_reclaim_identity_key", lambda: cls._TEST_IDENTITY_KEY)
 
@@ -165,9 +165,9 @@ class TestOrphanForwarderReclaim:
     async def test_hard_kill_leaked_forwarder_is_reclaimed_by_pid(self, tmp_path, monkeypatch):
         """hard-kill -> restart -> reconnect: the recorded child is terminated
         and its port released; connect then succeeds."""
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         proc, port, argv = self._spawn_port_holder()
         try:
@@ -231,8 +231,8 @@ class TestOrphanForwarderReclaim:
         ``ssh_spawn_argv_env`` resolves the bare ``"ssh"`` at spawn, so a reclaim
         comparing ``ssh`` with ``/usr/bin/ssh`` element-exactly would leak every orphan.
         """
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew.instances import token_mint
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew.instances import token_mint
 
         head = str(tmp_path / "bin" / "ssh")
         monkeypatch.setattr(token_mint, "resolve_ssh_bin", lambda: head)
@@ -282,9 +282,9 @@ class TestOrphanForwarderReclaim:
         the grace (identity re-confirmed before the destructive escalation)."""
         import signal as signal_mod
 
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         code = (
             "import signal, socket, sys, time\n"
@@ -345,9 +345,9 @@ class TestOrphanForwarderReclaim:
         missing or wrong — authorizes nothing, even with the orphan gate open
         and the argv matching. Only the gateway can mint the signature (its
         key derives from the deny-listed SEL trust root)."""
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         proc, port, argv = self._spawn_port_holder()
         try:
@@ -387,9 +387,9 @@ class TestOrphanForwarderReclaim:
         (real pid, real start time, matching argv). The orphan gate must
         refuse it: a process whose parent is alive belongs to a running
         gateway and is never a hard-kill leak."""
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         # Direct child of the test process == a live parent (this process).
         proc, port, argv = self._spawn_port_holder()
@@ -426,8 +426,8 @@ class TestOrphanForwarderReclaim:
         whose argv happens to match, but its start-time identity does not.
         Nothing may be signalled — the start-time pin is what defeats a
         recycled pid running an identical command line."""
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         proc, port, argv = self._spawn_port_holder()
         try:
@@ -462,8 +462,8 @@ class TestOrphanForwarderReclaim:
         manager did not spawn (its argv is not the forward command line). It
         must be left alone even with a matching start time and an open orphan
         gate."""
-        from kiro_crew import platform_compat as pc
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew import platform_compat as pc
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         proc, port, _argv = self._spawn_port_holder()
         try:
@@ -544,9 +544,9 @@ class TestOrphanForwarderReclaim:
         Through a shebang the kernel argv carries an interpreter the rebuild lacks,
         so only the recorded fingerprint can confirm the identity.
         """
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         proc, port, rebuilt = self._spawn_shebang_port_holder(tmp_path)
         try:
@@ -594,9 +594,9 @@ class TestOrphanForwarderReclaim:
         left alone, even when the rebuilt command line would have matched."""
         import hashlib
 
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         proc, port, argv = self._spawn_port_holder()
         try:
@@ -634,9 +634,9 @@ class TestOrphanForwarderReclaim:
     async def test_dropping_the_signed_fingerprint_does_not_fall_back(self, tmp_path, monkeypatch):
         """Erasing ``forwarder_argv_sig`` from a record signed with it fails the
         MAC, so the record cannot be pushed back onto the rebuilt-argv check."""
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         proc, port, argv = self._spawn_port_holder()
         seen: list = []
@@ -678,7 +678,7 @@ class TestOrphanForwarderReclaim:
         import hashlib
         import hmac
 
-        import kiro_crew.instances.ssh_tunnel_manager as stm
+        import aj_crew.instances.ssh_tunnel_manager as stm
 
         key = b"k" * 32
         old = hmac.new(key, b"cd-1\x004242\x00S1\x0054300", hashlib.sha256).hexdigest()
@@ -696,8 +696,8 @@ class TestOrphanForwarderReclaim:
         """A record signed for an ssh child is refused once the instance's
         settings say SSM, so the SSM group signal never reaches a child that
         shares the dead gateway's process group."""
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
 
         proc, port, _argv = self._spawn_port_holder()
         seen: list = []
@@ -743,8 +743,8 @@ class TestOrphanForwarderReclaim:
         (on POSIX that delegates straight to ``kill_pid``). A Windows SSM forwarder
         is not signalled at all: the group signal there is an unpinned
         ``taskkill /T``, and ending the wrapper alone strands its plugin child."""
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
 
         pinned: list = []
         bare: list = []
@@ -787,8 +787,8 @@ class TestOrphanForwarderReclaim:
         the order is host-independent. ``IS_WINDOWS`` is flipped only inside the
         wrapped call, so nothing else in ``connect`` takes a Windows path.
         """
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
 
         real_state = stm._forwarder_orphan_state
         fake_ppid = self._FAKE_PARENT_PID
@@ -838,9 +838,9 @@ class TestOrphanForwarderReclaim:
 
         Windows never re-parents to pid 1. The verify-and-kill worker is a recorder
         here; the kill is pinned by ``TestProcessArgvMatchesExact`` and others."""
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         proc, port, argv = self._spawn_port_holder()
         try:
@@ -886,9 +886,9 @@ class TestOrphanForwarderReclaim:
         this gateway or a second one on the box. Refused, and the miss is logged."""
         import logging
 
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         proc, port, argv = self._spawn_port_holder()
         try:
@@ -930,8 +930,8 @@ class TestOrphanForwarderReclaim:
         Reclaim needs the recorded listener, not a replacement tunnel: allocating
         a replacement adds a probe-to-bind race unrelated to identity refusal.
         """
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
 
         proc, port, argv = self._spawn_port_holder()
         try:
@@ -964,7 +964,7 @@ class TestOrphanForwarderReclaim:
     async def test_unrecorded_port_holder_is_never_signalled(self, tmp_path):
         """No recorded identity -> no candidate: the reclaim never scans the
         process table for whoever holds the port."""
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         proc, port, _argv = self._spawn_port_holder()
         try:
@@ -984,9 +984,9 @@ class TestOrphanForwarderReclaim:
         """A free recorded port means nothing leaked: the recorded pid is not
         signalled even when its identity WOULD match (e.g. the pid was
         recycled onto an innocent process while nothing holds the port)."""
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         code = "import sys, time; sys.stdout.write('R'); sys.stdout.flush(); time.sleep(120)"
         argv = [sys.executable, "-c", code]
@@ -1038,8 +1038,8 @@ class TestOrphanForwarderReclaim:
         An ``ssh -L`` child binds 127.0.0.1 alone; probing ``::1`` too would record a
         reclaimed forwarder as ``not_gone`` in the SEL audit.
         """
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
 
         squatter = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
         squatter.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1)
@@ -1075,8 +1075,8 @@ class TestOrphanForwarderReclaim:
         start-time identity during the TERM grace (exit + recycle inside a
         poll gap, which pid_exists cannot observe), the destructive SIGKILL is
         withheld — leak-not-mis-kill."""
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
 
         delivered: list[int] = []
         starts = iter(["identity-A", "identity-B"])  # pre-TERM, then re-check
@@ -1102,8 +1102,8 @@ class TestOrphanForwarderReclaim:
         poll gap) is NOT a safe SIGKILL fall-through: getpgid on a recycled
         pid would resolve the REPLACEMENT process. No verified identity, no
         SIGKILL."""
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
 
         delivered: list[int] = []
         starts = iter(["identity-A", None])  # pre-TERM ok; re-check: pid gone
@@ -1137,8 +1137,8 @@ class TestOrphanForwarderReclaim:
         same-second pid reuse can keep it matching — the argv half of the
         re-check is what breaks the tie. argv mismatch at escalation time
         withholds the SIGKILL."""
-        import kiro_crew.instances.ssh_tunnel_manager as stm
-        from kiro_crew import platform_compat as pc
+        import aj_crew.instances.ssh_tunnel_manager as stm
+        from aj_crew import platform_compat as pc
 
         delivered: list[int] = []
         argv_answers = iter([True, False])  # pre-TERM ok; re-check: different argv

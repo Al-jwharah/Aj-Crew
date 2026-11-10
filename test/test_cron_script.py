@@ -22,9 +22,9 @@ from cron_script_helpers import (  # noqa: F401 -- the autouse fixtures register
     _crons_dir_tracks_patched_home,
 )
 
-import kiro_crew.cron_script as cron_script
-from kiro_crew import platform_compat as pc
-from kiro_crew.cron_script import (
+import aj_crew.cron_script as cron_script
+from aj_crew import platform_compat as pc
+from aj_crew.cron_script import (
     Done,
     McpToolError,
     Report,
@@ -34,7 +34,7 @@ from kiro_crew.cron_script import (
     run_command_sandboxed,
     run_script_sandboxed,
 )
-from kiro_crew.security import REDACTED_CREDENTIAL_TAG
+from aj_crew.security import REDACTED_CREDENTIAL_TAG
 
 
 class TestScriptContext:
@@ -69,7 +69,7 @@ class TestResolveMcpServer:
                 "test-server": {"command": "node", "args": ["server.js", "--port", "3000"]}
             }
         }
-        (agents_dir / "kirocrew.json").write_text(json.dumps(config))
+        (agents_dir / "ajcrew.json").write_text(json.dumps(config))
         with patch("pathlib.Path.home", return_value=tmp_path):
             result = _resolve_mcp_server("test-server")
         # New shape: (argv, env). No env block in config -> empty env dict.
@@ -91,7 +91,7 @@ class TestResolveMcpServer:
                 }
             }
         }
-        (agents_dir / "kirocrew.json").write_text(json.dumps(config))
+        (agents_dir / "ajcrew.json").write_text(json.dumps(config))
         with patch("pathlib.Path.home", return_value=tmp_path):
             argv, env = _resolve_mcp_server("path-server")
         assert argv == ("some-mcp", "--mode", "stdio")
@@ -112,7 +112,7 @@ class TestResolveMcpServer:
                 }
             }
         }
-        (agents_dir / "kirocrew.json").write_text(json.dumps(config))
+        (agents_dir / "ajcrew.json").write_text(json.dumps(config))
         with patch("pathlib.Path.home", return_value=tmp_path):
             _argv, env = _resolve_mcp_server("num-env")
         assert env == {"PORT": "3000"}
@@ -122,7 +122,7 @@ class TestResolveMcpServer:
         """Write an agent config whose sole server declares *env_block*."""
         agents_dir = tmp_path / ".kiro" / "agents"
         agents_dir.mkdir(parents=True, exist_ok=True)
-        (agents_dir / "kirocrew.json").write_text(
+        (agents_dir / "ajcrew.json").write_text(
             json.dumps(
                 {"mcpServers": {"bad-env": {"command": "some-mcp", "env": env_block}}}
             )
@@ -218,14 +218,14 @@ class TestMcpToolClient:
     """Tests for McpToolClient JSON-RPC communication."""
 
     def test_init_fails_for_unknown_server(self, tmp_path):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         with patch("pathlib.Path.home", return_value=tmp_path):
             with pytest.raises(RuntimeError, match="not found"):
                 McpToolClient("nonexistent-server")
 
     def test_close_handles_already_terminated(self, tmp_path):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         client = object.__new__(McpToolClient)
         client._proc = MagicMock()
@@ -243,7 +243,7 @@ class TestMcpToolClient:
         """Regression: McpToolClient must hand the spawned MCP subprocess the
         per-server `env` (so a launcher can resolve its helper binary on PATH)
         while still scrubbing cron secrets (Slack tokens / owner id)."""
-        from kiro_crew.cron_script import (
+        from aj_crew.cron_script import (
             _CRON_ENV_DENY,
             McpToolClient,
             _resolve_mcp_server,
@@ -253,7 +253,7 @@ class TestMcpToolClient:
         # A secret that must NEVER reach the child subprocess env...
         monkeypatch.setenv("SLACK_BOT_TOKEN", "xoxb-should-not-leak")
         # ...and an ordinary var that SHOULD be inherited from the cron env.
-        monkeypatch.setenv("KIROCREW_PROBE_VAR", "keep-me")
+        monkeypatch.setenv("AJCREW_PROBE_VAR", "keep-me")
 
         # Mock proc whose stdout answers the initialize handshake (id == 1).
         mock_proc = MagicMock()
@@ -267,16 +267,16 @@ class TestMcpToolClient:
         # prove the deny-set is applied to the spec overlay too.
         spec_env = {"PATH": "/custom/launcher/path", "SLACK_BOT_TOKEN": "spec-also-blocked"}
         with patch(
-            "kiro_crew.cron_script._resolve_mcp_server",
+            "aj_crew.cron_script._resolve_mcp_server",
             return_value=(("some-mcp", "--mode", "stdio"), spec_env),
         ), patch(
-            "kiro_crew.cron_script.wrap_argv",
+            "aj_crew.cron_script.wrap_argv",
             return_value=(["some-mcp", "--mode", "stdio"], None),
         ), patch(
-            "kiro_crew.cron_script.cgroup_scope_argv",
+            "aj_crew.cron_script.cgroup_scope_argv",
             side_effect=lambda argv: argv,
         ), patch(
-            "kiro_crew.cron_script.popen_limited", return_value=mock_proc
+            "aj_crew.cron_script.popen_limited", return_value=mock_proc
         ) as mock_popen:
             client = McpToolClient("path-server")
             client.close()
@@ -285,7 +285,7 @@ class TestMcpToolClient:
         # Spec PATH is forwarded so the launcher can find its helper binary.
         assert passed_env["PATH"] == "/custom/launcher/path"
         # Ordinary inherited vars survive.
-        assert passed_env.get("KIROCREW_PROBE_VAR") == "keep-me"
+        assert passed_env.get("AJCREW_PROBE_VAR") == "keep-me"
         # The denied secret is scrubbed from BOTH the inherited env and the
         # spec overlay (it never reaches the child).
         assert "SLACK_BOT_TOKEN" not in passed_env
@@ -307,7 +307,7 @@ class TestMcpToolClient:
         no-sandbox path argv[0] is the operator's command, and resolving it against the
         gateway's PATH would run a different copy than the spec ``PATH`` selects.
         """
-        from kiro_crew.cron_script import McpToolClient, _resolve_mcp_server
+        from aj_crew.cron_script import McpToolClient, _resolve_mcp_server
 
         _resolve_mcp_server.cache_clear()
 
@@ -325,18 +325,18 @@ class TestMcpToolClient:
 
         spec_env = {"PATH": str(spec_dir)}
         with patch(
-            "kiro_crew.cron_script._resolve_mcp_server",
+            "aj_crew.cron_script._resolve_mcp_server",
             return_value=(("some-mcp",), spec_env),
         ), patch(
             # Fail-open no-sandbox path: neither helper prepends a wrapper, so
             # argv[0] stays the operator's own command.
-            "kiro_crew.cron_script.wrap_argv",
+            "aj_crew.cron_script.wrap_argv",
             return_value=(["some-mcp"], None),
         ), patch(
-            "kiro_crew.cron_script.cgroup_scope_argv",
+            "aj_crew.cron_script.cgroup_scope_argv",
             side_effect=lambda argv: list(argv),
         ), patch(
-            "kiro_crew.cron_script.popen_limited", return_value=self._mock_handshake_proc()
+            "aj_crew.cron_script.popen_limited", return_value=self._mock_handshake_proc()
         ) as mock_popen:
             client = McpToolClient("path-server")
             client.close()
@@ -357,7 +357,7 @@ class TestMcpToolClient:
         the wrapper before containment starts: pre-confinement code execution. It goes
         through ``env.sanitize_spec_env``; ``PATH`` is kept, since forwarding it is the feature.
         """
-        from kiro_crew.cron_script import McpToolClient, _resolve_mcp_server
+        from aj_crew.cron_script import McpToolClient, _resolve_mcp_server
 
         _resolve_mcp_server.cache_clear()
         for key in ("LD_PRELOAD", "LD_LIBRARY_PATH", "DYLD_INSERT_LIBRARIES", "PYTHONPATH"):
@@ -375,14 +375,14 @@ class TestMcpToolClient:
             "MCP_TOKEN": "keep-me",
         }
         with patch(
-            "kiro_crew.cron_script._resolve_mcp_server",
+            "aj_crew.cron_script._resolve_mcp_server",
             return_value=(("some-mcp",), spec_env),
         ), patch(
-            "kiro_crew.cron_script.wrap_argv", return_value=(["some-mcp"], None)
+            "aj_crew.cron_script.wrap_argv", return_value=(["some-mcp"], None)
         ), patch(
-            "kiro_crew.cron_script.cgroup_scope_argv", side_effect=lambda argv: list(argv)
+            "aj_crew.cron_script.cgroup_scope_argv", side_effect=lambda argv: list(argv)
         ), patch(
-            "kiro_crew.cron_script.popen_limited", return_value=self._mock_handshake_proc()
+            "aj_crew.cron_script.popen_limited", return_value=self._mock_handshake_proc()
         ) as mock_popen:
             client = McpToolClient("path-server")
             client.close()
@@ -400,55 +400,55 @@ class TestMcpToolClient:
         assert passed_env["PATH"] == "/opt/helper/bin"
         assert passed_env["MCP_TOKEN"] == "keep-me"
 
-    def test_init_drops_reserved_kirocrew_namespace_from_spec_env(self, monkeypatch):
+    def test_init_drops_reserved_ajcrew_namespace_from_spec_env(self, monkeypatch):
         """SECURITY regression: a spec ``env`` must not forge caller identity.
 
-        ``kirocrew-cron`` resolves its caller from ``KIROCREW_SESSION_KEY`` /
-        ``KIROCREW_HOST_PID``, so a script cron could name itself another session and
+        ``ajcrew-cron`` resolves its caller from ``AJCREW_SESSION_KEY`` /
+        ``AJCREW_HOST_PID``, so a script cron could name itself another session and
         reach its jobs. The OS sandbox is no mitigation: it bounds what the child may
-        touch, not whose jobs Kiro Crew believes it owns.
+        touch, not whose jobs Aj Crew believes it owns.
 
-        ``KIROCREW_CLI`` has no producer or consumer; it is asserted because the
+        ``AJCREW_CLI`` has no producer or consumer; it is asserted because the
         reserved-namespace deny covers the whole class.
         """
-        from kiro_crew.cron_script import McpToolClient, _resolve_mcp_server
+        from aj_crew.cron_script import McpToolClient, _resolve_mcp_server
 
         _resolve_mcp_server.cache_clear()
-        for key in ("KIROCREW_CLI", "KIROCREW_SESSION_KEY", "KIROCREW_HOST_PID"):
+        for key in ("AJCREW_CLI", "AJCREW_SESSION_KEY", "AJCREW_HOST_PID"):
             monkeypatch.delenv(key, raising=False)
 
         spec_env = {
             # The ambient admin flag.
-            "KIROCREW_CLI": "1",
+            "AJCREW_CLI": "1",
             # Siblings in the same class: two of the three sources the STRICT
             # session resolver accepts because "an agent cannot write them".
-            "KIROCREW_SESSION_KEY": "some-other-session",
-            "KIROCREW_HOST_PID": "4242",
+            "AJCREW_SESSION_KEY": "some-other-session",
+            "AJCREW_HOST_PID": "4242",
             # Lowercase reaches the same lookup on Windows.
-            "kirocrew_cli": "1",
+            "ajcrew_cli": "1",
             # ...and PATH forwarding still works.
             "PATH": "/opt/helper/bin",
             "MCP_TOKEN": "keep-me",
         }
         with patch(
-            "kiro_crew.cron_script._resolve_mcp_server",
+            "aj_crew.cron_script._resolve_mcp_server",
             return_value=(("some-mcp",), spec_env),
         ), patch(
-            "kiro_crew.cron_script.wrap_argv", return_value=(["some-mcp"], None)
+            "aj_crew.cron_script.wrap_argv", return_value=(["some-mcp"], None)
         ), patch(
-            "kiro_crew.cron_script.cgroup_scope_argv", side_effect=lambda argv: list(argv)
+            "aj_crew.cron_script.cgroup_scope_argv", side_effect=lambda argv: list(argv)
         ), patch(
-            "kiro_crew.cron_script.popen_limited", return_value=self._mock_handshake_proc()
+            "aj_crew.cron_script.popen_limited", return_value=self._mock_handshake_proc()
         ) as mock_popen:
-            client = McpToolClient("kirocrew-cron")
+            client = McpToolClient("ajcrew-cron")
             client.close()
 
         passed_env = mock_popen.call_args.kwargs["env"]
         for denied in (
-            "KIROCREW_CLI",
-            "KIROCREW_SESSION_KEY",
-            "KIROCREW_HOST_PID",
-            "kirocrew_cli",
+            "AJCREW_CLI",
+            "AJCREW_SESSION_KEY",
+            "AJCREW_HOST_PID",
+            "ajcrew_cli",
         ):
             assert denied not in passed_env, f"{denied} reached the spawn"
         assert passed_env["PATH"] == "/opt/helper/bin"
@@ -460,35 +460,35 @@ class TestMcpToolClient:
         """The end of the attack path, asserted where it actually decides.
 
         The real strict session resolver, run in the child's env, must not return the
-        forged session. ``KIROCREW_SESSION_KEY`` is the subject because it has real
+        forged session. ``AJCREW_SESSION_KEY`` is the subject because it has real
         producers, so the filter is load-bearing for it.
 
         Scope: the ``env`` block only. The spec's ``command`` field
-        (``sh -c 'KIROCREW_SESSION_KEY=... exec kirocrew-cron'``) is a sibling forgery
+        (``sh -c 'AJCREW_SESSION_KEY=... exec ajcrew-cron'``) is a sibling forgery
         channel this filter does not close; that needs consumer-side vouching.
         """
-        from kiro_crew.cron_script import McpToolClient, _resolve_mcp_server
-        from kiro_crew.mcp_core import _resolve_session_key_strict
+        from aj_crew.cron_script import McpToolClient, _resolve_mcp_server
+        from aj_crew.mcp_core import _resolve_session_key_strict
 
         _resolve_mcp_server.cache_clear()
         forged = "dashboard:victim"
         # Baseline: the key really is an identity source, so a miss below means
         # the filter worked rather than that the key never mattered.
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", forged)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", forged)
         assert _resolve_session_key_strict() == forged
-        monkeypatch.delenv("KIROCREW_SESSION_KEY")
+        monkeypatch.delenv("AJCREW_SESSION_KEY")
 
         with patch(
-            "kiro_crew.cron_script._resolve_mcp_server",
-            return_value=(("some-mcp",), {"KIROCREW_SESSION_KEY": forged}),
+            "aj_crew.cron_script._resolve_mcp_server",
+            return_value=(("some-mcp",), {"AJCREW_SESSION_KEY": forged}),
         ), patch(
-            "kiro_crew.cron_script.wrap_argv", return_value=(["some-mcp"], None)
+            "aj_crew.cron_script.wrap_argv", return_value=(["some-mcp"], None)
         ), patch(
-            "kiro_crew.cron_script.cgroup_scope_argv", side_effect=lambda argv: list(argv)
+            "aj_crew.cron_script.cgroup_scope_argv", side_effect=lambda argv: list(argv)
         ), patch(
-            "kiro_crew.cron_script.popen_limited", return_value=self._mock_handshake_proc()
+            "aj_crew.cron_script.popen_limited", return_value=self._mock_handshake_proc()
         ) as mock_popen:
-            client = McpToolClient("kirocrew-cron")
+            client = McpToolClient("ajcrew-cron")
             client.close()
 
         child_env = mock_popen.call_args.kwargs["env"]
@@ -497,7 +497,7 @@ class TestMcpToolClient:
 
     def test_rpc_disconnect_includes_rc_and_stderr_tail(self, tmp_path):
         """a handshake EOF must surface exit code + stderr tail."""
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
         stderr_path = tmp_path / "stderr.log"
         stderr_path.write_text("Node version 18 detected, but version 20 or higher is required.\n")
         client = object.__new__(McpToolClient)
@@ -519,7 +519,7 @@ class TestMcpToolClient:
         assert "version 20 or higher is required" in msg
 
     def test_rpc_disconnect_empty_stderr(self, tmp_path):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
         client = object.__new__(McpToolClient)
         client._server_name = "some-mcp"
         client._req_id = 0
@@ -533,7 +533,7 @@ class TestMcpToolClient:
                 client._rpc("tools/call")
 
     def test_stderr_tail_redacts_credentials(self, tmp_path):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
         stderr_path = tmp_path / "stderr.log"
         stderr_path.write_text("boom AKIA1234567890123456 failure")
         client = object.__new__(McpToolClient)
@@ -552,7 +552,7 @@ class TestMcpToolClient:
         """
         import re
 
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
         stderr_path = tmp_path / "stderr.log"
         filler = "x" * 1000
         # Synthetic key id: deliberately well-formed so the redaction regex has
@@ -574,7 +574,7 @@ class TestMcpToolClient:
         The ~6 KiB URL puts its scheme far before the served tail, so only a full-capture
         redaction pass sees the scheme and scrubs the match whole.
         """
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
         stderr_path = tmp_path / "stderr.log"
         # Long query triggers redact_exfiltration_urls' length-based
         # heuristic, as in the test below; here it is long enough that no
@@ -596,8 +596,8 @@ class TestMcpToolClient:
         Only the last ``_STDERR_TAIL_READ_SPAN`` bytes are read, so a long
         session's stderr costs a fixed amount, and its diagnostic is kept.
         """
-        from kiro_crew import cron_script
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew import cron_script
+        from aj_crew.cron_script import McpToolClient
 
         stderr_path = tmp_path / "stderr.log"
         noise = ("log line\n" * (4 * cron_script._STDERR_TAIL_READ_SPAN // 9))
@@ -613,8 +613,8 @@ class TestMcpToolClient:
 
     def test_stderr_tail_drops_the_line_severed_by_the_read_start(self, tmp_path):
         """A line cut by the bounded read's start is never served."""
-        from kiro_crew import cron_script
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew import cron_script
+        from aj_crew.cron_script import McpToolClient
 
         stderr_path = tmp_path / "stderr.log"
         span = cron_script._STDERR_TAIL_READ_SPAN
@@ -627,8 +627,8 @@ class TestMcpToolClient:
 
     def test_stderr_tail_masks_a_key_block_opened_before_the_read(self, tmp_path):
         """A private-key body whose BEGIN sits before the read stays masked."""
-        from kiro_crew import cron_script
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew import cron_script
+        from aj_crew.cron_script import McpToolClient
 
         stderr_path = tmp_path / "stderr.log"
         span = cron_script._STDERR_TAIL_READ_SPAN
@@ -651,8 +651,8 @@ class TestMcpToolClient:
         No marker is left inside the read, so only a scan of the skipped
         prefix knows the block is open.
         """
-        from kiro_crew import cron_script
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew import cron_script
+        from aj_crew.cron_script import McpToolClient
 
         stderr_path = tmp_path / "stderr.log"
         span = cron_script._STDERR_TAIL_READ_SPAN
@@ -665,7 +665,7 @@ class TestMcpToolClient:
         assert "K" * 16 not in tail
 
     def test_stderr_tail_redacts_exfiltration_urls(self, tmp_path):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
         stderr_path = tmp_path / "stderr.log"
         # Long innocuous query (>= 200 chars) triggers redact_exfiltration_urls'
         # length-based heuristic. We can't use a credential-shaped value (AKIA,
@@ -682,7 +682,7 @@ class TestMcpToolClient:
         assert "boom" in tail
 
     def test_close_removes_stderr_tempfile(self, tmp_path):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
         stderr_path = tmp_path / "stderr.log"
         stderr_path.write_text("x")
         client = object.__new__(McpToolClient)
@@ -707,7 +707,7 @@ class TestScriptContextNotify:
         mock_response.read.return_value = b'{"ok": true}'
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
-        with patch("kiro_crew.cron_script.loopback_urlopen", return_value=mock_response):
+        with patch("aj_crew.cron_script.loopback_urlopen", return_value=mock_response):
             result = ctx.notify("hello")
         assert result == {"ok": True}
 
@@ -718,7 +718,7 @@ class TestScriptContextNotify:
         mock_response.read.return_value = b'{"error": "forbidden"}'
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
-        with patch("kiro_crew.cron_script.loopback_urlopen", return_value=mock_response):
+        with patch("aj_crew.cron_script.loopback_urlopen", return_value=mock_response):
             with pytest.raises(RuntimeError, match="forbidden"):
                 ctx.notify("hello")
 
@@ -732,7 +732,7 @@ class TestScriptContextNotify:
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
         with patch(
-            "kiro_crew.cron_script.loopback_urlopen", return_value=mock_response
+            "aj_crew.cron_script.loopback_urlopen", return_value=mock_response
         ) as mock_urlopen:
             ctx.notify(f"secret {fake_key} text")
             mock_urlopen.assert_called_once()
@@ -748,7 +748,7 @@ class TestScriptContextNotify:
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
         with patch(
-            "kiro_crew.cron_script.loopback_urlopen", return_value=mock_response
+            "aj_crew.cron_script.loopback_urlopen", return_value=mock_response
         ) as mock_urlopen:
             ctx.notify("*Title*", channel_type="telegram", target_id="user:1", format="markdown")
         sent = json.loads(mock_urlopen.call_args.args[0].data)
@@ -789,7 +789,7 @@ class TestScriptContextCallTool:
             def close(self):
                 pass
 
-        monkeypatch.setattr("kiro_crew.cron_script.McpToolClient", FakeClient)
+        monkeypatch.setattr("aj_crew.cron_script.McpToolClient", FakeClient)
         ctx = ScriptContext(job=SimpleNamespace(id="j1", message=""))
         audited = []
         monkeypatch.setattr(ctx, "_audit_tool_call", lambda *record: audited.append(record))
@@ -833,7 +833,7 @@ class TestScriptContextKeepsServers:
                 self.closed += 1
                 self.running = False
 
-        monkeypatch.setattr("kiro_crew.cron_script.McpToolClient", FakeClient)
+        monkeypatch.setattr("aj_crew.cron_script.McpToolClient", FakeClient)
         return started
 
     @staticmethod
@@ -949,12 +949,12 @@ class TestRunCommandSandboxedEdgeCases:
         """Bypass the OS-sandbox wrap so these plumbing tests run without a
         sandbox backend (see TestRunCommandSandboxed._passthrough_sandbox)."""
         monkeypatch.setattr(
-            "kiro_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None)
+            "aj_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None)
         )
         # Bypass the runtime shell probe (which itself spawns a child): these
         # tests exercise the run_command_sandboxed plumbing, not shell fingerprinting.
         monkeypatch.setattr(
-            "kiro_crew.cron_script._resolve_command_shell", lambda: posix_test_shell
+            "aj_crew.cron_script._resolve_command_shell", lambda: posix_test_shell
         )
 
     def test_command_with_env_vars(self):
@@ -986,15 +986,15 @@ class TestRunScriptSandboxedEdgeCases:
         existing = _os.environ.get("PYTHONPATH", "")
         monkeypatch.setenv("PYTHONPATH", src_dir + (_os.pathsep + existing if existing else ""))
         monkeypatch.setattr(
-            "kiro_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None)
+            "aj_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None)
         )
         # Bypass the runtime shell probe (which itself spawns a child): these
         # tests exercise the run_command_sandboxed plumbing, not shell fingerprinting.
         # Return "sh" so Popen mocks that assert on argv[0] still see it.
-        monkeypatch.setattr("kiro_crew.cron_script._resolve_command_shell", lambda: "sh")
+        monkeypatch.setattr("aj_crew.cron_script._resolve_command_shell", lambda: "sh")
 
     def _write_script(self, tmp_path, code):
-        crons_dir = tmp_path / ".kirocrew" / "crons"
+        crons_dir = tmp_path / ".ajcrew" / "crons"
         crons_dir.mkdir(parents=True)
         script = crons_dir / "edge_test.py"
         script.write_text(code)
@@ -1004,7 +1004,7 @@ class TestRunScriptSandboxedEdgeCases:
         script_path = self._write_script(
             tmp_path,
             """
-from kiro_crew.cron_script import Report
+from aj_crew.cron_script import Report
 def run(ctx):
     raise Report("progress update")
 """,
@@ -1019,7 +1019,7 @@ def run(ctx):
             tmp_path,
             """
 import os
-from kiro_crew.cron_script import Done
+from aj_crew.cron_script import Done
 def run(ctx):
     assert os.path.exists("/")
 """,
@@ -1040,7 +1040,7 @@ def run(ctx):
             tmp_path,
             f"""
 from pathlib import Path
-from kiro_crew.cron_script import Skip
+from aj_crew.cron_script import Skip
 def run(ctx):
     ctx.close = lambda: Path(ctx.message).write_text(str(Path.cwd()))
     {ending}
@@ -1062,7 +1062,7 @@ class TestMcpToolClientProtocol:
     """Tests for McpToolClient JSON-RPC protocol internals."""
 
     def test_send_writes_json_line(self):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         client = object.__new__(McpToolClient)
         client._proc = MagicMock()
@@ -1074,7 +1074,7 @@ class TestMcpToolClientProtocol:
         mock_stdin.flush.assert_called_once()
 
     def test_recv_returns_parsed_json(self):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         client = object.__new__(McpToolClient)
         client._proc = MagicMock()
@@ -1084,7 +1084,7 @@ class TestMcpToolClientProtocol:
         assert msg == {"jsonrpc": "2.0", "id": 1, "result": {}}
 
     def test_recv_returns_none_on_eof(self):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         client = object.__new__(McpToolClient)
         client._proc = MagicMock()
@@ -1093,7 +1093,7 @@ class TestMcpToolClientProtocol:
         assert client._recv() is None
 
     def test_recv_skips_blank_lines(self):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         client = object.__new__(McpToolClient)
         client._proc = MagicMock()
@@ -1103,7 +1103,7 @@ class TestMcpToolClientProtocol:
         assert [client._recv() for _ in range(3)] == [{}, {}, {"id": 1, "result": "ok"}]
 
     def test_rpc_sends_and_receives(self):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         client = object.__new__(McpToolClient)
         client._proc = MagicMock()
@@ -1117,7 +1117,7 @@ class TestMcpToolClientProtocol:
         assert result == {"jsonrpc": "2.0", "id": 1, "result": {"tools": []}}
 
     def test_rpc_raises_on_eof(self):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         client = object.__new__(McpToolClient)
         client._proc = MagicMock()
@@ -1130,7 +1130,7 @@ class TestMcpToolClientProtocol:
         assert not isinstance(raised.value, McpToolError)
 
     def test_call_tool_success(self):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         client = object.__new__(McpToolClient)
         client._proc = MagicMock()
@@ -1152,7 +1152,7 @@ class TestMcpToolClientProtocol:
 
     def test_call_tool_returns_every_text_block(self):
         """A payload behind a leading notice block reaches the script."""
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         client = object.__new__(McpToolClient)
         client._proc = MagicMock()
@@ -1181,7 +1181,7 @@ class TestMcpToolClientProtocol:
         assert json.loads(result.splitlines()[-1]) == {"AuthorEmail": "someone@example.com"}
 
     def test_call_tool_is_error_joins_every_text_block(self):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         client = object.__new__(McpToolClient)
         client._proc = MagicMock()
@@ -1208,7 +1208,7 @@ class TestMcpToolClientProtocol:
             client.call_tool("failing_tool", {})
 
     def test_call_tool_error_response(self):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         client = object.__new__(McpToolClient)
         client._proc = MagicMock()
@@ -1225,7 +1225,7 @@ class TestMcpToolClientProtocol:
             client.call_tool("bad_tool", {})
 
     def test_call_tool_is_error_flag(self):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         client = object.__new__(McpToolClient)
         client._proc = MagicMock()
@@ -1249,7 +1249,7 @@ class TestMcpToolClientProtocol:
             client.call_tool("failing_tool", {})
 
     def test_call_tool_is_error_no_content(self):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         client = object.__new__(McpToolClient)
         client._proc = MagicMock()
@@ -1264,7 +1264,7 @@ class TestMcpToolClientProtocol:
             client.call_tool("failing_tool", {})
 
     def test_close_with_sandbox_cleanup(self, tmp_path):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         cleanup_file = tmp_path / "sandbox_cleanup"
         cleanup_file.write_text("temp")
@@ -1280,7 +1280,7 @@ class TestMcpToolClientProtocol:
     def test_close_timeout_kills(self):
         import subprocess
 
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         client = object.__new__(McpToolClient)
         client._proc = MagicMock()
@@ -1294,23 +1294,23 @@ class TestMcpToolClientProtocol:
         assert client._proc.wait.call_args_list == [call(timeout=5), call()]
 
     def test_init_popen_failure_cleans_sandbox(self, tmp_path):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         agents_dir = tmp_path / ".kiro" / "agents"
         agents_dir.mkdir(parents=True)
         config = {"mcpServers": {"test": {"command": "nonexistent_binary_xyz", "args": []}}}
-        (agents_dir / "kirocrew.json").write_text(json.dumps(config))
+        (agents_dir / "ajcrew.json").write_text(json.dumps(config))
         with patch("pathlib.Path.home", return_value=tmp_path):
             with pytest.raises(Exception):
                 McpToolClient("test")
 
     def test_init_handshake_failure_closes(self, tmp_path):
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         agents_dir = tmp_path / ".kiro" / "agents"
         agents_dir.mkdir(parents=True)
         config = {"mcpServers": {"test": {"command": "echo", "args": ["bye"]}}}
-        (agents_dir / "kirocrew.json").write_text(json.dumps(config))
+        (agents_dir / "ajcrew.json").write_text(json.dumps(config))
         with patch("pathlib.Path.home", return_value=tmp_path):
             with pytest.raises(Exception):
                 McpToolClient("test")
@@ -1320,12 +1320,12 @@ class TestResolveMcpServerAimFallback:
     """Tests for _resolve_mcp_server AIM agent spec fallback."""
 
     def test_aim_fallback_path(self, tmp_path):
-        # No kirocrew.json, but a fallback agent spec exists
+        # No ajcrew.json, but a fallback agent spec exists
         _resolve_mcp_server.cache_clear()
         agents_dir = tmp_path / ".kiro" / "agents"
         agents_dir.mkdir(parents=True)
         config = {"mcpServers": {"builder-mcp": {"command": "npx", "args": ["-y", "builder-mcp"]}}}
-        (agents_dir / "my-kirocrew-agent.json").write_text(json.dumps(config))
+        (agents_dir / "my-ajcrew-agent.json").write_text(json.dumps(config))
         with patch("pathlib.Path.home", return_value=tmp_path):
             result = _resolve_mcp_server("builder-mcp")
         # Fallback path returns the same (argv, env) shape; no env block -> {}.
@@ -1336,7 +1336,7 @@ class TestResolveMcpServerAimFallback:
         agents_dir = tmp_path / ".kiro" / "agents"
         agents_dir.mkdir(parents=True)
         config = {"mcpServers": {"other-server": {"command": "node", "args": []}}}
-        (agents_dir / "kirocrew.json").write_text(json.dumps(config))
+        (agents_dir / "ajcrew.json").write_text(json.dumps(config))
         with patch("pathlib.Path.home", return_value=tmp_path):
             result = _resolve_mcp_server("nonexistent")
         assert result is None
@@ -1350,8 +1350,8 @@ class TestScriptContextCallToolSuccess:
         ctx = ScriptContext(job=job)
         mock_client = MagicMock()
         mock_client.call_tool.return_value = "result text"
-        with patch("kiro_crew.cron_script.McpToolClient", return_value=mock_client), patch(
-            "kiro_crew.cron_script.sel"
+        with patch("aj_crew.cron_script.McpToolClient", return_value=mock_client), patch(
+            "aj_crew.cron_script.sel"
         ) as mock_sel:
             result = ctx.call_tool("server", "tool", {"key": "val"})
         assert result == "result text"
@@ -1365,8 +1365,8 @@ class TestScriptContextCallToolSuccess:
         ctx = ScriptContext(job=job)
         mock_client = MagicMock()
         mock_client.call_tool.side_effect = RuntimeError("connection failed")
-        with patch("kiro_crew.cron_script.McpToolClient", return_value=mock_client), patch(
-            "kiro_crew.cron_script.sel"
+        with patch("aj_crew.cron_script.McpToolClient", return_value=mock_client), patch(
+            "aj_crew.cron_script.sel"
         ):
             with pytest.raises(RuntimeError, match="connection failed"):
                 ctx.call_tool("server", "tool", {})
@@ -1377,8 +1377,8 @@ class TestScriptContextCallToolSuccess:
         ctx = ScriptContext(job=job)
         mock_client = MagicMock()
         mock_client.call_tool.return_value = ""
-        with patch("kiro_crew.cron_script.McpToolClient", return_value=mock_client), patch(
-            "kiro_crew.cron_script.sel"
+        with patch("aj_crew.cron_script.McpToolClient", return_value=mock_client), patch(
+            "aj_crew.cron_script.sel"
         ) as mock_sel:
             mock_sel().log_tool_invocation.side_effect = Exception("SEL down")
             result = ctx.call_tool("server", "tool", {})
@@ -1395,7 +1395,7 @@ class TestScriptContextPost:
         mock_response.read.return_value = b'{"status": "delivered"}'
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
-        with patch("kiro_crew.cron_script.loopback_urlopen", return_value=mock_response):
+        with patch("aj_crew.cron_script.loopback_urlopen", return_value=mock_response):
             result = ctx._post("/api/deliver", {"text": "hello"})
         assert result == {"status": "delivered"}
 
@@ -1403,7 +1403,7 @@ class TestScriptContextPost:
         job = SimpleNamespace(id="j1", message="test")
         ctx = ScriptContext(job=job)
         with patch(
-            "kiro_crew.cron_script.loopback_urlopen", side_effect=Exception("connection refused")
+            "aj_crew.cron_script.loopback_urlopen", side_effect=Exception("connection refused")
         ):
             result = ctx._post("/api/deliver", {"text": "hello"})
         assert "error" in result
@@ -1417,12 +1417,12 @@ class TestRunCommandSandboxedExceptions:
     def _passthrough_sandbox(self, monkeypatch, posix_test_shell):
         """See TestRunCommandSandboxed._passthrough_sandbox."""
         monkeypatch.setattr(
-            "kiro_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None)
+            "aj_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None)
         )
         # Bypass the runtime shell probe (which itself spawns a child): these
         # tests exercise the run_command_sandboxed plumbing, not shell fingerprinting.
         monkeypatch.setattr(
-            "kiro_crew.cron_script._resolve_command_shell", lambda: posix_test_shell
+            "aj_crew.cron_script._resolve_command_shell", lambda: posix_test_shell
         )
 
     def test_timeout_returns_error(self):
@@ -1443,16 +1443,16 @@ class TestMcpToolClientInitFailures:
 
     def test_popen_exception_cleans_sandbox(self, tmp_path):
         """Lines 172-175: Popen raises, sandbox cleanup file is removed."""
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         agents_dir = tmp_path / ".kiro" / "agents"
         agents_dir.mkdir(parents=True)
         config = {"mcpServers": {"test": {"command": "node", "args": ["nonexistent.js"]}}}
-        (agents_dir / "kirocrew.json").write_text(json.dumps(config))
+        (agents_dir / "ajcrew.json").write_text(json.dumps(config))
         cleanup = tmp_path / "cleanup_marker"
         cleanup.write_text("x")
         with patch("pathlib.Path.home", return_value=tmp_path), patch(
-            "kiro_crew.cron_script.wrap_argv", return_value=(["false"], str(cleanup))
+            "aj_crew.cron_script.wrap_argv", return_value=(["false"], str(cleanup))
         ), patch("subprocess.Popen", side_effect=OSError("spawn failed")):
             with pytest.raises(OSError, match="spawn failed"):
                 McpToolClient("test")
@@ -1460,7 +1460,7 @@ class TestMcpToolClientInitFailures:
 
     def test_rpc_no_response_in_1000_messages(self):
         """Line 214: server sends 1000+ messages without matching ID."""
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         client = object.__new__(McpToolClient)
         client._proc = MagicMock()
@@ -1473,7 +1473,7 @@ class TestMcpToolClientInitFailures:
 
     def test_close_exception_swallowed(self, tmp_path):
         """An exception in terminate is swallowed and the sandbox file is still removed."""
-        from kiro_crew.cron_script import McpToolClient
+        from aj_crew.cron_script import McpToolClient
 
         cleanup_file = tmp_path / "sandbox_cleanup"
         cleanup_file.write_text("temp")

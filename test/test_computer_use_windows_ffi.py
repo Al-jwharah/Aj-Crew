@@ -28,8 +28,8 @@ from contextlib import contextmanager
 import pytest
 from _clock_isolation import assert_clock_is_private
 
-from kiro_crew.computer_use import windows_ffi as ffi
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.computer_use import windows_ffi as ffi
+from aj_crew.testing.clock import ManualClock
 
 
 def test_another_thread_keeps_the_real_sleep_and_clock(monkeypatch) -> None:
@@ -227,7 +227,7 @@ class TestVtableTableIsTheOnlySourceOfSlotIndices:
 class TestAvailabilityIsPlatformGuarded:
     def test_available_is_false_off_windows_without_raising(self, monkeypatch) -> None:
         """The dashboard renders a Settings row on a host with no driver at all."""
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
         ffi.reset_libraries()
@@ -242,8 +242,8 @@ class TestAvailabilityIsPlatformGuarded:
         A bare ``OSError`` from the loader would escape as an internal error
         instead.
         """
-        from kiro_crew import platform_compat
-        from kiro_crew.computer_use.types import ComputerUseUnsupported
+        from aj_crew import platform_compat
+        from aj_crew.computer_use.types import ComputerUseUnsupported
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
         ffi.reset_libraries()

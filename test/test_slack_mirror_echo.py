@@ -41,18 +41,18 @@ from slot_ownership_checkpoint_helpers import (  # noqa: F401 -- fixtures are re
 )
 from turn_harness import Do, Raise, TurnContext, TurnScript, run_turn
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.crew_log import emit_turn as crew_log_emit
-from kiro_crew.dashboard.chat_runner import _prepare_mirror_msg
-from kiro_crew.slack.client import SlackClientOps
-from kiro_crew.slack.format import escape_mrkdwn_keep_links, mirror_prompt_echo
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.crew_log import emit_turn as crew_log_emit
+from aj_crew.dashboard.chat_runner import _prepare_mirror_msg
+from aj_crew.slack.client import SlackClientOps
+from aj_crew.slack.format import escape_mrkdwn_keep_links, mirror_prompt_echo
+from aj_crew.testing.wait import async_wait_until
 
 _DONE = AcpEvent(kind=EVENT_COMPLETE, stop_reason=STOP_REASON_END_TURN)
 _ANSWER = AcpEvent(kind=EVENT_TEXT_CHUNK, text="the reply")
@@ -339,7 +339,7 @@ async def test_a_refused_stream_leaves_the_line_up_until_the_answer() -> None:
 async def test_a_withheld_turn_opens_no_stream_and_still_retires_the_line(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     monkeypatch.setattr(chat_runner, "cross_surface_withheld", lambda state, slot: True)
     slack = await _linked_turn([_TOOL, _ANSWER, _DONE])
@@ -357,7 +357,7 @@ async def test_a_withheld_turn_opens_no_stream_and_still_retires_the_line(
 # that defaults to "not the person", so a new producer is never echoed until it
 # says it is.
 
-_REPO_SRC = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+_REPO_SRC = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 _ORIGIN_KWARGS = (
     "_directive_user_origin",
     "_directive_channel_origin",
@@ -517,7 +517,7 @@ async def test_the_gate_reads_stamps_not_text() -> None:
 async def test_the_cross_surface_leg_uses_the_same_gate(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     sent: list[str] = []
 
@@ -555,7 +555,7 @@ class TestPromptTypedInDashboard:
         return SimpleNamespace(**{**base, **over})
 
     def test_the_dashboard_human_passes(self) -> None:
-        from kiro_crew.dashboard.chat_runner import _prompt_typed_in_dashboard
+        from aj_crew.dashboard.chat_runner import _prompt_typed_in_dashboard
 
         assert _prompt_typed_in_dashboard(self._turn()) is True
 
@@ -572,12 +572,12 @@ class TestPromptTypedInDashboard:
         ],
     )
     def test_each_condition_closes_it(self, field: str, value: Any) -> None:
-        from kiro_crew.dashboard.chat_runner import _prompt_typed_in_dashboard
+        from aj_crew.dashboard.chat_runner import _prompt_typed_in_dashboard
 
         assert _prompt_typed_in_dashboard(self._turn(**{field: value})) is False
 
     def test_an_owed_replay_of_the_persons_words_passes(self) -> None:
-        from kiro_crew.dashboard.chat_runner import _prompt_typed_in_dashboard
+        from aj_crew.dashboard.chat_runner import _prompt_typed_in_dashboard
 
         owed = self._turn(_synthetic_recovery_turn=True, _recovery_echo_owed=True)
         assert _prompt_typed_in_dashboard(owed) is True
@@ -600,8 +600,8 @@ class TestTheDrainCarriesOrigin:
 
         # Load the facade first: a first import while ``cr._run_chat`` is stubbed
         # would bind the stub there for the rest of the session.
-        from kiro_crew.dashboard import chat as _chat  # noqa: F401
-        from kiro_crew.dashboard import chat_runner as cr
+        from aj_crew.dashboard import chat as _chat  # noqa: F401
+        from aj_crew.dashboard import chat_runner as cr
 
         state = _make_state(tmp_path)
         state.subagents = None
@@ -626,7 +626,7 @@ class TestTheDrainCarriesOrigin:
         if merge:
             cfg = MagicMock()
             cfg.load.return_value.dashboard.merge_queued_messages = True
-            monkeypatch.setattr(cr, "KiroCrewConfig", cfg)
+            monkeypatch.setattr(cr, "AjCrewConfig", cfg)
 
         def _busy(key: str) -> Any:
             slot = state.get_or_create_slot(key)
@@ -647,7 +647,7 @@ class TestTheDrainCarriesOrigin:
     async def _route_busy(state: Any, slot: Any, monkeypatch: pytest.MonkeyPatch) -> None:
         """Queue "what's up?" from thread t1 through the router's real busy arm."""
         from conftest import MockSlackClient
-        from kiro_crew.slack import handler as h
+        from aj_crew.slack import handler as h
 
         monkeypatch.setattr(h, "_owner_id", "U1")
         monkeypatch.setattr(state, "get_linked_slot", lambda ts: slot, raising=False)
@@ -660,7 +660,7 @@ class TestTheDrainCarriesOrigin:
     async def test_a_queued_dashboard_message_runs_as_the_person(
         self, tmp_path: Any, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.dashboard import chat_delivery as cd
+        from aj_crew.dashboard import chat_delivery as cd
 
         state, busy, run = self._drain(tmp_path, monkeypatch)
         slot = busy("chat-1")
@@ -674,7 +674,7 @@ class TestTheDrainCarriesOrigin:
     async def test_a_queued_peer_message_runs_unstamped(
         self, tmp_path: Any, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.dashboard import chat_delivery as cd
+        from aj_crew.dashboard import chat_delivery as cd
 
         state, busy, run = self._drain(tmp_path, monkeypatch)
         slot = busy("chat-1")
@@ -697,7 +697,7 @@ class TestTheDrainCarriesOrigin:
     ) -> None:
         # Fails closed: the merged turn is channel-origin when ANY entry is, so a
         # mixed batch is not quoted back (it would quote the Slack words too).
-        from kiro_crew.dashboard import chat_delivery as cd
+        from aj_crew.dashboard import chat_delivery as cd
 
         # A channel entry with no stamped source channel (another channel's
         # hand-off) still merges with the dashboard's words.
@@ -718,7 +718,7 @@ class TestTheDrainCarriesOrigin:
         # The router stamps its reply's source channel, and a merge run stops
         # where those change: the reply runs channel-origin on its own, and the
         # dashboard message after it still runs as the person.
-        from kiro_crew.dashboard import chat_delivery as cd
+        from aj_crew.dashboard import chat_delivery as cd
 
         state, busy, run = self._drain(tmp_path, monkeypatch, merge=True)
         slot = busy("chat-1")
@@ -748,13 +748,13 @@ async def test_an_mcp_tool_step_shows_its_human_label() -> None:
     wait = AcpEvent(
         kind=EVENT_TOOL_CALL,
         tool_call_id="w1",
-        title="@kirocrew-core/wait",
+        title="@ajcrew-core/wait",
         tool_name="wait",
-        mcp_server_name="kirocrew-core",
+        mcp_server_name="ajcrew-core",
         tool_input='{"seconds": 300}',
     )
     ledger = AcpEvent(
-        kind=EVENT_TOOL_CALL, tool_call_id="w2", title="Running: @kirocrew-work/work_ledger_read"
+        kind=EVENT_TOOL_CALL, tool_call_id="w2", title="Running: @ajcrew-work/work_ledger_read"
     )
     slack = await _linked_turn([wait, ledger, _ANSWER, _DONE])
     titles = _task_titles(slack)
@@ -781,7 +781,7 @@ async def test_a_purpose_line_still_wins() -> None:
     tool = AcpEvent(
         kind=EVENT_TOOL_CALL,
         tool_call_id="p1",
-        title="@kirocrew-core/wait",
+        title="@ajcrew-core/wait",
         tool_purpose="Waiting for CI",
     )
     slack = await _linked_turn([tool, _ANSWER, _DONE])
@@ -807,9 +807,9 @@ class TestAScriptCronSendIsTheCrons:
         async def _admit(*_a: Any, **_k: Any) -> tuple[None, bool, dict[str, Any]]:
             return None, False, {}
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.cron_slot_creator", _creator)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.cron_creator_admission", _admit)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.cron_slot_creator", _creator)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.cron_creator_admission", _admit)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("creator, actor", [("cron:job-1", "cron"), ("", None)])
@@ -834,7 +834,7 @@ class TestAScriptCronSendIsTheCrons:
     ) -> None:
         from unittest.mock import MagicMock
 
-        from kiro_crew.dashboard.chat_delivery import TURN_ACTOR_META_KEY
+        from aj_crew.dashboard.chat_delivery import TURN_ACTOR_META_KEY
 
         self._as_cron(monkeypatch, creator)
         slot = state.get_or_create_slot("s1")
@@ -852,11 +852,11 @@ class TestAScriptCronSendIsTheCrons:
     async def test_a_send_held_behind_sub_agents(
         self, state: Any, chat_run: Any, monkeypatch: pytest.MonkeyPatch, creator: str, actor: Any
     ) -> None:
-        from kiro_crew.dashboard.chat_delivery import TURN_ACTOR_META_KEY
+        from aj_crew.dashboard.chat_delivery import TURN_ACTOR_META_KEY
 
         self._as_cron(monkeypatch, creator)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.subagents_hold_user_messages", lambda *_a: True
+            "aj_crew.dashboard.chat_handlers.subagents_hold_user_messages", lambda *_a: True
         )
         slot = state.get_or_create_slot("s1")
         async with _client(state, "") as client:
@@ -892,21 +892,21 @@ async def _recovered(script_events: list[Any], **script: Any) -> tuple[Any, dict
 
 @pytest.mark.asyncio
 async def test_a_turn_that_dies_before_its_echo_replays_owing_it() -> None:
-    from kiro_crew.acp.transport_errors import AcpProcessDied
+    from aj_crew.acp.transport_errors import AcpProcessDied
 
     slack, retry = await _recovered([], allocation_error=AcpProcessDied("runtime died"))
     assert _echoes(slack) == []
     assert retry.get("_synthetic_recovery_turn") is True
     assert retry.get("_recovery_echo_owed") is True
     # The stamp is queue plumbing: it does not ride into the persisted row.
-    from kiro_crew.dashboard.chat_runner import MIRROR_ECHO_OWED_META_KEY
+    from aj_crew.dashboard.chat_runner import MIRROR_ECHO_OWED_META_KEY
 
     assert MIRROR_ECHO_OWED_META_KEY not in (retry["_current_message"].get("meta") or {})
 
 
 @pytest.mark.asyncio
 async def test_a_turn_that_echoed_then_died_replays_owing_nothing() -> None:
-    from kiro_crew.acp.transport_errors import AcpError
+    from aj_crew.acp.transport_errors import AcpError
 
     slack, retry = await _recovered([Raise(AcpError("Internal server error", transient=True))])
     assert _echoes(slack) == ["> 💬 what's up?"]
@@ -946,8 +946,8 @@ async def test_an_owed_stamp_cannot_open_a_system_turn() -> None:
 class TestBatchRecoveryEchoOwed:
     @staticmethod
     def _entry(owed: bool = True, payload: str = "original") -> dict[str, Any]:
-        from kiro_crew.dashboard.chat_runner import MIRROR_ECHO_OWED_META_KEY
-        from kiro_crew.dashboard.chat_utils import SYNTHETIC_RECOVERY_KIND, RecoveryPayload
+        from aj_crew.dashboard.chat_runner import MIRROR_ECHO_OWED_META_KEY
+        from aj_crew.dashboard.chat_utils import SYNTHETIC_RECOVERY_KIND, RecoveryPayload
 
         return {
             "kind": SYNTHETIC_RECOVERY_KIND,
@@ -956,7 +956,7 @@ class TestBatchRecoveryEchoOwed:
         }
 
     def test_only_stamped_verbatim_replays_owe_it(self) -> None:
-        from kiro_crew.dashboard.chat_runner import _batch_recovery_echo_owed
+        from aj_crew.dashboard.chat_runner import _batch_recovery_echo_owed
 
         assert _batch_recovery_echo_owed([self._entry()]) is True
         assert _batch_recovery_echo_owed([]) is False

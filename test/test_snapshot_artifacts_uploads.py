@@ -27,10 +27,10 @@ import tarfile
 from pathlib import Path
 
 import pytest
-from test_snapshot import _setup_fake_kirocrew, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
 from conftest import requires_symlinks
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 FOLDERS = '[{"id": "abc123abc123", "name": "Reports", "order": 0, "parent_id": ""}]'
 
@@ -38,8 +38,8 @@ FOLDERS = '[{"id": "abc123abc123", "name": "Reports", "order": 0, "parent_id": "
 def _home(tmp_path, monkeypatch) -> Path:
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
-    _setup_fake_kirocrew(home)
+    monkeypatch.setenv("AJCREW_HOME", str(home))
+    _setup_fake_ajcrew(home)
     (home / "artifacts").mkdir(parents=True, exist_ok=True)
     (home / "artifacts" / "report.md").write_text("# quarterly report\n")
     (home / "artifacts" / "nested").mkdir(exist_ok=True)
@@ -57,7 +57,7 @@ def _snapshot(tmp_path, *components: str) -> Path:
         *(("--components", ",".join(components)) if components else ()),
     ]
     assert snap.snapshot_main([*argv, *unpinnable_argv()]) == 0
-    return next(out.glob("kirocrew-snapshot-*.tar.gz"))
+    return next(out.glob("ajcrew-snapshot-*.tar.gz"))
 
 
 def _peek(bundle: Path, tmp_path: Path, tag: str = "peek") -> Path:
@@ -400,7 +400,7 @@ class TestAnEmptyLibraryDoesNotVetoTheWholeRestore:
         The non-locked ownership guard does not apply to locked documents; this drives
         `_restore_everything_from_rollback` directly with `rel in installed`.
         """
-        from kiro_crew import snapshot_restore
+        from aj_crew import snapshot_restore
 
         rel = "crew-teams/teams.json"
         mc = tmp_path / "home"
@@ -425,7 +425,7 @@ class TestAnEmptyLibraryDoesNotVetoTheWholeRestore:
 
         With `rel not in installed` and no saved copy, the live roster survives untouched.
         """
-        from kiro_crew import snapshot_restore
+        from aj_crew import snapshot_restore
 
         rel = "crew-teams/teams.json"
         mc = tmp_path / "home"
@@ -445,7 +445,7 @@ class TestAnEmptyLibraryDoesNotVetoTheWholeRestore:
     def test_a_hollow_memory_declaration_is_still_refused(self, tmp_path, monkeypatch, capsys):
         """The case the guard was written for, which the narrowing must not reach."""
         home = _home(tmp_path, monkeypatch)
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         payload.mkdir()
         (payload / "MANIFEST.json").write_text(
             '{"version": 4, "components": {"memory": "unresolved"}}', encoding="utf-8"
@@ -486,7 +486,7 @@ class TestAnEmptyLibraryDoesNotVetoTheWholeRestore:
         Driven per component rather than asserted as set membership, so a component whose
         restore starts clearing unconditionally fails here."""
         home = _home(tmp_path, monkeypatch)
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         payload.mkdir()
         (payload / "MANIFEST.json").write_text(
             json.dumps({"version": 4, "components": {comp: "unresolved"}}), encoding="utf-8"

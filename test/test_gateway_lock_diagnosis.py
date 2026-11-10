@@ -20,7 +20,7 @@ row, or owner 0) and omitting it from /proc/locks. The orphan test reads that
 kernel evidence itself, whole and unfiltered, and only a positively observed
 populated-then-discarded acquirer permits the honest unknown-owner refusal.
 Kernels that retain the acquirer's PID must name it exactly. With
-``KIROCREW_LOCK_OWNER_STRICT=1`` the discarded branch is refused outright: the
+``AJCREW_LOCK_OWNER_STRICT=1`` the discarded branch is refused outright: the
 hosted lane that sets it exists to prove the named-owner diagnosis on a kernel
 that can show it, so an environmental pass there is a failure.
 """
@@ -38,13 +38,13 @@ from pathlib import Path
 import pytest
 from test_gateway_lock import _lock_failure_evidence, kernel_lock_home  # noqa: F401
 
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 pytestmark = pytest.mark.skipif(
     not hasattr(os, "fork"), reason="fork-inheritance semantics are POSIX-only"
 )
 
-_STRICT_ENV = "KIROCREW_LOCK_OWNER_STRICT"
+_STRICT_ENV = "AJCREW_LOCK_OWNER_STRICT"
 
 
 def _listeners(*pids, address="127.0.0.1", family="4"):
@@ -54,7 +54,7 @@ def _listeners(*pids, address="127.0.0.1", family="4"):
     address), so a stand-in must supply both; the default binds each pid at
     IPv4 loopback, the address an unconfigured gateway probes.
     """
-    from kiro_crew.platform_compat import PortListener
+    from aj_crew.platform_compat import PortListener
 
     return [PortListener(pid, address, family) for pid in pids]
 
@@ -72,7 +72,7 @@ _ORPHANING_HOLDER = """
 import os, sys, time
 sys.path[:0] = {syspath!r}
 from pathlib import Path
-from kiro_crew.gateway_lock import GatewayLock
+from aj_crew.gateway_lock import GatewayLock
 home, pid_file, release = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])
 GatewayLock(home).acquire()
 child = os.fork()
@@ -113,7 +113,7 @@ def reap():
     another process before this teardown runs. A mismatch (or an unreadable
     identity) means the process we spawned is already gone -- signal nothing.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     tokens: dict[int, str | None] = {}
 
@@ -321,8 +321,8 @@ def _assert_independent_contention(lock_path: Path) -> None:
 
 def _run_orphan_scenario(holder: _OrphaningHolder, *, strict: bool) -> str:
     """The two-phase protocol; returns the kernel verdict it observed."""
-    from kiro_crew import platform_compat
-    from kiro_crew.gateway_lock import (
+    from aj_crew import platform_compat
+    from aj_crew.gateway_lock import (
         GatewayLock,
         GatewayLockError,
         LockHolder,
@@ -412,7 +412,7 @@ def test_a_lookup_that_never_names_the_acquirer_fails_while_it_is_alive(
     orphaning_holder, monkeypatch
 ):
     """The always-None mutant is caught in phase one, on every kernel."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "flock_owner_pid", lambda _p: None)
     with pytest.raises(AssertionError, match="live acquirer lookup"):
@@ -428,7 +428,7 @@ def test_a_lookup_that_forgets_a_dead_acquirer_fails_the_strict_lane(orphaning_h
     the kernel record; on one that discards it strict mode refuses the verdict
     itself. Either way the strict lane is red.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     real = platform_compat.flock_owner_pid
 
@@ -560,7 +560,7 @@ def test_pids_holding_file_finds_the_real_holder(tmp_path):
     """Holder resolution comes from /proc, not from the pid inside the file."""
     if sys.platform != "linux":
         pytest.skip("/proc scanning is Linux-only")
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     path = tmp_path / "gateway.lock"
     path.write_text("999999\n")  # a pid that is not us
@@ -586,7 +586,7 @@ def test_pids_holding_file_finds_the_real_holder(tmp_path):
 @pytest.fixture
 def refused_lock(monkeypatch, tmp_path):
     """A home whose lock always appears held, plus a stale pid on disk."""
-    from kiro_crew import gateway_lock, platform_compat
+    from aj_crew import gateway_lock, platform_compat
 
     (tmp_path / gateway_lock.LOCK_FILENAME).write_text("4242\n", encoding="utf-8")
     monkeypatch.setattr(platform_compat, "try_acquire_lock", lambda *a, **k: False)
@@ -594,7 +594,7 @@ def refused_lock(monkeypatch, tmp_path):
 
 
 def _refusal(home, port=None):
-    from kiro_crew.gateway_lock import GatewayLock, GatewayLockError
+    from aj_crew.gateway_lock import GatewayLock, GatewayLockError
 
     with pytest.raises(GatewayLockError) as excinfo:
         GatewayLock(home, port=port).acquire()
@@ -603,7 +603,7 @@ def _refusal(home, port=None):
 
 def test_refusal_names_the_live_acquirer_from_proc_locks(monkeypatch, refused_lock):
     """A live acquirer is authoritative: name it, and never suggest killing it."""
-    from kiro_crew import gateway_lock, platform_compat
+    from aj_crew import gateway_lock, platform_compat
 
     monkeypatch.setattr(platform_compat, "flock_owner_pid", lambda _p: 16968)
     monkeypatch.setattr(platform_compat, "pid_exists", lambda _p: True)
@@ -627,7 +627,7 @@ def test_a_live_acquirer_without_the_port_is_not_a_live_holder(monkeypatch, refu
     """Alive but not on the port: a sibling still starting, or one shutting down
     that has closed its listener and will release the lock next. Either way the
     next attempt resolves it, so this refusal must stay the restartable kind."""
-    from kiro_crew import gateway_lock, platform_compat
+    from aj_crew import gateway_lock, platform_compat
 
     monkeypatch.setattr(platform_compat, "flock_owner_pid", lambda _p: 16968)
     monkeypatch.setattr(platform_compat, "pid_exists", lambda _p: True)
@@ -649,11 +649,11 @@ def test_a_live_acquirer_without_the_port_is_not_a_live_holder(monkeypatch, refu
     ("command_line", "names_a_gateway"),
     [
         ("flock -x /home/u/.kiro/crew/gateway.lock sleep 3000", False),
-        ("/venv/bin/python3 -m kiro_crew gateway", True),
-        ("/venv/bin/kirocrew -v gateway", True),
-        ("/venv/bin/kirocrew --no-jail gateway", True),
-        ("/venv/bin/python3 -m kiro_crew -v gateway", True),
-        ("/venv/bin/python3 -mkiro_crew gateway --slack-only", True),
+        ("/venv/bin/python3 -m aj_crew gateway", True),
+        ("/venv/bin/ajcrew -v gateway", True),
+        ("/venv/bin/ajcrew --no-jail gateway", True),
+        ("/venv/bin/python3 -m aj_crew -v gateway", True),
+        ("/venv/bin/python3 -maj_crew gateway --slack-only", True),
         ("", True),  # unreadable: no evidence the holder is something else
     ],
 )
@@ -662,9 +662,9 @@ def test_a_portless_acquirer_is_called_a_gateway_only_when_it_may_be_one(
 ):
     """A holder without the port is a gateway starting or stopping -- or a
     stray process that took the lock. Only a command line read and recognised
-    as not a Kiro Crew server earns the second wording; the exit stays
+    as not a Aj Crew server earns the second wording; the exit stays
     restartable either way."""
-    from kiro_crew import gateway_lock, platform_compat
+    from aj_crew import gateway_lock, platform_compat
 
     monkeypatch.setattr(platform_compat, "flock_owner_pid", lambda _p: 16968)
     monkeypatch.setattr(platform_compat, "pid_exists", lambda _p: True)
@@ -680,7 +680,7 @@ def test_a_portless_acquirer_is_called_a_gateway_only_when_it_may_be_one(
         assert err.holder_pid == 16968
         assert err.live_holder is False
         assert ("another gateway already owns" in text) is names_a_gateway
-        assert ("which is not a Kiro Crew gateway" in text) is not names_a_gateway
+        assert ("which is not a Aj Crew gateway" in text) is not names_a_gateway
 
 
 def test_a_live_acquirer_listening_but_not_answering_http_is_not_a_live_holder(
@@ -697,7 +697,7 @@ def test_a_live_acquirer_listening_but_not_answering_http_is_not_a_live_holder(
     probe that already words the message is the one measurement the verdict
     reads, so no second probe is made.
     """
-    from kiro_crew import gateway_lock, platform_compat
+    from aj_crew import gateway_lock, platform_compat
 
     monkeypatch.setattr(platform_compat, "flock_owner_pid", lambda _p: 16968)
     monkeypatch.setattr(platform_compat, "pid_exists", lambda _p: True)
@@ -717,7 +717,7 @@ def test_a_live_acquirer_listening_but_not_answering_http_is_not_a_live_holder(
     assert err.holder_pid == 16968
     assert "holds port 5477, not answering HTTP at 127.0.0.1" in text  # what was measured
     assert "wedged" in text and "not treated as permanent" in text
-    assert "kirocrew stop" in text
+    assert "ajcrew stop" in text
     assert "kill" not in text.lower()  # a live acquirer is never offered up
     assert err.live_holder is False
     assert probes == [5477]  # one probe feeds both the message and the verdict
@@ -746,7 +746,7 @@ def test_the_predicate_probes_the_configured_bind_with_wildcards_mapped_by_famil
     is probed as given. A holder bound somewhere else is the residual row the
     predicate leaves unasserted on purpose.
     """
-    from kiro_crew.gateway_lock import GatewayLock, probe_host_for_bind
+    from aj_crew.gateway_lock import GatewayLock, probe_host_for_bind
 
     assert probe_host_for_bind(bind) == host
     assert GatewayLock(Path("/nonexistent-home"), port=5477, bind_address=bind)._probe_host == host
@@ -784,15 +784,15 @@ def test_a_listener_reaches_the_probe_host_only_when_its_bind_covers_it(
     not report -- no address, a wildcard with no family -- is unknowable and
     therefore False: the conjunct is never asserted on a fact nobody supplied.
     """
-    from kiro_crew.gateway_lock import _listener_reaches
-    from kiro_crew.platform_compat import PortListener
+    from aj_crew.gateway_lock import _listener_reaches
+    from aj_crew.platform_compat import PortListener
 
     assert _listener_reaches(PortListener(1, address, family), host) is reaches
 
 
 def test_refusal_names_the_dead_acquirer_and_the_single_inheritor(monkeypatch, refused_lock):
     """The wedge: acquirer dead, one opener, parent gone, serving nothing."""
-    from kiro_crew import gateway_lock, platform_compat
+    from aj_crew import gateway_lock, platform_compat
 
     monkeypatch.setattr(platform_compat, "flock_owner_pid", lambda _p: 23184)
     monkeypatch.setattr(platform_compat, "pid_exists", lambda pid: False)
@@ -819,7 +819,7 @@ def test_refusal_withholds_kill_when_the_candidates_parent_is_alive(monkeypatch,
     This is the shape a healthy starting gateway has -- one thread, no listener
     yet -- so the parent is the fact that discriminates it from an orphan.
     """
-    from kiro_crew import gateway_lock, platform_compat
+    from aj_crew import gateway_lock, platform_compat
 
     monkeypatch.setattr(platform_compat, "flock_owner_pid", lambda _p: 23184)
     monkeypatch.setattr(platform_compat, "pid_exists", lambda pid: pid == 9001)
@@ -837,7 +837,7 @@ def test_refusal_withholds_kill_when_the_candidates_parent_is_alive(monkeypatch,
 
 def test_refusal_withholds_kill_from_a_candidate_that_is_serving_http(monkeypatch, refused_lock):
     """Answering HTTP proves a live gateway, whatever /proc/locks says."""
-    from kiro_crew import gateway_lock, platform_compat
+    from aj_crew import gateway_lock, platform_compat
 
     monkeypatch.setattr(platform_compat, "flock_owner_pid", lambda _p: 23184)
     monkeypatch.setattr(platform_compat, "pid_exists", lambda pid: False)
@@ -848,13 +848,13 @@ def test_refusal_withholds_kill_from_a_candidate_that_is_serving_http(monkeypatc
     monkeypatch.setattr(gateway_lock, "_port_answers_http", lambda *_a, **_k: True)
 
     text = str(_refusal(refused_lock, port=5477))
-    assert "IS serving HTTP" in text and "kirocrew stop" in text
+    assert "IS serving HTTP" in text and "ajcrew stop" in text
     assert "kill -9" not in text
 
 
 def test_refusal_refuses_to_guess_between_multiple_openers(monkeypatch, refused_lock):
     """Two openers -> ambiguous. Offer no kill command for either."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "flock_owner_pid", lambda _p: 23184)
     monkeypatch.setattr(platform_compat, "pid_exists", lambda _p: False)
@@ -885,7 +885,7 @@ def test_refusal_keeps_the_hedge_when_there_is_no_port_to_weigh(monkeypatch, ref
     This is the ``--port auto`` / ``--slack-only`` shape. Even a known opener
     cannot establish ownership, because an opener may merely have read the file.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "flock_owner_pid", lambda _p: None)
     monkeypatch.setattr(platform_compat, "pids_holding_file", lambda _p: openers)
@@ -914,7 +914,7 @@ def test_refusal_hedges_when_a_live_port_holding_pid_has_no_owner_surface(
     holder cannot be confirmed, and the verdict stays restartable -- exit 78
     would stand the unit down with no evidence anyone holds the lock.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "flock_owner_pid", lambda _p: None)
     monkeypatch.setattr(platform_compat, "pids_holding_file", lambda _p: None)
@@ -931,7 +931,7 @@ def test_refusal_hedges_when_a_live_port_holding_pid_has_no_owner_surface(
     # must not promise a systemd relaunch macOS (launchd) and Windows never make.
     assert "systemd" not in text
     assert "may be stale" not in text  # the pid is alive; what is unknown is the lock
-    assert "kirocrew stop" in text
+    assert "ajcrew stop" in text
     assert "kill" not in text.lower()
     # Only a POSITIVELY identified acquirer (``/proc/locks``) that is running and
     # on the port is a live holder; the recorded pid alone never is.
@@ -940,7 +940,7 @@ def test_refusal_hedges_when_a_live_port_holding_pid_has_no_owner_surface(
 
 def test_refusal_hedges_when_the_recorded_pid_holds_no_port(monkeypatch, refused_lock):
     """Running but portless: name the missing fact instead of deciding either way."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "flock_owner_pid", lambda _p: None)
     monkeypatch.setattr(platform_compat, "pids_holding_file", lambda _p: None)
@@ -957,7 +957,7 @@ def test_refusal_hedges_when_the_recorded_pid_holds_no_port(monkeypatch, refused
 
 def test_refusal_reports_an_inherited_lock_when_the_recorded_pid_is_gone(monkeypatch, refused_lock):
     """A dead recorded pid is not a stale number -- something inherited the fd."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "flock_owner_pid", lambda _p: None)
     monkeypatch.setattr(platform_compat, "pids_holding_file", lambda _p: None)

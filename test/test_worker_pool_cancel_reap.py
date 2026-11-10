@@ -11,7 +11,7 @@ decrements.
 
 import asyncio
 
-from kiro_crew.acp import worker_pool as wp
+from aj_crew.acp import worker_pool as wp
 
 
 class _W:

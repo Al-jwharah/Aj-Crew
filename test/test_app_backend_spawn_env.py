@@ -19,11 +19,11 @@ from app_backend_helpers import app_env_fixture  # noqa: F401
 from app_backend_helpers import _make_app_with_backend
 
 from conftest import requires_symlinks
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
 
 
 class TestBootAdmissionRevet:
-    """start_enabled_app_backends re-vets admission at boot (Kiro Crew parity).
+    """start_enabled_app_backends re-vets admission at boot (Aj Crew parity).
 
     An app enabled before a policy tightened (banned / now-unsigned) must NOT
     keep running across restarts, but builtins (origin == "builtin") are exempt
@@ -31,7 +31,7 @@ class TestBootAdmissionRevet:
     """
 
     def _boot_env(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -101,18 +101,18 @@ class TestBootAdmissionRevet:
         self, tmp_path, app_env, monkeypatch
     ):
         """With the gateway's bound port exported, Dev Fleet spawns with every other
-        app and its spawn finds ``KIROCREW_BOUND_PORT`` set, the source of its
-        ``KIROCREW_GATEWAY_ORIGIN``."""
+        app and its spawn finds ``AJCREW_BOUND_PORT`` set, the source of its
+        ``AJCREW_GATEWAY_ORIGIN``."""
         bmod, started = self._boot_env(monkeypatch)
         seen_port: dict[str, str | None] = {}
 
         def _spawn(name):
-            seen_port[name] = os.environ.get("KIROCREW_BOUND_PORT")
+            seen_port[name] = os.environ.get("AJCREW_BOUND_PORT")
             started.append(name)
             return None
 
         monkeypatch.setattr(bmod, "start_app_backend", _spawn)
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "5476")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "5476")
         apps = [
             {
                 "name": "dev-fleet",
@@ -175,7 +175,7 @@ class TestBootAdmissionRevet:
         """A per-app spawn failure (e.g. sandbox.wrap_argv fail-closing on macOS 26
         where sandbox-exec is gone) must NOT crash the whole gateway — the loop logs,
         skips the failing app, and still boots the healthy one."""
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # These exercise promotion logic, not enablement: their app names are
         # fabricated and so are not in installed.json. The real gate is pinned by
@@ -218,62 +218,62 @@ class TestBootAdmissionRevet:
         assert "boom-app" not in result
 
 
-# KIROCREW_DEVFLEET_REPO forwarding (silent-empty-fleet fix)
+# AJCREW_DEVFLEET_REPO forwarding (silent-empty-fleet fix)
 
 
 def test_devfleet_repo_survives_the_app_backend_env_allowlist(monkeypatch):
     """The documented dev-fleet repo override must be ABLE to reach the backend.
 
     The backend starts with ``apps.registry.minimal_env()``, so unless
-    ``KIROCREW_DEVFLEET_REPO`` is forwarded as a host-grant variable it is stripped and
-    the fleet silently renders empty (``KIROCREW_PROJECT_DIR`` has no ``.git`` on
+    ``AJCREW_DEVFLEET_REPO`` is forwarded as a host-grant variable it is stripped and
+    the fleet silently renders empty (``AJCREW_PROJECT_DIR`` has no ``.git`` on
     packaged installs).
     """
     from pathlib import Path
 
-    import kiro_crew.apps.backend as bmod
-    from kiro_crew.apps.registry import minimal_env
+    import aj_crew.apps.backend as bmod
+    from aj_crew.apps.registry import minimal_env
 
-    monkeypatch.setenv("KIROCREW_DEVFLEET_REPO", "/opt/checkouts/kirocrew")
+    monkeypatch.setenv("AJCREW_DEVFLEET_REPO", "/opt/checkouts/ajcrew")
     # The generic allowlist does NOT carry it — that is the trap this guards.
-    assert "KIROCREW_DEVFLEET_REPO" not in minimal_env()
+    assert "AJCREW_DEVFLEET_REPO" not in minimal_env()
 
     # The app's host grants must therefore name it, and apps/backend.py must forward
-    # what they name (the mechanism that also carries the KIROCREW_DEVFLEET_BIN_*
+    # what they name (the mechanism that also carries the AJCREW_DEVFLEET_BIN_*
     # trusted-binary overrides).
-    from kiro_crew.apps import builtin_host_grants
+    from aj_crew.apps import builtin_host_grants
 
-    assert "KIROCREW_DEVFLEET_REPO" in builtin_host_grants.backend_env_names()
+    assert "AJCREW_DEVFLEET_REPO" in builtin_host_grants.backend_env_names()
     body = Path(bmod.__file__).read_text(encoding="utf-8")
     assert (
         "_host_grants.backend_env_names()" in body
-    ), "the KIROCREW_DEVFLEET_REPO override no longer reaches app backends"
+    ), "the AJCREW_DEVFLEET_REPO override no longer reaches app backends"
 
 
 def test_devfleet_repo_env_wins_repo_discovery(monkeypatch, tmp_path):
     """dev-fleet honors the forwarded override ahead of every other hint."""
-    from kiro_crew.apps.builtins.dev_fleet import server as dfmod
+    from aj_crew.apps.builtins.dev_fleet import server as dfmod
 
     proj = tmp_path / "proj"
     (proj / ".git").mkdir(parents=True)
-    (proj / "src" / "kiro_crew").mkdir(parents=True)
-    (proj / "pyproject.toml").write_text("[project]\nname = 'kiro-crew'\n")
-    monkeypatch.setenv("KIROCREW_DEVFLEET_REPO", "/opt/checkouts/kirocrew")
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(proj))
-    assert dfmod._default_main_repo() == "/opt/checkouts/kirocrew"
+    (proj / "src" / "aj_crew").mkdir(parents=True)
+    (proj / "pyproject.toml").write_text("[project]\nname = 'aj-crew'\n")
+    monkeypatch.setenv("AJCREW_DEVFLEET_REPO", "/opt/checkouts/ajcrew")
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(proj))
+    assert dfmod._default_main_repo() == "/opt/checkouts/ajcrew"
 
     # Without the override the chain falls through to PROJECT_DIR, which is
-    # adopted only because it carries the Kiro Crew checkout markers.
-    monkeypatch.delenv("KIROCREW_DEVFLEET_REPO")
+    # adopted only because it carries the Aj Crew checkout markers.
+    monkeypatch.delenv("AJCREW_DEVFLEET_REPO")
     assert dfmod._default_main_repo() == str(proj)
 
 
 class TestGatewayOriginInjection:
     """Bound-port-gated gateway-origin/proof injection into entryPoint app backends.
 
-    ``KIROCREW_GATEWAY_ORIGIN`` is injected ONLY from a numeric ``KIROCREW_BOUND_PORT``
-    in 1..65535, with no fallback to ``KIROCREW_PORT``, ``PORT``, config or a default;
-    without it the backend fails closed. ``KIROCREW_GATEWAY_ORIGIN_PROOF`` (an HMAC) also
+    ``AJCREW_GATEWAY_ORIGIN`` is injected ONLY from a numeric ``AJCREW_BOUND_PORT``
+    in 1..65535, with no fallback to ``AJCREW_PORT``, ``PORT``, config or a default;
+    without it the backend fails closed. ``AJCREW_GATEWAY_ORIGIN_PROOF`` (an HMAC) also
     needs the app's ``.app_secret``. No app-specific variable is ever injected.
     """
 
@@ -309,7 +309,7 @@ class TestGatewayOriginInjection:
         return name
 
     def _write_secret(self, name, *, mode=0o600, secret=None):
-        from kiro_crew.apps.manager import app_dir
+        from aj_crew.apps.manager import app_dir
 
         path = app_dir(name) / ".app_secret"
         path.write_text(secret if secret is not None else self._SECRET)
@@ -324,7 +324,7 @@ class TestGatewayOriginInjection:
         spy Popen that records the env the gateway would hand the child, then
         raises to stop before a real process is created.
         """
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         captured: dict[str, dict] = {}
 
@@ -340,40 +340,40 @@ class TestGatewayOriginInjection:
     def test_valid_bound_port_injects_exact_origin_distinct_from_app_port(
         self, tmp_path, app_env, monkeypatch
     ):
-        """A valid KIROCREW_BOUND_PORT yields the exact origin, never the app's own PORT.
+        """A valid AJCREW_BOUND_PORT yields the exact origin, never the app's own PORT.
 
-        The origin must be the port THIS gateway bound (KIROCREW_BOUND_PORT),
+        The origin must be the port THIS gateway bound (AJCREW_BOUND_PORT),
         not the app's own PORT (which lives in the 9100-9200 app range).
         """
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         name = self._install_backend_app(tmp_path)
         self._write_secret(name)
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "8123")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "8123")
 
         _result, env = self._capture_child_env(monkeypatch, name)
         assert env is not None, "the spawn never reached the Popen boundary"
-        assert env["KIROCREW_GATEWAY_ORIGIN"] == "http://127.0.0.1:8123"
+        assert env["AJCREW_GATEWAY_ORIGIN"] == "http://127.0.0.1:8123"
         # The origin is the GATEWAY port, never the app's own bound PORT.
         assert env["PORT"] != "8123"
         assert bmod._MIN_PORT <= int(env["PORT"]) <= bmod._MAX_PORT
         # The proxy secret is still injected when a secret exists.
-        assert env["KIROCREW_PROXY_SECRET"] == self._SECRET
+        assert env["AJCREW_PROXY_SECRET"] == self._SECRET
 
     def test_dev_fleet_gets_the_origin_and_no_bound_port(self, tmp_path, app_env, monkeypatch):
-        """Dev Fleet aims its pointer broker at ``KIROCREW_GATEWAY_ORIGIN``; the raw
+        """Dev Fleet aims its pointer broker at ``AJCREW_GATEWAY_ORIGIN``; the raw
         bound port is not passed through to any backend."""
         name = self._install_backend_app(tmp_path, name="dev-fleet")
         self._write_secret(name)
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "8123")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "8123")
 
         _result, env = self._capture_child_env(monkeypatch, name)
         assert env is not None, "the spawn never reached the Popen boundary"
-        assert env["KIROCREW_GATEWAY_ORIGIN"] == "http://127.0.0.1:8123"
-        assert "KIROCREW_BOUND_PORT" not in env
+        assert env["AJCREW_GATEWAY_ORIGIN"] == "http://127.0.0.1:8123"
+        assert "AJCREW_BOUND_PORT" not in env
 
     def test_specific_interface_bind_omits_the_origin(self, tmp_path, app_env, monkeypatch):
-        """A specific-interface KIROCREW_BOUND_HOST omits the origin (fail closed).
+        """A specific-interface AJCREW_BOUND_HOST omits the origin (fail closed).
 
         The CSRF barrier trusts an Origin-less mutating callback only from a loopback peer,
         so an origin on 10.0.0.7 would yield a half-alive backend. "::1" still injects,
@@ -381,60 +381,60 @@ class TestGatewayOriginInjection:
         """
         name = self._install_backend_app(tmp_path)
         self._write_secret(name)
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "8123")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "8123")
 
-        monkeypatch.setenv("KIROCREW_BOUND_HOST", "10.0.0.7")
+        monkeypatch.setenv("AJCREW_BOUND_HOST", "10.0.0.7")
         _result, env = self._capture_child_env(monkeypatch, name)
         assert env is not None, "the spawn never reached the Popen boundary"
-        assert "KIROCREW_GATEWAY_ORIGIN" not in env
+        assert "AJCREW_GATEWAY_ORIGIN" not in env
         # No origin means nothing to prove, even with a secret present.
-        assert "KIROCREW_GATEWAY_ORIGIN_PROOF" not in env
+        assert "AJCREW_GATEWAY_ORIGIN_PROOF" not in env
 
-        monkeypatch.setenv("KIROCREW_BOUND_HOST", "fd00::7")
+        monkeypatch.setenv("AJCREW_BOUND_HOST", "fd00::7")
         _result, env = self._capture_child_env(monkeypatch, name)
         assert env is not None
-        assert "KIROCREW_GATEWAY_ORIGIN" not in env
+        assert "AJCREW_GATEWAY_ORIGIN" not in env
 
-        monkeypatch.setenv("KIROCREW_BOUND_HOST", "::1")
+        monkeypatch.setenv("AJCREW_BOUND_HOST", "::1")
         _result, env = self._capture_child_env(monkeypatch, name)
         assert env is not None
-        assert env["KIROCREW_GATEWAY_ORIGIN"] == "http://[::1]:8123"
+        assert env["AJCREW_GATEWAY_ORIGIN"] == "http://[::1]:8123"
 
-        monkeypatch.delenv("KIROCREW_BOUND_HOST", raising=False)
+        monkeypatch.delenv("AJCREW_BOUND_HOST", raising=False)
         _result, env = self._capture_child_env(monkeypatch, name)
         assert env is not None
-        assert env["KIROCREW_GATEWAY_ORIGIN"] == "http://127.0.0.1:8123"
+        assert env["AJCREW_GATEWAY_ORIGIN"] == "http://127.0.0.1:8123"
 
     def test_no_bound_port_env_omits_the_origin(self, tmp_path, app_env, monkeypatch):
-        """With no KIROCREW_BOUND_PORT at all, origin AND proof are omitted (fail closed)."""
+        """With no AJCREW_BOUND_PORT at all, origin AND proof are omitted (fail closed)."""
         name = self._install_backend_app(tmp_path)
         self._write_secret(name)
-        monkeypatch.delenv("KIROCREW_BOUND_PORT", raising=False)
+        monkeypatch.delenv("AJCREW_BOUND_PORT", raising=False)
 
         _result, env = self._capture_child_env(monkeypatch, name)
         assert env is not None
-        assert "KIROCREW_GATEWAY_ORIGIN" not in env
+        assert "AJCREW_GATEWAY_ORIGIN" not in env
         # No origin means nothing to prove: the proof is omitted even with a secret.
-        assert "KIROCREW_GATEWAY_ORIGIN_PROOF" not in env
+        assert "AJCREW_GATEWAY_ORIGIN_PROOF" not in env
         # The unrelated proxy-secret behavior is unchanged.
-        assert env["KIROCREW_PROXY_SECRET"] == self._SECRET
+        assert env["AJCREW_PROXY_SECRET"] == self._SECRET
 
-    def test_inherited_kirocrew_port_alone_does_not_produce_an_origin(
+    def test_inherited_ajcrew_port_alone_does_not_produce_an_origin(
         self, tmp_path, app_env, monkeypatch
     ):
-        """An inherited KIROCREW_PORT is NOT bound-port evidence: no fallback, origin omitted.
+        """An inherited AJCREW_PORT is NOT bound-port evidence: no fallback, origin omitted.
 
         Proves the injected origin never derives from resolve_serving_port()'s
-        KIROCREW_PORT/default chain -- only the exported KIROCREW_BOUND_PORT counts.
+        AJCREW_PORT/default chain -- only the exported AJCREW_BOUND_PORT counts.
         """
         name = self._install_backend_app(tmp_path)
         self._write_secret(name)
-        monkeypatch.delenv("KIROCREW_BOUND_PORT", raising=False)
-        monkeypatch.setenv("KIROCREW_PORT", "5476")  # inherited / --port guess only
+        monkeypatch.delenv("AJCREW_BOUND_PORT", raising=False)
+        monkeypatch.setenv("AJCREW_PORT", "5476")  # inherited / --port guess only
 
         _result, env = self._capture_child_env(monkeypatch, name)
         assert env is not None
-        assert "KIROCREW_GATEWAY_ORIGIN" not in env
+        assert "AJCREW_GATEWAY_ORIGIN" not in env
 
     @pytest.mark.parametrize("bad", ["", "   ", "notaport", "80.5", "0", "-1", "65536", "99999"])
     def test_nonnumeric_zero_or_out_of_range_bound_port_omits_the_origin(
@@ -443,13 +443,13 @@ class TestGatewayOriginInjection:
         """Nonnumeric, zero, negative, and out-of-range (>65535) bound ports all omit."""
         name = self._install_backend_app(tmp_path)
         self._write_secret(name)
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", bad)
+        monkeypatch.setenv("AJCREW_BOUND_PORT", bad)
 
         _result, env = self._capture_child_env(monkeypatch, name)
         assert env is not None
         assert (
-            "KIROCREW_GATEWAY_ORIGIN" not in env
-        ), f"KIROCREW_BOUND_PORT={bad!r} is not valid bound-port evidence"
+            "AJCREW_GATEWAY_ORIGIN" not in env
+        ), f"AJCREW_BOUND_PORT={bad!r} is not valid bound-port evidence"
 
     def test_every_entrypoint_type_gets_the_same_generic_origin(
         self, tmp_path, app_env, monkeypatch
@@ -460,12 +460,12 @@ class TestGatewayOriginInjection:
         -- exec). Module-style dotted entries are builtin-only and not installable
         here. The value is the same generic origin regardless of type.
         """
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         # A node backend must find a node binary before it reaches the spawn; the
         # binary is never executed (Popen is spied), so a stub path suffices.
         monkeypatch.setattr(bmod, "_find_node_binary", lambda: sys.executable)
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "8123")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "8123")
 
         cases = [
             ("py-plain", "backend/server.py", "python", "import http.server\n"),
@@ -485,7 +485,7 @@ class TestGatewayOriginInjection:
             self._install_typed_backend_app(tmp_path, name, entry_rel, backend_type, body)
             _result, env = self._capture_child_env(monkeypatch, name)
             assert env is not None, f"{backend_type} entry never reached the spawn boundary"
-            origins[backend_type] = env["KIROCREW_GATEWAY_ORIGIN"]
+            origins[backend_type] = env["AJCREW_GATEWAY_ORIGIN"]
 
         assert set(origins.values()) == {
             "http://127.0.0.1:8123"
@@ -496,8 +496,8 @@ class TestGatewayOriginInjection:
         self, tmp_path, app_env, monkeypatch
     ):
         """A symlinked app dir must not reach node's argv[1]: ESM main guards compare realpaths."""
-        import kiro_crew.apps.backend as bmod
-        from kiro_crew.apps.manager import app_dir
+        import aj_crew.apps.backend as bmod
+        from aj_crew.apps.manager import app_dir
 
         monkeypatch.setattr(bmod, "_find_node_binary", lambda: sys.executable)
         self._install_typed_backend_app(tmp_path, "node-link", "server.mjs", "node", "//\n")
@@ -529,19 +529,19 @@ class TestGatewayOriginInjection:
 
         name = self._install_backend_app(tmp_path)
         self._write_secret(name)
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "8123")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "8123")
 
         _result, env = self._capture_child_env(monkeypatch, name)
         assert env is not None, "the spawn never reached the Popen boundary"
-        assert env["KIROCREW_GATEWAY_ORIGIN"] == "http://127.0.0.1:8123"
+        assert env["AJCREW_GATEWAY_ORIGIN"] == "http://127.0.0.1:8123"
         # The proof is HMAC-SHA256(app_secret, origin) over the exact origin.
         expected = hmac.new(
             self._SECRET.encode("utf-8"),
             b"http://127.0.0.1:8123",
             hashlib.sha256,
         ).hexdigest()
-        assert env["KIROCREW_GATEWAY_ORIGIN_PROOF"] == expected
-        assert env["KIROCREW_PROXY_SECRET"] == self._SECRET
+        assert env["AJCREW_GATEWAY_ORIGIN_PROOF"] == expected
+        assert env["AJCREW_PROXY_SECRET"] == self._SECRET
 
     def test_the_proof_verifies_under_the_app_secret_and_not_another(
         self, tmp_path, app_env, monkeypatch
@@ -552,31 +552,31 @@ class TestGatewayOriginInjection:
 
         name = self._install_backend_app(tmp_path)
         self._write_secret(name)
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "8123")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "8123")
 
         _result, env = self._capture_child_env(monkeypatch, name)
         assert env is not None
-        origin = env["KIROCREW_GATEWAY_ORIGIN"].encode("utf-8")
+        origin = env["AJCREW_GATEWAY_ORIGIN"].encode("utf-8")
         good = hmac.new(self._SECRET.encode("utf-8"), origin, hashlib.sha256).hexdigest()
         bad = hmac.new(b"a-different-secret", origin, hashlib.sha256).hexdigest()
-        assert hmac.compare_digest(env["KIROCREW_GATEWAY_ORIGIN_PROOF"], good)
-        assert not hmac.compare_digest(env["KIROCREW_GATEWAY_ORIGIN_PROOF"], bad)
+        assert hmac.compare_digest(env["AJCREW_GATEWAY_ORIGIN_PROOF"], good)
+        assert not hmac.compare_digest(env["AJCREW_GATEWAY_ORIGIN_PROOF"], bad)
 
     def test_missing_secret_still_injects_origin_but_no_secret(
         self, tmp_path, app_env, monkeypatch
     ):
         """A missing .app_secret is tolerated: origin still set, no proof, no secret."""
-        from kiro_crew.apps.manager import app_dir
+        from aj_crew.apps.manager import app_dir
 
         name = self._install_backend_app(tmp_path)
         (app_dir(name) / ".app_secret").unlink()  # install writes one; remove it
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "8123")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "8123")
 
         _result, env = self._capture_child_env(monkeypatch, name)
         assert env is not None
-        assert env["KIROCREW_GATEWAY_ORIGIN"] == "http://127.0.0.1:8123"
-        assert "KIROCREW_GATEWAY_ORIGIN_PROOF" not in env
-        assert "KIROCREW_PROXY_SECRET" not in env
+        assert env["AJCREW_GATEWAY_ORIGIN"] == "http://127.0.0.1:8123"
+        assert "AJCREW_GATEWAY_ORIGIN_PROOF" not in env
+        assert "AJCREW_PROXY_SECRET" not in env
 
     def test_a_non_entrypoint_app_is_not_spawned_and_gets_no_injection(
         self, tmp_path, app_env, monkeypatch
@@ -597,7 +597,7 @@ class TestGatewayOriginInjection:
             )
         )
         install_app(src)
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "8123")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "8123")
 
         result, env = self._capture_child_env(monkeypatch, name)
         assert result is None
@@ -613,8 +613,8 @@ class TestTheCacheOnlyChildCanSeeTheCacheItMustBootFrom:
     """
 
     def test_the_spawn_passes_the_cache_as_a_visible_dir(self, app_env, tmp_path, monkeypatch):
-        import kiro_crew.apps.backend as bmod
-        from kiro_crew.platform import policy_distribution as pd
+        import aj_crew.apps.backend as bmod
+        from aj_crew.platform import policy_distribution as pd
 
         # A gateway whose OWN ceiling came from the central tier is the only one that
         # flags a child cache-only, so that is the state to reproduce.
@@ -692,13 +692,13 @@ class TestTheCacheOnlyChildCanSeeTheCacheItMustBootFrom:
         """
         import logging
 
-        import kiro_crew.apps.backend as bmod
-        from kiro_crew.platform import policy_distribution as pd
+        import aj_crew.apps.backend as bmod
+        from aj_crew.platform import policy_distribution as pd
 
         pd._record_installed(b'{"version": 1, "boot": {}}')
         monkeypatch.setattr(bmod, "_warned_unconfined_cache", False, raising=False)
         try:
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.backend"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.apps.backend"):
                 # An unwrapped argv is exactly what wrap_argv returns with no sandbox backend.
                 self._spawn_with_wrap(
                     bmod,
@@ -718,13 +718,13 @@ class TestTheCacheOnlyChildCanSeeTheCacheItMustBootFrom:
         """The control: where the seal applies there is nothing to warn about."""
         import logging
 
-        import kiro_crew.apps.backend as bmod
-        from kiro_crew.platform import policy_distribution as pd
+        import aj_crew.apps.backend as bmod
+        from aj_crew.platform import policy_distribution as pd
 
         pd._record_installed(b'{"version": 1, "boot": {}}')
         monkeypatch.setattr(bmod, "_warned_unconfined_cache", False, raising=False)
         try:
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.backend"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.apps.backend"):
                 # A CHANGED argv is what a real wrap returns.
                 self._spawn_with_wrap(
                     bmod,
@@ -741,8 +741,8 @@ class TestTheCacheOnlyChildCanSeeTheCacheItMustBootFrom:
 
     def test_an_ungoverned_host_passes_no_visible_dirs(self, app_env, tmp_path, monkeypatch):
         """No central ceiling means no cache-only flag and nothing to un-hide."""
-        import kiro_crew.apps.backend as bmod
-        from kiro_crew.platform import policy_distribution as pd
+        import aj_crew.apps.backend as bmod
+        from aj_crew.platform import policy_distribution as pd
 
         pd.reset_process_state()
         seen: dict = {}
@@ -804,9 +804,9 @@ class TestTheMdNotebookBackendCanSeeItsOwnStateFiles:
     def test_the_shipped_builtin_spawn_starts_isolated_with_the_carveout(
         self, app_env, monkeypatch
     ):
-        import kiro_crew.apps.backend as bmod
-        from kiro_crew.apps.manager import register_builtin_apps
-        from kiro_crew.sandbox import MD_NOTEBOOK_APP_NAME, app_backend_visible_targets
+        import aj_crew.apps.backend as bmod
+        from aj_crew.apps.manager import register_builtin_apps
+        from aj_crew.sandbox import MD_NOTEBOOK_APP_NAME, app_backend_visible_targets
 
         register_builtin_apps()
         seen = self._spy(bmod, monkeypatch)
@@ -827,7 +827,7 @@ class TestTheMdNotebookBackendCanSeeItsOwnStateFiles:
         argv = seen["argv"]
         assert "-I" in argv, f"module builtin spawned without isolated startup: {argv!r}"
         assert "-m" not in argv and any(
-            "runpy" in a and "kiro_crew.apps.builtins.md_notebook" in a for a in argv
+            "runpy" in a and "aj_crew.apps.builtins.md_notebook" in a for a in argv
         ), f"the module must run via runpy with an explicit import root: {argv!r}"
 
     def test_other_module_builtins_keep_the_bare_module_launch(self, app_env, monkeypatch):
@@ -835,8 +835,8 @@ class TestTheMdNotebookBackendCanSeeItsOwnStateFiles:
         carve-out: the other module builtins have no unmasked secret in their
         namespace, and rewriting their import environment would be a rider on a
         fix scoped to one (First Principles review)."""
-        import kiro_crew.apps.backend as bmod
-        from kiro_crew.apps.manager import register_builtin_apps
+        import aj_crew.apps.backend as bmod
+        from aj_crew.apps.manager import register_builtin_apps
 
         register_builtin_apps()
         seen = self._spy(bmod, monkeypatch)
@@ -856,7 +856,7 @@ class TestTheMdNotebookBackendCanSeeItsOwnStateFiles:
         NAMED md-notebook that executes from the mutable installed tree (here
         via the blanket third-party toggle the fixture enables) must not see
         the GitHub token."""
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         seen = self._spy(bmod, monkeypatch)
 
@@ -928,8 +928,8 @@ class TestTheBackendSpawnLiftsTheAppsDeclaredMasks:
     def test_an_installed_apps_backend_gets_its_declared_leaves_back(
         self, app_env, tmp_path, monkeypatch
     ):
-        import kiro_crew.apps.backend as bmod
-        from kiro_crew.sandbox import app_declared_mask_targets
+        import aj_crew.apps.backend as bmod
+        from aj_crew.sandbox import app_declared_mask_targets
 
         self._install(tmp_path, "masked-app", ["secrets.json"])
         lifted = app_declared_mask_targets("masked-app", builtin=False)
@@ -949,10 +949,10 @@ class TestTheBackendSpawnLiftsTheAppsDeclaredMasks:
     def test_the_lift_is_keyed_on_the_spawned_codes_provenance(
         self, app_env, tmp_path, monkeypatch, name, builtin
     ):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         if builtin:
-            from kiro_crew.apps.manager import register_builtin_apps
+            from aj_crew.apps.manager import register_builtin_apps
 
             register_builtin_apps()
         else:
@@ -977,8 +977,8 @@ class TestTheBackendSpawnLiftsTheAppsDeclaredMasks:
 class TestExecBackendShebangShim:
     def _spawn_cmd(self, tmp_path, shebang_line: str):
         """Build the exec-arm inputs and return the resolved cmd."""
-        import kiro_crew.apps.backend as bk
-        from kiro_crew.apps.interpreter import app_deps_dir
+        import aj_crew.apps.backend as bk
+        from aj_crew.apps.interpreter import app_deps_dir
 
         root = tmp_path / "app"
         root.mkdir()

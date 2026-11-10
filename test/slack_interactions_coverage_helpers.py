@@ -1,4 +1,4 @@
-"""Fixtures and builders shared by the :mod:`kiro_crew.slack.interactions` coverage tests.
+"""Fixtures and builders shared by the :mod:`aj_crew.slack.interactions` coverage tests.
 
 ``test_slack_interactions_coverage.py`` imports these by name. The autouse fixtures stub
 ``aiohttp.ClientSession`` and restore the process-global handler state each test
@@ -15,9 +15,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config.loader import config_path
-from kiro_crew.slack import handler as sh
-from kiro_crew.slack import interactions as ix
+from aj_crew.config.loader import config_path
+from aj_crew.slack import handler as sh
+from aj_crew.slack import interactions as ix
 
 
 @pytest.fixture(name="_mock_aiohttp", autouse=True)
@@ -139,7 +139,7 @@ def _read_config() -> dict:
 
 
 # Every ``interactions_*`` owner module logs under the facade's name.
-_IX_LOGGER = "kiro_crew.slack.interactions"
+_IX_LOGGER = "aj_crew.slack.interactions"
 
 
 @pytest.fixture(name="ix_logs")

@@ -3,7 +3,7 @@
 CPython 3.11+ asks WMI (``platform._wmi_query``) for ``machine()``, the
 ``uname().processor`` string and the OS version. When WMI is slow the stdlib
 abandons the query's helper thread, which then spins inside ``wbemprox.dll``
-for the life of the process (python/cpython#125315). Importing ``kiro_crew``
+for the life of the process (python/cpython#125315). Importing ``aj_crew``
 replaces ``_wmi_query`` with one that raises ``OSError``, the failure every
 stdlib call site already falls back from.
 
@@ -22,7 +22,7 @@ import types
 
 import pytest
 
-import kiro_crew
+import aj_crew
 
 needs_wmi_hook = pytest.mark.skipif(
     not hasattr(platform, "_wmi_query"),
@@ -49,7 +49,7 @@ def test_install_is_noop_off_windows():
     if sys.platform == "win32":
         pytest.skip("only meaningful off Windows")
     before = getattr(platform, "_wmi_query", None)
-    assert kiro_crew._install_wmi_free_platform() is False
+    assert aj_crew._install_wmi_free_platform() is False
     assert getattr(platform, "_wmi_query", None) is before
 
 
@@ -67,8 +67,8 @@ def test_machine_chain_never_reaches_wmi(windows_sim, monkeypatch, env, expected
     monkeypatch.delenv("PROCESSOR_ARCHITEW6432", raising=False)
     for key, value in env.items():
         monkeypatch.setenv(key, value)
-    assert kiro_crew._install_wmi_free_platform() is True
-    assert platform._wmi_query is kiro_crew._wmi_query_disabled
+    assert aj_crew._install_wmi_free_platform() is True
+    assert platform._wmi_query is aj_crew._wmi_query_disabled
     assert platform._get_machine_win32() == expected
 
 
@@ -77,31 +77,31 @@ def test_machine_chain_never_reaches_wmi(windows_sim, monkeypatch, env, expected
     "query", [("CPU", "Architecture"), ("CPU", "Name"), ("OS", "Caption"), ("OS",)]
 )
 def test_every_query_raises_oserror(windows_sim, query):
-    assert kiro_crew._install_wmi_free_platform() is True
+    assert aj_crew._install_wmi_free_platform() is True
     with pytest.raises(OSError):
         platform._wmi_query(*query)
 
 
 @needs_wmi_hook
 def test_install_is_idempotent(windows_sim):
-    assert kiro_crew._install_wmi_free_platform() is True
-    assert kiro_crew._install_wmi_free_platform() is True
-    assert platform._wmi_query is kiro_crew._wmi_query_disabled
+    assert aj_crew._install_wmi_free_platform() is True
+    assert aj_crew._install_wmi_free_platform() is True
+    assert platform._wmi_query is aj_crew._wmi_query_disabled
 
 
 def test_install_reports_false_without_stdlib_hook(windows_sim, monkeypatch):
     monkeypatch.delattr(platform, "_wmi_query", raising=False)
-    assert kiro_crew._install_wmi_free_platform() is False
+    assert aj_crew._install_wmi_free_platform() is False
     assert not hasattr(platform, "_wmi_query")
 
 
 @needs_wmi_hook
-def test_importing_kiro_crew_installs_override_in_fresh_interpreter():
+def test_importing_aj_crew_installs_override_in_fresh_interpreter():
     # platform.uname() caches machine() per interpreter, so the import-time
     # wiring must be proven in a process that has not computed it yet. The
-    # child pretends to be Windows BEFORE importing kiro_crew, with a lethal
+    # child pretends to be Windows BEFORE importing aj_crew, with a lethal
     # _wmi canary. asyncio is imported first because its module body branches
-    # on sys.platform; once cached, kiro_crew's ``import asyncio`` reuses the
+    # on sys.platform; once cached, aj_crew's ``import asyncio`` reuses the
     # POSIX one. On a real Windows child that line is a no-op.
     code = "\n".join(
         [
@@ -112,8 +112,8 @@ def test_importing_kiro_crew_installs_override_in_fresh_interpreter():
             "import platform",
             "def boom(q): raise AssertionError('WMI contacted: ' + q)",
             "platform._wmi = types.SimpleNamespace(exec_query=boom)",
-            "import kiro_crew",
-            "assert platform._wmi_query is kiro_crew._wmi_query_disabled",
+            "import aj_crew",
+            "assert platform._wmi_query is aj_crew._wmi_query_disabled",
             "print(platform._get_machine_win32())",
         ]
     )

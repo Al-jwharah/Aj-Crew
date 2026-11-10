@@ -34,14 +34,14 @@ from markdown_link_parentheses_helpers import (
 )
 
 from conftest import assert_rejected_without_backtracking
-from kiro_crew import preview_text, voice_reply
-from kiro_crew.dashboard.handlers import artifacts as artifact_handlers
-from kiro_crew.deploy import render as deploy_render
-from kiro_crew.discord.renderer import _redact_transformed as discord_redact_transformed
-from kiro_crew.imessage import plaintext as imessage_plaintext
-from kiro_crew.imessage.plaintext import to_plaintext
-from kiro_crew.messaging import display_safety
-from kiro_crew.messaging.display_safety import (
+from aj_crew import preview_text, voice_reply
+from aj_crew.dashboard.handlers import artifacts as artifact_handlers
+from aj_crew.deploy import render as deploy_render
+from aj_crew.discord.renderer import _redact_transformed as discord_redact_transformed
+from aj_crew.imessage import plaintext as imessage_plaintext
+from aj_crew.imessage.plaintext import to_plaintext
+from aj_crew.messaging import display_safety
+from aj_crew.messaging.display_safety import (
     _MD_LINK,
     _REDACTION_TAG,
     DISPLAY_SETTLING_PASSES,
@@ -52,24 +52,24 @@ from kiro_crew.messaging.display_safety import (
     canonicalize_display,
     redact_for_display,
 )
-from kiro_crew.messaging.outbound_files import _walk_destination
-from kiro_crew.messaging.renderer import _default_redactor, count_redaction_tags
-from kiro_crew.messaging.split import _flattened_for_any_cut
-from kiro_crew.security import (
+from aj_crew.messaging.outbound_files import _walk_destination
+from aj_crew.messaging.renderer import _default_redactor, count_redaction_tags
+from aj_crew.messaging.split import _flattened_for_any_cut
+from aj_crew.security import (
     CREDENTIAL_REDACTION_TAGS,
     EXFILTRATION_REDACTION_TAG_PREFIX,
     redact_credentials,
     redact_exfiltration_urls,
 )
-from kiro_crew.slack import format as slack_format
-from kiro_crew.telegram import renderer as telegram_renderer
-from kiro_crew.telegram.renderer import (
+from aj_crew.slack import format as slack_format
+from aj_crew.telegram import renderer as telegram_renderer
+from aj_crew.telegram.renderer import (
     _display_safe,
     _md_to_telegram_html,
     _strip_md,
 )
-from kiro_crew.whatsapp import renderer as whatsapp_renderer
-from kiro_crew.whatsapp.renderer import to_whatsapp_text
+from aj_crew.whatsapp import renderer as whatsapp_renderer
+from aj_crew.whatsapp.renderer import to_whatsapp_text
 
 #: The link patterns every renderer composes from ``md_link_destination``. Each
 #: label class must be no wider than the screen's ``_MD_LINK`` class: a label the
@@ -1083,7 +1083,7 @@ class TestPlainReadingSharesTelegramFallbacksPasses:
     _REVIEW = (
         "Telegram's _strip_md gained, lost or reordered a pass: decide whether the pass "
         "can join two halves of a key and, if so, add it to TELEGRAM_FALLBACK_PASSES in "
-        "kiro_crew.messaging.display_safety, which _plain_reading applies."
+        "aj_crew.messaging.display_safety, which _plain_reading applies."
     )
 
     def test_the_shared_passes_are_the_named_patterns_in_order(self):

@@ -8,7 +8,7 @@
  * survives every restore path for free because it is the slot's identity — no
  * extra payload field is needed.
  *
- * Mirrors `CHANNEL_SESSION_NAMESPACES` in `src/kiro_crew/messaging/link.py`.
+ * Mirrors `CHANNEL_SESSION_NAMESPACES` in `src/aj_crew/messaging/link.py`.
  * Keep the two lists in sync.
  */
 

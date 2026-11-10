@@ -1,4 +1,4 @@
-"""RED on main: `kirocrew perf sample --output ~/sub/x.folded` does not expand `~`.
+"""RED on main: `ajcrew perf sample --output ~/sub/x.folded` does not expand `~`.
 
 `cli_perf._write_artifact(output, text)` is handed `args.output` verbatim as a
 `Path`, and `--output` is `type=Path` with no `expanduser()`. So a `~`-prefixed
@@ -8,7 +8,7 @@ instead of the operator's home. Every other caller-supplied path in the CLI
 `Path(...).expanduser()`; this one is the outlier.
 
 How it is hit: an operator (or an agent, which can run any CLI command) runs
-`KIROCREW_DEBUG=1 kirocrew perf sample --call m:f --output ~/profiles/p.folded`
+`AJCREW_DEBUG=1 ajcrew perf sample --call m:f --output ~/profiles/p.folded`
 and the profile silently lands in `./~/profiles/p.folded`, not `~/profiles/`.
 
 Smallest fix: `_write_artifact` (or the two call sites) expands the path:
@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from kiro_crew import cli_perf
+from aj_crew import cli_perf
 
 
 def test_write_artifact_expands_leading_tilde(tmp_path, monkeypatch):

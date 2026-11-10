@@ -1,7 +1,7 @@
 """Claude Code steering resources come back after a compaction.
 
 The Claude Code backend does not read an agent's ``resources``, so session start
-puts the ``file://`` steering text of ``kirocrew.json`` into the prompt. A
+puts the ``file://`` steering text of ``ajcrew.json`` into the prompt. A
 compaction drops that prompt text; kiro-cli keeps its natively loaded resources.
 The first turn after a compaction on Claude Code therefore re-injects it, under the
 session-start gate, and no other harness receives it.
@@ -14,13 +14,13 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.acp.types import PROVIDER_LABEL_KAS
-from kiro_crew.agent_sdk.provider_identity import PROVIDER_ACP, PROVIDER_CLAUDE_CODE
-from kiro_crew.context import _MULTIBYTE_TABLE, ContextBuilder
-from kiro_crew.context_assembly import inclusion
-from kiro_crew.learn import LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew.acp.types import PROVIDER_LABEL_KAS
+from aj_crew.agent_sdk.provider_identity import PROVIDER_ACP, PROVIDER_CLAUDE_CODE
+from aj_crew.context import _MULTIBYTE_TABLE, ContextBuilder
+from aj_crew.context_assembly import inclusion
+from aj_crew.learn import LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 _RULE = "GLOBAL_STEERING_RULE_7Q2"
 _HEADER = "[REINJECTED AFTER COMPACTION — steering resources]".translate(_MULTIBYTE_TABLE)
@@ -38,7 +38,7 @@ def home(tmp_path):
     (steering / "global.md").write_text(f"# Global\n{_RULE}\n", encoding="utf-8")
     agents = tmp_path / ".kiro" / "agents"
     agents.mkdir(parents=True)
-    (agents / "kirocrew.json").write_text(
+    (agents / "ajcrew.json").write_text(
         json.dumps({"resources": ["file://.kiro/steering/**/*.md"]}), encoding="utf-8"
     )
     with patch("pathlib.Path.home", return_value=tmp_path):

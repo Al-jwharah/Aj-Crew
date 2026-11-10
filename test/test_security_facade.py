@@ -1,7 +1,7 @@
-"""Guards for the ``kiro_crew.security`` facade.
+"""Guards for the ``aj_crew.security`` facade.
 
 The security controls are split by responsibility across submodules of the
-``security`` package while ``kiro_crew.security`` stays the only import path.
+``security`` package while ``aj_crew.security`` stays the only import path.
 Roughly forty modules import from it, the platform layer registers a seam site
 on it by dotted name, and tests reach private helpers as attributes of it and
 patch them by dotted string. "The split changed nothing for a caller" is
@@ -34,8 +34,8 @@ from types import ModuleType
 
 import pytest
 
-import kiro_crew.security as facade
-from kiro_crew.security import _exports
+import aj_crew.security as facade
+from aj_crew.security import _exports
 
 
 def _is_type_checking(test: ast.expr) -> bool:
@@ -46,7 +46,7 @@ def _is_type_checking(test: ast.expr) -> bool:
 
 
 def _owner(name: str) -> ModuleType:
-    return importlib.import_module(f"kiro_crew.security.{facade._EXPORTS[name]}")
+    return importlib.import_module(f"aj_crew.security.{facade._EXPORTS[name]}")
 
 
 class TestExportManifest:
@@ -92,7 +92,7 @@ class TestExportManifest:
         for name in facade._EXPORTS:
             owner = _owner(name)
             assert isinstance(owner, ModuleType), name
-            assert owner.__name__.startswith("kiro_crew.security."), name
+            assert owner.__name__.startswith("aj_crew.security."), name
 
     def test_the_type_checking_block_names_every_owned_name(self) -> None:
         """The third copy of the name list has to agree with the owner table.
@@ -187,7 +187,7 @@ class TestPatchMirroring:
         try:
             assert getattr(facade, unowned) == 1
             for module in sorted(set(facade._EXPORTS.values())):
-                submodule = importlib.import_module(f"kiro_crew.security.{module}")
+                submodule = importlib.import_module(f"aj_crew.security.{module}")
                 assert not hasattr(submodule, unowned)
         finally:
             delattr(facade, unowned)

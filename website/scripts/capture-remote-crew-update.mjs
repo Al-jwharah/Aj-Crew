@@ -55,11 +55,11 @@ const MANY_BEHIND = {
   local_version: '0.9.1',
   instances: ['dev-box', 'build-box', 'test-box'].map(name => ({ id: name, name, version: '0.9.0', behind: true, updatable: true })),
 }
-const LONG_TAIL = 'Collecting kiro-crew==0.9.1 ... ERROR: Could not find a version that satisfies the requirement '
-  + 'kiro-crew==0.9.1 (from versions: 0.8.4, 0.8.5, 0.9.0). ERROR: No matching distribution found for kiro-crew==0.9.1. '
+const LONG_TAIL = 'Collecting aj-crew==0.9.1 ... ERROR: Could not find a version that satisfies the requirement '
+  + 'aj-crew==0.9.1 (from versions: 0.8.4, 0.8.5, 0.9.0). ERROR: No matching distribution found for aj-crew==0.9.1. '
   + 'The release feed answered 404 for the requested build; check that this crew can reach the release channel '
   + 'and that its configured index serves the new version. Retrying the download after a network timeout: '
-  + 'connection to the package index timed out after 30 seconds while fetching the wheel metadata for kiro-crew. '
+  + 'connection to the package index timed out after 30 seconds while fetching the wheel metadata for aj-crew. '
   + 'Update aborted; the installed version is unchanged and the gateway keeps running.'
 const CAPS = {
   instance_id: 'dev', version: '0.9.0', local_version: '0.9.1', version_match: true, behind: true,
@@ -159,7 +159,7 @@ const FRAMES = [
   ['05-row-succeeded-unknown-dark', job({ state: 'succeeded', phase: 'done', finished_at: 2, version_before: '', version_after: '' }), 'dev-box is updated and restarted. It reconnects on its own.', false],
   ['05-row-unverified-dark', job({ state: 'unverified', phase: 'done', finished_at: 2 }), /has not reconnected yet to confirm its version/, false],
   ['05-row-failed-dark', job({ state: 'failed', finished_at: 2, error: 'Could not reach the release feed: connection timed out' }), /The update on dev-box failed/, true],
-  ['05-row-restart-failed-dark', job({ state: 'failed', phase: 'restarting', finished_at: 2, error: 'Failed to restart kirocrew.service: Access denied' }), /The new version is installed on dev-box, but its restart failed/, true],
+  ['05-row-restart-failed-dark', job({ state: 'failed', phase: 'restarting', finished_at: 2, error: 'Failed to restart ajcrew.service: Access denied' }), /The new version is installed on dev-box, but its restart failed/, true],
 ]
 for (const [name, state, text, offersUpdate] of FRAMES) {
   const { page, posts } = await open('panel', 'dark', { jobState: state })

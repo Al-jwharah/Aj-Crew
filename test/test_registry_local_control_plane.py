@@ -1,7 +1,7 @@
 """Registry-governed hosts: Crew's own session identity is an admin opt-in, off by default.
 
-Under ``agent.mcp_registry_mode`` kiro-cli launches ``kirocrew-core`` and
-``kirocrew-cron`` from the admin's catalog, which carries no session identity. The
+Under ``agent.mcp_registry_mode`` kiro-cli launches ``ajcrew-core`` and
+``ajcrew-cron`` from the admin's catalog, which carries no session identity. The
 per-session identity element ``kiro_control_plane_servers`` would inject is launched
 as given, past that catalog, so it is mounted only when the admin's security policy
 sets ``mcp_registry_local_control_plane: true`` -- and then for those two servers
@@ -22,16 +22,16 @@ from mcp_shared_helpers import (  # noqa: F401 -- the autouse fixture registers 
     _tools_call_with_caller,
 )
 
-import kiro_crew.agent as agent_mod
-import kiro_crew.mcp_shared as mcp_shared
-import kiro_crew.mcp_shared_policy as mcp_shared_policy
-import kiro_crew.platform.governance as governance_mod
-from kiro_crew.acp import session_mcp
-from kiro_crew.platform.governance import (
+import aj_crew.agent as agent_mod
+import aj_crew.mcp_shared as mcp_shared
+import aj_crew.mcp_shared_policy as mcp_shared_policy
+import aj_crew.platform.governance as governance_mod
+from aj_crew.acp import session_mcp
+from aj_crew.platform.governance import (
     PlatformCompositionError,
 )
-from kiro_crew.platform.governance import _intersect_ceilings as intersect_ceilings
-from kiro_crew.platform.governance import (
+from aj_crew.platform.governance import _intersect_ceilings as intersect_ceilings
+from aj_crew.platform.governance import (
     parse_policy,
     parse_profile,
 )
@@ -81,14 +81,14 @@ class TestPolicyField:
 
 
 class TestOnlyTheAdminCanWriteIt:
-    @pytest.mark.parametrize("prefix", ["~/.kiro/crew", "~/.kirocrew"])
+    @pytest.mark.parametrize("prefix", ["~/.kiro/crew", "~/.ajcrew"])
     def test_the_agent_file_gate_refuses_a_write(self, prefix):
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         assert is_sensitive_write_path(f"{prefix}/security_policy.json")
 
     def test_the_sandbox_mounts_the_policy_read_only(self):
-        from kiro_crew import sandbox_leaves
+        from aj_crew import sandbox_leaves
 
         assert "security_policy.json" in sandbox_leaves._CREW_READONLY_LEAVES
 
@@ -98,7 +98,7 @@ class TestOnlyTheAdminCanWriteIt:
 
 class TestPermissionRead:
     def _context(self, monkeypatch, governance):
-        from kiro_crew.platform import context
+        from aj_crew.platform import context
 
         monkeypatch.setattr(
             context, "current_context", lambda: SimpleNamespace(governance=governance)
@@ -117,7 +117,7 @@ class TestPermissionRead:
         assert session_mcp._registry_local_control_plane_permitted() is True
 
     def test_an_unreadable_ceiling_is_off(self, monkeypatch):
-        from kiro_crew.platform import context
+        from aj_crew.platform import context
 
         def broken():
             raise RuntimeError("boom")
@@ -128,7 +128,7 @@ class TestPermissionRead:
 
 # ── the mount ───────────────────────────────────────────────────────────
 
-_GRANTED = ("kirocrew-core", "kirocrew-cron", "kirocrew-dashboard", "mochi:mochi")
+_GRANTED = ("ajcrew-core", "ajcrew-cron", "ajcrew-dashboard", "mochi:mochi")
 
 
 def _mount(monkeypatch, tmp_path, *, registry: bool, permitted: bool) -> list[str]:
@@ -148,7 +148,7 @@ def _mount(monkeypatch, tmp_path, *, registry: bool, permitted: bool) -> list[st
         "builtin_app_identity_launches",
         lambda: {"mochi:mochi": {"command": "test-app", "args": ["serve"]}},
     )
-    mount = session_mcp.kiro_control_plane_servers("kirocrew", work_dir=tmp_path)
+    mount = session_mcp.kiro_control_plane_servers("ajcrew", work_dir=tmp_path)
     return [element["name"] for element in mount.elements]
 
 
@@ -160,7 +160,7 @@ class TestMount:
         self, monkeypatch, tmp_path
     ):
         names = _mount(monkeypatch, tmp_path, registry=True, permitted=True)
-        assert names == ["kirocrew-core", "kirocrew-cron"]
+        assert names == ["ajcrew-core", "ajcrew-cron"]
 
     def test_outside_registry_mode_the_switch_changes_nothing(self, monkeypatch, tmp_path):
         on = _mount(monkeypatch, tmp_path, registry=False, permitted=True)
@@ -185,16 +185,16 @@ class TestRefusalText:
 
     def test_the_note_is_empty_outside_registry_mode(self, monkeypatch):
         monkeypatch.setattr(agent_mod, "_mcp_registry_mode", lambda: False)
-        assert mcp_shared_policy.registry_identity_note("kirocrew-core") == ""
+        assert mcp_shared_policy.registry_identity_note("ajcrew-core") == ""
 
-    @pytest.mark.parametrize("server", ["kirocrew-core", "kirocrew-cron"])
+    @pytest.mark.parametrize("server", ["ajcrew-core", "ajcrew-cron"])
     def test_the_note_names_the_cause_and_the_exact_field(self, registry_without_opt_in, server):
         note = mcp_shared_policy.registry_identity_note(server)
-        assert "registry is blocking Kiro Crew's own tools" in note
+        assert "registry is blocking Aj Crew's own tools" in note
         assert f'"{_FIELD}": true' in note
         assert "security_policy.json" in note
 
-    @pytest.mark.parametrize("server", ["kirocrew-dashboard", "mochi:mochi", "test-server"])
+    @pytest.mark.parametrize("server", ["ajcrew-dashboard", "mochi:mochi", "test-server"])
     def test_the_note_is_empty_on_a_server_the_field_does_not_mount(
         self, registry_without_opt_in, server
     ):
@@ -203,14 +203,14 @@ class TestRefusalText:
     def test_the_note_is_empty_once_the_admin_has_opted_in(self, monkeypatch):
         monkeypatch.setattr(agent_mod, "_mcp_registry_mode", lambda: True)
         monkeypatch.setattr(governance_mod, "registry_local_control_plane_permitted", lambda: True)
-        assert mcp_shared_policy.registry_identity_note("kirocrew-core") == ""
+        assert mcp_shared_policy.registry_identity_note("ajcrew-core") == ""
 
     @pytest.mark.parametrize(
         ("server", "registry", "noted"),
         [
-            ("kirocrew-core", True, True),
-            ("kirocrew-core", False, False),
-            ("kirocrew-dashboard", True, False),
+            ("ajcrew-core", True, True),
+            ("ajcrew-core", False, False),
+            ("ajcrew-dashboard", True, False),
         ],
     )
     def test_an_unattestable_call_is_refused_with_the_note_only_where_the_field_helps(

@@ -4,7 +4,7 @@ A slot's history key comes from ``linked_session_key`` and, for an unlinked slot
 ``channel_origin``. Aliases share one ``TranscriptBinding`` only because
 ``bind_transcript`` runs after every change to either field. A new assignment site
 that forgets the call silently gives that slot a private copy of the shared
-project again, so this scan finds every assignment in ``src/kiro_crew`` and
+project again, so this scan finds every assignment in ``src/aj_crew`` and
 requires its enclosing function to call ``bind_transcript``.
 """
 
@@ -13,10 +13,10 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-_SRC = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+_SRC = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 _FIELDS = {"linked_session_key", "channel_origin"}
 
-#: (path under src/kiro_crew, function) pairs that assign a field without joining,
+#: (path under src/aj_crew, function) pairs that assign a field without joining,
 #: each with the reason the join happens elsewhere.
 _EXEMPT = {
     # Field defaults for a new slot, which starts with its own private binding.
@@ -90,9 +90,9 @@ def test_a_rebound_channel_tab_joins_its_live_alias(tmp_path, monkeypatch):
     """The channel rebind links an existing slot; it must share the peer's directory."""
     from test_cleared_project_not_resurrected import _make_state
 
-    from kiro_crew.dashboard import channel_slots
+    from aj_crew.dashboard import channel_slots
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     key = "slack:1.1"
     live = state.get_or_create_slot("w", linked_session_key=key)

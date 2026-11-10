@@ -37,7 +37,7 @@ mkdirSync(join(OUT, 'video'), { recursive: true })
 
 const now = Math.floor(Date.now() / 1000)
 const slot = (key, title, minsAgo) => ({
-  key, title, running: false, last_message: '', messages: 6, agent: 'kirocrew',
+  key, title, running: false, last_message: '', messages: 6, agent: 'ajcrew',
   memory_mode: 'persistent', folder_id: '', modified: now - minsAgo * 60,
   source_links: [], source_links_total: 0,
 })
@@ -83,7 +83,7 @@ async function main() {
     slots: SLOTS,
     extra: async (path, route) => {
       if (path.startsWith('/api/chat/history')) { await json(route, { messages: [] }); return true }
-      if (path === '/api/agents') { await json(route, { agents: [{ name: 'kirocrew' }], default_agent: 'kirocrew' }); return true }
+      if (path === '/api/agents') { await json(route, { agents: [{ name: 'ajcrew' }], default_agent: 'ajcrew' }); return true }
       if (path === '/api/models') { await json(route, []); return true }
       return false
     },

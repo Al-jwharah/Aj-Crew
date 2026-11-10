@@ -11,12 +11,12 @@ from types import SimpleNamespace
 import pytest
 from aiohttp import web
 
-from kiro_crew.apps import builtin_adoption as adoption
-from kiro_crew.apps import builtin_adoption_pins as pins_mod
-from kiro_crew.dashboard import server
-from kiro_crew.dashboard.routes import system
-from kiro_crew.dashboard.server_runtime import app_platform
-from kiro_crew.testing.wait import await_until
+from aj_crew.apps import builtin_adoption as adoption
+from aj_crew.apps import builtin_adoption_pins as pins_mod
+from aj_crew.dashboard import server
+from aj_crew.dashboard.routes import system
+from aj_crew.dashboard.server_runtime import app_platform
+from aj_crew.testing.wait import await_until
 
 #: Boot steps that register a route, open an app's code or reconcile its resources.
 _AFTER_APPLY = (

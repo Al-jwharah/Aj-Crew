@@ -6,7 +6,7 @@ what they use of these by name: ``FakeWorker``, an in-memory worker;
 ``_zero_tool_client``, an ``AcpClient`` double whose agent spec answers the zero-tool check;
 ``_real_client_without_io``, which lets a worker build a real ``AcpClient`` that never spawns;
 and the autouse ``_config_dir_tracks_patched_home``, which points ``llm_pool.config_dir()``
-at ``<patched home>/.kirocrew`` and which every test module of the family imports.
+at ``<patched home>/.ajcrew`` and which every test module of the family imports.
 """
 
 from __future__ import annotations
@@ -18,27 +18,27 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.knowledge.llm_pool import LLMPool, Worker
+from aj_crew.acp.client import AcpClient
+from aj_crew.knowledge.llm_pool import LLMPool, Worker
 
 
 @pytest.fixture(autouse=True)
 def _config_dir_tracks_patched_home(_floor_monkeypatch):
-    """Keep ``llm_pool.config_dir()`` pointed at ``<patched home>/.kirocrew``.
+    """Keep ``llm_pool.config_dir()`` pointed at ``<patched home>/.ajcrew``.
 
-    The data home moved from ``~/.kirocrew`` to ``~/.kiro/crew`` (``config_dir()``),
+    The data home moved from ``~/.ajcrew`` to ``~/.kiro/crew`` (``config_dir()``),
     and ``_read_config`` now reads ``config_dir()/config.json`` rather than
-    ``Path.home()/".kirocrew"/"config.json"``. These tests patch
+    ``Path.home()/".ajcrew"/"config.json"``. These tests patch
     ``llm_pool.Path.home`` per-test and write ``config.json`` under
-    ``<home>/.kirocrew`` — but ``config_dir()`` reads ``KIROCREW_HOME`` (pinned to
-    a *different* tmp dir by the conftest ``_isolate_kirocrew_home`` fixture), so
+    ``<home>/.ajcrew`` — but ``config_dir()`` reads ``AJCREW_HOME`` (pinned to
+    a *different* tmp dir by the conftest ``_isolate_ajcrew_home`` fixture), so
     without this redirect the config would never be found. Redirect
-    ``config_dir`` to ``Path.home()/".kirocrew"`` (evaluated lazily, so it tracks
+    ``config_dir`` to ``Path.home()/".ajcrew"`` (evaluated lazily, so it tracks
     whatever ``Path.home()`` each test patches), preserving the existing
-    ``.kirocrew/config.json`` layout the tests build.
+    ``.ajcrew/config.json`` layout the tests build.
     """
     _floor_monkeypatch.setattr(
-        "kiro_crew.knowledge.llm_pool.config_dir", lambda: Path.home() / ".kirocrew"
+        "aj_crew.knowledge.llm_pool.config_dir", lambda: Path.home() / ".ajcrew"
     )
 
 

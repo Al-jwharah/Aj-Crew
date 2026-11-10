@@ -31,7 +31,7 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const scene = params.get('scene') ?? 'deploy-destroy'
 
-document.documentElement.setAttribute('data-theme', 'kiro-dark')
+document.documentElement.setAttribute('data-theme', 'aj-dark')
 applyFallbackTheme()
 initI18n('en')
 

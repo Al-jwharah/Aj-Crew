@@ -3,7 +3,7 @@
 A REAL gatewayd runs in-process against ``fake_pool_mcp_server.py`` in its
 subscription mode, and connections reach it two ways: a real stub process, which
 is what kiro-cli runs, and :class:`RawConnection`, which speaks the stub protocol
-directly from the test process. The second is what a connection the Kiro Crew
+directly from the test process. The second is what a connection the Aj Crew
 server opens for itself looks like to the daemon: its peer is the server's own
 process, so it shares that process's ancestry with every stub the server spawned.
 """
@@ -20,13 +20,13 @@ from typing import Any, AsyncIterator, Optional
 
 import pytest
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.mcp_gateway import gatewayd as gw
-from kiro_crew.mcp_gateway import stub as stub_mod
-from kiro_crew.mcp_gateway import stub_register, transport
-from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
-from kiro_crew.mcp_gateway.pool import BackendPool
-from kiro_crew.testing.wait import async_wait_until, finished
+from aj_crew import platform_compat as pc
+from aj_crew.mcp_gateway import gatewayd as gw
+from aj_crew.mcp_gateway import stub as stub_mod
+from aj_crew.mcp_gateway import stub_register, transport
+from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+from aj_crew.mcp_gateway.pool import BackendPool
+from aj_crew.testing.wait import async_wait_until, finished
 
 FAKE_SERVER = Path(__file__).with_name("fake_pool_mcp_server.py")
 
@@ -79,9 +79,9 @@ def clean_env(home: Path) -> dict[str, str]:
     env = {
         k: v
         for k, v in os.environ.items()
-        if k not in ("KIROCREW_CHANNEL_ID", "KIROCREW_SESSION_KEY", STUB_SESSION_TOKEN_ENV)
+        if k not in ("AJCREW_CHANNEL_ID", "AJCREW_SESSION_KEY", STUB_SESSION_TOKEN_ENV)
     }
-    env["KIROCREW_HOME"] = str(home)
+    env["AJCREW_HOME"] = str(home)
     return env
 
 
@@ -98,11 +98,11 @@ async def spawn_stub(
     if session_token:
         env[STUB_SESSION_TOKEN_ENV] = session_token
     if session_key:
-        env["KIROCREW_SESSION_KEY"] = session_key
+        env["AJCREW_SESSION_KEY"] = session_key
     return await asyncio.create_subprocess_exec(
         sys.executable,
         "-m",
-        "kiro_crew.mcp_gateway.stub",
+        "aj_crew.mcp_gateway.stub",
         *stub_argv(socket_path, work_dir),
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,

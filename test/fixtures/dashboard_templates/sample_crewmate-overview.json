@@ -211,7 +211,7 @@
       "type": "turn/completed"
      },
      {
-      "agent": "kirocrew-worker",
+      "agent": "ajcrew-worker",
       "seq": 30,
       "subagent_id": "sub-a1",
       "time": 1791001528737,
@@ -241,7 +241,7 @@
       "type": "turn/started"
      },
      {
-      "agent": "kirocrew-worker",
+      "agent": "ajcrew-worker",
       "seq": 31,
       "subagent_id": "sub-a2",
       "time": 1791001723303,
@@ -273,7 +273,7 @@
       "type": "turn/completed"
      },
      {
-      "agent": "kirocrew-worker",
+      "agent": "ajcrew-worker",
       "seq": 32,
       "subagent_id": "sub-b1",
       "time": 1791001973460,
@@ -304,7 +304,7 @@
       "type": "turn/completed"
      },
      {
-      "agent": "kirocrew-worker",
+      "agent": "ajcrew-worker",
       "seq": 33,
       "subagent_id": "sub-b2",
       "time": 1791002501569,

@@ -54,7 +54,7 @@ vi.mock('../../components/MarkdownRenderer', async () => {
 vi.mock('../../utils/clipboard', () => ({ copyToClipboard: vi.fn() }))
 
 vi.mock('../../hooks/useBranding', () => ({
-  useBranding: () => ({ botName: 'Kiro Crew', avatar: '/logo.png', directLocal: true }),
+  useBranding: () => ({ botName: 'Aj Crew', avatar: '/logo.png', directLocal: true }),
 }))
 
 import { fileExplorerApi } from './api'

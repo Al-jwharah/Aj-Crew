@@ -20,8 +20,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from shared_crew_host_isolation import host_isolation  # noqa: F401
 
-from kiro_crew.history import ConversationLog
-from kiro_crew.shared_crew import (
+from aj_crew.history import ConversationLog
+from aj_crew.shared_crew import (
     access,
     audit,
     crew_mode,
@@ -30,9 +30,9 @@ from kiro_crew.shared_crew import (
     routes_identity,
     trigger,
 )
-from kiro_crew.shared_crew.admission import AcceptedWork, OperationKind, OperationState
-from kiro_crew.shared_crew.attribution import public_attribution_from_meta, trigger_of_public
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew.admission import AcceptedWork, OperationKind, OperationState
+from aj_crew.shared_crew.attribution import public_attribution_from_meta, trigger_of_public
+from aj_crew.shared_crew.contracts import (
     ACTOR_REQUEST_KEY,
     ActionOutcome,
     ActionType,
@@ -44,8 +44,8 @@ from kiro_crew.shared_crew.contracts import (
     SessionQuery,
     Transport,
 )
-from kiro_crew.shared_crew.identity import local_operator_principal, tailnet_principal
-from kiro_crew.shared_crew.session_query import query_sessions
+from aj_crew.shared_crew.identity import local_operator_principal, tailnet_principal
+from aj_crew.shared_crew.session_query import query_sessions
 
 pytestmark = pytest.mark.usefixtures("host_isolation")
 
@@ -93,7 +93,7 @@ class TestModes:
 
     def test_startup_validation_logs_a_machine_readable_reason(self, caplog):
         access.note_tailnet(enabled=True, host="h", identity_config_unreadable=True)
-        with caplog.at_level(logging.ERROR, logger="kiro_crew.shared_crew.crew_mode"):
+        with caplog.at_level(logging.ERROR, logger="aj_crew.shared_crew.crew_mode"):
             problem = crew_mode.validate_at_startup()
         assert problem is not None
         assert "network_identity_config_unreadable" in caplog.text
@@ -447,12 +447,12 @@ def test_no_external_requested_by_attribution_is_emitted():
     """Human attribution stays in Crew records; nothing tells a downstream system who asked.
 
     External "Requested by <person>" output is suspended pending product
-    reconciliation, so no source file under ``src/kiro_crew`` may build one.
+    reconciliation, so no source file under ``src/aj_crew`` may build one.
     """
     import pathlib
     import re
 
-    root = pathlib.Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+    root = pathlib.Path(__file__).resolve().parents[1] / "src" / "aj_crew"
     # Case-sensitive: the outbound label is "Requested by <person>"; prose such as
     # "requested by me" in a filter description is not attribution output.
     pattern = re.compile(r"[\"']Requested by\b|requested_by_human|on_behalf_of_human")

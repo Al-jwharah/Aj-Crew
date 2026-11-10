@@ -49,7 +49,7 @@ interface ChatTranscriptViewProps {
   activityOpen: boolean
   completedTurnCount: number
   cursorIsForActiveSlot: boolean
-  kiroCrewVersion: string
+  ajCrewVersion: string
   loadingOlder: boolean
   olderFailed: boolean
   setTurnDisclosureFor: (key: string, expanded: boolean) => void
@@ -108,7 +108,7 @@ interface ChatTranscriptViewProps {
  * The transcript column: the welcome hero, or the turn minimap and the scroll shell with its rows, the earlier-messages bar, the measurement farm, the footer, the pulse survey and the tail spacer; and the restore skeleton.
  */
 export default function ChatTranscriptView({
-  embedded, popout, activeSlot, appToolCallIds, titleInTopbar, workerBreadcrumb = false, activityOpen, completedTurnCount, cursorIsForActiveSlot, kiroCrewVersion, loadingOlder, olderFailed, setTurnDisclosureFor, slotHasMore,
+  embedded, popout, activeSlot, appToolCallIds, titleInTopbar, workerBreadcrumb = false, activityOpen, completedTurnCount, cursorIsForActiveSlot, ajCrewVersion, loadingOlder, olderFailed, setTurnDisclosureFor, slotHasMore,
   slotLoading, slotRunning, slotState, environmentStart, slotStopping, slotSwitchTarget, turnDisclosure, turnRowMayBeLive, setInput, isWelcomeState, crewModeOn, openTaskBoard, chatConfig, scrollerRef, bindScroller, handleSurveyLayoutChange,
   onScrollPin, pinned, approve, dismissApproval, currentSlot, projectDir = null, regenerating, sendUnconfirmed, dockH, lastRole, streamTick, footerActivityKey, footerSentHere = false, toggleAct, renderedDisplayItems, stableMsgKey, virtualKey, handleLoadEarlier,
   spinnerNearTop, virt, visibleDisplayItems, chatNav, navigateToTurn, turnStepAnnouncement, renderFarmItem, renderMessage, renderTurnItem,
@@ -257,7 +257,7 @@ export default function ChatTranscriptView({
               // a missing check.
               key={activeSlot}
               sessionId={activeSlot}
-              kiroCrewVersion={kiroCrewVersion}
+              ajCrewVersion={ajCrewVersion}
               turnCount={completedTurnCount}
               slotOrigin={currentSlot?.origin}
               onLayoutChange={handleSurveyLayoutChange}

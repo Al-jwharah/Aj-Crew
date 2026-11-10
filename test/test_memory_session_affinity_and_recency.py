@@ -1,6 +1,6 @@
 """Tests for opt-in session affinity and opt-in recency boost."""
 
-from kiro_crew.memory_v2 import (
+from aj_crew.memory_v2 import (
     RECENCY_HALF_WEIGHT_DAYS,
     SESSION_AFFINITY_BOOST,
     rank_score,
@@ -187,8 +187,8 @@ class TestRecallQueryForwarding:
     def test_recall_query_path_forwards_the_ranking_settings(self):
         import threading
 
-        from kiro_crew.vector_memory_runtime import episodic_search
-        from kiro_crew.vector_memory_runtime.embedding import _RecallQuery
+        from aj_crew.vector_memory_runtime import episodic_search
+        from aj_crew.vector_memory_runtime.embedding import _RecallQuery
 
         seen: dict = {}
 
@@ -224,8 +224,8 @@ def test_recall_with_default_settings_ignores_conversation_id(tmp_path, monkeypa
     """With both settings at 0, recall() is the same with and without conversation_id."""
     from member_memory_helpers import declare_v2_store
 
-    from kiro_crew import memory_stores
-    from kiro_crew.vector_memory import open_member_database
+    from aj_crew import memory_stores
+    from aj_crew.vector_memory import open_member_database
 
     monkeypatch.setattr(memory_stores, "memory_stores_root", lambda: tmp_path / "memory_stores")
     directory = declare_v2_store(tmp_path, "member-alice")

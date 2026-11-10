@@ -463,7 +463,7 @@ describe('the shell reveals a failure panel when the bundle never runs', () => {
     const html = readFileSync(INDEX_PATH, 'utf8')
     const panel = html.slice(html.indexOf('<div id="boot-failure"'))
     expect(panel).toMatch(/worth reporting at/)
-    expect(panel).toContain('https://github.com/kirodotdev/KiroCrew/issues')
+    expect(panel).toContain('https://github.com/Al-jwharah/Aj-Crew/issues')
   })
 
   it('does not let a failed service-worker registration arm the panel', () => {
@@ -523,7 +523,7 @@ describe('the shell reveals a failure panel when the bundle never runs', () => {
   })
 
   it('tells an embedded host first, then shows the panel if nothing replaced the frame', () => {
-    // The Kiro Crew host reloads the frame on script-error, which discards the
+    // The Aj Crew host reloads the frame on script-error, which discards the
     // wait, and keeps an opaque overlay over the frame until ready. A host that
     // ignores the message used to leave a blank frame with no way out.
     const h = harness({ rootHasChildren: false, embedded: true })
@@ -693,11 +693,11 @@ describe('the shell reloads by itself when a boot module fails to load', () => {
     expect(storage.data.size).toBe(0)
   })
 
-  it('says plainly that Kiro Crew did not load and offers a reload', () => {
+  it('says plainly that Aj Crew did not load and offers a reload', () => {
     const html = readFileSync(INDEX_PATH, 'utf8')
     const panel = html.slice(html.indexOf('<div id="boot-failure"'))
     const heading = panel.slice(panel.indexOf('<h1'), panel.indexOf('</h1>'))
-    expect(heading.slice(heading.indexOf('>') + 1)).toBe('Kiro Crew did not load')
+    expect(heading.slice(heading.indexOf('>') + 1)).toBe('Aj Crew did not load')
     const button = panel.slice(panel.indexOf('<button id="boot-failure-retry"'), panel.indexOf('</button>'))
     expect(button.slice(button.lastIndexOf('>') + 1)).toBe('Clear cache and reload')
   })

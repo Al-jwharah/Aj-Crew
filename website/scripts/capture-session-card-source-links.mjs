@@ -33,7 +33,7 @@ import { logPageProblems, stubDashboardApi, json } from './lib/stub-dashboard-ap
 
 const OUT = process.argv[2] || '../temp-screenshots/session-card-source-links'
 const ACTIVE = 'chat-a'
-const REPO = 'https://github.com/kirodotdev/KiroCrew'
+const REPO = 'https://github.com/Al-jwharah/Aj-Crew'
 const pr = n => `${REPO}/pull/${n}`
 const issue = n => `${REPO}/issues/${n}`
 
@@ -49,7 +49,7 @@ const now = Math.floor(Date.now() / 1000)
 const SLOTS = [
   {
     key: ACTIVE, title: 'Draft the release notes', running: false, messages: 4,
-    agent: 'kirocrew', modified: now, last_ts: '2026-08-30T00:10:00Z', folder_id: '',
+    agent: 'ajcrew', modified: now, last_ts: '2026-08-30T00:10:00Z', folder_id: '',
     last_message: 'Grouped the entries by area.',
     source_links: [], source_links_total: 0,
   },
@@ -57,7 +57,7 @@ const SLOTS = [
     // The reporter's own case: this session only READ someone else's pull
     // request, and the card advertises it like a workstream.
     key: 'chat-b', title: 'Answer the config question', running: false, messages: 9,
-    agent: 'kirocrew', modified: now - 600, last_ts: '2026-08-30T00:00:00Z', folder_id: '',
+    agent: 'ajcrew', modified: now - 600, last_ts: '2026-08-30T00:00:00Z', folder_id: '',
     last_message: 'Quoted the diff from the other team\'s PR.',
     source_links: [
       { provider: 'github', number: 843, url: pr(843), state: 'open', ci: 'passed', kind: 'change', mergeable: 'mergeable', mergeStateStatus: 'clean' },
@@ -67,7 +67,7 @@ const SLOTS = [
   },
   {
     key: 'chat-c', title: 'Sweep the native selects', running: false, messages: 24,
-    agent: 'kirocrew', modified: now - 1800, last_ts: '2026-08-29T23:30:00Z', folder_id: '',
+    agent: 'ajcrew', modified: now - 1800, last_ts: '2026-08-29T23:30:00Z', folder_id: '',
     last_message: 'Two of these need a rebase before they can land.',
     source_links: [
       { provider: 'github', number: 846, url: pr(846), state: 'open', ci: 'failed', kind: 'change', mergeable: 'mergeable', mergeStateStatus: 'clean' },

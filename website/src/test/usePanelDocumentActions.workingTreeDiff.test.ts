@@ -35,7 +35,7 @@ describe('openWorkingTreeDiff (#9695)', () => {
   const realFetch = globalThis.fetch
   afterEach(() => {
     globalThis.fetch = realFetch
-    delete (window as unknown as { __kirocrewPluginHandlesFiles?: boolean }).__kirocrewPluginHandlesFiles
+    delete (window as unknown as { __ajcrewPluginHandlesFiles?: boolean }).__ajcrewPluginHandlesFiles
     vi.restoreAllMocks()
   })
 
@@ -74,7 +74,7 @@ describe('openWorkingTreeDiff (#9695)', () => {
   })
 
   it('defers to the IDE file-bridge and opens no panel tab when a plugin handles files', async () => {
-    ;(window as unknown as { __kirocrewPluginHandlesFiles?: boolean }).__kirocrewPluginHandlesFiles = true
+    ;(window as unknown as { __ajcrewPluginHandlesFiles?: boolean }).__ajcrewPluginHandlesFiles = true
     const openWorkingTreeDiffSpy = vi.fn()
     const { openWorkingTreeDiff } = render({ openWorkingTreeDiff: openWorkingTreeDiffSpy })
     await act(async () => { await openWorkingTreeDiff('/tmp/a.ts') })

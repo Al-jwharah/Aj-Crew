@@ -58,7 +58,7 @@ async function newPage(theme, viewport) {
       counts.rosterReads += 1
       // The arrival read is empty and fine; every read after the create fails.
       if (counts.rosterReads > 1) return route.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"roster unavailable"}' })
-      return json({ members: [], default_agent: 'kirocrew' })
+      return json({ members: [], default_agent: 'ajcrew' })
     }
     if (path === '/api/agents' && method === 'POST') {
       counts.creates += 1
@@ -71,13 +71,13 @@ async function newPage(theme, viewport) {
     if (path === '/api/teams') return json({ teams: [] })
     if (path === '/api/crons') return json({ jobs: [] })
     if (path === '/api/webhooks') return json({ tokens: [] })
-    if (path === '/api/agents') return json({ agents: [], default_agent: 'kirocrew' })
+    if (path === '/api/agents') return json({ agents: [], default_agent: 'ajcrew' })
     if (path === '/api/agents/catalog') return json({
-      agents: [{ name: 'kirocrew', selection_kind: 'template', kiro_agent: 'kirocrew', scope: 'global' }],
-      default_agent: 'kirocrew',
+      agents: [{ name: 'ajcrew', selection_kind: 'template', kiro_agent: 'ajcrew', scope: 'global' }],
+      default_agent: 'ajcrew',
     })
     if (path === '/api/workspaces') return json({ workspaces: [{ name: 'default' }] })
-    if (path === '/api/config/default-agent') return json({ default_agent: 'kirocrew' })
+    if (path === '/api/config/default-agent') return json({ default_agent: 'ajcrew' })
     if (path === '/api/autonudge') return json({ enabled: true, loops: [] })
     if (/\/api\/chat\/(tags|pins|folders|tag-columns)$/.test(path)) return route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
     const isList = /commands|skills|agents$|sessions|files|history|models|artifacts|folders|slots$/.test(path)

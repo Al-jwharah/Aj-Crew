@@ -7,8 +7,8 @@ import time
 
 import pytest
 
-from kiro_crew.dashboard.file_index import FileIndex, FileIndexRegistry
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.dashboard.file_index import FileIndex, FileIndexRegistry
+from aj_crew.testing.wait import async_wait_until
 
 
 def _populate(tmp_path):
@@ -97,7 +97,7 @@ class TestFileIndex:
         idx = FileIndex(str(tmp_path))
         await idx.build()
         try:
-            from kiro_crew.dashboard import file_index as fi_mod
+            from aj_crew.dashboard import file_index as fi_mod
 
             # Fresh (built just now): no rebuild is scheduled.
             idx._built_at = time.monotonic()
@@ -189,7 +189,7 @@ class TestFileIndexRegistry:
         (tmp_path / "a.py").write_text("x")
         reg = FileIndexRegistry()
         root = os.path.realpath(str(tmp_path))
-        from kiro_crew.dashboard import file_index as fi_mod
+        from aj_crew.dashboard import file_index as fi_mod
 
         try:
             await reg.ensure(str(tmp_path))
@@ -224,7 +224,7 @@ class TestFileIndexRegistry:
         walks onto the shared pool with one more per search."""
         reg = FileIndexRegistry()
         root = os.path.realpath(str(tmp_path))
-        from kiro_crew.dashboard import file_index as fi_mod
+        from aj_crew.dashboard import file_index as fi_mod
 
         calls = {"n": 0}
 
@@ -255,7 +255,7 @@ class TestFileIndexRegistry:
     @pytest.mark.asyncio
     async def test_ensure_evicts_least_recently_searched_past_cap(self, tmp_path, monkeypatch):
         """The registry holds at most _MAX_CACHED_ROOTS indexes, LRU-evicting."""
-        from kiro_crew.dashboard import file_index as fi_mod
+        from aj_crew.dashboard import file_index as fi_mod
 
         monkeypatch.setattr(fi_mod, "_MAX_CACHED_ROOTS", 2)
         reg = FileIndexRegistry()
@@ -300,7 +300,7 @@ class TestFileIndexRegistry:
         """
         import threading
 
-        from kiro_crew.dashboard import file_index as fi_mod
+        from aj_crew.dashboard import file_index as fi_mod
 
         monkeypatch.setattr(fi_mod, "_MAX_CACHED_ROOTS", 1)
         monkeypatch.setattr(fi_mod, "_WALK_EXEC_CEILING_SECS", 0.05)
@@ -360,7 +360,7 @@ class TestFileIndexRegistry:
         """
         import threading
 
-        from kiro_crew.dashboard import file_index as fi_mod
+        from aj_crew.dashboard import file_index as fi_mod
 
         monkeypatch.setattr(fi_mod, "_MAX_CACHED_ROOTS", 1)
         slow = tmp_path / "slow"
@@ -400,7 +400,7 @@ class TestFileIndexTruncation:
     @pytest.mark.asyncio
     async def test_walk_truncates_at_max_entries(self, tmp_path, monkeypatch):
         """Index must set truncated=True when entry cap is hit."""
-        from kiro_crew.dashboard import file_index as fi_mod
+        from aj_crew.dashboard import file_index as fi_mod
 
         monkeypatch.setattr(fi_mod, "_MAX_ENTRIES", 3)
         for i in range(10):

@@ -1,4 +1,4 @@
-"""The core registration seams in :mod:`kiro_crew.apps.seams`, and aws-control's providers.
+"""The core registration seams in :mod:`aj_crew.apps.seams`, and aws-control's providers.
 
 The registry is process-global, so every test that changes it does so through
 ``monkeypatch`` on ``seams._providers`` and the change is undone afterwards.
@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.apps import seams
+from aj_crew.apps import seams
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -100,7 +100,7 @@ class TestWorkerSlotModes:
             seams.register_worker_slot_mode(("some-app",))  # type: ignore[arg-type]
 
     def test_the_chat_create_paths_read_the_seam(self):
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         assert chat_handlers._CREATABLE_MODES == ("", *seams.worker_slot_modes())
 
@@ -119,10 +119,10 @@ class TestTheShippedProviders:
         """A CLI process that asks for the runtime must not pay for the app's routes."""
         code = (
             "import sys\n"
-            "from kiro_crew.apps import seams\n"
+            "from aj_crew.apps import seams\n"
             "assert seams.crew_runtime() is not None\n"
             "loaded = sorted(m for m in sys.modules\n"
-            "                if m.startswith('kiro_crew.apps.builtins.aws_control.backend'))\n"
+            "                if m.startswith('aj_crew.apps.builtins.aws_control.backend'))\n"
             "print(loaded)\n"
         )
         out = subprocess.run(
@@ -138,15 +138,15 @@ class TestTheShippedProviders:
 
     def test_the_package_still_serves_register_routes(self):
         """The gateway's startup loop asks ``hasattr(pkg, "register_routes")``."""
-        import kiro_crew.apps.builtins.aws_control as pkg
-        from kiro_crew.apps.builtins.aws_control.backend.routes import register_routes
+        import aj_crew.apps.builtins.aws_control as pkg
+        from aj_crew.apps.builtins.aws_control.backend.routes import register_routes
 
         assert pkg.register_routes is register_routes
         assert not hasattr(pkg, "on_disable")
 
     def test_the_account_policy_delegates_to_the_accounts_module(self, monkeypatch):
         """Looked up at call time, so a patch of ``accounts`` reaches core's callers."""
-        from kiro_crew.apps.builtins.aws_control.backend import accounts
+        from aj_crew.apps.builtins.aws_control.backend import accounts
 
         monkeypatch.setattr(accounts, "resolve_consent_target", AsyncMock(return_value=("p", "r")))
         monkeypatch.setattr(accounts, "configured_region", AsyncMock(return_value="eu-west-1"))
@@ -162,17 +162,17 @@ class TestTheShippedProviders:
         assert asyncio.run(policy.is_sso_profile("x")) is False
 
     def test_the_staging_provider_is_the_storage_modules(self, monkeypatch):
-        from kiro_crew.apps.builtins.aws_control.backend import storage
+        from aj_crew.apps.builtins.aws_control.backend import storage
 
         calls = []
         monkeypatch.setattr(storage, "pinned_staging", lambda prefix: calls.append(prefix) or 7)
         staging = seams.transfer_staging()
         assert staging is not None
-        assert staging.pinned_staging("kirocrew-x-") == 7
-        assert calls == ["kirocrew-x-"]
+        assert staging.pinned_staging("ajcrew-x-") == 7
+        assert calls == ["ajcrew-x-"]
 
     def test_the_bundle_digest_is_the_packaging_builders(self, monkeypatch, tmp_path):
-        from kiro_crew.apps.builtins.aws_control.crew.packaging import build
+        from aj_crew.apps.builtins.aws_control.crew.packaging import build
 
         monkeypatch.setattr(build, "bundle_digest", lambda path: f"digest:{path.name}")
         runtime = seams.crew_runtime()
@@ -184,18 +184,18 @@ class TestCoreCallersWithNoProvider:
     """What each core caller does when no app provides its seam."""
 
     def test_the_consent_card_names_the_default_chain(self, registry):
-        from kiro_crew import aws_consent
-        from kiro_crew.dashboard.handlers import aws_consent as consent_handlers
-        from kiro_crew.deploy import profiles as deploy_profiles
+        from aj_crew import aws_consent
+        from aj_crew.dashboard.handlers import aws_consent as consent_handlers
+        from aj_crew.deploy import profiles as deploy_profiles
 
         del registry[seams.SEAM_AWS_ACCOUNT_POLICY]
         target = asyncio.run(consent_handlers._effective_target(aws_consent.SERVICE_S3))
         assert target == ("", deploy_profiles.DEFAULT_REGION)
 
     def test_the_project_pill_reports_a_failed_probe_as_unavailable(self, registry, monkeypatch):
-        from kiro_crew import aws_consent
-        from kiro_crew.dashboard.handlers import aws_project_profile as handler
-        from kiro_crew.deploy import profiles as deploy_profiles
+        from aj_crew import aws_consent
+        from aj_crew.dashboard.handlers import aws_project_profile as handler
+        from aj_crew.deploy import profiles as deploy_profiles
 
         del registry[seams.SEAM_AWS_ACCOUNT_POLICY]
         seen = []
@@ -209,9 +209,9 @@ class TestCoreCallersWithNoProvider:
         assert seen == [("dev", deploy_profiles.DEFAULT_REGION)]
 
     def test_the_microvm_staging_refuses_rather_than_using_tmp(self, registry):
-        from kiro_crew.cloud.microvm import api
+        from aj_crew.cloud.microvm import api
 
         del registry[seams.SEAM_TRANSFER_STAGING]
         with pytest.raises(RuntimeError, match="no sandbox-masked staging root"):
-            with api.staging_dir("kirocrew-x-"):
+            with api.staging_dir("ajcrew-x-"):
                 pass

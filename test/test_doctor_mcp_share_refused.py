@@ -1,4 +1,4 @@
-"""``kirocrew doctor`` names servers set to share whose launch is refused.
+"""``ajcrew doctor`` names servers set to share whose launch is refused.
 
 A server in ``mcp_gateway.stub_servers`` whose launch approval is refused runs one
 copy per chat while config says it is shared. These tests pin that doctor says so,
@@ -15,10 +15,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.doctor_checks import mcp
-from kiro_crew.mcp_gateway import launch_approval
-from kiro_crew.security import CREDENTIAL_REDACTION_TAGS
-from kiro_crew.security.exfil import EXFILTRATION_REDACTION_TAG_PREFIX
+from aj_crew.doctor_checks import mcp
+from aj_crew.mcp_gateway import launch_approval
+from aj_crew.security import CREDENTIAL_REDACTION_TAGS
+from aj_crew.security.exfil import EXFILTRATION_REDACTION_TAG_PREFIX
 
 
 def _cfg(*, enabled: bool = True, stub: tuple[str, ...] = ("alpha-mcp", "beta-mcp")):
@@ -57,7 +57,7 @@ def test_refused_share_is_reported_as_an_issue_with_the_approve_path(refused, ca
     assert "Customize → Connections" in flat
     assert "Developer Mode" not in flat
     # Unflattened on purpose: the command must stay on one line to be pasteable.
-    assert "kirocrew restart" in out
+    assert "ajcrew restart" in out
     assert issues == ["2 MCP server(s) set to share are not shared: launch not approved"]
 
 

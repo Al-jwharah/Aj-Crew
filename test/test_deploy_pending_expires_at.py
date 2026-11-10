@@ -10,9 +10,9 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.deploy import handlers, pending
-from kiro_crew.mcp_tools import artifacts
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.deploy import handlers, pending
+from aj_crew.mcp_tools import artifacts
+from aj_crew.testing.clock import ManualClock
 
 # 11:59:45 UTC, so the 1-hour deadline reads 12:59 UTC.
 _CREATED = datetime(2026, 11, 6, 11, 59, 45, tzinfo=timezone.utc).timestamp()
@@ -62,8 +62,8 @@ def test_deadline_is_derived_not_stored(_isolate_store, monkeypatch):
 def _tool(monkeypatch, post_reply: dict) -> tuple[str, dict]:
     ManualClock(start=_CREATED).install(monkeypatch, artifacts)
     with (
-        patch("kiro_crew.mcp_core._post", return_value=post_reply),
-        patch("kiro_crew.deploy.pending.add_pending") as add,
+        patch("aj_crew.mcp_core._post", return_value=post_reply),
+        patch("aj_crew.deploy.pending.add_pending") as add,
     ):
         out = artifacts.deploy_artifact(
             "deploy_artifact", {"site_id": "s", "artifact_slug": "a", "ttl_hours": 72}

@@ -7,7 +7,7 @@
 //
 // Usage:
 //   npm run build
-//   OUT_DIR="$KIROCREW_SCRATCH/sidebar-hidden-refresh" node scripts/capture-sidebar-hidden-refresh.mjs
+//   OUT_DIR="$AJCREW_SCRATCH/sidebar-hidden-refresh" node scripts/capture-sidebar-hidden-refresh.mjs
 //   DIST=<another dist dir> captures a different build (e.g. the base) for comparison.
 import { chromium } from 'playwright'
 import { mkdirSync, writeFileSync } from 'fs'
@@ -23,7 +23,7 @@ const slots = Array.from({ length: 6 }, (_, i) => ({
   title: `Session ${i}`,
   running: false,
   messages: 3,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   last_ts: new Date(Date.now() - (i + 1) * 60_000).toISOString(),
 }))
 

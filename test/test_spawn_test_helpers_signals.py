@@ -14,8 +14,8 @@ import sys
 import pytest
 from spawn_test_helpers import process_group_report, unblocked_signals
 
-from kiro_crew import platform_compat
-from kiro_crew.testing.wait import default_timeout
+from aj_crew import platform_compat
+from aj_crew.testing.wait import default_timeout
 
 # Python puts its own SIGINT handler over a default (never over an ignore), so
 # "taken" is anything but SIG_IGN.

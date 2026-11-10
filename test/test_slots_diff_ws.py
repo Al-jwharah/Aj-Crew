@@ -20,11 +20,11 @@ from aiohttp import WSMsgType
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import revocation_gen, token_auth
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.dashboard.websocket_hub import SLOT_DIFF_CAPABILITY
-from kiro_crew.testing.wait import finished
+from aj_crew.dashboard import revocation_gen, token_auth
+from aj_crew.dashboard.handlers import updates
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.dashboard.websocket_hub import SLOT_DIFF_CAPABILITY
+from aj_crew.testing.wait import finished
 
 _SLOT = "slots-diff-e2e"
 _FENCE = "slots-diff-fence"
@@ -33,20 +33,20 @@ _APP = "slots-diff-app"
 
 @pytest.fixture
 def e2e_state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(token_auth, "_get_secret", lambda: b"slots-diff-test-signing-key")
     monkeypatch.setattr(token_auth, "_state", token_auth.TokenStateManager())
     monkeypatch.setattr(token_auth, "_app_perms_cache", {})
     monkeypatch.setattr(token_auth, "_revoked_store_singleton", None)
     monkeypatch.setattr(revocation_gen, "_gen", 0)
     # Through the facade: every state part that binds the name sees the patch.
-    monkeypatch.setattr("kiro_crew.dashboard.state._slots_broadcast_interval_for", lambda _n: 0.0)
+    monkeypatch.setattr("aj_crew.dashboard.state._slots_broadcast_interval_for", lambda _n: 0.0)
     stopped = asyncio.Event()
     monkeypatch.setattr(updates, "shutdown_event", stopped)
-    monkeypatch.setattr("kiro_crew.dashboard.ws.shutdown_event", stopped)
+    monkeypatch.setattr("aj_crew.dashboard.ws.shutdown_event", stopped)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.ws.load_declared_events_for_connect",
+        "aj_crew.dashboard.ws.load_declared_events_for_connect",
         lambda _app: (True, frozenset({"slots", "refresh"})),
     )
     st = _make_state(tmp_path)
@@ -86,7 +86,7 @@ async def _next_slot_frame(socket) -> dict:
 
 
 def _app(e2e_state):
-    from kiro_crew.dashboard.ws import api_ws
+    from aj_crew.dashboard.ws import api_ws
 
     app = _make_app(e2e_state)
     app.middlewares.insert(0, token_auth.token_auth_middleware())

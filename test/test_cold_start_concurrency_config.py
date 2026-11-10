@@ -21,16 +21,16 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import cli_doctor, cold_start_sizing, session_start_sizing
-from kiro_crew.acp import runtime_start
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.schema import build_json_schema
-from kiro_crew.config.sections import AgentConfig
-from kiro_crew.recovery import ladder as lad
-from kiro_crew.session import SessionManager
-from kiro_crew.session_allocation import FOREGROUND_COLD_START_RESERVE
-from kiro_crew.start_priority import StartPriority
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew import cli_doctor, cold_start_sizing, session_start_sizing
+from aj_crew.acp import runtime_start
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.schema import build_json_schema
+from aj_crew.config.sections import AgentConfig
+from aj_crew.recovery import ladder as lad
+from aj_crew.session import SessionManager
+from aj_crew.session_allocation import FOREGROUND_COLD_START_RESERVE
+from aj_crew.start_priority import StartPriority
+from aj_crew.testing.wait import await_until, finished
 
 
 @pytest.fixture(autouse=True)
@@ -61,7 +61,7 @@ def _pin_auto_width(monkeypatch: pytest.MonkeyPatch, width: int) -> None:
 
 
 def _agent(**fields: Any) -> Any:
-    agent = KiroCrewConfig().agent
+    agent = AjCrewConfig().agent
     for name, value in fields.items():
         setattr(agent, name, value)
     return agent
@@ -73,15 +73,15 @@ def _widths(agent: object) -> tuple[int, int]:
     return int(found[0]), int(found[1])
 
 
-def _load(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, agent: dict[str, Any]) -> KiroCrewConfig:
+def _load(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, agent: dict[str, Any]) -> AjCrewConfig:
     home = tmp_path / "kc"
     home.mkdir()
     (home / "config.json").write_text(json.dumps({"agent": agent}), encoding="utf-8")
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
-    return KiroCrewConfig.load()
+    monkeypatch.setenv("AJCREW_HOME", str(home))
+    return AjCrewConfig.load()
 
 
-def _manager(cfg: KiroCrewConfig) -> SessionManager:
+def _manager(cfg: AjCrewConfig) -> SessionManager:
     return SessionManager(cfg, provider_factory=lambda *a, **k: object())
 
 
@@ -95,7 +95,7 @@ def _background_width(mgr: SessionManager) -> int:
 
 
 def test_defaults_are_auto() -> None:
-    agent = KiroCrewConfig().agent
+    agent = AjCrewConfig().agent
     assert agent.cold_start_concurrency == "auto"
     assert agent.runtime_spawn_concurrency == "auto"
 
@@ -226,7 +226,7 @@ async def test_gateway_boot_sizes_every_width_in_one_thread_hop(
     width, then widens the session manager's queues on the loop."""
     import logging
 
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     on_main_thread = _record_host_probe_thread(monkeypatch)
     hops: list[object] = []
@@ -243,8 +243,8 @@ async def test_gateway_boot_sizes_every_width_in_one_thread_hop(
             threading.current_thread() is threading.main_thread()
         )
     )
-    orch = SimpleNamespace(_cfg=KiroCrewConfig(), sessions=sessions)
-    with caplog.at_level(logging.INFO, logger="kiro_crew.slack.gateway"):
+    orch = SimpleNamespace(_cfg=AjCrewConfig(), sessions=sessions)
+    with caplog.at_level(logging.INFO, logger="aj_crew.slack.gateway"):
         await GatewayOrchestrator._log_session_start_sizing(orch)  # type: ignore[arg-type]
 
     assert len(hops) == 1
@@ -264,7 +264,7 @@ def test_gateway_boot_path_takes_no_sizing_step() -> None:
     """
     import inspect
 
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     init_services = inspect.getsource(GatewayOrchestrator._init_services)
     run = inspect.getsource(GatewayOrchestrator.run)
@@ -282,7 +282,7 @@ def test_gateway_boot_path_takes_no_sizing_step() -> None:
 
 
 def test_session_manager_sizes_its_start_semaphore_from_config() -> None:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.cold_start_concurrency = 9
     mgr = _manager(cfg)
     assert _background_width(mgr) == 9
@@ -292,7 +292,7 @@ def test_session_manager_sizes_its_start_semaphore_from_config() -> None:
 @pytest.mark.parametrize(("width", "cold"), [(2, 4), (8, 8), (16, 16)])
 def test_session_manager_auto_width(monkeypatch: pytest.MonkeyPatch, width: int, cold: int) -> None:
     _pin_auto_width(monkeypatch, width)
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.session_start_concurrency = "auto"  # type: ignore[assignment]
     assert _background_width(_manager(cfg)) == cold
 
@@ -310,7 +310,7 @@ def test_session_manager_never_probes_the_host(monkeypatch: pytest.MonkeyPatch) 
         )
 
     monkeypatch.setattr(session_start_sizing, "probe_host_capacity", probe)
-    mgr = _manager(KiroCrewConfig())
+    mgr = _manager(AjCrewConfig())
     assert probes == []
     assert _background_width(mgr) == cold_start_sizing.COLD_START_DEFAULT
     assert (
@@ -325,7 +325,7 @@ async def test_widening_moves_both_queues_to_the_host_sized_widths(
 ) -> None:
     """The gateway's post-bind reading grows a manager built at the floors."""
     monkeypatch.setattr(session_start_sizing, "_host_cached", None)
-    mgr = _manager(KiroCrewConfig())
+    mgr = _manager(AjCrewConfig())
     admission = runtime_start._cold_start_admission()
     assert admission.semaphore.limit == 2
     _pin_auto_width(monkeypatch, 16)  # the reading lands
@@ -341,7 +341,7 @@ async def test_widening_moves_both_queues_to_the_host_sized_widths(
 
 
 def test_widening_leaves_an_explicit_width_alone(monkeypatch: pytest.MonkeyPatch) -> None:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.cold_start_concurrency = 3
     cfg.agent.runtime_spawn_concurrency = 1
     mgr = _manager(cfg)
@@ -354,7 +354,7 @@ def test_widening_leaves_an_explicit_width_alone(monkeypatch: pytest.MonkeyPatch
 @pytest.mark.asyncio
 async def test_the_identity_sweep_drain_waits_for_every_configured_permit() -> None:
     """The sweep's barrier is the semaphore's own capacity, so it covers a wider queue."""
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.cold_start_concurrency = 7
     sem = _manager(cfg)._start_sem
     for _ in range(7):
@@ -386,7 +386,7 @@ async def test_the_identity_sweep_drain_waits_for_every_configured_permit() -> N
 
 @pytest.mark.asyncio
 async def test_runtime_admission_is_sized_from_config() -> None:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.runtime_spawn_concurrency = 6
     _manager(cfg)
     assert cold_start_sizing.configured_runtime_spawn_width() == 6
@@ -398,7 +398,7 @@ async def test_runtime_admission_auto_follows_the_start_width(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _pin_auto_width(monkeypatch, 16)
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.session_start_concurrency = "auto"  # type: ignore[assignment]
     _manager(cfg)
     assert runtime_start._cold_start_admission().semaphore._value == 8
@@ -417,7 +417,7 @@ async def test_an_admission_made_before_the_manager_grows_to_its_width() -> None
     """A spawn that ran before any manager published is not stuck at the default."""
     first = runtime_start._cold_start_admission()
     assert first.semaphore.limit == runtime_start._COLD_START_MAX_CONCURRENT
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.runtime_spawn_concurrency = 7
     _manager(cfg)
     assert runtime_start._cold_start_admission() is first
@@ -427,7 +427,7 @@ async def test_an_admission_made_before_the_manager_grows_to_its_width() -> None
 
 @pytest.mark.asyncio
 async def test_an_admission_never_shrinks() -> None:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.runtime_spawn_concurrency = 6
     _manager(cfg)
     first = runtime_start._cold_start_admission()
@@ -447,7 +447,7 @@ def test_gateway_builds_the_session_manager_before_anything_can_spawn() -> None:
     import inspect
     import re
 
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     run = inspect.getsource(GatewayOrchestrator.run)
     init_steps = re.findall(r"self\.(_init_\w+)\(", run)
@@ -464,9 +464,9 @@ async def test_spawn_enters_an_admission_of_the_configured_width(
 ) -> None:
     """``spawn`` takes no extra await before admission, so concurrent spawns queue
     in arrival order (a pre-admission await let a third spawn trail the check)."""
-    from kiro_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.runtime import AcpRuntime
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.runtime_spawn_concurrency = 5
     _manager(cfg)
     seen: list[int] = []
@@ -480,12 +480,12 @@ async def test_spawn_enters_an_admission_of_the_configured_width(
 
 
 # --------------------------------------------------------------------------- #
-# kirocrew doctor
+# ajcrew doctor
 # --------------------------------------------------------------------------- #
 
 
 def test_doctor_prints_explicit_limits(capsys: pytest.CaptureFixture[str]) -> None:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.cold_start_concurrency = 12
     cfg.agent.runtime_spawn_concurrency = 5
     cli_doctor._doctor_overload_resilience(cfg)
@@ -497,7 +497,7 @@ def test_doctor_prints_resolved_auto_limits(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     _pin_auto_width(monkeypatch, 16)
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.session_start_concurrency = "auto"  # type: ignore[assignment]
     cli_doctor._doctor_overload_resilience(cfg)
     out = capsys.readouterr().out

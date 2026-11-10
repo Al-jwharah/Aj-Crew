@@ -12,19 +12,19 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import platform_compat, session_pid
-from kiro_crew.acp import client, runtime, session_mcp
-from kiro_crew.acp.types import (
+from aj_crew import platform_compat, session_pid
+from aj_crew.acp import client, runtime, session_mcp
+from aj_crew.acp.types import (
     METHOD_SESSION_LOAD,
     METHOD_SESSION_NEW,
     METHOD_SESSION_TERMINATE,
     METHOD_SET_MODE,
     JsonRpcMessage,
 )
-from kiro_crew.security import paths as security_paths
-from kiro_crew.session_cleanup import SessionCleanup
-from kiro_crew.testing.wait import await_until
-from kiro_crew.watchdog import CleanupHook, SessionWatchdog
+from aj_crew.security import paths as security_paths
+from aj_crew.session_cleanup import SessionCleanup
+from aj_crew.testing.wait import await_until
+from aj_crew.watchdog import CleanupHook, SessionWatchdog
 
 
 class SimulatedKernel:
@@ -251,7 +251,7 @@ async def test_cancelled_descendant_scan_terminates_only_failed_session(
         assert child_lines(lifecycle) == {"1001:1000:child-1001"}
         assert rt.is_alive()
         # Exercise a real handle operation after the failed co-tenant's unwind.
-        await await_until(asyncio.ensure_future(sibling.set_mode("kirocrew")))
+        await await_until(asyncio.ensure_future(sibling.set_mode("ajcrew")))
         assert lifecycle.kernel.signals == []
     finally:
         rt._descendant_scan_lock.release()

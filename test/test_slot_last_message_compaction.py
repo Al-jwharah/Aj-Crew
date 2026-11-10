@@ -13,7 +13,7 @@ compaction notice variant. Mirrors the frontend's `deriveFollowUpOptions` skip.
 
 from __future__ import annotations
 
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.state import _ChatSlot
 
 _COMPACT_META = {"kind": "compaction"}
 _AUTO_COMPACT_MSG = "🔄 Auto-compacted at 93%."

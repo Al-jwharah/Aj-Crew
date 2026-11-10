@@ -1,4 +1,4 @@
-"""Coverage of the remaining branches in ``kiro_crew.hooks``' file helpers.
+"""Coverage of the remaining branches in ``aj_crew.hooks``' file helpers.
 
 A symlink swapped in after canonicalization, the opened inode's real path
 re-screened, a failed stage write, access controls carried across the atomic
@@ -21,8 +21,8 @@ from hooks_coverage_helpers import (
     _write,
 )
 
-from kiro_crew import hooks as hooks_mod
-from kiro_crew.hooks import (
+from aj_crew import hooks as hooks_mod
+from aj_crew.hooks import (
     safe_copy_file_nolink,
     safe_read_file,
     safe_read_file_bytes_nolink,
@@ -38,7 +38,7 @@ class TestSafeReadFileSymlinkRace:
     def test_eloop_after_canonicalization_is_refused(self, tmp_path, monkeypatch):
         import errno as _errno
 
-        from kiro_crew import platform_compat as _pc
+        from aj_crew import platform_compat as _pc
 
         f = _write(tmp_path / "a.txt", "x")
         real_no_reparse = _pc.open_file_no_reparse

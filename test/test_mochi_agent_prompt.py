@@ -12,9 +12,9 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.apps.bridges import _apply_agent_prompt
-from kiro_crew.apps.builtins.mochi import soul_loader
+from aj_crew import platform_compat
+from aj_crew.apps.bridges import _apply_agent_prompt
+from aj_crew.apps.builtins.mochi import soul_loader
 
 
 class TestApplyAgentPrompt:
@@ -144,7 +144,7 @@ class TestWriteAgentPrompt:
 
 class TestPolicyCarriesThePrompt:
     def test_build_policy_pins_a_prompt_for_every_agent(self, tmp_path):
-        from kiro_crew.apps.builtins.mochi.agent_policy import BG_AGENT, CHAT_AGENT, build_policy
+        from aj_crew.apps.builtins.mochi.agent_policy import BG_AGENT, CHAT_AGENT, build_policy
 
         policy = build_policy({}, tmp_path)
         assert (
@@ -163,13 +163,13 @@ class TestPolicyCarriesThePrompt:
         subagents, save lessons, and answer in plain text — none of which it can
         do. A single shared path would silently restore that.
         """
-        from kiro_crew.apps.builtins.mochi.agent_policy import BG_AGENT, CHAT_AGENT, build_policy
+        from aj_crew.apps.builtins.mochi.agent_policy import BG_AGENT, CHAT_AGENT, build_policy
 
         policy = build_policy({}, tmp_path)
         assert policy["agents"][CHAT_AGENT]["prompt"] != policy["agents"][BG_AGENT]["prompt"]
 
     def test_without_a_data_dir_no_prompt_is_claimed(self):
-        from kiro_crew.apps.builtins.mochi.agent_policy import CHAT_AGENT, build_policy
+        from aj_crew.apps.builtins.mochi.agent_policy import CHAT_AGENT, build_policy
 
         policy = build_policy({})
         assert "prompt" not in policy["agents"][CHAT_AGENT]

@@ -674,10 +674,10 @@ describe('Lightbox download', () => {
 
   it('falls back to the alt text when the source carries no filename', async () => {
     render(<Lightbox />); const container = document.body
-    act(() => open('data:image/png;base64,iVBORw0KGgo=', 'Kiro Crew banner'))
+    act(() => open('data:image/png;base64,iVBORw0KGgo=', 'Aj Crew banner'))
     clickDownload(container)
     await waitFor(() => expect(clicks).toHaveLength(1))
-    expect(clicks[0].download).toBe('Kiro_Crew_banner')
+    expect(clicks[0].download).toBe('Aj_Crew_banner')
   })
 
   it('opens the image in a new tab when the fetch is refused', async () => {

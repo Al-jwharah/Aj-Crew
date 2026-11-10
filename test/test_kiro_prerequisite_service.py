@@ -1,8 +1,8 @@
 """``kiro_prerequisite.py`` keeps its BASE surface while its code lives in sibling owners.
 
-``kiro_crew.kiro_prerequisite`` was one module. Its code now lives in ten sibling
+``aj_crew.kiro_prerequisite`` was one module. Its code now lives in ten sibling
 ``kiro_prerequisite_<role>`` owners, and the module itself is a
-:mod:`kiro_crew._facade_mirror` facade, so a patch of ``kiro_crew.kiro_prerequisite.<name>``
+:mod:`aj_crew._facade_mirror` facade, so a patch of ``aj_crew.kiro_prerequisite.<name>``
 reaches every owner that reads the name. These tests freeze what the split must not
 change, measured on the one-module file:
 
@@ -33,18 +33,18 @@ import owner_import_scan
 import pytest
 import source_corpus
 
-import kiro_crew
-from kiro_crew import _facade_mirror
-from kiro_crew import kiro_prerequisite as facade
-from kiro_crew import kiro_prerequisite_service as service_module
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
+import aj_crew
+from aj_crew import _facade_mirror
+from aj_crew import kiro_prerequisite as facade
+from aj_crew import kiro_prerequisite_service as service_module
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService
 
-# Walks src/kiro_crew for owner imports; keep it on one worker.
+# Walks src/aj_crew for owner imports; keep it on one worker.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_kiro_prerequisite_service")
 
-_SRC = Path(kiro_crew.__file__).resolve().parent
-_FACADE = "kiro_crew.kiro_prerequisite"
-_OWNER_PREFIX = "kiro_crew.kiro_prerequisite_"
+_SRC = Path(aj_crew.__file__).resolve().parent
+_FACADE = "aj_crew.kiro_prerequisite"
+_OWNER_PREFIX = "aj_crew.kiro_prerequisite_"
 
 #: Every module-level name ``kiro_prerequisite.py`` bound before the split.
 _BASE_MODULE_NAMES = frozenset("""
@@ -203,31 +203,31 @@ _BASE_MEMBERS: dict[str, tuple[str, bool, str]] = {
 
 #: Members bound from a collaborator -> the owner whose function the class attribute is.
 _BOUND: dict[str, str] = {
-    "_agent_spec_overlay": "kiro_crew.kiro_prerequisite_agent_specs",
-    "_audited_identity_probe": "kiro_crew.kiro_prerequisite_probe",
-    "_audited_probe": "kiro_crew.kiro_prerequisite_probe",
-    "_maybe_latch_interim_identity": "kiro_crew.kiro_prerequisite_identity_tracking",
-    "_missing_agent_specs": "kiro_crew.kiro_prerequisite_agent_specs",
-    "_probe": "kiro_crew.kiro_prerequisite_probe",
-    "_probe_acp_support": "kiro_crew.kiro_prerequisite_probe",
-    "_probe_kas_spec_loading": "kiro_crew.kiro_prerequisite_agent_specs",
-    "_probe_spec_acceptance": "kiro_crew.kiro_prerequisite_agent_specs",
-    "_repair_agent_specs": "kiro_crew.kiro_prerequisite_agent_specs",
-    "_repair_auxiliary_specs": "kiro_crew.kiro_prerequisite_agent_specs",
-    "_run_auth_command": "kiro_crew.kiro_prerequisite_probe",
-    "_set_terminal_audit": "kiro_crew.kiro_prerequisite_probe",
-    "_stamp_probe": "kiro_crew.kiro_prerequisite_probe",
-    "current_identity_fingerprint": "kiro_crew.kiro_prerequisite_identity_tracking",
-    "identity_changed_since_probe": "kiro_crew.kiro_prerequisite_identity_tracking",
-    "identity_changed_since_sessions": "kiro_crew.kiro_prerequisite_identity_tracking",
-    "note_absence_swept": "kiro_crew.kiro_prerequisite_identity_tracking",
-    "identity_read_other_than": "kiro_crew.kiro_prerequisite_identity_tracking",
-    "note_sessions_reconciled": "kiro_crew.kiro_prerequisite_identity_tracking",
-    "read_spawn_identity": "kiro_crew.kiro_prerequisite_identity_tracking",
-    "repair_agent_specs": "kiro_crew.kiro_prerequisite_agent_specs",
-    "seed_sessions_baseline": "kiro_crew.kiro_prerequisite_identity_tracking",
-    "signed_out_confirmed": "kiro_crew.kiro_prerequisite_probe",
-    "update_cli": "kiro_crew.kiro_prerequisite_probe",
+    "_agent_spec_overlay": "aj_crew.kiro_prerequisite_agent_specs",
+    "_audited_identity_probe": "aj_crew.kiro_prerequisite_probe",
+    "_audited_probe": "aj_crew.kiro_prerequisite_probe",
+    "_maybe_latch_interim_identity": "aj_crew.kiro_prerequisite_identity_tracking",
+    "_missing_agent_specs": "aj_crew.kiro_prerequisite_agent_specs",
+    "_probe": "aj_crew.kiro_prerequisite_probe",
+    "_probe_acp_support": "aj_crew.kiro_prerequisite_probe",
+    "_probe_kas_spec_loading": "aj_crew.kiro_prerequisite_agent_specs",
+    "_probe_spec_acceptance": "aj_crew.kiro_prerequisite_agent_specs",
+    "_repair_agent_specs": "aj_crew.kiro_prerequisite_agent_specs",
+    "_repair_auxiliary_specs": "aj_crew.kiro_prerequisite_agent_specs",
+    "_run_auth_command": "aj_crew.kiro_prerequisite_probe",
+    "_set_terminal_audit": "aj_crew.kiro_prerequisite_probe",
+    "_stamp_probe": "aj_crew.kiro_prerequisite_probe",
+    "current_identity_fingerprint": "aj_crew.kiro_prerequisite_identity_tracking",
+    "identity_changed_since_probe": "aj_crew.kiro_prerequisite_identity_tracking",
+    "identity_changed_since_sessions": "aj_crew.kiro_prerequisite_identity_tracking",
+    "note_absence_swept": "aj_crew.kiro_prerequisite_identity_tracking",
+    "identity_read_other_than": "aj_crew.kiro_prerequisite_identity_tracking",
+    "note_sessions_reconciled": "aj_crew.kiro_prerequisite_identity_tracking",
+    "read_spawn_identity": "aj_crew.kiro_prerequisite_identity_tracking",
+    "repair_agent_specs": "aj_crew.kiro_prerequisite_agent_specs",
+    "seed_sessions_baseline": "aj_crew.kiro_prerequisite_identity_tracking",
+    "signed_out_confirmed": "aj_crew.kiro_prerequisite_probe",
+    "update_cli": "aj_crew.kiro_prerequisite_probe",
 }
 
 
@@ -266,7 +266,7 @@ def _member(cls: type, name: str) -> tuple[str, object]:
 def test_the_facade_serves_a_mirror_over_every_sibling_owner() -> None:
     assert isinstance(facade, _facade_mirror.MirroredModule)
     index = _index()
-    on_disk = sorted(f"kiro_crew.{path.stem}" for path in _SRC.glob("kiro_prerequisite_*.py"))
+    on_disk = sorted(f"aj_crew.{path.stem}" for path in _SRC.glob("kiro_prerequisite_*.py"))
     assert sorted(index.owners) == on_disk
     assert index.excluded == ()
     assert index.divergent() == ()
@@ -298,7 +298,7 @@ def test_every_served_import_is_named_for_type_checkers() -> None:
     """A name the family imports and the facade serves is in a ``TYPE_CHECKING`` group.
 
     The facade binds none of them, so this group is what keeps
-    ``from kiro_crew.kiro_prerequisite import CRED_KIRO_API_KEY`` visible to mypy.
+    ``from aj_crew.kiro_prerequisite import CRED_KIRO_API_KEY`` visible to mypy.
     """
     index = _index()
     defined = set().union(
@@ -438,14 +438,14 @@ def test_only_the_family_imports_an_owner() -> None:
 
 
 def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None:
-    root = tmp_path / "kiro_crew"
+    root = tmp_path / "aj_crew"
     sources = {
-        root / "pkg" / "caller.py": "from kiro_crew.kiro_prerequisite_probe import _probe\n",
-        root / "other.py": "from kiro_crew import kiro_prerequisite_status as status\n",
+        root / "pkg" / "caller.py": "from aj_crew.kiro_prerequisite_probe import _probe\n",
+        root / "other.py": "from aj_crew import kiro_prerequisite_status as status\n",
         root / "relative.py": "from .kiro_prerequisite_identity import identity_fingerprint\n",
         root / "pkg" / "up.py": "from .. import kiro_prerequisite_process\n",
         root
-        / "facade_user.py": "from kiro_crew.kiro_prerequisite import KiroPrerequisiteService\n",
+        / "facade_user.py": "from aj_crew.kiro_prerequisite import KiroPrerequisiteService\n",
     }
     assert _owner_importers(sources.items(), root) == {
         "pkg/caller.py",
@@ -507,24 +507,24 @@ async def test_an_unresolvable_launcher_omits_the_hints(
 def test_the_resolver_wrapper_formats_the_resolved_launcher(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew import agent
-    from kiro_crew.kiro_prerequisite_status import config_set_hints_for_launcher
+    from aj_crew import agent
+    from aj_crew.kiro_prerequisite_status import config_set_hints_for_launcher
 
-    monkeypatch.setattr(agent, "_resolve_kirocrew_bin", lambda: "/opt/kiro crew/kirocrew")
+    monkeypatch.setattr(agent, "_resolve_ajcrew_bin", lambda: "/opt/aj crew/ajcrew")
 
     hints = service_module._resolve_config_set_hints()
 
-    assert hints == config_set_hints_for_launcher("/opt/kiro crew/kirocrew", sys.platform)
+    assert hints == config_set_hints_for_launcher("/opt/aj crew/ajcrew", sys.platform)
 
 
 def test_the_resolver_wrapper_survives_a_resolver_failure(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew import agent
+    from aj_crew import agent
 
     def boom() -> str:
         raise OSError("install pruned")
 
-    monkeypatch.setattr(agent, "_resolve_kirocrew_bin", boom)
+    monkeypatch.setattr(agent, "_resolve_ajcrew_bin", boom)
 
     assert service_module._resolve_config_set_hints() is None

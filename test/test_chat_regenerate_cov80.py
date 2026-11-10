@@ -1,5 +1,5 @@
 """Coverage for the guard and failure paths of
-:mod:`kiro_crew.dashboard.chat_regenerate`.
+:mod:`aj_crew.dashboard.chat_regenerate`.
 
 ``test_dashboard_chat_regenerate.py::TestRegenerateAndVariants`` covers the happy paths of
 regenerate and variant switching. Untested there: ``edit-resend`` in its
@@ -28,12 +28,12 @@ from aiohttp.test_utils import make_mocked_request
 from chat_regenerate_cov80_helpers import state_fixture  # noqa: F401
 from chat_regenerate_cov80_helpers import _client, _make_regen_app
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.dashboard import chat_regenerate
-from kiro_crew.dashboard.chat_regenerate import (
+from aj_crew.config import AjCrewConfig
+from aj_crew.dashboard import chat_regenerate
+from aj_crew.dashboard.chat_regenerate import (
     api_chat_slot_edit_resend,
 )
-from kiro_crew.testing.wait import async_wait_until, finished
+from aj_crew.testing.wait import async_wait_until, finished
 
 # Ceiling for the cross-thread gates below. Generous rather than tight: it is a
 # deadlock backstop, never a synchronisation point, so a slow shared runner must
@@ -103,7 +103,7 @@ async def test_regenerate_skips_a_trailing_system_notice(state) -> None:
         captured.append(list(slot._pending_variants))
         targets.append(slot._regenerate_target)
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=_capture):
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=_capture):
         async with _client(state) as client:
             resp = await client.post("/api/chat/slots/s1/regenerate")
             assert resp.status == 200
@@ -150,14 +150,14 @@ async def test_readiness_latch_blocks_before_the_dispatch(state) -> None:
     """An unverified backend is rejected before any turn is dispatched or any
     replace target is armed."""
     # The gate asks only when the applied harness signs in via kiro-cli.
-    state.sessions._cfg = KiroCrewConfig.load()
+    state.sessions._cfg = AjCrewConfig.load()
     slot = state.get_or_create_slot("s1")
     slot.append("user", "hi")
     slot.append("assistant", "hello v1")
     blocked = web.json_response({"error": "kiro not verified"}, status=503)
 
     with patch(
-        "kiro_crew.dashboard.chat_regenerate.reject_if_kiro_unverified",
+        "aj_crew.dashboard.chat_regenerate.reject_if_kiro_unverified",
         new=AsyncMock(return_value=blocked),
     ):
         async with _client(state) as client:
@@ -179,8 +179,8 @@ async def test_regenerate_writes_nothing_before_the_turn(state) -> None:
 
     saved = AsyncMock(return_value=True)
     with (
-        patch("kiro_crew.dashboard.chat_regenerate.save_slot_off_loop", new=saved),
-        patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_regenerate.save_slot_off_loop", new=saved),
+        patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()),
     ):
         async with _client(state) as client:
             resp = await client.post("/api/chat/slots/s1/regenerate")
@@ -201,7 +201,7 @@ async def test_unconsumed_variants_are_discarded_with_a_warning(state, caplog) -
     slot.drain()
 
     with patch(
-        "kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()
+        "aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()
     ):  # returns without consuming _pending_variants
         with caplog.at_level("WARNING"):
             async with _client(state) as client:
@@ -339,7 +339,7 @@ async def test_switch_variant_restores_the_row_when_the_save_is_refused(state) -
     ]
 
     with patch(
-        "kiro_crew.dashboard.chat_regenerate.save_slot_off_loop",
+        "aj_crew.dashboard.chat_regenerate.save_slot_off_loop",
         AsyncMock(return_value=False),
     ):
         async with _client(state) as client:
@@ -388,7 +388,7 @@ async def test_switch_variant_restores_the_row_before_an_app_is_answered_not_fou
 
     request.json = _json  # type: ignore[method-assign]
     with patch(
-        "kiro_crew.dashboard.chat_regenerate.save_slot_off_loop",
+        "aj_crew.dashboard.chat_regenerate.save_slot_off_loop",
         AsyncMock(side_effect=_refused_after_a_pop),
     ):
         resp = await chat_regenerate.api_chat_slot_switch_variant(request)
@@ -431,7 +431,7 @@ async def test_switch_variant_survives_a_persist_failure(state, caplog) -> None:
     slot.messages[-1]["variants"] = [{"content": "v1", "ts": "t1"}, {"content": "v2"}]
 
     with patch(
-        "kiro_crew.dashboard.chat_regenerate.save_slot_off_loop",
+        "aj_crew.dashboard.chat_regenerate.save_slot_off_loop",
         new=AsyncMock(side_effect=OSError("disk full")),
     ):
         with caplog.at_level("WARNING"):
@@ -464,7 +464,7 @@ async def test_regenerate_pins_the_replace_target_to_its_transcript(state) -> No
     async def _capture(*args, **kwargs) -> None:
         armed.append((slot._regenerate_target, slot._turn_generation))
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=_capture):
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=_capture):
         async with _client(state) as client:
             resp = await client.post("/api/chat/slots/s1/regenerate")
             assert resp.status == 200
@@ -490,7 +490,7 @@ async def test_switch_variant_pins_the_persist_to_its_transcript(state) -> None:
     slot.drain()
 
     saved = AsyncMock(return_value=True)
-    with patch("kiro_crew.dashboard.chat_regenerate.save_slot_off_loop", new=saved):
+    with patch("aj_crew.dashboard.chat_regenerate.save_slot_off_loop", new=saved):
         async with _client(state) as client:
             resp = await client.post("/api/chat/slots/s1/switch-variant", json={"index": 0})
             assert resp.status == 200
@@ -555,8 +555,8 @@ async def test_edit_resend_pins_the_truncating_write_to_its_transcript(state) ->
 
     saved = AsyncMock(return_value=True)
     with (
-        patch("kiro_crew.dashboard.chat_regenerate.save_slot_off_loop", new=saved),
-        patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_regenerate.save_slot_off_loop", new=saved),
+        patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()),
     ):
         async with _client(state) as client:
             resp = await client.post(
@@ -600,7 +600,7 @@ async def test_edit_resend_skips_the_write_when_the_slot_is_recreated(state) -> 
             "get_metadata_status",
             side_effect=_swap_inside_the_locked_write,
         ),
-        patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()) as run,
+        patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()) as run,
     ):
         async with _client(state) as client:
             resp = await client.post(
@@ -632,7 +632,7 @@ async def test_edit_resend_by_ts_truncates_and_resends(state) -> None:
     slot.drain()
     run = AsyncMock()
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=run):
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=run):
         async with _client(state) as client:
             resp = await client.post(
                 "/api/chat/slots/s1/edit-resend",
@@ -657,7 +657,7 @@ async def test_edit_resend_by_index_truncates_from_that_row(state) -> None:
     slot.append("assistant", "answer")
     slot.drain()
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()):
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()):
         async with _client(state) as client:
             resp = await client.post(
                 "/api/chat/slots/s1/edit-resend", json={"index": 0, "content": "edited"}
@@ -674,7 +674,7 @@ async def test_edit_resend_delivers_the_owners_edit_as_typed(state) -> None:
     slot.append("user", "first")
     slot.drain()
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()) as run:
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()) as run:
         async with _client(state) as client:
             resp = await client.post(
                 "/api/chat/slots/s1/edit-resend",
@@ -836,13 +836,13 @@ async def test_edit_resend_rejected_while_a_turn_is_in_flight(state) -> None:
 @pytest.mark.asyncio
 async def test_edit_resend_readiness_latch_blocks_before_the_truncation(state) -> None:
     # The gate asks only when the applied harness signs in via kiro-cli.
-    state.sessions._cfg = KiroCrewConfig.load()
+    state.sessions._cfg = AjCrewConfig.load()
     slot = state.get_or_create_slot("s1")
     slot.append("user", "first")
     blocked = web.json_response({"error": "kiro not verified"}, status=503)
 
     with patch(
-        "kiro_crew.dashboard.chat_regenerate.reject_if_kiro_unverified",
+        "aj_crew.dashboard.chat_regenerate.reject_if_kiro_unverified",
         new=AsyncMock(return_value=blocked),
     ):
         async with _client(state) as client:
@@ -868,10 +868,10 @@ async def test_edit_resend_rejects_when_the_history_save_raises(state, caplog) -
 
     with (
         patch(
-            "kiro_crew.dashboard.chat_persistence._save_slot_to_history",
+            "aj_crew.dashboard.chat_persistence._save_slot_to_history",
             side_effect=OSError("disk full"),
         ),
-        patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=run),
+        patch("aj_crew.dashboard.chat_regenerate._run_chat", new=run),
     ):
         with caplog.at_level("WARNING"):
             async with _client(state) as client:
@@ -902,10 +902,10 @@ async def test_edit_resend_rejects_when_the_save_is_refused(state) -> None:
 
     with (
         patch(
-            "kiro_crew.dashboard.chat_persistence._save_slot_to_history",
+            "aj_crew.dashboard.chat_persistence._save_slot_to_history",
             MagicMock(return_value=False),
         ),
-        patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=run),
+        patch("aj_crew.dashboard.chat_regenerate._run_chat", new=run),
     ):
         async with _client(state) as client:
             resp = await client.post(
@@ -933,8 +933,8 @@ async def test_edit_resend_rejects_when_the_native_boundary_cannot_be_discarded(
     run = AsyncMock()
 
     with (
-        patch("kiro_crew.dashboard.chat_persistence._save_slot_to_history") as save,
-        patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=run),
+        patch("aj_crew.dashboard.chat_persistence._save_slot_to_history") as save,
+        patch("aj_crew.dashboard.chat_regenerate._run_chat", new=run),
     ):
         async with _client(state) as client:
             resp = await client.post(
@@ -963,8 +963,8 @@ async def test_edit_resend_rejects_when_the_sid_flush_fails(state) -> None:
     run = AsyncMock()
 
     with (
-        patch("kiro_crew.dashboard.chat_persistence._save_slot_to_history") as save,
-        patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=run),
+        patch("aj_crew.dashboard.chat_persistence._save_slot_to_history") as save,
+        patch("aj_crew.dashboard.chat_regenerate._run_chat", new=run),
     ):
         async with _client(state) as client:
             resp = await client.post(
@@ -995,8 +995,8 @@ async def test_edit_resend_refuses_a_busy_session_with_409(state) -> None:
     run = AsyncMock()
 
     with (
-        patch("kiro_crew.dashboard.chat_persistence._save_slot_to_history") as save,
-        patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=run),
+        patch("aj_crew.dashboard.chat_persistence._save_slot_to_history") as save,
+        patch("aj_crew.dashboard.chat_regenerate._run_chat", new=run),
     ):
         async with _client(state) as client:
             resp = await client.post(
@@ -1037,8 +1037,8 @@ async def test_edit_resend_discards_the_native_conversation_before_persisting(st
 
     run = AsyncMock()
     with (
-        patch("kiro_crew.dashboard.chat_persistence._save_slot_to_history", side_effect=_save),
-        patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=run),
+        patch("aj_crew.dashboard.chat_persistence._save_slot_to_history", side_effect=_save),
+        patch("aj_crew.dashboard.chat_regenerate._run_chat", new=run),
     ):
         async with _client(state) as client:
             resp = await client.post(
@@ -1095,10 +1095,10 @@ async def test_edit_resend_cancelled_mid_save_keeps_live_and_disk_in_sync(state)
     try:
         with (
             patch(
-                "kiro_crew.dashboard.chat_persistence._save_slot_to_history",
+                "aj_crew.dashboard.chat_persistence._save_slot_to_history",
                 side_effect=_gated_save,
             ),
-            patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=run),
+            patch("aj_crew.dashboard.chat_regenerate._run_chat", new=run),
         ):
             app = _make_regen_app(state)
             fake_request = make_mocked_request(
@@ -1168,10 +1168,10 @@ async def test_edit_resend_excludes_the_periodic_flush_during_the_rewrite(state)
 
     with (
         patch(
-            "kiro_crew.dashboard.chat_persistence._save_slot_to_history",
+            "aj_crew.dashboard.chat_persistence._save_slot_to_history",
             side_effect=_save_observing_inflight,
         ),
-        patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()),
     ):
         async with _client(state) as client:
             resp = await client.post(
@@ -1213,10 +1213,10 @@ async def test_edit_resend_repeated_cancellation_still_commits_the_landed_rewrit
     try:
         with (
             patch(
-                "kiro_crew.dashboard.chat_persistence._save_slot_to_history",
+                "aj_crew.dashboard.chat_persistence._save_slot_to_history",
                 side_effect=_gated_save,
             ),
-            patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=run),
+            patch("aj_crew.dashboard.chat_regenerate._run_chat", new=run),
         ):
             app = _make_regen_app(state)
             fake_request = make_mocked_request(
@@ -1262,7 +1262,7 @@ async def test_edit_resend_logs_a_failing_background_turn(state, caplog) -> None
     slot.drain()
 
     with patch(
-        "kiro_crew.dashboard.chat_regenerate._run_chat",
+        "aj_crew.dashboard.chat_regenerate._run_chat",
         new=AsyncMock(side_effect=RuntimeError("backend exploded")),
     ):
         with caplog.at_level("ERROR"):
@@ -1359,7 +1359,7 @@ async def test_a_paused_crew_session_keeps_its_history_when_asked_to_redo_it(
 ) -> None:
     """Ultra Mode "Pause all" holds the session: its replacement turn could not
     run, so the history is left as it is and the refusal says why."""
-    from kiro_crew import crew_pause
+    from aj_crew import crew_pause
 
     stored = {"read": False}
     monkeypatch.setattr(crew_pause, "holds_slot", lambda sl: stored["read"] and sl.key == "s1")
@@ -1383,8 +1383,8 @@ async def test_a_paused_crew_session_keeps_its_history_when_asked_to_redo_it(
 async def test_a_pause_landing_during_the_edit_probe_keeps_the_history(state, monkeypatch) -> None:
     """Pause all lands while Edit & Resend awaits its sub-agent probe: the edit is
     refused before the history is cut, so the edited prompt is not silently lost."""
-    from kiro_crew import crew_pause
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew import crew_pause
+    from aj_crew.dashboard import chat_handlers
 
     paused = {"now": False}
     monkeypatch.setattr(crew_pause, "holds_slot", lambda sl: paused["now"])
@@ -1410,7 +1410,7 @@ async def test_a_pause_landing_during_the_edit_probe_keeps_the_history(state, mo
 @pytest.mark.asyncio
 async def test_switching_a_variant_is_not_held_by_a_crew_pause(state, monkeypatch) -> None:
     """A variant switch starts no turn, so a paused crew may still read its replies."""
-    from kiro_crew import crew_pause
+    from aj_crew import crew_pause
 
     monkeypatch.setattr(crew_pause, "holds_slot", lambda sl: True)
     slot = state.get_or_create_slot("s1")

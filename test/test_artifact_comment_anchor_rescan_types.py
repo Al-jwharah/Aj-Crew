@@ -13,9 +13,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.artifact_store.comments import rescan_anchors
-from kiro_crew.artifact_store.model import ArtifactComment
-from kiro_crew.artifacts import ArtifactStore
+from aj_crew.artifact_store.comments import rescan_anchors
+from aj_crew.artifact_store.model import ArtifactComment
+from aj_crew.artifacts import ArtifactStore
 
 
 def _clock() -> str:
@@ -61,8 +61,8 @@ async def test_the_comment_list_route_answers_over_non_string_anchor_text(
 ) -> None:
     from unittest.mock import MagicMock
 
-    from kiro_crew import artifacts as art_mod
-    from kiro_crew.dashboard.handlers import artifacts as handlers
+    from aj_crew import artifacts as art_mod
+    from aj_crew.dashboard.handlers import artifacts as handlers
 
     store = ArtifactStore(root=tmp_path / "artifacts")
     art = store.create(name="A", content="hello world")

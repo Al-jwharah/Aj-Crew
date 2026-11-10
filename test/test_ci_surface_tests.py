@@ -80,10 +80,10 @@ _BACKEND_GUARDS = (
     "test/test_knowledge_formats_parity.py",
     "test/test_windows_signing_contract.py",
     "test/test_meetings_routes.py",
-    # Under the third testpath root, src/kiro_crew/apps/builtins in _BACKEND_ROOTS.
-    "src/kiro_crew/apps/builtins/design_critique/tests/test_manifest.py",
-    "src/kiro_crew/apps/builtins/crew_companion/tests/test_manifest.py",
-    "src/kiro_crew/apps/builtins/ops_mission_control/tests/test_routes_claim_and_slot.py",
+    # Under the third testpath root, src/aj_crew/apps/builtins in _BACKEND_ROOTS.
+    "src/aj_crew/apps/builtins/design_critique/tests/test_manifest.py",
+    "src/aj_crew/apps/builtins/crew_companion/tests/test_manifest.py",
+    "src/aj_crew/apps/builtins/ops_mission_control/tests/test_routes_claim_and_slot.py",
 )
 
 _FRONTEND_GUARDS = (
@@ -223,14 +223,14 @@ def test_unreadable_file_is_treated_as_cross_surface(selector, tmp_path) -> None
 def test_pure_backend_file_is_classified_single_surface(selector, tmp_path) -> None:
     """A file with no other-surface reference is skippable (the actual saving)."""
     pure = tmp_path / "test_pure.py"
-    pure.write_text("from kiro_crew import config\n\n\ndef test_x():\n    assert config\n")
+    pure.write_text("from aj_crew import config\n\n\ndef test_x():\n    assert config\n")
     assert selector._is_cross_surface(pure, selector._BACKEND_FOREIGN) is False
 
 
 def test_frontend_escape_patterns_are_detected(selector, tmp_path) -> None:
     """Both escape styles must be caught -- the string form AND the segment form."""
     literal = tmp_path / "a.test.ts"
-    literal.write_text("import x from '../../../src/kiro_crew/connections/registry.json'\n")
+    literal.write_text("import x from '../../../src/aj_crew/connections/registry.json'\n")
     assert selector._is_cross_surface(literal, selector._FRONTEND_FOREIGN) is True
 
     segments = tmp_path / "b.test.js"
@@ -246,7 +246,7 @@ def test_backend_owned_config_references_are_cross_surface(selector, tmp_path) -
     """A spec naming a backend-owned config file must stay in the must-run set.
 
     A spec reaches TOML/CFG/YAML configs through a root constant, with no
-    ``../../../`` escape and no ``kiro_crew`` marker on the line. Live guards of this
+    ``../../../`` escape and no ``aj_crew`` marker on the line. Live guards of this
     shape: ``releaseVersion.test.ts`` and ``frontendBlobReconcile.wireFormat.test.ts``.
     """
     toml = tmp_path / "a.test.ts"
@@ -582,7 +582,7 @@ def test_windows_filter_is_scoped_to_the_test_root(tmp_path, monkeypatch) -> Non
     # Both are cross-surface; the only difference between them is where they live.
     guard = "assert Path('website/src/utils/sanitize.ts').is_file()\n"
     _seed(tmp_path / "test" / "test_snapshot.py", guard)
-    app_suite = "src/kiro_crew/apps/builtins/demo/tests/test_snapshot.py"
+    app_suite = "src/aj_crew/apps/builtins/demo/tests/test_snapshot.py"
     _seed(tmp_path / app_suite, guard)
 
     selected = selector.collect("backend")
@@ -605,7 +605,7 @@ def test_windows_filter_is_scoped_to_the_test_root(tmp_path, monkeypatch) -> Non
 _CONTAINER_CONFTEST = (
     _REPO_ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "apps"
     / "builtins"
     / "aws_control"

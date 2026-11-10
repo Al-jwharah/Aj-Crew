@@ -45,7 +45,7 @@ import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-from kiro_crew.project_scan import (
+from aj_crew.project_scan import (
     DECL_CARGO,
     DECL_GO_WORK,
     DECL_NPM,

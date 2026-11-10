@@ -15,11 +15,11 @@ from unittest.mock import MagicMock
 import pytest
 from member_memory_helpers import declare_v2_store
 
-from kiro_crew import memory_kind_routing as mkr
-from kiro_crew.config.section_builders import _build_memory_config
-from kiro_crew.history import HistoryConsolidator
-from kiro_crew.history_consolidation_span import _PersistenceDisabledMidRun
-from kiro_crew.vector_memory import (
+from aj_crew import memory_kind_routing as mkr
+from aj_crew.config.section_builders import _build_memory_config
+from aj_crew.history import HistoryConsolidator
+from aj_crew.history_consolidation_span import _PersistenceDisabledMidRun
+from aj_crew.vector_memory import (
     _AUDITABLE_REJECT_CODES,
     SemanticRejectCode,
     VectorMemoryStore,
@@ -302,7 +302,7 @@ def test_a_user_stated_write_is_never_routed(tmp_path, monkeypatch) -> None:
 
 def test_v1_log_takes_the_publication_hold(tmp_path, monkeypatch) -> None:
     """A state-only enforce answer writes nothing else, so the log alone meets the fence."""
-    import kiro_crew.history_consolidation as hc
+    import aj_crew.history_consolidation as hc
 
     _with_mode(monkeypatch, "enforce")
     monkeypatch.setattr(hc, "_persistence_disabled", lambda: True)
@@ -335,7 +335,7 @@ async def test_the_key_naming_rule_is_asked_only_under_enforce(monkeypatch, mode
 
 
 def _member(tmp_path, monkeypatch):
-    from kiro_crew import memory_stores
+    from aj_crew import memory_stores
 
     monkeypatch.setattr(memory_stores, "memory_stores_root", lambda: tmp_path / "stores")
     directory = declare_v2_store(tmp_path, "member-alice")

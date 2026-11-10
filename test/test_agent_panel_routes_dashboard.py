@@ -21,16 +21,16 @@ from agent_panel_routes_helpers import (  # noqa: F401 -- fixtures are used by n
 )
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import agent_panel
-from kiro_crew import members as members_mod
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log_projection
-from kiro_crew.dashboard.handlers import agent_panel as routes
+from aj_crew import agent_panel
+from aj_crew import members as members_mod
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log_projection
+from aj_crew.dashboard.handlers import agent_panel as routes
 
 # Bound at collection, before conftest's autouse ``gateway_posts`` swaps
 # ``mcp_core._post`` for its recorder in each test.
-from kiro_crew.mcp_core import _get as _real_mcp_get
-from kiro_crew.mcp_core import _post as _real_mcp_post
+from aj_crew.mcp_core import _get as _real_mcp_get
+from aj_crew.mcp_core import _post as _real_mcp_post
 
 pytestmark = pytest.mark.asyncio
 
@@ -85,8 +85,8 @@ def _adopt_dashboard(monkeypatch, *, state: str = "live", version: int = 4) -> N
         manifest=dict(DASHBOARD_MANIFEST),
     )
     store = SimpleNamespace(read=lambda _slug: record, STATE_LIVE="live")
-    monkeypatch.setitem(sys.modules, "kiro_crew.dashboard_templates.instance", store)
-    import kiro_crew.dashboard_templates as templates_pkg
+    monkeypatch.setitem(sys.modules, "aj_crew.dashboard_templates.instance", store)
+    import aj_crew.dashboard_templates as templates_pkg
 
     monkeypatch.setattr(templates_pkg, "instance", store, raising=False)
 
@@ -115,8 +115,8 @@ def _default_dashboard(monkeypatch, *, ships_default: bool = True) -> None:
         STATE_STALE="stale",
         STATE_EMPTY="empty",
     )
-    monkeypatch.setitem(sys.modules, "kiro_crew.dashboard_templates.instance", store)
-    import kiro_crew.dashboard_templates as templates_pkg
+    monkeypatch.setitem(sys.modules, "aj_crew.dashboard_templates.instance", store)
+    import aj_crew.dashboard_templates as templates_pkg
 
     monkeypatch.setattr(templates_pkg, "instance", store, raising=False)
 
@@ -287,7 +287,7 @@ async def test_a_write_is_refused_for_every_package_state_that_has_no_model(
     The Model comes from ``dashboard_package.read_package_model``. Three codes, because
     the remedy differs: create a package, or have a human repair it.
     """
-    from kiro_crew import dashboard_package
+    from aj_crew import dashboard_package
 
     monkeypatch.setattr(
         dashboard_package,
@@ -311,8 +311,8 @@ async def test_a_live_package_checks_the_write_against_its_own_model(vetted, mon
     against the package's own field table, so a value of the wrong shape is refused
     by that table and not by the provenance of the read.
     """
-    from kiro_crew import dashboard_agentic, dashboard_package
-    from kiro_crew.dashboard.handlers.member_dashboard_fields import package_manifest
+    from aj_crew import dashboard_agentic, dashboard_package
+    from aj_crew.dashboard.handlers.member_dashboard_fields import package_manifest
 
     package = {
         "bound_to": "crewmate:atlas",
@@ -347,7 +347,7 @@ async def test_the_write_route_asks_for_a_package_by_member_and_not_by_slug(vett
     resolves the artifact from that member's binding, which is why the reader takes no
     slug at all.
     """
-    from kiro_crew import dashboard_package
+    from aj_crew import dashboard_package
 
     seen = []
 
@@ -368,7 +368,7 @@ async def test_the_write_route_asks_for_a_package_by_member_and_not_by_slug(vett
 async def test_a_package_the_route_cannot_read_is_a_503_and_not_a_refusal(vetted, monkeypatch):
     """A read that FAILED says nothing about the write, so there is no lesson to
     record and no field to blame -- and a 400 would teach the agent a wrong one."""
-    from kiro_crew import dashboard_package
+    from aj_crew import dashboard_package
 
     def _boom(member):
         raise dashboard_package.PackageReadError("package unreadable")
@@ -486,7 +486,7 @@ async def test_a_write_that_answers_a_recorded_mistake_reports_the_correction(ve
 async def test_a_write_with_the_crew_log_off(vetted, monkeypatch, field, status, code):
     _adopt_dashboard(monkeypatch)
     async with _client() as c:
-        monkeypatch.setenv("KIROCREW_CREW_LOG", "0")
+        monkeypatch.setenv("AJCREW_CREW_LOG", "0")
         crew_log_emit.reset_caches()
         resp = await c.post(
             WRITE_PATH,
@@ -634,12 +634,12 @@ async def test_a_write_succeeds_for_a_crewmate_that_adopted_nothing(vetted, monk
 
 
 async def test_an_unadopted_conductor_writes_needs_you_to_its_own_board(vetted):
-    """An unadopted ``kirocrew-conductor`` writes ``needs_you`` to its shipped page.
+    """An unadopted ``ajcrew-conductor`` writes ``needs_you`` to its shipped page.
 
     The ``goal-board`` field ``asks`` is refused. Uses the real registry, so the route
     resolves the same page the read route renders.
     """
-    async with _client("kirocrew-conductor") as c:
+    async with _client("ajcrew-conductor") as c:
         resp = await c.post(
             WRITE_PATH,
             json={"field": "needs_you", "value": ["approve the plan"]},
@@ -663,7 +663,7 @@ async def test_clear_through_the_panel_server_empties_an_array_field(vetted, mon
     An MCP client can drop ``value: []``. Two writes, so the read proves the clear
     replaced a value rather than finding a field nobody wrote.
     """
-    from kiro_crew import mcp_core, mcp_panel
+    from aj_crew import mcp_core, mcp_panel
 
     # ``mcp_panel`` binds ``_post`` by name on its first import. When that import
     # happens inside a test, it binds conftest's recorder and no write leaves the
@@ -671,7 +671,7 @@ async def test_clear_through_the_panel_server_empties_an_array_field(vetted, mon
     # beside files that import the server at collection.
     monkeypatch.setattr(mcp_panel, "_post", _real_mcp_post)
 
-    async with _client("kirocrew-conductor") as c:
+    async with _client("ajcrew-conductor") as c:
         monkeypatch.setattr(mcp_core, "_API", f"http://127.0.0.1:{c.server.port}")
         monkeypatch.setattr(mcp_core, "_API_UNIX_SOCKET", "")
         monkeypatch.setattr(mcp_core, "_internal_secret", lambda: "unused-by-this-app")
@@ -711,7 +711,7 @@ async def test_clear_through_the_panel_server_empties_an_object_field(vetted, mo
     ``goal-board.asks`` is an object field whose upkeep says to drop entries once
     answered, so clearing it to ``{}`` is the documented final step.
     """
-    from kiro_crew import mcp_core, mcp_panel
+    from aj_crew import mcp_core, mcp_panel
 
     monkeypatch.setattr(mcp_panel, "_post", _real_mcp_post)
     monkeypatch.setattr(mcp_panel, "_get", _real_mcp_get)
@@ -780,7 +780,7 @@ async def test_two_crews_sharing_one_slug_cannot_reach_the_dashboard_surface(vet
     shared = members_mod.member_slug(lower)
     assert members_mod.member_slug(upper) == shared, "fixture no longer collides"
 
-    real_load = routes.KiroCrewConfig.load
+    real_load = routes.AjCrewConfig.load
 
     def _roster_with_both(*a, **kw):
         cfg = real_load(*a, **kw)
@@ -789,7 +789,7 @@ async def test_two_crews_sharing_one_slug_cannot_reach_the_dashboard_surface(vet
             cfg.agents[name] = SimpleNamespace(name=name)
         return cfg
 
-    monkeypatch.setattr(routes.KiroCrewConfig, "load", staticmethod(_roster_with_both))
+    monkeypatch.setattr(routes.AjCrewConfig, "load", staticmethod(_roster_with_both))
 
     async with _client(lower) as caller:
         for path in (
@@ -859,9 +859,9 @@ def _shaped_dashboard(monkeypatch, read: Any = None) -> None:
     Both seams carry it: ``read_instance`` for the field list, and the package read
     the write route checks a value against, as the template page it falls through to.
     """
-    from kiro_crew import dashboard_agentic, dashboard_package
-    from kiro_crew.dashboard.handlers import member_dashboard
-    from kiro_crew.dashboard_templates.manifest import parse_manifest
+    from aj_crew import dashboard_agentic, dashboard_package
+    from aj_crew.dashboard.handlers import member_dashboard
+    from aj_crew.dashboard_templates.manifest import parse_manifest
 
     inst = dashboard_agentic.Instance(
         manifest=parse_manifest(dict(SHAPED_MANIFEST)), instance_version=5
@@ -903,7 +903,7 @@ async def test_a_card_in_the_declared_shape_is_accepted(vetted, monkeypatch):
 
 async def test_the_field_list_carries_the_shape_and_the_current_values(vetted, monkeypatch):
     """Shape and current value for an agentic field, one summary line for a fold field."""
-    from kiro_crew.dashboard_feed import FieldRead
+    from aj_crew.dashboard_feed import FieldRead
 
     card = [{"text": "Pick a db", "ask": "decide"}]
     board = [{"title": f"t{i}", "last_report_at": f"2026-10-0{i}T00:00:00Z"} for i in (1, 2, 3)]
@@ -932,13 +932,13 @@ async def test_a_publish_the_template_cannot_read_is_refused_with_its_keys(vette
     async with TestClient(TestServer(app)) as c:
         resp = await c.post(
             "/api/agent-panel/publish",
-            json={"template": "kirocrew-conductor", "data": {"cycle": 47}},
+            json={"template": "ajcrew-conductor", "data": {"cycle": 47}},
             headers={"X-Session-Key": "dashboard:chat-1"},
         )
         body = await resp.json()
     assert resp.status == 400
     assert body["code"] == "no_known_keys"
-    from kiro_crew.conductor_board_contract import ConductorBoardPanel
+    from aj_crew.conductor_board_contract import ConductorBoardPanel
 
     for field in ConductorBoardPanel.__annotations__:
         assert field in body["error"], f"the refusal does not name {field!r}"

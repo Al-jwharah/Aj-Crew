@@ -16,7 +16,7 @@ from lesson_write_outcome_helpers import (
     _store,
 )
 
-from kiro_crew.vector_memory import LessonWriteOutcome, VectorMemoryStore
+from aj_crew.vector_memory import LessonWriteOutcome, VectorMemoryStore
 
 
 class TestASupersedingWriteNamesWhatItRemoved:
@@ -269,7 +269,7 @@ class TestSupersedeRecordIsDurableAndAttributable:
             store.close()
 
     def test_supersede_tombstone_reads_apart_from_an_explicit_forget(self, tmp_path) -> None:
-        from kiro_crew import memory_record_metadata as meta
+        from aj_crew import memory_record_metadata as meta
 
         store = _store(tmp_path)
         try:
@@ -317,7 +317,7 @@ class TestSupersedeRecordIsDurableAndAttributable:
         store = _store(tmp_path)
         try:
             caplog.clear()
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.vector_memory"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.vector_memory"):
                 self._supersede(store)
             supersede_lines = [
                 r for r in caplog.records if r.getMessage().startswith("Lesson supersede:")
@@ -332,8 +332,8 @@ class TestSupersedeRecordIsDurableAndAttributable:
 
         Status 'forgotten', operation 'forget' (never 'supersede'), null audit new_value.
         """
-        from kiro_crew import memory_record_metadata as meta
-        from kiro_crew.vector_memory import _lesson_key
+        from aj_crew import memory_record_metadata as meta
+        from aj_crew.vector_memory import _lesson_key
 
         store = _store(tmp_path)
         try:
@@ -384,7 +384,7 @@ class TestSupersedeRecordIsDurableAndAttributable:
         A reason with a newline or long free text is refused at delete_semantic rather
         than written to the disk-persisted audit row.
         """
-        from kiro_crew.vector_memory import _lesson_key
+        from aj_crew.vector_memory import _lesson_key
 
         store = _store(tmp_path)
         try:
@@ -408,7 +408,7 @@ class TestSupersedeRecordIsDurableAndAttributable:
         commit. A supersede is the opposite -- its attribution event is atomic, so
         the same failure rolls the whole supersede back and the row survives.
         """
-        from kiro_crew.vector_memory import _lesson_key
+        from aj_crew.vector_memory import _lesson_key
 
         store = _store(tmp_path)
         try:
@@ -427,7 +427,7 @@ class TestSupersedeRecordIsDurableAndAttributable:
 
     def test_a_supersede_rolls_back_when_its_attribution_event_fails(self, tmp_path) -> None:
         """A supersede is atomic: a failed attribution event keeps the row alive."""
-        from kiro_crew.vector_memory import _lesson_key
+        from aj_crew.vector_memory import _lesson_key
 
         store = _store(tmp_path)
         try:

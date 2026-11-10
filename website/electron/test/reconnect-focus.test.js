@@ -177,17 +177,17 @@ describe("gateway supervisor wiring (source pins)", () => {
 
   // The probe itself must reach the backend's maintained lock_holder oracle
   // through the CLI, not reimplement lock reading in JS.
-  it("probeLockHolderPid invokes the kirocrew gateway-pid CLI probe", () => {
+  it("probeLockHolderPid invokes the ajcrew gateway-pid CLI probe", () => {
     const body = fnBody("probeLockHolderPid");
     assert.match(
       body,
       /gatewayCliInvocation\(bin,\s*\["gateway-pid"\],\s*path\)/,
-      "the lock-holder probe must invoke `kirocrew gateway-pid` through the Windows-safe helper",
+      "the lock-holder probe must invoke `ajcrew gateway-pid` through the Windows-safe helper",
     );
     assert.match(
       body,
       /execFile\(probeBin,\s*probeArgs/,
-      "the probe must execFile the resolved (bin, args) so a bundled kirocrew.cmd is unwrapped to python.exe",
+      "the probe must execFile the resolved (bin, args) so a bundled ajcrew.cmd is unwrapped to python.exe",
     );
     assert.match(body, /payload\.holder === "nobody"[\s\S]*?verdict: "released"/, "holder=nobody maps to the lock-released verdict");
     assert.match(body, /payload\.holder === "process"[\s\S]*?verdict: "captured"/, "holder=process maps to the captured verdict");
@@ -195,7 +195,7 @@ describe("gateway supervisor wiring (source pins)", () => {
     assert.match(
       body,
       /if \(IS_WIN && app\.isPackaged && isPathFallback\(bin\)\) \{[\s\S]*?verdict: "refused"[\s\S]*?execFile\(probeBin/,
-      "a packaged Windows app must refuse to run a PATH-fallback kirocrew before execFile, as spawnGateway does, and say so as refused",
+      "a packaged Windows app must refuse to run a PATH-fallback ajcrew before execFile, as spawnGateway does, and say so as refused",
     );
   });
 

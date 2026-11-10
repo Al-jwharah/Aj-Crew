@@ -12,7 +12,7 @@ These tests pin the discipline from four directions:
    no-op / throttled warning),
 2. the *interprocedural* catch, together with proof that the static gate is
    blind to the very same call -- the two are complementary, not redundant,
-3. the deliberate departure from ``history_offload.py``: ``KIROCREW_DEV_MODE`` alone
+3. the deliberate departure from ``history_offload.py``: ``AJCREW_DEV_MODE`` alone
    must NOT arm this store's raise while 85 recorded on-loop callers
    are outstanding,
 4. a mutation guard, so deleting the check from the accessor fails loudly
@@ -32,9 +32,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import on_loop_db
-from kiro_crew.knowledge.store import _ON_LOOP_DB_GUARD, KnowledgeStore
-from kiro_crew.on_loop_db import (
+from aj_crew import on_loop_db
+from aj_crew.knowledge.store import _ON_LOOP_DB_GUARD, KnowledgeStore
+from aj_crew.on_loop_db import (
     STORE_STRICT_ENV,
     STRICT_ENV,
     OnLoopDBGuard,
@@ -73,7 +73,7 @@ class TestOnLoopGuard:
 
     @pytest.mark.asyncio
     async def test_on_loop_db_raises_under_strict(self, tmp_path, monkeypatch, opened):
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         st = opened(await asyncio.to_thread(KnowledgeStore, str(tmp_path / "k.db")))
         with pytest.raises(OnLoopStoreError):
             st.db  # noqa: B018 - taking the connection is the operation under test
@@ -81,13 +81,13 @@ class TestOnLoopGuard:
     def test_off_loop_db_allowed_under_strict(self, store, monkeypatch):
         """No running loop (worker thread / executor lane / CLI / cron) is the
         sanctioned path -- strict mode must not flag it."""
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         assert store.db.execute("SELECT 1").fetchone()[0] == 1
 
     @pytest.mark.asyncio
     async def test_offloaded_call_is_allowed_under_strict(self, tmp_path, monkeypatch, opened):
         """The remedy the message names must actually satisfy the guard."""
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         st = opened(await asyncio.to_thread(KnowledgeStore, str(tmp_path / "k.db")))
         got = await asyncio.to_thread(lambda: st.db.execute("SELECT 1").fetchone()[0])
         assert got == 1
@@ -97,17 +97,17 @@ class TestOnLoopGuard:
         """Strict off (production): the take proceeds but logs loudly, so a
         mis-wired call-site is never silent. Production must not start raising --
         that would turn a slow query into a failed request."""
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "0")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "0")
         st = opened(await asyncio.to_thread(KnowledgeStore, str(tmp_path / "k.db")))
-        with caplog.at_level("WARNING", logger="kiro_crew.on_loop_db"):
+        with caplog.at_level("WARNING", logger="aj_crew.on_loop_db"):
             assert st.db.execute("SELECT 1").fetchone()[0] == 1
         assert any("event loop" in r.message for r in caplog.records)
 
     @pytest.mark.asyncio
     async def test_on_loop_warning_is_throttled(self, tmp_path, monkeypatch, caplog, opened):
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "0")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "0")
         st = opened(await asyncio.to_thread(KnowledgeStore, str(tmp_path / "k.db")))
-        with caplog.at_level("WARNING", logger="kiro_crew.on_loop_db"):
+        with caplog.at_level("WARNING", logger="aj_crew.on_loop_db"):
             for _ in range(3):
                 st.db.execute("SELECT 1").fetchone()
         assert sum("event loop" in r.message for r in caplog.records) == 1
@@ -124,7 +124,7 @@ class TestOnLoopGuard:
         async def _take() -> None:
             guard.check()
 
-        with caplog.at_level("WARNING", logger="kiro_crew.on_loop_db"):
+        with caplog.at_level("WARNING", logger="aj_crew.on_loop_db"):
             asyncio.run(_take())
         assert any("probe store" in r.message for r in caplog.records)
 
@@ -143,7 +143,7 @@ class TestInterproceduralCatch:
         """``get_item`` is a plain ``def`` that runs ``self.db.execute(...)``.
         Called from an ``async def`` it runs the busy wait on the loop, and the
         runtime guard is what notices."""
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         st = opened(await asyncio.to_thread(KnowledgeStore, str(tmp_path / "k.db")))
 
         async def handler():
@@ -179,14 +179,14 @@ class TestInterproceduralCatch:
 
 
 class TestDevModeDeparture:
-    """This store deliberately does NOT let ``KIROCREW_DEV_MODE`` alone raise.
+    """This store deliberately does NOT let ``AJCREW_DEV_MODE`` alone raise.
 
     ``history_offload.py``'s guard can arm that branch because every session mutator was
     already offloaded when it landed, so a raise there means genuinely new
     drift. This store still has 85 recorded on-loop callers (the whole of
     ``.github/sync-io-in-async-baseline.txt``). Raising on a
     tracked backlog reports it as a regression, and the developer's rational
-    response -- unset ``KIROCREW_DEV_MODE`` -- would silence history_offload.py's guard
+    response -- unset ``AJCREW_DEV_MODE`` -- would silence history_offload.py's guard
     too. Pinned so flipping it later is a conscious edit with a failing test.
     """
 
@@ -194,10 +194,10 @@ class TestDevModeDeparture:
     async def test_dev_mode_alone_warns_but_does_not_raise(
         self, tmp_path, monkeypatch, caplog, opened
     ):
-        monkeypatch.delenv("KIROCREW_STRICT_ON_LOOP_STORE", raising=False)
-        monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+        monkeypatch.delenv("AJCREW_STRICT_ON_LOOP_STORE", raising=False)
+        monkeypatch.setenv("AJCREW_DEV_MODE", "1")
         st = opened(await asyncio.to_thread(KnowledgeStore, str(tmp_path / "k.db")))
-        with caplog.at_level("WARNING", logger="kiro_crew.on_loop_db"):
+        with caplog.at_level("WARNING", logger="aj_crew.on_loop_db"):
             assert st.db.execute("SELECT 1").fetchone()[0] == 1  # must NOT raise
         assert any("event loop" in r.message for r in caplog.records)
 
@@ -205,8 +205,8 @@ class TestDevModeDeparture:
     async def test_explicit_opt_in_still_raises_under_dev_mode(self, tmp_path, monkeypatch, opened):
         """The escape from the departure: a CI job or a discipline test that
         wants the hard failure exports the explicit flag."""
-        monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_DEV_MODE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         st = opened(await asyncio.to_thread(KnowledgeStore, str(tmp_path / "k.db")))
         with pytest.raises(OnLoopStoreError):
             st.db  # noqa: B018
@@ -221,7 +221,7 @@ class TestSharedSwitchCannotArmThisStore:
     """Regression: the shared switch is ALREADY exported in CI.
 
     ``setup.py``'s ``test_e2e`` and ``.github/workflows/ci.yml`` both export
-    ``KIROCREW_STRICT_ON_LOOP_PERSIST=1`` into the e2e gateway, scoped when they
+    ``AJCREW_STRICT_ON_LOOP_PERSIST=1`` into the e2e gateway, scoped when they
     were written to history's fully-offloaded surface. If this store read that
     same switch, the on-loop ``/api/knowledge/stats`` and
     ``/api/knowledge/namespaces`` handlers would raise and 500 the e2e run --
@@ -290,7 +290,7 @@ class TestConstructionOnLoopIsSanctioned:
         """Only THIS guard's records: construction runs dozens of migration
         statements that may legitimately log through other loggers, and
         ``caplog.records`` captures every logger at the handler."""
-        return [r for r in caplog.records if r.name == "kiro_crew.on_loop_db"]
+        return [r for r in caplog.records if r.name == "aj_crew.on_loop_db"]
 
     @pytest.mark.asyncio
     async def test_construction_on_loop_emits_no_warning(
@@ -301,7 +301,7 @@ class TestConstructionOnLoopIsSanctioned:
         probe is wired lives in ``test_reader_after_construction_still_warns``,
         which sees the same logger fire for a real reader take.)"""
         monkeypatch.setenv(STORE_STRICT_ENV, "0")
-        with caplog.at_level("WARNING", logger="kiro_crew.on_loop_db"):
+        with caplog.at_level("WARNING", logger="aj_crew.on_loop_db"):
             opened(KnowledgeStore(str(tmp_path / "k.db")))
         assert not self._guard_records(caplog)
 
@@ -324,7 +324,7 @@ class TestConstructionOnLoopIsSanctioned:
         reader paths. A genuine on-loop take right after construction warns --
         which also proves the suppression left the throttle clock untouched."""
         monkeypatch.setenv(STORE_STRICT_ENV, "0")
-        with caplog.at_level("WARNING", logger="kiro_crew.on_loop_db"):
+        with caplog.at_level("WARNING", logger="aj_crew.on_loop_db"):
             st = opened(KnowledgeStore(str(tmp_path / "k.db")))
             assert not self._guard_records(caplog), "construction itself must stay silent"
             st.get_item("does-not-exist")
@@ -342,7 +342,7 @@ class TestConstructionOnLoopIsSanctioned:
                     raise RuntimeError("boom")
             guard.check()  # must warn: the opt-out ended with the block
 
-        with caplog.at_level("WARNING", logger="kiro_crew.on_loop_db"):
+        with caplog.at_level("WARNING", logger="aj_crew.on_loop_db"):
             asyncio.run(_probe())
         assert sum("probe store" in r.message for r in caplog.records) == 1
 
@@ -435,26 +435,26 @@ class TestStrictSwitchDoesNotDrift:
 
     CASES = [
         {},
-        {"KIROCREW_STRICT_ON_LOOP_PERSIST": "1"},
-        {"KIROCREW_STRICT_ON_LOOP_PERSIST": "true"},
-        {"KIROCREW_STRICT_ON_LOOP_PERSIST": "0"},
-        {"KIROCREW_STRICT_ON_LOOP_PERSIST": "off"},
-        {"KIROCREW_DEV_MODE": "1"},
-        {"KIROCREW_DEV_MODE": "yes"},
-        {"KIROCREW_DEV_MODE": "0"},
+        {"AJCREW_STRICT_ON_LOOP_PERSIST": "1"},
+        {"AJCREW_STRICT_ON_LOOP_PERSIST": "true"},
+        {"AJCREW_STRICT_ON_LOOP_PERSIST": "0"},
+        {"AJCREW_STRICT_ON_LOOP_PERSIST": "off"},
+        {"AJCREW_DEV_MODE": "1"},
+        {"AJCREW_DEV_MODE": "yes"},
+        {"AJCREW_DEV_MODE": "0"},
         # explicit falsy must force-disable even under dev mode, in both readers
-        {"KIROCREW_DEV_MODE": "1", "KIROCREW_STRICT_ON_LOOP_PERSIST": "0"},
-        {"KIROCREW_DEV_MODE": "1", "KIROCREW_STRICT_ON_LOOP_PERSIST": "1"},
+        {"AJCREW_DEV_MODE": "1", "AJCREW_STRICT_ON_LOOP_PERSIST": "0"},
+        {"AJCREW_DEV_MODE": "1", "AJCREW_STRICT_ON_LOOP_PERSIST": "1"},
         # an unrecognised value is neither truthy nor falsy in either reader
-        {"KIROCREW_STRICT_ON_LOOP_PERSIST": "maybe"},
-        {"KIROCREW_DEV_MODE": "1", "KIROCREW_STRICT_ON_LOOP_PERSIST": "maybe"},
+        {"AJCREW_STRICT_ON_LOOP_PERSIST": "maybe"},
+        {"AJCREW_DEV_MODE": "1", "AJCREW_STRICT_ON_LOOP_PERSIST": "maybe"},
     ]
 
     def test_agrees_with_history_when_dev_mode_is_armed(self, monkeypatch):
-        from kiro_crew.history import on_loop_persist_strict
+        from aj_crew.history import on_loop_persist_strict
 
         for env in self.CASES:
-            for var in ("KIROCREW_STRICT_ON_LOOP_PERSIST", "KIROCREW_DEV_MODE"):
+            for var in ("AJCREW_STRICT_ON_LOOP_PERSIST", "AJCREW_DEV_MODE"):
                 monkeypatch.delenv(var, raising=False)
             for key, value in env.items():
                 monkeypatch.setenv(key, value)
@@ -466,11 +466,11 @@ class TestStrictSwitchDoesNotDrift:
         """The narrowing must be exactly the dev-mode arm and nothing else: for
         every case where the explicit flag decides, both forms must agree."""
         for env in self.CASES:
-            for var in ("KIROCREW_STRICT_ON_LOOP_PERSIST", "KIROCREW_DEV_MODE"):
+            for var in ("AJCREW_STRICT_ON_LOOP_PERSIST", "AJCREW_DEV_MODE"):
                 monkeypatch.delenv(var, raising=False)
             for key, value in env.items():
                 monkeypatch.setenv(key, value)
-            explicit = env.get("KIROCREW_STRICT_ON_LOOP_PERSIST", "").strip().lower()
+            explicit = env.get("AJCREW_STRICT_ON_LOOP_PERSIST", "").strip().lower()
             if explicit in {"1", "true", "yes", "on", "0", "false", "no", "off"}:
                 assert strict_enabled(include_dev_mode=False) == strict_enabled(
                     include_dev_mode=True

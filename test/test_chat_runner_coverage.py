@@ -1,4 +1,4 @@
-"""Coverage tests for ``kiro_crew.dashboard.chat_runner``.
+"""Coverage tests for ``aj_crew.dashboard.chat_runner``.
 
 The module's happy paths are well covered by the existing chat suites
 (``test_dashboard_approval``, ``test_dashboard_chat``, ``test_eager_spawn``,
@@ -56,12 +56,12 @@ from chat_runner_coverage_helpers import (  # noqa: F401
     _statusless_coding_tool_call,
 )
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_TOOL_CALL,
 )
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.history import ConversationLog
-from kiro_crew.providers.base import LLMEvent
+from aj_crew.dashboard import chat_runner
+from aj_crew.history import ConversationLog
+from aj_crew.providers.base import LLMEvent
 
 
 class TestPromptSubmitTranscriptRead:
@@ -108,7 +108,7 @@ class TestSessionClosingQuietAbort:
 
     @pytest.mark.asyncio
     async def test_get_or_create_closing_appends_no_error_card(self, tmp_path):
-        from kiro_crew.session import SessionClosingError
+        from aj_crew.session import SessionClosingError
 
         state, _client = _runner_state(tmp_path)
         state.sessions.get_or_create = AsyncMock(
@@ -137,8 +137,8 @@ class TestSessionStartFailureRowKind:
 
     @pytest.mark.asyncio
     async def test_shared_runtime_start_timeout_row_carries_the_kind(self, tmp_path):
-        from kiro_crew.acp.runtime import AcpSessionStartTimeout
-        from kiro_crew.dashboard.chat_utils import SESSION_START_FAILED_KIND
+        from aj_crew.acp.runtime import AcpSessionStartTimeout
+        from aj_crew.dashboard.chat_utils import SESSION_START_FAILED_KIND
 
         state, _client = _runner_state(tmp_path)
         state.sessions.get_or_create = AsyncMock(
@@ -171,7 +171,7 @@ class TestSessionStartFailureRowKind:
 class TestRunChatWakaTimeCodingAccounting:
     @staticmethod
     def _wakatime_config():
-        config = chat_runner.KiroCrewConfig.load()
+        config = chat_runner.AjCrewConfig.load()
         config.wakatime.enabled = True
         config.wakatime.send_heartbeats = True
         return config
@@ -179,7 +179,7 @@ class TestRunChatWakaTimeCodingAccounting:
     @pytest.fixture
     def sent_beats(self, monkeypatch):
         """Every heartbeat payload the turn hands to the sender, in order."""
-        from kiro_crew.wakatime import heartbeats
+        from aj_crew.wakatime import heartbeats
 
         sent: list[dict] = []
         monkeypatch.setattr(heartbeats, "_schedule_send", sent.append)
@@ -189,7 +189,7 @@ class TestRunChatWakaTimeCodingAccounting:
     def _shapes(beats):
         return [{k: v for k, v in beat.items() if k != "time"} for beat in beats]
 
-    _BEAT = {"entity": "kirocrew-session", "type": "app", "category": "ai coding", "is_write": True}
+    _BEAT = {"entity": "ajcrew-session", "type": "app", "category": "ai coding", "is_write": True}
 
     @pytest.mark.asyncio
     async def test_statusless_coding_call_demotes_when_permission_is_denied(
@@ -220,7 +220,7 @@ class TestRunChatWakaTimeCodingAccounting:
 
         state.push_slots_update.side_effect = _deny_when_registered
         with patch.object(
-            chat_runner.KiroCrewConfig,
+            chat_runner.AjCrewConfig,
             "load",
             return_value=self._wakatime_config(),
         ):
@@ -260,7 +260,7 @@ class TestRunChatWakaTimeCodingAccounting:
 
         state.push_slots_update.side_effect = _deny_when_registered
         with patch.object(
-            chat_runner.KiroCrewConfig,
+            chat_runner.AjCrewConfig,
             "load",
             return_value=self._wakatime_config(),
         ):
@@ -299,7 +299,7 @@ class TestRunChatWakaTimeCodingAccounting:
         state.push_slots_update.side_effect = _approve_when_registered
         with (
             patch.object(
-                chat_runner.KiroCrewConfig,
+                chat_runner.AjCrewConfig,
                 "load",
                 return_value=self._wakatime_config(),
             ),
@@ -322,7 +322,7 @@ class TestRunChatWakaTimeCodingAccounting:
         config = self._wakatime_config()
         with (
             patch.object(
-                chat_runner.KiroCrewConfig,
+                chat_runner.AjCrewConfig,
                 "load",
                 return_value=config,
             ),
@@ -363,7 +363,7 @@ class TestRunChatWakaTimeCodingAccounting:
         _set_stream(client, [_statusless_coding_tool_call(), _complete()])
         with (
             patch.object(
-                chat_runner.KiroCrewConfig,
+                chat_runner.AjCrewConfig,
                 "load",
                 return_value=self._wakatime_config(),
             ),
@@ -386,7 +386,7 @@ class TestRunChatWakaTimeCodingAccounting:
         config = self._wakatime_config()
         with (
             patch.object(
-                chat_runner.KiroCrewConfig,
+                chat_runner.AjCrewConfig,
                 "load",
                 return_value=config,
             ),
@@ -427,7 +427,7 @@ class TestRunChatWakaTimeCodingAccounting:
 
         with (
             patch.object(
-                chat_runner.KiroCrewConfig,
+                chat_runner.AjCrewConfig,
                 "load",
                 return_value=self._wakatime_config(),
             ),
@@ -459,7 +459,7 @@ class TestRunChatWakaTimeCodingAccounting:
 
         with (
             patch.object(
-                chat_runner.KiroCrewConfig,
+                chat_runner.AjCrewConfig,
                 "load",
                 return_value=self._wakatime_config(),
             ),
@@ -501,7 +501,7 @@ class TestRunChatWakaTimeCodingAccounting:
         state.push_slots_update.side_effect = _approve_when_registered
         with (
             patch.object(
-                chat_runner.KiroCrewConfig,
+                chat_runner.AjCrewConfig,
                 "load",
                 return_value=self._wakatime_config(),
             ),
@@ -551,7 +551,7 @@ class TestRunChatWakaTimeCodingAccounting:
         state.push_slots_update.side_effect = _decide_when_registered
         with (
             patch.object(
-                chat_runner.KiroCrewConfig,
+                chat_runner.AjCrewConfig,
                 "load",
                 return_value=self._wakatime_config(),
             ),
@@ -566,7 +566,7 @@ class TestRunChatWakaTimeCodingAccounting:
     async def test_collapsed_coding_id_cannot_be_counted_by_unrelated_approval(
         self, tmp_path, sent_beats
     ):
-        from kiro_crew.security import REDACTED_CREDENTIAL_TAG
+        from aj_crew.security import REDACTED_CREDENTIAL_TAG
 
         state, client = _runner_state(tmp_path)
         client.mcp_session_report = MagicMock(return_value=None)
@@ -615,7 +615,7 @@ class TestRunChatWakaTimeCodingAccounting:
         state.push_slots_update.side_effect = _decide_when_registered
         with (
             patch.object(
-                chat_runner.KiroCrewConfig,
+                chat_runner.AjCrewConfig,
                 "load",
                 return_value=self._wakatime_config(),
             ),
@@ -636,7 +636,7 @@ class TestRunChatWakaTimeCodingAccounting:
 
         with (
             patch.object(
-                chat_runner.KiroCrewConfig,
+                chat_runner.AjCrewConfig,
                 "load",
                 return_value=self._wakatime_config(),
             ),
@@ -685,7 +685,7 @@ class TestRunChatWakaTimeCodingAccounting:
         state.push_slots_update.side_effect = _approve_when_registered
         with (
             patch.object(
-                chat_runner.KiroCrewConfig,
+                chat_runner.AjCrewConfig,
                 "load",
                 return_value=self._wakatime_config(),
             ),
@@ -724,7 +724,7 @@ class TestRunChatWakaTimeCodingAccounting:
 
         with (
             patch.object(
-                chat_runner.KiroCrewConfig,
+                chat_runner.AjCrewConfig,
                 "load",
                 return_value=self._wakatime_config(),
             ),
@@ -751,7 +751,7 @@ class TestRunChatWakaTimeCodingAccounting:
 
         with (
             patch.object(
-                chat_runner.KiroCrewConfig,
+                chat_runner.AjCrewConfig,
                 "load",
                 return_value=self._wakatime_config(),
             ),
@@ -792,7 +792,7 @@ class TestRunChatWakaTimeCodingAccounting:
         config = self._wakatime_config()
         with (
             patch.object(
-                chat_runner.KiroCrewConfig,
+                chat_runner.AjCrewConfig,
                 "load",
                 return_value=config,
             ),
@@ -822,7 +822,7 @@ class TestRunChatWakaTimeCodingAccounting:
         client.stream = MagicMock(return_value=_events())
         with (
             patch.object(
-                chat_runner.KiroCrewConfig,
+                chat_runner.AjCrewConfig,
                 "load",
                 return_value=self._wakatime_config(),
             ),
@@ -843,7 +843,7 @@ class TestRunChatWakaTimeCodingAccounting:
 
         with (
             patch.object(
-                chat_runner.KiroCrewConfig,
+                chat_runner.AjCrewConfig,
                 "load",
                 return_value=self._wakatime_config(),
             ),
@@ -884,7 +884,7 @@ class TestRunChatWakaTimeCodingAccounting:
         state.push_slots_update.side_effect = _approve_when_registered
         with (
             patch.object(
-                chat_runner.KiroCrewConfig,
+                chat_runner.AjCrewConfig,
                 "load",
                 return_value=self._wakatime_config(),
             ),
@@ -942,7 +942,7 @@ class TestBlockedLinkCardRecords:
     def test_two_links_on_one_host_cut_across_deltas_are_vouched_in_order(self):
         """The whole-text pass writes the records in reply order, so the row
         vouches it and both addresses come back in place once the host is allowed."""
-        from kiro_crew.security.exfil import restore_allowed_links
+        from aj_crew.security.exfil import restore_allowed_links
 
         first = f"https://{self.H}/first?q=" + "a" * 250
         second = f"https://{self.H}/second?q=" + "b" * 250
@@ -961,7 +961,7 @@ class TestBlockedLinkCardRecords:
         """``S B C C`` from review: B on the allowed host carries S (another host)
         in its query. The allowed host must keep its placeholders: B, a redirect
         carrying the sink address, must never be put back where a C stood."""
-        from kiro_crew.security.exfil import restore_allowed_links
+        from aj_crew.security.exfil import restore_allowed_links
 
         allowed = "allowed.example"
         sink = f"https://{self.H}/x?d=" + "s" * 260
@@ -981,7 +981,7 @@ class TestBlockedLinkCardRecords:
         holds records [A, B] and two placeholders, both B's, so pairing by order
         would put A where the first B stood: the row must not vouch its order and
         the host keeps its placeholders."""
-        from kiro_crew.security.exfil import restore_allowed_links
+        from aj_crew.security.exfil import restore_allowed_links
 
         allowed = "allowed.example"
         inner = f"https://{allowed}/a?q=" + "a" * 250
@@ -1215,7 +1215,7 @@ class TestBlockedLinkCardRecords:
         """With no blocked link on a placeholder's host, the folds change
         nothing: the saved text equals one pass of both removers over it, even
         with quoted placeholders and a blocked link on another host."""
-        from kiro_crew.security import redact_credentials, redact_exfiltration_urls
+        from aj_crew.security import redact_credentials, redact_exfiltration_urls
 
         host = "my-bucket.s3.us-east-1.amazonaws.com"
         ph = f"[REDACTED: suspicious URL to {host}]"
@@ -1282,7 +1282,7 @@ class TestBlockedLinkCardRecords:
         """Quoted placeholders, a kept same-host link with a masked token and a
         cut blocked link in one segment: the saved text is the raw copy through
         both removers once, so nothing next to a placeholder is lost."""
-        from kiro_crew.security import redact_credentials, redact_exfiltration_urls
+        from aj_crew.security import redact_credentials, redact_exfiltration_urls
 
         host = "my-bucket.s3.us-east-1.amazonaws.com"
         ph = f"[REDACTED: suspicious URL to {host}]"
@@ -1319,7 +1319,7 @@ class TestBlockedLinkCardRecords:
     def test_the_streamed_footer_reflow_is_applied_to_the_saved_copy(self):
         """A glued ``[OPTIONS:]`` footer split across deltas is saved reflowed,
         the same repair the streamed text gets."""
-        from kiro_crew.constants import reflow_and_label_glued_option_marker
+        from aj_crew.constants import reflow_and_label_glued_option_marker
 
         raw = "Pick one.\n[OPTIONS: A | B]Anytime."
         content, _ = self._flush([raw[:18], raw[18:]])
@@ -1555,7 +1555,7 @@ class TestBlockedLinkCardRecords:
         """Every two-delta cut of a reply with a presigned link: the saved reply
         is either main's per-delta text redacted whole or the withheld notice,
         and never holds the key or a run main's save hid."""
-        from kiro_crew.security import redact_credentials, redact_exfiltration_urls
+        from aj_crew.security import redact_credentials, redact_exfiltration_urls
 
         host = "my-bucket.s3.us-east-1.amazonaws.com"
         url = (
@@ -1619,7 +1619,7 @@ class TestBlockedLinkCardRecords:
         streamed text, so the flush saves the reply. A new writer to the streamed
         text that skips the raw copy would turn every reply into the notice, and
         this goes red."""
-        from kiro_crew.acp.types import EVENT_TEXT_CHUNK
+        from aj_crew.acp.types import EVENT_TEXT_CHUNK
 
         state, client = _runner_state(tmp_path)
         slot = _slot()
@@ -1647,7 +1647,7 @@ class TestBlockedLinkCardRecords:
         """A real turn: a blocked link in one delta, then the same link with a
         session token appended in the next. Each delta alone redacts both; the
         saved reply must too, with no piece of the token's tail."""
-        from kiro_crew.acp.types import EVENT_TEXT_CHUNK
+        from aj_crew.acp.types import EVENT_TEXT_CHUNK
 
         state, client = _runner_state(tmp_path)
         slot = _slot()

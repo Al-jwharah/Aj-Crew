@@ -19,12 +19,12 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-import kiro_crew.config.loader as loader
-import kiro_crew.dashboard.handlers.core as core_handlers
-import kiro_crew.dashboard.handlers.messaging as mod
-from kiro_crew import slack_manifest
-from kiro_crew.dashboard import slack_code_settings as scs
-from kiro_crew.slack import features, scope_probe
+import aj_crew.config.loader as loader
+import aj_crew.dashboard.handlers.core as core_handlers
+import aj_crew.dashboard.handlers.messaging as mod
+from aj_crew import slack_manifest
+from aj_crew.dashboard import slack_code_settings as scs
+from aj_crew.slack import features, scope_probe
 
 _AS = frozenset({slack_manifest.AGENT_SESSIONS})
 
@@ -160,7 +160,7 @@ class TestSwitches:
         assert "code_channels" not in ok[1]["resources"]
 
     def test_toggle_on_reports_the_capability_it_still_lacks(self, env: dict) -> None:
-        from kiro_crew.slack import features
+        from aj_crew.slack import features
 
         features.reset_capabilities()
         _call(env, "PUT", {"code_channels": True})
@@ -266,7 +266,7 @@ class TestDefaults:
     ) -> None:
         # The real validator, not the fixture's stub: only the live catalogs are
         # faked, one per harness, so the result depends on the backend it is given.
-        from kiro_crew.dashboard.handlers import core_config_models
+        from aj_crew.dashboard.handlers import core_config_models
 
         catalogs = {"codex": ["codex-only-model"], None: ["claude-opus-4.8"]}
         monkeypatch.setattr(
@@ -303,7 +303,7 @@ class TestDefaults:
         assert status == 400
 
     def test_a_stored_off_ladder_effort_does_not_block_other_saves(self, env: dict) -> None:
-        # A hand edit / `kirocrew config set` left an effort the ladder lacks.
+        # A hand edit / `ajcrew config set` left an effort the ladder lacks.
         # The page reads it as unset, so a save of another default must not be
         # refused over it, and the stored value is left alone (not this save's).
         env["cfg"].write_text(
@@ -424,7 +424,7 @@ class TestFolderScopedAgents:
     unsaved folder pick, so the picker follows the folder's project."""
 
     def _agents(self, env: dict, folder: str) -> tuple[int, dict]:
-        from kiro_crew.dashboard.routes import messaging as messaging_routes
+        from aj_crew.dashboard.routes import messaging as messaging_routes
 
         async def _run() -> tuple[int, dict]:
             app = web.Application()
@@ -519,13 +519,13 @@ class TestAutoFolder:
         _, body = _call(env, "GET")
         assert body["code_channel_auto_folder"] == {
             "name": "Code channels",
-            "agent": "kirocrew-conductor",
+            "agent": "ajcrew-conductor",
             "id": None,
             "ambiguous": False,
         }
         eff = body["code_channel_effective"]
         assert (eff["folder_path"], eff["folder_auto_create"]) == ("Code channels", True)
-        assert (eff["agent"], eff["agent_source"]) == ("kirocrew-conductor", "folder")
+        assert (eff["agent"], eff["agent_source"]) == ("ajcrew-conductor", "folder")
         assert eff["folder"] is None
         assert body["code_channel_agents"] == ["builder", "reviewer"]
 
@@ -572,43 +572,43 @@ class TestAutoFolder:
 
 class TestAgentChoices:
     """The real filter behind ``_agent_names``: the chat picker's choices, minus
-    Kiro Crew's generated specs and the background-only heartbeat agent."""
+    Aj Crew's generated specs and the background-only heartbeat agent."""
 
     def _row(self, name: str, *, owned: bool = True, desc: str = "") -> Any:
-        from kiro_crew.agent_discovery import AgentInfo
+        from aj_crew.agent_discovery import AgentInfo
 
         return AgentInfo(
-            name=name, description=desc, model="", filename=f"{name}.json", kirocrew_owned=owned
+            name=name, description=desc, model="", filename=f"{name}.json", ajcrew_owned=owned
         )
 
     def test_shipped_agents_are_offered_and_internal_ones_are_not(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import agent_discovery
-        from kiro_crew.dashboard.handlers import agent_catalog
+        from aj_crew import agent_discovery
+        from aj_crew.dashboard.handlers import agent_catalog
 
         rows = [
-            self._row("kirocrew"),
-            self._row("kirocrew-conductor"),
-            self._row("kirocrew-team-lead"),
-            self._row("kirocrew-research"),
-            self._row("kirocrew-heartbeat"),
-            self._row("kirocrew-lite"),
-            self._row("kirocrew-guest"),
-            self._row("kirocrew-skill-view-0123456789abcdef01234567"),
+            self._row("ajcrew"),
+            self._row("ajcrew-conductor"),
+            self._row("ajcrew-team-lead"),
+            self._row("ajcrew-research"),
+            self._row("ajcrew-heartbeat"),
+            self._row("ajcrew-lite"),
+            self._row("ajcrew-guest"),
+            self._row("ajcrew-skill-view-0123456789abcdef01234567"),
             self._row("my-agent", owned=False),
             # A user's own file with the heartbeat's name is an ordinary choice.
-            self._row("kirocrew-heartbeat-copy", owned=False),
+            self._row("ajcrew-heartbeat-copy", owned=False),
         ]
         monkeypatch.setattr(agent_discovery, "list_agents", lambda project_dir=None: rows)
         monkeypatch.setattr(agent_catalog.agent_state, "all_fork_info", lambda: {})
         monkeypatch.setattr(agent_catalog, "_name_would_be_masked", lambda name: False)
         got = scs._choosable_agent_names(None)
-        assert "kirocrew-conductor" in got and "kirocrew-team-lead" in got
-        assert {"kirocrew", "kirocrew-research", "my-agent", "kirocrew-heartbeat-copy"} <= set(got)
-        hidden = {"kirocrew-heartbeat", "kirocrew-lite", "kirocrew-guest"}
+        assert "ajcrew-conductor" in got and "ajcrew-team-lead" in got
+        assert {"ajcrew", "ajcrew-research", "my-agent", "ajcrew-heartbeat-copy"} <= set(got)
+        hidden = {"ajcrew-heartbeat", "ajcrew-lite", "ajcrew-guest"}
         assert not hidden & set(got)
-        assert not [n for n in got if n.startswith("kirocrew-skill-view-")]
+        assert not [n for n in got if n.startswith("ajcrew-skill-view-")]
 
 
 # ── Manifest drift probe, against recorded Slack payloads ──
@@ -679,7 +679,7 @@ _CC = frozenset({slack_manifest.CODE_CHANNELS})
 
 @pytest.fixture(autouse=True)
 def _clean_probe_state() -> Any:
-    from kiro_crew.slack import features
+    from aj_crew.slack import features
 
     features.reset_capabilities()
     scs.reset_status_cache()
@@ -783,7 +783,7 @@ class TestDrift:
         self, env: dict, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.delenv("SLACK_BOT_TOKEN", raising=False)
-        body = asyncio.run(scs.manifest_status(loader.KiroCrewConfig(), ""))
+        body = asyncio.run(scs.manifest_status(loader.AjCrewConfig(), ""))
         assert body["install"]["status"] == scope_probe.STATUS_NOT_CONFIGURED
         assert body["features"] == [] and body["app_manifest_url"] is None
         assert set(body["feature_changes"]) == set(slack_manifest.FEATURES)
@@ -796,7 +796,7 @@ class TestDrift:
         import slack_sdk.web.async_client as sdk
 
         monkeypatch.setattr(sdk, "AsyncWebClient", lambda **kw: _FakeClient(_scopes(_AS)))
-        cfg = loader.KiroCrewConfig()
+        cfg = loader.AjCrewConfig()
         cfg.slack.agent_sessions = True
         features.latch_unavailable("agent_sessions", "feature_disabled")
         first = asyncio.run(scs.manifest_status(cfg, "xoxb-test"))
@@ -813,7 +813,7 @@ class TestDrift:
         import slack_sdk.web.async_client as sdk
 
         monkeypatch.setattr(sdk, "AsyncWebClient", lambda **kw: _FakeClient(_scopes(_AS)))
-        cfg = loader.KiroCrewConfig()
+        cfg = loader.AjCrewConfig()
         cfg.slack.agent_sessions = True
         features.latch_unavailable("agent_sessions", "feature_disabled")
         got = asyncio.run(scs.manifest_status(cfg, "xoxb-test"))
@@ -831,7 +831,7 @@ class TestDrift:
         import slack_sdk.web.async_client as sdk
 
         monkeypatch.setattr(sdk, "AsyncWebClient", _make)
-        cfg = loader.KiroCrewConfig()
+        cfg = loader.AjCrewConfig()
         first = asyncio.run(scs.manifest_status(cfg, "xoxb-test"))
         asyncio.run(scs.manifest_status(cfg, "xoxb-test"))
         assert len(clients) == 1

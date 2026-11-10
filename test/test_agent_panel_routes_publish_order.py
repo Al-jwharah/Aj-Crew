@@ -17,8 +17,8 @@ from agent_panel_routes_helpers import (  # noqa: F401 -- fixtures are used by n
     vetted_fixture,
 )
 
-from kiro_crew import agent_panel
-from kiro_crew.crew_log import emit as crew_log_emit
+from aj_crew import agent_panel
+from aj_crew.crew_log import emit as crew_log_emit
 
 pytestmark = pytest.mark.asyncio
 
@@ -39,9 +39,9 @@ def _publish_handler_ast():
     import ast
     from pathlib import Path
 
-    import kiro_crew
+    import aj_crew
 
-    path = Path(kiro_crew.__file__).parent / "dashboard" / "handlers" / "agent_panel_publish.py"
+    path = Path(aj_crew.__file__).parent / "dashboard" / "handlers" / "agent_panel_publish.py"
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     for node in ast.walk(tree):
         if isinstance(node, ast.AsyncFunctionDef) and node.name == "api_agent_panel_publish":
@@ -250,7 +250,7 @@ async def test_the_drawer_read_reports_the_templates_docked_opt_in(vetted):
     over = agent_panel.override_templates_dir()
     over.mkdir(parents=True, exist_ok=True)
     (over / "compact.html").write_text(
-        "<!--kirocrew:docked height=180-->" + agent_panel.DATA_MARKER, encoding="utf-8"
+        "<!--ajcrew:docked height=180-->" + agent_panel.DATA_MARKER, encoding="utf-8"
     )
     async with _client() as c:
         await c.post(

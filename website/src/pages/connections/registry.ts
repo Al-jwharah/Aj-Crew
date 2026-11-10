@@ -1,4 +1,4 @@
-import registryJson from '../../../../src/kiro_crew/connections/registry.json'
+import registryJson from '../../../../src/aj_crew/connections/registry.json'
 import type { McpServer } from '../../types'
 
 export interface ConnectionProvider {

@@ -7,7 +7,7 @@ import hmac
 
 import pytest
 
-from kiro_crew.apps.proxy_auth import (
+from aj_crew.apps.proxy_auth import (
     ProxyPrincipalReplayCache,
     new_proxy_nonce,
     sign_proxy_request_v2,
@@ -150,14 +150,14 @@ def test_a_non_ascii_signature_is_a_verdict_not_a_type_error():
 
 
 def test_missing_secret_or_cache_fails_closed(monkeypatch):
-    monkeypatch.delenv("KIROCREW_PROXY_SECRET", raising=False)
+    monkeypatch.delenv("AJCREW_PROXY_SECRET", raising=False)
     assert not _verify(_sign(), secret=None)
     assert not _verify(_sign(), secret="")
     assert not _verify(_sign(), replay_cache=None)
 
 
 def test_secret_falls_back_to_the_backend_environment(monkeypatch):
-    monkeypatch.setenv("KIROCREW_PROXY_SECRET", SECRET)
+    monkeypatch.setenv("AJCREW_PROXY_SECRET", SECRET)
     assert _verify(_sign(), secret=None)
 
 

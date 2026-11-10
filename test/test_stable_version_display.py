@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.dashboard.handlers.updates import _display_version
+from aj_crew.dashboard.handlers.updates import _display_version
 
 
 @pytest.mark.parametrize(

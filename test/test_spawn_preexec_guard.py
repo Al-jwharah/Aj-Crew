@@ -20,7 +20,7 @@ process, and it is checked the same way. The synchronous check carries a shrink-
 ``_SYNC_UNMIGRATED`` ratchet (empty: every synchronous spawn is migrated), keyed on
 each spawn's ``argv`` expression rather than a bare count so that migrating one
 spawn and adding a different one in the same function cannot cancel out. A NEW
-synchronous site anywhere under ``src/kiro_crew`` fails immediately, and removing
+synchronous site anywhere under ``src/aj_crew`` fails immediately, and removing
 an entry is the only way the ratchet changes without a visible diff a reviewer has
 to approve.
 """
@@ -32,7 +32,7 @@ import functools
 from collections import Counter
 from pathlib import Path
 
-_SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+_SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 
 # The one legitimate ``preexec_fn`` on an async spawn: the wrapper's own fallback
 # for a host with no usable shim (non-POSIX, or a truncated install), where
@@ -51,7 +51,7 @@ _ALLOWED = frozenset(
 def _async_spawns_with_preexec() -> dict[str, int]:
     """Map ``<relpath>::<func>`` -> line for async spawns passing ``preexec_fn``.
 
-    Cached: this AST-parses all ~630 files under ``src/kiro_crew`` and both tests in
+    Cached: this AST-parses all ~630 files under ``src/aj_crew`` and both tests in
     this file call it, so an unmemoized second pass re-parsed the whole tree for the
     same answer. The source tree cannot change mid-run. Callers must not mutate the
     returned dict -- both only read it.
@@ -90,7 +90,7 @@ def test_no_async_spawn_forks_python_in_the_child():
         "These async spawns pass preexec_fn, which forks the threaded gateway and "
         "runs Python in the child before exec:\n  "
         + "\n  ".join(f"{key} (line {line})" for key, line in sorted(offenders.items()))
-        + "\n\nUse kiro_crew.sandbox.create_subprocess_limited(...) instead: it "
+        + "\n\nUse aj_crew.sandbox.create_subprocess_limited(...) instead: it "
         "applies the same resource limits AFTER exec, where the process is "
         "single-threaded. See issue #935."
     )
@@ -124,7 +124,7 @@ _SYNC_ALLOWED = frozenset(
 # Shrink-only ratchet: ``<relpath>::<func>`` -> the ``argv`` expression of each
 # synchronous spawn in that function still on the ``preexec_fn`` path. Empty: every
 # synchronous spawn goes through ``run_limited`` / ``popen_limited``. The ratchet
-# stays so a NEW synchronous ``preexec_fn`` spawn anywhere under ``src/kiro_crew``
+# stays so a NEW synchronous ``preexec_fn`` spawn anywhere under ``src/aj_crew``
 # fails immediately; nothing may be added here.
 #
 # Keyed on the argv EXPRESSION rather than a bare count so that migrating one
@@ -223,7 +223,7 @@ def test_no_sync_spawn_forks_python_in_the_child():
             for key, sites in sorted(offenders.items())
             for line, expr in sites
         )
-        + "\n\nUse kiro_crew.sandbox.run_limited(...) or popen_limited(...) "
+        + "\n\nUse aj_crew.sandbox.run_limited(...) or popen_limited(...) "
         "instead: they apply the same resource limits AFTER exec, where the "
         "process is single-threaded."
     )

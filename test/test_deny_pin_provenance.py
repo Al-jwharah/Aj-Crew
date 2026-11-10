@@ -16,10 +16,10 @@ import dataclasses
 
 import pytest
 
-from kiro_crew import hooks as hooks_mod
-from kiro_crew import security
-from kiro_crew.hooks import HookManager, HooksConfig
-from kiro_crew.platform import context as ctx_mod
+from aj_crew import hooks as hooks_mod
+from aj_crew import security
+from aj_crew.hooks import HookManager, HooksConfig
+from aj_crew.platform import context as ctx_mod
 
 _PINNED_ID = "credential-exfil-s3-cp"
 

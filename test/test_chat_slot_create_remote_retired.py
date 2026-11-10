@@ -16,7 +16,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-import kiro_crew
+import aj_crew
 
 RETIRED_BODIES = [
     {"instance_id": "nobita"},
@@ -27,7 +27,7 @@ RETIRED_BODIES = [
 
 
 def _create_app(state, *, app_name: str = "") -> web.Application:
-    from kiro_crew.dashboard.chat import api_chat_slot_create
+    from aj_crew.dashboard.chat import api_chat_slot_create
 
     async def handler(request: web.Request) -> web.Response:
         request["app"] = app_name
@@ -88,7 +88,7 @@ async def test_an_empty_binding_field_is_an_ordinary_local_create(tmp_path, empt
 
 def test_no_source_module_stamps_a_remote_executor_except_the_disk_reader():
     """The only ``executor = "remote"`` left is restoring an old slot from disk."""
-    root = Path(kiro_crew.__file__).parent / "dashboard"
+    root = Path(aj_crew.__file__).parent / "dashboard"
     stamps = []
     for path in sorted(root.rglob("*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"))

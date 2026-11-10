@@ -1,4 +1,4 @@
-"""The small pure helpers of :mod:`kiro_crew.slack.handler`, called directly.
+"""The small pure helpers of :mod:`aj_crew.slack.handler`, called directly.
 
 Pins tool phases, options-tag filtering, the timing footer and footer actions, condensed
 thinking, grant wording and the owner, channel, trust and config accessors. The commands
@@ -17,8 +17,8 @@ from slack_handler_coverage_helpers import (  # noqa: F401 -- the autouse fixtur
     _clean_handler_state,
 )
 
-from kiro_crew.safety_override import NO_EXPIRY_TEXT, fmt_grant_duration
-from kiro_crew.slack import handler as h
+from aj_crew.safety_override import NO_EXPIRY_TEXT, fmt_grant_duration
+from aj_crew.slack import handler as h
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -185,9 +185,9 @@ class TestPureHelpers:
         assert h.get_orch_cfg() is None
 
     def test_reload_orch_cfg_refreshes_channel_state(self):
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         h.set_orch_cfg(cfg)
         h._persist_channel_config("C1", activation="observe")
         h._reload_orch_cfg()
@@ -211,7 +211,7 @@ class TestPureHelpers:
         builder.is_auto_approved_spawn.return_value = True
         event = SimpleNamespace(
             tool_name="spawn_run",
-            mcp_server_name="kirocrew-core",
+            mcp_server_name="ajcrew-core",
             mcp_identity_trusted=True,
             title="spawn_run",
             is_shell=False,

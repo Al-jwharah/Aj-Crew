@@ -4,7 +4,7 @@ name: CI Runner Watchdog
 #
 # `ci.yml` routes several Linux jobs to an AWS CodeBuild-hosted runner through a
 # label that is specific to one run attempt:
-# `codebuild-kirocrew-gha-linux-${{ github.run_id }}-${{ github.run_attempt }}`
+# `codebuild-ajcrew-gha-linux-${{ github.run_id }}-${{ github.run_attempt }}`
 # (admission decided once, in the `changes` job, the label spelled in each routed
 # job's own `runs-on`; docs/ci/ci-and-reviews.md, "CodeBuild-hosted runner
 # (pilot)"). CodeBuild answers each `workflow_job.queued` webhook with one
@@ -348,11 +348,11 @@ jobs:
     # Never fleet-routed: `WATCHED_WORKFLOWS` is derived from the workflows whose
     # `runs-on` carries the fleet label, so a fleet route here would put this
     # workflow in its own watch set, and an orphaned watchdog cannot unstick one.
-    # `kirocrew-runners` larger-runner group, targeted by GROUP not label; see
+    # `ajcrew-runners` larger-runner group, targeted by GROUP not label; see
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

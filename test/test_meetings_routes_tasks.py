@@ -26,9 +26,9 @@ from meetings_helpers import (  # noqa: F401
 )
 from meetings_routes_helpers import BASE
 
-from kiro_crew.apps.builtins.meetings.backend import constants as k
-from kiro_crew.apps.builtins.meetings.backend import store
-from kiro_crew.apps.builtins.meetings.backend.routes import _common
+from aj_crew.apps.builtins.meetings.backend import constants as k
+from aj_crew.apps.builtins.meetings.backend import store
+from aj_crew.apps.builtins.meetings.backend.routes import _common
 
 
 class TestTaskRoutes:
@@ -184,7 +184,7 @@ class TestTaskRoutes:
 
     @pytest.mark.asyncio
     async def test_file_task_provider_failure_is_502(self, app, root: Path, monkeypatch):
-        from kiro_crew.apps.builtins.meetings.backend.providers import tasks as taskprov
+        from aj_crew.apps.builtins.meetings.backend.providers import tasks as taskprov
 
         class Failing(taskprov.TaskProvider):
             @property
@@ -199,7 +199,7 @@ class TestTaskRoutes:
                 raise RuntimeError("tracker down")
 
         monkeypatch.setattr(
-            "kiro_crew.apps.builtins.meetings.backend.routes.tasks." "taskprov.get_task_provider",
+            "aj_crew.apps.builtins.meetings.backend.routes.tasks." "taskprov.get_task_provider",
             lambda *_a, **_kw: Failing(),
         )
         async with client_for(app) as client:
@@ -338,7 +338,7 @@ class TestBodyLimits:
 class TestStartupHook:
     @pytest.mark.asyncio
     async def test_startup_seeds_the_data_dir_and_loads_the_dictionary(self, tmp_path: Path):
-        from kiro_crew.apps.builtins.meetings.backend.domain import session as sess
+        from aj_crew.apps.builtins.meetings.backend.domain import session as sess
 
         fresh = tmp_path / "unseeded"
         app = make_app(fresh)
@@ -365,7 +365,7 @@ class TestFiledRefIsSanitized:
     """
 
     def test_a_javascript_url_is_dropped_but_the_id_survives(self) -> None:
-        from kiro_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
+        from aj_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
 
         ref = task_routes._normalize_filed_ref(
             {"id": "KC-1", "url": "javascript:alert(document.cookie)"}
@@ -386,7 +386,7 @@ class TestFiledRefIsSanitized:
         ],
     )
     def test_every_non_http_scheme_is_refused(self, url: str) -> None:
-        from kiro_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
+        from aj_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
 
         ref = task_routes._normalize_filed_ref({"id": "KC-2", "url": url})
         assert ref is not None
@@ -394,19 +394,19 @@ class TestFiledRefIsSanitized:
 
     @pytest.mark.parametrize("url", ["https://tracker.example/t/1", "http://tracker.example/t/1"])
     def test_absolute_http_urls_are_kept(self, url: str) -> None:
-        from kiro_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
+        from aj_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
 
         ref = task_routes._normalize_filed_ref({"id": "KC-3", "url": url})
         assert ref == {"id": "KC-3", "url": url}
 
     def test_a_non_dict_ref_is_dropped(self) -> None:
-        from kiro_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
+        from aj_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
 
         assert task_routes._normalize_filed_ref("KC-4") is None
         assert task_routes._normalize_filed_ref(None) is None
 
     def test_normalize_task_routes_filed_ref_through_the_gate(self) -> None:
-        from kiro_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
+        from aj_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
 
         task = task_routes._normalize_task(
             {"description": "do the thing", "filed_ref": {"id": "X", "url": "javascript:1"}}
@@ -427,7 +427,7 @@ class TestAgentAndPresetSanitizers:
 
     @staticmethod
     def _mod():
-        from kiro_crew.apps.builtins.meetings.backend.routes import settings as mod
+        from aj_crew.apps.builtins.meetings.backend.routes import settings as mod
 
         return mod
 
@@ -556,8 +556,8 @@ class TestNoStoreCallRunsOnTheEventLoop:
     )
 
     def _route_modules(self) -> list:
-        from kiro_crew.apps.builtins.meetings.backend import calendar_poller, calendar_sync
-        from kiro_crew.apps.builtins.meetings.backend.routes import (
+        from aj_crew.apps.builtins.meetings.backend import calendar_poller, calendar_sync
+        from aj_crew.apps.builtins.meetings.backend.routes import (
             agents,
             audio_import,
             calendar,
@@ -630,7 +630,7 @@ class TestNoStoreCallRunsOnTheEventLoop:
         """``handle_list_meetings`` lists meetings via ``asyncio.to_thread``."""
         import inspect
 
-        from kiro_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle as ml
+        from aj_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle as ml
 
         src = inspect.getsource(ml.handle_list_meetings)
         assert "asyncio.to_thread(store.list_meetings" in src
@@ -646,10 +646,10 @@ class TestNoStoreCallRunsOnTheEventLoop:
         """
         import inspect
 
-        from kiro_crew.apps.builtins.meetings.backend.routes import agents as ag
-        from kiro_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle as ml
-        from kiro_crew.apps.builtins.meetings.backend.routes import settings as st
-        from kiro_crew.apps.builtins.meetings.backend.routes import tasks as tk
+        from aj_crew.apps.builtins.meetings.backend.routes import agents as ag
+        from aj_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle as ml
+        from aj_crew.apps.builtins.meetings.backend.routes import settings as st
+        from aj_crew.apps.builtins.meetings.backend.routes import tasks as tk
 
         for handler in (
             ml.handle_meeting_init,
@@ -674,11 +674,11 @@ class TestNoStoreCallRunsOnTheEventLoop:
         """The helpers a worker thread runs say so, per the repo convention."""
         import inspect
 
-        from kiro_crew.apps.builtins.meetings.backend.routes import agents as ag
-        from kiro_crew.apps.builtins.meetings.backend.routes import calendar as cl
-        from kiro_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle as ml
-        from kiro_crew.apps.builtins.meetings.backend.routes import settings as st
-        from kiro_crew.apps.builtins.meetings.backend.routes import tasks as tk
+        from aj_crew.apps.builtins.meetings.backend.routes import agents as ag
+        from aj_crew.apps.builtins.meetings.backend.routes import calendar as cl
+        from aj_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle as ml
+        from aj_crew.apps.builtins.meetings.backend.routes import settings as st
+        from aj_crew.apps.builtins.meetings.backend.routes import tasks as tk
 
         for helper in (
             ml._init_meeting,
@@ -715,7 +715,7 @@ class TestTaskWritesAreSerialized:
         import threading
         from concurrent import futures
 
-        from kiro_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
+        from aj_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
 
         meeting_id = "m1"
         count = 16
@@ -741,7 +741,7 @@ class TestTaskWritesAreSerialized:
         import threading
         from concurrent import futures
 
-        from kiro_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
+        from aj_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
 
         meeting_id = "m2"
         count = 16
@@ -768,8 +768,8 @@ class TestTaskWritesAreSerialized:
         recorded the ref against one arbitrarily. The user sees two rows and can
         address neither reliably.
         """
-        from kiro_crew.apps.builtins.meetings.backend import store as meetings_store
-        from kiro_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
+        from aj_crew.apps.builtins.meetings.backend import store as meetings_store
+        from aj_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
 
         meeting_id = "m-dupe"
         meetings_store.write_tasks(
@@ -801,8 +801,8 @@ class TestTaskWritesAreSerialized:
         ],
     )
     def test_renamed_task_ids_never_collide(self, root: Path, raw_ids: list[str]) -> None:
-        from kiro_crew.apps.builtins.meetings.backend import store as meetings_store
-        from kiro_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
+        from aj_crew.apps.builtins.meetings.backend import store as meetings_store
+        from aj_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
 
         meeting_id = "m-collide"
         meetings_store.write_tasks(
@@ -824,7 +824,7 @@ class TestTaskWritesAreSerialized:
     async def test_deleting_one_of_two_long_duplicate_ids_keeps_the_other(
         self, app, root: Path
     ) -> None:
-        from kiro_crew.apps.builtins.meetings.backend import store as meetings_store
+        from aj_crew.apps.builtins.meetings.backend import store as meetings_store
 
         long_id = "x" * 64
         meetings_store.write_tasks(
@@ -844,8 +844,8 @@ class TestTaskWritesAreSerialized:
 
     def test_deleting_one_of_two_duplicate_ids_keeps_the_other(self, root: Path) -> None:
         """The consequence the rename prevents, asserted end to end."""
-        from kiro_crew.apps.builtins.meetings.backend import store as meetings_store
-        from kiro_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
+        from aj_crew.apps.builtins.meetings.backend import store as meetings_store
+        from aj_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
 
         meeting_id = "m-dupe-delete"
         meetings_store.write_tasks(
@@ -871,7 +871,7 @@ class TestTaskWritesAreSerialized:
         import ast
         from pathlib import Path as _Path
 
-        import kiro_crew.apps.builtins.meetings.backend as backend_pkg
+        import aj_crew.apps.builtins.meetings.backend as backend_pkg
 
         backend = _Path(backend_pkg.__file__).resolve().parent
         offenders: list[str] = []
@@ -924,9 +924,9 @@ class TestTaskWritesAreSerialized:
         import threading
         from concurrent import futures
 
-        from kiro_crew.apps.builtins.meetings.backend import store as meetings_store
-        from kiro_crew.apps.builtins.meetings.backend.routes import agents as agent_routes
-        from kiro_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle as lifecycle
+        from aj_crew.apps.builtins.meetings.backend import store as meetings_store
+        from aj_crew.apps.builtins.meetings.backend.routes import agents as agent_routes
+        from aj_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle as lifecycle
 
         meeting_id = "m-concurrent"
         meetings_store.write_meeting_meta(
@@ -972,8 +972,8 @@ class TestTaskWritesAreSerialized:
         import threading
         from concurrent import futures
 
-        from kiro_crew.apps.builtins.meetings.backend import store as meetings_store
-        from kiro_crew.apps.builtins.meetings.backend.routes import agents as agent_routes
+        from aj_crew.apps.builtins.meetings.backend import store as meetings_store
+        from aj_crew.apps.builtins.meetings.backend.routes import agents as agent_routes
 
         meeting_id = "m-toggles"
         meetings_store.write_meeting_meta(
@@ -1004,7 +1004,7 @@ class TestTaskWritesAreSerialized:
         import threading
         from concurrent import futures
 
-        from kiro_crew.apps.builtins.meetings.backend.routes import settings as settings_routes
+        from aj_crew.apps.builtins.meetings.backend.routes import settings as settings_routes
 
         count = 12
         barrier = threading.Barrier(count)
@@ -1028,8 +1028,8 @@ class TestTaskWritesAreSerialized:
         result. Writing that pre-await snapshot would roll back anything changed in
         between — e.g. the task extractor agent adding a task.
         """
-        from kiro_crew.apps.builtins.meetings.backend.providers import tasks as taskprov
-        from kiro_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
+        from aj_crew.apps.builtins.meetings.backend.providers import tasks as taskprov
+        from aj_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
 
         meeting_id = "m3"
         store.write_tasks(meeting_id, [{"id": "t1", "description": "file me"}], root)
@@ -1119,7 +1119,7 @@ class TestATaskIsNeverFiledTwice:
         import asyncio
         from unittest import mock
 
-        from kiro_crew.apps.builtins.meetings.backend.providers import tasks as taskprov
+        from aj_crew.apps.builtins.meetings.backend.providers import tasks as taskprov
 
         created: list[str] = []
         real_create = taskprov.LocalTaskProvider.create
@@ -1158,7 +1158,7 @@ class TestATaskIsNeverFiledTwice:
         double-click slow enough not to overlap. Same answer, no second item."""
         from unittest import mock
 
-        from kiro_crew.apps.builtins.meetings.backend.providers import tasks as taskprov
+        from aj_crew.apps.builtins.meetings.backend.providers import tasks as taskprov
 
         created: list[str] = []
         real_create = taskprov.LocalTaskProvider.create
@@ -1197,7 +1197,7 @@ class TestATaskIsNeverFiledTwice:
         import ast
         import inspect
 
-        from kiro_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
+        from aj_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
 
         tree = ast.parse(inspect.getsource(task_routes))
         handler = next(
@@ -1229,7 +1229,7 @@ class TestATaskIsNeverFiledTwice:
         import ast
         import inspect
 
-        from kiro_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
+        from aj_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
 
         tree = ast.parse(inspect.getsource(task_routes))
         handler = next(
@@ -1255,10 +1255,10 @@ class TestATaskIsNeverFiledTwice:
         rewriting `tasks.json`, a hand-edit). `_record_filing` must then refuse, not
         report success, and must not rewrite the list a concurrent deleter just wrote.
         """
-        from kiro_crew.apps.builtins.meetings.backend import store
-        from kiro_crew.apps.builtins.meetings.backend.providers import tasks as taskprov
-        from kiro_crew.apps.builtins.meetings.backend.routes import _common
-        from kiro_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
+        from aj_crew.apps.builtins.meetings.backend import store
+        from aj_crew.apps.builtins.meetings.backend.providers import tasks as taskprov
+        from aj_crew.apps.builtins.meetings.backend.routes import _common
+        from aj_crew.apps.builtins.meetings.backend.routes import tasks as task_routes
 
         root = tmp_path
         store.write_tasks("m1", [{"id": "survivor", "description": "kept"}], root)

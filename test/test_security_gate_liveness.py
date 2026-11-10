@@ -19,8 +19,8 @@ import json
 import time
 from pathlib import Path
 
-from kiro_crew import security
-from kiro_crew.security import (
+from aj_crew import security
+from aj_crew.security import (
     MAX_SCANNABLE_COMMAND_CHARS,
     MAX_SCANNABLE_SOURCE_BODY_CHARS,
     is_sensitive_bash_command,
@@ -465,7 +465,7 @@ def _url_payload_command(n: int) -> str:
 #: boundary split an SRI value saves main's verdict on the digest, not the notice.
 #:
 #: Raised again, from 32,188, for the ``self-protection-skills-authority-retire`` floor,
-#: which denies the operator-only ``kirocrew skills authority-retire`` recovery
+#: which denies the operator-only ``ajcrew skills authority-retire`` recovery
 #: through an agent shell: one argv matcher in ``argv_floor_self``, its facade
 #: manifest line, its rule id and reason in ``denied_rules_tables``, its ``deny_gate``
 #: registration, its facade export, and its name in the ungated-floor comment. No pass
@@ -525,7 +525,7 @@ def _url_payload_command(n: int) -> str:
 #: Raised by 3, from 32,613, for the LTS install-tree write fence in
 #: ``paths``: one import and one ``or`` clause on the write gate, plus the blank line
 #: isort puts after the import. The matcher lives outside the package
-#: (``kiro_crew.edition_install_fence``).
+#: (``aj_crew.edition_install_fence``).
 #:
 #: Raised by 19, from 32,616, for the ``rm`` floor's own segment walk: reserved
 #: words (``then``, ``do``, ``!``, ``time`` …) keep command position, a quoted
@@ -655,9 +655,9 @@ def _url_payload_command(n: int) -> str:
 #: use in ``_DenyWaiver``: it keeps every self-protection floor, the unverifiable
 #: push key and every self-protection or credential-exfil rule out of the override
 #: entirely, so the change only narrows what can be waived.
-#: Raised by 8 more, to 33,967, for the ``kirocrew-bin`` entry in
+#: Raised by 8 more, to 33,967, for the ``ajcrew-bin`` entry in
 #: ``paths_lists._WRITE_PROTECTED_HOME_PATHS``: the file-edit tool may not write the
-#: link that decides which ``kirocrew`` an agent shell runs. Deny-only.
+#: link that decides which ``ajcrew`` an agent shell runs. Deny-only.
 #: Raised by 345 more, from 33,967, for Outlook on the web and Slack links, matched by
 #: structure in ``redaction_entropy._chat_mail_link_spans`` with no pattern: a mail or
 #: calendar item id is base64 with its ``+``, ``/`` and ``=`` percent-escaped, and a
@@ -754,7 +754,7 @@ _MODULE_LINE_CAP = 4_500
 
 
 def _package_line_counts() -> dict[str, int]:
-    """Line count per file of the installed ``kiro_crew.security`` package."""
+    """Line count per file of the installed ``aj_crew.security`` package."""
     package_dir = Path(security.__file__).parent
     return {
         path.name: len(path.read_text(encoding="utf-8").splitlines())
@@ -816,7 +816,7 @@ def test_command_at_the_ceiling_is_scanned_not_refused() -> None:
 def test_ceiling_matches_the_tool_input_tier() -> None:
     """The two tiers refuse at the same size, so a command cannot be too long
     for one and scanned by the other."""
-    from kiro_crew import llm_helpers
+    from aj_crew import llm_helpers
 
     assert llm_helpers._MAX_SCANNABLE_TOOL_INPUT_CHARS == MAX_SCANNABLE_COMMAND_CHARS
 
@@ -830,7 +830,7 @@ def test_the_source_body_ceiling_is_larger_and_owned_by_the_cron_reader() -> Non
     """20 KiB of shell on one ``Bash`` call is a heredoc; 20 KiB of cron script is an
     ordinary script, and refusing it there is permanent (every tick until edited). The
     cron gate reads and refuses on ONE number so the reader and the scan agree."""
-    from kiro_crew import mcp_cron
+    from aj_crew import mcp_cron
 
     assert MAX_SCANNABLE_SOURCE_BODY_CHARS > MAX_SCANNABLE_COMMAND_CHARS
     assert mcp_cron._MAX_SCRIPT_SCAN_BYTES == MAX_SCANNABLE_SOURCE_BODY_CHARS

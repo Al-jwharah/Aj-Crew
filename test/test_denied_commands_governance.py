@@ -7,7 +7,7 @@ helper, and the ``resolve_pinned_commands`` deduped-union resolver.
 
 from __future__ import annotations
 
-from kiro_crew.platform import governance as gov
+from aj_crew.platform import governance as gov
 
 
 def _ceiling(commands_control: object) -> gov.GovernanceCeiling:
@@ -114,7 +114,7 @@ class TestSnapshotReflectsProfilePins:
     """
 
     def test_all_profile_pinned_commands_unions_loaded_profiles(self, monkeypatch) -> None:
-        from kiro_crew.platform import governance_profiles as gp
+        from aj_crew.platform import governance_profiles as gp
 
         rm_rf_root = "aws(?:\\s+--?[a-z-]+(?:[= ]\\S+)?)*\\s+s3(?:\\s+--?[a-z-]+"
         prof = gov.Profile(
@@ -137,8 +137,8 @@ class TestSnapshotReflectsProfilePins:
         # Pin a REAL built-in pattern via a profile; the snapshot must show that
         # rule as pinned + enabled and set governance_locked, even with no
         # Level-1 ceiling.
-        from kiro_crew.platform import governance_profiles as gp
-        from kiro_crew.security import BUILTIN_DENIED_RULES
+        from aj_crew.platform import governance_profiles as gp
+        from aj_crew.security import BUILTIN_DENIED_RULES
 
         target = BUILTIN_DENIED_RULES[0]
         prof = gov.Profile(
@@ -158,7 +158,7 @@ class TestSnapshotReflectsProfilePins:
 
         # The SNAPSHOT accessor unions all-profile pins; the ENFORCEMENT accessor
         # (ceiling-only) must NOT — a profile-A pin cannot force-enforce globally.
-        from kiro_crew.security import (
+        from aj_crew.security import (
             pinned_builtin_command_ids,
             pinned_builtin_command_ids_for_snapshot,
         )

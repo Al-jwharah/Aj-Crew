@@ -37,14 +37,14 @@ from telegram_parity_helpers import (  # noqa: F401 -- the autouse fixture regis
 from test_telegram import _dispatcher
 
 from conftest import host_abs
-from kiro_crew.messaging.outbound_files import OutboundFile
-from kiro_crew.telegram.client import (
+from aj_crew.messaging.outbound_files import OutboundFile
+from aj_crew.telegram.client import (
     REACTION_EMOJI,
     TelegramClient,
     TelegramInbound,
     normalize_reaction_emoji,
 )
-from kiro_crew.telegram.renderer import _display_safe, _utf16_chunks, _utf16_cut, _utf16_len
+from aj_crew.telegram.renderer import _display_safe, _utf16_chunks, _utf16_cut, _utf16_len
 
 #: The authorized upload root. ``authorize_upload_root`` keeps only an ABSOLUTE
 #: root (a string gate; extraction is faked below), and from Python 3.13
@@ -82,7 +82,7 @@ class TestDisplayFormRedaction:
         ],
     )
     def test_a_render_reassembled_credential_is_redacted(self, markup: str) -> None:
-        from kiro_crew.security import redact_credentials
+        from aj_crew.security import redact_credentials
 
         # The premise: the byte-level pass leaves the markup untouched, so the
         # halves are still there for the platform to rejoin.
@@ -121,7 +121,7 @@ class TestDisplayFormRedaction:
     async def test_a_heading_secret_is_redacted_before_the_plaintext_fallback(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.security import redact_credentials
+        from aj_crew.security import redact_credentials
 
         payload = "SecretAccessKey\n# : wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
         redacted, warnings = redact_credentials(payload)
@@ -147,7 +147,7 @@ class TestDisplayFormRedaction:
     async def test_a_heading_cannot_reveal_a_named_short_secret_in_the_plaintext_fallback(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.security import redact_credentials
+        from aj_crew.security import redact_credentials
 
         secret = "short-secret-value"
         payload = f"SecretAccessKey\n# : {secret}"
@@ -178,7 +178,7 @@ class TestDisplayFormRedaction:
         # ``# : <value>`` below read as one credential on screen and are redacted
         # before delivery. The screen is defence-in-depth, not the one Telegram
         # pass alone.
-        from kiro_crew.messaging import display_safety
+        from aj_crew.messaging import display_safety
 
         heading = display_safety.TELEGRAM_FALLBACK_HEADING
         monkeypatch.setattr(
@@ -501,7 +501,7 @@ class TestOutboundImages:
         renderer._buf = ["The answer. ![c](/tmp/chart.png)"]
         with pytest.MonkeyPatch.context() as mp:
             mp.setattr(
-                "kiro_crew.telegram.renderer.extract_local_refs_off_loop",
+                "aj_crew.telegram.renderer.extract_local_refs_off_loop",
                 AsyncMock(side_effect=OSError("disk gone")),
             )
             await renderer.on_done()
@@ -520,7 +520,7 @@ class TestUploadRejections:
     the defect the extractor's rejection list exists to prevent."""
 
     def _rejection(self, reason: str = "not_a_raster"):
-        from kiro_crew.messaging.outbound_files import Rejection
+        from aj_crew.messaging.outbound_files import Rejection
 
         return Rejection(dest="/tmp/x.png", reason=reason, detail="")
 
@@ -545,13 +545,13 @@ class TestUploadRejections:
 
     @pytest.mark.asyncio
     async def test_a_refused_image_keeps_its_markup_and_says_why(self) -> None:
-        from kiro_crew.messaging.outbound_files import ExtractResult
+        from aj_crew.messaging.outbound_files import ExtractResult
 
         renderer, client = _renderer()
         renderer.authorize_upload_root(_UPLOAD_ROOT)
         with pytest.MonkeyPatch.context() as mp:
             mp.setattr(
-                "kiro_crew.telegram.renderer.extract_local_refs_off_loop",
+                "aj_crew.telegram.renderer.extract_local_refs_off_loop",
                 AsyncMock(
                     return_value=ExtractResult(
                         rewritten_text="See it. ![c](/tmp/chart.png)",
@@ -634,7 +634,7 @@ class TestStallMarks:
         # threshold leaves 100 ms of real elapsed time to flip the verdict.
         renderer, _ = _renderer()
         renderer._last_progress = 1000.0
-        monkeypatch.setattr("kiro_crew.telegram.renderer.time.monotonic", lambda: 1000.0 + idle)
+        monkeypatch.setattr("aj_crew.telegram.renderer.time.monotonic", lambda: 1000.0 + idle)
         mark = renderer._stall_mark()
         assert (expect in mark) if expect else (mark == "")
 
@@ -1015,7 +1015,7 @@ class TestMultipartShape:
         # The endpoint hands the transport a str conversation id off a
         # ChannelLink; the Bot API wants ints. The verb owns that conversion,
         # like send_message beside it.
-        from kiro_crew.telegram.transport import TelegramTransport
+        from aj_crew.telegram.transport import TelegramTransport
 
         client = TelegramClient(token="t:1")
         seen: list[Any] = []

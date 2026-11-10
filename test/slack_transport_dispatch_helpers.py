@@ -37,7 +37,7 @@ class _CapturingSessions(FakeSessions):
         self.background_keys: list = []
 
     async def get_or_create(self, session_key, agent=None, channel_id=None, start_priority=None):
-        from kiro_crew.session import BACKGROUND_KEY
+        from aj_crew.session import BACKGROUND_KEY
 
         if session_key == BACKGROUND_KEY:
             self.background_keys.append(session_key)
@@ -54,7 +54,7 @@ class _CapturingCtxBuilder:
 
         class _Hooks:
             def on_message(self, text):
-                from kiro_crew.hooks import HookResult
+                from aj_crew.hooks import HookResult
 
                 return hook_result or HookResult.passthrough()
 

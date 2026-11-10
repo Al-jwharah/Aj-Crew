@@ -17,9 +17,9 @@ import json
 import sys
 from pathlib import Path
 
-import kiro_crew.hooks as hooks_mod
-from kiro_crew.agent_sdk import spec_hooks
-from kiro_crew.hooks import (
+import aj_crew.hooks as hooks_mod
+from aj_crew.agent_sdk import spec_hooks
+from aj_crew.hooks import (
     HOOK_EVENT_PRE_TOOL_USE,
     HOOK_EVENT_USER_PROMPT_SUBMIT,
     ScriptHookStore,
@@ -27,8 +27,8 @@ from kiro_crew.hooks import (
 
 
 def _passthrough_sandbox(monkeypatch):
-    monkeypatch.setattr("kiro_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
-    monkeypatch.setattr("kiro_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
+    monkeypatch.setattr("aj_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
+    monkeypatch.setattr("aj_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
 
 
 def _marker_command(tmp_path: Path, name: str) -> str:
@@ -57,13 +57,13 @@ def _point_hooks_dir(monkeypatch, home: Path) -> None:
     config. Patch the constant to the temp HOME's hooks dir and point the config
     path at a non-existent file so no custom override is read.
     """
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     (home / ".kiro" / "hooks").mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(agent_mod, "_DEFAULT_KIRO_HOOKS_DIR", home / ".kiro" / "hooks")
     monkeypatch.setattr(agent_mod, "_mc_config_path", lambda: home / "no-such-config.json")
     # Clear the per-file conversion cache so a prior test's entries never leak.
-    from kiro_crew.agent_sdk import spec_hooks as _sh
+    from aj_crew.agent_sdk import spec_hooks as _sh
 
     _sh._user_file_cache.clear()
 
@@ -189,7 +189,7 @@ def test_d_pre_tool_use_exit_2_blocks(tmp_path, monkeypatch):
 #     pick up a *.json standalone file, so it fires exactly once (only via the
 #     user-file loader, never again through spec hooks).
 def test_e_json_file_is_not_also_picked_up_by_sh_autoimport(tmp_path, monkeypatch):
-    from kiro_crew.agent_materialization import kiro_hooks
+    from aj_crew.agent_materialization import kiro_hooks
 
     home = tmp_path / "home"
     _write_user_hook(
@@ -220,17 +220,17 @@ def test_e_json_file_is_not_also_picked_up_by_sh_autoimport(tmp_path, monkeypatc
 import asyncio as _asyncio  # noqa: E402
 from types import SimpleNamespace as _NS  # noqa: E402
 
-from kiro_crew.agent_sdk.backends import (  # noqa: E402
+from aj_crew.agent_sdk.backends import (  # noqa: E402
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_KAS,
     ACP_BACKEND_OPENCODE,
 )
-from kiro_crew.agent_sdk.capabilities import capabilities_for  # noqa: E402
-from kiro_crew.dashboard import chat_runner  # noqa: E402
+from aj_crew.agent_sdk.capabilities import capabilities_for  # noqa: E402
+from aj_crew.dashboard import chat_runner  # noqa: E402
 
 
 def _agents_dir(tmp_path, monkeypatch) -> Path:
-    import kiro_crew.config.paths as paths_mod
+    import aj_crew.config.paths as paths_mod
 
     d = tmp_path / "agents"
     d.mkdir()
@@ -305,7 +305,7 @@ def test_g_kas_session_does_load_user_files(tmp_path, monkeypatch):
 # (h) F-A: a KAS sub-agent / task-runner turn fires a user-file PreToolUse hook,
 #     and exit 2 blocks the tool. turn_spec_hooks is the seam both use.
 def test_h_subagent_turn_fires_user_file_pre_tool_hook_and_exit_2_blocks(tmp_path, monkeypatch):
-    from kiro_crew.agent_sdk import spec_hooks
+    from aj_crew.agent_sdk import spec_hooks
 
     _passthrough_sandbox(monkeypatch)
     monkeypatch.setattr(hooks_mod, "_script_hooks_capability_denied", lambda sk="": None)
@@ -342,8 +342,8 @@ def test_h_subagent_turn_fires_user_file_pre_tool_hook_and_exit_2_blocks(tmp_pat
 # (i) F-B: a user-file hook whose command is an autoimported *.sh already folded
 #     into the spec fires exactly once (dedup on event/command/matcher, spec wins).
 def test_i_a_json_hook_whose_command_is_an_autoimported_script_fires_once(tmp_path, monkeypatch):
-    from kiro_crew.agent_sdk import spec_hooks
-    from kiro_crew.hooks import ScriptHook
+    from aj_crew.agent_sdk import spec_hooks
+    from aj_crew.hooks import ScriptHook
 
     command = "/usr/bin/true"
     _write_user_hook(
@@ -368,7 +368,7 @@ def test_i_a_json_hook_whose_command_is_an_autoimported_script_fires_once(tmp_pa
 
 # (j) F-C: over-cap user files log + SEL-audit once per snapshot, not per turn.
 def test_j_over_cap_user_files_audit_once_per_snapshot(tmp_path, monkeypatch):
-    from kiro_crew.agent_sdk import spec_hooks
+    from aj_crew.agent_sdk import spec_hooks
 
     home = tmp_path / "home"
     hooks_dir = home / ".kiro" / "hooks"
@@ -393,7 +393,7 @@ def test_j_over_cap_user_files_audit_once_per_snapshot(tmp_path, monkeypatch):
     _point_hooks_dir(monkeypatch, home)
     spec_hooks._user_file_truncation_audited.clear()
     audits: list = []
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     monkeypatch.setattr(agent_mod, "_sel_hook_rejected", lambda *a, **k: audits.append(a))
     spec_hooks.user_hook_files()
@@ -404,8 +404,8 @@ def test_j_over_cap_user_files_audit_once_per_snapshot(tmp_path, monkeypatch):
 # (k) R2: a rejected kiro_hooks_dir is NOT logged or SEL-audited on each turn.
 #     resolved_kiro_hooks_dir (the per-turn resolver) passes audit=False.
 def test_k_rejected_dir_is_not_audited_per_turn(tmp_path, monkeypatch):
-    import kiro_crew.agent as agent_mod
-    from kiro_crew.agent_materialization import kiro_hooks
+    import aj_crew.agent as agent_mod
+    from aj_crew.agent_materialization import kiro_hooks
 
     # Point the mc config at one that sets kiro_hooks_dir OUTSIDE HOME.
     bad = tmp_path / "outside"
@@ -435,7 +435,7 @@ def test_k_rejected_dir_is_not_audited_per_turn(tmp_path, monkeypatch):
 #     _from_documents truncates. The message names the cap, not an exact count --
 #     the loader stops at the cap and cannot know how many more there were.
 def test_l_over_cap_single_file_keeps_cap_and_warns_naming_the_cap(tmp_path, monkeypatch):
-    from kiro_crew.agent_sdk import spec_hooks
+    from aj_crew.agent_sdk import spec_hooks
 
     home = tmp_path / "home"
     docs = [
@@ -450,7 +450,7 @@ def test_l_over_cap_single_file_keeps_cap_and_warns_naming_the_cap(tmp_path, mon
     _point_hooks_dir(monkeypatch, home)
     spec_hooks._user_file_truncation_audited.clear()
     reasons: list = []
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     monkeypatch.setattr(agent_mod, "_sel_hook_rejected", lambda *a, **k: reasons.append(a[2]))
     out = spec_hooks.user_hook_files()
@@ -463,7 +463,7 @@ def test_l_over_cap_single_file_keeps_cap_and_warns_naming_the_cap(tmp_path, mon
 
 # (m) R3: adding a file past the file cap changes the snapshot and audits once more.
 def test_m_adding_a_file_past_the_cap_changes_snapshot_and_audits(tmp_path, monkeypatch):
-    from kiro_crew.agent_sdk import spec_hooks
+    from aj_crew.agent_sdk import spec_hooks
 
     home = tmp_path / "home"
     hooks_dir = home / ".kiro" / "hooks"
@@ -487,7 +487,7 @@ def test_m_adding_a_file_past_the_cap_changes_snapshot_and_audits(tmp_path, monk
     _point_hooks_dir(monkeypatch, home)
     spec_hooks._user_file_truncation_audited.clear()
     audits: list = []
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     monkeypatch.setattr(agent_mod, "_sel_hook_rejected", lambda *a, **k: audits.append(a))
     spec_hooks.user_hook_files()  # at the file cap, over the hook cap -> audits once
@@ -517,7 +517,7 @@ def test_m_adding_a_file_past_the_cap_changes_snapshot_and_audits(tmp_path, monk
 # (n) S1: an under-cap file with a disabled (or confirm/unknown-trigger) document
 #     is NOT counted as a cap drop, so it writes no caps WARNING or SEL audit.
 def test_n_under_cap_skipped_doc_does_not_audit_as_a_cap_drop(tmp_path, monkeypatch):
-    from kiro_crew.agent_sdk import spec_hooks
+    from aj_crew.agent_sdk import spec_hooks
 
     home = tmp_path / "home"
     _write_user_hook(
@@ -551,7 +551,7 @@ def test_n_under_cap_skipped_doc_does_not_audit_as_a_cap_drop(tmp_path, monkeypa
     _point_hooks_dir(monkeypatch, home)
     spec_hooks._user_file_truncation_audited.clear()
     reasons: list = []
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     monkeypatch.setattr(agent_mod, "_sel_hook_rejected", lambda *a, **k: reasons.append(a))
     out = spec_hooks.user_hook_files()

@@ -48,34 +48,34 @@ class TestCaught:
     @pytest.mark.parametrize(
         "line",
         [
-            "KiroCrew keeps working while you sleep.",
-            "Run KiroCrew on your own hardware.",
-            "This is KiroCrew's own sandbox.",
-            "the process that launched KiroCrew.",
-            "A desktop companion for KiroCrew that paces your day",
-            "every KiroCrew-owned file",
-            '"about_blurb": "A companion built into KiroCrew."',
-            "# KiroCrew needs Python >= 3.10 at runtime",
+            "AjCrew keeps working while you sleep.",
+            "Run AjCrew on your own hardware.",
+            "This is AjCrew's own sandbox.",
+            "the process that launched AjCrew.",
+            "A desktop companion for AjCrew that paces your day",
+            "every AjCrew-owned file",
+            '"about_blurb": "A companion built into AjCrew."',
+            "# AjCrew needs Python >= 3.10 at runtime",
         ],
     )
     def test_concatenated_prose_is_flagged(self, line: str) -> None:
         assert _hits(line), f"missed: {line}"
 
-    @pytest.mark.parametrize("token", ["KiroCrew", "Kirocrew", "kiroCrew", "KiroCREW"])
+    @pytest.mark.parametrize("token", ["AjCrew", "Ajcrew", "ajCrew", "AjCREW"])
     def test_every_mixed_case_join_is_flagged(self, token: str) -> None:
         assert _hits(f"powered by {token} today") == [token]
 
     def test_uncapitalised_spacing_is_flagged(self) -> None:
         # "at least the first letter capitalised" — a spaced but lowercase brand
         # is still wrong.
-        assert _hits("install kiro crew first") == ["kiro crew"]
+        assert _hits("install aj crew first") == ["aj crew"]
 
     def test_capitalised_spacing_is_accepted(self) -> None:
-        assert _hits("Kiro Crew keeps working.") == []
-        assert _hits("Kiro crew keeps working.") == []
+        assert _hits("Aj Crew keeps working.") == []
+        assert _hits("Aj crew keeps working.") == []
 
     def test_multiple_hits_on_one_line_all_reported(self) -> None:
-        assert _hits("KiroCrew talks to KiroCrew over SSH") == ["KiroCrew", "KiroCrew"]
+        assert _hits("AjCrew talks to AjCrew over SSH") == ["AjCrew", "AjCrew"]
 
 
 # ---------------------------------------------------------------------------
@@ -88,72 +88,72 @@ class TestExempt:
         "line",
         [
             # The systems that own the joined spelling.
-            "run `kirocrew serve` to start the gateway",
-            'os.environ["KIROCREW_HOME"]',
-            "from kiro_crew.config import loader",
+            "run `ajcrew serve` to start the gateway",
+            'os.environ["AJCREW_HOME"]',
+            "from aj_crew.config import loader",
             "state lives under ~/.kiro/crew/workspace",
-            "mailto:kiro-crew-security-support@example.com",
+            "mailto:aj-crew-security-support@example.com",
             # Repo slug and URLs.
-            "https://github.com/kirodotdev/KiroCrew/issues",
-            "git clone https://github.com/kirodotdev/KiroCrew.git",
+            "https://github.com/Al-jwharah/Aj-Crew/issues",
+            "git clone https://github.com/Al-jwharah/Aj-Crew.git",
             "pushed to `kirodotdev/KiroCrew` itself",
             # Path segments — each separator side alone, since a brand with a
             # separator on both sides is covered by either check.
-            "built from ~/src/KiroCrew last night",
-            "KiroCrew/website holds the frontend",
-            r"installed to C:\Program Files\KiroCrew",
-            r"launches KiroCrew\resources\app.asar",
-            "artifacts/KiroCrew-notarized-stable/KiroCrew.dmg",
+            "built from ~/src/AjCrew last night",
+            "AjCrew/website holds the frontend",
+            r"installed to C:\Program Files\AjCrew",
+            r"launches AjCrew\resources\app.asar",
+            "artifacts/AjCrew-notarized-stable/AjCrew.dmg",
             # One identifier, not two words.
-            "resolve KiroCrewApps from the registry",
-            "the KiroCrewPublishCDK distribution stack",
-            "SHIM = MyKiroCrewShim()",
+            "resolve AjCrewApps from the registry",
+            "the AjCrewPublishCDK distribution stack",
+            "SHIM = MyAjCrewShim()",
             # Hyphenated identifier interior — an HTTP header, not prose.
-            'assert "X-KiroCrew-Proxy" in headers',
+            'assert "X-AjCrew-Proxy" in headers',
             # Release artifacts.
-            "electron-builder signs KiroCrew.exe and Update.exe",
-            "publishes KiroCrew-x86_64.AppImage beside the deb",
-            "opens /Applications/KiroCrew.app",
-            "the KiroCrew-Nightly channel",
+            "electron-builder signs AjCrew.exe and Update.exe",
+            "publishes AjCrew-x86_64.AppImage beside the deb",
+            "opens /Applications/AjCrew.app",
+            "the AjCrew-Nightly channel",
         ],
     )
     def test_identifier_forms_are_not_flagged(self, line: str) -> None:
         assert _hits(line) == [], f"false positive: {line}"
 
     def test_sentence_end_is_not_read_as_a_file_extension(self) -> None:
-        # `KiroCrew.exe` is exempt; `KiroCrew.` at the end of a sentence is not.
-        assert _hits("shipped with KiroCrew.") == ["KiroCrew"]
-        assert _hits("shipped with KiroCrew.exe") == []
+        # `AjCrew.exe` is exempt; `AjCrew.` at the end of a sentence is not.
+        assert _hits("shipped with AjCrew.") == ["AjCrew"]
+        assert _hits("shipped with AjCrew.exe") == []
 
     def test_hyphen_exemption_does_not_swallow_prose(self) -> None:
         # Only an *interior* hyphen segment is an identifier.
-        assert _hits("a KiroCrew-specific workaround") == ["KiroCrew"]
+        assert _hits("a AjCrew-specific workaround") == ["AjCrew"]
 
     def test_line_suppression(self) -> None:
-        assert _hits("correct = 'KiroCrew'  # brand-ok: transcript fixture") == []
+        assert _hits("correct = 'AjCrew'  # brand-ok: transcript fixture") == []
 
     def test_channel_qualified_identifier(self) -> None:
         # PRODUCT_NAMES in cli_desktop.py spells the macOS log dir this way, so the
         # space form is an OS identifier even though it reads like prose.
-        assert _hits('home / "Library" / "Logs" / "KiroCrew Nightly"') == []
-        assert _hits("the KiroCrew Insider channel") == []
+        assert _hits('home / "Library" / "Logs" / "AjCrew Nightly"') == []
+        assert _hits("the AjCrew Insider channel") == []
         # Any other following word is prose again.
-        assert _hits("the KiroCrew dashboard") == ["KiroCrew"]
+        assert _hits("the AjCrew dashboard") == ["AjCrew"]
 
 
 class TestUrlBoundary:
     """A URL exempts what is *inside* it, and nothing after it."""
 
     def test_wrapped_link_still_exempts_the_slug(self) -> None:
-        assert _hits("see [docs](https://github.com/kirodotdev/KiroCrew/issues)") == []
-        assert _hits("<https://github.com/kirodotdev/KiroCrew>") == []
+        assert _hits("see [docs](https://github.com/Al-jwharah/Aj-Crew/issues)") == []
+        assert _hits("<https://github.com/Al-jwharah/Aj-Crew>") == []
 
     def test_markup_closing_a_url_does_not_exempt_the_text_after_it(self) -> None:
-        assert _hits('<a href="https://example.com/">KiroCrew</a>') == ["KiroCrew"]
-        assert _hits("[KiroCrew](https://example.com/)") == ["KiroCrew"]
+        assert _hits('<a href="https://example.com/">AjCrew</a>') == ["AjCrew"]
+        assert _hits("[AjCrew](https://example.com/)") == ["AjCrew"]
 
     def test_a_url_earlier_on_the_line_does_not_exempt_later_prose(self) -> None:
-        assert _hits("https://example.com/x is where KiroCrew lives") == ["KiroCrew"]
+        assert _hits("https://example.com/x is where AjCrew lives") == ["AjCrew"]
 
     @pytest.mark.parametrize(
         "filler,glue",
@@ -162,11 +162,11 @@ class TestUrlBoundary:
     def test_a_very_long_line_stays_linear(self, filler: str, glue: str) -> None:
         # A generated file can carry one enormous line. Quadratic backtracking here
         # would blow the CI job's timeout on input nobody can see is pathological.
-        line = filler * (200_000 // len(filler)) + glue + "KiroCrew is here"
+        line = filler * (200_000 // len(filler)) + glue + "AjCrew is here"
         started = time.monotonic()
         found = _hits(line, path="big.md")
         assert time.monotonic() - started < 2.0
-        assert found == ["KiroCrew"]
+        assert found == ["AjCrew"]
 
     def test_many_brand_names_on_one_line_stay_linear(self) -> None:
         # The other axis: not one long line, but MANY matches on it. Any per-match
@@ -263,9 +263,9 @@ class TestUrlBoundary:
         )
 
     def test_many_backticks_stay_linear(self) -> None:
-        line = "`x`" * 30_000 + " KiroCrew"
+        line = "`x`" * 30_000 + " AjCrew"
         started = time.monotonic()
-        assert _hits(line, path="big.md") == ["KiroCrew"]
+        assert _hits(line, path="big.md") == ["AjCrew"]
         assert time.monotonic() - started < 2.0
 
 
@@ -277,12 +277,12 @@ class TestUrlBoundary:
 class TestMarkdownCode:
     def test_fenced_block_is_exempt_and_surrounding_prose_is_not(self) -> None:
         doc = [
-            "Install KiroCrew:",
+            "Install AjCrew:",
             "```bash",
-            "git clone https://github.com/kirodotdev/KiroCrew.git",
-            "cd KiroCrew",
+            "git clone https://github.com/Al-jwharah/Aj-Crew.git",
+            "cd AjCrew",
             "```",
-            "Then start KiroCrew.",
+            "Then start AjCrew.",
         ]
         fenced = gate.fenced_lines(doc)
         assert fenced == {2, 3, 4, 5}
@@ -294,14 +294,14 @@ class TestMarkdownCode:
         assert flagged == [1, 6]
 
     def test_tilde_fences_and_reopened_blocks(self) -> None:
-        doc = ["a", "~~~", "cd KiroCrew", "~~~", "b", "```", "cd KiroCrew", "```"]
+        doc = ["a", "~~~", "cd AjCrew", "~~~", "b", "```", "cd AjCrew", "```"]
         assert gate.fenced_lines(doc) == {2, 3, 4, 6, 7, 8}
 
     def test_a_wider_fence_is_not_closed_by_a_narrower_run(self) -> None:
         # `builtin_skills/artifacts/SKILL.md` quotes fenced examples inside
         # four-backtick blocks. Closing the outer fence on the inner ``` would
         # expose the example's contents as prose and flag its identifiers.
-        doc = ["````markdown", "```bash", "cd KiroCrew", "```", "````", "Then run KiroCrew."]
+        doc = ["````markdown", "```bash", "cd AjCrew", "```", "````", "Then run AjCrew."]
         assert gate.fenced_lines(doc) == {1, 2, 3, 4, 5}
         flagged = [
             i
@@ -313,21 +313,21 @@ class TestMarkdownCode:
     def test_a_closing_fence_may_not_carry_an_info_string(self) -> None:
         # Only a bare run closes; ```` ```python ```` inside a block is an opener
         # for a nested example, not the outer block's terminator.
-        doc = ["````", "```python", "x = 1", "```", "````", "KiroCrew here"]
+        doc = ["````", "```python", "x = 1", "```", "````", "AjCrew here"]
         assert gate.fenced_lines(doc) == {1, 2, 3, 4, 5}
 
     def test_inline_code_span_is_exempt_but_the_rest_of_the_line_is_not(self) -> None:
-        assert _hits("clone `KiroCrew` then start KiroCrew.", path="doc.md") == ["KiroCrew"]
+        assert _hits("clone `AjCrew` then start AjCrew.", path="doc.md") == ["AjCrew"]
 
     def test_inline_code_exemption_is_markdown_only(self) -> None:
         # A backtick in Python is not a code span; a TS template literal string
         # is still shipped text.
-        assert _hits("s = 'see `KiroCrew` docs'", path="a.py") == ["KiroCrew"]
+        assert _hits("s = 'see `AjCrew` docs'", path="a.py") == ["AjCrew"]
 
     def test_the_uncapitalised_rule_has_its_own_inline_code_exemption(self) -> None:
         # A separate branch from the concatenated rule's, so it needs its own case.
-        assert _hits("run `kiro crew` from a shell", path="doc.md") == []
-        assert _hits("run kiro crew from a shell", path="doc.md") == ["kiro crew"]
+        assert _hits("run `aj crew` from a shell", path="doc.md") == []
+        assert _hits("run aj crew from a shell", path="doc.md") == ["aj crew"]
 
 
 # ---------------------------------------------------------------------------
@@ -341,7 +341,7 @@ class TestScope:
         assert not gate.in_scope("node_modules/foo/README.md")
         assert not gate.in_scope("assets/banner.png")
         assert not gate.in_scope("scripts/check_brand_name.py")
-        assert not gate.in_scope("src/kiro_crew/_vendor/libggml-base.so.0")
+        assert not gate.in_scope("src/aj_crew/_vendor/libggml-base.so.0")
         assert not gate.in_scope("website/electron/package.json")
         assert gate.in_scope("README.md")
 
@@ -352,9 +352,9 @@ class TestScope:
             "website/src/i18n/locales/de.json",
             "website/src/i18n/locales/zh-CN.json",
             "website/src/i18n/locales/en-XA.json",
-            "src/kiro_crew/data/tips_catalog.json",
-            "src/kiro_crew/docs/settings-registry.generated.json",
-            "src/kiro_crew/docs/ui-index.generated.json",
+            "src/aj_crew/data/tips_catalog.json",
+            "src/aj_crew/docs/settings-registry.generated.json",
+            "src/aj_crew/docs/ui-index.generated.json",
         ):
             assert gate.in_scope(path), path
             assert not gate.enforced(path), path
@@ -364,7 +364,7 @@ class TestScope:
             "website/src/i18n/locales/en.json",
             "website/src/i18n/locales/en.manual.json",
             "website/src/i18n/glossary.json",
-            "src/kiro_crew/docs/skills.md",
+            "src/aj_crew/docs/skills.md",
             "website/src/pages/settings/NotificationsPanel.tsx",
             "website/src/uiLocations/descriptors.ts",
         ):
@@ -373,10 +373,10 @@ class TestScope:
     def test_enforced_is_never_wider_than_in_scope(self) -> None:
         for path in (
             "website/package-lock.json",
-            "src/kiro_crew/_vendor/x.so.0",
+            "src/aj_crew/_vendor/x.so.0",
             "website/electron/package.json",
             "website/src/i18n/locales/de.json",
-            "src/kiro_crew/data/tips_catalog.json",
+            "src/aj_crew/data/tips_catalog.json",
         ):
             assert not (gate.enforced(path) and not gate.in_scope(path)), path
 
@@ -386,7 +386,7 @@ class TestScope:
         # os.path.relpath raises across mounts.
         monkeypatch.setattr(gate, "REPO_ROOT", str(tmp_path))
         (tmp_path / "note.md").write_text(
-            "KiroCrew one\nKiroCrew two\nKiroCrew three\n", encoding="utf-8"
+            "AjCrew one\nAjCrew two\nAjCrew three\n", encoding="utf-8"
         )
         assert len(gate.scan_file("note.md")) == 3
         assert [v.line_no for v in gate.scan_file("note.md", {2})] == [2]
@@ -399,7 +399,7 @@ class TestScope:
         # git splits on \n only. A lone \r must not start a new line here, or every
         # line number after it points at the wrong text.
         monkeypatch.setattr(gate, "REPO_ROOT", str(tmp_path))
-        (tmp_path / "crlf.md").write_bytes(b"one\r\ntwo \rstill two\r\nKiroCrew\r\n")
+        (tmp_path / "crlf.md").write_bytes(b"one\r\ntwo \rstill two\r\nAjCrew\r\n")
         lines = gate.read_lines("crlf.md")
         assert lines is not None and len(lines) == 4  # 3 real lines + trailing ""
         assert [v.line_no for v in gate.scan_file("crlf.md")] == [3]
@@ -465,11 +465,11 @@ class TestDiffScopedRun:
 
     def test_preexisting_violation_does_not_fail_the_diff_gate(self, tmp_path) -> None:
         root = self._repo(tmp_path)
-        self._commit(root, "doc.md", "Old line about KiroCrew.\n", "base")
+        self._commit(root, "doc.md", "Old line about AjCrew.\n", "base")
         base = subprocess.run(
             ["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True, encoding="utf-8", check=True
         ).stdout.strip()
-        self._commit(root, "doc.md", "Old line about KiroCrew.\nA clean new line.\n", "head")
+        self._commit(root, "doc.md", "Old line about AjCrew.\nA clean new line.\n", "head")
 
         result = self._run(root, base)
         assert result.returncode == 0, result.stdout
@@ -483,17 +483,17 @@ class TestDiffScopedRun:
         base = subprocess.run(
             ["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True, encoding="utf-8", check=True
         ).stdout.strip()
-        self._commit(root, "doc.md", "Nothing to see.\nNow with KiroCrew in it.\n", "head")
+        self._commit(root, "doc.md", "Nothing to see.\nNow with AjCrew in it.\n", "head")
 
         result = self._run(root, base)
         assert result.returncode == 1, result.stdout
         assert "::error::" in result.stdout
-        assert "'Kiro Crew'" in result.stdout
+        assert "'Aj Crew'" in result.stdout
         assert "doc.md:2" in result.stdout
 
     def test_no_base_ref_reports_the_whole_tree_without_failing(self, tmp_path) -> None:
         root = self._repo(tmp_path)
-        self._commit(root, "doc.md", "Prose about KiroCrew everywhere.\n", "base")
+        self._commit(root, "doc.md", "Prose about AjCrew everywhere.\n", "base")
 
         result = self._run(root, None)
         assert result.returncode == 0, result.stdout
@@ -508,7 +508,7 @@ class TestDiffScopedRun:
         root = self._repo(tmp_path)
         self._commit(root, ".gitattributes", "*.md -diff\n", "base")
         base = self._head(root)
-        self._commit(root, "doc.md", "Run KiroCrew today.\n", "head")
+        self._commit(root, "doc.md", "Run AjCrew today.\n", "head")
 
         result = self._run(root, base)
         assert result.returncode == 1, result.stdout
@@ -520,7 +520,7 @@ class TestDiffScopedRun:
         root = self._repo(tmp_path)
         self._commit(root, "clean.md", "nothing here\n", "base")
         base = self._head(root)
-        self._commit(root, "日本語.md", "Run KiroCrew today.\n", "head")
+        self._commit(root, "日本語.md", "Run AjCrew today.\n", "head")
 
         result = self._run(root, base)
         assert result.returncode == 1, result.stdout
@@ -543,7 +543,7 @@ class TestDiffScopedRun:
 
     def test_a_pure_deletion_hunk_contributes_nothing(self, tmp_path) -> None:
         root = self._repo(tmp_path)
-        self._commit(root, "doc.md", "keep\nKiroCrew line\nkeep\n", "base")
+        self._commit(root, "doc.md", "keep\nAjCrew line\nkeep\n", "base")
         base = self._head(root)
         self._commit(root, "doc.md", "keep\nkeep\n", "head")
 
@@ -555,7 +555,7 @@ class TestDiffScopedRun:
         root = self._repo(tmp_path)
         self._commit(root, "existing.md", "nothing\n", "base")
         base = self._head(root)
-        self._commit(root, "fresh.md", "line one\nRun KiroCrew here.\n", "head")
+        self._commit(root, "fresh.md", "line one\nRun AjCrew here.\n", "head")
 
         result = self._run(root, base)
         assert result.returncode == 1, result.stdout
@@ -572,7 +572,7 @@ class TestDiffScopedRun:
             check=True,
             capture_output=True,
         )
-        self._commit(root, "doc.md", "Now with KiroCrew in it.\n", "orphan")
+        self._commit(root, "doc.md", "Now with AjCrew in it.\n", "orphan")
         assert (
             subprocess.run(
                 ["git", "merge-base", "main", "HEAD"], cwd=root, capture_output=True
@@ -592,7 +592,7 @@ class TestDiffScopedRun:
         self._commit(
             root,
             "website/src/i18n/locales/de.json",
-            '{\n  "update": "KiroCrew wird aktualisiert"\n}\n',
+            '{\n  "update": "AjCrew wird aktualisiert"\n}\n',
             "head",
         )
 
@@ -618,7 +618,7 @@ class TestDiffScopedRun:
         root = self._repo(tmp_path)
         self._commit(root, "clean.md", "nothing here\n", "base")
         base = self._head(root)
-        self._commit(root, "日本語.md", "Run KiroCrew today.\n", "head")
+        self._commit(root, "日本語.md", "Run AjCrew today.\n", "head")
 
         result = self._run(root, base, PYTHONIOENCODING="ascii")
         assert result.returncode == 1, f"stdout={result.stdout!r} stderr={result.stderr!r}"
@@ -696,21 +696,21 @@ class TestExplicitPathFailsClosed:
 
     def test_an_undecodable_path_fails_closed(self, tmp_path) -> None:
         blob = tmp_path / "notes.md"
-        blob.write_bytes(b"\xff\xfe\x00KiroCrew")
+        blob.write_bytes(b"\xff\xfe\x00AjCrew")
         result = self._run(str(blob))
         assert result.returncode == 1, result.stdout
         assert "never checked" in result.stdout
 
     def test_a_readable_clean_path_still_passes(self, tmp_path) -> None:
         doc = tmp_path / "clean.md"
-        doc.write_text("Prose about Kiro Crew.\n", encoding="utf-8")
+        doc.write_text("Prose about Aj Crew.\n", encoding="utf-8")
         result = self._run(str(doc))
         assert result.returncode == 0, result.stdout
         assert "no misspellings" in result.stdout
 
     def test_a_readable_dirty_path_still_fails_on_the_finding(self, tmp_path) -> None:
         doc = tmp_path / "dirty.md"
-        doc.write_text("Prose about KiroCrew.\n", encoding="utf-8")
+        doc.write_text("Prose about AjCrew.\n", encoding="utf-8")
         result = self._run(str(doc))
         assert result.returncode == 1, result.stdout
         assert "dirty.md:1" in result.stdout
@@ -728,7 +728,7 @@ class TestReportDisclosesTruncation:
 
     def test_a_truncated_report_says_so_and_tallies_by_path(self, capsys) -> None:
         violations = [
-            gate.Violation(f"{top}/f{i}.md", 1, "KiroCrew", "KiroCrew")
+            gate.Violation(f"{top}/f{i}.md", 1, "AjCrew", "AjCrew")
             # 'zzz' sorts last, so a silent head-slice would drop it entirely.
             for top, count in (("aaa", 40), ("zzz", 5))
             for i in range(count)
@@ -744,7 +744,7 @@ class TestReportDisclosesTruncation:
         assert "all 45 lines" in out
 
     def test_an_untruncated_report_adds_no_tally_or_notice(self, capsys) -> None:
-        violations = [gate.Violation("a.md", 1, "KiroCrew", "KiroCrew")]
+        violations = [gate.Violation("a.md", 1, "AjCrew", "AjCrew")]
         assert gate.report(violations, enforcing=False, base=None) == 0
         out = capsys.readouterr().out
         assert "more" not in out
@@ -753,7 +753,7 @@ class TestReportDisclosesTruncation:
 
     def test_the_enforcing_path_keeps_its_own_cap_and_notice(self, capsys) -> None:
         violations = [
-            gate.Violation(f"f{i}.md", 1, "KiroCrew", "KiroCrew") for i in range(205)
+            gate.Violation(f"f{i}.md", 1, "AjCrew", "AjCrew") for i in range(205)
         ]
         assert gate.report(violations, enforcing=True, base="HEAD") == 1
         out = capsys.readouterr().out
@@ -763,7 +763,7 @@ class TestReportDisclosesTruncation:
 
     def test_a_root_level_path_is_tallied_without_a_trailing_slash(self, capsys) -> None:
         violations = [
-            gate.Violation("install.sh" if i % 2 else "docs/a.md", 1, "KiroCrew", "KiroCrew")
+            gate.Violation("install.sh" if i % 2 else "docs/a.md", 1, "AjCrew", "AjCrew")
             for i in range(50)
         ]
         assert gate.report(violations, enforcing=False, base=None) == 0

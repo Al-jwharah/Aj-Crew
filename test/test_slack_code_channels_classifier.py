@@ -12,8 +12,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.slack.code_channels import classifier
-from kiro_crew.slack.code_channels.classifier import (
+from aj_crew.slack.code_channels import classifier
+from aj_crew.slack.code_channels.classifier import (
     MAX_CONTEXT_MESSAGES,
     MAX_REQUEST_BYTES,
     build_prompt,
@@ -21,7 +21,7 @@ from kiro_crew.slack.code_channels.classifier import (
     clean_title,
     parse_answer,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 
 @pytest.mark.parametrize(

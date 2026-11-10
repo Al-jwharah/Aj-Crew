@@ -36,22 +36,22 @@ from chat_mode_security_helpers import (  # noqa: F401 -- fixtures are requested
     state_fixture,
 )
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard import chat_persistence, chat_runner, session_control
-from kiro_crew.dashboard.chat_delivery import (
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard import chat_persistence, chat_runner, session_control
+from aj_crew.dashboard.chat_delivery import (
     BACKGROUND_START_TASKS,
     START_BACKGROUND_META_KEY,
     TURN_ACTOR_META_KEY,
     queue_for_next_turn,
 )
-from kiro_crew.dashboard.chat_title import (
+from aj_crew.dashboard.chat_title import (
     _counts_as_user_turn,
     _maybe_auto_title,
     _rehydrated_refresh_mark,
     maybe_refresh_title,
 )
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard.chat_utils import (
     CRON_NOTIFICATION_KIND,
     CRON_NOTIFY_PREFIX,
     MCP_APP_MESSAGE_KIND,
@@ -59,14 +59,14 @@ from kiro_crew.dashboard.chat_utils import (
     TURN_END_WIRE_CLS,
     _dequeue_next_message,
 )
-from kiro_crew.dashboard.slot_ownership import app_may_control_session
-from kiro_crew.dashboard.slot_queue_repository import (
+from aj_crew.dashboard.slot_ownership import app_may_control_session
+from aj_crew.dashboard.slot_queue_repository import (
     durable_queue_entries,
     sanitize_restored_queue,
 )
-from kiro_crew.dashboard.state import SlotOrigin, row_mid
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.dashboard.state import SlotOrigin, row_mid
+from aj_crew.providers.base import LLMEvent
+from aj_crew.testing.wait import await_until, finished
 
 # ── app permission: explicit grant, live slot scope ──
 
@@ -97,7 +97,7 @@ def test_app_keeps_own_slot_send_without_session_grant(state) -> None:
 async def test_app_without_session_approval_grant_is_denied(state) -> None:
     state.get_or_create_slot("s1")
     with patch(
-        "kiro_crew.apps.permissions.app_can_manage_session_approvals",
+        "aj_crew.apps.permissions.app_can_manage_session_approvals",
         return_value=False,
     ):
         async with _app_client(state) as client:
@@ -115,7 +115,7 @@ _THEME_FIELDS = {
     "theme_consent": True,
     "theme_consent_sha": _CONSENT_SHA,
 }
-_GRANT_CHECK = "kiro_crew.apps.permissions.app_can_manage_session_approvals"
+_GRANT_CHECK = "aj_crew.apps.permissions.app_can_manage_session_approvals"
 #: The fields a send on a session the app does not own must leave as it found them.
 _settings = attrgetter("agent", "color_theme", "theme_consent", "theme_consent_sha")
 
@@ -152,8 +152,8 @@ async def _app_send(state, body: dict, *, granted: bool = True) -> _Sent:
     grant_check = MagicMock(return_value=granted)
     with (
         patch(_GRANT_CHECK, grant_check),
-        patch("kiro_crew.dashboard.chat_handlers._run_chat", new=run_chat),
-        patch("kiro_crew.dashboard.chat_handlers._maybe_auto_title", new=title),
+        patch("aj_crew.dashboard.chat_handlers._run_chat", new=run_chat),
+        patch("aj_crew.dashboard.chat_handlers._maybe_auto_title", new=title),
     ):
         async with _app_client(state) as client:
             resp = await client.post("/api/chat?ws=1", json={"message": "hi", **body})
@@ -193,7 +193,7 @@ async def test_app_on_user_slot_cannot_change_its_settings(
     before = _settings(slot)
     audit = MagicMock()
 
-    with patch("kiro_crew.dashboard.chat_handlers.sel", return_value=audit):
+    with patch("aj_crew.dashboard.chat_handlers.sel", return_value=audit):
         sent = await _app_send(state, {"slot": "s1", **body})
 
     assert sent.status == 403
@@ -229,7 +229,7 @@ async def test_app_on_agent_bound_user_slot_sends_a_turn(state, body: dict) -> N
     before = _settings(slot)
     audit = MagicMock()
 
-    with patch("kiro_crew.dashboard.chat_handlers.sel", return_value=audit):
+    with patch("aj_crew.dashboard.chat_handlers.sel", return_value=audit):
         sent = await _app_send(state, {"slot": "s1", **body})
 
     assert sent.status == 200, sent.data
@@ -322,7 +322,7 @@ def test_every_api_chat_body_key_is_classified() -> None:
     Classifying it settings-bearing puts it under
     ``test_settings_bearing_body_keys_never_reach_a_user_slot``.
     """
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     tree = ast.parse(inspect.getsource(chat_handlers._owner_chat_send))
     functions = {
@@ -357,7 +357,7 @@ async def test_app_on_user_slot_cannot_run_a_harness_slash_command(state, messag
     slot = _user_slot(state, agent="researcher")
     audit = MagicMock()
 
-    with patch("kiro_crew.dashboard.chat_handlers.sel", return_value=audit):
+    with patch("aj_crew.dashboard.chat_handlers.sel", return_value=audit):
         sent = await _app_send(state, {"slot": "s1", "message": message})
 
     assert sent.status == 403
@@ -536,7 +536,7 @@ async def test_end_of_turn_title_ignores_an_apps_turn_on_a_user_slot(state) -> N
     slot.append("assistant", "reply")
     generate = AsyncMock(return_value="An App Title")
 
-    with patch("kiro_crew.dashboard.chat_title._generate_title_via_kiro", new=generate):
+    with patch("aj_crew.dashboard.chat_title._generate_title_via_kiro", new=generate):
         await _maybe_auto_title(state, slot)
 
     generate.assert_not_called()
@@ -553,9 +553,9 @@ async def test_title_refresh_counts_only_the_users_turns(state, actor: str, refr
     generate = AsyncMock(return_value="Fresh title")
 
     with (
-        patch("kiro_crew.dashboard.chat_title._generate_refreshed_title", new=generate),
-        patch("kiro_crew.dashboard.chat_title._title_refresh_every", return_value=0),
-        patch("kiro_crew.dashboard.chat_title._persist_title", new=AsyncMock(return_value=True)),
+        patch("aj_crew.dashboard.chat_title._generate_refreshed_title", new=generate),
+        patch("aj_crew.dashboard.chat_title._title_refresh_every", return_value=0),
+        patch("aj_crew.dashboard.chat_title._persist_title", new=AsyncMock(return_value=True)),
     ):
         await maybe_refresh_title(state, slot)
 
@@ -581,9 +581,9 @@ async def test_the_title_fallback_never_takes_an_apps_text(state) -> None:
     generate = AsyncMock(return_value="")  # the titler SKIPs
 
     with (
-        patch("kiro_crew.dashboard.chat_title._generate_title_via_kiro", new=generate),
-        patch("kiro_crew.dashboard.chat_title._persist_title", new=AsyncMock(return_value=True)),
-        patch("kiro_crew.dashboard.chat_title.maybe_suggest_folder", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_title._generate_title_via_kiro", new=generate),
+        patch("aj_crew.dashboard.chat_title._persist_title", new=AsyncMock(return_value=True)),
+        patch("aj_crew.dashboard.chat_title.maybe_suggest_folder", new=AsyncMock()),
     ):
         await _maybe_auto_title(state, slot)
 
@@ -603,9 +603,9 @@ async def test_the_reply_to_an_apps_turn_is_not_the_users_answered_turn(state) -
     generate = AsyncMock(return_value="")
 
     with (
-        patch("kiro_crew.dashboard.chat_title._generate_title_via_kiro", new=generate),
-        patch("kiro_crew.dashboard.chat_title._persist_title", new=AsyncMock(return_value=True)),
-        patch("kiro_crew.dashboard.chat_title.maybe_suggest_folder", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_title._generate_title_via_kiro", new=generate),
+        patch("aj_crew.dashboard.chat_title._persist_title", new=AsyncMock(return_value=True)),
+        patch("aj_crew.dashboard.chat_title.maybe_suggest_folder", new=AsyncMock()),
     ):
         await _maybe_auto_title(state, slot)
 
@@ -623,9 +623,9 @@ async def test_the_title_refresh_prompt_leaves_out_an_apps_turn(state) -> None:
     generate = AsyncMock(return_value="")
 
     with (
-        patch("kiro_crew.dashboard.chat_title._generate_refreshed_title", new=generate),
-        patch("kiro_crew.dashboard.chat_title._title_refresh_every", return_value=0),
-        patch("kiro_crew.dashboard.chat_title._persist_title", new=AsyncMock(return_value=True)),
+        patch("aj_crew.dashboard.chat_title._generate_refreshed_title", new=generate),
+        patch("aj_crew.dashboard.chat_title._title_refresh_every", return_value=0),
+        patch("aj_crew.dashboard.chat_title._persist_title", new=AsyncMock(return_value=True)),
     ):
         await maybe_refresh_title(state, slot)
 
@@ -678,8 +678,8 @@ async def test_app_send_refused_when_the_slot_closes_during_the_permission_read(
     run_chat = AsyncMock()
     with (
         patch(_GRANT_CHECK, gated_grant),
-        patch("kiro_crew.dashboard.chat_handlers._run_chat", new=run_chat),
-        patch("kiro_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_handlers._run_chat", new=run_chat),
+        patch("aj_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
     ):
         async with _app_client(state) as client:
             send = asyncio.create_task(
@@ -713,7 +713,7 @@ async def test_app_send_refused_when_the_slot_is_relinked_during_the_command_rea
     slot = _user_slot(state, agent="researcher")
     reading = threading.Event()
     release = threading.Event()
-    real_load = KiroCrewConfig.load
+    real_load = AjCrewConfig.load
     loads: list[None] = []
 
     def gated_load(*args, **kwargs):
@@ -728,10 +728,10 @@ async def test_app_send_refused_when_the_slot_is_relinked_during_the_command_rea
     audit = MagicMock()
     with (
         patch(_GRANT_CHECK, return_value=True),
-        patch.object(KiroCrewConfig, "load", staticmethod(gated_load)),
-        patch("kiro_crew.dashboard.chat_handlers._run_chat", new=run_chat),
-        patch("kiro_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
-        patch("kiro_crew.dashboard.chat_handlers.sel", return_value=audit),
+        patch.object(AjCrewConfig, "load", staticmethod(gated_load)),
+        patch("aj_crew.dashboard.chat_handlers._run_chat", new=run_chat),
+        patch("aj_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_handlers.sel", return_value=audit),
     ):
         async with _app_client(state) as client:
             send = asyncio.create_task(
@@ -770,8 +770,8 @@ async def test_app_sse_stream_stops_at_the_end_of_its_turn(state) -> None:
 
     with (
         patch(_GRANT_CHECK, return_value=True),
-        patch("kiro_crew.dashboard.chat_handlers._run_chat", new=turn_then_queued_follow_up),
-        patch("kiro_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_handlers._run_chat", new=turn_then_queued_follow_up),
+        patch("aj_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
     ):
         async with _app_client(state) as client:
             resp = await client.post("/api/chat", json={"slot": "s1", "message": "hi"})
@@ -813,8 +813,8 @@ async def test_app_sse_stream_never_carries_a_restored_note(state) -> None:
 
     with (
         patch(_GRANT_CHECK, return_value=True),
-        patch("kiro_crew.dashboard.chat_handlers._run_chat", new=reply),
-        patch("kiro_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_handlers._run_chat", new=reply),
+        patch("aj_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
     ):
         async with _app_client(state) as client:
             resp = await client.post("/api/chat", json={"slot": "s1", "message": "hi"})
@@ -848,8 +848,8 @@ async def test_app_sse_stream_skips_a_row_queued_for_a_later_turn(state) -> None
 
     with (
         patch(_GRANT_CHECK, return_value=True),
-        patch("kiro_crew.dashboard.chat_handlers._run_chat", new=turn_with_a_cron_queued_meanwhile),
-        patch("kiro_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_handlers._run_chat", new=turn_with_a_cron_queued_meanwhile),
+        patch("aj_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
     ):
         async with _app_client(state) as client:
             resp = await client.post("/api/chat", json={"slot": "s1", "message": "hi"})
@@ -876,8 +876,8 @@ async def test_a_slot_owners_sse_stream_skips_the_turn_boundary(state) -> None:
         s.append("done", "", "done")
 
     with (
-        patch("kiro_crew.dashboard.chat_handlers._run_chat", new=two_turns),
-        patch("kiro_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_handlers._run_chat", new=two_turns),
+        patch("aj_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
     ):
         async with _app_client(state) as client:
             resp = await client.post("/api/chat", json={"slot": "s1", "message": "hi"})
@@ -898,8 +898,8 @@ async def test_a_failed_sse_prepare_releases_the_reader(state) -> None:
 
     with (
         patch.object(web, "StreamResponse", _PrepareFails),
-        patch("kiro_crew.dashboard.chat_handlers._run_chat", new=AsyncMock()),
-        patch("kiro_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_handlers._run_chat", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
     ):
         async with _app_client(state) as client:
             with contextlib.suppress(aiohttp.ClientError):
@@ -1162,7 +1162,7 @@ async def test_a_held_app_recovery_cannot_extend_a_later_apps_stream(state, monk
 
 @pytest.mark.asyncio
 async def test_restored_recovery_identity_cannot_continue_a_live_stream(state) -> None:
-    from kiro_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
+    from aj_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
 
     slot = _user_slot(state)
     slot.queue_insert(
@@ -1231,9 +1231,9 @@ async def test_restored_app_turn_titles_only_an_app_owned_slot(state, owned: boo
     generate = AsyncMock(return_value="")
 
     with (
-        patch("kiro_crew.dashboard.chat_title._generate_title_via_kiro", new=generate),
-        patch("kiro_crew.dashboard.chat_title._persist_title", new=AsyncMock(return_value=True)),
-        patch("kiro_crew.dashboard.chat_title.maybe_suggest_folder", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_title._generate_title_via_kiro", new=generate),
+        patch("aj_crew.dashboard.chat_title._persist_title", new=AsyncMock(return_value=True)),
+        patch("aj_crew.dashboard.chat_title.maybe_suggest_folder", new=AsyncMock()),
     ):
         await _maybe_auto_title(state, slot)
 
@@ -1268,7 +1268,7 @@ async def test_resume_runs_only_the_recovery_and_leaves_restored_cards_queued(st
 
 @pytest.mark.asyncio
 async def test_a_restored_card_chosen_while_a_turn_ran_drains_at_the_turn_end(state) -> None:
-    from kiro_crew.dashboard.slot_queue_repository import RESTORED_SEND_CHOSEN_KEY
+    from aj_crew.dashboard.slot_queue_repository import RESTORED_SEND_CHOSEN_KEY
 
     slot = _user_slot(state)
     slot._queue = sanitize_restored_queue(
@@ -1287,15 +1287,15 @@ async def test_a_restored_card_chosen_while_a_turn_ran_drains_at_the_turn_end(st
 @pytest.mark.parametrize("restored_first", [False, True])
 @pytest.mark.asyncio
 async def test_restored_and_fresh_queue_rows_never_merge(state, restored_first: bool) -> None:
-    from kiro_crew.dashboard.chat_title import _titling_messages
+    from aj_crew.dashboard.chat_title import _titling_messages
 
     slot = _user_slot(state)
     restored = sanitize_restored_queue([{"id": "old", "content": "restored app request"}])
     slot.queue_append("fresh user request", directive_user_origin=True)
     slot._queue = restored + slot._queue if restored_first else slot._queue + restored
-    config = KiroCrewConfig()
+    config = AjCrewConfig()
     config.dashboard.merge_queued_messages = True
-    with patch.object(KiroCrewConfig, "load", return_value=config):
+    with patch.object(AjCrewConfig, "load", return_value=config):
         # The fresh entry drains on its own, wherever it sits; the restored
         # card waits for the user, even at the head of the queue.
         fresh = await _drain_once(state, slot)
@@ -1352,8 +1352,8 @@ async def test_app_sse_backstop_rejects_a_foreign_user_row_without_turn_end(
 
     with (
         patch(_GRANT_CHECK, return_value=True),
-        patch("kiro_crew.dashboard.chat_handlers._run_chat", new=without_boundary),
-        patch("kiro_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_handlers._run_chat", new=without_boundary),
+        patch("aj_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
     ):
         async with _app_client(state) as client:
             resp = await client.post("/api/chat", json={"slot": "s1", "message": "own request"})

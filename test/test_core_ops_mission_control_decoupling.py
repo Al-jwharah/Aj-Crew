@@ -1,7 +1,7 @@
-"""GATE: Kiro Crew core does not depend on the Ops Mission Control app's code.
+"""GATE: Aj Crew core does not depend on the Ops Mission Control app's code.
 
 Ops Mission Control (``ops-mission-control``) is to leave this repository whole. That
-is only possible while nothing outside ``src/kiro_crew/apps/builtins/`` imports it. What
+is only possible while nothing outside ``src/aj_crew/apps/builtins/`` imports it. What
 the app needs from the core it imports from the core (the governance gate, the
 notification bus, the redactor, the hidden-leaf staging); its tests of those pins run
 in the app's own ``tests/``.
@@ -9,9 +9,9 @@ in the app's own ``tests/``.
 Two properties are pinned:
 
 1. **No core module or script imports the app.** Every module under
-   ``src/kiro_crew`` outside ``apps/builtins/``, and every script under
+   ``src/aj_crew`` outside ``apps/builtins/``, and every script under
    ``scripts/``, is parsed. ``import``, ``from ... import`` (relative ones
-   resolved), ``from kiro_crew.apps.builtins import ops_mission_control``,
+   resolved), ``from aj_crew.apps.builtins import ops_mission_control``,
    ``importlib.import_module`` and ``__import__`` with a literal name are all in
    scope, and the probes below fail if any of those forms stops being caught.
 2. **The strings that still name the app are a pinned, shrinking list.** A path
@@ -45,11 +45,11 @@ import pytest
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_test_core_ops_mission_control_decoupling")
 
-APP_PACKAGE = "kiro_crew.apps.builtins.ops_mission_control"
+APP_PACKAGE = "aj_crew.apps.builtins.ops_mission_control"
 #: The package directory name and the app id: every spelling that addresses the app.
 APP_NAMES = ("ops_mission_control", "ops-mission-control")
 
-#: (path relative to ``src/kiro_crew``, or to the repo root for a script; the
+#: (path relative to ``src/aj_crew``, or to the repo root for a script; the
 #: literal): the core strings that still name the app, each with why it is not a
 #: seam. Each row is deleted together with the file, table or tool it names.
 KNOWN_NAME_REFERENCES: frozenset[tuple[str, str]] = frozenset(
@@ -132,31 +132,31 @@ def test_the_strings_naming_the_app_are_the_pinned_list(core_trees):
     ("source", "importer", "is_package"),
     [
         (
-            "import kiro_crew.apps.builtins.ops_mission_control.backend.routes",
-            "kiro_crew.x",
+            "import aj_crew.apps.builtins.ops_mission_control.backend.routes",
+            "aj_crew.x",
             False,
         ),
-        ("from kiro_crew.apps.builtins.ops_mission_control import backend", "kiro_crew.x", False),
-        ("from kiro_crew.apps.builtins import ops_mission_control", "kiro_crew.x", False),
+        ("from aj_crew.apps.builtins.ops_mission_control import backend", "aj_crew.x", False),
+        ("from aj_crew.apps.builtins import ops_mission_control", "aj_crew.x", False),
         (
             "from ..apps.builtins.ops_mission_control.backend import store",
-            "kiro_crew.dashboard.y",
+            "aj_crew.dashboard.y",
             False,
         ),
-        ("from .builtins.ops_mission_control.backend import store", "kiro_crew.apps.y", False),
-        ("from .builtins import ops_mission_control", "kiro_crew.apps", True),
+        ("from .builtins.ops_mission_control.backend import store", "aj_crew.apps.y", False),
+        ("from .builtins import ops_mission_control", "aj_crew.apps", True),
         (
             "import importlib\n"
-            "importlib.import_module('kiro_crew.apps.builtins.ops_mission_control.backend')",
-            "kiro_crew.x",
+            "importlib.import_module('aj_crew.apps.builtins.ops_mission_control.backend')",
+            "aj_crew.x",
             False,
         ),
-        ("__import__('kiro_crew.apps.builtins.ops_mission_control')", "kiro_crew.x", False),
+        ("__import__('aj_crew.apps.builtins.ops_mission_control')", "aj_crew.x", False),
         (
             "from typing import TYPE_CHECKING\n"
             "if TYPE_CHECKING:\n"
-            "    from kiro_crew.apps.builtins.ops_mission_control.backend import models",
-            "kiro_crew.x",
+            "    from aj_crew.apps.builtins.ops_mission_control.backend import models",
+            "aj_crew.x",
             False,
         ),
     ],
@@ -168,13 +168,13 @@ def test_the_scan_catches_every_import_form(source, importer, is_package):
 @pytest.mark.parametrize(
     "source",
     [
-        "from kiro_crew.apps import seams",
-        "from kiro_crew.apps.builtins import BUILTIN_NAMES",
-        "import kiro_crew.apps.builtins.ops_mission_control_other",
+        "from aj_crew.apps import seams",
+        "from aj_crew.apps.builtins import BUILTIN_NAMES",
+        "import aj_crew.apps.builtins.ops_mission_control_other",
     ],
 )
 def test_the_scan_leaves_other_imports_alone(source):
-    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "kiro_crew.x", False)
+    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "aj_crew.x", False)
 
 
 def test_the_string_scan_skips_docstrings_but_not_paths_ids_or_urls():

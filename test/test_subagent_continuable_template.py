@@ -15,7 +15,7 @@ import pytest
 import subagent_continuable_helpers
 from subagent_continuable_helpers import _manager, _mock_sessions
 
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -36,16 +36,16 @@ async def _close_all(sessions: Any) -> None:
 
 class TestContinuationTemplateNamespace:
     def test_parent_selection_snapshot_keeps_allocation_namespace(self):
-        from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-        from kiro_crew.session import SessionManager, _Session
+        from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+        from aj_crew.session import SessionManager, _Session
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         sessions = SessionManager(cfg)
         assert sessions.get_agent_selection("absent") == ("template", "")
         session = _Session(provider=MagicMock(), agent="worker")
         sessions._sessions["parent"] = session
         template = sessions.get_agent_selection("parent")
-        cfg.agents["worker"] = KiroCrewAgentConfig(kiro_agent="different-template")
+        cfg.agents["worker"] = AjCrewAgentConfig(kiro_agent="different-template")
         assert sessions.get_agent_selection("parent") == template == ("template", "worker")
         session.capability_member = "member-alias"
         member = sessions.get_agent_selection("parent")
@@ -57,10 +57,10 @@ class TestContinuationTemplateNamespace:
     def test_present_parent_with_unavailable_selection_refuses(self, agent, member):
         from types import SimpleNamespace
 
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.session import SessionManager
 
-        sessions = SessionManager(KiroCrewConfig())
+        sessions = SessionManager(AjCrewConfig())
         sessions._sessions["parent"] = SimpleNamespace(agent=agent, capability_member=member)
         with pytest.raises(ValueError, match="parent agent selection unavailable"):
             sessions.get_agent_selection("parent")
@@ -70,13 +70,13 @@ class TestContinuationTemplateNamespace:
     async def test_retained_template_survives_same_named_member_enrollment(
         self, continuation_runtime, restart
     ):
-        from kiro_crew import subagent_persistence as sp
-        from kiro_crew.member_memory_auth import private_memory_store_for_session
+        from aj_crew import subagent_persistence as sp
+        from aj_crew.member_memory_auth import private_memory_store_for_session
 
         world = continuation_runtime
         sessions, manager = world.new_manager()
         try:
-            with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+            with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
                 original = manager.spawn(
                     "original task",
                     parent_session_key=world.parent,
@@ -144,7 +144,7 @@ class TestContinuationTemplateNamespace:
             monkeypatch.setattr(manager, "_should_use_session_sharing", lambda info: True)
             monkeypatch.setattr(manager, "_create_shared_session", shared)
         try:
-            with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+            with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
                 child = manager.spawn(
                     "use the explicit template",
                     agent="worker",
@@ -170,13 +170,13 @@ class TestContinuationTemplateNamespace:
     @pytest.mark.parametrize("override", ["", "worker"])
     @pytest.mark.parametrize("queued", [False, True])
     async def test_named_crew_keeps_member_identity(self, continuation_runtime, override, queued):
-        from kiro_crew import subagent_persistence as sp
+        from aj_crew import subagent_persistence as sp
 
         world = continuation_runtime
         generation, store = await asyncio.to_thread(world.enroll_collision)
         sessions, manager = world.new_manager()
         try:
-            with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+            with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
                 if queued:
                     manager._running_count = manager.max_concurrent
                 child = manager.spawn(
@@ -234,15 +234,15 @@ class TestContinuationTemplateNamespace:
 
         from test_handlers_messaging_coverage import _Req, _state
 
-        from kiro_crew import subagent_persistence as sp
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.dashboard.handlers.messaging import api_spawn
+        from aj_crew import subagent_persistence as sp
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.dashboard.handlers.messaging import api_spawn
 
         world = continuation_runtime
         generation, store = await asyncio.to_thread(world.enroll_collision)
 
         def enable_delegation():
-            cfg = KiroCrewConfig.load()
+            cfg = AjCrewConfig.load()
             cfg.agents["worker"].triggers = "work"
             cfg.save()
 
@@ -250,7 +250,7 @@ class TestContinuationTemplateNamespace:
         sessions, manager = world.new_manager()
         state = _state(subagents=manager, sessions=sessions, conversation_log=world.history)
         try:
-            with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+            with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
                 response = await api_spawn(
                     _Req(
                         state,
@@ -283,13 +283,13 @@ class TestContinuationTemplateNamespace:
     async def test_queued_named_crew_revalidates_identity(
         self, continuation_runtime, monkeypatch, override, fault
     ):
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         world = continuation_runtime
         _generation, store = await asyncio.to_thread(world.enroll_collision)
         sessions, manager = world.new_manager()
         try:
-            with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+            with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
                 manager._running_count = manager.max_concurrent
                 queued = manager.spawn(
                     "queued member task",
@@ -302,13 +302,13 @@ class TestContinuationTemplateNamespace:
                 params = manager._queue.pop(0)
                 if fault == "governance":
                     monkeypatch.setattr(
-                        "kiro_crew.subagent._vet_spawn_governance",
+                        "aj_crew.subagent._vet_spawn_governance",
                         lambda parent, agent, **kw: "member denied" if agent == "worker" else "",
                     )
                 else:
 
                     def change_member():
-                        cfg = KiroCrewConfig.load()
+                        cfg = AjCrewConfig.load()
                         if fault == "removed":
                             del cfg.agents["worker"]
                         else:
@@ -338,7 +338,7 @@ class TestContinuationTemplateNamespace:
         world = continuation_runtime
         generation, peer_store = await asyncio.to_thread(world.enroll_collision)
         sessions, manager = world.new_manager()
-        from kiro_crew.member_memory_auth import bind_private_session_store
+        from aj_crew.member_memory_auth import bind_private_session_store
 
         parent = "slack:C123:123.456"
         await asyncio.to_thread(bind_private_session_store, parent, peer_store)
@@ -352,7 +352,7 @@ class TestContinuationTemplateNamespace:
             )
             sessions.release(parent)
             assert sessions.get_agent(parent) == "worker"
-            with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+            with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
                 child = manager.spawn(
                     "inherit the parent",
                     parent_session_key=parent,
@@ -377,13 +377,13 @@ class TestContinuationTemplateNamespace:
     ):
         import json
 
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         world = continuation_runtime
         await asyncio.to_thread(world.enroll_collision)
 
         def configure_models():
-            cfg = KiroCrewConfig.load()
+            cfg = AjCrewConfig.load()
             cfg.agents["worker"].model = "member-model"
             cfg.agent.model = "global-model"
             cfg.save()
@@ -400,7 +400,7 @@ class TestContinuationTemplateNamespace:
             monkeypatch.setattr(manager, "_should_use_session_sharing", lambda info: True)
             monkeypatch.setattr(manager, "_create_shared_session", shared)
         try:
-            with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+            with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
                 child = manager.spawn(
                     "use the selected template and its model",
                     agent="worker",
@@ -434,16 +434,16 @@ class TestContinuationTemplateNamespace:
     async def test_member_continuation_adopts_generation_after_template_override(
         self, continuation_runtime, monkeypatch, restart
     ):
-        from kiro_crew import subagent_persistence as sp
-        from kiro_crew.member_memory_auth import (
+        from aj_crew import subagent_persistence as sp
+        from aj_crew.member_memory_auth import (
             bind_private_session_store,
             private_memory_store_for_session,
         )
-        from kiro_crew.subagent import _vet_spawn_governance
+        from aj_crew.subagent import _vet_spawn_governance
 
         world = continuation_runtime
         governance = MagicMock(wraps=_vet_spawn_governance)
-        monkeypatch.setattr("kiro_crew.subagent._vet_spawn_governance", governance)
+        monkeypatch.setattr("aj_crew.subagent._vet_spawn_governance", governance)
         generation, store = await asyncio.to_thread(world.enroll_collision)
         sessions, manager = world.new_manager()
         parent = "slack:C123:123.456"
@@ -463,7 +463,7 @@ class TestContinuationTemplateNamespace:
             shared = AsyncMock(side_effect=AssertionError("member bypassed preparation"))
             monkeypatch.setattr(manager, "_should_use_session_sharing", lambda info: True)
             monkeypatch.setattr(manager, "_create_shared_session", shared)
-            with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+            with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
                 original = manager.spawn(
                     "member task", parent_session_key=parent, memory_store=store, cwd=world.project
                 )
@@ -534,8 +534,8 @@ class TestContinuationTemplateNamespace:
     async def test_retained_member_cannot_fall_back_or_change_authority(
         self, continuation_runtime, monkeypatch, fault
     ):
-        from kiro_crew import subagent_persistence as sp
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew import subagent_persistence as sp
+        from aj_crew.config.loader import AjCrewConfig
 
         world = continuation_runtime
         _, store = await asyncio.to_thread(world.enroll_collision)
@@ -547,13 +547,13 @@ class TestContinuationTemplateNamespace:
         manager._ctx_builder.conversation_log = world.history
         if fault == "governance":
             monkeypatch.setattr(
-                "kiro_crew.subagent._vet_spawn_governance",
+                "aj_crew.subagent._vet_spawn_governance",
                 lambda parent, agent, app="": "member denied" if agent == "worker" else None,
             )
         else:
 
             def change_member():
-                cfg = KiroCrewConfig.load()
+                cfg = AjCrewConfig.load()
                 if fault == "removed":
                     del cfg.agents["worker"]
                 else:
@@ -561,7 +561,7 @@ class TestContinuationTemplateNamespace:
                 cfg.save()
 
             await asyncio.to_thread(change_member)
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             followup = manager.continue_conversation("member-run", "follow-up", cwd=world.project)
             assert followup is not None
             if not followup.done:
@@ -578,11 +578,11 @@ class TestContinuationTemplateNamespace:
 
     @pytest.mark.asyncio
     async def test_missing_member_never_becomes_same_named_template(self, continuation_runtime):
-        from kiro_crew import subagent_persistence as sp
+        from aj_crew import subagent_persistence as sp
 
         world = continuation_runtime
         # worker.json exists, but worker is not a configured member.
-        from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+        from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
         execution = ExecutionContext(
             None, MemoryStoreRef("default"), "member", "worker", selection_name="worker"
@@ -591,7 +591,7 @@ class TestContinuationTemplateNamespace:
         sessions = _mock_sessions(resumed=True)
         manager = _manager(sessions)
         manager._ctx_builder.conversation_log = world.history
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             followup = manager.continue_conversation("member-run", "follow-up", cwd=world.project)
             assert followup is not None and followup.done
         assert "selected member is unavailable" in followup.error
@@ -600,13 +600,13 @@ class TestContinuationTemplateNamespace:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("override", [None, "caller-model"])
     async def test_unenrolled_member_keeps_its_model_pin(self, continuation_runtime, override):
-        from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
+        from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
 
         world = continuation_runtime
 
         def configure_member():
-            cfg = KiroCrewConfig.load()
-            cfg.agents["worker"] = KiroCrewAgentConfig(
+            cfg = AjCrewConfig.load()
+            cfg.agents["worker"] = AjCrewAgentConfig(
                 kiro_agent="member-parent", model="member-model"
             )
             cfg.agent.model = "global-model"
@@ -639,7 +639,7 @@ class TestContinuationTemplateNamespace:
     async def test_legacy_namespace_never_becomes_new_template_authority(self, legacy):
         import json
 
-        from kiro_crew import subagent_persistence as sp
+        from aj_crew import subagent_persistence as sp
 
         directory = await asyncio.to_thread(sp.create_agent_folder, "legacy", agent=legacy)
         path = directory / "state.json"
@@ -650,10 +650,10 @@ class TestContinuationTemplateNamespace:
         manager = _manager(sessions)
         manager._spawn_stagger_secs = 0
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch(
-                "kiro_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
+                "aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
             ),
         ):
             target = "legacy"
@@ -677,8 +677,8 @@ class TestContinuationTemplateNamespace:
 @pytest.mark.asyncio
 @pytest.mark.parametrize("valid_metadata", [True, False], ids=["verified", "mismatch"])
 async def test_channel_spawn_carries_verified_member_store(continuation_runtime, valid_metadata):
-    from kiro_crew.member_memory_auth import bind_private_session_store
-    from kiro_crew.messaging.commands import _spawn_off_loop
+    from aj_crew.member_memory_auth import bind_private_session_store
+    from aj_crew.messaging.commands import _spawn_off_loop
 
     world = continuation_runtime
     generation, store = await asyncio.to_thread(world.enroll_collision)
@@ -697,7 +697,7 @@ async def test_channel_spawn_carries_verified_member_store(continuation_runtime,
             await asyncio.to_thread(
                 world.history.update_metadata, parent, {"memory_store": "default"}
             )
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             child = await _spawn_off_loop(manager, "delegated task", parent)
             assert child is not None and not child.error
             await await_until(manager._tasks[child.id], what="the child run finishing")

@@ -12,8 +12,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps.manifest import AppManifest
-from kiro_crew.apps.manifest_sections import UIConfig
+from aj_crew.apps.manifest import AppManifest
+from aj_crew.apps.manifest_sections import UIConfig
 
 
 def _manifest(ui: dict[str, Any]) -> dict[str, Any]:

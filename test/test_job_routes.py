@@ -1,8 +1,8 @@
-"""Coverage tests for kiro_crew.apps.job_routes — the shared ``_jobs/*`` HTTP
+"""Coverage tests for aj_crew.apps.job_routes — the shared ``_jobs/*`` HTTP
 surface mounted once for every app.
 
 Everything runs in-process against ``aiohttp``'s ``TestServer`` with
-``KIROCREW_HOME`` pointed at ``tmp_path`` and the guards monkeypatched — no
+``AJCREW_HOME`` pointed at ``tmp_path`` and the guards monkeypatched — no
 network, no subprocess. The routes resolve the app from the URL and look its
 :class:`JobSDK` up in a process-global registry, so a fixture forgets the SDK
 on teardown to keep tests from leaking into the rest of the suite.
@@ -28,12 +28,12 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-import kiro_crew.apps.job_routes as jr
-import kiro_crew.apps.job_sdk as js
-import kiro_crew.dashboard.handlers._shared as shared
-import kiro_crew.dashboard.handlers.source_providers as sp
-from kiro_crew.apps.job_sdk import JobError, JobSDK, forget_sdk, get_sdk, register_sdk
-from kiro_crew.testing.wait import async_wait_until, wait_until
+import aj_crew.apps.job_routes as jr
+import aj_crew.apps.job_sdk as js
+import aj_crew.dashboard.handlers._shared as shared
+import aj_crew.dashboard.handlers.source_providers as sp
+from aj_crew.apps.job_sdk import JobError, JobSDK, forget_sdk, get_sdk, register_sdk
+from aj_crew.testing.wait import async_wait_until, wait_until
 
 APP = "jobs-cov-app"
 
@@ -78,7 +78,7 @@ def _setup_guards(
 ) -> None:
     home = tmp_path / "home"
     home.mkdir(exist_ok=True)
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.setattr(jr, "is_app_enabled", lambda name: enabled)
 
     # The guard re-reads the manifest rather than trusting the process registry,
@@ -254,7 +254,7 @@ async def test_the_interruption_fields_reach_the_client(
     party that can act on either. A record that carries them behind an API that
     withholds them leaves the record honest and the API not.
     """
-    from kiro_crew.apps.job_sdk import (
+    from aj_crew.apps.job_sdk import (
         CAUSE_RUNNER_UNREGISTERED,
         INTERRUPTED,
         STARTING,
@@ -294,7 +294,7 @@ async def test_work_observed_reaches_the_client(
     instead of re-deriving it. It is an SDK-minted boolean, so it needs no
     sanitizing the way the result channel does.
     """
-    from kiro_crew.apps.job_sdk import DONE, JobRun
+    from aj_crew.apps.job_sdk import DONE, JobRun
 
     _setup_guards(tmp_path, monkeypatch)
     run_id = "7d" * 16
@@ -325,7 +325,7 @@ async def test_the_callers_own_strings_are_withheld_from_the_client(
     never supplied and cannot act on, so the view withholds them like the host
     facts.
     """
-    from kiro_crew.apps.job_sdk import DONE, JobRun
+    from aj_crew.apps.job_sdk import DONE, JobRun
 
     _setup_guards(tmp_path, monkeypatch)
     run_id = "8e" * 16
@@ -964,7 +964,7 @@ async def test_on_loop_read_propagates_permission_error_offloaded_read_retries(
     retry and succeed. Shim the module attribute only, never ``os.name``, which
     breaks ``Path.home()`` on POSIX.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     sdk.register("k", lambda handle, **p: {"ok": True})
     rid = sdk.start("k")

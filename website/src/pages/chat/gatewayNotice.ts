@@ -13,8 +13,8 @@ import type { NoticeTone } from './NoticeCard'
  * notices, and a Bot chat that keeps its agent after the Bot was set to another).
  *
  * Each such row carries a structured wire token in `meta.notice`
- * (`TRANSIENT_NOTICE_*` in `src/kiro_crew/dashboard/chat_utils.py` and
- * `GATEWAY_NOTICE_*` in `src/kiro_crew/dashboard/gateway_notice.py`) and the
+ * (`TRANSIENT_NOTICE_*` in `src/aj_crew/dashboard/chat_utils.py` and
+ * `GATEWAY_NOTICE_*` in `src/aj_crew/dashboard/gateway_notice.py`) and the
  * values its copy interpolates in `meta.notice_args`. The row's English content
  * is the fallback for channel mirrors, SSE readers and the model, and is never
  * shown here. The tokens below are WIRE VALUES, not copy: never translate them,
@@ -555,7 +555,7 @@ const LEGACY: readonly Legacy[] = [
  * The KAS signed-out sentences a row carries without their token: rows stored
  * before the token existed, and side-panel rows. Fixed text, so they are matched
  * as text: the bare sentence, the relay-led one, and the one led by "KAS runs on
- * Kiro Crew's own engine" with or without its reason, each in the older "start a
+ * Aj Crew's own engine" with or without its reason, each in the older "start a
  * new chat" ending and the current "send your message again" one.
  */
 /** The route a token-less KAS signed-out row names (`''` for none), or null when it is not one. */
@@ -567,7 +567,7 @@ function legacyKasSignedOutRoute(content: string): '' | 'relay' | 'bundle' | nul
   if (head === 'Not signed in to Kiro. Sign in from Settings → Agent Harness → Kiro sign-in') return ''
   if (head === "KAS runs through kiro-cli's relay. Not signed in to Kiro. Sign in from Settings → Agent Harness → Kiro sign-in") return 'relay'
   const bundle =
-    head.startsWith("KAS runs on Kiro Crew's own engine") &&
+    head.startsWith("KAS runs on Aj Crew's own engine") &&
     head.endsWith('. Not signed in to Kiro. Sign in from Settings → Agent Harness → Kiro sign-in')
   return bundle ? 'bundle' : null
 }
@@ -646,7 +646,7 @@ function copyOf({ token, args }: Shape): string {
 /**
  * *message* led by the route the KAS engine took, in plain words, when the row
  * names one: every KAS prompt names the real route
- * (docs/decisions/2026-10-30-choosing-kas-runs-kiro-crews-own-engine-when-kiro-cli-cannot.md).
+ * (docs/decisions/2026-10-30-choosing-kas-runs-aj-crews-own-engine-when-kiro-cli-cannot.md).
  */
 function withKasRoute(args: Args, message: string): string {
   const route =

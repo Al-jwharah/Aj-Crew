@@ -1,7 +1,7 @@
-"""``kiro_crew.agent`` composes its split-out spec code onto one namespace.
+"""``aj_crew.agent`` composes its split-out spec code onto one namespace.
 
-:func:`kiro_crew._facade_compose.compose` runs every function the ``kiro_crew.agent_parts``
-owners define on ``kiro_crew.agent``'s module globals, which is why the facade contract
+:func:`aj_crew._facade_compose.compose` runs every function the ``aj_crew.agent_parts``
+owners define on ``aj_crew.agent``'s module globals, which is why the facade contract
 (``test/test_agent_refactor_facade.py``) holds. These tests pin what the composition promises:
 
 * every owner function runs on the facade's globals, names the facade as its module, and is
@@ -18,7 +18,7 @@ owners define on ``kiro_crew.agent``'s module globals, which is why the facade c
   one;
 * the facade composes through the shared helper, once, and imports nothing its family does
   not account for, which stands in for the F401 check ``setup.cfg`` switches off for it; and
-* a fresh ``import kiro_crew.agent`` composes every owner.
+* a fresh ``import aj_crew.agent`` composes every owner.
 """
 
 from __future__ import annotations
@@ -44,9 +44,9 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror, agent, agent_parts
-from kiro_crew._facade_compose import compose as facade_compose
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import _facade_mirror, agent, agent_parts
+from aj_crew._facade_compose import compose as facade_compose
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_agent_parts")
 
@@ -65,7 +65,7 @@ _GLOBAL_OPS = frozenset({"LOAD_GLOBAL", "LOAD_NAME", "STORE_GLOBAL", "DELETE_GLO
 
 #: The owners, by module stem.
 _OWNER_STEMS = (
-    "kirocrew_launcher",
+    "ajcrew_launcher",
     "shared_home",
     "spec_build",
     "spec_files",
@@ -94,11 +94,11 @@ _KNOWN_SEAMS = frozenset(
     {
         "KIRO_AGENTS_DIR",
         "__file__",
-        "_KIROCREW_BIN",
+        "_AJCREW_BIN",
         "_atomic_json_write",
         "_conductor_spec_held",
         "_decline_shared_agent_home",
-        "_kirocrew_mcp_invocation",
+        "_ajcrew_mcp_invocation",
         "_read_spec_capped",
         "agent_spec_path",
         "ambient_agents_dir",
@@ -240,13 +240,13 @@ def test_the_managed_server_table_holds_the_composed_spec_gate() -> None:
     """The facade builds ``_MANAGED_MCP_SERVERS`` after composing, so the gate the table
     captures is the composed function, which reads the facade's names; composed after the
     table, it would hold the owner's original."""
-    gate = agent._MANAGED_MCP_SERVERS["kirocrew-computer"]["spec_gate"]
+    gate = agent._MANAGED_MCP_SERVERS["ajcrew-computer"]["spec_gate"]
     assert gate is agent._computer_use_spec_gate
     assert gate.__globals__ is vars(agent)
 
 
 def test_every_global_an_owner_function_reads_is_bound_on_the_facade() -> None:
-    """Nested code included: ``_resolve_kirocrew_bin`` defines its ``_usable`` inline."""
+    """Nested code included: ``_resolve_ajcrew_bin`` defines its ``_usable`` inline."""
     missing = {
         f"{stem}.{name}": names
         for stem, name, fn in _owner_functions()
@@ -258,14 +258,14 @@ def test_every_global_an_owner_function_reads_is_bound_on_the_facade() -> None:
 def test_a_global_rebind_in_moved_code_lands_on_the_facade(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """The launcher resolver caches what it finds with ``global _KIROCREW_BIN``; the cache
+    """The launcher resolver caches what it finds with ``global _AJCREW_BIN``; the cache
     lands on the facade, which every reader of the name reads."""
-    planted = tmp_path / "planted-kirocrew"
-    monkeypatch.setattr(agent, "_KIROCREW_BIN", None)
+    planted = tmp_path / "planted-ajcrew"
+    monkeypatch.setattr(agent, "_AJCREW_BIN", None)
     monkeypatch.setattr(agent, "_launcher_works", lambda path: path.name == planted.name)
     monkeypatch.setattr(shutil, "which", lambda name: str(planted))
-    assert agent._resolve_kirocrew_bin() == str(planted)
-    assert agent._KIROCREW_BIN == str(planted)
+    assert agent._resolve_ajcrew_bin() == str(planted)
+    assert agent._AJCREW_BIN == str(planted)
 
 
 def test_the_rebuild_tracker_rebinds_its_globals_on_the_facade(
@@ -307,7 +307,7 @@ def _spellings() -> dict[str, str]:
             continue
         module = ".".join(path.relative_to(_SRC.parent).with_suffix("").parts)
         for node in ast.parse(text).body:
-            if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew" and not node.level:
+            if isinstance(node, ast.ImportFrom) and node.module == "aj_crew" and not node.level:
                 for alias in node.names:
                     if alias.name == "agent":
                         spellings[f"{module}.{alias.asname or alias.name}"] = FACADE
@@ -359,30 +359,30 @@ def test_leaf_test_scope_derives_this_file_as_a_corpus_gate(
 
 
 def test_the_spellings_include_a_materialization_owner_binding_of_the_facade() -> None:
-    assert "kiro_crew.agent_materialization.worker_agent.agent_mod" in _spellings()
+    assert "aj_crew.agent_materialization.worker_agent.agent_mod" in _spellings()
 
 
 @pytest.mark.parametrize(
     ("source", "expected"),
     [
         (
-            "from kiro_crew import agent\n"
+            "from aj_crew import agent\n"
             "def t(monkeypatch):\n    monkeypatch.setattr(agent, 'A', 1)\n",
             {"A"},
         ),
         (
             "from unittest.mock import patch\n"
-            "def t():\n    with patch('kiro_crew.agent.B'):\n        pass\n",
+            "def t():\n    with patch('aj_crew.agent.B'):\n        pass\n",
             {"B"},
         ),
         (
-            "from kiro_crew.agent_materialization import worker_agent\n"
+            "from aj_crew.agent_materialization import worker_agent\n"
             "def t(monkeypatch):\n    monkeypatch.setattr(worker_agent.agent_mod, 'C', 1)\n",
             {"C"},
         ),
         (
             "from unittest.mock import patch\n"
-            "def t():\n    with patch('kiro_crew.agent_parts.spec_files.D'):\n        pass\n",
+            "def t():\n    with patch('aj_crew.agent_parts.spec_files.D'):\n        pass\n",
             set(),
         ),
     ],
@@ -430,9 +430,9 @@ def test_a_facade_patch_reaches_the_spec_build(
 
 
 def test_a_facade_patch_reaches_the_launcher(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(agent, "_resolve_kirocrew_bin", _raiser("resolve"))
+    monkeypatch.setattr(agent, "_resolve_ajcrew_bin", _raiser("resolve"))
     with pytest.raises(_Reached):
-        agent._kirocrew_mcp_invocation("mcp-cron")
+        agent._ajcrew_mcp_invocation("mcp-cron")
 
 
 def test_a_facade_patch_reaches_the_spec_upgrades(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -472,7 +472,7 @@ def test_a_facade_patch_reaches_the_unreadable_episode(monkeypatch: pytest.Monke
     unreadable = agent._AgentSpecUnreadable("PermissionError: denied")
     with pytest.raises(_Reached):
         agent._skip_unreadable_main_spec(
-            Path("kirocrew.json"), unreadable, False, clean=False, wrote_out=None, held_out=None
+            Path("ajcrew.json"), unreadable, False, clean=False, wrote_out=None, held_out=None
         )
 
 
@@ -507,7 +507,7 @@ def _bad_owner_imports(tree: ast.Module) -> list[str]:
     bad = [
         f"{line}: {mod}"
         for line, mod in _runtime_imports(tree)
-        if mod == "kiro_crew" or mod.startswith(("kiro_crew.", "."))
+        if mod == "aj_crew" or mod.startswith(("aj_crew.", "."))
     ]
     for node in ast.walk(tree):
         if isinstance(node, ast.If) and ast.unparse(node.test) == "TYPE_CHECKING":
@@ -523,11 +523,11 @@ def _bad_owner_imports(tree: ast.Module) -> list[str]:
     ("source", "flagged"),
     [
         ("import os\nfrom pathlib import Path\n", False),
-        ("if TYPE_CHECKING:\n    from kiro_crew.agent import sel\n", False),
-        ("from kiro_crew.agent import sel\n", True),
-        ("from kiro_crew import agent_state\n", True),
-        ("import kiro_crew.agent\n", True),
-        ("if TYPE_CHECKING:\n    from kiro_crew.sel import sel\n", True),
+        ("if TYPE_CHECKING:\n    from aj_crew.agent import sel\n", False),
+        ("from aj_crew.agent import sel\n", True),
+        ("from aj_crew import agent_state\n", True),
+        ("import aj_crew.agent\n", True),
+        ("if TYPE_CHECKING:\n    from aj_crew.sel import sel\n", True),
         ("from .. import agent\n", True),
         ("from . import spec_files\n", True),
     ],
@@ -565,7 +565,7 @@ def test_every_module_level_value_an_owner_defines_is_the_object_the_facade_bind
     }
     assert [v for names in values.values() for v in names if ":" in v] == []
     probe = (
-        "import importlib, json, sys, kiro_crew.agent as agent\n"
+        "import importlib, json, sys, aj_crew.agent as agent\n"
         "values = json.loads(sys.argv[1])\n"
         "print(json.dumps(sorted(\n"
         "    stem + '.' + name for stem, names in values.items() for name in names\n"
@@ -604,13 +604,13 @@ def _imports_an_owner(source: str) -> bool:
 @pytest.mark.parametrize(
     ("source", "flagged"),
     [
-        ("from kiro_crew.agent_parts import spec_files\n", True),
-        ("from kiro_crew.agent_parts.kirocrew_launcher import _resolve_kirocrew_bin\n", True),
-        ("import kiro_crew.agent_parts.spec_files\n", True),
-        ("from kiro_crew import agent_parts\n", True),
+        ("from aj_crew.agent_parts import spec_files\n", True),
+        ("from aj_crew.agent_parts.ajcrew_launcher import _resolve_ajcrew_bin\n", True),
+        ("import aj_crew.agent_parts.spec_files\n", True),
+        ("from aj_crew import agent_parts\n", True),
         ("from .agent_parts import spec_build\n", True),
-        ("from kiro_crew.agent import rebuild_agent_config\n", False),
-        ("from kiro_crew.subagent_parts import manager\n", False),
+        ("from aj_crew.agent import rebuild_agent_config\n", False),
+        ("from aj_crew.subagent_parts import manager\n", False),
         ("from . import agent_parts\n", True),
         ("from ..agent_parts.spec_files import kiro_agents_dir_path\n", True),
         ("from .subagent_parts import manager\n", False),
@@ -636,16 +636,16 @@ def test_nothing_but_the_facade_imports_an_owner() -> None:
 
 
 def test_the_importer_scan_finds_a_planted_importer(tmp_path: Path) -> None:
-    src = tmp_path / "kiro_crew"
+    src = tmp_path / "aj_crew"
     (src / "agent_parts").mkdir(parents=True)
     (src / "agent.py").write_text(
-        "from kiro_crew.agent_parts import spec_files\n", encoding="utf-8"
+        "from aj_crew.agent_parts import spec_files\n", encoding="utf-8"
     )
     (src / "agent_parts" / "spec_files.py").write_text("import os\n", encoding="utf-8")
     (src / "caller.py").write_text(
-        "from kiro_crew.agent_parts.spec_files import kiro_agents_dir_path\n", encoding="utf-8"
+        "from aj_crew.agent_parts.spec_files import kiro_agents_dir_path\n", encoding="utf-8"
     )
-    assert _owner_importers(src) == ["kiro_crew/caller.py"]
+    assert _owner_importers(src) == ["aj_crew/caller.py"]
 
 
 def _rel(path: Path) -> str:
@@ -675,7 +675,7 @@ def test_no_owner_and_not_the_facade_carries_an_agent_sdk_boundary_edge() -> Non
 
 
 @pytest.mark.parametrize(
-    "source", ["from ..acp.client import KIRO_CLI_BIN\n", "from kiro_crew.acp import types\n"]
+    "source", ["from ..acp.client import KIRO_CLI_BIN\n", "from aj_crew.acp import types\n"]
 )
 def test_the_boundary_check_sees_an_owner_import_of_the_acp_layer(source: str) -> None:
     """The gate resolves a relative import against the repository path it is given."""
@@ -755,18 +755,18 @@ def test_the_inventory_check_reports_a_planted_import() -> None:
     of a name that owner does not define, are both reported."""
     planted = (
         Path(agent.__file__).read_text(encoding="utf-8")
-        + "\nimport pickle\nfrom kiro_crew.agent_parts.spec_lookup import _atomic_json_write\n"
+        + "\nimport pickle\nfrom aj_crew.agent_parts.spec_lookup import _atomic_json_write\n"
     )
     assert unexpected_imports(planted, _owner_names(), _family_reads()) == [
         "pickle",
-        "kiro_crew.agent_parts.spec_lookup._atomic_json_write",
+        "aj_crew.agent_parts.spec_lookup._atomic_json_write",
     ]
 
 
 def test_a_fresh_import_composes_every_owner() -> None:
     probe = (
-        "import sys, kiro_crew.agent as agent\n"
-        "loaded = sorted(m for m in sys.modules if m.startswith('kiro_crew.agent_parts.'))\n"
+        "import sys, aj_crew.agent as agent\n"
+        "loaded = sorted(m for m in sys.modules if m.startswith('aj_crew.agent_parts.'))\n"
         "composed = all(getattr(agent, n).__globals__ is vars(agent)\n"
         "    for m in loaded for n, v in vars(sys.modules[m]).items()\n"
         "    if type(v).__name__ == 'function'\n"

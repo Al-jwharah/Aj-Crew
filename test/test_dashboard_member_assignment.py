@@ -10,19 +10,19 @@ import threading
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.dashboard import chat_persistence
-from kiro_crew.execution_context import read_session_execution
-from kiro_crew.member_memory_auth import read_private_session_store
-from kiro_crew.memory_stores import UnknownMemoryStore, provision_member_memory
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.dashboard import chat_persistence
+from aj_crew.execution_context import read_session_execution
+from aj_crew.member_memory_auth import read_private_session_store
+from aj_crew.memory_stores import UnknownMemoryStore, provision_member_memory
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 @pytest.fixture
 def member_stores():
-    cfg = KiroCrewConfig.load()
-    cfg.agents["writer"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
-    cfg.agents["reviewer"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+    cfg = AjCrewConfig.load()
+    cfg.agents["writer"] = AjCrewAgentConfig(kiro_agent="ajcrew")
+    cfg.agents["reviewer"] = AjCrewAgentConfig(kiro_agent="ajcrew")
     writer = provision_member_memory(cfg, "writer")
     reviewer = provision_member_memory(cfg, "reviewer")
     cfg.save()
@@ -36,7 +36,7 @@ async def test_dashboard_pin_refuses_stale_member_generation(
 ):
     """A grant uses current membership, not its request-entry snapshot."""
     writer, reviewer = member_stores
-    stale = KiroCrewConfig.load()
+    stale = AjCrewConfig.load()
     current = copy.deepcopy(stale)
     if change == "deleted":
         del current.agents["writer"]
@@ -54,7 +54,7 @@ async def test_dashboard_pin_refuses_stale_member_generation(
         called = True
         return writer
 
-    monkeypatch.setattr(chat_persistence.KiroCrewConfig, "load", lambda: current)
+    monkeypatch.setattr(chat_persistence.AjCrewConfig, "load", lambda: current)
     monkeypatch.setattr(chat_persistence, "_pin_private_agent_assignment", assignment)
     state = _make_state(tmp_path)
     with pytest.raises(UnknownMemoryStore, match="changed during private memory assignment"):
@@ -75,7 +75,7 @@ async def test_dashboard_pin_refuses_privateness_changed_during_wait(
     or pin a retired store private.
     """
     writer, _ = member_stores
-    private = KiroCrewConfig.load()
+    private = AjCrewConfig.load()
     non_private = copy.deepcopy(private)
     non_private.agents["writer"].memory_store = ""
     stale, current = (
@@ -89,7 +89,7 @@ async def test_dashboard_pin_refuses_privateness_changed_during_wait(
         called = True
         return writer
 
-    monkeypatch.setattr(chat_persistence.KiroCrewConfig, "load", lambda: current)
+    monkeypatch.setattr(chat_persistence.AjCrewConfig, "load", lambda: current)
     monkeypatch.setattr(chat_persistence, "_pin_private_agent_assignment", assignment)
     state = _make_state(tmp_path)
     with pytest.raises(UnknownMemoryStore, match="changed during private memory assignment"):
@@ -104,7 +104,7 @@ async def test_dashboard_pin_refuses_privateness_changed_during_wait(
 
 
 def _writer_database(store: str):
-    from kiro_crew.memory_stores import MEMORY_DB_FILE, _named_store_dir
+    from aj_crew.memory_stores import MEMORY_DB_FILE, _named_store_dir
 
     return _named_store_dir(store) / MEMORY_DB_FILE
 
@@ -116,8 +116,8 @@ async def test_dashboard_pin_recreates_a_deleted_member_database(
     """A Bot whose own memory.db was deleted opens on a new empty store with its identity."""
     import stat
 
-    from kiro_crew import platform_compat
-    from kiro_crew.vector_memory import read_member_database_identity
+    from aj_crew import platform_compat
+    from aj_crew.vector_memory import read_member_database_identity
 
     writer, _ = member_stores
     database = _writer_database(writer)
@@ -130,11 +130,11 @@ async def test_dashboard_pin_recreates_a_deleted_member_database(
     )
     state = _make_state(tmp_path)
     assigned = await chat_persistence.pin_private_agent_store(
-        state, "dashboard:deleted-db", "writer", KiroCrewConfig.load()
+        state, "dashboard:deleted-db", "writer", AjCrewConfig.load()
     )
     assert assigned == writer
     assert pinned == ["writer"]
-    member_id = KiroCrewConfig.load().agents["writer"].member_id
+    member_id = AjCrewConfig.load().agents["writer"].member_id
     assert read_member_database_identity(database) == (member_id, writer)
     assert not list(database.parent.glob(f"{database.name}.repair-*"))
     assert stat.S_ISREG(database.lstat().st_mode)
@@ -170,7 +170,7 @@ async def test_dashboard_pin_fsyncs_the_recreated_database_through_a_writable_ha
     monkeypatch.setattr(os, "fsync", windows_like_fsync)
     state = _make_state(tmp_path)
     assigned = await chat_persistence.pin_private_agent_store(
-        state, "dashboard:fsync-handle", "writer", KiroCrewConfig.load()
+        state, "dashboard:fsync-handle", "writer", AjCrewConfig.load()
     )
     assert assigned == writer
     assert database.exists()
@@ -182,7 +182,7 @@ async def test_dashboard_pin_releases_cached_deleted_member_database(
     tmp_path, member_stores, monkeypatch
 ):
     """A prepared turn must not keep learning into the deleted database's handle."""
-    from kiro_crew import context, embeddings
+    from aj_crew import context, embeddings
 
     writer, _ = member_stores
     monkeypatch.setattr(embeddings, "model_file_present", lambda: False)
@@ -201,7 +201,7 @@ async def test_dashboard_pin_releases_cached_deleted_member_database(
         state = _make_state(tmp_path)
         assert (
             await chat_persistence.pin_private_agent_store(
-                state, "dashboard:cached-deleted-db", "writer", KiroCrewConfig.load()
+                state, "dashboard:cached-deleted-db", "writer", AjCrewConfig.load()
             )
             == writer
         )
@@ -229,7 +229,7 @@ async def test_dashboard_pin_releases_cached_database_before_namespace_lock(
     tmp_path, member_stores, monkeypatch
 ):
     """Cache eviction cannot invert context's cache-lock then namespace-lock order."""
-    from kiro_crew import context, memory_stores
+    from aj_crew import context, memory_stores
 
     writer, _ = member_stores
     _writer_database(writer).unlink()
@@ -245,7 +245,7 @@ async def test_dashboard_pin_releases_cached_database_before_namespace_lock(
     state = _make_state(tmp_path)
     assert (
         await chat_persistence.pin_private_agent_store(
-            state, "dashboard:release-before-namespace", "writer", KiroCrewConfig.load()
+            state, "dashboard:release-before-namespace", "writer", AjCrewConfig.load()
         )
         == writer
     )
@@ -256,7 +256,7 @@ async def test_dashboard_pin_releases_cached_database_before_namespace_lock(
 @pytest.mark.skipif(os.name != "posix", reason="store-use admission uses POSIX shared locks")
 async def test_dashboard_pin_refuses_deleted_database_still_open_elsewhere(tmp_path, member_stores):
     """Another holder's shared admission prevents repair and private publication."""
-    from kiro_crew.member_memory_backup import acquire_store_use_lock, release_store_use_lock
+    from aj_crew.member_memory_backup import acquire_store_use_lock, release_store_use_lock
 
     writer, _ = member_stores
     database = _writer_database(writer)
@@ -269,7 +269,7 @@ async def test_dashboard_pin_refuses_deleted_database_still_open_elsewhere(tmp_p
         key = "dashboard:busy-deleted-db"
         with pytest.raises(UnknownMemoryStore, match="still open in another process.*restart"):
             await chat_persistence.pin_private_agent_store(
-                state, key, "writer", KiroCrewConfig.load()
+                state, key, "writer", AjCrewConfig.load()
             )
         assert not database.exists()
         assert journal.read_bytes() == b"old journal"
@@ -284,7 +284,7 @@ async def test_dashboard_pin_moves_leftover_side_files_aside_before_recreating(
     tmp_path, member_stores, monkeypatch
 ):
     """WAL/SHM files a deleted database left behind are renamed aside, never deleted."""
-    from kiro_crew.vector_memory import read_member_database_identity
+    from aj_crew.vector_memory import read_member_database_identity
 
     writer, _ = member_stores
     database = _writer_database(writer)
@@ -297,11 +297,11 @@ async def test_dashboard_pin_moves_leftover_side_files_aside_before_recreating(
     state = _make_state(tmp_path)
     assert (
         await chat_persistence.pin_private_agent_store(
-            state, "dashboard:side-files", "writer", KiroCrewConfig.load()
+            state, "dashboard:side-files", "writer", AjCrewConfig.load()
         )
         == writer
     )
-    member_id = KiroCrewConfig.load().agents["writer"].member_id
+    member_id = AjCrewConfig.load().agents["writer"].member_id
     assert read_member_database_identity(database) == (member_id, writer)
     for suffix in ("-wal", "-shm"):
         moved = sorted(database.parent.glob(f"{database.name}{suffix}.orphaned-*"))
@@ -313,7 +313,7 @@ async def test_dashboard_pin_retries_after_failed_database_recreation(
     tmp_path, member_stores, monkeypatch
 ):
     """Failed creation removes only its fresh files, preserving archived bytes for retry."""
-    from kiro_crew import vector_memory
+    from aj_crew import vector_memory
 
     writer, _ = member_stores
     database = _writer_database(writer)
@@ -333,7 +333,7 @@ async def test_dashboard_pin_retries_after_failed_database_recreation(
 
     state = _make_state(tmp_path)
     key = "dashboard:retry-deleted-db"
-    config = KiroCrewConfig.load()
+    config = AjCrewConfig.load()
     with monkeypatch.context() as patch:
         patch.setattr(vector_memory, "create_member_database", fail_creation)
         with pytest.raises(OSError, match="database initialization failed"):
@@ -382,7 +382,7 @@ async def test_dashboard_pin_refuses_a_linked_side_file(tmp_path, member_stores,
     state = _make_state(tmp_path)
     with pytest.raises(UnknownMemoryStore):
         await chat_persistence.pin_private_agent_store(
-            state, "dashboard:linked-wal", "writer", KiroCrewConfig.load()
+            state, "dashboard:linked-wal", "writer", AjCrewConfig.load()
         )
     assert not called
     assert wal.is_symlink()
@@ -392,18 +392,18 @@ async def test_dashboard_pin_refuses_a_linked_side_file(tmp_path, member_stores,
 @pytest.mark.asyncio
 async def test_new_chat_precheck_admits_a_repairable_deleted_database(member_stores):
     """The new-chat precheck lets the open heal a deleted memory.db instead of refusing."""
-    from kiro_crew.dashboard.chat_handlers import _check_new_slot_assignment
-    from kiro_crew.vector_memory import create_member_database
+    from aj_crew.dashboard.chat_handlers import _check_new_slot_assignment
+    from aj_crew.vector_memory import create_member_database
 
     writer, _ = member_stores
     database = _writer_database(writer)
     database.unlink()
-    await _check_new_slot_assignment(KiroCrewConfig.load(), "writer", "", "", "persistent")
+    await _check_new_slot_assignment(AjCrewConfig.load(), "writer", "", "", "persistent")
     assert not database.exists()
 
     create_member_database(database, member_id="someone-else", store_id=writer)
     with pytest.raises(UnknownMemoryStore, match="does not own its private memory store"):
-        await _check_new_slot_assignment(KiroCrewConfig.load(), "writer", "", "", "persistent")
+        await _check_new_slot_assignment(AjCrewConfig.load(), "writer", "", "", "persistent")
 
 
 @pytest.mark.asyncio
@@ -411,7 +411,7 @@ async def test_dashboard_pin_refuses_a_database_of_another_identity(
     tmp_path, member_stores, monkeypatch
 ):
     """A database that exists but names someone else is refused with that reason."""
-    from kiro_crew.vector_memory import create_member_database
+    from aj_crew.vector_memory import create_member_database
 
     writer, _ = member_stores
     database = _writer_database(writer)
@@ -428,7 +428,7 @@ async def test_dashboard_pin_refuses_a_database_of_another_identity(
     state = _make_state(tmp_path)
     with pytest.raises(UnknownMemoryStore) as refused:
         await chat_persistence.pin_private_agent_store(
-            state, "dashboard:foreign-db", "writer", KiroCrewConfig.load()
+            state, "dashboard:foreign-db", "writer", AjCrewConfig.load()
         )
     message = str(refused.value)
     assert "Member database identity does not match its declaration" in message
@@ -459,7 +459,7 @@ async def test_dashboard_pin_refuses_a_symlink_at_the_database_path(
     state = _make_state(tmp_path)
     with pytest.raises(UnknownMemoryStore) as refused:
         await chat_persistence.pin_private_agent_store(
-            state, "dashboard:linked-db", "writer", KiroCrewConfig.load()
+            state, "dashboard:linked-db", "writer", AjCrewConfig.load()
         )
     assert "changed during private memory assignment" not in str(refused.value)
     assert not called
@@ -472,7 +472,7 @@ async def test_dashboard_pin_holds_namespace_lock_through_publication(
     tmp_path, member_stores, monkeypatch
 ):
     """Deletion cannot retire a store between its final check and binding write."""
-    from kiro_crew import execution_context, memory_stores, platform_compat
+    from aj_crew import execution_context, memory_stores, platform_compat
 
     writer, _ = member_stores
     state = _make_state(tmp_path)
@@ -489,7 +489,7 @@ async def test_dashboard_pin_holds_namespace_lock_through_publication(
 
     monkeypatch.setattr(execution_context, "bind_session_execution", pause_before_publication)
     pin = asyncio.create_task(
-        chat_persistence.pin_private_agent_store(state, key, "writer", KiroCrewConfig.load())
+        chat_persistence.pin_private_agent_store(state, key, "writer", AjCrewConfig.load())
     )
     try:
         await async_wait_until(checked.is_set, describe=lambda: "the pin never reached its check")
@@ -523,9 +523,9 @@ async def test_dashboard_pin_preserves_private_and_non_private_controls(
     tmp_path, member_stores, agent, expected, memory_mode, validate_only
 ):
     writer, _ = member_stores
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     if agent == "legacy":
-        cfg.agents[agent] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg.agents[agent] = AjCrewAgentConfig(kiro_agent="ajcrew")
         cfg.save()
     state = _make_state(tmp_path)
     key = f"dashboard:pin-control-{agent}"

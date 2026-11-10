@@ -1,5 +1,5 @@
 name: Feature request
-description: Propose a new capability or a change to how KiroCrew behaves.
+description: Propose a new capability or a change to how AjCrew behaves.
 labels: ["enhancement"]
 body:
   - type: markdown
@@ -7,7 +7,7 @@ body:
       value: |
         For anything significant, this issue is the right place to agree on the
         approach before code gets written — see
-        [CONTRIBUTING.md](https://github.com/kirodotdev/KiroCrew/blob/main/CONTRIBUTING.md).
+        [CONTRIBUTING.md](https://github.com/Al-jwharah/Aj-Crew/blob/main/CONTRIBUTING.md).
 
   - type: checkboxes
     id: search
@@ -62,4 +62,4 @@ body:
         Want to build this yourself? Once the issue is triaged as `tier:T1` or
         `tier:T2`, comment `/claim` on it so nobody else starts the same work. A
         `tier:T3` or `tier:T4` needs a design first. See
-        [Claiming an issue](https://github.com/kirodotdev/KiroCrew/blob/main/CONTRIBUTING.md#claiming-an-issue).
+        [Claiming an issue](https://github.com/Al-jwharah/Aj-Crew/blob/main/CONTRIBUTING.md#claiming-an-issue).

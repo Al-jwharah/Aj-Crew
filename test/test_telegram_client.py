@@ -19,11 +19,11 @@ import aiohttp
 import pytest
 from telegram_helpers import _drop_live_config_snapshot  # noqa: F401
 
-from kiro_crew.telegram.client import TelegramClient
-from kiro_crew.telegram.commands import bot_command_payload
-from kiro_crew.telegram.renderer import TelegramApprovalDecider, TelegramRenderer
-from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.telegram.client import TelegramClient
+from aj_crew.telegram.commands import bot_command_payload
+from aj_crew.telegram.renderer import TelegramApprovalDecider, TelegramRenderer
+from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
+from aj_crew.testing.wait import async_wait_until
 
 
 class TestClientSession:
@@ -31,7 +31,7 @@ class TestClientSession:
         # Concurrent _api callers (polling loop + handler tasks) must share ONE
         # ClientSession — the double-checked lock in _ensure_session prevents a
         # leaked duplicate.
-        import kiro_crew.telegram.client as client_mod
+        import aj_crew.telegram.client as client_mod
 
         created = {"n": 0}
 
@@ -63,7 +63,7 @@ class TestConfigurableApiBase:
     # ── Call-time read: the var takes effect without a module reload ──
 
     def test_api_base_read_at_call_time_after_env_change(self, monkeypatch: Any) -> None:
-        import kiro_crew.telegram.client as client_mod
+        import aj_crew.telegram.client as client_mod
 
         # The module is already imported with the var unset. Setting it now
         # (as load_credentials does, AFTER import) must change the result,
@@ -78,7 +78,7 @@ class TestConfigurableApiBase:
         assert client_mod._api_base() == "https://tg-proxy.example.com/bot{token}/{method}"
 
     def test_unset_keeps_public_host(self, monkeypatch: Any) -> None:
-        import kiro_crew.telegram.client as client_mod
+        import aj_crew.telegram.client as client_mod
 
         monkeypatch.delenv("TELEGRAM_API_BASE_URL", raising=False)
         assert client_mod._api_base() == "https://api.telegram.org/bot{token}/{method}"
@@ -87,7 +87,7 @@ class TestConfigurableApiBase:
     # ── Scheme validation: https accepted, http refused unless loopback ──
 
     def test_https_proxy_accepted(self, monkeypatch: Any) -> None:
-        import kiro_crew.telegram.client as client_mod
+        import aj_crew.telegram.client as client_mod
 
         monkeypatch.setenv(
             "TELEGRAM_API_BASE_URL",
@@ -96,7 +96,7 @@ class TestConfigurableApiBase:
         assert client_mod._api_base() == "https://tg-proxy.example.com/bot{token}/{method}"
 
     def test_http_non_loopback_refused_falls_back_to_public(self, monkeypatch: Any) -> None:
-        import kiro_crew.telegram.client as client_mod
+        import aj_crew.telegram.client as client_mod
 
         # Plaintext http to a remote host would send the bot token in clear
         # text — refused, falls back to the public https host.
@@ -107,7 +107,7 @@ class TestConfigurableApiBase:
         assert client_mod._api_base() == "https://api.telegram.org/bot{token}/{method}"
 
     def test_http_loopback_accepted(self, monkeypatch: Any) -> None:
-        import kiro_crew.telegram.client as client_mod
+        import aj_crew.telegram.client as client_mod
 
         # http is allowed only for loopback, where the token never leaves the
         # machine (a local dev proxy on 127.0.0.1 / ::1 / localhost).
@@ -120,7 +120,7 @@ class TestConfigurableApiBase:
             assert client_mod._api_base() == host
 
     def test_missing_placeholder_refused(self, monkeypatch: Any) -> None:
-        import kiro_crew.telegram.client as client_mod
+        import aj_crew.telegram.client as client_mod
 
         # A value lacking {token}/{method} formats to the same URL for every
         # method — refused, falls back to the public host.
@@ -128,7 +128,7 @@ class TestConfigurableApiBase:
         assert client_mod._api_base() == "https://api.telegram.org/bot{token}/{method}"
 
     def test_unparseable_falls_back_to_public(self, monkeypatch: Any) -> None:
-        import kiro_crew.telegram.client as client_mod
+        import aj_crew.telegram.client as client_mod
 
         monkeypatch.setenv("TELEGRAM_API_BASE_URL", "not-a-url")
         assert client_mod._api_base() == "https://api.telegram.org/bot{token}/{method}"
@@ -137,13 +137,13 @@ class TestConfigurableApiBase:
     # ── File base keeps the template's path prefix ──
 
     def test_file_base_defaults_to_public_host(self, monkeypatch: Any) -> None:
-        import kiro_crew.telegram.client as client_mod
+        import aj_crew.telegram.client as client_mod
 
         monkeypatch.delenv("TELEGRAM_API_BASE_URL", raising=False)
         assert client_mod._file_base() == "https://api.telegram.org"
 
     def test_file_base_derives_proxy_origin(self, monkeypatch: Any) -> None:
-        import kiro_crew.telegram.client as client_mod
+        import aj_crew.telegram.client as client_mod
 
         # A root-mounted proxy template yields that proxy's origin.
         monkeypatch.setenv(
@@ -153,7 +153,7 @@ class TestConfigurableApiBase:
         assert client_mod._file_base() == "https://tg-proxy.example.com"
 
     def test_file_base_keeps_path_prefix(self, monkeypatch: Any) -> None:
-        import kiro_crew.telegram.client as client_mod
+        import aj_crew.telegram.client as client_mod
 
         # A path-prefixed template must keep its prefix so downloads stay
         # inside the proxied route (…/tg/file/bot…), not fall out to …/file/bot.
@@ -187,7 +187,7 @@ class TestFileBaseFollowsApiBase:
     def test_the_scheme_is_read_the_way_api_base_accepted_it(
         self, monkeypatch: Any, template: str, expected: str
     ) -> None:
-        import kiro_crew.telegram.client as client_mod
+        import aj_crew.telegram.client as client_mod
 
         monkeypatch.setenv("TELEGRAM_API_BASE_URL", template)
         assert client_mod._api_base() == template
@@ -204,7 +204,7 @@ class TestFileBaseFollowsApiBase:
     def test_a_template_without_the_method_tail_has_no_download_base(
         self, monkeypatch: Any, template: str
     ) -> None:
-        import kiro_crew.telegram.client as client_mod
+        import aj_crew.telegram.client as client_mod
 
         monkeypatch.setenv("TELEGRAM_API_BASE_URL", template)
         # Method calls keep using it exactly as before ...
@@ -213,7 +213,7 @@ class TestFileBaseFollowsApiBase:
         assert client_mod._file_base() is None
 
     def test_a_query_after_the_method_tail_has_no_download_base(self, monkeypatch: Any) -> None:
-        import kiro_crew.telegram.client as client_mod
+        import aj_crew.telegram.client as client_mod
 
         template = "https://proxy.example.com/bot{token}/{method}?key=x"
         monkeypatch.setenv("TELEGRAM_API_BASE_URL", template)
@@ -226,7 +226,7 @@ class TestFileBaseFollowsApiBase:
         Returns the client and a record of what it requested: the ``api``
         method names and the ``get`` URLs.
         """
-        import kiro_crew.telegram.client as client_mod
+        import aj_crew.telegram.client as client_mod
 
         seen: dict[str, list[Any]] = {"api": [], "get": []}
         if template is None:
@@ -313,7 +313,7 @@ class TestLoopbackProxyBypass:
     """
 
     def test_url_is_loopback_detects_loopback_hosts(self) -> None:
-        from kiro_crew.telegram.client import _url_is_loopback
+        from aj_crew.telegram.client import _url_is_loopback
 
         assert _url_is_loopback("http://127.0.0.1:8080/botT/getMe")
         assert _url_is_loopback("http://localhost/botT/getMe")
@@ -322,7 +322,7 @@ class TestLoopbackProxyBypass:
         assert not _url_is_loopback("https://api.telegram.org/botT/getMe")
 
     def test_proxy_bypassed_for_loopback_destination(self) -> None:
-        from kiro_crew.telegram.client import TelegramClient
+        from aj_crew.telegram.client import TelegramClient
 
         client = TelegramClient(token="T", proxy="http://corp-proxy.example.com:3128")
         # A loopback request must not go through the remote proxy.
@@ -330,7 +330,7 @@ class TestLoopbackProxyBypass:
         assert client._proxy_for("http://localhost/botT/getMe") is None
 
     def test_proxy_kept_for_remote_destination(self) -> None:
-        from kiro_crew.telegram.client import TelegramClient
+        from aj_crew.telegram.client import TelegramClient
 
         proxy = "http://corp-proxy.example.com:3128"
         client = TelegramClient(token="T", proxy=proxy)
@@ -345,7 +345,7 @@ class TestTelegramSettingsSharedBase:
     def test_validate_url_uses_shared_resolver_at_call_time(self, monkeypatch: Any) -> None:
         import asyncio
 
-        import kiro_crew.dashboard.messaging_api.telegram_settings as settings_mod
+        import aj_crew.dashboard.messaging_api.telegram_settings as settings_mod
 
         captured: dict[str, str] = {}
 
@@ -402,7 +402,7 @@ class TestRedirectsRefusedOnTokenPath:
     def _drive(self, monkeypatch: Any, call: str) -> dict[str, Any]:
         import asyncio
 
-        import kiro_crew.telegram.client as client_mod
+        import aj_crew.telegram.client as client_mod
 
         captured: dict[str, Any] = {}
 
@@ -453,7 +453,7 @@ class TestTelegramTokenRedaction:
     """#1 — a Telegram bot token echoed in output must be scrubbed."""
 
     def test_bot_token_is_redacted(self) -> None:
-        from kiro_crew.security import redact_credentials
+        from aj_crew.security import redact_credentials
 
         token = "8412345678:" "AAExampleSecretTokenValue_1234567890abcd"
         cleaned, warnings = redact_credentials(f"my token is {token} ok")
@@ -462,7 +462,7 @@ class TestTelegramTokenRedaction:
         assert warnings  # at least one redaction warning recorded
 
     def test_benign_short_colon_pairs_not_redacted(self) -> None:
-        from kiro_crew.security import redact_credentials
+        from aj_crew.security import redact_credentials
 
         # Too few digits (<6) and too-short suffix (<30) to match the token
         # shape — must not be over-redacted.
@@ -475,7 +475,7 @@ class TestConfigMasking:
     """#5 — sensitive config fields are masked in the API response only."""
 
     def test_bot_token_masked_in_response(self) -> None:
-        from kiro_crew.dashboard.handlers.core import _SENSITIVE_MASK, _masked_config_dict
+        from aj_crew.dashboard.handlers.core import _SENSITIVE_MASK, _masked_config_dict
 
         class _Cfg:
             def to_dict(self) -> dict:
@@ -493,7 +493,7 @@ class TestConfigMasking:
         assert out["telegram"]["allowed_user_ids"] == [7]
 
     def test_empty_token_not_masked(self) -> None:
-        from kiro_crew.dashboard.handlers.core import _SENSITIVE_MASK, _masked_config_dict
+        from aj_crew.dashboard.handlers.core import _SENSITIVE_MASK, _masked_config_dict
 
         class _Cfg:
             def to_dict(self) -> dict:
@@ -689,7 +689,7 @@ class TestRichMessageAvailabilityLatch:
     """sendRichMessage learns whether the server implements the method."""
 
     def _client(self):
-        from kiro_crew.telegram.client import TelegramClient
+        from aj_crew.telegram.client import TelegramClient
 
         return TelegramClient(token="12345:testtoken")
 
@@ -736,7 +736,7 @@ class TestRichMessageAvailabilityLatch:
         # 400 is ambiguous: a wrong payload shape fails EVERY call, while one
         # oversized table fails only itself. Latch on the streak so a single bad
         # message cannot disable rich rendering for the whole process.
-        from kiro_crew.telegram.client import _RICH_400_LATCH
+        from aj_crew.telegram.client import _RICH_400_LATCH
 
         c = self._client()
         self._stub(c, monkeypatch, [400] * _RICH_400_LATCH)
@@ -749,7 +749,7 @@ class TestRichMessageAvailabilityLatch:
     def test_a_successful_send_clears_the_400_streak(self, monkeypatch) -> None:
         # Two unrelated bad tables spread over a session must not accumulate
         # into a latch when good tables send in between.
-        from kiro_crew.telegram.client import _RICH_400_LATCH
+        from aj_crew.telegram.client import _RICH_400_LATCH
 
         c = self._client()
         self._stub(c, monkeypatch, [400, None] * _RICH_400_LATCH)
@@ -895,7 +895,7 @@ class TestClientHealth:
     """get_me auth gate + on_status polling-health callback."""
 
     def _client(self):
-        from kiro_crew.telegram.client import TelegramClient
+        from aj_crew.telegram.client import TelegramClient
 
         return TelegramClient(token="12345:testtoken")
 
@@ -904,14 +904,14 @@ class TestClientHealth:
 
         async def _call_raw(method, params, timeout=15):
             assert method == "getMe"
-            return {"ok": True, "result": {"id": 42, "username": "kirocrew_bot"}}
+            return {"ok": True, "result": {"id": 42, "username": "ajcrew_bot"}}
 
         monkeypatch.setattr(client, "_call_raw", _call_raw)
         result = asyncio.run(client.get_me())
-        assert result["username"] == "kirocrew_bot"
+        assert result["username"] == "ajcrew_bot"
 
     def test_get_me_raises_auth_error_on_rejection(self, monkeypatch) -> None:
-        from kiro_crew.telegram.client import TelegramAuthError
+        from aj_crew.telegram.client import TelegramAuthError
 
         client = self._client()
 

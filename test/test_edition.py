@@ -1,6 +1,6 @@
-"""Tests for the build-time edition constant (kiro_crew.edition) and its stamper.
+"""Tests for the build-time edition constant (aj_crew.edition) and its stamper.
 
-The stamper is the real ``kiro_crew._edition_stamp`` that ``setup.py``'s
+The stamper is the real ``aj_crew._edition_stamp`` that ``setup.py``'s
 ``build_py`` runs; these tests drive it on a copy of the real edition.py.
 """
 
@@ -19,10 +19,10 @@ from types import ModuleType
 
 import pytest
 
-from kiro_crew import _edition_stamp, edition
+from aj_crew import _edition_stamp, edition
 
 _REPO = Path(__file__).resolve().parents[1]
-_EDITION_SRC = _REPO / "src" / "kiro_crew" / "edition.py"
+_EDITION_SRC = _REPO / "src" / "aj_crew" / "edition.py"
 
 
 def _load(path: Path) -> ModuleType:
@@ -34,7 +34,7 @@ def _load(path: Path) -> ModuleType:
 
 
 def _built_copy(tmp_path: Path) -> Path:
-    built = tmp_path / "build" / "kiro_crew" / "edition.py"
+    built = tmp_path / "build" / "aj_crew" / "edition.py"
     built.parent.mkdir(parents=True)
     shutil.copyfile(_EDITION_SRC, built)
     return built
@@ -84,8 +84,8 @@ def test_declared_editions_match_the_module() -> None:
     ("environ", "expected"),
     [
         ({}, "oss"),
-        ({"KIROCREW_BUILD_EDITION": ""}, "oss"),
-        ({"KIROCREW_BUILD_EDITION": " lts\n"}, "lts"),
+        ({"AJCREW_BUILD_EDITION": ""}, "oss"),
+        ({"AJCREW_BUILD_EDITION": " lts\n"}, "lts"),
     ],
 )
 def test_requested_edition_defaults_to_oss(environ: dict, expected: str) -> None:
@@ -112,14 +112,14 @@ def test_default_stamp_overwrites_a_stale_lts_copy(tmp_path: Path) -> None:
 
 def test_stamp_refuses_unknown_edition(tmp_path: Path) -> None:
     built = _built_copy(tmp_path)
-    with pytest.raises(ValueError, match="unknown KIROCREW_BUILD_EDITION 'foo'"):
+    with pytest.raises(ValueError, match="unknown AJCREW_BUILD_EDITION 'foo'"):
         _edition_stamp.stamp_file(str(built), "foo")
     assert built.read_bytes() == _EDITION_SRC.read_bytes()
 
 
 def test_old_enterprise_name_is_an_unknown_edition(tmp_path: Path) -> None:
     built = _built_copy(tmp_path)
-    with pytest.raises(ValueError, match="unknown KIROCREW_BUILD_EDITION 'enterprise'"):
+    with pytest.raises(ValueError, match="unknown AJCREW_BUILD_EDITION 'enterprise'"):
         _edition_stamp.stamp_file(str(built), "enterprise")
     assert built.read_bytes() == _EDITION_SRC.read_bytes()
 
@@ -127,7 +127,7 @@ def test_old_enterprise_name_is_an_unknown_edition(tmp_path: Path) -> None:
 def test_check_edition_accepts_declared_and_refuses_unknown() -> None:
     _edition_stamp.check_edition(str(_EDITION_SRC), "lts")
     _edition_stamp.check_edition(str(_EDITION_SRC), "oss")
-    with pytest.raises(ValueError, match="unknown KIROCREW_BUILD_EDITION 'foo'"):
+    with pytest.raises(ValueError, match="unknown AJCREW_BUILD_EDITION 'foo'"):
         _edition_stamp.check_edition(str(_EDITION_SRC), "foo")
 
 
@@ -174,7 +174,7 @@ def test_packaging_targets_check_and_pass_the_edition(target: str) -> None:
     block = re.search(rf"^{re.escape(target)}:([^\n]*)\n((?:\t[^\n]*\n)+)", makefile, re.MULTILINE)
     assert block, f"no {target} rule in Makefile"
     assert "check-edition" in block.group(1).split()
-    assert "KIROCREW_BUILD_EDITION=$(EDITION)" in block.group(2)
+    assert "AJCREW_BUILD_EDITION=$(EDITION)" in block.group(2)
 
 
 _NO_MAKE = pytest.mark.skipif(shutil.which("make") is None, reason="no make on PATH")
@@ -193,10 +193,10 @@ def _make_dry_run(
 
     ``ambient_edition`` is an exported shell ``EDITION``, which must be ignored.
     """
-    dropped = {"EDITION", "EDITIONS", "KIROCREW_BUILD_EDITION", "MAKEFLAGS", "MFLAGS"}
+    dropped = {"EDITION", "EDITIONS", "AJCREW_BUILD_EDITION", "MAKEFLAGS", "MFLAGS"}
     env = {k: v for k, v in os.environ.items() if k not in dropped}
     if env_edition is not None:
-        env["KIROCREW_BUILD_EDITION"] = env_edition
+        env["AJCREW_BUILD_EDITION"] = env_edition
     if ambient_edition is not None:
         env["EDITION"] = ambient_edition
     env.update(extra_env or {})
@@ -237,8 +237,8 @@ def test_make_check_edition_resolves(
         ("%", None, "unknown EDITION '%'"),
         ("ent%", None, "unknown EDITION 'ent%'"),
         (None, "%", "unknown EDITION '%'"),
-        ("oss", "lts", "conflicts with KIROCREW_BUILD_EDITION 'lts'"),
-        ("lts", "oss", "conflicts with KIROCREW_BUILD_EDITION 'oss'"),
+        ("oss", "lts", "conflicts with AJCREW_BUILD_EDITION 'lts'"),
+        ("lts", "oss", "conflicts with AJCREW_BUILD_EDITION 'oss'"),
     ],
 )
 def test_make_check_edition_refuses(
@@ -260,7 +260,7 @@ def test_packaging_target_passes_the_resolved_edition(
 ) -> None:
     result = _make_dry_run(target, edition=edition_arg, env_edition=env_edition)
     assert result.returncode == 0, result.stderr
-    stamped = re.findall(r"KIROCREW_BUILD_EDITION=(\S+)", result.stdout)
+    stamped = re.findall(r"AJCREW_BUILD_EDITION=(\S+)", result.stdout)
     assert stamped == [expected], result.stdout
 
 
@@ -279,7 +279,7 @@ def test_exported_shell_edition_is_ignored(
     if target == "check-edition":
         assert f'edition: {expected}"' in result.stdout
     else:
-        assert re.findall(r"KIROCREW_BUILD_EDITION=(\S+)", result.stdout) == [expected]
+        assert re.findall(r"AJCREW_BUILD_EDITION=(\S+)", result.stdout) == [expected]
 
 
 def _resolved(result: subprocess.CompletedProcess[str], target: str) -> str:
@@ -287,7 +287,7 @@ def _resolved(result: subprocess.CompletedProcess[str], target: str) -> str:
     if target == "check-edition":
         (value,) = re.findall(r'edition: (\S+)"', result.stdout)
         return value
-    (value,) = re.findall(r"KIROCREW_BUILD_EDITION=(\S+)", result.stdout)
+    (value,) = re.findall(r"AJCREW_BUILD_EDITION=(\S+)", result.stdout)
     return value
 
 
@@ -339,7 +339,7 @@ def test_an_ambient_editions_list_cannot_widen_the_allowed_set(flags: tuple[str,
 def test_command_line_edition_still_wins_over_an_exported_one() -> None:
     result = _make_dry_run("wheel", edition="lts", ambient_edition="oss")
     assert result.returncode == 0, result.stderr
-    assert re.findall(r"KIROCREW_BUILD_EDITION=(\S+)", result.stdout) == ["lts"]
+    assert re.findall(r"AJCREW_BUILD_EDITION=(\S+)", result.stdout) == ["lts"]
 
 
 @_NO_MAKE
@@ -347,14 +347,14 @@ def test_command_line_edition_still_wins_over_an_exported_one() -> None:
 def test_packaging_target_refuses_a_conflict(target: str) -> None:
     result = _make_dry_run(target, edition="oss", env_edition="lts")
     assert result.returncode != 0
-    assert "conflicts with KIROCREW_BUILD_EDITION" in result.stderr
+    assert "conflicts with AJCREW_BUILD_EDITION" in result.stderr
 
 
 def test_lts_wheel_carries_the_lts_stamp(tmp_path: Path) -> None:
     """Build a real wheel offline through setup.py and read edition.py out of it."""
     pytest.importorskip("setuptools.command.bdist_wheel")
-    env = {k: v for k, v in os.environ.items() if k != "KIROCREW_BUILD_EDITION"}
-    env["KIROCREW_BUILD_EDITION"] = "lts"
+    env = {k: v for k, v in os.environ.items() if k != "AJCREW_BUILD_EDITION"}
+    env["AJCREW_BUILD_EDITION"] = "lts"
     dist = tmp_path / "dist"
     argv = [
         "egg_info", "--egg-base", str(tmp_path),
@@ -373,7 +373,7 @@ def test_lts_wheel_carries_the_lts_stamp(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr[-2000:]
     (wheel,) = dist.glob("*.whl")
     with zipfile.ZipFile(wheel) as zf:
-        built = zf.read("kiro_crew/edition.py").decode("utf-8")
+        built = zf.read("aj_crew/edition.py").decode("utf-8")
     assert 'EDITION = "lts"' in built.splitlines()
     assert _load(_EDITION_SRC).EDITION == "oss"
 
@@ -381,13 +381,13 @@ def test_lts_wheel_carries_the_lts_stamp(tmp_path: Path) -> None:
 def test_setup_py_build_py_stamps_and_refuses(tmp_path: Path) -> None:
     """End to end through the real setup.py, where setuptools is installed."""
     pytest.importorskip("setuptools")
-    env = {k: v for k, v in os.environ.items() if k != "KIROCREW_BUILD_EDITION"}
+    env = {k: v for k, v in os.environ.items() if k != "AJCREW_BUILD_EDITION"}
     lib, egg = tmp_path / "lib", tmp_path / "egg"
     egg.mkdir()
     src_before = {p.name: p.stat().st_mtime_ns for p in (_REPO / "src").iterdir()}
 
     def build(value: str | None) -> subprocess.CompletedProcess[str]:
-        run_env = dict(env) if value is None else {**env, "KIROCREW_BUILD_EDITION": value}
+        run_env = dict(env) if value is None else {**env, "AJCREW_BUILD_EDITION": value}
         # egg_info --egg-base keeps setuptools' metadata out of the checkout's src/.
         argv = ["egg_info", "--egg-base", str(egg), "build_py", "--build-lib", str(lib)]
         return subprocess.run(
@@ -400,13 +400,13 @@ def test_setup_py_build_py_stamps_and_refuses(tmp_path: Path) -> None:
             timeout=300,
         )
 
-    built = lib / "kiro_crew" / "edition.py"
+    built = lib / "aj_crew" / "edition.py"
     assert build("lts").returncode == 0
     assert _load(built).EDITION == "lts"
     assert build(None).returncode == 0
     assert _load(built).EDITION == "oss"
     refused = build("foo")
     assert refused.returncode != 0
-    assert "unknown KIROCREW_BUILD_EDITION 'foo'" in refused.stderr
+    assert "unknown AJCREW_BUILD_EDITION 'foo'" in refused.stderr
     assert _load(_EDITION_SRC).EDITION == "oss"
     assert {p.name: p.stat().st_mtime_ns for p in (_REPO / "src").iterdir()} == src_before

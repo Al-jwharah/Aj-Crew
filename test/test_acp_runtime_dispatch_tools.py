@@ -21,11 +21,11 @@ from acp_runtime_helpers import (
     _stop_reader,
 )
 
-from kiro_crew.acp import session_handle_dispatch
-from kiro_crew.acp.runtime import AcpSessionHandle
-from kiro_crew.acp.types import METHOD_SESSION_UPDATE
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp import session_handle_dispatch
+from aj_crew.acp.runtime import AcpSessionHandle
+from aj_crew.acp.types import METHOD_SESSION_UPDATE
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import await_until
 
 # ── _dispatch_events: notification kind branches ──
 
@@ -38,7 +38,7 @@ async def test_dispatch_permission_request():
     (kind="execute") seeds the shell cache so ``is_shell=True``, which chat_runner's
     trust-mode gate needs.
     """
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         EVENT_PERMISSION_REQUEST,
         METHOD_REQUEST_PERMISSION,
         METHOD_SESSION_UPDATE,
@@ -117,7 +117,7 @@ async def test_a_spec_disabled_tool_is_refused_before_the_event_is_yielded():
     Drives the real loop, since ``_deny_spec_disabled_tool`` alone would pass unwired.
     Nothing is yielded, so no auto-approving consumer or human re-decides the spec.
     """
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         EVENT_PERMISSION_REQUEST,
         METHOD_REQUEST_PERMISSION,
         METHOD_SESSION_UPDATE,
@@ -127,7 +127,7 @@ async def test_a_spec_disabled_tool_is_refused_before_the_event_is_yielded():
     q = _register(rt, "sA")
     handle = AcpSessionHandle("sA", q["sA"], rt)
     # What AcpRuntime sets from the projection on a mirrored host.
-    handle.spec_denied_tools = frozenset({("kirocrew-core", "spawn_run")})
+    handle.spec_denied_tools = frozenset({("ajcrew-core", "spawn_run")})
     task = await _start_reader(rt)
     try:
         events = []
@@ -149,9 +149,9 @@ async def test_a_spec_disabled_tool_is_refused_before_the_event_is_yielded():
                     "update": {
                         "sessionUpdate": "tool_call",
                         "toolCallId": "tcD",
-                        "title": "mcp.kirocrew-core.spawn_run",
+                        "title": "mcp.ajcrew-core.spawn_run",
                         "kind": "execute",
-                        "rawInput": {"server": "kirocrew-core", "tool": "spawn_run"},
+                        "rawInput": {"server": "ajcrew-core", "tool": "spawn_run"},
                     },
                 },
             },
@@ -191,7 +191,7 @@ async def test_a_spec_disabled_tool_is_refused_before_the_event_is_yielded():
 @pytest.mark.asyncio
 async def test_a_tool_the_deny_set_does_not_name_still_reaches_the_consumer():
     """The refusal is narrow: a set that names another tool changes nothing."""
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         EVENT_PERMISSION_REQUEST,
         METHOD_REQUEST_PERMISSION,
         METHOD_SESSION_UPDATE,
@@ -200,7 +200,7 @@ async def test_a_tool_the_deny_set_does_not_name_still_reaches_the_consumer():
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
     handle = AcpSessionHandle("sA", q["sA"], rt)
-    handle.spec_denied_tools = frozenset({("kirocrew-core", "spawn_run")})
+    handle.spec_denied_tools = frozenset({("ajcrew-core", "spawn_run")})
     task = await _start_reader(rt)
     try:
         events = []
@@ -220,9 +220,9 @@ async def test_a_tool_the_deny_set_does_not_name_still_reaches_the_consumer():
                     "update": {
                         "sessionUpdate": "tool_call",
                         "toolCallId": "tcE",
-                        "title": "mcp.kirocrew-core.send_message",
+                        "title": "mcp.ajcrew-core.send_message",
                         "kind": "execute",
-                        "rawInput": {"server": "kirocrew-core", "tool": "send_message"},
+                        "rawInput": {"server": "ajcrew-core", "tool": "send_message"},
                     },
                 },
             },
@@ -260,7 +260,7 @@ async def test_an_unidentifiable_mcp_approval_never_reaches_the_consumer():
     yielded: the consumer auto-approves by hook glob and in trust mode, and this
     session's spec switched a tool off.
     """
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         EVENT_PERMISSION_REQUEST,
         METHOD_REQUEST_PERMISSION,
     )
@@ -268,7 +268,7 @@ async def test_an_unidentifiable_mcp_approval_never_reaches_the_consumer():
     rt, reader, proc = _make_runtime()
     q = _register(rt, "sA")
     handle = AcpSessionHandle("sA", q["sA"], rt)
-    handle.spec_denied_tools = frozenset({("kirocrew-core", "spawn_run")})
+    handle.spec_denied_tools = frozenset({("ajcrew-core", "spawn_run")})
     task = await _start_reader(rt)
     try:
         events = []
@@ -328,7 +328,7 @@ def test_both_deny_set_refusals_run_at_the_handles_one_answering_site():
 @pytest.mark.asyncio
 async def test_dispatch_tool_call_and_result():
     """Tool call + tool result notifications yield correct events."""
-    from kiro_crew.acp.types import EVENT_TOOL_CALL, EVENT_TOOL_RESULT
+    from aj_crew.acp.types import EVENT_TOOL_CALL, EVENT_TOOL_RESULT
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -390,8 +390,8 @@ async def test_tool_stall_cancels_session_not_runtime(monkeypatch):
     """A dispatched tool that goes silent must be recovered by a session-scoped
     session/cancel (so co-tenant sessions on the shared runtime survive), NOT by
     killing the runtime process. The turn ends with stop_reason 'tool_stall'."""
-    from kiro_crew.acp.session_handle import WatchdogSettings
-    from kiro_crew.acp.types import EVENT_COMPLETE
+    from aj_crew.acp.session_handle import WatchdogSettings
+    from aj_crew.acp.types import EVENT_COMPLETE
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -440,8 +440,8 @@ async def test_tool_stall_recovery_completes_even_if_cancel_fails(monkeypatch):
     """If session/cancel raises or times out (an unresponsive runtime is likely
     right after a stall), the watchdog must still complete the turn — the
     bounded wait_for + except must not let recovery hang or bubble."""
-    from kiro_crew.acp.session_handle import WatchdogSettings
-    from kiro_crew.acp.types import EVENT_COMPLETE
+    from aj_crew.acp.session_handle import WatchdogSettings
+    from aj_crew.acp.types import EVENT_COMPLETE
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -482,7 +482,7 @@ async def test_tool_stall_recovery_completes_even_if_cancel_fails(monkeypatch):
 @pytest.mark.asyncio
 async def test_dispatch_thinking_chunk():
     """agent_thought_chunk yields EVENT_THINKING_CHUNK."""
-    from kiro_crew.acp.types import EVENT_THINKING_CHUNK
+    from aj_crew.acp.types import EVENT_THINKING_CHUNK
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")

@@ -17,7 +17,7 @@ from mcp_discovery_helpers import (  # noqa: F401 -- the autouse fixture registe
     _stub_remote_probe_ssrf_vet,
 )
 
-from kiro_crew.mcp_discovery import McpServerInfo, probe_all, probe_server
+from aj_crew.mcp_discovery import McpServerInfo, probe_all, probe_server
 
 #: The words the person reads: the field, and the shape it must have.
 ENV_NOT_A_MAP = "env must be an object of variable names to values"
@@ -40,9 +40,9 @@ async def test_a_non_map_env_is_refused_in_its_own_terms_before_any_spawn(env: o
     server = McpServerInfo(name="bad-env", command="echo", env=env)  # type: ignore[arg-type]
     with (
         patch(
-            "kiro_crew.mcp_discovery.asyncio.create_subprocess_exec", side_effect=_NoSpawn
+            "aj_crew.mcp_discovery.asyncio.create_subprocess_exec", side_effect=_NoSpawn
         ) as spawn,
-        patch("kiro_crew.mcp_discovery.shutil.which", return_value="/usr/bin/echo"),
+        patch("aj_crew.mcp_discovery.shutil.which", return_value="/usr/bin/echo"),
     ):
         result = await probe_server(server)
     assert result.status == "error"
@@ -59,10 +59,10 @@ async def test_a_scalar_env_does_not_fail_the_whole_probe_response() -> None:
     bad = McpServerInfo(name="bad-env", command="echo", env=5)  # type: ignore[arg-type]
     good = McpServerInfo(name="no-command", command="")
     with (
-        patch("kiro_crew.mcp_discovery.list_servers", return_value=[bad, good]),
-        patch("kiro_crew.mcp_discovery._spawn_excluded", return_value=frozenset()),
+        patch("aj_crew.mcp_discovery.list_servers", return_value=[bad, good]),
+        patch("aj_crew.mcp_discovery._spawn_excluded", return_value=frozenset()),
         patch(
-            "kiro_crew.mcp_discovery.asyncio.create_subprocess_exec", side_effect=_NoSpawn
+            "aj_crew.mcp_discovery.asyncio.create_subprocess_exec", side_effect=_NoSpawn
         ) as spawn,
     ):
         rows = await probe_all()
@@ -87,9 +87,9 @@ async def test_an_env_that_declares_nothing_wrong_still_reaches_the_spawn(env: o
     server = McpServerInfo(name="good-env", command="echo", env=env)  # type: ignore[arg-type]
     with (
         patch(
-            "kiro_crew.mcp_discovery.asyncio.create_subprocess_exec", side_effect=_NoSpawn
+            "aj_crew.mcp_discovery.asyncio.create_subprocess_exec", side_effect=_NoSpawn
         ) as spawn,
-        patch("kiro_crew.mcp_discovery.shutil.which", return_value="/usr/bin/echo"),
+        patch("aj_crew.mcp_discovery.shutil.which", return_value="/usr/bin/echo"),
     ):
         result = await probe_server(server)
     spawn.assert_called_once()

@@ -20,7 +20,7 @@ from ai_review_workflows_helpers import (
     _write_stub,
 )
 
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 HEAD = "1234567890abcdef1234567890abcdef12345678"
 REPO = "example/repo"

@@ -22,8 +22,8 @@ from session_storage_helpers import (  # noqa: F401 -- fixtures are requested by
 )
 
 from conftest import requires_symlinks
-from kiro_crew import session_storage
-from kiro_crew.session_storage import SessionStorageError
+from aj_crew import session_storage
+from aj_crew.session_storage import SessionStorageError
 
 
 class TestEmptyTrashApproval:

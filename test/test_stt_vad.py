@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from kiro_crew.stt import vad
+from aj_crew.stt import vad
 
 
 def _tone(seconds: float, amplitude: float = 0.3) -> np.ndarray:

@@ -1,4 +1,4 @@
-"""Per-test resets and pins of process-global ``kiro_crew`` state, plus the
+"""Per-test resets and pins of process-global ``aj_crew`` state, plus the
 fences that keep the suite off live network endpoints.
 
 Part of ``test/conftest.py``, which imports and re-binds these names so pytest registers
@@ -15,8 +15,8 @@ import warnings
 import pytest
 from conftest_opt_in import drain_breadcrumb_writes
 
-from kiro_crew.safety_override import reset_singleton as _reset_safety_override
-from kiro_crew.safety_override import reset_yolo_policy_state as _reset_yolo_policy_state
+from aj_crew.safety_override import reset_singleton as _reset_safety_override
+from aj_crew.safety_override import reset_yolo_policy_state as _reset_yolo_policy_state
 
 
 @pytest.fixture(autouse=True)
@@ -34,7 +34,7 @@ def _small_default_host(_floor_monkeypatch):
     It also clears the runtime spawn width a ``SessionManager`` publishes for the
     process, so a manager one test built does not size another test's admission.
     """
-    from kiro_crew import cold_start_sizing, session_start_sizing
+    from aj_crew import cold_start_sizing, session_start_sizing
 
     _floor_monkeypatch.setattr(cold_start_sizing, "_configured_runtime_spawn_width", None)
 
@@ -57,7 +57,7 @@ def _fresh_reexec_environment(_floor_monkeypatch):
     consumed must not make a later test's gateway read as service-launched, nor
     be written into the environment by a later test's stubbed exec.
     """
-    from kiro_crew import platform_compat, platform_compat_runtime
+    from aj_crew import platform_compat, platform_compat_runtime
 
     # ONE fresh dict bound in both modules: ``keep_for_reexec`` and the
     # ``reexec_*`` seams resolve ``_KEPT_FOR_REEXEC`` in
@@ -78,7 +78,7 @@ def _fresh_released_sessions_warning(_floor_monkeypatch):
     backend that is not selected, so a test that drives that warning would
     otherwise silence it for every later test on the same worker.
     """
-    from kiro_crew import released_sessions
+    from aj_crew import released_sessions
 
     _floor_monkeypatch.setattr(released_sessions, "_stranded_warned", False)
 
@@ -99,7 +99,7 @@ def _approve_every_mcp_launch(request, _floor_monkeypatch):
     if getattr(request.module, "ENFORCE_LAUNCH_APPROVAL", False):
         return
     try:
-        from kiro_crew.mcp_gateway import launch_approval, launch_resolve
+        from aj_crew.mcp_gateway import launch_approval, launch_resolve
     except ImportError:
         return
     monkeypatch = _floor_monkeypatch
@@ -148,7 +148,7 @@ def _release_source_corpus_after_module():
 def _drop_live_config_snapshot():
     """Give every test an unstarted process watcher, and leave none behind.
 
-    ``kiro_crew.config.live`` keeps ONE process-global watcher, and every
+    ``aj_crew.config.live`` keeps ONE process-global watcher, and every
     point-of-use reader (``SkillsLoader._max_triggered_now``, the channel
     dispatchers' ``_live_cfg``) prefers its snapshot over the config it was
     constructed with. A test that primes it and does not reset therefore sets the
@@ -162,7 +162,7 @@ def _drop_live_config_snapshot():
     process-global too, and an entry another test left in it is indistinguishable
     from one the test under way registered.
     """
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     live.reset_for_tests()
     yield
@@ -181,7 +181,7 @@ def _reset_env_boot_record_and_ownership():
     ownership it never recorded -- failures that depend on which tests share an
     xdist worker. Reset on both sides, the same shape as the live watcher reset.
     """
-    from kiro_crew.config import loader_credentials
+    from aj_crew.config import loader_credentials
 
     # Looked up, not imported by name: the root floor must not take every test
     # down with it on a tree where these helpers do not exist (an older owner
@@ -212,7 +212,7 @@ def _inline_taskq_pump(_floor_monkeypatch):
     which cannot wait for a thread hop. Both off-loop paths are pinned by their
     own tests, which turn the switches back on.
     """
-    from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+    from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
 
     _floor_monkeypatch.setattr(SpawnAdmissionCoordinator, "pump_off_loop", False)
     _floor_monkeypatch.setattr(SpawnAdmissionCoordinator, "open_store_off_loop", False)
@@ -222,14 +222,14 @@ def _inline_taskq_pump(_floor_monkeypatch):
 def _release_stt_engine():
     """Never let a loaded speech model outlive the test that loaded it.
 
-    ``kiro_crew.stt.engine`` keeps ONE recogniser per process on purpose: the
+    ``aj_crew.stt.engine`` keeps ONE recogniser per process on purpose: the
     whole point of the module is that an utterance does not pay for a model load.
     Under xdist that same property makes it cross-test state, and the instance
     carries the idle-eviction window the first caller passed, so a later test
     reading a different setting would silently get the earlier one.
     """
     yield
-    from kiro_crew.stt import engine as stt_engine
+    from aj_crew.stt import engine as stt_engine
 
     stt_engine._engine = None
 
@@ -253,13 +253,13 @@ def _reset_safety_override_between_tests():
     yield
     # Drained BEFORE the reset below, and (by pytest's fixture teardown order --
     # finalizers run in reverse of setup order, so a fixture set up AFTER this
-    # one, e.g. a test's own ``monkeypatch.setenv("KIROCREW_HOME", ...)``, tears
-    # down BEFORE this line runs) while any KIROCREW_HOME the test itself set is
+    # one, e.g. a test's own ``monkeypatch.setenv("AJCREW_HOME", ...)``, tears
+    # down BEFORE this line runs) while any AJCREW_HOME the test itself set is
     # still in effect. A publish enqueued mid-test resolves ``config_dir()`` on
     # the CALLING thread at enqueue time (see ``_sync_breadcrumb``), but the
     # worker that runs the write is on its own thread and can still be
     # mid-flight when the test function returns. Waiting here for that worker to
-    # finish, before this fixture's own KIROCREW_HOME-independent state reset,
+    # finish, before this fixture's own AJCREW_HOME-independent state reset,
     # closes the window that let a delayed write land on the real operator home
     # instead of the test's temp dir (found in review).
     drain_breadcrumb_writes()
@@ -271,7 +271,7 @@ def _reset_safety_override_between_tests():
 def _reset_degraded_config_observations():
     """Forget the loader's process-sticky malformed-config observations.
 
-    ``kiro_crew.config.loader`` remembers every malformed config section it has
+    ``aj_crew.config.loader`` remembers every malformed config section it has
     ever seen for the LIFE OF THE PROCESS (deliberately: ``load()``'s migration
     repairs the file on first read, so the observation is the only surviving
     evidence, and the publish gate fails closed on it). Tests share one
@@ -284,7 +284,7 @@ def _reset_degraded_config_observations():
     ``reset_degraded_observations`` documents tests as its only legitimate
     caller; this fixture is that caller.
     """
-    from kiro_crew.config.loader import reset_degraded_observations
+    from aj_crew.config.loader import reset_degraded_observations
 
     reset_degraded_observations()
     yield
@@ -301,7 +301,7 @@ def _forget_enterprise_profile_pin():
     import sys
 
     def forget() -> None:
-        module = sys.modules.get("kiro_crew.platform.enterprise_policy_fetch")
+        module = sys.modules.get("aj_crew.platform.enterprise_policy_fetch")
         if module is not None:
             module._pinned = ""
 
@@ -323,19 +323,19 @@ def forget_home_bound_caches() -> None:
     """
     import sys
 
-    governance = sys.modules.get("kiro_crew.platform.governance")
+    governance = sys.modules.get("aj_crew.platform.governance")
     if governance is not None:
         governance._CONFIRM_PATTERNS_MEMO = None
-    sandbox_rlimit = sys.modules.get("kiro_crew.sandbox_rlimit")
+    sandbox_rlimit = sys.modules.get("aj_crew.sandbox_rlimit")
     if sandbox_rlimit is not None:
         sandbox_rlimit._SHIM_ARGV_CACHE.clear()
-    embeddings = sys.modules.get("kiro_crew.embeddings")
+    embeddings = sys.modules.get("aj_crew.embeddings")
     if embeddings is not None:
         # Dropped, not retired: a boot's memory thread may still be using it,
         # and retiring it under that thread hangs the worker's later tests.
         embeddings._shared_embedder = None
         embeddings._download_manager = None
-    token_auth = sys.modules.get("kiro_crew.dashboard.token_auth")
+    token_auth = sys.modules.get("aj_crew.dashboard.token_auth")
     if token_auth is not None:
         token_auth._app_perms_cache.clear()
 
@@ -350,7 +350,7 @@ def _forget_legacy_auth_sweep_clean_roots(_floor_monkeypatch):
     dict per test keeps that true for a test that reuses a fixed path, which would
     otherwise find its planted orphan skipped by an earlier test's clean pass.
     """
-    from kiro_crew import sandbox_staging
+    from aj_crew import sandbox_staging
 
     _floor_monkeypatch.setattr(sandbox_staging, "_LEGACY_AUTH_SWEEP_CLEAN", {})
 
@@ -364,7 +364,7 @@ def _forget_mount_source_sweep_pacing(_floor_monkeypatch):
     lifetime. A test that runs the sweep after another one in the same worker
     would otherwise find its pass skipped as too soon, or started mid-listing.
     """
-    from kiro_crew import sandbox_mount_sweep
+    from aj_crew import sandbox_mount_sweep
 
     _floor_monkeypatch.setattr(sandbox_mount_sweep, "_SWEEP_STATE", {}, raising=False)
     _floor_monkeypatch.setattr(sandbox_mount_sweep, "_SWEEP_CURSORS", {}, raising=False)
@@ -375,10 +375,10 @@ def _forget_sandbox_launch_mark():
     """Forget that an entry point saw the sandbox marker.
 
     ``sandbox_launch_mark`` never forgets within a process, by design. A test that sets
-    ``KIROCREW_SANDBOX_ACTIVE`` and runs ``cli.main`` would otherwise make every later
+    ``AJCREW_SANDBOX_ACTIVE`` and runs ``cli.main`` would otherwise make every later
     enterprise test in the worker boot as a sandboxed child.
     """
-    from kiro_crew import sandbox_launch_mark
+    from aj_crew import sandbox_launch_mark
 
     sandbox_launch_mark._launched_in_sandbox = False
     yield
@@ -389,7 +389,7 @@ def _forget_sandbox_launch_mark():
 def _reset_channel_turn_ceiling():
     """Forget the channel turn ceiling's process-global per-conversation counts.
 
-    ``kiro_crew.messaging.turn_ceiling`` keeps ONE counter for the whole process
+    ``aj_crew.messaging.turn_ceiling`` keeps ONE counter for the whole process
     (``_SHARED``), keyed by session key, so a counted turn outlives the test that
     drove it. Tests share one interpreter and the Slack, Telegram and Discord
     inbound routes all drive the same handful of session keys, so a worker that
@@ -404,7 +404,7 @@ def _reset_channel_turn_ceiling():
     The notification sink is module-global for the same reason and is cleared with
     it, so a test that registers an observer cannot be heard by the next one.
     """
-    from kiro_crew.messaging.turn_ceiling import set_notification_sink, shared_ceiling
+    from aj_crew.messaging.turn_ceiling import set_notification_sink, shared_ceiling
 
     shared_ceiling().clear()
     set_notification_sink(None)
@@ -434,7 +434,7 @@ def _restore_autonudge_singleton():
     Retiring the leaked instance's timers goes through ``_cancel_timer``, which is the one
     place that knows a task on a closed loop must be dropped rather than cancelled.
     """
-    from kiro_crew import autonudge as _an
+    from aj_crew import autonudge as _an
 
     inherited = _an._INSTANCE
     try:
@@ -462,7 +462,7 @@ def _fresh_aws_bin_dir_trust(_floor_monkeypatch):
     what that child's PATH holds. Patched only when the module is already
     imported: importing it here would load the deploy engine into every test.
     """
-    engine = sys.modules.get("kiro_crew.deploy.engine")
+    engine = sys.modules.get("aj_crew.deploy.engine")
     if engine is not None:
         _floor_monkeypatch.setattr(engine, "_TRUSTED_AWS_BIN_DIRS", ())
         _floor_monkeypatch.setattr(engine, "_WARNED_AWS_BIN_DIR_REFUSALS", set())
@@ -479,11 +479,11 @@ def _reset_cjk_segmenter():
     depending on which tests shared the worker. Read from ``sys.modules`` so a test
     that never imports search pays nothing.
     """
-    module = sys.modules.get("kiro_crew.history_search")
+    module = sys.modules.get("aj_crew.history_search")
     if module is not None:
         module.reset_cjk_segmenter_for_tests()
     yield
-    module = sys.modules.get("kiro_crew.history_search")
+    module = sys.modules.get("aj_crew.history_search")
     if module is not None:
         module.reset_cjk_segmenter_for_tests()
 
@@ -500,17 +500,17 @@ def _disable_dev_fleet_background_tasks(_floor_monkeypatch):
     test that wants the real refresher overrides this itself
     via ``monkeypatch.setattr(worktree_ops, "_background_tasks_disabled", lambda: False)``.
     """
-    _floor_monkeypatch.setenv("KIROCREW_DEVFLEET_NO_BACKGROUND", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEVFLEET_NO_BACKGROUND", "1")
 
 
 @pytest.fixture(autouse=True)
 def _no_restart_ready_timeout_override(_floor_monkeypatch):
-    """Keep a developer's ``KIROCREW_RESTART_READY_TIMEOUT`` out of every test.
+    """Keep a developer's ``AJCREW_RESTART_READY_TIMEOUT`` out of every test.
 
-    ``kirocrew restart`` reads it on every call, and several test files drive
+    ``ajcrew restart`` reads it on every call, and several test files drive
     ``cli_server._restart`` directly.
     """
-    _floor_monkeypatch.delenv("KIROCREW_RESTART_READY_TIMEOUT", raising=False)
+    _floor_monkeypatch.delenv("AJCREW_RESTART_READY_TIMEOUT", raising=False)
 
 
 @pytest.fixture(autouse=True)
@@ -524,7 +524,7 @@ def _no_inherited_git_proxy_env(_floor_monkeypatch):
     CLI start exports ``SSL_CERT_FILE`` itself when it is unset. A test that needs
     a proxy sets the variable itself.
     """
-    from kiro_crew.apps.registry_pipeline.subprocess_env import _GIT_PROXY_ENV_KEYS
+    from aj_crew.apps.registry_pipeline.subprocess_env import _GIT_PROXY_ENV_KEYS
 
     for key in (*_GIT_PROXY_ENV_KEYS, "NO_PROXY", "no_proxy"):
         _floor_monkeypatch.delenv(key, raising=False)
@@ -532,15 +532,15 @@ def _no_inherited_git_proxy_env(_floor_monkeypatch):
 
 @pytest.fixture(autouse=True)
 def _no_managed_venv_override(_floor_monkeypatch):
-    """Keep a developer's ``KIROCREW_VENV`` out of every test.
+    """Keep a developer's ``AJCREW_VENV`` out of every test.
 
     ``wheel_engine.managed_venv_layout`` reads it first, so an exported value
     would make a test that takes the real update lock create and hold
-    ``${KIROCREW_VENV}.update.lock`` beside the operator's managed venv, racing
+    ``${AJCREW_VENV}.update.lock`` beside the operator's managed venv, racing
     that install's own updates. Without it the layout sits beside the test's
-    scratch ``KIROCREW_HOME``. A test that needs a layout sets the variable itself.
+    scratch ``AJCREW_HOME``. A test that needs a layout sets the variable itself.
     """
-    _floor_monkeypatch.delenv("KIROCREW_VENV", raising=False)
+    _floor_monkeypatch.delenv("AJCREW_VENV", raising=False)
 
 
 @pytest.fixture(autouse=True)
@@ -550,7 +550,7 @@ def _session_memory_scope_sample_unshared(_floor_monkeypatch):
     The route keeps its last host sample for a few seconds so a wave of callers
     shares one ``/proc`` walk; a sample one test took must not answer the next.
     """
-    module = sys.modules.get("kiro_crew.dashboard.handlers.session_memory_scope")
+    module = sys.modules.get("aj_crew.dashboard.handlers.session_memory_scope")
     if module is not None:
         _floor_monkeypatch.setattr(module, "_last_sample", None)
 
@@ -580,7 +580,7 @@ def _isolate_kiro_window_cache():
     own body. The operator-declared windows (``_OPERATOR_WINDOWS``) get the same
     treatment, so a declaration one test applies never reaches the next.
     """
-    import kiro_crew.model_registry as _mr
+    import aj_crew.model_registry as _mr
 
     saved = dict(_mr._KIRO_WINDOWS)
     saved_operator = _mr._OPERATOR_WINDOWS
@@ -607,7 +607,7 @@ def _history_cleanup_throttle_closed(_floor_monkeypatch):
     """
     import math
 
-    from kiro_crew import history
+    from aj_crew import history
 
     _floor_monkeypatch.setattr(history, "_last_cleanup", math.inf)
 
@@ -615,7 +615,7 @@ def _history_cleanup_throttle_closed(_floor_monkeypatch):
 @pytest.fixture(autouse=True)
 def _isolate_advertised_model_cache(_floor_monkeypatch):
     """Keep one session's advertised model spellings and labels inside its own test."""
-    from kiro_crew import model_registry
+    from aj_crew import model_registry
 
     _floor_monkeypatch.setattr(model_registry, "_ADVERTISED_MODELS", {})
     _floor_monkeypatch.setattr(model_registry, "_ADVERTISED_META", {})
@@ -634,7 +634,7 @@ def _isolate_display_verdicts():
     try:
         yield
     finally:
-        from kiro_crew.dashboard import display_verdicts as _dv
+        from aj_crew.dashboard import display_verdicts as _dv
 
         _dv.disable_for_tests()
 
@@ -656,7 +656,7 @@ def _disarm_agent_slice_memory_high():
     stamps are reset too: a stamp left by an earlier test would mark the
     kill switch as a failure from an older session and re-arm it.
     """
-    import kiro_crew.sandbox as _sb
+    import aj_crew.sandbox as _sb
 
     saved_disabled = _sb._SLICE_MEMHIGH_DISABLED
     saved_applied = _sb._SLICE_MEMHIGH_APPLIED
@@ -684,7 +684,7 @@ def _reset_crewmate_worker_slots():
 
     ``_CREWMATE_WORKER_SLOTS``, ``_CREWMATE_WORKER_MEMBERS`` and
     ``_CREWMATE_WORKER_PROMPT_IN_CONTEXT`` are process-wide in
-    ``kiro_crew.members_parts.member_sessions``.
+    ``aj_crew.members_parts.member_sessions``.
     ``note_crewmate_worker_session`` mutates them directly (not through a
     monkeypatch), so a test that calls ``resolve_session_agent_bindings`` or
     ``note_worker_session`` with a worker execution silently contaminates every
@@ -695,7 +695,7 @@ def _reset_crewmate_worker_slots():
     """
 
     def clear():
-        module = sys.modules.get("kiro_crew.members_parts.member_sessions")
+        module = sys.modules.get("aj_crew.members_parts.member_sessions")
         if module is not None:
             module._CREWMATE_WORKER_SLOTS.clear()
             module._CREWMATE_WORKER_MEMBERS.clear()
@@ -715,9 +715,9 @@ def _reset_live_execution_records():
 
     def clear():
         for name, attribute in (
-            ("kiro_crew.execution_context", "_LIVE_EXECUTIONS"),
-            ("kiro_crew.execution_context", "_VOUCHED_EXECUTIONS"),
-            ("kiro_crew.subagent_persistence", "_LIVE_RUN_STATES"),
+            ("aj_crew.execution_context", "_LIVE_EXECUTIONS"),
+            ("aj_crew.execution_context", "_VOUCHED_EXECUTIONS"),
+            ("aj_crew.subagent_persistence", "_LIVE_RUN_STATES"),
         ):
             module = sys.modules.get(name)
             if module is not None:
@@ -726,7 +726,7 @@ def _reset_live_execution_records():
         # needs its own reset. A test that leaves the flag ARMED makes the next
         # test's first episode silent, which reads as a missing log line rather
         # than as leaked state.
-        execution = sys.modules.get("kiro_crew.execution_context")
+        execution = sys.modules.get("aj_crew.execution_context")
         if execution is not None:
             execution._vouched_overflow_reported = False
             execution._vouched_overflow_count = 0
@@ -767,7 +767,7 @@ def _reset_runtime_ownership_tables(request):
         return
 
     def clear():
-        module = sys.modules.get("kiro_crew.runtime_ownership")
+        module = sys.modules.get("aj_crew.runtime_ownership")
         if module is not None:
             module._reset_for_tests()
 
@@ -783,7 +783,7 @@ def _reset_session_switch_locks(_floor_monkeypatch):
     """Tests reuse session keys across loops; the gateway has one serving loop."""
     import weakref
 
-    from kiro_crew import llm_helpers
+    from aj_crew import llm_helpers
 
     _floor_monkeypatch.setattr(
         llm_helpers, "_slot_switch_session_locks", weakref.WeakValueDictionary()
@@ -804,7 +804,7 @@ def _shut_down_shared_pools_in_session():
     it, and leaves nothing for ``atexit`` to do.
     """
     yield
-    from kiro_crew import executors as _executors
+    from aj_crew import executors as _executors
 
     _executors.shutdown_maintenance_executor()
 
@@ -814,12 +814,12 @@ def _no_boot_sandbox_sweep(_floor_monkeypatch):
     """A real ``SessionManager`` must not sweep the host's sandbox profiles from a test.
 
     ``SessionManager.get_or_create`` arms the cleanup loop, whose boot reclaim
-    submits ``kiro_crew.session.cleanup_stale_sandbox_profiles`` -- the REAL
+    submits ``aj_crew.session.cleanup_stale_sandbox_profiles`` -- the REAL
     ``/proc`` pin scan over the data home -- to the shared ``mc-maint`` executor.
     ``close_all()`` cancels the asyncio task but cannot stop the executor
     thread, so on a loaded xdist worker the scan finishes seconds later, inside
     whichever test is then running, and logs at WARNING on
-    ``kiro_crew.sandbox`` (the tenth sweep caught it as a second record in an
+    ``aj_crew.sandbox`` (the tenth sweep caught it as a second record in an
     unrelated test's ``caplog``). The seam is the name the session module
     rebinds at import, so the module is imported here rather than looked up in
     ``sys.modules``: a guard on "already loaded" would let the first test on a
@@ -828,7 +828,7 @@ def _no_boot_sandbox_sweep(_floor_monkeypatch):
     nothing extra. A test of the sweep itself patches the same name inside its
     body (``TestCleanupLoop``) and so overrides this.
     """
-    from kiro_crew import session as session_mod
+    from aj_crew import session as session_mod
 
     _floor_monkeypatch.setattr(session_mod, "cleanup_stale_sandbox_profiles", lambda *a, **kw: 0)
 
@@ -961,17 +961,17 @@ def _fake_computer_use_backend():
 
     MODULE-scoped, not function-scoped, deliberately: the registration is a
     single module-global assignment plus a singleton drop, and paying that (plus
-    the ``kiro_crew.testing.fake_computer_use`` import) on all ~16k tests would
+    the ``aj_crew.testing.fake_computer_use`` import) on all ~16k tests would
     be pure overhead. Any test that swaps the backend itself is responsible for
     restoring it (see that file's ``restore_registry`` fixture) — a
     function-scoped fixture here would paper over such a leak instead of letting
     it fail.
     """
-    from kiro_crew.computer_use.backend import (
+    from aj_crew.computer_use.backend import (
         register_computer_use_backend,
         reset_shared_backend,
     )
-    from kiro_crew.testing.fake_computer_use import FakeComputerUseBackend
+    from aj_crew.testing.fake_computer_use import FakeComputerUseBackend
 
     register_computer_use_backend(FakeComputerUseBackend)
     reset_shared_backend()
@@ -990,7 +990,7 @@ def _no_release_feed_network(_floor_monkeypatch) -> None:
     fires ``_do_update_check`` as a background task once
     ``_UPDATE_CHECK_INTERVAL`` has elapsed (and ``_last_update_check`` starts at
     ``0.0``, so the first call always qualifies), and any direct call in a test
-    env with no ``KIROCREW_PROJECT_DIR`` takes the feed branch by definition.
+    env with no ``AJCREW_PROJECT_DIR`` takes the feed branch by definition.
 
     Without this fixture the suite would make real HTTPS requests to
     ``updates.crew.kiro.dev`` — slow, flaky, offline-hostile, and CI traffic
@@ -1007,11 +1007,11 @@ def _no_release_feed_network(_floor_monkeypatch) -> None:
     async def _refuse(url: str) -> tuple[int, bytes]:
         raise AssertionError(
             f"test reached the real release feed ({url}) — stub "
-            "kiro_crew.dashboard.handlers.updates._fetch_feed_bytes instead"
+            "aj_crew.dashboard.handlers.updates._fetch_feed_bytes instead"
         )
 
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.updates._fetch_feed_bytes", _refuse, raising=True
+        "aj_crew.dashboard.handlers.updates._fetch_feed_bytes", _refuse, raising=True
     )
 
 
@@ -1024,7 +1024,7 @@ def _no_carried_auto_update_effect(_floor_monkeypatch) -> None:
     Left over from one test, it changes the status field the next test reads and
     can start that derivation inside an unrelated test's event loop.
     """
-    from kiro_crew.dashboard.handlers import updates
+    from aj_crew.dashboard.handlers import updates
 
     _floor_monkeypatch.setattr(updates, "_auto_effect", None)
     _floor_monkeypatch.setattr(updates, "_auto_effect_task", None)
@@ -1046,12 +1046,12 @@ def _no_live_kernel_memory_pressure(_floor_monkeypatch) -> None:
     floor's own ``MonkeyPatch`` so a test's ``monkeypatch.undo()`` cannot lift it.
     """
     _floor_monkeypatch.setattr(
-        "kiro_crew.platform_compat.memory_pressure_level", lambda: None, raising=True
+        "aj_crew.platform_compat.memory_pressure_level", lambda: None, raising=True
     )
     # On a macOS runner that pinned None would otherwise make the probe log its
     # once-per-process "level unreadable" WARNING into whichever test came first.
     _floor_monkeypatch.setattr(
-        "kiro_crew.resource_status._pressure_unreadable_reported", True, raising=True
+        "aj_crew.resource_status._pressure_unreadable_reported", True, raising=True
     )
 
 
@@ -1086,7 +1086,7 @@ def _no_live_catalog_network(_floor_monkeypatch):
     ``_no_release_feed_network`` above, this is a NETWORK guard first and a
     diagnostic second.
     """
-    from kiro_crew.apps import official_catalog
+    from aj_crew.apps import official_catalog
 
     original = official_catalog._open_catalog
 
@@ -1094,7 +1094,7 @@ def _no_live_catalog_network(_floor_monkeypatch):
         url = getattr(req, "full_url", repr(req))
         raise AssertionError(
             f"test reached the live app catalog ({url}) — stub "
-            "kiro_crew.apps.official_catalog.fetch_document (or a higher "
+            "aj_crew.apps.official_catalog.fetch_document (or a higher "
             "seam such as inventory_for_install) instead"
         )
 
@@ -1106,7 +1106,7 @@ def _no_live_catalog_network(_floor_monkeypatch):
 def _reset_create_rate_limit_buckets():
     """Clear the session/folder creation rate limiter between tests.
 
-    ``kiro_crew.dashboard.create_rate_limit`` keeps its per-(verb, caller)
+    ``aj_crew.dashboard.create_rate_limit`` keeps its per-(verb, caller)
     buckets in MODULE-LEVEL state (deliberately: the production guard needs no
     durable state), so every session-creating test in a pytest process
     accumulates timestamps under shared caller keys. A shard whose test
@@ -1116,7 +1116,7 @@ def _reset_create_rate_limit_buckets():
     and runner speed, not the code under test. The limiter's own direct tests build their scenarios on
     top of a clean slate, so clearing between tests changes nothing for them.
     """
-    from kiro_crew.dashboard import create_rate_limit
+    from aj_crew.dashboard import create_rate_limit
 
     with create_rate_limit._lock:
         create_rate_limit._buckets.clear()
@@ -1129,13 +1129,13 @@ def _reset_create_rate_limit_buckets():
 def _crewmate_dynamic_capabilities_on():
     """Run every test with every crewmate's Dynamic capabilities ON unless it says otherwise.
 
-    The per-crewmate preview (``KiroCrewAgentConfig.dynamic_capabilities``) ships
+    The per-crewmate preview (``AjCrewAgentConfig.dynamic_capabilities``) ships
     off, but the suite pins the crewmate-driven capability path it holds
     (find_capabilities, the card, the hand-off summary, the nudge). A test of the
     per-crewmate read sets ``crewmate_dynamic_capabilities._override = None``
     itself (``test/test_crewmate_dynamic_capabilities.py``).
     """
-    from kiro_crew import crewmate_dynamic_capabilities
+    from aj_crew import crewmate_dynamic_capabilities
 
     prior = crewmate_dynamic_capabilities._override
     crewmate_dynamic_capabilities._override = True
@@ -1147,7 +1147,7 @@ def _crewmate_dynamic_capabilities_on():
 def _reset_materialized_agents_snapshot():
     """Reset the materialized-agents process-wide snapshot before and after each test.
 
-    ``kiro_crew.config.loader_snapshots`` keeps a process-wide in-memory snapshot
+    ``aj_crew.config.loader_snapshots`` keeps a process-wide in-memory snapshot
     of installed kiro agent names (``_MATERIALIZED_AGENTS``) and a removal-evidence
     history (``_MATERIALIZED_SEEN``). Any test that triggers a scan -- via
     ``dispatch_kiro_agent`` in a synchronous context, ``publish_materialized_agents``,
@@ -1158,7 +1158,7 @@ def _reset_materialized_agents_snapshot():
     ``_MATERIALIZED_SEEN`` while the current ``_MATERIALIZED_AGENTS`` frozenset does
     NOT contain it, ``_removal_evidence`` classifies it as a removed agent. A later
     test that passes ``cfg.agent.default_agent = "atlas"`` to ``default_template``
-    then silently receives ``DEFAULT_KIRO_TEMPLATE`` (``"kirocrew"``) instead, because
+    then silently receives ``DEFAULT_KIRO_TEMPLATE`` (``"ajcrew"``) instead, because
     ``default_template`` falls back to the managed default for any name that has been
     "removed" from the snapshot. Because ``_MATERIALIZED_SEEN`` is a dict mutated in
     place, a ``monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", ...)`` restore does
@@ -1171,7 +1171,7 @@ def _reset_materialized_agents_snapshot():
     """
 
     def clear():
-        loader_mod = sys.modules.get("kiro_crew.config.loader")
+        loader_mod = sys.modules.get("aj_crew.config.loader")
         if loader_mod is None:
             return
         # Rebound globals: write through the facade mirror so both the loader

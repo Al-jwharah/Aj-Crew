@@ -14,9 +14,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-import kiro_crew.apps.hooks_integration as hooks_mod
-import kiro_crew.apps.routes as routes_mod
-from kiro_crew.apps.route_registry import RouteRegistry
+import aj_crew.apps.hooks_integration as hooks_mod
+import aj_crew.apps.routes as routes_mod
+from aj_crew.apps.route_registry import RouteRegistry
 
 
 @pytest.fixture(autouse=True)
@@ -53,13 +53,13 @@ def _arm_startup(
         async def dispatch_disable(self, app_info):
             return True
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setattr(hooks_mod, "_lifecycle_dispatcher", _StubDispatcher())
     monkeypatch.setattr(hooks_mod, "_route_registry", RouteRegistry(web.Application()))
     monkeypatch.setattr(hooks_mod, "list_apps", lambda: [info])
     monkeypatch.setattr(hooks_mod, "_app_hook_root", lambda _name: app_dir)
     monkeypatch.setattr(hooks_mod, "app_execution_denied", lambda *a, **kw: "")
-    monkeypatch.setattr("kiro_crew.apps.execution.third_party_execution_allowed", lambda: True)
+    monkeypatch.setattr("aj_crew.apps.execution.third_party_execution_allowed", lambda: True)
 
 
 class TestStartupPublishesHookHealth:
@@ -131,13 +131,13 @@ class TestStartupPublishesHookHealth:
             def _build_context(self, app_info):
                 return SimpleNamespace()
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         monkeypatch.setattr(hooks_mod, "_lifecycle_dispatcher", _SpyDispatcher())
         monkeypatch.setattr(hooks_mod, "_route_registry", RouteRegistry(web.Application()))
         monkeypatch.setattr(hooks_mod, "list_apps", lambda: [info])
         monkeypatch.setattr(hooks_mod, "_app_hook_root", lambda _name: app_dir)
         monkeypatch.setattr(hooks_mod, "app_execution_denied", lambda *a, **kw: "")
-        monkeypatch.setattr("kiro_crew.apps.execution.third_party_execution_allowed", lambda: True)
+        monkeypatch.setattr("aj_crew.apps.execution.third_party_execution_allowed", lambda: True)
         monkeypatch.setattr(
             hooks_mod,
             "_build_app_context_from_info",
@@ -191,13 +191,13 @@ class TestStartupPublishesHookHealth:
 
                 return _noop()
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         monkeypatch.setattr(hooks_mod, "_lifecycle_dispatcher", _SpyDispatcher())
         monkeypatch.setattr(hooks_mod, "_route_registry", RouteRegistry(web.Application()))
         monkeypatch.setattr(hooks_mod, "list_apps", lambda: [info])
         monkeypatch.setattr(hooks_mod, "_app_hook_root", lambda _name: app_dir)
         monkeypatch.setattr(hooks_mod, "app_execution_denied", lambda *a, **kw: "")
-        monkeypatch.setattr("kiro_crew.apps.execution.third_party_execution_allowed", lambda: True)
+        monkeypatch.setattr("aj_crew.apps.execution.third_party_execution_allowed", lambda: True)
         monkeypatch.setattr(
             hooks_mod,
             "_build_app_context_from_info",

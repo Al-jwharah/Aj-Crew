@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.apps.dependencies — dependency resolution."""
+"""Tests for aj_crew.apps.dependencies — dependency resolution."""
 from __future__ import annotations
 
 import sys
@@ -8,20 +8,20 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from kiro_crew.apps.dependencies import (
+from aj_crew.apps.dependencies import (
     DependencyResult,
     _get_dep_id,
     _get_managed_by,
     clean_dependencies,
     resolve_dependencies,
 )
-from kiro_crew.apps.manifest import CapabilityDependencies, Dependencies
-from kiro_crew.platform.interfaces import CapabilityResult
+from aj_crew.apps.manifest import CapabilityDependencies, Dependencies
+from aj_crew.platform.interfaces import CapabilityResult
 
 
 @pytest.fixture(autouse=True)
 def _dep_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "kirocrew-home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "ajcrew-home"))
 
 
 class TestHelpers:
@@ -170,7 +170,7 @@ def fake_manager(monkeypatch):
     def _install(**kwargs):
         mgr = _FakeManager(**kwargs)
         monkeypatch.setattr(
-            "kiro_crew.apps.dependencies._capability_manager",
+            "aj_crew.apps.dependencies._capability_manager",
             lambda: mgr if mgr.available() else None,
         )
         return mgr
@@ -192,7 +192,7 @@ class TestCapabilitySeamResolution:
     async def test_unreadable_ledger_reports_dependency_failed(self, fake_manager, monkeypatch):
         from pathlib import Path
 
-        from kiro_crew.apps.dependency_ledger import _ledger_path
+        from aj_crew.apps.dependency_ledger import _ledger_path
 
         mgr = fake_manager()
         deps = Dependencies(capabilities=CapabilityDependencies(mcp=["some-mcp"]))
@@ -243,7 +243,7 @@ class TestCapabilitySeamResolution:
         """Commands-only manifests must not touch the capability seam at all."""
         probed = []
         monkeypatch.setattr(
-            "kiro_crew.apps.dependencies._capability_manager",
+            "aj_crew.apps.dependencies._capability_manager",
             lambda: probed.append(1) or None,
         )
         await resolve_dependencies("test-app", Dependencies(commands=["sh"]))
@@ -309,9 +309,9 @@ class TestCapabilityManagerAccessor:
         """Returns the context-provided manager as-is, so the
         ``BoundedCapabilityManager`` timeout wrapper applied at context
         composition is inherited rather than stripped."""
-        from kiro_crew.apps import dependencies as deps_mod
-        from kiro_crew.platform import context as platform_context
-        from kiro_crew.platform.capability_bound import BoundedCapabilityManager
+        from aj_crew.apps import dependencies as deps_mod
+        from aj_crew.platform import context as platform_context
+        from aj_crew.platform.capability_bound import BoundedCapabilityManager
 
         class _Inner:
             def available(self) -> bool:
@@ -326,8 +326,8 @@ class TestCapabilityManagerAccessor:
         assert deps_mod._capability_manager() is sentinel
 
     def test_unavailable_manager_yields_none(self, monkeypatch):
-        from kiro_crew.apps import dependencies as deps_mod
-        from kiro_crew.platform import context as platform_context
+        from aj_crew.apps import dependencies as deps_mod
+        from aj_crew.platform import context as platform_context
 
         class _Unavailable:
             def available(self) -> bool:
@@ -341,8 +341,8 @@ class TestCapabilityManagerAccessor:
 
     def test_context_lookup_failure_fails_closed(self, monkeypatch):
         """A broken context must degrade to "unavailable", never propagate."""
-        from kiro_crew.apps import dependencies as deps_mod
-        from kiro_crew.platform import context as platform_context
+        from aj_crew.apps import dependencies as deps_mod
+        from aj_crew.platform import context as platform_context
 
         def _boom():
             raise RuntimeError("no context")
@@ -351,8 +351,8 @@ class TestCapabilityManagerAccessor:
         assert deps_mod._capability_manager() is None
 
     def test_available_probe_raising_fails_closed(self, monkeypatch):
-        from kiro_crew.apps import dependencies as deps_mod
-        from kiro_crew.platform import context as platform_context
+        from aj_crew.apps import dependencies as deps_mod
+        from aj_crew.platform import context as platform_context
 
         class _Raising:
             def available(self) -> bool:
@@ -371,7 +371,7 @@ class TestCleanDependenciesFailurePaths:
     covered, the cleanup side had none."""
 
     async def test_unavailable_manager_cleans_nothing(self, monkeypatch):
-        monkeypatch.setattr("kiro_crew.apps.dependencies._capability_manager", lambda: None)
+        monkeypatch.setattr("aj_crew.apps.dependencies._capability_manager", lambda: None)
         cleaned = await clean_dependencies(
             "test-app", [{"id": "capability/mcp/x", "type": "capability.mcp"}],
         )
@@ -390,7 +390,7 @@ class TestCleanDependenciesFailurePaths:
                 raise RuntimeError("boom")
 
         mgr = _Exploding()
-        monkeypatch.setattr("kiro_crew.apps.dependencies._capability_manager", lambda: mgr)
+        monkeypatch.setattr("aj_crew.apps.dependencies._capability_manager", lambda: mgr)
         cleaned = await clean_dependencies(
             "test-app", [{"id": "capability/mcp/x", "type": "capability.mcp"}],
         )
@@ -419,7 +419,7 @@ class TestLedgerWritesOffLoop:
     @staticmethod
     def _record_thread(monkeypatch, name: str) -> list[int]:
         """Wrap the real ledger writer so the call still lands in the ledger."""
-        from kiro_crew.apps import dependencies as deps_mod
+        from aj_crew.apps import dependencies as deps_mod
 
         real = getattr(deps_mod, name)
         threads: list[int] = []
@@ -432,7 +432,7 @@ class TestLedgerWritesOffLoop:
         return threads
 
     async def test_install_records_ledger_off_loop(self, fake_manager, monkeypatch):
-        from kiro_crew.apps.dependency_ledger import get_entry
+        from aj_crew.apps.dependency_ledger import get_entry
 
         fake_manager()
         threads = self._record_thread(monkeypatch, "record_install")
@@ -444,7 +444,7 @@ class TestLedgerWritesOffLoop:
         assert threads[0] != threading.get_ident()
 
     async def test_uninstall_records_ledger_off_loop(self, fake_manager, monkeypatch):
-        from kiro_crew.apps.dependency_ledger import get_entry
+        from aj_crew.apps.dependency_ledger import get_entry
 
         fake_manager()
         deps = Dependencies(capabilities=CapabilityDependencies(mcp=["m"]))
@@ -464,7 +464,7 @@ class TestLedgerTypeRecorded:
     async def test_install_records_canonical_type(self, fake_manager):
         """Pins the ledger ``type`` string written on install — nothing else
         asserted it, so a wrong type could be written undetected."""
-        from kiro_crew.apps.dependency_ledger import get_entry
+        from aj_crew.apps.dependency_ledger import get_entry
 
         fake_manager()
         deps = Dependencies(capabilities=CapabilityDependencies(mcp=["m"], skills=["s"]))

@@ -25,7 +25,7 @@ _ID_B = "delivery-b"
 
 
 async def _drain_once(state, slot) -> None:
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     with (
         patch.object(chat_runner, "spawn_guarded_turn", return_value=MagicMock()),
@@ -56,7 +56,7 @@ def _queue_decision_answer(slot, text: str, delivery_id: str) -> None:
 async def test_merged_row_names_every_decision_delivery_id(tmp_path, monkeypatch):
     """Two answers folded into one row: the row names both ids, so each answer's
     outbox record can find a row carrying its id."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     state.subagents = None
@@ -65,11 +65,11 @@ async def test_merged_row_names_every_decision_delivery_id(tmp_path, monkeypatch
     _queue_decision_answer(slot, "answer one", _ID_A)
     _queue_decision_answer(slot, "answer two", _ID_B)
 
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     cfg = MagicMock()
     cfg.load.return_value.dashboard.merge_queued_messages = True
-    monkeypatch.setattr(chat_runner, "KiroCrewConfig", cfg)
+    monkeypatch.setattr(chat_runner, "AjCrewConfig", cfg)
     await _drain_once(state, slot)
 
     rows = _user_rows(slot)
@@ -85,7 +85,7 @@ async def test_merged_row_names_every_decision_delivery_id(tmp_path, monkeypatch
 @pytest.mark.asyncio
 async def test_single_entry_keeps_the_scalar_shape(tmp_path, monkeypatch):
     """One queued answer: the row keeps the plain scalar, no list."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     state.subagents = None
@@ -93,11 +93,11 @@ async def test_single_entry_keeps_the_scalar_shape(tmp_path, monkeypatch):
 
     _queue_decision_answer(slot, "only answer", _ID_A)
 
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     cfg = MagicMock()
     cfg.load.return_value.dashboard.merge_queued_messages = True
-    monkeypatch.setattr(chat_runner, "KiroCrewConfig", cfg)
+    monkeypatch.setattr(chat_runner, "AjCrewConfig", cfg)
     await _drain_once(state, slot)
 
     rows = _user_rows(slot)
@@ -110,7 +110,7 @@ async def test_single_entry_keeps_the_scalar_shape(tmp_path, monkeypatch):
 def test_matcher_reads_both_scalar_and_list():
     """The outbox already-relayed scan matches a delivery id against both the
     scalar key and the merged list, so a folded earlier answer is still seen."""
-    from kiro_crew.apps.builtins.spec_builder.backend.orchestration.decision_outbox import (
+    from aj_crew.apps.builtins.spec_builder.backend.orchestration.decision_outbox import (
         _row_carries_delivery_id,
     )
 

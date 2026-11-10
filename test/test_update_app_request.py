@@ -18,11 +18,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.platform import app_update_request, update_stepup
-from kiro_crew.platform.update_capability import (
+from aj_crew.dashboard.handlers import updates
+from aj_crew.platform import app_update_request, update_stepup
+from aj_crew.platform.update_capability import (
     MANAGED_BY_ELECTRON,
-    MANAGED_BY_KIROCREW,
+    MANAGED_BY_AJCREW,
     MODE_CONSENT,
     UNAVAILABLE_MANAGED_BY_APP,
     UpdateCapability,
@@ -72,7 +72,7 @@ def _electron_capability() -> UpdateCapability:
 def _wheel_capability() -> UpdateCapability:
     return UpdateCapability(
         supported=True,
-        managed_by=MANAGED_BY_KIROCREW,
+        managed_by=MANAGED_BY_AJCREW,
         mode=MODE_CONSENT,
         can_download=True,
         can_apply=False,
@@ -93,7 +93,7 @@ def store(tmp_path):
 
 @pytest.fixture()
 def packaged(monkeypatch: pytest.MonkeyPatch, store):
-    from kiro_crew.platform import update_capability
+    from aj_crew.platform import update_capability
 
     monkeypatch.setattr(update_capability, "derive_capability", _electron_capability)
     monkeypatch.setattr(updates, "resolve_provider", lambda: None)
@@ -369,7 +369,7 @@ class TestStatusAndDecline:
         update_stepup.arm("9.9.9", "stable")
         resp = await updates.api_update_arm_status(_request())
         body = json.loads(resp.body.decode())
-        assert body["armed"] is True and body["managed_by"] == "kirocrew"
+        assert body["armed"] is True and body["managed_by"] == "ajcrew"
         assert "approve_command" in body and "nonce" not in json.dumps(body)
 
     async def test_decline_drops_the_request_it_names(self, packaged) -> None:
@@ -460,7 +460,7 @@ class TestAgentReachability:
         A route in neither bucket falls through to cookie auth and refuses an
         agent's X-Internal-Secret. MIXED, not strict: the browser polls it too.
         """
-        from kiro_crew.dashboard.server import (
+        from aj_crew.dashboard.server import (
             _MIXED_INTERNAL_API_PATHS,
             _STRICT_INTERNAL_API_PATHS,
         )
@@ -477,7 +477,7 @@ class TestWheelLaneUnchanged:
 
     @pytest.mark.asyncio
     async def test_wheel_arm_still_refuses_non_managed_shapes(self, monkeypatch) -> None:
-        from kiro_crew.platform import update_capability, wheel_engine
+        from aj_crew.platform import update_capability, wheel_engine
 
         monkeypatch.setattr(update_capability, "derive_capability", _wheel_capability)
         monkeypatch.setattr(wheel_engine, "running_from_managed_venv", lambda: False)
@@ -488,8 +488,8 @@ class TestWheelLaneUnchanged:
 
 class TestCliApprove:
     def test_packaged_install_is_told_to_approve_in_the_app(self, monkeypatch, capsys) -> None:
-        from kiro_crew import cli_server
-        from kiro_crew.platform import update_capability
+        from aj_crew import cli_server
+        from aj_crew.platform import update_capability
 
         monkeypatch.setattr(update_capability, "derive_capability", _electron_capability)
         cli_server._update_approve()
@@ -512,8 +512,8 @@ class TestCliApprove:
         import time
         import urllib.error
 
-        from kiro_crew import cli_server
-        from kiro_crew.platform import update_capability, update_stepup
+        from aj_crew import cli_server
+        from aj_crew.platform import update_capability, update_stepup
 
         if not hasattr(_socket, "AF_UNIX"):
             pytest.skip("no AF_UNIX on this platform")
@@ -533,7 +533,7 @@ class TestCliApprove:
         monkeypatch.setattr(cli_server, "resolve_client_port", lambda _p: 7777)
         monkeypatch.setattr(cli_server, "read_local_secret", lambda _port, **_kw: "sekret")
         monkeypatch.setattr(
-            "kiro_crew.dashboard.urls.dashboard_socket_path", lambda _port: "/run/gw.sock"
+            "aj_crew.dashboard.urls.dashboard_socket_path", lambda _port: "/run/gw.sock"
         )
         # The socket file is PRESENT (bound) but goes stale at connect time: the
         # path exists, so the socket branch is taken, and the stale-connect error

@@ -24,7 +24,7 @@ import pytest
 
 lark = pytest.importorskip("lark_oapi")
 
-from kiro_crew.feishu.client import (  # noqa: E402
+from aj_crew.feishu.client import (  # noqa: E402
     _RESOURCE_TIMEOUT_SECS,
     CHAT_GROUP,
     LarkClient,

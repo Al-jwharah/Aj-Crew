@@ -1,10 +1,10 @@
-// Demo KiroCrew App — proves the federated loading pipeline works end-to-end.
+// Demo AjCrew App — proves the federated loading pipeline works end-to-end.
 // This file is loaded dynamically by AppHost via import('/apps/demo-app/ui/index.mjs').
-// It uses the import map to resolve 'react' and '@kirocrew/app-sdk' from the host.
+// It uses the import map to resolve 'react' and '@ajcrew/app-sdk' from the host.
 
-const React = window.__kirocrew_modules.react
-const { useAppApi, useAppEvents } = window.__kirocrew_modules['@kirocrew/app-sdk']
-const { Sparkles, Bot, Zap, RefreshCw } = window.__kirocrew_modules['lucide-react']
+const React = window.__ajcrew_modules.react
+const { useAppApi, useAppEvents } = window.__ajcrew_modules['@ajcrew/app-sdk']
+const { Sparkles, Bot, Zap, RefreshCw } = window.__ajcrew_modules['lucide-react']
 
 const { useState, useEffect, createElement: h } = React
 
@@ -81,7 +81,7 @@ function DemoApp() {
 
     // Footer
     h('div', { className: 'mt-6 text-[12px] text-muted/60 text-center' },
-      'This app was loaded dynamically from /apps/demo-app/ui/index.mjs via the Kiro Crew App Platform.'
+      'This app was loaded dynamically from /apps/demo-app/ui/index.mjs via the Aj Crew App Platform.'
     ),
   )
 }

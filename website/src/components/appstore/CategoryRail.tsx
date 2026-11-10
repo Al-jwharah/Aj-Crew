@@ -38,8 +38,8 @@ export type SourceRow = { name: string; label: string; count: number; builtin: b
  * would be the over-claim this whole change exists to remove.
  */
 function sourceTitle(s: SourceRow): string | undefined {
-  if (s.review === 'curated') return i18nT('components.appstore.categoryRail.curated_reviewed_by_the_kiro_crew_team')
-  if (s.review === 'community') return i18nT('components.appstore.categoryRail.community_listed_not_vetted_by_the_kiro_crew_team')
+  if (s.review === 'curated') return i18nT('components.appstore.categoryRail.curated_reviewed_by_the_aj_crew_team')
+  if (s.review === 'community') return i18nT('components.appstore.categoryRail.community_listed_not_vetted_by_the_aj_crew_team')
   return undefined
 }
 
@@ -147,9 +147,9 @@ export default function CategoryRail({ categories, total, selected, onSelect, in
             {s.builtin
               ? <BadgeCheck size={14} className="text-accent shrink-0" aria-label={i18nT('components.appstore.categoryRail.first_party')} />
               : s.review === 'curated'
-                ? <ShieldCheck size={14} className="text-accent shrink-0" aria-label={i18nT('components.appstore.categoryRail.curated_reviewed_by_the_kiro_crew_team')} />
+                ? <ShieldCheck size={14} className="text-accent shrink-0" aria-label={i18nT('components.appstore.categoryRail.curated_reviewed_by_the_aj_crew_team')} />
                 : s.review === 'community'
-                  ? <Users size={14} className="text-muted shrink-0" aria-label={i18nT('components.appstore.categoryRail.community_listed_not_vetted_by_the_kiro_crew_team')} />
+                  ? <Users size={14} className="text-muted shrink-0" aria-label={i18nT('components.appstore.categoryRail.community_listed_not_vetted_by_the_aj_crew_team')} />
                   : <Database size={14} className="text-muted shrink-0" />}
             <div className="min-w-0">
               <div className="text-text truncate" title={s.label}>{s.label}</div>

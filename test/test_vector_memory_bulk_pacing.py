@@ -14,8 +14,8 @@ import time
 
 import pytest
 
-from kiro_crew import vector_memory as vm
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import vector_memory as vm
+from aj_crew.vector_memory import VectorMemoryStore
 
 
 class _PaceClock:

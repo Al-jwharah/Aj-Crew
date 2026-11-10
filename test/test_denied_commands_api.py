@@ -24,7 +24,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.dashboard.handlers.security import (
+from aj_crew.dashboard.handlers.security import (
     api_denied_command_builtin_toggle,
     api_denied_command_user_add,
     api_denied_command_user_delete,
@@ -34,7 +34,7 @@ from kiro_crew.dashboard.handlers.security import (
     build_denied_commands_snapshot,
     count_effective_denied_commands,
 )
-from kiro_crew.security import BUILTIN_DENIED_RULES
+from aj_crew.security import BUILTIN_DENIED_RULES
 
 # Number of built-in rules (default-on). Derived so catalog additions don't
 # require editing every count assertion below.
@@ -43,8 +43,8 @@ _CATALOG_N = len(BUILTIN_DENIED_RULES)
 
 @pytest.fixture
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """Redirect KIROCREW_HOME so the keystone file writes land in a tmp dir."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    """Redirect AJCREW_HOME so the keystone file writes land in a tmp dir."""
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     return tmp_path
 
 
@@ -66,7 +66,7 @@ def _seed(config_file: Path, denied: dict) -> None:
 @pytest.fixture
 def mock_sel():
     """Patch the late-bound ``_sel()`` so SEL audit calls are observable."""
-    with patch("kiro_crew.dashboard.handlers.security._sel") as m:
+    with patch("aj_crew.dashboard.handlers.security._sel") as m:
         instance = MagicMock()
         m.return_value = instance
         yield instance
@@ -107,7 +107,7 @@ def _read_hooks(config_file: Path) -> dict:
 
 def _a_builtin_id() -> str:
     """A freely-toggleable builtin id (never a floor-enforced one)."""
-    from kiro_crew.security import builtin_denied_rules, floor_enforced_builtin_command_ids
+    from aj_crew.security import builtin_denied_rules, floor_enforced_builtin_command_ids
 
     floor = floor_enforced_builtin_command_ids()
     return next(r["id"] for r in builtin_denied_rules() if r["id"] not in floor)
@@ -115,13 +115,13 @@ def _a_builtin_id() -> str:
 
 def _a_floor_id() -> str:
     """A floor-enforced (always-on, non-opt-out-able) builtin id."""
-    from kiro_crew.security import floor_enforced_builtin_command_ids
+    from aj_crew.security import floor_enforced_builtin_command_ids
 
     return sorted(floor_enforced_builtin_command_ids())[0]
 
 
 def _floor_n() -> int:
-    from kiro_crew.security import floor_enforced_builtin_command_ids
+    from aj_crew.security import floor_enforced_builtin_command_ids
 
     return len(floor_enforced_builtin_command_ids())
 
@@ -190,7 +190,7 @@ def test_disable_all_zeroes_builtins_except_floor(home: Path, config_file: Path)
 def test_pin_forces_enabled_under_disable_all(home: Path, config_file: Path):
     rid = _a_builtin_id()
     _seed(config_file, {"disable_all": True})
-    with patch("kiro_crew.security.pinned_builtin_command_ids", return_value={rid}):
+    with patch("aj_crew.security.pinned_builtin_command_ids", return_value={rid}):
         snap = build_denied_commands_snapshot()
     assert snap["governance_locked"] is True
     pinned = [b for b in snap["builtins"] if b["id"] == rid]
@@ -229,7 +229,7 @@ def test_snapshot_marks_floor_rules_locked_and_forced_on(home: Path, config_file
     # branch are floor-enforced: forced enabled and lock-flagged, even when the id
     # was persisted into disabled_ids by an older build. The rest of the category
     # is gated on the per-rule enable state and renders freely toggleable.
-    from kiro_crew.security import floor_enforced_builtin_command_ids
+    from aj_crew.security import floor_enforced_builtin_command_ids
 
     rid = _a_floor_id()
     _seed(config_file, {"disabled_ids": [rid]})
@@ -251,7 +251,7 @@ def test_floor_lock_reason_wins_over_policy(home: Path):
     # A rule that is BOTH governance-pinned and floor-enforced reports "floor":
     # the floor holds even if the pin were removed, so it is the stronger reason.
     rid = _a_floor_id()
-    with patch("kiro_crew.security.pinned_builtin_command_ids", return_value={rid}):
+    with patch("aj_crew.security.pinned_builtin_command_ids", return_value={rid}):
         snap = build_denied_commands_snapshot()
     row = next(b for b in snap["builtins"] if b["id"] == rid)
     assert row["pinned"] is True
@@ -266,7 +266,7 @@ def test_floor_ids_are_derived_from_the_category():
     # to prevent. Brace expansion is the ungated one: it is caught by
     # ``_AMBIGUOUS_EXPANSION_RE`` inside the unverifiable-glue check, which no
     # opt-out may reach.
-    from kiro_crew.security import (
+    from aj_crew.security import (
         BUILTIN_DENIED_RULES,
         floor_enforced_builtin_command_ids,
     )
@@ -345,7 +345,7 @@ async def test_builtin_toggle_unknown_id(home: Path, mock_sel):
 async def test_builtin_toggle_disable_pinned_is_409(home: Path, mock_sel):
     rid = _a_builtin_id()
     with patch(
-        "kiro_crew.security.pinned_builtin_command_ids",
+        "aj_crew.security.pinned_builtin_command_ids",
         return_value={rid},
     ):
         async with _client() as client:
@@ -360,7 +360,7 @@ async def test_builtin_toggle_disable_pinned_is_409(home: Path, mock_sel):
 async def test_builtin_toggle_enable_pinned_is_200_noop(config_file: Path, mock_sel):
     rid = _a_builtin_id()
     with patch(
-        "kiro_crew.security.pinned_builtin_command_ids",
+        "aj_crew.security.pinned_builtin_command_ids",
         return_value={rid},
     ):
         async with _client() as client:
@@ -516,7 +516,7 @@ async def test_user_add_note_forging_the_reason_prefix_is_400(home: Path, mock_s
     # do, and it would make RecoveryCard.tsx -- which parses refusals with a
     # global per-line regex -- report a second, fabricated deny pattern. Reject
     # with a real error rather than silently mangling the operator's text.
-    from kiro_crew.security import DENY_REASON_PREFIX
+    from aj_crew.security import DENY_REASON_PREFIX
 
     async with _client() as client:
         resp = await client.post(
@@ -637,7 +637,7 @@ async def test_non_object_json_body_is_400_not_500(home: Path, mock_sel):
 async def test_user_add_redos_pattern_is_400(home: Path, mock_sel):
     # A catastrophic-backtracking regex must be rejected at add-time — it would
     # otherwise freeze the event loop when the gate runs it synchronously.
-    from kiro_crew.security import _DANGEROUS_AWS_FLAG_RUN, _LINEARIZED_AWS_FLAG_RUN
+    from aj_crew.security import _DANGEROUS_AWS_FLAG_RUN, _LINEARIZED_AWS_FLAG_RUN
 
     async with _client() as client:
         resp = await client.post("/api/security/denied-commands/user", json={"pattern": "(a+)+$"})
@@ -660,7 +660,7 @@ async def test_user_add_wrapped_builtin_fragment_rejection_names_the_trigger(
     # as part of a complete built-in, so the tweaked copy is rejected. The
     # rejection must name the fragment so the dead end is self-explanatory
     # instead of a generic "unsafe regex".
-    from kiro_crew.security import _DANGEROUS_AWS_FLAG_RUN, _LINEARIZED_AWS_FLAG_RUN
+    from aj_crew.security import _DANGEROUS_AWS_FLAG_RUN, _LINEARIZED_AWS_FLAG_RUN
 
     async with _client() as client:
         for fragment in (_DANGEROUS_AWS_FLAG_RUN, _LINEARIZED_AWS_FLAG_RUN):
@@ -683,7 +683,7 @@ async def test_user_add_fragment_hint_withheld_when_not_the_trigger(home: Path, 
     # is removed, so hinting at the fragment would send the user to an
     # identical 400. The hint is gated on the fragment-scrubbed residue
     # actually passing.
-    from kiro_crew.security import _DANGEROUS_AWS_FLAG_RUN, _LINEARIZED_AWS_FLAG_RUN
+    from aj_crew.security import _DANGEROUS_AWS_FLAG_RUN, _LINEARIZED_AWS_FLAG_RUN
 
     async with _client() as client:
         for pattern in (
@@ -793,7 +793,7 @@ async def test_user_edit_sets_only_the_fields_it_carries(config_file: Path, mock
 async def test_user_edit_refuses_what_an_add_refuses_and_keeps_the_rule(
     config_file: Path, mock_sel
 ):
-    from kiro_crew.security import DENY_REASON_PREFIX
+    from aj_crew.security import DENY_REASON_PREFIX
 
     async with _client() as client:
         add = await client.post(
@@ -923,7 +923,7 @@ async def test_mutation_hot_reloads_live_hookmanager(home: Path, config_file: Pa
     # hot-reloads the live HookManager so its _config reflects the new state.
     from types import SimpleNamespace
 
-    from kiro_crew.hooks import HookManager, HooksConfig
+    from aj_crew.hooks import HookManager, HooksConfig
 
     manager = HookManager(HooksConfig())
     assert manager._config.denied_commands_disable_all is False
@@ -942,7 +942,7 @@ async def test_mutation_hot_reloads_live_hookmanager(home: Path, config_file: Pa
 
 @pytest.mark.asyncio
 async def test_api_security_stats_uses_effective_count(home: Path, config_file: Path):
-    from kiro_crew.dashboard.handlers.core import api_security_stats
+    from aj_crew.dashboard.handlers.core import api_security_stats
 
     rid = _a_builtin_id()
     _seed(config_file, {"disabled_ids": [rid]})
@@ -954,7 +954,7 @@ async def test_api_security_stats_uses_effective_count(home: Path, config_file: 
     # (security_posture), not literals — a hardcoded 5 would drift as controls
     # are added; the real number is 16. Assert the derivation, not a magic number;
     # test_security_posture pins the per-control derivation itself.
-    from kiro_crew.security_posture import build_posture_snapshot
+    from aj_crew.security_posture import build_posture_snapshot
 
     counts = build_posture_snapshot()["counts"]
     assert body["redaction_paths"] == counts["redaction_paths"]
@@ -963,13 +963,13 @@ async def test_api_security_stats_uses_effective_count(home: Path, config_file: 
 
 
 def test_core_has_no_build_agent_config_import():
-    import kiro_crew.dashboard.handlers.core as core
+    import aj_crew.dashboard.handlers.core as core
 
     assert not hasattr(core, "build_agent_config")
 
 
 def test_enforce_denied_commands_settable_key_removed():
-    from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+    from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
     assert "agent.enforce_denied_commands" not in _EDITABLE_CONFIG
 
@@ -992,7 +992,7 @@ async def _run_write_denied_state(home: Path, config_file: Path, mutate):
     thread executor. Driving the event loop here is enough to surface the
     after-write lockdown without going through the full aiohttp app.
     """
-    from kiro_crew.dashboard.handlers.security import _write_denied_state
+    from aj_crew.dashboard.handlers.security import _write_denied_state
 
     return await _write_denied_state(mutate)
 
@@ -1033,7 +1033,7 @@ def test_write_denied_state_does_not_fall_back_to_chmod_safe(
     elsewhere (e.g. for the temp file's pre-write mode), but the audit
     pin is on the keystone path itself, which is what this test patches.
     """
-    import kiro_crew.atomic_write as atomic_write_mod
+    import aj_crew.atomic_write as atomic_write_mod
 
     captured: dict = {}
 
@@ -1063,10 +1063,10 @@ async def test_a_failed_lockdown_publishes_no_denied_commands(
 ):
     """restrict_to_owner runs on the temp; a failure must not leave the keystone file."""
     monkeypatch.setattr(
-        "kiro_crew.atomic_write.platform_compat.restrict_to_owner",
+        "aj_crew.atomic_write.platform_compat.restrict_to_owner",
         lambda path: (_ for _ in ()).throw(OSError("icacls: transient failure")),
     )
-    from kiro_crew.dashboard.handlers.security import _write_denied_state
+    from aj_crew.dashboard.handlers.security import _write_denied_state
 
     with pytest.raises(OSError, match="icacls"):
         await _write_denied_state(lambda d: d.update({"disable_all": True}))

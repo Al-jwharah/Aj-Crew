@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.appearance_packs import store as ap
+from aj_crew.appearance_packs import store as ap
 
 _RESERVED_IDS = ["con", "CON", "nul", "NUL", "prn", "aux", "com1", "COM9", "lpt1", "lpt9"]
 _RESERVED_FILES = ["nul.svg", "NUL.svg", "con.json", "aux.png", "com1.svg", "lpt9.svg"]

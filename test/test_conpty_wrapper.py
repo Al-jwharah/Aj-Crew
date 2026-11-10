@@ -12,7 +12,7 @@ import logging
 
 import pytest
 
-from kiro_crew.conpty import WindowsPty
+from aj_crew.conpty import WindowsPty
 
 
 class _Binding:
@@ -55,7 +55,7 @@ class TestExitStatusNormalisation:
         self, caplog: pytest.LogCaptureFixture
     ) -> None:
         """Better an unknown status than a made-up code or a raised exception."""
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.conpty"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.conpty"):
             assert _wrapper_over(_Binding("not a code")).exitstatus() is None
         assert "not an integer" in caplog.text
 

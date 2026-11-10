@@ -231,8 +231,8 @@ def test_escaped_failed_is_reported_against_its_test_not_as_internalerror(tmp_pa
     # outer per-test home down would be refused whenever the outer TMPDIR sits
     # under the live ~/.kiro/crew tree, which is the containment that floor exists
     # to enforce.
-    env.pop("KIROCREW_HOME", None)
-    env.pop("KIROCREW_WORKSPACE", None)
+    env.pop("AJCREW_HOME", None)
+    env.pop("AJCREW_WORKSPACE", None)
     env["ESCAPE_SITE"] = escape_site
     env["REPORTS_PATH"] = str(reports_path)
 

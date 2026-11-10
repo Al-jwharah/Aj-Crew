@@ -2,13 +2,13 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, cleanup } from '@testing-library/react'
 import { useRef } from 'react'
 
-// Under a sub-path build (KIROCREW_BASE_PATH) the DOM shim rebases the `src`
+// Under a sub-path build (AJCREW_BASE_PATH) the DOM shim rebases the `src`
 // attribute React writes, so the attribute never equals the minted
 // root-relative url. The hook must neither read the attribute back as "the
 // document shown" (it would navigate on the first mount) nor hand
 // `location.replace` an un-based url (it would leave the mount).
 
-const BASE = '/proxy/kirocrew'
+const BASE = '/proxy/ajcrew'
 
 vi.mock('../lib/basePath', async (importOriginal) => {
   const real = await importOriginal<typeof import('../lib/basePath')>()

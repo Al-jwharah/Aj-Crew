@@ -86,7 +86,7 @@ vi.mock('../../api/client', () => ({
     artifacts: vi.fn(() => Promise.resolve({ artifacts: [] })),
     // `dashboard.crewmate_threads` (reply threads) is read from the shared config
     // query; an empty config is the default -- the flag is OFF.
-    kirocrewConfig: vi.fn(() => Promise.resolve({})),
+    ajcrewConfig: vi.fn(() => Promise.resolve({})),
     // The Schedules chip's count and its tab body read the whole cron list and
     // filter it per crewmate (`wakesCrew`). Resolved-and-empty is the state every
     // case not about schedules wants: the chip reads 0/0, which is an ANSWER of
@@ -96,7 +96,7 @@ vi.mock('../../api/client', () => ({
     // `wakesCrew`'s default-crew fallback needs to know which crew is the default,
     // or every unbound job in the install would be attributed to whichever
     // crewmate happens to be open.
-    defaultAgent: vi.fn(() => Promise.resolve({ default_agent: 'kirocrew' })),
+    defaultAgent: vi.fn(() => Promise.resolve({ default_agent: 'ajcrew' })),
     // The schedule row's own controls (pause / run now), reached through
     // `useCronActions` once the Schedules tab is open.
     toggleCron: vi.fn(() => Promise.resolve({})),
@@ -107,13 +107,13 @@ vi.mock('../../api/client', () => ({
     // create write. Quiet defaults — one custom agent list item and one
     // workspace — so the dialog renders without its own options-failed notice
     // in every case that does not open it.
-    agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'kirocrew' })),
-    // The crew editor's roster read (KiroCrewAgent list), fired when the
+    agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'ajcrew' })),
+    // The crew editor's roster read (AjCrewAgent list), fired when the
     // thread-header pencil opens the in-place editor (CREW-18688).
-    kirocrewAgents: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'kirocrew' })),
+    ajcrewAgents: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'ajcrew' })),
     workspaces: vi.fn(() => Promise.resolve({ workspaces: [{ name: 'default' }] })),
     createWorkspace: vi.fn(() => Promise.resolve({ name: 'staging' })),
-    createKirocrewAgent: vi.fn(() => Promise.resolve({ ok: true })),
+    createAjcrewAgent: vi.fn(() => Promise.resolve({ ok: true })),
     // The guided (embedded Meet CrewMates) flow's reads and its schedule write.
     agentsInstalled: vi.fn(() => Promise.resolve([])),
     getSlackConfig: vi.fn(() => Promise.resolve({ connected: false })),
@@ -196,7 +196,7 @@ vi.mock('./CrewDynamicDashboard', () => ({
       {onPreviewGone && (
         <button type="button" data-testid="crew-dashboard-stub-gone" onClick={() => onPreviewGone(true)}>gone</button>
       )}
-      {/* A page's `kirocrew-dashboard:send`, the way the real frame routes it: to
+      {/* A page's `ajcrew-dashboard:send`, the way the real frame routes it: to
           `onSend` when the host offers one, otherwise into the composer (`act`). */}
       <button
         type="button"
@@ -459,7 +459,7 @@ describe('MembersPage side panel (Dashboard / Work log / Notes / Schedules) and 
     utils.unmount()
     // Another crewmate opens with the panel shown: the Assistant's choice is its own.
     localStorage.setItem('mc-members-assistant-panel-open', '0')
-    await renderPage(rows, 'kirocrew', { route: '/members?member=oncall' })
+    await renderPage(rows, 'ajcrew', { route: '/members?member=oncall' })
     expect(await screen.findByTestId('member-dashboard', undefined, PANE_READY)).toBeInTheDocument()
   })
 
@@ -546,7 +546,7 @@ describe('MembersPage side panel (Dashboard / Work log / Notes / Schedules) and 
       row({ name: 'research', slug: 'research' }),
     ]
     const classes = () => screen.getByTestId('member-roster').className.split(/\s+/)
-    const first = await renderPage(rows, 'kirocrew', { route: '/members?member=oncall' })
+    const first = await renderPage(rows, 'ajcrew', { route: '/members?member=oncall' })
     await screen.findByTestId('member-identity-pill')
     expect(classes()).not.toContain('md:flex')
     fireEvent.click(screen.getByTestId('crewmate-switcher'))
@@ -554,14 +554,14 @@ describe('MembersPage side panel (Dashboard / Work log / Notes / Schedules) and 
     await waitFor(() => expect(classes()).toContain('md:flex'))
     // Navigating away unmounts the page; coming back mounts it fresh.
     first.unmount()
-    const second = await renderPage(rows, 'kirocrew', { route: '/members?member=oncall' })
+    const second = await renderPage(rows, 'ajcrew', { route: '/members?member=oncall' })
     await screen.findByTestId('member-identity-pill')
     expect(classes()).toContain('md:flex')
     // Lifting the pin is remembered the same way.
     fireEvent.click(screen.getByTestId('member-roster-hide'))
     await waitFor(() => expect(classes()).not.toContain('md:flex'))
     second.unmount()
-    await renderPage(rows, 'kirocrew', { route: '/members?member=oncall' })
+    await renderPage(rows, 'ajcrew', { route: '/members?member=oncall' })
     await screen.findByTestId('member-identity-pill')
     expect(classes()).not.toContain('md:flex')
   })
@@ -572,7 +572,7 @@ describe('MembersPage side panel (Dashboard / Work log / Notes / Schedules) and 
     // The column is `hidden md:flex` in a team view regardless of the pin,
     // exactly as it was before the roster folded behind the switcher.
     vi.mocked(api.teams.list).mockResolvedValue({ teams: [{ id: 'abc123abc123', name: 'Triage', members: ['oncall'] }] })
-    await renderPage([row({ name: 'oncall', slug: 'oncall' })], 'kirocrew', { route: '/members?team=abc123abc123' })
+    await renderPage([row({ name: 'oncall', slug: 'oncall' })], 'ajcrew', { route: '/members?team=abc123abc123' })
     await screen.findByTestId('team-view')
     const classes = () => screen.getByTestId('member-roster').className.split(/\s+/)
     expect(classes()).toContain('hidden')
@@ -671,7 +671,7 @@ describe('MembersPage side panel (Dashboard / Work log / Notes / Schedules) and 
   describe('a refresh opens the Dashboard tab, not the last focused one', () => {
     const dashTab = () => screen.getByTestId(`side-panel-leading-tab-${CREW_DASHBOARD_TAB_ID}`)
     const openOncall = async () => {
-      const utils = await renderPage([row({ bound: true, slot_key: 'member-oncall' })], 'kirocrew', { route: '/members?member=oncall' })
+      const utils = await renderPage([row({ bound: true, slot_key: 'member-oncall' })], 'ajcrew', { route: '/members?member=oncall' })
       await screen.findByTestId('side-panel-leading-tabs', undefined, PANE_READY)
       return utils
     }
@@ -707,7 +707,7 @@ describe('MembersPage side panel (Dashboard / Work log / Notes / Schedules) and 
 
     it('opens a closed panel on the Dashboard tab and asks the frame for the preview', async () => {
       localStorage.setItem(PANEL_OPEN_KEY, '0')
-      await renderPage([row({ bound: true, slot_key: 'member-oncall' })], 'kirocrew', { route: PREVIEW_ROUTE })
+      await renderPage([row({ bound: true, slot_key: 'member-oncall' })], 'ajcrew', { route: PREVIEW_ROUTE })
       const stub = await screen.findByTestId('crew-dashboard-stub', undefined, PANE_READY)
       expect(stub).toHaveAttribute('data-preview', 'true')
       expect(stub).toHaveAttribute('data-member', 'oncall')
@@ -721,7 +721,7 @@ describe('MembersPage side panel (Dashboard / Work log / Notes / Schedules) and 
       ['the older JSON-read link', 'chat-open-preview-slug'],
     ])('%s clicked in the thread opens the Dashboard tab on the staged page, not a second tab', async (_name, control) => {
       localStorage.setItem(PANEL_OPEN_KEY, '0')
-      await renderPage([row({ name: 'oncall', slug: 'oncall', bound: true, slot_key: 'member-oncall' })], 'kirocrew', { route: '/members?member=oncall' })
+      await renderPage([row({ name: 'oncall', slug: 'oncall', bound: true, slot_key: 'member-oncall' })], 'ajcrew', { route: '/members?member=oncall' })
       fireEvent.click(await screen.findByTestId(control, undefined, PANE_READY))
       await waitFor(() => expect(currentUrl()).toBe('/members?member=oncall&dashboard=preview'))
       const stub = await screen.findByTestId('crew-dashboard-stub', undefined, PANE_READY)
@@ -733,7 +733,7 @@ describe('MembersPage side panel (Dashboard / Work log / Notes / Schedules) and 
 
     it('a preview link clicked in the thread re-reads the staged page, so a restaged page is never shown stale', async () => {
       const invalidate = vi.spyOn(QueryClient.prototype, 'invalidateQueries')
-      await renderPage([row({ name: 'oncall', slug: 'oncall', bound: true, slot_key: 'member-oncall' })], 'kirocrew', { route: '/members?member=oncall' })
+      await renderPage([row({ name: 'oncall', slug: 'oncall', bound: true, slot_key: 'member-oncall' })], 'ajcrew', { route: '/members?member=oncall' })
       invalidate.mockClear()
       fireEvent.click(await screen.findByTestId('chat-open-preview-member', undefined, PANE_READY))
       expect(invalidate).toHaveBeenCalledWith({ queryKey: ['member-dashboard', 'oncall'] })
@@ -741,7 +741,7 @@ describe('MembersPage side panel (Dashboard / Work log / Notes / Schedules) and 
     })
 
     it('a staged page the agent applied (or that expired) hands over to the live page, with a line saying so', async () => {
-      await renderPage([row({ bound: true, slot_key: 'member-oncall' })], 'kirocrew', { route: '/members?member=oncall&dashboard=preview' })
+      await renderPage([row({ bound: true, slot_key: 'member-oncall' })], 'ajcrew', { route: '/members?member=oncall&dashboard=preview' })
       expect(await screen.findByTestId('dashboard-preview-badge', undefined, PANE_READY)).toBeInTheDocument()
       fireEvent.click(await screen.findByTestId('crew-dashboard-stub-gone', undefined, PANE_READY))
       await waitFor(() => expect(screen.queryByTestId('dashboard-preview-badge')).toBeNull())
@@ -753,7 +753,7 @@ describe('MembersPage side panel (Dashboard / Work log / Notes / Schedules) and 
     })
 
     it('a plain member link is the live page', async () => {
-      await renderPage([row({ bound: true, slot_key: 'member-oncall' })], 'kirocrew', { route: '/members?member=oncall' })
+      await renderPage([row({ bound: true, slot_key: 'member-oncall' })], 'ajcrew', { route: '/members?member=oncall' })
       expect(await screen.findByTestId('crew-dashboard-stub', undefined, PANE_READY)).toHaveAttribute('data-preview', 'false')
       expect(screen.queryByTestId('dashboard-preview-badge')).toBeNull()
     })
@@ -892,7 +892,7 @@ describe('MembersPage side panel (Dashboard / Work log / Notes / Schedules) and 
 
   it('a refused thread hands the profile settings no slot, even with a cached key', async () => {
     localStorage.setItem(PANEL_OPEN_KEY, '0')
-    await renderPage([row({ bound: true, slot_key: 'member-oncall' })], 'kirocrew', { thread: new Error('member_slot_conflict') })
+    await renderPage([row({ bound: true, slot_key: 'member-oncall' })], 'ajcrew', { thread: new Error('member_slot_conflict') })
     fireEvent.click(await rosterRow('oncall'))
     fireEvent.click(await screen.findByTestId('member-identity-pill'))
     // The card opens on Sessions (#18245); the settings live on the Profile tab.
@@ -909,7 +909,7 @@ describe('MembersPage side panel (Dashboard / Work log / Notes / Schedules) and 
     localStorage.setItem(PANEL_OPEN_KEY, '0')
     // Never answers: the thread stays unconfirmed for the whole test.
     const pending = new Promise<never>(() => {})
-    await renderPage([row({ bound: false, slot_key: '' })], 'kirocrew', { thread: pending as unknown as Record<string, unknown> })
+    await renderPage([row({ bound: false, slot_key: '' })], 'ajcrew', { thread: pending as unknown as Record<string, unknown> })
     fireEvent.click(await rosterRow('oncall'))
     fireEvent.click(await screen.findByTestId('member-identity-pill'))
     // The card opens on Sessions (#18245); the settings live on the Profile tab.

@@ -33,7 +33,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import chat_fork
+from aj_crew.dashboard import chat_fork
 
 _TARGET = "dashboard/chat_fork.py"
 
@@ -58,7 +58,7 @@ def _findings():
 def test_no_refusal_in_this_module_is_prose_only() -> None:
     missing = sorted(f.lineno for f in _findings() if f.bucket == "missing_code")
     assert missing == [], (
-        f"these src/kiro_crew/{_TARGET} lines refuse with prose and no "
+        f"these src/aj_crew/{_TARGET} lines refuse with prose and no "
         f"machine-readable code: {missing}"
     )
 
@@ -97,7 +97,7 @@ async def _fork(state, slot: str, payload) -> tuple[int, dict]:
 
 @pytest.mark.asyncio
 async def test_an_unknown_slot(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     status, body = await _fork(_seeded_state(tmp_path), "nosuchslot", {})
     assert status == 404
     assert body["code"] == "slot_not_found"
@@ -106,7 +106,7 @@ async def test_an_unknown_slot(tmp_path, monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_a_body_that_is_not_json(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seeded_state(tmp_path)
     async with TestClient(TestServer(_make_app(state))) as client:
         resp = await client.post(
@@ -166,7 +166,7 @@ async def test_a_body_that_is_not_json(tmp_path, monkeypatch) -> None:
     ],
 )
 async def test_a_refused_fork_names_its_code(tmp_path, monkeypatch, payload, status, code) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     got_status, body = await _fork(_seeded_state(tmp_path), "forkable", payload)
     assert got_status == status
     assert body["code"] == code
@@ -179,7 +179,7 @@ async def test_a_non_integer_index_and_an_out_of_range_one_differ(tmp_path, monk
     "not an index" and "an index past the end" are different client bugs and want
     different handling; without the ``code`` they are both ``400`` with prose.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     _, bad_type = await _fork(_seeded_state(tmp_path), "forkable", {"at_message_index": "2"})
     _, out_of_range = await _fork(_seeded_state(tmp_path), "forkable", {"at_message_index": 999})
     assert bad_type["code"] == "invalid_field_type"
@@ -188,7 +188,7 @@ async def test_a_non_integer_index_and_an_out_of_range_one_differ(tmp_path, monk
 
 @pytest.mark.asyncio
 async def test_a_duplicate_message_id_is_refused_as_ambiguous(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seeded_state(tmp_path)
     slot = state._slots["forkable"]
     slot.messages[0]["meta"]["mid"] = "duplicate-row"
@@ -200,7 +200,7 @@ async def test_a_duplicate_message_id_is_refused_as_ambiguous(tmp_path, monkeypa
 
 @pytest.mark.asyncio
 async def test_a_slot_with_no_forkable_messages(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.get_or_create_slot("empty")
     status, body = await _fork(state, "empty", {})
@@ -213,7 +213,7 @@ async def test_a_non_persistent_slot_forks_and_inherits_its_mode(tmp_path, monke
     """The mode is a memory boundary, not a property of the transcript, so the
     fork proceeds and the child is born with the parent's mode rather than the
     persistent default."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seeded_state(tmp_path)
     state._slots["forkable"].memory_mode = "incognito"
     status, body = await _fork(state, "forkable", {})
@@ -232,12 +232,12 @@ async def test_a_parent_with_an_unrecognised_persisted_mode_is_refused(
     parent. The child inherits that value, and the slot constructor rejects it;
     the fork must refuse with a code before any child exists, not surface the
     constructor's ``ValueError`` as a 500."""
-    from kiro_crew.dashboard.chat_persistence import (
+    from aj_crew.dashboard.chat_persistence import (
         _rehydrate_slot_from_history,
         _save_slot_to_history,
     )
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("forkable")
     slot.append("user", "hello", "msg msg-u")
@@ -267,7 +267,7 @@ async def test_the_three_404s_stay_indistinguishable(tmp_path, monkeypatch) -> N
     The ``404`` hides other-app, unscoped and missing slots alike (CWE-204); the ``code``
     field must not tell them apart either. The true reason is recorded via SEL.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seeded_state(tmp_path)
     # An unscoped slot (no ``_app``) and one owned by a DIFFERENT app.
     other = state.get_or_create_slot("othersapp")
@@ -304,7 +304,7 @@ async def test_the_three_404s_stay_indistinguishable(tmp_path, monkeypatch) -> N
 async def test_every_refusal_carries_both_a_code_and_its_prose(tmp_path, monkeypatch) -> None:
     """The behavioural ratchet: no path regresses to prose-only, and none drops
     the advisory text an existing client still reads."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     for payload in (
         ["at_message_index"],
         {"mode": "sideways"},
@@ -329,7 +329,7 @@ def test_an_unreadable_mid_rotation_corpus_refuses_instead_of_approximating() ->
     """
     from pathlib import Path
 
-    src = (Path(__file__).resolve().parents[1] / "src/kiro_crew" / _TARGET).read_text(
+    src = (Path(__file__).resolve().parents[1] / "src/aj_crew" / _TARGET).read_text(
         encoding="utf-8"
     )
     head, _, tail = src.partition("chained-full fork corpus read failed")
@@ -363,8 +363,8 @@ async def test_a_corpus_over_slot_capacity_refuses(tmp_path, monkeypatch) -> Non
     `persisted_trim` is 0 and the evicted rows are unrecoverable. Answering
     success there loses the start of the conversation with no signal to the caller.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_fork._MAX_SLOT_MESSAGES", 5)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.chat_fork._MAX_SLOT_MESSAGES", 5)
     state = _seeded_state(tmp_path)
     slot = state._slots["forkable"]
     for n in range(4):
@@ -383,8 +383,8 @@ async def test_the_over_capacity_refusal_names_no_numbers(tmp_path, monkeypatch)
     is a bound no reader can act on and a second contract for the frontend to drift
     against.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_fork._MAX_SLOT_MESSAGES", 5)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.chat_fork._MAX_SLOT_MESSAGES", 5)
     state = _seeded_state(tmp_path)
     slot = state._slots["forkable"]
     for n in range(4):
@@ -400,8 +400,8 @@ async def test_the_over_capacity_refusal_names_no_numbers(tmp_path, monkeypatch)
 @pytest.mark.asyncio
 async def test_a_corpus_within_capacity_still_forks(tmp_path, monkeypatch) -> None:
     """Negative control: the guard must fire on size alone, not on every fork."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_fork._MAX_SLOT_MESSAGES", 5)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.chat_fork._MAX_SLOT_MESSAGES", 5)
     state = _seeded_state(tmp_path)
     status, body = await _fork(state, "forkable", {})
     assert status == 200, body

@@ -32,10 +32,10 @@ rather than line numbers because every line reference taken from a checkout 962
 commits behind had moved:
 
 - **The manifest field exists and nothing reads it.**
-  `src/kiro_crew/apps/manifest_sections.py::UISidebar` declares `section: str = "Apps"` and
+  `src/aj_crew/apps/manifest_sections.py::UISidebar` declares `section: str = "Apps"` and
   `order: int = 10`, is a field of `UIConfig` (`UIConfig.sidebar`), round-trips
   through `to_dict`/`from_dict`, and the `ui` key is described in
-  `src/kiro_crew/apps/manager_builtins.py`. A grep for `ui.sidebar` across `website/src`
+  `src/aj_crew/apps/manager_builtins.py`. A grep for `ui.sidebar` across `website/src`
   returns **zero hits**, and the object returned by
   `website/src/appNav.ts::appNavTarget` carries neither `section` nor `order`. The
   manifest promises placement control that the frontend silently discards.
@@ -49,7 +49,7 @@ commits behind had moved:
   `APPS_NAV_LIMIT = 6` (`website/src/App.tsx`), so an app's declared `order: 10` has
   nowhere to land even if it crossed the boundary.
 - **`registerBuiltinSurface` is not a seam.** `website/docs/extension-seams.md`
-  documents the existing registry seams composed through `virtual:kirocrew-edition`;
+  documents the existing registry seams composed through `virtual:ajcrew-edition`;
   `registerBuiltinSurface` is not among them (grep confirms no mention). It is
   core-internal wiring called only from `surfaces/builtins.tsx`. An edition
   therefore cannot contribute a `Main`- or `Bottom`-group entry, and an app cannot
@@ -126,9 +126,9 @@ returns the manifest.
 ### 3.2 Phase N2 — promote `registerBuiltinSurface` to a registry seam
 
 Add `order?: number` to `Surface` and expose `registerBuiltinSurface` through
-`virtual:kirocrew-edition` alongside the existing registry seams (see
+`virtual:ajcrew-edition` alongside the existing registry seams (see
 `website/docs/extension-seams.md`), gated by the same
-`KIROCREW_EDITION_DIR` + `KIROCREW_ALLOW_EDITION=1` pair, with collisions routed
+`AJCREW_EDITION_DIR` + `AJCREW_ALLOW_EDITION=1` pair, with collisions routed
 through `reportSeamCollision`. Ordering within a group becomes `(order ?? index)`, so
 today's registration-order behaviour is preserved when no `order` is given.
 
@@ -226,7 +226,7 @@ decide whether an app exists at all before any of this runs.
    allow path is an ordinary prependable cordis waterfall — a plugin can answer
    `allowed-once` before any human UI sees the request, and DSH's own ACP package
    already registers a machine answerer on it. Its one order-proof gate is hardcoded
-   to bypass its own event system. Kiro Crew's admission policy, governance ceiling,
+   to bypass its own event system. Aj Crew's admission policy, governance ceiling,
    and per-app permission scoping have no expressible home in that model.
 2. **Document `pages[0]`-only as intended and delete `UISidebar`.** Rejected:
    `UISidebar` is already published manifest surface with defaults and a documented

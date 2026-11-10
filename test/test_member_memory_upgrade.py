@@ -16,14 +16,14 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli, cli_doctor
-from kiro_crew import memory_record_metadata as record_meta
-from kiro_crew import memory_schema, memory_stores
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, config_dir
-from kiro_crew.execution_context import resolve_member_execution
-from kiro_crew.members import dm_binding_path, write_dm_binding
-from kiro_crew.memory import PREFERENCES_FILE, PROJECTS_FILE
-from kiro_crew.memory_stores import (
+from aj_crew import cli, cli_doctor
+from aj_crew import memory_record_metadata as record_meta
+from aj_crew import memory_schema, memory_stores
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, config_dir
+from aj_crew.execution_context import resolve_member_execution
+from aj_crew.members import dm_binding_path, write_dm_binding
+from aj_crew.memory import PREFERENCES_FILE, PROJECTS_FILE
+from aj_crew.memory_stores import (
     LEGACY_MEMBER_MANIFEST,
     LEGACY_MEMBER_STORE_REMEDY,
     legacy_member_store_states,
@@ -32,8 +32,8 @@ from kiro_crew.memory_stores import (
     repair_legacy_member_stores,
     require_member_memory_store,
 )
-from kiro_crew.slack import gateway as slack_gateway
-from kiro_crew.vector_memory import open_member_database, read_member_database_identity
+from aj_crew.slack import gateway as slack_gateway
+from aj_crew.vector_memory import open_member_database, read_member_database_identity
 
 STORE = "member-reviewer-0123456789abcdef0123456789abcdef"
 LESSON_KEY = "lesson.deadbeef"
@@ -91,12 +91,12 @@ def _write_legacy_home(*bound: str, owner: str = "reviewer", manifest: bool = Tr
     single-owner case is the normal one). Every member also gets a peer on the
     default store so the roster is not degenerate.
     """
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     home = config_dir()
-    agents: dict[str, dict] = {"default": {}, "peer": {"kiro_agent": "kirocrew"}}
+    agents: dict[str, dict] = {"default": {}, "peer": {"kiro_agent": "ajcrew"}}
     for alias in bound:
-        agents[alias] = {"kiro_agent": "kirocrew", "memory_store": STORE}
+        agents[alias] = {"kiro_agent": "ajcrew", "memory_store": STORE}
     config = {
         "agents": agents,
         "memory_stores": {
@@ -137,7 +137,7 @@ class TestTheUpgradeRepairsAnAttributableStore:
     def test_the_member_resolves_and_its_lessons_survive(self) -> None:
         directory = _write_legacy_home("reviewer")
         database = directory / memory_stores.MEMORY_DB_FILE
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         with pytest.raises(memory_stores.UnknownMemoryStore):
             require_member_memory_store(cfg, "reviewer")
 
@@ -148,7 +148,7 @@ class TestTheUpgradeRepairsAnAttributableStore:
         assert member_id == "reviewer"
         assert cfg.memory_stores[STORE].owner_member_id == member_id
         assert cfg.memory_stores[STORE].owner_member == "reviewer"
-        reloaded = KiroCrewConfig.load()
+        reloaded = AjCrewConfig.load()
         assert reloaded.agents["reviewer"].member_id == member_id
         assert reloaded.memory_stores[STORE].owner_member_id == member_id
         assert reloaded.memory_stores[STORE].memory_version == 2
@@ -179,11 +179,11 @@ class TestTheUpgradeRepairsAnAttributableStore:
     def test_an_own_dm_binding_does_not_re_slug_the_member_during_upgrade(self) -> None:
         _write_legacy_home("reviewer")
         write_dm_binding("reviewer", member="reviewer", slot_key="member-reviewer")
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
         assert migrate_legacy_member_stores(cfg) == [STORE]
         assert cfg.agents["reviewer"].member_id == "reviewer"
-        assert KiroCrewConfig.load().agents["reviewer"].member_id == "reviewer"
+        assert AjCrewConfig.load().agents["reviewer"].member_id == "reviewer"
 
     def test_an_unreadable_dm_binding_does_not_re_slug_the_member_during_upgrade(self) -> None:
         # The legacy agent already derives this slug at runtime, so a binding
@@ -193,18 +193,18 @@ class TestTheUpgradeRepairsAnAttributableStore:
         path = dm_binding_path("reviewer")
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(b"\xff\xfe{not json")
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
         assert migrate_legacy_member_stores(cfg) == [STORE]
         assert cfg.agents["reviewer"].member_id == "reviewer"
-        assert KiroCrewConfig.load().agents["reviewer"].member_id == "reviewer"
+        assert AjCrewConfig.load().agents["reviewer"].member_id == "reviewer"
 
     def test_migration_owner_keeps_shared_legacy_slug_and_later_peer_is_suffixed(self) -> None:
         _write_legacy_home("on_call", owner="on_call")
-        cfg = KiroCrewConfig.load()
-        cfg.agents["on-call"] = KiroCrewAgentConfig()
+        cfg = AjCrewConfig.load()
+        cfg.agents["on-call"] = AjCrewAgentConfig()
         cfg.save()
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
         assert migrate_legacy_member_stores(cfg) == [STORE]
         assert cfg.agents["on_call"].member_id == "on-call"
@@ -218,36 +218,36 @@ class TestTheUpgradeRepairsAnAttributableStore:
     def test_a_second_run_changes_nothing(self) -> None:
         directory = _write_legacy_home("reviewer")
         database = directory / memory_stores.MEMORY_DB_FILE
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert migrate_legacy_member_stores(cfg) == [STORE]
         config_after, database_after = _config_bytes(), database.read_bytes()
 
         assert migrate_legacy_member_stores(cfg) == []
-        assert migrate_legacy_member_stores(KiroCrewConfig.load()) == []
+        assert migrate_legacy_member_stores(AjCrewConfig.load()) == []
         assert repair_legacy_member_stores() == []
 
         assert _config_bytes() == config_after
         assert database.read_bytes() == database_after
-        assert legacy_member_store_states(KiroCrewConfig.load()) == {}
+        assert legacy_member_store_states(AjCrewConfig.load()) == {}
 
     def test_the_start_of_process_entry_runs_it_once(self) -> None:
         _write_legacy_home("reviewer")
         assert repair_legacy_member_stores() == [STORE]
         assert repair_legacy_member_stores() == []
-        assert KiroCrewConfig.load().agents["reviewer"].member_id == "reviewer"
+        assert AjCrewConfig.load().agents["reviewer"].member_id == "reviewer"
 
     def test_a_slug_already_held_gets_a_suffix_like_member_creation(self) -> None:
         _write_legacy_home("reviewer")
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents["peer"].member_id = "reviewer"
         cfg.save()
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
         assert migrate_legacy_member_stores(cfg) == [STORE]
 
         member_id = cfg.agents["reviewer"].member_id
         assert member_id != "reviewer" and member_id.startswith("reviewer-")
-        assert KiroCrewConfig.load().memory_stores[STORE].owner_member_id == member_id
+        assert AjCrewConfig.load().memory_stores[STORE].owner_member_id == member_id
 
     def test_an_interrupted_upgrade_resumes_with_the_identity_already_in_the_database(
         self,
@@ -259,7 +259,7 @@ class TestTheUpgradeRepairsAnAttributableStore:
         memory_stores._complete_legacy_member_database(
             database, member_id="reviewer-resumed", store=STORE
         )
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
         assert migrate_legacy_member_stores(cfg) == [STORE]
 
@@ -268,7 +268,7 @@ class TestTheUpgradeRepairsAnAttributableStore:
 
     def test_a_missing_manifest_is_not_required(self) -> None:
         _write_legacy_home("reviewer", manifest=False)
-        assert migrate_legacy_member_stores(KiroCrewConfig.load()) == [STORE]
+        assert migrate_legacy_member_stores(AjCrewConfig.load()) == [STORE]
 
     def test_a_published_member_identity_resumes_instead_of_stranding(self) -> None:
         """The member's identity is published before the store record's.
@@ -279,13 +279,13 @@ class TestTheUpgradeRepairsAnAttributableStore:
         directory = _write_legacy_home("reviewer")
         database = directory / memory_stores.MEMORY_DB_FILE
         memory_stores._complete_legacy_member_database(database, member_id="reviewer", store=STORE)
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         data = json.loads(_config_bytes())
         data["agents"]["reviewer"]["member_id"] = "reviewer"
         (config_dir() / "config.json").write_text(json.dumps(data), encoding="utf-8")
         loader._invalidate_config_cache()
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
         assert migrate_legacy_member_stores(cfg) == [STORE]
         assert cfg.memory_stores[STORE].owner_member_id == "reviewer"
@@ -296,14 +296,14 @@ class TestTheUpgradeRepairsAnAttributableStore:
         memory_stores._complete_legacy_member_database(
             directory / memory_stores.MEMORY_DB_FILE, member_id="someone-else", store=STORE
         )
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         data = json.loads(_config_bytes())
-        data["agents"]["intruder"] = {"kiro_agent": "kirocrew", "member_id": "someone-else"}
+        data["agents"]["intruder"] = {"kiro_agent": "ajcrew", "member_id": "someone-else"}
         (config_dir() / "config.json").write_text(json.dumps(data), encoding="utf-8")
         loader._invalidate_config_cache()
 
-        assert migrate_legacy_member_stores(KiroCrewConfig.load()) == []
+        assert migrate_legacy_member_stores(AjCrewConfig.load()) == []
 
 
 class TestTheUpgradeRefusesWhatItCannotAttribute:
@@ -319,10 +319,10 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
         database = directory / memory_stores.MEMORY_DB_FILE
         # The first load writes the loader's own migrations back; the baseline
         # is the document AFTER that, so only the upgrade's writes are measured.
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         before = _config_bytes()
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.memory_stores"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.memory_stores"):
             assert migrate_legacy_member_stores(cfg) == []
 
         warnings = [record for record in caplog.records if STORE in record.getMessage()]
@@ -337,10 +337,10 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
 
     def test_a_member_that_already_has_an_identity_is_refused(self) -> None:
         _write_legacy_home("reviewer")
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents["reviewer"].member_id = "someone-else"
         cfg.save()
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         before = _config_bytes()
 
         assert migrate_legacy_member_stores(cfg) == []
@@ -358,7 +358,7 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
         document = json.loads(path.read_text(encoding="utf-8"))
         document["memory_stores"][STORE]["owner_member_id"] = invalid
         path.write_text(json.dumps(document), encoding="utf-8")
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert cfg.memory_stores[STORE].owner_member_id == invalid
         before = _config_bytes()
 
@@ -374,7 +374,7 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
         (directory / LEGACY_MEMBER_MANIFEST).write_text(
             json.dumps({"owner_member": "stranger", "memory_version": 2}), encoding="utf-8"
         )
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
         assert migrate_legacy_member_stores(cfg) == []
 
@@ -387,7 +387,7 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
         other is not the bound member agreeing with either: adopting it would
         hand alice's lessons to reviewer."""
         _write_legacy_home("reviewer", owner="alice")
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
         assert migrate_legacy_member_stores(cfg) == []
 
@@ -398,7 +398,7 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
 
     def test_a_record_naming_another_owner_is_refused_without_a_manifest(self) -> None:
         _write_legacy_home("reviewer", owner="alice", manifest=False)
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
         assert migrate_legacy_member_stores(cfg) == []
 
@@ -418,13 +418,13 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
         self, content: bytes, reason: str
     ) -> None:
         """One store's manifest refuses that store alone; the next store still upgrades."""
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         directory = _write_legacy_home("reviewer")
         (directory / LEGACY_MEMBER_MANIFEST).write_bytes(content)
         other = "member-writer-fedcba9876543210fedcba9876543210"
         document = json.loads(_config_bytes())
-        document["agents"]["writer"] = {"kiro_agent": "kirocrew", "memory_store": other}
+        document["agents"]["writer"] = {"kiro_agent": "ajcrew", "memory_store": other}
         document["memory_stores"][other] = {"owner_member": "writer", "memory_version": 2}
         (config_dir() / "config.json").write_text(json.dumps(document), encoding="utf-8")
         other_dir = memory_stores.memory_stores_root() / other
@@ -436,7 +436,7 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
             other_dir / memory_stores.MEMORY_DB_FILE, store=other, owner="writer"
         )
         loader._invalidate_config_cache()
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
         try:
             states = legacy_member_store_states(cfg)
@@ -472,7 +472,7 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
         database = directory / memory_stores.MEMORY_DB_FILE
         database.unlink()
         _write_legacy_database(database, **stamp)
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         before = _config_bytes()
 
         assert migrate_legacy_member_stores(cfg) == []
@@ -488,7 +488,7 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
         memory_stores._complete_legacy_member_database(
             database, member_id="reviewer", store="member-somebody-else"
         )
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         before = _config_bytes()
 
         assert migrate_legacy_member_stores(cfg) == []
@@ -504,10 +504,10 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
         memory_stores._complete_legacy_member_database(
             directory / memory_stores.MEMORY_DB_FILE, member_id="peer-id", store=STORE
         )
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents["peer"].member_id = "peer-id"
         cfg.save()
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
         assert migrate_legacy_member_stores(cfg) == []
 
@@ -518,7 +518,7 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
     def test_a_missing_database_is_refused_rather_than_created(self) -> None:
         directory = _write_legacy_home("reviewer")
         (directory / memory_stores.MEMORY_DB_FILE).unlink()
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
         assert migrate_legacy_member_stores(cfg) == []
 
@@ -537,7 +537,7 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
         sibling = tmp_path / "restored-copy.db"
         os.link(database, sibling)
         before = sibling.read_bytes()
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
         assert migrate_legacy_member_stores(cfg) == []
 
@@ -556,7 +556,7 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
         elsewhere = tmp_path / "elsewhere.db"
         database.rename(elsewhere)
         database.symlink_to(elsewhere)
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
         assert migrate_legacy_member_stores(cfg) == []
 
@@ -565,12 +565,12 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
 
     def test_one_refused_store_does_not_block_another(self) -> None:
         directory = _write_legacy_home("reviewer")
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         other = "member-auditor-fedcba9876543210fedcba9876543210"
         data = json.loads(_config_bytes())
-        data["agents"]["auditor"] = {"kiro_agent": "kirocrew", "memory_store": other}
-        data["agents"]["shadow"] = {"kiro_agent": "kirocrew", "memory_store": other}
+        data["agents"]["auditor"] = {"kiro_agent": "ajcrew", "memory_store": other}
+        data["agents"]["shadow"] = {"kiro_agent": "ajcrew", "memory_store": other}
         data["memory_stores"][other] = {"owner_member": "auditor", "memory_version": 2}
         (config_dir() / "config.json").write_text(json.dumps(data), encoding="utf-8")
         other_dir = directory.parent / other
@@ -579,12 +579,12 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
             other_dir / memory_stores.MEMORY_DB_FILE, store=other, owner="auditor"
         )
         loader._invalidate_config_cache()
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
         assert migrate_legacy_member_stores(cfg) == [STORE]
 
         assert cfg.agents["reviewer"].member_id == "reviewer"
-        assert set(legacy_member_store_states(KiroCrewConfig.load())) == {other}
+        assert set(legacy_member_store_states(AjCrewConfig.load())) == {other}
 
     def test_a_damaged_identity_elsewhere_does_not_block_a_repair(self) -> None:
         """One unreadable record must not cost every other store its repair.
@@ -595,7 +595,7 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
         refused on its own behalf by the candidate scan.
         """
         _write_legacy_home("reviewer")
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         damaged = "member-wrecked-0123456789abcdef0123456789abcdef"
         data = json.loads(_config_bytes())
@@ -606,7 +606,7 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
         }
         (config_dir() / "config.json").write_text(json.dumps(data), encoding="utf-8")
         loader._invalidate_config_cache()
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
         assert migrate_legacy_member_stores(cfg) == [STORE]
         assert cfg.agents["reviewer"].member_id == "reviewer"
@@ -615,13 +615,13 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
         """The creation path keeps refusing: a config it cannot read is no
         basis for writing a new identity into it."""
         _write_legacy_home("reviewer")
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         data = json.loads(_config_bytes())
         data["memory_stores"][STORE]["owner_member_id"] = 7
         (config_dir() / "config.json").write_text(json.dumps(data), encoding="utf-8")
         loader._invalidate_config_cache()
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
         with pytest.raises(memory_stores.UnknownMemoryStore):
             memory_stores._allocate_member_id(cfg, "newcomer")
@@ -630,7 +630,7 @@ class TestTheUpgradeRefusesWhatItCannotAttribute:
 class TestDoctorReportsWhatTheUpgradeLeftAlone:
     def test_a_refused_store_gets_its_reason_and_remedy(self, capsys) -> None:
         _write_legacy_home("reviewer", "auditor")
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         before = _config_bytes()
         issues: list[str] = []
 
@@ -647,7 +647,7 @@ class TestDoctorReportsWhatTheUpgradeLeftAlone:
 
     def test_a_repairable_store_is_reported_as_pending_not_broken(self, capsys) -> None:
         _write_legacy_home("reviewer")
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         issues: list[str] = []
 
         cli_doctor._doctor_member_memory_bindings(cfg, issues)

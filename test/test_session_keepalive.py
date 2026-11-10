@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from aiohttp import web
 
-from kiro_crew.dashboard.handlers.sessions import api_session_keepalive
+from aj_crew.dashboard.handlers.sessions import api_session_keepalive
 
 
 class _FakeSessions:
@@ -60,8 +60,8 @@ def test_wait_tool_posts_keepalive_periodically():
     """wait() should POST /api/session-keepalive at least once while sleeping."""
     import time as _time
 
-    from kiro_crew import mcp_core
-    from kiro_crew.mcp_core import _call_tool
+    from aj_crew import mcp_core
+    from aj_crew.mcp_core import _call_tool
 
     # A fake clock that only `sleep` advances. Reads never move it, so the
     # number of `monotonic()` calls between entering the tool and its first
@@ -94,7 +94,7 @@ def test_wait_tool_posts_keepalive_periodically():
         def __getattr__(self, name):
             return getattr(_time, name)
 
-    with patch("kiro_crew.mcp_core._post") as mock_post:
+    with patch("aj_crew.mcp_core._post") as mock_post:
         mock_post.return_value = {}
         with patch.object(mcp_core, "time", _FakeTime()):
             _call_tool("wait", {"seconds": 60, "reason": "test"})

@@ -20,13 +20,13 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.dashboard.handlers import knowledge as kh
-from kiro_crew.knowledge.chunker import HeadingAwareChunker
-from kiro_crew.knowledge.extractor import EntityExtractor
-from kiro_crew.knowledge.folder_watcher import FolderWatcher
-from kiro_crew.knowledge.ingestion import IngestionPipeline
-from kiro_crew.knowledge.readers import FileReader
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.dashboard.handlers import knowledge as kh
+from aj_crew.knowledge.chunker import HeadingAwareChunker
+from aj_crew.knowledge.extractor import EntityExtractor
+from aj_crew.knowledge.folder_watcher import FolderWatcher
+from aj_crew.knowledge.ingestion import IngestionPipeline
+from aj_crew.knowledge.readers import FileReader
+from aj_crew.knowledge.store import KnowledgeStore
 
 #: Document text that must never reach the log.
 SECRET_TEXT = "ZEBRA-CANARY-TEXT"
@@ -65,19 +65,19 @@ class _Pool:
 
 def _source(source_id: str):
     """The extraction-source context, imported per call so collection never depends on it."""
-    from kiro_crew.knowledge.extractor import extraction_source
+    from aj_crew.knowledge.extractor import extraction_source
 
     return extraction_source(source_id)
 
 
 def _reclaim(store, *, created_before: str) -> int:
-    from kiro_crew.knowledge.ingestion import reclaim_interrupted_ingest_jobs
+    from aj_crew.knowledge.ingestion import reclaim_interrupted_ingest_jobs
 
     return reclaim_interrupted_ingest_jobs(store, created_before=created_before)
 
 
 def _interrupted_error() -> str:
-    from kiro_crew.knowledge.ingestion import INTERRUPTED_JOB_ERROR
+    from aj_crew.knowledge.ingestion import INTERRUPTED_JOB_ERROR
 
     return INTERRUPTED_JOB_ERROR
 
@@ -113,7 +113,7 @@ class TestExtractionFailuresAreLogged:
                 return [next(replies) for _ in prompts]
 
         extractor = EntityExtractor(pool=_Mixed())
-        caplog.set_level(logging.WARNING, logger="kiro_crew.knowledge.extractor")
+        caplog.set_level(logging.WARNING, logger="aj_crew.knowledge.extractor")
         with _source("src-123"):
             results = await extractor.extract_batch(["a", "b", "c"])
 
@@ -129,7 +129,7 @@ class TestExtractionFailuresAreLogged:
     @pytest.mark.asyncio
     async def test_a_failed_batch_warns_with_the_error_type_only(self, caplog):
         extractor = EntityExtractor(pool=_Pool(raise_on="batch"))
-        caplog.set_level(logging.WARNING, logger="kiro_crew.knowledge.extractor")
+        caplog.set_level(logging.WARNING, logger="aj_crew.knowledge.extractor")
         with _source("src-9"):
             results = await extractor.extract_batch(["a", "b"])
 
@@ -143,7 +143,7 @@ class TestExtractionFailuresAreLogged:
     async def test_single_chunk_extract_warns_on_an_unparseable_reply(self, caplog):
         # extract() sends one prompt through the pool's ``send``.
         extractor = EntityExtractor(pool=_Pool(summary_reply="not json at all"))
-        caplog.set_level(logging.WARNING, logger="kiro_crew.knowledge.extractor")
+        caplog.set_level(logging.WARNING, logger="aj_crew.knowledge.extractor")
         with _source("src-1"):
             result = await extractor.extract("some text")
 
@@ -153,13 +153,13 @@ class TestExtractionFailuresAreLogged:
     @pytest.mark.asyncio
     async def test_good_replies_log_nothing(self, caplog):
         extractor = EntityExtractor(pool=_Pool())
-        caplog.set_level(logging.WARNING, logger="kiro_crew.knowledge.extractor")
+        caplog.set_level(logging.WARNING, logger="aj_crew.knowledge.extractor")
         await extractor.extract_batch(["a", "b"])
         assert _warnings(caplog) == []
 
     @pytest.mark.asyncio
     async def test_no_pool_is_not_a_failure(self, caplog):
-        caplog.set_level(logging.WARNING, logger="kiro_crew.knowledge.extractor")
+        caplog.set_level(logging.WARNING, logger="aj_crew.knowledge.extractor")
         await EntityExtractor(pool=None).extract_batch(["a"])
         assert _warnings(caplog) == []
 
@@ -178,7 +178,7 @@ class TestVaultIngestRunsAndReportsExtraction:
         source = dict(
             kstore.db.execute("SELECT * FROM sources WHERE id = ?", (source_id,)).fetchone()
         )
-        caplog.set_level(logging.WARNING, logger="kiro_crew.knowledge")
+        caplog.set_level(logging.WARNING, logger="aj_crew.knowledge")
 
         await FolderWatcher(kstore, _pipeline(kstore, pool)).scan_source(source)
 
@@ -208,7 +208,7 @@ class TestSourceSummaryFailuresAreLogged:
     async def test_unusable_reply_warns(self, kstore, caplog):
         source_id = self._seed(kstore)
         pipeline = _pipeline(kstore, _Pool(summary_reply=f"no idea about {SECRET_TEXT}"))
-        caplog.set_level(logging.WARNING, logger="kiro_crew.knowledge.ingestion")
+        caplog.set_level(logging.WARNING, logger="aj_crew.knowledge.ingestion")
 
         await pipeline.generate_source_summary(source_id)
 
@@ -220,7 +220,7 @@ class TestSourceSummaryFailuresAreLogged:
     async def test_failed_call_warns_with_the_error_type_only(self, kstore, caplog):
         source_id = self._seed(kstore)
         pipeline = _pipeline(kstore, _Pool(raise_on="send"))
-        caplog.set_level(logging.WARNING, logger="kiro_crew.knowledge.ingestion")
+        caplog.set_level(logging.WARNING, logger="aj_crew.knowledge.ingestion")
 
         await pipeline.generate_source_summary(source_id)
 
@@ -300,7 +300,7 @@ class TestInterruptedIngestJobsAreReclaimed:
         from aiohttp import web
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.knowledge_lifecycle.config_dir", lambda: tmp_path
+            "aj_crew.dashboard.handlers.knowledge_lifecycle.config_dir", lambda: tmp_path
         )
         app = web.Application()
         app["state"] = SimpleNamespace(knowledge_store=kstore)

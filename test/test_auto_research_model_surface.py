@@ -28,7 +28,7 @@ class _FakeState:
 def make_app(tmp_path: Path):
     from aiohttp import web
 
-    from kiro_crew.apps.builtins.auto_research.handlers import register_routes
+    from aj_crew.apps.builtins.auto_research.handlers import register_routes
 
     @web.middleware
     async def _inject_user(request, handler):
@@ -36,8 +36,8 @@ def make_app(tmp_path: Path):
         return await handler(request)
 
     with (
-        patch("kiro_crew.apps.builtins.auto_research.handlers.DB_PATH", tmp_path / "t.db"),
-        patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path / "r"),
+        patch("aj_crew.apps.builtins.auto_research.handlers.DB_PATH", tmp_path / "t.db"),
+        patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path / "r"),
     ):
 
         def _make(state: object | None = None):
@@ -51,7 +51,7 @@ def make_app(tmp_path: Path):
 
 
 def _completed_parent(model: str) -> str:
-    from kiro_crew.apps.builtins.auto_research import handlers as h
+    from aj_crew.apps.builtins.auto_research import handlers as h
 
     parent = h.create_campaign(
         {
@@ -82,7 +82,7 @@ async def _fork(app, pid: str, **extra):
 class TestForkModel:
     @pytest.mark.asyncio
     async def test_fork_without_a_model_keeps_the_parents_pick(self, make_app):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         pid = _completed_parent("test-model-x")
         status, child = await _fork(make_app(), pid)
@@ -91,7 +91,7 @@ class TestForkModel:
 
     @pytest.mark.asyncio
     async def test_fork_runs_on_the_model_the_body_names(self, make_app):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         pid = _completed_parent("test-model-x")
         status, child = await _fork(make_app(), pid, model="  test-model-y ")
@@ -100,7 +100,7 @@ class TestForkModel:
 
     @pytest.mark.asyncio
     async def test_fork_with_an_empty_model_inherits_the_default(self, make_app):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         pid = _completed_parent("test-model-x")
         status, child = await _fork(make_app(), pid, model="")
@@ -110,7 +110,7 @@ class TestForkModel:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("bad", [123, "m" * 129])
     async def test_fork_rejects_an_unusable_model_and_creates_nothing(self, make_app, bad):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         pid = _completed_parent("test-model-x")
         before = len(h.list_campaigns())
@@ -131,7 +131,7 @@ class TestWorkerModelState:
             return await r.json()
 
     def _campaign(self, model: str) -> str:
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         return h.create_campaign(
             {"question": "A research question long enough to pass", "model": model}

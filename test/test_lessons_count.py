@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.learn import Lesson, LessonStore
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.learn import Lesson, LessonStore
 
 
 def _make_state(
@@ -88,7 +88,7 @@ class TestVectorStoreCountLessons:
         soft-delete. A predicate typo here would silently drift the Overview
         card from the lessons page forever, with a green mock-only suite.
         """
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew.vector_memory import VectorMemoryStore
 
         store = VectorMemoryStore(db_path=tmp_path / "mem.db")
         store.init()

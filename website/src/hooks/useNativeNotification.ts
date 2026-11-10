@@ -19,7 +19,7 @@
  * the window later loses focus: it was seen.
  *
  * A muted channel's notes arrive with `silenced: true` and `priority:
- * "passive"` (`ChannelSettings.apply()`, `kiro_crew/notifications/settings.py`)
+ * "passive"` (`ChannelSettings.apply()`, `aj_crew/notifications/settings.py`)
  * -- the backend's stated contract is that every attention surface (badge
  * count, sound, native banner, feed styling) skips them. The in-app feed
  * (`NotificationFeed.tsx`) already reads `silenced` for its styling; this hook
@@ -117,7 +117,7 @@ export function useNativeNotification(botName: string, avatar: string) {
             latestNotif?.approval_id ||
             latestNotif?.job_id ||
             latestNotif?.task_id ||
-            'kirocrew-notif',
+            'ajcrew-notif',
           // The same click target the push banner carries in `data.url`, so
           // whichever of the two same-tag banners is on screen opens the note.
           data: { url: latestNotif?.url || '/' },

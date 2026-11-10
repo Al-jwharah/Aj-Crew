@@ -15,7 +15,7 @@ vi.mock('../../api/client', async (importOriginal) => {
       installBrowserHarness: vi.fn(),
       testBrowser: vi.fn(),
       disconnectBrowser: vi.fn(),
-      kirocrewConfig: vi.fn(),
+      ajcrewConfig: vi.fn(),
       patchConfig: vi.fn(),
       dashboardConfig: vi.fn(),
     },
@@ -59,7 +59,7 @@ const mocked = api as unknown as {
   installBrowserHarness: ReturnType<typeof vi.fn>
   testBrowser: ReturnType<typeof vi.fn>
   disconnectBrowser: ReturnType<typeof vi.fn>
-  kirocrewConfig: ReturnType<typeof vi.fn>
+  ajcrewConfig: ReturnType<typeof vi.fn>
   patchConfig: ReturnType<typeof vi.fn>
   dashboardConfig: ReturnType<typeof vi.fn>
 }
@@ -70,7 +70,7 @@ beforeEach(async () => {
   mocked.installBrowserHarness.mockReset().mockResolvedValue(status({ install_job: { status: 'running', stage: 'venv' } }))
   mocked.testBrowser.mockReset().mockResolvedValue({ ok: true, connection: 'connected', detail: null })
   mocked.disconnectBrowser.mockReset().mockResolvedValue(status({ connection: 'disconnected', browser: null }))
-  mocked.kirocrewConfig.mockReset().mockResolvedValue(config())
+  mocked.ajcrewConfig.mockReset().mockResolvedValue(config())
   mocked.patchConfig.mockReset().mockResolvedValue({ ok: true })
   mocked.dashboardConfig.mockReset().mockResolvedValue({ browse_enabled: true })
 })
@@ -97,7 +97,7 @@ describe('primaryState', () => {
     }
   })
 
-  it('reads an installed engine as not installed while Kiro’s Chromium is the browser and is not downloaded', () => {
+  it('reads an installed engine as not installed while Aj’s Chromium is the browser and is not downloaded', () => {
     const missing = { browser: { kind: 'kiro_chromium', headless: false }, chromium: { downloaded: false, version: null }, connection: 'disconnected' } as const
     expect(primaryState(status(missing))).toBe('not_installed')
     // The user's own Chrome needs no Chromium, and a gateway that omits the field changes nothing.
@@ -107,21 +107,21 @@ describe('primaryState', () => {
 })
 
 describe('browser.choice across the picker and the no-window switch', () => {
-  it('the picker reads headless as Kiro’s Chromium and an unknown value as auto', () => {
+  it('the picker reads headless as Aj’s Chromium and an unknown value as auto', () => {
     expect(pickerValueOf('headless')).toBe('kiro_chromium')
     expect(pickerValueOf('kiro_chromium')).toBe('kiro_chromium')
     expect(pickerValueOf('user_chrome')).toBe('user_chrome')
     expect(pickerValueOf('nonsense')).toBe('auto')
   })
 
-  it('picking Kiro’s Chromium while headless writes nothing; any other pick writes that value', () => {
+  it('picking Aj’s Chromium while headless writes nothing; any other pick writes that value', () => {
     expect(choiceFromPicker('headless', 'kiro_chromium')).toBeNull()
     expect(choiceFromPicker('auto', 'auto')).toBeNull()
     expect(choiceFromPicker('headless', 'auto')).toBe('auto')
     expect(choiceFromPicker('auto', 'kiro_chromium')).toBe('kiro_chromium')
   })
 
-  it('the switch writes headless on and Kiro’s Chromium (with a window) off', () => {
+  it('the switch writes headless on and Aj’s Chromium (with a window) off', () => {
     expect(choiceFromHeadless(true)).toBe('headless')
     expect(choiceFromHeadless(false)).toBe('kiro_chromium')
   })
@@ -197,7 +197,7 @@ describe('BrowserPanel - main card', () => {
     await waitFor(() => expect(mocked.installBrowserHarness).toHaveBeenCalledWith({}))
   })
 
-  it('a failed install, job or request, while Kiro’s Chromium is missing is the card’s, not the Engine row’s', async () => {
+  it('a failed install, job or request, while Aj’s Chromium is missing is the card’s, not the Engine row’s', async () => {
     mocked.getBrowserStatus.mockResolvedValue(status({
       browser: { kind: 'kiro_chromium', headless: false },
       chromium: { downloaded: false, version: null },
@@ -281,9 +281,9 @@ describe('BrowserPanel - main card', () => {
   it('the explanation is an info tip on the title, not a line on the card', async () => {
     renderWithProviders(<BrowserPanel />)
     const card = await screen.findByTestId('browser-status-card')
-    expect(within(card).queryByText(/Kiro only works in tabs it opened itself/)).toBeNull()
+    expect(within(card).queryByText(/Aj only works in tabs it opened itself/)).toBeNull()
     const tip = within(card).getByRole('button', { name: 'More information' })
-    expect(tip.getAttribute('title')).toMatch(/Kiro only works in tabs it opened itself/)
+    expect(tip.getAttribute('title')).toMatch(/Aj only works in tabs it opened itself/)
     fireEvent.focus(tip)
     const bubble = await screen.findByRole('tooltip')
     expect(tip.getAttribute('aria-describedby')).toBe(bubble.id)
@@ -328,14 +328,14 @@ describe('BrowserPanel - controls and More', () => {
     fireEvent.click(screen.getByRole('switch', { name: 'Run with no window' }))
     await waitFor(() => expect(mocked.patchConfig).toHaveBeenCalledWith('browser.choice', 'headless'))
     // Descriptions are tips (on `title` while closed), never body text.
-    for (const text of [/When Kiro uses the browser, the turn shows a live card/, /Auto adapts frame rate/, /60 is the most this machine streams/, /For previewing your own dev server only/]) {
+    for (const text of [/When Aj uses the browser, the turn shows a live card/, /Auto adapts frame rate/, /60 is the most this machine streams/, /For previewing your own dev server only/]) {
       expect(screen.queryByText(text)).toBeNull()
     }
     expect(screen.getAllByRole('button', { name: 'More information' }).length).toBeGreaterThanOrEqual(7)
   })
 
-  it('the no-window switch is on for a headless config, and off writes Kiro’s Chromium', async () => {
-    mocked.kirocrewConfig.mockResolvedValue(config({ browser: { choice: 'headless' } }))
+  it('the no-window switch is on for a headless config, and off writes Aj’s Chromium', async () => {
+    mocked.ajcrewConfig.mockResolvedValue(config({ browser: { choice: 'headless' } }))
     renderWithProviders(<BrowserPanel />)
     await screen.findByTestId('browser-status-card')
     await openMore()
@@ -406,7 +406,7 @@ describe('BrowserPanel - failures', () => {
   })
 
   it('a config read failure disables the config controls but keeps the status', async () => {
-    mocked.kirocrewConfig.mockRejectedValue(new Error('config unreadable'))
+    mocked.ajcrewConfig.mockRejectedValue(new Error('config unreadable'))
     renderWithProviders(<BrowserPanel />)
     await screen.findByText('config unreadable')
     expect(screen.getByTestId('browser-status-card')).toBeTruthy()
@@ -423,7 +423,7 @@ describe('BrowserPanel - failures', () => {
   })
 })
 
-describe('BrowserPanel - sign-in for Kiro’s Chromium', () => {
+describe('BrowserPanel - sign-in for Aj’s Chromium', () => {
   const cred = (over: Record<string, unknown> = {}) => ({
     provider: 'Acme SSO', enabled: true, domains: ['example.com'], state: 'applied', reason: null, applied: 3, ...over,
   })
@@ -467,12 +467,12 @@ describe('BrowserPanel - sign-in for Kiro’s Chromium', () => {
   })
 
   it('an unset switch reads the edition default the status reports', async () => {
-    mocked.kirocrewConfig.mockResolvedValue(config({ browser: { choice: 'auto', credentials: { enabled: null, domains: [] } } }))
+    mocked.ajcrewConfig.mockResolvedValue(config({ browser: { choice: 'auto', credentials: { enabled: null, domains: [] } } }))
     mocked.getBrowserStatus.mockResolvedValue(status({ credentials: cred({ enabled: true, state: 'pending' }) }))
     renderWithProviders(<BrowserPanel />)
     const sw = await screen.findByRole('switch', { name: 'Use Acme SSO sign-in' })
     expect(sw).toHaveAttribute('aria-checked', 'true')
-    expect(screen.getByText('Used from the next page Kiro’s Chromium opens')).toBeTruthy()
+    expect(screen.getByText('Used from the next page Aj’s Chromium opens')).toBeTruthy()
   })
 
   it('a failed apply is an ErrorNotice with the reason code', async () => {

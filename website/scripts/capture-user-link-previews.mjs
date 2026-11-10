@@ -19,11 +19,11 @@ import { json } from './lib/boot-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/user-link-previews'
 const SLOT = 'chat-userlinkprev'
-const PROJECT = '/Users/diwm/workspace/KiroCrew'
+const PROJECT = '/Users/diwm/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
-const HREF = 'https://github.com/kirodotdev/KiroCrew'
+const HREF = 'https://github.com/Al-jwharah/Aj-Crew'
 const META = {
   url: HREF,
   title: 'kirodotdev/KiroCrew: an autonomous agent management layer',
@@ -48,7 +48,7 @@ const PASTE_META = { pastes: [{ id: 'pb1', seq: 1, lines: 4, content: 'a\nb\nc\n
 const now = Date.now() / 1000
 const slots = [{
   key: SLOT, title: 'User link previews', running: false,
-  last_message: 'sounds good', messages: 3, agent: 'kirocrew',
+  last_message: 'sounds good', messages: 3, agent: 'ajcrew',
   memory_mode: 'persistent', project: PROJECT, modified: Math.floor(now),
   source_links: [], source_links_total: 0,
 }]

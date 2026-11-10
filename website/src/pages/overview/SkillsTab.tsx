@@ -75,18 +75,18 @@ function skillUsage(s: Skill): { id: string; text: string; title: string } | nul
  *  skips those entirely — and for sources the dashboard cannot write.
  *
  *  `owned === false` is the backend's own write predicate: a skill reached
- *  through `skills.extra_paths` still reports `source: 'kirocrew'`, but
+ *  through `skills.extra_paths` still reports `source: 'ajcrew'`, but
  *  `set_inject_on_trigger` refuses to rewrite it. Gating on the reported
  *  writability, not on source alone, is what keeps the UI from offering a
  *  toggle that always fails. */
 const canControlInjection = (s: Skill) =>
-  s.source === 'kirocrew' && !s.always && s.owned !== false
+  s.source === 'ajcrew' && !s.always && s.owned !== false
 
-/** Edit and Delete write into the Kiro Crew skills folder, so only a row
- *  from that folder gets them. A `kirocrew` row reached through
+/** Edit and Delete write into the Aj Crew skills folder, so only a row
+ *  from that folder gets them. A `ajcrew` row reached through
  *  `skills.extra_paths` reports `owned: false` and stays read-only, like
  *  every other source. */
-const canEditSkill = (s: Skill) => s.source === 'kirocrew' && s.owned !== false
+const canEditSkill = (s: Skill) => s.source === 'ajcrew' && s.owned !== false
 
 /** The skill-detail query's value: SKILL.md text and its sha256, the edit base. */
 type SkillDetail = { content: string; hash: string }
@@ -97,7 +97,7 @@ function sourceLabel(source: Skill['source']): string | null {
     case 'package': return i18nT('pages.overview.skillsTab.package')
     case 'kiro-user': return '~/.kiro/skills'
     case 'kiro-workspace': return i18nT('pages.overview.skillsTab.workspace')
-    default: return null  // kirocrew — the default home, no badge needed
+    default: return null  // ajcrew — the default home, no badge needed
   }
 }
 
@@ -362,7 +362,7 @@ export default function SkillsTab() {
     },
   })
 
-  // Two groups: skills KiroCrew can edit (kirocrew + kiro-cli's own dirs) and
+  // Two groups: skills AjCrew can edit (ajcrew + kiro-cli's own dirs) and
   // read-only AIM-package skills.  The text filter is applied to both.
   const { localSkills, packageSkills } = useMemo(() => {
     const q = skillFilter.toLowerCase()
@@ -721,7 +721,7 @@ export default function SkillsTab() {
               </div>
             ) : (
               <div className="flex flex-col h-full min-h-0">
-                {/* Detail header: name, source badge, Edit/Delete (Kiro Crew skills folder only) */}
+                {/* Detail header: name, source badge, Edit/Delete (Aj Crew skills folder only) */}
                 {/* Own row, same reason as the edit header: Edit and Delete
                     already fill this row's two-control budget. */}
                 {isMobile && (

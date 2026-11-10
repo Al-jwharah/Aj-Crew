@@ -4,7 +4,7 @@
  *
  * Deliberately NOT re-exported from `./index`. That barrel is the surface
  * third-party apps resolve -- `chatProtocolBoundary.test.ts` holds every value
- * export of it in exact agreement with `public/vendor/kirocrew-app-sdk.mjs` -- so
+ * export of it in exact agreement with `public/vendor/ajcrew-app-sdk.mjs` -- so
  * a name placed there is PUBLISHED, and publishing later is additive while
  * un-publishing is a break. `AppScopedApiProvider`'s consumers are two
  * host-internal builtin pages that can import this path directly, so there is

@@ -32,9 +32,9 @@ import pytest
 from mcp_gateway_backend_coverage_helpers import _no_real_metrics_file  # noqa: F401 -- autouse
 from mcp_gateway_backend_coverage_helpers import _line, _make_backend, _settle
 
-from kiro_crew.mcp_caller import CallerContext
-from kiro_crew.mcp_gateway import backend as backend_mod
-from kiro_crew.mcp_gateway.backend import _log_safe_identifier, _tool_call_error_text
+from aj_crew.mcp_caller import CallerContext
+from aj_crew.mcp_gateway import backend as backend_mod
+from aj_crew.mcp_gateway.backend import _log_safe_identifier, _tool_call_error_text
 
 
 class TestToolCallFailureLogging:
@@ -118,7 +118,7 @@ class TestToolCallFailureLogging:
             {"method": "tools/call", "id": 1, "params": {"name": "get_aws_creds"}},
             caller=caller,
         )
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_gateway.backend"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_gateway.backend"):
             await backend._route_backend_line(
                 _line(
                     {
@@ -158,7 +158,7 @@ class TestToolCallFailureLogging:
         await backend.forward_from_stub(
             "s1", {"method": "tools/call", "id": 1, "params": {"name": "search"}}
         )
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_gateway.backend"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_gateway.backend"):
             await backend._route_backend_line(
                 _line(
                     {
@@ -187,7 +187,7 @@ class TestToolCallFailureLogging:
         await backend.forward_from_stub(
             "s1", {"method": "tools/call", "id": 1, "params": {"name": "evil\nWARNING forged line"}}
         )
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_gateway.backend"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_gateway.backend"):
             await backend._route_backend_line(
                 _line(
                     {
@@ -215,7 +215,7 @@ class TestToolCallFailureLogging:
         await backend.forward_from_stub(
             "s1", {"method": "tools/call", "id": 1, "params": {"name": "ok_tool"}}
         )
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_gateway.backend"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_gateway.backend"):
             await backend._route_backend_line(
                 _line(
                     {
@@ -244,7 +244,7 @@ class TestToolCallFailureLogging:
         monkeypatch.setattr(backend_mod, "_METRICS_PATH", str(metrics))
         backend = _make_backend()
         await backend.forward_from_stub("s1", {"method": "tools/list", "id": 1})
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_gateway.backend"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_gateway.backend"):
             await backend._route_backend_line(
                 _line(
                     {
@@ -353,7 +353,7 @@ class TestCallMetrics:
     def test_write_metric_line_returns_early_when_unset(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.mcp_gateway import backend_routing
+        from aj_crew.mcp_gateway import backend_routing
 
         opened = MagicMock(side_effect=AssertionError("no path configured, nothing to open"))
         monkeypatch.setattr(backend_mod, "_METRICS_PATH", None)

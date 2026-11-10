@@ -27,9 +27,9 @@ from crew_log_emit_helpers import (  # noqa: F401 -- the autouse fixture registe
     _remove_as_retention_does,
 )
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import emit
-from kiro_crew.crew_log import projection as crew_log_projection
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import emit
+from aj_crew.crew_log import projection as crew_log_projection
 
 # cache pressure
 
@@ -47,7 +47,7 @@ def test_cache_pressure_never_closes_a_live_turn(monkeypatch):
     # Enough other sessions to overrun the cache several times over.
     for n in range(emit._MAX_OPEN_CREW_LOGS + 1):
         other = f"filler-{n:04d}"
-        emit.on_session_opened(other, agent="kirocrew")
+        emit.on_session_opened(other, agent="ajcrew")
         emit.on_turn_started(other, 1, "user")
         emit.on_turn_completed(other, 1, stop_reason="end_turn")
     assert_drained()
@@ -71,7 +71,7 @@ def test_a_finished_session_is_evicted_so_the_cache_stays_bounded():
     # evictable again, which is what keeps a long-lived gateway bounded.
     for n in range(emit._MAX_OPEN_CREW_LOGS + 8):
         other = f"done-{n:04d}"
-        emit.on_session_opened(other, agent="kirocrew")
+        emit.on_session_opened(other, agent="ajcrew")
         emit.on_turn_started(other, 1, "user")
         emit.on_turn_completed(other, 1, stop_reason="end_turn")
     assert_drained()
@@ -106,7 +106,7 @@ def test_a_resume_closes_a_child_the_registry_no_longer_lists():
         emit.on_subagent_spawned(SESSION, 1, agent_id="sub-1")
         assert_drained()
         emit.reset_caches()
-        emit.on_session_opened(SESSION, agent="kirocrew", resumed=True)
+        emit.on_session_opened(SESSION, agent="ajcrew", resumed=True)
         assert_drained()
         closers = [e for e in _body() if e["type"] == "subagent/failed"]
         assert [e["data"]["agent_id"] for e in closers] == ["sub-1"]
@@ -126,7 +126,7 @@ def test_a_resume_leaves_a_child_the_registry_still_lists_alone():
         emit.on_subagent_spawned(SESSION, 1, agent_id="sub-1")
         assert_drained()
         emit.reset_caches()
-        emit.on_session_opened(SESSION, agent="kirocrew", resumed=True)
+        emit.on_session_opened(SESSION, agent="ajcrew", resumed=True)
         assert_drained()
         assert [e for e in _body() if e["type"] == "subagent/failed"] == []
     finally:
@@ -326,8 +326,8 @@ def test_the_child_probe_reports_present_while_this_session_owes_an_entry():
     other = "other-session"
     held = "held-session"
     _open_session()
-    emit.on_session_opened(other, agent="kirocrew", slot="chat-8")
-    emit.on_session_opened(held, agent="kirocrew", slot="chat-9")
+    emit.on_session_opened(other, agent="ajcrew", slot="chat-8")
+    emit.on_session_opened(held, agent="ajcrew", slot="chat-9")
     assert_drained()
     real_append = lg.CrewLog.append
     holding = threading.Event()
@@ -427,7 +427,7 @@ def test_a_resume_with_no_registered_probe_closes_no_child():
     emit.on_subagent_spawned(SESSION, 1, agent_id="sub-1")
     assert_drained()
     emit.reset_caches()
-    emit.on_session_opened(SESSION, agent="kirocrew", resumed=True)
+    emit.on_session_opened(SESSION, agent="ajcrew", resumed=True)
     assert_drained()
     assert [e for e in _body() if e["type"] == "subagent/failed"] == []
 
@@ -440,7 +440,7 @@ def test_a_resume_is_the_one_path_that_closes_an_open_turn():
     emit.on_turn_started(SESSION, 1, "user")
     assert_drained()
     emit.reset_caches()
-    emit.on_session_opened(SESSION, agent="kirocrew", resumed=True)
+    emit.on_session_opened(SESSION, agent="ajcrew", resumed=True)
     assert_drained()
     closers = [e for e in _body() if e["type"] == "turn/completed"]
     assert len(closers) == 1
@@ -471,8 +471,8 @@ def test_a_resume_does_not_close_a_turn_this_process_is_still_running(caplog):
     assert_drained()
     # NO reset_caches: this process still holds turn 1 as live, which is the whole
     # point -- the claim below is contradicted by our own state.
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.crew_log.emit"):
-        emit.on_session_opened(SESSION, agent="kirocrew", resumed=True)
+    with caplog.at_level(logging.WARNING, logger="aj_crew.crew_log.emit"):
+        emit.on_session_opened(SESSION, agent="ajcrew", resumed=True)
         assert_drained()
 
     body = _body()
@@ -522,7 +522,7 @@ def test_a_claim_that_cannot_own_the_log_writes_nothing_and_counts_the_loss():
     emit.reset_caches()
 
     with _owned_elsewhere():
-        emit.on_session_opened(SESSION, agent="kirocrew", resumed=True)
+        emit.on_session_opened(SESSION, agent="ajcrew", resumed=True)
         emit.on_message_received(SESSION, 1, role="user", text="hello")
         assert_drained()
         after = [e["type"] for e in _body()]
@@ -656,7 +656,7 @@ def test_a_warm_reuse_inside_this_process_closes_nothing():
     emit.on_turn_started(SESSION, 1, "user")
     assert_drained()
     emit.reset_caches()
-    emit.on_session_opened(SESSION, agent="kirocrew")  # resumed defaults False
+    emit.on_session_opened(SESSION, agent="ajcrew")  # resumed defaults False
     assert_drained()
     assert "turn/completed" not in [e["type"] for e in _body()]
 
@@ -715,7 +715,7 @@ def test_call_index_of_a_live_turn_survives_cache_pressure():
 
     for n in range(emit._MAX_OPEN_CREW_LOGS + 1):
         other = f"stepfill-{n:04d}"
-        emit.on_session_opened(other, agent="kirocrew")
+        emit.on_session_opened(other, agent="ajcrew")
         emit.on_turn_started(other, 1, "user")
         emit.on_tool_called(other, 1, name="fs_read", call_id="tc-x")
     assert_drained()
@@ -748,7 +748,7 @@ def test_call_index_stays_unique_when_many_turns_are_live_at_once():
     # Every one of these stays live: no completion, no re-claim.
     for n in range(emit._MAX_OPEN_CREW_LOGS * 2):
         other = f"livefill-{n:04d}"
-        emit.on_session_opened(other, agent="kirocrew")
+        emit.on_session_opened(other, agent="ajcrew")
         emit.on_turn_started(other, 1, "user")
     assert_drained()
     assert emit.live_turn(SESSION) == 7, "the oldest live turn lost its pin"
@@ -846,7 +846,7 @@ def test_a_resume_of_the_same_store_writes_no_previous_edge():
     assert not lg.CrewLog.exists(lg.KIND_SESSION, SESSION)
 
     emit.on_session_opened(
-        SESSION, agent="kirocrew", slot="chat-7", resumed=True, previous_sid=SESSION
+        SESSION, agent="ajcrew", slot="chat-7", resumed=True, previous_sid=SESSION
     )
     assert_drained()
 
@@ -869,7 +869,7 @@ def test_a_warm_reuse_of_a_live_store_writes_nothing_at_all():
     assert_drained()
     before = len(_body(SESSION))
 
-    emit.on_session_opened(SESSION, agent="kirocrew", slot="chat-7", previous_sid=SESSION)
+    emit.on_session_opened(SESSION, agent="ajcrew", slot="chat-7", previous_sid=SESSION)
     assert_drained()
     assert len(_body(SESSION)) == before, "a warm reuse appended something"
 
@@ -887,7 +887,7 @@ def test_a_re_attach_names_no_predecessor():
     """
     # A bystander with work in flight, on a different slot.
     bystander = "acp-sess-bystander"
-    emit.on_session_opened(bystander, agent="kirocrew", slot="chat-9")
+    emit.on_session_opened(bystander, agent="ajcrew", slot="chat-9")
     emit.on_turn_started(bystander, 1, "user")
     assert_drained()
 
@@ -896,7 +896,7 @@ def test_a_re_attach_names_no_predecessor():
     emit.reset_caches()
     # A re-attach to a store that EXISTS, handed an unrelated unit as predecessor.
     emit.on_session_opened(
-        SESSION, agent="kirocrew", slot="chat-7", resumed=True, previous_sid=bystander
+        SESSION, agent="ajcrew", slot="chat-7", resumed=True, previous_sid=bystander
     )
     assert_drained()
 
@@ -921,7 +921,7 @@ def test_a_candidate_from_another_slot_is_not_linked():
     """
     # A crew log belonging to a DIFFERENT slot, fully written.
     other = "acp-sess-other-slot"
-    emit.on_session_opened(other, agent="kirocrew", slot="chat-9", cwd="/home/dev/project")
+    emit.on_session_opened(other, agent="ajcrew", slot="chat-9", cwd="/home/dev/project")
     assert_drained()
 
     _open_successor(previous_sid=other)

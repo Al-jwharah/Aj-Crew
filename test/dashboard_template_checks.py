@@ -15,7 +15,7 @@ import sys
 from types import ModuleType
 from typing import Any
 
-from kiro_crew.dashboard_templates.manifest import MAX_FIELDS
+from aj_crew.dashboard_templates.manifest import MAX_FIELDS
 
 
 def _file_module(test: object) -> ModuleType:
@@ -25,7 +25,7 @@ def _file_module(test: object) -> ModuleType:
 
 class ItReadsTheHostsOwnFieldBag:
     def test_it_reads_the_hosts_own_field_bag(self, html: str) -> None:
-        assert "window.kirocrew" in html
+        assert "window.ajcrew" in html
 
 
 class TheSharedLoaderAcceptsIt:
@@ -41,7 +41,7 @@ class TheSharedLoaderAcceptsIt:
 class ItRendersOnLoadAndOnEveryMessage:
     def test_it_renders_on_load_and_on_every_message(self, html: str) -> None:
         assert "window.addEventListener('load', render)" in html
-        assert "addEventListener('kirocrew-dashboard'" in html
+        assert "addEventListener('ajcrew-dashboard'" in html
 
 
 class EachResolvedValueHasTheDeclaredType:

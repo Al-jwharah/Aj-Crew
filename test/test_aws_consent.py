@@ -16,14 +16,14 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from kiro_crew import aws_consent
+from aj_crew import aws_consent
 
 
 @pytest.fixture()
 def home(tmp_path, monkeypatch):
     """Isolated data home so the keystone file never touches the real one."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    from kiro_crew.config.loader import config_dir
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    from aj_crew.config.loader import config_dir
 
     config_dir().mkdir(parents=True, exist_ok=True)
     aws_consent._probe_cache.clear()
@@ -80,7 +80,7 @@ def _record_lockdown_sizes(monkeypatch) -> list[int]:
     process global, and the SEL writer thread re-locks its non-empty audit log on
     every append, so its flush landing mid-grant would read as the store's lockdown.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     sizes: list[int] = []
     test_thread = threading.get_ident()
@@ -122,8 +122,8 @@ class TestProviderDefaultIsLocal:
     """Turning voice on without naming a provider must not reach AWS."""
 
     def test_dataclass_default_is_local(self):
-        from kiro_crew.slack.handler import _VoiceConfig
-        from kiro_crew.voice_reply import DEFAULT_PROVIDER, PROVIDER_POLLY
+        from aj_crew.slack.handler import _VoiceConfig
+        from aj_crew.voice_reply import DEFAULT_PROVIDER, PROVIDER_POLLY
 
         # Pinned as "not the paid provider" rather than as one provider name:
         # which local provider is the default is a product decision that may
@@ -134,9 +134,9 @@ class TestProviderDefaultIsLocal:
 
     def test_absent_provider_key_loads_as_local(self, home):
         """The regression: a config with voice ON but no provider named."""
-        from kiro_crew.config.loader import config_path
-        from kiro_crew.slack.handler import _vc, load_voice_reply_config
-        from kiro_crew.voice_reply import DEFAULT_PROVIDER, PROVIDER_POLLY
+        from aj_crew.config.loader import config_path
+        from aj_crew.slack.handler import _vc, load_voice_reply_config
+        from aj_crew.voice_reply import DEFAULT_PROVIDER, PROVIDER_POLLY
 
         config_path().write_text(json.dumps({"voice_reply": {"enabled": True}}))
         load_voice_reply_config()
@@ -144,9 +144,9 @@ class TestProviderDefaultIsLocal:
         assert _vc.provider != PROVIDER_POLLY
 
     def test_invalid_provider_falls_back_to_local(self, home):
-        from kiro_crew.config.loader import config_path
-        from kiro_crew.slack.handler import _vc, load_voice_reply_config
-        from kiro_crew.voice_reply import DEFAULT_PROVIDER, PROVIDER_POLLY
+        from aj_crew.config.loader import config_path
+        from aj_crew.slack.handler import _vc, load_voice_reply_config
+        from aj_crew.voice_reply import DEFAULT_PROVIDER, PROVIDER_POLLY
 
         config_path().write_text(json.dumps({"voice_reply": {"provider": "ploly"}}))
         load_voice_reply_config()
@@ -161,9 +161,9 @@ class TestGrantIsOnTheKeystoneFloor:
     """The agent must not be able to consent on the operator's behalf."""
 
     def test_leaf_is_fenced_for_read_and_write(self):
-        from kiro_crew import sandbox
-        from kiro_crew.config.loader import aws_consent_path
-        from kiro_crew.security import _CREW_SECRET_LEAVES, is_sensitive_path
+        from aj_crew import sandbox
+        from aj_crew.config.loader import aws_consent_path
+        from aj_crew.security import _CREW_SECRET_LEAVES, is_sensitive_path
 
         assert "aws_service_consent.json" in _CREW_SECRET_LEAVES
         assert aws_consent_path().name == "aws_service_consent.json"
@@ -174,8 +174,8 @@ class TestGrantIsOnTheKeystoneFloor:
     def test_file_is_owner_only(self, home):
         import stat
 
-        from kiro_crew import platform_compat
-        from kiro_crew.config.loader import aws_consent_path
+        from aj_crew import platform_compat
+        from aj_crew.config.loader import aws_consent_path
 
         _grant()
         if not platform_compat.IS_POSIX:
@@ -205,7 +205,7 @@ class TestGrantIsOnTheKeystoneFloor:
     def test_sidecar_preservation_lockdown_precedes_content(self, home, monkeypatch):
         """The corrupt-store sidecar carries whatever the old store held, so its
         write gets the same lockdown-before-content ordering."""
-        from kiro_crew.config.loader import aws_consent_path
+        from aj_crew.config.loader import aws_consent_path
 
         aws_consent_path().write_text("not json{", encoding="utf-8")
         sizes = _record_lockdown_sizes(monkeypatch)
@@ -228,8 +228,8 @@ class TestGrantIsOnTheKeystoneFloor:
         locked down is refused (the OSError propagates), and — starting from an
         empty home — no consent store at ANY permission exists afterwards, which
         the read side treats as "no consent"."""
-        from kiro_crew import platform_compat
-        from kiro_crew.config.loader import aws_consent_path
+        from aj_crew import platform_compat
+        from aj_crew.config.loader import aws_consent_path
 
         def _refuse(_target):
             raise OSError("cannot resolve the invoking user's SID")
@@ -248,8 +248,8 @@ class TestGrantIsOnTheKeystoneFloor:
         Failures in ``atomic_write`` happen before the rename, so an unlink on OSError
         would wipe every grant. Seeds a real grant, which the empty-home test cannot.
         """
-        from kiro_crew import platform_compat
-        from kiro_crew.config.loader import aws_consent_path
+        from aj_crew import platform_compat
+        from aj_crew.config.loader import aws_consent_path
 
         _grant()  # a healthy, locked-down store exists
         before = aws_consent_path().read_bytes()
@@ -273,7 +273,7 @@ class TestGrantIsOnTheKeystoneFloor:
         propagates and the previous store survives byte-identical."""
         import tempfile
 
-        from kiro_crew.config.loader import aws_consent_path
+        from aj_crew.config.loader import aws_consent_path
 
         _grant()  # a healthy, locked-down store exists
         before = aws_consent_path().read_bytes()
@@ -288,7 +288,7 @@ class TestGrantIsOnTheKeystoneFloor:
 
         # No undo needed: the assertions below only READ (Path.read_bytes /
         # read_grant), which never calls tempfile.mkstemp — and undo would also
-        # revert the home fixture's KIROCREW_HOME (same monkeypatch instance).
+        # revert the home fixture's AJCREW_HOME (same monkeypatch instance).
         assert aws_consent_path().read_bytes() == before, "the previous store was altered"
         assert (
             aws_consent.read_grant(aws_consent.SERVICE_POLLY) is not None
@@ -335,13 +335,13 @@ class TestGate:
         assert granted is False
 
     def test_malformed_record_is_no_consent(self, home):
-        from kiro_crew.config.loader import aws_consent_path
+        from aj_crew.config.loader import aws_consent_path
 
         aws_consent_path().write_text('{"polly": "not-a-dict"}')
         assert aws_consent.read_grant(aws_consent.SERVICE_POLLY) is None
 
     def test_unparseable_file_is_no_consent(self, home):
-        from kiro_crew.config.loader import aws_consent_path
+        from aj_crew.config.loader import aws_consent_path
 
         aws_consent_path().write_text("{ this is not json")
         assert aws_consent.read_grant(aws_consent.SERVICE_POLLY) is None
@@ -354,7 +354,7 @@ class TestGate:
         rather than refused, because refusing would leave a corrupt file
         unrecoverable from the dashboard.
         """
-        from kiro_crew.config.loader import aws_consent_path
+        from aj_crew.config.loader import aws_consent_path
 
         path = aws_consent_path()
         path.write_text('{"transcribe": {"service": "transcribe", TRUNCATED')
@@ -368,7 +368,7 @@ class TestGate:
         assert aws_consent.read_grant(aws_consent.SERVICE_POLLY) is not None
 
     def test_a_readable_store_is_not_copied_aside(self, home):
-        from kiro_crew.config.loader import aws_consent_path
+        from aj_crew.config.loader import aws_consent_path
 
         path = aws_consent_path()
         _grant(aws_consent.SERVICE_TRANSCRIBE, region="us-east-1")
@@ -424,11 +424,11 @@ class TestPollySynthesisRefuses:
     """The billable request must not be issued without a grant."""
 
     def test_no_grant_means_no_subprocess(self, home):
-        from kiro_crew import voice_reply
+        from aj_crew import voice_reply
 
         with (
             patch("asyncio.create_subprocess_exec") as spawn,
-            patch("kiro_crew.sandbox.create_subprocess_limited") as limited,
+            patch("aj_crew.sandbox.create_subprocess_limited") as limited,
         ):
             result = asyncio.run(
                 voice_reply._synthesize_polly("hello", aws_profile="", region="us-east-1")
@@ -438,12 +438,12 @@ class TestPollySynthesisRefuses:
         assert limited.call_count == 0
 
     def test_grant_for_a_different_profile_means_no_subprocess(self, home):
-        from kiro_crew import voice_reply
+        from aj_crew import voice_reply
 
         _grant(profile="voice", region="us-east-1")
         with (
             patch("asyncio.create_subprocess_exec") as spawn,
-            patch("kiro_crew.sandbox.create_subprocess_limited") as limited,
+            patch("aj_crew.sandbox.create_subprocess_limited") as limited,
         ):
             result = asyncio.run(
                 voice_reply._synthesize_polly("hello", aws_profile="", region="us-east-1")
@@ -508,14 +508,14 @@ class TestAccountIsVerifiedNotAssumed:
         assert aws_consent.read_grant(aws_consent.SERVICE_POLLY) is not None
 
     def test_synthesis_refuses_when_the_account_moved(self, home):
-        from kiro_crew import voice_reply
+        from aj_crew import voice_reply
 
         _grant(profile="", region="us-east-1", account="111122223333")
         moved = aws_consent.Identity(ok=True, account="999988887777")
         with (
             patch.object(aws_consent, "probe_identity", AsyncMock(return_value=moved)),
             patch("asyncio.create_subprocess_exec") as spawn,
-            patch("kiro_crew.sandbox.create_subprocess_limited") as limited,
+            patch("aj_crew.sandbox.create_subprocess_limited") as limited,
         ):
             result = asyncio.run(
                 voice_reply._synthesize_polly("hello", aws_profile="", region="us-east-1")
@@ -683,7 +683,7 @@ class TestConcurrentWithdrawalFailsClosed:
 
     def test_a_grant_naming_no_account_is_denied(self, home):
         """Only a hand-edited file produces one, and it cannot be verified."""
-        from kiro_crew.config.loader import aws_consent_path
+        from aj_crew.config.loader import aws_consent_path
 
         aws_consent_path().write_text(
             json.dumps(
@@ -732,7 +732,7 @@ class TestConsentEndpointRequiresTheOwner:
 
     def test_get_refuses_a_non_owner_messaging_user(self, home):
         """The finding an app-only check missed: app is empty, user is not owner."""
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         resp = asyncio.run(
             handler.api_aws_consent_get(
@@ -743,7 +743,7 @@ class TestConsentEndpointRequiresTheOwner:
         assert json.loads(resp.text)["code"] == "dashboard_owner_required"
 
     def test_post_refuses_a_non_owner_messaging_user(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         req = self._req(app="", user="slack-guest", owner="owner-1", body={"service": "polly"})
         resp = asyncio.run(handler.api_aws_consent_post(req))
@@ -752,7 +752,7 @@ class TestConsentEndpointRequiresTheOwner:
         assert req.json.await_count == 0
 
     def test_delete_refuses_a_non_owner_messaging_user(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         _grant(region="us-east-1")
         resp = asyncio.run(
@@ -764,7 +764,7 @@ class TestConsentEndpointRequiresTheOwner:
         assert aws_consent.read_grant(aws_consent.SERVICE_POLLY) is not None
 
     def test_an_unauthenticated_caller_is_refused(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         resp = asyncio.run(
             handler.api_aws_consent_get(
@@ -774,7 +774,7 @@ class TestConsentEndpointRequiresTheOwner:
         assert resp.status == 403
 
     def test_get_refuses_an_app_token(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         resp = asyncio.run(
             handler.api_aws_consent_get(self._req(app="notes", query={"service": "polly"}))
@@ -783,7 +783,7 @@ class TestConsentEndpointRequiresTheOwner:
         assert json.loads(resp.text)["code"] == "dashboard_owner_required"
 
     def test_post_refuses_an_app_token_before_reading_the_body(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         req = self._req(app="notes", body={"service": "polly"})
         resp = asyncio.run(handler.api_aws_consent_post(req))
@@ -792,7 +792,7 @@ class TestConsentEndpointRequiresTheOwner:
         assert req.json.await_count == 0
 
     def test_delete_refuses_an_app_token(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         _grant(region="us-east-1")
         resp = asyncio.run(
@@ -803,12 +803,12 @@ class TestConsentEndpointRequiresTheOwner:
         assert aws_consent.read_grant(aws_consent.SERVICE_POLLY) is not None
 
     def test_the_owner_is_not_refused(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         assert asyncio.run(handler._deny_non_owner(self._req(), "aws_consent.read")) is None
 
     def test_the_denial_is_audited(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         with patch.object(handler.aws_consent, "audit_decision") as audit:
             resp = asyncio.run(handler._deny_non_owner(self._req(app="notes"), "aws_consent.grant"))
@@ -825,7 +825,7 @@ class TestConsentEndpointRequiresTheOwner:
         """
         import inspect
 
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         src = inspect.getsource(handler._deny_non_owner)
         body = src.split('"""')[-1]
@@ -841,20 +841,20 @@ class TestConsentEndpointReads:
         return _consent_request(query=query)
 
     def test_unknown_service_is_rejected(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         resp = asyncio.run(handler.api_aws_consent_get(self._req({"service": "bedrock"})))
         assert resp.status == 400
         assert json.loads(resp.text)["code"] == "unknown_aws_service"
 
     def test_missing_service_is_rejected(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         resp = asyncio.run(handler.api_aws_consent_get(self._req({})))
         assert resp.status == 400
 
     def test_reports_what_would_be_billed(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         resolved = aws_consent.Identity(ok=True, account="111122223333", arn="arn:aws:iam::1:u/x")
         with (
@@ -871,7 +871,7 @@ class TestConsentEndpointReads:
         assert body["grant"] is None
 
     def test_reports_a_grant_and_its_account(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         _grant(profile="voice", region="us-east-1", account="111122223333")
         resolved = aws_consent.Identity(ok=True, account="111122223333", arn="arn:aws:iam::1:u/x")
@@ -889,7 +889,7 @@ class TestConsentEndpointReads:
 
     def test_a_drifted_account_is_revoked_in_the_same_response(self, home):
         """The panel must not report a grant this request just invalidated."""
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         _grant(profile="voice", region="us-east-1", account="111122223333")
         moved = aws_consent.Identity(ok=True, account="999988887777", arn="arn:aws:iam::9:u/x")
@@ -906,7 +906,7 @@ class TestConsentEndpointReads:
         assert body["grant"] is None
 
     def test_an_unresolved_identity_is_reported_not_fatal(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         unknown = aws_consent.Identity(ok=False, detail="creds did not resolve")
         with (
@@ -925,7 +925,7 @@ class TestConsentEndpointDelete:
         return _consent_request(query=query)
 
     def test_withdraws_a_grant(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         _grant(region="us-east-1")
         resp = asyncio.run(handler.api_aws_consent_delete(self._req({"service": "polly"})))
@@ -933,13 +933,13 @@ class TestConsentEndpointDelete:
         assert aws_consent.read_grant(aws_consent.SERVICE_POLLY) is None
 
     def test_withdrawing_nothing_is_not_an_error(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         resp = asyncio.run(handler.api_aws_consent_delete(self._req({"service": "polly"})))
         assert json.loads(resp.text) == {"ok": True, "removed": False}
 
     def test_unknown_service_is_rejected(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         resp = asyncio.run(handler.api_aws_consent_delete(self._req({"service": "bedrock"})))
         assert resp.status == 400
@@ -953,8 +953,8 @@ class TestEffectiveTargetReadsLiveConfig:
     """
 
     def test_polly_reads_the_live_voice_state(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
-        from kiro_crew.slack.handler import _vc
+        from aj_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.slack.handler import _vc
 
         with (
             patch.object(_vc, "aws_profile", "voice"),
@@ -963,8 +963,8 @@ class TestEffectiveTargetReadsLiveConfig:
             assert asyncio.run(handler._effective_target("polly")) == ("voice", "eu-west-1")
 
     def test_transcribe_reads_the_live_stt_config(self, home):
-        from kiro_crew.config.loader import config_path
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.config.loader import config_path
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         config_path().write_text(
             json.dumps(
@@ -993,7 +993,7 @@ class TestThereIsNoCliGrantSurface:
     def test_cli_exposes_no_consent_command(self):
         import pathlib as _pathlib
 
-        import kiro_crew.cli as cli_mod
+        import aj_crew.cli as cli_mod
 
         # cli.py and every module split out of it.
         family = [_pathlib.Path(cli_mod.__file__)]
@@ -1006,7 +1006,7 @@ class TestThereIsNoCliGrantSurface:
     def test_cli_commands_has_no_consent_helpers(self):
         import pathlib as _pathlib
 
-        import kiro_crew.cli_commands as cc
+        import aj_crew.cli_commands as cc
 
         # cli_commands.py and every module split out of it.
         family = [_pathlib.Path(cc.__file__)]
@@ -1067,7 +1067,7 @@ class TestConsentDecisionsAreAudited:
 
     def test_an_audit_failure_does_not_break_the_gate(self, home, caplog):
         caplog.set_level(logging.DEBUG, logger=aws_consent.logger.name)
-        with patch("kiro_crew.sel.sel", side_effect=RuntimeError("sel down")):
+        with patch("aj_crew.sel.sel", side_effect=RuntimeError("sel down")):
             aws_consent.audit_decision("polly", outcome="denied", detail="x")
         logged = [r for r in caplog.records if r.name == aws_consent.logger.name]
         assert [r.getMessage() for r in logged] == ["could not write the AWS consent audit event"]
@@ -1078,7 +1078,7 @@ class TestTranscribeRefuses:
     def test_no_grant_means_no_client(self, home):
         from types import SimpleNamespace
 
-        from kiro_crew import transcribe
+        from aj_crew import transcribe
 
         cfg = SimpleNamespace(
             transcribe_profile="", transcribe_region="us-east-1", language_code="en-US"
@@ -1097,8 +1097,8 @@ class TestDescribeVoicesEndpoint:
         return _consent_request()
 
     def test_non_polly_provider_returns_empty_without_calling_aws(self, home):
-        from kiro_crew.dashboard import chat_voice
-        from kiro_crew.voice_reply import PROVIDER_SYSTEM
+        from aj_crew.dashboard import chat_voice
+        from aj_crew.voice_reply import PROVIDER_SYSTEM
 
         chat_voice._voices_cache = None
         with (
@@ -1116,8 +1116,8 @@ class TestDescribeVoicesEndpoint:
         own GET carrying the reason -- so a second copy here would be a response
         field with no reader. Review found the dead surface.
         """
-        from kiro_crew.dashboard import chat_voice
-        from kiro_crew.voice_reply import PROVIDER_POLLY
+        from aj_crew.dashboard import chat_voice
+        from aj_crew.voice_reply import PROVIDER_POLLY
 
         chat_voice._voices_cache = None
         with (
@@ -1256,8 +1256,8 @@ class TestIdentityProbeInputs:
 
         if _os.name == "nt":
             pytest.skip("fallback install dirs are POSIX literals; dead on Windows by design")
-        from kiro_crew import github_runner
-        from kiro_crew.deploy import engine
+        from aj_crew import github_runner
+        from aj_crew.deploy import engine
 
         fake_aws = tmp_path / "aws"
         fake_aws.write_text("#!/bin/sh\n")
@@ -1301,7 +1301,7 @@ class TestConsentEndpoint:
         return _consent_request(body=body)
 
     def test_unresolved_account_is_not_recorded(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         unresolved = aws_consent.Identity(ok=False, detail="creds did not resolve")
         with (
@@ -1313,7 +1313,7 @@ class TestConsentEndpoint:
         assert aws_consent.read_grant(aws_consent.SERVICE_POLLY) is None
 
     def test_resolved_account_is_recorded_against_live_config(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         resolved = aws_consent.Identity(ok=True, account="111122223333", arn="arn:aws:iam::1:u/x")
         with (
@@ -1348,7 +1348,7 @@ class TestConsentEndpoint:
         for Polly, propagates as the unhandled error it is (the same as every
         other consent write), instead of telling the operator a Bedrock source
         could not be checked."""
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         resolved = aws_consent.Identity(ok=True, account="111122223333", arn="arn:aws:iam::1:u/x")
         with (
@@ -1380,7 +1380,7 @@ class TestConsentEndpoint:
         operator could read account A, change the profile, then click Confirm.
         Without this the POST would record account B while A was on screen.
         """
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         resolved = aws_consent.Identity(ok=True, account="999988887777", arn="arn:aws:iam::9:u/x")
         with (
@@ -1407,7 +1407,7 @@ class TestConsentEndpoint:
 
     def test_a_confirmation_with_no_echoed_values_is_refused(self, home):
         """An empty echo must not pass as "everything matched"."""
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         resolved = aws_consent.Identity(ok=True, account="111122223333", arn="arn:aws:iam::1:u/x")
         with (
@@ -1421,7 +1421,7 @@ class TestConsentEndpoint:
         assert aws_consent.read_grant(aws_consent.SERVICE_POLLY) is None
 
     def test_unknown_service_is_rejected(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         resp = asyncio.run(handler.api_aws_consent_post(self._post({"service": "bedrock"})))
         assert resp.status == 400
@@ -1429,14 +1429,14 @@ class TestConsentEndpoint:
     @pytest.mark.parametrize("bad", [[], {}, 7, None, True])
     def test_a_non_string_service_is_rejected_not_a_500(self, home, bad):
         """A non-string ``service`` is rejected before ``list.strip()`` can 500."""
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         resp = asyncio.run(handler.api_aws_consent_post(self._post({"service": bad})))
         assert resp.status == 400
         assert json.loads(resp.text)["code"] == "unknown_aws_service"
 
     def test_a_non_dict_body_is_rejected(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         resp = asyncio.run(handler.api_aws_consent_post(self._post(["not", "a", "dict"])))
         assert resp.status == 400
@@ -1454,7 +1454,7 @@ class TestAuditDecisionRedactsBeforeTruncate:
 
     @staticmethod
     def _capture(monkeypatch):
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         calls: list[dict] = []
 
@@ -1514,7 +1514,7 @@ class TestRevocationCannotBeDenied:
         assert not hasattr(aws_consent, "_ConsentLock")
 
     def test_no_lock_artifact_appears_beside_the_grant(self, home):
-        from kiro_crew.config.loader import aws_consent_path
+        from aj_crew.config.loader import aws_consent_path
 
         _grant(region="us-east-1")
         assert aws_consent.revoke(aws_consent.SERVICE_POLLY) is True
@@ -1532,7 +1532,7 @@ class TestRevocationCannotBeDenied:
         import fcntl
         import threading
 
-        from kiro_crew.config.loader import aws_consent_path
+        from aj_crew.config.loader import aws_consent_path
 
         _grant(region="us-east-1")
         held = aws_consent_path().parent / ".aws_consent.lock"
@@ -1587,12 +1587,12 @@ class TestAuditWritesStayOffTheEventLoop:
     def test_the_helper_is_a_coroutine_so_every_caller_must_await_it(self):
         import inspect
 
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         assert inspect.iscoroutinefunction(handler._deny_non_owner)
 
     def test_the_owner_refusal_audits_off_the_loop(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         record, seen = self._recorder()
         with patch.object(handler.aws_consent, "audit_decision", record):
@@ -1643,7 +1643,7 @@ class TestConfirmNeverImportsTheConnectorOnTheLoop:
     module object so later patches still hit the one the code imports.
     """
 
-    _MODULE = "kiro_crew.knowledge.connectors.bedrock_kb"
+    _MODULE = "aj_crew.knowledge.connectors.bedrock_kb"
 
     @pytest.fixture()
     def loads(self, monkeypatch):
@@ -1672,7 +1672,7 @@ class TestConfirmNeverImportsTheConnectorOnTheLoop:
         # real first one and stays.
         already = sys.modules.get(module_name)
         if already is not None:
-            pkg = importlib.import_module("kiro_crew.knowledge.connectors")
+            pkg = importlib.import_module("aj_crew.knowledge.connectors")
             monkeypatch.setattr(pkg, "bedrock_kb", already, raising=False)
             monkeypatch.delitem(sys.modules, module_name)
         monkeypatch.setattr(sys, "meta_path", [_Recorder, *sys.meta_path])
@@ -1708,7 +1708,7 @@ class TestConfirmNeverImportsTheConnectorOnTheLoop:
 
     @pytest.mark.asyncio
     async def test_a_bedrock_confirmation_loads_the_connector_off_the_loop(self, home, loads):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         with patch.object(aws_consent, "probe_identity", AsyncMock(return_value=self._IDENTITY)):
             resp = await handler.api_aws_consent_post(self._bedrock_post([]))
@@ -1724,7 +1724,7 @@ class TestConfirmNeverImportsTheConnectorOnTheLoop:
         """The refusal is the one the loop-side ``except`` produced before the
         translation moved into the worker: same status, same code, same text,
         and no grant."""
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         req = self._bedrock_post([])
         req.app["state"].knowledge_store.db.execute.side_effect = RuntimeError("db locked")
@@ -1745,7 +1745,7 @@ class TestConfirmNeverImportsTheConnectorOnTheLoop:
     async def test_a_polly_confirmation_never_loads_the_connector(self, home, loads):
         """The cost the finding measured: a Polly confirm on a process that has
         never used Bedrock paid the connector's import, on the loop."""
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         req = _consent_request(
             body={
@@ -1773,7 +1773,7 @@ class TestProbeTimeoutForBudgetedCallers:
 
     @staticmethod
     def _record_run_aws(monkeypatch) -> list[int]:
-        from kiro_crew.cloud import aws as cloud_aws
+        from aj_crew.cloud import aws as cloud_aws
 
         seen: list[int] = []
 

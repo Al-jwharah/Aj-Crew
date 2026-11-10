@@ -14,18 +14,18 @@ from member_memory_helpers import request
 from test_default_context_admission import rig as _rig
 from test_default_context_admission import seed_skill
 
-from kiro_crew import context as ctx
-from kiro_crew import mcp_core, member_memory_auth, memory_stores
-from kiro_crew.config import loader
-from kiro_crew.dashboard.handlers import discover, memory_member
-from kiro_crew.hooks import HookManager
-from kiro_crew.learn import LessonStore
-from kiro_crew.mcp_tools import learn
-from kiro_crew.mcp_tools import skills as skill_tools
-from kiro_crew.memory import MemoryStore
-from kiro_crew.memory_recall import bound_recall_payload
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import context as ctx
+from aj_crew import mcp_core, member_memory_auth, memory_stores
+from aj_crew.config import loader
+from aj_crew.dashboard.handlers import discover, memory_member
+from aj_crew.hooks import HookManager
+from aj_crew.learn import LessonStore
+from aj_crew.mcp_tools import learn
+from aj_crew.mcp_tools import skills as skill_tools
+from aj_crew.memory import MemoryStore
+from aj_crew.memory_recall import bound_recall_payload
+from aj_crew.skills import SkillsLoader
+from aj_crew.vector_memory import VectorMemoryStore
 
 env = _env
 rig = _rig
@@ -39,7 +39,7 @@ pytestmark = pytest.mark.xdist_group("memory_no_regression")
 async def test_v1_base_visible_matrix(env, monkeypatch, binding, vectors, mode):
     name = "legacy-team" if binding == "named" else ""
     if name:
-        cfg = loader.KiroCrewConfig.load()
+        cfg = loader.AjCrewConfig.load()
         cfg.memory_stores[name] = loader.MemoryStoreConfig(memory_version=1)
         cfg.save()
         directory = env.home / "memory_stores" / name
@@ -294,12 +294,12 @@ def test_noise_never_displaces_relevant_episode():
 
 
 def test_overflow_retains_navigation_and_latest_user(rig, tmp_path):
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     builder, memory, skills, lessons, _ = rig
     memory.write_preferences("Required preference.\n" * 2000)
     memory.write_projects("# Paymentquartz\nTask detail")
-    from kiro_crew.learn import Lesson
+    from aj_crew.learn import Lesson
 
     lessons.save(
         Lesson(ts="2026-09-19", rule="Always retain safe behavior. " * 1500, category="knowledge")
@@ -323,13 +323,13 @@ def test_overflow_retains_navigation_and_latest_user(rig, tmp_path):
 def test_disabled_metrics_skip_measurement(rig, monkeypatch):
     import logging
 
-    from kiro_crew.metrics.recorder import MetricsRecorder
+    from aj_crew.metrics.recorder import MetricsRecorder
 
     builder, _, _, _, _ = rig
     monkeypatch.setattr(ctx, "get_recorder", lambda: MetricsRecorder(None))
     monkeypatch.setattr(ctx.logger, "level", logging.INFO)
     measure = Mock(side_effect=AssertionError("measurement"))
-    monkeypatch.setattr("kiro_crew.context_blocks.measure_prompt", measure)
+    monkeypatch.setattr("aj_crew.context_blocks.measure_prompt", measure)
     builder.build_message("hello", False)
     measure.assert_not_called()
 
@@ -337,7 +337,7 @@ def test_disabled_metrics_skip_measurement(rig, monkeypatch):
 @pytest.mark.parametrize("pinned", [False, True])
 @pytest.mark.parametrize("reinject", [False, True])
 def test_project_body_and_discovery_survive(rig, tmp_path, pinned, reinject):
-    from kiro_crew import skill_trust
+    from aj_crew import skill_trust
 
     builder, _, skills, _, _ = rig
     project = tmp_path / "project"
@@ -367,8 +367,8 @@ def test_project_body_and_discovery_survive(rig, tmp_path, pinned, reinject):
 
 
 def test_skill_search_reads_project_bodies_only_under_the_body_cap(rig, tmp_path, monkeypatch):
-    from kiro_crew import skill_trust
-    from kiro_crew import skills as skills_mod
+    from aj_crew import skill_trust
+    from aj_crew import skills as skills_mod
 
     builder, _, skills, _, _ = rig
     project = tmp_path / "project"
@@ -425,7 +425,7 @@ def test_skill_search_reads_project_bodies_only_under_the_body_cap(rig, tmp_path
 async def test_project_search_agent_route_loads_confined_body(rig, tmp_path, monkeypatch):
     from member_memory_helpers import make_request
 
-    from kiro_crew import skill_trust
+    from aj_crew import skill_trust
 
     builder, _, skills, _, _ = rig
     project = tmp_path / "project"
@@ -433,7 +433,7 @@ async def test_project_search_agent_route_loads_confined_body(rig, tmp_path, mon
     state = SimpleNamespace(
         context_builder=builder, _slots={"synthetic": SimpleNamespace(project=str(project))}
     )
-    from kiro_crew.dashboard.server import _MIXED_INTERNAL_API_PATHS
+    from aj_crew.dashboard.server import _MIXED_INTERNAL_API_PATHS
 
     assert "/api/skills/-/discover" in _MIXED_INTERNAL_API_PATHS
     monkeypatch.setattr(
@@ -541,7 +541,7 @@ def test_a_conversation_reset_keeps_its_own_turns_out_of_the_fresh_context(rig):
 
 
 def test_cancel_restore_span_counts_only_the_real_request(rig):
-    from kiro_crew.context_blocks import measure_prompt
+    from aj_crew.context_blocks import measure_prompt
 
     builder, _, _, _, _ = rig
     prefix = "[PREVIOUS TURN WAS CANCELLED BY THE USER — context restore]\nOld task\n[END PREVIOUS TURN]\n\n"

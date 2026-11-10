@@ -4,7 +4,7 @@
 marked as a named exception in [the Reference index](../README.md).
 
 > **Two of these types have a writer; the rest do not.** `crew/dispatch` and
-> `crew/report` are declared in `kiro_crew.crew_log.entry_types` as
+> `crew/report` are declared in `aj_crew.crew_log.entry_types` as
 > `CREW_ENTRY_TYPES`, the append path checks every entry of those two types
 > against the declaration, and `crew_log.emit` writes them: the conductor work
 > board's `bind` records a dispatch into the dispatching crew's log, and a

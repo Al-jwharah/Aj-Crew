@@ -84,7 +84,7 @@ function watchEntry(): void {
 }
 
 /** The message a bridged frame's shim posts on each click or key in that frame. */
-export const INPUT_MESSAGE_TYPE = 'kirocrew-dashboard:input'
+export const INPUT_MESSAGE_TYPE = 'ajcrew-dashboard:input'
 
 /**
  * The last click or key each bridged frame reported, by its window.
@@ -197,7 +197,7 @@ function useLatest<T>(value: T): { current: T } {
  * Those frames are `sandbox="allow-scripts"` with no popup grant, so a page cannot
  * open a window itself. `buildSrcdoc({ linkBridge: true })` turns a `_blank` or
  * bare web link click, and a `window.open` call, into the same
- * `kirocrew-dashboard:open` message the crew pages use, and gives each web link a
+ * `ajcrew-dashboard:open` message the crew pages use, and gives each web link a
  * hover title with its URL. This hook answers the message:
  *
  * - only from one of the given frames (`event.source`);

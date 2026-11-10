@@ -24,7 +24,7 @@ widen anything else.
 from __future__ import annotations
 
 from conftest import assert_rejected_without_backtracking
-from kiro_crew.constants import (
+from aj_crew.constants import (
     MARKER_CLOSERS,
     MARKER_OPENERS,
     MARKER_WRAPPERS,

@@ -34,8 +34,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from test_knowledge_delete_off_loop import _on_loop_call_sites
 
-from kiro_crew.dashboard.handlers import knowledge as kh
-from kiro_crew.knowledge.store import KnowledgeBundleError, KnowledgeStore
+from aj_crew.dashboard.handlers import knowledge as kh
+from aj_crew.knowledge.store import KnowledgeBundleError, KnowledgeStore
 
 
 def test_delete_item_is_never_called_on_the_event_loop():

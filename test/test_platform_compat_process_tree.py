@@ -18,8 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.testing.wait import wait_until
+from aj_crew import platform_compat as pc
+from aj_crew.testing.wait import wait_until
 
 # Tests here read or build the macOS libc and libproc handles, so each one starts
 # with both caches unbuilt and puts them back after (see conftest.py).
@@ -980,7 +980,7 @@ def test_process_descendants_snapshots_a_new_session_grandchild():
     This is the case a bare ``killpg`` misses, so the walk that broadens a kill
     must be able to see it.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX session semantics
         pytest.skip("POSIX session semantics")
@@ -1023,7 +1023,7 @@ def test_process_descendants_snapshots_a_new_session_grandchild():
 
 def test_process_descendants_is_best_effort_on_unreadable_table(monkeypatch):
     """Introspection failure must not raise into a caller's kill path."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(
         platform_compat,
@@ -1039,7 +1039,7 @@ def test_process_descendants_is_best_effort_on_unreadable_table(monkeypatch):
 
 
 def test_process_descendants_refuses_reserved_pids():
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     assert platform_compat.process_descendants(1) == []
     assert platform_compat.process_descendants(0) == []

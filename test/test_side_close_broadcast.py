@@ -22,11 +22,11 @@ from side_helpers import (  # noqa: F401 -- the autouse fixture registers by imp
     _published_readonly_spec_fixture,
 )
 
-from kiro_crew.dashboard.handlers.side import (
+from aj_crew.dashboard.handlers.side import (
     _requeue_unconsumed_side_steers,
     _run_side_turn,
 )
-from kiro_crew.dashboard.side_state import SideState
+from aj_crew.dashboard.side_state import SideState
 
 
 def _closed_frames(events: list[tuple[str, Any]]) -> list[dict[str, Any]]:
@@ -140,7 +140,7 @@ async def test_a_close_from_an_app_that_does_not_own_the_slot_is_refused_and_tel
 
 def _running_side(state):
     parent = state.get_or_create_slot("parent")
-    parent.agent = "kirocrew"
+    parent.agent = "ajcrew"
     parent._side = SideState(open=True, created_at="2026-01-01T00:00:00Z")
     parent._side.append_user("q", run_id="run-1")
     parent._side.last_run_id = "run-1"
@@ -167,7 +167,7 @@ async def test_a_run_whose_conversation_closed_sends_nothing_more(tmp_path, monk
         on_chunk("after the close")
         return "before the close after the close"
 
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side.stream_and_collect", _closed_mid_answer)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side.stream_and_collect", _closed_mid_answer)
 
     await _run_side_turn(state, parent, "run-1", "q", is_first_turn=True)
 
@@ -185,7 +185,7 @@ async def test_a_run_whose_conversation_closed_sends_no_error_notice(tmp_path, m
         raise RuntimeError("the backend went away")
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.side.stream_and_collect", _failed_after_the_close
+        "aj_crew.dashboard.handlers.side.stream_and_collect", _failed_after_the_close
     )
 
     await _run_side_turn(state, parent, "run-1", "q", is_first_turn=True)
@@ -203,7 +203,7 @@ async def test_a_run_whose_conversation_stayed_open_still_sends_its_answer(tmp_p
         on_chunk("the answer")
         return "the answer"
 
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side.stream_and_collect", _answered)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side.stream_and_collect", _answered)
 
     await _run_side_turn(state, parent, "run-1", "q", is_first_turn=True)
 

@@ -78,11 +78,11 @@ jobs:
     # the guard is on every step, so a step added later cannot quietly run
     # against fork content.
     name: "${{ github.event.pull_request.head.repo.full_name == github.repository && 'Opus 5.5 Review' || 'Opus 5.5 Review (same-repo lane, not applicable to forks)' }}"
-    # `kirocrew-runners` larger-runner group, targeted by GROUP not label; see
+    # `ajcrew-runners` larger-runner group, targeted by GROUP not label; see
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     # Runaway/hang backstop only, NOT a per-review budget: a healthy review
     # self-terminates at --max-turns 180 per stage (two stages; see below)
     # long before this, so this
@@ -189,9 +189,9 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           MAX_REVIEWABLE_LINES: "15000"
         run: |
-          changed=$(git diff --numstat "$MERGE_BASE..$HEAD_SHA" -- . ':(exclude)src/kiro_crew/_vendor' 2>/dev/null \
+          changed=$(git diff --numstat "$MERGE_BASE..$HEAD_SHA" -- . ':(exclude)src/aj_crew/_vendor' 2>/dev/null \
             | awk '{ a += $1; d += $2 } END { print a + d + 0 }')
-          echo "reviewable changed lines (excluding src/kiro_crew/_vendor): ${changed}"
+          echo "reviewable changed lines (excluding src/aj_crew/_vendor): ${changed}"
           if [ "${changed:-0}" -gt "$MAX_REVIEWABLE_LINES" ]; then
             echo "::warning::This PR changes ${changed} reviewable lines (> ${MAX_REVIEWABLE_LINES}) — likely too large for one reliable review pass. Consider splitting it into smaller, self-contained PRs."
           fi
@@ -791,7 +791,7 @@ jobs:
           #
           # A marker comment is the ONLY thing a freshness verifier reads. A
           # write that does not land therefore leaves the PR indistinguishable
-          # from one no lane ever reviewed: kirocrew-prepare-pr's pr_status.py refuses a
+          # from one no lane ever reviewed: ajcrew-prepare-pr's pr_status.py refuses a
           # PR whose check-runs, readiness status and mergeable state all pass,
           # and the only way out is manufacturing a new head -- which re-rolls
           # the non-deterministic review lanes and discards the verdicts they
@@ -1033,7 +1033,7 @@ jobs:
             # would invent a BLOCK nobody judged out of an infrastructure fault.
             # The annotation is what says so: the required readiness status reads
             # check-run CONCLUSIONS and has no stamp-freshness read, so the reader
-            # that catches a head with no verdict is kirocrew-prepare-pr's own marker
+            # that catches a head with no verdict is ajcrew-prepare-pr's own marker
             # evaluation, run before a PR is called ready.
             if [ -n "$slot" ]; then
               occupied=""

@@ -6,7 +6,7 @@ it defaults to ON, it round-trips through the PUT/GET handler, and it only ever
 accepts a real boolean (a truthy string must not silently enable it).
 
 
-Per-test config isolation comes from the autouse KIROCREW_HOME fixture in
+Per-test config isolation comes from the autouse AJCREW_HOME fixture in
 conftest, so these do not take tmp_path themselves.
 """
 
@@ -18,8 +18,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from aiohttp import web
 
-import kiro_crew.dashboard.handlers.core as core
-from kiro_crew.config.loader import KiroCrewConfig, config_path
+import aj_crew.dashboard.handlers.core as core
+from aj_crew.config.loader import AjCrewConfig, config_path
 
 
 def _req(method: str, body: dict | None = None):
@@ -38,14 +38,14 @@ def _stub_probes(monkeypatch):
 
 def test_defaults_to_enabled() -> None:
     """Absent from config.json, the panel is on: it is the standard recording UI."""
-    assert KiroCrewConfig.load().stt.dictation_panel is True
+    assert AjCrewConfig.load().stt.dictation_panel is True
 
 
 def test_explicit_false_is_honoured() -> None:
     path = config_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps({"stt": {"dictation_panel": False}}), encoding="utf-8")
-    assert KiroCrewConfig.load().stt.dictation_panel is False
+    assert AjCrewConfig.load().stt.dictation_panel is False
 
 
 @pytest.mark.asyncio
@@ -93,7 +93,7 @@ def test_non_bool_in_config_file_falls_back_to_default() -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     for bogus in ("false", "true", 0, 1, None, [], {}):
         path.write_text(json.dumps({"stt": {"dictation_panel": bogus}}), encoding="utf-8")
-        loaded = KiroCrewConfig.load().stt.dictation_panel
+        loaded = AjCrewConfig.load().stt.dictation_panel
         assert loaded is True, f"{bogus!r} should fall back to the default, got {loaded!r}"
 
 

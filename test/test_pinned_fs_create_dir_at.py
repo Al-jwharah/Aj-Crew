@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-from kiro_crew import pinned_fs
+from aj_crew import pinned_fs
 
 pytestmark = pytest.mark.skipif(
     not pinned_fs.supports_pinned_walk(), reason="needs descriptor-relative opens"

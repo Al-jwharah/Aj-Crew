@@ -9,10 +9,10 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.testing.wait import until_parked
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.testing.wait import until_parked
 
 
 class TestCrewmatePicksOnItsHarness:
@@ -25,9 +25,9 @@ class TestCrewmatePicksOnItsHarness:
         ],
     )
     async def test_same_harness_still_applies_live(self, tmp_path, monkeypatch, route, field, pick):
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS
-        from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS
+        from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+        from aj_crew.dashboard import chat_handlers
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot(
@@ -38,11 +38,11 @@ class TestCrewmatePicksOnItsHarness:
         provider.accepts_effort_level.return_value = True
         state.sessions.get_provider = MagicMock(return_value=provider)
         state.sessions.reset = AsyncMock()
-        cfg = KiroCrewConfig.load()
-        cfg.agents["atlas"] = KiroCrewAgentConfig(
+        cfg = AjCrewConfig.load()
+        cfg.agents["atlas"] = AjCrewAgentConfig(
             member_id="atlas-0123456789ab", kiro_agent="atlas", acp_backend="kas"
         )
-        monkeypatch.setattr(chat_handlers.KiroCrewConfig, "load", lambda: cfg)
+        monkeypatch.setattr(chat_handlers.AjCrewConfig, "load", lambda: cfg)
         app = TestSlotModelLiveSwitch._app(state)
         app.router.add_post(
             "/api/chat/slots/{slot}/reasoning-effort", chat_handlers.api_chat_slot_reasoning_effort
@@ -70,7 +70,7 @@ class TestSlotModelLiveSwitch:
 
     @staticmethod
     def _app(state: DashboardState) -> web.Application:
-        from kiro_crew.dashboard.chat import api_chat_slot_model
+        from aj_crew.dashboard.chat import api_chat_slot_model
 
         app = web.Application()
         app["state"] = state
@@ -92,7 +92,7 @@ class TestSlotModelLiveSwitch:
         ``capabilities_of`` requires a genuine ``SessionCapabilities``, so an
         attribute-shaped flag on a spec'd mock would claim every capability at once.
         """
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         provider = MagicMock(spec=AcpProvider)
         provider.capabilities = capabilities_for(ACP_BACKEND_CLAUDE if claude else ACP_BACKEND_KIRO)
@@ -126,7 +126,7 @@ class TestSlotModelLiveSwitch:
     @pytest.mark.asyncio
     async def test_canonical_key_is_translated_to_the_acp_id(self, tmp_path):
         # slot.model is a canonical/wire value; set_model only accepts kiro ids.
-        from kiro_crew import model_registry
+        from aj_crew import model_registry
 
         state = _make_state(tmp_path)
         state.sessions.reset = AsyncMock()
@@ -190,7 +190,7 @@ class TestSlotModelLiveSwitch:
         # nothing, instead of reporting a deferral that cannot happen.
         from unittest.mock import patch
 
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         state = _make_state(tmp_path)
         state.sessions.reset = AsyncMock()
@@ -329,7 +329,7 @@ class TestSlotModelLiveSwitch:
 
     @pytest.mark.asyncio
     async def test_claude_backend_switch_uses_provider_id(self, tmp_path):
-        from kiro_crew import model_registry
+        from aj_crew import model_registry
 
         state = _make_state(tmp_path)
         state.sessions.reset = AsyncMock()
@@ -486,7 +486,7 @@ class TestSlotModelLiveSwitch:
         A reset would destroy the conversation and cold-start on another model while
         answering ok:True. The slot keeps its previous model so the picker stays truthful.
         """
-        from kiro_crew.acp.client import AcpModelUnavailable
+        from aj_crew.acp.client import AcpModelUnavailable
 
         state = _make_state(tmp_path)
         state.sessions.reset = AsyncMock()
@@ -543,7 +543,7 @@ class TestSlotModelLiveSwitch:
         FAILED attempt as an explicit choice and silently abandon restoring
         the primary — the session would stay on the fallback forever with no
         card and no probe."""
-        from kiro_crew.acp.client import AcpModelUnavailable
+        from aj_crew.acp.client import AcpModelUnavailable
 
         state = _make_state(tmp_path)
         state.sessions.reset = AsyncMock()
@@ -573,7 +573,7 @@ class TestSlotModelLiveSwitch:
         is the later, successful pick's."""
         import asyncio
 
-        from kiro_crew.acp.client import AcpModelUnavailable
+        from aj_crew.acp.client import AcpModelUnavailable
 
         state = _make_state(tmp_path)
         state.sessions.reset = AsyncMock()
@@ -629,7 +629,7 @@ class TestSlotModelLiveSwitch:
         transaction unwinds itself and the slot ends exactly where it began."""
         import asyncio
 
-        from kiro_crew.acp.client import AcpModelUnavailable
+        from aj_crew.acp.client import AcpModelUnavailable
 
         state = _make_state(tmp_path)
         state.sessions.reset = AsyncMock()
@@ -884,7 +884,7 @@ class TestDeferredModelSwitchAtTheBoundary:
 
     @staticmethod
     def _slot_with_deferred_pick(state, provider, model="gpt-5.6-sol"):
-        from kiro_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.dashboard.chat_utils import effective_session_key
 
         state.sessions.get_provider = MagicMock(return_value=provider)
         state.get_or_create_slot("a", model=model)
@@ -894,7 +894,7 @@ class TestDeferredModelSwitchAtTheBoundary:
 
     @pytest.mark.asyncio
     async def test_nothing_deferred_is_a_no_op(self, tmp_path):
-        from kiro_crew.dashboard import session_control as sc
+        from aj_crew.dashboard import session_control as sc
 
         state = _make_state(tmp_path)
         provider = TestSlotModelLiveSwitch._provider()
@@ -906,7 +906,7 @@ class TestDeferredModelSwitchAtTheBoundary:
 
     @pytest.mark.asyncio
     async def test_an_idle_session_is_moved_live_and_no_reset_is_armed(self, tmp_path):
-        from kiro_crew.dashboard import session_control as sc
+        from aj_crew.dashboard import session_control as sc
 
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
@@ -932,9 +932,9 @@ class TestDeferredModelSwitchAtTheBoundary:
         # strand the new runtime on the old model with nothing armed to retry.
         from unittest.mock import patch
 
-        import kiro_crew.dashboard.chat_handlers as ch
-        from kiro_crew.dashboard import session_control as sc
-        from kiro_crew.dashboard.chat_utils import effective_session_key
+        import aj_crew.dashboard.chat_handlers as ch
+        from aj_crew.dashboard import session_control as sc
+        from aj_crew.dashboard.chat_utils import effective_session_key
 
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
@@ -968,7 +968,7 @@ class TestDeferredModelSwitchAtTheBoundary:
         # leave the slot on the old model with nothing to recover the pick.
         import asyncio
 
-        from kiro_crew.dashboard import session_control as sc
+        from aj_crew.dashboard import session_control as sc
 
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
@@ -992,8 +992,8 @@ class TestDeferredModelSwitchAtTheBoundary:
         # clear the marker and strand the session on the model it just applied.
         from unittest.mock import patch
 
-        import kiro_crew.dashboard.chat_handlers as ch
-        from kiro_crew.dashboard import session_control as sc
+        import aj_crew.dashboard.chat_handlers as ch
+        from aj_crew.dashboard import session_control as sc
 
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
@@ -1024,8 +1024,8 @@ class TestDeferredModelSwitchAtTheBoundary:
         # the session lock too would hang the turn at session creation.
         import asyncio
 
-        from kiro_crew.dashboard import session_control as sc
-        from kiro_crew.llm_helpers import slot_switch_session_lock
+        from aj_crew.dashboard import session_control as sc
+        from aj_crew.llm_helpers import slot_switch_session_lock
 
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
@@ -1053,7 +1053,7 @@ class TestDeferredModelSwitchAtTheBoundary:
         # Another alias's turn (or the same session still streaming) is the
         # one case that waits: nothing is sent, nothing armed, the mark stays
         # for a later boundary.
-        from kiro_crew.dashboard import session_control as sc
+        from aj_crew.dashboard import session_control as sc
 
         state = _make_state(tmp_path)
         provider = TestSlotModelLiveSwitch._provider(active_turn=True)
@@ -1069,8 +1069,8 @@ class TestDeferredModelSwitchAtTheBoundary:
     async def test_a_failed_live_switch_arms_the_deferred_reset(self, tmp_path):
         from unittest.mock import patch
 
-        from kiro_crew.dashboard import chat_handlers
-        from kiro_crew.dashboard import session_control as sc
+        from aj_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import session_control as sc
 
         state = _make_state(tmp_path)
         provider = TestSlotModelLiveSwitch._provider()
@@ -1092,8 +1092,8 @@ class TestDeferredModelSwitchAtTheBoundary:
     async def test_a_model_the_account_cannot_run_falls_to_the_reset(self, tmp_path):
         # The cold start withholds a pin the account cannot run and the slot's
         # withheld-pin card says so; the helper does not raise into the turn.
-        from kiro_crew.acp.client import AcpModelUnavailable
-        from kiro_crew.dashboard import session_control as sc
+        from aj_crew.acp.client import AcpModelUnavailable
+        from aj_crew.dashboard import session_control as sc
 
         state = _make_state(tmp_path)
         provider = TestSlotModelLiveSwitch._provider()
@@ -1110,8 +1110,8 @@ class TestDeferredModelSwitchAtTheBoundary:
     async def test_a_non_acp_provider_takes_the_reset(self, tmp_path):
         # No live switch to try: the boundary arms the reset, the same answer
         # the idle picker gives such a provider.
-        from kiro_crew.dashboard import session_control as sc
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.dashboard import session_control as sc
+        from aj_crew.providers.base import LLMProvider
 
         state = _make_state(tmp_path)
         provider = MagicMock(spec=LLMProvider)
@@ -1127,16 +1127,16 @@ class TestDeferredModelSwitchAtTheBoundary:
 async def test_stored_harness_secret_never_reaches_model_response_or_log(
     tmp_path, monkeypatch, caplog, live
 ):
-    from kiro_crew import model_registry
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew import model_registry
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+    from aj_crew.dashboard import chat_handlers
 
     secret = "sk-test-not-a-real-secret-0000"
-    cfg = KiroCrewConfig()
-    cfg.agents["atlas"] = KiroCrewAgentConfig(
+    cfg = AjCrewConfig()
+    cfg.agents["atlas"] = AjCrewAgentConfig(
         member_id="atlas-0123456789ab", kiro_agent="atlas", acp_backend=secret
     )
-    monkeypatch.setattr(chat_handlers.KiroCrewConfig, "load", lambda: cfg)
+    monkeypatch.setattr(chat_handlers.AjCrewConfig, "load", lambda: cfg)
     monkeypatch.setattr(model_registry, "is_canonical_key", lambda model: True)
     monkeypatch.setattr(model_registry, "get_entry", lambda model: {})
     monkeypatch.setattr(model_registry, "acp_id_correction", lambda model: None)

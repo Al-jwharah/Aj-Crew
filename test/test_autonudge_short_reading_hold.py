@@ -20,16 +20,16 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import autonudge as _an
-from kiro_crew import autonudge_judge as judge
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
-from kiro_crew.autonudge_service import gate as _gate
-from kiro_crew.monitoring.models import (
+from aj_crew import autonudge as _an
+from aj_crew import autonudge_judge as judge
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew.autonudge_service import gate as _gate
+from aj_crew.monitoring.models import (
     MonitorState,
     monitor_state_from_dict,
     monitor_state_to_dict,
 )
-from kiro_crew.probes import gh_pr
+from aj_crew.probes import gh_pr
 
 _CEILING = _gate._SHORT_READING_HOLD_CEILING
 _SHORT_PAGE = ("check runs page 2 unread",)
@@ -159,7 +159,7 @@ class _Harness:
 
 @pytest.fixture(autouse=True)
 def _enable(_floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    _floor_monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
 
 @pytest.mark.asyncio

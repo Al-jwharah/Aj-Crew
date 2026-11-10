@@ -16,8 +16,8 @@ from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from kiro_crew.dashboard.handlers import api_project_git_branch_diff
-from kiro_crew.dashboard.handlers import files as files_mod
+from aj_crew.dashboard.handlers import api_project_git_branch_diff
+from aj_crew.dashboard.handlers import files as files_mod
 
 ROUTE = "/api/project/git/branch-diff"
 
@@ -51,7 +51,7 @@ def passthrough_sandbox(_floor_monkeypatch):
 
 @pytest.fixture(autouse=True)
 def mock_sel():
-    with patch("kiro_crew.dashboard.handlers.sel") as m:
+    with patch("aj_crew.dashboard.handlers.sel") as m:
         m.return_value = MagicMock()
         yield m.return_value
 

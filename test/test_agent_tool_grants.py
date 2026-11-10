@@ -34,7 +34,7 @@ class TestToolBloatFixesMountAndGrant:
             "allowedTools": ["fs_read", "use_aws"],
             "mcpServers": {},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         path = _run_install(tmp_path, cfg_dir)
         config = json.loads(path.read_text(encoding="utf-8"))
@@ -79,7 +79,7 @@ class TestToolBloatFixesMountAndGrant:
             # below depend on that rather than on tool_search seeding.
             "mcpServers": {"builder-mcp": {"command": "/bin/true"}},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         path = _run_install(tmp_path, cfg_dir)
         config = json.loads(path.read_text(encoding="utf-8"))
@@ -112,7 +112,7 @@ class TestToolBloatFixesMountAndGrant:
             "allowedTools": ["@kept", "@orphan"],
             "mcpServers": {"kept": {"command": "/bin/true"}},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         config = json.loads(_run_install(tmp_path, cfg_dir).read_text(encoding="utf-8"))
 
@@ -134,7 +134,7 @@ class TestToolBloatFixesMountAndGrant:
         The exempt set is asserted too: a set built from "declared but not in the final
         map" would sweep both in while the rendered-file asserts still passed.
         """
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -151,7 +151,7 @@ class TestToolBloatFixesMountAndGrant:
                 "notaspec": "this is not a server spec",
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         exempted: list[set[str]] = []
         real_prune = agent_mod.prune_dangling_tool_refs
@@ -188,7 +188,7 @@ class TestToolBloatFixesMountAndGrant:
         a dropped grant costs one approval. Needs the resolver override because the stub
         echoes every command, which makes this branch unreachable by default.
         """
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -196,9 +196,9 @@ class TestToolBloatFixesMountAndGrant:
         existing = {
             "tools": ["fs_read", "@notinstalled", "@notinstalled/search"],
             "allowedTools": ["@notinstalled"],
-            "mcpServers": {"notinstalled": {"command": "kirocrew-not-installed-yet"}},
+            "mcpServers": {"notinstalled": {"command": "ajcrew-not-installed-yet"}},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         exempted: list[set[str]] = []
         real_prune = agent_mod.prune_dangling_tool_refs
@@ -213,7 +213,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 
@@ -246,10 +246,10 @@ class TestToolBloatFixesMountAndGrant:
             "allowedTools": ["@a/b", "@a/b/tool", "@a/b/c", "@a/b/c/tool"],
             "mcpServers": {
                 "a/b": {"command": sys.executable},
-                "a/b/c": {"command": "kirocrew-not-installed-yet"},
+                "a/b/c": {"command": "ajcrew-not-installed-yet"},
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
         (tmp_path / "fake_kiro_mcp.json").write_text(
             json.dumps({"mcpServers": existing["mcpServers"]})
         )
@@ -258,7 +258,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 
@@ -273,7 +273,7 @@ class TestToolBloatFixesMountAndGrant:
 
     def test_overlapping_alias_output_is_not_rewritten_by_another_original_key(self):
         """Each ref moves once from its longest original server owner."""
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         config = {
             "tools": ["@npm:@scope/pkg/x/run", "@scope-pkg/x/y"],
@@ -296,7 +296,7 @@ class TestToolBloatFixesMountAndGrant:
 
     def test_frozen_allowed_ref_is_dropped_only_when_it_collides_with_a_live_server(self):
         """A frozen grant cannot become a live normalized server's per-tool grant."""
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         config = {
             "tools": ["@a/b", "@a-b/c", "@x/y"],
@@ -330,7 +330,7 @@ class TestToolBloatFixesMountAndGrant:
             "allowedTools": ["@builtin", "@gone"],
             "mcpServers": {},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         config = json.loads(_run_install(tmp_path, cfg_dir).read_text(encoding="utf-8"))
 
@@ -349,7 +349,7 @@ class TestToolBloatFixesMountAndGrant:
         The mount survives by design: it costs one mount attempt against an empty name,
         where a dropped `tools` ref is unrecoverable.
         """
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -358,11 +358,11 @@ class TestToolBloatFixesMountAndGrant:
             "tools": ["fs_read", "@deadapp:srv", "@liveapp:srv"],
             "allowedTools": ["@deadapp:srv", "@liveapp:srv"],
             "mcpServers": {
-                "deadapp:srv": {"command": "kirocrew-not-installed-yet"},
-                "liveapp:srv": {"command": "kirocrew-not-installed-yet"},
+                "deadapp:srv": {"command": "ajcrew-not-installed-yet"},
+                "liveapp:srv": {"command": "ajcrew-not-installed-yet"},
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         monkeypatch.setattr(
             agent_mod,
@@ -374,7 +374,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 
@@ -396,7 +396,7 @@ class TestToolBloatFixesMountAndGrant:
         App `npm` (switched ON) declares only `bar`; a global server keyed `npm:foo` keeps
         its colon. A prefix-attributing reader would let `npm:foo` keep its grant.
         """
-        from kiro_crew.apps import manager as apps_manager
+        from aj_crew.apps import manager as apps_manager
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -405,14 +405,14 @@ class TestToolBloatFixesMountAndGrant:
             "tools": ["fs_read", "@npm:foo", "@npm:foo/run", "@npm:bar"],
             "allowedTools": ["@npm:foo", "@npm:bar"],
             "mcpServers": {
-                "npm:foo": {"command": "kirocrew-not-installed-yet"},
-                "npm:bar": {"command": "kirocrew-not-installed-yet"},
+                "npm:foo": {"command": "ajcrew-not-installed-yet"},
+                "npm:bar": {"command": "ajcrew-not-installed-yet"},
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         class _Manifest:
-            mcpServers = {"bar": {"command": "kirocrew-not-installed-yet"}}
+            mcpServers = {"bar": {"command": "ajcrew-not-installed-yet"}}
 
         # An app named `npm`, installed and switched ON, declaring only `bar`.
         monkeypatch.setattr(apps_manager, "list_apps", lambda: [{"name": "npm"}])
@@ -423,7 +423,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 
@@ -445,7 +445,7 @@ class TestToolBloatFixesMountAndGrant:
         `mcp_server_alias` maps `npm:@playwright/mcp` to `playwright-mcp`; keying by the raw
         name matches nothing. The unowned `solo` fails a reader that claims everything.
         """
-        from kiro_crew.apps import manager as apps_manager
+        from aj_crew.apps import manager as apps_manager
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -454,14 +454,14 @@ class TestToolBloatFixesMountAndGrant:
             "tools": ["fs_read", "@playwright-mcp", "@playwright-mcp/run", "@solo"],
             "allowedTools": ["@playwright-mcp", "@solo"],
             "mcpServers": {
-                "playwright-mcp": {"command": "kirocrew-not-installed-yet"},
-                "solo": {"command": "kirocrew-not-installed-yet"},
+                "playwright-mcp": {"command": "ajcrew-not-installed-yet"},
+                "solo": {"command": "ajcrew-not-installed-yet"},
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         class _Manifest:
-            mcpServers = {"@playwright/mcp": {"command": "kirocrew-not-installed-yet"}}
+            mcpServers = {"@playwright/mcp": {"command": "ajcrew-not-installed-yet"}}
 
         monkeypatch.setattr(apps_manager, "list_apps", lambda: [{"name": "npm"}])
         monkeypatch.setattr(apps_manager, "app_enabled_state", lambda name: False)
@@ -471,7 +471,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 
@@ -495,7 +495,7 @@ class TestToolBloatFixesMountAndGrant:
         `get_app_manifest` returns None for absent, unparsable and unreadable files alike.
         `vouched` is declared by a file this rebuild read, so its exemption must not narrow.
         """
-        from kiro_crew.apps import manager as apps_manager
+        from aj_crew.apps import manager as apps_manager
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -504,13 +504,13 @@ class TestToolBloatFixesMountAndGrant:
             "tools": ["fs_read", "@ghost:srv", "@ghost:srv/run", "@vouched"],
             "allowedTools": ["@ghost:srv", "@vouched"],
             "mcpServers": {
-                "ghost:srv": {"command": "kirocrew-not-installed-yet"},
-                "vouched": {"command": "kirocrew-not-installed-yet"},
+                "ghost:srv": {"command": "ajcrew-not-installed-yet"},
+                "vouched": {"command": "ajcrew-not-installed-yet"},
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
         (tmp_path / "fake_kiro_mcp.json").write_text(
-            json.dumps({"mcpServers": {"vouched": {"command": "kirocrew-not-installed-yet"}}})
+            json.dumps({"mcpServers": {"vouched": {"command": "ajcrew-not-installed-yet"}}})
         )
 
         # Installed, switched OFF, and its manifest unreadable.
@@ -522,7 +522,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 
@@ -546,7 +546,7 @@ class TestToolBloatFixesMountAndGrant:
         A user's unclaimed stdio server, binary off PATH, keeps its `tools` ref: no later
         pass re-adds it. `nosuch` is absent from the config, so it fails a keep-all reader.
         """
-        from kiro_crew.apps import manager as apps_manager
+        from aj_crew.apps import manager as apps_manager
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -554,9 +554,9 @@ class TestToolBloatFixesMountAndGrant:
         existing = {
             "tools": ["fs_read", "@mine", "@mine/run", "@nosuch", "@nosuch/run"],
             "allowedTools": ["@mine", "@mine/run", "@nosuch"],
-            "mcpServers": {"mine": {"command": "kirocrew-not-installed-yet"}},
+            "mcpServers": {"mine": {"command": "ajcrew-not-installed-yet"}},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         # An unrelated app, installed and enabled, whose manifest will not read.
         monkeypatch.setattr(apps_manager, "list_apps", lambda: [{"name": "unrelated"}])
@@ -567,7 +567,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 
@@ -594,7 +594,7 @@ class TestToolBloatFixesMountAndGrant:
         not recoverable, so `playwright-mcp-2` belonging to the app is a guess.
         `playwright-mcpx` shares the prefix but is not a numeric-suffixed sibling.
         """
-        from kiro_crew.apps import manager as apps_manager
+        from aj_crew.apps import manager as apps_manager
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -603,15 +603,15 @@ class TestToolBloatFixesMountAndGrant:
             "tools": ["fs_read", "@playwright-mcp", "@playwright-mcp-2", "@playwright-mcpx"],
             "allowedTools": ["@playwright-mcp", "@playwright-mcp-2", "@playwright-mcpx"],
             "mcpServers": {
-                "playwright-mcp": {"command": "kirocrew-not-installed-yet"},
-                "playwright-mcp-2": {"command": "kirocrew-not-installed-yet"},
-                "playwright-mcpx": {"command": "kirocrew-not-installed-yet"},
+                "playwright-mcp": {"command": "ajcrew-not-installed-yet"},
+                "playwright-mcp-2": {"command": "ajcrew-not-installed-yet"},
+                "playwright-mcpx": {"command": "ajcrew-not-installed-yet"},
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         class _Manifest:
-            mcpServers = {"@playwright/mcp": {"command": "kirocrew-not-installed-yet"}}
+            mcpServers = {"@playwright/mcp": {"command": "ajcrew-not-installed-yet"}}
 
         monkeypatch.setattr(apps_manager, "list_apps", lambda: [{"name": "npm"}])
         monkeypatch.setattr(apps_manager, "app_enabled_state", lambda name: False)
@@ -621,7 +621,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 
@@ -649,7 +649,7 @@ class TestToolBloatFixesMountAndGrant:
         The app owning `playwright-mcp` is ON; the unresolved `playwright-mcp-2` may not be
         its collision half. A wrong mount costs one attempt; a dropped mount is permanent.
         """
-        from kiro_crew.apps import manager as apps_manager
+        from aj_crew.apps import manager as apps_manager
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -658,14 +658,14 @@ class TestToolBloatFixesMountAndGrant:
             "tools": ["fs_read", "@playwright-mcp", "@playwright-mcp-2"],
             "allowedTools": ["@playwright-mcp", "@playwright-mcp-2"],
             "mcpServers": {
-                "playwright-mcp": {"command": "kirocrew-not-installed-yet"},
-                "playwright-mcp-2": {"command": "kirocrew-not-installed-yet"},
+                "playwright-mcp": {"command": "ajcrew-not-installed-yet"},
+                "playwright-mcp-2": {"command": "ajcrew-not-installed-yet"},
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         class _Manifest:
-            mcpServers = {"@playwright/mcp": {"command": "kirocrew-not-installed-yet"}}
+            mcpServers = {"@playwright/mcp": {"command": "ajcrew-not-installed-yet"}}
 
         # Installed and switched ON, declaring the base that `playwright-mcp-2`
         # only resembles.
@@ -677,7 +677,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 
@@ -696,7 +696,7 @@ class TestToolBloatFixesMountAndGrant:
         An ON app declares `x-y-2`; an OFF app declares `@x/y` (alias `x-y`). Family
         matching is only for names nothing claims exactly. `x-y` loses both refs.
         """
-        from kiro_crew.apps import manager as apps_manager
+        from aj_crew.apps import manager as apps_manager
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -705,17 +705,17 @@ class TestToolBloatFixesMountAndGrant:
             "tools": ["fs_read", "@x-y", "@x-y-2", "@x-y-2/run"],
             "allowedTools": ["@x-y", "@x-y-2"],
             "mcpServers": {
-                "x-y": {"command": "kirocrew-not-installed-yet"},
-                "x-y-2": {"command": "kirocrew-not-installed-yet"},
+                "x-y": {"command": "ajcrew-not-installed-yet"},
+                "x-y-2": {"command": "ajcrew-not-installed-yet"},
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         class _OnManifest:
-            mcpServers = {"@x/y-2": {"command": "kirocrew-not-installed-yet"}}
+            mcpServers = {"@x/y-2": {"command": "ajcrew-not-installed-yet"}}
 
         class _OffManifest:
-            mcpServers = {"@x/y": {"command": "kirocrew-not-installed-yet"}}
+            mcpServers = {"@x/y": {"command": "ajcrew-not-installed-yet"}}
 
         monkeypatch.setattr(apps_manager, "list_apps", lambda: [{"name": "on"}, {"name": "off"}])
         monkeypatch.setattr(apps_manager, "app_enabled_state", lambda name: name == "on")
@@ -729,7 +729,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 
@@ -748,7 +748,7 @@ class TestToolBloatFixesMountAndGrant:
         A last-writer-wins map would give the family the state of whichever app was read
         last. `beta:solo` has one enabled claimant, so a deny-all reader fails it.
         """
-        from kiro_crew.apps import manager as apps_manager
+        from aj_crew.apps import manager as apps_manager
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -757,19 +757,19 @@ class TestToolBloatFixesMountAndGrant:
             "tools": ["fs_read", "@x-y", "@beta:solo"],
             "allowedTools": ["@x-y", "@beta:solo"],
             "mcpServers": {
-                "x-y": {"command": "kirocrew-not-installed-yet"},
-                "beta:solo": {"command": "kirocrew-not-installed-yet"},
+                "x-y": {"command": "ajcrew-not-installed-yet"},
+                "beta:solo": {"command": "ajcrew-not-installed-yet"},
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         class _Alpha:
-            mcpServers = {"x/y": {"command": "kirocrew-not-installed-yet"}}
+            mcpServers = {"x/y": {"command": "ajcrew-not-installed-yet"}}
 
         class _Beta:
             mcpServers = {
-                "x/y": {"command": "kirocrew-not-installed-yet"},
-                "solo": {"command": "kirocrew-not-installed-yet"},
+                "x/y": {"command": "ajcrew-not-installed-yet"},
+                "solo": {"command": "ajcrew-not-installed-yet"},
             }
 
         # Both apps alias `x/y` to the base `x-y`. `alpha` is OFF, `beta` is ON,
@@ -786,7 +786,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 
@@ -807,7 +807,7 @@ class TestToolBloatFixesMountAndGrant:
         A minted `base-<n>` looks like a source-named one, so a name the user's `mcp.json`
         still declares is not a disabled app's sibling. The app does own `playwright-mcp`.
         """
-        from kiro_crew.apps import manager as apps_manager
+        from aj_crew.apps import manager as apps_manager
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -816,20 +816,20 @@ class TestToolBloatFixesMountAndGrant:
             "tools": ["fs_read", "@playwright-mcp", "@playwright-mcp-2", "@playwright-mcp-2/run"],
             "allowedTools": ["@playwright-mcp", "@playwright-mcp-2"],
             "mcpServers": {
-                "playwright-mcp": {"command": "kirocrew-not-installed-yet"},
-                "playwright-mcp-2": {"command": "kirocrew-not-installed-yet"},
+                "playwright-mcp": {"command": "ajcrew-not-installed-yet"},
+                "playwright-mcp-2": {"command": "ajcrew-not-installed-yet"},
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
         # The user's own source still declares the suffixed name.
         (tmp_path / "fake_kiro_mcp.json").write_text(
             json.dumps(
-                {"mcpServers": {"playwright-mcp-2": {"command": "kirocrew-not-installed-yet"}}}
+                {"mcpServers": {"playwright-mcp-2": {"command": "ajcrew-not-installed-yet"}}}
             )
         )
 
         class _Manifest:
-            mcpServers = {"@playwright/mcp": {"command": "kirocrew-not-installed-yet"}}
+            mcpServers = {"@playwright/mcp": {"command": "ajcrew-not-installed-yet"}}
 
         monkeypatch.setattr(apps_manager, "list_apps", lambda: [{"name": "npm"}])
         monkeypatch.setattr(apps_manager, "app_enabled_state", lambda name: False)
@@ -839,7 +839,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 
@@ -856,7 +856,7 @@ class TestToolBloatFixesMountAndGrant:
 
         A record file on disk under a name the list does not carry signals a missing claim.
         """
-        from kiro_crew.apps import manager as apps_manager
+        from aj_crew.apps import manager as apps_manager
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -864,9 +864,9 @@ class TestToolBloatFixesMountAndGrant:
         existing = {
             "tools": ["fs_read", "@skipped:srv", "@skipped:srv/run"],
             "allowedTools": ["@skipped:srv"],
-            "mcpServers": {"skipped:srv": {"command": "kirocrew-not-installed-yet"}},
+            "mcpServers": {"skipped:srv": {"command": "ajcrew-not-installed-yet"}},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         # On disk with its record file present, but absent from what list_apps
         # returned: exactly the shape a failed per-app record read leaves.
@@ -883,7 +883,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 
@@ -904,7 +904,7 @@ class TestToolBloatFixesMountAndGrant:
         resolve, so nothing vouches for the grant. The mount stays: dropping a
         `tools` ref is not recoverable for a name nothing re-adds.
         """
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -912,9 +912,9 @@ class TestToolBloatFixesMountAndGrant:
         existing = {
             "tools": ["fs_read", "@ghosted:srv", "@ghosted:srv/run"],
             "allowedTools": ["@ghosted:srv"],
-            "mcpServers": {"ghosted:srv": {"command": "kirocrew-not-installed-yet"}},
+            "mcpServers": {"ghosted:srv": {"command": "ajcrew-not-installed-yet"}},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         reads = iter([{}, {}])
         monkeypatch.setattr(agent_mod, "_app_owned_mcp_keys", lambda: next(reads, {}))
@@ -923,7 +923,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 
@@ -938,8 +938,8 @@ class TestToolBloatFixesMountAndGrant:
         `is_app_enabled` returns False for both. A false disablement would revoke a grant
         nothing re-derives, so the claim counts as unread.
         """
-        from kiro_crew import agent as agent_mod
-        from kiro_crew.apps import manager as apps_manager
+        from aj_crew import agent as agent_mod
+        from aj_crew.apps import manager as apps_manager
 
         class _Manifest:
             mcpServers = {"srv": {"command": "x"}}
@@ -960,8 +960,8 @@ class TestToolBloatFixesMountAndGrant:
         If the gate vouched, a disabled app's grant would pass to the managed server once
         the gate reopened. `@gated-alone` is claimed by no app, so its ref is kept.
         """
-        from kiro_crew import agent as agent_mod
-        from kiro_crew.apps import manager as apps_manager
+        from aj_crew import agent as agent_mod
+        from aj_crew.apps import manager as apps_manager
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -971,14 +971,14 @@ class TestToolBloatFixesMountAndGrant:
             "allowedTools": ["@gated-claimed", "@gated-alone"],
             "mcpServers": {},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         monkeypatch.setattr(
             agent_mod, "_gated_off_servers", lambda: frozenset({"gated-claimed", "gated-alone"})
         )
 
         class _Manifest:
-            mcpServers = {"gated/claimed": {"command": "kirocrew-not-installed-yet"}}
+            mcpServers = {"gated/claimed": {"command": "ajcrew-not-installed-yet"}}
 
         # A switched-off app whose alias for `gated/claimed` is exactly `gated-claimed`.
         monkeypatch.setattr(apps_manager, "list_apps", lambda: [{"name": "gated"}])
@@ -989,7 +989,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 
@@ -1007,7 +1007,7 @@ class TestToolBloatFixesMountAndGrant:
         The app is uninstalled between the two ownership reads; the union with the start
         snapshot keeps the name claimed, so the grant goes and the mount stays.
         """
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -1017,7 +1017,7 @@ class TestToolBloatFixesMountAndGrant:
             "allowedTools": ["@gated-claimed"],
             "mcpServers": {},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         monkeypatch.setattr(agent_mod, "_gated_off_servers", lambda: frozenset({"gated-claimed"}))
         # Claimed (and enabled) at the start read, gone by the final one: the
@@ -1038,7 +1038,7 @@ class TestToolBloatFixesMountAndGrant:
         The shared sync re-adds the bare `@alias` once the command resolves, so a user who
         had only `@alias/one-tool` would get a whole-server grant back.
         """
-        from kiro_crew.apps import manager as apps_manager
+        from aj_crew.apps import manager as apps_manager
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -1047,20 +1047,20 @@ class TestToolBloatFixesMountAndGrant:
             "tools": ["fs_read", "@shared-name", "@shared-name/one-tool", "@orphan-name"],
             "allowedTools": ["@shared-name/one-tool", "@orphan-name"],
             "mcpServers": {
-                "shared-name": {"command": "kirocrew-not-installed-yet"},
-                "orphan-name": {"command": "kirocrew-not-installed-yet"},
+                "shared-name": {"command": "ajcrew-not-installed-yet"},
+                "orphan-name": {"command": "ajcrew-not-installed-yet"},
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
         # The user's own source still declares one of the two names.
         (tmp_path / "fake_kiro_mcp.json").write_text(
-            json.dumps({"mcpServers": {"shared-name": {"command": "kirocrew-not-installed-yet"}}})
+            json.dumps({"mcpServers": {"shared-name": {"command": "ajcrew-not-installed-yet"}}})
         )
 
         class _Manifest:
             mcpServers = {
-                "shared/name": {"command": "kirocrew-not-installed-yet"},
-                "orphan/name": {"command": "kirocrew-not-installed-yet"},
+                "shared/name": {"command": "ajcrew-not-installed-yet"},
+                "orphan/name": {"command": "ajcrew-not-installed-yet"},
             }
 
         # A switched-off app claims BOTH names exactly, via aliases of `shared/name`
@@ -1073,7 +1073,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 
@@ -1094,7 +1094,7 @@ class TestToolBloatFixesMountAndGrant:
         The app may be uninstalled by the end, leaving the name looking unowned, so both
         reads must see every claim before an unclaimed, unvouched name is exempted.
         """
-        from kiro_crew.apps import manager as apps_manager
+        from aj_crew.apps import manager as apps_manager
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -1102,9 +1102,9 @@ class TestToolBloatFixesMountAndGrant:
         existing = {
             "tools": ["fs_read", "@orphan:srv"],
             "allowedTools": ["@orphan:srv"],
-            "mcpServers": {"orphan:srv": {"command": "kirocrew-not-installed-yet"}},
+            "mcpServers": {"orphan:srv": {"command": "ajcrew-not-installed-yet"}},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         monkeypatch.setattr(apps_manager, "list_apps", lambda: [{"name": "ghost"}])
         monkeypatch.setattr(apps_manager, "app_enabled_state", lambda name: True)
@@ -1114,7 +1114,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 
@@ -1134,7 +1134,7 @@ class TestToolBloatFixesMountAndGrant:
 
         The end read cannot tell "app gone" from "never owned"; the pre-rebuild snapshot can.
         """
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -1142,9 +1142,9 @@ class TestToolBloatFixesMountAndGrant:
         existing = {
             "tools": ["fs_read", "@doomed:srv", "@doomed:srv/run"],
             "allowedTools": ["@doomed:srv"],
-            "mcpServers": {"doomed:srv": {"command": "kirocrew-not-installed-yet"}},
+            "mcpServers": {"doomed:srv": {"command": "ajcrew-not-installed-yet"}},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         # Owned and enabled on the first read, gone by the second: the uninstall
         # lands between them. Both reads saw every claim, so the absence at the end
@@ -1156,7 +1156,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 
@@ -1179,7 +1179,7 @@ class TestToolBloatFixesMountAndGrant:
         Pair of the uninstall test above: here the final read missed a claim, so the
         absence carries no information. The app is enabled throughout.
         """
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -1187,9 +1187,9 @@ class TestToolBloatFixesMountAndGrant:
         existing = {
             "tools": ["fs_read", "@live:srv", "@live:srv/run"],
             "allowedTools": ["@live:srv"],
-            "mcpServers": {"live:srv": {"command": "kirocrew-not-installed-yet"}},
+            "mcpServers": {"live:srv": {"command": "ajcrew-not-installed-yet"}},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         # Owned and enabled at the start; the second read claims nothing.
         reads = iter([{"live:srv": True}, {}])
@@ -1199,7 +1199,7 @@ class TestToolBloatFixesMountAndGrant:
             _run_install(
                 tmp_path,
                 cfg_dir,
-                which=lambda c, **kw: None if c == "kirocrew-not-installed-yet" else c,
+                which=lambda c, **kw: None if c == "ajcrew-not-installed-yet" else c,
             ).read_text(encoding="utf-8")
         )
 

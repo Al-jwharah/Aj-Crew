@@ -16,10 +16,10 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import revocation_gen, token_auth, ws_event_scope
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.dashboard import revocation_gen, token_auth, ws_event_scope
+from aj_crew.dashboard.handlers import updates
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.shared_crew.contracts import (
     ACTOR_REQUEST_KEY,
     ActorContext,
     DisplaySnapshot,
@@ -50,8 +50,8 @@ PEOPLE = {"alice": _person("alice@example.test"), "bob": _person("bob@example.te
 
 @pytest.fixture
 def ws_state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(token_auth, "_get_secret", lambda: b"typing-test-signing-key")
     monkeypatch.setattr(token_auth, "_state", token_auth.TokenStateManager())
     monkeypatch.setattr(token_auth, "_app_perms_cache", {})
@@ -63,13 +63,13 @@ def ws_state(tmp_path, monkeypatch):
         monkeypatch.setattr(ws_event_scope, name, set())
     stopped = asyncio.Event()
     monkeypatch.setattr(updates, "shutdown_event", stopped)
-    monkeypatch.setattr("kiro_crew.dashboard.ws.shutdown_event", stopped)
+    monkeypatch.setattr("aj_crew.dashboard.ws.shutdown_event", stopped)
     state = _make_state(tmp_path)
     state.get_or_create_slot(_SLOT, origin=SlotOrigin.USER)
     monkeypatch.setattr(state, "status_snapshot", lambda **_kwargs: {})
     import time as _time
 
-    from kiro_crew.dashboard import status_counts as _sc
+    from aj_crew.dashboard import status_counts as _sc
 
     monkeypatch.setattr(_sc, "_counts_cache", (0, 0))
     monkeypatch.setattr(_sc, "_counts_cache_ts", _time.monotonic())
@@ -102,7 +102,7 @@ async def _presence_naming(socket, login: str, activity: str) -> dict:
 
 @pytest.mark.asyncio
 async def test_alice_typing_reaches_bobs_socket(ws_state):
-    from kiro_crew.dashboard.ws import api_ws
+    from aj_crew.dashboard.ws import api_ws
 
     app = _make_app(ws_state)
     app.middlewares.insert(0, token_auth.token_auth_middleware())

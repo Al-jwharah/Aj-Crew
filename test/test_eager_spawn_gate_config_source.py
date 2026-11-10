@@ -12,12 +12,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config import live
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.config.resolution import DEGRADED_WHOLE_CONFIG
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_runner import schedule_eager_spawn
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.config import live
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.config.resolution import DEGRADED_WHOLE_CONFIG
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_runner import schedule_eager_spawn
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 
 @pytest.fixture(autouse=True)
@@ -28,8 +28,8 @@ def _isolate_armed_registry():
     chat_runner._armed_prefetches.clear()
 
 
-def _cfg(enabled: bool, *, degraded: frozenset[str] = frozenset()) -> KiroCrewConfig:
-    cfg = KiroCrewConfig(agents={"default": KiroCrewAgentConfig()}, _degraded_sections=degraded)
+def _cfg(enabled: bool, *, degraded: frozenset[str] = frozenset()) -> AjCrewConfig:
+    cfg = AjCrewConfig(agents={"default": AjCrewAgentConfig()}, _degraded_sections=degraded)
     cfg.session.eager_spawn = enabled
     return cfg
 
@@ -44,7 +44,7 @@ def _mock_state(slot: _ChatSlot) -> DashboardState:
     return state
 
 
-def _schedule(*, snapshot: KiroCrewConfig | None, on_disk):
+def _schedule(*, snapshot: AjCrewConfig | None, on_disk):
     """Run the gate with *snapshot* armed and *on_disk* behind the disk load.
 
     *snapshot* goes through :meth:`ConfigWatch.prime`, as at boot; ``None`` leaves the
@@ -56,7 +56,7 @@ def _schedule(*, snapshot: KiroCrewConfig | None, on_disk):
     load = MagicMock(**on_disk)
     slot = _ChatSlot("t1")
     state = _mock_state(slot)
-    with patch.object(chat_runner.KiroCrewConfig, "load", load):
+    with patch.object(chat_runner.AjCrewConfig, "load", load):
         task = schedule_eager_spawn(state, slot)
     if task is not None:
         task.cancel()

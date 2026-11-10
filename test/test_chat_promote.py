@@ -22,11 +22,11 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import chat_fork
-from kiro_crew.dashboard.chat_utils import effective_session_key, slot_history_key
-from kiro_crew.dashboard.state import _note_authorized_elsewhere
-from kiro_crew.history import is_incognito_transcript
-from kiro_crew.sel import sel
+from aj_crew.dashboard import chat_fork
+from aj_crew.dashboard.chat_utils import effective_session_key, slot_history_key
+from aj_crew.dashboard.state import _note_authorized_elsewhere
+from aj_crew.history import is_incognito_transcript
+from aj_crew.sel import sel
 
 
 @pytest.fixture(autouse=True)
@@ -107,7 +107,7 @@ async def _promote_with_no_app_claim(state, slot_name: str) -> tuple[int, dict]:
 
 @pytest.mark.asyncio
 async def test_promote_succeeds_for_incognito(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seed(tmp_path, "secret", "incognito")
     status, body = await _promote(state, "secret")
     assert status == 200, body
@@ -136,7 +136,7 @@ async def test_promote_preserves_persisted_system_rows(tmp_path, monkeypatch) ->
     ephemeral original (a Stop notice, a compaction card, an error row) must
     survive into the kept session. Dropping it would silently lose transcript
     content, and the ephemeral original is the copy being left behind."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("secret", memory_mode="incognito")
     slot.append("user", "hello", "msg msg-u")
@@ -171,7 +171,7 @@ async def test_promote_restamps_note_rows_for_the_kept_session(tmp_path, monkeyp
     """An App Kit note row carries the session it was written for. The kept
     session's save drops a note stamped for another session, so a copied note
     must name the kept session, or it never reaches the kept transcript."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("secret", memory_mode="incognito")
     slot.append("user", "hello", "msg msg-u")
@@ -205,7 +205,7 @@ async def test_promote_restamps_note_rows_for_the_kept_session(tmp_path, monkeyp
 
 @pytest.mark.asyncio
 async def test_promote_succeeds_for_temporary(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seed(tmp_path, "scratch", "temporary")
     status, body = await _promote(state, "scratch")
     assert status == 200, body
@@ -225,7 +225,7 @@ async def test_promote_succeeds_for_temporary(tmp_path, monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_promote_refused_for_an_already_persistent_slot(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seed(tmp_path, "regular", None)  # defaults to persistent
     assert state._slots["regular"].memory_mode == "persistent"
     status, body = await _promote(state, "regular")
@@ -235,7 +235,7 @@ async def test_promote_refused_for_an_already_persistent_slot(tmp_path, monkeypa
 
 @pytest.mark.asyncio
 async def test_promote_of_an_unknown_slot_is_not_found(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seed(tmp_path, "secret", "incognito")
     status, body = await _promote(state, "nosuchslot")
     assert status == 404
@@ -250,7 +250,7 @@ async def test_an_app_token_cannot_promote_a_slot_it_owns(tmp_path, monkeypatch)
     """Slot ownership is the wrong question for this route. An app that owns
     its own ephemeral slot (App Kit §5.2) is still refused: only a signed-in
     dashboard user may confirm "Keep this chat"."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seed(tmp_path, "secret", "incognito")
     state._slots["secret"]._app = "app-a"
     status, body = await _promote_as_app(state, "secret", "app-a")
@@ -265,7 +265,7 @@ async def test_an_app_token_cannot_promote_a_slot_it_owns(tmp_path, monkeypatch)
 async def test_an_app_token_cannot_promote_a_slot_it_does_not_own(tmp_path, monkeypatch) -> None:
     """The slot-ownership middleware answers first: a slot another app owns, or
     an unscoped one, reads as missing to an app token (CWE-204)."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seed(tmp_path, "secret", "incognito")
     status, body = await _promote_as_app(state, "secret", "app-b")
     assert status == 404
@@ -282,7 +282,7 @@ async def test_a_caller_with_no_app_claim_cannot_promote(tmp_path, monkeypatch) 
     promotion to any holder of the internal secret — readable by a spawned
     shell from the OS-unfenced ``.local_secret`` leaf — and a private
     transcript would become persistent with no human confirming the dialog."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seed(tmp_path, "secret", "incognito")
     status, body = await _promote_with_no_app_claim(state, "secret")
     assert status == 403
@@ -294,7 +294,7 @@ async def test_a_caller_with_no_app_claim_cannot_promote(tmp_path, monkeypatch) 
 
 @pytest.mark.asyncio
 async def test_app_token_promote_refusal_writes_a_sel_audit_record(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seed(tmp_path, "secret", "incognito")
     state._slots["secret"]._app = "app-a"
     status, _ = await _promote_as_app(state, "secret", "app-a")
@@ -319,7 +319,7 @@ async def test_promote_ignores_body_fields_and_always_copies_everything(
     """The confirmation dialog promises "the whole conversation is kept" —
     a body trying to narrow the scope (as a fork request could) must not be
     able to make that promise false."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seed(tmp_path, "secret", "incognito")
     status, body = await _promote(state, "secret", {"at_message_index": 0, "direction": "tail"})
     assert status == 200, body
@@ -332,7 +332,7 @@ async def test_promote_ignores_body_fields_and_always_copies_everything(
 
 @pytest.mark.asyncio
 async def test_a_successful_promotion_writes_a_sel_audit_record(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seed(tmp_path, "secret", "incognito")
     status, body = await _promote(state, "secret")
     assert status == 200, body
@@ -349,7 +349,7 @@ async def test_a_successful_promotion_writes_a_sel_audit_record(tmp_path, monkey
 
 @pytest.mark.asyncio
 async def test_a_refused_promotion_also_writes_a_sel_audit_record(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seed(tmp_path, "regular", None)
     status, _ = await _promote(state, "regular")
     assert status == 400
@@ -372,7 +372,7 @@ async def test_the_promoted_transcript_is_no_longer_read_as_private(tmp_path, mo
     gate on the shared ``is_incognito_transcript`` predicate over the
     persisted ``memory_mode`` header (see ``history.md``). Once promoted, the
     NEW slot's own persisted transcript must read back as not-private."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seed(tmp_path, "secret", "temporary")
     status, body = await _promote(state, "secret")
     assert status == 200, body
@@ -396,7 +396,7 @@ async def test_the_promoted_transcript_is_no_longer_read_as_private(tmp_path, mo
 async def test_promote_over_the_slot_cap_answers_fork_corpus_too_large(
     tmp_path, monkeypatch
 ) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(chat_fork, "_MAX_SLOT_MESSAGES", 1)
     state = _seed(tmp_path, "secret", "incognito")
     status, body = await _promote(state, "secret")
@@ -411,7 +411,7 @@ async def test_promote_over_the_slot_cap_answers_fork_corpus_too_large(
 
 @pytest.mark.asyncio
 async def test_a_non_owner_dashboard_request_cannot_promote(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _seed(tmp_path, "secret", "incognito")
 
     @web.middleware
@@ -437,7 +437,7 @@ async def test_a_non_owner_dashboard_request_cannot_promote(tmp_path, monkeypatc
 def test_promotion_has_no_mcp_tool_surface() -> None:
     """Promotion is strictly human-initiated, with no MCP tool or CLI
     surface an agent could call on its own."""
-    from kiro_crew.mcp_tools import build_tool_list
+    from aj_crew.mcp_tools import build_tool_list
 
     tools = build_tool_list()
     names = {t.get("name", "") for t in tools}
@@ -446,7 +446,7 @@ def test_promotion_has_no_mcp_tool_surface() -> None:
 
 
 def test_promotion_has_no_reference_in_any_mcp_server_module() -> None:
-    from kiro_crew import mcp_core, mcp_cron, mcp_dashboard
+    from aj_crew import mcp_core, mcp_cron, mcp_dashboard
 
     for module in (mcp_core, mcp_cron, mcp_dashboard):
         src = inspect.getsource(module)
@@ -455,7 +455,7 @@ def test_promotion_has_no_reference_in_any_mcp_server_module() -> None:
 
 
 def test_promotion_has_no_cli_command() -> None:
-    import kiro_crew.cli_chat as cli_chat_mod
+    import aj_crew.cli_chat as cli_chat_mod
 
     src = inspect.getsource(cli_chat_mod)
     assert "promote" not in src.lower()

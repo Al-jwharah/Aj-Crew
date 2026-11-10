@@ -48,12 +48,12 @@ import pytest
 
 pytestmark = pytest.mark.skipif(os.name == "nt", reason="ACP frame recorder is Linux-only")
 
-from kiro_crew.acp import _frame_record  # noqa: E402
-from kiro_crew.acp.client import AcpClient, JsonRpcMessage  # noqa: E402
-from kiro_crew.acp.runtime import AcpRuntime  # noqa: E402
-from kiro_crew.acp.types import METHOD_SESSION_UPDATE  # noqa: E402
-from kiro_crew.acp_backends import ACP_BACKENDS_KNOWN, POLICY_ID_BY_BACKEND  # noqa: E402
-from kiro_crew.testing.wait import async_wait_until, await_until  # noqa: E402
+from aj_crew.acp import _frame_record  # noqa: E402
+from aj_crew.acp.client import AcpClient, JsonRpcMessage  # noqa: E402
+from aj_crew.acp.runtime import AcpRuntime  # noqa: E402
+from aj_crew.acp.types import METHOD_SESSION_UPDATE  # noqa: E402
+from aj_crew.acp_backends import ACP_BACKENDS_KNOWN, POLICY_ID_BY_BACKEND  # noqa: E402
+from aj_crew.testing.wait import async_wait_until, await_until  # noqa: E402
 
 # Every backend id this build can construct a provider for. The empty string is
 # kiro-cli, and it is deliberately in the list: a test that forgot it would pass
@@ -108,7 +108,7 @@ async def _read_one(backend: str, frame: dict = WIRE_FRAME) -> JsonRpcMessage:
 @pytest.mark.parametrize("backend", PROVIDERS)
 async def test_restricted_client_never_records_payload(backend, mode, monkeypatch):
     recorder = AsyncMock()
-    monkeypatch.setattr("kiro_crew.acp.client.record_frame", recorder)
+    monkeypatch.setattr("aj_crew.acp.client.record_frame", recorder)
     client = _client_with_wire(backend, WIRE_FRAME)
     client.memory_mode = mode
 

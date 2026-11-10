@@ -23,9 +23,9 @@ import pytest
 from aiohttp.test_utils import make_mocked_request
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import chat_handlers as ch
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard import chat_handlers as ch
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
 
 
 @pytest.fixture(autouse=True)

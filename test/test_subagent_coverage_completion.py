@@ -1,4 +1,4 @@
-"""Coverage tests for what ``kiro_crew.subagent`` does once a run finishes.
+"""Coverage tests for what ``aj_crew.subagent`` does once a run finishes.
 
 The injection-failure notice and its outcome-aware copy, continuable-conversation
 retention (keep, promote, release, sweep), wave and batch bookkeeping with the
@@ -17,8 +17,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from subagent_coverage_helpers import _info, _manager, _sessions
 
-from kiro_crew import subagent as sa
-from kiro_crew.subagent import SubagentDelivery, SubagentInfo, SubagentManager
+from aj_crew import subagent as sa
+from aj_crew.subagent import SubagentDelivery, SubagentInfo, SubagentManager
 
 # Ceiling for a wait on an announce task the test ends itself: far above what the
 # in-memory work needs, so a regression that keeps it running fails at the wait by
@@ -35,7 +35,7 @@ class TestNotifyInjectionFailed:
         mgr = _manager(on_event=on_event)
         info = _info(parent_session_key="cron:1")
         with patch(
-            "kiro_crew.dashboard.chat_utils.dashboard_slot_key", return_value=""
+            "aj_crew.dashboard.chat_utils.dashboard_slot_key", return_value=""
         ) as slot_key:
             mgr.notify_injection_failed(info)
         slot_key.assert_called_once_with("cron:1")
@@ -54,7 +54,7 @@ class TestNotifyInjectionFailed:
         result.write_text("hello", newline="\n")
         mgr = _manager(on_event=_on_event)
         info = _info(parent_session_key="dash:1", result_path=str(result))
-        with patch("kiro_crew.dashboard.chat_utils.dashboard_slot_key", return_value="slot-1"):
+        with patch("aj_crew.dashboard.chat_utils.dashboard_slot_key", return_value="slot-1"):
             mgr.notify_injection_failed(info)
         # flake-ok: two zero-delay yields let the task notify_injection_failed queued run first; moved verbatim
         await asyncio.sleep(0)
@@ -71,7 +71,7 @@ class TestNotifyInjectionFailed:
 
         mgr = _manager(on_event=_on_event)
         info = _info(parent_session_key="dash:1", result_path=str(tmp_path / "absent.txt"))
-        with patch("kiro_crew.dashboard.chat_utils.dashboard_slot_key", return_value="slot-1"):
+        with patch("aj_crew.dashboard.chat_utils.dashboard_slot_key", return_value="slot-1"):
             mgr.notify_injection_failed(info)
         # flake-ok: two zero-delay yields let the task notify_injection_failed queued run first; moved verbatim
         await asyncio.sleep(0)
@@ -83,7 +83,7 @@ class TestNotifyInjectionFailed:
         mgr = _manager(on_event=on_event)
         info = _info(parent_session_key="dash:1")
         with patch(
-            "kiro_crew.dashboard.chat_utils.dashboard_slot_key",
+            "aj_crew.dashboard.chat_utils.dashboard_slot_key",
             side_effect=RuntimeError("no dashboard"),
         ) as slot_key:
             mgr.notify_injection_failed(info)
@@ -106,7 +106,7 @@ class TestNotifyInjectionFailed:
         mgr = _manager(on_event=_on_event)
         info = _info(parent_session_key="dash:1")
         mgr._teardown_cancelled_ids.add(info.id)
-        with patch("kiro_crew.dashboard.chat_utils.dashboard_slot_key", return_value="slot-1"):
+        with patch("aj_crew.dashboard.chat_utils.dashboard_slot_key", return_value="slot-1"):
             mgr.notify_injection_failed(info)
         # flake-ok: two zero-delay yields let the task notify_injection_failed queued run first; moved verbatim
         await asyncio.sleep(0)
@@ -120,7 +120,7 @@ class TestNotifyInjectionFailed:
         The forced partial flush is a synthetic record with a fresh id, so the delivery gate
         keyed on run ids cannot catch it; the member is skipped in the expiry scan instead.
         """
-        import kiro_crew.subagent as _facade
+        import aj_crew.subagent as _facade
 
         mgr = _manager(on_done=AsyncMock())
         held = _info(parent_session_key="dash:1")
@@ -176,7 +176,7 @@ class TestNotifyInjectionFailed:
         A parent with many queued children would evict its own earliest ids mid-spawn. The
         TTL exceeds every window with an announce left, and a read must not extend it.
         """
-        from kiro_crew.subagent import _AgingIdSet
+        from aj_crew.subagent import _AgingIdSet
 
         ids = _AgingIdSet(3600.0)
         ids.update(str(n) for n in range(10_000))
@@ -185,13 +185,13 @@ class TestNotifyInjectionFailed:
 
         aged = _AgingIdSet(1.0)
         # flake-ok: pins subagent's monotonic clock for one synchronous _AgingIdSet call in a sync test that starts no loop or thread; moved verbatim
-        with patch("kiro_crew.subagent.time.monotonic", return_value=1_000.0):
+        with patch("aj_crew.subagent.time.monotonic", return_value=1_000.0):
             aged.update(["old-1", "old-2"])
         # flake-ok: pins subagent's monotonic clock for one synchronous _AgingIdSet call in a sync test that starts no loop or thread; moved verbatim
-        with patch("kiro_crew.subagent.time.monotonic", return_value=1_000.5):
+        with patch("aj_crew.subagent.time.monotonic", return_value=1_000.5):
             assert "old-1" in aged  # a read does not refresh it
         # flake-ok: pins subagent's monotonic clock for one synchronous _AgingIdSet call in a sync test that starts no loop or thread; moved verbatim
-        with patch("kiro_crew.subagent.time.monotonic", return_value=1_100.0):
+        with patch("aj_crew.subagent.time.monotonic", return_value=1_100.0):
             aged.add("new-1")
         assert list(aged) == ["new-1"]
 
@@ -296,7 +296,7 @@ class TestNotifyInjectionFailed:
         the person takes. An hour let a later teardown prune its mark while it waited, and
         the completion then injected into whatever the key served by then.
         """
-        from kiro_crew.subagent import _TEARDOWN_GATE_TTL_SECS
+        from aj_crew.subagent import _TEARDOWN_GATE_TTL_SECS
 
         assert _TEARDOWN_GATE_TTL_SECS >= 86400.0, (
             "the backstop is shorter than a person plausibly takes to answer an approval, "
@@ -314,7 +314,7 @@ class TestNotifyInjectionFailed:
         mgr = _manager(on_event=_on_event)
         mgr._teardown_cancelled_ids.add("some-other-agent")
         info = _info(parent_session_key="dash:1")
-        with patch("kiro_crew.dashboard.chat_utils.dashboard_slot_key", return_value="slot-1"):
+        with patch("aj_crew.dashboard.chat_utils.dashboard_slot_key", return_value="slot-1"):
             mgr.notify_injection_failed(info)
         # flake-ok: two zero-delay yields let the task notify_injection_failed queued run first; moved verbatim
         await asyncio.sleep(0)
@@ -407,7 +407,7 @@ class TestInjectionNoticeDoesNotContradictItsReason:
             seen.append(extra)
 
         mgr = _manager(on_event=_on_event)
-        with patch("kiro_crew.dashboard.chat_utils.dashboard_slot_key", return_value="slot-1"):
+        with patch("aj_crew.dashboard.chat_utils.dashboard_slot_key", return_value="slot-1"):
             mgr.notify_injection_failed(info, reason=reason)
         # flake-ok: two zero-delay yields let the task notify_injection_failed queued run first; moved verbatim
         await asyncio.sleep(0)
@@ -469,7 +469,7 @@ class TestNotifyInjectionFailedOutcomeCopy:
             seen.append(extra)
 
         mgr = _manager(on_event=_on_event)
-        with patch("kiro_crew.dashboard.chat_utils.dashboard_slot_key", return_value="slot-1"):
+        with patch("aj_crew.dashboard.chat_utils.dashboard_slot_key", return_value="slot-1"):
             mgr.notify_injection_failed(info)
         # flake-ok: two zero-delay yields let the task notify_injection_failed queued run first; moved verbatim
         await asyncio.sleep(0)
@@ -1344,7 +1344,7 @@ class TestEveryDoneFlipArmsTheHold:
     def test_no_terminal_done_flip_is_left_unarmed(self) -> None:
         import re
 
-        root = Path(__file__).resolve().parent.parent / "src" / "kiro_crew" / "subagent_manager"
+        root = Path(__file__).resolve().parent.parent / "src" / "aj_crew" / "subagent_manager"
         files = sorted(root.rglob("*.py"))
         assert files, "no subagent_manager sources found"
 
@@ -1380,7 +1380,7 @@ class TestEveryDoneFlipArmsTheHold:
         non-batch rejection (``_drain_queue``) holds nothing and is marked ``non-batch``."""
         import re
 
-        root = Path(__file__).resolve().parent.parent / "src" / "kiro_crew" / "subagent_manager"
+        root = Path(__file__).resolve().parent.parent / "src" / "aj_crew" / "subagent_manager"
         sched_re = re.compile(r"ensure_future\(\s*self\._manager\._safe_announce\((\w+)\)")
         split_re = re.compile(r"ensure_future\(\s*$")  # the call split across two lines
         unarmed: list[str] = []

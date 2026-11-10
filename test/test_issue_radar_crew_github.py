@@ -20,10 +20,10 @@ import json
 import unittest
 from unittest import mock
 
-from kiro_crew.apps.builtins.issue_radar.backend import github_client as gh
+from aj_crew.apps.builtins.issue_radar.backend import github_client as gh
 
 MARKER = (
-    "<!-- kirocrew-crew id=c_7f3a phase=implementing pr=2271 "
+    "<!-- ajcrew-crew id=c_7f3a phase=implementing pr=2271 "
     "updated=2026-08-08T20:44:12Z -->"
 )
 
@@ -32,7 +32,7 @@ def _proc(stdout: str = "", *, returncode: int = 0, stderr: str = ""):
     return mock.Mock(returncode=returncode, stdout=stdout, stderr=stderr)
 
 
-def _comment_row(comment_id, body, *, actor="kiro-crew", created="2026-08-08T18:02:00Z"):
+def _comment_row(comment_id, body, *, actor="aj-crew", created="2026-08-08T18:02:00Z"):
     """One row in the shape ``_normalize_timeline_event`` emits for a comment."""
     return {
         "kind": "comment", "id": comment_id, "actor": actor,
@@ -169,7 +169,7 @@ class TimelineCommentFieldsTest(unittest.TestCase):
     """``id`` and ``updated_at`` must survive normalization — both load-bearing."""
 
     RAW = {
-        "event": "commented", "id": 9001, "user": {"login": "kiro-crew"},
+        "event": "commented", "id": 9001, "user": {"login": "aj-crew"},
         "created_at": "2026-08-08T18:02:00Z", "updated_at": "2026-08-08T20:44:12Z",
         "body": f"progress\n\n{MARKER}", "author_association": "MEMBER",
     }
@@ -220,7 +220,7 @@ class FindCrewClaimTest(unittest.TestCase):
         self.assertEqual(gh.find_crew_claim(rows), [{
             "comment_id": 9001, "crew_id": "c_7f3a", "phase": "implementing",
             "pr": 2271, "updated": "2026-08-08T20:44:12Z",
-            "actor": "kiro-crew", "created_at": "2026-08-08T18:02:00Z",
+            "actor": "aj-crew", "created_at": "2026-08-08T18:02:00Z",
         }])
 
     def test_a_row_with_no_marker_is_skipped(self):
@@ -231,14 +231,14 @@ class FindCrewClaimTest(unittest.TestCase):
         self.assertEqual(gh.find_crew_claim(rows), [])
 
     def test_the_brief_sentinel_is_not_a_claim(self):
-        # `kirocrew-crew-brief` shares the marker's prefix; matching it would make
+        # `ajcrew-crew-brief` shares the marker's prefix; matching it would make
         # every session that echoes the brief look like a claim.
-        rows = [_comment_row(1, "<!-- kirocrew-crew-brief v1 -->")]
+        rows = [_comment_row(1, "<!-- ajcrew-crew-brief v1 -->")]
         self.assertEqual(gh.find_crew_claim(rows), [])
 
     def test_unknown_keys_are_ignored(self):
         marker = (
-            "<!-- kirocrew-crew id=c_7f3a phase=claimed pr=7 "
+            "<!-- ajcrew-crew id=c_7f3a phase=claimed pr=7 "
             "updated=2026-08-08T20:44:12Z lease=99 nextField=whatever -->"
         )
         claim = gh.find_crew_claim([_comment_row(5, marker)])[0]
@@ -248,7 +248,7 @@ class FindCrewClaimTest(unittest.TestCase):
         self.assertNotIn("nextField", claim)
 
     def test_absent_optional_fields_read_as_empty_not_missing(self):
-        claim = gh.find_crew_claim([_comment_row(5, "<!-- kirocrew-crew id=c_1 -->")])[0]
+        claim = gh.find_crew_claim([_comment_row(5, "<!-- ajcrew-crew id=c_1 -->")])[0]
         self.assertEqual(claim["crew_id"], "c_1")
         self.assertEqual(claim["phase"], "")
         self.assertIsNone(claim["pr"])
@@ -257,19 +257,19 @@ class FindCrewClaimTest(unittest.TestCase):
     def test_a_marker_with_no_id_is_still_reported_as_a_claim(self):
         # It names nobody, so it can never MATCH a crew id — but dropping it is how
         # two crews end up on one issue.
-        claim = gh.find_crew_claim([_comment_row(5, "<!-- kirocrew-crew phase=claimed -->")])[0]
+        claim = gh.find_crew_claim([_comment_row(5, "<!-- ajcrew-crew phase=claimed -->")])[0]
         self.assertEqual(claim["crew_id"], "")
-        self.assertEqual(gh.find_crew_claim([_comment_row(5, "<!-- kirocrew-crew phase=x -->")],
+        self.assertEqual(gh.find_crew_claim([_comment_row(5, "<!-- ajcrew-crew phase=x -->")],
                                             crew_id="c_7f3a"), [])
 
     def test_a_non_numeric_pr_is_none_not_a_crash(self):
-        marker = "<!-- kirocrew-crew id=c_1 pr=none updated=2026-08-08T20:44:12Z -->"
+        marker = "<!-- ajcrew-crew id=c_1 pr=none updated=2026-08-08T20:44:12Z -->"
         self.assertIsNone(gh.find_crew_claim([_comment_row(5, marker)])[0]["pr"])
 
     # ── the timestamp rule: only ISO-8601 with a trailing Z parses ────────────
 
     def test_a_valid_stamp_with_fractional_seconds_is_accepted(self):
-        marker = "<!-- kirocrew-crew id=c_1 updated=2026-08-08T20:44:12.501Z -->"
+        marker = "<!-- ajcrew-crew id=c_1 updated=2026-08-08T20:44:12.501Z -->"
         self.assertEqual(gh.find_crew_claim([_comment_row(5, marker)])[0]["updated"],
                          "2026-08-08T20:44:12.501Z")
 
@@ -286,7 +286,7 @@ class FindCrewClaimTest(unittest.TestCase):
             "yesterday",
             "1786000000",                  # epoch seconds
         ):
-            marker = f"<!-- kirocrew-crew id=c_1 updated={bad} -->"
+            marker = f"<!-- ajcrew-crew id=c_1 updated={bad} -->"
             claim = gh.find_crew_claim([_comment_row(5, marker)])[0]
             self.assertIsNone(claim["updated"], bad)
             # The claim itself still stands — only its freshness is unknown.
@@ -296,9 +296,9 @@ class FindCrewClaimTest(unittest.TestCase):
 
     def test_claims_are_ordered_by_comment_id_ascending(self):
         rows = [
-            _comment_row(9003, "<!-- kirocrew-crew id=c_c -->", created="2026-08-08T20:00:00Z"),
-            _comment_row(9001, "<!-- kirocrew-crew id=c_a -->", created="2026-08-08T18:00:00Z"),
-            _comment_row(9002, "<!-- kirocrew-crew id=c_b -->", created="2026-08-08T19:00:00Z"),
+            _comment_row(9003, "<!-- ajcrew-crew id=c_c -->", created="2026-08-08T20:00:00Z"),
+            _comment_row(9001, "<!-- ajcrew-crew id=c_a -->", created="2026-08-08T18:00:00Z"),
+            _comment_row(9002, "<!-- ajcrew-crew id=c_b -->", created="2026-08-08T19:00:00Z"),
         ]
         # The winner of a collision is [0], so the order IS the protocol.
         self.assertEqual([c["comment_id"] for c in gh.find_crew_claim(rows)],
@@ -307,23 +307,23 @@ class FindCrewClaimTest(unittest.TestCase):
 
     def test_an_unknown_comment_id_sorts_last_so_it_cannot_win_a_collision(self):
         rows = [
-            _comment_row(None, "<!-- kirocrew-crew id=c_ghost -->"),
-            _comment_row(9002, "<!-- kirocrew-crew id=c_b -->"),
-            _comment_row(9001, "<!-- kirocrew-crew id=c_a -->"),
+            _comment_row(None, "<!-- ajcrew-crew id=c_ghost -->"),
+            _comment_row(9002, "<!-- ajcrew-crew id=c_b -->"),
+            _comment_row(9001, "<!-- ajcrew-crew id=c_a -->"),
         ]
         self.assertEqual([c["comment_id"] for c in gh.find_crew_claim(rows)],
                          [9001, 9002, None])
 
     def test_a_non_int_comment_id_is_normalized_to_none(self):
         for raw in ("9001", True, 9001.0, {"id": 9001}):
-            claim = gh.find_crew_claim([_comment_row(raw, "<!-- kirocrew-crew id=c_1 -->")])[0]
+            claim = gh.find_crew_claim([_comment_row(raw, "<!-- ajcrew-crew id=c_1 -->")])[0]
             self.assertIsNone(claim["comment_id"], raw)
 
     # ── the crew_id filter ───────────────────────────────────────────────────
 
     def test_crew_id_filters_to_one_crews_own_claims(self):
         rows = [
-            _comment_row(9001, "<!-- kirocrew-crew id=c_other phase=claimed -->"),
+            _comment_row(9001, "<!-- ajcrew-crew id=c_other phase=claimed -->"),
             _comment_row(9002, f"progress\n{MARKER}"),
         ]
         self.assertEqual(gh.find_crew_claim(rows, crew_id="c_7f3a"),
@@ -373,7 +373,7 @@ class FindCrewClaimTest(unittest.TestCase):
                              "c_7f3a", body)
 
     def test_the_first_marker_wins_when_a_body_carries_two(self):
-        body = f"{MARKER}\nquoted example:\n<!-- kirocrew-crew id=c_zzz phase=resolved -->"
+        body = f"{MARKER}\nquoted example:\n<!-- ajcrew-crew id=c_zzz phase=resolved -->"
         claim = gh.find_crew_claim([_comment_row(1, body)])[0]
         self.assertEqual(claim["crew_id"], "c_7f3a")
         self.assertEqual(claim["phase"], "implementing")

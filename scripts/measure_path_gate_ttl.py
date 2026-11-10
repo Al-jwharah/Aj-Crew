@@ -3,7 +3,7 @@
 
 WHY THIS EXISTS
 ---------------
-``kiro_crew.security.paths`` caches the protected-anchor set for
+``aj_crew.security.paths`` caches the protected-anchor set for
 ``_HOME_TARGETS_TTL_SECS``.  That constant was chosen against an IDLE
 interpreter, where one rebuild costs about 2ms, so a 0.1s expiry spends about
 2% of the wall clock rebuilding.  Under contention the SAME rebuild costs
@@ -45,9 +45,9 @@ WHAT IT MEASURES
 
 HOW TO RUN
 ----------
-From a checkout, with an interpreter that can import ``kiro_crew``::
+From a checkout, with an interpreter that can import ``aj_crew``::
 
-    KIROCREW_HOME="$SOME_SCRATCH_DIR" \\
+    AJCREW_HOME="$SOME_SCRATCH_DIR" \\
       PYTHONPATH=src python scripts/measure_path_gate_ttl.py ksweep \\
       > ksweep.log 2>&1 </dev/null
 
@@ -72,8 +72,8 @@ COST AND SAFETY
 ---------------
 The sibling threads are pure-Python loops.  They contend for the GIL rather
 than for cores, so the whole run costs roughly one core no matter how many are
-asked for, and nothing is written outside ``KIROCREW_HOME``.  Point
-``KIROCREW_HOME`` at a scratch directory: the gate anchors its target set on
+asked for, and nothing is written outside ``AJCREW_HOME``.  Point
+``AJCREW_HOME`` at a scratch directory: the gate anchors its target set on
 that variable, and the run should not depend on the operator's real crew home.
 A ``ksweep`` takes several minutes, because the contended cells deliberately
 wait out the refusals they are there to count.
@@ -92,8 +92,8 @@ import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from kiro_crew import security
-from kiro_crew.security import paths as gate
+from aj_crew import security
+from aj_crew.security import paths as gate
 
 #: Load levels the sweep walks.  Chosen to bracket the transition: an idle
 #: interpreter, the single sibling the raised rebuild budget was sized for, and
@@ -235,7 +235,7 @@ def measure_rebuild(hogs: int, samples: int) -> RebuildRow:
 
 def _candidate_files(limit: int) -> list[str]:
     """Ordinary project files to gate, which no correct gate ever refuses."""
-    root = Path(__file__).resolve().parent.parent / "src" / "kiro_crew" / "security"
+    root = Path(__file__).resolve().parent.parent / "src" / "aj_crew" / "security"
     files = sorted(str(path) for path in root.rglob("*.py"))
     if not files:  # pragma: no cover - a checkout always has these
         raise SystemExit(f"no candidate files under {root}")
@@ -446,7 +446,7 @@ def _provenance() -> dict[str, object]:
         "shipped_ttl_cap_secs": gate._HOME_TARGETS_TTL_MAX_SECS,
         "rebuild_budget_secs": gate._PATH_RESOLVE_REBUILD_TIMEOUT_SECS,
         "candidate_budget_secs": gate._PATH_RESOLVE_TIMEOUT_SECS,
-        "kirocrew_home": os.environ.get("KIROCREW_HOME", "<unset>"),
+        "ajcrew_home": os.environ.get("AJCREW_HOME", "<unset>"),
     }
 
 

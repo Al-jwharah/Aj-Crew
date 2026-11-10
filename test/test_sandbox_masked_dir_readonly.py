@@ -1,7 +1,7 @@
 """An OPTED-IN masked directory with no writable window is sealed read-only.
 
 The launcher binds an empty stand-in over each sensitive directory
-(:func:`~kiro_crew.sandbox_launcher_program.mask_sensitive`). On Linux that bind
+(:func:`~aj_crew.sandbox_launcher_program.mask_sensitive`). On Linux that bind
 is a WRITABLE empty tmpfs, so a write into a masked path lands in disposable
 storage and vanishes when the namespace is torn down -- the write reports success
 while nothing is persisted. For a masked directory the caller explicitly OPTED IN
@@ -32,7 +32,7 @@ from typing import Any
 import pytest
 from test_sandbox_launcher_program import CoveringLibc, launch, payload
 
-from kiro_crew import sandbox_launcher_program
+from aj_crew import sandbox_launcher_program
 
 program = sandbox_launcher_program
 

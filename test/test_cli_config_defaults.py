@@ -1,4 +1,4 @@
-"""``kirocrew config defaults`` -- review, adopt, or affirm superseded defaults.
+"""``ajcrew config defaults`` -- review, adopt, or affirm superseded defaults.
 
 The load path can only REPORT drift: a stored old default and a deliberate opt-out
 are the same bytes, so it must not rewrite either. This command is the surface
@@ -15,7 +15,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.config import superseded_defaults as SD
+from aj_crew.config import superseded_defaults as SD
 
 DRIFTED = {
     "session": {"autocompact_pct": 90.0},
@@ -28,17 +28,17 @@ def _args(*, keys: list[str] | None = None, adopt: bool = False, keep: bool = Fa
 
 
 def _run(args: argparse.Namespace, config_dir: Path) -> None:
-    from kiro_crew.cli_config import _config_cmd
+    from aj_crew.cli_config import _config_cmd
 
     with (
-        patch("kiro_crew.cli_config.config_path", return_value=config_dir / "config.json"),
+        patch("aj_crew.cli_config.config_path", return_value=config_dir / "config.json"),
         patch(
-            "kiro_crew.cli_config.config_local_path",
+            "aj_crew.cli_config.config_local_path",
             return_value=config_dir / "config.local.json",
         ),
-        patch("kiro_crew.config.loader.config_path", return_value=config_dir / "config.json"),
-        patch("kiro_crew.config.loader.config_dir", return_value=config_dir),
-        patch("kiro_crew.cli_config.sel"),
+        patch("aj_crew.config.loader.config_path", return_value=config_dir / "config.json"),
+        patch("aj_crew.config.loader.config_dir", return_value=config_dir),
+        patch("aj_crew.cli_config.sel"),
     ):
         _config_cmd(args)
 
@@ -84,8 +84,8 @@ def test_adopt_touches_only_the_named_key(home):
 
 def test_adopt_leaves_a_value_that_changed_since_it_was_listed(home):
     """Re-detection happens inside the lock, so a concurrent edit is not discarded."""
-    from kiro_crew import cli_config
-    from kiro_crew.cli_config import _config_cmd
+    from aj_crew import cli_config
+    from aj_crew.cli_config import _config_cmd
 
     def _steal(existing: dict) -> dict:
         existing["session"]["autocompact_pct"] = 55.0
@@ -98,19 +98,19 @@ def test_adopt_leaves_a_value_that_changed_since_it_was_listed(home):
         # First call is the snapshot read; mutate the file before the locked pass.
         calls.append(1)
         if len(calls) == 1:
-            from kiro_crew.config.loader import update_config_locked
+            from aj_crew.config.loader import update_config_locked
 
             update_config_locked(home / "config.json", mutate=_steal)
         return real(base_data, acked)
 
     with (
-        patch("kiro_crew.cli_config.config_path", return_value=home / "config.json"),
+        patch("aj_crew.cli_config.config_path", return_value=home / "config.json"),
         patch(
-            "kiro_crew.cli_config.config_local_path",
+            "aj_crew.cli_config.config_local_path",
             return_value=home / "config.local.json",
         ),
-        patch("kiro_crew.config.loader.config_dir", return_value=home),
-        patch("kiro_crew.cli_config.sel"),
+        patch("aj_crew.config.loader.config_dir", return_value=home),
+        patch("aj_crew.cli_config.sel"),
         patch.object(cli_config, "superseded_default_drift", _drift),
     ):
         _config_cmd(_args(keys=["session.autocompact_pct"], adopt=True))
@@ -120,7 +120,7 @@ def test_adopt_leaves_a_value_that_changed_since_it_was_listed(home):
 
 def test_keep_records_the_stored_values_and_silences_the_report(home, capsys):
     _run(_args(keep=True), home)
-    with patch("kiro_crew.config.loader.config_dir", return_value=home):
+    with patch("aj_crew.config.loader.config_dir", return_value=home):
         assert SD.acked_superseded() == {
             "session.autocompact_pct": 90.0,
             "mcp_gateway.forward_declared_env": False,
@@ -135,7 +135,7 @@ def test_the_restart_hint_names_only_restart_bound_keys(home, capsys):
     """The schema's ``restart=True`` mark decides the hint, so a key the mark leaves
     hot is not sent through a restart. ``forward_declared_env`` is marked;
     ``autocompact_pct`` is not."""
-    from kiro_crew.config.schema import requires_restart
+    from aj_crew.config.schema import requires_restart
 
     assert requires_restart("mcp_gateway.forward_declared_env")
     assert not requires_restart("session.autocompact_pct")
@@ -210,7 +210,7 @@ def test_adopting_an_acked_key_drops_its_ack(home):
     silence a genuinely deliberate choice made later."""
     _run(_args(keys=["session.autocompact_pct"], keep=True), home)
     _run(_args(keys=["session.autocompact_pct"], adopt=True), home)
-    with patch("kiro_crew.config.loader.config_dir", return_value=home):
+    with patch("aj_crew.config.loader.config_dir", return_value=home):
         assert "session.autocompact_pct" not in SD.acked_superseded()
 
 
@@ -252,7 +252,7 @@ def test_adopt_says_the_overlay_still_wins_when_it_carries_the_key(home, capsys)
 def test_an_overlay_shadowed_restart_bound_key_asks_for_no_restart(home, capsys):
     """The overlay still decides that key, so the running value does not move and a
     restart would change nothing."""
-    from kiro_crew.config.schema import requires_restart
+    from aj_crew.config.schema import requires_restart
 
     assert requires_restart("mcp_gateway.forward_declared_env")
     (home / "config.local.json").write_text(
@@ -290,25 +290,25 @@ def test_listing_shows_what_auto_adoption_already_removed(tmp_path, capsys):
     d = tmp_path / "crew"
     d.mkdir()
     (d / "config.json").write_text(json.dumps({"agent": {}}), "utf-8")
-    with patch("kiro_crew.config.loader.config_dir", return_value=d):
+    with patch("aj_crew.config.loader.config_dir", return_value=d):
         SD.record_adoptions({"agent.subagent_timeout_secs": 1800})
 
     _run(_args(), d)
     out = capsys.readouterr().out
     assert "agent.subagent_timeout_secs" in out
     assert "1800" in out
-    assert "kirocrew config set agent.subagent_timeout_secs 1800" in out
+    assert "ajcrew config set agent.subagent_timeout_secs 1800" in out
     assert "No stored value holds a superseded default" in out
     # Listing changes nothing, in either file.
     assert _stored(d) == {"agent": {}}
-    with patch("kiro_crew.config.loader.config_dir", return_value=d):
+    with patch("aj_crew.config.loader.config_dir", return_value=d):
         assert SD.adopted_superseded() == {"agent.subagent_timeout_secs": 1800}
 
 
 def test_listing_renders_the_ledger_even_without_a_config_file(tmp_path, capsys):
     d = tmp_path / "crew"
     d.mkdir()
-    with patch("kiro_crew.config.loader.config_dir", return_value=d):
+    with patch("aj_crew.config.loader.config_dir", return_value=d):
         SD.record_adoptions({"agent.subagent_timeout_secs": 1800})
 
     _run(_args(), d)
@@ -323,13 +323,13 @@ def test_listing_renders_the_ledger_before_a_corrupt_config_is_refused(tmp_path,
     d = tmp_path / "crew"
     d.mkdir()
     (d / "config.json").write_text("{ not json", encoding="utf-8")
-    with patch("kiro_crew.config.loader.config_dir", return_value=d):
+    with patch("aj_crew.config.loader.config_dir", return_value=d):
         SD.record_adoptions({"agent.subagent_timeout_secs": 1800})
 
     with pytest.raises(SystemExit):
         _run(_args(), d)
     captured = capsys.readouterr()
-    assert "kirocrew config set agent.subagent_timeout_secs 1800" in captured.out
+    assert "ajcrew config set agent.subagent_timeout_secs 1800" in captured.out
     assert "Could not read" in captured.err
 
 
@@ -338,7 +338,7 @@ def test_an_adopted_key_is_not_an_adopt_or_keep_target(tmp_path, capsys):
     d = tmp_path / "crew"
     d.mkdir()
     (d / "config.json").write_text(json.dumps({"agent": {}}), "utf-8")
-    with patch("kiro_crew.config.loader.config_dir", return_value=d):
+    with patch("aj_crew.config.loader.config_dir", return_value=d):
         SD.record_adoptions({"agent.subagent_timeout_secs": 1800})
 
     with pytest.raises(SystemExit):
@@ -416,7 +416,7 @@ def test_a_coerced_value_cannot_be_kept(retired, capsys):
     assert "cannot be kept" in out
     saved = json.loads((retired / "config.json").read_text(encoding="utf-8"))
     assert saved["stt"]["provider"] == "whisper"
-    with patch("kiro_crew.config.loader.config_dir", return_value=retired):
+    with patch("aj_crew.config.loader.config_dir", return_value=retired):
         assert SD.acked_superseded() == {}
 
 
@@ -445,7 +445,7 @@ def test_an_appended_coerced_entry_is_detected_without_editing_the_detector(monk
 
 def test_an_unwritable_data_home_gives_an_error_not_a_traceback(home, capsys):
     """A read-only or full data home must not surface as an uncaught OSError."""
-    from kiro_crew.config import superseded_defaults as sd
+    from aj_crew.config import superseded_defaults as sd
 
     with patch.object(sd, "_update_acked", side_effect=OSError("read-only file system")):
         with pytest.raises(SystemExit) as e:
@@ -455,7 +455,7 @@ def test_an_unwritable_data_home_gives_an_error_not_a_traceback(home, capsys):
 
 
 def test_an_unwritable_config_on_adopt_gives_an_error_not_a_traceback(home, capsys):
-    from kiro_crew import cli_config
+    from aj_crew import cli_config
 
     with patch.object(cli_config, "update_config_locked", side_effect=OSError("disk full")):
         with pytest.raises(SystemExit) as e:

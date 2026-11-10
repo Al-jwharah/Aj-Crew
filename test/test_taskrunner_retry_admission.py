@@ -11,10 +11,10 @@ import pytest
 from test_workflows_snapshot_commit import _fail_io, _private, _runner
 from test_workflows_snapshot_commit import world as _world
 
-from kiro_crew import atomic_write as atomic
-from kiro_crew.task_models import Task, TaskStatus
-from kiro_crew.testing.wait import await_until, finished
-from kiro_crew.workflow_memory import TaskSnapshotError
+from aj_crew import atomic_write as atomic
+from aj_crew.task_models import Task, TaskStatus
+from aj_crew.testing.wait import await_until, finished
+from aj_crew.workflow_memory import TaskSnapshotError
 
 world = _world
 

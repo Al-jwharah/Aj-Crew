@@ -17,14 +17,14 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import slot_retention
-from kiro_crew.dashboard.chat_persistence import (
+from aj_crew.dashboard import slot_retention
+from aj_crew.dashboard.chat_persistence import (
     ENV_AUTHORITY_RESTORED,
     restore_open_slots,
     restore_open_slots_async,
 )
-from kiro_crew.dashboard.chat_utils import _history_key_for
-from kiro_crew.dashboard.state import MAX_LIVE_SLOTS
+from aj_crew.dashboard.chat_utils import _history_key_for
+from aj_crew.dashboard.state import MAX_LIVE_SLOTS
 
 # ── Restore budget ──
 
@@ -35,7 +35,7 @@ _LOOPED = "chat-0-looped"
 
 def _seed_open_tabs(tmp_path, monkeypatch):
     """Seed more open tabs than the cap; the pinned and looped ones are the OLDEST."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     log = state.conversation_log
     keys = [f"chat-{i}-tab" for i in range(1, _SEEDED + 1)] + [_PINNED, _LOOPED]
@@ -83,7 +83,7 @@ def _assert_one_history_notice(state, count: int) -> None:
 
 
 def test_sync_restore_stops_at_the_budget_and_keeps_pinned_and_looped(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: None)
+    monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: None)
     state, log = _seed_open_tabs(tmp_path, monkeypatch)
     # Suspended as at startup, so the 400 builds broadcast once rather than each.
     with state.suspend_slots_push():
@@ -92,7 +92,7 @@ def test_sync_restore_stops_at_the_budget_and_keeps_pinned_and_looped(tmp_path, 
 
 
 def test_async_restore_stops_at_the_budget_and_keeps_pinned_and_looped(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: None)
+    monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: None)
     state, log = _seed_open_tabs(tmp_path, monkeypatch)
     with state.suspend_slots_push():
         restored = asyncio.run(restore_open_slots_async(state))
@@ -101,10 +101,10 @@ def test_async_restore_stops_at_the_budget_and_keeps_pinned_and_looped(tmp_path,
 
 def test_unreadable_loop_store_applies_no_budget(tmp_path, monkeypatch):
     """Which tabs a loop drives is unknown, so no tab is left unbuilt."""
-    monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: None)
+    monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: None)
     monkeypatch.setattr(slot_retention, "RESTORE_SLOT_BUDGET", 2)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_persistence.RESTORE_SLOT_BUDGET", 2)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setattr("aj_crew.dashboard.chat_persistence.RESTORE_SLOT_BUDGET", 2)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     seed = _make_state(tmp_path / "sessions")
     keys = [f"chat-{i}-tab" for i in range(1, 5)]
     for key in keys:
@@ -134,9 +134,9 @@ class _FakeNudge:
 
 
 def _sweep_state(tmp_path, monkeypatch, *, fill_to: int):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     nudge = _FakeNudge("looped")
-    monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: nudge)
+    monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: nudge)
     state = _make_state(tmp_path)
     old = (_NOW - timedelta(days=30)).isoformat()
     fresh = (_NOW - timedelta(hours=1)).isoformat()
@@ -173,7 +173,7 @@ async def test_sweep_archives_only_the_idle_slot_above_high_water(tmp_path, monk
 @pytest.mark.asyncio
 async def test_sweep_hands_nothing_up_from_an_archived_manager(tmp_path, monkeypatch):
     """An idle archive leaves the sessions it managed naming it, so a revive gets them back."""
-    from kiro_crew.dashboard import session_control
+    from aj_crew.dashboard import session_control
 
     hand_back = AsyncMock(return_value=[])
     monkeypatch.setattr(session_control, "hand_back_on_close", hand_back)
@@ -199,7 +199,7 @@ async def test_sweep_does_nothing_below_high_water(tmp_path, monkeypatch):
 @pytest.mark.asyncio
 async def test_sweep_does_nothing_without_the_nudge_service(tmp_path, monkeypatch):
     state, never_done = _sweep_state(tmp_path, monkeypatch, fill_to=slot_retention.SWEEP_HIGH_WATER)
-    monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: None)
+    monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: None)
     archived = await slot_retention.sweep_idle_slots(state, 7, now=_NOW.timestamp())
     never_done.cancel()
     assert archived == []
@@ -210,7 +210,7 @@ async def test_sweep_does_nothing_without_the_nudge_service(tmp_path, monkeypatc
 async def test_sweep_keeps_a_slot_that_turns_active_before_the_pop(tmp_path, monkeypatch):
     """The pre-pop re-check aborts the close when the slot got pinned mid-close."""
     state, never_done = _sweep_state(tmp_path, monkeypatch, fill_to=slot_retention.SWEEP_HIGH_WATER)
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     real_close = chat_handlers.close_slot
 
@@ -229,7 +229,7 @@ async def test_sweep_keeps_a_slot_that_turns_active_before_the_pop(tmp_path, mon
 @pytest.mark.asyncio
 async def test_sweep_keeps_a_slot_whose_loop_was_armed_after_selection(tmp_path, monkeypatch):
     """A loop armed between the selection and the close is seen before close_slot retires it."""
-    import kiro_crew.autonudge as autonudge
+    import aj_crew.autonudge as autonudge
 
     state, never_done = _sweep_state(tmp_path, monkeypatch, fill_to=slot_retention.SWEEP_HIGH_WATER)
     nudge = autonudge.get_instance()
@@ -250,9 +250,9 @@ async def test_sweep_keeps_a_slot_whose_loop_was_armed_after_selection(tmp_path,
 
 def test_unreadable_pin_read_past_the_budget_keeps_the_reopen_seed(tmp_path, monkeypatch):
     """Past the budget an unreadable tab is carried as unrestored, not dropped as unpinned."""
-    monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: None)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_persistence.RESTORE_SLOT_BUDGET", 1)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: None)
+    monkeypatch.setattr("aj_crew.dashboard.chat_persistence.RESTORE_SLOT_BUDGET", 1)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     seed = _make_state(tmp_path / "sessions")
     log = seed.conversation_log
     for i, key in enumerate(("chat-1-new", "chat-2-old")):
@@ -277,7 +277,7 @@ def test_unreadable_pin_read_past_the_budget_keeps_the_reopen_seed(tmp_path, mon
 
 
 def test_sweep_help_text_names_the_high_water_mark():
-    from kiro_crew.config.sections import DashboardConfig
+    from aj_crew.config.sections import DashboardConfig
 
     field = DashboardConfig.__dataclass_fields__["idle_slot_sweep_days"]
     help_text = str(field.metadata)
@@ -287,7 +287,7 @@ def test_sweep_help_text_names_the_high_water_mark():
 @pytest.mark.asyncio
 async def test_sweep_keeps_a_slot_whose_loop_is_paused(tmp_path, monkeypatch):
     """A paused loop exempts its tab: a resume could land while close_slot removes it."""
-    import kiro_crew.autonudge as autonudge
+    import aj_crew.autonudge as autonudge
 
     state, never_done = _sweep_state(tmp_path, monkeypatch, fill_to=slot_retention.SWEEP_HIGH_WATER)
     nudge = autonudge.get_instance()
@@ -302,10 +302,10 @@ async def test_sweep_keeps_a_slot_whose_loop_is_paused(tmp_path, monkeypatch):
 @pytest.mark.parametrize("driver", ["sync", "async"])
 def test_remote_only_tab_past_the_budget_keeps_the_reopen_seed(tmp_path, monkeypatch, driver):
     """After a remote authority restore a tab with no local transcript stays in the seed."""
-    monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: None)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_persistence.RESTORE_SLOT_BUDGET", 1)
+    monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: None)
+    monkeypatch.setattr("aj_crew.dashboard.chat_persistence.RESTORE_SLOT_BUDGET", 1)
     monkeypatch.setenv(ENV_AUTHORITY_RESTORED, "1")
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     seed = _make_state(tmp_path / "sessions")
     seed.conversation_log.append(_history_key_for("chat-1-local"), "user", "hello")
     (tmp_path / "open_slots.json").write_text(
@@ -334,7 +334,7 @@ def _select(state, **kwargs) -> list[str]:
 
 
 def _recheck_keeps(state, name: str) -> bool:
-    from kiro_crew.dashboard.chat_handlers import SlotCloseError
+    from aj_crew.dashboard.chat_handlers import SlotCloseError
 
     check = slot_retention._still_idle_check(state, state._slots[name], name, _CUTOFF)
     try:
@@ -360,7 +360,7 @@ class _FakeSubagents:
 
 
 def _session_key(state, name: str) -> str:
-    from kiro_crew.dashboard.chat_utils import effective_session_key
+    from aj_crew.dashboard.chat_utils import effective_session_key
 
     return effective_session_key(state._slots[name])
 
@@ -385,7 +385,7 @@ async def test_recheck_alone_keeps_a_running_slot(tmp_path, monkeypatch):
 async def test_no_nudge_service_archives_nothing_before_any_selection(tmp_path, monkeypatch):
     """The early return alone stops the pass: no selection, no close, no re-check."""
     state, never_done = _sweep_state(tmp_path, monkeypatch, fill_to=slot_retention.SWEEP_HIGH_WATER)
-    monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: None)
+    monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: None)
 
     def _no_select(*args, **kwargs):
         raise AssertionError("the sweep selected with no auto-nudge service")
@@ -486,7 +486,7 @@ async def test_sweep_keeps_the_slot_when_the_full_probe_raises(tmp_path, monkeyp
     async def _broken(*args, **kwargs):
         raise RuntimeError("store gone")
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_utils.subagents_attached_async", _broken)
+    monkeypatch.setattr("aj_crew.dashboard.chat_utils.subagents_attached_async", _broken)
     archived = await slot_retention.sweep_idle_slots(state, 7, now=_NOW.timestamp())
     never_done.cancel()
     assert archived == []
@@ -518,13 +518,13 @@ async def test_sweep_keeps_a_crew_bound_worker_tab(tmp_path, monkeypatch):
 @pytest.mark.parametrize("driver", ["sync", "async"])
 def test_crew_bound_tab_past_the_budget_is_built(tmp_path, monkeypatch, driver):
     """A worker tab left unbuilt would read as closed to the work-ledger wake gate."""
-    monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: None)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_persistence.RESTORE_SLOT_BUDGET", 1)
+    monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: None)
+    monkeypatch.setattr("aj_crew.dashboard.chat_persistence.RESTORE_SLOT_BUDGET", 1)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_persistence.crew_bound_on_disk",
+        "aj_crew.dashboard.chat_persistence.crew_bound_on_disk",
         lambda key: key == "chat-2-worker",
     )
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     seed = _make_state(tmp_path / "sessions")
     log = seed.conversation_log
     keys = ["chat-1-new", "chat-2-worker", "chat-3-old"]
@@ -545,7 +545,7 @@ def test_crew_bound_tab_past_the_budget_is_built(tmp_path, monkeypatch, driver):
 
 
 def test_crew_bound_reads_an_open_item_bound_to_the_worker(monkeypatch):
-    from kiro_crew import work_ledger
+    from aj_crew import work_ledger
 
     item = MagicMock(is_terminal=False, worker_session_key="chat-9-w")
     monkeypatch.setattr(
@@ -561,7 +561,7 @@ def test_crew_bound_reads_an_open_item_bound_to_the_worker(monkeypatch):
 
 
 def test_crew_bound_fails_closed_on_an_unreadable_binding(monkeypatch):
-    from kiro_crew import work_ledger
+    from aj_crew import work_ledger
 
     def _broken(key, strict=False):
         raise OSError("transient")
@@ -577,7 +577,7 @@ def test_sweep_high_water_leaves_headroom_above_the_restore_budget():
 @pytest.mark.asyncio
 async def test_sweep_keeps_a_replacement_opened_during_the_probe(tmp_path, monkeypatch):
     """A tab reopened under the same key while the probe awaits is not the slot judged."""
-    from kiro_crew.dashboard import chat_utils
+    from aj_crew.dashboard import chat_utils
 
     state, never_done = _sweep_state(tmp_path, monkeypatch, fill_to=slot_retention.SWEEP_HIGH_WATER)
     replacement = MagicMock()
@@ -596,9 +596,9 @@ async def test_sweep_keeps_a_replacement_opened_during_the_probe(tmp_path, monke
 
 def test_foldered_tab_past_the_budget_is_built_and_not_counted(tmp_path, monkeypatch):
     """The recent-sessions restore rebuilds a foldered tab, so the budget never skips one."""
-    monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: None)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_persistence.RESTORE_SLOT_BUDGET", 1)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: None)
+    monkeypatch.setattr("aj_crew.dashboard.chat_persistence.RESTORE_SLOT_BUDGET", 1)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     seed = _make_state(tmp_path / "sessions")
     log = seed.conversation_log
     keys = ["chat-1-new", "chat-2-foldered", "chat-3-old"]

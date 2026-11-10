@@ -23,8 +23,8 @@ from chat_test_helpers import _make_state
 # eight-channel roster so there is one place a new channel has to be added.
 from test_options_cap_contract import _all_channel_capabilities
 
-from kiro_crew.messaging.link import SLACK_NAMESPACE
-from kiro_crew.messaging.transport import ConfiguredChannelTarget
+from aj_crew.messaging.link import SLACK_NAMESPACE
+from aj_crew.messaging.transport import ConfiguredChannelTarget
 
 
 def _mirror_gate_capabilities() -> dict[str, Any]:
@@ -40,7 +40,7 @@ def _mirror_gate_capabilities() -> dict[str, Any]:
 
 
 def _make_mirror_app(state):
-    from kiro_crew.dashboard.chat_mirror import (
+    from aj_crew.dashboard.chat_mirror import (
         api_channel_targets,
         api_chat_slot_mirror_link,
         api_chat_slot_mirror_unlink,
@@ -97,7 +97,7 @@ def _real_caps_transport(channel_type: str):
 
 
 def _prep(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     # ``get_mirror_link`` is deliberately NOT stubbed to a constant None here. The
     # shared double is dict-backed and already answers None while nothing is bound,

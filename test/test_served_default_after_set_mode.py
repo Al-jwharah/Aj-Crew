@@ -30,10 +30,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     ACP_BACKEND_KIRO,
     EVENT_AGENT_SWITCHED,
     EVENT_COMPLETE,
@@ -328,7 +328,7 @@ class TestPooledMidSessionSwitch:
     @pytest.fixture(autouse=True)
     def _agent_names_pass_through(self, _floor_monkeypatch):
         _floor_monkeypatch.setattr(
-            "kiro_crew.acp.skill_projection.resolve_source_agent", _no_source_rename
+            "aj_crew.acp.skill_projection.resolve_source_agent", _no_source_rename
         )
 
     @staticmethod

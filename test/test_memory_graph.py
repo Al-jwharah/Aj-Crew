@@ -8,12 +8,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.state import DashboardState
 
 
 def _get_handler():
     """Import api_memory_graph from handlers (works after brazil-build)."""
-    mod = importlib.import_module("kiro_crew.dashboard.handlers")
+    mod = importlib.import_module("aj_crew.dashboard.handlers")
     return mod.api_memory_graph
 
 
@@ -45,7 +45,7 @@ class TestMemoryGraphNodeExtraction:
 
     @pytest.mark.asyncio
     async def test_empty_memory_returns_empty_graph(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(tmp_path)
         request = MagicMock()
         request.app = {"state": state}
@@ -58,7 +58,7 @@ class TestMemoryGraphNodeExtraction:
 
     @pytest.mark.asyncio
     async def test_preferences_become_nodes(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(tmp_path, prefs="- Prefers dark mode\n- Uses vim keybindings")
         request = MagicMock()
         request.app = {"state": state}
@@ -73,7 +73,7 @@ class TestMemoryGraphNodeExtraction:
 
     @pytest.mark.asyncio
     async def test_short_preferences_skipped(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(tmp_path, prefs="- OK\n- Yes\n- Prefers concise output")
         request = MagicMock()
         request.app = {"state": state}
@@ -86,7 +86,7 @@ class TestMemoryGraphNodeExtraction:
 
     @pytest.mark.asyncio
     async def test_comments_and_headings_skipped_in_prefs(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(
             tmp_path,
             prefs="# User Preferences\n<!-- comment -->\n- Prefers dark mode",
@@ -102,10 +102,10 @@ class TestMemoryGraphNodeExtraction:
 
     @pytest.mark.asyncio
     async def test_projects_create_parent_and_detail_nodes(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(
             tmp_path,
-            projects="## KiroCrew\n- Repository: ssh://git.example.com\n- Branch: main",
+            projects="## AjCrew\n- Repository: ssh://git.example.com\n- Branch: main",
         )
         request = MagicMock()
         request.app = {"state": state}
@@ -115,13 +115,13 @@ class TestMemoryGraphNodeExtraction:
 
         proj_nodes = [n for n in data["nodes"] if n["group"] == "project"]
         assert len(proj_nodes) == 3  # parent + 2 details
-        assert any(n["label"] == "KiroCrew" for n in proj_nodes)
+        assert any(n["label"] == "AjCrew" for n in proj_nodes)
         # Detail nodes should have edges to parent
         assert len(data["edges"]) == 2
 
     @pytest.mark.asyncio
     async def test_history_headings_become_nodes(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(
             tmp_path,
             history=(
@@ -155,7 +155,7 @@ class TestMemoryGraphNodeExtraction:
         ],
     )
     async def test_history_timestamp_headers_are_not_nodes(self, tmp_path, monkeypatch, header):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(tmp_path, history=header)
         request = MagicMock()
         request.app = {"state": state}
@@ -170,7 +170,7 @@ class TestMemoryGraphNodeExtraction:
     async def test_history_header_with_content_after_time_stays(
         self, tmp_path, monkeypatch, header
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(tmp_path, history=header)
         request = MagicMock()
         request.app = {"state": state}
@@ -182,9 +182,9 @@ class TestMemoryGraphNodeExtraction:
 
     @pytest.mark.asyncio
     async def test_lessons_become_nodes(self, tmp_path, monkeypatch):
-        from kiro_crew.learn import Lesson
+        from aj_crew.learn import Lesson
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         lessons = [
             Lesson(rule="Always check for existing CRs", category="tool", ts="2026-03-25"),
             Lesson(
@@ -204,12 +204,12 @@ class TestMemoryGraphNodeExtraction:
 
     @pytest.mark.asyncio
     async def test_semantic_memory_becomes_nodes(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(tmp_path)
         vs = MagicMock()
         vs.get_all_semantic.return_value = [
             {"key": "pref.editor", "value_json": '"vim"'},
-            {"key": "project.name", "value_json": '"KiroCrew"'},
+            {"key": "project.name", "value_json": '"AjCrew"'},
         ]
         vs.get_lessons.return_value = []
         state.context_builder.memory.vector_store = vs
@@ -227,7 +227,7 @@ class TestMemoryGraphNodeExtraction:
     async def test_semantic_raw_string_value_json_does_not_crash(self, tmp_path, monkeypatch):
         """value_json can contain raw strings (URLs, plain text) that are not
         valid JSON. The handler must not crash — it should treat them as-is."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(tmp_path)
         vs = MagicMock()
         vs.get_all_semantic.return_value = [
@@ -253,7 +253,7 @@ class TestMemoryGraphNodeExtraction:
     @pytest.mark.asyncio
     async def test_graph_redacts_credentials_in_semantic_nodes(self, tmp_path, monkeypatch):
         """Memory graph endpoint must redact credentials in node labels/titles."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(tmp_path)
         vs = MagicMock()
         vs.get_all_semantic.return_value = [
@@ -277,8 +277,8 @@ class TestMemoryEndpointRedaction:
 
     @pytest.mark.asyncio
     async def test_semantic_redacts_credential_in_key(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        mod = importlib.import_module("kiro_crew.dashboard.handlers")
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        mod = importlib.import_module("aj_crew.dashboard.handlers")
         vs = MagicMock()
         vs.get_all_semantic.return_value = [
             {"key": "AKIAIOSFODNN7EXAMPLE", "value_json": "ok"},
@@ -293,8 +293,8 @@ class TestMemoryEndpointRedaction:
 
     @pytest.mark.asyncio
     async def test_semantic_redacts_credential_in_value_json(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        mod = importlib.import_module("kiro_crew.dashboard.handlers")
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        mod = importlib.import_module("aj_crew.dashboard.handlers")
         vs = MagicMock()
         vs.get_all_semantic.return_value = [
             {"key": "k1", "value_json": "AKIAIOSFODNN7EXAMPLE"},
@@ -309,8 +309,8 @@ class TestMemoryEndpointRedaction:
 
     @pytest.mark.asyncio
     async def test_semantic_redacts_tags_as_list(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        mod = importlib.import_module("kiro_crew.dashboard.handlers")
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        mod = importlib.import_module("aj_crew.dashboard.handlers")
         vs = MagicMock()
         vs.get_all_semantic.return_value = [
             {"key": "k1", "value_json": "ok", "tags": ["safe", "AKIAIOSFODNN7EXAMPLE"]},
@@ -327,8 +327,8 @@ class TestMemoryEndpointRedaction:
 
     @pytest.mark.asyncio
     async def test_episodic_search_redacts_text(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        mod = importlib.import_module("kiro_crew.dashboard.handlers")
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        mod = importlib.import_module("aj_crew.dashboard.handlers")
         vs = MagicMock()
         vs.embed_fn = None
         vs.search_episodic.return_value = [
@@ -345,8 +345,8 @@ class TestMemoryEndpointRedaction:
 
     @pytest.mark.asyncio
     async def test_episodic_list_redacts_tags_list(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        mod = importlib.import_module("kiro_crew.dashboard.handlers")
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        mod = importlib.import_module("aj_crew.dashboard.handlers")
         vs = MagicMock()
         vs.get_episodic_list.return_value = [
             {"id": "1", "text": "ok", "tags": ["AKIAIOSFODNN7EXAMPLE"]},
@@ -363,8 +363,8 @@ class TestMemoryEndpointRedaction:
     @pytest.mark.asyncio
     async def test_semantic_redacts_all_string_fields(self, tmp_path, monkeypatch):
         """Defense-in-depth: credentials in ANY string field are redacted."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        mod = importlib.import_module("kiro_crew.dashboard.handlers")
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        mod = importlib.import_module("aj_crew.dashboard.handlers")
         vs = MagicMock()
         vs.get_all_semantic.return_value = [
             {"key": "k1", "value_json": "ok", "source": "AKIAIOSFODNN7EXAMPLE"},
@@ -380,8 +380,8 @@ class TestMemoryEndpointRedaction:
     @pytest.mark.asyncio
     async def test_episodic_search_redacts_all_string_fields(self, tmp_path, monkeypatch):
         """Defense-in-depth: credentials in ANY episodic field are redacted."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        mod = importlib.import_module("kiro_crew.dashboard.handlers")
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        mod = importlib.import_module("aj_crew.dashboard.handlers")
         vs = MagicMock()
         vs.embed_fn = None
         vs.search_episodic.return_value = [
@@ -399,8 +399,8 @@ class TestMemoryEndpointRedaction:
     @pytest.mark.asyncio
     async def test_episodic_list_redacts_all_string_fields(self, tmp_path, monkeypatch):
         """Defense-in-depth: credentials in ANY episodic field are redacted."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        mod = importlib.import_module("kiro_crew.dashboard.handlers")
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        mod = importlib.import_module("aj_crew.dashboard.handlers")
         vs = MagicMock()
         vs.get_episodic_list.return_value = [
             {"id": "1", "text": "ok", "conversation_id": "AKIAIOSFODNN7EXAMPLE"},
@@ -417,8 +417,8 @@ class TestMemoryEndpointRedaction:
     @pytest.mark.asyncio
     async def test_redaction_preserves_non_string_fields(self, tmp_path, monkeypatch):
         """Numeric and other non-string fields pass through unchanged."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        mod = importlib.import_module("kiro_crew.dashboard.handlers")
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        mod = importlib.import_module("aj_crew.dashboard.handlers")
         vs = MagicMock()
         vs.get_all_semantic.return_value = [
             {"key": "k1", "value_json": "v", "confidence": 0.95, "is_deleted": 0},
@@ -435,8 +435,8 @@ class TestMemoryEndpointRedaction:
     @pytest.mark.asyncio
     async def test_redaction_does_not_mutate_store_objects(self, tmp_path, monkeypatch):
         """Redaction must operate on copies, never mutating the store's records."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        mod = importlib.import_module("kiro_crew.dashboard.handlers")
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        mod = importlib.import_module("aj_crew.dashboard.handlers")
         original = {
             "key": "k1",
             "value_json": "AKIAIOSFODNN7EXAMPLE",
@@ -478,11 +478,11 @@ class TestMemoryGraphEdgeDetection:
 
     @pytest.mark.asyncio
     async def test_preference_referencing_project_creates_edge(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(
             tmp_path,
-            prefs="- Uses KiroCrew for automation",
-            projects="## KiroCrew\n- Local path: /home/user/kirocrew",
+            prefs="- Uses AjCrew for automation",
+            projects="## AjCrew\n- Local path: /home/user/ajcrew",
         )
         request = MagicMock()
         request.app = {"state": state}
@@ -500,7 +500,7 @@ class TestMemoryGraphEdgeDetection:
 
     @pytest.mark.asyncio
     async def test_no_self_edges(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(
             tmp_path,
             prefs="- Uses TestProject for everything",
@@ -531,7 +531,7 @@ class TestMemoryGraphEdgeDetection:
         ],
     )
     async def test_cjk_project_name_links_inside_prose(self, tmp_path, monkeypatch, pref):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(tmp_path, prefs=pref, projects="## 账单服务\n- Owner: billing")
         request = MagicMock()
         request.app = {"state": state}
@@ -543,7 +543,7 @@ class TestMemoryGraphEdgeDetection:
 
     @pytest.mark.asyncio
     async def test_cjk_project_name_does_not_link_unrelated_text(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(
             tmp_path, prefs="- 订单服务查询接口超时", projects="## 账单服务\n- Owner: billing"
         )
@@ -557,7 +557,7 @@ class TestMemoryGraphEdgeDetection:
 
     @pytest.mark.asyncio
     async def test_ascii_project_name_still_needs_word_boundary(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(
             tmp_path, prefs="- Uses Acmeville for staging", projects="## Acme\n- Some detail"
         )
@@ -575,7 +575,7 @@ class TestMemoryGraphResponseFormat:
 
     @pytest.mark.asyncio
     async def test_response_has_required_fields(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         mem = MagicMock()
         mem.read_preferences.return_value = "- Test preference value"
         mem.read_projects.return_value = ""
@@ -610,7 +610,7 @@ class TestMemoryGraphResponseFormat:
 
     @pytest.mark.asyncio
     async def test_node_labels_truncated_at_60(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         long_pref = "- " + "A" * 200
         mem = MagicMock()
         mem.read_preferences.return_value = long_pref
@@ -637,7 +637,7 @@ class TestMemoryGraphResponseFormat:
 
     @pytest.mark.asyncio
     async def test_node_ids_are_deterministic(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         mem = MagicMock()
         mem.read_preferences.return_value = "- Prefers dark mode"
         mem.read_projects.return_value = ""
@@ -664,7 +664,7 @@ class TestMemoryGraphResponseFormat:
 
     @pytest.mark.asyncio
     async def test_no_duplicate_nodes(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         mem = MagicMock()
         mem.read_preferences.return_value = "- Same pref\n- Same pref"
         mem.read_projects.return_value = ""
@@ -694,7 +694,7 @@ class TestMemoryGraphErrorHandling:
 
     @pytest.mark.asyncio
     async def test_vector_store_error_doesnt_crash(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         mem = MagicMock()
         mem.read_preferences.return_value = ""
         mem.read_projects.return_value = ""
@@ -724,9 +724,9 @@ class TestMemoryGraphErrorHandling:
 
     @pytest.mark.asyncio
     async def test_vector_store_error_falls_back_to_file_lessons(self, tmp_path, monkeypatch):
-        from kiro_crew.learn import Lesson
+        from aj_crew.learn import Lesson
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         mem = MagicMock()
         mem.read_preferences.return_value = ""
         mem.read_projects.return_value = ""
@@ -797,7 +797,7 @@ class TestMemoryGraphHTTPIntegration:
     async def test_endpoint_returns_200_with_json(self, tmp_path, monkeypatch):
         from aiohttp.test_utils import TestClient, TestServer
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(tmp_path, prefs="- Prefers dark mode")
         async with TestClient(TestServer(self._make_app(state))) as client:
             resp = await client.get("/api/memory/graph")
@@ -811,7 +811,7 @@ class TestMemoryGraphHTTPIntegration:
     async def test_endpoint_returns_empty_graph(self, tmp_path, monkeypatch):
         from aiohttp.test_utils import TestClient, TestServer
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(tmp_path)
         async with TestClient(TestServer(self._make_app(state))) as client:
             resp = await client.get("/api/memory/graph")
@@ -824,13 +824,13 @@ class TestMemoryGraphHTTPIntegration:
     async def test_endpoint_with_all_memory_types(self, tmp_path, monkeypatch):
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew.learn import Lesson
+        from aj_crew.learn import Lesson
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._make_state(
             tmp_path,
             prefs="- Prefers dark mode",
-            projects="## KiroCrew\n- Local path: /home/user/mc",
+            projects="## AjCrew\n- Local path: /home/user/mc",
             history="# 2026-03-25\n[2026-03-25 10:00] Did some work",
         )
         state.lessons.load_all.return_value = [

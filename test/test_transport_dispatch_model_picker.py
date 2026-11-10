@@ -1,6 +1,6 @@
 """The ``!model`` picker's rules, read through the ``DiscordDispatcher`` members that hold them.
 
-``kiro_crew.discord.transport_dispatch_model_picker`` owns which models a session may be
+``aj_crew.discord.transport_dispatch_model_picker`` owns which models a session may be
 offered, how long a posted button set stays pressable and how many are kept, and what a
 pick promises the user. ``test_discord_interactions.py`` drives the picker end to end;
 these pin the edges each rule decides on its own: what is offered when the backend
@@ -16,8 +16,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.discord.transport_dispatch import DiscordDispatcher
-from kiro_crew.discord.transport_dispatch_model_picker import (
+from aj_crew.discord.transport_dispatch import DiscordDispatcher
+from aj_crew.discord.transport_dispatch_model_picker import (
     _MODEL_PICKER_LIMIT,
     _MODEL_PICKER_MAX,
     _MODEL_PICKER_TTL_SECS,

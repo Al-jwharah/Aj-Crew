@@ -7,9 +7,9 @@ import time
 
 import pytest
 
-import kiro_crew.cron as cron
-from kiro_crew.cron import CronJob, CronSchedule
-from kiro_crew.cron_service import schedule
+import aj_crew.cron as cron
+from aj_crew.cron import CronJob, CronSchedule
+from aj_crew.cron_service import schedule
 
 
 def _job(expr: str) -> CronJob:
@@ -30,7 +30,7 @@ def test_bad_expression_warns_once_without_traceback_and_good_one_clears(
     caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(schedule, "_BAD_CRON_WARNED", {})
-    caplog.set_level(logging.WARNING, logger="kiro_crew.cron")
+    caplog.set_level(logging.WARNING, logger="aj_crew.cron")
     now = time.time()
     bad = _job("0 0 30 2 *")  # Feb 30 never happens
 
@@ -63,7 +63,7 @@ def test_full_memo_refuses_new_rows_and_says_so_once(
     monkeypatch.setattr(schedule, "_BAD_CRON_WARNED", {})
     monkeypatch.setattr(schedule, "_BAD_CRON_WARNED_MAX", 2)
     monkeypatch.setattr(schedule, "_BAD_CRON_REFUSED", [0])
-    caplog.set_level(logging.WARNING, logger="kiro_crew.cron")
+    caplog.set_level(logging.WARNING, logger="aj_crew.cron")
     now = time.time()
     jobs = [_job("0 0 30 2 *") for _ in range(3)]
     for n, job in enumerate(jobs):

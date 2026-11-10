@@ -4,7 +4,7 @@
 managed install, that path can point into the tree the update just pruned, so
 ``os.execv`` on it dies with ENOENT and the gateway never comes back. The
 dashboard's update handler already routes through
-``kiro_crew.platform.wheel_engine.respawn_executable``; these tests pin the
+``aj_crew.platform.wheel_engine.respawn_executable``; these tests pin the
 three restart sites in ``GatewayOrchestrator`` to the same rule.
 
 Each test drives the REAL method to its exec line: the download / apply /
@@ -25,11 +25,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from wheel_update_test_helpers import wire_wheel_apply
 
-from kiro_crew import platform_compat
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.handlers import updates as dashboard_updates
-from kiro_crew.slack import gateway as gw
-from kiro_crew.slack.gateway import GatewayOrchestrator
+from aj_crew import platform_compat
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.handlers import updates as dashboard_updates
+from aj_crew.slack import gateway as gw
+from aj_crew.slack.gateway import GatewayOrchestrator
 
 #: Basename of the stand-in interpreter ``respawn_executable`` is made to answer.
 #: It must be a REAL executable file on disk, not a synthetic pathname: the restart
@@ -50,8 +50,8 @@ def _gateway_source() -> str:
 
 
 def _make_orchestrator() -> GatewayOrchestrator:
-    cfg = KiroCrewConfig()
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U1"}):
+    cfg = AjCrewConfig()
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U1"}):
         orch = GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
     # No dashboard slots to save, no sessions to close: the tests are about the
     # exec, not the teardown that precedes it.
@@ -72,9 +72,9 @@ def exec_seams(monkeypatch, tmp_path):
     interpreter.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
     platform_compat.chmod_safe(interpreter, 0o700)
     respawn = MagicMock(return_value=str(interpreter))
-    monkeypatch.setattr("kiro_crew.platform.wheel_engine.respawn_executable", respawn)
+    monkeypatch.setattr("aj_crew.platform.wheel_engine.respawn_executable", respawn)
     reexec = MagicMock()
-    monkeypatch.setattr("kiro_crew.platform_compat.reexec_python_module", reexec)
+    monkeypatch.setattr("aj_crew.platform_compat.reexec_python_module", reexec)
     # The breadcrumb drain hits the real safety-override store; not under test.
     monkeypatch.setattr(gw, "flush_breadcrumb_writes", lambda *_a, **_k: None)
     return respawn, reexec, str(interpreter)
@@ -85,7 +85,7 @@ def _assert_execs_the_respawn_interpreter(
 ) -> None:
     reexec.assert_called_once()
     args, kwargs = reexec.call_args
-    assert args[0] == "kiro_crew"
+    assert args[0] == "aj_crew"
     assert list(args[1]) == sys.argv[1:]
     assert kwargs.get("executable") == interpreter, (
         "restart exec'd sys.executable instead of respawn_executable(); after an "
@@ -134,7 +134,7 @@ class TestResolverIsLoadedBeforeTheApply:
             node.lineno
             for node in ast.walk(fn)
             if isinstance(node, ast.ImportFrom)
-            and node.module == "kiro_crew.platform.wheel_engine"
+            and node.module == "aj_crew.platform.wheel_engine"
             and any(alias.name == "respawn_executable" for alias in node.names)
         ]
 
@@ -305,8 +305,8 @@ class TestAutoApplyGitUpdate:
         respawn, reexec, interpreter = exec_seams
         orch = _make_orchestrator()
 
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr("kiro_crew.platform_compat.trusted_git_bin", lambda: "/usr/bin/git")
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr("aj_crew.platform_compat.trusted_git_bin", lambda: "/usr/bin/git")
         # The pre-reset refusals, each answered the way a clean checkout on the
         # primary branch answers them. Their own behaviour is pinned elsewhere.
         monkeypatch.setattr(gw, "git_command_env", lambda: {})
@@ -317,7 +317,7 @@ class TestAutoApplyGitUpdate:
             gw, "resolve_remote_url", lambda _proj, remote, **_k: "https://example/r.git"
         )
         monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.update_blocked_reason", lambda _url: None
+            "aj_crew.platform.update_governance.update_blocked_reason", lambda _url: None
         )
         monkeypatch.setattr(gw, "commits_ahead", lambda _proj, _target: 0)
         monkeypatch.setattr(gw, "hidden_worktree_edits", lambda _proj: [])

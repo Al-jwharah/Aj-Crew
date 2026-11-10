@@ -16,13 +16,13 @@ from pathlib import Path
 import conductor_agent_checks
 from pipeline_conductor_agent_helpers import FleetProbeHarness
 
-from kiro_crew import agent
-from kiro_crew.agent_files import (
+from aj_crew import agent
+from aj_crew.agent_files import (
     OWNED_KIRO_AGENT_FILES,
     PIPELINE_CONDUCTOR_AGENT_FILENAME,
 )
-from kiro_crew.agent_sdk.drivers.acp import derived_agent_permissions
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.agent_sdk.drivers.acp import derived_agent_permissions
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
 #: A release that accepts a spec ``permissions`` block, and one that refuses it,
 #: expressed against the floor so raising it cannot strand these tests.
@@ -35,11 +35,11 @@ def _pin_spec_permissions_cli(monkeypatch, which):
     """Pin what the shared writer gate believes the installed kiro-cli is.
 
     ``_write_derived_permissions`` reads ``installed_kiro_cli_version`` function-locally
-    from ``kiro_crew.kiro_cli``, so the patch lands there; without it CI's absent binary
+    from ``aj_crew.kiro_cli``, so the patch lands there; without it CI's absent binary
     reads as "unknown". ``which`` is ``"accepts"``, ``"refuses"`` or ``"unknown"``.
     """
     version = {"accepts": _ACCEPTS, "refuses": _REFUSES, "unknown": None}[which]
-    monkeypatch.setattr("kiro_crew.kiro_cli.installed_kiro_cli_version", lambda: version)
+    monkeypatch.setattr("aj_crew.kiro_cli.installed_kiro_cli_version", lambda: version)
 
 
 class TestPipelineConductorInstaller(
@@ -53,21 +53,21 @@ class TestPipelineConductorInstaller(
             agent,
             "build_agent_config",
             lambda: {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "prompt": "file://x",
                 "mcpServers": {
-                    "kirocrew-core": {"command": "/resolved/kirocrew", "args": ["mcp-core"]},
+                    "ajcrew-core": {"command": "/resolved/ajcrew", "args": ["mcp-core"]},
                     "builder-mcp": {"command": "/x/builder", "args": []},
                 },
-                "tools": ["fs_write", "@kirocrew-core"],
-                "allowedTools": ["@kirocrew-core"],
+                "tools": ["fs_write", "@ajcrew-core"],
+                "allowedTools": ["@ajcrew-core"],
                 "permissions": _INHERITED_PERMISSIONS,
             },
         )
         monkeypatch.setattr(
             agent,
-            "_kirocrew_mcp_invocation",
-            lambda sub: ("/resolved/kirocrew", [sub]),
+            "_ajcrew_mcp_invocation",
+            lambda sub: ("/resolved/ajcrew", [sub]),
         )
         monkeypatch.setattr(agent, "_may_auto_approve", may_auto_approve or (lambda ref: True))
         agent._install_pipeline_conductor_agent()
@@ -77,7 +77,7 @@ class TestPipelineConductorInstaller(
 
     def test_identity_and_charter(self, tmp_path, monkeypatch):
         data = self._install(tmp_path, monkeypatch)
-        assert data["name"] == "kirocrew-pipeline-conductor"
+        assert data["name"] == "ajcrew-pipeline-conductor"
         assert "work item" in data["prompt"]
         assert "pipeline-conductor" in data["prompt"]  # the skill is the procedure
 
@@ -115,26 +115,26 @@ class TestPipelineConductorInstaller(
         but gated."""
         data = self._install(tmp_path, monkeypatch)
         allowed = set(data["allowedTools"])
-        assert "@kirocrew-dashboard/session_create" in allowed
-        assert "@kirocrew-dashboard/session_read_message" in allowed
+        assert "@ajcrew-dashboard/session_create" in allowed
+        assert "@ajcrew-dashboard/session_read_message" in allowed
         # The roster read: narrower than the transcript read above, and asked on
         # every unattended cycle, so it is granted rather than gated.
-        assert "@kirocrew-dashboard/session_status" in allowed
+        assert "@ajcrew-dashboard/session_status" in allowed
         # A dispatcher does not manage folders (rfc-crewmate-workers-under-the-crewmate.md).
         assert not [g for g in allowed if "chat_folder_" in g]
         for gated in (
-            "@kirocrew-dashboard/session_send",
+            "@ajcrew-dashboard/session_send",
             # The fan-out write, withheld on session_send's own reason: the
             # fan-out changes how many sessions ingested text reaches, not
             # whether anything bounds what is sent.
-            "@kirocrew-dashboard/session_broadcast",
-            "@kirocrew-dashboard/session_stop",
-            "@kirocrew-dashboard/chat_folder_move_session",
-            "@kirocrew-dashboard",
+            "@ajcrew-dashboard/session_broadcast",
+            "@ajcrew-dashboard/session_stop",
+            "@ajcrew-dashboard/chat_folder_move_session",
+            "@ajcrew-dashboard",
             "execute_bash",
         ):
             assert gated not in allowed, gated
-        assert "@kirocrew-dashboard" in data["tools"]  # mounted, so gated verbs still work
+        assert "@ajcrew-dashboard" in data["tools"]  # mounted, so gated verbs still work
         assert "execute_bash" in data["tools"]
 
     def test_skill_gives_no_folder_guidance(self):
@@ -147,7 +147,7 @@ class TestPipelineConductorInstaller(
         skill = (
             Path(__file__).resolve().parents[1]
             / "src"
-            / "kiro_crew"
+            / "aj_crew"
             / "builtin_skills"
             / "pipeline-conductor"
             / "SKILL.md"
@@ -163,31 +163,31 @@ class TestPipelineConductorInstaller(
         under a session-level trust grant."""
         data = self._install(tmp_path, monkeypatch)
         allowed = set(data["allowedTools"])
-        assert "@kirocrew-core/monitor_start" in allowed
-        assert "@kirocrew-core/resource_status" in allowed
-        assert "@kirocrew-core/session_ledger_record" in allowed
+        assert "@ajcrew-core/monitor_start" in allowed
+        assert "@ajcrew-core/resource_status" in allowed
+        assert "@ajcrew-core/session_ledger_record" in allowed
         for gated in (
-            "@kirocrew-core",
-            "@kirocrew-core/task_run",
-            "@kirocrew-core/workflow_run",
-            "@kirocrew-core/cron_add",
-            "@kirocrew-core/spawn_run",
+            "@ajcrew-core",
+            "@ajcrew-core/task_run",
+            "@ajcrew-core/workflow_run",
+            "@ajcrew-core/cron_add",
+            "@ajcrew-core/spawn_run",
         ):
             assert gated not in allowed, gated
-        assert "@kirocrew-core" in data["tools"]
+        assert "@ajcrew-core" in data["tools"]
 
     def test_mcp_servers_are_narrowed(self, tmp_path, monkeypatch):
-        """kirocrew-core plus the two hand-built opt-in entries the shared conductor
+        """ajcrew-core plus the two hand-built opt-in entries the shared conductor
         base mounts (dashboard and work); inherited third-party servers are dropped
         from this spec."""
         data = self._install(tmp_path, monkeypatch)
         assert set(data["mcpServers"]) == {
-            "kirocrew-core",
-            "kirocrew-dashboard",
-            "kirocrew-work",
+            "ajcrew-core",
+            "ajcrew-dashboard",
+            "ajcrew-work",
         }
-        assert data["mcpServers"]["kirocrew-dashboard"]["args"] == ["mcp-dashboard"]
-        assert data["mcpServers"]["kirocrew-work"]["args"] == ["mcp-work"]
+        assert data["mcpServers"]["ajcrew-dashboard"]["args"] == ["mcp-dashboard"]
+        assert data["mcpServers"]["ajcrew-work"]["args"] == ["mcp-work"]
 
     def test_the_work_ledger_base_reaches_all_four_surfaces(self, tmp_path, monkeypatch):
         """The base work-ledger surface holds on all four places a spec carries it:
@@ -196,11 +196,11 @@ class TestPipelineConductorInstaller(
         verbs stay off: ``work_report`` writes into a parent's record, and this
         conductor's procedure never calls ``work_brief``."""
         data = self._install(tmp_path, monkeypatch)
-        assert "@kirocrew-work" in data["tools"]
-        work = [ref for ref in data["allowedTools"] if "kirocrew-work" in ref]
+        assert "@ajcrew-work" in data["tools"]
+        work = [ref for ref in data["allowedTools"] if "ajcrew-work" in ref]
         assert work == list(agent._CONDUCTOR_BASE_WORK_GRANTS)
         match = data["permissions"]["rules"][0]["match"]
-        assert {"kirocrew-work/work_ledger_read", "kirocrew-work/work_ledger_record"} <= set(match)
+        assert {"ajcrew-work/work_ledger_read", "ajcrew-work/work_ledger_record"} <= set(match)
         assert agent._CONDUCTOR_WORK_LEDGER_PROTOCOL in data["prompt"]
         assert data["prompt"].startswith(agent._PIPELINE_CONDUCTOR_SYSTEM_PROMPT)
 
@@ -217,9 +217,9 @@ class TestPipelineConductorInstaller(
         data = self._install(
             tmp_path,
             monkeypatch,
-            may_auto_approve=lambda ref: ref != "@kirocrew-core/monitor_start",
+            may_auto_approve=lambda ref: ref != "@ajcrew-core/monitor_start",
         )
-        assert "@kirocrew-core/monitor_start" not in data["allowedTools"]
+        assert "@ajcrew-core/monitor_start" not in data["allowedTools"]
         withheld = [e for e in events if e.get("operation") == "mcp_auto_approve_withheld"]
         assert withheld and withheld[0]["source"] == "_install_pipeline_conductor_agent"
 
@@ -413,7 +413,7 @@ class TestFleetProbe(FleetProbeHarness):
         (proc / "4343").mkdir(parents=True)
         (proc / "4343" / "cmdline").write_bytes(b"pytest\x00-n\x00auto\x00test/x.py\x00")
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "BANNED pid=4242" in out  # an explicit count bypasses the budget
         assert "rule=" in out  # which rule fired is reported...
@@ -469,7 +469,7 @@ class TestFleetProbe(FleetProbeHarness):
             (proc / pid).mkdir(parents=True)
             (proc / pid / "cmdline").write_bytes(argv)
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         reported = {
             ln.split("pid=")[1].split()[0] for ln in out.splitlines() if "BANNED pid=" in ln
@@ -498,7 +498,7 @@ class TestFleetProbe(FleetProbeHarness):
             (proc / pid).mkdir(parents=True)
             (proc / pid / "cmdline").write_bytes(argv)
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         line = {
             ln.split("pid=")[1].split()[0]: ln for ln in out.splitlines() if "BANNED pid=" in ln
@@ -525,7 +525,7 @@ class TestFleetProbe(FleetProbeHarness):
             b"python\x00-m\x00pytest\x00-n4\x00--token\x00sec\x00test\x00"
         )
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "scope=suite" in out
         assert "sec" not in out.replace("scope=", "")  # the value never escapes
@@ -542,7 +542,7 @@ class TestFleetProbe(FleetProbeHarness):
         (proc / "41").mkdir(parents=True)
         (proc / "41" / "cmdline").write_bytes(b"some-runner\x00--all\x00")
         cfg = self._config(tmp_path, monkeypatch, [], banned_process_res=[r"\bsome-runner\b"])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "BANNED pid=41" in out
         assert "scope=unknown" in out
@@ -552,14 +552,14 @@ class TestFleetProbe(FleetProbeHarness):
     ):
         """The classifier's docstring names two forms it gets approximately right; pin both.
 
-        ``--pyargs kiro_crew.mod`` reads ``suite`` (fail-closed). A module flag glued onto
+        ``--pyargs aj_crew.mod`` reads ``suite`` (fail-closed). A module flag glued onto
         the runner name reads ``unknown``, and the default rule needs a word boundary
         there, so only a custom rule reaches it."""
         mod = self._mod()
         proc = tmp_path / "proc"
         glued = b"-m" + b"pytest"
         for pid, argv in (
-            ("61", b"pytest\x00-n4\x00--pyargs\x00kiro_crew.mod\x00"),
+            ("61", b"pytest\x00-n4\x00--pyargs\x00aj_crew.mod\x00"),
             ("62", b"/usr/bin/python3\x00" + glued + b"\x00-q\x00"),
         ):
             (proc / pid).mkdir(parents=True)
@@ -570,7 +570,7 @@ class TestFleetProbe(FleetProbeHarness):
             [],
             banned_process_res=[glued.decode(), *mod.DEFAULT_BANNED_RES],
         )
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         line = {
             ln.split("pid=")[1].split()[0]: ln for ln in out.splitlines() if "BANNED pid=" in ln
@@ -578,10 +578,10 @@ class TestFleetProbe(FleetProbeHarness):
         assert "scope=suite" in line["61"], line["61"]
         assert "scope=unknown" in line["62"], line["62"]
         # The package name is an argument like any other and must not ride out.
-        assert "kiro_crew.mod" not in out
+        assert "aj_crew.mod" not in out
 
     def test_an_option_value_is_not_a_target(self, tmp_path, capsys, monkeypatch):
-        """``--cov src/kiro_crew`` and ``-W ignore::X`` are whole-suite runs.
+        """``--cov src/aj_crew`` and ``-W ignore::X`` are whole-suite runs.
 
         Both carry a separator or ``::`` in the value of an option, so without
         ``_VALUE_TAKING_OPTS`` they would print the low-priority ``scope=paths``."""
@@ -589,7 +589,7 @@ class TestFleetProbe(FleetProbeHarness):
         proc = tmp_path / "proc"
         for pid, argv in (
             # A path-shaped value: the separator belongs to `--cov`, not a target.
-            ("51", b"/usr/bin/python3\x00-m\x00pytest\x00-n4\x00--cov\x00src/kiro_crew\x00-q\x00"),
+            ("51", b"/usr/bin/python3\x00-m\x00pytest\x00-n4\x00--cov\x00src/aj_crew\x00-q\x00"),
             # A `::`-shaped value: a warning filter, not a node id.
             ("52", b"pytest\x00-n4\x00-W\x00ignore::DeprecationWarning\x00-q\x00"),
             # An `--ignore <path>` narrows nothing about the run's fan-out.
@@ -598,7 +598,7 @@ class TestFleetProbe(FleetProbeHarness):
             (proc / pid).mkdir(parents=True)
             (proc / pid / "cmdline").write_bytes(argv)
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         line = {
             ln.split("pid=")[1].split()[0]: ln for ln in out.splitlines() if "BANNED pid=" in ln
@@ -607,7 +607,7 @@ class TestFleetProbe(FleetProbeHarness):
             assert "scope=suite" in line[pid], line[pid]
         # The option values are arguments like any other and must not ride out on
         # the derived word.
-        assert "src/kiro_crew" not in out
+        assert "src/aj_crew" not in out
         assert "DeprecationWarning" not in out
         assert "test/slow" not in out
 
@@ -665,7 +665,7 @@ class TestFleetProbe(FleetProbeHarness):
                 b"pytest\x00-n4\x00" + opt.encode() + b"\x00" + value.encode() + b"\x00"
             )
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         line = {
             ln.split("pid=")[1].split()[0]: ln for ln in out.splitlines() if "BANNED pid=" in ln
@@ -695,7 +695,7 @@ class TestFleetProbe(FleetProbeHarness):
             (proc / pid).mkdir(parents=True)
             (proc / pid / "cmdline").write_bytes(argv)
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         self._exe_agrees_with_argv0(mod, monkeypatch, proc)
         out = self._run(mod, cfg, capsys)
         assert "BANNED" not in out
@@ -724,7 +724,7 @@ class TestFleetProbe(FleetProbeHarness):
             (proc / pid).mkdir(parents=True)
             (proc / pid / "cmdline").write_bytes(argv)
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         self._exe_agrees_with_argv0(mod, monkeypatch, proc)
         out = self._run(mod, cfg, capsys)
         assert "BANNED" not in out
@@ -746,7 +746,7 @@ class TestFleetProbe(FleetProbeHarness):
         (proc / "51").mkdir(parents=True)
         (proc / "51" / "cmdline").write_bytes(b"bash\x00/tmp/run.sh\x00-c\x00pytest -n4\x00")
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         self._exe_agrees_with_argv0(mod, monkeypatch, proc)
         out = self._run(mod, cfg, capsys)
         assert "BANNED pid=51" in out
@@ -769,7 +769,7 @@ class TestFleetProbe(FleetProbeHarness):
             (proc / pid).mkdir(parents=True)
             (proc / pid / "cmdline").write_bytes(argv)
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         self._exe_agrees_with_argv0(mod, monkeypatch, proc)
         out = self._run(mod, cfg, capsys)
         assert "BANNED" not in out
@@ -807,7 +807,7 @@ class TestFleetProbe(FleetProbeHarness):
 
         monkeypatch.setattr(mod.os, "readlink", fake_readlink)
         cfg = self._config(tmp_path, monkeypatch, [], banned_process_res=[r"\bwget\b"])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "BANNED pid=101" in out, out
         assert "BANNED pid=102" in out, out
@@ -838,7 +838,7 @@ class TestFleetProbe(FleetProbeHarness):
 
         monkeypatch.setattr(mod.os, "readlink", fake_readlink)
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "pid=104" not in out, out
         assert "banned 0" in out, out
@@ -860,7 +860,7 @@ class TestFleetProbe(FleetProbeHarness):
             (proc / pid).mkdir(parents=True)
             (proc / pid / "cmdline").write_bytes(argv)
         cfg = self._config(tmp_path, monkeypatch, [], banned_process_res=[r"\bcurl\b"])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         self._exe_agrees_with_argv0(mod, monkeypatch, proc)
         out = self._run(mod, cfg, capsys)
         assert "BANNED pid=81" in out, out
@@ -887,7 +887,7 @@ class TestFleetProbe(FleetProbeHarness):
             [],
             banned_process_res=[r"\bcurl\b", *mod.DEFAULT_BANNED_RES],
         )
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         self._exe_agrees_with_argv0(mod, monkeypatch, proc)
         out = self._run(mod, cfg, capsys)
         assert "pid=83" not in out, out
@@ -910,7 +910,7 @@ class TestFleetProbe(FleetProbeHarness):
             (proc / pid).mkdir(parents=True)
             (proc / pid / "cmdline").write_bytes(argv)
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         self._exe_agrees_with_argv0(mod, monkeypatch, proc)
         out = self._run(mod, cfg, capsys)
         assert "BANNED" not in out
@@ -930,7 +930,7 @@ class TestFleetProbe(FleetProbeHarness):
         (proc / "71").mkdir(parents=True)
         (proc / "71" / "cmdline").write_bytes(b"bash\x00/tmp/a b -c pytest -n4\x00")
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         self._exe_agrees_with_argv0(mod, monkeypatch, proc)
         out = self._run(mod, cfg, capsys)
         assert "BANNED pid=71" in out
@@ -957,7 +957,7 @@ class TestFleetProbe(FleetProbeHarness):
 
         monkeypatch.setattr(mod.os, "readlink", fake_readlink)
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "pid=91" in out, out
 
@@ -980,7 +980,7 @@ class TestFleetProbe(FleetProbeHarness):
 
         monkeypatch.setattr(mod.os, "readlink", fake_readlink)
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "pid=92" not in out, out
 
@@ -997,7 +997,7 @@ class TestFleetProbe(FleetProbeHarness):
         (proc / "93").mkdir(parents=True)
         (proc / "93" / "cmdline").write_bytes(b"bash\x00-c\x00pytest -n 4 test/y.py\x00")
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         # No `exe` entry, so readlink raises OSError exactly as it does for a process
         # that made itself non-dumpable.
         out = self._run(mod, cfg, capsys)
@@ -1035,7 +1035,7 @@ class TestFleetProbe(FleetProbeHarness):
 
         monkeypatch.setattr(mod.os, "readlink", fake_readlink)
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "BANNED pid=111" in out, out
         assert "BANNED pid=112" in out, out
@@ -1072,7 +1072,7 @@ class TestFleetProbe(FleetProbeHarness):
 
         monkeypatch.setattr(mod.os, "readlink", fake_readlink)
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "pid=114" not in out, out
         assert "BANNED pid=115" in out, out
@@ -1093,7 +1093,7 @@ class TestFleetProbe(FleetProbeHarness):
         # argv = ["mytool", "", "--full"] -> joined "mytool  --full" (two spaces).
         (proc / "94" / "cmdline").write_bytes(b"mytool\x00\x00--full\x00")
         cfg = self._config(tmp_path, monkeypatch, [], banned_process_res=[r"mytool\s\s--full"])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "BANNED pid=94" in out, out
 
@@ -1110,7 +1110,7 @@ class TestFleetProbe(FleetProbeHarness):
             (proc / pid).mkdir(parents=True)
             (proc / pid / "cmdline").write_bytes(argv)
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "BANNED pid=31" in out
         assert "BANNED pid=32" in out
@@ -1127,7 +1127,7 @@ class TestFleetProbe(FleetProbeHarness):
         (proc / "42").mkdir(parents=True)
         (proc / "42" / "cmdline").write_bytes(b"vitest\x00run\x00src/x.test.ts\x00")
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "BANNED pid=41" in out
         assert "pid=42" not in out  # a named file is a scoped run
@@ -1225,8 +1225,8 @@ class TestFleetProbe(FleetProbeHarness):
         mod = self._mod()
         for bad in ("NaN", "true", "-5"):
             cfg_path = tmp_path / "probe-config.json"
-            monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-            monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(tmp_path / "no-proc"))
+            monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+            monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(tmp_path / "no-proc"))
             cfg_path.write_text('{"sessions": [], "tail_bytes": ' + bad + "}", encoding="utf-8")
             assert mod.main(["--config", str(cfg_path)]) == 2, bad
 

@@ -32,7 +32,7 @@ performs a blocking embed, so callers hand the bound method to
         memory_store=memory_store,
     )
 
-There are ZERO direct ``build_message(...)`` calls under ``src/kiro_crew/``, so a
+There are ZERO direct ``build_message(...)`` calls under ``src/aj_crew/``, so a
 line-oriented rule would have to guess which of the following lines carries the
 store — and a rule matching the same names as a SUBSTRING would additionally hit
 every ``_build_message_entry`` in the chat-persistence path, which builds a
@@ -111,7 +111,7 @@ future whole-tree enforcement switch.
     python3 scripts/check_memory_store_seam.py
 
     # scan explicit files, ignoring git entirely (enforcing)
-    python3 scripts/check_memory_store_seam.py src/kiro_crew/task_planner.py
+    python3 scripts/check_memory_store_seam.py src/aj_crew/task_planner.py
 
     # self-test: plant one probe per rule, assert each verdict
     python3 scripts/check_memory_store_seam.py --test
@@ -140,7 +140,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Only the backend package holds memory-context call sites. The gate's own
 # sources spell every forbidden shape out literally and live outside this root,
 # so they need no exemption.
-SCAN_ROOTS = ("src/kiro_crew/",)
+SCAN_ROOTS = ("src/aj_crew/",)
 SCAN_SUFFIX = ".py"
 
 # The two methods that read a memory store into a prompt. Matched as attribute
@@ -221,7 +221,7 @@ RULE_NOT_AGENT_DERIVED = Rule(
         f"{STORE_KEYWORD}= derived from an agent name. `agent=` here carries a "
         f"kiro-cli modeId (acp.client sends it as session/set_mode's modeId), "
         f"a namespace DISJOINT from "
-        f"cfg.agents, so resolve_agent_bindings(cfg, 'kirocrew-ops') answers store "
+        f"cfg.agents, so resolve_agent_bindings(cfg, 'ajcrew-ops') answers store "
         f"`default` with requested_resolved=False — the derivation fails SILENTLY "
         f"toward the operator's real store, for exactly the crew that configured "
         f"otherwise"
@@ -659,7 +659,7 @@ full_message, _ = await run_in_embed_pool(
 PROBES: tuple[tuple[str, str, str, str | None], ...] = (
     (
         "store-missing-on-the-pool-call",
-        "src/kiro_crew/dashboard/chat_runner.py",
+        "src/aj_crew/dashboard/chat_runner.py",
         """\
 full_message, _ = await run_in_embed_pool(
     state.context_builder.build_message,
@@ -673,37 +673,37 @@ full_message, _ = await run_in_embed_pool(
     ),
     (
         "store-missing-with-no-keywords-at-all",
-        "src/kiro_crew/slack/gateway.py",
+        "src/aj_crew/slack/gateway.py",
         "await run_in_embed_pool(self.ctx_builder.build_message, injected, is_new)\n",
         "store-identity-required",
     ),
     (
         "store-missing-on-a-direct-session-context-call",
-        "src/kiro_crew/eval/runner.py",
+        "src/aj_crew/eval/runner.py",
         "memory_context = ctx_builder.build_session_context(session_key=session_key)\n",
         "store-identity-required",
     ),
     (
         "store-derived-from-a-bare-agent-name",
-        "src/kiro_crew/task_planner.py",
+        "src/aj_crew/task_planner.py",
         _LEGIT_CALL.format(store="agent"),
         "store-not-derived-from-agent",
     ),
     (
         "store-derived-from-an-agent-attribute",
-        "src/kiro_crew/messaging/dispatch.py",
+        "src/aj_crew/messaging/dispatch.py",
         _LEGIT_CALL.format(store="cfg.agents[kiro_agent].memory_store"),
         "store-not-derived-from-agent",
     ),
     (
         "store-derived-from-a-private-agent-field",
-        "src/kiro_crew/subagent_manager/run.py",
+        "src/aj_crew/subagent_manager/run.py",
         _LEGIT_CALL.format(store="self._agent"),
         "store-not-derived-from-agent",
     ),
     (
         "store-given-a-bare-literal",
-        "src/kiro_crew/task_executor.py",
+        "src/aj_crew/task_executor.py",
         _LEGIT_CALL.format(store='"default"'),
         "bare-store-literal",
     ),
@@ -712,92 +712,92 @@ full_message, _ = await run_in_embed_pool(
         # sees it — while ``memory_store or workspace`` resolves it to exactly
         # what passing no keyword resolves to.
         "store-given-a-literal-none",
-        "src/kiro_crew/task_executor.py",
+        "src/aj_crew/task_executor.py",
         _LEGIT_CALL.format(store="None"),
         "literal-none-store",
     ),
     (
         "target-stashed-in-a-local",
-        "src/kiro_crew/dashboard/chat_runner.py",
+        "src/aj_crew/dashboard/chat_runner.py",
         "builder = state.context_builder.build_message\n",
         "unanchored-target-reference",
     ),
     (
         "target-deferred-into-a-lambda",
-        "src/kiro_crew/slack/gateway.py",
+        "src/aj_crew/slack/gateway.py",
         "await run_in_embed_pool(lambda: self.ctx_builder.build_message)\n",
         "unanchored-target-reference",
     ),
     (
         "target-hidden-by-getattr",
-        "src/kiro_crew/task_planner.py",
+        "src/aj_crew/task_planner.py",
         'getattr(ctx, "build_message")(message, is_new, session_key)\n',
         "unanchored-target-reference",
     ),
     (
         "target-hidden-by-methodcaller",
-        "src/kiro_crew/task_planner.py",
+        "src/aj_crew/task_planner.py",
         'operator.methodcaller("build_message", message)(ctx)\n',
         "unanchored-target-reference",
     ),
     (
         "target-hidden-by-vars",
-        "src/kiro_crew/task_planner.py",
+        "src/aj_crew/task_planner.py",
         'vars(ctx)["build_message"](message)\n',
         "unanchored-target-reference",
     ),
     (
         "target-hidden-by-dunder-getattribute",
-        "src/kiro_crew/task_planner.py",
+        "src/aj_crew/task_planner.py",
         'ctx.__getattribute__("build_message")(message, is_new, session_key)\n',
         "unanchored-target-reference",
     ),
     (
         "resolver-called-with-nothing",
-        "src/kiro_crew/tips.py",
+        "src/aj_crew/tips.py",
         "memory = ContextBuilder.get_memory_for()\n",
         "resolver-memory-root-required",
     ),
     (
         "resolver-called-with-a-literal-none",
-        "src/kiro_crew/suggestions.py",
+        "src/aj_crew/suggestions.py",
         "memory = ContextBuilder.get_memory_for(None)\n",
         "resolver-memory-root-required",
     ),
     (
         "lesson-resolver-called-with-a-keyword-none",
-        "src/kiro_crew/dashboard/handlers/_shared.py",
+        "src/aj_crew/dashboard/handlers/_shared.py",
         "return state.context_builder.get_lessons_for(workspace=None)\n",
         "resolver-memory-root-required",
     ),
     (
         "unparseable-source",
-        "src/kiro_crew/context.py",
+        "src/aj_crew/context.py",
         "def build_message(:\n",
         "unparseable-source",
     ),
     # ── allowed forms: each must produce NO hit ──
     (
         "store-passed-by-name",
-        "src/kiro_crew/dashboard/chat_runner.py",
+        "src/aj_crew/dashboard/chat_runner.py",
         _LEGIT_CALL.format(store="memory_store"),
         None,
     ),
     (
         "store-passed-as-the-configured-default",
-        "src/kiro_crew/task_executor.py",
+        "src/aj_crew/task_executor.py",
         _LEGIT_CALL.format(store="cfg.default_memory_store"),
         None,
     ),
     (
         "store-passed-from-resolved-bindings",
-        "src/kiro_crew/messaging/dispatch.py",
+        "src/aj_crew/messaging/dispatch.py",
         _LEGIT_CALL.format(store="bindings.memory_store_name"),
         None,
     ),
     (
         "the-definitions-themselves",
-        "src/kiro_crew/context.py",
+        "src/aj_crew/context.py",
         """\
 class ContextBuilder:
     def build_session_context(self, session_key, memory_store=None):
@@ -810,7 +810,7 @@ class ContextBuilder:
     ),
     (
         "the-resolver-definitions-themselves",
-        "src/kiro_crew/context.py",
+        "src/aj_crew/context.py",
         """\
 @staticmethod
 def get_memory_for(
@@ -823,13 +823,13 @@ def get_memory_for(
     ),
     (
         "resolver-given-a-workspace-root",
-        "src/kiro_crew/history_consolidation.py",
+        "src/aj_crew/history_consolidation.py",
         "memory = ContextBuilder.get_memory_for(ws_name)\n",
         None,
     ),
     (
         "resolver-given-a-resolved-store-name",
-        "src/kiro_crew/history_consolidation.py",
+        "src/aj_crew/history_consolidation.py",
         "memory = ContextBuilder.get_memory_for(memory_store=store_name)\n",
         None,
     ),
@@ -837,7 +837,7 @@ def get_memory_for(
         # The GLOBAL store by name. Indistinguishable from a leak if it were
         # reached by omission, which is why the rule refuses the bare call.
         "resolver-given-the-default-store-by-name",
-        "src/kiro_crew/tips.py",
+        "src/aj_crew/tips.py",
         "memory = ContextBuilder.get_memory_for(memory_store=DEFAULT_MEMORY_STORE)\n",
         None,
     ),
@@ -845,7 +845,7 @@ def get_memory_for(
     # NAME, so an AST matcher does not.
     (
         "persistence-helper-with-a-similar-name",
-        "src/kiro_crew/dashboard/chat_persistence.py",
+        "src/aj_crew/dashboard/chat_persistence.py",
         """\
 def _build_message_entry(m: dict) -> dict | None:
     return _build_message_entry_uncached(m)
@@ -854,38 +854,38 @@ def _build_message_entry(m: dict) -> dict | None:
     ),
     (
         "persistence-helper-referenced-without-a-call",
-        "src/kiro_crew/dashboard/chat_persistence.py",
+        "src/aj_crew/dashboard/chat_persistence.py",
         "builder = _build_message_entry_uncached if raw else _build_message_entry\n",
         None,
     ),
     (
         "persistence-helper-spelled-as-an-attribute",
-        "src/kiro_crew/history.py",
+        "src/aj_crew/history.py",
         "entry = chat_persistence._build_message_entry(m)\n",
         None,
     ),
     (
         "persistence-helper-attribute-with-no-call",
-        "src/kiro_crew/dashboard/chat_backfill.py",
+        "src/aj_crew/dashboard/chat_backfill.py",
         "builder = chat_persistence._build_message_entry_uncached\n",
         None,
     ),
     # Prose naming the forbidden form, from both directions.
     (
         "docstring-naming-the-call",
-        "src/kiro_crew/context_blocks.py",
+        "src/aj_crew/context_blocks.py",
         '"""Authoritative bounds from build_message(...) — no reconstruction."""\n',
         None,
     ),
     (
         "comment-naming-the-call",
-        "src/kiro_crew/executors.py",
+        "src/aj_crew/executors.py",
         "# every build_message(...) call embeds its episodic recall query\n",
         None,
     ),
     (
         "suppressed-with-a-reason",
-        "src/kiro_crew/slack/gateway.py",
+        "src/aj_crew/slack/gateway.py",
         "await run_in_embed_pool(  # memory-store-ok: heartbeat has no crew binding\n"
         "    self.ctx_builder.build_message, injected, is_new\n"
         ")\n",
@@ -968,7 +968,7 @@ def _deletion_anchor_probe() -> tuple[bool, str]:
     anchored = hunk_touched_lines(diff)
     if not anchored:
         return False, "a deletion-only hunk reports nothing touched, so dropping a store passes"
-    found = scan_source("src/kiro_crew/probe.py", stripped)
+    found = scan_source("src/aj_crew/probe.py", stripped)
     if not found:
         return False, "the post-image of a dropped store reports no violation at all"
     if not any(v.span[0] <= n <= v.span[1] for v in found for n in anchored):
@@ -995,7 +995,7 @@ def self_test() -> int:
             print(f"  ok   {label}")
 
     for label, source, expected in _EMPTY_REASON_PROBES:
-        got = {v.rule.rule_id for v in scan_source("src/kiro_crew/slack/gateway.py", source)}
+        got = {v.rule.rule_id for v in scan_source("src/aj_crew/slack/gateway.py", source)}
         covered.add(expected)
         if expected not in got:
             print(f"  FAIL {label}: expected {expected!r}, got {sorted(got) or 'no hit'}")

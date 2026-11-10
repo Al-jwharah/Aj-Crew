@@ -27,9 +27,9 @@ from members_dm_thread_helpers import (
     _patched_config,
 )
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.dashboard.chat_handlers import _history_key_for
-from kiro_crew.members import (
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.dashboard.chat_handlers import _history_key_for
+from aj_crew.members import (
     DM_SLOT_MODE,
     dm_binding_path,
     member_slot_key,
@@ -37,11 +37,11 @@ from kiro_crew.members import (
     slug_for_name,
     write_dm_binding,
 )
-from kiro_crew.testing.wait import LoopHop
+from aj_crew.testing.wait import LoopHop
 
 
 def _mode_app(state) -> web.Application:
-    from kiro_crew.dashboard.chat_folders import api_chat_slot_mode
+    from aj_crew.dashboard.chat_folders import api_chat_slot_mode
 
     app = web.Application()
     app["state"] = state
@@ -188,7 +188,7 @@ class TestResumeGuards:
         """
         from chat_test_helpers import _make_app
 
-        import kiro_crew.dashboard.chat_handlers as handlers
+        import aj_crew.dashboard.chat_handlers as handlers
 
         state = _make_state(tmp_path)
         write_dm_binding(CREW, member=CREW, slot_key=member_slot_key(CREW))
@@ -328,7 +328,7 @@ class TestResumeGuards:
         """
         from chat_test_helpers import _make_app
 
-        import kiro_crew.dashboard.chat_handlers as handlers
+        import aj_crew.dashboard.chat_handlers as handlers
 
         state = _make_state(tmp_path)
         write_dm_binding(CREW, member=CREW, slot_key=member_slot_key(CREW))
@@ -404,11 +404,11 @@ class TestFreeFormMemberOnOrdinarySlot:
         from chat_test_helpers import _make_app_with_agent_routes
 
         state = _make_state(tmp_path)
-        slot = state.get_or_create_slot("ordinary", agent="kirocrew")
-        cfg = KiroCrewConfig()
-        cfg.agents = {self.NAME: KiroCrewAgentConfig(kiro_agent="kirocrew")}
+        slot = state.get_or_create_slot("ordinary", agent="ajcrew")
+        cfg = AjCrewConfig()
+        cfg.agents = {self.NAME: AjCrewAgentConfig(kiro_agent="ajcrew")}
         cfg.default_agent = self.NAME
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.config.loader.AjCrewConfig.load", return_value=cfg):
             async with TestClient(TestServer(_make_app_with_agent_routes(state))) as client:
                 resp = await client.post(
                     f"/api/chat/slots/{slot.key}/agent", json={"agent": self.NAME}
@@ -432,16 +432,16 @@ class TestFreeFormMemberOnOrdinarySlot:
         from chat_test_helpers import _make_app_with_agent_routes
 
         state = _make_state(tmp_path)
-        slot = state.get_or_create_slot("ordinary", agent="kirocrew")
+        slot = state.get_or_create_slot("ordinary", agent="ajcrew")
         cfg = _fake_config(configured, default=configured[0])
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.config.loader.AjCrewConfig.load", return_value=cfg):
             async with TestClient(TestServer(_make_app_with_agent_routes(state))) as client:
                 resp = await client.post(
                     f"/api/chat/slots/{slot.key}/agent", json={"agent": requested}
                 )
                 assert resp.status == 400
                 assert (await resp.json()) == {"error": "invalid agent name"}
-        assert slot.agent == "kirocrew"
+        assert slot.agent == "ajcrew"
 
     @pytest.mark.asyncio
     async def test_agent_switch_admits_a_published_dotted_template(self, tmp_path):
@@ -451,7 +451,7 @@ class TestFreeFormMemberOnOrdinarySlot:
         from chat_test_helpers import _make_app_with_agent_routes
 
         state = _make_state(tmp_path)
-        slot = state.get_or_create_slot("ordinary", agent="kirocrew")
+        slot = state.get_or_create_slot("ordinary", agent="ajcrew")
         async with TestClient(TestServer(_make_app_with_agent_routes(state))) as client:
             resp = await client.post(
                 f"/api/chat/slots/{slot.key}/agent", json={"agent": "reviewer.v2"}
@@ -473,7 +473,7 @@ class TestFreeFormMemberOnOrdinarySlot:
         slot = state.get_or_create_slot("ordinary", agent=self.NAME)
         assert slot.mode != DM_SLOT_MODE
         cfg = _fake_config([self.NAME], default=self.NAME)
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.config.loader.AjCrewConfig.load", return_value=cfg):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/chat", json={"slot": slot.key, "agent": self.NAME, "message": ""}
@@ -497,8 +497,8 @@ class TestFreeFormMemberOnOrdinarySlot:
     async def test_completions_admit_only_a_configured_free_form_member(
         self, configured, model, admitted
     ):
-        from kiro_crew.dashboard.openai_compat import api_completions
-        from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
+        from aj_crew.dashboard.openai_compat import api_completions
+        from aj_crew.kiro_prerequisite import KiroPrerequisiteService
 
         class _Ready(KiroPrerequisiteService):
             async def session_ready(self) -> bool:  # pragma: no cover - trivial
@@ -522,8 +522,8 @@ class TestFreeFormMemberOnOrdinarySlot:
 
         cfg = _fake_config(configured, default=configured[0])
         with (
-            patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=cfg),
-            patch("kiro_crew.dashboard.openai_compat._make_id", side_effect=_PastTheGuard),
+            patch("aj_crew.config.loader.AjCrewConfig.load", return_value=cfg),
+            patch("aj_crew.dashboard.openai_compat._make_id", side_effect=_PastTheGuard),
         ):
             if admitted:
                 with pytest.raises(_PastTheGuard):
@@ -543,12 +543,12 @@ class TestOpenAiCompatPin:
         ("slot_id", "model"),
         [
             ("member-dr-eggbot", "dr. eggbot"),
-            (member_slot_key("dr-eggbot", "private-store"), "kirocrew"),
+            (member_slot_key("dr-eggbot", "private-store"), "ajcrew"),
         ],
     )
     async def test_app_completion_hides_member_slot_existence(self, live, slot_id, model):
-        from kiro_crew.dashboard.openai_compat import api_completions
-        from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
+        from aj_crew.dashboard.openai_compat import api_completions
+        from aj_crew.kiro_prerequisite import KiroPrerequisiteService
 
         class _Ready(KiroPrerequisiteService):
             async def session_ready(self) -> bool:
@@ -595,8 +595,8 @@ class TestOpenAiCompatPin:
         """The OpenAI-compat per-request agent write honors the pin."""
         import asyncio as _asyncio
 
-        from kiro_crew.dashboard.openai_compat import api_completions
-        from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
+        from aj_crew.dashboard.openai_compat import api_completions
+        from aj_crew.kiro_prerequisite import KiroPrerequisiteService
 
         class _Ready(KiroPrerequisiteService):
             async def session_ready(self) -> bool:  # pragma: no cover - trivial
@@ -645,8 +645,8 @@ class TestOpenAiCompatPin:
     async def test_completion_refuses_a_redaction_requiring_stored_member_pin(self, name):
         import asyncio as _asyncio
 
-        from kiro_crew.dashboard.openai_compat import api_completions
-        from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
+        from aj_crew.dashboard.openai_compat import api_completions
+        from aj_crew.kiro_prerequisite import KiroPrerequisiteService
 
         class _Ready(KiroPrerequisiteService):
             async def session_ready(self) -> bool:
@@ -683,7 +683,7 @@ class TestOpenAiCompatPin:
         request.get = MagicMock(side_effect=lambda key, default="": default)
 
         cfg = _fake_config([name], default=name)
-        with patch("kiro_crew.dashboard.openai_compat.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.dashboard.openai_compat.AjCrewConfig.load", return_value=cfg):
             response = await api_completions(request)
         assert response.status == 409
         body = json.loads(response.body)
@@ -699,8 +699,8 @@ class TestOpenAiCompatPin:
         """
         import asyncio as _asyncio
 
-        from kiro_crew.dashboard.openai_compat import api_completions
-        from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
+        from aj_crew.dashboard.openai_compat import api_completions
+        from aj_crew.kiro_prerequisite import KiroPrerequisiteService
 
         class _Ready(KiroPrerequisiteService):
             async def session_ready(self) -> bool:  # pragma: no cover - trivial
@@ -738,7 +738,7 @@ class TestOpenAiCompatPin:
         request.get = MagicMock(side_effect=lambda k, d="": d)
 
         cfg = _fake_config([name], default=name)
-        with patch("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.dashboard.handlers.members.AjCrewConfig.load", return_value=cfg):
             resp = await api_completions(request)
         assert resp.status == 409
         body = json.loads(resp.body)
@@ -791,7 +791,7 @@ class TestRegistryDriftWithoutLiveSlot:
         write_dm_binding(CREW, member="Code.Reviewer", slot_key=member_slot_key(CREW))
         # Registry knows only the same-slug successor; no slot is live.
         with patch(
-            "kiro_crew.dashboard.handlers.members._member_names_for_slug",
+            "aj_crew.dashboard.handlers.members._member_names_for_slug",
             return_value=[CREW],
         ):
             with _patched_config([CREW]):
@@ -880,7 +880,7 @@ class TestReservedMemberKeys:
 
 class TestPersistenceRestoreGate:
     def test_member_identity_resolves_from_the_binding(self):
-        from kiro_crew.dashboard.chat_persistence import _member_restore_identity
+        from aj_crew.dashboard.chat_persistence import _member_restore_identity
 
         key = member_slot_key(CREW)
         write_dm_binding(CREW, member=CREW, slot_key=key)
@@ -889,7 +889,7 @@ class TestPersistenceRestoreGate:
         assert _member_restore_identity("chat-1-1") is None
 
     def test_non_dispatchable_member_identity_is_skipped(self):
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard.chat_persistence import (
             _SKIP_MEMBER_RESTORE,
             _member_restore_identity,
         )
@@ -904,7 +904,7 @@ class TestPersistenceRestoreGate:
     def test_skipped_restore_warning_does_not_log_a_credential_shaped_slot(self, caplog):
         import logging
 
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard.chat_persistence import (
             _SKIP_MEMBER_RESTORE,
             _member_restore_identity,
         )
@@ -914,7 +914,7 @@ class TestPersistenceRestoreGate:
         key = member_slot_key(slug)
         write_dm_binding(slug, member=name, slot_key=key)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.chat_persistence"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.chat_persistence"):
             assert _member_restore_identity(key) is _SKIP_MEMBER_RESTORE
 
         messages = [record.getMessage() for record in caplog.records]
@@ -930,7 +930,7 @@ class TestPersistenceRestoreGate:
         loses nothing: the transcript stays on disk and the member-thread
         endpoint re-creates and re-binds the slot on the next page open.
         """
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard.chat_persistence import (
             _SKIP_MEMBER_RESTORE,
             _member_restore_identity,
         )
@@ -944,7 +944,7 @@ class TestPersistenceRestoreGate:
         binding is consulted breaks this; binding-first resolution is what
         admits the legitimate restore.
         """
-        from kiro_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
+        from aj_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
 
         state = _make_state(tmp_path)
         key = member_slot_key(CREW)
@@ -960,7 +960,7 @@ class TestPersistenceRestoreGate:
         assert slot.mode == DM_SLOT_MODE
 
     def test_open_slot_restore_skips_a_member_key_without_binding(self, tmp_path):
-        from kiro_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
+        from aj_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
 
         state = _make_state(tmp_path)
         key = member_slot_key(CREW)
@@ -981,12 +981,12 @@ class TestPersistenceRestoreGate:
         return key
 
     def test_an_id_binding_the_config_does_not_resolve_is_deferred_not_skipped(self):
-        from kiro_crew import execution_context
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew import execution_context
+        from aj_crew.dashboard.chat_persistence import (
             _DEFER_MEMBER_RESTORE,
             _member_restore_identity,
         )
-        from kiro_crew.members import dm_binding_depends_on_config
+        from aj_crew.members import dm_binding_depends_on_config
 
         key = self._id_binding(slug_for_name(CREW))
 
@@ -1003,9 +1003,9 @@ class TestPersistenceRestoreGate:
         """A binding read that fails at boot keeps the thread, and the retry builds it."""
         from types import SimpleNamespace
 
-        from kiro_crew import execution_context
-        from kiro_crew.dashboard import chat_persistence as cp
-        from kiro_crew.dashboard import member_slot_retry
+        from aj_crew import execution_context
+        from aj_crew.dashboard import chat_persistence as cp
+        from aj_crew.dashboard import member_slot_retry
 
         state = _make_state(tmp_path)
         key = self._id_binding(slug_for_name(CREW))
@@ -1055,8 +1055,8 @@ class TestPersistenceRestoreGate:
 
     def test_a_retry_that_still_cannot_build_drops_the_key(self, tmp_path):
         """A crewmate gone for good (deleted) is not carried from boot to boot."""
-        from kiro_crew import execution_context
-        from kiro_crew.dashboard import member_slot_retry
+        from aj_crew import execution_context
+        from aj_crew.dashboard import member_slot_retry
 
         state = _make_state(tmp_path)
         key = self._id_binding(slug_for_name(CREW))
@@ -1085,10 +1085,10 @@ class TestPersistenceRestoreGate:
         The retry exists for that boot-mid-write case: once the crewmate
         resolves again, it rebuilds the thread instead of answering unknown.
         """
-        from kiro_crew.config import loader
-        from kiro_crew.config.loader_locations import config_path
-        from kiro_crew.dashboard import chat_persistence as cp
-        from kiro_crew.dashboard import member_slot_retry
+        from aj_crew.config import loader
+        from aj_crew.config.loader_locations import config_path
+        from aj_crew.dashboard import chat_persistence as cp
+        from aj_crew.dashboard import member_slot_retry
 
         state = _make_state(tmp_path)
         slug = slug_for_name(CREW)
@@ -1099,7 +1099,7 @@ class TestPersistenceRestoreGate:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({"agents": {CREW: {"member_id": slug}}}), encoding="utf-8")
         loader._mark_file_degraded(path)  # what the failed boot read left behind
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert loader.DEGRADED_WHOLE_CONFIG in cfg.degraded_sections
         assert cfg.agents[CREW].member_id == slug
         rehydrate = AsyncMock(return_value=object())
@@ -1126,29 +1126,29 @@ class TestPersistenceRestoreGate:
         ],
     )
     def test_retry_uses_one_resolution(self, tmp_path, monkeypatch, caplog, case):
-        from kiro_crew import members as members_facade
-        from kiro_crew.dashboard import chat_persistence as cp
-        from kiro_crew.dashboard import member_slot_retry
-        from kiro_crew.members_parts import dm_bindings as bindings
+        from aj_crew import members as members_facade
+        from aj_crew.dashboard import chat_persistence as cp
+        from aj_crew.dashboard import member_slot_retry
+        from aj_crew.members_parts import dm_bindings as bindings
 
         state = _make_state(tmp_path)
         slug = slug_for_name(CREW)
         key = self._id_binding(slug)
         state.unrestored_slot_keys = {key}
         state.deferred_member_slot_keys = {key}
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         if case == "resolved":
-            cfg.agents = {CREW: KiroCrewAgentConfig(member_id=slug)}
+            cfg.agents = {CREW: AjCrewAgentConfig(member_id=slug)}
             # A failed earlier read cannot poison the successful retry.
             with patch.object(members_facade, "read_bytes_with_retry", side_effect=OSError):
                 assert bindings.read_dm_binding_for_slot(key) is None
         if case == "resolved_whole":
-            cfg.agents = {CREW: KiroCrewAgentConfig(member_id=slug)}
+            cfg.agents = {CREW: AjCrewAgentConfig(member_id=slug)}
         if case == "ambiguous":
             # Two matches in a healthy config are not a deletion.
             cfg.agents = {
-                CREW: KiroCrewAgentConfig(member_id=slug),
-                OTHER: KiroCrewAgentConfig(member_id=slug),
+                CREW: AjCrewAgentConfig(member_id=slug),
+                OTHER: AjCrewAgentConfig(member_id=slug),
             }
         cfg._base_unreadable = case == "base"
         cfg._overlay_unreadable = case == "overlay"
@@ -1158,7 +1158,7 @@ class TestPersistenceRestoreGate:
         load = MagicMock(return_value=cfg)
         if case == "load_error":
             load.side_effect = OSError("config read failed")
-        monkeypatch.setattr(KiroCrewConfig, "load", load)
+        monkeypatch.setattr(AjCrewConfig, "load", load)
         real_read = bindings.read_bytes_with_retry
         loop_thread = threading.get_ident()
         reads = []
@@ -1230,15 +1230,15 @@ class TestPersistenceRestoreGate:
         ],
     )
     def test_dm_binding_resolution_outcomes(self, monkeypatch, case, expected):
-        from kiro_crew import execution_context
-        from kiro_crew import members as members_facade
-        from kiro_crew.members_parts import dm_bindings as bindings
+        from aj_crew import execution_context
+        from aj_crew import members as members_facade
+        from aj_crew.members_parts import dm_bindings as bindings
 
         slug = slug_for_name(CREW)
         key = self._id_binding(slug)
         path = dm_binding_path(slug)
         data = json.loads(path.read_text(encoding="utf-8"))
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         if case in {
             "resolved",
             "resolved_degraded",
@@ -1248,9 +1248,9 @@ class TestPersistenceRestoreGate:
             "ambiguous_degraded",
             "resolver_error",
         }:
-            cfg.agents = {"renamed": KiroCrewAgentConfig(member_id=slug)}
+            cfg.agents = {"renamed": AjCrewAgentConfig(member_id=slug)}
         if case in {"ambiguous", "ambiguous_degraded"}:
-            cfg.agents["duplicate"] = KiroCrewAgentConfig(member_id=slug)
+            cfg.agents["duplicate"] = AjCrewAgentConfig(member_id=slug)
         cfg._base_unreadable = case in {"base", "resolved_base"}
         cfg._overlay_unreadable = case == "overlay"
         cfg._degraded_sections = frozenset(
@@ -1285,7 +1285,7 @@ class TestPersistenceRestoreGate:
         load = MagicMock(return_value=cfg)
         if case == "load_value_error":
             load.side_effect = ValueError("config unavailable")
-        monkeypatch.setattr(KiroCrewConfig, "load", load)
+        monkeypatch.setattr(AjCrewConfig, "load", load)
         if case == "resolver_error":
             monkeypatch.setattr(
                 execution_context, "member_config_for_id", MagicMock(side_effect=RuntimeError)
@@ -1308,9 +1308,9 @@ class TestPersistenceRestoreGate:
         """A read error on the retry is the next boot's to decide, not a reason to prune."""
         from types import SimpleNamespace
 
-        from kiro_crew import execution_context
-        from kiro_crew.dashboard import chat_persistence as cp
-        from kiro_crew.dashboard import member_slot_retry
+        from aj_crew import execution_context
+        from aj_crew.dashboard import chat_persistence as cp
+        from aj_crew.dashboard import member_slot_retry
 
         state = _make_state(tmp_path)
         key = self._id_binding(slug_for_name(CREW))
@@ -1335,18 +1335,18 @@ class TestPersistenceRestoreGate:
     def test_a_thread_closed_during_the_retrys_binding_read_is_not_rebuilt(
         self, tmp_path, monkeypatch, read_window
     ):
-        from kiro_crew import members as members_facade
-        from kiro_crew.dashboard import chat_persistence as cp
-        from kiro_crew.dashboard import member_slot_retry
-        from kiro_crew.dashboard.channel_slots import note_slot_closed
-        from kiro_crew.members_parts import dm_bindings as bindings
+        from aj_crew import members as members_facade
+        from aj_crew.dashboard import chat_persistence as cp
+        from aj_crew.dashboard import member_slot_retry
+        from aj_crew.dashboard.channel_slots import note_slot_closed
+        from aj_crew.members_parts import dm_bindings as bindings
 
         state = _make_state(tmp_path)
         slug = slug_for_name(CREW)
         key = self._id_binding(slug)
         state.unrestored_slot_keys = {key}
         state.deferred_member_slot_keys = {key}
-        cfg = KiroCrewConfig(agents={CREW: KiroCrewAgentConfig(member_id=slug)})
+        cfg = AjCrewConfig(agents={CREW: AjCrewAgentConfig(member_id=slug)})
         real_read = bindings.read_bytes_with_retry
         resolution = MagicMock(wraps=bindings.resolve_dm_binding_outcome)
         monkeypatch.setattr(bindings, "resolve_dm_binding_outcome", resolution)
@@ -1376,7 +1376,7 @@ class TestPersistenceRestoreGate:
                 return cfg
 
             monkeypatch.setattr(members_facade, "read_bytes_with_retry", read)
-            monkeypatch.setattr(KiroCrewConfig, "load", load)
+            monkeypatch.setattr(AjCrewConfig, "load", load)
             result = await member_slot_retry.retry_deferred_member_slots(state, delay=0)
             hop.check()
             return result
@@ -1390,8 +1390,8 @@ class TestPersistenceRestoreGate:
 
     def test_a_deferred_thread_another_path_built_still_leaves_the_seed(self, monkeypatch):
         """Opened or loaded before the retry: the retry builds nothing and ends the deferral."""
-        from kiro_crew.dashboard import chat_persistence as cp
-        from kiro_crew.dashboard import member_slot_retry
+        from aj_crew.dashboard import chat_persistence as cp
+        from aj_crew.dashboard import member_slot_retry
 
         key = member_slot_key(CREW)
 
@@ -1419,7 +1419,7 @@ class TestPersistenceRestoreGate:
         assert state.deferred_member_slot_keys == set()
 
     def test_a_skipped_member_thread_is_not_kept_for_a_retry(self, tmp_path):
-        from kiro_crew.dashboard import chat_persistence as cp
+        from aj_crew.dashboard import chat_persistence as cp
 
         state = _make_state(tmp_path)
         key = member_slot_key(CREW)
@@ -1578,7 +1578,7 @@ class TestCentralReservation:
             ]
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.members_mod.read_dm_binding_for_slot",
+            "aj_crew.dashboard.chat_handlers.members_mod.read_dm_binding_for_slot",
             lambda _slot_key: next(binding_reads),
         )
 

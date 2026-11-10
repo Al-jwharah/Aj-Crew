@@ -6,11 +6,11 @@ import shutil
 import sys
 from pathlib import Path
 
-from kiro_crew import install_liveness
+from aj_crew import install_liveness
 
 
 def _package(root: Path) -> Path:
-    pkg = root / "kiro_crew"
+    pkg = root / "aj_crew"
     pkg.mkdir(parents=True)
     (pkg / "__init__.py").write_text("")
     return pkg
@@ -36,10 +36,10 @@ def test_an_emptied_package_directory_is_pruned(tmp_path: Path) -> None:
 
 
 def test_only_the_pool_marker_counts_as_respawnable(monkeypatch) -> None:
-    from kiro_crew import install_liveness
+    from aj_crew import install_liveness
 
     monkeypatch.delenv(install_liveness.POOLED_BACKEND_ENV, raising=False)
-    monkeypatch.setenv("KIROCREW_SPAWNED", "1")  # set on agent runtimes too
+    monkeypatch.setenv("AJCREW_SPAWNED", "1")  # set on agent runtimes too
     assert install_liveness.respawned_by_pool() is False
     monkeypatch.setenv(install_liveness.POOLED_BACKEND_ENV, install_liveness.POOLED_BACKEND_VALUE)
     monkeypatch.setenv(install_liveness.POOLED_RESPAWN_COMMAND_ENV, sys.executable)
@@ -51,9 +51,9 @@ def test_a_pooled_backend_whose_respawn_command_was_pruned_is_not_respawnable(
 ) -> None:
     """The pool respawns from its frozen target, so a launcher that went with
     the prune would fail to relaunch and leave the session with no tools."""
-    from kiro_crew import install_liveness
+    from aj_crew import install_liveness
 
-    launcher = tmp_path / "0.8.0.4" / "bin" / "kirocrew"
+    launcher = tmp_path / "0.8.0.4" / "bin" / "ajcrew"
     launcher.parent.mkdir(parents=True)
     launcher.write_text("#!/bin/sh\n")
     launcher.chmod(0o755)

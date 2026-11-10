@@ -8,7 +8,7 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 
-vi.mock('../api/client', () => ({ api: { kirocrewConfig: vi.fn() } }))
+vi.mock('../api/client', () => ({ api: { ajcrewConfig: vi.fn() } }))
 
 import { api } from '../api/client'
 import { mcpAppKey, openActivityPanel } from '../store/chatSlice'
@@ -24,7 +24,7 @@ const slot = (key: string, project?: string) => ({ key, project }) as unknown as
 
 describe('useRunInTerminalConfig', () => {
   it('mirrors the active slot project and the terminal config onto refs read at event time', async () => {
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ dashboard: { terminal: { reuse_current: true } } } as never)
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ dashboard: { terminal: { reuse_current: true } } } as never)
     const { result, rerender } = renderHook(
       ({ activeSlot }: { activeSlot: string | null }) => useRunInTerminalConfig({ slots: [slot('a', '/repo/a'), slot('b')], activeSlot }),
       { initialProps: { activeSlot: 'a' as string | null }, wrapper: withQueryClient() },
@@ -40,7 +40,7 @@ describe('useRunInTerminalConfig', () => {
   })
 
   it('reports a failed config read as failed, never as reuse off', async () => {
-    vi.mocked(api.kirocrewConfig).mockRejectedValue(new Error('down'))
+    vi.mocked(api.ajcrewConfig).mockRejectedValue(new Error('down'))
     const { result } = renderHook(() => useRunInTerminalConfig({ slots: [], activeSlot: null }), { wrapper: withQueryClient() })
     await waitFor(() => expect(result.current.terminalCfgReadFailedRef.current).toBe(true))
     expect(result.current.terminalReuseRef.current).toBe(false)

@@ -25,8 +25,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.channel_history import ChannelHistory
-from kiro_crew.history import ConversationLog
+from aj_crew.channel_history import ChannelHistory
+from aj_crew.history import ConversationLog
 
 
 @pytest.mark.parametrize("bad", ["[1]", "42", '"text"', "null"])

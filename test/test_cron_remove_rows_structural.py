@@ -31,9 +31,9 @@ import pkgutil
 from pathlib import Path
 from types import ModuleType
 
-import kiro_crew.cron as cron_module
-from kiro_crew.cron import CronService
-from kiro_crew.cron_service import service
+import aj_crew.cron as cron_module
+from aj_crew.cron import CronService
+from aj_crew.cron_service import service
 
 SANCTIONED_HELPER = "_remove_job_rows"
 

@@ -21,7 +21,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.apps.builtins.issue_radar.backend import provider, routes
+from aj_crew.apps.builtins.issue_radar.backend import provider, routes
 
 OWNER = "owner-user"
 BASE = "/api/apps/issue-radar"

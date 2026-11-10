@@ -29,9 +29,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard.handlers import agents
-from kiro_crew.dashboard.kiro_readiness import KIRO_PREREQUISITE_REQUIRED_CODE
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
+from aj_crew.dashboard.handlers import agents
+from aj_crew.dashboard.kiro_readiness import KIRO_PREREQUISITE_REQUIRED_CODE
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService
 
 # A real auth-failure stderr an expired kiro-cli login writes: a rejected bearer
 # token. ``is_auth_failure_output`` recognizes it.
@@ -93,13 +93,13 @@ def harness(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(agents, "_catalog_cache", agents._CatalogCache())
     cfg = SimpleNamespace(agent=SimpleNamespace(provider="kiro", acp_backend="kiro"))
     patches = [
-        patch.object(agents.KiroCrewConfig, "load", return_value=cfg),
-        patch("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", return_value="/usr/bin/kiro-cli"),
-        patch("kiro_crew.acp.client._resolve_ssh_auth_sock", lambda env: None),
-        patch("kiro_crew.env.augmented_path", lambda p: p),
+        patch.object(agents.AjCrewConfig, "load", return_value=cfg),
+        patch("aj_crew.acp.client._resolve_kiro_bin_for_spawn", return_value="/usr/bin/kiro-cli"),
+        patch("aj_crew.acp.client._resolve_ssh_auth_sock", lambda env: None),
+        patch("aj_crew.env.augmented_path", lambda p: p),
         patch.object(agents, "wrap_argv", lambda argv, **kwargs: (argv, None)),
         patch.object(agents, "cgroup_scope_argv", lambda argv: argv),
-        patch("kiro_crew.sandbox.resource_limit_preexec", lambda: None),
+        patch("aj_crew.sandbox.resource_limit_preexec", lambda: None),
     ]
     for p in patches:
         p.start()

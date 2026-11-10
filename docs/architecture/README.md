@@ -1,6 +1,6 @@
 # Architecture
 
-How Kiro Crew fits together, one doc per cross-cutting concern. These docs are maps:
+How Aj Crew fits together, one doc per cross-cutting concern. These docs are maps:
 they explain structure and rationale and link out to
 [../system-specs/modules/](../system-specs/README.md) for mechanism detail.
 

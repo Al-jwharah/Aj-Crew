@@ -18,7 +18,7 @@ from slack_gateway_helpers import (
     _make_orchestrator,
 )
 
-from kiro_crew.slack import gateway as gw
+from aj_crew.slack import gateway as gw
 
 
 def _provider(active: bool):
@@ -295,7 +295,7 @@ class TestCallbackSafeUpdateRestart:
     @pytest.mark.asyncio
     async def test_the_restart_owns_the_bundle_gap_while_it_runs(self, monkeypatch, tmp_path):
         """Its teardown must not be raced by the stale-asset watchdog."""
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         seen: list[object] = []
         orch = _make_orchestrator()
@@ -324,7 +324,7 @@ class TestCallbackSafeUpdateRestart:
     @pytest.mark.asyncio
     async def test_a_deferred_restart_keeps_owning_the_gap(self, monkeypatch, tmp_path):
         """The watchdog must not force the restart the update just put off."""
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         orch = _make_orchestrator()
         orch.dashboard_state = None
@@ -343,7 +343,7 @@ class TestCallbackSafeUpdateRestart:
     @pytest.mark.asyncio
     async def test_a_retry_that_defers_again_keeps_the_first_deadline(self, monkeypatch, tmp_path):
         """The coordinator retries every few minutes; that must not hold the watchdog off for good."""
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         clock = {"t": 1000.0}
         monkeypatch.setattr(update_ownership, "_now", lambda: clock["t"])
@@ -367,7 +367,7 @@ class TestCallbackSafeUpdateRestart:
     @pytest.mark.asyncio
     async def test_no_usable_interpreter_leaves_the_gap_to_the_supervisor(self, tmp_path):
         """The pruned tree took the bundle too; the watchdog's exit is what relaunches."""
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         orch = _make_orchestrator()
         orch.dashboard_state = None
@@ -383,7 +383,7 @@ class TestCallbackSafeUpdateRestart:
         self, tmp_path
     ):
         """A drain deferral must not keep owning the gap once the interpreter is pruned."""
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         update_ownership.note_restart_deferred()  # the earlier attempt's drain deferral
         orch = _make_orchestrator()
@@ -397,7 +397,7 @@ class TestCallbackSafeUpdateRestart:
 
     @pytest.mark.asyncio
     async def test_a_committed_restart_ends_the_deferral_it_retried(self, monkeypatch, tmp_path):
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         update_ownership.note_restart_deferred()
         orch = _make_orchestrator()

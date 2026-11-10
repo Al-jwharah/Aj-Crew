@@ -14,15 +14,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.client import AcpError, AcpPromptBusy, AcpTimeoutError
-from kiro_crew.acp.types import (
+from aj_crew.acp.client import AcpError, AcpPromptBusy, AcpTimeoutError
+from aj_crew.acp.types import (
     EVENT_COMPACTION_STATUS,
     STOP_REASON_CANCELLED,
     STOP_REASON_STALE_RECOVER,
     TurnUsage,
 )
-from kiro_crew.history import ConversationLog
-from kiro_crew.llm_helpers import (
+from aj_crew.history import ConversationLog
+from aj_crew.llm_helpers import (
     PromptBusyExhaustedError,
     ToolApprovalPolicy,
     first_advertised_fallback,
@@ -32,7 +32,7 @@ from kiro_crew.llm_helpers import (
     save_conversation_turn,
     stream_and_collect,
 )
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, EVENT_TOOL_CALL, LLMEvent
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, EVENT_TOOL_CALL, LLMEvent
 
 
 class TestFirstAdvertisedFallback:
@@ -326,7 +326,7 @@ class TestStreamAndCollectPromptBusy:
         unattended caller (workflows/agent_pool, handlers/side, the
         subagent-completion injector).
         """
-        from kiro_crew.acp.client import _format_acp_error
+        from aj_crew.acp.client import _format_acp_error
 
         formatted = _format_acp_error(
             {"code": -32603, "message": "Internal error", "data": "Prompt already in progress"}
@@ -359,7 +359,7 @@ class TestStreamAndCollectPromptBusy:
     @pytest.mark.asyncio
     async def test_formatted_prompt_busy_exhaustion_still_raises_typed(self) -> None:
         """The exhaustion arm must also fire for a formatted prompt-busy."""
-        from kiro_crew.acp.client import _format_acp_error
+        from aj_crew.acp.client import _format_acp_error
 
         formatted = _format_acp_error(
             {"code": -32603, "message": "Internal error", "data": "Prompt already in progress"}
@@ -482,14 +482,14 @@ class TestTransientErrorClassifier:
     """_is_transient_acp_error: retry server-side hiccups, fail fast on auth."""
 
     def test_internal_server_error_is_transient(self) -> None:
-        from kiro_crew.llm_helpers import _is_transient_acp_error
+        from aj_crew.llm_helpers import _is_transient_acp_error
 
         assert _is_transient_acp_error(
             "Prompt error: {'message': 'Internal error: API Error: Internal server error'}"
         )
 
     def test_throttle_and_unavailable_are_transient(self) -> None:
-        from kiro_crew.llm_helpers import _is_transient_acp_error
+        from aj_crew.llm_helpers import _is_transient_acp_error
 
         assert _is_transient_acp_error("Bedrock is throttling requests")
         assert _is_transient_acp_error("ServiceUnavailableException")
@@ -497,7 +497,7 @@ class TestTransientErrorClassifier:
         assert _is_transient_acp_error("connection reset by peer")
 
     def test_dispatch_failure_is_transient(self) -> None:
-        from kiro_crew.llm_helpers import _is_transient_acp_error
+        from aj_crew.llm_helpers import _is_transient_acp_error
 
         # AWS SDK connector-level I/O failure (conn/DNS/TLS drop) — retryable.
         # Uses the exact shapes seen in history-consolidation ACP errors.
@@ -513,7 +513,7 @@ class TestTransientErrorClassifier:
         )
 
     def test_auth_and_validation_are_not_transient(self) -> None:
-        from kiro_crew.llm_helpers import _is_transient_acp_error
+        from aj_crew.llm_helpers import _is_transient_acp_error
 
         # These must fail fast — a retry cannot fix them.
         assert not _is_transient_acp_error(
@@ -530,19 +530,19 @@ class TestAcpErrorIsTransient:
     falls back to the string classifier."""
 
     def test_flag_true_wins_over_nontransient_message(self) -> None:
-        from kiro_crew.llm_helpers import acp_error_is_transient
+        from aj_crew.llm_helpers import acp_error_is_transient
 
         # Flag is authoritative: a terminal-looking message is still retried.
         assert acp_error_is_transient(AcpError("ValidationException", transient=True))
 
     def test_flag_false_wins_over_transient_message(self) -> None:
-        from kiro_crew.llm_helpers import acp_error_is_transient
+        from aj_crew.llm_helpers import acp_error_is_transient
 
         # Flag is authoritative: a transient-looking message still fails fast.
         assert not acp_error_is_transient(AcpError("ServiceUnavailableException", transient=False))
 
     def test_unflagged_5xx_message_falls_back_to_string(self) -> None:
-        from kiro_crew.llm_helpers import acp_error_is_transient
+        from aj_crew.llm_helpers import acp_error_is_transient
 
         # The regression: _format_acp_error's friendly 5xx string is
         # now recognised by the string fallback even with no flag set.
@@ -554,7 +554,7 @@ class TestAcpErrorIsTransient:
         assert acp_error_is_transient(AcpError(msg))  # transient defaults to None
 
     def test_plain_exception_uses_string_fallback(self) -> None:
-        from kiro_crew.llm_helpers import acp_error_is_transient
+        from aj_crew.llm_helpers import acp_error_is_transient
 
         # Non-AcpError (no .transient attr) → string classifier.
         assert acp_error_is_transient(RuntimeError("ServiceUnavailableException"))
@@ -630,7 +630,7 @@ class TestStreamAndCollectTransient:
         (initial attempt + _TRANSIENT_RETRIES); without it, a skipped retry
         path would still pass on the first raise.
         """
-        from kiro_crew.llm_helpers import _TRANSIENT_RETRIES
+        from aj_crew.llm_helpers import _TRANSIENT_RETRIES
 
         call_count = 0
 
@@ -831,7 +831,7 @@ class TestRecordInteractionEvent:
     """The shared per-interaction telemetry helper used by every surface."""
 
     def _install_stub(self, monkeypatch, record):
-        import kiro_crew.platform as platform
+        import aj_crew.platform as platform
 
         telemetry = MagicMock()
         telemetry.record_event = record

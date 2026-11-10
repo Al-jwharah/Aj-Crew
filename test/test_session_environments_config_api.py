@@ -17,30 +17,30 @@ from test_session_environments_config import (
     _write_section,
 )
 
-from kiro_crew.dashboard.handlers import api_kirocrew_config, api_kirocrew_config_patch
+from aj_crew.dashboard.handlers import api_ajcrew_config, api_ajcrew_config_patch
 
 
 @pytest.fixture
 def config_file(tmp_path, monkeypatch):
     path = tmp_path / "config.json"
     path.write_text(json.dumps(_BASE_CONFIG), encoding="utf-8")
-    monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: path)
+    monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: path)
     return path
 
 
 def _app() -> web.Application:
     app = web.Application()
-    app.router.add_patch("/api/config/kirocrew", api_kirocrew_config_patch)
-    app.router.add_get("/api/config/kirocrew", api_kirocrew_config)
+    app.router.add_patch("/api/config/ajcrew", api_ajcrew_config_patch)
+    app.router.add_get("/api/config/ajcrew", api_ajcrew_config)
     return as_owner(app)
 
 
 async def _patch(client, path, value):
-    return await client.patch("/api/config/kirocrew", json={"path": path, "value": value})
+    return await client.patch("/api/config/ajcrew", json={"path": path, "value": value})
 
 
 async def _section(client) -> dict:
-    return (await (await client.get("/api/config/kirocrew")).json())["session_environments"]
+    return (await (await client.get("/api/config/ajcrew")).json())["session_environments"]
 
 
 def _api() -> TestClient:
@@ -52,7 +52,7 @@ class TestApi:
 
     async def test_get_exposes_safe_defaults(self, config_file):
         async with _api() as client:
-            resp = await client.get("/api/config/kirocrew")
+            resp = await client.get("/api/config/ajcrew")
             assert resp.status == 200
             assert (await resp.json())["session_environments"] == {
                 "coder_url": "",
@@ -79,7 +79,7 @@ class TestApi:
         assert stored["session_environments"] == expected
         assert stored["session"]["timeout_secs"] == 1234
         assert stored["an_edition_section"] == {"keep": "me"}
-        assert stored["default_agent"] == "kirocrew"
+        assert stored["default_agent"] == "ajcrew"
 
     async def test_a_whole_section_save_keeps_omitted_optional_keys(self, config_file):
         """SECTION_OPTIONAL_KEYS left out of a whole-section save (an agent's change
@@ -481,8 +481,8 @@ class TestStaleCardSave:
 
 def test_every_optional_key_has_the_loaders_validator():
     """A key without a validator is never carried, so a new provider list must add one."""
-    from kiro_crew.config.session_environments import SECTION_OPTIONAL_KEYS
-    from kiro_crew.dashboard.handlers.core_config_patch import (
+    from aj_crew.config.session_environments import SECTION_OPTIONAL_KEYS
+    from aj_crew.dashboard.handlers.core_config_patch import (
         _session_environment_key_validators,
     )
 

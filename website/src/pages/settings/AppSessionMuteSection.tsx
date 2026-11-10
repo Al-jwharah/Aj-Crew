@@ -41,7 +41,7 @@ function AppMuteRow({
   const name = appDisplayName(app)
   const mut = useMutation(
     overlay.mutationOpts<boolean>({
-      queryKey: ['kirocrewConfig'],
+      queryKey: ['ajcrewConfig'],
       mutationFn: (value: boolean) => api.patchConfig(path, value),
       path: () => path,
       displayValue: value => value,
@@ -64,7 +64,7 @@ export function AppSessionMuteSection() {
   const qc = useQueryClient()
   const overlay = useOptimisticConfigPaths(qc)
   const [failure, setFailure] = useState<{ path: string; message: string } | null>(null)
-  const configQ = useQuery({ queryKey: ['kirocrewConfig'], queryFn: () => api.kirocrewConfig() })
+  const configQ = useQuery({ queryKey: ['ajcrewConfig'], queryFn: () => api.ajcrewConfig() })
   const appsQ = useQuery({ queryKey: ['apps'], queryFn: () => api.listApps() })
   const muted = appsMutingSessions(configQ.data)
   // Enabled apps, plus a disabled one whose mute is still stored, so the switch

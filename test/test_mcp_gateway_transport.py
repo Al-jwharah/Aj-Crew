@@ -22,10 +22,10 @@ from typing import Any, Iterator
 import pytest
 from tmpdir_helpers import SHORT_TMP_PREFIX, short_tmp_base
 
-from kiro_crew import code_fingerprint as cf
-from kiro_crew import platform_compat as pc
-from kiro_crew.mcp_gateway import transport
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew import code_fingerprint as cf
+from aj_crew import platform_compat as pc
+from aj_crew.mcp_gateway import transport
+from aj_crew.testing.wait import await_until, finished
 
 
 @pytest.fixture(autouse=True)
@@ -76,7 +76,7 @@ def test_posix_address_is_the_socket_path(tmp_path: Path) -> None:
 def test_windows_address_is_a_pipe_name(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(pc, "IS_WINDOWS", True)
     addr = transport.resolve_address("/some/home/mcp-gateway/gateway.sock")
-    assert addr.startswith(r"\\.\pipe\kirocrew-mcp-")
+    assert addr.startswith(r"\\.\pipe\ajcrew-mcp-")
     # No path separators survive into the name: a pipe name is a flat namespace.
     assert "/" not in addr[len(r"\\.\pipe\\") :]
 
@@ -87,7 +87,7 @@ def test_windows_address_is_deterministic_and_path_scoped(
     """The stub and gatewayd derive the name independently from --socket.
 
     They exchange nothing, so the same path must always give the same name, and
-    two installations (different $KIROCREW_HOME) must not collide on the
+    two installations (different $AJCREW_HOME) must not collide on the
     machine-global pipe namespace.
     """
     monkeypatch.setattr(pc, "IS_WINDOWS", True)
@@ -215,7 +215,7 @@ def test_deleting_the_lock_file_does_not_admit_a_second_daemon(tmp_path: Path) -
 def test_singleton_refusal_says_what_to_do_instead_of_deleting(tmp_path: Path) -> None:
     sock = tmp_path / "gateway.sock"
     msg = transport.singleton_refusal_message(sock)
-    assert "kirocrew restart" in msg
+    assert "ajcrew restart" in msg
     assert f"Do not delete {transport.lock_path_for(sock)}" in msg
 
 
@@ -1072,7 +1072,7 @@ async def test_manager_offloads_prepare_dir_from_the_event_loop(
 ) -> None:
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.mcp_gateway import manager as mgr
+    from aj_crew.mcp_gateway import manager as mgr
 
     probe = _LoopProbe()
     monkeypatch.setattr(mgr.transport, "prepare_dir", probe)
@@ -1099,7 +1099,7 @@ async def test_gatewayd_offloads_prepare_dir_from_the_event_loop(
 ) -> None:
     from unittest.mock import AsyncMock
 
-    from kiro_crew.mcp_gateway import gatewayd as gw
+    from aj_crew.mcp_gateway import gatewayd as gw
 
     probe = _LoopProbe()
     monkeypatch.setattr(gw.transport, "prepare_dir", probe)

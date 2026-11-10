@@ -28,14 +28,14 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from test_decisions_strip_rides_message import _slot, _state
 
-from kiro_crew import decisions as core
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_utils import effective_session_key
-from kiro_crew.dashboard.handlers.decisions import api_decisions_feedback
-from kiro_crew.decisions import log as log_mod
-from kiro_crew.decisions import outcomes
-from kiro_crew.decisions.points import skills_select as sel
-from kiro_crew.decisions.types import Answer
+from aj_crew import decisions as core
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_utils import effective_session_key
+from aj_crew.dashboard.handlers.decisions import api_decisions_feedback
+from aj_crew.decisions import log as log_mod
+from aj_crew.decisions import outcomes
+from aj_crew.decisions.points import skills_select as sel
+from aj_crew.decisions.types import Answer
 
 BASELINE = "matcher"
 WIDENED = "unrelated"
@@ -60,7 +60,7 @@ def _generous_append_deadline(monkeypatch):
 
     Raised, not removed: a genuinely stuck lock still fails the test.
     """
-    from kiro_crew import platform_log_append
+    from aj_crew import platform_log_append
 
     monkeypatch.setattr(platform_log_append, "_APPEND_TIMEOUT_SECONDS", 10.0)
 
@@ -108,10 +108,10 @@ def _write_skill(root, name, *, triggers, description="d"):
 
 def _builder(tmp_path):
     """A real ContextBuilder. MUST be constructed on the loop, as production does."""
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.learn import LessonStore
-    from kiro_crew.memory import MemoryStore
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew.context import ContextBuilder
+    from aj_crew.learn import LessonStore
+    from aj_crew.memory import MemoryStore
+    from aj_crew.skills import SkillsLoader
 
     root = tmp_path / "skills"
     _write_skill(root, BASELINE, triggers="zebra, giraffe", description="animal work")
@@ -153,7 +153,7 @@ async def test_a_sampled_turn_shows_its_decision_and_takes_a_verdict(
     tmp_path, home, sampled, monkeypatch
 ):
     """decide -> publish -> the reply carries it -> a verdict is filed against it."""
-    import kiro_crew.dashboard.handlers as handlers_pkg
+    import aj_crew.dashboard.handlers as handlers_pkg
 
     monkeypatch.setattr(handlers_pkg, "sel", lambda: MagicMock())
     builder = _builder(tmp_path)

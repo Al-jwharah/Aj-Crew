@@ -4,10 +4,10 @@ What is pinned:
 
 * the git route installs the code first and runs the engine step only when the
   code landed; an engine failure is its own return code, distinct from a pip
-  failure and a refusal, and names ``kirocrew kas install``;
+  failure and a refusal, and names ``ajcrew kas install``;
 * the wheel route hands the wheel engine an engine step that runs the new tree's
   own interpreter with the apply's build context;
-* the engine step itself runs ``<new python> -I -P -m kiro_crew kas install
+* the engine step itself runs ``<new python> -I -P -m aj_crew kas install
   --if-in-use`` through the update's one child spawn, and a nonzero exit is an
   :class:`EngineInstallError` carrying the child's redacted reason;
 * nothing else in an update path runs the package install or the wheel apply: the
@@ -26,11 +26,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import dep_sync
-from kiro_crew.platform import release_apply, wheel_engine
-from kiro_crew.platform.release_apply import _install_engine as _real_install_engine
-from kiro_crew.platform.wheel_engine_contract import WheelUpdateError, _BuildContext
-from kiro_crew.testing.wait import await_until
+from aj_crew import dep_sync
+from aj_crew.platform import release_apply, wheel_engine
+from aj_crew.platform.release_apply import _install_engine as _real_install_engine
+from aj_crew.platform.wheel_engine_contract import WheelUpdateError, _BuildContext
+from aj_crew.testing.wait import await_until
 
 _PY = Path("/venv/bin/python")
 
@@ -103,7 +103,7 @@ class TestGitRelease:
         errors = [m for m, error in messages if error]
         assert len(errors) == 1
         assert "keeps running" in errors[0]
-        assert "kirocrew kas install" in errors[0]
+        assert "ajcrew kas install" in errors[0]
 
     def test_the_release_cancel_reaches_the_package_install(self, monkeypatch):
         seen: list[bool] = []
@@ -259,7 +259,7 @@ class TestEngineStep:
         _real_install_engine(_PY, ctx)
         assert spawned == [
             (
-                [str(_PY), "-I", "-P", "-m", "kiro_crew", "kas", "install", "--if-in-use"],
+                [str(_PY), "-I", "-P", "-m", "aj_crew", "kas", "install", "--if-in-use"],
                 release_apply.ENGINE_INSTALL_TIMEOUT_SECS,
                 "the KAS engine install",
                 ctx,
@@ -308,7 +308,7 @@ class TestEngineStep:
     def test_a_relative_data_home_reaches_the_child_resolved(self, monkeypatch, tmp_path):
         """The child runs in ``/``; a relative override must not move its data home."""
         monkeypatch.chdir(tmp_path)
-        monkeypatch.setenv("KIROCREW_HOME", "crew-data")
+        monkeypatch.setenv("AJCREW_HOME", "crew-data")
         seen: list = []
 
         def spawn(argv, timeout, step, *, ctx, want_stdout, env_overrides):
@@ -317,21 +317,21 @@ class TestEngineStep:
 
         monkeypatch.setattr(release_apply, "_spawn_build_child", spawn)
         _real_install_engine(_PY, _BuildContext())
-        home = seen[0]["KIROCREW_HOME"]
+        home = seen[0]["AJCREW_HOME"]
         assert Path(home).is_absolute()
         # The data home this process resolved, not the raw relative spelling.
         assert Path(home) == Path(release_apply.data_home()).resolve()
         assert home != "crew-data"
 
     def test_no_override_pins_nothing(self, monkeypatch):
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
         assert release_apply._data_home_env() == {}
 
     @pytest.mark.parametrize(
         "usage",
         [
-            b"kirocrew: error: argument command: invalid choice: 'kas' (choose from ...)\n",
-            b"kirocrew: error: unrecognized arguments: --if-in-use\n",
+            b"ajcrew: error: argument command: invalid choice: 'kas' (choose from ...)\n",
+            b"ajcrew: error: unrecognized arguments: --if-in-use\n",
         ],
         ids=["no-kas-command", "no-flag"],
     )
@@ -346,7 +346,7 @@ class TestEngineStep:
         monkeypatch.setattr(
             release_apply,
             "_spawn_build_child",
-            lambda *a, **k: (2, b"", b"kirocrew: error: unrecognized arguments: --bogus\n"),
+            lambda *a, **k: (2, b"", b"ajcrew: error: unrecognized arguments: --bogus\n"),
         )
         with pytest.raises(release_apply.EngineInstallError, match="exited 2"):
             _real_install_engine(_PY, _BuildContext())
@@ -388,7 +388,7 @@ _INSTALL_CALLS = frozenset(
 
 @pytest.mark.parametrize("rel", _UPDATE_ROUTES)
 def test_no_update_route_installs_code_except_through_release_apply(rel):
-    src = Path(__file__).resolve().parent.parent / "src" / "kiro_crew" / rel
+    src = Path(__file__).resolve().parent.parent / "src" / "aj_crew" / rel
     tree = ast.parse(src.read_text(encoding="utf-8"))
     direct = sorted(
         node.lineno

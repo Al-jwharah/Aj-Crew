@@ -32,7 +32,7 @@ import os
 import socket
 from pathlib import Path
 
-from kiro_crew.instances.registry import InstancesRegistry
+from aj_crew.instances.registry import InstancesRegistry
 
 # Stands in for "this crew's id on its PARENT" in fixtures that do not care what
 # it is. The one test that does care asserts on its own genuinely divergent pair,
@@ -61,7 +61,7 @@ class _FakeTunnel:
         aws_profile="",
         aws_region="",
     ):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
 
         self.iid = iid
         self.ssh_host = ssh_host
@@ -88,8 +88,8 @@ class _FakeTunnel:
 
 def _free_ports(monkeypatch):
     """Make both loopback port probes answer "free", so these stay hermetic."""
-    from kiro_crew.instances import port_allocator
-    from kiro_crew.instances import ssh_tunnel_manager as stm
+    from aj_crew.instances import port_allocator
+    from aj_crew.instances import ssh_tunnel_manager as stm
 
     monkeypatch.setattr(port_allocator, "_is_port_free", lambda *_a, **_k: True)
     monkeypatch.setattr(stm, "_is_port_free", lambda *_a, **_k: True)
@@ -124,7 +124,7 @@ def _mgr(tmp_path, monkeypatch, *, mint=None, real_hop_guard=False, real_identit
     probe would read "no answer", which a chained connect refuses.
     """
     _free_ports(monkeypatch)
-    from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+    from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
     _FakeTunnel.made = []
     reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -225,9 +225,9 @@ class _FakeReq:
 
 
 def _enable(tmp_path: Path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     (tmp_path / "config.json").write_text(json.dumps({"instances": {"enabled": True}}))
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     loader._invalidate_config_cache()
 
@@ -254,7 +254,7 @@ def _relay_mint(
     async def fake(inst, _params):
         if seen is not None:
             seen.append(inst.id)
-        from kiro_crew.instances.ssh_tunnel_manager import _Mint
+        from aj_crew.instances.ssh_tunnel_manager import _Mint
 
         return _Mint(
             token=token,

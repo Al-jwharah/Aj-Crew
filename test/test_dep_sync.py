@@ -21,7 +21,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import dep_sync
+from aj_crew import dep_sync
 
 _SETUP_CFG = textwrap.dedent("""
     [options]
@@ -63,14 +63,14 @@ def _preconditions_ok(request):
 
 def _origin_inside(target_py):
     """A probe answer that resolves inside whatever repo the test passed."""
-    return str(Path(_origin_inside.repo) / "src" / "kiro_crew" / "__init__.py")
+    return str(Path(_origin_inside.repo) / "src" / "aj_crew" / "__init__.py")
 
 
 def test_normalize_folds_the_spellings_pep503_treats_as_one():
     """The folding matters only through `rejected_specs`, so it is tested here."""
-    assert dep_sync.normalize("Kiro_Crew") == "kiro-crew"
-    assert dep_sync.normalize("KIROCREW") == "kirocrew"
-    assert dep_sync.normalize("kiro.crew") == "kiro-crew"
+    assert dep_sync.normalize("Aj_Crew") == "aj-crew"
+    assert dep_sync.normalize("AJCREW") == "ajcrew"
+    assert dep_sync.normalize("aj.crew") == "aj-crew"
 
 
 def test_declared_requirements_reads_install_requires_and_drops_comments(repo):
@@ -108,7 +108,7 @@ def test_pyproject_is_read_with_a_parser_not_by_matching_text(repo):
     """
     (repo / "pyproject.toml").write_text(
         "[project] # the table this module has to read\n"
-        'name = "kirocrew"\n'
+        'name = "ajcrew"\n'
         'requires-python = ">=3.13"\n'
         'dependencies = ["aiohttp"]\n',
         encoding="utf-8",
@@ -123,7 +123,7 @@ def test_text_fallback_also_survives_a_commented_header(repo, monkeypatch):
     """The 3.10-without-tomli path has no parser, so its reader must not regress."""
     monkeypatch.setattr(dep_sync, "_toml", None)
     (repo / "pyproject.toml").write_text(
-        '[project]   # trailing comment\nname = "kirocrew"\n'
+        '[project]   # trailing comment\nname = "ajcrew"\n'
         'requires-python = ">=3.13"\ndependencies = ["aiohttp"]\n',
         encoding="utf-8",
     )
@@ -147,7 +147,7 @@ def test_requires_python_prefers_pyproject_because_setuptools_ignores_setup_cfg(
     that silently passes the interpreter it should refuse.
     """
     (repo / "pyproject.toml").write_text(
-        '[project]\nname = "kirocrew"\nrequires-python = ">=3.13"\n' 'dynamic = ["dependencies"]\n',
+        '[project]\nname = "ajcrew"\nrequires-python = ">=3.13"\n' 'dynamic = ["dependencies"]\n',
         encoding="utf-8",
     )
 
@@ -158,7 +158,7 @@ def test_requires_python_prefers_pyproject_because_setuptools_ignores_setup_cfg(
 def test_requires_python_falls_back_when_pyproject_declares_it_dynamic(repo):
     """A field listed as dynamic is still setup.cfg's to declare."""
     (repo / "pyproject.toml").write_text(
-        '[project]\nname = "kirocrew"\ndynamic = ["requires-python", "dependencies"]\n',
+        '[project]\nname = "ajcrew"\ndynamic = ["requires-python", "dependencies"]\n',
         encoding="utf-8",
     )
 
@@ -176,7 +176,7 @@ def test_requires_python_reads_a_static_omission_as_no_floor_at_all(repo):
     both leave this gate not firing, which is the same safe outcome.
     """
     (repo / "pyproject.toml").write_text(
-        '[project]\nname = "kirocrew"\ndynamic = ["dependencies"]\n',
+        '[project]\nname = "ajcrew"\ndynamic = ["dependencies"]\n',
         encoding="utf-8",
     )
 
@@ -186,12 +186,12 @@ def test_requires_python_reads_a_static_omission_as_no_floor_at_all(repo):
 
 def test_requires_python_from_texts_judges_a_revision_without_a_working_tree():
     """The same precedence as the checkout reader, applied to raw file bodies."""
-    py = '[project]\nname = "kirocrew"\nrequires-python = ">=3.12"\n'
+    py = '[project]\nname = "ajcrew"\nrequires-python = ">=3.12"\n'
     assert dep_sync.requires_python_from_texts(py, _SETUP_CFG) == ">=3.12"
     # No pyproject at all: setup.cfg is the authority.
     assert dep_sync.requires_python_from_texts(None, _SETUP_CFG) == ">=3.10"
     # A static omission in `[project]` is "no floor", never setup.cfg's copy.
-    assert dep_sync.requires_python_from_texts('[project]\nname = "kirocrew"\n', _SETUP_CFG) is None
+    assert dep_sync.requires_python_from_texts('[project]\nname = "ajcrew"\n', _SETUP_CFG) is None
     assert dep_sync.requires_python_from_texts(None, None) is None
 
 
@@ -223,14 +223,14 @@ def floor_repo(tmp_path):
     repo.mkdir()
     _git(repo, "init", "-q", "-b", "main")
     (repo / "pyproject.toml").write_text(
-        '[project]\nname = "kirocrew"\nrequires-python = ">=3.10"\n', encoding="utf-8"
+        '[project]\nname = "ajcrew"\nrequires-python = ">=3.10"\n', encoding="utf-8"
     )
     _git(repo, "add", "pyproject.toml")
     _git(repo, "commit", "-q", "-m", "floor 3.10")
     _git(repo, "branch", "incoming")
     _git(repo, "checkout", "-q", "incoming")
     (repo / "pyproject.toml").write_text(
-        '[project]\nname = "kirocrew"\nrequires-python = ">=3.12"\n', encoding="utf-8"
+        '[project]\nname = "ajcrew"\nrequires-python = ">=3.12"\n', encoding="utf-8"
     )
     _git(repo, "commit", "-q", "-am", "floor 3.12")
     _git(repo, "checkout", "-q", "main")
@@ -306,7 +306,7 @@ def test_incoming_floor_breach_remedy_names_the_declared_floor_and_quotes_paths(
     repo.mkdir()
     _git(repo, "init", "-q", "-b", "main")
     (repo / "pyproject.toml").write_text(
-        '[project]\nname = "kirocrew"\nrequires-python = ">=3.13"\n', encoding="utf-8"
+        '[project]\nname = "ajcrew"\nrequires-python = ">=3.13"\n', encoding="utf-8"
     )
     _git(repo, "add", "pyproject.toml")
     _git(repo, "commit", "-q", "-m", "floor 3.13")
@@ -358,7 +358,7 @@ def test_python_floor_breach_reads_every_spelling_that_declares_a_floor():
 def test_dependency_authority_moved_detects_a_migration_to_pyproject(repo):
     """This module reads ONE file; a move would make it install yesterday's set."""
     (repo / "pyproject.toml").write_text(
-        '[project]\nname = "kirocrew"\ndependencies = ["aiohttp"]\n', encoding="utf-8"
+        '[project]\nname = "ajcrew"\ndependencies = ["aiohttp"]\n', encoding="utf-8"
     )
 
     assert dep_sync.dependency_authority_moved(repo) is not None
@@ -371,7 +371,7 @@ def test_dependency_authority_moved_matches_dynamic_items_not_substrings(repo):
     still dynamic and install a stale setup.cfg list while reporting success.
     """
     (repo / "pyproject.toml").write_text(
-        '[project]\nname = "kirocrew"\ndependencies = ["aiohttp"]\n'
+        '[project]\nname = "ajcrew"\ndependencies = ["aiohttp"]\n'
         'dynamic = ["optional-dependencies"]\n',
         encoding="utf-8",
     )
@@ -382,7 +382,7 @@ def test_dependency_authority_moved_matches_dynamic_items_not_substrings(repo):
 def test_dependency_authority_intact_when_fields_stay_dynamic(repo):
     """setuptools keeps reading setup.cfg for a field listed as dynamic."""
     (repo / "pyproject.toml").write_text(
-        '[project]\nname = "kirocrew"\ndynamic = ["dependencies", "version"]\n',
+        '[project]\nname = "ajcrew"\ndynamic = ["dependencies", "version"]\n',
         encoding="utf-8",
     )
 
@@ -392,22 +392,22 @@ def test_dependency_authority_intact_when_fields_stay_dynamic(repo):
 def test_console_script_target_prefers_the_pyproject_declaration(repo):
     """`scripts` is not dynamic here, so pyproject is what builds the wrapper."""
     (repo / "pyproject.toml").write_text(
-        '[project]\nname = "kirocrew"\ndynamic = ["dependencies"]\n\n'
-        '[project.scripts]\nkirocrew = "kiro_crew.new:main"\n',
+        '[project]\nname = "ajcrew"\ndynamic = ["dependencies"]\n\n'
+        '[project.scripts]\najcrew = "aj_crew.new:main"\n',
         encoding="utf-8",
     )
 
-    assert dep_sync.console_script_target(repo, "kirocrew") == "kiro_crew.new:main"
+    assert dep_sync.console_script_target(repo, "ajcrew") == "aj_crew.new:main"
 
 
 def test_console_script_target_falls_back_to_setup_cfg(repo):
     (repo / "setup.cfg").write_text(
         _SETUP_CFG + "\n\n[options.entry_points]\nconsole_scripts =\n"
-        "    kirocrew = kiro_crew.old:main\n",
+        "    ajcrew = aj_crew.old:main\n",
         encoding="utf-8",
     )
 
-    assert dep_sync.console_script_target(repo, "kirocrew") == "kiro_crew.old:main"
+    assert dep_sync.console_script_target(repo, "ajcrew") == "aj_crew.old:main"
 
 
 def test_console_script_target_reports_a_removal_rather_than_reading_a_stale_copy(repo):
@@ -420,46 +420,46 @@ def test_console_script_target_reports_a_removal_rather_than_reading_a_stale_cop
     """
     (repo / "setup.cfg").write_text(
         _SETUP_CFG + "\n\n[options.entry_points]\nconsole_scripts =\n"
-        "    kirocrew = kiro_crew.old:main\n",
+        "    ajcrew = aj_crew.old:main\n",
         encoding="utf-8",
     )
     (repo / "pyproject.toml").write_text(
-        '[project]\nname = "kirocrew"\ndynamic = ["dependencies"]\n\n'
-        '[project.scripts]\nsomething-else = "kiro_crew.other:main"\n',
+        '[project]\nname = "ajcrew"\ndynamic = ["dependencies"]\n\n'
+        '[project.scripts]\nsomething-else = "aj_crew.other:main"\n',
         encoding="utf-8",
     )
 
-    assert dep_sync.console_script_target(repo, "kirocrew") == dep_sync.SCRIPT_REMOVED
+    assert dep_sync.console_script_target(repo, "ajcrew") == dep_sync.SCRIPT_REMOVED
 
 
 def test_console_script_target_reads_no_scripts_table_as_a_removal_too(repo):
     """No `scripts` and not dynamic is the same statement: setuptools builds none."""
     (repo / "setup.cfg").write_text(
         _SETUP_CFG + "\n\n[options.entry_points]\nconsole_scripts =\n"
-        "    kirocrew = kiro_crew.old:main\n",
+        "    ajcrew = aj_crew.old:main\n",
         encoding="utf-8",
     )
     (repo / "pyproject.toml").write_text(
-        '[project]\nname = "kirocrew"\ndynamic = ["dependencies"]\n',
+        '[project]\nname = "ajcrew"\ndynamic = ["dependencies"]\n',
         encoding="utf-8",
     )
 
-    assert dep_sync.console_script_target(repo, "kirocrew") == dep_sync.SCRIPT_REMOVED
+    assert dep_sync.console_script_target(repo, "ajcrew") == dep_sync.SCRIPT_REMOVED
 
 
 def test_console_script_target_still_reads_setup_cfg_when_scripts_is_dynamic(repo):
     """A field listed as dynamic is still setup.cfg's to declare."""
     (repo / "setup.cfg").write_text(
         _SETUP_CFG + "\n\n[options.entry_points]\nconsole_scripts =\n"
-        "    kirocrew = kiro_crew.old:main\n",
+        "    ajcrew = aj_crew.old:main\n",
         encoding="utf-8",
     )
     (repo / "pyproject.toml").write_text(
-        '[project]\nname = "kirocrew"\ndynamic = ["dependencies", "scripts"]\n',
+        '[project]\nname = "ajcrew"\ndynamic = ["dependencies", "scripts"]\n',
         encoding="utf-8",
     )
 
-    assert dep_sync.console_script_target(repo, "kirocrew") == "kiro_crew.old:main"
+    assert dep_sync.console_script_target(repo, "ajcrew") == "aj_crew.old:main"
 
 
 def test_rejected_specs_refuses_paths_archives_and_the_project_itself():
@@ -467,14 +467,14 @@ def test_rejected_specs_refuses_paths_archives_and_the_project_itself():
     for hostile in [".", "./local", "/abs/path", r"C:\pkgs\x", "file:./x", "x.whl", "-e"]:
         assert dep_sync.rejected_specs([hostile]), hostile
 
-    # Only spellings PEP 503 actually folds onto this project's name. `kiro_crew`
-    # normalizes to `kiro-crew`, which is a DIFFERENT distribution, so it is not
+    # Only spellings PEP 503 actually folds onto this project's name. `aj_crew`
+    # normalizes to `aj-crew`, which is a DIFFERENT distribution, so it is not
     # claimed here.
     for spelling in [
-        "kirocrew",
-        "KiroCrew",  # brand-ok: a PEP 503 spelling of the distribution name
-        "KIROCREW",
-        "kirocrew>=1",
+        "ajcrew",
+        "AjCrew",  # brand-ok: a PEP 503 spelling of the distribution name
+        "AJCREW",
+        "ajcrew>=1",
     ]:
         rejected = dep_sync.rejected_specs([spelling])
         assert rejected and "names this project" in rejected[0], spelling
@@ -487,7 +487,7 @@ def test_installed_package_origin_reports_where_the_package_resolves():
 
     class _Proc:
         returncode = 0
-        stdout = "/checkouts/main/src/kiro_crew/__init__.py\n"
+        stdout = "/checkouts/main/src/aj_crew/__init__.py\n"
 
     with patch.object(dep_sync.subprocess, "run", return_value=_Proc()):
         origin = dep_sync.installed_package_origin(Path("py"))
@@ -508,7 +508,7 @@ def test_installed_package_origin_is_none_when_the_package_is_absent():
 def test_venv_serving_another_checkout_is_reported(tmp_path):
     """The harm this guards: upgrading a runtime another checkout is served by."""
     reason = dep_sync.venv_not_mapped_to(
-        str(tmp_path / "other" / "src" / "kiro_crew" / "__init__.py"), tmp_path / "main"
+        str(tmp_path / "other" / "src" / "aj_crew" / "__init__.py"), tmp_path / "main"
     )
 
     assert reason is not None
@@ -523,14 +523,14 @@ def test_an_unresolvable_package_is_not_taken_as_a_match(tmp_path):
 
 def test_a_venv_serving_this_checkout_passes(tmp_path):
     repo = tmp_path / "main"
-    origin = repo / "src" / "kiro_crew" / "__init__.py"
+    origin = repo / "src" / "aj_crew" / "__init__.py"
 
     assert dep_sync.venv_not_mapped_to(str(origin), repo) is None
 
 
 def test_a_sibling_directory_sharing_the_prefix_does_not_count_as_inside(tmp_path):
     """`<repo>-wt` starts with `<repo>` as a string but is a different checkout."""
-    sibling = tmp_path / "main-wt" / "src" / "kiro_crew" / "__init__.py"
+    sibling = tmp_path / "main-wt" / "src" / "aj_crew" / "__init__.py"
 
     assert dep_sync.venv_not_mapped_to(str(sibling), tmp_path / "main") is not None
 
@@ -630,7 +630,7 @@ def test_main_refuses_a_venv_serving_another_checkout(repo, capsys):
         patch.object(
             dep_sync,
             "installed_package_origin",
-            return_value="/checkouts/other/src/kiro_crew/__init__.py",
+            return_value="/checkouts/other/src/aj_crew/__init__.py",
         ),
         patch.object(dep_sync, "subprocess") as sp,
     ):
@@ -646,7 +646,7 @@ def test_main_refuses_when_the_requirements_moved_to_pyproject(repo, capsys):
     """Reading a stale setup.cfg while reporting success is the failure to avoid."""
     _origin_inside.repo = repo
     (repo / "pyproject.toml").write_text(
-        '[project]\nname = "kirocrew"\ndependencies = ["aiohttp"]\n', encoding="utf-8"
+        '[project]\nname = "ajcrew"\ndependencies = ["aiohttp"]\n', encoding="utf-8"
     )
 
     with patch.object(dep_sync, "subprocess") as sp:
@@ -672,9 +672,9 @@ def test_main_reports_a_repointed_console_script_after_installing(repo, capsys):
     _origin_inside.repo = repo
 
     with (
-        patch.object(dep_sync, "console_script_target", return_value="kiro_crew.new:main"),
+        patch.object(dep_sync, "console_script_target", return_value="aj_crew.new:main"),
         patch.object(
-            dep_sync, "installed_console_script_target", return_value="kiro_crew.old:main"
+            dep_sync, "installed_console_script_target", return_value="aj_crew.old:main"
         ),
         patch.object(dep_sync.subprocess, "run", return_value=_Proc()),
     ):
@@ -682,8 +682,8 @@ def test_main_reports_a_repointed_console_script_after_installing(repo, capsys):
 
     assert rc == 1
     err = capsys.readouterr().err
-    assert "kiro_crew.new:main" in err
-    assert "kiro_crew.old:main" in err
+    assert "aj_crew.new:main" in err
+    assert "aj_crew.old:main" in err
     assert "No dependency was installed" not in err
 
 
@@ -704,7 +704,7 @@ def test_main_reports_a_removed_console_script_as_a_removal(repo, capsys):
     with (
         patch.object(dep_sync, "console_script_target", return_value=dep_sync.SCRIPT_REMOVED),
         patch.object(
-            dep_sync, "installed_console_script_target", return_value="kiro_crew.old:main"
+            dep_sync, "installed_console_script_target", return_value="aj_crew.old:main"
         ),
         patch.object(dep_sync.subprocess, "run", return_value=_Proc()),
     ):
@@ -713,7 +713,7 @@ def test_main_reports_a_removed_console_script_as_a_removal(repo, capsys):
     assert rc == 1
     err = capsys.readouterr().err
     assert "no longer declared" in err
-    assert "kiro_crew.old:main" in err
+    assert "aj_crew.old:main" in err
     assert "repointed to" not in err
     assert "No dependency was installed" not in err
 
@@ -728,7 +728,7 @@ def test_main_tolerates_an_unreadable_installed_entry_point(repo):
     _origin_inside.repo = repo
 
     with (
-        patch.object(dep_sync, "console_script_target", return_value="kiro_crew.cli:main"),
+        patch.object(dep_sync, "console_script_target", return_value="aj_crew.cli:main"),
         patch.object(dep_sync, "installed_console_script_target", return_value=None),
         patch.object(dep_sync.subprocess, "run", return_value=_Proc()),
     ):
@@ -778,27 +778,27 @@ def _raise_on(monkeypatch, name, exc):
 
 def test_locked_console_scripts_is_a_posix_noop(tmp_path, monkeypatch):
     """POSIX can unlink an executing binary, so there is nothing to detect."""
-    py = _make_scripts(tmp_path, "kirocrew.exe")
+    py = _make_scripts(tmp_path, "ajcrew.exe")
     monkeypatch.setattr(sys, "platform", "linux")
-    _raise_on(monkeypatch, "kirocrew.exe", PermissionError(13, "in use"))
+    _raise_on(monkeypatch, "ajcrew.exe", PermissionError(13, "in use"))
 
     assert dep_sync.locked_console_scripts(py) == []
 
 
 def test_locked_console_scripts_flags_a_locked_script(tmp_path, monkeypatch):
     """The real failure: the exe the gateway is executing cannot be replaced."""
-    py = _make_scripts(tmp_path, "kirocrew.exe")
+    py = _make_scripts(tmp_path, "ajcrew.exe")
     monkeypatch.setattr(sys, "platform", "win32")
-    _raise_on(monkeypatch, "kirocrew.exe", PermissionError(13, "in use"))
+    _raise_on(monkeypatch, "ajcrew.exe", PermissionError(13, "in use"))
 
     locked = dep_sync.locked_console_scripts(py)
     assert len(locked) == 1
-    assert locked[0].endswith("kirocrew.exe")
+    assert locked[0].endswith("ajcrew.exe")
 
 
 def test_locked_console_scripts_passes_a_writable_script(tmp_path, monkeypatch):
     """A venv the gateway is NOT running from must still get its reinstall."""
-    py = _make_scripts(tmp_path, "kirocrew.exe")
+    py = _make_scripts(tmp_path, "ajcrew.exe")
     monkeypatch.setattr(sys, "platform", "win32")
 
     assert dep_sync.locked_console_scripts(py) == []
@@ -810,7 +810,7 @@ def test_locked_console_scripts_ignores_unrelated_executables(tmp_path, monkeypa
     Some other locked exe sharing the Scripts dir must not suppress the
     reinstall — that would turn an unrelated process into a silent skip.
     """
-    py = _make_scripts(tmp_path, "kirocrew.exe", "unrelated.exe")
+    py = _make_scripts(tmp_path, "ajcrew.exe", "unrelated.exe")
     monkeypatch.setattr(sys, "platform", "win32")
     _raise_on(monkeypatch, "unrelated.exe", PermissionError(13, "in use"))
 
@@ -822,9 +822,9 @@ def test_locked_console_scripts_lets_pip_judge_other_errors(tmp_path, monkeypatc
 
     Skipping on any OSError would suppress installs that would have worked.
     """
-    py = _make_scripts(tmp_path, "kirocrew.exe")
+    py = _make_scripts(tmp_path, "ajcrew.exe")
     monkeypatch.setattr(sys, "platform", "win32")
-    _raise_on(monkeypatch, "kirocrew.exe", OSError(5, "I/O error"))
+    _raise_on(monkeypatch, "ajcrew.exe", OSError(5, "I/O error"))
 
     assert dep_sync.locked_console_scripts(py) == []
 
@@ -883,7 +883,7 @@ def test_sync_or_reinstall_fails_when_entry_point_missing_after_pip_ok(tmp_path)
     """A full reinstall is not successful until its executable entry point exists.
 
     This is the interrupted-venv-rebuild incident: the subprocess can report 0
-    while the ``kirocrew`` artifact is absent or unusable. Every full-reinstall
+    while the ``ajcrew`` artifact is absent or unusable. Every full-reinstall
     caller gets this postcondition; the locked dependency-only branch returns
     before it because it deliberately cannot rewrite the running wrapper.
     """
@@ -907,7 +907,7 @@ def test_sync_or_reinstall_fails_when_entry_point_missing_after_pip_ok(tmp_path)
 
     assert rc == 1
     joined = " ".join(m for m, _ in messages)
-    assert "console" in joined and "kirocrew" in joined
+    assert "console" in joined and "ajcrew" in joined
 
 
 def test_sync_or_reinstall_fails_when_package_unimportable_after_pip_ok(tmp_path):
@@ -942,7 +942,7 @@ def test_sync_or_reinstall_fails_when_package_unimportable_after_pip_ok(tmp_path
     # _probe_interpreter owns the -I, neutral-CWD, and PYTHONPATH isolation
     # contract. Calling it here prevents a source checkout in the parent process
     # from satisfying a postcondition about the target venv.
-    import_probe.assert_called_once_with(Path("/venv/bin/python"), "import kiro_crew", timeout=None)
+    import_probe.assert_called_once_with(Path("/venv/bin/python"), "import aj_crew", timeout=None)
 
 
 def test_sync_or_reinstall_fails_when_import_probe_times_out(tmp_path):
@@ -974,7 +974,7 @@ def test_sync_or_reinstall_fails_when_import_probe_times_out(tmp_path):
 
     assert rc == 1
     assert any("import check timed out" in m for m, _ in messages)
-    import_probe.assert_called_once_with(Path("/venv/bin/python"), "import kiro_crew", timeout=7)
+    import_probe.assert_called_once_with(Path("/venv/bin/python"), "import aj_crew", timeout=7)
 
 
 def test_sync_or_reinstall_repairs_absent_package_in_verified_project_venv(tmp_path):
@@ -1217,7 +1217,7 @@ def test_sync_or_reinstall_substitutes_when_a_script_is_locked(tmp_path):
     with (
         _origin_stub(),
         _maps(),
-        patch.object(dep_sync, "locked_console_scripts", return_value=[r"C:\v\kirocrew.exe"]),
+        patch.object(dep_sync, "locked_console_scripts", return_value=[r"C:\v\ajcrew.exe"]),
         patch.object(dep_sync, "sync", return_value=0) as sync_mock,
         patch.object(dep_sync.os, "access", side_effect=AssertionError("must not verify wrapper")),
         patch.object(dep_sync.subprocess, "run", side_effect=AssertionError("must not reinstall")),
@@ -1228,7 +1228,7 @@ def test_sync_or_reinstall_substitutes_when_a_script_is_locked(tmp_path):
 
     assert rc == 0
     assert sync_mock.call_count == 1
-    assert any("kirocrew.exe" in m and "dependency-only" in m for m, _ in messages)
+    assert any("ajcrew.exe" in m and "dependency-only" in m for m, _ in messages)
 
 
 def test_sync_or_reinstall_guards_the_reinstall_branch_too(tmp_path):
@@ -1426,10 +1426,10 @@ def test_installed_package_origin_fails_closed_on_an_unrunnable_interpreter(tmp_
 
 
 def _decoy_package(tmp_path):
-    """A directory holding a decoy ``kiro_crew`` package, as a checkout's src/ does."""
+    """A directory holding a decoy ``aj_crew`` package, as a checkout's src/ does."""
     decoy = tmp_path / "decoy-src"
-    (decoy / "kiro_crew").mkdir(parents=True)
-    (decoy / "kiro_crew" / "__init__.py").write_text("", encoding="utf-8")
+    (decoy / "aj_crew").mkdir(parents=True)
+    (decoy / "aj_crew" / "__init__.py").write_text("", encoding="utf-8")
     return decoy
 
 
@@ -1437,7 +1437,7 @@ def test_origin_probe_ignores_a_decoy_package_in_the_callers_cwd(tmp_path, monke
     """The probe describes the venv, never the caller's working directory.
 
     The reproduction from the field: the caller (the Dev Fleet backend) runs
-    with its CWD inside a checkout's ``src/``, which contains ``kiro_crew/``.
+    with its CWD inside a checkout's ``src/``, which contains ``aj_crew/``.
     An unisolated ``python -c`` puts that CWD at ``sys.path[0]``, so
     ``find_spec`` resolves the decoy for ANY target interpreter and the guard
     refuses a healthy venv. The probe's answer must not be the decoy.
@@ -1485,7 +1485,7 @@ def test_every_interpreter_probe_runs_isolated_with_a_neutral_cwd(tmp_path):
     with patch.object(dep_sync.subprocess, "run", side_effect=fake_run):
         dep_sync.interpreter_version(target)
         dep_sync.installed_package_origin(target)
-        dep_sync.installed_console_script_target(target, "kirocrew")
+        dep_sync.installed_console_script_target(target, "ajcrew")
 
     assert len(seen) == 3
     for cmd, kwargs in seen:
@@ -1577,7 +1577,7 @@ def test_sync_captures_pip_output_instead_of_writing_it_to_stderr(tmp_path, caps
 
 
 def test_module_imports_stdlib_only():
-    """The invariant ``kiro_crew._bootstrap`` depends on, enforced.
+    """The invariant ``aj_crew._bootstrap`` depends on, enforced.
 
     That caller reaches for this module precisely when a declared dependency is
     missing from the venv, so a third-party import here would fail in exactly the
@@ -1603,8 +1603,8 @@ def test_module_imports_stdlib_only():
 
 
 def test_console_script_path_is_platform_aware():
-    """The console-script path resolves to Scripts\\kirocrew.exe on Windows and
-    bin/kirocrew on POSIX -- not a hardcoded POSIX layout in a module that exists
+    """The console-script path resolves to Scripts\\ajcrew.exe on Windows and
+    bin/ajcrew on POSIX -- not a hardcoded POSIX layout in a module that exists
     for the Windows locked-script case.
     """
     posix_py = Path("/home/u/proj/.venv/bin/python")
@@ -1612,11 +1612,11 @@ def test_console_script_path_is_platform_aware():
 
     with patch.object(dep_sync.sys, "platform", "linux"):
         p = dep_sync.console_script_path(posix_py)
-        assert p.name == "kirocrew"
+        assert p.name == "ajcrew"
         assert not p.name.endswith(".exe")
-        assert p == posix_py.with_name("kirocrew")
+        assert p == posix_py.with_name("ajcrew")
 
     with patch.object(dep_sync.sys, "platform", "win32"):
         w = dep_sync.console_script_path(win_py)
-        assert w.name == "kirocrew.exe"
-        assert w == win_py.with_name("kirocrew.exe")
+        assert w.name == "ajcrew.exe"
+        assert w == win_py.with_name("ajcrew.exe")

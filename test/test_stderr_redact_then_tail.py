@@ -32,12 +32,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from test_theme_clone_stderr_redact_before_bound import _find_slice_before_redact_offenders
 
-import kiro_crew.apps.builtins.dev_fleet.gateway_service as gateway_service
-import kiro_crew.cli_setup as cli_setup
-import kiro_crew.dashboard.tailnet as tailnet
-import kiro_crew.env as env_mod
-import kiro_crew.voice_reply as voice_reply
-from kiro_crew.hooks import (
+import aj_crew.apps.builtins.dev_fleet.gateway_service as gateway_service
+import aj_crew.cli_setup as cli_setup
+import aj_crew.dashboard.tailnet as tailnet
+import aj_crew.env as env_mod
+import aj_crew.voice_reply as voice_reply
+from aj_crew.hooks import (
     HOOK_EVENT_PRE_TOOL_USE,
     HOOK_EVENT_USER_PROMPT_SUBMIT,
     ScriptHook,
@@ -87,7 +87,7 @@ def _assert_tail_anchored(excerpt: str) -> None:
 def _systemd(run_cmd, tmp_path: Path) -> gateway_service.SystemdBackend:
     return gateway_service.SystemdBackend(
         run_cmd,
-        lambda: "kirocrew.service",
+        lambda: "ajcrew.service",
         platform="linux",
         which=lambda _name: "/usr/bin/systemctl",
         dropin_path=lambda: tmp_path / "make-live.conf",
@@ -126,7 +126,7 @@ class TestGatewayServiceStderrExcerpts:
         run_cmd = AsyncMock(side_effect=[(0, "printed", ""), (1, "", _two_markers(200))])
         backend = gateway_service.LaunchdBackend(
             run_cmd,
-            lambda: "com.kirocrew.gateway",
+            lambda: "com.ajcrew.gateway",
             platform="darwin",
             which=lambda _n: "/bin/launchctl",
         )
@@ -261,7 +261,7 @@ class TestHookLastErrorAnchor:
         # These tests exercise the last_error cut, not host sandbox discovery: a
         # host without a sandbox backend (Windows CI) otherwise fails closed
         # with exit -1 before the hook runs.
-        monkeypatch.setattr("kiro_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
+        monkeypatch.setattr("aj_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
 
     @pytest.mark.asyncio
     async def test_a_crashed_hook_keeps_the_tail_of_its_stderr(self, tmp_path):
@@ -331,7 +331,7 @@ class TestHookLastErrorAnchor:
 #: app's own ``tests/``. The row leaves with the file.
 _OMC_GITHUB_ISSUES = (
     Path(__file__).resolve().parents[1]
-    / "src/kiro_crew/apps/builtins/ops_mission_control/backend/providers/github_issues.py"
+    / "src/aj_crew/apps/builtins/ops_mission_control/backend/providers/github_issues.py"
 )
 
 _CONVERTED_MODULES = (
@@ -352,7 +352,7 @@ def test_no_stderr_slice_precedes_redaction_in_converted_modules(module_path: Pa
 
 def _hook_fire_block() -> str:
     """The hook-result loop in ``_fire`` (chat_turn.turn_spec_hooks), by its anchors."""
-    import kiro_crew.dashboard.chat_runner as chat_runner
+    import aj_crew.dashboard.chat_runner as chat_runner
 
     text = "\n".join(
         turn_file.read_text(encoding="utf-8")
@@ -384,7 +384,7 @@ def test_chat_runner_hook_excerpts_anchor_by_exit_semantics() -> None:
 
 def test_slack_pip_failure_logs_keep_the_redacted_tail() -> None:
     """Both pip-failure logs in the Slack gateway bound the REDACTED text at its tail."""
-    import kiro_crew.slack.gateway as slack_gateway
+    import aj_crew.slack.gateway as slack_gateway
 
     facade = Path(slack_gateway.__file__)
     text = "\n".join(

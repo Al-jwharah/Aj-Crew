@@ -21,8 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.config.loader import workspace_root
+from aj_crew import platform_compat
+from aj_crew.config.loader import workspace_root
 
 
 def _make_aliased_workspace(tmp_path: Path) -> tuple[Path, Path]:
@@ -44,7 +44,7 @@ class TestWorkspaceRootRealpath:
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         alias_form, real_form = _make_aliased_workspace(tmp_path)
-        monkeypatch.setenv("KIROCREW_WORKSPACE", str(alias_form))
+        monkeypatch.setenv("AJCREW_WORKSPACE", str(alias_form))
 
         root = workspace_root()
 
@@ -56,7 +56,7 @@ class TestWorkspaceRootRealpath:
         """When the workspace path has no symlink component, normalization is a
         no-op and the root is returned unchanged (apart from existing)."""
         plain = tmp_path / "plain-ws"
-        monkeypatch.setenv("KIROCREW_WORKSPACE", str(plain))
+        monkeypatch.setenv("AJCREW_WORKSPACE", str(plain))
 
         root = workspace_root()
 

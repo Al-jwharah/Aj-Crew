@@ -54,7 +54,7 @@ const CrewBoardPage = lazy(() => import('./pages/CrewBoardPage'))
 const SessionDashboardsPage = lazy(() => import('./pages/chat/command-center/SessionDashboardsPage'))
 import ArtifactDetailPage from './pages/ArtifactDetailPage'
 import { ChangelogModal, UpdateErrorDialogFrame } from './shell/updates/updateFlow'
-import KiroCrewNavBridge from './components/KiroCrewNavBridge'
+import AjCrewNavBridge from './components/AjCrewNavBridge'
 import InstancesViewport from './components/InstancesViewport'
 import { LocalOverlayRoot } from './components/overlayRoot'
 import EmbeddedHostBridge from './components/EmbeddedHostBridge'
@@ -249,7 +249,7 @@ export function UpdateOverlay({ onCancel }: { onCancel: () => void }) {
       <div className="bg-card border border-border rounded-xl p-8 max-w-md w-full mx-4 shadow-xl text-center">
         {/* A terminal step is not in progress, so it does not pulse. */}
         <div className={`text-4xl mb-4 ${isFailed ? 'text-danger' : 'animate-pulse'}`} data-testid="update-overlay-step-icon">{info?.icon || <RefreshCw className="lucide-inline" />}</div>
-        <div className="text-lg font-bold text-text-strong mb-2">{i18nT('app.updating_kirocrew')}</div>
+        <div className="text-lg font-bold text-text-strong mb-2">{i18nT('app.updating_ajcrew')}</div>
         <div className="text-sm text-muted mb-5">{detail || i18nT('app.starting_update')}</div>
         {/* Step progress */}
         <div className="flex flex-col gap-2 text-left mb-5">
@@ -591,7 +591,7 @@ export default function App() {
       </>
     ) : isEmbed ? (
       <div className="h-screen supports-[height:100dvh]:h-dvh w-screen overflow-hidden bg-bg flex flex-col">
-        <KiroCrewNavBridge />
+        <AjCrewNavBridge />
         <Suspense fallback={null}><SelectionActionLayer /></Suspense>
         <EmbedTabStrip />
         <div className="flex-1 min-h-0">
@@ -853,7 +853,7 @@ export default function App() {
             </Suspense>
           </ErrorBoundary>
           {/* Route-independent too: the first KAS chat on a host without a
-              working kiro-cli waits on the gateway downloading Kiro Crew's own
+              working kiro-cli waits on the gateway downloading Aj Crew's own
               engine, whatever page is open. */}
           <ErrorBoundary
             scope="kas-engine-notice"

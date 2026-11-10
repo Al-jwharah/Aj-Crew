@@ -1,6 +1,6 @@
 # Adding a remote-provisioner lane
 
-A **remote instance** registry record names an execution target this gateway can reach through a loopback tunnel. Usually that target runs a complete Kiro Crew gateway; the `fargate` connection method instead reaches a crew container's turn API. A human can type coordinates into **Settings → Remote Crew**, while a **provisioner** can create the target first and register it afterwards.
+A **remote instance** registry record names an execution target this gateway can reach through a loopback tunnel. Usually that target runs a complete Aj Crew gateway; the `fargate` connection method instead reaches a crew container's turn API. A human can type coordinates into **Settings → Remote Crew**, while a **provisioner** can create the target first and register it afterwards.
 
 The stock build always ships the EC2 provisioner and also exposes the Fargate provisioner when `cloud.json` contains a complete `fargate` block. This guide is for the case where you need another lane — a managed dev-environment service, a fleet API, a different container platform — and it answers three questions in order: how a remote instance is reached today, which parts of that are an interface you may implement, and what a new lane actually has to write.
 
@@ -10,7 +10,7 @@ The short version: you supply a **descriptor** and a **`LaunchEngine`**, and not
 
 ### The registry is the single destination
 
-`src/kiro_crew/instances/registry.py` holds the records. One `Instance` dataclass describes one remote, and `CONNECTION_METHODS` is `("ssh", "ssm", "fargate")`. Those are three connection methods over two forwarding mechanisms: `ssh` uses OpenSSH, while `ssm` and `fargate` use AWS Systems Manager port forwarding. Which fields matter depends on which method the record names:
+`src/aj_crew/instances/registry.py` holds the records. One `Instance` dataclass describes one remote, and `CONNECTION_METHODS` is `("ssh", "ssm", "fargate")`. Those are three connection methods over two forwarding mechanisms: `ssh` uses OpenSSH, while `ssm` and `fargate` use AWS Systems Manager port forwarding. Which fields matter depends on which method the record names:
 
 | Connection method | Fields it uses | What reachability depends on |
 |---|---|---|
@@ -22,21 +22,21 @@ All three share `remote_port`, `local_port` and `ttl`. `Instance.validate` enfor
 
 ### One tunnel manager, transport chosen per record
 
-`src/kiro_crew/instances/ssh_tunnel_manager.py` supervises one child process per connected instance and forwards a loopback port. `SshTunnelManager` reads each record's `connection_method` and builds either an `ssh -N -L` argv or an `aws ssm start-session` port-forward argv. For `fargate`, the latter targets an ECS task and exposes its turn API; the manager deliberately skips dashboard-token minting and remote-gateway restart logic because the task has neither. The class name is historical; it is transport-neutral in behaviour.
+`src/aj_crew/instances/ssh_tunnel_manager.py` supervises one child process per connected instance and forwards a loopback port. `SshTunnelManager` reads each record's `connection_method` and builds either an `ssh -N -L` argv or an `aws ssm start-session` port-forward argv. For `fargate`, the latter targets an ECS task and exposes its turn API; the manager deliberately skips dashboard-token minting and remote-gateway restart logic because the task has neither. The class name is historical; it is transport-neutral in behaviour.
 
 This matters for a new lane: **you do not write a transport.** You pick one of the three supported connection methods at registration time, and the existing manager takes it from there.
 
 ### Two entry points, one registry
 
-Manual add is `POST /api/instances`, handled by `src/kiro_crew/dashboard/handlers_instances.py::api_instances_add`. It defaults `connection_method` to `"ssh"` and passes the body straight to `InstancesRegistry.add`. No machine is created; the user already has one.
+Manual add is `POST /api/instances`, handled by `src/aj_crew/dashboard/handlers_instances.py::api_instances_add`. It defaults `connection_method` to `"ssh"` and passes the body straight to `InstancesRegistry.add`. No machine is created; the user already has one.
 
-Provisioned launch ends at `LaunchEngine.register`, and the built-in implementation calls `src/kiro_crew/cloud/connect.py::register_instance`, which defaults `connection_method` to `"ssm"` and uses the EC2 instance id as `ssm_target`. `connection_method` is a keyword, so a lane whose crew is reached another way passes its own — the Fargate lane passes `"fargate"` with an ECS task target. Either way the value lands in `ssm_target`, which is what the record is matched on: it is idempotent per box, so a re-launch updates the existing record in place rather than accumulating duplicates.
+Provisioned launch ends at `LaunchEngine.register`, and the built-in implementation calls `src/aj_crew/cloud/connect.py::register_instance`, which defaults `connection_method` to `"ssm"` and uses the EC2 instance id as `ssm_target`. `connection_method` is a keyword, so a lane whose crew is reached another way passes its own — the Fargate lane passes `"fargate"` with an ECS task target. Either way the value lands in `ssm_target`, which is what the record is matched on: it is idempotent per box, so a re-launch updates the existing record in place rather than accumulating duplicates.
 
 ### The provisioning seam
 
-`src/kiro_crew/cloud/launch_job.py::LaunchEngine` is a five-method Protocol: `preflight`, `provision`, `begin_signin`, `register`, `teardown`. It is driven by `src/kiro_crew/cloud/launch_job.py::run_launch`, and that function is where the operational machinery lives — cancel checks between steps, the two rollback paths (`_rollback_cancelled_stack` for a user cancel, `_rollback_failed_provision` for a provision that died after creating something), and `LaunchJobStore.reap_orphans` for jobs left non-terminal by a gateway kill. One-launch-at-a-time is enforced above it, in `src/kiro_crew/dashboard/handlers_cloud.py::api_cloud_launch_create`, under `_launch_lock`.
+`src/aj_crew/cloud/launch_job.py::LaunchEngine` is a five-method Protocol: `preflight`, `provision`, `begin_signin`, `register`, `teardown`. It is driven by `src/aj_crew/cloud/launch_job.py::run_launch`, and that function is where the operational machinery lives — cancel checks between steps, the two rollback paths (`_rollback_cancelled_stack` for a user cancel, `_rollback_failed_provision` for a provision that died after creating something), and `LaunchJobStore.reap_orphans` for jobs left non-terminal by a gateway kill. One-launch-at-a-time is enforced above it, in `src/aj_crew/dashboard/handlers_cloud.py::api_cloud_launch_create`, under `_launch_lock`.
 
-Which engine runs is a Composable Platform Provider seam. `src/kiro_crew/platform/interfaces_runtime.py::RemoteProvisioner` is the descriptor and `src/kiro_crew/platform/interfaces_runtime.py::RemoteProvisionerProvider` is the two-method provider Protocol. The public default is `src/kiro_crew/platform/defaults.py::DefaultRemoteProvisionerProvider`, which always lists the EC2 descriptor and conditionally lists Fargate when its configuration is complete. It hands out `src/kiro_crew/cloud/launch_engine.py::RealLaunchEngine` or `src/kiro_crew/cloud/fargate_engine.py::FargateLaunchEngine` for those ids. Resolution happens in `src/kiro_crew/dashboard/handlers_cloud.py::_engine`.
+Which engine runs is a Composable Platform Provider seam. `src/aj_crew/platform/interfaces_runtime.py::RemoteProvisioner` is the descriptor and `src/aj_crew/platform/interfaces_runtime.py::RemoteProvisionerProvider` is the two-method provider Protocol. The public default is `src/aj_crew/platform/defaults.py::DefaultRemoteProvisionerProvider`, which always lists the EC2 descriptor and conditionally lists Fargate when its configuration is complete. It hands out `src/aj_crew/cloud/launch_engine.py::RealLaunchEngine` or `src/aj_crew/cloud/fargate_engine.py::FargateLaunchEngine` for those ids. Resolution happens in `src/aj_crew/dashboard/handlers_cloud.py::_engine`.
 
 The API surface is two routes: `GET /api/cloud/provisioners` lists the descriptors, including any `confirm_before_launch` value, and `POST /api/cloud/launch` takes a `provider_id` plus an optional `confirm_recipient` and re-resolves the id against the same seam before any job file is written. An id the provider lists but cannot back is rejected with `unknown_provisioner` at 400, before a job exists. When a descriptor names a credential recipient, the handler requires the exact confirmation before persisting a job and the engine must verify it again against what it is about to run.
 
@@ -116,7 +116,7 @@ A user *cancel* during sign-in is handled: `run_launch` rolls back whenever the 
 
 ### `size_key`, `profile` and `region` are generic wires
 
-They are named for the built-in lane but are not owned by it. For `aws_ec2` they are the EC2 size ladder, an AWS profile and an AWS region. For your lane they are whatever shape vocabulary, credential selector and placement you need. `LaunchJobStore.create` validates `size_key` against `src/kiro_crew/cloud/sizes.py` **only** when `provider_id` is the built-in id — validating every lane against the EC2 table would refuse every non-EC2 launch. Your engine validates its own in `provision`.
+They are named for the built-in lane but are not owned by it. For `aws_ec2` they are the EC2 size ladder, an AWS profile and an AWS region. For your lane they are whatever shape vocabulary, credential selector and placement you need. `LaunchJobStore.create` validates `size_key` against `src/aj_crew/cloud/sizes.py` **only** when `provider_id` is the built-in id — validating every lane against the EC2 table would refuse every non-EC2 launch. Your engine validates its own in `provision`.
 
 ## C. The lanes that exist today, and what each one uses
 
@@ -124,12 +124,12 @@ They are named for the built-in lane but are not owned by it. For `aws_ec2` they
 |---|---|---|---|
 | Manual SSH instance (a developer's own EC2, a dev desktop) | No | `ssh` | `handlers_instances.py::api_instances_add` |
 | Manual SSM instance | No | `ssm` | Same handler, `connection_method="ssm"` in the body |
-| Built-in `aws_ec2` | Yes — CloudFormation deploy | `ssm` | `src/kiro_crew/cloud/launch_engine.py::RealLaunchEngine` |
-| Remote Instance on Fargate | Yes — ECS task, offered only when `cloud.json` configures it | `fargate` — the task's ECS target, registered at launch | `src/kiro_crew/cloud/fargate_engine.py::FargateLaunchEngine`, designed in [rfc-remote-instance-on-fargate.md](../request-for-change/rfc-remote-instance-on-fargate.md) |
+| Built-in `aws_ec2` | Yes — CloudFormation deploy | `ssm` | `src/aj_crew/cloud/launch_engine.py::RealLaunchEngine` |
+| Remote Instance on Fargate | Yes — ECS task, offered only when `cloud.json` configures it | `fargate` — the task's ECS target, registered at launch | `src/aj_crew/cloud/fargate_engine.py::FargateLaunchEngine`, designed in [rfc-remote-instance-on-fargate.md](../request-for-change/rfc-remote-instance-on-fargate.md) |
 
-The Fargate RFC is **partially implemented**. Its front matter says `status: partial` with `implementation-prs: [9223]`, and the lane is partly shipped: `DefaultRemoteProvisionerProvider.provisioners()` appends the `aws_fargate` descriptor once `cloud.json` carries a complete `fargate` block, and `engine_for` hands out `src/kiro_crew/cloud/fargate_engine.py::FargateLaunchEngine` for it. The engine starts a task whose model credential is injected at run time, so its sign-in handle completes immediately. Its `register` reads the started task with `DescribeTasks` until the crew container reports a `runtimeId`, then registers `ecs:<cluster>_<task-id>_<runtime-id>` with `connection_method="fargate"` and the task definition's published port; the launch job also stores the task ARN, and `GET /api/cloud/launch/{id}/task` reads that task's current ECS state, which a registry record naming one task cannot report. A registration that cannot complete leaves the launch reported as launched with the reason on its connect step, because the task is running and billing either way. No `registerRemoteProvisionerRenderer` claims the Fargate `kind`, so the lane is reachable through the API and absent from the Set-up selector.
+The Fargate RFC is **partially implemented**. Its front matter says `status: partial` with `implementation-prs: [9223]`, and the lane is partly shipped: `DefaultRemoteProvisionerProvider.provisioners()` appends the `aws_fargate` descriptor once `cloud.json` carries a complete `fargate` block, and `engine_for` hands out `src/aj_crew/cloud/fargate_engine.py::FargateLaunchEngine` for it. The engine starts a task whose model credential is injected at run time, so its sign-in handle completes immediately. Its `register` reads the started task with `DescribeTasks` until the crew container reports a `runtimeId`, then registers `ecs:<cluster>_<task-id>_<runtime-id>` with `connection_method="fargate"` and the task definition's published port; the launch job also stores the task ARN, and `GET /api/cloud/launch/{id}/task` reads that task's current ECS state, which a registry record naming one task cannot report. A registration that cannot complete leaves the launch reported as launched with the reason on its connect step, because the task is running and billing either way. No `registerRemoteProvisionerRenderer` claims the Fargate `kind`, so the lane is reachable through the API and absent from the Set-up selector.
 
-Two adjacent pieces of work are easy to mistake for a provisioner lane, so state it plainly: the **crew bundle builder** under `src/kiro_crew/apps/builtins/aws_control/crew/packaging/` (merged as #9213) and the **crew container runtime** added by PR #9223 (merged) are the bundle and image side. Neither implements `LaunchEngine` and neither writes to the instances registry — a search of the `aws_control` app for `LaunchEngine`, `register_instance` or `InstancesRegistry` returns nothing on `main`, and the same search across #9223's diff returns nothing either. They produce something a lane could one day run; they are not a lane.
+Two adjacent pieces of work are easy to mistake for a provisioner lane, so state it plainly: the **crew bundle builder** under `src/aj_crew/apps/builtins/aws_control/crew/packaging/` (merged as #9213) and the **crew container runtime** added by PR #9223 (merged) are the bundle and image side. Neither implements `LaunchEngine` and neither writes to the instances registry — a search of the `aws_control` app for `LaunchEngine`, `register_instance` or `InstancesRegistry` returns nothing on `main`, and the same search across #9223's diff returns nothing either. They produce something a lane could one day run; they are not a lane.
 
 ### Lifecycle routes are not part of the seam
 
@@ -144,7 +144,7 @@ Custom lanes go in an edition or companion package. Core owns EC2 and the condit
 ### 1. Write the descriptor
 
 ```python
-from kiro_crew.platform.interfaces import RemoteProvisioner
+from aj_crew.platform.interfaces import RemoteProvisioner
 
 MY_LANE = RemoteProvisioner(
     id="my_lane",
@@ -193,11 +193,11 @@ If the lane delivers a credential selected by configuration, `provision` must re
 
 ### The sign-in handle
 
-`begin_signin` returns a `src/kiro_crew/cloud/launch_job.py::SigninHandle`. Core reads its `already_logged_in`, `error`, `url`, `code` and `ports`, calls `wait(cancel)` while a code is being polled, and always calls `close()`. One more method is part of the contract and easy to miss because the happy path never calls it:
+`begin_signin` returns a `src/aj_crew/cloud/launch_job.py::SigninHandle`. Core reads its `already_logged_in`, `error`, `url`, `code` and `ports`, calls `wait(cancel)` while a code is being polled, and always calls `close()`. One more method is part of the contract and easy to miss because the happy path never calls it:
 
 `abort() -> bool` runs **only when the user cancels** a launch or a sign-in retry while a login may be polling on the box. It must stop that login — the built-in lane runs `cancel_device_login`, which kills the `kiro-cli login` process and removes its code files **without** signing the box out — and return `True` only when the stop is **confirmed**. Anything else (`False`, `None`, a raise, a missing method) is recorded on the job as `ABORT_UNCONFIRMED_NOTE`: "the Kiro sign-in on the instance was NOT confirmed stopped", with a warning in the gateway log. Core never infers a clean stop from silence, because a device code left polling can sign the crew in minutes after the owner said no.
 
-A lane whose sign-in involves **no remote login** — one that hands the box a credential at provision time, say, and whose `begin_signin` answers `already_logged_in` — should still implement `abort()` and return `True`, with the reason in its docstring: there was never a login to stop, so the stop is trivially confirmed. `src/kiro_crew/cloud/fargate_engine.py::FargateSigninHandle.abort` is the in-tree example. Do **not** leave the method off and rely on the fallback: that fallback is the unconfirmed note, and its text is about a polling device code your lane does not have.
+A lane whose sign-in involves **no remote login** — one that hands the box a credential at provision time, say, and whose `begin_signin` answers `already_logged_in` — should still implement `abort()` and return `True`, with the reason in its docstring: there was never a login to stop, so the stop is trivially confirmed. `src/aj_crew/cloud/fargate_engine.py::FargateSigninHandle.abort` is the in-tree example. Do **not** leave the method off and rely on the fallback: that fallback is the unconfirmed note, and its text is about a polling device code your lane does not have.
 
 ### 4. Choose the transport at `register` time
 
@@ -205,7 +205,7 @@ A lane whose sign-in involves **no remote login** — one that hands the box a c
 |---|---|
 | `ssm` | The machine is an EC2 instance or an SSM-managed instance in an AWS account the user's credentials reach. Buys you no inbound port, no SSH key, and reachability as an IAM decision |
 | `ssh` | Anything else — a container task, a managed environment, a machine outside AWS. Needs a reachable host and a key, but is the only option when there is no SSM agent |
-| `fargate` | An ECS task exposing the Kiro Crew turn API and addressed by an ECS task target. It uses the SSM forwarder but has no dashboard token or remote `kirocrew` process |
+| `fargate` | An ECS task exposing the Aj Crew turn API and addressed by an ECS task target. It uses the SSM forwarder but has no dashboard token or remote `ajcrew` process |
 
 Set `remote_port` to the port your gateway actually binds. The two ends of one instance must name the same port or the tunnel forwards to nothing.
 
@@ -247,7 +247,7 @@ The RFC's own acceptance conditions are worth copying for any lane: `provision` 
 
 ### Example 2: a managed dev-environment service, reached over SSH
 
-The setup: a service hands out a machine from a prebuilt image that already contains Kiro Crew, reachable over SSH. This is the lane where the seam earns the most, because most of the work is already done by the image.
+The setup: a service hands out a machine from a prebuilt image that already contains Aj Crew, reachable over SSH. This is the lane where the seam earns the most, because most of the work is already done by the image.
 
 | Method | What it does |
 |---|---|

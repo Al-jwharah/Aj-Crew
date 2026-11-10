@@ -7,7 +7,7 @@
 // named imports at LINK time: an icon missing from the list fails the importing
 // app module outright, before the Proxy below can stand in for it. Regenerate
 // with `npm run gen:vendor-lucide` after bumping lucide-react.
-const m = window.__kirocrew_modules?.['lucide-react']
+const m = window.__ajcrew_modules?.['lucide-react']
 if (!m) throw new Error('[vendor/lucide-react] Host modules not initialized. Ensure shared-modules.ts is loaded.')
 
 // Keeps `import icons from 'lucide-react'` and any property access working.

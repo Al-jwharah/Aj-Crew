@@ -22,19 +22,19 @@ import pytest
 from test_start_priority import bounded, settle_tasks, until
 from test_update_provider import _UNALLOCATABLE_PID
 
-import kiro_crew.acp.runtime as runtime_mod
-import kiro_crew.acp.runtime_start as runtime_start
-import kiro_crew.config.live as live_mod
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.types import METHOD_SESSION_NEW
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.session import SessionManager
-from kiro_crew.start_priority import StartPriority
+import aj_crew.acp.runtime as runtime_mod
+import aj_crew.acp.runtime_start as runtime_start
+import aj_crew.config.live as live_mod
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.types import METHOD_SESSION_NEW
+from aj_crew.config import AjCrewConfig
+from aj_crew.session import SessionManager
+from aj_crew.start_priority import StartPriority
 
 
 @pytest.fixture(autouse=True)
 def _fresh_gates(monkeypatch):
-    import kiro_crew.acp.session_handle as sh
+    import aj_crew.acp.session_handle as sh
 
     monkeypatch.setattr(sh, "_MCP_DRAIN_NO_REPORT_CEILING", 0.05, raising=False)
     runtime_mod._session_start_gates.clear()
@@ -238,7 +238,7 @@ async def test_get_bg_session_starts_on_the_bg_runtime_gate(priority):
         async def kill(self, *, expected: bool = False, reason: str = "") -> None:
             return None
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session.pool_size = 0
     mgr = SessionManager(cfg)
     with patch.object(runtime_mod, "AcpRuntime", _FakeRuntime):

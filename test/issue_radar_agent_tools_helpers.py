@@ -1,4 +1,4 @@
-"""Drive Issue Radar's agent tools through the real ``kirocrew-core`` call path.
+"""Drive Issue Radar's agent tools through the real ``ajcrew-core`` call path.
 
 The three tools are declared in the app's shipped ``app.json`` (``agentTools``) and
 served by ``backend/agent_tools.py``. :func:`forwarded` runs a call the way production
@@ -22,10 +22,10 @@ from unittest.mock import patch
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import mcp_core
-from kiro_crew.apps import app_agent_tools
-from kiro_crew.apps.builtins.issue_radar.backend import agent_tools, crew_routes
-from kiro_crew.validation import validate_tool_args
+from aj_crew import mcp_core
+from aj_crew.apps import app_agent_tools
+from aj_crew.apps.builtins.issue_radar.backend import agent_tools, crew_routes
+from aj_crew.validation import validate_tool_args
 
 READ_TOOL = "issue_radar_crew_read"
 RECORD_TOOL = "issue_radar_crew_record"
@@ -70,7 +70,7 @@ def listed() -> Iterator[None]:
     """The app's tools listed, as for an installed and enabled Issue Radar."""
     with (
         patch.object(app_agent_tools, "declared_tools", app_agent_tools.shipped_tools),
-        patch("kiro_crew.mcp_tools.app_tools.app_enabled_state", lambda name: True),
+        patch("aj_crew.mcp_tools.app_tools.app_enabled_state", lambda name: True),
     ):
         yield
 

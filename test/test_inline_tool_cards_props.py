@@ -18,11 +18,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from kiro_crew.dashboard.chat import _flush_segment, _prepare_messages
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.history import ConversationLog
-from kiro_crew.security import redact_credentials, redact_exfiltration_urls
-from kiro_crew.security.credential_sources import CredentialEvidence
+from aj_crew.dashboard.chat import _flush_segment, _prepare_messages
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.history import ConversationLog
+from aj_crew.security import redact_credentials, redact_exfiltration_urls
+from aj_crew.security.credential_sources import CredentialEvidence
 
 # ── Helpers ──
 
@@ -195,7 +195,7 @@ class TestProperty1SegmentFlushOnInterrupt:
         Verify _flush_segment broadcasts chat_segment.
         """
         with tempfile.TemporaryDirectory() as config_tmp:
-            with patch("kiro_crew.dashboard.state.config_dir", return_value=Path(config_tmp)):
+            with patch("aj_crew.dashboard.state.config_dir", return_value=Path(config_tmp)):
                 state, tmp_dir = _make_state_no_fixture()
                 try:
                     slot = state.get_or_create_slot("prop1perm")
@@ -240,7 +240,7 @@ class TestProperty2NoSegmentWhenEmpty:
         Verify no chat_segment broadcast.
         """
         with tempfile.TemporaryDirectory() as config_tmp:
-            with patch("kiro_crew.dashboard.state.config_dir", return_value=Path(config_tmp)):
+            with patch("aj_crew.dashboard.state.config_dir", return_value=Path(config_tmp)):
                 state, tmp_dir = _make_state_no_fixture()
                 try:
                     slot = state.get_or_create_slot("prop2")
@@ -299,7 +299,7 @@ class TestProperty6PersistedMessageStructure:
         Verify the persisted messages have the correct structure.
         """
         with tempfile.TemporaryDirectory() as config_tmp:
-            with patch("kiro_crew.dashboard.state.config_dir", return_value=Path(config_tmp)):
+            with patch("aj_crew.dashboard.state.config_dir", return_value=Path(config_tmp)):
                 state, tmp_dir = _make_state_no_fixture()
                 try:
                     slot = state.get_or_create_slot("prop6")
@@ -452,7 +452,7 @@ class TestProperty8ChunkSequenceMonotonicity:
         strict monotonic increase.
         """
         with tempfile.TemporaryDirectory() as config_tmp:
-            with patch("kiro_crew.dashboard.state.config_dir", return_value=Path(config_tmp)):
+            with patch("aj_crew.dashboard.state.config_dir", return_value=Path(config_tmp)):
                 state, tmp_dir = _make_state_no_fixture()
                 try:
                     slot = state.get_or_create_slot("prop8")
@@ -523,7 +523,7 @@ class TestProperty10NoSegmentForToolFreeStreams:
         finalization.  Verify zero chat_segment broadcasts.
         """
         with tempfile.TemporaryDirectory() as config_tmp:
-            with patch("kiro_crew.dashboard.state.config_dir", return_value=Path(config_tmp)):
+            with patch("aj_crew.dashboard.state.config_dir", return_value=Path(config_tmp)):
                 state, tmp_dir = _make_state_no_fixture()
                 try:
                     slot = state.get_or_create_slot("prop10")

@@ -26,7 +26,7 @@ const { tipsFeedbackMock, tipsStatusMock, dashboardConfigMock, updateDashboardCo
 vi.mock('../api/client', () => ({
   api: {
     dashboardConfig: dashboardConfigMock,
-    kirocrewConfig: () => Promise.resolve({ agent: { model: 'auto', reasoning_effort: '' } }),
+    ajcrewConfig: () => Promise.resolve({ agent: { model: 'auto', reasoning_effort: '' } }),
     models: () => Promise.resolve([{ model_name: 'auto', description: 'Default' }]),
     patchConfig: () => Promise.resolve({}),
     updateDashboardConfig: updateDashboardConfigMock,

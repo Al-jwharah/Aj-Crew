@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from kiro_crew.skills import SkillsLoader
+from aj_crew.skills import SkillsLoader
 
 
 def _write(tmp_path: Path, frontmatter: str) -> Path:

@@ -16,9 +16,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from aiohttp import web
 
-from kiro_crew.dashboard.handlers import api_sessions_clear, api_sessions_clearable_count
-from kiro_crew.dashboard.handlers.sessions import _clearable_history_keys, api_session_delete
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard.handlers import api_sessions_clear, api_sessions_clearable_count
+from aj_crew.dashboard.handlers.sessions import _clearable_history_keys, api_session_delete
+from aj_crew.history import ConversationLog
 
 CLOSED_AT = 1_700_000_000.0
 
@@ -39,7 +39,7 @@ class _FakeSlot:
 
 
 def _history_key_for(key: str) -> str:
-    from kiro_crew.dashboard.chat import _history_key_for as _hkf
+    from aj_crew.dashboard.chat import _history_key_for as _hkf
 
     return _hkf(key)
 
@@ -234,7 +234,7 @@ async def test_unparseable_metadata_is_excluded_from_count_and_bulk_delete(
 
     assert status == 200
     assert body == {"sessions": 0}
-    with patch("kiro_crew.dashboard.handlers.sel"):
+    with patch("aj_crew.dashboard.handlers.sel"):
         resp = await api_sessions_clear(_request(state))
     assert resp.status == 200
     clear_body = json.loads(resp.body)
@@ -268,7 +268,7 @@ async def test_an_individual_delete_excludes_and_reports_unparseable_metadata(
     # Slot/provider teardown has its own coverage. Keep the HTTP handler and the
     # locked transcript deletion real, including the metadata readability check.
     with patch(
-        "kiro_crew.dashboard.handlers.sessions._remove_slot_for_history_key",
+        "aj_crew.dashboard.handlers.sessions._remove_slot_for_history_key",
         new_callable=AsyncMock,
     ) as remove_slot:
         response = await api_session_delete(request)
@@ -311,10 +311,10 @@ async def test_count_and_bulk_delete_resolve_the_same_set() -> None:
     # cleared keys is what keeps that mistake from coming back silently.
     with (
         patch(
-            "kiro_crew.dashboard.handlers.sessions._remove_slot_for_history_key",
+            "aj_crew.dashboard.handlers.sessions._remove_slot_for_history_key",
             new_callable=AsyncMock,
         ) as remove_slot,
-        patch("kiro_crew.dashboard.handlers.sel"),
+        patch("aj_crew.dashboard.handlers.sel"),
     ):
         resp = await api_sessions_clear(_request(delete_state))
     assert resp.status == 200
@@ -406,7 +406,7 @@ def _seed_mixed_history(tmp_path) -> ConversationLog:
     log.append("dashboard:used", "user", "hello")
     log.append("subagent:abc123", "user", "a delegated task")
     log.append("secretary:daily", "user", "a background turn")
-    log.update_metadata("dashboard:chat-3-1790874654", {"agent": "kirocrew"})  # never used
+    log.update_metadata("dashboard:chat-3-1790874654", {"agent": "ajcrew"})  # never used
     return log
 
 
@@ -437,7 +437,7 @@ async def test_user_only_clear_deletes_exactly_the_listed_rows(tmp_path) -> None
     The pane lists one row here; the hidden machine transcripts and the
     never-used session must survive the clear.
     """
-    from kiro_crew.dashboard.handlers import api_sessions
+    from aj_crew.dashboard.handlers import api_sessions
 
     log = _seed_mixed_history(tmp_path)
     state = _real_state(log)
@@ -452,7 +452,7 @@ async def test_user_only_clear_deletes_exactly_the_listed_rows(tmp_path) -> None
     count = await api_sessions_clearable_count(_query_request(state, {"user_only": "1"}))
     assert json.loads(count.body.decode("utf-8")) == {"sessions": len(listed_keys)}
 
-    with patch("kiro_crew.dashboard.handlers.sel"):
+    with patch("aj_crew.dashboard.handlers.sel"):
         resp = await api_sessions_clear(_query_request(state, {"user_only": "1"}))
     assert resp.status == 200
     body = json.loads(resp.body.decode("utf-8"))
@@ -471,8 +471,8 @@ async def test_user_only_clear_rechecks_content_after_the_indexed_listing(tmp_pa
     still read the transcript as empty, so they agree with the pane. After the
     reconcile, each request sees the message and the clear removes the transcript.
     """
-    from kiro_crew.dashboard.handlers import api_sessions
-    from kiro_crew.history_listing_index import SessionListingIndex
+    from aj_crew.dashboard.handlers import api_sessions
+    from aj_crew.history_listing_index import SessionListingIndex
 
     log = _seed_mixed_history(tmp_path)
     jobs: list = []
@@ -493,7 +493,7 @@ async def test_user_only_clear_rechecks_content_after_the_indexed_listing(tmp_pa
     assert log._listing_index.reconcile()
     count = await api_sessions_clearable_count(_query_request(state, {"user_only": "1"}))
     assert json.loads(count.body.decode("utf-8")) == {"sessions": 2}
-    with patch("kiro_crew.dashboard.handlers.sel"):
+    with patch("aj_crew.dashboard.handlers.sel"):
         resp = await api_sessions_clear(_query_request(state, {"user_only": "1"}))
     body = json.loads(resp.body.decode("utf-8"))
     assert (body["ok"], body["cleared"], body["skipped"]) == (True, 2, 0)
@@ -511,7 +511,7 @@ async def test_clear_without_user_only_still_clears_every_closed_session(tmp_pat
     total = json.loads(count.body.decode("utf-8"))["sessions"]
     assert total == len(_on_disk(tmp_path))
 
-    with patch("kiro_crew.dashboard.handlers.sel"):
+    with patch("aj_crew.dashboard.handlers.sel"):
         resp = await api_sessions_clear(_query_request(state, {}))
     assert json.loads(resp.body.decode("utf-8"))["cleared"] == total
     assert _on_disk(tmp_path) == set()

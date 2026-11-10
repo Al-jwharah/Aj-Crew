@@ -18,13 +18,13 @@ import pytest
 from test_shared_crew_admission import _open, _service
 from test_shared_crew_entry_points import service as entry_service
 
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import admission_link as link
-from kiro_crew.shared_crew import containment
-from kiro_crew.shared_crew.admission import OperationState, ReasonCode
-from kiro_crew.shared_crew.contracts import Principal
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import await_until
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import admission_link as link
+from aj_crew.shared_crew import containment
+from aj_crew.shared_crew.admission import OperationState, ReasonCode
+from aj_crew.shared_crew.contracts import Principal
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import await_until
 
 S = OperationState
 A = Principal.system("alice-link").id
@@ -86,7 +86,7 @@ async def test_a_linked_child_is_held_through_a_restart_until_its_run_ends(tmp_p
 @pytest.mark.asyncio
 async def test_the_boot_reconciles_admission_before_it_opens_subagent_dispatch(tmp_path, clock):
     """An API-only gateway opens the queue with no chat send to reconcile first."""
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     path = tmp_path / "t.db"
     store = _open(path, clock)
@@ -177,7 +177,7 @@ async def test_under_hard_limits_dispatch_waits_for_the_recovered_childs_slice(
     child, _, svc2 = await _restarted_with_linked_child(tmp_path, clock, "run-hard")
     svc2._limits = replace(svc2._limits, hard_limits=True)
     # Not applied at the boot reconcile nor at the check after it; applied on retry.
-    units = iter(["", "", "kirocrew-p.slice"])
+    units = iter(["", "", "ajcrew-p.slice"])
 
     async def _prepare(budget_key):
         return next(units)
@@ -277,7 +277,7 @@ async def test_nothing_is_linked_when_admission_is_off_or_the_work_ended(tmp_pat
 
 @pytest.mark.asyncio
 async def test_an_app_spawn_runs_under_the_run_id_it_linked(service, monkeypatch):
-    from kiro_crew.apps import spawn_sdk
+    from aj_crew.apps import spawn_sdk
 
     monkeypatch.setattr(
         spawn_sdk,
@@ -314,9 +314,9 @@ async def test_each_spawn_route_starts_the_run_id_it_linked(service, monkeypatch
     from handlers_messaging_coverage_helpers import _Req, _state
     from test_handlers_messaging_coverage import _info, _mgr
 
-    import kiro_crew.dashboard.handlers.messaging as mod
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-    from kiro_crew.shared_crew import admission_entry
+    import aj_crew.dashboard.handlers.messaging as mod
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew.shared_crew import admission_entry
 
     admitted: list[ag.Admission] = []
 
@@ -339,7 +339,7 @@ async def test_each_spawn_route_starts_the_run_id_it_linked(service, monkeypatch
     if route == "retry":
         old = _info(done=True, outcome="failed", _raw_task="t")
         old.execution_context = ExecutionContext(
-            None, MemoryStoreRef("default"), "template", "kirocrew"
+            None, MemoryStoreRef("default"), "template", "ajcrew"
         )
         mgr.get.return_value = old
         mgr.claim_retry.return_value = ""
@@ -407,7 +407,7 @@ async def test_a_spawn_cancelled_during_the_link_write_frees_its_slot(tmp_path, 
 
 def test_the_child_probe_waits_while_the_queue_store_is_still_opening():
     """A restart reconciles before the queue store opens: absence is not proof yet."""
-    from kiro_crew.shared_crew.admission_entry import subagent_probe
+    from aj_crew.shared_crew.admission_entry import subagent_probe
 
     opening = SimpleNamespace(done=lambda: False)
     manager = SimpleNamespace(_agents={}, _taskq_init_task=opening, taskq_store=lambda: None)
@@ -419,7 +419,7 @@ def test_the_child_probe_waits_while_the_queue_store_is_still_opening():
 
 def test_the_child_probe_decides_absence_only_from_a_successful_store_read():
     """A failed open or a failed read may still hold a queued run: never settle it."""
-    from kiro_crew.shared_crew.admission_entry import subagent_probe
+    from aj_crew.shared_crew.admission_entry import subagent_probe
 
     done = SimpleNamespace(done=lambda: True)
 

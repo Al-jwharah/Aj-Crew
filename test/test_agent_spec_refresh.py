@@ -21,8 +21,8 @@ from agent_helpers import _run_install
 # Re-exported under the original private names so the call sites below are unchanged.
 from mcp_merge_helpers import bundled_defaults as _bundled_defaults
 
-from kiro_crew import agent_state
-from kiro_crew.agent import migrate_agent_specs
+from aj_crew import agent_state
+from aj_crew.agent import migrate_agent_specs
 
 
 class TestRefreshDynamicFieldsLegacyMcpJsonAlias:
@@ -30,7 +30,7 @@ class TestRefreshDynamicFieldsLegacyMcpJsonAlias:
     so a refreshed config that keeps both is refused as a duplicate field."""
 
     def test_alias_dropped_when_include_mcp_json_written(self):
-        from kiro_crew.agent import _refresh_dynamic_fields
+        from aj_crew.agent import _refresh_dynamic_fields
 
         config = {"useLegacyMcpJson": True}
         _refresh_dynamic_fields(config)
@@ -43,29 +43,29 @@ class TestRefreshDynamicFieldsStripsStaleUrl:
     removed on refresh so it can't propagate into the CC config."""
 
     def test_stale_url_and_headers_removed_from_managed_entry(self):
-        from kiro_crew.agent import _refresh_dynamic_fields
+        from aj_crew.agent import _refresh_dynamic_fields
 
         config = {
             "mcpServers": {
-                "kirocrew-core": {
+                "ajcrew-core": {
                     "url": "http://localhost:5476/api/mcp/core",
                     "headers": {"X-Stale": "1"},
                 },
-                "kirocrew-cron": {"url": "http://localhost:5476/api/mcp/cron"},
+                "ajcrew-cron": {"url": "http://localhost:5476/api/mcp/cron"},
             }
         }
         _refresh_dynamic_fields(config)
-        for name, args in (("kirocrew-core", ["mcp-core"]), ("kirocrew-cron", ["mcp-cron"])):
+        for name, args in (("ajcrew-core", ["mcp-core"]), ("ajcrew-cron", ["mcp-cron"])):
             entry = config["mcpServers"][name]
             assert "url" not in entry, f"{name} still has stale url"
             assert "headers" not in entry, f"{name} still has stale headers"
             assert entry["command"]
             # Windows uses the interpreter-module fallback, which prepends
-            # ``-m kiro_crew.__main__`` before the same managed subcommand.
+            # ``-m aj_crew.__main__`` before the same managed subcommand.
             assert entry["args"][-len(args) :] == args
 
     def test_non_managed_server_url_preserved(self):
-        from kiro_crew.agent import _refresh_dynamic_fields
+        from aj_crew.agent import _refresh_dynamic_fields
 
         config = {
             "mcpServers": {
@@ -77,8 +77,8 @@ class TestRefreshDynamicFieldsStripsStaleUrl:
         assert config["mcpServers"]["deepwiki"]["url"] == "https://mcp.deepwiki.com/mcp"
 
     def test_non_managed_server_oauth_hints_preserved(self):
-        """scopes/clientId are passthrough — the runtime, not Kiro Crew, uses them."""
-        from kiro_crew.agent import _refresh_dynamic_fields
+        """scopes/clientId are passthrough — the runtime, not Aj Crew, uses them."""
+        from aj_crew.agent import _refresh_dynamic_fields
 
         config = {
             "mcpServers": {
@@ -97,7 +97,7 @@ class TestRefreshDynamicFieldsStripsStaleUrl:
     def test_edition_extra_invocation_refreshed_user_keys_kept(self):
         """An edition extra's command/args are the edition's; everything else is
         the user's. A stale versioned interpreter must be replaced on refresh."""
-        from kiro_crew.agent import _refresh_dynamic_fields
+        from aj_crew.agent import _refresh_dynamic_fields
 
         extra = {
             "edition-extra": {"command": "/v2/python3", "args": ["-m", "extra"]},
@@ -118,7 +118,7 @@ class TestRefreshDynamicFieldsStripsStaleUrl:
                 "user-nulled": None,
             }
         }
-        with patch("kiro_crew.agent._extra_mcp_servers", return_value=extra):
+        with patch("aj_crew.agent._extra_mcp_servers", return_value=extra):
             _refresh_dynamic_fields(config)
         entry = config["mcpServers"]["edition-extra"]
         assert entry["command"] == "/v2/python3"
@@ -136,7 +136,7 @@ class TestRefreshDynamicFieldsStripsStaleUrl:
         # stale toolsSettings.deniedCommands + autoAllowReadonly that kiro-cli
         # would keep enforcing ahead of the hooks gate. The refresh must remove
         # them so upgraded installs behave like a fresh (hooks-gate-only) one.
-        from kiro_crew.agent import _refresh_dynamic_fields
+        from aj_crew.agent import _refresh_dynamic_fields
 
         config = {
             "toolsSettings": {
@@ -153,7 +153,7 @@ class TestRefreshDynamicFieldsStripsStaleUrl:
 
     def test_refresh_preserves_other_tools_settings(self):
         # Only the retired keys are stripped — a user-authored sibling stays.
-        from kiro_crew.agent import _refresh_dynamic_fields
+        from aj_crew.agent import _refresh_dynamic_fields
 
         config = {
             "toolsSettings": {
@@ -171,20 +171,20 @@ class TestRefreshDynamicFieldsStripsStaleUrl:
 class TestMigrateRelocatedSkillUris:
     """An agent spec mapping a relocated builtin skill's old path follows the move."""
 
-    OLD = "kirocrew-dev/prepare-pr"
-    NEW = "kirocrew-dev/kirocrew-prepare-pr"
+    OLD = "ajcrew-dev/prepare-pr"
+    NEW = "ajcrew-dev/ajcrew-prepare-pr"
 
     @pytest.fixture
     def env(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         home = tmp_path / "home"
         skills = home / ".kiro" / "crew" / "skills"
         (skills / self.NEW).mkdir(parents=True)
-        (skills / self.NEW / "SKILL.md").write_text("---\nname: kirocrew-prepare-pr\n---\n")
+        (skills / self.NEW / "SKILL.md").write_text("---\nname: ajcrew-prepare-pr\n---\n")
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
-        monkeypatch.setattr("kiro_crew.skills.skills_dir", lambda: skills)
+        monkeypatch.setattr("aj_crew.skills.skills_dir", lambda: skills)
         agents = tmp_path / "kiro_agents"
         agents.mkdir()
-        monkeypatch.setattr("kiro_crew.agent.KIRO_AGENTS_DIR", agents)
+        monkeypatch.setattr("aj_crew.agent.KIRO_AGENTS_DIR", agents)
         return skills, agents
 
     def _write(self, agents: Path, resources: list) -> Path:
@@ -193,7 +193,7 @@ class TestMigrateRelocatedSkillUris:
         return spec
 
     def test_rewrites_home_and_absolute_forms_in_place(self, env) -> None:
-        from kiro_crew.agent import migrate_relocated_skill_uris
+        from aj_crew.agent import migrate_relocated_skill_uris
 
         skills, agents = env
         spec = self._write(
@@ -218,7 +218,7 @@ class TestMigrateRelocatedSkillUris:
         ]
 
     def test_drops_the_old_entry_when_the_new_path_is_already_mapped(self, env) -> None:
-        from kiro_crew.agent import migrate_relocated_skill_uris
+        from aj_crew.agent import migrate_relocated_skill_uris
 
         _skills, agents = env
         new = f"skill://~/.kiro/crew/skills/{self.NEW}/SKILL.md"
@@ -227,7 +227,7 @@ class TestMigrateRelocatedSkillUris:
         assert json.loads(spec.read_text(encoding="utf-8"))["resources"] == [new]
 
     def test_is_idempotent(self, env) -> None:
-        from kiro_crew.agent import migrate_relocated_skill_uris
+        from aj_crew.agent import migrate_relocated_skill_uris
 
         _skills, agents = env
         self._write(agents, [f"skill://~/.kiro/crew/skills/{self.OLD}/SKILL.md"])
@@ -235,7 +235,7 @@ class TestMigrateRelocatedSkillUris:
         assert migrate_relocated_skill_uris() == 0
 
     def test_leaves_a_mapping_whose_old_skill_still_loads(self, env) -> None:
-        from kiro_crew.agent import migrate_relocated_skill_uris
+        from aj_crew.agent import migrate_relocated_skill_uris
 
         skills, agents = env
         (skills / self.OLD).mkdir(parents=True)
@@ -248,7 +248,7 @@ class TestMigrateRelocatedSkillUris:
     def test_reads_and_writes_inside_the_spec_lock(self, env, monkeypatch) -> None:
         # A concurrent template PATCH holds the same lock; reading before it
         # would write a stale snapshot back over the user's saved edit.
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         _skills, agents = env
         self._write(agents, [f"skill://~/.kiro/crew/skills/{self.OLD}/SKILL.md"])
@@ -284,14 +284,14 @@ class TestMigrateRelocatedSkillUris:
     def test_leaves_an_enrolled_members_saved_generation_alone(self, env, monkeypatch) -> None:
         # An enrolled member's spec carries a digest its capability intent
         # records; an in-place rewrite would make reconcile refuse sessions.
-        from kiro_crew.agent import migrate_relocated_skill_uris
+        from aj_crew.agent import migrate_relocated_skill_uris
 
         _skills, agents = env
         old = f"skill://~/.kiro/crew/skills/{self.OLD}/SKILL.md"
         spec = self._write(agents, [old])
 
         monkeypatch.setattr(
-            "kiro_crew.agent_state.get_capabilities",
+            "aj_crew.agent_state.get_capabilities",
             lambda name: {"status": "saved"} if name == "alpha" else None,
         )
         assert migrate_relocated_skill_uris() == 0
@@ -300,12 +300,12 @@ class TestMigrateRelocatedSkillUris:
         def unreadable(name):
             raise ValueError("capability_state_invalid")
 
-        monkeypatch.setattr("kiro_crew.agent_state.get_capabilities", unreadable)
+        monkeypatch.setattr("aj_crew.agent_state.get_capabilities", unreadable)
         assert migrate_relocated_skill_uris() == 0
         assert json.loads(spec.read_text(encoding="utf-8"))["resources"] == [old]
 
     def test_leaves_workspace_relative_and_wildcard_uris_alone(self, env) -> None:
-        from kiro_crew.agent import migrate_relocated_skill_uris
+        from aj_crew.agent import migrate_relocated_skill_uris
 
         _skills, agents = env
         kept = [f".kiro/skills/{self.OLD}/SKILL.md", "skill://~/.kiro/crew/skills/*/SKILL.md"]
@@ -316,7 +316,7 @@ class TestMigrateRelocatedSkillUris:
 
 
 class TestMigrateAgentSpecs:
-    """migrate_agent_specs lifts Kiro Crew bookkeeping keys into the sidecar."""
+    """migrate_agent_specs lifts Aj Crew bookkeeping keys into the sidecar."""
 
     def test_strips_and_lifts_keys(self, tmp_path: Path):
         kiro = tmp_path / "kiro_agents"
@@ -326,7 +326,7 @@ class TestMigrateAgentSpecs:
         )
         (kiro / "b.json").write_text(json.dumps({"name": "beta", "cc_model": "claude-sonnet-4.6"}))
         (kiro / "c.json").write_text(json.dumps({"name": "gamma", "model": "m"}))
-        with patch("kiro_crew.agent.KIRO_AGENTS_DIR", kiro):
+        with patch("aj_crew.agent.KIRO_AGENTS_DIR", kiro):
             cleaned = migrate_agent_specs()
         assert cleaned == 2
         assert "model_managed" not in json.loads((kiro / "a.json").read_text(encoding="utf-8"))
@@ -338,7 +338,7 @@ class TestMigrateAgentSpecs:
         kiro = tmp_path / "kiro_agents"
         kiro.mkdir()
         (kiro / "a.json").write_text(json.dumps({"name": "alpha", "model_managed": True}))
-        with patch("kiro_crew.agent.KIRO_AGENTS_DIR", kiro):
+        with patch("aj_crew.agent.KIRO_AGENTS_DIR", kiro):
             assert migrate_agent_specs() == 1
             assert migrate_agent_specs() == 0
 
@@ -347,12 +347,12 @@ class TestMigrateAgentSpecs:
         kiro = tmp_path / "kiro_agents"
         kiro.mkdir()
         (kiro / "a.json").write_text(json.dumps({"name": "alpha", "model_managed": True}))
-        with patch("kiro_crew.agent.KIRO_AGENTS_DIR", kiro):
+        with patch("aj_crew.agent.KIRO_AGENTS_DIR", kiro):
             migrate_agent_specs()
         assert agent_state.get_model_managed("alpha") is False
 
     def test_installed_spec_is_schema_clean(self, tmp_path: Path):
-        """After install the written spec carries no Kiro Crew bookkeeping keys."""
+        """After install the written spec carries no Aj Crew bookkeeping keys."""
         cfg_dir = _bundled_defaults(tmp_path)
         path = _run_install(tmp_path, cfg_dir)
         config = json.loads(path.read_text(encoding="utf-8"))
@@ -371,14 +371,14 @@ class TestRefreshDynamicFieldsSyncsConfigModel:
         return mc
 
     def test_explicit_config_model_overrides_managed_default(self, tmp_path: Path):
-        from kiro_crew.agent import _refresh_dynamic_fields
+        from aj_crew.agent import _refresh_dynamic_fields
 
         # model_managed=True would re-sync the agent file from the shipped
         # default; an explicit config.json pick must still win.
-        agent_state.set_model_managed("kirocrew", True)
+        agent_state.set_model_managed("ajcrew", True)
         mc = self._write_mc_config(tmp_path, "claude-opus-4.8")
-        config = {"name": "kirocrew", "model": "stale-from-install"}
-        with patch("kiro_crew.agent._mc_config_path", return_value=mc):
+        config = {"name": "ajcrew", "model": "stale-from-install"}
+        with patch("aj_crew.agent._mc_config_path", return_value=mc):
             _refresh_dynamic_fields(config)
         assert config["model"] == "claude-opus-4.8"
 
@@ -400,11 +400,11 @@ class TestRefreshDynamicFieldsSyncsConfigModel:
     def test_a_deferring_config_model_leaves_the_agent_model_untouched(
         self, tmp_path: Path, config_model: str | None, spec_model: str
     ):
-        from kiro_crew.agent import _refresh_dynamic_fields
+        from aj_crew.agent import _refresh_dynamic_fields
 
         mc = self._write_mc_config(tmp_path, config_model)
-        config = {"name": "kirocrew", "model": spec_model}
-        with patch("kiro_crew.agent._mc_config_path", return_value=mc):
+        config = {"name": "ajcrew", "model": spec_model}
+        with patch("aj_crew.agent._mc_config_path", return_value=mc):
             _refresh_dynamic_fields(config)
         assert config["model"] == spec_model
 
@@ -424,68 +424,68 @@ class TestResetAgentModel:
         return spec
 
     def test_clear_model_pin_drops_the_pin_and_resumes_tracking(self):
-        from kiro_crew.agent import clear_model_pin
+        from aj_crew.agent import clear_model_pin
 
-        config = {"name": "kirocrew", "model": "claude-opus-4.8"}
-        clear_model_pin(config, "kirocrew")
+        config = {"name": "ajcrew", "model": "claude-opus-4.8"}
+        clear_model_pin(config, "ajcrew")
         assert "model" not in config
-        assert agent_state.get_model_managed("kirocrew") is True
+        assert agent_state.get_model_managed("ajcrew") is True
 
     def test_clear_model_pin_is_idempotent_with_no_pin(self):
-        from kiro_crew.agent import clear_model_pin
+        from aj_crew.agent import clear_model_pin
 
-        config: dict = {"name": "kirocrew"}
-        clear_model_pin(config, "kirocrew")
+        config: dict = {"name": "ajcrew"}
+        clear_model_pin(config, "ajcrew")
         assert "model" not in config
-        assert agent_state.get_model_managed("kirocrew") is True
+        assert agent_state.get_model_managed("ajcrew") is True
 
     def test_reset_writes_the_spec_and_reports_the_previous_model(
         self, tmp_path: Path, monkeypatch
     ):
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
-        self._spec(tmp_path, "kirocrew", {"name": "kirocrew", "model": "claude-opus-4.8"})
+        self._spec(tmp_path, "ajcrew", {"name": "ajcrew", "model": "claude-opus-4.8"})
         monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: tmp_path)
 
-        spec_path, previous = agent_mod.reset_agent_model("kirocrew")
+        spec_path, previous = agent_mod.reset_agent_model("ajcrew")
 
         assert previous == "claude-opus-4.8"
-        assert json.loads(spec_path.read_text(encoding="utf-8")) == {"name": "kirocrew"}
-        assert agent_state.get_model_managed("kirocrew") is True
+        assert json.loads(spec_path.read_text(encoding="utf-8")) == {"name": "ajcrew"}
+        assert agent_state.get_model_managed("ajcrew") is True
 
     def test_reset_overrides_an_explicit_freeze(self, tmp_path: Path, monkeypatch):
         """A frozen editor pick is the user's own answer, and asking for a reset
         is a NEWER answer from the same user -- so it wins."""
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
-        agent_state.set_model_managed("kirocrew", False)
-        self._spec(tmp_path, "kirocrew", {"name": "kirocrew", "model": "claude-haiku-4.5"})
+        agent_state.set_model_managed("ajcrew", False)
+        self._spec(tmp_path, "ajcrew", {"name": "ajcrew", "model": "claude-haiku-4.5"})
         monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: tmp_path)
 
-        agent_mod.reset_agent_model("kirocrew")
-        assert agent_state.get_model_managed("kirocrew") is True
+        agent_mod.reset_agent_model("ajcrew")
+        assert agent_state.get_model_managed("ajcrew") is True
 
     def test_reset_never_writes_bookkeeping_into_the_spec(self, tmp_path: Path, monkeypatch):
         """kiro-cli validates specs with deny_unknown_fields and drops the whole
         agent on an unknown key, so a stray sidecar key must be lifted out."""
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         self._spec(
             tmp_path,
-            "kirocrew",
-            {"name": "kirocrew", "model": "claude-opus-4.8", "cc_model": "claude-sonnet-4.6"},
+            "ajcrew",
+            {"name": "ajcrew", "model": "claude-opus-4.8", "cc_model": "claude-sonnet-4.6"},
         )
         monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: tmp_path)
 
-        spec_path, _ = agent_mod.reset_agent_model("kirocrew")
+        spec_path, _ = agent_mod.reset_agent_model("ajcrew")
         written = json.loads(spec_path.read_text(encoding="utf-8"))
         assert "cc_model" not in written and "model_managed" not in written
-        assert agent_state.get_cc_model("kirocrew") == "claude-sonnet-4.6"
+        assert agent_state.get_cc_model("ajcrew") == "claude-sonnet-4.6"
 
     def test_reset_resolves_a_spec_whose_filename_differs_from_its_name(
         self, tmp_path: Path, monkeypatch
     ):
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         self._spec(tmp_path, "some-file", {"name": "custom-agent", "model": "claude-haiku-4.5"})
         monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: tmp_path)
@@ -495,27 +495,27 @@ class TestResetAgentModel:
         assert previous == "claude-haiku-4.5"
 
     def test_reset_refuses_an_agent_with_no_spec(self, tmp_path: Path, monkeypatch):
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: tmp_path)
         with pytest.raises(FileNotFoundError):
-            agent_mod.reset_agent_model("kirocrew")
+            agent_mod.reset_agent_model("ajcrew")
         # Nothing was claimed on a failed reset.
-        assert agent_state.get_model_managed("kirocrew") is None
+        assert agent_state.get_model_managed("ajcrew") is None
 
     def test_refresh_still_leaves_an_unrecorded_spec_alone(self, tmp_path: Path):
         """The counterpart contract: with no sidecar entry the refresh must not
         reclassify a pin on its own. Inferring ownership from the value is what
         makes the explicit reset necessary rather than optional."""
-        from kiro_crew.agent import _refresh_dynamic_fields
+        from aj_crew.agent import _refresh_dynamic_fields
 
         mc = tmp_path / "config.json"
         mc.write_text(json.dumps({"agent": {"model": "auto"}}), encoding="utf-8")
-        config = {"name": "kirocrew", "model": "claude-opus-4.8"}
-        with patch("kiro_crew.agent._mc_config_path", return_value=mc):
+        config = {"name": "ajcrew", "model": "claude-opus-4.8"}
+        with patch("aj_crew.agent._mc_config_path", return_value=mc):
             _refresh_dynamic_fields(config)
         assert config["model"] == "claude-opus-4.8"
-        assert agent_state.get_model_managed("kirocrew") is None
+        assert agent_state.get_model_managed("ajcrew") is None
 
 
 class TestRefreshDynamicFieldsWrongTypedAgentSection:
@@ -526,23 +526,23 @@ class TestRefreshDynamicFieldsWrongTypedAgentSection:
 
     @pytest.mark.parametrize("bad_agent", [["x"], "oops", 123, 1.5])
     def test_a_truthy_non_dict_agent_section_does_not_raise(self, tmp_path, bad_agent):
-        from kiro_crew.agent import _refresh_dynamic_fields
+        from aj_crew.agent import _refresh_dynamic_fields
 
         mc = tmp_path / "config.json"
         mc.write_text(json.dumps({"agent": bad_agent}), encoding="utf-8")
-        config = {"name": "kirocrew", "model": "sentinel"}
-        with patch("kiro_crew.agent._mc_config_path", return_value=mc):
+        config = {"name": "ajcrew", "model": "sentinel"}
+        with patch("aj_crew.agent._mc_config_path", return_value=mc):
             _refresh_dynamic_fields(config)
         # No model was pulled from the malformed section, so the sentinel the
         # builder started with is not overwritten by a config-derived pick.
         assert config["model"] == "sentinel"
 
     def test_a_valid_agent_model_is_still_applied(self, tmp_path):
-        from kiro_crew.agent import _refresh_dynamic_fields
+        from aj_crew.agent import _refresh_dynamic_fields
 
         mc = tmp_path / "config.json"
         mc.write_text(json.dumps({"agent": {"model": "claude-chosen"}}), encoding="utf-8")
-        config = {"name": "kirocrew", "model": "sentinel"}
-        with patch("kiro_crew.agent._mc_config_path", return_value=mc):
+        config = {"name": "ajcrew", "model": "sentinel"}
+        with patch("aj_crew.agent._mc_config_path", return_value=mc):
             _refresh_dynamic_fields(config)
         assert config["model"] == "claude-chosen"

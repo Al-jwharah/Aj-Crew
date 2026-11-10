@@ -42,10 +42,10 @@
     "description": "Blocks `printenv` naming a secret-bearing AWS variable (`AWS_SECRET*`, `AWS_SESSION*`, `AWS_SECURITY*`, `AWS_ACCESS*`), which prints the credential held in the environment. Naming a non-secret variable such as `AWS_REGION` is allowed."
   },
   {
-    "id": "credential-exfil-kirocrew-token",
-    "pattern": "(?:\\A|[;&|\\n`]|\\$\\()[\\s\"'(]*[\\w.:/\\\\-]*kiro[-.]?crew\\b[^|;&#>/*]*\\btoken\\b",
+    "id": "credential-exfil-ajcrew-token",
+    "pattern": "(?:\\A|[;&|\\n`]|\\$\\()[\\s\"'(]*[\\w.:/\\\\-]*aj[-.]?crew\\b[^|;&#>/*]*\\btoken\\b",
     "category": "credential-exfil",
-    "description": "Blocks the `kirocrew token` CLI, which mints a signed dashboard access token an attacker could use to authenticate to the gateway. Matches the CLI name and the token verb within one command segment -- including nested forms such as `kirocrew pod token` and the hyphenated `kiro-crew` spelling -- so an incidental mention of the word in a later command, a comment, or a file path is not a mint. The argv floor additionally covers `python -m kiro_crew ... token`, which mints the same token through the interpreter rather than the console script."
+    "description": "Blocks the `ajcrew token` CLI, which mints a signed dashboard access token an attacker could use to authenticate to the gateway. Matches the CLI name and the token verb within one command segment -- including nested forms such as `ajcrew pod token` and the hyphenated `aj-crew` spelling -- so an incidental mention of the word in a later command, a comment, or a file path is not a mint. The argv floor additionally covers `python -m aj_crew ... token`, which mints the same token through the interpreter rather than the console script."
   },
   {
     "id": "credential-exfil-env-grep-aws",
@@ -643,15 +643,15 @@
   },
   {
     "id": "self-protection-kill",
-    "pattern": "(?:(?:\\A|[;&|\\n`]|\\$\\()[\\s\"'(]*[\\w.:/\\\\-]*(?:pkill|killall)\\b[^;&#>]*\\bkiro[-.]?crew\\b|(?:\\A|[;&|\\n`]|\\$\\()[\\s\"'(]*[\\w.:/\\\\-]*kill\\b[^;&#>]*(?:\\$\\(|`)[^;&#>]*\\bkiro[-.]?crew\\b)",
+    "pattern": "(?:(?:\\A|[;&|\\n`]|\\$\\()[\\s\"'(]*[\\w.:/\\\\-]*(?:pkill|killall)\\b[^;&#>]*\\baj[-.]?crew\\b|(?:\\A|[;&|\\n`]|\\$\\()[\\s\"'(]*[\\w.:/\\\\-]*kill\\b[^;&#>]*(?:\\$\\(|`)[^;&#>]*\\baj[-.]?crew\\b)",
     "category": "self-protection",
-    "description": "Blocks pkill/killall naming a kirocrew process, and a bare kill whose PID comes from a command substitution that resolves the kirocrew name, so the agent cannot terminate its own gateway or supervisor and disable the controls governing it. Scoped to the kill target within one command segment: an incidental mention of the product in a later command or a comment (a file being restored, a log path) is not a kill."
+    "description": "Blocks pkill/killall naming a ajcrew process, and a bare kill whose PID comes from a command substitution that resolves the ajcrew name, so the agent cannot terminate its own gateway or supervisor and disable the controls governing it. Scoped to the kill target within one command segment: an incidental mention of the product in a later command or a comment (a file being restored, a log path) is not a kill."
   },
   {
     "id": "self-protection-cron-adopt",
-    "pattern": ".*kiro.?crew\\b(?:(?!&&)[^;|])*?\\bcron\\b(?:(?!&&)[^;|])*?\\badopt\\b.*",
+    "pattern": ".*aj.?crew\\b(?:(?!&&)[^;|])*?\\bcron\\b(?:(?!&&)[^;|])*?\\badopt\\b.*",
     "category": "self-protection",
-    "description": "Blocks 'kirocrew cron adopt' so the agent cannot assign itself ownership of a scheduled job. A cron's owning session both manages the job and receives its output, and the MCP cron tools deliberately cannot write that field -- without this rule a session could reach the same power through bash and claim a job that belongs to another session. The gaps between the words tolerate anything that is not a command separator, rather than enumerating what may sit there: the CLI accepts '-v'/'--verbose' and '--no-jail' before a subcommand, a shell redirection is legal anywhere in a simple command, and $IFS is a word separator too, so an allow-list of interlopers would need extending on each new spelling. A single '&' is allowed through because '2>&1' is a redirection, while '&&' still ends the match: the three words have to belong to ONE simple command."
+    "description": "Blocks 'ajcrew cron adopt' so the agent cannot assign itself ownership of a scheduled job. A cron's owning session both manages the job and receives its output, and the MCP cron tools deliberately cannot write that field -- without this rule a session could reach the same power through bash and claim a job that belongs to another session. The gaps between the words tolerate anything that is not a command separator, rather than enumerating what may sit there: the CLI accepts '-v'/'--verbose' and '--no-jail' before a subcommand, a shell redirection is legal anywhere in a simple command, and $IFS is a word separator too, so an allow-list of interlopers would need extending on each new spelling. A single '&' is allowed through because '2>&1' is a redirection, while '&&' still ends the match: the three words have to belong to ONE simple command."
   },
   {
     "id": "self-protection-dev-mode-out-of-root-confirm",
@@ -660,16 +660,16 @@
     "description": "Blocks any agent command carrying the `--confirm-out-of-install-root` flag, the operator's explicit attestation for granting app dev mode on a UI root outside the app's install directory. The dev-mode grant relaxes the unauthenticated UI route's root containment, so an agent able to pass the flag itself would convert an auto-approved shell into a self-granted serving grant on an arbitrary host directory. The confirmation must come from the operator's own terminal, which these rules do not govern."
   },
   {
-    "id": "credential-exfil-kirocrew-token-argv",
-    "pattern": "(?:['\"][\\w.:/\\\\-]*kiro[-.]?crew[\\w.]*['\"][\\s,\\[\\]\\(\\)+*'\"=\\w-]*['\"]token['\"]|(?:os\\.system|os\\.popen|os\\.exec\\w*|(?:asyncio\\.)?create_subprocess_\\w*|(?:run|call|check_call|check_output|popen|Popen|getoutput|getstatusoutput)|commands\\.getoutput|popen\\d?|system|shell_exec|passthru|proc_open|child_process\\.exec\\w*|exec\\w*sync|spawn\\w*|kernel\\.system|io\\.popen)\\s*\\(?\\s*[a-z]{0,2}['\"][^'\"]*\\b(?:kiro[-.]?crew|irocrew)\\b[^'\"]*\\btoken\\b)",
+    "id": "credential-exfil-ajcrew-token-argv",
+    "pattern": "(?:['\"][\\w.:/\\\\-]*aj[-.]?crew[\\w.]*['\"][\\s,\\[\\]\\(\\)+*'\"=\\w-]*['\"]token['\"]|(?:os\\.system|os\\.popen|os\\.exec\\w*|(?:asyncio\\.)?create_subprocess_\\w*|(?:run|call|check_call|check_output|popen|Popen|getoutput|getstatusoutput)|commands\\.getoutput|popen\\d?|system|shell_exec|passthru|proc_open|child_process\\.exec\\w*|exec\\w*sync|spawn\\w*|kernel\\.system|io\\.popen)\\s*\\(?\\s*[a-z]{0,2}['\"][^'\"]*\\b(?:aj[-.]?crew|jcrew)\\b[^'\"]*\\btoken\\b)",
     "category": "credential-exfil",
-    "description": "Blocks an interpreter payload that spawns the `kirocrew token` credential mint through a library call rather than as a shell command -- the CLI name and the token verb as adjacent QUOTED arguments, as in `python -c \"subprocess.run(['kirocrew','token'])\"`, or both words in one quoted string handed to a call that executes it (an `os.system` call given \"kirocrew token\"). A quoted string with no executing call (a regex literal, prose) is not matched; a name assembled at runtime is out of reach of command-text matching and is covered by the sensitive-path floor over the signing key instead."
+    "description": "Blocks an interpreter payload that spawns the `ajcrew token` credential mint through a library call rather than as a shell command -- the CLI name and the token verb as adjacent QUOTED arguments, as in `python -c \"subprocess.run(['ajcrew','token'])\"`, or both words in one quoted string handed to a call that executes it (an `os.system` call given \"ajcrew token\"). A quoted string with no executing call (a regex literal, prose) is not matched; a name assembled at runtime is out of reach of command-text matching and is covered by the sensitive-path floor over the signing key instead."
   },
   {
     "id": "self-protection-kill-interpreter",
-    "pattern": "(?:(?:os\\.system|os\\.popen|os\\.exec\\w*|(?:asyncio\\.)?create_subprocess_\\w*|(?:run|call|check_call|check_output|popen|Popen|getoutput|getstatusoutput)|commands\\.getoutput|popen\\d?|system|shell_exec|passthru|proc_open|child_process\\.exec\\w*|exec\\w*sync|spawn\\w*|kernel\\.system|io\\.popen)(?:\\s*\\(?\\s*[a-z]{0,2}['\"][^'\"]*\\b(?:pkill|killall)\\b[^'\"]*\\b(?:kiro[-.]?crew|irocrew)\\b|[\\s\\(\\[]*['\"][\\w.:/\\\\-]*(?:pkill|killall)['\"][\\s,\\[\\]\\(\\)+*'\"=\\w-]*['\"][^'\"]*(?:kiro[-.]?crew|irocrew))|(?:os\\.kill(?:pg)?|process\\.kill|\\bkillpg)\\s*\\([^)]*irocrew)",
+    "pattern": "(?:(?:os\\.system|os\\.popen|os\\.exec\\w*|(?:asyncio\\.)?create_subprocess_\\w*|(?:run|call|check_call|check_output|popen|Popen|getoutput|getstatusoutput)|commands\\.getoutput|popen\\d?|system|shell_exec|passthru|proc_open|child_process\\.exec\\w*|exec\\w*sync|spawn\\w*|kernel\\.system|io\\.popen)(?:\\s*\\(?\\s*[a-z]{0,2}['\"][^'\"]*\\b(?:pkill|killall)\\b[^'\"]*\\b(?:aj[-.]?crew|jcrew)\\b|[\\s\\(\\[]*['\"][\\w.:/\\\\-]*(?:pkill|killall)['\"][\\s,\\[\\]\\(\\)+*'\"=\\w-]*['\"][^'\"]*(?:aj[-.]?crew|jcrew))|(?:os\\.kill(?:pg)?|process\\.kill|\\bkillpg)\\s*\\([^)]*jcrew)",
     "category": "self-protection",
-    "description": "Blocks an interpreter payload that terminates a kirocrew process through a library call rather than as a shell command -- a pkill/killall command and the product name inside one quoted string passed to an executing sink such as ``os.system(...)`` or ``execSync(...)``. Sink-qualified so prose, a commit message or a regex literal naming both is not a kill."
+    "description": "Blocks an interpreter payload that terminates a ajcrew process through a library call rather than as a shell command -- a pkill/killall command and the product name inside one quoted string passed to an executing sink such as ``os.system(...)`` or ``execSync(...)``. Sink-qualified so prose, a commit message or a regex literal naming both is not a kill."
   },
   {
     "id": "sandbox-escape-ssh-self",

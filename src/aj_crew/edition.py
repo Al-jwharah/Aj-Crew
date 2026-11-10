@@ -1,0 +1,27 @@
+"""Which edition this build is: ``"oss"`` or ``"lts"`` (Long Term Support).
+
+The value is fixed when the package is BUILT, never at run time. The checked-in
+source always says ``"oss"``; ``setup.py``'s ``build_py`` step rewrites the
+``EDITION = ...`` line in the built copy from ``AJCREW_BUILD_EDITION``
+(``make wheel|backend-bin|desktop EDITION=lts``), and refuses a value
+outside ``EDITIONS``. Runtime code reads only this module: no environment
+variable or config file can change the edition of an installed build.
+
+Read it through ``is_lts()`` (or ``aj_crew.edition.EDITION``) at call
+time, not with ``from aj_crew.edition import EDITION``: a copied binding
+ignores the test hook. To exercise the LTS branch in a test::
+
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
+"""
+
+from __future__ import annotations
+
+EDITIONS = frozenset({"oss", "lts"})
+
+# Rewritten in the built copy by setup.py; keep it one line, a plain string.
+EDITION = "oss"
+
+
+def is_lts() -> bool:
+    """Return True when this build is the LTS edition."""
+    return EDITION == "lts"

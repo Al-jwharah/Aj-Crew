@@ -11,9 +11,9 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.workflows.agent_exec as agent_exec
-import kiro_crew.workflows.agent_pool as agent_pool
-from kiro_crew.workflows.runner import WorkflowRunner
+import aj_crew.workflows.agent_exec as agent_exec
+import aj_crew.workflows.agent_pool as agent_pool
+from aj_crew.workflows.runner import WorkflowRunner
 
 _STOPPED = ["cancelled", "error: cancel unacked"]
 

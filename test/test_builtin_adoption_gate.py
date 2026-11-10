@@ -35,22 +35,22 @@ from builtin_adoption_helpers import (
     write_tree,
 )
 
-from kiro_crew import hooks
-from kiro_crew.apps import execution as exec_mod
-from kiro_crew.apps import manager
-from kiro_crew.apps.builtin_adoption_gate import adopted_app_own_mcp_servers
-from kiro_crew.hooks import TOOL_AUTO_APPROVE, HookManager, HooksConfig, ToolCall
+from aj_crew import hooks
+from aj_crew.apps import execution as exec_mod
+from aj_crew.apps import manager
+from aj_crew.apps.builtin_adoption_gate import adopted_app_own_mcp_servers
+from aj_crew.hooks import TOOL_AUTO_APPROVE, HookManager, HooksConfig, ToolCall
 
 LAUNCHER = "backend/mcp_launch.py"
 SERVER = "srv"
 KEY = f"{NAME}:{SERVER}"
 TOOLS = ["get_status", "list_items"]
-OTHER_REPOSITORY = "https://github.com/SomeoneElse/kirocrew-app-fixture-former"
+OTHER_REPOSITORY = "https://github.com/SomeoneElse/ajcrew-app-fixture-former"
 
 #: The wheel built-in's declaration: its server runs the wheel package by module.
 WHEEL_SERVER = {
     "command": "python3",
-    "args": ["-m", "kiro_crew.apps.builtins.fixture_former.backend.mcp_server"],
+    "args": ["-m", "aj_crew.apps.builtins.fixture_former.backend.mcp_server"],
     "autoApprove": TOOLS,
 }
 #: The repository copy's: the same server, started from the app's own launcher.
@@ -108,7 +108,7 @@ def _record(
 
 
 def _home() -> Path:
-    return Path(os.environ["KIROCREW_HOME"])
+    return Path(os.environ["AJCREW_HOME"])
 
 
 def _trust(name: str = NAME, repository: str = REPOSITORY) -> None:
@@ -208,7 +208,7 @@ def test_an_unreadable_installed_manifest_fails_closed(adopted):
 
 
 async def _warm() -> None:
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     await server._warm_builtin_app_names()
 
@@ -266,9 +266,9 @@ async def test_the_warmed_gate_asks_for_a_mismatched_launch(tmp_path, monkeypatc
 @pytest.mark.asyncio
 async def test_adoption_leaves_the_own_server_grant_as_it_was(tmp_path, monkeypatch, gate_sets):
     """The wheel copy's grant before adoption is the adopted record's grant after it."""
-    import kiro_crew.sel as sel_mod
-    from kiro_crew.apps import builtin_adoption as adoption
-    from kiro_crew.config.loader import _invalidate_config_cache
+    import aj_crew.sel as sel_mod
+    from aj_crew.apps import builtin_adoption as adoption
+    from aj_crew.config.loader import _invalidate_config_cache
 
     monkeypatch.setattr(
         sel_mod, "sel", lambda: types.SimpleNamespace(log_api_access=lambda **_kw: None)

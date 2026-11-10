@@ -2,7 +2,7 @@
 
 These drive the real code paths against real config files under a temporary
 data home: the loader, ``beacon.telemetry_permitted``, ``metrics.provider`` and
-``kirocrew telemetry enable|disable``. Nothing here sends data anywhere.
+``ajcrew telemetry enable|disable``. Nothing here sends data anywhere.
 """
 
 from __future__ import annotations
@@ -13,18 +13,18 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import beacon
-from kiro_crew import cli_commands as cc
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.metrics import provider
+from aj_crew import beacon
+from aj_crew import cli_commands as cc
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.metrics import provider
 
-_ENV_VARS = ("DO_NOT_TRACK", "KIROCREW_TELEMETRY", "KIROCREW_TELEMETRY_DISABLED")
+_ENV_VARS = ("DO_NOT_TRACK", "AJCREW_TELEMETRY", "AJCREW_TELEMETRY_DISABLED")
 
 
 @pytest.fixture
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """A private data home with no telemetry env vars set."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     for name in _ENV_VARS:
         monkeypatch.delenv(name, raising=False)
     return tmp_path
@@ -58,9 +58,9 @@ def test_do_not_track_turns_both_switches_off(
 def test_do_not_track_wins_over_an_on_value(home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Off wins: an on value in the product's own variable cannot undo it."""
     monkeypatch.setenv("DO_NOT_TRACK", "1")
-    monkeypatch.setenv("KIROCREW_TELEMETRY", "1")
+    monkeypatch.setenv("AJCREW_TELEMETRY", "1")
     _write_config(home, {"telemetry": {"enabled": True}})
-    assert provider._consent_enabled(KiroCrewConfig.load().telemetry) is False
+    assert provider._consent_enabled(AjCrewConfig.load().telemetry) is False
 
 
 @pytest.mark.parametrize("value", ["", "0", "false", "no", "off", "maybe"])
@@ -68,11 +68,11 @@ def test_falsy_do_not_track_changes_nothing(
     home: Path, monkeypatch: pytest.MonkeyPatch, value: str
 ) -> None:
     monkeypatch.setenv("DO_NOT_TRACK", value)
-    monkeypatch.setenv("KIROCREW_TELEMETRY", "1")
+    monkeypatch.setenv("AJCREW_TELEMETRY", "1")
     assert beacon.do_not_track() is False
     assert provider.env_pin() is True
-    assert provider.pin_env_var() == "KIROCREW_TELEMETRY"
-    assert beacon.opt_out_env_var() == "KIROCREW_TELEMETRY_DISABLED"
+    assert provider.pin_env_var() == "AJCREW_TELEMETRY"
+    assert beacon.opt_out_env_var() == "AJCREW_TELEMETRY_DISABLED"
 
 
 def test_do_not_track_has_a_reason_code() -> None:
@@ -86,7 +86,7 @@ def test_do_not_track_has_a_reason_code() -> None:
 def test_ack_version_defaults_to_zero_without_falling_back(home: Path) -> None:
     """An existing user (onboarded, acked) reads 0, so the new notice shows once."""
     _write_config(home, {"dashboard": {"onboarded": True, "privacy_acked": True}})
-    dash = KiroCrewConfig.load().dashboard
+    dash = AjCrewConfig.load().dashboard
     assert dash.privacy_acked is True
     assert dash.privacy_ack_version == 0
 
@@ -94,10 +94,10 @@ def test_ack_version_defaults_to_zero_without_falling_back(home: Path) -> None:
 @pytest.mark.parametrize(("raw", "expected"), [(2, 2), ("2", 2), (True, 0), (-5, 0), (10**6, 1000)])
 def test_ack_version_is_coerced_and_clamped(home: Path, raw: object, expected: int) -> None:
     _write_config(home, {"dashboard": {"privacy_ack_version": raw}})
-    assert KiroCrewConfig.load().dashboard.privacy_ack_version == expected
+    assert AjCrewConfig.load().dashboard.privacy_ack_version == expected
 
 
-# -- kirocrew telemetry enable|disable|status --
+# -- ajcrew telemetry enable|disable|status --
 
 
 def _ns(action: str) -> argparse.Namespace:
@@ -115,7 +115,7 @@ def test_cli_disable_turns_both_off_and_survives_a_reload(
     # Disable records that the user chose, not that they were told recording is on.
     assert "privacy_ack_version" not in stored["dashboard"]
     assert stored["agent"] == {"model": "auto"}
-    loaded = KiroCrewConfig.load()
+    loaded = AjCrewConfig.load()
     assert (loaded.telemetry.enabled, loaded.telemetry.beacon_enabled) == (False, False)
     assert "DISABLED" in capsys.readouterr().out
 
@@ -124,7 +124,7 @@ def test_cli_enable_turns_both_on(home: Path, monkeypatch: pytest.MonkeyPatch) -
     monkeypatch.setattr(beacon, "is_governance_pinned_off", lambda **kw: False)
     _write_config(home, {"telemetry": {"enabled": False, "beacon_enabled": False}})
     cc._telemetry(_ns("enable"))
-    loaded = KiroCrewConfig.load()
+    loaded = AjCrewConfig.load()
     assert (loaded.telemetry.enabled, loaded.telemetry.beacon_enabled) == (True, True)
     assert loaded.dashboard.privacy_ack_version == beacon.PRIVACY_NOTICE_VERSION
 

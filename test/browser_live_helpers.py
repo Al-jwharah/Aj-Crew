@@ -13,7 +13,7 @@ import base64
 import struct
 from typing import Any
 
-from kiro_crew.browser_harness import screencast as sc
+from aj_crew.browser_harness import screencast as sc
 
 SESSION = "relay-sess-1"
 CHROME_SESSION = "chrome-frame-sess"

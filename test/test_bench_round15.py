@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.eval.bench.safepath import (
+from aj_crew.eval.bench.safepath import (
     UnsafePathError,
     open_write_nofollow,
     write_text_atomic_nofollow,
@@ -137,7 +137,7 @@ def test_the_staging_name_carries_the_pid(tmp_path: Path) -> None:
     A `.part` left by a killed download must not turn every later fetch into a
     refusal, so the process id is part of the name.
     """
-    from kiro_crew.eval.bench import datasets
+    from aj_crew.eval.bench import datasets
 
     source = Path(datasets.__file__).read_text(encoding="utf-8")
     effective = [ln for ln in source.splitlines() if not ln.lstrip().startswith("#")]

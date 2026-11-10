@@ -23,8 +23,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.dashboard.handlers import mcp as mcp_mod
-from kiro_crew.mcp_discovery import (
+from aj_crew.dashboard.handlers import mcp as mcp_mod
+from aj_crew.mcp_discovery import (
     MCP_REDACTED_HEADER_VALUE,
     McpServerInfo,
 )
@@ -70,13 +70,13 @@ class _State:
 
 def _arrange(monkeypatch, tmp_path, servers, cache):
     """Point the handler at a synthetic server list and a warm probe cache."""
-    import kiro_crew.mcp_discovery as disc
+    import aj_crew.mcp_discovery as disc
 
     monkeypatch.setattr(disc, "list_servers", lambda *a, **k: list(servers))
-    # No mcp.json on disk: the disabled/kirocrewManaged overlay is a no-op, so
+    # No mcp.json on disk: the disabled/ajcrewManaged overlay is a no-op, so
     # `disabled` comes purely from the McpServerInfo rows above.
     monkeypatch.setattr(mcp_mod, "_GLOBAL_MCP_JSON", tmp_path / "absent.json")
-    monkeypatch.setattr(mcp_mod, "_kirocrew_mcp_json", lambda: tmp_path / "absent-kc.json")
+    monkeypatch.setattr(mcp_mod, "_ajcrew_mcp_json", lambda: tmp_path / "absent-kc.json")
     monkeypatch.setattr(mcp_mod, "_mcp_probe_cache", list(cache))
     # Warm cache: the TTL branch must NOT be the thing that triggers a reprobe.
     monkeypatch.setattr(mcp_mod, "_mcp_probe_ts", time.time())
@@ -183,7 +183,7 @@ class TestDisabledServerDoesNotDefeatProbeCache:
             seen.append(threading.get_ident())
             return {}
 
-        monkeypatch.setattr(mcp_mod, "_kirocrew_mcp_servers", store_read)
+        monkeypatch.setattr(mcp_mod, "_ajcrew_mcp_servers", store_read)
         loop_thread = threading.get_ident()
 
         resp = await mcp_mod.api_mcp_servers(_request(_State()))
@@ -288,7 +288,7 @@ class TestMcpHeaderRedaction:
     async def test_live_probe_preserves_header_names_without_values(
         self, monkeypatch, tmp_path
     ) -> None:
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         server = McpServerInfo(
             name="remote",
@@ -337,7 +337,7 @@ class TestMcpHeaderRedaction:
     async def test_live_probe_redacts_reflected_header_credential_suffix(
         self, monkeypatch, tmp_path
     ) -> None:
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         credential = "live-fake-credential-7e91"
         secret = f"Bearer {credential}"
@@ -402,7 +402,7 @@ class TestMcpHeaderRedaction:
         assert credential.casefold() not in (resp.text or "").casefold()
 
     def test_full_authorization_value_is_redacted_exactly_once(self) -> None:
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         credential = "full-fake-credential-2a63"
         value = f"Bearer {credential}"
@@ -420,7 +420,7 @@ class TestMcpHeaderRedaction:
         """A long credential cannot occur inside prose by chance, so it is
         masked as a bare substring even when a server reflects it with no
         surrounding whitespace. Boundary anchoring would suppress this."""
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         credential = "ghp_" "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef12"
         headers = {"Authorization": f"Bearer {credential}"}
@@ -435,7 +435,7 @@ class TestMcpHeaderRedaction:
             assert MCP_REDACTED_HEADER_VALUE in redacted
 
     def test_short_basic_credential_reflected_alone_is_redacted(self) -> None:
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         credential = "YTpi"
         value = f"Basic {credential}"
@@ -449,7 +449,7 @@ class TestMcpHeaderRedaction:
         assert credential not in redacted
 
     def test_padded_base64_credential_is_redacted_before_punctuation(self) -> None:
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         credential = "YTpiYw=="
         error = f"Remote reflected {credential}."
@@ -469,7 +469,7 @@ class TestMcpHeaderRedaction:
         it percent-encoded — space as %20, base64 padding as %3D — which
         contains no literal substring of the credential at all.
         """
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         headers = {"Authorization": "Basic YTpiYw=="}
         error = "GET https://mcp.example.com/auth?hdr=Basic%20YTpiYw%3D%3D failed"
@@ -482,7 +482,7 @@ class TestMcpHeaderRedaction:
 
     def test_partially_percent_encoded_credential_is_redacted(self) -> None:
         """Only the padding encoded: a mixed literal/%XX reflection is caught."""
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         redacted = disc.redact_mcp_error(
             "Remote reflected YTpiYw%3D%3D in its error",
@@ -493,7 +493,7 @@ class TestMcpHeaderRedaction:
         assert MCP_REDACTED_HEADER_VALUE in redacted
 
     def test_fully_percent_encoded_credential_is_redacted(self) -> None:
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         credential = "full-fake-credential-2a63"
         encoded = "".join(f"%{byte:02X}" for byte in credential.encode())
@@ -506,7 +506,7 @@ class TestMcpHeaderRedaction:
 
     def test_double_percent_encoded_credential_is_redacted(self) -> None:
         """A nested reflection re-encodes the escape's own percent sign."""
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         headers = {"Authorization": "Basic YTpiYw=="}
 
@@ -525,7 +525,7 @@ class TestMcpHeaderRedaction:
         serialization time would be masked against the NEW credential while
         still carrying the OLD one.
         """
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         old_credential = "old-rotated-secret-9f27"
         server = disc.McpServerInfo(
@@ -547,7 +547,7 @@ class TestMcpHeaderRedaction:
 
     def test_plus_encoded_space_in_reflected_value_is_redacted(self) -> None:
         """Form-urlencoding spells the space in ``Basic <token>`` as ``+``."""
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         redacted = disc.redact_mcp_error(
             "auth failed for Basic+YTpiYw%3d%3d (lowercase hex)",
@@ -566,7 +566,7 @@ class TestMcpHeaderRedaction:
         (an access-key id, a connection string); the site-wide scrubbers must
         catch it before serialization.
         """
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         fake_key = "AKIA" + "IOSFODNN7EXAMPLE"
         redacted = disc.redact_mcp_error(
@@ -579,7 +579,7 @@ class TestMcpHeaderRedaction:
     def test_lone_surrogate_header_value_does_not_crash(self) -> None:
         """JSON permits unpaired surrogate escapes; building the redaction
         pattern must never raise and turn a listing request into a 500."""
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         headers = {
             "Authorization": "Bearer bad\ud800token",
@@ -596,7 +596,7 @@ class TestMcpHeaderRedaction:
     def test_short_credential_substring_in_unrelated_word_is_not_redacted(
         self,
     ) -> None:
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         error = "Remote returned prefixYTpicalSuffix as ordinary prose"
 
@@ -606,14 +606,14 @@ class TestMcpHeaderRedaction:
         ) == error
 
     def test_short_authorization_suffix_leaves_ordinary_error_untouched(self) -> None:
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         error = "A remote server returned a generic failure"
 
         assert disc.redact_mcp_error(error, {"Authorization": "Bearer a"}) == error
 
     def test_scheme_less_header_value_is_still_redacted(self) -> None:
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         credential = "scheme-less-fake-credential-8b14"
         error = f"Remote reflected {credential}"

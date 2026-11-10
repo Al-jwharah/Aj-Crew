@@ -9,7 +9,7 @@
  * One card, top to bottom: the look as its hero (a centred tile whose pencil
  * opens the avatar editor), the name under its label, Create, and a centred
  * "Advanced settings" toggle under it, so the primary action follows the name
- * directly. The way out is the modal's header X. Every crewmate starts as Kiro Crew's
+ * directly. The way out is the modal's header X. Every crewmate starts as Aj Crew's
  * own source-defined worker; abilities are added afterwards in its editor
  * (Add abilities), so there is no template to pick here. The "Advanced
  * settings" toggle unfolds the rest of the form inline, in the same card,
@@ -90,7 +90,7 @@ import {
 /** The binding a new crewmate starts on: the built-in kiro agent every install
  *  ships. The server repoints it to the crewmate's own file at create and reads
  *  nothing from it (`mate_config.adopt_own_file`). */
-export const DEFAULT_CREWMATE_TEMPLATE = 'kirocrew'
+export const DEFAULT_CREWMATE_TEMPLATE = 'ajcrew'
 /** The id the Advanced settings row's `aria-controls` points at. */
 const ADVANCED_ID = 'crewmate-create-advanced'
 
@@ -510,8 +510,8 @@ export default function NewCrewmateDialog({
    * Re-read the roster behind EVERY door this dialog is opened from.
    *
    * Two readers, because the two doors do not share a query: the Crewmates page
-   * renders `MEMBERS_ROSTER_QUERY_KEY` (`['kirocrew-agents', 'members-roster']`)
-   * and the crew manager renders `['kirocrew-agents']` itself. An invalidation
+   * renders `MEMBERS_ROSTER_QUERY_KEY` (`['ajcrew-agents', 'members-roster']`)
+   * and the crew manager renders `['ajcrew-agents']` itself. An invalidation
    * matches when the FILTER key is a PREFIX of a query's key, and the roster leaf
    * is one segment LONGER than the registry key — so invalidating the leaf alone
    * never reaches the crew manager's list. Under the app's `staleTime: Infinity`
@@ -523,9 +523,9 @@ export default function NewCrewmateDialog({
    * `exact` on the registry key, so this stays the two queries that are stale
    * rather than every per-member projection nested under the prefix.
    *
-   * `['kirocrewConfig']` goes with the registry key because the SAME write
+   * `['ajcrewConfig']` goes with the registry key because the SAME write
    * (`POST /api/agents`) lands in both, and the crew manager's list is
-   * config-derived (`KiroCrewAgentsPage`'s `['kirocrewConfig']` query). The
+   * config-derived (`AjCrewAgentsPage`'s `['ajcrewConfig']` query). The
    * success path already invalidates both; this reconcile path — reached when a
    * create committed server-side but its response was lost (socket drop /
    * gateway restart mid-POST) or came back 409 `agent_exists` — must refresh the
@@ -534,8 +534,8 @@ export default function NewCrewmateDialog({
    */
   const refreshRosterReaders = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: MEMBERS_ROSTER_QUERY_KEY })
-    void queryClient.invalidateQueries({ queryKey: ['kirocrew-agents'], exact: true })
-    void queryClient.invalidateQueries({ queryKey: ['kirocrewConfig'] })
+    void queryClient.invalidateQueries({ queryKey: ['ajcrew-agents'], exact: true })
+    void queryClient.invalidateQueries({ queryKey: ['ajcrewConfig'] })
   }, [queryClient])
   const guideHeaders = useGuideRequestHeaders('crewmate.create')
   const guideSave = useGuideSaveLifecycle('crewmate.create')
@@ -562,10 +562,10 @@ export default function NewCrewmateDialog({
       // gateway confirms the step from what it actually created. A progress
       // report still in flight (the guide catching up with a fast click)
       // would leave the headers unread and the save uncredited.
-      if (!guided) return { r: await api.createKirocrewAgent(body) as { error?: string; name?: string }, credited: true }
+      if (!guided) return { r: await api.createAjcrewAgent(body) as { error?: string; name?: string }, credited: true }
       await guideSave.sync()
       const headers = guideHeaders()
-      const r = await (headers ? api.createKirocrewAgent(body, headers) : api.createKirocrewAgent(body)) as { error?: string; name?: string }
+      const r = await (headers ? api.createAjcrewAgent(body, headers) : api.createAjcrewAgent(body)) as { error?: string; name?: string }
       return { r, credited: !!headers }
     },
     onSuccess: async ({ r, credited }, body) => {
@@ -593,8 +593,8 @@ export default function NewCrewmateDialog({
       // not hold the dialog on "Creating…" with no exit. Past the bound the
       // refetches keep going in the background and the create proceeds.
       const warm = Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['kirocrew-agents'], exact: true, refetchType: 'all' }),
-        queryClient.invalidateQueries({ queryKey: ['kirocrewConfig'], refetchType: 'all' }),
+        queryClient.invalidateQueries({ queryKey: ['ajcrew-agents'], exact: true, refetchType: 'all' }),
+        queryClient.invalidateQueries({ queryKey: ['ajcrewConfig'], refetchType: 'all' }),
         // The shared sessionless catalog key this dialog also reads at
         // `staleTime: 0` on open. Every OTHER reader of it holds it longer: the
         // command bar's crewmates view serves from it at `MATES_STALE_MS`, and
@@ -912,8 +912,8 @@ export default function NewCrewmateDialog({
             <ErrorNotice
               message={t('pages.membersPage.create_options_failed', {
                 list: workspacesError
-                    ? t('pages.kiroCrewAgentsPage.workspace_2')
-                    : t('pages.kiroCrewAgentsPage.model'),
+                    ? t('pages.ajCrewAgentsPage.workspace_2')
+                    : t('pages.ajCrewAgentsPage.model'),
               })}
               variant="inline"
               testId="crewmate-create-options-error"
@@ -1009,7 +1009,7 @@ export default function NewCrewmateDialog({
                   options={modelOptions}
                   value={model}
                   onChange={setModel}
-                  hint={t('pages.kiroCrewAgentsPage.model_inherited_from_default')}
+                  hint={t('pages.ajCrewAgentsPage.model_inherited_from_default')}
                   disabled={busy}
                 />
                 <TriggersField value={triggers} onChange={setTriggers} subject="member" busy={busy} />

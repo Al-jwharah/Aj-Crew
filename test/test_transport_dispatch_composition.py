@@ -1,8 +1,8 @@
 """Composition contract between ``DiscordDispatcher`` and its ``transport_dispatch_*`` owners.
 
-``kiro_crew.discord.transport_dispatch`` keeps the dispatcher's state, its front door and
+``aj_crew.discord.transport_dispatch`` keeps the dispatcher's state, its front door and
 the constructs repository guards read in that file, and binds the functions of the owner
-modules beside it (``kiro_crew.discord.transport_dispatch_<role>``) as class attributes.
+modules beside it (``aj_crew.discord.transport_dispatch_<role>``) as class attributes.
 What this file pins is what a caller of the dispatcher observes independently of where
 each rule lives:
 
@@ -44,8 +44,8 @@ from typing import Any
 import pytest
 from test_discord import _dispatcher, _drop_live_config_snapshot  # noqa: F401
 
-import kiro_crew.discord.transport_dispatch as td
-from kiro_crew.discord.client import DiscordInteraction
+import aj_crew.discord.transport_dispatch as td
+from aj_crew.discord.client import DiscordInteraction
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_discord_transport_dispatch")
 
@@ -59,7 +59,7 @@ SHARED_FACADE_CHECKS = (
 )
 
 
-FACADE = "kiro_crew.discord.transport_dispatch"
+FACADE = "aj_crew.discord.transport_dispatch"
 FACADE_PATH = Path(td.__file__).resolve()
 PACKAGE_DIR = FACADE_PATH.parent
 REPO = FACADE_PATH.parents[3]
@@ -103,7 +103,7 @@ BASE_NAMES = frozenset(
         "InboundMessage",
         "InboundRoute",
         "IngestLimits",
-        "KiroCrewConfig",
+        "AjCrewConfig",
         "LiveDefaultAgent",
         "MonitorCompletionHook",
         "MonitorDispatchResult",
@@ -311,7 +311,7 @@ BASE_MEMBERS: dict[str, tuple[str, bool, str]] = {
         False,
         (
             "(self, *, sessions: \"'SessionManager'\", ctx_builder: \"'ContextBuilder'\", cfg: "
-            "\"'KiroCrewConfig'\", allowed_user_ids: 'set[str]', allowed_thread_ids: 'set[str] "
+            "\"'AjCrewConfig'\", allowed_user_ids: 'set[str]', allowed_thread_ids: 'set[str] "
             "| None' = None, agent: 'str | None' = None, conv_log: \"'ConversationLog | "
             "None'\" = None, approval_mode: 'str' = 'interactive') -> 'None'"
         ),
@@ -405,7 +405,7 @@ BASE_MEMBERS: dict[str, tuple[str, bool, str]] = {
         False,
         ("(self, itx: \"'DiscordInteraction'\") -> \"'ReplyFn'\""),
     ),
-    "_live_cfg": ("function", False, "(self) -> \"'KiroCrewConfig'\""),
+    "_live_cfg": ("function", False, "(self) -> \"'AjCrewConfig'\""),
     "_maybe_notice": (
         "function",
         True,
@@ -580,9 +580,9 @@ def test_a_star_import_binds_the_base_public_names(tmp_path: Path) -> None:
 
 def test_a_fresh_import_loads_every_owner() -> None:
     probe = (
-        "import sys, kiro_crew.discord.transport_dispatch\n"
+        "import sys, aj_crew.discord.transport_dispatch\n"
         "print(sorted(m for m in sys.modules if m.startswith("
-        "'kiro_crew.discord.transport_dispatch_')))\n"
+        "'aj_crew.discord.transport_dispatch_')))\n"
     )
     result = subprocess.run(
         [sys.executable, "-c", probe],
@@ -775,13 +775,13 @@ def _imported_modules(nodes: list[ast.stmt]) -> list[str]:
 def test_the_import_scan_reads_what_runs_at_load_and_nothing_under_type_checking() -> None:
     planted = (
         f"from {FACADE} import a\n"
-        "import kiro_crew.dashboard.state\n"
+        "import aj_crew.dashboard.state\n"
         "if TYPE_CHECKING:\n"
-        "    from kiro_crew.discord import transport_dispatch_origin\n"
+        "    from aj_crew.discord import transport_dispatch_origin\n"
     )
     loaded = _imported_modules(_module_level_imports(ast.parse(planted)))
-    assert FACADE in loaded and "kiro_crew.dashboard.state" in loaded
-    assert "kiro_crew.discord.transport_dispatch_origin" not in loaded
+    assert FACADE in loaded and "aj_crew.dashboard.state" in loaded
+    assert "aj_crew.discord.transport_dispatch_origin" not in loaded
 
 
 def test_an_owner_imports_only_owners_below_it() -> None:
@@ -811,11 +811,11 @@ def test_every_owner_logs_under_the_facades_name() -> None:
 
 def test_dashboard_imports_stay_call_time() -> None:
     """The dashboard imports the channel packages on its boot path, so a channel
-    module reaches ``kiro_crew.dashboard`` only inside the function that needs it."""
+    module reaches ``aj_crew.dashboard`` only inside the function that needs it."""
     sources = {"transport_dispatch": FACADE_PATH.read_text(encoding="utf-8"), **_owner_sources()}
     for stem, source in sources.items():
         loaded = _imported_modules(_module_level_imports(ast.parse(source)))
-        assert not [m for m in loaded if m.startswith("kiro_crew.dashboard")], stem
+        assert not [m for m in loaded if m.startswith("aj_crew.dashboard")], stem
 
 
 def _instance_fields() -> set[str]:
@@ -922,7 +922,7 @@ def test_the_sync_io_gate_reports_a_blocking_call_planted_in_each_coroutine_owne
 
 
 def test_the_gate_reach_check_tells_a_blind_spelling_from_a_seen_one() -> None:
-    blind = "from kiro_crew.discord.transport_dispatch import time\n\n\nasync def f():\n    pass\n"
+    blind = "from aj_crew.discord.transport_dispatch import time\n\n\nasync def f():\n    pass\n"
     assert _from_imported_sync_io_modules(blind) == {"time"}
     planted, line = _with_blocking_call(blind, "time.sleep(1)")
     assert line not in {f for f, _fam, _prov in _sync_io_gate()._violations_in_source(planted)}
@@ -946,7 +946,7 @@ _FACADE_PINNED = {
     "the context-usage read": "test_reinjection_gate: a compacting module also delegates",
     "a name-grant check": "test_name_grant_surfaces: name_grant",
     "the forgeable spawn title": 'test_name_grant_surfaces: title == "spawn_run"',
-    "an agent-SDK import": "check_agent_sdk_boundary: kiro_crew.acp / kiro_crew.providers",
+    "an agent-SDK import": "check_agent_sdk_boundary: aj_crew.acp / aj_crew.providers",
 }
 _FORBIDDEN_IN_THE_FACADE_TOO = frozenset(
     {"a name-grant check", "the forgeable spawn title", "an agent-SDK import"}
@@ -981,7 +981,7 @@ def _facade_pinned_shapes(source: str) -> list[str]:
         "an agent-SDK import": any(
             m == root or m.startswith(f"{root}.")
             for m in imported
-            for root in ("kiro_crew.acp", "kiro_crew.providers")
+            for root in ("aj_crew.acp", "aj_crew.providers")
         ),
     }
     assert held.keys() == _FACADE_PINNED.keys()
@@ -998,9 +998,9 @@ _PLANTED = {
     "the start-priority asker": "def f(k, c):\n    return Asker(k, c)\n",
     "the inbound admission": "async def f(s):\n    await admit_inbound_callback(s)\n",
     "the context-usage read": "def f(self, k, p):\n    return self.sessions.check_context_usage(k, p)\n",
-    "a name-grant check": "def f(cmd):\n    from kiro_crew import name_grant\n",
+    "a name-grant check": "def f(cmd):\n    from aj_crew import name_grant\n",
     "the forgeable spawn title": 'def f(title):\n    return title == "spawn_run"\n',
-    "an agent-SDK import": "import kiro_crew.acp\n",
+    "an agent-SDK import": "import aj_crew.acp\n",
 }
 
 
@@ -1025,7 +1025,7 @@ def test_the_direct_send_sink_names_the_owner_that_redacts_compact() -> None:
     ``_handle_compact``'s redaction pass, and that pass is the composed one that runs
     both scanners, so the posture panel names where the redaction happens and its
     checks read that code."""
-    from kiro_crew import security_posture
+    from aj_crew import security_posture
 
     sinks = {label: module for label, module, _detail in security_posture._REDACTION_SINKS}
     assert sinks["Discord direct send"] == "discord/transport_dispatch_commands.py"

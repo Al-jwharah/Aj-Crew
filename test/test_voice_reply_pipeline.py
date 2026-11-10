@@ -21,7 +21,7 @@ from voice_reply_helpers import (
     _patch_aws_on_path,
 )
 
-from kiro_crew.voice_reply import (
+from aj_crew.voice_reply import (
     PROVIDER_POLLY,
     PROVIDER_SYSTEM,
     SYSTEM_ENGINE_ESPEAK,
@@ -42,11 +42,11 @@ class TestSynthesizeSpeechDispatcher:
     async def test_polly_dispatch(self) -> None:
         with (
             patch(
-                "kiro_crew.voice_reply._synthesize_polly",
+                "aj_crew.voice_reply._synthesize_polly",
                 new=AsyncMock(return_value="/tmp/out.mp3"),
             ) as mock_polly,
             patch(
-                "kiro_crew.voice_reply._synthesize_system",
+                "aj_crew.voice_reply._synthesize_system",
                 new=AsyncMock(return_value="/tmp/out.wav"),
             ) as mock_system,
         ):
@@ -59,11 +59,11 @@ class TestSynthesizeSpeechDispatcher:
     async def test_system_dispatch(self) -> None:
         with (
             patch(
-                "kiro_crew.voice_reply._synthesize_polly",
+                "aj_crew.voice_reply._synthesize_polly",
                 new=AsyncMock(return_value="/tmp/out.mp3"),
             ) as mock_polly,
             patch(
-                "kiro_crew.voice_reply._synthesize_system",
+                "aj_crew.voice_reply._synthesize_system",
                 new=AsyncMock(return_value="/tmp/system.wav"),
             ) as mock_system,
         ):
@@ -82,7 +82,7 @@ class TestSynthesizeSpeechDispatcher:
     @pytest.mark.asyncio
     async def test_system_empty_text_returns_none(self) -> None:
         with patch(
-            "kiro_crew.voice_reply._synthesize_system",
+            "aj_crew.voice_reply._synthesize_system",
             new=AsyncMock(return_value="/tmp/system.wav"),
         ) as mock_system:
             assert await synthesize_speech("**", provider=PROVIDER_SYSTEM) is None
@@ -96,7 +96,7 @@ class TestSynthesizeSpeechDispatcher:
     async def test_polly_empty_ssml_returns_none(self) -> None:
         # Pure markdown that strip_markdown reduces to empty yields empty ssml.
         with patch(
-            "kiro_crew.voice_reply._synthesize_polly",
+            "aj_crew.voice_reply._synthesize_polly",
             new=AsyncMock(return_value=None),
         ) as mock_polly:
             out = await synthesize_speech("", provider=PROVIDER_POLLY)
@@ -115,7 +115,7 @@ class TestSynthesizeSpeechDispatcher:
             return "/tmp/out.mp3"
 
         with patch(
-            "kiro_crew.voice_reply._synthesize_polly",
+            "aj_crew.voice_reply._synthesize_polly",
             side_effect=capture_polly,
         ):
             await synthesize_speech(raw, provider=PROVIDER_POLLY)
@@ -176,7 +176,7 @@ class TestVoiceReplyEndToEnd:
     async def test_synthesis_fails_returns_false(self) -> None:
         client = MagicMock()
         with patch(
-            "kiro_crew.voice_reply.synthesize_speech",
+            "aj_crew.voice_reply.synthesize_speech",
             new=AsyncMock(return_value=None),
         ):
             assert await voice_reply(client, "C1", "t1", "hi") is False
@@ -188,7 +188,7 @@ class TestVoiceReplyEndToEnd:
         client = MagicMock()
         client.upload_file = AsyncMock(return_value=None)
         with patch(
-            "kiro_crew.voice_reply.synthesize_speech",
+            "aj_crew.voice_reply.synthesize_speech",
             new=AsyncMock(return_value=str(audio)),
         ):
             ok = await voice_reply(
@@ -209,7 +209,7 @@ class TestVoiceReplyEndToEnd:
         client = MagicMock()
         client.upload_file = AsyncMock(side_effect=RuntimeError("boom"))
         with patch(
-            "kiro_crew.voice_reply.synthesize_speech",
+            "aj_crew.voice_reply.synthesize_speech",
             new=AsyncMock(return_value=str(audio)),
         ):
             ok = await voice_reply(client, "C1", "t1", "hi")
@@ -223,7 +223,7 @@ class TestVoiceReplyEndToEnd:
 class TestStreamingVoiceReply:
     @pytest.mark.asyncio
     async def test_redacts_credentials_before_synthesis(self, tmp_path) -> None:
-        from kiro_crew.voice_reply import streaming_voice_reply
+        from aj_crew.voice_reply import streaming_voice_reply
 
         sentences_seen: list[str] = []
 
@@ -234,7 +234,7 @@ class TestStreamingVoiceReply:
             return str(out)
 
         with patch(
-            "kiro_crew.voice_reply._synthesize_polly",
+            "aj_crew.voice_reply._synthesize_polly",
             side_effect=fake_polly,
         ):
             gen = streaming_voice_reply("AKIAIOSFODNN7EXAMPLE is secret. Bye.")
@@ -247,7 +247,7 @@ class TestStreamingVoiceReply:
 
     @pytest.mark.asyncio
     async def test_skips_sentences_with_failed_synth(self, tmp_path) -> None:
-        from kiro_crew.voice_reply import streaming_voice_reply
+        from aj_crew.voice_reply import streaming_voice_reply
 
         calls = {"n": 0}
 
@@ -260,7 +260,7 @@ class TestStreamingVoiceReply:
             return str(out)
 
         with patch(
-            "kiro_crew.voice_reply._synthesize_polly",
+            "aj_crew.voice_reply._synthesize_polly",
             side_effect=alternating,
         ):
             collected = []
@@ -281,7 +281,7 @@ class TestStreamingVoiceReply:
         travel so the dashboard shows the cause, rather than skip the sentence
         and try the next one against the same doomed engine/region.
         """
-        from kiro_crew.voice_reply import VoiceSynthesisError, streaming_voice_reply
+        from aj_crew.voice_reply import VoiceSynthesisError, streaming_voice_reply
 
         calls = {"n": 0}
 
@@ -295,7 +295,7 @@ class TestStreamingVoiceReply:
             )
 
         with (
-            patch("kiro_crew.voice_reply._synthesize_polly", side_effect=rejects),
+            patch("aj_crew.voice_reply._synthesize_polly", side_effect=rejects),
             pytest.raises(VoiceSynthesisError) as rejected,
         ):
             async for _idx, _sent, _data in streaming_voice_reply("First. Second."):
@@ -318,7 +318,7 @@ class TestStreamingVoiceReplyConsent:
     def _passthrough_sandbox(self, _floor_monkeypatch, _polly_consented):
         # See TestSynthesizePolly._passthrough_sandbox.
         _floor_monkeypatch.setattr(
-            "kiro_crew.voice_reply.wrap_argv", lambda argv, **k: (list(argv), None)
+            "aj_crew.voice_reply.wrap_argv", lambda argv, **k: (list(argv), None)
         )
         _patch_aws_on_path(_floor_monkeypatch)
 
@@ -336,7 +336,7 @@ class TestStreamingVoiceReplyConsent:
 
     @staticmethod
     async def _collect(**kwargs) -> list[int]:
-        from kiro_crew.voice_reply import streaming_voice_reply
+        from aj_crew.voice_reply import streaming_voice_reply
 
         stream = streaming_voice_reply("First. Second.", **kwargs)
         return [idx async for idx, _sent, _data in stream]
@@ -349,7 +349,7 @@ class TestStreamingVoiceReplyConsent:
         spoken, so a transient fault never ends the read aloud with a notice
         telling the person to confirm a consent they already gave.
         """
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         probes: list[str] = []
 
@@ -375,8 +375,8 @@ class TestStreamingVoiceReplyConsent:
     @pytest.mark.asyncio
     async def test_no_matching_grant_raises_at_the_first_sentence(self) -> None:
         """Consent recorded for another region: fixed text, refused once."""
-        from kiro_crew import aws_consent
-        from kiro_crew.voice_reply import VoiceSynthesisError
+        from aj_crew import aws_consent
+        from aj_crew.voice_reply import VoiceSynthesisError
 
         with (
             patch.object(aws_consent, "audit_decision") as audit,
@@ -402,8 +402,8 @@ class TestStreamingVoiceReplyConsent:
         so the second sentence raises and the person sees the consent notice
         after the audio they already heard.
         """
-        from kiro_crew import aws_consent
-        from kiro_crew.voice_reply import VoiceSynthesisError, streaming_voice_reply
+        from aj_crew import aws_consent
+        from aj_crew.voice_reply import VoiceSynthesisError, streaming_voice_reply
 
         probes: list[str] = []
 
@@ -431,7 +431,7 @@ class TestStreamingVoiceReplyConsent:
     @pytest.mark.asyncio
     async def test_unattended_call_returns_none_on_either_refusal(self) -> None:
         """Without ``raise_refusal`` a refusal is "no audio", whatever its cause."""
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         unknown = aws_consent.Identity(ok=False, detail="STS unreachable")
         with (
@@ -450,7 +450,7 @@ class TestTextTypeAutoDetection:
     def _passthrough_sandbox(self, _floor_monkeypatch, _polly_consented):
         # See TestSynthesizePolly._passthrough_sandbox.
         _floor_monkeypatch.setattr(
-            "kiro_crew.voice_reply.wrap_argv", lambda argv, **k: (list(argv), None)
+            "aj_crew.voice_reply.wrap_argv", lambda argv, **k: (list(argv), None)
         )
         _patch_aws_on_path(_floor_monkeypatch)
 
@@ -512,7 +512,7 @@ class TestOggOpusOutput:
     def _passthrough_sandbox(self, _floor_monkeypatch, _polly_consented):
         # See TestSynthesizePolly._passthrough_sandbox.
         _floor_monkeypatch.setattr(
-            "kiro_crew.voice_reply.wrap_argv", lambda argv, **k: (list(argv), None)
+            "aj_crew.voice_reply.wrap_argv", lambda argv, **k: (list(argv), None)
         )
         _patch_aws_on_path(_floor_monkeypatch)
 
@@ -739,8 +739,8 @@ class TestSynthesizeSpeechDoesNotSwallowARefusal:
 
     @pytest.mark.asyncio
     async def test_system_refusal_travels_through_synthesize_speech(self, monkeypatch):
-        from kiro_crew.sandbox import SandboxUnavailableError
-        from kiro_crew.voice_reply import synthesize_speech
+        from aj_crew.sandbox import SandboxUnavailableError
+        from aj_crew.voice_reply import synthesize_speech
 
         prose = "SEAM-SENTINEL: the sandbox refused"
 
@@ -750,9 +750,9 @@ class TestSynthesizeSpeechDoesNotSwallowARefusal:
         async def refuse(cmd, **kw):
             raise SandboxUnavailableError(prose, "no_backend", "not Linux")
 
-        monkeypatch.setattr("kiro_crew.voice_reply.sandboxed_spawn_argv_async", refuse)
+        monkeypatch.setattr("aj_crew.voice_reply.sandboxed_spawn_argv_async", refuse)
         monkeypatch.setattr(
-            "kiro_crew.voice_reply.resolve_system_tts",
+            "aj_crew.voice_reply.resolve_system_tts",
             lambda: (SYSTEM_ENGINE_ESPEAK, "/usr/bin/espeak-ng"),
         )
 
@@ -764,8 +764,8 @@ class TestSynthesizeSpeechDoesNotSwallowARefusal:
     async def test_polly_refusal_travels_through_synthesize_speech(
         self, monkeypatch, _polly_consented
     ):
-        from kiro_crew.sandbox import SandboxUnavailableError
-        from kiro_crew.voice_reply import synthesize_speech
+        from aj_crew.sandbox import SandboxUnavailableError
+        from aj_crew.voice_reply import synthesize_speech
 
         prose = "SEAM-SENTINEL: the sandbox refused"
 
@@ -784,7 +784,7 @@ class TestSynthesizeSpeechDoesNotSwallowARefusal:
         # from it), so it wraps through `wrap_argv_async` rather than the
         # credential-scrubbing spawn the local engines use. Patch the seam this
         # path really takes, or the spawn proceeds and the test proves nothing.
-        monkeypatch.setattr("kiro_crew.voice_reply.wrap_argv", refuse)
+        monkeypatch.setattr("aj_crew.voice_reply.wrap_argv", refuse)
 
         with pytest.raises(SandboxUnavailableError) as caught:
             await synthesize_speech("hello", provider="polly")

@@ -14,7 +14,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.artifacts import ArtifactFolderStore
+from aj_crew.artifacts import ArtifactFolderStore
 
 
 def _store(tmp_path: Path, rows: list[dict[str, Any]]) -> ArtifactFolderStore:
@@ -93,9 +93,9 @@ async def test_the_folder_list_route_answers_valid_json_over_a_non_finite_number
 ) -> None:
     from unittest.mock import MagicMock
 
-    from kiro_crew import artifacts as art_mod
-    from kiro_crew.artifacts import ArtifactStore
-    from kiro_crew.dashboard.handlers.artifacts import api_artifact_folders
+    from aj_crew import artifacts as art_mod
+    from aj_crew.artifacts import ArtifactStore
+    from aj_crew.dashboard.handlers.artifacts import api_artifact_folders
 
     path = tmp_path / "artifact_folders.json"
     raw = (

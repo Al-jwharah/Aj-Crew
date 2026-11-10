@@ -18,11 +18,11 @@ name: Publish Linux Desktop (reusable)
 # on GitHub Releases.
 #
 # Key properties:
-#   - The versioned key desktop/<channel>/<version>/KiroCrew-<arch>.<ext>
+#   - The versioned key desktop/<channel>/<version>/AjCrew-<arch>.<ext>
 #     is immutable-cached by CloudFront and is never republished with
 #     different bytes (--if-none-match conditional write; a 412 on a job
 #     re-run keeps the existing object and continues idempotently).
-#   - The mutable alias desktop/<channel>/latest/KiroCrew-<arch>.<ext>
+#   - The mutable alias desktop/<channel>/latest/AjCrew-<arch>.<ext>
 #     (max-age=300) is written AFTER the versioned key so it never points
 #     at bytes that are not yet live.
 #   - Arch-qualified filename: Linux has no universal binary, so per-arch
@@ -103,11 +103,11 @@ jobs:
     # missing the job skips rather than publishing objects it cannot
     # verify or address. GitHub Releases still carries the AppImage.
     if: ${{ inputs.publish && vars.CLI_DIST_BUCKET != '' && vars.CLI_CDN_BASE != '' }}
-    # `kirocrew-runners` larger-runner group, targeted by GROUP not label; see
+    # `ajcrew-runners` larger-runner group, targeted by GROUP not label; see
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     timeout-minutes: 15
     # REQUIRED: the publish role's OIDC trust accepts exactly two subjects,
     # ref:refs/heads/main and environment:prod. Declaring the environment
@@ -120,7 +120,7 @@ jobs:
       CHANNEL: ${{ inputs.channel }}
       # Published file stem: the LTS edition's own on lts (release-lts.yml),
       # so its downloads never share a file name with the oss app.
-      PUBLISHED_STEM: ${{ inputs.channel == 'lts' && 'KiroCrew-LTS' || 'KiroCrew' }} # brand-ok
+      PUBLISHED_STEM: ${{ inputs.channel == 'lts' && 'AjCrew-LTS' || 'AjCrew' }} # brand-ok
       VERSION: ${{ inputs.version }}
       ARCH: ${{ inputs.arch }}
       FORMAT: ${{ inputs.format }}
@@ -477,7 +477,7 @@ jobs:
           echo "Feed written: ${FEED_PREFIX}/${FEED_FILE} -> ${{ vars.CLI_CDN_BASE }}/${ARTIFACT_KEY}"
 
       # Human-clickable permalink to the current AppImage:
-      #   <CDN>/desktop/<channel>/latest/KiroCrew-x86_64.<ext>
+      #   <CDN>/desktop/<channel>/latest/AjCrew-x86_64.<ext>
       # Same mutable-alias semantics as the latest-DMG alias: plain
       # overwrite, max-age=300, written AFTER the versioned key and the
       # feed so it never points at bytes that are not yet live nor ahead

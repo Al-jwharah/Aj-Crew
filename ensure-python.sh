@@ -16,13 +16,13 @@
 # AL2's glibc 2.26. On success the chosen interpreter's real path — symlinks
 # resolved, see _resolve — is recorded in "<data-home>/python-bin" so
 # non-interactive callers (make) can use it without re-running a version
-# manager. The data home is "$KIROCREW_HOME" when set, else
-# "$HOME/.kiro/crew" (the current default) — NOT the pre-move "$HOME/.kirocrew",
+# manager. The data home is "$AJCREW_HOME" when set, else
+# "$HOME/.kiro/crew" (the current default) — NOT the pre-move "$HOME/.ajcrew",
 # which is not the data home and must not be written to.
 
 MIN_MAJOR=3
 MIN_MINOR=12
-TARGET_PY="${KIROCREW_PYTHON_VERSION:-3.12}"
+TARGET_PY="${AJCREW_PYTHON_VERSION:-3.12}"
 
 # True if $1 is a python that runs AND is >= MIN_MAJOR.MIN_MINOR.
 _py_ok() {
@@ -37,7 +37,7 @@ _pyver() {
 # True if a venv built from $1 has a python that runs. `make backend` builds
 # its venv with `"$PY" -m venv`, so an interpreter that runs but cannot make a
 # working venv fails the build inside ensurepip. A shared-libpython build
-# launched through a wrapper is exactly that: Toolbox's kirocrew Python is a
+# launched through a wrapper is exactly that: Toolbox's ajcrew Python is a
 # shell script that execs `ld-linux --library-path <its lib> bin/real/python3.12`.
 # It reports the wrapper as sys.executable, but the venv links its python to
 # the real binary, which then dies with "libpython3.12.so.1.0: cannot open
@@ -117,7 +117,7 @@ _resolve() {
 }
 
 _record() {
-    home="${KIROCREW_HOME:-$HOME/.kiro/crew}"
+    home="${AJCREW_HOME:-$HOME/.kiro/crew}"
     mkdir -p "$home"
     printf '%s\n' "$1" > "$home/python-bin" 2>/dev/null || true
 }

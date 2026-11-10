@@ -15,7 +15,7 @@ a future edit could quietly reintroduce a refusal (or lose the audit):
   operator's only record of what the agent did to their desktop;
 * the observation ceiling is a pass-through, so a renderer cannot lose fields to
   it;
-* the one retained refusal (KiroCrew's own window) lives in ``policy``, NOT here —
+* the one retained refusal (AjCrew's own window) lives in ``policy``, NOT here —
   asserted so nobody moves it back into the gate.
 """
 
@@ -27,8 +27,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.computer_use import gate
-from kiro_crew.computer_use.types import (
+from aj_crew.computer_use import gate
+from aj_crew.computer_use.types import (
     ALL_OBSERVATION_CHANNELS,
     ALL_TOOLS,
     TOOL_CLICK,
@@ -116,7 +116,7 @@ class TestThePointerPath:
 
     def test_a_pointer_gesture_is_audited_with_its_method(self):
         """The one record that says the operator's physical cursor was moved."""
-        with patch("kiro_crew.sel.sel") as sel_factory:
+        with patch("aj_crew.sel.sel") as sel_factory:
             recorder = MagicMock()
             sel_factory.return_value = recorder
             gate.audit_pointer_move(
@@ -131,7 +131,7 @@ class TestEveryCallIsAudited:
     """With the ceiling gone, the audit trail is the remaining accountability."""
 
     def test_an_allowed_call_records_the_tool_and_the_app(self):
-        with patch("kiro_crew.sel.sel") as sel_factory:
+        with patch("aj_crew.sel.sel") as sel_factory:
             recorder = MagicMock()
             sel_factory.return_value = recorder
             gate.require_computer_use(
@@ -145,7 +145,7 @@ class TestEveryCallIsAudited:
 
     def test_an_audit_failure_never_breaks_the_call(self):
         """Best-effort: a wedged SEL must not turn a permitted action into an error."""
-        with patch("kiro_crew.sel.sel") as sel_factory:
+        with patch("aj_crew.sel.sel") as sel_factory:
             recorder = MagicMock()
             recorder.log_tool_invocation.side_effect = RuntimeError("sel is down")
             sel_factory.return_value = recorder
@@ -205,7 +205,7 @@ class TestAppDisclosure:
 
 
 class TestTheOneRetainedRefusalIsNotHere:
-    def test_kirocrew_self_is_refused_by_policy_not_by_the_gate(self):
+    def test_ajcrew_self_is_refused_by_policy_not_by_the_gate(self):
         """The keystone's un-reachability is what that refusal protects.
 
         It lives in ``policy.check_app`` because that is the layer with the resolved
@@ -213,17 +213,17 @@ class TestTheOneRetainedRefusalIsNotHere:
         gate that makes no decisions — and so the invariant itself has a test
         that names it.
         """
-        from kiro_crew.computer_use import policy
-        from kiro_crew.computer_use.types import AppRef, PolicyConfig
+        from aj_crew.computer_use import policy
+        from aj_crew.computer_use.types import AppRef, PolicyConfig
 
-        ours = AppRef(name="Kiro Crew", pid=1, bundle_id="dev.kiro.crew")
+        ours = AppRef(name="Aj Crew", pid=1, bundle_id="io.github.al-jwharah.ajcrew")
         assert policy.check_app(ours, PolicyConfig()) is not None
         # And the gate itself has no opinion about it.
         assert gate.require_computer_use(TOOL_LIST_APPS, session_key="dashboard:main") is None
 
     def test_a_terminal_is_no_longer_refused_by_policy(self):
-        from kiro_crew.computer_use import policy
-        from kiro_crew.computer_use.types import AppRef, PolicyConfig
+        from aj_crew.computer_use import policy
+        from aj_crew.computer_use.types import AppRef, PolicyConfig
 
         term = AppRef(name="Terminal", pid=1, bundle_id="com.apple.Terminal")
         assert policy.check_app(term, PolicyConfig()) is None
@@ -257,7 +257,7 @@ class TestNothingInTreeStillCallsThisGateFailClosed:
         root = Path(__file__).resolve().parents[1]
         return [
             p
-            for p in [*root.glob("src/kiro_crew/**/*.py"), *root.glob("docs/**/*.md")]
+            for p in [*root.glob("src/aj_crew/**/*.py"), *root.glob("docs/**/*.md")]
             # gate.py is the definition; its own docstring states the contract.
             if p.name != "gate.py"
         ]

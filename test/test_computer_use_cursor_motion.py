@@ -36,8 +36,8 @@ import math
 
 import pytest
 
-from kiro_crew.computer_use import cursor_motion
-from kiro_crew.computer_use.cursor_motion import (
+from aj_crew.computer_use import cursor_motion
+from aj_crew.computer_use.cursor_motion import (
     SpringConfig,
     build_path,
     curve_amount,
@@ -46,7 +46,7 @@ from kiro_crew.computer_use.cursor_motion import (
     settle_time,
     spring_progress_curve,
 )
-from kiro_crew.computer_use.types import (
+from aj_crew.computer_use.types import (
     CURVE_AMOUNT_MAX,
     CURVE_AMOUNT_MIN,
     CURVE_DISTANCE_RATIO,
@@ -418,7 +418,7 @@ class TestPurity:
                 imported.update(alias.name.split(".")[0] for alias in node.names)
             elif isinstance(node, ast.ImportFrom) and node.module:
                 imported.add(node.module.split(".")[0])
-        assert imported <= {"__future__", "logging", "math", "dataclasses", "kiro_crew"}, imported
+        assert imported <= {"__future__", "logging", "math", "dataclasses", "aj_crew"}, imported
 
     def test_planning_is_deterministic(self):
         # No clock, no randomness: two identical calls must be byte-identical, or a

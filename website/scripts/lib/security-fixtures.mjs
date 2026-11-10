@@ -13,7 +13,7 @@ export const SECURITY_RAIL_FIXTURES = Object.freeze({
   '/api/governance/policy': {
     version: null, has_policy: false, profile: null, unavailable: false, scopes: [],
   },
-  '/api/config/kirocrew': { agent: { yolo_duration: '6h', apps_allow_third_party: false } },
+  '/api/config/ajcrew': { agent: { yolo_duration: '6h', apps_allow_third_party: false } },
   '/api/tailnet/status': {
     enabled: false, governance_pinned: false, host: '', origin: '', resolved_at: 0, state: 'off',
   },

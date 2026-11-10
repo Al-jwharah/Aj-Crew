@@ -19,7 +19,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from test_dashboard_chat import TestRunChatTransientRetry as _TransientSuite
 
-from kiro_crew import llm_helpers
+from aj_crew import llm_helpers
 
 # The engine's answer to a throttled prompt, as KAS words it.
 _THROTTLE_FRAME = {
@@ -35,7 +35,7 @@ _FIVE_XX_FRAME = {"code": -32603, "message": "Internal error: API Error: Interna
 
 
 def _error(frame: dict):
-    from kiro_crew.acp.client import AcpError, _raise_acp_error
+    from aj_crew.acp.client import AcpError, _raise_acp_error
 
     try:
         _raise_acp_error(frame)
@@ -68,8 +68,8 @@ class _KasHistory:
         self._answered = True
 
     async def stream(self, msg):
-        from kiro_crew.acp.types import TurnUsage
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.types import TurnUsage
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         self.calls += 1
         self.history.append(msg)  # KAS stores the row before the model request
@@ -115,7 +115,7 @@ class TestThrottledTurnRetry:
         stop_on_rewind=None,
         **slot_kw,
     ):
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         state = self._make_state(tmp_path, monkeypatch)
         client = self._client(kas.stream)
@@ -144,8 +144,8 @@ class TestThrottledTurnRetry:
             recorded_waits.append(secs)
 
         with (
-            patch("kiro_crew.dashboard.chat_runner._recovery_delay", side_effect=_wait),
-            patch("kiro_crew.dashboard.chat_runner._emit_recovery_outcome") as outcomes,
+            patch("aj_crew.dashboard.chat_runner._recovery_delay", side_effect=_wait),
+            patch("aj_crew.dashboard.chat_runner._emit_recovery_outcome") as outcomes,
         ):
             await _run_chat(state, slot, "hello")
             await self._drain_bg(state)
@@ -179,11 +179,11 @@ class TestThrottledTurnRetry:
 
     @pytest.mark.asyncio
     async def test_throttle_on_a_crewmate_dm_slot_takes_the_same_path(self, tmp_path, monkeypatch):
-        from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
+        from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
 
-        cfg = KiroCrewConfig()
-        cfg.agents["perf-mate"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.KiroCrewConfig.load", lambda: cfg)
+        cfg = AjCrewConfig()
+        cfg.agents["perf-mate"] = AjCrewAgentConfig(kiro_agent="ajcrew")
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.AjCrewConfig.load", lambda: cfg)
         kas = _KasHistory(failures=2, frame=_THROTTLE_FRAME)
         _state, slot, client, _outcomes = await self._run(
             tmp_path,
@@ -204,9 +204,9 @@ class TestThrottledTurnRetry:
         self, tmp_path, monkeypatch
     ):
         """The whole ladder fails: the last failed copy stays, the earlier ones do not."""
-        from kiro_crew.llm_helpers import TRANSIENT_RETRIES
+        from aj_crew.llm_helpers import TRANSIENT_RETRIES
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
         kas = _KasHistory(failures=TRANSIENT_RETRIES + 1, frame=_THROTTLE_FRAME)
         _state, slot, _client, outcomes = await self._run(tmp_path, monkeypatch, kas)
 
@@ -254,7 +254,7 @@ class TestThrottledTurnRetry:
             slot = slot_ref[0]
             slot._stop_generation = getattr(slot, "_stop_generation", 0) + 1
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         state = self._make_state(tmp_path, monkeypatch)
         client = self._client(kas.stream)
@@ -264,7 +264,7 @@ class TestThrottledTurnRetry:
         slot._titled = True
         slot_ref.append(slot)
         with patch(
-            "kiro_crew.dashboard.chat_runner._recovery_delay", side_effect=_stop_during_wait
+            "aj_crew.dashboard.chat_runner._recovery_delay", side_effect=_stop_during_wait
         ):
             await _run_chat(state, slot, "hello")
             await self._drain_bg(state)
@@ -276,13 +276,13 @@ class TestThrottledTurnRetry:
     @pytest.mark.asyncio
     async def test_throttle_fallback_swap_rewinds_before_its_resend(self, tmp_path, monkeypatch):
         """The model-fallback re-send replays the same prompt, so it rewinds too."""
-        from kiro_crew.llm_helpers import TRANSIENT_RETRIES
+        from aj_crew.llm_helpers import TRANSIENT_RETRIES
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ("fallback-model",)
+            "aj_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ("fallback-model",)
         )
         # The swap's own short wait before the fallback attempt, not the ladder's.
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.transient_retry_delay", lambda _a: 0.0)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.transient_retry_delay", lambda _a: 0.0)
         kas = _KasHistory(failures=TRANSIENT_RETRIES + 1, frame=_THROTTLE_FRAME)
         _state, slot, client, _outcomes = await self._run(
             tmp_path, monkeypatch, kas, moves_on_set_model=True
@@ -309,12 +309,12 @@ class TestThrottledTurnRetry:
     async def test_stop_during_the_fallback_rewind_drops_the_fallback_resend(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.llm_helpers import TRANSIENT_RETRIES
+        from aj_crew.llm_helpers import TRANSIENT_RETRIES
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ("fallback-model",)
+            "aj_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ("fallback-model",)
         )
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.transient_retry_delay", lambda _a: 0.0)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.transient_retry_delay", lambda _a: 0.0)
         kas = _KasHistory(failures=TRANSIENT_RETRIES + 1, frame=_THROTTLE_FRAME)
         _state, slot, client, _outcomes = await self._run(
             tmp_path,
@@ -334,7 +334,7 @@ class TestThrottledTurnRetry:
     @pytest.mark.asyncio
     async def test_a_stop_during_a_resend_drops_the_episode_count(self, tmp_path, monkeypatch):
         """A Stop that lands while a re-send is in flight ends the episode before its backoff."""
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         slot_ref: list = []
 
@@ -355,7 +355,7 @@ class TestThrottledTurnRetry:
         async def _wait(secs):
             waits.append(secs)
 
-        with patch("kiro_crew.dashboard.chat_runner._recovery_delay", side_effect=_wait):
+        with patch("aj_crew.dashboard.chat_runner._recovery_delay", side_effect=_wait):
             await _run_chat(state, slot, "hello")
             await self._drain_bg(state)
 
@@ -367,7 +367,7 @@ class TestThrottledTurnRetry:
     @pytest.mark.asyncio
     async def test_a_stop_still_resolving_drops_the_episode_count(self, tmp_path, monkeypatch):
         """A Stop still resolving when the re-send fails suppresses the next one and ends the episode."""
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         slot_ref: list = []
 
@@ -390,7 +390,7 @@ class TestThrottledTurnRetry:
         async def _wait(secs):
             waits.append(secs)
 
-        with patch("kiro_crew.dashboard.chat_runner._recovery_delay", side_effect=_wait):
+        with patch("aj_crew.dashboard.chat_runner._recovery_delay", side_effect=_wait):
             await _run_chat(state, slot, "hello")
             await self._drain_bg(state)
 
@@ -408,7 +408,7 @@ class TestThrottledTurnRetry:
         (a recovery turn adds to the running episode), so the Stop arm is the one
         place the count of the stopped episode can be dropped.
         """
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         kas = _KasHistory(failures=2, frame=_THROTTLE_FRAME)
         state = self._make_state(tmp_path, monkeypatch)
@@ -426,10 +426,10 @@ class TestThrottledTurnRetry:
 
         with (
             patch(
-                "kiro_crew.dashboard.chat_runner._recovery_delay",
+                "aj_crew.dashboard.chat_runner._recovery_delay",
                 side_effect=_stop_on_second_wait,
             ),
-            patch("kiro_crew.dashboard.chat_runner._emit_recovery_outcome") as outcomes,
+            patch("aj_crew.dashboard.chat_runner._emit_recovery_outcome") as outcomes,
         ):
             await _run_chat(state, slot, "hello")
             await self._drain_bg(state)

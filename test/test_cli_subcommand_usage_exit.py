@@ -1,10 +1,10 @@
-"""``kirocrew app|agent|workspace`` with no sub-action exits non-zero.
+"""``ajcrew app|agent|workspace`` with no sub-action exits non-zero.
 
 These subparsers are not `required` (no CLI subparser is), so a bare
-`kirocrew app` leaves the action unset and the handler's `else` branch runs.
+`ajcrew app` leaves the action unset and the handler's `else` branch runs.
 It printed a Usage line to stdout and returned None, and the dispatcher
 discards the return -- so the process exited 0 after a usage error, and a
-`kirocrew app && …` chain proceeded past a typo. The branch now prints to
+`ajcrew app && …` chain proceeded past a typo. The branch now prints to
 stderr and exits 2, the argparse convention.
 """
 
@@ -14,9 +14,9 @@ import argparse
 
 import pytest
 
-from kiro_crew.cli_commands_agent import _handle_agent
-from kiro_crew.cli_commands_app import _handle_app
-from kiro_crew.cli_commands_workspace import _handle_workspace
+from aj_crew.cli_commands_agent import _handle_agent
+from aj_crew.cli_commands_app import _handle_app
+from aj_crew.cli_commands_workspace import _handle_workspace
 
 
 @pytest.mark.parametrize(
@@ -35,7 +35,7 @@ def test_no_subaction_exits_two_with_usage_on_stderr(handler, action_attr, capsy
     assert exited.value.code == 2
     captured = capsys.readouterr()
     assert captured.out == ""  # the usage line is an error: stderr, not stdout
-    assert "Usage: kirocrew" in captured.err
+    assert "Usage: ajcrew" in captured.err
 
 
 @pytest.mark.parametrize(

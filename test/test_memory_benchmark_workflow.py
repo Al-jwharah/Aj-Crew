@@ -1,7 +1,7 @@
 """Behavioural tests for .github/workflows/memory-benchmark.yml.
 
 The workflow's decisions live in shell embedded in `run:` blocks, so these tests
-extract each step's script and execute it for real with `git`/`gh`/`kirocrew`
+extract each step's script and execute it for real with `git`/`gh`/`ajcrew`
 replaced by stubs. Three properties are verified rather than assumed, because
 each one has a failure mode that produces a plausible-looking wrong answer:
 
@@ -108,7 +108,7 @@ def test_the_digest_guard_rejects_a_non_hex_value(tmp_path: Path) -> None:
     script = _step("Read the pinned embedding-model digest")["run"]
     # Replace the python3 read with a stub that emits junk, keeping the guard.
     broken = script.replace(
-        "DIGEST=\"$(python3 -c 'from kiro_crew import embeddings; "
+        "DIGEST=\"$(python3 -c 'from aj_crew import embeddings; "
         "print(embeddings._GGUF_SHA256)')\"",
         'DIGEST="not-a-digest"',
     )
@@ -125,7 +125,7 @@ def test_first_run_reports_bootstrap_instead_of_a_delta(tmp_path: Path) -> None:
     script = _step("Compare against the accepted baseline", job="accept")["run"]
     (tmp_path / "bench_baselines" / "latest").mkdir(parents=True)
     (tmp_path / "bench_baselines" / "latest" / "locomo10_now.json").write_text("{}")
-    stubs = _stub_dir(tmp_path, kirocrew='echo "SHOULD NOT RUN"; exit 1')
+    stubs = _stub_dir(tmp_path, ajcrew='echo "SHOULD NOT RUN"; exit 1')
 
     out = _run(
         script,
@@ -148,7 +148,7 @@ def test_an_existing_baseline_is_actually_compared(tmp_path: Path) -> None:
         d = tmp_path / "bench_baselines" / sub
         d.mkdir(parents=True)
         (d / "locomo10_now.json").write_text("{}")
-    stubs = _stub_dir(tmp_path, kirocrew='echo "COMPARED $*"')
+    stubs = _stub_dir(tmp_path, ajcrew='echo "COMPARED $*"')
 
     out = _run(
         script,
@@ -329,13 +329,13 @@ def test_the_model_is_downloaded_before_the_run(tmp_path: Path) -> None:
 
 
 def test_the_download_step_does_not_inherit_the_test_suite_skip_flag() -> None:
-    """`KIROCREW_SKIP_MODEL_DOWNLOAD` exists so unit tests never pull 639 MB.
+    """`AJCREW_SKIP_MODEL_DOWNLOAD` exists so unit tests never pull 639 MB.
 
     Here the download is the entire point, so the step states the empty value
     rather than leaving it to whatever the environment happens to carry.
     """
     step = _step("Ensure the embedding model is resident")
-    assert step["env"]["KIROCREW_SKIP_MODEL_DOWNLOAD"] == ""
+    assert step["env"]["AJCREW_SKIP_MODEL_DOWNLOAD"] == ""
 
 
 def test_the_model_dir_is_derived_from_the_code_not_hardcoded() -> None:
@@ -378,7 +378,7 @@ def test_every_arm_failing_is_reported_as_such(tmp_path: Path) -> None:
     """
     script = _step("Compare against the accepted baseline", job="accept")["run"]
     (tmp_path / "bench_baselines" / "latest").mkdir(parents=True)
-    stubs = _stub_dir(tmp_path, kirocrew='echo "SHOULD NOT RUN"; exit 1')
+    stubs = _stub_dir(tmp_path, ajcrew='echo "SHOULD NOT RUN"; exit 1')
     out = _run(
         script,
         tmp_path,

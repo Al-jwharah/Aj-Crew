@@ -24,7 +24,7 @@ const params = new URLSearchParams(location.search)
 const scene = params.get('scene') || 'library'
 const theme = params.get('theme') || 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 /** A crew already wearing a pack, with a sound on two of its moments — the
  *  reaction layer a pack keeps. */

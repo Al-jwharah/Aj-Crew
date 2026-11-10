@@ -10,31 +10,31 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.acp.harness._common import apply_client_application_env
-from kiro_crew.acp.harness.kiro import KiroHarness
-from kiro_crew.acp.types import KIRO_CLI_CLIENT_APPLICATION, KIRO_CLI_CLIENT_APPLICATION_ENV
+from aj_crew.acp.harness._common import apply_client_application_env
+from aj_crew.acp.harness.kiro import KiroHarness
+from aj_crew.acp.types import KIRO_CLI_CLIENT_APPLICATION, KIRO_CLI_CLIENT_APPLICATION_ENV
 
 
 @pytest.fixture
 def quiet_credentials(monkeypatch):
     """Silence the credential half of both harness hooks, which reads the data home."""
     monkeypatch.setattr(
-        "kiro_crew.config.loader.inject_kiro_cli_api_key", lambda _env: None, raising=True
+        "aj_crew.config.loader.inject_kiro_cli_api_key", lambda _env: None, raising=True
     )
     monkeypatch.setattr(
-        "kiro_crew.config.loader.strip_kiro_cli_api_key", lambda _env: None, raising=True
+        "aj_crew.config.loader.strip_kiro_cli_api_key", lambda _env: None, raising=True
     )
 
 
 def test_the_name_is_the_one_kiro_cli_reads() -> None:
     """Pinned: kiro-cli reads this exact spelling, so a rename silently drops the tag."""
     assert KIRO_CLI_CLIENT_APPLICATION_ENV == "KIRO_CLI_CLIENT_APPLICATION"
-    assert KIRO_CLI_CLIENT_APPLICATION == "kirocrew"
+    assert KIRO_CLI_CLIENT_APPLICATION == "ajcrew"
 
 
 def test_the_tag_and_the_handshake_name_are_one_constant() -> None:
     """One filter string finds Crew in both channels only while these agree."""
-    from kiro_crew.acp.client import CLIENT_NAME
+    from aj_crew.acp.client import CLIENT_NAME
 
     assert CLIENT_NAME is KIRO_CLI_CLIENT_APPLICATION
 

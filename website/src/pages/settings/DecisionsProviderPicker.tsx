@@ -374,7 +374,7 @@ export function DecisionsProviderPicker({
       Promise.all([
         qc.invalidateQueries({ queryKey: DECISIONS_PROVIDER_QUERY_KEY }),
         qc.invalidateQueries({ queryKey: ['decisionsConsent'] }),
-        qc.invalidateQueries({ queryKey: ['kirocrewConfig'] }),
+        qc.invalidateQueries({ queryKey: ['ajcrewConfig'] }),
       ]),
   })
   const removeMut = useMutation({

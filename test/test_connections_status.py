@@ -17,9 +17,9 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew import mcp_grant
-from kiro_crew.connections import mint, status
-from kiro_crew.dashboard.handlers import connections
+from aj_crew import mcp_grant
+from aj_crew.connections import mint, status
+from aj_crew.dashboard.handlers import connections
 
 _NOTION = {"slug": "notion", "mcp_url": "https://mcp.notion.com/mcp"}
 _LINEAR = {"slug": "linear", "mcp_url": "https://mcp.linear.app/mcp"}
@@ -337,7 +337,7 @@ def test_pair_semantics_from_one_stat_pass(isolated_status, monkeypatch):
 async def test_a_stamp_that_cannot_persist_is_not_published(isolated_status, monkeypatch):
     """A read-only home must not fabricate connected-since: an in-memory stamp
     the next read cannot reproduce would re-date the connection every poll."""
-    from kiro_crew import agent, hooks
+    from aj_crew import agent, hooks
 
     def _read_only(*a, **kw):
         raise OSError("read-only home")
@@ -366,7 +366,7 @@ def test_the_status_read_id_is_registered_with_the_audit_gate():
     """``emit_internal_read_audit`` fail-closes on an unregistered read_id, and
     the audit tests above monkeypatch the hook, so only this un-mocked check can
     catch a registration gap that silently disables the audit."""
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     assert status._GRANT_PRESENCE_READ_ID in hooks._AUDIT_ONLY_READ_IDS
 
@@ -375,7 +375,7 @@ def test_the_status_read_id_is_registered_with_the_audit_gate():
 async def test_a_first_observed_grant_is_sel_audited_once(isolated_status, monkeypatch):
     """Stamping a first-connect time is the credential-store observation this
     module acts on; it owes exactly one trail entry, not one per poll sweep."""
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     calls: list[str] = []
     monkeypatch.setattr(
@@ -401,7 +401,7 @@ async def test_an_unrecordable_audit_never_fails_the_status_read(
     this boundary (stats only), so an SEL outage warns instead of denying."""
     import logging
 
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     monkeypatch.setattr(hooks, "emit_internal_read_audit", lambda *a, **kw: False)
     _set_facts(granted={_NOTION["mcp_url"]})
@@ -423,7 +423,7 @@ def test_overlapping_reconciles_serialize_and_the_second_carries_the_first_stamp
     module lock and passes deterministically with it."""
     import threading as _threading
 
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     monkeypatch.setattr(hooks, "emit_internal_read_audit", lambda *a, **kw: True)
 
@@ -492,7 +492,7 @@ def test_a_failed_prune_never_resurrects_the_revoked_timestamp(isolated_status, 
     date from the unpruned file), an indeterminate lookup carries nothing, and
     the first successful save persists the honest state and retires the memory
     baseline."""
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     monkeypatch.setattr(hooks, "emit_internal_read_audit", lambda *a, **kw: True)
 
@@ -611,14 +611,14 @@ async def test_cancel_endpoint_reports_not_dropped_without_a_live_mint(monkeypat
 # that a local disconnect/reconnect keeps the shared token rather than forcing
 # fresh consent.
 
-from kiro_crew.connections import ownership  # noqa: E402
+from aj_crew.connections import ownership  # noqa: E402
 
 
 def test_sharers_from_specs_names_a_cross_entry_grant_sharer():
     # notion's registry pair is also configured by an entry named 'atlassian' at
     # the same endpoint -> atlassian is a sharer; notion's own entry is not.
     specs = {
-        "kirocrew": {
+        "ajcrew": {
             "notion": {"url": _NOTION["mcp_url"]},
             "atlassian": {"url": _NOTION["mcp_url"]},
         }
@@ -630,10 +630,10 @@ def test_sharers_from_specs_names_a_cross_entry_grant_sharer():
 
 def test_sharers_from_specs_excludes_the_owner_and_its_mirror():
     specs = {
-        "kirocrew": {"notion": {"url": _NOTION["mcp_url"]}},
+        "ajcrew": {"notion": {"url": _NOTION["mcp_url"]}},
         # The rendered agent file mirrors the owner's own entry; it must not count
         # as the grant being "shared with" its own reflection.
-        f"{ownership._MIRROR_PREFIX}kirocrew.json": {"notion": {"url": _NOTION["mcp_url"]}},
+        f"{ownership._MIRROR_PREFIX}ajcrew.json": {"notion": {"url": _NOTION["mcp_url"]}},
     }
     result = ownership._sharers_from_specs("notion", _NOTION["mcp_url"], specs, False)
     assert result.shared_with == ()
@@ -643,7 +643,7 @@ def test_sharers_from_specs_excludes_the_owner_and_its_mirror():
 def test_sharers_from_specs_reports_unconfirmed_on_an_unreadable_source():
     # No sharer found, but a source could not be read: an empty sharer set must
     # not read as proven sole ownership.
-    specs = {"kirocrew": {"notion": {"url": _NOTION["mcp_url"]}}}
+    specs = {"ajcrew": {"notion": {"url": _NOTION["mcp_url"]}}}
     result = ownership._sharers_from_specs("notion", _NOTION["mcp_url"], specs, True)
     assert result.shared_with == ()
     assert result.census_incomplete is True
@@ -657,7 +657,7 @@ async def test_status_feed_surfaces_a_shared_grant_proactively(isolated_status, 
     def _fake_census(project_dirs):
         return (
             {
-                "kirocrew": {
+                "ajcrew": {
                     "notion": {"url": _NOTION["mcp_url"]},
                     "atlassian": {"url": _NOTION["mcp_url"]},
                 }
@@ -683,7 +683,7 @@ async def test_status_feed_hedges_when_the_census_is_incomplete(isolated_status,
 
     def _fake_census(project_dirs):
         # No sharer, but one source could not be read.
-        return ({"kirocrew": {"notion": {"url": _NOTION["mcp_url"]}}}, ("agent:custom.json",))
+        return ({"ajcrew": {"notion": {"url": _NOTION["mcp_url"]}}}, ("agent:custom.json",))
 
     monkeypatch.setattr(ownership, "spec_census", _fake_census)
 
@@ -705,7 +705,7 @@ async def test_status_feed_omits_the_shared_axis_when_the_grant_is_absent(
     def _fake_census(project_dirs):
         nonlocal called
         called = True
-        return ({"kirocrew": {"notion": {"url": _NOTION["mcp_url"]}}}, ())
+        return ({"ajcrew": {"notion": {"url": _NOTION["mcp_url"]}}}, ())
 
     monkeypatch.setattr(ownership, "spec_census", _fake_census)
 
@@ -749,16 +749,16 @@ def test_sharers_from_specs_hedges_only_the_entry_whose_own_url_cannot_be_keyed(
     # If grant_key raises on THIS provider's own registry URL, the hint is hedged
     # for this entry alone (census_incomplete) rather than letting the exception
     # escape and drop the shared-grant hint for every provider in the feed.
-    from kiro_crew.connections import ownership as ownership_mod
+    from aj_crew.connections import ownership as ownership_mod
 
     def _raise_for_notion(url):
         if url == _NOTION["mcp_url"]:
             raise ValueError("malformed URL")
         return mcp_grant.grant_key(url)
 
-    monkeypatch.setattr("kiro_crew.mcp_grant.grant_key", _raise_for_notion)
+    monkeypatch.setattr("aj_crew.mcp_grant.grant_key", _raise_for_notion)
 
-    specs = {"kirocrew": {"notion": {"url": _NOTION["mcp_url"]}}}
+    specs = {"ajcrew": {"notion": {"url": _NOTION["mcp_url"]}}}
     result = ownership_mod._sharers_from_specs("notion", _NOTION["mcp_url"], specs, False)
     assert result.shared_with == ()
     assert result.census_incomplete is True

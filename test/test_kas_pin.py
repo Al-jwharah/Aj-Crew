@@ -2,7 +2,7 @@
 
 ``acp.kas_pin`` is bumped by changing BOTH constants in one commit. These cases
 are what makes a half-bump (a new version with the old or a mangled digest) fail
-CI instead of failing every ``kirocrew kas install`` of the release: the
+CI instead of failing every ``ajcrew kas install`` of the release: the
 installer compares the fetched ``manifest.json`` bytes against the digest before
 parsing, so a digest that is not a sha256 can never match anything.
 """
@@ -13,7 +13,7 @@ import re
 
 import pytest
 
-from kiro_crew.acp import kas_pin
+from aj_crew.acp import kas_pin
 
 _SEMVER = re.compile(r"^\d+\.\d+\.\d+$")
 _SHA256_HEX = re.compile(r"^[0-9a-f]{64}$")
@@ -61,7 +61,7 @@ class TestEngineSpecPermissionsGate:
     def test_the_pinned_engine_passes_the_floor(self) -> None:
         """A floor above the pin would withhold the block on every stock install,
         so a pin bump that forgets the floor, or a floor raised past the pin, fails here."""
-        from kiro_crew.mcp_hot_reload import parse_kiro_cli_version
+        from aj_crew.mcp_hot_reload import parse_kiro_cli_version
 
         assert kas_pin.engine_spec_permissions_supported(kas_pin.KAS_PIN_VERSION)
         pinned = parse_kiro_cli_version(kas_pin.KAS_PIN_VERSION)

@@ -16,7 +16,7 @@ binding itself promises and what those runtime-only scans cannot see:
   package: no module-scope facade import, every facade seam read through the facade at call
   time, no binding of a seam the module does not define, one logger, no async function,
   sibling runtime modules imported as modules;
-* the moved outcome classes keep ``kiro_crew.vector_memory`` as their module, the path logs,
+* the moved outcome classes keep ``aj_crew.vector_memory`` as their module, the path logs,
   API errors and pickles name them by;
 * the injection-refusal snippet is redacted by the facade's ``_injection_audit_snippet``, called
   only from the episodic write path and with the whole text.
@@ -35,12 +35,12 @@ from pathlib import Path
 import pytest
 import test_vector_memory_composition_contract as contract
 
-import kiro_crew.vector_memory as vm
-from kiro_crew.security import redact_and_truncate
-from kiro_crew.vector_memory import VectorMemoryStore
+import aj_crew.vector_memory as vm
+from aj_crew.security import redact_and_truncate
+from aj_crew.vector_memory import VectorMemoryStore
 
-RUNTIME_PACKAGE = "kiro_crew.vector_memory_runtime"
-STORE_LOGGER = "kiro_crew.vector_memory"
+RUNTIME_PACKAGE = "aj_crew.vector_memory_runtime"
+STORE_LOGGER = "aj_crew.vector_memory"
 FACADE_DIR = Path(vm.__file__).resolve().parent
 
 #: owner module -> the members the class binds from it, frozen at the split.
@@ -56,22 +56,22 @@ BOUND_MEMBERS = {
     f"{RUNTIME_PACKAGE}.store_bookkeeping": """_eligible_rows _ineligible_ids _log_event
         _read_meta _record_mutation _write_meta _write_meta_in_transaction get_events
         get_rejection_stats rotate_events with_record_metadata""",
-    "kiro_crew.vector_memory_inventory": """_require_facets count_by_facet get_episodic_list
+    "aj_crew.vector_memory_inventory": """_require_facets count_by_facet get_episodic_list
         list_by_facets memory_stats""",
-    "kiro_crew.vector_memory_lifecycle": """_apply_migration _crew_stamps_missing
+    "aj_crew.vector_memory_lifecycle": """_apply_migration _crew_stamps_missing
         _init_database _release_store_use_lock _restrict_memory_files _schema_steps
         _secret_bearing_files _stamp_crew_lineage close init""",
-    "kiro_crew.vector_memory_member": """_append_history _read_editable_history_for_day
+    "aj_crew.vector_memory_member": """_append_history _read_editable_history_for_day
         _write_history append_history apply_consolidation consolidation_receipt
         read_editable_history read_history_entries rebuild_memory_index replace_today_history
         search_memory seed_item_if_absent""",
-    "kiro_crew.vector_memory_semantic_write": "_write_semantic",
+    "aj_crew.vector_memory_semantic_write": "_write_semantic",
 }
 
 #: The owner modules the store binds from: every new runtime owner and every owner beside it.
 OWNER_MODULES = tuple(sorted(BOUND_MEMBERS) + [f"{RUNTIME_PACKAGE}.write_outcomes"])
 
-#: The outcome types callers, logs and pickles name as ``kiro_crew.vector_memory.<name>``.
+#: The outcome types callers, logs and pickles name as ``aj_crew.vector_memory.<name>``.
 OUTCOME_CLASSES = (
     "SemanticRejectCode",
     "LessonWriteOutcome",
@@ -85,7 +85,7 @@ def _owner_source(module_name: str) -> str:
 
 
 def _out_sources() -> dict[str, str]:
-    return {stem: _owner_source(f"kiro_crew.{stem}") for stem in sorted(contract.OUT_OWNER_MODULES)}
+    return {stem: _owner_source(f"aj_crew.{stem}") for stem in sorted(contract.OUT_OWNER_MODULES)}
 
 
 def _bound() -> dict[str, object]:
@@ -117,7 +117,7 @@ class TestBinding:
         # Non-vacuous, and the one decorated binding keeps the wrapped owner function.
         assert len(_bound()) == sum(len(names.split()) for names in BOUND_MEMBERS.values())
         init = vars(VectorMemoryStore)["init"]
-        lifecycle = importlib.import_module("kiro_crew.vector_memory_lifecycle")
+        lifecycle = importlib.import_module("aj_crew.vector_memory_lifecycle")
         assert init.__wrapped__.__module__ == lifecycle.__name__
 
     def test_every_self_first_owner_function_is_bound_under_its_name(self) -> None:
@@ -208,12 +208,12 @@ class TestOwnersBesideTheFacade:
         imported = {
             alias.name
             for node in tree.body
-            if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew"
+            if isinstance(node, ast.ImportFrom) and node.module == "aj_crew"
             for alias in node.names
             if alias.name.startswith("vector_memory_")
         }
         assert imported == contract.OUT_OWNER_MODULES
-        assert {f"kiro_crew.{stem}" for stem in imported} <= set(BOUND_MEMBERS)
+        assert {f"aj_crew.{stem}" for stem in imported} <= set(BOUND_MEMBERS)
 
     @staticmethod
     def _module_scope_facade_imports(source: str) -> list[str]:
@@ -229,8 +229,8 @@ class TestOwnersBesideTheFacade:
             hits += [
                 name
                 for name in names
-                if name == "kiro_crew.vector_memory"
-                or name.startswith("kiro_crew.vector_memory.")
+                if name == "aj_crew.vector_memory"
+                or name.startswith("aj_crew.vector_memory.")
                 or name.split(".")[0] in ("numpy", "faiss")
             ]
         return hits
@@ -244,8 +244,8 @@ class TestOwnersBesideTheFacade:
         assert offenders == {}
 
     def test_the_module_scope_import_scan_catches_a_planted_import(self) -> None:
-        planted = "from kiro_crew import vector_memory\nimport numpy as np\n"
-        assert self._module_scope_facade_imports(planted) == ["kiro_crew.vector_memory", "numpy"]
+        planted = "from aj_crew import vector_memory\nimport numpy as np\n"
+        assert self._module_scope_facade_imports(planted) == ["aj_crew.vector_memory", "numpy"]
         assert self._module_scope_facade_imports("if TYPE_CHECKING:\n    import numpy\n") == []
 
     def test_no_out_owner_reads_a_seam_as_a_bare_global(self) -> None:
@@ -289,7 +289,7 @@ class TestOwnersBesideTheFacade:
         offenders = {
             stem: hits
             for stem, source in _out_sources().items()
-            if (hits := self._seam_rebinds(f"kiro_crew.{stem}", source))
+            if (hits := self._seam_rebinds(f"aj_crew.{stem}", source))
         }
         assert offenders == {}
 
@@ -307,7 +307,7 @@ class TestOwnersBesideTheFacade:
                 if isinstance(node, ast.Call) and getattr(node.func, "attr", None) == "getLogger":
                     assert [ast.literal_eval(a) for a in node.args] == [STORE_LOGGER], stem
                 assert not isinstance(node, ast.AsyncFunctionDef), stem
-            module = importlib.import_module(f"kiro_crew.{stem}")
+            module = importlib.import_module(f"aj_crew.{stem}")
             if "logger" in vars(module):
                 assert module.logger is vm.logger, stem
 
@@ -319,7 +319,7 @@ class TestOwnersBesideTheFacade:
         }
         assert found == set()
         assert contract._sibling_name_imports(
-            "from kiro_crew.vector_memory_runtime.semantic import _json_value_equal\n"
+            "from aj_crew.vector_memory_runtime.semantic import _json_value_equal\n"
         )
 
 
@@ -332,7 +332,7 @@ class TestOutcomeClassesKeepTheirModule:
         owner = importlib.import_module(f"{RUNTIME_PACKAGE}.write_outcomes")
         cls = getattr(vm, name)
         assert cls is getattr(owner, name)
-        assert cls.__module__ == "kiro_crew.vector_memory"
+        assert cls.__module__ == "aj_crew.vector_memory"
 
     @pytest.mark.parametrize("name", OUTCOME_CLASSES)
     def test_the_reported_path_resolves_to_the_class(self, name: str) -> None:

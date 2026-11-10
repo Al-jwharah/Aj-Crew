@@ -9,16 +9,16 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-import kiro_crew
-from kiro_crew.messaging.display_safety import joins_to_a_credential
-from kiro_crew.messaging.renderer import _default_redactor
+import aj_crew
+from aj_crew.messaging.display_safety import joins_to_a_credential
+from aj_crew.messaging.renderer import _default_redactor
 
 #: AWS's own documented example key, the same fixture the display-safety tests
 #: use, so no real credential shape is introduced anywhere.
 KEY = "AKIAIOSFODNN7EXAMPLE"
 HEAD, TAIL = KEY[:10], KEY[10:]
 
-SRC = Path(kiro_crew.__file__).parent
+SRC = Path(aj_crew.__file__).parent
 
 #: The splitters that ACCEPT a redactor, which is what makes "pass one" a
 #: well-formed demand. ``chunk_text`` takes no such parameter: it is the blind

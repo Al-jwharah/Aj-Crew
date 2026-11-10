@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from kiro_crew import apple_speech
+from aj_crew import apple_speech
 
 
 @pytest.mark.asyncio

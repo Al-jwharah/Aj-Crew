@@ -32,7 +32,7 @@ const SLOT = 'chat-1'
 const slot = (key: string): ChatSlot => ({
   key, title: key, messages: 1, running: false, mode: '', created: '', last_ts: '',
   pending_approval: false, waiting_for_input: false, last_activity_ts: undefined,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
 } as ChatSlot)
 
 function storeWithSlot() {
@@ -105,7 +105,7 @@ describe('/agent <name> routes through Crew\'s agent selector', () => {
     })
     // The caller owns the report (the composer's notice); no shell toast.
     expect(store.getState().chat.agentSwitchNotice).toBeNull()
-    expect(slotAgent(store)).toBe('kirocrew')
+    expect(slotAgent(store)).toBe('ajcrew')
   })
 
   it('names the retry-later reason when a turn is in flight', async () => {

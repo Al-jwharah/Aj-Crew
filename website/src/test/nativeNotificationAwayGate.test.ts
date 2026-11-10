@@ -6,7 +6,7 @@
  *     arrival, so a note the in-app banner and the bell badge already showed
  *     ALSO raised an OS banner over the focused window.
  *  2. The socket layer's `approval` case constructed its own toast (tag
- *     `kirocrew-approval`) and then dispatched `addNotification`, whose count
+ *     `ajcrew-approval`) and then dispatched `addNotification`, whose count
  *     increase made `useNativeNotification` construct a second one (tag
  *     `approval_id`). Different tags, so the OS collapsed nothing: two banners
  *     per approval whenever the window was hidden.
@@ -122,7 +122,7 @@ describe('useNativeNotification only toasts while the user is away', () => {
     function wrapper({ children }: { children: React.ReactNode }) {
       return createElement(Provider, { store }, children)
     }
-    renderHook(() => useNativeNotification('Kiro Crew', '/avatar.png'), { wrapper })
+    renderHook(() => useNativeNotification('Aj Crew', '/avatar.png'), { wrapper })
     return store
   }
 
@@ -221,7 +221,7 @@ describe('one approval frame yields exactly one OS toast', () => {
     }
     renderHook(() => {
       useWebSocket()
-      useNativeNotification('Kiro Crew', '/avatar.png')
+      useNativeNotification('Aj Crew', '/avatar.png')
     }, { wrapper })
     const ws = WS_INSTANCES[0]
     act(() => { ws.simulateOpen() })

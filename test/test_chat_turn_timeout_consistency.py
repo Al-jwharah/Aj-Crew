@@ -13,30 +13,30 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-_CHAT_API = Path(__file__).resolve().parent.parent / "src" / "kiro_crew" / "dashboard" / "chat_api"
+_CHAT_API = Path(__file__).resolve().parent.parent / "src" / "aj_crew" / "dashboard" / "chat_api"
 _GATEWAY_RUNTIME = (
-    Path(__file__).resolve().parent.parent / "src" / "kiro_crew" / "slack" / "gateway_runtime"
+    Path(__file__).resolve().parent.parent / "src" / "aj_crew" / "slack" / "gateway_runtime"
 )
 
 # Source files known to contain ``_run_chat`` dispatches.  When a new
 # dispatch site lands in another file, add it here. The chat handlers and the
 # Slack gateway are scanned whole: each facade and every owner it composes.
 _DISPATCH_FILES = (
-    "src/kiro_crew/dashboard/chat_handlers.py",
-    *(f"src/kiro_crew/dashboard/chat_api/{path.name}" for path in sorted(_CHAT_API.glob("*.py"))),
+    "src/aj_crew/dashboard/chat_handlers.py",
+    *(f"src/aj_crew/dashboard/chat_api/{path.name}" for path in sorted(_CHAT_API.glob("*.py"))),
     *sorted(
-        f"src/kiro_crew/dashboard/chat_turn/{_owner.name}"
+        f"src/aj_crew/dashboard/chat_turn/{_owner.name}"
         for _owner in (
-            Path(__file__).resolve().parent.parent / "src/kiro_crew/dashboard/chat_turn"
+            Path(__file__).resolve().parent.parent / "src/aj_crew/dashboard/chat_turn"
         ).glob("*.py")
         if _owner.name != "__init__.py"
     ),
-    "src/kiro_crew/dashboard/chat_runner.py",
-    "src/kiro_crew/dashboard/handlers/messaging.py",
-    "src/kiro_crew/dashboard/session_deliver.py",
-    "src/kiro_crew/slack/gateway.py",
+    "src/aj_crew/dashboard/chat_runner.py",
+    "src/aj_crew/dashboard/handlers/messaging.py",
+    "src/aj_crew/dashboard/session_deliver.py",
+    "src/aj_crew/slack/gateway.py",
     *(
-        f"src/kiro_crew/slack/gateway_runtime/{path.name}"
+        f"src/aj_crew/slack/gateway_runtime/{path.name}"
         for path in sorted(_GATEWAY_RUNTIME.glob("*.py"))
     ),
 )
@@ -54,8 +54,8 @@ def test_cap_matches_inner_acp_prompt_timeout() -> None:
     transport layer's promised "longest legitimate turn" budget, otherwise
     legitimate long-running agentic turns die at the wall.
     """
-    from kiro_crew.acp import client as acp_client
-    from kiro_crew.constants import CHAT_TURN_TIMEOUT
+    from aj_crew.acp import client as acp_client
+    from aj_crew.constants import CHAT_TURN_TIMEOUT
 
     assert CHAT_TURN_TIMEOUT == acp_client._DEFAULT_PROMPT_TIMEOUT, (
         "CHAT_TURN_TIMEOUT must match _DEFAULT_PROMPT_TIMEOUT in acp/client.py — "
@@ -69,8 +69,8 @@ def test_cap_value_is_four_hours() -> None:
     It covers a 90-minute test command plus a fix and a re-run, and matches the ACP layer.
     Changing it means updating docs/system-specs/modules/learn-cron-dashboard.md.
     """
-    from kiro_crew.config.loader import AgentConfig
-    from kiro_crew.constants import CHAT_TURN_TIMEOUT
+    from aj_crew.config.loader import AgentConfig
+    from aj_crew.constants import CHAT_TURN_TIMEOUT
 
     assert CHAT_TURN_TIMEOUT == 14400.0
     assert AgentConfig().chat_turn_timeout_secs == CHAT_TURN_TIMEOUT

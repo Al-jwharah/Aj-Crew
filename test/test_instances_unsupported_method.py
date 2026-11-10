@@ -16,10 +16,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard import handlers_instances as handlers
-from kiro_crew.instances.registry import Instance, InstancesRegistry
-from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager, TunnelState, TunnelStatus
-from kiro_crew.instances.validation import SshValidationError, UnsupportedConnectionMethodError
+from aj_crew.dashboard import handlers_instances as handlers
+from aj_crew.instances.registry import Instance, InstancesRegistry
+from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager, TunnelState, TunnelStatus
+from aj_crew.instances.validation import SshValidationError, UnsupportedConnectionMethodError
 
 _TASK = "0123456789abcdef0123456789abcdef"
 
@@ -87,13 +87,13 @@ def _set_method_on_disk(path: Path, instance_id: str, method: str | None) -> Non
 
 @pytest.fixture
 def env(tmp_path: Path, monkeypatch):
-    import kiro_crew.instances.port_allocator as pa
-    import kiro_crew.instances.ssh_tunnel_manager as stm
-    from kiro_crew.config import loader
+    import aj_crew.instances.port_allocator as pa
+    import aj_crew.instances.ssh_tunnel_manager as stm
+    from aj_crew.config import loader
 
     monkeypatch.setattr(stm, "_is_port_free", lambda port, host="127.0.0.1": True)
     monkeypatch.setattr(pa, "_is_port_free", lambda port, host="127.0.0.1": True)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     (tmp_path / "config.json").write_text(json.dumps({"instances": {"enabled": True}}))
     loader._invalidate_config_cache()
     _Tunnel.built = []
@@ -176,7 +176,7 @@ async def test_a_record_without_a_method_still_connects_over_ssh(env, tmp_path):
 
 @pytest.mark.asyncio
 async def test_diagnose_reports_the_method_and_runs_no_ssh_probe(env, monkeypatch):
-    import kiro_crew.instances.ssh_tunnel_manager as stm
+    import aj_crew.instances.ssh_tunnel_manager as stm
 
     _, mgr, _ = env
     dialled: list[str] = []

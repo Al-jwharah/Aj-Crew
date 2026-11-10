@@ -33,7 +33,7 @@ import pytest
 #:
 #: * ``systemd-run`` — in this codebase it is not a service-control tool at all.
 #:   ``sandbox`` wraps essentially EVERY subprocess in
-#:   ``systemd-run --user --scope --slice=kirocrew-agents.slice -p MemoryMax=…``
+#:   ``systemd-run --user --scope --slice=ajcrew-agents.slice -p MemoryMax=…``
 #:   to apply cgroup resource limits, so denying it would refuse an ordinary
 #:   ``git config`` spawn. Its one service-control use (``restart_detached``)
 #:   passes ``systemctl restart`` as the wrapped command, which this guard
@@ -116,17 +116,17 @@ _ALWAYS_REFUSED = frozenset({"apparmor_parser"})
 #:
 #: The two entries below are the real-service end-to-end suites, and they are the
 #: reason the guard also recognises the pod CLI (see ``_POD_MUTATING_VERBS``): a
-#: test that drives ``kirocrew pod up`` through a CHILD interpreter reaches
+#: test that drives ``ajcrew pod up`` through a CHILD interpreter reaches
 #: ``systemctl start`` / ``launchctl bootstrap`` / ``schtasks /Create`` one
 #: process removed, where the in-process manager check cannot see it. Both
 #: suites self-skip unless an operator sets their own opt-in variable
-#: (``KIROCREW_E2E_SCENARIOS`` / ``KIROCREW_E2E_POD_WINDOWS``), run against a
+#: (``AJCREW_E2E_SCENARIOS`` / ``AJCREW_E2E_POD_WINDOWS``), run against a
 #: hermetic plane (their own root, env dir, port base and unit prefix), and tear
 #: down every pod, the plane root and the plane's template unit in ``finally``.
 _HOST_SERVICE_EXEC_ALLOWED_MODULES: frozenset[str] = frozenset(
     {
         # The pod scenario suite (nightly ``pod-scenarios``): boots one real pod
-        # per session on the ``kirocrew-e2e-pod`` plane and reclaims it.
+        # per session on the ``ajcrew-e2e-pod`` plane and reclaims it.
         "e2e.scenarios.test_cron_fire",
         "e2e.scenarios.test_service_install_dry_run",
         "e2e.scenarios.test_settings_save",
@@ -138,10 +138,10 @@ _HOST_SERVICE_EXEC_ALLOWED_MODULES: frozenset[str] = frozenset(
     }
 )
 
-#: ``kirocrew pod`` verbs that create, start, stop or delete a host service
+#: ``ajcrew pod`` verbs that create, start, stop or delete a host service
 #: definition (a systemd unit, a launchd agent, a Task Scheduler task). The pod
 #: CLI is how a test reaches a service manager without naming one, so a spawn of
-#: ``kirocrew pod <verb>`` or ``python -m kiro_crew pod <verb>`` is refused for
+#: ``ajcrew pod <verb>`` or ``python -m aj_crew pod <verb>`` is refused for
 #: every module not listed above. Read-only verbs (``ls``, ``status``, ``api``,
 #: ``logs``) stay allowed.
 _POD_MUTATING_VERBS = frozenset({"up", "down", "install", "prune", "restart"})
@@ -199,23 +199,23 @@ def _refusal_reason(argv: object, *, shell: bool = False) -> str | None:
 
 
 def _pod_cli_refusal(tokens: list[str]) -> str | None:
-    """Name the ``kirocrew pod`` mutation in *tokens*, or ``None``.
+    """Name the ``ajcrew pod`` mutation in *tokens*, or ``None``.
 
-    Matches the console script (``kirocrew``, ``kirocrew.exe``) and the module
-    form (``python -m kiro_crew``), then requires the literal ``pod`` subcommand
+    Matches the console script (``ajcrew``, ``ajcrew.exe``) and the module
+    form (``python -m aj_crew``), then requires the literal ``pod`` subcommand
     followed by a verb from :data:`_POD_MUTATING_VERBS`. Anything looser would
     refuse a test that merely passes ``"pod"`` as an argument to something else.
     """
     for index, token in enumerate(tokens):
         name = _basename(token)
-        if name in {"kirocrew", "kirocrew.exe"}:
+        if name in {"ajcrew", "ajcrew.exe"}:
             rest = tokens[index + 1 :]
-        elif token == "-m" and index + 1 < len(tokens) and tokens[index + 1] == "kiro_crew":
+        elif token == "-m" and index + 1 < len(tokens) and tokens[index + 1] == "aj_crew":
             rest = tokens[index + 2 :]
         else:
             continue
         if len(rest) >= 2 and rest[0] == "pod" and rest[1] in _POD_MUTATING_VERBS:
-            return f"kirocrew pod {rest[1]!r} changes host service state"
+            return f"ajcrew pod {rest[1]!r} changes host service state"
         return None
     return None
 
@@ -228,7 +228,7 @@ def _refuse(reason: str, argv: object) -> None:
         f"  argv: {argv!r}\n"
         f"This spawn must be stubbed. Depending on the code under test:\n"
         f"  - dev_fleet make-live: stub BOTH `_run_cmd` and `_dropin_path`\n"
-        f"  - kiro_crew.service.*: patch `service.<platform>.subprocess.run`\n"
+        f"  - aj_crew.service.*: patch `service.<platform>.subprocess.run`\n"
         f"  - pod runtime: stub the runtime's `systemctl` / `launchctl` helper\n"
         f"Read-only queries (`systemctl show`, `cat`, `is-active`) are allowed and "
         f"need no stub.\n"
@@ -244,7 +244,7 @@ def _block_host_service_mutation(request, _floor_monkeypatch):
 
     Redirecting ``$XDG_CONFIG_HOME`` (the seams part) stops a test from *writing* a real
     unit file, but not from *running* ``systemctl --user daemon-reload`` or
-    ``systemctl --user restart kirocrew-gateway.service``. Those restart the
+    ``systemctl --user restart ajcrew-gateway.service``. Those restart the
     developer's live gateway even when the drop-in they read is pristine, so the
     second half of the floor has to be an execution guard.
 
@@ -344,7 +344,7 @@ _REAL_USER_SESSION_ENV_AT_START: dict[str, str] = {
 
 def _reset_cgroup_scope_probe() -> None:
     """Drop ``sandbox``'s memoised cgroup-scope probe so the next call re-reads the env."""
-    sb = sys.modules.get("kiro_crew.sandbox")
+    sb = sys.modules.get("aj_crew.sandbox")
     if sb is not None:
         sb._CGROUP_SCOPE_PROBE = None
 
@@ -354,12 +354,12 @@ def _no_systemd_user_session():
     """Run the whole session, children included, without a systemd user session.
 
     ``sandbox.cgroup_scope_argv`` wraps a spawn in ``systemd-run --user --scope
-    --slice=kirocrew-agents-<token>.slice`` whenever its probe finds a user session,
-    and the token is a hash of the data home. This floor pins a FRESH ``KIROCREW_HOME``
+    --slice=ajcrew-agents-<token>.slice`` whenever its probe finds a user session,
+    and the token is a hash of the data home. This floor pins a FRESH ``AJCREW_HOME``
     per test, so on a developer host every test that reaches the wrapper -- and every
-    ``kirocrew`` CLI child a test spawns, which probes for itself -- creates a NEW
+    ``ajcrew`` CLI child a test spawns, which probes for itself -- creates a NEW
     transient slice, and systemd never garbage-collects a slice: five full runs left
-    over 4,000 ``kirocrew-agents-*.slice`` units loaded in the operator's user manager.
+    over 4,000 ``ajcrew-agents-*.slice`` units loaded in the operator's user manager.
     The same session bus is what let a late reconcile thread run a real
     ``systemctl --user set-property`` on the operator's agents slice after its test's
     monkeypatch was undone.
@@ -395,14 +395,14 @@ def _no_real_cgroup_reclaim_write():
 
     The resource-pressure sampler calls ``sandbox.reclaim_agents_slice_page_cache``
     every tick, and the slice it reads is the operator's real
-    ``kirocrew-agents.slice`` under ``/sys/fs/cgroup`` (no environment variable
+    ``ajcrew-agents.slice`` under ``/sys/fs/cgroup`` (no environment variable
     redirects that read). On a developer host whose slice sits near its
     ``memory.high`` with cold cache, any test that drives the sampler would drop the
     operator's page cache. The writer is the one place every reclaim goes through, so
     it is replaced with one that refuses a real cgroupfs path and still writes a
     fabricated tree under a test's temp directory.
     """
-    from kiro_crew import sandbox_slice
+    from aj_crew import sandbox_slice
 
     real_writer = sandbox_slice._write_memory_reclaim
 
@@ -438,7 +438,7 @@ def _fail_on_refused_real_reclaim_write(_no_real_cgroup_reclaim_write):
     test ended (a reclaim thread nobody joined) is reported by the next test
     that runs on this worker.
     """
-    from kiro_crew import sandbox_slice
+    from aj_crew import sandbox_slice
 
     was_disarmed = sandbox_slice._SLICE_RECLAIM_DISARMED
     sandbox_slice._SLICE_RECLAIM_DISARMED = True
@@ -467,7 +467,7 @@ def real_user_session(monkeypatch):
         pytest.skip("no systemd user session on this host")
     for name, value in _REAL_USER_SESSION_ENV_AT_START.items():
         monkeypatch.setenv(name, value)
-    import kiro_crew.sandbox as sb
+    import aj_crew.sandbox as sb
 
     monkeypatch.setattr(sb, "_CGROUP_SCOPE_PROBE", None)
     try:

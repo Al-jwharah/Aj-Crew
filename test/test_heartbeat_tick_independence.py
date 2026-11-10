@@ -19,18 +19,18 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.heartbeat import HeartbeatService, heartbeat_path
-from kiro_crew.testing.wait import async_wait_until, await_until, finished
+from aj_crew.heartbeat import HeartbeatService, heartbeat_path
+from aj_crew.testing.wait import async_wait_until, await_until, finished
 
 
 @pytest.fixture()
 def workspace(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    monkeypatch.setattr("kiro_crew.heartbeat.workspace_dir", lambda: tmp_path / "ws")
+    monkeypatch.setattr("aj_crew.heartbeat.workspace_dir", lambda: tmp_path / "ws")
     ws = tmp_path / "ws"
     ws.mkdir()
     heartbeat_path().write_text("# Heartbeat Tasks\n\n- slow zibble\n", encoding="utf-8")
     # The loop's default executor is enough for MagicMock maintenance calls.
-    monkeypatch.setattr("kiro_crew.heartbeat.maintenance_executor", lambda: None)
+    monkeypatch.setattr("aj_crew.heartbeat.maintenance_executor", lambda: None)
     return ws
 
 
@@ -137,7 +137,7 @@ async def test_the_loop_keeps_ticking_through_a_slow_task(
 ) -> None:
     """Through the real ``_loop``: the FTS rebuild lands on tick 15 mid-task."""
     event = asyncio.Event()
-    monkeypatch.setattr("kiro_crew.heartbeat.shutdown_event", event)
+    monkeypatch.setattr("aj_crew.heartbeat.shutdown_event", event)
     slow = _SlowTask()
     mem = _memory()
     svc = _service(mem, slow, interval=0.001)

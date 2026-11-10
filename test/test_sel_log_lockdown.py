@@ -16,9 +16,9 @@ from sel_helpers import (  # noqa: F401 -- the autouse fixture registers by impo
     reset_singleton,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew import sel as sel_mod
-from kiro_crew.sel import SecurityEventLog
+from aj_crew import platform_compat
+from aj_crew import sel as sel_mod
+from aj_crew.sel import SecurityEventLog
 
 
 @pytest.mark.skipif(
@@ -26,7 +26,7 @@ from kiro_crew.sel import SecurityEventLog
     reason="Windows DACL branch (POSIX carries access in the mode bits)",
 )
 def test_windows_append_applies_an_owner_only_dacl(tmp_path) -> None:
-    from kiro_crew import windows_acl
+    from aj_crew import windows_acl
 
     log = SecurityEventLog(base_dir=tmp_path, sync=True)
     log.log(_make_event(), critical=True)
@@ -58,7 +58,7 @@ def test_on_loop_append_skips_a_non_local_volume_and_warns(
     monkeypatch.setattr(platform_compat.windows_acl, "volume_is_local", _volume_is_local)
     monkeypatch.setattr(platform_compat, "restrict_to_owner", lockdowns.append)
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.sel"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.sel"):
         log.log(_make_event(), critical=True)
 
     assert lockdowns == []

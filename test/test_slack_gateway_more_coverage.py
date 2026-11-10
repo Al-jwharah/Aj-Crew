@@ -1,4 +1,4 @@
-"""Further coverage for ``kiro_crew.slack.gateway``.
+"""Further coverage for ``aj_crew.slack.gateway``.
 
 ``test_slack_gateway.py``, ``test_slack_gateway_coverage.py`` and
 ``test_slack_gateway_cron_exec_coverage.py`` already drive the cron executor,
@@ -29,7 +29,7 @@ surfaces exercised here had no test anywhere in the suite before this file:
 Everything is driven through mocked collaborators: ``asyncio``'s process
 spawner, the process-tree killer, the embedding backend, the dashboard/API
 server starters and the Slack client are all patched, so no subprocess, no
-signal, no socket and no write outside the per-test ``KIROCREW_HOME`` (pinned
+signal, no socket and no write outside the per-test ``AJCREW_HOME`` (pinned
 by ``test/conftest.py``) happens. Style and patch seams mirror
 ``test_slack_gateway.py``.
 """
@@ -49,16 +49,16 @@ import pytest
 from real_dashboard_state import _settle_real_dashboard_states  # noqa: F401
 from real_dashboard_state import notes, real_dashboard_state
 
-from kiro_crew.acp.types import AcpEvent
-from kiro_crew.autonudge import (
+from aj_crew.acp.types import AcpEvent
+from aj_crew.autonudge import (
     APPROVAL_STALL_REASON,
     CONSECUTIVE_FAILURE_REASON,
     MODEL_REFUSED_REASON,
     NudgeLoop,
 )
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.chat_utils_slack_options import options_records
-from kiro_crew.monitoring.models import (
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.chat_utils_slack_options import options_records
+from aj_crew.monitoring.models import (
     DEFAULT_MONITOR_CADENCE_SECS,
     DEFAULT_MONITOR_STALL_MIN_SECS,
     DEFAULT_MONITOR_STALL_TICKS,
@@ -67,8 +67,8 @@ from kiro_crew.monitoring.models import (
     MonitorOutcome,
     MonitorState,
 )
-from kiro_crew.slack import gateway as gw
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.slack import gateway as gw
+from aj_crew.testing.wait import await_until, finished
 
 # ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -79,8 +79,8 @@ def _make_orchestrator(**kwargs: Any) -> Any:
     Returned as ``Any`` on purpose: every test below swaps real collaborators
     for mocks, which do not satisfy the declared attribute types.
     """
-    cfg = KiroCrewConfig()
-    creds = {"KIROCREW_OWNER_ID": "U_OWNER"}
+    cfg = AjCrewConfig()
+    creds = {"AJCREW_OWNER_ID": "U_OWNER"}
     with patch.object(cfg, "load_credentials", return_value=creds):
         return gw.GatewayOrchestrator(
             cfg,
@@ -115,7 +115,7 @@ def _mock_slack(*, dm: str | None = "D1") -> MagicMock:
 def _slack_default_deliver() -> Any:
     """Pin ``heartbeat.default_deliver`` to "slack" for tagless deliveries."""
     return patch.object(
-        gw.KiroCrewConfig,
+        gw.AjCrewConfig,
         "load",
         return_value=SimpleNamespace(heartbeat=SimpleNamespace(default_deliver="slack")),
     )
@@ -131,7 +131,7 @@ class TestHeartbeatSafeToolNormalisation:
     title with no trusted identity behind it is refused the same way."""
 
     @pytest.mark.parametrize(
-        "title", ["mcp__foo", "@server-only", "mcp__kirocrew-core__learn_list", ""]
+        "title", ["mcp__foo", "@server-only", "mcp__ajcrew-core__learn_list", ""]
     )
     def test_a_title_alone_is_refused(self, title: str):
         event = AcpEvent(kind="permission_request", title=title, tool_kind="mcp")
@@ -166,7 +166,7 @@ class TestWarnIfKiroCliOutdated:
         never happened. The refusal path itself is covered separately by
         :meth:`test_unresolvable_binary_never_spawns`.
         """
-        with patch("kiro_crew.kiro_cli.resolve_kiro_cli", return_value="/opt/pinned/bin/kiro-cli"):
+        with patch("aj_crew.kiro_cli.resolve_kiro_cli", return_value="/opt/pinned/bin/kiro-cli"):
             yield
 
     @pytest.mark.asyncio
@@ -178,7 +178,7 @@ class TestWarnIfKiroCliOutdated:
         argument is no protection. Nothing to warn about, so nothing runs.
         """
         orch = _make_orchestrator()
-        with patch("kiro_crew.kiro_cli.resolve_kiro_cli", return_value=None):
+        with patch("aj_crew.kiro_cli.resolve_kiro_cli", return_value=None):
             with patch("asyncio.create_subprocess_exec") as spawn:
                 await orch._warn_if_kiro_cli_outdated()
         spawn.assert_not_called()
@@ -190,11 +190,11 @@ class TestWarnIfKiroCliOutdated:
         install, so the resolved kiro-cli -- the fixture resolves one -- decides
         nothing about this gateway's sessions and is neither pinned nor spawned.
         The predicate is the shared ``agent_sdk.kas_bundle.kas_bundle_route``,
-        read through ``KiroCrewConfig.load``."""
+        read through ``AjCrewConfig.load``."""
         orch = _make_orchestrator()
-        base = KiroCrewConfig()
+        base = AjCrewConfig()
         cfg = replace(base, agent=replace(base.agent, acp_backend="kas", kas_bundle=True))
-        with patch.object(KiroCrewConfig, "load", classmethod(lambda cls: cfg)):
+        with patch.object(AjCrewConfig, "load", classmethod(lambda cls: cfg)):
             with patch.object(gw, "_pinned_kiro_cli", AsyncMock()) as pinned:
                 with patch("asyncio.create_subprocess_exec") as spawn:
                     await orch._warn_if_kiro_cli_outdated()
@@ -212,7 +212,7 @@ class TestWarnIfKiroCliOutdated:
         proc = _probe_proc(_communicate)
         orch = _make_orchestrator()
         with patch(
-            "kiro_crew.kiro_cli.resolve_kiro_cli", return_value="/opt/pinned/bin/kiro-cli"
+            "aj_crew.kiro_cli.resolve_kiro_cli", return_value="/opt/pinned/bin/kiro-cli"
         ) as mock_resolve:
             with patch("asyncio.create_subprocess_exec", AsyncMock(return_value=proc)) as spawn:
                 await orch._warn_if_kiro_cli_outdated()
@@ -235,22 +235,22 @@ class TestWarnIfKiroCliOutdated:
             return None if kwargs.get("include_inherited_path") is False else "/w/venv/bin/kiro-cli"
 
         with caplog.at_level("WARNING"):
-            with patch("kiro_crew.kiro_cli.resolve_kiro_cli", side_effect=_resolve):
+            with patch("aj_crew.kiro_cli.resolve_kiro_cli", side_effect=_resolve):
                 with patch("asyncio.create_subprocess_exec") as spawn:
                     await orch._warn_if_kiro_cli_outdated()
         spawn.assert_not_called()
-        assert "KIROCREW_KIRO_BIN" in caplog.text
+        assert "AJCREW_KIRO_BIN" in caplog.text
 
     @pytest.mark.asyncio
     async def test_absent_backend_is_refused_quietly(self, caplog):
         """No kiro-cli anywhere is not a problem to report — the backend is optional."""
         orch = _make_orchestrator()
         with caplog.at_level("WARNING"):
-            with patch("kiro_crew.kiro_cli.resolve_kiro_cli", return_value=None):
+            with patch("aj_crew.kiro_cli.resolve_kiro_cli", return_value=None):
                 with patch("asyncio.create_subprocess_exec") as spawn:
                     await orch._warn_if_kiro_cli_outdated()
         spawn.assert_not_called()
-        assert "KIROCREW_KIRO_BIN" not in caplog.text
+        assert "AJCREW_KIRO_BIN" not in caplog.text
 
     @pytest.mark.asyncio
     async def test_slow_home_directory_cannot_stall_boot(self, caplog):
@@ -268,7 +268,7 @@ class TestWarnIfKiroCliOutdated:
 
         with caplog.at_level("WARNING"):
             with patch.object(gw, "_KIRO_CLI_RESOLVE_TIMEOUT_SECS", 0.01):
-                with patch("kiro_crew.kiro_cli.resolve_kiro_cli", side_effect=_hang):
+                with patch("aj_crew.kiro_cli.resolve_kiro_cli", side_effect=_hang):
                     with patch("asyncio.create_subprocess_exec") as spawn:
                         await orch._warn_if_kiro_cli_outdated()
         spawn.assert_not_called()
@@ -382,7 +382,7 @@ class TestDeliverResultRouting:
         orch.slack = None
         ds = real_dashboard_state(tmp_path)
         orch.dashboard_state = ds
-        with patch.object(gw.KiroCrewConfig, "load", side_effect=RuntimeError("no config")) as load:
+        with patch.object(gw.AjCrewConfig, "load", side_effect=RuntimeError("no config")) as load:
             await orch._deliver_result("Title", "task", "result", "")
             # A Slack-less, dashboard-less host takes the same arm and delivers nowhere.
             orch.dashboard_state = None
@@ -438,7 +438,7 @@ class TestDeliverResultRouting:
         # (no owner-DM fallback), and still ring the bell. The tag is
         # agent-writable, so the channel must be tracked for the post to happen —
         # see test_slack_heartbeat_channel_deliver.py for the refusal legs.
-        monkeypatch.setattr("kiro_crew.slack.gateway.is_tracked_channel", lambda c: c == "C1")
+        monkeypatch.setattr("aj_crew.slack.gateway.is_tracked_channel", lambda c: c == "C1")
         orch = _make_orchestrator()
         ds = _mock_dashboard_state()
         orch.dashboard_state = ds
@@ -518,7 +518,7 @@ class TestConnectSlack:
 
     @pytest.mark.asyncio
     async def test_socks_proxy_error_keeps_its_actionable_reason(self):
-        from kiro_crew.slack.socket_mode_proxy import SocksProxyUnavailable
+        from aj_crew.slack.socket_mode_proxy import SocksProxyUnavailable
 
         exc = SocksProxyUnavailable("SOCKS proxy set but python-socks is not installed")
         orch = _make_orchestrator()
@@ -560,7 +560,7 @@ class TestShutdownExtras:
         orch.dashboard_state = ds
         orch._stop_mcp_broker = AsyncMock()
         with patch(
-            "kiro_crew.dashboard.chat.save_all_slots_to_history",
+            "aj_crew.dashboard.chat.save_all_slots_to_history",
             side_effect=RuntimeError("history lock"),
         ):
             await orch._shutdown()
@@ -596,7 +596,7 @@ class TestShutdownExtras:
         ds._slots = {"s1": SimpleNamespace(_eager_spawn_task=start)}
         try:
             await await_until(debouncing, what="the eager start's debounce")
-            with patch("kiro_crew.dashboard.chat.save_all_slots_to_history"):
+            with patch("aj_crew.dashboard.chat.save_all_slots_to_history"):
                 await await_until(asyncio.ensure_future(orch._shutdown()), what="the shutdown")
             assert start.cancelled()
         finally:
@@ -672,7 +672,7 @@ class TestShutdownExtras:
         graceful cap exits ahead of. Shutdown stops it with the coordinator, up
         front, and waits for its rollback before the teardown.
         """
-        from kiro_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers import updates
 
         orch = _make_orchestrator()
         orch.cron_svc = None
@@ -831,7 +831,7 @@ class TestDashboardPortSelection:
         ds = _mock_dashboard_state()
         with patch.object(gw, "LessonStore", MagicMock()):
             with patch(
-                "kiro_crew.dashboard.start_api_server", AsyncMock(return_value=(runner, ds))
+                "aj_crew.dashboard.start_api_server", AsyncMock(return_value=(runner, ds))
             ) as start:
                 await orch._init_api_server()
         assert start.await_args.kwargs["port"] == 0
@@ -846,7 +846,7 @@ class TestDashboardPortSelection:
         runner.addresses = [("127.0.0.1", 1)]
         with patch.object(gw, "LessonStore", MagicMock()):
             with patch(
-                "kiro_crew.dashboard.start_api_server",
+                "aj_crew.dashboard.start_api_server",
                 AsyncMock(return_value=(runner, _mock_dashboard_state())),
             ) as start:
                 await orch._init_api_server()
@@ -904,7 +904,7 @@ class TestAutoMigrateMemory:
             with patch.object(gw, "model_file_present", return_value=True):
                 with patch.object(gw, "make_sync_embed_fn", return_value=lambda s: [0.0]):
                     with patch.object(gw, "reconcile_store_embedding_space") as reconcile:
-                        with patch("kiro_crew.memory.legacy_memory_present", return_value=True):
+                        with patch("aj_crew.memory.legacy_memory_present", return_value=True):
                             await orch._auto_migrate_memory()
 
         orch._set_memory_migrated.assert_awaited_once_with(True)
@@ -955,7 +955,7 @@ class TestAutoMigrateMemory:
         cfg_path = tmp_path / "config.json"
         cfg_path.write_text(json.dumps({"memory": {"migrated": False}}), encoding="utf-8")
         orch = _make_orchestrator()
-        with patch("kiro_crew.dashboard.handlers.memory.config_path", return_value=cfg_path):
+        with patch("aj_crew.dashboard.handlers.memory.config_path", return_value=cfg_path):
             await orch._set_memory_migrated(True)
         assert json.loads(cfg_path.read_text(encoding="utf-8"))["memory"]["migrated"] is True
 
@@ -973,19 +973,19 @@ class TestInitMcpDiscovery:
         orch = _make_orchestrator()
         servers = [SimpleNamespace(name="builder-mcp"), SimpleNamespace(name="playwright-mcp")]
         with caplog.at_level("INFO"):
-            with patch("kiro_crew.mcp_discovery.list_servers", return_value=servers):
+            with patch("aj_crew.mcp_discovery.list_servers", return_value=servers):
                 orch._init_mcp_discovery()
         assert "builder-mcp, playwright-mcp" in caplog.text
 
     def test_listing_failure_is_swallowed(self, caplog):
         orch = _make_orchestrator()
-        with caplog.at_level("DEBUG", logger="kiro_crew.slack.gateway"):
+        with caplog.at_level("DEBUG", logger="aj_crew.slack.gateway"):
             with patch(
-                "kiro_crew.mcp_discovery.list_servers", side_effect=RuntimeError("boom")
+                "aj_crew.mcp_discovery.list_servers", side_effect=RuntimeError("boom")
             ) as listing:
                 orch._init_mcp_discovery()
         listing.assert_called_once_with()
-        messages = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.slack.gateway"]
+        messages = [r.getMessage() for r in caplog.records if r.name == "aj_crew.slack.gateway"]
         assert "MCP server listing failed" in messages
         assert not any(m.startswith("Configured MCP servers") for m in messages)
 
@@ -1123,7 +1123,7 @@ class TestNotifyNudgeExpired:
             (
                 MonitorOutcome.BLOCKED,
                 "unsupported_monitor_version",
-                "Update Kiro Crew",
+                "Update Aj Crew",
                 "reopen",
             ),
             (MonitorOutcome.BLOCKED, "invalid_monitor_record", "record", "reopen"),
@@ -1137,7 +1137,7 @@ class TestNotifyNudgeExpired:
         orch = _make_orchestrator()
         ds = _mock_dashboard_state()
         orch.dashboard_state = ds
-        loop = NudgeLoop(id="monitor-1", slot_key="discord:kirocrew:direct:42", message="")
+        loop = NudgeLoop(id="monitor-1", slot_key="discord:ajcrew:direct:42", message="")
         loop.active = False
         loop.monitor = MonitorState(
             kind="github_pull_request",
@@ -1199,7 +1199,7 @@ class TestNotifyNudgeExpired:
         reason that path recorded, and asserts BOTH numbers in the notice are the
         constants the trip used.
         """
-        from kiro_crew.monitoring.decision import decide_monitor, monitor_stall_reason
+        from aj_crew.monitoring.decision import decide_monitor, monitor_stall_reason
 
         state = MonitorState(
             kind="github_pull_request",
@@ -1257,7 +1257,7 @@ class TestNotifyNudgeExpired:
         The exclusions are reasons that never reach this branch, each for a stated
         structural reason -- not a list to append to when a case is inconvenient.
         """
-        from kiro_crew.monitoring import models as monitor_models
+        from aj_crew.monitoring import models as monitor_models
 
         handled_by_an_outcome_branch = {
             monitor_models.MONITOR_STOP_RUNTIME_BUDGET,
@@ -1376,7 +1376,7 @@ class TestNotifyNudgeExpired:
         unmet" about a finished subject. The rule is expressed once now, as a ``terminal``
         flag the earlier branches defer to.
         """
-        from kiro_crew.autonudge import MONITOR_TERMINAL_REASON
+        from aj_crew.autonudge import MONITOR_TERMINAL_REASON
 
         orch = _make_orchestrator()
         ds = _mock_dashboard_state()
@@ -1406,7 +1406,7 @@ class TestNotifyNudgeExpired:
         skipped, and the operator was told the goal was possibly unmet and to restart
         a watch whose subject had merged.
         """
-        from kiro_crew.autonudge import MONITOR_TERMINAL_REASON
+        from aj_crew.autonudge import MONITOR_TERMINAL_REASON
 
         orch = _make_orchestrator()
         ds = _mock_dashboard_state()

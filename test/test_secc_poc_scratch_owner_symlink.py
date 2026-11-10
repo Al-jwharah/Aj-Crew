@@ -2,7 +2,7 @@
 never through a link planted where that marker belongs.
 
 A spawned agent OWNS its scratch directory: ``agent_scratch.scratch_env`` hands
-that path to the child as ``TMPDIR``/``KIROCREW_SCRATCH``. The gateway that
+that path to the child as ``TMPDIR``/``AJCREW_SCRATCH``. The gateway that
 records the child's pid in ``.owner`` there runs UNSANDBOXED, and it recorded it
 with ``Path.write_text``, which opens ``O_WRONLY|O_CREAT|O_TRUNC`` by name with
 no ``lstat`` and no ``O_NOFOLLOW``. So the child could replace its own marker
@@ -36,9 +36,9 @@ from typing import get_args
 
 import pytest
 
-from kiro_crew import agent_scratch as sc
-from kiro_crew import platform_compat
-from kiro_crew.mcp_gateway import backend_tmp as bt
+from aj_crew import agent_scratch as sc
+from aj_crew import platform_compat
+from aj_crew.mcp_gateway import backend_tmp as bt
 
 #: Only for a case that links a FILE. A Windows directory JUNCTION needs no
 #: privilege and every DIRECTORY-link case uses one via
@@ -55,7 +55,7 @@ CHILD_PID = 4242
 
 @pytest.fixture
 def scratch_root(monkeypatch, tmp_path: Path) -> Path:
-    """Point :mod:`kiro_crew.agent_scratch` at a fabricated data home."""
+    """Point :mod:`aj_crew.agent_scratch` at a fabricated data home."""
     home = tmp_path / "home"
     home.mkdir()
     monkeypatch.setattr(sc, "config_dir", lambda: home)
@@ -64,7 +64,7 @@ def scratch_root(monkeypatch, tmp_path: Path) -> Path:
 
 @pytest.fixture
 def backend_tmp_root(monkeypatch, tmp_path: Path) -> Path:
-    """Point :mod:`kiro_crew.mcp_gateway.backend_tmp` at a fabricated data home."""
+    """Point :mod:`aj_crew.mcp_gateway.backend_tmp` at a fabricated data home."""
     home = tmp_path / "backend-home"
     home.mkdir()
     monkeypatch.setattr(bt, "config_dir", lambda: home)
@@ -529,8 +529,8 @@ class TestTheSweepNeverJudgesAnOwnerThroughALink:
 
 #: The two spawn chokepoints that must reap a child which planted a link.
 SPAWNERS = (
-    Path("src/kiro_crew/acp/client_start.py"),
-    Path("src/kiro_crew/acp/runtime_spawn_launch.py"),
+    Path("src/aj_crew/acp/client_start.py"),
+    Path("src/aj_crew/acp/runtime_spawn_launch.py"),
 )
 
 

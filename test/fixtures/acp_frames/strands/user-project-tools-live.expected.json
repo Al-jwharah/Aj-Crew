@@ -270,7 +270,7 @@
       {
         "kind": "tool_result",
         "tool_call_id": "tooluse_strands02",
-        "tool_output": "DENIED: Kiro Crew did not approve 'file_editor'",
+        "tool_output": "DENIED: Aj Crew did not approve 'file_editor'",
         "tool_output_bytes": 47,
         "tool_output_digest": "b139dd6628a0a687b94bf9aa09476e9baf3bb0ead1131aab3d4b53642f10ae7b",
         "tool_status": "failed"

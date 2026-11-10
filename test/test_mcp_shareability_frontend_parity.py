@@ -16,7 +16,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from kiro_crew.mcp_gateway.shareability import Strength
+from aj_crew.mcp_gateway.shareability import Strength
 
 _VIEW = (
     Path(__file__).resolve().parents[1]

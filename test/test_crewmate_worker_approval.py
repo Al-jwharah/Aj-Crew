@@ -17,12 +17,12 @@ import pytest
 from test_chat_agent_selection import _finished, _turn_state
 from test_mate_worker_dispatch import _create, _fresh_create_budget, crewmate  # noqa: F401
 
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.crewmate_approval import apply_to_live_sessions
-from kiro_crew.execution_context import clear_session_execution
-from kiro_crew.history import ConversationLog
-from kiro_crew.mate_worker import MATE_WORKER_AGENT
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.crewmate_approval import apply_to_live_sessions
+from aj_crew.execution_context import clear_session_execution
+from aj_crew.history import ConversationLog
+from aj_crew.mate_worker import MATE_WORKER_AGENT
 
 
 def _set_mode(tmp_path, mode: str) -> None:
@@ -30,7 +30,7 @@ def _set_mode(tmp_path, mode: str) -> None:
     config = json.loads(path.read_text(encoding="utf-8"))
     config["agents"]["pixel"]["approval_mode"] = mode
     path.write_text(json.dumps(config), encoding="utf-8")
-    from kiro_crew.config.loader import _invalidate_config_cache
+    from aj_crew.config.loader import _invalidate_config_cache
 
     _invalidate_config_cache()
 
@@ -59,7 +59,7 @@ def test_a_profile_change_during_the_workers_creation_reaches_it(
 ):
     """The Profile is saved after the create read its config but before the worker
     has a record, so the save's own apply cannot see the worker."""
-    from kiro_crew.dashboard.session_control_parts import session_create
+    from aj_crew.dashboard.session_control_parts import session_create
 
     state, caller, _execution, tmp_path = home
     _set_mode(tmp_path, before)
@@ -85,9 +85,9 @@ async def test_a_profile_save_applied_during_the_seeds_read_wins(
 ):
     """The seed's config read is stale: the save and its live apply land between that
     read and the seed. The apply marks the slot seeded, so the stale mode is not used."""
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.dashboard import crewmate_approval
-    from kiro_crew.execution_context import read_session_execution
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.dashboard import crewmate_approval
+    from aj_crew.execution_context import read_session_execution
 
     state, caller, _execution, tmp_path = home
     await asyncio.to_thread(_set_mode, tmp_path, before)
@@ -100,11 +100,11 @@ async def test_a_profile_save_applied_during_the_seeds_read_wins(
     worker = state.get_slot((await asyncio.to_thread(_create, state, caller))["target"])
     assert not (worker._trust or worker._trust_reads or worker._member_approval_seeded)
 
-    stale = await asyncio.to_thread(KiroCrewConfig.load)  # the seed's read
+    stale = await asyncio.to_thread(AjCrewConfig.load)  # the seed's read
     assert stale.agents["pixel"].approval_mode == before
     await asyncio.to_thread(_set_mode, tmp_path, after)
     assert await apply_to_live_sessions(state, "pixel", after) == 1
-    monkeypatch.setattr(KiroCrewConfig, "load", lambda: stale)
+    monkeypatch.setattr(AjCrewConfig, "load", lambda: stale)
     record = await asyncio.to_thread(
         read_session_execution, slot_history_key(worker), required=True
     )
@@ -181,10 +181,10 @@ async def test_saving_the_profile_permission_reaches_a_live_worker(home, monkeyp
 
 def test_the_crewmates_own_chat_takes_the_mode_at_its_turn_start(home):
     """A thread restored after a restart is seeded before its first turn, not only on open."""
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.dashboard.crewmate_approval import seed_for_turn
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.dashboard.crewmate_approval import seed_for_turn
 
     state, caller, execution, tmp_path = home
     _set_mode(tmp_path, "trust_reads")
-    assert seed_for_turn(state, caller, KiroCrewConfig.load(), execution)
+    assert seed_for_turn(state, caller, AjCrewConfig.load(), execution)
     assert (caller._trust, caller._trust_reads) == (False, True)

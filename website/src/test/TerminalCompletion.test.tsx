@@ -187,7 +187,7 @@ afterEach(() => {
 
 describe('TerminalCompletion', () => {
   it('opens a menu for `cd ../` and lists directories', async () => {
-    const fetchMock = mockComplete([{ name: 'KiroCrew', dir: true }, { name: 'notes', dir: true }])
+    const fetchMock = mockComplete([{ name: 'AjCrew', dir: true }, { name: 'notes', dir: true }])
     vi.stubGlobal('fetch', fetchMock)
     const line = `${PROMPT}cd ../`
     const h = makeTerm(line, line.length)
@@ -195,7 +195,7 @@ describe('TerminalCompletion', () => {
     await trigger(h)
 
     expect(screen.getByTestId('terminal-completion')).toBeInTheDocument()
-    expect(screen.getByText('KiroCrew/')).toBeInTheDocument()
+    expect(screen.getByText('AjCrew/')).toBeInTheDocument()
     // `cd` is a directory-only command, so the request narrows the listing. No
     // `argv`: its ABSENCE is what selects the path tier server-side.
     const body = JSON.parse(fetchMock.mock.calls[0][1].body)
@@ -260,7 +260,7 @@ describe('TerminalCompletion', () => {
   // accepting it has to replace the typed fragment rather than extend it.
   it('emphasises a mid-name match and replaces the typed fragment', async () => {
     vi.stubGlobal('fetch', mockComplete(
-      [{ name: 'KiroCrew-terminal-completion', dir: true, at: 9 }], 'termi', '/work',
+      [{ name: 'AjCrew-terminal-completion', dir: true, at: 9 }], 'termi', '/work',
     ))
     const line = `${PROMPT}cd termi`
     const h = makeTerm(line, line.length)
@@ -268,12 +268,12 @@ describe('TerminalCompletion', () => {
     await trigger(h)
 
     const row = screen.getByRole('option')
-    expect(row).toHaveTextContent('KiroCrew-terminal-completion/')
+    expect(row).toHaveTextContent('AjCrew-terminal-completion/')
     // Only the matched span is emphasised, not the whole name.
     expect(row.querySelector('span span')).toHaveTextContent('termi')
     // The name does not extend "termi", so the fragment is erased and retyped.
     await act(async () => { pick(h) })
-    expect(sent).toEqual(['\x7f'.repeat(5) + 'KiroCrew-terminal-completion/'])
+    expect(sent).toEqual(['\x7f'.repeat(5) + 'AjCrew-terminal-completion/'])
   })
 
   it('captions the highlighted row', async () => {

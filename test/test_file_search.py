@@ -10,7 +10,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.dashboard.handlers import api_file_search
+from aj_crew.dashboard.handlers import api_file_search
 
 
 def _make_app() -> web.Application:
@@ -28,7 +28,7 @@ def _make_app() -> web.Application:
 
 @pytest.fixture()
 def mock_sel():
-    with patch("kiro_crew.dashboard.handlers.sel") as m:
+    with patch("aj_crew.dashboard.handlers.sel") as m:
         m.return_value = MagicMock()
         yield m.return_value
 
@@ -103,7 +103,7 @@ class TestFileSearch:
         ws_dir.mkdir()
         (ws_dir / "target.py").write_text("t")
         (tmp_path / "target_outside.py").write_text("o")
-        with patch("kiro_crew.config.loader.workspace_dir_for", return_value=ws_dir):
+        with patch("aj_crew.config.loader.workspace_dir_for", return_value=ws_dir):
             async with TestClient(TestServer(_make_app())) as client:
                 resp = await client.get("/api/file-search?q=target&workspace=myws")
                 names = {r["name"] for r in (await resp.json())["results"]}
@@ -113,7 +113,7 @@ class TestFileSearch:
     @pytest.mark.asyncio
     async def test_missing_workspace_dir_does_not_fall_back(self, tmp_path, mock_sel):
         """A named workspace whose directory is gone must not search the default roots."""
-        with patch("kiro_crew.config.loader.workspace_dir_for", return_value=tmp_path / "gone"):
+        with patch("aj_crew.config.loader.workspace_dir_for", return_value=tmp_path / "gone"):
             async with TestClient(TestServer(_make_app())) as client:
                 resp = await client.get("/api/file-search?q=target&workspace=chosen")
                 assert resp.status == 404
@@ -152,7 +152,7 @@ class TestFileSearch:
         """
         (tmp_path / "findme.txt").write_text("x")
         with patch.dict(os.environ, {"HOME": str(tmp_path), "USERPROFILE": str(tmp_path)}, clear=False), \
-             patch.dict(os.environ, {"KIROCREW_PROJECT_DIR": ""}, clear=False):
+             patch.dict(os.environ, {"AJCREW_PROJECT_DIR": ""}, clear=False):
             async with TestClient(TestServer(_make_app())) as client:
                 resp = await client.get("/api/file-search?q=findme")
                 names = {r["name"] for r in (await resp.json())["results"]}
@@ -186,7 +186,7 @@ class TestFileSearch:
     async def test_project_sensitive_path_rejected(self, tmp_path, mock_sel):
         sensitive_dir = tmp_path / "secret"
         sensitive_dir.mkdir()
-        with patch("kiro_crew.security.is_sensitive_path", return_value=True):
+        with patch("aj_crew.security.is_sensitive_path", return_value=True):
             async with TestClient(TestServer(_make_app())) as client:
                 resp = await client.get(
                     f"/api/file-search?q=test&project={sensitive_dir}"
@@ -292,7 +292,7 @@ class TestFileSearch:
         """SECURITY: an absurd limit is clamped to _SEARCH_LIMIT_CEILING, never
         passed to the walk -- max_collect multiplies it 10x, so an unclamped
         value would amplify server-side filesystem work."""
-        from kiro_crew.dashboard.handlers.files import _SEARCH_LIMIT_CEILING
+        from aj_crew.dashboard.handlers.files import _SEARCH_LIMIT_CEILING
         for i in range(_SEARCH_LIMIT_CEILING + 10):
             (tmp_path / f"match_{i:03d}.txt").write_text("x")
         async with TestClient(TestServer(_make_app())) as client:

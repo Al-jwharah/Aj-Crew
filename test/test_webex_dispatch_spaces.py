@@ -23,9 +23,9 @@ from webex_dispatch_helpers import (
     _spin,
 )
 
-from kiro_crew.acp.types import EVENT_COMPLETE, AcpEvent
-from kiro_crew.testing.wait import await_until
-from kiro_crew.webex import transport_dispatch as webex_dispatch
+from aj_crew.acp.types import EVENT_COMPLETE, AcpEvent
+from aj_crew.testing.wait import await_until
+from aj_crew.webex import transport_dispatch as webex_dispatch
 
 # ------------------------------------------------------------------
 # Tests: group spaces
@@ -48,7 +48,7 @@ class TestGroupSpaceRouting:
         async def _capture(turn, *, sessions, ctx_builder):
             keys.append(turn.session_key)
 
-        with mock.patch("kiro_crew.webex.transport_dispatch.drive_turn", _capture):
+        with mock.patch("aj_crew.webex.transport_dispatch.drive_turn", _capture):
             await d.handle_message(_space("hi"))
             await d.handle_message(_inbound("hi"))
 
@@ -74,7 +74,7 @@ class TestGroupSpaceRouting:
         async def _capture(turn, *, sessions, ctx_builder):
             keys.append(turn.session_key)
 
-        with mock.patch("kiro_crew.webex.transport_dispatch.drive_turn", _capture):
+        with mock.patch("aj_crew.webex.transport_dispatch.drive_turn", _capture):
             await d.handle_message(_space("hi"))
             await d.handle_message(_inbound("hi"))
 
@@ -137,8 +137,8 @@ class TestGroupSpaceRouting:
         async def _noop(turn, *, sessions, ctx_builder):
             pass
 
-        with mock.patch("kiro_crew.webex.transport_dispatch.WebexRenderer", _spy):
-            with mock.patch("kiro_crew.webex.transport_dispatch.drive_turn", _noop):
+        with mock.patch("aj_crew.webex.transport_dispatch.WebexRenderer", _spy):
+            with mock.patch("aj_crew.webex.transport_dispatch.drive_turn", _noop):
                 await d.handle_message(_space("hi"))
                 await d.handle_message(_inbound("hi"))
 
@@ -160,7 +160,7 @@ class TestGroupSpaceRouting:
         async def _capture(turn, *, sessions, ctx_builder):
             seen.append(turn.minimal_context)
 
-        with mock.patch("kiro_crew.webex.transport_dispatch.drive_turn", _capture):
+        with mock.patch("aj_crew.webex.transport_dispatch.drive_turn", _capture):
             await d.handle_message(_space("hi"))
             await d.handle_message(_inbound("hi"))
 

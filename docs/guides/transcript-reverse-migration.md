@@ -19,10 +19,10 @@ any session whose `<sid>.json` is absent from `kiro_sessions_dir()`, and that
 prune is not reversible.
 
 ```bash
-kirocrew stop        # wait for the gateway to exit
+ajcrew stop        # wait for the gateway to exit
 # ... run the file-move recipe in the next section ...
 unset KIRO_HOME      # or remove the line from your shell profile
-kirocrew gateway
+ajcrew gateway
 ```
 
 ### If `KIRO_HOME` has already been reverted
@@ -30,7 +30,7 @@ kirocrew gateway
 Stop the gateway if it is still running:
 
 ```bash
-kirocrew stop
+ajcrew stop
 ```
 
 Check whether the session map entries are still present before running the

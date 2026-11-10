@@ -19,9 +19,9 @@ import pytest
 from named_cases_helpers import named_cases
 from slack_code_channels_helpers import OWNER, Env, make_env, mention
 
-from kiro_crew.slack.code_channels import creation, routing
-from kiro_crew.slack.code_channels.creation import ORIGIN_CONTEXT_BLOCK_ID, slack_sender
-from kiro_crew.slack.code_channels.store import Binding
+from aj_crew.slack.code_channels import creation, routing
+from aj_crew.slack.code_channels.creation import ORIGIN_CONTEXT_BLOCK_ID, slack_sender
+from aj_crew.slack.code_channels.store import Binding
 
 pytestmark = pytest.mark.asyncio
 
@@ -213,8 +213,8 @@ async def test_an_opener_carrying_the_thread_inline_names_no_single_sender(
 async def test_a_slot_on_the_wrong_agent_refuses_without_appending_anything() -> None:
     """Through the real linked-slot route: the agent-mismatch refusal is told
     apart from a delivery, and nothing reaches the slot's transcript or queue."""
-    from kiro_crew.slack import handler
-    from kiro_crew.slack.handler import LinkedRoute
+    from aj_crew.slack import handler
+    from aj_crew.slack.handler import LinkedRoute
 
     slot = MagicMock()
     slot.running = False
@@ -231,7 +231,7 @@ async def test_a_slot_on_the_wrong_agent_refuses_without_appending_anything() ->
         patch.object(handler, "_dashboard_state", state),
         patch.object(handler, "is_allowed_user", return_value=True),
         patch.object(handler, "linked_slot_channel_mismatch", AsyncMock(return_value="reviewer")),
-        patch("kiro_crew.dashboard.chat._run_chat", new_callable=AsyncMock) as run_chat,
+        patch("aj_crew.dashboard.chat._run_chat", new_callable=AsyncMock) as run_chat,
     ):
         routed = await routing._route_to_slot(
             orch, binding, "opener", OWNER, sender=SENDER, request_id="C0ORIGIN:1.0"
@@ -246,7 +246,7 @@ async def test_a_slot_on_the_wrong_agent_refuses_without_appending_anything() ->
 
 async def test_the_session_user_row_stores_the_sender_as_meta() -> None:
     """Through the real linked-slot delivery: the appended user row's meta."""
-    from kiro_crew.slack import handler
+    from aj_crew.slack import handler
 
     slot = MagicMock()
     slot.running = False
@@ -263,7 +263,7 @@ async def test_the_session_user_row_stores_the_sender_as_meta() -> None:
     with (
         patch.object(handler, "_dashboard_state", state),
         patch.object(handler, "is_allowed_user", return_value=True),
-        patch("kiro_crew.dashboard.chat._run_chat", new_callable=AsyncMock),
+        patch("aj_crew.dashboard.chat._run_chat", new_callable=AsyncMock),
     ):
         assert await routing._route_to_slot(orch, binding, "hi", OWNER, sender=SENDER)
         assert await routing._route_to_slot(orch, binding, "again", OWNER)
@@ -295,7 +295,7 @@ def drain_fixture(tmp_path: Any, monkeypatch: pytest.MonkeyPatch) -> Any:
 
 
 async def _queue_from_slack(state: Any, slot: Any, text: str, sender: dict[str, str]) -> None:
-    from kiro_crew.slack import handler
+    from aj_crew.slack import handler
 
     state.get_linked_slot = lambda _ts: slot
     with (
@@ -317,7 +317,7 @@ async def _queue_from_slack(state: Any, slot: Any, text: str, sender: dict[str, 
 async def _drain(state: Any, slot: Any, monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
     import asyncio
 
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     slot.task.cancel()
     slot.task = None
@@ -391,7 +391,7 @@ async def test_an_unchanged_edit_keeps_the_sender(
 
 async def test_a_routed_answer_hands_its_sender_to_the_linked_slot() -> None:
     """``handle_message(user_meta=...)`` reaches the linked-slot delivery unchanged."""
-    from kiro_crew.slack import handler
+    from aj_crew.slack import handler
 
     route = AsyncMock(return_value=True)
     with patch.object(handler, "maybe_route_linked_thread", route):
@@ -413,10 +413,10 @@ async def test_a_routed_answer_hands_its_sender_to_the_linked_slot() -> None:
 async def test_row_meta_cannot_overwrite_the_queue_containment_stamp(drain_fixture: Any) -> None:
     from test_responsive_chat import _busy
 
-    from kiro_crew.dashboard.session_control_parts.delivery_containment import (
+    from aj_crew.dashboard.session_control_parts.delivery_containment import (
         QUEUED_CONTAINMENT_META_KEY,
     )
-    from kiro_crew.slack import handler
+    from aj_crew.slack import handler
 
     state, slot, *_ = drain_fixture
     _busy(slot)
@@ -441,11 +441,11 @@ async def test_a_dashboard_send_cannot_pass_itself_off_as_a_slack_user(
     from aiohttp.test_utils import TestClient, TestServer
     from chat_test_helpers import _make_app, _make_state
 
-    from kiro_crew.dashboard.chat_handlers import RESERVED_ROW_META_KEYS
+    from aj_crew.dashboard.chat_handlers import RESERVED_ROW_META_KEYS
 
     assert "slack_sender" in RESERVED_ROW_META_KEYS
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", AsyncMock())
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", AsyncMock())
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     slot = state.get_or_create_slot("test")

@@ -1,6 +1,6 @@
 """A Slack-thread auto-nudge matches skill triggers on the loop's own message.
 
-``_fire_slack_inner_nudge`` puts Kiro Crew's ``[auto-nudge cycle N]`` header
+``_fire_slack_inner_nudge`` puts Aj Crew's ``[auto-nudge cycle N]`` header
 (and, on a capped loop, the patrol budget line) before the loop's message.
 Unless ``build_message`` gets ``skill_trigger_text``, triggers match that whole
 text, so a skill whose trigger is a word of the header loads into every cycle.
@@ -19,11 +19,11 @@ from unittest.mock import AsyncMock
 import pytest
 from slack_gateway_coverage_helpers import _loop, _slack_nudge_orchestrator
 
-import kiro_crew.slack.gateway as gw
-from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
-from kiro_crew.context import ContextBuilder
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+import aj_crew.slack.gateway as gw
+from aj_crew.config.loader import AjCrewConfig, SkillsConfig
+from aj_crew.context import ContextBuilder
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 pytestmark = pytest.mark.usefixtures("close_skills_loaders")
 
@@ -61,7 +61,7 @@ def _builder(tmp_path: Path) -> ContextBuilder:
     loader = SkillsLoader(
         skills_path=skills,
         install_builtins=False,
-        config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+        config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
     )
     return ContextBuilder(memory=MemoryStore(workspace=tmp_path / "ws"), skills=loader)
 

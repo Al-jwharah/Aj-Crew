@@ -8,9 +8,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.artifacts import ArtifactNotFoundError, ArtifactStore
-from kiro_crew.knowledge import artifact_ingest
-from kiro_crew.knowledge.artifact_ingest import (
+from aj_crew.artifacts import ArtifactNotFoundError, ArtifactStore
+from aj_crew.knowledge import artifact_ingest
+from aj_crew.knowledge.artifact_ingest import (
     ARTIFACT_SOURCE_TYPE,
     ARTIFACT_SOURCE_URI,
     ArtifactKnowledgeSync,
@@ -20,10 +20,10 @@ from kiro_crew.knowledge.artifact_ingest import (
     refresh_artifact_name,
     remove_artifact,
 )
-from kiro_crew.knowledge.ingestion import DUPLICATE_JOB_STATUS, IngestionPipeline
-from kiro_crew.knowledge.readers import FileReader
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.on_loop_db import OnLoopStoreError
+from aj_crew.knowledge.ingestion import DUPLICATE_JOB_STATUS, IngestionPipeline
+from aj_crew.knowledge.readers import FileReader
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.on_loop_db import OnLoopStoreError
 
 DEFAULT_KINDS = {"markdown", "text", "html", "json"}
 
@@ -213,7 +213,7 @@ class TestIngestArtifact:
             name="Backed", content="# notes\nsensitive body", kind="markdown",
             source_path=str(src_file))
         monkeypatch.setattr(
-            "kiro_crew.knowledge.artifact_ingest.is_sensitive_path", lambda p: True)
+            "aj_crew.knowledge.artifact_ingest.is_sensitive_path", lambda p: True)
         assert await ingest_artifact(pipeline, art_store, art.slug, sid, DEFAULT_KINDS) is None
         assert _contents(kstore, sid) == []
 
@@ -938,7 +938,7 @@ class TestArtifactKnowledgeSync:
         monkeypatch.setattr(
             artifact_ingest, "reconcile_artifacts",
             AsyncMock(return_value=(0, 0, 0)))
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         sync = ArtifactKnowledgeSync(
             art_store=art_store, pipeline=pipeline, kinds=DEFAULT_KINDS,
             loop=asyncio.get_running_loop())
@@ -968,7 +968,7 @@ class TestArtifactKnowledgeSync:
         art = art_store.create(name="Doc", content="hello body", kind="markdown")
         monkeypatch.setattr(
             pipeline, "ingest_file", AsyncMock(return_value=None))
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         sync = ArtifactKnowledgeSync(
             art_store=art_store, pipeline=pipeline, kinds=DEFAULT_KINDS,
             loop=asyncio.get_running_loop())
@@ -996,7 +996,7 @@ class TestArtifactKnowledgeSync:
         art = art_store.create(name="Doc", content="v1 body", kind="markdown")
         await ingest_artifact(pipeline, art_store, art.slug, sid, DEFAULT_KINDS)
         art_store.update(art.slug, content="v2 body", snapshot=True)
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         sync = ArtifactKnowledgeSync(
             art_store=art_store, pipeline=pipeline, kinds=DEFAULT_KINDS,
             loop=asyncio.get_running_loop())
@@ -1014,7 +1014,7 @@ class TestArtifactKnowledgeSync:
         sid, _ = await asyncio.to_thread(ensure_artifact_source, kstore)
         art = art_store.create(name="Doc", content="doomed body", kind="markdown")
         await ingest_artifact(pipeline, art_store, art.slug, sid, DEFAULT_KINDS)
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         sync = ArtifactKnowledgeSync(
             art_store=art_store, pipeline=pipeline, kinds=DEFAULT_KINDS,
             loop=asyncio.get_running_loop())
@@ -1036,7 +1036,7 @@ class TestArtifactKnowledgeSync:
         art = art_store.create(name="Before", content="stable body", kind="markdown")
         await ingest_artifact(pipeline, art_store, art.slug, sid, DEFAULT_KINDS)
         art_store.update(art.slug, name="After")
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         sync = ArtifactKnowledgeSync(
             art_store=art_store, pipeline=pipeline, kinds=DEFAULT_KINDS,
             loop=asyncio.get_running_loop())
@@ -1067,7 +1067,7 @@ class TestArtifactUpsertOnLoopGuardIsWired:
         art_store.update(art.slug, content="second body", snapshot=True)
         monkeypatch.setattr(
             pipeline, "ingest_file", AsyncMock(return_value=None))
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         # Must not raise: _get_state and release_stale_claim are offloaded.
         assert await ingest_artifact(
             pipeline, art_store, art.slug, sid, DEFAULT_KINDS) is None
@@ -1076,7 +1076,7 @@ class TestArtifactUpsertOnLoopGuardIsWired:
     async def test_the_guard_is_armed_on_this_store(self, kstore, monkeypatch):
         """Control: a direct on-loop take of this store's connection under strict
         mode raises, so the passes above are meaningful."""
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         with pytest.raises(OnLoopStoreError):
             kstore.db  # noqa: B018 - the on-loop take is the operation under test
 
@@ -1085,11 +1085,11 @@ class TestKnowledgeConfigDefaults:
     def test_auto_ingest_defaults_off(self):
         # Opt-in: the dataclass default and the loader must agree, or the
         # dashboard toggle and the running gateway disagree about the state.
-        from kiro_crew.config.loader import KiroCrewConfig, KnowledgeConfig
+        from aj_crew.config.loader import AjCrewConfig, KnowledgeConfig
         kc = KnowledgeConfig()
         assert kc.auto_ingest_artifacts is False
         assert kc.auto_ingest_artifact_kinds == ["markdown", "text", "html", "json"]
-        assert KiroCrewConfig().knowledge.auto_ingest_artifacts is False
+        assert AjCrewConfig().knowledge.auto_ingest_artifacts is False
 
 
 class TestGroupLabelAndRename:
@@ -1107,7 +1107,7 @@ class TestGroupLabelAndRename:
     async def test_attach_file_paths_labels_artifact_items_by_name(
         self, pipeline, art_store, kstore
     ):
-        from kiro_crew.dashboard.handlers.knowledge import _attach_file_paths
+        from aj_crew.dashboard.handlers.knowledge import _attach_file_paths
         sid, _ = ensure_artifact_source(kstore)
         art = art_store.create(name="Grouped Doc", content="body", kind="markdown")
         await ingest_artifact(pipeline, art_store, art.slug, sid, DEFAULT_KINDS)
@@ -1246,8 +1246,8 @@ def test_removing_a_deduped_artifact_releases_its_claim_on_the_winner(tmp_path):
     Deleting the artifact must drop that claim, or a later winner deletion hands the
     document to a source whose artifact is gone and the text stays searchable.
     """
-    from kiro_crew.knowledge.artifact_ingest import remove_artifact
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.knowledge.artifact_ingest import remove_artifact
+    from aj_crew.knowledge.store import KnowledgeStore
 
     store = KnowledgeStore(str(tmp_path / "k.db"))
     try:

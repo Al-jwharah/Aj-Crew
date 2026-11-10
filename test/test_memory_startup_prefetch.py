@@ -14,9 +14,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import memory_backup
-from kiro_crew.memory_startup import MemoryStartup, require_memory_prepared
-from kiro_crew.slack.gateway import GatewayOrchestrator
+from aj_crew import memory_backup
+from aj_crew.memory_startup import MemoryStartup, require_memory_prepared
+from aj_crew.slack.gateway import GatewayOrchestrator
 
 
 def _gateway(monkeypatch, *, embed_fn):
@@ -36,8 +36,8 @@ def _gateway(monkeypatch, *, embed_fn):
     gateway.vector_memory.embed_fn = embed_fn
     gateway._auto_migrate_memory = AsyncMock()
     gateway._repair_member_memory = AsyncMock()
-    monkeypatch.setattr("kiro_crew.context.reset_memory_caches", lambda memory: None)
-    monkeypatch.setattr("kiro_crew.memory_stores.repair_legacy_member_stores", lambda: [])
+    monkeypatch.setattr("aj_crew.context.reset_memory_caches", lambda memory: None)
+    monkeypatch.setattr("aj_crew.memory_stores.repair_legacy_member_stores", lambda: [])
     monkeypatch.setattr(memory_backup, "apply_pending_member_restores", lambda **kwargs: {})
     return gateway
 
@@ -65,7 +65,7 @@ async def test_preparation_starts_the_model_load_before_it_completes(monkeypatch
         seen_before_open.append(len(backend.prefetches))
 
     gateway.vector_memory.init.side_effect = open_vectors
-    monkeypatch.setattr("kiro_crew.slack.gateway.get_shared_embedder", lambda: backend)
+    monkeypatch.setattr("aj_crew.slack.gateway.get_shared_embedder", lambda: backend)
     try:
         await gateway._wait_for_memory_preparation()
         assert backend.prefetches == [True]
@@ -78,7 +78,7 @@ async def test_preparation_starts_the_model_load_before_it_completes(monkeypatch
 async def test_no_model_file_means_no_prefetch(monkeypatch):
     backend = _Backend()
     gateway = _gateway(monkeypatch, embed_fn=None)
-    monkeypatch.setattr("kiro_crew.slack.gateway.get_shared_embedder", lambda: backend)
+    monkeypatch.setattr("aj_crew.slack.gateway.get_shared_embedder", lambda: backend)
     try:
         await gateway._wait_for_memory_preparation()
         assert backend.prefetches == []
@@ -88,7 +88,7 @@ async def test_no_model_file_means_no_prefetch(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_preparation_reads_the_memory_databases_in_order_first(monkeypatch, tmp_path):
-    from kiro_crew import page_cache
+    from aj_crew import page_cache
 
     gateway = _gateway(monkeypatch, embed_fn=None)
     gateway.vector_memory._db_path = tmp_path / "memory.db"
@@ -114,7 +114,7 @@ async def test_preparation_reads_the_memory_databases_in_order_first(monkeypatch
 async def test_the_read_starts_only_after_pending_restores(monkeypatch, tmp_path):
     # A pending restore renames memory.db; on Windows an open read handle
     # would make that rename fail, so the read must not start before it.
-    from kiro_crew import page_cache
+    from aj_crew import page_cache
 
     gateway = _gateway(monkeypatch, embed_fn=None)
     gateway.vector_memory._db_path = tmp_path / "memory.db"
@@ -136,7 +136,7 @@ async def test_the_read_starts_only_after_pending_restores(monkeypatch, tmp_path
 async def test_a_failing_prefetch_does_not_fail_preparation(monkeypatch):
     backend = _Backend(fail=True)
     gateway = _gateway(monkeypatch, embed_fn=lambda text: [0.0])
-    monkeypatch.setattr("kiro_crew.slack.gateway.get_shared_embedder", lambda: backend)
+    monkeypatch.setattr("aj_crew.slack.gateway.get_shared_embedder", lambda: backend)
     try:
         await gateway._wait_for_memory_preparation()
         assert backend.prefetches == [True]

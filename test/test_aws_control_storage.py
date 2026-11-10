@@ -18,23 +18,23 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import sandbox
-from kiro_crew.apps.builtins.aws_control.backend import storage
-from kiro_crew.deploy import engine
-from kiro_crew.deploy.engine import AWSError
+from aj_crew import sandbox
+from aj_crew.apps.builtins.aws_control.backend import storage
+from aj_crew.deploy import engine
+from aj_crew.deploy.engine import AWSError
 
 
 @contextlib.contextmanager
 def _crew_home_pinned_to(parent_dir: Path):
     """Build the sandbox mask universe from *parent_dir*, not the real home.
 
-    The temp root can sit INSIDE the real crew home (under KIROCREW_SCRATCH), where
+    The temp root can sit INSIDE the real crew home (under AJCREW_SCRATCH), where
     the shadow guard would refuse a layout production never has. The guard itself
     still runs for real.
     """
     with (
         mock.patch.object(sandbox.Path, "home", staticmethod(lambda: parent_dir)),
-        mock.patch.dict(os.environ, {"KIROCREW_HOME": str(parent_dir / "crew")}),
+        mock.patch.dict(os.environ, {"AJCREW_HOME": str(parent_dir / "crew")}),
     ):
         yield
 
@@ -78,7 +78,7 @@ class TestFindDrive:
             assert storage.find_drive("p", "us-east-1", account="111122223333") is None
 
     def test_single_match_is_returned(self):
-        name = "kirocrew-drive-0123456789ab"
+        name = "ajcrew-drive-0123456789ab"
         payload = json.dumps({"ResourceTagMappingList": [{"ResourceARN": f"arn:aws:s3:::{name}"}]})
         with (
             mock.patch.object(storage, "_checked", return_value=payload),
@@ -92,7 +92,7 @@ class TestFindDrive:
         # The tags say WHICH bucket; only S3 says WHOSE it is. A profile repointed
         # from A to B discovers B's tagged bucket, and without this a request for
         # /drive/A would read and write B's drive with no consent from B's owner.
-        name = "kirocrew-drive-0123456789ab"
+        name = "ajcrew-drive-0123456789ab"
         payload = json.dumps({"ResourceTagMappingList": [{"ResourceARN": f"arn:aws:s3:::{name}"}]})
         with (
             mock.patch.object(storage, "_checked", return_value=payload),
@@ -105,7 +105,7 @@ class TestFindDrive:
         assert "111122223333" in str(exc.value)
 
     def test_the_owner_probe_carries_the_verified_account(self):
-        name = "kirocrew-drive-0123456789ab"
+        name = "ajcrew-drive-0123456789ab"
         payload = json.dumps({"ResourceTagMappingList": [{"ResourceARN": f"arn:aws:s3:::{name}"}]})
         with (
             mock.patch.object(storage, "_checked", return_value=payload),
@@ -122,7 +122,7 @@ class TestFindDrive:
         # matches no redactor pattern downstream -- so it travels into the
         # response and the audit log looking harmless. _trimmed_stderr redacts
         # first, which is the only order that works.
-        name = "kirocrew-drive-0123456789ab"
+        name = "ajcrew-drive-0123456789ab"
         payload = json.dumps({"ResourceTagMappingList": [{"ResourceARN": f"arn:aws:s3:::{name}"}]})
         secret = "AKIAIOSFODNN7EXAMPLE"
         noise = "x" * 190
@@ -159,8 +159,8 @@ class TestFindDrive:
         assert seen["region"] == engine.DEFAULT_REGION
 
     def test_both_discovery_tags_are_anded_in_the_filter(self):
-        # Discovery is a trust decision: BOTH kirocrew:managed=true AND
-        # kirocrew:drive=default must be required, or a bucket carrying only one
+        # Discovery is a trust decision: BOTH ajcrew:managed=true AND
+        # ajcrew:drive=default must be required, or a bucket carrying only one
         # tag could be adopted as the mutation target.
         seen: dict[str, list] = {}
 
@@ -249,7 +249,7 @@ class TestCreateDrive:
             self._run_create("us-west-2", owner_rc=1, owner_err="An error occurred (403)")
         assert "123456789012" in str(exc.value)
         # The bucket name is surfaced so the owner can remove the orphan.
-        assert "kirocrew-drive-" in str(exc.value)
+        assert "ajcrew-drive-" in str(exc.value)
 
     def test_an_ambiguous_ownership_answer_is_treated_as_a_mismatch(self):
         # A throttle leaves us unable to say which account this is; tagging it
@@ -304,7 +304,7 @@ class TestCreateDrive:
         policy = json.loads(put[put.index("--policy") + 1])
         assert policy["Statement"] == [
             {
-                "Sid": "KiroCrewDenyInsecureTransport",
+                "Sid": "AjCrewDenyInsecureTransport",
                 "Effect": "Deny",
                 "Principal": "*",
                 "Action": "s3:*",
@@ -334,7 +334,7 @@ class TestCreateDrive:
             mock.patch.object(storage.engine, "run_aws", side_effect=run_aws),
         ):
             bucket = storage.create_drive("p", "us-west-2", "123456789012")
-        assert bucket.startswith("kirocrew-drive-")
+        assert bucket.startswith("ajcrew-drive-")
         assert "put-bucket-policy" not in calls
         assert calls[-1] == "harden"
 
@@ -366,7 +366,7 @@ class TestEnsureTlsOnlyPolicy:
         puts = self._run((254, "", "An error occurred (NoSuchBucketPolicy)"))
         assert len(puts) == 1
         statements = json.loads(puts[0][puts[0].index("--policy") + 1])["Statement"]
-        assert [s["Sid"] for s in statements] == ["KiroCrewDenyInsecureTransport"]
+        assert [s["Sid"] for s in statements] == ["AjCrewDenyInsecureTransport"]
 
     def test_an_owner_statement_is_kept_beside_the_new_one(self):
         own = {"Sid": "OwnerRule", "Effect": "Deny", "Principal": "*", "Action": "s3:Get*"}
@@ -374,7 +374,7 @@ class TestEnsureTlsOnlyPolicy:
         puts = self._run((0, existing, ""))
         statements = json.loads(puts[0][puts[0].index("--policy") + 1])["Statement"]
         assert statements[0] == own
-        assert statements[1]["Sid"] == "KiroCrewDenyInsecureTransport"
+        assert statements[1]["Sid"] == "AjCrewDenyInsecureTransport"
 
     def test_a_policy_that_already_has_it_is_left_alone(self):
         stmt = engine.deny_insecure_transport_statement("b")
@@ -1382,7 +1382,7 @@ class TestGetObjectHeadBytes:
         # plant a junction at its name before the create, and the CLI's path
         # resolves into the planted target. Both directories are therefore held
         # open -- root first, then the per-call directory -- for the whole call.
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         pinned: list[str] = []
         real_pin = platform_compat.pin_directory
@@ -1427,7 +1427,7 @@ class TestGetObjectHeadBytes:
     def test_the_staging_root_is_fenced_on_both_the_tool_gate_and_the_sandbox(self):
         # Moving the staging root out of the fenced leaf would silently
         # re-open the link swap; the three spellings are pinned together.
-        from kiro_crew import sandbox, security
+        from aj_crew import sandbox, security
 
         assert storage.STAGING_DIR_LEAF in security._CREW_SECRET_LEAVES
         assert storage.STAGING_DIR_LEAF in sandbox._CREW_HIDDEN_LEAVES

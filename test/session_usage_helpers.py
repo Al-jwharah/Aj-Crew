@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
 
-import kiro_crew.dashboard.handlers.sessions as sessions_mod
+import aj_crew.dashboard.handlers.sessions as sessions_mod
 
 SAMPLE_USAGE = (
     "Some preamble line\n"

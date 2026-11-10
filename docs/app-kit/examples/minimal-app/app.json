@@ -2,8 +2,8 @@
   "name": "hello-world",
   "version": "0.1.0",
   "displayName": "Hello World",
-  "description": "Minimal KiroCrew app — agent + skill only",
-  "author": "kirocrew",
+  "description": "Minimal AjCrew app — agent + skill only",
+  "author": "ajcrew",
   "agents": ["agents/greeter.json"],
   "skills": ["skills/greeting"],
   "tags": ["example"]

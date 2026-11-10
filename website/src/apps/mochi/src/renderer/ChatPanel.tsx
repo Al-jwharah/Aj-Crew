@@ -404,7 +404,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ onToggleWatch, watchPanelV
   }, [])
 
   useEffect(() => {
-    // Load history from KiroCrew slot
+    // Load history from AjCrew slot
     api?.getChatHistory?.().then((history) => {
       if (Array.isArray(history)) {
         // The bridge answers untyped rows, so the shape is asserted per FIELD here
@@ -1023,8 +1023,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ onToggleWatch, watchPanelV
              editSoul (the soul concept was removed — each avatar carries its own
              persona), doctor (all eight of upstream's checks verified that a
              SELF-INSTALLING standalone app had installed itself; as a builtin the
-             app manager owns that and `kirocrew doctor` covers the host), quit
-             (KiroCrew owns the app lifecycle; the pet is disabled from the App
+             app manager owns that and `ajcrew doctor` covers the host), quit
+             (AjCrew owns the app lifecycle; the pet is disabled from the App
              Store). resetMochi is BACK and implemented — see mochiApi.resetMochi
              and the /reset route. */
           items={[

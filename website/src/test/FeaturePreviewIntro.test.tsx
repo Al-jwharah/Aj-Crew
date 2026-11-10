@@ -128,7 +128,7 @@ describe('FeaturePreviewsSection — See-what-it-looks-like per card', () => {
     for (const k of ['mc-preview-webhooks', 'mc-preview-remote-crew-chat', 'mc-preview-crew-mode']) localStorage.removeItem(k)
     // The Decisions card reads `config.json`; stubbed so these capture-button
     // cases do not wait on a fetch that cannot succeed under vitest.
-    vi.spyOn(api, 'kirocrewConfig').mockResolvedValue({} as never)
+    vi.spyOn(api, 'ajcrewConfig').mockResolvedValue({} as never)
   })
   afterEach(() => {
     cleanup()

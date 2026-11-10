@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 from apps_registry_coverage_helpers import _fake_sandbox, _FakeProc
 
-from kiro_crew.apps import registry
+from aj_crew.apps import registry
 
 _GIT_URL = "https://github.com/o/demo.git"
 

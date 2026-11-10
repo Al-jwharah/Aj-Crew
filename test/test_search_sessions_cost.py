@@ -21,9 +21,9 @@ import threading
 
 import pytest
 
-from kiro_crew import history
-from kiro_crew.config.sections import DEFAULT_SEARCH_SCAN_WINDOW
-from kiro_crew.history import ConversationLog
+from aj_crew import history
+from aj_crew.config.sections import DEFAULT_SEARCH_SCAN_WINDOW
+from aj_crew.history import ConversationLog
 
 
 @pytest.fixture

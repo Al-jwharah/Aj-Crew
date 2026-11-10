@@ -19,14 +19,14 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew import session_ledger
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import checkpoint as savepoints
-from kiro_crew.crew_log import eager as crew_log_eager
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import store as crew_log_store
+from aj_crew import crew_log as lg
+from aj_crew import session_ledger
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import checkpoint as savepoints
+from aj_crew.crew_log import eager as crew_log_eager
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import store as crew_log_store
 
 BOARD, WORKER = "chat-rebuild-board", "chat-rebuild-worker"
 BOARD_UNIT, WORKER_UNIT = "u-rebuild-board", "u-rebuild-worker"
@@ -34,8 +34,8 @@ BOARD_UNIT, WORKER_UNIT = "u-rebuild-board", "u-rebuild-worker"
 
 @pytest.fixture(autouse=True)
 def _home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     _floor_monkeypatch.setattr(crew_log_eager, "note_commit", lambda *a, **k: None)
     _floor_monkeypatch.setattr(savepoints, "MIN_ADVANCE_ENTRIES", 2)
     ticks = itertools.count(1_700_000_000_000, 1_000)
@@ -132,7 +132,7 @@ def test_a_rebuild_leaves_the_workers_own_savepoint_alone():
 def test_a_rebuild_on_the_request_path_answers_not_ready():
     """``cold=False`` never pays for a fold of every unit, the rebuild's included."""
     _board_and_worker()
-    from kiro_crew.crew_log.projection_slot_memo import SlotFoldNotReady
+    from aj_crew.crew_log.projection_slot_memo import SlotFoldNotReady
 
     with pytest.raises(SlotFoldNotReady):
         crew_log.read_slot_projection(BOARD, "work", also_slots=(WORKER,), cold=False)

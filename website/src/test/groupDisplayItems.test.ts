@@ -24,7 +24,7 @@ const workingTurn = () => [msg('assistant', 'a'), msg('tool', 't'), msg('assista
 /** A sub-agent completion event SubagentCompletionCard can parse. */
 const COMPLETION = [
   '[Subagent completion event]',
-  'Agent `53e3e5eb` (kirocrew) completed ✅',
+  'Agent `53e3e5eb` (ajcrew) completed ✅',
   'Task: map the picker',
   '',
   'done',
@@ -135,7 +135,7 @@ describe('groupDisplayItems', () => {
     const { turns } = groupDisplayItems([
       msg('user', 'detect the root cause then raise the suggestion'),
       msg('assistant', 'Delegating three independent investigations.'),
-      msg('tool', '🔧 Running: @kirocrew-core/spawn_run'),
+      msg('tool', '🔧 Running: @ajcrew-core/spawn_run'),
       msg('assistant', 'Spawned 3 agents — waiting for results.'),
       msg('tool', '🔧 Reading result.txt:1'),
       msg('assistant', 'Root cause identified — investigation B is still running.'),
@@ -215,7 +215,7 @@ describe('groupDisplayItems', () => {
       synthesisRow(),
       answer('ANSWER ONE'),
       msg('assistant', 'spawning wave 2'),
-      msg('tool', '🔧 @kirocrew-core/spawn_run'),
+      msg('tool', '🔧 @ajcrew-core/spawn_run'),
       msg('assistant', 'wave 2 per-completion prose'),
       synthesisRow(),
       answer('ANSWER TWO'),

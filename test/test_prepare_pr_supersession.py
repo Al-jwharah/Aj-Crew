@@ -44,10 +44,10 @@ ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = (
     ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
+    / "ajcrew-dev"
+    / "ajcrew-prepare-pr"
     / "scripts"
     / "_review_contract.py"
 )
@@ -1483,7 +1483,7 @@ def test_the_required_status_actually_calls_the_gate() -> None:
     drifts silently.
     """
     step = _readiness_step("supersessions")
-    assert step["env"]["GATE"].endswith("kirocrew-prepare-pr/scripts/pr_status.py")
+    assert step["env"]["GATE"].endswith("ajcrew-prepare-pr/scripts/pr_status.py")
     assert "--supersession-gate" in step["run"]
     # The grammar must not gain a workflow-side copy: the step reads the gate's
     # JSON and parses no marker itself.

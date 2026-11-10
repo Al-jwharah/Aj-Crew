@@ -124,7 +124,7 @@ export function applyPushedRead(held: DashboardRead, arrived: DashboardRead): Da
 }
 
 /** The id `dashboard_frame.compose_body` gives the composed page's data island. */
-const ISLAND_ID = 'kirocrew-dashboard-data'
+const ISLAND_ID = 'ajcrew-dashboard-data'
 
 /** `dashboard_frame.escape_json_for_html`: each of these as JSON's own `\u` escape,
  *  so the JSON is the same and the HTML parser sees nothing it would act on. */

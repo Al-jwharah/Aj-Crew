@@ -24,12 +24,12 @@ export const KAS_ENGINE_INSTALL_POLL_MS = 2_000
 export const KAS_ENGINE_IDLE_POLL_MS = 20_000
 
 /**
- * App-level notice for Kiro Crew's own KAS engine, mounted beside the sign-in
+ * App-level notice for Aj Crew's own KAS engine, mounted beside the sign-in
  * notice. Choosing KAS runs Crew's own engine where kiro-cli cannot run, and the
  * gateway downloads that engine the first time a chat needs it. The download
  * takes a while, and nothing else on screen says why the chat has not started,
  * so this says so while it runs; a failed download says why and how to retry
- * (the gateway's own text names `kirocrew kas install`), with a Retry button.
+ * (the gateway's own text names `ajcrew kas install`), with a Retry button.
  *
  * Nothing while KAS is not the selected backend, with no install running, or
  * once the engine is installed.
@@ -38,8 +38,8 @@ export default function KasEngineNotice() {
   const qc = useQueryClient()
   const [dismissedError, setDismissedError] = useState<string | null>(null)
   const cfgQuery = useQuery<AcpBackendConfig>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
   })
   const kas = cfgQuery.data?.agent?.acp_backend === ACP_BACKEND_KAS
   const statusQuery = useQuery<KasBundleStatus>({

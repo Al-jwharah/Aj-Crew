@@ -32,14 +32,14 @@ from member_goals_helpers import (  # noqa: F401 -- the autouse fixtures registe
     _slug,
 )
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew import mcp_mate, member_goals
-from kiro_crew.agent_files import ASSISTANT_MEMBER_NAME
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, _invalidate_config_cache
-from kiro_crew.cron import CronService
-from kiro_crew.dashboard import goal_reminder
-from kiro_crew.dashboard.handlers import member_goals as goal_routes
-from kiro_crew.testing.wait import await_until
+from aj_crew import change_card_catalog as catalog
+from aj_crew import mcp_mate, member_goals
+from aj_crew.agent_files import ASSISTANT_MEMBER_NAME
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, _invalidate_config_cache
+from aj_crew.cron import CronService
+from aj_crew.dashboard import goal_reminder
+from aj_crew.dashboard.handlers import member_goals as goal_routes
+from aj_crew.testing.wait import await_until
 
 # ── a crewmate made on a crewmate.create card ──
 
@@ -52,7 +52,7 @@ class _CardState(FakeState):
 
     def __init__(self, tmp_path: Path) -> None:
         super().__init__()
-        from kiro_crew.dashboard.change_cards import CardStore
+        from aj_crew.dashboard.change_cards import CardStore
 
         self._change_card_store = CardStore(tmp_path / "cards.json")
         self.crons = _Crons(tmp_path / "crons")
@@ -67,15 +67,15 @@ class _CardState(FakeState):
 
 
 def _create_card_app(state: _CardState) -> web.Application:
-    from kiro_crew.dashboard.handlers import change_cards as card_routes
+    from aj_crew.dashboard.handlers import change_cards as card_routes
 
     async def create_agent(request: web.Request) -> web.Response:
         # Stands in for POST /api/agents: it records the body and publishes the
         # crewmate with the immutable member_id the real route allocates.
         body = await request.json()
         state.agent_bodies.append(body)
-        cfg = KiroCrewConfig.load()
-        cfg.agents[NEW_MEMBER] = KiroCrewAgentConfig(
+        cfg = AjCrewConfig.load()
+        cfg.agents[NEW_MEMBER] = AjCrewAgentConfig(
             kiro_agent=DEFAULT,
             member_id=NEW_MEMBER_ID,
             description=body.get("description", ""),
@@ -115,7 +115,7 @@ async def _owner_auth(request: web.Request, handler: Any) -> web.StreamResponse:
 
 
 def _propose_create(state: _CardState, params: dict[str, Any]) -> dict[str, Any]:
-    from kiro_crew.dashboard import change_cards as cards
+    from aj_crew.dashboard import change_cards as cards
 
     params = catalog.validate_params(catalog.KIND_CREWMATE_CREATE, params)
     before = asyncio.run(
@@ -179,7 +179,7 @@ def _apply_create(state: _CardState, card: dict[str, Any]) -> list[tuple[int, An
                 responses.append(data)
                 if r.status >= 400:
                     break
-            from kiro_crew.dashboard.handlers import change_cards as card_routes
+            from aj_crew.dashboard.handlers import change_cards as card_routes
 
             if card_routes._BACKGROUND:
                 await asyncio.gather(*list(card_routes._BACKGROUND))
@@ -193,7 +193,7 @@ def _apply_create(state: _CardState, card: dict[str, Any]) -> list[tuple[int, An
 @pytest.fixture
 def _card_owner(_floor_monkeypatch):
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
@@ -215,7 +215,7 @@ def test_a_create_card_writes_its_goal_as_the_long_term_goal_not_the_description
     assert [status for status, _ in results] == [200, 200, 200], results
     (agent_body,) = state.agent_bodies
     assert agent_body.get("description", "") == ""
-    assert KiroCrewConfig.load().agents[NEW_MEMBER].description == ""
+    assert AjCrewConfig.load().agents[NEW_MEMBER].description == ""
     rec = member_goals.read_goals(NEW_MEMBER_ID, NEW_MEMBER)
     assert _goal(rec) == "Keep the docs current"
     assert member_goals.member_goals_path(NEW_MEMBER_ID).parent.name == "member-goals"
@@ -269,7 +269,7 @@ def test_a_create_card_whose_goal_write_fails_says_so_on_the_card(
 
 
 def _propose_check_ins(state: _CardState, params: dict[str, Any]) -> dict[str, Any]:
-    from kiro_crew.dashboard import change_cards as cards
+    from aj_crew.dashboard import change_cards as cards
 
     kind = catalog.KIND_CREWMATE_CHECK_INS
     params = catalog.validate_params(kind, {"member": ORDINARY, **params})
@@ -292,7 +292,7 @@ def _run_card(state: _CardState, card_id: str, op: str) -> list[tuple[int, Any]]
     """Send the card's *op* plan through the real card middleware, as the dashboard does."""
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import change_cards as card_routes
+    from aj_crew.dashboard.handlers import change_cards as card_routes
 
     card = state._change_card_store.public(state._change_card_store.get(card_id))
 
@@ -386,7 +386,7 @@ def test_a_heartbeat_card_turns_it_on_at_its_interval_and_undo_turns_it_off(
     state = _CardState(tmp_path)
     member_goals.set_goal(slug, ORDINARY, "Ship", by="user")
     card = _propose_check_ins(state, {"heartbeat": True, "interval": 120})
-    from kiro_crew.dashboard import change_cards as cards
+    from aj_crew.dashboard import change_cards as cards
 
     kind = catalog.KIND_CREWMATE_CHECK_INS
     params = catalog.validate_params(kind, {"member": ORDINARY, "heartbeat": True, "interval": 120})
@@ -418,7 +418,7 @@ def test_a_heartbeat_card_at_the_default_interval_still_says_how_often(
     slug = _slug(ORDINARY)
     state = _CardState(tmp_path)
     member_goals.set_goal(slug, ORDINARY, "Ship", by="user")
-    from kiro_crew.dashboard import change_cards as cards
+    from aj_crew.dashboard import change_cards as cards
 
     kind = catalog.KIND_CREWMATE_CHECK_INS
     for params in ({"heartbeat": True}, {"heartbeat": True, "interval": 60}):
@@ -439,7 +439,7 @@ def test_a_heartbeat_card_at_the_default_interval_still_says_how_often(
 
 def test_every_surface_writes_the_interval_one_way() -> None:
     """The card, the tool text and the wake prompt share ``member_goals.interval_label``."""
-    from kiro_crew import mcp_mate
+    from aj_crew import mcp_mate
 
     assert [member_goals.interval_label(m) for m in member_goals.HEARTBEAT_INTERVALS] == [
         "30 min",
@@ -476,7 +476,7 @@ def test_a_heartbeat_card_refuses_an_interval_outside_the_list(interval: Any) ->
 
 
 def test_a_path_fill_takes_only_the_identifier_the_earlier_step_returned() -> None:
-    from kiro_crew.dashboard.handlers.change_cards import match_step
+    from aj_crew.dashboard.handlers.change_cards import match_step
 
     p = catalog.validate_params(catalog.KIND_CREWMATE_CREATE, {"name": "Rover", "goal": "g"})
     goal = catalog.build_preview(catalog.KIND_CREWMATE_CREATE, p, {"exists": False}, {})["apply"][
@@ -499,10 +499,10 @@ def test_deleting_a_crewmate_removes_its_goal_check_ins(tmp_path: Path, _floor_m
     from types import SimpleNamespace
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard.handlers.agents import api_kirocrew_agent_delete
+    from aj_crew.dashboard.handlers.agents import api_ajcrew_agent_delete
 
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
     _seed()
@@ -524,7 +524,7 @@ def test_deleting_a_crewmate_removes_its_goal_check_ins(tmp_path: Path, _floor_m
         request.match_info = {"name": ORDINARY}
         request.app = {"state": SimpleNamespace(crons=svc, push_refresh=MagicMock())}
         request.get = lambda key, default=None: default
-        return (await api_kirocrew_agent_delete(request)).status
+        return (await api_ajcrew_agent_delete(request)).status
 
     assert asyncio.run(go()) == 200
     names = sorted(j.name for j in svc.list_jobs(include_disabled=True))
@@ -562,7 +562,7 @@ def test_the_goals_tab_saves_over_a_goal_it_was_shown_scrubbed() -> None:
 
 
 def test_a_report_is_saved_scrubbed() -> None:
-    from kiro_crew import artifacts as artifacts_mod
+    from aj_crew import artifacts as artifacts_mod
 
     _seed()
     slug = _slug(ORDINARY)
@@ -608,7 +608,7 @@ def test_wide_readings_never_lock_the_record(_floor_monkeypatch) -> None:
 
 
 def test_a_key_results_card_undo_restores_ids_and_readings(tmp_path: Path) -> None:
-    from kiro_crew.dashboard import change_cards as cards
+    from aj_crew.dashboard import change_cards as cards
 
     _seed()
     slug = _slug(ORDINARY)
@@ -642,7 +642,7 @@ def test_a_key_results_card_undo_restores_ids_and_readings(tmp_path: Path) -> No
 
 def test_a_key_results_cards_public_plan_carries_no_unscrubbed_reading(tmp_path: Path) -> None:
     """The plan reaches every dashboard socket (CardStore.public): readings scrubbed."""
-    from kiro_crew.dashboard import change_cards as cards
+    from aj_crew.dashboard import change_cards as cards
 
     _seed()
     slug = _slug(ORDINARY)
@@ -683,7 +683,7 @@ def test_a_key_results_card_undo_keeps_readings_recorded_since_on_a_kept_key_res
     tmp_path: Path,
 ) -> None:
     """Undo puts back what the card removed; what it kept stays as it is now."""
-    from kiro_crew.dashboard import change_cards as cards
+    from aj_crew.dashboard import change_cards as cards
 
     _seed()
     slug = _slug(ORDINARY)
@@ -762,7 +762,7 @@ def test_undoing_a_card_that_added_the_first_milestones_still_checks_their_ids(
     tmp_path: Path,
 ) -> None:
     """``restore: []`` (no milestones before the card) still runs the locked id check."""
-    from kiro_crew.dashboard import change_cards as cards
+    from aj_crew.dashboard import change_cards as cards
 
     _seed()
     slug = _slug(ORDINARY)
@@ -794,7 +794,7 @@ def test_a_stale_key_results_undo_refuses_a_set_recreated_with_the_same_wording(
     tmp_path: Path,
 ) -> None:
     """Same wording, new ids: the older card's Undo must not replace the new set."""
-    from kiro_crew.dashboard import change_cards as cards
+    from aj_crew.dashboard import change_cards as cards
 
     _seed()
     slug = _slug(ORDINARY)
@@ -835,7 +835,7 @@ def test_a_stale_key_results_undo_refuses_a_newer_change_to_goal_links(
     existing: bool,
 ) -> None:
     """A links-only edit must survive both the snapshot and locked Undo checks."""
-    from kiro_crew.dashboard import change_cards as cards
+    from aj_crew.dashboard import change_cards as cards
 
     _seed()
     slug = _slug(ORDINARY)
@@ -874,7 +874,7 @@ def test_key_results_undo_ignores_link_order_and_keeps_fresh_readings(
     tmp_path: Path,
     _card_owner,
 ) -> None:
-    from kiro_crew.dashboard import change_cards as cards
+    from aj_crew.dashboard import change_cards as cards
 
     _seed()
     slug = _slug(ORDINARY)
@@ -924,7 +924,7 @@ def test_key_results_restore_rejects_malformed_expected_links(tmp_path: Path, li
 
 def _propose_card(state: _CardState, kind: str, params: dict[str, Any]) -> dict[str, Any]:
     """A card proposed the way ``propose_change`` builds it; returns its stored record."""
-    from kiro_crew.dashboard import change_cards as cards
+    from aj_crew.dashboard import change_cards as cards
 
     params = catalog.validate_params(kind, params)
     before = asyncio.run(cards.read_state(kind, params, [], state=state, app=None))
@@ -967,7 +967,7 @@ def _run_card_plan(state: _CardState, rec: dict[str, Any], op: str) -> list[int]
                 statuses.append(r.status)
                 if r.status >= 400:
                     break
-            from kiro_crew.dashboard.handlers import change_cards as card_routes
+            from aj_crew.dashboard.handlers import change_cards as card_routes
 
             if card_routes._BACKGROUND:
                 await asyncio.gather(*list(card_routes._BACKGROUND))
@@ -1128,7 +1128,7 @@ def test_two_key_results_with_the_same_text_and_target_are_refused() -> None:
 
 def test_goal_card_params_read_as_the_record_stores_them() -> None:
     """A tab, a line break and a format character: the after-read matches the params."""
-    from kiro_crew.dashboard import change_cards as cards
+    from aj_crew.dashboard import change_cards as cards
 
     _seed()
     slug = _slug(ORDINARY)
@@ -1158,7 +1158,7 @@ def test_card_carrying_scrubbed_text_still_reads_back_as_its_write(
     _floor_monkeypatch,
 ) -> None:
     """A card that repeats a credential-bearing item in its scrubbed form keeps Undo."""
-    from kiro_crew.dashboard import change_cards as cards
+    from aj_crew.dashboard import change_cards as cards
 
     _seed()
     slug = _slug(ORDINARY)
@@ -1359,7 +1359,7 @@ def test_the_mate_goal_tools_refuse_off_their_own_chat(_floor_monkeypatch) -> No
 
 def test_every_surface_bounds_a_goal_field_by_the_record_s_own_limit() -> None:
     """A card, a tool call and the record all validate one field against one limit."""
-    from kiro_crew.validation import MCP_MATE_SCHEMAS
+    from aj_crew.validation import MCP_MATE_SCHEMAS
 
     g = member_goals
     card_goal = catalog.KINDS[catalog.KIND_CREWMATE_GOAL].params_schema["properties"]
@@ -1394,7 +1394,7 @@ def test_every_surface_bounds_a_goal_field_by_the_record_s_own_limit() -> None:
 
 def _flagged(handler):
     """The key-results route as a card's Apply step reaches it (flag set)."""
-    from kiro_crew.dashboard.handlers.change_cards import REQ_CARD_KEY_RESULTS_APPLY
+    from aj_crew.dashboard.handlers.change_cards import REQ_CARD_KEY_RESULTS_APPLY
 
     async def route(request):
         request[REQ_CARD_KEY_RESULTS_APPLY] = True
@@ -1407,7 +1407,7 @@ def _flagged(handler):
 def test_confirming_a_milestones_card_always_tells_the_crewmate(
     tmp_path: Path, _floor_monkeypatch, checkins_on: bool
 ) -> None:
-    from kiro_crew.dashboard import goal_setup
+    from aj_crew.dashboard import goal_setup
 
     _seed()
     slug = _slug(ORDINARY)
@@ -1441,7 +1441,7 @@ def test_confirming_a_milestones_card_always_tells_the_crewmate(
 def test_a_goals_page_milestone_edit_sends_no_milestones_nudge(
     tmp_path: Path, _floor_monkeypatch
 ) -> None:
-    from kiro_crew.dashboard import goal_setup
+    from aj_crew.dashboard import goal_setup
 
     _seed()
     slug = _slug(ORDINARY)
@@ -1455,7 +1455,7 @@ def test_a_goals_page_milestone_edit_sends_no_milestones_nudge(
 
 
 def test_only_a_key_results_cards_apply_step_carries_the_confirm_flag() -> None:
-    from kiro_crew.dashboard.handlers import change_cards as card_routes
+    from aj_crew.dashboard.handlers import change_cards as card_routes
 
     for kind, op, flagged in [
         (catalog.KIND_CREWMATE_KEY_RESULTS, catalog.OP_APPLY, True),
@@ -1470,7 +1470,7 @@ def test_only_a_key_results_cards_apply_step_carries_the_confirm_flag() -> None:
 def test_saving_a_goal_on_the_goals_tab_nudges_the_crewmate_naming_that_goal(
     tmp_path: Path, _floor_monkeypatch
 ) -> None:
-    from kiro_crew.dashboard import goal_setup
+    from aj_crew.dashboard import goal_setup
 
     calls: list[tuple] = []
     _floor_monkeypatch.setattr(goal_setup, "schedule_nudge", lambda *a: calls.append(a[1:]))
@@ -1503,7 +1503,7 @@ def test_saving_a_goal_on_the_goals_tab_nudges_the_crewmate_naming_that_goal(
 def test_removing_a_goal_on_the_goals_tab_nudges_the_crewmate_and_undo_does_not(
     tmp_path: Path, _floor_monkeypatch
 ) -> None:
-    from kiro_crew.dashboard import goal_setup
+    from aj_crew.dashboard import goal_setup
 
     removed: list[tuple] = []
     _floor_monkeypatch.setattr(goal_setup, "schedule_nudge", lambda *a: None)
@@ -1572,7 +1572,7 @@ def test_the_key_results_card_shows_and_checks_each_milestones_goals() -> None:
 
 def _write_after_card_snapshot(monkeypatch, write):
     """Land an owner-store write after the card check, before its handler runs."""
-    from kiro_crew.dashboard.handlers import change_cards as card_routes
+    from aj_crew.dashboard.handlers import change_cards as card_routes
 
     original = card_routes._before_value
     calls = []

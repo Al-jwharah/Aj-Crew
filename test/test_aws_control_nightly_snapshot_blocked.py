@@ -23,7 +23,7 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew.apps.builtins.aws_control.backend import backup
+from aj_crew.apps.builtins.aws_control.backend import backup
 
 ACCOUNT = "111122223333"
 

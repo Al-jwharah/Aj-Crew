@@ -62,7 +62,7 @@ const folders = [
 ]
 
 const mkSlot = (key, title, folderId) => ({
-  key, title, running: false, last_message: '', messages: 3, agent: 'kirocrew',
+  key, title, running: false, last_message: '', messages: 3, agent: 'ajcrew',
   memory_mode: 'persistent', project: '', folder_id: folderId, modified: now,
   tags: [], source_links: [], source_links_total: 0,
 })

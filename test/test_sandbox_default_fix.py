@@ -18,19 +18,19 @@ import sys
 
 import pytest
 
-import kiro_crew.sandbox as sb
-from kiro_crew.config.loader import AgentConfig
+import aj_crew.sandbox as sb
+from aj_crew.config.loader import AgentConfig
 
 
 @pytest.fixture(autouse=True)
 def clean_state(monkeypatch):
     """Neutralize environment that would short-circuit wrap_argv."""
-    monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
-    monkeypatch.setattr(sb, "_inside_kirocrew_sandbox", lambda: False)
+    monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
+    monkeypatch.setattr(sb, "_inside_ajcrew_sandbox", lambda: False)
     monkeypatch.setattr(sb, "_macos_sandbox_state", lambda: None)
     monkeypatch.setattr(
         sb, "_KIRO_INTERNAL_SETTINGS_PATH",
-        "/nonexistent/kirocrew-test/amazon-internal.json",
+        "/nonexistent/ajcrew-test/amazon-internal.json",
     )
     # Reset one-shot flags
     for obj in (sb.wrap_argv, sb._warn_mode_off_unconfined):
@@ -53,14 +53,14 @@ class TestFix1DefaultIsAuto:
 
     def test_config_read_fallback_is_auto(self):
         """When config.json has no 'sandbox' key, the read path returns 'auto'."""
-        from kiro_crew.knowledge.llm_pool import _get_sandbox_mode
+        from aj_crew.knowledge.llm_pool import _get_sandbox_mode
 
         # Empty config -> returns new default
         assert _get_sandbox_mode(config={}) == "auto"
 
     def test_config_read_preserves_explicit_off(self):
         """Existing config with explicit 'off' is still honored."""
-        from kiro_crew.knowledge.llm_pool import _get_sandbox_mode
+        from aj_crew.knowledge.llm_pool import _get_sandbox_mode
 
         assert _get_sandbox_mode(config={"agent": {"sandbox": "off"}}) == "off"
 

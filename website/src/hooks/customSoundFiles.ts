@@ -20,7 +20,7 @@ export const CUSTOM_FILE_LIMITS = {
   maxSeconds: 5,
 } as const
 
-const DB_NAME = 'kirocrew-notification-sounds'
+const DB_NAME = 'ajcrew-notification-sounds'
 const STORE = 'files'
 
 let dbPromise: Promise<IDBDatabase | null> | null = null

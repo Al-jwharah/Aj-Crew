@@ -13,8 +13,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.mcp_gateway import hashing, rewriter, session_servers, stub
+from aj_crew import platform_compat
+from aj_crew.mcp_gateway import hashing, rewriter, session_servers, stub
 
 CASES = [
     [],
@@ -158,7 +158,7 @@ def test_percent_metadata_survives_modelled_expansion(tmp_path):
     # The daemon side reads the same envelope and hashes the same argv.
     env: dict[str, str] = {}
     rewriter._collect_target_env({"probe": entry}, env)
-    assert env["KIROCREW_MCP_TARGET_PROBE__" + payload["command_args_hash"]] == " ".join(
+    assert env["AJCREW_MCP_TARGET_PROBE__" + payload["command_args_hash"]] == " ".join(
         shlex.quote(p) for p in [parsed.target_command, f"literal{PERCENT}", "-P"]
     )
 
@@ -258,7 +258,7 @@ def test_emitted_stub_and_daemon_hash_same_argv(tmp_path, args):
     rewriter._collect_target_env({"probe": entry}, env)
     expected_hash = hashing.hash_command(sys.executable, args)
     assert payload["command_args_hash"] == expected_hash
-    assert shlex.split(env["KIROCREW_MCP_TARGET_PROBE__" + expected_hash]) == [
+    assert shlex.split(env["AJCREW_MCP_TARGET_PROBE__" + expected_hash]) == [
         sys.executable,
         *args,
     ]
@@ -293,7 +293,7 @@ def test_legacy_separator_and_flag_spelling(tmp_path, sep, equals):
     assert stub._resolve_pool_identity_env(parsed) == frozenset({"ALPHA", "BETA"})
     env: dict[str, str] = {}
     rewriter._collect_target_env({"probe": entry}, env)
-    assert shlex.split(env["KIROCREW_MCP_TARGET_PROBE"]) == [sys.executable, *argv]
+    assert shlex.split(env["AJCREW_MCP_TARGET_PROBE"]) == [sys.executable, *argv]
 
 
 def _plain_flags(entry: dict) -> list[str]:
@@ -313,7 +313,7 @@ def test_encoded_precedence_matches_daemon(tmp_path, equals):
     assert stub._resolve_target_args(_parsed(entry)) == [""]
     env: dict[str, str] = {}
     rewriter._collect_target_env({"probe": entry}, env)
-    assert shlex.split(env["KIROCREW_MCP_TARGET_PROBE"]) == [sys.executable, ""]
+    assert shlex.split(env["AJCREW_MCP_TARGET_PROBE"]) == [sys.executable, ""]
 
 
 def test_empty_encoded_flag_never_falls_back(tmp_path):
@@ -361,7 +361,7 @@ def _through_cmd(tmp_path: Path, entry: dict, extra_env: dict[str, str] | None =
     assert cmd is not None, "native Windows regression requires the system cmd.exe"
     receiver = tmp_path / "receiver.py"
     receiver.write_text(
-        "import json\nfrom kiro_crew.mcp_gateway.stub import _parse_args, build_register_payload\n"
+        "import json\nfrom aj_crew.mcp_gateway.stub import _parse_args, build_register_payload\n"
         "ns = _parse_args()\n"
         "print(json.dumps({'payload': build_register_payload(ns), 'args': vars(ns)}))\n",
         encoding="utf-8",

@@ -18,7 +18,7 @@
  *   ?scene=policy-off  downloads are forbidden. The line says so and there is NO
  *                      control in any state — the "hidden, not greyed" claim.
  *
- * `?theme=` picks the palette (default `kiro-dark`).
+ * `?theme=` picks the palette (default `aj-dark`).
  */
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -34,7 +34,7 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const scene = params.get('scene') || 'cached'
 
-document.documentElement.setAttribute('data-theme', params.get('theme') || 'kiro-dark')
+document.documentElement.setAttribute('data-theme', params.get('theme') || 'aj-dark')
 applyFallbackTheme()
 initI18n('en')
 

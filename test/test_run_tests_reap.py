@@ -13,8 +13,8 @@ import os
 
 import pytest
 
-from kiro_crew import platform_compat, task_executor
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import platform_compat, task_executor
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 @pytest.mark.asyncio

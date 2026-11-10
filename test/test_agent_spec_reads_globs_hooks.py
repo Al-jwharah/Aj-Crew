@@ -14,9 +14,9 @@ Differentially RED against the pre-change code:
   which escaped and violated the function's own never-raises docstring.
 - ``test_sensitive_symlink_target_skipped_and_sel_denied`` — old code skipped
   the file but emitted no SEL ``denied`` event.
-- ``test_oversized_kirocrew_json_degrades_to_empty`` — old handler had no size
+- ``test_oversized_ajcrew_json_degrades_to_empty`` — old handler had no size
   cap and served the oversized file's hooks.
-- ``test_non_utf8_kirocrew_json_degrades_to_empty`` — old handler decoded with
+- ``test_non_utf8_ajcrew_json_degrades_to_empty`` — old handler decoded with
   the platform default and caught only ``(OSError, JSONDecodeError)``, so a
   ``UnicodeDecodeError`` escaped as an unhandled 500 where the default codec is
   strict (UTF-8 platforms).
@@ -42,17 +42,17 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-import kiro_crew.agent_discovery as ad
-import kiro_crew.hooks as kc_hooks
-from kiro_crew.agent_discovery import agent_skill_globs
-from kiro_crew.dashboard.handlers.hooks import api_kiro_hooks
+import aj_crew.agent_discovery as ad
+import aj_crew.hooks as kc_hooks
+from aj_crew.agent_discovery import agent_skill_globs
+from aj_crew.dashboard.handlers.hooks import api_kiro_hooks
 
 # Same patch targets as test_api_kiro_hooks.py: ``kiro_agents_dir_path()`` reads
 # ``KIRO_AGENTS_DIR`` from ``agent``'s globals at call time, and the handler
 # imports ``_shipped_defaults`` at module scope, so it is patched in the
 # handler's namespace.
-_P_AGENTS_DIR = "kiro_crew.agent.KIRO_AGENTS_DIR"
-_P_DEFAULTS = "kiro_crew.dashboard.handlers.hooks._shipped_defaults"
+_P_AGENTS_DIR = "aj_crew.agent.KIRO_AGENTS_DIR"
+_P_DEFAULTS = "aj_crew.dashboard.handlers.hooks._shipped_defaults"
 
 
 def _agents_dir(tmp_path: Path) -> Path:
@@ -156,7 +156,7 @@ class TestAgentSkillGlobsHardenedRead:
         _symlink_or_skip(secret, d / "evil.json")
         resolved = str(secret.resolve())
         monkeypatch.setattr(
-            "kiro_crew.agent_discovery.is_sensitive_canonical_path", lambda p: str(p) == resolved
+            "aj_crew.agent_discovery.is_sensitive_canonical_path", lambda p: str(p) == resolved
         )
         sel_events: list[dict] = []
         monkeypatch.setattr(
@@ -215,10 +215,10 @@ class TestApiKiroHooksHardenedRead:
         return p
 
     @pytest.mark.asyncio
-    async def test_oversized_kirocrew_json_degrades_to_empty(
+    async def test_oversized_ajcrew_json_degrades_to_empty(
         self, kiro_dir: Path, defaults: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """An over-cap ``kirocrew.json`` yields no user hooks — 200, not 500."""
+        """An over-cap ``ajcrew.json`` yields no user hooks — 200, not 500."""
         monkeypatch.setattr(kc_hooks, "MAX_FILE_BYTES", 256)
         body = json.dumps(
             {
@@ -227,18 +227,18 @@ class TestApiKiroHooksHardenedRead:
             }
         )
         assert len(body.encode("utf-8")) > 256
-        (kiro_dir / "kirocrew.json").write_text(body, encoding="utf-8")
+        (kiro_dir / "ajcrew.json").write_text(body, encoding="utf-8")
         status, payload = await _get_hooks(kiro_dir, defaults)
         assert status == 200
         assert payload == {"hooks": {}, "unsent": []}
 
     @pytest.mark.asyncio
-    async def test_non_utf8_kirocrew_json_degrades_to_empty(
+    async def test_non_utf8_ajcrew_json_degrades_to_empty(
         self, kiro_dir: Path, defaults: Path
     ) -> None:
         """Non-UTF-8 bytes are refused deterministically instead of decoded with
         the platform default, which would be an unhandled 500 on UTF-8 platforms."""
-        (kiro_dir / "kirocrew.json").write_bytes(b'\xff\xfe{"hooks": {}}')
+        (kiro_dir / "ajcrew.json").write_bytes(b'\xff\xfe{"hooks": {}}')
         status, payload = await _get_hooks(kiro_dir, defaults)
         assert status == 200
         assert payload == {"hooks": {}, "unsent": []}
@@ -249,16 +249,16 @@ class TestApiKiroHooksHardenedRead:
     ) -> None:
         """A top-level object whose ``hooks`` value is not a dict yields no user
         hooks — 200, not an ``AttributeError`` 500 from ``hooks.items()``."""
-        (kiro_dir / "kirocrew.json").write_text(json.dumps({"hooks": []}), encoding="utf-8")
+        (kiro_dir / "ajcrew.json").write_text(json.dumps({"hooks": []}), encoding="utf-8")
         status, payload = await _get_hooks(kiro_dir, defaults)
         assert status == 200
         assert payload == {"hooks": {}, "unsent": []}
 
     @pytest.mark.asyncio
-    async def test_normal_kirocrew_json_still_serves_hooks(
+    async def test_normal_ajcrew_json_still_serves_hooks(
         self, kiro_dir: Path, defaults: Path
     ) -> None:
-        (kiro_dir / "kirocrew.json").write_text(
+        (kiro_dir / "ajcrew.json").write_text(
             json.dumps({"hooks": {"preToolUse": [{"command": "echo hi", "matcher": ""}]}}),
             encoding="utf-8",
         )
@@ -273,7 +273,7 @@ class TestApiKiroHooksHardenedRead:
         a file shipped inside the package, not the user-writable agents dir), so
         source tagging keeps working exactly as before."""
         entry = {"command": "echo bundled", "matcher": ""}
-        (kiro_dir / "kirocrew.json").write_text(
+        (kiro_dir / "ajcrew.json").write_text(
             json.dumps({"hooks": {"preToolUse": [entry]}}), encoding="utf-8"
         )
         defaults = tmp_path / "defaults.json"

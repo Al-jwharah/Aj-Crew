@@ -16,20 +16,20 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.constants import MAX_SHORT_STRING
-from kiro_crew.dashboard.handlers.messaging import (
+from aj_crew.constants import MAX_SHORT_STRING
+from aj_crew.dashboard.handlers.messaging import (
     api_notification_agent_dismiss,
     api_notification_agent_push,
 )
-from kiro_crew.dashboard.notification_coordinator import native_notification_tag, unread_count
-from kiro_crew.dashboard.state import DashboardState, _load_notifications
-from kiro_crew.notifications.bus import NotificationPayload, NotificationValidationError
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.notification_coordinator import native_notification_tag, unread_count
+from aj_crew.dashboard.state import DashboardState, _load_notifications
+from aj_crew.notifications.bus import NotificationPayload, NotificationValidationError
+from aj_crew.testing.wait import await_until
 
 
 def _make_state(monkeypatch, tmp_path) -> DashboardState:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
     return DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(),
@@ -78,12 +78,12 @@ def _capped_state_with_clock(
 ) -> DashboardState:
     state = _make_state(monkeypatch, tmp_path)
     state._notification_coordinator._max_persisted = 3
-    monkeypatch.setattr("kiro_crew.dashboard.state._MAX_PERSISTED_NOTIFICATIONS", 3)
+    monkeypatch.setattr("aj_crew.dashboard.state._MAX_PERSISTED_NOTIFICATIONS", 3)
     clock = MagicMock()
     clock.now.side_effect = [
         datetime(2026, 1, 1, 0, minute, tzinfo=timezone.utc) for minute in clock_minutes
     ]
-    monkeypatch.setattr("kiro_crew.notifications.bus.datetime", clock)
+    monkeypatch.setattr("aj_crew.notifications.bus.datetime", clock)
     return state
 
 
@@ -96,7 +96,7 @@ async def _state_at_real_cap_with_key(
     start = datetime(2026, 1, 1, tzinfo=timezone.utc)
     clock = MagicMock()
     clock.now.side_effect = [start + timedelta(seconds=index) for index in range(max_persisted + 1)]
-    monkeypatch.setattr("kiro_crew.notifications.bus.datetime", clock)
+    monkeypatch.setattr("aj_crew.notifications.bus.datetime", clock)
 
     for index in range(max_persisted - 1):
         await _push(state, _agent_payload(f"retained-{index}"))
@@ -108,16 +108,16 @@ async def _state_at_real_cap_with_key(
 async def _overlap_keyed_rewrite_with_unkeyed_arrival(
     monkeypatch, tmp_path, *, clock_minutes: tuple[int, int, int, int, int]
 ) -> DashboardState:
-    from kiro_crew.dashboard import state as state_module
+    from aj_crew.dashboard import state as state_module
 
     state = _make_state(monkeypatch, tmp_path)
     state._notification_coordinator._max_persisted = 3
-    monkeypatch.setattr("kiro_crew.dashboard.state._MAX_PERSISTED_NOTIFICATIONS", 3)
+    monkeypatch.setattr("aj_crew.dashboard.state._MAX_PERSISTED_NOTIFICATIONS", 3)
     clock = MagicMock()
     clock.now.side_effect = [
         datetime(2026, 1, 1, 0, minute, tzinfo=timezone.utc) for minute in clock_minutes
     ]
-    monkeypatch.setattr("kiro_crew.notifications.bus.datetime", clock)
+    monkeypatch.setattr("aj_crew.notifications.bus.datetime", clock)
 
     for index in range(3):
         await _push(state, _agent_payload(f"retained-{index}"))
@@ -132,7 +132,7 @@ async def _overlap_keyed_rewrite_with_unkeyed_arrival(
         assert release_rewrite.wait(timeout=5)
         return real_rewrite(notes)
 
-    monkeypatch.setattr("kiro_crew.dashboard.state._rewrite_notifications", hold_rewrite)
+    monkeypatch.setattr("aj_crew.dashboard.state._rewrite_notifications", hold_rewrite)
 
     state.notification_bus.push(_agent_payload("keyed", key="clock-direction"))
     replacing = state.last_notification_persist
@@ -186,7 +186,7 @@ class TestReplacement:
         clock.now.side_effect = [
             datetime(2026, 1, 1, 0, minute, tzinfo=timezone.utc) for minute in (1, 2, 3, 0)
         ]
-        monkeypatch.setattr("kiro_crew.notifications.bus.datetime", clock)
+        monkeypatch.setattr("aj_crew.notifications.bus.datetime", clock)
 
         for index in range(3):
             await _push(state, _agent_payload(f"retained-{index}"))
@@ -236,7 +236,7 @@ class TestReplacement:
     async def test_worker_thread_arrival_survives_a_blocked_keyed_rewrite(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
         state = _make_state(monkeypatch, tmp_path)
         loop = asyncio.get_running_loop()
@@ -258,7 +258,7 @@ class TestReplacement:
             if note["title"] == "worker arrival":
                 loop.call_soon_threadsafe(worker_delivered.set)
 
-        monkeypatch.setattr("kiro_crew.dashboard.state._rewrite_notifications", hold_rewrite)
+        monkeypatch.setattr("aj_crew.dashboard.state._rewrite_notifications", hold_rewrite)
         monkeypatch.setattr(state, "_broadcast", observe_delivery)
         state.notification_bus.push(_agent_payload("keyed", key="held-rewrite"))
         replacing = state.last_notification_persist
@@ -353,7 +353,7 @@ class TestReplacement:
         state = _make_state(monkeypatch, tmp_path)
         frames: list[dict] = []
         monkeypatch.setattr(state, "_broadcast", frames.append)
-        monkeypatch.setattr("kiro_crew.dashboard.state._rewrite_notifications", lambda notes: False)
+        monkeypatch.setattr("aj_crew.dashboard.state._rewrite_notifications", lambda notes: False)
         state.notification_bus.push(_agent_payload("first", key="k"))
         assert await state.last_notification_persist is False
         assert state._notification_log == [] and frames == []
@@ -367,7 +367,7 @@ class TestReplacement:
         await _push(state, _agent_payload("one", key="k"))
         frames: list[dict] = []
         monkeypatch.setattr(state, "_broadcast", frames.append)
-        monkeypatch.setattr("kiro_crew.dashboard.state._rewrite_notifications", lambda notes: False)
+        monkeypatch.setattr("aj_crew.dashboard.state._rewrite_notifications", lambda notes: False)
         state.notification_bus.push(_agent_payload("two", key="k"))
         assert await state.last_notification_persist is False
         # Memory, the open views and disk all still show the note it was to replace.
@@ -393,7 +393,7 @@ class TestReplacement:
     async def test_first_of_two_overlapping_replacements_survives_when_second_fails(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
         state = _make_state(monkeypatch, tmp_path)
         await _push(state, _agent_payload("A", key="k"))
@@ -420,7 +420,7 @@ class TestReplacement:
             return False
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.state._rewrite_notifications", first_succeeds_second_fails
+            "aj_crew.dashboard.state._rewrite_notifications", first_succeeds_second_fails
         )
         state.notification_bus.push(_agent_payload("B", key="k"))
         first = state.last_notification_persist
@@ -440,7 +440,7 @@ class TestReplacement:
     async def test_a_dismiss_queued_behind_a_replacement_leaves_memory_and_disk_empty(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
         state = _make_state(monkeypatch, tmp_path)
         await _push(state, _agent_payload("one", key="k"))
@@ -461,7 +461,7 @@ class TestReplacement:
             assert release_replacement.wait(timeout=5)
             return real_rewrite(notes)
 
-        monkeypatch.setattr("kiro_crew.dashboard.state._rewrite_notifications", hold_replacement)
+        monkeypatch.setattr("aj_crew.dashboard.state._rewrite_notifications", hold_replacement)
         replacement = state.notification_bus.push(_agent_payload("two", key="k"))
         replacing = state.last_notification_persist
         await _signalled(replacement_started)
@@ -481,14 +481,14 @@ class TestReplacement:
     async def test_a_dismiss_broadcasts_a_note_deleted_while_its_rewrite_is_held(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
         state = _make_state(monkeypatch, tmp_path)
         clock = MagicMock()
         clock.now.side_effect = [
             datetime(2026, 1, 1, 0, minute, tzinfo=timezone.utc) for minute in (0, 1)
         ]
-        monkeypatch.setattr("kiro_crew.notifications.bus.datetime", clock)
+        monkeypatch.setattr("aj_crew.notifications.bus.datetime", clock)
         keyed = await _push(state, _agent_payload("keyed", key="k", priority="passive"))
         await _push(state, _agent_payload("unkeyed"))
         frames: list[tuple[str, dict]] = []
@@ -510,7 +510,7 @@ class TestReplacement:
             assert release_rewrite.wait(timeout=_SIGNAL_TIMEOUT_SECS)
             return real_rewrite(notes)
 
-        monkeypatch.setattr("kiro_crew.dashboard.state._rewrite_notifications", hold_rewrite)
+        monkeypatch.setattr("aj_crew.dashboard.state._rewrite_notifications", hold_rewrite)
         original_rewrite = state._rewrite_notifications_async
 
         async def observe_queued_delete() -> bool:
@@ -550,7 +550,7 @@ class TestReplacement:
     async def test_a_queued_ack_persists_the_note_after_a_keyed_dismiss_fails(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
         state = _make_state(monkeypatch, tmp_path)
         note = await _push(state, _agent_payload("held", key="k"))
@@ -573,7 +573,7 @@ class TestReplacement:
             return real_rewrite(notes)
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.state._rewrite_notifications", dismiss_fails_then_ack_succeeds
+            "aj_crew.dashboard.state._rewrite_notifications", dismiss_fails_then_ack_succeeds
         )
         original_rewrite = state._rewrite_notifications_async
 
@@ -601,7 +601,7 @@ class TestReplacement:
     async def test_a_clear_racing_a_replacement_leaves_memory_matching_disk(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
         state = _make_state(monkeypatch, tmp_path)
         await _push(state, _agent_payload("one", key="k"))
@@ -631,7 +631,7 @@ class TestReplacement:
                 assert release_replacement.wait(timeout=5)
             return real_rewrite(notes)
 
-        monkeypatch.setattr("kiro_crew.dashboard.state._rewrite_notifications", hold_first_rewrite)
+        monkeypatch.setattr("aj_crew.dashboard.state._rewrite_notifications", hold_first_rewrite)
         state.notification_bus.push(_agent_payload("two", key="k"))
         replacing = state.last_notification_persist
         await _signalled(replacement_started)
@@ -661,7 +661,7 @@ class TestReplacement:
     async def test_cancelling_a_replacement_waiter_does_not_cancel_the_write_then_commit(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
         state, replaced = await _state_at_real_cap_with_key(
             monkeypatch, tmp_path, keyed_title="replaced"
@@ -684,7 +684,7 @@ class TestReplacement:
             assert release_rewrite.wait(timeout=_SIGNAL_TIMEOUT_SECS)
             return real_rewrite(notes)
 
-        monkeypatch.setattr("kiro_crew.dashboard.state._rewrite_notifications", hold_rewrite)
+        monkeypatch.setattr("aj_crew.dashboard.state._rewrite_notifications", hold_rewrite)
         replacement = state.notification_bus.push(_agent_payload("replacement", key="k"))
         replacing = state.last_notification_persist
         assert replacing is not None
@@ -709,7 +709,7 @@ class TestReplacement:
     async def test_cancelling_a_dismiss_waiter_does_not_cancel_the_write_then_commit(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
         state, dismissed = await _state_at_real_cap_with_key(
             monkeypatch, tmp_path, keyed_title="dismissed"
@@ -733,7 +733,7 @@ class TestReplacement:
             assert release_rewrite.wait(timeout=_SIGNAL_TIMEOUT_SECS)
             return real_rewrite(notes)
 
-        monkeypatch.setattr("kiro_crew.dashboard.state._rewrite_notifications", hold_rewrite)
+        monkeypatch.setattr("aj_crew.dashboard.state._rewrite_notifications", hold_rewrite)
         dismissing = asyncio.create_task(state.dismiss_notification(source="system", key="k"))
         await _signalled(rewrite_started)
         dismissing.cancel()
@@ -755,7 +755,7 @@ class TestReplacement:
     async def test_dismiss_at_cap_keeps_the_slot_freed_by_the_dismissal(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
         state = _capped_state_with_clock(monkeypatch, tmp_path, clock_minutes=(0, 1, 2, 3))
         await _push(state, _agent_payload("oldest"))
@@ -773,7 +773,7 @@ class TestReplacement:
             assert release_rewrite.wait(timeout=5)
             return real_rewrite(notes)
 
-        monkeypatch.setattr("kiro_crew.dashboard.state._rewrite_notifications", hold_rewrite)
+        monkeypatch.setattr("aj_crew.dashboard.state._rewrite_notifications", hold_rewrite)
         dismissing = asyncio.create_task(state.dismiss_notification(source="system", key="k"))
         await _signalled(rewrite_started)
         state.notification_bus.push(_agent_payload("arrival"))
@@ -824,7 +824,7 @@ class TestReplacement:
     async def test_dismiss_broadcast_arrival_is_trimmed_to_the_retention_cap(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
         state = _capped_state_with_clock(monkeypatch, tmp_path, clock_minutes=(0, 1, 2, 3, 4))
         await _push(state, _agent_payload("oldest"))
@@ -853,7 +853,7 @@ class TestReplacement:
             assert release_rewrite.wait(timeout=_SIGNAL_TIMEOUT_SECS)
             return real_rewrite(notes)
 
-        monkeypatch.setattr("kiro_crew.dashboard.state._rewrite_notifications", hold_rewrite)
+        monkeypatch.setattr("aj_crew.dashboard.state._rewrite_notifications", hold_rewrite)
         dismissing = asyncio.create_task(state.dismiss_notification(source="system", key="k"))
         await _signalled(rewrite_started)
         state.notification_bus.push(_agent_payload("arrival"))
@@ -873,7 +873,7 @@ class TestReplacement:
     async def test_replacing_oldest_at_cap_keeps_the_written_quiet_decision(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
         state = _capped_state_with_clock(monkeypatch, tmp_path, clock_minutes=(0, 1, 2, 3, 4))
         await _push(state, _agent_payload("oldest", key="k"))
@@ -891,7 +891,7 @@ class TestReplacement:
             assert release_rewrite.wait(timeout=5)
             return real_rewrite(notes)
 
-        monkeypatch.setattr("kiro_crew.dashboard.state._rewrite_notifications", hold_rewrite)
+        monkeypatch.setattr("aj_crew.dashboard.state._rewrite_notifications", hold_rewrite)
         state.notification_bus.push(_agent_payload("replacement", key="k"))
         replacing = state.last_notification_persist
         await _signalled(rewrite_started)
@@ -929,7 +929,7 @@ class TestReplacement:
             assert release_rewrite.wait(timeout=5)
             return False
 
-        monkeypatch.setattr("kiro_crew.dashboard.state._rewrite_notifications", fail_rewrite)
+        monkeypatch.setattr("aj_crew.dashboard.state._rewrite_notifications", fail_rewrite)
         state.notification_bus.push(_agent_payload("replacement", key="k"))
         replacing = state.last_notification_persist
         await _signalled(rewrite_started)
@@ -962,7 +962,7 @@ class TestReplacement:
             assert release_rewrite.wait(timeout=5)
             return False
 
-        monkeypatch.setattr("kiro_crew.dashboard.state._rewrite_notifications", fail_rewrite)
+        monkeypatch.setattr("aj_crew.dashboard.state._rewrite_notifications", fail_rewrite)
         dismissing = asyncio.create_task(state.dismiss_notification(source="system", key="k"))
         await _signalled(rewrite_started)
         state.notification_bus.push(_agent_payload("arrival"))
@@ -1011,7 +1011,7 @@ class TestBannerTagAndWebPush:
     async def test_web_push_hears_a_keyed_note_unless_its_replacement_is_quiet(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew.dashboard.state_parts.dashboard_services import _web_push_payload
+        from aj_crew.dashboard.state_parts.dashboard_services import _web_push_payload
 
         state = _make_state(monkeypatch, tmp_path)
         pushed: list[dict] = []
@@ -1035,7 +1035,7 @@ class TestBannerTagAndWebPush:
         state = _make_state(monkeypatch, tmp_path)
         pushed: list[dict] = []
         monkeypatch.setattr(state, "_fan_out_web_push", pushed.append)
-        monkeypatch.setattr("kiro_crew.dashboard.state._rewrite_notifications", lambda notes: False)
+        monkeypatch.setattr("aj_crew.dashboard.state._rewrite_notifications", lambda notes: False)
         state.notification_bus.push(_agent_payload("first", key="k"))
         assert await state.last_notification_persist is False
         assert pushed == []
@@ -1047,7 +1047,7 @@ class TestBannerTagAndWebPush:
         pushed: list[dict] = []
         monkeypatch.setattr(state, "_fan_out_web_push", pushed.append)
         state.notification_bus.push(_agent_payload("written", key="k"))
-        monkeypatch.setattr("kiro_crew.dashboard.state._rewrite_notifications", lambda notes: False)
+        monkeypatch.setattr("aj_crew.dashboard.state._rewrite_notifications", lambda notes: False)
         state.notification_bus.push(_agent_payload("not written", key="k", priority="critical"))
         assert [note["title"] for note in pushed] == ["written"]
         assert _titles(state) == ["written"]
@@ -1163,7 +1163,7 @@ class TestAgentRoutes:
     ):
         state = _make_state(monkeypatch, tmp_path)
         sel_mock = MagicMock()
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.messaging._sel", lambda: sel_mock)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.messaging._sel", lambda: sel_mock)
         await _push(state, _agent_payload("kept", key="k"))
         app = self._app(state, internal_auth=internal_auth, app_name=app_name)
         async with TestClient(TestServer(app)) as client:
@@ -1199,7 +1199,7 @@ class TestAgentRoutes:
         await _push(state, _agent_payload("after"))
         frames: list[tuple[str, dict]] = []
         monkeypatch.setattr(state, "broadcast_ws", lambda kind, data: frames.append((kind, data)))
-        monkeypatch.setattr("kiro_crew.dashboard.state._rewrite_notifications", lambda notes: False)
+        monkeypatch.setattr("aj_crew.dashboard.state._rewrite_notifications", lambda notes: False)
         async with TestClient(TestServer(self._app(state))) as client:
             resp = await client.post("/api/notifications/agent/dismiss", json={"key": "k"})
             assert resp.status == 500
@@ -1222,8 +1222,8 @@ class TestAgentRoutes:
 
     @pytest.mark.asyncio
     async def test_the_dismiss_route_is_internal_secret_only(self):
-        from kiro_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
-        from kiro_crew.dashboard.token_auth import token_auth_middleware
+        from aj_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
+        from aj_crew.dashboard.token_auth import token_auth_middleware
 
         async def ok(_request):
             return web.Response(text="ok")
@@ -1248,7 +1248,7 @@ class TestAgentRoutes:
         assert refused.status in (401, 403)
 
     def test_the_gateway_serves_the_dismiss_route(self):
-        from kiro_crew.dashboard import server
+        from aj_crew.dashboard import server
 
         app = web.Application()
         server._register_mcp_routes(app)
@@ -1259,7 +1259,7 @@ class TestAgentRoutes:
 class TestTools:
     @pytest.fixture
     def identified(self, monkeypatch):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         monkeypatch.setattr(mcp_core, "_resolve_session_key_strict", lambda: "dashboard:chat-9")
         monkeypatch.setattr(mcp_core, "_vet_messaging_governance", lambda *a, **k: None)
@@ -1274,7 +1274,7 @@ class TestTools:
         return posted, replies
 
     def test_send_notification_forwards_the_key(self, identified):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         posted, replies = identified
         replies["value"] = {"ok": True, "note": {}}
@@ -1282,7 +1282,7 @@ class TestTools:
         assert posted == [("/api/notifications/agent", {"title": "t", "key": "cr:1"})]
 
     def test_dismiss_notification_posts_the_key(self, identified):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         posted, _ = identified
         result = mcp_core._call_tool_inner("dismiss_notification", {"key": "poller:ci"})
@@ -1290,7 +1290,7 @@ class TestTools:
         assert "dismissed" in result and not result.startswith("Error")
 
     def test_dismiss_notification_says_when_nothing_held_the_key(self, identified):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         _, replies = identified
         replies["value"] = {"ok": True, "dismissed": False}
@@ -1298,14 +1298,14 @@ class TestTools:
         assert "nothing to dismiss" in result
 
     def test_dismiss_notification_reports_a_gateway_failure_as_an_error(self, identified):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         _, replies = identified
         replies["value"] = {"ok": False, "error": "boom"}
         assert mcp_core._call_tool_inner("dismiss_notification", {"key": "k"}).startswith("Error:")
 
     def test_dismiss_notification_fails_closed_without_a_verified_identity(self, monkeypatch):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         monkeypatch.setattr(mcp_core, "_resolve_session_key_strict", lambda: "")
         posted: list = []
@@ -1315,7 +1315,7 @@ class TestTools:
         assert not posted
 
     def test_dismiss_notification_honours_a_messaging_denial(self, monkeypatch):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         monkeypatch.setattr(mcp_core, "_resolve_session_key_strict", lambda: "dashboard:chat-9")
         seen: list = []
@@ -1332,12 +1332,12 @@ class TestTools:
         assert seen[0][1] == {"tool_name": "dismiss_notification", "fail_closed": True}
 
     def test_a_channel_agent_cannot_dismiss(self, monkeypatch):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         monkeypatch.setattr(mcp_core, "_resolve_session_key", lambda: "channel:C1:agent-1")
         monkeypatch.setattr(mcp_core, "_resolve_session_key_strict", lambda: "channel:C1:agent-1")
         monkeypatch.setattr(mcp_core, "_vet_messaging_governance", lambda *a, **k: None)
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: MagicMock())
         posted: list = []
         monkeypatch.setattr(mcp_core, "_post", lambda *a, **k: posted.append(a) or {"ok": True})
         result = mcp_core._call_tool_inner("dismiss_notification", {"key": "k"})
@@ -1345,7 +1345,7 @@ class TestTools:
         assert not posted
 
     def test_a_dismiss_without_a_key_is_refused_before_the_tool_runs(self, monkeypatch):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         posted: list = []
         monkeypatch.setattr(mcp_core, "_post", lambda *a, **k: posted.append(a) or {"ok": True})
@@ -1353,7 +1353,7 @@ class TestTools:
         assert not posted
 
     def test_the_tool_is_advertised_with_a_required_key(self):
-        from kiro_crew.mcp_tools import build_tool_list
+        from aj_crew.mcp_tools import build_tool_list
 
         tools = {tool["name"]: tool for tool in build_tool_list()}
         assert tools["dismiss_notification"]["inputSchema"]["required"] == ["key"]
@@ -1362,8 +1362,8 @@ class TestTools:
 
 def test_a_rewrite_that_fails_part_way_leaves_the_previous_file(monkeypatch, tmp_path):
     """A full disk mid-write must not truncate history the caller still holds."""
-    from kiro_crew import atomic_write as atomic_write_module
-    from kiro_crew.dashboard.state_parts.notification_log import _rewrite_notifications
+    from aj_crew import atomic_write as atomic_write_module
+    from aj_crew.dashboard.state_parts.notification_log import _rewrite_notifications
 
     state = _make_state(monkeypatch, tmp_path)
     state.notification_bus.push(_agent_payload("kept"))

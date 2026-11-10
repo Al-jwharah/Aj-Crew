@@ -11,7 +11,7 @@ from source_providers_helpers import _clear_shared_fetch_state  # noqa: F401
 from source_providers_helpers import _mock_source_sel_fixture  # noqa: F401
 from source_providers_helpers import _no_visibility_refresh_side_task  # noqa: F401
 
-from kiro_crew.dashboard.handlers import source_providers as source
+from aj_crew.dashboard.handlers import source_providers as source
 
 
 class TestGetJiraAuth:
@@ -33,7 +33,7 @@ class TestGetJiraAuth:
             def load_credentials(self, *, propagate=True):
                 return {}
 
-        monkeypatch.setattr(source, "KiroCrewConfig", FakeConfig)
+        monkeypatch.setattr(source, "AjCrewConfig", FakeConfig)
         assert source._get_jira_auth("acme.atlassian.net") is None
 
     def test_matches_host_case_insensitively(self, monkeypatch):
@@ -54,7 +54,7 @@ class TestGetJiraAuth:
             def load_credentials(self, *, propagate=True):
                 return {"JIRA_API_TOKEN": "secret123"}
 
-        monkeypatch.setattr(source, "KiroCrewConfig", FakeConfig)
+        monkeypatch.setattr(source, "AjCrewConfig", FakeConfig)
         result = source._get_jira_auth("acme.atlassian.net")
         assert result == ("user@acme.com", "secret123")
 
@@ -76,7 +76,7 @@ class TestGetJiraAuth:
             def load_credentials(self, *, propagate=True):
                 return {"JIRA_API_TOKEN": "pat-token"}
 
-        monkeypatch.setattr(source, "KiroCrewConfig", FakeConfig)
+        monkeypatch.setattr(source, "AjCrewConfig", FakeConfig)
         result = source._get_jira_auth("jira.internal")
         assert result == ("", "pat-token")
 
@@ -88,7 +88,7 @@ class TestGetJiraAuth:
             def load(cls):
                 raise RuntimeError("corrupt config.json")
 
-        monkeypatch.setattr(source, "KiroCrewConfig", BrokenConfig)
+        monkeypatch.setattr(source, "AjCrewConfig", BrokenConfig)
         with pytest.raises(ValueError, match="jira_config_error"):
             source._get_jira_auth("acme.atlassian.net")
 
@@ -116,7 +116,7 @@ class TestGetJiraAuth:
                     f"JIRA_TOKEN_{host_key}": "per-host-secret",
                 }
 
-        monkeypatch.setattr(source, "KiroCrewConfig", FakeConfig)
+        monkeypatch.setattr(source, "AjCrewConfig", FakeConfig)
         result = source._get_jira_auth("acme.atlassian.net")
         assert result == ("dev@acme.com", "per-host-secret")
 
@@ -154,7 +154,7 @@ class TestGetJiraAuth:
                 return {"JIRA_API_TOKEN": "seeded-global"}
 
         host_key = "acme.atlassian.net".encode().hex().upper()
-        monkeypatch.setattr(source, "KiroCrewConfig", FakeConfig)
+        monkeypatch.setattr(source, "AjCrewConfig", FakeConfig)
         monkeypatch.setattr(
             source,
             "_resolve_jira_token_from_vault",
@@ -184,7 +184,7 @@ class TestGetJiraAuth:
             def load_credentials(self, *, propagate=True):
                 return {"JIRA_API_TOKEN": "env-token"}
 
-        monkeypatch.setattr(source, "KiroCrewConfig", FakeConfig)
+        monkeypatch.setattr(source, "AjCrewConfig", FakeConfig)
         host_key = "acme.atlassian.net".encode().hex().upper()
         monkeypatch.setattr(
             source,
@@ -214,7 +214,7 @@ class TestGetJiraAuth:
             def load_credentials(self, *, propagate=True):
                 return {"JIRA_API_TOKEN": "env-token"}
 
-        monkeypatch.setattr(source, "KiroCrewConfig", FakeConfig)
+        monkeypatch.setattr(source, "AjCrewConfig", FakeConfig)
         monkeypatch.setattr(source, "_resolve_jira_token_from_vault", lambda name: "")
         monkeypatch.delenv("JIRA_API_TOKEN", raising=False)
         result = source._get_jira_auth("acme.atlassian.net")
@@ -240,7 +240,7 @@ class TestGetJiraAuth:
             def load_credentials(self, *, propagate=True):
                 return {}
 
-        monkeypatch.setattr(source, "KiroCrewConfig", FakeConfig)
+        monkeypatch.setattr(source, "AjCrewConfig", FakeConfig)
         monkeypatch.setattr(
             source,
             "_resolve_jira_token_from_vault",
@@ -279,7 +279,7 @@ class TestGetJiraAuth:
                 # override directly from os.environ before the global vault.
                 return {"JIRA_API_TOKEN": "env-override"}
 
-        monkeypatch.setattr(source, "KiroCrewConfig", FakeConfig)
+        monkeypatch.setattr(source, "AjCrewConfig", FakeConfig)
         # Stale global vault entry that must NOT win.
         monkeypatch.setattr(
             source,
@@ -292,7 +292,7 @@ class TestGetJiraAuth:
 
     def test_catalog_slots_match_runtime_precedence(self, monkeypatch):
         """Catalog output names the same vault slot the runtime resolves."""
-        from kiro_crew.dashboard.handlers.secrets import _managed_secret_catalog
+        from aj_crew.dashboard.handlers.secrets import _managed_secret_catalog
 
         class FakeEntry:
             host = "acme.atlassian.net"
@@ -311,7 +311,7 @@ class TestGetJiraAuth:
             def load_credentials(self, *, propagate=True):
                 return {}
 
-        monkeypatch.setattr(source, "KiroCrewConfig", FakeConfig)
+        monkeypatch.setattr(source, "AjCrewConfig", FakeConfig)
         monkeypatch.delenv("JIRA_API_TOKEN", raising=False)
         host_name = source.jira_host_token_name(FakeEntry.host)
         cases = (
@@ -361,7 +361,7 @@ class TestGetJiraAuth:
                 # load_credentials overlays the migrated secret:// ref here too.
                 return {"JIRA_API_TOKEN": "secret://JIRA_API_TOKEN"}
 
-        monkeypatch.setattr(source, "KiroCrewConfig", FakeConfig)
+        monkeypatch.setattr(source, "AjCrewConfig", FakeConfig)
         monkeypatch.setattr(
             source,
             "_resolve_jira_token_from_vault",
@@ -393,7 +393,7 @@ class TestGetJiraAuth:
             def load_credentials(self, *, propagate=True):
                 return {}
 
-        monkeypatch.setattr(source, "KiroCrewConfig", FakeConfig)
+        monkeypatch.setattr(source, "AjCrewConfig", FakeConfig)
         monkeypatch.setattr(source, "_resolve_jira_token_from_vault", lambda name: "")
         assert source._get_jira_auth("acme.atlassian.net") is None
 
@@ -428,7 +428,7 @@ class TestGetJiraAuth:
             def load_credentials(self, *, propagate=True):
                 return {"JIRA_API_TOKEN": _ENV_FILE_TOKEN}
 
-        monkeypatch.setattr(source, "KiroCrewConfig", FakeConfig)
+        monkeypatch.setattr(source, "AjCrewConfig", FakeConfig)
         # Per-host vault returns nothing; global vault has the rotated token.
         monkeypatch.setattr(
             source,
@@ -476,7 +476,7 @@ class TestGetJiraAuth:
             def load_credentials(self, *, propagate=True):
                 return {"JIRA_API_TOKEN": _OPERATOR_TOKEN}
 
-        monkeypatch.setattr(source, "KiroCrewConfig", FakeConfig)
+        monkeypatch.setattr(source, "AjCrewConfig", FakeConfig)
         monkeypatch.setattr(
             source,
             "_resolve_jira_token_from_vault",

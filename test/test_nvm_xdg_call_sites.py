@@ -1,14 +1,14 @@
 """nvm under the XDG layout, at the two call sites outside ``env``'s Node scan.
 
 nvm's installer puts its root at ``$XDG_CONFIG_HOME/nvm`` (default
-``~/.config/nvm``) when that variable is set. ``kiro_crew.env`` finds that root
+``~/.config/nvm``) when that variable is set. ``aj_crew.env`` finds that root
 for its own Node scan. Two more places look for nvm, and both read nvm's roots
 from the same ``env._NVM_ROOTS`` list:
 
-- ``kiro_crew.apps.backend._resolve_nvm_path`` sources ``<root>/nvm.sh`` to find
-  the node an app backend runs on, through :func:`kiro_crew.env.nvm_dirs`;
+- ``aj_crew.apps.backend._resolve_nvm_path`` sources ``<root>/nvm.sh`` to find
+  the node an app backend runs on, through :func:`aj_crew.env.nvm_dirs`;
 - the Design Tweak backend's ``_node_bin_dirs`` puts nvm's version dirs ahead of
-  its own list, through :func:`kiro_crew.env.nvm_version_bin_dirs`.
+  its own list, through :func:`aj_crew.env.nvm_version_bin_dirs`.
 
 Each test builds its layout under ``tmp_path``. The backend tests run the real
 ``bash`` against a fake ``nvm.sh`` whose ``nvm`` function prints a node beside
@@ -24,10 +24,10 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.apps.backend as bmod
-from kiro_crew import env as env_mod
-from kiro_crew import platform_compat
-from kiro_crew.apps.builtins.design_tweak.backend import server as dt_server
+import aj_crew.apps.backend as bmod
+from aj_crew import env as env_mod
+from aj_crew import platform_compat
+from aj_crew.apps.builtins.design_tweak.backend import server as dt_server
 
 needs_bash = pytest.mark.skipif(
     platform_compat.IS_WINDOWS or shutil.which("bash") is None,

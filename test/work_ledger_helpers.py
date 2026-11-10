@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import work_ledger as wl
+from aj_crew import work_ledger as wl
 
 CONDUCTOR = "chat-1-conductor"
 WORKER = "chat-2-worker"
@@ -18,7 +18,7 @@ WORKER = "chat-2-worker"
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch):
     """Every test writes into its own data home, never the live one."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     yield
 
 

@@ -11,8 +11,8 @@ import json
 
 import pytest
 
-from kiro_crew.crew_log import slot_state_codec
-from kiro_crew.projection import MAX_PAYLOAD_BYTES
+from aj_crew.crew_log import slot_state_codec
+from aj_crew.projection import MAX_PAYLOAD_BYTES
 
 
 def test_a_small_state_is_still_stored_plain():

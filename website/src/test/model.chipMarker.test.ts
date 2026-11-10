@@ -95,24 +95,24 @@ afterEach(() => vi.restoreAllMocks())
 
 describe('useSettingsDefaultModel', () => {
   it('reports a failed config read instead of claiming no default', async () => {
-    vi.spyOn(api, 'kirocrewConfig').mockRejectedValue(new Error('503'))
+    vi.spyOn(api, 'ajcrewConfig').mockRejectedValue(new Error('503'))
     const { result } = run('')
     await waitFor(() => expect(result.current.failed).toBe(true))
     expect(result.current.settingsDefault).toBeNull()
   })
 
   it('reports a failed agent pin read and claims no default until it lands', async () => {
-    vi.spyOn(api, 'kirocrewConfig').mockResolvedValue({ agent: { model: 'claude-sonnet-5' } } as never)
+    vi.spyOn(api, 'ajcrewConfig').mockResolvedValue({ agent: { model: 'claude-sonnet-5' } } as never)
     vi.spyOn(api, 'agentResolvedModel').mockRejectedValue(new Error('500'))
-    const { result } = run('kirocrew')
+    const { result } = run('ajcrew')
     await waitFor(() => expect(result.current.failed).toBe(true))
     expect(result.current.settingsDefault).toBeNull()
   })
 
   it('returns the default and the agent pin once both reads land', async () => {
-    vi.spyOn(api, 'kirocrewConfig').mockResolvedValue({ agent: { model: 'gpt-5-codex[high]' } } as never)
+    vi.spyOn(api, 'ajcrewConfig').mockResolvedValue({ agent: { model: 'gpt-5-codex[high]' } } as never)
     vi.spyOn(api, 'agentResolvedModel').mockResolvedValue({ pinned: true } as never)
-    const { result } = run('kirocrew', true)
+    const { result } = run('ajcrew', true)
     await waitFor(() => expect(result.current.settingsDefault).toBe('gpt-5-codex'))
     expect(result.current).toEqual({ settingsDefault: 'gpt-5-codex', agentPinned: true, failed: false })
   })

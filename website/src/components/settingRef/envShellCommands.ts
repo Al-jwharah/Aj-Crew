@@ -42,14 +42,14 @@ export const ENV_SHELLS: readonly EnvShellEntry[] = [
 ] as const
 
 /**
- * Build the `kirocrew config set` CLI command for a file-mode setting.
+ * Build the `ajcrew config set` CLI command for a file-mode setting.
  * Lives here (not in SettingRef.tsx) because this module is the named i18n
  * boundary for CLI syntax: commands and their placeholders are terminal
  * input, never user-visible prose, and are excluded from string extraction
  * in eslint.i18n.config.js with rationale.
  */
 export function configSetCommand(key: string, placeholder: string): string {
-  return `kirocrew config set ${key} ${placeholder}`
+  return `ajcrew config set ${key} ${placeholder}`
 }
 
 /**
@@ -79,7 +79,7 @@ function utf8Base64(text: string): string {
 }
 
 /**
- * Build `kirocrew config set` for a gateway that supplied launcher prefixes.
+ * Build `ajcrew config set` for a gateway that supplied launcher prefixes.
  *
  * `prefix` is the server-resolved launcher for one shell and `key` a schema key, so
  * the only user text is the value, and that exists solely inside the Base64 token.

@@ -21,12 +21,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.llm_helpers import is_context_overflow_error, run_bg_oneliner, stream_and_collect
-from kiro_crew.session import _BG_BLIND_RECYCLE_PROMPTS, BACKGROUND_KEY, SessionManager
-from kiro_crew.session_background import mark_context_overflowed
+from aj_crew.acp.client import AcpError
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.config import AjCrewConfig
+from aj_crew.llm_helpers import is_context_overflow_error, run_bg_oneliner, stream_and_collect
+from aj_crew.session import _BG_BLIND_RECYCLE_PROMPTS, BACKGROUND_KEY, SessionManager
+from aj_crew.session_background import mark_context_overflowed
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).
@@ -76,7 +76,7 @@ def _mock_provider_factory():
 
 
 async def _manager(backend: str) -> SessionManager:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session.timeout_secs = 2
     cfg.agent.acp_backend = backend
     mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())

@@ -19,8 +19,8 @@ from pathlib import Path
 import pytest
 
 from conftest import requires_symlinks
-from kiro_crew.eval.bench.run import compare_reports
-from kiro_crew.eval.bench.safepath import UnsafePathError, write_text_atomic_nofollow
+from aj_crew.eval.bench.run import compare_reports
+from aj_crew.eval.bench.safepath import UnsafePathError, write_text_atomic_nofollow
 
 
 def _report(measurable: object) -> dict:

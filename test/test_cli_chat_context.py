@@ -1,4 +1,4 @@
-"""``kirocrew chat`` opens each new session with Kiro Crew's session context.
+"""``ajcrew chat`` opens each new session with Aj Crew's session context.
 
 A harness other than Kiro's reads a custom agent's ``prompt`` and its ``skill://``
 skills only from the message ``ContextBuilder.build_message`` assembles: every
@@ -14,20 +14,20 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_chat
-from kiro_crew.acp.types import (
+from aj_crew import cli_chat
+from aj_crew.acp.types import (
     ACP_BACKEND_CLAUDE,
     PROVIDER_LABEL_CLAUDE,
     PROVIDER_LABEL_CODEX,
 )
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.config.loader import KiroCrewAgentConfig
-from kiro_crew.config.paths import kiro_agents_dir
-from kiro_crew.config.sections import MemoryStoreConfig
-from kiro_crew.context import ContextBuilder
-from kiro_crew.memory import MemoryStore
-from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent, LLMProvider
-from kiro_crew.skills_discovery import skills_dir
+from aj_crew.config import AjCrewConfig
+from aj_crew.config.loader import AjCrewAgentConfig
+from aj_crew.config.paths import kiro_agents_dir
+from aj_crew.config.sections import MemoryStoreConfig
+from aj_crew.context import ContextBuilder
+from aj_crew.memory import MemoryStore
+from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent, LLMProvider
+from aj_crew.skills_discovery import skills_dir
 
 #: ``_chat`` builds a ``SkillsLoader``, whose index and catalog worker outlive the test.
 pytestmark = pytest.mark.usefixtures("close_skills_loaders")
@@ -120,10 +120,10 @@ def _pirate_agent(root: Path) -> None:
     )
 
 
-def _run_on(monkeypatch, provider: _RecordingSession) -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
+def _run_on(monkeypatch, provider: _RecordingSession) -> AjCrewConfig:
+    cfg = AjCrewConfig()
     cfg.agent.acp_backend = ACP_BACKEND_CLAUDE
-    monkeypatch.setattr(cli_chat.KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(cli_chat.AjCrewConfig, "load", classmethod(lambda cls: cfg))
     monkeypatch.setattr(cli_chat, "build_provider_factory", lambda config: lambda *a, **k: provider)
     return cfg
 
@@ -309,7 +309,7 @@ async def test_only_a_session_on_the_default_store_reads_global_memory(
     MemoryStore().add_preference(GLOBAL_PREFERENCE)
     provider = _RecordingSession(PROVIDER_LABEL_CLAUDE)
     cfg = _run_on(monkeypatch, provider)
-    cfg.agents["acme"] = KiroCrewAgentConfig(kiro_agent="pirate", memory_store="acme")
+    cfg.agents["acme"] = AjCrewAgentConfig(kiro_agent="pirate", memory_store="acme")
     cfg.memory_stores["acme"] = MemoryStoreConfig()
 
     await cli_chat._chat("say hello", None, agent=agent)

@@ -38,16 +38,16 @@ from aiohttp import web
 from aiohttp.client_exceptions import ClientConnectionResetError
 from aiohttp.test_utils import make_mocked_request
 
-import kiro_crew.dashboard.handlers as _HANDLERS_PKG
-from kiro_crew import executors
-from kiro_crew.dashboard import file_api
-from kiro_crew.dashboard.handlers import files as f
-from kiro_crew.testing.wait import async_wait_until, await_until, finished
+import aj_crew.dashboard.handlers as _HANDLERS_PKG
+from aj_crew import executors
+from aj_crew.dashboard import file_api
+from aj_crew.dashboard.handlers import files as f
+from aj_crew.testing.wait import async_wait_until, await_until, finished
 
 #: The shared open-and-check prefix resolves the validator through the
 #: ``handlers`` package at call time -- a documented monkey-patch seam kept for
 #: the circular import. A stub on the ``files`` module alone is invisible to it.
-_VALIDATOR_SEAM = "kiro_crew.dashboard.handlers._validate_dashboard_path"
+_VALIDATOR_SEAM = "aj_crew.dashboard.handlers._validate_dashboard_path"
 
 #: Thread-name prefixes of the two dedicated pools in ``executors.py``: probes
 #: (validation and stats) and transfers (bounded full reads, walks, listings,
@@ -591,7 +591,7 @@ class TestFileSearch:
         """Control: with no ?project= / ?workspace=, the project dir from the
         environment is still a search root."""
         (tmp_path / "beta.txt").write_text("x", encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
 
         resp = await f.api_file_search(_req("/api/file-search", "q=beta"))
 
@@ -656,7 +656,7 @@ class TestOfficePreview:
         """The endpoint the first sweep missed: ``resolve=1`` resolves the path
         against the project dir, which is two realpath calls."""
         (tmp_path / "deck.docx").write_bytes(b"PK\x03\x04")
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         threads: list[str] = []
         original = f._resolve_project_relative
 
@@ -677,7 +677,7 @@ class TestOfficePreview:
     async def test_an_unresolvable_relative_path_is_still_a_400(
         self, monkeypatch: pytest.MonkeyPatch
     ):
-        monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+        monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
 
         resp = await f.api_file_office_preview(
             _req("/api/file-office-preview", "path=deck.docx&resolve=1")
@@ -1372,7 +1372,7 @@ class TestStallKeyForCallersThatDoNotLeadWithThePath:
     async def test_fallback_search_is_refused_under_its_stuck_roots(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ):
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path / "proj"))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path / "proj"))
         monkeypatch.setattr(f, "data_home", lambda: tmp_path)
         async with _stuck_under(monkeypatch, str(tmp_path)):
             resp = await f.api_file_search(_req("/api/file-search", "q=note"))
@@ -1385,7 +1385,7 @@ class TestStallKeyForCallersThatDoNotLeadWithThePath:
     async def test_file_kinds_is_refused_when_its_batch_is_under_a_stuck_key(
         self, a_file: Path, monkeypatch: pytest.MonkeyPatch
     ):
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(a_file.parent))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(a_file.parent))
         req = make_mocked_request("POST", "/api/file-kinds", app=_app())
         req["user"] = "local-app"
         req["app"] = ""
@@ -1405,7 +1405,7 @@ class TestStallKeyForCallersThatDoNotLeadWithThePath:
         self, a_file: Path, monkeypatch: pytest.MonkeyPatch
     ):
         """The resolve itself is refused, before it realpaths inside the dead project."""
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(a_file.parent))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(a_file.parent))
         resolve = mock.MagicMock(side_effect=f._resolve_project_relative)
         monkeypatch.setattr(f, "_resolve_project_relative", resolve)
         async with _stuck_under(monkeypatch, str(a_file.parent)):
@@ -1439,14 +1439,14 @@ class TestStallKeyForCallersThatDoNotLeadWithThePath:
     ):
         """A batch across mounts gets no key: keyed on one path, two batches stuck on
         a dead mount listed later would refuse the healthy mount listed first."""
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         here = str(tmp_path / "x")
         other = os.path.join(os.sep, "kc-other-mount", "share", "y")
         assert f._path_probe_stall_key((here,)) != f._path_probe_stall_key((other,))
         assert f._batch_stall_path([here, "rel.md"]) == here
         assert f._batch_stall_path([here, other]) == ""
         assert f._batch_stall_path(["rel.md"]) == str(tmp_path)
-        monkeypatch.delenv("KIROCREW_PROJECT_DIR")
+        monkeypatch.delenv("AJCREW_PROJECT_DIR")
         assert f._project_relative_stall_path("rel.md") == ""
         assert f._project_relative_stall_path(here) == here
 

@@ -14,7 +14,7 @@ import pytest
 
 
 def _fake_provider(name: str, *, available: bool, installable: bool):
-    from kiro_crew.publish_provider import (
+    from aj_crew.publish_provider import (
         Capability,
         DiscoveryModel,
         KindSupport,
@@ -42,7 +42,7 @@ class TestPickerIncludesInstallable:
 
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.dashboard.handlers import artifacts as handlers
+        from aj_crew.dashboard.handlers import artifacts as handlers
 
         ready = _fake_provider("ready", available=True, installable=False)
         heals = _fake_provider("heals", available=False, installable=True)
@@ -69,7 +69,7 @@ class TestPickerPublicReachable:
 
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.dashboard.handlers import artifacts as handlers
+        from aj_crew.dashboard.handlers import artifacts as handlers
 
         private = _fake_provider("private", available=True, installable=False)
         private.public_reachable = False
@@ -92,8 +92,8 @@ class TestPickerPublicReachable:
 
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.dashboard.handlers import artifacts as handlers
-        from kiro_crew.publish_provider import PublishProvider
+        from aj_crew.dashboard.handlers import artifacts as handlers
+        from aj_crew.publish_provider import PublishProvider
 
         class Undeclared(PublishProvider):
             name = "undeclared"
@@ -148,9 +148,9 @@ class TestPublishProviderNameBoundary:
     def publish_mock(self, monkeypatch, tmp_path):
         from unittest.mock import AsyncMock
 
-        from kiro_crew import artifacts as art_mod
-        from kiro_crew.artifacts import ArtifactStore
-        from kiro_crew.dashboard.handlers import artifacts as handlers
+        from aj_crew import artifacts as art_mod
+        from aj_crew.artifacts import ArtifactStore
+        from aj_crew.dashboard.handlers import artifacts as handlers
 
         store = ArtifactStore(root=tmp_path / "artifacts")
         store.create(name="Doc", content="hi", slug="doc", kind="markdown")
@@ -164,7 +164,7 @@ class TestPublishProviderNameBoundary:
 
     @pytest.mark.asyncio
     async def test_underscore_name_reaches_the_provider(self, publish_mock):
-        from kiro_crew.dashboard.handlers import artifacts as handlers
+        from aj_crew.dashboard.handlers import artifacts as handlers
 
         resp = await handlers.api_artifact_publish(_publish_request("edition_provider"))
 
@@ -180,7 +180,7 @@ class TestPublishProviderNameBoundary:
     async def test_unsafe_names_still_400(self, publish_mock, bad):
         import json
 
-        from kiro_crew.dashboard.handlers import artifacts as handlers
+        from aj_crew.dashboard.handlers import artifacts as handlers
 
         resp = await handlers.api_artifact_publish(_publish_request(bad))
 
@@ -189,9 +189,9 @@ class TestPublishProviderNameBoundary:
         publish_mock.assert_not_awaited()
 
     def test_every_registered_core_provider_name_passes_the_boundary(self, monkeypatch):
-        from kiro_crew import publish_provider as pp
-        from kiro_crew.dashboard.handlers import artifacts as handlers
-        from kiro_crew.publish import personal_drive as pd
+        from aj_crew import publish_provider as pp
+        from aj_crew.dashboard.handlers import artifacts as handlers
+        from aj_crew.publish import personal_drive as pd
 
         monkeypatch.setattr(pp, "_FACTORIES", dict(pp._FACTORIES))
         pd.register_public_edition_providers()

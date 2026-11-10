@@ -3,15 +3,15 @@
 This directory is the middle layer of the test pyramid. A unit test in
 ``test/`` builds a bare ``web.Application()`` with a handful of routes and
 mocks the rest; the E2E suites (``test/test_e2e_smoke.py``, ``test/e2e/``,
-``test/test_playwright_e2e.py``) spawn ``kirocrew gateway`` as a subprocess
-behind ``KIROCREW_E2E=1``. Neither answers "do the real modules work when
+``test/test_playwright_e2e.py``) spawn ``ajcrew gateway`` as a subprocess
+behind ``AJCREW_E2E=1``. Neither answers "do the real modules work when
 wired together?" -- that is what a test here answers:
 
 * the real ``GatewayOrchestrator`` boot sequence (``run()``), not a hand-copied
   subset of it, so a new boot step is covered the day it lands;
-* a real ``KIROCREW_HOME`` under ``tmp_path`` -- real session store, real
+* a real ``AJCREW_HOME`` under ``tmp_path`` -- real session store, real
   config, real memory bindings, real agent-spec directory;
-* the ONLY fake is the model: ``kiro_crew.testing.fake_acp_backend`` stands in
+* the ONLY fake is the model: ``aj_crew.testing.fake_acp_backend`` stands in
   for ``kiro-cli`` (tests MUST NOT spawn the real one);
 * the HTTP client talks to the port the gateway actually bound, on loopback,
   from the same interpreter and event loop -- so an event-loop stall in one
@@ -60,7 +60,7 @@ an isolated home::
 
 Opt-in
 ------
-The layer runs only with ``KIROCREW_INTEGRATION=1`` (the ``integration`` job
+The layer runs only with ``AJCREW_INTEGRATION=1`` (the ``integration`` job
 in ``ci.yml`` sets it). A bare ``pytest`` collects these files and skips them:
 a boot per test is too slow for the per-commit unit shards, and the Windows
 shards must not pay for a POSIX signal-handler dance they do not need.
@@ -71,7 +71,7 @@ bare name ``conftest``; a second top-level ``conftest`` would shadow it.
 
 The boot reaches no real channel
 --------------------------------
-``KiroCrewConfig.load_credentials`` merges every ``CREDENTIAL_KEYS`` name from
+``AjCrewConfig.load_credentials`` merges every ``CREDENTIAL_KEYS`` name from
 ``os.environ``, and the orchestrator opens Slack/Discord/... transports for
 any it finds. A developer with ``SLACK_APP_TOKEN`` exported would otherwise
 have a TEST connect their real workspace. ``integration_home`` deletes every
@@ -90,13 +90,13 @@ boots under a stand-in home and fails on any read beneath it.
 One process, many homes: what a boot leaves behind, and who puts it back
 -------------------------------------------------------------------------
 The whole layer runs in one interpreter, and every boot is a fresh
-``KIROCREW_HOME``. A production gateway is one process for one home, so
+``AJCREW_HOME``. A production gateway is one process for one home, so
 startup pins home-derived state in module globals, installs process-wide
 hooks and raises process limits, and never expects any of it to change or to
 be undone. Left alone, the second boot in a worker inherits the first home's
 copies and the last test's residue. Four mechanisms cover it. The lists ARE
 the contract, and ``test_a_second_boot_touches_only_known_module_globals`` is
-the witness that keeps them honest: it diffs every loaded ``kiro_crew`` module's
+the witness that keeps them honest: it diffs every loaded ``aj_crew`` module's
 globals across a second boot, so a home-derived global startup grows that is
 on no list goes red there, naming itself, rather than surfacing as a
 cross-home flake three tests later.
@@ -126,7 +126,7 @@ cross-home flake three tests later.
      ``platform.bootstrap`` boot state -- config and governance the first
      boot composed; a ``restart()`` must compose its own.
    * ``embeddings`` shared embedder and model-download manager -- both pinned
-     to the home's model path, and both already ship the "KIROCREW_HOME
+     to the home's model path, and both already ship the "AJCREW_HOME
      changes" reset this calls.
    * ``crew_log.emit`` caches and its shutdown-drain flag -- the real exit
      path drains the session log and marks the writer as draining for
@@ -198,7 +198,7 @@ cross-home flake three tests later.
      credential propagation grows it, so a fresh boot in a different home must
      start with none of the prior home's keys; a fresh process has none.
    * ``agent._main_spec_unreadable`` and ``agent._main_spec_skip_generation``
-     -- whether the home's ``kirocrew.json`` could not be read, and the
+     -- whether the home's ``ajcrew.json`` could not be read, and the
      governance generation the episode's last sibling pass ran under. Both
      describe the previous home's spec, whose hold must not carry over to the
      next home's rebuild; a fresh process has neither. The episode revision and
@@ -208,11 +208,11 @@ cross-home flake three tests later.
    exit: the SIGINT/SIGTERM handlers ``run()`` installs; the event loop's
    exception handler ``crash_guard.install_loop_handler`` replaces; the
    ``RLIMIT_NOFILE`` soft limit ``raise_nofile_soft_limit`` raises; and the
-   ``os.environ`` keys startup writes (``KIROCREW_BOUND_PORT`` /
-   ``KIROCREW_BOUND_HOST``).
+   ``os.environ`` keys startup writes (``AJCREW_BOUND_PORT`` /
+   ``AJCREW_BOUND_HOST``).
 
 3. **Waited for** by ``_teardown_boot``: the memory-preparation worker is a
-   THREAD behind a process-wide fence (``kiro_crew.memory_startup``) that
+   THREAD behind a process-wide fence (``aj_crew.memory_startup``) that
    ``_shutdown()`` cannot join, so teardown polls until the fence drops.
 
 4. **Reaped** by ``_teardown_boot``: every asyncio task the boot created that
@@ -229,7 +229,7 @@ task and runs the same teardown before the error propagates.
 What this boot does NOT run
 ---------------------------
 The only FAKE is the model. But the boot is ``GatewayOrchestrator.run()``, not
-``kirocrew gateway``, and it runs with ``test_mode=True`` and ``no_crons=True``,
+``ajcrew gateway``, and it runs with ``test_mode=True`` and ``no_crons=True``,
 so these production steps are skipped here and belong to the E2E layer:
 
 * everything ``run_gateway()`` does before it constructs the orchestrator --
@@ -246,7 +246,7 @@ Route coverage
 --------------
 Every request made through :class:`IntegrationGateway` is attributed to the
 aiohttp ROUTE it resolved to (``/api/sessions/abc`` counts toward
-``GET /api/sessions/{key}``). With ``KIROCREW_INTEGRATION_HITS_DIR`` set, each
+``GET /api/sessions/{key}``). With ``AJCREW_INTEGRATION_HITS_DIR`` set, each
 pytest process writes its hit set plus the full registered-route list at
 session end; ``scripts/check_integration_route_coverage.py`` unions them and
 reports the share of registered routes this suite exercised. That share is
@@ -280,8 +280,8 @@ from typing import Any, AsyncIterator, Callable, Iterator, NoReturn
 import pytest
 from aiohttp import ClientSession, ClientTimeout
 
-from kiro_crew import agent as agent_mod
-from kiro_crew import (
+from aj_crew import agent as agent_mod
+from aj_crew import (
     autonudge,
     crash_guard,
     embeddings,
@@ -293,32 +293,32 @@ from kiro_crew import (
     sandbox,
     shutdown_event,
 )
-from kiro_crew.acp import client as acp_client
-from kiro_crew.agent_sdk import host_auth
-from kiro_crew.apps import credential_masks
-from kiro_crew.apps.builtin_adoption_pins import HARNESS_PINS_ENV, load_adoption_pins
-from kiro_crew.config import live as config_live
-from kiro_crew.config import loader as config_loader
-from kiro_crew.config.loader import CREDENTIAL_KEYS
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.dashboard import (
+from aj_crew.acp import client as acp_client
+from aj_crew.agent_sdk import host_auth
+from aj_crew.apps import credential_masks
+from aj_crew.apps.builtin_adoption_pins import HARNESS_PINS_ENV, load_adoption_pins
+from aj_crew.config import live as config_live
+from aj_crew.config import loader as config_loader
+from aj_crew.config.loader import CREDENTIAL_KEYS
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.dashboard import (
     loop_watchdog,
     revocation_gen,
     status_counts,
     token_auth,
     token_secret,
 )
-from kiro_crew.dashboard.handlers import kiro_usage_api
-from kiro_crew.dashboard.handlers import updates as dashboard_updates
-from kiro_crew.diag import threads as diag_threads
-from kiro_crew.mcp_gateway import overlay_refresh
-from kiro_crew.metrics import inventory_gauges
-from kiro_crew.platform import bootstrap as platform_bootstrap
-from kiro_crew.platform import context as platform_context
-from kiro_crew.platform import governance
-from kiro_crew.security import paths as security_paths
-from kiro_crew.testing import fake_acp_backend
-from kiro_crew.testing.wait import async_wait_until, finished
+from aj_crew.dashboard.handlers import kiro_usage_api
+from aj_crew.dashboard.handlers import updates as dashboard_updates
+from aj_crew.diag import threads as diag_threads
+from aj_crew.mcp_gateway import overlay_refresh
+from aj_crew.metrics import inventory_gauges
+from aj_crew.platform import bootstrap as platform_bootstrap
+from aj_crew.platform import context as platform_context
+from aj_crew.platform import governance
+from aj_crew.security import paths as security_paths
+from aj_crew.testing import fake_acp_backend
+from aj_crew.testing.wait import async_wait_until, finished
 
 try:  # POSIX only; the layer is Linux-only in CI, but keep the import honest.
     import resource as _resource
@@ -326,7 +326,7 @@ except ImportError:  # pragma: no cover - Windows
     _resource = None  # type: ignore[assignment]
 
 #: Opt-in switch for the whole directory (see module docstring, "Opt-in").
-INTEGRATION_ENV = "KIROCREW_INTEGRATION"
+INTEGRATION_ENV = "AJCREW_INTEGRATION"
 
 #: How long the in-process boot may take before the helper gives up. The
 #: subprocess harness budgets 5-15s for the same boot plus interpreter start;
@@ -345,7 +345,7 @@ MEMORY_FENCE_DRAIN_SECS = 30.0
 BREADCRUMB_DRAIN_SECS = 5.0
 
 #: Env var naming the directory the route-hit / route-registry dumps go to.
-HITS_DIR_ENV = "KIROCREW_INTEGRATION_HITS_DIR"
+HITS_DIR_ENV = "AJCREW_INTEGRATION_HITS_DIR"
 
 #: The checkout this file lives in; a dump directory may not resolve inside it.
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -389,7 +389,7 @@ class HarnessExit(BaseException):
 def hard_exit_timer_disabled() -> "Iterator[None]":
     """Keep the loop-stall watchdog's C-level exit timer off while a boot is live.
 
-    ``start_dashboard`` arms :class:`~kiro_crew.dashboard.loop_watchdog.LoopStallWatchdog`
+    ``start_dashboard`` arms :class:`~aj_crew.dashboard.loop_watchdog.LoopStallWatchdog`
     whenever ``faulthandler`` is enabled -- which pytest does for every worker --
     and its hard timer is ``faulthandler.dump_traceback_later(exit=True)``: 25s
     without a loop beat and the PROCESS exits, which here is the xdist worker
@@ -671,7 +671,7 @@ class IntegrationGateway:
         process, ``X-Session-Token`` attests the ``X-Session-Key``). Use with
         ``auth=False``: these routes are for processes, not the dashboard user.
         """
-        from kiro_crew.session_token_sig import publish_session_token
+        from aj_crew.session_token_sig import publish_session_token
 
         token = secrets.token_hex(16)
         publish_session_token(token, session_key)
@@ -707,7 +707,7 @@ class IntegrationGateway:
             await self._client.close()
 
     async def restart(self) -> "IntegrationGateway":
-        """Stop and boot again on the SAME home -- what ``kirocrew restart`` does.
+        """Stop and boot again on the SAME home -- what ``ajcrew restart`` does.
 
         The handle is updated in place so the enclosing ``async with`` closes
         the new boot. Everything a real restart loses (in-memory state) is lost
@@ -761,7 +761,7 @@ class _ProcessSnapshot:
 
 def _restore_environ(before: dict[str, str]) -> None:
     """Put ``os.environ`` back to exactly ``before`` -- added keys go, changed
-    values revert. Startup writes ``KIROCREW_BOUND_PORT`` and friends and has
+    values revert. Startup writes ``AJCREW_BOUND_PORT`` and friends and has
     no teardown for them; this is that teardown."""
     for key in set(os.environ) - set(before):
         del os.environ[key]
@@ -852,10 +852,10 @@ def _reset_home_bound_globals() -> None:
         autonudge._INSTANCE = None
     # Shared crew: the tailnet allowlist snapshot, the access set read from the
     # home, what this boot's tailnet setup resolved to, and the boot's host hooks.
-    from kiro_crew.dashboard import tailnet_live_allowlist
-    from kiro_crew.shared_crew import access as shared_crew_access
-    from kiro_crew.shared_crew import access_set as shared_crew_access_set
-    from kiro_crew.shared_crew import admission_gate as shared_crew_admission
+    from aj_crew.dashboard import tailnet_live_allowlist
+    from aj_crew.shared_crew import access as shared_crew_access
+    from aj_crew.shared_crew import access_set as shared_crew_access_set
+    from aj_crew.shared_crew import admission_gate as shared_crew_admission
 
     tailnet_live_allowlist.reset_for_tests()
     shared_crew_access_set.reset_for_tests()
@@ -875,7 +875,7 @@ def _reset_home_bound_globals() -> None:
 
 def home_bound_globals_are_clear() -> bool:
     """Whether no home-derived module global is currently populated."""
-    from kiro_crew.shared_crew import admission_gate as shared_crew_admission
+    from aj_crew.shared_crew import admission_gate as shared_crew_admission
 
     return (
         shared_crew_admission._SERVICE is None
@@ -1048,15 +1048,15 @@ async def _boot(home: Path, *, boot_secs: float) -> IntegrationGateway:
     cancellation from outside -- reaps the boot before the error propagates
     (module docstring, "One process, many homes").
     """
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.dashboard.token_auth import MAX_SESSION_TTL_SECS, generate_token
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.dashboard.token_auth import MAX_SESSION_TTL_SECS, generate_token
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     shutdown_event.clear()
     _reset_home_bound_globals()
     tasks_before = frozenset(_live_tasks())
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     orchestrator = GatewayOrchestrator(
         cfg,
         no_crons=True,
@@ -1292,9 +1292,9 @@ def isolate_credentials(monkeypatch: pytest.MonkeyPatch, home: Path) -> None:
 def integration_home(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, unpinned_agent_spec_home: Any
 ) -> Iterator[Path]:
-    """A fresh, isolated ``KIROCREW_HOME`` with the fake model wired in.
+    """A fresh, isolated ``AJCREW_HOME`` with the fake model wired in.
 
-    Modelled on ``kiro_crew.testing.harness.spawn_feature_gateway``'s
+    Modelled on ``aj_crew.testing.harness.spawn_feature_gateway``'s
     environment, so a test that passes here and fails in E2E mostly differs in
     the process boundary. This boot runs in the test process, though, so it also
     keeps out what that subprocess gateway inherits from its caller: the
@@ -1303,7 +1303,7 @@ def integration_home(
     """
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     # The developer's own home stays out of the boot too (``isolate_user_home``
     # lists what that covers): the gateway runs in this process, so without it
     # the onboarding import scan walks their foreign agents' homes and the
@@ -1318,13 +1318,13 @@ def integration_home(
     # rootdir pins the WRITE side of the agent-spec seam (the ``KIRO_AGENTS_DIR``
     # hooks) to its own per-test directory while the READ side
     # (``config.paths.kiro_agents_dir``) follows ``KIRO_HOME``, so under the pin
-    # the boot writes ``kirocrew.json`` where no request will read it. That
+    # the boot writes ``ajcrew.json`` where no request will read it. That
     # fixture releases the pin; with ``KIRO_HOME`` set above, both sides resolve
     # to ``<home>/kiro/agents`` -- the private target the shared-home write guard
     # exempts -- so its "read-only use" caveat (writes would reach the operator's
     # live agents) does not apply here.
-    monkeypatch.setenv("KIROCREW_KIRO_BIN", str(fake_acp_backend.__file__))
-    monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+    monkeypatch.setenv("AJCREW_KIRO_BIN", str(fake_acp_backend.__file__))
+    monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
     # Unsandboxed consent, for THIS disposable home only, written as the operator
     # would write it. The agent binary is the fake above -- a stdlib echo stub --
     # so OS isolation guards nothing this layer asserts, and the CI container
@@ -1344,7 +1344,7 @@ def integration_home(
     # value never reaches the boot. Set per test it makes an on-loop store write
     # raise instead of warn, the same discipline the other gateway-booting jobs
     # enforce.
-    monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_PERSIST", "1")
+    monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_PERSIST", "1")
     # The adoption pin table is this test's own (``harness_environment`` sets the
     # same name for a subprocess gateway): absent, so empty, unless the test
     # writes a fixture pin to ``tmp_path / "adoption-pins.json"``. Read once per

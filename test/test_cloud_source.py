@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.cloud import aws, source
+from aj_crew.cloud import aws, source
 
 
 @pytest.fixture(autouse=True)
@@ -41,7 +41,7 @@ class TestRepoRoot:
         # which itself may sit inside this checkout (a developer's
         # `TMPDIR=./tmp`) -- where install.sh + setup.cfg ARE above it. The
         # walk is lexical on the resolved path, so existence is not required.
-        fake_module = Path("/kc-wheel-install-no-markers/site-packages/kiro_crew/cloud/source.py")
+        fake_module = Path("/kc-wheel-install-no-markers/site-packages/aj_crew/cloud/source.py")
         monkeypatch.setattr(source, "__file__", str(fake_module))
         with pytest.raises(aws.AWSError, match="source root"):
             source.repo_root()
@@ -85,8 +85,8 @@ class TestBuildTarball:
     def test_tar_fallback_excludes_secrets(self, tmp_path):
         # Secret-bearing files/dirs must never be packaged by the fallback.
         (tmp_path / "install.sh").write_text("echo hi\n")
-        (tmp_path / ".kirocrew-dev").mkdir()
-        (tmp_path / ".kirocrew-dev" / "config.json").write_text('{"token":"secret"}\n')
+        (tmp_path / ".ajcrew-dev").mkdir()
+        (tmp_path / ".ajcrew-dev" / "config.json").write_text('{"token":"secret"}\n')
         (tmp_path / ".env").write_text("SLACK_BOT_TOKEN=xoxb-secret\n")
         (tmp_path / "server.pem").write_text("-----BEGIN KEY-----\n")
         (tmp_path / "id_rsa.key").write_text("privatekey\n")
@@ -97,23 +97,23 @@ class TestBuildTarball:
             with tarfile.open(tarball) as tf:
                 names = tf.getnames()
             assert any(n.endswith("ok.py") for n in names)  # normal file shipped
-            assert not any(".kirocrew-dev" in n for n in names)
+            assert not any(".ajcrew-dev" in n for n in names)
             assert not any(n.endswith(".env") for n in names)
             assert not any(n.endswith(".pem") for n in names)
             assert not any(n.endswith(".key") for n in names)
         finally:
             tarball.unlink()
 
-    def test_tar_fallback_excludes_custom_kirocrew_home(self, monkeypatch, tmp_path):
-        # Dev mode can set KIROCREW_HOME to a custom-named dir at the repo root;
+    def test_tar_fallback_excludes_custom_ajcrew_home(self, monkeypatch, tmp_path):
+        # Dev mode can set AJCREW_HOME to a custom-named dir at the repo root;
         # the tarfile fallback must exclude it by its actual name (not just the
-        # hardcoded .kirocrew* entries) so its data/secrets don't ship to S3.
+        # hardcoded .ajcrew* entries) so its data/secrets don't ship to S3.
         (tmp_path / "install.sh").write_text("echo hi\n")
         home = tmp_path / "my-custom-home"
         home.mkdir()
         (home / "contacts.json").write_text('{"secret":"x"}\n')
         (tmp_path / "ok.py").write_text("x=1\n")
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
 
         tarball = source._tar_fallback(tmp_path)
         try:
@@ -125,14 +125,14 @@ class TestBuildTarball:
             tarball.unlink()
 
     def test_tar_fallback_excludes_nested_custom_home(self, monkeypatch, tmp_path):
-        # A custom KIROCREW_HOME nested below the repo root (root/data/kc-home)
+        # A custom AJCREW_HOME nested below the repo root (root/data/kc-home)
         # must also be excluded from the tarfile fallback.
         (tmp_path / "install.sh").write_text("echo hi\n")
         home = tmp_path / "data" / "kc-home"
         home.mkdir(parents=True)
         (home / "secrets.json").write_text('{"k":"v"}\n')
         (tmp_path / "data" / "keep.txt").write_text("keep\n")  # sibling stays
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
 
         tarball = source._tar_fallback(tmp_path)
         try:
@@ -144,14 +144,14 @@ class TestBuildTarball:
             tarball.unlink()
 
     def test_custom_home_not_excluded_when_outside_repo(self, monkeypatch, tmp_path):
-        # An absolute ~/.kirocrew OUTSIDE the repo root isn't in the tarball
+        # An absolute ~/.ajcrew OUTSIDE the repo root isn't in the tarball
         # anyway; _custom_home_rel_parts must return None so we don't accidentally
         # drop a same-named dir that legitimately lives in the repo. Use a
         # sibling dir that is genuinely not under the packaged root.
         repo = tmp_path / "repo"
         repo.mkdir()
-        outside = tmp_path / "home" / ".kirocrew"
-        monkeypatch.setenv("KIROCREW_HOME", str(outside))
+        outside = tmp_path / "home" / ".ajcrew"
+        monkeypatch.setenv("AJCREW_HOME", str(outside))
         assert source._custom_home_rel_parts(repo) is None
 
     def test_env_exclusion_is_exact_not_prefix_greedy(self, tmp_path):
@@ -259,7 +259,7 @@ class TestBuildTarball:
                 ("src/app.py", b"x=1\n"),
                 ("server.pem", b"-----BEGIN KEY-----\n"),
                 (".env", b"TOKEN=secret\n"),
-                (".kirocrew/config.json", b"{}\n"),
+                (".ajcrew/config.json", b"{}\n"),
             ):
                 ti = tarfile.TarInfo(name)
                 ti.size = len(data)
@@ -282,7 +282,7 @@ class TestBuildTarball:
         import tarfile as _tf
         import tempfile as _tmp
 
-        import kiro_crew.cloud.source as _src
+        import aj_crew.cloud.source as _src
 
         created: list[str] = []
         real_ntf = _tmp.NamedTemporaryFile
@@ -615,7 +615,7 @@ class TestSourceChecksumPin:
 class TestBucketNaming:
     def test_bucket_name(self, monkeypatch):
         monkeypatch.setattr(source, "_account_id", lambda *a: "814959995281")
-        assert source.bucket_name("dev", "us-east-1") == "kirocrew-src-814959995281-us-east-1"
+        assert source.bucket_name("dev", "us-east-1") == "ajcrew-src-814959995281-us-east-1"
 
 
 class TestEnsureBucket:
@@ -627,7 +627,7 @@ class TestEnsureBucket:
             aws, "checked", lambda args, *a, action="", **k: actions.append(action) or ""
         )
         b = source.ensure_bucket("dev", "us-east-1")
-        assert b == "kirocrew-src-123-us-east-1"
+        assert b == "ajcrew-src-123-us-east-1"
         # existing bucket: no create-bucket...
         assert "s3:CreateBucket" not in actions
         # ...but the public-access block MUST still be (re-)enforced on reuse,
@@ -670,7 +670,7 @@ class TestEnsureBucket:
             aws, "checked", lambda *a, **k: created.update(n=created["n"] + 1) or ""
         )
         b = source.ensure_bucket("dev", "us-west-2")
-        assert b == "kirocrew-src-123-us-west-2"
+        assert b == "ajcrew-src-123-us-west-2"
         assert created["n"] >= 1
 
     def test_raises_when_account_id_unresolved(self, monkeypatch):
@@ -705,7 +705,7 @@ class TestEnsureInstanceBoundary:
     def test_reuses_existing_boundary_when_content_matches(self, monkeypatch):
         # An existing boundary is reused (never re-versioned) ONLY after its
         # content is verified to match the fixed document.
-        from kiro_crew.cloud import iam
+        from aj_crew.cloud import iam
 
         monkeypatch.setattr(source, "_account_id", lambda *a: _ACCT12)
         calls = []
@@ -747,7 +747,7 @@ class TestEnsureInstanceBoundary:
         # The compare is canonical JSON (sort_keys), so the same document with its
         # dict KEYS in a different order (as AWS may return them) still matches and
         # is reused — we don't spuriously reject our own boundary over key order.
-        from kiro_crew.cloud import iam
+        from aj_crew.cloud import iam
 
         monkeypatch.setattr(source, "_account_id", lambda *a: _ACCT12)
         monkeypatch.setattr(aws, "run_aws", lambda args, *a, **k: (0, "{}", ""))
@@ -767,7 +767,7 @@ class TestEnsureInstanceBoundary:
         assert source.ensure_instance_boundary("dev", "us-east-1") == iam.boundary_arn(_ACCT12)
 
     def test_creates_when_absent_with_fixed_document(self, monkeypatch):
-        from kiro_crew.cloud import iam
+        from aj_crew.cloud import iam
 
         monkeypatch.setattr(source, "_account_id", lambda *a: "123456789012")
         created = {}
@@ -796,7 +796,7 @@ class TestEnsureInstanceBoundary:
         # get-policy says absent, but a concurrent launch created it first →
         # create-policy returns EntityAlreadyExists → we VERIFY content matches
         # ours, then treat as success.
-        from kiro_crew.cloud import iam
+        from aj_crew.cloud import iam
 
         monkeypatch.setattr(source, "_account_id", lambda *a: _ACCT12)
 
@@ -846,7 +846,7 @@ class TestEnsureInstanceBoundary:
                     "An error occurred (AccessDenied): User: "
                     "arn:aws:sts::123456789012:assumed-role/launcher/s is not "
                     "authorized to perform: iam:GetPolicy on resource: "
-                    "arn:aws:iam::123456789012:policy/kirocrew-ec2-boundary",
+                    "arn:aws:iam::123456789012:policy/ajcrew-ec2-boundary",
                 )
             raise AssertionError(f"must not run {args[:2]} after a denied read")
 
@@ -855,8 +855,8 @@ class TestEnsureInstanceBoundary:
             source.ensure_instance_boundary("dev", "us-east-1")
         assert excinfo.value.missing_action == "iam:GetPolicy"
         assert str(excinfo.value).startswith(
-            "could not read the permissions boundary 'kirocrew-ec2-boundary': grant "
-            "`iam:GetPolicy` (see `kirocrew cloud iam-policy`) and retry — "
+            "could not read the permissions boundary 'ajcrew-ec2-boundary': grant "
+            "`iam:GetPolicy` (see `ajcrew cloud iam-policy`) and retry — "
         )
         assert "iam:CreatePolicy" not in str(excinfo.value)
         assert ["iam", "create-policy"] not in calls
@@ -865,7 +865,7 @@ class TestEnsureInstanceBoundary:
         # The denied-read branch must not swallow the ordinary absent case: a
         # boundary that does not exist answers NoSuchEntity, not AccessDenied, and
         # is created as before.
-        from kiro_crew.cloud import iam
+        from aj_crew.cloud import iam
 
         monkeypatch.setattr(source, "_account_id", lambda *a: _ACCT12)
         calls = []
@@ -895,7 +895,7 @@ class TestEnsureCrewBoundary:
     """T3's creator, and the evidence it does not reimplement the instance one."""
 
     def test_creates_when_absent_from_the_content_fixed_document(self, monkeypatch):
-        from kiro_crew.cloud import iam
+        from aj_crew.cloud import iam
 
         monkeypatch.setattr(source, "_account_id", lambda *a: _ACCT12)
         created = {}
@@ -921,7 +921,7 @@ class TestEnsureCrewBoundary:
             assert verb not in argv
 
     def test_reuses_an_existing_boundary_only_after_verifying_content(self, monkeypatch):
-        from kiro_crew.cloud import iam
+        from aj_crew.cloud import iam
 
         monkeypatch.setattr(source, "_account_id", lambda *a: _ACCT12)
         calls = []
@@ -962,12 +962,12 @@ class TestEnsureCrewBoundary:
     def test_the_ec2_ceiling_is_not_accepted_as_this_ones_content(self, monkeypatch):
         """A ceiling above the floor caps nothing, so it is refused here too.
 
-        The EC2 document is a real, kirocrew-authored, non-permissive policy, which
+        The EC2 document is a real, ajcrew-authored, non-permissive policy, which
         is what makes it the interesting mismatch: a lane that checked "some
-        kirocrew boundary is present" rather than "this exact content" would accept
+        ajcrew boundary is present" rather than "this exact content" would accept
         it and cap a four-action role with a twenty-action ceiling.
         """
-        from kiro_crew.cloud import iam
+        from aj_crew.cloud import iam
 
         monkeypatch.setattr(source, "_account_id", lambda *a: _ACCT12)
         monkeypatch.setattr(aws, "run_aws", lambda args, *a, **k: (0, "{}", ""))
@@ -982,7 +982,7 @@ class TestEnsureCrewBoundary:
             source.ensure_crew_boundary("dev", "us-east-1")
 
     def test_a_lost_create_race_is_verified_before_it_counts_as_success(self, monkeypatch):
-        from kiro_crew.cloud import iam
+        from aj_crew.cloud import iam
 
         monkeypatch.setattr(source, "_account_id", lambda *a: _ACCT12)
 
@@ -1034,7 +1034,7 @@ class TestEnsureCrewBoundary:
         A copied core would pass every other test here. Checking the documents differ
         stops both lanes from sharing it by getting the same expected content.
         """
-        from kiro_crew.cloud import iam
+        from aj_crew.cloud import iam
 
         monkeypatch.setattr(source, "_account_id", lambda *a: _ACCT12)
         monkeypatch.setattr(aws, "run_aws", lambda args, *a, **k: (0, "{}", ""))
@@ -1069,20 +1069,20 @@ class TestEnsureCrewBoundary:
 
 
 _ACCT = "123456789012"
-_BUCKET = f"kirocrew-src-{_ACCT}-us-east-1"
+_BUCKET = f"ajcrew-src-{_ACCT}-us-east-1"
 
 
 class TestAccountFromBucket:
     def test_extracts_12_digit_account(self):
         assert source._account_from_bucket(_BUCKET) == _ACCT
         # region with hyphens doesn't confuse the first-field split
-        assert source._account_from_bucket("kirocrew-src-123456789012-ap-south-1") == "123456789012"
+        assert source._account_from_bucket("ajcrew-src-123456789012-ap-south-1") == "123456789012"
 
     def test_rejects_unknown_fallback_and_bad_shapes(self):
-        # The `kirocrew-src-unknown-*` fallback (account didn't resolve) yields ""
+        # The `ajcrew-src-unknown-*` fallback (account didn't resolve) yields ""
         # so callers fail closed instead of pinning a bogus owner.
-        assert source._account_from_bucket("kirocrew-src-unknown-us-east-1") == ""
-        assert source._account_from_bucket("kirocrew-src-123-us-east-1") == ""  # too short
+        assert source._account_from_bucket("ajcrew-src-unknown-us-east-1") == ""
+        assert source._account_from_bucket("ajcrew-src-123-us-east-1") == ""  # too short
         assert source._account_from_bucket("some-other-bucket") == ""
 
 
@@ -1102,7 +1102,7 @@ class TestUploadDelete:
         )
         bucket, key = source.upload_source("kc-1", "dev", "us-east-1")
         assert bucket == _BUCKET
-        assert key == "kc-1/kirocrew-src.tar.gz"
+        assert key == "kc-1/ajcrew-src.tar.gz"
         # low-level s3api put-object (only it accepts --expected-bucket-owner)
         assert cp["args"][:2] == ["s3api", "put-object"]
         assert "--bucket" in cp["args"] and bucket in cp["args"]
@@ -1123,8 +1123,8 @@ class TestUploadDelete:
 
     def test_upload_source_fails_closed_when_owner_underivable(self, monkeypatch, tmp_path):
         # If the bucket name isn't the expected shape (account unresolved →
-        # `kirocrew-src-unknown-*`), we must NOT upload without an owner pin.
-        monkeypatch.setattr(source, "ensure_bucket", lambda *a: "kirocrew-src-unknown-us-east-1")
+        # `ajcrew-src-unknown-*`), we must NOT upload without an owner pin.
+        monkeypatch.setattr(source, "ensure_bucket", lambda *a: "ajcrew-src-unknown-us-east-1")
 
         def _boom_build(*a, **k):  # pragma: no cover - must not build/upload
             raise AssertionError("must not build/upload without an owner pin")
@@ -1146,15 +1146,15 @@ class TestUploadDelete:
         # low-level s3api delete-object (only it accepts --expected-bucket-owner)
         assert rm["args"][:2] == ["s3api", "delete-object"]
         assert "--bucket" in rm["args"] and _BUCKET in rm["args"]
-        assert "--key" in rm["args"] and "kc-1/kirocrew-src.tar.gz" in rm["args"]
+        assert "--key" in rm["args"] and "kc-1/ajcrew-src.tar.gz" in rm["args"]
         assert "--expected-bucket-owner" in rm["args"] and _ACCT in rm["args"]
         assert res["removed"] is True
         assert res["error"] == ""
-        assert res["uri"] == f"s3://{_BUCKET}/kc-1/kirocrew-src.tar.gz"
+        assert res["uri"] == f"s3://{_BUCKET}/kc-1/ajcrew-src.tar.gz"
 
     def test_delete_source_fails_closed_when_owner_underivable(self, monkeypatch):
         # bucket_name fell back to unknown → skip the unpinned delete, report it.
-        monkeypatch.setattr(source, "bucket_name", lambda *a: "kirocrew-src-unknown-us-east-1")
+        monkeypatch.setattr(source, "bucket_name", lambda *a: "ajcrew-src-unknown-us-east-1")
         monkeypatch.setattr(
             aws, "run_aws", lambda *a, **k: pytest.fail("must not issue unpinned delete")
         )

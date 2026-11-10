@@ -19,7 +19,7 @@ from md_notebook_helpers import _seed_template  # noqa: F401 - fixture
 from md_notebook_helpers import fixtures_fixture  # noqa: F401 - fixture
 from md_notebook_helpers import _clone, _git, signed_client
 
-from kiro_crew.apps.builtins.md_notebook import git_ops
+from aj_crew.apps.builtins.md_notebook import git_ops
 
 # ---------------------------------------------------------------------------
 # Token, knowledge flag, folder picker
@@ -549,22 +549,22 @@ def test_notebook_pat_is_behind_the_sensitive_path_floor() -> None:
     file tools must not be able to read it through the shared gate. The app's own
     backend opens it directly and is unaffected.
     """
-    from kiro_crew.security import is_sensitive_path
+    from aj_crew.security import is_sensitive_path
 
     assert is_sensitive_path("~/.kiro/crew/workspace/md-notebook/pat") is True
-    # config_dir() can resolve to the legacy `.kirocrew` data-home on a migration
+    # config_dir() can resolve to the legacy `.ajcrew` data-home on a migration
     # fallback, and HOME follows it — the token must be protected there too.
-    assert is_sensitive_path("~/.kirocrew/workspace/md-notebook/pat") is True
+    assert is_sensitive_path("~/.ajcrew/workspace/md-notebook/pat") is True
     # vaults.json stores each vault's on-disk localPath, which auto-sync trusts
     # for git add/commit/push. An agent that could rewrite it would repoint a
     # vault at an unrelated repo, so it is behind the floor under both prefixes.
     assert is_sensitive_path("~/.kiro/crew/workspace/md-notebook/vaults.json") is True
-    assert is_sensitive_path("~/.kirocrew/workspace/md-notebook/vaults.json") is True
+    assert is_sensitive_path("~/.ajcrew/workspace/md-notebook/vaults.json") is True
     # settings.json carries `autoSync`, the bit that authorizes the background
     # loop's unattended push — an agent that could write it would flip pushing on
     # without the operator, so it is behind the floor under both prefixes too.
     assert is_sensitive_path("~/.kiro/crew/workspace/md-notebook/settings.json") is True
-    assert is_sensitive_path("~/.kirocrew/workspace/md-notebook/settings.json") is True
+    assert is_sensitive_path("~/.ajcrew/workspace/md-notebook/settings.json") is True
     # Notes themselves must stay readable — the floor covers the token, not the vault.
     assert is_sensitive_path("~/.kiro/crew/workspace/md-notebook/vaults/v1/note.md") is False
 
@@ -744,7 +744,7 @@ async def test_run_git_surrogateescape_round_trips_a_non_utf8_path(tmp_path) -> 
     `os` layer restores byte-exactly, or the empty-scope classifier's lstat
     inspects a U+FFFD path that names nothing and an EXISTING
     `config.worktree` reads as the empty scope (see
-    kiro_crew.git_worktree_scope)."""
+    aj_crew.git_worktree_scope)."""
     repo = tmp_path / os.fsdecode(b"v-\xff")
     repo.mkdir()
     _git("init", "-q", "--template=", ".", cwd=repo)

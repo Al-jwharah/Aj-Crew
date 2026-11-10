@@ -1,8 +1,8 @@
-"""The unresolved-``@server``-ref guard (:mod:`kiro_crew.acp.mcp_ref_guard`).
+"""The unresolved-``@server``-ref guard (:mod:`aj_crew.acp.mcp_ref_guard`).
 
 The defect this guards against has shipped on three harnesses: a session comes up
-holding ``tools: ["@kirocrew-core", ...]`` while nothing in its effective
-``mcpServers`` defines ``kirocrew-core``, so every Crew tool is silently absent
+holding ``tools: ["@ajcrew-core", ...]`` while nothing in its effective
+``mcpServers`` defines ``ajcrew-core``, so every Crew tool is silently absent
 with the harness otherwise working. These tests pin the two backend semantics
 (kiro-cli reads the spec itself, everyone else gets only the wire array), the ref
 spellings that are NOT server refs, and that the composition path in
@@ -10,7 +10,7 @@ spellings that are NOT server refs, and that the composition path in
 ``session/load``.
 
 The resolver itself is provider-neutral and lives in
-:mod:`kiro_crew.agent_sdk.mcp_refs`, which is what lets ``kirocrew doctor`` ask the
+:mod:`aj_crew.agent_sdk.mcp_refs`, which is what lets ``ajcrew doctor`` ask the
 same question without taking an ACP edge; ``acp/mcp_ref_guard`` is only the log
 line. Both are exercised from here, because they are one behaviour.
 """
@@ -26,19 +26,19 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp import mcp_ref_guard, session_mcp
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.harness.codex import CodexHarness
-from kiro_crew.acp.mcp_ref_guard import warn_unresolved_server_refs
-from kiro_crew.acp.mcp_session_report import (
+from aj_crew import agent as agent_mod
+from aj_crew.acp import client as client_mod
+from aj_crew.acp import mcp_ref_guard, session_mcp
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.harness.codex import CodexHarness
+from aj_crew.acp.mcp_ref_guard import warn_unresolved_server_refs
+from aj_crew.acp.mcp_session_report import (
     NAME_CAP,
     McpSessionReport,
     roster_names,
     sanitize_sink_text,
 )
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KAS,
@@ -46,16 +46,16 @@ from kiro_crew.acp.types import (
     ACP_BACKENDS_KNOWN,
     ACP_BACKENDS_SPEC_SERVERS_OFF_WIRE,
 )
-from kiro_crew.agent_sdk import mcp_refs as mcp_refs_mod
-from kiro_crew.agent_sdk.mcp_refs import (
+from aj_crew.agent_sdk import mcp_refs as mcp_refs_mod
+from aj_crew.agent_sdk.mcp_refs import (
     parse_tools_refs,
     unresolved_server_refs,
     wire_server_names,
 )
-from kiro_crew.providers.mirrors.codex import codex_projection
+from aj_crew.providers.mirrors.codex import codex_projection
 
-_CORE = {"command": "/opt/kirocrew", "args": ["mcp-core"]}
-_CRON = {"command": "/opt/kirocrew", "args": ["mcp-cron"]}
+_CORE = {"command": "/opt/ajcrew", "args": ["mcp-core"]}
+_CRON = {"command": "/opt/ajcrew", "args": ["mcp-cron"]}
 
 
 def _wire(*names: str) -> list[dict[str, Any]]:
@@ -169,9 +169,9 @@ class TestRefParsing:
 
 class TestResolution:
     def test_a_wire_served_ref_resolves(self):
-        spec = {"tools": ["@kirocrew-core"], "mcpServers": {"kirocrew-core": _CORE}}
+        spec = {"tools": ["@ajcrew-core"], "mcpServers": {"ajcrew-core": _CORE}}
         assert (
-            unresolved_server_refs(spec, _wire("kirocrew-core"), backend=ACP_BACKEND_CLAUDE) == []
+            unresolved_server_refs(spec, _wire("ajcrew-core"), backend=ACP_BACKEND_CLAUDE) == []
         )
 
     def test_an_empty_array_on_a_mirrored_backend_reports_every_ref(self):
@@ -181,12 +181,12 @@ class TestResolution:
         none of the servers its spec references, with nothing else saying so.
         """
         spec = {
-            "tools": ["@kirocrew-core", "@kirocrew-cron", "fs_read"],
-            "mcpServers": {"kirocrew-core": _CORE, "kirocrew-cron": _CRON},
+            "tools": ["@ajcrew-core", "@ajcrew-cron", "fs_read"],
+            "mcpServers": {"ajcrew-core": _CORE, "ajcrew-cron": _CRON},
         }
         assert unresolved_server_refs(spec, [], backend=ACP_BACKEND_CODEX) == [
-            "@kirocrew-core",
-            "@kirocrew-cron",
+            "@ajcrew-core",
+            "@ajcrew-cron",
         ]
 
     def test_kiro_resolves_its_refs_against_the_spec_not_the_wire(self):
@@ -197,15 +197,15 @@ class TestResolution:
         guard's own false-positive failure mode, and the one that would get it
         deleted rather than fixed.
         """
-        spec = {"tools": ["@kirocrew-core"], "mcpServers": {"kirocrew-core": _CORE}}
+        spec = {"tools": ["@ajcrew-core"], "mcpServers": {"ajcrew-core": _CORE}}
         assert unresolved_server_refs(spec, [], backend=ACP_BACKEND_KIRO) == []
         # ...and the same spec on a backend that reads no agent file does report it.
-        assert unresolved_server_refs(spec, [], backend=ACP_BACKEND_CLAUDE) == ["@kirocrew-core"]
+        assert unresolved_server_refs(spec, [], backend=ACP_BACKEND_CLAUDE) == ["@ajcrew-core"]
 
     def test_kiro_still_reports_a_ref_the_spec_never_defines(self):
         # The spec being the satisfier does not make every ref satisfied: a typo'd
         # or removed server name names nothing on kiro-cli either.
-        spec = {"tools": ["@typo-core"], "mcpServers": {"kirocrew-core": _CORE}}
+        spec = {"tools": ["@typo-core"], "mcpServers": {"ajcrew-core": _CORE}}
         assert unresolved_server_refs(spec, [], backend=ACP_BACKEND_KIRO) == ["@typo-core"]
 
     def test_kas_resolves_its_refs_against_the_spec_not_the_wire(self):
@@ -214,10 +214,10 @@ class TestResolution:
         KAS's ``mcpServers`` travel in ``_meta.kiro.customAgents``, so judging by the
         wire alone would report every ref unresolved on a default install.
         """
-        spec = {"tools": ["@kirocrew-core"], "mcpServers": {"kirocrew-core": _CORE}}
+        spec = {"tools": ["@ajcrew-core"], "mcpServers": {"ajcrew-core": _CORE}}
         assert unresolved_server_refs(spec, [], backend=ACP_BACKEND_KAS) == []
         # A ref the spec never declares is still nothing on KAS.
-        typo = {"tools": ["@typo-core"], "mcpServers": {"kirocrew-core": _CORE}}
+        typo = {"tools": ["@typo-core"], "mcpServers": {"ajcrew-core": _CORE}}
         assert unresolved_server_refs(typo, [], backend=ACP_BACKEND_KAS) == ["@typo-core"]
 
     def test_the_off_wire_exemption_is_read_from_membership_not_identity(self):
@@ -229,9 +229,9 @@ class TestResolution:
         own channel joins the set; nothing here spells a backend id.
         """
         assert ACP_BACKEND_CODEX not in ACP_BACKENDS_SPEC_SERVERS_OFF_WIRE
-        spec = {"tools": ["@kirocrew-core"], "mcpServers": {"kirocrew-core": _CORE}}
-        assert unresolved_server_refs(spec, [], backend=ACP_BACKEND_CODEX) == ["@kirocrew-core"]
-        assert unresolved_server_refs(spec, _wire("kirocrew-core"), backend=ACP_BACKEND_CODEX) == []
+        spec = {"tools": ["@ajcrew-core"], "mcpServers": {"ajcrew-core": _CORE}}
+        assert unresolved_server_refs(spec, [], backend=ACP_BACKEND_CODEX) == ["@ajcrew-core"]
+        assert unresolved_server_refs(spec, _wire("ajcrew-core"), backend=ACP_BACKEND_CODEX) == []
         for member in ACP_BACKENDS_SPEC_SERVERS_OFF_WIRE:
             assert unresolved_server_refs(spec, [], backend=member) == []
 
@@ -316,26 +316,26 @@ class TestResolution:
 
 class TestTheWarning:
     def test_one_line_naming_backend_agent_refs_and_gateway(self, caplog):
-        spec = {"tools": ["@kirocrew-core"], "mcpServers": {"kirocrew-core": _CORE}}
+        spec = {"tools": ["@ajcrew-core"], "mcpServers": {"ajcrew-core": _CORE}}
         with caplog.at_level(logging.WARNING, logger=mcp_ref_guard.__name__):
             found = warn_unresolved_server_refs(
                 spec,
                 [],
                 backend=ACP_BACKEND_CODEX,
-                agent="kirocrew",
+                agent="ajcrew",
                 gateway_enabled=False,
             )
-        assert found == ["@kirocrew-core"]
+        assert found == ["@ajcrew-core"]
         records = [r for r in caplog.records if r.levelno == logging.WARNING]
         assert len(records) == 1
         text = records[0].getMessage()
         assert "codex" in text
-        assert "kirocrew" in text
-        assert "@kirocrew-core" in text
+        assert "ajcrew" in text
+        assert "@ajcrew-core" in text
         assert "mcp_gateway=off" in text
 
     def test_the_gateway_state_rides_along_because_it_decides_the_remedy(self, caplog):
-        spec = {"tools": ["@kirocrew-core"], "mcpServers": {"kirocrew-core": _CORE}}
+        spec = {"tools": ["@ajcrew-core"], "mcpServers": {"ajcrew-core": _CORE}}
         with caplog.at_level(logging.WARNING, logger=mcp_ref_guard.__name__):
             warn_unresolved_server_refs(
                 spec, [], backend=ACP_BACKEND_CODEX, agent="a", gateway_enabled=True
@@ -350,21 +350,21 @@ class TestTheWarning:
         Crew's array, so the line says the harness may serve the ref and never claims
         the tools absent. Pinned as the full line on every backend.
         """
-        spec = {"tools": ["@glean", "@kirocrew-core"], "mcpServers": {"other": _CORE}}
+        spec = {"tools": ["@glean", "@ajcrew-core"], "mcpServers": {"other": _CORE}}
         with caplog.at_level(logging.WARNING, logger=mcp_ref_guard.__name__):
             found = warn_unresolved_server_refs(
-                spec, [], backend=backend, agent="kirocrew", gateway_enabled=False
+                spec, [], backend=backend, agent="ajcrew", gateway_enabled=False
             )
-        assert found == ["@glean", "@kirocrew-core"]
+        assert found == ["@glean", "@ajcrew-core"]
         text = caplog.records[-1].getMessage()
         assert text == (
             "agent-spec tool refs name no MCP server in Crew's projection for this "
-            f"session: backend={backend!r} agent='kirocrew' unresolved=@glean, "
-            "@kirocrew-core mcp_gateway=off. Crew's projection delivers none of those "
+            f"session: backend={backend!r} agent='ajcrew' unresolved=@glean, "
+            "@ajcrew-core mcp_gateway=off. Crew's projection delivers none of those "
             "servers; the harness may mount a same-named server from its own "
             "configuration, so a listed ref may still be served and this line cannot "
             "tell which. The harness still works. A backend that reads no agent file "
-            "needs a mirror (src/kiro_crew/providers/mirrors/) to project the spec "
+            "needs a mirror (src/aj_crew/providers/mirrors/) to project the spec "
             "onto its session/new mcpServers array."
         )
         assert "absent from the session" not in text
@@ -398,7 +398,7 @@ class TestTheWarning:
         spec = {"tools": [f"@{secret}"], "mcpServers": {}}
         with caplog.at_level(logging.WARNING, logger=mcp_ref_guard.__name__):
             found = warn_unresolved_server_refs(
-                spec, [], backend=ACP_BACKEND_CODEX, agent="kirocrew", gateway_enabled=False
+                spec, [], backend=ACP_BACKEND_CODEX, agent="ajcrew", gateway_enabled=False
             )
         assert secret not in caplog.text
         # The RETURN value is sanitized too, so the next consumer to log or render
@@ -556,7 +556,7 @@ class TestTheDocumentedReach:
         assert "never reaches" not in doc, "the module still disclaims the runtime"
 
     def test_the_runtime_call_site_is_wired(self):
-        from kiro_crew.acp import runtime as runtime_mod
+        from aj_crew.acp import runtime as runtime_mod
 
         # runtime.py's owner modules (runtime_*.py) hold code that was its own.
         src = "".join(
@@ -624,14 +624,14 @@ class TestTheCompositionPath:
         monkeypatch.setattr(
             session_mcp,
             "managed_mcp_spec_entry",
-            lambda name: {"kirocrew-core": dict(_CORE), "kirocrew-cron": dict(_CRON)}.get(name),
+            lambda name: {"ajcrew-core": dict(_CORE), "ajcrew-cron": dict(_CRON)}.get(name),
         )
         monkeypatch.setattr(session_mcp, "_mcp_registry_mode", lambda: False)
         return d
 
     def _spec(self, agents_dir, *, servers: dict, tools: list) -> None:
-        (agents_dir / "kirocrew.json").write_text(
-            json.dumps({"name": "kirocrew", "mcpServers": servers, "tools": tools}),
+        (agents_dir / "ajcrew.json").write_text(
+            json.dumps({"name": "ajcrew", "mcpServers": servers, "tools": tools}),
             encoding="utf-8",
         )
 
@@ -643,7 +643,7 @@ class TestTheCompositionPath:
         (harness-parity H13), so a test that skips the warm exercises the
         guard's silent path rather than its finding.
         """
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=backend)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=backend)
         client._write_claude_local_settings()
         client._mcp_ref_spec = client._read_mcp_ref_spec()
         return client
@@ -669,7 +669,7 @@ class TestTheCompositionPath:
         :meth:`CodexHarness.session_mcp_servers` narrows it by advertised transport.
         The handshake advertises stdio, so any finding is the mirror's withhold.
         """
-        projected = codex_projection("kirocrew", work_dir=tmp_path).params["mcpServers"]
+        projected = codex_projection("ajcrew", work_dir=tmp_path).params["mcpServers"]
         wire = CodexHarness().session_mcp_servers(
             list(projected), agent_capabilities={"mcpCapabilities": {"stdio": True}}
         )
@@ -677,10 +677,10 @@ class TestTheCompositionPath:
         report.begin_session(wire)
         report.record_unresolved_refs(
             warn_unresolved_server_refs(
-                session_mcp.agent_spec_snapshot("kirocrew", work_dir=tmp_path),
+                session_mcp.agent_spec_snapshot("ajcrew", work_dir=tmp_path),
                 wire,
                 backend=ACP_BACKEND_CODEX,
-                agent="kirocrew",
+                agent="ajcrew",
                 # No shared MCP gateway in this session, so the remedy the line
                 # names is the projection rather than stub routing.
                 gateway_enabled=False,
@@ -696,36 +696,36 @@ class TestTheCompositionPath:
         """
         self._spec(
             agents_dir,
-            servers={"kirocrew-core": dict(_CORE), "kirocrew-work": dict(_CORE)},
-            tools=["@kirocrew-core", "@kirocrew-cron", "@kirocrew-work"],
+            servers={"ajcrew-core": dict(_CORE), "ajcrew-work": dict(_CORE)},
+            tools=["@ajcrew-core", "@ajcrew-cron", "@ajcrew-work"],
         )
         with caplog.at_level(logging.WARNING, logger=mcp_ref_guard.__name__):
             wire, report = self._codex_wire(tmp_path)
         names = {e["name"] for e in wire}
-        assert {"kirocrew-core", "kirocrew-cron"} <= names
-        assert "kirocrew-work" not in names
-        assert report.unresolved_refs == ("@kirocrew-work",)
-        assert "@kirocrew-work" in caplog.text
+        assert {"ajcrew-core", "ajcrew-cron"} <= names
+        assert "ajcrew-work" not in names
+        assert report.unresolved_refs == ("@ajcrew-work",)
+        assert "@ajcrew-work" in caplog.text
 
     def test_a_claude_session_whose_mirror_projects_the_server_is_silent(
         self, tmp_path, agents_dir, caplog
     ):
         self._spec(
             agents_dir,
-            servers={"kirocrew-core": dict(_CORE)},
-            tools=["@kirocrew-core", "@kirocrew-cron"],
+            servers={"ajcrew-core": dict(_CORE)},
+            tools=["@ajcrew-core", "@ajcrew-cron"],
         )
         client = self._client(tmp_path, agents_dir, ACP_BACKEND_CLAUDE)
         with caplog.at_level(logging.WARNING, logger=mcp_ref_guard.__name__):
             names = {e["name"] for e in self._compose(client)}
-        assert {"kirocrew-core", "kirocrew-cron"} <= names
+        assert {"ajcrew-core", "ajcrew-cron"} <= names
         assert client.mcp_session_report().unresolved_refs == ()
         assert "name no MCP server" not in caplog.text
 
     def test_a_kiro_session_is_silent_on_its_empty_array(self, tmp_path, agents_dir, caplog):
         # kiro-cli receives no array by design and loads the spec via --agent, so
         # the guard must read its refs against the spec.
-        self._spec(agents_dir, servers={"kirocrew-core": dict(_CORE)}, tools=["@kirocrew-core"])
+        self._spec(agents_dir, servers={"ajcrew-core": dict(_CORE)}, tools=["@ajcrew-core"])
         client = self._client(tmp_path, agents_dir, ACP_BACKEND_KIRO)
         with caplog.at_level(logging.WARNING, logger=mcp_ref_guard.__name__):
             assert self._compose(client) == []
@@ -741,7 +741,7 @@ class TestTheCompositionPath:
         itself, which does and therefore may.
         """
         self._spec(agents_dir, servers={}, tools=["@ghost"])
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CODEX)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CODEX)
 
         def _boom(*_a, **_k):
             raise AssertionError("the guard read the agent spec at the call site")
@@ -776,7 +776,7 @@ class TestTheCompositionPath:
         assert reached == [True]
 
     def test_a_spec_that_cannot_be_read_leaves_no_snapshot(self, tmp_path, agents_dir, monkeypatch):
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CODEX)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CODEX)
 
         def _boom(*_a, **_k):
             raise OSError("spec unreadable")
@@ -794,10 +794,10 @@ class TestTheCallSitesAreWired:
 
     @pytest.mark.asyncio
     async def test_session_new_reaches_the_guard(self, tmp_path, monkeypatch):
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CODEX)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CODEX)
         # A ref no projection can resolve, so this proves the CALL SITE rather than
         # re-testing the mirror: codex's array re-derives the control plane, so
-        # ``@kirocrew-core`` would resolve and leave the guard nothing to report.
+        # ``@ajcrew-core`` would resolve and leave the guard nothing to report.
         client._mcp_ref_spec = {"tools": ["@ghost"], "mcpServers": {}}
 
         async def _work_dir():
@@ -866,8 +866,8 @@ class TestTheRuntimeCallSitesAreWired:
         from contextlib import ExitStack
         from unittest.mock import MagicMock, patch
 
-        from kiro_crew.acp.runtime import AcpRuntime
-        from kiro_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp.runtime import AcpRuntime
+        from aj_crew.acp.session_handle import AcpSessionHandle
 
         rt = AcpRuntime(work_dir="/tmp", acp_backend=ACP_BACKEND_CODEX, expect_mcp_reports=False)
         proc = MagicMock()
@@ -916,7 +916,7 @@ class TestTheRuntimeCallSitesAreWired:
             )
             # codex is a mirrored host, so its array and the guard's snapshot arrive
             # together from the mirror hop; stand that hop in with the roster above.
-            from kiro_crew.acp.runtime import _MirroredSessionMcp
+            from aj_crew.acp.runtime import _MirroredSessionMcp
 
             async def _mirrored(*_a, **_k):
                 return _MirroredSessionMcp(
@@ -928,7 +928,7 @@ class TestTheRuntimeCallSitesAreWired:
                 )
 
             stack.enter_context(patch.object(rt, "_mirrored_session_mcp", _mirrored))
-            handle = await rt.create_session(cwd="/w", agent="kirocrew")
+            handle = await rt.create_session(cwd="/w", agent="ajcrew")
 
         wire = [p for m, p in sent if m == "session/new"][0]["mcpServers"]
         assert [e["name"] for e in wire] == ["kept"], "the harness did not narrow the array"
@@ -948,7 +948,7 @@ class TestTheRuntimeCallSitesAreWired:
         that hands over a roster and forgets the guard -- or guards a different list
         than it reported -- is the omission this pins.
         """
-        from kiro_crew.acp import runtime as runtime_mod
+        from aj_crew.acp import runtime as runtime_mod
 
         # runtime.py's owner modules (runtime_*.py) hold code that was its own.
         lines = "".join(
@@ -978,8 +978,8 @@ class TestTheRuntimeCallSitesAreWired:
         detects: a detector that explodes must resolve to silence."""
         from unittest.mock import MagicMock
 
-        from kiro_crew.acp import runtime as runtime_mod
-        from kiro_crew.acp.runtime import AcpRuntime
+        from aj_crew.acp import runtime as runtime_mod
+        from aj_crew.acp.runtime import AcpRuntime
 
         def _boom(*_a, **_k):
             raise RuntimeError("detector exploded")
@@ -988,12 +988,12 @@ class TestTheRuntimeCallSitesAreWired:
         rt = AcpRuntime(work_dir="/tmp", acp_backend=ACP_BACKEND_CODEX, expect_mcp_reports=False)
         handle = MagicMock()
         spec = {"tools": ["@x"]}
-        wire: list[dict] = [{"name": "kirocrew-core"}]
-        assert rt._guard_unresolved_mcp_refs(handle, spec, "kirocrew", wire) is None
+        wire: list[dict] = [{"name": "ajcrew-core"}]
+        assert rt._guard_unresolved_mcp_refs(handle, spec, "ajcrew", wire) is None
         # Silence, and the session's inputs are left exactly as they were.
         assert handle.mcp_session_report.return_value.record_unresolved_refs.call_count == 0
         assert spec == {"tools": ["@x"]}
-        assert wire == [{"name": "kirocrew-core"}]
+        assert wire == [{"name": "ajcrew-core"}]
 
     def test_the_runtime_guard_is_synchronous_and_reads_no_disk(self):
         """H13: the guard adds no suspension point to any host's session start.
@@ -1001,8 +1001,8 @@ class TestTheRuntimeCallSitesAreWired:
         The spec rides the off-loop hop each branch already makes; the only
         ``agent_spec_snapshot`` read is in ``_ref_spec_snapshot``, called from those hops.
         """
-        from kiro_crew.acp import runtime as runtime_mod
-        from kiro_crew.acp.runtime import (
+        from aj_crew.acp import runtime as runtime_mod
+        from aj_crew.acp.runtime import (
             AcpRuntime,
             _pooled_session_servers_and_ref_spec,
             _ref_spec_snapshot,
@@ -1037,15 +1037,15 @@ class TestTheRuntimeCallSitesAreWired:
         not fail a ``session/new`` that would succeed, so the pooled hop still returns its
         array, as ``AcpClient._read_mcp_ref_spec`` does.
         """
-        from kiro_crew.acp import runtime as runtime_mod
-        from kiro_crew.acp.runtime import _pooled_session_servers_and_ref_spec, _ref_spec_snapshot
-        from kiro_crew.agent_sdk.backends import overlay_project_scope
+        from aj_crew.acp import runtime as runtime_mod
+        from aj_crew.acp.runtime import _pooled_session_servers_and_ref_spec, _ref_spec_snapshot
+        from aj_crew.agent_sdk.backends import overlay_project_scope
 
         def _stale(agent, *, work_dir=None):
             raise RuntimeError("derived spec is stale and could not be repaired")
 
         monkeypatch.setattr(runtime_mod, "agent_spec_snapshot", _stale)
-        assert _ref_spec_snapshot("kirocrew-worker", "/tmp") is None
+        assert _ref_spec_snapshot("ajcrew-worker", "/tmp") is None
 
         seen: dict[str, object] = {}
 
@@ -1055,7 +1055,7 @@ class TestTheRuntimeCallSitesAreWired:
 
         monkeypatch.setattr(runtime_mod, "pooled_session_servers", _pooled)
         servers, spec, mcp_json = _pooled_session_servers_and_ref_spec(
-            None, "kirocrew-worker", "kiro", "/tmp"
+            None, "ajcrew-worker", "kiro", "/tmp"
         )
         assert servers == ["s"]
         assert spec is None
@@ -1075,7 +1075,7 @@ class TestTheSpawnHopCarriesTheSnapshot:
 
     def test_the_hop_creates_the_dir_and_warms_the_snapshot(self, tmp_path, monkeypatch):
         work = tmp_path / "nested" / "work"
-        client = AcpClient(work_dir=work, agent="kirocrew", acp_backend=ACP_BACKEND_CODEX)
+        client = AcpClient(work_dir=work, agent="ajcrew", acp_backend=ACP_BACKEND_CODEX)
         monkeypatch.setattr(
             client_mod, "agent_spec_snapshot", lambda _a, **_k: {"tools": ["@ghost"]}
         )
@@ -1097,7 +1097,7 @@ class TestTheSpawnHopCarriesTheSnapshot:
         blocker = tmp_path / "blocked"
         blocker.write_text("not a directory", encoding="utf-8")
         client = AcpClient(
-            work_dir=blocker / "work", agent="kirocrew", acp_backend=ACP_BACKEND_CODEX
+            work_dir=blocker / "work", agent="ajcrew", acp_backend=ACP_BACKEND_CODEX
         )
         with pytest.raises(OSError):
             client._prepare_spawn_workspace()
@@ -1107,7 +1107,7 @@ class TestTheSpawnHopCarriesTheSnapshot:
         def _boom(*_a, **_k):
             raise OSError("spec unreadable")
 
-        ok = AcpClient(work_dir=tmp_path / "ok", agent="kirocrew", acp_backend=ACP_BACKEND_CODEX)
+        ok = AcpClient(work_dir=tmp_path / "ok", agent="ajcrew", acp_backend=ACP_BACKEND_CODEX)
         monkeypatch.setattr(client_mod, "agent_spec_snapshot", _boom)
         ok._prepare_spawn_workspace()
         assert (tmp_path / "ok").is_dir()
@@ -1125,7 +1125,7 @@ class TestTheSpawnHopCarriesTheSnapshot:
 
         import acp_launch_capture as capture_mod
 
-        from kiro_crew.acp_backends import ACP_BACKEND_KIRO
+        from aj_crew.acp_backends import ACP_BACKEND_KIRO
 
         hops: list[str] = []
         real_to_thread = asyncio.to_thread
@@ -1158,29 +1158,29 @@ class TestTheSpawnHopCarriesTheSnapshot:
 class TestGateWithheldServers:
     """A managed server a closed ``spec_gate`` withholds is not a finding."""
 
-    _SPEC = {"tools": ["@kirocrew-computer", "@glean"], "mcpServers": {}}
+    _SPEC = {"tools": ["@ajcrew-computer", "@glean"], "mcpServers": {}}
 
     def _gate(self, monkeypatch, closed):
-        is_open = "kirocrew-computer" not in closed
+        is_open = "ajcrew-computer" not in closed
         self._set_gate(monkeypatch, lambda: is_open)
 
     @staticmethod
     def _set_gate(monkeypatch, gate):
-        entry = dict(agent_mod._MANAGED_MCP_SERVERS["kirocrew-computer"], spec_gate=gate)
-        monkeypatch.setitem(agent_mod._MANAGED_MCP_SERVERS, "kirocrew-computer", entry)
+        entry = dict(agent_mod._MANAGED_MCP_SERVERS["ajcrew-computer"], spec_gate=gate)
+        monkeypatch.setitem(agent_mod._MANAGED_MCP_SERVERS, "ajcrew-computer", entry)
 
     def test_a_gate_withheld_ref_is_not_reported(self, monkeypatch, caplog):
-        self._gate(monkeypatch, {"kirocrew-computer"})
+        self._gate(monkeypatch, {"ajcrew-computer"})
         with caplog.at_level(logging.WARNING, logger=mcp_ref_guard.__name__):
             found = warn_unresolved_server_refs(
                 self._SPEC, [], backend=ACP_BACKEND_CODEX, agent="a", gateway_enabled=False
             )
         assert found == ["@glean"]
-        assert "kirocrew-computer" not in caplog.records[-1].getMessage()
+        assert "ajcrew-computer" not in caplog.records[-1].getMessage()
 
     def test_only_withheld_refs_means_no_warning_at_all(self, monkeypatch, caplog):
-        self._gate(monkeypatch, {"kirocrew-computer"})
-        spec = {"tools": ["@kirocrew-computer"], "mcpServers": {}}
+        self._gate(monkeypatch, {"ajcrew-computer"})
+        spec = {"tools": ["@ajcrew-computer"], "mcpServers": {}}
         with caplog.at_level(logging.WARNING, logger=mcp_ref_guard.__name__):
             found = warn_unresolved_server_refs(
                 spec, [], backend=ACP_BACKEND_CODEX, agent="a", gateway_enabled=False
@@ -1193,21 +1193,21 @@ class TestGateWithheldServers:
         found = warn_unresolved_server_refs(
             self._SPEC, [], backend=ACP_BACKEND_CODEX, agent="a", gateway_enabled=False
         )
-        assert found == ["@glean", "@kirocrew-computer"]
+        assert found == ["@glean", "@ajcrew-computer"]
 
     def test_a_raising_gate_keeps_its_ref_reported(self, monkeypatch):
         # Emission withholds the server; the diagnostic still names it, as doctor does.
-        from kiro_crew.agent_materialization import managed_mcp
+        from aj_crew.agent_materialization import managed_mcp
 
         def boom():
             raise RuntimeError("unreadable keystone")
 
         self._set_gate(monkeypatch, boom)
-        assert "kirocrew-computer" in managed_mcp._gated_off_servers()
+        assert "ajcrew-computer" in managed_mcp._gated_off_servers()
         found = warn_unresolved_server_refs(
             self._SPEC, [], backend=ACP_BACKEND_CODEX, agent="a", gateway_enabled=False
         )
-        assert found == ["@glean", "@kirocrew-computer"]
+        assert found == ["@glean", "@ajcrew-computer"]
 
     def test_an_unreadable_registry_drops_nothing(self, monkeypatch):
         class Broken(dict):
@@ -1215,10 +1215,10 @@ class TestGateWithheldServers:
                 raise RuntimeError("registry unreadable")
 
         monkeypatch.setattr(agent_mod, "_MANAGED_MCP_SERVERS", Broken())
-        assert mcp_ref_guard.drop_gate_withheld(["@kirocrew-computer"]) == ["@kirocrew-computer"]
+        assert mcp_ref_guard.drop_gate_withheld(["@ajcrew-computer"]) == ["@ajcrew-computer"]
 
     def test_doctor_and_the_report_share_one_predicate(self, monkeypatch):
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         calls = []
 
@@ -1227,12 +1227,12 @@ class TestGateWithheldServers:
             return True
 
         monkeypatch.setattr(agent_mod, "_spec_gate_answers_closed", spy)
-        assert cli_doctor._spec_gate_closed("kirocrew-computer") is True
-        assert mcp_ref_guard.drop_gate_withheld(["@kirocrew-computer"]) == []
-        assert calls[0] == "kirocrew-computer" and "kirocrew-computer" in calls[1:]
+        assert cli_doctor._spec_gate_closed("ajcrew-computer") is True
+        assert mcp_ref_guard.drop_gate_withheld(["@ajcrew-computer"]) == []
+        assert calls[0] == "ajcrew-computer" and "ajcrew-computer" in calls[1:]
 
     def test_doctors_static_rows_apply_the_same_filter(self):
-        from kiro_crew.agent_sdk.drivers import acp as acp_driver
+        from aj_crew.agent_sdk.drivers import acp as acp_driver
 
         src = inspect.getsource(acp_driver.agent_spec_mcp_refs)
         assert "drop_gate_withheld(unresolved_server_refs(" in src
@@ -1278,7 +1278,7 @@ class TestServersTheSpecMountsFromMcpJson:
     ):
         self._global(tmp_path, monkeypatch)
         monkeypatch.setattr(client_mod, "agent_spec_snapshot", lambda _a, **_k: dict(self._SPEC))
-        client = AcpClient(work_dir=tmp_path / "w", agent="kirocrew", acp_backend=ACP_BACKEND_KIRO)
+        client = AcpClient(work_dir=tmp_path / "w", agent="ajcrew", acp_backend=ACP_BACKEND_KIRO)
 
         client._prepare_spawn_workspace()
         client._mcp_report.begin_session([])
@@ -1291,7 +1291,7 @@ class TestServersTheSpecMountsFromMcpJson:
         self._global(tmp_path, monkeypatch)
         spec = {**self._SPEC, "includeMcpJson": False}
         monkeypatch.setattr(client_mod, "agent_spec_snapshot", lambda _a, **_k: dict(spec))
-        client = AcpClient(work_dir=tmp_path / "w", agent="kirocrew", acp_backend=ACP_BACKEND_KIRO)
+        client = AcpClient(work_dir=tmp_path / "w", agent="ajcrew", acp_backend=ACP_BACKEND_KIRO)
 
         client._prepare_spawn_workspace()
         client._mcp_report.begin_session([])
@@ -1304,19 +1304,19 @@ class TestServersTheSpecMountsFromMcpJson:
     ):
         from unittest.mock import MagicMock
 
-        from kiro_crew.acp import runtime as runtime_mod
-        from kiro_crew.acp.runtime import AcpRuntime
+        from aj_crew.acp import runtime as runtime_mod
+        from aj_crew.acp.runtime import AcpRuntime
 
         self._global(tmp_path, monkeypatch)
         monkeypatch.setattr(runtime_mod, "agent_spec_snapshot", lambda _a, **_k: dict(self._SPEC))
         monkeypatch.setattr(runtime_mod, "pooled_session_servers", lambda *_a, **_k: [])
         servers, spec, mcp_json = runtime_mod._pooled_session_servers_and_ref_spec(
-            None, "kirocrew", ACP_BACKEND_KIRO, tmp_path / "w"
+            None, "ajcrew", ACP_BACKEND_KIRO, tmp_path / "w"
         )
         rt = AcpRuntime(work_dir="/tmp", acp_backend=ACP_BACKEND_KIRO, expect_mcp_reports=False)
         handle = MagicMock()
 
-        rt._guard_unresolved_mcp_refs(handle, spec, "kirocrew", servers, mcp_json)
+        rt._guard_unresolved_mcp_refs(handle, spec, "ajcrew", servers, mcp_json)
 
         assert mcp_json == ("local-chorus-mcp",)
         assert handle.mcp_session_report.return_value.record_unresolved_refs.call_count == 0

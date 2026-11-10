@@ -11,7 +11,7 @@ in ``--auth=acp-callback`` and the turn completes). Windows ships ONE self-conta
 ``kiro-cli.exe`` that IS the chat-cli crate (no q_cli launcher in the MSI), so there
 is nothing to swap there and :func:`chat_sibling` answers ``None``.
 
-Two layers are pinned here: :func:`kiro_crew.kiro_cli.chat_sibling` (pure path work,
+Two layers are pinned here: :func:`aj_crew.kiro_cli.chat_sibling` (pure path work,
 asked with an explicit platform) and the KAS harness plan, which consults it on the
 Crew-owned branch only. The harness tests stub ``chat_sibling`` so they describe the
 plumbing on every CI host rather than inheriting the host's ``sys.platform``; the
@@ -28,14 +28,14 @@ from pathlib import Path
 import pytest
 
 from conftest import requires_symlinks
-from kiro_crew import kiro_cli
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp.harness import harness_for
-from kiro_crew.acp.harness import kas as kas_mod
-from kiro_crew.acp.harness.base import SpawnContext
-from kiro_crew.acp.kas_transport import KAS_RELAY_AUTH_CLIENT, KAS_RELAY_AUTH_FLAG
-from kiro_crew.acp.types import ACP_BACKEND_KAS
-from kiro_crew.kiro_cli import KAS_AUTH_CLIENT_MIN_KIRO_CLI
+from aj_crew import kiro_cli
+from aj_crew.acp import client as client_mod
+from aj_crew.acp.harness import harness_for
+from aj_crew.acp.harness import kas as kas_mod
+from aj_crew.acp.harness.base import SpawnContext
+from aj_crew.acp.kas_transport import KAS_RELAY_AUTH_CLIENT, KAS_RELAY_AUTH_FLAG
+from aj_crew.acp.types import ACP_BACKEND_KAS
+from aj_crew.kiro_cli import KAS_AUTH_CLIENT_MIN_KIRO_CLI
 
 posix_only = pytest.mark.skipif(
     sys.platform == "win32", reason="POSIX execute bit; Windows reports every file executable"
@@ -205,10 +205,10 @@ async def test_crew_owned_spawn_without_a_sibling_keeps_the_resolved_binary(
 async def test_an_operator_override_named_kiro_cli_is_never_swapped(
     resolves_launcher, sibling_present, monkeypatch, tmp_path
 ):
-    """``KIROCREW_KIRO_BIN`` is exactly what the operator asked for, wrapper included."""
+    """``AJCREW_KIRO_BIN`` is exactly what the operator asked for, wrapper included."""
     monkeypatch.setattr(kas_mod, "vault_holds_identity_off_loop", _vault(True))
     plan = await harness_for(ACP_BACKEND_KAS).resolve_spawn(
-        _ctx(tmp_path, {"KIROCREW_KIRO_BIN": LAUNCHER})
+        _ctx(tmp_path, {"AJCREW_KIRO_BIN": LAUNCHER})
     )
     assert plan.host_auth is True
     assert plan.argv[0] == LAUNCHER
@@ -221,6 +221,6 @@ async def test_an_override_naming_a_different_binary_does_not_pin_this_one(
 ):
     monkeypatch.setattr(kas_mod, "vault_holds_identity_off_loop", _vault(True))
     plan = await harness_for(ACP_BACKEND_KAS).resolve_spawn(
-        _ctx(tmp_path, {"KIROCREW_KIRO_BIN": str(Path("/elsewhere/kiro-cli"))})
+        _ctx(tmp_path, {"AJCREW_KIRO_BIN": str(Path("/elsewhere/kiro-cli"))})
     )
     assert plan.argv[0] == CHAT

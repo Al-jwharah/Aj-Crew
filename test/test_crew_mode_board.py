@@ -1,6 +1,6 @@
 """Crew Mode's task board: the root session's own page and the turn block naming it.
 
-Turning Crew Mode on is the ordinary switch to the ``kirocrew-conductor`` template. For
+Turning Crew Mode on is the ordinary switch to the ``ajcrew-conductor`` template. For
 a ROOT session (``card_lifecycle.is_root_session``) that switch also adopts the shipped
 ``goal-board`` on the session's own page, which its side panel Overview draws, and each
 turn of that session carries a ``[DASHBOARD]`` block naming the page. That block is
@@ -17,15 +17,15 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import dashboard_agentic
-from kiro_crew.context_assembly import turn as turn_parts
-from kiro_crew.crew_log import session_tree_projection
-from kiro_crew.dashboard_templates import instance
+from aj_crew import dashboard_agentic
+from aj_crew.context_assembly import turn as turn_parts
+from aj_crew.crew_log import session_tree_projection
+from aj_crew.dashboard_templates import instance
 
 ROOT = "chat-200"
 DISPATCHED = "chat-201"
 ADOPTED = "chat-202"
-CONDUCTOR = "kirocrew-conductor"
+CONDUCTOR = "ajcrew-conductor"
 
 
 class _Node:
@@ -56,7 +56,7 @@ def _slot(
 
 @pytest.fixture(autouse=True)
 def _env(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     # The session tree, seeded: ADOPTED has a parent edge, the others none.
     nodes = {ADOPTED: _Node(ADOPTED, ROOT)}
     _floor_monkeypatch.setattr(
@@ -163,7 +163,7 @@ async def test_a_crewmate_dm_slot_gets_no_session_block():
 async def test_a_root_session_off_crew_mode_keeps_its_page_but_gets_no_block():
     # Crew Mode turned off lands on the default template; the adopted page stays.
     dashboard_agentic.adopt_crew_mode_board(ROOT)
-    slot = _slot(ROOT, agent="kirocrew")
+    slot = _slot(ROOT, agent="ajcrew")
     assert await dashboard_agentic.root_session_dashboard_block(slot) == ""
     assert _template_of(ROOT) == "goal-board"
 
@@ -201,8 +201,8 @@ async def test_a_switch_while_the_session_tree_seeds_waits_for_the_seed(monkeypa
     """The root test answers "not root yet" until the tree is seeded (and asks for the
     seed). The adoption is taken once, so it waits for that seed instead of reading the
     provisional answer as a refusal."""
-    from kiro_crew.crew_log import emit as crew_log_emit
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.crew_log import emit as crew_log_emit
+    from aj_crew.dashboard import card_lifecycle
 
     nodes: dict[str, _Node] = {}
     tree = SimpleNamespace(nodes=lambda: nodes, seeded_for_current_store=False)
@@ -233,7 +233,7 @@ async def test_a_switch_while_the_session_tree_seeds_waits_for_the_seed(monkeypa
 async def test_with_the_crew_log_off_the_adoption_does_not_wait(monkeypatch):
     # No seed will ever land, so there is nothing to wait for: the wait loop asks
     # once, hears "nothing to wait for", and the root test's fail-closed answer stands.
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import emit as crew_log_emit
 
     tree = SimpleNamespace(nodes=lambda: {}, seeded_for_current_store=False)
     monkeypatch.setattr(session_tree_projection, "projection", lambda: tree)
@@ -256,7 +256,7 @@ async def test_with_the_crew_log_off_the_adoption_does_not_wait(monkeypatch):
 async def test_a_seed_that_never_lands_adopts_nothing(monkeypatch):
     # Fail-closed: an unseeded tree folds an empty state, which would call every
     # adopted session a root; the wait is bounded and the refusal stands.
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import emit as crew_log_emit
 
     tree = SimpleNamespace(nodes=lambda: {}, seeded_for_current_store=False)
     monkeypatch.setattr(session_tree_projection, "projection", lambda: tree)
@@ -275,7 +275,7 @@ async def test_a_seed_that_never_lands_adopts_nothing(monkeypatch):
         # A crewmate that carries the conductor's name is that crewmate, not Crew Mode.
         (_slot(ROOT, agent_kind="member"), CONDUCTOR),
         # Turning Crew Mode off lands on the default template and leaves the page alone.
-        (_slot(ROOT), "kirocrew"),
+        (_slot(ROOT), "ajcrew"),
     ],
 )
 async def test_no_board_is_adopted_off_the_crew_mode_path(slot, agent):
@@ -327,10 +327,10 @@ def test_the_turn_rail_carries_the_session_block_on_its_own_line():
 
 
 def test_build_message_carries_the_session_block_into_a_follow_up_turn(tmp_path):
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.learn import LessonStore
-    from kiro_crew.memory import MemoryStore
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew.context import ContextBuilder
+    from aj_crew.learn import LessonStore
+    from aj_crew.memory import MemoryStore
+    from aj_crew.skills import SkillsLoader
 
     builder = ContextBuilder(
         memory=MemoryStore(workspace=tmp_path / "ws"),
@@ -357,10 +357,10 @@ async def test_the_agent_switch_route_adopts_the_board_for_the_conductor(tmp_pat
     from chat_test_helpers import _make_app_with_agent_routes, _make_state
     from dashboard_owner_helpers import as_owner
 
-    from kiro_crew.config.loader import KiroCrewConfig, ResolvedBindings
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew.config.loader import AjCrewConfig, ResolvedBindings
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
-    mod = "kiro_crew.dashboard.chat_handlers"
+    mod = "aj_crew.dashboard.chat_handlers"
     bindings = ResolvedBindings(
         workspace_dir=tmp_path / "ws",
         effective_memory_config={},
@@ -373,14 +373,14 @@ async def test_the_agent_switch_route_adopts_the_board_for_the_conductor(tmp_pat
             None, MemoryStoreRef("default"), "template", CONDUCTOR, selection_name=CONDUCTOR
         ),
     )
-    monkeypatch.setattr(f"{mod}.KiroCrewConfig.load", lambda: KiroCrewConfig())
+    monkeypatch.setattr(f"{mod}.AjCrewConfig.load", lambda: AjCrewConfig())
     monkeypatch.setattr(f"{mod}.resolve_agent_bindings", lambda *_a, **_k: bindings)
     monkeypatch.setattr(f"{mod}._workspace_name_for_dir", lambda cfg, ws_dir: "default")
     monkeypatch.setattr(f"{mod}.warm_project_agent_names", AsyncMock())
     monkeypatch.setattr(f"{mod}.cached_project_agent_names", lambda project_dir: frozenset())
     monkeypatch.setattr(f"{mod}.default_project_dir", lambda ws: str(tmp_path / "ws"))
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.get_or_create_slot("s1")
     state.sessions.reset = AsyncMock()
@@ -397,7 +397,7 @@ async def test_the_agent_switch_route_adopts_the_board_for_the_conductor(tmp_pat
     assert seen == ["s1"]
     # The switch stamps the agent Crew Mode turned on with and persists it, so the
     # chat stays in Crew Mode on this conductor after ``agent.crew_mode_agent`` changes.
-    from kiro_crew.dashboard.chat_utils import slot_history_key
+    from aj_crew.dashboard.chat_utils import slot_history_key
 
     slot = state.get_slot("s1")
     assert slot.crew_mode_agent == CONDUCTOR
@@ -416,11 +416,11 @@ async def test_the_migrations_move_writes_no_stamp_onto_an_older_conductor_chat(
 
     from chat_test_helpers import _make_state
 
-    from kiro_crew.config.loader import KiroCrewConfig, ResolvedBindings
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew.config.loader import AjCrewConfig, ResolvedBindings
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
-    mod = "kiro_crew.dashboard.chat_handlers"
+    mod = "aj_crew.dashboard.chat_handlers"
     bindings = ResolvedBindings(
         workspace_dir=tmp_path / "ws",
         effective_memory_config={},
@@ -433,18 +433,18 @@ async def test_the_migrations_move_writes_no_stamp_onto_an_older_conductor_chat(
             None, MemoryStoreRef("default"), "template", CONDUCTOR, selection_name=CONDUCTOR
         ),
     )
-    monkeypatch.setattr(f"{mod}.KiroCrewConfig.load", lambda: KiroCrewConfig())
+    monkeypatch.setattr(f"{mod}.AjCrewConfig.load", lambda: AjCrewConfig())
     monkeypatch.setattr(f"{mod}.resolve_agent_bindings", lambda *_a, **_k: bindings)
     monkeypatch.setattr(f"{mod}._workspace_name_for_dir", lambda cfg, ws_dir: "default")
     monkeypatch.setattr(f"{mod}.warm_project_agent_names", AsyncMock())
     monkeypatch.setattr(f"{mod}.cached_project_agent_names", lambda project_dir: frozenset())
     monkeypatch.setattr(f"{mod}.default_project_dir", lambda ws: str(tmp_path / "ws"))
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.sessions.reset = AsyncMock()
     caller = chat_handlers.SlotAgentSwitchCaller.for_crew_mode_migration()
     # The migration moves onto the CONFIGURED conductor: the default, the team lead.
-    target = "kirocrew-team-lead"
+    target = "ajcrew-team-lead"
 
     older = state.get_or_create_slot("older")
     older.agent, older.agent_kind, older.crew_mode_agent = CONDUCTOR, "template", ""
@@ -470,13 +470,13 @@ async def test_a_window_that_cannot_be_loaded_refuses_the_switch_retryably(tmp_p
 
     from chat_test_helpers import _make_state
 
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.dashboard import chat_handlers
 
-    mod = "kiro_crew.dashboard.chat_handlers"
-    monkeypatch.setattr(f"{mod}.KiroCrewConfig.load", lambda: KiroCrewConfig())
+    mod = "aj_crew.dashboard.chat_handlers"
+    monkeypatch.setattr(f"{mod}.AjCrewConfig.load", lambda: AjCrewConfig())
     monkeypatch.setattr(f"{mod}.warm_project_agent_names", AsyncMock())
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     # The switch reads its helpers from the chat_handlers facade at call time.
     monkeypatch.setattr(f"{mod}.load_window_off_loop", AsyncMock(side_effect=OSError("disk gone")))
     state = _make_state(tmp_path)
@@ -484,11 +484,11 @@ async def test_a_window_that_cannot_be_loaded_refuses_the_switch_retryably(tmp_p
     caller = chat_handlers.SlotAgentSwitchCaller.for_crew_mode_migration()
 
     root = state.get_or_create_slot("r")
-    root.agent, root.agent_kind, root.crew_mode_agent = "kirocrew-team-lead", "template", ""
+    root.agent, root.agent_kind, root.crew_mode_agent = "ajcrew-team-lead", "template", ""
     resp = await chat_handlers.switch_slot_agent(state, root, "r", CONDUCTOR, "template", caller)
     assert resp.status == 503, resp.text
     assert json.loads(resp.text)["code"] == "history_unavailable"
-    assert root.agent == "kirocrew-team-lead"
+    assert root.agent == "ajcrew-team-lead"
     assert _template_of("r") == ""
     state.sessions.reset.assert_not_awaited()
 
@@ -505,29 +505,29 @@ async def test_a_first_message_landing_during_resolution_still_locks_the_switch(
 
     from chat_test_helpers import _make_state
 
-    from kiro_crew.config.loader import KiroCrewConfig, ResolvedBindings
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew.config.loader import AjCrewConfig, ResolvedBindings
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
-    mod = "kiro_crew.dashboard.chat_handlers"
+    mod = "aj_crew.dashboard.chat_handlers"
     bindings = ResolvedBindings(
         workspace_dir=tmp_path / "ws",
         effective_memory_config={},
         memory_store_name="default",
         requested_resolved=True,
-        resolved_alias="kirocrew",
-        kiro_agent="kirocrew",
+        resolved_alias="ajcrew",
+        kiro_agent="ajcrew",
         selection_kind="template",
         execution_context=ExecutionContext(
-            None, MemoryStoreRef("default"), "template", "kirocrew", selection_name="kirocrew"
+            None, MemoryStoreRef("default"), "template", "ajcrew", selection_name="ajcrew"
         ),
     )
-    monkeypatch.setattr(f"{mod}.KiroCrewConfig.load", lambda: KiroCrewConfig())
+    monkeypatch.setattr(f"{mod}.AjCrewConfig.load", lambda: AjCrewConfig())
     monkeypatch.setattr(f"{mod}._workspace_name_for_dir", lambda cfg, ws_dir: "default")
     monkeypatch.setattr(f"{mod}.warm_project_agent_names", AsyncMock())
     monkeypatch.setattr(f"{mod}.cached_project_agent_names", lambda project_dir: frozenset())
     monkeypatch.setattr(f"{mod}.default_project_dir", lambda ws: str(tmp_path / "ws"))
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.sessions.reset = AsyncMock()
     root = state.get_or_create_slot("r")
@@ -540,7 +540,7 @@ async def test_a_first_message_landing_during_resolution_still_locks_the_switch(
 
     monkeypatch.setattr(f"{mod}.resolve_agent_bindings", _resolve_while_a_send_lands)
     caller = chat_handlers.SlotAgentSwitchCaller(app="", remote="", owner=True)
-    resp = await chat_handlers.switch_slot_agent(state, root, "r", "kirocrew", "template", caller)
+    resp = await chat_handlers.switch_slot_agent(state, root, "r", "ajcrew", "template", caller)
     assert resp.status == 409, resp.text
     assert json.loads(resp.text)["code"] == "crew_mode_locked"
     assert root.agent == CONDUCTOR and root.crew_mode_agent == CONDUCTOR
@@ -557,10 +557,10 @@ async def test_a_chat_created_on_the_conductor_is_stamped_like_a_switch(tmp_path
     from chat_test_helpers import _make_app_with_agent_routes, _make_state
     from dashboard_owner_helpers import as_owner
 
-    from kiro_crew.config.loader import KiroCrewConfig, ResolvedBindings
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew.config.loader import AjCrewConfig, ResolvedBindings
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
-    mod = "kiro_crew.dashboard.chat_handlers"
+    mod = "aj_crew.dashboard.chat_handlers"
     bindings = ResolvedBindings(
         workspace_dir=tmp_path / "ws",
         effective_memory_config={},
@@ -573,13 +573,13 @@ async def test_a_chat_created_on_the_conductor_is_stamped_like_a_switch(tmp_path
             None, MemoryStoreRef("default"), "template", CONDUCTOR, selection_name=CONDUCTOR
         ),
     )
-    monkeypatch.setattr(f"{mod}.KiroCrewConfig.load", lambda: KiroCrewConfig())
+    monkeypatch.setattr(f"{mod}.AjCrewConfig.load", lambda: AjCrewConfig())
     monkeypatch.setattr(f"{mod}.resolve_agent_bindings", lambda *_a, **_k: bindings)
     monkeypatch.setattr(f"{mod}._workspace_name_for_dir", lambda cfg, ws_dir: "default")
     monkeypatch.setattr(f"{mod}.warm_project_agent_names", AsyncMock())
     monkeypatch.setattr(f"{mod}.cached_project_agent_names", lambda project_dir: frozenset())
     monkeypatch.setattr(f"{mod}.default_project_dir", lambda ws: str(tmp_path / "ws"))
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     monkeypatch.setattr(dashboard_agentic, "adopt_crew_mode_board", lambda key: False)
 

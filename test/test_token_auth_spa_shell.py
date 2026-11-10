@@ -27,7 +27,7 @@ from token_auth_helpers import (  # noqa: F401 -- the autouse fixture registers 
     clear_nonces,
 )
 
-from kiro_crew.dashboard.token_auth import (
+from aj_crew.dashboard.token_auth import (
     bind_token_ip,
     generate_token,
     mark_consumed,
@@ -58,7 +58,7 @@ async def test_non_api_path_gets_html_403() -> None:
     assert resp.status == 403
     assert resp.content_type == "text/html"
     assert b"Settings \xe2\x86\x92 Security \xe2\x86\x92 Sign in on mobile" in resp.body
-    assert b"kirocrew token" in resp.body
+    assert b"ajcrew token" in resp.body
 
 
 @pytest.mark.asyncio
@@ -195,7 +195,7 @@ def test_no_get_route_outside_shell_exclusions() -> None:
     import os
     import re as _re
 
-    import kiro_crew.dashboard.token_auth as ta
+    import aj_crew.dashboard.token_auth as ta
 
     # server.py and the server_runtime owners it composes, which hold the MCP and
     # build route tables.
@@ -271,8 +271,8 @@ def test_apps_routes_get_paths_are_matched_by_the_apps_spa_regex() -> None:
     """
     import re as _re
 
-    import kiro_crew.apps.routes as app_routes
-    import kiro_crew.dashboard.token_auth as ta
+    import aj_crew.apps.routes as app_routes
+    import aj_crew.dashboard.token_auth as ta
 
     source = open(app_routes.__file__, encoding="utf-8").read()
     get_paths = [p for p in _re.findall(r'add_get\(\s*["\']([^"\']+)["\']', source)]
@@ -317,7 +317,7 @@ async def test_invalid_token_shell_serve_emits_distinct_sel_outcome(monkeypatch)
     outcome so anomaly detection still flags credential-forgery probing on GET
     navigations. Pins the observability signal: fails if the outcome reverts
     to "ok"."""
-    import kiro_crew.dashboard.token_auth as ta
+    import aj_crew.dashboard.token_auth as ta
 
     calls: list[dict] = []
 
@@ -350,7 +350,7 @@ async def test_served_shell_is_auth_independent() -> None:
     boundary. This test fails if the served body becomes request-dependent or
     starts carrying credential/state markers.
     """
-    import kiro_crew.dashboard.handlers.core as core
+    import aj_crew.dashboard.handlers.core as core
 
     # Unauthenticated cold-start request vs an "authenticated-looking" one
     # (cookies + remote set). index() must ignore request state entirely.
@@ -388,7 +388,7 @@ async def test_index_serves_guidance_when_bundle_missing(tmp_path, monkeypatch) 
     served unauthenticated). The legacy dashboard.html fallback was removed
     (security-review); dist/index.html is the sole shell source.
     """
-    import kiro_crew.dashboard.handlers.core as core
+    import aj_crew.dashboard.handlers.core as core
 
     # Point the React build index at a non-existent location so index() falls
     # into the FileNotFoundError -> guidance-page branch.
@@ -408,8 +408,8 @@ async def test_index_serves_guidance_when_bundle_missing(tmp_path, monkeypatch) 
     body = resp_anon.text
     # Recognizable heading preserved + actionable guidance added.
     assert "<h1>Dashboard HTML not found</h1>" in body
-    assert "restarting Kiro Crew" in body
-    assert "kirocrew restart" in body
+    assert "restarting Aj Crew" in body
+    assert "ajcrew restart" in body
     # Request-independent and secret-free (same contract as the served shell).
     assert resp_anon.text == resp_authed.text
     assert "someminted.token.value" not in body
@@ -428,7 +428,7 @@ async def test_index_caches_html_and_rerereads_only_on_rebuild(tmp_path, monkeyp
     and no process-lifetime cache that would pin a
     pre-rebuild shell after a Vite rebuild rewrote the hashed asset refs.
     """
-    import kiro_crew.dashboard.handlers.core as core
+    import aj_crew.dashboard.handlers.core as core
 
     fake_index = tmp_path / "index.html"
     fake_index.write_text("<html>spa-shell-v1</html>", encoding="utf-8")
@@ -478,7 +478,7 @@ async def test_index_missing_bundle_not_cached_recovers_when_dist_appears(
     """A FileNotFoundError must NOT be cached: once the bundle appears on disk
     the next request should serve it (self-healing after a dev build).
     """
-    import kiro_crew.dashboard.handlers.core as core
+    import aj_crew.dashboard.handlers.core as core
 
     fake_index = tmp_path / "index.html"
     # Do NOT create the file yet — first request should get the fallback.
@@ -518,7 +518,7 @@ def test_ambiguous_app_and_window_names_cannot_collide(tmp_path) -> None:
     has removes the class rather than handling it — this pins that, using the
     exact pair that was the counter-example.
     """
-    from kiro_crew.dashboard.server import discover_app_window_entries
+    from aj_crew.dashboard.server import discover_app_window_entries
 
     root = tmp_path / "src" / "apps"
     (root / "foo").mkdir(parents=True)
@@ -552,7 +552,7 @@ def test_app_window_entries_register_route_and_exclusion(tmp_path) -> None:
     """
     from aiohttp import web
 
-    import kiro_crew.dashboard.token_auth as ta
+    import aj_crew.dashboard.token_auth as ta
 
     # Fixture dist: one app with two windows, one unrelated non-html file.
     win = tmp_path / "src" / "apps" / "someapp"
@@ -565,7 +565,7 @@ def test_app_window_entries_register_route_and_exclusion(tmp_path) -> None:
     # construction: the previous form duplicated it, and duplicated it in the
     # OLD flat shape, so it kept passing after the scheme changed and asserted
     # nothing about what the gateway actually registers.
-    from kiro_crew.dashboard.server import (
+    from aj_crew.dashboard.server import (
         _window_entry_handler,
         discover_app_window_entries,
     )

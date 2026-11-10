@@ -286,8 +286,8 @@ export default function OnboardingFlow({
   // Preselect previously saved answers (matters for `/onboarding` replays).
   // Shares the app-wide config query; on true first-run it resolves to ''.
   const { data: cfgData } = useQuery<ProfileConfig>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
     enabled: open,
     staleTime: 60_000,
   })
@@ -355,7 +355,7 @@ export default function OnboardingFlow({
         ok = false
       }
     })
-    qc.invalidateQueries({ queryKey: ['kirocrewConfig'] })
+    qc.invalidateQueries({ queryKey: ['ajcrewConfig'] })
     return ok
   }, [role, roleOther, techLevel, qc])
 
@@ -605,7 +605,7 @@ export default function OnboardingFlow({
     return (
       <OnboardingChapterShell
         eyebrow={i18nT('components.onboardingFlow.customize_step', { n: 1, total: 2 })}
-        ariaLabel={i18nT('components.onboardingFlow.customize_kirocrew')}
+        ariaLabel={i18nT('components.onboardingFlow.customize_ajcrew')}
         panelHeadline={i18nT('components.onboardingFlow.make_it_yours')}
         panelBody={i18nT('components.onboardingFlow.set_your_look_and_tell_kiro_about_you_so_respons')}
         panelFootnote={i18nT('components.onboardingFlow.change_anything_later_in_settings')}
@@ -705,7 +705,7 @@ export default function OnboardingFlow({
     return (
       <OnboardingChapterShell
         eyebrow={i18nT('components.onboardingFlow.customize_step', { n: 2, total: 2 })}
-        ariaLabel={i18nT('components.onboardingFlow.customize_kirocrew')}
+        ariaLabel={i18nT('components.onboardingFlow.customize_ajcrew')}
         panelHeadline={i18nT('components.onboardingFlow.make_it_yours')}
         panelBody={i18nT('components.onboardingFlow.set_your_look_and_tell_kiro_about_you_so_respons')}
         panelFootnote={i18nT('components.onboardingFlow.change_anything_later_in_settings')}

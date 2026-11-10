@@ -3,7 +3,7 @@
 * ``_fix_shell_profiles`` rewrites ``~/.zshrc`` and friends in place. It deletes a line
   only when it carries BOTH the stale marker and ``PATH``, leaves a clean profile
   byte-identical, survives an unreadable profile, and names every profile it touched.
-* ``_find_electron_dir``: ``KIROCREW_PROJECT_DIR`` wins over the walk-up, and a
+* ``_find_electron_dir``: ``AJCREW_PROJECT_DIR`` wins over the walk-up, and a
   pip-installed tree with no ``website/electron`` returns ``None``.
 """
 
@@ -15,18 +15,18 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.skills as skills_module
-from kiro_crew import pinned_fs
-from kiro_crew.cli_setup import (
+import aj_crew.skills as skills_module
+from aj_crew import pinned_fs
+from aj_crew.cli_setup import (
     _find_electron_dir,
     _fix_shell_profiles,
     _remove_retired_conductor_skill,
     _setup_slash_command,
     _setup_whatsapp,
 )
-from kiro_crew.skills import RETIRED_CONDUCTOR_SKILL_SHA256
+from aj_crew.skills import RETIRED_CONDUCTOR_SKILL_SHA256
 
-_STALE = 'export PATH="$HOME/.kirocrew-app/bin:$PATH"\n'
+_STALE = 'export PATH="$HOME/.ajcrew-app/bin:$PATH"\n'
 
 
 @pytest.fixture()
@@ -55,7 +55,7 @@ class TestFixShellProfiles:
     def test_a_marker_line_without_path_is_left_alone(self, home: Path) -> None:
         """The match is marker AND ``PATH`` — a bare mention must not be deleted."""
         bashrc = home / ".bashrc"
-        original = "# see ~/.kirocrew-app for notes\nexport EDITOR=vi\n"
+        original = "# see ~/.ajcrew-app for notes\nexport EDITOR=vi\n"
         bashrc.write_text(original, encoding="utf-8")
 
         _fix_shell_profiles()
@@ -127,12 +127,12 @@ class TestSetupSlashCommand:
     @pytest.fixture()
     def cfg_file(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         target = tmp_path / "config.json"
-        monkeypatch.setattr("kiro_crew.cli_setup.config_path", lambda: target)
+        monkeypatch.setattr("aj_crew.cli_setup.config_path", lambda: target)
         return target
 
     @staticmethod
     def _answer(monkeypatch: pytest.MonkeyPatch, value: str | None) -> None:
-        monkeypatch.setattr("kiro_crew.cli_setup._input_or_skip", lambda prompt: value)
+        monkeypatch.setattr("aj_crew.cli_setup._input_or_skip", lambda prompt: value)
 
     def _saved(self, cfg_file: Path) -> str:
         return json.loads(cfg_file.read_text(encoding="utf-8"))["slack"]["command"]
@@ -157,7 +157,7 @@ class TestSetupSlashCommand:
     ) -> None:
         self._answer(monkeypatch, "has space")
         _setup_slash_command()
-        assert self._saved(cfg_file) == "kirocrew"
+        assert self._saved(cfg_file) == "ajcrew"
         assert "letters, numbers, hyphens" in capsys.readouterr().out
 
     def test_an_over_long_name_falls_back_to_the_current_name(
@@ -165,7 +165,7 @@ class TestSetupSlashCommand:
     ) -> None:
         self._answer(monkeypatch, "z" * 33)
         _setup_slash_command()
-        assert self._saved(cfg_file) == "kirocrew"
+        assert self._saved(cfg_file) == "ajcrew"
         assert "too long" in capsys.readouterr().out
 
     def test_an_unreadable_config_aborts_the_step_without_writing(
@@ -188,7 +188,7 @@ class TestSetupSlashCommand:
         cfg_file.write_text(json.dumps({"slack": {"command": 123}}), encoding="utf-8")
         self._answer(monkeypatch, None)  # EOF/skip keeps the current value
         _setup_slash_command()
-        assert self._saved(cfg_file) == "kirocrew"
+        assert self._saved(cfg_file) == "ajcrew"
 
 
 class TestFindElectronDir:
@@ -198,7 +198,7 @@ class TestFindElectronDir:
         root = tmp_path / "checkout"
         electron = root / "website" / "electron"
         electron.mkdir(parents=True)
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(root))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(root))
 
         assert _find_electron_dir() == electron
 
@@ -206,7 +206,7 @@ class TestFindElectronDir:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """With no env var, a source checkout is still found from this file's location."""
-        monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+        monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
 
         found = _find_electron_dir()
 
@@ -218,7 +218,7 @@ class TestFindElectronDir:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A pip-installed tree has no desktop sources — say so, don't guess a path."""
-        monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+        monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
         monkeypatch.setattr(Path, "is_dir", lambda self: False)
 
         assert _find_electron_dir() is None
@@ -226,7 +226,7 @@ class TestFindElectronDir:
     def test_an_env_var_pointing_nowhere_is_ignored_not_returned(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path / "does-not-exist"))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path / "does-not-exist"))
 
         found = _find_electron_dir()
 
@@ -235,7 +235,7 @@ class TestFindElectronDir:
 
 
 class TestSetupWhatsApp:
-    """``_setup_whatsapp``: the guided WhatsApp opt-in (`kirocrew setup --whatsapp`).
+    """``_setup_whatsapp``: the guided WhatsApp opt-in (`ajcrew setup --whatsapp`).
 
     Pairing is a QR scan on the running gateway, so the step states the ban risk, the
     optional wheel, and that enabling is a separate config flag. It must never damage
@@ -245,14 +245,14 @@ class TestSetupWhatsApp:
     @pytest.fixture()
     def cfg_file(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         target = tmp_path / "config.json"
-        monkeypatch.setattr("kiro_crew.cli_setup.config_path", lambda: target)
-        monkeypatch.setattr("kiro_crew.config.paths.data_home", lambda: tmp_path / "home")
-        monkeypatch.setattr("kiro_crew.whatsapp.client.neonize_available", lambda: True)
+        monkeypatch.setattr("aj_crew.cli_setup.config_path", lambda: target)
+        monkeypatch.setattr("aj_crew.config.paths.data_home", lambda: tmp_path / "home")
+        monkeypatch.setattr("aj_crew.whatsapp.client.neonize_available", lambda: True)
         return target
 
     @staticmethod
     def _answer(monkeypatch: pytest.MonkeyPatch, value: str | None) -> None:
-        monkeypatch.setattr("kiro_crew.cli_setup._input_or_skip", lambda prompt: value)
+        monkeypatch.setattr("aj_crew.cli_setup._input_or_skip", lambda prompt: value)
 
     def test_yes_enables_the_channel_and_keeps_the_rest_of_the_config(
         self, cfg_file: Path, monkeypatch: pytest.MonkeyPatch
@@ -296,7 +296,7 @@ class TestSetupWhatsApp:
     def test_a_missing_extra_is_named_with_its_install_command(
         self, cfg_file: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        monkeypatch.setattr("kiro_crew.whatsapp.client.neonize_available", lambda: False)
+        monkeypatch.setattr("aj_crew.whatsapp.client.neonize_available", lambda: False)
         self._answer(monkeypatch, "y")
 
         _setup_whatsapp()
@@ -304,7 +304,7 @@ class TestSetupWhatsApp:
         out = capsys.readouterr().out
         # neonize by name -- the extras form installs from no index.
         assert "neonize" in out
-        assert "kirocrew[" not in out
+        assert "ajcrew[" not in out
         # Still enabled: the operator can install the extra afterwards, and doctor
         # reports the gap until they do. Refusing here would strand them.
         assert json.loads(cfg_file.read_text(encoding="utf-8"))["whatsapp"]["enabled"] is True
@@ -377,7 +377,7 @@ class TestRemoveRetiredConductorSkill:
     def skills_root(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         root = tmp_path / "skills"
         root.mkdir()
-        monkeypatch.setattr("kiro_crew.skills.skills_dir", lambda: root)
+        monkeypatch.setattr("aj_crew.skills.skills_dir", lambda: root)
         return root
 
     @pytest.mark.parametrize("fixture", ["select-crew-v2.md", "select-crew-v1.md"])
@@ -575,7 +575,7 @@ class TestRemoveRetiredConductorSkill:
             # coverage or hygiene plugin). Only PRODUCTION re-resolving the name
             # is the defect; a bystander normalising a path it was handed is not,
             # so the verdict is keyed on who asked.
-            if str(path).endswith("conductor") and _asking_module().startswith("kiro_crew"):
+            if str(path).endswith("conductor") and _asking_module().startswith("aj_crew"):
                 pytest.fail("the conductor path was re-resolved by name")
             return real_realpath(path, *args, **kwargs)
 

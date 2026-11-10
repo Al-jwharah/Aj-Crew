@@ -1,4 +1,4 @@
-"""The managed tool policy applies to Kiro Crew's own servers, not to an app's.
+"""The managed tool policy applies to Aj Crew's own servers, not to an app's.
 
 The reported defect: a user-installed app serves its own tools
 through ``mcp_shared.run_mcp_stdio_loop``. On the shared ACP runtime a server the
@@ -22,8 +22,8 @@ import sys
 import pytest
 from test_mcp_shared import _LoopHarness, _tools_call
 
-import kiro_crew.mcp_shared as mcp_shared
-from kiro_crew.testing.links import make_dir_link
+import aj_crew.mcp_shared as mcp_shared
+from aj_crew.testing.links import make_dir_link
 
 APP_SOURCE = """
 def call_tool(name, args):
@@ -64,7 +64,7 @@ class TestServesManagedTools:
 
     def test_a_link_into_the_package_is_managed(self, tmp_path):
         # A junction on Windows, so this runs unprivileged on every platform.
-        link = tmp_path / "linked_kiro_crew"
+        link = tmp_path / "linked_aj_crew"
         make_dir_link(link, pathlib.Path(mcp_shared.__file__).parent)
         assert mcp_shared.serves_managed_tools(_handler_at(str(link / "mcp_shared.py"))) is True
 
@@ -81,18 +81,18 @@ class TestWindowsDrives:
     ``C:``; ``commonpath`` raises for that pair instead of answering.
     """
 
-    ROOT = r"D:\a\KiroCrew\src\kiro_crew"
+    ROOT = r"D:\a\AjCrew\src\aj_crew"
 
     def test_a_handler_on_another_drive_is_not_managed(self):
         app = r"C:\Users\runner\AppData\Local\Temp\app_backend\mcp_server.py"
         assert mcp_shared._path_is_under(app, self.ROOT, ntpath) is False
 
     def test_a_handler_under_the_package_is_managed_whatever_the_drive_case(self):
-        own = r"d:\a\KiroCrew\src\kiro_crew\mcp_shared.py"
+        own = r"d:\a\AjCrew\src\aj_crew\mcp_shared.py"
         assert mcp_shared._path_is_under(own, self.ROOT, ntpath) is True
 
     def test_a_sibling_on_the_same_drive_is_not_managed(self):
-        app = r"D:\a\KiroCrew\apps\mcp_server.py"
+        app = r"D:\a\AjCrew\apps\mcp_server.py"
         assert mcp_shared._path_is_under(app, self.ROOT, ntpath) is False
 
     def test_a_pair_commonpath_refuses_on_one_drive_keeps_the_policy(self):
@@ -100,7 +100,7 @@ class TestWindowsDrives:
         assert mcp_shared._path_is_under(r"D:\app.py", r"D:relative", ntpath) is True
 
 
-_WINDOWS_PACKAGE_DIR = r"D:\a\KiroCrew\KiroCrew\src\kiro_crew"
+_WINDOWS_PACKAGE_DIR = r"D:\a\AjCrew\AjCrew\src\aj_crew"
 _APP_ON_C = r"C:\Users\runner\AppData\Local\Temp\app\mcp_server.py"
 
 
@@ -189,7 +189,7 @@ class TestAnotherDriveNeedsProof:
         assert mcp_shared.serves_managed_tools(_handler_at(r"C:app\mcp_server.py")) is True
 
     def test_a_relative_location_on_the_package_drive_is_not_managed(self, windows_path):
-        windows_path.cwd = r"D:\a\KiroCrew\KiroCrew"
+        windows_path.cwd = r"D:\a\AjCrew\AjCrew"
         windows_path.exists_at(r"app\mcp_server.py")
         assert mcp_shared.serves_managed_tools(_handler_at(r"app\mcp_server.py")) is False
 
@@ -218,14 +218,14 @@ class TestAnotherDriveNeedsProof:
         ],
     )
     def test_a_long_path_unc_spelling_of_a_file_on_the_share_is_managed(self, windows_path, prefix):
-        mcp_shared._PACKAGE_DIR = r"\\server\share\pkg\kiro_crew"
-        filename = prefix + r"\server\share\pkg\kiro_crew\mcp_core.py"
+        mcp_shared._PACKAGE_DIR = r"\\server\share\pkg\aj_crew"
+        filename = prefix + r"\server\share\pkg\aj_crew\mcp_core.py"
         windows_path.exists_at(filename)
         assert mcp_shared.serves_managed_tools(_handler_at(filename)) is True
 
     def test_a_package_on_a_long_path_unc_share_still_holds_its_files(self, windows_path):
-        mcp_shared._PACKAGE_DIR = r"\\?\UNC\server\share\pkg\kiro_crew"
-        filename = r"\\server\share\pkg\kiro_crew\mcp_core.py"
+        mcp_shared._PACKAGE_DIR = r"\\?\UNC\server\share\pkg\aj_crew"
+        filename = r"\\server\share\pkg\aj_crew\mcp_core.py"
         windows_path.exists_at(filename)
         assert mcp_shared.serves_managed_tools(_handler_at(filename)) is True
 

@@ -30,8 +30,8 @@ from chat_runner_coverage_helpers import _state
 from slot_scale_helpers import seed_key, seed_slots
 from turn_golden_harness import SocketDouble, _SteppingClock
 
-from kiro_crew.dashboard import state as dashboard_state
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard import state as dashboard_state
+from aj_crew.dashboard.state import DashboardState
 
 N_SLOTS = 2_000
 
@@ -49,7 +49,7 @@ class _Counts:
 def _dashboard_caller(depth: int = 2) -> bool:
     """Whether the ``json.dumps`` caller is dashboard code, not an audit sink."""
     filename = sys._getframe(depth).f_code.co_filename
-    return f"{Path('kiro_crew') / 'dashboard'}" in filename
+    return f"{Path('aj_crew') / 'dashboard'}" in filename
 
 
 async def _drain() -> None:

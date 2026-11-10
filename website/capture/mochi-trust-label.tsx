@@ -47,7 +47,7 @@ const params = new URLSearchParams(location.search)
 const key = (params.get('cmd') ?? 'api_config') as keyof typeof COMMANDS
 const cmd = COMMANDS[key] ?? COMMANDS.api_config
 
-document.documentElement.setAttribute('data-theme', 'kiro-dark')
+document.documentElement.setAttribute('data-theme', 'aj-dark')
 applyTheme()
 initI18n('en')
 

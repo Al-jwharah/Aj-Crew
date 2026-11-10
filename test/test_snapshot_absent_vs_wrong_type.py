@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 from test_snapshot import unpinnable_argv
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 
 def _real_db(path: Path) -> bytes:
@@ -41,7 +41,7 @@ class TestAWrongTypeEntryIsRefusedNotSkipped:
         live.write_bytes(_real_db(tmp_path / "live.db"))
         before = live.read_bytes()
 
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         (payload / "memory.db").mkdir(parents=True)  # a DIRECTORY with a file's name
         (payload / "MANIFEST.json").write_text(
             '{"version": 3, "components": {"memory": "unresolved"}}', encoding="utf-8"
@@ -60,7 +60,7 @@ class TestAWrongTypeEntryIsRefusedNotSkipped:
         "could never restore it"
 
     def test_a_file_named_like_a_declared_tree_is_refused(self, home, tmp_path, capsys):
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         (payload / "workspace").mkdir(parents=True)
         (payload / "workspace" / "knowledge").write_text("not a dir", encoding="utf-8")
         (payload / "memory.db").write_bytes(_real_db(tmp_path / "sound.db"))
@@ -80,7 +80,7 @@ class TestAWrongTypeEntryIsRefusedNotSkipped:
 
     def test_a_genuinely_absent_entry_still_skips(self, home, tmp_path, capsys):
         """The refusal must not turn a selective bundle into an error."""
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         payload.mkdir(parents=True)
         (payload / "memory.db").write_bytes(_real_db(tmp_path / "s2.db"))
         # memory_index.db and the trees are simply not in this bundle.
@@ -146,7 +146,7 @@ class TestTheRollbackDirectoryBelongsToOneRestore:
         mem.mkdir(parents=True)
         (mem / "note.md").write_text("local", encoding="utf-8")
 
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         (payload / "workspace" / "memory").mkdir(parents=True)
         (payload / "workspace" / "memory" / "in.md").write_text("in", encoding="utf-8")
         (payload / "memory.db").write_bytes(_real_db(tmp_path / "in2.db"))

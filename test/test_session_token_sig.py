@@ -1,4 +1,4 @@
-"""Tests for :mod:`kiro_crew.session_token_sig` — the signed token -> key mapping.
+"""Tests for :mod:`aj_crew.session_token_sig` — the signed token -> key mapping.
 
 ``config_dir()`` is agent-writable, so verification accepts only a MAC matching the
 token presented and every tamper path fails closed to ``""``. ``session_pid_sig``
@@ -15,13 +15,13 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import session_pid_sig, session_token_sig
+from aj_crew import session_pid_sig, session_token_sig
 
 SESSION_KEY = "dashboard:chat-7-123456"
 OTHER_KEY = "dashboard:chat-9-999999"
 TOKEN = "a" * 64
 OTHER_TOKEN = "b" * 64
-LOGGER_NAME = "kiro_crew.session_token_sig"
+LOGGER_NAME = "aj_crew.session_token_sig"
 
 
 def _path_for(cfg, token: str):
@@ -36,7 +36,7 @@ def _path_for(cfg, token: str):
 def cfg(tmp_path):
     """Isolated mapping dir with a valid SEL trust-root key.
 
-    ``_load_hmac_key`` is shared with :mod:`kiro_crew.session_pid_sig`, so both modules'
+    ``_load_hmac_key`` is shared with :mod:`aj_crew.session_pid_sig`, so both modules'
     ``sel_hmac_key_path`` are patched. ``_sel_hmac_key_bytes`` -> ``None`` keeps the file
     path isolated from a ``SecurityEventLog`` singleton other tests may have set up.
     """
@@ -279,7 +279,7 @@ class TestDomainSeparation:
         root = b"\x01" * 32
         assert (
             session_token_sig._derive_subkey(root)
-            == hmac.new(root, b"kirocrew.session_token.sig.v1", hashlib.sha256).digest()
+            == hmac.new(root, b"ajcrew.session_token.sig.v1", hashlib.sha256).digest()
         )
 
 

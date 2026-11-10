@@ -23,7 +23,7 @@ vi.mock('../../api/client', () => ({
     autonudgeForSlot: vi.fn(() => Promise.resolve({ enabled: true, loop: null })),
     monitorForSlot: vi.fn(() => Promise.resolve({ enabled: true, monitor: null })),
     // reuse_current off: the run path, not the copy path.
-    kirocrewConfig: vi.fn(() => Promise.resolve({})),
+    ajcrewConfig: vi.fn(() => Promise.resolve({})),
     // The member's chat runs on this machine, so Run in terminal may open a local tab.
     chatSlotEnvironment: vi.fn(() => Promise.resolve({ profile: null, profiles: [] })),
   },
@@ -81,19 +81,19 @@ import MembersPage from './MembersPage'
 function row(overrides: Record<string, unknown> = {}) {
   return {
     name: 'oncall', slug: 'oncall', bound: false, slot_key: '', running: false,
-    kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', model: '',
+    kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', model: '',
     ...overrides,
   }
 }
 
 async function openThread() {
-  ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: [row()], default_agent: 'kirocrew' })
+  ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: [row()], default_agent: 'ajcrew' })
   ;(api.memberThread as ReturnType<typeof vi.fn>).mockResolvedValue({ slot_key: 'member-oncall', slug: 'oncall', member: 'oncall', created: true })
   const view = renderWithProviders(<MembersPage />)
   fireEvent.click(await screen.findByText('oncall'))
   await waitFor(() => expect(screen.getByTestId('chat-pane-stub')).toHaveTextContent('member-oncall'))
   // Let the reuse-current read settle: while it is pending the handler copies.
-  await waitFor(() => expect(api.kirocrewConfig).toHaveBeenCalled())
+  await waitFor(() => expect(api.ajcrewConfig).toHaveBeenCalled())
   await act(async () => {})
   return view
 }

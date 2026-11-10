@@ -525,7 +525,7 @@ export function TailnetMobileCard() {
 
               It renders `serve_command`, the same `tailscale serve` publish the
               gateway would run (built server-side so it names the real port),
-              not the `kirocrew tailnet up` shown here before — that command runs
+              not the `ajcrew tailnet up` shown here before — that command runs
               the very publish path that just refused, so it could never resolve
               the conflict. No copy button: `occupied` reads as a hand-run remedy
               and `max-two-buttons-per-row` counts a link styled as one.

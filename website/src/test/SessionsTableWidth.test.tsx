@@ -17,12 +17,12 @@ vi.mock('../api/client', () => ({
     sessionsMemory: () => Promise.resolve({
       sessions: [{
         key: 'chat-1', title: SESSION_NAME, slot_key: 'chat-1', untitled: false,
-        agent: 'kirocrew', channel: 'dashboard', pid: 4242, owns_runtime: true,
+        agent: 'ajcrew', channel: 'dashboard', pid: 4242, owns_runtime: true,
         prompts: 3, rss_mb: 512, procs: 2, mcp: 7, cpu_cores: 1.5,
         uptime_s: 900, credits: 12, turns: 8,
       }],
       tasks: [{
-        id: 't1', task: 'child task', agent: 'kirocrew', parent: 'chat-1',
+        id: 't1', task: 'child task', agent: 'ajcrew', parent: 'chat-1',
         sampled: true, rss_mb: 64, peak_rss_mb: 96, cpu_cores: 0.25,
         started_at: null, pid: 4243, shared: false,
       }],

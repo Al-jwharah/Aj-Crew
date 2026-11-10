@@ -12,9 +12,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from aiohttp import web
 
-from kiro_crew import agent_state
-from kiro_crew.dashboard.handlers._shared import SkillCatalogSnapshot
-from kiro_crew.dashboard.handlers.agents import api_agent_detail
+from aj_crew import agent_state
+from aj_crew.dashboard.handlers._shared import SkillCatalogSnapshot
+from aj_crew.dashboard.handlers.agents import api_agent_detail
 
 
 @pytest.fixture(autouse=True)
@@ -24,7 +24,7 @@ def _owner_caller(monkeypatch):
     its own enumerate-the-invariant coverage in
     test_agents_endpoints_owner_auth.py."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
@@ -44,11 +44,11 @@ def _patch_request(name: str, body: dict):
 
 @pytest.mark.asyncio
 async def test_patch_explicit_model_freezes(tmp_path):
-    cfg = tmp_path / "kirocrew.json"
-    cfg.write_text(json.dumps({"name": "kirocrew", "model": "claude-old", "model_managed": True}))
-    request = _patch_request("kirocrew", {"model": "claude-new"})
+    cfg = tmp_path / "ajcrew.json"
+    cfg.write_text(json.dumps({"name": "ajcrew", "model": "claude-old", "model_managed": True}))
+    request = _patch_request("ajcrew", {"model": "claude-new"})
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", tmp_path):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", tmp_path):
         resp = await api_agent_detail(request)
 
     assert resp.status == 200
@@ -56,25 +56,25 @@ async def test_patch_explicit_model_freezes(tmp_path):
     assert data["model"] == "claude-new"
     # Spec stays schema-clean; managed-state goes to the sidecar.
     assert "model_managed" not in data
-    assert agent_state.get_model_managed("kirocrew") is False
+    assert agent_state.get_model_managed("ajcrew") is False
 
 
 @pytest.mark.asyncio
 async def test_patch_clear_model_resumes_tracking(tmp_path):
-    cfg = tmp_path / "kirocrew.json"
+    cfg = tmp_path / "ajcrew.json"
     cfg.write_text(
-        json.dumps({"name": "kirocrew", "model": "claude-pinned", "model_managed": False})
+        json.dumps({"name": "ajcrew", "model": "claude-pinned", "model_managed": False})
     )
-    request = _patch_request("kirocrew", {"model": ""})
+    request = _patch_request("ajcrew", {"model": ""})
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", tmp_path):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", tmp_path):
         resp = await api_agent_detail(request)
 
     assert resp.status == 200
     data = json.loads(cfg.read_text(encoding="utf-8"))
     assert "model" not in data
     assert "model_managed" not in data
-    assert agent_state.get_model_managed("kirocrew") is True
+    assert agent_state.get_model_managed("ajcrew") is True
 
 
 @pytest.mark.asyncio
@@ -86,21 +86,21 @@ async def test_patch_without_model_lifts_stale_bookkeeping_keys(tmp_path):
     writers (PUT, migrate_agent_specs, _refresh_dynamic_fields) do. It routes
     through ``agent_state.lift_and_strip_bookkeeping`` to guarantee that.
     """
-    cfg = tmp_path / "kirocrew.json"
+    cfg = tmp_path / "ajcrew.json"
     cfg.write_text(
-        json.dumps({"name": "kirocrew", "model_managed": False, "cc_model": "claude-sonnet-4.6"})
+        json.dumps({"name": "ajcrew", "model_managed": False, "cc_model": "claude-sonnet-4.6"})
     )
-    request = _patch_request("kirocrew", {})
+    request = _patch_request("ajcrew", {})
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", tmp_path):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", tmp_path):
         resp = await api_agent_detail(request)
 
     assert resp.status == 200
     data = json.loads(cfg.read_text(encoding="utf-8"))
     assert "model_managed" not in data
     assert "cc_model" not in data
-    assert agent_state.get_model_managed("kirocrew") is False
-    assert agent_state.get_cc_model("kirocrew") == "claude-sonnet-4.6"
+    assert agent_state.get_model_managed("ajcrew") is False
+    assert agent_state.get_cc_model("ajcrew") == "claude-sonnet-4.6"
 
 
 @pytest.mark.asyncio
@@ -108,19 +108,19 @@ async def test_patch_write_is_governance_sanitized(tmp_path):
     """The PATCH overwrite must run the whole-config governance funnel inside
     the spec lock: a stale snapshot must not restore ceiling-rejected
     allowedTools/autoApprove grants (a security boundary)."""
-    cfg = tmp_path / "kirocrew.json"
+    cfg = tmp_path / "ajcrew.json"
     cfg.write_text(
-        json.dumps({"name": "kirocrew", "model": "claude-old", "allowedTools": ["@stale"]})
+        json.dumps({"name": "ajcrew", "model": "claude-old", "allowedTools": ["@stale"]})
     )
-    request = _patch_request("kirocrew", {"model": "claude-new"})
+    request = _patch_request("ajcrew", {"model": "claude-new"})
 
     def fake_sanitize(config):
         config["allowedTools"] = ["governance-filtered"]
 
     with (
-        patch("kiro_crew.agent.KIRO_AGENTS_DIR", tmp_path),
+        patch("aj_crew.agent.KIRO_AGENTS_DIR", tmp_path),
         patch(
-            "kiro_crew.dashboard.handlers.agents.sanitize_agent_config_governance",
+            "aj_crew.dashboard.handlers.agents.sanitize_agent_config_governance",
             fake_sanitize,
         ),
     ):
@@ -137,20 +137,20 @@ async def test_patch_merge_preserves_concurrent_writer_changes(tmp_path):
     """The locked overwrite re-reads INSIDE the lock and merges only this
     patch's delta: a concurrent refresh's change to an untouched key must
     survive, and a key the concurrent writer removed must stay removed."""
-    cfg = tmp_path / "kirocrew.json"
+    cfg = tmp_path / "ajcrew.json"
     cfg.write_text(
         json.dumps(
             {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "model": "claude-old",
                 "hooks": {"old": True},
                 "staleGrant": "x",
             }
         )
     )
-    request = _patch_request("kirocrew", {"model": "claude-new"})
+    request = _patch_request("ajcrew", {"model": "claude-new"})
 
-    from kiro_crew.dashboard.handlers import agents as agents_mod
+    from aj_crew.dashboard.handlers import agents as agents_mod
 
     real_read = agents_mod._read_agent_spec
     calls = {"n": 0}
@@ -168,8 +168,8 @@ async def test_patch_merge_preserves_concurrent_writer_changes(tmp_path):
         return result
 
     with (
-        patch("kiro_crew.agent.KIRO_AGENTS_DIR", tmp_path),
-        patch("kiro_crew.dashboard.handlers.agents._read_agent_spec", side_effect=racing_read),
+        patch("aj_crew.agent.KIRO_AGENTS_DIR", tmp_path),
+        patch("aj_crew.dashboard.handlers.agents._read_agent_spec", side_effect=racing_read),
     ):
         resp = await api_agent_detail(request)
 
@@ -213,13 +213,13 @@ async def test_a_patch_that_names_no_resource_change_leaves_a_malformed_value_al
     A non-list ``resources`` does occur; an unguarded merge iterates a string and saves it
     split per character.
     """
-    cfg = tmp_path / "kirocrew.json"
+    cfg = tmp_path / "ajcrew.json"
     cfg.write_text(
-        json.dumps({"name": "kirocrew", "model": "claude-old", "resources": "skill://not-a-list"})
+        json.dumps({"name": "ajcrew", "model": "claude-old", "resources": "skill://not-a-list"})
     )
-    request = _patch_request("kirocrew", {"model": "claude-new"})
+    request = _patch_request("ajcrew", {"model": "claude-new"})
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", tmp_path):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", tmp_path):
         resp = await api_agent_detail(request)
 
     assert resp.status == 200, resp.text
@@ -238,11 +238,11 @@ async def test_a_skills_patch_keeps_a_uri_a_concurrent_writer_added(tmp_path):
     that list whole publishes a resources value that predates any co-owner's addition --
     deleting it durably, on a key the request only meant to add one entry to.
     """
-    cfg = tmp_path / "kirocrew.json"
-    cfg.write_text(json.dumps({"name": "kirocrew", "resources": ["skill://old/mapped"]}))
-    request = _patch_request("kirocrew", {"skills": ["kiro-user/one"]})
+    cfg = tmp_path / "ajcrew.json"
+    cfg.write_text(json.dumps({"name": "ajcrew", "resources": ["skill://old/mapped"]}))
+    request = _patch_request("ajcrew", {"skills": ["kiro-user/one"]})
 
-    from kiro_crew.dashboard.handlers import agents as agents_mod
+    from aj_crew.dashboard.handlers import agents as agents_mod
 
     real_read = agents_mod._read_agent_spec
     calls = {"n": 0}
@@ -260,15 +260,15 @@ async def test_a_skills_patch_keeps_a_uri_a_concurrent_writer_added(tmp_path):
         return result
 
     with (
-        patch("kiro_crew.agent.KIRO_AGENTS_DIR", tmp_path),
+        patch("aj_crew.agent.KIRO_AGENTS_DIR", tmp_path),
         # Isolate the mate scope (``_agent_detail_candidates``'s second walked
         # root) from whatever this machine's real ``~/.kiro/mates/agents/``
         # holds; without this an unrelated file there would add extra
         # ``_read_agent_spec`` calls and desync the ``calls["n"] == 2`` race.
-        patch("kiro_crew.config.paths.mate_agents_dir", lambda: tmp_path / "mates-empty"),
-        patch("kiro_crew.dashboard.handlers.agents._read_agent_spec", side_effect=racing_read),
+        patch("aj_crew.config.paths.mate_agents_dir", lambda: tmp_path / "mates-empty"),
+        patch("aj_crew.dashboard.handlers.agents._read_agent_spec", side_effect=racing_read),
         patch(
-            "kiro_crew.dashboard.handlers.agents.apply_skill_mapping",
+            "aj_crew.dashboard.handlers.agents.apply_skill_mapping",
             new=_mapping_stub(["skill://new/mapped"]),
         ),
     ):
@@ -289,22 +289,22 @@ async def test_a_skills_patch_preserves_resource_entries_it_cannot_read(tmp_path
     a number sitting in that list the first time any skill PATCH touches the agent -- silent,
     permanent, and on entries the request never named.
     """
-    cfg = tmp_path / "kirocrew.json"
+    cfg = tmp_path / "ajcrew.json"
     opaque = {"kind": "future-entry", "value": 7}
     cfg.write_text(
         json.dumps(
             {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "resources": ["skill://old/mapped", opaque, "file://steering/*.md"],
             }
         )
     )
-    request = _patch_request("kirocrew", {"skills": ["kiro-user/one"]})
+    request = _patch_request("ajcrew", {"skills": ["kiro-user/one"]})
 
     with (
-        patch("kiro_crew.agent.KIRO_AGENTS_DIR", tmp_path),
+        patch("aj_crew.agent.KIRO_AGENTS_DIR", tmp_path),
         patch(
-            "kiro_crew.dashboard.handlers.agents.apply_skill_mapping",
+            "aj_crew.dashboard.handlers.agents.apply_skill_mapping",
             new=_mapping_stub(["skill://new/mapped"]),
         ),
     ):
@@ -325,11 +325,11 @@ async def test_a_resource_change_over_a_malformed_fresh_value_does_not_split_it(
     the merge runs against a ``fresh`` whose ``resources`` is a string -- and iterating that
     yields characters, every one of them a ``str``.
     """
-    cfg = tmp_path / "kirocrew.json"
-    cfg.write_text(json.dumps({"name": "kirocrew", "resources": ["skill://old/mapped"]}))
-    request = _patch_request("kirocrew", {"skills": ["kiro-user/one"]})
+    cfg = tmp_path / "ajcrew.json"
+    cfg.write_text(json.dumps({"name": "ajcrew", "resources": ["skill://old/mapped"]}))
+    request = _patch_request("ajcrew", {"skills": ["kiro-user/one"]})
 
-    from kiro_crew.dashboard.handlers import agents as agents_mod
+    from aj_crew.dashboard.handlers import agents as agents_mod
 
     real_read = agents_mod._read_agent_spec
     calls = {"n": 0}
@@ -339,14 +339,14 @@ async def test_a_resource_change_over_a_malformed_fresh_value_does_not_split_it(
         result = real_read(path, **kwargs)
         # The locked re-read finds a malformed value this writer's snapshot never saw.
         if calls["n"] == 2:
-            cfg.write_text(json.dumps({"name": "kirocrew", "resources": "skill://not-a-list"}))
+            cfg.write_text(json.dumps({"name": "ajcrew", "resources": "skill://not-a-list"}))
         return result
 
     with (
-        patch("kiro_crew.agent.KIRO_AGENTS_DIR", tmp_path),
-        patch("kiro_crew.dashboard.handlers.agents._read_agent_spec", side_effect=racing_read),
+        patch("aj_crew.agent.KIRO_AGENTS_DIR", tmp_path),
+        patch("aj_crew.dashboard.handlers.agents._read_agent_spec", side_effect=racing_read),
         patch(
-            "kiro_crew.dashboard.handlers.agents.apply_skill_mapping",
+            "aj_crew.dashboard.handlers.agents.apply_skill_mapping",
             new=_mapping_stub(["skill://new/mapped"]),
         ),
     ):
@@ -373,15 +373,15 @@ async def test_patch_renews_digest_for_a_confirmed_dashboard_author(tmp_path):
     re-record the ownership digest to match -- otherwise the next rebuild sees a mismatch,
     stops re-filtering the spec's grants against a tightened ceiling, and reports success
     anyway. The pre-edit file is our confirmed managed write, so the renewal fires."""
-    name = "kirocrew-dashboard-author"
+    name = "ajcrew-dashboard-author"
     cfg = tmp_path / f"{name}.json"
-    spec = {"name": name, "model": "claude-old", "mcpServers": {"kirocrew-core": {}}}
+    spec = {"name": name, "model": "claude-old", "mcpServers": {"ajcrew-core": {}}}
     cfg.write_text(json.dumps(spec, indent=2) + "\n", encoding="utf-8")
     # Record the digest of exactly these bytes -> the pre-edit file is confirmed ours.
     agent_state.set_managed_digest(name, agent_state.spec_digest(spec))
 
     request = _patch_request(name, {"model": "claude-new"})
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", tmp_path):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", tmp_path):
         resp = await api_agent_detail(request)
 
     assert resp.status == 200, resp.text
@@ -396,14 +396,14 @@ async def test_patch_does_not_stamp_a_user_file_at_the_dashboard_author_stem(tmp
     A PATCH that edits it must NOT record the managed digest for the user's bytes -- doing
     so would make the next rebuild overwrite their charter. The renewal is gated on the
     pre-edit content already being our confirmed managed write."""
-    name = "kirocrew-dashboard-author"
+    name = "ajcrew-dashboard-author"
     cfg = tmp_path / f"{name}.json"
     user = {"name": name, "model": "claude-old", "prompt": "the user's own charter"}
     cfg.write_text(json.dumps(user, indent=2) + "\n", encoding="utf-8")
     assert agent_state.get_managed_digest(name) is None  # user file, no record
 
     request = _patch_request(name, {"model": "claude-new"})
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", tmp_path):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", tmp_path):
         resp = await api_agent_detail(request)
 
     assert resp.status == 200, resp.text

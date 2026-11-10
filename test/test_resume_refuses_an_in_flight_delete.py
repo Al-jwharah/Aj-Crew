@@ -27,7 +27,7 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew import history_projection
+from aj_crew import history_projection
 
 
 def _park_delete_inside_its_lock(monkeypatch):
@@ -76,7 +76,7 @@ async def _conflict(resp) -> None:
 async def test_a_resume_that_rechecks_while_the_delete_holds_its_lock_is_refused(
     tmp_path, monkeypatch
 ):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:inflight1"
@@ -122,7 +122,7 @@ async def test_a_skipped_delete_leaves_nothing_that_refuses_a_later_resume(tmp_p
 
     Nothing it leaves behind may refuse a later resume of the live session.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:inflight2"
@@ -153,9 +153,9 @@ async def test_a_resume_racing_the_delete_handler_before_its_unlink_is_refused(
     The handler is parked at its first await after the capture (the cron-owner
     scan) while the resume re-checks.
     """
-    from kiro_crew.dashboard.handlers import sessions as sessions_mod
+    from aj_crew.dashboard.handlers import sessions as sessions_mod
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.crons = None  # no cron store in this fixture; the owner scan answers empty
     log = state.conversation_log
@@ -209,9 +209,9 @@ async def test_a_bulk_clear_racing_a_resume_before_its_unlink_is_refused(tmp_pat
     """``DELETE /api/sessions`` claims each row's slot the same way, so it opens
     the same window. The clear is parked inside its worker, after the row's claim
     and before ``delete_session`` opens its own window."""
-    from kiro_crew.dashboard.handlers import sessions as sessions_mod
+    from aj_crew.dashboard.handlers import sessions as sessions_mod
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.crons = None  # no cron store in this fixture; the owner scan answers empty
     log = state.conversation_log
@@ -270,7 +270,7 @@ async def test_a_refused_resume_leaves_a_closed_session_closed_and_a_retry_opens
     as open at the next start, and the resume holds nothing afterwards. Once the
     delete ends, a retry opens the session.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:inflight5"
@@ -304,7 +304,7 @@ async def test_the_reopen_write_lands_before_the_publish(tmp_path, monkeypatch):
     writes nothing. Once the clear lands the first resume publishes, and the
     session is open on disk before any client sees its tab.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:inflight10"
@@ -353,7 +353,7 @@ async def test_a_reopen_write_that_fails_publishes_nothing(tmp_path, monkeypatch
     Publishing anyway would open a tab whose session is still marked closed, so
     it would vanish at the next start while the person keeps typing into it.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:inflight11"
@@ -385,9 +385,9 @@ async def test_a_delete_starting_during_the_member_binding_read_is_seen(tmp_path
     claim captured then, before the slot exists) must still stop the publish,
     so the check cannot sit ahead of that await.
     """
-    from kiro_crew import members as members_mod
+    from aj_crew import members as members_mod
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     name = "member-alice"
@@ -438,7 +438,7 @@ async def test_a_finished_delete_releases_its_window(tmp_path, monkeypatch):
     a marker left open would answer ``resume_conflict`` instead, and none of the
     deleted rows come back.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:inflight6"
@@ -503,7 +503,7 @@ async def test_a_delete_opening_during_the_reopen_write_refuses_the_resume(tmp_p
     check stops the publish. The resume must refuse ``resume_conflict``, publish
     nothing, release its construction mark, and put the ``closed`` marker back.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:inflight12"

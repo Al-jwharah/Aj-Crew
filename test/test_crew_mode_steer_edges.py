@@ -18,8 +18,8 @@ import pytest
 import work_ledger_helpers
 from work_ledger_helpers import CONDUCTOR, WORKER, _new_item
 
-from kiro_crew import work_ledger as wl
-from kiro_crew.testing.wait import finished
+from aj_crew import work_ledger as wl
+from aj_crew.testing.wait import finished
 
 _isolated_home = work_ledger_helpers._isolated_home
 
@@ -31,7 +31,7 @@ GRANDCHILD = "chat-4-grandchild"
 def _routing_live(_floor_monkeypatch):
     # The routing is off on main until the Crew panel turns it on; these tests pin
     # the composer steer as it runs then.
-    from kiro_crew import crew_mode
+    from aj_crew import crew_mode
 
     _floor_monkeypatch.setattr(crew_mode, "APPROVAL_ROUTING_LIVE", True)
 
@@ -39,7 +39,7 @@ def _routing_live(_floor_monkeypatch):
 @pytest.fixture(autouse=True)
 def _fresh_steer_record_locks(_floor_monkeypatch):
     # A record a test left unawaited must not leave its owed count on the next test.
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     _floor_monkeypatch.setattr(chat_handlers, "_STEER_RECORD_LOCKS", {})
 
@@ -55,7 +55,7 @@ def _bound(board: str = CONDUCTOR, worker: str = WORKER) -> str:
 
 @pytest.fixture
 def _log(monkeypatch):
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import emit as crew_log_emit
 
     entries: list[tuple[str, dict[str, Any]]] = []
 
@@ -82,7 +82,7 @@ class _Sessions:
 
 @pytest.mark.asyncio
 async def test_E5_a_root_with_no_live_session_records_into_the_workers_unit(_log):
-    from kiro_crew.dashboard.handlers import work_ledger_worker as wlw
+    from aj_crew.dashboard.handlers import work_ledger_worker as wlw
 
     item_id = _new_item()
     state = SimpleNamespace(sessions=_Sessions({f"dashboard:{WORKER}": "unit-w"}))
@@ -96,7 +96,7 @@ async def test_E5_a_root_with_no_live_session_records_into_the_workers_unit(_log
 
 @pytest.mark.asyncio
 async def test_W1_a_steer_on_a_closed_item_says_closed_not_ledger_failed(_log):
-    from kiro_crew.dashboard.handlers import work_ledger_worker as wlw
+    from aj_crew.dashboard.handlers import work_ledger_worker as wlw
 
     item_id = _new_item()
     wl.apply_conductor_action(CONDUCTOR, "close", item_id=item_id, state="abandoned")
@@ -109,8 +109,8 @@ async def test_W1_a_steer_on_a_closed_item_says_closed_not_ledger_failed(_log):
 
 @pytest.mark.asyncio
 async def test_E5_no_live_session_at_all_falls_back_to_the_boards_newest_unit(_log, monkeypatch):
-    from kiro_crew import session_ledger
-    from kiro_crew.dashboard.handlers import work_ledger_worker as wlw
+    from aj_crew import session_ledger
+    from aj_crew.dashboard.handlers import work_ledger_worker as wlw
 
     item_id = _new_item()
     monkeypatch.setattr(session_ledger, "work_crew_log_units", lambda slot: ("u-old", "u-new"))
@@ -122,8 +122,8 @@ async def test_E5_no_live_session_at_all_falls_back_to_the_boards_newest_unit(_l
 
 @pytest.mark.asyncio
 async def test_E5_with_no_unit_anywhere_the_reason_is_named_not_silent(_log, monkeypatch):
-    from kiro_crew import session_ledger
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew import session_ledger
+    from aj_crew.dashboard.handlers import crew_workers
 
     _bound()
     monkeypatch.setattr(session_ledger, "work_crew_log_units", lambda slot: ())
@@ -139,7 +139,7 @@ async def test_E5_with_no_unit_anywhere_the_reason_is_named_not_silent(_log, mon
 
 @pytest.mark.asyncio
 async def test_E7_a_grandchild_is_steered_on_its_sub_conductors_ledger(_log):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     item_id = _bound(SUB, GRANDCHILD)
     rows = [
@@ -155,7 +155,7 @@ async def test_E7_a_grandchild_is_steered_on_its_sub_conductors_ledger(_log):
 
 @pytest.mark.asyncio
 async def test_E7_a_binding_outside_the_roots_tree_is_not_followed(_log):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     item_id = _bound("chat-9-elsewhere", GRANDCHILD)
     state = SimpleNamespace(sessions=_Sessions({f"dashboard:{GRANDCHILD}": "unit-g"}))
@@ -168,7 +168,7 @@ async def test_E7_a_binding_outside_the_roots_tree_is_not_followed(_log):
 
 
 def test_E11_a_steer_newer_than_the_question_answers_it():
-    from kiro_crew.dashboard.handlers.work_ledger_board import _is_outstanding
+    from aj_crew.dashboard.handlers.work_ledger_board import _is_outstanding
 
     item = SimpleNamespace(status="question", last_report_at="")
     asked = {"kind": "report", "status": "question", "ts": "2026-10-23T10:00:00Z"}
@@ -192,8 +192,8 @@ class _Req(dict):
 async def test_X1_a_composer_send_to_a_worker_records_the_steer_and_says_so(monkeypatch):
     from aiohttp import web
 
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.dashboard.handlers import crew_workers
 
     calls: list[tuple[str, str, str]] = []
 
@@ -226,8 +226,8 @@ async def test_X1_a_composer_send_to_a_worker_records_the_steer_and_says_so(monk
 async def test_X1_a_refused_send_records_nothing(monkeypatch):
     from aiohttp import web
 
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.dashboard.handlers import crew_workers
 
     async def fake_send(request):
         request[chat_handlers._CREW_PERSON_STEER] = (CONDUCTOR, WORKER, "x")
@@ -244,13 +244,13 @@ async def test_X1_a_refused_send_records_nothing(monkeypatch):
 
 
 def test_X1_only_the_owners_own_send_to_a_worker_is_a_steer(monkeypatch):
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.dashboard.handlers import source_providers
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.dashboard.handlers import source_providers
 
     monkeypatch.setattr(source_providers, "is_owner_dashboard_request", lambda r: True)
     root = SimpleNamespace(
         key="r",
-        agent="kirocrew-conductor",
+        agent="ajcrew-conductor",
         agent_kind="template",
         crew_mode_agent="",
         mode="",
@@ -261,7 +261,7 @@ def test_X1_only_the_owners_own_send_to_a_worker_is_a_steer(monkeypatch):
         instance_id="",
     )
     worker = SimpleNamespace(
-        **{**vars(root), "key": "w", "agent": "kirocrew-worker", "_created_by": "r"}
+        **{**vars(root), "key": "w", "agent": "ajcrew-worker", "_created_by": "r"}
     )
     state = SimpleNamespace(_slots={"r": root, "w": worker})
     assert chat_handlers._person_crew_worker_root(object(), state, worker, "") == "r"  # type: ignore[arg-type]
@@ -272,7 +272,7 @@ def test_X1_only_the_owners_own_send_to_a_worker_is_a_steer(monkeypatch):
 
 
 def test_X1_the_composer_send_refuses_an_over_long_steer_before_queueing_it():
-    from kiro_crew.dashboard.chat_api import chat_send
+    from aj_crew.dashboard.chat_api import chat_send
 
     source = open(chat_send.__file__, encoding="utf-8").read()
     body = source.split("async def _api_chat_send", 1)[1]
@@ -287,8 +287,8 @@ def test_X1_the_composer_send_refuses_an_over_long_steer_before_queueing_it():
 async def test_F5_a_queued_send_is_not_recorded_until_the_drain_delivers_it(monkeypatch):
     from aiohttp import web
 
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.dashboard.handlers import crew_workers
 
     calls: list[tuple[str, str, str]] = []
     entry: dict[str, Any] = {"id": "q1", "content": "use main"}
@@ -318,10 +318,10 @@ async def test_F5_the_drain_records_the_edited_text_once_and_a_cancel_records_no
 ):
     import asyncio
 
-    from kiro_crew.dashboard import chat_handlers  # noqa: F401  (wires the drain module)
-    from kiro_crew.dashboard.chat_handlers import CREW_STEER_QUEUE_KEY
-    from kiro_crew.dashboard.chat_turn import queue_drain
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard import chat_handlers  # noqa: F401  (wires the drain module)
+    from aj_crew.dashboard.chat_handlers import CREW_STEER_QUEUE_KEY
+    from aj_crew.dashboard.chat_turn import queue_drain
+    from aj_crew.dashboard.handlers import crew_workers
 
     calls: list[tuple[str, str, str]] = []
 
@@ -352,8 +352,8 @@ async def test_K8_a_requeued_steer_is_left_to_its_hold_on_both_routes(monkeypatc
     have delivered it, and an older entry with the same text is not this steer."""
     from aiohttp import web
 
-    from kiro_crew.dashboard import chat_delivery, chat_handlers
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard import chat_delivery, chat_handlers
+    from aj_crew.dashboard.handlers import crew_workers
 
     async def boom(*_a, **_k):
         raise AssertionError("a requeued steer must not be recorded by the route")
@@ -364,7 +364,7 @@ async def test_K8_a_requeued_steer_is_left_to_its_hold_on_both_routes(monkeypatc
     monkeypatch.setattr(crew_workers, "person_steer", boom)
     monkeypatch.setattr(chat_delivery, "steer_into_running_turn", requeued)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.session_control.containment_meta", lambda *_a, **_k: {}
+        "aj_crew.dashboard.session_control.containment_meta", lambda *_a, **_k: {}
     )
 
     # The worker's own composer: the receipt says queued, with no queue_id. The
@@ -411,12 +411,12 @@ async def test_Y2_the_main_pane_send_to_a_worker_of_a_closed_root_is_refused(mon
     from aiohttp.test_utils import TestClient, TestServer
     from chat_test_helpers import _make_state
 
-    from kiro_crew import crew_mode
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.dashboard.handlers import crew_workers, source_providers
-    from kiro_crew.dashboard.state import SlotOrigin
+    from aj_crew import crew_mode
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.dashboard.handlers import crew_workers, source_providers
+    from aj_crew.dashboard.state import SlotOrigin
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(crew_mode, "_known_roots", {"root"})
     monkeypatch.setattr(crew_mode, "persisted_parents", lambda: {})
     monkeypatch.setattr(crew_mode, "_live_cfg", lambda: None)
@@ -430,7 +430,7 @@ async def test_Y2_the_main_pane_send_to_a_worker_of_a_closed_root_is_refused(mon
     state.broadcast_ws = MagicMock()
     state.push_slots_update = MagicMock()
     worker = state.get_or_create_slot("w", origin=SlotOrigin.USER)
-    worker.agent = "kirocrew-worker"
+    worker.agent = "ajcrew-worker"
     worker._created_by = "root"
     # The root's tab is closed: no "root" slot, but it is still a known root.
     assert "root" not in state._slots
@@ -470,8 +470,8 @@ class _SteerReq(dict):
 
 
 def _steer_route(monkeypatch, delivered: dict[str, Any], queue: list[dict[str, Any]]):
-    from kiro_crew import crew_mode
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew import crew_mode
+    from aj_crew.dashboard.handlers import crew_workers
 
     calls: list[tuple[str, str, str]] = []
     worker = SimpleNamespace(key=WORKER, _app="", _queue=queue)
@@ -500,7 +500,7 @@ def _steer_route(monkeypatch, delivered: dict[str, Any], queue: list[dict[str, A
 
 @pytest.mark.asyncio
 async def test_the_panel_steer_route_loads_the_workers_window_off_the_loop_first(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     state, _calls = _steer_route(
         monkeypatch,
@@ -530,7 +530,7 @@ async def test_the_panel_steer_route_loads_the_workers_window_off_the_loop_first
 
 @pytest.mark.asyncio
 async def test_a_worker_closed_while_its_window_loads_is_not_steered(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     state, calls = _steer_route(monkeypatch, {"ok": True, "steered": True}, [])
     live = state.get_slot
@@ -553,8 +553,8 @@ async def test_a_worker_closed_while_its_window_loads_is_not_steered(monkeypatch
 
 @pytest.mark.asyncio
 async def test_G2_the_panel_steer_route_records_a_queued_steer_only_at_delivery(monkeypatch):
-    from kiro_crew.dashboard.chat_handlers import CREW_STEER_QUEUE_KEY
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.chat_handlers import CREW_STEER_QUEUE_KEY
+    from aj_crew.dashboard.handlers import crew_workers
 
     entry: dict[str, Any] = {"id": "q9", "content": "use main"}
     state, calls = _steer_route(
@@ -576,7 +576,7 @@ async def test_G2_the_panel_steer_route_records_a_queued_steer_only_at_delivery(
 
 @pytest.mark.asyncio
 async def test_G2_the_panel_steer_route_never_records_a_requeued_steer_itself(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     state, calls = _steer_route(
         monkeypatch,
@@ -603,7 +603,7 @@ async def test_G2_the_panel_steer_route_never_records_a_requeued_steer_itself(mo
 async def test_G2_the_panel_steer_route_records_a_steer_into_a_running_turn_when_read(
     monkeypatch,
 ):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     state, calls = _steer_route(
         monkeypatch,
@@ -622,7 +622,7 @@ async def test_G2_the_panel_steer_route_records_a_steer_into_a_running_turn_when
 
 @pytest.mark.asyncio
 async def test_G2_the_panel_steer_route_records_an_idle_start_in_the_background(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     state, calls = _steer_route(
         monkeypatch,
@@ -647,11 +647,11 @@ async def test_G2_the_panel_steer_route_records_an_idle_start_in_the_background(
 async def test_G6_a_restored_entry_is_never_recorded_as_the_persons_steer(monkeypatch):
     import asyncio
 
-    from kiro_crew.dashboard import chat_handlers  # noqa: F401  (wires the drain module)
-    from kiro_crew.dashboard.chat_handlers import mark_crew_steer
-    from kiro_crew.dashboard.chat_turn import queue_drain
-    from kiro_crew.dashboard.handlers import crew_workers
-    from kiro_crew.dashboard.slot_queue_repository import (
+    from aj_crew.dashboard import chat_handlers  # noqa: F401  (wires the drain module)
+    from aj_crew.dashboard.chat_handlers import mark_crew_steer
+    from aj_crew.dashboard.chat_turn import queue_drain
+    from aj_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.slot_queue_repository import (
         durable_queue_entries,
         sanitize_restored_queue,
     )
@@ -693,7 +693,7 @@ class _Owners(SimpleNamespace):
 def _started_send(monkeypatch, message: str = "use main") -> None:
     from aiohttp import web
 
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     async def fake_send(request):
         # The send itself is the composer's ordinary path; this is what it leaves.
@@ -715,8 +715,8 @@ async def test_a_stuck_crew_log_writer_cannot_hold_the_send_past_the_client_time
 ):
     import threading
 
-    from kiro_crew.crew_log import emit as crew_log_emit
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.crew_log import emit as crew_log_emit
+    from aj_crew.dashboard import chat_handlers
 
     item_id = _bound()
     # The crew-log writer is stuck: the real record path (board lock, ledger write,
@@ -752,8 +752,8 @@ async def test_a_stuck_crew_log_writer_cannot_hold_the_send_past_the_client_time
 
 @pytest.mark.asyncio
 async def test_back_to_back_steers_are_recorded_in_send_order_and_leave_no_lock(monkeypatch):
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.dashboard.handlers import crew_workers
 
     landed: list[str] = []
     delays = {"one": 0.05, "two": 0.01, "three": 0.0}
@@ -784,8 +784,8 @@ async def test_a_failed_background_record_is_logged_and_shown_to_the_owner(
 ):
     import logging
 
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.dashboard.handlers import crew_workers
 
     async def failing(state, root, worker, message, **_k):
         if fails == "raises":
@@ -811,8 +811,8 @@ async def test_a_failed_background_record_is_logged_and_shown_to_the_owner(
 
 @pytest.mark.asyncio
 async def test_a_cancelled_background_record_is_cancelled_and_not_reported(monkeypatch):
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.dashboard.handlers import crew_workers
 
     started = asyncio.Event()
 

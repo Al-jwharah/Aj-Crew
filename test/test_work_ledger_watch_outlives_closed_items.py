@@ -17,8 +17,8 @@ from unittest.mock import AsyncMock
 import pytest
 import pytest_asyncio
 
-from kiro_crew import work_ledger
-from kiro_crew.autonudge import AutoNudgeService
+from aj_crew import work_ledger
+from aj_crew.autonudge import AutoNudgeService
 
 CONDUCTOR = "chat-conductor"
 WORKER = "chat-worker"
@@ -27,7 +27,7 @@ WORKER = "chat-worker"
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch):
     """Own data home per test, so no ledger, rate or kernel file outlives it."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
 
 
 def _create(title: str = "do the thing", worker: str = WORKER) -> str:

@@ -7,7 +7,7 @@ it from, the same way ``test_swift_helper_still_accepts_fast`` pins ``--fast``.
 
 from pathlib import Path
 
-from kiro_crew import apple_speech
+from aj_crew import apple_speech
 
 
 def _stream_source() -> str:

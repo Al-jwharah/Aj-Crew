@@ -1,4 +1,4 @@
-// Screen-share request handling for the KiroCrew Electron app.
+// Screen-share request handling for the AjCrew Electron app.
 //
 // Why this exists: in a browser, navigator.mediaDevices.getDisplayMedia() shows
 // the OS picker natively. In Electron (>= 20) the renderer's call is REJECTED
@@ -39,7 +39,7 @@
 // capture visibly instead of granting screens to whoever asks.
 //
 // The embedded BROWSER PANEL never reaches this handler at all, by construction
-// rather than by any gate: it runs on the `persist:kirocrew-browser` partition,
+// rather than by any gate: it runs on the `persist:ajcrew-browser` partition,
 // which registers no display-media handler, and per this header's opening note a
 // session with no handler REJECTS the renderer's call. That partition's
 // permission handlers are additionally deny-all.

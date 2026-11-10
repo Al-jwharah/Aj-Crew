@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # ──────────────────────────────────────────────────────────────────────
-# Kiro Crew — Minimal OSS Quickstart (contributor / from-source layout)
+# Aj Crew — Minimal OSS Quickstart (contributor / from-source layout)
 #
-# Builds Kiro Crew from a local clone using only public tooling: python3 + pip
+# Builds Aj Crew from a local clone using only public tooling: python3 + pip
 # (backend) and npm + vite (frontend). No Brazil, no Builder Toolbox, no
 # internal registries.
 #
@@ -12,8 +12,8 @@
 #   curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
 #
 # Run from inside a cloned repo:
-#   git clone https://github.com/kirodotdev/KiroCrew.git
-#   cd kirocrew
+#   git clone https://github.com/Al-jwharah/Aj-Crew.git
+#   cd ajcrew
 #   bash minimal_install.sh
 #
 # Prerequisites: Python 3.12+, Node.js 22.12+ (24 LTS recommended), npm, git
@@ -63,14 +63,14 @@ done
 has node || die "Node.js not found. Install Node.js 22.12+ (24 LTS recommended, https://nodejs.org) and re-run."
 has npm  || die "npm not found. Install Node.js 22.12+ (24 LTS recommended, https://nodejs.org) and re-run."
 
-echo "👻 KiroCrew — minimal install"
+echo "👻 AjCrew — minimal install"
 echo "  Repo:    $REPO_DIR"
 echo "  Python:  $("$_py" --version 2>&1)"
 echo "  Node:    $(node --version)"
 echo ""
 
 # ── 1. Frontend build (npm + vite) ──
-# Vite emits to website/dist; setup.py copies src/kiro_crew/static/dist into
+# Vite emits to website/dist; setup.py copies src/aj_crew/static/dist into
 # the package at install time, so we stage the build there first.
 if [ -d "$REPO_DIR/website" ]; then
     echo "→ Building frontend (website/)…"
@@ -85,12 +85,12 @@ if [ -d "$REPO_DIR/website" ]; then
     ) || die "Frontend build failed. Fix the npm/vite error above and re-run."
     # Stage built assets where setup.py expects them.
     _dist_src="$REPO_DIR/website/dist"
-    _dist_dst="$REPO_DIR/src/kiro_crew/static/dist"
+    _dist_dst="$REPO_DIR/src/aj_crew/static/dist"
     if [ -d "$_dist_src" ]; then
         rm -rf "$_dist_dst"
         mkdir -p "$(dirname "$_dist_dst")"
         cp -R "$_dist_src" "$_dist_dst"
-        echo "✓ Frontend built and staged → src/kiro_crew/static/dist"
+        echo "✓ Frontend built and staged → src/aj_crew/static/dist"
     else
         echo "⚠ website/dist not found after build — dashboard assets may be missing"
     fi
@@ -101,8 +101,8 @@ echo ""
 
 # ── 2. Python venv + package install (pip) ──
 _venv="$REPO_DIR/.venv"
-# Build the venv under a umask that masks group/other WRITE so bin/kirocrew
-# and its dirs are born non-group-writable -- `kirocrew service install`
+# Build the venv under a umask that masks group/other WRITE so bin/ajcrew
+# and its dirs are born non-group-writable -- `ajcrew service install`
 # refuses to attach its AppArmor profile to a group/world-writable launcher
 # (see the matching block in cli.sh for the full rationale). OR-ing with 022
 # only ADDS write-mask bits, so a stricter caller umask is preserved.
@@ -128,17 +128,17 @@ if [ ! -d "$_venv" ] || [ ! -x "$_venv/bin/python" ]; then
     "$_py" -m venv "$_venv" || die "Failed to create venv. Try: $_py -m pip install --user virtualenv"
 fi
 
-echo "→ Installing kirocrew (pip)…"
+echo "→ Installing ajcrew (pip)…"
 "$_venv/bin/pip" install --upgrade pip setuptools wheel -q \
     || die "Failed to upgrade pip/setuptools/wheel"
 
 # Frontend is already built and staged above; tell setup.py not to rebuild it.
 if [ "$WITH_VOICE" -eq 1 ]; then
     echo "  (including voice extras)"
-    KIROCREW_SKIP_FRONTEND=1 "$_venv/bin/pip" install -e "$REPO_DIR"'[voice]' \
+    AJCREW_SKIP_FRONTEND=1 "$_venv/bin/pip" install -e "$REPO_DIR"'[voice]' \
         || die "pip install failed"
 else
-    KIROCREW_SKIP_FRONTEND=1 "$_venv/bin/pip" install -e "$REPO_DIR" \
+    AJCREW_SKIP_FRONTEND=1 "$_venv/bin/pip" install -e "$REPO_DIR" \
         || die "pip install failed"
 fi
 
@@ -173,20 +173,20 @@ echo ""
 
 # ── 4. Symlink CLI (no shell rc modification) ──
 mkdir -p "$HOME/.local/bin"
-ln -sf "$_venv/bin/kirocrew" "$HOME/.local/bin/kirocrew"
-echo "✓ Symlinked kirocrew → ~/.local/bin/kirocrew"
+ln -sf "$_venv/bin/ajcrew" "$HOME/.local/bin/ajcrew"
+echo "✓ Symlinked ajcrew → ~/.local/bin/ajcrew"
 echo ""
 
 # ── Done ──
-echo "👻 KiroCrew installed!"
+echo "👻 AjCrew installed!"
 echo ""
 echo "  Next steps:"
 echo "    1. Default agent: install Kiro CLI from https://kiro.dev/cli/"
 echo "                      then run: kiro-cli login"
 echo "       (skip this if you selected another ACP backend)"
-echo "    2. Run setup:    $HOME/.local/bin/kirocrew setup"
-echo "    3. Start it:     $HOME/.local/bin/kirocrew gateway"
-echo "       (or add ~/.local/bin to PATH and just run: kirocrew gateway)"
+echo "    2. Run setup:    $HOME/.local/bin/ajcrew setup"
+echo "    3. Start it:     $HOME/.local/bin/ajcrew gateway"
+echo "       (or add ~/.local/bin to PATH and just run: ajcrew gateway)"
 echo ""
 echo "  Optional — local vector memory (embeddings):"
 echo "    Install ollama (https://ollama.com), then:"

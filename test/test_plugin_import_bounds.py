@@ -23,8 +23,8 @@ from plugin_import_helpers import (
     _write_json,
 )
 
-from kiro_crew.apps import plugin_import
-from kiro_crew.apps.plugin_import import PluginImportError, convert_plugin_package
+from aj_crew.apps import plugin_import
+from aj_crew.apps.plugin_import import PluginImportError, convert_plugin_package
 
 
 class TestForeignManifestRetentionIsBounded:
@@ -212,7 +212,7 @@ class TestProvenanceCarriesTheFinalBoundingWarnings:
     def test_a_truncation_by_the_final_pass_reaches_the_persisted_provenance(self, tmp_path):
         import json as _json
 
-        from kiro_crew.apps import plugin_import as pi
+        from aj_crew.apps import plugin_import as pi
 
         long_description = "d" * (pi.MAX_MANIFEST_STRING_CHARS + 50)
         root = _package(tmp_path, skills="./skills", description=long_description)

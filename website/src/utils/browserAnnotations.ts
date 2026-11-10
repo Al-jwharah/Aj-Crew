@@ -15,7 +15,7 @@ import { sliceCodePoints } from './codePoints'
  *  `{ slot, files, draft }`. ChatPage uploads the files into the composer's
  *  attachments and puts `draft` into the composer text (NOT sent), so the
  *  user can add a sentence before sending. */
-export const PREVIEW_ANNOTATE_EVENT = 'kirocrew-web-preview-annotate'
+export const PREVIEW_ANNOTATE_EVENT = 'ajcrew-web-preview-annotate'
 
 export interface PreviewAnnotateDetail {
   slot: string

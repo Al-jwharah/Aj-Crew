@@ -17,10 +17,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.mcp_gateway import STUB_MODULE
-from kiro_crew.mcp_gateway import launch_approval as la
-from kiro_crew.mcp_gateway import overlay_refresh, rewriter
-from kiro_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.mcp_gateway import STUB_MODULE
+from aj_crew.mcp_gateway import launch_approval as la
+from aj_crew.mcp_gateway import overlay_refresh, rewriter
+from aj_crew.slack.gateway import GatewayOrchestrator
 
 _CMD = sys.executable
 _VAR = "KC_TEST_23761_TOKEN"
@@ -54,9 +54,9 @@ def _srv(args: list[str] | None = None, env: dict[str, str] | None = None) -> di
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
-    import kiro_crew.mcp_gateway.backend_tmp as backend_tmp
+    import aj_crew.mcp_gateway.backend_tmp as backend_tmp
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew"))
     monkeypatch.setenv(_VAR, "old")
     monkeypatch.setattr(rewriter, "forward_declared_env_enabled", lambda: True)
     scratch_root = tmp_path / "probe"
@@ -78,7 +78,7 @@ def home(tmp_path, monkeypatch):
 
 def _boot(home, stubs: frozenset[str]) -> GatewayOrchestrator:
     """Start a broker over the specs on disk, as ``_init_mcp_gateway`` does."""
-    import kiro_crew.slack.gateway as gw
+    import aj_crew.slack.gateway as gw
 
     inputs = {
         "source_dir": home.agents,
@@ -198,11 +198,11 @@ async def test_a_mute_saved_since_start_does_not_block_the_refresh(home, monkeyp
     """MCP Management changes the scope mutes at any time. A mute only removes a
     stub, so an app installed after one still gets its routed overlay, and the
     muted server stays unwrapped."""
-    from kiro_crew import mcp_discovery
+    from aj_crew import mcp_discovery
 
     store = home.tmp / "crew" / "mcp.json"
     store.parent.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setattr(mcp_discovery, "_MCP_SOURCES", ((store, "kirocrew"),))
+    monkeypatch.setattr(mcp_discovery, "_MCP_SOURCES", ((store, "ajcrew"),))
     monkeypatch.setattr(mcp_discovery, "_MCP_JSON_PATHS", None)
     _seed_store(srv=([], None, {}), other=(["-V"], None, {}))
     _spec(home.agents, "host", {"srv": _srv(), "other": _srv(["-V"])})
@@ -322,9 +322,9 @@ async def test_no_broker_means_no_rewrite(home) -> None:
 
 @pytest.mark.asyncio
 async def test_registering_an_app_with_agents_asks_for_the_refresh(monkeypatch) -> None:
-    from kiro_crew.apps import routes as routes_facade
-    from kiro_crew.apps import routes_lifecycle
-    from kiro_crew.apps.bridges import RegistrationResult
+    from aj_crew.apps import routes as routes_facade
+    from aj_crew.apps import routes_lifecycle
+    from aj_crew.apps.bridges import RegistrationResult
 
     calls: list[bool] = []
 
@@ -351,10 +351,10 @@ async def test_registration_waits_for_an_in_flight_refresh(home, monkeypatch) ->
     land them between another refresh's check and its publish."""
     import asyncio
 
-    from kiro_crew.apps import routes as routes_facade
-    from kiro_crew.apps import routes_lifecycle
-    from kiro_crew.apps.bridges import RegistrationResult
-    from kiro_crew.testing.wait import until_parked
+    from aj_crew.apps import routes as routes_facade
+    from aj_crew.apps import routes_lifecycle
+    from aj_crew.apps.bridges import RegistrationResult
+    from aj_crew.testing.wait import until_parked
 
     _seed_store(srv=([], None, {}))
     _spec(home.agents, "host", {"srv": _srv()})
@@ -415,7 +415,7 @@ async def test_a_refresh_waiting_on_a_broker_restart_reads_the_restarted_state(h
     publish overlays built from the inputs the restart replaced."""
     import asyncio
 
-    from kiro_crew.testing.wait import until_parked
+    from aj_crew.testing.wait import until_parked
 
     _seed_store(srv=([], None, {}))
     _spec(home.agents, "host", {"srv": _srv()})
@@ -458,7 +458,7 @@ async def test_the_sharing_toggle_restarts_the_broker_under_the_refresh_lock(mon
     monkeypatch.setattr(orch, "_stop_mcp_broker", _stop)
     monkeypatch.setattr(orch, "_init_mcp_gateway", _init)
     monkeypatch.setattr(
-        "kiro_crew.config.loader.KiroCrewConfig.load", staticmethod(lambda: orch._cfg)
+        "aj_crew.config.loader.AjCrewConfig.load", staticmethod(lambda: orch._cfg)
     )
 
     await orch._apply_mcp_gateway_enabled(False)

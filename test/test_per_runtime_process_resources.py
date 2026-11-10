@@ -24,7 +24,7 @@ from unittest.mock import patch
 
 import pytest
 
-import kiro_crew.sandbox as sb
+import aj_crew.sandbox as sb
 
 
 def _wrap(argv=None):
@@ -39,17 +39,17 @@ def _wrap(argv=None):
     sb._CGROUP_WARNED = False
     try:
         with (
-            patch("kiro_crew.sandbox._probe_cgroup_scope", return_value=(True, "ok")),
+            patch("aj_crew.sandbox._probe_cgroup_scope", return_value=(True, "ok")),
             patch(
-                "kiro_crew.platform_compat.trusted_system_bin",
+                "aj_crew.platform_compat.trusted_system_bin",
                 return_value="/usr/bin/systemd-run",
             ),
-            patch("kiro_crew.sandbox._reconcile_slice_memory_high_off_thread"),
+            patch("aj_crew.sandbox._reconcile_slice_memory_high_off_thread"),
             patch(
-                "kiro_crew.sandbox._cgroup_limits_from_config",
+                "aj_crew.sandbox._cgroup_limits_from_config",
                 return_value=(8192, 8192, 50, 0),
             ),
-            patch("kiro_crew.sandbox._cpu_controller_delegated", return_value=False),
+            patch("aj_crew.sandbox._cpu_controller_delegated", return_value=False),
         ):
             return sb.cgroup_scope_argv(list(argv or ["kiro-cli", "chat"]))
     finally:
@@ -74,7 +74,7 @@ class TestScopeUnitName:
         two unjoinable and the naming would buy nothing.
         """
         name = sb.scope_unit_name("a1b2c3d4e5f6a7b8")
-        assert name == "kirocrew-rt-a1b2c3d4e5f6a7b8.scope"
+        assert name == "ajcrew-rt-a1b2c3d4e5f6a7b8.scope"
         assert "a1b2c3d4e5f6a7b8" in name
 
     def test_distinct_spawns_get_distinct_names(self):
@@ -117,7 +117,7 @@ class TestScopeIsNamed:
         exactly that distinction is where a defect would sit.
         """
         argv = sb.name_scope_unit(_wrap(), token)
-        assert _unit_arg(argv) == f"kirocrew-rt-{token}.scope"
+        assert _unit_arg(argv) == f"ajcrew-rt-{token}.scope"
         assert argv.index("--unit") < argv.index("--")
 
     def test_the_wrapped_command_is_untouched(self):
@@ -177,7 +177,7 @@ def _runtime_family_texts() -> list[str]:
     """runtime.py and its owner modules (runtime_*.py), which hold code that was its own."""
     import sys
 
-    from kiro_crew.acp import runtime
+    from aj_crew.acp import runtime
 
     return [
         Path(sys.modules[name].__file__).read_text(encoding="utf-8")
@@ -207,9 +207,9 @@ class TestRuntimeNamesItsScope:
 
         import acp_launch_capture as capture_mod
 
-        from kiro_crew.acp import runtime as runtime_mod
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_CODEX
-        from kiro_crew.constants import KIROCREW_RUNTIME_AGENT_ENV, KIROCREW_SPAWN_INSTANCE_ENV
+        from aj_crew.acp import runtime as runtime_mod
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_CODEX
+        from aj_crew.constants import AJCREW_RUNTIME_AGENT_ENV, AJCREW_SPAWN_INSTANCE_ENV
 
         named_argv: list[str] = []
         instances: list[str] = []
@@ -226,8 +226,8 @@ class TestRuntimeNamesItsScope:
 
             def _mark(env):
                 request.env_after_marker(env)
-                instances.append(env[KIROCREW_SPAWN_INSTANCE_ENV])
-                agents.append(env.get(KIROCREW_RUNTIME_AGENT_ENV, ""))
+                instances.append(env[AJCREW_SPAWN_INSTANCE_ENV])
+                agents.append(env.get(AJCREW_RUNTIME_AGENT_ENV, ""))
 
             observed = dataclasses.replace(request, scope_argv=_scope, env_after_marker=_mark)
             return await real_launch(host, observed, tools)
@@ -290,9 +290,9 @@ class TestRuntimeNamesItsScope:
         wrapped in a scope or not.
         """
         _argv, _instance, _reported, agent = self._launch(tmp_path / "wrapped", wrapped=True)
-        assert agent == "kirocrew"
+        assert agent == "ajcrew"
         _argv, _instance, _reported, agent = self._launch(tmp_path / "bare", wrapped=False)
-        assert agent == "kirocrew"
+        assert agent == "ajcrew"
 
     def test_the_runtime_logs_its_scope_name_beside_its_pid(self):
         """The scope name reaches a durable record, not only the live process.
@@ -376,7 +376,7 @@ class TestOverlayIsKeyedByWorkDir:
         session: two sessions on one runtime share the work directory and
         therefore this file, and kiro-cli reads it at spawn.
         """
-        from kiro_crew.providers.acp import _read_cli_overlay, _write_cli_overlay
+        from aj_crew.providers.acp import _read_cli_overlay, _write_cli_overlay
 
         _write_cli_overlay(tmp_path, "claude-sonnet-4", "high")
         written = tmp_path / ".kiro" / "settings" / "cli.json"
@@ -386,7 +386,7 @@ class TestOverlayIsKeyedByWorkDir:
 
     def test_a_second_write_for_one_model_replaces_the_first(self, tmp_path):
         """One entry per model per work dir: the last writer is what a respawn reads."""
-        from kiro_crew.providers.acp import _read_cli_overlay, _write_cli_overlay
+        from aj_crew.providers.acp import _read_cli_overlay, _write_cli_overlay
 
         _write_cli_overlay(tmp_path, "claude-sonnet-4", "high")
         _write_cli_overlay(tmp_path, "claude-sonnet-4", "low")
@@ -402,11 +402,11 @@ class TestChatLogIsPerProcess:
         kiro-cli log is the failure the pin exists to prevent. What it cannot fix
         is several sessions on ONE process, which share the file by construction.
         """
-        from kiro_crew import agent_scratch
+        from aj_crew import agent_scratch
 
         own, shared = tmp_path / "own", tmp_path / "shared"
         env = agent_scratch.scratch_env(own, shared=shared)
-        assert env["KIROCREW_SCRATCH"] == str(shared)
+        assert env["AJCREW_SCRATCH"] == str(shared)
         assert env["TMPDIR"] == str(own)
         if agent_scratch._CAN_CAP_LOGS:
             assert env[agent_scratch.KIRO_CHAT_LOG_FILE_ENV].startswith(str(own))

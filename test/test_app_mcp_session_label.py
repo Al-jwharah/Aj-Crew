@@ -1,13 +1,13 @@
-"""An MCP server Kiro Crew does not own can opt into a per-session identity LABEL.
+"""An MCP server Aj Crew does not own can opt into a per-session identity LABEL.
 
 The reported gap: a server an app installs into the agent spec is launched by the
 host straight from that spec, so on the shared kiro-cli runtime it cannot tell which
 session it was started for (the process environment names whichever session claimed
 the process, and the signed pid mapping is written per turn, after the session's
-servers have already started). The opt-in, ``"x-kirocrew-session-label": true`` on
-the server's ``mcpServers`` entry, hands that server ``KIROCREW_SESSION_LABEL`` for
+servers have already started). The opt-in, ``"x-ajcrew-session-label": true`` on
+the server's ``mcpServers`` entry, hands that server ``AJCREW_SESSION_LABEL`` for
 the session it serves, and nothing else: not the session token, not the port, not
-``KIROCREW_SESSION_KEY``.
+``AJCREW_SESSION_KEY``.
 
 The marker and the variable are spelled as literals rather than imported, so the
 runtime and KAS tests below fail on an assertion, not only on an import, against a
@@ -20,10 +20,10 @@ import json
 
 import pytest
 
-from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
 
-MARKER = "x-kirocrew-session-label"
-LABEL = "KIROCREW_SESSION_LABEL"
+MARKER = "x-ajcrew-session-label"
+LABEL = "AJCREW_SESSION_LABEL"
 KEY = "dashboard:chat-label-1"
 
 APP = {
@@ -34,11 +34,11 @@ APP = {
 }
 
 
-def _spec(entry=None, *, tools=("@kirocrew-core", "@notes:notes")):
+def _spec(entry=None, *, tools=("@ajcrew-core", "@notes:notes")):
     return {
         "tools": list(tools),
         "mcpServers": {
-            "kirocrew-core": {"command": "test-crew", "args": ["mcp-core"]},
+            "ajcrew-core": {"command": "test-crew", "args": ["mcp-core"]},
             "notes:notes": dict(APP if entry is None else entry),
         },
     }
@@ -51,7 +51,7 @@ def _env(element):
 @pytest.fixture
 def quiet_sources(monkeypatch):
     """No settings files, no registry mode, no builtin apps: the spec alone decides."""
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
     monkeypatch.setattr(session_mcp, "_global_settings", lambda **kwargs: {})
     monkeypatch.setattr(session_mcp, "_registry_mode", lambda: False)
@@ -61,7 +61,7 @@ def quiet_sources(monkeypatch):
 
 
 def _label_elements(spec, tmp_path, session_key=KEY, existing=()):
-    from kiro_crew.acp.session_label import kiro_session_label_elements
+    from aj_crew.acp.session_label import kiro_session_label_elements
 
     return kiro_session_label_elements(
         "notes--agent",
@@ -88,8 +88,8 @@ class TestKiroLabelElements:
 
         names = set(_env(element))
         assert STUB_SESSION_TOKEN_ENV not in names
-        assert "KIROCREW_SESSION_KEY" not in names
-        assert "KIROCREW_PORT" not in names
+        assert "AJCREW_SESSION_KEY" not in names
+        assert "AJCREW_PORT" not in names
         assert MARKER not in element
 
     def test_a_declared_value_cannot_shadow_the_label(self, quiet_sources, tmp_path):
@@ -109,7 +109,7 @@ class TestKiroLabelElements:
         assert _label_elements(_spec(), tmp_path, session_key="") == []
 
     def test_an_ungranted_server_is_not_mounted(self, quiet_sources, tmp_path):
-        assert _label_elements(_spec(tools=("@kirocrew-core",)), tmp_path) == []
+        assert _label_elements(_spec(tools=("@ajcrew-core",)), tmp_path) == []
 
     def test_a_name_already_in_the_array_is_not_redeclared(self, quiet_sources, tmp_path):
         """A broker stub (shared across sessions) or Crew's own element keeps its slot."""
@@ -117,7 +117,7 @@ class TestKiroLabelElements:
 
     def test_crews_own_servers_never_take_the_label_path(self, quiet_sources, tmp_path):
         spec = _spec()
-        spec["mcpServers"]["kirocrew-core"][MARKER] = True
+        spec["mcpServers"]["ajcrew-core"][MARKER] = True
         names = [e["name"] for e in _label_elements(spec, tmp_path)]
         assert names == ["notes:notes"]
 
@@ -177,13 +177,13 @@ class TestKiroLabelElements:
         self, quiet_sources, tmp_path, monkeypatch
     ):
         """An element launches outside kiro-cli's workspace trust, so a repo cannot pick it."""
-        from kiro_crew import agent as agent_mod
-        from kiro_crew.acp.session_label import kiro_session_label_elements
+        from aj_crew import agent as agent_mod
+        from aj_crew.acp.session_label import kiro_session_label_elements
 
         user_agents = tmp_path / "home-agents"
         user_agents.mkdir()
         monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", user_agents)
-        from kiro_crew.acp import session_mcp
+        from aj_crew.acp import session_mcp
 
         monkeypatch.setattr(session_mcp, "ensure_agent_materialized", lambda _a: True)
         repo_cmd = "/nonexistent/label-trust/repo-launcher"
@@ -207,13 +207,13 @@ class TestKiroLabelElements:
         self, quiet_sources, tmp_path, monkeypatch
     ):
         """kiro-cli runs the workspace's server; a user-level element must not replace it."""
-        from kiro_crew import agent as agent_mod
-        from kiro_crew.acp.session_label import kiro_session_label_elements
+        from aj_crew import agent as agent_mod
+        from aj_crew.acp.session_label import kiro_session_label_elements
 
         user_agents = tmp_path / "home-agents"
         user_agents.mkdir()
         monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", user_agents)
-        from kiro_crew.acp import session_mcp
+        from aj_crew.acp import session_mcp
 
         monkeypatch.setattr(session_mcp, "ensure_agent_materialized", lambda _a: True)
         user = {**_spec(), "name": "notes--agent"}
@@ -256,12 +256,12 @@ async def test_the_shared_kiro_runtime_sends_the_label_on_the_sessions_own_eleme
     stays on Crew's own server only, and no resolver reads the label as identity."""
     from test_acp_runtime import _make_runtime
 
-    from kiro_crew import mcp_caller
-    from kiro_crew.acp import session_handle
-    from kiro_crew.acp.types import METHOD_SESSION_LOAD, METHOD_SESSION_NEW
+    from aj_crew import mcp_caller
+    from aj_crew.acp import session_handle
+    from aj_crew.acp.types import METHOD_SESSION_LOAD, METHOD_SESSION_NEW
 
     spec = _spec()
-    core = spec["mcpServers"]["kirocrew-core"]
+    core = spec["mcpServers"]["ajcrew-core"]
     monkeypatch.setattr(quiet_sources, "_agent_spec_for", lambda *a, **k: spec)
     monkeypatch.setattr(
         quiet_sources, "_session_spec_and_snapshot_for", lambda *a, **k: (spec, None)
@@ -275,7 +275,7 @@ async def test_the_shared_kiro_runtime_sends_the_label_on_the_sessions_own_eleme
     async def send(method, params, timeout=None):
         if method in (METHOD_SESSION_NEW, METHOD_SESSION_LOAD):
             sent.append(params)
-        return {"sessionId": "sid-label", "modes": {"currentModeId": "kirocrew"}}
+        return {"sessionId": "sid-label", "modes": {"currentModeId": "ajcrew"}}
 
     monkeypatch.setattr(runtime, "_send_and_await", send)
     if resume:
@@ -285,11 +285,11 @@ async def test_the_shared_kiro_runtime_sends_the_label_on_the_sessions_own_eleme
 
     servers = {item["name"]: item for item in sent[0]["mcpServers"]}
     assert _env(servers["notes:notes"]) == {"APP_MODE": "chat", LABEL: KEY}
-    assert STUB_SESSION_TOKEN_ENV in _env(servers["kirocrew-core"])
-    assert LABEL not in _env(servers["kirocrew-core"])
+    assert STUB_SESSION_TOKEN_ENV in _env(servers["ajcrew-core"])
+    assert LABEL not in _env(servers["ajcrew-core"])
 
     # The label is a name, not a credential: nothing that resolves identity reads it.
-    for name in (STUB_SESSION_TOKEN_ENV, "KIROCREW_SESSION_KEY", "KIROCREW_HOST_PID"):
+    for name in (STUB_SESSION_TOKEN_ENV, "AJCREW_SESSION_KEY", "AJCREW_HOST_PID"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv(LABEL, KEY)
     own = mcp_caller.resolve_own_identity(consult_protected_binding=False, skip_pid_mapping=True)
@@ -328,11 +328,11 @@ async def test_a_pool_session_with_no_owner_yet_starts_its_servers_unlabelled(
 ):
     from test_acp_runtime import _make_runtime
 
-    from kiro_crew.acp import session_handle
-    from kiro_crew.acp.types import METHOD_SESSION_NEW
+    from aj_crew.acp import session_handle
+    from aj_crew.acp.types import METHOD_SESSION_NEW
 
     spec = _spec()
-    core = spec["mcpServers"]["kirocrew-core"]
+    core = spec["mcpServers"]["ajcrew-core"]
     monkeypatch.setattr(quiet_sources, "_agent_spec_for", lambda *a, **k: spec)
     monkeypatch.setattr(
         quiet_sources, "_session_spec_and_snapshot_for", lambda *a, **k: (spec, None)
@@ -345,7 +345,7 @@ async def test_a_pool_session_with_no_owner_yet_starts_its_servers_unlabelled(
     async def send(method, params, timeout=None):
         if method == METHOD_SESSION_NEW:
             sent.append(params)
-        return {"sessionId": "sid-pool", "modes": {"currentModeId": "kirocrew"}}
+        return {"sessionId": "sid-pool", "modes": {"currentModeId": "ajcrew"}}
 
     monkeypatch.setattr(runtime, "_send_and_await", send)
     await runtime.create_session(session_key="")
@@ -359,11 +359,11 @@ class TestKasProjection:
     def _project(self, entry, session_key=KEY):
         from kas_agents_helpers import _spec as kas_spec
 
-        from kiro_crew.acp.kas_agents import to_client_custom_agent
+        from aj_crew.acp.kas_agents import to_client_custom_agent
 
         spec = kas_spec(
-            tools=["@kirocrew-core", "@notes:notes"],
-            mcpServers={"kirocrew-core": {"command": "x"}, "notes:notes": entry},
+            tools=["@ajcrew-core", "@notes:notes"],
+            mcpServers={"ajcrew-core": {"command": "x"}, "notes:notes": entry},
         )
         return to_client_custom_agent("a", spec, "p", session_key=session_key)["mcpServers"]
 
@@ -380,15 +380,15 @@ class TestKasProjection:
         out = self._project({**APP, "env": {"API_TOKEN": "s3cr3t"}})
         notes = out["notes:notes"]
         # Opting in must not cost the server its env: the relay still ran.
-        assert "kiro_crew.kas_env_shim" in notes["args"]
+        assert "aj_crew.kas_env_shim" in notes["args"]
         assert notes["env"][LABEL] == KEY
-        assert set(notes["env"]) <= {LABEL, "KIROCREW_HOME"}
+        assert set(notes["env"]) <= {LABEL, "AJCREW_HOME"}
         assert MARKER not in notes
         assert "s3cr3t" not in str(out)
 
     def test_a_declared_value_never_reaches_the_launch_snapshot(self, monkeypatch):
         """The launcher merges its snapshot over the label, so a declared one would win."""
-        from kiro_crew.acp import kas_env_launch
+        from aj_crew.acp import kas_env_launch
 
         handed = []
         real = kas_env_launch.relay_withheld_env
@@ -414,6 +414,6 @@ class TestKasProjection:
 
     def test_a_managed_server_keeps_its_own_identity_not_a_label(self):
         out = self._project(dict(APP))
-        core = out["kirocrew-core"].get("env", {})
-        assert core.get("KIROCREW_SESSION_KEY") == KEY
+        core = out["ajcrew-core"].get("env", {})
+        assert core.get("AJCREW_SESSION_KEY") == KEY
         assert LABEL not in core

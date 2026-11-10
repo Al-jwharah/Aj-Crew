@@ -18,13 +18,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from acp_runtime_helpers import _bounded, _make_runtime, _register
 
-from kiro_crew import webhooks
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp import runtime as runtime_mod
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.mcp_session_report import McpSessionReport
-from kiro_crew.acp.runtime import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew import webhooks
+from aj_crew.acp import client as client_mod
+from aj_crew.acp import runtime as runtime_mod
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.mcp_session_report import McpSessionReport
+from aj_crew.acp.runtime import AcpSessionHandle
+from aj_crew.acp.types import (
     ACP_BACKEND_KIRO,
     EVENT_COMPLETE,
     EVENT_MCP_SERVER_INIT_FAILURE,
@@ -33,9 +33,9 @@ from kiro_crew.acp.types import (
     AcpEvent,
     JsonRpcMessage,
 )
-from kiro_crew.agent_sdk import mcp_problems
-from kiro_crew.dashboard.handlers import hooks as H
-from kiro_crew.testing.wait import await_until
+from aj_crew.agent_sdk import mcp_problems
+from aj_crew.dashboard.handlers import hooks as H
+from aj_crew.testing.wait import await_until
 
 _SPEC = {"mcpServers": {"atlassian": {"url": "x"}, "azure-devops": {"command": "node"}}}
 
@@ -73,7 +73,7 @@ def test_declared_servers_skip_disabled_ones_and_survive_until_the_next_session(
 
 
 def test_servers_past_the_cap_are_counted_and_never_read_as_ready():
-    from kiro_crew.acp.mcp_session_report import BUCKET_CAP
+    from aj_crew.acp.mcp_session_report import BUCKET_CAP
 
     report = McpSessionReport()
     report.begin_session([])
@@ -111,7 +111,7 @@ def test_the_runtime_records_the_spec_servers_on_a_host_that_reports_them():
     handle = AcpSessionHandle("sA", q["sA"], rt)
     handle.mcp_session_report().begin_session([])
 
-    rt._guard_unresolved_mcp_refs(handle, _SPEC, "kirocrew", [])
+    rt._guard_unresolved_mcp_refs(handle, _SPEC, "ajcrew", [])
 
     assert handle.mcp_session_report().declared == ("atlassian", "azure-devops")
 
@@ -119,15 +119,15 @@ def test_the_runtime_records_the_spec_servers_on_a_host_that_reports_them():
 def test_the_kas_runtime_declares_the_spec_servers_its_wire_array_carries():
     """KAS reports each wire server in ``_kiro/mcp/status``, so a cron waits for
     them; a spec server Crew held back never reports and is not waited for."""
-    from kiro_crew.acp.runtime import AcpRuntime
-    from kiro_crew.acp.types import ACP_BACKEND_KAS
+    from aj_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.types import ACP_BACKEND_KAS
 
     rt = AcpRuntime(work_dir="/tmp", acp_backend=ACP_BACKEND_KAS)
     q = _register(rt, "sA")
     handle = AcpSessionHandle("sA", q["sA"], rt)
     handle.mcp_session_report().begin_session([])
 
-    rt._guard_unresolved_mcp_refs(handle, _SPEC, "kirocrew", [{"name": "azure-devops"}])
+    rt._guard_unresolved_mcp_refs(handle, _SPEC, "ajcrew", [{"name": "azure-devops"}])
 
     assert handle.mcp_session_report().declared == ("azure-devops",)
 
@@ -136,20 +136,20 @@ def test_the_kas_runtime_declares_the_spec_servers_its_active_custom_agent_keeps
     """A third-party server stays in the active agent's ``mcpServers`` on
     session/new rather than the wire array; KAS starts and reports it, so a cron
     waits for it too. Another agent's block delivers nothing to this session."""
-    from kiro_crew.acp.runtime import AcpRuntime
-    from kiro_crew.acp.types import ACP_BACKEND_KAS
+    from aj_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.types import ACP_BACKEND_KAS
 
     rt = AcpRuntime(work_dir="/tmp", acp_backend=ACP_BACKEND_KAS)
     q = _register(rt, "sA")
     handle = AcpSessionHandle("sA", q["sA"], rt)
     handle.mcp_session_report().begin_session([])
-    handle.kas_projected_agent = "kirocrew"
+    handle.kas_projected_agent = "ajcrew"
     handle.kas_registered_agents = [
         {"id": "other", "mcpServers": {"azure-devops": {}}},
-        {"id": "kirocrew", "mcpServers": {"atlassian": {"url": "x"}}},
+        {"id": "ajcrew", "mcpServers": {"atlassian": {"url": "x"}}},
     ]
 
-    rt._guard_unresolved_mcp_refs(handle, _SPEC, "kirocrew", [])
+    rt._guard_unresolved_mcp_refs(handle, _SPEC, "ajcrew", [])
 
     assert handle.mcp_session_report().declared == ("atlassian",)
 
@@ -162,13 +162,13 @@ def test_the_runtime_records_nothing_when_it_expects_no_mcp_reports():
     handle = AcpSessionHandle("sA", q["sA"], rt)
     handle.mcp_session_report().begin_session([])
 
-    rt._guard_unresolved_mcp_refs(handle, _SPEC, "kirocrew", [])
+    rt._guard_unresolved_mcp_refs(handle, _SPEC, "ajcrew", [])
 
     assert handle.mcp_session_report().declared == ()
 
 
 def test_the_client_records_the_spec_servers_only_on_a_reporting_host(tmp_path):
-    from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
+    from aj_crew.acp.types import ACP_BACKEND_CLAUDE
 
     kiro = AcpClient(work_dir=tmp_path)
     kiro._mcp_ref_spec = _SPEC
@@ -196,7 +196,7 @@ def _global_mcp_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, servers: d
     (home / "settings" / "mcp.json").write_text(
         json.dumps({"mcpServers": servers}), encoding="utf-8"
     )
-    monkeypatch.setattr("kiro_crew.agent._KIRO_MCP_JSON", home / "settings" / "mcp.json")
+    monkeypatch.setattr("aj_crew.agent._KIRO_MCP_JSON", home / "settings" / "mcp.json")
 
 
 def test_the_report_also_waits_for_the_servers_named_from_mcp_json():
@@ -212,7 +212,7 @@ def test_the_report_also_waits_for_the_servers_named_from_mcp_json():
 def test_the_client_waits_for_a_server_only_the_global_mcp_json_defines(tmp_path, monkeypatch):
     _global_mcp_json(tmp_path, monkeypatch, {"slow": {"command": "npx"}})
     monkeypatch.setattr(client_mod, "agent_spec_snapshot", lambda _a, **_k: dict(_OPTED_IN))
-    client = AcpClient(work_dir=tmp_path / "work", agent="kirocrew")
+    client = AcpClient(work_dir=tmp_path / "work", agent="ajcrew")
 
     client._prepare_spawn_workspace()
     client._mcp_report.begin_session([])
@@ -228,14 +228,14 @@ def test_the_runtime_waits_for_a_server_only_the_global_mcp_json_defines(tmp_pat
     monkeypatch.setattr(runtime_mod, "agent_spec_snapshot", lambda _a, **_k: dict(_OPTED_IN))
     monkeypatch.setattr(runtime_mod, "pooled_session_servers", lambda *_a, **_k: [])
     servers, spec, mcp_json = runtime_mod._pooled_session_servers_and_ref_spec(
-        None, "kirocrew", ACP_BACKEND_KIRO, tmp_path / "work"
+        None, "ajcrew", ACP_BACKEND_KIRO, tmp_path / "work"
     )
     rt, _, _ = _make_runtime()
     q = _register(rt, "sA")
     handle = AcpSessionHandle("sA", q["sA"], rt)
     handle.mcp_session_report().begin_session(servers)
 
-    rt._guard_unresolved_mcp_refs(handle, spec, "kirocrew", servers, mcp_json)
+    rt._guard_unresolved_mcp_refs(handle, spec, "ajcrew", servers, mcp_json)
 
     assert handle.mcp_session_report().declared_unreported() == ("slow",)
 
@@ -247,7 +247,7 @@ def test_without_the_opt_in_the_global_mcp_json_is_not_waited_for(tmp_path, monk
         "agent_spec_snapshot",
         lambda _a, **_k: {**_OPTED_IN, "includeMcpJson": False},
     )
-    client = AcpClient(work_dir=tmp_path / "work", agent="kirocrew")
+    client = AcpClient(work_dir=tmp_path / "work", agent="ajcrew")
 
     client._prepare_spawn_workspace()
     client._mcp_report.begin_session([])
@@ -284,8 +284,8 @@ async def test_handle_holds_the_first_prompt_for_a_slow_declared_server():
 
 @pytest.mark.asyncio
 async def test_handle_declared_wait_counts_an_owed_compaction_terminal():
-    from kiro_crew.acp import stale_compaction
-    from kiro_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
+    from aj_crew.acp import stale_compaction
+    from aj_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
 
     rt, _, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -406,7 +406,7 @@ class _FakeClient:
         self._slow_reports = slow_reports
         self.waits: list[float] = []
         self.prompted_with_tools: bool | None = None
-        self._agent = "kirocrew"
+        self._agent = "ajcrew"
         self._model = "test-model"
 
     def mcp_session_report(self) -> McpSessionReport:
@@ -443,7 +443,7 @@ def wired(tmp_path, monkeypatch):
     monkeypatch.setattr(webhooks, "config_dir", lambda: Path(tmp_path))
     monkeypatch.setattr(H, "_HOOK_STORE_PATH", Path(tmp_path) / "hooks.json")
     monkeypatch.setattr(H, "_sel", lambda: MagicMock())
-    from kiro_crew.dashboard.handlers import usage
+    from aj_crew.dashboard.handlers import usage
 
     monkeypatch.setattr(usage, "_write_token_record", lambda *_a, **_k: None)
     H._reset_hook_inflight()
@@ -509,7 +509,7 @@ def test_degraded_is_a_recordable_outcome():
 
 
 def _cron_gateway(client: _FakeClient):
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     gw = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gw.sessions = MagicMock()
@@ -537,7 +537,7 @@ def _cron_gateway(client: _FakeClient):
 
 
 def _run_cron(client: _FakeClient, *, sequence: list[str] | None = None):
-    from kiro_crew.cron import CronJob, CronSchedule
+    from aj_crew.cron import CronJob, CronSchedule
 
     job = CronJob(
         id="j1",
@@ -562,8 +562,8 @@ def _run_cron(client: _FakeClient, *, sequence: list[str] | None = None):
 
     captured_cb = None
     with (
-        patch("kiro_crew.slack.gateway.stream_and_collect", fake_stream),
-        patch("kiro_crew.slack.gateway.CronService") as mock_cron_cls,
+        patch("aj_crew.slack.gateway.stream_and_collect", fake_stream),
+        patch("aj_crew.slack.gateway.CronService") as mock_cron_cls,
     ):
 
         def capture_cron(on_job=None, **kw):
@@ -602,7 +602,7 @@ def test_a_cron_run_still_missing_a_server_names_it_in_the_result():
 
 def test_a_sequence_cron_keeps_an_early_steps_missing_server_note():
     """The next step's reply replaces result_text; the stored result keeps the note."""
-    job = _run_cron(_FakeClient(slow_reports=False), sequence=["kirocrew", "kirocrew"])
+    job = _run_cron(_FakeClient(slow_reports=False), sequence=["ajcrew", "ajcrew"])
 
     assert "azure-devops" in job.last_result
     assert job.last_result.endswith("the second answer")
@@ -660,14 +660,14 @@ def workflow_stream(monkeypatch):
         waits.append(list(provider.waits))
         return "the agent answer"
 
-    monkeypatch.setattr("kiro_crew.workflows.agent_exec.stream_and_collect", fake_stream)
-    monkeypatch.setattr("kiro_crew.workflows.agent_pool.stream_and_collect", fake_stream)
+    monkeypatch.setattr("aj_crew.workflows.agent_exec.stream_and_collect", fake_stream)
+    monkeypatch.setattr("aj_crew.workflows.agent_pool.stream_and_collect", fake_stream)
     return waits
 
 
 @pytest.mark.asyncio
 async def test_a_workflow_step_waits_on_a_new_session_only(workflow_stream):
-    from kiro_crew.workflows.agent_exec import build_agent_fn
+    from aj_crew.workflows.agent_exec import build_agent_fn
 
     client = _WorkflowClient()
     agent_fn = build_agent_fn(_WorkflowSessions(client), run_id="wf1")
@@ -680,7 +680,7 @@ async def test_a_workflow_step_waits_on_a_new_session_only(workflow_stream):
 
 @pytest.mark.asyncio
 async def test_a_pooled_workflow_step_waits_on_each_fresh_conversation(workflow_stream):
-    from kiro_crew.workflows.agent_pool import build_pooled_agent_fn
+    from aj_crew.workflows.agent_pool import build_pooled_agent_fn
 
     client = _WorkflowClient()
     agent_fn, pool = build_pooled_agent_fn(
@@ -697,7 +697,7 @@ async def test_a_pooled_workflow_step_waits_on_each_fresh_conversation(workflow_
 
 @pytest.mark.asyncio
 async def test_an_unpooled_workflow_chain_waits_on_its_new_session_only(workflow_stream):
-    from kiro_crew.workflows.agent_pool import build_pooled_agent_fn
+    from aj_crew.workflows.agent_pool import build_pooled_agent_fn
 
     client = _WorkflowClient()
     agent_fn, pool = build_pooled_agent_fn(_WorkflowSessions(client), run_id="wf3")
@@ -715,7 +715,7 @@ async def test_an_unpooled_workflow_chain_waits_on_its_new_session_only(workflow
 
 
 async def _heartbeat_result(client: _FakeClient, monkeypatch, *, is_new: bool = True) -> str:
-    import kiro_crew.slack.gateway as gw_mod
+    import aj_crew.slack.gateway as gw_mod
 
     orch = gw_mod.GatewayOrchestrator.__new__(gw_mod.GatewayOrchestrator)
     orch.sessions = MagicMock()

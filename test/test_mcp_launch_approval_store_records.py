@@ -23,7 +23,7 @@ from mcp_launch_approval_helpers import (
     _target_spec,
 )
 
-from kiro_crew.mcp_gateway import rewriter
+from aj_crew.mcp_gateway import rewriter
 
 #: Opts this module out of the conftest fixture that approves every gatewayd launch.
 ENFORCE_LAUNCH_APPROVAL = True
@@ -122,7 +122,7 @@ def test_an_over_record_cap_stem_is_absent_from_every_structure(tmp_path):
         derived_env_hash=env_hash,
     )
     _kept, dropped = mod.filter_target_env(
-        {"KIROCREW_MCP_TARGET_OVERFLOW": _target_spec(_ATTACK_CMD, "-c", "id")}, approvals
+        {"AJCREW_MCP_TARGET_OVERFLOW": _target_spec(_ATTACK_CMD, "-c", "id")}, approvals
     )
     assert dropped == ["OVERFLOW"]
     populations = (
@@ -203,7 +203,7 @@ def test_a_recorded_approval_never_lets_a_credential_vendor_spawn(vendor):
     sandbox. Both gateway-side checks refuse it -- the target filter that builds
     gatewayd's env and the per-spawn ``admits_launch`` -- while the same approval
     shape still admits an ordinary server, so the refusal is the denylist's."""
-    from kiro_crew.mcp_gateway.hashing import hash_command
+    from aj_crew.mcp_gateway.hashing import hash_command
 
     mod = _approval_module()
     assert mod is not None
@@ -216,12 +216,12 @@ def test_a_recorded_approval_never_lets_a_credential_vendor_spawn(vendor):
 
     kept, dropped = mod.filter_target_env(
         {
-            f"KIROCREW_MCP_TARGET_{stem}": _target_spec(_APPROVED_CMD),
-            "KIROCREW_MCP_TARGET_SRV": _target_spec(_APPROVED_CMD),
+            f"AJCREW_MCP_TARGET_{stem}": _target_spec(_APPROVED_CMD),
+            "AJCREW_MCP_TARGET_SRV": _target_spec(_APPROVED_CMD),
         },
         approvals,
     )
-    assert list(kept) == ["KIROCREW_MCP_TARGET_SRV"]
+    assert list(kept) == ["AJCREW_MCP_TARGET_SRV"]
     assert dropped == [stem]
     # Not a refusal the person can approve away: nothing is waiting on them.
     assert stem not in approvals.refused

@@ -15,19 +15,19 @@ import typing
 from hypothesis import given
 from hypothesis import strategies as st
 
-from kiro_crew.config import schema as _schema_module
-from kiro_crew.config.loader import (
+from aj_crew.config import schema as _schema_module
+from aj_crew.config.loader import (
     AgentConfig,
     DashboardConfig,
-    KiroCrewAgentConfig,
-    KiroCrewConfig,
+    AjCrewAgentConfig,
+    AjCrewConfig,
     MemoryConfig,
     MemoryStoreConfig,
     SessionConfig,
     SlackConfig,
     WorkspaceConfig,
 )
-from kiro_crew.config.schema import (
+from aj_crew.config.schema import (
     JSON_SCHEMA,
     SCHEMA_REGISTRY,
     ConfigEntry,
@@ -37,13 +37,13 @@ from kiro_crew.config.schema import (
 # Helpers
 
 ALL_CONFIG_CLASSES: list[type] = [
-    KiroCrewConfig,
+    AjCrewConfig,
     AgentConfig,
     SessionConfig,
     MemoryConfig,
     SlackConfig,
     DashboardConfig,
-    KiroCrewAgentConfig,
+    AjCrewAgentConfig,
     WorkspaceConfig,
     MemoryStoreConfig,
 ]
@@ -55,7 +55,7 @@ def _all_fields_recursive(
 ) -> list[tuple[str, dataclasses.Field, object]]:  # type: ignore[type-arg]
     """Yield (dot_path, field, resolved_type) through the dataclass hierarchy.
 
-    Private fields (such as ``KiroCrewConfig._extra_sections``) are skipped, as
+    Private fields (such as ``AjCrewConfig._extra_sections``) are skipped, as
     ``schema.build_json_schema`` skips them.
     """
     result: list[tuple[str, dataclasses.Field, object]] = []  # type: ignore[type-arg]
@@ -121,7 +121,7 @@ class TestConfigSchemaProperties:
 
         **Validates: Requirements 1.1**
         """
-        all_fields = _all_fields_recursive(KiroCrewConfig)
+        all_fields = _all_fields_recursive(AjCrewConfig)
         assert len(all_fields) > 0, "Expected at least one field"
 
         for path, f, tp in all_fields:
@@ -200,7 +200,7 @@ class TestConfigSchemaProperties:
     def test_registry_entries_structurally_complete(self) -> None:
         """Every SCHEMA_REGISTRY entry must have all required fields and
         every path must be reachable via dataclasses.fields() recursion
-        on KiroCrewConfig.
+        on AjCrewConfig.
 
         **Validates: Requirements 3.2, 2.6**
         """
@@ -220,7 +220,7 @@ class TestConfigSchemaProperties:
         ]
 
         # Build set of all reachable paths from the dataclass hierarchy
-        all_fields = _all_fields_recursive(KiroCrewConfig)
+        all_fields = _all_fields_recursive(AjCrewConfig)
         reachable_paths: set[str] = set()
         for path, f, tp in all_fields:
             reachable_paths.add(path)
@@ -255,7 +255,7 @@ class TestConfigSchemaProperties:
             # Verify path is reachable from the dataclass hierarchy
             assert entry.path in reachable_paths, (
                 f"Entry path '{entry.path}' not reachable via "
-                f"dataclasses.fields() recursion on KiroCrewConfig"
+                f"dataclasses.fields() recursion on AjCrewConfig"
             )
 
             # Verify type is a valid JSON Schema type
@@ -284,7 +284,7 @@ class TestConfigSchemaProperties:
         # Build a lookup from path → ConfigEntry
         registry_by_path: dict[str, ConfigEntry] = {e.path: e for e in SCHEMA_REGISTRY}
 
-        all_fields = _all_fields_recursive(KiroCrewConfig)
+        all_fields = _all_fields_recursive(AjCrewConfig)
         for path, f, tp in all_fields:
             optional_args = typing.get_args(tp)
             if len(optional_args) == 2 and type(None) in optional_args:
@@ -466,7 +466,7 @@ class TestDeclaredDictProperties:
         # says "value kept", the surrounding dict survives untouched, and the
         # value is re-validated by its consumer (_resolve_shell coerces and
         # rejects at spawn time).
-        from kiro_crew.config.validation import validate_config_data
+        from aj_crew.config.validation import validate_config_data
 
         data = {"dashboard": {"terminal": {"enabled": True, "shell": 123}}}
         validate_config_data(data)
@@ -494,7 +494,7 @@ class TestDeclaredDictProperties:
     def test_completion_dict_stays_open_for_undeclared_keys(self) -> None:
         # `completion.commands` (the subcommand-probe allowlist) is documented
         # and undeclared; declaring `enabled` must not invalidate it.
-        from kiro_crew.config.validation import validate_config_data
+        from aj_crew.config.validation import validate_config_data
 
         node = JSON_SCHEMA["properties"]["dashboard"]["properties"]["terminal"]
         completion = node["properties"]["completion"]

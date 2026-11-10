@@ -15,7 +15,7 @@ from typing import Any
 import aiohttp
 import pytest
 
-from kiro_crew.dashboard.handlers import source_providers as sp
+from aj_crew.dashboard.handlers import source_providers as sp
 
 _CLOUD = "https://acme.atlassian.net/browse/PROJ-7"
 _SERVER = "https://jira.corp.example/jira/browse/OPS-3"
@@ -239,7 +239,7 @@ async def test_cloud_without_an_email_names_the_missing_field(monkeypatch) -> No
     ],
 )
 def test_jira_auth_reads_user_as_an_alias_of_email(entry, email) -> None:
-    from kiro_crew.config.loader import _build_dashboard_config
+    from aj_crew.config.loader import _build_dashboard_config
 
     dashboard = _build_dashboard_config(set(), {"jira_auth": [entry]})
 

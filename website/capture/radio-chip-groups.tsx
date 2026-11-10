@@ -17,7 +17,7 @@ const params = new URLSearchParams(location.search)
 const mode = params.get('theme') === 'light' ? 'light' : 'dark'
 localStorage.setItem('mc-theme', mode)
 localStorage.setItem('mc-color-theme', 'kiro')
-document.documentElement.setAttribute('data-theme', mode === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', mode === 'light' ? 'aj-light' : 'aj-dark')
 initI18n('en')
 api.themeBoot = async () => ({ mode, color: 'kiro' }) as Awaited<ReturnType<typeof api.themeBoot>>
 api.themes = async () => ({ themes: [] })

@@ -43,18 +43,18 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.dashboard import refresh_tokens as rt
-from kiro_crew.dashboard import token_auth as ta
-from kiro_crew.dashboard.handlers import auth_refresh as h
-from kiro_crew.dashboard.refresh_tokens import (
+from aj_crew.dashboard import refresh_tokens as rt
+from aj_crew.dashboard import token_auth as ta
+from aj_crew.dashboard.handlers import auth_refresh as h
+from aj_crew.dashboard.refresh_tokens import (
     RefreshStateManager,
     generate_refresh_token,
     refresh_cookie_name,
     refresh_token_peer_key,
     refresh_token_requires_peer,
 )
-from kiro_crew.dashboard.tailnet import ForwardedPeer, TailnetTrust
-from kiro_crew.dashboard.token_auth import generate_token
+from aj_crew.dashboard.tailnet import ForwardedPeer, TailnetTrust
+from aj_crew.dashboard.token_auth import generate_token
 
 PORT = 5476
 LAPTOP_KEY = "ts:node:user@example.com|laptop.tail.ts.net"
@@ -84,7 +84,7 @@ def _isolate_token_state(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     middleware. The cost is that a genuine exchange writes process-global state:
     it binds into the ``ta._state`` singleton (nonces, peer bindings, consumed
     tokens) and revokes the link nonce through ``_get_revoked_store()``, whose
-    singleton is built ONCE per process from whatever ``KIROCREW_HOME`` the first
+    singleton is built ONCE per process from whatever ``AJCREW_HOME`` the first
     caller happened to see. Left alone, a store created here outlives the test and
     a LATER test writes through it into this test's already-deleted tmp home,
     while stale peer bindings make a later posture read report sessions that no
@@ -99,9 +99,9 @@ def _isolate_token_state(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     this, down to the pinned ``_gen``, rather than a second isolation shape for
     the same singletons.
     """
-    import kiro_crew.dashboard.revocation_gen as _rg
+    import aj_crew.dashboard.revocation_gen as _rg
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     monkeypatch.setattr(_rg, "_gen", 0)
     monkeypatch.setattr(ta, "_revoked_store_singleton", None)
     ta._state.clear_all()
@@ -349,7 +349,7 @@ async def test_the_rotated_access_token_carries_the_signed_device(
     cookie carrying ``require_peer`` fails closed when no peer resolves, so
     turning identity trust off later ends these sessions until one re-mint.
     """
-    from kiro_crew.dashboard.token_auth import required_peer_key_unverified
+    from aj_crew.dashboard.token_auth import required_peer_key_unverified
 
     trust = _trust()
     minted = await _exchange(trust, monkeypatch, node="laptop.tail.ts.net")
@@ -374,7 +374,7 @@ async def test_a_rotated_access_token_is_refused_for_another_node_after_restart(
     rotation signs is what makes the ORIGINAL device the only answer, and it
     must not cost that device its own session.
     """
-    from kiro_crew.dashboard.token_auth import _state as token_state
+    from aj_crew.dashboard.token_auth import _state as token_state
 
     trust = _trust()
     minted = await _exchange(trust, monkeypatch, node="laptop.tail.ts.net")

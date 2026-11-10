@@ -14,9 +14,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-import kiro_crew.dashboard.handlers.wakatime as wt
-import kiro_crew.wakatime.service as wt_service
-from kiro_crew.dashboard.handlers.wakatime import _csv_safe, _rows_by_project
+import aj_crew.dashboard.handlers.wakatime as wt
+import aj_crew.wakatime.service as wt_service
+from aj_crew.dashboard.handlers.wakatime import _csv_safe, _rows_by_project
 
 
 class _StubClient:
@@ -34,14 +34,14 @@ class _StubClient:
 
     async def fetch_summaries(self, start: str, end: str, *, project: Any = None) -> list:
         if self._fail:
-            from kiro_crew.wakatime import WakaTimeUnavailableError
+            from aj_crew.wakatime import WakaTimeUnavailableError
 
             raise WakaTimeUnavailableError("stub: summaries request failed")
         return self._summaries
 
     async def fetch_stats(self, wakatime_range: str = "last_7_days") -> dict:
         if self._fail:
-            from kiro_crew.wakatime import WakaTimeUnavailableError
+            from aj_crew.wakatime import WakaTimeUnavailableError
 
             raise WakaTimeUnavailableError("stub: stats request failed")
         return self._stats

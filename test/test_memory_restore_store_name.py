@@ -1,4 +1,4 @@
-"""``kirocrew memory restore`` refuses an empty ``--store`` name.
+"""``ajcrew memory restore`` refuses an empty ``--store`` name.
 
 ``--store "$STORE"`` with ``STORE`` unset reaches the verb as ``''``. Restore is a
 write, so the empty name is refused rather than read as the default store, the way
@@ -13,16 +13,16 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import memory_backup as mb
-from kiro_crew.memory_stores import DEFAULT_MEMORY_STORE, resolve_store_path
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import memory_backup as mb
+from aj_crew.memory_stores import DEFAULT_MEMORY_STORE, resolve_store_path
+from aj_crew.vector_memory import VectorMemoryStore
 
 
 def _point_home_at(monkeypatch: pytest.MonkeyPatch, data_home: Path) -> None:
     """Make *data_home* the data home, declaring only the default store."""
-    import kiro_crew.config.paths as paths
-    from kiro_crew import memory_stores
-    from kiro_crew.config.loader import _invalidate_config_cache
+    import aj_crew.config.paths as paths
+    from aj_crew import memory_stores
+    from aj_crew.config.loader import _invalidate_config_cache
 
     resolved_home = data_home.resolve()
     config = {
@@ -30,7 +30,7 @@ def _point_home_at(monkeypatch: pytest.MonkeyPatch, data_home: Path) -> None:
         "default_memory_store": DEFAULT_MEMORY_STORE,
     }
     (resolved_home / "config.json").write_text(json.dumps(config), encoding="utf-8")
-    monkeypatch.setenv("KIROCREW_HOME", str(resolved_home))
+    monkeypatch.setenv("AJCREW_HOME", str(resolved_home))
     monkeypatch.setattr(paths, "_resolved_home", None, raising=False)
     monkeypatch.setattr(paths, "_config_dir_memo", None, raising=False)
     monkeypatch.setattr(memory_stores, "_DECLARED_MEMO", None, raising=False)
@@ -44,7 +44,7 @@ def test_an_empty_store_name_is_refused_and_stages_nothing(
     capsys: pytest.CaptureFixture[str],
     cancel_pending: bool,
 ) -> None:
-    from kiro_crew.cli_commands import _memory_cmd
+    from aj_crew.cli_commands import _memory_cmd
 
     _point_home_at(monkeypatch, tmp_path)
     store = VectorMemoryStore()

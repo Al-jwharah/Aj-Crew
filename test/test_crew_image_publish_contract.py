@@ -22,17 +22,17 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.cloud.fargate.taskdef import _DIGEST_REF_RE
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.cloud.fargate.taskdef import _DIGEST_REF_RE
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "src/kiro_crew/apps/builtins/aws_control/crew/scripts/publish_crew_base_image.sh"
-PRODUCER = ROOT / "src/kiro_crew/apps/builtins/aws_control/crew/scripts/build_crew_base_image.sh"
+SCRIPT = ROOT / "src/aj_crew/apps/builtins/aws_control/crew/scripts/publish_crew_base_image.sh"
+PRODUCER = ROOT / "src/aj_crew/apps/builtins/aws_control/crew/scripts/build_crew_base_image.sh"
 FORK_LANE = ROOT / ".github" / "workflows" / "crew-image-build.yml"
 
 #: A repository with no account id and no real namespace, so the fixture cannot
 #: become the hardcoded value the tests below forbid.
-SAMPLE_REPOSITORY = "registry.invalid/example/kirocrew-crew-base"
+SAMPLE_REPOSITORY = "registry.invalid/example/ajcrew-crew-base"
 
 
 def _script() -> str:
@@ -438,8 +438,8 @@ def test_the_digest_is_selected_by_repository_not_by_position(publish_shell: str
     block = _selection_block()
     assert "RepoDigests" not in block, "the selection block should not re-read the daemon"
 
-    wanted = "registry.invalid/example/kirocrew-crew-base"
-    foreign = "registry.invalid/somebody-else/kirocrew-crew-base"
+    wanted = "registry.invalid/example/ajcrew-crew-base"
+    foreign = "registry.invalid/somebody-else/ajcrew-crew-base"
     mine = f"{wanted}@sha256:{'b' * 64}"
     theirs = f"{foreign}@sha256:{'c' * 64}"
     # Quoted by hand with a REAL newline: bash single-quoted strings span lines,
@@ -470,8 +470,8 @@ def test_a_push_that_names_no_matching_repository_is_refused(publish_shell: str)
     harness = f"""
 set -euo pipefail
 die() {{ echo "error: $*" >&2; exit 1; }}
-REPOSITORY='registry.invalid/example/kirocrew-crew-base'
-CANDIDATES='registry.invalid/somebody-else/kirocrew-crew-base@sha256:{'c' * 64}'
+REPOSITORY='registry.invalid/example/ajcrew-crew-base'
+CANDIDATES='registry.invalid/somebody-else/ajcrew-crew-base@sha256:{'c' * 64}'
 {_selection_block()}
 printf 'REACHED-END'
 """
@@ -482,7 +482,7 @@ printf 'REACHED-END'
 
 @pytest.mark.parametrize(
     "repository",
-    ["myuser/myrepo", "kirocrew-crew-base", "library/ubuntu"],
+    ["myuser/myrepo", "ajcrew-crew-base", "library/ubuntu"],
     ids=["hub-namespace", "bare-name", "official-style"],
 )
 def test_a_short_repository_name_is_refused_before_anything_is_built(
@@ -682,7 +682,7 @@ def test_the_commands_that_write_their_own_output_are_folded_into_stderr() -> No
 #: DIFFERENT repository placed ahead of it -- so a run that takes ``RepoDigests``
 #: by position prints the wrong registry and this file says so.
 STUB_DIGEST = "sha256:" + "ab" * 32
-STUB_DECOY = f"registry.invalid/other/kirocrew-crew-base@{STUB_DIGEST}"
+STUB_DECOY = f"registry.invalid/other/ajcrew-crew-base@{STUB_DIGEST}"
 STUB_REFERENCE = f"{SAMPLE_REPOSITORY}@{STUB_DIGEST}"
 
 _STUB_PRODUCER = """#!/bin/sh

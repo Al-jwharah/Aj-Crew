@@ -1,7 +1,7 @@
 ---
 title: Conductor rolling reset -- a conductor drops its chat after a turn that closes an item or fills a free seat
 status: superseded
-author: iamwhatever, with kirocrew-worker
+author: iamwhatever, with ajcrew-worker
 created: 2026-10-19
 last-audited: 2026-10-19
 audited-at: c3f2b27de7
@@ -28,7 +28,7 @@ superseded-by: [rfc-conductor-context-cap.md]
   [rfc-conductor-round-reset.md](rfc-conductor-round-reset.md) (iamwhatever).
   This document landed on its own first, because the First Principles lane
   reads an RFC's status off the base branch, and the implementation would have
-  changed what the `kirocrew-conductor` agent and the goal-conductor skill do
+  changed what the `ajcrew-conductor` agent and the goal-conductor skill do
   by default.
 - Amends [rfc-conductor-round-reset.md](rfc-conductor-round-reset.md) in three
   named places: its first goal (when a conductor resets), its non-goal
@@ -45,7 +45,7 @@ superseded-by: [rfc-conductor-context-cap.md]
 rfc-conductor-round-reset lets a goal conductor drop its chat with
 `reset_conversation` at a round close, "after the next round is dispatched".
 The goal-conductor skill and `_CONDUCTOR_SYSTEM_PROMPT` in
-`src/kiro_crew/agent.py` carry that rule.
+`src/aj_crew/agent.py` carry that rule.
 
 The same skill also runs a rolling queue, and its sections disagree:
 
@@ -59,7 +59,7 @@ Under the concurrency cap a seat is filled as soon as an item lands, so some
 item is always open. "Every item in the round has landed" never holds, and the
 reset never comes. Every patrol wake then re-sends a chat that only grows.
 
-Measured on one operator's conductor DM (`member-kirocrew-conductor`, one
+Measured on one operator's conductor DM (`member-ajcrew-conductor`, one
 session):
 
 | Window (UTC) | What happened | `reset_conversation` calls |
@@ -91,7 +91,7 @@ Goals:
 
 Non-goals, kept from rfc-conductor-round-reset:
 
-- Any agent other than `kirocrew-conductor` gaining the tool.
+- Any agent other than `ajcrew-conductor` gaining the tool.
 - Letting a wake run `set_project` or `chat_tag`. They stay human-only.
 - Resetting mid-round, with the meaning section 3.2 gives it, or on a timer.
 - Changing what a reset drops.
@@ -154,7 +154,7 @@ to finish, and a changed goal is applied at the round boundary.
 ### 3.4 Unchanged
 
 The gateway is not touched. `apply_session_directive` in
-`src/kiro_crew/dashboard/session_directive_apply.py` still admits a wake's
+`src/aj_crew/dashboard/session_directive_apply.py` still admits a wake's
 reset only through `_refuse_unvouched_wake_reset`: a conductor agent, the
 slot's current live loop, a recorded self-arm, and nothing waiting on a person.
 A refused reset still changes nothing.

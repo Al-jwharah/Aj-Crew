@@ -19,9 +19,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import api_session_detail, api_sessions, api_sessions_search
-from kiro_crew.dashboard.handlers.sessions_parts import history_reads
-from kiro_crew.history import INCOGNITO_EXCLUDED_HEADER, ConversationLog
+from aj_crew.dashboard.handlers import api_session_detail, api_sessions, api_sessions_search
+from aj_crew.dashboard.handlers.sessions_parts import history_reads
+from aj_crew.history import INCOGNITO_EXCLUDED_HEADER, ConversationLog
 
 
 def _make_app(log: ConversationLog) -> web.Application:

@@ -24,7 +24,7 @@ import pytest
 from chat_test_helpers import _make_state
 from windows_sim import colliding_clock
 
-from kiro_crew.history import (
+from aj_crew.history import (
     ConversationLog,
     _parse_transcript_ts,
     monotonic_transcript_ts,
@@ -114,7 +114,7 @@ class TestTheChannelWriter:
     def test_a_turns_two_rows_stay_ordered_on_a_stalled_clock(self, tmp_path):
         log = ConversationLog(base_dir=tmp_path)
 
-        with colliding_clock("kiro_crew.history", at=_INSTANT):
+        with colliding_clock("aj_crew.history", at=_INSTANT):
             log.append("s1", "user", "the question")
             log.append("s1", "assistant", "the reply")
 
@@ -125,7 +125,7 @@ class TestTheChannelWriter:
     def test_a_long_run_of_rows_stays_ordered(self, tmp_path):
         log = ConversationLog(base_dir=tmp_path)
 
-        with colliding_clock("kiro_crew.history", at=_INSTANT):
+        with colliding_clock("aj_crew.history", at=_INSTANT):
             for i in range(12):
                 log.append("s1", "user" if i % 2 == 0 else "assistant", f"m{i}")
 
@@ -139,7 +139,7 @@ class TestTheChannelWriter:
         # to order against unless the reader grows its window.
         log = ConversationLog(base_dir=tmp_path)
 
-        with colliding_clock("kiro_crew.history", at=_INSTANT):
+        with colliding_clock("aj_crew.history", at=_INSTANT):
             log.append("s1", "user", "the question")
             log.append("s1", "assistant", "x" * (ConversationLog._TAIL_MIN_BYTES * 2))
             log.append("s1", "user", "the follow-up")
@@ -153,7 +153,7 @@ class TestTheChannelWriter:
         a = ConversationLog(base_dir=tmp_path)
         b = ConversationLog(base_dir=tmp_path)
 
-        with colliding_clock("kiro_crew.history", at=_INSTANT):
+        with colliding_clock("aj_crew.history", at=_INSTANT):
             b.append("s1", "user", "b first")
             a.append("s1", "user", "a second")
             b.append("s1", "user", "b third")
@@ -176,7 +176,7 @@ class TestTheChannelWriter:
 
         log._read_tail_messages = counting  # type: ignore[method-assign]
 
-        with colliding_clock("kiro_crew.history", at=_INSTANT):
+        with colliding_clock("aj_crew.history", at=_INSTANT):
             log.append("s1", "user", "the first message")
 
         assert reads == []
@@ -186,7 +186,7 @@ class TestTheChannelWriter:
         # floor is read at stamp time rather than remembered, so a row that
         # arrived by a rewrite still orders the next append.
         log = ConversationLog(base_dir=tmp_path)
-        with colliding_clock("kiro_crew.history", at=_INSTANT):
+        with colliding_clock("aj_crew.history", at=_INSTANT):
             log.append("s1", "user", "first")
 
         path = log._path("s1")
@@ -196,7 +196,7 @@ class TestTheChannelWriter:
         rewritten["ts"] = later
         path.write_text("\n".join([kept[0], json.dumps(rewritten)]) + "\n", encoding="utf-8")
 
-        with colliding_clock("kiro_crew.history", at=_INSTANT):
+        with colliding_clock("aj_crew.history", at=_INSTANT):
             log.append("s1", "user", "second")
 
         rows = log.read_messages("s1")
@@ -208,11 +208,11 @@ class TestTheDashboardWriter:
     """``_ChatSlot.append`` -- the window re-serialized into the same file."""
 
     def test_two_appends_stay_ordered_on_a_stalled_clock(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
 
-        with colliding_clock("kiro_crew.dashboard.state", at=_INSTANT):
+        with colliding_clock("aj_crew.dashboard.state", at=_INSTANT):
             slot.append("user", "the question")
             slot.append("assistant", "the reply")
 
@@ -221,12 +221,12 @@ class TestTheDashboardWriter:
     def test_a_replayed_row_keeps_the_timestamp_it_arrived_with(self, tmp_path, monkeypatch):
         # A row replayed from a channel transcript carries the ts it was
         # originally written with. Restamping it would reorder the replay.
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         original = "2026-01-01T00:00:00+00:00"
 
-        with colliding_clock("kiro_crew.dashboard.state", at=_INSTANT):
+        with colliding_clock("aj_crew.dashboard.state", at=_INSTANT):
             slot.append("user", "replayed", ts=original)
 
         assert slot.messages[-1]["ts"] == original
@@ -252,11 +252,11 @@ class TestTheDashboardWriterAndAForeignRow:
     """
 
     def test_a_foreign_disk_row_is_ordered_against(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
 
-        with colliding_clock("kiro_crew.dashboard.state", at=_INSTANT):
+        with colliding_clock("aj_crew.dashboard.state", at=_INSTANT):
             slot.append("user", "run the job")
             window_tail = slot.messages[-1]["ts"]
             # A subagent wrote this under the flock one microsecond later. It is
@@ -272,11 +272,11 @@ class TestTheDashboardWriterAndAForeignRow:
         ), "the slot's row ties or precedes a foreign on-disk row"
 
     def test_a_stale_cached_tail_does_not_drag_a_row_backwards(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
 
-        with colliding_clock("kiro_crew.dashboard.state", at=_INSTANT):
+        with colliding_clock("aj_crew.dashboard.state", at=_INSTANT):
             slot.append("user", "later row", ts=(_INSTANT + timedelta(seconds=5)).isoformat())
             slot._disk_tail_ts = _INSTANT.isoformat()  # older than the window tail
             slot.append("assistant", "reply")
@@ -285,24 +285,24 @@ class TestTheDashboardWriterAndAForeignRow:
 
     def test_a_replayed_row_still_keeps_its_timestamp(self, tmp_path, monkeypatch):
         """The extra floor candidate must not restamp an explicit ts."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot._disk_tail_ts = "2099-01-01T00:00:00.000000+00:00"  # far in the future
         original = "2026-01-01T00:00:00+00:00"
 
-        with colliding_clock("kiro_crew.dashboard.state", at=_INSTANT):
+        with colliding_clock("aj_crew.dashboard.state", at=_INSTANT):
             slot.append("user", "replayed", ts=original)
 
         assert slot.messages[-1]["ts"] == original
 
     def test_no_cached_tail_behaves_exactly_as_before(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         assert slot._disk_tail_ts is None
 
-        with colliding_clock("kiro_crew.dashboard.state", at=_INSTANT):
+        with colliding_clock("aj_crew.dashboard.state", at=_INSTANT):
             slot.append("user", "the question")
             slot.append("assistant", "the reply")
 
@@ -314,9 +314,9 @@ class TestTheDashboardWriterAndAForeignRow:
         Without this the cache would never populate and the floor above would be
         permanently ``None`` -- the fix would be inert.
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.conversation_log = ConversationLog(tmp_path / "history")
         slot = state.get_or_create_slot("s1")
@@ -331,9 +331,9 @@ class TestTheDashboardWriterAndAForeignRow:
 
     def test_the_cached_tail_never_moves_backwards(self, tmp_path, monkeypatch):
         """A save must not regress the floor -- that would re-open the tie."""
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.conversation_log = ConversationLog(tmp_path / "history")
         slot = state.get_or_create_slot("s1")

@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import subprocess
 
-from kiro_crew import apple_speech
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import apple_speech
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 
 def _decode_spy(calls: list[dict]):

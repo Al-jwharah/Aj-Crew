@@ -2,7 +2,7 @@
 
 Two surfaces are under test, and they exist for two different readers:
 
-1. :func:`kiro_crew.mcp_core.strict_identity_diagnosis` — the reader who just
+1. :func:`aj_crew.mcp_core.strict_identity_diagnosis` — the reader who just
    had a tool refused. Every strict refusal already said WHAT was refused; none
    said why THIS install cannot answer "which session is calling", so there was
    no next step. The diagnosis is appended to the refusal text.
@@ -22,7 +22,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import cli_doctor, mcp_core
+from aj_crew import cli_doctor, mcp_core
 
 
 class TestStrictIdentityDiagnosis:
@@ -31,7 +31,7 @@ class TestStrictIdentityDiagnosis:
     def test_empty_when_identity_resolves(self, monkeypatch) -> None:
         """A caller appends this unconditionally, so a resolvable identity must
         produce nothing rather than a misleading explanation."""
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:chat-7")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:chat-7")
         assert mcp_core.strict_identity_diagnosis() == ""
 
     def test_names_the_routing_gap_and_the_fix(self, monkeypatch) -> None:
@@ -39,11 +39,11 @@ class TestStrictIdentityDiagnosis:
         must name the server, the config key, and why the backend cannot supply
         an env identity — that last part is what stops a reader concluding their
         session is broken."""
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-        monkeypatch.delenv("KIROCREW_HOST_PID", raising=False)
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+        monkeypatch.delenv("AJCREW_HOST_PID", raising=False)
         with patch.object(mcp_core, "current_caller", return_value=None):
-            out = mcp_core.strict_identity_diagnosis("kirocrew-dashboard")
-        assert "kirocrew-dashboard" in out
+            out = mcp_core.strict_identity_diagnosis("ajcrew-dashboard")
+        assert "ajcrew-dashboard" in out
         assert "mcp_gateway.stub_servers" in out
         assert "session-unbound" in out
         assert "doctor" in out
@@ -52,8 +52,8 @@ class TestStrictIdentityDiagnosis:
         """When the launcher DID declare a host pid the channel exists and the
         sidecar is what failed, so advising the operator to route the server
         would send them to the wrong place."""
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-        monkeypatch.setenv("KIROCREW_HOST_PID", "4242")
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+        monkeypatch.setenv("AJCREW_HOST_PID", "4242")
         with (
             patch.object(mcp_core, "current_caller", return_value=None),
             patch.object(mcp_core, "_resolve_session_key_strict", return_value=""),
@@ -66,18 +66,18 @@ class TestStrictIdentityDiagnosis:
     def test_signing_refusal_names_the_searched_mapping_path(self, monkeypatch, tmp_path) -> None:
         """The refusal must say WHERE the verifier looked.
 
-        When an agent spec pins a foreign ``KIROCREW_HOME`` into the stub's
+        When an agent spec pins a foreign ``AJCREW_HOME`` into the stub's
         environment, the mapping is searched in a home the real gateway never
         writes. Without the resolved path in the message, the operator is sent
-        to ``kirocrew doctor`` on the real gateway — which reports a healthy
+        to ``ajcrew doctor`` on the real gateway — which reports a healthy
         trust root and points nowhere near the poisoned home.
         """
-        from kiro_crew.config import paths as config_paths
+        from aj_crew.config import paths as config_paths
 
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-        monkeypatch.setenv("KIROCREW_HOST_PID", "4242")
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+        monkeypatch.setenv("AJCREW_HOST_PID", "4242")
         poisoned = tmp_path / "poisoned-home"
-        monkeypatch.setenv("KIROCREW_HOME", str(poisoned))
+        monkeypatch.setenv("AJCREW_HOME", str(poisoned))
         mapping = poisoned.resolve() / "session_pid_4242.txt"
         with (
             patch.object(mcp_core, "current_caller", return_value=None),
@@ -106,12 +106,12 @@ class TestStrictIdentityDiagnosis:
         existence through the refusal text; the suffix only names the path the
         verifier searched.
         """
-        from kiro_crew.config import paths as config_paths
+        from aj_crew.config import paths as config_paths
 
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-        monkeypatch.setenv("KIROCREW_HOST_PID", "4242")
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+        monkeypatch.setenv("AJCREW_HOST_PID", "4242")
         home = tmp_path / "home"
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         mapping = home.resolve() / "session_pid_4242.txt"
         with (
             patch.object(mcp_core, "current_caller", return_value=None),
@@ -133,10 +133,10 @@ class TestStrictIdentityDiagnosis:
         replacing the denial it decorates with a crash — and would create
         directories from a message-formatting path.
         """
-        from kiro_crew.session_pid_sig import session_pid_mapping_path
+        from aj_crew.session_pid_sig import session_pid_mapping_path
 
         home = tmp_path / "never-created"
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         mapping = session_pid_mapping_path("4242")
         assert mapping == home.resolve() / "session_pid_4242.txt"
         assert not home.exists(), "the diagnostic resolver must not mkdir the home"
@@ -155,8 +155,8 @@ class TestStrictIdentityDiagnosis:
         HOME nor USERPROFILE resolves, so every arm the except clause names is
         exercised. The generic wording is the fallback.
         """
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-        monkeypatch.setenv("KIROCREW_HOST_PID", "4242")
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+        monkeypatch.setenv("AJCREW_HOST_PID", "4242")
         with (
             patch.object(mcp_core, "current_caller", return_value=None),
             patch.object(mcp_core, "_resolve_session_key_strict", return_value=""),
@@ -175,8 +175,8 @@ class TestStrictIdentityDiagnosis:
 class TestExternalClientNote:
     """Three refusals, one missing identity, one sentence set.
 
-    A ``kirocrew-core`` an editor spawns from its own MCP config has no identity
-    channel and never will. With ``KIROCREW_SESSION_KEY`` copied into that config
+    A ``ajcrew-core`` an editor spawns from its own MCP config has no identity
+    channel and never will. With ``AJCREW_SESSION_KEY`` copied into that config
     the tool-policy gate refuses every call (``identity_unattested``); without it
     ``memory_recall`` refuses through the strict diagnosis and ``learn_add`` hands
     back the gateway's bare ``missing X-Session-Key``. Each refusal keeps its own
@@ -187,27 +187,27 @@ class TestExternalClientNote:
 
     @staticmethod
     def _unspawned(monkeypatch) -> None:
-        monkeypatch.delenv("KIROCREW_STUB_SESSION_TOKEN", raising=False)
-        monkeypatch.delenv("KIROCREW_HOST_PID", raising=False)
+        monkeypatch.delenv("AJCREW_STUB_SESSION_TOKEN", raising=False)
+        monkeypatch.delenv("AJCREW_HOST_PID", raising=False)
 
     def test_the_note_is_actionable_and_names_no_machine(self) -> None:
-        from kiro_crew import mcp_shared
+        from aj_crew import mcp_shared
 
         note = mcp_shared.external_client_identity_note()
         # What the reader must learn, in the words they will search for.
-        assert "not started by a Kiro Crew session" in note
+        assert "not started by a Aj Crew session" in note
         assert "not supported" in note
-        assert "KIROCREW_SESSION_KEY" in note and "not a credential" in note
+        assert "AJCREW_SESSION_KEY" in note and "not a credential" in note
         assert "identity_unattested" in note
         assert "learn_list" in note and "local_knowledge_search" in note
         assert "dashboard" in note
-        assert "connect INTO a Kiro Crew session" in note
+        assert "connect INTO a Aj Crew session" in note
         assert "~/.kiro/settings/mcp.json" in note
         assert "docs/architecture/mcp.md" in note
-        # The server name is substituted, so kirocrew-dashboard's refusal
-        # does not blame kirocrew-core.
-        assert "kirocrew-dashboard" in mcp_shared.external_client_identity_note(
-            "kirocrew-dashboard"
+        # The server name is substituted, so ajcrew-dashboard's refusal
+        # does not blame ajcrew-core.
+        assert "ajcrew-dashboard" in mcp_shared.external_client_identity_note(
+            "ajcrew-dashboard"
         )
         # No absolute path or host name: this text is echoed to the model and
         # to Slack. The two tilde paths are documentation locations.
@@ -219,10 +219,10 @@ class TestExternalClientNote:
     ) -> None:
         """Path 2: ``memory_recall`` (no env var). The existing no-channel text is
         kept verbatim as the prefix; the note follows it."""
-        from kiro_crew import mcp_shared
+        from aj_crew import mcp_shared
 
         self._unspawned(monkeypatch)
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
         with patch.object(mcp_core, "current_caller", return_value=None):
             out = mcp_core.strict_identity_diagnosis()
         assert "No identity channel on this install" in out
@@ -235,11 +235,11 @@ class TestExternalClientNote:
         """A token on the element means the gateway spawned this server and the
         trust root is what failed; the external-client note would point away from
         it, so the existing text stays byte-identical."""
-        from kiro_crew import mcp_shared
+        from aj_crew import mcp_shared
 
-        monkeypatch.setenv("KIROCREW_STUB_SESSION_TOKEN", "tok")
-        monkeypatch.delenv("KIROCREW_HOST_PID", raising=False)
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
+        monkeypatch.setenv("AJCREW_STUB_SESSION_TOKEN", "tok")
+        monkeypatch.delenv("AJCREW_HOST_PID", raising=False)
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
         with (
             patch.object(mcp_core, "current_caller", return_value=None),
             patch.object(mcp_core, "_resolve_session_key_strict", return_value=""),
@@ -248,8 +248,8 @@ class TestExternalClientNote:
         assert "signed mapping did not verify" in out
         assert mcp_shared.external_client_identity_note() not in out
 
-        monkeypatch.delenv("KIROCREW_STUB_SESSION_TOKEN", raising=False)
-        monkeypatch.setenv("KIROCREW_HOST_PID", "4242")
+        monkeypatch.delenv("AJCREW_STUB_SESSION_TOKEN", raising=False)
+        monkeypatch.setenv("AJCREW_HOST_PID", "4242")
         with (
             patch.object(mcp_core, "current_caller", return_value=None),
             patch.object(mcp_core, "_resolve_session_key_strict", return_value=""),
@@ -259,11 +259,11 @@ class TestExternalClientNote:
         assert mcp_shared.external_client_identity_note() not in out
 
     def test_memory_recall_refusal_carries_the_note(self, monkeypatch) -> None:
-        from kiro_crew import mcp_shared
-        from kiro_crew.mcp_tools import learn
+        from aj_crew import mcp_shared
+        from aj_crew.mcp_tools import learn
 
         self._unspawned(monkeypatch)
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
         with patch.object(mcp_core, "current_caller", return_value=None):
             out = learn.memory_recall("memory_recall", {"query": "anything"})
         assert out.startswith("Error: memory recall requires an established session")
@@ -273,11 +273,11 @@ class TestExternalClientNote:
         """Path 3: the gateway's 400 ``missing_session_key`` is the same missing
         identity as the other two, so ``learn_add`` answers with the same text
         instead of the HTTP body's ``missing X-Session-Key``."""
-        from kiro_crew import mcp_shared
-        from kiro_crew.mcp_tools import learn
+        from aj_crew import mcp_shared
+        from aj_crew.mcp_tools import learn
 
         self._unspawned(monkeypatch)
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
         posted: list = []
 
         def fake_post(path, body=None, **kw):
@@ -299,7 +299,7 @@ class TestExternalClientNote:
     def test_learn_add_leaves_every_other_error_as_it_was(self, monkeypatch) -> None:
         """Only the missing-identity code is mapped; a different backend error --
         and the same wording under a different code -- pass through unchanged."""
-        from kiro_crew.mcp_tools import learn
+        from aj_crew.mcp_tools import learn
 
         monkeypatch.setattr(mcp_core, "_vet_memory_writes_governance", lambda *_a: None)
         for body in (
@@ -317,11 +317,11 @@ class TestExternalClientNote:
         """The DELETE route answers the same ``missing_session_key`` 400, so the
         sibling tool answers with the same refusal -- and, being a destructive
         verb, keeps saying that nothing was removed."""
-        from kiro_crew import mcp_shared
-        from kiro_crew.mcp_tools import learn
+        from aj_crew import mcp_shared
+        from aj_crew.mcp_tools import learn
 
         self._unspawned(monkeypatch)
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
         monkeypatch.setattr(
             mcp_core,
             "_delete",
@@ -341,13 +341,13 @@ class TestExternalClientNote:
         assert learn.learn_remove("learn_remove", {"query": "port"}) == "Error: boom"
 
     def test_the_note_names_only_the_refusing_server(self) -> None:
-        """The remediation names THAT server, not kirocrew-core; the "leftover"
-        clause appears only for the names Kiro Crew itself once wrote into the
+        """The remediation names THAT server, not ajcrew-core; the "leftover"
+        clause appears only for the names Aj Crew itself once wrote into the
         shared config, since an opt-in server found there is the user's own
-        wiring; the read-only tools listed are kirocrew-core's alone; and shipped
+        wiring; the read-only tools listed are ajcrew-core's alone; and shipped
         text names no pull request, because a plan is not a step."""
-        from kiro_crew import mcp_shared
-        from kiro_crew.mcp_cleanup import OPT_IN_BIN_MCP_SERVERS, STALE_MANAGED_MCP_SERVERS
+        from aj_crew import mcp_shared
+        from aj_crew.mcp_cleanup import OPT_IN_BIN_MCP_SERVERS, STALE_MANAGED_MCP_SERVERS
 
         for server in STALE_MANAGED_MCP_SERVERS:
             note = mcp_shared.external_client_identity_note(server)
@@ -357,7 +357,7 @@ class TestExternalClientNote:
             note = mcp_shared.external_client_identity_note(server)
             assert f"not to spawn {server} itself" in note
             assert "leftover" not in note, server
-            assert "a kirocrew-core entry" not in note, server
+            assert "a ajcrew-core entry" not in note, server
             assert "learn_list" not in note, server
         core = mcp_shared.external_client_identity_note()
         assert "learn_list" in core and "local_knowledge_search" in core
@@ -365,11 +365,11 @@ class TestExternalClientNote:
 
     def test_all_three_refusals_share_one_string(self, monkeypatch) -> None:
         """The point of the change: one explanation, not three."""
-        from kiro_crew import mcp_shared
-        from kiro_crew.mcp_tools import learn
+        from aj_crew import mcp_shared
+        from aj_crew.mcp_tools import learn
 
         self._unspawned(monkeypatch)
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
         monkeypatch.setattr(
             mcp_core,
             "_post",
@@ -394,7 +394,7 @@ class TestRefusalsCarryTheDiagnosis:
     _MARKER = " [why: no identity channel]"
 
     def test_ledger_refusal_carries_it(self, monkeypatch) -> None:
-        from kiro_crew.mcp_tools import ledger
+        from aj_crew.mcp_tools import ledger
 
         monkeypatch.setattr(mcp_core, "_resolve_session_key_strict", lambda: "")
         monkeypatch.setattr(mcp_core, "strict_identity_diagnosis", lambda *a: self._MARKER)
@@ -402,7 +402,7 @@ class TestRefusalsCarryTheDiagnosis:
         assert err.startswith("Error:") and self._MARKER in err
 
     def test_strict_app_tool_refusal_carries_it(self, monkeypatch) -> None:
-        from kiro_crew.mcp_tools import app_tools
+        from aj_crew.mcp_tools import app_tools
 
         strict = SimpleNamespace(decl=SimpleNamespace(strict_session=True))
         monkeypatch.setattr(app_tools, "declared", lambda name: strict)
@@ -453,7 +453,7 @@ class TestRefusalsCarryTheDiagnosis:
 
 
 class TestDoctorStrictIdentity:
-    """``kirocrew doctor`` answers the question without waiting for a refusal."""
+    """``ajcrew doctor`` answers the question without waiting for a refusal."""
 
     class _Cfg:
         class _GW:
@@ -478,7 +478,7 @@ class TestDoctorStrictIdentity:
         cli_doctor._doctor_strict_identity(self._Cfg(["aws-mcp"]))
         out = capsys.readouterr().out
         assert "not routed through the gateway" in out
-        assert "kirocrew-core" in out and "kirocrew-dashboard" in out
+        assert "ajcrew-core" in out and "ajcrew-dashboard" in out
         assert "monitor_start" in out and "session_ledger" in out
 
     def test_unrouted_is_not_reported_as_a_missing_identity_channel(
@@ -505,7 +505,7 @@ class TestDoctorStrictIdentity:
     def test_it_never_makes_doctor_exit_nonzero(self, monkeypatch, capsys) -> None:
         """The line is a NOTE, not a problem. ``stub_servers`` is empty by
         default, so appending to doctor's ``issues`` would make a stock install
-        exit 1 and break ``kirocrew doctor && kirocrew gateway`` — the failure
+        exit 1 and break ``ajcrew doctor && ajcrew gateway`` — the failure
         the speech-to-text section is written to avoid. Signature-enforced: the
         function takes no ``issues`` list at all, so it structurally cannot.
         """
@@ -530,7 +530,7 @@ class TestDoctorStrictIdentity:
         assert "broker" in out
 
     def test_skipped_where_the_env_channel_exists(self, monkeypatch, capsys) -> None:
-        """On Linux the sandbox launcher exports ``KIROCREW_HOST_PID``, so
+        """On Linux the sandbox launcher exports ``AJCREW_HOST_PID``, so
         routing is not what decides whether strict identity resolves — warning
         there would be false."""
         monkeypatch.setattr(cli_doctor._plat, "system", lambda: "Linux")

@@ -23,7 +23,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.side_state import SideState
+from aj_crew.dashboard.side_state import SideState
 
 pytestmark = pytest.mark.asyncio
 
@@ -57,7 +57,7 @@ def _owner():
 
 
 def _autonudge_app(monkeypatch, middleware, *, existing=None):
-    from kiro_crew.dashboard.handlers import autonudge
+    from aj_crew.dashboard.handlers import autonudge
 
     svc = MagicMock()
     svc.get_by_id = MagicMock(return_value=existing)
@@ -95,7 +95,7 @@ async def test_autonudge_delete_legacy_allows_owner(monkeypatch) -> None:
 
 async def test_autonudge_delete_structured_branch_still_gates_once_and_stops(monkeypatch) -> None:
     """The structured branch keeps its own gate; the legacy gate adds nothing to it."""
-    from kiro_crew.dashboard.handlers import autonudge
+    from aj_crew.dashboard.handlers import autonudge
 
     live = SimpleNamespace(slot_key="chat-1-1", monitor=SimpleNamespace(outcome=None))
     monkeypatch.setattr(autonudge, "is_structured_monitor_loop", lambda loop: True)
@@ -114,7 +114,7 @@ async def test_autonudge_delete_structured_branch_still_gates_once_and_stops(mon
 
 
 def _taskrunner_app(middleware, runner):
-    from kiro_crew.dashboard.handlers import taskrunner
+    from aj_crew.dashboard.handlers import taskrunner
 
     app = web.Application(middlewares=[middleware])
     app["state"] = SimpleNamespace(task_runner=runner, owner_id=OWNER)
@@ -174,7 +174,7 @@ async def test_taskrunner_cancel_refuses_non_owner() -> None:
 
 
 def _side_app(monkeypatch, middleware, *, slot_app: str):
-    from kiro_crew.dashboard.handlers import side
+    from aj_crew.dashboard.handlers import side
 
     dispatch = MagicMock(return_value="run-1")
     monkeypatch.setattr(side, "_dispatch_side_turn", dispatch)
@@ -218,7 +218,7 @@ async def test_side_turn_app_token_foreign_slot_still_404(monkeypatch) -> None:
 
 
 async def test_computer_use_config_app_token_still_dashboard_user_required(monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers import computer_use
+    from aj_crew.dashboard.handlers import computer_use
 
     monkeypatch.setattr(computer_use, "_audit", lambda *a, **k: None)
     app = web.Application(middlewares=[_identity(user="dashboard", app="some-app")])
@@ -234,7 +234,7 @@ async def test_computer_use_config_app_token_still_dashboard_user_required(monke
 
 
 async def test_autonudge_start_allows_owner(monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers import autonudge
+    from aj_crew.dashboard.handlers import autonudge
 
     armed = AsyncMock(return_value=(SimpleNamespace(loop_id="l1"), None, 200))
     monkeypatch.setattr(autonudge, "authorize_and_add_nudge", armed)
@@ -249,7 +249,7 @@ async def test_autonudge_start_allows_owner(monkeypatch) -> None:
 
 
 async def test_computer_use_config_allows_owner(monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers import computer_use
+    from aj_crew.dashboard.handlers import computer_use
 
     write_state = MagicMock()
     monkeypatch.setattr(computer_use, "_write_state", write_state)
@@ -268,8 +268,8 @@ async def test_computer_use_config_allows_owner(monkeypatch) -> None:
 
 
 async def test_update_apply_allows_owner(monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers import updates
-    from kiro_crew.platform import update_provider
+    from aj_crew.dashboard.handlers import updates
+    from aj_crew.platform import update_provider
 
     applied = AsyncMock(return_value=True)
     restarted = AsyncMock()

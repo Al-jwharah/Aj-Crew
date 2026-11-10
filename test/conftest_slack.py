@@ -10,15 +10,15 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.slack.client import SlackClientOps
-from kiro_crew.slack.handler import _PHASE_EMOJIS, _build_phase_emojis
+from aj_crew.slack.client import SlackClientOps
+from aj_crew.slack.handler import _PHASE_EMOJIS, _build_phase_emojis
 
 
 @pytest.fixture(autouse=True)
 def _reset_options_control_state():
     """Clear the per-message OPTIONS registries between tests.
 
-    ``kiro_crew.slack.outbound`` holds two process-global maps keyed by
+    ``aj_crew.slack.outbound`` holds two process-global maps keyed by
     ``(channel, ts)``: the per-message edit lock, and the once-only answer claim
     that stops a second Send click dispatching a duplicate turn. Both are
     correct as process state in the gateway, where a control's ts is unique and
@@ -29,7 +29,7 @@ def _reset_options_control_state():
     control and every later test's click is silently dropped as a duplicate.
     Reset per test rather than making production defensive about it.
     """
-    from kiro_crew.slack import outbound
+    from aj_crew.slack import outbound
 
     outbound._ANSWERED.clear()
     outbound._EDIT_LOCKS.clear()
@@ -43,9 +43,9 @@ def _reset_options_control_state():
 @pytest.fixture(autouse=True)
 def _enterprise_bypass(_floor_monkeypatch) -> None:
     """Set a default validated team_id so _route_message doesn't reject messages."""
-    _floor_monkeypatch.setattr("kiro_crew.slack.enterprise._validated_team_id", "TTEST")
-    _floor_monkeypatch.setattr("kiro_crew.slack.enterprise._validated_enterprise_id", "ETEST")
-    _floor_monkeypatch.setattr("kiro_crew.slack.enterprise._allowed_team_ids", {"TTEST"})
+    _floor_monkeypatch.setattr("aj_crew.slack.enterprise._validated_team_id", "TTEST")
+    _floor_monkeypatch.setattr("aj_crew.slack.enterprise._validated_enterprise_id", "ETEST")
+    _floor_monkeypatch.setattr("aj_crew.slack.enterprise._allowed_team_ids", {"TTEST"})
 
 
 @pytest.fixture(autouse=True)
@@ -80,8 +80,8 @@ def _clean_slack_thread_state():
     Clearing before and after every test makes each hermetic regardless of
     scheduling. Idempotent with per-file fixtures that already clear a subset.
     """
-    from kiro_crew.slack import handler as _h
-    from kiro_crew.slack import thread_override_slots as _slots
+    from aj_crew.slack import handler as _h
+    from aj_crew.slack import thread_override_slots as _slots
 
     _maps = (
         _h._thread_temporary,

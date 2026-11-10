@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat, skill_trust
-from kiro_crew.skill_usage import SkillUsageLedger
+from aj_crew import platform_compat, skill_trust
+from aj_crew.skill_usage import SkillUsageLedger
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -53,7 +53,7 @@ class TestAliasFold:
 
     def test_fold_sums_deliveries_and_reports_alias(self, tmp_path):
         """Symlinked alias key's hits are added to the canonical key."""
-        from kiro_crew.dashboard.handlers.skill_budget import (
+        from aj_crew.dashboard.handlers.skill_budget import (
             _compute_budget,
         )
 
@@ -98,7 +98,7 @@ class TestAliasFold:
                 return True
 
             def resolve_ledger_aliases(self):
-                from kiro_crew.skills import SkillsLoader
+                from aj_crew.skills import SkillsLoader
 
                 return SkillsLoader.resolve_ledger_aliases(self)
 
@@ -117,7 +117,7 @@ class TestAliasFold:
 
     def test_unresolvable_ledger_key_is_dropped(self, tmp_path):
         """A ledger key whose SKILL.md doesn't exist is not folded."""
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
 
         canonical_file = _make_skill(tmp_path, "real-skill", "# Real\ncontent")
 
@@ -151,7 +151,7 @@ class TestAliasFold:
                 return True
 
             def resolve_ledger_aliases(self):
-                from kiro_crew.skills import SkillsLoader
+                from aj_crew.skills import SkillsLoader
 
                 return SkillsLoader.resolve_ledger_aliases(self)
 
@@ -164,7 +164,7 @@ class TestAliasFold:
 
     def test_untracked_skill_gives_null_deliveries(self, tmp_path):
         """A skill with no ledger entry yields deliveries=None, not 0."""
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
 
         skill_file = _make_skill(tmp_path, "brand-new", "# New\nstuff")
 
@@ -191,7 +191,7 @@ class TestAliasFold:
                 return True
 
             def resolve_ledger_aliases(self):
-                from kiro_crew.skills import SkillsLoader
+                from aj_crew.skills import SkillsLoader
 
                 return SkillsLoader.resolve_ledger_aliases(self)
 
@@ -204,7 +204,7 @@ class TestAliasFold:
 
     def test_chars_arithmetic(self, tmp_path):
         """chars = character length * deliveries (NOT byte size)."""
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
 
         body = "x" * 500
         skill_file = _make_skill(tmp_path, "measured", body)
@@ -232,7 +232,7 @@ class TestAliasFold:
                 return True
 
             def resolve_ledger_aliases(self):
-                from kiro_crew.skills import SkillsLoader
+                from aj_crew.skills import SkillsLoader
 
                 return SkillsLoader.resolve_ledger_aliases(self)
 
@@ -244,7 +244,7 @@ class TestAliasFold:
 
     def test_total_chars_equals_row_sum(self, tmp_path):
         """total_chars is the sum of all row chars."""
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
 
         f1 = _make_skill(tmp_path, "alpha", "aaa")
         f2 = _make_skill(tmp_path, "beta", "bbbbb")
@@ -278,7 +278,7 @@ class TestAliasFold:
                 return True
 
             def resolve_ledger_aliases(self):
-                from kiro_crew.skills import SkillsLoader
+                from aj_crew.skills import SkillsLoader
 
                 return SkillsLoader.resolve_ledger_aliases(self)
 
@@ -289,7 +289,7 @@ class TestAliasFold:
 
     def test_unreadable_ledger_degrades_gracefully(self, tmp_path):
         """When ledger is None, all deliveries are None and no crash."""
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
 
         skill_file = _make_skill(tmp_path, "orphan", "# Hi")
 
@@ -313,7 +313,7 @@ class TestAliasFold:
                 return True
 
             def resolve_ledger_aliases(self):
-                from kiro_crew.skills import SkillsLoader
+                from aj_crew.skills import SkillsLoader
 
                 return SkillsLoader.resolve_ledger_aliases(self)
 
@@ -335,7 +335,7 @@ class TestNestedFirstSkillBaseDir:
         the alias fold still resolves correctly because the loader's _dir
         is used, not inferred from the first skill's path.
         """
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
 
         # "apps/deploy" is alphabetically FIRST and is NESTED.
         nested_file = _make_skill(tmp_path, "apps/deploy", "# Deploy\napp deploy")
@@ -383,7 +383,7 @@ class TestNestedFirstSkillBaseDir:
                 return True
 
             def resolve_ledger_aliases(self):
-                from kiro_crew.skills import SkillsLoader
+                from aj_crew.skills import SkillsLoader
 
                 return SkillsLoader.resolve_ledger_aliases(self)
 
@@ -406,7 +406,7 @@ class TestAliasUnderExtraPath:
     """
 
     def test_alias_resolving_only_under_an_extra_path_still_folds(self, tmp_path):
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
 
         main_dir = tmp_path / "skills"
         main_dir.mkdir()
@@ -449,7 +449,7 @@ class TestAliasUnderExtraPath:
                 return True
 
             def resolve_ledger_aliases(self):
-                from kiro_crew.skills import SkillsLoader
+                from aj_crew.skills import SkillsLoader
 
                 return SkillsLoader.resolve_ledger_aliases(self)
 
@@ -467,7 +467,7 @@ class TestServedAliasIsFolded:
     """
 
     def test_two_served_keys_for_one_file_yield_one_folded_row(self, tmp_path):
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
 
         real_file = _make_skill(tmp_path, "new-name", "# Skill\nbody")
         alias_dir = tmp_path / "old-name"
@@ -507,7 +507,7 @@ class TestServedAliasIsFolded:
                 return True
 
             def resolve_ledger_aliases(self):
-                from kiro_crew.skills import SkillsLoader
+                from aj_crew.skills import SkillsLoader
 
                 return SkillsLoader.resolve_ledger_aliases(self)
 
@@ -521,7 +521,7 @@ class TestServedAliasIsFolded:
 
     def test_the_real_file_wins_over_the_symlink_regardless_of_order(self, tmp_path):
         """Canonical choice must not depend on directory iteration order."""
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         real_file = _make_skill(tmp_path, "zzz-real", "# Skill\nbody")
         alias_dir = tmp_path / "aaa-alias"
@@ -565,7 +565,7 @@ class TestFrontmatterFailurePolicy:
     """
 
     def test_the_loader_propagates_so_writers_abort(self, tmp_path):
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         bad_dir = tmp_path / "bad"
         bad_dir.mkdir()
@@ -595,8 +595,8 @@ class TestFrontmatterFailurePolicy:
         A rewrite that read "no metadata" would drop ``version`` and ``pinned``,
         so a writer must hear the refusal; a reader keeps the empty answer.
         """
-        from kiro_crew import skills as skills_module
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew import skills as skills_module
+        from aj_crew.skills import SkillsLoader
 
         root = tmp_path / "skills"
         skill = _make_skill(
@@ -616,7 +616,7 @@ class TestFrontmatterFailurePolicy:
 
     def test_nothing_is_cached_for_a_failed_read(self, tmp_path):
         """A propagated failure must not leave a poisoned mtime-keyed entry."""
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         bad_dir = tmp_path / "bad2"
         bad_dir.mkdir()
@@ -643,7 +643,7 @@ class TestFrontmatterFailurePolicy:
         assert loader._fm_cache == {}, "a failed read must not be cached"
 
     def test_a_successful_parse_is_still_cached(self, tmp_path):
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         skill = _make_skill(tmp_path, "stable", "---\nname: Stable\n---\nbody")
         calls: list[int] = []
@@ -689,7 +689,7 @@ class TestUnreadableSkillPropagates:
     def test_an_unopenable_skill_raises_rather_than_returning_no_metadata(self, tmp_path):
         import os
 
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         if os.geteuid() == 0:
             pytest.skip("root ignores mode bits, so the file stays readable")
@@ -724,8 +724,8 @@ class TestUndecodableSkillDoesNotCrash:
     """
 
     def test_non_utf8_skill_still_returns_rows(self, tmp_path):
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.skills import SkillsLoader
 
         good = _make_skill(tmp_path, "good", "---\nname: Good\n---\nbody")
         bad_dir = tmp_path / "bad"
@@ -783,7 +783,7 @@ class TestSymlinkLoopDoesNotCrash:
     """
 
     def test_cyclic_symlink_is_skipped_not_raised(self, tmp_path):
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         good = _make_skill(tmp_path, "good", "# Good\nbody")
 
@@ -818,7 +818,7 @@ class TestCacheCoversTheFilesystem:
     """
 
     def test_removing_a_served_alias_invalidates_the_cache(self, tmp_path):
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         real_file = _make_skill(tmp_path, "canonical", "# Skill\nbody")
         alias_dir = tmp_path / "alias"
@@ -862,8 +862,8 @@ class TestNameIsRedacted:
     """
 
     def test_credential_shaped_name_does_not_reach_the_response(self, tmp_path):
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
-        from kiro_crew.security import redact_credentials
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.security import redact_credentials
 
         # Only meaningful if the redactor actually matches this shape -- assert
         # that first, so the test cannot pass by redacting nothing.
@@ -905,7 +905,7 @@ class TestNameIsRedacted:
 
     def test_an_ordinary_name_is_left_alone(self, tmp_path):
         """Redaction must not mangle legitimate skill names."""
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
 
         skill = _make_skill(tmp_path, "normal", "# Normal\nbody")
         now = time.time()
@@ -921,7 +921,7 @@ class TestNameIsRedacted:
                 return [("normal", skill, None)]
 
             def _cached_frontmatter(self, path, mtime=None, within=None):
-                return {"name": "kirocrew-worktree-dev"}
+                return {"name": "ajcrew-worktree-dev"}
 
             def _owned_hint(self, path):
                 return True
@@ -933,7 +933,7 @@ class TestNameIsRedacted:
                 return {}
 
         row = _compute_budget(FakeLoader())["rows"][0]
-        assert row["name"] == "kirocrew-worktree-dev"
+        assert row["name"] == "ajcrew-worktree-dev"
 
 
 class TestCostIsCharactersNotBytes:
@@ -945,7 +945,7 @@ class TestCostIsCharactersNotBytes:
     """
 
     def test_non_ascii_skill_is_costed_by_characters(self, tmp_path):
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
 
         # Every em-dash is 3 UTF-8 bytes, so bytes >> chars here. (Deliberately
         # not CJK: a pre-commit hook forbids Chinese characters in tests.)
@@ -1000,7 +1000,7 @@ class TestAliasCacheInvalidation:
     """
 
     def test_a_retargeted_symlink_is_reflected_immediately(self, tmp_path):
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         first = _make_skill(tmp_path, "first", "# First")
         second = _make_skill(tmp_path, "second", "# Second")
@@ -1048,7 +1048,7 @@ class TestAliasCacheInvalidation:
 
     def test_cache_invalidates_on_key_set_change(self, tmp_path):
         """Adding a ledger key invalidates the cache."""
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         skill_file = _make_skill(tmp_path, "alpha", "# A")
         alias_dir = tmp_path / "old-alpha"
@@ -1095,7 +1095,7 @@ class TestAlwaysTrueSkillCost:
 
     def test_always_true_reports_chars_none(self, tmp_path):
         """A skill with always:true has chars=None (unmeasurable), not 0."""
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
 
         skill_file = _make_skill(tmp_path, "core-skill", "# Core\nbody content here")
 
@@ -1122,7 +1122,7 @@ class TestAlwaysTrueSkillCost:
                 return True
 
             def resolve_ledger_aliases(self):
-                from kiro_crew.skills import SkillsLoader
+                from aj_crew.skills import SkillsLoader
 
                 return SkillsLoader.resolve_ledger_aliases(self)
 
@@ -1137,7 +1137,7 @@ class TestAlwaysTrueSkillCost:
 
     def test_always_true_with_deliveries_still_none_chars(self, tmp_path):
         """Even with recorded deliveries, always:true chars stays None."""
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
 
         skill_file = _make_skill(tmp_path, "pinned", "# Pinned\nlots of content")
 
@@ -1165,7 +1165,7 @@ class TestAlwaysTrueSkillCost:
                 return True
 
             def resolve_ledger_aliases(self):
-                from kiro_crew.skills import SkillsLoader
+                from aj_crew.skills import SkillsLoader
 
                 return SkillsLoader.resolve_ledger_aliases(self)
 
@@ -1179,7 +1179,7 @@ class TestAlwaysTrueSkillCost:
 
     def test_mixed_always_and_regular_total_chars(self, tmp_path):
         """total_chars only includes regular skills, not always:true."""
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
 
         always_file = _make_skill(tmp_path, "always-skill", "x" * 100)
         regular_file = _make_skill(tmp_path, "regular", "y" * 200)
@@ -1215,7 +1215,7 @@ class TestAlwaysTrueSkillCost:
                 return True
 
             def resolve_ledger_aliases(self):
-                from kiro_crew.skills import SkillsLoader
+                from aj_crew.skills import SkillsLoader
 
                 return SkillsLoader.resolve_ledger_aliases(self)
 
@@ -1261,8 +1261,8 @@ class TestBudgetEndpointAgainstTheRealLoader:
     """
 
     def test_the_budget_computes_over_a_real_loader(self, tmp_path):
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.skills import SkillsLoader
 
         skills_root = tmp_path / "skills"
         (skills_root / "alpha").mkdir(parents=True)
@@ -1304,10 +1304,10 @@ class TestBudgetEndpointAgainstTheRealLoader:
         while the endpoint could never have listed it -- an assertion that cannot
         fail, which its surviving mutation exposed.
         """
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.skills import SkillsLoader
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         skill_trust.reset_cache_for_tests()
 
         project = tmp_path / "proj"
@@ -1350,13 +1350,13 @@ class TestRowsExplainThemselves:
         yield
 
     def _loader(self, skills_root: Path):
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         return SkillsLoader(skills_path=skills_root, install_builtins=False)
 
     def test_description_and_origin_reach_the_row(self, tmp_path):
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
-        from kiro_crew.skills_builtin_provenance import _record_builtin_provenance
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.skills_builtin_provenance import _record_builtin_provenance
 
         skills_root = tmp_path / "skills"
         shipped = skills_root / "living-ui"
@@ -1390,9 +1390,9 @@ class TestRowsExplainThemselves:
     def test_installed_app_skill_is_app_not_builtin_or_yours(self, tmp_path, monkeypatch):
         # An installed app's skill lives under <data home>/apps and is linked
         # into the skills dir. It has no provenance marker and is not the
-        # user's (the loader says so), but Kiro Crew did not ship it either.
-        from kiro_crew import skills as skills_facade
-        from kiro_crew.dashboard.handlers import skill_budget
+        # user's (the loader says so), but Aj Crew did not ship it either.
+        from aj_crew import skills as skills_facade
+        from aj_crew.dashboard.handlers import skill_budget
 
         home = tmp_path / "home"
         app_skill = home / "apps" / "some-app" / "skills" / "app-helper"
@@ -1412,8 +1412,8 @@ class TestRowsExplainThemselves:
     def test_skill_shipped_inside_the_package_is_builtin(self, tmp_path, monkeypatch):
         # A built-in app keeps its skills inside the installed package, which
         # is also a trusted root; that one IS shipped, so it stays "builtin".
-        from kiro_crew import skills as skills_facade
-        from kiro_crew.dashboard.handlers import skill_budget
+        from aj_crew import skills as skills_facade
+        from aj_crew.dashboard.handlers import skill_budget
 
         pkg_skill = tmp_path / "pkg" / "apps" / "builtins" / "x" / "skills" / "pkg-helper"
         pkg_skill.mkdir(parents=True)
@@ -1432,8 +1432,8 @@ class TestRowsExplainThemselves:
         # The redactor's own patterns are covered by its tests and by the name
         # test above; here it is swapped for a marker-matching stand-in so the
         # fixture needs no credential-shaped literal.
-        from kiro_crew.dashboard.handlers import skill_budget
-        from kiro_crew.dashboard.handlers.skill_budget import _compute_budget
+        from aj_crew.dashboard.handlers import skill_budget
+        from aj_crew.dashboard.handlers.skill_budget import _compute_budget
 
         planted = "LEAK-MARKER-26893"
         monkeypatch.setattr(

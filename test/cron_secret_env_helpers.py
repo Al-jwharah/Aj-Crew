@@ -25,17 +25,17 @@ def _cron_caller_is_named(named_cron_caller):
 def cron_home_fixture(_floor_monkeypatch, tmp_path):
     """Point cron_script.config_dir at the per-test patched home.
 
-    Scripts and the vault share ``<home>/.kirocrew/crons``, so resolver, pin and
+    Scripts and the vault share ``<home>/.ajcrew/crons``, so resolver, pin and
     vault agree on one root. Tests that do not patch ``Path.home`` still reach the
     resolver via ``compute_secret_env_pin``, so they get a per-test tmp dir, never
-    the real ``~/.kirocrew``. Returns the resolver so tests can plant scripts.
+    the real ``~/.ajcrew``. Returns the resolver so tests can plant scripts.
     """
     real_home = Path.home()
-    fallback = tmp_path / "kirocrew-home-fallback"
+    fallback = tmp_path / "ajcrew-home-fallback"
 
     def _dir() -> Path:
         home = Path.home()
-        root = fallback if home == real_home else home / ".kirocrew"
+        root = fallback if home == real_home else home / ".ajcrew"
         # The real ``config_dir`` resolves AND creates the home on every call
         # (``mkdir(parents=True, exist_ok=True)``), so a stub that handed back a
         # non-existent directory would model a state production cannot be in --
@@ -44,7 +44,7 @@ def cron_home_fixture(_floor_monkeypatch, tmp_path):
         root.mkdir(parents=True, exist_ok=True)
         return root
 
-    _floor_monkeypatch.setattr("kiro_crew.cron_script.config_dir", _dir)
+    _floor_monkeypatch.setattr("aj_crew.cron_script.config_dir", _dir)
     return _dir
 
 

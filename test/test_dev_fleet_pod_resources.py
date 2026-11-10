@@ -16,7 +16,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.apps.builtins.dev_fleet import fleet_state, runtime
+from aj_crew.apps.builtins.dev_fleet import fleet_state, runtime
 
 # Pod HOME values are opaque (``rt.pod_home`` is stubbed), but built from the
 # temp dir so no path in this file is impossible on Windows.
@@ -27,8 +27,8 @@ _HOME_ALPHA = os.path.join(_TMP, "kc-pods", "alpha")
 # Canned ``systemctl --user show`` dump; the probe matches blocks to units by
 # ``Id``. Beta has MemoryAccounting=no and no MemoryMax (systemd omits a property
 # it cannot answer, so the parser must tolerate it).
-_UNIT_A = "kirocrew-pod@alpha.service"
-_UNIT_B = "kirocrew-pod@beta.service"
+_UNIT_A = "ajcrew-pod@alpha.service"
+_UNIT_B = "ajcrew-pod@beta.service"
 _CANNED_TWO_PODS = f"""\
 Id={_UNIT_A}
 MemoryCurrent=652242944
@@ -50,7 +50,7 @@ CPUAccounting=no
 @pytest.fixture
 def _cfg():
     """A stand-in PodConfig: only pod_unit/pod_home reach it via ``rt``."""
-    return SimpleNamespace(unit_prefix="kirocrew-pod")
+    return SimpleNamespace(unit_prefix="ajcrew-pod")
 
 
 @pytest.fixture(autouse=True)
@@ -114,7 +114,7 @@ def test_a_short_record_list_never_misattributes(monkeypatch, _cfg):
     A unit systemd does not know emits no block, so positional pairing would
     publish one pod's figures under another pod's name.
     """
-    unit_c = "kirocrew-pod@gamma.service"
+    unit_c = "ajcrew-pod@gamma.service"
     dump = (
         f"Id={_UNIT_A}\nMemoryCurrent=100\nTasksCurrent=1\n"
         "MemoryAccounting=yes\nCPUAccounting=no\n\n"
@@ -138,10 +138,10 @@ def test_home_size_cache_drops_pods_that_stopped(monkeypatch, _cfg):
     """
     _stub_rt(monkeypatch, show_stdout=_CANNED_TWO_PODS)
     fleet_state._POD_HOME_SIZE_CACHE[_UNIT_A] = (1.0, 111)
-    fleet_state._POD_HOME_SIZE_CACHE["kirocrew-pod@evicted.service"] = (1.0, 999)
+    fleet_state._POD_HOME_SIZE_CACHE["ajcrew-pod@evicted.service"] = (1.0, 999)
     fleet_state._pod_resources_sync(_cfg, ["alpha", "beta"])
     assert _UNIT_A in fleet_state._POD_HOME_SIZE_CACHE
-    assert "kirocrew-pod@evicted.service" not in fleet_state._POD_HOME_SIZE_CACHE
+    assert "ajcrew-pod@evicted.service" not in fleet_state._POD_HOME_SIZE_CACHE
     assert fleet_state._coerce_uint("0") == 0
 
 
@@ -187,7 +187,7 @@ def test_resources_empty_running_set_short_circuits(monkeypatch, _cfg):
 
 # CPU delta: null on first sample, correct % on the second
 def test_cpu_percent_null_then_pct():
-    unit = "kirocrew-pod@alpha.service"
+    unit = "ajcrew-pod@alpha.service"
     rec_on = {"CPUAccounting": "yes", "CPUUsageNSec": "1000000000"}  # 1.0s cpu
     # First observation at t=100.0 -> null (no prior sample).
     assert fleet_state._cpu_percent(unit, rec_on, 100.0) is None
@@ -197,14 +197,14 @@ def test_cpu_percent_null_then_pct():
 
 
 def test_cpu_percent_absent_when_accounting_off():
-    unit = "kirocrew-pod@x.service"
+    unit = "ajcrew-pod@x.service"
     assert fleet_state._cpu_percent(unit, {"CPUAccounting": "no", "CPUUsageNSec": "5"}, 1.0) is None
     # Accounting-off must not leave a stale sample that fakes a later delta.
     assert unit not in fleet_state._POD_CPU_SAMPLES
 
 
 def test_cpu_percent_null_on_counter_reset():
-    unit = "kirocrew-pod@y.service"
+    unit = "ajcrew-pod@y.service"
     assert (
         fleet_state._cpu_percent(unit, {"CPUAccounting": "yes", "CPUUsageNSec": "500"}, 10.0)
         is None
@@ -222,7 +222,7 @@ def test_cpu_percent_null_across_a_fast_restart():
     The backwards-counter guard misses a fast restart that already burned past
     the old total; only the invocation id makes the restart unambiguous.
     """
-    unit = "kirocrew-pod@z.service"
+    unit = "ajcrew-pod@z.service"
     first = {"CPUAccounting": "yes", "CPUUsageNSec": "1000000000", "InvocationID": "aaa"}
     assert fleet_state._cpu_percent(unit, first, 100.0) is None
     # Restarted (new invocation) AND already past the old total, so the delta is
@@ -241,8 +241,8 @@ def test_empty_running_set_clears_stale_caches(monkeypatch, _cfg):
     sample is compared against a restarted pod's counter.
     """
     _stub_rt(monkeypatch, show_stdout="")
-    fleet_state._POD_CPU_SAMPLES["kirocrew-pod@gone.service"] = (1.0, 5, "aaa")
-    fleet_state._POD_HOME_SIZE_CACHE["kirocrew-pod@gone.service"] = (1.0, 999)
+    fleet_state._POD_CPU_SAMPLES["ajcrew-pod@gone.service"] = (1.0, 5, "aaa")
+    fleet_state._POD_HOME_SIZE_CACHE["ajcrew-pod@gone.service"] = (1.0, 999)
     assert fleet_state._pod_resources_sync(_cfg, []) == {}
     assert fleet_state._POD_CPU_SAMPLES == {}
     assert fleet_state._POD_HOME_SIZE_CACHE == {}
@@ -268,7 +268,7 @@ async def test_home_size_cached_within_ttl(monkeypatch, _cfg):
 
     monkeypatch.setattr(runtime, "_run_cmd", _fake_run_cmd)
 
-    unit = "kirocrew-pod@alpha.service"
+    unit = "ajcrew-pod@alpha.service"
     # t=1000: first call runs du.
     monkeypatch.setattr(runtime, "_trusted_bin", lambda name: "/usr/bin/du")
     assert await fleet_state._pod_home_size(_cfg, "alpha", unit, 1000.0) == 123456
@@ -300,7 +300,7 @@ async def test_home_size_goes_through_the_routed_chokepoint(monkeypatch, _cfg):
     monkeypatch.setattr(runtime, "_trusted_bin", lambda name: "/usr/bin/du")
     raw = MagicMock()
     monkeypatch.setattr(subprocess, "run", raw)
-    await fleet_state._pod_home_size(_cfg, "alpha", "kirocrew-pod@alpha.service", 1.0)
+    await fleet_state._pod_home_size(_cfg, "alpha", "ajcrew-pod@alpha.service", 1.0)
     # Routed by NAME -- `_run_cmd` resolves and vets it; the caller never picks
     # the binary path itself.
     assert seen["argv"][0] == "du"
@@ -317,7 +317,7 @@ async def test_home_size_failure_is_none(monkeypatch, _cfg):
 
     monkeypatch.setattr(runtime, "_run_cmd", _fail)
     assert (
-        await fleet_state._pod_home_size(_cfg, "alpha", "kirocrew-pod@alpha.service", 1.0) is None
+        await fleet_state._pod_home_size(_cfg, "alpha", "ajcrew-pod@alpha.service", 1.0) is None
     )
 
 

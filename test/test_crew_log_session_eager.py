@@ -13,12 +13,12 @@ import asyncio
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, bus
-from kiro_crew.crew_log import checkpoint as savepoints
-from kiro_crew.crew_log import eager, emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.dashboard.handlers import crew_log as routes
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, bus
+from aj_crew.crew_log import checkpoint as savepoints
+from aj_crew.crew_log import eager, emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.dashboard.handlers import crew_log as routes
 
 GATEWAY = "gateway"
 SESSION = "s-session-eager"
@@ -27,7 +27,7 @@ SESSION = "s-session-eager"
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
     """Every test writes into its own data home, with no warm cell or subscriber left over."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     eager.stop_for_tests()
     crew_log.forget_slot_folds()
     crew_log.forget_session_folds()
@@ -43,7 +43,7 @@ def _isolated_home(tmp_path, monkeypatch):
 
 def _log(unit_id: str = SESSION, **fields) -> CrewLog:
     fields.setdefault("owner", "raymond")
-    fields.setdefault("agent", "kirocrew")
+    fields.setdefault("agent", "ajcrew")
     return CrewLog.create(lg.KIND_SESSION, unit_id, **fields)
 
 
@@ -409,7 +409,7 @@ def test_a_removal_waits_for_a_fold_that_has_the_log_open(monkeypatch):
     """
     import threading
 
-    from kiro_crew.crew_log import store
+    from aj_crew.crew_log import store
 
     handle = _log()
     seq = _turn(handle, 1)

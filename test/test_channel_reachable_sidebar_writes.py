@@ -17,12 +17,12 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_folder_app, _make_state, _make_tags_app
 
-from kiro_crew.dashboard.chat_folders import api_chat_folder_reorder
-from kiro_crew.messaging.link import ChannelLink
+from aj_crew.dashboard.chat_folders import api_chat_folder_reorder
+from aj_crew.messaging.link import ChannelLink
 
 _hermetic_signing_secret = chat_tags_helpers._hermetic_signing_secret
 
-_AGENT = {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "kirocrew-dashboard"}
+_AGENT = {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "ajcrew-dashboard"}
 
 #: Each write as ``(app, method, path, body)``, with the status a caller the rule does
 #: not refuse gets. ``{alpha}``, ``{beta}`` and ``{tag}`` are filled in from the setup.
@@ -82,7 +82,7 @@ def _store(state: Any) -> list[Any]:
 async def test_a_channel_reachable_agent_cannot_reshape_the_sidebar(
     tmp_path, monkeypatch, write: str, caller: str
 ) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.get_or_create_slot("a")
     which, method, path, body, allowed = _WRITES[write]

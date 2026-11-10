@@ -1,6 +1,6 @@
 # Meetings (builtin app)
 
-An AI meeting assistant. Transcribes a live meeting through Kiro Crew's own
+An AI meeting assistant. Transcribes a live meeting through Aj Crew's own
 streaming speech-to-text, stores the finalized transcript, fans each line out to
 a small crew of background agents (structured notes, an HTML/Mermaid diagram, an
 action-item list), and gates the meeting's close behind a review of the extracted
@@ -12,7 +12,7 @@ action items.
 
 | Path | What it is |
 |---|---|
-| `src/kiro_crew/apps/builtins/meetings/app.json` | manifest (`backend.routes`, `ui.pages`, agents, permissions) |
+| `src/aj_crew/apps/builtins/meetings/app.json` | manifest (`backend.routes`, `ui.pages`, agents, permissions) |
 | `.../backend/constants.py` | every limit, state name, and provider id |
 | `.../backend/store.py` | on-disk layout **and the single path-containment barrier** |
 | `.../backend/domain/dictionary.py` | speech-correction dictionary (TOML) |
@@ -26,7 +26,7 @@ action items.
 | `.../backend/calendar_poller.py` | background calendar poll: keeps the cache fresh, pre-creates the meeting about to start |
 | `.../backend/routes/` | `_common` (gate + validation + the dispatch transaction), `meeting_lifecycle`, `agents`, `audio_import`, `tasks`, `calendar`, `settings` |
 | `.../agents/*.json` | the three shipped agent specs |
-| `src/kiro_crew/builtin_skills/meetings/SKILL.md` | the bundled skill (data layout, lifecycle, provider config) |
+| `src/aj_crew/builtin_skills/meetings/SKILL.md` | the bundled skill (data layout, lifecycle, provider config) |
 | `website/src/apps/meetings/` | `MeetingsPage` (list) → `MeetingView` → `TaskReviewView`, `SettingsView` |
 | `website/public/app-assets/meetings/` | icon + hero art |
 
@@ -437,7 +437,7 @@ must also be what publishes the accepted set.
 
 It is **not** an `AgentQueue` variant. That one exists to BATCH (30 s) so an agent
 gets context; this exists to avoid batching, so it is a bounded SEQUENTIAL
-per-meeting queue running one tool-less call on `kirocrew-lite` per line with the
+per-meeting queue running one tool-less call on `ajcrew-lite` per line with the
 ephemeral session destroyed after. This is the app's first non-agent LLM path;
 anything else needing a quick model call should reuse it.
 
@@ -468,7 +468,7 @@ marks it rather than leaving a gap indistinguishable from nobody speaking.
 ## Importing a recording
 
 `POST …/{id}/import` (`backend/routes/audio_import.py`) takes a host path,
-transcribes it with the gateway's batch speech-to-text (`kiro_crew.transcribe`),
+transcribes it with the gateway's batch speech-to-text (`aj_crew.transcribe`),
 and feeds the result into the meeting **as if it had been spoken**: every line goes
 through `_common.dispatch_line`, so it is appended to `transcript.jsonl` and only
 then fanned out — the same persist-before-fan-out boundary live speech crosses —
@@ -572,7 +572,7 @@ read-fenced). Six decisions worth carrying forward:
   string reaches a path. An unrecognised signature is REFUSED, which is what keeps
   SVG out (no binary signature, and a document that can carry `<script>`).
   The magic bytes themselves are NOT this app's: `sniff_image_ext` delegates to
-  `kiro_crew.messaging.raster.sniff_raster_mime` and keeps only a `{mime: ext}`
+  `aj_crew.messaging.raster.sniff_raster_mime` and keeps only a `{mime: ext}`
   allowlist, which is the per-consumer narrowing that module reserves for its callers.
   A second copy of the table is how one path ends up accepting a type another rejects,
   so BMP stays out by being absent from the allowlist rather than from the table.
@@ -617,7 +617,7 @@ notification feed.
 
 ## The two provider seams
 
-Both follow `kiro_crew.embeddings`' `EmbeddingBackend` /
+Both follow `aj_crew.embeddings`' `EmbeddingBackend` /
 `register_embedding_backend` shape: an ABC, a name-keyed factory registry, and a
 resolver that **degrades instead of raising** on an unknown id. Each ships
 exactly one real implementation; the seam exists so an out-of-repo edition can
@@ -760,7 +760,7 @@ every minute while it is open, so a pre-created meeting appears without a remoun
 
 ## Transcript UI and speech-to-text
 
-Kiro Crew's own `/api/ws/stt` (`dashboard/stt_stream.py`).
+Aj Crew's own `/api/ws/stt` (`dashboard/stt_stream.py`).
 `hooks/useMeetingTranscription.ts` conforms to that endpoint's existing wire
 protocol — connect, wait for `{"type":"ready"}`, send 16 kHz Int16 PCM from
 `/pcm-worklet.js`, receive `partial`/`final`/`error`, send `{"type":"stop"}` and
@@ -961,7 +961,7 @@ broadcast bar remains available when speech input is unavailable.
   default-disabled app would otherwise stay callable). `is_app_enabled` runs off
   the loop.
 * **Owner-edit isolation.** User-edited minutes live under the fixed
-  `<KIROCREW_HOME>/apps/meetings/data/edits/` sensitive root, outside the meeting
+  `<AJCREW_HOME>/apps/meetings/data/edits/` sensitive root, outside the meeting
   directories given to agents. The shared hook gate denies both reads and writes
   from file tools (and shell equivalents), while the app's direct backend I/O
   remains available. This is the enforcement boundary; flat agent filenames alone
@@ -1025,7 +1025,7 @@ broadcast bar remains available when speech input is unavailable.
      Remote-URL *fetches* are left to the CSP rather than pattern-matched.
 
   Mermaid still renders, and this is what makes control 3 affordable: it is driven
-  by Kiro Crew's own bootstrap from the declarative `div.mermaid` / fenced
+  by Aj Crew's own bootstrap from the declarative `div.mermaid` / fenced
   ```mermaid markup the agent is instructed to emit, so the agent has no
   documented need to ship JS. Both directions are tested in
   `website/src/apps/meetings/sketchSrcdoc.test.ts` — nothing executable survives, **and** a
@@ -1063,7 +1063,7 @@ broadcast bar remains available when speech input is unavailable.
 See `ATTRIBUTION.md` for the table. In short: the internal task system became
 the task-provider seam, the internal calendar MCP became the calendar-provider
 seam, the second (separately built, internally sourced) speech-to-text daemon was
-deleted in favour of Kiro Crew's own, the standalone server became in-gateway
+deleted in favour of Aj Crew's own, the standalone server became in-gateway
 routes, the shell-blob self-heal cron became Python at startup, and the
 internal-git update-check cron was deleted (a builtin versions with the package).
 
@@ -1095,7 +1095,7 @@ model, or decodes audio.
 
 Most of the app's backend tests live in the repo-level `test/` tree. The pins of
 core behaviour the app relies on live in the package's own `tests/` (collected
-through `setup.cfg`'s `testpaths = test src/kiro_crew/apps/builtins`):
+through `setup.cfg`'s `testpaths = test src/aj_crew/apps/builtins`):
 `test_owner_only_store.py` (the startup sweep lists the store the app writes, and a
 transcript inside the data home is created `0600`), `test_import_suffix_demuxers.py`
 (every import-admissible suffix maps to a forced FFmpeg demuxer) and
@@ -1119,9 +1119,9 @@ IME Enter guard), and `settingsStaleTime.test.ts` (the settings view's focus-ref
 opt-in).
 
 **Repository boundary.** Meetings is to leave this repository whole, so no module
-under `src/kiro_crew` outside `apps/builtins/`, and no `scripts/` file, imports
-`kiro_crew.apps.builtins.meetings`. The app imports the core (speech-to-text, the
-`UNTRUSTED_CALENDAR_EVENT` fence in `kiro_crew.context`, redaction, the sandbox and
+under `src/aj_crew` outside `apps/builtins/`, and no `scripts/` file, imports
+`aj_crew.apps.builtins.meetings`. The app imports the core (speech-to-text, the
+`UNTRUSTED_CALENDAR_EVENT` fence in `aj_crew.context`, redaction, the sandbox and
 path helpers); the core needs nothing from the app, so no seam is involved.
 `test/test_core_meetings_decoupling.py` is the gate, on the shared
 `test/core_app_independence.py` scanner. The core strings left naming the app are a

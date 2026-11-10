@@ -69,7 +69,7 @@ describe('non-millisecond histogram rows', () => {
     vi.mocked(api.telemetryStartup).mockResolvedValue(resp({
       other: [
         {
-          name: 'kirocrew.process.memory.rss_sampled',
+          name: 'ajcrew.process.memory.rss_sampled',
           kind: 'histogram',
           unit: 'By',
           count: 120,
@@ -88,9 +88,9 @@ describe('non-millisecond histogram rows', () => {
     render(<TelemetryPanel />, { wrapper: Wrapper })
 
     await waitFor(() => {
-      expect(screen.getByText('kirocrew.process.memory.rss_sampled')).toBeInTheDocument()
+      expect(screen.getByText('ajcrew.process.memory.rss_sampled')).toBeInTheDocument()
     })
-    const row = rowFor('kirocrew.process.memory.rss_sampled')
+    const row = rowFor('ajcrew.process.memory.rss_sampled')
     // A byte reading in byte units. A millisecond suffix anywhere in this row is
     // the unit lie, whichever cell carries it.
     expect(row.textContent).toContain('GB')
@@ -106,7 +106,7 @@ describe('non-millisecond histogram rows', () => {
     vi.mocked(api.telemetryStartup).mockResolvedValue(resp({
       other: [
         {
-          name: 'kirocrew.process.cpu.utilization',
+          name: 'ajcrew.process.cpu.utilization',
           kind: 'histogram',
           unit: '1',
           count: 300,
@@ -125,9 +125,9 @@ describe('non-millisecond histogram rows', () => {
     render(<TelemetryPanel />, { wrapper: Wrapper })
 
     await waitFor(() => {
-      expect(screen.getByText('kirocrew.process.cpu.utilization')).toBeInTheDocument()
+      expect(screen.getByText('ajcrew.process.cpu.utilization')).toBeInTheDocument()
     })
-    const row = rowFor('kirocrew.process.cpu.utilization')
+    const row = rowFor('ajcrew.process.cpu.utilization')
     // A share of one machine's cores. 0.0625 of the cores is 6.3% of them; the
     // raw ratio reads as a rounding artefact. A whole share keeps no trailing
     // zero, so the maximum reads 94%.
@@ -142,7 +142,7 @@ describe('non-millisecond histogram rows', () => {
         // Exactly the shape `_amount_stats` reports for an empty window: a count,
         // a unit, and no percentile of any name.
         {
-          name: 'kirocrew.process.memory.rss_sampled',
+          name: 'ajcrew.process.memory.rss_sampled',
           kind: 'histogram',
           unit: 'By',
           count: 0,
@@ -153,9 +153,9 @@ describe('non-millisecond histogram rows', () => {
     render(<TelemetryPanel />, { wrapper: Wrapper })
 
     await waitFor(() => {
-      expect(screen.getByText('kirocrew.process.memory.rss_sampled')).toBeInTheDocument()
+      expect(screen.getByText('ajcrew.process.memory.rss_sampled')).toBeInTheDocument()
     })
-    const row = rowFor('kirocrew.process.memory.rss_sampled')
+    const row = rowFor('ajcrew.process.memory.rss_sampled')
     // The unit is the only thing that says which family this row belongs to, so
     // an empty window still reads in bytes.
     expect(row.textContent).not.toContain('0ms')
@@ -167,7 +167,7 @@ describe('non-millisecond histogram rows', () => {
     vi.mocked(api.telemetryStartup).mockResolvedValue(resp({
       other: [
         {
-          name: 'kirocrew.tool.call.duration',
+          name: 'ajcrew.tool.call.duration',
           kind: 'histogram',
           count: 45,
           mean_ms: 120,
@@ -184,9 +184,9 @@ describe('non-millisecond histogram rows', () => {
     render(<TelemetryPanel />, { wrapper: Wrapper })
 
     await waitFor(() => {
-      expect(screen.getByText('kirocrew.tool.call.duration')).toBeInTheDocument()
+      expect(screen.getByText('ajcrew.tool.call.duration')).toBeInTheDocument()
     })
-    const row = rowFor('kirocrew.tool.call.duration')
+    const row = rowFor('ajcrew.tool.call.duration')
     // A duration row carries no unit, and the millisecond formatter is what it
     // has always meant. Selecting rows by kind must not move it.
     expect(row.textContent).toContain('95ms')

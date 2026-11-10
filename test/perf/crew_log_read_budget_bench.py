@@ -1,8 +1,8 @@
 """What counting crew-log reads costs, and whether it counts right, at 4 slot sizes.
 
-Run with the worktree venv, PYTHONPATH=src and an isolated KIROCREW_HOME:
+Run with the worktree venv, PYTHONPATH=src and an isolated AJCREW_HOME:
 
-    KIROCREW_HOME=<empty dir> KIROCREW_CREW_LOG=1 PYTHONPATH=src \\
+    AJCREW_HOME=<empty dir> AJCREW_CREW_LOG=1 PYTHONPATH=src \\
         .venv/bin/python test/perf/crew_log_read_budget_bench.py --output out.json
 
 The largest size has the busy host's biggest slot shape (8 units, 214,421 records, the
@@ -21,10 +21,10 @@ import os
 import statistics
 import time
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, checkpoint
-from kiro_crew.crew_log import eager as crew_log_eager
-from kiro_crew.crew_log import projection, read_budget
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, checkpoint
+from aj_crew.crew_log import eager as crew_log_eager
+from aj_crew.crew_log import projection, read_budget
 
 #: The busy host's biggest slot, records per unit oldest first: the largest unit as
 #: measured, the other 59,528 records split by each unit's byte size.

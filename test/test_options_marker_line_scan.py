@@ -19,8 +19,8 @@ import sys
 from hypothesis import example, given, settings
 from hypothesis import strategies as st
 
-from kiro_crew import constants
-from kiro_crew.constants import (
+from aj_crew import constants
+from aj_crew.constants import (
     _RAW_OPTIONS_RE_LINE,
     OPTIONS_RE_LINE,
     _marker_labels_have_unmatched_opener,

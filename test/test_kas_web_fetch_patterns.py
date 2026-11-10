@@ -17,20 +17,20 @@ from typing import Any
 import pytest
 from test_tool_call_classification_kas import _kas_builtin_flow
 
-from kiro_crew.acp import kas_agents
-from kiro_crew.acp.kas_permissions import CREW_SPEC_DENIES_KEY
-from kiro_crew.acp.kas_spec_denies import projected_spec_denies
-from kiro_crew.acp.types import AcpEvent
-from kiro_crew.hooks import (
+from aj_crew.acp import kas_agents
+from aj_crew.acp.kas_permissions import CREW_SPEC_DENIES_KEY
+from aj_crew.acp.kas_spec_denies import projected_spec_denies
+from aj_crew.acp.types import AcpEvent
+from aj_crew.hooks import (
     TOOL_ALLOW,
     TOOL_AUTO_APPROVE,
     HookManager,
     HooksConfig,
     hook_gate_kwargs,
 )
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform.spec_denied_gate import url_literal
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform.spec_denied_gate import url_literal
 
 
 @pytest.fixture(autouse=True)

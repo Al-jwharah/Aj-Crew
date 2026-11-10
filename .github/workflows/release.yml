@@ -32,11 +32,11 @@ jobs:
     # route falls back to the shared standard pool for any tagger outside
     # CODEBUILD_ACTOR_IDS, and the tagger rotates with the on-call; every other
     # job here `needs` this one, so that queue delays the whole release.
-    # `kirocrew-runners` larger-runner group, targeted by GROUP not label; see
+    # `ajcrew-runners` larger-runner group, targeted by GROUP not label; see
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     timeout-minutes: 10
     outputs:
       version: ${{ steps.channel.outputs.version }}
@@ -101,7 +101,7 @@ jobs:
           # the cleared commit by default. Promotion -- republishing the
           # candidate's own bytes -- cannot do that: those bytes were stamped
           # from the prerelease tag, so a promoted stable ships "0.5.0rc9" in
-          # the wheel name, the feed, `pip show` and `kirocrew --version`, and
+          # the wheel name, the feed, `pip show` and `ajcrew --version`, and
           # nothing downstream can re-stamp them without invalidating the
           # recorded digests and macOS signatures.
           #
@@ -131,11 +131,11 @@ jobs:
     name: Test Release Candidate SHA
     if: needs.version.outputs.channel == 'insider'
     needs: version
-    # `kirocrew-runners` larger-runner group, targeted by GROUP not label; see
+    # `ajcrew-runners` larger-runner group, targeted by GROUP not label; see
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     # Match ci.yml's whole-file split so every runner carries a bounded part of
     # the exact-SHA gate while the matrix still covers the full test population.
     timeout-minutes: 60
@@ -202,11 +202,11 @@ jobs:
     name: Resolve Tested Candidate
     if: needs.version.outputs.promote_mode == 'true'
     needs: version
-    # `kirocrew-runners` larger-runner group, targeted by GROUP not label; see
+    # `ajcrew-runners` larger-runner group, targeted by GROUP not label; see
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     permissions:
       actions: read
       contents: read
@@ -239,7 +239,7 @@ jobs:
       - name: Attach verified bundle to this run
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: KiroCrew-notarized-stable-${{ needs.version.outputs.version }}
+          name: AjCrew-notarized-stable-${{ needs.version.outputs.version }}
           path: ${{ runner.temp }}/stable-promotion/*
           if-no-files-found: error
           retention-days: 14
@@ -275,11 +275,11 @@ jobs:
   stable-gate:
     name: Stable publication gate
     needs: [version]
-    # `kirocrew-runners` larger-runner group, targeted by GROUP not label; see
+    # `ajcrew-runners` larger-runner group, targeted by GROUP not label; see
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     # A full-history checkout on this runner group can take most of ten
     # minutes even with the blobless filter below; 20 leaves headroom.
     timeout-minutes: 20
@@ -395,7 +395,7 @@ jobs:
           # landed, so a source install, a `pip install -e .` and every later
           # RC on this branch still advertise the stale spelling.
           for spec in \
-            "src/kiro_crew/__init__.py:^__version__ = \"\\(.*\\)\"$" \
+            "src/aj_crew/__init__.py:^__version__ = \"\\(.*\\)\"$" \
             "pyproject.toml:^version = \"\\(.*\\)\"$" \
             "website/electron/package.json:^  \"version\": \"\\(.*\\)\",$"
           do
@@ -422,7 +422,7 @@ jobs:
           # promotion republishes the candidate's bytes, so a promoted stable
           # advertises that candidate's RC-stamped version to stable users.
           if [ "$PROMOTE_MODE" = "true" ]; then
-            echo "::warning::STABLE_PROMOTE_BYTES names $VERSION, so this release republishes the candidate's bytes and will ship an RC-stamped version (wheel name, feed, pip show, kirocrew --version). Unset the variable to rebuild and ship a bare $VERSION instead."
+            echo "::warning::STABLE_PROMOTE_BYTES names $VERSION, so this release republishes the candidate's bytes and will ship an RC-stamped version (wheel name, feed, pip show, ajcrew --version). Unset the variable to rebuild and ship a bare $VERSION instead."
           else
             echo "mode: rebuilding from source so the shipped bytes carry the bare $VERSION"
           fi
@@ -536,7 +536,7 @@ jobs:
     with:
       channel: ${{ needs.version.outputs.channel }}
       version: ${{ needs.version.outputs.version }}
-      wheel_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('KiroCrew-notarized-stable-{0}', needs.version.outputs.version) || 'cli-wheel' }}
+      wheel_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('AjCrew-notarized-stable-{0}', needs.version.outputs.version) || 'cli-wheel' }}
       promote: ${{ needs.version.outputs.promote_mode == 'true' }}
       promotion_base_version: ${{ needs.version.outputs.base_version }}
     # Explicit passthrough, not `secrets: inherit`: the callee declares
@@ -593,7 +593,7 @@ jobs:
       arch: x64
       format: appimage
       publish: true
-      build_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('KiroCrew-notarized-stable-{0}', needs.version.outputs.version) || 'build-linux-x64' }}
+      build_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('AjCrew-notarized-stable-{0}', needs.version.outputs.version) || 'build-linux-x64' }}
       promote: ${{ needs.version.outputs.promote_mode == 'true' }}
       promotion_base_version: ${{ needs.version.outputs.base_version }}
     secrets:
@@ -617,7 +617,7 @@ jobs:
       arch: arm64
       format: appimage
       publish: true
-      build_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('KiroCrew-notarized-stable-{0}', needs.version.outputs.version) || 'build-linux-arm64' }}
+      build_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('AjCrew-notarized-stable-{0}', needs.version.outputs.version) || 'build-linux-arm64' }}
       promote: ${{ needs.version.outputs.promote_mode == 'true' }}
       promotion_base_version: ${{ needs.version.outputs.base_version }}
     secrets:
@@ -641,7 +641,7 @@ jobs:
       arch: x64
       format: deb
       publish: true
-      build_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('KiroCrew-notarized-stable-{0}', needs.version.outputs.version) || 'build-linux-x64' }}
+      build_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('AjCrew-notarized-stable-{0}', needs.version.outputs.version) || 'build-linux-x64' }}
       promote: ${{ needs.version.outputs.promote_mode == 'true' }}
       promotion_base_version: ${{ needs.version.outputs.base_version }}
     secrets:
@@ -665,7 +665,7 @@ jobs:
       arch: arm64
       format: deb
       publish: true
-      build_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('KiroCrew-notarized-stable-{0}', needs.version.outputs.version) || 'build-linux-arm64' }}
+      build_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('AjCrew-notarized-stable-{0}', needs.version.outputs.version) || 'build-linux-arm64' }}
       promote: ${{ needs.version.outputs.promote_mode == 'true' }}
       promotion_base_version: ${{ needs.version.outputs.base_version }}
     secrets:
@@ -689,7 +689,7 @@ jobs:
       arch: x64
       format: rpm
       publish: true
-      build_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('KiroCrew-notarized-stable-{0}', needs.version.outputs.version) || 'build-linux-x64' }}
+      build_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('AjCrew-notarized-stable-{0}', needs.version.outputs.version) || 'build-linux-x64' }}
       promote: ${{ needs.version.outputs.promote_mode == 'true' }}
       promotion_base_version: ${{ needs.version.outputs.base_version }}
     secrets:
@@ -713,7 +713,7 @@ jobs:
       arch: arm64
       format: rpm
       publish: true
-      build_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('KiroCrew-notarized-stable-{0}', needs.version.outputs.version) || 'build-linux-arm64' }}
+      build_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('AjCrew-notarized-stable-{0}', needs.version.outputs.version) || 'build-linux-arm64' }}
       promote: ${{ needs.version.outputs.promote_mode == 'true' }}
       promotion_base_version: ${{ needs.version.outputs.base_version }}
     secrets:
@@ -771,7 +771,7 @@ jobs:
       # does not carry. Mirrors publish-linux.yml's caller exactly.
       version: ${{ needs.version.outputs.promote_mode == 'true' && needs.resolve-promotion.outputs.source_version || needs.version.outputs.version }}
       publish: true
-      installer_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('KiroCrew-notarized-stable-{0}', needs.version.outputs.version) || 'build-windows-x64' }}
+      installer_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('AjCrew-notarized-stable-{0}', needs.version.outputs.version) || 'build-windows-x64' }}
       promote: ${{ needs.version.outputs.promote_mode == 'true' }}
       promotion_base_version: ${{ needs.version.outputs.base_version }}
     secrets:
@@ -804,7 +804,7 @@ jobs:
       # anonymously, so a release that lands behind a private package is a
       # broken release. Fail the lane rather than advertise an unpullable tag.
       require_public_access: true
-      wheel_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('KiroCrew-notarized-stable-{0}', needs.version.outputs.version) || 'cli-wheel' }}
+      wheel_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('AjCrew-notarized-stable-{0}', needs.version.outputs.version) || 'cli-wheel' }}
       promote: ${{ needs.version.outputs.promote_mode == 'true' }}
       promote_digest: ${{ needs.version.outputs.promote_mode == 'true' && needs.resolve-promotion.outputs.docker_digest || '' }}
     # No `secrets: inherit`: the lane authenticates with GITHUB_TOKEN only
@@ -842,14 +842,14 @@ jobs:
       version: ${{ needs.version.outputs.promote_mode == 'true' && needs.resolve-promotion.outputs.source_version || needs.version.outputs.version }}
       write_feed: true
       promote: ${{ needs.version.outputs.promote_mode == 'true' }}
-      promotion_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('KiroCrew-notarized-stable-{0}', needs.version.outputs.version) || '' }}
+      promotion_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('AjCrew-notarized-stable-{0}', needs.version.outputs.version) || '' }}
       promotion_base_version: ${{ needs.version.outputs.base_version }}
 
   # The two single-arch macOS legs: one sign-and-notarize call each, differing
   # from the universal caller above in `mac_variant` + `mac_artifact` alone
   # (nightly.yml has the same pair). Same stable gate, same promotion switch:
   # on a byte promotion every leg downloads the ONE resolved bundle
-  # (KiroCrew-notarized-stable-<version>), and picks its own zip and DMG out
+  # (AjCrew-notarized-stable-<version>), and picks its own zip and DMG out
   # of it by name (notarized-<arch>.zip / the <arch> DMG -- see
   # sign-and-notarize.yml's NOTARIZED_ZIP). NOT `needs: build-wheel`: a
   # single-arch leg downloads only its own build artifact and attests no
@@ -882,7 +882,7 @@ jobs:
       version: ${{ needs.version.outputs.promote_mode == 'true' && needs.resolve-promotion.outputs.source_version || needs.version.outputs.version }}
       write_feed: true
       promote: ${{ needs.version.outputs.promote_mode == 'true' }}
-      promotion_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('KiroCrew-notarized-stable-{0}', needs.version.outputs.version) || '' }}
+      promotion_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('AjCrew-notarized-stable-{0}', needs.version.outputs.version) || '' }}
       promotion_base_version: ${{ needs.version.outputs.base_version }}
       mac_variant: arm64
       mac_artifact: unsigned-build-darwin-arm64
@@ -909,7 +909,7 @@ jobs:
       version: ${{ needs.version.outputs.promote_mode == 'true' && needs.resolve-promotion.outputs.source_version || needs.version.outputs.version }}
       write_feed: true
       promote: ${{ needs.version.outputs.promote_mode == 'true' }}
-      promotion_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('KiroCrew-notarized-stable-{0}', needs.version.outputs.version) || '' }}
+      promotion_artifact: ${{ needs.version.outputs.promote_mode == 'true' && format('AjCrew-notarized-stable-{0}', needs.version.outputs.version) || '' }}
       promotion_base_version: ${{ needs.version.outputs.base_version }}
       mac_variant: x64
       mac_artifact: unsigned-build-darwin-x64
@@ -986,11 +986,11 @@ jobs:
           needs.sign-and-notarize.result == 'success' &&
           needs.sign-and-notarize-arm64.result == 'success' &&
           needs.sign-and-notarize-x64.result == 'success' }}
-    # `kirocrew-runners` larger-runner group, targeted by GROUP not label; see
+    # `ajcrew-runners` larger-runner group, targeted by GROUP not label; see
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     # 60, not 20: the assets now upload one at a time (see `preserve_order` on
     # the Create GitHub Release step), several GB in all.
     timeout-minutes: 60
@@ -1009,7 +1009,7 @@ jobs:
         if: needs.version.outputs.promote_mode == 'true'
         run: |
           python3 scripts/release_promotion.py verify \
-            --bundle-dir "artifacts/KiroCrew-notarized-stable-${{ needs.version.outputs.version }}" \
+            --bundle-dir "artifacts/AjCrew-notarized-stable-${{ needs.version.outputs.version }}" \
             --expected-source-sha "${GITHUB_SHA}" \
             --expected-base-version "${{ needs.version.outputs.base_version }}"
 
@@ -1100,14 +1100,14 @@ jobs:
 
           # Three gated macOS handoffs: the universal DMG and the two single-arch
           # ones (sign-and-notarize-arm64 / -x64). On the fresh path each leg
-          # attached its own artifact, KiroCrew-notarized-<channel>-<version>
+          # attached its own artifact, AjCrew-notarized-<channel>-<version>
           # plus "-<arch>" for a single-arch leg; on a byte promotion all three
           # sit in the ONE resolved bundle under the universal name, told apart
           # by file name (notarized-<arch>.zip / the <arch> DMG -- see
           # sign-and-notarize.yml's NOTARIZED_ZIP). Every one is REQUIRED: the
           # three callers are required lanes, so a page offering two of three
           # would announce a publication that did not complete.
-          NOTARIZED_DIR="artifacts/KiroCrew-notarized-${{ needs.version.outputs.channel }}-${{ needs.version.outputs.version }}"
+          NOTARIZED_DIR="artifacts/AjCrew-notarized-${{ needs.version.outputs.channel }}-${{ needs.version.outputs.version }}"
           # $1 = gated zip, $2 = gated DMG, $3 = release-asset arch label
           # (universal | arm64 | x64).
           require_mac_handoff() {
@@ -1121,8 +1121,8 @@ jobs:
               exit 1
             }
             validate_mac_handoff "$zip" "$dmg"
-            cp "$zip" "release/KiroCrew-${{ needs.version.outputs.version }}-${label}-mac.zip"
-            cp "$dmg" "release/KiroCrew-${{ needs.version.outputs.version }}-${label}.dmg"
+            cp "$zip" "release/AjCrew-${{ needs.version.outputs.version }}-${label}-mac.zip"
+            cp "$dmg" "release/AjCrew-${{ needs.version.outputs.version }}-${label}.dmg"
           }
 
           # Fail closed on corrupt or mis-shaped handoff files before granting
@@ -1173,14 +1173,14 @@ jobs:
           PY_VALIDATE
           }
 
-          require_mac_handoff "${NOTARIZED_DIR}/notarized.zip" "${NOTARIZED_DIR}/KiroCrew.dmg" universal
+          require_mac_handoff "${NOTARIZED_DIR}/notarized.zip" "${NOTARIZED_DIR}/AjCrew.dmg" universal
           for ARCH in arm64 x64; do
             if [ "${PROMOTE_MODE:-}" = "true" ]; then
               ARCH_DIR="$NOTARIZED_DIR"
             else
               ARCH_DIR="${NOTARIZED_DIR}-${ARCH}"
             fi
-            require_mac_handoff "${ARCH_DIR}/notarized-${ARCH}.zip" "${ARCH_DIR}/KiroCrew-${ARCH}.dmg" "$ARCH"
+            require_mac_handoff "${ARCH_DIR}/notarized-${ARCH}.zip" "${ARCH_DIR}/AjCrew-${ARCH}.dmg" "$ARCH"
           done
 
           # The Windows installer, selected per MODE rather than by extension.
@@ -1192,7 +1192,7 @@ jobs:
           # was never soaked or promoted on a stable page, looking the more
           # official of the pair for carrying the version number.
           if [ "${PROMOTE_MODE:-}" = "true" ]; then
-            WINDOWS_INSTALLER="${NOTARIZED_DIR}/KiroCrew-Setup.exe"
+            WINDOWS_INSTALLER="${NOTARIZED_DIR}/AjCrew-Setup.exe"
             [ -s "$WINDOWS_INSTALLER" ] || WINDOWS_INSTALLER=""
           else
             # Scoped to the producing artifact, and two is a bug rather than a
@@ -1211,7 +1211,7 @@ jobs:
           # role is optional for the same reason. Loud in the run summary is the
           # most this hop may do without reintroducing that coupling.
           if [ -n "$WINDOWS_INSTALLER" ]; then
-            cp "$WINDOWS_INSTALLER" "release/KiroCrew-${{ needs.version.outputs.version }}-Setup-x64.exe"
+            cp "$WINDOWS_INSTALLER" "release/AjCrew-${{ needs.version.outputs.version }}-Setup-x64.exe"
           else
             echo "::notice::no Windows installer available to this run; the release page will offer none."
           fi
@@ -1247,7 +1247,7 @@ jobs:
           import re
           import sys
           sys.path.insert(0, "src")
-          from kiro_crew.changelog import parse_sections
+          from aj_crew.changelog import parse_sections
 
           FENCE = re.compile(r"^\s*(```|~~~)")
           HEADING = re.compile(r"^\s{0,3}#{1,6}\s")
@@ -1489,11 +1489,11 @@ jobs:
           needs.sign-and-notarize-arm64.result == 'success' &&
           needs.sign-and-notarize-x64.result == 'success' }}
     needs: [version, release-candidate-tests, publish-cli, publish-linux-appimage-x64, publish-linux-appimage-arm64, publish-linux-deb-x64, publish-linux-deb-arm64, publish-linux-rpm-x64, publish-linux-rpm-arm64, publish-docker, sign-and-notarize, sign-and-notarize-arm64, sign-and-notarize-x64, build-windows]
-    # `kirocrew-runners` larger-runner group, targeted by GROUP not label; see
+    # `ajcrew-runners` larger-runner group, targeted by GROUP not label; see
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     permissions:
       contents: read
     steps:
@@ -1550,37 +1550,37 @@ jobs:
           RPM=$(one rpm -path '*build-linux-x64*' -name '*.rpm')
           RPM_ARM64=$(one rpm-arm64 -path '*build-linux-arm64*' -name '*.rpm')
           # Three macOS legs, three gated artifacts on the run
-          # (KiroCrew-notarized-insider-<version>, plus -arm64 and -x64), each
+          # (AjCrew-notarized-insider-<version>, plus -arm64 and -x64), each
           # holding one zip and one DMG whose NAMES already carry the arch
           # (sign-and-notarize.yml's NOTARIZED_ZIP / ARTIFACT_BASENAME): the
-          # universal leg's are the bare notarized.zip / KiroCrew.dmg, so an
+          # universal leg's are the bare notarized.zip / AjCrew.dmg, so an
           # exact -name match is unambiguous, and the single-arch lookups are
           # scoped to their own artifact directory as well so a misnamed file
           # in the wrong leg is a count error here rather than a promoted one.
-          MAC_ZIP=$(one notarized.zip -path '*KiroCrew-notarized-*' -name 'notarized.zip')
-          DMG=$(one notarized-DMG -path '*KiroCrew-notarized-*' -name 'KiroCrew.dmg')
-          MAC_ZIP_ARM64=$(one notarized-arm64.zip -path '*KiroCrew-notarized-*-arm64/*' -name 'notarized-arm64.zip')
-          DMG_ARM64=$(one notarized-DMG-arm64 -path '*KiroCrew-notarized-*-arm64/*' -name 'KiroCrew-arm64.dmg')
-          MAC_ZIP_X64=$(one notarized-x64.zip -path '*KiroCrew-notarized-*-x64/*' -name 'notarized-x64.zip')
-          DMG_X64=$(one notarized-DMG-x64 -path '*KiroCrew-notarized-*-x64/*' -name 'KiroCrew-x64.dmg')
+          MAC_ZIP=$(one notarized.zip -path '*AjCrew-notarized-*' -name 'notarized.zip')
+          DMG=$(one notarized-DMG -path '*AjCrew-notarized-*' -name 'AjCrew.dmg')
+          MAC_ZIP_ARM64=$(one notarized-arm64.zip -path '*AjCrew-notarized-*-arm64/*' -name 'notarized-arm64.zip')
+          DMG_ARM64=$(one notarized-DMG-arm64 -path '*AjCrew-notarized-*-arm64/*' -name 'AjCrew-arm64.dmg')
+          MAC_ZIP_X64=$(one notarized-x64.zip -path '*AjCrew-notarized-*-x64/*' -name 'notarized-x64.zip')
+          DMG_X64=$(one notarized-DMG-x64 -path '*AjCrew-notarized-*-x64/*' -name 'AjCrew-x64.dmg')
           INSTALLER=$(at_most_one installer -path '*build-windows-x64*' -name '*.exe')
           cp "$WHEEL" "promotion-bundle/$(basename "$WHEEL")"
           cp "$SDIST" "promotion-bundle/$(basename "$SDIST")"
-          cp "$APPIMAGE" promotion-bundle/KiroCrew-x86_64.AppImage
-          cp "$APPIMAGE_ARM64" promotion-bundle/KiroCrew-aarch64.AppImage
-          cp "$DEB" promotion-bundle/KiroCrew-x86_64.deb
-          cp "$DEB_ARM64" promotion-bundle/KiroCrew-aarch64.deb
-          cp "$RPM" promotion-bundle/KiroCrew-x86_64.rpm
-          cp "$RPM_ARM64" promotion-bundle/KiroCrew-aarch64.rpm
+          cp "$APPIMAGE" promotion-bundle/AjCrew-x86_64.AppImage
+          cp "$APPIMAGE_ARM64" promotion-bundle/AjCrew-aarch64.AppImage
+          cp "$DEB" promotion-bundle/AjCrew-x86_64.deb
+          cp "$DEB_ARM64" promotion-bundle/AjCrew-aarch64.deb
+          cp "$RPM" promotion-bundle/AjCrew-x86_64.rpm
+          cp "$RPM_ARM64" promotion-bundle/AjCrew-aarch64.rpm
           cp "$MAC_ZIP" promotion-bundle/notarized.zip
-          cp "$DMG" promotion-bundle/KiroCrew.dmg
+          cp "$DMG" promotion-bundle/AjCrew.dmg
           # Same names they travel under in their gated artifacts, so a
           # promote-mode single-arch leg reads the bundle with the same
           # NOTARIZED_ZIP / ARTIFACT_BASENAME a fresh leg reads its own with.
           cp "$MAC_ZIP_ARM64" promotion-bundle/notarized-arm64.zip
-          cp "$DMG_ARM64" promotion-bundle/KiroCrew-arm64.dmg
+          cp "$DMG_ARM64" promotion-bundle/AjCrew-arm64.dmg
           cp "$MAC_ZIP_X64" promotion-bundle/notarized-x64.zip
-          cp "$DMG_X64" promotion-bundle/KiroCrew-x64.dmg
+          cp "$DMG_X64" promotion-bundle/AjCrew-x64.dmg
           # The blockmap travels with the installer or not at all: promoting the
           # installer alone still updates, but silently turns every stable
           # Windows update into a full download instead of a differential one.
@@ -1598,8 +1598,8 @@ jobs:
             INSTALLER=""
           fi
           if [ -n "$INSTALLER" ]; then
-            cp "$INSTALLER" promotion-bundle/KiroCrew-Setup.exe
-            cp "${INSTALLER}.blockmap" promotion-bundle/KiroCrew-Setup.exe.blockmap
+            cp "$INSTALLER" promotion-bundle/AjCrew-Setup.exe
+            cp "${INSTALLER}.blockmap" promotion-bundle/AjCrew-Setup.exe.blockmap
           else
             echo "::notice::no Windows installer in this run; recording a candidate without the optional Windows role."
           fi
@@ -1612,7 +1612,7 @@ jobs:
             --base-version "${{ needs.version.outputs.base_version }}" \
             --wheel-version "${{ needs.version.outputs.wheel_version }}" \
             --source-run-id "${GITHUB_RUN_ID}" \
-            --docker-image "ghcr.io/${OWNER}/kirocrew" \
+            --docker-image "ghcr.io/${OWNER}/ajcrew" \
             --docker-digest "${DOCKER_DIGEST}"
 
       - name: Upload immutable promotion record
@@ -1676,11 +1676,11 @@ jobs:
           needs.sign-and-notarize-arm64.result == 'success' &&
           needs.sign-and-notarize-x64.result == 'success' &&
           needs.github-release.result == 'success' }}
-    # `kirocrew-runners` larger-runner group, targeted by GROUP not label; see
+    # `ajcrew-runners` larger-runner group, targeted by GROUP not label; see
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     timeout-minutes: 10
     # Editing a release needs contents:write, and this job holds nothing else:
     # no AWS identity, no package scope. Same least-privilege split as
@@ -1755,7 +1755,7 @@ jobs:
           print(
               json.dumps(
                   {
-                      "schema": "kirocrew.stable-publication/1",
+                      "schema": "ajcrew.stable-publication/1",
                       "tag": os.environ["TAG"],
                       "version": os.environ["VERSION"],
                       "base_version": os.environ["BASE_VERSION"],

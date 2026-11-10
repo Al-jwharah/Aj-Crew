@@ -24,9 +24,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew import vector_memory as vm
-from kiro_crew.history import ConversationLog
-from kiro_crew.vector_memory import _HAS_FAISS, _HAS_NUMPY, VectorMemoryStore
+from aj_crew import vector_memory as vm
+from aj_crew.history import ConversationLog
+from aj_crew.vector_memory import _HAS_FAISS, _HAS_NUMPY, VectorMemoryStore
 
 
 def _fake_embed(dim: int):
@@ -218,7 +218,7 @@ class TestLastAccessedDebounce:
 
 class TestLessonsSingleQuery:
     def _builder(self, tmp_path: Path, *, opened):
-        from kiro_crew.context import ContextBuilder, LessonStore, MemoryStore, SkillsLoader
+        from aj_crew.context import ContextBuilder, LessonStore, MemoryStore, SkillsLoader
 
         return ContextBuilder(
             memory=MemoryStore(workspace=tmp_path / "ws"),
@@ -228,7 +228,7 @@ class TestLessonsSingleQuery:
 
     def test_lessons_probe_query_is_gone(self, tmp_path: Path, opened) -> None:
         """get_lessons() is not called as an emptiness probe."""
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         vector_store = MagicMock()
         vector_store.get_lessons_context.return_value = (
@@ -258,8 +258,8 @@ class TestLessonsSingleQuery:
         An empty vector answer can mean "all out of scope", so falling back on empty
         would re-inject rows deleted from the live vector store.
         """
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.learn import Lesson, LessonStore
+        from aj_crew.context import ContextBuilder
+        from aj_crew.learn import Lesson, LessonStore
 
         lessons = LessonStore(base_dir=tmp_path)
         lessons.save(Lesson(ts="1", rule="never force push to mainline", category="knowledge"))
@@ -488,7 +488,7 @@ class TestEpisodicSqliteCosineNumpy:
         use_numpy: bool,
         tag_filter: list[str] | None = None,
     ) -> list[dict]:
-        import kiro_crew.vector_memory as vm
+        import aj_crew.vector_memory as vm
 
         monkeypatch.setattr(vm, "_HAS_NUMPY", use_numpy)
         return store._sqlite_vector_search(
@@ -521,7 +521,7 @@ class TestEpisodicSqliteCosineNumpy:
         touch ``struct.unpack``, which is exactly what the old per-row loop did."""
         if not _HAS_NUMPY:
             pytest.skip("numpy not available on this platform")
-        import kiro_crew.vector_memory as vm
+        import aj_crew.vector_memory as vm
 
         store = self._seed_store(tmp_path, opened=opened)
 
@@ -685,7 +685,7 @@ class TestEpisodicScoringCacheReuse:
         """
         if not _HAS_NUMPY:
             pytest.skip("numpy not available on this platform")
-        import kiro_crew.vector_memory as vm
+        import aj_crew.vector_memory as vm
 
         monkeypatch.setattr(vm, "_HAS_FAISS", False)
         store = self._store(tmp_path, opened=opened)
@@ -760,7 +760,7 @@ class TestEpisodicScoringCacheReuse:
         """
         import ast
 
-        src_root = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+        src_root = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
         write_verbs = (
             "INSERT INTO episodic_memories",
             "UPDATE episodic_memories",
@@ -852,7 +852,7 @@ class TestEpisodicCachedRankingParity:
         use_numpy: bool,
         **kwargs: object,
     ) -> list[dict]:
-        import kiro_crew.vector_memory as vm
+        import aj_crew.vector_memory as vm
 
         monkeypatch.setattr(vm, "_HAS_NUMPY", use_numpy)
         return store._sqlite_vector_search(
@@ -906,7 +906,7 @@ class TestOverBudgetRefusalIsMemoized:
     BUILD_SCAN = ("text_len", "FROM episodic_memories")
 
     def _over_budget_store(self, tmp_path: Path, monkeypatch, *, opened) -> VectorMemoryStore:
-        import kiro_crew.vector_memory as vm_mod
+        import aj_crew.vector_memory as vm_mod
 
         # Smaller than a single 8-float embedding blob, so any populated store
         # refuses to build.
@@ -1236,7 +1236,7 @@ class TestRowStemMemo:
         The per-set memo derives entries through
         ``text_scoring._row_stem_tokens_uncached``, so each call there is a miss.
         """
-        from kiro_crew.vector_memory_runtime import text_scoring
+        from aj_crew.vector_memory_runtime import text_scoring
 
         seen: list[str] = []
         real = text_scoring._row_stem_tokens_uncached

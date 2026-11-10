@@ -35,7 +35,7 @@ const MemoryTab = lazy(() => import('./overview/MemoryTab'))
  * One scrollable dashboard, no nested tab bar: a health hero, the stat-tile
  * grid, and summary cards that drill into the two deep surfaces (memory
  * browser, usage report) via a URL-backed `?view=` param — the same
- * list-detail pattern as the Channels tab. KiroCrew/agent config viewers and
+ * list-detail pattern as the Channels tab. AjCrew/agent config viewers and
  * the memory graph live in Settings > Developer; configuration import/export is
  * on the Import tab.
  */

@@ -34,7 +34,7 @@ export { escapeInvisibleChars }
 
 /** Where the RFC explains redaction; every "About" link opens it. */
 export const ABOUT_REDACTION_URL =
-  'https://github.com/kirodotdev/KiroCrew/blob/main/docs/request-for-change/rfc-redaction-explain-and-reveal.md'
+  'https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/request-for-change/rfc-redaction-explain-and-reveal.md'
 
 // ── records ──────────────────────────────────────────────────────────────
 

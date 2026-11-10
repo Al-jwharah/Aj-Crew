@@ -27,7 +27,7 @@ def _draining(mock_log):
 @pytest.fixture
 def fake_vector_store():
     """The store the command opens, faked for the tests that fake its config."""
-    with patch("kiro_crew.vector_memory.VectorMemoryStore") as store:
+    with patch("aj_crew.vector_memory.VectorMemoryStore") as store:
         yield store
 
 
@@ -42,13 +42,13 @@ class TestConsolidateCmd:
         f.write_text('{"role":"user","content":"hi","ts":"2026-05-18T10:00:00"}\n')
         return sessions_dir
 
-    @patch("kiro_crew.cli.sel")
-    @patch("kiro_crew.cli.SkillsLoader")
-    @patch("kiro_crew.cli.SessionManager")
-    @patch("kiro_crew.cli.MemoryStore")
-    @patch("kiro_crew.cli.HistoryConsolidator")
-    @patch("kiro_crew.cli.ConversationLog")
-    @patch("kiro_crew.cli.KiroCrewConfig")
+    @patch("aj_crew.cli.sel")
+    @patch("aj_crew.cli.SkillsLoader")
+    @patch("aj_crew.cli.SessionManager")
+    @patch("aj_crew.cli.MemoryStore")
+    @patch("aj_crew.cli.HistoryConsolidator")
+    @patch("aj_crew.cli.ConversationLog")
+    @patch("aj_crew.cli.AjCrewConfig")
     def test_list_sessions(
         self,
         mock_cfg_cls,
@@ -67,7 +67,7 @@ class TestConsolidateCmd:
         mock_log._dir = sessions_dir
         mock_log.unconsolidated_count.return_value = 5
 
-        from kiro_crew.cli import _consolidate_cmd
+        from aj_crew.cli import _consolidate_cmd
 
         args = argparse.Namespace(session_key=None, consolidate_all=False)
         _consolidate_cmd(args)
@@ -76,13 +76,13 @@ class TestConsolidateCmd:
         assert "test_session" in captured.out
         assert "5 messages" in captured.out
 
-    @patch("kiro_crew.cli.sel")
-    @patch("kiro_crew.cli.SkillsLoader")
-    @patch("kiro_crew.cli.SessionManager")
-    @patch("kiro_crew.cli.MemoryStore")
-    @patch("kiro_crew.cli.HistoryConsolidator")
-    @patch("kiro_crew.cli.ConversationLog")
-    @patch("kiro_crew.cli.KiroCrewConfig")
+    @patch("aj_crew.cli.sel")
+    @patch("aj_crew.cli.SkillsLoader")
+    @patch("aj_crew.cli.SessionManager")
+    @patch("aj_crew.cli.MemoryStore")
+    @patch("aj_crew.cli.HistoryConsolidator")
+    @patch("aj_crew.cli.ConversationLog")
+    @patch("aj_crew.cli.AjCrewConfig")
     def test_list_sessions_none_found(
         self,
         mock_cfg_cls,
@@ -102,7 +102,7 @@ class TestConsolidateCmd:
         mock_log._dir = sessions_dir
         mock_log.unconsolidated_count.return_value = 0
 
-        from kiro_crew.cli import _consolidate_cmd
+        from aj_crew.cli import _consolidate_cmd
 
         args = argparse.Namespace(session_key=None, consolidate_all=False)
         _consolidate_cmd(args)
@@ -110,13 +110,13 @@ class TestConsolidateCmd:
         captured = capsys.readouterr()
         assert "No sessions with unconsolidated messages" in captured.out
 
-    @patch("kiro_crew.cli.sel")
-    @patch("kiro_crew.cli.SkillsLoader")
-    @patch("kiro_crew.cli.SessionManager")
-    @patch("kiro_crew.cli.MemoryStore")
-    @patch("kiro_crew.cli.HistoryConsolidator")
-    @patch("kiro_crew.cli.ConversationLog")
-    @patch("kiro_crew.cli.KiroCrewConfig")
+    @patch("aj_crew.cli.sel")
+    @patch("aj_crew.cli.SkillsLoader")
+    @patch("aj_crew.cli.SessionManager")
+    @patch("aj_crew.cli.MemoryStore")
+    @patch("aj_crew.cli.HistoryConsolidator")
+    @patch("aj_crew.cli.ConversationLog")
+    @patch("aj_crew.cli.AjCrewConfig")
     def test_consolidate_all(
         self,
         mock_cfg_cls,
@@ -143,7 +143,7 @@ class TestConsolidateCmd:
         # test below.
         mock_consolidator.consolidate_now = AsyncMock(side_effect=_draining(mock_log))
 
-        from kiro_crew.cli import _consolidate_cmd
+        from aj_crew.cli import _consolidate_cmd
 
         args = argparse.Namespace(session_key=None, consolidate_all=True)
         _consolidate_cmd(args)
@@ -153,13 +153,13 @@ class TestConsolidateCmd:
         assert "done" in captured.out
         assert mock_sel.return_value.log_api_access.call_count >= 1
 
-    @patch("kiro_crew.cli.sel")
-    @patch("kiro_crew.cli.SkillsLoader")
-    @patch("kiro_crew.cli.SessionManager")
-    @patch("kiro_crew.cli.MemoryStore")
-    @patch("kiro_crew.cli.HistoryConsolidator")
-    @patch("kiro_crew.cli.ConversationLog")
-    @patch("kiro_crew.cli.KiroCrewConfig")
+    @patch("aj_crew.cli.sel")
+    @patch("aj_crew.cli.SkillsLoader")
+    @patch("aj_crew.cli.SessionManager")
+    @patch("aj_crew.cli.MemoryStore")
+    @patch("aj_crew.cli.HistoryConsolidator")
+    @patch("aj_crew.cli.ConversationLog")
+    @patch("aj_crew.cli.AjCrewConfig")
     def test_consolidate_all_none_found(
         self,
         mock_cfg_cls,
@@ -179,7 +179,7 @@ class TestConsolidateCmd:
         mock_log._dir = sessions_dir
         mock_log.unconsolidated_count.return_value = 0
 
-        from kiro_crew.cli import _consolidate_cmd
+        from aj_crew.cli import _consolidate_cmd
 
         args = argparse.Namespace(session_key=None, consolidate_all=True)
         _consolidate_cmd(args)
@@ -187,13 +187,13 @@ class TestConsolidateCmd:
         captured = capsys.readouterr()
         assert "No sessions with unconsolidated messages" in captured.out
 
-    @patch("kiro_crew.cli.sel")
-    @patch("kiro_crew.cli.SkillsLoader")
-    @patch("kiro_crew.cli.SessionManager")
-    @patch("kiro_crew.cli.MemoryStore")
-    @patch("kiro_crew.cli.HistoryConsolidator")
-    @patch("kiro_crew.cli.ConversationLog")
-    @patch("kiro_crew.cli.KiroCrewConfig")
+    @patch("aj_crew.cli.sel")
+    @patch("aj_crew.cli.SkillsLoader")
+    @patch("aj_crew.cli.SessionManager")
+    @patch("aj_crew.cli.MemoryStore")
+    @patch("aj_crew.cli.HistoryConsolidator")
+    @patch("aj_crew.cli.ConversationLog")
+    @patch("aj_crew.cli.AjCrewConfig")
     def test_consolidate_single_session(
         self,
         mock_cfg_cls,
@@ -215,7 +215,7 @@ class TestConsolidateCmd:
         mock_consolidator = mock_consolidator_cls.return_value
         mock_consolidator.consolidate_now = AsyncMock(side_effect=_draining(mock_log))
 
-        from kiro_crew.cli import _consolidate_cmd
+        from aj_crew.cli import _consolidate_cmd
 
         args = argparse.Namespace(session_key="test_session", consolidate_all=False)
         _consolidate_cmd(args)
@@ -231,13 +231,13 @@ class TestConsolidateCmd:
             resources="test_session",
         )
 
-    @patch("kiro_crew.cli.sel")
-    @patch("kiro_crew.cli.SkillsLoader")
-    @patch("kiro_crew.cli.SessionManager")
-    @patch("kiro_crew.cli.MemoryStore")
-    @patch("kiro_crew.cli.HistoryConsolidator")
-    @patch("kiro_crew.cli.ConversationLog")
-    @patch("kiro_crew.cli.KiroCrewConfig")
+    @patch("aj_crew.cli.sel")
+    @patch("aj_crew.cli.SkillsLoader")
+    @patch("aj_crew.cli.SessionManager")
+    @patch("aj_crew.cli.MemoryStore")
+    @patch("aj_crew.cli.HistoryConsolidator")
+    @patch("aj_crew.cli.ConversationLog")
+    @patch("aj_crew.cli.AjCrewConfig")
     def test_consolidate_reports_a_remainder_instead_of_done(
         self,
         mock_cfg_cls,
@@ -265,7 +265,7 @@ class TestConsolidateCmd:
         mock_consolidator = mock_consolidator_cls.return_value
         mock_consolidator.consolidate_now = AsyncMock(return_value=True)
 
-        from kiro_crew.cli import _consolidate_cmd
+        from aj_crew.cli import _consolidate_cmd
 
         args = argparse.Namespace(session_key="test_session", consolidate_all=False)
         with pytest.raises(SystemExit) as exit_info:
@@ -277,13 +277,13 @@ class TestConsolidateCmd:
         assert "done" not in captured.out
         assert "Done." not in captured.out
 
-    @patch("kiro_crew.cli.sel")
-    @patch("kiro_crew.cli.SkillsLoader")
-    @patch("kiro_crew.cli.SessionManager")
-    @patch("kiro_crew.cli.MemoryStore")
-    @patch("kiro_crew.cli.HistoryConsolidator")
-    @patch("kiro_crew.cli.ConversationLog")
-    @patch("kiro_crew.cli.KiroCrewConfig")
+    @patch("aj_crew.cli.sel")
+    @patch("aj_crew.cli.SkillsLoader")
+    @patch("aj_crew.cli.SessionManager")
+    @patch("aj_crew.cli.MemoryStore")
+    @patch("aj_crew.cli.HistoryConsolidator")
+    @patch("aj_crew.cli.ConversationLog")
+    @patch("aj_crew.cli.AjCrewConfig")
     def test_consolidate_single_no_messages(
         self,
         mock_cfg_cls,
@@ -302,7 +302,7 @@ class TestConsolidateCmd:
         mock_log._dir = sessions_dir
         mock_log.unconsolidated_count.return_value = 0
 
-        from kiro_crew.cli import _consolidate_cmd
+        from aj_crew.cli import _consolidate_cmd
 
         args = argparse.Namespace(session_key="test_session", consolidate_all=False)
         _consolidate_cmd(args)
@@ -316,7 +316,7 @@ class TestGatewayExpireWiring:
 
     def test_session_expire_wiring_on_real_instance(self):
         """A real SessionManager instance accepts on_session_expire assignment."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         cfg = MagicMock()
         cfg.session.pool_size = 0
@@ -340,13 +340,13 @@ class TestConsolidateCmdExceptionPath:
         f.write_text('{"role":"user","content":"hi","ts":"2026-05-18T10:00:00"}\n')
         return sessions_dir
 
-    @patch("kiro_crew.cli.sel")
-    @patch("kiro_crew.cli.SkillsLoader")
-    @patch("kiro_crew.cli.SessionManager")
-    @patch("kiro_crew.cli.MemoryStore")
-    @patch("kiro_crew.cli.HistoryConsolidator")
-    @patch("kiro_crew.cli.ConversationLog")
-    @patch("kiro_crew.cli.KiroCrewConfig")
+    @patch("aj_crew.cli.sel")
+    @patch("aj_crew.cli.SkillsLoader")
+    @patch("aj_crew.cli.SessionManager")
+    @patch("aj_crew.cli.MemoryStore")
+    @patch("aj_crew.cli.HistoryConsolidator")
+    @patch("aj_crew.cli.ConversationLog")
+    @patch("aj_crew.cli.AjCrewConfig")
     def test_consolidate_single_exception_logged(
         self,
         mock_cfg_cls,
@@ -369,7 +369,7 @@ class TestConsolidateCmdExceptionPath:
         mock_consolidator = mock_consolidator_cls.return_value
         mock_consolidator.consolidate_now = AsyncMock(side_effect=RuntimeError("LLM down"))
 
-        from kiro_crew.cli import _consolidate_cmd
+        from aj_crew.cli import _consolidate_cmd
 
         args = argparse.Namespace(session_key="test_session", consolidate_all=False)
         with pytest.raises(SystemExit) as exit_info:
@@ -386,13 +386,13 @@ class TestConsolidateCmdExceptionPath:
         assert failure_lines == ["  test_session: failed (RuntimeError)"]
         assert "LLM down" not in captured.err
 
-    @patch("kiro_crew.cli.sel")
-    @patch("kiro_crew.cli.SkillsLoader")
-    @patch("kiro_crew.cli.SessionManager")
-    @patch("kiro_crew.cli.MemoryStore")
-    @patch("kiro_crew.cli.HistoryConsolidator")
-    @patch("kiro_crew.cli.ConversationLog")
-    @patch("kiro_crew.cli.KiroCrewConfig")
+    @patch("aj_crew.cli.sel")
+    @patch("aj_crew.cli.SkillsLoader")
+    @patch("aj_crew.cli.SessionManager")
+    @patch("aj_crew.cli.MemoryStore")
+    @patch("aj_crew.cli.HistoryConsolidator")
+    @patch("aj_crew.cli.ConversationLog")
+    @patch("aj_crew.cli.AjCrewConfig")
     def test_consolidate_all_reports_each_failed_key_and_exits_1(
         self, mock_cfg_cls, mock_log_cls, mock_consolidator_cls,
         mock_mem_cls, mock_sess_cls, mock_skills_cls, mock_sel,
@@ -421,7 +421,7 @@ class TestConsolidateCmdExceptionPath:
         mock_consolidator = mock_consolidator_cls.return_value
         mock_consolidator.consolidate_now = AsyncMock(side_effect=_consolidate_now)
 
-        from kiro_crew.cli import _consolidate_cmd
+        from aj_crew.cli import _consolidate_cmd
 
         args = argparse.Namespace(session_key=None, consolidate_all=True)
         with pytest.raises(SystemExit) as exit_info:
@@ -435,13 +435,13 @@ class TestConsolidateCmdExceptionPath:
         assert "1 session(s) did not finish consolidating." in captured.err
         assert "secret transcript text" not in captured.err + captured.out
 
-    @patch("kiro_crew.cli.sel")
-    @patch("kiro_crew.cli.SkillsLoader")
-    @patch("kiro_crew.cli.SessionManager")
-    @patch("kiro_crew.cli.MemoryStore")
-    @patch("kiro_crew.cli.HistoryConsolidator")
-    @patch("kiro_crew.cli.ConversationLog")
-    @patch("kiro_crew.cli.KiroCrewConfig")
+    @patch("aj_crew.cli.sel")
+    @patch("aj_crew.cli.SkillsLoader")
+    @patch("aj_crew.cli.SessionManager")
+    @patch("aj_crew.cli.MemoryStore")
+    @patch("aj_crew.cli.HistoryConsolidator")
+    @patch("aj_crew.cli.ConversationLog")
+    @patch("aj_crew.cli.AjCrewConfig")
     def test_consolidate_finished_and_skipped_keys_exit_0(
         self, mock_cfg_cls, mock_log_cls, mock_consolidator_cls,
         mock_mem_cls, mock_sess_cls, mock_skills_cls, mock_sel,
@@ -456,7 +456,7 @@ class TestConsolidateCmdExceptionPath:
         mock_consolidator = mock_consolidator_cls.return_value
         mock_consolidator.consolidate_now = AsyncMock(side_effect=_draining(mock_log))
 
-        from kiro_crew.cli import _consolidate_cmd
+        from aj_crew.cli import _consolidate_cmd
 
         _consolidate_cmd(argparse.Namespace(session_key="good", consolidate_all=False))
         _consolidate_cmd(argparse.Namespace(session_key="empty", consolidate_all=False))
@@ -467,13 +467,13 @@ class TestConsolidateCmdExceptionPath:
         assert captured.out.count("Done. Check ~/.kiro/crew/skills/auto/ for new skills.") == 2
         assert captured.err == ""
 
-    @patch("kiro_crew.cli.sel")
-    @patch("kiro_crew.cli.SkillsLoader")
-    @patch("kiro_crew.cli.SessionManager")
-    @patch("kiro_crew.cli.MemoryStore")
-    @patch("kiro_crew.cli.HistoryConsolidator")
-    @patch("kiro_crew.cli.ConversationLog")
-    @patch("kiro_crew.cli.KiroCrewConfig")
+    @patch("aj_crew.cli.sel")
+    @patch("aj_crew.cli.SkillsLoader")
+    @patch("aj_crew.cli.SessionManager")
+    @patch("aj_crew.cli.MemoryStore")
+    @patch("aj_crew.cli.HistoryConsolidator")
+    @patch("aj_crew.cli.ConversationLog")
+    @patch("aj_crew.cli.AjCrewConfig")
     def test_consolidate_sensitive_session_skip_exits_0(
         self, mock_cfg_cls, mock_log_cls, mock_consolidator_cls,
         mock_mem_cls, mock_sess_cls, mock_skills_cls, mock_sel,
@@ -496,7 +496,7 @@ class TestConsolidateCmdExceptionPath:
         mock_consolidator = mock_consolidator_cls.return_value
         mock_consolidator.consolidate_now = AsyncMock(return_value=True)
 
-        from kiro_crew.cli import _consolidate_cmd
+        from aj_crew.cli import _consolidate_cmd
 
         _consolidate_cmd(argparse.Namespace(session_key="secretive", consolidate_all=False))
 
@@ -509,14 +509,14 @@ class TestConsolidateCmdExceptionPath:
 class TestExpireIdleSelFailure:
     """Cover the SEL failure path in session.py _expire_idle."""
 
-    @patch("kiro_crew.session.sel")
-    @patch("kiro_crew.session.Stats")
+    @patch("aj_crew.session.sel")
+    @patch("aj_crew.session.Stats")
     def test_expire_idle_sel_failure_still_resets(self, mock_stats, mock_sel):
         """When sel().log_api_access raises, the session is still reset."""
         import time as _time
         from types import SimpleNamespace
 
-        from kiro_crew.session import SessionManager, _Session
+        from aj_crew.session import SessionManager, _Session
 
         cfg = MagicMock()
         cfg.session.pool_size = 0
@@ -548,17 +548,17 @@ class TestExpireIdleSelFailure:
 
 @pytest.mark.usefixtures("fake_vector_store")
 def test_refused_consolidation_cli_does_not_claim_zero_spend(capsys):
-    from kiro_crew.cli import _consolidate_cmd
+    from aj_crew.cli import _consolidate_cmd
 
     with (
-        patch("kiro_crew.cli.sel"),
-        patch("kiro_crew.cli.SkillsLoader"),
-        patch("kiro_crew.cli.SessionManager"),
-        patch("kiro_crew.cli.MemoryStore"),
-        patch("kiro_crew.cli.KiroCrewConfig"),
-        patch("kiro_crew.cli.build_provider_factory"),
-        patch("kiro_crew.cli.ConversationLog") as log,
-        patch("kiro_crew.cli.HistoryConsolidator") as consolidator,
+        patch("aj_crew.cli.sel"),
+        patch("aj_crew.cli.SkillsLoader"),
+        patch("aj_crew.cli.SessionManager"),
+        patch("aj_crew.cli.MemoryStore"),
+        patch("aj_crew.cli.AjCrewConfig"),
+        patch("aj_crew.cli.build_provider_factory"),
+        patch("aj_crew.cli.ConversationLog") as log,
+        patch("aj_crew.cli.HistoryConsolidator") as consolidator,
     ):
         log.return_value.unconsolidated_count.return_value = 3
         consolidator.return_value.consolidate_now = AsyncMock(return_value=False)
@@ -574,17 +574,17 @@ def test_refused_consolidation_cli_does_not_claim_zero_spend(capsys):
 
 def test_the_store_is_closed_when_a_key_fails(fake_vector_store):
     """The command closes the store it opened, on the exit-1 path too."""
-    from kiro_crew.cli import _consolidate_cmd
+    from aj_crew.cli import _consolidate_cmd
 
     with (
-        patch("kiro_crew.cli.sel"),
-        patch("kiro_crew.cli.SkillsLoader"),
-        patch("kiro_crew.cli.SessionManager"),
-        patch("kiro_crew.cli.MemoryStore"),
-        patch("kiro_crew.cli.KiroCrewConfig"),
-        patch("kiro_crew.cli.build_provider_factory"),
-        patch("kiro_crew.cli.ConversationLog") as log,
-        patch("kiro_crew.cli.HistoryConsolidator") as consolidator,
+        patch("aj_crew.cli.sel"),
+        patch("aj_crew.cli.SkillsLoader"),
+        patch("aj_crew.cli.SessionManager"),
+        patch("aj_crew.cli.MemoryStore"),
+        patch("aj_crew.cli.AjCrewConfig"),
+        patch("aj_crew.cli.build_provider_factory"),
+        patch("aj_crew.cli.ConversationLog") as log,
+        patch("aj_crew.cli.HistoryConsolidator") as consolidator,
     ):
         log.return_value.unconsolidated_count.return_value = 3
         consolidator.return_value.consolidate_now = AsyncMock(side_effect=RuntimeError("down"))
@@ -594,10 +594,10 @@ def test_the_store_is_closed_when_a_key_fails(fake_vector_store):
 
 
 def _consolidate_with_reply(key: str, reply: dict) -> None:
-    """Run ``kirocrew consolidate <key>`` over a two-row transcript; the model answers *reply*."""
-    from kiro_crew import history as history_mod
-    from kiro_crew.cli import _consolidate_cmd
-    from kiro_crew.history import ConversationLog, HistoryConsolidator
+    """Run ``ajcrew consolidate <key>`` over a two-row transcript; the model answers *reply*."""
+    from aj_crew import history as history_mod
+    from aj_crew.cli import _consolidate_cmd
+    from aj_crew.history import ConversationLog, HistoryConsolidator
 
     log = ConversationLog()
     log.init()
@@ -605,9 +605,9 @@ def _consolidate_with_reply(key: str, reply: dict) -> None:
         log.append(key, "user", "Always run the linter before you commit.")
         log.append(key, "assistant", "Understood.")
     with (
-        patch("kiro_crew.cli.sel"),
-        patch("kiro_crew.cli.SessionManager"),
-        patch("kiro_crew.cli.build_provider_factory"),
+        patch("aj_crew.cli.sel"),
+        patch("aj_crew.cli.SessionManager"),
+        patch("aj_crew.cli.build_provider_factory"),
         patch.object(HistoryConsolidator, "_call_llm", AsyncMock(return_value=reply)),
     ):
         _consolidate_cmd(argparse.Namespace(session_key=key, consolidate_all=False))
@@ -619,7 +619,7 @@ def test_cli_pass_stores_the_lesson_and_fact_the_reply_extracts():
     Without a vector store a pass drops the lessons and structured facts it
     extracts while it still marks the span consolidated.
     """
-    from kiro_crew.vector_memory import VectorMemoryStore
+    from aj_crew.vector_memory import VectorMemoryStore
 
     _consolidate_with_reply(
         "cli-lessons-and-facts",
@@ -648,8 +648,8 @@ def test_cli_pass_on_a_migrated_install_leaves_the_markdown_files_alone():
     Otherwise a migrated install's CLI pass rewrites preferences.md from the same
     reply it files as facts, which the gateway's pass for that span never does.
     """
-    from kiro_crew.config import config_path
-    from kiro_crew.memory import MemoryStore
+    from aj_crew.config import config_path
+    from aj_crew.memory import MemoryStore
 
     config_path().write_text(json.dumps({"memory": {"migrated": True}}), encoding="utf-8")
 

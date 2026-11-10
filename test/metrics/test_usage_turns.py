@@ -17,9 +17,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import usage as usage_mod
-from kiro_crew.dashboard.handlers.telemetry import api_usage_turns
-from kiro_crew.dashboard.handlers.usage import TURN_USAGE_FIELDS, slot_turn_usage
+from aj_crew.dashboard.handlers import usage as usage_mod
+from aj_crew.dashboard.handlers.telemetry import api_usage_turns
+from aj_crew.dashboard.handlers.usage import TURN_USAGE_FIELDS, slot_turn_usage
 
 
 @pytest.fixture(autouse=True)
@@ -184,8 +184,8 @@ class TestAppIsolation:
 
     @pytest.fixture(autouse=True)
     def _quiet_sel(self, monkeypatch):
-        import kiro_crew.sel as sel_mod
-        from kiro_crew.dashboard.handlers import telemetry as tele_mod
+        import aj_crew.sel as sel_mod
+        from aj_crew.dashboard.handlers import telemetry as tele_mod
 
         calls: list[dict] = []
 
@@ -249,7 +249,7 @@ class TestAppIsolation:
 
     @pytest.mark.asyncio
     async def test_a_disabled_app_is_refused_outright(self, _isolated_shards, monkeypatch):
-        from kiro_crew.dashboard.handlers import telemetry as tele_mod
+        from aj_crew.dashboard.handlers import telemetry as tele_mod
 
         monkeypatch.setattr(tele_mod, "_app_is_enabled", lambda name: False)
         _write(_isolated_shards, [_row("mine", app="acme-app")])
@@ -317,7 +317,7 @@ class TestWriteSiteStamping:
     _ROOT = Path(__file__).resolve().parents[2]
 
     def test_chat_runner_stamps_the_slots_app(self):
-        runner = self._ROOT / "src/kiro_crew/dashboard/chat_runner.py"
+        runner = self._ROOT / "src/aj_crew/dashboard/chat_runner.py"
         src = "\n".join(
             turn_file.read_text(encoding="utf-8")
             for turn_file in [*sorted(runner.with_name("chat_turn").glob("*.py")), runner]
@@ -328,7 +328,7 @@ class TestWriteSiteStamping:
     def test_subagent_completion_stamps_the_dispatching_app(self):
         # run.py binds most of its members from sibling ``run_*`` owners: read the family,
         # plus ``usage_row``, which holds the body of ``run_turn``'s per-prompt usage row.
-        package = self._ROOT / "src/kiro_crew/subagent_manager"
+        package = self._ROOT / "src/aj_crew/subagent_manager"
         family = [package / "run.py", *sorted(package.glob("run_*.py")), package / "usage_row.py"]
         trees = [ast.parse(path.read_text(encoding="utf-8")) for path in family]
         calls = [

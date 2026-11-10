@@ -71,7 +71,7 @@ common_asserts() {
   cat <<ASSERTS
     files=\$($1)
     entry=\$(printf '%s\\n' "\$files" | grep -E '^/usr/share/applications/[^/]+[.]desktop\$' | head -1)
-    stamp=\$(printf '%s\\n' "\$files" | grep -E '/kiro_crew/_build_info[.]py\$' | head -1)
+    stamp=\$(printf '%s\\n' "\$files" | grep -E '/aj_crew/_build_info[.]py\$' | head -1)
     test -n "\$entry" && test -f "\$entry"
     test -n "\$stamp"
     # The identity comes from the desktop entry's FILENAME, not from parsing its
@@ -81,7 +81,7 @@ common_asserts() {
     #
     # Exec is deliberately NOT the source: electron-builder quotes that path when
     # it contains a character outside [/0-9A-Za-z._-], which the nightly channel's
-    # `/opt/KiroCrew Nightly/...` does. Parsing it would work on stable and return
+    # `/opt/AjCrew Nightly/...` does. Parsing it would work on stable and return
     # empty on nightly -- the third time this gate assumed stable's shape.
     exe=\$(basename "\$entry" .desktop)
     launcher=/usr/bin/\$exe
@@ -95,8 +95,8 @@ common_asserts() {
     # profile, the PATH launcher and in-place updates durable.
     grep -qE "^Exec=\\"?/opt/.*/\${exe}" "\$entry"
     # The bundled CLI that fixed prefix makes reachable -- what an AppImage
-    # cannot offer, and what makes \`kirocrew service install\` usable.
-    printf '%s\\n' "\$files" | grep -qE '/backend-dist/kirocrew-backend/bin/kirocrew\$'
+    # cannot offer, and what makes \`ajcrew service install\` usable.
+    printf '%s\\n' "\$files" | grep -qE '/backend-dist/ajcrew-backend/bin/ajcrew\$'
 ASSERTS
 }
 
@@ -104,7 +104,7 @@ echo "▶ Installing '${DEB_NAME}' on Ubuntu 24.04 (the t64 release)…"
 docker run --rm -v "${ABS_DIST}:/dist:ro" -w /dist ubuntu:24.04 bash -euxc "
   export DEBIAN_FRONTEND=noninteractive
   apt-get update -qq
-  # The package's OWN declared name, so a nightly build (kirocrew-nightly) is
+  # The package's OWN declared name, so a nightly build (ajcrew-nightly) is
   # queried and removed under the identity it actually installed as.
   pkg=\$(dpkg-deb -f './${DEB_NAME}' Package)
   apt-get install -y --no-install-recommends './${DEB_NAME}'

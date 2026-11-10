@@ -21,8 +21,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import cron_script
-from kiro_crew.cron_script import (
+from aj_crew import cron_script
+from aj_crew.cron_script import (
     McpToolClient,
     ScriptContext,
     _kill_proc_group,
@@ -36,7 +36,7 @@ from kiro_crew.cron_script import (
     run_command_sandboxed,
     run_script_sandboxed,
 )
-from kiro_crew.sandbox import SandboxUnavailableError
+from aj_crew.sandbox import SandboxUnavailableError
 
 # ── shared fakes ──
 
@@ -437,20 +437,20 @@ class TestScriptContextInit:
     def test_secret_file_is_read_then_unlinked_and_env_popped(self, tmp_path, monkeypatch):
         secret = tmp_path / "secret.txt"
         secret.write_text("s3cret-value", newline="\n")
-        monkeypatch.setenv("_KIROCREW_SECRET_FILE", str(secret))
-        monkeypatch.setenv("KIROCREW_PORT", "7788")
+        monkeypatch.setenv("_AJCREW_SECRET_FILE", str(secret))
+        monkeypatch.setenv("AJCREW_PORT", "7788")
 
         ctx = _ctx()
 
         assert ctx._secret == "s3cret-value"
         assert ctx._port == 7788
         assert not secret.exists()
-        assert "_KIROCREW_SECRET_FILE" not in os.environ
+        assert "_AJCREW_SECRET_FILE" not in os.environ
 
     def test_unlink_failure_still_yields_the_secret(self, tmp_path, monkeypatch):
         secret = tmp_path / "secret.txt"
         secret.write_text("keep-me", newline="\n")
-        monkeypatch.setenv("_KIROCREW_SECRET_FILE", str(secret))
+        monkeypatch.setenv("_AJCREW_SECRET_FILE", str(secret))
         real_unlink = Path.unlink
 
         def _unlink(self, *a, **k):
@@ -463,20 +463,20 @@ class TestScriptContextInit:
         assert _ctx()._secret == "keep-me"
 
     def test_missing_secret_file_falls_back_to_env(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("_KIROCREW_SECRET_FILE", str(tmp_path / "absent"))
-        monkeypatch.setenv("KIROCREW_INTERNAL_SECRET", "from-env")
+        monkeypatch.setenv("_AJCREW_SECRET_FILE", str(tmp_path / "absent"))
+        monkeypatch.setenv("AJCREW_INTERNAL_SECRET", "from-env")
 
         ctx = _ctx()
 
         assert ctx._secret == "from-env"
-        assert "KIROCREW_INTERNAL_SECRET" not in os.environ
+        assert "AJCREW_INTERNAL_SECRET" not in os.environ
 
     def test_message_property_reads_the_job(self, monkeypatch):
-        monkeypatch.delenv("_KIROCREW_SECRET_FILE", raising=False)
+        monkeypatch.delenv("_AJCREW_SECRET_FILE", raising=False)
         assert _ctx(message="args here").message == "args here"
 
     def test_message_property_defaults_when_job_has_none(self, monkeypatch):
-        monkeypatch.delenv("_KIROCREW_SECRET_FILE", raising=False)
+        monkeypatch.delenv("_AJCREW_SECRET_FILE", raising=False)
         ctx = ScriptContext(job=SimpleNamespace(id="j"))
         assert ctx.message == ""
 
@@ -506,9 +506,9 @@ class TestScriptContextNotify:
 
 class TestScriptContextPost:
     def test_request_url_headers_and_body(self, monkeypatch):
-        monkeypatch.setenv("KIROCREW_PORT", "7788")
-        monkeypatch.setenv("KIROCREW_INTERNAL_SECRET", "tok")
-        monkeypatch.delenv("_KIROCREW_SECRET_FILE", raising=False)
+        monkeypatch.setenv("AJCREW_PORT", "7788")
+        monkeypatch.setenv("AJCREW_INTERNAL_SECRET", "tok")
+        monkeypatch.delenv("_AJCREW_SECRET_FILE", raising=False)
         ctx = _ctx(job_id="abc")
         captured: dict = {}
 
@@ -560,13 +560,13 @@ class TestScriptContextCallTool:
         audits: list[tuple] = []
         monkeypatch.setattr(ctx, "_audit_tool_call", lambda *a, **k: audits.append((a, k)))
 
-        assert ctx.call_tool("kirocrew-core", "browse_search", {"query": "x"}) == "tool output"
+        assert ctx.call_tool("ajcrew-core", "browse_search", {"query": "x"}) == "tool output"
 
         client.call_tool.assert_called_once_with("browse_search", {"query": "x"})
         client.close.assert_not_called()
         ctx.close()
         client.close.assert_called_once()
-        assert audits == [(("kirocrew-core", "browse_search", "ok"), {})]
+        assert audits == [(("ajcrew-core", "browse_search", "ok"), {})]
 
     def test_failure_audits_error_reraises_and_still_closes(self, monkeypatch):
         ctx = _ctx()
@@ -656,11 +656,11 @@ class TestMcpToolClientSpawn:
     def test_handshake_sends_initialize_then_initialized(self, mcp_spawn):
         mcp_spawn.proc = _FakeProc(out_lines=["\n", _HANDSHAKE_OK])
 
-        client = McpToolClient("kirocrew-core")
+        client = McpToolClient("ajcrew-core")
 
         sent = [json.loads(line) for line in mcp_spawn.proc.stdin.lines]
         assert sent[0]["method"] == "initialize"
-        assert sent[0]["params"]["clientInfo"]["name"] == "kirocrew-cron-script"
+        assert sent[0]["params"]["clientInfo"]["name"] == "ajcrew-cron-script"
         assert sent[1]["method"] == "notifications/initialized"
         assert "id" not in sent[1]
         assert mcp_spawn.proc.stdin.flushes == 2
@@ -677,7 +677,7 @@ class TestMcpToolClientSpawn:
         before = set(os.listdir(tmp_path))
 
         with pytest.raises(FileNotFoundError):
-            McpToolClient("kirocrew-core")
+            McpToolClient("ajcrew-core")
 
         assert not cleanup.exists()
         # The stderr tempfile lives in tmp_path too and must not survive.
@@ -687,7 +687,7 @@ class TestMcpToolClientSpawn:
         mcp_spawn.proc = _FakeProc(out_lines=[], returncode=127)
 
         with pytest.raises(RuntimeError) as excinfo:
-            McpToolClient("kirocrew-core")
+            McpToolClient("ajcrew-core")
 
         msg = str(excinfo.value)
         assert "disconnected during 'initialize'" in msg
@@ -698,7 +698,7 @@ class TestMcpToolClientSpawn:
 class TestMcpToolClientRpc:
     def _client(self, mcp_spawn, out_lines=()):
         mcp_spawn.proc = _FakeProc(out_lines=[_HANDSHAKE_OK, *out_lines])
-        return McpToolClient("kirocrew-core")
+        return McpToolClient("ajcrew-core")
 
     def test_unrelated_ids_are_skipped_until_the_match(self, mcp_spawn):
         client = self._client(
@@ -771,7 +771,7 @@ class TestMcpToolClientRpc:
 class TestMcpToolClientCallTool:
     def _client(self, mcp_spawn):
         mcp_spawn.proc = _FakeProc(out_lines=[_HANDSHAKE_OK])
-        return McpToolClient("kirocrew-core")
+        return McpToolClient("ajcrew-core")
 
     def test_text_content_is_returned(self, mcp_spawn, monkeypatch):
         client = self._client(mcp_spawn)
@@ -814,7 +814,7 @@ class TestMcpToolClientCallTool:
 class TestMcpToolClientStderrTail:
     def _client(self, mcp_spawn):
         mcp_spawn.proc = _FakeProc(out_lines=[_HANDSHAKE_OK])
-        return McpToolClient("kirocrew-core")
+        return McpToolClient("ajcrew-core")
 
     def test_tail_is_capped_to_the_limit(self, mcp_spawn):
         client = self._client(mcp_spawn)
@@ -849,7 +849,7 @@ class TestMcpToolClientStderrTail:
 class TestMcpToolClientClose:
     def _client(self, mcp_spawn, **proc_kwargs):
         mcp_spawn.proc = _FakeProc(out_lines=[_HANDSHAKE_OK], **proc_kwargs)
-        return McpToolClient("kirocrew-core")
+        return McpToolClient("ajcrew-core")
 
     def test_graceful_close_removes_the_stderr_file(self, mcp_spawn):
         client = self._client(mcp_spawn)
@@ -911,7 +911,7 @@ class TestResolveMcpServer:
     def test_glob_fallback_finds_an_aliased_spec(self, tmp_path, monkeypatch):
         agents = tmp_path / "agents"
         agents.mkdir()
-        (agents / "my-kirocrew-alias.json").write_text(
+        (agents / "my-ajcrew-alias.json").write_text(
             json.dumps({"mcpServers": {"core": {"command": "node", "args": ["srv.js"]}}}),
             newline="\n",
         )
@@ -922,7 +922,7 @@ class TestResolveMcpServer:
     def test_absent_server_entry_returns_none(self, tmp_path, monkeypatch):
         agents = tmp_path / "agents"
         agents.mkdir()
-        (agents / "kirocrew.json").write_text(
+        (agents / "ajcrew.json").write_text(
             json.dumps({"mcpServers": {"other": {"command": "node"}}}), newline="\n"
         )
         monkeypatch.setattr(cron_script, "kiro_agents_dir", lambda: agents)
@@ -932,7 +932,7 @@ class TestResolveMcpServer:
     def test_argless_spec_yields_a_single_element_argv(self, tmp_path, monkeypatch):
         agents = tmp_path / "agents"
         agents.mkdir()
-        (agents / "kirocrew.json").write_text(
+        (agents / "ajcrew.json").write_text(
             json.dumps({"mcpServers": {"bare": {"command": "srv-bin"}}}), newline="\n"
         )
         monkeypatch.setattr(cron_script, "kiro_agents_dir", lambda: agents)
@@ -970,16 +970,16 @@ class TestPathAndSecretResolution:
 
     @staticmethod
     def _homes(tmp_path, monkeypatch, data_home: Path) -> None:
-        """Point ``~`` at a scratch user home and ``KIROCREW_HOME`` at *data_home*."""
+        """Point ``~`` at a scratch user home and ``AJCREW_HOME`` at *data_home*."""
         for var in ("HOME", "USERPROFILE"):
             monkeypatch.setenv(var, str(tmp_path / "user"))
-        monkeypatch.setenv("KIROCREW_HOME", str(data_home))
+        monkeypatch.setenv("AJCREW_HOME", str(data_home))
         (data_home / "crons").mkdir(parents=True)
 
     def test_the_documented_tilde_spelling_names_the_configured_data_home(
         self, tmp_path, monkeypatch
     ):
-        """``~/.kiro/crew/`` in a spec follows ``KIROCREW_HOME``, still held to ``crons/``."""
+        """``~/.kiro/crew/`` in a spec follows ``AJCREW_HOME``, still held to ``crons/``."""
         data_home = tmp_path / "data-home"
         self._homes(tmp_path, monkeypatch, data_home)
         script = data_home / "crons" / "job.py"
@@ -1019,7 +1019,7 @@ class TestPathAndSecretResolution:
     def test_a_data_home_above_the_default_still_takes_the_documented_spelling(
         self, tmp_path, monkeypatch
     ):
-        """``KIROCREW_HOME=~/.kiro`` reads ``~/.kiro/crew/crons/`` as its own ``crons/``."""
+        """``AJCREW_HOME=~/.kiro`` reads ``~/.kiro/crew/crons/`` as its own ``crons/``."""
         data_home = tmp_path / "user" / ".kiro"
         self._homes(tmp_path, monkeypatch, data_home)
         script = data_home / "crons" / "job.py"
@@ -1030,12 +1030,12 @@ class TestPathAndSecretResolution:
         assert Path(resolved) == script.resolve()
 
     def test_internal_secret_prefers_the_environment(self, monkeypatch):
-        monkeypatch.setenv("KIROCREW_INTERNAL_SECRET", "env-secret")
+        monkeypatch.setenv("AJCREW_INTERNAL_SECRET", "env-secret")
         monkeypatch.setattr(cron_script, "read_local_secret", lambda port, **_kw: "file-secret")
         assert _resolve_internal_secret(5476) == "env-secret"
 
     def test_internal_secret_falls_back_to_the_local_secret_file(self, monkeypatch):
-        monkeypatch.delenv("KIROCREW_INTERNAL_SECRET", raising=False)
+        monkeypatch.delenv("AJCREW_INTERNAL_SECRET", raising=False)
         monkeypatch.setattr(cron_script, "read_local_secret", lambda port, **_kw: "file-secret")
         assert _resolve_internal_secret(5476) == "file-secret"
 
@@ -1044,7 +1044,7 @@ class TestPathAndSecretResolution:
         # resolves the dial port ONCE and passes it here, so the same port reaches
         # both the credential read and the child env -- a mid-startup --port auto
         # bind cannot split them into a mismatched pair that 403s the callback.
-        monkeypatch.delenv("KIROCREW_INTERNAL_SECRET", raising=False)
+        monkeypatch.delenv("AJCREW_INTERNAL_SECRET", raising=False)
         seen = {}
 
         def _fake_read(port, **_kw):
@@ -1098,7 +1098,7 @@ def script_run(monkeypatch, tmp_path):
         state.argv = list(argv)
         state.env = dict(kw.get("env") or {})
         state.launcher_src = Path(argv[1]).read_text()
-        state.secret_seen = Path(state.env["_KIROCREW_SECRET_FILE"]).read_text()
+        state.secret_seen = Path(state.env["_AJCREW_SECRET_FILE"]).read_text()
         return state.proc
 
     monkeypatch.setattr(cron_script, "popen_limited", _popen)
@@ -1121,7 +1121,7 @@ class TestRunScriptSandboxed:
         assert script_run.resolved_kwargs == {"allow_bundle_roots": True}
 
     def test_the_dial_port_is_resolved_exactly_once(self, script_run, monkeypatch):
-        # The credential write and the child's _KIROCREW_DIAL_PORT must come from
+        # The credential write and the child's _AJCREW_DIAL_PORT must come from
         # ONE resolution. Two calls are a TOCTOU: a --port auto gateway binding
         # between them would pair a credential with the wrong port and 403 the
         # callback. So run_script_sandboxed must call _resolve_dial_port once and
@@ -1147,10 +1147,10 @@ class TestRunScriptSandboxed:
         self, script_run, monkeypatch, tmp_path
     ):
         # The in-process scheduler hands the gateway's LIVE secret via a
-        # provider. It must win over BOTH a stale KIROCREW_INTERNAL_SECRET in
+        # provider. It must win over BOTH a stale AJCREW_INTERNAL_SECRET in
         # the environment AND a stale per-port .secret file, which is exactly
         # the boot-time 403 this fix addresses.
-        monkeypatch.setenv("KIROCREW_INTERNAL_SECRET", "stale-env-secret")
+        monkeypatch.setenv("AJCREW_INTERNAL_SECRET", "stale-env-secret")
         monkeypatch.setattr(cron_script, "_resolve_dial_port", lambda: 7788)
         monkeypatch.setattr(
             cron_script, "read_local_secret", lambda port, **_kw: "stale-file-secret"
@@ -1168,7 +1168,7 @@ class TestRunScriptSandboxed:
         # No provider: derivation must be the pre-existing env-first, file-second
         # order. env present -> env wins.
         monkeypatch.setattr(cron_script, "_resolve_dial_port", lambda: 7788)
-        monkeypatch.setenv("KIROCREW_INTERNAL_SECRET", "env-wins")
+        monkeypatch.setenv("AJCREW_INTERNAL_SECRET", "env-wins")
         monkeypatch.setattr(cron_script, "read_local_secret", lambda port, **_kw: "file-loses")
         # Use the real derivation (the fixture stubs it).
         monkeypatch.setattr(cron_script, "_resolve_internal_secret", _resolve_internal_secret)
@@ -1178,7 +1178,7 @@ class TestRunScriptSandboxed:
         assert script_run.secret_seen == "env-wins"
 
         # env absent -> file is used.
-        monkeypatch.delenv("KIROCREW_INTERNAL_SECRET", raising=False)
+        monkeypatch.delenv("AJCREW_INTERNAL_SECRET", raising=False)
         script_run.proc = _FakeProc(comm_results=[(_TAG + '{"status": "ok"}\n', "")])
         run_script_sandboxed("spec:run", "job-file")
         assert script_run.secret_seen == "file-loses"
@@ -1204,13 +1204,13 @@ class TestRunScriptSandboxed:
         assert run_script_sandboxed("spec:run", "job-9", "the message") == {"status": "ok"}
 
         assert script_run.secret_seen == "unit-secret"
-        assert script_run.restricted == [script_run.env["_KIROCREW_SECRET_FILE"]]
+        assert script_run.restricted == [script_run.env["_AJCREW_SECRET_FILE"]]
         assert "job-9" in script_run.launcher_src
         assert "the message" in script_run.launcher_src
         # Secrets are handed over by file, never inherited through the env.
-        assert "KIROCREW_INTERNAL_SECRET" not in script_run.env
+        assert "AJCREW_INTERNAL_SECRET" not in script_run.env
         assert not Path(script_run.argv[1]).exists()
-        assert not Path(script_run.env["_KIROCREW_SECRET_FILE"]).exists()
+        assert not Path(script_run.env["_AJCREW_SECRET_FILE"]).exists()
         assert cron_script._RUNNING_PROCS == {}
 
     def test_the_tagged_status_line_is_parsed(self, script_run):
@@ -1516,7 +1516,7 @@ class TestRunCommandSandboxed:
 
         assert result == {"status": "ok", "output": "hello\n", "exit_code": 0}
         assert command_run.argv == ["/bin/sh", "-c", "echo hello"]
-        assert "KIROCREW_INTERNAL_SECRET" not in command_run.env
+        assert "AJCREW_INTERNAL_SECRET" not in command_run.env
 
     def test_the_spawn_uses_the_form_the_probe_proved(self, command_run):
         """The executor must inherit the resolved invocation form, not re-derive it.

@@ -24,7 +24,7 @@ import { json } from './lib/boot-api.mjs'
 import { serveDist } from './lib/serve-dist.mjs'
 import { stubDashboardApi, logPageProblems } from './lib/stub-dashboard-api.mjs'
 
-const OUT = process.argv[2] || join(process.env.KIROCREW_SCRATCH || '/tmp', 'crewmate-profile-settings')
+const OUT = process.argv[2] || join(process.env.AJCREW_SCRATCH || '/tmp', 'crewmate-profile-settings')
 mkdirSync(OUT, { recursive: true })
 
 const now = Math.floor(Date.now() / 1000)
@@ -33,13 +33,13 @@ const iso = (secsAgo) => new Date((now - secsAgo) * 1000).toISOString()
 const MEMBER = {
   name: 'kiro', slug: 'kiro', display_name: 'Kiro', bound: true, slot_key: 'member-kiro', running: true,
   kiro_agent: 'frontend', workspace: '/srv/repos/kiro', memory_store: 'member-kiro', memory_version: 2, memory_owner: 'kiro',
-  model: 'claude-opus-5', reasoning_effort: 'high', approval_mode: 'trust', source: 'kirocrew',
+  model: 'claude-opus-5', reasoning_effort: 'high', approval_mode: 'trust', source: 'ajcrew',
   last_active_ts: now - 60, last_message: 'All 85 checks are green. Only human review is left.',
 }
 const AGENTS = [{
   name: 'kiro', display_name: 'Kiro', kiro_agent: 'frontend', workspace: MEMBER.workspace, memory_store: MEMBER.memory_store,
-  model: MEMBER.model, source: 'kirocrew', approval_mode: 'trust',
-  description: 'Frontend crewmate for the Kiro Crew dashboard. Owns the chat surface, the members page and the Glass design language. Reviews every UI PR from a new-user point of view before it ships, and never merges.',
+  model: MEMBER.model, source: 'ajcrew', approval_mode: 'trust',
+  description: 'Frontend crewmate for the Aj Crew dashboard. Owns the chat surface, the members page and the Glass design language. Reviews every UI PR from a new-user point of view before it ships, and never merges.',
 }]
 const SLOTS = [
   { key: 'member-kiro', title: 'Kiro', mode: 'member', created: iso(86400), last_ts: iso(60), running: true, project: MEMBER.workspace, agent: 'kiro' },
@@ -62,7 +62,7 @@ let conflictOnce = null
 const QUIET = { '/api/autonudge': { enabled: true, loops: [] }, '/api/monitors': { enabled: true, monitors: [] }, '/api/teams': { teams: [] } }
 
 const extra = async (path, route) => {
-  if (path === '/api/members') { await json(route, { members: [MEMBER], default_agent: 'kirocrew' }); return true }
+  if (path === '/api/members') { await json(route, { members: [MEMBER], default_agent: 'ajcrew' }); return true }
   if (path === '/api/agents') { await json(route, { agents: AGENTS, default_agent: 'kiro' }); return true }
   if (path === '/api/agents/kiro' && route.request().method() === 'PUT') {
     const body = JSON.parse(route.request().postData() || '{}')
@@ -83,7 +83,7 @@ const extra = async (path, route) => {
   if (path === '/api/models') { await json(route, MODELS); return true }
   if (path === '/api/crons') { await json(route, { jobs: [] }); return true }
   if (path === '/api/cron-folders') { await json(route, []); return true }
-  if (path === '/api/default-agent') { await json(route, { default_agent: 'kirocrew' }); return true }
+  if (path === '/api/default-agent') { await json(route, { default_agent: 'ajcrew' }); return true }
   if (/^\/api\/members\/[^/]+\/thread$/.test(path)) { await json(route, { slot_key: 'member-kiro', slug: 'kiro', member: 'kiro', created: false }); return true }
   if (/^\/api\/members\/[^/]+\/activity$/.test(path)) { await json(route, { slug: '', member: '', capped: false, entries: [] }); return true }
   if (/^\/api\/members\/[^/]+\/briefing$/.test(path)) { await json(route, { slug: '', member: '', supported: true, text: '# Briefing\n', updated_ts: now - 3600, redacted: false, truncated: false }); return true }

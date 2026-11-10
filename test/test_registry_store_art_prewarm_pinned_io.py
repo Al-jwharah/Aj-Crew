@@ -25,8 +25,8 @@ from registry_store_art_prewarm_helpers import (
 )
 
 from conftest import requires_o_nofollow, requires_symlinks
-from kiro_crew.apps import registry as reg_mod
-from kiro_crew.apps.registry import (
+from aj_crew.apps import registry as reg_mod
+from aj_crew.apps.registry import (
     _TRUST_OWNER,
     _blob_cache_dir,
     _copy_declared_art,
@@ -93,7 +93,7 @@ class TestFetchRefHooksNeutralizer:
 
     @staticmethod
     async def _run_fetch(monkeypatch, tmp_path, neutralize=True):
-        from kiro_crew.apps.registry_pipeline import checkout as co
+        from aj_crew.apps.registry_pipeline import checkout as co
 
         spawned: list[list[str]] = []
 
@@ -423,7 +423,7 @@ class TestPinnedDestinationPublish:
         which silently succeeds on a junction/symlink root) and writes nothing into the
         link target. Forced on POSIX by monkeypatching the pinned-walk probe, so the
         Windows arm runs here too."""
-        import kiro_crew.pinned_fs as pinned_fs
+        import aj_crew.pinned_fs as pinned_fs
 
         reg = _pin_registry(monkeypatch, _TRUST_OWNER)
         assert reg is not None
@@ -446,7 +446,7 @@ class TestPinnedDestinationPublish:
         """Negative control: the SAME by-name arm, given a REAL (unlinked) blob root,
         writes the bytes — so the refusal above is the linked root, not the arm being
         inert."""
-        import kiro_crew.pinned_fs as pinned_fs
+        import aj_crew.pinned_fs as pinned_fs
 
         reg = _pin_registry(monkeypatch, _TRUST_OWNER)
         assert reg is not None

@@ -19,10 +19,10 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from external_registry_helpers import cache_dir_fixture  # noqa: F401
 
-from kiro_crew.apps import installed_app_tips
-from kiro_crew.apps import registry as reg_mod
-from kiro_crew.apps import update_status
-from kiro_crew.apps.registry import (
+from aj_crew.apps import installed_app_tips
+from aj_crew.apps import registry as reg_mod
+from aj_crew.apps import update_status
+from aj_crew.apps.registry import (
     _expire_cache_file,
     _external_registry_cache_identity,
     _external_registry_cache_path,
@@ -44,13 +44,13 @@ def _reg() -> Any:
 def _configure_registry(monkeypatch, repo: str = REGISTRY_URL) -> None:
     """Pin the configured registries to the one this module reads, at *repo*.
 
-    ``_owner_designated_repo_target`` reads them through ``KiroCrewConfig.load``.
+    ``_owner_designated_repo_target`` reads them through ``AjCrewConfig.load``.
     """
-    from kiro_crew.config.loader import ExternalRegistryConfig, KiroCrewConfig
+    from aj_crew.config.loader import ExternalRegistryConfig, AjCrewConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.registries = [ExternalRegistryConfig(name=REGISTRY, repo=repo, branch="main")]
-    monkeypatch.setattr(KiroCrewConfig, "load", staticmethod(lambda: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", staticmethod(lambda: cfg))
 
 
 def _row(name: str = "cool-app", **extra: Any) -> dict[str, Any]:
@@ -80,7 +80,7 @@ def _installed(name: str = "cool-app", **extra: Any) -> dict[str, Any]:
 @pytest.fixture(name="tips")
 def tips_fixture(monkeypatch, cache_dir):  # noqa: F811 - the shared cache_dir fixture
     """Index tier, the given installed records, and a tip fetch that records its calls."""
-    import kiro_crew.apps.manager as manager_mod
+    import aj_crew.apps.manager as manager_mod
 
     state: dict[str, Any] = {
         "installed": [_installed()],
@@ -281,7 +281,7 @@ def listing_fixture(tips, monkeypatch):
     """The one configured index-tier registry, whose index fetch returns one versionless row."""
     _configure_registry(monkeypatch)
     fetch = AsyncMock(return_value=[{k: v for k, v in _row().items() if k != "_registry"}])
-    monkeypatch.setattr("kiro_crew.apps.registry._fetch_external_registry_index", fetch)
+    monkeypatch.setattr("aj_crew.apps.registry._fetch_external_registry_index", fetch)
     return fetch
 
 
@@ -349,13 +349,13 @@ class TestRefreshReadsTheTip:
         reg.branch = "main"
         config = MagicMock()
         config.registries = [reg]
-        monkeypatch.setattr("kiro_crew.config.loader.KiroCrewConfig.load", lambda: config)
+        monkeypatch.setattr("aj_crew.config.loader.AjCrewConfig.load", lambda: config)
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._fetch_external_registry_index",
+            "aj_crew.apps.registry._fetch_external_registry_index",
             AsyncMock(return_value=[{k: v for k, v in _row().items() if k != "_registry"}]),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.registry.list_registry", AsyncMock(return_value=[{"name": "cool-app"}])
+            "aj_crew.apps.registry.list_registry", AsyncMock(return_value=[{"name": "cool-app"}])
         )
         # A fresh source cache does not hold the refresh back: it expires it first.
         assert _write_manifest_cache(_row(), {"name": "cool-app", "version": "1.0.0"})

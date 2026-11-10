@@ -18,10 +18,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import mcp_work, validation
-from kiro_crew import work_ledger as wl
-from kiro_crew.dashboard.handlers import work_ledger as routes
-from kiro_crew.dashboard.handlers import work_ledger_conductor
+from aj_crew import mcp_work, validation
+from aj_crew import work_ledger as wl
+from aj_crew.dashboard.handlers import work_ledger as routes
+from aj_crew.dashboard.handlers import work_ledger_conductor
 
 pytestmark = pytest.mark.asyncio
 
@@ -33,7 +33,7 @@ _ACCEPT = {"kind": "human_approval"}
 def _open_route(tmp_path, _floor_monkeypatch: pytest.MonkeyPatch) -> None:
     """A private data home, and the entry gates opened (their own suites cover them)."""
     mp = _floor_monkeypatch
-    mp.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    mp.setenv("AJCREW_HOME", str(tmp_path / "home"))
 
     async def _recognized(*a: Any, **k: Any) -> None:
         return None
@@ -129,7 +129,7 @@ async def test_a_plain_create_still_opens_a_ledger() -> None:
 
 
 def test_the_work_tool_cannot_send_the_mark() -> None:
-    """``kirocrew-work`` forwards only ``_RECORD_FIELDS``, and its schema refuses
+    """``ajcrew-work`` forwards only ``_RECORD_FIELDS``, and its schema refuses
     the field, so the unmarked path stays the work tool's alone."""
     assert work_ledger_conductor.DISPATCH_FIELD not in mcp_work._RECORD_FIELDS
     with pytest.raises(validation.ValidationError):

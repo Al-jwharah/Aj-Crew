@@ -52,8 +52,8 @@ from sandbox_absent_ceiling_seal_helpers import (  # noqa: F401 -- fixtures are 
 )
 from test_sandbox_launcher_program import RecordingLibc, identity, launch, payload
 
-from kiro_crew import sandbox
-from kiro_crew.sandbox_plan import BACKEND_NAMESPACE, ConfinementPlan
+from aj_crew import sandbox
+from aj_crew.sandbox_plan import BACKEND_NAMESPACE, ConfinementPlan
 
 #: The ``mount(2)`` flag values a seal must pass, as the kernel defines them.
 _MS_RDONLY = 1
@@ -129,8 +129,8 @@ def test_run_authority_root_is_sealed_before_its_first_record(
 @_POSIX_ONLY
 def test_deny_ceiling_is_primed_before_the_operator_first_saves_it(crew_home, monkeypatch):
     """An absent deny ceiling is created for the seal, and the deny set it yields is unchanged."""
-    from kiro_crew.config import loader
-    from kiro_crew.hooks import effective_denied_regexes_from_config
+    from aj_crew.config import loader
+    from aj_crew.hooks import effective_denied_regexes_from_config
 
     target = crew_home / "denied_commands.json"
     monkeypatch.setattr(loader, "denied_commands_path", lambda: target)
@@ -421,9 +421,9 @@ class TestSealAppliesToAPreviouslyAbsentCeiling:
 
         The deny lists cover both ``_CREW_HOME_PREFIXES`` because either tree may hold
         bytes, but creation is the opposite case: a stub under a migrated host's leftover
-        ``~/.kirocrew`` is a file nothing will ever read.
+        ``~/.ajcrew`` is a file nothing will ever read.
         """
-        legacy = tmp_path / ".kirocrew"
+        legacy = tmp_path / ".ajcrew"
         legacy.mkdir()
 
         sandbox._materialize_sealable_ceilings()
@@ -460,7 +460,7 @@ class TestPublishIsAllOrNothing:
         with pytest.raises(sandbox.SandboxCeilingUnsealable):
             sandbox._materialize_sealable_ceilings()
 
-        assert [p.name for p in crew_home.iterdir() if p.name.startswith(".kirocrew-ceiling")] == []
+        assert [p.name for p in crew_home.iterdir() if p.name.startswith(".ajcrew-ceiling")] == []
 
     def test_publish_never_clobbers_a_racing_writer(self, crew_home):
         """``os.link`` fails with EEXIST rather than overwriting.
@@ -533,7 +533,7 @@ class TestAnUnsealedCeilingIsNeverSilent:
             os, "mkdir", lambda *a, **k: (_ for _ in ()).throw(OSError("read-only fs"))
         )
 
-        with caplog.at_level("WARNING", logger="kiro_crew.sandbox"):
+        with caplog.at_level("WARNING", logger="aj_crew.sandbox"):
             with pytest.raises(sandbox.SandboxCeilingUnsealable):
                 sandbox._materialize_sealable_ceilings()
 
@@ -545,7 +545,7 @@ class TestAnUnsealedCeilingIsNeverSilent:
             os, "link", lambda *a, **k: (_ for _ in ()).throw(OSError("no hardlinks"))
         )
 
-        with caplog.at_level("WARNING", logger="kiro_crew.sandbox"):
+        with caplog.at_level("WARNING", logger="aj_crew.sandbox"):
             with pytest.raises(sandbox.SandboxCeilingUnsealable):
                 sandbox._materialize_sealable_ceilings()
 
@@ -555,7 +555,7 @@ class TestAnUnsealedCeilingIsNeverSilent:
         assert sandbox._CREW_PRECREATE_READONLY_FILE_LEAVES[0] in caplog.text
 
     def test_success_is_quiet(self, crew_home, caplog):
-        with caplog.at_level("WARNING", logger="kiro_crew.sandbox"):
+        with caplog.at_level("WARNING", logger="aj_crew.sandbox"):
             sandbox._materialize_sealable_ceilings()
 
         assert "REFUSING to launch" not in caplog.text
@@ -664,7 +664,7 @@ class TestEachCeilingIsJudgedAgainstItsOwnHome:
     was true unconditionally and never described that leaf. The refusal then fired on
     every host with no ``~/.kiro`` at all and took the launcher sweep with it
     (``test_sandbox_launcher_sweep.py::TestNamespaceArgvPlacement``, whose ``fake_home``
-    creates ``.kirocrew`` and never ``.kiro``). These tests drive the real
+    creates ``.ajcrew`` and never ``.kiro``). These tests drive the real
     ``_sealable_absent_ceilings`` and the real refusal rather than replacing the
     function under test, which is the gap that let that ship.
     """
@@ -847,14 +847,14 @@ class TestAnAliasBackedCeilingIsReported:
             path = crew_home / leaf
             assert path.stat().st_nlink == 1, "a published ceiling must have no alias"
             assert not path.is_symlink()
-        assert [p.name for p in crew_home.iterdir() if p.name.startswith(".kirocrew-ceiling")] == []
+        assert [p.name for p in crew_home.iterdir() if p.name.startswith(".ajcrew-ceiling")] == []
 
     def test_a_symlinked_ceiling_is_reported(self, crew_home, caplog):
         real = crew_home / "elsewhere.json"
         real.write_text("{}", encoding="utf-8")
         (crew_home / "computer_use.json").symlink_to(real)
 
-        with caplog.at_level("WARNING", logger="kiro_crew.sandbox"):
+        with caplog.at_level("WARNING", logger="aj_crew.sandbox"):
             sandbox._materialize_sealable_ceilings()
 
         assert "is a SYMLINK" in caplog.text
@@ -866,7 +866,7 @@ class TestAnAliasBackedCeilingIsReported:
         os.link(target, crew_home / "alias.json")
         assert target.stat().st_nlink == 2
 
-        with caplog.at_level("WARNING", logger="kiro_crew.sandbox"):
+        with caplog.at_level("WARNING", logger="aj_crew.sandbox"):
             sandbox._materialize_sealable_ceilings()
 
         assert "hardlinks" in caplog.text
@@ -877,7 +877,7 @@ class TestAnAliasBackedCeilingIsReported:
         real.mkdir()
         (crew_home / "profiles").symlink_to(real)
 
-        with caplog.at_level("WARNING", logger="kiro_crew.sandbox"):
+        with caplog.at_level("WARNING", logger="aj_crew.sandbox"):
             sandbox._materialize_sealable_ceilings()
 
         assert "is a SYMLINK" in caplog.text
@@ -898,7 +898,7 @@ class TestAnAliasBackedCeilingIsReported:
     def test_an_ordinary_single_link_ceiling_is_quiet(self, crew_home, caplog):
         (crew_home / "computer_use.json").write_text("{}", encoding="utf-8")
 
-        with caplog.at_level("WARNING", logger="kiro_crew.sandbox"):
+        with caplog.at_level("WARNING", logger="aj_crew.sandbox"):
             sandbox._materialize_sealable_ceilings()
 
         assert "SYMLINK" not in caplog.text

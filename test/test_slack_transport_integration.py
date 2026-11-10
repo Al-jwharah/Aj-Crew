@@ -13,10 +13,10 @@ import asyncio
 import importlib
 from unittest.mock import AsyncMock
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.slack import handler as slack_handler
-from kiro_crew.slack.transport import SlackTransport
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.slack import handler as slack_handler
+from aj_crew.slack.transport import SlackTransport
 
 _golden = importlib.import_module("test_slack_golden_transcript")
 

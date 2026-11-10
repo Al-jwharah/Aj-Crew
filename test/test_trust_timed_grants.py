@@ -16,10 +16,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import platform_compat
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.history import ConversationLog
-from kiro_crew.trust_patterns import (
+from aj_crew import platform_compat
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.history import ConversationLog
+from aj_crew.trust_patterns import (
     MAX_TIMED_GRANT_SECONDS,
     GrantDeadline,
     base_trust_patterns,
@@ -55,7 +55,7 @@ async def _test_auth_middleware(request, handler):
 
 
 def _make_app(state: DashboardState) -> web.Application:
-    from kiro_crew.dashboard.chat import api_chat_slot_approve
+    from aj_crew.dashboard.chat import api_chat_slot_approve
 
     app = web.Application(middlewares=[_test_auth_middleware])
     app["state"] = state

@@ -19,8 +19,8 @@ from session_helpers import (  # noqa: F401 -- the fixture is requested by name
     cfg_fixture,
 )
 
-from kiro_crew.session import SessionManager
-from kiro_crew.testing.wait import await_until
+from aj_crew.session import SessionManager
+from aj_crew.testing.wait import await_until
 
 
 class TestCompactCallback:
@@ -56,7 +56,7 @@ class TestCompactCallback:
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         mgr.set_compact_callback(AsyncMock())
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session"):
             mgr.set_compact_callback(AsyncMock())
 
         assert any("Compact callback already registered" in r.message for r in caplog.records)
@@ -105,7 +105,7 @@ class TestCompactCallback:
 
         task = asyncio.create_task(mgr._compact_session("dashboard:chat-1", 92.0))
         # flake-ok: the compaction parks on the held turn semaphore before this sleep returns; a slow host only weakens the negative asserts; moved verbatim
-        # nosemgrep: kirocrew.test-sleep-as-barrier -- the compaction parks on the held turn semaphore before this sleep returns so the negative asserts hold on any host and a slow host only weakens them
+        # nosemgrep: ajcrew.test-sleep-as-barrier -- the compaction parks on the held turn semaphore before this sleep returns so the negative asserts hold on any host and a slow host only weakens them
         await asyncio.sleep(0.05)
         # Still draining: not recycled, callback not fired.
         assert not task.done()
@@ -132,14 +132,14 @@ class TestCompactCallback:
         # _COMPACT_RESULT_WAIT_FLOOR_SECS (5s) — patch that too if a test
         # needs the inner wait itself to time out quickly.
         # flake-ok: the 0.1 s outer budget is meant to expire: the test holds the turn semaphore throughout so the wait defers on any host; moved verbatim
-        monkeypatch.setattr("kiro_crew.session.COMPACT_WAIT_TIMEOUT_SECS", 0.1)
+        monkeypatch.setattr("aj_crew.session.COMPACT_WAIT_TIMEOUT_SECS", 0.1)
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         # Hold the semaphore and never release -> simulates a long-running turn.
         provider, _, _ = await mgr.get_or_create("dashboard:chat-1")
         cb = AsyncMock()
         mgr.set_compact_callback(cb)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session"):
             await await_until(
                 asyncio.ensure_future(mgr._compact_session("dashboard:chat-1", 92.0)),
                 what="the deferred compaction returning",
@@ -164,7 +164,7 @@ class TestCompactCallback:
         cb = AsyncMock(side_effect=RuntimeError("boom"))
         mgr.set_compact_callback(cb)
 
-        with caplog.at_level(logging.ERROR, logger="kiro_crew.session"):
+        with caplog.at_level(logging.ERROR, logger="aj_crew.session"):
             await mgr._compact_session("dashboard:chat-1", 95.0)
 
         cb.assert_awaited_once()
@@ -253,7 +253,7 @@ class TestCheckContextUsage:
         would pin the test to one threshold and go stale the next time either
         number moves.
         """
-        from kiro_crew.config.loader import CONTEXT_WARN_MARGIN_PCT
+        from aj_crew.config.loader import CONTEXT_WARN_MARGIN_PCT
 
         cfg.session.autocompact_pct = 90.0
         warn_at = 90.0 - CONTEXT_WARN_MARGIN_PCT
@@ -262,12 +262,12 @@ class TestCheckContextUsage:
         mgr.release("k1")
         provider.context_usage_pct = lambda: warn_at
         with (
-            patch("kiro_crew.session.published_autocompact_pct", return_value=90.0),
-            caplog.at_level(logging.WARNING, logger="kiro_crew.session"),
+            patch("aj_crew.session.published_autocompact_pct", return_value=90.0),
+            caplog.at_level(logging.WARNING, logger="aj_crew.session"),
         ):
             mgr.check_context_usage("k1", provider)
         assert any(
-            f"{warn_at:.0f}%" in r.message for r in caplog.records if r.name == "kiro_crew.session"
+            f"{warn_at:.0f}%" in r.message for r in caplog.records if r.name == "aj_crew.session"
         )
         await mgr.close_all()
 
@@ -278,7 +278,7 @@ class TestCheckContextUsage:
         Pins the boundary from the other side: without this, a margin widened
         to cover the whole window would still satisfy the test above.
         """
-        from kiro_crew.config.loader import CONTEXT_WARN_MARGIN_PCT
+        from aj_crew.config.loader import CONTEXT_WARN_MARGIN_PCT
 
         cfg.session.autocompact_pct = 90.0
         below = 90.0 - CONTEXT_WARN_MARGIN_PCT - 1.0
@@ -287,8 +287,8 @@ class TestCheckContextUsage:
         mgr.release("k1")
         provider.context_usage_pct = lambda: below
         with (
-            patch("kiro_crew.session.published_autocompact_pct", return_value=90.0),
-            caplog.at_level(logging.WARNING, logger="kiro_crew.session"),
+            patch("aj_crew.session.published_autocompact_pct", return_value=90.0),
+            caplog.at_level(logging.WARNING, logger="aj_crew.session"),
         ):
             mgr.check_context_usage("k1", provider)
         # Scoped to this logger: caplog captures the whole root hierarchy, so an
@@ -298,7 +298,7 @@ class TestCheckContextUsage:
         assert not [
             r
             for r in caplog.records
-            if r.levelno >= logging.WARNING and r.name == "kiro_crew.session"
+            if r.levelno >= logging.WARNING and r.name == "aj_crew.session"
         ]
         await mgr.close_all()
 
@@ -387,7 +387,7 @@ class TestCompaction:
         # Second trigger on same key is a no-op (already in progress)
         assert mgr._trigger_compaction("k1", "test again", 95.0, provider) == "in_progress"
         # flake-ok: settle sleep with no assert after it; close_all cancels and gathers any task still running so a slow host changes nothing; moved verbatim
-        # nosemgrep: kirocrew.test-sleep-as-barrier -- no assert follows the sleep and close_all cancels and gathers the compaction task so timing cannot change the result
+        # nosemgrep: ajcrew.test-sleep-as-barrier -- no assert follows the sleep and close_all cancels and gathers the compaction task so timing cannot change the result
         await asyncio.sleep(0.1)
         await mgr.close_all()
 
@@ -431,7 +431,7 @@ class TestClaudeBackendCompaction:
 
         mgr.set_compact_callback(cb)
 
-        with patch("kiro_crew.session._is_claude_backend", return_value=True):
+        with patch("aj_crew.session._is_claude_backend", return_value=True):
             await mgr._compact_session("k1", 92.0)
 
         provider.compact.assert_awaited_once()
@@ -450,8 +450,8 @@ class TestClaudeBackendCompaction:
         mgr.set_compact_callback(cb)
 
         with (
-            patch("kiro_crew.session._is_claude_backend", return_value=True),
-            caplog.at_level(logging.ERROR, logger="kiro_crew.session"),
+            patch("aj_crew.session._is_claude_backend", return_value=True),
+            caplog.at_level(logging.ERROR, logger="aj_crew.session"),
         ):
             await mgr._compact_session("k1", 92.0)
 
@@ -473,7 +473,7 @@ class TestClaudeBackendCompaction:
         provider.context_usage_pct = lambda: 40.0
 
         with (
-            patch("kiro_crew.session._is_claude_backend", return_value=True),
+            patch("aj_crew.session._is_claude_backend", return_value=True),
             patch.object(mgr, "_trigger_compaction") as mock_trigger,
         ):
             mgr.check_context_usage("k1", provider)
@@ -490,7 +490,7 @@ class TestClaudeBackendCompaction:
         provider, _, _ = await mgr.get_or_create("k1")
         mgr.release("k1")
 
-        with patch("kiro_crew.session._is_claude_backend", return_value=True):
+        with patch("aj_crew.session._is_claude_backend", return_value=True):
             mgr._compacting.add("k1")
             try:
                 provider2, is_new, _ = await mgr.get_or_create("k1")
@@ -529,7 +529,7 @@ class TestClaudeBackendCompaction:
         healthy REPLACEMENT for a key whose OLD session is still being torn
         down, get_or_create must reuse the replacement — not exile it and
         cold-start a duplicate provider that would overwrite and leak it."""
-        from kiro_crew.session import FirstTurnState, _Session
+        from aj_crew.session import FirstTurnState, _Session
 
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         old_provider, _, _ = await mgr.get_or_create("k1")
@@ -713,7 +713,7 @@ class TestKiroInPlaceCompaction:
         end_turn). The stream watcher must latch it so the blind drain never
         eats it — otherwise wait_for_compaction would stall to timeout and
         wrongly recycle a just-compacted healthy session."""
-        from kiro_crew.acp.types import EVENT_COMPACTION_STATUS, AcpEvent
+        from aj_crew.acp.types import EVENT_COMPACTION_STATUS, AcpEvent
 
         mid = AcpEvent(kind=EVENT_COMPACTION_STATUS, text="completed", title="sum")
         mgr = SessionManager(
@@ -792,7 +792,7 @@ class TestKiroInPlaceCompaction:
 
         task = asyncio.create_task(mgr._compact_session("dashboard:chat-1", 92.0))
         # flake-ok: the compaction task takes the free semaphore and parks on the gate in its first step which runs before this sleep can wake; moved verbatim
-        # nosemgrep: kirocrew.test-sleep-as-barrier -- the compaction task takes the free semaphore and parks on the gate in its first step which runs before this sleep wakes; moved verbatim
+        # nosemgrep: ajcrew.test-sleep-as-barrier -- the compaction task takes the free semaphore and parks on the gate in its first step which runs before this sleep wakes; moved verbatim
         await asyncio.sleep(0.05)
         assert not task.done()
         assert sess.semaphore.locked()  # queued turn would wait here
@@ -854,7 +854,7 @@ class TestKiroInPlaceCompaction:
 
         compact = asyncio.create_task(mgr._compact_session("dashboard:chat-1", 92.0))
         # flake-ok: sleep lets the compaction task take the free semaphore before the locked() assert; it acquires with no earlier suspension; moved verbatim
-        # nosemgrep: kirocrew.test-sleep-as-barrier -- lets the compaction task take the free semaphore before the locked assert; it acquires with no earlier suspension; moved verbatim
+        # nosemgrep: ajcrew.test-sleep-as-barrier -- lets the compaction task take the free semaphore before the locked assert; it acquires with no earlier suspension; moved verbatim
         await asyncio.sleep(0.05)
         assert sess.semaphore.locked()
 
@@ -866,7 +866,7 @@ class TestKiroInPlaceCompaction:
 
         turn = asyncio.create_task(_queued_turn())
         # flake-ok: the turn parks on the permit the gated compaction holds in its first step before this sleep ends so the not-done assert is exact; moved verbatim
-        # nosemgrep: kirocrew.test-sleep-as-barrier -- the turn parks on the held permit in its first step before this sleep ends so the not-done assert does not depend on the sleep length
+        # nosemgrep: ajcrew.test-sleep-as-barrier -- the turn parks on the held permit in its first step before this sleep ends so the not-done assert does not depend on the sleep length
         await asyncio.sleep(0.05)
         assert not turn.done()
 
@@ -886,7 +886,7 @@ class TestKiroInPlaceCompaction:
         """If a racing cold-start replaced the entry while the in-place
         compact was still running, the failure recycle kills only the OLD
         session; the fresh replacement (and its session_map entry) survives."""
-        from kiro_crew.session import FirstTurnState, _Session
+        from aj_crew.session import FirstTurnState, _Session
 
         gate = asyncio.Event()
 
@@ -920,7 +920,7 @@ class TestKiroInPlaceCompaction:
 
         task = asyncio.create_task(mgr._compact_session("k1", 92.0))
         # flake-ok: the compaction task reads the old session in its first step which runs before this sleep returns; the unset gate keeps it parked; moved verbatim
-        # nosemgrep: kirocrew.test-sleep-as-barrier -- the compaction task reads the old session in its first step which runs before this sleep returns and the unset gate keeps it parked; moved verbatim
+        # nosemgrep: ajcrew.test-sleep-as-barrier -- the compaction task reads the old session in its first step which runs before this sleep returns and the unset gate keeps it parked; moved verbatim
         await asyncio.sleep(0.05)
         assert not task.done()
 
@@ -955,7 +955,7 @@ class TestCompactFailureCooldown:
         mgr.release("k1")
         provider.compact = AsyncMock(side_effect=RuntimeError("boom"))
 
-        with patch("kiro_crew.session._is_claude_backend", return_value=True):
+        with patch("aj_crew.session._is_claude_backend", return_value=True):
             await mgr._compact_session("k1", 92.0)
 
         # flake-ok: the awaited failure arms the cooldown at monotonic plus 60 s and the real clock is read right after; only a 60 s stall flips it; moved verbatim
@@ -984,7 +984,7 @@ class TestCompactFailureCooldown:
         # Pre-existing cooldown from an earlier failure.
         mgr._compact_cooldown_until["k1"] = time.monotonic() + 60.0
 
-        with patch("kiro_crew.session._is_claude_backend", return_value=True):
+        with patch("aj_crew.session._is_claude_backend", return_value=True):
             await mgr._compact_session("k1", 92.0)
 
         assert "k1" not in mgr._compact_cooldown_until
@@ -1020,7 +1020,7 @@ class TestCompactTimeout:
 
         async def _hang(*_a, **_kw):
             # flake-ok: stand-in compact that outlasts the patched 0.05 s budget; wait_for cancels it at that deadline so the test never waits 10 s; moved verbatim
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- stand-in compact that the patched 0.05 s budget cancels so the test never waits the full 10 s
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- stand-in compact that the patched 0.05 s budget cancels so the test never waits the full 10 s
             await asyncio.sleep(10.0)
 
         provider.compact = _hang
@@ -1032,11 +1032,11 @@ class TestCompactTimeout:
         mgr.set_compact_callback(cb)
 
         with (
-            patch("kiro_crew.session._is_claude_backend", return_value=True),
+            patch("aj_crew.session._is_claude_backend", return_value=True),
             # Only the outer cap is scaled — see _COMPACT_RESULT_WAIT_FLOOR_SECS
             # note above if the inner wait must time out quickly.
             # flake-ok: the 0.05 s budget is meant to expire: the stand-in compact sleeps 10 s so the timeout arm runs on any host; moved verbatim
-            patch("kiro_crew.session.COMPACT_WAIT_TIMEOUT_SECS", 0.05),
+            patch("aj_crew.session.COMPACT_WAIT_TIMEOUT_SECS", 0.05),
         ):
             await mgr._compact_session("k1", 92.0)
 
@@ -1057,9 +1057,9 @@ class TestCompactTimeout:
         provider.compact = AsyncMock()
 
         with (
-            patch("kiro_crew.session._is_claude_backend", return_value=True),
+            patch("aj_crew.session._is_claude_backend", return_value=True),
             # flake-ok: the 0.05 s budget is meant to expire: the held turn is released only after it, so the timeout arm runs on any host
-            patch("kiro_crew.session.COMPACT_WAIT_TIMEOUT_SECS", 0.05),
+            patch("aj_crew.session.COMPACT_WAIT_TIMEOUT_SECS", 0.05),
         ):
             await mgr._compact_session("k1", 92.0)
 
@@ -1087,7 +1087,7 @@ class TestCompactCallbackSuccessFlag:
 
         mgr.set_compact_callback(cb)
 
-        with patch("kiro_crew.session._is_claude_backend", return_value=True):
+        with patch("aj_crew.session._is_claude_backend", return_value=True):
             await mgr._compact_session("k1", 92.0)
 
         assert calls == [("k1", 92.0, True)]
@@ -1106,7 +1106,7 @@ class TestSetCompactCallback:
     def test_warns_on_replace(self, cfg, caplog):
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         mgr.set_compact_callback(AsyncMock())
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session"):
             mgr.set_compact_callback(AsyncMock())
         assert any("already registered" in r.message for r in caplog.records)
 
@@ -1161,7 +1161,7 @@ class TestIneffectiveCompactionCooldown:
         provider.context_usage_pct = lambda: 40.0
         mgr._compact_cooldown_until["k1"] = time.monotonic() + 999
 
-        with patch("kiro_crew.session._is_claude_backend", return_value=True):
+        with patch("aj_crew.session._is_claude_backend", return_value=True):
             await mgr._compact_session("k1", 92.0)
 
         assert "k1" not in mgr._compact_cooldown_until
@@ -1216,7 +1216,7 @@ class TestIneffectiveCompactionCooldown:
         unknown mid-turn -- would settle here and be recorded nowhere, so the
         ledger would be missing exactly the compactions that were hardest to
         measure."""
-        from kiro_crew.crew_log import emit as crew_log_emit
+        from aj_crew.crew_log import emit as crew_log_emit
 
         seen: list[tuple[float, float]] = []
         monkeypatch.setattr(
@@ -1248,7 +1248,7 @@ class TestIneffectiveCompactionCooldown:
         mgr._compact_pending_verdict["dashboard:chat-1"] = 92.0
         provider.context_usage_pct = lambda: 91.0  # >= autocompact_pct (90)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session"):
             mgr.check_context_usage("dashboard:chat-1", provider)
 
         assert "dashboard:chat-1" not in mgr._compact_pending_verdict
@@ -1289,7 +1289,7 @@ class TestIneffectiveCompactionCooldown:
         provider.compact = AsyncMock()
         provider.context_usage_pct = lambda: 92.0  # unchanged: stats never reset
 
-        with patch("kiro_crew.session._is_claude_backend", return_value=True):
+        with patch("aj_crew.session._is_claude_backend", return_value=True):
             await mgr._compact_session("k1", 92.0)
 
         # Deferred, not damped: a successful compaction must not be punished.
@@ -1329,7 +1329,7 @@ class TestIneffectiveCompactionCooldown:
         cb = AsyncMock()
         mgr.set_compact_callback(cb)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session"):
             await mgr._compact_session("dashboard:chat-1", 92.0)
 
         # flake-ok: the in-place compaction arms the cooldown at monotonic plus 60 s and the real clock is read right after; only a 60 s stall flips it; moved verbatim
@@ -1358,8 +1358,8 @@ class TestIneffectiveCompactionCooldown:
         mgr.set_compact_callback(cb)
 
         with (
-            patch("kiro_crew.session._is_claude_backend", return_value=True),
-            caplog.at_level(logging.WARNING, logger="kiro_crew.session"),
+            patch("aj_crew.session._is_claude_backend", return_value=True),
+            caplog.at_level(logging.WARNING, logger="aj_crew.session"),
         ):
             await mgr._compact_session("k1", 92.0)
 
@@ -1379,7 +1379,7 @@ class TestIneffectiveCompactionCooldown:
         circuit breaker: when the stuck session's turns keep failing,
         ``record_failure`` trips at ``_CIRCUIT_BREAKER_THRESHOLD`` and the
         forced reset clears the cooldown along with the session."""
-        from kiro_crew.session import _CIRCUIT_BREAKER_THRESHOLD
+        from aj_crew.session import _CIRCUIT_BREAKER_THRESHOLD
 
         mgr = SessionManager(cfg, provider_factory=self._inplace_factory(pct_after=91.0))
         await mgr.get_or_create("dashboard:chat-1")

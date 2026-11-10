@@ -4,7 +4,7 @@
   symlink on dev desktops (``/home/<u>`` -> ``/local/home/<u>``). macOS before Ventura
   has no ``readlink -f``, so only Linux shows a mismatch.
 * ``_resolve_checkout`` matches the branch leaf as well as the directory basename, so
-  a short name ``kirocrew pod up`` accepts (``feat/<name>``) resolves.
+  a short name ``ajcrew pod up`` accepts (``feat/<name>``) resolves.
 
 The tests drive the real shell fragments out of the shipped script.
 """
@@ -27,23 +27,23 @@ import pytest
 
 SCRIPT = (
     Path(__file__).resolve().parent.parent
-    / "src/kiro_crew/apps/builtins/dev_fleet/skills/pod-e2e/scripts/pod-e2e.sh"
+    / "src/aj_crew/apps/builtins/dev_fleet/skills/pod-e2e/scripts/pod-e2e.sh"
 )
-POD_CLI = Path(__file__).resolve().parent.parent / "src/kiro_crew/pod/cli.py"
+POD_CLI = Path(__file__).resolve().parent.parent / "src/aj_crew/pod/cli.py"
 #: ``runtime.mint_token`` is defined in the pod runtime client owner; the runtime
 #: module re-exports it.
-POD_RUNTIME_CLIENT = Path(__file__).resolve().parent.parent / "src/kiro_crew/pod/runtime_client.py"
-POD_CONFIG = Path(__file__).resolve().parent.parent / "src/kiro_crew/pod/config.py"
+POD_RUNTIME_CLIENT = Path(__file__).resolve().parent.parent / "src/aj_crew/pod/runtime_client.py"
+POD_CONFIG = Path(__file__).resolve().parent.parent / "src/aj_crew/pod/config.py"
 #: ``generate_token`` is defined in the token-auth tokens owner; the token_auth facade serves it.
-TOKEN_AUTH = Path(__file__).resolve().parent.parent / "src/kiro_crew/dashboard/token_auth_tokens.py"
+TOKEN_AUTH = Path(__file__).resolve().parent.parent / "src/aj_crew/dashboard/token_auth_tokens.py"
 #: ``api_token_local`` is defined in the local token owner; the core handlers facade serves it.
 TOKEN_HANDLER = (
-    Path(__file__).resolve().parent.parent / "src/kiro_crew/dashboard/handlers/core_local_token.py"
+    Path(__file__).resolve().parent.parent / "src/aj_crew/dashboard/handlers/core_local_token.py"
 )
 #: ``_pod_status`` is defined in the Dev Fleet pods owner; the worktree_ops facade serves it.
 WORKTREE_OPS = (
     Path(__file__).resolve().parent.parent
-    / "src/kiro_crew/apps/builtins/dev_fleet/worktree_ops_pods.py"
+    / "src/aj_crew/apps/builtins/dev_fleet/worktree_ops_pods.py"
 )
 
 
@@ -349,7 +349,7 @@ def test_resolver_matches_a_directory_basename(tmp_path):
 def test_resolver_prefers_feat_over_another_branch_with_the_same_leaf(tmp_path):
     """Regression: a leaf match would pick fix/foo and test the WRONG checkout.
 
-    `kirocrew pod up foo` resolves feat/foo, so the harness must too — otherwise
+    `ajcrew pod up foo` resolves feat/foo, so the harness must too — otherwise
     the suite reports a verdict for a branch nobody booted.
     """
     got = _resolve("foo", str(tmp_path), porcelain=PORCELAIN_AMBIGUOUS, tmp=tmp_path)
@@ -391,7 +391,7 @@ def _health_snippet(stub_bin: str, timeout: str = "1", handle: str | None = None
     preamble = textwrap.dedent(f"""
         set -uo pipefail
         export POD_E2E_HEALTH_TIMEOUT='{timeout}'
-        KIROCREW_CLI="{stub_bin}"
+        AJCREW_CLI="{stub_bin}"
         HANDLE_JSON="{'' if handle is None else '/handle/from/the/caller.json'}"
         HANDLE_HEALTH="{'' if handle is None else handle}"
         NAME=demo
@@ -417,14 +417,14 @@ def _health_snippet(stub_bin: str, timeout: str = "1", handle: str | None = None
 
 @pytest.fixture()
 def stub_cli(tmp_path: Path):
-    """A fake `kirocrew` whose `pod status --json` health value is injectable.
+    """A fake `ajcrew` whose `pod status --json` health value is injectable.
 
     Every invocation is appended to ``cli-calls.log`` beside it, which is how a
     handle-mode test proves no pod verb ran instead of inferring it.
     """
 
     def _make(health: str) -> str:
-        path = tmp_path / "kirocrew-stub"
+        path = tmp_path / "ajcrew-stub"
         calls = tmp_path / "cli-calls.log"
         path.write_text(
             textwrap.dedent(f"""
@@ -690,7 +690,7 @@ def _check_handle(
         # shlex.quote, not repr: repr renders a tab as the two characters `\t`, so a
         # control-character case would reach the shell as different bytes than the
         # producer saw and the comparison would be against a value nobody set.
-        preamble.append(f"export KIROCREW_POD_LIVE_PORT={shlex.quote(live_port)}")
+        preamble.append(f"export AJCREW_POD_LIVE_PORT={shlex.quote(live_port)}")
     snippet = "\n".join([*preamble, check, 'echo "ACCEPTED"'])
     return _run(snippet, str(tmp_path))
 
@@ -899,7 +899,7 @@ def test_handle_refuses_the_default_live_port_when_unset(tmp_path):
     res = _check_handle(tmp_path, str(handle))
     assert res.returncode == 64, res.stdout + res.stderr
     assert "base_url port 5476 is the configured live plane" in res.stderr
-    assert "ignoring KIROCREW_POD_LIVE_PORT" not in res.stderr
+    assert "ignoring AJCREW_POD_LIVE_PORT" not in res.stderr
 
 
 def test_handle_accepts_a_pod_port_that_is_not_the_configured_live_port(tmp_path):
@@ -911,7 +911,7 @@ def test_handle_accepts_a_pod_port_that_is_not_the_configured_live_port(tmp_path
     res = _check_handle(tmp_path, str(handle), live_port="9123")
     assert res.returncode == 0, res.stdout + res.stderr
     assert "ACCEPTED" in res.stdout
-    assert "ignoring KIROCREW_POD_LIVE_PORT" not in res.stderr
+    assert "ignoring AJCREW_POD_LIVE_PORT" not in res.stderr
 
 
 @pytest.mark.parametrize("bad", ["abc", "0", "65536", "999999999999999999999999"])
@@ -923,7 +923,7 @@ def test_bad_live_port_falls_back_to_the_default_and_warns(tmp_path, bad):
     )
     res = _check_handle(tmp_path, str(handle), live_port=bad)
     assert res.returncode == 64, res.stdout + res.stderr
-    assert "ignoring KIROCREW_POD_LIVE_PORT" in res.stderr
+    assert "ignoring AJCREW_POD_LIVE_PORT" in res.stderr
     assert "using 5476" in res.stderr
     assert "base_url port 5476 is the configured live plane" in res.stderr
     assert "ACCEPTED" not in res.stdout
@@ -951,11 +951,11 @@ def test_the_refused_set_follows_the_producers_own_parse_of_the_variable(tmp_pat
     `_env_int` in `pod/config.py` strips and uses `str.isdigit()`, so `' 9123 '` and
     fullwidth `'\uff19\uff11\uff12\uff13'` both mean 9123; the harness must refuse it too.
     """
-    from kiro_crew.pod.config import DEFAULT_LIVE_PORT, _env_int
+    from aj_crew.pod.config import DEFAULT_LIVE_PORT, _env_int
 
     with pytest.MonkeyPatch.context() as patch:
-        patch.setenv("KIROCREW_POD_LIVE_PORT", raw)
-        producer_port = _env_int("KIROCREW_POD_LIVE_PORT", DEFAULT_LIVE_PORT)
+        patch.setenv("AJCREW_POD_LIVE_PORT", raw)
+        producer_port = _env_int("AJCREW_POD_LIVE_PORT", DEFAULT_LIVE_PORT)
     assert 1 <= producer_port <= 65535, "matrix must only carry bindable ports"
 
     handle = tmp_path / "handle.json"
@@ -993,7 +993,7 @@ def test_handle_refuses_the_default_live_port_even_when_another_is_configured(tm
     res = _check_handle(tmp_path, str(handle), live_port="9123")
     assert res.returncode == 64, res.stdout + res.stderr
     assert "base_url port 5476 is reserved for a production gateway" in res.stderr
-    assert "ignoring KIROCREW_POD_LIVE_PORT" not in res.stderr
+    assert "ignoring AJCREW_POD_LIVE_PORT" not in res.stderr
     assert "ACCEPTED" not in res.stdout
 
 
@@ -1152,7 +1152,7 @@ def _run_safety_refusal(
         _real_reporters(),
     ]
     if live_port is not None:
-        preamble.append(f"export KIROCREW_POD_LIVE_PORT={live_port}")
+        preamble.append(f"export AJCREW_POD_LIVE_PORT={live_port}")
     return _run("\n".join([*preamble, definition, refusal, "echo CONTINUED"]), str(tmp_path))
 
 
@@ -1373,7 +1373,7 @@ def _producer_token_alphabet() -> set[str]:
     # it: exec on AST-built code trips the repo's SAST rule, and a lifted copy would
     # miss any change made outside that one function body. Other suites import this
     # module directly for the same reason.
-    from kiro_crew.dashboard import token_auth
+    from aj_crew.dashboard import token_auth
 
     encode = token_auth._b64url_encode
 
@@ -1415,7 +1415,7 @@ def test_handle_schema_matches_all_producer_key_sets():
     assert {"base_url", "token"}.isdisjoint(status_keys)
     assert wrapper_keys == {"ok"}
 
-    # Pin PodConfig.load line 226: live_port=_env_int("KIROCREW_POD_LIVE_PORT", DEFAULT_LIVE_PORT).
+    # Pin PodConfig.load line 226: live_port=_env_int("AJCREW_POD_LIVE_PORT", DEFAULT_LIVE_PORT).
     default_live_port, live_port_env = _pod_live_port_contract()
     shell_source = SCRIPT.read_text(encoding="utf-8")
     shell_default = re.search(r"^DEFAULT_LIVE_PORT=([0-9]+)$", shell_source, re.MULTILINE)

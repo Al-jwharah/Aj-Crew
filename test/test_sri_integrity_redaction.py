@@ -8,8 +8,8 @@ import random
 
 import pytest
 
-from kiro_crew.security import redact, redact_credentials
-from kiro_crew.security import redaction as _redaction
+from aj_crew.security import redact, redact_credentials
+from aj_crew.security import redaction as _redaction
 
 # The canonical AWS documentation example secret key, never a live credential.
 KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
@@ -171,8 +171,8 @@ def test_the_exemption_leaves_the_exfil_scan_unchanged() -> None:
 
 def _flush_streamed(deltas: list[str]) -> str:
     """Stream *deltas* through the per-delta removers as the run loop does, then flush."""
-    from kiro_crew.dashboard import chat_runner
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard import chat_runner
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("sri-flush")
     text = ""
@@ -190,7 +190,7 @@ def test_a_streamed_sri_value_in_one_delta_is_saved_whole() -> None:
 
 @pytest.mark.parametrize("value", FIRING_VALUES)
 def test_a_delta_split_sri_value_saves_the_reply_not_the_withheld_notice(value: str) -> None:
-    from kiro_crew.dashboard.chat_turn.segment_flush import _SEGMENT_UNCHECKED_TEXT
+    from aj_crew.dashboard.chat_turn.segment_flush import _SEGMENT_UNCHECKED_TEXT
 
     head, digest = 'Run this:\n    integrity = "sha256-', value.removeprefix("sha256-")
     tail = '",\nthen build.'
@@ -235,8 +235,8 @@ def test_past_the_work_budget_the_split_digest_retry_is_not_run(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The retry's digest-by-value scan is the cost the budget bounds, so it never runs past it."""
-    from kiro_crew.dashboard import chat_runner
-    from kiro_crew.dashboard.chat_turn.segment_flush import _SEGMENT_UNCHECKED_TEXT
+    from aj_crew.dashboard import chat_runner
+    from aj_crew.dashboard.chat_turn.segment_flush import _SEGMENT_UNCHECKED_TEXT
 
     real = chat_runner._redact_segment_text
     judged: list[object] = []

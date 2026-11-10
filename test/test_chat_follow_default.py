@@ -34,18 +34,18 @@ from test_chat_send_agent_model_default import (
     _turn_state,
 )
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard import channel_slots
-from kiro_crew.dashboard import chat_follow_default as follow
-from kiro_crew.dashboard import chat_handlers, chat_persistence, chat_runner
-from kiro_crew.dashboard.channel_slots import note_slot_closed
-from kiro_crew.dashboard.chat_api.agent_switch import clear_slot_model_binding
-from kiro_crew.dashboard.chat_handlers import _close_slot, resume_slot_from_history
-from kiro_crew.dashboard.chat_utils import effective_session_key
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.llm_helpers import slot_switch_session_lock
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import async_wait_until, default_timeout, finished, until_parked
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard import channel_slots
+from aj_crew.dashboard import chat_follow_default as follow
+from aj_crew.dashboard import chat_handlers, chat_persistence, chat_runner
+from aj_crew.dashboard.channel_slots import note_slot_closed
+from aj_crew.dashboard.chat_api.agent_switch import clear_slot_model_binding
+from aj_crew.dashboard.chat_handlers import _close_slot, resume_slot_from_history
+from aj_crew.dashboard.chat_utils import effective_session_key
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.llm_helpers import slot_switch_session_lock
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import async_wait_until, default_timeout, finished, until_parked
 
 PATH = "/api/chat/slots/follow-default"
 #: Fake AWS access-key shapes, built by concatenation as the repo's other redaction
@@ -273,7 +273,7 @@ class TestCountAndConfirm:
         self, tmp_path, monkeypatch
     ):
         """A close drains the pending clear before History can publish another pick."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         clock = ManualClock()
         clock.install(monkeypatch, channel_slots)
         clock.install(monkeypatch, chat_handlers)
@@ -473,7 +473,7 @@ class TestAnOpenChatIsJudgedOnItsLineToo:
     async def test_a_chat_reopened_from_history_keeps_the_model_it_was_given(
         self, tmp_path, monkeypatch, provenance, slot_attr
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         name = "chat-1-100"
         # An archived line carries the close instant its close save stamped. Without
@@ -1115,7 +1115,7 @@ class TestOwnerOnly:
     @pytest.mark.asyncio
     async def test_the_real_table_answers_the_path_with_this_handler(self):
         """Ahead of ``/api/chat/slots/{slot}``, which would read it as a slot named so."""
-        from kiro_crew.dashboard import routes
+        from aj_crew.dashboard import routes
 
         app = web.Application()
         routes.register_all(app)
@@ -1126,12 +1126,12 @@ class TestOwnerOnly:
 
 @pytest.fixture
 def runner_config():
-    """Serve one real config object to every ``KiroCrewConfig.load()`` in the turn."""
+    """Serve one real config object to every ``AjCrewConfig.load()`` in the turn."""
     patchers: list = []
 
-    def _use(cfg: KiroCrewConfig) -> None:
+    def _use(cfg: AjCrewConfig) -> None:
         patcher = unittest.mock.patch.object(
-            chat_runner.KiroCrewConfig, "load", unittest.mock.MagicMock(return_value=cfg)
+            chat_runner.AjCrewConfig, "load", unittest.mock.MagicMock(return_value=cfg)
         )
         patcher.start()
         patchers.append(patcher)
@@ -1176,7 +1176,7 @@ class TestTheNextTurn:
         self, tmp_path, monkeypatch, runner_config
     ):
         cfg = _load_config(
-            tmp_path, {"agent": {"model": "auto", "provider": "acp"}, "default_agent": "kirocrew"}
+            tmp_path, {"agent": {"model": "auto", "provider": "acp"}, "default_agent": "ajcrew"}
         )
         runner_config(cfg)
         state = _make_state(tmp_path)
@@ -1285,7 +1285,7 @@ class TestTheNextTurn:
         self, tmp_path, runner_config
     ):
         cfg = _load_config(
-            tmp_path, {"agent": {"model": "auto", "provider": "acp"}, "default_agent": "kirocrew"}
+            tmp_path, {"agent": {"model": "auto", "provider": "acp"}, "default_agent": "ajcrew"}
         )
         runner_config(cfg)
         state, _client = _turn_state(tmp_path)
@@ -1293,7 +1293,7 @@ class TestTheNextTurn:
 
         await self._clear_all(state)
         with unittest.mock.patch.object(
-            KiroCrewConfig, "_resolve_agent_model", staticmethod(lambda: "")
+            AjCrewConfig, "_resolve_agent_model", staticmethod(lambda: "")
         ):
             await _drive(state, slot)
 
@@ -1307,7 +1307,7 @@ class TestTheNextTurn:
     ):
         """Every tier defers on Auto, so the turn's stamp check has no default to compare."""
         cfg = _load_config(
-            tmp_path, {"agent": {"model": "auto", "provider": "acp"}, "default_agent": "kirocrew"}
+            tmp_path, {"agent": {"model": "auto", "provider": "acp"}, "default_agent": "ajcrew"}
         )
         runner_config(cfg)
         state, client = _turn_state(tmp_path)
@@ -1317,7 +1317,7 @@ class TestTheNextTurn:
         assert await self._clear_all(state) == 1
         state.sessions.reset.assert_not_awaited()
         with unittest.mock.patch.object(
-            KiroCrewConfig, "_resolve_agent_model", staticmethod(lambda: "")
+            AjCrewConfig, "_resolve_agent_model", staticmethod(lambda: "")
         ):
             await _drive(state, slot)
 

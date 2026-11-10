@@ -2,7 +2,7 @@
 
 Dispatch flattens a crew alias to its ``kiro_agent`` pointer
 (``config.loader.resolve_agent_bindings``), so a crew whose ``kiro_agent`` is
-allowed to default to ``"kirocrew"`` is offered in the chat picker and then
+allowed to default to ``"ajcrew"`` is offered in the chat picker and then
 answered by the DEFAULT agent — the picker appears to revert to default, with
 only a log line marking the substitution.
 
@@ -14,14 +14,14 @@ The contract these tests pin:
   to look anything up;
 * existence is resolved through ``list_agents()`` — the hardened spec reader —
   never a raw filesystem probe;
-* ``"kirocrew"`` stays a perfectly legal explicit CHOICE, because a crew that
+* ``"ajcrew"`` stays a perfectly legal explicit CHOICE, because a crew that
   boots the built-in agent against its own workspace/memory store is the common
   case and must keep working;
-* any template other than ``"kirocrew"`` or the crew's own key is REFUSED
+* any template other than ``"ajcrew"`` or the crew's own key is REFUSED
   (400 ``mate_template_unsupported``): the crewmate's own file is the
   source-free worker and reads no template, so the template's tools and
   restrictions would never reach it;
-* a ``"kirocrew"`` missing from the listing is accepted with a WARNING rather
+* a ``"ajcrew"`` missing from the listing is accepted with a WARNING rather
   than refused, matching the sync path's EXECUTABLE INVARIANT posture — an
   edition may resolve a row this listing cannot see.
 """
@@ -36,7 +36,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config.sections import MemoryConfig
+from aj_crew.config.sections import MemoryConfig
 
 
 @pytest.fixture(autouse=True)
@@ -46,14 +46,14 @@ def _owner_caller(monkeypatch):
     its own enumerate-the-invariant coverage in
     test_agents_endpoints_owner_auth.py."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
     pass  # Member routing does not depend on OS isolation.
 
 
 def _fake_config():
-    """A stand-in KiroCrewConfig snapshot.
+    """A stand-in AjCrewConfig snapshot.
 
     The handler persists via a delta mutate through ``update_config_locked`` --
     ``_post`` patches that and records the mutated document into
@@ -68,7 +68,7 @@ def _fake_config():
         agents={},
         memory_stores={},
         workspaces={},
-        default_agent="kirocrew",
+        default_agent="ajcrew",
         save=lambda: saved.append(True),
         saved=saved,
         written={},
@@ -76,10 +76,10 @@ def _fake_config():
 
 
 def _make_app() -> web.Application:
-    from kiro_crew.dashboard.handlers.agents import api_kirocrew_agents_create
+    from aj_crew.dashboard.handlers.agents import api_ajcrew_agents_create
 
     app = web.Application()
-    app.router.add_post("/api/agents", api_kirocrew_agents_create)
+    app.router.add_post("/api/agents", api_ajcrew_agents_create)
     return app
 
 
@@ -107,19 +107,19 @@ async def _post(body, cfg, installed=(), spy=None):
 
     with (
         patch(
-            "kiro_crew.dashboard.handlers.agents.KiroCrewConfig.load",
+            "aj_crew.dashboard.handlers.agents.AjCrewConfig.load",
             return_value=cfg,
         ),
         patch(
-            "kiro_crew.config.loader.update_config_locked",
+            "aj_crew.config.loader.update_config_locked",
             new=_fake_update_config_locked,
         ),
         patch(
-            "kiro_crew.dashboard.handlers.agents.list_agents",
+            "aj_crew.dashboard.handlers.agents.list_agents",
             new=_list_agents,
         ),
         patch(
-            "kiro_crew.dashboard.handlers.agents._sel",
+            "aj_crew.dashboard.handlers.agents._sel",
             return_value=SimpleNamespace(
                 log_api_access=lambda **kwargs: None,
             ),
@@ -225,17 +225,17 @@ class TestTemplateNameGrammar:
 
 class TestExplicitTemplateStillWorks:
     @pytest.mark.asyncio
-    async def test_builtin_kirocrew_is_a_legal_choice(self):
+    async def test_builtin_ajcrew_is_a_legal_choice(self):
         """Only the silent DEFAULT is refused — the value itself is legitimate."""
         cfg = _fake_config()
         status, data = await _post(
-            {"name": "researcher", "kiro_agent": "kirocrew", "workspace": "research"},
+            {"name": "researcher", "kiro_agent": "ajcrew", "workspace": "research"},
             cfg,
-            installed=("kirocrew",),
+            installed=("ajcrew",),
         )
         assert status == 200
         assert data["ok"] is True
-        assert cfg.written["doc"]["agents"]["researcher"]["kiro_agent"] == "kirocrew"
+        assert cfg.written["doc"]["agents"]["researcher"]["kiro_agent"] == "ajcrew"
         assert cfg.written["doc"]["agents"]["researcher"]["workspace"] == "research"
         # Naming a workspace is a reuse: stored as given, no entry of its own.
         assert "workspaces" not in cfg.written["doc"]
@@ -247,7 +247,7 @@ class TestExplicitTemplateStillWorks:
         status, data = await _post(
             {"name": "release-bot", "kiro_agent": "release-bot"},
             cfg,
-            installed=("kirocrew", "release-bot"),
+            installed=("ajcrew", "release-bot"),
         )
         assert (status, data["code"]) == (409, "template_name_in_use")
         assert cfg.saved == []
@@ -256,13 +256,13 @@ class TestExplicitTemplateStillWorks:
     async def test_a_user_level_agent_of_the_crews_name_is_refused(self, monkeypatch):
         """The crewmate would be bound to that agent, which wins over its own copy."""
         monkeypatch.setattr(
-            "kiro_crew.mate_config.user_agent_named", lambda name: name == "release-bot"
+            "aj_crew.mate_config.user_agent_named", lambda name: name == "release-bot"
         )
         cfg = _fake_config()
         status, data = await _post(
-            {"name": "release-bot", "kiro_agent": "kirocrew"},
+            {"name": "release-bot", "kiro_agent": "ajcrew"},
             cfg,
-            installed=("kirocrew", "release-bot"),
+            installed=("ajcrew", "release-bot"),
         )
         assert (status, data["code"]) == (409, "template_name_in_use")
         assert cfg.saved == []
@@ -272,9 +272,9 @@ class TestExplicitTemplateStillWorks:
         cfg = _fake_config()
         with caplog.at_level(logging.WARNING):
             status, _ = await _post(
-                {"name": "crew-a", "kiro_agent": "kirocrew"},
+                {"name": "crew-a", "kiro_agent": "ajcrew"},
                 cfg,
-                installed=("kirocrew", "reviewer"),
+                installed=("ajcrew", "reviewer"),
             )
         assert status == 200
         assert "not in the installed agent listing" not in caplog.text
@@ -285,13 +285,13 @@ class TestMissingTemplateWarnsButCreates:
     async def test_unknown_template_warns_and_still_creates(self, caplog):
         cfg = _fake_config()
         with caplog.at_level(logging.WARNING):
-            status, _ = await _post({"name": "crew-c", "kiro_agent": "kirocrew"}, cfg, installed=())
+            status, _ = await _post({"name": "crew-c", "kiro_agent": "ajcrew"}, cfg, installed=())
         # Accepted (an edition may resolve it even when unlisted)…
         assert status == 200
-        assert cfg.written["doc"]["agents"]["crew-c"]["kiro_agent"] == "kirocrew"
+        assert cfg.written["doc"]["agents"]["crew-c"]["kiro_agent"] == "ajcrew"
         # …but the substitution risk is on the record rather than silent.
         assert "not in the installed agent listing" in caplog.text
-        assert "'kirocrew'" in caplog.text
+        assert "'ajcrew'" in caplog.text
 
 
 class TestStartTemplateIsTheWorker:
@@ -308,7 +308,7 @@ class TestStartTemplateIsTheWorker:
         status, data = await _post(
             {"name": "crew-e", "kiro_agent": "locked-down"},
             cfg,
-            installed=("kirocrew", "locked-down"),
+            installed=("ajcrew", "locked-down"),
         )
         assert (status, data["code"]) == (400, "mate_template_unsupported")
         assert "built-in worker" in data["error"]
@@ -328,7 +328,7 @@ class TestStartTemplateIsTheWorker:
         status, data = await _post(
             {"name": "Release Bot", "kiro_agent": "release-bot"},
             cfg,
-            installed=("kirocrew", "release-bot"),
+            installed=("ajcrew", "release-bot"),
         )
         assert (status, data["code"]) == (409, "template_name_in_use")
         assert cfg.saved == []
@@ -343,16 +343,16 @@ class TestStartTemplateIsTheWorker:
         status, data = await _post(
             {"name": "reviewer", "kiro_agent": "reviewer"},
             cfg,
-            installed=("kirocrew", "reviewer"),
+            installed=("ajcrew", "reviewer"),
         )
         assert data["code"] != "mate_template_unsupported"
         assert (status, data["code"]) == (409, "template_name_in_use")
 
 
 def test_start_template_refusal_admits_the_worker_and_the_crews_own_key():
-    from kiro_crew.mate_config import MATE_TEMPLATE_UNSUPPORTED, start_template_refusal
+    from aj_crew.mate_config import MATE_TEMPLATE_UNSUPPORTED, start_template_refusal
 
-    assert start_template_refusal("kirocrew", "crew-e") == ""
+    assert start_template_refusal("ajcrew", "crew-e") == ""
     assert start_template_refusal("crew-e", "crew-e") == ""
     assert start_template_refusal("locked-down", "crew-e") == MATE_TEMPLATE_UNSUPPORTED
 
@@ -367,7 +367,7 @@ class TestFirstGreetingOwed:
 
     @pytest.mark.asyncio
     async def test_flagged_create_marks_a_goal_welcome_owed_under_its_member_id(self):
-        from kiro_crew.members import WELCOME_KIND_GOAL, member_slug
+        from aj_crew.members import WELCOME_KIND_GOAL, member_slug
 
         cfg = _fake_config()
         marked: list[tuple[str, str, str]] = []
@@ -376,11 +376,11 @@ class TestFirstGreetingOwed:
             marked.append((name, kind, member_slug(name, config)))
             return True
 
-        with patch("kiro_crew.members.mark_welcome_owed", new=record):
+        with patch("aj_crew.members.mark_welcome_owed", new=record):
             status, data = await _post(
-                {"name": "scout", "kiro_agent": "kirocrew", "first_greeting": True},
+                {"name": "scout", "kiro_agent": "ajcrew", "first_greeting": True},
                 cfg,
-                installed=("kirocrew",),
+                installed=("ajcrew",),
             )
         assert status == 200
         assert data["member_id"]
@@ -391,7 +391,7 @@ class TestFirstGreetingOwed:
     async def test_a_create_without_the_flag_owes_nothing(self, flag):
         cfg = _fake_config()
         marked: list[str] = []
-        body = {"name": "scout", "kiro_agent": "kirocrew"}
+        body = {"name": "scout", "kiro_agent": "ajcrew"}
         if flag is not None:
             body["first_greeting"] = flag
 
@@ -399,8 +399,8 @@ class TestFirstGreetingOwed:
             marked.append(name)
             return True
 
-        with patch("kiro_crew.members.mark_welcome_owed", new=record):
-            status, _ = await _post(body, cfg, installed=("kirocrew",))
+        with patch("aj_crew.members.mark_welcome_owed", new=record):
+            status, _ = await _post(body, cfg, installed=("ajcrew",))
         assert status == 200
         assert marked == []
 
@@ -426,11 +426,11 @@ class TestCreateRequestHandle:
     )
     async def test_a_repeat_of_the_same_request_gets_the_member_it_created(self, named):
         cfg = _fake_config()
-        other = {"name": "ranger", "display_name": "Range Finder", "kiro_agent": "kirocrew"}
-        assert (await _post(other, cfg, installed=("kirocrew",)))[0] == 200
-        body = {**named, "kiro_agent": "kirocrew", "request_id": self.RID}
-        first = await _post(body, cfg, installed=("kirocrew",))
-        again = await _post(body, cfg, installed=("kirocrew",))
+        other = {"name": "ranger", "display_name": "Range Finder", "kiro_agent": "ajcrew"}
+        assert (await _post(other, cfg, installed=("ajcrew",)))[0] == 200
+        body = {**named, "kiro_agent": "ajcrew", "request_id": self.RID}
+        first = await _post(body, cfg, installed=("ajcrew",))
+        again = await _post(body, cfg, installed=("ajcrew",))
         assert first[0] == 200 and first[1]["member_id"]
         assert again == first
         assert cfg.saved == [True, True] and len(cfg.agents) == 2
@@ -439,20 +439,20 @@ class TestCreateRequestHandle:
     @pytest.mark.parametrize("repeat_id", [None, "0b9e4a1c-2d3f-4a5b-9c8d-7e6f5a4b3c2d"])
     async def test_any_other_repeat_is_still_agent_exists(self, repeat_id):
         cfg = _fake_config()
-        body = {"name": "scout", "kiro_agent": "kirocrew", "request_id": self.RID}
-        assert (await _post(body, cfg, installed=("kirocrew",)))[0] == 200
-        repeat = {"name": "scout", "kiro_agent": "kirocrew"}
+        body = {"name": "scout", "kiro_agent": "ajcrew", "request_id": self.RID}
+        assert (await _post(body, cfg, installed=("ajcrew",)))[0] == 200
+        repeat = {"name": "scout", "kiro_agent": "ajcrew"}
         if repeat_id is not None:
             repeat["request_id"] = repeat_id
-        status, data = await _post(repeat, cfg, installed=("kirocrew",))
+        status, data = await _post(repeat, cfg, installed=("ajcrew",))
         assert (status, data["code"]) == (409, "agent_exists")
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("bad", ["", "not-a-uuid", 1, ["6f1c2b9e-3d4a-4e5f-8a7b-0c1d2e3f4a5b"]])
     async def test_a_request_id_that_is_not_a_uuid_is_refused_before_any_write(self, bad):
         cfg = _fake_config()
-        body = {"name": "scout", "kiro_agent": "kirocrew", "request_id": bad}
-        status, data = await _post(body, cfg, installed=("kirocrew",))
+        body = {"name": "scout", "kiro_agent": "ajcrew", "request_id": bad}
+        status, data = await _post(body, cfg, installed=("ajcrew",))
         assert (status, data["code"]) == (400, "invalid_request_id")
         assert cfg.saved == [] and cfg.agents == {}
 
@@ -470,9 +470,9 @@ class TestApprovalModeOnCreate:
     async def test_a_pinned_mode_lands_in_the_single_create_write(self, mode):
         cfg = _fake_config()
         status, _ = await _post(
-            {"name": "scout", "kiro_agent": "kirocrew", "approval_mode": mode},
+            {"name": "scout", "kiro_agent": "ajcrew", "approval_mode": mode},
             cfg,
-            installed=("kirocrew",),
+            installed=("ajcrew",),
         )
         assert status == 200
         assert cfg.saved == [True]
@@ -481,7 +481,7 @@ class TestApprovalModeOnCreate:
     @pytest.mark.asyncio
     async def test_an_absent_mode_stays_unset(self):
         cfg = _fake_config()
-        status, _ = await _post({"name": "scout", "kiro_agent": "kirocrew"}, cfg)
+        status, _ = await _post({"name": "scout", "kiro_agent": "ajcrew"}, cfg)
         assert status == 200
         assert cfg.written["doc"]["agents"]["scout"].get("approval_mode", "") == ""
 
@@ -490,7 +490,7 @@ class TestApprovalModeOnCreate:
     async def test_an_unknown_mode_is_refused_before_any_write(self, bad):
         cfg = _fake_config()
         status, data = await _post(
-            {"name": "scout", "kiro_agent": "kirocrew", "approval_mode": bad}, cfg
+            {"name": "scout", "kiro_agent": "ajcrew", "approval_mode": bad}, cfg
         )
         assert status == 400
         assert data["code"] == "invalid_approval_mode"
@@ -508,12 +508,12 @@ class TestImportedCrewmateCreate:
 
     @staticmethod
     def _import_create_body():
-        from kiro_crew import change_card_catalog as catalog
-        from kiro_crew.crewmate_bundle import crewmate_import_params
+        from aj_crew import change_card_catalog as catalog
+        from aj_crew.crewmate_bundle import crewmate_import_params
 
         bundle = {
             "crewmate": {
-                "format": "kirocrew.crewmate",
+                "format": "ajcrew.crewmate",
                 "formatVersion": 1,
                 "name": "Release Captain",
                 "sender": {"label": "Ana"},
@@ -527,7 +527,7 @@ class TestImportedCrewmateCreate:
     @pytest.mark.asyncio
     async def test_the_card_create_lands_one_member_in_normal_with_its_stamp(self):
         cfg = _fake_config()
-        status, data = await _post(self._import_create_body(), cfg, installed=("kirocrew",))
+        status, data = await _post(self._import_create_body(), cfg, installed=("ajcrew",))
         assert status == 200, data
         assert cfg.saved == [True]
         # Exactly one record: the crew key is the slug of the name.
@@ -560,7 +560,7 @@ class TestImportedCrewmateCreate:
     )
     async def test_a_malformed_stamp_is_refused_before_any_write(self, bad):
         cfg = _fake_config()
-        body = {"name": "scout", "kiro_agent": "kirocrew", "imported": bad}
+        body = {"name": "scout", "kiro_agent": "ajcrew", "imported": bad}
         status, data = await _post(body, cfg)
         assert status == 400
         assert data["code"] == "invalid_imported"
@@ -574,11 +574,11 @@ class TestHeadlessAvatarDefault:
 
     @pytest.mark.asyncio
     async def test_no_avatar_stores_the_name_seeded_icon(self):
-        from kiro_crew.crew_avatar_seed import default_icon_avatar
+        from aj_crew.crew_avatar_seed import default_icon_avatar
 
         cfg = _fake_config()
         status, _ = await _post(
-            {"name": "scout", "kiro_agent": "kirocrew"}, cfg, installed=("kirocrew",)
+            {"name": "scout", "kiro_agent": "ajcrew"}, cfg, installed=("ajcrew",)
         )
         assert status == 200
         stored = cfg.written["doc"]["agents"]["scout"]["avatar"]
@@ -589,7 +589,7 @@ class TestHeadlessAvatarDefault:
     async def test_no_avatar_never_stores_an_empty_override(self):
         cfg = _fake_config()
         status, _ = await _post(
-            {"name": "scout", "kiro_agent": "kirocrew"}, cfg, installed=("kirocrew",)
+            {"name": "scout", "kiro_agent": "ajcrew"}, cfg, installed=("ajcrew",)
         )
         assert status == 200
         # An empty override is exactly what renders the trait ghost; a headless
@@ -601,23 +601,23 @@ class TestHeadlessAvatarDefault:
         cfg = _fake_config()
         chosen = {"kind": "icon", "pose": "pose-3", "bg": "#123456"}
         status, _ = await _post(
-            {"name": "scout", "kiro_agent": "kirocrew", "avatar": chosen},
+            {"name": "scout", "kiro_agent": "ajcrew", "avatar": chosen},
             cfg,
-            installed=("kirocrew",),
+            installed=("ajcrew",),
         )
         assert status == 200
         assert cfg.written["doc"]["agents"]["scout"]["avatar"] == chosen
 
     @pytest.mark.asyncio
     async def test_explicit_ghost_avatar_is_not_overridden(self):
-        from kiro_crew.config.sections import _safe_avatar
+        from aj_crew.config.sections import _safe_avatar
 
         cfg = _fake_config()
         ghost = {"kind": "ghost", "traits": {"eyes": "happy"}}
         status, _ = await _post(
-            {"name": "scout", "kiro_agent": "kirocrew", "avatar": ghost},
+            {"name": "scout", "kiro_agent": "ajcrew", "avatar": ghost},
             cfg,
-            installed=("kirocrew",),
+            installed=("ajcrew",),
         )
         assert status == 200
         # The ghost the user explicitly picked stands (in its validated form);
@@ -643,9 +643,9 @@ class TestHeadlessAvatarDefault:
         key is not ghost-shaped and the handler rejects it 400 by existing design.)"""
         cfg = _fake_config()
         status, _ = await _post(
-            {"name": "scout", "kiro_agent": "kirocrew", "avatar": ghost_reset},
+            {"name": "scout", "kiro_agent": "ajcrew", "avatar": ghost_reset},
             cfg,
-            installed=("kirocrew",),
+            installed=("ajcrew",),
         )
         assert status == 200
         stored = cfg.written["doc"]["agents"]["scout"].get("avatar", {})
@@ -655,15 +655,15 @@ class TestHeadlessAvatarDefault:
 
     @pytest.mark.asyncio
     async def test_free_form_name_seeds_from_the_shown_label(self):
-        from kiro_crew.crew_avatar_seed import default_icon_avatar
+        from aj_crew.crew_avatar_seed import default_icon_avatar
 
         cfg = _fake_config()
         # A free-form name becomes the crew's display label over a derived key;
         # the icon must seed from the shown label, matching the UI preview.
         status, _ = await _post(
-            {"name": "Scout Ranger", "kiro_agent": "kirocrew"},
+            {"name": "Scout Ranger", "kiro_agent": "ajcrew"},
             cfg,
-            installed=("kirocrew",),
+            installed=("ajcrew",),
         )
         assert status == 200
         agents = cfg.written["doc"]["agents"]

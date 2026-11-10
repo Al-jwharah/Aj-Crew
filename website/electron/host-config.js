@@ -5,15 +5,15 @@
 const { DEFAULT_REMOTE_BIN } = require("./remote-token");
 const { defaultedPort, portIsSchemeDefault } = require("./gateway-auth-hint");
 
-// Migrate legacy single-host config (remoteHost + kirocrewBinPath) to the
+// Migrate legacy single-host config (remoteHost + ajcrewBinPath) to the
 // per-port remoteHosts map. Returns true if migration occurred.
 function migrateRemoteHostConfig(store, port) {
   const legacy = store.get("remoteHost");
   if (legacy && Object.keys(store.get("remoteHosts") || {}).length === 0) {
-    const bin = store.get("kirocrewBinPath") || DEFAULT_REMOTE_BIN;
+    const bin = store.get("ajcrewBinPath") || DEFAULT_REMOTE_BIN;
     store.set("remoteHosts", { [port]: { host: legacy, binPath: bin } });
     store.delete("remoteHost");
-    store.delete("kirocrewBinPath");
+    store.delete("ajcrewBinPath");
     return true;
   }
   return false;
@@ -25,7 +25,7 @@ function migrateRemoteHostConfig(store, port) {
  * The entry carries a host and no port, so this key is what makes the crew
  * visible to every per-port lookup -- and it has to be the port this launch will
  * actually target, or the launch runs against a port whose remote host is
- * recorded somewhere else. An explicit `KIROCREW_PORT` outranks selection, so it
+ * recorded somewhere else. An explicit `AJCREW_PORT` outranks selection, so it
  * outranks this too, so an override that the launch will actually bind is taken
  * over the configured port. It still has to be a port this app can bind: an
  * unselectable override is refused before it reaches here, and keying a legacy
@@ -35,7 +35,7 @@ function migrateRemoteHostConfig(store, port) {
  * why this needs no store: the two readers reach the same literal.
  *
  * @param {object} input
- * @param {number} input.envPort  usable `KIROCREW_PORT`, or 0 when absent.
+ * @param {number} input.envPort  usable `AJCREW_PORT`, or 0 when absent.
  * @param {number|null} input.configuredPort  port from `dashboard.url`, if any.
  * @returns {number}
  */

@@ -31,7 +31,7 @@ import type { CrewSettings } from './api'
 import { repoScopeKey } from './lib/links'
 
 // brand-ok: the repository name
-const PAGE_REPO = { owner: 'kirodotdev', repo: 'KiroCrew' } // brand-ok: the repository name
+const PAGE_REPO = { owner: 'kirodotdev', repo: 'AjCrew' } // brand-ok: the repository name
 
 const api = {
   getCrewSettings: vi.fn(),
@@ -50,7 +50,7 @@ const SETTINGS: CrewSettings = {
   schema: 1,
   claim_ttl_hours: 48,
   needs_human_label: 'crew: needs human',
-  commit_trailer: 'Crew: {name} (Kiro Crew Issue Radar)',
+  commit_trailer: 'Crew: {name} (Aj Crew Issue Radar)',
 }
 
 /** `settings` is passed EXPLICITLY, with no default: a default parameter is used

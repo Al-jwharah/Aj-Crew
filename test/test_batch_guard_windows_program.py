@@ -12,7 +12,7 @@ import pytest
 
 
 def _guard():
-    return importlib.import_module("kiro_crew.acp.batch_guard")
+    return importlib.import_module("aj_crew.acp.batch_guard")
 
 
 @pytest.mark.parametrize(

@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.mcp_gateway.prewarm import HotKeyStore
+from aj_crew import platform_compat as pc
+from aj_crew.mcp_gateway.prewarm import HotKeyStore
 
 pytestmark = pytest.mark.xdist_group("mcp_gateway")
 
@@ -157,7 +157,7 @@ def test_load_treats_an_undecodable_file_as_empty(
     path.write_bytes(b'{"keys": [{"k": "caf\xe9"}]}')
     store = HotKeyStore(path)
 
-    with caplog.at_level("WARNING", logger="kiro_crew.mcp_gateway.prewarm"):
+    with caplog.at_level("WARNING", logger="aj_crew.mcp_gateway.prewarm"):
         try:
             store.load()
         except UnicodeDecodeError as exc:

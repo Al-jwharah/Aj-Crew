@@ -12,12 +12,12 @@ from chat_test_helpers import _make_state, drain_background_tasks
 from test_handlers_taskrunner_coverage import _request, _runner, _state
 from test_shared_crew_admission import _open, _service
 
-from kiro_crew.dashboard import chat_handlers as chat
-from kiro_crew.dashboard.handlers import taskrunner, workflows
-from kiro_crew.shared_crew import admission_entry as entry
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew.admission import OperationState
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.dashboard import chat_handlers as chat
+from aj_crew.dashboard.handlers import taskrunner, workflows
+from aj_crew.shared_crew import admission_entry as entry
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew.admission import OperationState
+from aj_crew.testing.clock import ManualClock
 
 BOUND = 30
 

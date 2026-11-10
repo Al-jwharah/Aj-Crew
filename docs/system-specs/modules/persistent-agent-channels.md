@@ -2,9 +2,9 @@
 
 ## Overview
 
-`src/kiro_crew/channel.py`, `src/kiro_crew/dashboard/handlers_channel.py`, and `website/src/pages/ChannelPage.tsx` implement persistent multi-agent workspaces where an orchestrator coordinates specialist agents through channel messages, threads, and @mentions.
+`src/aj_crew/channel.py`, `src/aj_crew/dashboard/handlers_channel.py`, and `website/src/pages/ChannelPage.tsx` implement persistent multi-agent workspaces where an orchestrator coordinates specialist agents through channel messages, threads, and @mentions.
 
-The UI is a hidden, opt-in built-in app (`name: channels`, `defaultEnabled: false`) on macOS, Linux, and Windows. Enable it with `kirocrew app enable channels`. The app is manifest-only: the dashboard server always initializes the core `ChannelManager` and registers `/api/channels` routes; enabling the app exposes its `/channels` page rather than registering a separate backend.
+The UI is a hidden, opt-in built-in app (`name: channels`, `defaultEnabled: false`) on macOS, Linux, and Windows. Enable it with `ajcrew app enable channels`. The app is manifest-only: the dashboard server always initializes the core `ChannelManager` and registers `/api/channels` routes; enabling the app exposes its `/channels` page rather than registering a separate backend.
 
 ## Problem
 
@@ -127,7 +127,7 @@ No lock guards any of this. What makes the pair decidable against the index the 
 
 ## Frontend
 
-`ChannelPage.tsx` loads channel summaries and full active-channel detail, then applies `kirocrew-channel` WebSocket events. It deduplicates a create response and its matching `channel_created` event by ID, so one newly created channel is not listed twice.
+`ChannelPage.tsx` loads channel summaries and full active-channel detail, then applies `ajcrew-channel` WebSocket events. It deduplicates a create response and its matching `channel_created` event by ID, so one newly created channel is not listed twice.
 
 The page renders pending, working, listening, done, failed, and tool-running states; supports thread replies and @mention completion; exposes per-agent listen-mode updates, dismiss, context reset, and channel close; and displays approval cards for channel approval messages. URL path parameters pass through `encodeURIComponent` in the channel endpoints, `website/src/api/client/agentChannels.ts`, which `website/src/api/client.ts` exposes on the `api` object.
 
@@ -148,17 +148,17 @@ The page renders pending, working, listening, done, failed, and tool-running sta
 | POST | `/api/channels/{id}/agents/{aid}/wake` | Restart a terminal agent. |
 | POST | `/api/channels/{id}/agents/{aid}/approve` | Resolve a pending provider permission request; command/base trust decisions include a consent-proof `pattern`. |
 
-`src/kiro_crew/dashboard/routes/connections.py::register` registers these routes.
+`src/aj_crew/dashboard/routes/connections.py::register` registers these routes.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `src/kiro_crew/apps/builtins/channels/app.json` | Hidden opt-in app manifest, platform declaration, permissions, and `/channels` page registration. |
-| `src/kiro_crew/channel.py` | Channel model, routing, persistence, containment, and agent execution loop. |
-| `src/kiro_crew/channel_spec_hooks.py` | The member turn's gate on its agent spec's own PreToolUse hooks. |
-| `src/kiro_crew/dashboard/handlers_channel.py` | Validated channel REST handlers, agent lifecycle calls, approvals, presets, and context resets. |
-| `src/kiro_crew/dashboard/routes/connections.py` | Dashboard route registration. |
+| `src/aj_crew/apps/builtins/channels/app.json` | Hidden opt-in app manifest, platform declaration, permissions, and `/channels` page registration. |
+| `src/aj_crew/channel.py` | Channel model, routing, persistence, containment, and agent execution loop. |
+| `src/aj_crew/channel_spec_hooks.py` | The member turn's gate on its agent spec's own PreToolUse hooks. |
+| `src/aj_crew/dashboard/handlers_channel.py` | Validated channel REST handlers, agent lifecycle calls, approvals, presets, and context resets. |
+| `src/aj_crew/dashboard/routes/connections.py` | Dashboard route registration. |
 | `website/src/pages/ChannelPage.tsx` | Channel workspace UI, WebSocket reconciliation, threads, presets, and agent controls. |
 | `website/src/api/client/agentChannels.ts` | Encoded channel API client methods, exposed on `api` by `website/src/api/client.ts`. |
 | `test/test_channel.py` | Model, routing, capacity, and persistence coverage. |

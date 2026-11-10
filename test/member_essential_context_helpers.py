@@ -20,19 +20,19 @@ from unittest.mock import Mock
 
 import pytest
 
-from kiro_crew import context as context_module
-from kiro_crew.agent_sdk.provider_identity import PROVIDER_ACP
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.context import ContextBuilder
-from kiro_crew.learn import LessonStore
-from kiro_crew.members import slug_for_name, write_member_rules
-from kiro_crew.memory import MemoryStore
-from kiro_crew.memory_stores import (
+from aj_crew import context as context_module
+from aj_crew.agent_sdk.provider_identity import PROVIDER_ACP
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.context import ContextBuilder
+from aj_crew.learn import LessonStore
+from aj_crew.members import slug_for_name, write_member_rules
+from aj_crew.memory import MemoryStore
+from aj_crew.memory_stores import (
     memory_store_dir_for,
     persist_member_config,
     provision_member_memory,
 )
-from kiro_crew.skills import SkillsLoader
+from aj_crew.skills import SkillsLoader
 
 
 @pytest.fixture(autouse=True)
@@ -51,10 +51,10 @@ def env(tmp_path, monkeypatch):
     # The host floor pins these hooks separately from the lazy KIRO_HOME path.
     # Keep template readers on the same test-owned root as template writers.
     agents = home / ".kiro" / "agents"
-    monkeypatch.setattr("kiro_crew.agent.KIRO_AGENTS_DIR", agents)
-    monkeypatch.setattr("kiro_crew.agent_discovery._KIRO_AGENTS_DIR", agents)
-    cfg = KiroCrewConfig.load()
-    cfg.agents["writer"] = KiroCrewAgentConfig(
+    monkeypatch.setattr("aj_crew.agent.KIRO_AGENTS_DIR", agents)
+    monkeypatch.setattr("aj_crew.agent_discovery._KIRO_AGENTS_DIR", agents)
+    cfg = AjCrewConfig.load()
+    cfg.agents["writer"] = AjCrewAgentConfig(
         kiro_agent="writer-template", description="A careful bilingual writer"
     )
     store = provision_member_memory(cfg, "writer")
@@ -89,7 +89,7 @@ def env(tmp_path, monkeypatch):
         (project / path).write_text(body, encoding="utf-8")
     write_member_rules(slug_for_name("writer"), member="writer", text="Do not publish drafts.")
     forbidden = Mock(side_effect=AssertionError("essential context performed retrieval"))
-    from kiro_crew.vector_memory import open_member_database
+    from aj_crew.vector_memory import open_member_database
 
     tier = open_member_database(
         memory_store_dir_for(store) / "memory.db",

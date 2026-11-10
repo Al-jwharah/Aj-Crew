@@ -39,7 +39,7 @@ const JOBS = [
   {
     id: 'a3f9c2e1-7b40', name: 'Nightly CI failure digest for the build-health channel', schedule: 'every 1d',
     timezone: 'America/Los_Angeles', message: 'Summarise yesterday\'s CI failures and post the digest to #build-health.',
-    enabled: true, agent: 'kirocrew', last_status: 'ok', last_run_ts: now - 3600, next_run_ts: now + 7200,
+    enabled: true, agent: 'ajcrew', last_status: 'ok', last_run_ts: now - 3600, next_run_ts: now + 7200,
   },
   {
     id: 'c81d04ab-22f6', name: 'Upstream feed poller (staging mirror)', schedule: 'every 300s', enabled: true,
@@ -112,7 +112,7 @@ async function newSchedulePage(browser, { theme, videoDir }) {
       if (path === '/api/crons') { await json(route, { jobs: JOBS }); return true }
       if (path === '/api/cron-folders') { await json(route, []); return true }
       if (path === '/api/crons/history') { await json(route, { runs: [] }); return true }
-      if (path === '/api/agents') { await json(route, { agents: [{ name: 'kirocrew' }], default_agent: 'kirocrew' }); return true }
+      if (path === '/api/agents') { await json(route, { agents: [{ name: 'ajcrew' }], default_agent: 'ajcrew' }); return true }
       if (path === '/api/models') { await json(route, []); return true }
       return false
     },

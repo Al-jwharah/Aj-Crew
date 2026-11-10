@@ -1,6 +1,6 @@
-"""Every facade that serves a ``kiro_crew._facade_mirror`` mirror holds to one contract.
+"""Every facade that serves a ``aj_crew._facade_mirror`` mirror holds to one contract.
 
-The facades are found by importing the ``src/kiro_crew`` modules that mention the mirror
+The facades are found by importing the ``src/aj_crew`` modules that mention the mirror
 and keeping those that carry an index, so a facade that adopts it is covered on the
 commit that adopts it, and a census of ``install(`` calls, from a walk of its own, checks
 that discovery. Each facade must bind one object per indexed name, declare in its
@@ -55,7 +55,7 @@ from facade_mirror_scan import (
     text_patched_names,
 )
 
-from kiro_crew import _facade_mirror
+from aj_crew import _facade_mirror
 
 # The checks and both guards parse the test trees; keep them on one worker.
 #
@@ -212,7 +212,7 @@ def facade_global_shadows(
 def resolver_overlaps(facade: ModuleType) -> list[str]:
     """Names the mirror holds that the facade's own module-level ``__getattr__`` answers.
 
-    :func:`~kiro_crew._facade_mirror.install` refuses such a resolver when the facade
+    :func:`~aj_crew._facade_mirror.install` refuses such a resolver when the facade
     defines it first; this catches one defined after the install.
     """
     index: _facade_mirror.MirrorIndex = vars(facade)[_facade_mirror.INDEX_ATTRIBUTE]
@@ -318,7 +318,7 @@ def _module_name(path: Path, root: Path | None = None) -> str:
 
 
 def mirrored_facades() -> dict[str, ModuleType]:
-    """Every ``src/kiro_crew`` module that serves a mirror, by importing the candidates.
+    """Every ``src/aj_crew`` module that serves a mirror, by importing the candidates.
 
     Found at run time rather than by spelling: a module mentioning the mirror is imported
     and kept when it carries an index, so any way of calling ``install`` is covered.
@@ -650,7 +650,7 @@ def test_the_detector_counts_only_names_the_facade_forwards() -> None:
 
 def _test_tree_files() -> Iterator[Path]:
     """Every file pytest collects tests or fixtures from: the root conftest, ``test/``,
-    and the test modules and conftests under ``src/kiro_crew/apps/builtins``."""
+    and the test modules and conftests under ``src/aj_crew/apps/builtins``."""
     root = source_corpus.repo_root()
     test_root = source_corpus.repo_root() / "test"
     for path in source_corpus.repo_files_named(".py"):
@@ -658,7 +658,7 @@ def _test_tree_files() -> Iterator[Path]:
         name = path.name
         if rel == "conftest.py" or path.is_relative_to(test_root):
             yield path
-        elif rel.startswith("src/kiro_crew/apps/builtins/") and (
+        elif rel.startswith("src/aj_crew/apps/builtins/") and (
             "/tests/" in rel
             or name.startswith("test_")
             or name.endswith("_test.py")
@@ -769,14 +769,14 @@ def test_discovery_agrees_with_an_independent_census_of_install_calls(tmp_path: 
     mentions, calls = install_census(source_corpus.src_root())
     assert _facade_mirror.__name__ in mentions, "the census walk reaches the mirror itself"
     assert set(_FACADES) == calls - {_facade_mirror.__name__}
-    synthetic = tmp_path / "kiro_crew"
+    synthetic = tmp_path / "aj_crew"
     (synthetic / "parts").mkdir(parents=True)
-    call = "from kiro_crew import _facade_mirror\n_facade_mirror.install(facade, owners)\n"
+    call = "from aj_crew import _facade_mirror\n_facade_mirror.install(facade, owners)\n"
     (synthetic / "parts" / "facade.py").write_text(call, encoding="utf-8")
-    (synthetic / "plain.py").write_text("from kiro_crew import _facade_mirror\n", encoding="utf-8")
+    (synthetic / "plain.py").write_text("from aj_crew import _facade_mirror\n", encoding="utf-8")
     (synthetic / "other.py").write_text("x = 1\n", encoding="utf-8")
     found = install_census(synthetic)
-    assert found == ({"kiro_crew.parts.facade", "kiro_crew.plain"}, {"kiro_crew.parts.facade"})
+    assert found == ({"aj_crew.parts.facade", "aj_crew.plain"}, {"aj_crew.parts.facade"})
 
 
 #: Facade -> the test file holding the facade's own ``create=True`` guard over its
@@ -784,9 +784,9 @@ def test_discovery_agrees_with_an_independent_census_of_install_calls(tmp_path: 
 #: and kept that shape's guard). The census here leaves those names to that guard; a
 #: facade not listed has every name it serves censused here, its forwards included.
 _OWN_CREATE_GUARDS: dict[str, str] = {
-    "kiro_crew.acp.client": "test/test_acp_refactor_create_guard.py",
-    "kiro_crew.acp.runtime": "test/test_acp_refactor_create_guard.py",
-    "kiro_crew.sandbox": "test/test_sandbox_refactor_create_guard.py",
+    "aj_crew.acp.client": "test/test_acp_refactor_create_guard.py",
+    "aj_crew.acp.runtime": "test/test_acp_refactor_create_guard.py",
+    "aj_crew.sandbox": "test/test_sandbox_refactor_create_guard.py",
 }
 
 
@@ -1208,8 +1208,8 @@ def test_every_name_the_test_trees_patch_through_a_facade_reaches_its_readers() 
 
 def test_the_corpus_reads_patches_through_an_alias_of_a_module_binding_the_facade() -> None:
     """``test/test_mcp_browser_tool.py`` patches these only as ``mod.mcp_core.<name>``,
-    with ``mod`` bound to ``kiro_crew.mcp_tools.browser``."""
-    corpus = _corpus_patched_names().get("kiro_crew.mcp_core", set())
+    with ``mod`` bound to ``aj_crew.mcp_tools.browser``."""
+    corpus = _corpus_patched_names().get("aj_crew.mcp_core", set())
     assert {"_vet_browse_governance", "_session_token_header"} <= corpus
 
 

@@ -195,7 +195,7 @@ describe('the rail while Learning is open', () => {
     mockApi.namespaces.mockResolvedValue({
       namespaces: [
         { name: 'default', patterns: 2, candidate: 0, active: true },
-        { name: 'kirocrew', patterns: 5, candidate: 1, active: false },
+        { name: 'ajcrew', patterns: 5, candidate: 1, active: false },
       ],
       active: ['default'],
     })
@@ -213,7 +213,7 @@ describe('the rail while Learning is open', () => {
 
   it('lists the namespaces with their pattern counts', async () => {
     mount()
-    expect(await screen.findByRole('button', { name: 'Read namespace kirocrew' }))
+    expect(await screen.findByRole('button', { name: 'Read namespace ajcrew' }))
       .toBeTruthy()
     expect(screen.getByRole('button', { name: 'Read namespace default' })).toBeTruthy()
     expect(screen.getByText(/5 patterns/)).toBeTruthy()
@@ -236,10 +236,10 @@ describe('the rail while Learning is open', () => {
       consolidating: false, consolidate_error: null,
     }))
     mount()
-    await userEvent.click(await screen.findByRole('button', { name: 'Read namespace kirocrew' }))
-    await waitFor(() => expect(mockApi.learnings).toHaveBeenCalledWith('kirocrew'))
+    await userEvent.click(await screen.findByRole('button', { name: 'Read namespace ajcrew' }))
+    await waitFor(() => expect(mockApi.learnings).toHaveBeenCalledWith('ajcrew'))
     // Title and guidance both carry it.
-    expect((await screen.findAllByText(/Rule in kirocrew/)).length).toBeGreaterThan(0)
+    expect((await screen.findAllByText(/Rule in ajcrew/)).length).toBeGreaterThan(0)
   })
 
   it('says whether the namespace being read is actually loaded', async () => {
@@ -250,30 +250,30 @@ describe('the rail while Learning is open', () => {
     mount()
     // A ruleset you are reading may be switched off; that is the first thing
     // worth knowing about it.
-    await screen.findByRole('button', { name: 'Read namespace kirocrew' })
+    await screen.findByRole('button', { name: 'Read namespace ajcrew' })
     expect(await screen.findByText(/^loaded during reviews$/)).toBeTruthy()
-    await userEvent.click(screen.getByRole('button', { name: 'Read namespace kirocrew' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Read namespace ajcrew' }))
     expect(await screen.findByText(/not loaded/)).toBeTruthy()
   })
 
   it('keeps active independent of what you are reading', async () => {
     mount()
-    await screen.findByRole('button', { name: 'Read namespace kirocrew' })
+    await screen.findByRole('button', { name: 'Read namespace ajcrew' })
     // Selecting a namespace to read must not change which ones reviews load.
-    await userEvent.click(screen.getByRole('button', { name: 'Read namespace kirocrew' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Read namespace ajcrew' }))
     expect(mockApi.putSettings).not.toHaveBeenCalled()
     await userEvent.click(screen.getByRole('checkbox', {
-      name: /Load namespace kirocrew during reviews/,
+      name: /Load namespace ajcrew during reviews/,
     }))
     await waitFor(() => expect(mockApi.putSettings).toHaveBeenCalledWith({
-      active_namespaces: ['default', 'kirocrew'],
+      active_namespaces: ['default', 'ajcrew'],
     }))
   })
 
   it('offers no delete for the default namespace', async () => {
     mount()
-    await screen.findByRole('button', { name: 'Read namespace kirocrew' })
-    expect(screen.getByRole('button', { name: /Delete namespace kirocrew/ })).toBeTruthy()
+    await screen.findByRole('button', { name: 'Read namespace ajcrew' })
+    expect(screen.getByRole('button', { name: /Delete namespace ajcrew/ })).toBeTruthy()
     expect(screen.queryByRole('button', { name: /Delete namespace default/ })).toBeNull()
   })
 

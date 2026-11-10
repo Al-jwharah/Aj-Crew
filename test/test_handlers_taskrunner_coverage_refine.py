@@ -22,14 +22,14 @@ from handlers_taskrunner_coverage_helpers import (  # noqa: F401 -- the autouse 
     _stub_sel,
 )
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
     STOP_REASON_STALE_RECOVER,
     AcpEvent,
 )
-from kiro_crew.dashboard.handlers.taskrunner import (
+from aj_crew.dashboard.handlers.taskrunner import (
     _run_refine,
     api_taskrunner_refine,
     api_taskrunner_refine_answer,
@@ -85,7 +85,7 @@ class TestRefineStart:
         # A refine is a model session the disabled page could not show or stop.
         state = _refine_state()
         with patch(
-            "kiro_crew.apps.manager._read_installed",
+            "aj_crew.apps.manager._read_installed",
             return_value=SimpleNamespace(enabled=False),
         ):
             resp = await api_taskrunner_refine(_request(state, json_body={"input": "build it"}))
@@ -113,7 +113,7 @@ class TestRefineStart:
         async def _noop(*_a: Any, **_kw: Any) -> None:
             return None
 
-        with patch("kiro_crew.dashboard.handlers.taskrunner._run_refine", new=_noop):
+        with patch("aj_crew.dashboard.handlers.taskrunner._run_refine", new=_noop):
             resp = await api_taskrunner_refine(
                 _request(state, json_body={"input": " build a thing "})
             )
@@ -301,7 +301,7 @@ class TestRunRefine:
             return clock["t"]
 
         # flake-ok: the injected clock, a fixed increasing sequence, so the throttle never reads wall-clock time; pre-existing, moved verbatim
-        # nosemgrep: kirocrew.test-stdlib-clock-rebound -- pre-existing stub clock the docstring describes, moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-stdlib-clock-rebound -- pre-existing stub clock the docstring describes, moved verbatim; tracked for a de-flake pass
         monkeypatch.setattr(real_time, "monotonic", _monotonic)
         state = _refine_state()
         state.sessions = self._sessions(

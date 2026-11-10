@@ -49,6 +49,6 @@ describe('Tailwind entry (src/index.css)', () => {
     expect(css).toContain('@source "../index.html";')
     expect(css).toContain('@source "../src/**/*.{ts,tsx}";')
     // The marker is a comment, so it too is read from the raw file.
-    expect(css).toContain('/* @kirocrew-edition-source */')
+    expect(css).toContain('/* @ajcrew-edition-source */')
   })
 })

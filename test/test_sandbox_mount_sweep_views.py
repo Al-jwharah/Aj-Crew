@@ -18,15 +18,15 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat, sandbox_mount_sweep
-from kiro_crew.sandbox import _mount_pinned_source_names, _PinScanCoverage
+from aj_crew import platform_compat, sandbox_mount_sweep
+from aj_crew.sandbox import _mount_pinned_source_names, _PinScanCoverage
 
 # The trees model namespaces and roots with hard links and symlinks; the sweep they
 # exercise only runs where the Linux namespace launcher does.
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="POSIX links model the views")
 
-PIN_A = "kirocrew_sb_4194305_alpha"
-PIN_B = "kirocrew_sb_4194305_bravo"
+PIN_A = "ajcrew_sb_4194305_alpha"
+PIN_B = "ajcrew_sb_4194305_bravo"
 
 
 def _line(mount_id: int, name: str, target: str) -> str:

@@ -1,5 +1,5 @@
 """
-Generate kirocrew-seccomp.json by patching Docker's built-in default profile.
+Generate ajcrew-seccomp.json by patching Docker's built-in default profile.
 
 Extends the Docker default allow-list with four unconditional ALLOW rules:
   - unshare  — lets the inner sandbox call unshare(CLONE_NEWUSER/CLONE_NEWNS)
@@ -9,7 +9,7 @@ Extends the Docker default allow-list with four unconditional ALLOW rules:
                umount2(MNT_DETACH) when a private window is torn down
 
 All four are blocked, arg-filtered, or capability-gated by the Docker default
-seccomp profile, causing Kiro Crew's sandbox probe to fail with EPERM inside
+seccomp profile, causing Aj Crew's sandbox probe to fail with EPERM inside
 containers.
 
 NOTE: these rules are unconditional (no arg filters), so they grant unshare
@@ -19,9 +19,9 @@ combinations that arg-filtered rules cannot reliably match across kernel
 versions.  The profile is still far less permissive than --privileged or
 --security-opt seccomp=unconfined (all other Docker default restrictions apply).
 
-Usage (run from repo root to regenerate kirocrew-seccomp.json):
+Usage (run from repo root to regenerate ajcrew-seccomp.json):
   docker run --rm -v .:/repo -w /repo python:3.12-slim \\
-    python docker/seccomp/gen_profile.py > docker/seccomp/kirocrew-seccomp.json
+    python docker/seccomp/gen_profile.py > docker/seccomp/ajcrew-seccomp.json
 
 If the fetch fails the script exits with code 1 — it never silently overwrites
 a valid profile with a broken one.
@@ -43,9 +43,9 @@ DOCKER_DEFAULT_PROFILE_URL = (
 )
 
 COMMENT = (
-    "Kiro Crew custom seccomp profile — extends the Docker default by adding "
+    "Aj Crew custom seccomp profile — extends the Docker default by adding "
     "unconditional ALLOW rules for unshare, clone, mount, and umount2. "
-    "Required for Kiro Crew's inner Linux user-namespace sandbox to work inside "
+    "Required for Aj Crew's inner Linux user-namespace sandbox to work inside "
     "Docker containers (the default profile blocks these syscalls). "
     "Less permissive than --security-opt seccomp=unconfined and far less "
     "permissive than --privileged; all other Docker default restrictions apply. "

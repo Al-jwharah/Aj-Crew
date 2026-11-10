@@ -1,6 +1,6 @@
 """Port baseline: watch-kernel edge cases that nothing else pins.
 
-:mod:`kiro_crew.irq` and its ``gh-pr`` probe carry a long tail of edge cases, and
+:mod:`aj_crew.irq` and its ``gh-pr`` probe carry a long tail of edge cases, and
 most of them already have a named test in ``test/test_irq.py`` or, for the
 gh-pr fetcher, ``test/test_gh_pr_fetch.py``. This module holds the remainder: behaviours
 that are load-bearing in the kernel and would survive a re-implementation
@@ -33,12 +33,12 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from kiro_crew import irq, probes
-from kiro_crew.cron_script import Done, Report, Skip
-from kiro_crew.irq import Observation, ResetsOn, Severity, Tick
-from kiro_crew.irq import _dedupe_key as dedupe_key
-from kiro_crew.irq import load_state, run, state_path
-from kiro_crew.probes import gh_pr
+from aj_crew import irq, probes
+from aj_crew.cron_script import Done, Report, Skip
+from aj_crew.irq import Observation, ResetsOn, Severity, Tick
+from aj_crew.irq import _dedupe_key as dedupe_key
+from aj_crew.irq import load_state, run, state_path
+from aj_crew.probes import gh_pr
 
 #: A floor big enough that the fake clock can sit clearly inside and outside it.
 #: Real time never advances here, so the value only has to keep the arithmetic in
@@ -49,7 +49,7 @@ _FLOOR = 10.0
 class _FakeClock:
     """A wall clock that moves only when a test advances it.
 
-    Installed over the ``time`` name :mod:`kiro_crew.irq` reads, so every
+    Installed over the ``time`` name :mod:`aj_crew.irq` reads, so every
     interval the kernel measures is exact by construction. The assertions that
     need this are the ones asserting a floor has NOT been reached yet: on real
     wall clock a loaded runner can age a window between two calls and turn a
@@ -70,7 +70,7 @@ class _FakeClock:
 
     def __getattr__(self, name: str) -> object:
         raise AttributeError(
-            f"_FakeClock does not fake time.{name}; kiro_crew.irq grew a clock "
+            f"_FakeClock does not fake time.{name}; aj_crew.irq grew a clock "
             "read beyond time.time(). Cover it here."
         )
 
@@ -81,7 +81,7 @@ _clock = _FakeClock(0.0)
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
     """Point the kernel's state directory at a private tmp home."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     return tmp_path
 
 
@@ -94,7 +94,7 @@ def _deterministic_clock(monkeypatch):
     the fake.
     """
     _clock.reset(time.time())
-    monkeypatch.setattr("kiro_crew.irq.time", _clock)
+    monkeypatch.setattr("aj_crew.irq.time", _clock)
     return _clock
 
 

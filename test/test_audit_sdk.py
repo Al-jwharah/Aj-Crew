@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.apps.audit_sdk import AuditSDK
-from kiro_crew.apps.context import build_app_context
+from aj_crew.apps.audit_sdk import AuditSDK
+from aj_crew.apps.context import build_app_context
 
 
 class _Sink:
@@ -29,7 +29,7 @@ class _Sink:
 @pytest.fixture()
 def sink(monkeypatch):
     s = _Sink()
-    monkeypatch.setattr("kiro_crew.apps.audit_sdk.sel", lambda: s)
+    monkeypatch.setattr("aj_crew.apps.audit_sdk.sel", lambda: s)
     return s
 
 
@@ -67,7 +67,7 @@ def test_operation_is_namespaced_so_two_apps_cannot_collide(sink) -> None:
 def test_record_never_raises_when_the_sink_fails(monkeypatch) -> None:
     # Auditing must not break the operation it only describes: an app that let this
     # raise would fail a user's publish because logging failed.
-    monkeypatch.setattr("kiro_crew.apps.audit_sdk.sel", lambda: _Sink(boom=True))
+    monkeypatch.setattr("aj_crew.apps.audit_sdk.sel", lambda: _Sink(boom=True))
     AuditSDK("doc-store").record("publish", "success")  # must not raise
 
 

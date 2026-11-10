@@ -17,7 +17,7 @@ import pytest
 @pytest.fixture
 def held_queue(monkeypatch):
     """Make the poller's next N write-backs fail as a held file does on Windows."""
-    from kiro_crew.apps.builtins.mochi import queue_file as qf
+    from aj_crew.apps.builtins.mochi import queue_file as qf
 
     real_write = qf.write_queue_atomic
     held = [0]
@@ -103,7 +103,7 @@ async def test_an_unreadable_queue_keeps_the_unsaved_markers(tmp_path, held_queu
     """Only a deleted queue is a reset: a read that fails keeps the markers."""
     from test_mochi_queue_poller_coverage import _Rig, _task
 
-    from kiro_crew.apps.builtins.mochi import queue_file as qf
+    from aj_crew.apps.builtins.mochi import queue_file as qf
 
     rig = _Rig(tmp_path / "mochi-queue.json")
     rig.write(_task("t1", "notify"))
@@ -181,7 +181,7 @@ async def test_a_failed_write_back_read_keeps_this_polls_markers(tmp_path, held_
     """The write-back cannot re-read a queue that still exists: what ran is kept."""
     from test_mochi_queue_poller_coverage import _Rig, _task
 
-    from kiro_crew.apps.builtins.mochi import queue_file as qf
+    from aj_crew.apps.builtins.mochi import queue_file as qf
 
     rig = _Rig(tmp_path / "mochi-queue.json")
     rig.write(_task("t1", "notify"))
@@ -232,7 +232,7 @@ async def test_markers_outlive_the_done_task_cleanup_while_writes_keep_failing(
     """Writes failing for longer than the done-task TTL still never re-run the task."""
     from test_mochi_queue_poller_coverage import _Rig, _task
 
-    from kiro_crew.apps.builtins.mochi import queue_file as qf
+    from aj_crew.apps.builtins.mochi import queue_file as qf
 
     rig = _Rig(tmp_path / "mochi-queue.json")
     rig.write(_task("t1", "notify"))
@@ -265,7 +265,7 @@ def refused_lock(monkeypatch):
     """Make the next N queue-lock takes fail closed, as a lock held past its ceiling does."""
     import contextlib
 
-    from kiro_crew.apps.builtins.mochi import queue_file as qf
+    from aj_crew.apps.builtins.mochi import queue_file as qf
 
     real_lock = qf.file_lock
     refused = [0]
@@ -285,7 +285,7 @@ def refused_lock(monkeypatch):
 @pytest.fixture
 def unopenable_lock_file(monkeypatch):
     """Make the next N opens of the queue's ``.lock`` file fail."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     real_open = platform_compat.open_create_or_existing
     failing = [0]
@@ -302,7 +302,7 @@ def unopenable_lock_file(monkeypatch):
 
 async def _assert_ran_once_then_saved(rig):
     """After a poll whose lock failed: the task is held back, not re-run, then saved."""
-    from kiro_crew.apps.builtins.mochi.queue_poller import _task_identity
+    from aj_crew.apps.builtins.mochi.queue_poller import _task_identity
 
     t1 = rig.task("t1")
     assert t1["done"] is False  # nothing was written without the lock
@@ -358,6 +358,6 @@ async def test_an_unopenable_lock_file_keeps_the_done_markers(tmp_path, unopenab
 
 
 def qf_iso(ms: int) -> str:
-    from kiro_crew.apps.builtins.mochi import queue_file as qf
+    from aj_crew.apps.builtins.mochi import queue_file as qf
 
     return qf._iso(ms)

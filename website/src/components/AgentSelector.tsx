@@ -14,7 +14,7 @@ import { i18nT } from '../i18n/t'
 import { isAssistantMember } from '../lib/assistantMember'
 import type { MarkdownBlock } from '../lib/markdownAgents'
 import { useInsideDialog } from './overlayRoot'
-export interface KiroCrewAgent {
+export interface AjCrewAgent {
   name: string
   kiro_agent: string
   /** The binding resolves to the crewmate's own mate file: `kiro_agent` equals
@@ -69,12 +69,12 @@ export interface KiroCrewAgent {
  *  trim — a stored label arrives trimmed, but an in-flight edit draft may
  *  not be). The built-in Assistant (see `isAssistantMember`) with no label of
  *  its own reads as its localized name rather than its config key. */
-export function crewDisplayName(a: Pick<KiroCrewAgent, 'name' | 'display_name'> & { kiro_agent?: unknown }): string {
+export function crewDisplayName(a: Pick<AjCrewAgent, 'name' | 'display_name'> & { kiro_agent?: unknown }): string {
   return a.display_name?.trim() || (isAssistantMember(a) ? i18nT('components.assistantWelcome.default_name') : a.name)
 }
 
 interface Props {
-  agents: KiroCrewAgent[]
+  agents: AjCrewAgent[]
   defaultAgent: string
   value: string
   onChange: (name: string) => void
@@ -176,7 +176,7 @@ export default function AgentSelector({ agents, defaultAgent, value, onChange, m
     if (!modal) btnRef.current?.focus()
   }, [modal])
 
-  const handleSelect = useCallback((a: KiroCrewAgent) => {
+  const handleSelect = useCallback((a: AjCrewAgent) => {
     onChange(a.name)
     closeToTrigger()
   }, [onChange, closeToTrigger])
@@ -259,7 +259,7 @@ export default function AgentSelector({ agents, defaultAgent, value, onChange, m
   // over a same-named template), so the name is the key and the default badge
   // marks the row named as the default — a template-only default carries it
   // truthfully.
-  const renderRow = (a: KiroCrewAgent) => {
+  const renderRow = (a: AjCrewAgent) => {
     const isCurrent = active === a.name
     const isDefault = a.name === defaultAgent
     return (

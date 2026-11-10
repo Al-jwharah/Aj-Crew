@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """check_brand_name.py — gate the product name's spelling on lines a change adds.
 
-The product is **Kiro Crew**: two words, a space between them, capital ``K``.
+The product is **Aj Crew**: two words, a space between them, capital ``K``.
 Everything else in the tree — the GitHub repo ``kirodotdev/KiroCrew``, the
-``kirocrew`` CLI, the ``kiro_crew`` Python package, ``KIROCREW_*`` environment
-variables, the ``KiroCrew.dmg`` artifact — is an *identifier*, and identifiers
+``ajcrew`` CLI, the ``aj_crew`` Python package, ``AJCREW_*`` environment
+variables, the ``AjCrew.dmg`` artifact — is an *identifier*, and identifiers
 keep the spelling their system gave them. Only the **prose** name is gated.
 
 ## Why diff-scoped and not whole-tree
 
-The tree carries thousands of prose ``KiroCrew``s that predate the convention.
+The tree carries thousands of prose ``AjCrew``s that predate the convention.
 A whole-tree gate would fail every PR until a single enormous rename lands, and
 would charge that failure to whoever pushed next. So the enforcing check reads
 only the lines the change *adds* (``BRAND_BASE_REF``), which is complete for
@@ -89,29 +89,29 @@ _PERF_BASE_SIZES = (20_000, 50_000, 120_000, 300_000)
 # ---------------------------------------------------------------------------
 
 # The concatenated forms. A capital letter inside the token is what makes it a
-# rendering of the *brand* rather than of an identifier: `kirocrew` all-lower is
-# the CLI command and `KIROCREW` all-upper is the env-var prefix, and neither is
+# rendering of the *brand* rather than of an identifier: `ajcrew` all-lower is
+# the CLI command and `AJCREW` all-upper is the env-var prefix, and neither is
 # ever prose, so neither appears here. `(?<![A-Za-z0-9_])` / `(?![A-Za-z0-9_])`
-# keep `KiroCrewApps` and `MyKiroCrewShim` out: those are single identifiers.
+# keep `AjCrewApps` and `MyAjCrewShim` out: those are single identifiers.
 CONCATENATED = re.compile(
-    r"(?<![A-Za-z0-9_])(?:KiroCrew|Kirocrew|kiroCrew|KiroCREW)(?![A-Za-z0-9_])"
+    r"(?<![A-Za-z0-9_])(?:AjCrew|Ajcrew|ajCrew|AjCREW)(?![A-Za-z0-9_])"
 )
 
 # Spaced but uncapitalised. What keeps the `~/.kiro/crew` data directory and the
-# `kiro-crew-security-support` alias out is the literal **space** — neither can
+# `aj-crew-security-support` alias out is the literal **space** — neither can
 # match this pattern at all. The leading class narrows something else: a spaced
 # form that follows `.`, `/`, `\` or `-`, which is a fragment of some longer
 # token rather than the two-word brand.
-UNCAPITALISED = re.compile(r"(?<![A-Za-z0-9_./\\-])kiro crew(?![A-Za-z0-9_])")
+UNCAPITALISED = re.compile(r"(?<![A-Za-z0-9_./\\-])aj crew(?![A-Za-z0-9_])")
 
-CORRECT = "Kiro Crew"
+CORRECT = "Aj Crew"
 
 # ---------------------------------------------------------------------------
 # Structural exemptions — places the concatenated spelling is the true name
 # ---------------------------------------------------------------------------
 
-# Shipped artifact filenames: KiroCrew.dmg, KiroCrew.exe, KiroCrew.app ...
-# The list is closed on purpose. `KiroCrew.` followed by anything else — most
+# Shipped artifact filenames: AjCrew.dmg, AjCrew.exe, AjCrew.app ...
+# The list is closed on purpose. `AjCrew.` followed by anything else — most
 # importantly by end-of-sentence — stays a violation.
 #
 # These three are applied with `.match(line, pos)`, which anchors at ``pos``, so
@@ -123,9 +123,9 @@ ARTIFACT_EXT = re.compile(
     r"(?![A-Za-z0-9])"
 )
 
-# Release-artifact suffixes: KiroCrew-x86_64.AppImage, KiroCrew-notarized-...,
-# KiroCrew-Nightly. Deliberately a closed list rather than "hyphen means
-# artifact", so prose like `KiroCrew-specific` is still reported.
+# Release-artifact suffixes: AjCrew-x86_64.AppImage, AjCrew-notarized-...,
+# AjCrew-Nightly. Deliberately a closed list rather than "hyphen means
+# artifact", so prose like `AjCrew-specific` is still reported.
 ARTIFACT_SUFFIX = re.compile(
     r"-(?:x86_64|aarch64|arm64|amd64|x64|universal|notarized|unnotarized"
     r"|[Nn]ightly|[Ss]etup|[Pp]ortable|mac|darwin|linux|win(?:dows)?"
@@ -134,7 +134,7 @@ ARTIFACT_SUFFIX = re.compile(
 
 # The channel-qualified product name, which is a **space**-separated OS
 # identifier: ``PRODUCT_NAMES`` in ``cli_desktop.py`` spells the macOS log
-# directory ``~/Library/Logs/KiroCrew Nightly``, and electron's
+# directory ``~/Library/Logs/AjCrew Nightly``, and electron's
 # ``instance-guard.js`` keeps ``appName`` distinct
 # from its ``displayName`` for exactly this reason. Prose and identifier are the
 # same characters here, so no rule can separate them — the identifier wins,
@@ -152,7 +152,7 @@ URL_START = re.compile(
 )
 
 # Characters that end a URL. Markup and punctuation around a link are not part of
-# it, so `<a href="https://example.com/">KiroCrew` must not read as "inside a URL"
+# it, so `<a href="https://example.com/">AjCrew` must not read as "inside a URL"
 # — the brand there is visible prose.
 URL_TERMINATOR = re.compile(r"[\"'<>()\[\]`,;\s]")
 
@@ -160,11 +160,11 @@ URL_TERMINATOR = re.compile(r"[\"'<>()\[\]`,;\s]")
 def hyphen_interior(line: str, start: int) -> bool:
     """Is the brand at ``start`` inside a hyphenated identifier?
 
-    The ``X-KiroCrew-Proxy`` header is the case that matters. Only the hyphen
+    The ``X-AjCrew-Proxy`` header is the case that matters. Only the hyphen
     itself is required: demanding a word character before it as well would let
-    this rule carry an untestable branch, since the tree holds no ``-KiroCrew``
+    this rule carry an untestable branch, since the tree holds no ``-AjCrew``
     preceded by anything other than a word character. Prose is unaffected either
-    way — ``KiroCrew-owned`` has a *space* before the brand, not a hyphen.
+    way — ``AjCrew-owned`` has a *space* before the brand, not a hyphen.
 
     Takes a position rather than the text before it, because slicing the line to
     produce that text costs O(length) once per match.
@@ -181,7 +181,7 @@ def url_spans(line: str) -> list[tuple[int, int]]:
 
     A URL runs from its start to the first character that cannot be part of one.
     Markup and punctuation therefore end it, which is what keeps
-    ``<a href="https://example.com/">KiroCrew`` out of the span: the brand there
+    ``<a href="https://example.com/">AjCrew`` out of the span: the brand there
     is visible prose, not part of the link.
     """
     spans: list[tuple[int, int]] = []
@@ -219,7 +219,7 @@ SKIP_DIRS = (
     # docs/system-specs/common/code-style.md excludes _vendor/ from every linter,
     # and it holds native libraries
     # whose suffixes (`.0`, `.dylib`) no extension list will ever fully enumerate.
-    "src/kiro_crew/_vendor/",
+    "src/aj_crew/_vendor/",
 )
 SKIP_SUFFIXES = (
     ".lock",
@@ -258,7 +258,7 @@ SKIP_PATHS = (
 # Generated artifacts. Counted by the whole-tree report, never enforced.
 #
 # The locale catalogs are machine-translated and carry ~85 joined spellings each;
-# `tips_catalog.json` is derived from `src/kiro_crew/docs/*.md`, and
+# `tips_catalog.json` is derived from `src/aj_crew/docs/*.md`, and
 # `settings-registry.generated.json` from `website/src/pages/settings/**` via
 # `npm run gen:settings`, and `ui-index.generated.json` from the dashboard source
 # and those catalogs via `npm run gen:ui`. All are JSON, so none offers a line the
@@ -269,9 +269,9 @@ SKIP_PATHS = (
 # the artifact.
 GENERATED_PATHS = (
     re.compile(r"^website/src/i18n/locales/(?!en\.json$|en\.manual\.json$)[\w-]+\.json$"),
-    re.compile(r"^src/kiro_crew/data/tips_catalog\.json$"),
-    re.compile(r"^src/kiro_crew/docs/settings-registry\.generated\.json$"),
-    re.compile(r"^src/kiro_crew/docs/ui-index\.generated\.json$"),
+    re.compile(r"^src/aj_crew/data/tips_catalog\.json$"),
+    re.compile(r"^src/aj_crew/docs/settings-registry\.generated\.json$"),
+    re.compile(r"^src/aj_crew/docs/ui-index\.generated\.json$"),
 )
 
 
@@ -296,7 +296,7 @@ def fenced_lines(lines: list[str]) -> set[int]:
     """1-based line numbers inside a fenced code block.
 
     Shell snippets are the single largest source of legitimate concatenated
-    spellings in the docs (``cd KiroCrew``, ``git clone .../KiroCrew.git``), and
+    spellings in the docs (``cd AjCrew``, ``git clone .../AjCrew.git``), and
     they are all inside fences. Tracking fence state needs the whole file, which
     is why the scanner reads full blobs and filters to added lines afterwards
     rather than scanning a diff hunk directly.
@@ -376,7 +376,7 @@ def scan_line(path: str, line_no: int, line: str, *, in_code: bool) -> Iterator[
         if end < len(line) and line[end] in "/\\":
             continue  # path segment, other side
         if hyphen_interior(line, start):
-            continue  # X-KiroCrew-Proxy and friends
+            continue  # X-AjCrew-Proxy and friends
         if covered(url_ranges, url_starts, start):
             continue  # inside a URL
         if ARTIFACT_EXT.match(line, end) or ARTIFACT_SUFFIX.match(line, end):
@@ -538,32 +538,32 @@ def added_lines(frm: str, path: str) -> set[int]:
 # ---------------------------------------------------------------------------
 
 PROBES: tuple[tuple[str, str, bool], ...] = (
-    ("prose", "Run KiroCrew on your laptop.", True),
-    ("possessive", "This is KiroCrew's own sandbox.", True),
-    ("sentence-end", "shipped with KiroCrew.", True),
-    ("uncapitalised", "Install kiro crew first.", True),
-    ("cli-command", "Run `kirocrew serve` to start it.", False),
-    ("env-var", 'os.environ["KIROCREW_HOME"]', False),
-    ("module", "from kiro_crew.config import loader", False),
-    ("repo-slug", "https://github.com/kirodotdev/KiroCrew/issues", False),
-    ("wrapped-slug", "see [docs](https://github.com/kirodotdev/KiroCrew/issues)", False),
-    ("url-query", "https://example.com/d?app=KiroCrew&v=2", False),
-    ("markup-after-url", '<a href="https://example.com/">KiroCrew</a>', True),
-    ("url-then-prose", "https://example.com/x is where KiroCrew lives", True),
+    ("prose", "Run AjCrew on your laptop.", True),
+    ("possessive", "This is AjCrew's own sandbox.", True),
+    ("sentence-end", "shipped with AjCrew.", True),
+    ("uncapitalised", "Install aj crew first.", True),
+    ("cli-command", "Run `ajcrew serve` to start it.", False),
+    ("env-var", 'os.environ["AJCREW_HOME"]', False),
+    ("module", "from aj_crew.config import loader", False),
+    ("repo-slug", "https://github.com/Al-jwharah/Aj-Crew/issues", False),
+    ("wrapped-slug", "see [docs](https://github.com/Al-jwharah/Aj-Crew/issues)", False),
+    ("url-query", "https://example.com/d?app=AjCrew&v=2", False),
+    ("markup-after-url", '<a href="https://example.com/">AjCrew</a>', True),
+    ("url-then-prose", "https://example.com/x is where AjCrew lives", True),
     # One-sided on purpose, all four. A probe with a separator on BOTH sides of the
     # brand is satisfied by either check alone, so it cannot tell which one broke.
-    ("path-before", "built from ~/src/KiroCrew last night", False),
-    ("path-after", "KiroCrew/website holds the frontend", False),
-    ("windows-path-before", r"installed to C:\Program Files\KiroCrew", False),
-    ("windows-path-after", r"launches KiroCrew\resources\app.asar", False),
-    ("glued-identifier", "resolve KiroCrewApps from the registry", False),
-    ("artifact-ext", "signs KiroCrew.exe and Update.exe", False),
-    ("artifact-suffix", "publishes KiroCrew-x86_64.AppImage", False),
-    ("channel-identifier", 'home / "Library" / "Logs" / "KiroCrew Nightly"', False),
-    ("http-header", 'assert "X-KiroCrew-Proxy" in headers', False),
-    ("hyphen-prose", "every KiroCrew-owned file", True),
+    ("path-before", "built from ~/src/AjCrew last night", False),
+    ("path-after", "AjCrew/website holds the frontend", False),
+    ("windows-path-before", r"installed to C:\Program Files\AjCrew", False),
+    ("windows-path-after", r"launches AjCrew\resources\app.asar", False),
+    ("glued-identifier", "resolve AjCrewApps from the registry", False),
+    ("artifact-ext", "signs AjCrew.exe and Update.exe", False),
+    ("artifact-suffix", "publishes AjCrew-x86_64.AppImage", False),
+    ("channel-identifier", 'home / "Library" / "Logs" / "AjCrew Nightly"', False),
+    ("http-header", 'assert "X-AjCrew-Proxy" in headers', False),
+    ("hyphen-prose", "every AjCrew-owned file", True),
     ("data-dir", "state lives under ~/.kiro/crew/workspace", False),
-    ("suppressed", "correct = 'KiroCrew'  # brand-ok: dictionary fixture", False),
+    ("suppressed", "correct = 'AjCrew'  # brand-ok: dictionary fixture", False),
 )
 
 
@@ -575,7 +575,7 @@ def _timed_scan(count: int) -> tuple[float, int]:
     baseline and inflates the ratio for reasons that have nothing to do with
     the scan.
     """
-    line = "!KiroCrew" * count
+    line = "!AjCrew" * count
     was_enabled = gc.isenabled()
     gc.collect()
     gc.disable()
@@ -601,7 +601,7 @@ def self_test() -> int:
             print(f"  ok   {label}")
 
     # Fenced code in markdown is exempt; the prose around it is not.
-    doc = ["Run KiroCrew.", "```bash", "cd KiroCrew", "```", "KiroCrew is done."]
+    doc = ["Run AjCrew.", "```bash", "cd AjCrew", "```", "AjCrew is done."]
     fenced = fenced_lines(doc)
     if fenced != {2, 3, 4}:
         print(f"  FAIL fence-tracking: expected {{2, 3, 4}}, got {fenced}")
@@ -620,7 +620,7 @@ def self_test() -> int:
     else:
         print("  ok   fence-exemption")
 
-    inline = list(scan_line("doc.md", 1, "clone `KiroCrew` then run KiroCrew.", in_code=False))
+    inline = list(scan_line("doc.md", 1, "clone `AjCrew` then run AjCrew.", in_code=False))
     if len(inline) != 1:
         print(f"  FAIL inline-code: expected 1 hit outside the span, got {len(inline)}")
         failures += 1
@@ -638,7 +638,7 @@ def self_test() -> int:
     # place an unbounded host quantifier would go quadratic.
     start = time.monotonic()
     for filler, glue in ((".", " "), ("a-", " "), ("x.com", " "), ("`", " "), ("a.", "")):
-        long_line = filler * (200_000 // len(filler)) + glue + "KiroCrew"
+        long_line = filler * (200_000 // len(filler)) + glue + "AjCrew"
         if not list(scan_line("big.md", 1, long_line, in_code=False)):
             print(f"  FAIL linearity: missed the brand after a {filler!r} run")
             failures += 1
@@ -651,7 +651,7 @@ def self_test() -> int:
 
     # The uncapitalised rule has its own inline-code exemption, on a separate
     # branch from the concatenated one above.
-    if list(scan_line("doc.md", 1, "run `kiro crew` from a shell", in_code=False)):
+    if list(scan_line("doc.md", 1, "run `aj crew` from a shell", in_code=False)):
         print("  FAIL inline-code-lower: a spaced form inside a code span was flagged")
         failures += 1
     else:
@@ -747,7 +747,7 @@ def self_test() -> int:
 
     # A wider fence is not closed by a narrower run inside it, so a doc can quote
     # a fenced example without exposing its contents as prose.
-    nested = ["````markdown", "```bash", "cd KiroCrew", "```", "````", "Then run KiroCrew."]
+    nested = ["````markdown", "```bash", "cd AjCrew", "```", "````", "Then run AjCrew."]
     nested_fenced = fenced_lines(nested)
     if nested_fenced != {1, 2, 3, 4, 5}:
         print(f"  FAIL fence-width: expected {{1..5}} inside, got {nested_fenced}")
@@ -802,13 +802,13 @@ def report(violations: Iterable[Violation], *, enforcing: bool, base: str | None
     if enforcing:
         print(
             "\nIdentifiers keep their own spelling and are already exempt: the "
-            "kirodotdev/KiroCrew slug, KiroCrew.dmg-style artifacts, the KiroCrew Nightly "
-            "channel, KIROCREW_* env vars, the kirocrew CLI, kiro_crew imports, and "
+            "kirodotdev/KiroCrew slug, AjCrew.dmg-style artifacts, the AjCrew Nightly "
+            "channel, AJCREW_* env vars, the ajcrew CLI, aj_crew imports, and "
             "fenced/inline code in markdown. For anything else that genuinely needs the "
             "joined form, add a 'brand-ok' comment on the line."
             "\n\nOne case wants a reword rather than a substitution: a hyphenated compound. "
-            "'KiroCrew-owned' does not become 'Kiro Crew-owned' — hyphenating an open "
-            "two-word name reads wrong. Write 'owned by Kiro Crew' instead."
+            "'AjCrew-owned' does not become 'Aj Crew-owned' — hyphenating an open "
+            "two-word name reads wrong. Write 'owned by Aj Crew' instead."
         )
     return 1 if enforcing else 0
 

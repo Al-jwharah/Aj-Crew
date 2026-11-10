@@ -74,7 +74,7 @@ const DENIED = {
 
 const control = (key, label, unit, count, summary, items) => ({
   key, label, unit, count, summary, unavailable: false,
-  source: 'src/kiro_crew/security.py',
+  source: 'src/aj_crew/security.py',
   items,
 })
 
@@ -120,7 +120,7 @@ const FIXTURES = {
   '/api/security/posture': POSTURE,
   '/api/security/denied-commands': DENIED,
   '/api/governance/policy': GOVERNANCE,
-  '/api/config/kirocrew': { agent: { yolo_duration: '6h', apps_allow_third_party: false } },
+  '/api/config/ajcrew': { agent: { yolo_duration: '6h', apps_allow_third_party: false } },
 }
 
 const SECTIONS = ['posture', 'approval', 'rules', 'apps', 'layers', 'governance', 'docs']

@@ -9,7 +9,7 @@ watchdog, the backend acquire/respawn helpers, and the CLI entry points.
 
 Everything here is driven with in-memory doubles -- no socket is bound, no
 subprocess is spawned, and every filesystem write lands under ``tmp_path`` or
-the per-test ``KIROCREW_HOME`` that Kiro Crew's conftest pins.
+the per-test ``AJCREW_HOME`` that Aj Crew's conftest pins.
 
 This file pins the CLI socket default, the periodic sweepers, the shutdown outstanding-work
 check, the credential-change drain and rewarm, the abort frame, the SEL audit emitters, the
@@ -43,16 +43,16 @@ from mcp_gatewayd_coverage_helpers import (  # noqa: F401 -- the autouse fixture
 )
 from named_cases_helpers import named_cases
 
-from kiro_crew.mcp_caller import CallerContext
-from kiro_crew.mcp_gateway import gatewayd as gw
-from kiro_crew.mcp_gateway.hashing import hash_effective_env
-from kiro_crew.mcp_gateway.pool import BackendPool, PoolKey
-from kiro_crew.mcp_gateway.rewriter import (
+from aj_crew.mcp_caller import CallerContext
+from aj_crew.mcp_gateway import gatewayd as gw
+from aj_crew.mcp_gateway.hashing import hash_effective_env
+from aj_crew.mcp_gateway.pool import BackendPool, PoolKey
+from aj_crew.mcp_gateway.rewriter import (
     env_sidecar_dir,
     env_sidecar_name,
     resolve_overlay_dir,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 pytestmark = pytest.mark.xdist_group("mcp_gateway")
 
@@ -86,7 +86,7 @@ class TestDefaultCliSocketPath:
     def test_falls_back_to_data_home_not_tmp(self, monkeypatch, tmp_path):
         """No /tmp tier: a Windows daemon must not create a stray C:\\tmp."""
         monkeypatch.delenv("XDG_RUNTIME_DIR", raising=False)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         got = gw._default_cli_socket_path()
         assert got == tmp_path / "mcp-gateway" / gw._DEFAULT_SOCKET_NAME
 
@@ -367,7 +367,7 @@ class TestHeartbeatSweeper:
         pidfile = tmp_path / "backends.pid"
 
         with patch(
-            "kiro_crew.platform_compat.get_process_start_id",
+            "aj_crew.platform_compat.get_process_start_id",
             side_effect=AssertionError("the heartbeat must not re-read identities"),
         ):
             await _run_one_heartbeat_sweep(pool, pidfile)
@@ -394,7 +394,7 @@ class TestHeartbeatSweeper:
         misbehaved keeps its recommendation until it misbehaves again. Shutdown is
         the ordinary path, not the exceptional one.
         """
-        from kiro_crew.mcp_gateway import hazards
+        from aj_crew.mcp_gateway import hazards
 
         ledger = hazards.HazardLedger(hazards.ledger_path(tmp_path))
         gw.hazards._sink = ledger  # type: ignore[attr-defined]
@@ -887,7 +887,7 @@ class TestDeclaredNonSecretEnv:
 
     def test_unreadable_config_falls_back_to_the_default_overlay_dir(self, monkeypatch):
         monkeypatch.setattr(
-            gw.KiroCrewConfig,
+            gw.AjCrewConfig,
             "load",
             classmethod(lambda cls: (_ for _ in ()).throw(OSError("nope"))),
         )
@@ -909,18 +909,18 @@ class TestDeclaredEnvToForward:
 class TestEnvTargetResolver:
     def test_unmapped_server_returns_none(self, monkeypatch):
         key = _pool_key(server="unmapped-mcp")
-        monkeypatch.delenv("KIROCREW_MCP_TARGET_UNMAPPED_MCP", raising=False)
+        monkeypatch.delenv("AJCREW_MCP_TARGET_UNMAPPED_MCP", raising=False)
         monkeypatch.delenv("MC_MCP_TARGET_UNMAPPED_MCP", raising=False)
         assert gw.env_target_resolver(key) is None
 
     def test_whitespace_only_spec_returns_none(self, monkeypatch):
         key = _pool_key(server="blank-mcp")
-        monkeypatch.setenv("KIROCREW_MCP_TARGET_BLANK_MCP", "   ")
+        monkeypatch.setenv("AJCREW_MCP_TARGET_BLANK_MCP", "   ")
         assert gw.env_target_resolver(key) is None
 
     def test_legacy_prefix_is_still_accepted(self, monkeypatch):
         key = _pool_key(server="legacy-mcp")
-        monkeypatch.delenv("KIROCREW_MCP_TARGET_LEGACY_MCP", raising=False)
+        monkeypatch.delenv("AJCREW_MCP_TARGET_LEGACY_MCP", raising=False)
         monkeypatch.setenv("MC_MCP_TARGET_LEGACY_MCP", "legacy-bin --stdio")
         resolved = gw.env_target_resolver(key)
         assert resolved is not None
@@ -935,12 +935,12 @@ class TestEnvTargetResolver:
         This pins the RESOLVER's output, which is what the classifier reads:
         no inherited ``PYTHON*`` key survives for a control-plane backend. The
         child's final environment is a separate step -- the spawn site re-applies
-        Kiro Crew's own UTF-8 pair after the verdict -- and is pinned by the
+        Aj Crew's own UTF-8 pair after the verdict -- and is pinned by the
         spawn-site tests.
         """
-        key = _pool_key(server="kirocrew-core")
-        monkeypatch.delenv("KIROCREW_MCP_TARGET_KIROCREW_CORE", raising=False)
-        monkeypatch.setenv("MC_MCP_TARGET_KIROCREW_CORE", "kirocrew mcp-core")
+        key = _pool_key(server="ajcrew-core")
+        monkeypatch.delenv("AJCREW_MCP_TARGET_AJCREW_CORE", raising=False)
+        monkeypatch.setenv("MC_MCP_TARGET_AJCREW_CORE", "ajcrew mcp-core")
         python_env = {
             "PYTHONPATH": "/host/site-packages",
             "PYTHONHOME": "/host/python",
@@ -1393,7 +1393,7 @@ class TestMetricEmitters:
         from opentelemetry.sdk.metrics import MeterProvider
         from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
-        from kiro_crew.metrics.recorder import MetricsRecorder
+        from aj_crew.metrics.recorder import MetricsRecorder
 
         reader = InMemoryMetricReader()
         rec = MetricsRecorder(MeterProvider(metric_readers=[reader]).get_meter("test"))
@@ -1406,16 +1406,16 @@ class TestMetricEmitters:
             for metric in sm.metrics
             for dp in metric.data.data_points
         ]
-        assert points == [("kirocrew.mcp.backend.acquire.duration", {"warm": True}, 12.5)]
+        assert points == [("ajcrew.mcp.backend.acquire.duration", {"warm": True}, 12.5)]
 
     def test_lazy_load_metrics_also_emit_the_acquire_histogram(self, monkeypatch):
         rec = MagicMock()
         monkeypatch.setattr(gw, "get_recorder", lambda: rec)
         gw._emit_lazy_load_metrics(33.0, warm=False)
         names = [call.args[0] for call in rec.histogram.call_args_list]
-        assert "kirocrew.mcp.lazy_load.duration" in names
-        assert "kirocrew.mcp.backend.acquire.duration" in names
-        assert rec.counter.call_args.args[0] == "kirocrew.mcp.lazy_load.count"
+        assert "ajcrew.mcp.lazy_load.duration" in names
+        assert "ajcrew.mcp.backend.acquire.duration" in names
+        assert rec.counter.call_args.args[0] == "ajcrew.mcp.lazy_load.count"
 
     def test_telemetry_failure_never_breaks_the_hot_path(self, monkeypatch, caplog):
         get_recorder = MagicMock(side_effect=RuntimeError("recorder down"))

@@ -17,8 +17,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.subagent import PINNED_RUNTIME_NOTE
-from kiro_crew.subagent_parts.start_pricing import _SharingPlan
+from aj_crew.subagent import PINNED_RUNTIME_NOTE
+from aj_crew.subagent_parts.start_pricing import _SharingPlan
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -31,9 +31,9 @@ def _api_spawn(
     keep: bool = False,
     selection_kind: str = "template",
 ) -> tuple[dict, MagicMock]:
-    from kiro_crew.config.loader import AgentConfig, KiroCrewConfig
-    from kiro_crew.dashboard.handlers.messaging import api_spawn
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.config.loader import AgentConfig, AjCrewConfig
+    from aj_crew.dashboard.handlers.messaging import api_spawn
+    from aj_crew.dashboard.state import _ChatSlot
 
     mgr = MagicMock()
     info = SimpleNamespace(
@@ -66,11 +66,11 @@ def _api_spawn(
     request.app = {"state": state}
     request.headers = {"X-Session-Key": body.get("parent_session", "")}
     request.json = AsyncMock(return_value=body)
-    cfg = KiroCrewConfig(agent=AgentConfig())
+    cfg = AjCrewConfig(agent=AgentConfig())
     with (
-        patch("kiro_crew.config.loader.KiroCrewConfig.load", classmethod(lambda c: cfg)),
+        patch("aj_crew.config.loader.AjCrewConfig.load", classmethod(lambda c: cfg)),
         patch(
-            "kiro_crew.dashboard.handlers.messaging.warm_project_agents_for_spawn",
+            "aj_crew.dashboard.handlers.messaging.warm_project_agents_for_spawn",
             AsyncMock(),
         ),
     ):
@@ -151,7 +151,7 @@ class TestApiSpawnRuntimeNote:
 
 
 def _receipt(responses: list[dict[str, Any]], tasks: list[str]) -> str:
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     replies = iter(responses)
 

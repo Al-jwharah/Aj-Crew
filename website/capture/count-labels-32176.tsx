@@ -30,7 +30,7 @@ const scene = params.get('scene') || 'fleet-one'
 const lang = params.get('lang') || 'en'
 const theme = params.get('theme') || 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const NOW = Math.floor(Date.now() / 1000)
 const MAIN = { name: 'main', is_main: true, running: false, has_dist: true, behind: 0, branch: 'main', last_updated_at: NOW - 1800 }

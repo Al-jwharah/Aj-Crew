@@ -20,15 +20,15 @@ from acp_runtime_helpers import (
     _stop_reader,
 )
 
-from kiro_crew.acp.runtime import AcpSessionHandle
-from kiro_crew.acp.types import JSONRPC_METHOD_NOT_FOUND, METHOD_SESSION_UPDATE, JsonRpcMessage
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.runtime import AcpSessionHandle
+from aj_crew.acp.types import JSONRPC_METHOD_NOT_FOUND, METHOD_SESSION_UPDATE, JsonRpcMessage
+from aj_crew.testing.wait import await_until
 
 
 @pytest.mark.asyncio
 async def test_dispatch_agent_switched():
     """Agent switched notification yields EVENT_AGENT_SWITCHED."""
-    from kiro_crew.acp.types import EVENT_AGENT_SWITCHED, METHOD_AGENT_SWITCHED
+    from aj_crew.acp.types import EVENT_AGENT_SWITCHED, METHOD_AGENT_SWITCHED
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -49,14 +49,14 @@ async def test_dispatch_agent_switched():
                 "method": METHOD_AGENT_SWITCHED,
                 "params": {
                     "sessionId": "sA",
-                    "agentName": "kirocrew-lite",
+                    "agentName": "ajcrew-lite",
                 },
             },
         )
         _feed(reader, {"id": req_id, "result": {"stopReason": "end_turn"}})
         await await_until(driver, what="the driver finishing its turn")
         sw = [e for e in events if e.kind == EVENT_AGENT_SWITCHED]
-        assert len(sw) == 1 and sw[0].text == "kirocrew-lite"
+        assert len(sw) == 1 and sw[0].text == "ajcrew-lite"
     finally:
         await _stop_reader(task)
 
@@ -64,7 +64,7 @@ async def test_dispatch_agent_switched():
 @pytest.mark.asyncio
 async def test_dispatch_mcp_oauth_request():
     """MCP OAuth request notification yields EVENT_MCP_OAUTH_REQUEST."""
-    from kiro_crew.acp.types import EVENT_MCP_OAUTH_REQUEST, METHOD_MCP_OAUTH_REQUEST
+    from aj_crew.acp.types import EVENT_MCP_OAUTH_REQUEST, METHOD_MCP_OAUTH_REQUEST
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -103,7 +103,7 @@ async def test_dispatch_mcp_oauth_request():
 @pytest.mark.asyncio
 async def test_dispatch_mcp_server_initialized():
     """MCP server initialized yields EVENT_MCP_SERVER_INITIALIZED."""
-    from kiro_crew.acp.types import EVENT_MCP_SERVER_INITIALIZED, METHOD_MCP_SERVER_INITIALIZED
+    from aj_crew.acp.types import EVENT_MCP_SERVER_INITIALIZED, METHOD_MCP_SERVER_INITIALIZED
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -139,7 +139,7 @@ async def test_dispatch_mcp_server_initialized():
 @pytest.mark.asyncio
 async def test_dispatch_mcp_server_init_failure():
     """MCP server init failure yields EVENT_MCP_SERVER_INIT_FAILURE."""
-    from kiro_crew.acp.types import EVENT_MCP_SERVER_INIT_FAILURE, METHOD_MCP_SERVER_INIT_FAILURE
+    from aj_crew.acp.types import EVENT_MCP_SERVER_INIT_FAILURE, METHOD_MCP_SERVER_INIT_FAILURE
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -209,7 +209,7 @@ async def test_dispatch_unknown_server_request_gets_error_response():
 @pytest.mark.asyncio
 async def test_dispatch_tool_call_update_raw_output():
     """tool_call_update with rawOutput yields EVENT_TOOL_RESULT."""
-    from kiro_crew.acp.types import EVENT_TOOL_RESULT
+    from aj_crew.acp.types import EVENT_TOOL_RESULT
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -249,7 +249,7 @@ async def test_dispatch_tool_call_update_raw_output():
 @pytest.mark.asyncio
 async def test_dispatch_tool_call_update_refinement():
     """tool_call_update with title but no content yields EVENT_TOOL_CALL_UPDATE."""
-    from kiro_crew.acp.types import EVENT_TOOL_CALL_UPDATE
+    from aj_crew.acp.types import EVENT_TOOL_CALL_UPDATE
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -333,7 +333,7 @@ async def test_dispatch_cost_and_prompt_tokens_reach_event_complete():
     surfaced on EVENT_COMPLETE.usage. Two turns
     prove the delta: turn 2 is billed only its own movement of the cumulative
     counter, and its own token counts."""
-    from kiro_crew.acp.types import EVENT_COMPLETE
+    from aj_crew.acp.types import EVENT_COMPLETE
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -466,7 +466,7 @@ def test_handle_update_malformed_usage_is_noop(used, size):
 async def test_dispatch_metadata_credits():
     """_kiro.dev/metadata meteringUsage(unit=credit) accumulates into last_prompt_stats
     and is propagated onto EVENT_COMPLETE; non-credit units are ignored."""
-    from kiro_crew.acp.types import EVENT_COMPLETE, METHOD_METADATA
+    from aj_crew.acp.types import EVENT_COMPLETE, METHOD_METADATA
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -511,8 +511,8 @@ async def test_cancelled_turn_bills_the_metering_frame_behind_its_answer():
     """kiro-cli answers a cancelled prompt BEFORE the metadata frame that bills
     it (live probe, kiro-cli 3.1.0): the stopped turn's EVENT_COMPLETE carries
     those credits instead of a footer with none."""
-    from kiro_crew.acp.types import EVENT_COMPLETE, METHOD_METADATA
-    from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+    from aj_crew.acp.types import EVENT_COMPLETE, METHOD_METADATA
+    from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -557,7 +557,7 @@ async def test_cancelled_turn_bills_the_metering_frame_behind_its_answer():
 async def test_dispatch_metadata_credits_robust():
     """Non-numeric / missing meteringUsage values and metadata with no meteringUsage
     are handled without raising; credits stays 0."""
-    from kiro_crew.acp.types import METHOD_METADATA
+    from aj_crew.acp.types import METHOD_METADATA
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -595,7 +595,7 @@ async def test_dispatch_metadata_credits_robust():
 async def test_metadata_credits_routed_per_session():
     """Concurrent sessions on one runtime each accrue only their own kiro credits —
     metadata notifications are demuxed by sessionId, no cross-talk."""
-    from kiro_crew.acp.types import METHOD_METADATA
+    from aj_crew.acp.types import METHOD_METADATA
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA", "sB")
@@ -649,7 +649,7 @@ async def test_metadata_credits_routed_per_session():
 @pytest.mark.asyncio
 async def test_dispatch_subagent_list():
     """Subagent list notification yields EVENT_SUBAGENT_LIST."""
-    from kiro_crew.acp.types import EVENT_SUBAGENT_LIST, METHOD_SUBAGENT_LIST_UPDATE
+    from aj_crew.acp.types import EVENT_SUBAGENT_LIST, METHOD_SUBAGENT_LIST_UPDATE
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -690,7 +690,7 @@ async def test_dispatch_subagent_activity_tool():
     registered session), so the reader would correctly drop it. We inject it
     straight into the parent's queue to exercise the dispatch branch.
     """
-    from kiro_crew.acp.types import EVENT_SUBAGENT_ACTIVITY, METHOD_KIRO_SESSION_UPDATE
+    from aj_crew.acp.types import EVENT_SUBAGENT_ACTIVITY, METHOD_KIRO_SESSION_UPDATE
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -729,7 +729,7 @@ async def test_dispatch_subagent_activity_tool():
 @pytest.mark.asyncio
 async def test_dispatch_subagent_activity_text():
     """Subagent activity with agent_message_chunk yields text event."""
-    from kiro_crew.acp.types import EVENT_SUBAGENT_ACTIVITY, METHOD_KIRO_SESSION_UPDATE
+    from aj_crew.acp.types import EVENT_SUBAGENT_ACTIVITY, METHOD_KIRO_SESSION_UPDATE
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -771,7 +771,7 @@ async def test_dispatch_subagent_activity_text():
 async def test_dispatch_subagent_activity_text_is_redacted():
     """Sub-agent streamed text is LLM output surfaced on the dashboard, so it
     MUST be scrubbed (credentials + exfil URLs) before being yielded."""
-    from kiro_crew.acp.types import EVENT_SUBAGENT_ACTIVITY, METHOD_KIRO_SESSION_UPDATE
+    from aj_crew.acp.types import EVENT_SUBAGENT_ACTIVITY, METHOD_KIRO_SESSION_UPDATE
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -822,7 +822,7 @@ async def test_dispatch_subagent_activity_ignores_this_session():
     session's own id, once per tool call. Recorded live in
     ``test/fixtures/acp_frames/kiro/session.jsonl``.
     """
-    from kiro_crew.acp.types import EVENT_SUBAGENT_ACTIVITY, METHOD_KIRO_SESSION_UPDATE
+    from aj_crew.acp.types import EVENT_SUBAGENT_ACTIVITY, METHOD_KIRO_SESSION_UPDATE
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -863,7 +863,7 @@ async def test_dispatch_subagent_activity_ignores_this_session():
 @pytest.mark.asyncio
 async def test_dispatch_subagent_activity_ignores_this_session_text():
     """Same scoping for the text carrier, so one guard cannot cover half the shape."""
-    from kiro_crew.acp.types import EVENT_SUBAGENT_ACTIVITY, METHOD_KIRO_SESSION_UPDATE
+    from aj_crew.acp.types import EVENT_SUBAGENT_ACTIVITY, METHOD_KIRO_SESSION_UPDATE
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")

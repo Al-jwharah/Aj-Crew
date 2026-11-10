@@ -4,7 +4,7 @@ The checkpoint is a fold shortcut, never an authority: a row the codec cannot pr
 dropped, a file it cannot trust loads as "no checkpoint", and the debounced write saves
 the state it was armed for or re-dirties it so a later change tries again. Each test
 calls the code synchronously -- no pool, no thread, no clock -- and patches through
-``kiro_crew.crew_log.session_tree_projection``, the surface callers use.
+``aj_crew.crew_log.session_tree_projection``, the surface callers use.
 """
 
 from __future__ import annotations
@@ -16,9 +16,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.crew_log import session_tree_projection as stp
-from kiro_crew.crew_log.session_tree import EdgeRecord, OpenedRecord
-from kiro_crew.crew_log.session_tree_projection import (
+from aj_crew.crew_log import session_tree_projection as stp
+from aj_crew.crew_log.session_tree import EdgeRecord, OpenedRecord
+from aj_crew.crew_log.session_tree_projection import (
     CHECKPOINT_VERSION,
     SessionTreeProjection,
 )
@@ -31,10 +31,10 @@ def submitted(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[list[
     ``apply`` arms a debounced write on the pool; the tests below call the write
     themselves, so a submitted job is only recorded, in the list this yields.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     jobs: list[tuple[Any, ...]] = []
     pool = type("_Pool", (), {"submit": staticmethod(lambda *a, **_k: jobs.append(a))})
-    monkeypatch.setattr("kiro_crew.executors.maintenance_executor", lambda: pool)
+    monkeypatch.setattr("aj_crew.executors.maintenance_executor", lambda: pool)
     stp.reset_for_tests()
     yield jobs
     stp.reset_for_tests()

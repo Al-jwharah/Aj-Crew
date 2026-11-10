@@ -23,11 +23,11 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import autonudge as _an
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
-from kiro_crew.autonudge_service import gate as _gate
-from kiro_crew.monitoring.models import MonitorState
-from kiro_crew.probes import gh_pr
+from aj_crew import autonudge as _an
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew.autonudge_service import gate as _gate
+from aj_crew.monitoring.models import MonitorState
+from aj_crew.probes import gh_pr
 
 _FLOOR = _gate._MAX_QUIET_STREAK
 _URL = "https://github.com/acme/widgets/pull/42"
@@ -128,7 +128,7 @@ class _Harness:
 
 @pytest.fixture(autouse=True)
 def _enable(_floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    _floor_monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
 
 @pytest.mark.asyncio

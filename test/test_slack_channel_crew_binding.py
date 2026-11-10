@@ -26,25 +26,25 @@ from slack_transport_dispatch_helpers import (
     make_event,
 )
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
-from kiro_crew.config import live, loader
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.sections import KiroCrewAgentConfig, WorkspaceConfig
-from kiro_crew.messaging.link import canonical_key
-from kiro_crew.slack import channel_crew, transport_dispatch
-from kiro_crew.slack.channel_crew import ChannelCrew, resolve_channel_crew
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
+from aj_crew.config import live, loader
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.sections import AjCrewAgentConfig, WorkspaceConfig
+from aj_crew.messaging.link import canonical_key
+from aj_crew.slack import channel_crew, transport_dispatch
+from aj_crew.slack.channel_crew import ChannelCrew, resolve_channel_crew
 
 
 @pytest.fixture()
 def crew_cfg(monkeypatch, tmp_path):
     """A config with one Crew record, ``web-frontend``, on its own workspace."""
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     tree = tmp_path / "web-frontend"
     tree.mkdir()
     cfg.workspaces["web-frontend"] = WorkspaceConfig(dir=str(tree))
-    cfg.agents["web-frontend"] = KiroCrewAgentConfig(
-        kiro_agent="kirocrew", workspace="web-frontend"
+    cfg.agents["web-frontend"] = AjCrewAgentConfig(
+        kiro_agent="ajcrew", workspace="web-frontend"
     )
     monkeypatch.setattr(live, "snapshot", lambda: cfg)
     return cfg, tree
@@ -54,12 +54,12 @@ class TestResolveChannelCrew:
     def test_crew_record_resolves_to_its_mode_identity_and_workspace(self, crew_cfg):
         _cfg, tree = crew_cfg
         assert resolve_channel_crew("web-frontend") == ChannelCrew(
-            kiro_agent="kirocrew", crew_agent="web-frontend", cwd=str(tree)
+            kiro_agent="ajcrew", crew_agent="web-frontend", cwd=str(tree)
         )
 
     def test_plain_kiro_mode_is_not_a_crew_record(self, crew_cfg):
         # A channel naming a kiro-cli mode directly keeps today's pass-through.
-        assert resolve_channel_crew("kirocrew-lite") is None
+        assert resolve_channel_crew("ajcrew-lite") is None
 
     def test_empty_name_resolves_nothing(self, crew_cfg):
         assert resolve_channel_crew("") is None
@@ -77,18 +77,18 @@ class TestContextTemplate:
     """The context builder's ``agent`` is a template, never a Crew record's name."""
 
     def test_record_name_collapses_to_its_template(self, crew_cfg):
-        assert channel_crew.context_template("web-frontend") == "kirocrew"
+        assert channel_crew.context_template("web-frontend") == "ajcrew"
 
     def test_resolved_binding_is_reused(self, crew_cfg):
-        crew = ChannelCrew(kiro_agent="kirocrew-lite", crew_agent="web-frontend", cwd="/x")
-        assert channel_crew.context_template("web-frontend", crew) == "kirocrew-lite"
+        crew = ChannelCrew(kiro_agent="ajcrew-lite", crew_agent="web-frontend", cwd="/x")
+        assert channel_crew.context_template("web-frontend", crew) == "ajcrew-lite"
 
     def test_binding_for_another_name_is_not_applied(self, crew_cfg):
-        crew = ChannelCrew(kiro_agent="kirocrew-lite", crew_agent="web-frontend", cwd="/x")
-        assert channel_crew.context_template("kirocrew-research", crew) == "kirocrew-research"
+        crew = ChannelCrew(kiro_agent="ajcrew-lite", crew_agent="web-frontend", cwd="/x")
+        assert channel_crew.context_template("ajcrew-research", crew) == "ajcrew-research"
 
     def test_plain_mode_and_empty_pass_through(self, crew_cfg):
-        assert channel_crew.context_template("kirocrew-lite") == "kirocrew-lite"
+        assert channel_crew.context_template("ajcrew-lite") == "ajcrew-lite"
         assert channel_crew.context_template(None) is None
 
 
@@ -100,7 +100,7 @@ class _KwargsSessions(FakeSessions):
         self.calls: list[dict] = []
 
     async def get_or_create(self, session_key, **kwargs):
-        from kiro_crew.session import BACKGROUND_KEY
+        from aj_crew.session import BACKGROUND_KEY
 
         if session_key != BACKGROUND_KEY:
             self.calls.append(kwargs)
@@ -148,7 +148,7 @@ class TestTransportHonorsChannelCrew:
     def test_crew_bound_channel_runs_the_record(self, monkeypatch, crew_cfg):
         _cfg, tree = crew_cfg
         kw = _run_transport(monkeypatch, agent_override="web-frontend")
-        assert kw["agent"] == "kirocrew"
+        assert kw["agent"] == "ajcrew"
         assert kw["crew_agent"] == "web-frontend"
         assert kw["cwd"] == str(tree)
 
@@ -161,9 +161,9 @@ class TestTransportHonorsChannelCrew:
     def test_thread_override_is_not_collapsed(self, monkeypatch, crew_cfg):
         # ``!agent`` chose the agent, not the channel binding: unchanged.
         kw = _run_transport(
-            monkeypatch, agent_override="web-frontend", thread_agent="kirocrew-research"
+            monkeypatch, agent_override="web-frontend", thread_agent="ajcrew-research"
         )
-        assert kw["agent"] == "kirocrew-research"
+        assert kw["agent"] == "ajcrew-research"
         assert "cwd" not in kw
 
     def test_binding_restored_from_the_transcript_still_runs_the_record(
@@ -174,7 +174,7 @@ class TestTransportHonorsChannelCrew:
         # the channel binding coming back, not a ``!agent`` override.
         _cfg, tree = crew_cfg
         kw = _run_transport(monkeypatch, agent_override="web-frontend", thread_agent="web-frontend")
-        assert kw["agent"] == "kirocrew"
+        assert kw["agent"] == "ajcrew"
         assert kw["crew_agent"] == "web-frontend"
         assert kw["cwd"] == str(tree)
 
@@ -202,19 +202,19 @@ class TestTransportContextTemplate:
 
     def test_dashboard_linked_session_gets_the_record_template(self, monkeypatch, crew_cfg):
         monkeypatch.setattr(transport_dispatch, "is_slack_born", lambda key: False)
-        assert self._agent_seen(monkeypatch, agent_override="web-frontend") == "kirocrew"
+        assert self._agent_seen(monkeypatch, agent_override="web-frontend") == "ajcrew"
 
     def test_crew_bound_channel_gets_the_record_template(self, monkeypatch, crew_cfg):
-        assert self._agent_seen(monkeypatch, agent_override="web-frontend") == "kirocrew"
+        assert self._agent_seen(monkeypatch, agent_override="web-frontend") == "ajcrew"
 
     def test_plain_mode_channel_is_unchanged(self, monkeypatch, crew_cfg):
         assert self._agent_seen(monkeypatch, agent_override="ops-agent") == "ops-agent"
 
     def test_thread_override_is_unchanged(self, monkeypatch, crew_cfg):
         seen = self._agent_seen(
-            monkeypatch, agent_override="web-frontend", thread_agent="kirocrew-research"
+            monkeypatch, agent_override="web-frontend", thread_agent="ajcrew-research"
         )
-        assert seen == "kirocrew-research"
+        assert seen == "ajcrew-research"
 
 
 async def _empty_stream(*a, **kw):
@@ -254,11 +254,11 @@ def _native_mocks():
 
 @pytest.fixture()
 def _native_agent_cache():
-    from kiro_crew.slack import handler
+    from aj_crew.slack import handler
 
     old_cached = handler._cached_default_agent
     old_thread = dict(handler._thread_agents)
-    handler._cached_default_agent = "kirocrew"
+    handler._cached_default_agent = "ajcrew"
     handler._thread_agents.clear()
     yield
     handler._cached_default_agent = old_cached
@@ -269,13 +269,13 @@ def _native_agent_cache():
 @pytest.mark.usefixtures("_native_agent_cache")
 class TestNativeTurnHonorsChannelCrew:
     async def _run(self, channel_agent, thread_agent=None):
-        from kiro_crew.slack import handler
-        from kiro_crew.slack.handler import handle_message
+        from aj_crew.slack import handler
+        from aj_crew.slack.handler import handle_message
 
         if thread_agent is not None:
             handler._thread_agents[canonical_key(_MSG_TS)] = thread_agent
         slack, sessions, ctx = _native_mocks()
-        with patch("kiro_crew.slack.handler.publish_turn_identity"):
+        with patch("aj_crew.slack.handler.publish_turn_identity"):
             await handle_message(
                 slack=slack,
                 sessions=sessions,
@@ -295,32 +295,32 @@ class TestNativeTurnHonorsChannelCrew:
     async def test_crew_bound_channel_runs_the_record(self, crew_cfg):
         _cfg, tree = crew_cfg
         kw, ctx = await self._run("web-frontend")
-        assert kw["agent"] == "kirocrew"
+        assert kw["agent"] == "ajcrew"
         assert kw["crew_agent"] == "web-frontend"
         assert kw["cwd"] == str(tree)
         # The context builder takes the record's template, not its name.
-        assert ctx.build_message.call_args.kwargs.get("agent") == "kirocrew"
+        assert ctx.build_message.call_args.kwargs.get("agent") == "ajcrew"
 
     @pytest.mark.asyncio
     async def test_dashboard_linked_session_gives_the_builder_the_template(self, crew_cfg):
         # A linked session is not Slack-born, so the session keeps its own
         # allocation, but its context is still built for the record's template.
-        with patch("kiro_crew.slack.handler.is_slack_born", lambda key: False):
+        with patch("aj_crew.slack.handler.is_slack_born", lambda key: False):
             kw, ctx = await self._run("web-frontend")
         assert kw["agent"] == "web-frontend"
-        assert ctx.build_message.call_args.kwargs.get("agent") == "kirocrew"
+        assert ctx.build_message.call_args.kwargs.get("agent") == "ajcrew"
 
     @pytest.mark.asyncio
     async def test_binding_restored_from_the_transcript_still_runs_the_record(self, crew_cfg):
         _cfg, tree = crew_cfg
         kw, _ctx = await self._run("web-frontend", thread_agent="web-frontend")
-        assert kw["agent"] == "kirocrew"
+        assert kw["agent"] == "ajcrew"
         assert kw["cwd"] == str(tree)
 
     @pytest.mark.asyncio
     async def test_thread_override_is_not_collapsed(self, crew_cfg):
-        kw, _ctx = await self._run("web-frontend", thread_agent="kirocrew-research")
-        assert kw["agent"] == "kirocrew-research"
+        kw, _ctx = await self._run("web-frontend", thread_agent="ajcrew-research")
+        assert kw["agent"] == "ajcrew-research"
         assert "cwd" not in kw
 
     @pytest.mark.asyncio

@@ -21,9 +21,9 @@ import textwrap
 
 import pytest
 
-import kiro_crew.sandbox as sb
-from kiro_crew.config import loosening_provenance as lp
-from kiro_crew.config.paths import config_dir
+import aj_crew.sandbox as sb
+from aj_crew.config import loosening_provenance as lp
+from aj_crew.config.paths import config_dir
 
 #: The real gate, captured at import: the conftest swaps it for ``lambda: False``.
 _REAL_ENFORCEMENT_ACTIVE = lp.enforcement_active
@@ -53,7 +53,7 @@ def real_gate(monkeypatch):
     monkeypatch.setattr(lp, "enforcement_active", _REAL_ENFORCEMENT_ACTIVE)
     monkeypatch.setattr(lp, "_host_verdict", None)
     monkeypatch.setattr(sys, "platform", "linux")
-    monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+    monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
 
     def _install(probe: _Probe) -> _Probe:
         # Through the facade, which forwards the patch to every holder of the name.
@@ -69,12 +69,12 @@ def _seal_and_hand_edit() -> None:
 
 
 def _read_paths() -> None:
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.config.loader_document import PendingEditBlocksSave
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.config.loader_document import PendingEditBlocksSave
 
     lp.pending_changes()
     lp.reconciled_bytes(lp.LEAF_CONFIG, config_dir() / lp.LEAF_CONFIG)
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
     lp.leaf_pending(lp.LEAF_CONFIG)
     try:
         lp.refuse_save_if_pending(lp.LEAF_CONFIG)
@@ -94,13 +94,13 @@ async def test_a_cold_cache_on_the_event_loop_is_on_and_does_not_probe(real_gate
 def test_inside_a_sandbox_it_is_on_even_over_a_cached_off(real_gate, monkeypatch) -> None:
     probe = real_gate(_Probe(boom=True))
     monkeypatch.setattr(lp, "_host_verdict", False)
-    monkeypatch.setenv("KIROCREW_SANDBOX_ACTIVE", "1")
+    monkeypatch.setenv("AJCREW_SANDBOX_ACTIVE", "1")
     assert lp.enforcement_active() is True
     assert probe.calls == 0
 
 
 def test_the_gateway_primes_the_probe_off_loop() -> None:
-    from kiro_crew.slack.gateway_runtime import service_boot
+    from aj_crew.slack.gateway_runtime import service_boot
 
     src = ast.unparse(ast.parse(textwrap.dedent(inspect.getsource(service_boot.run))))
     # Off-loop, and readiness never waits on it: a tracked background task.
@@ -126,13 +126,13 @@ async def test_after_priming_on_a_host_without_userns_a_hand_edit_is_served_as_w
 @pytest.mark.asyncio
 async def test_a_load_before_an_off_answer_does_not_outlive_it(real_gate) -> None:
     """A load on the loop before the probe answers reads the copy; OFF drops that cache."""
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     real_gate(_Probe(ok=False, transient=False))
     _seal_and_hand_edit()
-    assert KiroCrewConfig.load().agent.bot_name == "Kiro"  # ON until answered
+    assert AjCrewConfig.load().agent.bot_name == "Kiro"  # ON until answered
     await asyncio.to_thread(lp.prime_host_verdict)
-    assert KiroCrewConfig.load().agent.bot_name == "Hand"
+    assert AjCrewConfig.load().agent.bot_name == "Hand"
 
 
 @pytest.mark.asyncio
@@ -178,7 +178,7 @@ def test_a_probe_that_proves_nothing_counts_as_on(real_gate, probe: _Probe) -> N
 async def test_a_save_after_a_direct_edit_succeeds_on_a_host_without_userns(real_gate) -> None:
     """The offline E2E in miniature: its runner has no user namespaces and its harness
     edits ``config.json`` directly; every later ordinary save must still go through."""
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     real_gate(_Probe(ok=False, transient=False))
     await asyncio.to_thread(lp.prime_host_verdict)

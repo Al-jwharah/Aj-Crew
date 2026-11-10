@@ -1,6 +1,6 @@
 """``TaskRunner`` keeps every member it had, and each is bound from the module that owns it.
 
-The runner's behaviour lives in the ``kiro_crew.taskrunner_parts`` owner modules: each member's
+The runner's behaviour lives in the ``aj_crew.taskrunner_parts`` owner modules: each member's
 body is a module-level function there whose first parameter is ``self``, and the class binds it
 by name (``m = _owner.m``, or ``staticmethod(_owner.f)``). The instance state stays on the
 instance, so tests, ``TaskRunner.__new__`` builds and the unbound calls with a stand-in ``self``
@@ -15,7 +15,7 @@ see the same object they always did. This file pins the binding contract:
 * each owner's docstring names the instance fields its members write and read;
 * owners log under the facade's logger, and a class moved to an owner keeps the facade as its
   ``__module__``;
-* a write through ``kiro_crew.taskrunner`` reaches every owner that reads the name, for every
+* a write through ``aj_crew.taskrunner`` reaches every owner that reads the name, for every
   name the test trees patch there (the facade's mirror, ``_facade_mirror``).
 """
 
@@ -35,8 +35,8 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import taskrunner
-from kiro_crew.taskrunner import TaskRunner
+from aj_crew import taskrunner
+from aj_crew.taskrunner import TaskRunner
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_taskrunner_bindings")
 
@@ -135,7 +135,7 @@ _MEMBERS: dict[str, tuple[str, bool, str, str]] = {
 #: declared in the class so type checkers know them. An annotation creates no attribute.
 _DECLARED = frozenset({"_workflow_initialization_error"})
 
-_PACKAGE = "kiro_crew.taskrunner_parts"
+_PACKAGE = "aj_crew.taskrunner_parts"
 
 
 def _module_of(owner: str) -> str:
@@ -279,12 +279,12 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
         if id(node) in guarded:
             continue
         if isinstance(node, ast.ImportFrom):
-            if node.module == "kiro_crew.taskrunner" or (
-                node.module == "kiro_crew" and any(a.name == "taskrunner" for a in node.names)
+            if node.module == "aj_crew.taskrunner" or (
+                node.module == "aj_crew" and any(a.name == "taskrunner" for a in node.names)
             ):
                 lines.append(node.lineno)
         elif isinstance(node, ast.Import):
-            if any(a.name == "kiro_crew.taskrunner" for a in node.names):
+            if any(a.name == "aj_crew.taskrunner" for a in node.names):
                 lines.append(node.lineno)
     return lines
 
@@ -292,10 +292,10 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
 def test_the_facade_import_scan_can_fail() -> None:
     tree = ast.parse(
         "from typing import TYPE_CHECKING\n"
-        "if TYPE_CHECKING:\n    from kiro_crew.taskrunner import TaskRunner\n"
-        "def f():\n    from kiro_crew.taskrunner import x\n"
-        "import kiro_crew.taskrunner\n"
-        "from kiro_crew import taskrunner\n"
+        "if TYPE_CHECKING:\n    from aj_crew.taskrunner import TaskRunner\n"
+        "def f():\n    from aj_crew.taskrunner import x\n"
+        "import aj_crew.taskrunner\n"
+        "from aj_crew import taskrunner\n"
     )
     assert sorted(_runtime_facade_imports(tree)) == [5, 6, 7]
 
@@ -320,14 +320,14 @@ def _owner_imports(tree: ast.Module) -> set[str]:
 
 def test_the_owner_import_scan_can_fail() -> None:
     tree = ast.parse(
-        "from kiro_crew.taskrunner_parts.run_scope import X\n"
-        "from kiro_crew.taskrunner_parts import run_inputs as _ri\n"
-        "import kiro_crew.taskrunner_parts.run_steps\n"
+        "from aj_crew.taskrunner_parts.run_scope import X\n"
+        "from aj_crew.taskrunner_parts import run_inputs as _ri\n"
+        "import aj_crew.taskrunner_parts.run_steps\n"
     )
     assert _owner_imports(tree) == {
-        "kiro_crew.taskrunner_parts.run_scope",
-        "kiro_crew.taskrunner_parts.run_inputs",
-        "kiro_crew.taskrunner_parts.run_steps",
+        "aj_crew.taskrunner_parts.run_scope",
+        "aj_crew.taskrunner_parts.run_inputs",
+        "aj_crew.taskrunner_parts.run_steps",
     }
 
 
@@ -421,7 +421,7 @@ def test_a_moved_class_keeps_the_facade_as_its_module(owner: str) -> None:
 def test_the_initializing_refusal_names_the_facade() -> None:
     error = taskrunner.WorkflowInitializing("retry shortly", code="workflow_initializing")
     assert f"{type(error).__module__}.{type(error).__qualname__}" == (
-        "kiro_crew.taskrunner.WorkflowInitializing"
+        "aj_crew.taskrunner.WorkflowInitializing"
     )
     assert isinstance(error, RuntimeError) and error.code == "workflow_initializing"
 
@@ -433,7 +433,7 @@ def test_the_initializing_refusal_names_the_facade() -> None:
 
 def _test_tree_texts() -> list[tuple[str, str]]:
     root = source_corpus.repo_root()
-    paths = [*(root / "test").rglob("*.py"), *(root / "src" / "kiro_crew" / "apps").rglob("*.py")]
+    paths = [*(root / "test").rglob("*.py"), *(root / "src" / "aj_crew" / "apps").rglob("*.py")]
     out = []
     for path in sorted(paths):
         rel = path.relative_to(root).as_posix()
@@ -482,7 +482,7 @@ def _reach_gaps(patched: set[str], index: Any) -> list[str]:
 
 
 def _index() -> Any:
-    from kiro_crew import _facade_mirror
+    from aj_crew import _facade_mirror
 
     return vars(taskrunner)[_facade_mirror.INDEX_ATTRIBUTE]
 
@@ -496,7 +496,7 @@ def test_every_name_patched_through_the_facade_reaches_the_owners_reading_it() -
 
 def test_the_reach_scan_can_fail() -> None:
     index = _index()
-    owner = "kiro_crew.taskrunner_parts.run_steps"
+    owner = "aj_crew.taskrunner_parts.run_steps"
     holders = dict(index.holders)
     holders["git_coord"] = tuple(h for h in holders["git_coord"] if h != owner)
     blind = dataclasses.replace(index, holders=holders)

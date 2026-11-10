@@ -30,7 +30,7 @@ const ALWAYS_SKILL = {
   inject_on_trigger: true,
   always: true,
   owned: true,
-  source: 'kirocrew',
+  source: 'ajcrew',
   idle_days: null,
 }
 
@@ -43,7 +43,7 @@ const MEASURED_SKILL = {
   inject_on_trigger: true,
   always: false,
   owned: true,
-  source: 'kirocrew',
+  source: 'ajcrew',
   idle_days: 1.0,
 }
 

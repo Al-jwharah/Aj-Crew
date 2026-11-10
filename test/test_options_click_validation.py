@@ -20,14 +20,14 @@ import pytest
 from chat_test_helpers import _make_state
 from test_handler_turn import SLACK_TURN_FUNCTIONS
 
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard.chat_utils import (
     mint_options_token,
     options_control_is_stale,
 )
-from kiro_crew.history import ConversationLog
-from kiro_crew.llm_helpers import save_conversation_turn_off_loop
-from kiro_crew.slack.format import build_options_blocks
-from kiro_crew.slack.outbound import decode_options_token, encode_options_token
+from aj_crew.history import ConversationLog
+from aj_crew.llm_helpers import save_conversation_turn_off_loop
+from aj_crew.slack.format import build_options_blocks
+from aj_crew.slack.outbound import decode_options_token, encode_options_token
 
 THREAD = "1786230097.467939"
 OWNER = f"slack:{THREAD}"
@@ -136,7 +136,7 @@ class TestTheTurnIsDurableBeforeItsControlGoesOut:
         """
         from pathlib import Path
 
-        from kiro_crew.slack import gateway
+        from aj_crew.slack import gateway
 
         # The persist this pins is the AutoNudge channel turn's, which the facade
         # composes from this owner, one indent level shallower than the class body
@@ -168,7 +168,7 @@ class TestTheTurnIsDurableBeforeItsControlGoesOut:
         """
         import inspect
 
-        from kiro_crew.slack import handler
+        from aj_crew.slack import handler
 
         src = "".join(inspect.getsource(getattr(handler, n)) for n in SLACK_TURN_FUNCTIONS)
         assert (
@@ -193,7 +193,7 @@ class TestTheTurnIsDurableBeforeItsControlGoesOut:
         """
         import inspect
 
-        from kiro_crew.slack import handler
+        from aj_crew.slack import handler
 
         src = "".join(inspect.getsource(getattr(handler, n)) for n in SLACK_TURN_FUNCTIONS)
         persist = src.find("save_conversation_turn_off_loop(")
@@ -259,7 +259,7 @@ class TestTheAnswerGoesToTheConversationThatAsked:
         import importlib
         import inspect
 
-        from kiro_crew.slack import interactions
+        from aj_crew.slack import interactions
 
         # The facade and every owner its handlers moved to.
         src = "\n".join(
@@ -285,7 +285,7 @@ class TestTheAnswerGoesToTheConversationThatAsked:
         import importlib
         import inspect
 
-        from kiro_crew.slack import interactions
+        from aj_crew.slack import interactions
 
         # The facade and every owner its handlers moved to.
         src = "\n".join(
@@ -313,7 +313,7 @@ class TestTheAnswerGoesToTheConversationThatAsked:
         import inspect
         from pathlib import Path
 
-        from kiro_crew.slack import handler
+        from aj_crew.slack import handler
 
         # The facade and the handler_runtime owners its turn runs in, as one text.
         src = inspect.getsource(handler) + "".join(

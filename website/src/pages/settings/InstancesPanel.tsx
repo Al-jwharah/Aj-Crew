@@ -1,5 +1,5 @@
 /**
- * InstancesPanel — legacy control plane for remote Kiro Crew instances
+ * InstancesPanel — legacy control plane for remote Aj Crew instances
  * reachable over SSH tunnels (add / edit / connect / disconnect / diagnose).
  * No longer routed as a settings tab: Settings → Remote Crew renders
  * RemoteCrewPanel, which reuses AddInstanceForm and StatusBadge from this
@@ -102,7 +102,7 @@ export function RestartToActivateText() {
       <Trans
         i18nKey="pages.settings.instancesPanel.restart_to_activate"
         components={{
-          restartCmd: <code className="text-text">{i18nT('pages.settings.instancesPanel.kirocrew_restart')}</code>,
+          restartCmd: <code className="text-text">{i18nT('pages.settings.instancesPanel.ajcrew_restart')}</code>,
         }}
       />
     </span>
@@ -114,7 +114,7 @@ export function AddInstanceForm({ onAdded }: { onAdded: () => void }) {
   // per mount: a later read would fight the live form state.
   const dispatch = useAppDispatch()
   const stored = useAppSelector(s => s.instances.crewForms?.add ?? null)
-  // A `kirocrew://remote-crew/add` link the values started from
+  // A `ajcrew://remote-crew/add` link the values started from
   // (`prefillCrewAddForm`). Read live, so the line naming it goes once a
   // successful add or a cleared form drops it.
   const link = useAppSelector(s => s.instances.crewForms?.addLink ?? null)
@@ -389,7 +389,7 @@ export function InstancesPanel() {
           <div role="status" className="flex items-start gap-2 px-3 py-2 mb-3 text-[13px] rounded-md bg-warn/10 text-warn-text border border-warn/30">
             <AlertTriangle size={14} className="lucide-inline mt-0.5 shrink-0" />
             <span>
-              {i18nT('pages.settings.instancesPanel.disabled_in_config_restart_the_gateway')}<code className="text-text">{i18nT('pages.settings.instancesPanel.kirocrew_restart')}</code>){' '}
+              {i18nT('pages.settings.instancesPanel.disabled_in_config_restart_the_gateway')}<code className="text-text">{i18nT('pages.settings.instancesPanel.ajcrew_restart')}</code>){' '}
               {i18nT('pages.settings.instancesPanel.to_fully_tear_down_any_tunnels_still_running_fro')}
             </span>
           </div>
@@ -403,7 +403,7 @@ export function InstancesPanel() {
             i18nKey="pages.settings.instancesPanel.enable_via_setting"
             components={{
               settingRef: <SettingRef configKey="instances.enabled" />,
-              restartCmd: <code className="text-text">kirocrew restart</code>,
+              restartCmd: <code className="text-text">ajcrew restart</code>,
             }}
           />
         </p>

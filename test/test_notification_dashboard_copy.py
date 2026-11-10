@@ -14,15 +14,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.messaging.turn_ceiling import ConversationTurnCeiling, TurnCeilingExceeded
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.messaging.turn_ceiling import ConversationTurnCeiling, TurnCeilingExceeded
 
 _EN_CATALOG = Path(__file__).parent.parent / "website/src/i18n/locales/en.manual.json"
 
 
 def _make_state(monkeypatch, tmp_path) -> DashboardState:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
     return DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(),

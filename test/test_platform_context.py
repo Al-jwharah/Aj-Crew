@@ -1,4 +1,4 @@
-"""Tests for the Composed Platform Providers contract (kiro_crew.platform)."""
+"""Tests for the Composed Platform Providers contract (aj_crew.platform)."""
 
 from __future__ import annotations
 
@@ -6,9 +6,9 @@ import string
 
 import pytest
 
-from kiro_crew import edition, security
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.platform import (
+from aj_crew import edition, security
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.platform import (
     BASELINE_DENY,
     CONTRACT_VERSION,
     PROFILE_ENTERPRISE,
@@ -20,29 +20,29 @@ from kiro_crew.platform import (
     build_default_context,
     resolve_profile,
 )
-from kiro_crew.platform.context import PlatformContext
+from aj_crew.platform.context import PlatformContext
 
 
 @pytest.fixture
-def cfg() -> KiroCrewConfig:
-    return KiroCrewConfig()
+def cfg() -> AjCrewConfig:
+    return AjCrewConfig()
 
 
 class TestDefaultContext:
     """The standalone edition composes an all-defaults context unchanged."""
 
-    def test_build_default_context_is_standalone(self, cfg: KiroCrewConfig) -> None:
+    def test_build_default_context_is_standalone(self, cfg: AjCrewConfig) -> None:
         ctx = build_default_context(cfg)
         assert isinstance(ctx, PlatformContext)
         assert ctx.profile == PROFILE_STANDALONE
         assert ctx.contract_version == CONTRACT_VERSION
         assert ctx.cfg is cfg
 
-    def test_default_adapters_match_legacy_behavior(self, cfg: KiroCrewConfig) -> None:
+    def test_default_adapters_match_legacy_behavior(self, cfg: AjCrewConfig) -> None:
         ctx = build_default_context(cfg)
         # Each Default* adapter reproduces today's module-level value.
-        from kiro_crew import agent, embeddings, sandbox
-        from kiro_crew.apps import registry
+        from aj_crew import agent, embeddings, sandbox
+        from aj_crew.apps import registry
 
         assert ctx.embeddings.registry_model() == embeddings._MODEL_ID
         assert ctx.sandbox.strict_dirs() == list(sandbox._STRICT_DIRS)
@@ -54,12 +54,12 @@ class TestDefaultContext:
         assert ctx.telemetry.frontend_rum_config() is None
         assert ctx.feature_apps == ()
 
-    def test_default_security_is_baseline_only(self, cfg: KiroCrewConfig) -> None:
+    def test_default_security_is_baseline_only(self, cfg: AjCrewConfig) -> None:
         ctx = build_default_context(cfg)
         assert isinstance(ctx.security, PolicyAuthority)
         assert set(ctx.security.effective_patterns()) == set(BASELINE_DENY)
 
-    def test_default_credential_redaction_delegates(self, cfg: KiroCrewConfig) -> None:
+    def test_default_credential_redaction_delegates(self, cfg: AjCrewConfig) -> None:
         ctx = build_default_context(cfg)
         text = "key AKIAIOSFODNN7EXAMPLE here"
         assert ctx.credentials.redact(text) == security.redact(text)
@@ -132,73 +132,73 @@ class TestPolicyAuthorityAddOnly:
 
 
 class TestProfileResolution:
-    def test_env_override_standalone(self, cfg: KiroCrewConfig, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_PROFILE", "standalone")
+    def test_env_override_standalone(self, cfg: AjCrewConfig, monkeypatch) -> None:
+        monkeypatch.setenv("AJCREW_PROFILE", "standalone")
         assert resolve_profile(cfg, entry_points=[object()]) == PROFILE_STANDALONE
 
-    def test_env_override_enterprise(self, cfg: KiroCrewConfig, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_PROFILE", "enterprise")
+    def test_env_override_enterprise(self, cfg: AjCrewConfig, monkeypatch) -> None:
+        monkeypatch.setenv("AJCREW_PROFILE", "enterprise")
         assert resolve_profile(cfg, entry_points=[]) == PROFILE_ENTERPRISE
 
-    def test_env_override_legacy_alias(self, cfg: KiroCrewConfig, monkeypatch) -> None:
+    def test_env_override_legacy_alias(self, cfg: AjCrewConfig, monkeypatch) -> None:
         # A legacy edition value still resolves to the enterprise profile
         # (back-compat alias) rather than falling back to standalone.
-        monkeypatch.setenv("KIROCREW_PROFILE", "amazon")
+        monkeypatch.setenv("AJCREW_PROFILE", "amazon")
         assert resolve_profile(cfg, entry_points=[]) == PROFILE_ENTERPRISE
 
-    def test_unknown_env_falls_back_to_standalone(self, cfg: KiroCrewConfig, monkeypatch) -> None:
-        # An unknown KIROCREW_PROFILE value returns standalone immediately,
+    def test_unknown_env_falls_back_to_standalone(self, cfg: AjCrewConfig, monkeypatch) -> None:
+        # An unknown AJCREW_PROFILE value returns standalone immediately,
         # before any identity/entry-point signal is consulted.
-        monkeypatch.setenv("KIROCREW_PROFILE", "bogus")
+        monkeypatch.setenv("AJCREW_PROFILE", "bogus")
         assert resolve_profile(cfg, entry_points=[]) == PROFILE_STANDALONE
 
     def test_entry_points_take_precedence_over_marker(
-        self, cfg: KiroCrewConfig, monkeypatch
+        self, cfg: AjCrewConfig, monkeypatch
     ) -> None:
         # A present companion (entry points) is the authoritative signal and is
         # checked BEFORE the SSO-marker stat — no subprocess is spawned.
-        monkeypatch.delenv("KIROCREW_PROFILE", raising=False)
+        monkeypatch.delenv("AJCREW_PROFILE", raising=False)
         assert resolve_profile(cfg, entry_points=[object()]) == PROFILE_ENTERPRISE
 
     def test_marker_stat_ignored_without_probe_optin(
-        self, cfg: KiroCrewConfig, monkeypatch
+        self, cfg: AjCrewConfig, monkeypatch
     ) -> None:
         # A stray SSO marker must NOT force the enterprise profile by default:
         # the public edition has no companion to compose, so forcing enterprise
         # would brick every command at boot. The heuristic is opt-in only.
-        monkeypatch.delenv("KIROCREW_PROFILE", raising=False)
-        monkeypatch.delenv("KIROCREW_SSO_PROFILE_PROBE", raising=False)
-        monkeypatch.setattr("kiro_crew.platform.profile.Path.home", lambda: _FakeHome(True))
+        monkeypatch.delenv("AJCREW_PROFILE", raising=False)
+        monkeypatch.delenv("AJCREW_SSO_PROFILE_PROBE", raising=False)
+        monkeypatch.setattr("aj_crew.platform.profile.Path.home", lambda: _FakeHome(True))
         assert resolve_profile(cfg, entry_points=[]) == PROFILE_STANDALONE
 
     def test_marker_stat_triggers_enterprise_when_probe_opted_in(
-        self, cfg: KiroCrewConfig, monkeypatch
+        self, cfg: AjCrewConfig, monkeypatch
     ) -> None:
         # With the opt-in set (a companion's managed launcher), a marker-present
         # host with no companion resolves enterprise so discovery fails closed
         # (rather than running open defaults).
-        monkeypatch.delenv("KIROCREW_PROFILE", raising=False)
-        monkeypatch.setenv("KIROCREW_SSO_PROFILE_PROBE", "1")
-        monkeypatch.setattr("kiro_crew.platform.profile.Path.home", lambda: _FakeHome(True))
+        monkeypatch.delenv("AJCREW_PROFILE", raising=False)
+        monkeypatch.setenv("AJCREW_SSO_PROFILE_PROBE", "1")
+        monkeypatch.setattr("aj_crew.platform.profile.Path.home", lambda: _FakeHome(True))
         assert resolve_profile(cfg, entry_points=[]) == PROFILE_ENTERPRISE
 
     def test_legacy_probe_env_still_triggers_enterprise(
-        self, cfg: KiroCrewConfig, monkeypatch
+        self, cfg: AjCrewConfig, monkeypatch
     ) -> None:
         # An already-deployed managed launcher still sets the LEGACY probe env
         # var. It must keep triggering the fail-closed marker check — dropping it
         # would let a marker-present enterprise host with a missing/broken
         # companion resolve standalone and boot WITHOUT the security overlay.
-        monkeypatch.delenv("KIROCREW_PROFILE", raising=False)
-        monkeypatch.delenv("KIROCREW_SSO_PROFILE_PROBE", raising=False)
-        monkeypatch.setenv("KIROCREW_MIDWAY_PROFILE_PROBE", "1")
-        monkeypatch.setattr("kiro_crew.platform.profile.Path.home", lambda: _FakeHome(True))
+        monkeypatch.delenv("AJCREW_PROFILE", raising=False)
+        monkeypatch.delenv("AJCREW_SSO_PROFILE_PROBE", raising=False)
+        monkeypatch.setenv("AJCREW_MIDWAY_PROFILE_PROBE", "1")
+        monkeypatch.setattr("aj_crew.platform.profile.Path.home", lambda: _FakeHome(True))
         assert resolve_profile(cfg, entry_points=[]) == PROFILE_ENTERPRISE
 
-    def test_no_signals_is_standalone(self, cfg: KiroCrewConfig, monkeypatch) -> None:
-        monkeypatch.delenv("KIROCREW_PROFILE", raising=False)
-        monkeypatch.setenv("KIROCREW_SSO_PROFILE_PROBE", "1")
-        monkeypatch.setattr("kiro_crew.platform.profile.Path.home", lambda: _FakeHome(False))
+    def test_no_signals_is_standalone(self, cfg: AjCrewConfig, monkeypatch) -> None:
+        monkeypatch.delenv("AJCREW_PROFILE", raising=False)
+        monkeypatch.setenv("AJCREW_SSO_PROFILE_PROBE", "1")
+        monkeypatch.setattr("aj_crew.platform.profile.Path.home", lambda: _FakeHome(False))
         assert resolve_profile(cfg, entry_points=[]) == PROFILE_STANDALONE
 
     def test_precedence_tests_run_on_the_oss_edition(self) -> None:
@@ -211,49 +211,49 @@ class TestLtsEditionProfile:
 
     @pytest.mark.parametrize("value", ["standalone", "bogus", "", "enterprise"])
     def test_env_profile_cannot_change_it(
-        self, cfg: KiroCrewConfig, monkeypatch, value: str
+        self, cfg: AjCrewConfig, monkeypatch, value: str
     ) -> None:
-        monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
-        monkeypatch.setenv("KIROCREW_PROFILE", value)
+        monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
+        monkeypatch.setenv("AJCREW_PROFILE", value)
         assert resolve_profile(cfg, entry_points=[]) == PROFILE_ENTERPRISE
 
     def test_no_companion_and_no_marker_is_still_enterprise(
-        self, cfg: KiroCrewConfig, monkeypatch
+        self, cfg: AjCrewConfig, monkeypatch
     ) -> None:
         # No entry point, no probe, no marker: still enterprise, so every
         # LTS gate stays on when bootstrap composes the core defaults.
-        monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
-        monkeypatch.delenv("KIROCREW_PROFILE", raising=False)
-        monkeypatch.delenv("KIROCREW_SSO_PROFILE_PROBE", raising=False)
-        monkeypatch.delenv("KIROCREW_MIDWAY_PROFILE_PROBE", raising=False)
-        monkeypatch.setattr("kiro_crew.platform.profile.Path.home", lambda: _FakeHome(False))
+        monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
+        monkeypatch.delenv("AJCREW_PROFILE", raising=False)
+        monkeypatch.delenv("AJCREW_SSO_PROFILE_PROBE", raising=False)
+        monkeypatch.delenv("AJCREW_MIDWAY_PROFILE_PROBE", raising=False)
+        monkeypatch.setattr("aj_crew.platform.profile.Path.home", lambda: _FakeHome(False))
         assert resolve_profile(cfg, entry_points=[]) == PROFILE_ENTERPRISE
 
     def test_lts_build_without_companion_fails_closed_at_discovery(self, monkeypatch) -> None:
-        from kiro_crew.platform.discovery import (
+        from aj_crew.platform.discovery import (
             PlatformCompositionError,
             discover_companion_context,
         )
 
-        monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
-        monkeypatch.setenv("KIROCREW_PROFILE", "standalone")
-        cfg = KiroCrewConfig()
+        monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
+        monkeypatch.setenv("AJCREW_PROFILE", "standalone")
+        cfg = AjCrewConfig()
         profile = resolve_profile(cfg, entry_points=[])
         with pytest.raises(PlatformCompositionError, match="fail-closed") as raised:
             discover_companion_context(profile, cfg, entry_points=[])
         # The advice must not point at an override this build ignores.
         message = str(raised.value)
-        assert "KIROCREW_PROFILE=standalone" not in message
+        assert "AJCREW_PROFILE=standalone" not in message
         assert "LTS-edition build" in message
 
     def test_oss_build_keeps_the_standalone_advice(self, monkeypatch) -> None:
-        from kiro_crew.platform.discovery import (
+        from aj_crew.platform.discovery import (
             PlatformCompositionError,
             discover_companion_context,
         )
 
-        with pytest.raises(PlatformCompositionError, match="KIROCREW_PROFILE=standalone"):
-            discover_companion_context(PROFILE_ENTERPRISE, KiroCrewConfig(), entry_points=[])
+        with pytest.raises(PlatformCompositionError, match="AJCREW_PROFILE=standalone"):
+            discover_companion_context(PROFILE_ENTERPRISE, AjCrewConfig(), entry_points=[])
 
 
 class _FakeHome:
@@ -273,29 +273,29 @@ class _FakeHome:
 
 
 class TestBootstrapAndDiscovery:
-    def test_bootstrap_standalone(self, cfg: KiroCrewConfig, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_PROFILE", "standalone")
+    def test_bootstrap_standalone(self, cfg: AjCrewConfig, monkeypatch) -> None:
+        monkeypatch.setenv("AJCREW_PROFILE", "standalone")
         ctx = bootstrap_context(cfg)
         assert ctx.profile == PROFILE_STANDALONE
         # current_context() now returns this context.
-        from kiro_crew.platform import current_context
+        from aj_crew.platform import current_context
 
         assert current_context() is ctx
 
     def test_bootstrap_enterprise_without_companion_fails_closed(
-        self, cfg: KiroCrewConfig, monkeypatch
+        self, cfg: AjCrewConfig, monkeypatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_PROFILE", "enterprise")
+        monkeypatch.setenv("AJCREW_PROFILE", "enterprise")
         # No companion entry point installed → must raise (fail-closed).
-        monkeypatch.setattr("kiro_crew.platform.bootstrap.plugin_entry_points", lambda: [])
-        monkeypatch.setattr("kiro_crew.platform.discovery.plugin_entry_points", lambda: [])
+        monkeypatch.setattr("aj_crew.platform.bootstrap.plugin_entry_points", lambda: [])
+        monkeypatch.setattr("aj_crew.platform.discovery.plugin_entry_points", lambda: [])
         with pytest.raises(PlatformCompositionError):
             bootstrap_context(cfg)
 
     def test_bootstrap_reuses_its_entry_point_snapshot(
-        self, cfg: KiroCrewConfig, monkeypatch
+        self, cfg: AjCrewConfig, monkeypatch
     ) -> None:
-        from kiro_crew.platform import bootstrap as bootstrap_mod
+        from aj_crew.platform import bootstrap as bootstrap_mod
 
         entry_point = object()
         scans: list[int] = []
@@ -312,7 +312,7 @@ class TestBootstrapAndDiscovery:
             received.extend(entry_points)
             return companion
 
-        monkeypatch.setenv("KIROCREW_PROFILE", "enterprise")
+        monkeypatch.setenv("AJCREW_PROFILE", "enterprise")
         monkeypatch.setattr(bootstrap_mod, "plugin_entry_points", _entry_points)
         monkeypatch.setattr(bootstrap_mod, "discover_companion_context", _discover)
 
@@ -320,16 +320,16 @@ class TestBootstrapAndDiscovery:
         assert scans == [1]
         assert received == [entry_point]
 
-    def test_contract_version_mismatch_rejected(self, cfg: KiroCrewConfig, monkeypatch) -> None:
+    def test_contract_version_mismatch_rejected(self, cfg: AjCrewConfig, monkeypatch) -> None:
         import dataclasses
 
-        from kiro_crew.platform import bootstrap as bootstrap_mod
+        from aj_crew.platform import bootstrap as bootstrap_mod
 
         bad = dataclasses.replace(
             build_default_context(cfg, profile=PROFILE_ENTERPRISE),
             contract_version=CONTRACT_VERSION + 99,
         )
-        monkeypatch.setenv("KIROCREW_PROFILE", "enterprise")
+        monkeypatch.setenv("AJCREW_PROFILE", "enterprise")
         monkeypatch.setattr(bootstrap_mod, "plugin_entry_points", lambda: [object()])
         monkeypatch.setattr(
             bootstrap_mod, "discover_companion_context", lambda profile, cfg, **_kwargs: bad
@@ -338,14 +338,14 @@ class TestBootstrapAndDiscovery:
             bootstrap_context(cfg)
 
     def test_none_companion_on_enterprise_fails_closed(
-        self, cfg: KiroCrewConfig, monkeypatch
+        self, cfg: AjCrewConfig, monkeypatch
     ) -> None:
         # Defense in depth: if discovery ever returns None for a non-standalone
         # profile, bootstrap must STILL refuse to boot rather than install an
         # enterprise-labeled context with open defaults.
-        from kiro_crew.platform import bootstrap as bootstrap_mod
+        from aj_crew.platform import bootstrap as bootstrap_mod
 
-        monkeypatch.setenv("KIROCREW_PROFILE", "enterprise")
+        monkeypatch.setenv("AJCREW_PROFILE", "enterprise")
         monkeypatch.setattr(bootstrap_mod, "plugin_entry_points", lambda: [object()])
         monkeypatch.setattr(
             bootstrap_mod, "discover_companion_context", lambda profile, cfg, **_kwargs: None
@@ -363,9 +363,9 @@ class TestLtsBuildWithoutCompanion:
 
     @staticmethod
     def _lts_build(monkeypatch) -> None:
-        from kiro_crew.platform import bootstrap as bootstrap_mod
+        from aj_crew.platform import bootstrap as bootstrap_mod
 
-        monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+        monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
         # The real LTS load fetches the organisation's policy; that fetch is
         # covered elsewhere and is not what these tests measure.
         monkeypatch.setattr(bootstrap_mod, "load_security_policy", lambda: None)
@@ -376,14 +376,14 @@ class TestLtsBuildWithoutCompanion:
 
     @pytest.mark.parametrize("env_profile", ["standalone", "enterprise", ""])
     def test_boots_on_core_defaults_under_the_enterprise_profile(
-        self, cfg: KiroCrewConfig, monkeypatch, env_profile: str
+        self, cfg: AjCrewConfig, monkeypatch, env_profile: str
     ) -> None:
         self._lts_build(monkeypatch)
-        from kiro_crew.platform import bootstrap as bootstrap_mod
-        from kiro_crew.platform import current_context
-        from kiro_crew.platform.defaults import DefaultIdentityProvider
+        from aj_crew.platform import bootstrap as bootstrap_mod
+        from aj_crew.platform import current_context
+        from aj_crew.platform.defaults import DefaultIdentityProvider
 
-        monkeypatch.setenv("KIROCREW_PROFILE", env_profile)
+        monkeypatch.setenv("AJCREW_PROFILE", env_profile)
         monkeypatch.setattr(bootstrap_mod, "plugin_entry_points", lambda: [])
         monkeypatch.setattr(bootstrap_mod, "discover_companion_context", self._no_discovery)
 
@@ -395,9 +395,9 @@ class TestLtsBuildWithoutCompanion:
         assert isinstance(ctx.identity, DefaultIdentityProvider)
         assert current_context() is ctx
 
-    def test_installed_companion_still_composes(self, cfg: KiroCrewConfig, monkeypatch) -> None:
+    def test_installed_companion_still_composes(self, cfg: AjCrewConfig, monkeypatch) -> None:
         self._lts_build(monkeypatch)
-        from kiro_crew.platform import bootstrap as bootstrap_mod
+        from aj_crew.platform import bootstrap as bootstrap_mod
 
         companion = build_default_context(cfg, profile=PROFILE_ENTERPRISE)
         monkeypatch.setattr(bootstrap_mod, "plugin_entry_points", lambda: [object()])
@@ -406,9 +406,9 @@ class TestLtsBuildWithoutCompanion:
         )
         assert bootstrap_mod.bootstrap_context(cfg) is companion
 
-    def test_broken_companion_still_fails_closed(self, cfg: KiroCrewConfig, monkeypatch) -> None:
+    def test_broken_companion_still_fails_closed(self, cfg: AjCrewConfig, monkeypatch) -> None:
         self._lts_build(monkeypatch)
-        from kiro_crew.platform import bootstrap as bootstrap_mod
+        from aj_crew.platform import bootstrap as bootstrap_mod
 
         def _broken(*_args, **_kwargs):
             raise PlatformCompositionError("companion entry point failed to compose")
@@ -419,12 +419,12 @@ class TestLtsBuildWithoutCompanion:
             bootstrap_mod.bootstrap_context(cfg)
 
     def test_mismatched_companion_still_fails_closed(
-        self, cfg: KiroCrewConfig, monkeypatch
+        self, cfg: AjCrewConfig, monkeypatch
     ) -> None:
         self._lts_build(monkeypatch)
         import dataclasses
 
-        from kiro_crew.platform import bootstrap as bootstrap_mod
+        from aj_crew.platform import bootstrap as bootstrap_mod
 
         bad = dataclasses.replace(
             build_default_context(cfg, profile=PROFILE_ENTERPRISE),
@@ -437,11 +437,11 @@ class TestLtsBuildWithoutCompanion:
         with pytest.raises(PlatformCompositionError):
             bootstrap_mod.bootstrap_context(cfg)
 
-    def test_telemetry_uses_the_core_provider(self, cfg: KiroCrewConfig, monkeypatch) -> None:
+    def test_telemetry_uses_the_core_provider(self, cfg: AjCrewConfig, monkeypatch) -> None:
         self._lts_build(monkeypatch)
-        from kiro_crew.metrics.otlp_governance import UNEVALUABLE
-        from kiro_crew.platform import bootstrap as bootstrap_mod
-        from kiro_crew.platform.defaults import DefaultTelemetryProvider
+        from aj_crew.metrics.otlp_governance import UNEVALUABLE
+        from aj_crew.platform import bootstrap as bootstrap_mod
+        from aj_crew.platform.defaults import DefaultTelemetryProvider
 
         policy = {"now": None}
 
@@ -468,16 +468,16 @@ class TestLtsBuildWithoutCompanion:
         policy["now"] = "broken"
         assert provider.governance_ceiling is UNEVALUABLE
 
-    def test_unreadable_entry_points_fail_closed(self, cfg: KiroCrewConfig, monkeypatch) -> None:
+    def test_unreadable_entry_points_fail_closed(self, cfg: AjCrewConfig, monkeypatch) -> None:
         # A scan that cannot read the metadata must not read as "no companion".
         self._lts_build(monkeypatch)
-        from kiro_crew.platform import bootstrap as bootstrap_mod
+        from aj_crew.platform import bootstrap as bootstrap_mod
 
         def _corrupt():
             raise TypeError("malformed entry_points.txt")
 
         monkeypatch.setattr(
-            "kiro_crew.platform.discovery.importlib.metadata.entry_points", _corrupt
+            "aj_crew.platform.discovery.importlib.metadata.entry_points", _corrupt
         )
         monkeypatch.setattr(bootstrap_mod, "discover_companion_context", self._no_discovery)
         with pytest.raises(PlatformCompositionError, match="could not read"):
@@ -486,26 +486,26 @@ class TestLtsBuildWithoutCompanion:
             bootstrap_mod.compose_telemetry_provider(cfg)
 
     def test_oss_build_still_reads_unreadable_entry_points_as_none(self, monkeypatch) -> None:
-        from kiro_crew.platform.discovery import plugin_entry_points
+        from aj_crew.platform.discovery import plugin_entry_points
 
         def _corrupt():
             raise TypeError("malformed entry_points.txt")
 
         monkeypatch.setattr(
-            "kiro_crew.platform.discovery.importlib.metadata.entry_points", _corrupt
+            "aj_crew.platform.discovery.importlib.metadata.entry_points", _corrupt
         )
         assert plugin_entry_points() == []
 
     def test_oss_build_with_enterprise_profile_still_fails_closed(
-        self, cfg: KiroCrewConfig, monkeypatch
+        self, cfg: AjCrewConfig, monkeypatch
     ) -> None:
         self._lts_build(monkeypatch)
-        from kiro_crew.platform import bootstrap as bootstrap_mod
+        from aj_crew.platform import bootstrap as bootstrap_mod
 
-        monkeypatch.setattr("kiro_crew.edition.EDITION", "oss")
-        monkeypatch.setenv("KIROCREW_PROFILE", "enterprise")
+        monkeypatch.setattr("aj_crew.edition.EDITION", "oss")
+        monkeypatch.setenv("AJCREW_PROFILE", "enterprise")
         monkeypatch.setattr(bootstrap_mod, "plugin_entry_points", lambda: [])
-        monkeypatch.setattr("kiro_crew.platform.discovery.plugin_entry_points", lambda: [])
+        monkeypatch.setattr("aj_crew.platform.discovery.plugin_entry_points", lambda: [])
         with pytest.raises(PlatformCompositionError):
             bootstrap_mod.bootstrap_context(cfg)
 
@@ -530,10 +530,10 @@ class TestRedactLogViaContext:
     BASELINE_SHAPE = "AKIAIOSFODNN7EXAMPLE"
 
     @staticmethod
-    def _install(policy, cfg: KiroCrewConfig):
+    def _install(policy, cfg: AjCrewConfig):
         import dataclasses
 
-        from kiro_crew.platform import set_context
+        from aj_crew.platform import set_context
 
         set_context(
             dataclasses.replace(
@@ -545,13 +545,13 @@ class TestRedactLogViaContext:
     @pytest.fixture(autouse=True)
     def _restore_context(self):
         """Never leave a stub context installed for the rest of the session."""
-        from kiro_crew.platform import reset_context
+        from aj_crew.platform import reset_context
 
         yield
         reset_context()
 
-    def test_companion_shape_is_scrubbed_on_top_of_the_baseline(self, cfg: KiroCrewConfig) -> None:
-        from kiro_crew.platform.context import redact_log_via_context
+    def test_companion_shape_is_scrubbed_on_top_of_the_baseline(self, cfg: AjCrewConfig) -> None:
+        from aj_crew.platform.context import redact_log_via_context
 
         class _Policy:
             def redact(self, text: str) -> str:
@@ -569,9 +569,9 @@ class TestRedactLogViaContext:
         assert self.BASELINE_SHAPE not in out
 
     def test_composition_failure_withholds_the_text_instead_of_raising(
-        self, cfg: KiroCrewConfig
+        self, cfg: AjCrewConfig
     ) -> None:
-        from kiro_crew.platform.context import (
+        from aj_crew.platform.context import (
             LOG_WITHHELD_PLACEHOLDER,
             redact_log_via_context,
         )
@@ -587,7 +587,7 @@ class TestRedactLogViaContext:
         assert self.BASELINE_SHAPE not in out
 
     def test_the_bare_shim_still_raises_so_egress_stays_fail_closed(
-        self, cfg: KiroCrewConfig
+        self, cfg: AjCrewConfig
     ) -> None:
         """The log spelling must not have softened the egress spelling.
 
@@ -595,7 +595,7 @@ class TestRedactLogViaContext:
         ``redact_via_context`` stop raising -- which would silently convert every
         egress sink to fail-open. Pin the difference to the call site.
         """
-        from kiro_crew.platform.context import redact_via_context
+        from aj_crew.platform.context import redact_via_context
 
         class _Unprovable:
             def redact(self, text: str) -> str:
@@ -606,7 +606,7 @@ class TestRedactLogViaContext:
             redact_via_context("anything")
 
     def test_a_transient_policy_error_still_degrades_to_the_baseline(
-        self, cfg: KiroCrewConfig
+        self, cfg: AjCrewConfig
     ) -> None:
         """Only a composition failure withholds; a flaky adapter must not.
 
@@ -614,7 +614,7 @@ class TestRedactLogViaContext:
         on a host whose companion is merely misbehaving, so the inherited
         degrade-to-baseline path has to survive underneath the new catch.
         """
-        from kiro_crew.platform.context import (
+        from aj_crew.platform.context import (
             LOG_WITHHELD_PLACEHOLDER,
             redact_log_via_context,
         )
@@ -645,8 +645,8 @@ class TestRedactLogViaContext:
         since ``current_context()`` never memoizes its fail-closed verdict on a
         non-standalone profile.
         """
-        from kiro_crew.platform import context as context_mod
-        from kiro_crew.platform.context import (
+        from aj_crew.platform import context as context_mod
+        from aj_crew.platform.context import (
             LOG_WITHHELD_PLACEHOLDER,
             redact_log_via_context,
             reset_context,
@@ -704,9 +704,9 @@ class TestRedactLogViaContext:
         """
         import pathlib
 
-        import kiro_crew
+        import aj_crew
 
-        root = pathlib.Path(kiro_crew.__file__).parent
+        root = pathlib.Path(aj_crew.__file__).parent
         for rel in self.CONVERGED_LOG_SITES:
             files = (rel, *self.CONVERGED_SITE_OWNERS.get(rel, ()))
             lines = [
@@ -746,10 +746,10 @@ class TestRedactCodeViaContext:
     PALETTE = string.ascii_lowercase + string.ascii_uppercase + string.digits
 
     @staticmethod
-    def _install(policy, cfg: KiroCrewConfig):
+    def _install(policy, cfg: AjCrewConfig):
         import dataclasses
 
-        from kiro_crew.platform import set_context
+        from aj_crew.platform import set_context
 
         set_context(
             dataclasses.replace(
@@ -760,15 +760,15 @@ class TestRedactCodeViaContext:
 
     @pytest.fixture(autouse=True)
     def _restore_context(self):
-        from kiro_crew.platform import reset_context
+        from aj_crew.platform import reset_context
 
         yield
         reset_context()
 
     def test_a_companion_pattern_still_applies_to_code_and_the_literal_is_kept(
-        self, cfg: KiroCrewConfig
+        self, cfg: AjCrewConfig
     ) -> None:
-        from kiro_crew.platform.context import redact_code_via_context, redact_via_context
+        from aj_crew.platform.context import redact_code_via_context, redact_via_context
 
         class _Policy:
             def redact(self, text: str) -> str:
@@ -783,8 +783,8 @@ class TestRedactCodeViaContext:
         assert self.COMPANION_SHAPE not in out
         assert f"var A = '{self.PALETTE}';" in out
 
-    def test_a_policy_that_cannot_be_composed_still_refuses(self, cfg: KiroCrewConfig) -> None:
-        from kiro_crew.platform.context import redact_code_via_context
+    def test_a_policy_that_cannot_be_composed_still_refuses(self, cfg: AjCrewConfig) -> None:
+        from aj_crew.platform.context import redact_code_via_context
 
         class _Unprovable:
             def redact(self, text: str) -> str:

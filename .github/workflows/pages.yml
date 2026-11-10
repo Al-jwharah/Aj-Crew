@@ -1,7 +1,7 @@
 name: Deploy Site (GitHub Pages)
 
 # Publishes the public marketing site in site/ to GitHub Pages.
-# Path-scoped to site/** so it never runs for backend (kirocrew-client-py)
+# Path-scoped to site/** so it never runs for backend (ajcrew-client-py)
 # or dashboard (website/) changes — and those workflows never run for site-only PRs.
 on:
   push:
@@ -30,11 +30,11 @@ concurrency:
 jobs:
   build:
     # Admitted pushes and dispatches use the fleet. Anything else in THIS
-    # repository takes the `kirocrew-runners` group rather than the shared
+    # repository takes the `ajcrew-runners` group rather than the shared
     # standard pool, whose concurrency is shared enterprise-wide; a fork
     # publishing its own Pages cannot reach an organization group and stays on
     # the hosted image. `deploy` below routes the same way.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 15
     defaults:
       run:
@@ -56,7 +56,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 15
     permissions:
       pages: write

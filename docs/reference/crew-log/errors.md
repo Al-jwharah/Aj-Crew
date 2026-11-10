@@ -175,7 +175,7 @@ Undeclared crew types and app guest namespaces have no per-field declaration and
 not raise this code.
 
 **Caller action** — Fix the producer to match the declaration in
-`kiro_crew.crew_log.entry_types`. The refusal happens before any byte is written.
+`aj_crew.crew_log.entry_types`. The refusal happens before any byte is written.
 
 ### `event_type_not_owned`
 

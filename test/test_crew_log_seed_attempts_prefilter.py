@@ -13,20 +13,20 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import emit_session, store_cuts
-from kiro_crew.crew_log.emit_runtime import _tracker
-from kiro_crew.crew_log.schema import Entry
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import emit_session, store_cuts
+from aj_crew.crew_log.emit_runtime import _tracker
+from aj_crew.crew_log.schema import Entry
 
 SESSION = "acp-seed-prefilter"
 
 
 @pytest.fixture(autouse=True)
 def _home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     crew_log_emit.reset_caches()
     yield
     crew_log_emit.reset_caches()
@@ -73,7 +73,7 @@ def _chatter(n: int, size: int = 400) -> "list[dict]":
 
 
 def _open() -> CrewLog:
-    return CrewLog.create(lg.KIND_SESSION, SESSION, owner="o", agent="kirocrew", slot="chat-seed")
+    return CrewLog.create(lg.KIND_SESSION, SESSION, owner="o", agent="ajcrew", slot="chat-seed")
 
 
 def test_the_prefiltered_scan_gives_the_same_map_on_a_damaged_log():

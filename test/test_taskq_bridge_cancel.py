@@ -15,11 +15,11 @@ import types
 
 import pytest
 
-from kiro_crew import taskq
-from kiro_crew.subagent_manager.admission import taskq_bridge_cancel as cancel_owner
-from kiro_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
+from aj_crew import taskq
+from aj_crew.subagent_manager.admission import taskq_bridge_cancel as cancel_owner
+from aj_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
 
-_ADMISSION_LOGGER = "kiro_crew.subagent_manager.admission"
+_ADMISSION_LOGGER = "aj_crew.subagent_manager.admission"
 
 
 def _store(tmp_path):

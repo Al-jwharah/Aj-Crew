@@ -20,17 +20,17 @@ import pytest
 from test_kas_spec_builtin_grant import _handle, _permission
 from test_tool_call_classification_kas import _kas_builtin_flow
 
-from kiro_crew.acp import kas_agents
-from kiro_crew.acp._dispatch import attach_kas_custom_agents
-from kiro_crew.acp.kas_permissions import (
+from aj_crew.acp import kas_agents
+from aj_crew.acp._dispatch import attach_kas_custom_agents
+from aj_crew.acp.kas_permissions import (
     CREW_ANSWERED_COMMANDS_KEY,
     allowed_command_pattern,
     crew_answered_commands,
     tools_settings_to_permissions,
 )
-from kiro_crew.acp.types import AcpEvent
-from kiro_crew.acp_backends import ACP_BACKEND_KAS
-from kiro_crew.hooks import (
+from aj_crew.acp.types import AcpEvent
+from aj_crew.acp_backends import ACP_BACKEND_KAS
+from aj_crew.hooks import (
     TOOL_ALLOW,
     TOOL_AUTO_APPROVE,
     TOOL_DENY,
@@ -38,10 +38,10 @@ from kiro_crew.hooks import (
     HooksConfig,
     hook_gate_kwargs,
 )
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.governance import parse_policy
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.governance import parse_policy
 
 #: Spelled in two pieces so this file's own text is not one destructive command line.
 _DESTRUCTIVE = "rm " + "-rf /"
@@ -207,7 +207,7 @@ def test_a_chain_with_any_unmatched_or_unplain_command_still_asks(command: str) 
 def test_the_prompt_says_a_quoted_chain_always_asks() -> None:
     """Every part matches, but the quote refuses the chain: the note must not say
     a chain runs whenever every command in it matches."""
-    from kiro_crew.platform.allowed_commands import COMPOSITION_NOTICE
+    from aj_crew.platform.allowed_commands import COMPOSITION_NOTICE
 
     assert "quote" in COMPOSITION_NOTICE
     event = _shell('ls "a" && ls')
@@ -227,7 +227,7 @@ def test_the_prompt_says_a_quoted_chain_always_asks() -> None:
 def test_a_quote_spanning_a_separator_is_never_granted(command: str, patterns: list[str]) -> None:
     """The split parts each match, but the shell runs one ``rm`` on a file no
     entry allows."""
-    from kiro_crew.platform.allowed_commands import chain_commands
+    from aj_crew.platform.allowed_commands import chain_commands
 
     assert chain_commands(command) is None
     assert _judge(_shell(command), patterns).tier != "spec-builtin-grant"
@@ -239,7 +239,7 @@ def test_the_deny_floor_still_refuses_a_chain_hiding_a_denied_command() -> None:
 
 
 def test_a_chain_past_the_bound_is_not_granted() -> None:
-    from kiro_crew.platform.allowed_commands import MAX_CHAIN_COMMANDS
+    from aj_crew.platform.allowed_commands import MAX_CHAIN_COMMANDS
 
     at_cap = " && ".join(["make build"] * MAX_CHAIN_COMMANDS)
     assert _judge(_shell(at_cap), ["make build"]).tier == "spec-builtin-grant"
@@ -270,9 +270,9 @@ def test_a_governance_command_deny_still_refuses_a_matching_command() -> None:
 
 
 def _install_governance(body: dict[str, Any]) -> None:
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    base = build_default_context(KiroCrewConfig.load())
+    base = build_default_context(AjCrewConfig.load())
     policy = {"version": 1, "boot": {"fail_closed": True}, **body}
     ctx_mod.set_context(dataclasses.replace(base, governance=parse_policy(policy)))
 
@@ -409,8 +409,8 @@ def test_a_posix_class_is_read_as_rust_reads_it() -> None:
         ("make ?", "make  ", False),
         ("a.b", "axb", True),
         ("a.b", "ab", False),
-        ("ls [A-Za-z0-9_./-]+", "ls src/kiro_crew-x.py", True),
-        ("ls [A-Za-z0-9_./-]+", "ls src/kiro crew", False),
+        ("ls [A-Za-z0-9_./-]+", "ls src/aj_crew-x.py", True),
+        ("ls [A-Za-z0-9_./-]+", "ls src/aj crew", False),
         ("ls [^ ]+", "ls a b", False),
         (r"ls [\]\-]+", "ls -]", True),
         ("ls [-a]+", "ls a-a", True),
@@ -441,7 +441,7 @@ def test_a_posix_class_is_read_as_rust_reads_it() -> None:
 def test_classes_groups_alternation_and_repeats_are_read_like_kiro_cli(
     pattern: str, command: str, granted: bool
 ) -> None:
-    from kiro_crew.platform.allowed_commands import matches, parse
+    from aj_crew.platform.allowed_commands import matches, parse
 
     parsed = parse(pattern)
     assert parsed is not None and parsed.program is not None
@@ -457,7 +457,7 @@ def test_nested_repetition_matches_in_linear_time(
     """Python's engine backtracks on these without bound; the automaton visits a
     number of states linear in the command, so a budget of a few states per
     character is enough to reach the answer both ways."""
-    from kiro_crew.platform import allowed_commands
+    from aj_crew.platform import allowed_commands
 
     parsed = allowed_commands.parse(pattern)
     assert parsed is not None and parsed.program is not None
@@ -474,7 +474,7 @@ def test_a_class_escape_does_not_judge_a_non_ascii_command(pattern: str) -> None
     """Rust reads ``\\d \\s \\w`` over Unicode and Crew over ASCII, so an entry using
     one judges no non-ASCII command: it grants nothing, without spending the budget
     the entries after it share, and a deny reader reads it as "cannot judge"."""
-    from kiro_crew.platform import allowed_commands
+    from aj_crew.platform import allowed_commands
 
     parsed = allowed_commands.parse(pattern)
     assert parsed is not None and parsed.ascii_only
@@ -504,7 +504,7 @@ def test_a_class_escape_does_not_judge_a_non_ascii_command(pattern: str) -> None
 def test_counted_repeats_are_bounded_when_expanded(pattern: str, refused: bool) -> None:
     """No short entry expands into a program past the state bound: its expansion
     is refused, or it adds no state (an empty group), as in Rust."""
-    from kiro_crew.platform import allowed_commands
+    from aj_crew.platform import allowed_commands
 
     assert allowed_commands.parse("make (a{32}){32}") is not None
     parsed = allowed_commands.parse(pattern)
@@ -517,7 +517,7 @@ def test_counted_repeats_are_bounded_when_expanded(pattern: str, refused: bool) 
 
 def test_a_match_past_the_step_budget_grants_nothing() -> None:
     """A costly entry spends one shared budget; past it nothing more matches."""
-    from kiro_crew.platform import allowed_commands
+    from aj_crew.platform import allowed_commands
 
     costly = "(" + "|".join(["."] * 500) + ")*x"
     command = "a" * 4000 + "x"
@@ -531,7 +531,7 @@ def test_a_match_past_the_step_budget_grants_nothing() -> None:
 def test_a_wide_class_draws_on_the_shared_budget(monkeypatch: pytest.MonkeyPatch) -> None:
     """Each range a class compares costs a step, so 64 wide classes cannot run
     unbounded work under a budget that counts only states."""
-    from kiro_crew.platform import allowed_commands
+    from aj_crew.platform import allowed_commands
 
     wide = "echo ([^" + "a-b" * 330 + "])*"
     command = "echo " + "z" * 100
@@ -566,7 +566,7 @@ def test_a_wildcard_never_covers_an_invisible_character(command: str) -> None:
 
 
 def test_matching_is_greedy_wildcards_between_literals() -> None:
-    from kiro_crew.platform.allowed_commands import matches, parse
+    from aj_crew.platform.allowed_commands import matches, parse
 
     segs = parse("git .* --stat")
     assert segs.segments == ("git ", " --stat")
@@ -663,7 +663,7 @@ def test_an_authored_shell_restriction_withholds_the_patterns(extra: dict[str, A
 
 
 def test_the_grant_itself_is_not_read_as_a_restriction() -> None:
-    from kiro_crew.acp.kas_grant_only_settings import (
+    from aj_crew.acp.kas_grant_only_settings import (
         without_allowed_commands,
         without_shell_grant_keys,
         without_write_grant_keys,
@@ -741,7 +741,7 @@ def test_the_patterns_never_reach_the_wire() -> None:
 
 
 def test_the_session_record_follows_the_active_agent_and_a_mode_switch() -> None:
-    from kiro_crew.agent_files import kas_wire_agent_id
+    from aj_crew.agent_files import kas_wire_agent_id
 
     batch = [
         {"id": "vibe", "prompt": "p", CREW_ANSWERED_COMMANDS_KEY: ["git status", 7]},

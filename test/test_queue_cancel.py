@@ -15,8 +15,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.chat import api_chat_slot_queue_cancel
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.chat import api_chat_slot_queue_cancel
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 # ── Unit tests: _ChatSlot queue helpers ──
 
@@ -130,7 +130,7 @@ class TestQueueCancelEndpoint:
         qid = slot.queue_append("cancel me")
         slot.append("queued", "cancel me", json.dumps({"queue_id": qid}))
 
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             app = _make_app(state)
             async with TestClient(TestServer(app)) as client:
@@ -147,7 +147,7 @@ class TestQueueCancelEndpoint:
     @pytest.mark.asyncio
     async def test_cancel_slot_not_found(self):
         state = _make_state()
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             app = _make_app(state)
             async with TestClient(TestServer(app)) as client:
@@ -160,7 +160,7 @@ class TestQueueCancelEndpoint:
         slot = state.get_or_create_slot("chat-1")
         slot.queue_append("keep me")
 
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             app = _make_app(state)
             async with TestClient(TestServer(app)) as client:
@@ -181,7 +181,7 @@ class TestQueueCancelEndpoint:
         qid2 = slot.queue_append("second")
         slot.queue_append("third")
 
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             app = _make_app(state)
             async with TestClient(TestServer(app)) as client:
@@ -198,7 +198,7 @@ class TestQueueCancelEndpoint:
         qid = slot.queue_append("cancel me")
         state.broadcast_ws = MagicMock()
 
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             app = _make_app(state)
             async with TestClient(TestServer(app)) as client:
@@ -220,7 +220,7 @@ class TestQueueCancelEndpoint:
         slot.append("queued", "same text", json.dumps({"queue_id": id1}))
         slot.append("queued", "same text", json.dumps({"queue_id": id2}))
 
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             app = _make_app(state)
             async with TestClient(TestServer(app)) as client:
@@ -276,7 +276,7 @@ class TestQueueEntryAttachmentsAreEchoed:
 
     def test_queue_entry_view_redacts_a_path_like_the_content(self):
         """A credential in a path is scrubbed the same way it is in the text."""
-        from kiro_crew.dashboard.chat_delivery import queue_entry_view
+        from aj_crew.dashboard.chat_delivery import queue_entry_view
 
         secret_path = "/tmp/AKIAIOSFODNN7EXAMPLE/report.pdf"
         view = queue_entry_view(
@@ -293,14 +293,14 @@ class TestQueueEntryAttachmentsAreEchoed:
 
     def test_queue_for_next_turn_push_frame_carries_the_lists(self):
         """The busy-slot `queue_push` frame names the lists the entry got."""
-        from kiro_crew.dashboard.chat_delivery import queue_for_next_turn
+        from aj_crew.dashboard.chat_delivery import queue_for_next_turn
 
         state = _make_state()
         slot = state.get_or_create_slot("chat-1")
         state.broadcast_ws = MagicMock()
         with (
-            patch("kiro_crew.dashboard.session_control.containment_meta", return_value={}),
-            patch("kiro_crew.dashboard.chat_delivery.start_queue_persist"),
+            patch("aj_crew.dashboard.session_control.containment_meta", return_value={}),
+            patch("aj_crew.dashboard.chat_delivery.start_queue_persist"),
         ):
             qid = queue_for_next_turn(state, slot, _WIRE, attachments={"files": [_SPACED]})
         frame = next(
@@ -317,14 +317,14 @@ class TestQueueEntryAttachmentsAreEchoed:
         }
 
     def test_queue_for_next_turn_push_frame_without_lists_is_unchanged(self):
-        from kiro_crew.dashboard.chat_delivery import queue_for_next_turn
+        from aj_crew.dashboard.chat_delivery import queue_for_next_turn
 
         state = _make_state()
         slot = state.get_or_create_slot("chat-1")
         state.broadcast_ws = MagicMock()
         with (
-            patch("kiro_crew.dashboard.session_control.containment_meta", return_value={}),
-            patch("kiro_crew.dashboard.chat_delivery.start_queue_persist"),
+            patch("aj_crew.dashboard.session_control.containment_meta", return_value={}),
+            patch("aj_crew.dashboard.chat_delivery.start_queue_persist"),
         ):
             qid = queue_for_next_turn(state, slot, "plain")
         frame = next(

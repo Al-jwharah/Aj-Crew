@@ -35,10 +35,10 @@ from member_dashboard_package_route_helpers import (
     _Store,
 )
 
-from kiro_crew.artifact_store import dashboard_package as dp
-from kiro_crew.dashboard.handlers import member_dashboard as md
-from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
-from kiro_crew.platform.context import redact_via_context
+from aj_crew.artifact_store import dashboard_package as dp
+from aj_crew.dashboard.handlers import member_dashboard as md
+from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
+from aj_crew.platform.context import redact_via_context
 
 # --------------------------------------------------------------------------- #
 # The resolver that makes the package page reachable at all. Without it nothing
@@ -79,10 +79,10 @@ def library(monkeypatch: pytest.MonkeyPatch) -> Any:
         ]
 
     monkeypatch.setattr(
-        "kiro_crew.artifacts.get_default_store",
+        "aj_crew.artifacts.get_default_store",
         lambda: SimpleNamespace(list=_list, get=lambda s, version=None: held[s]),
     )
-    monkeypatch.setattr("kiro_crew.members.member_slug", lambda name, config=None: SLUG)
+    monkeypatch.setattr("aj_crew.members.member_slug", lambda name, config=None: SLUG)
     return held
 
 
@@ -94,7 +94,7 @@ class TestTheBindingResolver:
     """
 
     def _resolved(self, member: str = CREW) -> Any:
-        from kiro_crew.artifact_store.dashboard_package import resolve_bound_slug
+        from aj_crew.artifact_store.dashboard_package import resolve_bound_slug
 
         return resolve_bound_slug(f"crewmate:{SLUG}")
 
@@ -114,7 +114,7 @@ class TestTheBindingResolver:
         Taking the first match follows the store's listing order, so a relisted library
         would silently swap which page the crewmate shows.
         """
-        from kiro_crew.artifact_store.dashboard_package import (
+        from aj_crew.artifact_store.dashboard_package import (
             BindingAmbiguous,
             BindingLookupIncomplete,
         )
@@ -135,8 +135,8 @@ class TestTheBindingResolver:
     ) -> None:
         """The same fact as ambiguity, seen from the other side: the record that could
         not be read may be the SECOND claimant, so the match is not proven unique."""
-        from kiro_crew.artifact_store.dashboard_package import BindingLookupIncomplete
-        from kiro_crew.artifacts import ArtifactError
+        from aj_crew.artifact_store.dashboard_package import BindingLookupIncomplete
+        from aj_crew.artifacts import ArtifactError
 
         library[PACKAGE_SLUG] = _record(PACKAGE_SLUG, _package())
         library["unreadable"] = _record("unreadable", _package())
@@ -153,7 +153,7 @@ class TestTheBindingResolver:
             ],
             get=_get,
         )
-        monkeypatch.setattr("kiro_crew.artifacts.get_default_store", lambda: store)
+        monkeypatch.setattr("aj_crew.artifacts.get_default_store", lambda: store)
         with pytest.raises(BindingLookupIncomplete) as refused:
             self._resolved()
         assert "only one bound to" in str(refused.value)
@@ -195,7 +195,7 @@ class TestTheBindingResolver:
         def _boom() -> Any:
             raise OSError("the library is unreadable")
 
-        monkeypatch.setattr("kiro_crew.artifacts.get_default_store", _boom)
+        monkeypatch.setattr("aj_crew.artifacts.get_default_store", _boom)
         assert md._bound_package_slug(CREW) == ""
 
     def test_it_resolves_against_the_REAL_store_not_a_fake_that_carries_content(
@@ -206,7 +206,7 @@ class TestTheBindingResolver:
         A fake may put content on a listed record; the real store returns None, so a
         resolver that parsed the listed record would send every crewmate to the template.
         """
-        from kiro_crew.artifacts import ArtifactStore
+        from aj_crew.artifacts import ArtifactStore
 
         store = ArtifactStore(root=tmp_path / "artifacts")
         store.create(name="page", content=dp.dump_package(_package()), kind="dashboard")
@@ -216,8 +216,8 @@ class TestTheBindingResolver:
             "the real store now carries content on a listed record, so the resolver's "
             "read-by-slug is no longer load-bearing -- re-check this before simplifying it"
         )
-        monkeypatch.setattr("kiro_crew.artifacts.get_default_store", lambda: store)
-        monkeypatch.setattr("kiro_crew.members.member_slug", lambda name, config=None: SLUG)
+        monkeypatch.setattr("aj_crew.artifacts.get_default_store", lambda: store)
+        monkeypatch.setattr("aj_crew.members.member_slug", lambda name, config=None: SLUG)
         assert self._resolved() == listed[0].slug
         assert md._bound_package_slug(CREW) == listed[0].slug
 
@@ -232,7 +232,7 @@ class TestTheBindingResolver:
         )
         assert hits == [
             # The route's own thin wrapper, which only maps the refusals to "".
-            "src/kiro_crew/dashboard/handlers/member_dashboard.py",
+            "src/aj_crew/dashboard/handlers/member_dashboard.py",
             # The two suites that name the wrapper to assert its fallback.
             "test/test_artifact_dashboard_package.py",
             "test/test_member_dashboard_package_route.py",
@@ -313,7 +313,7 @@ class _StoreAt:
     def get(self, slug: str, *, version: int | None = None) -> Any:
         self.reads.append(slug)
         if slug != self.slug:
-            from kiro_crew.artifacts import ArtifactError
+            from aj_crew.artifacts import ArtifactError
 
             raise ArtifactError(f"no artifact {slug!r}")
         return self._record()
@@ -353,7 +353,7 @@ async def test_a_credential_shaped_slug_is_refused_before_the_package_is_read(
         redact_via_context(bad) != bad
     ), "this fixture is not a credential shape, so the test proves nothing"
     store = _StoreAt(bad, dp.dump_package(_package()))
-    monkeypatch.setattr("kiro_crew.artifacts.get_default_store", lambda: store)
+    monkeypatch.setattr("aj_crew.artifacts.get_default_store", lambda: store)
     status, body = await _call(
         md.api_member_dashboard,
         _request(
@@ -413,7 +413,7 @@ async def test_a_page_beyond_the_cap_evicts_the_least_recently_armed_one(
     """
     monkeypatch.setattr(md, "_MAX_LIVE_PAGES", 2)
     monkeypatch.setattr(
-        "kiro_crew.artifacts.get_default_store",
+        "aj_crew.artifacts.get_default_store",
         lambda: _StoreAny(dp.dump_package(_package())),
     )
     for name in ("one", "two", "three"):
@@ -483,7 +483,7 @@ class _ListingStore(_Store):
 def bound(wired: Any, monkeypatch: pytest.MonkeyPatch) -> Any:
     """``wired`` with the crewmate's binding actually resolvable."""
     store = _ListingStore(dp.dump_package(_package()))
-    monkeypatch.setattr("kiro_crew.artifacts.get_default_store", lambda: store)
+    monkeypatch.setattr("aj_crew.artifacts.get_default_store", lambda: store)
     return SimpleNamespace(app=wired.app, frames=wired.frames, store=store)
 
 
@@ -574,7 +574,7 @@ class _VanishingStore:
         ]
 
     def get(self, slug: str) -> Any:
-        from kiro_crew.artifacts import ArtifactError
+        from aj_crew.artifacts import ArtifactError
 
         self.gets.append(slug)
         if len(self.gets) == 1 and slug == PACKAGE_SLUG:
@@ -592,7 +592,7 @@ class TestABoundPackageWithNothingToServe:
     @pytest.fixture()
     def unbacked(self, wired: Any, monkeypatch: pytest.MonkeyPatch) -> Any:
         store = _VanishingStore(dp.dump_package(_package()))
-        monkeypatch.setattr("kiro_crew.artifacts.get_default_store", lambda: store)
+        monkeypatch.setattr("aj_crew.artifacts.get_default_store", lambda: store)
         return SimpleNamespace(app=wired.app, store=store)
 
     @pytest.mark.asyncio
@@ -645,7 +645,7 @@ class TestABoundPackageWithNothingToServe:
         """
         store = _VanishingStore(dp.dump_package(_package()))
         store.gets.append("spent")  # the route's read is never this store's first
-        monkeypatch.setattr("kiro_crew.artifacts.get_default_store", lambda: store)
+        monkeypatch.setattr("aj_crew.artifacts.get_default_store", lambda: store)
         status, body = await _call(md.api_member_dashboard, _request(wired.app, "GET", PATH))
         assert status == 404, body
         assert body["code"] == "dashboard_not_found"
@@ -714,11 +714,11 @@ class TestTheRenderPathServesAnAppliedVersion:
 
     @pytest.fixture()
     def live(self, wired: Any, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
-        from kiro_crew.artifacts import ArtifactStore
+        from aj_crew.artifacts import ArtifactStore
 
         store = ArtifactStore(root=tmp_path / "artifacts")
         art = store.create(name="page", content=dp.dump_package(_package()), kind="dashboard")
-        monkeypatch.setattr("kiro_crew.artifacts.get_default_store", lambda: store)
+        monkeypatch.setattr("aj_crew.artifacts.get_default_store", lambda: store)
         path = f"/api/members/{SLUG}/dashboard?member={CREW}&dashboard={art.slug}"
         return SimpleNamespace(app=wired.app, store=store, slug=art.slug, path=path)
 
@@ -870,7 +870,7 @@ class TestAnAnnotationIsNotAnApproval:
 
     @pytest.fixture()
     def live(self, wired: Any, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
-        from kiro_crew.artifacts import ArtifactStore
+        from aj_crew.artifacts import ArtifactStore
 
         store = ArtifactStore(root=tmp_path / "artifacts")
         art = store.create(name="page", content=dp.dump_package(_package()), kind="dashboard")
@@ -878,7 +878,7 @@ class TestAnAnnotationIsNotAnApproval:
         page = _package()
         page["view"]["html"] = '<p data-dashboard-field="goal">agent-draft</p>'
         _owner_write(store, art.slug, content=dp.dump_package(page), snapshot=True, actor="agent")
-        monkeypatch.setattr("kiro_crew.artifacts.get_default_store", lambda: store)
+        monkeypatch.setattr("aj_crew.artifacts.get_default_store", lambda: store)
         path = f"/api/members/{SLUG}/dashboard?member={CREW}&dashboard={art.slug}"
         return SimpleNamespace(app=wired.app, store=store, slug=art.slug, path=path)
 
@@ -947,12 +947,12 @@ class TestTheAppRefusalIsWhatKeepsTheMarkerHonest:
     async def test_an_app_write_never_becomes_an_applied_version(
         self, wired: Any, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.artifacts import ArtifactStore
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as fields
+        from aj_crew.artifacts import ArtifactStore
+        from aj_crew.dashboard.handlers import member_dashboard_fields as fields
 
         store = ArtifactStore(root=tmp_path / "artifacts")
         art = store.create(name="page", content=dp.dump_package(_package()), kind="dashboard")
-        monkeypatch.setattr("kiro_crew.artifacts.get_default_store", lambda: store)
+        monkeypatch.setattr("aj_crew.artifacts.get_default_store", lambda: store)
 
         page = _package()
         page["view"]["html"] = '<p data-dashboard-field="goal">app-wrote-this</p>'
@@ -990,7 +990,7 @@ class TestTheAppRefusalIsWhatKeepsTheMarkerHonest:
         whoever is left."""
         import inspect
 
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as fields
+        from aj_crew.dashboard.handlers import member_dashboard_fields as fields
 
         body = inspect.getsource(fields.package_write_refusal)
         app_check = body.index("if isinstance(app_id, str) and app_id:")
@@ -1008,7 +1008,7 @@ def test_a_create_cannot_name_itself_the_person(tmp_path: Path) -> None:
     The create route honours `body["source"]`, but `source` is checked against a closed
     label set with no `user`. Pinned as the whole label set, so adding `user` fails here.
     """
-    from kiro_crew.artifacts import ArtifactStore, ArtifactValidationError
+    from aj_crew.artifacts import ArtifactStore, ArtifactValidationError
 
     store = ArtifactStore(root=tmp_path / "artifacts")
     with pytest.raises(ArtifactValidationError) as refused:
@@ -1048,7 +1048,7 @@ async def test_a_package_a_person_created_is_not_applied_by_the_create_alone(
     """The consequence of leaving `created` out, stated as behaviour: the dashboard's own
     create does not make a page live. A person approves a page by saving it, which is an
     `edited` cut whose actor the auth path decides."""
-    from kiro_crew.artifacts import ArtifactStore
+    from aj_crew.artifacts import ArtifactStore
 
     store = ArtifactStore(root=tmp_path / "artifacts")
     page = _package()
@@ -1056,7 +1056,7 @@ async def test_a_package_a_person_created_is_not_applied_by_the_create_alone(
     art = store.create(
         name="page", content=dp.dump_package(page), kind="dashboard", source="dashboard"
     )
-    monkeypatch.setattr("kiro_crew.artifacts.get_default_store", lambda: store)
+    monkeypatch.setattr("aj_crew.artifacts.get_default_store", lambda: store)
     status, body = await _call(
         md.api_member_dashboard,
         _request(
@@ -1078,7 +1078,7 @@ class TestTheApprovingTypeSetIsAnAllowlist:
     def test_every_approving_type_is_a_real_lifecycle_type(self) -> None:
         """A typo in the set would silently never match, and the gate would then refuse
         every page -- failing closed, but for a reason nobody could find."""
-        from kiro_crew.artifact_store.records import ALLOWED_EVENT_TYPES
+        from aj_crew.artifact_store.records import ALLOWED_EVENT_TYPES
 
         assert md._VERSION_CUTTING_EVENTS <= ALLOWED_EVENT_TYPES, (
             f"the approving set names types the store does not emit: "
@@ -1093,7 +1093,7 @@ class TestTheApprovingTypeSetIsAnAllowlist:
         A type added to the store's vocabulary appears in neither list and fails here,
         which is the prompt to decide rather than to inherit.
         """
-        from kiro_crew.artifact_store.records import ALLOWED_EVENT_TYPES
+        from aj_crew.artifact_store.records import ALLOWED_EVENT_TYPES
 
         excluded_on_purpose = {
             # An agent's own version cut. Excluded by the actor too, named here so the
@@ -1119,7 +1119,7 @@ class TestTheApprovingTypeSetIsAnAllowlist:
         So `created` stays out of the approving set. If `user` joins `ALLOWED_SOURCES`,
         this fails and the decision must be made again.
         """
-        from kiro_crew.artifact_store.rules import ALLOWED_SOURCES
+        from aj_crew.artifact_store.rules import ALLOWED_SOURCES
 
         assert "user" not in ALLOWED_SOURCES, (
             "a create can now name the person as its source, so a `created` event can "
@@ -1183,7 +1183,7 @@ class TestTheGenericSnapshotButtonIsNotAnApproval:
 
     @pytest.fixture()
     def drafted(self, wired: Any, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
-        from kiro_crew.artifacts import ArtifactStore
+        from aj_crew.artifacts import ArtifactStore
 
         store = ArtifactStore(root=tmp_path / "artifacts")
         art = store.create(
@@ -1192,7 +1192,7 @@ class TestTheGenericSnapshotButtonIsNotAnApproval:
         draft = _package()
         draft["view"]["html"] = '<p data-dashboard-field="goal">agent-draft</p>'
         _owner_write(store, art.slug, content=dp.dump_package(draft), snapshot=True, actor="agent")
-        monkeypatch.setattr("kiro_crew.artifacts.get_default_store", lambda: store)
+        monkeypatch.setattr("aj_crew.artifacts.get_default_store", lambda: store)
         path = f"/api/members/{SLUG}/dashboard?member={CREW}&dashboard={art.slug}"
         return SimpleNamespace(app=wired.app, store=store, slug=art.slug, path=path)
 
@@ -1264,7 +1264,7 @@ class TestTheScriptGrantIsAudited:
             def log_governance_decision(self, **kw: Any) -> None:
                 rows.append(kw)
 
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(sel_mod, "sel", lambda: _Sel())
         monkeypatch.setattr(md, "_grant_audited", {})
@@ -1306,8 +1306,8 @@ class TestTheScriptGrantIsAudited:
         """The change worth recording. An operator edits a profile and the same page
         stops running script: that is a new decision about the same bytes, and a dedupe
         keyed on the page alone would hide it."""
-        from kiro_crew.platform import governance as gov
-        from kiro_crew.platform import governance_profiles as profiles_mod
+        from aj_crew.platform import governance as gov
+        from aj_crew.platform import governance_profiles as profiles_mod
 
         monkeypatch.setattr(profiles_mod, "resolve_active_scope", lambda *a, **k: None)
         _status, first = await _call(md.api_member_dashboard, _request(wired.app, "GET", PATH))
@@ -1339,7 +1339,7 @@ class TestTheScriptGrantIsAudited:
         and profile, and it cannot change because a log write failed. The route must
         answer the same `scripts` it would have answered with a healthy log, and must
         not turn the failure into an error for the reader."""
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(md, "_grant_audited", {})
         healthy_status, healthy = await _call(
@@ -1368,7 +1368,7 @@ class TestTheScriptGrantIsAudited:
         """A broken log must not become a retry storm. The decision is remembered
         BEFORE the write is attempted, so a log that cannot be written costs one lost
         row rather than one failed write per poll for as long as the tab is open."""
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         attempts: list[int] = []
 

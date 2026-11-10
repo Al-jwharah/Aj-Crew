@@ -18,8 +18,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.cron import CronService
-from kiro_crew.dashboard.handlers.cron import api_cron_ack
+from aj_crew.cron import CronService
+from aj_crew.dashboard.handlers.cron import api_cron_ack
 
 
 @web.middleware

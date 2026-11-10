@@ -37,16 +37,16 @@ from session_control_helpers import (  # noqa: F401 -- the autouse fixtures regi
     _slot,
 )
 
-import kiro_crew
-from kiro_crew import crew_mode, mcp_dashboard
-from kiro_crew.config.section_builders import _build_work_ledger_config
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.handlers import remote_dispatch_routes as crew
-from kiro_crew.dashboard.handlers import session_control as handlers_sc
-from kiro_crew.dashboard.peer_redaction import redact_peer_text
-from kiro_crew.instances.ssh_tunnel_manager import ProxyRequestError
-from kiro_crew.mcp_session_crew import CREW_TOOLS, with_crew_schema
-from kiro_crew.remote_dispatch import REMOTE_DISPATCH_DISABLED
+import aj_crew
+from aj_crew import crew_mode, mcp_dashboard
+from aj_crew.config.section_builders import _build_work_ledger_config
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.handlers import remote_dispatch_routes as crew
+from aj_crew.dashboard.handlers import session_control as handlers_sc
+from aj_crew.dashboard.peer_redaction import redact_peer_text
+from aj_crew.instances.ssh_tunnel_manager import ProxyRequestError
+from aj_crew.mcp_session_crew import CREW_TOOLS, with_crew_schema
+from aj_crew.remote_dispatch import REMOTE_DISPATCH_DISABLED
 
 #: A GitHub-style personal access credential, built at runtime so no scanner
 #: reads this file as holding one.
@@ -72,7 +72,7 @@ class _Content:
 class StubPeer:
     """The two carrier methods the hub calls, recording every call."""
 
-    def __init__(self, version: str = kiro_crew.__version__) -> None:
+    def __init__(self, version: str = aj_crew.__version__) -> None:
         self.version = version
         self.calls: list[dict[str, Any]] = []
         self.replies: dict[tuple[str, str], tuple[int, Any]] = {}
@@ -182,7 +182,7 @@ def _call(env, verb: str, key: str | None = None, **fields) -> tuple[int, dict]:
 
 
 def _create(env, **fields) -> str:
-    env.peer.reply("POST", "api/chat/slots", 200, {"key": "chat-77", "agent": "kirocrew-worker"})
+    env.peer.reply("POST", "api/chat/slots", 200, {"key": "chat-77", "agent": "ajcrew-worker"})
     status, body = _call(env, "create", crew="lab", **fields)
     assert status == 200, body
     return body["target"]
@@ -199,17 +199,17 @@ def test_the_switch_defaults_off_and_reads_only_a_real_bool():
 
 
 def test_switch_off_advertises_exactly_todays_schemas(monkeypatch):
-    monkeypatch.setattr("kiro_crew.remote_dispatch.remote_dispatch_enabled", lambda: False)
+    monkeypatch.setattr("aj_crew.remote_dispatch.remote_dispatch_enabled", lambda: False)
     # The session_harness preview filters `backend`; held on so only `crew` varies here.
-    monkeypatch.setattr("kiro_crew.session_harness_preview.session_harness_enabled", lambda: True)
+    monkeypatch.setattr("aj_crew.session_harness_preview.session_harness_enabled", lambda: True)
     assert mcp_dashboard._list_tools() == mcp_dashboard.TABLE.list()
     for tool in mcp_dashboard._list_tools():
         assert "crew" not in tool["inputSchema"].get("properties", {})
 
 
 def test_switch_on_adds_crew_to_the_five_tools_only(monkeypatch):
-    monkeypatch.setattr("kiro_crew.remote_dispatch.remote_dispatch_enabled", lambda: True)
-    monkeypatch.setattr("kiro_crew.session_harness_preview.session_harness_enabled", lambda: True)
+    monkeypatch.setattr("aj_crew.remote_dispatch.remote_dispatch_enabled", lambda: True)
+    monkeypatch.setattr("aj_crew.session_harness_preview.session_harness_enabled", lambda: True)
     listed = {t["name"]: t for t in mcp_dashboard._list_tools()}
     base = {t["name"]: t for t in mcp_dashboard.TABLE.list()}
     for name, tool in listed.items():
@@ -268,7 +268,7 @@ def test_the_schema_accepts_crew_so_the_gateway_can_answer_it():
 
 
 def test_create_posts_slots_with_memory_mode_then_renames(env):
-    target = _create(env, title="worker A", agent="kirocrew-worker", model="sonnet")
+    target = _create(env, title="worker A", agent="ajcrew-worker", model="sonnet")
     assert target == "chat-77"
     first, second = env.peer.calls
     assert (first["instance"], first["method"], first["path"]) == (
@@ -276,7 +276,7 @@ def test_create_posts_slots_with_memory_mode_then_renames(env):
         "POST",
         "api/chat/slots",
     )
-    assert first["body"]["agent"] == "kirocrew-worker" and first["body"]["model"] == "sonnet"
+    assert first["body"]["agent"] == "ajcrew-worker" and first["body"]["model"] == "sonnet"
     assert "memory_mode" in first["body"]
     assert (second["method"], second["path"], second["body"]) == (
         "PATCH",
@@ -319,13 +319,13 @@ def test_close_forgets_the_slot(env):
 def test_a_create_with_work_item_is_born_bound_on_the_callers_ledger(env, monkeypatch):
     """Wave 4: ``work_item`` routes the create through the bound path, on the ledger
     the caller's own key names, and the reply says which item it bound."""
-    from kiro_crew import session_ledger
-    from kiro_crew.dashboard.handlers import remote_ingest
+    from aj_crew import session_ledger
+    from aj_crew.dashboard.handlers import remote_ingest
 
     seen: dict = {}
 
     async def _bound(state, mgr, board, instance_id, item_id, create):
-        from kiro_crew.dashboard.handlers import remote_placement
+        from aj_crew.dashboard.handlers import remote_placement
 
         # The explicit create is counted in flight while it runs (wave 5).
         assert remote_placement._INFLIGHT[state] == {instance_id: 1}
@@ -343,7 +343,7 @@ def test_a_create_with_work_item_is_born_bound_on_the_callers_ledger(env, monkey
 def test_after_a_restart_the_item_pair_still_fences_the_slot(env, monkeypatch):
     """The in-memory record is gone after a hub restart; an open item bound to the
     slot on that crew still admits the verbs, and nothing else does."""
-    from kiro_crew.dashboard.handlers import remote_ingest
+    from aj_crew.dashboard.handlers import remote_ingest
 
     target = _create(env)
     crew._DISPATCHED.clear()
@@ -597,7 +597,7 @@ def test_the_steer_receipt_reports_what_the_crew_did(env, reply, steered):
 
 
 def test_a_bound_worker_cannot_dispatch_to_a_crew(env, monkeypatch):
-    from kiro_crew import session_ledger, work_ledger
+    from aj_crew import session_ledger, work_ledger
 
     worker_key = session_ledger.ledger_key(_key(env.caller))
     real = work_ledger.read_binding
@@ -614,7 +614,7 @@ def test_a_bound_worker_cannot_dispatch_to_a_crew(env, monkeypatch):
 
 
 def test_an_unreadable_binding_fails_closed(env, monkeypatch):
-    from kiro_crew import work_ledger
+    from aj_crew import work_ledger
 
     def _boom(key, **kw):
         raise OSError("busy")
@@ -647,7 +647,7 @@ def test_an_ultra_mode_chat_is_admitted(env):
     ],
 )
 def test_a_plain_owner_chat_is_refused_ultra_mode_only(env, verb, fields):
-    env.caller.agent, env.caller.agent_kind = "kirocrew", "template"
+    env.caller.agent, env.caller.agent_kind = "ajcrew", "template"
     assert not crew_mode.slot_is_crew_mode_root(env.caller)
     status, body = _call(env, verb, **fields)
     assert (status, body["code"]) == (403, crew.ULTRA_MODE_ONLY)
@@ -701,8 +701,8 @@ def test_a_turn_the_owner_sent_is_admitted(env, monkeypatch):
 
 
 def test_the_owner_check_is_the_crew_read_gate_check():
-    from kiro_crew.dashboard.handlers_instances_crew_reads import _slot_refusal
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.handlers_instances_crew_reads import _slot_refusal
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("chat-x")
     assert _slot_refusal(slot) is not None and _REAL_OWNER_CHECK(slot)
@@ -715,7 +715,7 @@ def test_the_owner_check_is_the_crew_read_gate_check():
 @pytest.mark.parametrize("steer", [False, True])
 def test_every_crew_send_is_marked_agent_origin(env, steer):
     """A conductor's message must reach the crew as an agent's, never a person's turn."""
-    from kiro_crew.dashboard.agent_origin import send_is_agent_origin
+    from aj_crew.dashboard.agent_origin import send_is_agent_origin
 
     target = _create(env)
     fields = {"crew": "lab", "target": target, "message": "go"}
@@ -730,7 +730,7 @@ def test_every_crew_send_is_marked_agent_origin(env, steer):
 
 def test_switch_off_a_work_item_create_without_crew_stays_local(env, monkeypatch):
     """Off, the create route never enters the crew path for ``work_item`` alone."""
-    from kiro_crew.dashboard.handlers import remote_placement
+    from aj_crew.dashboard.handlers import remote_placement
 
     async def _boom(*a, **k):
         raise AssertionError("placement reached with the switch off")
@@ -747,7 +747,7 @@ def test_switch_off_a_work_item_create_without_crew_stays_local(env, monkeypatch
 
 
 def test_switch_on_a_work_item_create_without_crew_is_placed(env, monkeypatch):
-    from kiro_crew.dashboard.handlers import remote_placement
+    from aj_crew.dashboard.handlers import remote_placement
 
     seen: dict = {}
 

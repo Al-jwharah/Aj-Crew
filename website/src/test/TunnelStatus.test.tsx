@@ -30,11 +30,11 @@ describe('tunnelDisplay', () => {
   })
 
   it('connected → accent color with url + uptime tooltip', () => {
-    const d = tunnelDisplay({ ...base, state: 'connected', url: 'https://x-kirocrew.example.tunnels.dev', uptime: 3720 })
+    const d = tunnelDisplay({ ...base, state: 'connected', url: 'https://x-ajcrew.example.tunnels.dev', uptime: 3720 })
     expect(d).not.toBeNull()
     expect(d!.value).toBe('Connected')
     expect(d!.colorClass).toBe('text-accent')
-    expect(d!.tooltip).toContain('https://x-kirocrew.example.tunnels.dev')
+    expect(d!.tooltip).toContain('https://x-ajcrew.example.tunnels.dev')
     expect(d!.tooltip).toContain('up 1h 2m')
   })
 
@@ -104,7 +104,7 @@ describe('<TunnelStatus /> tile', () => {
   it('renders the "Connected" label when the tunnel is up', async () => {
     const { api } = await import('../api/client')
     ;(api.tunnelStatus as ReturnType<typeof vi.fn>).mockResolvedValue({
-      state: 'connected', url: 'https://x-kirocrew.example.tunnels.dev', error: '', uptime: 120, reconnect_attempt: 0,
+      state: 'connected', url: 'https://x-ajcrew.example.tunnels.dev', error: '', uptime: 120, reconnect_attempt: 0,
     })
     render(<TunnelStatusTile />, { wrapper: Wrapper })
     await waitFor(() => expect(screen.getByText('Connected')).toBeInTheDocument())

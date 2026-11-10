@@ -14,7 +14,7 @@
  * Usage:
  *   POD_INFO=<after.json> POD_BEFORE=<before.json> node scripts/capture-pane-composer-parity.mjs <outdir>
  *
- * Both JSON files are the last line of `kirocrew pod up <name> --json`.
+ * Both JSON files are the last line of `ajcrew pod up <name> --json`.
  *
  * Recording uses Chromium's fake audio device, and `/api/config/stt` is
  * answered `enabled+available` from the harness (the pod's STT provider is not

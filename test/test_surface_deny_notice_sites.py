@@ -8,7 +8,7 @@ handlers already steer the real reason into the running turn first (each pinned
 by its own ``test_*deny_notice`` file). The four surfaces here answer their own
 permission requests and must do the same:
 
-* ``cli_chat.py`` -- ``kirocrew chat``. The person at the terminal reads a
+* ``cli_chat.py`` -- ``ajcrew chat``. The person at the terminal reads a
   specific notice, and the model's reply printed under it must not apologise for
   a refusal they never made. Every host deny goes through ONE funnel
   (``_refuse_host_deny``); the person's own "no" stays bare, because there the
@@ -43,22 +43,22 @@ import types
 
 import pytest
 
-import kiro_crew.cli_chat as cli_chat
-import kiro_crew.messaging.auto_title as auto_title
-from kiro_crew.dashboard.handlers.hooks import _WEBHOOK_DENY_NOTICE, _webhook_deny_notice
-from kiro_crew.hooks import TOOL_ALLOW, TOOL_DENY, ToolHookResult
-from kiro_crew.providers.base import (
+import aj_crew.cli_chat as cli_chat
+import aj_crew.messaging.auto_title as auto_title
+from aj_crew.dashboard.handlers.hooks import _WEBHOOK_DENY_NOTICE, _webhook_deny_notice
+from aj_crew.hooks import TOOL_ALLOW, TOOL_DENY, ToolHookResult
+from aj_crew.providers.base import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
     LLMEvent,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
-_SRC = pathlib.Path(__file__).resolve().parents[1] / "src/kiro_crew"
+_SRC = pathlib.Path(__file__).resolve().parents[1] / "src/aj_crew"
 _GENERIC = "User denied tool execution"
-_TAG = "[Kiro Crew host notice]"
-_POLICY_CLAUSE = "blocked by a Kiro Crew safety policy"
+_TAG = "[Aj Crew host notice]"
+_POLICY_CLAUSE = "blocked by a Aj Crew safety policy"
 _SURFACE_CLAUSE = "tool policy of the surface"
 _HOOK_ERROR_CLAUSE = "PreToolUse hook raised"
 _UNDELIVERABLE_CLAUSE = "approval prompt could not be delivered"

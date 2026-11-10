@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.browser_harness import env
+from aj_crew.browser_harness import env
 
 _POISONED_BASE = {
     "PATH": "/usr/bin",

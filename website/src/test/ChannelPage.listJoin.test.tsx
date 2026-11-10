@@ -24,7 +24,7 @@ afterEach(async () => { await i18next.changeLanguage(previous) })
 type Raw = Record<string, unknown>
 
 const member = (id: string, role: string): Raw => ({
-  id, role, agent_name: 'kiro-crew-default',
+  id, role, agent_name: 'aj-crew-default',
   state: 'listening', listen_mode: 'mention', approval_policy: 'writes',
 })
 

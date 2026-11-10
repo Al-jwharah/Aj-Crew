@@ -30,8 +30,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.cron import CronService
-from kiro_crew.dashboard.handlers.cron import (
+from aj_crew.cron import CronService
+from aj_crew.dashboard.handlers.cron import (
     api_cron_ack,
     api_cron_enable,
     api_cron_update,
@@ -206,9 +206,9 @@ async def test_lessons_delete_refuses_a_non_object_body(payload) -> None:
     app = _lessons_app()
 
     with (
-        patch("kiro_crew.dashboard.handlers.cron._recognize_session", AsyncMock(return_value=None)),
-        patch("kiro_crew.dashboard.handlers.cron._blocks_reads_session", return_value=False),
-        patch("kiro_crew.dashboard.handlers.cron._sel"),
+        patch("aj_crew.dashboard.handlers.cron._recognize_session", AsyncMock(return_value=None)),
+        patch("aj_crew.dashboard.handlers.cron._blocks_reads_session", return_value=False),
+        patch("aj_crew.dashboard.handlers.cron._sel"),
     ):
         async with TestClient(TestServer(app)) as client:
             response = await client.delete(
@@ -229,9 +229,9 @@ async def test_lessons_delete_keeps_the_object_path() -> None:
     app = _lessons_app()
 
     with (
-        patch("kiro_crew.dashboard.handlers.cron._recognize_session", AsyncMock(return_value=None)),
-        patch("kiro_crew.dashboard.handlers.cron._blocks_reads_session", return_value=False),
-        patch("kiro_crew.dashboard.handlers.cron._sel"),
+        patch("aj_crew.dashboard.handlers.cron._recognize_session", AsyncMock(return_value=None)),
+        patch("aj_crew.dashboard.handlers.cron._blocks_reads_session", return_value=False),
+        patch("aj_crew.dashboard.handlers.cron._sel"),
     ):
         async with TestClient(TestServer(app)) as client:
             response = await client.delete(
@@ -253,13 +253,13 @@ async def test_lessons_delete_threads_repo_scope_to_the_store() -> None:
     app["state"].context_builder = SimpleNamespace(memory=SimpleNamespace(vector_store=None))
 
     guards = (
-        patch("kiro_crew.dashboard.handlers.cron._recognize_session", AsyncMock(return_value=None)),
-        patch("kiro_crew.dashboard.handlers.cron._blocks_reads_session", return_value=False),
-        patch("kiro_crew.dashboard.handlers.cron._sel"),
+        patch("aj_crew.dashboard.handlers.cron._recognize_session", AsyncMock(return_value=None)),
+        patch("aj_crew.dashboard.handlers.cron._blocks_reads_session", return_value=False),
+        patch("aj_crew.dashboard.handlers.cron._sel"),
         # No named binding: the caller uses the global lessons contract, so the
         # delete reaches state.lessons rather than a per-silo store.
         patch(
-            "kiro_crew.dashboard.handlers.cron.resolve_lesson_memory_store",
+            "aj_crew.dashboard.handlers.cron.resolve_lesson_memory_store",
             AsyncMock(return_value=("", None)),
         ),
     )
@@ -299,13 +299,13 @@ async def test_lessons_delete_refuses_selector_shapes_that_collide_with_global()
     app["state"].context_builder = SimpleNamespace(memory=SimpleNamespace(vector_store=None))
 
     guards = (
-        patch("kiro_crew.dashboard.handlers.cron._recognize_session", AsyncMock(return_value=None)),
-        patch("kiro_crew.dashboard.handlers.cron._blocks_reads_session", return_value=False),
-        patch("kiro_crew.dashboard.handlers.cron._sel"),
+        patch("aj_crew.dashboard.handlers.cron._recognize_session", AsyncMock(return_value=None)),
+        patch("aj_crew.dashboard.handlers.cron._blocks_reads_session", return_value=False),
+        patch("aj_crew.dashboard.handlers.cron._sel"),
         # No named binding: the caller uses the global lessons contract, so the
         # accepted whitespace selector reaches state.lessons.
         patch(
-            "kiro_crew.dashboard.handlers.cron.resolve_lesson_memory_store",
+            "aj_crew.dashboard.handlers.cron.resolve_lesson_memory_store",
             AsyncMock(return_value=("", None)),
         ),
     )
@@ -372,15 +372,15 @@ async def test_lessons_delete_refuses_selector_shapes_that_collide_with_global()
 async def test_a_damaged_member_store_answers_503_with_its_reason(tmp_path, monkeypatch) -> None:
     """The lesson handlers' member-store check catches the store's own SQLite errors.
 
-    A member database is opened through ``kiro_crew._sqlite_compat`` (the bundled
+    A member database is opened through ``aj_crew._sqlite_compat`` (the bundled
     pysqlite3 where installed), whose exception classes are not the stdlib's. A member
     file that is not a database answers the check's 503 ``store_unavailable`` with the
     reason, instead of escaping and making list, create and delete answer a 500.
     """
-    from kiro_crew import memory_stores
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.dashboard.handlers import cron as cron_handlers
-    from kiro_crew.vector_memory import read_member_database_identity
+    from aj_crew import memory_stores
+    from aj_crew.context import ContextBuilder
+    from aj_crew.dashboard.handlers import cron as cron_handlers
+    from aj_crew.vector_memory import read_member_database_identity
 
     damaged = tmp_path / "memory.db"
     damaged.write_bytes(b"synthetic bytes that are not a sqlite database " * 64)
@@ -410,9 +410,9 @@ async def test_member_lesson_check_prepares_a_cold_v1_store(monkeypatch) -> None
     ``None`` vector store and ``learn_list`` would answer "No lessons saved." from
     the empty JSONL tier until some turn of that member opened it.
     """
-    from kiro_crew import memory_stores
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.dashboard.handlers import cron as cron_handlers
+    from aj_crew import memory_stores
+    from aj_crew.context import ContextBuilder
+    from aj_crew.dashboard.handlers import cron as cron_handlers
 
     prepared: list[str] = []
 
@@ -431,9 +431,9 @@ async def test_member_lesson_check_prepares_a_cold_v1_store(monkeypatch) -> None
 async def test_member_lesson_check_keeps_a_v1_store_it_could_not_prepare(monkeypatch) -> None:
     """``ensure_store`` answers None for a V1 store it could not open (and logs why);
     the route keeps that store's fallback rather than refusing, as before."""
-    from kiro_crew import memory_stores
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.dashboard.handlers import cron as cron_handlers
+    from aj_crew import memory_stores
+    from aj_crew.context import ContextBuilder
+    from aj_crew.dashboard.handlers import cron as cron_handlers
 
     async def _ensure_store(_store):
         return None
@@ -446,9 +446,9 @@ async def test_member_lesson_check_keeps_a_v1_store_it_could_not_prepare(monkeyp
 
 @pytest.mark.asyncio
 async def test_member_lesson_check_still_refuses_an_unopenable_v2_store(monkeypatch) -> None:
-    from kiro_crew import memory_stores
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.dashboard.handlers import cron as cron_handlers
+    from aj_crew import memory_stores
+    from aj_crew.context import ContextBuilder
+    from aj_crew.dashboard.handlers import cron as cron_handlers
 
     async def _ensure_store(_store):
         return None
@@ -463,8 +463,8 @@ async def test_member_lesson_check_still_refuses_an_unopenable_v2_store(monkeypa
 
 @pytest.mark.asyncio
 async def test_member_lesson_check_skips_an_unnamed_store(monkeypatch) -> None:
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.dashboard.handlers import cron as cron_handlers
+    from aj_crew.context import ContextBuilder
+    from aj_crew.dashboard.handlers import cron as cron_handlers
 
     async def _ensure_store(_store):
         raise AssertionError("an unnamed (global) store is prepared at startup")
@@ -481,9 +481,9 @@ async def test_lessons_delete_refuses_a_non_string_rule(rule) -> None:
     app = _lessons_app()
 
     with (
-        patch("kiro_crew.dashboard.handlers.cron._recognize_session", AsyncMock(return_value=None)),
-        patch("kiro_crew.dashboard.handlers.cron._blocks_reads_session", return_value=False),
-        patch("kiro_crew.dashboard.handlers.cron._sel"),
+        patch("aj_crew.dashboard.handlers.cron._recognize_session", AsyncMock(return_value=None)),
+        patch("aj_crew.dashboard.handlers.cron._blocks_reads_session", return_value=False),
+        patch("aj_crew.dashboard.handlers.cron._sel"),
     ):
         async with TestClient(TestServer(app)) as client:
             response = await client.delete(

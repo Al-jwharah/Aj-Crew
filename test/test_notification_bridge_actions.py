@@ -14,9 +14,9 @@ import inspect
 
 import pytest
 
-from kiro_crew.notifications import bridge_actions as actions_mod
-from kiro_crew.notifications.bridge_actions import ActionOutcome, BridgeActionRegistry
-from kiro_crew.slack.approval_tokens import build_approval_token, split_approval_token
+from aj_crew.notifications import bridge_actions as actions_mod
+from aj_crew.notifications.bridge_actions import ActionOutcome, BridgeActionRegistry
+from aj_crew.slack.approval_tokens import build_approval_token, split_approval_token
 
 #: Each answer maps to the value the decision future takes, here a bool.
 _CHOICES = {"approve": True, "deny": False}
@@ -301,9 +301,9 @@ def test_no_transport_or_gateway_module_reaches_the_binding():
     """B4 is inert: only its own modules import it until a later phase wires a reader."""
     from pathlib import Path
 
-    import kiro_crew
+    import aj_crew
 
-    root = Path(inspect.getfile(kiro_crew)).parent
+    root = Path(inspect.getfile(aj_crew)).parent
     importers = []
     for path in root.rglob("*.py"):
         if path.name in _B4_MODULES:

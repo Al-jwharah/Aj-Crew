@@ -1,6 +1,6 @@
-"""The spawn gate checks the ``kirocrew-heartbeat`` copy against the default spec.
+"""The spawn gate checks the ``ajcrew-heartbeat`` copy against the default spec.
 
-``kirocrew-heartbeat.json`` copies the default spec's ``kirocrew-core`` entry,
+``ajcrew-heartbeat.json`` copies the default spec's ``ajcrew-core`` entry,
 ``autoApprove`` included, plus the entries behind the edition's
 ``heartbeat_safe_tools()`` pins (``autoApprove`` dropped). A copy left behind (a failed install during a rebuild, or a
 process that never rebuilds) keeps an auto-approval the default has since dropped, so a
@@ -17,23 +17,23 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import agent
-from kiro_crew.agent_files import AGENT_FILENAME, HEARTBEAT_AGENT_FILENAME
-from kiro_crew.agent_materialization import worker_agent
+from aj_crew import agent
+from aj_crew.agent_files import AGENT_FILENAME, HEARTBEAT_AGENT_FILENAME
+from aj_crew.agent_materialization import worker_agent
 
-HEARTBEAT = "kirocrew-heartbeat"
+HEARTBEAT = "ajcrew-heartbeat"
 
 
 def _default_spec(auto_approve: list[str]) -> dict[str, Any]:
     return {
-        "name": "kirocrew",
+        "name": "ajcrew",
         "description": "the default agent",
         "prompt": "the default prompt",
-        "tools": ["fs_read", "@kirocrew-core"],
+        "tools": ["fs_read", "@ajcrew-core"],
         "allowedTools": ["fs_read"],
         "mcpServers": {
-            "kirocrew-core": {
-                "command": "kirocrew-mcp",
+            "ajcrew-core": {
+                "command": "ajcrew-mcp",
                 "args": ["core", "--include-tools", "a,b"],
                 "autoApprove": list(auto_approve),
             },
@@ -52,7 +52,7 @@ def _read(path: Path) -> dict[str, Any]:
 
 def _heartbeat_auto_approve(agents_dir: Path) -> list[str]:
     spec = _read(agents_dir / HEARTBEAT_AGENT_FILENAME)
-    return spec["mcpServers"]["kirocrew-core"]["autoApprove"]
+    return spec["mcpServers"]["ajcrew-core"]["autoApprove"]
 
 
 @pytest.fixture()
@@ -86,7 +86,7 @@ def test_a_stale_copy_is_re_derived_before_the_start(agents_dir) -> None:
     assert snapshot is not None
     assert snapshot.agent == HEARTBEAT
     assert snapshot.spec is not None
-    assert snapshot.spec["mcpServers"]["kirocrew-core"]["autoApprove"] == ["learn_add"]
+    assert snapshot.spec["mcpServers"]["ajcrew-core"]["autoApprove"] == ["learn_add"]
 
 
 def test_a_stale_copy_that_cannot_be_re_derived_refuses_the_start(agents_dir, monkeypatch) -> None:
@@ -157,7 +157,7 @@ def test_a_copy_with_include_mcp_json_true_is_re_derived(agents_dir) -> None:
     "edit",
     [
         pytest.param(
-            lambda spec: spec["mcpServers"]["kirocrew-core"].__setitem__("autoApprove", ["*"]),
+            lambda spec: spec["mcpServers"]["ajcrew-core"].__setitem__("autoApprove", ["*"]),
             id="widened-auto-approve",
         ),
         pytest.param(
@@ -183,15 +183,15 @@ def test_a_copy_edited_outside_the_installer_is_re_derived(agents_dir, edit) -> 
     assert snapshot is not None
     assert snapshot.spec == _read(path)
     assert _heartbeat_auto_approve(agents_dir) == ["learn_add", "cron_add"]
-    assert set(_read(path)["mcpServers"]) == {"kirocrew-core"}
+    assert set(_read(path)["mcpServers"]) == {"ajcrew-core"}
     assert "allowedTools" not in _read(path)
-    assert _read(path)["tools"] == ["@kirocrew-core"]
+    assert _read(path)["tools"] == ["@ajcrew-core"]
 
 
 def test_a_current_copy_passes_without_any_recorded_bookkeeping(agents_dir, monkeypatch) -> None:
     """A data home that did not write the copy has no record of it, and a current copy
     still starts there without being rewritten."""
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
     agent_state.set_mirrored_from(HEARTBEAT, None)
     agent_state.set_mirrored_stat(HEARTBEAT, None)
@@ -216,17 +216,17 @@ def test_a_re_derive_that_leaves_a_stale_copy_refuses_the_start(agents_dir, monk
 
 def test_a_volatile_env_value_alone_is_not_a_mismatch(agents_dir, monkeypatch) -> None:
     """A launcher re-stamping a per-launch nonce into the copy is not a grant change."""
-    from kiro_crew.agent_spec_format import volatile_env_keys
+    from aj_crew.agent_spec_format import volatile_env_keys
 
     keys = sorted(volatile_env_keys())
     if not keys:
         pytest.skip("no volatile env keys on this build")
     path = agents_dir / HEARTBEAT_AGENT_FILENAME
     spec = _read(path)
-    spec["mcpServers"]["kirocrew-core"]["env"] = {keys[0]: "nonce-a"}
+    spec["mcpServers"]["ajcrew-core"]["env"] = {keys[0]: "nonce-a"}
     _write(path, spec)
     default = _read(agents_dir / AGENT_FILENAME)
-    default["mcpServers"]["kirocrew-core"]["env"] = {keys[0]: "nonce-b"}
+    default["mcpServers"]["ajcrew-core"]["env"] = {keys[0]: "nonce-b"}
     _write(agents_dir / AGENT_FILENAME, default)
 
     calls: list[int] = []
@@ -241,7 +241,7 @@ def test_the_installer_and_the_check_derive_the_same_servers(agents_dir) -> None
     default = _read(agents_dir / AGENT_FILENAME)
     spec = _read(agents_dir / HEARTBEAT_AGENT_FILENAME)
     assert spec["mcpServers"] == worker_agent.heartbeat_mcp_servers(default)
-    assert spec["mcpServers"]["kirocrew-core"]["args"] == ["core"]
+    assert spec["mcpServers"]["ajcrew-core"]["args"] == ["core"]
 
 
 # ── An edition's servers ride along ──
@@ -274,26 +274,26 @@ def edition(monkeypatch):
     """Install a standalone context whose Slack gate is the given adapter."""
     import dataclasses
 
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.platform import build_default_context
-    from kiro_crew.platform.context import set_context
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.platform import build_default_context
+    from aj_crew.platform.context import set_context
 
     def install(gate) -> None:
-        ctx = dataclasses.replace(build_default_context(KiroCrewConfig()), slack_gate=gate)
+        ctx = dataclasses.replace(build_default_context(AjCrewConfig()), slack_gate=gate)
         set_context(ctx)
-        monkeypatch.setattr("kiro_crew.platform.bootstrap._BOOTED", True, raising=False)
+        monkeypatch.setattr("aj_crew.platform.bootstrap._BOOTED", True, raising=False)
 
     yield install
     set_context(None)
 
 
 def test_a_standalone_install_mirrors_core_only(agents_dir, edition) -> None:
-    from kiro_crew.platform.defaults import DefaultSlackEnterpriseGate
+    from aj_crew.platform.defaults import DefaultSlackEnterpriseGate
 
     edition(DefaultSlackEnterpriseGate())
-    assert worker_agent.heartbeat_mirrored_servers() == ("kirocrew-core",)
+    assert worker_agent.heartbeat_mirrored_servers() == ("ajcrew-core",)
     agent._install_heartbeat_agent()
-    assert tuple(_read(agents_dir / HEARTBEAT_AGENT_FILENAME)["mcpServers"]) == ("kirocrew-core",)
+    assert tuple(_read(agents_dir / HEARTBEAT_AGENT_FILENAME)["mcpServers"]) == ("ajcrew-core",)
 
 
 def test_an_edition_server_is_copied_verbatim_minus_auto_approve(agents_dir, edition) -> None:
@@ -309,26 +309,26 @@ def test_an_edition_server_is_copied_verbatim_minus_auto_approve(agents_dir, edi
     _write(agents_dir / AGENT_FILENAME, spec)
     edition(_Gate({"@other/read_x"}))
 
-    assert worker_agent.heartbeat_mirrored_servers() == ("kirocrew-core", "other")
+    assert worker_agent.heartbeat_mirrored_servers() == ("ajcrew-core", "other")
     agent._install_heartbeat_agent()
     written = _read(agents_dir / HEARTBEAT_AGENT_FILENAME)
-    assert tuple(written["mcpServers"]) == ("kirocrew-core", "other")
+    assert tuple(written["mcpServers"]) == ("ajcrew-core", "other")
     assert written["mcpServers"]["other"] == {
         "command": "other-mcp",
         "args": ["--include-tools", "read_x", "--exclude-tools", "write_y"],
     }
-    assert written["mcpServers"]["kirocrew-core"]["autoApprove"] == ["learn_add"]
-    assert written["tools"] == ["@kirocrew-core", "@other"]
+    assert written["mcpServers"]["ajcrew-core"]["autoApprove"] == ["learn_add"]
+    assert written["tools"] == ["@ajcrew-core", "@other"]
     # The spawn gate derives the same map and accepts the copy as current.
     assert agent.require_fresh_derived_spec(HEARTBEAT, None) is not None
 
 
 def test_a_pin_on_a_server_the_default_spec_does_not_mount_is_skipped(agents_dir, edition) -> None:
     """Core is never repeated, and a pinned server the default spec lacks is skipped."""
-    edition(_Gate({"@not-installed/x", "@kirocrew-core/learn_list"}))
+    edition(_Gate({"@not-installed/x", "@ajcrew-core/learn_list"}))
     agent._install_heartbeat_agent()
-    assert tuple(_read(agents_dir / HEARTBEAT_AGENT_FILENAME)["mcpServers"]) == ("kirocrew-core",)
-    assert worker_agent.heartbeat_mirrored_servers() == ("kirocrew-core", "not-installed")
+    assert tuple(_read(agents_dir / HEARTBEAT_AGENT_FILENAME)["mcpServers"]) == ("ajcrew-core",)
+    assert worker_agent.heartbeat_mirrored_servers() == ("ajcrew-core", "not-installed")
 
 
 def test_an_edition_change_to_a_mirrored_server_is_caught_at_spawn(agents_dir, edition) -> None:
@@ -362,26 +362,26 @@ def test_a_copy_carrying_a_server_the_edition_dropped_its_pins_on_is_re_derived(
     edition(_Gate(frozenset()))
     snapshot = agent.require_fresh_derived_spec(HEARTBEAT, None)
     assert snapshot is not None
-    assert tuple(snapshot.spec["mcpServers"]) == ("kirocrew-core",)
+    assert tuple(snapshot.spec["mcpServers"]) == ("ajcrew-core",)
     assert "other" not in _read(agents_dir / HEARTBEAT_AGENT_FILENAME)["mcpServers"]
 
 
 def test_a_bare_pin_mounts_nothing_extra(agents_dir, edition) -> None:
     edition(_Gate({"read_x", "@/read_x", "@other"}))
-    assert worker_agent.heartbeat_mirrored_servers() == ("kirocrew-core",)
+    assert worker_agent.heartbeat_mirrored_servers() == ("ajcrew-core",)
     agent._install_heartbeat_agent()
-    assert tuple(_read(agents_dir / HEARTBEAT_AGENT_FILENAME)["mcpServers"]) == ("kirocrew-core",)
+    assert tuple(_read(agents_dir / HEARTBEAT_AGENT_FILENAME)["mcpServers"]) == ("ajcrew-core",)
 
 
 def test_an_older_companion_without_the_seam_degrades_to_core(agents_dir, edition) -> None:
     edition(_OlderGate({"@other/read_x"}))
-    assert worker_agent.heartbeat_mirrored_servers() == ("kirocrew-core",)
+    assert worker_agent.heartbeat_mirrored_servers() == ("ajcrew-core",)
     agent._install_heartbeat_agent()
-    assert tuple(_read(agents_dir / HEARTBEAT_AGENT_FILENAME)["mcpServers"]) == ("kirocrew-core",)
+    assert tuple(_read(agents_dir / HEARTBEAT_AGENT_FILENAME)["mcpServers"]) == ("ajcrew-core",)
 
 
 def test_a_composition_failure_still_fails_closed(agents_dir, monkeypatch) -> None:
-    from kiro_crew.platform.context import PlatformCompositionError
+    from aj_crew.platform.context import PlatformCompositionError
 
     def boom():
         raise PlatformCompositionError("companion missing")
@@ -443,7 +443,7 @@ def test_the_copy_and_the_check_name_the_same_servers(agents_dir) -> None:
 
 
 def test_an_agent_that_copies_nothing_is_still_out_of_scope(agents_dir) -> None:
-    assert agent.require_fresh_derived_spec("kirocrew-lite", None) is None
+    assert agent.require_fresh_derived_spec("ajcrew-lite", None) is None
     assert agent.require_fresh_derived_spec(None, None) is None
 
 
@@ -452,7 +452,7 @@ def test_the_installer_holds_both_writer_locks_in_the_worker_order(agents_dir, m
     from an older main spec cannot land after one derived from a newer main spec."""
     import contextlib
 
-    from kiro_crew.apps import bridges
+    from aj_crew.apps import bridges
 
     events: list[str] = []
     real_write = agent._atomic_json_write

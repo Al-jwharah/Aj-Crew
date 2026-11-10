@@ -18,8 +18,8 @@ from pathlib import Path
 import pytest
 
 from conftest import make_dir_link
-from kiro_crew import platform_compat
-from kiro_crew.apps.builtins.dev_fleet import npm_preflight, sync_runner
+from aj_crew import platform_compat
+from aj_crew.apps.builtins.dev_fleet import npm_preflight, sync_runner
 
 _BACKUP = sync_runner._BACKUP_SUFFIX
 
@@ -588,7 +588,7 @@ class TestGone:
 
 def test_sync_runner_imports_only_stdlib():
     """sync_runner is run BY PATH from a snapshot, so it must import nothing
-    from kiro_crew -- otherwise a by-path snapshot would drag the package chain
+    from aj_crew -- otherwise a by-path snapshot would drag the package chain
     in and defeat the whole reason it is snapshotted."""
     source = Path(sync_runner.__file__).read_text(encoding="utf-8")
     tree = ast.parse(source)
@@ -599,7 +599,7 @@ def test_sync_runner_imports_only_stdlib():
         elif isinstance(node, ast.ImportFrom):
             # level>0 is a relative import (also forbidden); module may be None.
             imported.append(node.module or ".")
-    offenders = [m for m in imported if m.split(".")[0] in {"kiro_crew", "kirocrew"}]
+    offenders = [m for m in imported if m.split(".")[0] in {"aj_crew", "ajcrew"}]
     assert offenders == [], f"sync_runner must be stdlib-only, found: {offenders}"
 
 
@@ -690,7 +690,7 @@ class TestBootstrap:
     def _bootstrap_cmd(self, snap, digest, *runner_args):
         import sys as _sys
 
-        from kiro_crew.apps.builtins.dev_fleet.worktree_ops import (
+        from aj_crew.apps.builtins.dev_fleet.worktree_ops import (
             _SYNC_RUNNER_BOOTSTRAP,
         )
 

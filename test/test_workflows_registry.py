@@ -18,9 +18,9 @@ import asyncio
 
 import pytest
 
-from kiro_crew.testing.wait import async_wait_until, await_until
-from kiro_crew.workflows import WorkflowEvent
-from kiro_crew.workflows.registry import (
+from aj_crew.testing.wait import async_wait_until, await_until
+from aj_crew.workflows import WorkflowEvent
+from aj_crew.workflows.registry import (
     STATUS_CANCELLED,
     STATUS_FAILED,
     STATUS_FINISHED,
@@ -30,7 +30,7 @@ from kiro_crew.workflows.registry import (
     RunRegistry,
     start_background_run,
 )
-from kiro_crew.workflows.runner import WorkflowRunner
+from aj_crew.workflows.runner import WorkflowRunner
 
 pytestmark = pytest.mark.asyncio
 
@@ -310,7 +310,7 @@ async def test_async_persistence_serializes_and_discards_superseded_snapshots(
             await release_first.wait()
         return fn(*args)
 
-    monkeypatch.setattr("kiro_crew.workflows.registry.asyncio.to_thread", controlled_to_thread)
+    monkeypatch.setattr("aj_crew.workflows.registry.asyncio.to_thread", controlled_to_thread)
 
     first = asyncio.create_task(registry.persist_async(handle.run_id))
     await first_started.wait()

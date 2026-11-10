@@ -22,13 +22,13 @@ from slack_code_channel_surface_helpers import (  # noqa: F401 - fixtures by nam
 )
 from slack_code_channels_helpers import OWNER
 
-from kiro_crew.slack.code_channels import routing, surface, tools
+from aj_crew.slack.code_channels import routing, surface, tools
 
 
 @pytest.fixture(autouse=True)
 def _stopping_slot(_floor_monkeypatch: Any) -> None:
     """The dashboard's own stop is out of scope here: the fence is the subject."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     async def stop_slot_turn(*_a: Any, **_k: Any) -> dict[str, Any]:
         return {"info": "stopping"}
@@ -79,7 +79,7 @@ def test_a_stop_during_the_html_redaction_blocks_set_view(env: Any, monkeypatch:
 
 
 def test_a_command_sync_after_a_stop_in_the_same_turn_sends_nothing(env: Any) -> None:
-    from kiro_crew.slack.code_channels import commands
+    from aj_crew.slack.code_channels import commands
 
     binding = _bind(env)
     asyncio.run(surface.note_turn_start(binding, None))
@@ -89,7 +89,7 @@ def test_a_command_sync_after_a_stop_in_the_same_turn_sends_nothing(env: Any) ->
 
 
 def test_the_refresh_after_a_stopped_turn_sends_nothing(env: Any, monkeypatch: Any) -> None:
-    from kiro_crew.slack.code_channels.workspace.service import WorkspaceService
+    from aj_crew.slack.code_channels.workspace.service import WorkspaceService
 
     binding = _bind(env)
     asyncio.run(surface.note_turn_start(binding, None))
@@ -141,8 +141,8 @@ def _stop_after(env: Any, monkeypatch: Any, owner: Any, name: str) -> None:
 
 
 def test_a_stop_during_set_status_leaves_no_suspended_hold(env: Any, monkeypatch: Any) -> None:
-    from kiro_crew.slack.code_channels import status
-    from kiro_crew.slack.code_channels.surface_client import SurfaceClient
+    from aj_crew.slack.code_channels import status
+    from aj_crew.slack.code_channels.surface_client import SurfaceClient
 
     _bind(env)
     _stop_after(env, monkeypatch, SurfaceClient, "set_status")
@@ -187,8 +187,8 @@ def test_a_stop_during_the_canvas_read_stores_no_create_intent(env: Any, monkeyp
 
 
 def test_a_stop_during_the_command_send_stores_no_digest(env: Any, monkeypatch: Any) -> None:
-    from kiro_crew.slack.code_channels import commands
-    from kiro_crew.slack.code_channels.surface_client import SurfaceClient
+    from aj_crew.slack.code_channels import commands
+    from aj_crew.slack.code_channels.surface_client import SurfaceClient
 
     binding = _bind(env)
 

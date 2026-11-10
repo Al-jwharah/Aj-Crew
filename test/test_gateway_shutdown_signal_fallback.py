@@ -22,8 +22,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import platform_compat, session
-from kiro_crew.slack.gateway import GatewayOrchestrator
+from aj_crew import platform_compat, session
+from aj_crew.slack.gateway import GatewayOrchestrator
 
 
 class _StubLoop:
@@ -85,7 +85,7 @@ def _install(
             raise signal_refusal("signal.signal refused the handler")
         installed.registrations.append((signum, handler))
 
-    monkeypatch.setattr("kiro_crew.slack.gateway.shutdown_event", installed.stopping)
+    monkeypatch.setattr("aj_crew.slack.gateway.shutdown_event", installed.stopping)
     monkeypatch.setattr(
         platform_compat, "cancel_wheel_applies_in_flight", installed.cancelled_applies.append
     )

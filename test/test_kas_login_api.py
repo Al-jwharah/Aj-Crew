@@ -16,17 +16,17 @@ import socket
 import aiohttp
 import pytest
 
-from kiro_crew.auth.login.builder_id import StartUrlRejectedError
-from kiro_crew.auth.login.portal import PortalAuthError, wait_for_callback
-from kiro_crew.auth.service import (
+from aj_crew.auth.login.builder_id import StartUrlRejectedError
+from aj_crew.auth.login.portal import PortalAuthError, wait_for_callback
+from aj_crew.auth.service import (
     InvalidStartUrlError,
     KasLoginService,
     LoopbackUnavailableError,
     UnknownIdentityError,
     UnknownLoginError,
 )
-from kiro_crew.dashboard.handlers import kas_login
-from kiro_crew.dashboard.handlers.kas_login import (
+from aj_crew.dashboard.handlers import kas_login
+from aj_crew.dashboard.handlers.kas_login import (
     api_kas_login_begin_device,
     api_kas_login_begin_loopback,
     api_kas_login_cancel,
@@ -34,7 +34,7 @@ from kiro_crew.dashboard.handlers.kas_login import (
     api_kas_login_poll,
     api_kas_login_status,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 
 class _FakeState:
@@ -340,7 +340,7 @@ async def test_logout_retires_running_identity_store_runtimes():
     assert _body(resp) == {"ok": True}
 
     # A failed delete never reaches the sweep: nothing to retire for.
-    from kiro_crew.auth.store import TokenStoreError
+    from aj_crew.auth.store import TokenStoreError
 
     class _BrokenStoreService(_StubService):
         async def logout(self, identity):
@@ -373,7 +373,7 @@ async def test_credential_mutations_reject_non_owner():
 
 @pytest.mark.asyncio
 async def test_logout_store_failure_returns_coded_500():
-    from kiro_crew.auth.store import TokenStoreError
+    from aj_crew.auth.store import TokenStoreError
 
     class _BrokenStoreService(_StubService):
         async def logout(self, identity):
@@ -414,7 +414,7 @@ async def test_begin_and_poll_return_502_on_transport_error():
 
 @pytest.mark.asyncio
 async def test_begin_answers_409_when_a_sign_out_landed_mid_begin():
-    from kiro_crew.auth.service import SignedOutDuringLoginError
+    from aj_crew.auth.service import SignedOutDuringLoginError
 
     class _SignedOutService(_StubService):
         async def begin_device(self, provider_str, *, start_url="", region="", replaces=""):
@@ -431,7 +431,7 @@ async def test_begin_answers_409_when_a_sign_out_landed_mid_begin():
 
 @pytest.mark.asyncio
 async def test_status_store_failure_returns_coded_500():
-    from kiro_crew.auth.store import TokenStoreError
+    from aj_crew.auth.store import TokenStoreError
 
     class _BrokenStoreService(_StubService):
         async def status(self):
@@ -584,8 +584,8 @@ def test_handlers_package_does_not_import_kas_at_boot():
     import sys
 
     code = (
-        "import sys; import kiro_crew.dashboard.handlers; "
-        "bad = [m for m in sys.modules if 'kas_login' in m or m.startswith('kiro_crew.auth')]; "
+        "import sys; import aj_crew.dashboard.handlers; "
+        "bad = [m for m in sys.modules if 'kas_login' in m or m.startswith('aj_crew.auth')]; "
         "sys.exit(1 if bad else 0)"
     )
     proc = subprocess.run(

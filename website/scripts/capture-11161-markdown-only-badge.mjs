@@ -25,7 +25,7 @@ mkdirSync(OUT, { recursive: true })
 const now = Math.floor(Date.now() / 1000)
 const slots = [{
   key: ACTIVE, title: 'Probe the markdown agent', running: false, messages: 0,
-  agent: 'kirocrew', agent_kind: 'template', modified: now, last_ts: new Date().toISOString(),
+  agent: 'ajcrew', agent_kind: 'template', modified: now, last_ts: new Date().toISOString(),
   folder_id: '', last_message: '', source_links: [], source_links_total: 0,
 }]
 
@@ -35,11 +35,11 @@ const template = (name, description, markdownOnly = false) => ({
 })
 const catalog = sessionBackend => ({
   agents: [
-    template('kirocrew', 'Primary Kiro Crew agent.'),
+    template('ajcrew', 'Primary Aj Crew agent.'),
     template('kas-md-probe', 'A minimal markdown-format probe agent.', true),
     template('reviewer', 'Reviews pull requests.'),
   ],
-  default_agent: 'kirocrew',
+  default_agent: 'ajcrew',
   session_backend: sessionBackend,
   markdown_refused_backends: ['kiro'],
   markdown_spec_backends: ['kas'],
@@ -72,7 +72,7 @@ async function main() {
           localStorageEntries: { 'mc-active-slot': ACTIVE, 'mc-privacy-notice-v1': '1' },
         })
         await page.goto(base + '/chat', { waitUntil: 'domcontentloaded' })
-        const chip = page.locator('button', { hasText: 'kirocrew' }).last()
+        const chip = page.locator('button', { hasText: 'ajcrew' }).last()
         await chip.waitFor({ state: 'visible', timeout: 20_000 })
         await chip.click()
         const pop = page.locator('[role="dialog"]').filter({ has: page.locator('[role="listbox"]') }).last()

@@ -34,7 +34,7 @@ const scene = params.get('scene') || 'webhooks'
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 
 document.documentElement.dataset.mode = theme
-document.documentElement.dataset.theme = theme === 'light' ? 'kiro-light' : 'kiro-dark'
+document.documentElement.dataset.theme = theme === 'light' ? 'aj-light' : 'aj-dark'
 
 initI18n()
 
@@ -66,7 +66,7 @@ window.fetch = ((input: RequestInfo | URL) => {
 const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
 function Scene() {
-  if (scene === 'wake') return <CrewWakeSection crew="kirocrew-autofix" isDefaultCrew={false} />
+  if (scene === 'wake') return <CrewWakeSection crew="ajcrew-autofix" isDefaultCrew={false} />
   if (scene === 'footer') {
     return (
       <div className="w-[320px] rounded-lg border border-border bg-bg-elevated">
@@ -75,7 +75,7 @@ function Scene() {
     )
   }
   if (scene === 'executions') return <ExecutionsView />
-  return <CrewWebhookSection crew="kirocrew-autofix" />
+  return <CrewWebhookSection crew="ajcrew-autofix" />
 }
 
 const root = createRoot(document.getElementById('root')!)

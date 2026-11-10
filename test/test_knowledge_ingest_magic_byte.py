@@ -24,10 +24,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers.knowledge import ingest_file
-from kiro_crew.knowledge.ingestion import IngestionPipeline
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.dashboard.handlers.knowledge import ingest_file
+from aj_crew.knowledge.ingestion import IngestionPipeline
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.testing.wait import async_wait_until
 
 
 class _FakeStore:
@@ -103,7 +103,7 @@ async def _post(app: web.Application, data: bytes, filename: str, ctype: str):
 
 @pytest.fixture
 def mock_sel():
-    with patch("kiro_crew.dashboard.handlers.knowledge.sel") as m:
+    with patch("aj_crew.dashboard.handlers.knowledge.sel") as m:
         m.return_value = MagicMock()
         yield m
 
@@ -193,7 +193,7 @@ async def test_docx_zip_bomb_member_count_rejected_before_parse(mock_sel):
     decompression-bomb guard (CWE-770) before any parser opens it."""
     app, ingest_spy = _make_app()
     data = _multi_member_zip_bytes(5)  # 6 members total, all with valid PK header
-    with patch("kiro_crew.dashboard.handlers.knowledge._MAX_INGEST_ARCHIVE_MEMBERS", 2):
+    with patch("aj_crew.dashboard.handlers.knowledge._MAX_INGEST_ARCHIVE_MEMBERS", 2):
         status, body = await _post(
             app, data, "bomb.docx",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
@@ -208,7 +208,7 @@ async def test_docx_zip_bomb_uncompressed_size_rejected_before_parse(mock_sel):
     before parsing (declared-size bomb guard)."""
     app, ingest_spy = _make_app()
     data = _minimal_zip_bytes()  # one member, >1 uncompressed byte
-    with patch("kiro_crew.dashboard.handlers.knowledge._MAX_INGEST_ARCHIVE_UNCOMPRESSED", 1):
+    with patch("aj_crew.dashboard.handlers.knowledge._MAX_INGEST_ARCHIVE_UNCOMPRESSED", 1):
         status, body = await _post(
             app, data, "bomb.docx",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
@@ -227,7 +227,7 @@ async def test_exhausted_import_budget_refuses_with_429_before_accepting(mock_se
     client was told had been accepted. Admission is reserved before the response
     instead, which makes 429 the answer and leaves nothing staged.
     """
-    from kiro_crew.knowledge.ingestion import ImportChunkBudgetError
+    from aj_crew.knowledge.ingestion import ImportChunkBudgetError
 
     app, ingest_spy = _make_app()
     app["knowledge_pipeline"].reserve_import_budget = AsyncMock(
@@ -292,7 +292,7 @@ async def test_the_background_task_holds_the_gate_from_its_lookup_through_the_in
     own, and the task holds it across its re-read and the ingest, so a
     maintenance window cannot open at any of those points and can once the task
     is done."""
-    import kiro_crew.dashboard.handlers.knowledge as kn
+    import aj_crew.dashboard.handlers.knowledge as kn
 
     store = KnowledgeStore(str(tmp_path / "k.db"))
     try:

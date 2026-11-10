@@ -22,7 +22,7 @@ import {
  * `returnSelfToMain`. Pure helpers are re-exported for unit tests.
  */
 
-export const ARTIFACT_POPOUT_CHANNEL = 'kirocrew-artifact-popout'
+export const ARTIFACT_POPOUT_CHANNEL = 'ajcrew-artifact-popout'
 
 export { HEARTBEAT_MS, STALE_MS, applyMessage, pruneStale }
 export type { PopoutMap, PopoutMsg, NavIntent }

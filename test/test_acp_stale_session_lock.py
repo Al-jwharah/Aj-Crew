@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.providers.acp import AcpProvider
 
 LOCKED = RuntimeError("Failed to start session: Session is active in another process (PID 1)")
 
@@ -34,8 +34,8 @@ async def _load(tmp_path, lock_text: str | None, side_effect: list) -> tuple[obj
     provider = AcpProvider.__new__(AcpProvider)
     rt = _runtime(AsyncMock(side_effect=side_effect))
     with (
-        patch("kiro_crew.providers.acp.kiro_sessions_dir", return_value=tmp_path),
-        patch("kiro_crew.providers.acp.asyncio.sleep", new=AsyncMock()),
+        patch("aj_crew.providers.acp.kiro_sessions_dir", return_value=tmp_path),
+        patch("aj_crew.providers.acp.asyncio.sleep", new=AsyncMock()),
     ):
         got = await provider._load_session_with_retry(rt, "/s.json", "sid", None, None)
     return got, rt

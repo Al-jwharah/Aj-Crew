@@ -23,17 +23,17 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import webhooks
-from kiro_crew.dashboard.handlers import hooks as hooks_handlers
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import webhooks
+from aj_crew.dashboard.handlers import hooks as hooks_handlers
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import async_wait_until, await_until
 
 TS = 1_700_000_000
 
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
-    for var, sub in (("KIROCREW_HOME", "home"), ("KIROCREW_WORKSPACE", "workspace")):
+    for var, sub in (("AJCREW_HOME", "home"), ("AJCREW_WORKSPACE", "workspace")):
         (tmp_path / sub).mkdir()
         monkeypatch.setenv(var, str(tmp_path / sub))
     monkeypatch.setattr(webhooks, "config_dir", lambda: tmp_path)

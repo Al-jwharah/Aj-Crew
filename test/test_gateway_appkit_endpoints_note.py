@@ -18,15 +18,15 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from gateway_appkit_endpoints_helpers import _make_state
 
-from kiro_crew.dashboard.chat import api_chat_slot_context, api_chat_slot_note
-from kiro_crew.dashboard.chat_handlers import _MAX_DEFERRED_NOTES
-from kiro_crew.dashboard.chat_runner import drain_pending_context
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard.chat import api_chat_slot_context, api_chat_slot_note
+from aj_crew.dashboard.chat_handlers import _MAX_DEFERRED_NOTES
+from aj_crew.dashboard.chat_runner import drain_pending_context
+from aj_crew.dashboard.chat_utils import (
     _history_key_for,
     effective_session_key,
     slot_history_key,
 )
-from kiro_crew.dashboard.state import _MAX_PENDING_CONTEXT, DashboardState, _ChatSlot
+from aj_crew.dashboard.state import _MAX_PENDING_CONTEXT, DashboardState, _ChatSlot
 
 # ---------------------------------------------------------------------------
 # Note endpoint tests
@@ -1073,7 +1073,7 @@ class TestNoteEndpoint:
         app.router.add_post("/api/chat/slots/{slot}/context", api_chat_slot_context)
         events: list[dict] = []
         with patch(
-            "kiro_crew.dashboard.slot_ownership.sel",
+            "aj_crew.dashboard.slot_ownership.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: events.append(kw)),
         ):
             async with TestClient(TestServer(app)) as client:
@@ -1216,7 +1216,7 @@ class TestNoteEndpoint:
         """
         import inspect
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         queued = inspect.getsource(chat_runner._start_next_queued_turn)
         assert "flush_deferred_notes" in queued
@@ -1391,7 +1391,7 @@ class TestNoteEndpoint:
         """
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.dashboard.chat_handlers import _reset_slot_session
+        from aj_crew.dashboard.chat_handlers import _reset_slot_session
 
         state = _make_state(tmp_path)
         slot = _ChatSlot("s1")
@@ -1452,7 +1452,7 @@ class TestNoteEndpoint:
                 return {"content": "x"}
 
         with patch(
-            "kiro_crew.dashboard.chat_handlers.sel",
+            "aj_crew.dashboard.chat_handlers.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: events.append(kw)),
         ):
             resp = await api_chat_slot_note(_Req())

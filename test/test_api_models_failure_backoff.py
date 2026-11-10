@@ -24,8 +24,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard.handlers import agents
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
+from aj_crew.dashboard.handlers import agents
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService
 
 _OK_PAYLOAD = json.dumps({"models": [{"model_name": "claude-opus-4.8"}]}).encode()
 
@@ -107,14 +107,14 @@ def harness(_floor_monkeypatch: pytest.MonkeyPatch):
     _floor_monkeypatch.setattr(agents, "spawn_supervised_oneshot", spawner)
     cfg = SimpleNamespace(agent=SimpleNamespace(provider="kiro"))
     patches = [
-        patch.object(agents.KiroCrewConfig, "load", return_value=cfg),
-        patch("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", return_value="/usr/bin/kiro-cli"),
-        patch("kiro_crew.acp.client._resolve_ssh_auth_sock", lambda env: None),
-        patch("kiro_crew.env.augmented_path", lambda p: p),
+        patch.object(agents.AjCrewConfig, "load", return_value=cfg),
+        patch("aj_crew.acp.client._resolve_kiro_bin_for_spawn", return_value="/usr/bin/kiro-cli"),
+        patch("aj_crew.acp.client._resolve_ssh_auth_sock", lambda env: None),
+        patch("aj_crew.env.augmented_path", lambda p: p),
         patch.object(agents, "wrap_argv", lambda argv, **kwargs: (argv, None)),
         patch.object(agents, "cgroup_scope_argv", lambda argv: argv),
-        patch("kiro_crew.sandbox.resource_limit_preexec", lambda: None),
-        patch("kiro_crew.platform.redact_via_context", lambda text: text),
+        patch("aj_crew.sandbox.resource_limit_preexec", lambda: None),
+        patch("aj_crew.platform.redact_via_context", lambda text: text),
     ]
     for p in patches:
         p.start()
@@ -186,7 +186,7 @@ def test_a_success_clears_the_negative_entry(harness, tmp_path):
 def test_an_unresolved_binary_is_not_held(harness, tmp_path):
     # No spawn ran, and the binary resolves on its own shortly after start, so
     # the next poll retries instead of waiting out a window.
-    with patch("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", return_value=""):
+    with patch("aj_crew.acp.client._resolve_kiro_bin_for_spawn", return_value=""):
         resp = _poll(tmp_path)
     assert json.loads(resp.body) == {
         "error": "kiro binary not resolved",

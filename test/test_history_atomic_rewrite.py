@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 from consolidation_lease_helpers import lease_aware_log
 
-from kiro_crew.history import ConversationLog
+from aj_crew.history import ConversationLog
 
 
 class TestMarkConsolidatedAtomic:
@@ -57,7 +57,7 @@ class TestMarkConsolidatedOffloaded:
         import threading
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.history import HistoryConsolidator
+        from aj_crew.history import HistoryConsolidator
 
         loop_thread_id = threading.get_ident()
         mark_thread_id: dict[str, int] = {}

@@ -2,7 +2,7 @@
 
 The path constants are resolved once, when the module is imported. These tests
 never re-import it: a reload re-runs the whole module body in the SHARED module,
-which re-creates every handler function (the copies ``kiro_crew.dashboard.handlers``
+which re-creates every handler function (the copies ``aj_crew.dashboard.handlers``
 and ``session_memory`` imported by value stop matching), regenerates the in-memory
 telemetry salt and leaves the faked command paths behind for the rest of the worker.
 They call ``_resolve_tool`` with the arguments the module binds each constant with,
@@ -20,7 +20,7 @@ from typing import Any, Callable
 
 import pytest
 
-from kiro_crew.dashboard import handlers_system
+from aj_crew.dashboard import handlers_system
 
 
 def _module_scope_stores(tree: ast.Module, constant: str) -> int:

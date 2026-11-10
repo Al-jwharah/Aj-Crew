@@ -36,7 +36,7 @@ class TestSpawnCreatesFolder:
     async def test_spawn_creates_agent_folder(self, agent_root):
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         sessions = MagicMock()
         sessions.get_pid = MagicMock(return_value=None)
@@ -68,7 +68,7 @@ class TestSpawnCreatesFolder:
 
         manager = SubagentManager(sessions=sessions, ctx_builder=ctx)
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = manager.spawn("test task", parent_session_key="dashboard:default")
             assert info is not None
             assert not info.done
@@ -89,11 +89,11 @@ class TestSpawnCreatesFolder:
         """Rejected spawns should NOT leave orphaned folders."""
         from unittest.mock import MagicMock, patch
 
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         manager = SubagentManager(sessions=MagicMock(), ctx_builder=None)
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = manager.spawn("rejected task")
 
         assert info is not None
@@ -105,7 +105,7 @@ class TestSpawnCreatesFolder:
         """Queued spawns should NOT get a folder until actually spawned."""
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         sessions = MagicMock()
         sessions.get_pid = MagicMock(return_value=None)
@@ -137,7 +137,7 @@ class TestSpawnCreatesFolder:
 
         manager = SubagentManager(sessions=sessions, ctx_builder=ctx, max_concurrent=1)
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             # First spawn takes the slot
             info1 = manager.spawn("task1", parent_session_key="dashboard:default")
             # Second spawn gets queued
@@ -177,8 +177,8 @@ class TestResultStreamingToAgentFolder:
     async def test_result_written_to_agent_folder(self, agent_root):
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.subagent import SubagentManager
 
         sessions = MagicMock()
         sessions.get_pid = MagicMock(return_value=None)
@@ -212,7 +212,7 @@ class TestResultStreamingToAgentFolder:
 
         manager = SubagentManager(sessions=sessions, ctx_builder=ctx)
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = manager.spawn("stream test", parent_session_key="dashboard:default")
             assert info is not None
             # flake-ok: the spawned run task ends on its own once the stubbed chunk stream completes; the test never has to unblock it; moved verbatim
@@ -235,8 +235,8 @@ class TestPerTurnStateUpdates:
     async def test_pid_recorded_after_session_create(self, agent_root):
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.subagent import SubagentManager
 
         sessions = MagicMock()
         sessions.get_pid = MagicMock(return_value=42)
@@ -269,7 +269,7 @@ class TestPerTurnStateUpdates:
 
         manager = SubagentManager(sessions=sessions, ctx_builder=ctx)
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = manager.spawn("pid test", parent_session_key="dashboard:default")
             # flake-ok: the spawned run task ends on its own once the stubbed stream completes; the test never has to unblock it; moved verbatim
             await manager._tasks[info.id]
@@ -286,14 +286,14 @@ class TestPerTurnStateUpdates:
     async def test_turns_and_last_tool_updated(self, agent_root):
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.hooks import TOOL_AUTO_APPROVE, ToolHookResult
-        from kiro_crew.providers.base import (
+        from aj_crew.hooks import TOOL_AUTO_APPROVE, ToolHookResult
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_PERMISSION_REQUEST,
             EVENT_TEXT_CHUNK,
             LLMEvent,
         )
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         sessions = MagicMock()
         sessions.get_pid = MagicMock(return_value=None)
@@ -330,7 +330,7 @@ class TestPerTurnStateUpdates:
 
         manager = SubagentManager(sessions=sessions, ctx_builder=ctx)
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = manager.spawn("tool test", parent_session_key="dashboard:default")
             # flake-ok: the spawned run task ends on its own once the stubbed stream completes; the test never has to unblock it; moved verbatim
             await manager._tasks[info.id]
@@ -351,8 +351,8 @@ class TestTombstoneOnAbnormalExit:
         """Timeout in _run writes tombstone with cause=timeout."""
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.subagent_persistence import create_agent_folder
 
         sessions = MagicMock()
         sessions.release = MagicMock()
@@ -365,7 +365,7 @@ class TestTombstoneOnAbnormalExit:
         info._session_cwd = "/project"
         info.keep = True
         create_agent_folder("timeout1", task="t")
-        from kiro_crew.subagent_persistence import remember_live_cleanup_identity
+        from aj_crew.subagent_persistence import remember_live_cleanup_identity
 
         remember_live_cleanup_identity(
             "timeout1",
@@ -376,7 +376,7 @@ class TestTombstoneOnAbnormalExit:
         manager._agents["timeout1"] = info
         manager._running_count = 1
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             # Simulate what _run does on TimeoutError
             manager._write_tombstone(info, "timeout")
 
@@ -393,8 +393,8 @@ class TestTombstoneOnAbnormalExit:
         import asyncio
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
-        from kiro_crew.subagent_persistence import create_agent_folder, write_tombstone
+        from aj_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.subagent_persistence import create_agent_folder, write_tombstone
 
         sessions = MagicMock()
         sessions.release = MagicMock()
@@ -417,8 +417,8 @@ class TestTombstoneOnAbnormalExit:
         with (
             patch.object(manager, "_run_inner", _hang),
             patch.object(manager, "_default_timeout", 0.01),
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(manager, "_fire_event", new_callable=AsyncMock),
             patch.object(manager, "_on_done", new_callable=AsyncMock),
         ):
@@ -437,9 +437,9 @@ class TestTombstoneOnAbnormalExit:
     async def test_tombstone_on_turn_limit(self, agent_root):
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.hooks import TOOL_AUTO_APPROVE, ToolHookResult
-        from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.hooks import TOOL_AUTO_APPROVE, ToolHookResult
+        from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+        from aj_crew.subagent import SubagentManager
 
         sessions = MagicMock()
         sessions.get_pid = MagicMock(return_value=None)
@@ -476,7 +476,7 @@ class TestTombstoneOnAbnormalExit:
         # Turn limit of 2 — will exceed on 3rd tool
         manager = SubagentManager(sessions=sessions, ctx_builder=ctx, default_turn_limit=2)
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = manager.spawn("turn limit test", parent_session_key="dashboard:default")
             # flake-ok: the spawned run task ends on its own at the 2-turn limit of the stubbed tool stream; the test never has to unblock it; moved verbatim
             await manager._tasks[info.id]
@@ -491,8 +491,8 @@ class TestTombstoneOnAbnormalExit:
         """Error in _run writes tombstone with cause=error."""
         from unittest.mock import MagicMock
 
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.subagent_persistence import create_agent_folder
 
         manager = SubagentManager(sessions=MagicMock(), ctx_builder=MagicMock())
 
@@ -509,8 +509,8 @@ class TestTombstoneOnAbnormalExit:
         """Successful completion should NOT write a tombstone."""
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.subagent import SubagentManager
 
         sessions = MagicMock()
         sessions.get_pid = MagicMock(return_value=None)
@@ -543,7 +543,7 @@ class TestTombstoneOnAbnormalExit:
 
         manager = SubagentManager(sessions=sessions, ctx_builder=ctx)
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = manager.spawn("success test", parent_session_key="dashboard:default")
             # flake-ok: the spawned run task ends on its own once the stubbed stream completes; the test never has to unblock it; moved verbatim
             await manager._tasks[info.id]
@@ -563,8 +563,8 @@ class TestFolderCleanupOnSuccess:
     async def test_folder_retained_on_success(self, agent_root):
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.subagent import SubagentManager
 
         sessions = MagicMock()
         sessions.get_pid = MagicMock(return_value=None)
@@ -598,7 +598,7 @@ class TestFolderCleanupOnSuccess:
         on_done = AsyncMock()
         manager = SubagentManager(sessions=sessions, ctx_builder=ctx, on_done=on_done)
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = manager.spawn("cleanup test", parent_session_key="dashboard:default")
             # flake-ok: the spawned run task ends on its own once the stubbed stream completes; the test never has to unblock it; moved verbatim
             await manager._tasks[info.id]
@@ -618,8 +618,8 @@ class TestFolderCleanupOnSuccess:
         import asyncio
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.subagent import SubagentManager
 
         sessions = MagicMock()
         sessions.get_pid = MagicMock(return_value=None)
@@ -658,9 +658,9 @@ class TestFolderCleanupOnSuccess:
         manager = SubagentManager(sessions=sessions, ctx_builder=ctx, on_done=_slow_on_done)
 
         with (
-            patch("kiro_crew.subagent._ON_DONE_TIMEOUT", 0.01),
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent._ON_DONE_TIMEOUT", 0.01),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
         ):
             info = manager.spawn("delivery failure test", parent_session_key="dashboard:default")
             try:

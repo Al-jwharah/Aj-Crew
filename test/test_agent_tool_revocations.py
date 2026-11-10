@@ -45,7 +45,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         self, tmp_path: Path, monkeypatch
     ):
         """The normalizer's collision filter revokes a grant through the caller audit."""
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -58,7 +58,7 @@ class TestToolBloatFixesRevocationsAndAliases:
                 "npm:@scope/pkg": {"command": "missing-tool"},
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
         monkeypatch.setattr(agent_mod, "_app_owned_mcp_keys", lambda: {})
         events: list[dict] = []
 
@@ -89,7 +89,7 @@ class TestToolBloatFixesRevocationsAndAliases:
 
     def test_alias_migration_is_not_a_revocation_sel_event(self, tmp_path: Path, monkeypatch):
         """Renamed bare and per-tool grants stay live without a false revocation event."""
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -109,12 +109,12 @@ class TestToolBloatFixesRevocationsAndAliases:
             "mcpServers": {
                 "npm:@scope/pkg": {"command": sys.executable},
                 "playwright-mcp": {
-                    "command": "kirocrew",
+                    "command": "ajcrew",
                     "args": ["mcp-playwright-proxy"],
                 },
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
         monkeypatch.setattr(agent_mod, "_app_owned_mcp_keys", lambda: {})
         events: list[dict] = []
 
@@ -155,7 +155,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         self, tmp_path: Path, monkeypatch
     ):
         """A verbatim-kept ambiguous grant is not reported as revoked."""
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -167,12 +167,12 @@ class TestToolBloatFixesRevocationsAndAliases:
                 "a": {"command": sys.executable},
                 "a/b": {"command": sys.executable},
                 "playwright-mcp": {
-                    "command": "kirocrew",
+                    "command": "ajcrew",
                     "args": ["mcp-playwright-proxy"],
                 },
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
         monkeypatch.setattr(agent_mod, "_app_owned_mcp_keys", lambda: {})
         events: list[dict] = []
 
@@ -203,7 +203,7 @@ class TestToolBloatFixesRevocationsAndAliases:
 
     def test_deleted_proxy_revocation_has_its_own_sel_event(self, tmp_path: Path, monkeypatch):
         """The every-rebuild proxy purge is covered by the same caller audit bracket."""
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -213,12 +213,12 @@ class TestToolBloatFixesRevocationsAndAliases:
             "allowedTools": ["@playwright-mcp", "@playwright-mcp/browser_navigate"],
             "mcpServers": {
                 "playwright-mcp": {
-                    "command": "kirocrew",
+                    "command": "ajcrew",
                     "args": ["mcp-playwright-proxy"],
                 }
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
         monkeypatch.setattr(agent_mod, "_app_owned_mcp_keys", lambda: {})
         events: list[dict] = []
 
@@ -277,7 +277,7 @@ class TestToolBloatFixesRevocationsAndAliases:
                 "literal-false": {"command": "literal-false-tool"},
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
         (tmp_path / "fake_kiro_mcp.json").write_text(
             json.dumps(
                 {
@@ -327,7 +327,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         the withhold path in the same pass already emits one. A silent revoke
         leaves an operator no record of why a tool now prompts.
         """
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         cfg_dir = self._tool_search_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
@@ -337,7 +337,7 @@ class TestToolBloatFixesRevocationsAndAliases:
             "allowedTools": ["@gone"],
             "mcpServers": {},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         events: list[tuple[str, str]] = []
 
@@ -365,7 +365,7 @@ class TestToolBloatFixesRevocationsAndAliases:
             "allowedTools": ["code"],
             "mcpServers": {},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         path = _run_install(tmp_path, cfg_dir)
         config = json.loads(path.read_text(encoding="utf-8"))
@@ -384,7 +384,7 @@ class TestToolBloatFixesRevocationsAndAliases:
             "allowedTools": ["code"],
             "mcpServers": {},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         path = _run_install(tmp_path, cfg_dir)
         config = json.loads(path.read_text(encoding="utf-8"))
@@ -402,7 +402,7 @@ class TestToolBloatFixesRevocationsAndAliases:
             "allowedTools": ["read"],
             "mcpServers": {},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         path = _run_install(tmp_path, cfg_dir)
         config = json.loads(path.read_text(encoding="utf-8"))
@@ -414,10 +414,10 @@ class TestToolBloatFixesRevocationsAndAliases:
         cfg_dir = _bundled_defaults(tmp_path)
         path = _run_install(tmp_path, cfg_dir)
         config = json.loads(path.read_text(encoding="utf-8"))
-        assert "@kirocrew-cron" in config["tools"]
-        assert "@kirocrew-core" in config["tools"]
-        assert "@kirocrew-cron" not in config["allowedTools"]
-        assert "@kirocrew-core" not in config["allowedTools"]
+        assert "@ajcrew-cron" in config["tools"]
+        assert "@ajcrew-core" in config["tools"]
+        assert "@ajcrew-cron" not in config["allowedTools"]
+        assert "@ajcrew-core" not in config["allowedTools"]
 
     def test_dashboard_added_remote_server_reaches_the_tools_allowlist(self, tmp_path: Path):
         """A Connections provider (or any dashboard-added MCP entry) must land in
@@ -427,7 +427,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         is mounted with none of its tools exposed.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         (user_home / "mcp.json").write_text(
             json.dumps({"mcpServers": {"notion": {"url": "https://mcp.notion.com/mcp"}}})
@@ -443,7 +443,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         """Disconnect must be the inverse: a disabled entry loses its ref, so a
         disconnected provider cannot keep exposing tools."""
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         (user_home / "mcp.json").write_text(
             json.dumps(
@@ -452,7 +452,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         )
         kiro_dir = tmp_path / "kiro_agents"
         kiro_dir.mkdir(exist_ok=True)
-        (kiro_dir / "kirocrew.json").write_text(
+        (kiro_dir / "ajcrew.json").write_text(
             json.dumps({"tools": ["@notion"], "allowedTools": [], "mcpServers": {}})
         )
 
@@ -470,7 +470,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         mean removed here or the last-rendered grant stays in the spec forever.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         # Dashboard store: the hints were removed, so the keys are simply gone.
         (user_home / "mcp.json").write_text(
@@ -479,7 +479,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         kiro_dir = tmp_path / "kiro_agents"
         kiro_dir.mkdir(exist_ok=True)
         # Previous render, still carrying the hints it was built with.
-        (kiro_dir / "kirocrew.json").write_text(
+        (kiro_dir / "ajcrew.json").write_text(
             json.dumps(
                 {
                     "tools": [],
@@ -510,7 +510,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         entry is byte-identical to row 3's -- ownership is the ONLY difference.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         (user_home / "mcp.json").write_text(json.dumps({"mcpServers": {}}))
         (tmp_path / "fake_kiro_mcp.json").write_text(
@@ -536,11 +536,11 @@ class TestToolBloatFixesRevocationsAndAliases:
     def test_a_malformed_store_value_does_not_confer_ownership(self, tmp_path: Path):
         """A non-dict store value must not mark a global entry as ours.
 
-        Membership is not ownership: the merge skips a malformed ``kirocrew_mcp`` value,
-        so `name in kirocrew_mcp` would delete the global entry's hand-authored hints.
+        Membership is not ownership: the merge skips a malformed ``ajcrew_mcp`` value,
+        so `name in ajcrew_mcp` would delete the global entry's hand-authored hints.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         # Hand-edited garbage under the same name as the global server below.
         (user_home / "mcp.json").write_text(json.dumps({"mcpServers": {"handmade": "not-a-dict"}}))
@@ -571,7 +571,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         store last would re-mount and auto-approve the server, bypassing PreToolUse.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         # Store entry: no `disabled` key at all.
         (user_home / "mcp.json").write_text(
@@ -601,7 +601,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         ``tools`` is an inert mount kept for re-enabling. ``notionx`` is untouched.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         kiro_dir = tmp_path / "kiro_agents"
         kiro_dir.mkdir(exist_ok=True)
@@ -621,7 +621,7 @@ class TestToolBloatFixesRevocationsAndAliases:
                 "notionx": {"url": "https://mcp.notionx.example.com/mcp"},
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
         # The operator's disable lives in the kiro global; notionx stays enabled.
         (tmp_path / "fake_kiro_mcp.json").write_text(
             json.dumps(
@@ -666,7 +666,7 @@ class TestToolBloatFixesRevocationsAndAliases:
             ],
             "mcpServers": {"foo-bar": {"command": "live-tool"}},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
         (tmp_path / "fake_kiro_mcp.json").write_text(
             json.dumps(
                 {
@@ -738,7 +738,7 @@ class TestToolBloatFixesRevocationsAndAliases:
                 "other-live": {"command": "other-live-tool"},
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
         (tmp_path / "fake_kiro_mcp.json").write_text(
             json.dumps(
                 {
@@ -788,7 +788,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         family's auto-approval, but the alias-keyed source keeps its mount.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         # Store entry keyed by the ALIAS form, with no `disabled` key.
         (user_home / "mcp.json").write_text(
@@ -819,11 +819,11 @@ class TestToolBloatFixesRevocationsAndAliases:
     def test_an_agent_config_only_server_keeps_its_oauth_hints_verbatim(self, tmp_path: Path):
         """The agent config is a merge source, so its own entries are preserved.
 
-        A server added with ``kiro-cli mcp add --agent kirocrew`` lives only in that file,
+        A server added with ``kiro-cli mcp add --agent ajcrew`` lives only in that file,
         so it holds the only copy of its OAuth hints.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         (user_home / "mcp.json").write_text(json.dumps({"mcpServers": {}}))
         (tmp_path / "fake_kiro_mcp.json").write_text(json.dumps({"mcpServers": {}}))
@@ -853,7 +853,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         rebuild rather than being refilled from the previous render.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         (tmp_path / "fake_kiro_mcp.json").write_text(json.dumps({"mcpServers": {}}))
         store = user_home / "mcp.json"
@@ -888,7 +888,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         slashed key; the pair must collapse so repeated rebuilds grow nothing.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         (user_home / "mcp.json").write_text(json.dumps({"mcpServers": {}}))
         (tmp_path / "fake_kiro_mcp.json").write_text(
@@ -927,7 +927,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         entry as unmanaged: an editor clear never applies and each rebuild adds a sibling.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         (tmp_path / "fake_kiro_mcp.json").write_text(json.dumps({"mcpServers": {}}))
         store = user_home / "mcp.json"
@@ -960,7 +960,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         or the entry reads as unmanaged and stale hints survive a clear.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         (tmp_path / "fake_kiro_mcp.json").write_text(json.dumps({"mcpServers": {}}))
         store = user_home / "mcp.json"
@@ -1003,7 +1003,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         name-only, since over-matching only over-disables.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         user_url = "https://user.example.com/mcp"
         managed_url = "https://managed.example.com/mcp"
@@ -1047,7 +1047,7 @@ class TestToolBloatFixesRevocationsAndAliases:
     def test_the_disabled_guard_preserves_a_distinct_alias_collision(self, tmp_path: Path):
         """A collision sibling keeps its mount but loses its family grant."""
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         disabled_url = "https://m.example.com/mcp"
         enabled_url = "https://u.example.com/mcp"
@@ -1099,7 +1099,7 @@ class TestToolBloatFixesRevocationsAndAliases:
     ):
         """Spec-field differences cannot preserve a canonical-family grant."""
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         kiro_dir = tmp_path / "kiro_agents"
         kiro_dir.mkdir(exist_ok=True)
@@ -1113,7 +1113,7 @@ class TestToolBloatFixesRevocationsAndAliases:
             ],
             "mcpServers": {},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
         (tmp_path / "fake_kiro_mcp.json").write_text(
             json.dumps({"mcpServers": {"foo-bar": enabled_spec}})
         )
@@ -1141,7 +1141,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         entry's grant and inject its own client identity into a file we do not own.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         url = "https://mcp.notion.com/mcp"
         (tmp_path / "fake_kiro_mcp.json").write_text(
@@ -1173,7 +1173,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         other's slot. An ambiguous family match must resolve to no owner instead.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         (tmp_path / "fake_kiro_mcp.json").write_text(json.dumps({"mcpServers": {}}))
         url = "https://shared.example.com/mcp"
@@ -1208,7 +1208,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         the store key nor its alias, so the lookup must still find the owner.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         user_url = "https://user.example.com/mcp"
         managed_url = "https://managed.example.com/mcp"
@@ -1246,7 +1246,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         cleared grant, and mints a new sibling on each rebuild.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         (tmp_path / "fake_kiro_mcp.json").write_text(json.dumps({"mcpServers": {}}))
         store = user_home / "mcp.json"
@@ -1299,7 +1299,7 @@ class TestToolBloatFixesRevocationsAndAliases:
         this is the case the slice exists to fix, so it must keep working.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(parents=True, exist_ok=True)
         (user_home / "mcp.json").write_text(
             json.dumps({"mcpServers": {"notion": {"url": "https://mcp.notion.com/mcp"}}})
@@ -1325,7 +1325,7 @@ class TestToolBloatFixesRevocationsAndAliases:
             "allowedTools": [1, "use_aws", None, "web_fetch"],
             "mcpServers": {},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         path = _run_install(tmp_path, cfg_dir)  # must not raise
         config = json.loads(path.read_text(encoding="utf-8"))
@@ -1343,7 +1343,7 @@ class TestToolBloatFixesRevocationsAndAliases:
             "allowedTools": ["read", "read", "use_aws"],
             "mcpServers": {},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         path = _run_install(tmp_path, cfg_dir)
         config = json.loads(path.read_text(encoding="utf-8"))
@@ -1357,10 +1357,10 @@ class TestToolBloatFixesRevocationsAndAliases:
         cfg_dir = _bundled_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
         kiro_dir.mkdir(exist_ok=True)
-        (kiro_dir / "kirocrew.json").write_text('"just a string"')
+        (kiro_dir / "ajcrew.json").write_text('"just a string"')
 
         path = _run_install(tmp_path, cfg_dir)
         config = json.loads(path.read_text(encoding="utf-8"))
         # Should get defaults (fresh install path)
         assert config["model"] == "claude-default"
-        assert "@kirocrew-cron" in config["tools"]
+        assert "@ajcrew-cron" in config["tools"]

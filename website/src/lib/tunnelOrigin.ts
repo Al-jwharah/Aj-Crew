@@ -33,7 +33,7 @@ export function parseLoopbackOriginPort(origin: string): number | null {
 
 // The hosts the server's CSP `frame-src` permits an embedded pane on, matched
 // EXACTLY against `_LOOPBACK_FRAME_SRC` / `_INSTANCES_FRAME_SRC_EXTRA` in
-// src/kiro_crew/dashboard/server.py — not a superset:
+// src/aj_crew/dashboard/server.py — not a superset:
 //   - 127.0.0.1, localhost, 0.0.0.0 are admitted under BOTH http and https;
 //   - a single-label `*.localhost` name is admitted under http ONLY;
 //   - IPv6 loopback [::1] is deliberately NOT admitted (a bracketed IPv6 host

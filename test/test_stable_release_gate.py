@@ -123,20 +123,20 @@ def _make_repo(
     # rather than on the behaviour under test. ``declared_version=None`` omits
     # them deliberately, for the case that pins the missing-file failure.
     if declared_version is not None:
-        (repo / "src" / "kiro_crew").mkdir(parents=True)
-        (repo / "src" / "kiro_crew" / "__init__.py").write_text(
+        (repo / "src" / "aj_crew").mkdir(parents=True)
+        (repo / "src" / "aj_crew" / "__init__.py").write_text(
             f'__version__ = "{declared_version}"\n', encoding="utf-8"
         )
         (repo / "pyproject.toml").write_text(
-            f'[project]\nname = "kirocrew"\nversion = "{declared_version}"\n', encoding="utf-8"
+            f'[project]\nname = "ajcrew"\nversion = "{declared_version}"\n', encoding="utf-8"
         )
         (repo / "website" / "electron").mkdir(parents=True)
         (repo / "website" / "electron" / "package.json").write_text(
-            '{\n  "name": "kirocrew-desktop",\n' f'  "version": "{declared_version}",\n' "}\n",
+            '{\n  "name": "ajcrew-desktop",\n' f'  "version": "{declared_version}",\n' "}\n",
             encoding="utf-8",
         )
         tracked += [
-            "src/kiro_crew/__init__.py",
+            "src/aj_crew/__init__.py",
             "pyproject.toml",
             "website/electron/package.json",
         ]

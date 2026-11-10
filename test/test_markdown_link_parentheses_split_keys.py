@@ -21,24 +21,24 @@ from markdown_link_parentheses_helpers import (
     _slack_reader_sees,
 )
 
-from kiro_crew.discord.renderer import _redact_transformed as discord_redact_transformed
-from kiro_crew.imessage.plaintext import to_plaintext
-from kiro_crew.messaging import display_safety
-from kiro_crew.messaging.display_safety import (
+from aj_crew.discord.renderer import _redact_transformed as discord_redact_transformed
+from aj_crew.imessage.plaintext import to_plaintext
+from aj_crew.messaging import display_safety
+from aj_crew.messaging.display_safety import (
     _REDACTION_TAG,
     DISPLAY_SETTLING_PASSES,
     canonicalize_display,
     redact_for_display,
 )
-from kiro_crew.messaging.renderer import _default_redactor, count_redaction_tags
-from kiro_crew.messaging.split import _flattened_for_any_cut
-from kiro_crew.security import CREDENTIAL_REDACTION_TAGS, EXFILTRATION_REDACTION_TAG_PREFIX
-from kiro_crew.telegram.renderer import (
+from aj_crew.messaging.renderer import _default_redactor, count_redaction_tags
+from aj_crew.messaging.split import _flattened_for_any_cut
+from aj_crew.security import CREDENTIAL_REDACTION_TAGS, EXFILTRATION_REDACTION_TAG_PREFIX
+from aj_crew.telegram.renderer import (
     _display_safe,
     _md_to_telegram_html,
     _strip_md,
 )
-from kiro_crew.whatsapp.renderer import to_whatsapp_text
+from aj_crew.whatsapp.renderer import to_whatsapp_text
 
 
 class TestAnOuterLinkCannotSwallowAnInnerOne:

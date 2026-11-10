@@ -74,7 +74,7 @@ const DEGRADED: AwsAccount = {
 
 const driveExists: DriveStatus = {
   exists: true,
-  bucket: 'kirocrew-drive-abc123',
+  bucket: 'ajcrew-drive-abc123',
   region: 'us-west-2',
   usage: {
     bytes: 3_500_000_000,
@@ -275,7 +275,7 @@ describe('UsagePane', () => {
     renderPane(<UsagePane account={ACCOUNT} />)
 
     const storage = await screen.findByTestId('usage-storage')
-    expect(within(storage).getByTestId('drive-bucket')).toHaveTextContent('kirocrew-drive-abc123')
+    expect(within(storage).getByTestId('drive-bucket')).toHaveTextContent('ajcrew-drive-abc123')
     expect(within(storage).getByTestId('drive-copy-bucket')).toBeTruthy()
     expect(storage).toHaveTextContent('us-west-2')
     // The StorageMeter mounts with the drive's usage split.
@@ -587,15 +587,15 @@ describe('ReconnectAction copy command', () => {
 describe('SetupCard', () => {
   it('previews the bootstrap payload, then confirms and creates the bucket', async () => {
     vi.mocked(awsControlApi.driveBootstrapPreview).mockResolvedValue({
-      preview: true, account: ACCOUNT.account, region: 'us-west-2', resource: 'kirocrew-drive-abc123',
+      preview: true, account: ACCOUNT.account, region: 'us-west-2', resource: 'ajcrew-drive-abc123',
     })
-    vi.mocked(awsControlApi.driveBootstrapConfirm).mockResolvedValue({ created: true, bucket: 'kirocrew-drive-abc123' })
+    vi.mocked(awsControlApi.driveBootstrapConfirm).mockResolvedValue({ created: true, bucket: 'ajcrew-drive-abc123' })
 
     renderWithProviders(<SetupCard account={ACCOUNT.account} region="us-west-2" />)
 
     // Preview shows the payload, confirm creates the bucket.
     fireEvent.click(await screen.findByTestId('drive-preview-btn'))
-    expect(await screen.findByTestId('drive-preview')).toHaveTextContent('kirocrew-drive-abc123')
+    expect(await screen.findByTestId('drive-preview')).toHaveTextContent('ajcrew-drive-abc123')
 
     fireEvent.click(screen.getByTestId('drive-confirm-btn'))
     await waitFor(() => expect(awsControlApi.driveBootstrapConfirm).toHaveBeenCalledWith(ACCOUNT.account))
@@ -642,7 +642,7 @@ describe('SetupCard', () => {
     // reader can paste the permissions below and try again.
     const { AwsControlError } = await import('./api')
     vi.mocked(awsControlApi.driveBootstrapPreview).mockResolvedValue({
-      preview: true, account: ACCOUNT.account, region: 'us-west-2', resource: 'kirocrew-drive-abc123',
+      preview: true, account: ACCOUNT.account, region: 'us-west-2', resource: 'ajcrew-drive-abc123',
     })
     vi.mocked(awsControlApi.driveBootstrapConfirm).mockRejectedValue(new AwsControlError('aws_call_failed', 502))
 

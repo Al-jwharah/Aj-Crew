@@ -12,8 +12,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from kiro_crew.apps.builtins.dev_fleet import repository as repository_mod
-from kiro_crew.apps.builtins.dev_fleet import scratch_worktrees
+from aj_crew.apps.builtins.dev_fleet import repository as repository_mod
+from aj_crew.apps.builtins.dev_fleet import scratch_worktrees
 
 NAME = "wt-in-scratch"
 HEAD = "0123456789abcdef0123456789abcdef01234567"

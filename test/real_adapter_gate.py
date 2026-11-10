@@ -6,7 +6,7 @@ to run it needs an absent adapter to be RED, because a lane whose only guard
 skipped asserted nothing while reporting success -- which is the whole reason a
 skip-only guard is worth replacing.
 
-``KIROCREW_E2E_REQUIRE=1`` separates them, and it is deliberately the switch this
+``AJCREW_E2E_REQUIRE=1`` separates them, and it is deliberately the switch this
 repository already has rather than a second spelling of it:
 ``test/e2e/scenarios/conftest.py`` reads the same name for the same contract ("skip
 on a missing precondition, or FAIL when the job declared the precondition must
@@ -40,7 +40,7 @@ TWO codex contracts this lane cannot measure, which a codex-acp bump has to cove
 by hand: ``session/delete`` disposing the thread, and a real model ANSWERING from a
 reloaded one. Both live in the opt-in
 ``test_codex_session_mcp.py::test_real_codex_acp_load_after_close_restores``, which runs
-only under ``KIROCREW_LIVE_CODEX_PROMPT_TESTS=1`` on a host holding a codex credential.
+only under ``AJCREW_LIVE_CODEX_PROMPT_TESTS=1`` on a host holding a codex credential.
 Close-then-load itself IS in this lane: the turn tests serve codex a loopback model, so
 the thread has a rollout to reload.
 """
@@ -56,7 +56,7 @@ import pytest
 #: The repository's one switch for "this job declared its preconditions must hold",
 #: shared with the E2E suites rather than duplicated. Parsed exactly as they parse
 #: it: ``== "1"``.
-REQUIRE_ENV = "KIROCREW_E2E_REQUIRE"
+REQUIRE_ENV = "AJCREW_E2E_REQUIRE"
 
 #: The marker the lane selects on. Every guarded test carries it, so the lane's
 #: collection does not enumerate node ids and a test added later is included.

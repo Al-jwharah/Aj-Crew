@@ -30,7 +30,7 @@ const slots = [{
   running: false,
   last_message: 'Rendered two apps',
   messages: 1,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
 }]
 
@@ -76,7 +76,7 @@ await stubDashboardApi(page, {
 await page.routeWebSocket(/\/api\/ws/, ws => { wsServer = ws })
 await page.addInitScript(slot => {
   localStorage.setItem('mc-active-slot', slot)
-  localStorage.removeItem('kirocrew.tips.lastShownAt')
+  localStorage.removeItem('ajcrew.tips.lastShownAt')
 }, SLOT)
 
 await page.goto(base + '/', { waitUntil: 'domcontentloaded' })

@@ -39,27 +39,27 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-import kiro_crew.channel as channel_mod
-import kiro_crew.slack.handler as h
-from kiro_crew import llm_helpers, permission_floor
-from kiro_crew.acp.types import AcpEvent
-from kiro_crew.channel import _APPROVAL_FIELD_MAX_CHARS, _stream_task
-from kiro_crew.constants import DENY_CAUSE_APPROVAL_OVERSIZE
-from kiro_crew.deny_notice import _DENY_CAUSE_TEXT, build_refusal_steer_notice
-from kiro_crew.hooks import TOOL_ALLOW, TOOL_DENY, ToolHookResult
-from kiro_crew.messaging import (
+import aj_crew.channel as channel_mod
+import aj_crew.slack.handler as h
+from aj_crew import llm_helpers, permission_floor
+from aj_crew.acp.types import AcpEvent
+from aj_crew.channel import _APPROVAL_FIELD_MAX_CHARS, _stream_task
+from aj_crew.constants import DENY_CAUSE_APPROVAL_OVERSIZE
+from aj_crew.deny_notice import _DENY_CAUSE_TEXT, build_refusal_steer_notice
+from aj_crew.hooks import TOOL_ALLOW, TOOL_DENY, ToolHookResult
+from aj_crew.messaging import (
     APPROVAL_AUTO,
     APPROVAL_INTERACTIVE,
     TransportCapabilities,
     TurnDriver,
 )
-from kiro_crew.messaging import driver as driver_mod
-from kiro_crew.messaging.dispatch import build_tool_gate
-from kiro_crew.messaging.renderer import Renderer
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST
+from aj_crew.messaging import driver as driver_mod
+from aj_crew.messaging.dispatch import build_tool_gate
+from aj_crew.messaging.renderer import Renderer
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST
 
 _GENERIC = "User denied tool execution"
-_TAG = "[Kiro Crew host notice]"
+_TAG = "[Aj Crew host notice]"
 #: Only the POLICY cause appends class-specific remediation; its guidance line
 #: is the fingerprint that must be absent from every non-policy notice.
 _POLICY_GUIDANCE = "allowed alternative"
@@ -68,7 +68,7 @@ _SURFACE_CLAUSE = "tool policy of the surface"
 _TIMEOUT_CLAUSE = "approval prompt expired unanswered"
 _OVERSIZE_CLAUSE = "too long for this channel to show in full"
 
-_SRC = pathlib.Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+_SRC = pathlib.Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 
 def _assert_steered_then_rejected(calls: list[str], steered: list[str], *fragments: str) -> str:
@@ -367,13 +367,13 @@ def _done():
 @pytest.fixture()
 def channel_sel(monkeypatch):
     sel_mock = MagicMock()
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: sel_mock)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: sel_mock)
     return sel_mock
 
 
 @pytest.mark.asyncio
 async def test_channel_blocked_messaging_tool_steers_the_surface_cause(channel_sel):
-    client = _ChannelClient([_perm(text="send_message (kirocrew-core)", title=""), _done()])
+    client = _ChannelClient([_perm(text="send_message (ajcrew-core)", title=""), _done()])
     agent = _make_agent()
     await _stream_task(agent, _make_channel(agent, trusted=True), client, "hi")
     notice = _assert_steered_then_rejected(
@@ -440,7 +440,7 @@ async def test_channel_human_deny_gets_no_notice(channel_sel):
 @pytest.mark.asyncio
 async def test_channel_backend_without_steer_only_rejects(channel_sel):
     client = _ChannelClient(
-        [_perm(text="send_message (kirocrew-core)"), _done()], supports_steer=False
+        [_perm(text="send_message (ajcrew-core)"), _done()], supports_steer=False
     )
     agent = _make_agent()
     await _stream_task(agent, _make_channel(agent, trusted=True), client, "hi")
@@ -461,7 +461,7 @@ async def test_channel_audits_before_the_steer(channel_sel):
             order.append("reject")
             await super().reject_tool(request_id)
 
-    client = _Ordered([_perm(text="send_message (kirocrew-core)"), _done()])
+    client = _Ordered([_perm(text="send_message (ajcrew-core)"), _done()])
     agent = _make_agent()
     await _stream_task(agent, _make_channel(agent, trusted=True), client, "hi")
     assert order[:3] == ["audit", "steer", "reject"], order
@@ -612,7 +612,7 @@ async def test_driver_audits_before_the_steer(monkeypatch):
     order: list[str] = []
     sel_mock = MagicMock()
     sel_mock.log_api_access.side_effect = lambda **kw: order.append("audit")
-    monkeypatch.setattr("kiro_crew.messaging.driver.sel", lambda: sel_mock)
+    monkeypatch.setattr("aj_crew.messaging.driver.sel", lambda: sel_mock)
 
     class _Ordered(_DriverProvider):
         async def steer(self, message):
@@ -636,7 +636,7 @@ class _StalledDriverProvider(_DriverProvider):
 
 async def _cancel_driver_steer(monkeypatch, *, audited: bool) -> MagicMock:
     sel_mock = MagicMock()
-    monkeypatch.setattr("kiro_crew.messaging.driver.sel", lambda: sel_mock)
+    monkeypatch.setattr("aj_crew.messaging.driver.sel", lambda: sel_mock)
     p = _StalledDriverProvider([])
     drv = TurnDriver(p, _Renderer(), approval_mode=APPROVAL_AUTO)
     event = SimpleNamespace(title="W", request_id="rq9")

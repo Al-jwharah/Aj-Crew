@@ -18,11 +18,11 @@ from chat_regenerate_cov80_helpers import state_fixture  # noqa: F401
 from chat_regenerate_cov80_helpers import _make_regen_app
 from chat_test_helpers import pin_harness_choice
 
-from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.dashboard import kiro_readiness
-from kiro_crew.dashboard.chat_rewind import api_chat_slot_rewind
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService, PrerequisiteStatus
+from aj_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.config import AjCrewConfig
+from aj_crew.dashboard import kiro_readiness
+from aj_crew.dashboard.chat_rewind import api_chat_slot_rewind
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService, PrerequisiteStatus
 
 _REGENERATE = ("regenerate", {})
 _EDIT_RESEND = ("edit-resend", {"index": 0, "content": "edited"})
@@ -43,7 +43,7 @@ class _SignedOutKiroCli(KiroPrerequisiteService):
 def _pin_applied(state, **choices: str) -> None:
     """Pin the harness choice in ``config.json`` and apply it to the session manager."""
     pin_harness_choice(**choices)
-    state.sessions._cfg = KiroCrewConfig.load()
+    state.sessions._cfg = AjCrewConfig.load()
 
 
 def _answered_slot(state, key: str = "s1"):
@@ -58,8 +58,8 @@ async def _post(state, route: str, body: dict):
     app = _make_regen_app(state)
     app.router.add_post("/api/chat/slots/{slot}/rewind", api_chat_slot_rewind)
     with (
-        patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()),
-        patch("kiro_crew.dashboard.chat_rewind._run_chat", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_rewind._run_chat", new=AsyncMock()),
     ):
         async with TestClient(TestServer(app)) as client:
             resp = await client.post(f"/api/chat/slots/s1/{route}", json=body)
@@ -97,7 +97,7 @@ async def test_no_slot_or_an_unreadable_selection_keeps_the_gate(state) -> None:
     assert await kiro_readiness.rerun_signs_in_via_kiro_cli(state.sessions, None) is True
     assert await kiro_readiness.rerun_signs_in_via_kiro_cli(None, slot) is True
     with patch(
-        "kiro_crew.dashboard.chat_handlers._configured_backend_for_slot",
+        "aj_crew.dashboard.chat_handlers._configured_backend_for_slot",
         new=AsyncMock(side_effect=OSError("config unreadable")),
     ):
         assert await kiro_readiness.rerun_signs_in_via_kiro_cli(state.sessions, slot) is True

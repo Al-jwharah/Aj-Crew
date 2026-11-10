@@ -42,7 +42,7 @@ vi.mock('../api/client', () => ({
     runCron: vi.fn().mockResolvedValue({}),
     cancelCron: vi.fn().mockResolvedValue({}),
     cronToChat: vi.fn().mockResolvedValue({}),
-    kirocrewAgents: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
+    ajcrewAgents: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
     agentCatalog: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
     // The page now SAYS when the default-agent read fails; an unmocked
     // `api.defaultAgent` would surface that notice in every case here.

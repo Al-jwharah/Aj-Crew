@@ -18,7 +18,7 @@ superseded-by: []
 > flips to `accepted` when one records it in section 7 with the date. Nothing is
 > on main. Verified at `999fcd1292`: in
 > `website/src/pages/members/CrewDynamicDashboard.tsx`, a page's
-> `kirocrew-dashboard:act` message is validated by `actText` and handed to `onAct`,
+> `ajcrew-dashboard:act` message is validated by `actText` and handed to `onAct`,
 > which `MembersPageSidePanel.tsx` implements as `suggestPaneDraft` plus
 > `revealComposer`; `dashboard_frame.py` exports no page-to-host type for `act`;
 > `dashboard/card_send.py` does not exist. Nothing a page can post sends a turn.
@@ -33,7 +33,7 @@ superseded-by: []
 A button the crewmate's page draws can ask the host to send its reply into that
 crewmate's own thread. Today the same button can only put the reply in the chat
 box, and the person then switches to the chat and presses send. The new message,
-`kirocrew-dashboard:send {text}`, is a request, not a command. The host sends
+`ajcrew-dashboard:send {text}`, is a request, not a command. The host sends
 only after a recent real interaction while the page's frame holds focus, only into
 the thread of the tab the page is shown in, and the gateway refuses it in every state where a person's typed
 words would mean more than the page's. The turn it starts never inherits the
@@ -47,10 +47,10 @@ A Dashboard page is HTML the crewmate wrote. It runs in a frame with
 `allow-scripts` and nothing else, on an opaque origin, with `connect-src 'none'`.
 Its only channels to the host are postMessage types. Three are in use:
 
-- `kirocrew-dashboard:ready` and `kirocrew-dashboard:refetch`, which carry no
+- `ajcrew-dashboard:ready` and `ajcrew-dashboard:refetch`, which carry no
   user content (`dashboard_frame.READY_MESSAGE_TYPE`, `REFETCH_MESSAGE_TYPE`).
-- `kirocrew-dashboard:act {text}`, which the host turns into a composer draft.
-- `kirocrew-dashboard:open {url}`, which opens one GitHub pull-request URL, and
+- `ajcrew-dashboard:act {text}`, which the host turns into a composer draft.
+- `ajcrew-dashboard:open {url}`, which opens one GitHub pull-request URL, and
   only with a live user activation (`useFrameOpenLink`).
 
 `act` is fill-only because a page that could speak as the person would let a
@@ -68,7 +68,7 @@ to send.
 
 ### 3.1 The message
 
-`{type: 'kirocrew-dashboard:send', text}`. The text rules are `act`'s: trimmed,
+`{type: 'ajcrew-dashboard:send', text}`. The text rules are `act`'s: trimmed,
 at most 600 characters, no control character except a newline. The type is
 exported as `dashboard_frame.SEND_MESSAGE_TYPE` (and `ACT_MESSAGE_TYPE`, which the
 frame did not export before), pinned to the tab's literals by a test. The message
@@ -176,7 +176,7 @@ section 4.1. It is decided together with the other default it meets: crewmate
 threads start in `trust` (every tool call auto-approved). The two defaults do not
 compound, because a card turn does not use the thread's trust (section 3.7). A
 page-chosen turn in a default thread reaches the person's approval card for every
-tool Kiro Crew gates, which is every tool except those the agent spec pre-allows
+tool Aj Crew gates, which is every tool except those the agent spec pre-allows
 (`allowedTools`, section 3.7 and the residual in 4.1). Opt-in would leave the feature unused: a person who never opens the
 Profile tab never learns the switch exists, and the buttons it serves are the ones
 the person already clicked to answer. What makes default-on acceptable is the bounds
@@ -339,7 +339,7 @@ bounds it:
 - the turn begins `[Dashboard card]`, so the person and the agent see where it came
   from, and a leading `/clear` is not a command;
 - it never counts as an approval, has no authority over session directives, and
-  the tool calls Kiro Crew gates are never auto-approved (3.7);
+  the tool calls Aj Crew gates are never auto-approved (3.7);
 - the text is redacted like any non-human text before it is stored (section 3.4);
 - the Profile switch turns it off per crewmate, and every decision, allowed or
   refused, is written to the SEL.

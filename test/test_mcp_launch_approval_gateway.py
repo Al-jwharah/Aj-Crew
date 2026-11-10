@@ -35,7 +35,7 @@ from mcp_launch_approval_helpers import (  # noqa: F401 -- the fixture is reques
     toggle_home_fixture,
 )
 
-from kiro_crew.mcp_gateway import rewriter
+from aj_crew.mcp_gateway import rewriter
 
 #: Opts this module out of the conftest fixture that approves every gatewayd launch.
 ENFORCE_LAUNCH_APPROVAL = True
@@ -72,12 +72,12 @@ def test_gateway_spawn_and_env_tests_choose_launch_approval_fixture():
         imported_symbols = set()
         enforced = False
         for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew.mcp_gateway":
+            if isinstance(node, ast.ImportFrom) and node.module == "aj_crew.mcp_gateway":
                 module_aliases.update(
                     alias.asname or alias.name for alias in node.names if alias.name == "gatewayd"
                 )
             elif (
-                isinstance(node, ast.ImportFrom) and node.module == "kiro_crew.mcp_gateway.gatewayd"
+                isinstance(node, ast.ImportFrom) and node.module == "aj_crew.mcp_gateway.gatewayd"
             ):
                 imported_symbols.update(alias.name for alias in node.names if sensitive(alias.name))
             elif isinstance(node, ast.Assign):
@@ -110,12 +110,12 @@ def test_gatewayd_stems_share_the_approval_store_codec():
     assert mod is not None
     codec = getattr(mod, "target_env_stem", None)
     assert codec is not None, "launch_approval must define the single target-stem codec"
-    from kiro_crew.mcp_gateway import gatewayd
+    from aj_crew.mcp_gateway import gatewayd
 
     env = {
-        "KIROCREW_MCP_TARGET_SRV": "x",
+        "AJCREW_MCP_TARGET_SRV": "x",
         "MC_MCP_TARGET_OLD__abc": "x",
-        "KIROCREW_MCP_TARGET_": "x",
+        "AJCREW_MCP_TARGET_": "x",
         "OTHER": "x",
     }
     assert gatewayd.resolvable_target_stems(env) == ["OLD", "SRV"]
@@ -126,12 +126,12 @@ def test_boot_persists_launch_state_only_after_process_readiness(tmp_path):
     import asyncio
     from unittest.mock import AsyncMock, MagicMock, patch
 
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.slack import gateway as gw
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.slack import gateway as gw
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.mcp_gateway.stub_servers = ["srv"]
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U"}):
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U"}):
         orch = gw.GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
     order: list[str] = []
 
@@ -161,10 +161,10 @@ def test_boot_persists_launch_state_only_after_process_readiness(tmp_path):
         persist.result()
 
     with (
-        patch("kiro_crew.slack.gateway.is_gateway_supported", return_value=True),
-        patch("kiro_crew.slack.gateway.rewrite_agents", return_value=(None, {})),
-        patch("kiro_crew.slack.gateway.GatewayManager", return_value=manager),
-        patch("kiro_crew.slack.gateway.save_pass", side_effect=_save),
+        patch("aj_crew.slack.gateway.is_gateway_supported", return_value=True),
+        patch("aj_crew.slack.gateway.rewrite_agents", return_value=(None, {})),
+        patch("aj_crew.slack.gateway.GatewayManager", return_value=manager),
+        patch("aj_crew.slack.gateway.save_pass", side_effect=_save),
     ):
         asyncio.run(_run())
 
@@ -175,12 +175,12 @@ def test_gateway_rewrite_and_target_filter_share_a_maintenance_worker(tmp_path):
     import asyncio
     from unittest.mock import AsyncMock, MagicMock, patch
 
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.slack import gateway as gw
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.slack import gateway as gw
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.mcp_gateway.stub_servers = ["srv"]
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U"}):
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U"}):
         orch = gw.GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
     manager = MagicMock()
     manager.start = AsyncMock(return_value=False)
@@ -196,10 +196,10 @@ def test_gateway_rewrite_and_target_filter_share_a_maintenance_worker(tmp_path):
         return target_env, []
 
     with (
-        patch("kiro_crew.slack.gateway.is_gateway_supported", return_value=True),
-        patch("kiro_crew.slack.gateway.rewrite_agents", side_effect=_rewrite),
-        patch("kiro_crew.slack.gateway.filter_target_env", side_effect=_filter),
-        patch("kiro_crew.slack.gateway.GatewayManager", return_value=manager),
+        patch("aj_crew.slack.gateway.is_gateway_supported", return_value=True),
+        patch("aj_crew.slack.gateway.rewrite_agents", side_effect=_rewrite),
+        patch("aj_crew.slack.gateway.filter_target_env", side_effect=_filter),
+        patch("aj_crew.slack.gateway.GatewayManager", return_value=manager),
     ):
         asyncio.run(orch._init_mcp_gateway())
 
@@ -213,20 +213,20 @@ def test_the_toggle_resolves_with_the_inputs_the_gateway_start_rewrites_with(tmp
     import asyncio
     from unittest.mock import AsyncMock, MagicMock, patch
 
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.slack import gateway as gw
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.slack import gateway as gw
 
-    resolve = importlib.import_module("kiro_crew.mcp_gateway.launch_resolve")
-    cfg = KiroCrewConfig()
+    resolve = importlib.import_module("aj_crew.mcp_gateway.launch_resolve")
+    cfg = AjCrewConfig()
     cfg.mcp_gateway.stub_servers = ["srv"]
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U"}):
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U"}):
         orch = gw.GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
     manager = MagicMock()
     manager.start = AsyncMock(return_value=False)
     with (
-        patch("kiro_crew.slack.gateway.is_gateway_supported", return_value=True),
-        patch("kiro_crew.slack.gateway.rewrite_agents", return_value=(None, {})) as rw,
-        patch("kiro_crew.slack.gateway.GatewayManager", return_value=manager),
+        patch("aj_crew.slack.gateway.is_gateway_supported", return_value=True),
+        patch("aj_crew.slack.gateway.rewrite_agents", return_value=(None, {})) as rw,
+        patch("aj_crew.slack.gateway.GatewayManager", return_value=manager),
     ):
         asyncio.run(orch._init_mcp_gateway())
 
@@ -235,8 +235,8 @@ def test_the_toggle_resolves_with_the_inputs_the_gateway_start_rewrites_with(tmp
 
 
 def test_seeding_routes_the_name_without_approving_its_launch(tmp_path, toggle_home):
-    from kiro_crew.mcp_gateway import verdict_cache as vc
-    from kiro_crew.mcp_gateway.seed import SeedPlan, apply_seed
+    from aj_crew.mcp_gateway import verdict_cache as vc
+    from aj_crew.mcp_gateway.seed import SeedPlan, apply_seed
 
     _declare(toggle_home, "agent spec", _APPROVED_CMD, [])
     assert apply_seed(SeedPlan(add_stub=("srv",)), {}, vc.VerdictCache(vc.cache_path(tmp_path)))
@@ -274,8 +274,8 @@ def test_a_warm_boot_with_approvals_is_served_from_the_rewrite_cache(tmp_path):
 async def test_re_approving_a_running_server_keeps_its_declared_env_forwarded(
     tmp_path, toggle_home
 ):
-    from kiro_crew.mcp_gateway import gatewayd
-    from kiro_crew.mcp_gateway.hashing import hash_effective_env
+    from aj_crew.mcp_gateway import gatewayd
+    from aj_crew.mcp_gateway.hashing import hash_effective_env
 
     declared = {"FOO": "bar"}
     (toggle_home / "a.json").write_text(

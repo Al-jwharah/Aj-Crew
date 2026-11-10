@@ -554,8 +554,8 @@ def test_a_bare_copy_runs_as_a_script_without_the_package_and_writes_no_bytecode
     config.write_text(json.dumps({"sessions": ["worker"]}), encoding="utf-8")
     env = {
         "PATH": os.environ.get("PATH", ""),
-        "KIROCREW_HOME": str(crew),
-        "KIROCREW_PROBE_PROC_ROOT": str(proc),
+        "AJCREW_HOME": str(crew),
+        "AJCREW_PROBE_PROC_ROOT": str(proc),
     }
     if "SYSTEMROOT" in os.environ:
         env["SYSTEMROOT"] = os.environ["SYSTEMROOT"]

@@ -25,10 +25,10 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
-from kiro_crew.config import live
-from kiro_crew.config.live import ConfigChange, ConfigWatch
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.sections import _clamp_pct, _normalize_threshold_pair
+from aj_crew.config import live
+from aj_crew.config.live import ConfigChange, ConfigWatch
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.sections import _clamp_pct, _normalize_threshold_pair
 
 # ------------------------------------------------------------------
 # Config documents and the shape a subscriber receives
@@ -58,8 +58,8 @@ def change(new: Any, *changed: str, old: Any = None) -> ConfigChange:
 
 
 def cfg_with(section_name: str, degraded: frozenset[str] = frozenset(), **section_kw: Any):
-    """A real :class:`KiroCrewConfig` carrying one replaced section."""
-    cfg = KiroCrewConfig()
+    """A real :class:`AjCrewConfig` carrying one replaced section."""
+    cfg = AjCrewConfig()
     section = replace(getattr(cfg, section_name), **section_kw)
     return replace(cfg, _degraded_sections=degraded, **{section_name: section})
 
@@ -97,7 +97,7 @@ def prime_raw_section(section_name: str, **raw: Any) -> None:
     clamp instead of the point-of-use read. Setting the fields after construction
     is what puts an unclamped value in front of the reader.
     """
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     section = getattr(cfg, section_name)
     for key, value in raw.items():
         setattr(section, key, value)
@@ -108,11 +108,11 @@ def prime_live_sections(cfg: Any, *names: str) -> None:
     """Publish *cfg*'s *names* sections as the live snapshot.
 
     Every field the test's stand-in carries is copied onto a real
-    :class:`KiroCrewConfig`; the loader's own defaults fill the rest. Call it
+    :class:`AjCrewConfig`; the loader's own defaults fill the rest. Call it
     again after mutating the boot copy mid-test -- the snapshot is a copy, not a
     view.
     """
-    base = KiroCrewConfig()
+    base = AjCrewConfig()
     sections: dict[str, Any] = {}
     for name in names:
         section = getattr(cfg, name, None)
@@ -158,9 +158,9 @@ def point_loader_at(tmp_path: Path, monkeypatch: Any, doc: dict) -> Path:
     """Point the loader at a temp ``config.json`` carrying *doc*."""
     cfg_path = tmp_path / "config.json"
     write_config(cfg_path, doc)
-    monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: cfg_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: cfg_path)
     monkeypatch.setattr(
-        "kiro_crew.config.loader.config_local_path", lambda: tmp_path / "config.local.json"
+        "aj_crew.config.loader.config_local_path", lambda: tmp_path / "config.local.json"
     )
     return cfg_path
 
@@ -235,7 +235,7 @@ class FakeIMessageClient:
 
 class FakeWhatsAppClient:
     def __init__(self) -> None:
-        from kiro_crew.whatsapp.jids import OwnIdentity
+        from aj_crew.whatsapp.jids import OwnIdentity
 
         self.sent: list[tuple[str, str]] = []
         self.on_message = None
@@ -324,7 +324,7 @@ class ChannelCase:
 
     @property
     def transport_module(self) -> str:
-        return f"kiro_crew.{self.name}.transport"
+        return f"aj_crew.{self.name}.transport"
 
     @property
     def audit_operation(self) -> str:
@@ -364,7 +364,7 @@ class ChannelCase:
 
 
 def _inbound(channel_type: str, user_id: str, conversation_id: str) -> Any:
-    from kiro_crew.messaging.transport import InboundMessage
+    from aj_crew.messaging.transport import InboundMessage
 
     return InboundMessage(
         channel_type=channel_type, user_id=user_id, conversation_id=conversation_id, text="hi"
@@ -434,26 +434,26 @@ def _generation_probe(read: Callable[[Any], Any], bucket: Any):
 @functools.lru_cache(maxsize=1)
 def channel_cases() -> tuple[ChannelCase, ...]:
     """Every channel whose allow-list follows ``config.json`` without a restart."""
-    from kiro_crew.discord.transport import DiscordTransport
-    from kiro_crew.discord.transport_dispatch import DiscordDispatcher
-    from kiro_crew.feishu.client import CHAT_P2P, LarkInbound
-    from kiro_crew.feishu.transport import FeishuTransport
-    from kiro_crew.feishu.transport_dispatch import FeishuDispatcher
-    from kiro_crew.imessage.transport import IMessageTransport
-    from kiro_crew.imessage.transport_dispatch import IMessageDispatcher
-    from kiro_crew.teams.transport import TeamsTransport
-    from kiro_crew.teams.transport_dispatch import TeamsDispatcher
-    from kiro_crew.telegram.transport import TelegramTransport
-    from kiro_crew.telegram.transport_dispatch import TelegramDispatcher
-    from kiro_crew.webex.transport import WebexTransport
-    from kiro_crew.webex.transport_dispatch import WebexDispatcher
-    from kiro_crew.wecom.client import WeComInbound
-    from kiro_crew.wecom.transport import WeComTransport
-    from kiro_crew.wecom.transport_dispatch import WeComDispatcher
-    from kiro_crew.weixin.transport import WeixinTransport
-    from kiro_crew.weixin.transport_dispatch import WeixinDispatcher
-    from kiro_crew.whatsapp.transport import WhatsAppTransport
-    from kiro_crew.whatsapp.transport_dispatch import WhatsAppDispatcher
+    from aj_crew.discord.transport import DiscordTransport
+    from aj_crew.discord.transport_dispatch import DiscordDispatcher
+    from aj_crew.feishu.client import CHAT_P2P, LarkInbound
+    from aj_crew.feishu.transport import FeishuTransport
+    from aj_crew.feishu.transport_dispatch import FeishuDispatcher
+    from aj_crew.imessage.transport import IMessageTransport
+    from aj_crew.imessage.transport_dispatch import IMessageDispatcher
+    from aj_crew.teams.transport import TeamsTransport
+    from aj_crew.teams.transport_dispatch import TeamsDispatcher
+    from aj_crew.telegram.transport import TelegramTransport
+    from aj_crew.telegram.transport_dispatch import TelegramDispatcher
+    from aj_crew.webex.transport import WebexTransport
+    from aj_crew.webex.transport_dispatch import WebexDispatcher
+    from aj_crew.wecom.client import WeComInbound
+    from aj_crew.wecom.transport import WeComTransport
+    from aj_crew.wecom.transport_dispatch import WeComDispatcher
+    from aj_crew.weixin.transport import WeixinTransport
+    from aj_crew.weixin.transport_dispatch import WeixinDispatcher
+    from aj_crew.whatsapp.transport import WhatsAppTransport
+    from aj_crew.whatsapp.transport_dispatch import WhatsAppDispatcher
 
     async def _no_dispatch(msg: Any) -> None:
         return None
@@ -809,10 +809,10 @@ class GatedCase:
 
 @functools.lru_cache(maxsize=1)
 def gated_cases() -> tuple[GatedCase, ...]:
-    from kiro_crew.feishu.client import CHAT_GROUP, LarkInbound
-    from kiro_crew.feishu.transport import FeishuTransport
-    from kiro_crew.telegram.transport import TelegramTransport, forum_gate_outcome
-    from kiro_crew.webex.transport import WebexTransport
+    from aj_crew.feishu.client import CHAT_GROUP, LarkInbound
+    from aj_crew.feishu.transport import FeishuTransport
+    from aj_crew.telegram.transport import TelegramTransport, forum_gate_outcome
+    from aj_crew.webex.transport import WebexTransport
 
     def telegram_build() -> tuple[Any, Callable[[], Any]]:
         t = TelegramTransport(FakeClient(), allowed_user_ids=[7])
@@ -911,9 +911,9 @@ def normalizer_cases() -> tuple[tuple[str, Callable[[Any], Any], Any, Any], ...]
     unusable ENTRIES are dropped, and an unusable WHOLE VALUE answers ``None``
     so the caller keeps its previous roster instead of emptying it.
     """
-    from kiro_crew.imessage.transport import allowed_handles_from_config
-    from kiro_crew.teams.transport import allowed_emails_from_config
-    from kiro_crew.wecom.transport import allowed_userids_from_config
+    from aj_crew.imessage.transport import allowed_handles_from_config
+    from aj_crew.teams.transport import allowed_emails_from_config
+    from aj_crew.wecom.transport import allowed_userids_from_config
 
     return (
         (

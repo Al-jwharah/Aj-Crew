@@ -36,7 +36,7 @@ from turn_harness import (
     run_turn,
 )
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
@@ -44,18 +44,18 @@ from kiro_crew.acp.types import (
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.dashboard import chat_handlers, chat_runner
-from kiro_crew.dashboard.chat_api.slot_lifecycle import (
+from aj_crew.dashboard import chat_handlers, chat_runner
+from aj_crew.dashboard.chat_api.slot_lifecycle import (
     _close_slot,
     _drain_file_changes_flush,
     api_chat_slots_cleanup,
 )
-from kiro_crew.dashboard.chat_runner import (
+from aj_crew.dashboard.chat_runner import (
     _flush_file_changes,
     _flush_file_changes_off_loop,
     _Snapshot,
 )
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.state import _ChatSlot
 
 #: A ceiling that only names a hang (rule D1): a read parked on the loop can never
 #: be released by a loop task, so the wait ends here with a failure that says so.

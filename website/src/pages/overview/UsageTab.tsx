@@ -47,8 +47,8 @@ export default function UsageTab() {
   // crew members on another harness (member_acp_backend) write to the same
   // store and count whatever credits they recorded.
   const cfgQuery = useQuery<AcpBackendConfig>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
   })
   const creditsHarness = reportsCredits(cfgQuery.data)
   // A config read that failed with nothing cached is said where the card would

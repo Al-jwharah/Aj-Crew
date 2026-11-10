@@ -1,7 +1,7 @@
 """Dev Fleet's split ``worktree_ops`` and ``live`` keep the patch seams each had as one module.
 
-Both modules under ``kiro_crew.apps.builtins.dev_fleet`` are mirror facades
-(:mod:`kiro_crew._facade_mirror`) over the ``<stem>_<role>`` owners beside them. Callers,
+Both modules under ``aj_crew.apps.builtins.dev_fleet`` are mirror facades
+(:mod:`aj_crew._facade_mirror`) over the ``<stem>_<role>`` owners beside them. Callers,
 ``server.py``'s re-export of their ``__all__`` and the tests still reach every name as
 ``<stem>.<name>``, and the moved code reads its names as plain module globals, so a patch
 through a facade reaches that code only because the mirror writes it into every module
@@ -31,8 +31,8 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew.apps.builtins.dev_fleet import live, server, worktree_ops
+from aj_crew import _facade_mirror
+from aj_crew.apps.builtins.dev_fleet import live, server, worktree_ops
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_worktree_ops_live_facades")
 
@@ -40,7 +40,7 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_worktree_ops_live_facades")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("corpus_gate", "owners_in_layer_order_each_facade")
 
-PKG = "kiro_crew.apps.builtins.dev_fleet"
+PKG = "aj_crew.apps.builtins.dev_fleet"
 
 
 @dataclasses.dataclass(frozen=True)
@@ -121,7 +121,7 @@ def _test_tree_files() -> list[Path]:
         rel = path.relative_to(root).as_posix()
         if rel == "conftest.py" or path.is_relative_to(test_root):
             found.append(path)
-        elif rel.startswith("src/kiro_crew/apps/builtins/") and "/tests/" in rel:
+        elif rel.startswith("src/aj_crew/apps/builtins/") and "/tests/" in rel:
             found.append(path)
     return found
 
@@ -158,7 +158,7 @@ def _home_imports(facade: Facade) -> dict[str, tuple[str, str]]:
             home = node.module or ""
             if node.level:
                 home = PKG + (f".{node.module}" if node.module else "")
-            if not home.startswith("kiro_crew") or home in family:
+            if not home.startswith("aj_crew") or home in family:
                 continue
             for alias in node.names:
                 if f"{home}.{alias.name}" not in family:

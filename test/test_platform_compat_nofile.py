@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.mcp_gateway import host_budget as hb
+from aj_crew import platform_compat as pc
+from aj_crew.mcp_gateway import host_budget as hb
 
 
 @pytest.mark.skipif(not pc.IS_POSIX, reason="rlimits are POSIX")

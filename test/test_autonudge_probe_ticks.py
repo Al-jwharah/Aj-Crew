@@ -13,8 +13,8 @@ import pytest
 from autonudge_helpers import _enable  # noqa: F401
 from autonudge_helpers import _structured_monitor
 
-from kiro_crew import autonudge as _an
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew import autonudge as _an
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
 
 #: Lost-run ceiling for synchronization the test itself must release. It is a
 #: hang guard whose expiry fails at the awaited line, never a performance
@@ -31,7 +31,7 @@ async def test_a_long_quiet_streak_is_delivered_anyway(tmp_path, monkeypatch):
     a moving base -- is invisible to it. Inference cannot read that intent out of
     the wording, so the bound is what keeps the design honest.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     fired: list[NudgeLoop] = []
 
@@ -77,7 +77,7 @@ async def test_an_unusable_instruction_mid_poll_discards_the_verdict(tmp_path, m
     An edit mid-poll that stops naming a subject must not let the verdict settle the
     watch. (A host change cannot happen: only an explicit github.com URL infers.)
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -119,7 +119,7 @@ async def test_the_tick_recovers_the_host_from_the_instruction(tmp_path, monkeyp
     """
     import json
 
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     seen: list[str] = []
 
@@ -158,7 +158,7 @@ async def test_a_drifted_instruction_fires_instead_of_observing(tmp_path, monkey
     disagreement by guessing which one is right is how a watch ends up observing
     the wrong pull request.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     polled: list[str] = []
 
@@ -196,7 +196,7 @@ async def test_a_re_owed_claim_survives_the_backoff_re_arm(tmp_path, monkeypatch
     ``_arm_timer`` cancels before it creates, and replacing a timer is not cancelling a
     cycle. An explicit cancel still drops the claim, by design.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return False
@@ -242,7 +242,7 @@ async def test_a_floor_tick_is_charged_only_when_its_delivery_lands(tmp_path, mo
     A busy slot can refuse the floor's fire, and the free-tick figure is ``quiet_ticks``
     minus ``floor_ticks``, so charging at the decision understates the saving.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     outcomes = [False, True]
 
@@ -554,7 +554,7 @@ async def test_a_refused_wake_is_charged_once_when_its_retry_delivers(tmp_path, 
 
     The refusal charges nothing and the follow-up retry that delivers charges one.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     outcomes = [False, True]
 
@@ -601,7 +601,7 @@ async def test_an_oversized_stored_pr_baseline_is_bounded_by_the_loader(tmp_path
     The bound has to be applied where the row is read, beside the four sibling judge maps
     that are already rebuilt there.
     """
-    from kiro_crew import autonudge as _an
+    from aj_crew import autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -640,7 +640,7 @@ async def test_a_malformed_pr_baseline_never_disables_the_loop(tmp_path, stored)
     A non-iterable would skip the whole record; a string or mapping would iterate into
     bogus remark ids. Only a list is accepted.
     """
-    from kiro_crew import autonudge as _an
+    from aj_crew import autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -686,7 +686,7 @@ async def test_a_wake_keeps_the_interrupted_poll_doubt_until_delivery_settles(
     loses the signal unless the marker outlives the fire. QUIET and FALLBACK clear it at
     once: neither has anything to lose.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     seen_during_fire: list[bool] = []
 
@@ -731,7 +731,7 @@ async def test_an_upgraded_record_with_a_monitor_but_no_gate_is_not_polled(tmp_p
     A record with a monitor dict but no ``gate`` key decodes to ``gate=False``; polling
     it would let a terminal verdict deactivate an opted-out loop.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     polled: list[str] = []
 
@@ -771,7 +771,7 @@ async def test_an_interrupted_poll_fires_on_the_next_tick(tmp_path, monkeypatch)
     mid-poll shutdown would read the state as unchanged. The next tick fires, and the
     doubt is consumed once rather than latching.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -872,7 +872,7 @@ async def test_a_refused_fire_charges_no_wake(tmp_path, monkeypatch):
     the follow-up allowance for it, so the next tick would skip its observation
     to protect work that was never started.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def refuse(loop):
         return False
@@ -913,7 +913,7 @@ async def test_a_quiet_tick_re_arms_its_own_timer(tmp_path, monkeypatch):
     slot, the fire cycle's own exit for a channel key -- and a quiet tick reaches
     neither. "No turn was spent" alone cannot tell a dead watch from a calm one.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):  # pragma: no cover - must not be reached
         raise AssertionError("a quiet tick must not fire")
@@ -950,7 +950,7 @@ async def test_a_wake_buys_exactly_one_follow_up_turn_then_gating_resumes(tmp_pa
     keeps that work moving; the bound is what stops the guard from quietly
     disabling the gate altogether.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     fired: list[NudgeLoop] = []
 
@@ -1005,7 +1005,7 @@ async def test_a_quiet_probe_tick_dispatches_zero_turns(tmp_path, monkeypatch):
     deactivated on a quiet tick would end the watch on the first uneventful
     observation, which is every watch's normal state.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     fired: list[NudgeLoop] = []
 
@@ -1049,7 +1049,7 @@ async def test_a_judge_overriding_a_quiet_probe_is_not_metered_as_a_free_tick(
     before asking would overstate the saving this feature exists to report, and it
     would walk a loop that keeps delivering toward a forced floor tick it never earned.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     fired: list[NudgeLoop] = []
 
@@ -1087,7 +1087,7 @@ async def test_a_judge_overriding_a_quiet_probe_is_not_metered_as_a_free_tick(
 
 @pytest.mark.asyncio
 async def test_a_waking_probe_tick_dispatches_exactly_one_turn(tmp_path, monkeypatch):
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     fired: list[NudgeLoop] = []
 
@@ -1151,7 +1151,7 @@ async def test_a_monitor_whose_kind_has_no_probe_fires_exactly_as_before(tmp_pat
 
 @pytest.mark.asyncio
 async def test_a_probe_that_raises_still_fires_rather_than_going_silent(tmp_path, monkeypatch):
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     fired: list[NudgeLoop] = []
 

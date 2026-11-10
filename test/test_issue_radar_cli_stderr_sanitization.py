@@ -6,7 +6,7 @@ those are stripped while the diagnostics a user acts on survive.
 
 from __future__ import annotations
 
-from kiro_crew.apps.builtins.issue_radar.backend.errors import sanitize_cli_stderr
+from aj_crew.apps.builtins.issue_radar.backend.errors import sanitize_cli_stderr
 
 
 class TestProviderStderrSanitization:

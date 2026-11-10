@@ -25,9 +25,9 @@ from issue_radar_crew_store_helpers import (  # noqa: F401 -- the autouse fixtur
 )
 
 from conftest import make_dir_link
-from kiro_crew.apps.builtins.issue_radar.backend import crew_store as cs
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log_projection
+from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log_projection
 
 
 def test_reads_apply_units_in_the_order_they_recorded_not_header_order(tmp_path, monkeypatch):
@@ -35,7 +35,7 @@ def test_reads_apply_units_in_the_order_they_recorded_not_header_order(tmp_path,
     units by the order the crew RECORDED into them. Header clock order is what a
     backward clock step inverts; here the store is made to list the units in that
     inverted order, and the read still applies the later write last."""
-    from kiro_crew.crew_log import store as crew_log_store
+    from aj_crew.crew_log import store as crew_log_store
 
     crew = _crew(tmp_path)
     cid = crew["id"]
@@ -70,7 +70,7 @@ def test_a_resets_unit_that_has_not_recorded_yet_reads_last(tmp_path, monkeypatc
     ``createdAt`` and fall back to an id order (``acp-10`` before ``acp-9``)."""
     import itertools
 
-    from kiro_crew.crew_log import store as crew_log_store
+    from aj_crew.crew_log import store as crew_log_store
 
     ticks = itertools.count(1_700_000_000_000, 1_000)
     monkeypatch.setattr(crew_log_store, "now_ms", lambda: next(ticks))  # flake-ok: fixed clock pin
@@ -140,7 +140,7 @@ def test_the_unit_order_write_never_follows_a_planted_link(tmp_path):
     assert (
         victim.read_text(encoding="utf-8") == "operator data\n"
     ), "nothing written through the link"
-    from kiro_crew import atomic_write as atomic_write_module
+    from aj_crew import atomic_write as atomic_write_module
 
     if atomic_write_module.pinned_parent_replace_supported():
         # The staged file is renamed over the link: the link is replaced, never followed.
@@ -161,8 +161,8 @@ def test_the_name_screen_refuses_a_linked_order_file_on_every_platform(tmp_path,
     screen is stubbed True for the order path ALONE; the real function answers for every
     other path, so a linked ancestor cannot be what refuses.
     """
-    from kiro_crew import atomic_write as atomic_write_module
-    from kiro_crew import platform_compat
+    from aj_crew import atomic_write as atomic_write_module
+    from aj_crew import platform_compat
 
     crew, sid = _live_crew(tmp_path)
     cid = crew["id"]
@@ -220,7 +220,7 @@ def test_the_unit_order_fallback_screen_answers_for_a_junction_not_only_a_symlin
     this fallback, since it has no descriptor-relative rename -- with no boundary.
     Pinned by reporting a link through the predicate while the filesystem holds a
     plain directory: a screen that consulted ``is_symlink`` would write anyway."""
-    from kiro_crew import atomic_write as atomic_write_module
+    from aj_crew import atomic_write as atomic_write_module
 
     crew, sid = _live_crew(tmp_path)
     cid = crew["id"]
@@ -255,7 +255,7 @@ def test_an_append_that_landed_after_the_flush_budget_publishes_its_unit_precede
     that write's own append moves the live unit after it."""
     crew, sid = _live_crew(tmp_path)
     cid = crew["id"]
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import emit as crew_log_emit
 
     real_flush = crew_log_emit.flush
     monkeypatch.setattr(crew_log_emit, "flush", lambda *a, **k: False)
@@ -320,7 +320,7 @@ def test_a_write_that_never_landed_does_not_claim_the_newest_entry(tmp_path, mon
 
 def _fallback_only(monkeypatch):
     """Take the by-name branch on a host that would otherwise write through a fd."""
-    from kiro_crew import atomic_write as atomic_write_module
+    from aj_crew import atomic_write as atomic_write_module
 
     monkeypatch.setattr(atomic_write_module, "pinned_parent_replace_supported", lambda: False)
 
@@ -537,7 +537,7 @@ def test_the_pinned_parent_branch_is_unchanged_on_a_posix_host(tmp_path):
 
     POSIX production takes this branch, so this is the pin that says POSIX behaviour
     did not move: the walk is reached only through the by-name fallback."""
-    from kiro_crew import atomic_write as atomic_write_module
+    from aj_crew import atomic_write as atomic_write_module
 
     if not atomic_write_module.pinned_parent_replace_supported():
         pytest.skip("this host has no descriptor-relative rename; the fallback is the only path")
@@ -738,7 +738,7 @@ def test_the_posix_read_path_takes_no_hold(tmp_path):
     an open that refuses a reparse point. POSIX has neither, writes through a pinned
     descriptor instead, and a walk here would refuse components that POSIX today
     resolves -- so this is the pin that says POSIX behaviour did not move."""
-    from kiro_crew import atomic_write as atomic_write_module
+    from aj_crew import atomic_write as atomic_write_module
 
     if not atomic_write_module.pinned_parent_replace_supported():
         pytest.skip("this host has no descriptor-relative rename; the fallback is the only path")

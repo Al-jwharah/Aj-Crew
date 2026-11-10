@@ -1,4 +1,4 @@
-"""``kirocrew restart --when-idle`` and the gateway idle check it asks.
+"""``ajcrew restart --when-idle`` and the gateway idle check it asks.
 
 A Remote Crew "Update" or "Restart" must not stop the crew's running turns and
 subagents. The remote job runs ``restart --when-idle``, which asks the crew's own gateway
@@ -19,12 +19,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import cli_restart_idle as idle_cli
-from kiro_crew import cli_server, cli_server_stop
-from kiro_crew.dashboard.handlers import restart_gate
-from kiro_crew.service import controller as service_controller
-from kiro_crew.session_parts import claims as _claims
-from kiro_crew.slack import gateway
+from aj_crew import cli_restart_idle as idle_cli
+from aj_crew import cli_server, cli_server_stop
+from aj_crew.dashboard.handlers import restart_gate
+from aj_crew.service import controller as service_controller
+from aj_crew.session_parts import claims as _claims
+from aj_crew.slack import gateway
 
 
 class _Sessions:
@@ -83,7 +83,7 @@ class TestGate:
         orch = _orchestrator((0, 0), sessions)
         installer = SimpleNamespace(done=lambda: False)
         updates = SimpleNamespace(policy_applies_in_flight=lambda: [installer])
-        monkeypatch.setitem(sys.modules, "kiro_crew.dashboard.handlers.updates", updates)
+        monkeypatch.setitem(sys.modules, "aj_crew.dashboard.handlers.updates", updates)
 
         assert await orch._restart_gate_when_idle() == (False, 0, 1)
 
@@ -563,7 +563,7 @@ class TestRoute:
 
 
 def test_the_route_is_a_strict_internal_path():
-    from kiro_crew.dashboard.server_internal_paths import _STRICT_INTERNAL_API_PATHS
+    from aj_crew.dashboard.server_internal_paths import _STRICT_INTERNAL_API_PATHS
 
     assert "/api/restart/when-idle" in _STRICT_INTERNAL_API_PATHS
 
@@ -676,7 +676,7 @@ class TestCli:
 
         assert exc.value.code == idle_cli.EXIT_GATE_REFUSED
         assert cli.restarts == []
-        assert "is not the running kirocrew service's gateway" in capsys.readouterr().out
+        assert "is not the running ajcrew service's gateway" in capsys.readouterr().out
 
     def test_an_idle_legacy_unit_gateway_is_restarted_with_a_hint(self, cli, monkeypatch, capsys):
         """A unit from before the marker: nothing shows another process runs, so it restarts."""
@@ -689,8 +689,8 @@ class TestCli:
 
         assert cli.restarts == [None]
         out = capsys.readouterr().out
-        assert "kirocrew service install" in out
-        assert "not the running kirocrew service's gateway" not in out
+        assert "ajcrew service install" in out
+        assert "not the running ajcrew service's gateway" not in out
 
     def test_a_busy_legacy_unit_gateway_is_waited_on_not_refused(self, cli, monkeypatch):
         monkeypatch.setattr(idle_cli, "_service_active", lambda: True)
@@ -808,7 +808,7 @@ class TestCli:
             idle_cli._restart_when_idle(None, max_wait_secs=0)
 
         out = capsys.readouterr()
-        marker = 'kirocrew-restart-busy {"turns":3,"background":4}'
+        marker = 'ajcrew-restart-busy {"turns":3,"background":4}'
         assert out.out.rstrip("\n").splitlines()[-1] == marker
         assert marker in out.err
 
@@ -951,7 +951,7 @@ class TestAskGate:
 
 class TestCommandLine:
     def test_when_idle_dispatches_to_the_idle_restart(self, monkeypatch):
-        from kiro_crew import cli, cli_server
+        from aj_crew import cli, cli_server
 
         seen = {}
         monkeypatch.setattr(
@@ -962,31 +962,31 @@ class TestCommandLine:
         monkeypatch.setattr(
             cli_server, "_restart", lambda port: pytest.fail("plain restart must not run")
         )
-        monkeypatch.setattr("sys.argv", ["kirocrew", "restart", "--when-idle", "--max-wait", "0"])
+        monkeypatch.setattr("sys.argv", ["ajcrew", "restart", "--when-idle", "--max-wait", "0"])
 
         cli.main()
 
         assert seen == {"port": None, "wait": 0.0}
 
     def test_a_plain_restart_is_unchanged(self, monkeypatch):
-        from kiro_crew import cli, cli_server
+        from aj_crew import cli, cli_server
 
         seen = []
         monkeypatch.setattr(cli_server, "_restart", lambda port: seen.append(port))
         monkeypatch.setattr(
             idle_cli, "_restart_when_idle", lambda *a, **k: pytest.fail("no idle check")
         )
-        monkeypatch.setattr("sys.argv", ["kirocrew", "restart", "--port", "7001"])
+        monkeypatch.setattr("sys.argv", ["ajcrew", "restart", "--port", "7001"])
 
         cli.main()
 
         assert seen == [7001]
 
     def test_max_wait_without_when_idle_is_refused(self, monkeypatch):
-        from kiro_crew import cli, cli_server
+        from aj_crew import cli, cli_server
 
         monkeypatch.setattr(cli_server, "_restart", lambda port: pytest.fail("must not restart"))
-        monkeypatch.setattr("sys.argv", ["kirocrew", "restart", "--max-wait", "5"])
+        monkeypatch.setattr("sys.argv", ["ajcrew", "restart", "--max-wait", "5"])
 
         with pytest.raises(SystemExit) as exc:
             cli.main()
@@ -997,7 +997,7 @@ class TestCommandLine:
 def test_the_dashboard_registers_the_route():
     from aiohttp import web
 
-    from kiro_crew.dashboard.routes import system
+    from aj_crew.dashboard.routes import system
 
     app = web.Application()
     system.register(app)
@@ -1019,7 +1019,7 @@ class TestInstancesRestartRoute:
     async def _call(self, monkeypatch, result, body=None):
         from instances_helpers import _enable, _FakeReq, _State
 
-        from kiro_crew.dashboard import handlers_instances as hi
+        from aj_crew.dashboard import handlers_instances as hi
 
         seen = {}
 
@@ -1071,7 +1071,7 @@ class TestInstancesRestartRoute:
 
 
 def test_the_scope_count_is_the_scopes_a_service_restart_restarts(monkeypatch):
-    from kiro_crew.service import common, linux
+    from aj_crew.service import common, linux
 
     monkeypatch.setattr(linux, "_running_scopes", lambda: [False, True])
     monkeypatch.setattr(common, "current_platform", lambda: common.Platform.SYSTEMD)
@@ -1097,7 +1097,7 @@ def test_the_scope_count_is_the_scopes_a_service_restart_restarts(monkeypatch):
 def test_the_service_check_is_the_one_restart_service_gates_on(
     monkeypatch, platform, linux_active, mac_loaded, expected
 ):
-    from kiro_crew.service import common, linux, macos
+    from aj_crew.service import common, linux, macos
 
     plat = getattr(common.Platform, platform, None) or object()
     monkeypatch.setattr(common, "current_platform", lambda: plat)

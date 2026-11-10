@@ -24,13 +24,13 @@ import pytest
 from named_cases_helpers import named_cases
 from test_config_load_pipeline import _DECLARED_EXCEPTIONS, _document, _section_fields
 
-from kiro_crew.acp_backends import selectable_backends
-from kiro_crew.config import loader, sections, validation
-from kiro_crew.instances.constants import DEFAULT_CONNECT_TIMEOUT_SECS, DEFAULT_MINT_TIMEOUT_SECS
-from kiro_crew.monitoring.limits import DEFAULT_RUNTIME_CEILING_SECS
-from kiro_crew.stt import models as stt_models
+from aj_crew.acp_backends import selectable_backends
+from aj_crew.config import loader, sections, validation
+from aj_crew.instances.constants import DEFAULT_CONNECT_TIMEOUT_SECS, DEFAULT_MINT_TIMEOUT_SECS
+from aj_crew.monitoring.limits import DEFAULT_RUNTIME_CEILING_SECS
+from aj_crew.stt import models as stt_models
 
-_BARE = loader.KiroCrewConfig()
+_BARE = loader.AjCrewConfig()
 
 #: Section fields whose wrong-typed value the READ stage repairs to something other
 #: than the field default, on purpose. Each value is what the load builds.
@@ -88,7 +88,7 @@ def staged_load(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Callable[[di
     """
     homes = itertools.count()
 
-    def load(document: dict) -> loader.KiroCrewConfig:
+    def load(document: dict) -> loader.AjCrewConfig:
         home = tmp_path / f"home{next(homes)}"
         home.mkdir()
         (home / "config.json").write_text(json.dumps(document), encoding="utf-8")
@@ -104,7 +104,7 @@ def staged_load(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Callable[[di
     return load
 
 
-def _build(tmp_path: Path, document: dict) -> loader.KiroCrewConfig:
+def _build(tmp_path: Path, document: dict) -> loader.AjCrewConfig:
     return loader.build_config(_document(tmp_path, copy.deepcopy(document)))
 
 
@@ -154,7 +154,7 @@ def test_each_read_stage_departure_names_a_field_and_differs_from_its_default():
 def _row(
     key: str,
     document: dict,
-    read: Callable[[loader.KiroCrewConfig], object],
+    read: Callable[[loader.AjCrewConfig], object],
     built: object,
     loaded: object,
 ):
@@ -686,7 +686,7 @@ def _move_cases() -> list:
         ),
         _case(
             "agents.avatar-omitted",
-            [(sections.KiroCrewAgentConfig, "avatar", {"kind": "image"})],
+            [(sections.AjCrewAgentConfig, "avatar", {"kind": "image"})],
             {"agents": {"crew": {}}},
             lambda c: c.agents["crew"].avatar,
             {"kind": "image"},
@@ -834,7 +834,7 @@ def _own_value_cases() -> list:
         ),
         _case(
             "agents.session_color-malformed",
-            [(sections.KiroCrewAgentConfig, "session_color", "#123456")],
+            [(sections.AjCrewAgentConfig, "session_color", "#123456")],
             {"agents": {"crew": {"session_color": "not a colour"}}},
             lambda c: c.agents["crew"].session_color,
             "",
@@ -874,7 +874,7 @@ def _stub_roster_migration_cases() -> list:
     gateway = sections.McpGatewayConfig
     moves = [(gateway, "enabled", True), (gateway, "stub_servers", ["moved"])]
 
-    def roster(c: loader.KiroCrewConfig) -> tuple[list[str], list[str]]:
+    def roster(c: loader.AjCrewConfig) -> tuple[list[str], list[str]]:
         return c.mcp_gateway.stub_servers, c.mcp_gateway.stub_roster
 
     return [

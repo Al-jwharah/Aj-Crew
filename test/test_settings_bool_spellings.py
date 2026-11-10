@@ -19,7 +19,7 @@ from aiohttp import web
 from test_config_savers_locked_write import _seed
 from test_handlers_memory_coverage import _MOD, _body, _cfg, _make_request, _make_state
 
-from kiro_crew.dashboard.handlers import memory as mem_mod
+from aj_crew.dashboard.handlers import memory as mem_mod
 
 _CASES = [
     ("false", False),
@@ -38,7 +38,7 @@ _CASES = [
 
 @pytest.mark.parametrize(("sent", "saved"), _CASES)
 def test_the_stt_switch_saves_what_it_spells(tmp_path: Path, monkeypatch, sent, saved) -> None:
-    import kiro_crew.dashboard.handlers.core as core
+    import aj_crew.dashboard.handlers.core as core
 
     cfg = _seed(monkeypatch, tmp_path, {"stt": {"enabled": not saved}})
     monkeypatch.setattr(core, "config_path", lambda: cfg)
@@ -63,7 +63,7 @@ async def test_the_memory_migrated_flag_saves_what_it_spells(tmp_path: Path, sen
     state.consolidator = None
     req = _make_request(state, method="PUT", json_body={"migrated": sent})
     with (
-        patch(f"{_MOD}.KiroCrewConfig.load", return_value=_cfg()),
+        patch(f"{_MOD}.AjCrewConfig.load", return_value=_cfg()),
         patch(f"{_MOD}.config_path", return_value=cfg_path),
     ):
         resp = await mem_mod.api_memory_settings(req)

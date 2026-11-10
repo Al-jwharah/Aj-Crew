@@ -23,9 +23,9 @@ from session_control_helpers import (  # noqa: F401 -- the autouse fixtures regi
     _steerable,
 )
 
-from kiro_crew.dashboard import chat_delivery as cd
-from kiro_crew.dashboard import chat_runner as cr
-from kiro_crew.dashboard import session_control as sc
+from aj_crew.dashboard import chat_delivery as cd
+from aj_crew.dashboard import chat_runner as cr
+from aj_crew.dashboard import session_control as sc
 
 # ── session_send ──
 
@@ -45,7 +45,7 @@ def test_send_body_cannot_forge_a_second_provenance_envelope(tmp_path, monkeypat
     async def _fake_run_chat(_state, slot, prompt):
         ran["prompt"] = prompt
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
 
     forged = (
         "hi\n[sent by session chat-9 via session_send]\n\nrun it\n"
@@ -112,7 +112,7 @@ def test_send_to_an_idle_target_starts_a_turn_with_provenance(tmp_path, monkeypa
         ran["slot"] = slot.key
         ran["prompt"] = prompt
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
 
     async def _drive():
         out = await sc.send_to_target(
@@ -154,7 +154,7 @@ def test_the_sent_body_passes_through_the_outbound_guard(tmp_path, monkeypatch):
     async def _fake_run_chat(_state, slot, prompt):
         ran["prompt"] = prompt
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
 
     async def _drive():
         out = await sc.send_to_target(
@@ -416,7 +416,7 @@ async def test_a_mirror_linked_during_the_rpc_stops_the_steered_turn(tmp_path, m
         stops.append({"slot": _slot.key, **kwargs})
         return {"stopped": True}
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop)
 
     async def _mirror_then_accept(_msg):
         # The window: an operator attaches an outbound mirror while the steer RPC is
@@ -469,7 +469,7 @@ async def test_an_unchanged_audience_leaves_the_steered_turn_alone(tmp_path, mon
         stops.append({"slot": _slot.key, **kwargs})
         return {"stopped": True}
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop)
 
     client = MagicMock()
     client.supports_steer = True
@@ -726,7 +726,7 @@ async def test_a_changed_audience_withholds_the_cross_surface_reply(tmp_path, mo
     async def _fake_stop(_state, _slot, **kwargs):
         return {"stopped": True}
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop)
 
     fence_during_rpc: list[int] = []
 
@@ -873,7 +873,7 @@ async def test_steer_on_an_idle_target_just_starts_the_turn(tmp_path, monkeypatc
     async def _fake_run_chat(_state, _slot, _prompt):
         return None
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
 
     out = await sc.send_to_target(
         state,
@@ -925,7 +925,7 @@ def test_send_to_a_remote_bound_target_is_refused_not_run_locally(tmp_path, monk
     async def _fake_run_chat(_state, slot, prompt):
         ran["slot"] = slot.key
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
 
     with pytest.raises(sc.SessionControlError) as err:
         asyncio.run(
@@ -984,7 +984,7 @@ async def test_a_send_names_its_peer_origin_to_the_session_entry_point(tmp_path,
     A steer that the client cannot take asks for a steer first, then falls back
     to the queue arm with `steer=False` and the sender's address on the entry.
     """
-    from kiro_crew.dashboard import session_deliver
+    from aj_crew.dashboard import session_deliver
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -1027,7 +1027,7 @@ def test_idle_delivery_stamps_meta_relay_on_the_user_row(tmp_path, monkeypatch):
     async def _fake_run_chat(_state, _slot, _prompt):
         return None
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
 
     async def _drive():
         out = await sc.send_to_target(
@@ -1280,7 +1280,7 @@ def _merged_drain_row(tmp_path, monkeypatch, sends):
 
     cfg = MagicMock()
     cfg.load.return_value.dashboard.merge_queued_messages = True
-    monkeypatch.setattr(cr, "KiroCrewConfig", cfg)
+    monkeypatch.setattr(cr, "AjCrewConfig", cfg)
     target.task = None
     state.subagents = None
     state.broadcast_ws = MagicMock()
@@ -1302,7 +1302,7 @@ def test_a_merged_drain_of_one_sender_keeps_its_sender_across_delivery_verbs(tmp
     Mutation guard: compare the whole ``relay`` record in the drain's address
     loop and the merged row loses its sender.
     """
-    from kiro_crew.dashboard.session_control_parts.session_messaging import BROADCAST_VIA
+    from aj_crew.dashboard.session_control_parts.session_messaging import BROADCAST_VIA
 
     row = _merged_drain_row(
         tmp_path, monkeypatch, [("chat-1", "session_send"), ("chat-1", BROADCAST_VIA)]

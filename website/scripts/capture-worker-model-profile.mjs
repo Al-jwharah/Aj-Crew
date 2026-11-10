@@ -23,13 +23,13 @@ import { json } from './lib/boot-api.mjs'
 import { serveDist } from './lib/serve-dist.mjs'
 import { stubDashboardApi, logPageProblems } from './lib/stub-dashboard-api.mjs'
 
-const OUT = process.argv[2] || join(process.env.KIROCREW_SCRATCH || '/tmp', 'worker-model-shots')
+const OUT = process.argv[2] || join(process.env.AJCREW_SCRATCH || '/tmp', 'worker-model-shots')
 mkdirSync(OUT, { recursive: true })
 
 const now = Math.floor(Date.now() / 1000)
 const member = (name, extra = {}) => ({
   name, slug: name, bound: true, slot_key: `member-${name}`, running: false,
-  kiro_agent: 'kirocrew', workspace: 'default', memory_store: `member-${name}`,
+  kiro_agent: 'ajcrew', workspace: 'default', memory_store: `member-${name}`,
   model: '', reasoning_effort: '', approval_mode: 'trust', worker_model: '', worker_reasoning_effort: '', ...extra,
 })
 let kiro = member('kiro', { display_name: 'Kiro', model: 'claude-opus-4.6', reasoning_effort: 'high', last_active_ts: now - 60, last_message: 'All checks are green.' })
@@ -46,7 +46,7 @@ const check = (name, ok, detail = '') => { console.log(`${name}: ${ok ? 'OK' : '
 
 let lastPut = null
 const extra = async (path, route) => {
-  if (path === '/api/members') { await json(route, { members: [kiro, atlas], default_agent: 'kirocrew' }); return true }
+  if (path === '/api/members') { await json(route, { members: [kiro, atlas], default_agent: 'ajcrew' }); return true }
   if (path === '/api/models') { await json(route, MODELS); return true }
   if (path.startsWith('/api/agents/resolved-model')) { await json(route, { model: 'claude-opus-4.6', reasoning_effort: 'high' }); return true }
   if (path === '/api/agents/kiro' && route.request().method() === 'PUT') {
@@ -56,7 +56,7 @@ const extra = async (path, route) => {
     return true
   }
   if (path === '/api/agents') { await json(route, { agents: [], default_agent: 'kiro' }); return true }
-  if (path === '/api/default-agent') { await json(route, { default_agent: 'kirocrew' }); return true }
+  if (path === '/api/default-agent') { await json(route, { default_agent: 'ajcrew' }); return true }
   const thread = path.match(/^\/api\/members\/([^/]+)\/thread$/)
   if (thread) { const slug = decodeURIComponent(thread[1]); await json(route, { slot_key: `member-${slug}`, slug, member: slug, created: false }); return true }
   if (/^\/api\/members\/[^/]+\/activity$/.test(path)) { await json(route, { slug: '', member: '', capped: false, entries: [] }); return true }

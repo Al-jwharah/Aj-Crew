@@ -16,11 +16,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import _facade_mirror
-from kiro_crew.config import sections
+from aj_crew import _facade_mirror
+from aj_crew.config import sections
 
 _OWNERS = tuple(
-    f"kiro_crew.config.sections_{name}"
+    f"aj_crew.config.sections_{name}"
     for name in (
         "defaults",
         "agent_env",
@@ -138,7 +138,7 @@ def test_owners_are_every_sections_sibling_lowest_layer_first() -> None:
     assert (index.owners, index.excluded, dict(index.forwards)) == (_OWNERS, (), {})
     assert index.divergent() == ()
     siblings = sorted(
-        f"kiro_crew.config.{path.stem}"
+        f"aj_crew.config.{path.stem}"
         for path in Path(sections.__file__).parent.glob("sections_*.py")
     )
     assert siblings == sorted(_OWNERS)
@@ -177,7 +177,7 @@ def test_every_owner_dataclass_is_bound_on_the_facade() -> None:
 
 
 def test_a_rebound_global_patched_here_reaches_its_owner() -> None:
-    stt = importlib.import_module("kiro_crew.config.sections_stt")
+    stt = importlib.import_module("aj_crew.config.sections_stt")
     before = stt._LAST_WARNED_TRANSCRIBE_VOCABULARY
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(sections, "_LAST_WARNED_TRANSCRIBE_VOCABULARY", "'patched'")
@@ -197,8 +197,8 @@ def test_the_inventory_check_reports_a_planted_import() -> None:
     """The F401 stand-in must be able to fail: a stray import, and an owner import of a
     name that owner does not define, are both reported."""
     source = Path(sections.__file__).read_text(encoding="utf-8")
-    planted = source + "\nimport json\nfrom kiro_crew.config.sections_stt import SectionReader\n"
+    planted = source + "\nimport json\nfrom aj_crew.config.sections_stt import SectionReader\n"
     assert unexpected_imports(planted, _owner_names()) == [
         "json",
-        "kiro_crew.config.sections_stt.SectionReader",
+        "aj_crew.config.sections_stt.SectionReader",
     ]

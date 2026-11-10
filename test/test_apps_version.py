@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.apps.version — parsing and the min-version install gate.
+"""Tests for aj_crew.apps.version — parsing and the min-version install gate.
 
 Regression anchor: every insider wheel is stamped with a PEP 440 version like
 ``0.4.0rc3`` (no separator before ``rc``). The old ``parse_version`` raised
@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.apps.version import check_min_version, parse_version
+from aj_crew.apps.version import check_min_version, parse_version
 
 
 class TestParseVersion:
@@ -44,17 +44,17 @@ class TestParseVersion:
 class TestCheckMinVersion:
     def test_gate_rejects_on_insider_rc_stamp(self, monkeypatch: pytest.MonkeyPatch) -> None:
         # The exact RC-gate scenario: running version is a PEP 440 rc stamp.
-        monkeypatch.setattr("kiro_crew.__version__", "0.4.0rc3")
+        monkeypatch.setattr("aj_crew.__version__", "0.4.0rc3")
         err = check_min_version("999.0.0")
         assert err is not None
         assert "999.0.0" in err
 
     def test_gate_accepts_on_insider_rc_stamp(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr("kiro_crew.__version__", "0.4.0rc3")
+        monkeypatch.setattr("aj_crew.__version__", "0.4.0rc3")
         assert check_min_version("0.4.0") is None
 
     def test_gate_rejects_on_bare_stamp(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr("kiro_crew.__version__", "0.4.0")
+        monkeypatch.setattr("aj_crew.__version__", "0.4.0")
         assert check_min_version("999.0.0") is not None
 
     def test_empty_min_version_passes(self) -> None:
@@ -70,5 +70,5 @@ class TestCheckMinVersion:
     ) -> None:
         # The install itself reads the manifest value through str(), so the
         # preflight must refuse the same apps instead of raising or passing them.
-        monkeypatch.setattr("kiro_crew.__version__", "1.6.0")
+        monkeypatch.setattr("aj_crew.__version__", "1.6.0")
         assert (check_min_version(raw) is not None) is refused  # type: ignore[arg-type]

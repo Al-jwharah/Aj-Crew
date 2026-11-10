@@ -29,10 +29,10 @@ from overload_fakes import mock_ctx, mock_sessions
 # path signals it (under pytest-xdist, a sibling worker).
 from test_update_provider import _UNALLOCATABLE_PID
 
-import kiro_crew.subagent as subagent_mod
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.subagent import _STARTUP_CAP_GATE_ROUNDS, SubagentInfo, SubagentManager
-from kiro_crew.testing.wait import async_wait_until, await_until
+import aj_crew.subagent as subagent_mod
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.subagent import _STARTUP_CAP_GATE_ROUNDS, SubagentInfo, SubagentManager
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # The end-to-end tests drive ``SubagentManager.spawn``, which refuses on a
 # memory-pressured host; pin the host reading so the verdict is the test's.
@@ -183,12 +183,12 @@ class TestStartupCap:
         ``agent.session_start_concurrency``, which the bound tracks. No
         ``agent.subagent_max_concurrent_startups`` key exists in the schema,
         the live-config list or the manager."""
-        assert not hasattr(KiroCrewConfig().agent, "subagent_max_concurrent_startups")
+        assert not hasattr(AjCrewConfig().agent, "subagent_max_concurrent_startups")
         assert "agent.subagent_max_concurrent_startups" not in SubagentManager.LIVE_CONFIG_PATHS
         mgr = _manager(max_concurrent=40, gate_width=2)
         assert not hasattr(mgr, "_max_concurrent_startups_setting")
         # apply_limits leaves the derivation alone: a cap change re-clamps, nothing else.
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.max_subagents = 40
         mgr.apply_limits(cfg, max_concurrent=40)
         assert mgr._startup_cap() == 4
@@ -467,8 +467,8 @@ async def test_a_held_release_does_not_starve_a_queued_resume() -> None:
     on the startup bound, so the pump must grant it on the same pass that
     holds the release -- a phase that ended the pass on its hold would leave
     the resume parked for as long as the bound stays full."""
-    from kiro_crew.taskq import WaitRecord
-    from kiro_crew.taskq import model as taskq_model
+    from aj_crew.taskq import WaitRecord
+    from aj_crew.taskq import model as taskq_model
 
     pending: dict[str, asyncio.Future] = {}
     trusted: list = []
@@ -591,7 +591,7 @@ async def test_a_reap_while_waiting_is_announced_as_a_reap_not_a_rejection() -> 
             # Only the two starts that actually ran are recorded as spawned.
             assert [c.args[0].id for c in mgr._log_spawned.call_args_list] == [first.id, second.id]
 
-            with patch("kiro_crew.subagent.sel") as sel_mock:
+            with patch("aj_crew.subagent.sel") as sel_mock:
                 await mgr._force_reap(third.id, live, 300.0, reason="timeout")
                 await _settle()
                 audited = [
@@ -683,7 +683,7 @@ async def test_a_stop_during_the_prompt_is_not_turned_into_a_rejection() -> None
                 await _settle()
 
             mgr._sessions.reset = _reset
-            with patch("kiro_crew.subagent.sel") as sel_mock:
+            with patch("aj_crew.subagent.sel") as sel_mock:
                 live.user_stopped = True
                 await mgr._force_reap(only.id, live, 1.0, reason="user_stop")
                 await _settle()
@@ -707,7 +707,7 @@ async def test_a_temporary_start_reaped_while_waiting_leaves_nothing_on_disk() -
     it is admitted, so a reap while it waits for the bound finds neither that
     state nor a ``state.json``: the run's own mode is what keeps its tombstone
     off the disk. The real ``_write_tombstone`` runs here."""
-    from kiro_crew.subagent_persistence import _agent_dir
+    from aj_crew.subagent_persistence import _agent_dir
 
     pending: dict[str, asyncio.Future] = {}
     trusted: list = []
@@ -764,7 +764,7 @@ async def test_admission_closed_at_release_refuses_the_approved_start() -> None:
             only = await _spawn(mgr, "late")
             assert mgr._running_count == 1
             mgr._sessions.admission_closed = True
-            with patch("kiro_crew.subagent.sel") as sel_mock:
+            with patch("aj_crew.subagent.sel") as sel_mock:
                 pending.pop(f"spawn:{only.id}").set_result(True)
                 await _settle()
                 reasons = [
@@ -923,7 +923,7 @@ async def test_reaper_sweep_reaps_a_runtime_that_never_answers_its_first_prompt(
     first prompt got no frame for longer than ``_FIRST_PROMPT_SILENT_SECS`` is
     reaped under ``startup_timeout``; one still inside that window, and one
     whose stream already answered, are left alone."""
-    from kiro_crew.subagent_manager.monitoring import _FIRST_PROMPT_SILENT_SECS
+    from aj_crew.subagent_manager.monitoring import _FIRST_PROMPT_SILENT_SECS
 
     now = 10_000.0
     mgr = _manager(startup_timeout=120)
@@ -998,8 +998,8 @@ class TestStreamOpenIsNotProgress:
         first-stream stamp, no pump wake) and the watchdog reaps it at the base
         deadline. Stamping at stream open would let exactly this hang evade
         both."""
-        from kiro_crew.execution_context import execution_for_store
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.execution_context import execution_for_store
+        from aj_crew.subagent_persistence import create_agent_folder
 
         opened = asyncio.Event()
         never = asyncio.get_event_loop().create_future()
@@ -1038,9 +1038,9 @@ class TestStreamOpenIsNotProgress:
     async def test_the_first_event_received_leaves_startup(self) -> None:
         """The counterpart: one event out of the stream stamps the marker,
         takes the run out of startup and wakes the pump once."""
-        from kiro_crew.execution_context import execution_for_store
-        from kiro_crew.providers.base import EVENT_COMPLETE
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.execution_context import execution_for_store
+        from aj_crew.providers.base import EVENT_COMPLETE
+        from aj_crew.subagent_persistence import create_agent_folder
 
         async def _one_event(*_a, **_k):
             yield SimpleNamespace(kind=EVENT_COMPLETE, stop_reason="end_turn", runtime_global=False)
@@ -1067,10 +1067,10 @@ class TestStreamOpenIsNotProgress:
         loop that consumes the stream (it is withheld for in-place recovery),
         but it is the backend answering: the run leaves startup on it, before
         the recovery wait, not after."""
-        from kiro_crew.acp.types import STOP_REASON_TOOL_STALL
-        from kiro_crew.execution_context import execution_for_store
-        from kiro_crew.providers.base import EVENT_COMPLETE
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.acp.types import STOP_REASON_TOOL_STALL
+        from aj_crew.execution_context import execution_for_store
+        from aj_crew.providers.base import EVENT_COMPLETE
+        from aj_crew.subagent_persistence import create_agent_folder
 
         seen: dict[str, object] = {}
         calls: list[str] = []
@@ -1126,9 +1126,9 @@ class TestStreamOpenIsNotProgress:
 class TestAPidEndsStartupBeforeTheStream:
     @pytest.mark.asyncio
     async def test_dedicated_start_is_out_of_startup_when_its_stream_opens(self) -> None:
-        from kiro_crew.execution_context import execution_for_store
-        from kiro_crew.providers.base import EVENT_COMPLETE
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.execution_context import execution_for_store
+        from aj_crew.providers.base import EVENT_COMPLETE
+        from aj_crew.subagent_persistence import create_agent_folder
 
         at_open: dict[str, object] = {}
         holder: dict[str, SubagentInfo] = {}
@@ -1161,8 +1161,8 @@ class TestAPidEndsStartupBeforeTheStream:
 
     @pytest.mark.asyncio
     async def test_shared_start_is_out_of_startup_at_bind(self) -> None:
-        from kiro_crew.execution_context import execution_for_store
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.execution_context import execution_for_store
+        from aj_crew.subagent_persistence import create_agent_folder
 
         mgr = _manager()
         mgr._note_startup_progress = MagicMock()  # type: ignore[method-assign]
@@ -1194,7 +1194,7 @@ def _shared_runtime(work_dir) -> tuple[object, asyncio.StreamReader, list[dict]]
     routing by ``sessionId``, the ownerless broadcast and its ``fanout_no_owner``
     mark -- and every request the runtime writes is parsed into the list.
     """
-    from kiro_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.runtime import AcpRuntime
 
     runtime = AcpRuntime(work_dir=str(work_dir))
     reader = asyncio.StreamReader()
@@ -1226,9 +1226,9 @@ class TestOnlyThisSessionsFrameIsItsAnswer:
         so it takes the run out of startup and issues the ``running`` mark. An
         event-kind exclusion would keep this run in startup on its own
         progress."""
-        from kiro_crew.execution_context import execution_for_store
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_SUBAGENT_LIST
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.execution_context import execution_for_store
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_SUBAGENT_LIST
+        from aj_crew.subagent_persistence import create_agent_folder
 
         seen: dict[str, object] = {}
         holder: dict[str, SubagentInfo] = {}
@@ -1273,14 +1273,14 @@ class TestOnlyThisSessionsFrameIsItsAnswer:
         and a compaction notice to both as ``runtime_global`` events. The run keeps its
         startup marker and issues no ``running`` mark until a frame names its own session.
         Both kinds are driven so one cannot stand in for the provenance test."""
-        from kiro_crew.acp.session_handle import AcpSessionHandle
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp.types import (
             METHOD_COMPACTION_STATUS,
             METHOD_MCP_SERVER_INITIALIZED,
             METHOD_SUBAGENT_LIST_UPDATE,
         )
-        from kiro_crew.execution_context import execution_for_store
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.execution_context import execution_for_store
+        from aj_crew.subagent_persistence import create_agent_folder
 
         frame = {
             "roster": {"method": METHOD_SUBAGENT_LIST_UPDATE, "params": {"subagents": []}},
@@ -1398,7 +1398,7 @@ class TestLeavingStartupStartsTheHeldSpawn:
         """Fill the bound with ``driven`` and a peer, then spawn one more: it is
         held by the bound -- the cap has room -- and nothing but a start
         leaving startup can release it."""
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.subagent_persistence import create_agent_folder
 
         mgr._spawn_stagger_secs = 0.0
         mgr._session_start_concurrency = 1  # bound 2
@@ -1419,8 +1419,8 @@ class TestLeavingStartupStartsTheHeldSpawn:
         and that record alone starts ``held``: observed while the driven start's
         stream is open and has produced nothing, so neither a first frame nor a
         terminal can be what woke the pump."""
-        from kiro_crew.execution_context import execution_for_store
-        from kiro_crew.providers.base import EVENT_COMPLETE
+        from aj_crew.execution_context import execution_for_store
+        from aj_crew.providers.base import EVENT_COMPLETE
 
         opened = asyncio.Event()
         release = asyncio.Event()
@@ -1464,8 +1464,8 @@ class TestLeavingStartupStartsTheHeldSpawn:
         on the first frame addressed to its session, and that frame alone starts
         ``held``. An open, silent stream starts nothing; the frame is observed
         with the stream still open, before the completion that ends the run."""
-        from kiro_crew.execution_context import execution_for_store
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_SUBAGENT_LIST
+        from aj_crew.execution_context import execution_for_store
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_SUBAGENT_LIST
 
         opened = asyncio.Event()
         send_first = asyncio.Event()
@@ -1518,7 +1518,7 @@ class TestLeavingStartupStartsTheHeldSpawn:
     async def test_the_shared_runtime_pid_record_starts_the_held_spawn(self) -> None:
         """The shared path records the runtime's PID as the handle is bound,
         before any prompt is sent, and that record alone starts ``held``."""
-        from kiro_crew.execution_context import execution_for_store
+        from aj_crew.execution_context import execution_for_store
 
         with _StartupRuns() as runs:
             mgr = _manager(max_concurrent=8, gate_width=1)
@@ -1634,7 +1634,7 @@ class TestGateExitResetIsOneDefinition:
     def test_a_start_parked_in_the_queues_past_the_cap_is_reaped_as_never_started(self) -> None:
         """The paused clock is bounded: a start parked behind holders no watchdog
         bounds (wedged cron runs, say) is not left waiting forever."""
-        from kiro_crew.subagent_manager.monitoring import _START_QUEUE_MAX_SECS
+        from aj_crew.subagent_manager.monitoring import _START_QUEUE_MAX_SECS
 
         mgr = _manager(startup_timeout=120)
         info = _starting("p1", exec_started=1_000.0)
@@ -1753,7 +1753,7 @@ class TestDedicatedPathGateExitReset:
         provider.context_window_tokens = MagicMock(return_value=0)
 
         async def stream(*_a, **_k):
-            from kiro_crew.providers.base import EVENT_COMPLETE
+            from aj_crew.providers.base import EVENT_COMPLETE
 
             yield SimpleNamespace(kind=EVENT_COMPLETE, stop_reason="end_turn", runtime_global=False)
 
@@ -1770,8 +1770,8 @@ class TestDedicatedPathGateExitReset:
 
     @pytest.mark.asyncio
     async def test_run_inner_hands_get_or_create_the_gate_exit_reset(self, monkeypatch) -> None:
-        from kiro_crew.execution_context import execution_for_store
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.execution_context import execution_for_store
+        from aj_crew.subagent_persistence import create_agent_folder
 
         captured: dict = {}
         sessions = self._dedicated_sessions(captured)
@@ -1805,7 +1805,7 @@ class TestDedicatedPathGateExitReset:
 
     def test_provider_factory_names_the_kwarg_and_forwards_it(self, monkeypatch) -> None:
         """Named in ``_acp``, never swallowed by its ``**_kwargs`` catch-all."""
-        import kiro_crew.providers.acp as acp_mod
+        import aj_crew.providers.acp as acp_mod
 
         captured: list[dict] = []
 
@@ -1814,7 +1814,7 @@ class TestDedicatedPathGateExitReset:
                 captured.append(kwargs)
 
         monkeypatch.setattr(acp_mod, "AcpProvider", _FakeProvider)
-        factory = KiroCrewConfig().create_provider_factory()
+        factory = AjCrewConfig().create_provider_factory()
         marker = lambda _ms: None  # noqa: E731
         queued = lambda: None  # noqa: E731
         factory("subagent:x", agent=None, on_gate_acquired=marker, on_gate_queued=queued)
@@ -1828,16 +1828,16 @@ class TestDedicatedPathGateExitReset:
     async def test_acp_provider_forwards_the_reset_to_its_own_create_session(self) -> None:
         """The dedicated process's ``session/new`` gets the callback; a
         ``session/load`` resume takes no gate permit and gets none."""
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         marker = lambda _ms: None  # noqa: E731
         queued = lambda: None  # noqa: E731
-        with patch("kiro_crew.providers.acp.AcpClient"):
+        with patch("aj_crew.providers.acp.AcpClient"):
             provider = AcpProvider(acp_backend="", on_gate_acquired=marker, on_gate_queued=queued)
         provider._client = MagicMock()
         provider._client.backend = ""
         provider._client._work_dir = "/tmp/ws"
-        provider._client._agent = "kirocrew"
+        provider._client._agent = "ajcrew"
         provider._client._sandbox_mode = "auto"
         provider._client._extra_env = {}
         provider._client._mcp_gateway_overlay = None
@@ -1854,9 +1854,9 @@ class TestDedicatedPathGateExitReset:
         runtime.create_session = AsyncMock(return_value=handle)
         runtime.load_session = AsyncMock(return_value=handle)
         with (
-            patch("kiro_crew.providers.acp.AcpRuntime", return_value=runtime),
+            patch("aj_crew.providers.acp.AcpRuntime", return_value=runtime),
             patch(
-                "kiro_crew.providers.acp.AcpSessionProvider",
+                "aj_crew.providers.acp.AcpSessionProvider",
                 side_effect=lambda h, r, **kw: MagicMock(_handle=h, _runtime=r, resumed=False),
             ),
         ):
@@ -1867,9 +1867,9 @@ class TestDedicatedPathGateExitReset:
         runtime.load_session.assert_not_awaited()
 
     def test_a_provider_built_without_the_callback_passes_none(self) -> None:
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
-        with patch("kiro_crew.providers.acp.AcpClient"):
+        with patch("aj_crew.providers.acp.AcpClient"):
             provider = AcpProvider(acp_backend="")
         assert provider._on_gate_acquired is None
         assert provider._on_gate_queued is None

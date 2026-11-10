@@ -67,7 +67,7 @@ function createShutdown({
   // process alone lets the service manager start it again. Any other adopted
   // gateway gets the same lock-checked command the stale/stuck dialogs name.
   function adoptedGatewayStopCommand() {
-    return getGatewayOwnership() === "reused-service" ? "kirocrew stop" : `kirocrew stop --port ${PORT}`;
+    return getGatewayOwnership() === "reused-service" ? "ajcrew stop" : `ajcrew stop --port ${PORT}`;
   }
 
   /**
@@ -92,7 +92,7 @@ function createShutdown({
     const currentHome = path.dirname(secretCandidates()[0]);
     await stopGatewayProcessGracefully(gateway, {
       backendUrl: BACKEND_URL,
-      kirocrewHome: currentHome,
+      ajcrewHome: currentHome,
       timeoutMs,
       // 3s PowerShell + 2s WMIC + 5s taskkill fits inside the 18s hard
       // shutdown deadline. The tree sweep is awaited because taskkill can emit
@@ -146,7 +146,7 @@ function createShutdown({
     // listener BACKEND_URL dials, never the home-wide `.local_secret`.
     let accepted = await postShutdown({
       backendUrl: BACKEND_URL,
-      kirocrewHome: path.dirname(secretCandidates()[0]),
+      ajcrewHome: path.dirname(secretCandidates()[0]),
       httpMod: http,
       fsMod: fs,
       pathMod: path,

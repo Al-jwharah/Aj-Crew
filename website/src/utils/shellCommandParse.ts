@@ -31,7 +31,7 @@
  *
  * Rule-change policy: every change to a rule here lands in the same commit
  * with fixture cases in `test/fixtures/tool_call_titles.json` that exercise it,
- * and with the matching change in `src/kiro_crew/tool_call_title.py`; the
+ * and with the matching change in `src/aj_crew/tool_call_title.py`; the
  * fixture is what makes the two implementations one rule set.
  *
  * EVERY string literal in this module is CLI syntax — command names, option
@@ -41,7 +41,7 @@
  * and the copy it feeds lives in `toolCallTitle.ts` under `i18nT`. Keep it that
  * way: anything a person reads belongs there.
  *
- * Mirrored by `src/kiro_crew/tool_call_title.py`; both are pinned to
+ * Mirrored by `src/aj_crew/tool_call_title.py`; both are pinned to
  * `test/fixtures/tool_call_titles.json`.
  */
 

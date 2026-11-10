@@ -23,8 +23,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.handlers.decisions import api_decisions_feedback
-from kiro_crew.decisions import log as log_mod
+from aj_crew.dashboard.handlers.decisions import api_decisions_feedback
+from aj_crew.decisions import log as log_mod
 
 
 @pytest.fixture(autouse=True)
@@ -39,7 +39,7 @@ def _generous_append_deadline(monkeypatch):
     Raised, not removed: a genuinely stuck lock still fails, and pytest's own
     per-test timeout still bounds the run.
     """
-    from kiro_crew import platform_log_append
+    from aj_crew import platform_log_append
 
     monkeypatch.setattr(platform_log_append, "_APPEND_TIMEOUT_SECONDS", 10.0)
 
@@ -55,7 +55,7 @@ def home(tmp_path, monkeypatch):
 @pytest.fixture
 def audit(monkeypatch):
     """Capture the SEL rows the handlers write."""
-    import kiro_crew.dashboard.handlers as handlers_pkg
+    import aj_crew.dashboard.handlers as handlers_pkg
 
     rows: list[dict] = []
     fake = MagicMock()

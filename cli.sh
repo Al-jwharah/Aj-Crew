@@ -1,11 +1,11 @@
 #!/bin/sh
 # ──────────────────────────────────────────────────────────────────────
-# KiroCrew CLI installer (channel / wheel based).
+# AjCrew CLI installer (channel / wheel based).
 #
 #   curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
 #   curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --channel nightly
 #
-# Installs the prebuilt `kirocrew` wheel for a release channel. It resolves the
+# Installs the prebuilt `ajcrew` wheel for a release channel. It resolves the
 # channel feed, verifies its RSA-SHA256 signature against the public key pinned
 # below, downloads the wheel over HTTPS from CloudFront, verifies its SHA-256
 # against the signed digest, then installs it (pipx if available, else a managed
@@ -22,25 +22,25 @@
 # Dependencies: installed from prebuilt wheels ONLY (`pip --only-binary=:all:`),
 # so the install never needs a C compiler or -dev headers. A host no wheel of a
 # dependency can run on fails with a supported-platform message before any
-# build starts; KIROCREW_ALLOW_SOURCE_BUILDS=1 opts back into compiling.
+# build starts; AJCREW_ALLOW_SOURCE_BUILDS=1 opts back into compiling.
 #
 # Options / env:
-#   --channel <nightly|insider|stable|lts>   (default: stable; env KIROCREW_CHANNEL)
+#   --channel <nightly|insider|stable|lts>   (default: stable; env AJCREW_CHANNEL)
 #   --version <X.Y.Z>                    pin an exact version, verified against
 #                                        its immutable signed CLI manifest
-#   --cdn <base-url>                     (default CloudFront; env KIROCREW_CDN_BASE)
+#   --cdn <base-url>                     (default CloudFront; env AJCREW_CDN_BASE)
 #   --managed-python                     force the managed default back on after
 #                                        a recorded --system-python opt-out
-#                                        (env KIROCREW_MANAGED_PYTHON=1)
+#                                        (env AJCREW_MANAGED_PYTHON=1)
 #   --system-python                      run on the system interpreter instead
 #                                        of the managed default (sticky: later
 #                                        runs and updates keep the choice)
-#                                        (env KIROCREW_MANAGED_PYTHON=0)
+#                                        (env AJCREW_MANAGED_PYTHON=0)
 #   --no-kas                             skip downloading the KAS engine this
-#                                        release pins (env KIROCREW_INSTALL_KAS=0)
+#                                        release pins (env AJCREW_INSTALL_KAS=0)
 #
 # KAS engine: after the wheel is installed, the installer runs the new
-# `kirocrew kas install`, which fetches the engine this release pins into the
+# `ajcrew kas install`, which fetches the engine this release pins into the
 # data home (`engines/kas/`) and verifies it against the pin. A failed download
 # only warns and prints the command to retry; the install still succeeds. The
 # switch (agent.kas_bundle) is never turned on here.
@@ -56,20 +56,20 @@ unset PYTHONPATH PYTHONHOME
 
 # The URL contract splits by class: FEED_BASE serves the mutable pointers
 # (latest-cli.json), ARTIFACT_BASE serves the bytes (wheels, cli-manifest.json).
-# Both are aliases of the same distribution today; --cdn / KIROCREW_CDN_BASE
+# Both are aliases of the same distribution today; --cdn / AJCREW_CDN_BASE
 # overrides BOTH (test / alternate-CDN escape hatch).
-FEED_BASE="${KIROCREW_CDN_BASE:-https://updates.crew.kiro.dev}"
-ARTIFACT_BASE="${KIROCREW_CDN_BASE:-https://download.crew.kiro.dev}"
-CHANNEL="${KIROCREW_CHANNEL:-stable}"
+FEED_BASE="${AJCREW_CDN_BASE:-https://updates.crew.kiro.dev}"
+ARTIFACT_BASE="${AJCREW_CDN_BASE:-https://download.crew.kiro.dev}"
+CHANNEL="${AJCREW_CHANNEL:-stable}"
 PIN_VERSION=""
 # Three states: "" = undecided (fall back to the persisted python-mode marker,
 # then to the managed default), "1" = managed, "0" = system. An explicit env
 # value or flag always outranks the marker, so an operator can override a
 # sticky choice.
-MANAGED_PYTHON="${KIROCREW_MANAGED_PYTHON:-}"
-# 1 = run `kirocrew kas install` after the wheel is installed (the default);
+MANAGED_PYTHON="${AJCREW_MANAGED_PYTHON:-}"
+# 1 = run `ajcrew kas install` after the wheel is installed (the default);
 # 0 = skip it (--no-kas).
-INSTALL_KAS="${KIROCREW_INSTALL_KAS:-1}"
+INSTALL_KAS="${AJCREW_INSTALL_KAS:-1}"
 
 # Pinned uv release used to provision a managed Python interpreter when the
 # system has none (or when --managed-python asks for one). uv is only ever
@@ -112,58 +112,58 @@ while [ $# -gt 0 ]; do
     --kas) INSTALL_KAS=1; shift ;;
     -h|--help)
       cat <<'EOF'
-KiroCrew CLI installer (channel / wheel based).
+AjCrew CLI installer (channel / wheel based).
 
   curl -fsSL https://download.crew.kiro.dev/cli.sh | sh
   curl -fsSL https://download.crew.kiro.dev/cli.sh | sh -s -- --channel nightly
 
-Installs the prebuilt `kirocrew` wheel for a release channel: resolves the
+Installs the prebuilt `ajcrew` wheel for a release channel: resolves the
 channel feed, verifies its signature against the installer-pinned public key,
 downloads the wheel over HTTPS, verifies its SHA-256 against the signed digest,
 then installs it (pipx if available, else a managed venv BESIDE the data home —
-"$KIROCREW_HOME"-venv or ~/.kiro/crew-venv, never inside the data home itself).
+"$AJCREW_HOME"-venv or ~/.kiro/crew-venv, never inside the data home itself).
 Records the channel in the data home. There is no unsigned fallback.
 
 Options / env:
-  --channel <nightly|insider|stable|lts>   (default: stable; env KIROCREW_CHANNEL)
+  --channel <nightly|insider|stable|lts>   (default: stable; env AJCREW_CHANNEL)
   --version <X.Y.Z>                    pin an exact version, verified against
                                        its immutable signed CLI manifest
-  --cdn <base-url>                     (default CloudFront; env KIROCREW_CDN_BASE)
+  --cdn <base-url>                     (default CloudFront; env AJCREW_CDN_BASE)
   --managed-python                     force the managed default back on after
                                        a recorded --system-python opt-out
-                                       (env KIROCREW_MANAGED_PYTHON=1)
+                                       (env AJCREW_MANAGED_PYTHON=1)
   --system-python                      run on the system interpreter (>=3.12)
                                        instead of the managed default (sticky:
                                        later runs and updates keep the choice)
-                                       (env KIROCREW_MANAGED_PYTHON=0)
+                                       (env AJCREW_MANAGED_PYTHON=0)
   --no-kas                             skip downloading the KAS engine this
                                        release pins; by default the installer
-                                       runs `kirocrew kas install` once the
-                                       wheel is in (env KIROCREW_INSTALL_KAS=0)
-  KIROCREW_VENV                        override the managed venv location
-  KIROCREW_PYTHON_DIR                  override where uv-provisioned interpreters
+                                       runs `ajcrew kas install` once the
+                                       wheel is in (env AJCREW_INSTALL_KAS=0)
+  AJCREW_VENV                        override the managed venv location
+  AJCREW_PYTHON_DIR                  override where uv-provisioned interpreters
                                        are stored (default: beside the data home,
                                        ~/.kiro/crew-python)
-  KIROCREW_UV_URL                      mirror base for the uv release tarballs
+  AJCREW_UV_URL                      mirror base for the uv release tarballs
                                        (default: the uv GitHub release tree; the
                                        SHA-256 pin is enforced either way)
   UV_PYTHON_INSTALL_MIRROR             mirror for the python-build-standalone
                                        interpreter downloads (read by uv)
-  KIROCREW_ALLOW_SOURCE_BUILDS=1       let pip compile a dependency that has no
+  AJCREW_ALLOW_SOURCE_BUILDS=1       let pip compile a dependency that has no
                                        prebuilt wheel for this host (needs a C
                                        toolchain and -dev headers); by default
                                        the install refuses instead of building
-  KIROCREW_INSTALL_PLAIN=1             plain one-line-per-step output on a
+  AJCREW_INSTALL_PLAIN=1             plain one-line-per-step output on a
                                        terminal (no redrawn progress line)
 EOF
       exit 0 ;;
-    *) echo "kirocrew-install: unknown argument '$1'" >&2; exit 2 ;;
+    *) echo "ajcrew-install: unknown argument '$1'" >&2; exit 2 ;;
   esac
 done
 FEED_BASE="${FEED_BASE%/}"
 ARTIFACT_BASE="${ARTIFACT_BASE%/}"
 
-err() { echo "kirocrew-install: $*" >&2; exit 1; }
+err() { echo "ajcrew-install: $*" >&2; exit 1; }
 
 # ── Progress output ──────────────────────────────────────────────────────────
 # The slow steps (the wheel download, pip resolving and fetching every
@@ -200,7 +200,7 @@ err() { echo "kirocrew-install: $*" >&2; exit 1; }
 #                   interrupt (RC > 128) still ends the install (the
 #                   rebuild's EXIT trap puts a moved-aside venv back).
 _tty=0
-if [ -t 1 ] && [ "${TERM:-dumb}" != "dumb" ] && [ -z "${KIROCREW_INSTALL_PLAIN:-}" ]; then
+if [ -t 1 ] && [ "${TERM:-dumb}" != "dumb" ] && [ -z "${AJCREW_INSTALL_PLAIN:-}" ]; then
   _tty=1
 fi
 CURL_PROGRESS="-s"
@@ -382,10 +382,10 @@ _run_step() {
 # `--only-binary=:all:` makes pip resolve the newest release of every
 # dependency that publishes a wheel this host can run, and when no release
 # does, fail before any build starts -- which _report_pip_failure turns into
-# a supported-platform message. KIROCREW_ALLOW_SOURCE_BUILDS=1 is the opt-in
+# a supported-platform message. AJCREW_ALLOW_SOURCE_BUILDS=1 is the opt-in
 # for a host that has the toolchain and wants the compile fallback back.
 PIP_BINARY_ONLY="--only-binary=:all:"
-if [ "${KIROCREW_ALLOW_SOURCE_BUILDS:-0}" = "1" ]; then
+if [ "${AJCREW_ALLOW_SOURCE_BUILDS:-0}" = "1" ]; then
   PIP_BINARY_ONLY=""
 fi
 
@@ -425,8 +425,8 @@ _report_pip_failure() {
   grep -q 'No matching distribution found for' "$1" 2>/dev/null || return 0
   _missing="$(grep 'No matching distribution found for' "$1" \
     | sed 's/.*No matching distribution found for //' | head -n 5 | tr '\n' ' ')"
-  echo "kirocrew-install: pip found no prebuilt wheel it may install on this platform ($(_platform_description)) for: ${_missing:-a required dependency}" >&2
-  echo "kirocrew-install: Kiro Crew installs prebuilt wheels only and never compiles a dependency. Usually this means the host is older than the wheels' floor: the current dependency set needs a newer Linux (Amazon Linux 2023, RHEL/Rocky 8+, Ubuntu 22.04+, Debian 12+) on x86_64/aarch64, or macOS. It can also mean the package index could not be reached or does not carry these releases; pip's output above shows the retries or the versions it saw. To compile on this host instead, install a C/C++ toolchain and the -dev headers the packages above need, then re-run with KIROCREW_ALLOW_SOURCE_BUILDS=1." >&2
+  echo "ajcrew-install: pip found no prebuilt wheel it may install on this platform ($(_platform_description)) for: ${_missing:-a required dependency}" >&2
+  echo "ajcrew-install: Aj Crew installs prebuilt wheels only and never compiles a dependency. Usually this means the host is older than the wheels' floor: the current dependency set needs a newer Linux (Amazon Linux 2023, RHEL/Rocky 8+, Ubuntu 22.04+, Debian 12+) on x86_64/aarch64, or macOS. It can also mean the package index could not be reached or does not carry these releases; pip's output above shows the retries or the versions it saw. To compile on this host instead, install a C/C++ toolchain and the -dev headers the packages above need, then re-run with AJCREW_ALLOW_SOURCE_BUILDS=1." >&2
 }
 
 # Take the install lock held open on fd 9 (the caller has already run
@@ -457,7 +457,7 @@ while True:
         if time.monotonic() >= deadline:
             sys.exit(3)
         if not told:
-            print("Another kirocrew installer run is working on this install; waiting for it to finish ...", flush=True)
+            print("Another ajcrew installer run is working on this install; waiting for it to finish ...", flush=True)
             told = True
         time.sleep(0.5)
     else:
@@ -474,7 +474,7 @@ while True:
 # Succeeds only when the original path is GONE before the move: `mv` onto a
 # directory that survived (an immutable file, a read-only remount after an
 # I/O error, a mount point) nests the backup INSIDE it and still exits 0,
-# which would read as a restore that never happened while `kirocrew` stays
+# which would read as a restore that never happened while `ajcrew` stays
 # broken. A dangling symlink at the path fails `-e` yet would still make `mv`
 # rename beside it, so `-L` is checked too. The caller reports the outcome.
 _restore_tree() {
@@ -505,7 +505,7 @@ _restore_tree() {
 # no name-to-prefix mapping. Reject anything outside the known set here: a
 # typo'd channel otherwise reaches the CDN and surfaces as an opaque 403.
 # lts is the LTS edition's own channel (release-lts.yml); it installs that
-# edition's distribution, kirocrew-lts, built for it alone.
+# edition's distribution, ajcrew-lts, built for it alone.
 case "$CHANNEL" in
   nightly|insider|stable|lts) ;;
   *) err "unknown channel '$CHANNEL' (expected one of: nightly, insider, stable, lts)" ;;
@@ -522,7 +522,7 @@ _canon_dir() {
 
 # True when canonical path $1 IS $2 or is nested beneath it. Used to reject any
 # overlap between the old and new venv trees before removing one of them:
-# equality alone is not enough, because a nested override (KIROCREW_VENV pointing
+# equality alone is not enough, because a nested override (AJCREW_VENV pointing
 # INSIDE the old venv) leaves the paths unequal while making `rm -rf` on the
 # parent destroy the new installation. The prefix strip is quoted so the
 # comparison stays literal rather than glob-matching a path with metacharacters.
@@ -545,7 +545,7 @@ else err "need sha256sum or shasum to verify the download"; fi
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT INT TERM
 
-# Kiro Crew needs Python >=3.12 at runtime -- that is what every release
+# Aj Crew needs Python >=3.12 at runtime -- that is what every release
 # artifact bundles and the only version CI tests, and older published wheels'
 # METADATA claimed a lower floor, so pip would install fine and then crash on
 # first run. Prefer the exact interpreter the project builds and tests on
@@ -634,7 +634,7 @@ _provision_python_via_uv() {
   # GNU tar's -z shells out to gzip, so both must exist before downloading.
   for _uv_tool in tar gzip; do
     if ! command -v "$_uv_tool" >/dev/null 2>&1; then
-      echo "kirocrew-install: $_uv_tool is required to unpack uv" >&2
+      echo "ajcrew-install: $_uv_tool is required to unpack uv" >&2
       return 1
     fi
   done
@@ -644,17 +644,17 @@ _provision_python_via_uv() {
     Darwin/x86_64)             _uv_target="x86_64-apple-darwin";        _uv_sha="$UV_SHA_MACOS_X64" ;;
     Darwin/arm64)              _uv_target="aarch64-apple-darwin";       _uv_sha="$UV_SHA_MACOS_ARM64" ;;
     *)
-      echo "kirocrew-install: no pinned uv build for $(uname -s)/$(uname -m)" >&2
+      echo "ajcrew-install: no pinned uv build for $(uname -s)/$(uname -m)" >&2
       return 1 ;;
   esac
   echo "Downloading uv $UV_VERSION ($_uv_target) ..."
   # -L: GitHub release assets redirect to a storage host; --proto-redir keeps
   # every hop on HTTPS (curl's redirect default would also allow plain http).
-  # KIROCREW_UV_URL points air-gapped / proxied hosts at a mirror of the uv
+  # AJCREW_UV_URL points air-gapped / proxied hosts at a mirror of the uv
   # release tree; the SHA-256 pin below still applies, so a mirror can serve
   # the bytes but never substitute them. (uv's own python-build-standalone
   # download honors UV_PYTHON_INSTALL_MIRROR, which inherits through env.)
-  _uv_base="${KIROCREW_UV_URL:-https://github.com/astral-sh/uv/releases/download}"
+  _uv_base="${AJCREW_UV_URL:-https://github.com/astral-sh/uv/releases/download}"
   # shellcheck disable=SC2086
   curl -f $CURL_PROGRESS -S -L --proto '=https' --proto-redir '=https' \
     "${_uv_base%/}/$UV_VERSION/uv-$_uv_target.tar.gz" \
@@ -668,8 +668,8 @@ _provision_python_via_uv() {
   # The interpreter store lives BESIDE the data home, like the managed venv and
   # for the same blast-radius reason: no data-home-wide operation may ever
   # reach the interpreter that the venv's shebangs point at.
-  _uv_data_home="${KIROCREW_HOME:-$HOME/.kiro/crew}"
-  _uv_py_dir="${KIROCREW_PYTHON_DIR:-${_uv_data_home%/}-python}"
+  _uv_data_home="${AJCREW_HOME:-$HOME/.kiro/crew}"
+  _uv_py_dir="${AJCREW_PYTHON_DIR:-${_uv_data_home%/}-python}"
   # uv draws its own download progress on a terminal and reuses an already
   # installed interpreter without a download, so it is not wrapped in _run_step.
   echo "Installing Python ($UV_PYTHON_SERIES) into $_uv_py_dir via uv ..."
@@ -710,17 +710,17 @@ PY=""
 # The interpreter choice is STICKY: a completed install records its mode in
 # the data home (next to `channel`), and a later run without an explicit flag
 # or env value reuses it. Without this, every re-run of the one-liner -- most
-# importantly the one `kirocrew update` performs -- would silently flip the
+# importantly the one `ajcrew update` performs -- would silently flip the
 # interpreter under an existing install.
 #
 # Managed is the DEFAULT: with no flag, no env value, and no recorded pin,
 # the installer provisions a python-build-standalone CPython via uv. Opt out
-# with --system-python (or KIROCREW_MANAGED_PYTHON=0), which records a
+# with --system-python (or AJCREW_MANAGED_PYTHON=0), which records a
 # `system-pinned` marker so the choice survives updates. A bare `system`
 # marker is NOT an opt-out: earlier installers recorded it for every default
 # install, so it only says "an old default ran here" -- such installs migrate
 # onto the managed default at their next update.
-_DATA_HOME="${KIROCREW_HOME:-$HOME/.kiro/crew}"
+_DATA_HOME="${AJCREW_HOME:-$HOME/.kiro/crew}"
 # The marker is agent-writable state, so the READ is guarded like the write:
 # only a plain regular file counts (a planted symlink -- e.g. to /dev/zero --
 # or a FIFO would wedge an unbounded read or spoof the mode), and the read is
@@ -761,7 +761,7 @@ if [ "$MANAGED_PYTHON" = "1" ]; then
     fi
     _resolve_python || true
     if [ -n "$PY" ]; then
-      echo "kirocrew-install: WARNING: could not provision a managed Python (network?); using the system interpreter $PY for this run. The next run retries the managed default." >&2
+      echo "ajcrew-install: WARNING: could not provision a managed Python (network?); using the system interpreter $PY for this run. The next run retries the managed default." >&2
       MANAGED_PYTHON=0
       PY_MODE_FALLBACK=1
     fi
@@ -783,10 +783,10 @@ if [ -n "$PIN_VERSION" ]; then
     *[!A-Za-z0-9._+]*) err "invalid pinned version '$PIN_VERSION'" ;;
   esac
   MANIFEST_URL="$ARTIFACT_BASE/cli/$CHANNEL_PATH/$PIN_VERSION/cli-manifest.json"
-  echo "Resolving KiroCrew $PIN_VERSION ($CHANNEL channel, pinned) ..."
+  echo "Resolving AjCrew $PIN_VERSION ($CHANNEL channel, pinned) ..."
 else
   MANIFEST_URL="$FEED_BASE/feed/$CHANNEL_PATH/latest-cli.json"
-  echo "Resolving KiroCrew ($CHANNEL channel) ..."
+  echo "Resolving AjCrew ($CHANNEL channel) ..."
 fi
 # A pinned miss is policy far more often than it is a broken CDN: releases
 # published before manifest signing was enabled carry no signed manifest and are
@@ -805,9 +805,9 @@ manifest_miss() {
   # printed the transport error and the cutoff is not the operator's problem, so
   # claiming it there would blame policy for an outage.
   if [ "$1" = 22 ] && [ -n "$PIN_VERSION" ]; then
-    echo "kirocrew-install: '$PIN_VERSION' cannot be pinned: it either predates signed CLI manifests or was never published." >&2
-    echo "kirocrew-install: Pinning policy and the minimum pinnable release: https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md#pinning-an-exact-version" >&2
-    echo "kirocrew-install: Re-run without --version to install the current $CHANNEL release." >&2
+    echo "ajcrew-install: '$PIN_VERSION' cannot be pinned: it either predates signed CLI manifests or was never published." >&2
+    echo "ajcrew-install: Pinning policy and the minimum pinnable release: https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/guides/install.md#pinning-an-exact-version" >&2
+    echo "ajcrew-install: Re-run without --version to install the current $CHANNEL release." >&2
   fi
   err "signed CLI manifest not found at $MANIFEST_URL"
 }
@@ -856,7 +856,7 @@ try:
         raise ValueError("unexpected fields")
     if not all(isinstance(value, str) and value for value in manifest.values()):
         raise ValueError("invalid field type")
-    if manifest["schema"] != "kirocrew-cli-artifact-manifest-v1":
+    if manifest["schema"] != "ajcrew-cli-artifact-manifest-v1":
         raise ValueError("unsupported schema")
     if manifest["algorithm"] != "RSASSA_PKCS1_V1_5_SHA_256":
         raise ValueError("unsupported algorithm")
@@ -928,7 +928,7 @@ try:
         ord(char) < 0x20 or ord(char) > 0x7E for char in payload["python_requires"]
     ):
         raise ValueError
-    stem = "kirocrew_lts" if expected_channel == "lts" else "kirocrew"
+    stem = "ajcrew_lts" if expected_channel == "lts" else "ajcrew"
     wheel_name = f"{stem}-{version}-py3-none-any.whl"
     expected_url = f"{artifact_base}/cli/{expected_channel}/{version}/{wheel_name}"
     if payload["wheel_url"] != expected_url:
@@ -947,11 +947,11 @@ read_field() {
 WHEEL_URL="$(read_field wheel_url)"
 SHA="$(read_field sha256)"
 VER="$(read_field version)"
-if [ "$CHANNEL" = lts ]; then _WHEEL_STEM=kirocrew_lts; else _WHEEL_STEM=kirocrew; fi
+if [ "$CHANNEL" = lts ]; then _WHEEL_STEM=ajcrew_lts; else _WHEEL_STEM=ajcrew; fi
 WHEEL_NAME="${_WHEEL_STEM}-${VER}-py3-none-any.whl"
 WHL="$TMP/$WHEEL_NAME"
 
-echo "Downloading kirocrew $VER ..."
+echo "Downloading ajcrew $VER ..."
 # $CURL_PROGRESS is one word (-s or --progress-bar), unquoted on purpose.
 # shellcheck disable=SC2086
 curl -f $CURL_PROGRESS -S --proto '=https' "$WHEEL_URL" -o "$WHL" || err "failed to download wheel from $WHEEL_URL"
@@ -962,9 +962,9 @@ GOT="$($SHA_CMD "$WHL" | awk '{print $1}')"
 [ "$GOT" = "$SHA" ] || err "SHA-256 mismatch (expected $SHA, got $GOT) — refusing to install"
 echo "Verified SHA-256."
 
-# Build under a umask that masks group/other WRITE, so bin/kirocrew and its
+# Build under a umask that masks group/other WRITE, so bin/ajcrew and its
 # dirs are born non-group-writable -- whether pipx or the managed venv builds
-# them. `kirocrew service install` refuses to attach its AppArmor
+# them. `ajcrew service install` refuses to attach its AppArmor
 # unprivileged-userns profile to a launcher whose file -- or any ancestor dir
 # -- is group- or world-writable, since another local user could plant an
 # executable at that path and inherit the grant. venv/pip/pipx honour the
@@ -984,11 +984,11 @@ _KC_PREV_UMASK="$(umask)"
 umask "$(printf '%03o' "$(( $(umask) | 022 ))")"
 if command -v pipx >/dev/null 2>&1; then
   echo "Installing with pipx ..."
-  # `pipx install --force` over an EXISTING kirocrew venv is not transactional
+  # `pipx install --force` over an EXISTING ajcrew venv is not transactional
   # on pipx's side: its install path removes the whole venv when pip fails,
   # so a dependency that no longer resolves (the binary-only policy turning a
   # would-be source build into a refusal, a download that dies) would take a
-  # WORKING `kirocrew` down with it. Keep pipx's own install exactly as it is
+  # WORKING `ajcrew` down with it. Keep pipx's own install exactly as it is
   # today -- --force installs INTO the existing venv (`--force-reinstall`, no
   # --clear), so `pipx inject`ed packages, anything added with `pipx runpip`,
   # and every exposed command survive a successful reinstall -- and wrap it in
@@ -1009,8 +1009,8 @@ if command -v pipx >/dev/null 2>&1; then
   # lock a file nobody else opens.
   _PIPX_VENV_BACKUP=""
   _PIPX_VENV="$(pipx environment --value PIPX_LOCAL_VENVS 2>/dev/null || true)"
-  # pipx names the venv after the distribution: kirocrew-lts on the lts channel.
-  if [ "$CHANNEL" = lts ]; then _PIPX_PKG=kirocrew-lts; else _PIPX_PKG=kirocrew; fi
+  # pipx names the venv after the distribution: ajcrew-lts on the lts channel.
+  if [ "$CHANNEL" = lts ]; then _PIPX_PKG=ajcrew-lts; else _PIPX_PKG=ajcrew; fi
   _PIPX_VENV="${_PIPX_VENV:+${_PIPX_VENV%/}/${_PIPX_PKG}}"
   if [ -n "$_PIPX_VENV" ]; then
     _PIPX_LOCK="$_PIPX_VENV.install.lock"
@@ -1022,7 +1022,7 @@ if command -v pipx >/dev/null 2>&1; then
     _wait_install_lock 900 && _st=0 || _st=$?
     if [ "$_st" -ne 0 ]; then
       [ "$_st" -eq 3 ] \
-        && err "another kirocrew installer run has been working on $_PIPX_VENV for 15 minutes (lock $_PIPX_LOCK). Nothing was changed. Wait for it to finish, or stop it, then re-run this installer." \
+        && err "another ajcrew installer run has been working on $_PIPX_VENV for 15 minutes (lock $_PIPX_LOCK). Nothing was changed. Wait for it to finish, or stop it, then re-run this installer." \
         || err "could not take the install lock $_PIPX_LOCK. Nothing was changed."
     fi
   fi
@@ -1044,7 +1044,7 @@ if command -v pipx >/dev/null 2>&1; then
     # exists to prevent. Nothing has been changed at this point.
     if ! cp -R -p "$_PIPX_VENV" "$_PIPX_VENV_BACKUP" 2>/dev/null; then
       rm -rf "$_PIPX_VENV_BACKUP" 2>/dev/null || true
-      err "could not copy the existing install aside for rollback ($_PIPX_VENV -> $_PIPX_VENV_BACKUP; out of disk space?). Nothing was changed and the current kirocrew keeps working. Free space (or remove the existing install with 'pipx uninstall kirocrew' to install fresh) and re-run this installer."
+      err "could not copy the existing install aside for rollback ($_PIPX_VENV -> $_PIPX_VENV_BACKUP; out of disk space?). Nothing was changed and the current ajcrew keeps working. Free space (or remove the existing install with 'pipx uninstall ajcrew' to install fresh) and re-run this installer."
     fi
   fi
   # pipx forwards --pip-args to the pip install it drives, so the binary-only
@@ -1054,7 +1054,7 @@ if command -v pipx >/dev/null 2>&1; then
   # trip on). The output is captured so a failure can be explained; pipx's
   # own words are replayed by _report_pip_failure.
   # shellcheck disable=SC2086
-  if ! _run_step "$TMP/pip-install.log" "Installing kirocrew $VER and its dependencies with pipx" \
+  if ! _run_step "$TMP/pip-install.log" "Installing ajcrew $VER and its dependencies with pipx" \
       pipx install --force --python "$PY" \
       ${PIP_BINARY_ONLY:+"--pip-args=$PIP_BINARY_ONLY"} "$WHL"; then
     _report_pip_failure "$TMP/pip-install.log"
@@ -1078,15 +1078,15 @@ else
   # interpreter in the data home would put the runtime and the user's data in
   # one blast radius: any home-wide operation (a bulk delete, a backup restore,
   # a relocation) could reach the live interpreter — a non-relocatable venv with
-  # absolute shebangs — and leave a dangling ~/.local/bin/kirocrew and no working
+  # absolute shebangs — and leave a dangling ~/.local/bin/ajcrew and no working
   # CLI. Keeping the venv out of the data home means no home-wide operation can
   # ever reach the interpreter.
-  _DATA_HOME_FOR_VENV="${KIROCREW_HOME:-$HOME/.kiro/crew}"
-  VENV="${KIROCREW_VENV:-${_DATA_HOME_FOR_VENV%/}-venv}"
+  _DATA_HOME_FOR_VENV="${AJCREW_HOME:-$HOME/.kiro/crew}"
+  VENV="${AJCREW_VENV:-${_DATA_HOME_FOR_VENV%/}-venv}"
   _OLD_VENV="${_DATA_HOME_FOR_VENV%/}/venv"
   echo "Installing into managed venv at $VENV ..."
   # One update lease for this layout. The shadow-venv update engine
-  # (`kirocrew update`, and the gateway's automatic and approved updates)
+  # (`ajcrew update`, and the gateway's automatic and approved updates)
   # takes this same lock file before it builds or promotes a tree beside
   # $VENV, so this run and an engine apply never interleave a rebuild with a
   # promotion. Held on fd 9 until this branch ends; the kernel drops it on any
@@ -1100,7 +1100,7 @@ else
   _wait_install_lock 900 && _st=0 || _st=$?
   if [ "$_st" -ne 0 ]; then
     [ "$_st" -eq 3 ] \
-      && err "another kirocrew update has been working on $VENV for 15 minutes (lock $_VENV_LOCK). Nothing was changed. Wait for it to finish, or stop it, then re-run this installer." \
+      && err "another ajcrew update has been working on $VENV for 15 minutes (lock $_VENV_LOCK). Nothing was changed. Wait for it to finish, or stop it, then re-run this installer." \
       || err "could not take the update lock $_VENV_LOCK. Nothing was changed."
   fi
   # Debian/Ubuntu ship the base `python3` WITHOUT the venv/ensurepip module (it
@@ -1124,7 +1124,7 @@ else
   # that can no longer import the CLI at all. Make the rebuild transactional:
   # move the working venv aside (a rename, so it costs nothing), build fresh,
   # and restore the original on failure. Guards: pyvenv.cfg proves the target
-  # IS a venv (a mis-pointed KIROCREW_VENV at a plain directory is never
+  # IS a venv (a mis-pointed AJCREW_VENV at a plain directory is never
   # touched), and a symlinked venv root (trailing slash stripped so `-L` sees
   # the link itself) is left as-is. If the rename itself fails (exotic
   # filesystem), fall back to removing only the stale interpreter links so
@@ -1186,7 +1186,7 @@ else
   # --quiet: pip's "Collecting"/"Downloading" lines are what _run_step shows
   # on the progress line, and they are the context _report_pip_failure needs.
   # shellcheck disable=SC2086
-  if ! _run_step "$TMP/pip-install.log" "Installing kirocrew $VER and its dependencies" \
+  if ! _run_step "$TMP/pip-install.log" "Installing ajcrew $VER and its dependencies" \
       "$VENV/bin/pip" install --progress-bar off $PIP_BINARY_ONLY "$WHL"; then
     _report_pip_failure "$TMP/pip-install.log"
     if [ -n "$_VENV_BACKUP" ] && [ -d "$_VENV_BACKUP" ]; then
@@ -1194,25 +1194,25 @@ else
         "installing the wheel into $VENV failed (see the pip output above). The previous install was restored and keeps working; re-run this installer to retry." \
         "installing the wheel into $VENV failed and the previous install could not be restored from $_VENV_BACKUP. Re-run this installer to complete the install."
     fi
-    err "installing the wheel into $VENV failed. Re-run this installer to complete the install; until then the previous 'kirocrew' command may be unusable."
+    err "installing the wheel into $VENV failed. Re-run this installer to complete the install; until then the previous 'ajcrew' command may be unusable."
   fi
   # A zero exit from pip is not proof the install is usable: a pip that reports
-  # success but lands a venv with no importable `kiro_crew` and no
-  # `bin/kirocrew` console script (observed in the field as a rebuilt venv
+  # success but lands a venv with no importable `aj_crew` and no
+  # `bin/ajcrew` console script (observed in the field as a rebuilt venv
   # holding only pip) would otherwise be COMMITTED here -- the rollback
   # disarmed and the pre-rebuild backup, the one working copy left, deleted --
-  # leaving a dangling ~/.local/bin/kirocrew and a service that will not start.
+  # leaving a dangling ~/.local/bin/ajcrew and a service that will not start.
   # Verify the rebuilt venv the same way install.sh verifies its own before
   # committing, while the rollback is STILL armed, so a bad rebuild restores
   # the previous install instead of destroying it. `-I` isolates the import
   # from an inherited PYTHONPATH, as every other interpreter call here does.
-  if [ ! -x "$VENV/bin/kirocrew" ] || ! "$VENV/bin/python" -I -c 'import kiro_crew' >/dev/null 2>&1; then
+  if [ ! -x "$VENV/bin/ajcrew" ] || ! "$VENV/bin/python" -I -c 'import aj_crew' >/dev/null 2>&1; then
     if [ -n "$_VENV_BACKUP" ] && [ -d "$_VENV_BACKUP" ]; then
       _venv_restore_after_failure \
-        "the wheel install into $VENV reported success but left no usable kirocrew (no importable kiro_crew or bin/kirocrew). The previous install was restored and keeps working; re-run this installer to retry." \
-        "the wheel install into $VENV reported success but left no usable kirocrew, and the previous install could not be restored from $_VENV_BACKUP. Re-run this installer to complete the install."
+        "the wheel install into $VENV reported success but left no usable ajcrew (no importable aj_crew or bin/ajcrew). The previous install was restored and keeps working; re-run this installer to retry." \
+        "the wheel install into $VENV reported success but left no usable ajcrew, and the previous install could not be restored from $_VENV_BACKUP. Re-run this installer to complete the install."
     fi
-    err "the wheel install into $VENV reported success but left no usable kirocrew (no importable kiro_crew or bin/kirocrew). Re-run this installer to complete the install; until then the previous 'kirocrew' command may be unusable."
+    err "the wheel install into $VENV reported success but left no usable ajcrew (no importable aj_crew or bin/ajcrew). Re-run this installer to complete the install; until then the previous 'ajcrew' command may be unusable."
   fi
   # Committed: the wheel landed and imports, so the rebuilt venv is the install now.
   # Disarm the rollback BEFORE deleting the backup: a restore during that
@@ -1228,7 +1228,7 @@ else
   umask "$_KC_PREV_UMASK"
   # Keep the stable launch path (`${VENV}-current`) naming the tree that holds
   # the LAST-INSTALLED version. The gateway's shadow-venv updater
-  # (kiro_crew/platform/wheel_engine.py) promotes this same symlink to a fresh
+  # (aj_crew/platform/wheel_engine.py) promotes this same symlink to a fresh
   # versioned tree; a later re-run of this installer writes into the fixed
   # $VENV again, so without this repoint the stable link would keep naming the
   # older versioned tree and a gateway restart would resurrect it. Replaced
@@ -1262,7 +1262,7 @@ except OSError:
 ' "$VENV" "$_VENV_CURRENT" || echo "WARNING: could not update $_VENV_CURRENT; continuing." >&2
   fi
   mkdir -p "$HOME/.local/bin"
-  ln -sf "$VENV/bin/kirocrew" "$HOME/.local/bin/kirocrew"
+  ln -sf "$VENV/bin/ajcrew" "$HOME/.local/bin/ajcrew"
   BIN="$HOME/.local/bin"
   # Retire a venv left inside the data home by an earlier version of this
   # script. Three independent conditions must all hold, so this never deletes
@@ -1271,29 +1271,29 @@ except OSError:
   #      venv module always writes it) and not a user directory that merely
   #      happens to be named `venv`, whose contents would otherwise be
   #      recursively deleted by a routine reinstall.
-  #   2. `bin/kirocrew` present — proves it is OUR managed environment rather
+  #   2. `bin/ajcrew` present — proves it is OUR managed environment rather
   #      than some unrelated venv the user parked in the data home.
-  #   3. The new environment imports `kiro_crew` — proves the replacement works
+  #   3. The new environment imports `aj_crew` — proves the replacement works
   #      before the old one goes away.
   # Plus: not a symlink, and no overlap with the new tree.
   #
   # The old/new comparison is on CANONICAL paths and rejects any OVERLAP of the
-  # two trees, not just exact equality: KIROCREW_VENV could name the same
+  # two trees, not just exact equality: AJCREW_VENV could name the same
   # directory by a different route (a symlink, or a `..` segment such as
-  # $KIROCREW_HOME/../crew/venv), or could point INSIDE the old venv
-  # ($KIROCREW_HOME/venv/new) — in which case the paths differ yet `rm -rf` on
-  # the old tree deletes the new installation and the ~/.local/bin/kirocrew
+  # $AJCREW_HOME/../crew/venv), or could point INSIDE the old venv
+  # ($AJCREW_HOME/venv/new) — in which case the paths differ yet `rm -rf` on
+  # the old tree deletes the new installation and the ~/.local/bin/ajcrew
   # symlink target with it. Fails CLOSED: if either path cannot be canonicalized
   # we skip the removal rather than guess.
   if [ -d "$_OLD_VENV" ] && [ ! -L "$_OLD_VENV" ] \
-     && [ -f "$_OLD_VENV/pyvenv.cfg" ] && [ -f "$_OLD_VENV/bin/kirocrew" ]; then
+     && [ -f "$_OLD_VENV/pyvenv.cfg" ] && [ -f "$_OLD_VENV/bin/ajcrew" ]; then
     _OLD_CANON="$(_canon_dir "$_OLD_VENV")"
     _NEW_CANON="$(_canon_dir "$VENV")"
     if [ -z "$_OLD_CANON" ] || [ -z "$_NEW_CANON" ]; then
       echo "WARNING: could not canonicalize $_OLD_VENV or $VENV; leaving $_OLD_VENV in place." >&2
     elif _is_within "$_NEW_CANON" "$_OLD_CANON" || _is_within "$_OLD_CANON" "$_NEW_CANON"; then
       : # overlapping trees — removing either would damage the new installation
-    elif "$VENV/bin/python" -c 'import kiro_crew' >/dev/null 2>&1; then
+    elif "$VENV/bin/python" -c 'import aj_crew' >/dev/null 2>&1; then
       # A gateway still running from the retired venv loses its interpreter
       # and package tree here, so the closing restart hint applies to it.
       _KC_REPLACED_INSTALL=1
@@ -1307,7 +1307,7 @@ except OSError:
   exec 9>&-
 fi
 
-_DATA_HOME="${KIROCREW_HOME:-$HOME/.kiro/crew}"
+_DATA_HOME="${AJCREW_HOME:-$HOME/.kiro/crew}"
 mkdir -p "$_DATA_HOME"
 # Atomic, symlink-proof marker writes. A plain `>` redirection FOLLOWS a
 # pre-planted symlink at the destination -- the data home is agent-writable,
@@ -1331,7 +1331,7 @@ _write_marker() {
 }
 _write_marker channel "$CHANNEL"
 # Record the interpreter mode so the next run -- including the re-run that
-# `kirocrew update` performs -- keeps the same choice without the flag.
+# `ajcrew update` performs -- keeps the same choice without the flag.
 # `system-pinned` is only ever written for an EXPLICIT system choice; a
 # transient fallback from the managed default records nothing, so the next
 # run retries managed instead of freezing a network hiccup into a pin.
@@ -1344,7 +1344,7 @@ else
 fi
 
 echo ""
-echo "Installed kirocrew $VER (channel: $CHANNEL)."
+echo "Installed ajcrew $VER (channel: $CHANNEL)."
 case ":$PATH:" in
   *":$BIN:"*) : ;;
   *) echo "Add $BIN to your PATH first (e.g. add it in your shell profile)." ;;
@@ -1355,27 +1355,27 @@ esac
 # data home's read-only `engines/kas/` leaf (never the venv). It is a separate
 # download, not part of the wheel, so a failed download must never fail the
 # install (an interrupt, Ctrl-C included, still ends it via _tolerate): a host
-# that cannot reach the CDN keeps a working Kiro Crew and is told the exact
+# that cannot reach the CDN keeps a working Aj Crew and is told the exact
 # command to retry. A version already on disk is a success with no fetch, so a
 # re-run is cheap. agent.kas_bundle is left alone: turning the route on is the
 # user's own step.
-_KAS_RETRY="$BIN/kirocrew kas install"
+_KAS_RETRY="$BIN/ajcrew kas install"
 if [ "$INSTALL_KAS" = "1" ]; then
   echo ""
-  echo "Downloading the built-in KAS engine (kirocrew kas install; skip with --no-kas) ..."
+  echo "Downloading the built-in KAS engine (ajcrew kas install; skip with --no-kas) ..."
   # Exit 3 is `kas install`'s "this host cannot run the engine" (cli_kas.py
   # HOST_UNSUPPORTED_EXIT): it already printed why, and a retry cannot help.
   _kas_rc=0
-  if [ -x "$BIN/kirocrew" ]; then
-    "$BIN/kirocrew" kas install || _kas_rc=$?
+  if [ -x "$BIN/ajcrew" ]; then
+    "$BIN/ajcrew" kas install || _kas_rc=$?
   else
     _kas_rc=1
   fi
   _tolerate "$_kas_rc"
   if [ "$_kas_rc" -eq 3 ]; then
-    echo "NOTE: this host cannot run the built-in KAS engine (see above); Kiro Crew is installed without it." >&2
+    echo "NOTE: this host cannot run the built-in KAS engine (see above); Aj Crew is installed without it." >&2
   elif [ "$_kas_rc" -ne 0 ]; then
-    echo "WARNING: could not download the built-in KAS engine; Kiro Crew is installed without it." >&2
+    echo "WARNING: could not download the built-in KAS engine; Aj Crew is installed without it." >&2
     echo "Retry when online: $_KAS_RETRY" >&2
   fi
 fi
@@ -1386,13 +1386,13 @@ fi
 # one for a quick look.
 echo ""
 echo "Next steps:"
-echo "  kirocrew gateway            # start the dashboard now (http://localhost:5476)"
-echo "  kirocrew service install    # run it 24/7 as a service (survives logout, restarts on crash)"
-echo "  kirocrew --help             # everything else"
+echo "  ajcrew gateway            # start the dashboard now (http://localhost:5476)"
+echo "  ajcrew service install    # run it 24/7 as a service (survives logout, restarts on crash)"
+echo "  ajcrew --help             # everything else"
 echo ""
 echo "Need a non-default port (e.g. 5476 is already taken)?"
-echo "  kirocrew gateway --port 5477                  # for a foreground run"
-echo "  KIROCREW_PORT=5477 kirocrew service install   # for the service (baked into its unit)"
+echo "  ajcrew gateway --port 5477                  # for a foreground run"
+echo "  AJCREW_PORT=5477 ajcrew service install   # for the service (baked into its unit)"
 
 # A re-run installs into the same tree a running gateway was loaded from, so
 # that gateway keeps its already-imported old modules while every later import
@@ -1401,25 +1401,25 @@ echo "  KIROCREW_PORT=5477 kirocrew service install   # for the service (baked i
 # `launchctl print`, `ps`) and nothing here starts, stops or restarts
 # anything. The systemd answer follows service/common.py's
 # restart_command_hint: one active scope gets its own command, both active
-# defer to `kirocrew restart`, which reads both managers. A gateway outside a
+# defer to `ajcrew restart`, which reads both managers. A gateway outside a
 # service manager is found through the pid gateway.lock records, accepted only
-# when that pid still runs a Kiro Crew gateway (the stamp is never cleared, so
+# when that pid still runs a Aj Crew gateway (the stamp is never cleared, so
 # a stale pid may name an unrelated process).
 #
 # A systemd scope counts only when the manager reports the canonical
-# Id=kirocrew.service, the same ownership test service/linux_systemctl.py's
+# Id=ajcrew.service, the same ownership test service/linux_systemctl.py's
 # _UnitState.ours applies: on an alias, `systemctl show` answers for the unit
-# the alias points at, and a command naming kirocrew would restart that unit.
+# the alias points at, and a command naming ajcrew would restart that unit.
 # Properties are read as Key=value lines, without --value, which systemd 219
 # does not have.
 _rg_unit_up() {
-  _rg_show="$(systemctl "$@" show -p Id -p ActiveState kirocrew.service 2>/dev/null || true)"
+  _rg_show="$(systemctl "$@" show -p Id -p ActiveState ajcrew.service 2>/dev/null || true)"
   _rg_show="
 $_rg_show
 "
   case "$_rg_show" in
     *"
-Id=kirocrew.service
+Id=ajcrew.service
 "*) ;;
     *) return 1 ;;
   esac
@@ -1441,25 +1441,25 @@ _running_gateway_restart_command() {
     if _rg_unit_up; then _rg_system=1; fi
     if _rg_unit_up --user; then _rg_user=1; fi
     if [ "$_rg_system" = 1 ] && [ "$_rg_user" = 1 ]; then
-      echo "kirocrew restart"
+      echo "ajcrew restart"
       return 0
     fi
     if [ "$_rg_system" = 1 ]; then
       if [ "$_rg_uid" = 0 ]; then
-        echo "systemctl restart kirocrew"
+        echo "systemctl restart ajcrew"
       else
-        echo "sudo systemctl restart kirocrew"
+        echo "sudo systemctl restart ajcrew"
       fi
       return 0
     fi
     if [ "$_rg_user" = 1 ]; then
-      echo "systemctl --user restart kirocrew"
+      echo "systemctl --user restart ajcrew"
       return 0
     fi
   fi
   if [ -n "$_rg_uid" ] && command -v launchctl >/dev/null 2>&1 \
-     && launchctl print "gui/$_rg_uid/dev.kirocrew.gateway" >/dev/null 2>&1; then
-    echo "launchctl kickstart -k gui/$_rg_uid/dev.kirocrew.gateway"
+     && launchctl print "gui/$_rg_uid/dev.ajcrew.gateway" >/dev/null 2>&1; then
+    echo "launchctl kickstart -k gui/$_rg_uid/dev.ajcrew.gateway"
     return 0
   fi
   _rg_lock="$_DATA_HOME/gateway.lock"
@@ -1472,9 +1472,9 @@ _running_gateway_restart_command() {
     _rg_args="$(ps -p "$_rg_pid" -o args= 2>/dev/null || true)"
     case "$_rg_args" in
       # `gateway` as its own word anywhere after the program, so global
-      # flags in between (`kirocrew -v gateway`) still match.
-      *kirocrew*\ gateway|*kirocrew*\ gateway\ *|*kiro_crew*\ gateway|*kiro_crew*\ gateway\ *)
-        echo "kirocrew restart"
+      # flags in between (`ajcrew -v gateway`) still match.
+      *ajcrew*\ gateway|*ajcrew*\ gateway\ *|*aj_crew*\ gateway|*aj_crew*\ gateway\ *)
+        echo "ajcrew restart"
         return 0
         ;;
     esac
@@ -1485,7 +1485,7 @@ _running_gateway_restart_command() {
 if [ "$_KC_REPLACED_INSTALL" = 1 ]; then
   if _KC_RESTART_CMD="$(_running_gateway_restart_command)"; then
     echo "" >&2
-    echo "WARNING: a Kiro Crew gateway is running and still has the previous version loaded." >&2
+    echo "WARNING: a Aj Crew gateway is running and still has the previous version loaded." >&2
     echo "Until it restarts it runs a mix of old and new code. Restart it now:" >&2
     echo "  $_KC_RESTART_CMD" >&2
   fi

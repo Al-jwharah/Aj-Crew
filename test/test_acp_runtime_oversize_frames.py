@@ -13,10 +13,10 @@ from acp_runtime_helpers import _pinned_kiro_cli_version  # noqa: F401
 from acp_runtime_helpers import _stub_sel_for_permission_tests  # noqa: F401
 from acp_runtime_helpers import _feed, _make_runtime, _next, _register, _start_reader, _stop_reader
 
-from kiro_crew.acp import runtime as runtime_mod
-from kiro_crew.acp.client import _OVERSIZE_DRAIN_MAX_BYTES
-from kiro_crew.acp.types import METHOD_SESSION_LOAD, METHOD_SESSION_NEW
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp import runtime as runtime_mod
+from aj_crew.acp.client import _OVERSIZE_DRAIN_MAX_BYTES
+from aj_crew.acp.types import METHOD_SESSION_LOAD, METHOD_SESSION_NEW
+from aj_crew.testing.wait import await_until
 
 
 @pytest.mark.asyncio
@@ -47,7 +47,7 @@ async def test_an_oversize_reply_fails_its_awaited_request_with_the_size_and_lim
     say) must fail that request at once naming the frame size and the limit --
     not surface minutes later as a session/new timeout blamed on MCP servers.
     The reader keeps routing afterwards."""
-    from kiro_crew.acp.session_handle import AcpFrameTooLarge
+    from aj_crew.acp.session_handle import AcpFrameTooLarge
 
     rt, _, proc = _make_runtime()
     reader = asyncio.StreamReader(limit=256)
@@ -95,7 +95,7 @@ async def test_an_oversize_prompt_reply_ends_its_sessions_turn():
         assert not rt._dead
         # What the user reads is one plain sentence with the sizes in MB: no raw
         # frame, no byte counts (those stay in the log), and no retry.
-        from kiro_crew.acp.transport_errors import _raise_acp_error
+        from aj_crew.acp.transport_errors import _raise_acp_error
 
         with pytest.raises(Exception) as excinfo:
             _raise_acp_error(msg.error, [], backend="kas")
@@ -112,8 +112,8 @@ async def test_an_oversize_prompt_reply_ends_its_sessions_turn():
 def test_the_oversize_marker_from_the_wire_is_still_redacted():
     """A backend can send the marker in its own error ``data``; its message must
     still pass the credential redaction every formatted error goes through."""
-    from kiro_crew.acp.structured_error_data import OVERSIZE_REPLY_DATA
-    from kiro_crew.acp.transport_errors import _format_acp_error_worded
+    from aj_crew.acp.structured_error_data import OVERSIZE_REPLY_DATA
+    from aj_crew.acp.transport_errors import _format_acp_error_worded
 
     secret = "ghp_" + "a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6q7R8"
     error = {"code": -32603, "message": f"leak {secret}", "data": OVERSIZE_REPLY_DATA}
@@ -159,7 +159,7 @@ async def test_an_oversize_session_start_reply_is_a_tagged_start_failure(monkeyp
     """A self-driving caller counts start failures by ``session_start_failed`` to back
     off; an oversize session/new or session/load reply is one, and it is not
     transient -- the same request gets the same reply."""
-    from kiro_crew.acp.session_handle import AcpFrameTooLarge
+    from aj_crew.acp.session_handle import AcpFrameTooLarge
 
     rt, _, _ = _make_runtime()
     rt._can_load_session = True
@@ -172,14 +172,14 @@ async def test_an_oversize_session_start_reply_is_a_tagged_start_failure(monkeyp
     monkeypatch.setattr(rt, "_send_and_await", _oversize)
     with pytest.raises(AcpFrameTooLarge) as excinfo:
         if path == "create":
-            await rt.create_session(cwd="/work", agent="kirocrew")
+            await rt.create_session(cwd="/work", agent="ajcrew")
         else:
             await rt.load_session(
-                "/home/u/.kiro/sessions/cli/sid-1.json", "sid-1", cwd="/work", agent="kirocrew"
+                "/home/u/.kiro/sessions/cli/sid-1.json", "sid-1", cwd="/work", agent="ajcrew"
             )
     assert excinfo.value.session_start_failed is True
     assert excinfo.value.transient is False
-    from kiro_crew.llm_helpers import acp_error_is_transient
+    from aj_crew.llm_helpers import acp_error_is_transient
 
     assert acp_error_is_transient(excinfo.value) is False
 
@@ -189,8 +189,8 @@ async def test_an_oversize_session_new_reply_releases_its_start_permit(monkeypat
     """The start gate admits a few session starts at once and has no reaper, so a
     start that fails on an oversize reply must give its slot back -- otherwise two
     such failures block every later ``create_session`` on the loop."""
-    from kiro_crew.acp import runtime_start
-    from kiro_crew.acp.session_handle import AcpFrameTooLarge
+    from aj_crew.acp import runtime_start
+    from aj_crew.acp.session_handle import AcpFrameTooLarge
 
     released: list[str] = []
     recorded: list[bool] = []
@@ -220,7 +220,7 @@ async def test_an_oversize_session_new_reply_releases_its_start_permit(monkeypat
 
     monkeypatch.setattr(rt, "_send_and_await", _oversize)
     with pytest.raises(AcpFrameTooLarge):
-        await rt.create_session(cwd="/work", agent="kirocrew")
+        await rt.create_session(cwd="/work", agent="ajcrew")
     assert released == ["x"]
     assert recorded == [False]
 
@@ -351,8 +351,8 @@ def test_runtime_reuses_clients_oversize_drain_helper():
     """The consume-prefix-and-retry drain must have ONE definition. A second copy
     is how two read paths drift apart (they already disagreed once, when only one
     of them killed the process)."""
-    import kiro_crew.acp.client as client_mod
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.client as client_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     assert runtime_mod._drain_oversize_line is client_mod._drain_oversize_line
     assert runtime_mod.OversizeLineUnrecoverable is client_mod.OversizeLineUnrecoverable

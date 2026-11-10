@@ -4,8 +4,8 @@ import json
 import subprocess
 import sys
 
-from kiro_crew.testing import fake_acp_backend
-from kiro_crew.testing.wait import finished
+from aj_crew.testing import fake_acp_backend
+from aj_crew.testing.wait import finished
 
 
 def test_workflow_warm_reset_allocates_distinct_native_sessions(tmp_path):
@@ -24,7 +24,7 @@ def test_workflow_warm_reset_allocates_distinct_native_sessions(tmp_path):
         },
     ]
     result = subprocess.run(
-        [sys.executable, "-m", "kiro_crew.testing.fake_acp_backend", "acp"],
+        [sys.executable, "-m", "aj_crew.testing.fake_acp_backend", "acp"],
         input="".join(json.dumps({"jsonrpc": "2.0", **row}) + "\n" for row in requests),
         capture_output=True,
         text=True,
@@ -53,7 +53,7 @@ def test_workflow_warm_reset_allocates_distinct_native_sessions(tmp_path):
 
 
 def test_workflow_timeout_summary_omits_private_payloads():
-    from kiro_crew.testing.workflow_memory_scenario import progress_summary
+    from aj_crew.testing.workflow_memory_scenario import progress_summary
 
     private = "PRIVATE_PAYLOAD_MUST_NOT_APPEAR"
     run = {
@@ -81,7 +81,7 @@ def test_workflow_backend_routes_each_session_to_its_own_projection(tmp_path, mo
     """Only observe the scenario entry; projection and proof code are not replaced."""
     import io
 
-    from kiro_crew.testing import workflow_memory_scenario
+    from aj_crew.testing import workflow_memory_scenario
 
     captured = io.StringIO()
     monkeypatch.setattr(fake_acp_backend, "_SESSIONS", {})
@@ -139,22 +139,22 @@ def test_workflow_worker_publishes_identity_before_mcp_http(tmp_path, monkeypatc
     import asyncio
     import os
 
-    from kiro_crew.messaging.identity import publish_turn_identity
-    from kiro_crew.providers.base import LLMEvent
-    from kiro_crew.workflows.agent_pool import _WorkflowSessionWorker
+    from aj_crew.messaging.identity import publish_turn_identity
+    from aj_crew.providers.base import LLMEvent
+    from aj_crew.workflows.agent_pool import _WorkflowSessionWorker
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew"))
-    monkeypatch.setenv("KIROCREW_WORKSPACE", str(tmp_path / "workspace"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew"))
+    monkeypatch.setenv("AJCREW_WORKSPACE", str(tmp_path / "workspace"))
     monkeypatch.setenv("KIRO_HOME", str(tmp_path / "kiro"))
     key = "wf-pool:wf_1:identity-probe"
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.config.loader import KiroCrewAgentConfig
-    from kiro_crew.history import ConversationLog
-    from kiro_crew.member_memory_auth import bind_private_session_store
-    from kiro_crew.memory_stores import persist_member_config, provision_member_memory
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.config.loader import AjCrewAgentConfig
+    from aj_crew.history import ConversationLog
+    from aj_crew.member_memory_auth import bind_private_session_store
+    from aj_crew.memory_stores import persist_member_config, provision_member_memory
 
-    cfg = KiroCrewConfig.load()
-    cfg.agents["identity-probe"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+    cfg = AjCrewConfig.load()
+    cfg.agents["identity-probe"] = AjCrewAgentConfig(kiro_agent="ajcrew")
     store = provision_member_memory(cfg, "identity-probe")
     persist_member_config(cfg, "identity-probe", create=True)
     bind_private_session_store(key, store)
@@ -189,17 +189,17 @@ def test_workflow_worker_publishes_identity_before_mcp_http(tmp_path, monkeypatc
         server = await asyncio.start_server(observe, "127.0.0.1", 0)
         async with server:
             env = dict(os.environ)
-            for name in ("KIROCREW_SESSION_KEY", "KIROCREW_HOST_PID", "KIROCREW_CHANNEL_ID"):
+            for name in ("AJCREW_SESSION_KEY", "AJCREW_HOST_PID", "AJCREW_CHANNEL_ID"):
                 env.pop(name, None)
             port = str(server.sockets[0].getsockname()[1])
-            env["KIROCREW_PORT"] = port
-            env["KIROCREW_BOUND_PORT"] = port
+            env["AJCREW_PORT"] = port
+            env["AJCREW_BOUND_PORT"] = port
             child = await asyncio.create_subprocess_exec(
                 sys.executable,
                 "-c",
-                "import subprocess,sys\nfrom kiro_crew.mcp_core import _api_port\n"
+                "import subprocess,sys\nfrom aj_crew.mcp_core import _api_port\n"
                 "assert _api_port() == int(sys.argv[1])\n"
-                'code = "import json; from kiro_crew.mcp_core import _post; '
+                'code = "import json; from aj_crew.mcp_core import _post; '
                 "print(json.dumps(_post('/identity-probe', {}, timeout=5)))\"\n"
                 "for line in sys.stdin:\n"
                 " result = subprocess.run([sys.executable, '-c', code], "
@@ -268,20 +268,20 @@ def test_unpooled_paths_publish_identity_before_prompt(monkeypatch):
     Only the final filesystem writer is captured, at its defining module."""
     import asyncio
 
-    from kiro_crew.workflows.agent_pool import build_pooled_agent_fn
+    from aj_crew.workflows.agent_pool import build_pooled_agent_fn
 
     events: list[tuple] = []
 
     def _capture_publish(pid, session_key):
         events.append(("publish", pid, session_key))
 
-    monkeypatch.setattr("kiro_crew.messaging.identity.publish_session_pid", _capture_publish)
+    monkeypatch.setattr("aj_crew.messaging.identity.publish_session_pid", _capture_publish)
 
     async def _stream(provider, prompt, **kwargs):
         events.append(("stream", provider.key))
         return prompt
 
-    monkeypatch.setattr("kiro_crew.workflows.agent_pool.stream_and_collect", _stream)
+    monkeypatch.setattr("aj_crew.workflows.agent_pool.stream_and_collect", _stream)
 
     class Provider:
         def __init__(self, key):

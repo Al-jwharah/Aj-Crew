@@ -4,7 +4,7 @@
 unattended sweep only guarantees a copy from up to ``MIN_BACKUP_INTERVAL_HOURS`` ago.
 An upgrade rewrites the code that opens that file, so the window between the last
 scheduled copy and the new binary is the window where a bad upgrade costs a day of
-memory. `kirocrew update` closes it by taking its own copy first, and by refusing to
+memory. `ajcrew update` closes it by taking its own copy first, and by refusing to
 dispatch at all when that copy did not land.
 
 The copy sits beside each updater rather than at the top of the command, and these tests
@@ -21,9 +21,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import cli_server, memory_backup
-from kiro_crew.memory_stores import DEFAULT_MEMORY_STORE, resolve_store_path
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import cli_server, memory_backup
+from aj_crew.memory_stores import DEFAULT_MEMORY_STORE, resolve_store_path
+from aj_crew.vector_memory import VectorMemoryStore
 
 pytestmark = pytest.mark.xdist_group("memory_backup")
 
@@ -40,8 +40,8 @@ def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         ),
         encoding="utf-8",
     )
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    import kiro_crew.config.paths as paths
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    import aj_crew.config.paths as paths
 
     monkeypatch.setattr(paths, "_resolved_home", None, raising=False)
     return tmp_path
@@ -53,7 +53,7 @@ def live_store(home: Path):
     store = VectorMemoryStore()
     store.init()
     try:
-        store.set_semantic("project.name", "kiro-crew", 1.0, "user_explicit")
+        store.set_semantic("project.name", "aj-crew", 1.0, "user_explicit")
         yield store
     finally:
         store.close()
@@ -67,7 +67,7 @@ def policy_updater(monkeypatch: pytest.MonkeyPatch) -> list[int]:
     it is reached without a git checkout or a release feed. Each test reads the returned
     list to see what the store looked like AT THE MOMENT the updater ran.
     """
-    from kiro_crew.platform import update_provider
+    from aj_crew.platform import update_provider
 
     at_dispatch: list[int] = []
     db = resolve_store_path(DEFAULT_MEMORY_STORE)
@@ -170,9 +170,9 @@ def test_the_configured_retention_is_the_one_the_copy_prunes_to(
     ``memory.backup_keep``, and this one has to as well or the update silently deletes
     the history the operator configured.
     """
-    from kiro_crew.config import KiroCrewConfig
+    from aj_crew.config import AjCrewConfig
 
-    config = KiroCrewConfig.load()
+    config = AjCrewConfig.load()
     config.memory.backup_keep = 30
     config.save()
 
@@ -192,7 +192,7 @@ def test_the_configured_retention_is_the_one_the_copy_prunes_to(
 def test_an_install_with_nothing_to_copy_still_updates(home: Path, policy_updater) -> None:
     """A store that was never opened has no bytes to lose, so it is not a reason to stop.
 
-    Without this the very first `kirocrew update` on a fresh install would refuse.
+    Without this the very first `ajcrew update` on a fresh install would refuse.
     """
     cli_server._update()
 
@@ -207,7 +207,7 @@ def test_a_path_that_updates_nothing_takes_no_copy(
     The copy is taken where an updater runs, and the interval guard is bypassed for it,
     so copying here would spend a retention slot every time the command is run.
     """
-    from kiro_crew.platform import update_provider
+    from aj_crew.platform import update_provider
 
     monkeypatch.setattr(update_provider, "resolve_provider", lambda: None)
     monkeypatch.setattr(
@@ -230,20 +230,20 @@ def test_a_path_that_updates_nothing_takes_no_copy(
 def _serve_feed(monkeypatch: pytest.MonkeyPatch, version: str) -> None:
     """Pin the CDN bases, channel and installer command, and serve one release feed."""
     monkeypatch.setattr(
-        "kiro_crew.platform.update_layout.cdn_bases",
+        "aj_crew.platform.update_layout.cdn_bases",
         lambda: ("https://cdn.example.com", "https://cdn.example.com"),
     )
-    monkeypatch.setattr("kiro_crew.platform.update_layout.release_channel", lambda: "stable")
+    monkeypatch.setattr("aj_crew.platform.update_layout.release_channel", lambda: "stable")
     monkeypatch.setattr(
-        "kiro_crew.platform.update_layout.wheel_update_command",
+        "aj_crew.platform.update_layout.wheel_update_command",
         lambda channel=None: "curl -fsSL https://cdn.example.com/cli.sh | sh",
     )
     monkeypatch.setattr(
-        "kiro_crew.platform.update_governance.update_blocked_reason", lambda url: ""
+        "aj_crew.platform.update_governance.update_blocked_reason", lambda url: ""
     )
     feed = json.dumps(
         {
-            "schema": "kirocrew-cli-artifact-manifest-v1",
+            "schema": "ajcrew-cli-artifact-manifest-v1",
             "channel": "stable",
             "version": version,
         }
@@ -277,8 +277,8 @@ def test_an_up_to_date_wheel_install_takes_no_copy(
     Driven through `_update`, so the branch that dispatches to the wheel updater is in
     the path and cannot be where the copy is taken.
     """
-    from kiro_crew import __version__ as local_version
-    from kiro_crew.platform import update_provider
+    from aj_crew import __version__ as local_version
+    from aj_crew.platform import update_provider
 
     monkeypatch.setattr(update_provider, "resolve_provider", lambda: None)
     monkeypatch.setattr(
@@ -307,7 +307,7 @@ def test_a_provider_that_cannot_apply_here_takes_no_copy(
     Neither does any provider on Windows, where every provider command refuses — and
     `can_apply()` is the one answer that already covers both.
     """
-    from kiro_crew.platform import update_provider
+    from aj_crew.platform import update_provider
 
     async def _no_apply_command():
         return False  # what CommandProvider.apply() answers with no apply_command
@@ -341,23 +341,23 @@ def test_a_wheel_install_that_cannot_self_update_takes_no_copy(
     The install here is neither the managed venv nor pipx, so the wheel path points the
     user at an in-place ``pip install -U`` instead of running the installer.
     """
-    from kiro_crew.platform.update_layout import InstallLayout
+    from aj_crew.platform.update_layout import InstallLayout
 
     _serve_feed(monkeypatch, "9999.0.0")
-    monkeypatch.setattr("kiro_crew.platform.wheel_engine.running_from_managed_venv", lambda: False)
-    monkeypatch.setattr("kiro_crew.platform.wheel_engine.running_from_pipx", lambda: False)
+    monkeypatch.setattr("aj_crew.platform.wheel_engine.running_from_managed_venv", lambda: False)
+    monkeypatch.setattr("aj_crew.platform.wheel_engine.running_from_pipx", lambda: False)
     monkeypatch.setattr(cli_server.sys, "platform", "win32")
 
     # The in-place hint prefers the signed pinned wheel; with no real signed CDN
     # in the fake feed the manifest fetch fails, so the refusal takes the
     # verification-FAILURE report path (no name-resolving command emitted).
-    from kiro_crew.platform.wheel_engine import WheelUpdateError
+    from aj_crew.platform.wheel_engine import WheelUpdateError
 
     def _no_manifest(*a, **k):
         raise WheelUpdateError("no CDN in test")
 
     monkeypatch.setattr(
-        "kiro_crew.platform.wheel_engine.fetch_verified_manifest",
+        "aj_crew.platform.wheel_engine.fetch_verified_manifest",
         _no_manifest,
     )
 
@@ -378,5 +378,5 @@ def test_a_wheel_install_that_cannot_self_update_takes_no_copy(
     # artifact directory for a manual install — not the name-based form.
     assert "https://cdn.example.com/cli/stable/" in out
     assert "--extra-index-url" not in out
-    assert "-U kirocrew" not in out
+    assert "-U ajcrew" not in out
     assert "Memory snapshot" not in out

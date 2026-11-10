@@ -7,8 +7,8 @@ from datetime import timezone
 
 import pytest
 
-from kiro_crew.cron import CronJob, CronSchedule
-from kiro_crew.cron_service import schedule
+from aj_crew.cron import CronJob, CronSchedule
+from aj_crew.cron_service import schedule
 
 
 def _job(job_id: str, tz: str = "America/New_York") -> CronJob:
@@ -43,7 +43,7 @@ def _tz_warnings(caplog: pytest.LogCaptureFixture) -> list[logging.LogRecord]:
 def test_unresolvable_zone_warns_once_per_job_without_traceback(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    caplog.set_level(logging.DEBUG, logger="kiro_crew.cron")
+    caplog.set_level(logging.DEBUG, logger="aj_crew.cron")
     jobs = [_job(f"job-{n}") for n in range(3)]
     for _tick in range(10):
         for job in jobs:
@@ -72,7 +72,7 @@ def test_full_memo_refuses_new_rows_and_says_so_once(
     caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(schedule, "_BAD_TZ_WARNED_MAX", 2)
-    caplog.set_level(logging.WARNING, logger="kiro_crew.cron")
+    caplog.set_level(logging.WARNING, logger="aj_crew.cron")
     jobs = [_job(f"job-{n}") for n in range(3)]
     for _tick in range(3):
         for job in jobs:

@@ -12,10 +12,10 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.agent as agent_mod
-import kiro_crew.config.paths as paths_mod
-from kiro_crew.acp.harness.kas import KasHarness
-from kiro_crew.acp.kas_agents import spec_keys_without_carrier, to_client_custom_agent
+import aj_crew.agent as agent_mod
+import aj_crew.config.paths as paths_mod
+from aj_crew.acp.harness.kas import KasHarness
+from aj_crew.acp.kas_agents import spec_keys_without_carrier, to_client_custom_agent
 
 
 def test_a_valid_knowledge_base_reaches_kas_with_only_schema_keys(tmp_path):
@@ -75,7 +75,7 @@ def test_a_knowledge_base_kas_would_refuse_is_dropped_and_named(bad):
 
 
 def test_a_users_tool_aliases_are_named(monkeypatch):
-    monkeypatch.setattr("kiro_crew.connections.alias_record.load_claimed", lambda _fp: frozenset())
+    monkeypatch.setattr("aj_crew.connections.alias_record.load_claimed", lambda _fp: frozenset())
     spec = {"toolAliases": {"@linear/list_issues": "linear_issues"}}
 
     assert spec_keys_without_carrier(spec) == ["toolAliases"]
@@ -83,7 +83,7 @@ def test_a_users_tool_aliases_are_named(monkeypatch):
 
 def test_tool_aliases_crew_wrote_are_not_named(monkeypatch):
     monkeypatch.setattr(
-        "kiro_crew.connections.alias_record.load_claimed",
+        "aj_crew.connections.alias_record.load_claimed",
         lambda _fp: frozenset({("linear", "search", "linear_search")}),
     )
 

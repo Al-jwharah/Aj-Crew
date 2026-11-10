@@ -30,11 +30,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import kiro_crew.sel as sel_mod
-from kiro_crew import llm_helpers, security
-from kiro_crew.hooks import HookManager, HooksConfig, UserDeniedPattern
-from kiro_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
-from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+import aj_crew.sel as sel_mod
+from aj_crew import llm_helpers, security
+from aj_crew.hooks import HookManager, HooksConfig, UserDeniedPattern
+from aj_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
+from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
 
 # A title that survives every title-tier check, so the decision under test is
 # decided by tool_input alone.
@@ -174,7 +174,7 @@ class TestOffLoop:
     @pytest.mark.asyncio
     async def test_scan_predicates_run_on_a_worker_thread(self) -> None:
         loop_ident = threading.get_ident()
-        probe_target = "kirocrew-offload-probe.md"
+        probe_target = "ajcrew-offload-probe.md"
         seen: list[int] = []
         real = llm_helpers.sensitive_path_refusal
 
@@ -620,7 +620,7 @@ class TestToolIdentityTitleLeavesThePathTier:
 
     @staticmethod
     def _mcp_event(
-        title: str, *, server: str = "kirocrew-core", tool: str = "wait", trusted: bool = True
+        title: str, *, server: str = "ajcrew-core", tool: str = "wait", trusted: bool = True
     ) -> LLMEvent:
         ev = _event(json.dumps({"seconds": 60}), title=title)
         ev.mcp_server_name = server
@@ -646,11 +646,11 @@ class TestToolIdentityTitleLeavesThePathTier:
 
         with patch.object(llm_helpers, "sensitive_path_refusal", never):
             assert (
-                llm_helpers._title_denial("@kirocrew-core/wait", None, identity_exempt=True) is None
+                llm_helpers._title_denial("@ajcrew-core/wait", None, identity_exempt=True) is None
             )
 
     def test_the_predicate_matches_only_the_verified_identity(self) -> None:
-        from kiro_crew.hooks import title_is_trusted_mcp_identity as match
+        from aj_crew.hooks import title_is_trusted_mcp_identity as match
 
         # Only an exact, provenance-verified ``@server/tool`` with a PROVEN tool
         # is exempt. Over-refusing an unverified or incomplete title is the safe
@@ -675,20 +675,20 @@ class TestToolIdentityTitleLeavesThePathTier:
     @pytest.mark.asyncio
     async def test_a_stalled_path_tier_cannot_refuse_a_tool_identity_title(self) -> None:
         stall = (
-            f"{security.UNVERIFIABLE_PATH_PREFIX}, so it is refused. Path: '@kirocrew-core/wait'"
+            f"{security.UNVERIFIABLE_PATH_PREFIX}, so it is refused. Path: '@ajcrew-core/wait'"
         )
         with patch.object(llm_helpers, "sensitive_path_refusal", lambda *_a, **_k: stall):
-            approved, provider = await self._resolve_event(self._mcp_event("@kirocrew-core/wait"))
+            approved, provider = await self._resolve_event(self._mcp_event("@ajcrew-core/wait"))
         assert approved is True
         assert provider.rejected == []
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("title", ["@kirocrew-core/wait", "Running: @kirocrew-core/wait"])
+    @pytest.mark.parametrize("title", ["@ajcrew-core/wait", "Running: @ajcrew-core/wait"])
     async def test_the_raw_and_stripped_title_forms_give_the_same_verdict(self, title: str) -> None:
         """The hook side normalizes the title (``GateFacts.normalized`` ->
         ``_normalize_tool_name``) before the identity check, so this side must
-        too. Before the fix this side read the RAW title, so ``@kirocrew-core/
-        wait`` was exempt while ``Running: @kirocrew-core/wait`` was not -- the
+        too. Before the fix this side read the RAW title, so ``@ajcrew-core/
+        wait`` was exempt while ``Running: @ajcrew-core/wait`` was not -- the
         two sides reached different verdicts on the identical call. Both forms
         name the same verified identity, so both must be exempt here."""
 
@@ -704,12 +704,12 @@ class TestToolIdentityTitleLeavesThePathTier:
     @pytest.mark.parametrize(
         ("title", "trusted"),
         [
-            ("@kirocrew-core/wait", False),  # identity not provenance-verified
+            ("@ajcrew-core/wait", False),  # identity not provenance-verified
             ("~/.ssh/id_rsa", True),  # a path title on a verified MCP call
-            ("@kirocrew-core/wait/x", True),  # not the identity byte for byte
+            ("@ajcrew-core/wait/x", True),  # not the identity byte for byte
             ("@other/wait", True),  # another server's identity
             (
-                "@kirocrew-core/other",
+                "@ajcrew-core/other",
                 True,
             ),  # same server, a tool the title names but the frame does not
         ],

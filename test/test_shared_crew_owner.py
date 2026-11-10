@@ -8,10 +8,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.platform_compat import IS_MACOS
-from kiro_crew.shared_crew import access_set, owner
-from kiro_crew.shared_crew.contracts import Principal, Provenance
-from kiro_crew.shared_crew.identity import local_operator_principal, tailnet_principal
+from aj_crew.platform_compat import IS_MACOS
+from aj_crew.shared_crew import access_set, owner
+from aj_crew.shared_crew.contracts import Principal, Provenance
+from aj_crew.shared_crew.identity import local_operator_principal, tailnet_principal
 
 
 @pytest.fixture(autouse=True)
@@ -140,7 +140,7 @@ def test_warming_fills_the_computer_name_cache_off_the_calling_thread(monkeypatc
         callers.append(threading.current_thread().name)
         return "Studio"
 
-    monkeypatch.setattr("kiro_crew.platform_compat.IS_MACOS", True)
+    monkeypatch.setattr("aj_crew.platform_compat.IS_MACOS", True)
     monkeypatch.setattr(owner, "_read_computer_name", fake_read)
     owner.warm_machine_name().join(timeout=5)
     assert callers == ["shared-crew-owner-name"]
@@ -158,7 +158,7 @@ def test_an_event_loop_thread_never_starts_the_lookup(monkeypatch):
         calls.append("scutil")
         return "Studio"
 
-    monkeypatch.setattr("kiro_crew.platform_compat.IS_MACOS", True)
+    monkeypatch.setattr("aj_crew.platform_compat.IS_MACOS", True)
     monkeypatch.setattr(owner, "_read_computer_name", fake_read)
     owner.set_tailnet_host_name("studio-node")
 

@@ -11,9 +11,9 @@ import json
 
 import pytest
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew.dashboard.change_cards import CardStore
-from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+from aj_crew import change_card_catalog as catalog
+from aj_crew.dashboard.change_cards import CardStore
+from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
 _CLASSES = {
     "_SETTING_ORDER": set(catalog._SETTING_ORDER),

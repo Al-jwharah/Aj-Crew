@@ -11,8 +11,8 @@ registration, app MCP policy, or the App Store listing:
 * an app's MCP policy reads as none;
 * the manifest cache, the external registry cache and the bundled registry
   read as absent;
-* an app agent config on disk reads as absent, and Kiro Crew's own agent
-  config (``kirocrew.json``) reads as empty for a read-only caller while a
+* an app agent config on disk reads as absent, and Aj Crew's own agent
+  config (``ajcrew.json``) reads as empty for a read-only caller while a
   read-modify-write caller still refuses it;
 * the dev-mode sentinel and grant record read as empty (no grants);
 * an app's install record reads as not installed, and its approved-grants file
@@ -28,10 +28,10 @@ from typing import TypeVar
 
 import pytest
 
-from kiro_crew.apps import bridges as bridges_mod
-from kiro_crew.apps import bridges_agents
-from kiro_crew.apps import execution as execution_mod
-from kiro_crew.apps.manager import (
+from aj_crew.apps import bridges as bridges_mod
+from aj_crew.apps import bridges_agents
+from aj_crew.apps import execution as execution_mod
+from aj_crew.apps.manager import (
     APP_MANIFEST_FILENAME,
     APPROVED_GRANTS_FILENAME,
     INSTALLED_META_FILENAME,
@@ -40,8 +40,8 @@ from kiro_crew.apps.manager import (
     _read_installed,
     install_app,
 )
-from kiro_crew.apps.manifest import AppManifest
-from kiro_crew.apps.registry_pipeline import caches, sources
+from aj_crew.apps.manifest import AppManifest
+from aj_crew.apps.registry_pipeline import caches, sources
 
 # Not UTF-8: 0xff never starts a UTF-8 sequence.
 _UNDECODABLE = b'\xff\xfe{"name": "my-agent"}'
@@ -78,9 +78,9 @@ def _make_app_source(tmp_path: Path, name: str = "test-app") -> Path:
 
 @pytest.fixture()
 def app_env(tmp_path, monkeypatch):
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     kiro_agents = tmp_path / "kiro-agents"
     kiro_agents.mkdir()
     monkeypatch.setattr(bridges_mod, "KIRO_AGENTS_DIR", kiro_agents)
@@ -161,22 +161,22 @@ def test_an_agent_config_that_is_not_utf8_reads_as_absent(tmp_path):
     assert _call(lambda: bridges_agents._read_agent_config(config)) is None
 
 
-def test_kirocrew_agent_config_that_is_not_utf8_reads_as_empty(tmp_path, monkeypatch):
-    from kiro_crew.apps import bridges_mcp_config
+def test_ajcrew_agent_config_that_is_not_utf8_reads_as_empty(tmp_path, monkeypatch):
+    from aj_crew.apps import bridges_mcp_config
 
-    config = tmp_path / "kirocrew.json"
+    config = tmp_path / "ajcrew.json"
     config.write_bytes(_UNDECODABLE)
     monkeypatch.setattr(bridges_mcp_config, "_mcp_json_path", lambda: config)
 
     assert _call(bridges_mcp_config._read_mcp_json_unlocked) == {}
 
 
-def test_a_strict_read_of_kirocrew_agent_config_still_refuses_to_guess(tmp_path, monkeypatch):
+def test_a_strict_read_of_ajcrew_agent_config_still_refuses_to_guess(tmp_path, monkeypatch):
     # A read-modify-write caller must not take the file for empty and write
     # over the whole agent config, so the strict read raises as for bad JSON.
-    from kiro_crew.apps import bridges_mcp_config
+    from aj_crew.apps import bridges_mcp_config
 
-    config = tmp_path / "kirocrew.json"
+    config = tmp_path / "ajcrew.json"
     config.write_bytes(_UNDECODABLE)
     monkeypatch.setattr(bridges_mcp_config, "_mcp_json_path", lambda: config)
 
@@ -186,7 +186,7 @@ def test_a_strict_read_of_kirocrew_agent_config_still_refuses_to_guess(tmp_path,
 
 
 def test_dev_mode_files_that_are_not_utf8_read_as_empty(app_env):
-    from kiro_crew.apps import dev_mode
+    from aj_crew.apps import dev_mode
 
     dev_mode._sentinel_path().parent.mkdir(parents=True, exist_ok=True)
     dev_mode._sentinel_path().write_bytes(_UNDECODABLE)

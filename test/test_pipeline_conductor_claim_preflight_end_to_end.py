@@ -31,7 +31,7 @@ from pipeline_conductor_claim_preflight_helpers import (
     run_main,
 )
 
-from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS
+from aj_crew.platform.update_governance import _GIT_LOCATION_VARS
 
 
 class TestAPartialScanKeepsWhatItConfirmed:
@@ -80,7 +80,7 @@ class TestAPartialScanKeepsWhatItConfirmed:
         """
         forge = Forge(
             timeline=[a_xref(8100), a_xref(8101)],
-            pulls={8100: a_pull(8100, head="leozhad/KiroCrew", user="leozhad")},
+            pulls={8100: a_pull(8100, head="leozhad/AjCrew", user="leozhad")},
             failures={"/pulls/8101": "API rate limit exceeded"},
         )
         assert run_main(mod, monkeypatch, forge) == 10
@@ -433,7 +433,7 @@ class TestClosureProseNeverCloses:
         of routing it through REVIEW. No check exists for "my pipeline dispositioned this".
         """
         stand_down = (
-            "Kiro Crew Auto-Pipeline [operator: redacted] - standing down and "
+            "Aj Crew Auto-Pipeline [operator: redacted] - standing down and "
             "handing back to `needs-human`. No longer being worked by the fleet; "
             "the investigation notes are below for whoever picks it up."
         )
@@ -538,7 +538,7 @@ class TestEndToEnd:
         the suppression reaches the conductor instead of only the queue."""
         forge = Forge(
             timeline=[a_xref(8100)],
-            pulls={8100: a_pull(8100, head="leozhad/KiroCrew", user="leozhad")},
+            pulls={8100: a_pull(8100, head="leozhad/AjCrew", user="leozhad")},
         )
         assert run_main(mod, monkeypatch, forge) == 10
         assert capsys.readouterr().out.strip() == (
@@ -551,7 +551,7 @@ class TestEndToEnd:
         forge = Forge(
             timeline=[a_xref(8100)],
             pulls={
-                8100: a_pull(8100, head="leozhad/KiroCrew", user="leozhad", association="MEMBER")
+                8100: a_pull(8100, head="leozhad/AjCrew", user="leozhad", association="MEMBER")
             },
         )
         assert run_main(mod, monkeypatch, forge) == 10
@@ -774,7 +774,7 @@ class TestEndToEnd:
     def test_json_mode_prints_exactly_one_object(self, mod, monkeypatch, capsys):
         forge = Forge(
             timeline=[a_xref(8100)],
-            pulls={8100: a_pull(8100, head="leozhad/KiroCrew", user="leozhad")},
+            pulls={8100: a_pull(8100, head="leozhad/AjCrew", user="leozhad")},
         )
         assert run_main(mod, monkeypatch, forge, ["--json"]) == 10
         out = capsys.readouterr().out

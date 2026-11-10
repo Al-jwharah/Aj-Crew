@@ -16,9 +16,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli as kc_cli
-from kiro_crew import cli_doctor, constants
-from kiro_crew.constants import (
+from aj_crew import cli as kc_cli
+from aj_crew import cli_doctor, constants
+from aj_crew.constants import (
     MIN_NODE_VERSION,
     node_too_old_message,
     node_version_meets_floor,
@@ -64,7 +64,7 @@ def test_below_the_floor_fails_with_the_exact_version(monkeypatch, version: str)
     # deterministically regardless of the glibc the test host actually ships.
     monkeypatch.setattr(constants, "_host_glibc_version", lambda: (2, 35))
     assert node_too_old_message(parsed) == (
-        f"Node.js {version} is too old: Kiro Crew needs {FLOOR_TEXT} or newer. "
+        f"Node.js {version} is too old: Aj Crew needs {FLOOR_TEXT} or newer. "
         "Update Node.js: install 24 LTS from https://nodejs.org, or run "
         "`nvm install 24` / `mise use -g node@24`."
     )
@@ -80,9 +80,9 @@ def test_old_glibc_x86_64_with_script_names_the_ensure_node_path(monkeypatch, gl
     script_path = Path("/opt/kc/ensure-node.sh")
     monkeypatch.setattr(constants, "_host_glibc_version", lambda: glibc)
     monkeypatch.setattr(constants.platform, "machine", lambda: "x86_64")
-    monkeypatch.setattr("kiro_crew.env._ensure_node_script", lambda: script_path)
+    monkeypatch.setattr("aj_crew.env._ensure_node_script", lambda: script_path)
     msg = node_too_old_message((17, 9, 1))
-    assert f"Kiro Crew needs {FLOOR_TEXT} or newer" in msg
+    assert f"Aj Crew needs {FLOOR_TEXT} or newer" in msg
     # str(Path) is OS-shaped, so assert the form the code actually emits.
     assert f"bash {script_path}" in msg
     assert "glibc-2.17 Node" in msg
@@ -90,7 +90,7 @@ def test_old_glibc_x86_64_with_script_names_the_ensure_node_path(monkeypatch, gl
     # The dead-end advice must NOT be offered.
     assert "nvm install 24" not in msg
     assert "install 24 LTS" not in msg
-    assert "kirocrew update" not in msg
+    assert "ajcrew update" not in msg
     # Action leads, explanation trails (reason is parenthetical at the end).
     assert msg.index(f"bash {script_path}") < msg.index("older than the official")
 
@@ -102,7 +102,7 @@ def test_old_glibc_x86_64_wheel_points_at_the_unofficial_build(monkeypatch, glib
     # it directly, never at a costly machine migration or build-from-source.
     monkeypatch.setattr(constants, "_host_glibc_version", lambda: glibc)
     monkeypatch.setattr(constants.platform, "machine", lambda: "x86_64")
-    monkeypatch.setattr("kiro_crew.env._ensure_node_script", lambda: None)
+    monkeypatch.setattr("aj_crew.env._ensure_node_script", lambda: None)
     msg = node_too_old_message((17, 9, 1))
     # Assert the full remedy phrase (with scheme + surrounding words) rather than
     # a bare host substring -- a bare "host in url" check trips CodeQL's
@@ -129,7 +129,7 @@ def test_old_glibc_aarch64_says_no_arm_build_exists(monkeypatch, machine) -> Non
     assert "build Node from source" in msg
     assert "ensure-node.sh" not in msg
     assert "Install the glibc-2.17 Node build from https://unofficial-builds.nodejs.org" not in msg
-    assert "kirocrew update" not in msg
+    assert "ajcrew update" not in msg
     assert "nvm install 24" not in msg
     assert "install 24 LTS" not in msg
 
@@ -315,5 +315,5 @@ def test_relay_route_without_node_keeps_the_install_advice(monkeypatch) -> None:
     with redirect_stdout(buf):
         cli_doctor._report_node([], bundle_route=False, bundle_node_version="22.23.3")
     out = buf.getvalue()
-    assert "not found (Kiro Crew needs Node" in out
+    assert "not found (Aj Crew needs Node" in out
     assert "Fix: install Node.js" in out

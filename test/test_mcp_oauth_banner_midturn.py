@@ -14,10 +14,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import mcp_discovery
-from kiro_crew.dashboard.chat_runner import _mark_mcp_oauth_completed, _on_mcp_oauth_request
-from kiro_crew.dashboard.chat_utils import _expire_dead_child_oauth_meta
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew import mcp_discovery
+from aj_crew.dashboard.chat_runner import _mark_mcp_oauth_completed, _on_mcp_oauth_request
+from aj_crew.dashboard.chat_utils import _expire_dead_child_oauth_meta
+from aj_crew.dashboard.state import _ChatSlot
 
 CARDED_SLUG = "linear"
 CARDED_URL = "https://mcp.linear.app/mcp/readonly"

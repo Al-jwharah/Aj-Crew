@@ -14,7 +14,7 @@ import pytest
 from _hot_reload_helpers import prime_live
 from telegram_helpers import _dispatcher, _dm, _press
 
-from kiro_crew.shared_crew import turn_gate
+from aj_crew.shared_crew import turn_gate
 
 _NEW = "amzn-builder"
 _ROUTE = ("direct", "7")
@@ -46,8 +46,8 @@ async def test_a_new_during_admission_leaves_the_waiting_turn_on_its_keys_agent(
     await d.handle_message(_dm("hi"))
 
     (turn,) = ran
-    assert turn["session_key"].split(":")[1] == "kirocrew"
-    assert turn["agent"] == "kirocrew"
+    assert turn["session_key"].split(":")[1] == "ajcrew"
+    assert turn["agent"] == "ajcrew"
 
 
 def test_the_picker_names_the_agent_the_open_conversation_runs(
@@ -58,13 +58,13 @@ def test_the_picker_names_the_agent_the_open_conversation_runs(
     prime_live("agent", default_agent="")
     d, client, _sessions = _dispatcher({7})
     monkeypatch.setattr(type(d), "_installed_agent_names", staticmethod(lambda: [_NEW]))
-    assert d._session_key(_ROUTE).split(":")[1] == "kirocrew"
+    assert d._session_key(_ROUTE).split(":")[1] == "ajcrew"
     prime_live("agent", default_agent=_NEW)
 
     asyncio.run(d.handle_message(_dm("/agent")))
 
     text, markup = client.sent[-1]
-    assert text == "Current agent: Default (kirocrew)\nPick one:"
+    assert text == "Current agent: Default (ajcrew)\nPick one:"
     assert [row[0]["text"] for row in markup["inline_keyboard"]] == [
         f"Default ({_NEW})",
         _NEW,
@@ -88,4 +88,4 @@ def test_a_default_row_pressed_after_the_default_moved_names_the_live_default(
     # The press answers by editing the picker message in place.
     reply = client.edits[-1][1]
     assert "Default (other-agent)" in reply, reply
-    assert "kirocrew" not in reply, reply
+    assert "ajcrew" not in reply, reply

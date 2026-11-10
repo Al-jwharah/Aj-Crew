@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-CONFIG_DIR = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "config"
+CONFIG_DIR = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "config"
 PROMPTS = ("prompt.md",)
 
 

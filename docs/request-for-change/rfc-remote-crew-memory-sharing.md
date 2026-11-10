@@ -1,5 +1,5 @@
 ---
-title: Opt-in memory sharing between connected Kiro Crew instances
+title: Opt-in memory sharing between connected Aj Crew instances
 status: draft
 author: djman-aws
 created: 2026-10-16
@@ -12,7 +12,7 @@ supersedes: []
 superseded-by: []
 ---
 
-# RFC: Opt-in memory sharing between connected Kiro Crew instances
+# RFC: Opt-in memory sharing between connected Aj Crew instances
 
 **Status:** Proposal for maintainer review. This document requests decisions
 on scope, ownership, and memory semantics for [#18593](https://github.com/kirodotdev/KiroCrew/issues/18593).
@@ -23,11 +23,11 @@ It does not record acceptance or an implementation assignment.
 Let one person share selected semantic and episodic memories between their
 laptop and development machines. Sharing is off until the owner chooses the
 participating machines and content, reviews a preview, and enables it.
-One coordinating Kiro Crew instance computes changes; each receiving instance
+One coordinating Aj Crew instance computes changes; each receiving instance
 authorizes and applies its own writes.
 
-Kiro Crew should own the memory contract, authorization, reconciliation state,
-and write results. The controls belong in Kiro Crew's Remote Crew experience
+Aj Crew should own the memory contract, authorization, reconciliation state,
+and write results. The controls belong in Aj Crew's Remote Crew experience
 and should use the project's approved app and dashboard extension boundaries.
 Maintainers must confirm their placement and the sharing contract before
 implementation.
@@ -50,12 +50,12 @@ The following baseline was checked at the commit in the front matter:
 | Existing behavior | Consequence for this proposal |
 |---|---|
 | The [Remote Crew sidebar RFC](rfc-remote-crew-sidebar.md) keeps sessions and transcripts on their owning peer and excludes memory synchronization. | Memory sharing needs its own decision. Opening a remote chat keeps its existing ownership model. |
-| The [peer proxy](https://github.com/kirodotdev/KiroCrew/blob/766c658641985e58b91752979dac229f88794b4d/src/kiro_crew/dashboard/handlers_instances.py#L1808) allows chat and stream paths. The [capability reader](https://github.com/kirodotdev/KiroCrew/blob/766c658641985e58b91752979dac229f88794b4d/src/kiro_crew/instances/ssh_tunnel_manager.py#L280) has a separate, closed set of reads. | An existing connection supplies transport, not permission or an API for sharing memory. |
-| [HTTP memory import](https://github.com/kirodotdev/KiroCrew/blob/766c658641985e58b91752979dac229f88794b4d/src/kiro_crew/dashboard/handlers/memory.py#L2165) runs the owner and session write gates. [Bulk import](https://github.com/kirodotdev/KiroCrew/blob/766c658641985e58b91752979dac229f88794b4d/src/kiro_crew/vector_memory_runtime/bulk_ingest.py#L163) reports aggregate semantic, episodic, and skipped counts. | Preserve authorization and store validation. Aggregate counts cannot identify which replicated records committed. |
-| [CLI import](https://github.com/kirodotdev/KiroCrew/blob/766c658641985e58b91752979dac229f88794b4d/src/kiro_crew/cli_commands.py#L4153) refuses V2 destinations because it cannot preserve their facets. | The existing exporter/importer is not a lossless transport for every memory store. |
-| The local [memory seed operation](https://github.com/kirodotdev/KiroCrew/blob/766c658641985e58b91752979dac229f88794b4d/src/kiro_crew/dashboard/handlers/memory_member.py#L345) requires owner authorization and selected items, and distinguishes per-item outcomes and uncertain commits. | Reuse this approach to consent and reporting where appropriate. Its local V2 destination contract does not itself authorize remote sharing. |
-| [Memory edit previews](https://github.com/kirodotdev/KiroCrew/blob/766c658641985e58b91752979dac229f88794b4d/src/kiro_crew/memory_edit.py#L622) and [apply](https://github.com/kirodotdev/KiroCrew/blob/766c658641985e58b91752979dac229f88794b4d/src/kiro_crew/memory_edit.py#L772) already use signed previews, record revisions, stale-selection checks, and an atomic batch receipt. | Assess reuse before creating parallel machinery. These edit existing records; their preview-bound receipt lasts 15 minutes and supplies neither remote authorization nor per-record transfer receipts. |
-| [Instance registration](https://github.com/kirodotdev/KiroCrew/blob/766c658641985e58b91752979dac229f88794b4d/src/kiro_crew/instances/registry.py#L921) derives a local identifier from a display name. | A connection label is insufficient evidence that a returning endpoint is the same installation and store. |
+| The [peer proxy](https://github.com/kirodotdev/KiroCrew/blob/766c658641985e58b91752979dac229f88794b4d/src/aj_crew/dashboard/handlers_instances.py#L1808) allows chat and stream paths. The [capability reader](https://github.com/kirodotdev/KiroCrew/blob/766c658641985e58b91752979dac229f88794b4d/src/aj_crew/instances/ssh_tunnel_manager.py#L280) has a separate, closed set of reads. | An existing connection supplies transport, not permission or an API for sharing memory. |
+| [HTTP memory import](https://github.com/kirodotdev/KiroCrew/blob/766c658641985e58b91752979dac229f88794b4d/src/aj_crew/dashboard/handlers/memory.py#L2165) runs the owner and session write gates. [Bulk import](https://github.com/kirodotdev/KiroCrew/blob/766c658641985e58b91752979dac229f88794b4d/src/aj_crew/vector_memory_runtime/bulk_ingest.py#L163) reports aggregate semantic, episodic, and skipped counts. | Preserve authorization and store validation. Aggregate counts cannot identify which replicated records committed. |
+| [CLI import](https://github.com/kirodotdev/KiroCrew/blob/766c658641985e58b91752979dac229f88794b4d/src/aj_crew/cli_commands.py#L4153) refuses V2 destinations because it cannot preserve their facets. | The existing exporter/importer is not a lossless transport for every memory store. |
+| The local [memory seed operation](https://github.com/kirodotdev/KiroCrew/blob/766c658641985e58b91752979dac229f88794b4d/src/aj_crew/dashboard/handlers/memory_member.py#L345) requires owner authorization and selected items, and distinguishes per-item outcomes and uncertain commits. | Reuse this approach to consent and reporting where appropriate. Its local V2 destination contract does not itself authorize remote sharing. |
+| [Memory edit previews](https://github.com/kirodotdev/KiroCrew/blob/766c658641985e58b91752979dac229f88794b4d/src/aj_crew/memory_edit.py#L622) and [apply](https://github.com/kirodotdev/KiroCrew/blob/766c658641985e58b91752979dac229f88794b4d/src/aj_crew/memory_edit.py#L772) already use signed previews, record revisions, stale-selection checks, and an atomic batch receipt. | Assess reuse before creating parallel machinery. These edit existing records; their preview-bound receipt lasts 15 minutes and supplies neither remote authorization nor per-record transfer receipts. |
+| [Instance registration](https://github.com/kirodotdev/KiroCrew/blob/766c658641985e58b91752979dac229f88794b4d/src/aj_crew/instances/registry.py#L921) derives a local identifier from a display name. | A connection label is insufficient evidence that a returning endpoint is the same installation and store. |
 
 ## Goals
 
@@ -262,7 +262,7 @@ Named/private stores and excluded categories cannot fall back into the default
 store or a broader export.
 
 Enforce authorized selection and credential screening at source egress, and
-authorization, validation, and write auditing at each receiving Kiro Crew
+authorization, validation, and write auditing at each receiving Aj Crew
 boundary. Do not forward authentication credentials or use a redacted preview
 to authorize an unredacted payload. Expose no new public listener and treat
 remote memory content as data. Store local synchronization state with the same
@@ -273,14 +273,14 @@ access expectations as the memory it describes.
 | Option | Benefit | Tradeoff |
 |---|---|---|
 | Schedule direct two-way export/import | Uses existing CLI commands and scheduling. | Bulk import counts cannot establish per-record results, and repeated copying does not supply the required identity, conflict, or deletion contract. |
-| Add native Kiro Crew sharing and controls | One authority for memory semantics, integrated with the existing connected-instance experience. | Requires the design and implementation work described here. Recommended for a supported integration. |
+| Add native Aj Crew sharing and controls | One authority for memory semantics, integrated with the existing connected-instance experience. | Requires the design and implementation work described here. Recommended for a supported integration. |
 | Share a database or synchronize whole data directories | Broad state transfer through existing file tools. | Bypasses selection, live-store ownership, and per-record conflict handling; does not meet this proposal's requirements. |
 
 ## Open questions
 
 Maintainers decide these on the RFC before assigning implementation:
 
-1. Where in Kiro Crew's Remote Crew experience should sharing controls live,
+1. Where in Aj Crew's Remote Crew experience should sharing controls live,
    using the project's approved app and dashboard extension boundaries?
 2. Is a single-owner, single-coordinator group limited to eligible default stores
    the right first scope? Does the all-members audience match the expected UX?

@@ -20,7 +20,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 
-import { SessionColorField } from '../pages/KiroCrewAgentsPage'
+import { SessionColorField } from '../pages/AjCrewAgentsPage'
 import { FOLDER_COLOR_PALETTE } from '../components/folderColorCatalog'
 
 /** The quick-pick swatches only — excludes the native `type=color` input and Clear. */

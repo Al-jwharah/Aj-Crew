@@ -20,12 +20,12 @@ import json
 
 import pytest
 
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.state import DashboardState
 
 
 @pytest.fixture()
 def cfg(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
     return tmp_path
 
 
@@ -122,7 +122,7 @@ class TestChatPinsPreservation:
         """A hand-edited pin exceeding the create-time length caps must not be
         served: it is dropped from the active list and preserved verbatim in
         ``_unparsed`` (mirrors api_chat_pins_create's ingress caps)."""
-        from kiro_crew.dashboard.chat_pins import (
+        from aj_crew.dashboard.chat_pins import (
             _MAX_MESSAGE_TS_CHARS,
             _MAX_MID_CHARS,
             _MAX_PREVIEW_INPUT_CHARS,
@@ -364,7 +364,7 @@ class TestPartitionPreserving:
 
     def test_all_valid_produces_no_unparsed_and_no_warning(self, caplog):
         raw = [{"id": "a"}, {"id": "b"}]
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.state"):
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.state"):
             active, unparsed = DashboardState._partition_preserving(
                 raw, lambda r: bool(r.get("id")), "entr(ies)", "tags.json"
             )
@@ -374,7 +374,7 @@ class TestPartitionPreserving:
 
     def test_warns_once_with_count_noun_and_file(self, caplog):
         raw = ["x", {"id": "ok"}, "y"]
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.state"):
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.state"):
             _, unparsed = DashboardState._partition_preserving(
                 raw,
                 lambda r: isinstance(r, dict) and bool(r.get("id")),
@@ -389,7 +389,7 @@ class TestPartitionPreserving:
         )
 
     def test_empty_input_is_noop(self, caplog):
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.state"):
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.state"):
             active, unparsed = DashboardState._partition_preserving(
                 [], lambda r: True, "entr(ies)", "tags.json"
             )

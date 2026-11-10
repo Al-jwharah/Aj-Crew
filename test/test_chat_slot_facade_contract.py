@@ -11,9 +11,9 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from kiro_crew.dashboard import state as state_module
-from kiro_crew.dashboard.chat_utils import chunk_generation
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard import state as state_module
+from aj_crew.dashboard.chat_utils import chunk_generation
+from aj_crew.dashboard.state import _ChatSlot
 
 _TO_DICT_KEYS = (
     "key",

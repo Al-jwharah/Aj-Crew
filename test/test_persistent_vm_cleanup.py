@@ -7,20 +7,20 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.boxd_session.launch import BoxdSessionEnvironments
-from kiro_crew.coder import retention
-from kiro_crew.config import paths
-from kiro_crew.session_environment import SessionEnvironmentUnavailable
-from kiro_crew.session_environments import persistent_vm
-from kiro_crew.session_environments.persistent_vm import SessionResource, stamp
-from kiro_crew.sprites_session import launch as sprites_launch
-from kiro_crew.sprites_session.launch import SpritesSessionEnvironments
+from aj_crew.boxd_session.launch import BoxdSessionEnvironments
+from aj_crew.coder import retention
+from aj_crew.config import paths
+from aj_crew.session_environment import SessionEnvironmentUnavailable
+from aj_crew.session_environments import persistent_vm
+from aj_crew.session_environments.persistent_vm import SessionResource, stamp
+from aj_crew.sprites_session import launch as sprites_launch
+from aj_crew.sprites_session.launch import SpritesSessionEnvironments
 
 
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments are reachable only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 NOW = datetime(2026, 1, 1, tzinfo=timezone.utc)
@@ -61,7 +61,7 @@ async def test_shutdown_hibernates_boxd_machines_in_parallel(tmp_path, monkeypat
     """One at a time, the later machines would outlast the shutdown budget."""
     import asyncio
 
-    from kiro_crew.testing.wait import await_until
+    from aj_crew.testing.wait import await_until
 
     section = SimpleNamespace(boxd_profiles=[{"id": "box"}])
     environments = BoxdSessionEnvironments(section, tmp_path)
@@ -127,7 +127,7 @@ async def test_removed_sprites_profile_names_the_repair_and_keeps_the_due_row(tm
     environments = SpritesSessionEnvironments(
         section, tmp_path, token_reader=lambda name: tokens_read.append(name) or "example-token"
     )
-    row = SessionResource("session", "fly", "kirocrew-0123456789abcdef", "sprite-id")
+    row = SessionResource("session", "fly", "ajcrew-0123456789abcdef", "sprite-id")
     environments.registry.put(row)
     environments.registry.set_deletion(row.session_key, stamp(NOW))
     with pytest.raises(SessionEnvironmentUnavailable, match="restore the original profile"):
@@ -141,7 +141,7 @@ async def test_removed_sprites_profile_names_the_repair_and_keeps_the_due_row(tm
     client = SimpleNamespace(
         get_sprite=AsyncMock(return_value={"id": "sprite-id"}), delete_sprite=AsyncMock()
     )
-    with patch("kiro_crew.sprites_session.launch.SpritesClient", return_value=client):
+    with patch("aj_crew.sprites_session.launch.SpritesClient", return_value=client):
         assert await environments.sweep_due(now=NOW) == 1
     assert tokens_read == ["ORIGINAL_TOKEN", "ORIGINAL_TOKEN"]
     client.delete_sprite.assert_awaited_once_with(row.name)
@@ -164,7 +164,7 @@ async def test_a_sprite_whose_profile_was_removed_is_still_deleted_when_due(tmp_
         get_sprite=AsyncMock(return_value={"id": "sprite-id"}),
         delete_sprite=AsyncMock(),
     )
-    with patch("kiro_crew.sprites_session.launch.SpritesClient", return_value=client):
+    with patch("aj_crew.sprites_session.launch.SpritesClient", return_value=client):
         row = await environments._create("session", profile, "session")
         environments.registry.set_deletion(row.session_key, stamp(NOW))
         section.sprites_profiles = []  # the user removes the profile
@@ -191,7 +191,7 @@ async def test_a_changed_token_key_never_replaces_the_sessions_sprite(tmp_path, 
         get_sprite=AsyncMock(return_value=None),  # another organization: not found
         delete_sprite=AsyncMock(),
     )
-    with patch("kiro_crew.sprites_session.launch.SpritesClient", return_value=client):
+    with patch("aj_crew.sprites_session.launch.SpritesClient", return_value=client):
         row = await environments._create("session", profile, "session")
         client.create_sprite.reset_mock()
         tokens_read.clear()
@@ -230,7 +230,7 @@ async def test_another_accounts_token_under_the_same_key_never_replaces_or_forge
         # A blank working folder: the start reads the guest's login home.
         exec=AsyncMock(return_value=(0, b"/guest", b"")),
     )
-    with patch("kiro_crew.sprites_session.launch.SpritesClient", return_value=client):
+    with patch("aj_crew.sprites_session.launch.SpritesClient", return_value=client):
         row = await environments._create("session", profile, "session")
         assert row.credential_id and "org-a-token" not in json.dumps(
             json.loads(environments.registry.path.read_text())
@@ -248,7 +248,7 @@ async def test_another_accounts_token_under_the_same_key_never_replaces_or_forge
         assert environments.registry.get("session").name == row.name
     # The same miss under the original token is a real deletion: replaced as before.
     vault["SPRITES_TOKEN"] = "org-a-token"
-    with patch("kiro_crew.sprites_session.launch.SpritesClient", return_value=client):
+    with patch("aj_crew.sprites_session.launch.SpritesClient", return_value=client):
         environments.registry.set_deletion("session", "")
         prepared = await environments.prepare("session", "fly")
     assert prepared.created is True
@@ -275,7 +275,7 @@ async def test_a_token_saved_during_a_lookup_is_not_credited_with_its_answer(tmp
         get_sprite=AsyncMock(side_effect=found_while_b_is_saved),
         delete_sprite=AsyncMock(),
     )
-    with patch("kiro_crew.sprites_session.launch.SpritesClient", return_value=client):
+    with patch("aj_crew.sprites_session.launch.SpritesClient", return_value=client):
         row = await environments._create("session", profile, "session")
         # B's token is what a shell would now be built from: nothing runs on it.
         with pytest.raises(SessionEnvironmentUnavailable, match="changed after its identity"):
@@ -311,12 +311,12 @@ async def test_a_token_saved_after_the_identity_check_never_runs_a_command(tmp_p
         delete_sprite=AsyncMock(),
         exec=AsyncMock(return_value=(0, b"", b"")),
     )
-    with patch("kiro_crew.sprites_session.launch.SpritesClient", return_value=client):
+    with patch("aj_crew.sprites_session.launch.SpritesClient", return_value=client):
         environments.registry.put(
             SessionResource(
                 "session",
                 "fly",
-                "kirocrew-0123456789abcdef",
+                "ajcrew-0123456789abcdef",
                 "sprite-id",
                 credential_id=sprites_launch._fingerprint("org-a-token"),
                 token_secret="SPRITES_TOKEN",
@@ -353,7 +353,7 @@ async def test_a_token_saved_during_the_sweeps_lookup_never_sends_its_delete(tmp
         get_sprite=AsyncMock(return_value={"id": "sprite-id"}),
         delete_sprite=AsyncMock(),
     )
-    with patch("kiro_crew.sprites_session.launch.SpritesClient", side_effect=client_for):
+    with patch("aj_crew.sprites_session.launch.SpritesClient", side_effect=client_for):
         row = await environments._create("session", profile, "session")
         environments.registry.set_deletion("session", stamp(NOW))
         client.get_sprite.side_effect = found_while_b_is_saved
@@ -377,7 +377,7 @@ async def test_a_row_recovered_from_an_interrupted_create_is_pinned_to_its_vm(
         section, tmp_path, token_reader=lambda _name: "a-token"
     )
     # The row as the interrupted create left it: a name, no provider id.
-    environments.registry.put(SessionResource("session", "fly", "kirocrew-0123456789abcdef", ""))
+    environments.registry.put(SessionResource("session", "fly", "ajcrew-0123456789abcdef", ""))
     client = SimpleNamespace(
         create_sprite=AsyncMock(),
         get_sprite=AsyncMock(return_value={"id": "first-id"}),
@@ -385,7 +385,7 @@ async def test_a_row_recovered_from_an_interrupted_create_is_pinned_to_its_vm(
         # A blank working folder: the start reads the guest's login home.
         exec=AsyncMock(return_value=(0, b"/guest", b"")),
     )
-    with patch("kiro_crew.sprites_session.launch.SpritesClient", return_value=client):
+    with patch("aj_crew.sprites_session.launch.SpritesClient", return_value=client):
         await environments.prepare("session", "fly")
         assert environments.registry.get("session").resource_id == "first-id"
         # A VM someone made later under the same name is not this session's.
@@ -414,7 +414,7 @@ async def test_a_token_rotated_in_the_same_account_keeps_the_sprite(tmp_path, mo
         # A blank working folder: the start reads the guest's login home.
         exec=AsyncMock(return_value=(0, b"/guest", b"")),
     )
-    with patch("kiro_crew.sprites_session.launch.SpritesClient", return_value=client):
+    with patch("aj_crew.sprites_session.launch.SpritesClient", return_value=client):
         row = await environments._create("session", profile, "session")
         vault["SPRITES_TOKEN"] = "rotated-token"
         prepared = await environments.prepare("session", "fly")

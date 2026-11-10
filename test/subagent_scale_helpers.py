@@ -44,11 +44,11 @@ def _mock_ctx() -> MagicMock:
 
 
 def _make_orchestrator():
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
-    cfg = KiroCrewConfig()
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U_OWNER"}):
+    cfg = AjCrewConfig()
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U_OWNER"}):
         return GatewayOrchestrator(cfg, no_dashboard=False, no_crons=True, no_open=True)
 
 

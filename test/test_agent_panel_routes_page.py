@@ -18,9 +18,9 @@ from agent_panel_routes_helpers import (  # noqa: F401 -- fixtures are used by n
     vetted_fixture,
 )
 
-from kiro_crew.crew_log import projection as crew_log_projection
-from kiro_crew.dashboard.handlers import agent_panel as routes
-from kiro_crew.dashboard_templates.instance import preview_url as instance_preview_url
+from aj_crew.crew_log import projection as crew_log_projection
+from aj_crew.dashboard.handlers import agent_panel as routes
+from aj_crew.dashboard_templates.instance import preview_url as instance_preview_url
 
 # ------------------------------------- the page's four routes, over HTTP
 
@@ -77,8 +77,8 @@ def _page_store(monkeypatch, **over: Any) -> SimpleNamespace:
     )
     for key, value in over.items():
         setattr(store, key, value)
-    monkeypatch.setitem(sys.modules, "kiro_crew.dashboard_templates.instance", store)
-    import kiro_crew.dashboard_templates as templates_pkg
+    monkeypatch.setitem(sys.modules, "aj_crew.dashboard_templates.instance", store)
+    import aj_crew.dashboard_templates as templates_pkg
 
     monkeypatch.setattr(templates_pkg, "instance", store, raising=False)
     return store
@@ -248,7 +248,7 @@ class TestThePreviewRouteOverHttp:
         store = _page_store(monkeypatch)
 
         def _boom(_slug, **_kw):
-            raise OSError("/home/someone/.kirocrew/members/x/instance.json: no space")
+            raise OSError("/home/someone/.ajcrew/members/x/instance.json: no space")
 
         monkeypatch.setattr(store, "stage_preview", _boom)
         async with _client() as c:
@@ -260,7 +260,7 @@ class TestThePreviewRouteOverHttp:
             assert resp.status == 503, await resp.text()
             body = await resp.json()
         assert body["code"] == "store_failed"
-        assert ".kirocrew" not in body["error"], "the refusal carried a filesystem path"
+        assert ".ajcrew" not in body["error"], "the refusal carried a filesystem path"
 
 
 class TestTheApplyAndRollbackRoutesOverHttp:
@@ -298,7 +298,7 @@ class TestTheApplyAndRollbackRoutesOverHttp:
     ) -> None:
         """The member section is rebuilt at session start and after a compaction, not
         every turn, so the reply that changed the page carries its new pointer."""
-        from kiro_crew import dashboard_agentic
+        from aj_crew import dashboard_agentic
 
         _page_store(monkeypatch)
         monkeypatch.setattr(
@@ -378,7 +378,7 @@ class TestTheCatalogListingTheAgentReads:
 
     @staticmethod
     def _fixture_catalog(monkeypatch, tmp_path) -> None:
-        from kiro_crew.dashboard_templates import catalog
+        from aj_crew.dashboard_templates import catalog
 
         root = tmp_path / "builtin"
         for tid, title, description, fold, path in (

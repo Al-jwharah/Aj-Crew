@@ -4,8 +4,8 @@ native wheel.
 Background
 ----------
 ``hooks.on_tool_call`` -- the function every ACP tool call passes through for
-its approve/deny verdict -- lazily imports ``kiro_crew.slack.gateway`` for
-``_is_read_only_tool``. That module imports ``kiro_crew.channels``, which
+its approve/deny verdict -- lazily imports ``aj_crew.slack.gateway`` for
+``_is_read_only_tool``. That module imports ``aj_crew.channels``, which
 imports every channel gateway, and the WeCom and Weixin gateways reach their
 ``media`` modules, which must not import ``cryptography.hazmat`` at module top
 for their AES decryptors. So a host whose ``cryptography`` wheel does not load
@@ -54,11 +54,11 @@ def _run(snippet: str) -> subprocess.CompletedProcess:
 def test_the_approval_hook_import_chain_loads_without_cryptography() -> None:
     proc = _run("""
         # The exact import hooks.on_tool_call performs, then the chain it drags in.
-        from kiro_crew.slack.gateway import _is_read_only_tool
-        import kiro_crew.channels
-        import kiro_crew.wecom.media
-        import kiro_crew.weixin.media
-        import kiro_crew.secrets.vault
+        from aj_crew.slack.gateway import _is_read_only_tool
+        import aj_crew.channels
+        import aj_crew.wecom.media
+        import aj_crew.weixin.media
+        import aj_crew.secrets.vault
         assert _is_read_only_tool("Read") is True
         print("chain ok")
         """)
@@ -70,9 +70,9 @@ def test_only_decrypting_media_needs_cryptography() -> None:
     # The dependency did not disappear, it moved to the one place that uses it:
     # decrypting still fails clearly when the wheel is unavailable.
     proc = _run("""
-        from kiro_crew.wecom import media as wecom_media
-        from kiro_crew.weixin import media as weixin_media
-        from kiro_crew.secrets.vault import SecretVault
+        from aj_crew.wecom import media as wecom_media
+        from aj_crew.weixin import media as weixin_media
+        from aj_crew.secrets.vault import SecretVault
         import tempfile, pathlib
         vault = SecretVault.__new__(SecretVault)
         cases = (
@@ -102,9 +102,9 @@ def test_no_module_on_the_channel_chain_imports_cryptography_at_top_level() -> N
     import ast
     from pathlib import Path
 
-    import kiro_crew
+    import aj_crew
 
-    root = Path(kiro_crew.__file__).parent
+    root = Path(aj_crew.__file__).parent
     offenders = []
     for sub in ("wecom", "weixin", "slack", "secrets", "channels.py"):
         paths = [root / sub] if sub.endswith(".py") else sorted((root / sub).rglob("*.py"))

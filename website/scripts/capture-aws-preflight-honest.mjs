@@ -273,7 +273,7 @@ for (const theme of ['dark', 'light']) {
   const { page, row } = await openRow(theme, 'Session Manager plugin')
   const text = await row.innerText()
   const alertText = await row.locator('[role="alert"]').innerText()
-  if (!/the strict check \(KIROCREW_PROVIDER_BIN_STRICT\) is on, and it accepts only a file and folders that only root can change, at a path with no symbolic links/.test(alertText)) {
+  if (!/the strict check \(AJCREW_PROVIDER_BIN_STRICT\) is on, and it accepts only a file and folders that only root can change, at a path with no symbolic links/.test(alertText)) {
     fail(`${theme}: the alert must say the strict policy refused it: ${JSON.stringify(alertText)}`)
   }
   if (!/Install it where only root can change the file and its folders, at a path with no symbolic links, then re-check\./.test(text)) {

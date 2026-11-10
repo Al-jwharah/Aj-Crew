@@ -23,7 +23,7 @@ def test_macos_cpu_flags_returns_missing_on_ivy_bridge():
     """
     import platform
 
-    from kiro_crew.embeddings import _macos_x86_64_missing_cpu_flags
+    from aj_crew.embeddings import _macos_x86_64_missing_cpu_flags
 
     result = _macos_x86_64_missing_cpu_flags()
     assert result is not None, "sysctl machdep.cpu.features unreadable"
@@ -41,7 +41,7 @@ def test_load_llama_returns_none_when_macos_x86_64_missing_flags(monkeypatch, tm
     """pre-AVX2 simulation: CPU guard must return None with warning, not SIGILL."""
     import logging
 
-    import kiro_crew.embeddings as emb
+    import aj_crew.embeddings as emb
 
     # Clear the lru_cache so prior suite results do not leak into this test.
     emb._load_llama_class.cache_clear()
@@ -63,7 +63,7 @@ def test_load_llama_returns_none_when_macos_x86_64_missing_flags(monkeypatch, tm
 
         monkeypatch.delenv("LLAMA_CPP_LIB_PATH", raising=False)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.embeddings"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.embeddings"):
             result = emb._load_llama_class()
 
         assert result is None, "CPU guard must return None on pre-AVX2 host"
@@ -84,7 +84,7 @@ def test_load_llama_proceeds_past_guard_when_macos_x86_64_capable(monkeypatch, t
     import. We verify the guard itself does not return None; the import may still
     fail for other reasons (fake libs), but that happens AFTER the guard.
     """
-    import kiro_crew.embeddings as emb
+    import aj_crew.embeddings as emb
 
     emb._load_llama_class.cache_clear()
     try:
@@ -135,7 +135,7 @@ def test_macos_cpu_flags_empty_when_all_present(monkeypatch):
     import ctypes
     import ctypes.util
 
-    import kiro_crew.embeddings as emb
+    import aj_crew.embeddings as emb
 
     all_flags = b"avx avx2 fma bmi2 f16c sse3 ssse3 sse4.1 sse4.2 aes"
 

@@ -31,10 +31,10 @@ from contextlib import contextmanager
 
 import pytest
 
-from kiro_crew.computer_use import apps_windows, keymap, policy, snapshot_windows, windows_driver
-from kiro_crew.computer_use import windows_ffi
-from kiro_crew.computer_use import windows_ffi as ffi
-from kiro_crew.computer_use.types import (
+from aj_crew.computer_use import apps_windows, keymap, policy, snapshot_windows, windows_driver
+from aj_crew.computer_use import windows_ffi
+from aj_crew.computer_use import windows_ffi as ffi
+from aj_crew.computer_use.types import (
     CLICK_METHOD_ACCESSIBILITY,
     CLICK_METHOD_APP_POST,
     CLICK_METHOD_AUTO,
@@ -47,7 +47,7 @@ from kiro_crew.computer_use.types import (
     PolicyConfig,
     SnapshotRequest,
 )
-from kiro_crew.computer_use.windows_driver import WindowsBackend
+from aj_crew.computer_use.windows_driver import WindowsBackend
 
 _APP = AppRef(
     name="target", pid=99, bundle_id="target.exe", window_id=0x2222, window_title="Target"
@@ -888,7 +888,7 @@ class TestTheVkTableCoversEveryCanonicalKey:
     def test_every_canonical_keymap_name_has_a_vk_code(self) -> None:
         """A key ``keymap`` accepts but this table lacks would be refused at the
         driver AFTER the chokepoint said yes — a dead end the model cannot act on."""
-        from kiro_crew.computer_use import keymap
+        from aj_crew.computer_use import keymap
 
         missing = sorted(set(keymap.KEY_ALIASES.values()) - set(ffi.VK_CODES) - {"spacebar"})
         assert not missing, f"canonical keys with no VK code: {missing}"

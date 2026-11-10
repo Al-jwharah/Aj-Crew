@@ -13,10 +13,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import embeddings_shared, executors
-from kiro_crew.apps import embed_sdk
-from kiro_crew.apps.embed_sdk import EmbedSDK
-from kiro_crew.testing.wait import default_timeout
+from aj_crew import embeddings_shared, executors
+from aj_crew.apps import embed_sdk
+from aj_crew.apps.embed_sdk import EmbedSDK
+from aj_crew.testing.wait import default_timeout
 
 
 class _FakeBackend:
@@ -93,7 +93,7 @@ def test_an_embed_exception_gives_none_and_is_logged_once(
 ) -> None:
     _use(monkeypatch, _FakeBackend(fail=True))
     sdk = EmbedSDK()
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.embed_sdk"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.apps.embed_sdk"):
         assert sdk.embed_sync("a") is None
         assert EmbedSDK().embed_sync("b") is None
     raised = [r for r in caplog.records if "an embed raised" in r.getMessage()]
@@ -107,7 +107,7 @@ async def test_embed_sync_on_the_event_loop_refuses(
 ) -> None:
     backend = _FakeBackend()
     _use(monkeypatch, backend)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.embed_sdk"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.apps.embed_sdk"):
         assert EmbedSDK().embed_sync("on loop") is None
     assert backend.calls == []
     assert any("ctx.embed.run" in r.getMessage() for r in caplog.records)

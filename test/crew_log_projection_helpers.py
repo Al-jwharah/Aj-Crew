@@ -13,8 +13,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
 
 SESSION = "s-fold"
 GATEWAY = "gateway"
@@ -23,13 +23,13 @@ GATEWAY = "gateway"
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch):
     """Every test writes into its own data home, never the live one."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     yield
 
 
 def _log(unit_id: str = SESSION, **fields) -> CrewLog:
     fields.setdefault("owner", "raymond")
-    fields.setdefault("agent", "kirocrew")
+    fields.setdefault("agent", "ajcrew")
     return CrewLog.create(lg.KIND_SESSION, unit_id, **fields)
 
 
@@ -37,7 +37,7 @@ def _opened(handle: CrewLog, *, resumed: bool = False, model: str = "opus") -> N
     handle.append(
         "session/opened",
         {
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "slot": "dashboard:1",
             "model": model,
             "cwd": "/w",

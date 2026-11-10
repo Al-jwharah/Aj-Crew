@@ -2,7 +2,7 @@
 
 The gateway — not kiro-cli — is the MCP Apps host, so it advertises
 ``capabilities.extensions["io.modelcontextprotocol/ui"]`` on the initialize
-frame it forwards to backends. Injection is gated by KIROCREW_MCP_APPS and
+frame it forwards to backends. Injection is gated by AJCREW_MCP_APPS and
 must be a byte-identical no-op when the flag is off.
 """
 
@@ -10,7 +10,7 @@ import copy
 
 import pytest
 
-from kiro_crew.mcp_gateway.backend import (
+from aj_crew.mcp_gateway.backend import (
     MCP_APPS_ENV_FLAG,
     MCP_APPS_EXTENSION_KEY,
     MCP_APPS_MIME_TYPE,
@@ -34,12 +34,12 @@ def _patch_pooling(monkeypatch, *, enabled: bool, apps_enabled: bool = True) -> 
     Both are pinned so these tests assert against a known config rather than
     whatever the host's config.json happens to carry.
     """
-    import kiro_crew.config.loader as loader
+    import aj_crew.config.loader as loader
 
-    real = loader.KiroCrewConfig.load()
+    real = loader.AjCrewConfig.load()
     monkeypatch.setattr(real.mcp_gateway, "enabled", enabled, raising=False)
     monkeypatch.setattr(real.mcp_gateway, "apps_enabled", apps_enabled, raising=False)
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", staticmethod(lambda: real))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", staticmethod(lambda: real))
 
 
 @pytest.fixture
@@ -136,12 +136,12 @@ class TestFlagOff:
         feature is the low-harm outcome.
         """
         monkeypatch.delenv(MCP_APPS_ENV_FLAG, raising=False)
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         def _boom():
             raise OSError("config unreadable")
 
-        monkeypatch.setattr(loader.KiroCrewConfig, "load", staticmethod(_boom))
+        monkeypatch.setattr(loader.AjCrewConfig, "load", staticmethod(_boom))
         msg = _init_frame(capabilities={})
         assert _inject_client_extensions(msg) is msg
 

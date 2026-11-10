@@ -12,7 +12,7 @@ import hashlib
 
 import pytest
 
-from kiro_crew.wecom.media_upload import (
+from aj_crew.wecom.media_upload import (
     CHUNK_SIZE_BYTES,
     CMD_CHUNK,
     CMD_FINISH,
@@ -202,7 +202,7 @@ class TestWeComMediaTypeMapping:
         ],
     )
     def test_media_type_by_extension(self, filename: str, expected: str) -> None:
-        from kiro_crew.wecom.transport import wecom_media_type_for
+        from aj_crew.wecom.transport import wecom_media_type_for
 
         assert wecom_media_type_for(filename) == expected
 
@@ -221,6 +221,6 @@ class TestBasename:
         ],
     )
     def test_basename_strips_both_separators(self, path: str, expected: str) -> None:
-        from kiro_crew.wecom.transport import _basename
+        from aj_crew.wecom.transport import _basename
 
         assert _basename(path) == expected

@@ -1,4 +1,4 @@
-"""PATCH /api/config/kirocrew for ``agent.strands_env``, the map Settings > Agent
+"""PATCH /api/config/ajcrew for ``agent.strands_env``, the map Settings > Agent
 Harness writes for the Strands harness.
 
 The claims: the value is a keyed change -- each named variable is set to its
@@ -16,7 +16,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config.sections import STRANDS_ENV_NAMES, validate_strands_env_patch
+from aj_crew.config.sections import STRANDS_ENV_NAMES, validate_strands_env_patch
 
 _SEED = {"agent": {"approval_mode": "auto"}}
 
@@ -32,11 +32,11 @@ async def _owner_identity(request, handler):
 
 
 def _make_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import api_kirocrew_config_patch
+    from aj_crew.dashboard.handlers import api_ajcrew_config_patch
 
     app = web.Application(middlewares=[_owner_identity])
     app["state"] = MagicMock()
-    app.router.add_patch("/api/config/kirocrew", api_kirocrew_config_patch)
+    app.router.add_patch("/api/config/ajcrew", api_ajcrew_config_patch)
     return app
 
 
@@ -44,14 +44,14 @@ def _make_app() -> web.Application:
 def tmp_config(tmp_path):
     cfg_path = tmp_path / "config.json"
     cfg_path.write_text(json.dumps(_SEED), encoding="utf-8")
-    with patch("kiro_crew.config.loader.config_path", return_value=cfg_path):
+    with patch("aj_crew.config.loader.config_path", return_value=cfg_path):
         yield cfg_path
 
 
 async def _patch(value: object):
     async with TestClient(TestServer(_make_app())) as client:
         resp = await client.patch(
-            "/api/config/kirocrew", json={"path": "agent.strands_env", "value": value}
+            "/api/config/ajcrew", json={"path": "agent.strands_env", "value": value}
         )
         return resp.status, await resp.json()
 
@@ -93,7 +93,7 @@ async def test_a_key_the_local_overlay_sets_is_refused(tmp_config) -> None:
     # The handler asks the loader whether config.local.json sets a key; this test
     # answers "yes" for one Strands key only.
     with patch(
-        "kiro_crew.config.loader.overlay_pins",
+        "aj_crew.config.loader.overlay_pins",
         side_effect=lambda *parts: parts == ("agent", "strands_env", "GEMINI_API_KEY"),
     ):
         status, body = await _patch({"GEMINI_API_KEY": None})
@@ -153,8 +153,8 @@ def test_the_refusal_names_the_key_not_the_value() -> None:
 
 
 def test_the_provider_choices_are_the_ones_the_harness_accepts() -> None:
-    from kiro_crew.acp.harness.strands import STRANDS_PROVIDERS
-    from kiro_crew.dashboard.handlers.core_config_schema import _EDITABLE_CONFIG
+    from aj_crew.acp.harness.strands import STRANDS_PROVIDERS
+    from aj_crew.dashboard.handlers.core_config_schema import _EDITABLE_CONFIG
 
     assert set(_EDITABLE_CONFIG["agent.strands_provider"]["values"]) == set(STRANDS_PROVIDERS)
 
@@ -166,7 +166,7 @@ def test_the_provider_choices_are_the_ones_the_harness_accepts() -> None:
 async def test_a_model_id_with_a_tag_or_version_is_accepted(tmp_config, model) -> None:
     async with TestClient(TestServer(_make_app())) as client:
         resp = await client.patch(
-            "/api/config/kirocrew", json={"path": "agent.strands_model", "value": model}
+            "/api/config/ajcrew", json={"path": "agent.strands_model", "value": model}
         )
         assert resp.status == 200
     assert json.loads(tmp_config.read_text(encoding="utf-8"))["agent"]["strands_model"] == model
@@ -176,13 +176,13 @@ async def test_a_model_id_with_a_tag_or_version_is_accepted(tmp_config, model) -
 async def test_a_model_with_a_space_is_refused(tmp_config) -> None:
     async with TestClient(TestServer(_make_app())) as client:
         resp = await client.patch(
-            "/api/config/kirocrew", json={"path": "agent.strands_model", "value": "a b"}
+            "/api/config/ajcrew", json={"path": "agent.strands_model", "value": "a b"}
         )
         assert resp.status == 400
 
 
 def test_the_harness_checks_the_same_name_set_the_dashboard_writes() -> None:
-    from kiro_crew.acp.harness import strands
+    from aj_crew.acp.harness import strands
 
     assert strands.STRANDS_ENV_NAMES is STRANDS_ENV_NAMES
 
@@ -190,7 +190,7 @@ def test_the_harness_checks_the_same_name_set_the_dashboard_writes() -> None:
 def test_a_change_card_cannot_carry_the_map() -> None:
     # The PATCH merges by key, so a card's whole-map "after" and its whole-map
     # undo would not do what the card shows; the catalog refuses the proposal.
-    from kiro_crew import change_card_catalog as catalog
+    from aj_crew import change_card_catalog as catalog
 
     params = catalog.validate_params(
         "setting.change",

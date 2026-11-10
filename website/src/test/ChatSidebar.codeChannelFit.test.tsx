@@ -32,7 +32,7 @@ vi.mock('../api/client', async (importOriginal) => {
       ),
       chatSlots: vi.fn().mockResolvedValue([]),
       chatFolders: vi.fn().mockResolvedValue([]),
-      kirocrewConfig: vi.fn().mockResolvedValue({ dashboard: {} }),
+      ajcrewConfig: vi.fn().mockResolvedValue({ dashboard: {} }),
       sessionsSearch: vi.fn().mockResolvedValue({ sessions: [] }),
     },
   }
@@ -65,7 +65,7 @@ afterEach(() => {
 })
 const slot = (key: string, extra: Partial<ChatSlot> = {}): ChatSlot => ({
   key, title: `${key} title`, messages: 1, running: false, mode: '', created: TS, last_ts: TS,
-  agent: 'kirocrew-conductor', ...extra,
+  agent: 'ajcrew-conductor', ...extra,
 } as ChatSlot)
 
 const CODE = slot('code', {
@@ -92,7 +92,7 @@ function renderSidebar(slots: ChatSlot[]) {
     } as unknown as RootState['chat'],
   })
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  qc.setQueryData(['kirocrewConfig'], { dashboard: {} })
+  qc.setQueryData(['ajcrewConfig'], { dashboard: {} })
   render(
     <QueryClientProvider client={qc}>
       <Provider store={store}>

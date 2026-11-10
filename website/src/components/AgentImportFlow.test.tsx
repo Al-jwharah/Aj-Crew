@@ -186,7 +186,7 @@ describe('AgentImportFlow', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
 
     expect(
-      screen.getByText(/existing Kiro Crew setup is never overwritten by default/i),
+      screen.getByText(/existing Aj Crew setup is never overwritten by default/i),
     ).toBeInTheDocument()
     expect(screen.getByText(/matching items are deduplicated/i)).toBeInTheDocument()
     expect(screen.getByText(/Secrets are never imported/i)).toBeInTheDocument()
@@ -229,7 +229,7 @@ describe('AgentImportFlow', () => {
     vi.mocked(api.onboardingImportApply).mockRejectedValueOnce(
       new ApiError(
         403,
-        'Session expired. Run kirocrew token, then use the banner to sign back in.',
+        'Session expired. Run ajcrew token, then use the banner to sign back in.',
         '{"error":"invalid session","code":"invalid_token"}',
         true,
       ),
@@ -239,7 +239,7 @@ describe('AgentImportFlow', () => {
     await startImport()
 
     const alert = await screen.findByRole('alert')
-    expect(alert).toHaveTextContent('Session expired. Run kirocrew token')
+    expect(alert).toHaveTextContent('Session expired. Run ajcrew token')
     expect(alert).not.toHaveTextContent('The import did not finish. Please try again.')
   })
 
@@ -729,9 +729,9 @@ describe('AgentImportFlow', () => {
     await screen.findByText('Import complete')
 
     expect(await screen.findByTestId('agent-spec-not-rewritten')).toHaveTextContent(
-      'Saved, but this copy of Kiro Crew could not update the agent config',
+      'Saved, but this copy of Aj Crew could not update the agent config',
     )    // "Ready" would contradict the notice.
-    expect(screen.queryByText(/ready in Kiro Crew/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/ready in Aj Crew/i)).not.toBeInTheDocument()
   })
 
   it('shows no notice when the agent spec was rewritten', async () => {

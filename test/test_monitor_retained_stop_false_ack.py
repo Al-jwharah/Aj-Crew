@@ -27,15 +27,15 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import mcp_core, session_directive
-from kiro_crew.autonudge import (
+from aj_crew import mcp_core, session_directive
+from aj_crew.autonudge import (
     AutoNudgeService,
     MonitorUpdateConflict,
     _stopped_row_is_replaceable,
 )
-from kiro_crew.dashboard.handlers.autonudge import _redact_monitor_value
-from kiro_crew.mcp_tools import control
-from kiro_crew.monitoring.models import (
+from aj_crew.dashboard.handlers.autonudge import _redact_monitor_value
+from aj_crew.mcp_tools import control
+from aj_crew.monitoring.models import (
     MONITOR_PUBLIC_FIELDS,
     MONITOR_STOP_INVALID_RECORD,
     MonitorBudgets,
@@ -51,12 +51,12 @@ PR_B = "https://github.com/acme/widgets/pull/456"
 
 @pytest.fixture(autouse=True)
 def _enable(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Pin the feature flag so an ambient ``KIROCREW_AUTONUDGE=0`` cannot decide.
+    """Pin the feature flag so an ambient ``AJCREW_AUTONUDGE=0`` cannot decide.
 
     The paths exercised here do not consult ``autonudge_enabled`` today, so this
     changes no verdict; it keeps one from depending on the host's environment.
     """
-    monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
 
 @pytest.fixture()
@@ -251,7 +251,7 @@ class TestTheToolRefusesInBandInsteadOfAcknowledging:
         """
 
         def _answer() -> str:
-            return _watch().split("[[KIROCREW_SESSION_DIRECTIVE]]")[0]
+            return _watch().split("[[AJCREW_SESSION_DIRECTIVE]]")[0]
 
         monkeypatch.setattr(
             mcp_core,

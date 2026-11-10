@@ -19,19 +19,19 @@ import pytest
 from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F401 - fixture
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
-import kiro_crew.sel as sel_mod
-from kiro_crew.acp._dispatch_parts.session_update_parser import parse_session_update
-from kiro_crew.acp._dispatch_parts.surfaced_text import DIFF_TRUNCATION_MARK, derive_edit_diff
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import EVENT_TOOL_CALL, EVENT_TOOL_CALL_UPDATE, JsonRpcMessage
-from kiro_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
-from kiro_crew.llm_helpers_parts import tool_input_denials
-from kiro_crew.llm_helpers_parts.tool_input_denials import (
+import aj_crew.sel as sel_mod
+from aj_crew.acp._dispatch_parts.session_update_parser import parse_session_update
+from aj_crew.acp._dispatch_parts.surfaced_text import DIFF_TRUNCATION_MARK, derive_edit_diff
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import EVENT_TOOL_CALL, EVENT_TOOL_CALL_UPDATE, JsonRpcMessage
+from aj_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
+from aj_crew.llm_helpers_parts import tool_input_denials
+from aj_crew.llm_helpers_parts.tool_input_denials import (
     _MAX_SCANNABLE_TOOL_INPUT_CHARS,
     _extract_tool_input_strings,
     _first_tool_input_denial,
 )
-from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
 
 PATH = "/work/a.txt"
 ARGS = {"path": PATH, "oldStr": "two", "newStr": "TWO", "replace_all": False}

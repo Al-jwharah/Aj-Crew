@@ -35,7 +35,7 @@ import pytest
 from test_credential_prefilter import AWS_SECRET, BRANCH_SAMPLES
 from turn_harness import APPROVED, Do, Raise, TurnContext, TurnRecord, TurnScript, run_turn
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
@@ -43,11 +43,11 @@ from kiro_crew.acp.types import (
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.constants import reflow_and_label_glued_option_marker
-from kiro_crew.dashboard import chat_runner, openai_compat
-from kiro_crew.dashboard.chat_turn import turn_reply_seams
-from kiro_crew.dashboard.chat_utils import _build_stream_chunk
-from kiro_crew.security import REDACTED_CREDENTIAL_TAG, redact
+from aj_crew.constants import reflow_and_label_glued_option_marker
+from aj_crew.dashboard import chat_runner, openai_compat
+from aj_crew.dashboard.chat_turn import turn_reply_seams
+from aj_crew.dashboard.chat_utils import _build_stream_chunk
+from aj_crew.security import REDACTED_CREDENTIAL_TAG, redact
 
 #: The AWS documentation's example access key id, split so no literal sits here.
 _HEAD, _TAIL = "AKIA", "IOSFODNN7EXAMPLE"

@@ -1,8 +1,8 @@
 """The blocked-commands doc must disclose what the command tier cannot see.
 
 The tier reads the command line a tool call carries, and a program the line only
-NAMES is never opened — :mod:`kiro_crew.security.denied_rules` and
-:mod:`kiro_crew.security.argv_floor_ssh` both record that as the module's own
+NAMES is never opened — :mod:`aj_crew.security.denied_rules` and
+:mod:`aj_crew.security.argv_floor_ssh` both record that as the module's own
 doctrine, naming an OS-level fence in the sandbox as the fix of record. An
 operator reading **Settings → Security** has no way to infer it, and a control
 believed to be binding while it is advisory in practice is worse than one known
@@ -20,7 +20,7 @@ claim the code does not support.
 
 ``security.is_denied`` is the whole command-text decision, not one layer of it:
 the argv-structural floor runs inside it, and
-:class:`~kiro_crew.platform.security_authority.PolicyAuthority` only ever adds
+:class:`~aj_crew.platform.security_authority.PolicyAuthority` only ever adds
 patterns to it. So a pass here is not scoped to the regex tier.
 """
 
@@ -28,7 +28,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from kiro_crew import security
+from aj_crew import security
 
 #: The heading and the verdict the doc has to carry, not a paraphrase of either.
 #: The verdict is the one sentence an operator's trust decision rests on.
@@ -42,11 +42,11 @@ _DIRECT = "aws s3 sync /tmp/out s3://example-bucket"
 #: A program spelled out ON the command line. The doc claims this half IS read,
 #: and the argv floor's own refusal text says so ("an inline interpreter program
 #: names the mint surface"), so the claim is pinned rather than assumed.
-_INLINE = "python3 -c \"from kiro_crew.cli import main; main(['token'])\""
+_INLINE = "python3 -c \"from aj_crew.cli import main; main(['token'])\""
 
 
 def _doc() -> str:
-    root = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+    root = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
     return (root / "docs" / "blocked-commands.md").read_text(encoding="utf-8")
 
 

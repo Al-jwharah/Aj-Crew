@@ -24,7 +24,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.apps.builtins.dev_fleet import fleet_state, git_facts, repository, runtime
+from aj_crew.apps.builtins.dev_fleet import fleet_state, git_facts, repository, runtime
 
 
 def _env():

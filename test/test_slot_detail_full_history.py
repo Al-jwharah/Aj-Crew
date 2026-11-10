@@ -22,8 +22,8 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import channel_slots
-from kiro_crew.history import _safe_key
+from aj_crew.dashboard import channel_slots
+from aj_crew.history import _safe_key
 
 CHANNEL_KEY = "slack:1785370133.085469"
 SLOT_NAME = "slack_1785370133.085469"

@@ -9,7 +9,7 @@ any golden path went unchecked.
 
 Two of those steps exist because of one round. A fix for a cron seam landed as an
 addition to ``sandbox._AGENT_DENIED_ENV_KEYS``, which stripped the OPERATOR's own
-``KIROCREW_SECURITY_POLICY`` from every agent child. The proof stopped reproducing,
+``AJCREW_SECURITY_POLICY`` from every agent child. The proof stopped reproducing,
 every ``shell`` row stayed permitted — none of them is a bash command that notices
 an env var going missing — and this gate exited 0. So a fix is now also judged
 against the blast radius the conductor declared in ``fix-contract.json``
@@ -25,7 +25,7 @@ state the verifier's exit status and write the corpus at its own call site, and
 what makes the broken-install case reachable without breaking the checkout.
 
 The deny fence is reached the way the shipped probe reaches it: the probe puts the
-worktree's ``src`` at the head of ``PYTHONPATH`` and imports ``kiro_crew.security``
+worktree's ``src`` at the head of ``PYTHONPATH`` and imports ``aj_crew.security``
 from there, so a test stages a fake module at that path -- one that refuses any
 command carrying a marker, or one that fails to import. There is deliberately no
 flag that substitutes a classifier PROGRAM: that would decode caller text into
@@ -322,7 +322,7 @@ class TestABrokenGoldenPathRejectsTheFix:
         denial differential reads from that tree."""
         import importlib.util
 
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         # Registered while it executes: its dataclasses resolve their string
         # annotations through ``sys.modules[cls.__module__]``.
@@ -438,7 +438,7 @@ class TestHoldsIsUnreachableWhileAnythingIsUnverifiable:
 class TestTheFenceClassifiedAgainstIsTheWorktrees:
     """A leading ``PYTHONPATH`` entry is a preference, not a guarantee.
 
-    A checkout that does not carry ``kiro_crew/security`` imports the INSTALLED
+    A checkout that does not carry ``aj_crew/security`` imports the INSTALLED
     package instead, and every golden path is then classified against rules that
     are not under review -- a pass that says nothing about the fix. The probe
     therefore proves where the fence came from, and a borrowed one is unavailable.
@@ -447,7 +447,7 @@ class TestTheFenceClassifiedAgainstIsTheWorktrees:
     def test_a_worktree_without_the_package_does_not_borrow_the_installed_fence(
         self, staged: Path, tmp_path: Path, worktree: Path
     ) -> None:
-        """No fake fence is staged, so the only ``kiro_crew.security`` the probe can
+        """No fake fence is staged, so the only ``aj_crew.security`` the probe can
         find is the one installed in this interpreter -- which must not count."""
         db = tmp_path / "findings.db"
         a_golden_path(staged, command="gh pr view 1 --json state")
@@ -466,8 +466,8 @@ class TestTheFenceClassifiedAgainstIsTheWorktrees:
         """A worktree whose ``src`` is a symlink to the source tree (the way an
         end-to-end smoke stages one) still owns the fence it points at."""
         real = tmp_path / "real-src"
-        (real / "kiro_crew").mkdir(parents=True)
-        module = real / "kiro_crew" / "security.py"
+        (real / "aj_crew").mkdir(parents=True)
+        module = real / "aj_crew" / "security.py"
         module.write_text("", encoding="utf-8")
         link = tmp_path / "wt" / "src"
         link.parent.mkdir()
@@ -481,12 +481,12 @@ class TestTheFenceClassifiedAgainstIsTheWorktrees:
         "module_file, root, symptom",
         [
             pytest.param(
-                "site-packages/kiro_crew/security/__init__.py", "wt/src", "outside", id="installed"
+                "site-packages/aj_crew/security/__init__.py", "wt/src", "outside", id="installed"
             ),
             pytest.param(None, "wt/src", "no source file", id="namespace-package"),
-            pytest.param("wt/src/kiro_crew/security.py", "", "not told", id="no-root"),
+            pytest.param("wt/src/aj_crew/security.py", "", "not told", id="no-root"),
             pytest.param(
-                "wt/src-other/kiro_crew/security.py", "wt/src", "outside", id="sibling-prefix"
+                "wt/src-other/aj_crew/security.py", "wt/src", "outside", id="sibling-prefix"
             ),
         ],
     )
@@ -607,7 +607,7 @@ class TestTheLedgerPathIsResolvedOnceAndShared:
         )
         home = tmp_path / "crew-home"
         a_golden_path(staged, command="git status --porcelain")
-        result = run_fix(staged, None, worktree, fence=fence(), env={"KIROCREW_HOME": str(home)})
+        result = run_fix(staged, None, worktree, fence=fence(), env={"AJCREW_HOME": str(home)})
         assert result.returncode == EXIT_HOLDS, result.stderr
         argv = json.loads(record.read_text(encoding="utf-8"))
         assert "--db" in argv
@@ -906,7 +906,7 @@ class TestTheGateReadsTheCommittedFileNotTheLedger:
     ) -> None:
         """A checkout that ships an emptier corpus is still judged by this one."""
         db = tmp_path / "findings.db"
-        shipped = worktree / "src" / "kiro_crew" / "builtin_skills" / "security-conductor"
+        shipped = worktree / "src" / "aj_crew" / "builtin_skills" / "security-conductor"
         shipped.mkdir(parents=True)
         (shipped / CORPUS_FILENAME).write_text('{"golden_paths": []}', encoding="utf-8")
         a_golden_path(staged, command="gh pr view 1 REFUSE-ME")
@@ -1076,7 +1076,7 @@ class TestTheShippedCorpusIsALiveGate:
     ) -> None:
         """Every tier the gate applies to shell text, in its order -- the same composite the probe
         applies and `scripts/deny_diff.py` measures."""
-        import kiro_crew.security as security
+        import aj_crew.security as security
 
         broken: dict[str, str] = {}
         for row in rows:

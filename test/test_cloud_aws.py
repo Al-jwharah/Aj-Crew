@@ -13,10 +13,10 @@ import threading
 
 import pytest
 
-from kiro_crew import sandbox as kc_sandbox
-from kiro_crew import sandbox_launch_mark
-from kiro_crew.cloud import aws
-from kiro_crew.slack.gateway_runtime import service_boot
+from aj_crew import sandbox as kc_sandbox
+from aj_crew import sandbox_launch_mark
+from aj_crew.cloud import aws
+from aj_crew.slack.gateway_runtime import service_boot
 
 
 class TestBuildArgv:
@@ -49,8 +49,8 @@ class TestBuildArgv:
 
         if _os.name == "nt":
             pytest.skip("fallback install dirs are POSIX literals; dead on Windows by design")
-        from kiro_crew import github_runner
-        from kiro_crew.deploy import engine
+        from aj_crew import github_runner
+        from aj_crew.deploy import engine
 
         fake_aws = tmp_path / "aws"
         fake_aws.write_text("#!/bin/sh\n")
@@ -118,7 +118,7 @@ class TestRunAws:
         ``run_aws`` hands the child :func:`aws_spawn_env` for the resolved head, so
         the CLI's own by-name lookups search the AWS bin dirs too.
         """
-        from kiro_crew.deploy import engine
+        from aj_crew.deploy import engine
 
         bin_dir = tmp_path / "aws-bin"
         bin_dir.mkdir()
@@ -292,7 +292,7 @@ class TestChecked:
         with pytest.raises(aws.AWSError) as ei:
             aws.checked(["ec2", "describe-vpcs"], "dev", action="ec2:DescribeVpcs")
         assert str(ei.value).startswith(
-            f"ec2:DescribeVpcs failed: {remedy} (see `kirocrew cloud iam-policy`) and retry — "
+            f"ec2:DescribeVpcs failed: {remedy} (see `ajcrew cloud iam-policy`) and retry — "
         )
 
     def test_failure_non_auth_has_no_missing_action(self, monkeypatch):
@@ -333,8 +333,8 @@ _REAL_AGENT_CONFINEMENT = getattr(aws, "_agent_confinement", None)
 
 
 class TestAgentSessionSignals:
-    """``_in_agent_session`` reads every marker Kiro Crew sets on an agent tree,
-    not only ``KIROCREW_SESSION_KEY``: a worker on the shared runtime has no
+    """``_in_agent_session`` reads every marker Aj Crew sets on an agent tree,
+    not only ``AJCREW_SESSION_KEY``: a worker on the shared runtime has no
     session key but carries the runtime and launcher markers, the remembered
     sandbox marker, and (on Linux) the agents cgroup. Any one of them must refuse
     a cloud mutation."""
@@ -343,10 +343,10 @@ class TestAgentSessionSignals:
     def _no_ambient_signal(self, _floor_monkeypatch):
         monkeypatch = _floor_monkeypatch
         for name in (
-            "KIROCREW_SESSION_KEY",
-            "KIROCREW_SPAWNED",
-            "KIROCREW_RUNTIME_AGENT",
-            "KIROCREW_HOST_PID",
+            "AJCREW_SESSION_KEY",
+            "AJCREW_SPAWNED",
+            "AJCREW_RUNTIME_AGENT",
+            "AJCREW_HOST_PID",
             sandbox_launch_mark.SANDBOX_MARKER,
         ):
             monkeypatch.delenv(name, raising=False)
@@ -361,16 +361,16 @@ class TestAgentSessionSignals:
         aws.assert_human_action("iam:CreatePolicyVersion")  # must not raise
 
     def test_worker_without_session_key_is_refused(self, monkeypatch):
-        # The shape seen in a gateway chat worker: no KIROCREW_SESSION_KEY.
-        monkeypatch.setenv("KIROCREW_SPAWNED", "1")
-        monkeypatch.setenv("KIROCREW_RUNTIME_AGENT", "kirocrew-worker")
-        monkeypatch.setenv("KIROCREW_HOST_PID", "4242")
+        # The shape seen in a gateway chat worker: no AJCREW_SESSION_KEY.
+        monkeypatch.setenv("AJCREW_SPAWNED", "1")
+        monkeypatch.setenv("AJCREW_RUNTIME_AGENT", "ajcrew-worker")
+        monkeypatch.setenv("AJCREW_HOST_PID", "4242")
         with pytest.raises(aws.CloudActionDenied):
             aws.assert_human_action("iam:CreatePolicyVersion")
         with pytest.raises(aws.CloudActionDenied):
             aws.run_aws(["iam", "create-policy-version", "--policy-arn", "arn:x"])
 
-    @pytest.mark.parametrize("name", ["KIROCREW_RUNTIME_AGENT", "KIROCREW_HOST_PID"])
+    @pytest.mark.parametrize("name", ["AJCREW_RUNTIME_AGENT", "AJCREW_HOST_PID"])
     def test_each_spawn_marker_alone_is_refused(self, monkeypatch, name):
         monkeypatch.setenv(name, "1")
         with pytest.raises(aws.CloudActionDenied):
@@ -378,14 +378,14 @@ class TestAgentSessionSignals:
 
     def test_spawned_marker_alone_stays_human(self, monkeypatch):
         # An app backend, or a gateway one restarted (Dev Fleet foreground
-        # restart), carries only KIROCREW_SPAWNED. The owner's dashboard cloud
+        # restart), carries only AJCREW_SPAWNED. The owner's dashboard cloud
         # actions run there, so that marker alone must not refuse them.
-        monkeypatch.setenv("KIROCREW_SPAWNED", "1")
+        monkeypatch.setenv("AJCREW_SPAWNED", "1")
         assert aws._in_agent_session() is False
         aws.assert_human_action("ec2:StopInstances")  # must not raise
 
     def test_sandbox_marker_dropped_by_cli_main_is_remembered(self, monkeypatch):
-        # cli.main notes then pops KIROCREW_SANDBOX_ACTIVE before the subcommand.
+        # cli.main notes then pops AJCREW_SANDBOX_ACTIVE before the subcommand.
         monkeypatch.setattr(sandbox_launch_mark, "_launched_in_sandbox", True)
         with pytest.raises(aws.CloudActionDenied):
             aws.assert_human_action("cloudformation:DeleteStack")
@@ -400,7 +400,7 @@ class TestAgentSessionSignals:
 
     def test_a_gateway_started_from_an_agent_session_warns_once(self, monkeypatch, caplog):
         # A restart run from an agent's shell: the child inherits its session key.
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:abc")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:abc")
         with caplog.at_level(logging.WARNING, logger=aws.logger.name):
             assert aws.warn_if_started_from_agent_session() is True
         warnings = [r for r in caplog.records if r.name == aws.logger.name]
@@ -417,17 +417,17 @@ def test_the_gateway_warns_after_readiness_off_the_loop():
     source = inspect.getsource(service_boot.run)
     warns = "for _warn in (warn_if_running_from_git_checkout, warn_if_started_from_agent_session):"
     assert warns in source
-    assert source.index('print(f"KIROCREW_READY:') < source.index(warns)
+    assert source.index('print(f"AJCREW_READY:') < source.index(warns)
     assert "asyncio.create_task(asyncio.to_thread(_warn))" in source
 
 
 class TestChokepointHumanActionGuard:
     """run_aws must refuse non-read-only calls from an agent session
-    (KIROCREW_SESSION_KEY set), covering mutations AND token-minting SSM calls
+    (AJCREW_SESSION_KEY set), covering mutations AND token-minting SSM calls
     even when run_aws is imported directly, bypassing the shell denylist."""
 
     def test_readonly_calls_allowed_under_agent_session(self, monkeypatch):
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "sess-1")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "sess-1")
         monkeypatch.setattr(aws, "wrap_argv", lambda argv, mode: (argv, ""))
 
         class FakeProc:
@@ -448,16 +448,16 @@ class TestChokepointHumanActionGuard:
             assert rc == 0, f"read-only {readonly} should be allowed"
 
     def test_mutations_and_token_mint_refused_under_agent_session(self, monkeypatch):
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "sess-1")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "sess-1")
         monkeypatch.setattr(aws, "popen_limited", lambda *a, **k: pytest.fail("must not spawn aws"))
         for sensitive in (
-            ["cloudformation", "delete-stack", "--stack-name", "kirocrew-x"],
+            ["cloudformation", "delete-stack", "--stack-name", "ajcrew-x"],
             ["cloudformation", "deploy"],
             ["ec2", "terminate-instances", "--instance-ids", "i-1"],
             ["ec2", "stop-instances", "--instance-ids", "i-1"],
             ["ssm", "send-command", "--instance-ids", "i-1"],  # token mint path
             ["ssm", "start-session", "--target", "i-1"],
-            ["s3", "rm", "s3://kirocrew-src-x/y"],
+            ["s3", "rm", "s3://ajcrew-src-x/y"],
         ):
             with pytest.raises(aws.CloudActionDenied):
                 aws.run_aws(sensitive)
@@ -465,7 +465,7 @@ class TestChokepointHumanActionGuard:
     def test_secret_reads_denied_under_agent_session(self, monkeypatch):
         # An EXACT allowlist (not a get-*/list-* prefix) must deny secret-bearing
         # reads even though they start with get-/list-.
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "sess-1")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "sess-1")
         monkeypatch.setattr(aws, "popen_limited", lambda *a, **k: pytest.fail("must not spawn aws"))
         for secret_read in (
             ["secretsmanager", "get-secret-value", "--secret-id", "x"],
@@ -478,7 +478,7 @@ class TestChokepointHumanActionGuard:
                 aws.run_aws(secret_read)
 
     def test_all_allowed_without_session_key(self, monkeypatch):
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
         monkeypatch.setattr(aws, "wrap_argv", lambda argv, mode: (argv, ""))
 
         class FakeProc:

@@ -14,7 +14,7 @@ const mockApi = vi.hoisted(() => ({
   mcpApply: vi.fn(),
   mcpGlobalScopes: vi.fn(),
   mcpResetProbeFailures: vi.fn(),
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
   acpBackends: vi.fn(),
 }))
 vi.mock('../api/client', () => ({ api: mockApi }))
@@ -34,10 +34,10 @@ const EXCEPTION = /One exception/
 const SPARED = /stops only that tool/
 
 const server: McpServer = {
-  name: 'kirocrew-core',
-  command: 'kirocrew-core-cmd',
+  name: 'ajcrew-core',
+  command: 'ajcrew-core-cmd',
   status: 'ok',
-  source: 'kirocrew',
+  source: 'ajcrew',
   enabled: true,
   tools: ['send_message', 'work_report'],
 }
@@ -67,7 +67,7 @@ function probeRow(id: string, perToolDeny: string, policyId = id, spared?: strin
 const BACKENDS = {
   backends: [
     probeRow('goose', 'whole-server', 'Goose', []),
-    probeRow('codex', 'per-call', 'Codex', ['kirocrew-core', 'kirocrew-cron']),
+    probeRow('codex', 'per-call', 'Codex', ['ajcrew-core', 'ajcrew-cron']),
     probeRow('claude', 'settings-file', 'claude', []),
     // An older gateway sends no list.
     probeRow('codex-old', 'per-call', 'Codex'),
@@ -95,7 +95,7 @@ const thirdParty: McpServer = {
 }
 
 /** Open the server's tool list and return the row it sits in. */
-async function openTools(name = 'kirocrew-core', first = 'send_message'): Promise<HTMLElement> {
+async function openTools(name = 'ajcrew-core', first = 'send_message'): Promise<HTMLElement> {
   const row = (await screen.findByText(name, { selector: 'code' }, ROW_WAIT)).closest('tr')!
   fireEvent.click(within(row).getByRole('button', { name: /2\s+tools/i }))
   await within(row).findByRole('button', { name: first }, ROW_WAIT)
@@ -107,7 +107,7 @@ async function openTools(name = 'kirocrew-core', first = 'send_message'): Promis
  * an absence asserted afterwards is the component's answer and not a race with a
  * pending fetch. `keys` names the ones expected to settle in that test.
  */
-async function settled(keys: string[] = ['kirocrewConfig', 'acpBackends']) {
+async function settled(keys: string[] = ['ajcrewConfig', 'acpBackends']) {
   await waitFor(() => {
     for (const key of keys) expect(['success', 'error']).toContain(qc.getQueryState([key])?.status)
   }, ROW_WAIT)
@@ -122,7 +122,7 @@ beforeEach(() => {
 
 describe('McpTab: what turning one tool off costs on the harness in use (#11969)', () => {
   it('states the rule above the tools on a whole-server harness, before any click', async () => {
-    mockApi.kirocrewConfig.mockResolvedValue({ agent: { acp_backend: 'goose' } })
+    mockApi.ajcrewConfig.mockResolvedValue({ agent: { acp_backend: 'goose' } })
     renderTab()
     const row = await openTools()
     const reach = await within(row).findByTestId('mcp-deny-reach', undefined, ROW_WAIT)
@@ -137,7 +137,7 @@ describe('McpTab: what turning one tool off costs on the harness in use (#11969)
   })
 
   it('on a per-call harness, Crew\'s own server shows only the tool-by-tool fact (#21334)', async () => {
-    mockApi.kirocrewConfig.mockResolvedValue({ agent: { acp_backend: 'codex' } })
+    mockApi.ajcrewConfig.mockResolvedValue({ agent: { acp_backend: 'codex' } })
     renderTab()
     const row = await openTools()
     const reach = await within(row).findByTestId('mcp-deny-reach', undefined, ROW_WAIT)
@@ -149,7 +149,7 @@ describe('McpTab: what turning one tool off costs on the harness in use (#11969)
   })
 
   it('on a per-call harness, any other server shows only the rule (#21334)', async () => {
-    mockApi.kirocrewConfig.mockResolvedValue({ agent: { acp_backend: 'codex' } })
+    mockApi.ajcrewConfig.mockResolvedValue({ agent: { acp_backend: 'codex' } })
     mockApi.mcpServers.mockResolvedValue([server, thirdParty])
     renderTab()
     const row = await openTools('github', 'create_issue')
@@ -160,20 +160,20 @@ describe('McpTab: what turning one tool off costs on the harness in use (#11969)
   })
 
   it('keeps the rule and its exception on a gateway that sends no spared list', async () => {
-    mockApi.kirocrewConfig.mockResolvedValue({ agent: { acp_backend: 'codex-old' } })
+    mockApi.ajcrewConfig.mockResolvedValue({ agent: { acp_backend: 'codex-old' } })
     renderTab()
     const row = await openTools()
     const reach = await within(row).findByTestId('mcp-deny-reach', undefined, ROW_WAIT)
     const rule = within(reach).getByText(RULE)
     const exception = within(reach).getByText(EXCEPTION)
     expect(rule.textContent).toContain('Codex')
-    expect(exception.textContent).toContain('kirocrew-core')
+    expect(exception.textContent).toContain('ajcrew-core')
     expect(exception).toHaveClass('text-muted')
     expect(rule.compareDocumentPosition(exception) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('says nothing on a harness whose tool-off stops only that tool', async () => {
-    mockApi.kirocrewConfig.mockResolvedValue({ agent: { acp_backend: 'claude' } })
+    mockApi.ajcrewConfig.mockResolvedValue({ agent: { acp_backend: 'claude' } })
     renderTab()
     const row = await openTools()
     await settled()
@@ -182,7 +182,7 @@ describe('McpTab: what turning one tool off costs on the harness in use (#11969)
   })
 
   it('says nothing when the probe is refused (403 for a non-owner)', async () => {
-    mockApi.kirocrewConfig.mockResolvedValue({ agent: { acp_backend: 'goose' } })
+    mockApi.ajcrewConfig.mockResolvedValue({ agent: { acp_backend: 'goose' } })
     mockApi.acpBackends.mockRejectedValue(new ApiError(403, 'forbidden', '{}'))
     renderTab()
     const row = await openTools()
@@ -192,7 +192,7 @@ describe('McpTab: what turning one tool off costs on the harness in use (#11969)
 
   it('says nothing while the config is still loading', async () => {
     // The probe has answered; without the config there is no harness to name.
-    mockApi.kirocrewConfig.mockReturnValue(new Promise(() => {}))
+    mockApi.ajcrewConfig.mockReturnValue(new Promise(() => {}))
     renderTab()
     const row = await openTools()
     await settled(['acpBackends'])
@@ -200,15 +200,15 @@ describe('McpTab: what turning one tool off costs on the harness in use (#11969)
   })
 
   it('stays inside the tool list: a closed list shows nothing', async () => {
-    mockApi.kirocrewConfig.mockResolvedValue({ agent: { acp_backend: 'goose' } })
+    mockApi.ajcrewConfig.mockResolvedValue({ agent: { acp_backend: 'goose' } })
     renderTab()
-    await screen.findByText('kirocrew-core', { selector: 'code' }, ROW_WAIT)
+    await screen.findByText('ajcrew-core', { selector: 'code' }, ROW_WAIT)
     await settled()
     expect(screen.queryByTestId('mcp-deny-reach')).toBeNull()
   })
 
   it('only declares: the tool still turns off on a whole-server harness', async () => {
-    mockApi.kirocrewConfig.mockResolvedValue({ agent: { acp_backend: 'goose' } })
+    mockApi.ajcrewConfig.mockResolvedValue({ agent: { acp_backend: 'goose' } })
     renderTab()
     const row = await openTools()
     await within(row).findByTestId('mcp-deny-reach', undefined, ROW_WAIT)

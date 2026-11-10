@@ -20,10 +20,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp import client_transport
-from kiro_crew.acp.client import _CLIENT_OWNERS, AcpClient, AcpError
-from kiro_crew.acp.client_transport import _ends_agent_started_turn, _starts_agent_turn
-from kiro_crew.acp.types import (
+from aj_crew.acp import client_transport
+from aj_crew.acp.client import _CLIENT_OWNERS, AcpClient, AcpError
+from aj_crew.acp.client_transport import _ends_agent_started_turn, _starts_agent_turn
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_STEER_CONSUMED,
     EVENT_TEXT_CHUNK,
@@ -31,14 +31,14 @@ from kiro_crew.acp.types import (
     METHOD_SESSION_STEERING,
     JsonRpcMessage,
 )
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_KIRO,
     ACP_BACKENDS_AGENT_STARTED_TURNS,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
-_ACP_DIR = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "acp"
+_ACP_DIR = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "acp"
 # AcpClient binds members its owner modules define, so a stdout reader can live in any of them.
 _CLIENT_SOURCES = [_ACP_DIR / "client.py"] + [
     _ACP_DIR / f"{owner.rsplit('.', 1)[-1]}.py" for owner in _CLIENT_OWNERS
@@ -591,10 +591,10 @@ async def test_a_kiro_client_runs_its_own_methods_and_never_reads_between_turns(
 
 
 def test_the_claude_adapter_binds_the_reader_once_across_respawns(monkeypatch, tmp_path) -> None:
-    from kiro_crew.acp.harness import SpawnContext
-    from kiro_crew.acp.harness import claude as claude_mod
-    from kiro_crew.acp.harness import process_adapter_for
-    from kiro_crew.agent_sdk.drivers.acp import forget_cached_resolution
+    from aj_crew.acp.harness import SpawnContext
+    from aj_crew.acp.harness import claude as claude_mod
+    from aj_crew.acp.harness import process_adapter_for
+    from aj_crew.agent_sdk.drivers.acp import forget_cached_resolution
 
     client = AcpClient(work_dir=tmp_path, acp_backend=ACP_BACKEND_CLAUDE)
     monkeypatch.setattr(
@@ -604,7 +604,7 @@ def test_the_claude_adapter_binds_the_reader_once_across_respawns(monkeypatch, t
     monkeypatch.setattr(AcpClient, "_seed_session_settings", AsyncMock())
     monkeypatch.setattr(AcpClient, "_prepare_session_mcp", AsyncMock())
     ctx = SpawnContext(
-        agent="kirocrew", work_dir=tmp_path, model=None, environ={}, home=tmp_path, session=client
+        agent="ajcrew", work_dir=tmp_path, model=None, environ={}, home=tmp_path, session=client
     )
     forget_cached_resolution(ACP_BACKEND_CLAUDE)
     bound = _BOUND_BY_THE_CLAUDE_ADAPTER + _QUEUED_BY_THE_CLAUDE_ADAPTER
@@ -1050,7 +1050,7 @@ async def test_a_prompt_waits_behind_the_agent_started_turn_and_keeps_its_own_st
 
 @pytest.mark.asyncio
 async def test_a_prompt_past_the_gate_keeps_stream_unsolicited_out(monkeypatch) -> None:
-    from kiro_crew.acp import client as acp_client
+    from aj_crew.acp import client as acp_client
 
     client, reader, _proc = _client(on_turn=lambda _c: None)
     await _handed_off(client, reader, _chunk("background result"))
@@ -1155,7 +1155,7 @@ async def test_a_late_steering_answer_does_not_end_the_agent_started_turn(
     monkeypatch, stopped_waiting_on: str, outcome: str
 ) -> None:
     """A steer sent in a user turn stops waiting; its answer lands in the next turn."""
-    from kiro_crew.acp import client as acp_client
+    from aj_crew.acp import client as acp_client
 
     if stopped_waiting_on == "timeout":
         monkeypatch.setattr(acp_client, "STEERING_ANSWER_WAIT_SECS", 0.0)

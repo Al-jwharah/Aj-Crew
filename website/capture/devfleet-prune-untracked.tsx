@@ -36,7 +36,7 @@ const params = new URLSearchParams(location.search)
 const scene = params.get('scene') || 'prune'
 const theme = params.get('theme') || 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const NOW = Date.now() / 1000
 

@@ -20,14 +20,14 @@ from pathlib import Path
 import pytest
 from test_chat_runner_coverage import _complete, _drive, _runner_state, _set_stream, _slot
 
-from kiro_crew.acp.types import EVENT_TEXT_CHUNK, TurnUsage
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_runner import _eager_spawn
-from kiro_crew.member_memory_auth import bind_private_session_store
-from kiro_crew.memory_stores import provision_member_memory
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.session import _session_model as _owner_session_model
+from aj_crew.acp.types import EVENT_TEXT_CHUNK, TurnUsage
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_runner import _eager_spawn
+from aj_crew.member_memory_auth import bind_private_session_store
+from aj_crew.memory_stores import provision_member_memory
+from aj_crew.providers.base import LLMEvent
+from aj_crew.session import _session_model as _owner_session_model
 
 #: The eager-spawn tests need a pre-warm allowance, which is zero while the
 #: host's memory posture is critical (see ``ample_host_free_memory``).
@@ -38,25 +38,25 @@ CREW_PIN = "claude-sonnet-5"
 SLOT_PIN = "claude-haiku-5"
 
 
-def _load_config(tmp_path: Path, data: dict) -> KiroCrewConfig:
-    """A real ``KiroCrewConfig`` loaded from *data* (same shape as config.json)."""
+def _load_config(tmp_path: Path, data: dict) -> AjCrewConfig:
+    """A real ``AjCrewConfig`` loaded from *data* (same shape as config.json)."""
     cfg_file = tmp_path / "config.json"
     cfg_file.write_text(json.dumps(data))
-    with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_file):
-        return KiroCrewConfig.load()
+    with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_file):
+        return AjCrewConfig.load()
 
 
 def _config(
     tmp_path: Path, *, crew_model: str = "", default: str = GLOBAL_DEFAULT
-) -> KiroCrewConfig:
+) -> AjCrewConfig:
     """Global ``agent.model`` is *default*; the crews pin nothing unless *crew_model*."""
     cfg = _load_config(
         tmp_path,
         {
             "agent": {"model": default, "provider": "acp"},
             "agents": {
-                "default": {"kiro_agent": "kirocrew", "memory_store": "default"},
-                "researcher": {"kiro_agent": "kirocrew", "model": crew_model},
+                "default": {"kiro_agent": "ajcrew", "memory_store": "default"},
+                "researcher": {"kiro_agent": "ajcrew", "model": crew_model},
             },
             "default_agent": "default",
         },
@@ -65,7 +65,7 @@ def _config(
     return cfg
 
 
-def _grant_researcher(cfg: KiroCrewConfig, slot_key: str = "chat-cov-1") -> None:
+def _grant_researcher(cfg: AjCrewConfig, slot_key: str = "chat-cov-1") -> None:
     """Write the member's private session grant, as an owner-gated route would.
 
     A turn only confirms a grant that already exists; these turns exercise
@@ -85,7 +85,7 @@ def _pin_sync_accessors(client) -> None:
     client.client.pop_pending_oauth_requests = unittest.mock.MagicMock(return_value=[])
 
 
-def _resolve_like_the_allocation(cfg: KiroCrewConfig, key: str, kwargs: dict) -> str | None:
+def _resolve_like_the_allocation(cfg: AjCrewConfig, key: str, kwargs: dict) -> str | None:
     """The model ``get_or_create`` starts *key* on for these kwargs.
 
     The caller's own model when it passed one, else the session layer's own
@@ -100,7 +100,7 @@ def _resolve_like_the_allocation(cfg: KiroCrewConfig, key: str, kwargs: dict) ->
     )
 
 
-def _allocation_resolves(state, cfg: KiroCrewConfig) -> None:
+def _allocation_resolves(state, cfg: AjCrewConfig) -> None:
     """Make the mocked session boundary resolve and stamp as ``SessionManager`` does.
 
     The session manager holds *cfg* (the watcher-refreshed config), a model-less
@@ -129,7 +129,7 @@ def _turn_state(tmp_path: Path):
     state, client = _runner_state(tmp_path, context_builder=builder)
     _pin_sync_accessors(client)
     _set_stream(client, [LLMEvent(kind=EVENT_TEXT_CHUNK, text="hi"), _complete()])
-    _allocation_resolves(state, chat_runner.KiroCrewConfig.load())
+    _allocation_resolves(state, chat_runner.AjCrewConfig.load())
     return state, client
 
 
@@ -148,21 +148,21 @@ def _requested(state) -> str | None:
 
 @pytest.fixture
 def _runner_config(tmp_path, monkeypatch):
-    """Serve the real config object to every ``KiroCrewConfig.load()`` in the turn."""
+    """Serve the real config object to every ``AjCrewConfig.load()`` in the turn."""
     # These turns use a fake provider and exercise model selection. Supply only
     # the host capability result; member provisioning and binding remain real.
     pass  # Member routing does not depend on OS isolation.
 
-    def _install(cfg: KiroCrewConfig):
+    def _install(cfg: AjCrewConfig):
         patcher = unittest.mock.patch.object(
-            chat_runner.KiroCrewConfig, "load", unittest.mock.MagicMock(return_value=cfg)
+            chat_runner.AjCrewConfig, "load", unittest.mock.MagicMock(return_value=cfg)
         )
         patcher.start()
         return patcher
 
     patchers: list[unittest.mock._patch] = []
 
-    def _use(cfg: KiroCrewConfig) -> None:
+    def _use(cfg: AjCrewConfig) -> None:
         patchers.append(_install(cfg))
 
     yield _use
@@ -242,14 +242,14 @@ class TestRunChatDefaultModel:
         """``agent.model`` unset/auto and no installed pin -> ``None``, as before."""
         cfg = _load_config(
             tmp_path,
-            {"agent": {"model": "auto", "provider": "acp"}, "default_agent": "kirocrew"},
+            {"agent": {"model": "auto", "provider": "acp"}, "default_agent": "ajcrew"},
         )
         _runner_config(cfg)
         state, _client = _turn_state(tmp_path)
         slot = _slot()
 
         with unittest.mock.patch.object(
-            KiroCrewConfig, "_resolve_agent_model", staticmethod(lambda: "")
+            AjCrewConfig, "_resolve_agent_model", staticmethod(lambda: "")
         ):
             await _drive(state, slot)
 
@@ -267,7 +267,7 @@ class TestRunChatDefaultModel:
         slot = _slot()
 
         with unittest.mock.patch(
-            "kiro_crew.config.loader.resolve_effective_model", side_effect=RuntimeError("boom")
+            "aj_crew.config.loader.resolve_effective_model", side_effect=RuntimeError("boom")
         ):
             await _drive(state, slot)
 
@@ -289,7 +289,7 @@ class TestRunChatDefaultModel:
         slot = _slot()
 
         with unittest.mock.patch(
-            "kiro_crew.config.loader.resolve_effective_model",
+            "aj_crew.config.loader.resolve_effective_model",
             side_effect=StopIteration("malformed"),
         ):
             await _drive(state, slot)
@@ -321,7 +321,7 @@ class TestRunChatDefaultModel:
             seen.append((threading.get_ident(), loop_on_thread))
             return GLOBAL_DEFAULT
 
-        with unittest.mock.patch("kiro_crew.config.loader.resolve_effective_model", _resolver):
+        with unittest.mock.patch("aj_crew.config.loader.resolve_effective_model", _resolver):
             await _drive(state, slot)
 
         assert _session_model(state) == GLOBAL_DEFAULT
@@ -490,7 +490,7 @@ class TestLiveSessionFollowsDefaultChange:
         slot = _slot()
 
         with unittest.mock.patch(
-            "kiro_crew.config.loader.resolve_effective_model", return_value=""
+            "aj_crew.config.loader.resolve_effective_model", return_value=""
         ):
             await _drive(state, slot)
 
@@ -509,7 +509,7 @@ class TestLiveSessionFollowsDefaultChange:
         slot = _slot()
 
         with unittest.mock.patch(
-            "kiro_crew.config.loader.resolve_effective_model", return_value=self.OLD_DEFAULT
+            "aj_crew.config.loader.resolve_effective_model", return_value=self.OLD_DEFAULT
         ):
             await _drive(state, slot)
 
@@ -559,7 +559,7 @@ class TestInheritingSlotStaysUnpinned:
     def _no_installed_pin():
         """The installed agent file names no model, so Auto defers to the backend."""
         return unittest.mock.patch.object(
-            KiroCrewConfig, "_resolve_agent_model", staticmethod(lambda: "")
+            AjCrewConfig, "_resolve_agent_model", staticmethod(lambda: "")
         )
 
     @staticmethod
@@ -607,7 +607,7 @@ class TestInheritingSlotStaysUnpinned:
         state.sessions.get_or_create.reset_mock()
         _set_stream(client, [LLMEvent(kind=EVENT_TEXT_CHUNK, text="hi"), _complete()])
         with unittest.mock.patch(
-            "kiro_crew.config.loader.resolve_effective_model", return_value=GLOBAL_DEFAULT
+            "aj_crew.config.loader.resolve_effective_model", return_value=GLOBAL_DEFAULT
         ):
             await _drive(state, slot)
 
@@ -697,11 +697,11 @@ class TestInheritedDefaultThreadBoundary:
         sessions._cfg = cfg
 
         with unittest.mock.patch(
-            "kiro_crew.config.loader.resolve_effective_model",
+            "aj_crew.config.loader.resolve_effective_model",
             side_effect=StopIteration("malformed"),
         ):
             result = await chat_runner._inherited_default_model(
-                sessions, _slot(), "dashboard:chat-cov-1", agent="kirocrew", crew_agent=""
+                sessions, _slot(), "dashboard:chat-cov-1", agent="ajcrew", crew_agent=""
             )
 
         assert result == ""
@@ -712,7 +712,7 @@ class TestInheritedDefaultThreadBoundary:
         sessions = unittest.mock.MagicMock()
 
         result = await chat_runner._inherited_default_model(
-            sessions, _slot(), "dashboard:chat-cov-1", agent="kirocrew", crew_agent=""
+            sessions, _slot(), "dashboard:chat-cov-1", agent="ajcrew", crew_agent=""
         )
 
         assert result == ""
@@ -843,13 +843,13 @@ class TestSessionOpenedCoversTheTierBelowTheCaller:
         )
 
     @staticmethod
-    def _all_tiers_defer(tmp_path: Path) -> KiroCrewConfig:
+    def _all_tiers_defer(tmp_path: Path) -> AjCrewConfig:
         """A config whose global pin is empty, so the turn resolves ``""``."""
         return _load_config(
             tmp_path,
             {
                 "agent": {"model": "", "provider": "acp"},
-                "agents": {"default": {"kiro_agent": "kirocrew", "memory_store": "default"}},
+                "agents": {"default": {"kiro_agent": "ajcrew", "memory_store": "default"}},
                 "default_agent": "default",
             },
         )

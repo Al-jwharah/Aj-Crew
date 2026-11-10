@@ -108,7 +108,7 @@ SITES = (
         "denial-differential.yml",
         "denial-differential",
         "Run the denial differential",
-        "src/kiro_crew/builtin_skills/security-conductor/golden-paths.json",
+        "src/aj_crew/builtin_skills/security-conductor/golden-paths.json",
         "corpus.json",
         cut="python scripts/deny_diff.py",
     ),

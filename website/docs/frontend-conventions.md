@@ -169,8 +169,8 @@ label, a header cell that hosts one needs `aria-labelledby` pointing at its
 visible label, or the grip's name is appended to the column header and announced
 with every cell. The two header components above already do this.
 
-`src/kirocrew-ui/index.ts` re-exports the subset that apps may import as
-`@kirocrew/app-sdk/ui`. Adding a primitive there makes it app-facing API, so add
+`src/ajcrew-ui/index.ts` re-exports the subset that apps may import as
+`@ajcrew/app-sdk/ui`. Adding a primitive there makes it app-facing API, so add
 deliberately.
 
 `src/app-sdk/ChatEmbed.tsx` keeps its composer markup small but delegates draft
@@ -669,10 +669,10 @@ split shows whole. The helper treats `\` as a separator only in a drive-rooted
 or backslash-UNC path, because on POSIX a backslash is a legal file-name
 character. It is display-only and decides nothing about which paths may be read.
 
-## Serving under a URL sub-path (`KIROCREW_BASE_PATH`)
+## Serving under a URL sub-path (`AJCREW_BASE_PATH`)
 
 The dashboard can be built to live under a URL prefix (e.g. behind a reverse
-proxy at `/proxy/kirocrew/`) with `KIROCREW_BASE_PATH=/proxy/kirocrew npm run
+proxy at `/proxy/ajcrew/`) with `AJCREW_BASE_PATH=/proxy/ajcrew npm run
 build`; see [Behind a reverse proxy at a sub-path](../../docs/guides/remote-and-mobile.md#behind-a-reverse-proxy-at-a-sub-path).
 The value is read once at build time and becomes Vite's `base`. `src/lib/basePath.ts`
 exposes it as `BASE_PATH` (`''` in the stock root build, so every helper is the
@@ -769,7 +769,7 @@ slices:
 | `dashboard` | SSE/WS connection state, chat slots, approval mode, optimistic slot add/remove, thunks for slot fetch and approval-mode change |
 | `chat` | active slot, messages, session history with pagination, WS chunk/done handling, thunks for slot CRUD and history fetch/resume/delete |
 | `notifications` | notification list with add/delete/clear plus their thunks |
-| `instances` | the known Kiro Crew instances a user can switch between |
+| `instances` | the known Aj Crew instances a user can switch between |
 
 Server data belongs in React Query, not in a slice. Reach for Redux only when the
 state is shell-wide and not a cached server read.
@@ -961,7 +961,7 @@ files own it:
 The build runs through `@tailwindcss/vite`; there is no PostCSS config. A
 downstream edition's sources are added to the content scan by
 `editionExtensionPlugin` in `vite.config.ts`, which swaps the
-`/* @kirocrew-edition-source */` marker in `index.css` for an `@source` line.
+`/* @ajcrew-edition-source */` marker in `index.css` for an `@source` line.
 Utility names follow Tailwind v4: `outline-hidden` (not `outline-none`) is the
 accessible outline suppressor, `backdrop-blur-xs` is the 4px blur, and the
 `shadcn/ui` primitives animate through `tw-animate-css`.

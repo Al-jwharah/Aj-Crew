@@ -1,7 +1,7 @@
 """Builtin app MCP servers get the same per-session identity element as Crew's own.
 
 The reported defect: a builtin app whose shipped manifest runs the host CLI
-(``mochi:mochi``, ``command: "kirocrew"``) is mounted by kiro-cli straight from the
+(``mochi:mochi``, ``command: "ajcrew"``) is mounted by kiro-cli straight from the
 agent spec. It serves through ``mcp_shared.run_mcp_stdio_loop``, whose
 ``tools/call`` reads the session tool policy behind an attestation, and with no
 session token every call refused as ``identity_unattested`` for session ``mcp``.
@@ -17,13 +17,13 @@ import pytest
 
 PINNED = {
     "command": "/crew/python3.12",
-    "args": ["-s", "-P", "-m", "kiro_crew", "app", "mcp", "mochi"],
-    "env": {"PYTHONPATH": "/crew/site-packages", "KIROCREW_HOME": "/crew/home"},
+    "args": ["-s", "-P", "-m", "aj_crew", "app", "mcp", "mochi"],
+    "env": {"PYTHONPATH": "/crew/site-packages", "AJCREW_HOME": "/crew/home"},
 }
 
 
 def _mount(monkeypatch, tmp_path, spec, launches):
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
     monkeypatch.setattr(session_mcp, "_agent_spec_for", lambda *a, **k: spec)
     monkeypatch.setattr(session_mcp, "_global_settings", lambda **kwargs: {})
@@ -39,9 +39,9 @@ def _mount(monkeypatch, tmp_path, spec, launches):
 
 def _spec(entry):
     return {
-        "tools": ["@kirocrew-core", "@mochi:mochi"],
+        "tools": ["@ajcrew-core", "@mochi:mochi"],
         "mcpServers": {
-            "kirocrew-core": {"command": "test-crew", "args": ["mcp-core"]},
+            "ajcrew-core": {"command": "test-crew", "args": ["mcp-core"]},
             "mochi:mochi": entry,
         },
     }
@@ -51,18 +51,18 @@ def test_granted_builtin_app_server_gets_an_identity_element(tmp_path, monkeypat
     spec = _spec(dict(PINNED))
     elements = _mount(monkeypatch, tmp_path, spec, {"mochi:mochi": dict(PINNED)}).elements
 
-    assert [e["name"] for e in elements] == ["kirocrew-core", "mochi:mochi"]
+    assert [e["name"] for e in elements] == ["ajcrew-core", "mochi:mochi"]
     mochi = elements[1]
     assert (mochi["command"], mochi["args"]) == (PINNED["command"], PINNED["args"])
     env = {p["name"]: p["value"] for p in mochi["env"]}
     assert env["PYTHONPATH"] == "/crew/site-packages"
-    assert env["KIROCREW_HOME"] == "/crew/home"
+    assert env["AJCREW_HOME"] == "/crew/home"
 
 
 def test_the_token_attach_reaches_the_app_element(tmp_path, monkeypatch):
     """The element is only useful because the runtime's attach covers every entry."""
-    from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
-    from kiro_crew.mcp_gateway.session_servers import attach_stub_session_token
+    from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+    from aj_crew.mcp_gateway.session_servers import attach_stub_session_token
 
     spec = _spec(dict(PINNED))
     elements = _mount(monkeypatch, tmp_path, spec, {"mochi:mochi": dict(PINNED)}).elements
@@ -81,23 +81,23 @@ def test_a_hand_edited_app_launch_is_replaced_by_the_manifest_one(tmp_path, monk
 
 
 def test_spec_env_cannot_move_the_app_data_home(tmp_path, monkeypatch):
-    spec = _spec({**PINNED, "env": {"KIROCREW_HOME": "/elsewhere", "PYTHONPATH": "/evil"}})
+    spec = _spec({**PINNED, "env": {"AJCREW_HOME": "/elsewhere", "PYTHONPATH": "/evil"}})
     elements = _mount(monkeypatch, tmp_path, spec, {"mochi:mochi": dict(PINNED)}).elements
 
     env = {
         p["name"]: p["value"]
         for p in next(e for e in elements if e["name"] == "mochi:mochi")["env"]
     }
-    assert env["KIROCREW_HOME"] == "/crew/home"
+    assert env["AJCREW_HOME"] == "/crew/home"
     assert env["PYTHONPATH"] == "/crew/site-packages"
 
 
 def test_an_ungranted_app_server_gets_no_element(tmp_path, monkeypatch):
     spec = _spec(dict(PINNED))
-    spec["tools"] = ["@kirocrew-core"]
+    spec["tools"] = ["@ajcrew-core"]
     elements = _mount(monkeypatch, tmp_path, spec, {"mochi:mochi": dict(PINNED)}).elements
 
-    assert [e["name"] for e in elements] == ["kirocrew-core"]
+    assert [e["name"] for e in elements] == ["ajcrew-core"]
 
 
 def test_an_app_server_outside_the_shipped_set_gets_no_element(tmp_path, monkeypatch):
@@ -105,7 +105,7 @@ def test_an_app_server_outside_the_shipped_set_gets_no_element(tmp_path, monkeyp
     spec = _spec(dict(PINNED))
     elements = _mount(monkeypatch, tmp_path, spec, {}).elements
 
-    assert [e["name"] for e in elements] == ["kirocrew-core"]
+    assert [e["name"] for e in elements] == ["ajcrew-core"]
 
 
 def test_a_muted_app_server_stays_native(tmp_path, monkeypatch):
@@ -113,12 +113,12 @@ def test_a_muted_app_server_stays_native(tmp_path, monkeypatch):
     spec = _spec({**PINNED, "disabledTools": ["perform_pet_action"]})
     mount = _mount(monkeypatch, tmp_path, spec, {"mochi:mochi": dict(PINNED)})
 
-    assert [e["name"] for e in mount.elements] == ["kirocrew-core"]
+    assert [e["name"] for e in mount.elements] == ["ajcrew-core"]
     assert "mochi:mochi" in mount.withheld
 
 
 def test_a_stubbed_app_server_is_not_duplicated(tmp_path, monkeypatch):
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
     spec = _spec(dict(PINNED))
     monkeypatch.setattr(session_mcp, "_agent_spec_for", lambda *a, **k: spec)
@@ -136,12 +136,12 @@ def test_a_stubbed_app_server_is_not_duplicated(tmp_path, monkeypatch):
         "mochi--mochi", work_dir=tmp_path, existing_names={"mochi:mochi"}
     ).elements
 
-    assert [e["name"] for e in elements] == ["kirocrew-core"]
+    assert [e["name"] for e in elements] == ["ajcrew-core"]
 
 
 def test_unreadable_settings_withhold_the_app_servers_too(tmp_path, monkeypatch):
     """The withheld verdicts cover every server the function would have mounted."""
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
     unreadable = session_mcp.NativeSettingsUnreadable(
         session_mcp.NATIVE_SOURCE_PROJECT, tmp_path / "settings.json"
@@ -167,15 +167,15 @@ def _write_manifest(root, name, servers):
 
 
 def test_only_host_cli_servers_of_builtin_owned_apps_are_launches(tmp_path, monkeypatch):
-    from kiro_crew.apps import execution, manager
+    from aj_crew.apps import execution, manager
 
     _write_manifest(
-        tmp_path, "mochi", {"mochi": {"command": "kirocrew", "args": ["app", "mcp", "mochi"]}}
+        tmp_path, "mochi", {"mochi": {"command": "ajcrew", "args": ["app", "mcp", "mochi"]}}
     )
     _write_manifest(tmp_path, "ownbin", {"srv": {"command": "/opt/ownbin", "args": []}})
-    _write_manifest(tmp_path, "remote", {"srv": {"command": "kirocrew", "url": "http://x"}})
-    _write_manifest(tmp_path, "badargs", {"srv": {"command": "kirocrew", "args": "app"}})
-    _write_manifest(tmp_path, "shadowed", {"srv": {"command": "kirocrew", "args": ["app"]}})
+    _write_manifest(tmp_path, "remote", {"srv": {"command": "ajcrew", "url": "http://x"}})
+    _write_manifest(tmp_path, "badargs", {"srv": {"command": "ajcrew", "args": "app"}})
+    _write_manifest(tmp_path, "shadowed", {"srv": {"command": "ajcrew", "args": ["app"]}})
     monkeypatch.setattr(execution, "_builtin_manifest_sources", lambda: (tmp_path.resolve(),))
     monkeypatch.setattr(manager, "builtin_owns_installed", lambda name: name != "shadowed")
 
@@ -187,10 +187,10 @@ def test_only_host_cli_servers_of_builtin_owned_apps_are_launches(tmp_path, monk
 def test_shipped_mochi_manifest_is_a_host_cli_launch():
     """Pin the real manifest: if Mochi stops shipping a host-CLI server this test
     says so, rather than the element silently disappearing."""
-    from kiro_crew.apps import execution
+    from aj_crew.apps import execution
 
     with pytest.MonkeyPatch.context() as mp:
-        from kiro_crew.apps import manager
+        from aj_crew.apps import manager
 
         mp.setattr(manager, "builtin_owns_installed", lambda name: True)
         launches = execution.builtin_app_host_cli_mcp_launches()

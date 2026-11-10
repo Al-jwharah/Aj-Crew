@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.channel_history import ChannelHistory, HistoryEntry
+from aj_crew.channel_history import ChannelHistory, HistoryEntry
 
 # Tests here assert the SHAPE of a built turn (e.g. that it opens with the user's
 # text), so the host's own free memory must not be an input: see the fixture for
@@ -111,8 +111,8 @@ class TestNoThreadReminder:
 
     def test_no_reminder_on_follow_up(self):
         """Follow-up messages should NOT inject thread reminder — trust ACP."""
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.history import ConversationLog
+        from aj_crew.context import ContextBuilder
+        from aj_crew.history import ConversationLog
 
         log = MagicMock(spec=ConversationLog)
         log.recent.return_value = [
@@ -130,8 +130,8 @@ class TestNoThreadReminder:
 
     def test_no_reminder_on_new_session(self):
         """New sessions get full history via build_session_context, not reminder."""
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.history import ConversationLog
+        from aj_crew.context import ContextBuilder
+        from aj_crew.history import ConversationLog
 
         log = MagicMock(spec=ConversationLog)
         log.recent.return_value = [
@@ -147,7 +147,7 @@ class TestNoThreadReminder:
         assert "[Recent thread context" not in msg
 
     def test_no_reminder_without_conversation_log(self):
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         cb = ContextBuilder()
         msg, _ = cb.build_message(
@@ -173,7 +173,7 @@ class TestThreadTsWiring:
         return h
 
     def test_build_message_passes_thread_ts_to_channel_history(self):
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         mock_ch = MagicMock(spec=ChannelHistory, wraps=self._three_places())
 
@@ -193,7 +193,7 @@ class TestThreadTsWiring:
         mock_ch.context_for.assert_called_once_with("C1", thread_ts="t123")
 
     def test_build_message_no_thread_ts_passes_none(self):
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         mock_ch = MagicMock(spec=ChannelHistory, wraps=self._three_places())
 

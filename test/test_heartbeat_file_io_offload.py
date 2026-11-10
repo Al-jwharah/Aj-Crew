@@ -8,7 +8,7 @@ Two sites are pinned.
    the gateway event-loop thread". Same file, same critical section, opposite
    treatment — and unlike the rewrite, the read runs on EVERY tick for the life
    of the process.
-2. ``start()`` seeds the file on the gateway boot path, before KIROCREW_READY.
+2. ``start()`` seeds the file on the gateway boot path, before AJCREW_READY.
 
 ``workspace_dir()`` is operator-configurable and routinely sits on a synced or
 network volume, so neither call is guaranteed to be a RAM-speed syscall. A stall
@@ -28,8 +28,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew.heartbeat as hb_mod
-from kiro_crew.heartbeat import _HEADER, HeartbeatService
+import aj_crew.heartbeat as hb_mod
+from aj_crew.heartbeat import _HEADER, HeartbeatService
 
 
 def _spy(monkeypatch: pytest.MonkeyPatch, method: str, target: Path, sink: list[str]) -> None:

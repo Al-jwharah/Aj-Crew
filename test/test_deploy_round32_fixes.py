@@ -1,6 +1,6 @@
 """R32 regression tests (round-32 Codex findings on d63c580).
 
-F1: shell reaper must verify the distribution's kirocrew:site tag before
+F1: shell reaper must verify the distribution's ajcrew:site tag before
     disable/delete (manifest distribution_id is attacker-writable).
 F2: DEPLOY policy must grant cloudfront:DeleteOriginAccessControl — the
     user-invoked destroy() path calls it; without the grant every destroy
@@ -10,11 +10,11 @@ F3: fullstack policy must grant iam:GetPolicy on the boundary ARN — the R29
 """
 from pathlib import Path
 
-from kiro_crew.deploy import iam as iam_mod
+from aj_crew.deploy import iam as iam_mod
 
 REPO = Path(__file__).resolve().parents[1]
 REAPER_SH = (
-    REPO / "src" / "kiro_crew" / "deploy" / "skills" / "artifact-deploy"
+    REPO / "src" / "aj_crew" / "deploy" / "skills" / "artifact-deploy"
     / "scripts" / "reaper.sh"
 )
 
@@ -39,7 +39,7 @@ class TestF1ReaperShellDistTagGate:
         block = src.split("list-tags-for-resource", 1)[1][:900]
         assert "TAG_LOOKUP_FAILED" in src, "lookup failure must not pass the gate"
         assert "continue" in block, "mismatch must skip (fail closed), not proceed"
-        assert 'kirocrew:site' in src.split("R32 F1", 1)[1][:1200]
+        assert 'ajcrew:site' in src.split("R32 F1", 1)[1][:1200]
 
 
 class TestF2DeployPolicyOacDelete:

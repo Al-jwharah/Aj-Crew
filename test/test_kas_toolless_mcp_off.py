@@ -1,7 +1,7 @@
 """A KAS process spawned for a tool-less agent switches its MCP servers off.
 
 KAS starts every ``mcp.json`` server for each process even when the agent sets
-``includeMcpJson: false``, so each ``kirocrew-lite`` helper started a new copy of
+``includeMcpJson: false``, so each ``ajcrew-lite`` helper started a new copy of
 the user's servers. The runtime now sends ``_kiro/mcp/toggle {enabled: false}``
 before any session exists, and only for a spec that mounts nothing.
 """
@@ -14,10 +14,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.acp import runtime_spawn_launch as launch
-from kiro_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.acp import runtime_spawn_launch as launch
+from aj_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
 
-LITE = {"name": "kirocrew-lite", "tools": [], "mcpServers": {}, "includeMcpJson": False}
+LITE = {"name": "ajcrew-lite", "tools": [], "mcpServers": {}, "includeMcpJson": False}
 
 
 def _runtime(spec: Any, backend: str = ACP_BACKEND_KAS, *, send_fails: bool = False):
@@ -35,7 +35,7 @@ def _runtime(spec: Any, backend: str = ACP_BACKEND_KAS, *, send_fails: bool = Fa
 
     rt = SimpleNamespace(
         _acp_backend=backend,
-        _agent="kirocrew-lite",
+        _agent="ajcrew-lite",
         _projected_spawn_spec=projected,
         send_notification=send_notification,
     )

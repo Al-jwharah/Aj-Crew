@@ -50,9 +50,9 @@ mkdirSync(OUT, { recursive: true })
 const SIZE = { width: 1280, height: 800 }
 
 const CREWS = [
-  { name: 'kirocrew', kiro_agent: 'kirocrew', workspace: 'core-ws', memory_store: 'core-mem' },
-  { name: 'oncall', kiro_agent: 'kirocrew', workspace: 'oncall', memory_store: 'oncall-mem' },
-  { name: 'research', kiro_agent: 'kirocrew', workspace: 'research', memory_store: 'research-mem' },
+  { name: 'ajcrew', kiro_agent: 'ajcrew', workspace: 'core-ws', memory_store: 'core-mem' },
+  { name: 'oncall', kiro_agent: 'ajcrew', workspace: 'oncall', memory_store: 'oncall-mem' },
+  { name: 'research', kiro_agent: 'ajcrew', workspace: 'research', memory_store: 'research-mem' },
 ]
 
 /** One dialog open, held long enough to read, then dismissed. */
@@ -96,7 +96,7 @@ async function main() {
   })
   const page = await context.newPage()
   logPageProblems(page)
-  await stubDashboardApi(page, { extra: crewsApi({ crews: CREWS, defaultAgent: 'kirocrew' }) })
+  await stubDashboardApi(page, { extra: crewsApi({ crews: CREWS, defaultAgent: 'ajcrew' }) })
 
   await page.goto(`${base}/capabilities`, { waitUntil: 'domcontentloaded' })
   await page.locator('[data-testid="crew-card"]').first()

@@ -1,7 +1,7 @@
 /**
  * Build-time base path for serving the dashboard under a URL sub-path.
  *
- * `KIROCREW_BASE_PATH` is read once, when Vite builds the bundle, and becomes
+ * `AJCREW_BASE_PATH` is read once, when Vite builds the bundle, and becomes
  * Vite's `base`. Nothing reads it at runtime: the gateway serves `index.html`
  * byte-for-byte as built, so a sub-path deployment is a separate build. Unset
  * (or `/`) builds the stock root-mounted dashboard.
@@ -26,12 +26,12 @@ export function resolveBuildBase(raw) {
   const value = (raw ?? '').trim()
   if (value === '' || value === '/') return '/'
   if (!value.startsWith('/') || value.startsWith('//')) {
-    throw new Error(`KIROCREW_BASE_PATH must be an absolute path such as /proxy/kirocrew, got ${JSON.stringify(value)}`)
+    throw new Error(`AJCREW_BASE_PATH must be an absolute path such as /proxy/ajcrew, got ${JSON.stringify(value)}`)
   }
   const segments = value.split('/').filter((s) => s !== '')
   for (const segment of segments) {
     if (segment === '.' || segment === '..' || !SEGMENT_RE.test(segment)) {
-      throw new Error(`KIROCREW_BASE_PATH has an invalid segment ${JSON.stringify(segment)} in ${JSON.stringify(value)}`)
+      throw new Error(`AJCREW_BASE_PATH has an invalid segment ${JSON.stringify(segment)} in ${JSON.stringify(value)}`)
     }
   }
   return `/${segments.join('/')}/`
@@ -43,8 +43,8 @@ const VENDOR_IMPORTS = [
   ['react-dom', 'vendor/react-dom.mjs'],
   ['react-dom/client', 'vendor/react-dom-client.mjs'],
   ['react/jsx-runtime', 'vendor/react-jsx-runtime.mjs'],
-  ['@kirocrew/app-sdk', 'vendor/kirocrew-app-sdk.mjs'],
-  ['@kirocrew/app-sdk/ui', 'vendor/kirocrew-ui.mjs'],
+  ['@ajcrew/app-sdk', 'vendor/ajcrew-app-sdk.mjs'],
+  ['@ajcrew/app-sdk/ui', 'vendor/ajcrew-ui.mjs'],
   ['@tanstack/react-query', 'vendor/tanstack-react-query.mjs'],
   ['lucide-react', 'vendor/lucide-react.mjs'],
 ]

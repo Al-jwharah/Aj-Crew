@@ -29,8 +29,8 @@ describe("pane constants agree across backend, panel and this allowlist", () => 
     return [...new Set(text.match(PANE_RE) || [])].sort();
   }
 
-  it("matches src/kiro_crew/computer_use/permissions.py", () => {
-    assert.deepEqual(panesIn("src/kiro_crew/computer_use/permissions.py"), [...EXTERNAL_URLS].sort());
+  it("matches src/aj_crew/computer_use/permissions.py", () => {
+    assert.deepEqual(panesIn("src/aj_crew/computer_use/permissions.py"), [...EXTERNAL_URLS].sort());
   });
 
   it("matches website/src/pages/settings/ComputerUsePanel.tsx", () => {

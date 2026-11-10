@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 from test_snapshot import unpinnable_argv
 
-from kiro_crew import snapshot as snap
-from kiro_crew import snapshot_redact as redact
+from aj_crew import snapshot as snap
+from aj_crew import snapshot_redact as redact
 
 
 class TestAFailedRevertIsNotReportedAsSuccess:
@@ -161,7 +161,7 @@ class TestTheOutboundScrubCoversWhatItClaims:
             '{"password": ""}',
             '{"password": "changeme"}',
             '{"path": "workspace/memory/notes.md"}',
-            "kiro_crew.snapshot_redact.redact_bundle_for_egress",
+            "aj_crew.snapshot_redact.redact_bundle_for_egress",
             '{"created_at": "2026-08-14T10:00:00Z"}',
             "CREATE TABLE semantic(id INTEGER PRIMARY KEY, key TEXT, value TEXT)",
         ],

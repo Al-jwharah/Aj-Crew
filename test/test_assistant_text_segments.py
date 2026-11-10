@@ -12,10 +12,10 @@ from __future__ import annotations
 import pytest
 from chat_runner_coverage_helpers import _complete, _drive, _runner_state, _set_stream, _slot
 
-from kiro_crew.acp.types import EVENT_TEXT_CHUNK
-from kiro_crew.dashboard.chat_turn import turn_locals
-from kiro_crew.dashboard.chat_turn.turn_locals import _ChatTurn
-from kiro_crew.providers.base import LLMEvent
+from aj_crew.acp.types import EVENT_TEXT_CHUNK
+from aj_crew.dashboard.chat_turn import turn_locals
+from aj_crew.dashboard.chat_turn.turn_locals import _ChatTurn
+from aj_crew.providers.base import LLMEvent
 
 
 def _joined_bytes(monkeypatch: pytest.MonkeyPatch) -> list[int]:

@@ -10,8 +10,8 @@ from dataclasses import fields, is_dataclass
 
 import pytest
 
-from kiro_crew.config import loader
-from kiro_crew.memory_stores import (
+from aj_crew.config import loader
+from aj_crew.memory_stores import (
     UnknownMemoryStore,
     persist_member_config,
     provision_member_memory,
@@ -21,7 +21,7 @@ from kiro_crew.memory_stores import (
 
 def _write(path, sections):
     document = {
-        "agents": {"default": {"kiro_agent": "kirocrew"}},
+        "agents": {"default": {"kiro_agent": "ajcrew"}},
         "default_agent": "default",
         "workspaces": {"default": {"dir": "~/workspace"}},
         **sections,
@@ -45,7 +45,7 @@ class TestSectionConstruction:
             and any(isinstance(target, ast.Name) and target.id == "cfg" for target in node.targets)
             and isinstance(node.value, ast.Call)
         )
-        # Non-vacuity: the statement found is the KiroCrewConfig assembly itself,
+        # Non-vacuity: the statement found is the AjCrewConfig assembly itself,
         # not some smaller ``cfg = ...`` that happens to come first.
         assert isinstance(assembly.func, ast.Name) and assembly.func.id == "config_cls"
         assert len(assembly.keywords) >= 40, len(assembly.keywords)
@@ -74,9 +74,9 @@ class TestSectionConstruction:
             else {}
         )
         _write(tmp_path / "config.json", sections)
-        loader.KiroCrewConfig.load()  # Complete any one-shot marker work before the cache hit.
-        first = loader.KiroCrewConfig.load()
-        second = loader.KiroCrewConfig.load()
+        loader.AjCrewConfig.load()  # Complete any one-shot marker work before the cache hit.
+        first = loader.AjCrewConfig.load()
+        second = loader.AjCrewConfig.load()
         for field in fields(first):
             left, right = getattr(first, field.name), getattr(second, field.name)
             if is_dataclass(left):
@@ -86,7 +86,7 @@ class TestSectionConstruction:
         first.memory.decay_rates["mutated"] = 9.0
         first.memory.semantic_keys.append("mutated")
         first.dashboard.terminal["mutated"] = True
-        third = loader.KiroCrewConfig.load()
+        third = loader.AjCrewConfig.load()
         assert third == second
         assert "mutated" not in third.agent.apps_trusted
         assert "mutated" not in third.memory.decay_rates
@@ -133,13 +133,13 @@ class TestSectionConstruction:
                 "dashboard": {"model_picker_hidden_models": hidden},
             },
         )
-        cfg = loader.KiroCrewConfig.load()
+        cfg = loader.AjCrewConfig.load()
         assert cfg.agent.subagent_cwd_allowed_roots == expected_roots
         assert cfg.memory.decay_rates == expected_decay
         assert cfg.knowledge.max_ingest_file_mb == expected_mb
         assert cfg.dashboard.model_picker_hidden_models == expected_hidden
         _write(path, {"knowledge": {"max_ingest_file_mb": 99.0}})
-        fresh = loader.KiroCrewConfig.load()
+        fresh = loader.AjCrewConfig.load()
         assert fresh.memory.decay_rates == {}
         assert fresh.knowledge.max_ingest_file_mb == 99.0
         assert fresh.dashboard.model_picker_hidden_models == []
@@ -157,7 +157,7 @@ class TestSectionConstruction:
             },
         )
         for _ in range(2):
-            cfg = loader.KiroCrewConfig.load()
+            cfg = loader.AjCrewConfig.load()
             assert cfg.agent.member_dispatch is True
             assert cfg.skills.project_skills_enabled is True
             assert cfg.dashboard.default_memory_mode == "persistent"
@@ -173,7 +173,7 @@ class TestSectionConstruction:
                     "dashboard": {"default_memory_mode": "temporary"},
                 },
             )
-        fresh = loader.KiroCrewConfig.load()
+        fresh = loader.AjCrewConfig.load()
         assert fresh.skills.project_skills_enabled is False
         assert fresh.dashboard.default_memory_mode == "temporary"
         if change != "corrupt":
@@ -185,9 +185,9 @@ class TestSectionConstruction:
     ):
         pass  # Member routing does not depend on OS isolation.
         monkeypatch.setattr(loader, "config_dir", lambda: tmp_path)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        cfg = loader.KiroCrewConfig.load()
-        cfg.agents["alice"] = loader.KiroCrewAgentConfig(kiro_agent="kirocrew")
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        cfg = loader.AjCrewConfig.load()
+        cfg.agents["alice"] = loader.AjCrewAgentConfig(kiro_agent="ajcrew")
         store = provision_member_memory(cfg, "alice")
         persist_member_config(cfg, "alice", create=True)
         assert require_memory_store(store) == store

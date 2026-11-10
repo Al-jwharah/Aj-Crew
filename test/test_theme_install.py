@@ -1,7 +1,7 @@
 """Tests for theme install (directory store + tier-aware validation, L0/L1/L2).
 
-Exercises the pure helpers in ``kiro_crew.dashboard.theme_validate`` and the
-theme HTTP handlers in ``kiro_crew.dashboard.handlers.themes`` (plus the
+Exercises the pure helpers in ``aj_crew.dashboard.theme_validate`` and the
+theme HTTP handlers in ``aj_crew.dashboard.handlers.themes`` (plus the
 persona reader in ``chat_utils``) directly — the validator is where the real
 structure/security logic lives, so no aiohttp app is needed. Covers:
 
@@ -42,12 +42,12 @@ import pytest
 from theme_install_helpers import _VALID_MP3, _VALID_VARS, _make_theme, _make_tiered, _write
 
 from conftest import requires_symlinks
-from kiro_crew.dashboard.handlers.themes import (
+from aj_crew.dashboard.handlers.themes import (
     _atomic_write_theme_json,
     _clone_github,
     _copy_installed_theme,
 )
-from kiro_crew.dashboard.theme_validate import (
+from aj_crew.dashboard.theme_validate import (
     _THEME_LOADER_ICONS,
     _THEME_LOADER_ICONS_MAX,
     _THEME_MAX_FONTS,
@@ -62,7 +62,7 @@ from kiro_crew.dashboard.theme_validate import (
     _validate_persona,
     _validate_theme_dir,
 )
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 
 def _allow_pinned_source_rename_on_windows(
@@ -379,7 +379,7 @@ class TestValidateThemeDir:
 class TestFormatVersion:
     """theme.json ``formatVersion`` gate (arbiter item 1). Checked before any
     other schema error, so a forward-incompatible pack gets an honest 'needs a
-    newer KiroCrew' message rather than an opaque downstream error."""
+    newer AjCrew' message rather than an opaque downstream error."""
 
     def _fmt_theme(self, tmp_path: Path, fmt: object, *, omit: bool = False) -> Path:
         # _make_theme already writes a valid formatVersion:1 manifest; overwrite
@@ -405,7 +405,7 @@ class TestFormatVersion:
         summary, err = _validate_theme_dir(self._fmt_theme(tmp_path, 2))
         assert summary is None
         assert err is not None
-        assert "requires a newer version of Kiro Crew" in err
+        assert "requires a newer version of Aj Crew" in err
         assert "formatVersion 2" in err and "supported 1" in err
 
     @pytest.mark.parametrize("bad", ["1", 1.5, None, True])
@@ -485,8 +485,8 @@ class TestThemeInstallGovernanceAudit:
     BOTH the allowed and denied outcomes, and the audit must never wedge install."""
 
     def test_allowed_and_denied_emit_sel(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        import kiro_crew.sel as sel_mod
-        from kiro_crew.dashboard.handlers import themes as th
+        import aj_crew.sel as sel_mod
+        from aj_crew.dashboard.handlers import themes as th
 
         calls: list[dict] = []
 
@@ -513,8 +513,8 @@ class TestThemeInstallGovernanceAudit:
     def test_never_raises_when_sel_unavailable(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.sel as sel_mod
-        from kiro_crew.dashboard.handlers import themes as th
+        import aj_crew.sel as sel_mod
+        from aj_crew.dashboard.handlers import themes as th
 
         def _boom() -> object:
             raise RuntimeError("sel backend down")
@@ -586,7 +586,7 @@ class TestCopyInstalledTheme:
         # A regular file swapped for a huge one
         # after any earlier walk must not exhaust memory / land in staging —
         # the copy loop enforces a hard cumulative byte ceiling itself.
-        from kiro_crew.dashboard.theme_validate import _THEME_TOTAL_BYTES_BY_LEVEL
+        from aj_crew.dashboard.theme_validate import _THEME_TOTAL_BYTES_BY_LEVEL
 
         budget = max(_THEME_TOTAL_BYTES_BY_LEVEL.values())
         d = _make_theme(tmp_path)
@@ -606,8 +606,8 @@ class TestCopyInstalledTheme:
         # equal to (or an ancestor of) the themes dir would make the copy walk
         # recursively consume its own staging output (unbounded nesting →
         # ENAMETOOLONG → residue). Must 400 by containment, leaving no residue.
-        import kiro_crew.dashboard.handlers.themes as th_mod
-        import kiro_crew.dashboard.theme_validate as tv_mod
+        import aj_crew.dashboard.handlers.themes as th_mod
+        import aj_crew.dashboard.theme_validate as tv_mod
 
         monkeypatch.setattr(tv_mod, "config_dir", lambda: tmp_path / "cfg")
         themes_root = tv_mod._themes_dir()
@@ -627,8 +627,8 @@ class TestCopyInstalledTheme:
         # The containment guard must return 400 with the source AND a sibling
         # file intact and no staging residue. Status alone is not enough: a
         # reject-after-delete implementation would still return 400.
-        import kiro_crew.dashboard.handlers.themes as th_mod
-        import kiro_crew.dashboard.theme_validate as tv_mod
+        import aj_crew.dashboard.handlers.themes as th_mod
+        import aj_crew.dashboard.theme_validate as tv_mod
 
         monkeypatch.setattr(tv_mod, "config_dir", lambda: tmp_path / "cfg")
         themes_root = tv_mod._themes_dir()
@@ -656,8 +656,8 @@ class TestCopyInstalledTheme:
         # The source identity is pinned before lock acquisition. If the source
         # moves beneath dest in that window, promotion restores the displaced
         # tree and rejects the install without deleting source bytes.
-        import kiro_crew.dashboard.handlers.themes as th_mod
-        import kiro_crew.dashboard.theme_validate as tv_mod
+        import aj_crew.dashboard.handlers.themes as th_mod
+        import aj_crew.dashboard.theme_validate as tv_mod
 
         monkeypatch.setattr(tv_mod, "config_dir", lambda: tmp_path / "cfg")
         themes_root = tv_mod._themes_dir()
@@ -689,8 +689,8 @@ class TestCopyInstalledTheme:
     def test_source_decoy_swap_while_waiting_for_lock_is_preserved(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.dashboard.handlers.themes as th_mod
-        import kiro_crew.dashboard.theme_validate as tv_mod
+        import aj_crew.dashboard.handlers.themes as th_mod
+        import aj_crew.dashboard.theme_validate as tv_mod
 
         monkeypatch.setattr(tv_mod, "config_dir", lambda: tmp_path / "cfg")
         themes_root = tv_mod._themes_dir()
@@ -744,8 +744,8 @@ class TestCopyInstalledTheme:
     def test_vanished_source_pin_returns_400_before_staging(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.dashboard.handlers.themes as th_mod
-        import kiro_crew.dashboard.theme_validate as tv_mod
+        import aj_crew.dashboard.handlers.themes as th_mod
+        import aj_crew.dashboard.theme_validate as tv_mod
 
         monkeypatch.setattr(tv_mod, "config_dir", lambda: tmp_path / "cfg")
         themes_root = tv_mod._themes_dir()
@@ -777,8 +777,8 @@ class TestCopyInstalledTheme:
         probe.mkdir()
         if not (tmp_path / "caseprobe").exists():
             pytest.skip("requires a case-insensitive filesystem")
-        import kiro_crew.dashboard.handlers.themes as th_mod
-        import kiro_crew.dashboard.theme_validate as tv_mod
+        import aj_crew.dashboard.handlers.themes as th_mod
+        import aj_crew.dashboard.theme_validate as tv_mod
 
         monkeypatch.setattr(tv_mod, "config_dir", lambda: tmp_path / "cfg")
         themes_root = tv_mod._themes_dir()
@@ -821,8 +821,8 @@ class TestCopyInstalledTheme:
         # A case-sensitive filesystem cannot spell one directory two ways, so
         # the kernel's answer is stood in for by a second directory: the walk
         # must follow the answer, not the path the caller supplied.
-        import kiro_crew.dashboard.handlers.themes as th_mod
-        import kiro_crew.dashboard.theme_validate as tv_mod
+        import aj_crew.dashboard.handlers.themes as th_mod
+        import aj_crew.dashboard.theme_validate as tv_mod
 
         monkeypatch.setattr(tv_mod, "config_dir", lambda: tmp_path / "cfg")
         supplied = _make_theme(tmp_path / "typed")
@@ -858,8 +858,8 @@ class TestCopyInstalledTheme:
         # spelling that walk uses -- the pinned descriptor's -- not the one the
         # caller supplied, or a source the kernel reports as the themes
         # directory itself would pass the guard and be walked.
-        import kiro_crew.dashboard.handlers.themes as th_mod
-        import kiro_crew.dashboard.theme_validate as tv_mod
+        import aj_crew.dashboard.handlers.themes as th_mod
+        import aj_crew.dashboard.theme_validate as tv_mod
 
         monkeypatch.setattr(tv_mod, "config_dir", lambda: tmp_path / "cfg")
         supplied = _make_theme(tmp_path)
@@ -879,8 +879,8 @@ class TestCopyInstalledTheme:
         # nothing better than the caller's spelling; the read-side check on
         # every file still decides, so the install proceeds rather than
         # refusing every local source on such a host.
-        import kiro_crew.dashboard.handlers.themes as th_mod
-        import kiro_crew.dashboard.theme_validate as tv_mod
+        import aj_crew.dashboard.handlers.themes as th_mod
+        import aj_crew.dashboard.theme_validate as tv_mod
 
         monkeypatch.setattr(tv_mod, "config_dir", lambda: tmp_path / "cfg")
         src = _make_theme(tmp_path)
@@ -906,8 +906,8 @@ class TestCopyInstalledTheme:
         # source dir — otherwise content swapped in after validation gets
         # promoted unvalidated. Pin the order by capturing the path
         # _validate_theme_dir receives during a real _do_install.
-        import kiro_crew.dashboard.handlers.themes as th_mod
-        import kiro_crew.dashboard.theme_validate as tv_mod
+        import aj_crew.dashboard.handlers.themes as th_mod
+        import aj_crew.dashboard.theme_validate as tv_mod
 
         monkeypatch.setattr(tv_mod, "config_dir", lambda: tmp_path / "cfg")
         src = _make_theme(tmp_path)
@@ -938,7 +938,7 @@ class TestCopyInstalledTheme:
 
 class TestInstalledStore:
     def test_dir_under_config(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        import kiro_crew.dashboard.theme_validate as tv_mod
+        import aj_crew.dashboard.theme_validate as tv_mod
 
         monkeypatch.setattr(tv_mod, "config_dir", lambda: tmp_path)
         assert _installed_theme_dir("lcars") == tmp_path / "themes" / "lcars"
@@ -946,7 +946,7 @@ class TestInstalledStore:
     def test_install_copy_and_remove_roundtrip(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.dashboard.theme_validate as tv_mod
+        import aj_crew.dashboard.theme_validate as tv_mod
 
         monkeypatch.setattr(tv_mod, "config_dir", lambda: tmp_path)
         src = _make_theme(tmp_path)
@@ -969,8 +969,8 @@ class TestInstalledStore:
         # before promotion): if an editor custom record <slug>.json already
         # exists, installing a dir with the same slug must 409 and leave no
         # staging residue — never both a .json record and a <slug>/ dir.
-        import kiro_crew.dashboard.handlers.themes as th_mod
-        import kiro_crew.dashboard.theme_validate as tv_mod
+        import aj_crew.dashboard.handlers.themes as th_mod
+        import aj_crew.dashboard.theme_validate as tv_mod
 
         monkeypatch.setattr(tv_mod, "config_dir", lambda: tmp_path)
         src = _make_theme(tmp_path)
@@ -1192,7 +1192,7 @@ class TestPureContentHelpers:
 
 class TestResolveThemeAsset:
     def _install(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-        import kiro_crew.dashboard.theme_validate as tv_mod
+        import aj_crew.dashboard.theme_validate as tv_mod
 
         monkeypatch.setattr(tv_mod, "config_dir", lambda: tmp_path)
         theme = _installed_theme_dir("mytheme")
@@ -1240,7 +1240,7 @@ class TestResolveThemeAsset:
 
 class TestInstalledThemePersona:
     def _setup(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, text: str) -> None:
-        import kiro_crew.config.loader as loader_mod
+        import aj_crew.config.loader as loader_mod
 
         monkeypatch.setattr(loader_mod, "config_dir", lambda: tmp_path)
         theme = tmp_path / "themes" / "mytheme"
@@ -1248,13 +1248,13 @@ class TestInstalledThemePersona:
         (theme / "persona.md").write_text(text, encoding="utf-8")
 
     def test_reads_persona(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.dashboard.chat_utils import _installed_theme_persona
+        from aj_crew.dashboard.chat_utils import _installed_theme_persona
 
         self._setup(tmp_path, monkeypatch, _VALID_PERSONA)
         assert _installed_theme_persona("mytheme") == _VALID_PERSONA
 
     def test_caps_length(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.dashboard.chat_utils import _installed_theme_persona
+        from aj_crew.dashboard.chat_utils import _installed_theme_persona
 
         self._setup(tmp_path, monkeypatch, "y" * 5000)
         assert len(_installed_theme_persona("mytheme")) == 2000
@@ -1262,7 +1262,7 @@ class TestInstalledThemePersona:
     def test_bad_slug_returns_empty(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.dashboard.chat_utils import _installed_theme_persona
+        from aj_crew.dashboard.chat_utils import _installed_theme_persona
 
         self._setup(tmp_path, monkeypatch, _VALID_PERSONA)
         assert _installed_theme_persona("../evil") == ""
@@ -1270,8 +1270,8 @@ class TestInstalledThemePersona:
     def test_missing_file_returns_empty(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.config.loader as loader_mod
-        from kiro_crew.dashboard.chat_utils import _installed_theme_persona
+        import aj_crew.config.loader as loader_mod
+        from aj_crew.dashboard.chat_utils import _installed_theme_persona
 
         monkeypatch.setattr(loader_mod, "config_dir", lambda: tmp_path)
         assert _installed_theme_persona("nosuchtheme") == ""
@@ -1316,7 +1316,7 @@ class TestDoSCeilings:
     so a normal theme trips them deterministically without giant fixtures)."""
 
     def test_entry_count_ceiling(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        import kiro_crew.dashboard.theme_validate as tv_mod
+        import aj_crew.dashboard.theme_validate as tv_mod
 
         monkeypatch.setattr(tv_mod, "_THEME_ENTRIES_BY_LEVEL", {0: 1, 1: 1, 2: 1})
         summary, err = _validate_theme_dir(_make_theme(tmp_path))
@@ -1324,7 +1324,7 @@ class TestDoSCeilings:
         assert err is not None and "too many files" in err
 
     def test_total_bytes_ceiling(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        import kiro_crew.dashboard.theme_validate as tv_mod
+        import aj_crew.dashboard.theme_validate as tv_mod
 
         monkeypatch.setattr(tv_mod, "_THEME_TOTAL_BYTES_BY_LEVEL", {0: 10, 1: 10, 2: 10})
         summary, err = _validate_theme_dir(_make_theme(tmp_path))
@@ -1401,8 +1401,8 @@ class TestDeleteLock:
         import asyncio
         import types
 
-        import kiro_crew.dashboard.theme_validate as tv_mod
-        from kiro_crew.dashboard.handlers import themes as themes_mod
+        import aj_crew.dashboard.theme_validate as tv_mod
+        from aj_crew.dashboard.handlers import themes as themes_mod
 
         monkeypatch.setattr(tv_mod, "config_dir", lambda: tmp_path)
         slug = "locktheme"
@@ -1445,7 +1445,7 @@ class TestServingReadNolink:
     through _read_theme_bytes_nolink (O_NOFOLLOW + containment)."""
 
     def _installed(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-        import kiro_crew.dashboard.theme_validate as tv_mod
+        import aj_crew.dashboard.theme_validate as tv_mod
 
         monkeypatch.setattr(tv_mod, "config_dir", lambda: tmp_path)
         d = tv_mod._installed_theme_dir("mypack")
@@ -1454,7 +1454,7 @@ class TestServingReadNolink:
         return d
 
     def test_regular_asset_served(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.dashboard.handlers.themes import _read_theme_bytes_nolink
+        from aj_crew.dashboard.handlers.themes import _read_theme_bytes_nolink
 
         d = self._installed(tmp_path, monkeypatch)
         data = _read_theme_bytes_nolink("mypack", d / "overlays" / "fx.html")
@@ -1463,7 +1463,7 @@ class TestServingReadNolink:
     def test_symlink_swapped_asset_refused(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.dashboard.handlers.themes import _read_theme_bytes_nolink
+        from aj_crew.dashboard.handlers.themes import _read_theme_bytes_nolink
 
         d = self._installed(tmp_path, monkeypatch)
         secret = tmp_path / "secret.txt"
@@ -1495,7 +1495,7 @@ class TestCssParserCorpus:
         return json.loads(corpus_path.read_text(encoding="utf-8"))["cases"]
 
     def test_install_verdicts_match_corpus(self) -> None:
-        from kiro_crew.dashboard.theme_validate import _validate_overrides_css
+        from aj_crew.dashboard.theme_validate import _validate_overrides_css
 
         mismatches = []
         for case in self._corpus():

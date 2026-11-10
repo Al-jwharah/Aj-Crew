@@ -1,4 +1,4 @@
-"""``kirocrew learn add`` validates and stores a rule like MCP and REST do.
+"""``ajcrew learn add`` validates and stores a rule like MCP and REST do.
 
 ``POST /api/lessons`` and the ``learn_add`` MCP tool both validate against
 ``LEARN_ADD_SCHEMA``, which sanitizes the text and caps the SANITIZED ``rule``
@@ -17,10 +17,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew import cli_commands
-from kiro_crew.constants import MAX_SHORT_STRING
-from kiro_crew.validation import LEARN_ADD_SCHEMA, validate_tool_args
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import cli_commands
+from aj_crew.constants import MAX_SHORT_STRING
+from aj_crew.validation import LEARN_ADD_SCHEMA, validate_tool_args
+from aj_crew.vector_memory import VectorMemoryStore
 
 
 def _add_args(rule: str, negative: str | None = None) -> argparse.Namespace:
@@ -56,7 +56,7 @@ def test_cli_add_refuses_an_over_limit_rule_before_any_store(capsys, extra) -> N
     with (
         patch.object(cli_commands, "VectorMemoryStore", vs_cls),
         patch.object(cli_commands, "LessonStore", return_value=MagicMock()),
-        patch.object(cli_commands.KiroCrewConfig, "load", return_value=MagicMock()),
+        patch.object(cli_commands.AjCrewConfig, "load", return_value=MagicMock()),
         pytest.raises(SystemExit) as exc,
     ):
         cli_commands._learn(args)
@@ -73,7 +73,7 @@ def test_cli_add_refuses_an_over_limit_negative_clause(capsys) -> None:
     with (
         patch.object(cli_commands, "VectorMemoryStore", vs_cls),
         patch.object(cli_commands, "LessonStore", return_value=MagicMock()),
-        patch.object(cli_commands.KiroCrewConfig, "load", return_value=MagicMock()),
+        patch.object(cli_commands.AjCrewConfig, "load", return_value=MagicMock()),
         pytest.raises(SystemExit) as exc,
     ):
         cli_commands._learn(args)
@@ -91,7 +91,7 @@ def test_cli_add_saves_a_rule_exactly_at_the_cap(tmp_path, capsys) -> None:
     with (
         patch.object(cli_commands, "VectorMemoryStore", return_value=store),
         patch.object(cli_commands, "LessonStore", return_value=MagicMock()),
-        patch.object(cli_commands.KiroCrewConfig, "load", return_value=MagicMock()),
+        patch.object(cli_commands.AjCrewConfig, "load", return_value=MagicMock()),
     ):
         cli_commands._learn(args)
     assert "Saved:" in capsys.readouterr().out
@@ -112,7 +112,7 @@ def test_cli_add_stores_the_sanitized_rule_not_the_raw_over_cap_form(tmp_path, c
     with (
         patch.object(cli_commands, "VectorMemoryStore", return_value=store),
         patch.object(cli_commands, "LessonStore", return_value=MagicMock()),
-        patch.object(cli_commands.KiroCrewConfig, "load", return_value=MagicMock()),
+        patch.object(cli_commands.AjCrewConfig, "load", return_value=MagicMock()),
     ):
         cli_commands._learn(args)
     assert "Saved:" in capsys.readouterr().out

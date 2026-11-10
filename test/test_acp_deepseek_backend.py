@@ -24,12 +24,12 @@ from acp_deepseek_backend_helpers import (  # noqa: F401 -- fixtures are used by
 )
 
 from conftest import make_dir_link
-from kiro_crew.acp import launch as launch_mod
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.harness import deepseek as deepseek_mod
-from kiro_crew.acp.harness import pi as pi_mod
-from kiro_crew.acp.transport_errors import AcpError
-from kiro_crew.acp_backends import (
+from aj_crew.acp import launch as launch_mod
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.harness import deepseek as deepseek_mod
+from aj_crew.acp.harness import pi as pi_mod
+from aj_crew.acp.transport_errors import AcpError
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_DEEPSEEK,
     ACP_BACKEND_KIRO,
@@ -182,7 +182,7 @@ def _good_gate_marker(module: str = "/sealed/gate.mjs", names: tuple[str, ...] =
     its child.
     """
     return {
-        "plugin": "kiro-crew-tool-gate",
+        "plugin": "aj-crew-tool-gate",
         "nonce": "n1",
         "module": module,
         "approval": {
@@ -343,7 +343,7 @@ def test_the_probe_hands_the_plugin_a_canary_under_each_vault_fed_name_and_never
     boots a third-party host. The names ride in their own variable so the marker cannot
     claim a different set.
     """
-    from kiro_crew.acp import client as client_module
+    from aj_crew.acp import client as client_module
 
     names = ("DEEPSEEK_API_KEY", "PROBE_SECRET")
 
@@ -386,7 +386,7 @@ def test_the_probe_refuses_a_marker_that_checked_a_different_name_set(
 
 def test_an_oversize_but_otherwise_valid_marker_is_refused(tmp_path, monkeypatch) -> None:
     """Size is checked before parsing, so a child cannot allocate an unbounded object."""
-    from kiro_crew.acp import client as client_module
+    from aj_crew.acp import client as client_module
 
     def write_marker(path):
         marker = {
@@ -404,7 +404,7 @@ def test_an_oversize_but_otherwise_valid_marker_is_refused(tmp_path, monkeypatch
 
 def test_a_marker_that_grows_past_its_fstat_size_is_refused(tmp_path, monkeypatch) -> None:
     """One extra byte rejects a file changed between metadata capture and its read."""
-    from kiro_crew.acp import client as client_module
+    from aj_crew.acp import client as client_module
 
     def write_marker(path):
         marker = _good_gate_marker(_gate_extension_path(tmp_path).as_uri())
@@ -488,7 +488,7 @@ def test_the_routing_is_a_verified_gate_extension_and_therefore_enforced() -> No
     There is no setting to seed, so not ``VERIFIED_SEEDED_SETTINGS``: routing comes from
     a composed plugin on ``tools/pre-execute`` plus a read-back before the first prompt.
     """
-    from kiro_crew import acp_tool_gate as gate
+    from aj_crew import acp_tool_gate as gate
 
     assert routing_for(ACP_BACKEND_DEEPSEEK) is Routing.VERIFIED_GATE_EXTENSION
     assert gate.is_enforced(ACP_BACKEND_DEEPSEEK) is True
@@ -506,12 +506,12 @@ def test_the_gate_is_read_back_through_its_load_marker() -> None:
     The profile has no registry to ask the way pi is asked. Each marker field refuses
     one failure: a foreign marker, a stale one, or another plugin's.
     """
-    from kiro_crew import acp_tool_gate as gate
-    from kiro_crew.acp_backends import Readback, gate_readback_for
+    from aj_crew import acp_tool_gate as gate
+    from aj_crew.acp_backends import Readback, gate_readback_for
 
     assert gate_readback_for(ACP_BACKEND_DEEPSEEK) is Readback.LOAD_MARKER
     probe = gate.gate_probe_command_for(ACP_BACKEND_DEEPSEEK)
-    assert probe == "kiro-crew-tool-gate"
+    assert probe == "aj-crew-tool-gate"
     good = _good_gate_marker()
     assert gate.gate_marker_issue(ACP_BACKEND_DEEPSEEK, good, "/sealed/gate.mjs", "n1") == ""
     # Absent, foreign, stale, and from another file all refuse.
@@ -536,7 +536,7 @@ def test_the_marker_must_report_the_composed_tool_presentation_as_native() -> No
     composed mode is checked. Under ``ptc`` or ``both`` one ``run_code`` call reaches
     Node's APIs where the gate cannot read.
     """
-    from kiro_crew import acp_tool_gate as gate
+    from aj_crew import acp_tool_gate as gate
 
     good = _good_gate_marker()
     assert gate.gate_marker_issue(ACP_BACKEND_DEEPSEEK, good, "/sealed/gate.mjs", "n1") == ""
@@ -561,7 +561,7 @@ def test_the_marker_must_prove_each_vault_fed_name_is_absent_from_a_harness_chil
     child and records each name. Crew refuses a leaked name, an unset name, a different
     name set, or a child that could not run.
     """
-    from kiro_crew import acp_tool_gate as gate
+    from aj_crew import acp_tool_gate as gate
 
     names = ("DEEPSEEK_API_KEY",)
     good = _good_gate_marker(names=names)
@@ -618,7 +618,7 @@ def test_the_marker_must_prove_each_vault_fed_name_is_absent_from_a_harness_chil
 
 def test_the_shipped_plugin_snapshots_the_tools_mode_and_proves_the_child_scrub() -> None:
     """The plugin's marker carries both new snapshots, taken through the harness's own seams."""
-    from kiro_crew.acp import client as client_module
+    from aj_crew.acp import client as client_module
 
     source = pathlib.Path(client_module.deepseek_gate_extension_path()).read_text()
     # The subprocess service is injected, so `apply` running is itself the evidence
@@ -627,7 +627,7 @@ def test_the_shipped_plugin_snapshots_the_tools_mode_and_proves_the_child_scrub(
     assert 'export const inject = ["tools", "approval", "appReady", "subprocess"]' in source
     assert "ctx.subprocess.spawn(" in source
     assert "child_process" not in source
-    assert "KIROCREW_DSH_GATE_SCRUB_NAMES" in source
+    assert "AJCREW_DSH_GATE_SCRUB_NAMES" in source
     assert "defaultMode" in source
     # The marker is PUBLISHED atomically -- written beside its path and renamed into
     # place -- because the probe now polls for it while the harness is still alive.
@@ -644,7 +644,7 @@ def test_the_session_writes_no_forensic_marker_of_its_own(monkeypatch, tmp_path)
     The session sets no marker variable, so the plugin writes nothing; a session marker
     would have no reader and only add a refusal path.
     """
-    from kiro_crew.acp import client as client_module
+    from aj_crew.acp import client as client_module
 
     rig = _DeepseekLaunchRig(monkeypatch, tmp_path)
     rig.run()
@@ -692,7 +692,7 @@ def test_the_shipped_gate_plugin_matches_the_pinned_digest() -> None:
     """
     import hashlib
 
-    from kiro_crew.acp import client as client_module
+    from aj_crew.acp import client as client_module
 
     path = client_module.deepseek_gate_extension_path()
     with open(path, "rb") as fh:
@@ -789,13 +789,13 @@ def test_the_one_publish_block_leaves_the_mode_to_the_dacl_on_windows(
     monkeypatch, tmp_path
 ) -> None:
     """The one Windows guard: ``chmod`` is inert there, and the directory DACL is the seal."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     chmods: list[tuple] = []
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
     monkeypatch.setattr(pi_mod.os, "chmod", lambda *args, **_kw: chmods.append(args))
     target = pi_mod._publish_gate_artifact(
-        str(tmp_path), "kirocrew_dsh_gate_1.mjs", b"// gate\n", stage_prefix="kirocrew_dsh_gate_1_"
+        str(tmp_path), "ajcrew_dsh_gate_1.mjs", b"// gate\n", stage_prefix="ajcrew_dsh_gate_1_"
     )
     assert pathlib.Path(target).read_bytes() == b"// gate\n"
     assert chmods == [], "the publish block chmods a file where the mode means nothing"
@@ -803,7 +803,7 @@ def test_the_one_publish_block_leaves_the_mode_to_the_dacl_on_windows(
 
 def test_the_marker_waits_until_every_profile_entry_has_settled() -> None:
     """A pre-readiness snapshot can race the ACP bridge and refuse every clean boot."""
-    from kiro_crew.acp import client as client_module
+    from aj_crew.acp import client as client_module
 
     source = pathlib.Path(client_module.deepseek_gate_extension_path()).read_text()
     assert 'export const inject = ["tools", "approval", "appReady", "subprocess"]' in source
@@ -822,13 +822,13 @@ def test_the_per_launch_patch_composes_only_the_sealed_plugin() -> None:
     """
     import json as _json
 
-    from kiro_crew.acp import client as client_module
+    from aj_crew.acp import client as client_module
 
     sealed = client_module._seal_deepseek_gate_extension()
     patch = client_module._write_deepseek_gate_patch(sealed)
     body = open(patch, encoding="utf-8").read()
     assert "- insert:" in body
-    assert "id: kiro-crew-tool-gate" in body
+    assert "id: aj-crew-tool-gate" in body
     assert f"name: {_json.dumps(sealed)}" in body
 
 
@@ -839,7 +839,7 @@ def test_the_patch_pins_the_tool_presentation_to_native() -> None:
     passing ``tools/pre-execute``. ``native`` is the default; the pin stops an operator
     layer from changing it.
     """
-    from kiro_crew.acp import client as client_module
+    from aj_crew.acp import client as client_module
 
     sealed = client_module._seal_deepseek_gate_extension()
     body = open(client_module._write_deepseek_gate_patch(sealed), encoding="utf-8").read()
@@ -855,7 +855,7 @@ def test_the_patch_reasserts_the_approval_service_and_acp_bridge() -> None:
     without pretending they can overwrite a replaced module. The marker's strict
     owner check is the fail-closed half for that shape.
     """
-    from kiro_crew.acp import client as client_module
+    from aj_crew.acp import client as client_module
 
     sealed = client_module._seal_deepseek_gate_extension()
     body = open(client_module._write_deepseek_gate_patch(sealed), encoding="utf-8").read()
@@ -879,16 +879,16 @@ def test_a_spawn_that_cannot_resolve_its_binary_leaves_no_scratch_behind(
     """
     import asyncio
 
-    from kiro_crew import agent_scratch
-    from kiro_crew.acp import client as client_module
+    from aj_crew import agent_scratch
+    from aj_crew.acp import client as client_module
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     root = agent_scratch.scratch_root()
     root.mkdir(mode=0o700, parents=True, exist_ok=True)
     before = {p.name for p in root.iterdir()}
 
     # The workspace sits beside the data home, not around it: on macOS the kiro arm
-    # first refuses a workspace that contains the voice runtime under KIROCREW_HOME,
+    # first refuses a workspace that contains the voice runtime under AJCREW_HOME,
     # and that refusal is a RuntimeError, raised before the binary is resolved.
     client = AcpClient(work_dir=tmp_path / "work")
     # The resolution the kiro arm performs, made to fail the way a host without
@@ -916,10 +916,10 @@ def _deepseek_readback_spawn(tmp_path, monkeypatch, *, readback):
     """
     import asyncio
 
-    from kiro_crew import agent_scratch
-    from kiro_crew.acp import client as client_module
+    from aj_crew import agent_scratch
+    from aj_crew.acp import client as client_module
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     root = agent_scratch.scratch_root()
     root.mkdir(mode=0o700, parents=True, exist_ok=True)
     before = {p.name for p in root.iterdir()}
@@ -1003,7 +1003,7 @@ def test_a_refused_read_back_removes_its_own_probe_window(tmp_path, monkeypatch)
         tmp_path, monkeypatch, readback=("the gate did not load", "reinstall it")
     )
 
-    from kiro_crew.acp.client import AcpToolGateUnroutable
+    from aj_crew.acp.client import AcpToolGateUnroutable
 
     with pytest.raises(AcpToolGateUnroutable):
         asyncio_mod.run(client._spawn())
@@ -1021,8 +1021,8 @@ def test_a_session_with_no_private_window_is_started_not_refused(tmp_path, monke
     Only the probe needs a window, for its marker. The child gets the nonce (the
     tripwire keys on it) and no marker path, and the wrap's launcher is still used.
     """
-    from kiro_crew import agent_scratch
-    from kiro_crew.acp import client as client_module
+    from aj_crew import agent_scratch
+    from aj_crew.acp import client as client_module
 
     client, root, before, _wrapped, asyncio_mod = _deepseek_readback_spawn(
         tmp_path, monkeypatch, readback=("", "")

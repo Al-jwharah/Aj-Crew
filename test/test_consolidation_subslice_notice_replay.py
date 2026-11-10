@@ -22,13 +22,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import history as history_mod
-from kiro_crew import memory_stores
-from kiro_crew.history import (
+from aj_crew import history as history_mod
+from aj_crew import memory_stores
+from aj_crew.history import (
     _CONSOLIDATION_PROMPT_BUDGET_CHARS,
     ConversationLog,
 )
-from kiro_crew.vector_memory import consolidation_source_digest
+from aj_crew.vector_memory import consolidation_source_digest
 
 KEY = "dashboard:chat-subslice-notice"
 
@@ -100,11 +100,11 @@ def _inject_head_notice(log: ConversationLog, text: str) -> None:
 
 
 def _make_consolidator(log, store):
-    from kiro_crew.context import ContextBuilder
+    from aj_crew.context import ContextBuilder
 
     memory = _dummy_memory()
     monkey = pytest.MonkeyPatch()
-    monkey.setattr("kiro_crew.context.store_of_session", lambda *_: "alice-store")
+    monkey.setattr("aj_crew.context.store_of_session", lambda *_: "alice-store")
     monkey.setattr(memory_stores, "memory_store_version", lambda *_: 2)
     monkey.setattr(ContextBuilder, "ensure_store", AsyncMock(return_value=store))
     monkey.setattr(ContextBuilder, "get_memory_for", lambda *a, **k: memory)

@@ -26,9 +26,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import part_stream
-from kiro_crew.dashboard.handlers import files as files_mod
-from kiro_crew.dashboard.handlers.files import api_upload_file
+from aj_crew.dashboard import part_stream
+from aj_crew.dashboard.handlers import files as files_mod
+from aj_crew.dashboard.handlers.files import api_upload_file
 
 #: QuickTime / MP4 family: a box length, then the ``ftyp`` box at offset 4. The
 #: brand differs between .mov ('qt  ') and .mp4 ('isom'); the box does not, and
@@ -48,7 +48,7 @@ def _make_app() -> web.Application:
 
 @pytest.fixture
 def mock_sel():
-    with patch("kiro_crew.dashboard.handlers.files._sel") as m:
+    with patch("aj_crew.dashboard.handlers.files._sel") as m:
         m.return_value = MagicMock()
         yield m.return_value
 
@@ -56,7 +56,7 @@ def mock_sel():
 @pytest.fixture
 def upload_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     target = tmp_path / "uploads"
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.files._UPLOAD_DIR", target)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.files._UPLOAD_DIR", target)
     return target
 
 
@@ -113,7 +113,7 @@ async def test_video_is_exempt_from_the_document_cap(
     test fast while still proving which ceiling the video branch consults — the
     whole point of the separate constant.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.files.upload_max_bytes", lambda: 64)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.files.upload_max_bytes", lambda: 64)
     payload = MOV_HEADER + b"\x00" * 4096
     status, body = await _post(payload, "long.mov", "video/quicktime")
     assert status == 200, body
@@ -132,7 +132,7 @@ async def test_video_over_its_own_cap_is_refused_and_leaves_nothing(
     destination by the time the cap trips, so a missing cleanup would leave a
     truncated recording in uploads/ that the composer would happily attach.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.files._MAX_VIDEO_UPLOAD_BYTES", 512)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.files._MAX_VIDEO_UPLOAD_BYTES", 512)
     status, body = await _post(MOV_HEADER + b"\x00" * 8192, "huge.mov", "video/quicktime")
     assert status == 413, body
     assert "too large" in body["error"].lower(), body
@@ -373,7 +373,7 @@ def test_video_ceiling_stays_above_the_document_cap() -> None:
     assert files_mod._MAX_VIDEO_UPLOAD_BYTES > files_mod._MAX_UPLOAD_BYTES
     # The composer's document cap is the configurable ``dashboard.upload_max_mb``;
     # its loader bound must not let it pass the video ceiling either.
-    from kiro_crew.config.sections import UPLOAD_MAX_MB_MAX
+    from aj_crew.config.sections import UPLOAD_MAX_MB_MAX
 
     assert files_mod._MAX_VIDEO_UPLOAD_BYTES >= UPLOAD_MAX_MB_MAX * 1024 * 1024
 

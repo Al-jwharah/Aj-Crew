@@ -28,13 +28,13 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.dashboard.chat_compaction_notice import (
+from aj_crew.dashboard.chat_compaction_notice import (
     deliver_channel_compaction_notice,
     notice_text,
 )
-from kiro_crew.messaging.link import ChannelLink
+from aj_crew.messaging.link import ChannelLink
 
-_NOTICE_LOGGER = "kiro_crew.dashboard.chat_compaction_notice"
+_NOTICE_LOGGER = "aj_crew.dashboard.chat_compaction_notice"
 
 
 class _SlackClient:
@@ -140,8 +140,8 @@ def _permit_governance():
     """
     permit = SimpleNamespace(permitted=True)
     with (
-        patch("kiro_crew.dashboard.chat_compaction_notice.vet_and_audit", return_value=permit),
-        patch("kiro_crew.platform.governance_profiles.vet_and_audit", return_value=permit),
+        patch("aj_crew.dashboard.chat_compaction_notice.vet_and_audit", return_value=permit),
+        patch("aj_crew.platform.governance_profiles.vet_and_audit", return_value=permit),
     ):
         yield
 
@@ -218,7 +218,7 @@ class TestSlackDelivery:
         state = _state(slack_client=client, sessions=_Sessions(slack_link=("ts-1", "C123")))
 
         with patch(
-            "kiro_crew.dashboard.chat_compaction_notice.vet_and_audit",
+            "aj_crew.dashboard.chat_compaction_notice.vet_and_audit",
             return_value=SimpleNamespace(permitted=False),
         ):
             await deliver_channel_compaction_notice(state, "slack:ts-1", 90.0, success=True)
@@ -231,7 +231,7 @@ class TestSlackDelivery:
         state = _state(slack_client=client, sessions=_Sessions(slack_link=("ts-1", "C123")))
 
         with patch(
-            "kiro_crew.dashboard.chat_compaction_notice.vet_and_audit",
+            "aj_crew.dashboard.chat_compaction_notice.vet_and_audit",
             return_value=SimpleNamespace(),
         ):
             await deliver_channel_compaction_notice(state, "slack:ts-1", 90.0, success=True)
@@ -243,7 +243,7 @@ class TestSlackDelivery:
         state = _state(slack_client=client, sessions=_Sessions(slack_link=("ts-1", "C123")))
 
         with patch(
-            "kiro_crew.dashboard.chat_compaction_notice.vet_and_audit",
+            "aj_crew.dashboard.chat_compaction_notice.vet_and_audit",
             side_effect=RuntimeError("profile unreadable"),
         ):
             await deliver_channel_compaction_notice(state, "slack:ts-1", 90.0, success=True)
@@ -283,7 +283,7 @@ class TestTransportDelivery:
 
         with _permit_governance():
             await deliver_channel_compaction_notice(
-                state, "discord:kirocrew:direct:u1", 93.0, success=True
+                state, "discord:ajcrew:direct:u1", 93.0, success=True
             )
 
         assert len(transport.sent) == 1
@@ -301,7 +301,7 @@ class TestTransportDelivery:
 
         with _permit_governance():
             await deliver_channel_compaction_notice(
-                state, "unified:kirocrew:direct:u1", 90.0, success=False
+                state, "unified:ajcrew:direct:u1", 90.0, success=False
             )
 
         assert "!compact" in transport.sent[0][1]
@@ -315,13 +315,13 @@ class TestTransportDelivery:
         # leg walks origin-then-mirror; this one now does too.
         import dataclasses
 
-        from kiro_crew.mirror_admission import sign_mirror_admission
+        from aj_crew.mirror_admission import sign_mirror_admission
 
         transport = _Transport()
         # Signed as the channel's own bind stores it: a key-named row must be.
         mirror = ChannelLink("telegram", channel_id="4242")
         mirror = dataclasses.replace(
-            mirror, admission=sign_mirror_admission("telegram:kirocrew:direct:7", mirror)
+            mirror, admission=sign_mirror_admission("telegram:ajcrew:direct:7", mirror)
         )
         state = _state(
             transport=transport,
@@ -331,7 +331,7 @@ class TestTransportDelivery:
 
         with _permit_governance():
             await deliver_channel_compaction_notice(
-                state, "telegram:kirocrew:direct:7", 91.0, success=False
+                state, "telegram:ajcrew:direct:7", 91.0, success=False
             )
 
         assert len(transport.sent) == 1
@@ -353,7 +353,7 @@ class TestTransportDelivery:
 
         with _permit_governance():
             await deliver_channel_compaction_notice(
-                state, "discord:kirocrew:direct:u1", 90.0, success=True
+                state, "discord:ajcrew:direct:u1", 90.0, success=True
             )
 
         assert transport.sent[0][0] == "origin-9"
@@ -364,7 +364,7 @@ class TestTransportDelivery:
 
         with _permit_governance():
             await deliver_channel_compaction_notice(
-                state, "discord:kirocrew:direct:u1", 90.0, success=True
+                state, "discord:ajcrew:direct:u1", 90.0, success=True
             )
 
         assert transport.sent == []
@@ -374,7 +374,7 @@ class TestTransportDelivery:
 
         with _permit_governance():
             await deliver_channel_compaction_notice(
-                state, "discord:kirocrew:direct:u1", 90.0, success=True
+                state, "discord:ajcrew:direct:u1", 90.0, success=True
             )
 
     async def test_noop_when_governance_denies(self) -> None:
@@ -386,11 +386,11 @@ class TestTransportDelivery:
 
         # The ladder resolves vet_and_audit at its source (function-local import).
         with patch(
-            "kiro_crew.platform.governance_profiles.vet_and_audit",
+            "aj_crew.platform.governance_profiles.vet_and_audit",
             return_value=SimpleNamespace(permitted=False),
         ):
             await deliver_channel_compaction_notice(
-                state, "discord:kirocrew:direct:u1", 90.0, success=True
+                state, "discord:ajcrew:direct:u1", 90.0, success=True
             )
 
         assert transport.sent == []
@@ -404,11 +404,11 @@ class TestTransportDelivery:
 
         with caplog.at_level(logging.DEBUG, logger=_NOTICE_LOGGER), _permit_governance():
             await deliver_channel_compaction_notice(
-                state, "discord:kirocrew:direct:u1", 90.0, success=True
+                state, "discord:ajcrew:direct:u1", 90.0, success=True
             )
 
         logged = [r.getMessage() for r in caplog.records if r.name == _NOTICE_LOGGER]
-        assert logged == ["compact notice: discord delivery failed for discord:kirocrew:direct:u1"]
+        assert logged == ["compact notice: discord delivery failed for discord:ajcrew:direct:u1"]
         assert transport.sent == []
 
 
@@ -447,17 +447,17 @@ class TestOriginLinkStore:
     """
 
     def _manager(self, tmp_path):
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.session import SessionManager
 
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
-            return SessionManager(KiroCrewConfig())
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
+            return SessionManager(AjCrewConfig())
 
     def test_round_trip(self, tmp_path) -> None:
         mgr = self._manager(tmp_path)
         link = ChannelLink("discord", channel_id="chan-9")
-        mgr.set_origin_link("discord:kirocrew:direct:u1", link)
-        assert mgr.get_origin_link("discord:kirocrew:direct:u1") == link
+        mgr.set_origin_link("discord:ajcrew:direct:u1", link)
+        assert mgr.get_origin_link("discord:ajcrew:direct:u1") == link
 
     def test_absent_returns_none(self, tmp_path) -> None:
         assert self._manager(tmp_path).get_origin_link("discord:nope") is None
@@ -484,7 +484,7 @@ class TestOriginLinkStore:
         assert mgr.get_origin_link("discord:k") is None
 
     def test_bounded_against_unevicted_growth(self, tmp_path) -> None:
-        from kiro_crew.session import _MAX_ORIGIN_LINKS
+        from aj_crew.session import _MAX_ORIGIN_LINKS
 
         mgr = self._manager(tmp_path)
         for i in range(_MAX_ORIGIN_LINKS + 10):

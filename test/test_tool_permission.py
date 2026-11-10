@@ -26,27 +26,27 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import llm_helpers, name_grant, permission_floor, task_executor, tool_permission
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.agent_sdk.spec_hooks import TurnSpecHooks
-from kiro_crew.constants import DENY_CAUSE_POLICY, DENY_CAUSE_SURFACE_POLICY
-from kiro_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, TOOL_DENY, ToolHookResult
-from kiro_crew.permission_floor import OUTCOME_REJECTED_TRANSPORT_FLOOR
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
-from kiro_crew.subagent import (
+from aj_crew import llm_helpers, name_grant, permission_floor, task_executor, tool_permission
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.agent_sdk.spec_hooks import TurnSpecHooks
+from aj_crew.constants import DENY_CAUSE_POLICY, DENY_CAUSE_SURFACE_POLICY
+from aj_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, TOOL_DENY, ToolHookResult
+from aj_crew.permission_floor import OUTCOME_REJECTED_TRANSPORT_FLOOR
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+from aj_crew.subagent import (
     _HEADLESS_DENY_REASON,
     _LOW_FIDELITY_DENY_REASON,
     SubagentInfo,
     SubagentManager,
 )
-from kiro_crew.subagent_manager import run as run_mod
-from kiro_crew.task_models import Project, Task
-from kiro_crew.testing.wait import await_until
-from kiro_crew.tool_permission import (
+from aj_crew.subagent_manager import run as run_mod
+from aj_crew.task_models import Project, Task
+from aj_crew.testing.wait import await_until
+from aj_crew.tool_permission import (
     GATE_GRANT,
     NO_GATE,
     AcpWire,
@@ -1459,10 +1459,10 @@ def _step() -> tuple[Project, Task]:
 )
 def test_the_task_runner_refusal_rows(refusal, extra):
     run, task = _step()
-    row = TaskrunnerRows("kirocrew", run, task).refusal(Ask(_event(), None, "k"), refusal)
+    row = TaskrunnerRows("ajcrew", run, task).refusal(Ask(_event(), None, "k"), refusal)
     expected = {
         "session_key": "k",
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         "source": "taskrunner",
         "tool_name": "Run: ls -la",
         "tool_kind": "execute",
@@ -1488,16 +1488,16 @@ def test_the_task_runner_refusal_rows(refusal, extra):
 )
 def test_the_task_runner_approval_rows(settled, outcome, reason):
     run, task = _step()
-    row = TaskrunnerRows("kirocrew", run, task).approval(Ask(_event(), None, "k"), settled)
-    assert row["outcome"] == outcome and row["agent"] == "kirocrew"
+    row = TaskrunnerRows("ajcrew", run, task).approval(Ask(_event(), None, "k"), settled)
+    assert row["outcome"] == outcome and row["agent"] == "ajcrew"
     assert list(row["metadata"].items()) == [
         ("task", 3),
         ("task_id", "tid"),
         ("reason", reason),
         ("source", "dashboard"),
     ]
-    assert TaskrunnerRows("kirocrew", run, task).decline(Ask(_event(), None, "k")) == {
-        "agent": "kirocrew"
+    assert TaskrunnerRows("ajcrew", run, task).decline(Ask(_event(), None, "k")) == {
+        "agent": "ajcrew"
     }
 
 
@@ -1529,7 +1529,7 @@ def _subagent_ladder(
         ask_key=info.parent_session_key,
         consult=consult or (lambda event: ToolHookResult(action=hook, identity_grant=True)),
         sel=sel or _Sel(log),
-        log=logging.getLogger("kiro_crew.subagent"),
+        log=logging.getLogger("aj_crew.subagent"),
     )
     return policy, info, log
 
@@ -1794,7 +1794,7 @@ async def test_each_ladder_gives_its_spec_hooks_the_callers_identity(monkeypatch
         monkeypatch.setattr(task_executor, "permission_pre_tool_block", pre_tool)
         store = object()
         monkeypatch.setattr(task_executor, "get_global_hook_store", lambda: store)
-        identity = {"parent_session_key": "k", "agent_role": "kirocrew"}
+        identity = {"parent_session_key": "k", "agent_role": "ajcrew"}
     event = _event(mcp_server_name="srv", harness_tool_id="h1")
     refusal = await policy.floors[0].refuse(Ask(event, RecordingWire([]), "k"))
     assert refusal is None
@@ -1941,7 +1941,7 @@ _ANSWER_CALLS = frozenset({"approve_tool", "reject_tool", "_steer_host_deny"})
 _WIRE_ANSWERS = frozenset({"allow", "refuse"})
 # The ladder's stages that also expose ``refuse``: a floor and the interject.
 _STAGE_RECEIVERS = frozenset({"floor", "policy.interject"})
-_SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+_SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 
 def test_the_ladder_answers_the_wire_in_exactly_one_adapter():

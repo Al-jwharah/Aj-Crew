@@ -1,8 +1,8 @@
 """``KnowledgeStore`` keeps every member it had, each bound from the owner that holds it.
 
-The store's behaviour lives in the ``kiro_crew.knowledge.store_parts`` owners: each
+The store's behaviour lives in the ``aj_crew.knowledge.store_parts`` owners: each
 member's body is a module-level function there whose first parameter is ``self``, and
-the class in ``kiro_crew.knowledge.store`` binds it by name (``m = _owner.m``, or
+the class in ``aj_crew.knowledge.store`` binds it by name (``m = _owner.m``, or
 ``staticmethod(_owner.f)``). The instance state stays on the instance, so tests that
 patch a method on the class or on a store, or poke a private field, see the object they
 always did. This file pins the binding contract:
@@ -16,10 +16,10 @@ always did. This file pins the binding contract:
 * no owner imports the facade at run time, and each imports only owners listed before
   it in ``_STORE_OWNERS``;
 * each owner's docstring names the instance fields its members write and read, and an
-  owner that logs does so under the ``kiro_crew.knowledge.store`` logger;
+  owner that logs does so under the ``aj_crew.knowledge.store`` logger;
 * every module-level name the one-module file bound still resolves on the facade, to the
   object its owner holds;
-* no name the test trees patch through ``kiro_crew.knowledge.store`` is read as a global
+* no name the test trees patch through ``aj_crew.knowledge.store`` is read as a global
   by an owner: an owner reads its own namespace, so such a patch would not reach it.
 
 Each structural check has a self-test that shows it can fail.
@@ -41,8 +41,8 @@ from typing import Any
 import pytest
 from facade_mirror_scan import global_reads, patched_names
 
-from kiro_crew.knowledge import store as store_module
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge import store as store_module
+from aj_crew.knowledge.store import KnowledgeStore
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_store_parts_bindings")
 
@@ -56,8 +56,8 @@ SHARED_BINDINGS_CHECKS = (
     "leaf_test_scope_derives_this_file_as_a_corpus_gate",
 )
 
-_FACADE = "kiro_crew.knowledge.store"
-_PACKAGE = "kiro_crew.knowledge.store_parts"
+_FACADE = "aj_crew.knowledge.store"
+_PACKAGE = "aj_crew.knowledge.store_parts"
 _TEST_ROOT = Path(__file__).resolve().parent
 _REPO_ROOT = _TEST_ROOT.parent
 
@@ -359,12 +359,12 @@ def _runtime_imports(tree: ast.Module, package: str = _PACKAGE) -> set[str]:
 def test_the_runtime_import_scan_can_fail() -> None:
     tree = ast.parse(
         "from typing import TYPE_CHECKING\n"
-        "from kiro_crew.knowledge.store_parts import entity_graph\n"
+        "from aj_crew.knowledge.store_parts import entity_graph\n"
         "if TYPE_CHECKING:\n"
-        "    from kiro_crew.knowledge.store import KnowledgeStore\n"
+        "    from aj_crew.knowledge.store import KnowledgeStore\n"
         "from .item_rows import add_item\n"
         "def f():\n"
-        "    import kiro_crew.knowledge.store\n"
+        "    import aj_crew.knowledge.store\n"
         "def g():\n"
         "    from ..store import KnowledgeStore\n"
     )
@@ -372,11 +372,11 @@ def test_the_runtime_import_scan_can_fail() -> None:
     assert f"{_PACKAGE}.entity_graph" in found
     assert f"{_PACKAGE}.item_rows" in found  # a relative import, resolved
     assert _FACADE in found  # the function-local imports are run-time imports
-    assert "kiro_crew.knowledge.store.KnowledgeStore" in found  # from g's relative import
+    assert "aj_crew.knowledge.store.KnowledgeStore" in found  # from g's relative import
     typing_only = ast.parse(
         "from typing import TYPE_CHECKING\n"
         "if TYPE_CHECKING:\n"
-        "    from kiro_crew.knowledge.store import KnowledgeStore\n"
+        "    from aj_crew.knowledge.store import KnowledgeStore\n"
     )
     assert _FACADE not in _runtime_imports(typing_only)
 
@@ -416,18 +416,18 @@ def _owner_importers(src: Path, owners: frozenset[str]) -> list[str]:
 
 
 def test_the_owner_importer_scan_can_fail(tmp_path: Path) -> None:
-    pkg = tmp_path / "kiro_crew" / "knowledge"
+    pkg = tmp_path / "aj_crew" / "knowledge"
     pkg.mkdir(parents=True)
     (pkg / "other.py").write_text(
         "from .store_parts.entity_graph import SimpleDiGraph\n", encoding="utf-8"
     )
-    (pkg / "fine.py").write_text("from kiro_crew.knowledge.store import X\n", encoding="utf-8")
-    owners = frozenset({"kiro_crew.knowledge.store_parts.entity_graph"})
-    assert _owner_importers(tmp_path, owners) == ["kiro_crew/knowledge/other.py"]
+    (pkg / "fine.py").write_text("from aj_crew.knowledge.store import X\n", encoding="utf-8")
+    owners = frozenset({"aj_crew.knowledge.store_parts.entity_graph"})
+    assert _owner_importers(tmp_path, owners) == ["aj_crew/knowledge/other.py"]
 
 
 def test_nothing_else_in_src_imports_an_owner() -> None:
-    """``kiro_crew.knowledge.store`` is the one import path of the store."""
+    """``aj_crew.knowledge.store`` is the one import path of the store."""
     src = Path(store_module.__file__).resolve().parents[2]
     assert _owner_importers(src, frozenset(store_module._STORE_OWNERS)) == []
 
@@ -502,10 +502,10 @@ def _foreign_loggers(tree: ast.Module) -> list[str]:
 def test_the_logger_scan_can_fail() -> None:
     tree = ast.parse(
         "import logging\n"
-        "logger = logging.getLogger('kiro_crew.knowledge.store')\n"
+        "logger = logging.getLogger('aj_crew.knowledge.store')\n"
         "_log = logging.getLogger(__name__)\n"
         "from logging import getLogger\n"
-        "other = getLogger('kiro_crew.knowledge.store_parts.x')\n"
+        "other = getLogger('aj_crew.knowledge.store_parts.x')\n"
     )
     assert [line.split(":")[0] for line in _foreign_loggers(tree)] == ["3", "5"]
 
@@ -536,7 +536,7 @@ _CLASS_MODULES = {
 
 def test_a_bundle_rejection_renders_under_the_facade_path() -> None:
     text = "".join(traceback.format_exception_only(store_module.KnowledgeBundleError("bad")))
-    assert text == "kiro_crew.knowledge.store.KnowledgeBundleError: bad\n"
+    assert text == "aj_crew.knowledge.store.KnowledgeBundleError: bad\n"
 
 
 # --------------------------------------------------------------------------- #
@@ -571,7 +571,7 @@ def test_a_module_name_an_owner_binds_is_the_same_object_on_the_facade(owner: st
 def _test_tree_files() -> list[Path]:
     """The root conftest, ``test/`` and the builtin apps' test modules and conftests."""
     files = [_REPO_ROOT / "conftest.py", *sorted(_TEST_ROOT.rglob("*.py"))]
-    builtins_root = _REPO_ROOT / "src" / "kiro_crew" / "apps" / "builtins"
+    builtins_root = _REPO_ROOT / "src" / "aj_crew" / "apps" / "builtins"
     for path in sorted(builtins_root.rglob("*.py")):
         rel = path.relative_to(builtins_root).as_posix()
         if "/tests/" in rel or path.name.startswith("test_") or path.name == "conftest.py":
@@ -581,7 +581,7 @@ def _test_tree_files() -> list[Path]:
 
 def _facade_spellings(src: Path) -> dict[str, str]:
     """The facade's own name, and every src module's module-level binding of it
-    (``kiro_crew.cli.knowledge_store``): a patch through either reaches the facade."""
+    (``aj_crew.cli.knowledge_store``): a patch through either reaches the facade."""
     spellings = {_FACADE: _FACADE}
     for path in sorted(src.rglob("*.py")):
         text = path.read_text(encoding="utf-8", errors="replace")
@@ -638,8 +638,8 @@ def _reach_gaps(patched: set[str], reads: dict[str, set[str]]) -> list[str]:
 def test_the_spellings_include_each_src_binding_of_the_facade() -> None:
     spellings = _facade_spellings(_REPO_ROOT / "src")
     assert {
-        "kiro_crew.cli.knowledge_store",
-        "kiro_crew.mcp_tools.knowledge.knowledge_store",
+        "aj_crew.cli.knowledge_store",
+        "aj_crew.mcp_tools.knowledge.knowledge_store",
     } <= set(spellings)
     assert set(spellings.values()) == {_FACADE}
 
@@ -658,16 +658,16 @@ def test_no_name_patched_through_the_facade_is_read_by_an_owner() -> None:
 def test_the_reach_scan_can_fail(tmp_path: Path) -> None:
     probe = tmp_path / "test_probe.py"
     probe.write_text(
-        "from kiro_crew.knowledge import store as store_mod\n"
+        "from aj_crew.knowledge import store as store_mod\n"
         "def test_x(monkeypatch):\n"
         "    monkeypatch.setattr(store_mod, '_RECLAIM_CHUNK', 1)\n"
         "def test_y():\n"
         "    from unittest import mock\n"
-        "    with mock.patch('kiro_crew.cli.knowledge_store._MAX_SQL_PARAMS', 1):\n"
+        "    with mock.patch('aj_crew.cli.knowledge_store._MAX_SQL_PARAMS', 1):\n"
         "        pass\n",
         encoding="utf-8",
     )
-    spellings = {_FACADE: _FACADE, "kiro_crew.cli.knowledge_store": _FACADE}
+    spellings = {_FACADE: _FACADE, "aj_crew.cli.knowledge_store": _FACADE}
     patched = _patched_through_the_facade([probe], spellings)
     assert patched == {"_RECLAIM_CHUNK", "_MAX_SQL_PARAMS"}
     assert _reach_gaps(patched, _owner_reads()) == [

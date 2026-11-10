@@ -5,7 +5,7 @@ Covers the composition primitive every tier below the authority goes through:
 * ``_intersect_ceilings``: a subordinate may add restrictions and may not remove
   one, and everything outside ``controls`` stays the authority's;
 * that there is NO channel by which a lower tier outranks the authority -- in
-  particular ``KIROCREW_SECURITY_POLICY``, which a runbook may still describe as a
+  particular ``AJCREW_SECURITY_POLICY``, which a runbook may still describe as a
   rollback lever;
 * the one-time signals the ladder emits (the env-tightens-only warning, the
   per-pair intersect audit) and the process state that latches them;
@@ -25,11 +25,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.platform import governance
-from kiro_crew.platform import governance_health as health
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform import policy_distribution as pd
-from kiro_crew.platform.governance import (
+from aj_crew.platform import governance
+from aj_crew.platform import governance_health as health
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform import policy_distribution as pd
+from aj_crew.platform.governance import (
     SIGNATURE_UNSIGNED,
     SIGNATURE_UNVERIFIED,
     TIER_CENTRAL,
@@ -40,7 +40,7 @@ from kiro_crew.platform.governance import (
     resolve_ordinal,
 )
 
-_POLICY_ENV = "KIROCREW_SECURITY_POLICY"
+_POLICY_ENV = "AJCREW_SECURITY_POLICY"
 
 #: A scheme no built-in transport handles, so the fake fetcher the ``central``
 #: fixture registers cannot be confused with (or shadowed by) https/http/file.
@@ -116,10 +116,10 @@ def _hermetic_governance_globals(monkeypatch, tmp_path):
     governance.reset_process_state()
     for var in (
         _POLICY_ENV,
-        "KIROCREW_ADMISSION_POLICY",
-        "KIROCREW_POLICY_URL",
-        "KIROCREW_POLICY_HEADERS",
-        "KIROCREW_POLICY_CACHE_ONLY",
+        "AJCREW_ADMISSION_POLICY",
+        "AJCREW_POLICY_URL",
+        "AJCREW_POLICY_HEADERS",
+        "AJCREW_POLICY_CACHE_ONLY",
     ):
         monkeypatch.delenv(var, raising=False)
     _point_home(monkeypatch, tmp_path / "absent" / "home.json")
@@ -160,7 +160,7 @@ def central(monkeypatch):
 
             with pd._FETCHER_LOCK:
                 pd._FETCHERS[_TEST_SCHEME] = fetch
-            monkeypatch.setenv("KIROCREW_POLICY_URL", _TEST_SOURCE)
+            monkeypatch.setenv("AJCREW_POLICY_URL", _TEST_SOURCE)
             return _TEST_SOURCE
 
         yield publish
@@ -419,7 +419,7 @@ class TestASubordinateMayOnlyTighten:
 class TestAnEnvDocumentBeneathAnAuthorityIsAnnouncedOnce:
     """The precedence inversion is otherwise silent at the moment it bites.
 
-    Before this change ``KIROCREW_SECURITY_POLICY`` outranked the central document and
+    Before this change ``AJCREW_SECURITY_POLICY`` outranked the central document and
     was the documented mid-incident rollback lever. Now it only tightens. A fleet whose
     runbook still says "set the env var to roll back" learns that mid-incident unless
     the host says so -- so the FIRST time the inverted shape composes, it warns once
@@ -434,7 +434,7 @@ class TestAnEnvDocumentBeneathAnAuthorityIsAnnouncedOnce:
         central("fleet")
         monkeypatch.setenv(_POLICY_ENV, str(_write_policy(tmp_path / "env.json", "local-env")))
 
-        with caplog.at_level("WARNING", logger="kiro_crew.platform.governance"):
+        with caplog.at_level("WARNING", logger="aj_crew.platform.governance"):
             load_security_policy()
             load_security_policy()
 
@@ -755,7 +755,7 @@ class TestNonControlFieldsStayWithTheAuthority:
     def composed(self, monkeypatch, tmp_path, central):
         central(
             "fleet",
-            updates={"source": "git@fleet.example:kirocrew.git", "min_version": "9.9.9"},
+            updates={"source": "git@fleet.example:ajcrew.git", "min_version": "9.9.9"},
         )
         home = tmp_path / "home.json"
         home.write_text(
@@ -791,7 +791,7 @@ class TestNonControlFieldsStayWithTheAuthority:
         # The authority pinned both; the home document names another source and a
         # lower floor. Neither replaces the authority's: a subordinate may narrow an
         # update pin (``TestUpdatePinsFoldAsRestrictions``), never widen one.
-        assert composed.updates.source == "git@fleet.example:kirocrew.git"
+        assert composed.updates.source == "git@fleet.example:ajcrew.git"
         assert composed.updates.min_version == "9.9.9"
 
     def test_distribution_pins_stay_the_authoritys(self, composed):
@@ -866,15 +866,15 @@ class TestUpdatePinsFoldAsRestrictions:
             _write_policy(
                 tmp_path / "home.json",
                 "operator",
-                updates={"source": "git@fleet.example:kirocrew.git"},
+                updates={"source": "git@fleet.example:ajcrew.git"},
             ),
         )
         ceiling = load_security_policy()
         assert ceiling is not None
         assert ceiling.tier == TIER_CENTRAL
-        assert ceiling.updates.source == "git@fleet.example:kirocrew.git"
+        assert ceiling.updates.source == "git@fleet.example:ajcrew.git"
         assert not ceiling.updates.permits_source("git@attacker.example:x.git")
-        assert ceiling.updates.permits_source("git@fleet.example:kirocrew.git")
+        assert ceiling.updates.permits_source("git@fleet.example:ajcrew.git")
 
     def test_a_subordinate_min_version_survives_an_authority_that_declares_none(
         self, monkeypatch, tmp_path, central
@@ -995,7 +995,7 @@ class TestAnExplicitDefaultDistributionIsDeclared:
     def _address_from_the_environment(self, monkeypatch):
         # A source-less block is only accepted when the environment names the
         # address -- the two-channel split these tests are about.
-        monkeypatch.setenv("KIROCREW_POLICY_URL", _TEST_SOURCE)
+        monkeypatch.setenv("AJCREW_POLICY_URL", _TEST_SOURCE)
 
     def test_a_present_block_spelling_the_default_is_declared(self):
         block = governance.PolicyDistribution.from_dict(
@@ -1122,7 +1122,7 @@ class TestAnUnreadableHomeFileBeneathAnAuthorityIsSkipped:
         assert refreshed.identity_issuer == "fleet"
 
     def test_with_no_authority_the_error_is_still_fatal(self, broken_home):
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.context import PlatformCompositionError
 
         with pytest.raises(PlatformCompositionError, match="is unreadable"):
             load_security_policy()
@@ -1156,7 +1156,7 @@ class TestAnUnreadableHomeFileBeneathAnAuthorityIsSkipped:
         assert refreshed.identity_issuer == "fleet"
 
     def test_with_no_authority_a_schema_error_is_still_fatal(self, schema_invalid_home):
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.context import PlatformCompositionError
 
         with pytest.raises(PlatformCompositionError):
             load_security_policy()
@@ -1204,7 +1204,7 @@ class TestAnUnreadableHomeFileBeneathAnAuthorityIsSkipped:
     def test_a_malformed_home_distribution_block_with_no_authority_is_fatal(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.context import PlatformCompositionError
 
         _point_home(
             monkeypatch,
@@ -1309,7 +1309,7 @@ class TestAnUnexpectedLoaderErrorRefusesBoot:
         ``ValueError`` escaping (the bug) fails an ASSERTION here instead of
         erroring out of the test body.
         """
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.context import PlatformCompositionError
 
         with pytest.raises(Exception) as info:
             call()
@@ -1329,14 +1329,14 @@ class TestAnUnexpectedLoaderErrorRefusesBoot:
         assert _POLICY_ENV in text
 
     def test_central_path_error_refuses(self, monkeypatch, boom):
-        monkeypatch.setenv("KIROCREW_POLICY_URL", _TEST_SOURCE)
+        monkeypatch.setenv("AJCREW_POLICY_URL", _TEST_SOURCE)
         monkeypatch.setattr(pd, "load_distributed_policy", boom)
         assert "central policy" in self._refusal(load_security_policy)
 
     def test_boot_composition_refuses_rather_than_defaulting(self, monkeypatch, tmp_path, boom):
         # ``build_default_context`` is the chokepoint both a real boot and the lazy
         # ``current_context`` default go through; its refusal is what boot re-raises.
-        from kiro_crew.platform.bootstrap import build_default_context
+        from aj_crew.platform.bootstrap import build_default_context
 
         env_file = _write_policy(tmp_path / "env.json", "env")
         monkeypatch.setenv(_POLICY_ENV, str(env_file))
@@ -1344,7 +1344,7 @@ class TestAnUnexpectedLoaderErrorRefusesBoot:
         self._refusal(lambda: build_default_context(object()))  # type: ignore[arg-type]
 
     def test_a_composition_error_passes_through_unwrapped(self, monkeypatch, tmp_path):
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.context import PlatformCompositionError
 
         env_file = tmp_path / "env.json"
         env_file.write_text("{ not json", encoding="utf-8")
@@ -1408,7 +1408,7 @@ class TestAUtf8BomPolicyLoadsAtItsTier:
         ids=["utf16", "bom_then_invalid_json"],
     )
     def test_any_other_defect_still_refuses_boot_standalone(self, monkeypatch, tmp_path, raw):
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.context import PlatformCompositionError
 
         _point_home(monkeypatch, _write_policy_bytes(tmp_path / "home.json", raw))
         with pytest.raises(PlatformCompositionError, match="is unreadable"):

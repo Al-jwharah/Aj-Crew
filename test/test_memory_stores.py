@@ -18,11 +18,11 @@ from pathlib import Path
 import pytest
 
 from conftest import make_dir_link
-from kiro_crew import sandbox, security
-from kiro_crew.config.loader import KiroCrewConfig, config_dir, workspace_dir_for
-from kiro_crew.config.paths import ensure_data_home
-from kiro_crew.memory import INDEX_DB_FILE, MemoryStore, workspace_dir
-from kiro_crew.memory_stores import (
+from aj_crew import sandbox, security
+from aj_crew.config.loader import AjCrewConfig, config_dir, workspace_dir_for
+from aj_crew.config.paths import ensure_data_home
+from aj_crew.memory import INDEX_DB_FILE, MemoryStore, workspace_dir
+from aj_crew.memory_stores import (
     DEFAULT_MEMORY_STORE,
     MEMORY_DB_FILE,
     MEMORY_STORE_NAME_MAX,
@@ -45,7 +45,7 @@ _IS_POSIX = os.name == "posix"
 
 def _write_config(payload: dict) -> None:
     """Write ``config.json`` into the per-test data home and drop the cache."""
-    from kiro_crew.config import loader as loader_mod
+    from aj_crew.config import loader as loader_mod
 
     (config_dir() / "config.json").write_text(json.dumps(payload), encoding="utf-8")
     loader_mod._invalidate_config_cache()
@@ -73,14 +73,14 @@ class TestDefaultStoreRootsAreUnmoved:
 
     def test_vector_file_is_byte_exact_with_the_vector_store_default(self) -> None:
         """The default answer must be the path ``VectorMemoryStore()`` picks."""
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew.vector_memory import VectorMemoryStore
 
         assert resolve_store_path(DEFAULT_MEMORY_STORE) == VectorMemoryStore()._db_path
 
     def test_a_degraded_config_still_resolves_the_default_store(self) -> None:
         """An unreadable config must not cost the default store its paths."""
         (config_dir() / "config.json").write_text("{not json", encoding="utf-8")
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         loader_mod._invalidate_config_cache()
         assert memory_store_dir_for(DEFAULT_MEMORY_STORE) == workspace_dir()
@@ -208,8 +208,8 @@ class TestShapeRuleRaises:
     def test_config_load_reports_a_malformed_store_name(self, caplog) -> None:
         """Reported at boot, and kept verbatim so a save cannot erase it."""
         _write_config({"memory_stores": {"Bad_Name": {}}})
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
-            cfg = KiroCrewConfig.load()
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
+            cfg = AjCrewConfig.load()
         assert "Bad_Name" in cfg.memory_stores
         assert any("Bad_Name" in r.getMessage() for r in caplog.records)
 
@@ -234,17 +234,17 @@ class TestMalformedAndDeclaredIsUndeclaredForResolution:
 
     @pytest.mark.parametrize("store", ["Bad_Name", "../escape"])
     def test_malformed_member_binding_fails_before_any_memory_read(self, store):
-        from kiro_crew.config.loader import resolve_agent_bindings
+        from aj_crew.config.loader import resolve_agent_bindings
 
         _write_config(
             {
-                "agents": {"crew": {"kiro_agent": "kirocrew", "memory_store": store}},
+                "agents": {"crew": {"kiro_agent": "ajcrew", "memory_store": store}},
                 "default_agent": "crew",
                 "memory_stores": {store: {}, "work": {}},
                 "default_memory_store": "work",
             }
         )
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert store in cfg.memory_stores
         with pytest.raises(UnknownMemoryStore):
             resolve_agent_bindings(cfg, agent_name="crew")
@@ -268,21 +268,21 @@ class TestUnusableLegacyBindingIsTheOneMovableBinding:
     """
 
     @staticmethod
-    def _config(binding: object, record: dict | None) -> KiroCrewConfig:
+    def _config(binding: object, record: dict | None) -> AjCrewConfig:
         stores: dict = {"work": {}}
         if record is not None and isinstance(binding, str):
             stores[binding] = record
         _write_config(
             {
                 "agents": {
-                    "crew": {"kiro_agent": "kirocrew", "memory_store": binding},
-                    "peer": {"kiro_agent": "kirocrew", "memory_store": "work"},
+                    "crew": {"kiro_agent": "ajcrew", "memory_store": binding},
+                    "peer": {"kiro_agent": "ajcrew", "memory_store": "work"},
                 },
                 "default_agent": "crew",
                 "memory_stores": stores,
             }
         )
-        return KiroCrewConfig.load()
+        return AjCrewConfig.load()
 
     @pytest.mark.parametrize("binding", ["Bad_Name", "AMS-CA-Patterns", "../escape"])
     def test_a_declared_unowned_v1_record_on_a_malformed_name_is_movable(self, binding) -> None:
@@ -346,7 +346,7 @@ class TestWorkspaceFallThrough:
                 "default_workspace": "default",
             }
         )
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             resolved = workspace_dir_for("nope")
         assert resolved == config_dir() / "workspace"
         assert any("nope" in r.getMessage() for r in caplog.records)
@@ -383,10 +383,10 @@ class TestWorkspaceFallThrough:
         migrates it into the table, and both resolvers answer from that table
         rather than from the raw bytes.
         """
-        from kiro_crew.config.loader import resolve_agent_bindings
+        from aj_crew.config.loader import resolve_agent_bindings
 
         _write_config({"workspaces": {"alt": "alt-tree"}, "default_workspace": "alt"})
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert cfg.workspaces["alt"].dir == "alt-tree"
         bindings = resolve_agent_bindings(cfg)
         assert workspace_dir_for("alt") == config_dir() / bindings.workspace_dir
@@ -402,18 +402,18 @@ class TestWorkspaceFallThrough:
 
     def test_a_real_fallback_to_default_workspace_warns(self, caplog) -> None:
         """An agent naming an undeclared workspace really does move; say so."""
-        from kiro_crew.config.loader import resolve_agent_bindings
+        from aj_crew.config.loader import resolve_agent_bindings
 
         _write_config(
             {
                 "workspaces": {"main": {"dir": "main-tree"}},
                 "default_workspace": "main",
-                "agents": {"crew": {"kiro_agent": "kirocrew", "workspace": "ghost"}},
+                "agents": {"crew": {"kiro_agent": "ajcrew", "workspace": "ghost"}},
                 "default_agent": "crew",
             }
         )
-        cfg = KiroCrewConfig.load()
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.config.loader"):
+        cfg = AjCrewConfig.load()
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.config.loader"):
             bindings = resolve_agent_bindings(cfg, agent_name="crew")
         assert bindings.workspace_dir == Path("main-tree")
         warnings = self._fallback_warnings(caplog)
@@ -422,19 +422,19 @@ class TestWorkspaceFallThrough:
 
     def test_no_warning_when_the_agent_already_names_default_workspace(self, caplog) -> None:
         """Logging "'x' not found, falling back to 'x'" is noise, not a fallback."""
-        from kiro_crew.config.loader import resolve_agent_bindings
+        from aj_crew.config.loader import resolve_agent_bindings
 
         _write_config(
             {
                 "workspaces": {"main": {"dir": "main-tree"}},
                 "default_workspace": "ghost",
-                "agents": {"crew": {"kiro_agent": "kirocrew", "workspace": "ghost"}},
+                "agents": {"crew": {"kiro_agent": "ajcrew", "workspace": "ghost"}},
                 "default_agent": "crew",
             }
         )
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert cfg.default_workspace == "ghost" and "ghost" not in cfg.workspaces
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.config.loader"):
             bindings = resolve_agent_bindings(cfg, agent_name="crew")
         assert bindings.workspace_dir == Path("workspace")
         assert self._fallback_warnings(caplog) == []
@@ -460,7 +460,7 @@ class TestWorkspaceFallThrough:
 
     def test_it_never_raises_on_an_unreadable_config(self) -> None:
         (config_dir() / "config.json").write_text("{{{", encoding="utf-8")
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         loader_mod._invalidate_config_cache()
         assert workspace_dir_for("anything") == config_dir() / "workspace"
@@ -485,7 +485,7 @@ class TestIndexIsPerStore:
 
     def test_it_is_the_path_the_snapshot_memory_component_declares(self) -> None:
         """The ratchet against moving it: snapshot names the file root-relative."""
-        from kiro_crew.snapshot import COMPONENTS
+        from aj_crew.snapshot import COMPONENTS
 
         assert INDEX_DB_FILE in COMPONENTS["memory"].files
         rel = memory_index_path_for(DEFAULT_MEMORY_STORE).relative_to(config_dir())
@@ -557,18 +557,18 @@ class TestARealStoreSurvivesSnapshotAndRestore:
     """
 
     def test_search_answers_the_restored_content(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew import pinned_fs
-        from kiro_crew.snapshot import restore_main, snapshot_main
+        from aj_crew import pinned_fs
+        from aj_crew.snapshot import restore_main, snapshot_main
 
         # ``_staging_is_pinned`` refuses rather than falling back where the
         # platform has no directory descriptors, so say what an operator there
         # has to say — and nothing extra where pinning works, so Linux still
         # exercises the shipping path.
         unpinnable = [] if pinned_fs.supports_pinned_tree_walk() else ["--allow-unpinned-staging"]
-        monkeypatch.setenv("KIROCREW_ASSUME_GATEWAY_RUNNING", "0")
+        monkeypatch.setenv("AJCREW_ASSUME_GATEWAY_RUNNING", "0")
 
         source = tmp_path / "source-home"
-        monkeypatch.setenv("KIROCREW_HOME", str(source))
+        monkeypatch.setenv("AJCREW_HOME", str(source))
         store = MemoryStore()
         store.init()
         store.write_preferences("# User Preferences\n\n- deploys with a canary stage first\n")
@@ -577,12 +577,12 @@ class TestARealStoreSurvivesSnapshotAndRestore:
 
         out = tmp_path / "out"
         assert snapshot_main([str(out), "--components", "memory"] + unpinnable) == 0
-        tarballs = sorted(out.glob("kirocrew-snapshot-*.tar.gz"))
+        tarballs = sorted(out.glob("ajcrew-snapshot-*.tar.gz"))
         assert tarballs, "no snapshot tarball was produced"
 
         fresh = tmp_path / "fresh-home"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         assert (
             restore_main(
                 [str(tarballs[-1]), "--mode", "replace", "--components", "memory", "--force"]
@@ -713,7 +713,7 @@ class TestNamedStoresAreFenced:
         assert security.is_sensitive_bash_command(cmd) is None
 
     def test_the_legacy_home_prefix_is_fenced_too(self) -> None:
-        legacy = str(Path.home() / ".kirocrew" / MEMORY_STORES_DIR_NAME / "work")
+        legacy = str(Path.home() / ".ajcrew" / MEMORY_STORES_DIR_NAME / "work")
         assert security.is_sensitive_path(legacy) is True
         assert security.is_sensitive_path(legacy + "/memory.db") is True
 
@@ -781,8 +781,8 @@ class TestTheV1StoreCheckKeepsTheOpenStoresLock:
     """
 
     def test_another_process_still_cannot_write_after_the_check(self, tmp_path: Path) -> None:
-        from kiro_crew.memory_stores import _require_legacy_store_files
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew.memory_stores import _require_legacy_store_files
+        from aj_crew.vector_memory import VectorMemoryStore
 
         target = tmp_path / "notes"
         target.mkdir()

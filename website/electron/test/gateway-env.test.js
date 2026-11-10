@@ -111,7 +111,7 @@ test("the macOS lock is a write ban, not a redirect", () => {
 
 test("a shipped bundled kiro-cli is exported as its directory with the update check off", () => {
   // The backend ranks this directory above every system install but below the
-  // KIROCREW_KIRO_BIN operator override, so what the app was built against is
+  // AJCREW_KIRO_BIN operator override, so what the app was built against is
   // what runs. A DIRECTORY, not the binary: the entry name is the backend's
   // constant. KIRO_NO_AUTO_UPDATE is set here once so the whole gateway tree
   // inherits it, rather than at every spawn site.
@@ -123,13 +123,13 @@ test("a shipped bundled kiro-cli is exported as its directory with the update ch
     },
   };
 
-  const env = bundledKiroCliEnvironment(fakeFs, path.posix, "/Applications/KiroCrew.app/Contents/Resources");
+  const env = bundledKiroCliEnvironment(fakeFs, path.posix, "/Applications/AjCrew.app/Contents/Resources");
 
   assert.deepStrictEqual(env, {
-    KIROCREW_BUNDLED_KIRO_DIR: "/Applications/KiroCrew.app/Contents/Resources/backend-dist/kiro-cli",
+    AJCREW_BUNDLED_KIRO_DIR: "/Applications/AjCrew.app/Contents/Resources/backend-dist/kiro-cli",
     KIRO_NO_AUTO_UPDATE: "1",
   });
-  assert.deepStrictEqual(seen, ["/Applications/KiroCrew.app/Contents/Resources/backend-dist/kiro-cli"]);
+  assert.deepStrictEqual(seen, ["/Applications/AjCrew.app/Contents/Resources/backend-dist/kiro-cli"]);
 });
 
 test("a build without the payload exports nothing, so discovery falls through", () => {
@@ -178,7 +178,7 @@ test("a bundled copy is exported only after it answers --version on this machine
     log: () => assert.fail("a passing probe logs nothing"),
   });
   assert.deepStrictEqual(env, {
-    KIROCREW_BUNDLED_KIRO_DIR: "/res/backend-dist/kiro-cli",
+    AJCREW_BUNDLED_KIRO_DIR: "/res/backend-dist/kiro-cli",
     KIRO_NO_AUTO_UPDATE: "1",
   });
   assert.equal(calls.length, 1);
@@ -269,7 +269,7 @@ test("a staged KAS engine is exported as its one root, read from BUNDLED-VERSION
     "/res/backend-dist/kas/0.66.33/install.json": KAS_RECORD,
   });
   const env = bundledKasEnvironment(fs, path.posix, "/res", {});
-  assert.deepStrictEqual(env, { KIROCREW_BUNDLED_KAS_DIR: "/res/backend-dist/kas" });
+  assert.deepStrictEqual(env, { AJCREW_BUNDLED_KAS_DIR: "/res/backend-dist/kas" });
 });
 
 test("a universal build's one KAS root serves both architectures", () => {
@@ -283,7 +283,7 @@ test("a universal build's one KAS root serves both architectures", () => {
     }),
   });
   assert.deepStrictEqual(bundledKasEnvironment(fs, path.posix, "/res"), {
-    KIROCREW_BUNDLED_KAS_DIR: "/res/backend-dist/kas",
+    AJCREW_BUNDLED_KAS_DIR: "/res/backend-dist/kas",
   });
   const suffixedOnly = kasResources({
     "/res/backend-dist/kas-arm64/BUNDLED-VERSION": "0.66.33",
@@ -310,7 +310,7 @@ test("the staged Node is never run at boot, even when a spawnSync is handed in",
   const env = bundledKasEnvironment(fs, path.posix, "/res", {
     spawnSync: () => assert.fail("bundledKasEnvironment executed the staged Node"),
   });
-  assert.deepStrictEqual(env, { KIROCREW_BUNDLED_KAS_DIR: "/res/backend-dist/kas" });
+  assert.deepStrictEqual(env, { AJCREW_BUNDLED_KAS_DIR: "/res/backend-dist/kas" });
 });
 
 test("a staged record whose node_bin or version could leave the staged tree is never executed", () => {

@@ -1,7 +1,7 @@
-"""Tests for the per-crew-member space (``$KIROCREW_HOME/members/<slug>/``).
+"""Tests for the per-crew-member space (``$AJCREW_HOME/members/<slug>/``).
 
-``KIROCREW_HOME`` is pinned to a per-test tmp dir by the autouse
-``_isolate_kirocrew_home`` fixture, so every path here resolves under tmp.
+``AJCREW_HOME`` is pinned to a per-test tmp dir by the autouse
+``_isolate_ajcrew_home`` fixture, so every path here resolves under tmp.
 """
 
 from __future__ import annotations
@@ -12,9 +12,9 @@ import re
 
 import pytest
 
-from kiro_crew.crew_log.schema import KIND_MEMBER
-from kiro_crew.crew_log.store import crew_log_path
-from kiro_crew.members import (
+from aj_crew.crew_log.schema import KIND_MEMBER
+from aj_crew.crew_log.store import crew_log_path
+from aj_crew.members import (
     ACTIVITY_FILE_NAME,
     DM_SLOT_MODE,
     MEMBER_NAME_MAX_CHARS,
@@ -31,7 +31,7 @@ from kiro_crew.members import (
     validate_member_name,
     validate_slug,
 )
-from kiro_crew.validation import (
+from aj_crew.validation import (
     _AGENT_NAME_RE,
     TEMPLATE_NAME_RE,
     WORKSPACE_NAME_RE,
@@ -169,7 +169,7 @@ class TestDispatchableLegacyNfcName:
 
     def test_raw_only_redaction_makes_the_name_non_dispatchable(self, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.members.external_text_requires_redaction",
+            "aj_crew.members.external_text_requires_redaction",
             lambda text: text == self.NFD,
         )
         assert is_dispatchable_member_name(self.NFD) is False
@@ -177,7 +177,7 @@ class TestDispatchableLegacyNfcName:
     def test_nfc_only_redaction_makes_the_name_non_dispatchable(self, monkeypatch):
         nfc = normalize_unicode(self.NFD)
         monkeypatch.setattr(
-            "kiro_crew.members.external_text_requires_redaction",
+            "aj_crew.members.external_text_requires_redaction",
             lambda text: text == nfc,
         )
         assert is_dispatchable_member_name(self.NFD) is False
@@ -424,7 +424,7 @@ class TestRecordActivity:
         # member_dir -- a patch on the old path would pass without proving
         # anything.
         monkeypatch.setattr(
-            "kiro_crew.eventlog.service.get_service",
+            "aj_crew.eventlog.service.get_service",
             lambda: (_ for _ in ()).throw(OSError("boom")),
         )
         assert record_activity("M", "s1", "persistent") is False
@@ -530,7 +530,7 @@ class TestLogCorruptionContract:
 
     @staticmethod
     def _reset_service():
-        from kiro_crew.eventlog.service import set_service
+        from aj_crew.eventlog.service import set_service
 
         set_service(None)
 
@@ -589,7 +589,7 @@ class TestLogCorruptionContract:
         # Guard the claim against drift: the log layer really raises LogCorrupt
         # for an unreadable header, and both public members funcs convert that
         # into their non-raising contracts once the stale in-memory log is gone.
-        from kiro_crew.eventlog.log import LogCorrupt, MemberLog
+        from aj_crew.eventlog.log import LogCorrupt, MemberLog
 
         assert record_activity("M", "s1", "persistent")
         log = _log_path("m")
@@ -612,12 +612,12 @@ class TestRefusedActivityIsReported:
 
     @staticmethod
     def _reset_service():
-        from kiro_crew.eventlog.service import set_service
+        from aj_crew.eventlog.service import set_service
 
         set_service(None)
 
     def test_a_refused_append_is_reported_as_a_dropped_entry(self, caplog):
-        from kiro_crew.crew_log.lease import LEASE_FILE, acquire, release
+        from aj_crew.crew_log.lease import LEASE_FILE, acquire, release
 
         assert record_activity("M", "s1", "persistent")
         # ``sole`` ownership refuses every later acquire in THIS process with the
@@ -625,7 +625,7 @@ class TestRefusedActivityIsReported:
         # reproduced without a second interpreter.
         key = acquire(_log_path("m").parent / LEASE_FILE, kind=KIND_MEMBER, unit_id="m", sole=True)
         try:
-            with caplog.at_level(logging.DEBUG, logger="kiro_crew.members"):
+            with caplog.at_level(logging.DEBUG, logger="aj_crew.members"):
                 assert record_activity("M", "s2", "persistent", via="select_crew") is False
         finally:
             release(key)
@@ -639,14 +639,14 @@ class TestRefusedActivityIsReported:
         assert [row.get("session") for row in read_activity("m")] == ["s1"]
 
     def test_an_ordinary_failure_is_not_reported_as_a_dropped_entry(self, caplog, monkeypatch):
-        from kiro_crew.eventlog import service as service_module
+        from aj_crew.eventlog import service as service_module
 
         class _Unusable:
             def ensure(self, *args, **kwargs):
                 raise RuntimeError("unrelated fault")
 
         monkeypatch.setattr(service_module, "get_service", lambda: _Unusable())
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.members"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.members"):
             assert record_activity("M", "s1", "persistent") is False
 
         assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
@@ -662,14 +662,14 @@ class TestNamelessWriterKeepsTheMemberIdentity:
 
     @staticmethod
     def _reset_service():
-        from kiro_crew.eventlog.service import set_service
+        from aj_crew.eventlog.service import set_service
 
         set_service(None)
 
     def test_a_nameless_emit_does_not_scope_a_member_out_of_their_own_activity(self):
-        from kiro_crew import eventlog_hooks
-        from kiro_crew.eventlog.service import get_service
-        from kiro_crew.eventlog.types import MEMBER_MESSAGE, PROJ_ACTIVITY
+        from aj_crew import eventlog_hooks
+        from aj_crew.eventlog.service import get_service
+        from aj_crew.eventlog.types import MEMBER_MESSAGE, PROJ_ACTIVITY
 
         assert record_activity("Real Name", "s1", "persistent")
         slug = slug_for_name("Real Name")
@@ -687,7 +687,7 @@ class TestNamelessWriterKeepsTheMemberIdentity:
         # CONTROL. Reading the header cannot become "the header always wins" in a
         # way that empties creation: on a fresh log the header is written by this
         # very call, so the resolved name has to survive the round trip.
-        from kiro_crew.eventlog.service import get_service
+        from aj_crew.eventlog.service import get_service
 
         get_service().ensure(slug_for_name("Real Name"), "Real Name")
         assert get_service()._names[slug_for_name("Real Name")] == "Real Name"

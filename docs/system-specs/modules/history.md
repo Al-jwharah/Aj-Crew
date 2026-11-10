@@ -62,7 +62,7 @@ delete leaves every other session untouched.
 
 ### Composition and source ownership
 
-`kiro_crew.history` remains the compatibility facade and defines the real
+`aj_crew.history` remains the compatibility facade and defines the real
 `ConversationLog` type. It keeps the class's identity and construction
 (`__init__` builds the caches and the components below), the transcript path
 (`_path` and its pre-migration Slack fallback), the process-wide lock and
@@ -89,7 +89,7 @@ use:
   the facade owner.
 - `history_search.py` owns the list/search/snippet catalog projection
   (`SessionCatalogProjection`) with the scan, ranking and indexing constants
-  it reads, and is a mirrored facade (`kiro_crew._facade_mirror`) over three
+  it reads, and is a mirrored facade (`aj_crew._facade_mirror`) over three
   sibling owners, lowest layer first: `history_search_query.py` (what a query
   means: `parse_search_query`, `SearchNeedle` and its caps and weights,
   `count_needle`, the forge-reference spellings, the source-provider spelling
@@ -106,25 +106,25 @@ use:
   transcript's head from that handle, and the path head scan
   (`_scan_head_title`, which the facade passes to `listing_row`). The facade binds every name its owners define
   except `_search_ref_resolver`, the one global an owner rebinds at run time,
-  which it serves, so a patch of `kiro_crew.history_search.<name>` reaches
+  which it serves, so a patch of `aj_crew.history_search.<name>` reaches
   every owner that reads it. The query owner logs under the
-  `kiro_crew.history_search` logger; the classes that moved name their owner
+  `aj_crew.history_search` logger; the classes that moved name their owner
   as `__module__` (nothing reads it). New parsing work goes to
   `history_search_query.py` and new shared search state to
   `history_search_memo.py`; `test/test_history_search_bindings.py` pins the
   owners, the served slot, the logger and the patch reach.
 - `history_projection.py` owns locked metadata updates and permanent deletion
   (`SessionMetadataProjection`) and is a mirrored facade
-  (`kiro_crew._facade_mirror`) over two sibling owners, lowest layer first:
+  (`aj_crew._facade_mirror`) over two sibling owners, lowest layer first:
   `history_projection_contract.py` (the metadata-line states,
   `DISPLAY_ONLY_ROLES`, the chained page and revision types, the bounded
   readers' tuning and chunked line splitter, `drop_persisted_tail_prefix`, and
-  the `kiro_crew.history` logger the projections share) and
+  the `aj_crew.history` logger the projections share) and
   `history_projection_reads.py` (`TranscriptReadProjection`: bounded transcript
   reads, tab-chain/index projection, metadata reads, and previews). The facade
   binds every name it imported and serves the moved ones, so a patch of
-  `kiro_crew.history_projection.<name>` reaches every owner that reads it.
-  `TranscriptRevisionChanged` keeps `kiro_crew.history_projection` as its
+  `aj_crew.history_projection.<name>` reaches every owner that reads it.
+  `TranscriptRevisionChanged` keeps `aj_crew.history_projection` as its
   `__module__`, because its name reaches tracebacks; `TranscriptPage` and
   `TranscriptReadProjection` name their owner (nothing reads it). New read work
   goes to `history_projection_reads.py`, which is close to the line cap, so a
@@ -144,11 +144,11 @@ use:
 - `history_consolidation.py` defines `HistoryConsolidator` (construction,
   `reconfigure`, retry accounting, off-loop counting and every scheduling entry
   point through `consolidate_now`) and is a mirrored facade
-  (`kiro_crew._facade_mirror`) over five sibling owners; `history.py`
+  (`aj_crew._facade_mirror`) over five sibling owners; `history.py`
   re-exports the class unchanged. The class binds each moved method under its
   own name, so `HistoryConsolidator._consolidate` and its peers keep their
   names, signatures and `__qualname__`; a moved method's `__module__` and
-  source file name its owner. A patch of `kiro_crew.history_consolidation.<name>` reaches
+  source file name its owner. A patch of `aj_crew.history_consolidation.<name>` reaches
   every owner that reads the name; a moved method is not a module name and is
   patched on the class, as before the split. The owners, lowest layer first:
   `history_consolidation_span.py` (the span a pass prompts: prompt budget,
@@ -201,15 +201,15 @@ bound member (or on an owner function whose annotation names it) needs it passed
 (`localns`). The
 exception classes the owners define (`ThreadStoreUnreadable`, `HistoryLockTimeout`,
 `OnLoopPersistError`, `TranscriptWithheld`, `TranscriptBusy`) keep
-`kiro_crew.history` as their `__module__`, because their names reach tracebacks and
+`aj_crew.history` as their `__module__`, because their names reach tracebacks and
 logs. `history_locks` reads the lock registries as `type(self).<registry>`: they stay
 class attributes of `ConversationLog`, which is the object that read finds while no
 subclass binds a registry of its own, and none does. The facade's `_OWNERS` lists the
 owners lowest layer first: an owner imports only owners listed before it. Owners log
-under the `kiro_crew.history` logger, never import `history.py` at run time, and read
+under the `aj_crew.history` logger, never import `history.py` at run time, and read
 their globals in their own namespaces: `history.py` keeps binding every name it bound
 before, and a write through it reaches every owner binding the same object
-(`kiro_crew._facade_mirror`). The two globals an owner rebinds at run time
+(`aj_crew._facade_mirror`). The two globals an owner rebinds at run time
 (`_last_cleanup`, `_on_loop_warn_last`) are served through the facade and never bound
 there, so a read through it is never stale. `test/test_history_bindings.py` pins the
 member inventory, the binding and the reach.
@@ -239,7 +239,7 @@ the first line is itself a row (a legacy file with no metadata line) it is part 
 the digested body, and a change to its length refuses the base.
 
 The base also survives a restart, a copy and every rewrite that keeps the rows
-(`kiro_crew.history_page_index`). For a transcript of 256 KiB or more it is
+(`aj_crew.history_page_index`). For a transcript of 256 KiB or more it is
 persisted to `<transcripts>/.page-index/<file>.json` (format version 2) after a
 build, again after each further 256 KiB, and whenever the base no longer extends
 the one this process last wrote; a read with no usable in-memory base loads it,
@@ -889,7 +889,7 @@ Per-thread JSONL files at `~/.kiro/crew/sessions/{safe_key}.jsonl`. First line i
 - `needles_match_text(needles, folded_text)` — the single-string form of `search_sessions`' match gate (required needles as substrings + the CJK adjacency floor), for callers filtering one text field; Discord session resume's zero-hit title fallback uses it so title matching cannot grow a second spelling of tokenization.
 - `read_file_change_messages(key)` — a lightweight Artifacts projection that streams one transcript as bytes, skips lines without the serialized `"file_changes"` key before JSON parsing, and retains only `ts` plus `meta.file_changes` in its own bounded, file-stamped cache. It never warms `_msg_cache`, so scanning the session-document firehose cannot retain the full parsed transcript corpus.
 - Forge references (pull requests, merge requests, issues) are a query dimension of their own, because one item has several written spellings and a transcript carries whichever one its author used. A term naming an item — `#4411`, `PR #4411`, `pr 4411`, `pull request 4411`, `pr4411`, `pull/4411`, a full PR/MR URL, `owner/repo#4411` — becomes ONE required needle carrying every spelling of that item (`SearchNeedle.alts`, counted by the shared `count_needle`), so any spelling finds every spelling. The words that introduce the number are dropped from the gate: they are not part of the reference, and requiring the literal "pr" would disqualify a transcript that names the item only by URL. Spellings are `digit_bounded` on both sides, so `#4411` matches neither `#44110` nor the run id `1544110293`. The TYPED sigil decides the family, never a word before it: `mr#12` is read as `#12`, because letting the word win produced a reference none of whose spellings was the string the user typed. Coverage of every accepted shape is pinned by a property test that drives each one against a transcript quoting it verbatim, rather than by inspection of the spelling list. GitHub's pull/issue sequence is shared (`#4411` ≡ `/pull/4411` ≡ `/issues/4411`) while GitLab numbers merge requests separately, so `!12` and `#12` stay distinct families and never match each other; bare `merge` is not a GitLab word (GitLab is `MR 12` / `merge request 12` / `!12`). Plain digits remain one of the spellings exactly when the QUERY typed no sigil (`issue 42`, `PR 4411`, `pr4411`): such a query would otherwise lose a gate on the digits, so dropping them would HIDE the transcript that says "we hit issue 42 in prod", and keeping them makes the recall of the literal AND it replaces hold with ONE intended exception — a session whose only claim to the old match was the digits sitting inside a longer number, which is what the boundary exists to exclude. The LEFT edge of that boundary applies only to a spelling that starts with a digit: for a delimited spelling the character before it says nothing about the number's length, and demanding a non-digit there would refuse `#4411` inside `owner/repo2#4411` — a repo whose name ends in a digit, matched against the very reference the query named. Only a lead-in run that actually NAMES a type turns a following number into a reference: `pr 4411`, `issue 42`, `pull request 4411` and `merge request 12` (the two-word GitLab form) do; `requests 12` and `merge 1234` do NOT and stay literal terms, since dropping such a word from the gate would trade a real term for every session mentioning that number. A query that DID type a sigil never gated on bare digits, so it keeps them out and stays precise (a standalone "12" is ordinary prose). A BARE number with no naming word is not a reference at all: it keeps its plain substring needle — numeric content search (ports, error codes, run ids) is unchanged — and gains the spellings as scoring-only needles at `_FORGE_REF_WEIGHT`, so the session that references the pull request outranks one that merely contains those digits. Those ranking needles are NOT adjacency evidence (`SearchNeedle.adjacency`, which only CJK bigrams set), or they would arm the adjacency floor and turn a ranking hint into a hidden gate. Two limitations are accepted rather than special-cased, both needing a query nobody writes and both only widening the result set: a chain-only word wedged between the type word and the number (`issue merge 42`) is swallowed, and because the gate is keyed by term text a query repeating a suffix word as its own term (`pull the pull request 12`) loses that term. Closing either means keying the gate by token position instead of by text. Expansions per query are capped at `_SEARCH_MAX_FORGE_REFS`, each costing one scan per spelling per scanned session (up to eight for a named reference, up to thirteen for a bare number's both-families ranking needle, plus up to eight more for a registered provider's own prefixed id — see below); a token past the cap degrades to a plain needle.
-- A REGISTERED source provider contributes its OWN id spellings through the same machinery, so an edition whose reviews are written `REV-987654321` is searchable without any provider vocabulary in core. The seam is one optional plugin hook, `search_ref(token) -> (canonical, alts) | None` on `SourceProviderPlugin`, discovered with `getattr` exactly like `path_markers()`; `source_search_ref()` fans out across the registered plugins (asking each registered plugin until one answers, then handing that answer through unjudged — shape is the normalizer's job, and skipping a malformed answer would only serve the same two-registrant case the merge below is declined for), and `register_source_provider()` publishes that collector DOWNWARD into `history_search.register_search_ref_resolver` at registration time — never from a route handler, because `parse_search_query` is also reached from paths that serve no HTTP (the Discord title-only resume gate, the `kirocrew memory search` CLI) and a process that never ran a route would otherwise answer the same query differently. One slot holds the resolver, not a list: the per-plugin fan-out already lives in the collector. The FIRST plugin to recognize a token WINS, for every token shape: a prefixed id names ONE item, so merging would conflate distinct items, and a cross-plugin merge for a bare number would exist only to serve two registrants holding a real item at the same number — which this repo, registering no provider at all, cannot produce. Cost stays bounded in ONE place: `_MAX_SEARCH_REF_SPELLINGS` (8, sized to the sibling per-plugin `_MAX_PLUGIN_PATH_MARKERS` because it bounds the same kind of thing — what ONE plugin hands core for one lookup) bounds the single answer that arrives, with no collector-side ceiling to drift from it. A bare number is NOT a provider token at all: a provider's ids are prefixed, so a run of digits names nothing it owns and the resolver is not consulted for one. `_provider_search_ref` is the single normalizer — it casefolds every spelling (the query is casefolded before parsing and `count_needle` requires already-folded needles, so a capitalized spelling produces a needle that matches NOTHING, silently), de-duplicates, drops empties, applies the fan-in ceiling, and DROPS an answer none of whose spellings carries the typed token, since such an answer describes some other item and would otherwise rank a query on text it never named. Every way a resolver can fail is contained and costs no more than a debug log — carrying a traceback where an exception was raised, and the offending value where a shape was merely wrong, so none of them is silent: raising when called, returning a malformed answer, and raising while its `alts` are READ — the hook promises a `Sequence`, which cannot do that, but a resolver ignoring the contract can, so the read sits inside the same boundary and the answer is dropped WHOLE rather than half-read, since an exception there would otherwise escape the parse as a 500 on every search. A provider is consulted only for a token no built-in shape recognized (built-ins always win), contributes SPELLINGS ONLY and never lead-in vocabulary (the words a provider would want — "review", "cr" — are common English, so admitting them would trade a real search term for every session mentioning that number), and can never gate a BARE all-digit token, which it is never even asked about — so no number of registered providers can spend the `_SEARCH_MAX_FORGE_REFS` budget on one numeric token. The purity contract — pure, allocation-cheap, no I/O — is documented and not enforced: a resolver is consulted for every term of every query and the parse runs at least twice per search, so a blocking resolver becomes per-keystroke latency in the search box.
+- A REGISTERED source provider contributes its OWN id spellings through the same machinery, so an edition whose reviews are written `REV-987654321` is searchable without any provider vocabulary in core. The seam is one optional plugin hook, `search_ref(token) -> (canonical, alts) | None` on `SourceProviderPlugin`, discovered with `getattr` exactly like `path_markers()`; `source_search_ref()` fans out across the registered plugins (asking each registered plugin until one answers, then handing that answer through unjudged — shape is the normalizer's job, and skipping a malformed answer would only serve the same two-registrant case the merge below is declined for), and `register_source_provider()` publishes that collector DOWNWARD into `history_search.register_search_ref_resolver` at registration time — never from a route handler, because `parse_search_query` is also reached from paths that serve no HTTP (the Discord title-only resume gate, the `ajcrew memory search` CLI) and a process that never ran a route would otherwise answer the same query differently. One slot holds the resolver, not a list: the per-plugin fan-out already lives in the collector. The FIRST plugin to recognize a token WINS, for every token shape: a prefixed id names ONE item, so merging would conflate distinct items, and a cross-plugin merge for a bare number would exist only to serve two registrants holding a real item at the same number — which this repo, registering no provider at all, cannot produce. Cost stays bounded in ONE place: `_MAX_SEARCH_REF_SPELLINGS` (8, sized to the sibling per-plugin `_MAX_PLUGIN_PATH_MARKERS` because it bounds the same kind of thing — what ONE plugin hands core for one lookup) bounds the single answer that arrives, with no collector-side ceiling to drift from it. A bare number is NOT a provider token at all: a provider's ids are prefixed, so a run of digits names nothing it owns and the resolver is not consulted for one. `_provider_search_ref` is the single normalizer — it casefolds every spelling (the query is casefolded before parsing and `count_needle` requires already-folded needles, so a capitalized spelling produces a needle that matches NOTHING, silently), de-duplicates, drops empties, applies the fan-in ceiling, and DROPS an answer none of whose spellings carries the typed token, since such an answer describes some other item and would otherwise rank a query on text it never named. Every way a resolver can fail is contained and costs no more than a debug log — carrying a traceback where an exception was raised, and the offending value where a shape was merely wrong, so none of them is silent: raising when called, returning a malformed answer, and raising while its `alts` are READ — the hook promises a `Sequence`, which cannot do that, but a resolver ignoring the contract can, so the read sits inside the same boundary and the answer is dropped WHOLE rather than half-read, since an exception there would otherwise escape the parse as a 500 on every search. A provider is consulted only for a token no built-in shape recognized (built-ins always win), contributes SPELLINGS ONLY and never lead-in vocabulary (the words a provider would want — "review", "cr" — are common English, so admitting them would trade a real search term for every session mentioning that number), and can never gate a BARE all-digit token, which it is never even asked about — so no number of registered providers can spend the `_SEARCH_MAX_FORGE_REFS` budget on one numeric token. The purity contract — pure, allocation-cheap, no I/O — is documented and not enforced: a resolver is consulted for every term of every query and the parse runs at least twice per search, so a blocking resolver becomes per-keystroke latency in the search box.
 - `_read_messages` — identity-guarded message cache with the same double-checked, miss-only locking `_folded_content` uses for this identical race. A warm hit is served lock-free; only a MISS takes the session's in-process writer lock (`_file_lock`) and re-checks identity + cache under it. The identity `(st_mtime_ns, st_ctime_ns, st_size, st_ino)` changes on the normal atomic rewrite even when housekeeping restores the previous mtime, so a stale cache entry cannot remain current. ON the event loop the lock is acquired non-blockingly and a busy lock falls back to an unlocked fill, so an on-loop read never stalls behind a writer holding the RLock across its cross-process flock wait (`_FLOCK_ACQUIRE_TIMEOUT_S`). An unlocked fill publishes through two witnesses: a per-key invalidation **generation** covering local writers and a cross-process **flock-hold witness** covering external processes (`_flock_hold_witness`: publish only while this process provably held the sidecar flock for the whole fill window). A fill that cannot prove its window clean is discarded. Every transcript memo (`_msg_cache`, `_meta_cache`, `_title_scan_cache`, `_has_messages_cache`, `_recent_cache`, `_folded_cache`, and `_snippet_cache`) records identity and generation; a warm hit requires both, so a write through another `ConversationLog` instance also invalidates it through the process-wide generation table keyed by `(transcript dir, sanitized filename stem)`, with canonical and legacy Slack spellings closed over bidirectionally (`_cache_key_identities`).
 - `_msg_cache` is bounded by weight as well as entry count: each entry weighs its transcript's file size times `_PARSED_BYTES_PER_FILE_BYTE` (2, measured 1.58–2.34 on the five largest real transcripts), and the LRU evicts until the total fits `_TRANSCRIPT_CACHE_MAX_BYTES` (32 MiB). A count bound alone let a few multi-ten-MiB transcripts hold 210 MiB of parsed rows (tracemalloc, live data copy). A transcript heavier than the whole budget is never cached, so a full read of one re-parses it.
 - `delete_session(key)` — permanently removes a session JSONL file. Dashboard
@@ -932,7 +932,7 @@ Per-thread JSONL files at `~/.kiro/crew/sessions/{safe_key}.jsonl`. First line i
 The session search index is written by its own process, not a gateway thread: index
 building is CPU-bound Python, and in the gateway it holds the GIL the event loop needs.
 `history_index_worker.SessionIndexWorkerSupervisor` keeps one spawned (never forked)
-daemon child, `kirocrew-session-index`, alive. A child that dies restarts with a
+daemon child, `ajcrew-session-index`, alive. A child that dies restarts with a
 backoff that doubles from 1 s to 60 s; the backoff and the rapid-restart count reset
 after `_HEALTHY_UPTIME_SECS` (300 s) of healthy uptime, and after
 `_MAX_RAPID_RESTARTS` (5) rapid deaths the supervisor gives up and search falls back
@@ -1034,7 +1034,7 @@ provenance and is diagnosed rather than guessed.
 Imported conversations are persisted through `ConversationLog` under generated,
 closed destination keys. They enter the normal History list but do not create
 live dashboard slots, resume a foreign runtime, or reuse a foreign identifier as
-an executable KiroCrew session key. The normal ConversationLog metadata/message
+an executable AjCrew session key. The normal ConversationLog metadata/message
 schema, rotation, path sanitization, and retention behavior therefore remain
 authoritative.
 
@@ -1142,7 +1142,7 @@ charged with what was actually written, so a file that grew between the passes
 still counts. The count is `contents.sessions_skipped_size` (present whenever
 chats were requested); the export handler adds it to its SEL `resources` line as
 `sessions_skipped_size=<n>` and sends it as the bare non-negative integer header
-`X-Kirocrew-Sessions-Skipped-Size`, only on an export that asked for chats. The
+`X-Ajcrew-Sessions-Skipped-Size`, only on an export that asked for chats. The
 Import / Export card shows `export_chats_skipped_size` under the download when
 that header is above zero.
 
@@ -1226,7 +1226,7 @@ from, and the one namespace the orchestration runs on. It keeps the reasoning-ef
 allowlist, the persisted-entry memo `_build_message_entry` with its bounds, the
 request-side retired-mode coercion (`_coerce_requested_mode`) and the history
 prefix. The orchestration's text lives in `dashboard/chat_persistence_parts/`,
-composed onto the facade by `kiro_crew._facade_compose.compose`, so each function
+composed onto the facade by `aj_crew._facade_compose.compose`, so each function
 runs on the facade's globals and reports the facade as its module:
 `save_transaction.py` (the save transaction `_save_slot_to_history` -- snapshot,
 refusals, the transcript lock, the atomic replace and the witness stamping -- with
@@ -1796,7 +1796,7 @@ no longer destroy older turns.
   `try/except`), invisible in CI. `_locked` now calls
   `_check_on_loop_persist_discipline(key)` on entry: if a running event loop is
   detected it either **raises `OnLoopPersistError`** (strict mode — on under
-  `KIROCREW_STRICT_ON_LOOP_PERSIST=1` or `KIROCREW_DEV_MODE`) so an un-offloaded
+  `AJCREW_STRICT_ON_LOOP_PERSIST=1` or `AJCREW_DEV_MODE`) so an un-offloaded
   call-site fails tests rather than losing data, or emits a **loud throttled
   warning** and proceeds via the single non-blocking safety-net acquire
   (default / production gateway, strict off — never a new hard failure in the
@@ -2462,7 +2462,7 @@ archived instead of being permanently deleted:
   explicit `retention_days`, and is rate-limited to once per hour.
 - **The same pass expires closed SESSION LEDGERS**, on that same setting and
   inside that same throttle: `_cleanup_expired_crew_logs()` hands the resolved
-  window to `kiro_crew.crew_log.store.sweep_expired()`. One switch governs both halves
+  window to `aj_crew.crew_log.store.sweep_expired()`. One switch governs both halves
   because a session's message bodies live in its ledger — expiring the transcript
   archive while the ledger it points into grew forever would keep the larger half
   of the same history indefinitely, and a second setting for it would be a second
@@ -3057,7 +3057,7 @@ than the budget needs several. In the gateway the rate is one budget per history
 pass: the idle sweep (once per `history_idle_secs` idle window, behind its own
 post-pass throttle) or a session-end hook. Per-turn callers do not drain it —
 they go through `maybe_consolidate`, whose `include_history=False` passes never
-advance `last_consolidated`. `consolidate_now()` (the `kirocrew consolidate`
+advance `last_consolidated`. `consolidate_now()` (the `ajcrew consolidate`
 CLI, whose process exits when it returns) has no sweep behind it, so it loops
 `_consolidate` itself until the tail is drained or a pass makes no progress, and
 the CLI prints the remainder rather than `done` when one is left. After a gateway
@@ -3079,7 +3079,7 @@ from preference and project extraction outright.
 
 **Cross-process exclusion (the consolidation lease).** `_running` is an in-memory
 set: it stops two passes over one session inside a single process and says
-nothing about another one. `kirocrew consolidate` IS another process, and it
+nothing about another one. `ajcrew consolidate` IS another process, and it
 runs against the same transcripts while the gateway's 60s idle sweep is live.
 Both would snapshot the same span, both would spend a provider turn on it, and
 both would write the history entry, preferences and lessons that turn produced.
@@ -3503,7 +3503,7 @@ read-only boundary line the side chat shows. A refused read-only spec is audited
 denied SEL API access (`operation=thread_reply`, `source=read_only_spec`),
 like the app-isolation refusal. A turn cancelled mid-stream (a gateway
 restart) stores the redacted partial answer under
-`[reply interrupted: Kiro Crew stopped before it finished]` -- or the
+`[reply interrupted: Aj Crew stopped before it finished]` -- or the
 "stored but not answered" row when nothing streamed -- before the
 cancellation propagates, since the panel drops its live row on reconnect; the
 final store write is shielded and drained, so a cancel that lands while the
@@ -3523,7 +3523,7 @@ hands `ChatPane` a `threads` hook set (`app-sdk/messageRenderers.ThreadHooks`:
 `summaryOf(mid)`, `onOpen(mid)`, the Bot's name), which the assistant and
 user rows read off `MessageRenderContext.threads`; every other surface has none
 and draws neither footer nor action. The page reads the flag through
-`hooks/useCrewmateThreadsFlag` (the shared `['kirocrewConfig']` query): `on`
+`hooks/useCrewmateThreadsFlag` (the shared `['ajcrewConfig']` query): `on`
 only once a successful read said `true`; a read that FAILED is its own state,
 said beside the chat through `ErrorNotice` with a Retry while the last known
 value stands -- never rendered as the flag being off, which would make an

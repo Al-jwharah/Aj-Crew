@@ -1,4 +1,4 @@
-"""Coverage-focused tests for the :mod:`kiro_crew.taskrunner` orchestrator.
+"""Coverage-focused tests for the :mod:`aj_crew.taskrunner` orchestrator.
 
 Exercises the surfaces the existing task-runner suites leave untouched: the
 workspace-dir security gate, plan/update_task validation, ``execute_plan``'s
@@ -23,13 +23,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import taskrunner as tr
-from kiro_crew.history import ConversationLog
-from kiro_crew.learn import LessonStore
-from kiro_crew.safety_override import safety_override
-from kiro_crew.task_models import Project, Task, TaskStatus
-from kiro_crew.taskrunner import TaskRunner, _auto_approve_scope, _resolve_workspace_dir
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import taskrunner as tr
+from aj_crew.history import ConversationLog
+from aj_crew.learn import LessonStore
+from aj_crew.safety_override import safety_override
+from aj_crew.task_models import Project, Task, TaskStatus
+from aj_crew.taskrunner import TaskRunner, _auto_approve_scope, _resolve_workspace_dir
+from aj_crew.testing.wait import async_wait_until
 
 # ── Fixtures / helpers ──
 
@@ -1185,7 +1185,7 @@ class TestDeleteRun:
     ) -> None:
         runner = _runner(tmp_path)
         _seed_run(runner, tmp_path)
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(sel_mod, "sel", MagicMock(side_effect=RuntimeError("sel down")))
         assert await runner.delete_run("plan_1") is True
@@ -1731,7 +1731,7 @@ class TestLogTask:
         def reported() -> bool:
             return any("history locked" in rec.getMessage() for rec in caplog.records)
 
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.taskrunner"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.taskrunner"):
             runner._log_task("hist", run, Task(index=1, title="T", description="d"))
             # The failure is logged by a done-callback the loop runs once the
             # worker thread returns; wait for that record, not a sleep count.

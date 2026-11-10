@@ -13,8 +13,8 @@ from acp_runtime_helpers import _pinned_kiro_cli_version  # noqa: F401
 from acp_runtime_helpers import _stub_sel_for_permission_tests  # noqa: F401
 from acp_runtime_helpers import _bounded, _make_runtime, _permission_msg, _register
 
-from kiro_crew.acp.runtime import AcpSessionHandle
-from kiro_crew.acp.types import JsonRpcMessage
+from aj_crew.acp.runtime import AcpSessionHandle
+from aj_crew.acp.types import JsonRpcMessage
 
 
 @pytest.mark.asyncio
@@ -52,7 +52,7 @@ async def test_pre_turn_drain_counts_discarded_frames_without_logging_content(ca
             )
         )
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.session_handle"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.session_handle"):
         gen = handle.prompt("hi", timeout=0.2)
         with contextlib.suppress(StopAsyncIteration, asyncio.TimeoutError, Exception):
             await _bounded(gen.__anext__(), what="the first prompt event")
@@ -73,7 +73,7 @@ async def _drain_warning_lines(handle, caplog):
     import contextlib
     import logging
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.session_handle"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.session_handle"):
         gen = handle.prompt("hi", timeout=0.2)
         with contextlib.suppress(StopAsyncIteration, asyncio.TimeoutError, Exception):
             await _bounded(gen.__anext__(), what="the first prompt event")
@@ -523,7 +523,7 @@ async def test_prompt_warns_when_the_stream_ends_without_a_terminal_event(caplog
     import contextlib
     import logging
 
-    from kiro_crew.acp.types import EVENT_TEXT_CHUNK, AcpEvent
+    from aj_crew.acp.types import EVENT_TEXT_CHUNK, AcpEvent
 
     _MARK = "ended without a terminal completion event"
 
@@ -537,7 +537,7 @@ async def test_prompt_warns_when_the_stream_ends_without_a_terminal_event(caplog
         yield AcpEvent(kind=EVENT_TEXT_CHUNK, text="partial")
 
     handle._dispatch_events = _no_terminal  # type: ignore[method-assign]
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.session_handle"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.session_handle"):
         async for _ev in handle.prompt("hi", timeout=0.2):
             pass
     assert any(_MARK in rec.getMessage() for rec in caplog.records)
@@ -550,7 +550,7 @@ async def test_prompt_warns_when_the_stream_ends_without_a_terminal_event(caplog
     handle2 = AcpSessionHandle("sB", q2["sB"], rt2)
     rt2.send_request = AsyncMock(return_value=9)
     handle2._dispatch_events = _no_terminal  # type: ignore[method-assign]
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.session_handle"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.session_handle"):
         gen = handle2.prompt("hi", timeout=0.2)
         with contextlib.suppress(StopAsyncIteration):
             await gen.__anext__()

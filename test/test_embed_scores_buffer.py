@@ -24,7 +24,7 @@ Two groups of tests below:
   unspaced input (CJK / hex / minified text) that the whitespace-based chunker's
   word count does not bound.
 * Vendored-constructor tests parse the SHIPPED
-  ``src/kiro_crew/_vendor/llama_cpp/llama.py`` and evaluate its real row-count
+  ``src/aj_crew/_vendor/llama_cpp/llama.py`` and evaluate its real row-count
   expression under controlled inputs. They fail if a re-vendor from upstream
   drops the divergence, or if the guard stops feeding the allocation.
 
@@ -39,8 +39,8 @@ from types import SimpleNamespace
 
 import numpy as np
 
-import kiro_crew.embeddings as embeddings_mod
-from kiro_crew.embeddings import LlamaCppEmbedder
+import aj_crew.embeddings as embeddings_mod
+from aj_crew.embeddings import LlamaCppEmbedder
 
 # Qwen3-Embedding-0.6B, the shipped embedding model.
 _N_VOCAB = 151_936
@@ -84,7 +84,7 @@ def _write_model_file(path: pathlib.Path) -> pathlib.Path:
 def _load_embedder(tmp_path: pathlib.Path, monkeypatch):
     """Build an embedder wired to a recording fake Llama and load it."""
     fake_cls = _make_recording_llama_class()
-    monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: fake_cls)
+    monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: fake_cls)
     model = _write_model_file(tmp_path / "model.gguf")
     emb = LlamaCppEmbedder(model_path=model)
     try:
@@ -171,7 +171,7 @@ def _row_count_expression() -> ast.expr:
             return stmt.value
     raise AssertionError(
         "the vendored Llama.__init__ no longer computes `n_score_rows`; the "
-        "kiro_crew scores-buffer divergence (#6827) was lost, probably by a "
+        "aj_crew scores-buffer divergence (#6827) was lost, probably by a "
         "re-vendor from upstream"
     )
 

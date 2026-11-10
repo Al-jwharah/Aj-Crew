@@ -17,7 +17,7 @@ const fetchAvailableModels = vi.fn()
 vi.mock('../api/client', () => ({
   api: {
     agentCatalog: vi.fn(),
-    kirocrewConfig: vi.fn(() => Promise.resolve({})),
+    ajcrewConfig: vi.fn(() => Promise.resolve({})),
     dashboardConfig: vi.fn(),
   },
 }))
@@ -51,11 +51,11 @@ function harness() {
 // Each call returns a fresh deep copy, as a JSON response does.
 const roster = (extra: string[] = []) => ({
   agents: [
-    { name: 'kirocrew', selection_kind: 'template', scope: 'global' },
+    { name: 'ajcrew', selection_kind: 'template', scope: 'global' },
     { name: 'reviewer', selection_kind: 'member', kiro_agent: 'reviewer', memory_store: 'reviewer' },
     ...extra.map(name => ({ name, selection_kind: 'template', scope: 'global' })),
   ],
-  default_agent: 'kirocrew',
+  default_agent: 'ajcrew',
 })
 
 beforeEach(() => {

@@ -16,8 +16,8 @@ import asyncio
 
 import pytest
 
-from kiro_crew.acp.session_handle import AcpProcessDied, AcpSessionHandle
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.session_handle import AcpProcessDied, AcpSessionHandle
+from aj_crew.testing.wait import await_until
 
 
 class _DeadRuntime:

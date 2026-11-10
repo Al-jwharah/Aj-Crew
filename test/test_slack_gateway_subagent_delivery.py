@@ -23,7 +23,7 @@ from slack_gateway_helpers import (
     _mock_sessions,
 )
 
-from kiro_crew.history import ConversationLog
+from aj_crew.history import ConversationLog
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Tests: Subagent Slack injection timeout
@@ -44,8 +44,8 @@ class TestSubagentSlackInjection:
         orch.slack.open_dm = AsyncMock(return_value="D_U1")
         orch.slack.post_message = AsyncMock()
         orch.slack.post_blocks = AsyncMock(return_value="ts")
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-            with patch("kiro_crew.slack.gateway.SubagentManager") as mock_sm:
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.slack.gateway.SubagentManager") as mock_sm:
                 mock_sm_inst = MagicMock()
                 mock_sm_inst.start_reaper = MagicMock()
                 mock_sm_inst.running = []
@@ -79,7 +79,7 @@ class TestSubagentSlackInjection:
         info.started = 0.0
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             side_effect=asyncio.TimeoutError,
         ) as mock_stream:
@@ -120,13 +120,13 @@ class TestSubagentSlackInjection:
         info.started = 0.0
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             side_effect=asyncio.TimeoutError,
         ):
             await on_done(info)
 
-        from kiro_crew.subagent_parts.run_limits import INJECTION_TIMEOUT
+        from aj_crew.subagent_parts.run_limits import INJECTION_TIMEOUT
 
         orch.subagent_mgr.notify_injection_failed.assert_called_once_with(
             info, reason=f"injection timed out after {int(INJECTION_TIMEOUT)}s"
@@ -153,8 +153,8 @@ class TestInjectWithRetry:
         orch.slack.open_dm = AsyncMock(return_value="D_U1")
         orch.slack.post_message = AsyncMock()
         orch.slack.post_blocks = AsyncMock(return_value="ts")
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-            with patch("kiro_crew.slack.gateway.SubagentManager") as mock_sm:
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.slack.gateway.SubagentManager") as mock_sm:
                 mock_sm_inst = MagicMock()
                 mock_sm_inst.start_reaper = MagicMock()
                 mock_sm_inst.running = []
@@ -172,7 +172,7 @@ class TestInjectWithRetry:
     @pytest.mark.asyncio
     async def test_acp_process_died_during_injection(self):
         """AcpProcessDied during injection → resets session."""
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         orch, mock_sm = self._setup(real_sessions())
         await open_session(orch.sessions, "C123:ts.1")
@@ -191,7 +191,7 @@ class TestInjectWithRetry:
         info.started = 0.0
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             side_effect=AcpProcessDied("dead"),
         ) as mock_stream:
@@ -207,7 +207,7 @@ class TestInjectWithRetry:
     @pytest.mark.asyncio
     async def test_prompt_busy_exhausted(self):
         """PromptBusyExhaustedError → resets session."""
-        from kiro_crew.llm_helpers import PromptBusyExhaustedError
+        from aj_crew.llm_helpers import PromptBusyExhaustedError
 
         orch, mock_sm = self._setup(real_sessions())
         await open_session(orch.sessions, "C123:ts.2")
@@ -226,7 +226,7 @@ class TestInjectWithRetry:
         info.started = 0.0
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             side_effect=PromptBusyExhaustedError("exhausted"),
         ) as mock_stream:
@@ -260,8 +260,8 @@ class TestSlackSubagentCompletionPersistence:
         orch.slack.post_message = AsyncMock()
         orch.slack.post_blocks = AsyncMock(return_value="ts")
         orch.conv_log = MagicMock()
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-            with patch("kiro_crew.slack.gateway.SubagentManager") as mock_sm:
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.slack.gateway.SubagentManager") as mock_sm:
                 mock_sm_inst = MagicMock()
                 mock_sm_inst.start_reaper = MagicMock()
                 mock_sm_inst.running = []
@@ -284,7 +284,7 @@ class TestSlackSubagentCompletionPersistence:
         info.result = "synthesis result"
         info.result_path = ""
         info.task = "analyze code"
-        info.agent = "kirocrew"
+        info.agent = "ajcrew"
         info.silent = False
         info.elapsed = 5.0
         # flake-ok: pre-existing real-clock start stamp, moved verbatim; tracked for a de-flake pass
@@ -300,12 +300,12 @@ class TestSlackSubagentCompletionPersistence:
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="synthesized response",
             ),
-            patch("kiro_crew.slack.gateway.is_thread_temporary", return_value=False),
-            patch("kiro_crew.slack.gateway.is_thread_incognito", return_value=False),
+            patch("aj_crew.slack.gateway.is_thread_temporary", return_value=False),
+            patch("aj_crew.slack.gateway.is_thread_incognito", return_value=False),
         ):
             await on_done(info)
 
@@ -331,12 +331,12 @@ class TestSlackSubagentCompletionPersistence:
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value=leaked,
             ),
-            patch("kiro_crew.slack.gateway.is_thread_temporary", return_value=False),
-            patch("kiro_crew.slack.gateway.is_thread_incognito", return_value=False),
+            patch("aj_crew.slack.gateway.is_thread_temporary", return_value=False),
+            patch("aj_crew.slack.gateway.is_thread_incognito", return_value=False),
         ):
             await on_done(info)
 
@@ -369,12 +369,12 @@ class TestSlackSubagentCompletionPersistence:
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="response",
             ) as mock_stream,
-            patch("kiro_crew.slack.gateway.is_thread_temporary", return_value=temporary),
-            patch("kiro_crew.slack.gateway.is_thread_incognito", return_value=incognito),
+            patch("aj_crew.slack.gateway.is_thread_temporary", return_value=temporary),
+            patch("aj_crew.slack.gateway.is_thread_incognito", return_value=incognito),
         ):
             await on_done(info)
 
@@ -392,12 +392,12 @@ class TestSlackSubagentCompletionPersistence:
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="response",
             ),
-            patch("kiro_crew.slack.gateway.is_thread_temporary", return_value=False),
-            patch("kiro_crew.slack.gateway.is_thread_incognito", return_value=False),
+            patch("aj_crew.slack.gateway.is_thread_temporary", return_value=False),
+            patch("aj_crew.slack.gateway.is_thread_incognito", return_value=False),
         ):
             await on_done(info)
 
@@ -413,7 +413,7 @@ class TestSlackSubagentCompletionPersistence:
         orch.conv_log = None
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             return_value="response",
         ):
@@ -434,12 +434,12 @@ class TestSlackSubagentCompletionPersistence:
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="synthesized response",
             ),
-            patch("kiro_crew.slack.gateway.is_thread_temporary", return_value=False),
-            patch("kiro_crew.slack.gateway.is_thread_incognito", return_value=False),
+            patch("aj_crew.slack.gateway.is_thread_temporary", return_value=False),
+            patch("aj_crew.slack.gateway.is_thread_incognito", return_value=False),
         ):
             await on_done(info)
 
@@ -458,12 +458,12 @@ class TestSlackSubagentCompletionPersistence:
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 side_effect=[asyncio.TimeoutError(), "response text"],
             ),
-            patch("kiro_crew.slack.gateway.is_thread_temporary", return_value=False),
-            patch("kiro_crew.slack.gateway.is_thread_incognito", return_value=False),
+            patch("aj_crew.slack.gateway.is_thread_temporary", return_value=False),
+            patch("aj_crew.slack.gateway.is_thread_incognito", return_value=False),
             # flake-ok: pre-existing worker-wide sleep patch inside the test, moved verbatim; tracked for a de-flake pass
             patch("asyncio.sleep", new_callable=AsyncMock),
         ):
@@ -484,12 +484,12 @@ class TestSlackSubagentCompletionPersistence:
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="synthesized response",
             ),
-            patch("kiro_crew.slack.gateway.is_thread_temporary", return_value=False),
-            patch("kiro_crew.slack.gateway.is_thread_incognito", return_value=False),
+            patch("aj_crew.slack.gateway.is_thread_temporary", return_value=False),
+            patch("aj_crew.slack.gateway.is_thread_incognito", return_value=False),
         ):
             await on_done(info)
 
@@ -532,8 +532,8 @@ class TestSubagentChannelTransportDelivery:
         orch.slack.open_dm = AsyncMock(return_value="D_U1")
         orch.slack.post_message = AsyncMock()
         orch.slack.post_blocks = AsyncMock(return_value="ts")
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-            with patch("kiro_crew.slack.gateway.SubagentManager") as mock_sm:
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.slack.gateway.SubagentManager") as mock_sm:
                 mock_sm_inst = MagicMock()
                 mock_sm_inst.start_reaper = MagicMock()
                 mock_sm_inst.running = []
@@ -581,7 +581,7 @@ class TestSubagentChannelTransportDelivery:
         info.result = "channel result"
         info.result_path = ""
         info.task = "analyze code"
-        info.agent = "kirocrew"
+        info.agent = "ajcrew"
         info.silent = False
         info.elapsed = 5.0
         # flake-ok: pre-existing real-clock start stamp, moved verbatim; tracked for a de-flake pass
@@ -591,7 +591,7 @@ class TestSubagentChannelTransportDelivery:
     @staticmethod
     def _permit_governance():
         return patch(
-            "kiro_crew.platform.governance_profiles.vet_and_audit",
+            "aj_crew.platform.governance_profiles.vet_and_audit",
             return_value=SimpleNamespace(permitted=True),
         )
 
@@ -605,11 +605,11 @@ class TestSubagentChannelTransportDelivery:
         # it must not turn this Telegram route into an implicit Slack mirror.
         orch.sessions.get_thread = MagicMock(return_value="")
         on_done = mock_sm.call_args[1]["on_done"]
-        info = self._make_info("telegram:kirocrew:direct:12345")
+        info = self._make_info("telegram:ajcrew:direct:12345")
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="synthesized reply",
             ),
@@ -629,17 +629,17 @@ class TestSubagentChannelTransportDelivery:
         precedence over the stored channel value."""
         transport = self._fake_transport("discord")
         orch, mock_sm = self._setup(parent_channel="discord:U999", transport=transport)
-        from kiro_crew.messaging.link import ChannelLink
+        from aj_crew.messaging.link import ChannelLink
 
         orch.sessions.get_origin_link = MagicMock(
             return_value=ChannelLink("discord", channel_id="C777")
         )
         on_done = mock_sm.call_args[1]["on_done"]
-        info = self._make_info("discord:kirocrew:direct:U999")
+        info = self._make_info("discord:ajcrew:direct:U999")
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="reply",
             ),
@@ -657,7 +657,7 @@ class TestSubagentChannelTransportDelivery:
         info = self._make_info("slack:1234567890.123456")
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             return_value="slack reply",
         ):
@@ -674,11 +674,11 @@ class TestSubagentChannelTransportDelivery:
         dashboard notification still fires."""
         orch, mock_sm = self._setup(parent_channel="telegram:12345", transport=None)
         on_done = mock_sm.call_args[1]["on_done"]
-        info = self._make_info("telegram:kirocrew:direct:12345")
+        info = self._make_info("telegram:ajcrew:direct:12345")
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="synthesized reply",
             ),
@@ -699,11 +699,11 @@ class TestSubagentChannelTransportDelivery:
         transport.send_message = AsyncMock(side_effect=RuntimeError("network down"))
         orch, mock_sm = self._setup(parent_channel="telegram:12345", transport=transport)
         on_done = mock_sm.call_args[1]["on_done"]
-        info = self._make_info("telegram:kirocrew:direct:12345")
+        info = self._make_info("telegram:ajcrew:direct:12345")
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="synthesized reply",
             ),
@@ -722,7 +722,7 @@ class TestSubagentChannelTransportDelivery:
         then succeeds still delivers to the original conversation."""
         transport = self._fake_transport("discord")
         orch, mock_sm = self._setup(parent_channel=None, transport=transport)
-        from kiro_crew.messaging.link import ChannelLink
+        from aj_crew.messaging.link import ChannelLink
 
         # Origin link present at entry, gone after the first (timed-out)
         # injection attempt — exactly what reset() does to a live session.
@@ -730,11 +730,11 @@ class TestSubagentChannelTransportDelivery:
             side_effect=[ChannelLink("discord", channel_id="C777", thread_id="T1")] + [None] * 8
         )
         on_done = mock_sm.call_args[1]["on_done"]
-        info = self._make_info("discord:kirocrew:direct:U999")
+        info = self._make_info("discord:ajcrew:direct:U999")
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 side_effect=[asyncio.TimeoutError, "reply after retry"],
             ),
@@ -755,16 +755,16 @@ class TestSubagentChannelTransportDelivery:
             transport.resolve_configured_target = AsyncMock(return_value=resolved_target)
             orch, mock_sm = self._setup(parent_channel="telegram:12345", transport=transport)
             on_done = mock_sm.call_args[1]["on_done"]
-            info = self._make_info("telegram:kirocrew:direct:12345")
+            info = self._make_info("telegram:ajcrew:direct:12345")
 
             with (
                 patch(
-                    "kiro_crew.slack.gateway.stream_and_collect",
+                    "aj_crew.slack.gateway.stream_and_collect",
                     new_callable=AsyncMock,
                     return_value="reply",
                 ),
                 self._permit_governance(),
-                patch("kiro_crew.slack.gateway.sel") as mock_sel,
+                patch("aj_crew.slack.gateway.sel") as mock_sel,
             ):
                 mock_sel.return_value.log_api_access = MagicMock()
                 await on_done(info)
@@ -783,12 +783,12 @@ class TestSubagentChannelTransportDelivery:
         transport = self._fake_transport("telegram")
         orch, mock_sm = self._setup(parent_channel="telegram:12345", transport=transport)
         on_done = mock_sm.call_args[1]["on_done"]
-        info = self._make_info("telegram:kirocrew:direct:12345")
+        info = self._make_info("telegram:ajcrew:direct:12345")
         leaked = "result aws_secret_" "access_key=AKIAIOSFODNN7EXAMPLE done"
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value=leaked,
             ),
@@ -808,11 +808,11 @@ class TestSubagentChannelTransportDelivery:
         transport = self._fake_transport("telegram")
         orch, mock_sm = self._setup(parent_channel="telegram:12345", transport=transport)
         on_done = mock_sm.call_args[1]["on_done"]
-        info = self._make_info("telegram:kirocrew:forum:987:5")
+        info = self._make_info("telegram:ajcrew:forum:987:5")
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="synthesized reply",
             ) as mock_stream,
@@ -834,21 +834,21 @@ class TestSubagentChannelTransportDelivery:
         orch, mock_sm = self._setup(parent_channel="telegram:12345", transport=transport)
         import dataclasses
 
-        from kiro_crew.messaging.link import ChannelLink
-        from kiro_crew.mirror_admission import sign_mirror_admission
+        from aj_crew.messaging.link import ChannelLink
+        from aj_crew.mirror_admission import sign_mirror_admission
 
         # Signed as the in-channel /link stores it: a key-named row must be.
         topic = ChannelLink("telegram", channel_id="987", thread_id="5")
         topic = dataclasses.replace(
-            topic, admission=sign_mirror_admission("telegram:kirocrew:forum:987:5", topic)
+            topic, admission=sign_mirror_admission("telegram:ajcrew:forum:987:5", topic)
         )
         orch.sessions.get_mirror_link = MagicMock(return_value=topic)
         on_done = mock_sm.call_args[1]["on_done"]
-        info = self._make_info("telegram:kirocrew:forum:987:5")
+        info = self._make_info("telegram:ajcrew:forum:987:5")
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="reply",
             ),
@@ -867,11 +867,11 @@ class TestSubagentChannelTransportDelivery:
         transport = self._fake_transport("telegram")
         orch, mock_sm = self._setup(parent_channel="telegram:12345", transport=transport)
         on_done = mock_sm.call_args[1]["on_done"]
-        info = self._make_info("unified:kirocrew")
+        info = self._make_info("unified:ajcrew")
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="reply",
             ),
@@ -890,11 +890,11 @@ class TestSubagentChannelTransportDelivery:
         transport.resolve_configured_target = AsyncMock(return_value=("DM123", None))
         orch, mock_sm = self._setup(parent_channel="discord:U999", transport=transport)
         on_done = mock_sm.call_args[1]["on_done"]
-        info = self._make_info("discord:kirocrew:direct:U999")
+        info = self._make_info("discord:ajcrew:direct:U999")
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="reply",
             ),
@@ -913,11 +913,11 @@ class TestSubagentChannelTransportDelivery:
         transport.resolve_configured_target = AsyncMock(return_value=None)
         orch, mock_sm = self._setup(parent_channel="teams:user@example.com", transport=transport)
         on_done = mock_sm.call_args[1]["on_done"]
-        info = self._make_info("teams:kirocrew:direct:user@example.com")
+        info = self._make_info("teams:ajcrew:direct:user@example.com")
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="reply",
             ),
@@ -936,16 +936,16 @@ class TestSubagentChannelTransportDelivery:
         transport = self._fake_transport("telegram")
         orch, mock_sm = self._setup(parent_channel="telegram:12345", transport=transport)
         on_done = mock_sm.call_args[1]["on_done"]
-        info = self._make_info("telegram:kirocrew:direct:12345")
+        info = self._make_info("telegram:ajcrew:direct:12345")
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="reply",
             ),
             patch(
-                "kiro_crew.platform.governance_profiles.vet_and_audit",
+                "aj_crew.platform.governance_profiles.vet_and_audit",
                 return_value=SimpleNamespace(permitted=False),
             ) as mock_vet,
         ):
@@ -963,12 +963,12 @@ class TestSubagentChannelTransportDelivery:
         transport = self._fake_transport("telegram", max_chars=20)
         orch, mock_sm = self._setup(parent_channel="telegram:12345", transport=transport)
         on_done = mock_sm.call_args[1]["on_done"]
-        info = self._make_info("telegram:kirocrew:direct:12345")
+        info = self._make_info("telegram:ajcrew:direct:12345")
         long_reply = "\n".join(f"line {i} of the reply" for i in range(6))
 
         with (
             patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value=long_reply,
             ),

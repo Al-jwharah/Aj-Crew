@@ -32,10 +32,10 @@ from onboarding_import_helpers import (  # noqa: F401 -- the autouse fixture reg
     _write_lineage_memory_db,
 )
 
-from kiro_crew import onboarding_plan, onboarding_scan
-from kiro_crew.cron import CronService
-from kiro_crew.onboarding_sources import lineage as lineage_source
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import onboarding_plan, onboarding_scan
+from aj_crew.cron import CronService
+from aj_crew.onboarding_sources import lineage as lineage_source
+from aj_crew.vector_memory import VectorMemoryStore
 
 # Keep apply_import's MCP sidecar lock off the real ~/.kiro/settings (see the
 # shared fixture in test/conftest.py).
@@ -44,9 +44,9 @@ pytestmark = pytest.mark.usefixtures("isolate_mcp_host_paths")
 
 def _api() -> ModuleType:
     try:
-        return importlib.import_module("kiro_crew.onboarding_import")
+        return importlib.import_module("aj_crew.onboarding_import")
     except ModuleNotFoundError:
-        pytest.fail("kiro_crew.onboarding_import is not implemented")
+        pytest.fail("aj_crew.onboarding_import is not implemented")
 
 
 class TestPreviewPredecessor:

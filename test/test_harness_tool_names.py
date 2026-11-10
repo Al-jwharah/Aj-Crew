@@ -4,17 +4,17 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.acp import _dispatch
-from kiro_crew.acp._dispatch import harness_tool_name as harness_tool_name_of
-from kiro_crew.acp.harness_tool_names import (
+from aj_crew.acp import _dispatch
+from aj_crew.acp._dispatch import harness_tool_name as harness_tool_name_of
+from aj_crew.acp.harness_tool_names import (
     CLAUDE_READ_ONLY_BUILTINS,
     HARNESS_TOOL_TABLES,
     harness_tool_match_names,
     qualified_harness_tool_id,
     split_harness_tool_id,
 )
-from kiro_crew.acp.kas_permissions import KAS_TOOL_IDS_BY_KIRO_TOOL, kas_tool_match_names
-from kiro_crew.acp.types import JsonRpcMessage
+from aj_crew.acp.kas_permissions import KAS_TOOL_IDS_BY_KIRO_TOOL, kas_tool_match_names
+from aj_crew.acp.types import JsonRpcMessage
 
 
 def test_a_shell_call_answers_to_its_kiro_cli_name():
@@ -193,6 +193,6 @@ def test_a_main_chat_claude_permission_event_names_no_builtin():
 
 
 def test_every_claude_read_builtin_maps_to_a_host_read_only_tool():
-    from kiro_crew.hooks import _HOST_READ_ONLY_BUILTIN_TOOLS
+    from aj_crew.hooks import _HOST_READ_ONLY_BUILTIN_TOOLS
 
     assert set(CLAUDE_READ_ONLY_BUILTINS.values()) <= _HOST_READ_ONLY_BUILTIN_TOOLS

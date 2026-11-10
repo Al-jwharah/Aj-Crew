@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const scratch = mkdtempSync(join(tmpdir(), "kirocrew-installer-assets-"));
+const scratch = mkdtempSync(join(tmpdir(), "ajcrew-installer-assets-"));
 
 function run(binary, args, label) {
   const result = spawnSync(

@@ -19,9 +19,9 @@ import logging
 
 import pytest
 
-from kiro_crew.mcp_providers.capability import _LIST_LIMIT_GUARD, CapabilityProvider
-from kiro_crew.mcp_utils import registry_accepts_query
-from kiro_crew.platform.capability_bound import BoundedCapabilityManager
+from aj_crew.mcp_providers.capability import _LIST_LIMIT_GUARD, CapabilityProvider
+from aj_crew.mcp_utils import registry_accepts_query
+from aj_crew.platform.capability_bound import BoundedCapabilityManager
 
 
 def _rows(count: int, *, prefix: str = "srv") -> list[dict[str, object]]:
@@ -236,7 +236,7 @@ async def test_matches_that_fit_the_guard_exactly_log_no_overflow(caplog):
     """Coverage at exactly the guard is complete, so nothing is invisible and
     the partial-coverage log must stay silent."""
     rows = _rows(_LIST_LIMIT_GUARD)
-    with caplog.at_level(logging.INFO, logger="kiro_crew.mcp_providers.capability"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.mcp_providers.capability"):
         entries = await CapabilityProvider(lambda: IgnoringManager(rows))._list_entries("srv-")
 
     assert len(entries) == _LIST_LIMIT_GUARD
@@ -247,7 +247,7 @@ async def test_matches_that_fit_the_guard_exactly_log_no_overflow(caplog):
 async def test_a_match_past_the_guard_logs_partial_coverage(caplog):
     """One match beyond the cap means search coverage really is partial."""
     rows = _rows(_LIST_LIMIT_GUARD + 1)
-    with caplog.at_level(logging.INFO, logger="kiro_crew.mcp_providers.capability"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.mcp_providers.capability"):
         entries = await CapabilityProvider(lambda: IgnoringManager(rows))._list_entries("srv-")
 
     assert len(entries) == _LIST_LIMIT_GUARD

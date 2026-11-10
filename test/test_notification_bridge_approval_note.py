@@ -14,10 +14,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.config.sections_dashboard import FEATURE_PREVIEW_FLAGS
-from kiro_crew.notifications import bridge_approval_note as note_mod
-from kiro_crew.notifications.bridge import BridgeTransportUnavailable
-from kiro_crew.notifications.bridge_slack import SlackBridgeSink
+from aj_crew.config.sections_dashboard import FEATURE_PREVIEW_FLAGS
+from aj_crew.notifications import bridge_approval_note as note_mod
+from aj_crew.notifications.bridge import BridgeTransportUnavailable
+from aj_crew.notifications.bridge_slack import SlackBridgeSink
 
 
 def _cfg(on: bool) -> Any:
@@ -135,7 +135,7 @@ async def test_the_slack_sink_reuses_a_card_already_in_slack(slack_card):
 @pytest.fixture()
 def handed(monkeypatch) -> list[dict[str, Any]]:
     calls: list[dict[str, Any]] = []
-    monkeypatch.setattr("kiro_crew.config.KiroCrewConfig.load", classmethod(lambda cls: _cfg(True)))
+    monkeypatch.setattr("aj_crew.config.AjCrewConfig.load", classmethod(lambda cls: _cfg(True)))
     monkeypatch.setattr(
         note_mod, "publish_pending_approval", lambda state, cfg, **kw: calls.append(kw)
     )
@@ -173,7 +173,7 @@ async def test_a_failing_hand_off_is_held_by_the_module_and_logged(monkeypatch, 
     def _boom(state, cfg, **kw):
         raise RuntimeError("bridge exploded")
 
-    monkeypatch.setattr("kiro_crew.config.KiroCrewConfig.load", classmethod(lambda cls: _cfg(True)))
+    monkeypatch.setattr("aj_crew.config.AjCrewConfig.load", classmethod(lambda cls: _cfg(True)))
     monkeypatch.setattr(note_mod, "publish_pending_approval", _boom)
     fut = asyncio.get_running_loop().create_future()
     with caplog.at_level("WARNING", logger=note_mod.__name__):

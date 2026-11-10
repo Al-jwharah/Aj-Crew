@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import re
 
-from kiro_crew.workflows.service import _authoring_references
+from aj_crew.workflows.service import _authoring_references
 
 _OPEN_RE = re.compile(r"^--- saved workflow (\S+)@(\d+) \((\S*)\) \[([0-9a-f]{16})\] ---$")
 

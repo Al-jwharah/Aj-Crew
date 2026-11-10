@@ -20,9 +20,9 @@ import pytest
 from worker_agent_helpers import _accepting_kiro_cli  # noqa: F401
 from worker_agent_helpers import _DEFAULT_SPEC_ON_DISK
 
-from kiro_crew import agent
-from kiro_crew import template_mcp_additions as tma
-from kiro_crew.agent_files import (
+from aj_crew import agent
+from aj_crew import template_mcp_additions as tma
+from aj_crew.agent_files import (
     AGENT_FILENAME,
     CONDUCTOR_AGENT_FILENAME,
     LEDGER_CONDUCTOR_AGENT_FILENAME,
@@ -30,7 +30,7 @@ from kiro_crew.agent_files import (
     SECURITY_CONDUCTOR_AGENT_FILENAME,
     WORKER_AGENT_FILENAME,
 )
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
 _ENTRY = {"command": "/opt/fetch/bin/mcp-fetch", "args": ["--stdio"]}
 
@@ -38,7 +38,7 @@ _ENTRY = {"command": "/opt/fetch/bin/mcp-fetch", "args": ["--stdio"]}
 @pytest.fixture()
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     data = tmp_path / "home"
-    monkeypatch.setenv("KIROCREW_HOME", str(data))
+    monkeypatch.setenv("AJCREW_HOME", str(data))
     return data
 
 
@@ -143,7 +143,7 @@ def test_a_restriction_only_entry_narrows_the_approved_server(home):
     """A checkout's (or the dashboard's) switch-off keys under the name, with no
     transport, narrow the approved server rather than withholding it whole."""
     _add("my-agent")
-    restricted = {"disabledTools": ["dangerous"], "disabled": False, "x-kirocrew": {}}
+    restricted = {"disabledTools": ["dangerous"], "disabled": False, "x-ajcrew": {}}
     merged = tma.merge_into("my-agent", {"fetch": restricted})
     assert merged["fetch"] == {**_ENTRY, "disabledTools": ["dangerous"], "disabled": False}
     spec = {"tools": [], "mcpServers": {"fetch": {"disabledTools": ["dangerous"]}}}
@@ -158,11 +158,11 @@ def test_a_restriction_only_entry_narrows_the_approved_server(home):
 
 
 def test_the_array_hosts_read_keeps_an_approved_server_a_checkout_narrows(home, monkeypatch):
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
     spec = {
         "name": "my-agent",
-        "tools": ["@kirocrew-core"],
+        "tools": ["@ajcrew-core"],
         "mcpServers": {"fetch": {"disabledTools": ["dangerous"]}},
     }
     monkeypatch.setattr(
@@ -186,11 +186,11 @@ def test_merge_into_spec_mounts_the_server_and_grants_nothing(home):
 
 
 def test_an_alias_writes_and_removes_its_successors_record(home):
-    _add("kirocrew-ledger-conductor")
-    assert "fetch" in tma.read_additions("kirocrew-conductor")
-    assert tma.merge_into("kirocrew-ledger-conductor", {})["fetch"] == _ENTRY
-    assert tma.remove_addition("kirocrew-ledger-conductor", "fetch") is True
-    assert tma.read_additions("kirocrew-conductor") == {}
+    _add("ajcrew-ledger-conductor")
+    assert "fetch" in tma.read_additions("ajcrew-conductor")
+    assert tma.merge_into("ajcrew-ledger-conductor", {})["fetch"] == _ENTRY
+    assert tma.remove_addition("ajcrew-ledger-conductor", "fetch") is True
+    assert tma.read_additions("ajcrew-conductor") == {}
 
 
 def test_remove_with_a_card_id_only_removes_that_cards_approval(home):
@@ -218,8 +218,8 @@ def test_the_record_directory_is_sealed_against_a_sandboxed_writer():
     sandbox (pre-created so the seal holds on a fresh home, and not satisfiable by
     a planted symlink), denied to the file-tool gate, and withheld from foreign
     harness children."""
-    from kiro_crew import sandbox_leaves, sandbox_precreate
-    from kiro_crew.security import paths_lists
+    from aj_crew import sandbox_leaves, sandbox_precreate
+    from aj_crew.security import paths_lists
 
     leaf = tma.RECORD_DIR
     assert leaf in sandbox_leaves._CREW_READONLY_LEAVES
@@ -230,7 +230,7 @@ def test_the_record_directory_is_sealed_against_a_sandboxed_writer():
     # the file-tool read gate, and an approved entry can hold an API key.
     assert leaf in paths_lists._CREW_SECRET_LEAVES
     # The floor fences reads AND writes for the file tools.
-    from kiro_crew.security import paths as security_paths
+    from aj_crew.security import paths as security_paths
 
     target = Path.home() / ".kiro" / "crew" / leaf / "additions.json"
     assert security_paths.is_sensitive_write_path(str(target))
@@ -241,8 +241,8 @@ def test_the_record_directory_is_sealed_against_a_sandboxed_writer():
 
 
 def test_the_constants_match_their_owners():
-    from kiro_crew.agent_materialization import conductor_agents
-    from kiro_crew.agent_parts import spec_build
+    from aj_crew.agent_materialization import conductor_agents
+    from aj_crew.agent_parts import spec_build
 
     assert tma._TEMPLATE_ALIASES == conductor_agents.DEPRECATED_AGENT_SPECS
     assert spec_build._MAIN_AGENT_NAME in tma.DEFAULT_TEMPLATES
@@ -277,53 +277,53 @@ def test_the_default_agent_and_the_worker_are_refused_everywhere(home, template)
 
 
 def test_a_default_mount_only_addition_round_trips_and_reaches_the_worker(home):
-    added = _add("kirocrew", mount_only=True)
+    added = _add("ajcrew", mount_only=True)
     assert added is not None and added.mount_only is True
-    assert tma.read_additions("kirocrew")["fetch"].mount_only is True
-    assert tma.mount_only_names("kirocrew") == frozenset({"fetch"})
+    assert tma.read_additions("ajcrew")["fetch"].mount_only is True
+    assert tma.mount_only_names("ajcrew") == frozenset({"fetch"})
     assert tma.mount_only_names("my-agent") == frozenset()
-    assert tma.addition_reach("kirocrew", mount_only=True) == (
-        "kirocrew",
-        "kirocrew-worker",
+    assert tma.addition_reach("ajcrew", mount_only=True) == (
+        "ajcrew",
+        "ajcrew-worker",
     )
-    assert tma.addition_support("kirocrew", "", mount_only=True) == tma.AdditionSupport(True)
+    assert tma.addition_support("ajcrew", "", mount_only=True) == tma.AdditionSupport(True)
     spec: dict[str, Any] = {"tools": ["fs_read"], "allowedTools": ["fs_read"], "mcpServers": {}}
-    assert tma.merge_into_spec("kirocrew", spec) == ["fetch"]
+    assert tma.merge_into_spec("ajcrew", spec) == ["fetch"]
     assert spec["tools"] == ["fs_read", "@fetch"]
     assert spec["allowedTools"] == ["fs_read"]
     assert (
-        "mount_only" in json.loads(tma.record_path().read_text())["templates"]["kirocrew"]["fetch"]
+        "mount_only" in json.loads(tma.record_path().read_text())["templates"]["ajcrew"]["fetch"]
     )
 
 
 def test_a_default_addition_without_the_flag_or_on_the_worker_is_refused(home):
     with pytest.raises(tma.AdditionError, match="template_not_covered"):
-        _add("kirocrew")
+        _add("ajcrew")
     with pytest.raises(tma.AdditionError, match="template_not_covered"):
-        _add("kirocrew-worker", mount_only=True)
-    assert tma.read_additions("kirocrew") == {}
-    assert tma.read_additions("kirocrew-worker") == {}
+        _add("ajcrew-worker", mount_only=True)
+    assert tma.read_additions("ajcrew") == {}
+    assert tma.read_additions("ajcrew-worker") == {}
 
 
 def test_a_planted_default_entry_without_the_flag_is_never_merged(home):
-    _plant("kirocrew")
-    assert tma.read_additions("kirocrew") == {}
-    assert tma.mount_only_names("kirocrew") == frozenset()
+    _plant("ajcrew")
+    assert tma.read_additions("ajcrew") == {}
+    assert tma.mount_only_names("ajcrew") == frozenset()
     spec: dict[str, Any] = {"tools": [], "mcpServers": {}}
-    assert tma.merge_into_spec("kirocrew", spec) == []
+    assert tma.merge_into_spec("ajcrew", spec) == []
     assert spec == {"tools": [], "mcpServers": {}}
 
 
 def test_reach_follows_the_alias():
-    assert tma.addition_reach("kirocrew-conductor") == (
-        "kirocrew-conductor",
-        "kirocrew-ledger-conductor",
+    assert tma.addition_reach("ajcrew-conductor") == (
+        "ajcrew-conductor",
+        "ajcrew-ledger-conductor",
     )
-    assert tma.addition_reach("kirocrew-ledger-conductor") == (
-        "kirocrew-ledger-conductor",
-        "kirocrew-conductor",
+    assert tma.addition_reach("ajcrew-ledger-conductor") == (
+        "ajcrew-ledger-conductor",
+        "ajcrew-conductor",
     )
-    assert tma.addition_reach("kirocrew-pipeline-conductor") == ("kirocrew-pipeline-conductor",)
+    assert tma.addition_reach("ajcrew-pipeline-conductor") == ("ajcrew-pipeline-conductor",)
     assert tma.addition_reach("my-agent") == ("my-agent",)
     assert tma.addition_reach("bad name") == ()
 
@@ -331,11 +331,11 @@ def test_reach_follows_the_alias():
 def test_reach_matches_what_the_installers_actually_merge(tmp_path, monkeypatch):
     """Not a restatement: install every conductor and the worker, and read which carry
     an addition made to the goal conductor."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _add("kirocrew-conductor", server="from-conductor")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _add("ajcrew-conductor", server="from-conductor")
     specs = _install_conductors_and_worker(tmp_path, monkeypatch)
     carrying = {name for name, spec in specs.items() if "from-conductor" in spec["mcpServers"]}
-    assert carrying == set(tma.addition_reach("kirocrew-conductor"))
+    assert carrying == set(tma.addition_reach("ajcrew-conductor"))
 
 
 def test_support_for_a_conductor_needs_a_backend_that_runs_spec_servers():
@@ -347,7 +347,7 @@ def test_support_for_a_conductor_needs_a_backend_that_runs_spec_servers():
 
 
 def test_a_crewmate_service_template_is_refused_and_never_merged_at_spawn(home):
-    from kiro_crew.agent_files import MATE_SERVICE_AGENT_FILENAMES
+    from aj_crew.agent_files import MATE_SERVICE_AGENT_FILENAMES
 
     for filename in MATE_SERVICE_AGENT_FILENAMES:
         template = Path(filename).stem
@@ -363,7 +363,7 @@ def test_a_crewmate_service_template_is_refused_and_never_merged_at_spawn(home):
 def test_every_other_built_in_template_is_refused_and_never_merged_at_spawn(home):
     """The heartbeat copies a fixed server list and the background agents are nobody's
     chat; their installers take no additions, so nothing may promise one."""
-    from kiro_crew.agent_files import MATE_SERVICE_AGENT_FILENAMES, OWNED_KIRO_AGENT_FILES
+    from aj_crew.agent_files import MATE_SERVICE_AGENT_FILENAMES, OWNED_KIRO_AGENT_FILES
 
     others = (
         {Path(f).stem for f in OWNED_KIRO_AGENT_FILES}
@@ -371,7 +371,7 @@ def test_every_other_built_in_template_is_refused_and_never_merged_at_spawn(home
         - set(tma.DEFAULT_TEMPLATES)
         - {Path(f).stem for f in MATE_SERVICE_AGENT_FILENAMES}
     )
-    assert "kirocrew-heartbeat" in others
+    assert "ajcrew-heartbeat" in others
     for template in sorted(others):
         for backend in ("", "kas", "claude", "codex"):
             assert tma.addition_support(template, backend) == tma.AdditionSupport(
@@ -385,16 +385,16 @@ def test_every_other_built_in_template_is_refused_and_never_merged_at_spawn(home
 
 
 def test_conductor_support_follows_the_spec_server_delivery_answer():
-    from kiro_crew.acp_backends import ACP_BACKENDS_KNOWN
-    from kiro_crew.agent_sdk.drivers.acp import backend_delivers_spec_servers
+    from aj_crew.acp_backends import ACP_BACKENDS_KNOWN
+    from aj_crew.agent_sdk.drivers.acp import backend_delivers_spec_servers
 
     for backend in ACP_BACKENDS_KNOWN:
         expected = backend_delivers_spec_servers(backend)
-        assert tma.addition_support("kirocrew-conductor", backend).supported is expected
+        assert tma.addition_support("ajcrew-conductor", backend).supported is expected
 
 
 def test_support_for_any_other_template_needs_a_per_session_channel():
-    from kiro_crew.acp_backends import ACP_BACKEND_KIRO
+    from aj_crew.acp_backends import ACP_BACKEND_KIRO
 
     refused = tma.addition_support("my-agent", ACP_BACKEND_KIRO)
     assert refused.supported is False
@@ -407,17 +407,17 @@ def test_support_for_any_other_template_needs_a_per_session_channel():
 # -- the conductor installers ------------------------------------------------------
 
 _CONDUCTOR_INSTALLERS = [
-    ("_install_conductor_agent", CONDUCTOR_AGENT_FILENAME, "kirocrew-conductor"),
-    ("_install_ledger_conductor_agent", LEDGER_CONDUCTOR_AGENT_FILENAME, "kirocrew-conductor"),
+    ("_install_conductor_agent", CONDUCTOR_AGENT_FILENAME, "ajcrew-conductor"),
+    ("_install_ledger_conductor_agent", LEDGER_CONDUCTOR_AGENT_FILENAME, "ajcrew-conductor"),
     (
         "_install_pipeline_conductor_agent",
         PIPELINE_CONDUCTOR_AGENT_FILENAME,
-        "kirocrew-pipeline-conductor",
+        "ajcrew-pipeline-conductor",
     ),
     (
         "_install_security_conductor_agent",
         SECURITY_CONDUCTOR_AGENT_FILENAME,
-        "kirocrew-security-conductor",
+        "ajcrew-security-conductor",
     ),
 ]
 
@@ -425,23 +425,23 @@ _CONDUCTOR_INSTALLERS = [
 def _pin_conductor_template(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version", lambda: SPEC_PERMISSIONS_MIN_VERSION
+        "aj_crew.kiro_cli.installed_kiro_cli_version", lambda: SPEC_PERMISSIONS_MIN_VERSION
     )
     monkeypatch.setattr(
         agent,
         "build_agent_config",
         lambda: {
-            "name": "kirocrew",
+            "name": "ajcrew",
             "prompt": "file://x",
             "mcpServers": {
-                "kirocrew-core": {"command": "/resolved/kirocrew", "args": ["mcp-core"]},
+                "ajcrew-core": {"command": "/resolved/ajcrew", "args": ["mcp-core"]},
             },
-            "tools": ["@kirocrew-core"],
+            "tools": ["@ajcrew-core"],
             "allowedTools": [],
         },
     )
     monkeypatch.setattr(
-        agent, "_kirocrew_mcp_invocation", lambda sub: ("/resolved/kirocrew", [sub])
+        agent, "_ajcrew_mcp_invocation", lambda sub: ("/resolved/ajcrew", [sub])
     )
     monkeypatch.setattr(agent, "_may_auto_approve", lambda ref: True)
 
@@ -455,7 +455,7 @@ def _install_conductors_and_worker(tmp_path, monkeypatch) -> dict[str, dict]:
         assert getattr(agent, installer)() is True
         out[Path(filename).stem] = json.loads((tmp_path / filename).read_text(encoding="utf-8"))
     agent._install_worker_agent()
-    out["kirocrew-worker"] = json.loads(
+    out["ajcrew-worker"] = json.loads(
         (tmp_path / WORKER_AGENT_FILENAME).read_text(encoding="utf-8")
     )
     return out
@@ -465,7 +465,7 @@ def _install_conductors_and_worker(tmp_path, monkeypatch) -> dict[str, dict]:
 def test_a_conductor_installer_merges_its_additions_and_grants_nothing(
     tmp_path, monkeypatch, installer, filename, template
 ):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _pin_conductor_template(tmp_path, monkeypatch)
     _add(template)
     assert getattr(agent, installer)() is True
@@ -476,14 +476,14 @@ def test_a_conductor_installer_merges_its_additions_and_grants_nothing(
     # Crew-shipped servers are still exactly what the base mounts.
     assert not any(ref.startswith("@fetch") for ref in data["allowedTools"])
     assert "autoApprove" not in data["mcpServers"]["fetch"]
-    assert {"kirocrew-core", "kirocrew-dashboard", "kirocrew-work"} <= set(data["mcpServers"])
+    assert {"ajcrew-core", "ajcrew-dashboard", "ajcrew-work"} <= set(data["mcpServers"])
 
 
 @pytest.mark.parametrize(("installer", "filename", "template"), _CONDUCTOR_INSTALLERS)
 def test_a_removed_conductor_addition_is_gone_on_the_next_install(
     tmp_path, monkeypatch, installer, filename, template
 ):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _pin_conductor_template(tmp_path, monkeypatch)
     _add(template)
     assert getattr(agent, installer)() is True
@@ -495,9 +495,9 @@ def test_a_removed_conductor_addition_is_gone_on_the_next_install(
 
 
 def test_another_templates_addition_does_not_reach_a_conductor(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _pin_conductor_template(tmp_path, monkeypatch)
-    _add("kirocrew-pipeline-conductor")
+    _add("ajcrew-pipeline-conductor")
     assert agent._install_conductor_agent() is True
     data = json.loads((tmp_path / CONDUCTOR_AGENT_FILENAME).read_text(encoding="utf-8"))
     assert "fetch" not in data["mcpServers"]
@@ -537,7 +537,7 @@ def test_a_server_the_session_waits_for_is_merged_first(home):
 def test_a_conductor_keeps_a_waited_for_addition_first_with_its_key(
     tmp_path, monkeypatch, installer, filename, template
 ):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _pin_conductor_template(tmp_path, monkeypatch)
     _add(template, entry=dict(_WAITED))
     assert getattr(agent, installer)() is True
@@ -552,7 +552,7 @@ def test_a_conductor_keeps_a_waited_for_addition_first_with_its_key(
 
 def test_merge_at_spawn_merges_a_custom_template_and_writes_nothing(home, tmp_path):
     _add("my-agent")
-    spec = {"tools": ["@kirocrew-core"], "mcpServers": {"kirocrew-core": {"command": "k"}}}
+    spec = {"tools": ["@ajcrew-core"], "mcpServers": {"ajcrew-core": {"command": "k"}}}
     before = json.dumps(spec)
     out = tma.merge_at_spawn("my-agent", spec)
     assert out is not spec and json.dumps(spec) == before
@@ -569,9 +569,9 @@ def test_merge_at_spawn_leaves_a_conductor_alone(home):
 
 
 def test_the_array_hosts_read_merges_a_custom_template(home, tmp_path, monkeypatch):
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
-    spec = {"name": "my-agent", "tools": ["@kirocrew-core"], "mcpServers": {}}
+    spec = {"name": "my-agent", "tools": ["@ajcrew-core"], "mcpServers": {}}
     monkeypatch.setattr(
         session_mcp, "_agent_spec_and_snapshot_for", lambda *a, **k: (dict(spec), None)
     )
@@ -583,12 +583,12 @@ def test_the_array_hosts_read_merges_a_custom_template(home, tmp_path, monkeypat
 
 
 def test_the_kas_read_merges_a_custom_template(home, tmp_path, monkeypatch):
-    from kiro_crew.acp.harness import kas
+    from aj_crew.acp.harness import kas
 
     agents = tmp_path / "agents"
     agents.mkdir()
     (agents / "my-agent.json").write_text(
-        json.dumps({"name": "my-agent", "tools": ["@kirocrew-core"], "mcpServers": {}}),
+        json.dumps({"name": "my-agent", "tools": ["@ajcrew-core"], "mcpServers": {}}),
         encoding="utf-8",
     )
     _add("my-agent")
@@ -602,14 +602,14 @@ def test_the_kas_read_merges_a_custom_template(home, tmp_path, monkeypatch):
 def test_the_kas_read_merges_a_project_only_template(home, tmp_path, monkeypatch):
     """A checkout's spec is filtered to its honoured keys; the approved additions come
     from the user's own record, so they reach it after the filter."""
-    from kiro_crew.acp.harness import kas
+    from aj_crew.acp.harness import kas
 
     agents = tmp_path / "agents"
     agents.mkdir()
     checkout = tmp_path / "checkout"
     (checkout / ".kiro" / "agents").mkdir(parents=True)
     (checkout / ".kiro" / "agents" / "proj-agent.json").write_text(
-        json.dumps({"name": "proj-agent", "tools": ["@kirocrew-core"]}), encoding="utf-8"
+        json.dumps({"name": "proj-agent", "tools": ["@ajcrew-core"]}), encoding="utf-8"
     )
     monkeypatch.setattr(kas.paths_mod, "mate_agents_dir", lambda: tmp_path / "no-mates")
     _add("proj-agent")
@@ -618,7 +618,7 @@ def test_the_kas_read_merges_a_project_only_template(home, tmp_path, monkeypatch
 
 
 def test_the_kas_read_keeps_a_checkout_mute_on_an_approved_server(home, tmp_path, monkeypatch):
-    from kiro_crew.acp.harness import kas
+    from aj_crew.acp.harness import kas
 
     agents = tmp_path / "agents"
     agents.mkdir()
@@ -628,7 +628,7 @@ def test_the_kas_read_keeps_a_checkout_mute_on_an_approved_server(home, tmp_path
         json.dumps(
             {
                 "name": "proj-agent",
-                "tools": ["@kirocrew-core"],
+                "tools": ["@ajcrew-core"],
                 "mcpServers": {
                     "fetch": {"disabled": True, "command": "checkout-cmd"},
                     "other": {"disabledTools": ["x"], "command": "never"},
@@ -648,8 +648,8 @@ def test_the_kas_read_keeps_a_checkout_mute_on_an_approved_server(home, tmp_path
 def test_an_addition_landing_mid_read_never_launches_a_checkout_muted_server(
     home, tmp_path, monkeypatch
 ):
-    from kiro_crew import template_mcp_additions as tma
-    from kiro_crew.acp.harness import kas
+    from aj_crew import template_mcp_additions as tma
+    from aj_crew.acp.harness import kas
 
     agents = tmp_path / "agents"
     agents.mkdir()
@@ -682,7 +682,7 @@ def test_an_addition_landing_mid_read_never_launches_a_checkout_muted_server(
 
 
 def test_the_kas_read_merges_a_crewmate_folder_template(home, tmp_path, monkeypatch):
-    from kiro_crew.acp.harness import kas
+    from aj_crew.acp.harness import kas
 
     agents = tmp_path / "agents"
     agents.mkdir()
@@ -702,14 +702,14 @@ def test_the_kas_read_merges_a_crewmate_folder_template(home, tmp_path, monkeypa
 
 
 def test_the_doctor_row_lists_each_templates_additions(home, capsys):
-    from kiro_crew.doctor_checks import mcp
+    from aj_crew.doctor_checks import mcp
 
     mcp._doctor_template_mcp_additions()
     assert capsys.readouterr().out == ""
-    _add("kirocrew-conductor", card="card-9")
+    _add("ajcrew-conductor", card="card-9")
     mcp._doctor_template_mcp_additions()
     out = capsys.readouterr().out
-    assert "mcp additions: 'kirocrew-conductor'" in out
+    assert "mcp additions: 'ajcrew-conductor'" in out
     assert "'fetch' (card 'card-9'," in out
 
 
@@ -717,7 +717,7 @@ def _page_switches(monkeypatch, switched: dict[str, list[str]]) -> None:
     """The MCP page's ``disabledTools`` switch, as ``list_servers`` reports it."""
     from types import SimpleNamespace
 
-    from kiro_crew import mcp_discovery
+    from aj_crew import mcp_discovery
 
     rows = [SimpleNamespace(name=n, disabled_tools=list(t)) for n, t in switched.items()]
     monkeypatch.setattr(mcp_discovery, "list_servers", lambda: rows)
@@ -725,15 +725,15 @@ def _page_switches(monkeypatch, switched: dict[str, list[str]]) -> None:
 
 def test_an_addition_never_brings_back_a_tool_the_page_switched_off(home, monkeypatch):
     tma.add_addition(
-        "kirocrew-conductor", "github", {"command": "gh-mcp"}, approved_by="u", card_id="c"
+        "ajcrew-conductor", "github", {"command": "gh-mcp"}, approved_by="u", card_id="c"
     )
     _page_switches(monkeypatch, {"github": ["delete_repo"], "other": ["x"]})
-    merged = tma.merge_into("kirocrew-conductor", {})
+    merged = tma.merge_into("ajcrew-conductor", {})
     assert merged["github"]["disabledTools"] == ["delete_repo"]
     assert merged["github"]["command"] == "gh-mcp"
     # A tool switched off after the approval is off on the next merge too.
     _page_switches(monkeypatch, {"github": ["delete_repo", "push"]})
-    assert tma.merge_into("kirocrew-conductor", {})["github"]["disabledTools"] == [
+    assert tma.merge_into("ajcrew-conductor", {})["github"]["disabledTools"] == [
         "delete_repo",
         "push",
     ]
@@ -741,22 +741,22 @@ def test_an_addition_never_brings_back_a_tool_the_page_switched_off(home, monkey
 
 def test_a_restriction_and_the_page_switch_both_apply(home, monkeypatch):
     tma.add_addition(
-        "kirocrew-conductor", "github", {"command": "gh-mcp"}, approved_by="u", card_id="c"
+        "ajcrew-conductor", "github", {"command": "gh-mcp"}, approved_by="u", card_id="c"
     )
     _page_switches(monkeypatch, {"github": ["delete_repo"]})
-    merged = tma.merge_into("kirocrew-conductor", {"github": {"disabledTools": ["push"]}})
+    merged = tma.merge_into("ajcrew-conductor", {"github": {"disabledTools": ["push"]}})
     assert merged["github"]["disabledTools"] == ["push", "delete_repo"]
 
 
 def test_an_unreadable_page_adds_no_switch(home, monkeypatch):
-    from kiro_crew import mcp_discovery
+    from aj_crew import mcp_discovery
 
     tma.add_addition(
-        "kirocrew-conductor", "github", {"command": "gh-mcp"}, approved_by="u", card_id="c"
+        "ajcrew-conductor", "github", {"command": "gh-mcp"}, approved_by="u", card_id="c"
     )
 
     def boom():
         raise OSError("config unreadable")
 
     monkeypatch.setattr(mcp_discovery, "list_servers", boom)
-    assert "disabledTools" not in tma.merge_into("kirocrew-conductor", {})["github"]
+    assert "disabledTools" not in tma.merge_into("ajcrew-conductor", {})["github"]

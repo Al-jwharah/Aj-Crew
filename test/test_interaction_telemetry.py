@@ -15,11 +15,11 @@ import pytest
 from chat_test_helpers import _make_state
 
 from conftest import MockSlackClient
-from kiro_crew.acp.types import STOP_REASON_CANCELLED
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.platform import build_default_context
-from kiro_crew.platform.context import reset_context, set_context
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.acp.types import STOP_REASON_CANCELLED
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.platform import build_default_context
+from aj_crew.platform.context import reset_context, set_context
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
 
 def _provider_mock() -> AsyncMock:
@@ -75,7 +75,7 @@ class _RaisingTelemetry(_StubTelemetry):
 def stub_telemetry():
     """Install a PlatformContext whose telemetry adapter records events."""
     stub = _StubTelemetry()
-    ctx = dataclasses.replace(build_default_context(KiroCrewConfig()), telemetry=stub)
+    ctx = dataclasses.replace(build_default_context(AjCrewConfig()), telemetry=stub)
     set_context(ctx)
     yield stub
     reset_context()
@@ -84,7 +84,7 @@ def stub_telemetry():
 @pytest.fixture(autouse=True)
 def _clean_slack_module_state():
     """Clear slack handler module-level state between tests (xdist hygiene)."""
-    from kiro_crew.slack.handler import _pending_approvals, _thread_agents, _trusted_sessions
+    from aj_crew.slack.handler import _pending_approvals, _thread_agents, _trusted_sessions
 
     _pending_approvals.clear()
     _trusted_sessions.clear()
@@ -126,7 +126,7 @@ class TestDashboardInteractionTelemetry:
 
     @staticmethod
     def _make_dash_state(tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.push_slots_update = MagicMock()
@@ -149,7 +149,7 @@ class TestDashboardInteractionTelemetry:
         client = self._make_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, _SECRET_PROMPT)
 
@@ -171,7 +171,7 @@ class TestDashboardInteractionTelemetry:
         client = self._make_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -181,7 +181,7 @@ class TestDashboardInteractionTelemetry:
     async def test_telemetry_failure_never_breaks_the_turn(self, tmp_path, monkeypatch):
         """record_event raising must not propagate — best-effort only."""
         stub = _RaisingTelemetry()
-        ctx = dataclasses.replace(build_default_context(KiroCrewConfig()), telemetry=stub)
+        ctx = dataclasses.replace(build_default_context(AjCrewConfig()), telemetry=stub)
         set_context(ctx)
         try:
             events = [
@@ -193,7 +193,7 @@ class TestDashboardInteractionTelemetry:
             client = self._make_client(events)
             state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-            from kiro_crew.dashboard.chat import _run_chat
+            from aj_crew.dashboard.chat import _run_chat
 
             await _run_chat(state, slot, "hello")
 
@@ -317,7 +317,7 @@ class _FakeSessionManager:
 class TestSlackInteractionTelemetry:
     @pytest.mark.asyncio
     async def test_successful_turn_records_one_interaction(self, stub_telemetry):
-        from kiro_crew.slack.handler import handle_message
+        from aj_crew.slack.handler import handle_message
 
         slack = MockSlackClient()
         provider = _FakeProvider([LLMEvent(kind=EVENT_TEXT_CHUNK, text="the answer is 42")])
@@ -338,7 +338,7 @@ class TestSlackInteractionTelemetry:
 
     @pytest.mark.asyncio
     async def test_cancelled_turn_records_nothing(self, stub_telemetry):
-        from kiro_crew.slack.handler import handle_message
+        from aj_crew.slack.handler import handle_message
 
         slack = MockSlackClient()
         provider = _FakeProvider(
@@ -357,10 +357,10 @@ class TestSlackInteractionTelemetry:
     @pytest.mark.asyncio
     async def test_telemetry_failure_never_breaks_the_turn(self):
         """record_event raising must not propagate — best-effort only."""
-        from kiro_crew.slack.handler import handle_message
+        from aj_crew.slack.handler import handle_message
 
         stub = _RaisingTelemetry()
-        ctx = dataclasses.replace(build_default_context(KiroCrewConfig()), telemetry=stub)
+        ctx = dataclasses.replace(build_default_context(AjCrewConfig()), telemetry=stub)
         set_context(ctx)
         try:
             slack = MockSlackClient()

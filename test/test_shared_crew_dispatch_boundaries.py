@@ -19,18 +19,18 @@ from test_shared_crew_queued_admission import dash_state as _dash_state
 from test_shared_crew_queued_admission import installed as _installed
 from test_shared_crew_turn_outcome import _service
 
-from kiro_crew.dashboard import chat_handlers, chat_runner
-from kiro_crew.dashboard.handlers import workflows
-from kiro_crew.dashboard.slot_queue_repository import (
+from aj_crew.dashboard import chat_handlers, chat_runner
+from aj_crew.dashboard.handlers import workflows
+from aj_crew.dashboard.slot_queue_repository import (
     drain_restored_parked_sends,
     durable_queue_entries,
     sanitize_restored_queue,
 )
-from kiro_crew.shared_crew import admission_entry as entry
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import turn_gate
-from kiro_crew.shared_crew.admission import OperationKind, OperationState
-from kiro_crew.testing.wait import await_until
+from aj_crew.shared_crew import admission_entry as entry
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import turn_gate
+from aj_crew.shared_crew.admission import OperationKind, OperationState
+from aj_crew.testing.wait import await_until
 
 clock = _clock
 dash_state = _dash_state
@@ -72,7 +72,7 @@ async def test_queued_send_rechecks_busy_after_admission(
     monkeypatch.setattr(chat_handlers, "_maybe_auto_title", AsyncMock())
     monkeypatch.setattr(chat_runner, "_run_chat", run)
     monkeypatch.setattr(chat_runner, "_parked_queue_drain_admitted", lambda: True)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_slack.slot_is_live", lambda *_: True)
+    monkeypatch.setattr("aj_crew.dashboard.chat_slack.slot_is_live", lambda *_: True)
     async with _client(dash_state, BOB) as client:
         sending = asyncio.create_task(
             client.post(
@@ -150,13 +150,13 @@ async def test_recovery_leaves_unaccepted_cards_in_the_same_slot(
     )
     slot = state.get_or_create_slot("mixed")
     slot._queue[:] = sanitize_restored_queue(saved)
-    from kiro_crew.shared_crew.host_hooks import mark_sessions_restored
+    from aj_crew.shared_crew.host_hooks import mark_sessions_restored
 
     mark_sessions_restored(state)
     plain = [dict(item) for item in slot._queue if item["id"].startswith("plain")]
     monkeypatch.setattr(chat_runner, "subagents_hold_user_messages", lambda *_: False)
     monkeypatch.setattr(chat_runner, "_parked_queue_drain_admitted", lambda: True)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_slack.slot_is_live", lambda *_: True)
+    monkeypatch.setattr("aj_crew.dashboard.chat_slack.slot_is_live", lambda *_: True)
     calls = []
     tasks = []
     follow_queue = True

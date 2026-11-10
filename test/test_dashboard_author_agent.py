@@ -1,6 +1,6 @@
-"""Tests for the kirocrew-dashboard-author managed crewmate.
+"""Tests for the ajcrew-dashboard-author managed crewmate.
 
-``kirocrew-dashboard-author`` authors one dashboard template and lands it as a pull
+``ajcrew-dashboard-author`` authors one dashboard template and lands it as a pull
 request. Pinned: the filename is owned, a rebuild writes a loadable spec, the charter
 mounts ``fs_write`` and ``execute_bash`` without auto-approving them, and ownership is the
 SHA-256 of the installer's last write, recorded in the ``agent_state`` sidecar. So the
@@ -17,10 +17,10 @@ from typing import Any
 import pytest
 from sidecar_fault_helpers import fail_one_sidecar_read
 
-from kiro_crew import agent, agent_state
-from kiro_crew.agent_files import DASHBOARD_AUTHOR_AGENT_FILENAME, OWNED_KIRO_AGENT_FILES
-from kiro_crew.agent_materialization import skill_resources, worker_agent
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew import agent, agent_state
+from aj_crew.agent_files import DASHBOARD_AUTHOR_AGENT_FILENAME, OWNED_KIRO_AGENT_FILES
+from aj_crew.agent_materialization import skill_resources, worker_agent
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
 
 class _Rig:
@@ -29,19 +29,19 @@ class _Rig:
     def __init__(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         self.agents = tmp_path / "agents"
         self.agents.mkdir()
-        binary = tmp_path / "bin" / "kirocrew"
+        binary = tmp_path / "bin" / "ajcrew"
         binary.parent.mkdir()
         binary.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
         binary.chmod(0o755)
         monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", self.agents)
-        monkeypatch.setattr(agent, "_KIROCREW_BIN", str(binary))
+        monkeypatch.setattr(agent, "_AJCREW_BIN", str(binary))
         monkeypatch.setattr(agent, "_KIRO_MCP_JSON", tmp_path / "kiro-global-mcp.json")
         monkeypatch.setattr(agent, "_DEFAULT_KIRO_HOOKS_DIR", tmp_path / "no-hooks")
         monkeypatch.setattr(
-            "kiro_crew.apps.bridges._mcp_json_path", lambda: self.agents / "kirocrew.json"
+            "aj_crew.apps.bridges._mcp_json_path", lambda: self.agents / "ajcrew.json"
         )
         monkeypatch.setattr(
-            "kiro_crew.kiro_cli.installed_kiro_cli_version",
+            "aj_crew.kiro_cli.installed_kiro_cli_version",
             lambda: SPEC_PERMISSIONS_MIN_VERSION,
         )
 
@@ -62,9 +62,9 @@ def _is_installers(path: Path) -> bool:
 
 
 def test_the_dashboard_author_filename_is_owned() -> None:
-    """A managed spec Kiro Crew writes must be in the owned-files allowlist, or the
+    """A managed spec Aj Crew writes must be in the owned-files allowlist, or the
     Playwright convergence sweep and the self-heal pass skip it."""
-    assert DASHBOARD_AUTHOR_AGENT_FILENAME == "kirocrew-dashboard-author.json"
+    assert DASHBOARD_AUTHOR_AGENT_FILENAME == "ajcrew-dashboard-author.json"
     assert DASHBOARD_AUTHOR_AGENT_FILENAME in OWNED_KIRO_AGENT_FILES
 
 
@@ -75,14 +75,14 @@ def test_a_rebuild_materializes_the_dashboard_author(
     rig = _Rig(tmp_path, monkeypatch)
     agent.rebuild_agent_config()
     spec = rig.read(DASHBOARD_AUTHOR_AGENT_FILENAME)
-    assert spec["name"] == "kirocrew-dashboard-author"
+    assert spec["name"] == "ajcrew-dashboard-author"
 
 
 def test_the_dashboard_author_mounts_but_never_auto_approves_write_or_shell(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """``fs_write`` and ``execute_bash`` are the job, so they are mounted; a human reads
-    the author's diff, so neither is auto-approved -- the line ``kirocrew-conductor``
+    the author's diff, so neither is auto-approved -- the line ``ajcrew-conductor``
     draws, and for the same reason (``allowedTools`` has no argument matching)."""
     rig = _Rig(tmp_path, monkeypatch)
     agent.rebuild_agent_config()
@@ -105,15 +105,15 @@ def test_the_dashboard_author_auto_approves_only_reading_core_verbs(
     spec = rig.read(DASHBOARD_AUTHOR_AGENT_FILENAME)
     assert set(spec["allowedTools"]) == {
         "tool_search",
-        "@kirocrew-core/skill_search",
-        "@kirocrew-core/skill_discover",
-        "@kirocrew-core/memory_recall",
-        "@kirocrew-core/resource_status",
+        "@ajcrew-core/skill_search",
+        "@ajcrew-core/skill_discover",
+        "@ajcrew-core/memory_recall",
+        "@ajcrew-core/resource_status",
     }
     # No session verb, no work-ledger mount, no publication surface, no file-write grant.
     for ref in spec["allowedTools"]:
-        assert not ref.startswith("@kirocrew-dashboard")
-        assert not ref.startswith("@kirocrew-work")
+        assert not ref.startswith("@ajcrew-dashboard")
+        assert not ref.startswith("@ajcrew-work")
         assert ref not in ("fs_write", "execute_bash", "code")
 
 
@@ -123,8 +123,8 @@ def test_the_prompt_and_description_come_from_the_shipped_spec(
     """The charter has ONE authoritative copy -- the shipped ``agent-spec.md`` -- so the
     installed spec's prompt and description are what ``parse_markdown_spec`` reads from
     it, never a Python constant held equal to it by nothing."""
-    from kiro_crew.agent_materialization.worker_agent import _DASHBOARD_AUTHOR_SPEC_PATH
-    from kiro_crew.agent_spec_format import parse_markdown_spec
+    from aj_crew.agent_materialization.worker_agent import _DASHBOARD_AUTHOR_SPEC_PATH
+    from aj_crew.agent_spec_format import parse_markdown_spec
 
     rig = _Rig(tmp_path, monkeypatch)
     agent.rebuild_agent_config()
@@ -151,8 +151,8 @@ def test_the_install_records_the_ownership_digest(
     agent.rebuild_agent_config()
     target = rig.agents / DASHBOARD_AUTHOR_AGENT_FILENAME
     spec = rig.read(DASHBOARD_AUTHOR_AGENT_FILENAME)
-    assert spec["name"] == "kirocrew-dashboard-author"
-    recorded = agent_state.get_managed_digest("kirocrew-dashboard-author")
+    assert spec["name"] == "ajcrew-dashboard-author"
+    recorded = agent_state.get_managed_digest("ajcrew-dashboard-author")
     assert recorded is not None
     assert recorded == agent_state.spec_digest(spec)
     assert _is_installers(target) is True
@@ -166,7 +166,7 @@ def test_the_recorded_digest_is_of_the_bytes_the_governed_write_lands(
     The pending digest is taken after the ceiling pass at the write; otherwise later
     rebuilds read the file as foreign and stop re-filtering it.
     """
-    from kiro_crew.agent_materialization import auto_approve
+    from aj_crew.agent_materialization import auto_approve
 
     rig = _Rig(tmp_path, monkeypatch)
     real_write = auto_approve.write_governed_spec
@@ -181,7 +181,7 @@ def test_the_recorded_digest_is_of_the_bytes_the_governed_write_lands(
     target = rig.agents / DASHBOARD_AUTHOR_AGENT_FILENAME
     spec = rig.read(DASHBOARD_AUTHOR_AGENT_FILENAME)
     assert "tool_search" not in spec["allowedTools"]
-    assert agent_state.get_managed_digest("kirocrew-dashboard-author") == agent_state.spec_digest(
+    assert agent_state.get_managed_digest("ajcrew-dashboard-author") == agent_state.spec_digest(
         spec
     )
     assert _is_installers(target) is True
@@ -201,7 +201,7 @@ def test_a_prior_managed_write_is_refreshed_in_place(
     # A second rebuild recognises our prior write (its digest) and refreshes it in place.
     agent.rebuild_agent_config()
     assert _is_installers(target) is True
-    assert rig.read(DASHBOARD_AUTHOR_AGENT_FILENAME)["name"] == "kirocrew-dashboard-author"
+    assert rig.read(DASHBOARD_AUTHOR_AGENT_FILENAME)["name"] == "ajcrew-dashboard-author"
 
 
 def test_a_user_file_is_left_untouched_and_not_installed_over(
@@ -225,19 +225,19 @@ def test_a_user_file_is_left_untouched_and_not_installed_over(
 def test_a_user_file_reusing_the_name_but_with_no_recorded_digest_is_left_untouched(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A user file that reuses the agent NAME and even mounts ``kirocrew-core`` is still not
+    """A user file that reuses the agent NAME and even mounts ``ajcrew-core`` is still not
     ours when no ownership digest is recorded for the name (nothing the installer wrote), so
     it is left untouched rather than overwritten. The name is not the record; the digest is."""
     rig = _Rig(tmp_path, monkeypatch)
     target = rig.agents / DASHBOARD_AUTHOR_AGENT_FILENAME
     user = {
-        "name": "kirocrew-dashboard-author",
+        "name": "ajcrew-dashboard-author",
         "prompt": "a user spec reusing the name and the core mount",
-        "mcpServers": {"kirocrew-core": {}},
-        "tools": ["@kirocrew-core/skill_search"],
+        "mcpServers": {"ajcrew-core": {}},
+        "tools": ["@ajcrew-core/skill_search"],
     }
     target.write_text(json.dumps(user), encoding="utf-8")
-    assert agent_state.get_managed_digest("kirocrew-dashboard-author") is None
+    assert agent_state.get_managed_digest("ajcrew-dashboard-author") is None
     assert _is_installers(target) is False
 
     agent.rebuild_agent_config()
@@ -356,7 +356,7 @@ def test_repair_pass_rewrites_an_owned_dashboard_author_file(
     managed = rig.read(DASHBOARD_AUTHOR_AGENT_FILENAME)
     managed["hooks"] = {"auto_approve_tools": ["x"]}
     target.write_text(json.dumps(managed, indent=2) + "\n", encoding="utf-8")
-    agent_state.set_managed_digest("kirocrew-dashboard-author", agent_state.spec_digest(managed))
+    agent_state.set_managed_digest("ajcrew-dashboard-author", agent_state.spec_digest(managed))
     assert _is_installers(target) is True  # ours by recorded digest
 
     # The prior rebuild's own hook-sweep recorded this file's mtime; clear that cache so the
@@ -384,7 +384,7 @@ def test_reset_model_on_the_managed_spec_keeps_it_attributable(
     target = rig.agents / DASHBOARD_AUTHOR_AGENT_FILENAME
     assert _is_installers(target) is True
 
-    agent.reset_agent_model("kirocrew-dashboard-author")
+    agent.reset_agent_model("ajcrew-dashboard-author")
 
     # The edited file still confirms as ours (its digest was re-recorded by the edit path)
     # -> still refreshed on the next rebuild.
@@ -403,19 +403,19 @@ def test_reset_model_does_not_stamp_a_user_file_at_the_stem(
     rig = _Rig(tmp_path, monkeypatch)
     target = rig.agents / DASHBOARD_AUTHOR_AGENT_FILENAME
     user = {
-        "name": "kirocrew-dashboard-author",
+        "name": "ajcrew-dashboard-author",
         "prompt": "the user's own hand-authored dashboard author",
-        "mcpServers": {"kirocrew-core": {}},
+        "mcpServers": {"ajcrew-core": {}},
         "model": "some-model",
     }
     target.write_text(json.dumps(user, indent=2) + "\n", encoding="utf-8")
-    assert agent_state.get_managed_digest("kirocrew-dashboard-author") is None
+    assert agent_state.get_managed_digest("ajcrew-dashboard-author") is None
     assert _is_installers(target) is False
 
-    agent.reset_agent_model("kirocrew-dashboard-author")
+    agent.reset_agent_model("ajcrew-dashboard-author")
 
     # No digest was recorded for the user's bytes -> still NOT ours -> a rebuild leaves it.
-    assert agent_state.get_managed_digest("kirocrew-dashboard-author") is None
+    assert agent_state.get_managed_digest("ajcrew-dashboard-author") is None
     assert _is_installers(target) is False
     agent.rebuild_agent_config()
     assert json.loads(target.read_text(encoding="utf-8"))["prompt"] == (
@@ -434,14 +434,14 @@ def test_hook_sweep_does_not_stamp_a_user_file_carrying_a_stale_digest(
     target = rig.agents / DASHBOARD_AUTHOR_AGENT_FILENAME
     # A user file at the stem carrying a legacy hook key.
     user = {
-        "name": "kirocrew-dashboard-author",
+        "name": "ajcrew-dashboard-author",
         "prompt": "the user's own file that replaced a managed install",
-        "mcpServers": {"kirocrew-core": {}},
+        "mcpServers": {"ajcrew-core": {}},
         "hooks": {"auto_approve_tools": ["x"]},
     }
     target.write_text(json.dumps(user, indent=2) + "\n", encoding="utf-8")
     # A STALE digest recorded for some OTHER (managed) bytes -- the user's file does not match.
-    agent_state.set_managed_digest("kirocrew-dashboard-author", "staledigeststaledigest")
+    agent_state.set_managed_digest("ajcrew-dashboard-author", "staledigeststaledigest")
     assert _is_installers(target) is False  # bytes do not reproduce the stale digest
 
     agent._hooks_sanitized_mtimes.clear()
@@ -450,7 +450,7 @@ def test_hook_sweep_does_not_stamp_a_user_file_carrying_a_stale_digest(
     # The legacy key was swept, but the digest was NOT renewed to the user's bytes.
     swept = json.loads(target.read_text(encoding="utf-8"))
     assert "auto_approve_tools" not in swept.get("hooks", {})
-    assert agent_state.get_managed_digest("kirocrew-dashboard-author") == "staledigeststaledigest"
+    assert agent_state.get_managed_digest("ajcrew-dashboard-author") == "staledigeststaledigest"
     assert _is_installers(target) is False  # still not ours -> a rebuild leaves it
 
 
@@ -477,14 +477,14 @@ def test_a_present_file_reproducing_the_digest_is_refreshed(
     marked = rig.read(DASHBOARD_AUTHOR_AGENT_FILENAME)
     marked["model"] = "a-stale-model-from-a-prior-build"
     target.write_text(json.dumps(marked, indent=2) + "\n", encoding="utf-8")
-    agent_state.set_managed_digest("kirocrew-dashboard-author", agent_state.spec_digest(marked))
+    agent_state.set_managed_digest("ajcrew-dashboard-author", agent_state.spec_digest(marked))
     assert _is_installers(target) is True  # reproduces the recorded digest
 
     agent.rebuild_agent_config()
 
     # Refreshed in place (the stale model is replaced), still the managed spec.
     refreshed = rig.read(DASHBOARD_AUTHOR_AGENT_FILENAME)
-    assert refreshed["name"] == "kirocrew-dashboard-author"
+    assert refreshed["name"] == "ajcrew-dashboard-author"
     assert refreshed.get("model") != "a-stale-model-from-a-prior-build"
     assert _is_installers(target) is True
 
@@ -492,15 +492,15 @@ def test_a_present_file_reproducing_the_digest_is_refreshed(
 def test_a_forgery_not_reproducing_the_digest_is_left_untouched(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A spec reusing the name and ``kirocrew-core`` mount is left untouched.
+    """A spec reusing the name and ``ajcrew-core`` mount is left untouched.
 
     It does not reproduce the recorded digest; content marks are forgeable, the digest is not."""
     rig = _Rig(tmp_path, monkeypatch)
     target = rig.agents / DASHBOARD_AUTHOR_AGENT_FILENAME
     forged = {
-        "name": "kirocrew-dashboard-author",
-        "mcpServers": {"kirocrew-core": {"command": "kirocrew"}},
-        "tools": ["@kirocrew-core/skill_search"],
+        "name": "ajcrew-dashboard-author",
+        "mcpServers": {"ajcrew-core": {"command": "ajcrew"}},
+        "tools": ["@ajcrew-core/skill_search"],
         "prompt": "a hand-built spec reusing the name and the core mount",
         "description": "forges the old content marks but not the digest",
     }
@@ -520,14 +520,14 @@ def test_a_conductor_duplicate_renamed_to_the_stem_is_not_overwritten(
 ) -> None:
     """A conductor copy renamed to this stem is read as a user file and left untouched.
 
-    It has the name, a ``kirocrew-core`` reference and no ``kirocrew-cron`` mount, so it
+    It has the name, a ``ajcrew-core`` reference and no ``ajcrew-cron`` mount, so it
     matches every content mark, but not the recorded digest."""
     rig = _Rig(tmp_path, monkeypatch)
     target = rig.agents / DASHBOARD_AUTHOR_AGENT_FILENAME
     conductor_dup = {
-        "name": "kirocrew-dashboard-author",
-        "mcpServers": {"kirocrew-core": {"command": "kirocrew"}},
-        "tools": ["@kirocrew-core/skill_search"],
+        "name": "ajcrew-dashboard-author",
+        "mcpServers": {"ajcrew-core": {"command": "ajcrew"}},
+        "tools": ["@ajcrew-core/skill_search"],
         "prompt": "the user's conductor charter, renamed onto the stem",
         "description": "a renamed conductor copy, not the dashboard author",
     }
@@ -556,7 +556,7 @@ def test_a_managed_file_with_the_digest_record_lost_is_not_overwritten(
     before = target.read_bytes()
 
     # Lose the ownership record (sidecar wiped), keep the managed file.
-    agent_state.set_managed_digest("kirocrew-dashboard-author", None)
+    agent_state.set_managed_digest("ajcrew-dashboard-author", None)
     assert _is_installers(target) is False  # no record -> unconfirmed, fail closed
 
     agent.rebuild_agent_config()
@@ -573,7 +573,7 @@ def test_a_present_file_whose_read_fails_is_left_untouched(
     reader is NOT treated as 'ours to write'. The install now RAISES (fail-closed) rather
     than returning, so the rebuild cannot report success without rewriting the governed spec
     (an unreadable present spec must not be recorded as projected)."""
-    import kiro_crew.agent_materialization.worker_agent as wa
+    import aj_crew.agent_materialization.worker_agent as wa
 
     rig = _Rig(tmp_path, monkeypatch)
     target = rig.agents / DASHBOARD_AUTHOR_AGENT_FILENAME
@@ -593,16 +593,16 @@ def test_a_user_markdown_spec_at_the_stem_blocks_the_install(
     """Both the ``.json`` and ``.md`` candidates are checked before the name is
     claimed. kiro-cli reads ``<stem>.json`` and the v3 engine also reads ``<stem>.md``, and
     a ``.json`` written beside a user's ``.md`` would SHADOW that markdown spec. So a user
-    ``kirocrew-dashboard-author.md`` (which the installer never writes -- it only writes the
+    ``ajcrew-dashboard-author.md`` (which the installer never writes -- it only writes the
     ``.json`` form) blocks the install: no ``.json`` is written and the user's ``.md`` is
     left untouched."""
-    import kiro_crew.agent_materialization.worker_agent as wa
+    import aj_crew.agent_materialization.worker_agent as wa
 
     rig = _Rig(tmp_path, monkeypatch)
-    md = rig.agents / "kirocrew-dashboard-author.md"
+    md = rig.agents / "ajcrew-dashboard-author.md"
     json_target = rig.agents / DASHBOARD_AUTHOR_AGENT_FILENAME
     md_body = (
-        "---\nname: kirocrew-dashboard-author\n---\nThe user's own markdown dashboard author.\n"
+        "---\nname: ajcrew-dashboard-author\n---\nThe user's own markdown dashboard author.\n"
     )
     md.write_text(md_body, encoding="utf-8")
 
@@ -638,8 +638,8 @@ def test_a_rebuild_preserves_the_pinned_model_and_skill_mappings(
     spec["model"] = "claude-user-pinned"
     spec["resources"] = ["skill://user/mapped-one"]
     target.write_text(json.dumps(spec, indent=2) + "\n", encoding="utf-8")
-    agent_state.set_model_managed("kirocrew-dashboard-author", False)  # explicit pick
-    agent_state.set_managed_digest("kirocrew-dashboard-author", agent_state.spec_digest(spec))
+    agent_state.set_model_managed("ajcrew-dashboard-author", False)  # explicit pick
+    agent_state.set_managed_digest("ajcrew-dashboard-author", agent_state.spec_digest(spec))
     assert _is_installers(target) is True
 
     agent.rebuild_agent_config()
@@ -651,10 +651,10 @@ def test_a_rebuild_preserves_the_pinned_model_and_skill_mappings(
     assert refreshed["model"] == "claude-user-pinned"
     assert refreshed.get("resources") == [
         "skill://user/mapped-one",
-        *skill_resources.prompt_skill_uris("kirocrew-dev/dashboard-template"),
+        *skill_resources.prompt_skill_uris("ajcrew-dev/dashboard-template"),
     ]
     # Governed grants were still regenerated from the shipped spec.
-    assert refreshed["name"] == "kirocrew-dashboard-author"
+    assert refreshed["name"] == "ajcrew-dashboard-author"
     assert _is_installers(target) is True
 
 
@@ -670,11 +670,11 @@ def test_a_rebuild_with_a_failed_sidecar_read_keeps_the_pinned_model(
     spec = rig.read(DASHBOARD_AUTHOR_AGENT_FILENAME)
     spec["model"] = "claude-user-pinned"
     target.write_text(json.dumps(spec, indent=2) + "\n", encoding="utf-8")
-    agent_state.set_model_managed("kirocrew-dashboard-author", False)
-    agent_state.set_managed_digest("kirocrew-dashboard-author", agent_state.spec_digest(spec))
+    agent_state.set_model_managed("ajcrew-dashboard-author", False)
+    agent_state.set_managed_digest("ajcrew-dashboard-author", agent_state.spec_digest(spec))
 
     with monkeypatch.context() as faulted:
-        fail_one_sidecar_read(faulted, "get_model_managed", "kirocrew-dashboard-author")
+        fail_one_sidecar_read(faulted, "get_model_managed", "ajcrew-dashboard-author")
         worker_agent._install_dashboard_author_agent()
     assert rig.read(DASHBOARD_AUTHOR_AGENT_FILENAME)["model"] == "claude-user-pinned"
 
@@ -691,14 +691,14 @@ def test_a_rebuild_does_not_carry_a_pinned_model_from_an_unconfirmed_file(
     rig = _Rig(tmp_path, monkeypatch)
     target = rig.agents / DASHBOARD_AUTHOR_AGENT_FILENAME
     user = {
-        "name": "kirocrew-dashboard-author",
+        "name": "ajcrew-dashboard-author",
         "model": "a-user-model",
         "resources": ["skill://user/private"],
         "prompt": "the user's own charter",
     }
     target.write_text(json.dumps(user, indent=2) + "\n", encoding="utf-8")
-    agent_state.set_model_managed("kirocrew-dashboard-author", False)
-    assert agent_state.get_managed_digest("kirocrew-dashboard-author") is None
+    agent_state.set_model_managed("ajcrew-dashboard-author", False)
+    assert agent_state.get_managed_digest("ajcrew-dashboard-author") is None
     assert _is_installers(target) is False
 
     agent.rebuild_agent_config()
@@ -721,7 +721,7 @@ def test_the_skill_uri_migration_renews_the_digest_for_a_confirmed_spec(
     spec to point a relocated skill at its new path. It is a managed writer, so it must renew
     the ownership digest for a CONFIRMED managed spec -- otherwise the installer reads its own
     migrated spec as foreign and stops re-filtering grants against a tightened ceiling."""
-    from kiro_crew import skills as skills_mod
+    from aj_crew import skills as skills_mod
 
     rig = _Rig(tmp_path, monkeypatch)
     target = rig.agents / DASHBOARD_AUTHOR_AGENT_FILENAME
@@ -739,7 +739,7 @@ def test_the_skill_uri_migration_renews_the_digest_for_a_confirmed_spec(
     spec = rig.read(DASHBOARD_AUTHOR_AGENT_FILENAME)
     spec["resources"] = [old_uri]
     target.write_text(json.dumps(spec, indent=2) + "\n", encoding="utf-8")
-    agent_state.set_managed_digest("kirocrew-dashboard-author", agent_state.spec_digest(spec))
+    agent_state.set_managed_digest("ajcrew-dashboard-author", agent_state.spec_digest(spec))
     assert _is_installers(target) is True
 
     rewritten = agent.migrate_relocated_skill_uris()
@@ -763,7 +763,7 @@ def test_a_rebuild_preserves_an_explicitly_empty_resources_selection(
     spec = rig.read(DASHBOARD_AUTHOR_AGENT_FILENAME)
     spec["resources"] = []  # explicit "no skills"
     target.write_text(json.dumps(spec, indent=2) + "\n", encoding="utf-8")
-    agent_state.set_managed_digest("kirocrew-dashboard-author", agent_state.spec_digest(spec))
+    agent_state.set_managed_digest("ajcrew-dashboard-author", agent_state.spec_digest(spec))
     assert _is_installers(target) is True
 
     agent.rebuild_agent_config()
@@ -792,14 +792,14 @@ def test_a_confirmed_json_is_refreshed_despite_a_markdown_sibling(
     # A confirmed managed spec carrying a now-revoked auto-approval.
     agent.rebuild_agent_config()
     spec = rig.read(DASHBOARD_AUTHOR_AGENT_FILENAME)
-    assert "@kirocrew-core/skill_search" in spec["allowedTools"]
-    spec["allowedTools"] = list(spec["allowedTools"]) + ["@kirocrew-core/revoked_grant"]
+    assert "@ajcrew-core/skill_search" in spec["allowedTools"]
+    spec["allowedTools"] = list(spec["allowedTools"]) + ["@ajcrew-core/revoked_grant"]
     target.write_text(json.dumps(spec, indent=2) + "\n", encoding="utf-8")
-    agent_state.set_managed_digest("kirocrew-dashboard-author", agent_state.spec_digest(spec))
+    agent_state.set_managed_digest("ajcrew-dashboard-author", agent_state.spec_digest(spec))
     assert _is_installers(target) is True
     # A user drops a markdown sibling at the stem AFTER the managed install.
-    md = rig.agents / "kirocrew-dashboard-author.md"
-    md_body = "---\nname: kirocrew-dashboard-author\n---\nThe user's own notes.\n"
+    md = rig.agents / "ajcrew-dashboard-author.md"
+    md_body = "---\nname: ajcrew-dashboard-author\n---\nThe user's own notes.\n"
     md.write_text(md_body, encoding="utf-8")
 
     agent.rebuild_agent_config()
@@ -807,8 +807,8 @@ def test_a_confirmed_json_is_refreshed_despite_a_markdown_sibling(
     # The confirmed .json was refreshed despite the sibling -> the stale grant is gone,
     # the governed surface is back, and the file still confirms as ours.
     refreshed = rig.read(DASHBOARD_AUTHOR_AGENT_FILENAME)
-    assert "@kirocrew-core/revoked_grant" not in refreshed["allowedTools"]
-    assert refreshed["name"] == "kirocrew-dashboard-author"
+    assert "@ajcrew-core/revoked_grant" not in refreshed["allowedTools"]
+    assert refreshed["name"] == "ajcrew-dashboard-author"
     assert _is_installers(target) is True
     # The user's markdown sibling is left untouched.
     assert md.read_text(encoding="utf-8") == md_body
@@ -820,14 +820,14 @@ def test_a_markdown_sibling_still_blocks_a_first_time_install(
     """The sibling check is retained for first-time install: with NO confirmed ``.json``
     (none recorded), a user ``.md`` at the stem still blocks the install so the managed
     ``.json`` never shadows the user's markdown spec."""
-    import kiro_crew.agent_materialization.worker_agent as wa
+    import aj_crew.agent_materialization.worker_agent as wa
 
     rig = _Rig(tmp_path, monkeypatch)
-    md = rig.agents / "kirocrew-dashboard-author.md"
+    md = rig.agents / "ajcrew-dashboard-author.md"
     json_target = rig.agents / DASHBOARD_AUTHOR_AGENT_FILENAME
-    md_body = "---\nname: kirocrew-dashboard-author\n---\nThe user's own markdown author.\n"
+    md_body = "---\nname: ajcrew-dashboard-author\n---\nThe user's own markdown author.\n"
     md.write_text(md_body, encoding="utf-8")
-    assert agent_state.get_managed_digest("kirocrew-dashboard-author") is None
+    assert agent_state.get_managed_digest("ajcrew-dashboard-author") is None
 
     wa._install_dashboard_author_agent()
 
@@ -854,11 +854,11 @@ def test_a_spec_left_pending_after_an_interrupted_write_is_still_refreshed(
     spec = rig.read(DASHBOARD_AUTHOR_AGENT_FILENAME)
     # Simulate the interrupted state: a managed writer put new bytes on disk (carrying a
     # now-revoked grant) and recorded them as PENDING, but crashed before finalize.
-    spec["allowedTools"] = list(spec["allowedTools"]) + ["@kirocrew-core/revoked_grant"]
+    spec["allowedTools"] = list(spec["allowedTools"]) + ["@ajcrew-core/revoked_grant"]
     target.write_text(json.dumps(spec, indent=2) + "\n", encoding="utf-8")
-    agent_state.set_managed_digest("kirocrew-dashboard-author", None)  # finalized lost
+    agent_state.set_managed_digest("ajcrew-dashboard-author", None)  # finalized lost
     agent_state.begin_managed_write(
-        "kirocrew-dashboard-author", agent_state.spec_digest(spec)
+        "ajcrew-dashboard-author", agent_state.spec_digest(spec)
     )  # only pending recorded, never finalized
     assert _is_installers(target) is True  # pending digest confirms the on-disk bytes
 
@@ -866,7 +866,7 @@ def test_a_spec_left_pending_after_an_interrupted_write_is_still_refreshed(
 
     # Refreshed, not frozen: the stale grant is gone and the file still confirms.
     refreshed = rig.read(DASHBOARD_AUTHOR_AGENT_FILENAME)
-    assert "@kirocrew-core/revoked_grant" not in refreshed["allowedTools"]
+    assert "@ajcrew-core/revoked_grant" not in refreshed["allowedTools"]
     assert _is_installers(target) is True
 
 
@@ -936,7 +936,7 @@ def test_an_author_install_write_failure_sets_the_hold_flag(
 
 # --------------------------------------------------------------------------- #
 # A user file at the dashboard-author
-# stem must NOT crash the rebuild / kirocrew setup / gateway boot.
+# stem must NOT crash the rebuild / ajcrew setup / gateway boot.
 # --------------------------------------------------------------------------- #
 
 
@@ -945,7 +945,7 @@ def test_a_user_file_at_the_stem_does_not_crash_the_rebuild(
 ) -> None:
     """A user spec at the stem is left untouched and the rebuild returns normally.
 
-    A raise would abort ``kirocrew setup`` and skip first-run setup on every boot."""
+    A raise would abort ``ajcrew setup`` and skip first-run setup on every boot."""
     rig = _Rig(tmp_path, monkeypatch)
     target = rig.agents / DASHBOARD_AUTHOR_AGENT_FILENAME
     user = {"name": "user-template", "prompt": "keep me"}
@@ -967,7 +967,7 @@ def test_a_lost_digest_does_not_crash_the_rebuild(
     agent.rebuild_agent_config()
     assert target.exists()
     # Now wipe the digest record.
-    agent_state.set_managed_digest("kirocrew-dashboard-author", None)
+    agent_state.set_managed_digest("ajcrew-dashboard-author", None)
     assert not _is_installers(target)
 
     # Must return normally -- not raise. The file is left untouched.
@@ -975,7 +975,7 @@ def test_a_lost_digest_does_not_crash_the_rebuild(
 
 
 # --------------------------------------------------------------------------- #
-# Every writer of kirocrew-dashboard-author.json goes
+# Every writer of ajcrew-dashboard-author.json goes
 # through the two-phase digest-renewing write.
 # --------------------------------------------------------------------------- #
 

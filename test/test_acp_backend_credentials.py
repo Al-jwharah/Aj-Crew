@@ -1,6 +1,6 @@
 """An ACP adapter's OAuth token store is on the sensitive-path floor.
 
-Each adapter owns its own sign-in flow and persists its own tokens. Kiro Crew
+Each adapter owns its own sign-in flow and persists its own tokens. Aj Crew
 never reads them — it only ever checks that the file EXISTS so it can name the
 right sign-in command — so an agent ``fs_read`` of one buys nothing legitimate
 and would let it impersonate the operator against that vendor.
@@ -25,9 +25,9 @@ import os
 
 import pytest
 
-from kiro_crew import security
-from kiro_crew.agent_sdk import native_allow_stores
-from kiro_crew.security import _SENSITIVE_HOME_DIRS, is_sensitive_path
+from aj_crew import security
+from aj_crew.agent_sdk import native_allow_stores
+from aj_crew.security import _SENSITIVE_HOME_DIRS, is_sensitive_path
 
 #: leaf, the env vars that move it, and the spelling it takes under each of them.
 #:

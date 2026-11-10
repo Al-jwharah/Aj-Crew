@@ -1,6 +1,6 @@
 """The App Kit seam level is one number on both sides of the host.
 
-``AppContext.sdk_level`` (Python) and ``APP_SDK_LEVEL`` from ``@kirocrew/app-sdk``
+``AppContext.sdk_level`` (Python) and ``APP_SDK_LEVEL`` from ``@ajcrew/app-sdk``
 (the dashboard) describe the same seam set, so an app that reads either must get the
 same answer.
 """
@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from kiro_crew.apps.app_sdk_level import APP_SDK_LEVEL
+from aj_crew.apps.app_sdk_level import APP_SDK_LEVEL
 
 _TS = Path(__file__).resolve().parents[1] / "website" / "src" / "app-sdk" / "sdkLevel.ts"
 _EXPORT_RE = re.compile(r"^export const APP_SDK_LEVEL = (\d+)\s*$", re.MULTILINE)

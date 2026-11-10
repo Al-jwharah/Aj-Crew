@@ -27,7 +27,7 @@ const RUNNING = {
 function mount(detect: DetectFn | undefined, platform: string | undefined) {
   const win = window as unknown as Record<string, unknown>
   win.wslAPI = detect ? { detect } : undefined
-  win.kirocrew = { isElectron: true, platform }
+  win.ajcrew = { isElectron: true, platform }
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={qc}>
@@ -40,7 +40,7 @@ afterEach(() => {
   cleanup()
   const win = window as unknown as Record<string, unknown>
   delete win.wslAPI
-  delete win.kirocrew
+  delete win.ajcrew
 })
 
 describe('HostRuntimeCard', () => {

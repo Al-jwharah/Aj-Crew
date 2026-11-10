@@ -26,10 +26,10 @@ from transcribe_helpers import (
     _write_wav,
 )
 
-from kiro_crew import stt, transcribe
-from kiro_crew.config.loader import SttConfig
-from kiro_crew.testing.wait import await_until
-from kiro_crew.transcribe import _ProfileCredentialResolver, transcribe_audio
+from aj_crew import stt, transcribe
+from aj_crew.config.loader import SttConfig
+from aj_crew.testing.wait import await_until
+from aj_crew.transcribe import _ProfileCredentialResolver, transcribe_audio
 
 # ---------------------------------------------------------------------------
 # transcribe_audio
@@ -39,7 +39,7 @@ from kiro_crew.transcribe import _ProfileCredentialResolver, transcribe_audio
 class TestTranscribeAudio:
     @staticmethod
     def _recogniser(monkeypatch, transcript="Hello world", available=True, seen=None):
-        """Stand the recogniser up at the ``kiro_crew.stt`` seam.
+        """Stand the recogniser up at the ``aj_crew.stt`` seam.
 
         Patched on the package namespace ``transcribe.py`` actually reads, so the
         lazy re-export cannot route a call past the stub. *seen* collects the
@@ -129,7 +129,7 @@ class TestTranscribeAudio:
     ):
         from threading import get_ident
 
-        from kiro_crew import transcribe as tr
+        from aj_crew import transcribe as tr
 
         audio = tmp_path / "test.ogg"
         audio.write_bytes(b"fake audio")
@@ -140,9 +140,9 @@ class TestTranscribeAudio:
         # recorded consent for this profile+region, so this case -- which is
         # about WHERE the read runs, not about the gate -- consents first. The
         # refusal itself is covered in `test_aws_consent.py`.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-        from kiro_crew import aws_consent
-        from kiro_crew.config.loader import config_dir
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+        from aj_crew import aws_consent
+        from aj_crew.config.loader import config_dir
 
         config_dir().mkdir(parents=True, exist_ok=True)
         aws_consent.record_grant(
@@ -216,7 +216,7 @@ class TestTranscribeAudio:
     async def test_apple_batch_uses_effective_locale(
         self, tmp_path, monkeypatch, language, expected_locale
     ):
-        from kiro_crew import apple_speech
+        from aj_crew import apple_speech
 
         cfg = SttConfig(provider="apple", language_code=language, timeout_secs=10)
         recognize = AsyncMock(return_value=("heard", {}))
@@ -234,7 +234,7 @@ class TestTranscribeAudio:
         that heard nothing and ``(None, {"error": ...})`` for a failure; the
         provider boundary passes the first through as ``""`` and only the second
         as None."""
-        from kiro_crew import apple_speech
+        from aj_crew import apple_speech
 
         cfg = SttConfig(provider="apple", timeout_secs=10)
         audio_path = str(tmp_path / "voice.wav")
@@ -254,7 +254,7 @@ class TestTranscribeAudio:
         """A Transcribe stream that completes with no final results is ``""``;
         a stream that raises is None. The join-and-strip must not fold the first
         onto the second."""
-        from kiro_crew import transcribe as tr
+        from aj_crew import transcribe as tr
 
         audio = tmp_path / "quiet.ogg"
         audio.write_bytes(b"fake audio")
@@ -304,7 +304,7 @@ class TestTranscribeAudio:
     ):
         """A voice memo hears the same names live dictation does: both Transcribe
         paths read the one setting, and None (not ``""``) means no header at all."""
-        from kiro_crew import transcribe as tr
+        from aj_crew import transcribe as tr
 
         audio = tmp_path / "memo.ogg"
         audio.write_bytes(b"fake audio")
@@ -490,7 +490,7 @@ class TestTranscribeAudio:
 
         with (
             patch(
-                "kiro_crew.transcribe._open_ffmpeg_for_execution",
+                "aj_crew.transcribe._open_ffmpeg_for_execution",
                 return_value="/fake/ffmpeg",
             ),
             patch("asyncio.create_subprocess_exec", side_effect=fake_exec),
@@ -524,7 +524,7 @@ class TestTranscribeAudio:
             raise AssertionError("no child may be spawned without an ffmpeg binary")
 
         with (
-            patch("kiro_crew.transcribe._open_ffmpeg_for_execution", return_value=None),
+            patch("aj_crew.transcribe._open_ffmpeg_for_execution", return_value=None),
             patch("asyncio.create_subprocess_exec", side_effect=_never),
         ):
             assert await transcribe_audio(str(audio), cfg) is None
@@ -564,7 +564,7 @@ class TestTranscribeAudio:
 
         with (
             patch(
-                "kiro_crew.transcribe._open_ffmpeg_for_execution",
+                "aj_crew.transcribe._open_ffmpeg_for_execution",
                 return_value="/fake/ffmpeg",
             ),
             patch("asyncio.create_subprocess_exec", return_value=_Proc()),
@@ -622,7 +622,7 @@ class TestTranscribeAudio:
 
         with (
             patch(
-                "kiro_crew.transcribe._open_ffmpeg_for_execution",
+                "aj_crew.transcribe._open_ffmpeg_for_execution",
                 return_value="/fake/ffmpeg",
             ),
             patch("asyncio.create_subprocess_exec", return_value=_Proc()),
@@ -653,7 +653,7 @@ class TestTranscribeAudio:
     async def test_loads_config_when_none(self):
         mock_cfg = MagicMock()
         mock_cfg.stt = SttConfig(enabled=False)
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=mock_cfg):
+        with patch("aj_crew.config.loader.AjCrewConfig.load", return_value=mock_cfg):
             result = await transcribe_audio("/tmp/test.webm", None)
         assert result is None
 
@@ -685,7 +685,7 @@ class TestTranscribeFormatValidation:
         audio = tmp_path / "test.mp3"
         audio.write_text("fake")
         cfg = SttConfig(enabled=True, provider="transcribe")
-        with patch("kiro_crew.security.is_sensitive_path", return_value=False):
+        with patch("aj_crew.security.is_sensitive_path", return_value=False):
             result = await transcribe_audio(str(audio), cfg)
         assert result is None
 
@@ -777,9 +777,9 @@ class TestTranscribeAwsTempOwnership:
     @staticmethod
     def _grant_consent(tmp_path, monkeypatch, cfg):
         """Record Transcribe consent so the paid-service gate lets tests pass."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-        from kiro_crew import aws_consent
-        from kiro_crew.config.loader import config_dir
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+        from aj_crew import aws_consent
+        from aj_crew.config.loader import config_dir
 
         config_dir().mkdir(parents=True, exist_ok=True)
         aws_consent.record_grant(
@@ -799,7 +799,7 @@ class TestTranscribeAwsTempOwnership:
     @staticmethod
     def _owned_temp(tmp_path, monkeypatch):
         """Pin ``_make_temp_ogg`` to a known file so the tests can watch it."""
-        from kiro_crew import transcribe as tr
+        from aj_crew import transcribe as tr
 
         owned = tmp_path / "owned.ogg"
         owned.write_bytes(b"")
@@ -813,7 +813,7 @@ class TestTranscribeAwsTempOwnership:
         """A cancellation mid-``communicate`` must kill the child, reap it, THEN
         remove ``tmp_ogg``, and re-raise — an ``except Exception`` guard would
         miss the ``CancelledError`` and do none of that."""
-        from kiro_crew import transcribe as tr
+        from aj_crew import transcribe as tr
 
         cfg = SttConfig(enabled=True, provider="transcribe", timeout_secs=10)
         self._grant_consent(tmp_path, monkeypatch, cfg)
@@ -848,7 +848,7 @@ class TestTranscribeAwsTempOwnership:
         monkeypatch.setattr(tr, "_unlink_if_exists", tracked_unlink)
         with (
             patch(
-                "kiro_crew.transcribe._open_ffmpeg_for_execution",
+                "aj_crew.transcribe._open_ffmpeg_for_execution",
                 return_value="/fake/ffmpeg",
             ),
             patch("asyncio.create_subprocess_exec", return_value=_Proc()),
@@ -864,7 +864,7 @@ class TestTranscribeAwsTempOwnership:
         """The webm→ogg remux must drop video: a Slack ``video/webm`` clip has a
         video track, and the audio-only decoder has no theora encoder for ogg's
         default video stream, so mapping it fails the remux outright."""
-        from kiro_crew import transcribe as tr
+        from aj_crew import transcribe as tr
 
         cfg = SttConfig(enabled=True, provider="transcribe", timeout_secs=10)
         self._grant_consent(tmp_path, monkeypatch, cfg)
@@ -890,7 +890,7 @@ class TestTranscribeAwsTempOwnership:
         monkeypatch.setattr(tr, "_load_aws_transcribe_components", lambda: (object, object))
         with (
             patch(
-                "kiro_crew.transcribe._open_ffmpeg_for_execution",
+                "aj_crew.transcribe._open_ffmpeg_for_execution",
                 return_value="/fake/ffmpeg",
             ),
             patch("asyncio.create_subprocess_exec", side_effect=fake_exec),
@@ -905,7 +905,7 @@ class TestTranscribeAwsTempOwnership:
     async def test_remux_failure_still_unlinks_and_returns_none(self, tmp_path, monkeypatch):
         """The new cancellation path must not eat the established ``Exception``
         contract: a failed remux logs, removes the temp, and returns None."""
-        from kiro_crew import transcribe as tr
+        from aj_crew import transcribe as tr
 
         cfg = SttConfig(enabled=True, provider="transcribe", timeout_secs=10)
         self._grant_consent(tmp_path, monkeypatch, cfg)
@@ -920,7 +920,7 @@ class TestTranscribeAwsTempOwnership:
         monkeypatch.setattr(tr, "_load_aws_transcribe_components", lambda: (object, object))
         with (
             patch(
-                "kiro_crew.transcribe._open_ffmpeg_for_execution",
+                "aj_crew.transcribe._open_ffmpeg_for_execution",
                 return_value="/fake/ffmpeg",
             ),
             patch("asyncio.create_subprocess_exec", return_value=proc),
@@ -935,7 +935,7 @@ class TestTranscribeAwsTempOwnership:
         """A REPEAT cancellation landing on the cleanup ``end_stream`` await
         escapes its ``except Exception`` guard; the nested ``finally`` must
         still remove ``tmp_ogg`` and let the cancellation propagate."""
-        from kiro_crew import transcribe as tr
+        from aj_crew import transcribe as tr
 
         cfg = SttConfig(enabled=True, provider="transcribe", timeout_secs=10)
         self._grant_consent(tmp_path, monkeypatch, cfg)
@@ -976,7 +976,7 @@ class TestTranscribeAwsTempOwnership:
         )
         with (
             patch(
-                "kiro_crew.transcribe._open_ffmpeg_for_execution",
+                "aj_crew.transcribe._open_ffmpeg_for_execution",
                 return_value="/fake/ffmpeg",
             ),
             patch("asyncio.create_subprocess_exec", return_value=remux_proc),
@@ -994,7 +994,7 @@ class TestTranscribeAwsTempOwnership:
         the child may still hold the file and the unlink raises
         ``PermissionError``. That must not REPLACE the in-flight cancellation
         — the guard swallows the ``OSError`` and the original propagates."""
-        from kiro_crew import transcribe as tr
+        from aj_crew import transcribe as tr
 
         cfg = SttConfig(enabled=True, provider="transcribe", timeout_secs=10)
         self._grant_consent(tmp_path, monkeypatch, cfg)
@@ -1021,7 +1021,7 @@ class TestTranscribeAwsTempOwnership:
         monkeypatch.setattr(tr, "_unlink_if_exists", locked_unlink)
         with (
             patch(
-                "kiro_crew.transcribe._open_ffmpeg_for_execution",
+                "aj_crew.transcribe._open_ffmpeg_for_execution",
                 return_value="/fake/ffmpeg",
             ),
             patch("asyncio.create_subprocess_exec", return_value=_Proc()),
@@ -1041,7 +1041,7 @@ class TestTranscribeAwsTempOwnership:
         """A cancellation landing on ``create_subprocess_exec`` itself means no
         child exists — the owned temp must still be removed and the
         cancellation must propagate."""
-        from kiro_crew import transcribe as tr
+        from aj_crew import transcribe as tr
 
         cfg = SttConfig(enabled=True, provider="transcribe", timeout_secs=10)
         self._grant_consent(tmp_path, monkeypatch, cfg)
@@ -1053,7 +1053,7 @@ class TestTranscribeAwsTempOwnership:
         monkeypatch.setattr(tr, "_load_aws_transcribe_components", lambda: (object, object))
         with (
             patch(
-                "kiro_crew.transcribe._open_ffmpeg_for_execution",
+                "aj_crew.transcribe._open_ffmpeg_for_execution",
                 return_value="/fake/ffmpeg",
             ),
             patch(
@@ -1071,7 +1071,7 @@ class TestTranscribeAwsTempOwnership:
         """When the off-loop unlink hop is itself cancelled AND the synchronous
         fallback hits a locked file, the ``OSError`` must be swallowed so the
         cancellation — not a ``PermissionError`` — reaches the awaiter."""
-        from kiro_crew import transcribe as tr
+        from aj_crew import transcribe as tr
 
         cfg = SttConfig(enabled=True, provider="transcribe", timeout_secs=10)
         self._grant_consent(tmp_path, monkeypatch, cfg)
@@ -1124,7 +1124,7 @@ class TestTranscribeAwsTempOwnership:
         monkeypatch.setattr(asyncio, "to_thread", cancelled_unlink_hop)
         with (
             patch(
-                "kiro_crew.transcribe._open_ffmpeg_for_execution",
+                "aj_crew.transcribe._open_ffmpeg_for_execution",
                 return_value="/fake/ffmpeg",
             ),
             patch("asyncio.create_subprocess_exec", return_value=remux_proc),
@@ -1142,7 +1142,7 @@ class TestTranscribeAwsTempOwnership:
         ``communicate()`` -- not ``wait()`` -- so the PIPE buffers are drained
         and a child blocked writing to a full stderr PIPE cannot hang the
         event loop."""
-        from kiro_crew import transcribe as tr
+        from aj_crew import transcribe as tr
 
         cfg = SttConfig(enabled=True, provider="transcribe", timeout_secs=10)
         self._grant_consent(tmp_path, monkeypatch, cfg)
@@ -1159,7 +1159,7 @@ class TestTranscribeAwsTempOwnership:
         monkeypatch.setattr(tr, "_load_aws_transcribe_components", lambda: (object, object))
         with (
             patch(
-                "kiro_crew.transcribe._open_ffmpeg_for_execution",
+                "aj_crew.transcribe._open_ffmpeg_for_execution",
                 return_value="/fake/ffmpeg",
             ),
             patch("asyncio.create_subprocess_exec", return_value=proc),

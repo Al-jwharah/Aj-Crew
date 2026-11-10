@@ -11,7 +11,7 @@
  *
  * Scope: the full-reveal shape (`group-hover:opacity-100`) on a DOM control.
  * Partial reveals and component controls (`Btn`, `*Button`) are tracked
- * separately. An adopted app's wheel copy (`src/kiro_crew/apps/adoption-pins.json`)
+ * separately. An adopted app's wheel copy (`src/aj_crew/apps/adoption-pins.json`)
  * is skipped: its source of truth is the app's own repository, so a fix there
  * lands in that repository, not here.
  *
@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url'
 
 const posix = (p: string) => p.split('\\').join('/')
 const SRC = posix(resolve(dirname(fileURLToPath(import.meta.url)), '..'))
-const PINS = resolve(SRC, '..', '..', 'src', 'kiro_crew', 'apps', 'adoption-pins.json')
+const PINS = resolve(SRC, '..', '..', 'src', 'aj_crew', 'apps', 'adoption-pins.json')
 
 /** The frontend wheel-copy trees of adopted apps, the same dirs PR Hygiene's
  *  `adopted_wheel_copy_check.py` reads off the pins. */

@@ -22,14 +22,14 @@ class TestRunMarker:
     def test_write_read_clear(self, tmp_path, monkeypatch):
         import sys
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.instances import run_marker
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.instances import run_marker
 
-        # Fabricate a venv layout: <venv>/bin/{python,kirocrew}, with the
-        # launcher named as this OS's pip names it (kirocrew.exe on Windows).
+        # Fabricate a venv layout: <venv>/bin/{python,ajcrew}, with the
+        # launcher named as this OS's pip names it (ajcrew.exe on Windows).
         bindir = tmp_path / "venv" / "bin"
         bindir.mkdir(parents=True)
-        launcher = bindir / ("kirocrew.exe" if os.name == "nt" else "kirocrew")
+        launcher = bindir / ("ajcrew.exe" if os.name == "nt" else "ajcrew")
         launcher.write_text("#!/bin/sh\n")
         launcher.chmod(0o755)
         monkeypatch.setattr(sys, "executable", str(bindir / "python"))
@@ -63,11 +63,11 @@ class TestRunMarker:
         """
         import sys
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.instances import run_marker
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.instances import run_marker
 
         bindir = tmp_path / "venv2" / "bin"
-        bindir.mkdir(parents=True)  # no sibling 'kirocrew' launcher
+        bindir.mkdir(parents=True)  # no sibling 'ajcrew' launcher
         monkeypatch.setattr(sys, "executable", str(bindir / "python"))
 
         assert run_marker.gateway_launcher_path() is None
@@ -80,7 +80,7 @@ class TestRunMarker:
 
     def test_mint_clause_ignores_an_empty_marker(self):
         """...and inert for mint: the exec is guarded on a non-empty -x path."""
-        from kiro_crew.instances.token_mint import build_candidate_command
+        from aj_crew.instances.token_mint import build_candidate_command
 
         cmd = build_candidate_command("status", marker_port=7000)
         assert '[ -n "$__kb" ] && [ -x "$__kb" ]' in cmd
@@ -91,9 +91,9 @@ class TestRunMarker:
         ``os.chmod(0o700)`` is a no-op on Windows; ``platform_compat.restrict_dir_to_owner``
         grants ``(OI)(CI)``, which also covers the ``.pid`` and ``.bin`` sidecars.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import platform_compat
-        from kiro_crew.instances import run_marker
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import platform_compat
+        from aj_crew.instances import run_marker
 
         seen: list[str] = []
         # Re-patch over the session-wide Windows stub in conftest so this
@@ -110,9 +110,9 @@ class TestRunMarker:
         try/except. The existing contract — tighten if possible, otherwise carry
         on — is what the caller depends on, so the raise is absorbed here.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import platform_compat
-        from kiro_crew.instances import run_marker
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import platform_compat
+        from aj_crew.instances import run_marker
 
         def _refuse(_path):
             raise OSError("lockdown refused")
@@ -146,9 +146,9 @@ class TestRunMarkerSidecarReadRetry:
         this fixture, because with the sleep zeroed the budget fits in one writer syscall.
 
         Uses ``_floor_monkeypatch``: a mid-body ``monkeypatch.undo()`` would lift the
-        shared one (semgrep ``kirocrew.test-autouse-shared-monkeypatch``).
+        shared one (semgrep ``ajcrew.test-autouse-shared-monkeypatch``).
         """
-        from kiro_crew import atomic_write as aw
+        from aj_crew import atomic_write as aw
 
         _floor_monkeypatch.setattr(aw, "_REPLACE_BACKOFF_SECONDS", 0)
 
@@ -156,7 +156,7 @@ class TestRunMarkerSidecarReadRetry:
         """Fabricate a venv launcher and write a full marker set for *port*."""
         bindir = tmp_path / "venv" / "bin"
         bindir.mkdir(parents=True)
-        launcher = bindir / ("kirocrew.exe" if os.name == "nt" else "kirocrew")
+        launcher = bindir / ("ajcrew.exe" if os.name == "nt" else "ajcrew")
         launcher.write_text("#!/bin/sh\n")
         launcher.chmod(0o755)
         monkeypatch.setattr(sys, "executable", str(bindir / "python"))
@@ -167,10 +167,10 @@ class TestRunMarkerSidecarReadRetry:
         """A transient fault on the credential sidecar retries, not folds to ""."""
         from windows_sim import read_sharing_violation
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import platform_compat
-        from kiro_crew.atomic_write import atomic_write
-        from kiro_crew.instances import run_marker
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import platform_compat
+        from aj_crew.atomic_write import atomic_write
+        from aj_crew.instances import run_marker
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
         atomic_write(run_marker.secret_path(6776), "s3cr3t-value", mode=0o600)
@@ -185,9 +185,9 @@ class TestRunMarkerSidecarReadRetry:
         """The marker (launcher path) reader rides the window out too."""
         from windows_sim import read_sharing_violation
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import platform_compat
-        from kiro_crew.instances import run_marker
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import platform_compat
+        from aj_crew.instances import run_marker
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
         launcher = self._write_full_marker(run_marker, 6776, monkeypatch, tmp_path)
@@ -208,10 +208,10 @@ class TestRunMarkerSidecarReadRetry:
         """
         from windows_sim import read_sharing_violation
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import atomic_write as aw
-        from kiro_crew import platform_compat
-        from kiro_crew.instances import run_marker
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import atomic_write as aw
+        from aj_crew import platform_compat
+        from aj_crew.instances import run_marker
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
         self._write_full_marker(run_marker, 6776, monkeypatch, tmp_path)
@@ -233,10 +233,10 @@ class TestRunMarkerSidecarReadRetry:
         read_pid reads through the capped path (``max_bytes``), so it is faulted
         at ``_read_bytes`` rather than ``Path.read_bytes``.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import atomic_write as aw
-        from kiro_crew import platform_compat
-        from kiro_crew.instances import run_marker
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import atomic_write as aw
+        from aj_crew import platform_compat
+        from aj_crew.instances import run_marker
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
         self._write_full_marker(run_marker, 6776, monkeypatch, tmp_path)
@@ -268,9 +268,9 @@ class TestRunMarkerSidecarReadRetry:
         """
         from windows_sim import read_sharing_violation
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import platform_compat
-        from kiro_crew.instances import run_marker
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import platform_compat
+        from aj_crew.instances import run_marker
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
 
@@ -288,8 +288,8 @@ class TestRunMarkerSidecarReadRetry:
         The retry helper is a plain read on POSIX and on the no-fault Windows
         path, so the common case is byte-for-byte prior behaviour.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.instances import run_marker
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.instances import run_marker
 
         launcher = self._write_full_marker(run_marker, 7001, monkeypatch, tmp_path)
         assert run_marker.read_launcher(7001) == str(launcher)
@@ -317,14 +317,14 @@ class TestRunMarkerSidecarConcurrentRewrite:
         vacuously against the seeded value. The launcher sidecar stands in for all
         sidecars, since ``read_bytes_with_retry`` is shared.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.atomic_write import atomic_write
-        from kiro_crew.instances import run_marker
-        from kiro_crew.testing.wait import default_timeout
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.atomic_write import atomic_write
+        from aj_crew.instances import run_marker
+        from aj_crew.testing.wait import default_timeout
 
         marker = run_marker.marker_path(6776)
-        values = {f"/opt/venv-{i}/bin/kirocrew" for i in range(50)}
-        atomic_write(marker, "/opt/venv-0/bin/kirocrew\n", mode=0o600)
+        values = {f"/opt/venv-{i}/bin/ajcrew" for i in range(50)}
+        atomic_write(marker, "/opt/venv-0/bin/ajcrew\n", mode=0o600)
 
         rounds = 500
         stop = threading.Event()
@@ -350,7 +350,7 @@ class TestRunMarkerSidecarConcurrentRewrite:
                     about_to_read.clear()
                     if stop.is_set():
                         return
-                    atomic_write(marker, f"/opt/venv-{i % 50}/bin/kirocrew\n", mode=0o600)
+                    atomic_write(marker, f"/opt/venv-{i % 50}/bin/ajcrew\n", mode=0o600)
                     i += 1
                     publishes["n"] += 1
                     published.set()  # acknowledge this round's one completed replace
@@ -402,11 +402,11 @@ class TestRunMarkerDiscovery:
     def _marker(self, home, name: str) -> None:
         d = home / "run"
         d.mkdir(parents=True, exist_ok=True)
-        (d / name).write_text("/some/venv/bin/kirocrew\n", encoding="utf-8")
+        (d / name).write_text("/some/venv/bin/ajcrew\n", encoding="utf-8")
 
     def test_no_run_dir_yields_no_ports_and_creates_nothing(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.instances import run_marker
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.instances import run_marker
 
         assert run_marker.marker_ports() == []
         # Discovery is read-only: a client merely looking for a gateway must not
@@ -414,8 +414,8 @@ class TestRunMarkerDiscovery:
         assert not (tmp_path / "run").exists()
 
     def test_lists_sorted_ports_and_ignores_non_markers(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.instances import run_marker
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.instances import run_marker
 
         self._marker(tmp_path, "gateway-6776.bin")
         self._marker(tmp_path, "gateway-5476.bin")
@@ -444,16 +444,16 @@ class TestRunMarkerDiscovery:
         trusting a marker. Keeping any such helper out of this module stops a
         future caller from reaching for the unsafe check.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.instances import run_marker
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.instances import run_marker
 
         assert not hasattr(run_marker, "port_is_live")
         assert not hasattr(run_marker, "live_marker_ports")
 
     def test_read_pid_rejects_junk_and_missing(self, tmp_path, monkeypatch):
         """The sidecar is an identity claim, so parse it strictly."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.instances import run_marker
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.instances import run_marker
 
         assert run_marker.read_pid(6776) is None  # absent
         d = tmp_path / "run"
@@ -465,7 +465,7 @@ class TestRunMarkerDiscovery:
         assert run_marker.read_pid(6776) == 4242
 
     def test_explicit_pid_reader_is_bounded_ascii_decimal_and_read_only(self, tmp_path):
-        from kiro_crew.instances import run_marker
+        from aj_crew.instances import run_marker
 
         path = tmp_path / "missing" / "gateway.pid"
         assert run_marker._read_pid_path(path) is None
@@ -487,7 +487,7 @@ class TestRunMarkerDiscovery:
         record this gateway wrote, instead of answering ``None`` and denying a
         gateway that genuinely is ours.
         """
-        from kiro_crew.instances import run_marker
+        from aj_crew.instances import run_marker
 
         pid_file = tmp_path / "gateway-7999.pid"
         pid_file.write_bytes(b"4242\n")
@@ -518,8 +518,8 @@ class TestRunMarkerDiscovery:
         That reader takes the WHOLE ``.pid`` file, stripped, gated on ``isdigit()``; a
         second line would break an older client venv sharing this data home.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.instances import run_marker
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.instances import run_marker
 
         run_marker.write_marker(7999)
         pid_file = run_marker.pid_path(7999)
@@ -548,8 +548,8 @@ class TestRunMarkerDiscovery:
         1-second granularity lets a pid recycled inside the same second forge an
         identical value.
         """
-        from kiro_crew import platform_compat
-        from kiro_crew.instances import run_marker
+        from aj_crew import platform_compat
+        from aj_crew.instances import run_marker
 
         monkeypatch.setattr(platform_compat, "get_process_start_id", lambda pid: "1730.000042")
         assert run_marker.pid_start_token(4242) == "1730.000042"
@@ -588,8 +588,8 @@ class TestRunMarkerDiscovery:
     def test_read_launcher_reads_marker_content(self, tmp_path, monkeypatch):
         """read_launcher returns the recorded path, None for absent/empty, and
         never creates run/ (read-only, like read_pid)."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.instances import run_marker
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.instances import run_marker
 
         assert run_marker.read_launcher(6776) is None  # absent
         assert not (tmp_path / "run").exists()  # read never materialises run/
@@ -600,8 +600,8 @@ class TestRunMarkerDiscovery:
         assert run_marker.read_launcher(6776) is None
         (d / "gateway-6776.bin").write_text("  \n", encoding="utf-8")
         assert run_marker.read_launcher(6776) is None
-        (d / "gateway-6776.bin").write_text("/opt/venv/bin/kirocrew\n", encoding="utf-8")
-        assert run_marker.read_launcher(6776) == "/opt/venv/bin/kirocrew"
+        (d / "gateway-6776.bin").write_text("/opt/venv/bin/ajcrew\n", encoding="utf-8")
+        assert run_marker.read_launcher(6776) == "/opt/venv/bin/ajcrew"
 
     def test_write_prunes_markers_from_earlier_runs(self, tmp_path, monkeypatch):
         """A gateway is a singleton per home, so markers naming other ports are
@@ -610,12 +610,12 @@ class TestRunMarkerDiscovery:
         """
         import sys
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.instances import run_marker
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.instances import run_marker
 
         bindir = tmp_path / "venv" / "bin"
         bindir.mkdir(parents=True)
-        launcher = bindir / "kirocrew"
+        launcher = bindir / "ajcrew"
         launcher.write_text("#!/bin/sh\n")
         launcher.chmod(0o755)
         monkeypatch.setattr(sys, "executable", str(bindir / "python"))
@@ -638,8 +638,8 @@ class TestRunMarkerDiscovery:
 
     def test_prune_keeps_unrelated_files(self, tmp_path, monkeypatch):
         """Pruning targets only this module's own marker/pid pairs."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.instances import run_marker
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.instances import run_marker
 
         d = tmp_path / "run"
         d.mkdir(parents=True, exist_ok=True)
@@ -659,14 +659,14 @@ class TestDataHomePointer:
 
     @pytest.fixture
     def run_marker(self, tmp_path, monkeypatch):
-        from kiro_crew.instances import run_marker
+        from aj_crew.instances import run_marker
 
         default_run = tmp_path / "default" / "run"
         default_run.mkdir(parents=True)
         monkeypatch.setattr(run_marker, "_DEFAULT_RUN_DIR", default_run)
-        monkeypatch.setattr(run_marker, "gateway_launcher_path", lambda: "/venv/bin/kirocrew")
-        monkeypatch.delenv("KIROCREW_POD", raising=False)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew-wrapped"))
+        monkeypatch.setattr(run_marker, "gateway_launcher_path", lambda: "/venv/bin/ajcrew")
+        monkeypatch.delenv("AJCREW_POD", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew-wrapped"))
         monkeypatch.setattr(
             run_marker, "_PUBLISHED_LISTENERS", {5476: {"127.0.0.1"}, 5477: {"127.0.0.1"}}
         )
@@ -675,17 +675,17 @@ class TestDataHomePointer:
     def test_writes_a_pointer_of_its_data_home_then_its_launcher(self, run_marker):
         import stat
 
-        from kiro_crew.config.paths import config_dir
+        from aj_crew.config.paths import config_dir
 
         run_marker.write_marker(5477)
 
         pointer = run_marker._DEFAULT_RUN_DIR / "gateway-5477.home"
-        assert pointer.read_text(encoding="utf-8") == f"{config_dir()}\n/venv/bin/kirocrew\n"
+        assert pointer.read_text(encoding="utf-8") == f"{config_dir()}\n/venv/bin/ajcrew\n"
         if os.name == "posix":
             assert stat.S_IMODE(pointer.stat().st_mode) == 0o600
 
     def test_writes_an_empty_launcher_line_for_a_source_tree_launch(self, run_marker, monkeypatch):
-        from kiro_crew.config.paths import config_dir
+        from aj_crew.config.paths import config_dir
 
         monkeypatch.setattr(run_marker, "gateway_launcher_path", lambda: None)
         run_marker.write_marker(5477)
@@ -694,21 +694,21 @@ class TestDataHomePointer:
         assert pointer.read_text(encoding="utf-8") == f"{config_dir()}\n\n"
 
     def test_the_default_home_prune_leaves_another_homes_pointer(self, run_marker, monkeypatch):
-        from kiro_crew import port_resolution
-        from kiro_crew.config.paths import config_dir
+        from aj_crew import port_resolution
+        from aj_crew.config.paths import config_dir
 
         run_marker.write_marker(5477)
         wrapped_home = config_dir()
         default_run = run_marker._DEFAULT_RUN_DIR
         (default_run / "gateway-5477.bin").write_text("", encoding="utf-8")  # stale, prunable
         monkeypatch.setattr(port_resolution, "_gateway_owns_port", lambda port: False)
-        monkeypatch.setenv("KIROCREW_HOME", str(default_run.parent))
+        monkeypatch.setenv("AJCREW_HOME", str(default_run.parent))
 
         run_marker.write_marker(5476)
 
         assert run_marker.marker_ports() == [5476]
         assert (default_run / "gateway-5477.home").read_text(encoding="utf-8") == (
-            f"{wrapped_home}\n/venv/bin/kirocrew\n"
+            f"{wrapped_home}\n/venv/bin/ajcrew\n"
         )
 
     @pytest.mark.parametrize(
@@ -722,7 +722,7 @@ class TestDataHomePointer:
         monkeypatch.setattr(run_marker, "_PUBLISHED_LISTENERS", {5476: set(cover)})
         default_run = run_marker._DEFAULT_RUN_DIR
         (default_run / "gateway-5476.home").write_text("/elsewhere\n", encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_HOME", str(default_run.parent))
+        monkeypatch.setenv("AJCREW_HOME", str(default_run.parent))
 
         run_marker.write_marker(5476)
 
@@ -741,9 +741,9 @@ class TestDataHomePointer:
         published = {5477: set(listeners)} if listeners else {}
         monkeypatch.setattr(run_marker, "_PUBLISHED_LISTENERS", published)
         if default_home:
-            monkeypatch.setenv("KIROCREW_HOME", str(run_marker._DEFAULT_RUN_DIR.parent))
+            monkeypatch.setenv("AJCREW_HOME", str(run_marker._DEFAULT_RUN_DIR.parent))
         pointer = run_marker._DEFAULT_RUN_DIR / "gateway-5477.home"
-        seeded = b"/elsewhere\n/other/bin/kirocrew\n"
+        seeded = b"/elsewhere\n/other/bin/ajcrew\n"
         pointer.write_bytes(seeded)
 
         with caplog.at_level(logging.INFO):
@@ -775,11 +775,11 @@ class TestDataHomePointer:
         self, run_marker, monkeypatch
     ):
         pointer = run_marker._DEFAULT_RUN_DIR / "gateway-5477.home"
-        monkeypatch.setenv("KIROCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_POD", "1")
         run_marker.write_marker(5477)
         assert not pointer.exists()
 
-        monkeypatch.delenv("KIROCREW_POD")
+        monkeypatch.delenv("AJCREW_POD")
         run_marker.write_marker(5477)
         assert pointer.exists()
 
@@ -818,7 +818,7 @@ class TestDataHomePointer:
         self, run_marker, monkeypatch, caplog, pod, dir_exists
     ):
         if pod:
-            monkeypatch.setenv("KIROCREW_POD", "1")
+            monkeypatch.setenv("AJCREW_POD", "1")
         if not dir_exists:
             run_marker._DEFAULT_RUN_DIR.rmdir()
 
@@ -841,7 +841,7 @@ class TestDataHomePointer:
         prefix = "Could not write the run-marker or pointer for port 5477: "
         assert any(m.startswith(prefix) and pointer.name in m for m in warnings)
         assert run_marker.read_pid(5477) == os.getpid()
-        assert run_marker.marker_path(5477).read_text(encoding="utf-8") == "/venv/bin/kirocrew\n"
+        assert run_marker.marker_path(5477).read_text(encoding="utf-8") == "/venv/bin/ajcrew\n"
         start = run_marker._start_path_for(run_marker.pid_path(5477))
         assert start.read_text(encoding="utf-8") == "own-token\n"
 
@@ -854,7 +854,7 @@ class TestDataHomePointer:
         self, run_marker, monkeypatch, cover
     ):
         """The pointer is LF where atomic_write's default is CRLF."""
-        from kiro_crew.config.paths import config_dir
+        from aj_crew.config.paths import config_dir
 
         monkeypatch.setattr(run_marker, "_PUBLISHED_LISTENERS", {5477: set(cover)})
 
@@ -868,7 +868,7 @@ class TestDataHomePointer:
         monkeypatch.setattr(run_marker, "atomic_write", windows_atomic_write)
         run_marker.write_marker(5477)
         pointer = run_marker._DEFAULT_RUN_DIR / "gateway-5477.home"
-        assert pointer.read_bytes() == os.fsencode(config_dir()) + b"\n/venv/bin/kirocrew\n"
+        assert pointer.read_bytes() == os.fsencode(config_dir()) + b"\n/venv/bin/ajcrew\n"
 
         run_marker.clear_marker(5477)
 
@@ -878,11 +878,11 @@ class TestDataHomePointer:
         "this_home_plus_cr", [False, True], ids=["elsewhere", "this-home-plus-cr"]
     )
     def test_clear_marker_leaves_a_pointer_naming_another_home(self, run_marker, this_home_plus_cr):
-        from kiro_crew.config.paths import config_dir
+        from aj_crew.config.paths import config_dir
 
         pointer = run_marker._DEFAULT_RUN_DIR / "gateway-5477.home"
         home = os.fsencode(config_dir()) + b"\r" if this_home_plus_cr else b"/elsewhere"
-        pointer.write_bytes(home + b"\n/venv/bin/kirocrew\n")
+        pointer.write_bytes(home + b"\n/venv/bin/ajcrew\n")
 
         run_marker.clear_marker(5477)
 
@@ -891,11 +891,11 @@ class TestDataHomePointer:
     def test_clear_marker_leaves_its_own_homes_pointer_without_127_0_0_1_cover(
         self, run_marker, monkeypatch
     ):
-        from kiro_crew.config.paths import config_dir
+        from aj_crew.config.paths import config_dir
 
         monkeypatch.setattr(run_marker, "_PUBLISHED_LISTENERS", {5477: {"127.0.0.2"}})
         pointer = run_marker._DEFAULT_RUN_DIR / "gateway-5477.home"
-        own = os.fsencode(config_dir()) + b"\n/venv/bin/kirocrew\n"
+        own = os.fsencode(config_dir()) + b"\n/venv/bin/ajcrew\n"
         pointer.write_bytes(own)
 
         run_marker.clear_marker(5477)
@@ -907,7 +907,7 @@ class TestDataHomePointer:
     def test_clear_marker_forgets_its_listeners_and_its_pointer_even_when_not_utf8(
         self, run_marker, monkeypatch, case
     ):
-        from kiro_crew.config.paths import config_dir
+        from aj_crew.config.paths import config_dir
 
         monkeypatch.setattr(run_marker, "_PUBLISHED_LISTENERS", {})
         run_marker.note_published_listener(5477, "127.0.0.1")
@@ -950,7 +950,7 @@ class TestDataHomePointer:
             try:
                 with run_marker._marker_lock(5477, lock) as locked:
                     assert locked
-                    real(pointer, "/other-home\n/other/bin/kirocrew\n", mode=0o600, newline="")
+                    real(pointer, "/other-home\n/other/bin/ajcrew\n", mode=0o600, newline="")
             except BaseException as e:
                 errors.append(e)
             finally:
@@ -972,17 +972,17 @@ class TestDataHomePointer:
 
         assert done.wait(timeout=10)
         thread.join(timeout=10)
-        assert pointer.read_text(encoding="utf-8") == "/other-home\n/other/bin/kirocrew\n", errors
+        assert pointer.read_text(encoding="utf-8") == "/other-home\n/other/bin/ajcrew\n", errors
 
     def test_writes_no_pointer_and_logs_why_while_the_pointer_lock_is_held(
         self, run_marker, monkeypatch, caplog
     ):
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         monkeypatch.setattr(run_marker, "_MARKER_LOCK_TIMEOUT_SECS", 0.05)
         lock = run_marker._DEFAULT_RUN_DIR / "gateway-5477.home.lock"
         (run_marker._DEFAULT_RUN_DIR / "gateway-5477.home").write_text(
-            "/stale-home\n/stale/bin/kirocrew\n", encoding="utf-8"
+            "/stale-home\n/stale/bin/ajcrew\n", encoding="utf-8"
         )
         fd = os.open(os.fspath(lock), os.O_RDWR | os.O_CREAT, 0o600)
         try:
@@ -1011,7 +1011,7 @@ class TestDataHomePointer:
                     yield locked
                 return
             run_marker.clear_marker(5477)
-            pointer.write_text("/other-home\n/other/bin/kirocrew\n", encoding="utf-8")
+            pointer.write_text("/other-home\n/other/bin/ajcrew\n", encoding="utf-8")
             if not lock_taken:
                 yield False
                 return
@@ -1028,7 +1028,7 @@ class TestDataHomePointer:
         run_marker.write_marker(5477)
 
         pointer = run_marker._DEFAULT_RUN_DIR / "gateway-5477.home"
-        assert pointer.read_text(encoding="utf-8") == "/other-home\n/other/bin/kirocrew\n"
+        assert pointer.read_text(encoding="utf-8") == "/other-home\n/other/bin/ajcrew\n"
 
     def test_a_stopped_writer_without_the_pointer_lock_leaves_the_successors_pointer(
         self, run_marker, monkeypatch
@@ -1038,12 +1038,12 @@ class TestDataHomePointer:
         run_marker.write_marker(5477)
 
         pointer = run_marker._DEFAULT_RUN_DIR / "gateway-5477.home"
-        assert pointer.read_text(encoding="utf-8") == "/other-home\n/other/bin/kirocrew\n"
+        assert pointer.read_text(encoding="utf-8") == "/other-home\n/other/bin/ajcrew\n"
 
     def test_an_unavailable_pointer_lock_drops_a_planted_pointer(self, run_marker, caplog):
         (run_marker._DEFAULT_RUN_DIR / "gateway-5477.home.lock").mkdir()
         pointer = run_marker._DEFAULT_RUN_DIR / "gateway-5477.home"
-        pointer.write_text("/planted-home\n/planted/bin/kirocrew\n", encoding="utf-8")
+        pointer.write_text("/planted-home\n/planted/bin/ajcrew\n", encoding="utf-8")
 
         with caplog.at_level(logging.INFO):
             run_marker.write_marker(5477)
@@ -1061,7 +1061,7 @@ class TestDataHomePointer:
         target.parent.mkdir()
         (run_marker._DEFAULT_RUN_DIR / "gateway-5477.home.lock").symlink_to(target)
         pointer = run_marker._DEFAULT_RUN_DIR / "gateway-5477.home"
-        pointer.write_text("/planted-home\n/planted/bin/kirocrew\n", encoding="utf-8")
+        pointer.write_text("/planted-home\n/planted/bin/ajcrew\n", encoding="utf-8")
 
         run_marker.write_marker(5477)
 
@@ -1071,10 +1071,10 @@ class TestDataHomePointer:
     def test_clear_marker_forgets_the_port_before_it_reads_the_pointer(
         self, run_marker, monkeypatch
     ):
-        from kiro_crew.config.paths import config_dir
+        from aj_crew.config.paths import config_dir
 
         pointer = run_marker._DEFAULT_RUN_DIR / "gateway-5477.home"
-        pointer.write_bytes(os.fsencode(config_dir()) + b"\n/venv/bin/kirocrew\n")
+        pointer.write_bytes(os.fsencode(config_dir()) + b"\n/venv/bin/ajcrew\n")
         seen = []
         real_read_bytes = Path.read_bytes
 
@@ -1090,7 +1090,7 @@ class TestDataHomePointer:
         assert not pointer.exists()
 
     def test_spec_states_the_shutdown_wait_an_orphan_pointer_outlasts(self):
-        from kiro_crew.slack.gateway_runtime.exit_path import _MARKER_WRITE_WAIT_SECS
+        from aj_crew.slack.gateway_runtime.exit_path import _MARKER_WRITE_WAIT_SECS
 
         spec = Path(__file__).resolve().parent.parent / "docs/system-specs/modules/instances.md"
         text = " ".join(spec.read_text(encoding="utf-8").split())

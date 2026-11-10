@@ -1098,7 +1098,7 @@ function dashboardWindowHarness({ platform, frameless = false, remoteHosts = nul
         },
       },
       nativeTheme: { shouldUseDarkColors: false, themeSource: "system" },
-      app: { getPath: () => "/virtual/logs", getVersion: () => "0.8.0", name: "Kiro Crew" },
+      app: { getPath: () => "/virtual/logs", getVersion: () => "0.8.0", name: "Aj Crew" },
     },
     store: { get: (key) => (key === "linuxFrameless" ? frameless : key === "remoteHosts" ? remoteHosts : null) },
     platform,
@@ -1165,7 +1165,7 @@ describe("dashboard window wiring order", () => {
     ]);
     assert.deepEqual(onLoad, [
       "view.send:fullscreen-changed",
-      "win.setTitle:Kiro Crew [:5476]",
+      "win.setTitle:Aj Crew [:5476]",
       "view.insertCSS:#electron-drag-bar {",
       "view.executeJavaScript:if (!document.getElementById('electron-drag-bar')) {",
       "view.executeJavaScript:getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()",
@@ -1184,7 +1184,7 @@ describe("dashboard window wiring order", () => {
       "win.on:system-context-menu",
     ]);
     assert.ok(!wiring.some((entry) => entry.startsWith("win.setWindowButtonPosition")));
-    assert.equal(onLoad[1], "win.setTitle:Kiro Crew", "the default local port is omitted on Windows");
+    assert.equal(onLoad[1], "win.setTitle:Aj Crew", "the default local port is omitted on Windows");
     assert.equal(onLoad[2], "view.insertCSS:#electron-drag-bar {");
   });
 
@@ -1202,7 +1202,7 @@ describe("dashboard window wiring order", () => {
     assert.ok(!wiring.includes("view.on:zoom-changed"), "zoom tracking is macOS/Windows only");
     assert.deepEqual(onLoad, [
       "view.send:fullscreen-changed",
-      "win.setTitle:Kiro Crew [:5476]",
+      "win.setTitle:Aj Crew [:5476]",
       "view.insertCSS:#electron-drag-bar {",
       "view.executeJavaScript:if (!document.getElementById('electron-drag-bar')) {",
       "view.insertCSS:#electron-linux-controls {",
@@ -1307,7 +1307,7 @@ describe("dashboard window wiring order", () => {
       assert.equal(redirect(contents, "http://localhost:54760/"), true);
       assert.equal(redirect(contents, "http://localhost:5476.evil.test/"), true);
       // A pane iframe redirecting inside its own origin is not the dashboard's.
-      assert.equal(redirect(contents, "http://kirocrew.localhost:6000/x", false), false);
+      assert.equal(redirect(contents, "http://ajcrew.localhost:6000/x", false), false);
       assert.equal(redirect(contents, "http://localhost:5476/chat?token=t"), false);
       // No isMainFrame on the event: an unknown frame counts as main, so refused.
       let unknownFrameRefused = false;
@@ -1320,7 +1320,7 @@ describe("dashboard window wiring order", () => {
     const { onLoad } = await wireDashboardWindow(t, { platform: "linux", frameless: false });
     assert.deepEqual(onLoad, [
       "view.send:fullscreen-changed",
-      "win.setTitle:Kiro Crew [:5476]",
+      "win.setTitle:Aj Crew [:5476]",
       "view.executeJavaScript:getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()",
       "view.executeJavaScript:JSON.stringify({pref: document.documentElement.dataset.modePref || \"\",mode: document.documentElement.dataset.mode || \"\"})",
     ]);
@@ -1403,7 +1403,7 @@ describe("embedded browser panel isolation", () => {
       sandbox: true,
       webviewTag: false,
     });
-    assert.equal(BROWSER_PARTITION, "persist:kirocrew-browser");
+    assert.equal(BROWSER_PARTITION, "persist:ajcrew-browser");
     assert.ok(win._mcBrowserPanels.has("p1"));
     lifecycle.browser.close(viewContents, "p1");
     assert.equal(win._mcBrowserPanels.size, 0);
@@ -1638,7 +1638,7 @@ describe("modal prompts", () => {
     const names = [];
     const focused = {
       isDestroyed: () => false,
-      getTitle: () => "Kiro Crew [:5476]",
+      getTitle: () => "Aj Crew [:5476]",
       _mcBackendUrl: "http://localhost:5476",
       _mcSetCustomName: (name) => names.push(name),
     };
@@ -1804,7 +1804,7 @@ describe("gateway port prompt", () => {
 // Enough of Electron for createTray, recording every Tray it makes.
 function trayElectron(trays = []) {
   return {
-    app: { name: "Kiro Crew", getVersion: () => "0.8.0", getPath: () => "/virtual/logs" },
+    app: { name: "Aj Crew", getVersion: () => "0.8.0", getPath: () => "/virtual/logs" },
     Tray: class {
       constructor() { this.destroyed = false; trays.push(this); }
       setToolTip() {}
@@ -1874,7 +1874,7 @@ describe("main window close action", () => {
     const menus = [];
     const lifecycle = createWindowLifecycle(validOptions({
       electron: {
-        app: { name: "Kiro Crew", getVersion: () => "0.8.0", getPath: () => "/virtual/logs" },
+        app: { name: "Aj Crew", getVersion: () => "0.8.0", getPath: () => "/virtual/logs" },
         Tray: class {
           setToolTip() {}
           setContextMenu() {}
@@ -1893,7 +1893,7 @@ describe("main window close action", () => {
     lifecycle.syncTray();
     assert.deepEqual(
       menus[0].map((item) => item.label || item.type),
-      ["Show Kiro Crew", "separator", "New Connection Window…", "separator", "Open Config File", "separator", "Quit"],
+      ["Show Aj Crew", "separator", "New Connection Window…", "separator", "Open Config File", "separator", "Quit"],
     );
   });
 });

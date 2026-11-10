@@ -16,14 +16,14 @@ import pathlib
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew import mcp_discovery, mcp_grant
-from kiro_crew.config import paths as connections_paths
-from kiro_crew.config.loader import config_path
-from kiro_crew.connections import endpoint_migration
-from kiro_crew.connections.registry import get_provider
-from kiro_crew.dashboard.handlers import mcp as mcp_handlers
-from kiro_crew.dashboard.handlers import mcp_config_files
+from aj_crew import agent as agent_mod
+from aj_crew import mcp_discovery, mcp_grant
+from aj_crew.config import paths as connections_paths
+from aj_crew.config.loader import config_path
+from aj_crew.connections import endpoint_migration
+from aj_crew.connections.registry import get_provider
+from aj_crew.dashboard.handlers import mcp as mcp_handlers
+from aj_crew.dashboard.handlers import mcp_config_files
 
 _V1 = "https://mcp.atlassian.com/v1/mcp/authv2"
 _V2 = "https://mcp.atlassian.com/v2/mcp"
@@ -38,9 +38,9 @@ def home(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path) -> dict[str, p
     agents.mkdir()
     cache = mcp_grant.kiro_oauth_cache_dir(home=tmp_path)
     cache.mkdir(parents=True)
-    monkeypatch.setattr(mcp_config_files, "_KIROCREW_MCP_JSON", mcp_json)
+    monkeypatch.setattr(mcp_config_files, "_AJCREW_MCP_JSON", mcp_json)
     monkeypatch.setattr(mcp_handlers, "_get_mcp_lock_sync", contextlib.nullcontext)
-    monkeypatch.setattr(mcp_discovery, "_MCP_SOURCES", ((mcp_json, "kirocrew"),))
+    monkeypatch.setattr(mcp_discovery, "_MCP_SOURCES", ((mcp_json, "ajcrew"),))
     monkeypatch.setattr(mcp_discovery, "_extra_scope_sources", list)
     monkeypatch.setattr(mcp_handlers, "_extra_mcp_scopes", list)
     monkeypatch.setattr(connections_paths, "kiro_agents_dir", lambda: agents)
@@ -49,7 +49,7 @@ def home(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path) -> dict[str, p
 
     def _rebuild(**_kwargs: object) -> tuple[pathlib.Path, bool]:
         rebuilds.append("rebuild")
-        return agents / "kirocrew.json", True
+        return agents / "ajcrew.json", True
 
     monkeypatch.setattr(agent_mod, "rebuild_agent_config_reporting", _rebuild)
     monkeypatch.setattr(endpoint_migration, "_audit", lambda _result: None)
@@ -222,7 +222,7 @@ def test_a_composition_refused_rebuild_is_logged_as_governance(
 ) -> None:
     """The entry still moves; the unrewritten spec is reported, and the log names
     governance at ERROR because this host's enterprise setup could not be built."""
-    from kiro_crew.platform import PlatformCompositionError
+    from aj_crew.platform import PlatformCompositionError
 
     def _refused(**_kwargs: object) -> tuple[pathlib.Path, bool]:
         raise PlatformCompositionError("companion missing")
@@ -230,7 +230,7 @@ def test_a_composition_refused_rebuild_is_logged_as_governance(
     monkeypatch.setattr(agent_mod, "rebuild_agent_config_reporting", _refused)
     _write_mcp(home, {"atlassian": {"url": _V1}})
     _write_owner_record({"atlassian": {"url": _V1}})
-    caplog.set_level("ERROR", logger="kiro_crew.connections.endpoint_migration")
+    caplog.set_level("ERROR", logger="aj_crew.connections.endpoint_migration")
 
     (moved,) = _start()
 
@@ -240,7 +240,7 @@ def test_a_composition_refused_rebuild_is_logged_as_governance(
     errors = [
         r
         for r in caplog.records
-        if r.name == "kiro_crew.connections.endpoint_migration" and r.levelname == "ERROR"
+        if r.name == "aj_crew.connections.endpoint_migration" and r.levelname == "ERROR"
     ]
     assert len(errors) == 1
     assert "governance" in errors[0].getMessage()

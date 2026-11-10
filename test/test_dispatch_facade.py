@@ -1,10 +1,10 @@
 """The shared channel turn pipeline facade keeps the patch seams the one module had.
 
-``kiro_crew.messaging.dispatch`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over
-the ``kiro_crew.messaging.dispatch_<role>`` owners, and keeps the turn loop itself
+``aj_crew.messaging.dispatch`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over
+the ``aj_crew.messaging.dispatch_<role>`` owners, and keeps the turn loop itself
 (``ChannelTurns``, ``drive_turn``, the compaction retry guard, the hook auto-reply and the
 directive consumer). Callers, tests and documents still reach every name as
-``kiro_crew.messaging.dispatch.<name>``, and the moved code reads its names as plain module
+``aj_crew.messaging.dispatch.<name>``, and the moved code reads its names as plain module
 globals, so a patch through the facade reaches that code only because the mirror writes it
 into every module holding the name.
 
@@ -32,9 +32,9 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew.messaging import dispatch
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import _facade_mirror
+from aj_crew.messaging import dispatch
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_dispatch_facade")
 
@@ -42,8 +42,8 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_dispatch_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.messaging.dispatch"
-OWNER_PREFIX = "kiro_crew.messaging.dispatch_"
+FACADE = "aj_crew.messaging.dispatch"
+OWNER_PREFIX = "aj_crew.messaging.dispatch_"
 MESSAGING_DIR = Path(dispatch.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
 
@@ -217,7 +217,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for path in _owner_paths().values():
         for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     if f"{node.module}.{alias.name}" not in family:
@@ -240,7 +240,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
-    """At BASE the module bound these by import, so ``from kiro_crew.messaging.dispatch
+    """At BASE the module bound these by import, so ``from aj_crew.messaging.dispatch
     import spool_refused_turn_sync`` type-checked. Now an owner holds them, so the facade
     names each one from its home module under ``TYPE_CHECKING``, and exactly those."""
     served = set(_index().exports)
@@ -282,7 +282,7 @@ def test_named_classes_keep_the_facade_module_and_others_their_owner() -> None:
 
 
 def test_the_facade_runs_as_a_module(tmp_path: Path) -> None:
-    """``python -m kiro_crew.messaging.dispatch`` imported cleanly before the split; the
+    """``python -m aj_crew.messaging.dispatch`` imported cleanly before the split; the
     mirror installs on ``__main__`` too, because every member that logs binds the one logger
     by its literal name."""
     env = dict(os.environ)

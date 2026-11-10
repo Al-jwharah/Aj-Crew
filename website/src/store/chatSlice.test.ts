@@ -35,7 +35,7 @@ describe('sseSubagentBatchChunks — prototype-pollution guard (bug chat/subagen
   it('ignores a poisoned __proto__ id and does not pollute Object.prototype', () => {
     const store = makeStore()
     store.dispatch(setActiveSlot('active'))
-    store.dispatch(sseSubagentSpawn({ slot: 'active', id: 'real', task: 't', agent: 'kirocrew' }))
+    store.dispatch(sseSubagentSpawn({ slot: 'active', id: 'real', task: 't', agent: 'ajcrew' }))
 
     // Failure scenario: a subagent_chunk event whose id === '__proto__' would,
     // without the guard, resolve `state.subagents['__proto__']` to
@@ -138,7 +138,7 @@ describe('sseToolResult — tool output also lands on the tool MESSAGE meta', ()
   // "Spawned N subagent(s)." out of message.meta.output. That field must be
   // patched onto the client message too, or the card would appear only after a
   // slot refetch — never during the live turn that spawned the agents.
-  const SPAWN_OUTPUT = 'Spawned 2 subagent(s). Results will arrive as completion events:\n  a1b2c3d4 (kirocrew): map the picker\n  e5f6a7b8 (kirocrew): map the desktop shell\n'
+  const SPAWN_OUTPUT = 'Spawned 2 subagent(s). Results will arrive as completion events:\n  a1b2c3d4 (ajcrew): map the picker\n  e5f6a7b8 (ajcrew): map the desktop shell\n'
 
   it('patches meta.output on the matching tool message so the launch is detectable live', () => {
     const store = makeStore()
@@ -804,7 +804,7 @@ describe('sseSubagentSpawn — requestedModel threading (#5326)', () => {
     expect(store.getState().chat.subagents['sa3'].status).toBe('pending')
 
     store.dispatch(sseSubagentSpawn({
-      slot: 'active', id: 'sa3', task: 'new task', agent: 'kirocrew',
+      slot: 'active', id: 'sa3', task: 'new task', agent: 'ajcrew',
       model: 'claude-opus-4.7', requested_model: 'claude-opus-4.8',
     }))
     const row = store.getState().chat.subagents['sa3']
@@ -946,7 +946,7 @@ describe('sseSubagentSpawn — batchId threading (#759)', () => {
     const store = makeStore()
     store.dispatch(setActiveSlot('active'))
     store.dispatch(sseSubagentPending({ slot: 'active', id: 'b3', task: 'old', approval_id: 'ap-1' }))
-    store.dispatch(sseSubagentSpawn({ slot: 'active', id: 'b3', task: 'new', agent: 'kirocrew', batch_id: 'wave-2' }))
+    store.dispatch(sseSubagentSpawn({ slot: 'active', id: 'b3', task: 'new', agent: 'ajcrew', batch_id: 'wave-2' }))
     expect(store.getState().chat.subagents['b3'].batchId).toBe('wave-2')
   })
 

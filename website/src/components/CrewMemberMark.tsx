@@ -2,7 +2,7 @@
 // and tinted for use as the `/members` nav glyph.
 //
 // Why this is an ASSET and not a Lucide glyph: what the rail needs to say here
-// is "the named Kiro crew members you hold conversations with", and the half of
+// is "the named Aj crew members you hold conversations with", and the half of
 // that which carries the meaning is the KIRO GHOST. lucide-react ships no brand
 // or mascot marks, so there is nothing to compose the pair from — this is the
 // same gap `KiroGhostMark` already fills on this rail, under the

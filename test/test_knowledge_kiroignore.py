@@ -8,10 +8,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import hooks
-from kiro_crew.knowledge import folder_watcher as fw_mod
-from kiro_crew.knowledge import kiroignore
-from kiro_crew.knowledge.folder_watcher import FolderWatcher
+from aj_crew import hooks
+from aj_crew.knowledge import folder_watcher as fw_mod
+from aj_crew.knowledge import kiroignore
+from aj_crew.knowledge.folder_watcher import FolderWatcher
 
 
 def _rules(*lines: str) -> kiroignore.KiroIgnore:

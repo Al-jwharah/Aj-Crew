@@ -17,7 +17,7 @@ Fargate lane's configuration home") and the
 `cloud.json` is the **operator's** file. The product only ever *reads* it — there
 is no `save()`, no `apply_update()`, and it is deliberately **sealed against
 agent-assisted file edits** (the agent file-edit tool refuses it and the sandbox
-mounts it read-only), because a value in it — the launch tag — is what `kirocrew
+mounts it read-only), because a value in it — the launch tag — is what `ajcrew
 cloud destroy` deletes when no `--tag` is given. So the fields below are ones only
 you can write, from outside the sandbox, in an editor. There is no product surface
 that writes them for you today; adding a `cloud config` command or a dashboard form
@@ -39,7 +39,7 @@ except the ones marked optional is **required** for the lane to register.
 | `subnets` | yes | list of subnet ids; at least one |
 | `security_groups` | yes | list of security-group ids; at least one |
 | `image` | yes | the crew container image, **digest-pinned only** — `<repo>@sha256:<64-hex>`; a movable tag is refused |
-| `secrets` | yes | list of `[canonical-name, ARN]` pairs; each name has the form `kirocrew/crew/<crew>/<KEY>`, and **one must be your model credential, named `kirocrew/crew/<crew>/KIRO_IDENTITY`**. That secret holds one KasToken JSON document, not an API key. Identifiers only — never a secret value; the task's execution role fetches the value from Secrets Manager at start |
+| `secrets` | yes | list of `[canonical-name, ARN]` pairs; each name has the form `ajcrew/crew/<crew>/<KEY>`, and **one must be your model credential, named `ajcrew/crew/<crew>/KIRO_IDENTITY`**. That secret holds one KasToken JSON document, not an API key. Identifiers only — never a secret value; the task's execution role fetches the value from Secrets Manager at start |
 | `cpu_architecture` | no | `X86_64` (default) or `ARM64` |
 | `assign_public_ip` | no | JSON boolean; defaults to `false`. A public subnet with no NAT gateway cannot pull the image without this |
 | `task_ttl_seconds` | no | JSON integer above zero; how long one task may run before the launcher stops it. Omitted takes the engine's own default |
@@ -60,8 +60,8 @@ removes the lane — no gateway restart.
     "cluster": "my-crews",
     "subnets": ["subnet-0abc123", "subnet-0def456"],
     "security_groups": ["sg-0abc123"],
-    "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/kirocrew-crew@sha256:<64-hex>",
-    "secrets": [["kirocrew/crew/<crew>/KIRO_IDENTITY", "arn:aws:secretsmanager:us-east-1:123456789012:secret:kirocrew/crew/<crew>/KIRO_IDENTITY-AbCdEf"]],
+    "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/ajcrew-crew@sha256:<64-hex>",
+    "secrets": [["ajcrew/crew/<crew>/KIRO_IDENTITY", "arn:aws:secretsmanager:us-east-1:123456789012:secret:ajcrew/crew/<crew>/KIRO_IDENTITY-AbCdEf"]],
     "cpu_architecture": "X86_64",
     "assign_public_ip": false,
     "task_ttl_seconds": 21600

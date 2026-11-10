@@ -1,10 +1,10 @@
 """``CronService`` keeps every member it had, and each is bound from the module that owns it.
 
-The service's behaviour lives in the ``kiro_crew.cron_service.service`` owner modules: each
+The service's behaviour lives in the ``aj_crew.cron_service.service`` owner modules: each
 member's body is a module-level function there whose first parameter is ``self``, and the
 class binds it by name (``m = _owner.m``, or ``staticmethod(_owner.f)``). The service's
 state stays on the instance, so callers, ``CronService.__new__`` builds and every patch of a
-member on the class or an instance see the same object they always did. ``kiro_crew.cron``
+member on the class or an instance see the same object they always did. ``aj_crew.cron``
 stays a plain module, and a name tests patch there is read through it on each call. This
 file pins that contract:
 
@@ -13,15 +13,15 @@ file pins that contract:
 * each bound member IS its owner's function, and no owner keeps an unbound ``self`` function;
 * no bound function uses zero-argument ``super()``, ``__class__`` or a name-mangled
   attribute, which only work inside a class body;
-* no owner imports ``kiro_crew.cron`` at import time, and at call time only as
-  ``from kiro_crew import cron as seams``;
-* every name the test trees patch on ``kiro_crew.cron``, and every name ``cron.py`` itself
+* no owner imports ``aj_crew.cron`` at import time, and at call time only as
+  ``from aj_crew import cron as seams``;
+* every name the test trees patch on ``aj_crew.cron``, and every name ``cron.py`` itself
   defines, is read by an owner through ``seams``, never as a global of its own, so a patch
   on the facade reaches the moved code as it did before the members moved;
 * no ``async def`` in an owner reaches a blocking call through ``seams``
   (``seams.time.sleep``), a spelling the sync-io gate cannot see;
 * each owner's docstring names the instance fields its members write and read, every owner
-  logs on the ``kiro_crew.cron`` logger, and a frame in an owner is the cron surface to the
+  logs on the ``aj_crew.cron`` logger, and a frame in an owner is the cron surface to the
   loop-stall classifier.
 """
 
@@ -45,9 +45,9 @@ from typing import Any
 import facade_mirror_scan
 import pytest
 
-import kiro_crew.cron as cron
-from kiro_crew.cron import CronService
-from kiro_crew.cron_service import service as service_package
+import aj_crew.cron as cron
+from aj_crew.cron import CronService
+from aj_crew.cron_service import service as service_package
 
 # The reach checks read the whole test tree; keep them on one worker.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_cron_service_bindings")
@@ -58,9 +58,9 @@ _REPO = Path(__file__).resolve().parents[1]
 _PACKAGE = service_package.__name__
 
 #: Member -> (kind, coroutine, signature digest, owner). Frozen at the split: the kind,
-#: coroutine flag and signature are BASE's. The owner is the ``kiro_crew.cron_service.service``
+#: coroutine flag and signature are BASE's. The owner is the ``aj_crew.cron_service.service``
 #: module the member's function lives in now, or, for a member the class body still defines,
-#: the module (under ``kiro_crew``) its function has always come from.
+#: the module (under ``aj_crew``) its function has always come from.
 _MEMBERS: dict[str, tuple[str, object, str, str]] = {
     "__init__": ("function", False, "a34214912333", "cron"),
     "_ack_job_locked": ("function", False, "1dcd84422c4a", "job_writes"),
@@ -235,7 +235,7 @@ def _member_function(name: str) -> Any:
 
 def _home(owner: str) -> str:
     stems = {name.rsplit(".", 1)[-1] for name in _OWNERS}
-    return f"{_PACKAGE}.{owner}" if owner in stems else f"kiro_crew.{owner}"
+    return f"{_PACKAGE}.{owner}" if owner in stems else f"aj_crew.{owner}"
 
 
 def _source(module: ModuleType) -> str:
@@ -340,9 +340,9 @@ def test_no_bound_function_needs_its_class_body(owner: str) -> None:
 
 
 def _facade_imports(tree: ast.Module) -> tuple[list[int], list[int]]:
-    """``(import-time, call-time)`` lines that import ``kiro_crew.cron``, a ``TYPE_CHECKING``
+    """``(import-time, call-time)`` lines that import ``aj_crew.cron``, a ``TYPE_CHECKING``
     import aside. A call-time import is one inside a function; only the spelling
-    ``from kiro_crew import cron as seams`` is a call-time import the owners may use."""
+    ``from aj_crew import cron as seams`` is a call-time import the owners may use."""
     guarded: set[int] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.If) and ast.unparse(node.test) == "TYPE_CHECKING":
@@ -358,16 +358,16 @@ def _facade_imports(tree: ast.Module) -> tuple[list[int], list[int]]:
             continue
         hit = False
         if isinstance(node, ast.ImportFrom):
-            hit = node.module == "kiro_crew.cron" or (
-                node.module == "kiro_crew" and any(a.name == "cron" for a in node.names)
+            hit = node.module == "aj_crew.cron" or (
+                node.module == "aj_crew" and any(a.name == "cron" for a in node.names)
             )
         elif isinstance(node, ast.Import):
-            hit = any(a.name == "kiro_crew.cron" for a in node.names)
+            hit = any(a.name == "aj_crew.cron" for a in node.names)
         if not hit:
             continue
         seam = (
             isinstance(node, ast.ImportFrom)
-            and node.module == "kiro_crew"
+            and node.module == "aj_crew"
             and [(a.name, a.asname) for a in node.names] == [("cron", "seams")]
         )
         if id(node) in in_function and seam:
@@ -380,10 +380,10 @@ def _facade_imports(tree: ast.Module) -> tuple[list[int], list[int]]:
 def test_the_facade_import_scan_can_fail() -> None:
     tree = ast.parse(
         "from typing import TYPE_CHECKING\n"
-        "if TYPE_CHECKING:\n    from kiro_crew.cron import CronService\n"
-        "def f():\n    from kiro_crew import cron as seams\n    from kiro_crew.cron import x\n"
-        "import kiro_crew.cron\n"
-        "from kiro_crew import cron\n"
+        "if TYPE_CHECKING:\n    from aj_crew.cron import CronService\n"
+        "def f():\n    from aj_crew import cron as seams\n    from aj_crew.cron import x\n"
+        "import aj_crew.cron\n"
+        "from aj_crew import cron\n"
     )
     assert _facade_imports(tree) == ([6, 7, 8], [5])
 
@@ -395,16 +395,16 @@ def test_no_owner_imports_the_facade_but_through_its_seams(owner: str) -> None:
 
 
 # --------------------------------------------------------------------------- #
-# A patch on ``kiro_crew.cron`` reaches the moved code.
+# A patch on ``aj_crew.cron`` reaches the moved code.
 # --------------------------------------------------------------------------- #
 
 
 def _test_tree_files() -> Iterator[Path]:
     """The files pytest collects tests or fixtures from: the root conftest, ``test/``, and
-    the test modules and conftests under ``src/kiro_crew/apps/builtins``."""
+    the test modules and conftests under ``src/aj_crew/apps/builtins``."""
     yield _REPO / "conftest.py"
     yield from sorted((_REPO / "test").rglob("*.py"))
-    for path in sorted((_REPO / "src" / "kiro_crew" / "apps" / "builtins").rglob("*.py")):
+    for path in sorted((_REPO / "src" / "aj_crew" / "apps" / "builtins").rglob("*.py")):
         rel = path.relative_to(_REPO).as_posix()
         if "/tests/" in rel or path.name.startswith("test_") or path.name == "conftest.py":
             yield path
@@ -435,7 +435,7 @@ def _loop_names(tree: ast.Module, line: int) -> list[str] | None:
 
 def patched_on_the_facade(source: str) -> tuple[set[str], list[int]]:
     """``(names, unresolved lines)``: every name *source* patches as an attribute of
-    ``kiro_crew.cron`` (:func:`facade_mirror_scan.patch_events`), a name a loop over a
+    ``aj_crew.cron`` (:func:`facade_mirror_scan.patch_events`), a name a loop over a
     literal tuple patches included; the lines of any other computed name."""
     events = facade_mirror_scan.patch_events(source, {cron.__name__: cron.__name__})
     names: set[str] = set()
@@ -459,13 +459,13 @@ def patched_on_the_facade(source: str) -> tuple[set[str], list[int]]:
 def test_the_patch_scan_reads_every_spelling_and_resolves_a_literal_loop() -> None:
     source = (
         "from unittest import mock\n"
-        "import kiro_crew.cron as cron_mod\n"
-        "from kiro_crew import cron\n"
+        "import aj_crew.cron as cron_mod\n"
+        "from aj_crew import cron\n"
         "def test_x(monkeypatch):\n"
         "    monkeypatch.setattr(cron_mod, 'a', 1)\n"
-        "    monkeypatch.setattr('kiro_crew.cron.b', 1)\n"
+        "    monkeypatch.setattr('aj_crew.cron.b', 1)\n"
         "    mock.patch.object(cron, 'c')\n"
-        "    mock.patch('kiro_crew.cron.d')\n"
+        "    mock.patch('aj_crew.cron.d')\n"
         "    for name in ('e', 'f'):\n"
         "        monkeypatch.setattr(cron_mod, name, 1)\n"
         "    monkeypatch.setattr(cron_mod, compute(), 1)\n"
@@ -477,13 +477,13 @@ def test_the_patch_scan_reads_every_spelling_and_resolves_a_literal_loop() -> No
 
 @functools.lru_cache(maxsize=1)
 def _corpus() -> tuple[set[str], list[str]]:
-    """Every name the test trees patch on ``kiro_crew.cron``, read once per process on first
+    """Every name the test trees patch on ``aj_crew.cron``, read once per process on first
     use (never at import, so collecting this file costs nothing)."""
     names: set[str] = set()
     unresolved: list[str] = []
     for path in _test_tree_files():
         text = path.read_text(encoding="utf-8", errors="replace")
-        if "cron" not in text or "kiro_crew" not in text:
+        if "cron" not in text or "aj_crew" not in text:
             continue
         found, lines = patched_on_the_facade(text)
         names |= found
@@ -552,7 +552,7 @@ def test_the_read_scans_can_fail() -> None:
         "import time\n"
         "LIMIT = 3\n"
         "def f(self, deadline=LIMIT):\n"
-        "    from kiro_crew import cron as seams\n"
+        "    from aj_crew import cron as seams\n"
         "    def inner():\n        return time.time()\n"
         "    return seams.sel, [time for _ in ()], inner\n"
     )
@@ -562,7 +562,7 @@ def test_the_read_scans_can_fail() -> None:
 
 def test_the_corpus_saw_the_patches_it_must_route() -> None:
     names, unresolved = _corpus()
-    assert unresolved == [], "a computed patch target on kiro_crew.cron: resolve it here"
+    assert unresolved == [], "a computed patch target on aj_crew.cron: resolve it here"
     # Non-vacuity: names the tests are known to patch there, by every spelling.
     assert {"admission_check", "_REAPER_RESET_TIMEOUT", "time", "_vet_allowance"} <= names
 
@@ -592,7 +592,7 @@ def test_a_seam_import_opens_the_function_that_reads_a_seam(owner: str) -> None:
             continue
         uses = any(isinstance(n, ast.Name) and n.id == "seams" for n in ast.walk(fn))
         body = fn.body[1:] if ast.get_docstring(fn) is not None else fn.body
-        opens = bool(body) and ast.unparse(body[0]) == "from kiro_crew import cron as seams"
+        opens = bool(body) and ast.unparse(body[0]) == "from aj_crew import cron as seams"
         assert uses == opens, fn.name
 
 
@@ -640,7 +640,7 @@ def test_the_blocking_seam_scan_can_fail() -> None:
     blocking = _sync_io_gate().MODULE_FUNCS
     source = (
         "async def f(self):\n"
-        "    from kiro_crew import cron as seams\n"
+        "    from aj_crew import cron as seams\n"
         "    seams.time.sleep(1)\n"
         "    seams.time.time()\n"
         "    def inner():\n        seams.time.sleep(2)\n"
@@ -744,7 +744,7 @@ def test_the_package_lists_every_owner() -> None:
 
 @pytest.mark.parametrize("owner", _OWNERS)
 def test_owners_log_on_the_cron_channel(owner: str) -> None:
-    """Operators filter, and tests ``caplog``, on ``kiro_crew.cron``."""
+    """Operators filter, and tests ``caplog``, on ``aj_crew.cron``."""
     assert getattr(sys.modules[owner], "logger", cron.logger) is cron.logger
 
 
@@ -752,12 +752,12 @@ def test_owners_log_on_the_cron_channel(owner: str) -> None:
 def test_a_stall_inside_an_owner_is_the_cron_surface(owner: str) -> None:
     """The loop-stall classifier names a stall in moved service code ``cron``, as it did
     when the code was in ``cron.py``: the frame's path is under ``cron_service/``."""
-    from kiro_crew.stall_attribution import classify_surface, parse_frames
+    from aj_crew.stall_attribution import classify_surface, parse_frames
 
     leaf = owner.rsplit(".", 1)[-1]
-    dashboard = '  File "/venv/site-packages/kiro_crew/dashboard/handlers/cron.py", line 1 in api'
+    dashboard = '  File "/venv/site-packages/aj_crew/dashboard/handlers/cron.py", line 1 in api'
     for frame in (
-        f'  File "/venv/site-packages/kiro_crew/cron_service/service/{leaf}.py", line 9 in f',
-        rf'  File "C:\venv\Lib\site-packages\kiro_crew\cron_service\service\{leaf}.py", line 9 in f',
+        f'  File "/venv/site-packages/aj_crew/cron_service/service/{leaf}.py", line 9 in f',
+        rf'  File "C:\venv\Lib\site-packages\aj_crew\cron_service\service\{leaf}.py", line 9 in f',
     ):
         assert classify_surface(parse_frames([frame, dashboard])) == "cron", frame

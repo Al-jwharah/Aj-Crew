@@ -18,8 +18,8 @@ is a deny gate whose silent failure would be invisible:
 
 from __future__ import annotations
 
-from kiro_crew.computer_use import policy
-from kiro_crew.computer_use.types import (
+from aj_crew.computer_use import policy
+from aj_crew.computer_use.types import (
     CLICK_METHOD_ACCESSIBILITY,
     CLICK_METHOD_APP_POST,
     CLICK_METHOD_AUTO,
@@ -41,7 +41,7 @@ class TestBlockedAppCategories:
         cats = policy.blocked_app_categories()
         assert cats, "the floor must be visible to the Settings panel"
         assert {"category", "reason"} == set(cats[0])
-        assert cats[0]["category"] == policy.CATEGORY_KIROCREW_SELF
+        assert cats[0]["category"] == policy.CATEGORY_AJCREW_SELF
 
 
 class TestTitleIsDenied:
@@ -50,7 +50,7 @@ class TestTitleIsDenied:
         assert policy.title_is_denied("   ") is False
 
     def test_a_dashboard_tab_title_is_denied_by_substring(self) -> None:
-        assert policy.title_is_denied("(3) Kiro Crew — Settings") is True
+        assert policy.title_is_denied("(3) Aj Crew — Settings") is True
 
     def test_an_unrelated_title_is_allowed(self) -> None:
         assert policy.title_is_denied("Zibblefax — untitled") is False
@@ -59,10 +59,10 @@ class TestTitleIsDenied:
         """The Linux/Windows drivers may only ever learn a process name, so the
         name-substring row has to fire on its own."""
         # brand-ok: the joined spelling is the `name_substrings` row under test.
-        app = AppRef(name="KiroCrew Helper", pid=11, bundle_id="com.unrelated.host")  # brand-ok
+        app = AppRef(name="AjCrew Helper", pid=11, bundle_id="com.unrelated.host")  # brand-ok
         rule = policy.denied_rule_for(app)
         assert rule is not None
-        assert rule.category == policy.CATEGORY_KIROCREW_SELF
+        assert rule.category == policy.CATEGORY_AJCREW_SELF
 
     def test_the_window_title_alone_denies_a_foreign_bundle(self) -> None:
         """A browser tab hosting the dashboard presents Chrome's identity, so the
@@ -72,11 +72,11 @@ class TestTitleIsDenied:
             pid=9,
             bundle_id="com.google.Chrome",
             # brand-ok: the joined spelling is the `title_substrings` row under test.
-            window_title="KiroCrew dashboard",  # brand-ok
+            window_title="AjCrew dashboard",  # brand-ok
         )
         rule = policy.denied_rule_for(app)
         assert rule is not None
-        assert rule.category == policy.CATEGORY_KIROCREW_SELF
+        assert rule.category == policy.CATEGORY_AJCREW_SELF
 
 
 class TestOperatorPatterns:
@@ -109,9 +109,9 @@ class TestOperatorPatterns:
 
     def test_the_builtin_floor_beats_the_allow_list(self) -> None:
         """An operator must not be able to allow-list past the floor."""
-        cfg = PolicyConfig(allowed_apps=("kirocrew",))
+        cfg = PolicyConfig(allowed_apps=("ajcrew",))
         # brand-ok: joined spelling, matching the operator entry on the line above.
-        app = AppRef(name="KiroCrew", pid=2, bundle_id="dev.kiro.crew")  # brand-ok
+        app = AppRef(name="AjCrew", pid=2, bundle_id="io.github.al-jwharah.ajcrew")  # brand-ok
         refusal = policy.check_app(app, cfg)
         assert refusal is not None
         # The BUILT-IN reason, not either operator-list reason.

@@ -1,7 +1,7 @@
 """An adopted former built-in keeps the agent tools its wheel copy listed.
 
 ``apps.app_agent_tools`` lists a first-party app's ``agentTools`` under the auto-approved
-``kirocrew-core`` server. A built-in's block is read from its shipped ``app.json``; once
+``ajcrew-core`` server. A built-in's block is read from its shipped ``app.json``; once
 adoption releases the wheel copy, the record is ``origin=registry`` and the builtin-owned
 set does not name it. The listing then follows the adopted record, read from its own
 ``app.json``, only under the trust the own-server tool-gate grant rests on
@@ -41,14 +41,14 @@ from builtin_adoption_helpers import (
     write_tree,
 )
 
-from kiro_crew.apps import app_agent_tools
-from kiro_crew.apps import execution as exec_mod
-from kiro_crew.apps import manager
-from kiro_crew.dashboard.handlers import app_agent_tools as handler_mod
-from kiro_crew.mcp_tools import app_tools
+from aj_crew.apps import app_agent_tools
+from aj_crew.apps import execution as exec_mod
+from aj_crew.apps import manager
+from aj_crew.dashboard.handlers import app_agent_tools as handler_mod
+from aj_crew.mcp_tools import app_tools
 
 TOOL = "fixture_former_note"
-OTHER_REPOSITORY = "https://github.com/SomeoneElse/kirocrew-app-fixture-former"
+OTHER_REPOSITORY = "https://github.com/SomeoneElse/ajcrew-app-fixture-former"
 BLOCK: dict[str, Any] = {
     "route": "agent-tools",
     "tools": [
@@ -86,7 +86,7 @@ def _fresh_reads(_floor_monkeypatch: pytest.MonkeyPatch):
 
 @pytest.fixture(autouse=True)
 def _quiet_sel(_floor_monkeypatch: pytest.MonkeyPatch):
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     quiet = types.SimpleNamespace(log_api_access=lambda **_kw: None)
     _floor_monkeypatch.setattr(handler_mod, "sel", lambda: quiet)
@@ -123,7 +123,7 @@ def _record(*, source_url: str = REPOSITORY, block: dict | None = None) -> None:
 
 
 def _trust(repository: str = REPOSITORY) -> None:
-    home = Path(os.environ["KIROCREW_HOME"])
+    home = Path(os.environ["AJCREW_HOME"])
     seed_agent(home, {"apps_trusted": [NAME], "apps_trusted_repositories": {NAME: repository}})
 
 
@@ -171,7 +171,7 @@ def test_the_listing_needs_a_grant_bound_to_the_pin_repository(tmp_path, monkeyp
     if trust == "other-repository":
         _trust(repository=OTHER_REPOSITORY)
     elif trust == "name-only":
-        seed_agent(Path(os.environ["KIROCREW_HOME"]), {"apps_trusted": [NAME]})
+        seed_agent(Path(os.environ["AJCREW_HOME"]), {"apps_trusted": [NAME]})
     assert _listed() == []
 
 
@@ -267,7 +267,7 @@ _CALL = {"tool": TOOL, "arguments": {"item_id": "i-1"}}
 
 
 async def _call(monkeypatch: pytest.MonkeyPatch) -> tuple[int, dict, list]:
-    from kiro_crew.apps import routes as app_routes
+    from aj_crew.apps import routes as app_routes
 
     seen: list[tuple[str, str]] = []
 
@@ -303,8 +303,8 @@ async def test_a_call_to_a_third_party_record_with_the_same_name_is_unknown(tmp_
 @pytest.mark.asyncio
 async def test_adoption_leaves_the_listed_tools_as_they_were(tmp_path, monkeypatch):
     """The wheel copy's tools before adoption are the adopted record's tools after it."""
-    from kiro_crew.apps import builtin_adoption as adoption
-    from kiro_crew.config.loader import _invalidate_config_cache
+    from aj_crew.apps import builtin_adoption as adoption
+    from aj_crew.config.loader import _invalidate_config_cache
 
     wheel = shipped_manifest(agentTools=BLOCK, backend=BACKEND)
     build_world(tmp_path, monkeypatch, wheel_manifest=wheel, agentTools=BLOCK, backend=BACKEND)

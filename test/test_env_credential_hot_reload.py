@@ -1,6 +1,6 @@
 """``.env`` credential hot-reload in the live config watcher.
 
-A hand edit to ``$KIROCREW_HOME/.env`` takes effect on a running gateway without
+A hand edit to ``$AJCREW_HOME/.env`` takes effect on a running gateway without
 a restart: the live watcher reconciles ``.env`` in the same cycle it reloads
 ``config.json``. These tests pin the three seams that make that work:
 
@@ -29,9 +29,9 @@ from unittest.mock import patch
 import pytest
 
 from conftest import forget_env_at_teardown
-from kiro_crew.config import live
-from kiro_crew.config.live import ConfigWatch
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config import live
+from aj_crew.config.live import ConfigWatch
+from aj_crew.config.loader import AjCrewConfig
 
 
 class _FoldedEnviron(dict):
@@ -80,7 +80,7 @@ def _reset_env_ownership_record():
     order-dependent flake. Autouse so coverage does not depend on requesting a
     fixture.
     """
-    from kiro_crew.config.loader_credentials import reset_boot_raw_env, reset_env_owned_keys
+    from aj_crew.config.loader_credentials import reset_boot_raw_env, reset_env_owned_keys
 
     reset_boot_raw_env()
     reset_env_owned_keys()
@@ -94,14 +94,14 @@ def home_fixture(tmp_path: Path):
     """Point ``config.json`` AND ``.env`` at a fresh temp data home.
 
     ``env_path`` is a name the ``config.loader`` facade mirror shares across its
-    family, so it is patched THROUGH the facade (``kiro_crew.config.loader``),
+    family, so it is patched THROUGH the facade (``aj_crew.config.loader``),
     never on the ``loader_credentials`` owner directly: the mirror routes a
     facade patch to every holder, and patching one owner would let the facade's
     undo restore the others to that owner's value (``test_facade_mirror_guards``
     enforces this). The config paths are patched the same way, as
     ``config_live_helpers`` does.
     """
-    from kiro_crew.config.loader_credentials import reset_boot_raw_env, reset_env_owned_keys
+    from aj_crew.config.loader_credentials import reset_boot_raw_env, reset_env_owned_keys
 
     live.reset_for_tests()
     # The boot ``.env`` record and the ``.env`` ownership set are once-per-process
@@ -113,9 +113,9 @@ def home_fixture(tmp_path: Path):
     cfg.write_text("{}", encoding="utf-8")
     env = tmp_path / ".env"
     with (
-        patch("kiro_crew.config.loader.config_path", return_value=cfg),
-        patch("kiro_crew.config.loader.config_local_path", return_value=tmp_path / "local.json"),
-        patch("kiro_crew.config.loader.env_path", return_value=env),
+        patch("aj_crew.config.loader.config_path", return_value=cfg),
+        patch("aj_crew.config.loader.config_local_path", return_value=tmp_path / "local.json"),
+        patch("aj_crew.config.loader.env_path", return_value=env),
     ):
         yield tmp_path
     live.reset_for_tests()
@@ -149,9 +149,9 @@ def _reexec_with_stubbed_execv(monkeypatch) -> list[dict[str, str]]:
     plays the successor next), so every name it can write is restored or
     removed at teardown.
     """
-    from kiro_crew import platform_compat
-    from kiro_crew import platform_compat_runtime as runtime
-    from kiro_crew.config import loader
+    from aj_crew import platform_compat
+    from aj_crew import platform_compat_runtime as runtime
+    from aj_crew.config import loader
 
     for name in ("PYTHONUTF8", "PYTHONIOENCODING"):
         if name in os.environ:
@@ -164,7 +164,7 @@ def _reexec_with_stubbed_execv(monkeypatch) -> list[dict[str, str]]:
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
     execs: list[dict[str, str]] = []
     monkeypatch.setattr(runtime.os, "execv", lambda path, argv: execs.append(dict(os.environ)))
-    runtime.reexec_launcher("/opt/kirocrew/bin/kirocrew", ["gateway"])
+    runtime.reexec_launcher("/opt/ajcrew/bin/ajcrew", ["gateway"])
     return execs
 
 
@@ -174,7 +174,7 @@ def _reexec_with_stubbed_execv(monkeypatch) -> list[dict[str, str]]:
 class TestLoaderCredentialHelpers:
     def test_read_env_credentials_raw_parses_literal_values(self, home: Path):
         _write_env(home, "# comment\nTELEGRAM_BOT_TOKEN=abc123\nFOO=bar\n\n")
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         assert loader.read_env_credentials_raw() == {
             "TELEGRAM_BOT_TOKEN": "abc123",
@@ -182,7 +182,7 @@ class TestLoaderCredentialHelpers:
         }
 
     def test_read_env_credentials_raw_is_empty_when_file_absent(self, home: Path):
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         definitive: list[bool] = []
         assert loader.read_env_credentials_raw(definitive=definitive) == {}
@@ -192,7 +192,7 @@ class TestLoaderCredentialHelpers:
     def test_read_env_credentials_raw_enforces_owner_only_permissions(self, home: Path):
         """The watcher's off-loop reader must not be a weaker path to the file
         than boot's: it narrows a group/other-readable .env to 0600 before read."""
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         env = home / ".env"
         _write_env(home, "TELEGRAM_BOT_TOKEN=x\n")
@@ -203,7 +203,7 @@ class TestLoaderCredentialHelpers:
     def test_read_env_credentials_raw_wide_encoding_is_not_definitive(self, home: Path):
         """A UTF-16 save returns {} but marks the read NON-definitive, so a caller
         diffing credentials does not read it as every key cleared."""
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         (home / ".env").write_bytes(b"\xff\xfeT\x00O\x00K\x00E\x00N\x00=\x00x\x00")
         definitive: list[bool] = []
@@ -222,7 +222,7 @@ class TestLoaderCredentialHelpers:
         dependent."""
         from types import SimpleNamespace
 
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         # Pin the decoder's locale seam to UTF-8 so \xe9 is an invalid byte on
         # every host: under a CP1252 (Windows ANSI) locale it would decode cleanly
@@ -246,7 +246,7 @@ class TestLoaderCredentialHelpers:
         First-Principles finding.)"""
         import logging
 
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "old-value")  # what boot propagated from .env
         with caplog.at_level(logging.WARNING):
@@ -263,7 +263,7 @@ class TestLoaderCredentialHelpers:
         .env value -- a genuinely inherited/foreign value being overwritten."""
         import logging
 
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         # The environment holds a value .env never set (inherited shell/systemd).
         monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "from-shell")
@@ -288,7 +288,7 @@ class TestLoaderCredentialHelpers:
         inherited value that happens to EQUAL the .env line is still left alone.
         (Fixes the Design pop-on-unset finding and the GPT matching-value
         ownership finding.)"""
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         # Case 1: .env owns the key (its propagation wrote it) -> popped.
         monkeypatch.setenv("WEBEX_BOT_TOKEN", "from-dotenv")
@@ -325,7 +325,7 @@ class TestLoaderCredentialHelpers:
         nothing in os.environ, so it must not record .env as the owner -- or the
         removal would pop the inherited token and restart the channel with no
         credential. (Fixes the Opus matching-value live-add finding.)"""
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "from-service")
         loader.discard_env_owned_key("TELEGRAM_BOT_TOKEN")
@@ -346,7 +346,7 @@ class TestLoaderCredentialHelpers:
     def test_a_live_add_that_changes_the_value_takes_ownership(self, monkeypatch):
         """Control for the case above: an add that actually writes a new value is
         a genuine .env write, so .env owns the key and a later removal pops it."""
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "x")
         monkeypatch.delenv("TELEGRAM_BOT_TOKEN")
@@ -366,7 +366,7 @@ class TestLoaderCredentialHelpers:
         unconditionally and no overwrite warning fires."""
         import logging
 
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         monkeypatch.setenv("WEBEX_BOT_TOKEN", "anything")
         monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "old")
@@ -386,7 +386,7 @@ class TestLoaderCredentialHelpers:
         permissions' warning on a forced read cycle. (Fixes the Opus finding.)"""
         import logging
 
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         # No .env written in this home.
         definitive: list[bool] = []
@@ -396,7 +396,7 @@ class TestLoaderCredentialHelpers:
         assert not any("enforce permissions" in r.message for r in caplog.records)
 
     def test_env_fingerprint_moves_on_edit_and_is_a_sentinel_when_absent(self, home: Path):
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         absent = loader.env_fingerprint()
         assert absent[1] is None, "a missing .env is a sentinel, not a stat tuple"
@@ -407,7 +407,7 @@ class TestLoaderCredentialHelpers:
         assert loader.env_fingerprint() != present
 
     def test_changed_env_keys_reports_add_remove_edit(self):
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         old = {"A": "1", "B": "2", "C": "3"}
         new = {"A": "1", "B": "22", "D": "4"}
@@ -419,14 +419,14 @@ class TestLoaderCredentialHelpers:
         threads, and a setdefault there could restore a credential the live
         watcher just popped -- silently undoing an external .env removal.
         (Fixes the GPT concurrent-reader race.)"""
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
         _write_env(home, "TELEGRAM_BOT_TOKEN=from-dotenv\n")
         # The watcher has popped the key (an external .env removal); os.environ
         # does not hold it. A propagate=False read must leave it absent.
         assert "TELEGRAM_BOT_TOKEN" not in os.environ
-        creds = KiroCrewConfig.load().load_credentials(propagate=False)
+        creds = AjCrewConfig.load().load_credentials(propagate=False)
         assert (
             "TELEGRAM_BOT_TOKEN" not in os.environ
         ), "a non-propagating read must not setdefault the key back into os.environ"
@@ -442,8 +442,8 @@ class TestLoaderCredentialHelpers:
         value, so a later .env removal leaves the inherited value in place rather
         than deleting it and disabling the channel. (Fixes the GPT
         matching-value ownership finding, end to end.)"""
-        from kiro_crew.config import loader
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config import loader
+        from aj_crew.config.loader import AjCrewConfig
 
         # DISCORD is supplied by the service env AND .env with the SAME value;
         # TELEGRAM comes only from .env.
@@ -451,7 +451,7 @@ class TestLoaderCredentialHelpers:
         monkeypatch.setenv("DISCORD_BOT_TOKEN", "from-service")
         _write_env(home, "TELEGRAM_BOT_TOKEN=from-dotenv\nDISCORD_BOT_TOKEN=from-service\n")
 
-        KiroCrewConfig.load().load_credentials()
+        AjCrewConfig.load().load_credentials()
         # .env wrote TELEGRAM (absent before) -> owned; DISCORD was inherited
         # (setdefault no-op) -> NOT owned, despite equal values.
         assert loader.env_owns_key("TELEGRAM_BOT_TOKEN")
@@ -475,8 +475,8 @@ class TestLoaderCredentialHelpers:
         successor's load_credentials reads back -- otherwise every .env key reads
         as inherited on the successor and a later removal never pops it.
         (Fixes the Opus re-exec finding.)"""
-        from kiro_crew.config import loader
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config import loader
+        from aj_crew.config.loader import AjCrewConfig
 
         # TWO owned keys, so the serialised marker joins them -- a NUL separator
         # would make os.environ reject the whole value and silently lose the
@@ -486,7 +486,7 @@ class TestLoaderCredentialHelpers:
         marker = loader._ENV_OWNED_KEYS_REEXEC_MARKER
         _write_env(home, "TELEGRAM_BOT_TOKEN=tok\nDISCORD_BOT_TOKEN=dtok\n")
         # First boot: .env writes both absent keys -> both owned.
-        KiroCrewConfig.load().load_credentials()
+        AjCrewConfig.load().load_credentials()
         assert loader.env_owns_key("TELEGRAM_BOT_TOKEN")
         assert loader.env_owns_key("DISCORD_BOT_TOKEN")
         # Kept for the exec successor only: no child spawned now inherits it.
@@ -504,7 +504,7 @@ class TestLoaderCredentialHelpers:
         loader.reset_env_owned_keys()
         assert not loader.env_owns_key("TELEGRAM_BOT_TOKEN")
         # The successor's first load_credentials adopts the marker and deletes it.
-        KiroCrewConfig.load().load_credentials()
+        AjCrewConfig.load().load_credentials()
         assert loader.env_owns_key("TELEGRAM_BOT_TOKEN"), "ownership survived the re-exec"
         assert loader.env_owns_key("DISCORD_BOT_TOKEN"), "both keys survived, not just one"
         assert loader._ENV_OWNED_KEYS_REEXEC_MARKER not in os.environ, "marker consumed"
@@ -525,13 +525,13 @@ class TestLoaderCredentialHelpers:
         marker (empty), so it adopts "nothing owned" instead of re-deriving
         ownership from an environment where every key looks inherited. And a key
         the live remover drops is not carried: the marker follows the record."""
-        from kiro_crew.config import loader
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config import loader
+        from aj_crew.config.loader import AjCrewConfig
 
         monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "from-the-service-unit")
         marker = loader._ENV_OWNED_KEYS_REEXEC_MARKER
         _write_env(home, "TELEGRAM_BOT_TOKEN=from-the-service-unit\n")
-        KiroCrewConfig.load().load_credentials()  # boot seed: inherited, not owned
+        AjCrewConfig.load().load_credentials()  # boot seed: inherited, not owned
 
         execs = _reexec_with_stubbed_execv(monkeypatch)
         assert execs[0][marker] == ""
@@ -553,7 +553,7 @@ class TestLoaderCredentialHelpers:
         import ast
         from pathlib import Path
 
-        src = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+        src = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
         # The reads that MUST still propagate, each with why:
         #  - process_entry: the gateway's one boot seed, before the watcher arms.
         #  - orchestrator_init: the boot path hands it the already-loaded map;
@@ -613,7 +613,7 @@ class TestLoaderCredentialHelpers:
         )
 
     def test_is_legal_env_name_rejects_empty_and_equals_and_nul(self):
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         assert loader.is_legal_env_name("TELEGRAM_BOT_TOKEN")
         assert not loader.is_legal_env_name("")  # an `=value` line parses to this
@@ -625,7 +625,7 @@ class TestLoaderCredentialHelpers:
         raise BEFORE writing anything: a legal key sharing the batch must NOT be
         left applied, or a later file restore would leave the stray value behind.
         (Fixes the GPT partial-mutation finding.)"""
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "before")
         with pytest.raises(ValueError):
@@ -643,8 +643,8 @@ class TestLoaderCredentialHelpers:
         (``https_proxy`` -> ``HTTPS_PROXY``) is one key added and one removed that
         share the SAME entry. The removal must NOT pop the entry the addition
         just wrote. (Fixes the GPT Windows case-rename finding.)"""
-        from kiro_crew import platform_compat
-        from kiro_crew.config import loader
+        from aj_crew import platform_compat
+        from aj_crew.config import loader
 
         # _env_name_key reads platform_compat.IS_WINDOWS at call time.
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True, raising=False)
@@ -673,8 +673,8 @@ class TestLoaderCredentialHelpers:
         boot's setdefault would -- the first spelling in .env order -- whatever
         order the changed set happens to iterate in. (Fixes the GPT
         order-dependent case-alias rotation finding.)"""
-        from kiro_crew import platform_compat
-        from kiro_crew.config import loader
+        from aj_crew import platform_compat
+        from aj_crew.config import loader
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True, raising=False)
         # Model Windows' case-insensitive os.environ for the applier's reads and
@@ -704,8 +704,8 @@ class TestLoaderCredentialHelpers:
         install the new first spelling's value. On POSIX the two names are two
         variables, so a reorder changes nothing. (Fixes the GPT order-only-edit
         finding.)"""
-        from kiro_crew import platform_compat
-        from kiro_crew.config import loader
+        from aj_crew import platform_compat
+        from aj_crew.config import loader
 
         before = {"TELEGRAM_BOT_TOKEN": "first", "telegram_bot_token": "second"}
         after = {"telegram_bot_token": "second", "TELEGRAM_BOT_TOKEN": "first"}
@@ -726,8 +726,8 @@ class TestLoaderCredentialHelpers:
     def test_windows_reordering_spellings_with_equal_values_is_not_a_change(self, monkeypatch):
         """Control: when both spellings hold the same value the winner's value is
         unchanged, so a reorder is still no diff and restarts nothing."""
-        from kiro_crew import platform_compat
-        from kiro_crew.config import loader
+        from aj_crew import platform_compat
+        from aj_crew.config import loader
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True, raising=False)
         before = {"TELEGRAM_BOT_TOKEN": "same", "telegram_bot_token": "same"}
@@ -741,8 +741,8 @@ class TestLoaderCredentialHelpers:
         entry now. Otherwise removing the surviving line later would find an
         unowned key and leave the deleted credential active. (Fixes the GPT
         surviving-alias ownership finding.)"""
-        from kiro_crew import platform_compat
-        from kiro_crew.config import loader
+        from aj_crew import platform_compat
+        from aj_crew.config import loader
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True, raising=False)
         folded = _FoldedEnviron({"TELEGRAM_BOT_TOKEN": "from-service"})
@@ -761,8 +761,8 @@ class TestLoaderCredentialHelpers:
     def test_windows_reconcile_that_changes_nothing_leaves_ownership_alone(self, monkeypatch):
         """Control: when the surviving spelling already holds the live value, the
         reconcile writes nothing, so an unowned inherited entry stays unowned."""
-        from kiro_crew import platform_compat
-        from kiro_crew.config import loader
+        from aj_crew import platform_compat
+        from aj_crew.config import loader
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True, raising=False)
         folded = _FoldedEnviron({"TELEGRAM_BOT_TOKEN": "same"})
@@ -785,8 +785,8 @@ class TestLoaderCredentialHelpers:
         removal must still not pop the shared entry, or a channel restart would
         build its client without the proxy it still needs. (Fixes the GPT
         duplicate-case-alias finding.)"""
-        from kiro_crew import platform_compat
-        from kiro_crew.config import loader
+        from aj_crew import platform_compat
+        from aj_crew.config import loader
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True, raising=False)
         forget_env_at_teardown(monkeypatch, "https_proxy", "HTTPS_PROXY")
@@ -813,7 +813,7 @@ class TestLoaderCredentialHelpers:
         rejects, so the batch must be refused before any key is written -- a
         legal key sharing the batch must not be left applied. (Fixes the GPT
         NUL-value partial-mutation finding.)"""
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "before")
         monkeypatch.delenv("DISCORD_BOT_TOKEN", raising=False)
@@ -830,7 +830,7 @@ class TestLoaderCredentialHelpers:
     def test_apply_sets_and_pops_overriding_an_inherited_value(self, monkeypatch):
         """A live edit MEANS the edit: unlike boot's setdefault, it overrides an
         inherited value and pops a removed key."""
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "from-shell")
         monkeypatch.delenv("DISCORD_BOT_TOKEN", raising=False)
@@ -845,12 +845,12 @@ class TestLoaderCredentialHelpers:
         assert "WEBEX_BOT_TOKEN" not in os.environ
 
     def test_apply_skips_credential_keys_when_docker_scrubbed(self, monkeypatch):
-        """With ``_KIROCREW_CREDS_SCRUBBED`` set, re-injecting a credential key would
+        """With ``_AJCREW_CREDS_SCRUBBED`` set, re-injecting a credential key would
         re-expose it in /proc/<pid>/environ; it is not applied. A non-credential
         operator setting still applies."""
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
-        monkeypatch.setenv("_KIROCREW_CREDS_SCRUBBED", "1")
+        monkeypatch.setenv("_AJCREW_CREDS_SCRUBBED", "1")
         monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
         # The code under test writes MY_PROXY via os.environ[...] (not through
         # monkeypatch), so record the pre-test state for teardown or it leaks
@@ -873,7 +873,7 @@ class TestWatchEnvTracking:
         a later ``.env`` edit is the ONLY thing a non-forced ``_cycle`` sees move
         -- the env-only branch (``not config_changed``)."""
         w = ConfigWatch(poll_interval_secs=0.05)
-        w.prime(KiroCrewConfig.load(), w._current_fingerprint())
+        w.prime(AjCrewConfig.load(), w._current_fingerprint())
         w._creds = w._read_env_credentials()[0]
         w._env_fingerprint = w._current_env_fingerprint()
         return w
@@ -910,7 +910,7 @@ class TestWatchEnvTracking:
         """
         import threading
 
-        from kiro_crew import env as env_mod
+        from aj_crew import env as env_mod
 
         extra = str(home / "extra-bin")
         monkeypatch.setenv("PATH", str(home / "sys-bin"))
@@ -946,7 +946,7 @@ class TestWatchEnvTracking:
         nothing: the map really was already applied at boot."""
         _write_env(home, "TELEGRAM_BOT_TOKEN=only\n")
         w = ConfigWatch(poll_interval_secs=0.05)
-        w.prime(KiroCrewConfig.load(), w._current_fingerprint())
+        w.prime(AjCrewConfig.load(), w._current_fingerprint())
         await w._prime_creds_baseline()
         assert w._creds == {"TELEGRAM_BOT_TOKEN": "only"}
         seen: list[frozenset[str]] = []
@@ -970,7 +970,7 @@ class TestWatchEnvTracking:
         monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
         _write_env(home, "TELEGRAM_BOT_TOKEN=only\n")
         w = ConfigWatch(poll_interval_secs=0.05)
-        w.prime(KiroCrewConfig.load(), w._current_fingerprint())
+        w.prime(AjCrewConfig.load(), w._current_fingerprint())
         # _creds left None: simulates boot's own read never having been definitive.
         seen: list[frozenset[str]] = []
         w.subscribe("credentials", callback=lambda c: seen.append(c.changed), name="creds")
@@ -991,7 +991,7 @@ class TestWatchEnvTracking:
         monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
         (home / ".env").write_bytes(b"\xff\xfeT\x00")
         w = ConfigWatch(poll_interval_secs=0.05)
-        w.prime(KiroCrewConfig.load(), w._current_fingerprint())
+        w.prime(AjCrewConfig.load(), w._current_fingerprint())
         await w._prime_creds_baseline()
         assert w._creds is None, "a wide-encoded boot read leaves no baseline"
         seen: list[frozenset[str]] = []
@@ -1022,7 +1022,7 @@ class TestWatchEnvTracking:
         _write_env(home, "TELEGRAM_BOT_TOKEN=rotated\n")
         # A one-off transient read failure: read_env_credentials_raw's own
         # OSError handling makes this non-definitive without raising.
-        with patch("kiro_crew.config.loader.read_env_text", side_effect=OSError("transient")):
+        with patch("aj_crew.config.loader.read_env_text", side_effect=OSError("transient")):
             change = await w._cycle()
         assert change is None
         assert seen == []
@@ -1106,14 +1106,14 @@ class TestWatchEnvTracking:
         # A malformed save that fails the apply on every tick. The fingerprint
         # does not advance, so re-running _cycle keeps retrying the same file.
         _write_env(home, "TELEGRAM_BOT_TOKEN=rotated\n=garbage\n")
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.config.live"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.config.live"):
             for _ in range(5):
                 assert await w._cycle() is None
         assert _warn_count() == 1, "the apply-failure WARNING fires once, not every tick"
 
         # A DIFFERENT malformed save is a new failing fingerprint -> warns again.
         _write_env(home, "TELEGRAM_BOT_TOKEN=rotated2\n=garbage\n")
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.config.live"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.config.live"):
             assert await w._cycle() is None
         assert _warn_count() == 2, "a new failing file state warns afresh"
 
@@ -1139,7 +1139,7 @@ class TestWatchEnvTracking:
         (home / "config.json").write_text('{"agent": {"model": "m1"}}', encoding="utf-8")
         _write_env(home, "TELEGRAM_BOT_TOKEN=a\n")
         w = ConfigWatch(poll_interval_secs=0.05)
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
         w._creds = w._read_env_credentials()[0]
         w._env_fingerprint = w._current_env_fingerprint()
 
@@ -1163,7 +1163,7 @@ class TestWatchEnvTracking:
     async def test_unchanged_env_and_config_returns_none(self, home: Path):
         _write_env(home, "FOO=1\n")
         w = ConfigWatch(poll_interval_secs=0.05)
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
         w._creds = w._read_env_credentials()[0]
         w._env_fingerprint = w._current_env_fingerprint()
         assert await w.refresh_now() is None
@@ -1252,12 +1252,12 @@ class TestBootWindowCredentialBaseline:
     async def test_a_boot_window_rotation_is_applied_on_the_first_cycle(
         self, home: Path, monkeypatch
     ):
-        from kiro_crew.config.loader_credentials import record_boot_raw_env
+        from aj_crew.config.loader_credentials import record_boot_raw_env
 
         monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
         # Boot read .env as "boot-value" and recorded it (os.environ carries it).
         _write_env(home, "TELEGRAM_BOT_TOKEN=boot-value\n")
-        initial = KiroCrewConfig.load()
+        initial = AjCrewConfig.load()
         record_boot_raw_env({"TELEGRAM_BOT_TOKEN": "boot-value"})
         monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "boot-value")
 
@@ -1284,11 +1284,11 @@ class TestBootWindowCredentialBaseline:
         """When .env did not change in the boot window, the baseline equals the
         current disk map, so the first cycle dispatches nothing -- channels do
         not bounce on every boot."""
-        from kiro_crew.config.loader_credentials import record_boot_raw_env
+        from aj_crew.config.loader_credentials import record_boot_raw_env
 
         monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
         _write_env(home, "TELEGRAM_BOT_TOKEN=steady\n")
-        initial = KiroCrewConfig.load()
+        initial = AjCrewConfig.load()
         record_boot_raw_env({"TELEGRAM_BOT_TOKEN": "steady"})
         monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "steady")
 
@@ -1311,7 +1311,7 @@ class TestBootWindowCredentialBaseline:
         baseline is still established."""
         monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
         _write_env(home, "TELEGRAM_BOT_TOKEN=disk\n")
-        initial = KiroCrewConfig.load()
+        initial = AjCrewConfig.load()
         # reset_for_tests() in the home fixture already cleared any boot map.
 
         w = ConfigWatch(poll_interval_secs=0.05)

@@ -46,9 +46,9 @@ const entry = scene => ({
   status: scene.granted ? 'ok' : 'error',
   error: scene.granted ? '' : 'authorization required',
   tools: scene.granted ? ['search', 'fetch', 'create-pages'] : [],
-  source: 'kirocrew',
+  source: 'ajcrew',
   enabled: true,
-  kirocrewManaged: true,
+  ajcrewManaged: true,
   ...(scene.granted ? { accountLabel: 'stan@example.com', connectedSince: '2026-08-12T22:41:00Z' } : {}),
 })
 
@@ -73,7 +73,7 @@ async function main() {
     // `return json(...), true` -- the comma marks the request handled; awaiting
     // fulfil() would resolve to undefined and fall through to the boot stub.
     extra: async (path, route) => {
-      if (path === '/api/config/kirocrew') return json(route, { connections_ui: true }), true
+      if (path === '/api/config/ajcrew') return json(route, { connections_ui: true }), true
       if (path === '/api/mcp' || path === '/api/mcp/probe') {
         return json(route, scene.installed ? [entry(scene)] : []), true
       }

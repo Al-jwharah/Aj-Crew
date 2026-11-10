@@ -215,7 +215,7 @@ span.v.on{display:inline}
   <li><b>The whole link disappears.</b> The system removes a link when its query, which is the part after the <code>?</code>, is over 200 characters. It can also mistake normal Chinese titles for suspicious text because seven Chinese characters can become 20 or more consecutive <code>%XX</code> groups when a URL encodes them.</li>
   <li><b>It looks too serious.</b> Red warnings appear before the answer, even though this protection is working normally, so the explanation should look calm and follow the answer instead.</li>
 </ol>
-<p>Users repeatedly ask in Slack #kiro-crew-debug why text or links disappeared, which shows that the current message is confusing even when the protection worked correctly.</p>
+<p>Users repeatedly ask in Slack #aj-crew-debug why text or links disappeared, which shows that the current message is confusing even when the protection worked correctly.</p>
 
 <h2 id="facts">Three facts to accept before changing anything</h2>
 <div class="fact"><b>1 · The value is not in the saved conversation.</b> The system replaces it <em>before</em> saving any message that was not written by the user (<code>chat_persistence._build_message_entry_uncached</code>). This means no saved copy of the conversation ever contains the value, so even the session owner cannot recover it from the conversation. The replacement also keeps the value out of Slack, artifacts, memory, sub-agents, and backups, although the source file, tool logs, model provider, or screenshots may still contain it. <b>There is no setting to turn this off.</b></div>
@@ -248,7 +248,7 @@ span.v.on{display:inline}
 <p><b>Where the source comes from.</b> Redaction runs before the message is saved, while the original value and the tool results from that turn are still in memory. The system searches those results for the value and saves only a description of its source, never the value itself. If it finds the value in a file, it records the path and nearby section; if it finds the value in command output, it records the exact command that already ran, which the user can run again in the built-in Terminal to see the live output. Some known rules provide a fixed command instead; for example, an AWS secret-key match (<code>bare_aws_secret</code>) in <code>~/.aws/credentials [dev]</code> uses <code>aws configure get aws_secret_access_key --profile dev</code>. A fixed command can use only non-secret details such as a profile name. If no source matches, the card says that the source was not recorded. Every command added to Terminal must be either a command that already ran or a fixed template, never free text written by the agent.</p>
 
 <h3>2 · A one-time coach card on the first redaction in a session</h3>
-<p>Show this guidance once, <em>after</em> the first answer that contains a removed value. It should explain that the values were replaced before saving, so no saved conversation copy contains them, Kiro Crew cannot show them, and no setting can change this behavior. It should also explain that each lock tag names the likely source and tells the user how to view it. End with: "Keep secrets at their source. Your messages are saved exactly as typed." Keep extra details under "Learn more", and after the user selects "Got it", show only the small lock tag.</p>
+<p>Show this guidance once, <em>after</em> the first answer that contains a removed value. It should explain that the values were replaced before saving, so no saved conversation copy contains them, Aj Crew cannot show them, and no setting can change this behavior. It should also explain that each lock tag names the likely source and tells the user how to view it. End with: "Keep secrets at their source. Your messages are saved exactly as typed." Keep extra details under "Learn more", and after the user selects "Got it", show only the small lock tag.</p>
 
 <h3>3 · Suspicious links: blocked, but visible</h3>
 <p>Keep a suspicious URL visible as a <b>Blocked link</b> chip, but do not make it clickable. Show the site name and path immediately, while hiding the query until the user selects <em>See link</em>. The details card explains why the link was blocked and can show the full URL, while <em>Copy URL</em> copies it without opening it. <em>Open once</em> requires confirmation, with <b>Cancel</b> selected by default, and the confirmation names both the site and the query that will be sent. <em>Allow long queries for this host in this workspace</em> creates a rule for only that workspace. The dashboard writes this rule and an agent can never write it. The rule relaxes only checks for long queries and base64 text, which is a common encoding that turns data into letters and numbers; all credential checks remain active. Users can undo the choice immediately or revoke it later in Settings. Never describe the link as safe. On shared pages, hide only the suspicious query value and do not provide an Open button.</p>
@@ -281,7 +281,7 @@ span.v.on{display:inline}
 </div>
 <div class="demo" id="rx">
 <div class="topbar">
-  <span class="title">aws-setup</span><span class="model">· kirocrew · claude-fable-5.1</span>
+  <span class="title">aws-setup</span><span class="model">· ajcrew · claude-fable-5.1</span>
 </div>
 <div class="transcript">
   <div class="u"><div class="bubble">Check whether my dev AWS profile is set up right, and give me the link to that reviewers filter page.</div></div>
@@ -445,7 +445,7 @@ aws_session_token<wbr> = <span class="v on" data-v="a"><button type="button" cla
 </ol>
 <p>Each step is independent, so it can be released or rolled back without requiring the later steps.</p>
 <div class="grid2">
-  <div class="callout"><b>How we know it worked</b><ul style="margin:6px 0 0"><li>For two weeks, count false-positive reports by rule name without collecting the removed value, then use those counts to find rules that need changes.</li><li>Check whether #kiro-crew-debug receives fewer questions about missing links and missing secrets.</li><li>Measure how quickly users dismiss the coach with "Got it", because very fast dismissal may mean the card is too long to read.</li></ul></div>
+  <div class="callout"><b>How we know it worked</b><ul style="margin:6px 0 0"><li>For two weeks, count false-positive reports by rule name without collecting the removed value, then use those counts to find rules that need changes.</li><li>Check whether #aj-crew-debug receives fewer questions about missing links and missing secrets.</li><li>Measure how quickly users dismiss the coach with "Got it", because very fast dismissal may mean the card is too long to read.</li></ul></div>
   <div class="callout"><b>Open questions</b><ul style="margin:6px 0 0"><li>When users copy text, should every marker become the same fixed token, or should the copied text keep the visible marker?</li><li>On shared pages, should we hide the entire suspicious query value? The preferred answer is yes; the other option hides only the part that matched the rule.</li><li>If a host appears in both places, should the workspace Allow list or the built-in exact-host exemption take priority (<code>exempt_exact_hosts</code>)?</li></ul></div>
 </div>
 

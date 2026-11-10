@@ -8,15 +8,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew.context as context_mod
-from kiro_crew.context import ContextBuilder
-from kiro_crew.embeddings import PRIORITY_INTERACTIVE, embedding_work
-from kiro_crew.executors import run_in_embed_pool
-from kiro_crew.learn import LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.testing.wait import finished, wait_until
-from kiro_crew.vector_memory import VectorMemoryStore
+import aj_crew.context as context_mod
+from aj_crew.context import ContextBuilder
+from aj_crew.embeddings import PRIORITY_INTERACTIVE, embedding_work
+from aj_crew.executors import run_in_embed_pool
+from aj_crew.learn import LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
+from aj_crew.testing.wait import finished, wait_until
+from aj_crew.vector_memory import VectorMemoryStore
 
 
 @pytest.mark.asyncio

@@ -23,7 +23,7 @@ import { logPageProblems, stubDashboardApi, json } from './lib/stub-dashboard-ap
 
 const OUT = process.argv[2] || '../temp-screenshots/sidebar-chip-conflict'
 const ACTIVE = 'chat-a'
-const REPO = 'https://github.com/kirodotdev/KiroCrew'
+const REPO = 'https://github.com/Al-jwharah/Aj-Crew'
 const pr = n => `${REPO}/pull/${n}`
 
 mkdirSync(OUT, { recursive: true })
@@ -38,14 +38,14 @@ const now = Math.floor(Date.now() / 1000)
 const slots = [
   {
     key: ACTIVE, title: 'Draft the release notes', running: false, messages: 4,
-    agent: 'kirocrew', modified: now, last_ts: '2026-08-15T00:10:00Z', folder_id: '',
+    agent: 'ajcrew', modified: now, last_ts: '2026-08-15T00:10:00Z', folder_id: '',
     last_message: 'Grouped the entries by area.',
   },
   {
     // The case this change is about: #843's checks all pass AND its branch
     // conflicts with main, where #844 differs only in being mergeable.
     key: 'chat-b', title: 'Merge-conflict glyph on session chips', running: false, messages: 9,
-    agent: 'kirocrew', modified: now - 600, last_ts: '2026-08-15T00:00:00Z', folder_id: '',
+    agent: 'ajcrew', modified: now - 600, last_ts: '2026-08-15T00:00:00Z', folder_id: '',
     last_message: 'All checks pass, but the branch needs a rebase.',
     source_links: [
       { provider: 'github', number: 843, url: pr(843), state: 'open', ci: 'passed', kind: 'change', mergeable: 'conflicting', mergeStateStatus: 'dirty' },
@@ -60,7 +60,7 @@ const slots = [
     // #848 is terminal, where the providers stop answering the merge pair at
     // all and the lifecycle glyph is the only meaningful signal.
     key: 'chat-c', title: 'Sweep the native selects', running: false, messages: 24,
-    agent: 'kirocrew', modified: now - 1800, last_ts: '2026-08-14T23:30:00Z', folder_id: '',
+    agent: 'ajcrew', modified: now - 1800, last_ts: '2026-08-14T23:30:00Z', folder_id: '',
     last_message: 'Two of these need a rebase before they can land.',
     source_links: [
       { provider: 'github', number: 846, url: pr(846), state: 'open', ci: 'failed', kind: 'change', mergeable: 'conflicting', mergeStateStatus: 'dirty' },

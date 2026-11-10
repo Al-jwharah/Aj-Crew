@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock
 import pytest
 from history_consolidation_retry_helpers import KEY, _make_consolidator, _seed_log, _total
 
-from kiro_crew.testing.wait import finished
+from aj_crew.testing.wait import finished
 
 
 def _marker(log) -> int:

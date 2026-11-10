@@ -15,10 +15,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import mcp_grant
-from kiro_crew.acp.mcp_session_report import McpSessionReport
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.connections import mint
+from aj_crew import mcp_grant
+from aj_crew.acp.mcp_session_report import McpSessionReport
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.connections import mint
 
 _URL = "https://mcp.example.com/mcp"
 _AUTHORIZE = (
@@ -124,17 +124,17 @@ def _write_paired_grant_artifacts(mcp_url: str) -> None:
 
 
 @pytest.fixture(autouse=True)
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- the autouse fixture of test_connections_mint.py and the suites split out of it, moved verbatim; none of them calls monkeypatch.undo()
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- the autouse fixture of test_connections_mint.py and the suites split out of it, moved verbatim; none of them calls monkeypatch.undo()
 def _isolated_mint(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     """Empty mint table, a scratch agents dir and grant cache, no real spawn."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    (agents_dir / "kirocrew.json").write_text(
+    (agents_dir / "ajcrew.json").write_text(
         json.dumps({"mcpServers": {"notion": {"url": _URL}}}), encoding="utf-8"
     )
     cache_dir = tmp_path / "cache"
     cache_dir.mkdir()
-    monkeypatch.setattr("kiro_crew.agent.kiro_agents_dir_path", lambda: agents_dir)
+    monkeypatch.setattr("aj_crew.agent.kiro_agents_dir_path", lambda: agents_dir)
     monkeypatch.setattr(mcp_grant, "kiro_oauth_cache_dir", lambda **kw: cache_dir)
     # The manifest is real gateway state; tests must never write the live one.
     monkeypatch.setattr(mint, "_mint_manifest_path", lambda: tmp_path / "mint-specs.json")

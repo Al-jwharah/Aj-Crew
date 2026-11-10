@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from kiro_crew.dashboard.handlers import usage as usage_mod
+from aj_crew.dashboard.handlers import usage as usage_mod
 
 
 @pytest.fixture(autouse=True)

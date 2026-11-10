@@ -1,13 +1,13 @@
 """The two halves of a tool must stay in sync: descriptor and handler.
 
-A ``kirocrew-core`` tool is declared twice in the same domain module under
-:mod:`kiro_crew.mcp_tools` -- a descriptor in ``schemas()`` (what ``tools/list``
+A ``ajcrew-core`` tool is declared twice in the same domain module under
+:mod:`aj_crew.mcp_tools` -- a descriptor in ``schemas()`` (what ``tools/list``
 advertises) and a function in ``HANDLERS`` (what runs). Nothing at runtime
 notices when only one half lands: a descriptor with no handler advertises a tool
 that answers with the dispatcher's fallthrough, and a handler with no descriptor
 is unreachable because the model is never told the name.
 
-``kirocrew-dashboard`` has no two halves: each tool is one row of
+``ajcrew-dashboard`` has no two halves: each tool is one row of
 ``mcp_dashboard.TABLE``, so the tests for it check what a row has to agree with
 outside itself -- the validation registry, the gate the session-control rows are
 named for, and the body's calling shape.
@@ -29,12 +29,12 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import mcp_core
-from kiro_crew.mcp_tools import DOMAIN_MODULES, build_tool_list, dispatch
+from aj_crew import mcp_core
+from aj_crew.mcp_tools import DOMAIN_MODULES, build_tool_list, dispatch
 
 
 def _domain(name: str):
-    return importlib.import_module(f"kiro_crew.mcp_tools.{name}")
+    return importlib.import_module(f"aj_crew.mcp_tools.{name}")
 
 
 def _all_handlers() -> dict[str, object]:
@@ -146,7 +146,7 @@ def test_domain_modules_covers_the_package() -> None:
 @pytest.mark.parametrize("support", sorted(_SUPPORT_MODULES))
 def test_a_support_module_declares_no_tools(support: str) -> None:
     """The exclusion above holds only while a support module carries no tool half."""
-    module = importlib.import_module(f"kiro_crew.mcp_tools.{support}")
+    module = importlib.import_module(f"aj_crew.mcp_tools.{support}")
     assert not hasattr(module, "HANDLERS") and not hasattr(module, "schemas"), support
     assert support not in DOMAIN_MODULES
 
@@ -159,13 +159,13 @@ def test_the_package_import_stays_a_leaf() -> None:
     import sys
 
     probe = (
-        "import sys, kiro_crew.mcp_tools as p\n"
-        "print(sorted(m for m in sys.modules if m.startswith('kiro_crew.mcp_tools.')))"
+        "import sys, aj_crew.mcp_tools as p\n"
+        "print(sorted(m for m in sys.modules if m.startswith('aj_crew.mcp_tools.')))"
     )
     out = subprocess.run(
         [sys.executable, "-c", probe], capture_output=True, text=True, check=True, encoding="utf-8"
     ).stdout.strip()
-    assert out == "['kiro_crew.mcp_tools._limits']" or out == "[]", out
+    assert out == "['aj_crew.mcp_tools._limits']" or out == "[]", out
 
 
 def test_unknown_tool_falls_through() -> None:
@@ -180,11 +180,11 @@ def test_workflow_library_mutations_are_human_only(tool_name: str) -> None:
     assert dispatch(tool_name, {}) == f"Unknown tool: {tool_name}"
 
 
-# ── kirocrew-dashboard: one row per tool ────────────────────────────────────
+# ── ajcrew-dashboard: one row per tool ────────────────────────────────────
 
 
 def _dashboard_table():
-    from kiro_crew.mcp_dashboard import TABLE
+    from aj_crew.mcp_dashboard import TABLE
 
     return TABLE
 
@@ -195,14 +195,14 @@ def test_every_dashboard_tool_is_validated() -> None:
     ``ToolTable.validate`` passes an unregistered tool's arguments through as
     sent, so the registry and the table must name the same tools.
     """
-    from kiro_crew.validation import MCP_DASHBOARD_SCHEMAS
+    from aj_crew.validation import MCP_DASHBOARD_SCHEMAS
 
     assert set(_dashboard_table().names()) == set(MCP_DASHBOARD_SCHEMAS)
 
 
 def test_the_session_control_rows_are_the_strict_rows() -> None:
     """The gate and the containment list read one set, derived from the rows."""
-    from kiro_crew.mcp_dashboard import SESSION_CONTROL_TOOLS
+    from aj_crew.mcp_dashboard import SESSION_CONTROL_TOOLS
 
     table = _dashboard_table()
     assert SESSION_CONTROL_TOOLS == table.names("strict")
@@ -227,12 +227,12 @@ def test_every_dashboard_row_is_well_formed() -> None:
 
 def test_the_dashboard_advertises_its_rows_in_order(monkeypatch) -> None:
     """``tools/list`` is the rows in order, titled; ``_tool_definitions`` is untitled."""
-    from kiro_crew import mcp_dashboard
-    from kiro_crew.mcp_tool_titles import with_titles
+    from aj_crew import mcp_dashboard
+    from aj_crew.mcp_tool_titles import with_titles
 
     # Held on: with it off, `tools/list` drops `backend` from two rows on purpose
     # (test_session_harness_preview.py), which is not what this test compares.
-    monkeypatch.setattr("kiro_crew.session_harness_preview.session_harness_enabled", lambda: True)
+    monkeypatch.setattr("aj_crew.session_harness_preview.session_harness_enabled", lambda: True)
 
     table = _dashboard_table()
     assert [t["name"] for t in mcp_dashboard._list_tools()] == list(table.names())

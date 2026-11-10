@@ -49,12 +49,12 @@ from security_path_resolve_bounded_helpers import (  # noqa: F401 -- the autouse
     _StalledResolver,
 )
 
-import kiro_crew.executors as ex
-from kiro_crew import security
-from kiro_crew.agent_sdk import host_auth
-from kiro_crew.subprocess_pool import OP_REALPATH_MANY, SubprocessPoolTimeout
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
-from kiro_crew.testing.wait import wait_until
+import aj_crew.executors as ex
+from aj_crew import security
+from aj_crew.agent_sdk import host_auth
+from aj_crew.subprocess_pool import OP_REALPATH_MANY, SubprocessPoolTimeout
+from aj_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.testing.wait import wait_until
 
 
 def test_symlink_alias_is_still_resolved_on_a_healthy_filesystem(tmp_path) -> None:
@@ -566,7 +566,7 @@ def test_the_resolver_pool_knob_reaches_the_pool_in_a_fresh_interpreter() -> Non
     # a fresh interpreter, where the once-at-import read really happens, and follow
     # the value to the pool the gate submits to.
     probe = (
-        "import kiro_crew.executors as ex\n"
+        "import aj_crew.executors as ex\n"
         "print(ex._MAX_PATH_RESOLVE_WORKERS, len(ex.path_resolve_executor()._children))\n"
     )
     env = dict(os.environ)
@@ -1095,7 +1095,7 @@ def test_root_anchors_resolve_in_one_pool_hop(monkeypatch, tmp_path) -> None:
     # call; one thread hop per root would cost more than the inline realpath it
     # replaces.  Every root -- the host's own and each declared harness home --
     # travels in one submission.
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew"))
     monkeypatch.setenv("KIRO_HOME", str(tmp_path / "kiro"))
     monkeypatch.setenv("CODEX_HOME", str(tmp_path / "codex"))
     requests = _count_child_requests(monkeypatch)
@@ -1115,14 +1115,14 @@ def test_root_anchors_resolve_in_one_pool_hop(monkeypatch, tmp_path) -> None:
 
 
 def test_a_stalled_rebuild_refuses_even_with_a_warm_cache(monkeypatch, tmp_path) -> None:
-    # The rebuild (home + every keystone leaf under KIROCREW_HOME) would
+    # The rebuild (home + every keystone leaf under AJCREW_HOME) would
     # realpath() inline on the event loop every time the 0.1s cache expires.
     # An expired slot is NOT served through a stall: a symlink repointed during
     # the stall would move a credential out from under the stale anchor.
     _clear_override_roots(monkeypatch)
     crew_home = tmp_path / "crew"
     crew_home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(crew_home))
+    monkeypatch.setenv("AJCREW_HOME", str(crew_home))
     clock = [1_000.0]
     monkeypatch.setattr(security.time, "monotonic", lambda: clock[0])
     security._home_targets_cache.clear()
@@ -1153,7 +1153,7 @@ def test_a_stalled_rebuild_refuses_even_with_a_warm_cache(monkeypatch, tmp_path)
 def test_the_rebuild_is_one_pool_job(monkeypatch, tmp_path) -> None:
     # A single bash command can drive ~200 rebuilds; 40 hops each is what turns
     # a 9s gate into a 15s one.  Roots and rebuild are one submission apiece.
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew"))
     requests = _count_child_requests(monkeypatch)
     security._home_targets_cache.clear()
     try:
@@ -1167,13 +1167,13 @@ def test_the_rebuild_is_one_pool_job(monkeypatch, tmp_path) -> None:
 def test_a_repointed_override_root_is_never_served_stale_through_a_stall(
     monkeypatch, tmp_path
 ) -> None:
-    # The repointed-home scenario: KIROCREW_HOME is a symlink, the anchors
+    # The repointed-home scenario: AJCREW_HOME is a symlink, the anchors
     # were resolved while it pointed at A, then it is repointed at B while the
     # home stalls.  A gate that served the previous canonical roots would still
     # anchor on A and let the canonical B credential through; refusing does not.
     _clear_override_roots(monkeypatch)
-    real_a = tmp_path / "a" / "kirocrew"
-    real_b = tmp_path / "b" / "kirocrew"
+    real_a = tmp_path / "a" / "ajcrew"
+    real_b = tmp_path / "b" / "ajcrew"
     real_a.mkdir(parents=True)
     real_b.mkdir(parents=True)
     link = tmp_path / "link-crew"
@@ -1181,7 +1181,7 @@ def test_a_repointed_override_root_is_never_served_stale_through_a_stall(
         link.symlink_to(real_a, target_is_directory=True)
     except (OSError, NotImplementedError):  # pragma: no cover -- Windows w/o privilege
         pytest.skip("symlink creation not permitted on this platform")
-    monkeypatch.setenv("KIROCREW_HOME", str(link))
+    monkeypatch.setenv("AJCREW_HOME", str(link))
     clock = [1_000.0]
     monkeypatch.setattr(security.time, "monotonic", lambda: clock[0])
     security._home_targets_cache.clear()
@@ -1211,7 +1211,7 @@ def test_a_repointed_override_root_is_never_served_stale_through_a_stall(
 
 def test_a_unc_home_still_has_its_anchors_resolved(monkeypatch) -> None:
     # The UNC-home scenario: a UNC home (a roaming profile on
-    # ``\\server\share``) with a junction inside KIROCREW_HOME.  The UNC
+    # ``\\server\share``) with a junction inside AJCREW_HOME.  The UNC
     # shortcut is a stance about agent-supplied CANDIDATE tokens -- a share
     # spelling is how an agent names a share, and the fence holds no UNC
     # targets -- so it must not skip the anchors, or the junction is never
@@ -1257,7 +1257,7 @@ def test_sandbox_mask_resolves_inline_and_never_sees_a_stall(monkeypatch, tmp_pa
     _clear_override_roots(monkeypatch)
     crew_home = tmp_path / "crew"
     crew_home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(crew_home))
+    monkeypatch.setenv("AJCREW_HOME", str(crew_home))
     logical_home = str(security.Path.home())
     prefix = security._stall_prefix(logical_home)
     security._path_resolve_degraded[prefix] = (security._path_resolve_clock() + 1_000.0, 1)

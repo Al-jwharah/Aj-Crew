@@ -16,14 +16,14 @@ import urllib.request
 import pytest
 from e2e.test_gateway_boot_matrix import _await_assistant_reply, _booted
 
-from kiro_crew.testing.wait import finished, wait_until
-from kiro_crew.testing.workflow_memory_scenario import (
+from aj_crew.testing.wait import finished, wait_until
+from aj_crew.testing.workflow_memory_scenario import (
     progress_summary,
     source,
 )
 
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("KIROCREW_E2E"), reason="Set KIROCREW_E2E=1 for real private workflow E2E"
+    not os.environ.get("AJCREW_E2E"), reason="Set AJCREW_E2E=1 for real private workflow E2E"
 )
 
 # One wait in this module may take _PER_WAIT_SECONDS, and a test makes nine of
@@ -185,8 +185,8 @@ def _next_reply(client, slot, message):
 
 def _assert_private_worker_child(handle, client):
     """Crewmate A's conductor opens a session; the child reads and writes A's store."""
-    from kiro_crew.execution_context import execution_from_record
-    from kiro_crew.history_files import transcript_stem
+    from aj_crew.execution_context import execution_from_record
+    from aj_crew.history_files import transcript_stem
 
     # The hand-off runs from A's own DM thread: only a member thread mounts the
     # dashboard tools (``member_dispatch``); a plain chat bound to A does not.
@@ -207,7 +207,7 @@ def _assert_private_worker_child(handle, client):
         execution = execution_from_record(json.loads(lines.readline()))
     config = json.loads((handle.home / "config.json").read_text(encoding="utf-8"))
     binding = config["agents"]["workflow-e2e-a"]
-    assert execution.template_id == "kirocrew-mate-worker"
+    assert execution.template_id == "ajcrew-mate-worker"
     assert execution.store.store_id == binding["memory_store"]
     assert execution.member_id == binding["member_id"]
 
@@ -217,7 +217,7 @@ def test_private_workflows_execute_over_real_projected_mcp():
         members = {}
         for marker in ("A", "B"):
             member = f"workflow-e2e-{marker.lower()}"
-            client.post("/api/agents", {"name": member, "kiro_agent": "kirocrew"})
+            client.post("/api/agents", {"name": member, "kiro_agent": "ajcrew"})
             members[marker] = client.post("/api/chat/slots", {"agent": member})["key"]
         members["V"] = client.post("/api/chat/slots", {"agent": "default"})["key"]
         starts = {}

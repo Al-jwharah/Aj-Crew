@@ -53,7 +53,7 @@ const SLOTS = [{
   title: 'Review the release checklist',
   running: false,
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   modified: now,
   last_ts: '2026-09-26T21:00:00Z',

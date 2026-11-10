@@ -31,11 +31,11 @@ from slack_gateway_helpers import (
     _mock_sessions,
 )
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.slack.gateway import GatewayOrchestrator
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.testing.wait import await_until, finished
 
-_GATEWAY_LOGGER = "kiro_crew.slack.gateway"
+_GATEWAY_LOGGER = "aj_crew.slack.gateway"
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Tests: _init_dashboard and _init_mcp_discovery
@@ -60,7 +60,7 @@ class TestInitDashboard:
         ds = _mock_dashboard_state()
         runner = MagicMock()
         with patch(
-            "kiro_crew.slack.gateway.start_dashboard",
+            "aj_crew.slack.gateway.start_dashboard",
             new_callable=AsyncMock,
             return_value=(runner, ds),
         ) as start:
@@ -84,7 +84,7 @@ class TestInitDashboard:
     def test_init_mcp_discovery_logs(self, caplog, servers, expected):
         orch = _make_orchestrator()
         with (
-            patch("kiro_crew.mcp_discovery.list_servers", return_value=servers) as listing,
+            patch("aj_crew.mcp_discovery.list_servers", return_value=servers) as listing,
             caplog.at_level(logging.INFO, logger=_GATEWAY_LOGGER),
         ):
             orch._init_mcp_discovery()
@@ -95,7 +95,7 @@ class TestInitDashboard:
         orch = _make_orchestrator()
         with (
             patch(
-                "kiro_crew.mcp_discovery.list_servers", side_effect=RuntimeError("fail")
+                "aj_crew.mcp_discovery.list_servers", side_effect=RuntimeError("fail")
             ) as listing,
             caplog.at_level(logging.DEBUG, logger=_GATEWAY_LOGGER),
         ):
@@ -117,13 +117,13 @@ class TestRunGateway:
 
     @pytest.mark.asyncio
     async def test_run_gateway_creates_orchestrator(self):
-        from kiro_crew.slack.gateway import run_gateway
+        from aj_crew.slack.gateway import run_gateway
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         with patch.object(cfg, "load_credentials", return_value={}):
             # The aggregate-cgroup-ceiling apply shells out to systemctl —
             # a host-service mutation the rootdir guard refuses; stub it.
-            with patch("kiro_crew.slack.gateway.ensure_agents_slice_limits", return_value=True):
+            with patch("aj_crew.slack.gateway.ensure_agents_slice_limits", return_value=True):
                 with patch.object(GatewayOrchestrator, "run", autospec=True) as mock_run:
                     await run_gateway(cfg, no_dashboard=True, no_crons=True)
         mock_run.assert_awaited_once()
@@ -144,7 +144,7 @@ class TestRunMethod:
     @pytest.mark.asyncio
     async def test_run_raises_on_shutdown(self):
         """run() exits when shutdown_event is set."""
-        import kiro_crew
+        import aj_crew
 
         orch = _make_orchestrator()
 
@@ -166,27 +166,27 @@ class TestRunMethod:
         orch._check_for_updates = AsyncMock()
         orch._shutdown = AsyncMock()
 
-        kiro_crew.shutdown_event.set()
+        aj_crew.shutdown_event.set()
         # loop.add_signal_handler -> set_wakeup_fd fails on xdist worker threads.
         loop = asyncio.get_running_loop()
         try:
             with patch.object(loop, "add_signal_handler"):
-                with patch("kiro_crew.slack.events.init_socket_mode"):
-                    with patch("kiro_crew.slack.interactions.init"):
-                        with patch("kiro_crew.slack.events.SeenCache"):
-                            with patch("kiro_crew.session.cleanup_orphaned_sessions"):
+                with patch("aj_crew.slack.events.init_socket_mode"):
+                    with patch("aj_crew.slack.interactions.init"):
+                        with patch("aj_crew.slack.events.SeenCache"):
+                            with patch("aj_crew.session.cleanup_orphaned_sessions"):
                                 with patch(
-                                    "kiro_crew.dashboard.handlers._bg_mcp_probe",
+                                    "aj_crew.dashboard.handlers._bg_mcp_probe",
                                     new_callable=AsyncMock,
                                 ):
                                     with patch("os._exit"):
                                         with patch(
-                                            "kiro_crew.platform_compat.raise_nofile_soft_limit"
+                                            "aj_crew.platform_compat.raise_nofile_soft_limit"
                                         ):
                                             # flake-ok: pre-existing unbounded run that the pre-set shutdown event ends, moved verbatim; tracked for a de-flake pass
                                             await orch.run()
         finally:
-            kiro_crew.shutdown_event.clear()
+            aj_crew.shutdown_event.clear()
 
         orch._init_services.assert_called_once()
         orch._init_cron.assert_awaited_once()
@@ -195,8 +195,8 @@ class TestRunMethod:
     @pytest.mark.asyncio
     async def test_run_no_dashboard_uses_api_server(self, tmp_path, monkeypatch):
         """--no-dashboard publishes, then writes and clears its run marker."""
-        import kiro_crew
-        from kiro_crew.instances import run_marker
+        import aj_crew
+        from aj_crew.instances import run_marker
 
         orch = _make_orchestrator(no_dashboard=True)
         orch._dashboard_port = 5476
@@ -213,7 +213,7 @@ class TestRunMethod:
             seen.append(run_marker.published_listeners(port))
             events.append("write-start")
             # flake-ok: pre-existing sleep inside the slow marker-write stub, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- stub that simulates a slow write, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- stub that simulates a slow write, moved verbatim; tracked for a de-flake pass
             time.sleep(0.05)
             original_write_marker(port)
             events.append("write-end")
@@ -254,26 +254,26 @@ class TestRunMethod:
         orch._check_for_updates = AsyncMock()
         orch._shutdown = AsyncMock()
 
-        kiro_crew.shutdown_event.set()
+        aj_crew.shutdown_event.set()
         loop = asyncio.get_running_loop()
         try:
             with patch.object(loop, "add_signal_handler"):
-                with patch("kiro_crew.slack.events.init_socket_mode"):
-                    with patch("kiro_crew.slack.interactions.init"):
-                        with patch("kiro_crew.slack.events.SeenCache"):
-                            with patch("kiro_crew.session.cleanup_orphaned_sessions"):
+                with patch("aj_crew.slack.events.init_socket_mode"):
+                    with patch("aj_crew.slack.interactions.init"):
+                        with patch("aj_crew.slack.events.SeenCache"):
+                            with patch("aj_crew.session.cleanup_orphaned_sessions"):
                                 with patch(
-                                    "kiro_crew.dashboard.handlers._bg_mcp_probe",
+                                    "aj_crew.dashboard.handlers._bg_mcp_probe",
                                     new_callable=AsyncMock,
                                 ):
                                     with patch("os._exit"):
                                         with patch(
-                                            "kiro_crew.platform_compat.raise_nofile_soft_limit"
+                                            "aj_crew.platform_compat.raise_nofile_soft_limit"
                                         ):
                                             # flake-ok: pre-existing unbounded run that the pre-set shutdown event ends, moved verbatim; tracked for a de-flake pass
                                             await orch.run()
         finally:
-            kiro_crew.shutdown_event.clear()
+            aj_crew.shutdown_event.clear()
 
         orch._init_dashboard.assert_not_awaited()
         orch._init_api_server.assert_awaited_once()
@@ -290,9 +290,9 @@ class TestRunMethod:
         An unbounded wait on ``self._marker_write_task`` before ``_shutdown()`` would
         spend the graceful-shutdown deadline, and active slots would be SIGKILLed unsaved.
         """
-        import kiro_crew
-        from kiro_crew.instances import run_marker
-        from kiro_crew.slack import gateway as gateway_mod
+        import aj_crew
+        from aj_crew.instances import run_marker
+        from aj_crew.slack import gateway as gateway_mod
 
         orch = _make_orchestrator(no_dashboard=True)
         orch._dashboard_port = 5477
@@ -360,26 +360,26 @@ class TestRunMethod:
         orch._check_for_updates = AsyncMock()
         orch._shutdown = AsyncMock()
 
-        kiro_crew.shutdown_event.set()
+        aj_crew.shutdown_event.set()
         loop = asyncio.get_running_loop()
         try:
             with patch.object(loop, "add_signal_handler"):
-                with patch("kiro_crew.slack.events.init_socket_mode"):
-                    with patch("kiro_crew.slack.interactions.init"):
-                        with patch("kiro_crew.slack.events.SeenCache"):
-                            with patch("kiro_crew.session.cleanup_orphaned_sessions"):
+                with patch("aj_crew.slack.events.init_socket_mode"):
+                    with patch("aj_crew.slack.interactions.init"):
+                        with patch("aj_crew.slack.events.SeenCache"):
+                            with patch("aj_crew.session.cleanup_orphaned_sessions"):
                                 with patch(
-                                    "kiro_crew.dashboard.handlers._bg_mcp_probe",
+                                    "aj_crew.dashboard.handlers._bg_mcp_probe",
                                     new_callable=AsyncMock,
                                 ):
                                     with patch("os._exit"):
                                         with patch(
-                                            "kiro_crew.platform_compat.raise_nofile_soft_limit"
+                                            "aj_crew.platform_compat.raise_nofile_soft_limit"
                                         ):
                                             # flake-ok: pre-existing unbounded run that the pre-set shutdown event ends, moved verbatim; tracked for a de-flake pass
                                             await orch.run()
         finally:
-            kiro_crew.shutdown_event.clear()
+            aj_crew.shutdown_event.clear()
             # Release AND drain the stalled writer inside this finally: if an
             # assertion below failed with the worker still parked, monkeypatch
             # teardown would restore the real config_dir/write_marker and the
@@ -415,8 +415,8 @@ class TestRunMethod:
     @pytest.mark.asyncio
     async def test_run_failed_marker_write_still_clears(self, tmp_path, monkeypatch):
         """A marker write that raises must not skip the shutdown clear."""
-        import kiro_crew
-        from kiro_crew.instances import run_marker
+        import aj_crew
+        from aj_crew.instances import run_marker
 
         orch = _make_orchestrator(no_dashboard=True)
         orch._dashboard_port = 5478
@@ -446,26 +446,26 @@ class TestRunMethod:
         orch._check_for_updates = AsyncMock()
         orch._shutdown = AsyncMock()
 
-        kiro_crew.shutdown_event.set()
+        aj_crew.shutdown_event.set()
         loop = asyncio.get_running_loop()
         try:
             with patch.object(loop, "add_signal_handler"):
-                with patch("kiro_crew.slack.events.init_socket_mode"):
-                    with patch("kiro_crew.slack.interactions.init"):
-                        with patch("kiro_crew.slack.events.SeenCache"):
-                            with patch("kiro_crew.session.cleanup_orphaned_sessions"):
+                with patch("aj_crew.slack.events.init_socket_mode"):
+                    with patch("aj_crew.slack.interactions.init"):
+                        with patch("aj_crew.slack.events.SeenCache"):
+                            with patch("aj_crew.session.cleanup_orphaned_sessions"):
                                 with patch(
-                                    "kiro_crew.dashboard.handlers._bg_mcp_probe",
+                                    "aj_crew.dashboard.handlers._bg_mcp_probe",
                                     new_callable=AsyncMock,
                                 ):
                                     with patch("os._exit"):
                                         with patch(
-                                            "kiro_crew.platform_compat.raise_nofile_soft_limit"
+                                            "aj_crew.platform_compat.raise_nofile_soft_limit"
                                         ):
                                             # flake-ok: pre-existing unbounded run that the pre-set shutdown event ends, moved verbatim; tracked for a de-flake pass
                                             await orch.run()
         finally:
-            kiro_crew.shutdown_event.clear()
+            aj_crew.shutdown_event.clear()
 
         # The failed write must not divert control past the clear: the
         # pre-existing marker files are removed and shutdown completed.
@@ -482,7 +482,7 @@ class TestRunFreezesBootHeap:
         """Drive run() with boot mocked; return (dashboard, api, gc on) per gc.freeze call."""
         import gc
 
-        import kiro_crew
+        import aj_crew
 
         for name in ("_init_services", "_start_embeddings", "_auto_migrate_memory"):
             setattr(orch, name, AsyncMock())
@@ -510,24 +510,24 @@ class TestRunFreezesBootHeap:
         was_enabled = gc.isenabled()
         # What the gateway's console-script entry leaves it in during the boot import.
         gc.disable()
-        kiro_crew.shutdown_event.set()
+        aj_crew.shutdown_event.set()
         loop = asyncio.get_running_loop()
         try:
             with (
                 patch.object(loop, "add_signal_handler"),
-                patch("kiro_crew.slack.events.init_socket_mode"),
-                patch("kiro_crew.slack.interactions.init"),
-                patch("kiro_crew.slack.events.SeenCache"),
-                patch("kiro_crew.session.cleanup_orphaned_sessions"),
-                patch("kiro_crew.dashboard.handlers._bg_mcp_probe", new_callable=AsyncMock),
+                patch("aj_crew.slack.events.init_socket_mode"),
+                patch("aj_crew.slack.interactions.init"),
+                patch("aj_crew.slack.events.SeenCache"),
+                patch("aj_crew.session.cleanup_orphaned_sessions"),
+                patch("aj_crew.dashboard.handlers._bg_mcp_probe", new_callable=AsyncMock),
                 patch("os._exit"),
-                patch("kiro_crew.platform_compat.raise_nofile_soft_limit"),
+                patch("aj_crew.platform_compat.raise_nofile_soft_limit"),
             ):
                 # flake-ok: run() returns because the shutdown event is set before it starts
                 await orch.run()
             assert gc.isenabled(), "cyclic GC must be back on once boot is done"
         finally:
-            kiro_crew.shutdown_event.clear()
+            aj_crew.shutdown_event.clear()
             if was_enabled:
                 gc.enable()
         return freezes
@@ -610,44 +610,44 @@ class TestOrphanNoticeRelease:
     @staticmethod
     async def _run_until(orch, stop: type[BaseException]) -> BaseException:
         """Drive ``run()`` until *stop* ends it: the release, or the step after it."""
-        import kiro_crew
+        import aj_crew
 
         # Set like the other boot tests: a run() that never reaches the release
         # leaves at the shutdown wait instead of blocking there.
-        kiro_crew.shutdown_event.set()
+        aj_crew.shutdown_event.set()
         loop = asyncio.get_running_loop()
         try:
             with ExitStack() as stack:
                 stack.enter_context(patch.object(loop, "add_signal_handler"))
                 for target in (
-                    "kiro_crew.platform_compat.raise_nofile_soft_limit",
-                    "kiro_crew.slack.events.init_socket_mode",
-                    "kiro_crew.slack.interactions.init",
-                    "kiro_crew.slack.events.SeenCache",
-                    "kiro_crew.session.cleanup_orphaned_sessions",
+                    "aj_crew.platform_compat.raise_nofile_soft_limit",
+                    "aj_crew.slack.events.init_socket_mode",
+                    "aj_crew.slack.interactions.init",
+                    "aj_crew.slack.events.SeenCache",
+                    "aj_crew.session.cleanup_orphaned_sessions",
                     "os._exit",
                 ):
                     stack.enter_context(patch(target))
                 stack.enter_context(
-                    patch("kiro_crew.dashboard.handlers._bg_mcp_probe", new_callable=AsyncMock)
+                    patch("aj_crew.dashboard.handlers._bg_mcp_probe", new_callable=AsyncMock)
                 )
                 # A spy, not the real freeze: freezing would park this worker's heap.
                 stack.enter_context(patch("gc.freeze", side_effect=_BootMovedOn()))
                 with pytest.raises(stop) as stopped:
                     await orch.run()
         finally:
-            kiro_crew.shutdown_event.clear()
+            aj_crew.shutdown_event.clear()
         return stopped.value
 
     @staticmethod
     def _dashboard_state(tmp_path, monkeypatch):
         """A real ``DashboardState`` whose restores find nothing, and a fresh registry."""
-        from kiro_crew import session_surface
-        from kiro_crew.dashboard import channel_slots
-        from kiro_crew.dashboard import server as srv
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew import session_surface
+        from aj_crew.dashboard import channel_slots
+        from aj_crew.dashboard import server as srv
+        from aj_crew.dashboard.state import DashboardState
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr(srv.cautious_boot, "pause_before", AsyncMock(return_value=None))
         monkeypatch.setattr(srv.chat, "restore_open_slots_async", AsyncMock(return_value=0))
         monkeypatch.setattr(srv.chat, "restore_recent_sessions_async", AsyncMock(return_value=0))
@@ -706,7 +706,7 @@ class TestOrphanNoticeRelease:
     async def test_without_channel_surfacing_the_restores_finish_releases_at_once(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.dashboard import server as srv
+        from aj_crew.dashboard import server as srv
 
         orch, events = self._booting(no_dashboard=False)
         state = self._dashboard_state(tmp_path, monkeypatch)
@@ -735,15 +735,15 @@ class TestOrphanNoticeRelease:
         # A Slack conversation was open in a tab at the last shutdown, and its
         # subagent finished there. The real channel reconciler rebuilds the tab
         # after the dashboard start returns; its first pass waits for ``first_pass``.
-        from kiro_crew import subagent_persistence as sp
-        from kiro_crew.dashboard import channel_slots
-        from kiro_crew.dashboard import server as srv
-        from kiro_crew.dashboard.chat_utils_slots import dashboard_slot_key
-        from kiro_crew.history_projection import METADATA_LINE_CORRUPT
-        from kiro_crew.subagent import SubagentManager
-        from kiro_crew.testing.wait import await_until
+        from aj_crew import subagent_persistence as sp
+        from aj_crew.dashboard import channel_slots
+        from aj_crew.dashboard import server as srv
+        from aj_crew.dashboard.chat_utils_slots import dashboard_slot_key
+        from aj_crew.history_projection import METADATA_LINE_CORRUPT
+        from aj_crew.subagent import SubagentManager
+        from aj_crew.testing.wait import await_until
 
-        for var, sub in (("KIROCREW_HOME", "home"), ("KIROCREW_WORKSPACE", "workspace")):
+        for var, sub in (("AJCREW_HOME", "home"), ("AJCREW_WORKSPACE", "workspace")):
             (tmp_path / sub).mkdir()
             monkeypatch.setenv(var, str(tmp_path / sub))
         sp.create_agent_folder("orp0101", task="summarise the logs", parent_session="slack:1.1")
@@ -796,7 +796,7 @@ class TestOrphanNoticeRelease:
             hold_orphan_notices=True,
         )
         monkeypatch.setattr(manager, "_is_pid_alive", lambda _pid: False)
-        monkeypatch.setattr("kiro_crew.subagent.sel", MagicMock())
+        monkeypatch.setattr("aj_crew.subagent.sel", MagicMock())
         orch, _events = self._booting(no_dashboard=False)
         sweeps: list[asyncio.Task[None]] = []
 
@@ -854,7 +854,7 @@ class TestInitApiServer:
         ds = _mock_dashboard_state()
         runner = MagicMock()
         with patch(
-            "kiro_crew.dashboard.start_api_server",
+            "aj_crew.dashboard.start_api_server",
             new_callable=AsyncMock,
             return_value=(runner, ds),
         ) as start:
@@ -886,7 +886,7 @@ class TestInitDashboardWiring:
         ds = _mock_dashboard_state()
         runner = MagicMock()
         with patch(
-            "kiro_crew.slack.gateway.start_dashboard",
+            "aj_crew.slack.gateway.start_dashboard",
             new_callable=AsyncMock,
             return_value=(runner, ds),
         ):
@@ -908,7 +908,7 @@ class TestInitDashboardWiring:
         ds = _mock_dashboard_state()
         runner = MagicMock()
         with patch(
-            "kiro_crew.slack.gateway.start_dashboard",
+            "aj_crew.slack.gateway.start_dashboard",
             new_callable=AsyncMock,
             return_value=(runner, ds),
         ):
@@ -957,19 +957,19 @@ class TestRunSignalAndBgSession:
         loop = asyncio.get_running_loop()
         try:
             with patch.object(loop, "add_signal_handler"):
-                with patch("kiro_crew.shutdown_event", fresh_event):
-                    with patch("kiro_crew.slack.gateway.shutdown_event", fresh_event):
-                        with patch("kiro_crew.slack.events.init_socket_mode"):
-                            with patch("kiro_crew.slack.interactions.init"):
-                                with patch("kiro_crew.slack.events.SeenCache"):
-                                    with patch("kiro_crew.session.cleanup_orphaned_sessions"):
+                with patch("aj_crew.shutdown_event", fresh_event):
+                    with patch("aj_crew.slack.gateway.shutdown_event", fresh_event):
+                        with patch("aj_crew.slack.events.init_socket_mode"):
+                            with patch("aj_crew.slack.interactions.init"):
+                                with patch("aj_crew.slack.events.SeenCache"):
+                                    with patch("aj_crew.session.cleanup_orphaned_sessions"):
                                         with patch(
-                                            "kiro_crew.dashboard.handlers._bg_mcp_probe",
+                                            "aj_crew.dashboard.handlers._bg_mcp_probe",
                                             new_callable=AsyncMock,
                                         ):
                                             with patch("os._exit"):
                                                 with patch(
-                                                    "kiro_crew.platform_compat.raise_nofile_soft_limit"
+                                                    "aj_crew.platform_compat.raise_nofile_soft_limit"
                                                 ):
                                                     # flake-ok: pre-existing unbounded run that the pre-set shutdown event ends, moved verbatim; tracked for a de-flake pass
                                                     await orch.run()
@@ -1023,32 +1023,32 @@ class TestBgSessionDashboardBranch:
         fresh_event.set()
         loop = asyncio.get_running_loop()
         with patch.object(loop, "add_signal_handler"):
-            with patch("kiro_crew.shutdown_event", fresh_event):
-                with patch("kiro_crew.slack.gateway.shutdown_event", fresh_event):
+            with patch("aj_crew.shutdown_event", fresh_event):
+                with patch("aj_crew.slack.gateway.shutdown_event", fresh_event):
                     with patch(
-                        "kiro_crew.slack.gateway.resolve_dashboard_host", return_value="127.0.0.1"
+                        "aj_crew.slack.gateway.resolve_dashboard_host", return_value="127.0.0.1"
                     ):
                         with patch(
-                            "kiro_crew.slack.gateway.build_dashboard_url",
+                            "aj_crew.slack.gateway.build_dashboard_url",
                             return_value="http://127.0.0.1:6779/?t=tok",
                         ):
                             with patch(
-                                "kiro_crew.slack.gateway.format_dashboard_urls",
+                                "aj_crew.slack.gateway.format_dashboard_urls",
                                 return_value=["url-line-1", "url-line-2"],
                             ):
-                                with patch("kiro_crew.slack.events.init_socket_mode"):
-                                    with patch("kiro_crew.slack.interactions.init"):
-                                        with patch("kiro_crew.slack.events.SeenCache"):
+                                with patch("aj_crew.slack.events.init_socket_mode"):
+                                    with patch("aj_crew.slack.interactions.init"):
+                                        with patch("aj_crew.slack.events.SeenCache"):
                                             with patch(
-                                                "kiro_crew.session.cleanup_orphaned_sessions"
+                                                "aj_crew.session.cleanup_orphaned_sessions"
                                             ):
                                                 with patch(
-                                                    "kiro_crew.dashboard.handlers._bg_mcp_probe",
+                                                    "aj_crew.dashboard.handlers._bg_mcp_probe",
                                                     new_callable=AsyncMock,
                                                 ):
                                                     with patch("os._exit"):
                                                         with patch(
-                                                            "kiro_crew.platform_compat.raise_nofile_soft_limit"
+                                                            "aj_crew.platform_compat.raise_nofile_soft_limit"
                                                         ):
                                                             # flake-ok: pre-existing unbounded run that the pre-set shutdown event ends, moved verbatim; tracked for a de-flake pass
                                                             await orch.run()
@@ -1109,33 +1109,33 @@ class TestBgSessionDashboardBranch:
         fresh_event.set()
         loop = asyncio.get_running_loop()
         with patch.object(loop, "add_signal_handler"):
-            with patch("kiro_crew.shutdown_event", fresh_event):
-                with patch("kiro_crew.slack.gateway.shutdown_event", fresh_event):
+            with patch("aj_crew.shutdown_event", fresh_event):
+                with patch("aj_crew.slack.gateway.shutdown_event", fresh_event):
                     with patch(
-                        "kiro_crew.slack.gateway.resolve_dashboard_host", return_value="127.0.0.1"
+                        "aj_crew.slack.gateway.resolve_dashboard_host", return_value="127.0.0.1"
                     ):
                         with patch(
-                            "kiro_crew.slack.gateway.build_dashboard_url",
+                            "aj_crew.slack.gateway.build_dashboard_url",
                             return_value="http://127.0.0.1:6779/?t=tok",
                         ):
                             with patch(
-                                "kiro_crew.slack.gateway.format_dashboard_urls",
+                                "aj_crew.slack.gateway.format_dashboard_urls",
                                 return_value=["url-line-1", "url-line-2"],
                             ):
                                 with patch("builtins.print", _tracing_print):
-                                    with patch("kiro_crew.slack.events.init_socket_mode"):
-                                        with patch("kiro_crew.slack.interactions.init"):
-                                            with patch("kiro_crew.slack.events.SeenCache"):
+                                    with patch("aj_crew.slack.events.init_socket_mode"):
+                                        with patch("aj_crew.slack.interactions.init"):
+                                            with patch("aj_crew.slack.events.SeenCache"):
                                                 with patch(
-                                                    "kiro_crew.session.cleanup_orphaned_sessions"
+                                                    "aj_crew.session.cleanup_orphaned_sessions"
                                                 ):
                                                     with patch(
-                                                        "kiro_crew.dashboard.handlers._bg_mcp_probe",
+                                                        "aj_crew.dashboard.handlers._bg_mcp_probe",
                                                         _tracing_probe,
                                                     ):
                                                         with patch("os._exit"):
                                                             with patch(
-                                                                "kiro_crew.platform_compat.raise_nofile_soft_limit"
+                                                                "aj_crew.platform_compat.raise_nofile_soft_limit"
                                                             ):
                                                                 # flake-ok: pre-existing unbounded run that the pre-set shutdown event ends, moved verbatim; tracked for a de-flake pass
                                                                 await orch.run()
@@ -1188,26 +1188,26 @@ class TestBgSessionDashboardBranch:
         fresh_event.set()
         loop = asyncio.get_running_loop()
         with patch.object(loop, "add_signal_handler"):
-            with patch("kiro_crew.shutdown_event", fresh_event):
-                with patch("kiro_crew.slack.gateway.shutdown_event", fresh_event):
+            with patch("aj_crew.shutdown_event", fresh_event):
+                with patch("aj_crew.slack.gateway.shutdown_event", fresh_event):
                     with patch(
-                        "kiro_crew.slack.gateway.resolve_dashboard_host", return_value="127.0.0.1"
+                        "aj_crew.slack.gateway.resolve_dashboard_host", return_value="127.0.0.1"
                     ):
                         with patch(
-                            "kiro_crew.slack.gateway.format_dashboard_urls",
+                            "aj_crew.slack.gateway.format_dashboard_urls",
                             side_effect=RuntimeError("cannot format URL"),
                         ):
-                            with patch("kiro_crew.slack.events.init_socket_mode"):
-                                with patch("kiro_crew.slack.interactions.init"):
-                                    with patch("kiro_crew.slack.events.SeenCache"):
-                                        with patch("kiro_crew.session.cleanup_orphaned_sessions"):
+                            with patch("aj_crew.slack.events.init_socket_mode"):
+                                with patch("aj_crew.slack.interactions.init"):
+                                    with patch("aj_crew.slack.events.SeenCache"):
+                                        with patch("aj_crew.session.cleanup_orphaned_sessions"):
                                             with patch(
-                                                "kiro_crew.dashboard.handlers._bg_mcp_probe",
+                                                "aj_crew.dashboard.handlers._bg_mcp_probe",
                                                 new_callable=AsyncMock,
                                             ):
                                                 with patch("os._exit"):
                                                     with patch(
-                                                        "kiro_crew.platform_compat.raise_nofile_soft_limit"
+                                                        "aj_crew.platform_compat.raise_nofile_soft_limit"
                                                     ):
                                                         # Must not raise.
                                                         # flake-ok: pre-existing unbounded run that the pre-set shutdown event ends, moved verbatim; tracked for a de-flake pass
@@ -1268,24 +1268,24 @@ class TestBgSessionDashboardBranch:
         loop = asyncio.get_running_loop()
         with ExitStack() as stack:
             stack.enter_context(patch.object(loop, "add_signal_handler"))
-            stack.enter_context(patch("kiro_crew.shutdown_event", fresh_event))
-            stack.enter_context(patch("kiro_crew.slack.gateway.shutdown_event", fresh_event))
+            stack.enter_context(patch("aj_crew.shutdown_event", fresh_event))
+            stack.enter_context(patch("aj_crew.slack.gateway.shutdown_event", fresh_event))
             stack.enter_context(
-                patch("kiro_crew.slack.gateway.resolve_dashboard_host", return_value="127.0.0.1")
+                patch("aj_crew.slack.gateway.resolve_dashboard_host", return_value="127.0.0.1")
             )
             stack.enter_context(
-                patch("kiro_crew.slack.gateway.format_dashboard_urls", return_value=["url"])
+                patch("aj_crew.slack.gateway.format_dashboard_urls", return_value=["url"])
             )
-            stack.enter_context(patch("kiro_crew.slack.events.init_socket_mode"))
-            stack.enter_context(patch("kiro_crew.slack.interactions.init"))
-            stack.enter_context(patch("kiro_crew.slack.events.SeenCache"))
-            stack.enter_context(patch("kiro_crew.session.cleanup_orphaned_sessions"))
+            stack.enter_context(patch("aj_crew.slack.events.init_socket_mode"))
+            stack.enter_context(patch("aj_crew.slack.interactions.init"))
+            stack.enter_context(patch("aj_crew.slack.events.SeenCache"))
+            stack.enter_context(patch("aj_crew.session.cleanup_orphaned_sessions"))
             stack.enter_context(
-                patch("kiro_crew.dashboard.handlers._bg_mcp_probe", new_callable=AsyncMock)
+                patch("aj_crew.dashboard.handlers._bg_mcp_probe", new_callable=AsyncMock)
             )
             stack.enter_context(patch("os._exit"))
             raise_nofile_soft_limit = stack.enter_context(
-                patch("kiro_crew.slack.gateway.platform_compat.raise_nofile_soft_limit")
+                patch("aj_crew.slack.gateway.platform_compat.raise_nofile_soft_limit")
             )
             await finished(orch.run(), "the gateway boot")
             await await_until(parked, what="the session warm to park")
@@ -1348,28 +1348,28 @@ class TestBgSessionDashboardBranch:
         loop = asyncio.get_running_loop()
         with ExitStack() as stack:
             stack.enter_context(patch.object(loop, "add_signal_handler"))
-            stack.enter_context(patch("kiro_crew.shutdown_event", fresh_event))
-            stack.enter_context(patch("kiro_crew.slack.gateway.shutdown_event", fresh_event))
+            stack.enter_context(patch("aj_crew.shutdown_event", fresh_event))
+            stack.enter_context(patch("aj_crew.slack.gateway.shutdown_event", fresh_event))
             stack.enter_context(
-                patch("kiro_crew.slack.gateway.resolve_dashboard_host", return_value="127.0.0.1")
+                patch("aj_crew.slack.gateway.resolve_dashboard_host", return_value="127.0.0.1")
             )
             # The real formatter, kept off the host's own name and proxy.
             stack.enter_context(
-                patch("kiro_crew.dashboard.urls.machine_hostname", return_value="localhost")
+                patch("aj_crew.dashboard.urls.machine_hostname", return_value="localhost")
             )
             stack.enter_context(
-                patch("kiro_crew.dashboard.urls.devspaces_proxy_url", return_value=None)
+                patch("aj_crew.dashboard.urls.devspaces_proxy_url", return_value=None)
             )
-            stack.enter_context(patch("kiro_crew.slack.events.init_socket_mode"))
-            stack.enter_context(patch("kiro_crew.slack.interactions.init"))
-            stack.enter_context(patch("kiro_crew.slack.events.SeenCache"))
-            stack.enter_context(patch("kiro_crew.session.cleanup_orphaned_sessions"))
+            stack.enter_context(patch("aj_crew.slack.events.init_socket_mode"))
+            stack.enter_context(patch("aj_crew.slack.interactions.init"))
+            stack.enter_context(patch("aj_crew.slack.events.SeenCache"))
+            stack.enter_context(patch("aj_crew.session.cleanup_orphaned_sessions"))
             stack.enter_context(
-                patch("kiro_crew.dashboard.handlers._bg_mcp_probe", new_callable=AsyncMock)
+                patch("aj_crew.dashboard.handlers._bg_mcp_probe", new_callable=AsyncMock)
             )
             stack.enter_context(patch("os._exit"))
             stack.enter_context(
-                patch("kiro_crew.slack.gateway.platform_compat.raise_nofile_soft_limit")
+                patch("aj_crew.slack.gateway.platform_compat.raise_nofile_soft_limit")
             )
             stack.enter_context(patch.object(stdout, "isatty", return_value=tty))
             stack.enter_context(patch("sys.stdout", stdout))
@@ -1377,9 +1377,9 @@ class TestBgSessionDashboardBranch:
             browser = stack.enter_context(patch("webbrowser.open", side_effect=TimeoutError))
             # The boot's subprocess-pool jobs, the browser open among them, run on the
             # test loop's own executor, which teardown joins, so no shared
-            # kiro_crew.executors pool is left busy.
+            # aj_crew.executors pool is left busy.
             stack.enter_context(
-                patch("kiro_crew.slack.gateway.subprocess_executor", return_value=None)
+                patch("aj_crew.slack.gateway.subprocess_executor", return_value=None)
             )
             await finished(orch.run(), "the gateway boot")
             await await_until(opened, what="the browser auto-open")
@@ -1392,7 +1392,7 @@ class TestBgSessionDashboardBranch:
         else:
             assert "?token=" not in printed
             assert printed.count("   http://127.0.0.1:6779\n") == 2
-            assert "👻 Sign in:   run kirocrew token for a sign-in link\n" in printed
+            assert "👻 Sign in:   run ajcrew token for a sign-in link\n" in printed
 
 
 class TestInitServicesLoopResponsiveness:
@@ -1497,7 +1497,7 @@ class TestInitServicesLoopResponsiveness:
         )
 
         with patch("importlib.util.find_spec", return_value=None):
-            with patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": "/proj"}):
+            with patch.dict("os.environ", {"AJCREW_PROJECT_DIR": "/proj"}):
                 with patch.object(GatewayOrchestrator, "_is_brazil_install", return_value=False):
                     with patch("asyncio.create_subprocess_exec", side_effect=_async_exec):
                         with patch(
@@ -1536,22 +1536,22 @@ class TestInitServicesLoopResponsiveness:
         )
         mock_vm_inst = MagicMock()
         mock_vm_inst.init = MagicMock(side_effect=self._make_probe(state, "vector-init"))
-        with patch("kiro_crew.slack.gateway.MemoryStore", return_value=mock_mem_inst):
-            with patch("kiro_crew.vector_memory.VectorMemoryStore") as mock_vm:
+        with patch("aj_crew.slack.gateway.MemoryStore", return_value=mock_mem_inst):
+            with patch("aj_crew.vector_memory.VectorMemoryStore") as mock_vm:
                 mock_vm.return_value = mock_vm_inst
-                with patch("kiro_crew.slack.gateway.SkillsLoader"):
-                    with patch("kiro_crew.slack.gateway.HookManager"):
-                        with patch("kiro_crew.slack.gateway.LessonStore"):
-                            with patch("kiro_crew.slack.gateway.ContextBuilder"):
+                with patch("aj_crew.slack.gateway.SkillsLoader"):
+                    with patch("aj_crew.slack.gateway.HookManager"):
+                        with patch("aj_crew.slack.gateway.LessonStore"):
+                            with patch("aj_crew.slack.gateway.ContextBuilder"):
                                 with patch(
-                                    "kiro_crew.slack.gateway.ConversationLog",
+                                    "aj_crew.slack.gateway.ConversationLog",
                                     return_value=MagicMock(),
                                 ):
-                                    with patch("kiro_crew.slack.gateway.SessionManager"):
-                                        with patch("kiro_crew.slack.gateway.HistoryConsolidator"):
-                                            with patch("kiro_crew.slack.gateway.ChannelHistory"):
+                                    with patch("aj_crew.slack.gateway.SessionManager"):
+                                        with patch("aj_crew.slack.gateway.HistoryConsolidator"):
+                                            with patch("aj_crew.slack.gateway.ChannelHistory"):
                                                 with patch(
-                                                    "kiro_crew.agent.rebuild_agent_config",
+                                                    "aj_crew.agent.rebuild_agent_config",
                                                     return_value=Path("/tmp/a"),
                                                 ):
                                                     with patch(
@@ -1576,10 +1576,10 @@ class TestInitServicesLoopResponsiveness:
                                                             orch.ctx_builder.memory = mock_mem_inst
                                                             with (
                                                                 patch(
-                                                                    "kiro_crew.context.reset_memory_caches"
+                                                                    "aj_crew.context.reset_memory_caches"
                                                                 ),
                                                                 patch(
-                                                                    "kiro_crew.memory_backup.apply_pending_member_restores",
+                                                                    "aj_crew.memory_backup.apply_pending_member_restores",
                                                                     return_value={},
                                                                 ),
                                                             ):

@@ -14,7 +14,7 @@ state stays on the instance, so ``object.__new__(Driver)`` builds, instance over
 * no owner imports the facade at run time, and an owner imports only owners below it;
 * each owner's docstring names the instance fields its members write and read;
 * a write through ``spine.driver`` reaches every owner that binds the name, for every name
-  the test trees patch there (the facade's mirror, ``kiro_crew._facade_mirror``).
+  the test trees patch there (the facade's mirror, ``aj_crew._facade_mirror``).
 """
 
 from __future__ import annotations
@@ -36,10 +36,10 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-import kiro_crew
-from kiro_crew.apps.builtins.auto_improvement.spine import driver as facade
-from kiro_crew.apps.builtins.auto_improvement.spine.driver import Driver
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew
+from aj_crew.apps.builtins.auto_improvement.spine import driver as facade
+from aj_crew.apps.builtins.auto_improvement.spine.driver import Driver
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_driver_owner_bindings")
 
@@ -48,7 +48,7 @@ SHARED_BINDINGS_CHECKS = (
     "leaf_test_scope_derives_this_file_as_a_corpus_gate",
 )
 
-_PACKAGE = "kiro_crew.apps.builtins.auto_improvement.spine"
+_PACKAGE = "aj_crew.apps.builtins.auto_improvement.spine"
 
 #: Member -> (kind, signature digest, owning module). Frozen at the split: the kind and the
 #: signature are BASE's; the owner is where the member lives now.
@@ -394,7 +394,7 @@ def test_each_owner_names_the_fields_it_writes_and_reads(owner: str) -> None:
 
 
 def _index() -> Any:
-    from kiro_crew import _facade_mirror
+    from aj_crew import _facade_mirror
 
     return vars(facade)[_facade_mirror.INDEX_ATTRIBUTE]
 
@@ -428,7 +428,7 @@ def _test_tree_texts() -> list[tuple[str, str]]:
     for path in source_corpus.repo_files_named(".py"):
         rel = path.relative_to(root).as_posix()
         in_tree = rel == "conftest.py" or path.is_relative_to(test_root)
-        in_tree = in_tree or (rel.startswith("src/kiro_crew/apps/builtins/") and "/tests/" in rel)
+        in_tree = in_tree or (rel.startswith("src/aj_crew/apps/builtins/") and "/tests/" in rel)
         if not in_tree:
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
@@ -515,9 +515,9 @@ def test_a_patch_through_the_facade_lands_on_every_owner_and_is_undone(
 _APP_LOADER_PROBE = """
 import json, sys
 from pathlib import Path
-import kiro_crew.apps.builtins
-from kiro_crew.apps.module_loader import load_app_module
-root = Path(kiro_crew.apps.builtins.__file__).resolve().parent / "auto_improvement"
+import aj_crew.apps.builtins
+from aj_crew.apps.module_loader import load_app_module
+root = Path(aj_crew.apps.builtins.__file__).resolve().parent / "auto_improvement"
 main = load_app_module("auto-improvement", root, "spine.driver:main")
 facade = sys.modules[main.__module__]
 print(json.dumps({"module": main.__module__, "owners": list(facade._OWNERS),
@@ -530,7 +530,7 @@ def test_the_driver_loads_under_the_app_loader_name(tmp_path: Path) -> None:
     facade's owners are named from ``__package__``, not from the canonical dotted path.
     Checked in a fresh interpreter, so this worker's ``sys.modules`` gains no app copy."""
     env = dict(os.environ)
-    src = str(Path(kiro_crew.__file__).resolve().parents[1])
+    src = str(Path(aj_crew.__file__).resolve().parents[1])
     env["PYTHONPATH"] = src + os.pathsep + env.get("PYTHONPATH", "")
     out = subprocess.run(
         [sys.executable, "-c", _APP_LOADER_PROBE],

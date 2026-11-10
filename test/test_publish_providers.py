@@ -16,10 +16,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.apps.discovery import _manifest_to_builtin_dict
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME, apps_dir, enable_app, install_app
-from kiro_crew.apps.manifest import AppManifest
-from kiro_crew.apps.routes import (
+from aj_crew.apps.discovery import _manifest_to_builtin_dict
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME, apps_dir, enable_app, install_app
+from aj_crew.apps.manifest import AppManifest
+from aj_crew.apps.routes import (
     _provider_is_configured,
     collect_publish_providers,
     register_app_routes,
@@ -122,7 +122,7 @@ def test_collect_skips_provider_without_id_or_endpoint():
 
 
 def test_provider_is_configured_reads_app_config(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     data_dir = apps_dir() / "deploy-web" / "data"
     data_dir.mkdir(parents=True)
     # No config yet → not configured.
@@ -136,13 +136,13 @@ def test_provider_is_configured_reads_app_config(tmp_path, monkeypatch):
 
 
 def test_provider_is_configured_no_field_means_always(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     pp = {**_PP, "configuredField": ""}
     assert _provider_is_configured("deploy-web", pp) is True
 
 
 def test_provider_is_configured_rejects_path_traversal(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     pp = {**_PP, "configFile": "../../../etc/passwd"}
     assert _provider_is_configured("deploy-web", pp) is False
 
@@ -150,7 +150,7 @@ def test_provider_is_configured_rejects_path_traversal(tmp_path, monkeypatch):
 def test_provider_is_configured_undecodable_config_is_unconfigured(tmp_path):
     # The app writes its own config file, so it can hold any bytes. A file
     # that is not UTF-8 reads as "not configured", like a malformed one.
-    with mock.patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+    with mock.patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
         data_dir = apps_dir() / "deploy-web" / "data"
         data_dir.mkdir(parents=True)
         (data_dir / "config.json").write_bytes(b'{"profile": "caf\xe9"}')
@@ -161,20 +161,20 @@ def test_provider_is_configured_undecodable_config_is_unconfigured(tmp_path):
 
 
 def _setup_env(tmp_path, monkeypatch):
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     kiro_agents = tmp_path / "kiro-agents"
     kiro_agents.mkdir()
-    import kiro_crew.apps.bridges as bridges_mod
+    import aj_crew.apps.bridges as bridges_mod
 
     monkeypatch.setattr(bridges_mod, "KIRO_AGENTS_DIR", kiro_agents)
-    import kiro_crew.apps.backend as bmod
+    import aj_crew.apps.backend as bmod
 
     bmod._processes.clear()
     bmod._allocated_ports.clear()
     monkeypatch.setattr(
-        "kiro_crew.apps.execution.third_party_execution_allowed", lambda: True
+        "aj_crew.apps.execution.third_party_execution_allowed", lambda: True
     )
     return home
 
@@ -318,8 +318,8 @@ def test_save_registry_concurrent_no_lost_updates(tmp_path, monkeypatch):
     """Threaded registry mutations must not lose updates."""
     import threading
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    from kiro_crew.deploy import profiles as profiles_mod
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    from aj_crew.deploy import profiles as profiles_mod
 
     n_threads = 10
     barrier = threading.Barrier(n_threads)

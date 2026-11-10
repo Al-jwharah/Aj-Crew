@@ -14,8 +14,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state, _make_tags_app
 
-from kiro_crew.dashboard import create_rate_limit
-from kiro_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
+from aj_crew.dashboard import create_rate_limit
+from aj_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
 
 _TAG = {"id": "t00000000001", "name": "Active", "color": "#22c55e", "order": 0, "status": True}
 _COLS = [
@@ -26,13 +26,13 @@ _COLS = [
 
 @pytest.fixture(autouse=True)
 def _hermetic_signing_secret(monkeypatch):
-    from kiro_crew.dashboard import token_secret
+    from aj_crew.dashboard import token_secret
 
     monkeypatch.setattr(token_secret, "_get_secret", lambda: b"test-signing-key")
 
 
 def _board_app(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state._tags = [dict(_TAG)]
     state._tag_boards = [dict(c) for c in _COLS]
@@ -117,7 +117,7 @@ async def test_create_rate_limits_an_internal_caller(tmp_path, monkeypatch):
     create_rate_limit.reset_for_tests()
     try:
         _state, app = _board_app(tmp_path, monkeypatch)
-        headers = {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "kirocrew-dashboard"}
+        headers = {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "ajcrew-dashboard"}
         async with TestClient(TestServer(app)) as client:
             allowed = 0
             for i in range(create_rate_limit.MAX_TAG_COLUMN_CREATES_PER_WINDOW + 3):
@@ -197,14 +197,14 @@ async def test_an_agent_write_is_audited_as_the_agent_not_the_browser(tmp_path, 
     """SEL must tell an MCP-driven board change from the person clicking."""
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard import chat_tags
+    from aj_crew.dashboard import chat_tags
 
     create_rate_limit.reset_for_tests()
     audit = MagicMock()
     monkeypatch.setattr(chat_tags, "sel", lambda: audit)
     try:
         _state, app = _board_app(tmp_path, monkeypatch)
-        headers = {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "kirocrew-dashboard"}
+        headers = {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "ajcrew-dashboard"}
         body = {"name": "Doing", "tag_ids": ["t00000000001"], "ensure": True}
         async with TestClient(TestServer(app)) as client:
             for _ in range(2):  # the second call is the ensure twin-hit
@@ -218,7 +218,7 @@ async def test_an_agent_write_is_audited_as_the_agent_not_the_browser(tmp_path, 
         create_rate_limit.reset_for_tests()
     rows = [c.kwargs for c in audit.log_api_access.call_args_list]
     assert len(rows) == 3
-    assert all(r["source"] == "mcp" and r["caller"] == "kirocrew-dashboard" for r in rows), rows
+    assert all(r["source"] == "mcp" and r["caller"] == "ajcrew-dashboard" for r in rows), rows
 
 
 @pytest.mark.asyncio
@@ -227,7 +227,7 @@ async def test_an_ensure_retry_does_not_spend_the_create_budget(tmp_path, monkey
     create_rate_limit.reset_for_tests()
     try:
         _state, app = _board_app(tmp_path, monkeypatch)
-        headers = {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "kirocrew-dashboard"}
+        headers = {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "ajcrew-dashboard"}
         body = {"name": "Doing", "tag_ids": ["t00000000001"], "ensure": True}
         async with TestClient(TestServer(app)) as client:
             for _ in range(create_rate_limit.MAX_TAG_COLUMN_CREATES_PER_WINDOW + 3):

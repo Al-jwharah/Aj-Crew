@@ -20,9 +20,9 @@ import sys
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.acp import liveness
-from kiro_crew.acp.liveness import (
+from aj_crew import platform_compat
+from aj_crew.acp import liveness
+from aj_crew.acp.liveness import (
     CHILD_EXIT_GRACE_SECS,
     EVIDENCE_PLATFORM_LIMITED,
     EVIDENCE_SHELL_CHILD_ABSENT,
@@ -461,7 +461,7 @@ def test_mcp_and_model_wait_never_read_the_windows_tree(
     run = _Run(tmp_path, "")
     monkeypatch.setattr(platform_compat, "proc_cpu_nanos_for_pid", lambda pid: None)
     tool = ToolCallState(
-        title="kirocrew-core___spawn_run",
+        title="ajcrew-core___spawn_run",
         command='{"task": "x"}',
         dispatch_ts=run.clock.t,
         is_shell=False,

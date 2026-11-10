@@ -29,8 +29,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.testing.channel_fixtures import load_fixture
-from kiro_crew.wecom.client import (
+from aj_crew.testing.channel_fixtures import load_fixture
+from aj_crew.wecom.client import (
     _MSGID_WINDOW_MAX,
     _MSGID_WINDOW_TTL_SECS,
     _SUBSCRIBE_REQ_PREFIX,
@@ -40,8 +40,8 @@ from kiro_crew.wecom.client import (
     _build_subscribe_frame,
     new_stream_id,
 )
-from kiro_crew.wecom.renderer import _STREAM_MAX_AGE_S, WeComRenderer
-from kiro_crew.wecom.transport import WECOM_CAPABILITIES, WeComTransport
+from aj_crew.wecom.renderer import _STREAM_MAX_AGE_S, WeComRenderer
+from aj_crew.wecom.transport import WECOM_CAPABILITIES, WeComTransport
 
 #: Anchored to the repo root, never a relative path: xdist workers may change CWD.
 _REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -169,7 +169,7 @@ class TestRedeliveryIsSuppressed:
     def test_an_entry_older_than_the_ttl_is_readmitted(self, monkeypatch) -> None:
         c = _client()
         clock = {"t": 1000.0}
-        monkeypatch.setattr("kiro_crew.wecom.client.time.monotonic", lambda: clock["t"])
+        monkeypatch.setattr("aj_crew.wecom.client.time.monotonic", lambda: clock["t"])
         assert c.already_delivered("m-1") is False
         clock["t"] += _MSGID_WINDOW_TTL_SECS + 1
         assert c.already_delivered("m-1") is False, "a stale entry must not suppress forever"
@@ -262,7 +262,7 @@ class TestGroupChatFailsClosed:
             def log_api_access(self, **kw: Any) -> None:
                 rows.append(kw)
 
-        import kiro_crew.wecom.transport as mod
+        import aj_crew.wecom.transport as mod
 
         original = mod.sel
         mod.sel = lambda: FakeSel()  # type: ignore[assignment]
@@ -449,7 +449,7 @@ class TestSubscribeAck:
                 "errmsg": f"invalid credential {secret}",
             }
         )
-        with capture("kiro_crew.wecom.client") as messages:
+        with capture("aj_crew.wecom.client") as messages:
             await c._handle_message(raw)
 
         blob = "\n".join(messages)
@@ -826,7 +826,7 @@ class TestRendererRollsOffASealedBubble:
         # write. A turn that spent that long in a tool call therefore has an
         # expired-but-not-yet-refused bubble, and writing the final answer there
         # loses it. Rotation must key on age, not only on a refusal.
-        monkeypatch.setattr("kiro_crew.wecom.renderer._STREAM_MAX_AGE_S", 0.0)
+        monkeypatch.setattr("aj_crew.wecom.renderer._STREAM_MAX_AGE_S", 0.0)
         c = _client()
         ws = RecordingWS(c)
         c._ws = ws  # type: ignore[assignment]
@@ -847,7 +847,7 @@ class TestRendererRollsOffASealedBubble:
     async def test_a_capped_frame_does_not_record_the_uncapped_length(self) -> None:
         # Recording the full accumulated length while sending a CAPPED frame let a
         # later rotation resume past text that was never delivered.
-        from kiro_crew.messaging.transport import TransportCapabilities
+        from aj_crew.messaging.transport import TransportCapabilities
 
         c = _client()
         ws = RecordingWS(c)
@@ -872,7 +872,7 @@ class TestRendererRollsOffASealedBubble:
         async def fake_sleep(secs: float) -> None:
             slept.append(secs)
 
-        monkeypatch.setattr("kiro_crew.wecom.renderer.asyncio.sleep", fake_sleep)
+        monkeypatch.setattr("aj_crew.wecom.renderer.asyncio.sleep", fake_sleep)
         c = _client()
         ws = RecordingWS(c)
         c._ws = ws  # type: ignore[assignment]
@@ -900,7 +900,7 @@ class TestRendererRollsOffASealedBubble:
         async def fake_sleep(secs: float) -> None:
             return None
 
-        monkeypatch.setattr("kiro_crew.wecom.renderer.asyncio.sleep", fake_sleep)
+        monkeypatch.setattr("aj_crew.wecom.renderer.asyncio.sleep", fake_sleep)
         c = _client()
         ws = RecordingWS(c, ack_errcode=45009)  # the platform refuses every push
         c._ws = ws  # type: ignore[assignment]
@@ -908,7 +908,7 @@ class TestRendererRollsOffASealedBubble:
         await r.on_turn_start()
         await r.on_text_chunk("word " * 4000)
 
-        with capture("kiro_crew.wecom.renderer") as messages:
+        with capture("aj_crew.wecom.renderer") as messages:
             await r.on_done()
             await r.close()  # the tail is released here
 
@@ -930,14 +930,14 @@ class TestRendererRollsOffASealedBubble:
         async def fake_sleep(secs: float) -> None:
             return None
 
-        monkeypatch.setattr("kiro_crew.wecom.renderer.asyncio.sleep", fake_sleep)
+        monkeypatch.setattr("aj_crew.wecom.renderer.asyncio.sleep", fake_sleep)
         c = _client()
         c._ws = RecordingWS(c)  # type: ignore[assignment]
         r = WeComRenderer(c, "r1", "https://fallback", WECOM_CAPABILITIES)  # no chat_id
         await r.on_turn_start()
         await r.on_text_chunk("word " * 4000)
 
-        with capture("kiro_crew.wecom.renderer") as messages:
+        with capture("aj_crew.wecom.renderer") as messages:
             await r.on_done()
             await r.close()  # the tail is released here
 
@@ -956,7 +956,7 @@ class TestRendererRollsOffASealedBubble:
         async def fake_sleep(secs: float) -> None:
             return None
 
-        monkeypatch.setattr("kiro_crew.wecom.renderer.asyncio.sleep", fake_sleep)
+        monkeypatch.setattr("aj_crew.wecom.renderer.asyncio.sleep", fake_sleep)
         c = _client()
         ws = RecordingWS(c)
         c._ws = ws  # type: ignore[assignment]
@@ -993,7 +993,7 @@ class TestRendererRollsOffASealedBubble:
         async def fake_sleep(secs: float) -> None:
             return None
 
-        monkeypatch.setattr("kiro_crew.wecom.renderer.asyncio.sleep", fake_sleep)
+        monkeypatch.setattr("aj_crew.wecom.renderer.asyncio.sleep", fake_sleep)
         c = _client()
         ws = RecordingWS(c)
         c._ws = ws  # type: ignore[assignment]
@@ -1016,7 +1016,7 @@ class TestRendererRollsOffASealedBubble:
         async def fake_sleep(secs: float) -> None:
             return None
 
-        monkeypatch.setattr("kiro_crew.wecom.renderer.asyncio.sleep", fake_sleep)
+        monkeypatch.setattr("aj_crew.wecom.renderer.asyncio.sleep", fake_sleep)
         c = _client()
         ws = RecordingWS(c, ack_errcode=45009)  # every push is refused
         c._ws = ws  # type: ignore[assignment]
@@ -1026,7 +1026,7 @@ class TestRendererRollsOffASealedBubble:
         await r.on_text_chunk("word " * 4000)
         r._stream_ok = False
 
-        with capture("kiro_crew.wecom.renderer") as messages:
+        with capture("aj_crew.wecom.renderer") as messages:
             await r.on_done()
             await r.close()
 
@@ -1046,7 +1046,7 @@ class TestRendererRollsOffASealedBubble:
         async def fake_sleep(secs: float) -> None:
             return None
 
-        monkeypatch.setattr("kiro_crew.wecom.renderer.asyncio.sleep", fake_sleep)
+        monkeypatch.setattr("aj_crew.wecom.renderer.asyncio.sleep", fake_sleep)
         c = _client()
         ws = RecordingWS(c)
         c._ws = ws  # type: ignore[assignment]
@@ -1058,7 +1058,7 @@ class TestRendererRollsOffASealedBubble:
         # The seal turns out refused, and every push is refused too.
         c._mark_stream_dead(r._stream_id)
         ws.ack_errcode = 45009
-        with capture("kiro_crew.wecom.renderer") as messages:
+        with capture("aj_crew.wecom.renderer") as messages:
             await r.close()
 
         pushes = [f for f in ws.sent if f.get("cmd") == "aibot_send_msg"]
@@ -1380,7 +1380,7 @@ class TestUnexpectedFaultReconnects:
             c._closed = True
 
         monkeypatch.setattr(c, "_connect_and_serve", boom)
-        monkeypatch.setattr("kiro_crew.wecom.client.asyncio.sleep", _immediate_sleep)
+        monkeypatch.setattr("aj_crew.wecom.client.asyncio.sleep", _immediate_sleep)
 
         await c._run_loop()
 
@@ -1457,7 +1457,7 @@ class TestProactivePushIsAckConfirmed:
     async def test_an_unacknowledged_push_reports_failure(self, monkeypatch) -> None:
         # Unacknowledged is NOT delivered; reporting success would let the mirror
         # record a message the platform dropped.
-        monkeypatch.setattr("kiro_crew.wecom.client._PUSH_ACK_TIMEOUT_SECS", 0.05)
+        monkeypatch.setattr("aj_crew.wecom.client._PUSH_ACK_TIMEOUT_SECS", 0.05)
         c = _client()
         c._ws = RecordingWS(c, ack=False)  # type: ignore[assignment]
         assert await c.send_proactive("Wei", "hello") is False
@@ -1492,7 +1492,7 @@ class TestQuotaArithmetic:
     def test_a_full_minute_of_frames_fits_inside_the_quota(self) -> None:
         import math
 
-        from kiro_crew.wecom.renderer import (
+        from aj_crew.wecom.renderer import (
             _STREAM_THROTTLE_S,
             _UNTHROTTLED_FRAME_BUDGET,
             WECOM_QUOTA_PER_MIN,
@@ -1507,14 +1507,14 @@ class TestQuotaArithmetic:
     def test_the_reserve_covers_every_frame_that_skips_the_throttle(self) -> None:
         # placeholder + first tool footer + final seal = 3 is the floor; the rest is
         # headroom for an overflow push and a second bubble's first footer.
-        from kiro_crew.wecom.renderer import _UNTHROTTLED_FRAME_BUDGET
+        from aj_crew.wecom.renderer import _UNTHROTTLED_FRAME_BUDGET
 
         assert _UNTHROTTLED_FRAME_BUDGET >= 3
 
     def test_the_pace_still_reads_as_live_typing(self) -> None:
         # A guard on the other side: a throttle so slow the stream stops feeling
         # live would "fit the quota" trivially.
-        from kiro_crew.wecom.renderer import _STREAM_THROTTLE_S
+        from aj_crew.wecom.renderer import _STREAM_THROTTLE_S
 
         assert _STREAM_THROTTLE_S <= 3.0
 
@@ -1638,6 +1638,6 @@ class TestSendReplyReportsItsVerdict:
         c._session = self._session(  # type: ignore[assignment]
             200, {"errcode": 45009, "errmsg": "rejected: sk-live-SECRET-token"}
         )
-        with capture("kiro_crew.wecom.client") as messages:
+        with capture("aj_crew.wecom.client") as messages:
             assert await c.send_reply("https://r.test/x", "hi") is False
         assert not any("SECRET" in m for m in messages), "the platform errmsg was logged"

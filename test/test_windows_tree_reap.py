@@ -11,8 +11,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.testing.wait import await_until
+from aj_crew import platform_compat as pc
+from aj_crew.testing.wait import await_until
 
 
 @pytest.fixture(autouse=True)
@@ -135,7 +135,7 @@ def test_a_tree_slower_than_one_pass_is_named_pending_and_the_sweep_still_reaps_
     registry. When the members do exit, the maintenance sweep finishes the
     same drain and closes each pin exactly once.
     """
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     monkeypatch.setattr(session_pid, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(
@@ -184,7 +184,7 @@ async def test_failed_owner_cleanup_survives_gc_and_retries_from_maintenance(
     kernel, monkeypatch, tmp_path
 ):
     """Failed exact handles outlive owners and are retried without PID authority."""
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     process_type = type(
         "OwnedProcess",
@@ -299,7 +299,7 @@ def test_owned_cleanup_deduplicates_and_denied_tree_does_not_starve_peer(monkeyp
 def test_metadata_write_refusal_keeps_the_pin_until_a_successful_retry(
     kernel, monkeypatch, tmp_path
 ):
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     monkeypatch.setattr(session_pid, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(session_pid, "_PROTECTED_PIDS", {100})
@@ -439,7 +439,7 @@ async def test_async_cleanup_refuses_a_missing_original_handle(monkeypatch):
 async def test_client_retry_cannot_discard_an_incompletely_drained_windows_tree(
     monkeypatch, tmp_path
 ):
-    from kiro_crew.acp.client import AcpClient
+    from aj_crew.acp.client import AcpClient
 
     client = AcpClient(work_dir=tmp_path)
     original = SimpleNamespace(returncode=0)

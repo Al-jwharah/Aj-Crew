@@ -3,7 +3,7 @@
 ``_extra_sections`` protects a whole top-level section this core does not model.
 A key one level down had no equivalent, so a build that stopped modelling
 ``<section>.<key>`` erased the operator's value on the next ``save()`` of any
-kind. See ``KiroCrewConfig._extra_keys`` and
+kind. See ``AjCrewConfig._extra_keys`` and
 ``config/resolution.capture_extra_section_keys``.
 """
 
@@ -15,8 +15,8 @@ import pathlib
 
 import pytest
 
-from kiro_crew.config import loader as L
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config import loader as L
+from aj_crew.config.loader import AjCrewConfig
 
 
 @pytest.fixture
@@ -40,7 +40,7 @@ def test_unknown_section_key_survives_save(cfg_home):
     """An unmodelled nested key survives any save()."""
     _write(cfg_home, {"agent": {"provider": "acp", "retired_knob": "keep-me"}})
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg._extra_keys.get("agent") == {"retired_knob": "keep-me"}
     assert cfg.to_dict()["agent"]["retired_knob"] == "keep-me"
 
@@ -56,7 +56,7 @@ def test_unknown_key_survives_a_save_that_changes_something_else(cfg_home):
     """The real-world trigger: an unrelated write (log level, workspace, agent)."""
     _write(cfg_home, {"dashboard": {"legacy_toggle": True}})
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.timezone = "UTC"
     cfg.save()
 
@@ -69,8 +69,8 @@ def test_unknown_keys_survive_repeated_round_trips(cfg_home):
     """Preservation must not decay: load/save twice keeps the key."""
     _write(cfg_home, {"memory": {"orphan": [1, 2, 3]}})
 
-    KiroCrewConfig.load().save()
-    KiroCrewConfig.load().save()
+    AjCrewConfig.load().save()
+    AjCrewConfig.load().save()
 
     after = json.loads(cfg_home.read_text(encoding="utf-8"))
     assert after["memory"]["orphan"] == [1, 2, 3]
@@ -85,7 +85,7 @@ def test_several_sections_at_once(cfg_home):
             "telemetry": {"gone_c": {"nested": True}},
         },
     )
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert set(cfg._extra_keys) == {"agent", "session", "telemetry"}
     d = cfg.to_dict()
     assert d["agent"]["gone_a"] == 1
@@ -98,8 +98,8 @@ def test_several_sections_at_once(cfg_home):
 
 def test_a_fully_modelled_config_captures_nothing(cfg_home):
     """No pollution: a config written by this build has no unknown keys."""
-    _write(cfg_home, KiroCrewConfig().to_dict())
-    assert KiroCrewConfig.load()._extra_keys == {}
+    _write(cfg_home, AjCrewConfig().to_dict())
+    assert AjCrewConfig.load()._extra_keys == {}
 
 
 def test_default_emitted_section_keys_are_all_recognized():
@@ -110,9 +110,9 @@ def test_default_emitted_section_keys_are_all_recognized():
     to_dict() ever stops emitting it."""
     from dataclasses import fields, is_dataclass
 
-    from kiro_crew.config.resolution import _SECTION_KEYS_EMITTED_ELSEWHERE
+    from aj_crew.config.resolution import _SECTION_KEYS_EMITTED_ELSEWHERE
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     emitted = cfg.to_dict()
     unaccounted: dict[str, set[str]] = {}
     for section, value in emitted.items():
@@ -137,7 +137,7 @@ def test_hooks_is_not_captured_because_it_round_trips_raw(cfg_home):
     """hooks is emitted as `self.hooks` verbatim, so nothing inside it can be lost
     and nothing about it needs capturing."""
     _write(cfg_home, {"hooks": {"my-hook": {"command": "true", "odd": 1}}})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert "hooks" not in cfg._extra_keys
     assert cfg.to_dict()["hooks"]["my-hook"]["odd"] == 1
 
@@ -154,7 +154,7 @@ def test_unknown_keys_inside_a_named_record_survive_save(cfg_home):
             "memory_stores": {"my-store": {"description": "d", "shard": 3}},
         },
     )
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg._extra_keys["agents"] == {"my-agent": {"retired_flag": True}}
     assert cfg._extra_keys["workspaces"] == {"my-ws": {"colour": "teal"}}
     assert cfg._extra_keys["memory_stores"] == {"my-store": {"shard": 3}}
@@ -171,16 +171,16 @@ def test_a_deleted_record_does_not_come_back(cfg_home):
     """Fill-only at record granularity too: deleting the record in memory must
     not resurrect it via its captured unknown keys."""
     _write(cfg_home, {"agents": {"gone": {"model": "auto", "retired_flag": True}}})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents.pop("gone")
     assert "gone" not in cfg.to_dict()["agents"]
 
 
 def test_record_unknown_keys_are_not_shipped_to_the_browser(cfg_home):
-    from kiro_crew.dashboard.handlers.core import _masked_config_dict
+    from aj_crew.dashboard.handlers.core import _masked_config_dict
 
     _write(cfg_home, {"agents": {"a": {"model": "auto", "legacy_token": "xoxb-S"}}})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg.to_dict()["agents"]["a"]["legacy_token"] == "xoxb-S"
     masked = _masked_config_dict(cfg)
     assert "xoxb-S" not in json.dumps(masked)
@@ -189,7 +189,7 @@ def test_record_unknown_keys_are_not_shipped_to_the_browser(cfg_home):
 def test_private_keys_are_not_captured(cfg_home):
     """to_dict() drops private carriers on purpose; capture must not undo that."""
     _write(cfg_home, {"mcp_gateway": {"_stub_roster": ["ghost"]}})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert "mcp_gateway" not in cfg._extra_keys
     assert "_stub_roster" not in cfg.to_dict()["mcp_gateway"]
 
@@ -201,7 +201,7 @@ def test_a_cleared_conditional_key_is_not_resurrected(cfg_home):
         cfg_home,
         {"slack": {"channels": {"C1": {"activation": "always"}}}},
     )
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert "slack" not in cfg._extra_keys
 
     cfg.slack_channels = {}
@@ -214,7 +214,7 @@ def test_a_rejected_modelled_value_stays_dropped(cfg_home):
     """A key the schema DOES model but validation refused must not be restored:
     re-emitting it would make the bad value permanent and re-warn every load."""
     _write(cfg_home, {"agent": {"approval_mode": "not-a-real-mode"}})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert "agent" not in cfg._extra_keys
     assert cfg.to_dict()["agent"]["approval_mode"] != "not-a-real-mode"
 
@@ -223,7 +223,7 @@ def test_a_legacy_alias_is_not_pinned_in_the_file(cfg_home):
     """knowledge.auto_ingest_doc_links is still READ but save() settles on the
     canonical auto_add_documents; capture must not pin the old spelling."""
     _write(cfg_home, {"knowledge": {"auto_ingest_doc_links": True}})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert "knowledge" not in cfg._extra_keys
 
     d = cfg.to_dict()
@@ -237,7 +237,7 @@ def test_the_auto_approve_aliases_are_not_pinned(cfg_home):
     the old ones would leave a contradiction in the file: the canonical grant off
     and a stale `yolo: true` beside it."""
     _write(cfg_home, {"agent": {"yolo": True, "dangerouslySkipPermissions": True}})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert "agent" not in cfg._extra_keys
     assert cfg.agent.dangerously_skip_permissions is True
 
@@ -262,7 +262,7 @@ def test_retired_keys_are_purged_not_preserved(cfg_home):
             }
         },
     )
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert "stt" not in cfg._extra_keys
 
     written = cfg.to_dict()["stt"]
@@ -300,8 +300,8 @@ def test_the_retired_knowledge_chunk_budget_is_purged_not_mistaken_for_a_typo(cf
             }
         },
     )
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
-        cfg = KiroCrewConfig.load()
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
+        cfg = AjCrewConfig.load()
 
     assert "knowledge" not in cfg._extra_keys
     # No retired key resembles the live folder budget: no misspelling warning.
@@ -314,7 +314,7 @@ def test_the_retired_knowledge_chunk_budget_is_purged_not_mistaken_for_a_typo(cf
     assert cfg.knowledge.folder_ingest_chunk_budget == 250
     assert written["folder_ingest_chunk_budget"] == 250
     # diagnose_settings reads the same to_dict(), so no retired key shows up there.
-    from kiro_crew.dashboard.change_cards import non_default_settings
+    from aj_crew.dashboard.change_cards import non_default_settings
 
     diagnosed = {row["key"] for row in non_default_settings()}
     assert not diagnosed & {f"knowledge.{k}" for k in _RETIRED_KNOWLEDGE_KEYS}
@@ -354,14 +354,14 @@ async def test_a_settings_patch_drops_the_retired_knowledge_keys(cfg_home):
     from aiohttp.test_utils import TestClient, TestServer
     from dashboard_owner_helpers import as_owner
 
-    from kiro_crew.dashboard.handlers import api_kirocrew_config_patch
+    from aj_crew.dashboard.handlers import api_ajcrew_config_patch
 
     _seed_retired_knowledge_keys(cfg_home)
     app = web.Application()
-    app.router.add_patch("/api/config/kirocrew", api_kirocrew_config_patch)
+    app.router.add_patch("/api/config/ajcrew", api_ajcrew_config_patch)
     async with TestClient(TestServer(as_owner(app))) as c:
         resp = await c.patch(
-            "/api/config/kirocrew",
+            "/api/config/ajcrew",
             json={"path": "knowledge.auto_ingest_artifacts", "value": False},
         )
         assert resp.status == 200, await resp.text()
@@ -369,11 +369,11 @@ async def test_a_settings_patch_drops_the_retired_knowledge_keys(cfg_home):
 
 
 def test_cli_config_set_drops_the_retired_knowledge_keys(cfg_home):
-    """`kirocrew config set` edits the raw document too, and drops them the same way."""
+    """`ajcrew config set` edits the raw document too, and drops them the same way."""
     import argparse
     from unittest.mock import patch
 
-    from kiro_crew.cli_config import _config_cmd
+    from aj_crew.cli_config import _config_cmd
 
     _seed_retired_knowledge_keys(cfg_home)
     args = argparse.Namespace(
@@ -384,9 +384,9 @@ def test_cli_config_set_drops_the_retired_knowledge_keys(cfg_home):
         local=False,
     )
     with (
-        patch("kiro_crew.cli_config.config_path", return_value=cfg_home),
-        patch("kiro_crew.cli_config.config_local_path", return_value=L.config_local_path()),
-        patch("kiro_crew.cli_config.sel"),
+        patch("aj_crew.cli_config.config_path", return_value=cfg_home),
+        patch("aj_crew.cli_config.config_local_path", return_value=L.config_local_path()),
+        patch("aj_crew.cli_config.sel"),
     ):
         _config_cmd(args)
     assert _assert_retired_knowledge_keys_dropped(cfg_home)["auto_ingest_artifacts"] is False
@@ -399,7 +399,7 @@ def test_the_retired_conductor_skill_flag_is_purged(cfg_home):
     carries it must load undegraded, not grow an attribute for it, and drop it on
     save rather than keep advertising a dead setting."""
     _write(cfg_home, {"agent": {"conductor_skill": True, "subagent_max_turns": 42}})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert "agent" not in cfg._extra_keys
     assert cfg.degraded_sections == frozenset()
     assert not hasattr(cfg.agent, "conductor_skill")
@@ -423,8 +423,8 @@ def test_the_retired_browser_keys_are_dropped_with_one_warning(cfg_home, caplog)
             }
         },
     )
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
-        cfg = KiroCrewConfig.load()
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
+        cfg = AjCrewConfig.load()
 
     assert "dashboard" not in cfg._extra_keys
     assert not hasattr(cfg.dashboard, "use_builtin_browser")
@@ -447,8 +447,8 @@ def test_the_retired_browser_keys_are_dropped_with_one_warning(cfg_home, caplog)
 
 def test_a_config_without_the_retired_browser_keys_gets_no_notice(cfg_home, caplog):
     _write(cfg_home, {"dashboard": {"browser_local_origins": []}})
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
-        KiroCrewConfig.load()
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
+        AjCrewConfig.load()
     assert not [r for r in caplog.records if "no longer exist and are ignored" in r.getMessage()]
 
 
@@ -459,10 +459,10 @@ def test_an_unknown_nested_key_is_not_shipped_to_the_browser(cfg_home):
     to the sensitivity walk. A credential a previous build stored under a
     since-renamed key would otherwise ship verbatim to any authenticated reader,
     which is the same reason the response already drops ``_extra_sections``."""
-    from kiro_crew.dashboard.handlers.core import _masked_config_dict
+    from aj_crew.dashboard.handlers.core import _masked_config_dict
 
     _write(cfg_home, {"slack": {"legacy_bot_token": "xoxb-SECRET"}})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg._extra_keys.get("slack") == {"legacy_bot_token": "xoxb-SECRET"}
 
     # Preserved for save()...
@@ -478,7 +478,7 @@ def test_an_unknown_nested_key_is_not_shipped_to_the_browser(cfg_home):
 
 def test_a_non_dict_section_does_not_crash_capture(cfg_home):
     _write(cfg_home, {"agent": "not-an-object", "session": [1, 2]})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg._extra_keys == {}
     cfg.save()  # must not raise
 
@@ -486,7 +486,7 @@ def test_a_non_dict_section_does_not_crash_capture(cfg_home):
 def test_capture_never_overwrites_a_live_value(cfg_home):
     """Capture only FILLS a gap. A modelled value set in memory must win."""
     _write(cfg_home, {"agent": {"reasoning_effort": "low", "retired_knob": "x"}})
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agent.reasoning_effort = "high"
     d = cfg.to_dict()
     assert d["agent"]["reasoning_effort"] == "high"
@@ -495,7 +495,7 @@ def test_capture_never_overwrites_a_live_value(cfg_home):
 
 def test_private_carriers_never_reach_the_file(cfg_home):
     _write(cfg_home, {"agent": {"retired_knob": "x"}})
-    KiroCrewConfig.load().save()
+    AjCrewConfig.load().save()
     after = json.loads(cfg_home.read_text(encoding="utf-8"))
     assert "_extra_keys" not in after
     assert "_extra_sections" not in after
@@ -510,7 +510,7 @@ def test_an_overlay_only_unknown_key_does_not_leak_into_the_base_file(cfg_home, 
         json.dumps({"agent": {"overlay_only_knob": "local"}}), encoding="utf-8"
     )
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert "agent" not in cfg._extra_keys
     cfg.save()
 
@@ -529,7 +529,7 @@ def test_an_overlay_shadowed_unknown_key_keeps_its_base_value(cfg_home, tmp_path
         json.dumps({"agent": {"retired": "OVERLAY"}}), encoding="utf-8"
     )
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg._extra_keys.get("agent") == {"retired": "BASE"}
     cfg.save()
 
@@ -545,8 +545,8 @@ def test_the_base_value_survives_a_cache_hit_too(cfg_home, tmp_path):
         json.dumps({"agent": {"retired": "OVERLAY"}}), encoding="utf-8"
     )
 
-    first = KiroCrewConfig.load()  # disk path, populates the cache
-    second = KiroCrewConfig.load()  # cache path
+    first = AjCrewConfig.load()  # disk path, populates the cache
+    second = AjCrewConfig.load()  # cache path
     assert first._extra_keys == second._extra_keys == {"agent": {"retired": "BASE"}}
 
     second.save()
@@ -557,7 +557,7 @@ def test_the_base_value_survives_a_cache_hit_too(cfg_home, tmp_path):
 def test_cache_data_and_sidecar_are_served_together_or_not_at_all():
     """A clear() between two separate fetches would hand the loader a merged
     document with an EMPTY base shadow; get_with_sidecar makes the pair atomic."""
-    from kiro_crew.config.validation import ConfigCache
+    from aj_crew.config.validation import ConfigCache
 
     cache = ConfigCache()
     fp = ("fp",)
@@ -592,18 +592,18 @@ def test_a_real_load_records_the_digest_of_the_bytes_it_parsed(cfg_home):
     # A first load can rewrite config.json (the write-back migration completes a
     # partial document), so the bytes to compare against are the ones standing
     # BEFORE the load. The next load reads the migrated file and leaves it alone.
-    L.KiroCrewConfig.load()
+    L.AjCrewConfig.load()
 
     before = L.config_content_stamp()
     L._CONFIG_CACHE.clear()
-    cold = L.KiroCrewConfig.load()
+    cold = L.AjCrewConfig.load()
     cold_digest = getattr(cold, "_content_digest", None)
     assert cold_digest == before, (
         "a load that read the files did not record the digest of what it read, so "
         "nothing downstream can tell a current copy from a stale one"
     )
 
-    warm = L.KiroCrewConfig.load()
+    warm = L.AjCrewConfig.load()
     assert getattr(warm, "_content_digest", None) == cold_digest, (
         "the cached path reported different provenance from the cold path, so the "
         "answer depends on whether the cache was warm"
@@ -612,7 +612,7 @@ def test_a_real_load_records_the_digest_of_the_bytes_it_parsed(cfg_home):
     # New bytes: the digest must move with them.
     _write(cfg_home, {"agent": {"provider": "acp", "added": "key"}})
     moved = L.config_content_stamp()
-    after = L.KiroCrewConfig.load()
+    after = L.AjCrewConfig.load()
     after_digest = getattr(after, "_content_digest", None)
     assert after_digest not in (None, cold_digest), "the digest did not move when the content did"
     assert after_digest == moved
@@ -630,7 +630,7 @@ def test_a_load_that_rewrote_the_file_names_the_bytes_it_parsed(cfg_home):
     L._CONFIG_CACHE.clear()
     parsed = L.config_content_stamp()
 
-    cfg = L.KiroCrewConfig.load()
+    cfg = L.AjCrewConfig.load()
     rewritten = L.config_content_stamp()
     assert rewritten != parsed, "this fixture no longer exercises the write-back migration"
     assert (
@@ -638,7 +638,7 @@ def test_a_load_that_rewrote_the_file_names_the_bytes_it_parsed(cfg_home):
     ), "the load named the bytes it WROTE rather than the ones it parsed"
 
     L._CONFIG_CACHE.clear()
-    settled = L.KiroCrewConfig.load()
+    settled = L.AjCrewConfig.load()
     assert getattr(settled, "_content_digest", None) == L.config_content_stamp(), (
         "the next load did not agree with the migrated file, so the mismatch is not "
         "limited to the migrating request"
@@ -653,7 +653,7 @@ def test_a_load_with_no_config_files_at_all_still_names_that_state(cfg_home):
     """
     L._CONFIG_CACHE.clear()
     assert not cfg_home.exists()
-    cfg = L.KiroCrewConfig.load()
+    cfg = L.AjCrewConfig.load()
     digest = getattr(cfg, "_content_digest", None)
     assert digest is not None, "an absent config named no bytes, so nothing may reconcile"
     assert (
@@ -673,7 +673,7 @@ def test_a_document_that_read_whole_but_would_not_parse_still_names_its_bytes(cf
     # cfg_home IS the config.json path. Bytes that read whole, content that will not.
     cfg_home.write_text('{"agent": {"provider": "acp"},,}', encoding="utf-8")
 
-    cfg = L.KiroCrewConfig.load()
+    cfg = L.AjCrewConfig.load()
     digest = getattr(cfg, "_content_digest", None)
     assert digest is not None, "bytes that read whole were left unnamed"
     assert digest == L.config_content_stamp(), "the digest does not name the file on disk"
@@ -694,7 +694,7 @@ def test_a_non_utf8_config_degrades_to_defaults_instead_of_raising(cfg_home):
     # A UTF-8 decoder cannot read this byte, so read_text raises before json sees it.
     cfg_home.write_bytes(b'{"agent": {"provider": "\xff\xfe acp"}}')
 
-    cfg = L.KiroCrewConfig.load()
+    cfg = L.AjCrewConfig.load()
 
     assert cfg.agent.provider != "\ufffd", "the loader substituted replacement characters"
     assert cfg.degraded_sections, (
@@ -730,7 +730,7 @@ def test_a_load_that_could_not_read_the_files_records_no_provenance(cfg_home, mo
         return real_read_text(self, *a, **kw)
 
     monkeypatch.setattr(pathlib.Path, "read_text", _unreadable)
-    cfg = L.KiroCrewConfig.load()
+    cfg = L.AjCrewConfig.load()
     assert (
         getattr(cfg, "_content_digest", None) is None
     ), "a load whose read failed claimed provenance it does not have"
@@ -743,7 +743,7 @@ def test_a_cache_entry_reports_the_bytes_it_was_parsed_from_not_its_fingerprint(
     The digest is taken in the same lock hold as the data, so a colliding replacement
     shows up as a different digest.
     """
-    from kiro_crew.config.validation import ConfigCache
+    from aj_crew.config.validation import ConfigCache
 
     cache = ConfigCache()
     collided_fp = ("same-stat-signature",)
@@ -775,7 +775,7 @@ def test_an_overlay_shadowed_unknown_section_keeps_its_base_values(cfg_home, tmp
         json.dumps({"amazon": {"flags": "-x"}}), encoding="utf-8"
     )
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg._extra_sections.get("amazon") == {"flags": "-o -s", "keep": 1}
     cfg.save()
 
@@ -797,11 +797,11 @@ def _misspelling_warnings(caplog) -> list[str]:
 
 
 def test_a_misspelled_section_key_is_reported_with_the_field_it_resembles(cfg_home, caplog):
-    default_timeout = KiroCrewConfig().agent.subagent_timeout_secs
+    default_timeout = AjCrewConfig().agent.subagent_timeout_secs
     _write(cfg_home, {"agent": {"subagent_timeout_sec": default_timeout + 777}})
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
-        cfg = KiroCrewConfig.load()
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
+        cfg = AjCrewConfig.load()
 
     (warning,) = _misspelling_warnings(caplog)
     assert "agent.subagent_timeout_sec (did you mean agent.subagent_timeout_secs?)" in warning
@@ -812,21 +812,21 @@ def test_a_misspelled_section_key_is_reported_with_the_field_it_resembles(cfg_ho
 
 def test_the_misspelling_warning_fires_once_per_disk_read(cfg_home, caplog):
     _write(cfg_home, {"agent": {"subagent_timeout_sec": 1}})
-    KiroCrewConfig.load()  # may rewrite the file (write-back migration)
-    KiroCrewConfig.load()  # reads the settled file and caches it
+    AjCrewConfig.load()  # may rewrite the file (write-back migration)
+    AjCrewConfig.load()  # reads the settled file and caches it
     caplog.clear()
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
-        KiroCrewConfig.load()  # unchanged file: a cache hit, no warning
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
+        AjCrewConfig.load()  # unchanged file: a cache hit, no warning
         assert _misspelling_warnings(caplog) == []
         _write(cfg_home, {"agent": {"subagent_timeout_sec": 22}})
-        KiroCrewConfig.load()  # a changed file is read again, and reported again
+        AjCrewConfig.load()  # a changed file is read again, and reported again
     assert len(_misspelling_warnings(caplog)) == 1
 
 
 def test_an_unknown_key_with_no_close_field_is_not_reported(cfg_home, caplog):
     _write(cfg_home, {"agent": {"provider": "acp", "retired_knob": "keep-me"}})
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
-        cfg = KiroCrewConfig.load()
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
+        cfg = AjCrewConfig.load()
     assert _misspelling_warnings(caplog) == []
     assert cfg._extra_keys["agent"] == {"retired_knob": "keep-me"}
 
@@ -836,16 +836,16 @@ def test_a_misspelling_in_the_overlay_is_reported(cfg_home, tmp_path, caplog):
     (tmp_path / "config.local.json").write_text(
         json.dumps({"agent": {"subagent_timeout_sec": 5}}), encoding="utf-8"
     )
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
-        KiroCrewConfig.load()
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
+        AjCrewConfig.load()
     (warning,) = _misspelling_warnings(caplog)
     assert "agent.subagent_timeout_sec" in warning
 
 
 def test_a_misspelled_key_inside_a_named_record_is_reported(cfg_home, caplog):
     _write(cfg_home, {"agents": {"my-agent": {"model": "auto", "modle": "opus"}}})
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
-        cfg = KiroCrewConfig.load()
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
+        cfg = AjCrewConfig.load()
     (warning,) = _misspelling_warnings(caplog)
     assert "agents.my-agent.modle (did you mean agents.my-agent.model?)" in warning
     assert cfg._extra_keys["agents"] == {"my-agent": {"modle": "opus"}}

@@ -140,9 +140,9 @@ function createTokenSources({
     // process started that gateway and that child is still alive, on our own
     // port. Nothing else is asked, and in particular the port's LISTEN owner is
     // NOT asked, because the answer cannot be trusted for this decision --
-    // `isKirocrewCommand` matches the basename of the command line `ps` reports,
+    // `isAjcrewCommand` matches the basename of the command line `ps` reports,
     // so any process running as this user can present itself as ours with
-    // `exec -a kirocrew` and collect the secret. `gatewayOwnership`'s own
+    // `exec -a ajcrew` and collect the secret. `gatewayOwnership`'s own
     // `reused-local` and `reused-service` states are no substitute:
     // `classifyAdoptedGateway` derives them from that same predicate.
     //
@@ -188,7 +188,7 @@ function createTokenSources({
     // The kernel's own pid-to-port mapping settles it, and that is the whole
     // reason to use it here: a pid cannot be presented the way a command line can,
     // so this is not the argv0 judgement #13826 is about -- `snapshotGatewayPortPids`
-    // returns raw pids and `isKirocrewCommand` is not involved. The gateway binds
+    // returns raw pids and `isAjcrewCommand` is not involved. The gateway binds
     // in its own process (`web.TCPSite` in the dashboard server, no fork), so the
     // kernel reports our child, or -- when our child is a launcher that runs the
     // gateway as a subprocess -- a direct child of it. A direct child is
@@ -210,7 +210,7 @@ function createTokenSources({
       return refuse(`not minting a local token for :${mintPort}: the kernel does not name our gateway (pid ${child.pid}), or a direct child of it holding this home's gateway.lock, as its listener`);
     }
     lastRefusal = null;
-    // Re-resolve the home at call time so a KIROCREW_HOME change after Electron
+    // Re-resolve the home at call time so a AJCREW_HOME change after Electron
     // starts is honored. The mint dials the configured loopback origin exactly
     // as written; `mintTokenFromHome` never rewrites it to a literal address.
     return mintTokenFromHome({
@@ -233,7 +233,7 @@ function createTokenSources({
    * is not enough on its own, because in the ordinary case our child IS the
    * gateway and its direct children are the agent processes and tunnels it
    * starts; the lock is what tells the gateway apart from them, by the same two
-   * facts the stuck-gateway path proves (gateway.lock in KIROCREW_HOME names
+   * facts the stuck-gateway path proves (gateway.lock in AJCREW_HOME names
    * the pid, and the pid has that file open). A parent pid that does not parse
    * as an integer is "not our child". Windows keeps the exact-pid rule: its
    * probe has no parent-pid lookup here, so a launcher there still falls

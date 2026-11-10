@@ -18,7 +18,7 @@ from denied_commands_security_helpers import (
     _denied_by,
 )
 
-from kiro_crew.security import argv_floor as _argv_floor
+from aj_crew.security import argv_floor as _argv_floor
 
 # Each test starts with the macOS libc and libproc handle caches unbuilt and puts them
 # back after, as every test of the test_denied_commands_security family does (see conftest.py).
@@ -42,7 +42,7 @@ class TestHostsAliasPublicationWindow:
     def _recording_thread(started):
         class _RecordingThread:
             def __init__(self, *args, **kwargs):
-                if kwargs.get("name") == "kirocrew-host-verdict":
+                if kwargs.get("name") == "ajcrew-host-verdict":
                     started.append(kwargs.get("name", ""))
 
             def start(self):
@@ -122,7 +122,7 @@ class TestHostsFileWarmUp:
     _RULE = "sandbox-escape-ssh-self"
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
     def _isolate(self, monkeypatch, tmp_path):
         # No live DNS, no netlink read, no real /etc/hosts, and no thread is
         # ever started: every spawn is recorded instead.  Every global the
@@ -211,7 +211,7 @@ class TestHostsFileWarmUp:
         assert _denied_by("ssh dev-dsk 'cd /workplace && git status'") is None
         assert _denied_by("ssh loopalias uptime") == self._RULE
         assert _argv_floor._HOSTS_FILE_CACHE[path][1] == {"farbox": False, "loopalias": True}
-        assert "kirocrew-hosts-warm" not in self.started
+        assert "ajcrew-hosts-warm" not in self.started
 
     def test_a_hosts_file_over_the_cap_is_never_parsed_on_the_gate(self, monkeypatch):
         path = self._big_hosts(monkeypatch, "10.4.4.4 farbox\n")
@@ -219,7 +219,7 @@ class TestHostsFileWarmUp:
         self._parser_must_not_run(monkeypatch)
         assert _denied_by("ssh farbox uptime") == self._RULE
         assert _denied_by("ssh dev-dsk uptime") == self._RULE
-        assert self.started.count("kirocrew-hosts-warm") == 1, "warm is single-flight"
+        assert self.started.count("ajcrew-hosts-warm") == 1, "warm is single-flight"
 
     def test_the_scheduled_warm_lets_the_same_command_through(self, monkeypatch):
         path = self._big_hosts(monkeypatch, "10.4.4.4 farbox\n127.0.0.1 loopalias\n")
@@ -242,7 +242,7 @@ class TestHostsFileWarmUp:
         assert _denied_by("ssh farbox uptime") is None
         assert _denied_by("ssh loopalias uptime") == self._RULE
         assert path in _argv_floor._HOSTS_FILE_CACHE
-        assert "kirocrew-hosts-warm" not in self.started
+        assert "ajcrew-hosts-warm" not in self.started
 
     def test_the_event_loop_thread_still_defers_a_large_file(self, monkeypatch):
         self._real_loop(monkeypatch)
@@ -254,7 +254,7 @@ class TestHostsFileWarmUp:
             return _denied_by("ssh dev-dsk uptime")
 
         assert asyncio.run(_on_loop()) == self._RULE
-        assert self.started.count("kirocrew-hosts-warm") == 1
+        assert self.started.count("ajcrew-hosts-warm") == 1
 
     def test_a_no_loop_read_failure_is_pending_and_not_cached(self, monkeypatch):
         self._real_loop(monkeypatch)
@@ -284,7 +284,7 @@ class TestHostsFileWarmUp:
             _argv_floor, "_hosts_file_paths", lambda: (str(self.tmp_path / "missing"),)
         )
         assert _denied_by("ssh dev-dsk uptime") is None
-        assert "kirocrew-hosts-warm" not in self.started
+        assert "ajcrew-hosts-warm" not in self.started
 
     # --- the key: publication, own set, and a mid-parse change ----------
 
@@ -366,7 +366,7 @@ class TestHostsFileWarmUp:
         assert _argv_floor._hosts_file_verdict("backuphost") is None
         assert _argv_floor._hosts_file_verdict("loopalias") is True
         assert _argv_floor._hosts_file_verdict("farbox") is True  # held, not served
-        assert "kirocrew-hosts-warm" in self.started
+        assert "ajcrew-hosts-warm" in self.started
         assert _argv_floor._HOSTS_FILE_CACHE == {}  # a moved key caches nothing
         assert path not in _argv_floor._HOSTS_FILE_CACHE
         assert _denied_by("ssh -o ConnectTimeout=10 backup@host uptime") is None
@@ -399,7 +399,7 @@ class TestHostsFileWarmUp:
         assert _denied_by("ssh farbox uptime") is None
         assert parses == [False, True]
         assert _argv_floor._HOSTS_FILE_CACHE[path][0][-2] is True
-        assert "kirocrew-hosts-warm" not in self.started
+        assert "ajcrew-hosts-warm" not in self.started
 
     def test_the_second_judgement_uses_the_newly_published_own_set(self, monkeypatch):
         # The address published mid-parse is this host's, and a line aliases
@@ -432,7 +432,7 @@ class TestHostsFileWarmUp:
         assert _argv_floor._hosts_file_verdict("farbox") is True
         assert len(parses) == 1
         assert _argv_floor._HOSTS_FILE_CACHE == {}
-        assert self.started.count("kirocrew-hosts-warm") == 1
+        assert self.started.count("ajcrew-hosts-warm") == 1
 
     def test_an_own_set_that_moves_before_a_remote_answer_is_judged_again(self, monkeypatch):
         # The own set grows between the table's key and the remote answer's
@@ -447,7 +447,7 @@ class TestHostsFileWarmUp:
 
         monkeypatch.setattr(_argv_floor, "_own_host_names", _own)
         assert _argv_floor._hosts_file_verdict("farbox") is False
-        assert "kirocrew-hosts-warm" not in self.started
+        assert "ajcrew-hosts-warm" not in self.started
 
     def test_a_key_still_moving_after_every_attempt_is_pending(self, monkeypatch):
         # The bound: an own set that moves on every read is judged a fixed
@@ -468,7 +468,7 @@ class TestHostsFileWarmUp:
         assert _argv_floor._hosts_file_verdict("farbox") is True
         assert len(parses) == _argv_floor._HOSTS_KEY_MOVED_ATTEMPTS == 3
         assert _argv_floor._HOSTS_FILE_CACHE == {}
-        assert self.started.count("kirocrew-hosts-warm") == 1
+        assert self.started.count("ajcrew-hosts-warm") == 1
 
     def test_a_failed_re_stat_after_the_parse_is_pending_at_once(self, monkeypatch):
         # The key cannot be re-read after a real parse: a read failure, not a
@@ -487,7 +487,7 @@ class TestHostsFileWarmUp:
         assert _argv_floor._hosts_file_verdict("farbox") is True
         assert len(calls) == 2
         assert _argv_floor._HOSTS_FILE_CACHE == {}
-        assert self.started.count("kirocrew-hosts-warm") == 1
+        assert self.started.count("ajcrew-hosts-warm") == 1
 
     def test_an_own_address_learned_later_re_marks_a_cached_alias(self, monkeypatch):
         self._hosts(monkeypatch, "198.51.100.44 lateownalias\n")

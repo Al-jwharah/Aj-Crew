@@ -560,7 +560,7 @@ export function GovernancePolicyViewer() {
             <ShieldCheck size={16} className="lucide-inline text-ok shrink-0 mt-0.5" />
             <div>
               <div className="text-[13px] font-semibold text-text">{i18nT('pages.settings.securityPanel.no_enterprise_policy_in_effect')}</div>
-              <div className="text-[12px] text-muted mt-0.5 leading-relaxed"><Trans i18nKey="pages.settings.securityPanel.no_policy_author_ceiling" components={{ policy: <code className="font-mono text-[11px]">{i18nT('pages.settings.securityPanel.kiro_crew_security_policy_json')}</code>, profiles: <code className="font-mono text-[11px]">{i18nT('pages.settings.securityPanel.profiles_json')}</code> }} /></div>
+              <div className="text-[12px] text-muted mt-0.5 leading-relaxed"><Trans i18nKey="pages.settings.securityPanel.no_policy_author_ceiling" components={{ policy: <code className="font-mono text-[11px]">{i18nT('pages.settings.securityPanel.aj_crew_security_policy_json')}</code>, profiles: <code className="font-mono text-[11px]">{i18nT('pages.settings.securityPanel.profiles_json')}</code> }} /></div>
             </div>
           </div>
         ) : (

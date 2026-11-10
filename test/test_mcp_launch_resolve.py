@@ -6,14 +6,14 @@ import tempfile
 from pathlib import Path
 from types import SimpleNamespace
 
-from kiro_crew.mcp_gateway import launch_resolve, rewriter
+from aj_crew.mcp_gateway import launch_resolve, rewriter
 
 ENFORCE_LAUNCH_APPROVAL = True
 
 
 def test_launch_probe_ignores_a_planted_overlay_symlink(tmp_path, monkeypatch):
     home = tmp_path / "home"
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     real_overlay = home / "mcp-gateway" / "agents"
     old_scratch = real_overlay.parent / ".launch-probe-planted"
     old_scratch.mkdir(parents=True)

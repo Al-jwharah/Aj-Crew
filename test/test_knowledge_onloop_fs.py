@@ -37,9 +37,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import knowledge as kh
-from kiro_crew.knowledge.connectors.local_folder import LocalFolderConnector
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.dashboard.handlers import knowledge as kh
+from aj_crew.knowledge.connectors.local_folder import LocalFolderConnector
+from aj_crew.knowledge.store import KnowledgeStore
 
 #: Threads a request-path filesystem call may run on: the dedicated probe pool,
 #: and the bounded ``mc-pathres`` resolver pool (``executors.path_resolve_executor``,

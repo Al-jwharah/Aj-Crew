@@ -62,13 +62,13 @@ vi.mock('framer-motion', async () => {
 })
 
 const mockApi = vi.hoisted(() => ({
-  kirocrewAgents: vi.fn(),
+  ajcrewAgents: vi.fn(),
   agentsInstalled: vi.fn(),
   workspaces: vi.fn(),
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
   createWorkspace: vi.fn(),
-  updateKirocrewAgent: vi.fn(),
-  deleteKirocrewAgent: vi.fn(),
+  updateAjcrewAgent: vi.fn(),
+  deleteAjcrewAgent: vi.fn(),
   uploadCrewAvatar: vi.fn(),
   agentResolvedModel: vi.fn(),
   crons: vi.fn(),
@@ -149,12 +149,12 @@ vi.mock('../components/CrewAvatarBuilder', () => ({
 
 import CrewEditorModal from '../components/crew/CrewEditorModal'
 import { useCrewEditor } from '../components/crew/useCrewEditor'
-import type { KiroCrewAgent } from '../api/types'
+import type { AjCrewAgent } from '../api/types'
 import { acpBackendName } from '../api/acpBackend'
 
-const DEFAULT_CREW = { name: 'kirocrew', kiro_agent: 'kirocrew', workspace: 'core-ws', memory_store: 'core-mem' }
+const DEFAULT_CREW = { name: 'ajcrew', kiro_agent: 'ajcrew', workspace: 'core-ws', memory_store: 'core-mem' }
 const OTHER_CREW = { name: 'oncall', kiro_agent: 'oncall-agent', workspace: 'oncall', memory_store: 'oncall-mem' }
-const AGENTS_RESPONSE = { agents: [DEFAULT_CREW, OTHER_CREW], default_agent: 'kirocrew' }
+const AGENTS_RESPONSE = { agents: [DEFAULT_CREW, OTHER_CREW], default_agent: 'ajcrew' }
 
 /* A capability view the inspectors + approvals editor render against:
    two built-in tools (one read-only, one not), two MCP servers (HTTP with a
@@ -177,7 +177,7 @@ const CAPS_VIEW: CapabilityView = {
       section: 'mcpServers', id: 'local-fs', label: 'local-fs', state: 'inherited', present: true, managed: true,
       value: { command: '/usr/bin/node', args: ['server.js'], env: { API_KEY: 'SECRET-VALUE' } },
     },
-    { section: 'skills', id: 'kirocrew-core/writing-tests', label: '', state: 'inherited', present: true, value: null, shared_reference: true },
+    { section: 'skills', id: 'ajcrew-core/writing-tests', label: '', state: 'inherited', present: true, value: null, shared_reference: true },
     { section: 'allowedTools', id: 'fs_read', label: 'fs_read', state: 'inherited', present: true, value: null },
     // An MCP server-allow parent (`@github`) with auto-approved verb children.
     // The nesting + cascade regression test below drives these.
@@ -196,16 +196,16 @@ const CAPS_VIEW: CapabilityView = {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  mockApi.kirocrewAgents.mockResolvedValue(AGENTS_RESPONSE)
-  mockApi.agentsInstalled.mockResolvedValue([{ name: 'kirocrew' }, { name: 'oncall-agent' }])
+  mockApi.ajcrewAgents.mockResolvedValue(AGENTS_RESPONSE)
+  mockApi.agentsInstalled.mockResolvedValue([{ name: 'ajcrew' }, { name: 'oncall-agent' }])
   mockApi.workspaces.mockResolvedValue({ workspaces: [{ name: 'default' }, { name: 'core-ws' }, { name: 'oncall' }] })
-  mockApi.kirocrewConfig.mockResolvedValue({ memory_stores: { default: {}, 'core-mem': {}, 'oncall-mem': { memory_version: 2, owner_member: 'oncall' } } })
+  mockApi.ajcrewConfig.mockResolvedValue({ memory_stores: { default: {}, 'core-mem': {}, 'oncall-mem': { memory_version: 2, owner_member: 'oncall' } } })
   mockApi.agentResolvedModel.mockResolvedValue({ model: '', pinned: false, kiro_agent: 'oncall-agent' })
   mockApi.crons.mockResolvedValue({ jobs: [] })
   mockApi.webhooks.mockResolvedValue({ tokens: [], switch_on: true })
   mockApi.models.mockResolvedValue([])
-  mockApi.updateKirocrewAgent.mockResolvedValue({})
-  mockApi.deleteKirocrewAgent.mockResolvedValue({})
+  mockApi.updateAjcrewAgent.mockResolvedValue({})
+  mockApi.deleteAjcrewAgent.mockResolvedValue({})
   mockApi.uploadCrewAvatar.mockResolvedValue({ ok: true, token: 'staged-token' })
   mockApi.createWorkspace.mockResolvedValue({ name: 'staging' })
   mockApi.memoryPreferences.mockResolvedValue({ content: '' })
@@ -220,11 +220,11 @@ const leaveSpy = vi.fn((perform: () => void | Promise<void>) => { void perform()
 function Host({ memberId, openCrew }: { memberId?: string; openCrew?: string } = {}) {
   const [editingCrew, setEditingCrew] = useState('')
   const crewAgentsQuery = useQuery({
-    queryKey: ['kirocrew-agents'],
-    queryFn: () => mockApi.kirocrewAgents(),
+    queryKey: ['ajcrew-agents'],
+    queryFn: () => mockApi.ajcrewAgents(),
     enabled: !!editingCrew,
   })
-  const crewAgents = (crewAgentsQuery.data?.agents || []) as KiroCrewAgent[]
+  const crewAgents = (crewAgentsQuery.data?.agents || []) as AjCrewAgent[]
   const ctl = useCrewEditor({
     editingName: editingCrew,
     memberId,
@@ -351,7 +351,7 @@ describe('CrewEditorNextDialog — section rail', () => {
   })
 
   it("names the capabilities view and the Added band by the crewmate's display name, not the file id", async () => {
-    mockApi.kirocrewAgents.mockResolvedValue({
+    mockApi.ajcrewAgents.mockResolvedValue({
       ...AGENTS_RESPONSE, agents: [DEFAULT_CREW, { ...OTHER_CREW, display_name: 'On-Call Pager' }],
     })
     mockCaps.get.mockResolvedValue({ ...CAPS_VIEW, mode: 'mate', template: { ...CAPS_VIEW.template, name: 'c0ffee12', scope: 'mate' } })
@@ -421,7 +421,7 @@ describe('CrewEditorNextDialog — section rail', () => {
   })
 
   it.each([
-    { section: 'skills' as const, id: 'kirocrew-worktree-dev', secondary: '' },
+    { section: 'skills' as const, id: 'ajcrew-worktree-dev', secondary: '' },
     { section: 'mcpServers' as const, id: 'long-named-local-development-server', secondary: 'long-development-server.example.com' },
   ])('truncates the long local $section band label while keeping Remove rendered', async ({ section, id, secondary }) => {
     const row: CapabilityRow = {
@@ -956,8 +956,8 @@ describe('CrewEditorNextDialog — Behavior / Approvals', () => {
   })
 
   it('names the resolved fallback when a foreign pin is unserved', async () => {
-    mockApi.kirocrewAgents.mockResolvedValue({
-      agents: [DEFAULT_CREW, { ...OTHER_CREW, model: 'claude-fable-5' }], default_agent: 'kirocrew',
+    mockApi.ajcrewAgents.mockResolvedValue({
+      agents: [DEFAULT_CREW, { ...OTHER_CREW, model: 'claude-fable-5' }], default_agent: 'ajcrew',
     })
     mockApi.agentResolvedModel.mockResolvedValue({
       model: 'openai.gpt-5.6-terra', pinned: true, kiro_agent: 'oncall-agent', reasoning_effort: '', effort_pinned: false,
@@ -979,8 +979,8 @@ describe('CrewEditorNextDialog — Behavior / Approvals', () => {
     // answers pinned with an empty model and no pin_served_as. The picker
     // still shows the saved model, so the readout names it as not offered
     // rather than reading as if the pick were honoured.
-    mockApi.kirocrewAgents.mockResolvedValue({
-      agents: [DEFAULT_CREW, { ...OTHER_CREW, model: 'claude-fable-5' }], default_agent: 'kirocrew',
+    mockApi.ajcrewAgents.mockResolvedValue({
+      agents: [DEFAULT_CREW, { ...OTHER_CREW, model: 'claude-fable-5' }], default_agent: 'ajcrew',
     })
     mockApi.agentResolvedModel.mockResolvedValue({
       model: '', pinned: true, kiro_agent: 'oncall-agent', reasoning_effort: '', effort_pinned: false,
@@ -994,8 +994,8 @@ describe('CrewEditorNextDialog — Behavior / Approvals', () => {
   })
 
   it('does not claim a stored pin is in use when its harness serves it under no id', async () => {
-    mockApi.kirocrewAgents.mockResolvedValue({
-      agents: [DEFAULT_CREW, { ...OTHER_CREW, model: 'claude-opus-5.5' }], default_agent: 'kirocrew',
+    mockApi.ajcrewAgents.mockResolvedValue({
+      agents: [DEFAULT_CREW, { ...OTHER_CREW, model: 'claude-opus-5.5' }], default_agent: 'ajcrew',
     })
     mockApi.agentResolvedModel.mockResolvedValue({
       model: 'claude-opus-5.5', pinned: true, kiro_agent: 'oncall-agent', reasoning_effort: '', effort_pinned: false,
@@ -1014,30 +1014,30 @@ describe('CrewEditorNextDialog — General edits, footer, danger', () => {
     const dialog = await openNew()
     fireEvent.change(within(dialog).getByTestId('display-name-input'), { target: { value: 'On-Call Bot' } })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save changes' }))
-    await waitFor(() => expect(mockApi.updateKirocrewAgent).toHaveBeenCalled())
+    await waitFor(() => expect(mockApi.updateAjcrewAgent).toHaveBeenCalled())
   })
 
   it('shows the stored session colour on General and saves a changed one', async () => {
-    mockApi.kirocrewAgents.mockResolvedValue({ ...AGENTS_RESPONSE, agents: [DEFAULT_CREW, { ...OTHER_CREW, session_color: '#ef4444' }] })
+    mockApi.ajcrewAgents.mockResolvedValue({ ...AGENTS_RESPONSE, agents: [DEFAULT_CREW, { ...OTHER_CREW, session_color: '#ef4444' }] })
     const dialog = await openNew()
     const hex = within(dialog).getByRole('textbox', { name: 'Session color hex value' })
     await waitFor(() => expect(hex).toHaveValue('#ef4444'))
     fireEvent.change(hex, { target: { value: '#14b8a6' } })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save changes' }))
     await waitFor(() =>
-      expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', expect.objectContaining({ session_color: '#14b8a6' })),
+      expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', expect.objectContaining({ session_color: '#14b8a6' })),
     )
   })
 
   it('clears the stored session colour and saves the empty value', async () => {
-    mockApi.kirocrewAgents.mockResolvedValue({ ...AGENTS_RESPONSE, agents: [DEFAULT_CREW, { ...OTHER_CREW, session_color: '#ef4444' }] })
+    mockApi.ajcrewAgents.mockResolvedValue({ ...AGENTS_RESPONSE, agents: [DEFAULT_CREW, { ...OTHER_CREW, session_color: '#ef4444' }] })
     const dialog = await openNew()
     const hex = within(dialog).getByRole('textbox', { name: 'Session color hex value' })
     await waitFor(() => expect(hex).toHaveValue('#ef4444'))
     fireEvent.click(within(dialog).getByRole('button', { name: 'Clear' }))
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save changes' }))
     await waitFor(() =>
-      expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', expect.objectContaining({ session_color: '' })),
+      expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', expect.objectContaining({ session_color: '' })),
     )
   })
 
@@ -1049,19 +1049,19 @@ describe('CrewEditorNextDialog — General edits, footer, danger', () => {
 
   it('persists a template switch immediately when a different template is picked', async () => {
     const dialog = await openNew()
-    const kirocrewOption = within(dialog).getAllByRole('option').find(o => o.textContent === 'kirocrew')
-    expect(kirocrewOption).toBeTruthy()
-    fireEvent.click(kirocrewOption!)
+    const ajcrewOption = within(dialog).getAllByRole('option').find(o => o.textContent === 'ajcrew')
+    expect(ajcrewOption).toBeTruthy()
+    fireEvent.click(ajcrewOption!)
     await waitFor(() =>
-      expect(mockApi.updateKirocrewAgent).toHaveBeenCalledWith('oncall', expect.objectContaining({ kiro_agent: 'kirocrew' })),
+      expect(mockApi.updateAjcrewAgent).toHaveBeenCalledWith('oncall', expect.objectContaining({ kiro_agent: 'ajcrew' })),
     )
   })
 
   it('surfaces templateSwitchError inline when the repoint is refused', async () => {
-    mockApi.updateKirocrewAgent.mockRejectedValue(new Error("Template 'kirocrew' is crew 'other's private copy; it cannot be bound to another crew."))
+    mockApi.updateAjcrewAgent.mockRejectedValue(new Error("Template 'ajcrew' is crew 'other's private copy; it cannot be bound to another crew."))
     const dialog = await openNew()
-    const kirocrewOption = within(dialog).getAllByRole('option').find(o => o.textContent === 'kirocrew')
-    fireEvent.click(kirocrewOption!)
+    const ajcrewOption = within(dialog).getAllByRole('option').find(o => o.textContent === 'ajcrew')
+    fireEvent.click(ajcrewOption!)
     const err = await within(dialog).findByTestId('next-template-switch-error')
     expect(err).toHaveTextContent(/private copy/i)
   })
@@ -1071,7 +1071,7 @@ describe('CrewEditorNextDialog — General edits, footer, danger', () => {
     fireEvent.click(within(dialog).getByTestId('next-rail-danger'))
     fireEvent.click(await within(dialog).findByTestId('next-delete-crew'))
     fireEvent.click(await within(dialog).findByTestId('next-confirm-delete-crew'))
-    await waitFor(() => expect(mockApi.deleteKirocrewAgent).toHaveBeenCalled())
+    await waitFor(() => expect(mockApi.deleteAjcrewAgent).toHaveBeenCalled())
   })
 
   it('cancels the armed danger delete', async () => {
@@ -1086,7 +1086,7 @@ describe('CrewEditorNextDialog — General edits, footer, danger', () => {
     // GPT guard-removal: the classic editor excluded the Danger Zone for the
     // default crew because DELETE /api/agents/{default} always 409s. Opening the
     // default crew must show no Danger Zone rail entry or panel.
-    const dialog = await openNew({ openCrew: 'kirocrew' })
+    const dialog = await openNew({ openCrew: 'ajcrew' })
     expect(within(dialog).queryByTestId('next-rail-danger')).toBeNull()
     expect(within(dialog).queryByTestId('next-pane-danger')).toBeNull()
   })
@@ -1101,9 +1101,9 @@ describe('CrewEditorNextDialog — General edits, footer, danger', () => {
 
 describe('CrewEditorNextDialog — Memory', () => {
   it('renders the private-store empty state for a crew with no V2 store', async () => {
-    // kirocrew's memory_store is core-mem (not a V2 private store) — memoryStore
+    // ajcrew's memory_store is core-mem (not a V2 private store) — memoryStore
     // resolves empty, so the Memory pane shows its empty state.
-    mockApi.kirocrewAgents.mockResolvedValue({ agents: [DEFAULT_CREW, { ...OTHER_CREW, memory_store: '' }], default_agent: 'kirocrew' })
+    mockApi.ajcrewAgents.mockResolvedValue({ agents: [DEFAULT_CREW, { ...OTHER_CREW, memory_store: '' }], default_agent: 'ajcrew' })
     const dialog = await openNew()
     fireEvent.click(within(dialog).getByTestId('next-rail-memory'))
     expect(await within(dialog).findByTestId('next-pane-memory')).toBeInTheDocument()
@@ -1123,11 +1123,11 @@ describe('CrewEditorNextDialog — Memory', () => {
   })
 
   it('shows only the diagnostic for a store another member owns', async () => {
-    mockApi.kirocrewConfig.mockResolvedValue({ memory_stores: { default: {}, 'oncall-mem': { memory_version: 2, owner_member: 'someone-else' } } })
+    mockApi.ajcrewConfig.mockResolvedValue({ memory_stores: { default: {}, 'oncall-mem': { memory_version: 2, owner_member: 'someone-else' } } })
     const dialog = await openNew()
     fireEvent.click(within(dialog).getByTestId('next-rail-memory'))
     expect(await within(dialog).findByTestId('next-memory-status')).toHaveTextContent(
-      'This member’s configured memory store belongs to another member. It cannot be used here. Inspect the cause on the gateway: kirocrew doctor',
+      'This member’s configured memory store belongs to another member. It cannot be used here. Inspect the cause on the gateway: ajcrew doctor',
     )
     expect(within(dialog).queryByTestId('next-memory-tab-memories')).toBeNull()
     expect(within(dialog).queryByTestId('next-memory-profile')).toBeNull()
@@ -1139,8 +1139,8 @@ describe('CrewEditorNextDialog — Memory', () => {
     const prefs = await within(dialog).findByRole('textbox', { name: 'Preferences' })
     fireEvent.change(prefs, { target: { value: 'typed but not saved' } })
     // Another session re-owns the store; the editor's config read refetches.
-    mockApi.kirocrewConfig.mockResolvedValue({ memory_stores: { default: {}, 'oncall-mem': { memory_version: 2, owner_member: 'someone-else' } } })
-    await act(async () => { await lastQc!.refetchQueries({ queryKey: ['kirocrewConfig'] }) })
+    mockApi.ajcrewConfig.mockResolvedValue({ memory_stores: { default: {}, 'oncall-mem': { memory_version: 2, owner_member: 'someone-else' } } })
+    await act(async () => { await lastQc!.refetchQueries({ queryKey: ['ajcrewConfig'] }) })
     expect(await within(dialog).findByText(/belongs to another member/)).toBeInTheDocument()
     const kept = within(dialog).getByRole('textbox', { name: 'Preferences' })
     expect(kept).toHaveValue('typed but not saved')
@@ -1154,8 +1154,8 @@ describe('CrewEditorNextDialog — save, chat hand-off, and sharing collisions',
     // Dirty a crew-level field so the roster-only save has something to persist.
     fireEvent.change(within(dialog).getByTestId('display-name-input'), { target: { value: 'On-Call Pager' } })
     fireEvent.click(screen.getByTestId('ctl-save'))
-    await waitFor(() => expect(mockApi.updateKirocrewAgent).toHaveBeenCalled())
-    const call = mockApi.updateKirocrewAgent.mock.calls.at(-1)
+    await waitFor(() => expect(mockApi.updateAjcrewAgent).toHaveBeenCalled())
+    const call = mockApi.updateAjcrewAgent.mock.calls.at(-1)
     expect(call?.[0]).toBe('oncall')
     expect(call?.[1]?.display_name).toBe('On-Call Pager')
   })
@@ -1163,14 +1163,14 @@ describe('CrewEditorNextDialog — save, chat hand-off, and sharing collisions',
   it('reports mates sharing the edited crew\u2019s workspace or memory store', async () => {
     // A third crew shares oncall's workspace AND a fourth shares its store, so
     // collidingCrews is their de-duplicated union.
-    mockApi.kirocrewAgents.mockResolvedValue({
+    mockApi.ajcrewAgents.mockResolvedValue({
       agents: [
         DEFAULT_CREW,
         OTHER_CREW,
         { name: 'pager', kiro_agent: 'oncall-agent', workspace: 'oncall', memory_store: 'pager-mem' },
         { name: 'relay', kiro_agent: 'oncall-agent', workspace: 'relay-ws', memory_store: 'oncall-mem' },
       ],
-      default_agent: 'kirocrew',
+      default_agent: 'ajcrew',
     })
     await openNew()
     await waitFor(() => {

@@ -3,7 +3,7 @@
  *
  * PROTOCOL VALUES ONLY, same category as `apps/issue-radar/lib/wireValues.ts`:
  * `ratingOptions` are the `responseValue`s Aperture's registered form template
- * (category=KiroCrew, name=SessionFeedback, version=1.0.1) expects verbatim — // brand-ok: registered category id
+ * (category=AjCrew, name=SessionFeedback, version=1.0.1) expects verbatim — // brand-ok: registered category id
  * `_customer_responses` in `feedback.py` sends the selected value straight
  * through as `responseValue`, so translating one would submit a value
  * Aperture's template does not recognize, 400ing ingestion rather than

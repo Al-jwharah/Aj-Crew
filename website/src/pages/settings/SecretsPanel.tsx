@@ -52,7 +52,7 @@ import { connectionsOAuthClientEntryId } from '../../components/commandPalette/s
  * exchange, so it is the only one of the two that actually means authentication
  * succeeded.
  *
- * At that moment a card reciting "Session expired. Run kirocrew token ... to
+ * At that moment a card reciting "Session expired. Run ajcrew token ... to
  * sign back in." points at a banner that is gone and a session that has been
  * replaced -- instructions for a state that no longer exists. Only a mutation's
  * own `reset()` clears it, because the failure lives in react-query's mutation

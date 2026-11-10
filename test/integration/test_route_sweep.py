@@ -99,7 +99,7 @@ REACHES_NETWORK: dict[str, str] = {
 #: Exact paths, like every other table here: a 503 elsewhere is a failure.
 #:
 #: ``/api/models`` is deliberately NOT here: this suite's fresh home runs the fake
-#: kiro-cli (``KIROCREW_KIRO_BIN`` in the integration conftest), which answers
+#: kiro-cli (``AJCREW_KIRO_BIN`` in the integration conftest), which answers
 #: ``chat --list-models``, so the route serves a catalog instead of reporting an
 #: empty model list. It is swept by the default rule below — under 500 — which
 #: still fails if it ever starts answering 5xx.

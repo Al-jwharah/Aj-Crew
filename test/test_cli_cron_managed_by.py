@@ -1,7 +1,7 @@
-"""``kirocrew cron add --managed-by KEY`` and ``cron remove --managed-by KEY``.
+"""``ajcrew cron add --managed-by KEY`` and ``cron remove --managed-by KEY``.
 
 An external installer owns a cron under a key it can recompute without reading
-Kiro Crew state. These tests pin the contract it relies on, against the real
+Aj Crew state. These tests pin the contract it relies on, against the real
 store: the key is unique (a second add refuses with nothing written), uninstall
 by key removes exactly that job, and a re-install is remove then add, which
 mints a fresh id. There is deliberately no replace-in-place.
@@ -16,10 +16,10 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.cli_commands import _cron
-from kiro_crew.config.loader import config_dir
-from kiro_crew.cron import CronService
-from kiro_crew.cron_service.fields import validate_managed_by
+from aj_crew.cli_commands import _cron
+from aj_crew.config.loader import config_dir
+from aj_crew.cron import CronService
+from aj_crew.cron_service.fields import validate_managed_by
 
 KEY = "acme:owner/version-check"
 
@@ -27,9 +27,9 @@ KEY = "acme:owner/version-check"
 @pytest.fixture()
 def home(tmp_path, monkeypatch):
     root = tmp_path / "home"
-    monkeypatch.setenv("KIROCREW_HOME", str(root))
+    monkeypatch.setenv("AJCREW_HOME", str(root))
     (config_dir() / "crons").mkdir(parents=True)
-    with patch("kiro_crew.cli_commands.sel"):
+    with patch("aj_crew.cli_commands.sel"):
         yield root
 
 
@@ -232,11 +232,11 @@ class TestRemove:
 
 class TestArgparse:
     def _parse(self, argv, monkeypatch):
-        from kiro_crew import cli
+        from aj_crew import cli
 
         seen: dict[str, argparse.Namespace] = {}
-        monkeypatch.setattr("kiro_crew.cli_commands._cron", lambda args: seen.update(args=args))
-        monkeypatch.setattr(sys, "argv", ["kirocrew", "cron", *argv])
+        monkeypatch.setattr("aj_crew.cli_commands._cron", lambda args: seen.update(args=args))
+        monkeypatch.setattr(sys, "argv", ["ajcrew", "cron", *argv])
         cli.main()
         return seen.get("args")
 

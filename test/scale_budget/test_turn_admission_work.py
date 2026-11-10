@@ -27,9 +27,9 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_runner_coverage_helpers import _complete, _drive, _runner_state, _set_stream, _slot
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.acp.types import EVENT_TEXT_CHUNK
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.acp.types import EVENT_TEXT_CHUNK
+from aj_crew.providers.base import LLMEvent
+from aj_crew.testing.wait import async_wait_until
 
 from .conftest import Spy, harness_fail
 
@@ -46,10 +46,10 @@ def _install_counters(spy: Spy) -> list[tuple[object, str]]:
     Returns the ``(module, name)`` bindings wrapped, so the test can check each
     still points at its spy.
     """
-    from kiro_crew.acp import runtime_process_tree, runtime_tree_kill
-    from kiro_crew.agent_discovery_parts import agent_roster
-    from kiro_crew.config import loader_snapshots
-    from kiro_crew.history import ConversationLog
+    from aj_crew.acp import runtime_process_tree, runtime_tree_kill
+    from aj_crew.agent_discovery_parts import agent_roster
+    from aj_crew.config import loader_snapshots
+    from aj_crew.history import ConversationLog
 
     wrapped: list[tuple[object, str]] = []
     for name in ("list_sessions", "list_sessions_indexed", "has_messages"):
@@ -73,7 +73,7 @@ def _install_counters(spy: Spy) -> list[tuple[object, str]]:
 @pytest.mark.asyncio
 async def test_handler_admission_costs_no_inventory_read(tmp_path, monkeypatch, spy) -> None:
     """Listing, catalog and process-tree calls before the first SSE frame are each 0."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.get_or_create_slot("s1")
     release = asyncio.Event()
@@ -86,7 +86,7 @@ async def test_handler_admission_costs_no_inventory_read(tmp_path, monkeypatch, 
         finally:
             finished.set()
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
     async with TestClient(TestServer(_make_app(state))) as client:
         wrapped = _install_counters(spy)
         resp = await asyncio.wait_for(
@@ -132,7 +132,7 @@ async def test_handler_admission_costs_no_inventory_read(tmp_path, monkeypatch, 
 
 def _refreshes(spy: Spy) -> int:
     """Agent snapshot refreshes counted so far: one scan of the user agents directory each."""
-    from kiro_crew.config.paths import kiro_agents_dir
+    from aj_crew.config.paths import kiro_agents_dir
 
     user_dir = kiro_agents_dir()
     return sum(
@@ -158,7 +158,7 @@ async def test_turn_path_admission_is_budgeted(tmp_path, spy) -> None:
     nothing. The root conftest resets the snapshot before each test, so the first
     send here is always the cold one.
     """
-    from kiro_crew.config import loader_snapshots
+    from aj_crew.config import loader_snapshots
 
     state, client = _runner_state(tmp_path)
     slot = _slot()
@@ -190,7 +190,7 @@ async def test_turn_path_admission_is_budgeted(tmp_path, spy) -> None:
         harness_fail(f"spies replaced before the measurement ended: {stale}")
     # Positive control: the counter sees a refresh made through the same binding.
     # Moving the spec generation makes it scan rather than reuse the snapshot.
-    from kiro_crew.agent_discovery import clear_list_agents_cache
+    from aj_crew.agent_discovery import clear_list_agents_cache
 
     clear_list_agents_cache()
     loader_snapshots.refresh_materialized_agents(heal_default=False)

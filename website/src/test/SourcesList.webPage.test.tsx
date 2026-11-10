@@ -61,7 +61,7 @@ describe('SourcesList web page source', () => {
     renderList()
     await openWebPage()
     expect(await screen.findByText(/No sites are allowed yet/)).toBeInTheDocument()
-    expect(screen.getByText(/kirocrew config set knowledge\.doc_ingest_hosts/)).toBeInTheDocument()
+    expect(screen.getByText(/ajcrew config set knowledge\.doc_ingest_hosts/)).toBeInTheDocument()
     typeUrl('https://example.com/a')
     expect(screen.getByRole('button', { name: 'Add Web Page' })).toBeDisabled()
   })
@@ -125,7 +125,7 @@ describe('SourcesList web page source', () => {
     await screen.findByText(/Allowed sites/)
     typeUrl('https://News.Example.org/story')
     expect(await screen.findByText(/news\.example\.org isn't an allowed site yet/)).toBeInTheDocument()
-    expect(screen.getByText(/kirocrew config set knowledge\.doc_ingest_hosts/)).toBeInTheDocument()
+    expect(screen.getByText(/ajcrew config set knowledge\.doc_ingest_hosts/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Add Web Page' })).toBeDisabled()
   })
 

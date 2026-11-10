@@ -26,9 +26,9 @@ from dashboard_server_composition_contract_helpers import (
     _FACADE,
 )
 
-import kiro_crew.dashboard.server as server
-from kiro_crew.crew_log import read_budget
-from kiro_crew.testing.wait import async_wait_until
+import aj_crew.dashboard.server as server
+from aj_crew.crew_log import read_budget
+from aj_crew.testing.wait import async_wait_until
 
 # ── the clauses the bootstrap carries ─────────────────────────────────────────
 
@@ -157,9 +157,9 @@ async def test_the_local_decision_model_release_waits_for_its_import(
     """The cleanup hook releases the local decision model only once its runtime module
     was imported at all -- a gateway that never ran one does not import it to stop it
     -- and the release waits for the model off the event loop."""
-    import kiro_crew.decisions as decisions
+    import aj_crew.decisions as decisions
 
-    name = "kiro_crew.decisions.local_runtime"
+    name = "aj_crew.decisions.local_runtime"
     app = web.Application()
     server._register_stt_hooks(app)
     hook = next(h for h in app.on_cleanup if h.__name__ == "_local_decision_model_shutdown")
@@ -187,9 +187,9 @@ async def test_the_decision_http_release_waits_for_its_import(
     """The cleanup hook closes the decision client's shared HTTP sessions only once
     that module was imported at all -- a gateway that never made a decision does not
     import it to close nothing."""
-    import kiro_crew.decisions as decisions
+    import aj_crew.decisions as decisions
 
-    name = "kiro_crew.decisions.impl_systemone"
+    name = "aj_crew.decisions.impl_systemone"
     app = web.Application()
     server._register_stt_hooks(app)
     hook = next(h for h in app.on_cleanup if h.__name__ == "_decision_http_shutdown")
@@ -249,12 +249,12 @@ def test_a_dashboard_only_launch_builds_its_own_consolidator(
         stores.append(MagicMock())
         return stores[-1]
 
-    monkeypatch.setattr("kiro_crew.history.HistoryConsolidator", _consolidator)
-    monkeypatch.setattr("kiro_crew.memory.MemoryStore", _store)
+    monkeypatch.setattr("aj_crew.history.HistoryConsolidator", _consolidator)
+    monkeypatch.setattr("aj_crew.memory.MemoryStore", _store)
     monkeypatch.setattr(server, "SkillsLoader", lambda **kwargs: ("loader", kwargs))
     loader = MagicMock()
     loader.load.return_value.skills = _skill_settings()
-    monkeypatch.setattr(server, "KiroCrewConfig", loader)
+    monkeypatch.setattr(server, "AjCrewConfig", loader)
     assert server._auto_create_consolidator("sessions", "lessons", None, "log") == "consolidator"
     stores[0].init.assert_called_once_with()
     assert built[0] == {
@@ -382,7 +382,7 @@ async def test_the_recorder_row_reads_the_gateway_counters(
     degrades to None on its own; a cap of 0 means unknown, never a cap of zero."""
     monkeypatch.setattr(_Recorder, "instances", [])
     monkeypatch.setattr(_Recorder, "refuse_start", False)
-    monkeypatch.setattr("kiro_crew.diag.recorder.Recorder", _Recorder)
+    monkeypatch.setattr("aj_crew.diag.recorder.Recorder", _Recorder)
     state = types.SimpleNamespace(sessions=types.SimpleNamespace(count=2), subagents=None)
     server._start_diag_recorder(state)
     recorder = _Recorder.instances[0]
@@ -392,9 +392,9 @@ async def test_the_recorder_row_reads_the_gateway_counters(
         "last": {"action": "hold", "reason": "ok", "signals": ["cpu"], "paused": False},
         "last_sample": {"running": 1, "queued": 4, "loop_lag_ms": 12},
     }
-    monkeypatch.setattr("kiro_crew.resource_status.adaptive_state", lambda: adaptive)
-    monkeypatch.setattr("kiro_crew.resource_status.adaptive_exec_cap", lambda: 0)
-    monkeypatch.setattr("kiro_crew.metrics.inventory_gauges.read_active_monitor_loops", lambda: 3)
+    monkeypatch.setattr("aj_crew.resource_status.adaptive_state", lambda: adaptive)
+    monkeypatch.setattr("aj_crew.resource_status.adaptive_exec_cap", lambda: 0)
+    monkeypatch.setattr("aj_crew.metrics.inventory_gauges.read_active_monitor_loops", lambda: 3)
     assert recorder.sources["gateway"]() == {
         "sessions": 2,
         "subagents": 0,
@@ -415,9 +415,9 @@ async def test_the_recorder_row_reads_the_gateway_counters(
         raise RuntimeError("gauge unreadable")
 
     for target in (
-        "kiro_crew.resource_status.adaptive_state",
-        "kiro_crew.resource_status.adaptive_exec_cap",
-        "kiro_crew.metrics.inventory_gauges.read_active_monitor_loops",
+        "aj_crew.resource_status.adaptive_state",
+        "aj_crew.resource_status.adaptive_exec_cap",
+        "aj_crew.metrics.inventory_gauges.read_active_monitor_loops",
     ):
         monkeypatch.setattr(target, _broken)
     state.sessions = None
@@ -447,12 +447,12 @@ async def test_the_recorder_stop_is_awaited_and_never_raises(
 
     recorder = MagicMock()
     recorder.stop.side_effect = lambda: asyncio.ensure_future(_finish())
-    monkeypatch.setattr("kiro_crew.diag.recorder.get_recorder", lambda: recorder)
+    monkeypatch.setattr("aj_crew.diag.recorder.get_recorder", lambda: recorder)
     await hook(app)
     assert finished == ["joined"]
     recorder.stop.side_effect = RuntimeError("probe thread wedged")
     await hook(app)
-    monkeypatch.setattr("kiro_crew.diag.recorder.get_recorder", lambda: None)
+    monkeypatch.setattr("aj_crew.diag.recorder.get_recorder", lambda: None)
     await hook(app)
 
 
@@ -477,7 +477,7 @@ async def test_the_watchdog_budget_falls_back_to_the_managed_service_grace(
     monkeypatch.setattr(server, "resolve_loop_stall_exit_after", lambda *, environ: 40)
     watchdog = MagicMock()
     monkeypatch.setattr(server, "LoopStallWatchdog", watchdog)
-    assert await server._open_loop_watchdog({"KIROCREW_MANAGED": "1"}) is watchdog.return_value
+    assert await server._open_loop_watchdog({"AJCREW_MANAGED": "1"}) is watchdog.return_value
     assert steps == ["sweep", "rotate"]
     expected: dict[str, Any] = {"dump_file": "dump.txt", "exit_after": 40.0}
     if is_macos:
@@ -628,7 +628,7 @@ async def test_the_dashboard_inner_layers_serve_the_shell_and_audit_mutations(
     assert await spa(make_mocked_request("GET", "/crew", app=app), _missing) is shell
     with pytest.raises(web.HTTPNotFound):
         await spa(make_mocked_request("GET", "/api/nothing", app=app), _missing)
-    log = _sel_double(monkeypatch, "kiro_crew.sel.sel")
+    log = _sel_double(monkeypatch, "aj_crew.sel.sel")
     audit = _layer(app, "sel_audit_middleware")
 
     async def _created(_request: web.Request) -> web.StreamResponse:
@@ -789,7 +789,7 @@ async def test_the_workflow_service_hooks_redact_announce_and_authorize(
         created.update(kwargs)
         return types.SimpleNamespace(timeout_secs=kwargs["timeout_secs"], registry=MagicMock())
 
-    monkeypatch.setattr("kiro_crew.workflows.service.WorkflowService.create", _create)
+    monkeypatch.setattr("aj_crew.workflows.service.WorkflowService.create", _create)
     slot = MagicMock()
     slot.enqueue_or_run_prompt.return_value = True
 
@@ -797,10 +797,10 @@ async def test_the_workflow_service_hooks_redact_announce_and_authorize(
         on_injected(slot, snapshot)
         on_injected(None, snapshot)
 
-    monkeypatch.setattr("kiro_crew.dashboard.workflow_inject.inject_bound_workflow_result", _inject)
+    monkeypatch.setattr("aj_crew.dashboard.workflow_inject.inject_bound_workflow_result", _inject)
     loader = MagicMock()
     loader.load.side_effect = OSError("config unreadable")
-    monkeypatch.setattr(server, "KiroCrewConfig", loader)
+    monkeypatch.setattr(server, "AjCrewConfig", loader)
     state = MagicMock()
     state._background_tasks = set()
     state.workflow_startup_stopping = False
@@ -865,14 +865,14 @@ async def test_the_optional_post_bind_work_never_fails_the_gateway(
     server._register_connections_warm_lifecycle(app, MagicMock())
     shutdown = next(h for h in app.on_cleanup if h.__name__ == "_connections_warm_shutdown")
     monkeypatch.setattr(
-        "kiro_crew.connections.warm.shutdown_warm_mint",
+        "aj_crew.connections.warm.shutdown_warm_mint",
         AsyncMock(side_effect=RuntimeError("mint wedged")),
     )
     state = MagicMock()
     state._background_tasks = set()
     resume = AsyncMock(side_effect=["qwen-small", RuntimeError("no model")])
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.decisions.resume_local_decision_model", resume
+        "aj_crew.dashboard.handlers.decisions.resume_local_decision_model", resume
     )
     with caplog.at_level(logging.INFO, logger=_FACADE):
         await shutdown(app)

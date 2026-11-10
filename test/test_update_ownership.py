@@ -8,11 +8,11 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import update_ownership
-from kiro_crew.testing.wait import await_until
-from kiro_crew.update_ownership import Step
+from aj_crew import update_ownership
+from aj_crew.testing.wait import await_until
+from aj_crew.update_ownership import Step
 
-_LOGGER = "kiro_crew.update_ownership"
+_LOGGER = "aj_crew.update_ownership"
 
 
 def test_no_step_owns_no_gap():

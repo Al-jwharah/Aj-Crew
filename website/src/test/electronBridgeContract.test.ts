@@ -8,7 +8,7 @@ const CONTRACT_PATH = resolve(process.cwd(), 'src/types/electron-bridge.d.ts')
 const preloadSource = readFileSync(PRELOAD_PATH, 'utf8')
 
 const dashboardBridges = [
-  'kirocrew',
+  'ajcrew',
   'electronAPI',
   'localGatewayAPI',
   'closeActionAPI',
@@ -23,7 +23,7 @@ const dashboardBridges = [
 ] as const
 
 const bridgeContracts = {
-  kirocrew: { name: 'KiroCrewBridge', methods: ['getPathForFile', 'windowControl'] },
+  ajcrew: { name: 'AjCrewBridge', methods: ['getPathForFile', 'windowControl'] },
   electronAPI: { name: 'ElectronAPI', methods: ['onStatus', 'getAppMenuItems', 'setBadgeCount', 'getGlobalHotkey'] },
   localGatewayAPI: { name: 'LocalGatewayAPI', methods: ['get', 'set'] },
   closeActionAPI: { name: 'CloseActionAPI', methods: ['get', 'set'] },

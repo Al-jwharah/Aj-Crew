@@ -29,7 +29,7 @@ const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 const direction = params.get('direction') === 'tail' ? 'tail' : 'head'
 
 document.documentElement.dataset.mode = theme
-document.documentElement.dataset.theme = theme === 'light' ? 'kiro-light' : 'kiro-dark'
+document.documentElement.dataset.theme = theme === 'light' ? 'aj-light' : 'aj-dark'
 
 initI18n()
 

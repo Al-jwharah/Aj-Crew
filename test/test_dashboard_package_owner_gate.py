@@ -15,7 +15,7 @@ from typing import Any
 import pytest
 from body_stream_helpers import JsonBodyRequest
 
-from kiro_crew.artifact_store import dashboard_package as dp
+from aj_crew.artifact_store import dashboard_package as dp
 
 
 def _install_roster(monkeypatch: pytest.MonkeyPatch, slugs: dict[str, str]) -> None:
@@ -27,8 +27,8 @@ def _install_roster(monkeypatch: pytest.MonkeyPatch, slugs: dict[str, str]) -> N
     """
     from types import SimpleNamespace
 
-    import kiro_crew.members as members_mod
-    from kiro_crew.config import loader as loader_mod
+    import aj_crew.members as members_mod
+    from aj_crew.config import loader as loader_mod
 
     def member_slug(name: str, config: Any = None) -> str:
         if name not in slugs:
@@ -37,7 +37,7 @@ def _install_roster(monkeypatch: pytest.MonkeyPatch, slugs: dict[str, str]) -> N
 
     monkeypatch.setattr(members_mod, "member_slug", member_slug)
     monkeypatch.setattr(
-        loader_mod.KiroCrewConfig,
+        loader_mod.AjCrewConfig,
         "load",
         staticmethod(lambda *a, **k: SimpleNamespace(agents=dict.fromkeys(slugs, None))),
     )
@@ -148,7 +148,7 @@ class _Req:
 @pytest.fixture()
 def worker(monkeypatch: pytest.MonkeyPatch, roster: None) -> None:
     """A caller that is the crew ``Nyx`` -- not ``atlas``, whose pages these are."""
-    from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+    from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
     monkeypatch.setattr(mdf, "writing_caller", lambda request: ("Nyx", "chat-9-17911"))
 
@@ -181,7 +181,7 @@ class TestTheKindCannotBeHiddenFromTheGate:
     """
 
     def test_a_package_whose_kind_is_escaped_is_still_gated(self, worker: None) -> None:
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+        from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
         # No literal "dashboard" anywhere in these bytes.
         text = _package_text(kind='"dash\\u0062oard"')
@@ -192,7 +192,7 @@ class TestTheKindCannotBeHiddenFromTheGate:
 
     def test_every_letter_escaped_is_still_gated(self, worker: None) -> None:
         """The fix cannot be a longer list of spellings to look for."""
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+        from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
         escaped = "".join(f"\\u{ord(c):04x}" for c in "dashboard")
         assert mdf.package_write_refusal(_Req(), _package_text(kind=f'"{escaped}"'))
@@ -200,13 +200,13 @@ class TestTheKindCannotBeHiddenFromTheGate:
     def test_a_prose_document_is_still_not_gated(self, worker: None) -> None:
         """The cheap pre-filter has to stay cheap AND unescapable: a JSON document
         begins with '{' and no escape hides that, so prose never reaches a parse."""
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+        from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
         for text in ("# just a note", "dashboard is a word I used in prose", "", None):
             assert mdf.package_write_refusal(_Req(), text) == ""
 
     def test_json_that_is_not_a_package_is_not_gated(self, worker: None) -> None:
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+        from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
         assert mdf.package_write_refusal(_Req(), '{"kind":"note","body":"hi"}') == ""
 
@@ -223,7 +223,7 @@ class TestTheStoredBindingIsAuthorizedToo:
     def test_a_worker_cannot_overwrite_another_crewmates_slug_by_rebinding_it(
         self, worker: None
     ) -> None:
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+        from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
         said = mdf.package_write_refusal(
             _Req(),
@@ -238,14 +238,14 @@ class TestTheStoredBindingIsAuthorizedToo:
     def test_a_worker_cannot_blank_another_crewmates_page_with_prose(self, worker: None) -> None:
         """The submitted content is not a package at all, so classifying only the
         submission answers "not mine to judge" and the store overwrites the page."""
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+        from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
         said = mdf.package_write_refusal(_Req(), "# gone", _package_text("crewmate:atlas"))
         assert said
         assert "atlas" in said
 
     def test_the_owner_may_still_rewrite_its_own_page(self, worker: None) -> None:
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+        from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
         monkeypatched = mdf.package_write_refusal(
             _Req(), _package_text("crewmate:nyx"), _package_text("crewmate:nyx")
@@ -255,7 +255,7 @@ class TestTheStoredBindingIsAuthorizedToo:
     def test_a_browser_caller_is_not_gated_here(self) -> None:
         """No internal secret: the person at the dashboard, already owner-gated by the
         artifact routes. Asserted so the fix above cannot quietly start refusing them."""
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+        from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
         assert (
             mdf.package_write_refusal(
@@ -286,14 +286,14 @@ class TestAnAppTokenCannotWriteAPackage:
     def test_an_app_is_refused_even_for_a_package_bound_to_nobody_it_knows(
         self, roster: None
     ) -> None:
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+        from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
         said = mdf.package_write_refusal(self._AppReq(), _package_text("crewmate:atlas"))
         assert said, "an app token can overwrite a mate's dashboard package"
         assert "app" in said.lower()
 
     def test_an_app_cannot_rebind_a_stored_package_to_itself(self, roster: None) -> None:
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+        from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
         said = mdf.package_write_refusal(
             self._AppReq(),
@@ -305,7 +305,7 @@ class TestAnAppTokenCannotWriteAPackage:
     def test_an_app_writing_a_prose_document_is_untouched(self, roster: None) -> None:
         """The gate is asked on every artifact write. An app saving a note is its own
         business, and refusing that would break every app that uses the library."""
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+        from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
         assert mdf.package_write_refusal(self._AppReq(), "# a note") == ""
 
@@ -313,7 +313,7 @@ class TestAnAppTokenCannotWriteAPackage:
         """No secret AND no app claim: the browser session the artifact routes have
         already owner-gated. The app check above is what makes that a positive
         identification rather than "whoever sent no secret"."""
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+        from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
         class _Person:
             headers: dict[str, str] = {}
@@ -338,9 +338,9 @@ class TestTheWriteLandsOnTheSNAPSHOTTheGateJudged:
         """THE RACE ITSELF, against the real store and with no threads: the rebind is
         simply performed between the read and the write, which is the interleaving the
         agent is choosing."""
-        from kiro_crew import artifacts as art_mod
-        from kiro_crew.artifacts import ArtifactConflictError, ArtifactStore
-        from kiro_crew.dashboard.handlers.artifacts import _stored_snapshot_for
+        from aj_crew import artifacts as art_mod
+        from aj_crew.artifacts import ArtifactConflictError, ArtifactStore
+        from aj_crew.dashboard.handlers.artifacts import _stored_snapshot_for
 
         store = ArtifactStore(root=tmp_path / "artifacts")
         made = store.create(name="page", content=_package_text("crewmate:atlas"), kind="dashboard")
@@ -432,7 +432,7 @@ class TestTheDedupPathReadsTheRecordItLandsOn:
         self, roster: None, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The gate has to read the record, not refuse everything that reaches it."""
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+        from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
         monkeypatch.setattr(mdf, "writing_caller", lambda request: ("Atlas", "chat-1-1790"))
         status, reached = await _save_onto_a_deduped_record(
@@ -467,7 +467,7 @@ class TestTheDedupPathReadsTheRecordItLandsOn:
     ) -> None:
         """A record that answers without a token is the same hole wearing a hat: the
         guard would be dropped silently and the write would be last-write-wins."""
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+        from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
         monkeypatch.setattr(mdf, "writing_caller", lambda request: ("Atlas", "chat-1-1790"))
         status, reached = await _save_onto_a_deduped_record(
@@ -507,7 +507,7 @@ class TestTheDedupPathReadsTheRecordItLandsOn:
     ) -> None:
         """Same reason as the update route: the gate judged a snapshot and this write
         lands later, so a rebind in between must meet the store's refusal."""
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+        from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
         monkeypatch.setattr(mdf, "writing_caller", lambda request: ("Atlas", "chat-1-1790"))
         wrote: dict[str, Any] = {}
@@ -537,7 +537,7 @@ async def _save_onto_a_deduped_record(
     import json
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.handlers import artifacts as handler
+    from aj_crew.dashboard.handlers import artifacts as handler
 
     seen: dict[str, Any] = captured if captured is not None else {}
     reached: list[bool] = []
@@ -615,7 +615,7 @@ async def _create_under_a_fresh_slug(
     import json
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.handlers import artifacts as handler
+    from aj_crew.dashboard.handlers import artifacts as handler
 
     reached: list[bool] = []
 
@@ -710,7 +710,7 @@ class TestTheCreatePathGatesTheBytesItStores:
         self, roster: None, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The gate has to read the promoted bytes, not refuse every path-backed create."""
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+        from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
         monkeypatch.setattr(mdf, "writing_caller", lambda request: ("Atlas", "chat-1-1790"))
         status, reached = await _create_under_a_fresh_slug(
@@ -838,7 +838,7 @@ class TestAReadThatFailedAuthorizesNothing:
 
 
 def _not_found() -> Exception:
-    from kiro_crew.artifacts import ArtifactNotFoundError
+    from aj_crew.artifacts import ArtifactNotFoundError
 
     return ArtifactNotFoundError("no artifact 'page'")
 
@@ -869,7 +869,7 @@ async def _update_against_a_store(
     import json
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.handlers import artifacts as handler
+    from aj_crew.dashboard.handlers import artifacts as handler
 
     reached: list[bool] = []
 
@@ -938,7 +938,7 @@ async def _update_through_the_route(
     import json
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.handlers import artifacts as handler
+    from aj_crew.dashboard.handlers import artifacts as handler
 
     captured: dict[str, Any] = {}
 
@@ -956,7 +956,7 @@ async def _update_through_the_route(
         update=_update,
     )
     # PATCHED ON THE HANDLER, which imports the accessor at module scope: patching
-    # `kiro_crew.artifacts.get_default_store` leaves this module's own name bound to the
+    # `aj_crew.artifacts.get_default_store` leaves this module's own name bound to the
     # real store, and the route answers 404 off the developer's own library.
     monkeypatch.setattr(handler, "get_default_store", lambda: store)
     monkeypatch.setattr(handler, "_is_restricted_session", lambda *_a: False)
@@ -1004,7 +1004,7 @@ async def _update_body_through_the_route(
     import json
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.handlers import artifacts as handler
+    from aj_crew.dashboard.handlers import artifacts as handler
 
     captured: dict[str, Any] = {}
 
@@ -1060,7 +1060,7 @@ class TestAContentLessWriteIsFencedForAPackage:
     def live(self, tmp_path: Any) -> Any:
         from types import SimpleNamespace
 
-        from kiro_crew.artifacts import ArtifactStore
+        from aj_crew.artifacts import ArtifactStore
 
         store = ArtifactStore(root=tmp_path / "artifacts")
         art = store.create(
@@ -1077,7 +1077,7 @@ class TestAContentLessWriteIsFencedForAPackage:
         """The race itself. The owner's rebind lands between the gate's read and this
         write, which rotates the content token -- so the token the gate authorized is
         stale, and the kind flip it was carrying must not apply."""
-        from kiro_crew.artifacts import ArtifactConflictError
+        from aj_crew.artifacts import ArtifactConflictError
 
         # THE REBIND, a content write that rotates the token. Under its own read's
         # token, as every write that lands on a dashboard must be.
@@ -1103,7 +1103,7 @@ class TestAContentLessWriteIsFencedForAPackage:
         """THE BEHAVIOUR NOT WIDENED. A metadata-only write on an ordinary artifact
         keeps last-write-wins, which the editor's autosave and every tag edit depend
         on."""
-        from kiro_crew.artifacts import ArtifactStore
+        from aj_crew.artifacts import ArtifactStore
 
         store = ArtifactStore(root=tmp_path / "plain")
         art = store.create(name="note", kind="markdown", content="# note", source="dashboard")
@@ -1134,7 +1134,7 @@ class TestAnUntokenedWriteCannotTakeADashboardOver:
     def owners_page(self, tmp_path: Any) -> Any:
         from types import SimpleNamespace
 
-        from kiro_crew.artifacts import ArtifactStore
+        from aj_crew.artifacts import ArtifactStore
 
         store = ArtifactStore(root=tmp_path / "artifacts")
         art = store.create(
@@ -1148,7 +1148,7 @@ class TestAnUntokenedWriteCannotTakeADashboardOver:
     def test_an_absent_token_cannot_flip_the_kind(self, owners_page: Any) -> None:
         """FAIL CLOSED ON ABSENT. The caller read an ordinary artifact, so nothing
         classified this as a package write and no token travelled at all."""
-        from kiro_crew.artifacts import ArtifactConflictError
+        from aj_crew.artifacts import ArtifactConflictError
 
         with pytest.raises(ArtifactConflictError):
             owners_page.store.update(owners_page.slug, kind="markdown")
@@ -1160,7 +1160,7 @@ class TestAnUntokenedWriteCannotTakeADashboardOver:
         Content alone fails the layout validator. Sending ``kind`` in the same call
         sets the kind FIRST, so the validator never runs on the new bytes.
         """
-        from kiro_crew.artifacts import ArtifactConflictError
+        from aj_crew.artifacts import ArtifactConflictError
 
         with pytest.raises(ArtifactConflictError):
             owners_page.store.update(owners_page.slug, kind="markdown", content="# replacement")
@@ -1171,7 +1171,7 @@ class TestAnUntokenedWriteCannotTakeADashboardOver:
     def test_a_stale_token_is_refused_the_same_way(self, owners_page: Any) -> None:
         """One rule, so the token that moved on and the token that never came are the
         same refusal rather than two guards that could disagree."""
-        from kiro_crew.artifacts import ArtifactConflictError
+        from aj_crew.artifacts import ArtifactConflictError
 
         stale = "0" * 64
         with pytest.raises(ArtifactConflictError):
@@ -1207,7 +1207,7 @@ class TestAnUntokenedWriteCannotTakeADashboardOver:
     def test_a_metadata_only_write_that_DOES_name_one_is_fenced(self, owners_page: Any) -> None:
         """A caller that named a snapshot is held to it even with no content, as for
         the `kind`-only PATCH with a stale token."""
-        from kiro_crew.artifacts import ArtifactConflictError
+        from aj_crew.artifacts import ArtifactConflictError
 
         with pytest.raises(ArtifactConflictError):
             owners_page.store.update(owners_page.slug, name="Renamed", snapshot_token="0" * 64)
@@ -1220,7 +1220,7 @@ class TestAnUntokenedWriteCannotTakeADashboardOver:
         ``expected_token`` still asks whether the record holds what THAT client saw,
         or an owner's stale tab would overwrite a newer layout with no 409.
         """
-        from kiro_crew.artifacts import ArtifactConflictError
+        from aj_crew.artifacts import ArtifactConflictError
 
         stale = owners_page.store.get(owners_page.slug, assign_token=True).content_token
         # The newer layout lands, rotating the token the tab is holding.
@@ -1258,7 +1258,7 @@ class TestAnUntokenedWriteCannotTakeADashboardOver:
     def test_an_ordinary_artifact_keeps_last_write_wins(self, tmp_path: Any) -> None:
         """The fence is one kind's, not the store's. A prose document still takes a
         content write with no token, which the editor's autosave depends on."""
-        from kiro_crew.artifacts import ArtifactStore
+        from aj_crew.artifacts import ArtifactStore
 
         store = ArtifactStore(root=tmp_path / "plain")
         art = store.create(name="note", kind="markdown", content="# note", source="dashboard")
@@ -1311,7 +1311,7 @@ class TestAnUntokenedWriteCannotTakeADashboardOver:
         is the interleaving the attack chooses: read an ordinary artifact, have the
         owner's page land on the slug, then write.
         """
-        from kiro_crew.artifacts import ArtifactConflictError, ArtifactStore
+        from aj_crew.artifacts import ArtifactConflictError, ArtifactStore
 
         wrote = await _update_through_the_route(
             monkeypatch,
@@ -1365,7 +1365,7 @@ def _pin_the_caller(_floor_monkeypatch: Any) -> None:
     ``monkeypatch.undo()``, which would point the gate back at the real caller
     resolution mid-test and authorize a write this suite means to refuse.
     """
-    from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+    from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
     _floor_monkeypatch.setattr(mdf, "writing_caller", lambda req: (getattr(req, "_crew", ""), ""))
 
@@ -1398,7 +1398,7 @@ class TestOwnershipDoesNotDependOnLayoutValidity:
     def test_the_stored_package_really_fails_the_current_validator(self) -> None:
         """The premise. Without it this class could pass by measuring a package that
         validates fine, which is the case that was never broken."""
-        from kiro_crew.artifact_store import dashboard_package as dp
+        from aj_crew.artifact_store import dashboard_package as dp
 
         with pytest.raises(dp.ArtifactValidationError):
             dp.parse_package(self.STALE_BUT_OWNED)
@@ -1407,7 +1407,7 @@ class TestOwnershipDoesNotDependOnLayoutValidity:
         """THE BYPASS. A worker submits a package bound to ITSELF over a stored one
         bound to Atlas. The stored binding is the one that decides, and it is readable
         whatever the layout does."""
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as fields
+        from aj_crew.dashboard.handlers import member_dashboard_fields as fields
 
         refused = fields.package_write_refusal(
             _agent_request(crew="nyx"),
@@ -1426,7 +1426,7 @@ class TestOwnershipDoesNotDependOnLayoutValidity:
         # A roster whose keys ARE the callers' names: the gate requires the binding's
         # slug to name exactly one crewmate in it.
         _install_roster(monkeypatch, {"atlas": "atlas", "nyx": "nyx"})
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as fields
+        from aj_crew.dashboard.handlers import member_dashboard_fields as fields
 
         assert (
             fields.package_write_refusal(
@@ -1441,7 +1441,7 @@ class TestOwnershipDoesNotDependOnLayoutValidity:
         """Ownership that cannot be ESTABLISHED is not ownership that is absent. A
         record naming the dashboard kind with no usable `bound_to` is refused rather
         than skipped, which is the fail-closed direction."""
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as fields
+        from aj_crew.dashboard.handlers import member_dashboard_fields as fields
 
         refused = fields.package_write_refusal(
             _agent_request(crew="nyx"),
@@ -1456,7 +1456,7 @@ class TestOwnershipDoesNotDependOnLayoutValidity:
         """The other limit: prose stored at the slug carries no binding to enforce, so
         the gate must not start refusing writes over every markdown note."""
         _install_roster(monkeypatch, {"atlas": "atlas", "nyx": "nyx"})
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as fields
+        from aj_crew.dashboard.handlers import member_dashboard_fields as fields
 
         assert (
             fields.package_write_refusal(
@@ -1485,7 +1485,7 @@ class TestTheOwnerRefusalRedactsEveryNameItQuotes:
         return ["gl" + "pat-" + "a" * 20, "xo" + "xb-" + "1" * 12 + "-" + "abcdefghijklmnop"]
 
     def test_a_crewmate_binding_is_not_echoed(self) -> None:
-        from kiro_crew.artifact_store import dashboard_package as dp
+        from aj_crew.artifact_store import dashboard_package as dp
 
         for secret in self._tokens():
             refusal = dp.binding_refusal(f"crewmate:{secret}", crew="Atlas")
@@ -1497,7 +1497,7 @@ class TestTheOwnerRefusalRedactsEveryNameItQuotes:
 
     def test_a_session_binding_is_not_echoed_either(self) -> None:
         """The session branch quotes a name just like the crewmate one."""
-        from kiro_crew.artifact_store import dashboard_package as dp
+        from aj_crew.artifact_store import dashboard_package as dp
 
         for secret in self._tokens():
             refusal = dp.binding_refusal(f"session:{secret}", slot="chat-1-1790")
@@ -1507,7 +1507,7 @@ class TestTheOwnerRefusalRedactsEveryNameItQuotes:
         """The refusal quotes the CALLER too, and a crew name reaches it from the
         session's binding rather than from a body -- but it is still a name in a
         sentence that leaves the process."""
-        from kiro_crew.artifact_store import dashboard_package as dp
+        from aj_crew.artifact_store import dashboard_package as dp
 
         secret = "gl" + "pat-" + "b" * 20  # assembled; see _tokens for why
         refusal = dp.binding_refusal("crewmate:atlas", crew=secret)
@@ -1516,7 +1516,7 @@ class TestTheOwnerRefusalRedactsEveryNameItQuotes:
     def test_a_validation_error_branch_is_redacted(self) -> None:
         """The third branch: a binding that fails validation for a reason unrelated to
         its shape -- a missing scope -- still has its value quoted in the error."""
-        from kiro_crew.artifact_store import dashboard_package as dp
+        from aj_crew.artifact_store import dashboard_package as dp
 
         secret = "gl" + "pat-" + "c" * 20  # assembled; see _tokens for why
         refusal = dp.binding_refusal(secret)
@@ -1526,7 +1526,7 @@ class TestTheOwnerRefusalRedactsEveryNameItQuotes:
         """The limit. Redaction is identity on a name that is not credential-shaped, so
         the refusal keeps naming whose dashboard it is, which is what makes it useful
         to the worker agent that reads it."""
-        from kiro_crew.artifact_store import dashboard_package as dp
+        from aj_crew.artifact_store import dashboard_package as dp
 
         refusal = dp.binding_refusal("crewmate:nyx", crew="Atlas")
         assert "nyx" in refusal and "Atlas" in refusal
@@ -1542,7 +1542,7 @@ class TestAnUndeclaredBindingNameIsRedactedInTheRefusal:
     """
 
     def test_an_undeclared_credential_shaped_binding_is_not_echoed(self) -> None:
-        from kiro_crew.artifact_store import dashboard_package as dp
+        from aj_crew.artifact_store import dashboard_package as dp
 
         secret = "ghp_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
         package = {
@@ -1574,7 +1574,7 @@ class TestAnUndeclaredBindingNameIsRedactedInTheRefusal:
     def test_an_ordinary_undeclared_binding_is_still_named_plainly(self) -> None:
         """The limit. Redaction is identity on a name that is not credential-shaped, so
         the ordinary refusal keeps naming the field the author has to fix."""
-        from kiro_crew.artifact_store import dashboard_package as dp
+        from aj_crew.artifact_store import dashboard_package as dp
 
         package = {
             "kind": "dashboard",
@@ -1607,7 +1607,7 @@ class TestTheFenceAndTheGateClassifyTheSameWay:
     """
 
     def test_a_layout_invalid_package_still_forwards_the_snapshot_token(self) -> None:
-        from kiro_crew.dashboard.handlers import artifacts as handler
+        from aj_crew.dashboard.handlers import artifacts as handler
 
         # The same record the ownership tests use: readable binding, model the current
         # validator rejects.
@@ -1620,8 +1620,8 @@ class TestTheFenceAndTheGateClassifyTheSameWay:
 
     def test_the_two_classifiers_agree_on_every_shape_that_matters(self) -> None:
         """Anything the gate will enforce a binding for must also be fenced."""
-        from kiro_crew.dashboard.handlers import artifacts as handler
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as fields
+        from aj_crew.dashboard.handlers import artifacts as handler
+        from aj_crew.dashboard.handlers import member_dashboard_fields as fields
 
         shapes = [
             _package_text("crewmate:atlas"),
@@ -1640,8 +1640,8 @@ class TestTheFenceAndTheGateClassifyTheSameWay:
     def test_prose_is_still_neither(self) -> None:
         """The limit: an ordinary document is not a package to either of them, so a
         markdown note keeps last-write-wins."""
-        from kiro_crew.dashboard.handlers import artifacts as handler
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as fields
+        from aj_crew.dashboard.handlers import artifacts as handler
+        from aj_crew.dashboard.handlers import member_dashboard_fields as fields
 
         assert fields.stored_package_binding("# just a note") is None
         assert not handler._is_dashboard_package("# just a note", None)
@@ -1658,8 +1658,8 @@ class TestTheFenceAndTheGateClassifyTheSameWay:
         ``None`` rather than ``BINDING_UNPROVABLE``: ``_decode_package`` refuses this
         depth, so no stored dashboard can be this deep.
         """
-        from kiro_crew.dashboard.handlers import artifacts as handler
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as fields
+        from aj_crew.dashboard.handlers import artifacts as handler
+        from aj_crew.dashboard.handlers import member_dashboard_fields as fields
 
         too_deep = '{"items": ' + "[" * 100_000 + "]" * 100_000 + "}"
         assert fields.stored_package_binding(too_deep) is None
@@ -1679,7 +1679,7 @@ class TestAValidationRefusalDoesNotEchoACredential:
     def test_the_route_redacts_the_validator_message(self) -> None:
         import inspect
 
-        from kiro_crew.dashboard.handlers import member_dashboard as md
+        from aj_crew.dashboard.handlers import member_dashboard as md
 
         src = inspect.getsource(md._serve_package)
         flat = " ".join(src.split())
@@ -1692,7 +1692,7 @@ class TestAValidationRefusalDoesNotEchoACredential:
     def test_the_redactor_rewrites_the_shape_the_validator_would_quote(self) -> None:
         """And the redactor really does rewrite such a value, so the call above is not
         a no-op dressed as a guard."""
-        from kiro_crew.platform.context import redact_via_context
+        from aj_crew.platform.context import redact_via_context
 
         secret = "gl" + "pat-" + "e" * 20
         said = f"model.types.goal.type {secret!r} is not a known data type"

@@ -30,8 +30,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.mcp_gateway.pool import PoolKey
-from kiro_crew.mcp_gateway.prewarm import (
+from aj_crew.mcp_gateway.pool import PoolKey
+from aj_crew.mcp_gateway.prewarm import (
     HOT_KEYS_FILENAME,
     HotKeyStore,
     default_hot_keys_path,
@@ -125,7 +125,7 @@ class TestRecord:
     ) -> None:
         """The flush slice bounds only the FILE, so without the in-memory prune
         ``_entries`` grows with every distinct key the daemon ever sees."""
-        import kiro_crew.mcp_gateway.prewarm as prewarm_mod
+        import aj_crew.mcp_gateway.prewarm as prewarm_mod
 
         monkeypatch.setattr(prewarm_mod, "_MAX_TRACKED_KEYS", 3)
         monkeypatch.setattr(prewarm_mod, "_PRUNE_HIGH_WATER", 5)
@@ -139,7 +139,7 @@ class TestRecord:
     def test_the_prune_drops_ttl_stale_keys_before_cold_ones(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.mcp_gateway.prewarm as prewarm_mod
+        import aj_crew.mcp_gateway.prewarm as prewarm_mod
 
         monkeypatch.setattr(prewarm_mod, "_MAX_TRACKED_KEYS", 2)
         monkeypatch.setattr(prewarm_mod, "_PRUNE_HIGH_WATER", 3)
@@ -240,7 +240,7 @@ class TestLoad:
         assert store.top_register_payloads(5) == []
 
     def test_a_ttl_expired_key_is_not_loaded(self, tmp_path: Path) -> None:
-        import kiro_crew.mcp_gateway.prewarm as prewarm_mod
+        import aj_crew.mcp_gateway.prewarm as prewarm_mod
 
         target = tmp_path / "hot-keys.json"
         stale = time.time() - (prewarm_mod._MAX_KEY_AGE_SECS + 3600)
@@ -280,7 +280,7 @@ class TestLoad:
     def test_a_bloated_file_is_capped_at_load(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.mcp_gateway.prewarm as prewarm_mod
+        import aj_crew.mcp_gateway.prewarm as prewarm_mod
 
         monkeypatch.setattr(prewarm_mod, "_MAX_TRACKED_KEYS", 2)
         now = time.time()

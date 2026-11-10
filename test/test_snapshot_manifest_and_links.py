@@ -8,9 +8,9 @@ import tarfile
 from pathlib import Path
 
 import pytest
-from test_snapshot import _setup_fake_kirocrew, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
-from kiro_crew.snapshot import restore_main, snapshot_main
+from aj_crew.snapshot import restore_main, snapshot_main
 
 
 def _tagset(pairs: dict[str, str]) -> str:
@@ -20,8 +20,8 @@ def _tagset(pairs: dict[str, str]) -> str:
 @pytest.fixture
 def src(tmp_path, monkeypatch):
     d = tmp_path / "src"
-    _setup_fake_kirocrew(d)
-    monkeypatch.setenv("KIROCREW_HOME", str(d))
+    _setup_fake_ajcrew(d)
+    monkeypatch.setenv("AJCREW_HOME", str(d))
     return d
 
 
@@ -30,16 +30,16 @@ def _extract(tarball: Path, into: Path) -> Path:
     with tarfile.open(str(tarball)) as t:
         t.extractall(into, filter=lambda m, _d="": m)
     return next(
-        d for d in into.iterdir() if d.name.startswith(("kirocrew-snapshot-", "kirocrew-partial-"))
+        d for d in into.iterdir() if d.name.startswith(("ajcrew-snapshot-", "ajcrew-partial-"))
     )
 
 
 def _snapshot(out: Path, extra: list[str]) -> Path:
-    # A selective bundle is now named `kirocrew-partial-*` so an older restore refuses
+    # A selective bundle is now named `ajcrew-partial-*` so an older restore refuses
     # it rather than silently relocating the core files it lacks; a complete one keeps
-    # the `kirocrew-snapshot-*` name. Match both so this helper works for either.
+    # the `ajcrew-snapshot-*` name. Match both so this helper works for either.
     assert snapshot_main([str(out)] + extra + unpinnable_argv()) == 0
-    return sorted(out.glob("kirocrew-*.tar.gz"))[-1]
+    return sorted(out.glob("ajcrew-*.tar.gz"))[-1]
 
 
 class TestSymlinkedTreeRootsAreRefused:
@@ -68,7 +68,7 @@ class TestSymlinkedTreeRootsAreRefused:
         out = tmp_path / "out"
         rc = snapshot_main([str(out), "--components", "memory"])
         assert rc != 0, "a symlinked component root produced a 'successful' backup"
-        assert list(out.glob("kirocrew-snapshot-*.tar.gz")) == []
+        assert list(out.glob("ajcrew-snapshot-*.tar.gz")) == []
         printed = capsys.readouterr().out
         assert "resolves outside" in printed
         assert "PRIVATE KEY" not in printed
@@ -82,7 +82,7 @@ class TestSymlinkedTreeRootsAreRefused:
         (outside / "keepme.txt").write_text("not ours to delete\n")
         (dest / "workspace").mkdir(parents=True)
         (dest / "workspace/memory").symlink_to(outside, target_is_directory=True)
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
 
         # A linked destination root is refused before any mutation. Otherwise the
         # databases get replaced before the tree loop reaches the link, so a
@@ -109,7 +109,7 @@ class TestRestoreHonoursTheBundleManifest:
         (dest / "skills").mkdir()
         (dest / "skills/mine").mkdir()
         (dest / "skills/mine/SKILL.md").write_text("my skill\n")
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
 
         # No --components: the bundle's manifest is the source of truth.
         assert restore_main([str(tarball), "--mode", "replace", "--force"] + unpinnable_argv()) == 0
@@ -124,7 +124,7 @@ class TestRestoreHonoursTheBundleManifest:
         tarball = _snapshot(tmp_path / "out", ["--components", "memory"])
         dest = tmp_path / "dest2"
         dest.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
         assert restore_main([str(tarball), "--mode", "replace", "--force"] + unpinnable_argv()) == 0
         out = capsys.readouterr().out
         assert "from bundle manifest" in out
@@ -134,7 +134,7 @@ class TestRestoreHonoursTheBundleManifest:
         tarball = _snapshot(tmp_path / "out", [])  # full bundle
         dest = tmp_path / "dest3"
         dest.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
         assert (
             restore_main(
                 [str(tarball), "--components", "crons", "--mode", "replace", "--force"]
@@ -150,7 +150,7 @@ class TestRestoreHonoursTheBundleManifest:
         tarball = _snapshot(tmp_path / "out", [])
         dest = tmp_path / "dest4"
         dest.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
         assert restore_main([str(tarball), "--mode", "replace", "--force"] + unpinnable_argv()) == 0
         assert (dest / "memory.db").is_file()
         assert (dest / "crons.json").is_file()
@@ -158,7 +158,7 @@ class TestRestoreHonoursTheBundleManifest:
 
     def test_a_manifest_naming_an_unknown_component_drops_it(self, src, tmp_path, monkeypatch):
         """A bundle from a newer build must not steer this one into an unknown name."""
-        from kiro_crew.snapshot import _manifest_components
+        from aj_crew.snapshot import _manifest_components
 
         snap = tmp_path / "fakesnap"
         snap.mkdir()
@@ -169,7 +169,7 @@ class TestRestoreHonoursTheBundleManifest:
 
     def test_a_pre_manifest_bundle_keeps_all_components(self, tmp_path):
         """No component map (a pre-v3 bundle) means it really did hold everything."""
-        from kiro_crew.snapshot import _manifest_components
+        from aj_crew.snapshot import _manifest_components
 
         snap = tmp_path / "old"
         snap.mkdir()

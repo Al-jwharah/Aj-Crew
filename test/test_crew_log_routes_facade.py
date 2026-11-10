@@ -1,9 +1,9 @@
 """The crew log handler facade keeps the patch seams and the import surface the one module had.
 
-``kiro_crew.dashboard.handlers.crew_log`` is a mirror facade (:mod:`kiro_crew._facade_mirror`)
-over the ``kiro_crew.dashboard.handlers.crew_log_<role>`` owners. The handlers package, the
+``aj_crew.dashboard.handlers.crew_log`` is a mirror facade (:mod:`aj_crew._facade_mirror`)
+over the ``aj_crew.dashboard.handlers.crew_log_<role>`` owners. The handlers package, the
 server, the WebSocket hub and tests still reach every name as
-``kiro_crew.dashboard.handlers.crew_log.<name>``, and the moved code reads its names as plain
+``aj_crew.dashboard.handlers.crew_log.<name>``, and the moved code reads its names as plain
 module globals, so a patch through the facade reaches that code only because the mirror writes it
 into every module holding the name.
 
@@ -25,14 +25,14 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import _facade_mirror
-from kiro_crew.dashboard.handlers import crew_log
+from aj_crew import _facade_mirror
+from aj_crew.dashboard.handlers import crew_log
 
-FACADE = "kiro_crew.dashboard.handlers.crew_log"
+FACADE = "aj_crew.dashboard.handlers.crew_log"
 HANDLERS_DIR = Path(crew_log.__file__).resolve().parent
 
 #: The owners, lowest layer first: each imports only owners listed before it.
-_OWNERS = ("kiro_crew.dashboard.handlers.crew_log_scope",)
+_OWNERS = ("aj_crew.dashboard.handlers.crew_log_scope",)
 
 
 def _index() -> _facade_mirror.MirrorIndex:
@@ -52,7 +52,7 @@ def test_the_owners_are_every_crew_log_sibling_in_layer_order() -> None:
     """A ``crew_log_*.py`` module the facade does not list would hold names a patch through
     the facade never reaches, so the sibling set and the owner tuple agree."""
     siblings = {
-        f"kiro_crew.dashboard.handlers.{path.stem}" for path in HANDLERS_DIR.glob("crew_log_*.py")
+        f"aj_crew.dashboard.handlers.{path.stem}" for path in HANDLERS_DIR.glob("crew_log_*.py")
     }
     assert set(_OWNERS) == siblings
     assert _index().owners == _OWNERS
@@ -68,7 +68,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
         tree = ast.parse(Path(sys.modules[owner].__file__).read_text(encoding="utf-8"))
         for node in tree.body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in _OWNERS:
+                if not node.module.startswith("aj_crew") or node.module in _OWNERS:
                     continue
                 for alias in node.names:
                     found.setdefault(alias.asname or alias.name, (node.module, alias.name))
@@ -134,7 +134,7 @@ def test_a_facade_patch_of_the_grant_recheck_reaches_every_holder(
     """``crew_log._stale_grant_refusal`` is patched through the facade by the dispatch-fence
     suite; the scope owner defines it and the facade's offload helper reads it, and a write
     through the facade lands in both."""
-    scope = sys.modules["kiro_crew.dashboard.handlers.crew_log_scope"]
+    scope = sys.modules["aj_crew.dashboard.handlers.crew_log_scope"]
     original = crew_log._stale_grant_refusal
 
     async def _never_stale(*args: object, **kwargs: object) -> None:

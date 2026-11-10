@@ -24,7 +24,7 @@ import { handleBootRoute, json, makeFixedApi } from './lib/boot-api.mjs'
 import { serveDist } from './lib/serve-dist.mjs'
 
 const OUT = process.argv[2] || '/tmp/shots'
-const PROJECT = '/home/kirocrew/workspace'
+const PROJECT = '/home/ajcrew/workspace'
 mkdirSync(OUT, { recursive: true })
 
 const { srv, base } = await serveDist()
@@ -38,7 +38,7 @@ const fixedApi = makeFixedApi(PROJECT)
 fixedApi.set('/api/status', status)
 // TWO WORDS, matching the backend default: the nav brand row accents the last
 // word only, so a single-word name renders the mark without its "CREW" half.
-fixedApi.set('/api/dashboard/branding', { bot_name: 'Kiro Crew', avatar: '/logo.png' })
+fixedApi.set('/api/dashboard/branding', { bot_name: 'Aj Crew', avatar: '/logo.png' })
 
 const browser = await chromium.launch()
 const context = await browser.newContext({
@@ -80,23 +80,23 @@ await page.route('**/api/**', async route => {
       { source: 'lesson-1', target: 'proj-1' },
     ],
   })
-  if (path === '/api/kirocrew-config' || path === '/api/config/kirocrew') return json(route, {
-    // Complete KiroCrewCfg shape (KiroCrewCfgTab enumerates every section).
-    agents: { kirocrew: { provider: 'kiroacp', model: 'auto', approval_mode: 'reads' } },
-    default_agent: 'kirocrew',
+  if (path === '/api/ajcrew-config' || path === '/api/config/ajcrew') return json(route, {
+    // Complete AjCrewCfg shape (AjCrewCfgTab enumerates every section).
+    agents: { ajcrew: { provider: 'kiroacp', model: 'auto', approval_mode: 'reads' } },
+    default_agent: 'ajcrew',
     workspaces: { default: { dir: '~/.kiro/crew/workspace' } },
     default_workspace: 'default',
     memory_stores: { default: { description: 'Workspace memory', embedding_provider: 'local' } },
     default_memory_store: 'default',
-    agent: { default_agent: 'kirocrew', provider: 'kiroacp', model: 'auto', approval_mode: 'reads', sandbox: 'auto', subagent_max_turns: 60, max_subagents: 8, subagent_auto_max: 4, tool_search: true, max_channels: 5, max_channel_agents: 2 },
-    session: { timeout_secs: 900, pool_size: 2, pool_agent: 'kirocrew', pool_ttl_secs: 900 },
+    agent: { default_agent: 'ajcrew', provider: 'kiroacp', model: 'auto', approval_mode: 'reads', sandbox: 'auto', subagent_max_turns: 60, max_subagents: 8, subagent_auto_max: 4, tool_search: true, max_channels: 5, max_channel_agents: 2 },
+    session: { timeout_secs: 900, pool_size: 2, pool_agent: 'ajcrew', pool_ttl_secs: 900 },
     memory: { embedding_provider: 'local' },
     auto_update: true,
   })
   if (path === '/api/agent-config' || path === '/api/agent/config') return json(route, {
-    name: 'kirocrew', provider: 'kiroacp', tools: ['fs_read', 'fs_write', 'execute_bash'], mcpServers: { 'playwright-mcp': {} },
+    name: 'ajcrew', provider: 'kiroacp', tools: ['fs_read', 'fs_write', 'execute_bash'], mcpServers: { 'playwright-mcp': {} },
   })
-  // Provider usage — kirocrew provider raw payload (normalized client-side).
+  // Provider usage — ajcrew provider raw payload (normalized client-side).
   if (path.includes('usage')) return json(route, {
     // Raw AcpAdapter.fetchUsage() contract (snake_case; normalized client-side).
     sessions: {

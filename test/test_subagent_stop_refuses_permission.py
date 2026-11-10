@@ -20,14 +20,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import tool_permission
-from kiro_crew.acp.transport_errors import AcpProcessDied
-from kiro_crew.dashboard.interaction_coordinator import ApprovalCoordinator
-from kiro_crew.execution_context import execution_for_store
-from kiro_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, ToolHookResult
-from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import tool_permission
+from aj_crew.acp.transport_errors import AcpProcessDied
+from aj_crew.dashboard.interaction_coordinator import ApprovalCoordinator
+from aj_crew.execution_context import execution_for_store
+from aj_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, ToolHookResult
+from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.testing.wait import async_wait_until
 
 AGENT_ID = "stop01"
 #: The request the person is asked about when the Stop lands.
@@ -55,7 +55,7 @@ def _pinned_data_home(tmp_path, _floor_monkeypatch):
     """Each test reads and writes only under its own tmp_path. The pins go through
     the isolation floor's own ``MonkeyPatch``, so a test's ``monkeypatch.undo()``
     cannot lift them."""
-    for var, sub in (("KIROCREW_HOME", "home"), ("KIROCREW_WORKSPACE", "workspace")):
+    for var, sub in (("AJCREW_HOME", "home"), ("AJCREW_WORKSPACE", "workspace")):
         path = tmp_path / sub
         path.mkdir()
         _floor_monkeypatch.setenv(var, str(path))
@@ -236,11 +236,11 @@ class _Harness:
             return await _failed_kill(self.log)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as self.sel,
-            patch("kiro_crew.subagent.update_state"),
-            patch("kiro_crew.subagent.create_agent_folder", MagicMock()),
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.2),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as self.sel,
+            patch("aj_crew.subagent.update_state"),
+            patch("aj_crew.subagent.create_agent_folder", MagicMock()),
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.2),
             patch.object(manager, "_cancel_task_intentionally", _cancel),
             patch.object(manager, "_sessions_under", MagicMock(return_value=[])),
             patch.object(manager, "_sigkill_sessions", _kill),
@@ -418,7 +418,7 @@ class _RaceHarness:
                 await self.land_stop()
                 return await pool(fn, *args, **kwargs)  # type: ignore[arg-type]
 
-            return [patch("kiro_crew.tool_permission.run_in_tool_gate_pool", _pool)]
+            return [patch("aj_crew.tool_permission.run_in_tool_gate_pool", _pool)]
         return []
 
     async def run(self) -> asyncio.Task:  # type: ignore[type-arg]
@@ -428,11 +428,11 @@ class _RaceHarness:
             return await _failed_kill(self.log)
 
         with ExitStack() as stack:
-            stack.enter_context(patch("kiro_crew.subagent.Stats"))
-            self.sel = stack.enter_context(patch("kiro_crew.subagent.sel"))
-            stack.enter_context(patch("kiro_crew.subagent.update_state"))
-            stack.enter_context(patch("kiro_crew.subagent.create_agent_folder", MagicMock()))
-            stack.enter_context(patch("kiro_crew.subagent._RESET_TIMEOUT", _SETTLE_SECS))
+            stack.enter_context(patch("aj_crew.subagent.Stats"))
+            self.sel = stack.enter_context(patch("aj_crew.subagent.sel"))
+            stack.enter_context(patch("aj_crew.subagent.update_state"))
+            stack.enter_context(patch("aj_crew.subagent.create_agent_folder", MagicMock()))
+            stack.enter_context(patch("aj_crew.subagent._RESET_TIMEOUT", _SETTLE_SECS))
             stack.enter_context(
                 patch.object(manager, "_sessions_under", MagicMock(return_value=[]))
             )
@@ -440,7 +440,7 @@ class _RaceHarness:
             # The gate's hit stands on its own verdict, whatever programs this
             # host resolves.
             stack.enter_context(
-                patch("kiro_crew.name_grant.refusal_for_event", AsyncMock(return_value=None))
+                patch("aj_crew.name_grant.refusal_for_event", AsyncMock(return_value=None))
             )
             for step_patch in self._step_patches():
                 stack.enter_context(step_patch)

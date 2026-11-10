@@ -11,8 +11,8 @@ import json
 
 import pytest
 
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME
-from kiro_crew.testing.wait import wait_until
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME
+from aj_crew.testing.wait import wait_until
 
 
 def _probe_outcome(ok: bool):
@@ -21,7 +21,7 @@ def _probe_outcome(ok: bool):
     The probe answers WHAT it observed, so a stub has to name something; these tests are
     about the transitions rather than the status, hence one shape for each verdict.
     """
-    from kiro_crew.apps.backend import HealthProbeOutcome
+    from aj_crew.apps.backend import HealthProbeOutcome
 
     if ok:
         return HealthProbeOutcome.answered(200)
@@ -62,14 +62,14 @@ def _make_app_with_backend(tmp_path, name="backend-app"):
 
 @pytest.fixture(name="app_env")
 def app_env_fixture(tmp_path, monkeypatch, worker_id):
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     # These tests exercise admitted backend process mechanics.
     (home / "config.json").write_text(
         json.dumps({"agent": {"apps_allow_third_party": True}}), encoding="utf-8"
     )
-    import kiro_crew.apps.backend as bmod
+    import aj_crew.apps.backend as bmod
 
     # Under xdist (-n auto) each worker runs in its OWN process with its own
     # _allocated_ports dict, so two workers both auto-allocate 9100 and the real

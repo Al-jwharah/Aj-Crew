@@ -17,12 +17,12 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.config.sections import KiroCrewAgentConfig
-from kiro_crew.dashboard import card_send, chat_handlers, chat_runner
-from kiro_crew.dashboard.slot_persistence.metadata_line import _newest_human_turn_ts
-from kiro_crew.history import HUMAN_TURN_META_KEY
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.config import AjCrewConfig
+from aj_crew.config.sections import AjCrewAgentConfig
+from aj_crew.dashboard import card_send, chat_handlers, chat_runner
+from aj_crew.dashboard.slot_persistence.metadata_line import _newest_human_turn_ts
+from aj_crew.history import HUMAN_TURN_META_KEY
+from aj_crew.testing.clock import ManualClock
 
 
 @pytest.fixture
@@ -33,14 +33,14 @@ def env(tmp_path, monkeypatch):
     slot = state.get_or_create_slot("member-default", agent="default", mode="member")
     slot._titled = True
     slot._auto_tagged = True
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     # The preview is off by default, so every accepted-send case here turns it on;
     # the off behaviour (every send refused, falls back to act) has its own test.
-    cfg.agents = {"default": KiroCrewAgentConfig(dashboard_card_send=True)}
-    monkeypatch.setattr(KiroCrewConfig, "load", lambda: cfg)
+    cfg.agents = {"default": AjCrewAgentConfig(dashboard_card_send=True)}
+    monkeypatch.setattr(AjCrewConfig, "load", lambda: cfg)
     binding = {"member": "default", "slot_key": slot.key, "memory_store": ""}
     monkeypatch.setattr(chat_handlers.members_mod, "read_dm_binding_for_slot", lambda key: binding)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_delivery.start_queue_persist", lambda *a: None)
+    monkeypatch.setattr("aj_crew.dashboard.chat_delivery.start_queue_persist", lambda *a: None)
     monkeypatch.setattr(chat_runner, "_gateway_shutdown_requested", lambda state: False)
     monkeypatch.setattr(chat_runner, "_memory_preparation_pending", lambda state: False)
     turns: list[tuple[str, dict]] = []
@@ -113,8 +113,8 @@ def test_a_card_send_does_not_count_as_the_person_being_back_for_autonudge(
     (``human=True``). A card's words are a page's, so they defer the timer and nothing else."""
     from unittest.mock import MagicMock
 
-    from kiro_crew import autonudge
-    from kiro_crew.dashboard import responsive_chat
+    from aj_crew import autonudge
+    from aj_crew.dashboard import responsive_chat
 
     nudge = MagicMock()
     monkeypatch.setattr(autonudge, "get_instance", lambda: nudge)
@@ -130,7 +130,7 @@ def test_a_card_send_does_not_count_as_the_person_being_back_for_autonudge(
 async def test_the_route_tells_autonudge_a_card_send_is_not_the_person(env, monkeypatch):
     from unittest.mock import MagicMock
 
-    from kiro_crew import autonudge
+    from aj_crew import autonudge
 
     state, slot, _, turns, app = env
     nudge = MagicMock()
@@ -420,7 +420,7 @@ async def test_a_card_is_not_queued_behind_a_running_turn(env):
     slot._acp_client = type(
         "C", (), {"awaiting_permission": False, "has_active_turn": lambda self: True}
     )()
-    from kiro_crew.dashboard import responsive_chat as rc
+    from aj_crew.dashboard import responsive_chat as rc
 
     rc.begin_turn(slot, protected=False)
     async with TestClient(TestServer(app)) as client:
@@ -458,12 +458,12 @@ async def test_a_card_never_enters_an_unmarked_queue_path(env, monkeypatch, hold
     state, slot, _, turns, app = env
     # Idle: the gate admits the send, so the refusal must come from the hold branches.
     if hold == "crew_paused":
-        monkeypatch.setattr("kiro_crew.crew_pause.holds_slot", lambda s: True)
+        monkeypatch.setattr("aj_crew.crew_pause.holds_slot", lambda s: True)
     elif hold == "teardown_hold":
         monkeypatch.setattr(chat_handlers, "teardown_hold_active", lambda st, s: True)
     else:
         monkeypatch.setattr(
-            "kiro_crew.dashboard.queue_edit_hold.edit_hold_blocks_user_turn", lambda s: True
+            "aj_crew.dashboard.queue_edit_hold.edit_hold_blocks_user_turn", lambda s: True
         )
     before = set(state._slots)
     async with TestClient(TestServer(app)) as client:
@@ -510,7 +510,7 @@ def test_the_rate_limit_map_is_bounded():
 
 
 def test_the_switch_is_off_by_default():
-    assert KiroCrewAgentConfig().dashboard_card_send is False
+    assert AjCrewAgentConfig().dashboard_card_send is False
 
 
 @pytest.mark.asyncio

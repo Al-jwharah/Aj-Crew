@@ -22,7 +22,7 @@ from test_provider_cli_invoked_name import (  # noqa: F401
     _needs_a_plain_shell,
 )
 
-from kiro_crew.apps.builtins.issue_radar.backend import gitlab_client as gl
+from aj_crew.apps.builtins.issue_radar.backend import gitlab_client as gl
 
 pytestmark = pytest.mark.skipif(os.name != "posix", reason="multicall links are a POSIX layout")
 
@@ -43,7 +43,7 @@ def installed_as(monkeypatch, tmp_path):
 
 @_needs_a_plain_shell
 def test_issue_radar_glab(monkeypatch, installed_as):
-    monkeypatch.setenv("KIROCREW_ISSUE_RADAR_GLAB", str(installed_as("glab")))
+    monkeypatch.setenv("AJCREW_ISSUE_RADAR_GLAB", str(installed_as("glab")))
     monkeypatch.setattr(gl, "_glab_bin_cache", None)
     monkeypatch.setattr(gl, "_audit", lambda *args, **kwargs: None)
 

@@ -23,10 +23,10 @@ from issue_radar_crew_runtime_helpers import (  # noqa: F401 -- the autouse fixt
 from off_loop_helpers import off_loop
 from test_issue_radar_crew_runtime_sweep import _KEY, _T0_MS, _AnswerClient, _unlabeled
 
-from kiro_crew.apps.builtins.issue_radar.backend import crew_runtime as cr
-from kiro_crew.apps.builtins.issue_radar.backend import crew_store as cs
-from kiro_crew.apps.builtins.issue_radar.backend import provider
-from kiro_crew.apps.builtins.issue_radar.backend import store as store_mod
+from aj_crew.apps.builtins.issue_radar.backend import crew_runtime as cr
+from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs
+from aj_crew.apps.builtins.issue_radar.backend import provider
+from aj_crew.apps.builtins.issue_radar.backend import store as store_mod
 
 
 class TestAnswerStore(unittest.TestCase):
@@ -36,8 +36,8 @@ class TestAnswerStore(unittest.TestCase):
         self.root = Path(self._tmp.name)
 
     def test_a_superseding_reason_is_clamped_to_the_fold_bound(self):
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_answer_store as answers
-        from kiro_crew.crew_log.projection_radar import RADAR_TEXT_LIMIT
+        from aj_crew.apps.builtins.issue_radar.backend import crew_answer_store as answers
+        from aj_crew.crew_log.projection_radar import RADAR_TEXT_LIMIT
 
         at = "2026-01-01T00:00:00.000000Z"
         answers.record(OWNER, REPO, self.root, 7, "alice", at, "c")
@@ -46,7 +46,7 @@ class TestAnswerStore(unittest.TestCase):
         self.assertEqual(len(held), RADAR_TEXT_LIMIT)
 
     def test_superseding_marks_only_once_and_says_so(self):
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_answer_store as answers
+        from aj_crew.apps.builtins.issue_radar.backend import crew_answer_store as answers
 
         at = "2026-01-01T00:00:01.000000Z"
         answers.record(OWNER, REPO, self.root, 1, "a", at, "c")
@@ -55,7 +55,7 @@ class TestAnswerStore(unittest.TestCase):
         self.assertEqual(answers.answers(OWNER, REPO, self.root)["1"]["pass"]["crew_id"], "x")
 
     def test_an_unreadable_answer_file_is_never_written_over(self):
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_answer_store as answers
+        from aj_crew.apps.builtins.issue_radar.backend import crew_answer_store as answers
 
         file = answers.path(OWNER, REPO, self.root)
         file.parent.mkdir(parents=True, exist_ok=True)
@@ -65,7 +65,7 @@ class TestAnswerStore(unittest.TestCase):
         self.assertEqual(file.read_text(encoding="utf-8"), "{not json")
 
     def test_an_evicted_answer_is_counted(self):
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_answer_store as answers
+        from aj_crew.apps.builtins.issue_radar.backend import crew_answer_store as answers
 
         with mock.patch.object(answers, "ANSWERS_LIMIT", 3):
             for n in range(3):
@@ -85,7 +85,7 @@ class TestAnswerStore(unittest.TestCase):
     def test_superseded_answers_count_toward_the_bound(self):
         """Every row is bounded, superseded ones too: answered-then-re-skipped issues
         cannot grow the file past ANSWERS_LIMIT, and each eviction is counted."""
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_answer_store as answers
+        from aj_crew.apps.builtins.issue_radar.backend import crew_answer_store as answers
 
         with mock.patch.object(answers, "ANSWERS_LIMIT", 2):
             for n in (1, 2, 3, 4):
@@ -106,7 +106,7 @@ class TestAnswerStore(unittest.TestCase):
     def test_a_reskip_to_an_unanswerable_scope_is_pinned_within_the_bound(self):
         """Only this row holds the new scope gate (the fold keeps the original pass),
         so it is never evicted; a new answer past the bound goes instead, counted."""
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_answer_store as answers
+        from aj_crew.apps.builtins.issue_radar.backend import crew_answer_store as answers
 
         with mock.patch.object(answers, "ANSWERS_LIMIT", 2):
             for n, scope in ((1, "architecture"), (2, "needs-decision")):
@@ -139,7 +139,7 @@ class TestEvictedSupersededAnswer(unittest.IsolatedAsyncioTestCase):
         self.addCleanup(self._tmp.cleanup)
         self.root = Path(self._tmp.name)
         self.now = [_T0_MS]
-        from kiro_crew.crew_log import store as crew_log_store
+        from aj_crew.crew_log import store as crew_log_store
 
         clock = mock.patch.object(crew_log_store, "now_ms", side_effect=lambda: self.now[0])
         clock.start()
@@ -173,7 +173,7 @@ class TestEvictedSupersededAnswer(unittest.IsolatedAsyncioTestCase):
         return woken, wake
 
     async def test_the_old_removal_hides_nothing_once_its_row_is_evicted(self):
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_answer_store as answers
+        from aj_crew.apps.builtins.issue_radar.backend import crew_answer_store as answers
 
         self._skip(7)
         store_mod.write_issues_cache(

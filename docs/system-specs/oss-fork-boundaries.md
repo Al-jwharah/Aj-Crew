@@ -7,7 +7,7 @@ silently in a public build rather than loudly. This doc is the list of what must
 come back, what is deliberately inert, and where the fork's UX diverges on purpose.
 
 [post-launch-removals.md](post-launch-removals.md) lists the migration scaffolding to
-delete once no legacy data can exist — today only the legacy `~/.kirocrew`
+delete once no legacy data can exist — today only the legacy `~/.ajcrew`
 security-path spelling. This file is a standing boundary.
 
 ## Never re-add
@@ -30,7 +30,7 @@ security-path spelling. This file is a standing boundary.
   credential-TTL card's backend route stays as an inert seam: `GET /api/sso-ttl`
   (`handlers_system.api_sso_ttl`) answers the identity seam's status, which is
   unavailable in the public build, and no public frontend calls it.
-- **Other providers.** Kiro Crew is KiroACP-only: `agent.provider` is fixed to `acp`
+- **Other providers.** Aj Crew is KiroACP-only: `agent.provider` is fixed to `acp`
   (`enum=["acp"]`) and kiro-cli is REQUIRED. A second harness is selected at
   `agent.acp_backend` and adapted, never added as a second `agent.provider` value,
   because a second provider would route around every harness-parity invariant.
@@ -63,12 +63,12 @@ STT extras.
 
 - The **Channels** app is hidden from the App Store, and the **Board** app is removed.
   An upstream sync must not restore either.
-- **The built-in app set is closed, and it is being emptied.** Kiro Crew accepts no
+- **The built-in app set is closed, and it is being emptied.** Aj Crew accepts no
   new built-in app: every app, first-party included, lives in a dedicated GitHub
   repository listed in the official registry (`kirodotdev/KiroCrewApps`). The
   built-ins that still ship move out one at a time without changing anything for the
   people who already use them
-  ([decision](../decisions/2026-11-01-kiro-crew-accepts-no-new-built-in-apps.md)).
+  ([decision](../decisions/2026-11-01-aj-crew-accepts-no-new-built-in-apps.md)).
   The `no-new-builtin-apps` rule in `AUTOSDE.yaml` blocks restoring those two and
   blocks any NEW built-in app, per-app core table row, or app-specific core MCP tool.
 
@@ -76,7 +76,7 @@ STT extras.
 
 The scrub removes internal *identity*, never protection. AKIA/ASIA credential
 redaction, the destructive-command deny rules, `~/.aws` and `~/.ssh` path blocking, and
-the SEL audit log are all generic and all stay. The legacy `~/.kirocrew` spelling stays
+the SEL audit log are all generic and all stay. The legacy `~/.ajcrew` spelling stays
 in the sensitive-path deny lists for the reason given in
 [post-launch-removals.md](post-launch-removals.md): nothing migrates or deletes a
 legacy home any more, so dropping the spelling would un-gate real credentials still on

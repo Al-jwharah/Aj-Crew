@@ -9,7 +9,7 @@ import subprocess
 
 import pytest
 
-from kiro_crew.dashboard.handlers import updates
+from aj_crew.dashboard.handlers import updates
 
 
 def _init_repo(path) -> None:
@@ -75,14 +75,14 @@ def _pin_probe_git(monkeypatch, tmp_path):
         )
         fake.chmod(0o755)
     monkeypatch.setattr(
-        "kiro_crew.platform.update_capability.trusted_system_bin", lambda _name: str(fake)
+        "aj_crew.platform.update_capability.trusted_system_bin", lambda _name: str(fake)
     )
     return fake
 
 
 @pytest.fixture(autouse=True)
 def _probe_git_is_a_fake(monkeypatch, tmp_path):
-    """Every test here classifies ``KIROCREW_PROJECT_DIR``; none is about the probe."""
+    """Every test here classifies ``AJCREW_PROJECT_DIR``; none is about the probe."""
     _pin_probe_git(monkeypatch, tmp_path)
 
 
@@ -109,10 +109,10 @@ class TestUpdateCheckGitGuard:
         # branch is the one that ran.
         info = updates.get_update_info()
         assert info["error_code"] == "feed_malformed"
-        assert info["managed_by"] == "kirocrew"
+        assert info["managed_by"] == "ajcrew"
 
     def test_skips_git_when_no_dot_git(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         self._stub_feed(monkeypatch)
 
         def _boom(*a, **k):  # pragma: no cover - must not be called
@@ -123,7 +123,7 @@ class TestUpdateCheckGitGuard:
         self._assert_took_the_feed_path()
 
     def test_skips_git_when_no_project_dir(self, monkeypatch):
-        monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+        monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
         self._stub_feed(monkeypatch)
 
         def _boom(*a, **k):  # pragma: no cover
@@ -135,11 +135,11 @@ class TestUpdateCheckGitGuard:
 
     def test_apply_rejects_non_git_checkout(self, monkeypatch, tmp_path):
         # POST /api/update on a tarball install must 409 with a clear
-        # "run `kirocrew update`" message instead of running git status/pull
-        # and failing. `kirocrew update` (unlike this endpoint) dispatches on
+        # "run `ajcrew update`" message instead of running git status/pull
+        # and failing. `ajcrew update` (unlike this endpoint) dispatches on
         # install layout and handles wheel/cli.sh installs correctly, so it is
         # the right redirect — see cli_server_update.py::_update().
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
 
         def _boom(*a, **k):  # pragma: no cover - must not be called
             raise AssertionError("git must not run without a .git dir")
@@ -151,7 +151,7 @@ class TestUpdateCheckGitGuard:
 
         resp = asyncio.run(updates.api_update_apply(_Req(app="", user="local-app")))
         assert resp.status == 409
-        assert b"kirocrew update" in resp.body
+        assert b"ajcrew update" in resp.body
 
     def test_apply_refuses_a_diverged_checkout_before_pulling(self, monkeypatch, tmp_path):
         # The render-site guards only cover clients that ran a fresh check; a
@@ -160,16 +160,16 @@ class TestUpdateCheckGitGuard:
         # destructive action, so IT enforces the precondition: 409 with the
         # counts, and git pull must never start.
         _init_repo(tmp_path)
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(
-            "kiro_crew.platform.update_capability.running_from_checkout",
+            "aj_crew.platform.update_capability.running_from_checkout",
             lambda root, **kw: True,
         )
 
         async def _no_provider():
             return None
 
-        monkeypatch.setattr("kiro_crew.platform.update_provider.apply_policy_update", _no_provider)
+        monkeypatch.setattr("aj_crew.platform.update_provider.apply_policy_update", _no_provider)
         monkeypatch.setattr(updates, "update_blocked_reason", lambda url: None)
 
         calls: list[tuple[str, ...]] = []
@@ -215,16 +215,16 @@ class TestUpdateCheckGitGuard:
         # remote cannot be reached, the distance below would be computed from
         # stale refs, so the endpoint refuses instead of pulling blind.
         _init_repo(tmp_path)
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(
-            "kiro_crew.platform.update_capability.running_from_checkout",
+            "aj_crew.platform.update_capability.running_from_checkout",
             lambda root, **kw: True,
         )
 
         async def _no_provider():
             return None
 
-        monkeypatch.setattr("kiro_crew.platform.update_provider.apply_policy_update", _no_provider)
+        monkeypatch.setattr("aj_crew.platform.update_provider.apply_policy_update", _no_provider)
         monkeypatch.setattr(updates, "update_blocked_reason", lambda url: None)
 
         calls: list[tuple[str, ...]] = []
@@ -263,16 +263,16 @@ class TestUpdateCheckGitGuard:
         # that follows it, and a genuine overrun answers 409 (retryable) with a
         # clear reason, never a 5xx and never by skipping the fetch.
         _init_repo(tmp_path)
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(
-            "kiro_crew.platform.update_capability.running_from_checkout",
+            "aj_crew.platform.update_capability.running_from_checkout",
             lambda root, **kw: True,
         )
 
         async def _no_provider():
             return None
 
-        monkeypatch.setattr("kiro_crew.platform.update_provider.apply_policy_update", _no_provider)
+        monkeypatch.setattr("aj_crew.platform.update_provider.apply_policy_update", _no_provider)
         monkeypatch.setattr(updates, "update_blocked_reason", lambda url: None)
 
         calls: list[tuple[str, ...]] = []
@@ -349,16 +349,16 @@ class TestUpdateCheckGitGuard:
         # distance it cannot read must refuse too — never read as "in sync"
         # and wave the pull through.
         _init_repo(tmp_path)
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(
-            "kiro_crew.platform.update_capability.running_from_checkout",
+            "aj_crew.platform.update_capability.running_from_checkout",
             lambda root, **kw: True,
         )
 
         async def _no_provider():
             return None
 
-        monkeypatch.setattr("kiro_crew.platform.update_provider.apply_policy_update", _no_provider)
+        monkeypatch.setattr("aj_crew.platform.update_provider.apply_policy_update", _no_provider)
         monkeypatch.setattr(updates, "update_blocked_reason", lambda url: None)
 
         calls: list[tuple[str, ...]] = []
@@ -406,9 +406,9 @@ class TestUpdateCheckGitGuard:
         # Linked git worktrees and submodules have .git as a *file* pointing at
         # the real git dir — update checks must still run there.
         _init_repo(tmp_path)
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(
-            "kiro_crew.platform.update_capability.running_from_checkout",
+            "aj_crew.platform.update_capability.running_from_checkout",
             lambda root, **kw: True,
         )
         called = {"n": 0}
@@ -438,9 +438,9 @@ class TestUpdateCheckGitGuard:
 
     def test_proceeds_when_dot_git_present(self, monkeypatch, tmp_path):
         _init_repo(tmp_path)
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(
-            "kiro_crew.platform.update_capability.running_from_checkout",
+            "aj_crew.platform.update_capability.running_from_checkout",
             lambda root, **kw: True,
         )
         called = {"n": 0}

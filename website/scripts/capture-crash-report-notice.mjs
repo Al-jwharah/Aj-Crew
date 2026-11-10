@@ -43,9 +43,9 @@ const slots = [{
   running: false,
   last_message: 'Reading the crash ledger.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
-  project: '/home/user/workspace/KiroCrew',
+  project: '/home/user/workspace/AjCrew',
   folder_id: '',
   modified: Math.floor(Date.now() / 1000),
   source_links: [],
@@ -79,7 +79,7 @@ async function openScene({ theme, newCount, viewport = { width: 1280, height: 90
       if (path.startsWith('/api/chat/slots/')) {
         await json(route, {
           running: false, has_more: false, total: 0, queue: [], messages: [],
-          project: '/home/user/workspace/KiroCrew',
+          project: '/home/user/workspace/AjCrew',
         })
         return true
       }

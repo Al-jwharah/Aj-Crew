@@ -1,7 +1,7 @@
 ---
 title: Work ledger caps a goal's open items, and its item total becomes an advisory line
 status: accepted
-author: kirocrew agent session, directed by iamwhatever
+author: ajcrew agent session, directed by iamwhatever
 created: 2026-10-12
 last-audited: 2026-10-12
 audited-at: 0a47021090
@@ -34,16 +34,16 @@ in its own document, so that one is not edited here.
 
 ## 1. Problem
 
-`_create_item` in `src/kiro_crew/work_ledger_writes.py` refuses a goal board's `create`
+`_create_item` in `src/aj_crew/work_ledger_writes.py` refuses a goal board's `create`
 with `goal_item_cap_reached` once `goal_items_used >= item_cap`. `item_cap`
 defaults to 20 (`DEFAULT_GOAL_ITEM_CAP`) and `goal_items_used` counts every item
 the current goal has created: closed ones, and every round's re-plans. Only a
 `goal` write with `new_goal=true` starts the count again.
 
 So a goal that dispatches items which land and close quickly is refused with
-nothing running. The conductor prompt (`src/kiro_crew/agent.py`,
+nothing running. The conductor prompt (`src/aj_crew/agent.py`,
 `_CONDUCTOR_SYSTEM_PROMPT`) and the goal-conductor skill
-(`src/kiro_crew/builtin_skills/goal-conductor/SKILL.md`) then tell it to stop
+(`src/aj_crew/builtin_skills/goal-conductor/SKILL.md`) then tell it to stop
 dispatching and ask the user whether to "spend more". The number the user is asked
 about is the goal's history, not its load.
 

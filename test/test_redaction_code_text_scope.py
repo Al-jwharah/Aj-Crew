@@ -25,10 +25,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import security
-from kiro_crew.platform.context import redact_code_via_context, redact_via_context
-from kiro_crew.security import redaction, redaction_switch
-from kiro_crew.testing.wait import await_until
+from aj_crew import security
+from aj_crew.platform.context import redact_code_via_context, redact_via_context
+from aj_crew.security import redaction, redaction_switch
+from aj_crew.testing.wait import await_until
 
 
 def _digest(seed: str, length: int, *, upper: bool = False) -> str:
@@ -352,7 +352,7 @@ class TestTheScopeIsNarrow:
 class TestOnlyTheNamedSeamOpensTheScope:
     def test_the_scope_is_opened_by_one_shim_and_the_shim_has_one_caller(self) -> None:
         """A grep-pinned allowlist: another code-text seam is a review decision."""
-        pkg = Path(security.__file__).resolve().parents[1]  # src/kiro_crew
+        pkg = Path(security.__file__).resolve().parents[1]  # src/aj_crew
         opens = re.compile(r"\bwith\s+(?:\w+\.)*code_text\(\)|\bredact_code_via_context\b")
         files = {
             f.relative_to(pkg).as_posix()
@@ -372,7 +372,7 @@ class TestOnlyTheNamedSeamOpensTheScope:
         ``map_page_text`` applies it. Both live in ``dashboard_frame.py``, and the page scrub is
         the only other file that may name them.
         """
-        pkg = Path(security.__file__).resolve().parents[1]  # src/kiro_crew
+        pkg = Path(security.__file__).resolve().parents[1]  # src/aj_crew
         names = re.compile(r"\bmap_page_text\b|\bcode_spans\b")
         files = {
             f.relative_to(pkg).as_posix()

@@ -17,11 +17,11 @@ from pathlib import Path
 import pytest
 import subagent_continuable_helpers
 
-from kiro_crew import agent, hooks
-from kiro_crew.agent_capabilities import CapabilityError
-from kiro_crew.config import loader_pipeline
-from kiro_crew.session_capabilities import prepare_runtime
-from kiro_crew.subprocess_pool import SubprocessPoolExecutor, SubprocessPoolTimeout
+from aj_crew import agent, hooks
+from aj_crew.agent_capabilities import CapabilityError
+from aj_crew.config import loader_pipeline
+from aj_crew.session_capabilities import prepare_runtime
+from aj_crew.subprocess_pool import SubprocessPoolExecutor, SubprocessPoolTimeout
 
 # pytest resolves a fixture in the requesting test's module, so each shared
 # fixture this module uses is bound here by name.
@@ -59,7 +59,7 @@ def test_each_canonical_member_start_check_still_refuses_a_sensitive_path(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # The crew home is a per-test tmp dir here; ``.env`` and ``diag`` are on its fence.
-    crew_home = Path(os.environ["KIROCREW_HOME"])
+    crew_home = Path(os.environ["AJCREW_HOME"])
     crew_home.mkdir(parents=True, exist_ok=True)
     secret = crew_home / ".env"
     secret.write_text('{"name": "leaked"}', encoding="utf-8")

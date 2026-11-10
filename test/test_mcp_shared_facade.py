@@ -1,17 +1,17 @@
-"""``kiro_crew.mcp_shared`` keeps the patch seams and the surface the one module had.
+"""``aj_crew.mcp_shared`` keeps the patch seams and the surface the one module had.
 
-``kiro_crew.mcp_shared`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the owners
+``aj_crew.mcp_shared`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the owners
 in its ``_OWNERS``, lowest layer first: ``mcp_shared_wire``, ``mcp_shared_calls``,
 ``mcp_shared_policy`` and ``mcp_shared_dispatch``. It keeps the server's entry,
 ``run_mcp_stdio_loop``, with the process identity it declares and its hard-exit signal
-handlers, and every name an owner defines still resolves as ``kiro_crew.mcp_shared.<name>``.
+handlers, and every name an owner defines still resolves as ``aj_crew.mcp_shared.<name>``.
 
 ``test/test_facade_mirror_guards.py`` holds every mirrored facade to the shared rules. These
 tests pin what is particular to this one: every name the test trees patch through it reaches
 every module holding it; the owner list and its layering; that each global rebound at run
 time lives in the one module that rebinds it, with every reader beside it; that every public
 name the module held before the split still type-checks through it; that the family logs
-through one ``kiro_crew.mcp_shared`` logger; that ``ToolCancelled`` keeps the module name its
+through one ``aj_crew.mcp_shared`` logger; that ``ToolCancelled`` keeps the module name its
 tracebacks show; that the managed-tools test still measures from the package directory; and
 the frozen import inventory that stands in for the F401 check ``setup.cfg`` switches off for
 it.
@@ -32,8 +32,8 @@ import pytest
 import source_corpus
 import test_campaign_facades_base_public_names as base_names
 
-import kiro_crew
-from kiro_crew import _facade_mirror, mcp_shared
+import aj_crew
+from aj_crew import _facade_mirror, mcp_shared
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_mcp_shared_facade")
 
@@ -49,12 +49,12 @@ SHARED_FACADE_CHECKS = (
     "home_manifest",
 )
 
-FACADE = "kiro_crew.mcp_shared"
+FACADE = "aj_crew.mcp_shared"
 OWNERS = (
-    "kiro_crew.mcp_shared_wire",
-    "kiro_crew.mcp_shared_calls",
-    "kiro_crew.mcp_shared_policy",
-    "kiro_crew.mcp_shared_dispatch",
+    "aj_crew.mcp_shared_wire",
+    "aj_crew.mcp_shared_calls",
+    "aj_crew.mcp_shared_policy",
+    "aj_crew.mcp_shared_dispatch",
 )
 
 #: Names the test trees are known to patch through the facade, one or more per kind of
@@ -84,8 +84,8 @@ _KNOWN_SEAMS = frozenset(
 
 #: A test file worth parsing spells the facade itself, never only a ``mcp_shared_*`` owner.
 _SPELLS_THE_FACADE = re.compile(
-    r"kiro_crew\.mcp_shared(?![\w])"
-    r"|from\s+kiro_crew\s+import\s+(?:\([^)]*?\bmcp_shared\b(?!_)|[^\n]*?\bmcp_shared\b(?!_))"
+    r"aj_crew\.mcp_shared(?![\w])"
+    r"|from\s+aj_crew\s+import\s+(?:\([^)]*?\bmcp_shared\b(?!_)|[^\n]*?\bmcp_shared\b(?!_))"
 )
 
 #: Every name the facade's import statements bound before its owners moved out. They stay
@@ -93,7 +93,7 @@ _SPELLS_THE_FACADE = re.compile(
 _BASE_IMPORTS = frozenset("""
     Any Callable CallerContext ID_PROBE_BYTES INFLIGHT_CAPABILITY_KEY INFLIGHT_NOTIFICATION
     INSTALL_PRUNED_EXIT_CODE JSONRPC_INTERNAL_ERROR JSONRPC_INVALID_PARAMS
-    JSONRPC_INVALID_REQUEST JSONRPC_PARSE_ERROR JsonRpcEnvelopeError KiroCrewConfig Literal
+    JSONRPC_INVALID_REQUEST JSONRPC_PARSE_ERROR JsonRpcEnvelopeError AjCrewConfig Literal
     Mapping NamedTuple Optional STALE_MANAGED_MCP_SERVERS ValidationError build_tool_response
     caller_identity_capability collections concurrent config_dir contextlib current_caller
     functools install_pruned json logging loopback_urlopen neutralize_markers os overload
@@ -111,14 +111,14 @@ _GLUE_IMPORTS = frozenset({"TYPE_CHECKING", "_facade_mirror", "_importlib"})
 #: does, and so holds it; every module that reads the name sits beside it.
 _REBOUND_HOMES = {
     "_internal_caller_name": FACADE,
-    "_stdout_fd": "kiro_crew.mcp_shared_wire",
-    "_framing": "kiro_crew.mcp_shared_wire",
-    "_last_failure_time": "kiro_crew.mcp_shared_policy",
-    "_last_probe_time": "kiro_crew.mcp_shared_policy",
-    "_last_startup_race_time": "kiro_crew.mcp_shared_policy",
-    "_last_startup_race_key": "kiro_crew.mcp_shared_policy",
-    "_failure_count": "kiro_crew.mcp_shared_policy",
-    "_last_failure_class": "kiro_crew.mcp_shared_policy",
+    "_stdout_fd": "aj_crew.mcp_shared_wire",
+    "_framing": "aj_crew.mcp_shared_wire",
+    "_last_failure_time": "aj_crew.mcp_shared_policy",
+    "_last_probe_time": "aj_crew.mcp_shared_policy",
+    "_last_startup_race_time": "aj_crew.mcp_shared_policy",
+    "_last_startup_race_key": "aj_crew.mcp_shared_policy",
+    "_failure_count": "aj_crew.mcp_shared_policy",
+    "_last_failure_class": "aj_crew.mcp_shared_policy",
 }
 
 
@@ -154,33 +154,33 @@ def patched_names(source: str) -> set[str]:
 #: Each spelling the patch scan must read, and each it must skip, keyed by case id.
 _SPELLING_CASES = {
     "monkeypatch-from-import": (
-        "from kiro_crew import mcp_shared\n"
+        "from aj_crew import mcp_shared\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(mcp_shared, 'A', 1)\n",
         {"A"},
     ),
     "patch-object-import-as": (
-        "import kiro_crew.mcp_shared as mod\n"
+        "import aj_crew.mcp_shared as mod\n"
         "from unittest import mock\n"
         "def t():\n    with mock.patch.object(mod, 'B'):\n        pass\n",
         {"B"},
     ),
     "dotted-setattr": (
-        "def t(monkeypatch):\n    monkeypatch.setattr('kiro_crew.mcp_shared.C', 1)\n",
+        "def t(monkeypatch):\n    monkeypatch.setattr('aj_crew.mcp_shared.C', 1)\n",
         {"C"},
     ),
     "attribute-assignment": (
-        "from kiro_crew import mcp_shared\ndef t():\n    mcp_shared.D = 1\n",
+        "from aj_crew import mcp_shared\ndef t():\n    mcp_shared.D = 1\n",
         {"D"},
     ),
     # An owner is not the facade, even bound under the facade's name.
     "owner-named-like-the-facade": (
-        "from kiro_crew import mcp_shared_wire as mcp_shared\n"
+        "from aj_crew import mcp_shared_wire as mcp_shared\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(mcp_shared, 'X', 1)\n",
         set(),
     ),
     "owner-string": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.mcp_shared_policy.Y'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.mcp_shared_policy.Y'):\n        pass\n",
         set(),
     ),
 }
@@ -260,7 +260,7 @@ def test_the_mirror_indexes_exactly_the_owners_with_no_exclusion_and_no_forward(
 def test_the_owners_are_every_mcp_shared_sibling() -> None:
     assert mcp_shared.__file__ is not None
     siblings = sorted(
-        f"kiro_crew.{path.stem}"
+        f"aj_crew.{path.stem}"
         for path in Path(mcp_shared.__file__).parent.glob("mcp_shared_*.py")
     )
     assert siblings == sorted(OWNERS)
@@ -291,8 +291,8 @@ def _layering_gaps(trees: dict[str, ast.Module]) -> dict[str, list[str]]:
 
 def test_the_layering_check_can_fail() -> None:
     trees = {name: _tree(sys.modules[name]) for name in OWNERS}
-    trees[OWNERS[0]] = ast.parse("from kiro_crew.mcp_shared_dispatch import _WakePipe\n")
-    trees[OWNERS[2]] = ast.parse("from kiro_crew import mcp_shared\n")
+    trees[OWNERS[0]] = ast.parse("from aj_crew.mcp_shared_dispatch import _WakePipe\n")
+    trees[OWNERS[2]] = ast.parse("from aj_crew import mcp_shared\n")
     assert _layering_gaps(trees) == {
         OWNERS[0]: [OWNERS[3]],
         OWNERS[2]: [FACADE],
@@ -322,7 +322,7 @@ def test_each_rebound_global_lives_with_its_writer_and_every_reader() -> None:
 
 
 def test_a_facade_write_of_a_rebound_global_lands_with_its_writer() -> None:
-    wire = sys.modules["kiro_crew.mcp_shared_wire"]
+    wire = sys.modules["aj_crew.mcp_shared_wire"]
     sentinel = object()
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(mcp_shared, "_framing", sentinel)
@@ -346,7 +346,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for owner in OWNERS:
         for node in _tree(sys.modules[owner]).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     if f"{node.module}.{alias.name}" not in family:
@@ -393,7 +393,7 @@ def test_every_served_name_type_checks_through_the_facade() -> None:
 
 
 def test_the_family_logs_through_one_logger_named_for_the_facade() -> None:
-    """Captures and filters name ``kiro_crew.mcp_shared`` (``caplog.set_level(...,
+    """Captures and filters name ``aj_crew.mcp_shared`` (``caplog.set_level(...,
     logger=...)``, ``record.name ==``), and a handler added to ``mcp_shared.logger`` must
     see the dispatch loop's records: every member binds that one logger object."""
     loggers = [vars(m)["logger"] for m in _family() if "logger" in vars(m)]
@@ -403,20 +403,20 @@ def test_the_family_logs_through_one_logger_named_for_the_facade() -> None:
 
 
 def test_tool_cancelled_keeps_the_module_name_its_tracebacks_show() -> None:
-    from kiro_crew.mcp_shared_calls import ToolCancelled
+    from aj_crew.mcp_shared_calls import ToolCancelled
 
     assert ToolCancelled is mcp_shared.ToolCancelled
     assert ToolCancelled.__module__ == FACADE
     assert f"{ToolCancelled.__module__}.{ToolCancelled.__qualname__}" == (
-        "kiro_crew.mcp_shared.ToolCancelled"
+        "aj_crew.mcp_shared.ToolCancelled"
     )
 
 
 def test_the_managed_tools_test_still_measures_from_the_package_directory() -> None:
-    """``serves_managed_tools`` asks whether a handler is defined under the ``kiro_crew``
+    """``serves_managed_tools`` asks whether a handler is defined under the ``aj_crew``
     package, from ``_PACKAGE_DIR``: an owner in a subpackage would measure from there and
     exempt every core server from the managed tool policy."""
-    package_dir = os.path.dirname(os.path.realpath(kiro_crew.__file__))
+    package_dir = os.path.dirname(os.path.realpath(aj_crew.__file__))
     assert mcp_shared._PACKAGE_DIR == package_dir
     assert mcp_shared.serves_managed_tools(mcp_shared.respond)
 
@@ -460,9 +460,9 @@ def test_the_inventory_check_reports_a_planted_import() -> None:
     name that owner does not define, are both reported."""
     planted = (
         _source(mcp_shared)
-        + "\nimport pickle\nfrom kiro_crew.mcp_shared_wire import _run_stdio_dispatch_loop\n"
+        + "\nimport pickle\nfrom aj_crew.mcp_shared_wire import _run_stdio_dispatch_loop\n"
     )
     assert unexpected_imports(planted, _owner_names()) == [
         "pickle",
-        "kiro_crew.mcp_shared_wire._run_stdio_dispatch_loop",
+        "aj_crew.mcp_shared_wire._run_stdio_dispatch_loop",
     ]

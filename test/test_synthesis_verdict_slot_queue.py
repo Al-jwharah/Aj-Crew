@@ -15,17 +15,17 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import chat_runner as cr
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard import chat_runner as cr
+from aj_crew.dashboard.chat_utils import (
     SYNTHESIS_CLEAR,
     SYNTHESIS_HELD,
     synthesis_fire_verdict,
 )
-from kiro_crew.dashboard.chat_utils_injected_rows import (
+from aj_crew.dashboard.chat_utils_injected_rows import (
     SUBAGENT_COMPLETION_KIND,
     SYNTHETIC_RECOVERY_KIND,
 )
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 
 @pytest.fixture(autouse=True)

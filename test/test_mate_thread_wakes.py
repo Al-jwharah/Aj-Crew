@@ -11,9 +11,9 @@ import asyncio
 
 import pytest
 
-from kiro_crew import crewmate_prompts
-from kiro_crew import members as members_mod
-from kiro_crew.dashboard import mate_thread_wakes as wakes
+from aj_crew import crewmate_prompts
+from aj_crew import members as members_mod
+from aj_crew.dashboard import mate_thread_wakes as wakes
 
 
 @pytest.fixture(autouse=True)
@@ -73,7 +73,7 @@ def dispatched(monkeypatch):
     def dispatch(state, slot, prompt, *, human_seen, heartbeat=False):
         calls.append((slot.key, prompt))
 
-    monkeypatch.setattr("kiro_crew.dashboard.mate_welcome.dispatch_hidden_turn", dispatch)
+    monkeypatch.setattr("aj_crew.dashboard.mate_welcome.dispatch_hidden_turn", dispatch)
     # The Dashboard line has its own tests below; the wake path is pinned without it.
     monkeypatch.setattr(wakes, "page_line", lambda slug: "", raising=False)
     return calls
@@ -84,7 +84,7 @@ def _crewmate() -> _Slot:
 
 
 def _worker(creator: str = "member-atlas", *, minted: bool = True) -> _Slot:
-    slot = _Slot("chat-worker-1", agent="kirocrew-mate-worker", created_by=creator)
+    slot = _Slot("chat-worker-1", agent="ajcrew-mate-worker", created_by=creator)
     slot._lineage_minted = minted
     return slot
 
@@ -206,10 +206,10 @@ async def test_a_worker_cut_by_a_restart_does_not_wake_its_crewmate(dispatched):
 
 
 def test_no_hidden_turn_starts_while_the_app_is_stopping(monkeypatch):
-    from kiro_crew.dashboard import mate_welcome
+    from aj_crew.dashboard import mate_welcome
 
     started: list[str] = []
-    monkeypatch.setattr("kiro_crew.dashboard.chat._run_chat", lambda *a, **k: started.append("run"))
+    monkeypatch.setattr("aj_crew.dashboard.chat._run_chat", lambda *a, **k: started.append("run"))
     state = _State(_crewmate())
     state.sessions = _Draining()
 
@@ -231,8 +231,8 @@ def test_a_long_reply_is_cut_and_its_end_marker_cannot_close_the_excerpt():
 def test_a_send_from_the_creator_and_only_the_creator_witnesses_the_link(tmp_path, monkeypatch):
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard import session_control as sc
-    from kiro_crew.dashboard.chat_utils import slot_history_key
+    from aj_crew.dashboard import session_control as sc
+    from aj_crew.dashboard.chat_utils import slot_history_key
 
     monkeypatch.setattr(sc, "session_control_enabled", lambda: True)
     state = _make_state(tmp_path)
@@ -245,7 +245,7 @@ def test_a_send_from_the_creator_and_only_the_creator_witnesses_the_link(tmp_pat
     async def _fake_run_chat(_state, slot, prompt):
         return None
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
 
     async def _drive():
         for target in ("chat-2", "chat-3"):
@@ -264,7 +264,7 @@ def test_every_top_level_turn_end_reaches_the_wake_path(tmp_path, monkeypatch):
 
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard import chat_runner as cr
+    from aj_crew.dashboard import chat_runner as cr
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("chat-2")
@@ -401,7 +401,7 @@ async def test_a_held_report_keeps_only_the_excerpt_it_shows(dispatched):
 
 def test_a_worker_gap_is_asked_for_on_the_users_next_turn():
     """``request_capabilities`` is refused on a wake turn, so the note waits for the user."""
-    from kiro_crew.dashboard.handlers import member_self
+    from aj_crew.dashboard.handlers import member_self
 
     assert "capabilities" not in member_self.OWN_GOAL_PROPOSALS
     assert "next message" in wakes._missing_capability_line("jira")
@@ -411,8 +411,8 @@ def _page(
     monkeypatch, *, panel=True, suggestions=False, locked=False, fields=("for_you", "verdict")
 ):
     """Stub the page lookups ``page_line`` reads, so each test names the tab's state."""
-    from kiro_crew import dashboard_agentic
-    from kiro_crew.dashboard_templates import instance as template_instance
+    from aj_crew import dashboard_agentic
+    from aj_crew.dashboard_templates import instance as template_instance
 
     manifest = object()
     monkeypatch.setattr(members_mod, "crew_panel_enabled", lambda: panel)
@@ -440,7 +440,7 @@ def test_a_report_on_a_page_names_its_fields_to_write_this_turn(monkeypatch):
 
 
 def test_a_report_on_the_suggestions_page_carries_the_build_line(monkeypatch):
-    from kiro_crew import dashboard_agentic
+    from aj_crew import dashboard_agentic
 
     _page(monkeypatch, suggestions=True)
     assert wakes.page_line("atlas") == dashboard_agentic.SUGGESTIONS_LINE
@@ -468,7 +468,7 @@ async def test_the_wake_a_worker_report_starts_carries_the_page_line(monkeypatch
         seen.append(slug)
         return "PAGE LINE"
 
-    monkeypatch.setattr("kiro_crew.dashboard.mate_welcome.dispatch_hidden_turn", dispatch)
+    monkeypatch.setattr("aj_crew.dashboard.mate_welcome.dispatch_hidden_turn", dispatch)
     monkeypatch.setattr(wakes, "page_line", line, raising=False)
     mate, worker = _crewmate(), _worker()
     state = _State(mate, worker)

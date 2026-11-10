@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard.handlers import source_providers as sp
+from aj_crew.dashboard.handlers import source_providers as sp
 
 _FACADE = sp.__name__
 _DYNAMIC = "<dynamic>"
@@ -222,7 +222,7 @@ def _create_patches(tree: ast.Module) -> list[tuple[int, str, str]]:
     return found
 
 
-_IMPORT_SP = "from kiro_crew.dashboard.handlers import source_providers as sp\n"
+_IMPORT_SP = "from aj_crew.dashboard.handlers import source_providers as sp\n"
 _FROM_MOCK = "from unittest import mock\n"
 
 
@@ -268,7 +268,7 @@ _FROM_MOCK = "from unittest import mock\n"
             _FROM_MOCK + f'_MOD = "{_FACADE}"\nmock.patch(_MOD + "._run_json", create=True)',
             ["_run_json"],
         ),
-        (_FROM_MOCK + '_MOD = "kiro_crew.other"\nmock.patch(f"{_MOD}._run_json", create=True)', []),
+        (_FROM_MOCK + '_MOD = "aj_crew.other"\nmock.patch(f"{_MOD}._run_json", create=True)', []),
         (_FROM_MOCK + 'import os\nmock.patch(f"{os.__name__}._run_json", create=True)', []),
         # (3) the target= and attribute= keyword forms
         (
@@ -347,7 +347,7 @@ def test_the_scan_reads_every_file_that_names_the_handler(text: str, worth: bool
 
 def test_no_test_patches_a_forwarded_name_that_it_may_create() -> None:
     repo = Path(inspect.getfile(sp)).parents[4]
-    roots = [repo / "test", *sorted((repo / "src" / "kiro_crew").rglob("tests"))]
+    roots = [repo / "test", *sorted((repo / "src" / "aj_crew").rglob("tests"))]
     scanned = 0
     hits: dict[tuple[str, str], list[str]] = {}
     for root in roots:

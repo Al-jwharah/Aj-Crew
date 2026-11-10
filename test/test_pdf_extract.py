@@ -1,4 +1,4 @@
-"""The memory-bounded PDF extractor: ``kiro_crew.pdf_extract`` and its child.
+"""The memory-bounded PDF extractor: ``aj_crew.pdf_extract`` and its child.
 
 What is pinned here is the BOUND, not pdfplumber's output: that a page which
 inflates past the ceiling fails inside the child and comes back as a reported
@@ -19,7 +19,7 @@ import time
 import pytest
 from pdf_test_helpers import flate_bomb_pdf, text_pdf
 
-from kiro_crew import pdf_extract, pdf_extract_child, sandbox
+from aj_crew import pdf_extract, pdf_extract_child, sandbox
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="POSIX rlimits")
 

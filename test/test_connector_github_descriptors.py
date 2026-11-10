@@ -8,8 +8,8 @@ evidence or claim a guarantee an operation does not have.
 
 from __future__ import annotations
 
-from kiro_crew.connections.vendors.github import descriptors as d
-from kiro_crew.connections.vendors.github.descriptors import (
+from aj_crew.connections.vendors.github import descriptors as d
+from aj_crew.connections.vendors.github.descriptors import (
     ADMIN,
     DELETE,
     POLICY_LAYERS,
@@ -18,7 +18,7 @@ from kiro_crew.connections.vendors.github.descriptors import (
     IdempotencyClass,
     Pagination,
 )
-from kiro_crew.platform.governance import SCOPE_CATALOG
+from aj_crew.platform.governance import SCOPE_CATALOG
 
 
 def test_all_45_operations_present() -> None:
@@ -158,7 +158,7 @@ def test_legacy_branch_protection_and_rate_limit_accept_service_to_service_auth(
 
 
 def test_every_auth_mode_is_a_control_plane_credential_mode() -> None:
-    from kiro_crew.connections.control_plane import CREDENTIAL_MODES
+    from aj_crew.connections.control_plane import CREDENTIAL_MODES
 
     for desc in d.DESCRIPTORS.values():
         for auth_mode in desc.auth_modes:
@@ -189,7 +189,7 @@ def test_http_methods_are_uppercase_verbs() -> None:
 def test_every_effect_is_a_control_plane_effect() -> None:
     # The effect vocabulary is consumed from the control plane, not restated;
     # every descriptor's effect must be a member of its EFFECTS closed set.
-    from kiro_crew.connections.control_plane import EFFECTS
+    from aj_crew.connections.control_plane import EFFECTS
 
     for desc in d.DESCRIPTORS.values():
         assert desc.effect in EFFECTS, (desc.operation_id, desc.effect)

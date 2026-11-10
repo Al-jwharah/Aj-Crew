@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from conftest import MockSlackClient
-from kiro_crew.slack import handler as h
+from aj_crew.slack import handler as h
 
 
 # ──────────────────────────────────────────────────────────────────────

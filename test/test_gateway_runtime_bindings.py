@@ -10,7 +10,7 @@ those functions on the facade's globals. These tests pin what makes that safe:
 * every bound owner member is inventoried, with its kind and signature, in the
   composition contract's ``_BASE_SURFACE``, and a class constant an owner defines is
   the owner's own object;
-* every name a test patches on ``kiro_crew.slack.gateway`` is a facade global some
+* every name a test patches on ``aj_crew.slack.gateway`` is a facade global some
   facade or owner function reads at call time, so the patch reaches the code;
 * every name the facade imports is read by a facade or owner function, or is part of
   its frozen public surface: the property flake8's F401 stands in for elsewhere,
@@ -35,8 +35,8 @@ import pytest
 from test_campaign_facades_base_public_names import _BASE_PUBLIC_NAMES
 from test_slack_gateway_composition_contract import _BASE_SURFACE
 
-import kiro_crew.slack.gateway as gateway
-from kiro_crew.slack import gateway_runtime
+import aj_crew.slack.gateway as gateway
+from aj_crew.slack import gateway_runtime
 
 _FACADE_PATH = Path(gateway.__file__).resolve()
 _RUNTIME_DIR = Path(gateway_runtime.__file__).resolve().parent
@@ -156,7 +156,7 @@ def test_a_bound_class_constant_is_its_owners_object(name: str, owner: str) -> N
 # ── a patch of the facade reaches the code ───────────────────────────────────
 
 _FACADE_NAME = gateway.__name__
-_PATCH_STRING = re.compile(r"""["']kiro_crew\.slack\.gateway\.([A-Za-z_]\w*)""")
+_PATCH_STRING = re.compile(r"""["']aj_crew\.slack\.gateway\.([A-Za-z_]\w*)""")
 
 
 def _constant(node: ast.AST | None) -> object:
@@ -164,7 +164,7 @@ def _constant(node: ast.AST | None) -> object:
 
 
 def _is_facade_lookup(node: ast.AST) -> bool:
-    """``import_module("kiro_crew.slack.gateway")`` or ``sys.modules["kiro_crew.slack.gateway"]``."""
+    """``import_module("aj_crew.slack.gateway")`` or ``sys.modules["aj_crew.slack.gateway"]``."""
     if isinstance(node, ast.Call) and node.args and _constant(node.args[0]) == _FACADE_NAME:
         func = node.func
         return (func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", "")) == (
@@ -181,7 +181,7 @@ def _facade_aliases(tree: ast.AST) -> set[str]:
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             aliases.update(a.asname for a in node.names if a.name == _FACADE_NAME and a.asname)
-        elif isinstance(node, ast.ImportFrom) and node.module == "kiro_crew.slack":
+        elif isinstance(node, ast.ImportFrom) and node.module == "aj_crew.slack":
             aliases.update(a.asname or a.name for a in node.names if a.name == "gateway")
         elif isinstance(node, (ast.Assign, ast.AnnAssign)) and node.value is not None:
             if _is_facade_lookup(node.value):
@@ -229,7 +229,7 @@ def _test_patched_names() -> dict[str, set[str]]:
         if path.resolve() == Path(__file__).resolve():
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
-        if "kiro_crew.slack" not in text:
+        if "aj_crew.slack" not in text:
             continue
         for name in _patched_names(text):
             found.setdefault(name, set()).add(path.relative_to(_TEST_DIR).as_posix())
@@ -271,40 +271,40 @@ def _facade_global_reads() -> set[str]:
     ("source", "expected"),
     [
         (
-            "import kiro_crew.slack.gateway as gw\n"
-            'patch("kiro_crew.slack.gateway.stream_and_collect")\n'
+            "import aj_crew.slack.gateway as gw\n"
+            'patch("aj_crew.slack.gateway.stream_and_collect")\n'
             'monkeypatch.setattr(gw, "sel", fake)\n'
             'patch.object(gw, "CronService")\n',
             {"stream_and_collect", "sel", "CronService"},
         ),
         (
-            "from kiro_crew.slack import events, gateway\n"
+            "from aj_crew.slack import events, gateway\n"
             'monkeypatch.setattr(gateway, "sel", fake)\n',
             {"sel"},
         ),
         (
-            'from kiro_crew.slack import gateway as g\nmonkeypatch.delattr(g, "logger")\n',
+            'from aj_crew.slack import gateway as g\nmonkeypatch.delattr(g, "logger")\n',
             {"logger"},
         ),
         (
-            "import kiro_crew.slack.gateway\n"
-            'monkeypatch.setattr(kiro_crew.slack.gateway, "time", fake)\n',
+            "import aj_crew.slack.gateway\n"
+            'monkeypatch.setattr(aj_crew.slack.gateway, "time", fake)\n',
             {"time"},
         ),
         (
-            'gw = importlib.import_module("kiro_crew.slack.gateway")\n'
+            'gw = importlib.import_module("aj_crew.slack.gateway")\n'
             'mock.patch.object(gw, "sel")\n',
             {"sel"},
         ),
-        ('gw = sys.modules["kiro_crew.slack.gateway"]\nsetattr(gw, "sel", fake)\n', {"sel"}),
+        ('gw = sys.modules["aj_crew.slack.gateway"]\nsetattr(gw, "sel", fake)\n', {"sel"}),
         (
-            "import kiro_crew.slack.gateway as gw\n"
+            "import aj_crew.slack.gateway as gw\n"
             "patch.multiple(gw, sel=fake, CronService=fake)\n"
-            'patch.multiple("kiro_crew.slack.gateway", data_home=fake)\n',
+            'patch.multiple("aj_crew.slack.gateway", data_home=fake)\n',
             {"sel", "CronService", "data_home"},
         ),
         # Another module's patch is not the facade's.
-        ('from kiro_crew.slack import events\nmonkeypatch.setattr(events, "sel", fake)\n', set()),
+        ('from aj_crew.slack import events\nmonkeypatch.setattr(events, "sel", fake)\n', set()),
     ],
     ids=[
         "dotted-and-alias",
@@ -400,7 +400,7 @@ def _unread_imports(facade_text: str, owner_texts: list[str], surface: frozenset
 
 
 def test_the_import_check_fails_an_unread_import() -> None:
-    facade = "import json\nimport os\nfrom kiro_crew import x as y\n\n\ndef f():\n    return os\n"
+    facade = "import json\nimport os\nfrom aj_crew import x as y\n\n\ndef f():\n    return os\n"
     owner = "def g(self):\n    return y\n"
     assert _unread_imports(facade, [owner], frozenset()) == ["json (line 1)"]
     assert _unread_imports(facade, [owner], frozenset({"json"})) == []
@@ -519,6 +519,6 @@ def test_the_planted_sleep_is_seen_only_through_the_plain_import() -> None:
     owner = _owners_importing("time")[0]
     source = (_RUNTIME_DIR / f"{owner}.py").read_text(encoding="utf-8")
     assert "    import time\n" in source
-    hidden = source.replace("    import time\n", "    from kiro_crew.slack.gateway import time\n")
+    hidden = source.replace("    import time\n", "    from aj_crew.slack.gateway import time\n")
     planted = _plant(hidden, "time.sleep(1)")
     assert "sleep" not in {family for _line, family, _why in gate._violations_in_source(planted)}

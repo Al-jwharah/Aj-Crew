@@ -30,11 +30,11 @@ from pod_helpers import (  # noqa: F401 -- the fixtures register by import
 )
 from tmpdir_helpers import SHORT_TMP_PREFIX, short_tmp_base
 
-from kiro_crew import platform_compat
-from kiro_crew.instances import run_marker
-from kiro_crew.pod import cli as pod_cli
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod.config import PodConfig
+from aj_crew import platform_compat
+from aj_crew.instances import run_marker
+from aj_crew.pod import cli as pod_cli
+from aj_crew.pod import runtime as rt
+from aj_crew.pod.config import PodConfig
 
 
 def _publish_pod_credential(cfg: PodConfig, name: str, port: int, secret: str = "s3cr3t") -> Path:
@@ -358,8 +358,8 @@ class TestRuntimeHelpers:
         self, cfg: PodConfig, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         out = (
-            "kirocrew-pod@alpha.service    loaded active running x\n"
-            "kirocrew-pod@beta-two.service loaded active running y\n"
+            "ajcrew-pod@alpha.service    loaded active running x\n"
+            "ajcrew-pod@beta-two.service loaded active running y\n"
             "unrelated.service             loaded active running z\n"
         )
         monkeypatch.setattr(rt, "systemctl", lambda *a, **k: _cp(stdout=out))
@@ -481,7 +481,7 @@ class TestRuntimeHelpers:
     def test_mint_token_reads_secret_and_posts(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path))
         c = PodConfig.load()
         home = c.home_dir("demo")
         home.mkdir(parents=True)
@@ -507,7 +507,7 @@ class TestRuntimeHelpers:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Windows mints through the ownership-attested loopback port only."""
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path))
         c = PodConfig.load()
         home = c.home_dir("demo")
         home.mkdir(parents=True)
@@ -536,10 +536,10 @@ class TestRuntimeHelpers:
         monkeypatch.setattr(rt, "IS_WINDOWS", True)
         monkeypatch.setattr(rt, "port_owner", lambda *a, **k: rt.OWNER_POD)
         monkeypatch.setattr(rt, "_pod_recorded_pid", lambda *a, **k: 4242)
-        monkeypatch.setattr("kiro_crew.cli_server._connected_tcp_peer_pid", lambda _s: peer["pid"])
+        monkeypatch.setattr("aj_crew.cli_server._connected_tcp_peer_pid", lambda _s: peer["pid"])
         monkeypatch.setattr(rt, "tcp_verified_urlopen", _tcp)
         sel = MagicMock()
-        monkeypatch.setattr("kiro_crew.cli_server.sel", sel)
+        monkeypatch.setattr("aj_crew.cli_server.sel", sel)
         monkeypatch.setattr(
             rt, "loopback_urlopen", lambda *a, **k: pytest.fail("the mint must prove its peer")
         )
@@ -585,7 +585,7 @@ class TestRuntimeHelpers:
         local user, and loopback TCP has no peer-credential API. The socket lives in
         the pod's owner-only home. Pins: no TCP opener, and exactly the pod's socket.
         """
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path))
         c = PodConfig.load()
         home = c.home_dir("demo")
         home.mkdir(parents=True)
@@ -638,7 +638,7 @@ class TestRuntimeHelpers:
         gateway published one -- and returns a dashboard token for the responder,
         so against a squatter it prints a URL that drives the wrong instance.
         """
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path))
         c = PodConfig.load()
         home = c.home_dir("demo")
         home.mkdir(parents=True)
@@ -659,7 +659,7 @@ class TestRuntimeHelpers:
         Refusing a live pod costs an error message; proceeding on an unproven port
         hands another local user, who can bind 127.0.0.1, this pod's credential.
         """
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path))
         c = PodConfig.load()
         home = c.home_dir("demo")
         home.mkdir(parents=True)
@@ -688,7 +688,7 @@ class TestRuntimeHelpers:
     def test_mint_token_no_secret_raises(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path))
         with pytest.raises(rt.PodError):
             rt.mint_token(PodConfig.load(), "ghost", "1h")
 
@@ -727,7 +727,7 @@ class TestMintRefusalNamesTheGateThatRefused:
 
         Idempotent in the pod home so one test can drive several causes in turn.
         """
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path))
         c = PodConfig.load()
         home = c.home_dir("demo")
         home.mkdir(parents=True, exist_ok=True)
@@ -786,7 +786,7 @@ class TestMintRefusalNamesTheGateThatRefused:
         body = json.dumps({"error": "no", "code": "member_owner_token_refused"}).encode()
         message = self._mint(tmp_path, monkeypatch, body)
 
-        assert "kirocrew pod down demo && kirocrew pod up demo" not in message
+        assert "ajcrew pod down demo && ajcrew pod up demo" not in message
         assert self._recreate_cost_is_stated(message)
 
     def test_transport_refusal_names_the_peer_verdict_not_a_stale_worktree(
@@ -806,7 +806,7 @@ class TestMintRefusalNamesTheGateThatRefused:
         # The impossible cause is not offered, and neither is its remedy.
         assert "predates unix-socket admission" not in message
         assert "Update the pod's worktree" not in message
-        assert "kirocrew pod down demo && kirocrew pod up demo" not in message
+        assert "ajcrew pod down demo && ajcrew pod up demo" not in message
         assert self._recreate_cost_is_stated(message)
 
     def test_secret_refusal_names_both_causes_and_offers_no_recreate(
@@ -824,7 +824,7 @@ class TestMintRefusalNamesTheGateThatRefused:
         assert "TRANSPORT" not in message
         assert "earlier run" in message
         assert "second gateway" in message
-        assert "kirocrew pod down" not in message
+        assert "ajcrew pod down" not in message
         assert self._recreate_cost_is_stated(message)
 
     def test_only_a_codeless_reply_may_blame_an_outdated_gateway(
@@ -1005,7 +1005,7 @@ class TestMintSendsTheCredentialOfTheGatewayItDials:
         return _open
 
     def _pod(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[object, int]:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path))
         c = PodConfig.load()
         c.home_dir("demo").mkdir(parents=True, exist_ok=True)
         monkeypatch.setattr(rt, "IS_WINDOWS", False)
@@ -1076,7 +1076,7 @@ class TestMintPeerVerification:
     def test_verifier_refuses_a_mismatched_peer(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path))
         c = PodConfig.load()
         self._grant_record_freshness(monkeypatch, 4242)
         monkeypatch.setattr(rt, "get_peer_pid", lambda sock: 9999)
@@ -1088,7 +1088,7 @@ class TestMintPeerVerification:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The connected peer needs a fresh record, not only a matching pid."""
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path))
         c = PodConfig.load()
         attestations = iter((4242, None))
         monkeypatch.setattr(rt, "_pod_recorded_pid", lambda cfg, name, port: next(attestations))
@@ -1101,7 +1101,7 @@ class TestMintPeerVerification:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """``None`` from the kernel is a refusal, never a pass (deny-by-default)."""
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path))
         c = PodConfig.load()
         self._grant_record_freshness(monkeypatch, 4242)
         monkeypatch.setattr(rt, "get_peer_pid", lambda sock: None)
@@ -1113,7 +1113,7 @@ class TestMintPeerVerification:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """No provable record at send time = no verifier at all, fail closed."""
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path))
         c = PodConfig.load()
         monkeypatch.setattr(rt, "_pod_recorded_pid", lambda cfg, name, port: None)
         with pytest.raises(rt.PodOwnershipUnproven):
@@ -1122,7 +1122,7 @@ class TestMintPeerVerification:
     def test_verifier_accepts_the_attested_peer(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path))
         c = PodConfig.load()
         self._grant_record_freshness(monkeypatch, 4242)
         monkeypatch.setattr(rt, "get_peer_pid", lambda sock: 4242)
@@ -1173,7 +1173,7 @@ class TestMintPeerVerification:
             pytest.skip("AF_UNIX transport is POSIX-only")
         root = Path(tempfile.mkdtemp(prefix=SHORT_TMP_PREFIX + "podpeer-", dir=short_tmp_base()))
         try:
-            monkeypatch.setenv("KIROCREW_POD_ROOT", str(root))
+            monkeypatch.setenv("AJCREW_POD_ROOT", str(root))
             c = PodConfig.load()
             home = c.home_dir("demo")
             home.mkdir(parents=True)

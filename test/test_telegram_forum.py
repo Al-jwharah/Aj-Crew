@@ -15,11 +15,11 @@ from typing import Any
 from telegram_helpers import _drop_live_config_snapshot  # noqa: F401
 from telegram_helpers import FakeClient, _dispatcher, _origin
 
-from kiro_crew.messaging.renderer import DONE, TEXT_CHUNK, OutputEvent, session_provenance_tag
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.telegram.client import TelegramClient, TelegramInbound
-from kiro_crew.telegram.renderer import TelegramApprovalDecider, TelegramRenderer
-from kiro_crew.telegram.transport import (
+from aj_crew.messaging.renderer import DONE, TEXT_CHUNK, OutputEvent, session_provenance_tag
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.telegram.client import TelegramClient, TelegramInbound
+from aj_crew.telegram.renderer import TelegramApprovalDecider, TelegramRenderer
+from aj_crew.telegram.transport import (
     TELEGRAM_CAPABILITIES,
     TelegramInboundMessage,
     TelegramTransport,
@@ -262,7 +262,7 @@ class TestForumDispatchRouting:
     def test_forum_topic_session_key(self) -> None:
         d, cli, sess = _dispatcher({7})
         asyncio.run(d.handle_message(self._forum_msg("5")))
-        assert sess.successes == ["telegram:kirocrew:forum:-1001234567890:5"]
+        assert sess.successes == ["telegram:ajcrew:forum:-1001234567890:5"]
 
     # NB: there is deliberately NO "General session key" routing test — a
     # threadless supergroup (General) message is denied at the forum gate
@@ -278,7 +278,7 @@ class TestForumDispatchRouting:
                 InboundMessage(channel_type="telegram", user_id="7", conversation_id="7", text="hi")
             )
         )
-        assert sess.successes == ["telegram:kirocrew:direct:7"]
+        assert sess.successes == ["telegram:ajcrew:direct:7"]
 
     def test_new_in_topic_isolates_generation(self) -> None:
         d, cli, sess = _dispatcher({7})
@@ -298,7 +298,7 @@ class TestForumDispatchRouting:
             cli,
             -1001234567890,
             TELEGRAM_CAPABILITIES,  # type: ignore[arg-type]
-            session_key="telegram:kirocrew:forum:-1001234567890:5",
+            session_key="telegram:ajcrew:forum:-1001234567890:5",
             message_thread_id=5,
         )
 
@@ -316,21 +316,21 @@ class TestForumDispatchRouting:
 class TestForumConfig:
     @staticmethod
     def _load(data: dict) -> Any:
-        """Load a KiroCrewConfig from an in-memory dict via a temp config file
+        """Load a AjCrewConfig from an in-memory dict via a temp config file
         (mirrors the canonical loader entrypoint used across the config tests)."""
         import json
         import tempfile
         import unittest.mock
         from pathlib import Path
 
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(data, f)
             tmp = Path(f.name)
         try:
-            with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
-                return KiroCrewConfig.load()
+            with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
+                return AjCrewConfig.load()
         finally:
             tmp.unlink(missing_ok=True)
 
@@ -425,7 +425,7 @@ class TestForumQueueDrain:
 
     def test_queued_forum_message_drains_under_forum_key(self) -> None:
         d, cli, sess = _dispatcher({7})
-        forum_key = "telegram:kirocrew:forum:-1001234567890:5"
+        forum_key = "telegram:ajcrew:forum:-1001234567890:5"
         # Simulate one message queued mid-turn for this Topic. The Topic rides on the
         # ENTRY now, not on the drain call: the replay envelope comes from the queued
         # message's own origin.
@@ -440,14 +440,14 @@ class TestForumQueueDrain:
         # The drained turn resolved to the FORUM key (carried via chat_type +
         # thread on the synthetic message), NOT the DM key.
         assert sess.successes == [forum_key]
-        assert "telegram:kirocrew:direct:7" not in sess.successes
+        assert "telegram:ajcrew:direct:7" not in sess.successes
 
     def test_dm_queue_drains_under_dm_key_regression(self) -> None:
         # HARD INVARIANT: a DM drain still resolves to the DM key.
         d, cli, sess = _dispatcher({7})
         sess.queued.append(("t0", "queued dm", _origin()))
-        asyncio.run(d._drain_queue("telegram:kirocrew:direct:7"))
-        assert sess.successes == ["telegram:kirocrew:direct:7"]
+        asyncio.run(d._drain_queue("telegram:ajcrew:direct:7"))
+        assert sess.successes == ["telegram:ajcrew:direct:7"]
 
 
 class TestForumCallbackGate:
@@ -476,7 +476,7 @@ class TestForumCallbackGate:
         asyncio.run(d.on_callback(self._opt_cb(tag)))  # type: ignore[arg-type]
         # Acked, and the [OPTIONS:] choice re-dispatched under the FORUM key.
         assert cli.answered == ["qf"]
-        assert sess.successes == ["telegram:kirocrew:forum:-1001234567890:5"]
+        assert sess.successes == ["telegram:ajcrew:forum:-1001234567890:5"]
         # Every callback-originated send threaded back into the Topic.
         assert cli.send_threads and all(t == 5 for t in cli.send_threads)
 

@@ -14,7 +14,7 @@ import pytest
 from acp_session_mcp_helpers import agents_dir_fixture  # noqa: F401
 from acp_session_mcp_helpers import _by_name, _write_spec
 
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_COPILOT,
@@ -23,7 +23,7 @@ from kiro_crew.agent_sdk.backends import (
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_STRANDS,
 )
-from kiro_crew.providers.mirrors import mirror_for
+from aj_crew.providers.mirrors import mirror_for
 
 _VALUE = "probe-value-7f3a"
 
@@ -52,7 +52,7 @@ def _project(backend: str, agents_dir, monkeypatch, value: str) -> dict:
         tools=["@probe"],
     )
     projection = mirror_for(backend).session_projection(
-        "kirocrew", permission_surface_owned=True, session_key="dashboard:t"
+        "ajcrew", permission_surface_owned=True, session_key="dashboard:t"
     )
     return _by_name(projection.params.get("mcpServers") or [])
 
@@ -84,7 +84,7 @@ def test_a_credential_named_variable_is_never_dereferenced(backend, agents_dir, 
         tools=["@probe"],
     )
     projection = mirror_for(backend).session_projection(
-        "kirocrew", permission_surface_owned=True, session_key="dashboard:t"
+        "ajcrew", permission_surface_owned=True, session_key="dashboard:t"
     )
     probe = _by_name(projection.params.get("mcpServers") or [])["probe"]
     assert probe["env"] == [{"name": "X", "value": "${AWS_SECRET_ACCESS_KEY}"}]
@@ -98,7 +98,7 @@ def test_an_unset_variable_stays_literal(agents_dir, monkeypatch):
         tools=["@probe"],
     )
     projection = mirror_for(ACP_BACKEND_OPENCODE).session_projection(
-        "kirocrew", permission_surface_owned=True
+        "ajcrew", permission_surface_owned=True
     )
     probe = _by_name(projection.params.get("mcpServers") or [])["probe"]
     assert probe["env"] == [{"name": "X", "value": "${PROBE_UNSET_VAR}"}]
@@ -110,11 +110,11 @@ def test_goose_never_restores_a_spec_command_on_crews_own_server(agents_dir, mon
     monkeypatch.setenv("PROBE_REF_VAR", _VALUE)
     _write_spec(
         agents_dir,
-        servers={"kirocrew-core": {"command": "/tmp/not-crew", "env": {"X": "${PROBE_REF_VAR}"}}},
-        tools=["@kirocrew-core"],
+        servers={"ajcrew-core": {"command": "/tmp/not-crew", "env": {"X": "${PROBE_REF_VAR}"}}},
+        tools=["@ajcrew-core"],
     )
     projection = mirror_for(ACP_BACKEND_GOOSE).session_projection(
-        "kirocrew", permission_surface_owned=True, session_key="dashboard:t"
+        "ajcrew", permission_surface_owned=True, session_key="dashboard:t"
     )
-    core = _by_name(projection.params.get("mcpServers") or [])["kirocrew-core"]
+    core = _by_name(projection.params.get("mcpServers") or [])["ajcrew-core"]
     assert core["command"] != "/tmp/not-crew"

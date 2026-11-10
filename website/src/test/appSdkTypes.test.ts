@@ -1,6 +1,6 @@
 /**
- * `npm run build` serves `vendor/kirocrew-app-sdk.d.ts`, so a TypeScript app can
- * typecheck its imports of `@kirocrew/app-sdk` and `@kirocrew/app-sdk/ui`. This runs
+ * `npm run build` serves `vendor/ajcrew-app-sdk.d.ts`, so a TypeScript app can
+ * typecheck its imports of `@ajcrew/app-sdk` and `@ajcrew/app-sdk/ui`. This runs
  * the real generator and compiles an app source against what it wrote.
  */
 import { execFileSync } from 'node:child_process'
@@ -19,7 +19,7 @@ let declarations = ''
 
 beforeAll(() => {
   scratch = mkdtempSync(path.join(tmpdir(), 'app-sdk-types-'))
-  const out = path.join(scratch, 'kirocrew-app-sdk.d.ts')
+  const out = path.join(scratch, 'ajcrew-app-sdk.d.ts')
   // A child process, so the generator's whole-dashboard program is not held in this
   // worker's heap.
   execFileSync(process.execPath, [path.join(WEBSITE, 'scripts/gen-app-sdk-types.mjs'), out], { stdio: 'pipe' })
@@ -36,7 +36,7 @@ function typeErrors(code: string): string[] {
   // does from an app's own. No skipLibCheck: the declaration file is checked too.
   const files = new Map([
     [`${APP_DIR}/App.tsx`, code],
-    [`${APP_DIR}/kirocrew-app-sdk.d.ts`, declarations],
+    [`${APP_DIR}/ajcrew-app-sdk.d.ts`, declarations],
   ])
   const options: ts.CompilerOptions = {
     strict: true,
@@ -60,11 +60,11 @@ function typeErrors(code: string): string[] {
   return ts.getPreEmitDiagnostics(program).map((d) => ts.flattenDiagnosticMessageText(d.messageText, '\n'))
 }
 
-describe('vendor/kirocrew-app-sdk.d.ts', () => {
+describe('vendor/ajcrew-app-sdk.d.ts', () => {
   it('typechecks an app using the SDK hooks and the shared UI components', () => {
     const app = `
-      import { useAppApi, useAppEvents } from '@kirocrew/app-sdk'
-      import { Card, CardTitle, PageHeader } from '@kirocrew/app-sdk/ui'
+      import { useAppApi, useAppEvents } from '@ajcrew/app-sdk'
+      import { Card, CardTitle, PageHeader } from '@ajcrew/app-sdk/ui'
       export default function App() {
         const api = useAppApi()
         useAppEvents('notification', () => {})
@@ -77,8 +77,8 @@ describe('vendor/kirocrew-app-sdk.d.ts', () => {
 
   it('reports a misuse instead of typing the SDK as any', () => {
     const app = `
-      import { useAppApi } from '@kirocrew/app-sdk'
-      import { PageHeader } from '@kirocrew/app-sdk/ui'
+      import { useAppApi } from '@ajcrew/app-sdk'
+      import { PageHeader } from '@ajcrew/app-sdk/ui'
       export default function App() {
         useAppApi().fetchEverything()
         return <PageHeader heading="Status" />

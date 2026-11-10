@@ -15,7 +15,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import platform_compat, sandbox
+from aj_crew import platform_compat, sandbox
 
 
 def _record_runs(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, object]]:

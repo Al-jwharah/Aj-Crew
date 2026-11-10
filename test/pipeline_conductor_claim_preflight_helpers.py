@@ -15,7 +15,7 @@ from skill_script_helpers import load_skill_script
 SCRIPT = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
     / "pipeline-conductor"
     / "scripts"

@@ -11,9 +11,9 @@ import { renderWithProviders } from './helpers'
  * launch gate reads.
  */
 
-const { patchConfigMock, kirocrewConfigMock } = vi.hoisted(() => ({
+const { patchConfigMock, ajcrewConfigMock } = vi.hoisted(() => ({
   patchConfigMock: vi.fn((_path: string, _value: unknown) => Promise.resolve({})),
-  kirocrewConfigMock: vi.fn(() => Promise.resolve({})),
+  ajcrewConfigMock: vi.fn(() => Promise.resolve({})),
 }))
 
 vi.mock('../api/client', () => {
@@ -29,7 +29,7 @@ vi.mock('../api/client', () => {
   }
   return {
     api: {
-      kirocrewConfig: kirocrewConfigMock,
+      ajcrewConfig: ajcrewConfigMock,
       patchConfig: patchConfigMock,
       installTheme: vi.fn(() => Promise.resolve({ ok: true })),
     },
@@ -105,7 +105,7 @@ const ROUTE = '/settings?tab=display&sub=terminal'
 /** Bound for every wait in this suite, so none relies on the 1,000 ms
  *  default. The picker renders only once the desktop shell's detection
  *  (`externalTerminalAPI.detect`) answers, and shows the pick only once the
- *  config query (`api.kirocrewConfig`) beside it answers too; a pick then
+ *  config query (`api.ajcrewConfig`) beside it answers too; a pick then
  *  waits on the config write, and a Retry on a second detection. The default
  *  is a bet on runner speed; this ceiling turns a lost run into a named
  *  failure. */
@@ -119,7 +119,7 @@ function installBridge(apps: Array<{ id: string; label: string }>) {
 }
 
 function seed(app: unknown) {
-  kirocrewConfigMock.mockImplementation(() =>
+  ajcrewConfigMock.mockImplementation(() =>
     Promise.resolve({ dashboard: { terminal: app === undefined ? {} : { external_app: app } } }),
   )
 }

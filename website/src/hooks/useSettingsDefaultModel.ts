@@ -5,7 +5,7 @@ import { modelWithoutEffort } from './useInteractiveModels'
 /**
  * What the composer chip needs to tell the Settings default from a pin, for
  * both chat hosts. `settingsDefault` is Settings → Chat → Default Model from
- * the shared `['kirocrewConfig']` entry, which every Settings write updates:
+ * the shared `['ajcrewConfig']` entry, which every Settings write updates:
  * `''` when none is set (unset or `auto`), effort-stripped when the host shows
  * models without their effort. It is `null` while a read it depends on is
  * unknown -- loading or failed -- so no caller claims a default it cannot see.
@@ -21,8 +21,8 @@ export function useSettingsDefaultModel(
   stripEffort: boolean,
 ): { settingsDefault: string | null; agentPinned: boolean; failed: boolean } {
   const configQ = useQuery({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
   })
   const resolvedQ = useQuery<{ pinned?: boolean }>({
     queryKey: ['agent-resolved-model', agentName],

@@ -18,16 +18,16 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import kiro_crew.sel as sel_mod
-from kiro_crew import llm_helpers
-from kiro_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
-from kiro_crew.platform import tool_paths
-from kiro_crew.platform.tool_paths import (
+import aj_crew.sel as sel_mod
+from aj_crew import llm_helpers
+from aj_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
+from aj_crew.platform import tool_paths
+from aj_crew.platform.tool_paths import (
     DOCUMENT_BODY_KEYS,
     DOCUMENT_WRITING_TOOLS,
     command_shaped_strings,
 )
-from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
 
 # Prose that the full document scan refuses: the first sentence trips the
 # ``rm -rf /`` deny glob, the second names a credential path.
@@ -130,7 +130,7 @@ class TestABodyIsNotACommandLine:
         ev = _event(
             params,
             title="artifact_save",
-            mcp_server_name="kirocrew-core",
+            mcp_server_name="ajcrew-core",
             tool_name="artifact_save",
         )
         approved, _p, _rows = await _resolve(ev)
@@ -330,8 +330,8 @@ class TestProvenanceComesFromTheClient:
 
     @staticmethod
     def _frames(tool_call: dict, *, with_identity_caches: bool = True):
-        from kiro_crew.acp import _dispatch
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp import _dispatch
+        from aj_crew.acp.types import JsonRpcMessage
 
         caches: dict = dict(
             tool_input_cache={},

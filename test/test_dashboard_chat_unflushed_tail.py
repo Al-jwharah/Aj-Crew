@@ -19,7 +19,7 @@ class TestSlotDetailPaginationUnflushedTail:
         A save drops transient roles, so subtracting disk length from window length
         counts each transient row as missing. Everything is on disk, so the tail is empty.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("dup")
         log = state.conversation_log
@@ -51,7 +51,7 @@ class TestSlotDetailPaginationUnflushedTail:
         client. A transient row sits between them, so a fix that merely stopped
         appending would pass the duplication test and fail this one.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("owed")
         log = state.conversation_log
@@ -81,9 +81,9 @@ class TestSlotDetailPaginationUnflushedTail:
         A foreign writer grows the transcript, so ``len(all_msgs) - _disk_older_count``
         over-counts and drops the owed turn. Over-count loses a message; under-count is safe.
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("overcount")
         for i in range(3):
@@ -117,10 +117,10 @@ class TestSlotDetailPaginationUnflushedTail:
         non-string id is preserved rather than replaced, reaches disk, and is then
         hashed by the boundary match, where a list raises ``TypeError``.
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", AsyncMock())
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", AsyncMock())
         state = _make_state(tmp_path)
         state.get_or_create_slot("listmid")
 
@@ -155,7 +155,7 @@ class TestSlotDetailPaginationUnflushedTail:
         Without ids the boundary falls back to counting. ``_disk_window_len`` counts
         this slot's rows on disk, and a foreign append does not move it.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("legacy")
         log = state.conversation_log
@@ -192,8 +192,8 @@ class TestSlotDetailPaginationUnflushedTail:
         """
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.chat_handlers import _append_unflushed_tail
-        from kiro_crew.security import redact_credentials, redact_exfiltration_urls
+        from aj_crew.dashboard.chat_handlers import _append_unflushed_tail
+        from aj_crew.security import redact_credentials, redact_exfiltration_urls
 
         raw = "AKIAIOSFODNN7EXAMPLE"
         loaded, _ = redact_exfiltration_urls(raw)
@@ -230,7 +230,7 @@ class TestSlotDetailPaginationUnflushedTail:
         """
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.chat_handlers import _append_unflushed_tail
+        from aj_crew.dashboard.chat_handlers import _append_unflushed_tail
 
         collided = "2026-08-18T12:00:00.000001+00:00"
         all_msgs = [
@@ -262,10 +262,10 @@ class TestSlotDetailPaginationUnflushedTail:
         An id is minted only when absent, so a client can post one id twice. With the
         first row on disk, a *set* of disk ids matches both window rows and hides the second.
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", AsyncMock())
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", AsyncMock())
         state = _make_state(tmp_path)
         state.get_or_create_slot("dupmid")
         dup = "m-deadbeefdeadbeef"
@@ -306,7 +306,7 @@ class TestSlotDetailPaginationUnflushedTail:
         """
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.chat_handlers import _append_unflushed_tail
+        from aj_crew.dashboard.chat_handlers import _append_unflushed_tail
 
         dup = "m-deadbeefdeadbeef"
         all_msgs = [
@@ -342,9 +342,9 @@ class TestSlotDetailPaginationUnflushedTail:
         next to a durable row without one. Id matching is sound only when EVERY disk window
         row has an id; a mixed window takes the ordered path. Uses the real writers.
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("mixed")
         key = "dashboard:mixed"
@@ -395,9 +395,9 @@ class TestSlotDetailPaginationUnflushedTail:
         The guard checks the region is all-id; otherwise the count assertion could pass
         through the ordered fallback.
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("dualid")
         key = "dashboard:dualid"
@@ -446,9 +446,9 @@ class TestSlotDetailPaginationUnflushedTail:
         If ``hydrate_slot_from_history`` dropped ``meta``, every row would get a fresh id
         and the identity walk would mark the whole history owed.
         """
-        from kiro_crew.dashboard.cron_inject import hydrate_slot_from_history
+        from aj_crew.dashboard.cron_inject import hydrate_slot_from_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         key = "dashboard:cronhyd"
 
@@ -493,7 +493,7 @@ class TestUnflushedTailOrderingAndSnapshot:
         """
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.chat_handlers import _append_unflushed_tail
+        from aj_crew.dashboard.chat_handlers import _append_unflushed_tail
 
         q = self._row("user", "run it", "u1", "2026-08-19T10:00:00+00:00")
         reply = self._row("assistant", "done", "a1", "2026-08-19T10:00:03+00:00")
@@ -525,7 +525,7 @@ class TestUnflushedTailOrderingAndSnapshot:
         """Negative control: with no inversion the result is ``all_msgs + owed``."""
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.chat_handlers import _append_unflushed_tail
+        from aj_crew.dashboard.chat_handlers import _append_unflushed_tail
 
         q = self._row("user", "run it", "u1", "2026-08-19T10:00:00+00:00")
         stop = self._row("assistant", "stopped", "s1", "2026-08-19T10:00:02+00:00")
@@ -548,10 +548,10 @@ class TestUnflushedTailOrderingAndSnapshot:
         ``_flush_segment`` sets ``slot.messages = head`` before appending the finalized
         row; a threaded scan can see that hole. The test removes the row on worker entry.
         """
-        import kiro_crew.dashboard.chat_handlers as ch
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        import aj_crew.dashboard.chat_handlers as ch
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("loopsnap")
         key = "dashboard:loopsnap"
@@ -628,7 +628,7 @@ class TestUnflushedTailOrderingAndSnapshot:
         """
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.chat_handlers import _append_unflushed_tail
+        from aj_crew.dashboard.chat_handlers import _append_unflushed_tail
 
         q = self._idless("user", "run it", "2026-08-19T15:00:00+00:00")
         chunk = self._idless("chunk", "partial an", "2026-08-19T15:00:01+00:00")
@@ -663,7 +663,7 @@ class TestUnflushedTailOrderingAndSnapshot:
         """
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.chat_handlers import _append_unflushed_tail
+        from aj_crew.dashboard.chat_handlers import _append_unflushed_tail
 
         q = self._idless("user", "run it", "2026-08-19T15:00:00+00:00")
         stop = self._idless("assistant", "stopped", "2026-08-19T15:00:02+00:00")
@@ -688,7 +688,7 @@ class TestUnflushedTailOrderingAndSnapshot:
         import json
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.chat_handlers import _append_unflushed_tail
+        from aj_crew.dashboard.chat_handlers import _append_unflushed_tail
 
         q = self._idless("user", "run it", "2026-08-19T15:00:00+00:00")
         stop = self._idless("assistant", "stopped", "2026-08-19T15:00:02+00:00")
@@ -733,7 +733,7 @@ class TestUnflushedTailOrderingAndSnapshot:
         """
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.chat_handlers import _append_unflushed_tail
+        from aj_crew.dashboard.chat_handlers import _append_unflushed_tail
 
         q = self._idless("user", "run it", "2026-08-19T16:00:00+00:00")
         reply = self._idless("assistant", "the reply", "2026-08-19T16:00:01+00:00")
@@ -775,7 +775,7 @@ class TestUnflushedTailOrderingAndSnapshot:
         """
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.chat_handlers import _append_unflushed_tail
+        from aj_crew.dashboard.chat_handlers import _append_unflushed_tail
 
         q = self._idless("user", "ask", "2026-08-19T16:10:00+00:00")
         owed = self._idless("assistant", "owed body", "2026-08-19T16:10:01+00:00")
@@ -812,7 +812,7 @@ class TestUnflushedTailOrderingAndSnapshot:
         import json
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.chat_handlers import _append_unflushed_tail
+        from aj_crew.dashboard.chat_handlers import _append_unflushed_tail
 
         q = self._idless("user", "run it", "2026-08-20T04:00:00+00:00")
         stop = self._idless("assistant", "stopped", "2026-08-20T04:00:01+00:00")
@@ -855,7 +855,7 @@ class TestUnflushedTailOrderingAndSnapshot:
         import json
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.chat_handlers import _append_unflushed_tail
+        from aj_crew.dashboard.chat_handlers import _append_unflushed_tail
 
         q = self._idless("user", "run it", "2026-08-20T04:10:00+00:00")
         stop = self._idless("assistant", "stopped", "2026-08-20T04:10:01+00:00")

@@ -3,7 +3,7 @@
  * on a REAL pod. Not a test — a screenshot harness.
  *
  * Usage:
- *   POD_INFO="$KIROCREW_SCRATCH/pod-info.json" \
+ *   POD_INFO="$AJCREW_SCRATCH/pod-info.json" \
  *     node scripts/capture-crew-panel-default-tab.mjs <outDir>
  *
  * Writes <outDir>/landing-dashboard.png (a crewmate opened cold: the strip's

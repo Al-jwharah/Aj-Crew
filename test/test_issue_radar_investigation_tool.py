@@ -3,7 +3,7 @@
 An agent session holds no dashboard credential (the cookie is httpOnly, the internal
 secret is never in its env, ``.local_secret`` is denylisted), so a raw ``PUT`` gets 403.
 The write goes through the ``issue_radar_record_investigation`` agent tool: the app's
-``app.json`` declares it, the ``kirocrew-core`` MCP server (which holds the internal
+``app.json`` declares it, the ``ajcrew-core`` MCP server (which holds the internal
 secret) forwards a validated call, and the app's ``backend/agent_tools.py`` writes the
 record in-process. ``issue_radar_agent_tools_helpers`` drives that path.
 """
@@ -20,10 +20,10 @@ from dashboard_owner_helpers import NoConfiguredOwner
 from issue_radar_agent_tools_helpers import INVESTIGATION_TOOL as TOOL
 from issue_radar_agent_tools_helpers import call, clean, descriptor, forwarded, listed, shipped
 
-from kiro_crew import mcp_core
-from kiro_crew.apps.builtins.issue_radar.backend import routes as ir_routes
-from kiro_crew.dashboard.token_auth import token_auth_middleware
-from kiro_crew.validation import ValidationError
+from aj_crew import mcp_core
+from aj_crew.apps.builtins.issue_radar.backend import routes as ir_routes
+from aj_crew.dashboard.token_auth import token_auth_middleware
+from aj_crew.validation import ValidationError
 
 RECORD_PATH = "/api/apps/issue-radar/investigation"
 
@@ -42,7 +42,7 @@ class TestTheRecordRouteIsNotAdmittedToTheInternalSecret(unittest.TestCase):
         open ``/labels/apply``, ``/issue/close`` and the comment routes, which write to
         the forge.
         """
-        from kiro_crew.dashboard.server import (
+        from aj_crew.dashboard.server import (
             _MIXED_INTERNAL_API_PATHS,
             _STRICT_INTERNAL_API_PATHS,
         )
@@ -344,7 +344,7 @@ class TestMiddlewareDecision:
         return req
 
     def _mw(self, secret: str = "s3cret"):
-        from kiro_crew.dashboard.server import (
+        from aj_crew.dashboard.server import (
             _MIXED_INTERNAL_API_PATHS,
             _STRICT_INTERNAL_API_PATHS,
         )
@@ -436,7 +436,7 @@ class TestTheToolWritesThroughTheRealRoute:
 
     @pytest.mark.asyncio
     async def test_a_record_for_a_repo_that_is_not_connected_is_refused(self):
-        from kiro_crew.apps.builtins.issue_radar.backend import agent_tools
+        from aj_crew.apps.builtins.issue_radar.backend import agent_tools
 
         request = make_mocked_request("POST", "/api/app-tools/call")
         request["internal_auth"] = True

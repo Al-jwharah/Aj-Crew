@@ -13,7 +13,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config.loader import KiroCrewConfig, SttConfig
+from aj_crew.config.loader import AjCrewConfig, SttConfig
 
 
 class TestConfig:
@@ -47,11 +47,11 @@ class TestConfigPutRoundTrip:
         ``True`` would leave every assertion here true even if the handler dropped
         the field entirely, since a fresh load would answer ``True`` on its own.
         """
-        # KIROCREW_HOME redirects both config_dir() and config_path() in a
+        # AJCREW_HOME redirects both config_dir() and config_path() in a
         # way that survives the `from ... import config_path` idiom used by
         # the handler, unlike monkeypatching a module-level name.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.dashboard import handlers
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.dashboard import handlers
 
         app = web.Application()
         # The config endpoint resolves owner identity from `app["state"]`.
@@ -74,9 +74,9 @@ class TestConfigPutRoundTrip:
 
             on_disk = _json.loads(cfg_file.read_text(encoding="utf-8"))
             assert on_disk["stt"]["streaming"] is False
-            # Assert KiroCrewConfig.load() correctly deserializes — guards
+            # Assert AjCrewConfig.load() correctly deserializes — guards
             # against field-name mismatches that would silently break at runtime.
-            reloaded = KiroCrewConfig.load()
+            reloaded = AjCrewConfig.load()
             assert reloaded.stt.streaming is False
 
     @pytest.mark.asyncio
@@ -86,8 +86,8 @@ class TestConfigPutRoundTrip:
         ``bool("false")`` is ``True`` and ``bool("")`` is ``False``, so coercion would
         flip the setting either way; both directions are pinned.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.dashboard import handlers
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.dashboard import handlers
 
         app = web.Application()
         # The config endpoint resolves owner identity from `app["state"]`.
@@ -127,8 +127,8 @@ class TestConfigPutRoundTrip:
         language_code, and language_codes so the Chat Settings STT section
         can render the current values and a language dropdown.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.dashboard import handlers
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.dashboard import handlers
 
         app = web.Application()
         # The config endpoint resolves owner identity from `app["state"]`.
@@ -177,7 +177,7 @@ class TestSttLanguageCodes:
         Regression: `ko-KR` was absent while ja-JP and zh-CN were present, so
         Korean speakers could not choose their language from the dashboard.
         """
-        from kiro_crew.dashboard.handlers.core import _STT_LANGUAGE_CODES
+        from aj_crew.dashboard.handlers.core import _STT_LANGUAGE_CODES
 
         assert "ko-KR" in _STT_LANGUAGE_CODES
 
@@ -187,7 +187,7 @@ class TestSttLanguageCodes:
         A duplicate renders twice in the dropdown, and a malformed tag is
         rejected by Transcribe at stream-start rather than at selection time.
         """
-        from kiro_crew.dashboard.handlers.core import _STT_LANGUAGE_CODES
+        from aj_crew.dashboard.handlers.core import _STT_LANGUAGE_CODES
 
         assert len(set(_STT_LANGUAGE_CODES)) == len(_STT_LANGUAGE_CODES)
         for code in _STT_LANGUAGE_CODES:
@@ -198,8 +198,8 @@ class TestSttLanguageCodes:
     @pytest.mark.asyncio
     async def test_korean_round_trips_through_the_config_api(self, tmp_path, monkeypatch):
         """Selecting Korean persists and is served back to the UI."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.dashboard import handlers
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.dashboard import handlers
 
         app = web.Application()
         # The config endpoint resolves owner identity from `app["state"]`.

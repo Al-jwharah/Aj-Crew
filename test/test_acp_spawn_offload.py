@@ -20,12 +20,12 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
-import kiro_crew.acp.client as client_mod
-import kiro_crew.acp.runtime as runtime_mod
-from kiro_crew.acp.client import AcpClient, _resolve_spawn_env
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
-from kiro_crew.testing.wait import await_until
+import aj_crew.acp.client as client_mod
+import aj_crew.acp.runtime as runtime_mod
+from aj_crew.acp.client import AcpClient, _resolve_spawn_env
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.testing.wait import await_until
 
 # A pid above every supported platform's pid_max: a cleanup path that signals it
 # reaches nothing on the runner (same spelling as test/test_update_provider.py).
@@ -41,7 +41,7 @@ def _pinned_kiro_cli_version(monkeypatch):
     ``test_agent.py``.
     """
     monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version",
+        "aj_crew.kiro_cli.installed_kiro_cli_version",
         lambda: SPEC_PERMISSIONS_MIN_VERSION,
     )
 
@@ -58,13 +58,13 @@ def _fake_process_admission(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def _native_projection_for_fake_processes(monkeypatch):
-    from kiro_crew.acp import skill_projection
+    from aj_crew.acp import skill_projection
 
     loop_thread = threading.current_thread()
 
     def prepare(work_dir, **_kwargs):
         assert threading.current_thread() is not loop_thread
-        return skill_projection.NativeSkillProjection({"kirocrew": "kirocrew-skill-view-test"})
+        return skill_projection.NativeSkillProjection({"ajcrew": "ajcrew-skill-view-test"})
 
     # Launch lifecycle tests own no native agent tree. Keep the projection hop
     # real and off-loop; its file and mapping behavior has separate coverage.
@@ -135,10 +135,10 @@ class TestClientSpawnOffLoop:
         mock_proc.returncode = None
 
         with (
-            patch("kiro_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
+            patch("aj_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
             patch.object(client_mod, "ensure_agent_materialized"),
             patch(
-                "kiro_crew.acp.client.wrap_argv",
+                "aj_crew.acp.client.wrap_argv",
                 return_value=(["/usr/bin/kiro-cli", "acp"], None),
             ),
             patch(
@@ -146,8 +146,8 @@ class TestClientSpawnOffLoop:
                 new_callable=AsyncMock,
                 return_value=mock_proc,
             ),
-            patch("kiro_crew.session._track_pid"),
-            patch("kiro_crew.session._track_session_pid"),
+            patch("aj_crew.session._track_pid"),
+            patch("aj_crew.session._track_session_pid"),
             # PID 12345 may be a real host process; without this, the early
             # descendant scan can find its children and _track_child_pids then
             # writes tracking state (mkdir included) on the loop thread —
@@ -229,10 +229,10 @@ class TestClientSpawnPidTrackingOffLoop:
         mock_proc.returncode = None
 
         with (
-            patch("kiro_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
+            patch("aj_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
             patch.object(client_mod, "ensure_agent_materialized"),
             patch(
-                "kiro_crew.acp.client.wrap_argv",
+                "aj_crew.acp.client.wrap_argv",
                 return_value=(["/usr/bin/kiro-cli", "acp"], None),
             ),
             patch(
@@ -241,11 +241,11 @@ class TestClientSpawnPidTrackingOffLoop:
                 return_value=mock_proc,
             ),
             patch(
-                "kiro_crew.session._track_pid",
+                "aj_crew.session._track_pid",
                 side_effect=lambda pid: track_threads.append(threading.current_thread()),
             ),
             patch(
-                "kiro_crew.session._track_session_pid",
+                "aj_crew.session._track_session_pid",
                 side_effect=lambda pid, token=None: session_track_threads.append(
                     threading.current_thread()
                 ),
@@ -326,7 +326,7 @@ class TestRuntimeSpawnOffLoop:
             return real_mkdir(self, *a, **kw)
 
         monkeypatch.setattr(client_mod, "_resolve_kiro_bin_for_spawn", resolve_bin)
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         monkeypatch.setattr(agent_mod, "ensure_agent_materialized", lambda agent: None)
         monkeypatch.setattr(runtime_mod, "wrap_argv", lambda argv, mode, **kw: (list(argv), None))
@@ -390,10 +390,10 @@ class TestSpawnCancellationSandboxCleanup:
             raise asyncio.CancelledError()
 
         with (
-            patch("kiro_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
+            patch("aj_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
             patch.object(client_mod, "ensure_agent_materialized"),
             patch(
-                "kiro_crew.acp.client.wrap_argv",
+                "aj_crew.acp.client.wrap_argv",
                 return_value=(["/usr/bin/kiro-cli", "acp"], sandbox_file),
             ),
             patch.object(client_mod, "cgroup_scope_argv", side_effect=_cgroup),
@@ -424,7 +424,7 @@ class TestSpawnCancellationSandboxCleanup:
             raise asyncio.CancelledError()
 
         monkeypatch.setattr(client_mod, "_resolve_kiro_bin_for_spawn", resolve_bin)
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         monkeypatch.setattr(agent_mod, "ensure_agent_materialized", lambda agent: None)
         monkeypatch.setattr(
@@ -478,10 +478,10 @@ class TestSpawnFailureCannotLeaveAnUntrackedProcess:
         killed = AsyncMock()
 
         with (
-            patch("kiro_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
+            patch("aj_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
             patch.object(client_mod, "ensure_agent_materialized"),
             patch(
-                "kiro_crew.acp.client.wrap_argv",
+                "aj_crew.acp.client.wrap_argv",
                 return_value=(["/usr/bin/kiro-cli", "acp"], None),
             ),
             patch(
@@ -494,10 +494,10 @@ class TestSpawnFailureCannotLeaveAnUntrackedProcess:
                 "finish_suspended_spawn",
                 side_effect=_raise_if("finish_suspended_spawn"),
             ),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=1.0),
-            patch("kiro_crew.session._track_pid", side_effect=_raise_if("track_pid")),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=1.0),
+            patch("aj_crew.session._track_pid", side_effect=_raise_if("track_pid")),
             patch(
-                "kiro_crew.session._track_session_pid",
+                "aj_crew.session._track_session_pid",
                 side_effect=_raise_if("track_session_pid"),
             ),
             patch.object(client_mod, "_get_child_pids", side_effect=_raise_if("child_scan")),
@@ -526,10 +526,10 @@ class TestSpawnFailureCannotLeaveAnUntrackedProcess:
 
         with (
             caplog.at_level("ERROR"),
-            patch("kiro_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
+            patch("aj_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
             patch.object(client_mod, "ensure_agent_materialized"),
             patch(
-                "kiro_crew.acp.client.wrap_argv",
+                "aj_crew.acp.client.wrap_argv",
                 return_value=(["/usr/bin/kiro-cli", "acp"], None),
             ),
             patch(
@@ -538,10 +538,10 @@ class TestSpawnFailureCannotLeaveAnUntrackedProcess:
                 return_value=mock_proc,
             ),
             patch.object(client_mod, "finish_suspended_spawn"),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=1.0),
-            patch("kiro_crew.session._track_pid"),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=1.0),
+            patch("aj_crew.session._track_pid"),
             patch(
-                "kiro_crew.session._track_session_pid",
+                "aj_crew.session._track_session_pid",
                 side_effect=OSError("no space left on device"),
             ),
             patch.object(client_mod, "_get_child_pids", return_value=[]),
@@ -567,9 +567,9 @@ class TestRuntimeSpawnCarriesItsInstance:
 
     @pytest.mark.asyncio
     async def test_env_instance_matches_process_instance(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.constants import (
-            KIROCREW_SPAWN_INSTANCE_ENV,
-            KIROCREW_SPAWNED_ENV,
+        from aj_crew.constants import (
+            AJCREW_SPAWN_INSTANCE_ENV,
+            AJCREW_SPAWNED_ENV,
         )
 
         class _StopSpawn(Exception):
@@ -607,8 +607,8 @@ class TestRuntimeSpawnCarriesItsInstance:
         with pytest.raises(_StopSpawn):
             await runtime.spawn()
 
-        assert seen_env.get(KIROCREW_SPAWNED_ENV) == "1"
-        instance = seen_env.get(KIROCREW_SPAWN_INSTANCE_ENV)
+        assert seen_env.get(AJCREW_SPAWNED_ENV) == "1"
+        instance = seen_env.get(AJCREW_SPAWN_INSTANCE_ENV)
         assert instance, "the child env carries no spawn instance"
         assert runtime._process_instance == instance
 
@@ -626,9 +626,9 @@ class TestRuntimeProjectedLaunchDocuments:
         before_spawn: Callable[[AcpRuntime], None] | None = None,
         member_plan: dict[str, str] | None = None,
     ) -> tuple[AcpRuntime, list[dict]]:
-        from kiro_crew import member_essential_context
-        from kiro_crew.acp import skill_projection
-        from kiro_crew.agent_sdk.drivers import acp as acp_driver
+        from aj_crew import member_essential_context
+        from aj_crew.acp import skill_projection
+        from aj_crew.agent_sdk.drivers import acp as acp_driver
 
         class StopAfterProjection(Exception):
             pass
@@ -650,15 +650,15 @@ class TestRuntimeProjectedLaunchDocuments:
         guide.parent.mkdir(parents=True)
         guide.write_text("PROJECTED-LAUNCH-GUIDE", encoding="utf-8")
         view = {
-            "name": "kirocrew-skill-view-test",
+            "name": "ajcrew-skill-view-test",
             "resources": ["file://.kiro/steering/**/*.md"],
         }
         monkeypatch.setattr(
             skill_projection,
             "prepare_native_skill_projection",
             lambda work_dir, **kwargs: skill_projection.NativeSkillProjection(
-                {"kirocrew": "kirocrew-skill-view-test"},
-                specs={"kirocrew": view},
+                {"ajcrew": "ajcrew-skill-view-test"},
+                specs={"ajcrew": view},
             ),
         )
 
@@ -770,12 +770,12 @@ class TestRuntimeProjectedLaunchDocuments:
         # kiro-cli re-reads the declared guides for every request, so the folder
         # dedup needs only their paths; no body is read or kept.
         assert runtime._native_launch_sources == {str(guide): ""}
-        assert runtime._native_launch_view_alias == "kirocrew-skill-view-test"
+        assert runtime._native_launch_view_alias == "ajcrew-skill-view-test"
         assert runtime._native_launch_resources == ["file://.kiro/steering/**/*.md"]
 
     @pytest.mark.asyncio
     async def test_spawn_reads_no_guide_body(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew import member_essential_context
+        from aj_crew import member_essential_context
 
         read = Mock(side_effect=AssertionError("the launch record must not read a guide"))
         monkeypatch.setattr(member_essential_context, "_read", read)
@@ -793,7 +793,7 @@ class TestRuntimeProjectedLaunchDocuments:
         """kiro-cli drops whole declared files past its budget, so a view whose
         declared files total more than the bound records nothing and the folder
         sends every guide."""
-        from kiro_crew import member_essential_context
+        from aj_crew import member_essential_context
 
         def oversize(runtime: AcpRuntime) -> None:
             guide = runtime._work_dir / ".kiro" / "steering" / "guide.md"
@@ -814,13 +814,13 @@ class TestRuntimeProjectedLaunchDocuments:
     async def test_spawn_records_the_projection_it_launched_when_the_attribute_is_swapped(
         self, tmp_path, monkeypatch, swap_at, swap_to
     ) -> None:
-        from kiro_crew.acp import skill_projection
+        from aj_crew.acp import skill_projection
 
         intruder = (
             None
             if swap_to == "none"
             else skill_projection.NativeSkillProjection(
-                {"kirocrew": "kirocrew-skill-view-other"}, specs={}
+                {"ajcrew": "ajcrew-skill-view-other"}, specs={}
             )
         )
 
@@ -837,7 +837,7 @@ class TestRuntimeProjectedLaunchDocuments:
 
         guide = tmp_path / "workspace" / ".kiro" / "steering" / "guide.md"
         assert runtime._native_launch_sources == {str(guide): ""}
-        assert runtime._native_launch_view_alias == "kirocrew-skill-view-test"
+        assert runtime._native_launch_view_alias == "ajcrew-skill-view-test"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -854,7 +854,7 @@ class TestRuntimeProjectedLaunchDocuments:
         project = tmp_path / "workspace"
         runtime = AcpRuntime(work_dir=project, expect_mcp_reports=False)
         runtime._native_launch_sources = {"file://guide.md": "GUIDE"}
-        self._patch_load_session(monkeypatch, runtime, agent or "kirocrew")
+        self._patch_load_session(monkeypatch, runtime, agent or "ajcrew")
 
         handle = await runtime.load_session(
             "",
@@ -894,9 +894,9 @@ class TestRuntimeProjectedLaunchDocuments:
     async def test_projected_walk_error_keeps_spawn_running_without_launch_documents(
         self, tmp_path, monkeypatch, caplog
     ) -> None:
-        from kiro_crew.member_essential_context import MemberEssentialContextError
+        from aj_crew.member_essential_context import MemberEssentialContextError
 
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.runtime"):
+        with caplog.at_level("WARNING", logger="aj_crew.acp.runtime"):
             runtime, calls = await self._drive(
                 monkeypatch,
                 tmp_path,
@@ -906,7 +906,7 @@ class TestRuntimeProjectedLaunchDocuments:
 
         assert calls == [
             {
-                "name": "kirocrew-skill-view-test",
+                "name": "ajcrew-skill-view-test",
                 "resources": ["file://.kiro/steering/**/*.md"],
             }
         ]
@@ -916,7 +916,7 @@ class TestRuntimeProjectedLaunchDocuments:
         warnings = [
             r
             for r in caplog.records
-            if r.name == "kiro_crew.acp.runtime"
+            if r.name == "aj_crew.acp.runtime"
             and r.levelname == "WARNING"
             and "launch steering record" in r.getMessage()
         ]
@@ -925,16 +925,16 @@ class TestRuntimeProjectedLaunchDocuments:
 
     @pytest.mark.asyncio
     async def test_record_warning_escapes_newlines(self, tmp_path, monkeypatch, caplog) -> None:
-        from kiro_crew.member_essential_context import MemberEssentialContextError
+        from aj_crew.member_essential_context import MemberEssentialContextError
 
         class NewlineRecordError(MemberEssentialContextError):
             def __init__(self, _message: str) -> None:
                 super().__init__(
                     "Essential source /steer/a\n"
-                    "2026-09-30 12:00:00,000 ERROR kiro_crew.auth: forged.md: unreadable"
+                    "2026-09-30 12:00:00,000 ERROR aj_crew.auth: forged.md: unreadable"
                 )
 
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.runtime"):
+        with caplog.at_level("WARNING", logger="aj_crew.acp.runtime"):
             await self._drive(
                 monkeypatch,
                 tmp_path,
@@ -945,7 +945,7 @@ class TestRuntimeProjectedLaunchDocuments:
         warnings = [
             record
             for record in caplog.records
-            if record.name == "kiro_crew.acp.runtime"
+            if record.name == "aj_crew.acp.runtime"
             and record.levelname == "WARNING"
             and "launch steering record" in record.getMessage()
         ]
@@ -972,7 +972,7 @@ class TestRuntimeProjectedLaunchDocuments:
         ``PermissionError`` from ``Path.is_file()``. Each must degrade to an
         empty record, not fail spawn, and each is logged once as a warning.
         """
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.runtime"):
+        with caplog.at_level("WARNING", logger="aj_crew.acp.runtime"):
             runtime, calls = await self._drive(
                 monkeypatch, tmp_path, inherits=False, projected_error=projected_error
             )
@@ -982,7 +982,7 @@ class TestRuntimeProjectedLaunchDocuments:
         warnings = [
             r
             for r in caplog.records
-            if r.name == "kiro_crew.acp.runtime"
+            if r.name == "aj_crew.acp.runtime"
             and r.levelname == "WARNING"
             and "launch steering record" in r.getMessage()
         ]
@@ -1022,7 +1022,7 @@ class TestRuntimeProjectedLaunchDocuments:
     async def test_load_copies_the_launch_record(self, tmp_path, monkeypatch) -> None:
         runtime, _calls = await self._drive(monkeypatch, tmp_path, inherits=False)
         guide = tmp_path / "workspace" / ".kiro" / "steering" / "guide.md"
-        self._patch_load_session(monkeypatch, runtime, "kirocrew")
+        self._patch_load_session(monkeypatch, runtime, "ajcrew")
 
         handle = await runtime.load_session("", "resumed-session")
 
@@ -1036,8 +1036,8 @@ class TestRuntimeProjectedLaunchDocuments:
         file added after launch can push a recorded guide out of its context:
         past the bound the provider hands out no record and the folder sends
         every guide; once the files fit again the record is back."""
-        from kiro_crew import member_essential_context
-        from kiro_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew import member_essential_context
+        from aj_crew.acp.session_provider import AcpSessionProvider
 
         runtime, _calls = await self._drive(monkeypatch, tmp_path, inherits=False)
         guide = tmp_path / "workspace" / ".kiro" / "steering" / "guide.md"
@@ -1072,17 +1072,17 @@ class TestRuntimeProjectedLaunchDocuments:
         launched with, so the record applies only while the projection still
         names that alias for the agent: another alias means the agent's declared
         resources changed, and the folder sends every guide."""
-        from kiro_crew.acp import skill_projection
+        from aj_crew.acp import skill_projection
 
         runtime, _calls = await self._drive(monkeypatch, tmp_path, inherits=False)
-        assert runtime._native_launch_view_alias == "kirocrew-skill-view-test"
+        assert runtime._native_launch_view_alias == "ajcrew-skill-view-test"
         if projection_state == "changed":
             runtime._native_skill_projection = skill_projection.NativeSkillProjection(
-                {"kirocrew": "kirocrew-skill-view-changed"}
+                {"ajcrew": "ajcrew-skill-view-changed"}
             )
         elif projection_state == "resolver-error":
             runtime._native_skill_projection = skill_projection.NativeSkillProjection(
-                {}, errors={"kirocrew": "synthetic resolver failure"}
+                {}, errors={"ajcrew": "synthetic resolver failure"}
             )
         else:
             runtime._native_skill_projection = None
@@ -1095,7 +1095,7 @@ class TestRuntimeProjectedLaunchDocuments:
                 "created-session", {"models": []}, **self._create_session_kwargs(runtime)
             )
         else:
-            self._patch_load_session(monkeypatch, runtime, "kirocrew")
+            self._patch_load_session(monkeypatch, runtime, "ajcrew")
             handle = await runtime.load_session("", "resumed-session")
 
         assert handle.native_context_documents == {}
@@ -1109,12 +1109,12 @@ class TestRuntimeProjectedLaunchDocuments:
         the projection attribute names afterwards: a fresh alias withholds the
         record even if the attribute has since swung back to the recorded one,
         and the recorded alias keeps it even if the attribute has moved on."""
-        from kiro_crew.acp import skill_projection
+        from aj_crew.acp import skill_projection
 
         runtime, _calls = await self._drive(monkeypatch, tmp_path, inherits=False)
         guide = tmp_path / "workspace" / ".kiro" / "steering" / "guide.md"
         recorded_alias = runtime._native_launch_view_alias
-        fresh_alias = "kirocrew-skill-view-fresh"
+        fresh_alias = "ajcrew-skill-view-fresh"
         sent_alias = recorded_alias if sent == "recorded" else fresh_alias
         after_alias = fresh_alias if sent == "recorded" else recorded_alias
 
@@ -1165,14 +1165,14 @@ class TestRuntimeShieldSurvivesAFailedAppend:
             return "/usr/bin/kiro-cli"
 
         monkeypatch.setattr(client_mod, "_resolve_kiro_bin_for_spawn", resolve_bin)
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         monkeypatch.setattr(agent_mod, "ensure_agent_materialized", lambda agent: None)
         monkeypatch.setattr(runtime_mod, "wrap_argv", lambda argv, mode, **kw: (list(argv), None))
         monkeypatch.setattr(runtime_mod, "cgroup_scope_argv", lambda argv: list(argv))
         monkeypatch.setattr(runtime_mod, "resolve_krb5_ccname", lambda env: None)
         monkeypatch.setattr(runtime_mod, "inject_xdist_auto_cap", lambda env: None)
-        monkeypatch.setattr("kiro_crew.platform_compat.get_process_start_id", lambda pid: 1.0)
+        monkeypatch.setattr("aj_crew.platform_compat.get_process_start_id", lambda pid: 1.0)
 
         async def fake_spawn(*_a, **_kw):
             return mock_proc
@@ -1201,7 +1201,7 @@ class TestRuntimeShieldSurvivesAFailedAppend:
         Only the subprocess and kernel boundary are simulated. In particular,
         killing just the root must leave the MCP children visible to assertions.
         """
-        from kiro_crew import platform_compat, session_pid
+        from aj_crew import platform_compat, session_pid
 
         root = 6100
         # Windows tree teardown follows parentage, not POSIX group membership.
@@ -1425,7 +1425,7 @@ class TestRuntimeShieldSurvivesAFailedAppend:
             )
         else:
             monkeypatch.setattr(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 lambda pid: (_ for _ in ()).throw(boom),
             )
 

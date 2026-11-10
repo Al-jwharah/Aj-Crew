@@ -19,10 +19,10 @@ from pathlib import Path
 import pytest
 
 from conftest import requires_symlinks
-from kiro_crew import security
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.skill_runtime import catalog
-from kiro_crew.skills import SkillsLoader
+from aj_crew import security
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.skill_runtime import catalog
+from aj_crew.skills import SkillsLoader
 
 _SKILLS = 6
 
@@ -57,7 +57,7 @@ def loader(tmp_path: Path, opened) -> SkillsLoader:
     for i in range(_SKILLS):
         _skill(base / "skills", f"own-{i}")
         _skill(base / "extra", f"extra-{i}")
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.skills.extra_paths = [str(base / "extra")]
     return opened(SkillsLoader(skills_path=base / "skills", install_builtins=False, config=cfg))
 
@@ -110,7 +110,7 @@ class TestAFencedLinkIsStillDropped:
     def test_an_extra_path_link_to_a_crew_secret_is_not_listed(
         self, loader, pool_submissions
     ) -> None:
-        crew_home = Path(os.environ["KIROCREW_HOME"])
+        crew_home = Path(os.environ["AJCREW_HOME"])
         crew_home.mkdir(parents=True, exist_ok=True)
         secret = crew_home / ".env"
         secret.write_text("TOKEN=leaked\n", encoding="utf-8")

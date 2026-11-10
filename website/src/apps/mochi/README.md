@@ -1,7 +1,7 @@
 # Mochi — architecture map
 
 Mochi is a desktop pet companion, migrated from a standalone Electron app into a
-Kiro Crew built-in. This file is the map: where everything lives, why the layout
+Aj Crew built-in. This file is the map: where everything lives, why the layout
 looks the way it does, and where the seams are. Read it before moving files or
 adding cross-boundary calls.
 
@@ -10,16 +10,16 @@ adding cross-boundary calls.
 | Root | What lives there |
 |---|---|
 | `website/src/apps/mochi/` (here) | All frontend: window entry HTML + React, bridges, vendored original renderer |
-| `src/kiro_crew/apps/builtins/mochi/` | Python backend: runtime (`hooks.py`), services, MCP server, routes, agents/skills |
+| `src/aj_crew/apps/builtins/mochi/` | Python backend: runtime (`hooks.py`), services, MCP server, routes, agents/skills |
 | `website/electron/mochi/` + `website/electron/mochi-session-token.js` | Electron shell layer: windows, preload, instance resolution, session-token borrowing |
-| `test/test_mochi_*.py`, `src/kiro_crew/apps/builtins/mochi/tests/` | Backend tests: flat `test/` with the `test_mochi_` prefix, plus the in-package `tests/` (see "Test placement") |
+| `test/test_mochi_*.py`, `src/aj_crew/apps/builtins/mochi/tests/` | Backend tests: flat `test/` with the `test_mochi_` prefix, plus the in-package `tests/` (see "Test placement") |
 
 Reusable core modules do not depend on Mochi internals; composition roots and
 first-party registries name the app at explicit integration points. Those currently
 include `apps/builtins/__init__.py`, `security_posture.py`,
 `apps/builtinRegistry.ts`, `components/appstore/appManifest.ts`, and the Electron
 `main.js`, `package.json`, and `mochi-session-token.js` surfaces. Removing the app
-also removes the `apps.mochi` i18n subtree. Search `src/kiro_crew`, `website/src`,
+also removes the `apps.mochi` i18n subtree. Search `src/aj_crew`, `website/src`,
 `website/electron`, and `test` for `mochi` rather than relying on a fixed count.
 
 ## Why the double `src` (`src/apps/mochi/src/renderer/...`)
@@ -64,7 +64,7 @@ ported line-for-line. It is intentional, not a nesting mistake.
 - `test/` — frontend tests (vitest picks up `src/**/*.test.*` with zero
   config).
 
-## Backend shape (`src/kiro_crew/apps/builtins/mochi/`)
+## Backend shape (`src/aj_crew/apps/builtins/mochi/`)
 
 `hooks.py` owns the runtime: service graph, owner loop (all periodic work
 ticks here — no free-floating tasks), notification gate, and the late-bound
@@ -90,12 +90,12 @@ origin, token fetcher, logger, and dashboard-window accessor. Shell tests live i
 
 Frontend and Electron tests live inside the mochi folders. Backend tests live in
 two places: the repo's flat `test/` with the `test_mochi_` prefix, and the
-in-package `src/kiro_crew/apps/builtins/mochi/tests/` (for example
+in-package `src/aj_crew/apps/builtins/mochi/tests/` (for example
 `test_mochi_windows.py`). The in-package ones are collected through `setup.cfg`
-`testpaths` (which includes `src/kiro_crew/apps/builtins`) and ship with the package,
+`testpaths` (which includes `src/aj_crew/apps/builtins`) and ship with the package,
 the established convention for a builtin app's `tests/` (`MANIFEST.in` deliberately
 does not prune it). The repo-root `conftest.py` covers both locations, including the
-per-test `KIROCREW_HOME` isolation.
+per-test `AJCREW_HOME` isolation.
 
 ## Rules of thumb
 

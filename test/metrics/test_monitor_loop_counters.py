@@ -28,14 +28,14 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from kiro_crew import autonudge_stop_log
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.autonudge_service import model as loop_model
-from kiro_crew.metrics import monitor_loops as ml
-from kiro_crew.metrics.recorder import MetricsRecorder
-from kiro_crew.monitoring import models as monitor_models
-from kiro_crew.monitoring.decision import decide_monitor
-from kiro_crew.monitoring.models import (
+from aj_crew import autonudge_stop_log
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.autonudge_service import model as loop_model
+from aj_crew.metrics import monitor_loops as ml
+from aj_crew.metrics.recorder import MetricsRecorder
+from aj_crew.monitoring import models as monitor_models
+from aj_crew.monitoring.decision import decide_monitor
+from aj_crew.monitoring.models import (
     MonitorBudgets,
     MonitorDecision,
     MonitorObservation,
@@ -45,7 +45,7 @@ from kiro_crew.monitoring.models import (
     MonitorState,
     ProviderErrorKind,
 )
-from kiro_crew.monitoring.pull_request import PullRequestFacts, classify_pull_request_facts
+from aj_crew.monitoring.pull_request import PullRequestFacts, classify_pull_request_facts
 
 _HOUR = 3600
 _DAY = 86400
@@ -67,7 +67,7 @@ class _CapturingRecorder:
 @pytest.fixture
 def rec():
     r = _CapturingRecorder()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=r):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=r):
         yield r
 
 
@@ -80,7 +80,7 @@ def _autonudge_enabled(_floor_monkeypatch):
     ``monkeypatch.undo()``, so the floor fixture is what gives it an independent
     lifetime.
     """
-    _floor_monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    _floor_monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
 
 def _named(rec, name):
@@ -1029,7 +1029,7 @@ class TestTelemetryDisabled:
         noop = MetricsRecorder(None)
         assert not noop.enabled
 
-        with patch("kiro_crew.metrics.provider.get_recorder", return_value=noop):
+        with patch("aj_crew.metrics.provider.get_recorder", return_value=noop):
             svc = AutoNudgeService(base_dir=tmp_path)
             await svc.start()
             loop = await svc.add(slot_key="chat-1-123", message="go", idle_secs=3600)
@@ -1047,7 +1047,7 @@ class TestTelemetryDisabled:
 
     def test_a_raising_recorder_never_breaks_the_decision(self):
         """Telemetry must never break the path it sits on."""
-        with patch("kiro_crew.metrics.events.emit_counter", side_effect=RuntimeError("boom")):
+        with patch("aj_crew.metrics.events.emit_counter", side_effect=RuntimeError("boom")):
             verdict = decide_monitor(
                 _state(last_fingerprint="pending-a"),
                 MonitorObservation("pending-a", MonitorObservationStatus.PENDING),
@@ -1058,7 +1058,7 @@ class TestTelemetryDisabled:
 
     @pytest.mark.asyncio
     async def test_a_raising_recorder_never_breaks_an_arm(self, tmp_path):
-        with patch("kiro_crew.metrics.events.emit_counter", side_effect=RuntimeError("boom")):
+        with patch("aj_crew.metrics.events.emit_counter", side_effect=RuntimeError("boom")):
             svc = AutoNudgeService(base_dir=tmp_path)
             await svc.start()
             loop = await svc.add(slot_key="chat-1-123", message="go", idle_secs=3600)
@@ -1073,7 +1073,7 @@ class TestTelemetryDisabled:
             delivered.append(watched.id)
             return True
 
-        with patch("kiro_crew.metrics.events.emit_counter", side_effect=RuntimeError("boom")):
+        with patch("aj_crew.metrics.events.emit_counter", side_effect=RuntimeError("boom")):
             svc = AutoNudgeService(base_dir=tmp_path)
             await svc.start()
             loop = await svc.add(slot_key="chat-1-123", message="go", idle_secs=3600)
@@ -1099,7 +1099,7 @@ class TestTelemetryDisabled:
 
         with (
             patch.object(ml, "record_loop_stopped", side_effect=RuntimeError("boom")) as raising,
-            caplog.at_level(logging.WARNING, logger="kiro_crew.autonudge"),
+            caplog.at_level(logging.WARNING, logger="aj_crew.autonudge"),
         ):
             await svc.update(loop.id, active=False, stopped_reason="cycle_cap")
 

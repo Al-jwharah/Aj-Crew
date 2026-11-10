@@ -550,15 +550,15 @@ def test_the_workflow_runs_this_script_from_a_sparse_checkout() -> None:
     assert sparse == {
         ".github/scripts/readiness_sweep_scan.py",
         ".github/scripts/republish_withheld_verdict.py",
-        "src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/scripts/pr_status.py",
-        "src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/scripts/_review_contract.py",
-        "src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/scripts/_review_fences.py",
-        "src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/scripts/_review_pushes.py",
-        "src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/scripts/_review_rounds.py",
-        "src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/scripts/green_age.py",
-        "src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/scripts/_tool_argv.py",
-        "src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/scripts/pr_status_issue_links.py",
-        "src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/scripts/pr_status_verdict.py",
+        "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts/pr_status.py",
+        "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts/_review_contract.py",
+        "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts/_review_fences.py",
+        "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts/_review_pushes.py",
+        "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts/_review_rounds.py",
+        "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts/green_age.py",
+        "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts/_tool_argv.py",
+        "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts/pr_status_issue_links.py",
+        "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts/pr_status_verdict.py",
     }
     assert checkout["with"]["sparse-checkout-cone-mode"] is False
     assert checkout["with"]["persist-credentials"] is False

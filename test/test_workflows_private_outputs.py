@@ -4,10 +4,10 @@ import pytest
 from test_workflows_inject import _FakeSlot, _FakeState
 from test_workflows_private_execution import world as _world
 
-from kiro_crew.dashboard.workflow_inject import inject_bound_workflow_result
-from kiro_crew.task_models import Project, Task, TaskStatus
-from kiro_crew.taskrunner import TaskRunner
-from kiro_crew.workflow_memory import WorkflowScope
+from aj_crew.dashboard.workflow_inject import inject_bound_workflow_result
+from aj_crew.task_models import Project, Task, TaskStatus
+from aj_crew.taskrunner import TaskRunner
+from aj_crew.workflow_memory import WorkflowScope
 
 world = _world
 

@@ -29,7 +29,7 @@ const slots = (chipState, chipCi) => [{
   running: false,
   last_message: 'Conflict resolved. PR #443 is MERGEABLE again…',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   modified: Math.floor(Date.now() / 1000),
   source_links: [
@@ -85,8 +85,8 @@ const source = (state, mergedAt) => ({
   ],
   comments: [],
   files: [
-    { path: 'src/kiro_crew/dashboard/handlers/source_providers.py', status: 'modified', additions: 151, deletions: 4, patch: '' },
-    { path: 'src/kiro_crew/dashboard/state.py', status: 'modified', additions: 46, deletions: 0, patch: '' },
+    { path: 'src/aj_crew/dashboard/handlers/source_providers.py', status: 'modified', additions: 151, deletions: 4, patch: '' },
+    { path: 'src/aj_crew/dashboard/state.py', status: 'modified', additions: 46, deletions: 0, patch: '' },
     { path: 'website/src/hooks/useWebSocket.ts', status: 'modified', additions: 32, deletions: 1, patch: '' },
     { path: 'website/src/utils/pullRequestStatusDelta.ts', status: 'added', additions: 62, deletions: 0, patch: '' },
   ],
@@ -131,7 +131,7 @@ async function main() {
     if (path === '/api/source/pull-request/checks') return json(route, { checks: source(scene.sourceState, '').checks })
     if (path === '/api/status') return json(route, { sessions: 1, crons: 0, lessons: 0, uptime: 120, version: 'dev' })
     if (path === '/api/notifications') return json(route, { notifications: [], unread: 0 })
-    if (path === '/api/config' || path === '/api/kirocrew-config') return json(route, {})
+    if (path === '/api/config' || path === '/api/ajcrew-config') return json(route, {})
     if (path.startsWith('/api/instances')) return json(route, { instances: [], active: '' })
     if (path === '/api/dashboard/branding') return json(route, { bot_name: 'Kiro', avatar: '' })
     if (path === '/api/auth/me') return json(route, { user: 'owner', app: '' })

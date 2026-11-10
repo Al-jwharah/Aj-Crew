@@ -1,10 +1,10 @@
-"""Behaviour coverage for the small helpers of ``kiro_crew.apps.registry``.
+"""Behaviour coverage for the small helpers of ``aj_crew.apps.registry``.
 
 Every subprocess is faked at this module's own chokepoints
 (``wrap_argv`` / ``cgroup_scope_argv`` / ``create_subprocess_limited``), matching
 the harness already used by ``test_apps_registry.py``, so nothing here spawns
 git, npm, or pip. All filesystem work happens under ``tmp_path`` with
-``_manifest_cache_dir`` redirected, so no test touches the real Kiro Crew home.
+``_manifest_cache_dir`` redirected, so no test touches the real Aj Crew home.
 
 This module holds the build step: ``_run_app_build``'s command selection and execution.
 The other helpers are covered by its siblings ``test_apps_registry_coverage_gates.py``,
@@ -27,8 +27,8 @@ from apps_registry_coverage_helpers import pip_importable_fixture  # noqa: F401
 from apps_registry_coverage_helpers import _DATA_IS_A_FILE, _asgi_backend, _fake_sandbox, _FakeProc
 
 from conftest import requires_symlinks
-from kiro_crew.apps import registry
-from kiro_crew.apps.manifest import AppManifest
+from aj_crew.apps import registry
+from aj_crew.apps.manifest import AppManifest
 
 # Build step selection + execution
 
@@ -134,7 +134,7 @@ class TestRunAppBuild:
         """
         (tmp_path / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
         bundled = tmp_path / "App.app" / "Contents" / "Resources" / "backend-dist"
-        bundled = bundled / "kirocrew-backend-arm64" / "bin" / "python3.12"
+        bundled = bundled / "ajcrew-backend-arm64" / "bin" / "python3.12"
         bundled.parent.mkdir(parents=True, exist_ok=True)
         bundled.write_text("", encoding="utf-8")
         monkeypatch.setattr(registry.sys, "executable", str(bundled))
@@ -467,7 +467,7 @@ class TestRunAppBuild:
             tmp_path,
             "demo",
             [],
-            manifest=_asgi_backend("kiro_crew.apps.builtins.demo.server"),
+            manifest=_asgi_backend("aj_crew.apps.builtins.demo.server"),
             self_managed=False,
         )
         assert result["ok"] is False
@@ -675,7 +675,7 @@ class TestRunAppBuild:
         backend never gets its deps -- so the waiver, granted because the
         provisioner installs the file, does not apply to one it will refuse. The
         cap is the provisioner's own constant, applied by the shared rule."""
-        from kiro_crew.apps.manifest import REQUIREMENTS_TXT_MAX_BYTES
+        from aj_crew.apps.manifest import REQUIREMENTS_TXT_MAX_BYTES
 
         (tmp_path / "requirements.txt").write_bytes(b"#" + b"x" * REQUIREMENTS_TXT_MAX_BYTES)
         spawned = _fake_sandbox(monkeypatch, [_FakeProc(returncode=0)])
@@ -964,7 +964,7 @@ class TestRunAppBuild:
         and the final gate -- timed together. Returns the runtime's refusal (``""``
         when it accepts the path), the build result, the final refusal and the
         elapsed seconds."""
-        from kiro_crew.apps.manifest import file_entry_point_refusal
+        from aj_crew.apps.manifest import file_entry_point_refusal
 
         (tmp_path / "B").symlink_to(Path("."))
         (tmp_path / "requirements.txt").write_text("fastapi\n", encoding="utf-8")
@@ -1081,7 +1081,7 @@ class TestRunAppBuild:
         `app_data_dir()`, leaving a partial record. The refusal carries no desktop code,
         since a browser install refuses it too. An UPDATE puts the preserved directory
         back over the file, so there is nothing to refuse."""
-        from kiro_crew.apps.manager import InstalledTreeRefused
+        from aj_crew.apps.manager import InstalledTreeRefused
 
         home = tmp_path / "home"
         source = home / "app-sources" / "demo"
@@ -1342,8 +1342,8 @@ class TestRunAppBuild:
         assert result == {"ok": True}
         # A stale provisioned tree and a source-shipped metadata file: dropped by
         # the copy, replaced by the runtime, and not the gate's to refuse over.
-        (tmp_path / ".kirocrew-deps").mkdir()
-        (tmp_path / ".kirocrew-deps" / "fastapi.dist-info").mkdir()
+        (tmp_path / ".ajcrew-deps").mkdir()
+        (tmp_path / ".ajcrew-deps" / "fastapi.dist-info").mkdir()
         (tmp_path / "installed.json").write_text("{}", encoding="utf-8")
         result = await registry._run_app_build(
             tmp_path, "demo", [], manifest=_asgi_backend(), self_managed=False

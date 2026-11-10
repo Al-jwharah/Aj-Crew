@@ -12,7 +12,7 @@ import re
 
 import pytest
 
-from kiro_crew.dashboard.workflow_inject import (
+from aj_crew.dashboard.workflow_inject import (
     _collect_artifact_paths,
     _slot_key_from_session,
     _summarize,
@@ -293,7 +293,7 @@ def test_supplied_title_survives_a_follow_up_auto_title() -> None:
     # `_titled` gate would be open and the title would be overwritten.
     import asyncio
 
-    from kiro_crew.dashboard.chat_title import _maybe_auto_title
+    from aj_crew.dashboard.chat_title import _maybe_auto_title
 
     state = _FakeState({})
     snap = {
@@ -452,7 +452,7 @@ def test_durable_copy_carries_the_window_rows_id() -> None:
         "session_key": "dashboard:chat-2-123",
         "result": {"ok": True},
     }
-    with patch("kiro_crew.dashboard.workflow_inject.append_if_absent_off_loop") as durable:
+    with patch("aj_crew.dashboard.workflow_inject.append_if_absent_off_loop") as durable:
         assert inject_workflow_result(state, "wf_2", snap) is True
     assert len(origin.messages) == 1
     window_mid = origin.messages[0]["meta"]["mid"]

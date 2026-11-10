@@ -16,7 +16,7 @@ const EMPTY_QUERY: RosterQuery = { search: '', starredOnly: false, source: 'all'
 const IDLE: MemberSignals = { running: false, needsYou: false, unread: false, patrolling: false, goal: false }
 const SIGNALS: Record<string, MemberSignals> = {
   conductor: { ...IDLE, running: true, patrolling: true },
-  kirocrew: { ...IDLE, needsYou: true },
+  ajcrew: { ...IDLE, needsYou: true },
   'pkg-a': { ...IDLE, unread: true },
   'pkg-b': IDLE,
   'legacy-aim': { ...IDLE, running: true },
@@ -28,9 +28,9 @@ const filterRoster = <M extends (typeof ROSTER)[number]>(members: readonly M[], 
 
 const ROSTER = [
   { name: 'pkg-b', source: 'package', starred: false, last_active_ts: 10 },
-  { name: 'conductor', source: 'kirocrew', starred: true, last_active_ts: 500 },
+  { name: 'conductor', source: 'ajcrew', starred: true, last_active_ts: 500 },
   { name: 'legacy-aim', source: 'aim', starred: false },
-  { name: 'kirocrew', source: 'builtin', starred: false, last_active_ts: 200 },
+  { name: 'ajcrew', source: 'builtin', starred: false, last_active_ts: 200 },
   { name: 'pkg-a', source: 'package', starred: true, last_active_ts: 200 },
 ]
 const q = (over: Partial<RosterQuery>): RosterQuery => ({ ...EMPTY_QUERY, ...over })
@@ -38,10 +38,10 @@ const names = (rows: { name: string }[]) => rows.map(r => r.name)
 
 describe('sortRoster', () => {
   it('recent: newest activity first, ties and never-talked members alphabetical', () => {
-    expect(names(sortRoster(ROSTER, 'recent'))).toEqual(['conductor', 'kirocrew', 'pkg-a', 'pkg-b', 'legacy-aim'])
+    expect(names(sortRoster(ROSTER, 'recent'))).toEqual(['conductor', 'ajcrew', 'pkg-a', 'pkg-b', 'legacy-aim'])
   })
   it('name: locale-aware alphabetical regardless of activity', () => {
-    expect(names(sortRoster(ROSTER, 'name'))).toEqual(['conductor', 'kirocrew', 'legacy-aim', 'pkg-a', 'pkg-b'])
+    expect(names(sortRoster(ROSTER, 'name'))).toEqual(['conductor', 'ajcrew', 'legacy-aim', 'pkg-a', 'pkg-b'])
   })
   it('does not mutate its input', () => {
     const before = names(ROSTER)
@@ -62,17 +62,17 @@ describe('sortRoster + narrowRoster', () => {
   })
   it('origin buckets: mine / builtin / everything else is package', () => {
     expect(names(filterRoster(ROSTER, q({ source: 'mine' }), signalsOf))).toEqual(['conductor'])
-    expect(names(filterRoster(ROSTER, q({ source: 'builtin' }), signalsOf))).toEqual(['kirocrew'])
+    expect(names(filterRoster(ROSTER, q({ source: 'builtin' }), signalsOf))).toEqual(['ajcrew'])
     expect(names(filterRoster(ROSTER, q({ source: 'package' }), signalsOf))).toEqual(['pkg-a', 'pkg-b', 'legacy-aim'])
   })
   it('one status keeps members in that state', () => {
     expect(names(filterRoster(ROSTER, q({ status: new Set(['working']) }), signalsOf))).toEqual(['conductor', 'legacy-aim'])
-    expect(names(filterRoster(ROSTER, q({ status: new Set(['needs_you']) }), signalsOf))).toEqual(['kirocrew'])
+    expect(names(filterRoster(ROSTER, q({ status: new Set(['needs_you']) }), signalsOf))).toEqual(['ajcrew'])
     expect(names(filterRoster(ROSTER, q({ status: new Set(['unread']) }), signalsOf))).toEqual(['pkg-a'])
     expect(names(filterRoster(ROSTER, q({ status: new Set(['patrolling']) }), signalsOf))).toEqual(['conductor'])
   })
   it('several statuses OR together, like the sidebar\'s session filters', () => {
-    expect(names(filterRoster(ROSTER, q({ status: new Set(['needs_you', 'unread']) }), signalsOf))).toEqual(['kirocrew', 'pkg-a'])
+    expect(names(filterRoster(ROSTER, q({ status: new Set(['needs_you', 'unread']) }), signalsOf))).toEqual(['ajcrew', 'pkg-a'])
   })
   it('dimensions AND together', () => {
     expect(names(filterRoster(ROSTER, q({ starredOnly: true, status: new Set(['working']) }), signalsOf))).toEqual(['conductor'])
@@ -90,7 +90,7 @@ describe('narrowRoster', () => {
     // not move rows, so the narrowing step has no opinion on order at all.
     const committed = [ROSTER[3], ROSTER[0], ROSTER[1], ROSTER[4], ROSTER[2]]
     expect(narrowRoster(committed, EMPTY_QUERY, signalsOf).map((m) => m.name)).toEqual([
-      'kirocrew', 'pkg-b', 'conductor', 'pkg-a', 'legacy-aim',
+      'ajcrew', 'pkg-b', 'conductor', 'pkg-a', 'legacy-aim',
     ])
     expect(narrowRoster(committed, { ...EMPTY_QUERY, starredOnly: true }, signalsOf).map((m) => m.name)).toEqual([
       'conductor', 'pkg-a',
@@ -100,21 +100,21 @@ describe('narrowRoster', () => {
 
 /** A roster as a real host serves it. `has_dm_message` is the DM thread holding
  *  a message, whoever sent it; `dashboard_created` is a crewmate the person
- *  created (source kirocrew AND a member id), listed even with an empty chat;
+ *  created (source ajcrew AND a member id), listed even with an empty chat;
  *  `has_user_dm_message` is the reserved `default` row's own, stricter signal. */
 const NO = { dashboard_created: false, has_dm_message: false }
 const MIXED = [
   // The reserved default member, no message the person sent -> hidden.
   { name: 'default', ...NO, has_user_dm_message: false, source: 'builtin' },
   // Dashboard-created, greeting never landed, but starred: listed.
-  { name: 'radar', display_name: 'Issue Radar', ...NO, dashboard_created: true, source: 'kirocrew', starred: true },
+  { name: 'radar', display_name: 'Issue Radar', ...NO, dashboard_created: true, source: 'ajcrew', starred: true },
   // Dashboard-created AND a message in the thread: listed.
-  { name: 'oncall', dashboard_created: true, has_dm_message: true, source: 'kirocrew' },
+  { name: 'oncall', dashboard_created: true, has_dm_message: true, source: 'ajcrew' },
   // Created by the person (on the page, or by approving Mate's card), chat
   // never opened, not starred -> listed: the person asked for it.
-  { name: 'fresh', ...NO, dashboard_created: true, source: 'kirocrew' },
-  // Legacy kirocrew row: no member id, no message -> hidden.
-  { name: 'legacy-aim', ...NO, source: 'kirocrew' },
+  { name: 'fresh', ...NO, dashboard_created: true, source: 'ajcrew' },
+  // Legacy ajcrew row: no member id, no message -> hidden.
+  { name: 'legacy-aim', ...NO, source: 'ajcrew' },
   // Sync-generated, empty thread -> hidden.
   { name: 'pkg-tool', ...NO, source: 'package' },
   // An app's own stamp, empty thread -> hidden.
@@ -149,7 +149,7 @@ describe('listedByDefault / rosterShows', () => {
     expect(listedByDefault({ ...base, has_dm_message: false, has_user_dm_message: false })).toBe(false)
     expect(listedByDefault({ ...base, has_dm_message: true, has_user_dm_message: true })).toBe(true)
     // Even a row that looks person-created never lists default by that alone.
-    expect(listedByDefault({ ...base, source: 'kirocrew', dashboard_created: true, has_dm_message: false, has_user_dm_message: false })).toBe(false)
+    expect(listedByDefault({ ...base, source: 'ajcrew', dashboard_created: true, has_dm_message: false, has_user_dm_message: false })).toBe(false)
     // Starring it is the person's own mark.
     expect(listedByDefault({ ...base, has_dm_message: false, has_user_dm_message: false, starred: true })).toBe(true)
     // An older gateway sends no has_user_dm_message: its has_dm_message rule stands.
@@ -159,7 +159,7 @@ describe('listedByDefault / rosterShows', () => {
     const upgraded = [
       { name: 'default', source: 'builtin', has_dm_message: true, has_user_dm_message: false },
       { name: 'mate', ...NO, source: 'builtin' },
-      { name: 'kirocrew-conductor', ...NO, source: 'builtin' },
+      { name: 'ajcrew-conductor', ...NO, source: 'builtin' },
     ]
     expect(names(rosterPopulation(upgraded, EMPTY_QUERY))).toEqual(['mate'])
   })
@@ -177,8 +177,8 @@ describe('listedByDefault / rosterShows', () => {
   it('the search also reads the agent template, so a row is reachable by what it RUNS', () => {
     // The folded roster in the header chip has always offered this term; it
     // lives here now so the column's search reaches the same rows.
-    expect(rosterShows({ name: 'oncall', kiro_agent: 'kirocrew-oncall' }, { search: 'kirocrew-onc', defaultAgent: 'default' })).toBe(true)
-    expect(rosterShows({ name: 'oncall', kiro_agent: 'kirocrew-oncall' }, { search: 'radar', defaultAgent: 'default' })).toBe(false)
+    expect(rosterShows({ name: 'oncall', kiro_agent: 'ajcrew-oncall' }, { search: 'ajcrew-onc', defaultAgent: 'default' })).toBe(true)
+    expect(rosterShows({ name: 'oncall', kiro_agent: 'ajcrew-oncall' }, { search: 'radar', defaultAgent: 'default' })).toBe(false)
   })
   it('a typed search decides alone: it reaches hidden rows and skips listed ones it misses', () => {
     expect(rosterShows(byName('legacy-aim'), { search: 'aim' })).toBe(true)
@@ -266,11 +266,11 @@ describe('storage parsers reject junk', () => {
 describe('Recent order: the newest message in each thread, whoever sent it', () => {
   const CHAT = [
     // A scheduled run wrote the newest message: it is the newest conversation.
-    { name: 'bg-only', source: 'kirocrew', dashboard_created: true, has_dm_message: true, last_message: 'patrol note', last_active_ts: 900 },
+    { name: 'bg-only', source: 'ajcrew', dashboard_created: true, has_dm_message: true, last_message: 'patrol note', last_active_ts: 900 },
     { name: 'default', source: 'builtin', has_dm_message: true, last_active_ts: 50 },
     { name: 'app-bot', source: 'radar-app', has_dm_message: false, last_active_ts: 800 },
     { name: 'old-chat', source: 'package', has_dm_message: true, last_active_ts: 5 },
-    { name: 'new-chat', source: 'kirocrew', has_dm_message: true, last_active_ts: 300 },
+    { name: 'new-chat', source: 'ajcrew', has_dm_message: true, last_active_ts: 300 },
   ]
   it('lists every thread that holds a message, and no empty one', () => {
     expect(CHAT.filter((m) => listedByDefault(m)).map((m) => m.name)).toEqual(['bg-only', 'default', 'old-chat', 'new-chat'])

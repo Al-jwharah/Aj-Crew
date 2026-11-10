@@ -20,8 +20,8 @@ import pytest
 from member_essential_context_helpers import _write_template
 
 from conftest import make_dir_link, requires_symlinks
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.member_essential_context import MemberEssentialContextError
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.member_essential_context import MemberEssentialContextError
 
 # Fixtures shared with the sibling modules, bound by assignment so pytest registers
 # them for the tests in this module.
@@ -62,7 +62,7 @@ def test_refused_workspace_root_is_never_resolved(env, monkeypatch, tmp_path):
     ``realpath`` on such a root IS the outbound SMB probe, so the isolation
     check must compare it lexically instead of resolving it.
     """
-    from kiro_crew import member_essential_context as mec
+    from aj_crew import member_essential_context as mec
 
     refused = Path("//share-host/ws-share/workspace")
     real_validate = mec.validate_file_path
@@ -72,7 +72,7 @@ def test_refused_workspace_root_is_never_resolved(env, monkeypatch, tmp_path):
         lambda raw: None if "share-host" in raw else real_validate(raw),
     )
     monkeypatch.setattr(
-        mec.KiroCrewConfig,
+        mec.AjCrewConfig,
         "load",
         classmethod(lambda cls: SimpleNamespace(workspaces={"shared": None})),
     )
@@ -107,8 +107,8 @@ def test_refused_workspace_root_is_never_resolved(env, monkeypatch, tmp_path):
 def test_inherited_product_prompt_uses_session_start_not_essentials(
     env, tmp_path, monkeypatch, source, spec_uses_stub, fresh, options
 ):
-    from kiro_crew import agent
-    from kiro_crew.config import config_dir
+    from aj_crew import agent
+    from aj_crew.config import config_dir
 
     package = tmp_path / "installed-package" / "config"
     development = tmp_path / "checkout"
@@ -156,7 +156,7 @@ def test_managed_stub_reaches_owner_session_start(env, tmp_path, monkeypatch):
     """A private-owner fork whose spec carries the native stub resolves to the
     product contract at session start via the owner-template load, not the stub
     text (see agent-spec-fields.md → Prompt)."""
-    from kiro_crew import agent
+    from aj_crew import agent
 
     package = tmp_path / "installed-package" / "config"
     monkeypatch.setattr(agent, "_BUNDLED_CFG_DIR", package)
@@ -189,7 +189,7 @@ def test_managed_stub_reaches_owner_session_start(env, tmp_path, monkeypatch):
 
 def test_stale_installed_product_prompt_uses_current_session_start(env, tmp_path, monkeypatch):
     """A prior bundled gateway's URI remains managed after its install changes."""
-    from kiro_crew import agent
+    from aj_crew import agent
 
     package = tmp_path / "current-package" / "config"
     monkeypatch.setattr(agent, "_BUNDLED_CFG_DIR", package)
@@ -197,8 +197,8 @@ def test_stale_installed_product_prompt_uses_current_session_start(env, tmp_path
     package.mkdir(parents=True)
     (package / "prompt.md").write_text("CURRENT_PRODUCT_PROMPT", encoding="utf-8")
     stale = (
-        "file:///Applications/KiroCrew.app/Contents/Resources/backend-dist/"
-        "kirocrew-backend-arm64/lib/python3.12/site-packages/kiro_crew/config/prompt.md"
+        "file:///Applications/AjCrew.app/Contents/Resources/backend-dist/"
+        "ajcrew-backend-arm64/lib/python3.12/site-packages/aj_crew/config/prompt.md"
     )
     spec = env.project / ".kiro" / "agents" / "writer-template.json"
     spec.write_text(json.dumps({"name": "writer-template", "prompt": stale}), encoding="utf-8")
@@ -212,10 +212,10 @@ def test_stale_installed_product_prompt_uses_current_session_start(env, tmp_path
     env.forbidden.assert_not_called()
 
 
-@pytest.mark.parametrize("template", ["writer-template", "kirocrew"])
+@pytest.mark.parametrize("template", ["writer-template", "ajcrew"])
 @pytest.mark.parametrize("source", ["inline", "relative", "absolute"])
 def test_custom_persona_is_not_classified_by_template_name(env, template, source):
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents["writer"].kiro_agent = template
     cfg.save()
     spec = env.project / ".kiro" / "agents" / f"{template}.json"
@@ -244,9 +244,9 @@ def test_custom_persona_is_not_classified_by_template_name(env, template, source
     assert "Do not publish drafts." in message
 
 
-@pytest.mark.parametrize("template", ["writer-template", "kirocrew"])
+@pytest.mark.parametrize("template", ["writer-template", "ajcrew"])
 def test_unmanaged_prompt_outside_root_is_not_exempted_by_name(env, tmp_path, template):
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents["writer"].kiro_agent = template
     cfg.save()
     persona = tmp_path / "prompt.md"
@@ -263,10 +263,10 @@ def test_unmanaged_prompt_outside_root_is_not_exempted_by_name(env, tmp_path, te
 def test_managed_source_resolves_each_declared_root_once_per_call(tmp_path, monkeypatch):
     from collections import Counter
 
-    from kiro_crew import member_essential_context as mec
-    from kiro_crew.config.loader import WorkspaceConfig
+    from aj_crew import member_essential_context as mec
+    from aj_crew.config.loader import WorkspaceConfig
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.workspaces["second"] = WorkspaceConfig(dir=str(tmp_path / "second"))
     cfg.save()
     original = mec._comparable_root
@@ -300,22 +300,22 @@ def test_managed_source_resolves_each_declared_root_once_per_call(tmp_path, monk
     ],
 )
 def test_managed_source_keeps_every_admin_root_protected(tmp_path, monkeypatch, root_index, leaf):
-    from kiro_crew import member_essential_context as mec
+    from aj_crew import member_essential_context as mec
 
     home = tmp_path / "host"
     home.mkdir()
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
-    roots = [mec.config_dir(), home / ".kiro/crew", home / ".kirocrew"]
+    roots = [mec.config_dir(), home / ".kiro/crew", home / ".ajcrew"]
     with pytest.raises(MemberEssentialContextError, match="managed memory/member state"):
         mec._refuse_managed_source(roots[root_index] / leaf / "record.txt")
 
 
 def test_managed_source_rechecks_workspace_configuration_between_calls(tmp_path):
-    from kiro_crew import member_essential_context as mec
-    from kiro_crew.config.loader import WorkspaceConfig
+    from aj_crew import member_essential_context as mec
+    from aj_crew.config.loader import WorkspaceConfig
 
     candidate = mec.config_dir() / "custom-project" / "guide.txt"
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.workspaces["custom"] = WorkspaceConfig(dir=str(candidate.parent))
     cfg.save()
     mec._refuse_managed_source(candidate)
@@ -327,8 +327,8 @@ def test_managed_source_rechecks_workspace_configuration_between_calls(tmp_path)
 
 @pytest.mark.parametrize("placement", ["ancestor", "equal", "protected-child"])
 def test_workspace_overlap_does_not_admit_admin_state(tmp_path, placement):
-    from kiro_crew import member_essential_context as mec
-    from kiro_crew.config.loader import WorkspaceConfig
+    from aj_crew import member_essential_context as mec
+    from aj_crew.config.loader import WorkspaceConfig
 
     admin = mec.config_dir()
     workspace = {
@@ -336,7 +336,7 @@ def test_workspace_overlap_does_not_admit_admin_state(tmp_path, placement):
         "equal": admin,
         "protected-child": admin / "member-rules",
     }[placement]
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.workspaces["overlap"] = WorkspaceConfig(dir=str(workspace))
     cfg.save()
     with pytest.raises(MemberEssentialContextError, match="managed memory/member state"):
@@ -348,7 +348,7 @@ def test_workspace_overlap_does_not_admit_admin_state(tmp_path, placement):
     os.name == "nt", reason="Windows rejects linked ancestors at the existing path gate"
 )
 def test_managed_source_rechecks_admin_symlink_target_between_calls(tmp_path, monkeypatch):
-    from kiro_crew import member_essential_context as mec
+    from aj_crew import member_essential_context as mec
 
     home = tmp_path / "host"
     (home / ".kiro").mkdir(parents=True)
@@ -369,7 +369,7 @@ def test_managed_source_rechecks_admin_symlink_target_between_calls(tmp_path, mo
 
 
 def test_managed_source_never_resolves_unvalidated_candidate(tmp_path, monkeypatch):
-    from kiro_crew import member_essential_context as mec
+    from aj_crew import member_essential_context as mec
 
     candidate = Path("//untrusted-candidate/guide.txt")
     original = os.path.realpath
@@ -385,8 +385,8 @@ def test_managed_source_never_resolves_unvalidated_candidate(tmp_path, monkeypat
 @pytest.mark.parametrize("pattern", ["*/AGENTS.md", "**/AGENTS.md"])
 @pytest.mark.parametrize("leaf", ["memory", "memory_index", "lessons", ".lessons"])
 def test_workspace_glob_excludes_managed_subtrees_before_scanning(env, monkeypatch, pattern, leaf):
-    from kiro_crew import member_essential_context as essentials
-    from kiro_crew.config import config_dir
+    from aj_crew import member_essential_context as essentials
+    from aj_crew.config import config_dir
 
     project = config_dir() / "workspace"
     managed = project / leaf
@@ -428,8 +428,8 @@ def test_workspace_glob_excludes_managed_subtrees_before_scanning(env, monkeypat
 def test_plain_workspace_glob_over_real_managed_store_adds_no_note(env, caplog):
     """A broad glob walking past the workspace's own memory/lessons store is
     routine: no note, no warning, only a debug line."""
-    from kiro_crew.config import config_dir
-    from kiro_crew.member_essential_context import (
+    from aj_crew.config import config_dir
+    from aj_crew.member_essential_context import (
         ESSENTIAL_MANAGED_SKIP_SOURCE,
         documents_for_member,
     )
@@ -445,7 +445,7 @@ def test_plain_workspace_glob_over_real_managed_store_adds_no_note(env, caplog):
     agents = project / ".kiro" / "agents"
     agents.mkdir(parents=True, exist_ok=True)
     _write_template(agents, "writer-template", ["file://*/AGENTS.md", "file://*", "file://**/*.md"])
-    with caplog.at_level("DEBUG", logger="kiro_crew.member_essential_context"):
+    with caplog.at_level("DEBUG", logger="aj_crew.member_essential_context"):
         documents = documents_for_member("writer-template", str(project))
     assert not any(s.startswith(ESSENTIAL_MANAGED_SKIP_SOURCE) for s, _ in documents)
     assert "WORKSPACE_CHILD_GUIDE" in "\n".join(body for _, body in documents)
@@ -457,7 +457,7 @@ def test_two_templates_skipping_different_entries_still_build(env):
     """An owner and an execution template whose globs skip different
     prefix-colliding entries each get their own note, so merging them
     does not trip the changed-during-preparation guard."""
-    from kiro_crew.config import config_dir
+    from aj_crew.config import config_dir
 
     project = config_dir() / "workspace"
     project.mkdir(parents=True, exist_ok=True)
@@ -484,8 +484,8 @@ def test_two_templates_skipping_different_entries_still_build(env):
 def test_native_reads_carry_no_skip_note(env):
     """The note is not a host-native source: a native-only read and the
     launch documents leave it out, so wire dedup cannot strip its body."""
-    from kiro_crew.config import config_dir
-    from kiro_crew.member_essential_context import (
+    from aj_crew.config import config_dir
+    from aj_crew.member_essential_context import (
         ESSENTIAL_MANAGED_SKIP_SOURCE,
         documents_for_member,
         kiro_launch_documents,
@@ -507,8 +507,8 @@ def test_native_reads_carry_no_skip_note(env):
 
 
 def test_workspace_glob_names_each_prefix_colliding_entry_it_skips(env, caplog):
-    from kiro_crew.config import config_dir
-    from kiro_crew.member_essential_context import (
+    from aj_crew.config import config_dir
+    from aj_crew.member_essential_context import (
         ESSENTIAL_MANAGED_SKIP_SOURCE,
         documents_for_member,
     )
@@ -526,7 +526,7 @@ def test_workspace_glob_names_each_prefix_colliding_entry_it_skips(env, caplog):
         encoding="utf-8",
     )
     core: set[str] = set()
-    with caplog.at_level("WARNING", logger="kiro_crew.member_essential_context"):
+    with caplog.at_level("WARNING", logger="aj_crew.member_essential_context"):
         documents = documents_for_member("writer-template", str(project), core_sources_out=core)
     bodies = dict(documents)
     joined = "\n".join(bodies.values())
@@ -545,8 +545,8 @@ def test_workspace_glob_names_each_prefix_colliding_entry_it_skips(env, caplog):
 
 
 def test_workspace_glob_without_prefix_collision_adds_no_skip_note(env):
-    from kiro_crew.config import config_dir
-    from kiro_crew.member_essential_context import (
+    from aj_crew.config import config_dir
+    from aj_crew.member_essential_context import (
         ESSENTIAL_MANAGED_SKIP_SOURCE,
         documents_for_member,
     )
@@ -568,8 +568,8 @@ def test_workspace_glob_without_prefix_collision_adds_no_skip_note(env):
 
 @pytest.mark.parametrize("resource", ["memory/AGENTS.md", "memory/*.md", "memory/**/AGENTS.md"])
 def test_workspace_explicit_managed_prefix_still_refuses(env, resource):
-    from kiro_crew.config import config_dir
-    from kiro_crew.member_essential_context import documents_for_member
+    from aj_crew.config import config_dir
+    from aj_crew.member_essential_context import documents_for_member
 
     project = config_dir() / "workspace"
     (project / "memory").mkdir(parents=True, exist_ok=True)
@@ -585,7 +585,7 @@ def test_workspace_explicit_managed_prefix_still_refuses(env, resource):
 
 
 def test_glob_keeps_memory_named_directory_in_an_ordinary_project(env):
-    from kiro_crew.member_essential_context import documents_for_member
+    from aj_crew.member_essential_context import documents_for_member
 
     memory = env.project / "memory"
     memory.mkdir()
@@ -605,7 +605,7 @@ def test_document_cap_ignores_on_demand_resource_schemes(env):
     demand and are never read here, so a template with one guide and seventy
     skills loads exactly one document and must not be refused as oversized.
     """
-    from kiro_crew.member_essential_context import (
+    from aj_crew.member_essential_context import (
         documents_for_member,
         projected_resource_documents,
     )
@@ -626,7 +626,7 @@ def test_document_cap_ignores_on_demand_resource_schemes(env):
 
 
 def test_declared_file_size_does_not_stat_a_rejected_path(env, monkeypatch):
-    from kiro_crew import member_essential_context as module
+    from aj_crew import member_essential_context as module
 
     guide = env.project / "declared-guide.md"
     stat_calls = []
@@ -647,7 +647,7 @@ def test_declared_file_size_does_not_stat_a_rejected_path(env, monkeypatch):
 
 
 def test_declared_file_size_stats_the_admitted_path(env, monkeypatch):
-    from kiro_crew import member_essential_context as module
+    from aj_crew import member_essential_context as module
 
     guide = env.project / "declared-guide.md"
     admitted = env.project / "admitted-guide.md"
@@ -672,7 +672,7 @@ def test_declared_file_size_stats_the_admitted_path(env, monkeypatch):
 def test_projected_launch_paths_name_the_declared_guides_without_reading_them(env, monkeypatch):
     """kiro-cli re-reads a declared guide for every request, so the launch record
     needs its path only; the body is never read."""
-    from kiro_crew import member_essential_context as module
+    from aj_crew import member_essential_context as module
 
     guide = env.project / "declared-guide.md"
     definition = {"id": "writer-template", "resources": ["file://declared-guide.md"]}
@@ -688,7 +688,7 @@ def test_projected_launch_paths_name_the_declared_guides_without_reading_them(en
 def test_projected_launch_paths_match_the_documents_the_launch_reader_reads(env):
     """The folder skips the record by path, so the record must spell each guide
     exactly as the launch reader does."""
-    from kiro_crew import member_essential_context as module
+    from aj_crew import member_essential_context as module
 
     definition = {"id": "writer-template", "resources": ["file://declared-guide.md"]}
 
@@ -700,7 +700,7 @@ def test_projected_launch_paths_match_the_documents_the_launch_reader_reads(env)
 def test_projected_launch_paths_record_nothing_past_the_size_bound(env, monkeypatch):
     """kiro-cli drops whole resources past its budget, so a launch whose declared
     files exceed the bound records nothing and the folder sends every guide."""
-    from kiro_crew import member_essential_context as module
+    from aj_crew import member_essential_context as module
 
     guide = env.project / "declared-guide.md"
     definition = {"id": "writer-template", "resources": ["file://declared-guide.md"]}
@@ -716,7 +716,7 @@ def test_projected_launch_size_bound_counts_every_declared_file(env, monkeypatch
     """kiro-cli budgets every declared file it loads, so a declared file the
     launch record never names counts, and so does the sum of files that each
     fit the bound alone."""
-    from kiro_crew import member_essential_context as module
+    from aj_crew import member_essential_context as module
 
     guide = env.project / "declared-guide.md"
     reference = env.project / "reference.json"
@@ -745,7 +745,7 @@ def test_projected_launch_size_check_refuses_no_view_the_record_names(
 ):
     """A declared file that does not exist adds no bytes, and non-markdown
     matches do not count against the reader's document limit."""
-    from kiro_crew import member_essential_context as module
+    from aj_crew import member_essential_context as module
 
     guide = env.project / "declared-guide.md"
     for directory in ("data-a", "data-b"):
@@ -761,7 +761,7 @@ def test_projected_launch_size_check_refuses_no_view_the_record_names(
 
 
 def test_projected_launch_paths_stat_failure_is_a_record_failure(env, monkeypatch):
-    from kiro_crew import member_essential_context as module
+    from aj_crew import member_essential_context as module
 
     definition = {"id": "writer-template", "resources": ["file://declared-guide.md"]}
     real_stat = os.stat
@@ -778,7 +778,7 @@ def test_projected_launch_paths_stat_failure_is_a_record_failure(env, monkeypatc
 
 
 def test_declared_files_fit_counts_an_unmeasurable_file_as_too_large(env, monkeypatch):
-    from kiro_crew import member_essential_context as module
+    from aj_crew import member_essential_context as module
 
     definition = {"id": "writer-template", "resources": ["file://declared-guide.md"]}
     assert module._declared_files_fit(definition, str(env.project)) is True
@@ -793,7 +793,7 @@ def test_declared_files_fit_counts_an_unmeasurable_file_as_too_large(env, monkey
 
 
 def test_document_cap_still_bounds_declared_file_resources(env):
-    from kiro_crew.member_essential_context import (
+    from aj_crew.member_essential_context import (
         documents_for_member,
         projected_resource_documents,
     )
@@ -818,7 +818,7 @@ def test_object_form_declaration_reaches_the_launch_document_path(env):
     such a template could not start: the launch-document build refused the spec
     before the child process existed.
     """
-    from kiro_crew.member_essential_context import kiro_launch_documents
+    from aj_crew.member_essential_context import kiro_launch_documents
 
     resources = [
         "file://declared-guide.md",
@@ -845,7 +845,7 @@ def test_object_form_declaration_is_admitted_and_read_by_nobody(env):
     No path is derived from the entry, so a readable directory of markdown
     behind ``source`` contributes no text.
     """
-    from kiro_crew.member_essential_context import (
+    from aj_crew.member_essential_context import (
         documents_for_member,
         projected_resource_documents,
     )
@@ -879,7 +879,7 @@ def test_object_form_source_cannot_widen_the_admitted_roots(env):
     also declared alone, so admission depends neither on an optional key nor on
     a ``file://`` sibling.
     """
-    from kiro_crew.member_essential_context import (
+    from aj_crew.member_essential_context import (
         documents_for_member,
         kiro_launch_documents,
         projected_resource_documents,
@@ -914,7 +914,7 @@ def test_object_form_source_cannot_widen_the_admitted_roots(env):
 
 def test_object_form_declarations_do_not_spend_the_document_budget(env):
     """An entry nothing reads cannot exhaust the budget for entries that are read."""
-    from kiro_crew.member_essential_context import documents_for_member
+    from aj_crew.member_essential_context import documents_for_member
 
     knowledge_bases = [
         {"type": "knowledgeBase", "source": f"file://kb-{index}", "name": f"kb-{index}"}
@@ -936,7 +936,7 @@ def test_resources_still_refuse_an_entry_that_is_neither_uri_nor_object(env, mal
     kiro-cli refuses the same shapes (``resource must be a string (file:// or
     skill://) or an object``). Asserted on the refusal, not its wording.
     """
-    from kiro_crew.member_essential_context import (
+    from aj_crew.member_essential_context import (
         documents_for_member,
         projected_resource_documents,
     )

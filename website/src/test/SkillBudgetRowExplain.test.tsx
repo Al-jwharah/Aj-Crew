@@ -21,7 +21,7 @@ const base: SkillBudgetRow = {
   inject_on_trigger: true,
   always: false,
   owned: true,
-  source: 'kirocrew',
+  source: 'ajcrew',
   idle_days: 0,
 }
 

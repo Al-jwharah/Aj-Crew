@@ -286,7 +286,7 @@ describe('useAppActions trust target tier', () => {
     renderModal({ ...BASE, ...target })
     const dialog = screen.getByRole('dialog')
     expect(within(dialog).getByText('community')).toBeTruthy()
-    expect(within(dialog).queryByText('components.appstore.types.kirocrew_registry')).toBeNull()
+    expect(within(dialog).queryByText('components.appstore.types.ajcrew_registry')).toBeNull()
     expect(within(dialog).getByTestId('trust-app-registry-community')).toBeTruthy()
   })
 })

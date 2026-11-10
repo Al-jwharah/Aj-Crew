@@ -1,4 +1,4 @@
-"""Fixtures, pins and spec shapes shared by the ``kirocrew-worker`` agent tests.
+"""Fixtures, pins and spec shapes shared by the ``ajcrew-worker`` agent tests.
 
 ``test_worker_agent.py`` and its ``_spawn_gate`` and ``_load_bracket`` siblings
 import these by name. ``_accepting_kiro_cli`` is autouse, so every one of them pins
@@ -14,7 +14,7 @@ from typing import Any
 import pytest
 from source_corpus import iter_source_texts
 
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
 #: A release that accepts a spec ``permissions`` block, and one that refuses it,
 #: expressed against the floor so raising it cannot strand these tests.
@@ -26,15 +26,15 @@ def _pin_spec_permissions_cli(monkeypatch, which):
     """Pin what the shared writer gate believes the installed kiro-cli is.
 
     ``_write_derived_permissions`` reads ``installed_kiro_cli_version``
-    function-locally from ``kiro_crew.kiro_cli``, so the patch lands there.
+    function-locally from ``aj_crew.kiro_cli``, so the patch lands there.
     ``which`` is ``"accepts"``, ``"refuses"`` or ``"unknown"``.
     """
     version = {"accepts": _ACCEPTS, "refuses": _REFUSES, "unknown": None}[which]
-    monkeypatch.setattr("kiro_crew.kiro_cli.installed_kiro_cli_version", lambda: version)
+    monkeypatch.setattr("aj_crew.kiro_cli.installed_kiro_cli_version", lambda: version)
 
 
 def _package_sources() -> Iterator[tuple[Path, str]]:
-    """Every ``kiro_crew`` module except ``agent.py``, streamed off the shared corpus.
+    """Every ``aj_crew`` module except ``agent.py``, streamed off the shared corpus.
 
     Four enumeration tests in ``test_worker_agent_spawn_gate.py`` and
     ``test_worker_agent_load_bracket.py`` reason over the package. Streamed, not
@@ -72,29 +72,29 @@ def _accepting_kiro_cli(_floor_monkeypatch):
 #: ``build_agent_config``, which composes the shipped template with the override
 #: file only — which is exactly why the worker mirrors the FILE.
 _DEFAULT_SPEC_ON_DISK: dict[str, Any] = {
-    "name": "kirocrew",
+    "name": "ajcrew",
     "model": "claude-opus-5",
     "tools": [
         "execute_bash",
         "fs_read",
         "fs_write",
-        "@kirocrew-core",
-        "@kirocrew-cron",
-        "@kirocrew-dashboard",
+        "@ajcrew-core",
+        "@ajcrew-cron",
+        "@ajcrew-dashboard",
         "@builder-mcp",
         "@pdf",
     ],
     "allowedTools": [
         "fs_read",
-        "@kirocrew-cron",
-        "@kirocrew-dashboard/session_create",
+        "@ajcrew-cron",
+        "@ajcrew-dashboard/session_create",
         "@builder-mcp",
         "@pdf",
     ],
     "mcpServers": {
-        "kirocrew-core": {"command": "kirocrew", "args": ["mcp-core"]},
-        "kirocrew-cron": {"command": "kirocrew", "args": ["mcp-cron"]},
-        "kirocrew-dashboard": {"command": "kirocrew", "args": ["mcp-dashboard"]},
+        "ajcrew-core": {"command": "ajcrew", "args": ["mcp-core"]},
+        "ajcrew-cron": {"command": "ajcrew", "args": ["mcp-cron"]},
+        "ajcrew-dashboard": {"command": "ajcrew", "args": ["mcp-dashboard"]},
         "builder-mcp": {"command": "builder-mcp", "args": []},
         "pdf": {"command": "uvx", "args": ["pdf-mcp"]},
     },
@@ -104,11 +104,11 @@ _DEFAULT_SPEC_ON_DISK: dict[str, Any] = {
 def _stale_worker_spec() -> dict[str, Any]:
     """A worker spec as an older build left it: template-only, and out of date."""
     return {
-        "name": "kirocrew-worker",
+        "name": "ajcrew-worker",
         "description": "an older build's description",
         "prompt": "an older build's prompt",
         "model": "auto",
-        "tools": ["fs_read", "@kirocrew-core", "@kirocrew-work"],
-        "allowedTools": ["fs_read", "@kirocrew-work/work_brief"],
-        "mcpServers": {"kirocrew-core": {"command": "kirocrew", "args": ["mcp-core"]}},
+        "tools": ["fs_read", "@ajcrew-core", "@ajcrew-work"],
+        "allowedTools": ["fs_read", "@ajcrew-work/work_brief"],
+        "mcpServers": {"ajcrew-core": {"command": "ajcrew", "args": ["mcp-core"]}},
     }

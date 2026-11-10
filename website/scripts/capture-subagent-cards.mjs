@@ -24,7 +24,7 @@ import { json, makeFixedApi, handleBootRoute } from './lib/boot-api.mjs'
 const BASE = process.argv[2] || 'http://127.0.0.1:6803'
 const OUT = process.argv[3] || '../temp-screenshots/subagent-card-header'
 const SLOT = 'chat-subagents'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -34,7 +34,7 @@ const slots = [{
   running: true,
   last_message: 'Spawned 3 agents, waiting for results…',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),
@@ -61,7 +61,7 @@ const now = () => Date.now() / 1000
 const CARDS = [
   {
     id: 'sa-research',
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     task: 'READ-ONLY RESEARCH (do not modify any file): map how the activity rail lays out subagent cards and report the header structure.',
     last_tool: 'read /website/src/pages/chat/ActivityViewer.tsx',
     started: now() - 239,
@@ -72,7 +72,7 @@ const CARDS = [
     id: 'sa-review',
     // A longer agent name proves the chip is capped instead of starving the
     // clock and the Cancel button.
-    agent: 'kirocrew-reviewer',
+    agent: 'ajcrew-reviewer',
     task: 'Mirror the GPT review gate over the working diff and report Critical/High findings only.',
     last_tool: 'grep shrink-0',
     started: now() - 74,
@@ -83,7 +83,7 @@ const CARDS = [
 
 const DONE_CARD = {
   id: 'sa-gates',
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   task: 'Run the frontend gates (tsc -b, eslint, vitest) and report failures.',
   last_tool: 'execute_bash npx vitest run',
   started: now() - 421,

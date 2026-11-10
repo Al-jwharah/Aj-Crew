@@ -35,10 +35,10 @@ from test_connections_warm import (
     _Runtime,
 )
 
-from kiro_crew import hooks
-from kiro_crew.connections import mint, warm
-from kiro_crew.connections.mint import _mints
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew import hooks
+from aj_crew.connections import mint, warm
+from aj_crew.connections.mint import _mints
+from aj_crew.testing.wait import await_until, finished
 
 _PC = warm.platform_compat
 
@@ -364,7 +364,7 @@ def _preregistered(slug: str = "github") -> Any:
 
 
 def _operator_client(slug: str) -> Any:
-    from kiro_crew.connections.oauth_clients import ResolvedOAuthClient
+    from aj_crew.connections.oauth_clients import ResolvedOAuthClient
 
     return ResolvedOAuthClient(
         slug=slug,
@@ -379,9 +379,9 @@ def _operator_client(slug: str) -> Any:
 @pytest.fixture
 def _operator_config(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> list[Any]:
     """Resolve the operator's client from a recorded call instead of the real config/vault."""
-    from kiro_crew import config, secrets
-    from kiro_crew.config import loader
-    from kiro_crew.connections import oauth_clients
+    from aj_crew import config, secrets
+    from aj_crew.config import loader
+    from aj_crew.connections import oauth_clients
 
     seen: list[Any] = []
     answer: list[Any] = [None]
@@ -936,11 +936,11 @@ _WARM_SEAMS = frozenset(
 def _owner_module(name: str) -> Any:
     import importlib
 
-    return importlib.import_module(f"kiro_crew.connections.warm_runtime.{name}")
+    return importlib.import_module(f"aj_crew.connections.warm_runtime.{name}")
 
 
 def _owner_trees() -> dict[str, ast.Module]:
-    from kiro_crew.connections import warm_runtime
+    from aj_crew.connections import warm_runtime
 
     package = Path(warm_runtime.__file__).parent
     trees = {
@@ -977,8 +977,8 @@ def test_every_owner_name_is_re_exported_by_the_facade_as_the_same_object(owner:
 def test_the_facade_keeps_binding_the_helpers_its_moved_rules_import():
     """``warm.<name>`` and ``from ... warm import *`` resolved these before the rules that call
     them moved into ``spec_plan``; they stay bound to the same objects."""
-    from kiro_crew import mcp_utils
-    from kiro_crew.connections import registry
+    from aj_crew import mcp_utils
+    from aj_crew.connections import registry
 
     assert warm.is_preregistered is registry.is_preregistered
     for name in ("kiro_entry_client_id", "kiro_entry_scopes", "kiro_oauth_wire_entry"):
@@ -1008,7 +1008,7 @@ def test_pinned_constructs_stay_defined_where_their_gates_look():
         "_recorded_runtime_is_dead",
         "_scavenge_warm_generation_dirs",
     ):
-        assert getattr(warm, name).__module__ == "kiro_crew.connections.warm", name
+        assert getattr(warm, name).__module__ == "aj_crew.connections.warm", name
     for name in (
         "_write_mint_agent_spec",
         "_agent_spec_entry_missing",
@@ -1018,8 +1018,8 @@ def test_pinned_constructs_stay_defined_where_their_gates_look():
         "start_oauth_mint",
         "MintState",
     ):
-        assert getattr(mint, name).__module__ == "kiro_crew.connections.mint", name
-    assert warm.logger.name == "kiro_crew.connections.warm"
+        assert getattr(mint, name).__module__ == "aj_crew.connections.mint", name
+    assert warm.logger.name == "aj_crew.connections.warm"
 
 
 def test_the_owners_are_leaves_that_reach_the_facade_only_for_their_declared_seam():
@@ -1031,14 +1031,14 @@ def test_the_owners_are_leaves_that_reach_the_facade_only_for_their_declared_sea
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom) and node.col_offset == 0:
                 module = node.module or ""
-                assert not module.startswith(("kiro_crew.acp", "kiro_crew.providers")), owner
-                assert module != "kiro_crew.connections.warm", f"{owner} imports the facade"
+                assert not module.startswith(("aj_crew.acp", "aj_crew.providers")), owner
+                assert module != "aj_crew.connections.warm", f"{owner} imports the facade"
                 assert not (
-                    module == "kiro_crew.connections" and any(a.name == "warm" for a in node.names)
+                    module == "aj_crew.connections" and any(a.name == "warm" for a in node.names)
                 ), f"{owner} imports the facade at module scope"
             if isinstance(node, ast.Import):
                 assert not any(
-                    a.name.startswith(("kiro_crew.acp", "kiro_crew.providers")) for a in node.names
+                    a.name.startswith(("aj_crew.acp", "aj_crew.providers")) for a in node.names
                 ), owner
             if not isinstance(node, ast.Call):
                 continue
@@ -1056,7 +1056,7 @@ def test_the_owners_are_leaves_that_reach_the_facade_only_for_their_declared_sea
                     reached.add(func.attr)
                 if func.attr == "getLogger":
                     assert [ast.literal_eval(a) for a in node.args] == [
-                        "kiro_crew.connections.warm"
+                        "aj_crew.connections.warm"
                     ], f"{owner} logs under a name the operator's filters do not know"
         assert reached == _FACADE_REACH.get(owner, frozenset()), owner
 
@@ -1120,14 +1120,14 @@ def _python(probe: str, cwd: Path) -> str:
 def test_each_owner_imports_cold_without_loading_the_facade(tmp_path: Path):
     """A cold import is what the session-registry gate and any direct importer perform; an
     owner that needed the facade at import time would fail it with a circular import."""
-    owners = ", ".join(f"'kiro_crew.connections.warm_runtime.{name}'" for name in _OWNERS)
+    owners = ", ".join(f"'aj_crew.connections.warm_runtime.{name}'" for name in _OWNERS)
     probe = (
         "import importlib, sys\n"
         f"for name in ({owners}):\n"
         "    importlib.import_module(name)\n"
-        "print('FACADE' if 'kiro_crew.connections.warm' in sys.modules else 'LEAF')\n"
-        "from kiro_crew.connections import warm\n"
-        "from kiro_crew.connections.warm_runtime import shared_rows\n"
+        "print('FACADE' if 'aj_crew.connections.warm' in sys.modules else 'LEAF')\n"
+        "from aj_crew.connections import warm\n"
+        "from aj_crew.connections.warm_runtime import shared_rows\n"
         "print(warm._claim_shared_mints is shared_rows._claim_shared_mints)\n"
     )
     assert _python(probe, tmp_path).splitlines()[-2:] == ["LEAF", "True"]
@@ -1138,9 +1138,9 @@ def test_no_boot_path_module_loads_any_warm_or_mint_module(tmp_path: Path):
     an owner reached from the boot path without its facade is caught too."""
     probe = (
         "import sys\n"
-        "import kiro_crew.dashboard.handlers, kiro_crew.mcp_discovery\n"
-        "import kiro_crew.connections.status, kiro_crew.connections.ownership\n"
-        "prefixes = ('kiro_crew.connections.warm', 'kiro_crew.connections.mint')\n"
+        "import aj_crew.dashboard.handlers, aj_crew.mcp_discovery\n"
+        "import aj_crew.connections.status, aj_crew.connections.ownership\n"
+        "prefixes = ('aj_crew.connections.warm', 'aj_crew.connections.mint')\n"
         "leaked = sorted(m for m in sys.modules if m.startswith(prefixes))\n"
         "print('LEAKED:' + ','.join(leaked) if leaked else 'CLEAN')\n"
     )

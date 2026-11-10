@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.appearance_packs import store as store_mod
-from kiro_crew.appearance_packs.store import DEFAULT_PACK, AppearanceStore
+from aj_crew.appearance_packs import store as store_mod
+from aj_crew.appearance_packs.store import DEFAULT_PACK, AppearanceStore
 
 _NAME = "crew-companion-colours.json"
 _SAVED = {DEFAULT_PACK: {"#fff": "#f0f"}, "cat": {"#000": "#0f0"}}

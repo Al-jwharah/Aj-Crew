@@ -63,7 +63,7 @@ MAP_PATH = "docs/feature-map/README.md"
 # (``pages/settings/BrowserPanel.tsx``) counts the same as a top-level one.
 WATCHED_DIRS = (
     "website/src/pages/",
-    "src/kiro_crew/dashboard/handlers/",
+    "src/aj_crew/dashboard/handlers/",
 )
 
 # Files under WATCHED_DIRS that are not features. Tests and helper modules come
@@ -377,7 +377,7 @@ PROBES: tuple[tuple[str, list[str], list[str], int, int, bool, bool], ...] = (
     ("page-deleted-no-map", [], ["website/src/pages/OldPage.tsx"], 0, 0, False, False),
     (
         "handler-added-no-map",
-        ["src/kiro_crew/dashboard/handlers/new_thing.py"],
+        ["src/aj_crew/dashboard/handlers/new_thing.py"],
         [],
         0,
         0,
@@ -387,7 +387,7 @@ PROBES: tuple[tuple[str, list[str], list[str], int, int, bool, bool], ...] = (
     (
         "handler-deleted-no-map",
         [],
-        ["src/kiro_crew/dashboard/handlers/old_thing.py"],
+        ["src/aj_crew/dashboard/handlers/old_thing.py"],
         0,
         0,
         False,
@@ -409,11 +409,11 @@ PROBES: tuple[tuple[str, list[str], list[str], int, int, bool, bool], ...] = (
     # Art beside the page that renders it. A brand mark is consumed by a feature
     # rather than being one, so its arrival owes the map nothing.
     ("page-asset-added", ["website/src/pages/connections/logos/gitlab.svg"], [], 0, 0, False, True),
-    ("handler-init-added", ["src/kiro_crew/dashboard/handlers/__init__.py"], [], 0, 0, False, True),
+    ("handler-init-added", ["src/aj_crew/dashboard/handlers/__init__.py"], [], 0, 0, False, True),
     ("pages-index-added", ["website/src/pages/overview/index.ts"], [], 0, 0, False, True),
     # Outside the watched trees entirely.
     ("component-added", ["website/src/components/NewThing.tsx"], [], 0, 0, False, True),
-    ("unrelated-module-added", ["src/kiro_crew/memory.py"], [], 0, 0, False, True),
+    ("unrelated-module-added", ["src/aj_crew/memory.py"], [], 0, 0, False, True),
     ("doc-added", ["docs/guides/new.md"], [], 0, 0, False, True),
 )
 

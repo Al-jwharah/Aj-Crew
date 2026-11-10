@@ -15,13 +15,13 @@ from session_control_helpers import (  # noqa: F401 -- the autouse fixtures regi
     _slot,
 )
 
-from kiro_crew import milestones as m
-from kiro_crew.dashboard import session_control as sc
+from aj_crew import milestones as m
+from aj_crew.dashboard import session_control as sc
 
 
 @pytest.fixture(autouse=True)
 def _home(tmp_path: Path, _floor_monkeypatch: pytest.MonkeyPatch) -> list[str]:
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     seen: list[str] = []
     _floor_monkeypatch.setattr(m, "record", seen.append)
     return seen

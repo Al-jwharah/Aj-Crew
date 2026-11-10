@@ -7,14 +7,14 @@ import pytest
 from test_boxd_session import fake  # noqa: F401 -- fixture for the local CLI
 from test_sprites_session import TOKEN, fake_api
 
-from kiro_crew.boxd_session.cli import BoxdCLI
-from kiro_crew.sprites_session.client import SpritesClient
+from aj_crew.boxd_session.cli import BoxdCLI
+from aj_crew.sprites_session.client import SpritesClient
 
 
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments are reachable only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="POSIX guest shell")

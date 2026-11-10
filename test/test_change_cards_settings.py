@@ -27,11 +27,11 @@ from change_cards_helpers import (
     _run,
 )
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew import mcp_guide
-from kiro_crew.dashboard import change_cards as cards
-from kiro_crew.dashboard.change_cards import CardStore
-from kiro_crew.dashboard.handlers import change_cards as routes
+from aj_crew import change_card_catalog as catalog
+from aj_crew import mcp_guide
+from aj_crew.dashboard import change_cards as cards
+from aj_crew.dashboard.change_cards import CardStore
+from aj_crew.dashboard.handlers import change_cards as routes
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 world = change_cards_helpers.world
@@ -58,7 +58,7 @@ def test_a_string_list_setting_resolves_to_the_settings_pages_delta_keys():
     assert target == {**_LIST_SNAP, "list": True}
     assert cards.resolve_setting({"path": "dashboard.model_picker_hidden_models"})["list"] is True
     # The keys a card sends are exactly the delta keys the route accepts.
-    route = (REPO / "src/kiro_crew/dashboard/file_api/dashboard_config.py").read_text(
+    route = (REPO / "src/aj_crew/dashboard/file_api/dashboard_config.py").read_text(
         encoding="utf-8"
     )
     accepted = re.search(r"_allowed = \{([^}]*)\}", route).group(1)
@@ -208,7 +208,7 @@ def test_check_setting_value_takes_only_a_list_of_strings_for_str_list():
 def test_check_setting_value_runs_a_normalized_settings_own_normalizer():
     # The route's spec for these keys, so a card is refused with the same reason
     # the PATCH route would give, before anyone is asked to approve it.
-    from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+    from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
     stop = _EDITABLE_CONFIG["session_environments.stop_on_shutdown"]
     cards.check_setting_value(stop, True)
@@ -262,7 +262,7 @@ def test_a_scalar_or_a_list_op_is_refused_for_the_extra_paths():
     p = catalog.validate_params("setting.change", {"path": _EXTRA_PATHS, "op": "add", "item": "/a"})
     with pytest.raises(catalog.CardCatalogError) as exc:
         catalog.build_preview(
-            "setting.change", p, {"store": "kirocrew", "key": _EXTRA_PATHS, "value": []}, {}
+            "setting.change", p, {"store": "ajcrew", "key": _EXTRA_PATHS, "value": []}, {}
         )
     assert exc.value.code == "not_a_list"
 
@@ -476,14 +476,14 @@ def test_shim_routes_find_setting(monkeypatch):
 @pytest.fixture
 def diagnosed(monkeypatch):
     """A loaded config differing from the defaults in two known places, plus history."""
-    from kiro_crew import context
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew import context
+    from aj_crew.config.loader import AjCrewConfig
 
-    loaded = KiroCrewConfig()
+    loaded = AjCrewConfig()
     loaded.dashboard.model_picker_hidden_models = ["fable-1"]
     loaded.telegram.bot_token = SECRET_VALUE
     loaded.teams.app_password = SECRET_VALUE
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: loaded))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: loaded))
     days: list[dict[str, Any]] = []
 
     class _Mem:
@@ -525,7 +525,7 @@ def test_diagnose_never_returns_a_credential_value(diagnosed):
     assert SECRET_VALUE not in json.dumps(result)
     rows = {r["key"]: r for r in result["non_default"]}
     for key in ("telegram.bot_token", "teams.app_password"):
-        assert rows[key]["store"] == "kirocrew"
+        assert rows[key]["store"] == "ajcrew"
         assert rows[key]["current"] == {"set": True}
         assert rows[key]["default"] == {"set": False}
 
@@ -534,9 +534,9 @@ def test_diagnose_withholds_a_schema_sensitive_field_whatever_its_key_name(diagn
     """A field the schema marks sensitive is withheld even when no key name in it
     looks like a credential: an endpoint URL with userinfo, and a list whose
     entries carry values under ordinary names."""
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    loaded = KiroCrewConfig.load()
+    loaded = AjCrewConfig.load()
     loaded.telemetry.otlp_endpoint = f"https://user:{SECRET_VALUE}@collector.example/v1/metrics"
     loaded.telemetry.otlp_endpoints = [
         {"name": "ops", "endpoint": f"https://collector.example/v1/metrics?k={SECRET_VALUE}"}
@@ -598,9 +598,9 @@ def test_diagnose_topic_filters_both_lists(diagnosed):
 
 
 def test_diagnose_multi_word_topic_matches_by_any_meaningful_word(diagnosed, monkeypatch):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    KiroCrewConfig.load().dashboard.verbosity = "concise"
+    AjCrewConfig.load().dashboard.verbosity = "concise"
     diagnosed.append(
         _history_day(
             "2026-10-01",

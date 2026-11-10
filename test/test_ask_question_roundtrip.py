@@ -14,7 +14,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.state import DashboardState
 
 # ── Helpers ──
 
@@ -178,11 +178,11 @@ async def test_question_text_is_redacted_before_broadcast() -> None:
 
     with (
         patch(
-            "kiro_crew.dashboard.state.redact_exfiltration_urls",
+            "aj_crew.dashboard.state.redact_exfiltration_urls",
             side_effect=lambda s: (("<url-redacted>", 1) if "LEAKY_URL_SENTINEL" in s else (s, 0)),
         ),
         patch(
-            "kiro_crew.dashboard.state.redact_credentials",
+            "aj_crew.dashboard.state.redact_credentials",
             side_effect=lambda s: (
                 ("<cred-redacted>", 1) if "LEAKY_CRED_SENTINEL" in s else (s, 0)
             ),
@@ -246,7 +246,7 @@ def _as_owner(request: MagicMock, user: str = "local-app") -> MagicMock:
 
 @pytest.mark.asyncio
 async def test_handler_rejects_unknown_slot() -> None:
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question
 
     st = _state()
     st._slots = {}
@@ -265,7 +265,7 @@ async def test_handler_rejects_unknown_slot() -> None:
 
 @pytest.mark.asyncio
 async def test_handler_rejects_invalid_question_payload() -> None:
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question
 
     st = _state()
     st._slots = {"chat-1": MagicMock()}
@@ -283,7 +283,7 @@ async def test_handler_rejects_invalid_question_payload() -> None:
 
 @pytest.mark.asyncio
 async def test_answer_handler_resolves_pending_question() -> None:
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_answer
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_answer
 
     st = _state()
     task = asyncio.ensure_future(st.request_question("h1", "chat-1", _questions(), timeout=30))
@@ -308,7 +308,7 @@ async def test_answer_handler_resolves_pending_question() -> None:
 
 @pytest.mark.asyncio
 async def test_answer_handler_404s_on_expired_question() -> None:
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_answer
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_answer
 
     st = _state()
     request = MagicMock()
@@ -326,7 +326,7 @@ async def test_answer_handler_404s_on_expired_question() -> None:
 
 @pytest.mark.asyncio
 async def test_answer_handler_coerces_nested_values_to_str() -> None:
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_answer
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_answer
 
     st = _state()
     task = asyncio.ensure_future(st.request_question("h2", "chat-1", _questions(), timeout=30))
@@ -360,8 +360,8 @@ async def test_oversized_answer_is_rejected_not_truncated() -> None:
     no way to resend. A 400 leaves the card up (the frontend clears only on
     success or 404) so the user can shorten and retry.
     """
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_answer
-    from kiro_crew.validation import _ASK_MAX_ANSWER_LEN
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_answer
+    from aj_crew.validation import _ASK_MAX_ANSWER_LEN
 
     st = _state()
     task = asyncio.ensure_future(st.request_question("cap1", "chat-1", _questions(), timeout=30))
@@ -393,8 +393,8 @@ async def test_oversized_answer_is_rejected_not_truncated() -> None:
 @pytest.mark.asyncio
 async def test_answer_at_the_limit_is_accepted() -> None:
     """The boundary itself must still work, or the cap is off by one."""
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_answer
-    from kiro_crew.validation import _ASK_MAX_ANSWER_LEN
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_answer
+    from aj_crew.validation import _ASK_MAX_ANSWER_LEN
 
     st = _state()
     task = asyncio.ensure_future(st.request_question("cap2", "chat-1", _questions(), timeout=30))
@@ -420,8 +420,8 @@ async def test_answer_at_the_limit_is_accepted() -> None:
 
 @pytest.mark.asyncio
 async def test_too_many_answer_entries_rejected() -> None:
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_answer
-    from kiro_crew.validation import _ASK_MAX_QUESTIONS
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_answer
+    from aj_crew.validation import _ASK_MAX_QUESTIONS
 
     st = _state()
     request = MagicMock()
@@ -439,7 +439,7 @@ async def test_too_many_answer_entries_rejected() -> None:
 
 @pytest.mark.asyncio
 async def test_dismissed_body_unblocks_with_no_answer() -> None:
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_answer
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_answer
 
     st = _state()
     task = asyncio.ensure_future(st.request_question("h3", "chat-1", _questions(), timeout=30))
@@ -469,7 +469,7 @@ def test_ask_question_routes_are_registered() -> None:
     """Guards the wiring itself: a handler nobody can reach is a silent no-op."""
     from aiohttp import web
 
-    from kiro_crew.dashboard.server import _register_mcp_routes
+    from aj_crew.dashboard.server import _register_mcp_routes
 
     app = web.Application()
     _register_mcp_routes(app)
@@ -491,7 +491,7 @@ async def test_app_token_cannot_ask_a_question() -> None:
     /api/ask-question could target the owner's slot, broadcast a crafted card,
     and read the typed answer out of its own blocked response.
     """
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question
 
     st = _state()
     st._slots = {"chat-1": MagicMock()}
@@ -516,7 +516,7 @@ async def test_app_token_cannot_ask_a_question() -> None:
 @pytest.mark.asyncio
 async def test_app_token_cannot_answer_a_question() -> None:
     """The answer endpoint resolves by ask_id alone, so it needs the same gate."""
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_answer
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_answer
 
     st = _state()
     task = asyncio.ensure_future(st.request_question("authz1", "chat-1", _questions(), timeout=30))
@@ -546,7 +546,7 @@ async def test_app_token_cannot_answer_a_question() -> None:
 @pytest.mark.asyncio
 async def test_dashboard_user_token_is_still_allowed() -> None:
     """The gate must not lock out the legitimate caller (empty app)."""
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question
 
     st = _state()
     st._slots = {"chat-1": MagicMock()}
@@ -565,7 +565,7 @@ async def test_dashboard_user_token_is_still_allowed() -> None:
         }
 
     request.json = _json
-    with patch("kiro_crew.dashboard.handlers.ask_question.sel"):
+    with patch("aj_crew.dashboard.handlers.ask_question.sel"):
         resp = await api_ask_question(request)
     # Times out (nobody answers) rather than being refused.
     assert resp.status == 200
@@ -577,7 +577,7 @@ async def test_dashboard_user_token_is_still_allowed() -> None:
 @pytest.mark.asyncio
 async def test_non_object_body_is_400_not_500() -> None:
     """`[]` / `null` / scalars parse fine then blow up on .get() as a 500."""
-    from kiro_crew.dashboard.handlers.ask_question import (
+    from aj_crew.dashboard.handlers.ask_question import (
         api_ask_question,
         api_ask_question_answer,
     )
@@ -619,7 +619,7 @@ async def test_unblock_pending_waits_releases_both_waits() -> None:
     """
     from unittest.mock import MagicMock, patch
 
-    from kiro_crew.dashboard.chat_handlers import _unblock_pending_waits
+    from aj_crew.dashboard.chat_handlers import _unblock_pending_waits
 
     st = _state()
     task = asyncio.ensure_future(st.request_question("ask-u", "chat-1", _questions(), timeout=30))
@@ -630,7 +630,7 @@ async def test_unblock_pending_waits_releases_both_waits() -> None:
     slot = MagicMock()
     slot.key = "chat-1"
 
-    with patch("kiro_crew.dashboard.chat_handlers._reject_pending_approvals") as rejected:
+    with patch("aj_crew.dashboard.chat_handlers._reject_pending_approvals") as rejected:
         _unblock_pending_waits(st, slot)
 
     # Withdrawn synchronously, before the waiting task gets a loop turn.
@@ -642,7 +642,7 @@ async def test_unblock_pending_waits_releases_both_waits() -> None:
 
 def _chat_handler_source() -> str:
     """chat_handlers.py and the chat_api owners it composes, as one text."""
-    dashboard = Path(__file__).resolve().parents[1] / "src/kiro_crew/dashboard"
+    dashboard = Path(__file__).resolve().parents[1] / "src/aj_crew/dashboard"
     owners = sorted((dashboard / "chat_api").glob("[!_]*.py"))
     assert owners, "no chat_api owner found beside chat_handlers.py"
     return "\n".join(
@@ -690,7 +690,7 @@ async def test_non_owner_dashboard_token_cannot_ask() -> None:
     slot, phish the owner with crafted options, and read the typed answer out of
     its own blocked response.
     """
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question
 
     st = _state()
     st.owner_id = "U_OWNER"
@@ -713,7 +713,7 @@ async def test_non_owner_dashboard_token_cannot_answer() -> None:
 
     Otherwise a non-owner feeds the blocked agent an answer the owner never gave.
     """
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_answer
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_answer
 
     st = _state()
     st.owner_id = "U_OWNER"
@@ -744,7 +744,7 @@ async def test_non_owner_dashboard_token_cannot_answer() -> None:
 @pytest.mark.asyncio
 async def test_configured_owner_is_allowed() -> None:
     """The gate must not lock out the legitimate owner."""
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_answer
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_answer
 
     st = _state()
     st.owner_id = "U_OWNER"
@@ -778,7 +778,7 @@ async def test_pending_endpoint_lists_unanswered_cards() -> None:
     Without this the agent stays blocked with nothing on screen until its window
     elapses.
     """
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_pending
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_pending
 
     st = _state()
     task = asyncio.ensure_future(st.request_question("ask-3", "chat-7", _questions(), timeout=30))
@@ -808,7 +808,7 @@ async def test_pending_endpoint_lists_unanswered_cards() -> None:
 
 @pytest.mark.asyncio
 async def test_pending_endpoint_is_owner_only() -> None:
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_pending
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_pending
 
     st = _state()
     st.owner_id = "U_OWNER"
@@ -821,7 +821,7 @@ async def test_pending_endpoint_is_owner_only() -> None:
 
 @pytest.mark.asyncio
 async def test_pending_endpoint_returns_recent_resolution_reason_to_owner_only() -> None:
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_pending
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_pending
 
     st = _state()
     task = asyncio.ensure_future(
@@ -882,7 +882,7 @@ def test_every_session_reset_goes_through_the_chokepoint() -> None:
 @pytest.mark.asyncio
 async def test_reset_chokepoint_cancels_pending_questions() -> None:
     """The helper itself must actually release the wait, not just exist."""
-    from kiro_crew.dashboard.chat_handlers import _reset_slot_session
+    from aj_crew.dashboard.chat_handlers import _reset_slot_session
 
     st = _state()
     st.sessions = MagicMock()
@@ -899,7 +899,7 @@ async def test_reset_chokepoint_cancels_pending_questions() -> None:
 
     slot = MagicMock()
     slot.key = "chat-1"
-    with patch("kiro_crew.dashboard.chat_handlers._reject_pending_approvals"):
+    with patch("aj_crew.dashboard.chat_handlers._reject_pending_approvals"):
         await _reset_slot_session(st, slot, "dashboard:chat-1")
 
     # Unblocked with no answer rather than left hanging until timeout.
@@ -969,8 +969,8 @@ def test_question_window_stays_under_the_tool_stall_watchdog() -> None:
     left to return to. The ceiling was copied from the `wait` tool (1800s), which
     is a different mechanism; that was the bug.
     """
-    from kiro_crew.acp.client import _TOOL_STALL_TIMEOUT
-    from kiro_crew.validation import ASK_QUESTION_SCHEMA
+    from aj_crew.acp.client import _TOOL_STALL_TIMEOUT
+    from aj_crew.validation import ASK_QUESTION_SCHEMA
 
     assert DashboardState._QUESTION_TIMEOUT_MAX < _TOOL_STALL_TIMEOUT
     assert DashboardState._QUESTION_TIMEOUT_DEFAULT <= DashboardState._QUESTION_TIMEOUT_MAX
@@ -1001,13 +1001,13 @@ async def test_questions_identical_after_redaction_are_rejected() -> None:
 
     with (
         patch(
-            "kiro_crew.dashboard.state.redact_credentials",
+            "aj_crew.dashboard.state.redact_credentials",
             side_effect=lambda s: (
                 ("Use <cred> now?", 1) if "LEAKY_CRED_SENTINEL" in s else (s, 0)
             ),
         ),
         patch(
-            "kiro_crew.dashboard.state.redact_exfiltration_urls",
+            "aj_crew.dashboard.state.redact_exfiltration_urls",
             side_effect=lambda s: (s, 0),
         ),
     ):
@@ -1032,11 +1032,11 @@ async def test_option_labels_identical_after_redaction_are_rejected() -> None:
 
     with (
         patch(
-            "kiro_crew.dashboard.state.redact_credentials",
+            "aj_crew.dashboard.state.redact_credentials",
             side_effect=lambda s: (("Deploy <cred>", 1) if "LEAKY_CRED_SENTINEL" in s else (s, 0)),
         ),
         patch(
-            "kiro_crew.dashboard.state.redact_exfiltration_urls",
+            "aj_crew.dashboard.state.redact_exfiltration_urls",
             side_effect=lambda s: (s, 0),
         ),
     ):
@@ -1051,7 +1051,7 @@ async def test_option_labels_identical_after_redaction_are_rejected() -> None:
 
 @pytest.mark.asyncio
 async def test_collision_surfaces_as_400_not_500() -> None:
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question
 
     st = _state()
     st._slots = {"chat-1": MagicMock()}
@@ -1082,8 +1082,8 @@ async def test_pending_lists_a_stateless_card_so_a_reloaded_tab_can_re_render_it
     screen to answer and no way to dismiss it (the client does not know the
     card_id) — a stuck state only sending a message could clear.
     """
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_pending
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_pending
+    from aj_crew.dashboard.state import _ChatSlot
 
     st = _state()
     st._slots = {"chat-1": _ChatSlot("chat-1")}
@@ -1109,8 +1109,8 @@ async def test_pending_lists_a_stateless_card_so_a_reloaded_tab_can_re_render_it
 
 @pytest.mark.asyncio
 async def test_pending_lists_blocking_and_stateless_together() -> None:
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_pending
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_pending
+    from aj_crew.dashboard.state import _ChatSlot
 
     st = _state()
     st._slots = {"chat-1": _ChatSlot("chat-1")}
@@ -1142,8 +1142,8 @@ async def test_pending_skips_a_status_only_record() -> None:
 
     Emitting it would hand the client an empty card it cannot render.
     """
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_pending
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_pending
+    from aj_crew.dashboard.state import _ChatSlot
 
     st = _state()
     st._slots = {"chat-1": _ChatSlot("chat-1")}
@@ -1173,8 +1173,8 @@ async def test_dismiss_retires_a_stateless_card_status() -> None:
     reporting needs_input — the sidebar and sessions board claiming the agent was
     waiting on an answer the user had explicitly waved away.
     """
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_dismiss
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_dismiss
+    from aj_crew.dashboard.state import _ChatSlot
 
     st = _state()
     st._slots = {"chat-1": _ChatSlot("chat-1")}
@@ -1201,8 +1201,8 @@ async def test_dismiss_refuses_a_stale_card_id() -> None:
     Dismiss card A, then card B lands before A's request does. Retiring by slot
     alone would clear B's status and leave B unanswered but unmarked.
     """
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_dismiss
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_dismiss
+    from aj_crew.dashboard.state import _ChatSlot
 
     st = _state()
     st._slots = {"chat-1": _ChatSlot("chat-1")}
@@ -1223,8 +1223,8 @@ async def test_dismiss_refuses_a_stale_card_id() -> None:
 
 @pytest.mark.asyncio
 async def test_dismiss_requires_a_card_id() -> None:
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_dismiss
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_dismiss
+    from aj_crew.dashboard.state import _ChatSlot
 
     st = _state()
     st._slots = {"chat-1": _ChatSlot("chat-1")}
@@ -1245,8 +1245,8 @@ async def test_dismiss_requires_a_card_id() -> None:
 
 @pytest.mark.asyncio
 async def test_dismiss_404s_when_nothing_is_pending() -> None:
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_dismiss
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_dismiss
+    from aj_crew.dashboard.state import _ChatSlot
 
     st = _state()
     st._slots = {"chat-1": _ChatSlot("chat-1")}
@@ -1269,8 +1269,8 @@ async def test_dismiss_cannot_clear_a_blocking_question() -> None:
     Clearing it would report the session as unblocked while the ask_question call
     is still waiting on its future.
     """
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_dismiss
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_dismiss
+    from aj_crew.dashboard.state import _ChatSlot
 
     st = _state()
     st._slots = {"chat-1": _ChatSlot("chat-1")}
@@ -1301,7 +1301,7 @@ async def test_dismiss_cannot_clear_a_blocking_question() -> None:
 
 @pytest.mark.asyncio
 async def test_dismiss_requires_a_slot() -> None:
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_dismiss
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_dismiss
 
     st = _state()
     st._slots = {}
@@ -1320,8 +1320,8 @@ async def test_dismiss_requires_a_slot() -> None:
 @pytest.mark.asyncio
 async def test_app_token_cannot_dismiss() -> None:
     """Same gate as the sibling endpoints: this mutates the owner's own status."""
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_dismiss
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_dismiss
+    from aj_crew.dashboard.state import _ChatSlot
 
     st = _state()
     st._slots = {"chat-1": _ChatSlot("chat-1")}
@@ -1344,8 +1344,8 @@ async def test_app_token_cannot_dismiss() -> None:
 
 @pytest.mark.asyncio
 async def test_non_owner_dashboard_token_cannot_dismiss() -> None:
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_dismiss
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_dismiss
+    from aj_crew.dashboard.state import _ChatSlot
 
     st = _state()
     st.owner_id = "U_OWNER"
@@ -1414,7 +1414,7 @@ class TestErrorCodes:
     def test_no_refusal_in_this_module_is_prose_only(self) -> None:
         missing = sorted(f.lineno for f in self._findings() if f.bucket == "missing_code")
         assert missing == [], (
-            "these src/kiro_crew/dashboard/handlers/ask_question.py lines refuse "
+            "these src/aj_crew/dashboard/handlers/ask_question.py lines refuse "
             f"with prose and no machine-readable code: {missing}"
         )
 
@@ -1448,7 +1448,7 @@ class TestErrorCodes:
 
     @staticmethod
     async def _ask(body, *, slots=None, owner=True, app_token=False, raises=False):
-        from kiro_crew.dashboard.handlers.ask_question import api_ask_question
+        from aj_crew.dashboard.handlers.ask_question import api_ask_question
 
         st = _state()
         st._slots = {"chat-1": MagicMock()} if slots is None else slots
@@ -1548,8 +1548,8 @@ class TestErrorCodes:
         raises=False,
         resolution_reason=None,
     ):
-        from kiro_crew.dashboard.handlers.ask_question import api_ask_question_answer
-        from kiro_crew.dashboard.interaction_coordinator import QuestionCoordinator
+        from aj_crew.dashboard.handlers.ask_question import api_ask_question_answer
+        from aj_crew.dashboard.interaction_coordinator import QuestionCoordinator
 
         st = _state()
         if resolution_reason:
@@ -1577,7 +1577,7 @@ class TestErrorCodes:
 
     @pytest.mark.asyncio
     async def test_answer_with_too_many_answers(self) -> None:
-        from kiro_crew.validation import _ASK_MAX_QUESTIONS
+        from aj_crew.validation import _ASK_MAX_QUESTIONS
 
         status, body = await self._answer(
             {"answers": {f"q{i}": "a" for i in range(_ASK_MAX_QUESTIONS + 1)}}
@@ -1587,7 +1587,7 @@ class TestErrorCodes:
 
     @pytest.mark.asyncio
     async def test_answer_with_an_over_long_question_key(self) -> None:
-        from kiro_crew.validation import _ASK_MAX_QUESTION_LEN
+        from aj_crew.validation import _ASK_MAX_QUESTION_LEN
 
         status, body = await self._answer({"answers": {"q" * (_ASK_MAX_QUESTION_LEN + 1): "a"}})
         assert status == 400
@@ -1598,7 +1598,7 @@ class TestErrorCodes:
         """Refused, never truncated: a silently sliced answer resolves the wait
         and clears the card, so the agent proceeds on input the user cannot see
         was cut. The code makes that refusal dispatchable."""
-        from kiro_crew.validation import _ASK_MAX_ANSWER_LEN
+        from aj_crew.validation import _ASK_MAX_ANSWER_LEN
 
         status, body = await self._answer({"answers": {"q": "a" * (_ASK_MAX_ANSWER_LEN + 1)}})
         assert status == 400
@@ -1606,15 +1606,15 @@ class TestErrorCodes:
 
     @staticmethod
     def _max_keys() -> list[str]:
-        from kiro_crew.validation import _ASK_MAX_QUESTION_LEN, _ASK_MAX_QUESTIONS
+        from aj_crew.validation import _ASK_MAX_QUESTION_LEN, _ASK_MAX_QUESTIONS
 
         return [str(i).ljust(_ASK_MAX_QUESTION_LEN, "q") for i in range(_ASK_MAX_QUESTIONS)]
 
     @pytest.mark.asyncio
     async def test_max_size_questions_with_max_length_answers_are_accepted(self) -> None:
         """Every input within the advertised per-field limits fits the tool row's cap."""
-        from kiro_crew.session_directive import MAX_TOOL_RESULT_CHARS
-        from kiro_crew.validation import _ASK_MAX_ANSWER_LEN, format_ask_answers
+        from aj_crew.session_directive import MAX_TOOL_RESULT_CHARS
+        from aj_crew.validation import _ASK_MAX_ANSWER_LEN, format_ask_answers
 
         answers = {k: "a" * _ASK_MAX_ANSWER_LEN for k in self._max_keys()}
         assert len(format_ask_answers(answers.items())) <= MAX_TOOL_RESULT_CHARS
@@ -1624,8 +1624,8 @@ class TestErrorCodes:
     @pytest.mark.asyncio
     async def test_the_aggregate_guard_still_refuses_an_oversized_body(self) -> None:
         """Within every per-field bound, yet JSON quoting doubles each answer past the cap."""
-        from kiro_crew.session_directive import MAX_TOOL_RESULT_CHARS
-        from kiro_crew.validation import _ASK_MAX_ANSWER_LEN, format_ask_answers
+        from aj_crew.session_directive import MAX_TOOL_RESULT_CHARS
+        from aj_crew.validation import _ASK_MAX_ANSWER_LEN, format_ask_answers
 
         answers = {k: '"' * _ASK_MAX_ANSWER_LEN for k in self._max_keys()}
         assert len(format_ask_answers(answers.items())) > MAX_TOOL_RESULT_CHARS
@@ -1636,8 +1636,8 @@ class TestErrorCodes:
     @pytest.mark.asyncio
     async def test_answers_that_redaction_would_push_past_the_cap(self) -> None:
         """Under the cap as typed, over it once each key id becomes a longer placeholder."""
-        from kiro_crew.session_directive import MAX_TOOL_RESULT_CHARS
-        from kiro_crew.validation import _ASK_MAX_ANSWER_LEN, format_ask_answers
+        from aj_crew.session_directive import MAX_TOOL_RESULT_CHARS
+        from aj_crew.validation import _ASK_MAX_ANSWER_LEN, format_ask_answers
 
         key_id = "AKIA" + "ABCDEFGHIJKLMNOP"  # assembled so secret scanners do not flag a fake key
         answer = (f"{key_id} " * 100)[:_ASK_MAX_ANSWER_LEN]
@@ -1658,8 +1658,8 @@ class TestErrorCodes:
 
     def test_the_measured_text_is_the_tool_result(self) -> None:
         """The length check measures exactly what the MCP tool returns."""
-        from kiro_crew.mcp_tools.control import _format_ask_outcome
-        from kiro_crew.validation import format_ask_answers
+        from aj_crew.mcp_tools.control import _format_ask_outcome
+        from aj_crew.validation import format_ask_answers
 
         answers = {'Say "hi"?': "yes\nno", "Pick one": "B"}
         reply = {
@@ -1671,8 +1671,8 @@ class TestErrorCodes:
 
     def test_the_answer_bound_is_derived_from_the_tool_row_cap(self) -> None:
         """The per-answer limit leaves room for the header and max-length keys."""
-        from kiro_crew.session_directive import MAX_TOOL_RESULT_CHARS
-        from kiro_crew.validation import (
+        from aj_crew.session_directive import MAX_TOOL_RESULT_CHARS
+        from aj_crew.validation import (
             _ASK_ANSWERS_HEADER,
             _ASK_MAX_ANSWER_LEN,
             _ASK_MAX_QUESTION_LEN,
@@ -1709,7 +1709,7 @@ class TestErrorCodes:
     async def test_every_refusal_carries_both_a_code_and_its_prose(self) -> None:
         """No refusal path may regress to prose-only, and none may drop the
         advisory text an existing client still reads."""
-        from kiro_crew.validation import _ASK_MAX_ANSWER_LEN, _ASK_MAX_QUESTIONS
+        from aj_crew.validation import _ASK_MAX_ANSWER_LEN, _ASK_MAX_QUESTIONS
 
         seen = []
         seen.append(await self._ask({}, app_token=True))

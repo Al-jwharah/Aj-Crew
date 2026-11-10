@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 from test_nothing_to_do_directive import _drive_turn, _stub_state
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,

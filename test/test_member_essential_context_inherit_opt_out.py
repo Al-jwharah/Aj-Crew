@@ -22,11 +22,11 @@ from member_essential_context_helpers import (
 )
 
 from conftest import make_dir_link, requires_symlinks
-from kiro_crew import context as context_module
-from kiro_crew import member_essential_context as _mec
-from kiro_crew import pinned_fs
-from kiro_crew.agent_sdk.provider_identity import PROVIDER_ACP, PROVIDER_CLAUDE_CODE
-from kiro_crew.member_essential_context import MemberEssentialContextError
+from aj_crew import context as context_module
+from aj_crew import member_essential_context as _mec
+from aj_crew import pinned_fs
+from aj_crew.agent_sdk.provider_identity import PROVIDER_ACP, PROVIDER_CLAUDE_CODE
+from aj_crew.member_essential_context import MemberEssentialContextError
 
 # Fixtures shared with the sibling modules, bound by assignment so pytest registers
 # them for the tests in this module.
@@ -208,7 +208,7 @@ def test_declared_steering_glob_names_a_link_that_leaves_the_project_unread(env,
 def test_declared_steering_glob_still_refuses_a_link_the_path_screen_refuses(env):
     """The data home is refused by the path screen, so a link into a member store
     is not left out: it must not turn another member's store into a quiet skip."""
-    from kiro_crew.config import config_dir
+    from aj_crew.config import config_dir
 
     _declare_steering_glob_only(env)
     peer_store = config_dir() / "memory_stores" / "peer-member"
@@ -366,8 +366,8 @@ def test_crew_overlay_is_not_read_as_an_opt_out(
         env.project / ".kiro",
         {
             "chat.disableInheritingDefaultResources": True,
-            "kirocrew.skillDiscovery.inheritFiles": True,
-            "kirocrew.skillDiscovery.inheritSource": source,
+            "ajcrew.skillDiscovery.inheritFiles": True,
+            "ajcrew.skillDiscovery.inheritSource": source,
         },
     )
     if global_opt_out:
@@ -417,14 +417,14 @@ def test_cyclic_kiro_home_keeps_inherited_guides(operator_steering, monkeypatch)
     os.symlink(loop, loop)
     monkeypatch.setenv("KIRO_HOME", str(loop))
 
-    from kiro_crew.acp import skill_projection
+    from aj_crew.acp import skill_projection
 
     assert skill_projection.inherits_default_resources(env.project) is True
     assert _OPERATOR_RULE in _snapshot_bodies(env)
 
 
 def test_launch_documents_follow_the_workspace_opt_out(operator_steering):
-    from kiro_crew.member_essential_context import kiro_launch_documents
+    from aj_crew.member_essential_context import kiro_launch_documents
 
     env = operator_steering
 
@@ -490,7 +490,7 @@ def test_opt_out_binds_only_a_session_kiro_cli_serves(operator_steering, provide
 
 def _count_setting_reads(monkeypatch) -> list[object]:
     """Record every call of the one settings reader behind the verdict."""
-    from kiro_crew.agent_sdk.drivers import acp as acp_driver
+    from aj_crew.agent_sdk.drivers import acp as acp_driver
 
     reads: list[object] = []
     real = acp_driver.inherits_default_resources
@@ -536,7 +536,7 @@ def test_documents_for_member_takes_the_verdict_and_never_reads_the_setting(
     operator_steering, monkeypatch
 ):
     """The snapshot reader is a consumer: without the caller's verdict it inherits."""
-    from kiro_crew.member_essential_context import documents_for_member
+    from aj_crew.member_essential_context import documents_for_member
 
     env = operator_steering
     _write_kiro_settings(env.project / ".kiro", {"chat.disableInheritingDefaultResources": True})
@@ -589,7 +589,7 @@ def test_folder_declared_steering_trees_reach_an_opted_out_member_once(operator_
 @_needs_pinned_walk
 def test_opted_out_folder_dedup_does_not_resolve_source_labels(operator_steering, monkeypatch):
     """Canonical dedup does not re-resolve the collector's emitted labels."""
-    from kiro_crew import member_essential_context as essential_context
+    from aj_crew import member_essential_context as essential_context
 
     env = operator_steering
     _declare_project_steering_in_template(env)

@@ -13,7 +13,7 @@ import asyncio
 import pytest
 from test_subagent_skill_trigger_text import _RUN_CEILING, _mock_sessions  # noqa: F401
 
-from kiro_crew.config.loader_locations import _session_work_dir, workspace_root
+from aj_crew.config.loader_locations import _session_work_dir, workspace_root
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory", "ample_host_resources")
 
@@ -22,7 +22,7 @@ _RUN_ID = "0123456789abcdef"
 
 
 def _marked_run_dir(run_id: str):
-    from kiro_crew.session_work_dir import mark_run_dir
+    from aj_crew.session_work_dir import mark_run_dir
 
     scratch = _session_work_dir(f"subagent:{run_id}")
     assert mark_run_dir(scratch)
@@ -30,7 +30,7 @@ def _marked_run_dir(run_id: str):
 
 
 def test_only_a_marked_subagent_work_dir_is_recognised(tmp_path):
-    from kiro_crew.session_work_dir import is_subagent_work_dir
+    from aj_crew.session_work_dir import is_subagent_work_dir
 
     for run_id in (_RUN_ID, "0123abcd"):
         scratch = _marked_run_dir(run_id)
@@ -53,11 +53,11 @@ def test_only_a_marked_subagent_work_dir_is_recognised(tmp_path):
 async def _child_build_kwargs(cwd: str) -> dict:
     from unittest.mock import MagicMock, patch
 
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.subagent import SubagentManager
 
     # An explicit cwd is admitted only under a configured root.
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agent.subagent_cwd_allowed_roots = [str(workspace_root())]
     cfg.save()
 
@@ -68,7 +68,7 @@ async def _child_build_kwargs(cwd: str) -> dict:
     ctx.hooks.auto_approve_subagent_tools = False
     mgr = SubagentManager(sessions=_mock_sessions(), ctx_builder=ctx)
     mgr._should_use_session_sharing = MagicMock(return_value=False)  # type: ignore[method-assign]
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("summarize the notes", cwd=cwd)
         assert info is not None
         assert info.id in mgr._tasks, (info.cwd, getattr(info, "result", None))

@@ -26,7 +26,7 @@ export function ansiSample() {
     // The powerline separator glyph is deliberately absent: the capture browser
     // has no Nerd Font, so it would render as tofu and put a missing-glyph
     // question in front of a reviewer who is looking at colours.
-    `${RESET}\x1b[44;30m ~/repos/kirocrew ${RESET}\x1b[43;30m  main ± ${RESET}`,
+    `${RESET}\x1b[44;30m ~/repos/ajcrew ${RESET}\x1b[43;30m  main ± ${RESET}`,
     '',
     `\x1b[1mdiff --git a/CliPanel.tsx b/CliPanel.tsx${RESET}`,
     `\x1b[36m@@ -21,7 +21,9 @@${RESET}`,

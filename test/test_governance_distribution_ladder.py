@@ -28,9 +28,9 @@ from governance_distribution_helpers import (
     _write_policy,
 )
 
-from kiro_crew.platform import governance
-from kiro_crew.platform import policy_distribution as pd
-from kiro_crew.platform.context import PlatformCompositionError, current_context
+from aj_crew.platform import governance
+from aj_crew.platform import policy_distribution as pd
+from aj_crew.platform.context import PlatformCompositionError, current_context
 
 # ──────────────────────────────────────────────────────────────────────────
 # A refresh replaces one rung, not the whole ladder
@@ -96,7 +96,7 @@ class TestARefreshReComposesTheWholeLadder:
         """The regression itself, at the narrowest seam that can show it."""
         install_ceiling(governance.parse_policy(_doc("running")))
         monkeypatch.setenv(
-            "KIROCREW_SECURITY_POLICY",
+            "AJCREW_SECURITY_POLICY",
             str(
                 _write_policy(
                     tmp_path / "local.json",
@@ -160,7 +160,7 @@ class TestARefreshReComposesTheWholeLadder:
         install_ceiling(governance.parse_policy(_doc("running", distribution={"source": source})))
         pd._record_installed(_body("running", distribution={"source": source}))
         monkeypatch.setenv(
-            "KIROCREW_SECURITY_POLICY",
+            "AJCREW_SECURITY_POLICY",
             str(
                 _write_policy(
                     tmp_path / "local.json",
@@ -235,7 +235,7 @@ class TestARefreshReComposesTheWholeLadder:
         Identity, not equality -- a re-install bumps the governance generation and
         invalidates every cache keyed on it, so "nothing moved" has to mean no install.
         """
-        from kiro_crew.platform.context import governance_generation
+        from aj_crew.platform.context import governance_generation
 
         source = transport(_static_fetcher(pd.FetchedPolicy(etag="v1", not_modified=True)))
         body = _body("running", distribution={"source": source})
@@ -273,7 +273,7 @@ class TestARefreshReComposesTheWholeLadder:
         """
         from dataclasses import replace as _replace
 
-        from kiro_crew.platform.context import governance_generation
+        from aj_crew.platform.context import governance_generation
 
         source = transport(_static_fetcher(pd.FetchedPolicy(etag="v1", not_modified=True)))
         body = _body("running", distribution={"source": source})
@@ -314,7 +314,7 @@ class TestARefreshReComposesTheWholeLadder:
         """
         from dataclasses import replace as _replace
 
-        from kiro_crew.platform.context import governance_generation
+        from aj_crew.platform.context import governance_generation
 
         source = transport(_static_fetcher(pd.FetchedPolicy(etag="v1", not_modified=True)))
         body = _body("running", distribution={"source": source})
@@ -351,7 +351,7 @@ class TestARefreshReComposesTheWholeLadder:
         skip -- the looser ceiling would stay in effect after the operator fixed the
         profile, until a restart. The basis is what LANDED, so the retry installs.
         """
-        from kiro_crew.platform.context import governance_generation
+        from aj_crew.platform.context import governance_generation
 
         source = transport(_static_fetcher(pd.FetchedPolicy(etag="v1", not_modified=True)))
         body = _body("running", distribution={"source": source})
@@ -413,7 +413,7 @@ class TestTheEnvDocumentIsInTheDeclarationPeekChain:
 
     The env document was missing from that chain, so an env-declared
     ``distribution.source`` was silently ignored and the central tier never loaded
-    from it -- a fleet that bootstrapped through ``KIROCREW_SECURITY_POLICY`` got no
+    from it -- a fleet that bootstrapped through ``AJCREW_SECURITY_POLICY`` got no
     central ceiling at all, with nothing anywhere reporting why.
 
     A tier naming a source is the operator choosing where their own ceiling comes
@@ -434,7 +434,7 @@ class TestTheEnvDocumentIsInTheDeclarationPeekChain:
         transport(self._fetcher("central-push", seen))
         source = self._source("env-declared")
         monkeypatch.setenv(
-            "KIROCREW_SECURITY_POLICY",
+            "AJCREW_SECURITY_POLICY",
             str(_write_policy(tmp_path / "env.json", "bootstrap", distribution={"source": source})),
         )
         ceiling = governance.load_security_policy()
@@ -456,7 +456,7 @@ class TestTheEnvDocumentIsInTheDeclarationPeekChain:
         )
         monkeypatch.setattr(governance, "_policy_home_path", lambda: home)
         monkeypatch.setenv(
-            "KIROCREW_SECURITY_POLICY",
+            "AJCREW_SECURITY_POLICY",
             str(
                 _write_policy(
                     tmp_path / "env.json", "env-decl", distribution={"source": env_source}
@@ -478,7 +478,7 @@ class TestTheEnvDocumentIsInTheDeclarationPeekChain:
         home = _write_policy(tmp_path / "home.json", "operator")
         monkeypatch.setattr(governance, "_policy_home_path", lambda: home)
         monkeypatch.setenv(
-            "KIROCREW_SECURITY_POLICY", str(_write_policy(tmp_path / "env.json", "local-env"))
+            "AJCREW_SECURITY_POLICY", str(_write_policy(tmp_path / "env.json", "local-env"))
         )
         ceiling = governance.load_security_policy(bundled_loader=lambda: _doc("companion"))
         assert ceiling is not None
@@ -495,7 +495,7 @@ class TestTheEnvDocumentIsInTheDeclarationPeekChain:
         added anywhere in the chain trips this.
         """
         env_path = _write_policy(tmp_path / "env.json", "local-env", distribution={"source": ""})
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(env_path))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(env_path))
         real_read = governance._read_json_file
         reads: list = []
 
@@ -520,7 +520,7 @@ class TestTheEnvDocumentIsInTheDeclarationPeekChain:
         the env tier, which is a WIDENING (the tier that was governing disappears).
         """
         monkeypatch.setenv(
-            "KIROCREW_SECURITY_POLICY", str(_write_policy(tmp_path / "env.json", "local-env"))
+            "AJCREW_SECURITY_POLICY", str(_write_policy(tmp_path / "env.json", "local-env"))
         )
         ceiling = governance._subordinate_ceiling(None, None, None, tmp_path / "absent-home.json")
         assert ceiling is not None
@@ -531,7 +531,7 @@ class TestTheEnvDocumentIsInTheDeclarationPeekChain:
         self, monkeypatch, tmp_path
     ):
         monkeypatch.setenv(
-            "KIROCREW_SECURITY_POLICY", str(_write_policy(tmp_path / "env.json", "local-env"))
+            "AJCREW_SECURITY_POLICY", str(_write_policy(tmp_path / "env.json", "local-env"))
         )
         ceiling = governance._subordinate_ceiling(
             _doc("companion"), None, None, tmp_path / "absent-home.json"
@@ -549,8 +549,8 @@ class TestTheEnvDocumentIsInTheDeclarationPeekChain:
         """
         broken = tmp_path / "env.json"
         broken.write_text("{ not json", encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(broken))
-        with pytest.raises(PlatformCompositionError, match="from KIROCREW_SECURITY_POLICY"):
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(broken))
+        with pytest.raises(PlatformCompositionError, match="from AJCREW_SECURITY_POLICY"):
             governance.load_security_policy()
 
     def test_an_unreadable_env_path_raises_before_the_central_tier_answers(
@@ -567,20 +567,20 @@ class TestTheEnvDocumentIsInTheDeclarationPeekChain:
         monkeypatch.setattr(governance, "_policy_home_path", lambda: home)
         broken = tmp_path / "env.json"
         broken.write_text("{ not json", encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(broken))
-        with pytest.raises(PlatformCompositionError, match="from KIROCREW_SECURITY_POLICY"):
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(broken))
+        with pytest.raises(PlatformCompositionError, match="from AJCREW_SECURITY_POLICY"):
             governance.load_security_policy()
         assert seen == []
 
     def test_an_unreadable_env_path_still_raises_at_the_reader(self, monkeypatch, tmp_path):
         broken = tmp_path / "env.json"
         broken.write_text("{ not json", encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(broken))
-        with pytest.raises(PlatformCompositionError, match="from KIROCREW_SECURITY_POLICY"):
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(broken))
+        with pytest.raises(PlatformCompositionError, match="from AJCREW_SECURITY_POLICY"):
             governance._read_env_policy()
 
     def test_an_unset_variable_reads_as_no_env_document(self, monkeypatch):
-        monkeypatch.delenv("KIROCREW_SECURITY_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_SECURITY_POLICY", raising=False)
         assert governance._read_env_policy() == (None, None)
 
 
@@ -693,7 +693,7 @@ class TestABootThroughTheLoaderThenTwoQuietPolls:
         """The existing control installs via ``compose_installed_ceiling`` itself. This
         one boots through ``load_security_policy`` -- the path a real gateway takes --
         so the comparison basis is the loader's own fold."""
-        from kiro_crew.platform.context import governance_generation
+        from aj_crew.platform.context import governance_generation
 
         body = _body("running", tools={"mode": "deny", "deny": ["danger"]})
         source = transport(_static_fetcher(pd.FetchedPolicy(body=body, etag="v1")))

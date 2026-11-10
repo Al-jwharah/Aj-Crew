@@ -1,7 +1,7 @@
 """``validation.py`` keeps its BASE surface while its definitions live in ``validation_parts``.
 
-``kiro_crew.validation`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the
-owner modules of ``kiro_crew.validation_parts``. ``test/test_facade_mirror_guards.py``
+``aj_crew.validation`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the
+owner modules of ``aj_crew.validation_parts``. ``test/test_facade_mirror_guards.py``
 holds it to the contract every mirrored facade shares: one object per name, the
 ``TYPE_CHECKING`` manifest, no owner importing its facade, and every patch through it
 reaching every module that holds the name. These checks pin what is particular to this
@@ -9,7 +9,7 @@ facade:
 
 * every top-level name the one-module file defined still resolves through the facade as
   the object its one owner defines, and ``dir()`` lists it (the posture view and its
-  tests walk ``dir(kiro_crew.validation)`` for the schema registries);
+  tests walk ``dir(aj_crew.validation)`` for the schema registries);
 * the owners are exactly the package's modules, imported eagerly, lowest layer first, and
   each imports only owners listed before it;
 * the facade imports nothing beyond its BASE import header and its own glue -- the
@@ -34,13 +34,13 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew
-from kiro_crew import _facade_mirror, validation
-from kiro_crew import validation_parts as _parts
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew
+from aj_crew import _facade_mirror, validation
+from aj_crew import validation_parts as _parts
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
-FACADE = "kiro_crew.validation"
-PACKAGE = "kiro_crew.validation_parts"
+FACADE = "aj_crew.validation"
+PACKAGE = "aj_crew.validation_parts"
 _FACADE_PATH = Path(validation.__file__)
 
 #: Every top-level name the one-module file defined (frozen at the split).
@@ -266,14 +266,14 @@ def test_each_owner_imports_only_owners_listed_before_it() -> None:
 
 def test_importing_the_facade_loads_every_owner(tmp_path: Path) -> None:
     """Checked in a fresh interpreter: the facade imports its owners while it loads, so
-    a probe that imports only ``kiro_crew.validation`` (the cycle-breaking imports in
+    a probe that imports only ``aj_crew.validation`` (the cycle-breaking imports in
     the member tests, the leaf check in test_agent_import_hoist) sees the whole graph."""
     env = dict(os.environ)
     env["PYTHONPATH"] = (
-        str(Path(kiro_crew.__file__).resolve().parents[1]) + os.pathsep + env.get("PYTHONPATH", "")
+        str(Path(aj_crew.__file__).resolve().parents[1]) + os.pathsep + env.get("PYTHONPATH", "")
     )
     probe = (
-        "import sys, kiro_crew.validation as v; "
+        "import sys, aj_crew.validation as v; "
         "print(sorted(o for o in v._OWNERS if o not in sys.modules))"
     )
     out = subprocess.run(
@@ -299,11 +299,11 @@ def test_the_inventory_check_reports_a_planted_import() -> None:
     source = _FACADE_PATH.read_text(encoding="utf-8")
     planted = (
         source
-        + "\nimport tempfile\nfrom kiro_crew.validation_parts.input_bounds import FieldSpec\n"
+        + "\nimport tempfile\nfrom aj_crew.validation_parts.input_bounds import FieldSpec\n"
     )
     assert unexpected_imports(planted, _owner_names()) == [
         "tempfile",
-        "kiro_crew.validation_parts.input_bounds.FieldSpec",
+        "aj_crew.validation_parts.input_bounds.FieldSpec",
     ]
 
 

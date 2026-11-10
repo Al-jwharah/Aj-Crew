@@ -12,7 +12,7 @@
 // no arguments -- can only get it from code inside the app.
 //
 // The public build bakes nothing and appends nothing. An edition that ships to a
-// managed intranet sets KIROCREW_AUTH_SERVER_ALLOWLIST when it runs
+// managed intranet sets AJCREW_AUTH_SERVER_ALLOWLIST when it runs
 // packaging/build-desktop.sh, which validates it with parseAuthServerAllowlist
 // below and stages it as AUTH-SERVER-ALLOWLIST next to this module; package.json
 // `files` packs it into app.asar, so it is trusted as code is trusted (the same

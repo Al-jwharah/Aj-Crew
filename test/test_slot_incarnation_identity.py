@@ -10,7 +10,7 @@ from __future__ import annotations
 import pathlib
 import re
 
-DASHBOARD = pathlib.Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard"
+DASHBOARD = pathlib.Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard"
 
 
 def _sources() -> list[pathlib.Path]:

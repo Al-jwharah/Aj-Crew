@@ -3,7 +3,7 @@
 ``allowedTools`` and each server's ``autoApprove`` are materialised: the writers ask
 ``may_skip_gate_now`` when they write, and that consults the policy ceiling AND every
 configured governance profile. kiro-cli then reads the FILE, and an auto-approved tool
-never reaches Kiro Crew's own PreToolUse gate. So a profile saved after the spec was
+never reaches Aj Crew's own PreToolUse gate. So a profile saved after the spec was
 written, one that comes to govern an auto-approved tool, has to re-derive the spec the
 same way a ceiling install does, or every new session keeps running that tool without
 a prompt until something unrelated rebuilds the config.
@@ -20,10 +20,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance as gov
-from kiro_crew.platform import governance_profiles as gp
+from aj_crew import agent as agent_mod
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance as gov
+from aj_crew.platform import governance_profiles as gp
 
 _REF = "@user-server"
 
@@ -56,7 +56,7 @@ def rebuilds(monkeypatch, profiles_dir) -> list[bool]:
 
     def fake_reporting(**kw):
         seen.append(gov.may_skip_gate_now(_REF))
-        return Path("/agents/kirocrew.json"), True
+        return Path("/agents/ajcrew.json"), True
 
     monkeypatch.setattr(agent_mod, "rebuild_agent_config_reporting", fake_reporting)
     monkeypatch.setattr(agent_mod, "_conductor_spec_held", False, raising=False)
@@ -139,7 +139,7 @@ class TestTheGatewayProfileWatch:
 
         def maybe_declined(**kw):
             attempts.append(1)
-            return Path("/agents/kirocrew.json"), not declined["value"]
+            return Path("/agents/ajcrew.json"), not declined["value"]
 
         _boot()
         monkeypatch.setattr(agent_mod, "rebuild_agent_config_reporting", maybe_declined)
@@ -173,7 +173,7 @@ class TestTheGatewayProfileWatch:
             attempts.append(1)
             agent_mod._conductor_spec_held = held["value"]
             kw["_held_out"].append(held["value"])
-            return Path("/agents/kirocrew.json"), True
+            return Path("/agents/ajcrew.json"), True
 
         _boot()
         monkeypatch.setattr(agent_mod, "rebuild_agent_config_reporting", holding)
@@ -204,7 +204,7 @@ class TestTheGatewayProfileWatch:
             attempts.append(1)
             if len(attempts) == 1:
                 raise OSError("could not write the agent config")
-            return Path("/agents/kirocrew.json"), True
+            return Path("/agents/ajcrew.json"), True
 
         _boot()
         monkeypatch.setattr(agent_mod, "rebuild_agent_config_reporting", flaky)
@@ -222,8 +222,8 @@ class TestTheGatewayProfileWatch:
     def test_the_gateway_runs_the_watch_off_the_loop_and_stops_it_at_shutdown(self):
         import inspect
 
-        import kiro_crew.slack.gateway as gw
-        from kiro_crew.slack.gateway_runtime import service_boot
+        import aj_crew.slack.gateway as gw
+        from aj_crew.slack.gateway_runtime import service_boot
 
         src = Path(service_boot.__file__).read_text(encoding="utf-8")
         assert "await asyncio.to_thread(reproject_for_profile_change)" in src
@@ -365,7 +365,7 @@ class TestConcurrentProjectionsAreSerialized:
             release.wait(timeout=5)
             with lock:
                 active["n"] -= 1
-            return Path("/agents/kirocrew.json"), True
+            return Path("/agents/ajcrew.json"), True
 
         monkeypatch.setattr(agent_mod, "rebuild_agent_config_reporting", slow)
         _save_profile_governing_the_ref(profiles_dir)
@@ -463,7 +463,7 @@ class TestTheBaselineSeed:
         assert rebuilds == []
 
     def test_the_gateway_seeds_off_the_loop(self):
-        from kiro_crew.slack.gateway_runtime import service_boot
+        from aj_crew.slack.gateway_runtime import service_boot
 
         src = Path(service_boot.__file__).read_text(encoding="utf-8")
         assert "await asyncio.to_thread(prime_ceiling_projection)" in src

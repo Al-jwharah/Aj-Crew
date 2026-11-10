@@ -15,7 +15,7 @@ each character measured here falls outside it, so a widened allowlist fails ther
 than here.
 
 It lives in the top-level tree, not in the app's own ``tests/`` directory, because it
-SPAWNS a process: every spawn under ``src/kiro_crew`` must be routed through the sandbox
+SPAWNS a process: every spawn under ``src/aj_crew`` must be routed through the sandbox
 or registered in ``test_spawn_audit.py``'s allowlist, and a test's own probe spawn
 qualifies for neither. Registering one to make this file pass would be telling a
 security gate something false.

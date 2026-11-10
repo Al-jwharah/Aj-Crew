@@ -13,12 +13,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import session_ledger
-from kiro_crew.dashboard.handlers import (
+from aj_crew import session_ledger
+from aj_crew.dashboard.handlers import (
     _remove_slot_for_history_key as _remove_slot_for_history_key_impl,
 )
-from kiro_crew.dashboard.handlers import sessions as sessions_module
-from kiro_crew.dashboard.handlers.sessions import _capture_history_delete_claim, _HistoryDeleteClaim
+from aj_crew.dashboard.handlers import sessions as sessions_module
+from aj_crew.dashboard.handlers.sessions import _capture_history_delete_claim, _HistoryDeleteClaim
 
 
 def _make_state(slots: dict) -> MagicMock:

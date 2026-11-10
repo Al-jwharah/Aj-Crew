@@ -14,8 +14,8 @@ import test_knowledge_add_source as _add_source_tests
 from aiohttp.test_utils import TestClient, TestServer
 from test_knowledge_add_source import _make_app
 
-from kiro_crew.dashboard.handlers.knowledge import import_bundle, ingest_text
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.dashboard.handlers.knowledge import import_bundle, ingest_text
+from aj_crew.knowledge.store import KnowledgeStore
 
 
 @pytest.fixture()
@@ -72,7 +72,7 @@ class TestBundlesNeverCarryBedrockSources:
 
     @pytest.mark.asyncio
     async def test_an_app_token_import_registers_no_bedrock_source(self, store, monkeypatch):
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         # A grant for the crafted row's exact target already exists: the state
         # of any deployment whose owner uses Bedrock, and the one in which an
@@ -113,7 +113,7 @@ class TestBundlesNeverCarryBedrockSources:
         """Not a caller check: the bundle is the wrong path for an account
         binding whoever posts it -- the owner registers a KB through the
         add-source form, where validation and the target check run."""
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         monkeypatch.setattr(
             aws_consent, "is_granted", lambda service, *, profile, region: (True, "")
@@ -159,7 +159,7 @@ class TestBundlesNeverCarryBedrockSources:
         rolls a CLEAN store's import back on the FK. Both ways an item comes to
         name a source are refused -- the insert, and a location attaching an
         existing item (the dedup path). Found in review."""
-        from kiro_crew.knowledge.store import LiveSourceHoldsNoItems
+        from aj_crew.knowledge.store import LiveSourceHoldsNoItems
 
         bedrock_id = store.add_source(
             name="kb",
@@ -425,7 +425,7 @@ class TestBundlesNeverCarryBedrockSources:
         locations are refused and counted while the rest lands. A bundle that
         names the registered id without carrying a row for it is malformed
         like any undeclared reference, so nothing lands. Found in review."""
-        from kiro_crew.knowledge.store import KnowledgeBundleError
+        from aj_crew.knowledge.store import KnowledgeBundleError
 
         bedrock_id = store.add_source(
             name="kb",

@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.validation import (
+from aj_crew.validation import (
     CRON_SESSION_RE,
     SEND_MESSAGE_SCHEMA,
     ValidationError,
@@ -52,7 +52,7 @@ def test_agent_defect():
 
 
 def _send_message_descriptor():
-    from kiro_crew.mcp_tools.messaging import schemas
+    from aj_crew.mcp_tools.messaging import schemas
 
     for tool in schemas():
         if tool["name"] == "send_message":

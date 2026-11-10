@@ -17,19 +17,19 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import chat_handlers as ch
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard import chat_handlers as ch
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import (
     _MANUAL_CONTINUE_MSG,
     _MANUAL_RESUME_MSG,
     SESSION_START_FAILED_KIND,
     SYNTHETIC_RECOVERY_KIND,
     slot_history_key,
 )
-from kiro_crew.dashboard.handlers import session_control as handlers_sc
-from kiro_crew.mcp_dashboard import TABLE
-from kiro_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew.dashboard.handlers import session_control as handlers_sc
+from aj_crew.mcp_dashboard import TABLE
+from aj_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
 
 _START_TIMEOUT = "Request initialize timed out after 90s"
 
@@ -327,8 +327,8 @@ def test_the_handler_renders_a_refusal_with_its_code(monkeypatch):
 def test_the_route_is_registered_and_strict_internal():
     from aiohttp import web
 
-    from kiro_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
-    from kiro_crew.dashboard.server_runtime.mcp_routes import _register_mcp_routes
+    from aj_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
+    from aj_crew.dashboard.server_runtime.mcp_routes import _register_mcp_routes
 
     assert "/api/session-control/continue" in _STRICT_INTERNAL_API_PATHS
     app = web.Application()
@@ -377,7 +377,7 @@ def test_tool_takes_no_prompt_text():
 
 def agent_grants() -> tuple[str, ...]:
     """Every shipped auto-grant tuple; session_continue is in none of them."""
-    from kiro_crew import agent
+    from aj_crew import agent
 
     return (
         agent._CONDUCTOR_DASHBOARD_GRANTS

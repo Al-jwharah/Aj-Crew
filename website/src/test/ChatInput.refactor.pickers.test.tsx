@@ -57,7 +57,7 @@ import ChatInput from '../components/ChatInput'
 
 const ROOT = '/work/proj'
 const SKILLS = [
-  { key: 'peer-review-walk', name: 'peer-review-walk', description: 'Walk peer CRs', source: 'kirocrew' },
+  { key: 'peer-review-walk', name: 'peer-review-walk', description: 'Walk peer CRs', source: 'ajcrew' },
 ]
 
 type Engine = 'textarea' | 'lexical'

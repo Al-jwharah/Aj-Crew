@@ -25,7 +25,7 @@ vi.mock('../components/SkillDirectoryBrowser', () => ({
 import SkillsTab from '../pages/overview/SkillsTab'
 
 const skill = (key: string, description: string): Skill => ({
-  key, name: key, description, source: 'kirocrew', loaded_by_agents: [],
+  key, name: key, description, source: 'ajcrew', loaded_by_agents: [],
 } as unknown as Skill)
 
 // The shape of the report: a skill listed first whose description mentions

@@ -1,4 +1,4 @@
-"""kiro_crew.messaging.approval -- both channel-neutral approval seams.
+"""aj_crew.messaging.approval -- both channel-neutral approval seams.
 
 Every test here is a security property, not a convenience. The module hosts two
 styles behind one INTERACTIVE decider, and this file exercises both:
@@ -18,8 +18,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.messaging import approval
-from kiro_crew.messaging.approval import (
+from aj_crew.messaging import approval
+from aj_crew.messaging.approval import (
     APPROVE,
     DENY,
     RECEIPT_APPROVED,
@@ -38,9 +38,9 @@ from kiro_crew.messaging.approval import (
     pending_for,
     reset_for_tests,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
-SESSION = "whatsapp:kirocrew:direct:447700900000"
+SESSION = "whatsapp:ajcrew:direct:447700900000"
 
 
 @pytest.fixture(autouse=True)
@@ -370,7 +370,7 @@ class TestDenyByDefault:
         asserting on the RESULT of an elapsed window is the property that
         matters, so shrink the window instead of sleeping.
         """
-        monkeypatch.setattr("kiro_crew.messaging.approval.APPROVAL_TIMEOUT_S", 0.01)
+        monkeypatch.setattr("aj_crew.messaging.approval.APPROVAL_TIMEOUT_S", 0.01)
         pending = PendingApprovals("webex")
 
         assert (await pending.decide_with_cause("s1", _event()))[0] is False
@@ -568,7 +568,7 @@ class TestApprovalStallSignalling:
         reporting itself healthy — its per-turn cap is measured in tens of minutes
         and the approval window in minutes.
         """
-        from kiro_crew import autonudge
+        from aj_crew import autonudge
 
         stalled: list[str] = []
         monkeypatch.setattr(approval, "APPROVAL_TIMEOUT_S", 0.01)
@@ -588,7 +588,7 @@ class TestApprovalStallSignalling:
     async def test_a_key_no_loop_can_bind_to_is_not_signalled(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import autonudge
+        from aj_crew import autonudge
 
         stalled: list[str] = []
         monkeypatch.setattr(approval, "APPROVAL_TIMEOUT_S", 0.01)
@@ -608,7 +608,7 @@ class TestApprovalStallSignalling:
     ) -> None:
         # A monitoring convenience must not be able to turn a denied tool into a
         # raised exception inside the turn.
-        from kiro_crew import autonudge
+        from aj_crew import autonudge
 
         def _boom() -> object:
             raise RuntimeError("autonudge is unavailable")
@@ -732,7 +732,7 @@ class TestApprovalHoldRelease:
     async def test_an_answer_releases_and_a_timeout_does_not(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import autonudge
+        from aj_crew import autonudge
 
         released: list[str | None] = []
         stalled: list[str] = []
@@ -749,7 +749,7 @@ class TestApprovalHoldRelease:
         assert (await task)[0] is True
         assert released == [autonudge.binding_key_for(session)]
 
-        monkeypatch.setattr("kiro_crew.messaging.approval.APPROVAL_TIMEOUT_S", 0.01)
+        monkeypatch.setattr("aj_crew.messaging.approval.APPROVAL_TIMEOUT_S", 0.01)
         assert (await pending.decide_with_cause(session, _event("req-2")))[0] is False
         assert released == [autonudge.binding_key_for(session)], "a timeout released the hold"
         assert stalled == [session]

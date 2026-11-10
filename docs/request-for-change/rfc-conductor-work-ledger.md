@@ -2,7 +2,7 @@
 title: Conductor work ledger — workers report structured data, not prompts
 status: partial
 revision: v5
-author: kirocrew agent session, directed by zejiangg
+author: ajcrew agent session, directed by zejiangg
 created: 2026-09-05
 last-audited: 2026-10-08
 audited-at: 9348a25a34
@@ -31,11 +31,11 @@ names, which was read at that PR's own head.
 
 Revision v3 changes what the ledger *is*. v1 and v2 described a two-party record — one conductor, one worker, one item each, and a worker that could see nothing but its own row. v3 calls it what the shipped store already is: **one shared board per conductor, masked by identity.** The conductor sees the whole board. A worker still writes only its own square, but it may now *read* a pointer-only digest of its siblings (§Visibility model, §`work_brief`), and it may ask the conductor for a channel to one of them (§`work_request`) which the conductor may grant with a bounded, expiring pairwise channel (§`work_message`). Every message and every request is an event on the board, so the manager reading the board sees all of the traffic it authorised. The v1/v2 "not a message bus" non-goal is narrowed rather than dropped: there is still no fan-out, no addressing outside one ledger, and no path from a worker's text into anyone's prompt. v3 also promotes the shipped phases from "proposed" to "as implemented" and closes Q2 and Q6.
 
-Revision v4 moves Phase 3 and Phase 4 from planned to in flight and records what each is actually being built as. Phase 3, the wake gate, is [#12781](https://github.com/kirodotdev/KiroCrew/pull/12781) on `feat/work-ledger-wake-gate`, still a draft; Phase 4, the surfaces, is [#12792](https://github.com/kirodotdev/KiroCrew/pull/12792) on `feat/crew-page-work-items`. **Neither was on main at v4**; both are merged now, and §Migration plan's two phase sections carry the v4 branch reading under an audit note that names the merged commit. Because a branch under review moves, each of those two sections is pinned to the head it was read at and marked for re-audit at merge. That pin is load-bearing rather than ceremonial: both heads moved once while this revision was itself in review, which is why neither section may be trusted on this document's `last-audited` date alone. The two phases are closer than §Migration plan implies: Phase 4's outstanding band is the *rendering* of Phase 3's actionable set, so one event set decides both what wakes a conductor and what a human sees as still unanswered. v4 corrects the size of that set. Phase 3's scope names four actionable events, but the store has no `request` event kind at all — `EVENT_KINDS` is `create`, `bind`, `report`, `decision`, `verdict`, `close` — so what wakes a conductor is a worker `report` carrying `done`, `blocked` or `question`, three statuses rather than four, and the `request` half of both the gate and the band waits for Phase 5 with the event kind that would carry it. That gives Phase 4 a requirement v3 left implicit: **a human reads the state of every dispatched worker from the Crew page at a cost of zero conductor turns.** It is what makes the board worth building beside a gate that already wakes the conductor, and it is the exit criterion the phase should be judged on. §Scope: conductors outside `kirocrew-conductor` is new in v4 and records which conductors none of this reaches, as an open question (Q10) rather than a decision. v4 also keeps one rejected alternative from a separate proposal folded in here: a second wake channel built on [`session_ledger.py`](../../src/kiro_crew/session_ledger.py) rather than on this store, rejected because a worker would then carry two status records — its `work_report` status and its session ledger's `phase` — that can disagree, with nothing to say which one a conductor should believe. The complementary half of that proposal survived separately as [`rfc-wake-judge.md`](rfc-wake-judge.md), whose §Alternatives considered states the division this document should be read against: a typed probe answers what can be typed, and a judge reads only the prose evidence a probe cannot — probe first, judge on what the probe cannot type. Phase 3 is the typed side of that split, which is why its verdicts are the ones a judge is forbidden to mint. The data model, storage layout, visibility model and agent specs are unchanged.
+Revision v4 moves Phase 3 and Phase 4 from planned to in flight and records what each is actually being built as. Phase 3, the wake gate, is [#12781](https://github.com/kirodotdev/KiroCrew/pull/12781) on `feat/work-ledger-wake-gate`, still a draft; Phase 4, the surfaces, is [#12792](https://github.com/kirodotdev/KiroCrew/pull/12792) on `feat/crew-page-work-items`. **Neither was on main at v4**; both are merged now, and §Migration plan's two phase sections carry the v4 branch reading under an audit note that names the merged commit. Because a branch under review moves, each of those two sections is pinned to the head it was read at and marked for re-audit at merge. That pin is load-bearing rather than ceremonial: both heads moved once while this revision was itself in review, which is why neither section may be trusted on this document's `last-audited` date alone. The two phases are closer than §Migration plan implies: Phase 4's outstanding band is the *rendering* of Phase 3's actionable set, so one event set decides both what wakes a conductor and what a human sees as still unanswered. v4 corrects the size of that set. Phase 3's scope names four actionable events, but the store has no `request` event kind at all — `EVENT_KINDS` is `create`, `bind`, `report`, `decision`, `verdict`, `close` — so what wakes a conductor is a worker `report` carrying `done`, `blocked` or `question`, three statuses rather than four, and the `request` half of both the gate and the band waits for Phase 5 with the event kind that would carry it. That gives Phase 4 a requirement v3 left implicit: **a human reads the state of every dispatched worker from the Crew page at a cost of zero conductor turns.** It is what makes the board worth building beside a gate that already wakes the conductor, and it is the exit criterion the phase should be judged on. §Scope: conductors outside `ajcrew-conductor` is new in v4 and records which conductors none of this reaches, as an open question (Q10) rather than a decision. v4 also keeps one rejected alternative from a separate proposal folded in here: a second wake channel built on [`session_ledger.py`](../../src/aj_crew/session_ledger.py) rather than on this store, rejected because a worker would then carry two status records — its `work_report` status and its session ledger's `phase` — that can disagree, with nothing to say which one a conductor should believe. The complementary half of that proposal survived separately as [`rfc-wake-judge.md`](rfc-wake-judge.md), whose §Alternatives considered states the division this document should be read against: a typed probe answers what can be typed, and a judge reads only the prose evidence a probe cannot — probe first, judge on what the probe cannot type. Phase 3 is the typed side of that split, which is why its verdicts are the ones a judge is forbidden to mint. The data model, storage layout, visibility model and agent specs are unchanged.
 
-Revision v2 reverses v1's agent-spec recommendation. v1 argued against a `kirocrew-worker` agent and put the four tools on `kirocrew-core` to fail closed. Both halves of that reasoning turned out to point the other way, and §Agent spec changes now proposes a worker agent that is the default agent's superset plus an opt-in `kirocrew-work` server. §Alternatives considered keeps v1's position as the rejected option. The data model, storage layout, wake gate and Phase 1 are unchanged.
+Revision v2 reverses v1's agent-spec recommendation. v1 argued against a `ajcrew-worker` agent and put the four tools on `ajcrew-core` to fail closed. Both halves of that reasoning turned out to point the other way, and §Agent spec changes now proposes a worker agent that is the default agent's superset plus an opt-in `ajcrew-work` server. §Alternatives considered keeps v1's position as the rejected option. The data model, storage layout, wake gate and Phase 1 are unchanged.
 
-**Disambiguation.** "Ledger" already names two things here. [`src/kiro_crew/session_ledger.py`](../../src/kiro_crew/session_ledger.py) is one session's own durable state, and Issue Radar's `crew_store` keeps a per-repository work ledger for issue crews. This RFC adds a third, now on main: a shared record between a conductor session and the worker sessions it dispatched. It is deliberately the generalization of the Issue Radar one, and §9 names what is lifted and what is left behind.
+**Disambiguation.** "Ledger" already names two things here. [`src/aj_crew/session_ledger.py`](../../src/aj_crew/session_ledger.py) is one session's own durable state, and Issue Radar's `crew_store` keeps a per-repository work ledger for issue crews. This RFC adds a third, now on main: a shared record between a conductor session and the worker sessions it dispatched. It is deliberately the generalization of the Issue Radar one, and §9 names what is lifted and what is left behind.
 
 ---
 
@@ -45,21 +45,21 @@ A conductor session dispatches work to child sessions and learned what happened,
 
 The store is **one board per conductor with a mask per reader**: the conductor sees every square, a worker sees its own square whole plus a pointer-only digest of its siblings, and the Crew page sees what the user is entitled to. Six MCP tools, one on-disk store per conductor, and one new wake gate. No worker tool has a parameter that can name another conductor's session or a conductor-owned field, and the two tools that *do* name a sibling item (`work_request`, `work_message`) can only write into the caller's own square or into a pair the conductor explicitly opened — so out-of-bounds writes are not validated away, they are unrepresentable.
 
-The reason this is not simply "let the worker call `session_send`" is in the code that withholds it, quoted in full in §2. `session_send` is not merely ungranted to a worker: it lives on the opt-in `kirocrew-dashboard` server, which a worker spec never mounts, so the tool never exists in a worker's surface. A worker's only ways to reach a human are `send_message` and `send_notification`, which address a *person*, not a session's turn queue. The ledger is a worker's only channel to its conductor.
+The reason this is not simply "let the worker call `session_send`" is in the code that withholds it, quoted in full in §2. `session_send` is not merely ungranted to a worker: it lives on the opt-in `ajcrew-dashboard` server, which a worker spec never mounts, so the tool never exists in a worker's surface. A worker's only ways to reach a human are `send_message` and `send_notification`, which address a *person*, not a session's turn queue. The ledger is a worker's only channel to its conductor.
 
 ## Motivation
 
 ### What a conductor can observe today
 
-This section describes what `kirocrew-conductor` cost BEFORE the ledger, and it is now a historical account: the swap in §Rollout note — swap done made the ledger flow what `kirocrew-conductor` runs, so the four costs below are what it no longer pays. `kirocrew-ledger-conductor` is a deprecated alias of it for one release.
+This section describes what `ajcrew-conductor` cost BEFORE the ledger, and it is now a historical account: the swap in §Rollout note — swap done made the ledger flow what `ajcrew-conductor` runs, so the four costs below are what it no longer pays. `ajcrew-ledger-conductor` is a deprecated alias of it for one release.
 
-The conductor agent spec is built by `_install_conductor_agent` in [`src/kiro_crew/agent_materialization/conductor_agents.py`](../../src/kiro_crew/agent_materialization/conductor_agents.py). Its operating loop is [`goal-conductor/SKILL.md`](../../src/kiro_crew/builtin_skills/goal-conductor/SKILL.md): dispatch with `session_create` plus `session_send`, then patrol on an AutoNudge loop armed by `monitor_start`, and each cycle read `session_ledger_read`, run `accept_eval.py` over every open item, and call `session_read_message` against a stored cursor.
+The conductor agent spec is built by `_install_conductor_agent` in [`src/aj_crew/agent_materialization/conductor_agents.py`](../../src/aj_crew/agent_materialization/conductor_agents.py). Its operating loop is [`goal-conductor/SKILL.md`](../../src/aj_crew/builtin_skills/goal-conductor/SKILL.md): dispatch with `session_create` plus `session_send`, then patrol on an AutoNudge loop armed by `monitor_start`, and each cycle read `session_ledger_read`, run `accept_eval.py` over every open item, and call `session_read_message` against a stored cursor.
 
 Four costs follow from that shape.
 
 **Latency equals the interval.** A worker that finishes one second after a poll waits a whole interval to be noticed. The interval is an idle gap measured from the end of the conductor's turn, so real cadence is turn duration plus interval.
 
-**Every cycle spends a turn.** `monitor_start` avoided this for one subject kind — a GitHub pull request named by full URL is watched by `PrWatchProbe` in [`src/kiro_crew/probes/gh_pr.py`](../../src/kiro_crew/probes/gh_pr.py), and an unchanged observation re-arms the timer without firing. Before Phase 3 there was no equivalent probe for "did my workers do anything", so a conductor patrol was a plain timer and every tick cost a model turn whether or not anything moved. The `work-ledger` probe (`watch: "work-ledger"`) is that probe.
+**Every cycle spends a turn.** `monitor_start` avoided this for one subject kind — a GitHub pull request named by full URL is watched by `PrWatchProbe` in [`src/aj_crew/probes/gh_pr.py`](../../src/aj_crew/probes/gh_pr.py), and an unchanged observation re-arms the timer without firing. Before Phase 3 there was no equivalent probe for "did my workers do anything", so a conductor patrol was a plain timer and every tick cost a model turn whether or not anything moved. The `work-ledger` probe (`watch: "work-ledger"`) is that probe.
 
 **A stalled worker looks like a working one.** `session_read_message` returns transcript. A worker parked on an approval prompt, a worker whose process died, and a worker mid-build all produce "no new assistant message". The skill uses that call for liveness, which is the best signal available and still cannot separate those three.
 
@@ -67,7 +67,7 @@ Four costs follow from that shape.
 
 ### Why the obvious fix is withheld
 
-`session_send` would let a worker push a line into the conductor's session. It is granted to the conductor and to Crew Mode members, and withheld from workers. The comment in [`src/kiro_crew/agent.py`](../../src/kiro_crew/agent.py) says why, verbatim:
+`session_send` would let a worker push a line into the conductor's session. It is granted to the conductor and to Crew Mode members, and withheld from workers. The comment in [`src/aj_crew/agent.py`](../../src/aj_crew/agent.py) says why, verbatim:
 
 ```text
 #: * ``session_send`` — WITHHELD. Runs text as another session's user-role turn
@@ -75,7 +75,7 @@ Four costs follow from that shape.
 #:   reachable; nothing bounds WHAT is sent.
 ```
 
-`send_to_target` in [`src/kiro_crew/dashboard/session_control_parts/session_messaging.py`](../../src/kiro_crew/dashboard/session_control_parts/session_messaging.py) hands the body to `enqueue_or_run_prompt` — the same call the human composer uses. A worker's text would therefore *be* the conductor's next prompt, executed under the conductor's grants. Granting it downward turns every worker into an operator of its parent.
+`send_to_target` in [`src/aj_crew/dashboard/session_control_parts/session_messaging.py`](../../src/aj_crew/dashboard/session_control_parts/session_messaging.py) hands the body to `enqueue_or_run_prompt` — the same call the human composer uses. A worker's text would therefore *be* the conductor's next prompt, executed under the conductor's grants. Granting it downward turns every worker into an operator of its parent.
 
 So the requirement is not "a channel from worker to conductor". It is a channel that cannot carry an instruction.
 
@@ -132,7 +132,7 @@ Both agents reach the store through the dashboard HTTP API with a server-resolve
 
 ### Identity: resolved, never asserted
 
-Every one of the six tools resolves the caller with `require_strict_session_key` in [`src/kiro_crew/mcp_core_parts/identity.py`](../../src/kiro_crew/mcp_core_parts/identity.py). Strict means the gateway-injected caller block, the `KIROCREW_SESSION_KEY` environment variable, or the HMAC host-pid sidecar — and explicitly *not* the lenient resolver's `/proc` ancestor walk, because a subagent walking its ancestry would resolve to its parent's identity. `session_ledger_read` and `issue_radar_crew_read` already depend on exactly this property; the failure text and diagnosis helper are reused unchanged.
+Every one of the six tools resolves the caller with `require_strict_session_key` in [`src/aj_crew/mcp_core_parts/identity.py`](../../src/aj_crew/mcp_core_parts/identity.py). Strict means the gateway-injected caller block, the `AJCREW_SESSION_KEY` environment variable, or the HMAC host-pid sidecar — and explicitly *not* the lenient resolver's `/proc` ancestor walk, because a subagent walking its ancestry would resolve to its parent's identity. `session_ledger_read` and `issue_radar_crew_read` already depend on exactly this property; the failure text and diagnosis helper are reused unchanged.
 
 No tool takes a session key, a conductor id, or an item id from the worker side. The server derives all three.
 
@@ -191,7 +191,7 @@ One file per item.
 
 #### Event
 
-Every write appends exactly one event. There is no way to change a field without appending a line, which is the structural form of the invariant Issue Radar enforces with a validator — `_validate_crew_record_couples_phase_to_an_event` in [`src/kiro_crew/validation.py`](../../src/kiro_crew/validation.py) rejects a phase change that carries no event. Here the record and the line are the same write, so the check has nothing to reject.
+Every write appends exactly one event. There is no way to change a field without appending a line, which is the structural form of the invariant Issue Radar enforces with a validator — `_validate_crew_record_couples_phase_to_an_event` in [`src/aj_crew/validation.py`](../../src/aj_crew/validation.py) rejects a phase change that carries no event. Here the record and the line are the same write, so the check has nothing to reject.
 
 | field | type | notes |
 |---|---|---|
@@ -268,7 +268,7 @@ gives.
 
 ### Storage layout
 
-Rooted at `data_home()` from [`src/kiro_crew/config/paths.py`](../../src/kiro_crew/config/paths.py), which is the resolve-only helper safe on hot paths. Directory naming copies `session_ledger`'s scheme — a filesystem-safe readable prefix plus the first eight hex of the key's SHA-256 — so a directory is greppable by a human and still collision-resistant.
+Rooted at `data_home()` from [`src/aj_crew/config/paths.py`](../../src/aj_crew/config/paths.py), which is the resolve-only helper safe on hot paths. Directory naming copies `session_ledger`'s scheme — a filesystem-safe readable prefix plus the first eight hex of the key's SHA-256 — so a directory is greppable by a human and still collision-resistant.
 
 ```text
 <data_home>/work-ledger/
@@ -286,13 +286,13 @@ Rooted at `data_home()` from [`src/kiro_crew/config/paths.py`](../../src/kiro_cr
     <worker-digest8>.json    {conductor_dir, item_id}; written once by the conductor
 ```
 
-Files are written with `atomic_write` from [`src/kiro_crew/atomic_write.py`](../../src/kiro_crew/atomic_write.py) using `mode=0o600` and `restrict_to_owner=True`, matching `session_ledger`. Event lines append under `platform_compat.file_lock`.
+Files are written with `atomic_write` from [`src/aj_crew/atomic_write.py`](../../src/aj_crew/atomic_write.py) using `mode=0o600` and `restrict_to_owner=True`, matching `session_ledger`. Event lines append under `platform_compat.file_lock`.
 
 Three choices here differ from the shape this design started from, and each is a correction rather than a preference.
 
 **One event file per item, not one per conductor.** The Issue Radar store this design started from kept a single `events.jsonl` per repository across all crews and serialized every append behind one lock; that crew ledger is a projection of the crew log now ([#12303](https://github.com/kirodotdev/KiroCrew/pull/12303)), and its `events.jsonl` is read only to carry legacy state forward. Per-item files bound a torn file's blast radius to one item, keep a read cheap, and let the probe fingerprint items independently. This part of the original shape is kept.
 
-**But the appends still take a lock.** The argument for lock-free appending is that POSIX `O_APPEND` advances the offset atomically, so two writers of short lines cannot interleave. That is true on POSIX and is *not* a guarantee Kiro Crew can rely on, because the same store must work on Windows, where Python's append mode does not request the append-only access right that gives the equivalent behaviour. A per-item lock held by at most two writers costs a sub-millisecond uncontended acquire, and `platform_compat.file_lock` already abstracts the platform difference. Paying it is cheaper than a cross-platform correctness argument that only holds on two of three platforms.
+**But the appends still take a lock.** The argument for lock-free appending is that POSIX `O_APPEND` advances the offset atomically, so two writers of short lines cannot interleave. That is true on POSIX and is *not* a guarantee Aj Crew can rely on, because the same store must work on Windows, where Python's append mode does not request the append-only access right that gives the equivalent behaviour. A per-item lock held by at most two writers costs a sub-millisecond uncontended acquire, and `platform_compat.file_lock` already abstracts the platform difference. Paying it is cheaper than a cross-platform correctness argument that only holds on two of three platforms.
 
 **No shared index file.** An items index would be a third writer over a file both parties care about. Deriving the list from `items/*.json` needs no writer at all. The `bindings/` files are the one exception, and they are single-writer by construction: the conductor that creates a binding is the only thing that ever writes that file.
 
@@ -322,19 +322,19 @@ key whichever party wrote it. The entry carries `actor`, `by`, `action` and only
 fields that action set; an omitted field means "unchanged".
 
 The `work` fold in
-[`src/kiro_crew/crew_log/projection_work.py`](../../src/kiro_crew/crew_log/projection_work.py),
+[`src/aj_crew/crew_log/projection_work.py`](../../src/aj_crew/crew_log/projection_work.py),
 registered in the projection registry beside the session folds, replays those entries
 across the conductor's and its workers' units into the shape the readers already
 consume: the conductor header and every item in creation order, each with its event
 tail. `rebuild_from_projection` in
-[`src/kiro_crew/work_ledger.py`](../../src/kiro_crew/work_ledger.py) re-materialises
+[`src/aj_crew/work_ledger.py`](../../src/aj_crew/work_ledger.py) re-materialises
 `conductor.json`, `items/*.json` and `items/*.jsonl` from that fold under the same locks
 the writers take, so a lost or damaged cache is recovered from the log rather than from
 a copy of the cache.
 
 Because the log is the record, a write with nowhere to append is refused before the
 cache is touched: with the emitter off the routes answer `409 crew_log_off`, naming
-the remedy -- unset `KIROCREW_CREW_LOG` (or remove it from the env file) and restart
+the remedy -- unset `AJCREW_CREW_LOG` (or remove it from the env file) and restart
 the gateway, since the crew log is on by default -- and a caller whose crew-log unit the session
 registry cannot name answers `409 crew_log_unit_unknown`. A mutation whose entry
 could not fit one log line -- the store takes an acceptance of up to 500 KB, the
@@ -438,7 +438,7 @@ into a `cache_dirty` refusal for readers.
 
 The record's authority to rebuild a board lasts exactly as long as the units that
 hold its entries. The crew log is on by default, and its retention sweep
-(`sweep_expired` in [`src/kiro_crew/crew_log/store_retention.py`](../../src/kiro_crew/crew_log/store_retention.py))
+(`sweep_expired` in [`src/aj_crew/crew_log/store_retention.py`](../../src/aj_crew/crew_log/store_retention.py))
 removes a finished session's unit once it is older than `session.archive_retention_days`.
 Retention must keep every unit an open board's entries live in, or checkpoint the fold
 before removing one, otherwise a rebuild after expiry folds only the survivors. That rule belongs to
@@ -461,13 +461,13 @@ files stay outside the fold; they are a follow-up, not part of the projection ch
 
 ### Tools
 
-Five tools ship, all mounted on one opt-in MCP server, `kirocrew-work`: `work_brief` and `work_report` for the worker, `work_ledger_read`, `work_ledger_record` and `work_ledger_rebuild` for the conductor (`WORKER_TOOLS` and `CONDUCTOR_TOOLS` in [`src/kiro_crew/mcp_work.py`](../../src/kiro_crew/mcp_work.py)). Which of them answer a given call depends on what the resolved caller is rather than on which spec mounted them; §Agent spec changes gives the dispatch table and argues for that placement. Four shipped in Phase 2, and `work_ledger_rebuild` came with the crew-log projection. `work_request` and `work_message` are Phase 5: proposed, not implemented.
+Five tools ship, all mounted on one opt-in MCP server, `ajcrew-work`: `work_brief` and `work_report` for the worker, `work_ledger_read`, `work_ledger_record` and `work_ledger_rebuild` for the conductor (`WORKER_TOOLS` and `CONDUCTOR_TOOLS` in [`src/aj_crew/mcp_work.py`](../../src/aj_crew/mcp_work.py)). Which of them answer a given call depends on what the resolved caller is rather than on which spec mounted them; §Agent spec changes gives the dispatch table and argues for that placement. Four shipped in Phase 2, and `work_ledger_rebuild` came with the crew-log projection. `work_request` and `work_message` are Phase 5: proposed, not implemented.
 
 #### `work_brief` — worker reads its own item
 
 Caller: worker. Input schema: `{}`. No arguments, following `session_ledger_read` and `issue_radar_crew_read`.
 
-**As implemented (Phase 2, [#9152](https://github.com/kirodotdev/KiroCrew/pull/9152)):** returns the item's `item_id`, `title`, `acceptance`, `round`, the conductor's latest `decision`, and the worker's own last `status`/`summary` — `read_work_brief` in [`src/kiro_crew/work_ledger_writes.py`](../../src/kiro_crew/work_ledger_writes.py) composes exactly those seven keys, and the route re-checks channel-mirror containment *after* its thread hop, because a brief carries a private dispatch's acceptance bar.
+**As implemented (Phase 2, [#9152](https://github.com/kirodotdev/KiroCrew/pull/9152)):** returns the item's `item_id`, `title`, `acceptance`, `round`, the conductor's latest `decision`, and the worker's own last `status`/`summary` — `read_work_brief` in [`src/aj_crew/work_ledger_writes.py`](../../src/aj_crew/work_ledger_writes.py) composes exactly those seven keys, and the route re-checks channel-mirror containment *after* its thread hop, because a brief carries a private dispatch's acceptance bar.
 
 **Phase 3b adds `siblings`**, a list over the same conductor's other **open** items:
 
@@ -677,7 +677,7 @@ The seed is sent **after** the bind, which inverts the current skill's "seed bef
 
 ### Wake gate and liveness
 
-`monitor_start` gates on exactly one subject kind today. `infer` in [`src/kiro_crew/probes/targets.py`](../../src/kiro_crew/probes/targets.py) scans the loop message for a single GitHub pull-request URL and returns a `Target`; `build` in [`src/kiro_crew/probes/__init__.py`](../../src/kiro_crew/probes/__init__.py) maps the kind to a probe; `_monitor_tick_is_quiet` in [`src/kiro_crew/autonudge_service/gate.py`](../../src/kiro_crew/autonudge_service/gate.py) runs it and re-arms without firing on a positive quiet verdict. The kernel in [`src/kiro_crew/irq.py`](../../src/kiro_crew/irq.py) needs no change: its state, dedupe, coalescing and failure backstop are already kind-agnostic.
+`monitor_start` gates on exactly one subject kind today. `infer` in [`src/aj_crew/probes/targets.py`](../../src/aj_crew/probes/targets.py) scans the loop message for a single GitHub pull-request URL and returns a `Target`; `build` in [`src/aj_crew/probes/__init__.py`](../../src/aj_crew/probes/__init__.py) maps the kind to a probe; `_monitor_tick_is_quiet` in [`src/aj_crew/autonudge_service/gate.py`](../../src/aj_crew/autonudge_service/gate.py) runs it and re-arms without firing on a positive quiet verdict. The kernel in [`src/aj_crew/irq.py`](../../src/aj_crew/irq.py) needs no change: its state, dedupe, coalescing and failure backstop are already kind-agnostic.
 
 A work-ledger gate adds a `work-ledger` kind and a probe, and needs one thing the pull-request gate does not: the subject is the calling session's own identity, which no regex over the message can find. So `monitor_start` gains an explicit `watch: "work-ledger"` field rather than inferring the gate from session state. Implicit selection would be more convenient and would make a quiet loop unexplainable — a conductor could not tell whether it was gated on its ledger or not, and neither could a maintainer reading the loop.
 
@@ -746,7 +746,7 @@ The threat model is what shapes the tool surface, so each row names the mechanis
 
 **A worker rewrites what acceptance means.** Unrepresentable: `acceptance`, `verdict` and `state` have no parameter on the worker tool. A worker cannot widen its own bar.
 
-**A worker edits the ledger files directly.** The two "unrepresentable" rows above hold only for the tools: a worker is a full-capability agent with `fs_write`, so a prompt-injected one could bypass `work_report` and open `items/it_*.json` itself — forging `state: accepted`, gutting `acceptance` before the conductor's evaluator runs, or reading a sibling item past `read_work_brief`'s scoping — and the conductor would read the forgery as its own writing. Prevented by the file fence, on two planes. The file-tool plane: `work-ledger` is a directory leaf in `_CREW_SECRET_LEAVES` ([`src/kiro_crew/security/paths_lists.py`](../../src/kiro_crew/security/paths_lists.py)), which projects it into `_SENSITIVE_HOME_DIRS` under both crew data-home prefixes and re-anchors it under a `KIROCREW_HOME` override, so `is_sensitive_path` is true for every path under `<data_home>/work-ledger/` and `hooks.on_tool_call` refuses the agent's read and edit tools there — read AND write, because reading a sibling's record is the scoping bypass and writing one is the forgery. The shell plane: the same leaf is in `sandbox._CREW_HIDDEN_LEAVES`, so `echo >` and `python -c` inside the agent's sandbox find no such directory; command text is deliberately not matched (see `is_sensitive_bash_command`), because a text matcher denies ordinary commands whenever a fenced spelling appears as data. The store's own `atomic_write` runs in the gateway process and opens the paths directly, not through the gate, so the sanctioned writers are unaffected. A directory leaf rather than a file leaf for the reason the sibling `ledger` entry is one: the store publishes through a `mkstemp` sibling, and fencing final names only leaves the same bytes writable under a temp name.
+**A worker edits the ledger files directly.** The two "unrepresentable" rows above hold only for the tools: a worker is a full-capability agent with `fs_write`, so a prompt-injected one could bypass `work_report` and open `items/it_*.json` itself — forging `state: accepted`, gutting `acceptance` before the conductor's evaluator runs, or reading a sibling item past `read_work_brief`'s scoping — and the conductor would read the forgery as its own writing. Prevented by the file fence, on two planes. The file-tool plane: `work-ledger` is a directory leaf in `_CREW_SECRET_LEAVES` ([`src/aj_crew/security/paths_lists.py`](../../src/aj_crew/security/paths_lists.py)), which projects it into `_SENSITIVE_HOME_DIRS` under both crew data-home prefixes and re-anchors it under a `AJCREW_HOME` override, so `is_sensitive_path` is true for every path under `<data_home>/work-ledger/` and `hooks.on_tool_call` refuses the agent's read and edit tools there — read AND write, because reading a sibling's record is the scoping bypass and writing one is the forgery. The shell plane: the same leaf is in `sandbox._CREW_HIDDEN_LEAVES`, so `echo >` and `python -c` inside the agent's sandbox find no such directory; command text is deliberately not matched (see `is_sensitive_bash_command`), because a text matcher denies ordinary commands whenever a fenced spelling appears as data. The store's own `atomic_write` runs in the gateway process and opens the paths directly, not through the gate, so the sanctioned writers are unaffected. A directory leaf rather than a file leaf for the reason the sibling `ledger` entry is one: the store publishes through a `mkstemp` sibling, and fencing final names only leaves the same bytes writable under a temp name.
 
 **A worker points acceptance at someone else's green pull request.** This is live and worth stating plainly, because it is the one place the shape nearly leaked. `accept_eval.py` needs an integer `pr`, and the worker is what learns the number, so the tempting design has `work_ledger_read` fill `acceptance.pr` from the worker's report. A worker could then claim any already-green pull request and pass. The design therefore keeps the worker's `pr` as a **claim only**: `accept_batch` is composed from `acceptance` alone, the claim is surfaced beside the item, and the conductor promotes it with an explicit `work_ledger_record verdict`-adjacent write. The two-phase acceptance the skill performs by hand — leaving an unknown `pr` out of the batch entirely — becomes a visible field instead of a manual omission, without moving control of the bar: the read itself drops an item whose bar is still a placeholder and says why on `acceptance_concrete`, and the `accept` promotion is what puts it back.
 
@@ -806,21 +806,21 @@ rather than noise.
 
 ## Agent spec changes
 
-**Recommendation: add a `kirocrew-worker` agent, and put the four tools on a new opt-in `kirocrew-work` MCP server rather than on `kirocrew-core`.**
+**Recommendation: add a `ajcrew-worker` agent, and put the four tools on a new opt-in `ajcrew-work` MCP server rather than on `ajcrew-core`.**
 
 A worker agent is the **superset** of the default agent, not a narrowed one: everything `build_agent_config()` already grants, plus one opt-in server, plus a short system prompt carrying the reporting contract. Nothing is withheld, so the failure a narrowed worker spec would have — withholding something some work item needs — does not arise.
 
-`session_create` already carries the binding. Its `agent` parameter names the child's agent, so a conductor dispatching a leaf item passes `agent="kirocrew-worker"` and the child comes up with the reporting tools mounted. The grant never has to be a runtime property of a session, because it is a property of the agent the conductor chose for it.
+`session_create` already carries the binding. Its `agent` parameter names the child's agent, so a conductor dispatching a leaf item passes `agent="ajcrew-worker"` and the child comes up with the reporting tools mounted. The grant never has to be a runtime property of a session, because it is a property of the agent the conductor chose for it.
 
 ### The server
 
-`kirocrew-work` is a managed server declared in `_MANAGED_MCP_SERVERS` with `opt_in: True`, exactly as `kirocrew-dashboard` is. `_mcp_server_emission_eligible` returns false for an opt-in entry, so neither loop that writes the default spec emits it, and a spec that wants it hand-builds the entry and adds `"@kirocrew-work"` to its `tools`. The comment on `kirocrew-dashboard` states the property this design rests on: kiro-cli loads a server only when something references it, so a session that never references one spends no context on tools it cannot use.
+`ajcrew-work` is a managed server declared in `_MANAGED_MCP_SERVERS` with `opt_in: True`, exactly as `ajcrew-dashboard` is. `_mcp_server_emission_eligible` returns false for an opt-in entry, so neither loop that writes the default spec emits it, and a spec that wants it hand-builds the entry and adds `"@ajcrew-work"` to its `tools`. The comment on `ajcrew-dashboard` states the property this design rests on: kiro-cli loads a server only when something references it, so a session that never references one spends no context on tools it cannot use.
 
 It carries **no `autoApprove` key**, and none may be added. An autoApproved MCP tool is approved inside kiro-cli and emits no permission request, so `hooks.on_tool_call` — the PreToolUse gate carrying the deny floor, the sensitive-path check and the governance ceiling — is never reached for it. Both managed servers that could have had one document that prohibition, and a store that writes agent-authored text into a record the user reads is not the place to break it.
 
 ### One server, dispatch by resolved identity
 
-All six tools live on `kirocrew-work`, and which half answers depends on what the resolved caller is:
+All six tools live on `ajcrew-work`, and which half answers depends on what the resolved caller is:
 
 | resolved caller | `work_brief` / `work_report` / `work_request` / `work_message` | `work_ledger_read` / `work_ledger_record` |
 |---|---|---|
@@ -835,16 +835,16 @@ Splitting the worker half onto a server of its own would express the same rule i
 
 ### Conductor and pipeline-conductor specs
 
-**As implemented, this is where v2's recommendation was walked back and then reinstated.** Phase 2 mounted the server on `kirocrew-conductor` and `kirocrew-pipeline-conductor`; Phase 2.5 ([#9277](https://github.com/kirodotdev/KiroCrew/pull/9277)) retracted both and moved the flow to its own `kirocrew-ledger-conductor` spec; the swap recorded in §Rollout note — swap done made `kirocrew-conductor` the ledger conductor again and kept `kirocrew-ledger-conductor` as a deprecated alias. `kirocrew-pipeline-conductor` stayed retracted until v5. **v5 reverses the #9277 retraction for every conductor:** on 2026-10-08 Mingwei (the maintainer, issue [#17977](https://github.com/kirodotdev/KiroCrew/issues/17977)) ruled that every conductor records its dispatched items in the work ledger, because the dashboard's `workstreams` fold mints a board only from `work/recorded` entries and a conductor that never records shows "No workstream yet" while it runs a full fleet. The implementing PR is [#17992](https://github.com/kirodotdev/KiroCrew/pull/17992). What is on main, with that PR's change marked:
+**As implemented, this is where v2's recommendation was walked back and then reinstated.** Phase 2 mounted the server on `ajcrew-conductor` and `ajcrew-pipeline-conductor`; Phase 2.5 ([#9277](https://github.com/kirodotdev/KiroCrew/pull/9277)) retracted both and moved the flow to its own `ajcrew-ledger-conductor` spec; the swap recorded in §Rollout note — swap done made `ajcrew-conductor` the ledger conductor again and kept `ajcrew-ledger-conductor` as a deprecated alias. `ajcrew-pipeline-conductor` stayed retracted until v5. **v5 reverses the #9277 retraction for every conductor:** on 2026-10-08 Mingwei (the maintainer, issue [#17977](https://github.com/kirodotdev/KiroCrew/issues/17977)) ruled that every conductor records its dispatched items in the work ledger, because the dashboard's `workstreams` fold mints a board only from `work/recorded` entries and a conductor that never records shows "No workstream yet" while it runs a full fleet. The implementing PR is [#17992](https://github.com/kirodotdev/KiroCrew/pull/17992). What is on main, with that PR's change marked:
 
-- `_conductor_spec`, which `_install_conductor_agent` and the alias installer `_install_ledger_conductor_agent` both call: `_conductor_mcp_servers(work=True)` hand-builds the `kirocrew-work` entry, `"@kirocrew-work"` is in `tools`, and `_LEDGER_CONDUCTOR_WORK_GRANTS` auto-approves four refs — `work_ledger_read`, `work_ledger_record`, `work_ledger_rebuild` and `work_brief`. The last is the one worker-half verb a conductor holds, because a second-level conductor's mandated first call is `work_brief` in a child session nobody opened, and gating that is an approval stall before any planning happens. `work_report` stays gated: it writes into the parent's record, across a dispatch relationship.
-- `_install_pipeline_conductor_agent` and `_install_security_conductor_agent`: **the base work-ledger grant (v5, #17992).** `_conductor_mcp_servers` mounts `kirocrew-work` unconditionally (the `work` parameter is removed), `_conductor_shipped` adds `_CONDUCTOR_BASE_WORK_GRANTS` (`work_ledger_read`, `work_ledger_record`) to both grant tuples, and `_conductor_prompt` appends one shared `_CONDUCTOR_WORK_LEDGER_PROTOCOL` block to both charters: create the item with a concrete acceptance, bind before seeding, the worker reports with `work_report`, the conductor gives the verdict and closes. The goal conductor's charter already states that flow in detail, so its prompt is unchanged. Each conductor's own store stays as the detail behind the ledger row: the pipeline queue and `decisions.md`, and the security skill's `scripts/ledger.py` findings, severity and evidence. No record field is added for severity. Before v5 both emitted the spec they emitted before the ledger existed.
-- `kirocrew-worker`: `"@kirocrew-work"` added to the default agent's own resolved surface, with `_WORKER_WORK_GRANTS` auto-approving `work_brief` and `work_report`. A worker that must ask permission to say it is blocked will not say it. The worker spec mirrors the default agent's spec as it stands on disk (`_WORKER_MIRRORED_SHAPES`: `tools`, `allowedTools`, `excludedTools`, `mcpServers`, `model`), minus every managed `opt_in` server other than `kirocrew-work` (`_worker_unassignable_servers`) and minus the cron scheduling grants (`_WORKER_EXCLUDED_GRANTS`), with ungoverned `autoApprove` stripped. Every spawn path runs `require_fresh_derived_spec` once and refuses the spawn with `DerivedSpecStale` when the mirror is older than the default spec and cannot be re-derived, and each host re-verifies the snapshot where it consumes the spec; a project-local shadow of a derived agent is refused. The bracket's per-path detail lives with the code and in [acp-client.md](../system-specs/modules/acp-client.md); the user-facing behaviour is in [`src/kiro_crew/docs/work-ledger.md`](../../src/kiro_crew/docs/work-ledger.md). The spec is therefore `build_agent_config()`-shaped only on a fresh install, and otherwise `default + @kirocrew-work − cron scheduling`.
-- Phase 5 adds `"@kirocrew-work/work_request"` and `"@kirocrew-work/work_message"` to `_WORKER_WORK_GRANTS`, and `"@kirocrew-work/work_request"` is **not** added to the conductor's grants: a conductor has no requester square to write from.
+- `_conductor_spec`, which `_install_conductor_agent` and the alias installer `_install_ledger_conductor_agent` both call: `_conductor_mcp_servers(work=True)` hand-builds the `ajcrew-work` entry, `"@ajcrew-work"` is in `tools`, and `_LEDGER_CONDUCTOR_WORK_GRANTS` auto-approves four refs — `work_ledger_read`, `work_ledger_record`, `work_ledger_rebuild` and `work_brief`. The last is the one worker-half verb a conductor holds, because a second-level conductor's mandated first call is `work_brief` in a child session nobody opened, and gating that is an approval stall before any planning happens. `work_report` stays gated: it writes into the parent's record, across a dispatch relationship.
+- `_install_pipeline_conductor_agent` and `_install_security_conductor_agent`: **the base work-ledger grant (v5, #17992).** `_conductor_mcp_servers` mounts `ajcrew-work` unconditionally (the `work` parameter is removed), `_conductor_shipped` adds `_CONDUCTOR_BASE_WORK_GRANTS` (`work_ledger_read`, `work_ledger_record`) to both grant tuples, and `_conductor_prompt` appends one shared `_CONDUCTOR_WORK_LEDGER_PROTOCOL` block to both charters: create the item with a concrete acceptance, bind before seeding, the worker reports with `work_report`, the conductor gives the verdict and closes. The goal conductor's charter already states that flow in detail, so its prompt is unchanged. Each conductor's own store stays as the detail behind the ledger row: the pipeline queue and `decisions.md`, and the security skill's `scripts/ledger.py` findings, severity and evidence. No record field is added for severity. Before v5 both emitted the spec they emitted before the ledger existed.
+- `ajcrew-worker`: `"@ajcrew-work"` added to the default agent's own resolved surface, with `_WORKER_WORK_GRANTS` auto-approving `work_brief` and `work_report`. A worker that must ask permission to say it is blocked will not say it. The worker spec mirrors the default agent's spec as it stands on disk (`_WORKER_MIRRORED_SHAPES`: `tools`, `allowedTools`, `excludedTools`, `mcpServers`, `model`), minus every managed `opt_in` server other than `ajcrew-work` (`_worker_unassignable_servers`) and minus the cron scheduling grants (`_WORKER_EXCLUDED_GRANTS`), with ungoverned `autoApprove` stripped. Every spawn path runs `require_fresh_derived_spec` once and refuses the spawn with `DerivedSpecStale` when the mirror is older than the default spec and cannot be re-derived, and each host re-verifies the snapshot where it consumes the spec; a project-local shadow of a derived agent is refused. The bracket's per-path detail lives with the code and in [acp-client.md](../system-specs/modules/acp-client.md); the user-facing behaviour is in [`src/aj_crew/docs/work-ledger.md`](../../src/aj_crew/docs/work-ledger.md). The spec is therefore `build_agent_config()`-shaped only on a fresh install, and otherwise `default + @ajcrew-work − cron scheduling`.
+- Phase 5 adds `"@ajcrew-work/work_request"` and `"@ajcrew-work/work_message"` to `_WORKER_WORK_GRANTS`, and `"@ajcrew-work/work_request"` is **not** added to the conductor's grants: a conductor has no requester square to write from.
 
-**What a worker structurally does not have.** `session_send` lives on `kirocrew-dashboard`, which is `opt_in` in `_MANAGED_MCP_SERVERS` and is hand-mounted only by the specs that need it — the conductors and Crew Mode members. A worker spec is not one of them, and the mirror does not make it one: `_worker_unassignable_servers` keeps every managed `opt_in` server except `kirocrew-work` out of the derivation, precisely so this paragraph stays true when an operator mounts the set on their own default agent. So a worker does not have `session_send` withheld by an allowlist it might later be added to; the server carrying it is never in a worker's spec at all. What the worker does have, from `kirocrew-core`, is `send_message` and `send_notification`, and both address a *person* rather than a session's turn queue. The ledger is therefore a worker's only channel to its conductor, and Phase 5's `work_message` its only channel to a peer.
+**What a worker structurally does not have.** `session_send` lives on `ajcrew-dashboard`, which is `opt_in` in `_MANAGED_MCP_SERVERS` and is hand-mounted only by the specs that need it — the conductors and Crew Mode members. A worker spec is not one of them, and the mirror does not make it one: `_worker_unassignable_servers` keeps every managed `opt_in` server except `ajcrew-work` out of the derivation, precisely so this paragraph stays true when an operator mounts the set on their own default agent. So a worker does not have `session_send` withheld by an allowlist it might later be added to; the server carrying it is never in a worker's spec at all. What the worker does have, from `ajcrew-core`, is `send_message` and `send_notification`, and both address a *person* rather than a session's turn queue. The ledger is therefore a worker's only channel to its conductor, and Phase 5's `work_message` its only channel to a peer.
 
-**Channel agents.** The seven session-control tools are hard-blocked for channel agents. `kirocrew-work` carries the same block, and Phase 2 implemented it as a re-check *after* the read rather than only on entry — `_reaches_a_channel` runs again immediately before `work_brief` returns, because an outbound mirror can be added at any moment and containment decided on entry says nothing about containment now. A brief carries a private dispatch's acceptance bar, and Phase 5 gives it a peer's message bodies too, so a mirrored reply would publish both.
+**Channel agents.** The seven session-control tools are hard-blocked for channel agents. `ajcrew-work` carries the same block, and Phase 2 implemented it as a re-check *after* the read rather than only on entry — `_reaches_a_channel` runs again immediately before `work_brief` returns, because an outbound mirror can be added at any moment and containment decided on entry says nothing about containment now. A brief carries a private dispatch's acceptance bar, and Phase 5 gives it a peer's message bodies too, so a mirrored reply would publish both.
 
 ### The worker system prompt
 
@@ -861,36 +861,36 @@ That last line is the prompt's share of the threat model: a worker reads one ins
 
 ### Dispatch rule
 
-The conductor picks the child's agent per item. **As implemented**, this table is in `_CONDUCTOR_SYSTEM_PROMPT` and in `goal-conductor/SKILL.md`, and the middle row names `kirocrew-conductor` itself — a decomposable item's child must be an agent that has the ledger tools, which after the swap is that spec:
+The conductor picks the child's agent per item. **As implemented**, this table is in `_CONDUCTOR_SYSTEM_PROMPT` and in `goal-conductor/SKILL.md`, and the middle row names `ajcrew-conductor` itself — a decomposable item's child must be an agent that has the ledger tools, which after the swap is that spec:
 
 | item | `agent` |
 |---|---|
-| a leaf — one assertable acceptance condition | `kirocrew-worker` |
-| decomposes into two or more independently acceptable sub-items | `kirocrew-conductor`, subject to `depth` ≤ 2 |
+| a leaf — one assertable acceptance condition | `ajcrew-worker` |
+| decomposes into two or more independently acceptable sub-items | `ajcrew-conductor`, subject to `depth` ≤ 2 |
 | `select_crew` names a specialist crew that fits | that crew |
 
 The swap is what put it in `goal-conductor/SKILL.md`; the deprecated `goal-ledger-conductor` skill is a pointer to that one and carries no table of its own.
 
-A specialist crew that does not mount `@kirocrew-work` cannot report, and its conductor falls back to reading its transcript — the v1 path, for that one item rather than for all of them. Making such a crew reportable is a one-line addition to that crew's own spec, which is the right place for the decision.
+A specialist crew that does not mount `@ajcrew-work` cannot report, and its conductor falls back to reading its transcript — the v1 path, for that one item rather than for all of them. Making such a crew reportable is a one-line addition to that crew's own spec, which is the right place for the decision.
 
 Two mechanics are worth stating outright, because both are easy to get wrong and one is currently documented wrongly.
 
-**`select_crew` and `session_create` are not wired.** `select_crew` is an advisory `kirocrew-core` tool that returns a crew's resolved configuration; it creates nothing and binds nothing. The conductor must pass the agent name to `session_create` itself. v1's phrasing — that the conductor "chooses the child's agent through the skill's `select_crew` step" — reads as though the two are connected, and they are not.
+**`select_crew` and `session_create` are not wired.** `select_crew` is an advisory `ajcrew-core` tool that returns a crew's resolved configuration; it creates nothing and binds nothing. The conductor must pass the agent name to `session_create` itself. v1's phrasing — that the conductor "chooses the child's agent through the skill's `select_crew` step" — reads as though the two are connected, and they are not.
 
-**An omitted `agent` inherits the CALLER's agent, not the global default.** `create_session` in [`src/kiro_crew/dashboard/session_control.py`](../../src/kiro_crew/dashboard/session_control.py) falls back to the caller slot's own agent, and the comment above that fallback gives the reason: the caller is already running in this workspace, so its agent is the one bound here, and dropping to the global default would put the child on another workspace's memory store the moment that default is bound elsewhere. For a conductor, an omitted `agent` therefore produces a *second conductor* — which has no `fs_write` and cannot do the work. That is what `goal-conductor/SKILL.md` warns about, and it is why this design makes the value explicit per item instead of leaning on any default.
+**An omitted `agent` inherits the CALLER's agent, not the global default.** `create_session` in [`src/aj_crew/dashboard/session_control.py`](../../src/aj_crew/dashboard/session_control.py) falls back to the caller slot's own agent, and the comment above that fallback gives the reason: the caller is already running in this workspace, so its agent is the one bound here, and dropping to the global default would put the child on another workspace's memory store the moment that default is bound elsewhere. For a conductor, an omitted `agent` therefore produces a *second conductor* — which has no `fs_write` and cannot do the work. That is what `goal-conductor/SKILL.md` warns about, and it is why this design makes the value explicit per item instead of leaning on any default.
 
-`session_create`'s own MCP parameter description in [`src/kiro_crew/mcp_dashboard_session_tools.py`](../../src/kiro_crew/mcp_dashboard_session_tools.py) says the agent may be omitted "to use the default agent", which is wrong about the one mechanism a conductor most depends on. Phase 2 corrects it.
+`session_create`'s own MCP parameter description in [`src/aj_crew/mcp_dashboard_session_tools.py`](../../src/aj_crew/mcp_dashboard_session_tools.py) says the agent may be omitted "to use the default agent", which is wrong about the one mechanism a conductor most depends on. Phase 2 corrects it.
 
-### Scope: conductors outside `kirocrew-conductor`
+### Scope: conductors outside `ajcrew-conductor`
 
-Everything above describes `kirocrew-conductor` and the workers it dispatches. Since v5 every installed conductor spec holds the base work-ledger grant (§Agent spec changes). Two kinds of conductor sat outside it before v5:
+Everything above describes `ajcrew-conductor` and the workers it dispatches. Since v5 every installed conductor spec holds the base work-ledger grant (§Agent spec changes). Two kinds of conductor sat outside it before v5:
 
 - An **ad-hoc conductor** — an ordinary member session that dispatches peers with `session_create` instead of being installed as a conductor agent. It opens no ledger, so its children hold no binding file and `work_brief` answers `not_bound`. Nothing stops a session from conducting this way, and nothing gives it a structured record when it does.
-- `kirocrew-pipeline-conductor` and `kirocrew-security-conductor`, which carried **no work-ledger grant** until v5. They now mount `kirocrew-work` from the shared conductor base ([#17977](https://github.com/kirodotdev/KiroCrew/issues/17977), [#17992](https://github.com/kirodotdev/KiroCrew/pull/17992)) and record each dispatched item, keeping their own stores as detail.
+- `ajcrew-pipeline-conductor` and `ajcrew-security-conductor`, which carried **no work-ledger grant** until v5. They now mount `ajcrew-work` from the shared conductor base ([#17977](https://github.com/kirodotdev/KiroCrew/issues/17977), [#17992](https://github.com/kirodotdev/KiroCrew/pull/17992)) and record each dispatched item, keeping their own stores as detail.
 
 A user-made conductor (for example a crew-scoped `crew-manager-conductor`) picks this up only when it is built from the same base; a hand-written spec keeps whatever servers it declares.
 
-Whether any of them should hold a grant was **Q10**; v5 closes it for the installed conductors and leaves the ad-hoc case open. Naming it here is what keeps §Motivation honest: the transcript-reading patrol this RFC replaces is still the live mechanism for every conductor that is not `kirocrew-conductor`.
+Whether any of them should hold a grant was **Q10**; v5 closes it for the installed conductors and leaves the ad-hoc case open. Naming it here is what keeps §Motivation honest: the transcript-reading patrol this RFC replaces is still the live mechanism for every conductor that is not `ajcrew-conductor`.
 
 ## Migration plan
 
@@ -901,14 +901,14 @@ Seven phases. Each is independently shippable and independently abandonable, and
 | 1 — the store, with no tools | **done** | [#8855](https://github.com/kirodotdev/KiroCrew/pull/8855), with lock-open fixes in [#9237](https://github.com/kirodotdev/KiroCrew/pull/9237) |
 | 2 — the first four tools and their routes | **done** | [#9152](https://github.com/kirodotdev/KiroCrew/pull/9152), test follow-up [#9257](https://github.com/kirodotdev/KiroCrew/pull/9257) |
 | 2.5 — isolation | **done**, then superseded by the swap | [#9277](https://github.com/kirodotdev/KiroCrew/pull/9277) |
-| 2.6 — the swap: `kirocrew-conductor` becomes the ledger conductor, old name kept as a deprecated alias | **done** | see §Rollout note — swap done |
+| 2.6 — the swap: `ajcrew-conductor` becomes the ledger conductor, old name kept as a deprecated alias | **done** | see §Rollout note — swap done |
 | 3 — the wake gate, with the one-call `watch: "work-ledger"` arm | **done** | [#12781](https://github.com/kirodotdev/KiroCrew/pull/12781) (`0141ede260`) |
 | 3b — visibility (`siblings`) | proposed — not implemented | |
 | 5 — communication | proposed — not implemented | |
 | 4 — the surfaces (Crew board) | **done** | [#12792](https://github.com/kirodotdev/KiroCrew/pull/12792) |
-| 6 — every conductor records (v5): pipeline and security mount `kirocrew-work` from the shared base | **done** | [#17992](https://github.com/kirodotdev/KiroCrew/pull/17992) (`8fe49bd54a`), issue [#17977](https://github.com/kirodotdev/KiroCrew/issues/17977) |
+| 6 — every conductor records (v5): pipeline and security mount `ajcrew-work` from the shared base | **done** | [#17992](https://github.com/kirodotdev/KiroCrew/pull/17992) (`8fe49bd54a`), issue [#17977](https://github.com/kirodotdev/KiroCrew/issues/17977) |
 
-**Phase 3 is not a precondition for use.** `kirocrew-conductor` runs a goal end to end
+**Phase 3 is not a precondition for use.** `ajcrew-conductor` runs a goal end to end
 on a plain timer too: it polls with `work_ledger_read` on its nudge interval and pays
 one turn per quiet tick. Phase 3 is a cost optimisation on that loop, not the thing that
 makes it work — which is what the swap in §Rollout note — swap done settled, by taking
@@ -916,7 +916,7 @@ the per-quiet-tick turn as the accepted cost rather than as a blocker.
 
 ### Phase 1 — the store, with no tools (done, [#8855](https://github.com/kirodotdev/KiroCrew/pull/8855))
 
-As implemented, [`src/kiro_crew/work_ledger.py`](../../src/kiro_crew/work_ledger.py) and its `work_ledger_*` owners
+As implemented, [`src/aj_crew/work_ledger.py`](../../src/aj_crew/work_ledger.py) and its `work_ledger_*` owners
 carry the record dataclasses, the five vocabularies as `frozenset` constants, every cap
 as a module constant, path resolution, the lock helpers, the derived list and derived
 flags, content-addressed event ids with merge-on-read dedupe, and the depth cap. Two
@@ -942,16 +942,16 @@ Phase 1 is untouched by v2's agent-spec reversal: the store has no tools, no ser
 
 ### Phase 2 — the four tools and their routes (done, [#9152](https://github.com/kirodotdev/KiroCrew/pull/9152))
 
-As implemented: [`src/kiro_crew/mcp_work.py`](../../src/kiro_crew/mcp_work.py) advertises
+As implemented: [`src/aj_crew/mcp_work.py`](../../src/aj_crew/mcp_work.py) advertises
 the four tools and resolves its caller with `_strict_caller`;
-[`src/kiro_crew/dashboard/handlers/work_ledger.py`](../../src/kiro_crew/dashboard/handlers/work_ledger.py)
+[`src/aj_crew/dashboard/handlers/work_ledger.py`](../../src/aj_crew/dashboard/handlers/work_ledger.py)
 carries the four routes under a shared `/api/work-ledger` prefix in
 `_STRICT_INTERNAL_API_PATHS`, one literal status-and-code sink per refusal class, SEL
 audit on every branch, and the channel-agent re-check after the read. `agent.py` carries
-the `kirocrew-work` opt-in entry, `_install_worker_agent`, and — originally — the two
+the `ajcrew-work` opt-in entry, `_install_worker_agent`, and — originally — the two
 conductor mounts that Phase 2.5 then retracted.
 
-Scope: `work_brief`, `work_report`, `work_ledger_read`, `work_ledger_record`; their input schemas in the validation module; the dashboard routes; strict identity resolution and dispatch by resolved caller; the binding file; SEL audit; the `kirocrew-work` opt-in server in `_MANAGED_MCP_SERVERS`; the `kirocrew-worker` agent and its prompt constant; the conductor and pipeline-conductor mounts and per-tool grants; the channel-agent block extended to cover `kirocrew-work`; and the corrected `agent` parameter description in `mcp_dashboard_session_tools.py`.
+Scope: `work_brief`, `work_report`, `work_ledger_read`, `work_ledger_record`; their input schemas in the validation module; the dashboard routes; strict identity resolution and dispatch by resolved caller; the binding file; SEL audit; the `ajcrew-work` opt-in server in `_MANAGED_MCP_SERVERS`; the `ajcrew-worker` agent and its prompt constant; the conductor and pipeline-conductor mounts and per-tool grants; the channel-agent block extended to cover `ajcrew-work`; and the corrected `agent` parameter description in `mcp_dashboard_session_tools.py`.
 
 Exit criteria:
 - A worker's `work_report` reaches its own item and no other, asserted against a two-conductor two-worker fixture.
@@ -962,15 +962,15 @@ Exit criteria:
 - `accept_batch` omits an item whose stored bar is still a placeholder, asserted by a test that dispatches a `TBD` `pr_checks` item, checks it is absent, promotes it with `accept`, and checks it is back.
 - An item whose last report was `done` is not `stale` however long it stays quiet, asserted against a clock past the staleness window.
 - A round trip through `work_report` cannot write any conductor-owned field, asserted field by field.
-- A default-agent spec carries neither a `kirocrew-work` entry nor an `@kirocrew-work` reference, asserted on the output of both loops that write specs.
-- `kirocrew-work` carries no `autoApprove` key, asserted so it cannot be added later without a failing test.
+- A default-agent spec carries neither a `ajcrew-work` entry nor an `@ajcrew-work` reference, asserted on the output of both loops that write specs.
+- `ajcrew-work` carries no `autoApprove` key, asserted so it cannot be added later without a failing test.
 - Each of the four caller states in the dispatch table resolves as tabulated, asserted against both tool halves.
 - `mcp_dashboard_session_tools.py`'s `agent` parameter description states the caller-inheritance rule, asserted against the string so it cannot silently revert.
-- `<data_home>/work-ledger/**` is on the sensitive-path floor and the sandbox mask (§Security considerations, "A worker edits the ledger files directly"), asserted two ways: by spelling under both crew data-home prefixes, and end to end through `hooks.on_tool_call` against the real item, binding and conductor files of a dispatched worker under a `KIROCREW_HOME` override — an edit and a read are both refused, and the worker's route and the conductor's store action still write the very file the tool was refused. Deferred from the Phase 1 design review as [#9083](https://github.com/kirodotdev/KiroCrew/issues/9083); the fence itself shipped in #9152.
+- `<data_home>/work-ledger/**` is on the sensitive-path floor and the sandbox mask (§Security considerations, "A worker edits the ledger files directly"), asserted two ways: by spelling under both crew data-home prefixes, and end to end through `hooks.on_tool_call` against the real item, binding and conductor files of a dispatched worker under a `AJCREW_HOME` override — an edit and a read are both refused, and the worker's route and the conductor's store action still write the very file the tool was refused. Deferred from the Phase 1 design review as [#9083](https://github.com/kirodotdev/KiroCrew/issues/9083); the fence itself shipped in #9152.
 
 ### Phase 2.5 — isolation (done, [#9277](https://github.com/kirodotdev/KiroCrew/pull/9277))
 
-Scope: a `kirocrew-ledger-conductor` spec with its own `_LEDGER_CONDUCTOR_SYSTEM_PROMPT`
+Scope: a `ajcrew-ledger-conductor` spec with its own `_LEDGER_CONDUCTOR_SYSTEM_PROMPT`
 and a `goal-ledger-conductor` skill; `_narrow_conductor_mcp_servers` gains a `work`
 parameter that only that spec passes; the two shipped conductors return to the spec they
 emitted before Phase 2. §Rollout note carries the reasoning and the merge criteria for
@@ -978,13 +978,13 @@ folding them back together.
 
 Exit criteria, all met at the time — the first and third are superseded by the swap
 (§Rollout note — swap done), and only the second still holds as written:
-- `kirocrew-conductor` and `kirocrew-pipeline-conductor` emit no `kirocrew-work` entry and no `@kirocrew-work` reference, asserted on the output of both installers. **Superseded:** `kirocrew-conductor` mounts it now; the pipeline conductor still does not.
-- `kirocrew-ledger-conductor` auto-approves exactly `work_ledger_read`, `work_ledger_record` and `work_brief`, and not `work_report`. **Superseded:** the grant set is `_LEDGER_CONDUCTOR_WORK_GRANTS`, which adds `work_ledger_rebuild` and still omits `work_report`, and both `kirocrew-conductor` and the alias take it by the same code path.
+- `ajcrew-conductor` and `ajcrew-pipeline-conductor` emit no `ajcrew-work` entry and no `@ajcrew-work` reference, asserted on the output of both installers. **Superseded:** `ajcrew-conductor` mounts it now; the pipeline conductor still does not.
+- `ajcrew-ledger-conductor` auto-approves exactly `work_ledger_read`, `work_ledger_record` and `work_brief`, and not `work_report`. **Superseded:** the grant set is `_LEDGER_CONDUCTOR_WORK_GRANTS`, which adds `work_ledger_rebuild` and still omits `work_report`, and both `ajcrew-conductor` and the alias take it by the same code path.
 - `goal-conductor/SKILL.md` and `ledger_entry.py` are untouched, so an un-migrated conductor mid-goal sees no change. **Superseded:** the SKILL.md carries the ledger procedure; `ledger_entry.py` is still shipped and its deletion is still Phase 4's.
 
 ### Phase 3 — the wake gate (done, [#12781](https://github.com/kirodotdev/KiroCrew/pull/12781))
 
-**On main.** #12781 merged as `0141ede260` and carries the one-call arm: `monitor_start` and `monitor_update` take `watch: "work-ledger"`, the `work-ledger` probe kind is served by `build` in [`src/kiro_crew/probes/__init__.py`](../../src/kiro_crew/probes/__init__.py), and the crew-log push from [`rfc-crew-log-wake`](rfc-crew-log-wake.md) pulls a tick forward on a worker's write. The block below is the v4 reading of the draft branch; where it and main differ, main wins.
+**On main.** #12781 merged as `0141ede260` and carries the one-call arm: `monitor_start` and `monitor_update` take `watch: "work-ledger"`, the `work-ledger` probe kind is served by `build` in [`src/aj_crew/probes/__init__.py`](../../src/aj_crew/probes/__init__.py), and the crew-log push from [`rfc-crew-log-wake`](rfc-crew-log-wake.md) pulls a tick forward on a worker's write. The block below is the v4 reading of the draft branch; where it and main differ, main wins.
 
 **As built, v4 — valid only at head `c749aff0d4`; re-audit at merge.** The branch is `feat/work-ledger-wake-gate` and the PR is still a draft, so everything here describes a branch rather than main, and every sentence in this block was read at that head. A draft under review can change any of it, and what merges is what counts: treat this block as superseded the moment that PR merges, and re-verify it against the merged commit rather than against this document's `last-audited` date. The gate is a probe kind and not a second loop: `WORK_LEDGER_KIND` in the new `probes/work_ledger.py` registers `work-ledger` beside the existing `gh-pr`, and `build` kept its branch rather than becoming a registry — two kinds is still not a registry — which is the call this phase was left to make. The fingerprint is the newest event id per item, folded by `ledger_wake.revision`, so a write nobody must answer still advances the board without waking anyone. Liveness is `work_ledger.is_stale`, and the conjunction lives *inside* that function rather than beside it: quiet past the window AND the worker not running AND the next move still the worker's. A worker in a thirty-minute build is running, so it is never flagged however long it stays silent, and a `done` item is not flagged either unless the conductor ruled `verdict: fail` on it and left it open, which hands the move back. A ledger whose every item is closed returns a terminal outcome that resets on nothing, keyed `all-accepted` when the work finished well and `all-closed` when it did not. The driver injects `worker_running`, and `MAX_WAKES_PER_ITEM_PER_HOUR` caps one item at twelve wakes an hour; past the cap the revision still advances and the wake folds into the next delivered one, so a conductor sees the newest state instead of a queue of superseded ones.
 
@@ -999,7 +999,7 @@ Two decisions reviewers keep re-opening on this branch, recorded so each round s
 - **The gate has no configuration switch, and that is the decision.** `test_no_config_switch_gates_the_wake` asserts the subtraction rather than the absence of a line: arming is already opt-in because a conductor must name the subject, and a loop is already stoppable, so a third off-position was a setting with one consumer — and the one it had never read a persisted value, because no loader hydration was written for it. Two review lanes asked for the removal on those grounds.
 - **Each `_PERMITTED_STORE_IMPORTERS` entry is a human's edit, by design.** The allowlist in `test/test_work_ledger.py` names `probes/work_ledger.py` (the probe must fold the ledger it observes) and `conductor_wake.py` (it reads one binding for the close and turn-end triggers), each with its own justification. `ledger_wake.py` is kept OUT: it needs the store only for the item cap, so it mirrors that value as a literal and imports only `irq` and `platform_compat`. The guard's own note says a new importer is a design change that must argue for itself in review "rather than arrive with a passing suite", so the entries belong to whoever accepts the seam, not to the change that needs them.
 
-**The one-call arm was split out of the draft as [#15691](https://github.com/kirodotdev/KiroCrew/pull/15691) and folded back into #12781 before it merged.** Arming the gate in a single call takes four linked pieces — a `watch` field on `monitor_start` and `monitor_update`, the payload that carries it, the applier that turns it into a subject, and the authorization forward — and the last of those lands in [`autonudge_authz.py`](../../src/kiro_crew/autonudge_authz.py), which this branch does not touch. The field is held back deliberately so the whole chain lands together: a `watch` parameter that is accepted and then ignored is worse than one that does not exist yet, because a conductor cannot tell the difference from the call site. The merged #12781 carries the whole chain together, along with [`rfc-crew-log-wake`](rfc-crew-log-wake.md), which hooks the crew log so a worker's report pulls the gate's next tick forward instead of waiting out the cadence.
+**The one-call arm was split out of the draft as [#15691](https://github.com/kirodotdev/KiroCrew/pull/15691) and folded back into #12781 before it merged.** Arming the gate in a single call takes four linked pieces — a `watch` field on `monitor_start` and `monitor_update`, the payload that carries it, the applier that turns it into a subject, and the authorization forward — and the last of those lands in [`autonudge_authz.py`](../../src/aj_crew/autonudge_authz.py), which this branch does not touch. The field is held back deliberately so the whole chain lands together: a `watch` parameter that is accepted and then ignored is worse than one that does not exist yet, because a conductor cannot tell the difference from the call site. The merged #12781 carries the whole chain together, along with [`rfc-crew-log-wake`](rfc-crew-log-wake.md), which hooks the crew log so a worker's report pulls the gate's next tick forward instead of waiting out the cadence.
 
 Scope: a `work-ledger` probe, its registration in `build`, the `watch` field on `monitor_start`'s schema, and the target-inference branch. No kernel change. The actionable event set is `done`, `blocked`, `question` and `request`; `progress`, `message`, `channel_open` and `channel_close` advance the fingerprint without firing.
 
@@ -1046,7 +1046,7 @@ Exit criteria:
 
 ### Phase 4 — the surfaces (done, [#12792](https://github.com/kirodotdev/KiroCrew/pull/12792))
 
-**On main.** #12792 merged as `958d5db579`: the board is served at `GET /api/crew-board` and `POST /api/crew-board/action` by [`src/kiro_crew/dashboard/handlers/work_ledger_board.py`](../../src/kiro_crew/dashboard/handlers/work_ledger_board.py). The module spec named in the scope below does not exist yet; [`src/kiro_crew/docs/work-ledger.md`](../../src/kiro_crew/docs/work-ledger.md) is the user guide. The block below is the v4 reading of the branch; where it and main differ, main wins.
+**On main.** #12792 merged as `958d5db579`: the board is served at `GET /api/crew-board` and `POST /api/crew-board/action` by [`src/aj_crew/dashboard/handlers/work_ledger_board.py`](../../src/aj_crew/dashboard/handlers/work_ledger_board.py). The module spec named in the scope below does not exist yet; [`src/aj_crew/docs/work-ledger.md`](../../src/aj_crew/docs/work-ledger.md) is the user guide. The block below is the v4 reading of the branch; where it and main differ, main wins.
 
 **As built, v4 — valid only at head `f0287a4a50`; re-audit at merge.** The branch is `feat/crew-page-work-items`, open and not on main, and every sentence in this block was read at that head. Review can change any of it, and what merges is what counts: treat this block as superseded the moment that PR merges, and re-verify it against the merged commit rather than against this document's `last-audited` date. The page is `/crew-board?conductor=KEY`, reading a masked projection at `GET /api/crew-board` rather than the conductor's own tool route, and the rows land in three bands: `ruling` for items waiting on the conductor, rendered first whatever their age; `working` for open items not waiting on a ruling; and `finished` for terminal items, collapsed behind an expander. Terminal wins over outstanding, and the precedence is the point — an item can carry `status: "question"` and still be closed, because the conductor answered it by closing it, and lifting such a row into the ruling band would ask a human to rule on finished work. A band that contains anything unactionable stops being read.
 
@@ -1059,7 +1059,7 @@ The masking is a deny-list on item rows, so a field added to `WorkItem` later re
 
 One thing the page settles that Q10 only asks: a session owning no work ledger renders as a neutral empty state, not an error, because only a session dispatched through the conductor tooling opens one — so an ad-hoc conductor legitimately has none, and showing it as a failure would teach people the board is broken.
 
-Scope: the Crew page item table and event list, including the open channels with their expiry and remaining budget and any outstanding `request` awaiting a conductor's answer; the `goal-conductor/SKILL.md` rewrite replacing the transcript-reading patrol with a ledger read and adding the dispatch rule (leaf → `kirocrew-worker`, decomposable → `kirocrew-conductor` under the depth cap, specialist crew → that crew, with the transcript fallback named for a crew that does not mount `@kirocrew-work`); a module spec in `docs/system-specs/modules/`, added to that directory's index. The deletion of `ledger_entry.py` and its tests rides with the alias's removal instead (§Rollout note — swap done).
+Scope: the Crew page item table and event list, including the open channels with their expiry and remaining budget and any outstanding `request` awaiting a conductor's answer; the `goal-conductor/SKILL.md` rewrite replacing the transcript-reading patrol with a ledger read and adding the dispatch rule (leaf → `ajcrew-worker`, decomposable → `ajcrew-conductor` under the depth cap, specialist crew → that crew, with the transcript fallback named for a crew that does not mount `@ajcrew-work`); a module spec in `docs/system-specs/modules/`, added to that directory's index. The deletion of `ledger_entry.py` and its tests rides with the alias's removal instead (§Rollout note — swap done).
 
 Exit criteria:
 - The Crew page renders items and events from the same endpoint the conductor reads, asserted by a test that the payload shapes match.
@@ -1088,9 +1088,9 @@ The one breaking step is the deletion of `ledger_entry.py`, which rides with the
 
 **Extend `issue_radar_crew_*` to cover general conductors.** Rejected as the *first* move: its scope key is a forge repository, its item key is an issue number, and its phase vocabulary is built around CI and merge states. Generalizing it in place means changing a shipped app's storage while inventing the new contract. Building the general store first and migrating Issue Radar onto it later — if it ever earns the churn — keeps those two risks apart.
 
-**Mount the four tools on `kirocrew-core` and let them fail closed.** This was v1's recommendation, and it is rejected on cost rather than on correctness. `kirocrew-core` is in every agent's spec, so every session would carry the four schemas whether or not it can ever use them, and almost no session is a conductor or a worker — for those the only reachable answer is `not_bound` or `no_ledger`. The refusal itself is kept: it is still what an unbound caller on the opt-in server gets. What changes is who pays for the tool.
+**Mount the four tools on `ajcrew-core` and let them fail closed.** This was v1's recommendation, and it is rejected on cost rather than on correctness. `ajcrew-core` is in every agent's spec, so every session would carry the four schemas whether or not it can ever use them, and almost no session is a conductor or a worker — for those the only reachable answer is `not_bound` or `no_ledger`. The refusal itself is kept: it is still what an unbound caller on the opt-in server gets. What changes is who pays for the tool.
 
-**A narrowed `kirocrew-worker` agent.** Rejected, and worth separating from the agent this RFC does propose. A worker writes files, runs builds and drives git, so anything a narrowed spec withholds is something some work item needs — the same defect an omitted `agent` produces by handing the child `kirocrew-conductor`. The narrowed worker is rejected; the **superset** worker is adopted, and the distinction is the whole of v2's change here.
+**A narrowed `ajcrew-worker` agent.** Rejected, and worth separating from the agent this RFC does propose. A worker writes files, runs builds and drives git, so anything a narrowed spec withholds is something some work item needs — the same defect an omitted `agent` produces by handing the child `ajcrew-conductor`. The narrowed worker is rejected; the **superset** worker is adopted, and the distinction is the whole of v2's change here.
 
 **Let workers address each other without a conductor.** A registry where any worker on the board can message any sibling. Rejected: it removes the only party with a reason to say no, and it makes the board's traffic something the conductor discovers rather than something it authorised. The channel record exists so that "who may talk to whom, about what, for how long" is a decision with a writer.
 
@@ -1104,11 +1104,11 @@ The one breaking step is the deletion of `ledger_entry.py`, which rides with the
 
 ## Rollout note (v2.1)
 
-Phase 2 landed the four tools, the routes and the `kirocrew-worker` spec, and it also
-mounted `kirocrew-work` on `kirocrew-conductor` and `kirocrew-pipeline-conductor` as
+Phase 2 landed the four tools, the routes and the `ajcrew-worker` spec, and it also
+mounted `ajcrew-work` on `ajcrew-conductor` and `ajcrew-pipeline-conductor` as
 §Agent spec changes above specifies. **That part is retracted.** Both shipped
 conductors emit the spec they emitted before Phase 2, and the flow lives on a new
-`kirocrew-ledger-conductor` spec with its own `goal-ledger-conductor` skill.
+`ajcrew-ledger-conductor` spec with its own `goal-ledger-conductor` skill.
 
 The reason is not a defect in the tools. It is that the two grants alone do not
 describe the change: the ledger flow **inverts the dispatch order** (`create` →
@@ -1128,11 +1128,11 @@ users who asked for it.
 **Merge criteria.** The merge is done — see §Rollout note — swap done below, which
 records criterion 1 as met on the evidence it names and criterion 2 as **waived**, not
 met. The criteria are kept as written, because they are what the decision was taken
-against. The two agents fold back into one — `kirocrew-ledger-conductor` retired,
-`kirocrew-work` restored on `kirocrew-conductor`, `goal-conductor/SKILL.md` rewritten to
+against. The two agents fold back into one — `ajcrew-ledger-conductor` retired,
+`ajcrew-work` restored on `ajcrew-conductor`, `goal-conductor/SKILL.md` rewritten to
 the ledger procedure and `ledger_entry.py` deleted — when BOTH hold:
 
-1. A real multi-item goal has run end to end on `kirocrew-ledger-conductor`: items
+1. A real multi-item goal has run end to end on `ajcrew-ledger-conductor`: items
    created, bound, seeded, reported, verified through `accept_eval.py` and closed,
    including at least one `blocked` or `question` and one second-level conductor.
 2. Phase 3's `watch: "work-ledger"` gate is merged, so the patrol loop no longer
@@ -1140,24 +1140,24 @@ the ledger procedure and `ledger_entry.py` deleted — when BOTH hold:
    the timer's, which is the one respect in which it is not yet better than the
    agent it would replace.
 
-**What "retired" means for the name.** `kirocrew-ledger-conductor` is a public,
+**What "retired" means for the name.** `ajcrew-ledger-conductor` is a public,
 user-referenceable agent name the moment it ships — in `session_create`'s `agent`,
 in cron jobs, in crew bindings. Retiring it does not delete it: the fold-back keeps
-`kirocrew-ledger-conductor.json` installed as an alias spec whose prompt and grants
-are identical to the merged `kirocrew-conductor`, for at least one minor release,
-with a deprecation line in the release notes and a `kirocrew doctor` notice for any
+`ajcrew-ledger-conductor.json` installed as an alias spec whose prompt and grants
+are identical to the merged `ajcrew-conductor`, for at least one minor release,
+with a deprecation line in the release notes and a `ajcrew doctor` notice for any
 config that still names it. Deleting the alias is a separate, later change with its
 own notes. A conductor dispatching onto the old name during that window gets the
 merged agent, not a `Mode not found` failure.
 
 ## Rollout note — swap done
 
-The swap has landed: criterion 1 met, criterion 2 waived. `kirocrew-conductor` **is**
-the ledger conductor: `_conductor_spec` mounts `kirocrew-work`, grants
+The swap has landed: criterion 1 met, criterion 2 waived. `ajcrew-conductor` **is**
+the ledger conductor: `_conductor_spec` mounts `ajcrew-work`, grants
 `work_ledger_read` / `work_ledger_record` / `work_ledger_rebuild` / `work_brief` and
 not `work_report`, and
 carries the ledger prompt; `goal-conductor/SKILL.md` is the ledger procedure.
-`kirocrew-ledger-conductor` stays for **one release** as a deprecated alias emitting
+`ajcrew-ledger-conductor` stays for **one release** as a deprecated alias emitting
 that same spec under the old name, and `goal-ledger-conductor/SKILL.md` is a
 one-paragraph pointer to `goal-conductor` with a byte-identical `accept_eval.py` beside
 it. Both are removed next release, **gated on the doctor notice below** — a removal that
@@ -1184,7 +1184,7 @@ remains worth doing and is now an optimisation of the shipped conductor rather t
 variant of it.
 
 **The doctor notice -- shipped.** The retirement spec above requires a
-`kirocrew doctor` notice for any config that still names `kirocrew-ledger-conductor`,
+`ajcrew doctor` notice for any config that still names `ajcrew-ledger-conductor`,
 and that notice now ships ([#10268](https://github.com/kirodotdev/KiroCrew/issues/10268)):
 doctor scans every config surface that persists an agent name -- cron jobs
 (`agent_id`, and `agent_sequence` entries when the sequence actually dispatches),
@@ -1198,7 +1198,7 @@ its alias. The notice is a
 **precondition for deleting the alias**, not for the swap: while the alias
 exists, an unmigrated config keeps working.
 
-**Mid-goal behaviour.** A `kirocrew-conductor` session that was mid-goal under the old
+**Mid-goal behaviour.** A `ajcrew-conductor` session that was mid-goal under the old
 procedure wakes into the ledger prompt with its item state still in `session_ledger`
 `artifacts`. That is soft rather than breaking, and deliberately so: every tool the old
 procedure used is still mounted, `session_ledger_read` still returns those artifacts, and
@@ -1213,13 +1213,13 @@ which expire on the same schedule as the alias, so its deletion — with
 `test_conductor_ledger_entry.py` — moves out of Phase 4 and rides with the alias's
 removal next release. Phase 4 keeps the Crew page surfaces.
 
-`kirocrew-pipeline-conductor` and `kirocrew-security-conductor` mount `kirocrew-work`
+`ajcrew-pipeline-conductor` and `ajcrew-security-conductor` mount `ajcrew-work`
 from the shared conductor base since v5 ([#17992](https://github.com/kirodotdev/KiroCrew/pull/17992)),
 recording each dispatched item while keeping their own skills' stores as detail.
 
 ## Open questions
 
-**Q1. Should `session_create` create and bind the item in one call?** The two-step create-then-bind sequence has a window in which a bound-in-intent worker is running unbound. Fusing them into `session_create(work_item=...)` closes it exactly, at the cost of coupling session control to the work ledger — a dependency that has to be justified against the current clean separation. Blocks nothing; Phase 2 ships the two-step form either way. [rfc-work-dispatch.md](rfc-work-dispatch.md) proposes the answer: a separate, approval-gated `work_dispatch` tool on `kirocrew-dashboard` that runs the existing routes in order, leaving `session_create` and `kirocrew-work` unchanged.
+**Q1. Should `session_create` create and bind the item in one call?** The two-step create-then-bind sequence has a window in which a bound-in-intent worker is running unbound. Fusing them into `session_create(work_item=...)` closes it exactly, at the cost of coupling session control to the work ledger — a dependency that has to be justified against the current clean separation. Blocks nothing; Phase 2 ships the two-step form either way. [rfc-work-dispatch.md](rfc-work-dispatch.md) proposes the answer: a separate, approval-gated `work_dispatch` tool on `ajcrew-dashboard` that runs the existing routes in order, leaving `session_create` and `ajcrew-work` unchanged.
 
 **Q2 — closed in v3. The ledger gate wins.** A conductor arms the ledger gate and never the pull-request gate: a worker reports the pull request it produced, so the ledger observes a superset of what the PR gate would, one report later. A composite probe was the alternative and is rejected as unnecessary complexity for a case that resolves by policy. A conductor that needs the PR gate directly is a conductor doing a worker's job.
 
@@ -1237,4 +1237,4 @@ recording each dispatched item while keeping their own skills' stores as detail.
 
 **Q9. Can a `request` cross a level in a two-level conductor?** No, in v3: both ends must be items of the same ledger, so a grandchild cannot ask its grandparent for anything and two cousins under different second-level conductors cannot be paired. That is consistent with `depth`'s other rule — a parent sees only its child's item record, never its grandchildren's — and it means a cross-branch need has to travel as two requests up and one grant down. Whether that is correct containment or a gap only becomes answerable once a conductor of conductors has actually run, which is also Q5's condition.
 
-**Q10 — closed in v5 for the installed conductors; the ad-hoc case stays open.** Mingwei ruled on 2026-10-08 ([#17977](https://github.com/kirodotdev/KiroCrew/issues/17977)) that every conductor uses the work ledger, so `kirocrew-pipeline-conductor` and `kirocrew-security-conductor` now hold the base grant from the shared conductor base and their own stores stay as detail. The v4 text follows. **Should a conductor outside `kirocrew-conductor` hold a work-ledger grant?** §Scope: conductors outside `kirocrew-conductor` names three that do not: an ad-hoc member session dispatching peers with `session_create`, `kirocrew-pipeline-conductor`, and `kirocrew-security-conductor`. All three still read transcript tails. The pipeline and security retractions were deliberate (§Agent spec changes), so reversing either is a decision about their skills' own reporting scripts rather than about this store. The ad-hoc case is the harder one, because it has no spec to grant anything to: the grant would have to attach to the dispatch rather than to the agent, which is the one shape §Agent spec changes argues against ("the grant never has to be a runtime property of a session"). v4 records the gap and takes no position.
+**Q10 — closed in v5 for the installed conductors; the ad-hoc case stays open.** Mingwei ruled on 2026-10-08 ([#17977](https://github.com/kirodotdev/KiroCrew/issues/17977)) that every conductor uses the work ledger, so `ajcrew-pipeline-conductor` and `ajcrew-security-conductor` now hold the base grant from the shared conductor base and their own stores stay as detail. The v4 text follows. **Should a conductor outside `ajcrew-conductor` hold a work-ledger grant?** §Scope: conductors outside `ajcrew-conductor` names three that do not: an ad-hoc member session dispatching peers with `session_create`, `ajcrew-pipeline-conductor`, and `ajcrew-security-conductor`. All three still read transcript tails. The pipeline and security retractions were deliberate (§Agent spec changes), so reversing either is a decision about their skills' own reporting scripts rather than about this store. The ad-hoc case is the harder one, because it has no spec to grant anything to: the grant would have to attach to the dispatch rather than to the agent, which is the one shape §Agent spec changes argues against ("the grant never has to be a runtime property of a session"). v4 records the gap and takes no position.

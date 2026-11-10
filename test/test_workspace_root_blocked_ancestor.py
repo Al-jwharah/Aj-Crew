@@ -15,14 +15,14 @@ from pathlib import Path
 import pytest
 
 from conftest import requires_symlinks
-from kiro_crew.config import loader
+from aj_crew.config import loader
 
 
 @requires_symlinks
 def test_a_dangling_link_ancestor_is_named(tmp_path: Path) -> None:
     link = tmp_path / "workplace"
     link.symlink_to(tmp_path / "not-mounted")
-    root = link / "kirocrew-workspace"
+    root = link / "ajcrew-workspace"
 
     with pytest.raises(NotADirectoryError) as caught:
         loader._resolve_workspace_root(root)
@@ -30,7 +30,7 @@ def test_a_dangling_link_ancestor_is_named(tmp_path: Path) -> None:
     message = str(caught.value)
     assert caught.value.filename == str(link)
     assert "does not exist" in message
-    assert "KIROCREW_WORKSPACE" in message
+    assert "AJCREW_WORKSPACE" in message
     # Nothing was created through the link.
     assert not os.path.lexists(tmp_path / "not-mounted")
 
@@ -38,7 +38,7 @@ def test_a_dangling_link_ancestor_is_named(tmp_path: Path) -> None:
 def test_a_file_ancestor_is_named(tmp_path: Path) -> None:
     blocker = tmp_path / "workplace"
     blocker.write_text("")
-    root = blocker / "kirocrew-workspace"
+    root = blocker / "ajcrew-workspace"
 
     with pytest.raises(NotADirectoryError) as caught:
         loader._resolve_workspace_root(root)
@@ -48,7 +48,7 @@ def test_a_file_ancestor_is_named(tmp_path: Path) -> None:
 
 
 def test_a_file_at_the_root_itself_is_named(tmp_path: Path) -> None:
-    root = tmp_path / "kirocrew-workspace"
+    root = tmp_path / "ajcrew-workspace"
     root.write_text("")
 
     with pytest.raises(NotADirectoryError) as caught:
@@ -63,9 +63,9 @@ def test_a_link_to_a_directory_still_works(tmp_path: Path) -> None:
     real.mkdir()
     (tmp_path / "workplace").symlink_to(real)
 
-    resolved = loader._resolve_workspace_root(tmp_path / "workplace" / "kirocrew-workspace")
+    resolved = loader._resolve_workspace_root(tmp_path / "workplace" / "ajcrew-workspace")
 
-    assert resolved == Path(os.path.realpath(real / "kirocrew-workspace"))
+    assert resolved == Path(os.path.realpath(real / "ajcrew-workspace"))
     assert resolved.is_dir()
 
 
@@ -75,4 +75,4 @@ def test_the_error_is_still_an_os_error(tmp_path: Path) -> None:
     blocker.write_text("")
 
     with pytest.raises(OSError):
-        loader._resolve_workspace_root(blocker / "kirocrew-workspace")
+        loader._resolve_workspace_root(blocker / "ajcrew-workspace")

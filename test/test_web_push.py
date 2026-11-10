@@ -13,9 +13,9 @@ import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
-from kiro_crew.notifications import vapid_keys, web_push
-from kiro_crew.notifications.push_store import PushSubscriptionError, PushSubscriptionStore
-from kiro_crew.testing.wait import await_until
+from aj_crew.notifications import vapid_keys, web_push
+from aj_crew.notifications.push_store import PushSubscriptionError, PushSubscriptionStore
+from aj_crew.testing.wait import await_until
 
 
 def _b64(b: bytes) -> str:
@@ -38,7 +38,7 @@ def _fake_subscription() -> dict:
 
 
 def test_vapid_keys_generate_and_persist(monkeypatch, tmp_path):
-    monkeypatch.setattr("kiro_crew.notifications.vapid_keys.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.vapid_keys.config_dir", lambda: tmp_path)
     vapid_keys.reset_cache_for_tests()
     pub1 = vapid_keys.public_key_b64url()
     assert isinstance(pub1, str) and len(pub1) > 40
@@ -58,12 +58,12 @@ def _public_dns(monkeypatch):
     """Resolve every host to a public IP so endpoint validation is deterministic
     (no live DNS in the store tests)."""
     monkeypatch.setattr(
-        "kiro_crew.link_unfurl._default_resolve", lambda _host, _port: ["93.184.216.34"]
+        "aj_crew.link_unfurl._default_resolve", lambda _host, _port: ["93.184.216.34"]
     )
 
 
 def test_store_add_get_remove_roundtrip(monkeypatch, tmp_path, _public_dns):
-    monkeypatch.setattr("kiro_crew.notifications.push_store.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.push_store.config_dir", lambda: tmp_path)
     store = PushSubscriptionStore()
     sub = _fake_subscription()
     entry = store.add(sub)
@@ -81,7 +81,7 @@ def test_store_add_get_remove_roundtrip(monkeypatch, tmp_path, _public_dns):
 
 
 def test_store_rejects_malformed(monkeypatch, tmp_path, _public_dns):
-    monkeypatch.setattr("kiro_crew.notifications.push_store.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.push_store.config_dir", lambda: tmp_path)
     store = PushSubscriptionStore()
     with pytest.raises(PushSubscriptionError):
         store.add({"endpoint": "https://x/y"})  # no keys
@@ -95,19 +95,19 @@ def test_store_rejects_malformed(monkeypatch, tmp_path, _public_dns):
 
 def test_store_rejects_internal_ssrf_endpoint(monkeypatch, tmp_path):
     """A host resolving to a loopback/private/link-local address is rejected."""
-    monkeypatch.setattr("kiro_crew.notifications.push_store.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.push_store.config_dir", lambda: tmp_path)
     store = PushSubscriptionStore()
     good_keys = {"p256dh": "a", "auth": "b"}
     for addr in ("127.0.0.1", "10.0.0.5", "169.254.169.254", "::1", "100.64.0.1", "fec0::1"):
         monkeypatch.setattr(
-            "kiro_crew.link_unfurl._default_resolve", lambda _host, _port, _addr=addr: [_addr]
+            "aj_crew.link_unfurl._default_resolve", lambda _host, _port, _addr=addr: [_addr]
         )
         with pytest.raises(PushSubscriptionError):
             store.add({"endpoint": "https://sneaky.example.com/x", "keys": good_keys})
 
 
 def test_store_corrupt_file_degrades_to_empty(monkeypatch, tmp_path):
-    monkeypatch.setattr("kiro_crew.notifications.push_store.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.push_store.config_dir", lambda: tmp_path)
     (tmp_path / "web-push").mkdir()
     (tmp_path / "web-push" / "subscriptions.json").write_text("{not json", encoding="utf-8")
     assert PushSubscriptionStore().all() == []
@@ -120,7 +120,7 @@ def test_store_load_does_no_dns(monkeypatch, tmp_path):
     """
     import json as _json
 
-    monkeypatch.setattr("kiro_crew.notifications.push_store.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.push_store.config_dir", lambda: tmp_path)
     (tmp_path / "web-push").mkdir()
     (tmp_path / "web-push" / "subscriptions.json").write_text(
         _json.dumps(
@@ -143,13 +143,13 @@ def test_store_load_does_no_dns(monkeypatch, tmp_path):
     def _no_dns(*_a, **_k):
         raise AssertionError("load must not resolve DNS")
 
-    monkeypatch.setattr("kiro_crew.link_unfurl._default_resolve", _no_dns)
+    monkeypatch.setattr("aj_crew.link_unfurl._default_resolve", _no_dns)
     assert [e["endpoint"] for e in PushSubscriptionStore().all()] == ["https://push.example.com/x"]
 
 
 def test_store_rejects_invalid_port(monkeypatch, tmp_path, _public_dns):
     """A malformed port is a 400-class PushSubscriptionError, not a bare ValueError."""
-    monkeypatch.setattr("kiro_crew.notifications.push_store.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.push_store.config_dir", lambda: tmp_path)
     store = PushSubscriptionStore()
     for endpoint in ("https://push.example.com:99999/x", "https://push.example.com:abc/x"):
         with pytest.raises(PushSubscriptionError):
@@ -158,13 +158,13 @@ def test_store_rejects_invalid_port(monkeypatch, tmp_path, _public_dns):
 
 def test_store_files_live_in_the_masked_directory(monkeypatch, tmp_path, _public_dns):
     """Both stores and their atomic-write temps sit under the sandbox-masked dir."""
-    from kiro_crew.notifications.push_store import WEB_PUSH_DIR_LEAF
-    from kiro_crew.sandbox_leaves import _CREW_HIDDEN_LEAVES
-    from kiro_crew.sandbox_precreate import _CREW_PRECREATE_HIDDEN_DIR_LEAVES
-    from kiro_crew.security.paths_lists import _CREW_SECRET_LEAVES
+    from aj_crew.notifications.push_store import WEB_PUSH_DIR_LEAF
+    from aj_crew.sandbox_leaves import _CREW_HIDDEN_LEAVES
+    from aj_crew.sandbox_precreate import _CREW_PRECREATE_HIDDEN_DIR_LEAVES
+    from aj_crew.security.paths_lists import _CREW_SECRET_LEAVES
 
-    monkeypatch.setattr("kiro_crew.notifications.push_store.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.notifications.vapid_keys.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.push_store.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.vapid_keys.config_dir", lambda: tmp_path)
     vapid_keys.reset_cache_for_tests()
     PushSubscriptionStore().add(_fake_subscription())
     vapid_keys.public_key_b64url()
@@ -178,7 +178,7 @@ def test_store_files_live_in_the_masked_directory(monkeypatch, tmp_path, _public
 @pytest.mark.asyncio
 async def test_public_address_resolver_drops_internal_addresses(monkeypatch):
     """Delivery connects only to public addresses, even after a DNS change."""
-    from kiro_crew.notifications.web_push import PublicAddressResolver
+    from aj_crew.notifications.web_push import PublicAddressResolver
 
     def _row(addr):
         return {"hostname": "h", "host": addr, "port": 443, "family": 2, "proto": 6, "flags": 0}
@@ -286,11 +286,11 @@ async def test_send_web_push_marks_gone_on_410(monkeypatch):
 
 
 def _make_state(monkeypatch, tmp_path):
-    from kiro_crew.dashboard.state import DashboardState
+    from aj_crew.dashboard.state import DashboardState
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.notifications.push_store.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.push_store.config_dir", lambda: tmp_path)
     return DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(),
@@ -355,7 +355,7 @@ def test_fanout_fires_for_normal_note(monkeypatch, tmp_path):
 
 
 def test_web_push_payload_shape(monkeypatch, tmp_path):
-    from kiro_crew.dashboard.state_parts.dashboard_services import _web_push_payload
+    from aj_crew.dashboard.state_parts.dashboard_services import _web_push_payload
 
     payload = _web_push_payload(
         {"ts": "t", "title": "Hi", "body": "there", "url": "/chat/x", "channel": "c"}
@@ -368,8 +368,8 @@ def test_web_push_payload_shape(monkeypatch, tmp_path):
 
 def test_web_push_payload_truncates_oversized_body(monkeypatch, tmp_path):
     """Title/body/tag are capped on a UTF-8 BYTE budget so the push stays <4KB."""
-    from kiro_crew.dashboard.notification_coordinator import NATIVE_TAG_MAX_BYTES
-    from kiro_crew.dashboard.state_parts.dashboard_services import (
+    from aj_crew.dashboard.notification_coordinator import NATIVE_TAG_MAX_BYTES
+    from aj_crew.dashboard.state_parts.dashboard_services import (
         _PUSH_BODY_BYTES,
         _PUSH_TITLE_BYTES,
         _web_push_payload,
@@ -409,7 +409,7 @@ def test_web_push_payload_truncates_oversized_body(monkeypatch, tmp_path):
 def test_web_push_payload_replaces_an_oversized_deep_link():
     """The deep link is copied twice into the payload; a long one is replaced
     by the dashboard root, never cut into a link that points nowhere."""
-    from kiro_crew.dashboard.state_parts.dashboard_services import _web_push_payload
+    from aj_crew.dashboard.state_parts.dashboard_services import _web_push_payload
 
     long_url = "/apps/x/" + "a" * 2000
     n = _web_push_payload({"ts": "t", "title": "Hi", "body": "b", "url": long_url})["notification"]
@@ -424,8 +424,8 @@ def test_web_push_payload_worst_case_fits_the_push_limit():
     """Every field at its maximum, in characters that JSON escapes to 6 bytes
     or UTF-8 encodes to 3, still encrypts under the 4096 byte Web Push
     ceiling, with the plaintext inside the module's own payload budget."""
-    from kiro_crew.dashboard.state_parts import dashboard_services
-    from kiro_crew.dashboard.state_parts.dashboard_services import _web_push_payload
+    from aj_crew.dashboard.state_parts import dashboard_services
+    from aj_crew.dashboard.state_parts.dashboard_services import _web_push_payload
 
     # The aes128gcm framing adds 103 bytes (86 header, 16 tag, 1 delimiter).
     plain_budget = getattr(dashboard_services, "_PUSH_PAYLOAD_BYTES", 4096 - 103)
@@ -455,9 +455,9 @@ def test_web_push_payload_worst_case_keyed_note_fits_the_push_limit():
     never measures, so measure them: the plaintext must stay inside the
     module's payload budget and the sealed message under the 4096 byte
     ceiling, or the keyed push is rejected with 413 and never arrives."""
-    from kiro_crew.dashboard.notification_coordinator import NATIVE_TAG_MAX_BYTES
-    from kiro_crew.dashboard.state_parts import dashboard_services
-    from kiro_crew.dashboard.state_parts.dashboard_services import _web_push_payload
+    from aj_crew.dashboard.notification_coordinator import NATIVE_TAG_MAX_BYTES
+    from aj_crew.dashboard.state_parts import dashboard_services
+    from aj_crew.dashboard.state_parts.dashboard_services import _web_push_payload
 
     plain_budget = getattr(dashboard_services, "_PUSH_PAYLOAD_BYTES", 4096 - 103)
     # The largest tag a keyed note can carry: an ASCII key costs one serialized
@@ -500,7 +500,7 @@ async def test_send_web_push_loads_vapid_keys_off_the_event_loop(monkeypatch, tm
     import threading
 
     monkeypatch.setattr(vapid_keys, "config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.notifications.push_store.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.push_store.config_dir", lambda: tmp_path)
     vapid_keys.reset_cache_for_tests()
     loop_thread = threading.get_ident()
     seen: list[int] = []
@@ -540,9 +540,9 @@ async def test_send_web_push_loads_vapid_keys_off_the_event_loop(monkeypatch, tm
 def test_store_construction_reads_no_file(monkeypatch, tmp_path):
     """Building the store (done in DashboardState.__init__ on the gateway loop)
     must not touch the subscriptions file; the first read loads it."""
-    from kiro_crew.notifications import push_store
+    from aj_crew.notifications import push_store
 
-    monkeypatch.setattr("kiro_crew.notifications.push_store.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.push_store.config_dir", lambda: tmp_path)
     (tmp_path / "web-push").mkdir()
     (tmp_path / "web-push" / "subscriptions.json").write_text(
         json.dumps(
@@ -598,7 +598,7 @@ async def test_fan_out_reads_subscriptions_off_the_event_loop(monkeypatch, tmp_p
 
 def _delivered(monkeypatch, tmp_path, note: dict) -> tuple[dict, dict]:
     """Deliver *note*; return (the note the tab receives, the push payload)."""
-    from kiro_crew.dashboard.state_parts.dashboard_services import _web_push_payload
+    from aj_crew.dashboard.state_parts.dashboard_services import _web_push_payload
 
     state = _make_state(monkeypatch, tmp_path)
     state.broadcast_ws = MagicMock()
@@ -649,7 +649,7 @@ def test_distinct_events_get_distinct_tags(monkeypatch, tmp_path):
 def test_oversized_event_id_tag_fits_the_push_budget_unchanged(monkeypatch, tmp_path):
     """A tag over the push byte budget would be truncated on the push path only,
     which splits the two banners again; the builder hashes it to fit instead."""
-    from kiro_crew.dashboard.notification_coordinator import NATIVE_TAG_MAX_BYTES
+    from aj_crew.dashboard.notification_coordinator import NATIVE_TAG_MAX_BYTES
 
     tab_note, payload = _delivered(
         monkeypatch,
@@ -664,7 +664,7 @@ def test_escaped_event_id_tag_fits_the_push_budget_unchanged(monkeypatch, tmp_pa
     """A tag short in raw bytes but long once JSON escapes it (control
     characters escape to 6 bytes each) is hashed at stamping time, so the push
     payload carries the stamped tag unchanged and stays within its budget."""
-    from kiro_crew.dashboard.notification_coordinator import NATIVE_TAG_MAX_BYTES
+    from aj_crew.dashboard.notification_coordinator import NATIVE_TAG_MAX_BYTES
 
     tab_note, payload = _delivered(
         monkeypatch,
@@ -694,7 +694,7 @@ def test_lone_surrogate_event_id_still_delivers(monkeypatch, tmp_path):
 def test_lone_surrogate_text_encodes_into_the_push_body():
     """A lone surrogate in a note's title reaches the push encoder as ``?``
     instead of failing that device's push."""
-    from kiro_crew.dashboard.state_parts.dashboard_services import _web_push_payload
+    from aj_crew.dashboard.state_parts.dashboard_services import _web_push_payload
 
     payload = _web_push_payload({"ts": "t", "title": "a\ud800b", "body": "b"})
     raw = json.dumps(payload, separators=(",", ":"), ensure_ascii=False).encode("utf-8", "replace")
@@ -707,8 +707,8 @@ def test_flattening_never_reassembles_a_credential_into_the_push_body(splitter):
     emphasis markup splits a token past the credential pattern. Flattening for
     the banner removes the splitter and joins the token, so the flattened text
     must be redacted again before it is sent."""
-    from kiro_crew.dashboard.state_parts.dashboard_services import _web_push_payload
-    from kiro_crew.dashboard.state_parts.notification_log import _redact_note_value
+    from aj_crew.dashboard.state_parts.dashboard_services import _web_push_payload
+    from aj_crew.dashboard.state_parts.notification_log import _redact_note_value
 
     token = "ghp_" + "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8"
     split = token[:10] + splitter + token[10:] + splitter
@@ -725,7 +725,7 @@ def test_web_push_payload_body_is_plain_text():
     """An OS banner shows text literally, so the markdown body is flattened the
     way the tab banner's stripMd does; with the shared tag the push banner
     replaces the tab one and must read the same."""
-    from kiro_crew.dashboard.state_parts.dashboard_services import _web_push_payload
+    from aj_crew.dashboard.state_parts.dashboard_services import _web_push_payload
 
     n = _web_push_payload(
         {"ts": "t", "title": "Skill", "body": "**deploy** \u2014 see [docs](https://x.example)"}
@@ -777,7 +777,7 @@ async def test_fan_out_logs_a_failed_sender_import(monkeypatch, tmp_path, caplog
     import sys
 
     state = _make_state(monkeypatch, tmp_path)
-    monkeypatch.setitem(sys.modules, "kiro_crew.notifications.web_push", None)
+    monkeypatch.setitem(sys.modules, "aj_crew.notifications.web_push", None)
     with caplog.at_level("WARNING"):
         await state._send_web_push_all({"title": "t", "body": "b", "channel": "c"})
     assert "Web push fan-out failed" in caplog.text
@@ -791,7 +791,7 @@ def test_web_push_imports_without_resolve_result(monkeypatch):
     import aiohttp.abc
 
     monkeypatch.delattr(aiohttp.abc, "ResolveResult", raising=False)
-    spec = importlib.util.find_spec("kiro_crew.notifications.web_push")
+    spec = importlib.util.find_spec("aj_crew.notifications.web_push")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     assert hasattr(module, "PublicAddressResolver")

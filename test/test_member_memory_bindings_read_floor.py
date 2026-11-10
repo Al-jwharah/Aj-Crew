@@ -34,7 +34,7 @@ def crew_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """A throwaway data home, reached through the override the gate anchors on."""
     home = tmp_path / "crew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.delenv("CLAUDE_CONFIG_DIR", raising=False)
     monkeypatch.delenv("CLAUDE_HOME", raising=False)
     return home
@@ -67,8 +67,8 @@ def test_the_agent_read_gate_refuses_a_binding_record_and_spares_a_readable_leaf
     crew_home: Path,
 ) -> None:
     """The path tier of the agent tool gate refuses the binding, not the whole tier."""
-    from kiro_crew import sandbox
-    from kiro_crew.security import sensitive_path_refusal, write_protected_home_paths
+    from aj_crew import sandbox
+    from aj_crew.security import sensitive_path_refusal, write_protected_home_paths
 
     binding = _plant_binding(crew_home)
     same_class, readable = _plant_controls(crew_home)
@@ -128,7 +128,7 @@ def test_the_enforced_adapter_credential_mask_denies_the_bindings_leaf(
     crew_home: Path,
 ) -> None:
     """The OS mask an enforced harness is confined by is a projection of this floor."""
-    from kiro_crew.security import sandbox_credential_targets
+    from aj_crew.security import sandbox_credential_targets
 
     _plant_binding(crew_home)
     _plant_controls(crew_home)
@@ -177,7 +177,7 @@ def test_the_write_tier_omits_the_leaf_while_writes_stay_refused() -> None:
     not come back: ``write_protected_home_paths()`` is published to
     ``security_posture`` as "reads allowed", which is false for this leaf.
     """
-    from kiro_crew.security import (
+    from aj_crew.security import (
         is_sensitive_write_path,
         sensitive_home_dirs,
         write_protected_home_paths,
@@ -214,7 +214,7 @@ def test_the_gateways_own_reader_still_resolves_a_retained_run(
     crew_home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The one legitimate reader opens the sidecar directly, so the floor spares it."""
-    from kiro_crew import subagent_persistence
+    from aj_crew import subagent_persistence
 
     agent_id = "bindings-floor-run"
     # The DEFAULT store: this test is about WHICH READER opens the sidecar, and a
@@ -240,7 +240,7 @@ def test_the_gateways_own_reader_still_resolves_a_retained_run(
 
     # PRECONDITION -- the agent tool gate refuses this very path, so a success below
     # is the direct keystone read rather than the gate having been widened.
-    from kiro_crew.security import sensitive_path_refusal
+    from aj_crew.security import sensitive_path_refusal
 
     assert sensitive_path_refusal(str(sidecar)) is not None, (
         "broken fixture: the gate does not refuse the sidecar, so this asserts "
@@ -268,7 +268,7 @@ def test_the_owning_spec_states_the_leafs_read_disposition() -> None:
     The premise reads tier membership from the code, and the control pins the sibling,
     so an emptied passage cannot pass.
     """
-    from kiro_crew.security import sensitive_home_dirs, write_protected_home_paths
+    from aj_crew.security import sensitive_home_dirs, write_protected_home_paths
 
     # PREMISE -- this test claims something about the SPEC only while the code puts
     # the leaf on the floor and off the write tier.

@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.channel — data models and ChannelManager."""
+"""Tests for aj_crew.channel — data models and ChannelManager."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-from kiro_crew.channel import (
+from aj_crew.channel import (
     _MAX_A2A_EXCHANGES,
     ApprovalPolicy,
     Channel,
@@ -50,7 +50,7 @@ class TestChannelAgent:
         agent = ChannelAgent(
             id="a1",
             role="Orchestrator",
-            agent_name="kirocrew",
+            agent_name="ajcrew",
             task="coordinate",
             is_orchestrator=True,
             approval_policy=ApprovalPolicy.TRUSTED,

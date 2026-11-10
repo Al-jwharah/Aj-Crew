@@ -21,7 +21,7 @@ def _verdict(status: str, **extra: Any) -> dict[str, Any]:
 
 
 def test_the_reply_lists_each_error_with_its_place_in_the_page():
-    from kiro_crew import mcp_panel
+    from aj_crew import mcp_panel
 
     verification = _verdict(
         "failed",
@@ -59,7 +59,7 @@ def test_the_reply_lists_each_error_with_its_place_in_the_page():
 
 
 def test_the_reply_says_what_a_pass_and_a_skip_mean():
-    from kiro_crew import mcp_panel
+    from aj_crew import mcp_panel
 
     passed = mcp_panel._render_saved({}, _verdict("passed"))
     skipped = mcp_panel._render_saved({}, _verdict("skipped", reason="no browser here"))
@@ -70,7 +70,7 @@ def test_the_reply_says_what_a_pass_and_a_skip_mean():
 
 
 def test_a_reply_without_a_verification_is_the_reply_it_always_was():
-    from kiro_crew import mcp_panel
+    from aj_crew import mcp_panel
 
     base = mcp_panel._render_saved({"fields": 1, "blocks": 1})
 
@@ -80,7 +80,7 @@ def test_a_reply_without_a_verification_is_the_reply_it_always_was():
 
 
 def test_the_reply_says_what_a_timed_out_check_means():
-    from kiro_crew import mcp_panel
+    from aj_crew import mcp_panel
 
     out = mcp_panel._render_saved(
         {"fields": 2, "blocks": 0},
@@ -106,7 +106,7 @@ def test_the_reply_says_what_a_timed_out_check_means():
 
 
 def test_the_reply_says_the_page_ran_over_a_synthetic_copy():
-    from kiro_crew import mcp_panel
+    from aj_crew import mcp_panel
 
     passed = mcp_panel._render_saved({}, _verdict("passed"))
     failed = mcp_panel._render_saved(
@@ -128,13 +128,13 @@ def test_the_reply_says_the_page_ran_over_a_synthetic_copy():
 
 def test_dashboard_save_describes_a_page_written_as_view_html() -> None:
     """A crewmate's page is view.html only: the tool must not teach a block layout."""
-    from kiro_crew import mcp_panel
+    from aj_crew import mcp_panel
 
     (tool,) = [t for t in mcp_panel._list_tools() if t["name"] == "dashboard_save"]
     view = tool["inputSchema"]["properties"]["view"]["description"]
     assert '{"html": "..."}' in view and "data-dashboard-field" in view
     assert "using host or custom variables" in view
-    assert "window.kirocrew.subscribe" in view and "needs no text cell" in view
+    assert "window.ajcrew.subscribe" in view and "needs no text cell" in view
     model = tool["inputSchema"]["properties"]["model"]["description"]
     assert "`array`" in model and "`object`" in model
     text = (tool["description"] + view).lower()
@@ -143,7 +143,7 @@ def test_dashboard_save_describes_a_page_written_as_view_html() -> None:
 
 def test_the_crewmate_is_told_its_page_is_view_html() -> None:
     """The member protocol's page item names the same three parts the save tool takes."""
-    from kiro_crew.context_assembly import member
+    from aj_crew.context_assembly import member
 
     item = member._MEMBER_DASHBOARD_ITEM
     assert "fields, view.html and theme" in item
@@ -152,7 +152,7 @@ def test_the_crewmate_is_told_its_page_is_view_html() -> None:
 
 def test_the_tool_reply_carries_field_types_and_both_warnings() -> None:
     """The crewmate reads the MCP text, so the gateway's checks must reach it."""
-    from kiro_crew import mcp_panel
+    from aj_crew import mcp_panel
 
     reply = {
         "saved": {"fields": 2},
@@ -182,8 +182,8 @@ def test_the_tool_reply_carries_field_types_and_both_warnings() -> None:
 
 
 def test_the_types_and_fields_replies_carry_the_rendering_advice() -> None:
-    from kiro_crew import mcp_panel
-    from kiro_crew.dashboard.handlers.dashboard_page_checks import page_rendering
+    from aj_crew import mcp_panel
+    from aj_crew.dashboard.handlers.dashboard_page_checks import page_rendering
 
     advice = page_rendering()
     types_text = mcp_panel._render_types(

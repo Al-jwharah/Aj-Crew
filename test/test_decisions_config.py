@@ -14,7 +14,7 @@ import json
 
 import pytest
 
-from kiro_crew.config.sections import (
+from aj_crew.config.sections import (
     DECISION_BUCKET_MAX,
     DECISION_BUCKET_MIN,
     DECISION_HISTORY_BUDGET_DEFAULT,
@@ -233,8 +233,8 @@ class TestTheHistoryBudget:
         lives on the sealed keystone, and the gate takes `min` -- so lowering stays
         an ordinary config edit and raising past what was reviewed takes a consent.
         """
-        from kiro_crew.decisions import consent as consent_mod
-        from kiro_crew.decisions import gate
+        from aj_crew.decisions import consent as consent_mod
+        from aj_crew.decisions import gate
 
         class _Cfg:
             decisions = DecisionsConfig.from_raw({"history_budget_chars": 42})
@@ -247,8 +247,8 @@ class TestTheHistoryBudget:
 
     def test_an_agent_raising_the_config_cannot_widen_egress(self, monkeypatch):
         """The whole point of the ceiling, stated as the attack it refuses."""
-        from kiro_crew.decisions import consent as consent_mod
-        from kiro_crew.decisions import gate
+        from aj_crew.decisions import consent as consent_mod
+        from aj_crew.decisions import gate
 
         class _AgentRaised:
             decisions = DecisionsConfig.from_raw({"history_budget_chars": 100_000})
@@ -258,8 +258,8 @@ class TestTheHistoryBudget:
         assert gate.history_budget_chars(_AgentRaised()) == 0
 
     def test_an_unreadable_keystone_sends_no_prior_turns(self, monkeypatch):
-        from kiro_crew.decisions import consent as consent_mod
-        from kiro_crew.decisions import gate
+        from aj_crew.decisions import consent as consent_mod
+        from aj_crew.decisions import gate
 
         class _Cfg:
             decisions = DecisionsConfig.from_raw({"history_budget_chars": 2000})
@@ -272,8 +272,8 @@ class TestTheHistoryBudget:
 
     def test_a_zero_config_asks_for_nothing_and_reads_no_keystone(self, monkeypatch):
         """An owner who lowers the budget to 0 costs no keystone read on the turn path."""
-        from kiro_crew.decisions import consent as consent_mod
-        from kiro_crew.decisions import gate
+        from aj_crew.decisions import consent as consent_mod
+        from aj_crew.decisions import gate
 
         reads = []
         monkeypatch.setattr(
@@ -288,8 +288,8 @@ class TestTheHistoryBudget:
 
     def test_a_config_whose_reads_raise_falls_back_to_the_shipped_default(self, monkeypatch):
         """And the keystone still decides: at a ceiling of 0 the gate sends nothing."""
-        from kiro_crew.decisions import consent as consent_mod
-        from kiro_crew.decisions import gate
+        from aj_crew.decisions import consent as consent_mod
+        from aj_crew.decisions import gate
 
         class _Hostile:
             @property
@@ -305,7 +305,7 @@ class TestTheHistoryBudget:
         """It only fed a split the shipped menu ceiling made unreachable."""
         from dataclasses import fields
 
-        from kiro_crew.decisions import gate
+        from aj_crew.decisions import gate
 
         assert "state_budget_chars" not in {f.name for f in fields(DecisionsConfig)}
         assert not hasattr(gate, "state_budget_chars")
@@ -338,12 +338,12 @@ class TestProvider:
 
 class TestTheLoaderWiresTheSection:
     def test_a_full_config_load_carries_the_section(self, tmp_path, monkeypatch):
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         path = tmp_path / "config.json"
         path.write_text(json.dumps({"decisions": {"enabled": True, "bucket": 10}}), "utf-8")
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: path)
-        cfg = KiroCrewConfig.load()
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: path)
+        cfg = AjCrewConfig.load()
         assert cfg.decisions.bucket == 10
         # The switch someone wrote there is inert: the parsed section has no such
         # attribute for the gate to read. (The loader's round trip may keep the
@@ -351,6 +351,6 @@ class TestTheLoaderWiresTheSection:
         assert not hasattr(cfg.decisions, "enabled")
 
     def test_the_section_name_is_known_so_the_loader_does_not_warn_it_away(self):
-        from kiro_crew.config.resolution import _KNOWN_CONFIG_SECTIONS
+        from aj_crew.config.resolution import _KNOWN_CONFIG_SECTIONS
 
         assert "decisions" in _KNOWN_CONFIG_SECTIONS

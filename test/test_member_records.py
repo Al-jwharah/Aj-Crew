@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import member_goals, member_records, members, sandbox, sandbox_tiers, security
-from kiro_crew.config.paths import data_home
+from aj_crew import member_goals, member_records, members, sandbox, sandbox_tiers, security
+from aj_crew.config.paths import data_home
 
 _SLUG = "atlas"
 _MEMBER = "Atlas"
@@ -26,7 +26,7 @@ _MEMBER = "Atlas"
 def home(tmp_path, monkeypatch) -> Path:
     home = (tmp_path / "crew").resolve()
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.delenv(member_records._IN_SANDBOX_MARKER, raising=False)
     assert data_home().resolve() == home
     return home
@@ -324,7 +324,7 @@ def test_a_spawn_is_refused_while_unsealed_even_with_no_old_records(home, monkey
 
 def test_a_fresh_data_home_seals_on_the_first_spawn(tmp_path, monkeypatch) -> None:
     """No carve-out is needed for a new install: the move seals it at once."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "not-created"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "not-created"))
     monkeypatch.delenv(member_records._IN_SANDBOX_MARKER, raising=False)
     assert sandbox._member_records_move() is True
     assert (tmp_path / "not-created" / "member-records" / member_records.MIGRATION_MARKER).is_file()

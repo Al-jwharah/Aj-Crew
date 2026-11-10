@@ -20,8 +20,8 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from test_steering_api import _make_app, _state
 
-import kiro_crew.dashboard.handlers.steering as steering_mod
-from kiro_crew.dashboard.handlers.steering import _create_path_too_long
+import aj_crew.dashboard.handlers.steering as steering_mod
+from aj_crew.dashboard.handlers.steering import _create_path_too_long
 
 
 @pytest.fixture
@@ -30,7 +30,7 @@ def fake_home(tmp_path, monkeypatch):
     home = tmp_path / "home"
     home.mkdir()
     monkeypatch.setenv("HOME", str(home))
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
     monkeypatch.setattr(Path, "home", lambda: home)
     return home
 

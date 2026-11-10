@@ -7,10 +7,10 @@ import asyncio
 import pytest
 
 from conftest import host_abs
-from kiro_crew.messaging.display_safety import canonicalize_display
-from kiro_crew.messaging.transport import TransportCapabilities
-from kiro_crew.whatsapp.group_gate import SILENCE_SENTINEL
-from kiro_crew.whatsapp.turn_renderer import WhatsAppRenderer
+from aj_crew.messaging.display_safety import canonicalize_display
+from aj_crew.messaging.transport import TransportCapabilities
+from aj_crew.whatsapp.group_gate import SILENCE_SENTINEL
+from aj_crew.whatsapp.turn_renderer import WhatsAppRenderer
 
 CAPS = TransportCapabilities(max_message_chars=4096, max_buttons=0)
 
@@ -342,9 +342,9 @@ class TestDisplaySafety:
         """The caption is the reference's alt text, so it is model-authored and
         WhatsApp renders markup in it exactly as in a body.
         """
-        from kiro_crew.messaging.outbound_files import OutboundFile
-        from kiro_crew.whatsapp import turn_renderer as module
-        from kiro_crew.whatsapp.files import UploadPlan
+        from aj_crew.messaging.outbound_files import OutboundFile
+        from aj_crew.whatsapp import turn_renderer as module
+        from aj_crew.whatsapp.files import UploadPlan
 
         async def fake_plan(text, *, within_root, scratch_root=""):
             return UploadPlan(
@@ -368,9 +368,9 @@ class TestDisplaySafety:
 
     async def test_a_failed_image_upload_is_named_with_a_reason(self, monkeypatch):
         """The "Not sent" line must say why, not end on a bare colon."""
-        from kiro_crew.messaging.outbound_files import OutboundFile
-        from kiro_crew.whatsapp import turn_renderer as module
-        from kiro_crew.whatsapp.files import UploadPlan
+        from aj_crew.messaging.outbound_files import OutboundFile
+        from aj_crew.whatsapp import turn_renderer as module
+        from aj_crew.whatsapp.files import UploadPlan
 
         async def fake_plan(text, *, within_root, scratch_root=""):
             return UploadPlan(
@@ -471,7 +471,7 @@ class TestApprovalTimeoutIsSpoken:
     """
 
     async def test_a_timeout_resolves_the_prompt_in_place(self):
-        from kiro_crew.messaging.approval import TIMEOUT_NOTICE
+        from aj_crew.messaging.approval import TIMEOUT_NOTICE
 
         transport, client = FakeTransport(), FakeClient()
         r = WhatsAppRenderer(
@@ -482,7 +482,7 @@ class TestApprovalTimeoutIsSpoken:
         assert client.edits[-1] == ("ID1", TIMEOUT_NOTICE)
 
     async def test_a_timeout_posts_the_notice_when_the_edit_is_refused(self):
-        from kiro_crew.messaging.approval import TIMEOUT_NOTICE
+        from aj_crew.messaging.approval import TIMEOUT_NOTICE
 
         transport, client = FakeTransport(), FakeClient(edits_ok=False)
         r = WhatsAppRenderer(
@@ -496,7 +496,7 @@ class TestApprovalTimeoutIsSpoken:
         """The whole path, not just the callback: the renderer registers the hook
         and the shared wait invokes it when the window closes.
         """
-        from kiro_crew.messaging.approval import (
+        from aj_crew.messaging.approval import (
             DENY,
             TIMEOUT_NOTICE,
             claim_approval,
@@ -542,7 +542,7 @@ class TestNothingIsLostOrLooped:
         later flush returned at the guard and `on_done`'s pending slice came out
         empty: the rest of the reply vanished with no error anywhere.
         """
-        from kiro_crew.whatsapp import client as wa_client
+        from aj_crew.whatsapp import client as wa_client
 
         r, transport, client = make()
         await r.on_turn_start()
@@ -671,7 +671,7 @@ class TestNothingIsLostOrLooped:
         reactions: letting one reach the turn path closes the loop
         react -> from_me echo -> note -> turn -> react.
         """
-        from kiro_crew.whatsapp.media import KIND_REACTION, MediaDescription, unsupported_note
+        from aj_crew.whatsapp.media import KIND_REACTION, MediaDescription, unsupported_note
 
         note = unsupported_note(MediaDescription(kind=KIND_REACTION))
         assert note == "", "a reaction must yield no note, so it starts no turn"

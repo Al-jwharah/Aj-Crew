@@ -8,7 +8,7 @@
 # the exit status lands in restart-status, both under the crew logs dir, so
 # the calling agent can verify the outcome on its next turn (see SKILL.md
 # "Verify the outcome").
-LOG_DIR="${KIROCREW_HOME:-$HOME/.kiro/crew}/logs"
+LOG_DIR="${AJCREW_HOME:-$HOME/.kiro/crew}/logs"
 # Attempt-specific when the scheduler passes one (SKILL.md step 3 generates a
 # per-attempt path), so overlapping restart attempts cannot overwrite each
 # other's verdict; the shared default serves a lone attempt.
@@ -19,13 +19,13 @@ LOG_DIR="${KIROCREW_HOME:-$HOME/.kiro/crew}/logs"
 # supplied path would let it delete and overwrite arbitrary user files; a
 # non-conforming path falls back to the shared default instead.
 STATUS_FILE="$LOG_DIR/restart-status"
-if [ -n "${KIROCREW_RESTART_STATUS_FILE:-}" ]; then
-  case "$KIROCREW_RESTART_STATUS_FILE" in
+if [ -n "${AJCREW_RESTART_STATUS_FILE:-}" ]; then
+  case "$AJCREW_RESTART_STATUS_FILE" in
     "$LOG_DIR"/restart-status.*)
-      suffix="${KIROCREW_RESTART_STATUS_FILE#"$LOG_DIR"/restart-status.}"
+      suffix="${AJCREW_RESTART_STATUS_FILE#"$LOG_DIR"/restart-status.}"
       case "$suffix" in
         */* | *..*) : ;;
-        *) STATUS_FILE="$KIROCREW_RESTART_STATUS_FILE" ;;
+        *) STATUS_FILE="$AJCREW_RESTART_STATUS_FILE" ;;
       esac
       ;;
   esac
@@ -56,13 +56,13 @@ set +C
 # most recent attempt. A stale success left in place would be read as this
 # attempt's verdict.
 rm -f -- "$STATUS_FILE"
-sleep "${KIROCREW_RESTART_DELAY:-10}"
-# kirocrew restart prints a dashboard login link only to a terminal, and this
-# pipe is not one, so the log gets the `kirocrew token` hint instead. The
+sleep "${AJCREW_RESTART_DELAY:-10}"
+# ajcrew restart prints a dashboard login link only to a terminal, and this
+# pipe is not one, so the log gets the `ajcrew token` hint instead. The
 # skill tells the resumed agent to quote this log into the conversation, so
 # the sed redacts any ?token= value as a guard. PIPESTATUS keeps the
 # restart's own exit status; plain $? would report sed's.
-kirocrew restart 2>&1 | sed -E 's/([?&]token=)[^[:space:]]+/\1REDACTED/g' >&3
+ajcrew restart 2>&1 | sed -E 's/([?&]token=)[^[:space:]]+/\1REDACTED/g' >&3
 status="${PIPESTATUS[0]}"
 # Same open-once discipline as the log: the exclusive open is the write
 # handle. A refused open (something re-planted at the path) drops the verdict.

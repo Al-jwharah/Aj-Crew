@@ -22,15 +22,15 @@ from dev_fleet_app_helpers import _sweep_staged_sync_tempdirs  # noqa: F401 - fi
 from dev_fleet_app_helpers import _venv_maps_to_the_synced_checkout  # noqa: F401 - fixture
 from dev_fleet_app_helpers import _POSIX_ONLY, _reap_cleanup_paths, _sync_step_argvs
 
-import kiro_crew.apps.builtins.dev_fleet.server as mod
-from kiro_crew import platform_compat
-from kiro_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
-from kiro_crew.apps.builtins.dev_fleet import http_api as http_api_mod
-from kiro_crew.apps.builtins.dev_fleet import live as live_mod
-from kiro_crew.apps.builtins.dev_fleet import repository as repository_mod
-from kiro_crew.apps.builtins.dev_fleet import runtime as runtime_mod
-from kiro_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
-from kiro_crew.testing.wait import async_wait_until
+import aj_crew.apps.builtins.dev_fleet.server as mod
+from aj_crew import platform_compat
+from aj_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
+from aj_crew.apps.builtins.dev_fleet import http_api as http_api_mod
+from aj_crew.apps.builtins.dev_fleet import live as live_mod
+from aj_crew.apps.builtins.dev_fleet import repository as repository_mod
+from aj_crew.apps.builtins.dev_fleet import runtime as runtime_mod
+from aj_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
+from aj_crew.testing.wait import async_wait_until
 
 # =============================================================================
 # Task 2b: fleet gateway_service_active
@@ -283,7 +283,7 @@ async def test_sync_stages_dist_on_a_stock_checkout(monkeypatch):
     """The staging step is part of the sync on a stock checkout.
 
     `npm run build` writes website/dist while the dashboard serves
-    src/kiro_crew/static/dist; without this step Pull+Build reports success and
+    src/aj_crew/static/dist; without this step Pull+Build reports success and
     the gateway keeps serving the previous bundle.
     """
     monkeypatch.setattr(worktree_ops_mod.frontend, "edition_configured", lambda: False)
@@ -314,7 +314,7 @@ async def test_sync_never_stages_dist_on_an_edition_checkout(monkeypatch):
     """An edition checkout must NOT have its dashboard rebuilt or staged over.
 
     The sync build runs under _build_env(), whose allowlist drops
-    KIROCREW_EDITION_DIR / KIROCREW_ALLOW_EDITION, so on an edition composition
+    AJCREW_EDITION_DIR / AJCREW_ALLOW_EDITION, so on an edition composition
     root `npm run build` compiles the STOCK SPA. Staging that would silently
     replace the edition dashboard with upstream's; leaving the shipped bundle in
     place is what frontend's own edition guards already do.
@@ -514,7 +514,7 @@ async def test_upstream_remote_rejects_option_injection(monkeypatch):
     async def fake_run(cmd, **kw):
         if "config" in cmd:
             return 0, "--exec=touch /tmp/pwned #", ""
-        return 0, "origin\nkirocrew\n", ""
+        return 0, "origin\najcrew\n", ""
 
     monkeypatch.setattr(repository_mod, "_UPSTREAM_REMOTE", None)
     monkeypatch.setattr(runtime_mod, "_run_cmd", fake_run)
@@ -522,17 +522,17 @@ async def test_upstream_remote_rejects_option_injection(monkeypatch):
 
     async def fake_run_valid(cmd, **kw):
         if "config" in cmd:
-            return 0, "kirocrew", ""
-        return 0, "origin\nkirocrew\n", ""
+            return 0, "ajcrew", ""
+        return 0, "origin\najcrew\n", ""
 
     monkeypatch.setattr(repository_mod, "_UPSTREAM_REMOTE", None)
     monkeypatch.setattr(runtime_mod, "_run_cmd", fake_run_valid)
-    assert await mod._upstream_remote() == "kirocrew"
+    assert await mod._upstream_remote() == "ajcrew"
 
     async def fake_run_unlisted(cmd, **kw):
         if "config" in cmd:
             return 0, "evil", ""
-        return 0, "origin\nkirocrew\n", ""
+        return 0, "origin\najcrew\n", ""
 
     monkeypatch.setattr(repository_mod, "_UPSTREAM_REMOTE", None)
     monkeypatch.setattr(runtime_mod, "_run_cmd", fake_run_unlisted)
@@ -541,12 +541,12 @@ async def test_upstream_remote_rejects_option_injection(monkeypatch):
 
 
 def test_find_cli_is_module_invocation_only(nonbundled_python_without_user_site):
-    """No filesystem resolution: a planted `kirocrew` shim must never become
-    the pod CLI. Always our interpreter + the RUNNABLE ``kiro_crew`` package
-    entry (its __main__), never ``kiro_crew.cli`` (no __main__ guard -> #220)."""
+    """No filesystem resolution: a planted `ajcrew` shim must never become
+    the pod CLI. Always our interpreter + the RUNNABLE ``aj_crew`` package
+    entry (its __main__), never ``aj_crew.cli`` (no __main__ guard -> #220)."""
     import sys as _sys
 
-    assert mod._find_cli() == [_sys.executable, "-s", "-P", "-m", "kiro_crew"]
+    assert mod._find_cli() == [_sys.executable, "-s", "-P", "-m", "aj_crew"]
 
     import subprocess as _sp
 
@@ -646,7 +646,7 @@ async def test_hmac_no_secret_always_denies(monkeypatch):
 
     monkeypatch.setattr(http_api_mod, "_load_app_secret", lambda: "")
     monkeypatch.setattr(runtime_mod, "_sel", lambda: FakeSel())
-    monkeypatch.setenv("KIROCREW_DEVFLEET_INSECURE", "1")
+    monkeypatch.setenv("AJCREW_DEVFLEET_INSECURE", "1")
     app = mod.create_app()
     async with TestClient(TestServer(app)) as client:
         resp = await client.get("/api/fleet")
@@ -669,9 +669,9 @@ async def test_hmac_invalid_signature_denial_is_audited(monkeypatch):
     app = mod.create_app()
     async with TestClient(TestServer(app)) as client:
         r1 = await client.get("/api/fleet")  # missing header
-        r2 = await client.get("/api/fleet", headers={"X-KiroCrew-Proxy": "junk"})
+        r2 = await client.get("/api/fleet", headers={"X-AjCrew-Proxy": "junk"})
         ts = str(int(time.time()))
-        r3 = await client.get("/api/fleet", headers={"X-KiroCrew-Proxy": f"{ts}:deadbeef"})
+        r3 = await client.get("/api/fleet", headers={"X-AjCrew-Proxy": f"{ts}:deadbeef"})
         assert (r1.status, r2.status, r3.status) == (401, 401, 401)
     assert len([e for e in events if e.get("outcome") == "denied"]) == 3
 
@@ -738,7 +738,7 @@ async def test_prunable_merged_unverified_when_oid_lookup_fails():
 def test_strict_sandbox_hides_gh_config():
     """.config/gh (the gh helper's token store) must be hidden from the
     strict tier where worktree-controlled code executes."""
-    import kiro_crew.sandbox as sandbox_mod
+    import aj_crew.sandbox as sandbox_mod
 
     assert ".config/gh" in sandbox_mod._STRICT_DIRS
     assert ".config/gh" not in sandbox_mod._STANDARD_DIRS
@@ -747,7 +747,7 @@ def test_strict_sandbox_hides_gh_config():
 @_POSIX_ONLY
 def test_build_preexec_raises_nofile_ceiling(monkeypatch):
     """Build-class spawns get a 65536 NOFILE ceiling (default 1024 EMFILEs vite)."""
-    import kiro_crew.sandbox as sandbox_mod
+    import aj_crew.sandbox as sandbox_mod
 
     monkeypatch.setattr(sandbox_mod, "_BUILD_RESOURCE_PREEXEC", sandbox_mod._UNSET)
     captured: dict = {}
@@ -756,7 +756,7 @@ def test_build_preexec_raises_nofile_ceiling(monkeypatch):
         captured.update((cfg or {}).get("resource_limits") or {})
         return lambda: None
 
-    monkeypatch.setattr("kiro_crew.security.apply_resource_limits", fake_apply)
+    monkeypatch.setattr("aj_crew.security.apply_resource_limits", fake_apply)
     fn = sandbox_mod.build_resource_limit_preexec()
     assert fn is not None
     assert captured["max_open_files"] >= 65536
@@ -766,11 +766,11 @@ def test_build_preexec_raises_nofile_ceiling(monkeypatch):
 def test_build_preexec_tolerates_malformed_config(monkeypatch):
     """A junk operator value ("lots") must not raise — the spawn falls back
     to the ceiling instead of leaving Dev Fleet unable to start."""
-    import kiro_crew.sandbox as sandbox_mod
+    import aj_crew.sandbox as sandbox_mod
 
     monkeypatch.setattr(sandbox_mod, "_BUILD_RESOURCE_PREEXEC", sandbox_mod._UNSET)
     monkeypatch.setattr(
-        "kiro_crew.config.loader._raw_config",
+        "aj_crew.config.loader._raw_config",
         lambda: {"resource_limits": {"max_open_files": "lots"}},
     )
     captured: dict = {}
@@ -779,21 +779,21 @@ def test_build_preexec_tolerates_malformed_config(monkeypatch):
         captured.update((cfg or {}).get("resource_limits") or {})
         return lambda: None
 
-    monkeypatch.setattr("kiro_crew.security.apply_resource_limits", fake_apply)
+    monkeypatch.setattr("aj_crew.security.apply_resource_limits", fake_apply)
     assert sandbox_mod.build_resource_limit_preexec() is not None
     assert captured["max_open_files"] == sandbox_mod._BUILD_NOFILE_CEILING
 
 
 def test_build_pending_dist_path_is_package_static_dist():
-    """The dist probe must resolve to kiro_crew/static/dist — the parent-chain
+    """The dist probe must resolve to aj_crew/static/dist — the parent-chain
     silently broke when this module moved from dashboard/handlers/."""
     import pathlib
 
     root = pathlib.Path(mod.__file__).resolve().parents[3]
-    assert root.name == "kiro_crew"
+    assert root.name == "aj_crew"
     assert mod._build_pending() in (True, False)
     probed = root / "static" / "dist"
-    assert probed.parts[-3:] == ("kiro_crew", "static", "dist")
+    assert probed.parts[-3:] == ("aj_crew", "static", "dist")
 
 
 @pytest.mark.asyncio
@@ -891,21 +891,21 @@ async def test_sync_refuses_when_target_repo_has_no_venv(monkeypatch, tmp_path):
 
 def test_gateway_unit_resolves_pod_instance(monkeypatch, tmp_path):
     """Inside a pod HOME the restart target is the pod unit, never the live one."""
-    pod_home = tmp_path / ".kirocrew-pods" / "kirocrew-wt-feature"
+    pod_home = tmp_path / ".ajcrew-pods" / "ajcrew-wt-feature"
     pod_home.mkdir(parents=True)
-    monkeypatch.setenv("KIROCREW_HOME", str(pod_home))
-    from kiro_crew.config import loader as cfg_loader
+    monkeypatch.setenv("AJCREW_HOME", str(pod_home))
+    from aj_crew.config import loader as cfg_loader
 
     if hasattr(cfg_loader, "_config_dir_cache"):
         monkeypatch.setattr(cfg_loader, "_config_dir_cache", None, raising=False)
-    assert mod._gateway_unit_name() == "kirocrew-pod@kirocrew-wt-feature.service"
+    assert mod._gateway_unit_name() == "ajcrew-pod@ajcrew-wt-feature.service"
 
 
 def test_gateway_unit_resolves_live_outside_pods(monkeypatch, tmp_path):
-    home = tmp_path / ".kirocrew"
+    home = tmp_path / ".ajcrew"
     home.mkdir(parents=True)
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
-    assert mod._gateway_unit_name() == "kirocrew-gateway.service"
+    monkeypatch.setenv("AJCREW_HOME", str(home))
+    assert mod._gateway_unit_name() == "ajcrew-gateway.service"
 
 
 @pytest.mark.asyncio

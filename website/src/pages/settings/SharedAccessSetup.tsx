@@ -12,7 +12,7 @@ import { SETUP_PATH_ORDER, setupPathStates } from '../../api/sharedCrewUi'
 import { Badge } from '../../components/ui'
 import { i18nT } from '../../i18n/t'
 
-const GUIDE_BASE = 'https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/'
+const GUIDE_BASE = 'https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/guides/'
 
 /** Existing guides only; a path with no guide shows none. */
 const GUIDES: Partial<Record<SetupPath, string>> = {

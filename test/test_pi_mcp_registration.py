@@ -11,9 +11,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.harness.pi import PiLaunch
-from kiro_crew.acp.pi_mcp_registration import (
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.harness.pi import PiLaunch
+from aj_crew.acp.pi_mcp_registration import (
     HANDOFF_REASONS,
     REGISTRATION_ENV,
     REGISTRATION_MARKER,
@@ -23,13 +23,13 @@ from kiro_crew.acp.pi_mcp_registration import (
     registration_path,
     verify_registration,
 )
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_PI
-from kiro_crew.agent_sdk.mcp_problems import session_mcp_problems
-from kiro_crew.subagent import SubagentInfo
-from kiro_crew.subagent_manager.run import RunEventCoordinator
+from aj_crew.agent_sdk.backends import ACP_BACKEND_PI
+from aj_crew.agent_sdk.mcp_problems import session_mcp_problems
+from aj_crew.subagent import SubagentInfo
+from aj_crew.subagent_manager.run import RunEventCoordinator
 
 NONCE = "0123456789abcdef" * 2
-HANDED_OFF = ("kirocrew-core", "calendar")
+HANDED_OFF = ("ajcrew-core", "calendar")
 
 
 @pytest.fixture
@@ -71,7 +71,7 @@ def unconfirmed(client, caplog):
     """The cause the unconfirmed warning named, or "": it is recorded nowhere else."""
     for record in caplog.records:
         message = record.getMessage()
-        if record.name == "kiro_crew.acp.pi_mcp_registration" and "unconfirmed (" in message:
+        if record.name == "aj_crew.acp.pi_mcp_registration" and "unconfirmed (" in message:
             return message.rsplit("(", 1)[1].rstrip(")")
     return ""
 
@@ -87,7 +87,7 @@ def provider_for(client):
 
 @pytest.mark.asyncio
 async def test_registration_uses_the_actual_childs_receipt_without_a_prompt(client, caplog):
-    path = write_receipt(client, ["calendar", "kirocrew-core"])
+    path = write_receipt(client, ["calendar", "ajcrew-core"])
     client._send_request = AsyncMock(side_effect=AssertionError("must not submit a prompt"))
     await verify_registration(client)
     client._send_request.assert_not_awaited()
@@ -102,7 +102,7 @@ async def test_registration_uses_the_actual_childs_receipt_without_a_prompt(clie
 @pytest.mark.asyncio
 @pytest.mark.parametrize("cause", sorted(UNREGISTERED_REASONS))
 async def test_a_partly_registered_handoff_names_the_extensions_cause(client, cause, caplog):
-    write_receipt(client, ["kirocrew-core"], {"calendar": cause})
+    write_receipt(client, ["ajcrew-core"], {"calendar": cause})
     await verify_registration(client)
     assert failed_reasons(client) == {"calendar": UNREGISTERED_REASONS[cause]}
     assert unconfirmed(client, caplog) == ""
@@ -251,14 +251,14 @@ async def test_no_scratch_window_names_that_cause(client, caplog):
 
 @pytest.mark.asyncio
 async def test_a_confirmed_refusal_reaches_the_subagent_notice(client):
-    write_receipt(client, ["kirocrew-core"], {"calendar": "mcp_json"})
+    write_receipt(client, ["ajcrew-core"], {"calendar": "mcp_json"})
     await verify_registration(client)
     coordinator = RunEventCoordinator(MagicMock())
     info = SubagentInfo(id="sub-1", task="call the tool", agent="researcher")
     summary = coordinator._warn_unusable_mcp_servers(info, provider_for(client))
     assert summary == "failed to start: calendar"
     notice = coordinator._spawn_mcp_notice(summary)
-    assert "calendar" in notice and "kirocrew-core" not in notice
+    assert "calendar" in notice and "ajcrew-core" not in notice
     assert "calendar" in session_mcp_problems(provider_for(client))
 
 
@@ -282,7 +282,7 @@ async def test_load_to_new_retry_clears_the_previous_childs_receipt(client, monk
     client._pi_mcp_handoff = ("handoff.json", b"{}")
     published = []
     monkeypatch.setattr(
-        "kiro_crew.acp.harness.pi.publish_pi_mcp_handoff",
+        "aj_crew.acp.harness.pi.publish_pi_mcp_handoff",
         lambda *args: published.append(not path.exists()),
     )
     await client._republish_pi_mcp_handoff()
@@ -296,7 +296,7 @@ def test_the_launch_uses_allocated_scratch_before_scratch_env_is_injected(client
     launch._launcher = "verified-launcher"
     launch._nonce = NONCE
     launch._session = client
-    env = {"KIROCREW_SCRATCH": "inherited-parent-window", REGISTRATION_ENV: "stale"}
+    env = {"AJCREW_SCRATCH": "inherited-parent-window", REGISTRATION_ENV: "stale"}
     launch.apply_spawn_env(env)
     assert env[REGISTRATION_ENV] == str(registration_path(client.work_scratch_dir, NONCE))
 

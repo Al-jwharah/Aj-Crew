@@ -18,8 +18,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from history_consolidation_retry_helpers import KEY, _make_consolidator, _seed_log
 
-from kiro_crew import history as history_mod
-from kiro_crew import history_consolidation as consolidation_facade
+from aj_crew import history as history_mod
+from aj_crew import history_consolidation as consolidation_facade
 
 THRESHOLD = history_mod._CONSOLIDATION_THRESHOLD
 

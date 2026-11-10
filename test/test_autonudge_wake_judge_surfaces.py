@@ -15,14 +15,14 @@ from typing import Any
 import pytest
 from autonudge_wake_judge_helpers import _restore_judge_process_globals  # noqa: F401 - fixture
 
-from kiro_crew import autonudge_judge as judge
-from kiro_crew.autonudge import AutoNudgeService, infer_monitor
-from kiro_crew.irq import Outcome
+from aj_crew import autonudge_judge as judge
+from aj_crew.autonudge import AutoNudgeService, infer_monitor
+from aj_crew.irq import Outcome
 
 
 def _gateway_source() -> str:
     """The Slack gateway facade's text followed by its composed owners' text."""
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     facade = pathlib.Path(gateway.__file__)
     return "\n".join(
@@ -40,7 +40,7 @@ class TestUpdatePathCarriesTheBrief:
     """
 
     def test_the_tool_copies_a_validated_brief_into_the_patch(self) -> None:
-        from kiro_crew.mcp_tools.control_parts import monitor
+        from aj_crew.mcp_tools.control_parts import monitor
 
         assert 'patch["judge"] = validate_judge_spec(args["judge"])' in inspect.getsource(monitor)
 
@@ -142,16 +142,16 @@ class TestTheReaderOnlyAnswersForItsOwnSubject:
 
     def test_an_empty_object_survives_as_a_clear(self) -> None:
         """``{}`` is falsy, so an ``if args.get(...)`` guard would silently eat it."""
-        from kiro_crew.mcp_tools.control_parts import monitor
+        from aj_crew.mcp_tools.control_parts import monitor
 
         source = inspect.getsource(monitor)
         guard = source[: source.index('patch["judge"] = validate_judge_spec')].rsplit("if ", 1)[1]
         assert "is not None" in guard, "a truthiness guard would drop the clear"
 
     def test_every_hop_between_the_tool_and_the_loop_names_it(self) -> None:
-        from kiro_crew import autonudge_authz
-        from kiro_crew.autonudge import AutoNudgeService
-        from kiro_crew.dashboard import session_directive_apply_monitor
+        from aj_crew import autonudge_authz
+        from aj_crew.autonudge import AutoNudgeService
+        from aj_crew.dashboard import session_directive_apply_monitor
 
         applier = inspect.getsource(session_directive_apply_monitor)
         assert 'judge=patch.get("judge")' in applier, "this applier names every kwarg"

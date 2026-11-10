@@ -23,4 +23,4 @@ export function activate(ctx) {
   }
 }
 
-globalThis.kirocrew?.register(activate)
+globalThis.ajcrew?.register(activate)

@@ -28,8 +28,8 @@ name: Connections L0 Static Metadata Probe
 #   L0_VERIFICATION_WARN_AGE_DAYS. This job cannot fix it: refreshing needs live
 #   network AND a commit, and this job has neither `contents: write` nor any
 #   business pushing to a protected branch. On a networked machine:
-#       python -m kiro_crew.connections.l0_probe --record
-#       git add src/kiro_crew/connections/registry.json && commit
+#       python -m aj_crew.connections.l0_probe --record
+#       git add src/aj_crew/connections/registry.json && commit
 #   The PR suite only WARNS until L0_VERIFICATION_MAX_AGE_DAYS, and then only
 #   hard-fails for providers actually visible to users -- so this red is the
 #   early signal, and ignoring it eventually blocks PRs.
@@ -89,7 +89,7 @@ jobs:
     # Use the larger-runner label upstream; forks cannot reach the org group.
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     # 10 min for the probe, plus the 20 min the gh wrapper may spend in total
     # waiting out a spent API rate limit.
     timeout-minutes: 30
@@ -168,7 +168,7 @@ jobs:
           if [ "$PRIOR_RUN" = "true" ]; then
             expected="--prior-run-expected"
           fi
-          python -m kiro_crew.connections.l0_probe \
+          python -m aj_crew.connections.l0_probe \
             --report connections-l0-report.json \
             --state l0-state.json \
             --drift-threshold 3 \

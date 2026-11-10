@@ -253,7 +253,7 @@ describe('a band another notice stands in for', () => {
 
     // The page asks for a whole read and it fails: the refetch band is up.
     await act(async () => {
-      const event = new MessageEvent('message', { data: { type: 'kirocrew-dashboard:refetch', held: 1 } })
+      const event = new MessageEvent('message', { data: { type: 'ajcrew-dashboard:refetch', held: 1 } })
       Object.defineProperty(event, 'source', { value: frame.contentWindow })
       window.dispatchEvent(event)
     })

@@ -13,10 +13,10 @@ import pytest
 from test_pod_windows_run import contained
 from test_pod_windows_run import model as model
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.pod import _windows_run as runs
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod import windows as win
+from aj_crew import platform_compat as pc
+from aj_crew.pod import _windows_run as runs
+from aj_crew.pod import runtime as rt
+from aj_crew.pod import windows as win
 
 __all__ = ["model"]
 

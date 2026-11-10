@@ -1,6 +1,6 @@
 /**
  * Configuration endpoints: the kiro agent config, the default agent, the
- * kirocrew config read/save/patch, the ACP backend probes behind
+ * ajcrew config read/save/patch, the ACP backend probes behind
  * `agent.acp_backend`, and the dashboard settings blob.
  */
 
@@ -33,7 +33,7 @@ export interface CrewmateHarnessReadout {
  * with what this build can serve and what this machine actually has.
  *
  * `selectable` is a BUILD/edition-and-policy fact (the same set
- * `PATCH /api/config/kirocrew` validates against); `installed` is a machine fact.
+ * `PATCH /api/config/ajcrew` validates against); `installed` is a machine fact.
  * They are independent: a build can serve a backend whose binary is absent, and a
  * machine can hold a backend this build refuses to run.
  *
@@ -166,7 +166,7 @@ export interface AcpBackendProbe {
    * switching costs a feature, adds a risk, or makes one of the reader's own agent-file
    * settings ineffective. Which ROUTE Crew takes to the harness -- native, mirror,
    * external -- is deliberately absent: it is true, and it costs the reader nothing.
-   * `kirocrew doctor` states it for the reader diagnosing a route.
+   * `ajcrew doctor` states it for the reader diagnosing a route.
    *
    * `per_tool_deny` is `PerToolDeny`'s value (`settings-file` / `per-call` /
    * `whole-server`), `''` where the declaration carries none, and
@@ -212,9 +212,9 @@ export function createConfigEndpoints({ post, put, j, jfetch: fetch }: ClientTra
     /** Pin which file a contested agent name runs (`agent.spec_pins`). Owner-only. */
     setAgentSpecPin: (agent: string, file: string) =>
       put('/api/agent-spec-pins/' + encodeURIComponent(agent), { file }).then(j) as Promise<{ ok: boolean; agent: string; file: string }>,
-    kirocrewConfig: () => fetch('/api/config/kirocrew').then(j),
-    saveKirocrewConfig: (agent: object) => put('/api/config/kirocrew', { agent }).then(j) as Promise<{ ok?: boolean; restart_required?: boolean; error?: string }>,
-    patchConfig: (path: string, value: unknown, opts?: { ifUnset?: boolean }) => fetch('/api/config/kirocrew', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path, value, ...(opts?.ifUnset ? { if_unset: true } : {}) }) }).then(j),
+    ajcrewConfig: () => fetch('/api/config/ajcrew').then(j),
+    saveAjcrewConfig: (agent: object) => put('/api/config/ajcrew', { agent }).then(j) as Promise<{ ok?: boolean; restart_required?: boolean; error?: string }>,
+    patchConfig: (path: string, value: unknown, opts?: { ifUnset?: boolean }) => fetch('/api/config/ajcrew', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path, value, ...(opts?.ifUnset ? { if_unset: true } : {}) }) }).then(j),
     // Owner-only, and absent (404) on an older gateway. Both of those reach the
     // caller as a rejection, which is the intended signal: "no probe information",
     // to be treated as fail-open rather than as a verdict.

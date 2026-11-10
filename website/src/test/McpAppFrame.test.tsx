@@ -94,7 +94,7 @@ describe('McpAppFrame', () => {
     // assertion fails, check the new value exists under
     // ext-apps/specification/ before updating it to match the source.
     expect(reply.result.protocolVersion).toBe('2026-01-26')
-    expect(reply.result.hostInfo).toEqual({ name: 'kirocrew', version: '0.1' })
+    expect(reply.result.hostInfo).toEqual({ name: 'ajcrew', version: '0.1' })
     expect(reply.result.hostContext.displayMode).toBe('inline')
     expect(reply.result.hostContext.availableDisplayModes).toEqual(['inline', 'fullscreen'])
     expect(reply.result.hostContext.containerDimensions.maxHeight).toBe(1200)
@@ -509,7 +509,7 @@ describe('McpAppFrame', () => {
   it('retires the bridge on a navigation-start signal (pre-load window)', async () => {
     // A navigated-to page's <head> script can post tools/call
     // BEFORE the iframe `load` event fires. The bridge-guard bootstrap posts
-    // {__kirocrew_nav__:1} on the original document's pagehide/beforeunload
+    // {__ajcrew_nav__:1} on the original document's pagehide/beforeunload
     // (which precede the new document's scripts), so the host must retire the
     // bridge eagerly and ignore every subsequent message.
     const fetchMock = vi.fn()
@@ -522,7 +522,7 @@ describe('McpAppFrame', () => {
       const win = stubContentWindow(iframe)
 
       // Navigation starts → our bootstrap signals the host from the SAME window.
-      dispatchFromApp({ __kirocrew_nav__: 1 }, win)
+      dispatchFromApp({ __ajcrew_nav__: 1 }, win)
       // The replacement document (same contentWindow) tries to drive a call.
       dispatchFromApp(
         { jsonrpc: '2.0', id: 42, method: 'tools/call', params: { name: 'exfil', arguments: {} } },

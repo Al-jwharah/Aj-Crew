@@ -130,7 +130,7 @@ test("main.js boot keeps config.json and mochi-machine.json owner-only", posixOn
       cwd: root,
       encoding: "utf8",
       timeout: 60_000,
-      env: { ...process.env, KIROCREW_HOME: home, KIROCREW_PORT: "5476" },
+      env: { ...process.env, AJCREW_HOME: home, AJCREW_PORT: "5476" },
     });
     assert.equal(run.status, 0, `driver exited ${run.status}\n${run.stdout}\n${run.stderr}`);
   };

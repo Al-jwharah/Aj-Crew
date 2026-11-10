@@ -32,7 +32,7 @@ import { test, expect, Page, APIRequestContext } from '@playwright/test'
  * headroom only — every historical break was ≥1px, most were 2px).
  *
  * SERIAL-RUN DEPENDENCY: session-tags-folders.spec.ts wipes ALL folders (and,
- * under KIROCREW_E2E_EPHEMERAL=1, all slots) in its beforeEach. The E2E gate
+ * under AJCREW_E2E_EPHEMERAL=1, all slots) in its beforeEach. The E2E gate
  * (test/test_playwright_e2e.py) runs with CI=1 → workers: 1, so the files
  * never interleave there; an ad-hoc fully-parallel run against a shared
  * gateway can race this spec's fixtures against those wipes.

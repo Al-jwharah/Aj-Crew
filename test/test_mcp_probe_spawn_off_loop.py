@@ -14,8 +14,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import mcp_discovery, platform_compat
-from kiro_crew.mcp_discovery import McpServerInfo, probe_server
+from aj_crew import mcp_discovery, platform_compat
+from aj_crew.mcp_discovery import McpServerInfo, probe_server
 
 
 class _Stdin:

@@ -1,4 +1,4 @@
-"""Coverage tests for ``kiro_crew.deploy.handlers`` error/refusal branches.
+"""Coverage tests for ``aj_crew.deploy.handlers`` error/refusal branches.
 
 Focus is the paths the existing deploy suites never reach: the redaction
 helpers, ``_scan_tree`` fail-closed findings, ``_stage_tree_safe`` rejections,
@@ -20,9 +20,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.deploy import engine, handlers
-from kiro_crew.deploy import profiles as profiles_mod
-from kiro_crew.sandbox import SandboxUnavailableError
+from aj_crew.deploy import engine, handlers
+from aj_crew.deploy import profiles as profiles_mod
+from aj_crew.sandbox import SandboxUnavailableError
 
 _POSIX_ONLY = pytest.mark.skipif(
     sys.platform == "win32",
@@ -49,11 +49,11 @@ def _force_posix_shell(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def _isolate_config(tmp_path: Path, monkeypatch):
-    """Redirect every deploy-module config_dir() and KIROCREW_HOME to tmp_path."""
-    import kiro_crew.deploy as _deploy_pkg
-    from kiro_crew.deploy import pending as _pending_mod
+    """Redirect every deploy-module config_dir() and AJCREW_HOME to tmp_path."""
+    import aj_crew.deploy as _deploy_pkg
+    from aj_crew.deploy import pending as _pending_mod
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setattr(handlers, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(profiles_mod, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(_pending_mod, "config_dir", lambda: tmp_path)
@@ -199,14 +199,14 @@ class TestHelpers:
 
 class TestAllowedLocalRoots:
     def test_config_load_failure_degrades_to_fallback(self, monkeypatch, tmp_path: Path):
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         class _Boom:
             @staticmethod
             def load():
                 raise RuntimeError("config unreadable")
 
-        monkeypatch.setattr(loader_mod, "KiroCrewConfig", _Boom)
+        monkeypatch.setattr(loader_mod, "AjCrewConfig", _Boom)
         (tmp_path / "workspace").mkdir()
         roots = handlers._allowed_local_roots()
         # config_dir()/workspace is always allowed, even with no usable config.
@@ -214,7 +214,7 @@ class TestAllowedLocalRoots:
                    for r in roots)
 
     def test_configured_roots_are_included(self, monkeypatch, tmp_path: Path):
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         allowed = tmp_path / "cfgroot"
         allowed.mkdir()
@@ -222,12 +222,12 @@ class TestAllowedLocalRoots:
             agent=SimpleNamespace(subagent_cwd_allowed_roots=[str(allowed), "/nonexistent-xyz"]),
             workspaces={},
         )
-        monkeypatch.setattr(loader_mod, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+        monkeypatch.setattr(loader_mod, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
         roots = handlers._allowed_local_roots()
         assert any(os.path.realpath(str(r)) == os.path.realpath(str(allowed)) for r in roots)
 
     def test_registered_workspaces_are_included(self, monkeypatch, tmp_path: Path):
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         ws = tmp_path / "ws1"
         ws.mkdir()
@@ -235,7 +235,7 @@ class TestAllowedLocalRoots:
             agent=SimpleNamespace(subagent_cwd_allowed_roots=[str(tmp_path)]),
             workspaces={"w": SimpleNamespace(dir=str(ws))},
         )
-        monkeypatch.setattr(loader_mod, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+        monkeypatch.setattr(loader_mod, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
         roots = handlers._allowed_local_roots()
         real = {os.path.realpath(str(r)) for r in roots}
         assert os.path.realpath(str(ws)) in real
@@ -264,7 +264,7 @@ class TestScanTree:
         assert size == 10
 
     def test_hook_denied_file_is_a_credential_finding(self, tmp_path: Path, monkeypatch):
-        from kiro_crew import hooks as hooks_mod
+        from aj_crew import hooks as hooks_mod
 
         src = tmp_path / "site"
         src.mkdir()
@@ -377,7 +377,7 @@ class TestStageTreeSafe:
             handlers._stage_tree_safe(src, tmp_path / "stage")
 
     def test_hook_refusal_blocks_staging(self, tmp_path: Path, monkeypatch):
-        from kiro_crew import hooks as hooks_mod
+        from aj_crew import hooks as hooks_mod
 
         src = tmp_path / "site"
         src.mkdir()
@@ -388,7 +388,7 @@ class TestStageTreeSafe:
             handlers._stage_tree_safe(src, tmp_path / "stage")
 
     def test_too_large_file_blocks_staging(self, tmp_path: Path, monkeypatch):
-        from kiro_crew import hooks as hooks_mod
+        from aj_crew import hooks as hooks_mod
 
         src = tmp_path / "site"
         src.mkdir()
@@ -585,7 +585,7 @@ class TestDoDeployRefusals:
 
     @pytest.mark.asyncio
     async def test_overridable_findings_block_without_override(self, _site, monkeypatch):
-        from kiro_crew.deploy.scan import Finding
+        from aj_crew.deploy.scan import Finding
 
         handlers._save_config("p", "us-west-2")
         monkeypatch.setattr(
@@ -633,7 +633,7 @@ class TestDoDeployRefusals:
         cmd = payload["remediation"]
         base_step, _, reaper_step = cmd.partition(" && ")
         assert base_step.startswith(
-            "aws cloudformation deploy --stack-name kirocrew-deploy-base --template-file ")
+            "aws cloudformation deploy --stack-name ajcrew-deploy-base --template-file ")
         assert "base-stack.yaml" in base_step
         assert base_step.endswith("--profile p --region us-west-2")
         assert reaper_step.endswith("install-reaper.sh --profile p --region us-west-2")
@@ -643,8 +643,8 @@ class TestDoDeployRefusals:
     async def test_missing_reaper_stack_remediation_skips_base_step(self, _site, monkeypatch):
         handlers._save_config("p", "us-west-2")
         monkeypatch.setattr(engine, "run_aws", _aws_router([
-            ("kirocrew-deploy-base", (0, _BASE_OUTPUTS, "")),
-            ("kirocrew-deploy-reaper", (1, "", "missing")),
+            ("ajcrew-deploy-base", (0, _BASE_OUTPUTS, "")),
+            ("ajcrew-deploy-reaper", (1, "", "missing")),
         ]))
         status, payload = await handlers._do_deploy(
             {"site_id": "s", "local_dir": str(_site), "confirm": True})
@@ -665,14 +665,14 @@ class TestDoDeployRefusals:
     async def test_missing_reaper_stack_blocks_finite_ttl(self, _site, monkeypatch):
         handlers._save_config("p", "us-west-2")
         monkeypatch.setattr(engine, "run_aws", _aws_router([
-            ("kirocrew-deploy-base", (0, _BASE_OUTPUTS, "")),
-            ("kirocrew-deploy-reaper", (1, "", "missing")),
+            ("ajcrew-deploy-base", (0, _BASE_OUTPUTS, "")),
+            ("ajcrew-deploy-reaper", (1, "", "missing")),
         ]))
         status, payload = await handlers._do_deploy(
             {"site_id": "s", "local_dir": str(_site), "confirm": True})
         # Stack names moved out of the banner text into `details`; `code` is the
         # stable machine field.
-        assert status == 409 and "kirocrew-deploy-reaper" in payload["details"]
+        assert status == 409 and "ajcrew-deploy-reaper" in payload["details"]
         assert payload["code"] == "reaper_required"
 
     @pytest.mark.asyncio
@@ -681,21 +681,21 @@ class TestDoDeployRefusals:
 
         def _run_aws(argv, *a, **kw):
             joined = " ".join(str(x) for x in argv)
-            if "kirocrew-deploy-reaper" in joined:
+            if "ajcrew-deploy-reaper" in joined:
                 raise OSError("aws missing")
             return (0, _BASE_OUTPUTS, "")
 
         monkeypatch.setattr(engine, "run_aws", _run_aws)
         status, payload = await handlers._do_deploy(
             {"site_id": "s", "local_dir": str(_site), "confirm": True})
-        assert status == 409 and "kirocrew-deploy-reaper" in payload["details"]
+        assert status == 409 and "ajcrew-deploy-reaper" in payload["details"]
         assert payload["code"] == "reaper_required"
 
     @pytest.mark.asyncio
     async def test_stale_preview_digest_is_refused(self, _site, monkeypatch):
         handlers._save_config("p", "us-west-2")
         monkeypatch.setattr(engine, "run_aws", _aws_router([
-            ("kirocrew-deploy-base", (0, _BASE_OUTPUTS, "")),
+            ("ajcrew-deploy-base", (0, _BASE_OUTPUTS, "")),
         ]))
         status, payload = await handlers._do_deploy({
             "site_id": "s", "local_dir": str(_site), "confirm": True,
@@ -707,7 +707,7 @@ class TestDoDeployRefusals:
     async def test_aws_error_becomes_502(self, _site, monkeypatch):
         handlers._save_config("p", "us-west-2")
         monkeypatch.setattr(engine, "run_aws", _aws_router([
-            ("kirocrew-deploy-base", (0, _BASE_OUTPUTS, "")),
+            ("ajcrew-deploy-base", (0, _BASE_OUTPUTS, "")),
         ]))
 
         def _deploy(*a, **kw):
@@ -738,7 +738,7 @@ class TestDoDeployManifestFailure:
 
         def _run_aws(argv, *a, **kw):
             joined = " ".join(str(x) for x in argv)
-            if "kirocrew-deploy-base" in joined:
+            if "ajcrew-deploy-base" in joined:
                 return (0, _BASE_OUTPUTS, "")
             if joined.startswith("s3 cp"):
                 if manifest_raises:
@@ -1094,7 +1094,7 @@ class TestAdapters:
 
     @pytest.mark.asyncio
     async def test_verify_backfills_account_on_success(self, monkeypatch):
-        from kiro_crew.deploy import iam as iam_mod
+        from aj_crew.deploy import iam as iam_mod
 
         handlers._save_config("p", "us-west-2")
         monkeypatch.setattr(iam_mod, "reachability_check",
@@ -1107,7 +1107,7 @@ class TestAdapters:
 
     @pytest.mark.asyncio
     async def test_verify_unreachable_skips_backfill(self, monkeypatch):
-        from kiro_crew.deploy import iam as iam_mod
+        from aj_crew.deploy import iam as iam_mod
 
         handlers._save_config("p", "us-west-2")
         monkeypatch.setattr(iam_mod, "reachability_check",
@@ -1135,7 +1135,7 @@ class TestAdapters:
 
     @pytest.mark.asyncio
     async def test_pricing_returns_unit_prices(self, monkeypatch):
-        from kiro_crew.deploy import pricing as pricing_mod
+        from aj_crew.deploy import pricing as pricing_mod
 
         handlers._save_config("p", "us-west-2")
         monkeypatch.setattr(
@@ -1356,7 +1356,7 @@ class TestExpireManifest:
         other = json.dumps({"slug": "app", "distribution_id": "SOMEONE-ELSE"})
         monkeypatch.setattr(engine, "run_aws", _aws_router([
             ("describe-stacks", (0, _BASE_OUTPUTS, "")),
-            (".kirocrew-deploy.json -", (0, other, "")),
+            (".ajcrew-deploy.json -", (0, other, "")),
         ]))
         assert await handlers._expire_manifest_best_effort(_art()) == "unreachable"
 
@@ -1369,7 +1369,7 @@ class TestExpireManifest:
             joined = " ".join(str(x) for x in argv)
             if "describe-stacks" in joined:
                 return (0, _BASE_OUTPUTS, "")
-            if joined.endswith(".kirocrew-deploy.json - --region us-west-2"):
+            if joined.endswith(".ajcrew-deploy.json - --region us-west-2"):
                 return (0, mine, "")
             return (1, "", "AccessDenied")
 
@@ -1577,7 +1577,7 @@ class TestPending:
 
     @pytest.mark.asyncio
     async def test_list_redacts_entries(self):
-        from kiro_crew.deploy.pending import add_pending
+        from aj_crew.deploy.pending import add_pending
 
         add_pending({"site_id": "s", "profile": "p"})
         body = _payload(await handlers._handle_pending_list(_FakeReq()))
@@ -1591,7 +1591,7 @@ class TestPending:
 
     @pytest.mark.asyncio
     async def test_confirm_refuses_on_profile_drift(self):
-        from kiro_crew.deploy.pending import add_pending
+        from aj_crew.deploy.pending import add_pending
 
         handlers._save_config("p", "us-west-2")
         entry = add_pending({"site_id": "s", "profile": "p", "region": "eu-west-1"})
@@ -1601,7 +1601,7 @@ class TestPending:
 
     @pytest.mark.asyncio
     async def test_confirm_refuses_when_local_dir_vanished(self, tmp_path: Path):
-        from kiro_crew.deploy.pending import add_pending, list_pending
+        from aj_crew.deploy.pending import add_pending, list_pending
 
         handlers._save_config("p", "us-west-2")
         entry = add_pending({
@@ -1616,7 +1616,7 @@ class TestPending:
 
     @pytest.mark.asyncio
     async def test_confirm_refuses_dir_outside_allowed_roots(self, tmp_path: Path, monkeypatch):
-        from kiro_crew.deploy.pending import add_pending
+        from aj_crew.deploy.pending import add_pending
 
         handlers._save_config("p", "us-west-2")
         outside = tmp_path / "outside"
@@ -1632,7 +1632,7 @@ class TestPending:
 
     @pytest.mark.asyncio
     async def test_confirm_refuses_sensitive_dir(self, tmp_path: Path, monkeypatch):
-        from kiro_crew.deploy.pending import add_pending
+        from aj_crew.deploy.pending import add_pending
 
         handlers._save_config("p", "us-west-2")
         src = tmp_path / "site"
@@ -1649,7 +1649,7 @@ class TestPending:
 
     @pytest.mark.asyncio
     async def test_confirm_refuses_oversized_tree(self, tmp_path: Path, monkeypatch):
-        from kiro_crew.deploy.pending import add_pending
+        from aj_crew.deploy.pending import add_pending
 
         handlers._save_config("p", "us-west-2")
         src = tmp_path / "site"
@@ -1667,7 +1667,7 @@ class TestPending:
 
     @pytest.mark.asyncio
     async def test_confirm_refuses_edited_artifact(self, monkeypatch):
-        from kiro_crew.deploy.pending import add_pending
+        from aj_crew.deploy.pending import add_pending
 
         handlers._save_config("p", "us-west-2")
         art = SimpleNamespace(kind="html", content="<p>changed</p>", name="a")
@@ -1682,7 +1682,7 @@ class TestPending:
 
     @pytest.mark.asyncio
     async def test_confirm_tolerates_unstageable_artifact(self, monkeypatch):
-        from kiro_crew.deploy.pending import add_pending
+        from aj_crew.deploy.pending import add_pending
 
         handlers._save_config("p", "us-west-2")
         exc = handlers.ArtifactNotFoundError("deleted")
@@ -1699,7 +1699,7 @@ class TestPending:
 
     @pytest.mark.asyncio
     async def test_confirm_carries_human_override_scan(self, monkeypatch, tmp_path: Path):
-        from kiro_crew.deploy.pending import add_pending
+        from aj_crew.deploy.pending import add_pending
 
         handlers._save_config("p", "us-west-2")
         seen: dict = {}
@@ -1722,7 +1722,7 @@ class TestPending:
 
     @pytest.mark.asyncio
     async def test_failed_confirm_readds_the_entry(self, monkeypatch, tmp_path: Path):
-        from kiro_crew.deploy.pending import add_pending, list_pending
+        from aj_crew.deploy.pending import add_pending, list_pending
 
         handlers._save_config("p", "us-west-2")
 
@@ -1764,7 +1764,7 @@ class TestPending:
 
     @pytest.mark.asyncio
     async def test_dismiss_removes_the_entry(self):
-        from kiro_crew.deploy.pending import add_pending, list_pending
+        from aj_crew.deploy.pending import add_pending, list_pending
 
         entry = add_pending({"site_id": "s"})
         resp = await handlers._handle_pending_dismiss(

@@ -6,11 +6,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.shared_crew.collab import Activity, DecisionKind
-from kiro_crew.shared_crew.contracts import Principal
-from kiro_crew.shared_crew.decisions import decisions_for
-from kiro_crew.shared_crew.presence import presence_for
-from kiro_crew.shared_crew.routes_collab import register
+from aj_crew.shared_crew.collab import Activity, DecisionKind
+from aj_crew.shared_crew.contracts import Principal
+from aj_crew.shared_crew.decisions import decisions_for
+from aj_crew.shared_crew.presence import presence_for
+from aj_crew.shared_crew.routes_collab import register
 
 
 class _State:

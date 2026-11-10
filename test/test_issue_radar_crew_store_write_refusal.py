@@ -28,11 +28,11 @@ from issue_radar_crew_store_helpers import (  # noqa: F401 -- the autouse fixtur
     _unit,
 )
 
-from kiro_crew.apps.builtins.issue_radar.backend import crew_store as cs
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log_projection
-from kiro_crew.crew_log.schema import KIND_SESSION
-from kiro_crew.testing.wait import wait_until
+from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log_projection
+from aj_crew.crew_log.schema import KIND_SESSION
+from aj_crew.testing.wait import wait_until
 
 
 @contextmanager
@@ -44,7 +44,7 @@ def _eager_folder_held():
     keep that thread out: a scan it started before the patch can assign the index
     after the test's own read and replace what the test is about to check.
     """
-    from kiro_crew.crew_log import eager
+    from aj_crew.crew_log import eager
 
     assert eager.drain(timeout=10.0), "the eager folder never settled"
     with eager.paused() as held:
@@ -117,7 +117,7 @@ def test_a_unit_listing_that_fails_refuses_the_write_and_empties_the_read(tmp_pa
     empty record says nothing false about what could be read). A WRITE lists strictly:
     folded over an empty record because the scan failed, the one-editor rule would
     admit a second editor, so the write is refused instead."""
-    from kiro_crew.crew_log import store as crew_log_store
+    from aj_crew.crew_log import store as crew_log_store
 
     crew, sid = _live_crew(tmp_path)
     cid = crew["id"]
@@ -150,7 +150,7 @@ def test_a_unit_holding_entries_it_cannot_prove_refuses_the_write(tmp_path, monk
     unit's header will not read. That unit's entries hold the editing item, so a write
     folded over the shorter listing passes the one-editor rule and admits a second
     editor -- the same loss as a scan that failed, reached without any failure."""
-    from kiro_crew.crew_log import store as crew_log_store
+    from aj_crew.crew_log import store as crew_log_store
 
     crew, retired = _live_crew(tmp_path)
     cid = crew["id"]
@@ -193,7 +193,7 @@ def test_a_unit_directory_with_nothing_in_it_yet_does_not_refuse_the_write(tmp_p
     scan landing in that window sees a child with no content. It holds no entries, so
     leaving it out loses nothing -- and refusing on it would make every crew write
     fail whenever any session anywhere happened to be starting its log."""
-    from kiro_crew.crew_log import store as crew_log_store
+    from aj_crew.crew_log import store as crew_log_store
 
     crew, sid = _live_crew(tmp_path)
     cid = crew["id"]
@@ -212,7 +212,7 @@ def test_a_cached_listing_that_is_short_a_unit_still_refuses_the_write(tmp_path,
     fingerprint, so once a READ has cached the shorter map the next strict caller takes
     a cache HIT and never reaches the scan. The refusal has to be re-derived on the hit
     or the validating caller is served exactly the listing the scan refused."""
-    from kiro_crew.crew_log import store as crew_log_store
+    from aj_crew.crew_log import store as crew_log_store
 
     crew, retired = _live_crew(tmp_path)
     cid = crew["id"]
@@ -405,7 +405,7 @@ def test_a_read_back_that_misses_the_written_entry_warns_with_seq_unit_and_path(
     CI red can show."""
     import logging
 
-    from kiro_crew.crew_log.schema import Entry
+    from aj_crew.crew_log.schema import Entry
 
     data = {"crew_id": "c_0a1b2c3d", "owner": OWNER, "repo": REPO, "number": 7}
     other = Entry(

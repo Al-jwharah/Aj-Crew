@@ -1,7 +1,7 @@
 """A synthetic mirrored family for ``test_facade_mirror*.py``: two owners and a facade.
 
 The family is a package ``facade_mirror_case_<test>`` written to ``tmp_path`` -- a facade
-in the shape ``kiro_crew._facade_mirror`` documents over two owner modules, ``low`` and
+in the shape ``aj_crew._facade_mirror`` documents over two owner modules, ``low`` and
 ``high`` -- loaded under names unique to the test and registered in :data:`sys.modules`
 through ``monkeypatch``, so teardown removes every module it added. A package rather
 than three top-level modules, because the owners of a real facade share its top-level
@@ -20,7 +20,7 @@ from types import ModuleType
 
 import pytest
 
-from kiro_crew import _facade_mirror
+from aj_crew import _facade_mirror
 
 _LOW = """
 from __future__ import annotations
@@ -87,7 +87,7 @@ import importlib as _importlib
 import sys as _sys
 from typing import TYPE_CHECKING
 
-from kiro_crew import _facade_mirror
+from aj_crew import _facade_mirror
 from {low} import helper
 
 ONLY_HERE = "facade"
@@ -219,7 +219,7 @@ _SECOND_FACADE = """
 import importlib as _importlib
 import sys as _sys
 
-from kiro_crew import _facade_mirror
+from aj_crew import _facade_mirror
 
 _OWNERS = ("{low}", "{high}")
 for _owner in _OWNERS:

@@ -2,7 +2,7 @@
 
 ``home`` and ``mock_sel`` are declared ``@pytest.fixture(name=...)`` and imported
 under their function names. ``_install`` writes an app record under the tmp
-``KIROCREW_HOME``; ``_client`` builds a ``TestClient`` that each test opens with
+``AJCREW_HOME``; ``_client`` builds a ``TestClient`` that each test opens with
 ``async with``.
 """
 
@@ -18,13 +18,13 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.apps.manager import (
+from aj_crew.apps.manager import (
     APP_MANIFEST_FILENAME,
     _read_installed,
     _write_installed,
     install_app,
 )
-from kiro_crew.dashboard.handlers.security import (
+from aj_crew.dashboard.handlers.security import (
     api_trusted_app_grant,
     api_trusted_app_revoke,
     api_trusted_apps_allow_all,
@@ -37,17 +37,17 @@ _OTHER = "other-test-app"
 
 @pytest.fixture(name="home")
 def home_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """Redirect KIROCREW_HOME so config.json + installed apps land in tmp."""
-    h = tmp_path / "kirocrew-home"
+    """Redirect AJCREW_HOME so config.json + installed apps land in tmp."""
+    h = tmp_path / "ajcrew-home"
     h.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(h))
+    monkeypatch.setenv("AJCREW_HOME", str(h))
     return h
 
 
 @pytest.fixture(name="mock_sel")
 def mock_sel_fixture():
     """Patch the late-bound ``_sel()`` so SEL audit calls are observable."""
-    with patch("kiro_crew.dashboard.handlers.security._sel") as m:
+    with patch("aj_crew.dashboard.handlers.security._sel") as m:
         instance = MagicMock()
         m.return_value = instance
         yield instance
@@ -64,7 +64,7 @@ def _install(
     body: str = "",
     source_repository: str = "",
 ) -> None:
-    """Install a minimal app record under the tmp KIROCREW_HOME.
+    """Install a minimal app record under the tmp AJCREW_HOME.
 
     ``builtin=True`` marks the install builtin-OWNED (``source``/``origin`` ==
     ``builtin``), which is what ``manager.builtin_owns_installed`` checks. Combined

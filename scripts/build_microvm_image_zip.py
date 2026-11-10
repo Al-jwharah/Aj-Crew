@@ -4,13 +4,13 @@
     python scripts/build_microvm_image_zip.py --bundle <dir> --out <file.zip>
 
 A CLI and nothing more. Every decision about what goes in the zip lives in
-``kiro_crew.cloud.microvm.recipe``, which is also what the launcher calls on a
+``aj_crew.cloud.microvm.recipe``, which is also what the launcher calls on a
 cache miss -- so an operator building by hand and a launch building for itself
 produce the same bytes. Two assemblers would be two answers to "what is in a crew
 image", and the looser one would be the one that shipped the wrong content.
 
 What this script owns is the one thing a launch does not do: staging the wheel.
-A launch runs from an installed Kiro Crew and the wheel is already beside the
+A launch runs from an installed Aj Crew and the wheel is already beside the
 recipes; an operator building from a checkout has to make it first.
 """
 
@@ -27,7 +27,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from kiro_crew.cloud.microvm import recipe as recipe_mod  # noqa: E402
+from aj_crew.cloud.microvm import recipe as recipe_mod  # noqa: E402
 
 #: The timestamp every member of the built wheel is dated with.
 #:
@@ -58,7 +58,7 @@ def _build_env() -> dict[str, str]:
 
 
 def build_wheel(vendor: Path) -> Path:
-    """Build the Kiro Crew wheel the base recipe installs, into ``runtime/vendor``.
+    """Build the Aj Crew wheel the base recipe installs, into ``runtime/vendor``.
 
     Built REPRODUCIBLY, through :data:`SOURCE_DATE_EPOCH`: the wheel's bytes are
     hashed into the base recipe digest, which is half the image cache's key, so a

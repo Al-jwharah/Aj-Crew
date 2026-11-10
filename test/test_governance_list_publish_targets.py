@@ -17,12 +17,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew import publish_governance as pg
-from kiro_crew import publish_sync
-from kiro_crew.deploy import handlers as deploy_handlers
-from kiro_crew.deploy import handlers_sites
-from kiro_crew.platform import governance
-from kiro_crew.platform.governance import SCOPE_CATALOG, parse_policy, resolve
+from aj_crew import publish_governance as pg
+from aj_crew import publish_sync
+from aj_crew.deploy import handlers as deploy_handlers
+from aj_crew.deploy import handlers_sites
+from aj_crew.platform import governance
+from aj_crew.platform.governance import SCOPE_CATALOG, parse_policy, resolve
 
 _SCOPE = "capabilities.publish"
 _ACCOUNT = "123456789012"
@@ -43,7 +43,7 @@ def _publish_on(**lists: dict) -> dict:
 
 @pytest.fixture
 def lts(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 # ── The keys ────────────────────────────────────────────────────────────────
@@ -128,7 +128,7 @@ def _answer(denied_items: set[str]):
 def _patch(monkeypatch, denied: set[str], governed: bool) -> list[str]:
     """*governed*: the accounts list restricts something (it is not fully open)."""
     asked, permits = _answer(denied)
-    monkeypatch.setattr("kiro_crew.platform.governance_profiles.governance_permits", permits)
+    monkeypatch.setattr("aj_crew.platform.governance_profiles.governance_permits", permits)
     monkeypatch.setattr(pg, "publish_list_unrestricted", lambda _s, _n: not governed)
     return asked
 
@@ -162,7 +162,7 @@ def test_governance_error_denies(monkeypatch) -> None:
     def _boom(*_a, **_k):
         raise RuntimeError("x")
 
-    monkeypatch.setattr("kiro_crew.platform.governance_profiles.governance_permits", _boom)
+    monkeypatch.setattr("aj_crew.platform.governance_profiles.governance_permits", _boom)
     assert pg.publish_list_denied_reason("s", "deploy-web-aws", "regions", "us-east-1")
 
 
@@ -179,27 +179,27 @@ def test_governance_error_denies(monkeypatch) -> None:
 def test_list_probe_asks_what_the_list_allows(monkeypatch, accounts, open_) -> None:
     """A present list is open only if it permits every value, the unknown one too."""
     monkeypatch.setattr(
-        "kiro_crew.platform.governance_profiles.resolve_active_scope", lambda _s: None
+        "aj_crew.platform.governance_profiles.resolve_active_scope", lambda _s: None
     )
     lists = {} if accounts is None else {"accounts": accounts}
     ctx = SimpleNamespace(governance=_ceiling(_publish_on(**lists)))
-    monkeypatch.setattr("kiro_crew.platform.context.current_context", lambda: ctx)
+    monkeypatch.setattr("aj_crew.platform.context.current_context", lambda: ctx)
     assert pg.publish_list_unrestricted("s", "accounts") is open_
 
 
 def test_lts_open_lists_let_the_drives_publish(lts, monkeypatch) -> None:
     """Presence is not a restriction: every list is present in LTS."""
     monkeypatch.setattr(
-        "kiro_crew.platform.governance_profiles.resolve_active_scope", lambda _s: None
+        "aj_crew.platform.governance_profiles.resolve_active_scope", lambda _s: None
     )
     open_lists = {n: {"mode": "deny", "deny": []} for n in ("regions", "audience", "accounts")}
     publish = _publish_on(**open_lists)
     publish["scopes"]["destinations"] = {"mode": "deny", "deny": []}
     ctx = SimpleNamespace(governance=_ceiling(publish))
-    monkeypatch.setattr("kiro_crew.platform.context.current_context", lambda: ctx)
+    monkeypatch.setattr("aj_crew.platform.context.current_context", lambda: ctx)
     monkeypatch.setattr(pg, "_read_allowed_destinations", lambda: ([], None))
     monkeypatch.setattr(
-        "kiro_crew.platform.governance_profiles.governance_permits",
+        "aj_crew.platform.governance_profiles.governance_permits",
         lambda *_a, **_k: SimpleNamespace(permitted=True),
     )
     request = SimpleNamespace(headers={"X-Session-Key": "s"})
@@ -237,7 +237,7 @@ def test_do_deploy_refuses_before_staging(monkeypatch) -> None:
 
 def _gate_permits(monkeypatch) -> SimpleNamespace:
     monkeypatch.setattr(
-        "kiro_crew.platform.governance_profiles.governance_permits",
+        "aj_crew.platform.governance_profiles.governance_permits",
         lambda *_a, **_k: SimpleNamespace(permitted=True),
     )
     monkeypatch.setattr(pg, "_read_allowed_destinations", lambda: ([], None))
@@ -259,22 +259,22 @@ def test_other_destinations_refused_while_a_list_restricts(
 def test_lts_artifact_publish_is_refused_by_default(lts, monkeypatch) -> None:
     """The baseline turns the lists off, so a named destination still cannot publish."""
     monkeypatch.setattr(
-        "kiro_crew.platform.governance_profiles.resolve_active_scope", lambda _s: None
+        "aj_crew.platform.governance_profiles.resolve_active_scope", lambda _s: None
     )
     publish = _publish_on()
     publish["scopes"]["destinations"] = {"mode": "allow", "allow": ["default"]}
     ctx = SimpleNamespace(governance=_ceiling(publish))
-    monkeypatch.setattr("kiro_crew.platform.context.current_context", lambda: ctx)
+    monkeypatch.setattr("aj_crew.platform.context.current_context", lambda: ctx)
     request = _gate_permits(monkeypatch)
     assert "only the public web deploy" in (pg.publish_denied_reason(request, "default") or "")
 
 
 def test_oss_artifact_publish_is_unchanged(monkeypatch) -> None:
     monkeypatch.setattr(
-        "kiro_crew.platform.governance_profiles.resolve_active_scope", lambda _s: None
+        "aj_crew.platform.governance_profiles.resolve_active_scope", lambda _s: None
     )
     ctx = SimpleNamespace(governance=None)
-    monkeypatch.setattr("kiro_crew.platform.context.current_context", lambda: ctx)
+    monkeypatch.setattr("aj_crew.platform.context.current_context", lambda: ctx)
     request = _gate_permits(monkeypatch)
     assert pg.publish_denied_reason(request, "default") is None
 
@@ -286,9 +286,9 @@ async def test_artifact_gate_runs_off_the_event_loop(tmp_path, monkeypatch) -> N
 
     from test_artifact_sharing_handlers import _request
 
-    from kiro_crew import artifacts as art_mod
-    from kiro_crew.artifacts import ArtifactStore
-    from kiro_crew.dashboard.handlers import artifacts as art_handlers
+    from aj_crew import artifacts as art_mod
+    from aj_crew.artifacts import ArtifactStore
+    from aj_crew.dashboard.handlers import artifacts as art_handlers
 
     store = ArtifactStore(root=tmp_path / "artifacts")
     monkeypatch.setattr(art_mod, "_default_store", store)
@@ -311,10 +311,10 @@ async def test_artifact_gate_runs_off_the_event_loop(tmp_path, monkeypatch) -> N
 
 def test_list_probe_disabled_gate_is_not_open(monkeypatch) -> None:
     monkeypatch.setattr(
-        "kiro_crew.platform.governance_profiles.resolve_active_scope", lambda _s: None
+        "aj_crew.platform.governance_profiles.resolve_active_scope", lambda _s: None
     )
     ctx = SimpleNamespace(governance=_ceiling({"enabled": False}))
-    monkeypatch.setattr("kiro_crew.platform.context.current_context", lambda: ctx)
+    monkeypatch.setattr("aj_crew.platform.context.current_context", lambda: ctx)
     assert not pg.publish_list_unrestricted("s", "accounts")
 
 
@@ -329,7 +329,7 @@ def test_deploy_web_id_skips_the_list_refusal_only_on_the_core_path(monkeypatch)
 def test_session_denied_reason_skips_list_refusal_for_deploy_core_path(monkeypatch) -> None:
     """session_denied_reason with lists_checked_by_caller=True skips the list gate."""
     monkeypatch.setattr(
-        "kiro_crew.platform.governance_profiles.governance_permits",
+        "aj_crew.platform.governance_profiles.governance_permits",
         lambda *_a, **_k: SimpleNamespace(permitted=True),
     )
     monkeypatch.setattr(pg, "_read_allowed_destinations", lambda: ([], None))
@@ -343,7 +343,7 @@ def test_session_denied_reason_skips_list_refusal_for_deploy_core_path(monkeypat
 def test_session_denied_reason_enforces_list_refusal_without_flag(monkeypatch) -> None:
     """session_denied_reason with lists_checked_by_caller=False (default) still refuses."""
     monkeypatch.setattr(
-        "kiro_crew.platform.governance_profiles.governance_permits",
+        "aj_crew.platform.governance_profiles.governance_permits",
         lambda *_a, **_k: SimpleNamespace(permitted=True),
     )
     monkeypatch.setattr(pg, "_read_allowed_destinations", lambda: ([], None))

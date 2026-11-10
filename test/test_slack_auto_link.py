@@ -18,19 +18,19 @@ import pytest
 from aiohttp import web
 from chat_test_helpers import _make_state
 
-from kiro_crew.apps.permissions import SessionControlGrant
-from kiro_crew.dashboard import chat_slack
-from kiro_crew.dashboard.chat_slack import (
+from aj_crew.apps.permissions import SessionControlGrant
+from aj_crew.dashboard import chat_slack
+from aj_crew.dashboard.chat_slack import (
     SlackLinkError,
     auto_link_eligible,
     link_slot_to_slack,
     maybe_auto_link_slack,
 )
-from kiro_crew.dashboard.state import SlotOrigin
+from aj_crew.dashboard.state import SlotOrigin
 
 
 def _slack_state(tmp_path, monkeypatch, *, owner: str | None = "U123"):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.slack_client = MagicMock()
     state.slack_client.open_dm = AsyncMock(return_value="D_OWNER")
@@ -312,12 +312,12 @@ class TestHook:
         from test_slack_mirror_unlink import _fake_provider, _make_slack_client
         from test_slack_mirror_unlink import _make_state as _mirror_state
 
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.session_map import SessionMap
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.session_map import SessionMap
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.chat.sel", lambda: MagicMock())
-        monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
         state = _mirror_state(tmp_path, SessionMap())
         state.slack_client = _make_slack_client()
         state.slack_client.open_dm = AsyncMock(return_value="D_OWNER")
@@ -377,12 +377,12 @@ class TestHook:
         from test_slack_mirror_unlink import _fake_provider, _make_slack_client
         from test_slack_mirror_unlink import _make_state as _mirror_state
 
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.session_map import SessionMap
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.session_map import SessionMap
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.chat.sel", lambda: MagicMock())
-        monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
         state = _mirror_state(tmp_path, SessionMap())
         state.slack_client = _make_slack_client()
         state.slack_client.post_message = AsyncMock(return_value="echo-ts")
@@ -614,7 +614,7 @@ class TestSharedHelper:
         the binding, typed messages the link. Moving the anchor link to another
         slot would split the channel, so it is refused before any Slack write and
         nothing is relinked. The binding's own session may still re-link."""
-        from kiro_crew.slack.code_channels.store import Binding, CodeChannelStore, set_store
+        from aj_crew.slack.code_channels.store import Binding, CodeChannelStore, set_store
 
         state = _slack_state(tmp_path, monkeypatch)
         owner = _user_slot(state, "owner")
@@ -654,7 +654,7 @@ class TestSharedHelper:
 
     @staticmethod
     def _bind_code_channel(tmp_path, slot):
-        from kiro_crew.slack.code_channels.store import Binding, CodeChannelStore, set_store
+        from aj_crew.slack.code_channels.store import Binding, CodeChannelStore, set_store
 
         store = CodeChannelStore(tmp_path / "cc.json")
         store.put_binding(
@@ -669,7 +669,7 @@ class TestSharedHelper:
     ):
         """The link writer keys a thread by ts alone, so the guard does too: the
         anchor's ts under ``dm``, another channel or none is the same thread."""
-        from kiro_crew.slack.code_channels.store import set_store
+        from aj_crew.slack.code_channels.store import set_store
 
         state = _slack_state(tmp_path, monkeypatch)
         owner = _user_slot(state, "owner")
@@ -694,8 +694,8 @@ class TestSharedHelper:
     ):
         """The chokepoint every writer passes through: a caller that skips the
         route's own check still cannot move the anchor, and nothing changes."""
-        from kiro_crew.slack.code_channels.binding import AnchorHandoffRefused
-        from kiro_crew.slack.code_channels.store import set_store
+        from aj_crew.slack.code_channels.binding import AnchorHandoffRefused
+        from aj_crew.slack.code_channels.store import set_store
 
         state = _slack_state(tmp_path, monkeypatch)
         owner = _user_slot(state, "owner")
@@ -722,7 +722,7 @@ class TestSharedHelper:
     ):
         """Before Slack startup loads the store, a persisted binding is still on
         disk: the link loads it first rather than reading "no binding"."""
-        from kiro_crew.slack.code_channels.store import Binding, CodeChannelStore, set_store
+        from aj_crew.slack.code_channels.store import Binding, CodeChannelStore, set_store
 
         state = _slack_state(tmp_path, monkeypatch)
         owner = _user_slot(state, "owner")
@@ -749,11 +749,11 @@ class TestSharedHelper:
     ):
         """A corrupt store loads as empty and code channels cannot route: nothing
         to split, so the link proceeds, with an audit row naming why."""
-        from kiro_crew.slack.code_channels import binding as binding_mod
-        from kiro_crew.slack.code_channels.store import CodeChannelStore, set_store
+        from aj_crew.slack.code_channels import binding as binding_mod
+        from aj_crew.slack.code_channels.store import CodeChannelStore, set_store
 
         audit = MagicMock()
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: audit)
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: audit)
         state = _slack_state(tmp_path, monkeypatch)
         other = _user_slot(state, "other")
         (tmp_path / "cc.json").write_text("{not json", encoding="utf-8")
@@ -775,10 +775,10 @@ class TestSharedHelper:
     ):
         """A failed load is treated like an unreadable store: code channels
         cannot route without it, so the link proceeds, with an audit row."""
-        from kiro_crew.slack.code_channels.store import CodeChannelStore, set_store
+        from aj_crew.slack.code_channels.store import CodeChannelStore, set_store
 
         audit = MagicMock()
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: audit)
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: audit)
         state = _slack_state(tmp_path, monkeypatch)
         other = _user_slot(state, "other")
         cc = CodeChannelStore(tmp_path / "cc.json")
@@ -806,7 +806,7 @@ class TestSharedHelper:
     async def test_a_new_thread_link_on_a_cold_store_never_loads_it(self, tmp_path, monkeypatch):
         """The guard is snapshot-only: a brand-new thread (no existing ts) links
         without touching the store, so nothing blocks the event loop."""
-        from kiro_crew.slack.code_channels.store import CodeChannelStore, set_store
+        from aj_crew.slack.code_channels.store import CodeChannelStore, set_store
 
         state = _slack_state(tmp_path, monkeypatch)
         slot = _user_slot(state, "fresh")
@@ -826,7 +826,7 @@ class TestSharedHelper:
     async def test_the_code_channels_own_session_relinks_its_anchor(self, tmp_path, monkeypatch):
         """The binding names the slot by its slot key; the link guard compares in
         that namespace, so the owner is never refused its own anchor."""
-        from kiro_crew.slack.code_channels.store import set_store
+        from aj_crew.slack.code_channels.store import set_store
 
         state = _slack_state(tmp_path, monkeypatch)
         owner = _user_slot(state, "owner")
@@ -847,7 +847,7 @@ class TestSharedHelper:
     async def test_an_already_linked_code_channel_owner_gets_already_linked(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.slack.code_channels.store import set_store
+        from aj_crew.slack.code_channels.store import set_store
 
         state = _slack_state(tmp_path, monkeypatch)
         owner = _user_slot(state, "owner")
@@ -864,7 +864,7 @@ class TestSharedHelper:
 
 class TestConfig:
     def test_default_is_off_with_no_target_field(self):
-        from kiro_crew.config.section_builders import _build_slack_config
+        from aj_crew.config.section_builders import _build_slack_config
 
         cfg = _build_slack_config({})
         assert cfg.auto_link_sessions is False
@@ -872,7 +872,7 @@ class TestConfig:
         assert not hasattr(cfg, "auto_link_channel")
 
     def test_enabled_must_be_a_real_bool(self):
-        from kiro_crew.config.section_builders import _build_slack_config
+        from aj_crew.config.section_builders import _build_slack_config
 
         assert _build_slack_config({"auto_link_sessions": "true"}).auto_link_sessions is False
         assert _build_slack_config({"auto_link_sessions": 1}).auto_link_sessions is False
@@ -880,17 +880,17 @@ class TestConfig:
 
 
 def _config_app(tmp_path, monkeypatch):
-    import kiro_crew.dashboard.handlers.messaging as mod
-    from kiro_crew.config import loader
+    import aj_crew.dashboard.handlers.messaging as mod
+    from aj_crew.config import loader
 
     env = tmp_path / ".env"
     env.write_text("", encoding="utf-8")
     cfg = tmp_path / "config.json"
-    cfg.write_text('{"slack": {"command": "kirocrew"}}', encoding="utf-8")
+    cfg.write_text('{"slack": {"command": "ajcrew"}}', encoding="utf-8")
     monkeypatch.setattr(loader, "env_path", lambda: env)
     monkeypatch.setattr(loader, "config_path", lambda: cfg)
     monkeypatch.setattr(mod, "is_direct_local_request", lambda req: True)
-    monkeypatch.delenv("KIROCREW_OWNER_ID", raising=False)
+    monkeypatch.delenv("AJCREW_OWNER_ID", raising=False)
     return mod, cfg
 
 
@@ -966,7 +966,7 @@ class TestSendHandlerHook:
         state.get_or_create_slot("s1", origin=SlotOrigin.USER)
         _settings(monkeypatch, enabled=True)
         monkeypatch.setattr(chat_slack, "_spawn_slack_backfill", lambda *a, **_k: None)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
         seen: dict = {}
 
         async def fake_run_chat(
@@ -977,7 +977,7 @@ class TestSendHandlerHook:
             sl.append("assistant", "reply")
             sl.append("done", "", "done", broadcast=False)
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post("/api/chat", json={"message": "hello", "slot": "s1"})
             await resp.text()
@@ -996,7 +996,7 @@ class TestSendHandlerHook:
             chat_slack, "vet_and_audit", lambda *a, **k: SimpleNamespace(permitted=True)
         )
         monkeypatch.setattr(chat_slack, "_spawn_slack_backfill", lambda *a, **_k: None)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
         posting = asyncio.Event()
         release = asyncio.Event()
         dispatches: list[str] = []
@@ -1012,7 +1012,7 @@ class TestSendHandlerHook:
             sl.append("done", "", "done", broadcast=False)
 
         state.slack_client.post_message = AsyncMock(side_effect=_blocked_post)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", _run)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", _run)
         async with TestClient(TestServer(_make_app(state))) as client:
             first_request = asyncio.create_task(
                 client.post("/api/chat", json={"message": "first", "slot": "s1"})
@@ -1039,15 +1039,15 @@ class TestSendHandlerHook:
 
         state = _slack_state(tmp_path, monkeypatch)
         state.get_or_create_slot("s1", origin=SlotOrigin.USER)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
         run_chat = AsyncMock()
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", run_chat)
 
         async def _close_slot(st, sl):
             st._slots.pop(sl.key, None)
             return False
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.maybe_auto_link_slack", _close_slot)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.maybe_auto_link_slack", _close_slot)
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post("/api/chat", json={"message": "hello", "slot": "s1"})
             body = await resp.json()
@@ -1065,10 +1065,10 @@ class TestSendHandlerHook:
 
         state = _slack_state(tmp_path, monkeypatch)
         state.get_or_create_slot("s1", origin=SlotOrigin.USER)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
         state.sessions.stop_turn = AsyncMock(return_value="idle")
         run_chat = AsyncMock()
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", run_chat)
         holding = asyncio.Event()
         release = asyncio.Event()
 
@@ -1077,7 +1077,7 @@ class TestSendHandlerHook:
             await release.wait()
             return False
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.maybe_auto_link_slack", _hold)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.maybe_auto_link_slack", _hold)
         async with TestClient(TestServer(_make_app(state))) as client:
             send = asyncio.create_task(
                 client.post("/api/chat?ws=1", json={"message": "hello", "slot": "s1"})
@@ -1106,13 +1106,13 @@ class TestSendHandlerHook:
         from aiohttp.test_utils import TestClient, TestServer
         from chat_test_helpers import _make_app
 
-        from kiro_crew import crew_pause
+        from aj_crew import crew_pause
 
         state = _slack_state(tmp_path, monkeypatch)
         state.get_or_create_slot("s1", origin=SlotOrigin.USER)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
         run_chat = AsyncMock()
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", run_chat)
         paused = {"on": False}
         owed: list[str] = []
         monkeypatch.setattr(crew_pause, "holds_slot", lambda sl: paused["on"])
@@ -1131,7 +1131,7 @@ class TestSendHandlerHook:
             paused["on"] = True  # Pause all publishes its hold during the link
             return False
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.maybe_auto_link_slack", _hold)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.maybe_auto_link_slack", _hold)
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post("/api/chat?ws=1", json={"message": "hello", "slot": "s1"})
             body = await resp.json()
@@ -1155,7 +1155,7 @@ class TestSendHandlerHook:
 
         state = _slack_state(tmp_path, monkeypatch)
         state.get_or_create_slot("s1", origin=SlotOrigin.USER)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
         state.sessions.stop_turn = AsyncMock(return_value="idle")
         started: list[str] = []
         reserved_during_drain: list[bool] = []
@@ -1167,10 +1167,10 @@ class TestSendHandlerHook:
             started.append(sl._queue[0]["content"])
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._start_next_queued_turn",
+            "aj_crew.dashboard.chat_handlers._start_next_queued_turn",
             AsyncMock(side_effect=_drain),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", AsyncMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", AsyncMock())
         holding = asyncio.Event()
         release = asyncio.Event()
 
@@ -1179,7 +1179,7 @@ class TestSendHandlerHook:
             await release.wait()
             return False
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.maybe_auto_link_slack", _hold)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.maybe_auto_link_slack", _hold)
         async with TestClient(TestServer(_make_app(state))) as client:
             send = asyncio.create_task(
                 client.post("/api/chat?ws=1", json={"message": "first", "slot": "s1"})
@@ -1204,16 +1204,16 @@ class TestSendHandlerHook:
         state = _slack_state(tmp_path, monkeypatch)
         state.get_or_create_slot("s1", origin=SlotOrigin.USER)
         _settings(monkeypatch, enabled=True)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
 
         async def fake_run_chat(st, sl, msg, **_kw):
             sl.append("assistant", "reply")
             sl.append("done", "", "done", broadcast=False)
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
         # The app reaches this user session through its sessionApproval grant.
         monkeypatch.setattr(
-            "kiro_crew.dashboard.slot_ownership.read_session_control_grant",
+            "aj_crew.dashboard.slot_ownership.read_session_control_grant",
             AsyncMock(return_value=SessionControlGrant(granted=True, member_threads=False)),
         )
         app = _make_app(state)

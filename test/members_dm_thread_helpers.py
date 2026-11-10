@@ -5,7 +5,7 @@
 ``test_members_dm_thread.py`` and its ``_resume_and_reservation``,
 ``_activity_and_briefing`` and ``_private_store_reopen`` siblings import them by name.
 Nothing here is a fixture, so nothing is autouse: each test's data home comes from the
-rootdir conftest's autouse ``_isolate_kirocrew_home``. ``test_members_dm_thread.py``
+rootdir conftest's autouse ``_isolate_ajcrew_home``. ``test_members_dm_thread.py``
 re-exports ``CREW``, ``_fake_config`` and ``_make_members_app`` for
 ``test_chat_agent_selection.py``, ``test_member_approval_default.py`` and
 ``test_member_memory_runtime.py``.
@@ -20,8 +20,8 @@ from unittest.mock import patch
 
 from aiohttp import web
 
-from kiro_crew.config.loader import KiroCrewAgentConfig
-from kiro_crew.members import DM_SLOT_MODE, record_activity, write_dm_binding
+from aj_crew.config.loader import AjCrewAgentConfig
+from aj_crew.members import DM_SLOT_MODE, record_activity, write_dm_binding
 
 CREW = "code-reviewer"
 OTHER = "other-agent"
@@ -60,7 +60,7 @@ def _record_or_explain(member, session_key, memory_mode, **kwargs) -> bool:
     member, crew-log and event-log records the call produced.
     """
     handler = _RenderedLogs()
-    names = ("kiro_crew.members", "kiro_crew.eventlog", "kiro_crew.crew_log")
+    names = ("aj_crew.members", "aj_crew.eventlog", "aj_crew.crew_log")
     loggers = [logging.getLogger(n) for n in names]
     levels = [lg.level for lg in loggers]
     for lg in loggers:
@@ -83,7 +83,7 @@ def _record_or_explain(member, session_key, memory_mode, **kwargs) -> bool:
 
 def _fake_config(names, default=CREW):
     return SimpleNamespace(
-        agents={name: KiroCrewAgentConfig(kiro_agent="kirocrew") for name in names},
+        agents={name: AjCrewAgentConfig(kiro_agent="ajcrew") for name in names},
         default_agent=default,
         memory_stores={},
         workspaces={"default": SimpleNamespace(dir="workspace")},
@@ -93,7 +93,7 @@ def _fake_config(names, default=CREW):
 
 
 def _make_members_app(state) -> web.Application:
-    from kiro_crew.dashboard.handlers.members import (
+    from aj_crew.dashboard.handlers.members import (
         api_member_activity,
         api_member_briefing,
         api_member_thread,
@@ -125,7 +125,7 @@ def _make_members_app(state) -> web.Application:
 
 def _patched_config(names, default=CREW):
     return patch(
-        "kiro_crew.dashboard.handlers.members.KiroCrewConfig.load",
+        "aj_crew.dashboard.handlers.members.AjCrewConfig.load",
         return_value=_fake_config(names, default),
     )
 

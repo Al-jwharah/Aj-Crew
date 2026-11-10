@@ -1,4 +1,4 @@
-"""The repository's one ``soffice`` discovery and install hint (``kiro_crew.soffice_discovery``).
+"""The repository's one ``soffice`` discovery and install hint (``aj_crew.soffice_discovery``).
 
 The file panel's slide previews depend on these, so they are a core capability that
 must hold with no app installed; PPTX Maker imports the same helpers. The hint is shown
@@ -24,7 +24,7 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import os_release, platform_compat, soffice_discovery
+from aj_crew import os_release, platform_compat, soffice_discovery
 
 _APT = "sudo apt install libreoffice"
 _DNF = "sudo dnf install libreoffice"

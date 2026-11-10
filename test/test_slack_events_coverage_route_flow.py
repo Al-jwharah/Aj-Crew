@@ -1,4 +1,4 @@
-"""Coverage for :mod:`kiro_crew.slack.events`: ``_route_message`` past its guards.
+"""Coverage for :mod:`aj_crew.slack.events`: ``_route_message`` past its guards.
 
 ``!stop``, queueing, attachments, the transport path, the native drain, enterprise
 and observe channels, temp-file cleanup, and the queued dispatch; then ``/status``
@@ -6,7 +6,7 @@ and the blocks a slash handler's reply carries.
 
 Conventions follow ``test_slack_events_coverage.py``: a ``MagicMock`` stand-in for
 ``GatewayOrchestrator``, ``AsyncMock`` for the Slack client, and
-``kiro_crew.slack.events.sel`` patched by the autouse fixtures from
+``aj_crew.slack.events.sel`` patched by the autouse fixtures from
 ``slack_events_coverage_helpers.py`` so no audit file is written.
 """
 
@@ -23,9 +23,9 @@ from slack_events_coverage_helpers import _isolated_home_fixture  # noqa: F401
 from slack_events_coverage_helpers import _mock_sel_fixture  # noqa: F401
 from slack_events_coverage_helpers import _capture_respond, _drain, _event, _make_orch
 
-from kiro_crew.channel_history import ChannelHistory
-from kiro_crew.config.loader import ACTIVATION_OBSERVE, KiroCrewConfig
-from kiro_crew.slack import events as ev
+from aj_crew.channel_history import ChannelHistory
+from aj_crew.config.loader import ACTIVATION_OBSERVE, AjCrewConfig
+from aj_crew.slack import events as ev
 
 
 @pytest.fixture(name="_real_sel")
@@ -34,7 +34,7 @@ def _real_sel_fixture(_mock_sel, tmp_path, monkeypatch):
 
     The fake keeps recording, and every write also lands as a row the test reads back.
     """
-    from kiro_crew import sel as sel_mod
+    from aj_crew import sel as sel_mod
 
     monkeypatch.setattr(sel_mod.SecurityEventLog, "_instance", None)
     monkeypatch.setattr(sel_mod.SecurityEventLog, "_initialized", False)
@@ -70,8 +70,8 @@ class TestRouteMessageStopCommand:
     @pytest.mark.asyncio
     async def test_unauthorized_stop_denied(self, _mock_sel, _real_sel):
         orch = _make_orch()
-        with patch("kiro_crew.slack.events.is_allowed_user", side_effect=[True, False]):
-            with patch("kiro_crew.slack.events.is_owner", return_value=False):
+        with patch("aj_crew.slack.events.is_allowed_user", side_effect=[True, False]):
+            with patch("aj_crew.slack.events.is_owner", return_value=False):
                 await ev._route_message(orch, _event(text="!stop"), ev.SeenCache())
         orch.slack.post_message.assert_awaited_with("D1", "⛔ Not authorized.", "100.0")
         assert _mock_sel.log_api_access.call_args.kwargs["error"] == "unauthorized sender"
@@ -84,8 +84,8 @@ class TestRouteMessageStopCommand:
     async def test_no_session_manager_reports_nothing_running(self, _mock_sel, _real_sel):
         orch = _make_orch()
         orch.sessions = None
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.is_owner", return_value=True):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.is_owner", return_value=True):
                 await ev._route_message(orch, _event(text="!stop"), ev.SeenCache())
         orch.slack.post_message.assert_awaited_with("D1", "Nothing running.", "100.0")
         assert _mock_sel.log_tool_invocation.call_args.kwargs["outcome"] == "no_session"
@@ -105,8 +105,8 @@ class TestRouteMessageStopCommand:
         active = asyncio.get_running_loop().create_future()
         orch._session_tasks = {"100.0": active}
         orch._pending_queue = {"100.0": []}
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.is_owner", return_value=True):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.is_owner", return_value=True):
                 await ev._route_message(orch, _event(text="!stop"), ev.SeenCache())
         posted = [c[0][1] for c in orch.slack.post_message.await_args_list]
         assert "⏹ Execution stopped." in posted
@@ -119,8 +119,8 @@ class TestRouteMessageStopCommand:
         orch = _make_orch()
         orch.sessions.has_session = MagicMock(return_value=True)
         orch.sessions.stop_turn = AsyncMock(return_value="idle")
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.is_owner", return_value=True):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.is_owner", return_value=True):
                 await ev._route_message(orch, _event(text="!stop"), ev.SeenCache())
         orch.slack.post_message.assert_awaited_with("D1", "Nothing running.", "100.0")
         assert _audit_rows(_real_sel, "!stop") == [("100.0", "idle", "")]
@@ -134,8 +134,8 @@ class TestRouteMessageStopCommand:
             captured.append(caller)
             await respond("♻️ Restarting gateway…")
 
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events._handle_restart", new=_fake_restart):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events._handle_restart", new=_fake_restart):
                 await ev._route_message(orch, _event(text="!restart"), ev.SeenCache())
         assert captured == ["U_OWNER"]
         orch.slack.post_message.assert_awaited_with("D1", "♻️ Restarting gateway…", "100.0")
@@ -147,8 +147,8 @@ class TestRouteMessageQueueing:
         orch = _make_orch()
         orch._session_tasks = {"100.0": MagicMock()}
         orch.sessions.enqueue = MagicMock(return_value=True)
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
                 await ev._route_message(orch, _event(), ev.SeenCache())
         hm.assert_not_called()
         orch.slack.add_reaction.assert_awaited_once_with("D1", "100.0", "hourglass_flowing_sand")
@@ -161,7 +161,7 @@ class TestRouteMessageQueueing:
         orch._session_tasks = {"100.0": MagicMock()}
         orch.sessions.enqueue = MagicMock(return_value=False)
         orch.slack.add_reaction = AsyncMock(side_effect=RuntimeError("rate limited"))
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
             await ev._route_message(orch, _event(), ev.SeenCache())
         assert orch._pending_queue["100.0"][0][0] == "100.0"
 
@@ -170,8 +170,8 @@ class TestRouteMessageQueueing:
         orch = _make_orch()
         orch.sessions.enqueue = MagicMock(return_value=True)
         orch.slack.add_reaction = AsyncMock(side_effect=RuntimeError("rate limited"))
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
                 await ev._route_message(orch, _event(), ev.SeenCache())
         hm.assert_not_called()
         assert orch.sessions.enqueue.call_args.args == ("100.0", "100.0", "hello")
@@ -217,21 +217,21 @@ class TestRouteMessageAttachments:
             loop_ran.set()
             return ["spoken"]
 
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
             with patch(
-                "kiro_crew.slack.events.stt_available", side_effect=_probe_watching_the_loop
+                "aj_crew.slack.events.stt_available", side_effect=_probe_watching_the_loop
             ):
                 with patch(
-                    "kiro_crew.slack.events._transcribe_with_reaction",
+                    "aj_crew.slack.events._transcribe_with_reaction",
                     side_effect=_let_the_loop_breathe,
                 ):
                     with patch(
-                        "kiro_crew.slack.events.process_slack_files",
+                        "aj_crew.slack.events.process_slack_files",
                         new_callable=AsyncMock,
                         return_value=([], []),
                     ):
                         with patch(
-                            "kiro_crew.slack.events.handle_message", new_callable=AsyncMock
+                            "aj_crew.slack.events.handle_message", new_callable=AsyncMock
                         ) as hm:
                             ticker = asyncio.create_task(_tick_until(loop_ran))
                             try:
@@ -257,23 +257,23 @@ class TestRouteMessageAttachments:
         orch = _make_orch(use_transport=use_transport)
         files = [{"mimetype": "audio/webm", "url_private": "https://x.invalid/a.webm"}]
         target = "handle_message_transport" if use_transport else "handle_message"
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.stt_available", return_value=True):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.stt_available", return_value=True):
                 with patch(
-                    "kiro_crew.slack.events._transcribe_with_reaction",
+                    "aj_crew.slack.events._transcribe_with_reaction",
                     new_callable=AsyncMock,
                     return_value=["spoken"],
                 ):
                     with patch(
-                        "kiro_crew.slack.events.process_slack_files",
+                        "aj_crew.slack.events.process_slack_files",
                         new_callable=AsyncMock,
                         return_value=([], []),
                     ):
                         with patch(
-                            f"kiro_crew.slack.events.{target}", new_callable=AsyncMock
+                            f"aj_crew.slack.events.{target}", new_callable=AsyncMock
                         ) as hm:
                             with patch.object(
-                                KiroCrewConfig, "load", return_value=KiroCrewConfig()
+                                AjCrewConfig, "load", return_value=AjCrewConfig()
                             ):
                                 await ev._route_message(
                                     orch, _event(text="", files=files), ev.SeenCache()
@@ -299,15 +299,15 @@ class TestRouteMessageAttachments:
             orch._session_tasks = {"100.0": MagicMock()}
         orch.sessions.enqueue = MagicMock(return_value=session_accepts)
         files = [{"mimetype": "audio/webm", "url_private": "https://x.invalid/a.webm"}]
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.stt_available", return_value=True):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.stt_available", return_value=True):
                 with patch(
-                    "kiro_crew.slack.events._transcribe_with_reaction",
+                    "aj_crew.slack.events._transcribe_with_reaction",
                     new_callable=AsyncMock,
                     return_value=["spoken"],
                 ):
                     with patch(
-                        "kiro_crew.slack.events.process_slack_files",
+                        "aj_crew.slack.events.process_slack_files",
                         new_callable=AsyncMock,
                         return_value=([], []),
                     ):
@@ -324,15 +324,15 @@ class TestRouteMessageAttachments:
         img = tmp_path / "shot.png"
         img.write_bytes(b"\x89PNG")
         files = [{"mimetype": "image/png", "url_private": "https://x.invalid/a.png"}]
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.stt_available", return_value=False):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.stt_available", return_value=False):
                 with patch(
-                    "kiro_crew.slack.events.process_slack_files",
+                    "aj_crew.slack.events.process_slack_files",
                     new_callable=AsyncMock,
                     return_value=([str(img)], ["file body"]),
                 ):
                     with patch(
-                        "kiro_crew.slack.events.handle_message", new_callable=AsyncMock
+                        "aj_crew.slack.events.handle_message", new_callable=AsyncMock
                     ) as hm:
                         await ev._route_message(
                             orch, _event(text="look", files=files), ev.SeenCache()
@@ -353,15 +353,15 @@ class TestRouteMessageAttachments:
         img.write_bytes(b"\x89PNG")
         files = [{"mimetype": "image/png", "url_private": "https://x.invalid/a.png"}]
         text = "<@UBOT> ```python\nprint(1)"
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.stt_available", return_value=False):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.stt_available", return_value=False):
                 with patch(
-                    "kiro_crew.slack.events.process_slack_files",
+                    "aj_crew.slack.events.process_slack_files",
                     new_callable=AsyncMock,
                     return_value=([str(img)], ["[File: n.md]\n```\nx\n```\n[End of file]"]),
                 ):
                     with patch(
-                        "kiro_crew.slack.events.handle_message", new_callable=AsyncMock
+                        "aj_crew.slack.events.handle_message", new_callable=AsyncMock
                     ) as hm:
                         await ev._route_message(
                             orch, _event(text=text, files=files), ev.SeenCache(), is_mention=True
@@ -386,15 +386,15 @@ class TestRouteMessageAttachments:
             {"mimetype": "text/plain", "url_private": "https://x.invalid/b.txt"},
         ]
         target = "handle_message_transport" if use_transport else "handle_message"
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.stt_available", return_value=False):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.stt_available", return_value=False):
                 with patch(
-                    "kiro_crew.slack.events.process_slack_files",
+                    "aj_crew.slack.events.process_slack_files",
                     new_callable=AsyncMock,
                     return_value=([str(img)], ["[File: b.txt]\nfile body"]),
                 ):
-                    with patch(f"kiro_crew.slack.events.{target}", new_callable=AsyncMock) as hm:
-                        with patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()):
+                    with patch(f"aj_crew.slack.events.{target}", new_callable=AsyncMock) as hm:
+                        with patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()):
                             await ev._route_message(
                                 orch,
                                 _event(text="<@UBOT> look", files=files),
@@ -414,10 +414,10 @@ class TestRouteMessageAttachments:
         img = tmp_path / "shot.png"
         img.write_bytes(b"\x89PNG")
         files = [{"mimetype": "image/png", "url_private": "https://x.invalid/a.png"}]
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.stt_available", return_value=False):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.stt_available", return_value=False):
                 with patch(
-                    "kiro_crew.slack.events.process_slack_files",
+                    "aj_crew.slack.events.process_slack_files",
                     new_callable=AsyncMock,
                     return_value=([str(img)], []),
                 ):
@@ -432,15 +432,15 @@ class TestRouteMessageAttachments:
         img = tmp_path / "empty.png"
         img.write_bytes(b"\x89PNG")
         files = [{"mimetype": "image/png", "url_private": "https://x.invalid/a.png"}]
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.stt_available", return_value=False):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.stt_available", return_value=False):
                 with patch(
-                    "kiro_crew.slack.events.process_slack_files",
+                    "aj_crew.slack.events.process_slack_files",
                     new_callable=AsyncMock,
                     return_value=([], []),
                 ) as process:
                     with patch(
-                        "kiro_crew.slack.events.handle_message", new_callable=AsyncMock
+                        "aj_crew.slack.events.handle_message", new_callable=AsyncMock
                     ) as hm:
                         # A missing temp path must not raise from the cleanup loop.
                         img.unlink()
@@ -461,8 +461,8 @@ class TestRouteMessageAttachments:
             text="This message contains interactive elements.",
             attachments=[{"is_share": True, "text": "the real body"}],
         )
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
                 await ev._route_message(orch, event, ev.SeenCache())
                 await _drain(orch)
         routed = hm.await_args[0][3]
@@ -478,14 +478,14 @@ class TestRouteMessageTransportPath:
         orch = _make_orch(use_transport=True)
         queued = [("101.0", "next up", {"channel": "C1"})]
         orch.sessions.dequeue = MagicMock(side_effect=lambda _k: queued.pop(0) if queued else None)
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
             with patch(
-                "kiro_crew.slack.events.handle_message_transport", new_callable=AsyncMock
+                "aj_crew.slack.events.handle_message_transport", new_callable=AsyncMock
             ) as transport:
                 with patch(
-                    "kiro_crew.slack.events._dispatch_queued", new_callable=AsyncMock
+                    "aj_crew.slack.events._dispatch_queued", new_callable=AsyncMock
                 ) as dispatch:
-                    with patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()):
+                    with patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()):
                         await ev._route_message(orch, _event(), ev.SeenCache())
                         await _drain(orch)
                         await _drain(orch)
@@ -498,12 +498,12 @@ class TestRouteMessageTransportPath:
         orch = _make_orch(use_transport=True)
         orch.sessions.dequeue = MagicMock(return_value=None)
         orch._pending_queue = {"100.0": [("101.0", "pending", {"channel": "C1"})]}
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.handle_message_transport", new_callable=AsyncMock):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.handle_message_transport", new_callable=AsyncMock):
                 with patch(
-                    "kiro_crew.slack.events._dispatch_queued", new_callable=AsyncMock
+                    "aj_crew.slack.events._dispatch_queued", new_callable=AsyncMock
                 ) as dispatch:
-                    with patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()):
+                    with patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()):
                         await ev._route_message(orch, _event(), ev.SeenCache())
                         await _drain(orch)
                         await _drain(orch)
@@ -514,10 +514,10 @@ class TestRouteMessageTransportPath:
     async def test_transport_drain_failure_is_logged(self, caplog):
         orch = _make_orch(use_transport=True)
         orch.sessions.dequeue = MagicMock(side_effect=RuntimeError("queue corrupt"))
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.handle_message_transport", new_callable=AsyncMock):
-                with patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()):
-                    with caplog.at_level("ERROR", logger="kiro_crew.slack.events"):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.handle_message_transport", new_callable=AsyncMock):
+                with patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()):
+                    with caplog.at_level("ERROR", logger="aj_crew.slack.events"):
                         await ev._route_message(orch, _event(), ev.SeenCache())
                         await _drain(orch)
         assert any("_on_transport_done drain failed" in r.message for r in caplog.records)
@@ -529,10 +529,10 @@ class TestRouteMessageNativeDrain:
         orch = _make_orch()
         queued = [("101.0", "next up", {"channel": "C1"})]
         orch.sessions.dequeue = MagicMock(side_effect=lambda _k: queued.pop(0) if queued else None)
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock):
                 with patch(
-                    "kiro_crew.slack.events._dispatch_queued", new_callable=AsyncMock
+                    "aj_crew.slack.events._dispatch_queued", new_callable=AsyncMock
                 ) as dispatch:
                     await ev._route_message(orch, _event(), ev.SeenCache())
                     await _drain(orch)
@@ -544,9 +544,9 @@ class TestRouteMessageNativeDrain:
     async def test_native_done_callback_drain_failure_is_logged(self, caplog):
         orch = _make_orch()
         orch.sessions.dequeue = MagicMock(side_effect=RuntimeError("queue corrupt"))
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock):
-                with caplog.at_level("ERROR", logger="kiro_crew.slack.events"):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock):
+                with caplog.at_level("ERROR", logger="aj_crew.slack.events"):
                     await ev._route_message(orch, _event(), ev.SeenCache())
                     await _drain(orch)
         assert any("_on_done drain failed" in r.message for r in caplog.records)
@@ -556,10 +556,10 @@ class TestRouteMessageNativeDrain:
         orch = _make_orch()
         orch.sessions.dequeue = MagicMock(return_value=None)
         orch._pending_queue = {"100.0": [("101.0", "pending", {"channel": "D1"})]}
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock):
                 with patch(
-                    "kiro_crew.slack.events._dispatch_queued", new_callable=AsyncMock
+                    "aj_crew.slack.events._dispatch_queued", new_callable=AsyncMock
                 ) as dispatch:
                     await ev._route_message(orch, _event(), ev.SeenCache())
                     await _drain(orch)
@@ -574,8 +574,8 @@ class TestRouteMessageEnterpriseAndObserve:
         orch = _history_orch()
         ctx = MagicMock()
         ctx.return_value.slack_gate.check_message_origin.return_value = False
-        with patch("kiro_crew.slack.events.current_context", ctx):
-            with patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
+        with patch("aj_crew.slack.events.current_context", ctx):
+            with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
                 await ev._route_message(orch, _event(), ev.SeenCache())
         hm.assert_not_called()
         assert _mock_sel.log_api_access.call_args.kwargs["error"] == "enterprise_origin_mismatch"
@@ -588,8 +588,8 @@ class TestRouteMessageEnterpriseAndObserve:
     async def test_observe_records_history_then_drops_plain_message(self, _mock_sel, _real_sel):
         orch = _history_orch(dm_activation=ACTIVATION_OBSERVE)
         seen = ev.SeenCache()
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
                 await ev._route_message(orch, _event(), seen)
         hm.assert_not_called()
         orch.channel_history.push.assert_called_once()
@@ -602,8 +602,8 @@ class TestRouteMessageEnterpriseAndObserve:
     @pytest.mark.asyncio
     async def test_observe_processes_mention(self):
         orch = _history_orch(dm_activation=ACTIVATION_OBSERVE)
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
                 await ev._route_message(
                     orch, _event(text="<@BOT1> hi"), ev.SeenCache(), is_mention=True
                 )
@@ -618,8 +618,8 @@ class TestRouteMessageEnterpriseAndObserve:
         orch = _make_orch(dm_activation=ACTIVATION_OBSERVE)
         orch.sessions.has_session = MagicMock(return_value=True)
         seen = ev.SeenCache()
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
                 await ev._route_message(orch, _event(thread_ts="99.0"), seen)
                 await _drain(orch)
         orch.sessions.has_session.assert_any_call("99.0")
@@ -631,8 +631,8 @@ class TestRouteMessageEnterpriseAndObserve:
     @pytest.mark.asyncio
     async def test_observe_skips_history_for_unauthorized_sender(self):
         orch = _make_orch(dm_activation=ACTIVATION_OBSERVE)
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=False) as allowed:
-            with patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=False) as allowed:
+            with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
                 await ev._route_message(orch, _event(), ev.SeenCache())
         allowed.assert_any_call("U_OWNER")
         orch.channel_history.push.assert_not_called()
@@ -645,15 +645,15 @@ class TestRouteMessageTempCleanup:
         orch = _make_orch()
         ghost = tmp_path / "already-gone.png"
         files = [{"mimetype": "image/png", "url_private": "https://x.invalid/a.png"}]
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-            with patch("kiro_crew.slack.events.stt_available", return_value=False):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.stt_available", return_value=False):
                 with patch(
-                    "kiro_crew.slack.events.process_slack_files",
+                    "aj_crew.slack.events.process_slack_files",
                     new_callable=AsyncMock,
                     return_value=([str(ghost)], []),
                 ):
                     with patch(
-                        "kiro_crew.slack.events.handle_message", new_callable=AsyncMock
+                        "aj_crew.slack.events.handle_message", new_callable=AsyncMock
                     ) as hm:
                         await ev._route_message(
                             orch, _event(text="see", files=files), ev.SeenCache()
@@ -670,7 +670,7 @@ class TestDispatchQueued:
         img = tmp_path / "queued.png"
         img.write_bytes(b"\x89PNG")
         kwargs = {"channel": "D1", "thread_ts": None, "image_temp_paths": [str(img)]}
-        with patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
+        with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
             await ev._dispatch_queued(orch, "100.0", "101.0", "queued text", kwargs)
         hm.assert_awaited_once()
         assert not img.exists()
@@ -681,8 +681,8 @@ class TestDispatchQueued:
         orch = _make_orch(use_transport=use_transport)
         kwargs = {"channel": "D1", "spool_text": "look", "spool_attachments": 1}
         target = "handle_message_transport" if use_transport else "handle_message"
-        with patch(f"kiro_crew.slack.events.{target}", new_callable=AsyncMock) as hm:
-            with patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()):
+        with patch(f"aj_crew.slack.events.{target}", new_callable=AsyncMock) as hm:
+            with patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()):
                 await ev._dispatch_queued(orch, "100.0", "101.0", "look\n/tmp/x.png", kwargs)
         assert hm.await_args.kwargs["spool_text"] == "look"
         assert hm.await_args.kwargs["spool_attachments"] == 1
@@ -693,8 +693,8 @@ class TestDispatchQueued:
         orch = _make_orch(use_transport=use_transport)
         kwargs = {"channel": "D1", "had_voice_input": True}
         target = "handle_message_transport" if use_transport else "handle_message"
-        with patch(f"kiro_crew.slack.events.{target}", new_callable=AsyncMock) as hm:
-            with patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()):
+        with patch(f"aj_crew.slack.events.{target}", new_callable=AsyncMock) as hm:
+            with patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()):
                 await ev._dispatch_queued(orch, "100.0", "101.0", "spoken", kwargs)
         assert hm.await_args.kwargs["had_voice_input"] is True
 
@@ -702,7 +702,7 @@ class TestDispatchQueued:
     async def test_missing_temp_path_is_tolerated(self, tmp_path):
         orch = _make_orch()
         kwargs = {"channel": "D1", "image_temp_paths": [str(tmp_path / "nope.png")]}
-        with patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
+        with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
             await ev._dispatch_queued(orch, "100.0", "101.0", "queued text", kwargs)
         hm.assert_awaited_once()
         assert hm.await_args[0][3] == "queued text"
@@ -713,7 +713,7 @@ class TestHandleStatus:
     @pytest.mark.asyncio
     async def test_reports_stats_summary_with_identity_line(self):
         respond = AsyncMock()
-        with patch("kiro_crew.slack.events.Stats") as stats:
+        with patch("aj_crew.slack.events.Stats") as stats:
             stats.return_value.summary.return_value = "turns: 3"
             await ev._handle_status(_make_orch(), "U_OWNER", "", respond)
         assert respond.call_args[0][0].startswith("turns: 3")
@@ -732,12 +732,12 @@ class TestHandleSlashRespondBlocks:
         ev.register_slash_command("zzcovblocks", _handler, "coverage probe")
         try:
             payload = {
-                "command": "/kirocrew",
+                "command": "/ajcrew",
                 "user_id": "U_OWNER",
                 "text": "zzcovblocks",
                 "response_url": "https://hooks.example.invalid/x",
             }
-            with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
+            with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
                 with _capture_respond(posted):
                     await ev._handle_slash(orch, payload)
                     await _drain(orch)
@@ -756,8 +756,8 @@ class TestHandleSlashRespondBlocks:
 
         ev.register_slash_command("zzcovnourl", _handler, "coverage probe")
         try:
-            payload = {"command": "/kirocrew", "user_id": "U_OWNER", "text": "zzcovnourl"}
-            with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
+            payload = {"command": "/ajcrew", "user_id": "U_OWNER", "text": "zzcovnourl"}
+            with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
                 with _capture_respond(posted, response_url=""):
                     await ev._handle_slash(orch, payload)
                     await _drain(orch)

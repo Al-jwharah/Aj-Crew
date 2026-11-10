@@ -25,17 +25,17 @@ from git_maintenance_helpers import GIT_MAINTENANCE_OFF_CONFIG, git_maintenance_
 from installer_test_helpers import run_bounded
 from skill_script_helpers import load_skill_script
 
-from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS
+from aj_crew.platform.update_governance import _GIT_LOCATION_VARS
 
 # Resolve the push_guard.py script path relative to the repo root.
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PUSH_GUARD_DIR = (
     REPO_ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
+    / "ajcrew-dev"
+    / "ajcrew-prepare-pr"
     / "scripts"
 )
 PUSH_GUARD = str(PUSH_GUARD_DIR / "push_guard.py")

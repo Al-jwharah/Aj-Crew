@@ -72,7 +72,7 @@ async function main() {
         // withMeta=true → managed lane (updateCommand present, no disabled field)
         // withMeta=false → bare marker (no updateCommand, disabled:'externally-managed')
         ...(withMeta
-          ? { managedBy: 'internal-registry', updateCommand: 'pkgtool update kirocrew' }
+          ? { managedBy: 'internal-registry', updateCommand: 'pkgtool update ajcrew' }
           : { disabled: 'externally-managed', managedBy: '', updateCommand: '' }),
       }),
       setChannel: async () => ({ ok: true }),

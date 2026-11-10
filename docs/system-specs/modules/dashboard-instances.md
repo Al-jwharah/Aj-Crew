@@ -484,8 +484,8 @@ draws after the value. A cell that never resolved keeps the template's placehold
 carries the same marker, which is why it says "not current" and not "older value".
 `missing` wins over presence on every fill, because a patch carries the fields it did
 not move forward from the read before it: a cell named in the patch's `missing` is
-marked even though its old value is still in `window.kirocrew.fields`. A
-`window.kirocrew.subscribe` callback is called `cb(value, name, meta)` with
+marked even though its old value is still in `window.ajcrew.fields`. A
+`window.ajcrew.subscribe` callback is called `cb(value, name, meta)` with
 `meta = {missing}`: when a field it was given goes missing it is called again with the
 value it already had and `missing: true`, and once more with `missing: false` when the
 field resolves (a patch that only drops it from `missing` counts). A field it was never

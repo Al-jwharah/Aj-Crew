@@ -82,14 +82,14 @@
         "is_shell": true,
         "kind": "tool_call_update",
         "raw_tool_params": {
-          "command": "echo kirocrew-opencode-live",
+          "command": "echo ajcrew-opencode-live",
           "cwd": "<cwd>"
         },
-        "title": "echo kirocrew-opencode-live",
+        "title": "echo ajcrew-opencode-live",
         "tool_call_id": "call_tkctdm9o",
-        "tool_input": "{\n  \"command\": \"echo kirocrew-opencode-live\",\n  \"cwd\": \"<cwd>\"\n}",
+        "tool_input": "{\n  \"command\": \"echo ajcrew-opencode-live\",\n  \"cwd\": \"<cwd>\"\n}",
         "tool_kind": "execute",
-        "wire_title": "echo kirocrew-opencode-live"
+        "wire_title": "echo ajcrew-opencode-live"
       }
     ],
     "frame": "session/update",
@@ -118,13 +118,13 @@
         ],
         "raw_params_trusted": true,
         "raw_tool_params": {
-          "command": "echo kirocrew-opencode-live",
+          "command": "echo ajcrew-opencode-live",
           "cwd": "<cwd>"
         },
         "shell_classified": true,
-        "title": "echo kirocrew-opencode-live",
+        "title": "echo ajcrew-opencode-live",
         "tool_call_id": "call_tkctdm9o",
-        "tool_input": "{\n  \"command\": \"echo kirocrew-opencode-live\",\n  \"cwd\": \"<cwd>\"\n}",
+        "tool_input": "{\n  \"command\": \"echo ajcrew-opencode-live\",\n  \"cwd\": \"<cwd>\"\n}",
         "tool_kind": "execute"
       }
     ],
@@ -142,14 +142,14 @@
         "is_shell": true,
         "kind": "tool_call_update",
         "raw_tool_params": {
-          "command": "echo kirocrew-opencode-live",
+          "command": "echo ajcrew-opencode-live",
           "cwd": "<cwd>"
         },
-        "title": "echo kirocrew-opencode-live",
+        "title": "echo ajcrew-opencode-live",
         "tool_call_id": "call_tkctdm9o",
-        "tool_input": "{\n  \"command\": \"echo kirocrew-opencode-live\",\n  \"cwd\": \"<cwd>\"\n}",
+        "tool_input": "{\n  \"command\": \"echo ajcrew-opencode-live\",\n  \"cwd\": \"<cwd>\"\n}",
         "tool_kind": "execute",
-        "wire_title": "echo kirocrew-opencode-live"
+        "wire_title": "echo ajcrew-opencode-live"
       }
     ],
     "frame": "session/update",
@@ -161,7 +161,7 @@
       {
         "kind": "tool_result",
         "tool_call_id": "call_tkctdm9o",
-        "tool_output": "kirocrew-opencode-live\n",
+        "tool_output": "ajcrew-opencode-live\n",
         "tool_output_bytes": 23,
         "tool_output_digest": "38b8f2d49d0a7dbe4e4470c261be27db3cccef718f9b3770949e7e3754780160",
         "tool_status": "in_progress"
@@ -170,14 +170,14 @@
         "is_shell": true,
         "kind": "tool_call_update",
         "raw_tool_params": {
-          "command": "echo kirocrew-opencode-live",
+          "command": "echo ajcrew-opencode-live",
           "cwd": "<cwd>"
         },
-        "title": "echo kirocrew-opencode-live",
+        "title": "echo ajcrew-opencode-live",
         "tool_call_id": "call_tkctdm9o",
-        "tool_input": "{\n  \"command\": \"echo kirocrew-opencode-live\",\n  \"cwd\": \"<cwd>\"\n}",
+        "tool_input": "{\n  \"command\": \"echo ajcrew-opencode-live\",\n  \"cwd\": \"<cwd>\"\n}",
         "tool_kind": "execute",
-        "wire_title": "echo kirocrew-opencode-live"
+        "wire_title": "echo ajcrew-opencode-live"
       }
     ],
     "frame": "session/update",
@@ -190,7 +190,7 @@
         "kind": "tool_result",
         "tool_call_id": "call_tkctdm9o",
         "tool_final": true,
-        "tool_output": "kirocrew-opencode-live\n",
+        "tool_output": "ajcrew-opencode-live\n",
         "tool_output_bytes": 23,
         "tool_output_digest": "38b8f2d49d0a7dbe4e4470c261be27db3cccef718f9b3770949e7e3754780160",
         "tool_status": "completed"
@@ -198,9 +198,9 @@
       {
         "is_shell": true,
         "kind": "tool_call_update",
-        "title": "echo kirocrew-opencode-live",
+        "title": "echo ajcrew-opencode-live",
         "tool_call_id": "call_tkctdm9o",
-        "wire_title": "echo kirocrew-opencode-live"
+        "wire_title": "echo ajcrew-opencode-live"
       }
     ],
     "frame": "session/update",

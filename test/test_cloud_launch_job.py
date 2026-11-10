@@ -11,8 +11,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.cloud import launch_job as lj
+from aj_crew import platform_compat
+from aj_crew.cloud import launch_job as lj
 
 
 class FakeHandle:
@@ -205,8 +205,8 @@ class TestRunLaunch:
     def test_real_handle_carries_the_prompt_error(self, monkeypatch):
         """``_RealSigninHandle`` must expose ``prompt.error``: dropping it is what
         let a verified mismatch masquerade as the no-URL case."""
-        from kiro_crew.cloud import launch_engine as le
-        from kiro_crew.cloud.login import LoginPrompt
+        from aj_crew.cloud import launch_engine as le
+        from aj_crew.cloud.login import LoginPrompt
 
         refused = LoginPrompt(error="the instance is signed in to a different Kiro identity")
         monkeypatch.setattr(le.login, "start_device_login", lambda *a, **k: refused)
@@ -511,7 +511,7 @@ class TestFilePermissions:
         The default store must live under the ``run/`` tree, which is on the shared
         sensitive-path floor, so agent file tools cannot read (and exfiltrate) it.
         (Same-UID file perms alone don't help: agent tools run as the same user.)"""
-        from kiro_crew import security
+        from aj_crew import security
 
         store = lj.LaunchJobStore()  # default root; constructing it touches no disk
         assert store.root.parent.name == "run"
@@ -526,7 +526,7 @@ class TestRealSigninHandleFailures:
     never registered and so never appears in the crew list."""
 
     def _handle(self, monkeypatch, resume_exc=None):
-        from kiro_crew.cloud import launch_engine as le
+        from aj_crew.cloud import launch_engine as le
 
         monkeypatch.setattr(
             le.login,
@@ -545,7 +545,7 @@ class TestRealSigninHandleFailures:
         return le._RealSigninHandle("i-0abc", "", "us-east-1")
 
     def test_an_aws_failure_resuming_login_is_unconfirmed_not_fatal(self, monkeypatch):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         h = self._handle(monkeypatch, resume_exc=AWSError("ssm hiccup"))
         assert h.wait(threading.Event()) is False
@@ -561,7 +561,7 @@ class TestRealSigninHandleFailures:
         # job would fail BEFORE register() — stranding a provisioned, billing
         # instance outside the crew list. The handle must instead come back empty and
         # unconfirmed so the launch still registers the crew.
-        from kiro_crew.cloud import launch_engine as le
+        from aj_crew.cloud import launch_engine as le
 
         def _boom(*a, **k):
             raise RuntimeError("transient ssm send-command failure")
@@ -583,7 +583,7 @@ class TestRealEngineGatewayPort:
     """
 
     def _engine(self, monkeypatch):
-        from kiro_crew.cloud import launch_engine as le
+        from aj_crew.cloud import launch_engine as le
 
         seen = {}
         monkeypatch.setattr(
@@ -620,8 +620,8 @@ class TestRealEngineGatewayPort:
         """
         import re
 
-        from kiro_crew.cloud import ec2
-        from kiro_crew.cloud.connect import DEFAULT_REMOTE_DASHBOARD_PORT
+        from aj_crew.cloud import ec2
+        from aj_crew.cloud.connect import DEFAULT_REMOTE_DASHBOARD_PORT
 
         text = ec2.load_template()
         # The template carries CloudFormation short-form tags (!Sub), which a
@@ -648,7 +648,7 @@ class TestRealEnginePreflight:
     """
 
     def _engine(self, monkeypatch, reach):
-        from kiro_crew.cloud import launch_engine as le
+        from aj_crew.cloud import launch_engine as le
 
         monkeypatch.setattr(le.iam, "reachability_check", lambda profile, region: reach)
         return le.RealLaunchEngine()
@@ -658,7 +658,7 @@ class TestRealEnginePreflight:
         assert engine.preflight("default", "us-east-1") is None
 
     def test_an_unreachable_account_raises_with_the_reported_detail(self, monkeypatch):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         engine = self._engine(
             monkeypatch, {"reachable": False, "detail": "ExpiredToken: session expired"}
@@ -669,7 +669,7 @@ class TestRealEnginePreflight:
     def test_it_falls_back_to_note_then_to_a_generic_reason(self, monkeypatch):
         """`detail` is not guaranteed: the probe reports some failures as `note`,
         and a bare `{"reachable": False}` must still name a cause."""
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         engine = self._engine(monkeypatch, {"reachable": False, "note": "no such profile"})
         with pytest.raises(AWSError, match="no such profile"):
@@ -685,7 +685,7 @@ class TestRealEngineRegistration:
     registry failure instead of raising. The engine must not treat that as success."""
 
     def test_a_registry_failure_is_not_reported_as_a_finished_launch(self, monkeypatch):
-        from kiro_crew.cloud import launch_engine as le
+        from aj_crew.cloud import launch_engine as le
 
         monkeypatch.setattr(le.connect_mod, "register_instance", lambda *a, **k: None)
 
@@ -700,7 +700,7 @@ class TestRealEngineRegistration:
         assert "billing" in str(err.value)
 
     def test_a_successful_registration_returns_quietly(self, monkeypatch):
-        from kiro_crew.cloud import launch_engine as le
+        from aj_crew.cloud import launch_engine as le
 
         monkeypatch.setattr(le.connect_mod, "register_instance", lambda *a, **k: "inst-7")
 
@@ -932,7 +932,7 @@ class TestTargetCompatibilityIsDecidedBeforeProvisioning:
         Center target must fail BEFORE `provision` runs. Deciding it at the
         sign-in step would strand a billed, running, unregistered instance that
         no teardown arm covers (those fire only on a provision-step failure)."""
-        from kiro_crew.cloud.login_target import KiroLoginTarget
+        from aj_crew.cloud.login_target import KiroLoginTarget
 
         s = _store(tmp_path)
         job = s.create(
@@ -984,7 +984,7 @@ class TestTheRegionIsDefaulted:
     def test_the_default_reads_the_operators_configured_region(self, monkeypatch):
         """Sourced from the same config the other lanes read, so the two cannot
         disagree about which region the operator chose."""
-        import kiro_crew.cloud.config as cloud_config_mod
+        import aj_crew.cloud.config as cloud_config_mod
 
         monkeypatch.setattr(
             cloud_config_mod.CloudConfig,
@@ -1000,7 +1000,7 @@ class TestTheRegionIsDefaulted:
         outcome as before this default existed and names the real problem --
         whereas raising would replace a readable refusal with a traceback.
         """
-        import kiro_crew.cloud.config as cloud_config_mod
+        import aj_crew.cloud.config as cloud_config_mod
 
         def _boom():
             raise OSError("cloud.json is unreadable")

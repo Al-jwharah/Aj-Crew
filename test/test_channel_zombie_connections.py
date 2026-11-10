@@ -17,10 +17,10 @@ import logging
 
 import pytest
 
-from kiro_crew.discord.client import _WS_HEARTBEAT_SECS, DiscordClient
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.weixin.client import ContextTokenStore
-from kiro_crew.weixin.transport import WeixinTransport
+from aj_crew.discord.client import _WS_HEARTBEAT_SECS, DiscordClient
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.weixin.client import ContextTokenStore
+from aj_crew.weixin.transport import WeixinTransport
 
 # ── Discord: transport keepalive ──────────────────────────────────────────────
 
@@ -62,7 +62,7 @@ class _FailingWs:
 async def test_heartbeat_loop_death_closes_ws_and_warns(caplog):
     client = DiscordClient(token="test")
     ws = _FailingWs()
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.discord.client"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.discord.client"):
         # interval=0 removes the pre-send jitter sleep from the timing budget.
         await client._heartbeat_loop(ws, 0.0)
     assert ws.close_calls == 1, "a dead heartbeat task must recycle the connection"
@@ -157,7 +157,7 @@ async def test_clean_close_warns_and_flips_the_badge(caplog):
     client.ready.set()
     states: list[tuple[bool, str]] = []
     client.on_state_change = lambda connected, error: states.append((connected, error))
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.discord.client"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.discord.client"):
         await client._run_connection()
     assert not client.ready.is_set()
     assert any("connection ended" in r.message for r in caplog.records)
@@ -229,7 +229,7 @@ async def test_a_sustained_timeout_streak_warns_exactly_once(tmp_path, caplog):
     not one every N polls — a long-idle channel must not spam the log even if
     the server holds every poll to the client deadline."""
     t = _transport(_TimeoutClient(timeouts=45), tmp_path)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.weixin.transport"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.weixin.transport"):
         await _run_poll_until_parked(t)
     hits = [r for r in caplog.records if "consecutive long-poll timeouts" in r.message]
     assert len(hits) == 1
@@ -252,7 +252,7 @@ async def test_a_successful_poll_resets_the_timeout_streak(tmp_path, caplog):
             return {}
 
     t = _transport(_NineteenThenOk(), tmp_path)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.weixin.transport"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.weixin.transport"):
         await _run_poll_until_parked(t)
     assert not any("consecutive long-poll timeouts" in r.message for r in caplog.records)
 
@@ -273,7 +273,7 @@ async def test_unexpected_poll_loop_death_warns_and_notifies(tmp_path, caplog):
     states: list[tuple[bool, str]] = []
     t.on_state_change = lambda connected, error: states.append((connected, error))
     t._running = True
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.weixin.transport"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.weixin.transport"):
         with pytest.raises(SystemExit):
             await t._poll_loop()
     assert any("ended unexpectedly" in r.message for r in caplog.records)

@@ -21,43 +21,43 @@ from dev_fleet_app_helpers import _reset_shutdown_admission_state  # noqa: F401 
 from dev_fleet_app_helpers import _sweep_staged_sync_tempdirs  # noqa: F401 - fixture
 from dev_fleet_app_helpers import _venv_maps_to_the_synced_checkout  # noqa: F401 - fixture
 
-import kiro_crew.apps.builtins.dev_fleet.server as mod
-from kiro_crew import gateway_lock
-from kiro_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
-from kiro_crew.apps.builtins.dev_fleet import repository as repository_mod
-from kiro_crew.apps.builtins.dev_fleet import runtime as runtime_mod
-from kiro_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
+import aj_crew.apps.builtins.dev_fleet.server as mod
+from aj_crew import gateway_lock
+from aj_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
+from aj_crew.apps.builtins.dev_fleet import repository as repository_mod
+from aj_crew.apps.builtins.dev_fleet import runtime as runtime_mod
+from aj_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
 
 
 # --- worktree porcelain parsing ---
 def test_parse_worktree_porcelain_basic():
-    from kiro_crew.apps.builtins.dev_fleet.server import _parse_worktree_porcelain
+    from aj_crew.apps.builtins.dev_fleet.server import _parse_worktree_porcelain
 
     raw = textwrap.dedent("""\
-        worktree /home/user/kirocrew
+        worktree /home/user/ajcrew
         HEAD abc1234567890abcdef1234567890abcdef123456
         branch refs/heads/main
 
-        worktree /home/user/kirocrew-wt-feature-x
+        worktree /home/user/ajcrew-wt-feature-x
         HEAD def4567890abcdef1234567890abcdef12345678
         branch refs/heads/feature-x
 
-        worktree /home/user/kirocrew-wt-detached
+        worktree /home/user/ajcrew-wt-detached
         HEAD 1234567890abcdef1234567890abcdef12345678
         detached
 
     """)
     entries = _parse_worktree_porcelain(raw)
     assert len(entries) == 3
-    assert entries[0]["path"] == "/home/user/kirocrew"
+    assert entries[0]["path"] == "/home/user/ajcrew"
     assert entries[0]["branch"] == "main"
-    assert entries[1]["path"] == "/home/user/kirocrew-wt-feature-x"
+    assert entries[1]["path"] == "/home/user/ajcrew-wt-feature-x"
     assert entries[1]["branch"] == "feature-x"
     assert entries[2]["branch"] is None  # detached
 
 
 def test_parse_worktree_porcelain_empty():
-    from kiro_crew.apps.builtins.dev_fleet.server import _parse_worktree_porcelain
+    from aj_crew.apps.builtins.dev_fleet.server import _parse_worktree_porcelain
 
     assert _parse_worktree_porcelain("") == []
 
@@ -70,19 +70,19 @@ def test_parse_worktree_porcelain_captures_locked():
     already run, so a removal path that only learns about it from the failure
     has already destroyed whatever it cleaned.
     """
-    from kiro_crew.apps.builtins.dev_fleet.server import _parse_worktree_porcelain
+    from aj_crew.apps.builtins.dev_fleet.server import _parse_worktree_porcelain
 
     raw = textwrap.dedent("""\
-        worktree /home/user/kirocrew
+        worktree /home/user/ajcrew
         HEAD abc1234567890abcdef1234567890abcdef123456
         branch refs/heads/main
 
-        worktree /home/user/kirocrew-wt-held
+        worktree /home/user/ajcrew-wt-held
         HEAD def4567890abcdef1234567890abcdef12345678
         branch refs/heads/held
         locked keeping this for the repro
 
-        worktree /home/user/kirocrew-wt-bare-lock
+        worktree /home/user/ajcrew-wt-bare-lock
         HEAD def4567890abcdef1234567890abcdef12345678
         detached
         locked
@@ -97,19 +97,19 @@ def test_parse_worktree_porcelain_captures_locked():
 
 def test_parse_worktree_porcelain_captures_prunable():
     """`prunable` marks a record whose checkout directory is gone."""
-    from kiro_crew.apps.builtins.dev_fleet.server import _parse_worktree_porcelain
+    from aj_crew.apps.builtins.dev_fleet.server import _parse_worktree_porcelain
 
     raw = textwrap.dedent("""\
-        worktree /home/user/kirocrew
+        worktree /home/user/ajcrew
         HEAD abc1234567890abcdef1234567890abcdef123456
         branch refs/heads/main
 
-        worktree /home/user/kirocrew-wt-deleted
+        worktree /home/user/ajcrew-wt-deleted
         HEAD def4567890abcdef1234567890abcdef12345678
         branch refs/heads/gone
         prunable gitdir file points to non-existent location
 
-        worktree /home/user/kirocrew-wt-bare-flag
+        worktree /home/user/ajcrew-wt-bare-flag
         HEAD def4567890abcdef1234567890abcdef12345678
         detached
         prunable
@@ -130,18 +130,18 @@ async def test_discover_worktrees_drops_prunable():
     git keeps reporting the admin record until `git worktree prune` runs, so
     without this filter the ghost row survives every refresh.
     """
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     stdout = textwrap.dedent("""\
-        worktree /home/user/kirocrew
+        worktree /home/user/ajcrew
         HEAD abc1234567890abcdef1234567890abcdef123456
         branch refs/heads/main
 
-        worktree /home/user/kirocrew-wt-alive
+        worktree /home/user/ajcrew-wt-alive
         HEAD def4567890abcdef1234567890abcdef12345678
         branch refs/heads/alive
 
-        worktree /home/user/kirocrew-wt-deleted
+        worktree /home/user/ajcrew-wt-deleted
         HEAD 1234567890abcdef1234567890abcdef12345678
         branch refs/heads/deleted
         prunable gitdir file points to non-existent location
@@ -150,7 +150,7 @@ async def test_discover_worktrees_drops_prunable():
     with patch.object(runtime_mod, "_run_cmd", new=AsyncMock(return_value=(0, stdout, ""))):
         entries = await mod._discover_worktrees()
     paths = [e["path"] for e in entries]
-    assert paths == ["/home/user/kirocrew", "/home/user/kirocrew-wt-alive"]
+    assert paths == ["/home/user/ajcrew", "/home/user/ajcrew-wt-alive"]
     assert entries[0]["is_main"] is True
     assert entries[1]["is_main"] is False
 
@@ -158,15 +158,15 @@ async def test_discover_worktrees_drops_prunable():
 @pytest.mark.asyncio
 async def test_discover_worktrees_keeps_prunable_main():
     """The primary checkout anchors is_main and is never filtered out."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     stdout = textwrap.dedent("""\
-        worktree /home/user/kirocrew
+        worktree /home/user/ajcrew
         HEAD abc1234567890abcdef1234567890abcdef123456
         branch refs/heads/main
         prunable gitdir file points to non-existent location
 
-        worktree /home/user/kirocrew-wt-alive
+        worktree /home/user/ajcrew-wt-alive
         HEAD def4567890abcdef1234567890abcdef12345678
         branch refs/heads/alive
 
@@ -174,15 +174,15 @@ async def test_discover_worktrees_keeps_prunable_main():
     with patch.object(runtime_mod, "_run_cmd", new=AsyncMock(return_value=(0, stdout, ""))):
         entries = await mod._discover_worktrees()
     assert [e["path"] for e in entries] == [
-        "/home/user/kirocrew",
-        "/home/user/kirocrew-wt-alive",
+        "/home/user/ajcrew",
+        "/home/user/ajcrew-wt-alive",
     ]
     assert entries[0]["is_main"] is True
 
 
 # --- PR status ---
 def test_pr_status_merged():
-    from kiro_crew.apps.builtins.dev_fleet.server import _is_pr_merged
+    from aj_crew.apps.builtins.dev_fleet.server import _is_pr_merged
 
     assert _is_pr_merged({"state": "MERGED", "number": 42}) is True
     assert _is_pr_merged({"state": "OPEN", "number": 42}) is False
@@ -193,11 +193,11 @@ def test_pr_status_merged():
 # --- shipped detection (git cherry parsing) ---
 @pytest.mark.asyncio
 async def test_git_ahead_counts_plus_lines():
-    from kiro_crew.apps.builtins.dev_fleet.server import _git_ahead
+    from aj_crew.apps.builtins.dev_fleet.server import _git_ahead
 
     cherry_output = "+ abc1234\n+ def5678\n- ghi9012\n"
     with patch(
-        "kiro_crew.apps.builtins.dev_fleet.repository._git", new_callable=AsyncMock
+        "aj_crew.apps.builtins.dev_fleet.repository._git", new_callable=AsyncMock
     ) as mock_git:
         mock_git.return_value = cherry_output
         result = await _git_ahead("/fake/path")
@@ -206,10 +206,10 @@ async def test_git_ahead_counts_plus_lines():
 
 @pytest.mark.asyncio
 async def test_git_ahead_returns_none_on_failure():
-    from kiro_crew.apps.builtins.dev_fleet.server import _git_ahead
+    from aj_crew.apps.builtins.dev_fleet.server import _git_ahead
 
     with patch(
-        "kiro_crew.apps.builtins.dev_fleet.repository._git", new_callable=AsyncMock
+        "aj_crew.apps.builtins.dev_fleet.repository._git", new_callable=AsyncMock
     ) as mock_git:
         mock_git.return_value = None
         result = await _git_ahead("/fake/path")
@@ -220,7 +220,7 @@ async def test_git_ahead_returns_none_on_failure():
 @pytest.mark.asyncio
 async def test_prunable_merged_clean():
     """PR merged + clean -> ok:true WITHOUT requiring ahead==0 (squash-safe)."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -251,7 +251,7 @@ async def test_prunable_merged_squash_sim():
     This is the core bug fix: old code would see ahead>0 and reject with
     'merged_new_commits'. New code does NOT check ahead at all.
     """
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -277,7 +277,7 @@ async def test_prunable_merged_squash_sim():
 
 @pytest.mark.asyncio
 async def test_prunable_merged_dirty_rejected():
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -299,7 +299,7 @@ async def test_prunable_merged_dirty_rejected():
 
 @pytest.mark.asyncio
 async def test_prunable_active_unmerged():
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -323,7 +323,7 @@ async def test_prunable_active_unmerged():
 @pytest.mark.asyncio
 async def test_remove_refuses_when_branch_oid_diverged():
     """Squash-safe race guard: branch OID != PR headRefOid -> refuse removal."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     full_head = "a" * 40
     cache = AsyncMock(return_value={"state": "MERGED"})
@@ -356,7 +356,7 @@ async def test_remove_refuses_when_branch_oid_diverged():
 @pytest.mark.asyncio
 async def test_remove_succeeds_when_oid_matches():
     """Squash-safe race guard passes when OIDs match."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -392,8 +392,8 @@ async def test_remove_succeeds_when_oid_matches():
 @pytest.mark.asyncio
 async def test_remove_proceeds_when_session_bus_absent():
     """An absent backend is checked off-loop and leaves no live pod to protect."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
-    from kiro_crew.pod.runtime import PodBackendAbsent
+    import aj_crew.apps.builtins.dev_fleet.server as mod
+    from aj_crew.pod.runtime import PodBackendAbsent
 
     event_loop_thread = threading.get_ident()
     backend_threads: list[int] = []
@@ -438,7 +438,7 @@ async def test_remove_proceeds_when_session_bus_absent():
 @pytest.mark.asyncio
 async def test_remove_refuses_stale_explicit_bus_address(monkeypatch):
     """A stale explicit bus address must never authorize worktree removal."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     detail = "Failed to connect to bus: No such file or directory"
     monkeypatch.setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/run/user/4242/stale-bus")
@@ -490,7 +490,7 @@ async def test_remove_refuses_stale_explicit_bus_address(monkeypatch):
 @pytest.mark.asyncio
 async def test_remove_still_fails_on_non_pod_exceptions():
     """Non-PodError exceptions (e.g. OSError, TimeoutError) still refuse removal."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -867,7 +867,7 @@ async def test_remove_names_the_home_it_cannot_reclaim(tmp_path, caplog):
     stays -- but at a level the operator sees, carrying the path and the verb
     that reclaims it.
     """
-    from kiro_crew.pod.runtime import PodBackendAbsent
+    from aj_crew.pod.runtime import PodBackendAbsent
 
     with ExitStack() as stack:
         for cm in _remove_stubs(
@@ -1074,7 +1074,7 @@ def test_reclaim_falls_back_to_the_return_code_when_stderr_is_empty(tmp_path):
 # --- _upstream_remote fallback + override ---
 @pytest.mark.asyncio
 async def test_upstream_remote_fallback_to_origin():
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     repository_mod._UPSTREAM_REMOTE = None
     with patch.object(
@@ -1087,14 +1087,14 @@ async def test_upstream_remote_fallback_to_origin():
 
 @pytest.mark.asyncio
 async def test_upstream_remote_reads_config():
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     repository_mod._UPSTREAM_REMOTE = None
     with patch.object(
-        runtime_mod, "_run_cmd", new_callable=AsyncMock, return_value=(0, "kirocrew\n", "")
+        runtime_mod, "_run_cmd", new_callable=AsyncMock, return_value=(0, "ajcrew\n", "")
     ):
         result = await mod._upstream_remote()
-    assert result == "kirocrew"
+    assert result == "ajcrew"
     repository_mod._UPSTREAM_REMOTE = None
 
 
@@ -1110,7 +1110,7 @@ async def test_resolve_base_branch_clears_cached_upstream_remote():
     the stale value and re-seeds the cache with the remote THIS resolution used, so
     later reads and sync target the resolved remote rather than a stale or wrong one.
     """
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     # Save every module global this test mutates: _resolve_base_branch writes
     # BASE_BRANCH and _BASE_BRANCH_POSITIVE, which other tests read at their default.

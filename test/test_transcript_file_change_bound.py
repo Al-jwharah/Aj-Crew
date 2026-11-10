@@ -24,18 +24,18 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import history as history_module
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard import chat_persistence
-from kiro_crew.dashboard.chat_persistence import _rehydrate_slot_from_history, _save_slot_to_history
-from kiro_crew.dashboard.slot_persistence import transcript_merge
-from kiro_crew.dashboard.slot_persistence.transcript_merge import (
+from aj_crew import history as history_module
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard import chat_persistence
+from aj_crew.dashboard.chat_persistence import _rehydrate_slot_from_history, _save_slot_to_history
+from aj_crew.dashboard.slot_persistence import transcript_merge
+from aj_crew.dashboard.slot_persistence.transcript_merge import (
     FILE_CHANGES_ARCHIVE_REASON,
     FILE_CHANGES_OLDER_TURN,
     compact_older_file_change_copies,
 )
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.history import ConversationLog
 
 KEY = "dashboard_chatfc"
 
@@ -132,7 +132,7 @@ def _loaded_slot(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, rows: list[dict], window: int
 ) -> tuple[DashboardState, Any, Path]:
     """A slot whose in-memory window is the last *window* rows; the rest is the prefix."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     path = _write(tmp_path, rows)
     state = _make_state(tmp_path)
     slot = _rehydrate_slot_from_history(state, KEY.removeprefix("dashboard_"))
@@ -355,14 +355,14 @@ def _config_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, session: dict)
     """Point the real config loader at a file holding *session* as its session section."""
     cfg_file = tmp_path / "config.json"
     cfg_file.write_text(json.dumps({"session": session}), encoding="utf-8")
-    monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: cfg_file)
+    monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: cfg_file)
 
 
 class TestTheSetting:
     """The bound ships opt-in: unset, every turn keeps its copies, as before it existed."""
 
     def test_defaults_to_zero_which_keeps_every_turn(self) -> None:
-        assert KiroCrewConfig().session.file_changes_keep_turns == 0
+        assert AjCrewConfig().session.file_changes_keep_turns == 0
 
     def test_the_default_keeps_every_turn_whole_through_the_real_save(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch

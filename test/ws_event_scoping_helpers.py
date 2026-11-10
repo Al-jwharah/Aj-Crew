@@ -12,8 +12,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.dashboard.ws_event_scope import build_allowed_event_set
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.dashboard.ws_event_scope import build_allowed_event_set
 
 
 @pytest.fixture(autouse=True)
@@ -25,7 +25,7 @@ def _clear_module_caches():
     entry from an earlier test can suppress the behaviour under test in a
     later one (especially the cross-app tests that patch ``get_app_manifest``).
     """
-    from kiro_crew.dashboard import ws_event_scope as _wes
+    from aj_crew.dashboard import ws_event_scope as _wes
 
     _wes._exposeto_cache.clear()
     _wes._sel_last_audit.clear()
@@ -69,7 +69,7 @@ def _clear_ws_scope_module_caches(_floor_monkeypatch):
     default. Tests that exercise revocation override this explicitly (patch it
     False, or seed ``_declared_cache`` with a disabled entry).
     """
-    from kiro_crew.dashboard import ws_event_scope as mod
+    from aj_crew.dashboard import ws_event_scope as mod
 
     _floor_monkeypatch.setattr(mod, "is_app_enabled", lambda _name: True)
     for cache in (mod._declared_cache, mod._exposeto_cache, mod._sel_last_audit):

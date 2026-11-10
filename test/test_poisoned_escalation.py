@@ -17,13 +17,13 @@ from types import SimpleNamespace
 import pytest
 from source_corpus import parsed_candidates, src_root
 
-from kiro_crew.dashboard import chat_runner as cr
-from kiro_crew.dashboard.poisoned_escalation import (
+from aj_crew.dashboard import chat_runner as cr
+from aj_crew.dashboard.poisoned_escalation import (
     POISONED_SESSION_CYCLES,
     PoisonedConversationEscalation,
 )
-from kiro_crew.dashboard.recovery_replays import POLICIES, ReplayFamily
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.recovery_replays import POLICIES, ReplayFamily
+from aj_crew.dashboard.state import _ChatSlot
 
 _CELLS = frozenset({"_prestream_exhausted_cycles", "_poisoned_reset_used"})
 

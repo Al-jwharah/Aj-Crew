@@ -29,7 +29,7 @@ const SUBAGENT: ChatMessage = {
   cls: '',
   content: [
     '[Subagent completion event]',
-    'Agent `53e3e5eb` (kirocrew) failed ❌',
+    'Agent `53e3e5eb` (ajcrew) failed ❌',
     'Task: Draft the release notes',
     '',
     `Handed off. Next: ${LINK}`,

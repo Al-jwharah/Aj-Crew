@@ -39,7 +39,7 @@ change must also update the docs and the indexes. The rule is only real if a
 machine enforces it.
 
 The sixth check guards the other direction: some documentation filenames are an
-API. ``src/kiro_crew/docs/*.md`` is packaged and read at runtime, and specific
+API. ``src/aj_crew/docs/*.md`` is packaged and read at runtime, and specific
 filenames are hardcoded in Python and TypeScript. Renaming one of those without
 updating its consumers breaks a shipped feature rather than a link.
 
@@ -64,7 +64,7 @@ answer on a repository this size is "mostly, with a recorded backlog":
   ABOUT to, because every line number rots on the next refactor. Cite a symbol.
 * ``fenced-path`` -- the same path question inside fenced blocks, for the two
   token shapes a reader COPIES rather than reads: a ``docs/task-specs/...md``
-  path and the argument of ``kirocrew run``.
+  path and the argument of ``ajcrew run``.
 * ``table-row-merge`` -- two index rows glued onto one physical line. Both links
   are present, so every link-graph check stays green while the table renders one
   row short and one file loses its entry entirely.
@@ -108,10 +108,10 @@ from pathlib import Path
 # ── What we scan ────────────────────────────────────────────────────────────────
 
 # Documentation roots, each with the index file that must reach every doc in it.
-# ``docs/`` is repo-only contributor/architecture material; ``src/kiro_crew/docs/``
+# ``docs/`` is repo-only contributor/architecture material; ``src/aj_crew/docs/``
 # is PACKAGED end-user material (see MANIFEST.in) and is read at runtime.
 #
-# ``src/kiro_crew/apps/builtins/`` is the third kind: thousands of lines of
+# ``src/aj_crew/apps/builtins/`` is the third kind: thousands of lines of
 # spec-grade markdown that ship INSIDE a builtin app -- its README, its agent
 # briefs and prompts, and its SKILL.md files, which an agent loads verbatim at
 # runtime. A stale path or a dead link there misroutes the agent rather than a
@@ -120,9 +120,9 @@ from pathlib import Path
 # manifest rather than by a documentation index.
 DOC_ROOTS: tuple[str, ...] = (
     "docs",
-    "src/kiro_crew/docs",
+    "src/aj_crew/docs",
     "website/docs",
-    "src/kiro_crew/apps/builtins",
+    "src/aj_crew/apps/builtins",
 )
 
 # Per-directory index filenames, in priority order. A directory is "indexed" by
@@ -165,7 +165,7 @@ UNCURATED_PREFIXES: tuple[str, ...] = (
     # opens. Requiring an index in `skills/<name>/` or `agents/context/` would
     # add a file the app never loads, so reachability and the index requirement
     # are off here while every link and every cited path is still checked.
-    "src/kiro_crew/apps/builtins/",
+    "src/aj_crew/apps/builtins/",
 )
 
 # Directories that legitimately hold docs without their own index: a vendored
@@ -202,14 +202,14 @@ SKIP_DIR_PATHS: frozenset[str] = frozenset(
         "dist",
         "website/build",
         "website/dist",
-        "src/kiro_crew/static/dist",
+        "src/aj_crew/static/dist",
     }
 )
 
 #: Build trees whose names carry a per-build id, so they are skipped by prefix:
 #: the scratch, ready and previous trees of website/scripts/publish-dist.mjs,
-#: and the staged copies src/kiro_crew/static/dist links to.
-SKIP_DIR_PREFIXES: tuple[str, ...] = ("website/.dist", "src/kiro_crew/static/.dist")
+#: and the staged copies src/aj_crew/static/dist links to.
+SKIP_DIR_PREFIXES: tuple[str, ...] = ("website/.dist", "src/aj_crew/static/.dist")
 
 # Source trees scanned for citations of documentation paths. Broad on purpose: a
 # stale pointer is just as misleading in an agent-facing SKILL.md or an Electron
@@ -234,11 +234,11 @@ CODE_SUFFIXES: frozenset[str] = frozenset(
 # qualified with one of these names is a correct cross-repo reference, not a dangling
 # link into this tree.
 _EXTERNAL_REPO_MARKERS: tuple[str, ...] = (
-    "KiroCrewPublishCDK",
+    "AjCrewPublishCDK",
     "electron.git",
     # The app catalog's publisher. Its distribution contract is documented in
     # that repo, and the client cites it to explain the base URL it fetches.
-    "KiroCrewApps",
+    "AjCrewApps",
 )
 
 # ── Code-coupled documentation filenames ───────────────────────────────────────
@@ -248,24 +248,24 @@ _EXTERNAL_REPO_MARKERS: tuple[str, ...] = (
 # The check is deliberately data-driven rather than a grep, so that adding a
 # coupling is a one-line change here and is impossible to forget silently.
 CODE_COUPLED_DOCS: dict[str, tuple[str, ...]] = {
-    "src/kiro_crew/docs/connections.md": ("website/src/pages/settings/mcpManagementModel.ts",),
-    "src/kiro_crew/docs/discord-integration.md": ("website/src/pages/settings/DiscordPanel.tsx",),
-    "src/kiro_crew/docs/feishu-integration.md": ("website/src/pages/settings/FeishuPanel.tsx",),
-    "src/kiro_crew/docs/imessage-integration.md": ("website/src/pages/settings/IMessagePanel.tsx",),
-    "src/kiro_crew/docs/slack-integration.md": ("website/src/pages/settings/SlackPanel.tsx",),
-    "src/kiro_crew/docs/teams-integration.md": ("website/src/pages/settings/TeamsPanel.tsx",),
-    "src/kiro_crew/docs/telegram-integration.md": ("website/src/pages/settings/TelegramPanel.tsx",),
-    "src/kiro_crew/docs/webex-integration.md": ("website/src/pages/settings/WebexPanel.tsx",),
-    "src/kiro_crew/docs/wecom-integration.md": ("website/src/pages/settings/WeComPanel.tsx",),
-    "src/kiro_crew/docs/weixin-integration.md": ("website/src/pages/settings/WeixinPanel.tsx",),
-    "src/kiro_crew/docs/whatsapp-integration.md": ("website/src/pages/settings/WhatsAppPanel.tsx",),
+    "src/aj_crew/docs/connections.md": ("website/src/pages/settings/mcpManagementModel.ts",),
+    "src/aj_crew/docs/discord-integration.md": ("website/src/pages/settings/DiscordPanel.tsx",),
+    "src/aj_crew/docs/feishu-integration.md": ("website/src/pages/settings/FeishuPanel.tsx",),
+    "src/aj_crew/docs/imessage-integration.md": ("website/src/pages/settings/IMessagePanel.tsx",),
+    "src/aj_crew/docs/slack-integration.md": ("website/src/pages/settings/SlackPanel.tsx",),
+    "src/aj_crew/docs/teams-integration.md": ("website/src/pages/settings/TeamsPanel.tsx",),
+    "src/aj_crew/docs/telegram-integration.md": ("website/src/pages/settings/TelegramPanel.tsx",),
+    "src/aj_crew/docs/webex-integration.md": ("website/src/pages/settings/WebexPanel.tsx",),
+    "src/aj_crew/docs/wecom-integration.md": ("website/src/pages/settings/WeComPanel.tsx",),
+    "src/aj_crew/docs/weixin-integration.md": ("website/src/pages/settings/WeixinPanel.tsx",),
+    "src/aj_crew/docs/whatsapp-integration.md": ("website/src/pages/settings/WhatsAppPanel.tsx",),
     "docs/architecture/security-deep-dive.md": ("website/src/pages/settings/SecurityPanel.tsx",),
     "website/docs/theming-contract.md": ("website/scripts/check-theme-colors.mjs",),
 }
 
-# The tips catalog scans ``src/kiro_crew/docs/*.md`` but only surfaces docs named
+# The tips catalog scans ``src/aj_crew/docs/*.md`` but only surfaces docs named
 # in this allowlist module; every allowlisted name must therefore still resolve.
-TIPS_ALLOWLIST_MODULE = "src/kiro_crew/tips_allowlist.py"
+TIPS_ALLOWLIST_MODULE = "src/aj_crew/tips_allowlist.py"
 
 # Markdown inline/reference links and images: [text](target) and ![alt](target).
 _LINK_RE = re.compile(r"!?\[[^\]]*\]\(\s*(<[^>]*>|[^)\s]+)")
@@ -368,7 +368,7 @@ _UNRESOLVABLE_REF_OK: frozenset[str] = frozenset(
         "apps/ops-mission-control/data/incidents/index.json",
         # spec-builder's trust keystone: `config_dir() / "trust" / ...`.
         "trust/spec-builder-decisions.json",
-        # Optional dev-only override read from KIROCREW_PROJECT_DIR by
+        # Optional dev-only override read from AJCREW_PROJECT_DIR by
         # `agent_parts/spec_build.py`'s `_shipped_defaults()`; the shipped file is
         # `config/defaults.json`, which resolves.
         "agents/defaults.json",
@@ -384,7 +384,7 @@ _UNRESOLVABLE_REF_OK: frozenset[str] = frozenset(
         "antigravity-cli/settings.json",
         # Hermes Agent (`~/.hermes`, `_scan_hermes`), OpenClaw
         # (`OPENCLAW_STATE_DIR`), and any registered install descended from
-        # Kiro Crew (`_scan_lineage_install`) -- all three name this relative path.
+        # Aj Crew (`_scan_lineage_install`) -- all three name this relative path.
         "cron/jobs.json",
         #
         #
@@ -393,7 +393,7 @@ _UNRESOLVABLE_REF_OK: frozenset[str] = frozenset(
         #
         # Stamped by `scripts/stamp-distribution.sh` during packaging; imported
         # through a try/except ImportError precisely because a checkout lacks it.
-        "kiro_crew/_build_info.py",
+        "aj_crew/_build_info.py",
         # Bundle inside the vendored npm package @agentclientprotocol/claude-agent-acp,
         # resolved out of the gitignored node_modules by `acp/client.py`.
         "dist/acp-agent.js",
@@ -591,7 +591,7 @@ def _is_regular_file(path: Path) -> bool:
 
     This gate walks a tree a fork PR controls, and every file it lists is a file
     it may later read in full. A symlink is therefore an arbitrary read primitive:
-    ``src/kiro_crew/evil.py -> /dev/zero`` plus a citation naming it makes the read
+    ``src/aj_crew/evil.py -> /dev/zero`` plus a citation naming it makes the read
     never finish, and a symlink into a credential path makes it exfiltration. Note
     ``Path.is_file()`` FOLLOWS symlinks, so the symlink test must be explicit.
 
@@ -913,7 +913,7 @@ def check_code_citations(root: Path, findings: Findings) -> None:
                         # inside the package, relative to the package itself.
                         if (
                             (root / ref).exists()
-                            or (root / "src" / "kiro_crew" / ref).exists()
+                            or (root / "src" / "aj_crew" / ref).exists()
                             or (root / "website" / ref).exists()
                         ):
                             continue
@@ -1106,7 +1106,7 @@ def check_source_citations(root: Path, docs: list[Path], findings: Findings) -> 
 def check_code_coupled_docs(root: Path, findings: Findings) -> None:
     """Docs whose filenames are hardcoded in code must still exist.
 
-    ``src/kiro_crew/docs/`` is packaged and read at runtime; specific filenames
+    ``src/aj_crew/docs/`` is packaged and read at runtime; specific filenames
     are baked into TypeScript URL constants and into the tips allowlist. Renaming
     one is a code change, not a docs change.
     """
@@ -1123,12 +1123,12 @@ def check_code_coupled_docs(root: Path, findings: Findings) -> None:
 
     allowlist = root / TIPS_ALLOWLIST_MODULE
     if allowlist.is_file():
-        packaged = root / "src" / "kiro_crew" / "docs"
+        packaged = root / "src" / "aj_crew" / "docs"
         for match in re.finditer(r'"([A-Za-z0-9][A-Za-z0-9._-]*\.md)"', _read(allowlist)):
             name = match.group(1)
             if not (packaged / name).is_file():
                 findings.coupling.append(
-                    f"src/kiro_crew/docs/{name} is missing but listed in "
+                    f"src/aj_crew/docs/{name} is missing but listed in "
                     f"{TIPS_ALLOWLIST_MODULE} (TIP_DOC_ALLOWLIST)"
                 )
 
@@ -1350,7 +1350,7 @@ from docs_lint_fact_checks import (  # noqa: E402,F401
     _IDENT_STOPWORDS,
     _IDENT_TOKEN_RE,
     _INLINE_CODE_SPAN_RE,
-    _KIROCREW_RUN_RE,
+    _AJCREW_RUN_RE,
     _MD_LINK_TEXT_RE,
     _MD_NAME_RE,
     _PACKAGED_DOCS_DIR,
@@ -1400,7 +1400,7 @@ del _OUTER_ALIAS
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Lint the Kiro Crew documentation trees and their indexes."
+        description="Lint the Aj Crew documentation trees and their indexes."
     )
     parser.add_argument(
         "--test",

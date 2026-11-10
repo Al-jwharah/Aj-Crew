@@ -18,7 +18,7 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_slot_switch_atomicity_helpers import _MODEL_A, _MODEL_B, _make_app, _mock_state
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.dashboard.chat import (
+from aj_crew.dashboard.chat import (
     api_chat_slot_agent,
     api_chat_slot_model,
     api_chat_slot_project,
@@ -26,8 +26,8 @@ from kiro_crew.dashboard.chat import (
     api_chat_slot_workspace,
     api_chat_slots_model,
 )
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.testing.wait import await_until, until_parked
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.testing.wait import await_until, until_parked
 
 
 def _make_app_as(state: DashboardState, app_name: str) -> web.Application:
@@ -74,8 +74,8 @@ class TestLinkedSlotSessionKey:
     @staticmethod
     def _busy_acp(backend: str):
         """A live, mid-turn AcpProvider double carrying *backend*'s real capabilities."""
-        from kiro_crew.agent_sdk.capabilities import capabilities_for
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.agent_sdk.capabilities import capabilities_for
+        from aj_crew.providers.acp import AcpProvider
 
         provider = MagicMock(spec=AcpProvider)
         provider.capabilities = capabilities_for(backend)
@@ -89,7 +89,7 @@ class TestLinkedSlotSessionKey:
         # manager's release observer), so a pick the live switch can express is
         # deferred on a channel-linked session too: committed, marked with the
         # linked key, and nothing torn down under the streaming channel reply.
-        from kiro_crew.acp.types import ACP_BACKEND_KIRO
+        from aj_crew.acp.types import ACP_BACKEND_KIRO
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -114,7 +114,7 @@ class TestLinkedSlotSessionKey:
         # land only through a reset, and a channel turn cold-starts on the
         # default ladder rather than on slot.model: a reset cannot land it at a
         # channel boundary. Such a pick keeps the 409. Nothing is mutated.
-        from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
+        from aj_crew.acp.types import ACP_BACKEND_CLAUDE
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -139,7 +139,7 @@ class TestLinkedSlotSessionKey:
         # channel (mirror link accepts inbound resume). The key prefix alone says
         # "dashboard", so the mirror-inbound signal is what keeps a reset-only
         # mid-turn pick at 409 rather than deferring a pick no channel turn lands.
-        from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
+        from aj_crew.acp.types import ACP_BACKEND_CLAUDE
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -288,7 +288,7 @@ class TestLinkedSlotSessionKey:
         # (after the key was resolved) means whatever set_model did landed on
         # a session the slot does not run on: commit nothing, reset nothing,
         # 409 so the retry resolves the current binding.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -377,7 +377,7 @@ class TestLinkedSlotSessionKey:
         def _boom():
             raise RuntimeError("config unreadable")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", _boom)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", _boom)
         slot = _ChatSlot("test")
         slot.agent = "old-agent"
         slot.linked_session_key = "slack:123.456"
@@ -397,7 +397,7 @@ class TestLinkedSlotSessionKey:
         # The busy probe lands on the live linked session: an in-flight
         # channel turn answers 409 instead of tearing the turn (or a
         # captured-identity session) down.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         slot = _ChatSlot("test")
         slot.agent = "old-agent"
@@ -440,7 +440,7 @@ class TestLinkedSlotSessionKey:
         def _boom():
             raise RuntimeError("config unreadable")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", _boom)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", _boom)
         slot = _ChatSlot("test")
         slot.agent = "old-agent"
         state = _mock_state(slot, provider=None)
@@ -469,7 +469,7 @@ class TestLinkedSlotSessionKey:
         def _boom():
             raise RuntimeError("config unreadable")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", _boom)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", _boom)
         slot = _ChatSlot("test")
         slot.agent = "old-agent"
         slot.model = _MODEL_A
@@ -527,7 +527,7 @@ class TestLinkedSlotSessionKey:
         # The live-effort probe lands on the linked session, so its active
         # turn takes the defer branch (commit now, live push next turn)
         # instead of a reset against a session that never existed.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         slot = _ChatSlot("test")
         slot.linked_session_key = "slack:123.456"
@@ -624,12 +624,12 @@ class TestLinkedSlotSessionKey:
         # does not take slot._lock): the reset runs with skip_if_busy=True and
         # its atomic decline is authoritative — the committed agent is rolled
         # back, the metadata write never runs, and the in-flight turn survives.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         def _boom():
             raise RuntimeError("config unreadable")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", _boom)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", _boom)
         slot = _ChatSlot("test")
         slot.agent = "old-agent"
         state = _mock_state(slot)
@@ -652,7 +652,7 @@ class TestLinkedSlotSessionKey:
 
     @pytest.mark.asyncio
     async def test_effort_reset_declined_busy_rolls_back_and_answers_409(self):
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         state = _mock_state(slot)
@@ -682,7 +682,7 @@ class TestLinkedSlotSessionKey:
         def _boom():
             raise RuntimeError("config unreadable")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", _boom)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", _boom)
         slot = _ChatSlot("test")
         slot.agent = "old-agent"
         slot.agent_kind = "member"
@@ -724,12 +724,12 @@ class TestLinkedSlotSessionKey:
         cfg.agents = {}
         cfg.memory_stores = {}
         cfg.default_workspace = "default"
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: cfg)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.warm_project_agent_names", _blocked_warm
+            "aj_crew.dashboard.chat_handlers.warm_project_agent_names", _blocked_warm
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.resolve_agent_bindings",
+            "aj_crew.dashboard.chat_handlers.resolve_agent_bindings",
             lambda *_args, **_kwargs: MagicMock(
                 workspace_dir="",
                 memory_store_name="",
@@ -738,7 +738,7 @@ class TestLinkedSlotSessionKey:
             ),
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._record_explicit_agent_selection",
+            "aj_crew.dashboard.chat_handlers._record_explicit_agent_selection",
             AsyncMock(return_value=None),
         )
         slot = _ChatSlot("test")
@@ -778,7 +778,7 @@ class TestLinkedSlotSessionKey:
         def _boom():
             raise RuntimeError("config unreadable")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", _boom)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", _boom)
         slot = _ChatSlot("test")
         slot.agent = "old-agent"
         state = _mock_state(slot, provider=None)
@@ -811,13 +811,13 @@ class TestLinkedSlotSessionKey:
         mock_cfg = MagicMock()
         mock_cfg.agents = {}
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", lambda: mock_cfg
+            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.warm_project_agent_names", AsyncMock()
+            "aj_crew.dashboard.chat_handlers.warm_project_agent_names", AsyncMock()
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.resolve_agent_bindings",
+            "aj_crew.dashboard.chat_handlers.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: MagicMock(
                 workspace_dir="/tmp/ws2",
                 memory_store_name="",
@@ -828,15 +828,15 @@ class TestLinkedSlotSessionKey:
             ),
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._workspace_name_for_dir",
+            "aj_crew.dashboard.chat_handlers._workspace_name_for_dir",
             lambda cfg, ws_dir: "ws2",
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.default_project_dir",
+            "aj_crew.dashboard.chat_handlers.default_project_dir",
             lambda ws: "/workspace/derived",
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.cached_project_agent_names",
+            "aj_crew.dashboard.chat_handlers.cached_project_agent_names",
             lambda p: frozenset(),
         )
         slot = _ChatSlot("test")
@@ -883,7 +883,7 @@ class TestLinkedSlotSessionKey:
             slot.linked_session_key = "cron:job-1"
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._save_recent_project", _save_and_rebind
+            "aj_crew.dashboard.chat_handlers._save_recent_project", _save_and_rebind
         )
         new_dir = os.path.realpath(str(tmp_path))
         async with TestClient(TestServer(_make_app(state))) as client:
@@ -920,7 +920,7 @@ class TestLinkedSlotSessionKey:
         # was observable, so a 409 would claim a rollback that did not
         # happen: the slot value is committed (it is what the new binding's
         # next cold start reads) and the rebind is reported as a warning.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         slot = _ChatSlot("test")
         state = _mock_state(slot, provider=None)

@@ -15,20 +15,20 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import cli_config
+from aj_crew import cli_config
 
 
 def _set_local(tmp_path: Path, overlay: dict, key: str, value: str) -> dict:
-    config_dir = tmp_path / ".kirocrew"
+    config_dir = tmp_path / ".ajcrew"
     config_dir.mkdir()
     (config_dir / "config.json").write_text("{}", encoding="utf-8")
     local_file = config_dir / "config.local.json"
     local_file.write_text(json.dumps(overlay), encoding="utf-8")
     args = argparse.Namespace(config_action="set", key=key, value=value, file=None, local=True)
     with (
-        patch("kiro_crew.config.loader.config_dir", return_value=config_dir),
-        patch("kiro_crew.cli_config.config_local_path", return_value=local_file),
-        patch("kiro_crew.cli_config.sel"),
+        patch("aj_crew.config.loader.config_dir", return_value=config_dir),
+        patch("aj_crew.cli_config.config_local_path", return_value=local_file),
+        patch("aj_crew.cli_config.sel"),
     ):
         cli_config._config_cmd(args)
     return json.loads(local_file.read_text(encoding="utf-8"))
@@ -41,7 +41,7 @@ def test_a_whole_object_write_names_the_pinned_keys_it_drops(tmp_path, capsys) -
     assert data["slack"] == {"open_channels": ["C1"]}
     err = capsys.readouterr().err
     assert "slack.allowed_users" in err
-    assert "kirocrew config set --local slack.<name> <value>" in err
+    assert "ajcrew config set --local slack.<name> <value>" in err
 
 
 def test_a_dotted_leaf_write_drops_nothing_and_says_nothing(tmp_path, capsys) -> None:

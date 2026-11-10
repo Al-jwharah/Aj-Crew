@@ -24,15 +24,15 @@ import pytest
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
-import kiro_crew.platform.context as context_mod
-from kiro_crew.config.loader import KiroCrewConfig, TelemetryConfig
-from kiro_crew.mcp_gateway.pool import BackendPool
-from kiro_crew.metrics import mcp_gateway_gauges as gauges
-from kiro_crew.metrics import provider as provider_mod
-from kiro_crew.platform import bootstrap, build_default_context
-from kiro_crew.platform.context import PlatformCompositionError, reset_context
-from kiro_crew.platform.interfaces import OtlpDestination
-from kiro_crew.testing.wait import async_wait_until, wait_until
+import aj_crew.platform.context as context_mod
+from aj_crew.config.loader import AjCrewConfig, TelemetryConfig
+from aj_crew.mcp_gateway.pool import BackendPool
+from aj_crew.metrics import mcp_gateway_gauges as gauges
+from aj_crew.metrics import provider as provider_mod
+from aj_crew.platform import bootstrap, build_default_context
+from aj_crew.platform.context import PlatformCompositionError, reset_context
+from aj_crew.platform.interfaces import OtlpDestination
+from aj_crew.testing.wait import async_wait_until, wait_until
 
 ENDPOINT = "https://collector.example.test:4318/v1/metrics"
 
@@ -113,7 +113,7 @@ def test_two_sessions_on_one_backend():
 def test_attributes_are_closed_and_carry_no_name():
     """Only class=first_party/third_party/other; never a server name or pid."""
     pool = _pool(
-        _FakeBackend("kirocrew-core", pid=os.getpid(), refcount=3),
+        _FakeBackend("ajcrew-core", pid=os.getpid(), refcount=3),
         _FakeBackend("secret-internal-tool", pid=os.getpid(), refcount=1),
         _FakeBackend("", pid=None, refcount=1),
     )
@@ -165,7 +165,7 @@ def test_gauges_and_control_snapshot_count_the_same_backends(monkeypatch):
     but no session can be pooled onto either, so neither the dashboard snapshot
     nor the gauges count them, and both sum the same per-pid reading.
     """
-    from kiro_crew.mcp_gateway import pool as pool_mod
+    from aj_crew.mcp_gateway import pool as pool_mod
 
     readings_kb = {201: 10, 202: 20, 203: 40, 204: 80}
     monkeypatch.setattr(pool_mod, "backend_rss_kb", lambda pid: readings_kb.get(pid, -1))
@@ -208,7 +208,7 @@ def test_unbind_only_clears_own_pool():
 def test_classify_unknown_maps_to_other():
     assert gauges.classify(None) == "other"
     assert gauges.classify("") == "other"
-    assert gauges.classify("kirocrew-cron") == "first_party"
+    assert gauges.classify("ajcrew-cron") == "first_party"
     assert gauges.classify("anything-else") == "third_party"
 
 
@@ -241,7 +241,7 @@ def _join_compose_thread():
 @pytest.fixture
 def gatewayd_env(monkeypatch, tmp_path):
     """A host whose edition supplies one OTLP destination; non-standalone by default."""
-    from kiro_crew.mcp_gateway import gatewayd
+    from aj_crew.mcp_gateway import gatewayd
 
     edition = _EditionTelemetry()
     composed = []
@@ -268,7 +268,7 @@ def gatewayd_env(monkeypatch, tmp_path):
         # fails closed here and a standalone one gets the lazy default.
         if state["profile"] != "standalone":
             raise PlatformCompositionError("not booted")
-        return build_default_context(KiroCrewConfig.load())
+        return build_default_context(AjCrewConfig.load())
 
     monkeypatch.setattr(context_mod, "current_context", _context)
     monkeypatch.setattr(provider_mod, "current_context", _context)
@@ -284,7 +284,7 @@ def gatewayd_env(monkeypatch, tmp_path):
     monkeypatch.setattr(provider_mod, "_build_otlp_reader", _reader_for)
 
     def _config(enabled, **extra):
-        fake = KiroCrewConfig(
+        fake = AjCrewConfig(
             telemetry=TelemetryConfig(
                 enabled=enabled,
                 local_dir=str(tmp_path / "metrics"),
@@ -292,9 +292,9 @@ def gatewayd_env(monkeypatch, tmp_path):
                 **extra,
             )
         )
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: fake))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: fake))
 
-    monkeypatch.delenv("KIROCREW_TELEMETRY", raising=False)
+    monkeypatch.delenv("AJCREW_TELEMETRY", raising=False)
     provider_mod.reset_for_testing()
     yield gatewayd, edition, composed, readers, _config, state
     release.set()
@@ -341,7 +341,7 @@ def test_gatewayd_init_exports_to_edition_destination(gatewayd_env):
     gauges.bind_pool(_pool(_FakeBackend("x", pid=os.getpid(), refcount=2)))
     gatewayd._emit_backend_acquire_metric(1.0, warm=True)
     names, resource = _exported(readers[0])
-    for expected in (*gauges.ALL_METRIC_NAMES, "kirocrew.mcp.backend.acquire.duration"):
+    for expected in (*gauges.ALL_METRIC_NAMES, "ajcrew.mcp.backend.acquire.duration"):
         assert expected in names, expected
     # Same resource attributes the main process exports.
     assert resource is not None
@@ -350,7 +350,7 @@ def test_gatewayd_init_exports_to_edition_destination(gatewayd_env):
         assert resource[key] == expected_attrs[key]
     assert resource["process.pid"] == os.getpid()
     # The daemon's series are told apart from the main process's by role, not
-    # only by pid: the main process builds no kirocrew.process.role at all.
+    # only by pid: the main process builds no ajcrew.process.role at all.
     assert resource[provider_mod.RESOURCE_ATTR_PROCESS_ROLE] == "gatewayd"
 
     # Nothing was installed: every other context reader in the daemon keeps the
@@ -408,7 +408,7 @@ def test_compose_telemetry_provider_applies_the_boot_security_floor(gatewayd_env
     """A companion boot would refuse is refused for the daemon's egress too."""
     gatewayd, edition, composed, readers, set_config, _ = gatewayd_env
     set_config(True)
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     # Wrapped only to carry the companion's ceiling; the provider is the edition's.
     assert bootstrap.compose_telemetry_provider(cfg)._inner is edition
 
@@ -440,7 +440,7 @@ def test_idle_daemon_stops_exporting_after_consent_is_withdrawn(gatewayd_env):
     tick that only asks ``get_recorder()`` sees no recheck due and keeps
     exporting; a tick must re-read consent itself.
     """
-    from kiro_crew.mcp_gateway.daemon.sweepers import _telemetry_consent_sweeper
+    from aj_crew.mcp_gateway.daemon.sweepers import _telemetry_consent_sweeper
 
     gatewayd, set_config = _exporting_daemon(gatewayd_env)
     assert provider_mod._CONSENT_RECHECK_SECS >= 30
@@ -486,7 +486,7 @@ def test_withdrawal_lands_within_one_window_at_gatewayd_cadence(gatewayd_env, mo
     the worker's stamp lands after the tick that started it -- the timing that
     made a once-per-window tick miss every other window.
     """
-    from kiro_crew.mcp_gateway.daemon import sweepers
+    from aj_crew.mcp_gateway.daemon import sweepers
 
     gatewayd, set_config = _exporting_daemon(gatewayd_env)
     window = provider_mod._CONSENT_RECHECK_SECS
@@ -495,13 +495,13 @@ def test_withdrawal_lands_within_one_window_at_gatewayd_cadence(gatewayd_env, mo
     clock = _Clock()
     monkeypatch.setattr(provider_mod, "time", clock)
     set_config(False)
-    off = KiroCrewConfig.load()
+    off = AjCrewConfig.load()
 
     def _slow_load(cls):
         clock.now += 0.25  # a read is never instantaneous
         return off
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_slow_load))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_slow_load))
     # The recorder was verified a moment ago, then consent was withdrawn.
     provider_mod._consent_checked_at = clock.now
     withdrawn_at = clock.now

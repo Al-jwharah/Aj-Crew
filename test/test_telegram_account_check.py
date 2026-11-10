@@ -15,8 +15,8 @@ from typing import Any
 from telegram_helpers import _drop_live_config_snapshot  # noqa: F401
 from telegram_helpers import _dispatcher, _dm, _press
 
-from kiro_crew.messaging.commands import COMPACT_ACCOUNT_CHANGED_TEXT
-from kiro_crew.messaging.transport import InboundMessage
+from aj_crew.messaging.commands import COMPACT_ACCOUNT_CHANGED_TEXT
+from aj_crew.messaging.transport import InboundMessage
 
 _ROUTE = ("direct", "7")
 _PICKED = "gpt-5.6-sol"

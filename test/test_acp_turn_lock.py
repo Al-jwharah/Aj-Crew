@@ -30,8 +30,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.testing.wait import finished
+from aj_crew.acp.client import AcpClient
+from aj_crew.testing.wait import finished
 
 
 def _client_with_real_reader(tmp_path):

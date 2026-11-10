@@ -3,8 +3,8 @@ import { mateAbilitiesLabel, templateDisplayName } from './builtFromName'
 
 describe('templateDisplayName', () => {
   it('labels the default template and the source-defined agents a crewmate runs on as the default', () => {
-    for (const id of ['kirocrew', 'kirocrew-mate-conductor', 'kirocrew-mate-worker', '']) {
-      expect(templateDisplayName(id)).toBe('kirocrew (default)')
+    for (const id of ['ajcrew', 'ajcrew-mate-conductor', 'ajcrew-mate-worker', '']) {
+      expect(templateDisplayName(id)).toBe('ajcrew (default)')
     }
   })
 

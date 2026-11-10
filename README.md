@@ -1,30 +1,30 @@
 <p align="center">
-  <img src="assets/banner.svg" alt="Kiro Crew. Keep work moving. Runs on your hardware, remembers across sessions, keeps working unattended.">
+  <img src="assets/banner.svg" alt="Aj Crew. Keep work moving. Runs on your hardware, remembers across sessions, keeps working unattended.">
 </p>
 
-<h1 align="center">Kiro Crew</h1>
+<h1 align="center">Aj Crew</h1>
 
 <p align="center">
   <strong>A persistent workspace for development work that self-improves and continues beyond one session.</strong>
 </p>
 
 <p align="center">
-  <a href="https://trendshift.io/repositories/103032" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/103032/daily?language=Python" alt="Kiro Crew on Trendshift" width="250" height="55"></a>
+  <a href="https://trendshift.io/repositories/103032" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/103032/daily?language=Python" alt="Aj Crew on Trendshift" width="250" height="55"></a>
 </p>
 
 <p align="center">
-  Kiro Crew is an open source development workspace that runs locally or remotely on
+  Aj Crew is an open source development workspace that runs locally or remotely on
   your hardware. It is persistent, self-learning, and self-evolving. Work with it
   from the desktop app, web dashboard, and CLI, or continue the same work through
   connection tools like Slack and Discord.
   Your multi-step tasks can run unattended, recurring jobs run on your schedule,
-  and heartbeats monitor systems until something needs attention. Kiro Crew Apps
+  and heartbeats monitor systems until something needs attention. Aj Crew Apps
   tailor that experience to a specific job, combining a purpose-built interface
   with agents, skills, schedules, integrations, and backend services.
 </p>
 
 <p align="center">
-  <a href="https://github.com/kirodotdev/KiroCrew/releases"><img src="https://img.shields.io/badge/Download-macOS%20%7C%20Linux%20%7C%20Windows-2f6feb?style=flat-square" alt="Download Kiro Crew for macOS, Linux, or Windows"></a>
+  <a href="https://github.com/Al-jwharah/Aj-Crew/releases"><img src="https://img.shields.io/badge/Download-macOS%20%7C%20Linux%20%7C%20Windows-2f6feb?style=flat-square" alt="Download Aj Crew for macOS, Linux, or Windows"></a>
   <a href="docs/README.md"><img src="https://img.shields.io/badge/Documentation-1f6feb?style=flat-square" alt="Read the documentation"></a>
   <a href="docs/guides/install.md"><img src="https://img.shields.io/badge/Install%20guide-macOS%20%7C%20Linux%20%7C%20Windows-6e7781?style=flat-square" alt="Install guide for macOS, Linux, and Windows"></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/Contributing-238636?style=flat-square" alt="Contributing guide"></a>
@@ -35,8 +35,8 @@
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
   <a href="#build-from-source">Build from source</a> ·
-  <a href="#why-kiro-crew">Why Kiro Crew</a> ·
-  <a href="#what-kiro-crew-does">Capabilities</a> ·
+  <a href="#why-aj-crew">Why Aj Crew</a> ·
+  <a href="#what-aj-crew-does">Capabilities</a> ·
   <a href="#how-it-works">How it works</a> ·
   <a href="#security-and-control">Security</a> ·
   <a href="#install-configure-and-operate">Install</a> ·
@@ -46,7 +46,7 @@
 
 ## Quick start
 
-You choose how to run Kiro Crew: the desktop app with automatic updates, a
+You choose how to run Aj Crew: the desktop app with automatic updates, a
 one-line install on your machine or a remote host, the Docker image for
 always-on servers, or a build from source. The default agent runs on
 `kiro-cli`, which you install and sign in to separately. First launch checks
@@ -60,14 +60,14 @@ itself on the same channel. Take Stable unless you have a reason not to; see
 
 | Download | Stable | Insider | Nightly |
 |---|---|---|---|
-| **macOS** (Apple Silicon/Intel) `.dmg` | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/KiroCrew.dmg) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/KiroCrew.dmg) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/KiroCrew.dmg) |
-| **Windows** (x64) `.exe` | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/KiroCrew-Setup.exe) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/KiroCrew-Setup.exe) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/KiroCrew-Setup.exe) |
-| **Linux** x86_64 `.deb` | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/KiroCrew-x86_64.deb) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/KiroCrew-x86_64.deb) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/KiroCrew-x86_64.deb) |
-| **Linux** aarch64 `.deb` | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/KiroCrew-aarch64.deb) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/KiroCrew-aarch64.deb) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/KiroCrew-aarch64.deb) |
-| **Linux** x86_64 `.rpm` | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/KiroCrew-x86_64.rpm) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/KiroCrew-x86_64.rpm) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/KiroCrew-x86_64.rpm) |
-| **Linux** aarch64 `.rpm` | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/KiroCrew-aarch64.rpm) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/KiroCrew-aarch64.rpm) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/KiroCrew-aarch64.rpm) |
-| **Linux** x86_64 AppImage | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/KiroCrew-x86_64.AppImage) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/KiroCrew-x86_64.AppImage) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/KiroCrew-x86_64.AppImage) |
-| **Linux** aarch64 AppImage | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/KiroCrew-aarch64.AppImage) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/KiroCrew-aarch64.AppImage) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/KiroCrew-aarch64.AppImage) |
+| **macOS** (Apple Silicon/Intel) `.dmg` | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/AjCrew.dmg) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/AjCrew.dmg) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/AjCrew.dmg) |
+| **Windows** (x64) `.exe` | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/AjCrew-Setup.exe) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/AjCrew-Setup.exe) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/AjCrew-Setup.exe) |
+| **Linux** x86_64 `.deb` | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/AjCrew-x86_64.deb) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/AjCrew-x86_64.deb) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/AjCrew-x86_64.deb) |
+| **Linux** aarch64 `.deb` | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/AjCrew-aarch64.deb) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/AjCrew-aarch64.deb) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/AjCrew-aarch64.deb) |
+| **Linux** x86_64 `.rpm` | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/AjCrew-x86_64.rpm) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/AjCrew-x86_64.rpm) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/AjCrew-x86_64.rpm) |
+| **Linux** aarch64 `.rpm` | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/AjCrew-aarch64.rpm) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/AjCrew-aarch64.rpm) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/AjCrew-aarch64.rpm) |
+| **Linux** x86_64 AppImage | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/AjCrew-x86_64.AppImage) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/AjCrew-x86_64.AppImage) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/AjCrew-x86_64.AppImage) |
+| **Linux** aarch64 AppImage | [Stable](https://download.crew.kiro.dev/desktop/stable/latest/AjCrew-aarch64.AppImage) | [Insider](https://download.crew.kiro.dev/desktop/insider/latest/AjCrew-aarch64.AppImage) | [Nightly](https://download.crew.kiro.dev/desktop/nightly/latest/AjCrew-aarch64.AppImage) |
 
 On Linux, start with the one-line install below and add a desktop package when
 you want a native window and in-app updates. The
@@ -107,9 +107,9 @@ upgrades, and recovery.
 For always-on servers, the Gateway ships as a public multi-arch image on GHCR:
 
 ```bash
-docker run -d --name kirocrew \
+docker run -d --name ajcrew \
   -p 127.0.0.1:5476:5476 \
-  -v kirocrew-home:/home/kirocrew \
+  -v ajcrew-home:/home/ajcrew \
   ghcr.io/kirodotdev/kirocrew:stable
 ```
 
@@ -127,21 +127,21 @@ is supported through a native source install; follow the
 [Windows guide](docs/guides/windows-install.md) instead of the shell steps below.
 
 ```bash
-# 1. Clone and build Kiro Crew
-git clone https://github.com/kirodotdev/KiroCrew.git
-cd KiroCrew
+# 1. Clone and build Aj Crew
+git clone https://github.com/Al-jwharah/Aj-Crew.git
+cd AjCrew
 make build
 source .venv/bin/activate
 
 # 2. Configure, verify, and start
-kirocrew setup
-kirocrew doctor
-kirocrew gateway
+ajcrew setup
+ajcrew doctor
+ajcrew gateway
 ```
 
-## Why Kiro Crew
+## Why Aj Crew
 
-Most agent sessions end when the chat closes. Kiro Crew runs continuously on
+Most agent sessions end when the chat closes. Aj Crew runs continuously on
 hardware you control and keeps working between conversations.
 
 **Persistent.** Sessions, memory, schedules, and task checkpoints survive
@@ -152,7 +152,7 @@ the terminal.
 Preferences and project context carry into new sessions.
 
 **Self-evolving.** Repeated patterns become reusable skills. Memory, lessons,
-and skills stay visible and editable, so each Kiro Crew grows more tailored to
+and skills stay visible and editable, so each Aj Crew grows more tailored to
 the person and work around it.
 
 **Runs where you choose.** Your Mac, a local container, or a remote machine
@@ -162,14 +162,14 @@ you control.
 or continue the same work from the CLI and messaging surfaces like Slack and
 Discord.
 
-## What Kiro Crew does
+## What Aj Crew does
 
 | Capability | What it gives you |
 |---|---|
 | **Persistent sessions** | Run concurrent, isolated conversations, resume them after Gateway restarts, search prior sessions, and carry recent context into new work. |
 | **Self-learning** | Turn corrections and task failures into durable lessons that change later behavior. Lessons can apply globally or carry a `repo_scope` that limits them to one repository; Crew Members keep private lessons in their own memory store. |
 | **Self-evolving skills** | Synthesize reusable skills from repeated patterns, then inspect, refine, or remove them as your work changes. |
-| **Long-running tasks** | Give Kiro Crew a task spec and walk away. It plans steps, executes them, validates results, retries failures, and resumes from checkpoints. *"Implement this migration plan and stop if the tests fail"* runs as a checkpointed task with validation at each step. |
+| **Long-running tasks** | Give Aj Crew a task spec and walk away. It plans steps, executes them, validates results, retries failures, and resumes from checkpoints. *"Implement this migration plan and stop if the tests fail"* runs as a checkpointed task with validation at each step. |
 | **Unattended autonomy** | Run scheduled agent work or deterministic scripts and commands without a model call. Monitor work until it is done, or react to messaging events and authenticated webhooks without someone at the terminal. *"Every weekday at 9, summarize the open work I should review"* becomes a timezone-aware recurring job delivered to the surface you choose. |
 | **Delegation** | Spawn isolated subagents for parallel work and bring their results back into the parent conversation. *"Research these three options in parallel and recommend one"* fans out to isolated subagents and synthesizes the tradeoffs. |
 | **Work where you choose** | Work directly in the desktop app or web dashboard, or continue through the CLI and any connected messaging surface without moving the agent runtime or its state. |
@@ -178,11 +178,11 @@ Discord.
 | **Visible execution** | Watch tool calls, subagent progress, context usage, approvals, schedules, memory, and logs from the dashboard. |
 | **Defense in depth** | Combine tool approvals, OS sandboxing, sensitive-path checks, credential redaction, deny rules, audit events, and governance profiles. |
 
-You can also paste a screenshot and ask what is causing an error. Kiro Crew sends
+You can also paste a screenshot and ask what is causing an error. Aj Crew sends
 the image to the active Kiro model and keeps the diagnosis in the conversation
 history.
 
-The complete inventory is in [Features](src/kiro_crew/docs/index.md) and
+The complete inventory is in [Features](src/aj_crew/docs/index.md) and
 [What's New](CHANGELOG.md).
 
 ## How it works
@@ -207,7 +207,7 @@ isolation, and [MCP architecture](docs/architecture/mcp.md) for tool exposure.
 
 ## Security and control
 
-Kiro Crew enforces approvals, OS isolation where available, sensitive-path and
+Aj Crew enforces approvals, OS isolation where available, sensitive-path and
 credential guards, denied-operation rules, audit records, and an optional
 policy/profile ceiling at the runtime boundary. The dashboard binds to loopback
 by default; any remote exposure requires authenticated configuration.
@@ -221,24 +221,24 @@ use [SECURITY.md](SECURITY.md) for private vulnerability reporting.
 
 The [install guide](docs/guides/install.md) owns every install path, first-run
 step, optional dependency, upgrade, uninstall, and recovery procedure. User data
-lives under `~/.kiro/crew` by default and moves with `KIROCREW_HOME`; configuration
+lives under `~/.kiro/crew` by default and moves with `AJCREW_HOME`; configuration
 keys and precedence are canonical in the
 [config spec](docs/system-specs/modules/config.md).
 
 For a new source or wheel install:
 
 ```bash
-kirocrew setup
-kirocrew doctor
-kirocrew gateway
+ajcrew setup
+ajcrew doctor
+ajcrew gateway
 ```
 
 Run the Gateway as a boot-persistent service when needed:
 
 ```bash
-kirocrew service install
-kirocrew service status
-kirocrew logs
+ajcrew service install
+ajcrew service status
+ajcrew logs
 ```
 
 Service ports, systemd/launchd behavior, containers, and remote-host access are
@@ -246,16 +246,16 @@ documented in the [install guide](docs/guides/install.md#running-as-a-service),
 [Docker guide](docs/guides/docker.md), and
 [remote host guide](docs/guides/remote-and-mobile.md).
 
-Use `kirocrew config get`, `kirocrew config set <key> <value>`, and
-`kirocrew config edit` for the main configuration. Set a process port with
-`KIROCREW_PORT` or `kirocrew gateway --port <n>`. Start troubleshooting with
-`kirocrew doctor`, then inspect `kirocrew logs` (or `kirocrew logs -f`). See the
-[troubleshooting guide](src/kiro_crew/docs/troubleshooting.md) for log sources,
+Use `ajcrew config get`, `ajcrew config set <key> <value>`, and
+`ajcrew config edit` for the main configuration. Set a process port with
+`AJCREW_PORT` or `ajcrew gateway --port <n>`. Start troubleshooting with
+`ajcrew doctor`, then inspect `ajcrew logs` (or `ajcrew logs -f`). See the
+[troubleshooting guide](src/aj_crew/docs/troubleshooting.md) for log sources,
 levels, diagnostics bundles, and recovery steps.
 
 ## Anonymous usage telemetry
 
-Kiro Crew sends **one anonymous heartbeat per day** so maintainers can see how
+Aj Crew sends **one anonymous heartbeat per day** so maintainers can see how
 many copies are actively running and which releases, Python minors, and install
 paths still need support. After a successful install or update from the official
 app catalog, it also sends one anonymous per-app receipt. Both signals are
@@ -267,14 +267,14 @@ onboarding, or flip **Settings > Privacy > Send anonymous usage heartbeat** in
 the dashboard. Or from a terminal:
 
 ```bash
-kirocrew telemetry disable        # local metrics and the heartbeat; persists to config.json
-export KIROCREW_TELEMETRY_DISABLED=1   # heartbeat only, per-shell / per-container
+ajcrew telemetry disable        # local metrics and the heartbeat; persists to config.json
+export AJCREW_TELEMETRY_DISABLED=1   # heartbeat only, per-shell / per-container
 export DO_NOT_TRACK=1             # everything: local metrics and the heartbeat
-kirocrew telemetry status         # print both switches and exactly what would be sent
+ajcrew telemetry status         # print both switches and exactly what would be sent
 ```
 
-Turn off and `kirocrew telemetry disable` write the same settings, so either
-one sticks across restarts and upgrades. `KIROCREW_TELEMETRY_DISABLED` and
+Turn off and `ajcrew telemetry disable` write the same settings, so either
+one sticks across restarts and upgrades. `AJCREW_TELEMETRY_DISABLED` and
 `DO_NOT_TRACK` override them: when one is set, the dashboard toggle is disabled
 and says so. When the Privacy screen's text changes, existing users see it once
 more at their next dashboard load while local recording is on.
@@ -290,13 +290,13 @@ more at their next dashboard load while local recording is on.
 | First-send flag | `1` / `0` | First successfully reported install vs returning |
 
 **Official-app install receipts are separate and event-based.** After a
-successful official-catalog install or update, Kiro Crew sends one GET to
+successful official-catalog install or update, Aj Crew sends one GET to
 `/b/1/install/<app-slug>?t=<token>&k=<fresh|update>&v=<release>` on the same
 telemetry host. The slug is the public catalog identifier. `t` is the first 32
 hex characters of HMAC-SHA256 keyed by an independent local receipt secret over
 `app-install:<slug>`; that secret never leaves the machine, so tokens for
 different apps cannot be linked to each other or to the heartbeat install id.
-`k` separates fresh installs from updates, and `v` is the same release-only Kiro
+`k` separates fresh installs from updates, and `v` is the same release-only Aj
 Crew version clamp used by the heartbeat.
 
 Receipts are emitted only for bundled or edition-provided official catalog
@@ -310,10 +310,10 @@ instance id is stable, so those attributes all describe the *same* copy and
 together they narrowed the group any one install blends into far more than any
 single field suggests.
 
-We report this as **Daily Active Crews** rather than "users": Kiro Crew has
+We report this as **Daily Active Crews** rather than "users": Aj Crew has
 no account system of its own, and the Kiro sign-in that `kiro-cli` uses for
 model access is never read or sent. There is no way to resolve a copy to a
-person, so one person running Kiro Crew on three machines counts as three
+person, so one person running Aj Crew on three machines counts as three
 Crews.
 
 **Never sent:** your prompts, model responses, file contents, file paths, repo
@@ -321,7 +321,7 @@ or branch names, credentials, environment variables, hostname, username, or IP
 address. The receiving CDN is configured **not to log client IP addresses** — the
 log delivery does not include that field, so no IP is stored at all.
 
-**Automatically off** in CI, and whenever `KIROCREW_HOME` points somewhere other
+**Automatically off** in CI, and whenever `AJCREW_HOME` points somewhere other
 than `~/.kiro/crew` (dev instances and pods are never counted).
 
 **Enterprise administrators can pin it off entirely.** A `capabilities.telemetry`
@@ -345,25 +345,25 @@ performance metrics that never leave your machine. See
 | Topic | Start here |
 |---|---|
 | Install and packaging | [Install and build](docs/guides/install.md), [Windows](docs/guides/windows-install.md), [Docker](docs/guides/docker.md), [Desktop](docs/build/desktop-app.md), [Remote host](docs/guides/remote-and-mobile.md), [Release process](docs/build/release.md) |
-| Product capabilities | [Features](src/kiro_crew/docs/index.md), [Skills](skills/README.md), [All user docs](src/kiro_crew/docs/README.md) |
+| Product capabilities | [Features](src/aj_crew/docs/index.md), [Skills](skills/README.md), [All user docs](src/aj_crew/docs/README.md) |
 | All documentation | [docs/](docs/README.md) for contributor and architecture docs |
-| Channels | [Slack](docs/guides/slack-setup.md), [Discord](src/kiro_crew/docs/discord-integration.md), [Telegram](src/kiro_crew/docs/telegram-integration.md), [Teams](src/kiro_crew/docs/teams-integration.md), [Webex](src/kiro_crew/docs/webex-integration.md), [WeCom](src/kiro_crew/docs/wecom-integration.md), [WeChat (Weixin)](src/kiro_crew/docs/weixin-integration.md), [WhatsApp](src/kiro_crew/docs/whatsapp-integration.md), [Feishu (Lark)](src/kiro_crew/docs/feishu-integration.md), [iMessage](src/kiro_crew/docs/imessage-integration.md) |
+| Channels | [Slack](docs/guides/slack-setup.md), [Discord](src/aj_crew/docs/discord-integration.md), [Telegram](src/aj_crew/docs/telegram-integration.md), [Teams](src/aj_crew/docs/teams-integration.md), [Webex](src/aj_crew/docs/webex-integration.md), [WeCom](src/aj_crew/docs/wecom-integration.md), [WeChat (Weixin)](src/aj_crew/docs/weixin-integration.md), [WhatsApp](src/aj_crew/docs/whatsapp-integration.md), [Feishu (Lark)](src/aj_crew/docs/feishu-integration.md), [iMessage](src/aj_crew/docs/imessage-integration.md) |
 | Architecture | [System architecture](docs/architecture/overview.md), [Memory](docs/system-specs/modules/memory-skills-hooks.md), [MCP](docs/architecture/mcp.md), [App Kit](docs/app-kit/getting-started.md) |
 | Trust and dependencies | [Security](docs/architecture/security-deep-dive.md), [Security policy](SECURITY.md) |
 | Project work | [Contributing](CONTRIBUTING.md), [Tenets](TENETS.md), [Governance](GOVERNANCE.md), [Maintainers](MAINTAINERS.md), [AI assistant rules](AGENTS.md), [Changelog](CHANGELOG.md) |
 
 Contributions are welcome. Follow [CONTRIBUTING.md](CONTRIBUTING.md) for setup,
 change-scoped validation, commit format, and the pull-request workflow. Use
-[GitHub Issues](https://github.com/kirodotdev/KiroCrew/issues) for bugs and
+[GitHub Issues](https://github.com/Al-jwharah/Aj-Crew/issues) for bugs and
 feature requests; report vulnerabilities privately through
 [SECURITY.md](SECURITY.md).
 
 
 ## Contributors
 
-Kiro Crew was made possible by its internal community, the people who supported the
+Aj Crew was made possible by its internal community, the people who supported the
 project and shipped its code, together with everyone who has since opened a pull
-request in the open. This is that founding group; as Kiro Crew grows in the open, we
+request in the open. This is that founding group; as Aj Crew grows in the open, we
 look forward to many more contributors joining them. Thank you to everyone who helped
 make this tool possible:
 
@@ -859,7 +859,7 @@ make this tool possible:
 <a href="https://github.com/kimlucky7" title="Kim @AdsAgent"><img src="https://github.com/kimlucky7.png?size=64" width="64" height="64" alt="Kim @AdsAgent" /></a>
 <a href="https://github.com/kirankumar15" title="kirankumar"><img src="https://github.com/kirankumar15.png?size=64" width="64" height="64" alt="kirankumar" /></a>
 <a href="https://github.com/kiro" title="Kiril Minkov"><img src="https://github.com/kiro.png?size=64" width="64" height="64" alt="Kiril Minkov" /></a>
-<a href="https://github.com/KiroCrew" title="KiroCrew"><img src="https://github.com/KiroCrew.png?size=64" width="64" height="64" alt="KiroCrew" /></a>
+<a href="https://github.com/AjCrew" title="AjCrew"><img src="https://github.com/AjCrew.png?size=64" width="64" height="64" alt="AjCrew" /></a>
 <a href="https://github.com/KiroCrewCaptain" title="KiroCrewCaptain"><img src="https://github.com/KiroCrewCaptain.png?size=64" width="64" height="64" alt="KiroCrewCaptain" /></a>
 <a href="https://github.com/kishoreb95" title="Kishore Baskar"><img src="https://github.com/kishoreb95.png?size=64" width="64" height="64" alt="Kishore Baskar" /></a>
 <a href="https://github.com/Kive1ru" title="Jiahao Guo"><img src="https://github.com/Kive1ru.png?size=64" width="64" height="64" alt="Jiahao Guo" /></a>
@@ -1430,5 +1430,5 @@ added, corrected, or removed, please open an issue or a pull request.
 
 ## License
 
-Kiro Crew is licensed under the [Apache License 2.0](LICENSE). See
+Aj Crew is licensed under the [Apache License 2.0](LICENSE). See
 [NOTICE](NOTICE) for attribution information.

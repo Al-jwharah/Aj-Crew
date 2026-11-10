@@ -20,10 +20,10 @@ import logging
 
 import pytest
 
-from kiro_crew.workflow_memory import WorkflowMemoryError
-from kiro_crew.workflows.agent_pool import build_pooled_agent_fn
+from aj_crew.workflow_memory import WorkflowMemoryError
+from aj_crew.workflows.agent_pool import build_pooled_agent_fn
 
-_LOGGER = "kiro_crew.workflows.agent_pool"
+_LOGGER = "aj_crew.workflows.agent_pool"
 _TEARDOWN_SECRET = "teardown-detail-token-9f3a"
 
 
@@ -121,8 +121,8 @@ async def _boom(provider, prompt):
 
 @pytest.fixture(autouse=True)
 def _patch_redaction(monkeypatch):
-    monkeypatch.setattr("kiro_crew.workflows.agent_pool.stream_and_collect", _ok_stream)
-    monkeypatch.setattr("kiro_crew.workflows.agent_pool.redact", lambda t: t)
+    monkeypatch.setattr("aj_crew.workflows.agent_pool.stream_and_collect", _ok_stream)
+    monkeypatch.setattr("aj_crew.workflows.agent_pool.redact", lambda t: t)
 
 
 def _build(sessions, **kwargs):
@@ -159,7 +159,7 @@ async def test_success_survives_destroy_failure(caplog):
 
 @pytest.mark.asyncio
 async def test_body_error_wins_over_destroy_failure(monkeypatch, caplog):
-    monkeypatch.setattr("kiro_crew.workflows.agent_pool.stream_and_collect", _unpooled_only(_boom))
+    monkeypatch.setattr("aj_crew.workflows.agent_pool.stream_and_collect", _unpooled_only(_boom))
     sessions = _FailingSessions(destroy_fails=True)
     agent_fn, pool = _build(sessions)
     with caplog.at_level(logging.DEBUG, logger=_LOGGER):
@@ -192,7 +192,7 @@ async def test_named_release_failure_does_not_mask_body_error(monkeypatch):
     async def _named_boom(provider, prompt, **kwargs):
         return await _boom(provider, prompt)
 
-    monkeypatch.setattr("kiro_crew.workflows.agent_pool.stream_and_collect", _named_boom)
+    monkeypatch.setattr("aj_crew.workflows.agent_pool.stream_and_collect", _named_boom)
     sessions = _FailingSessions(release_fails=True)
     agent_fn, pool = _build(sessions)
     with pytest.raises(ValueError, match="provider failed"):
@@ -209,7 +209,7 @@ async def test_cancellation_propagates_and_still_tears_down(monkeypatch):
         started.set()
         await asyncio.sleep(3600)
 
-    monkeypatch.setattr("kiro_crew.workflows.agent_pool.stream_and_collect", _unpooled_only(_hang))
+    monkeypatch.setattr("aj_crew.workflows.agent_pool.stream_and_collect", _unpooled_only(_hang))
     sessions = _FailingSessions(destroy_fails=True)
     agent_fn, pool = _build(sessions)
     await agent_fn("warm", {"model": "m1"})

@@ -15,7 +15,7 @@
       "enabled": true,
       "lifecycle": "gateway",
       "manifest": {
-        "author": "kirocrew",
+        "author": "ajcrew",
         "defaultEnabled": false,
         "description": "A former built-in used by the adoption tests.",
         "displayName": "Fixture Former",
@@ -53,8 +53,8 @@
       "sessionApprovalConsentPending": false,
       "source": "registry:fixture-former",
       "sourceCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "sourceUrl": "https://github.com/FixtureOrg/kirocrew-app-fixture-former",
-      "trustRepository": "https://github.com/FixtureOrg/kirocrew-app-fixture-former",
+      "sourceUrl": "https://github.com/FixtureOrg/ajcrew-app-fixture-former",
+      "trustRepository": "https://github.com/FixtureOrg/ajcrew-app-fixture-former",
       "version": "0.1.0"
     },
     "adopted_host_too_old": {
@@ -73,11 +73,11 @@
       "enabled": true,
       "lifecycle": "gateway",
       "manifest": {
-        "author": "kirocrew",
+        "author": "ajcrew",
         "defaultEnabled": false,
         "description": "A former built-in used by the adoption tests.",
         "displayName": "Fixture Former",
-        "minKiroCrewVersion": "999.0.0",
+        "minAjCrewVersion": "999.0.0",
         "name": "fixture-former",
         "permissions": {
           "api": [
@@ -112,8 +112,8 @@
       "sessionApprovalConsentPending": false,
       "source": "registry:fixture-former",
       "sourceCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "sourceUrl": "https://github.com/FixtureOrg/kirocrew-app-fixture-former",
-      "trustRepository": "https://github.com/FixtureOrg/kirocrew-app-fixture-former",
+      "sourceUrl": "https://github.com/FixtureOrg/ajcrew-app-fixture-former",
+      "trustRepository": "https://github.com/FixtureOrg/ajcrew-app-fixture-former",
       "version": "9.0.0"
     },
     "blocked_admission": {
@@ -128,7 +128,7 @@
       "enabled": true,
       "lifecycle": "locked",
       "manifest": {
-        "author": "kirocrew",
+        "author": "ajcrew",
         "defaultEnabled": false,
         "description": "A former built-in used by the adoption tests.",
         "displayName": "Fixture Former",
@@ -179,7 +179,7 @@
       "enabled": true,
       "lifecycle": "locked",
       "manifest": {
-        "author": "kirocrew",
+        "author": "ajcrew",
         "defaultEnabled": false,
         "description": "A former built-in used by the adoption tests.",
         "displayName": "Fixture Former",
@@ -230,7 +230,7 @@
       "enabled": true,
       "lifecycle": "locked",
       "manifest": {
-        "author": "kirocrew",
+        "author": "ajcrew",
         "defaultEnabled": false,
         "description": "A former built-in used by the adoption tests.",
         "displayName": "Fixture Former",
@@ -280,7 +280,7 @@
       "enabled": true,
       "lifecycle": "locked",
       "manifest": {
-        "author": "kirocrew",
+        "author": "ajcrew",
         "defaultEnabled": false,
         "description": "A former built-in used by the adoption tests.",
         "displayName": "Fixture Former",
@@ -337,7 +337,7 @@
         "enabled": true,
         "lifecycle": "gateway",
         "manifest": {
-          "author": "kirocrew",
+          "author": "ajcrew",
           "defaultEnabled": false,
           "description": "A former built-in used by the adoption tests.",
           "displayName": "Fixture Former",
@@ -375,8 +375,8 @@
         "sessionApprovalConsentPending": false,
         "source": "registry:fixture-former",
         "sourceCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "sourceUrl": "https://github.com/FixtureOrg/kirocrew-app-fixture-former",
-        "trustRepository": "https://github.com/FixtureOrg/kirocrew-app-fixture-former",
+        "sourceUrl": "https://github.com/FixtureOrg/ajcrew-app-fixture-former",
+        "trustRepository": "https://github.com/FixtureOrg/ajcrew-app-fixture-former",
         "version": "0.1.0"
       }
     ]

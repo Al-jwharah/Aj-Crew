@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from kiro_crew.workflows.library import WorkflowDefinitionLibrary
+from aj_crew.workflows.library import WorkflowDefinitionLibrary
 
 # A script whose only short tokens are one- and two-letter identifiers. None of
 # its words share a meaningful prefix with the query used below.

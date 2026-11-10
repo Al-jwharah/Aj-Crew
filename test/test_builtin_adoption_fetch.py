@@ -21,16 +21,16 @@ from builtin_adoption_helpers import (
     write_tree,
 )
 
-from kiro_crew import pinned_fs, platform_compat
-from kiro_crew.apps import builtin_adoption_fetch as fetch_mod
-from kiro_crew.apps.builtin_adoption_fetch import (
+from aj_crew import pinned_fs, platform_compat
+from aj_crew.apps import builtin_adoption_fetch as fetch_mod
+from aj_crew.apps.builtin_adoption_fetch import (
     AdoptionRefused,
     StagedArtifact,
     adoption_tree_digest,
     materialize_verified_tree,
     stage_pin,
 )
-from kiro_crew.apps.builtin_adoption_pins import adoption_pin
+from aj_crew.apps.builtin_adoption_pins import adoption_pin
 
 pytestmark = requires_git
 
@@ -94,7 +94,7 @@ def test_a_symlink_refuses_the_tree(tmp_path):
 
 @pytest.mark.skipif(platform_compat.IS_POSIX, reason="junctions exist only on Windows")
 def test_a_junction_refuses_the_tree(tmp_path):
-    from kiro_crew.testing.links import make_dir_link
+    from aj_crew.testing.links import make_dir_link
 
     a = write_tree(tmp_path / "a", {"name": "x"})
     target = tmp_path / "target"
@@ -244,7 +244,7 @@ def harness_pin(tmp_path, monkeypatch):
     """Build a pin read from a harness table whose ``harnessArchive`` holds a body."""
     from builtin_adoption_helpers import pin_row
 
-    from kiro_crew.apps import builtin_adoption_pins as pins_mod
+    from aj_crew.apps import builtin_adoption_pins as pins_mod
 
     def make(world, body):
         archive = tmp_path / "harness" / "fixture.tar.gz"
@@ -459,7 +459,7 @@ def test_the_archive_download_never_writes_through_a_planted_link(tmp_path, monk
 
 @pytest.mark.parametrize("raises", [False, True])
 def test_moved_aside_checkouts_are_removed_off_the_event_loop(tmp_path, monkeypatch, raises):
-    from kiro_crew.apps.registry_pipeline import checkout as checkout_mod
+    from aj_crew.apps.registry_pipeline import checkout as checkout_mod
 
     build_world(tmp_path, monkeypatch)
     pin = adoption_pin(NAME)

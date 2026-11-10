@@ -1,6 +1,6 @@
 """``SessionManager`` keeps every member it had, and each is bound from the module that owns it.
 
-The manager's behaviour lives in the ``kiro_crew.session_parts`` owner modules: each
+The manager's behaviour lives in the ``aj_crew.session_parts`` owner modules: each
 member's body is a module-level function there whose first parameter is ``self``, and the
 class binds it by name (``m = _owner.m``, or ``staticmethod(_owner.f)``); each state view
 is a ``StateProperty`` the owner builds from its getter and setter. The instance state
@@ -16,10 +16,10 @@ see the same object they always did. This file pins the binding contract:
   attribute, which only work inside a class body;
 * no owner imports the facade at run time, and each imports only owners listed before it;
 * each owner's docstring names the instance fields its members write and read;
-* every owner logs under ``kiro_crew.session``, and a moved class keeps that module name;
-* ``kiro_crew._facade_mirror`` serves exactly the moved names the facade does not bind, and
-  a write through ``kiro_crew.session`` reaches every owner that reads the name;
-* ``from kiro_crew.session import *`` binds the names it bound before the split.
+* every owner logs under ``aj_crew.session``, and a moved class keeps that module name;
+* ``aj_crew._facade_mirror`` serves exactly the moved names the facade does not bind, and
+  a write through ``aj_crew.session`` reaches every owner that reads the name;
+* ``from aj_crew.session import *`` binds the names it bound before the split.
 """
 
 from __future__ import annotations
@@ -36,9 +36,9 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import session as session_mod
-from kiro_crew.session import SessionManager
-from kiro_crew.session_parts.state_views import StateProperty
+from aj_crew import session as session_mod
+from aj_crew.session import SessionManager
+from aj_crew.session_parts.state_views import StateProperty
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_session_bindings")
 
@@ -49,7 +49,7 @@ SHARED_BINDINGS_CHECKS = (
 
 #: Member -> (kind, coroutine, signature digest, owning module). Frozen at the split: the
 #: kind, coroutine flag and signature are BASE's; the owner is where the member lives now
-#: (``session`` is the facade, any other name a ``kiro_crew.session_parts`` module).
+#: (``session`` is the facade, any other name a ``aj_crew.session_parts`` module).
 _MEMBERS: dict[str, tuple[str, object, str, str]] = {
     "_CONFIG_SECTIONS": ("data", False, "", "config_apply"),
     "_FACTORY_CONFIG_PATHS": ("data", False, "", "config_apply"),
@@ -448,7 +448,7 @@ _SERVED = frozenset(
 #: Classes that moved to an owner and must keep the facade's module name.
 _MOVED_CLASSES = ("FirstTurnState", "_Session", "_CompactCallback", "_RecycleCallback")
 
-_PACKAGE = "kiro_crew.session_parts"
+_PACKAGE = "aj_crew.session_parts"
 
 
 def _owners() -> list[ModuleType]:
@@ -672,7 +672,7 @@ def test_no_bound_function_needs_its_class_body(owner: str) -> None:
 
 
 def _runtime_facade_imports(tree: ast.Module) -> list[int]:
-    """Lines that import the facade (``kiro_crew.session``) outside a ``TYPE_CHECKING`` block."""
+    """Lines that import the facade (``aj_crew.session``) outside a ``TYPE_CHECKING`` block."""
     guarded: set[int] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.If) and ast.unparse(node.test) == "TYPE_CHECKING":
@@ -682,12 +682,12 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
         if id(node) in guarded:
             continue
         if isinstance(node, ast.ImportFrom):
-            if node.module == "kiro_crew.session" or (
-                node.module == "kiro_crew" and any(a.name == "session" for a in node.names)
+            if node.module == "aj_crew.session" or (
+                node.module == "aj_crew" and any(a.name == "session" for a in node.names)
             ):
                 lines.append(node.lineno)
         elif isinstance(node, ast.Import):
-            if any(a.name == "kiro_crew.session" for a in node.names):
+            if any(a.name == "aj_crew.session" for a in node.names):
                 lines.append(node.lineno)
     return lines
 
@@ -695,10 +695,10 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
 def test_the_facade_import_scan_can_fail() -> None:
     tree = ast.parse(
         "from typing import TYPE_CHECKING\n"
-        "if TYPE_CHECKING:\n    from kiro_crew.session import SessionManager\n"
-        "def f():\n    from kiro_crew.session import x\n"
-        "import kiro_crew.session\n"
-        "from kiro_crew import session\n"
+        "if TYPE_CHECKING:\n    from aj_crew.session import SessionManager\n"
+        "def f():\n    from aj_crew.session import x\n"
+        "import aj_crew.session\n"
+        "from aj_crew import session\n"
     )
     assert sorted(_runtime_facade_imports(tree)) == [5, 6, 7]
 
@@ -724,9 +724,9 @@ def _owner_imports(tree: ast.Module) -> set[str]:
 
 def test_the_owner_import_scan_can_fail() -> None:
     tree = ast.parse(
-        "from kiro_crew.session_parts.policy import X\n"
-        "from kiro_crew.session_parts import record as _r\n"
-        "import kiro_crew.session_parts.claims\n"
+        "from aj_crew.session_parts.policy import X\n"
+        "from aj_crew.session_parts import record as _r\n"
+        "import aj_crew.session_parts.claims\n"
     )
     assert _owner_imports(tree) == {
         f"{_PACKAGE}.policy",
@@ -850,7 +850,7 @@ def test_each_owner_names_the_fields_it_writes_and_reads(owner: str) -> None:
 def test_owners_log_under_the_session_logger(owner: str) -> None:
     module = sys.modules[owner]
     assert getattr(module, "logger", session_mod.logger) is session_mod.logger
-    assert session_mod.logger.name == "kiro_crew.session"
+    assert session_mod.logger.name == "aj_crew.session"
 
 
 @pytest.mark.parametrize("name", _MOVED_CLASSES)
@@ -934,7 +934,7 @@ def test_a_patch_of_a_served_name_reaches_every_owner_reading_it(
     assert links._MAX_ORIGIN_LINKS is before
 
 
-#: What ``from kiro_crew.session import *`` bound before the split (the unsplit module had
+#: What ``from aj_crew.session import *`` bound before the split (the unsplit module had
 #: no ``__all__``, so every public name it bound): the facade's derived ``__all__`` keeps it.
 _STAR_EXPORTS = frozenset("""
     ACP_BACKENDS_ACP_RUNTIME ACP_BACKENDS_SESSION_EVICTION ACP_BACKEND_KIRO
@@ -944,7 +944,7 @@ _STAR_EXPORTS = frozenset("""
     COMPACT_WAIT_TIMEOUT_SECS CONSOLIDATE_KEY CONTEXT_WARN_MARGIN_PCT Callable CancelOutcome
     ChannelLink ClaudeCodeProvider CleanupDeps CleanupHook CleanupState
     CompactionCoordinator CompactionDeps CompactionState ConfigChange Enum FirstTurnState
-    HEARTBEAT_KEY InboundCallbackReservation Iterator KiroCrewConfig LLMProvider Literal
+    HEARTBEAT_KEY InboundCallbackReservation Iterator AjCrewConfig LLMProvider Literal
     MIRROR_OPT_OUT_FLAG POOL_DECISIONS POOL_SIZE_MAX PROVIDER_LABEL_CLAUDE
     PROVIDER_LABEL_DEFAULT PYCACHE_GC_INTERVAL_SECS Path PidRefcount PrioritySemaphore
     Protocol ProviderFactory SESSION_IDLE_EXPIRED SUPPRESS_REPLAY_FLAG

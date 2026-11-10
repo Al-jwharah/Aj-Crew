@@ -20,14 +20,14 @@ from dev_fleet_app_helpers import _reset_shutdown_admission_state  # noqa: F401 
 from dev_fleet_app_helpers import _sweep_staged_sync_tempdirs  # noqa: F401 - fixture
 from dev_fleet_app_helpers import _venv_maps_to_the_synced_checkout  # noqa: F401 - fixture
 
-import kiro_crew.apps.builtins.dev_fleet.server as mod
-from kiro_crew import platform_compat
-from kiro_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
-from kiro_crew.apps.builtins.dev_fleet import live as live_mod
-from kiro_crew.apps.builtins.dev_fleet import repository as repository_mod
-from kiro_crew.apps.builtins.dev_fleet import runtime as runtime_mod
-from kiro_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
-from kiro_crew.pod import windows as pod_windows
+import aj_crew.apps.builtins.dev_fleet.server as mod
+from aj_crew import platform_compat
+from aj_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
+from aj_crew.apps.builtins.dev_fleet import live as live_mod
+from aj_crew.apps.builtins.dev_fleet import repository as repository_mod
+from aj_crew.apps.builtins.dev_fleet import runtime as runtime_mod
+from aj_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
+from aj_crew.pod import windows as pod_windows
 
 # Per-worktree context: issue/ticket links + purpose one-liner
 
@@ -94,14 +94,14 @@ def test_pick_summary_falls_back_to_latest_when_all_bumps():
 # --- html origin parsing (issue link base) ---
 def test_parse_html_repo_base_variants():
     p = mod._parse_html_repo_base
-    assert p("git@github.com:kirodotdev/KiroCrew.git") == "https://github.com/kirodotdev/KiroCrew"
+    assert p("git@github.com:Al-jwharah/Aj-Crew.git") == "https://github.com/Al-jwharah/Aj-Crew"
     assert (
-        p("https://github.com/kirodotdev/KiroCrew.git") == "https://github.com/kirodotdev/KiroCrew"
+        p("https://github.com/Al-jwharah/Aj-Crew.git") == "https://github.com/Al-jwharah/Aj-Crew"
     )
-    assert p("https://github.com/kirodotdev/KiroCrew") == "https://github.com/kirodotdev/KiroCrew"
+    assert p("https://github.com/Al-jwharah/Aj-Crew") == "https://github.com/Al-jwharah/Aj-Crew"
     assert (
-        p("ssh://git@github.com/kirodotdev/KiroCrew.git")
-        == "https://github.com/kirodotdev/KiroCrew"
+        p("ssh://git@github.com/Al-jwharah/Aj-Crew.git")
+        == "https://github.com/Al-jwharah/Aj-Crew"
     )
     assert p("") is None
     assert p("not a url") is None
@@ -157,7 +157,7 @@ async def test_build_context_parses_pr_body_and_commits():
             fleet_state_mod,
             "_html_repo_base",
             new_callable=AsyncMock,
-            return_value="https://github.com/kirodotdev/KiroCrew",
+            return_value="https://github.com/Al-jwharah/Aj-Crew",
         ),
         patch.object(
             repository_mod,
@@ -392,7 +392,7 @@ async def test_fleet_payload_redacts_credentials_in_main_repo():
 
 @pytest.mark.asyncio
 async def test_fleet_payload_preserves_ordinary_main_repo_path():
-    ordinary = "/home/user/oss/KiroCrew"
+    ordinary = "/home/user/oss/AjCrew"
     with patch.object(repository_mod, "_repo", return_value=ordinary):
         fleet = await _fleet_with([{"path": "/repo", "branch": "main", "is_main": True}])
 
@@ -572,10 +572,10 @@ async def test_build_state_is_reported_even_where_pods_cannot_run(tmp_path):
     wt = tmp_path / "repo-wt-built"
     binp = wt / ".venv" / ("Scripts" if platform_compat.IS_WINDOWS else "bin")
     binp.mkdir(parents=True)
-    exe = binp / ("kirocrew.exe" if platform_compat.IS_WINDOWS else "kirocrew")
+    exe = binp / ("ajcrew.exe" if platform_compat.IS_WINDOWS else "ajcrew")
     exe.write_text("#!/bin/sh\n")
     exe.chmod(0o755)
-    (wt / "src" / "kiro_crew" / "static" / "dist").mkdir(parents=True)
+    (wt / "src" / "aj_crew" / "static" / "dist").mkdir(parents=True)
 
     fleet = await _fleet_with(
         [
@@ -606,10 +606,10 @@ async def test_main_checkout_build_state_is_probed(tmp_path):
     main_co = tmp_path / "repo"
     binp = main_co / ".venv" / ("Scripts" if platform_compat.IS_WINDOWS else "bin")
     binp.mkdir(parents=True)
-    exe = binp / ("kirocrew.exe" if platform_compat.IS_WINDOWS else "kirocrew")
+    exe = binp / ("ajcrew.exe" if platform_compat.IS_WINDOWS else "ajcrew")
     exe.write_text("#!/bin/sh\n")
     exe.chmod(0o755)
-    (main_co / "src" / "kiro_crew" / "static" / "dist").mkdir(parents=True)
+    (main_co / "src" / "aj_crew" / "static" / "dist").mkdir(parents=True)
 
     fleet = await _fleet_with(
         [{"path": str(main_co), "branch": "main", "is_main": True}],
@@ -627,18 +627,18 @@ async def test_main_checkout_build_state_is_probed(tmp_path):
 
 
 # _find_cli must target a RUNNABLE entry point
-def test_find_cli_targets_kiro_crew_package(nonbundled_python_without_user_site):
-    """_find_cli must invoke the ``kiro_crew`` package (its __main__), not
-    ``kiro_crew.cli`` — the latter has no __main__ guard and no-ops silently."""
+def test_find_cli_targets_aj_crew_package(nonbundled_python_without_user_site):
+    """_find_cli must invoke the ``aj_crew`` package (its __main__), not
+    ``aj_crew.cli`` — the latter has no __main__ guard and no-ops silently."""
     import sys
 
-    assert mod._find_cli() == [sys.executable, "-s", "-P", "-m", "kiro_crew"]
+    assert mod._find_cli() == [sys.executable, "-s", "-P", "-m", "aj_crew"]
 
 
-def test_kiro_crew_module_entry_actually_runs():
+def test_aj_crew_module_entry_actually_runs():
     """The entry point _find_cli uses must actually run main() and emit output.
 
-    Guards the root cause of #220: ``python -m kiro_crew.cli`` imported the
+    Guards the root cause of #220: ``python -m aj_crew.cli`` imported the
     module, ran no main(), and exited 0 with EMPTY output — so every pod op was
     a silent no-op reported as success. A runnable entry prints usage on --help.
     """
@@ -646,7 +646,7 @@ def test_kiro_crew_module_entry_actually_runs():
     import sys
 
     proc = subprocess.run(
-        [sys.executable, "-m", "kiro_crew", "--help"],
+        [sys.executable, "-m", "aj_crew", "--help"],
         capture_output=True,
         text=True,
         encoding="utf-8",
@@ -666,7 +666,7 @@ async def test_pod_down_fails_closed_when_still_active():
             repository_mod,
             "_find_worktree",
             new_callable=AsyncMock,
-            return_value=({"path": "/worktrees/kirocrew-wt-x"}, None),
+            return_value=({"path": "/worktrees/ajcrew-wt-x"}, None),
         ),
         patch.object(
             worktree_ops_mod, "_pod_checkout_guard", new_callable=AsyncMock, return_value=None
@@ -674,9 +674,9 @@ async def test_pod_down_fails_closed_when_still_active():
         patch.object(runtime_mod, "_run_cmd", new_callable=AsyncMock, return_value=(0, "", "")),
         patch.object(runtime_mod, "_load_cfg", return_value=object()),
         patch.object(runtime_mod, "_POD_AVAILABLE", True),
-        patch.object(runtime_mod.rt, "active_names", return_value={"kirocrew-wt-x"}),
+        patch.object(runtime_mod.rt, "active_names", return_value={"ajcrew-wt-x"}),
     ):
-        result = await mod._pod_down("kirocrew-wt-x")
+        result = await mod._pod_down("ajcrew-wt-x")
     assert result["ok"] is False
     assert "still active" in result["error"]
 
@@ -689,7 +689,7 @@ async def test_pod_down_ok_when_unit_gone():
             repository_mod,
             "_find_worktree",
             new_callable=AsyncMock,
-            return_value=({"path": "/worktrees/kirocrew-wt-x"}, None),
+            return_value=({"path": "/worktrees/ajcrew-wt-x"}, None),
         ),
         patch.object(
             worktree_ops_mod, "_pod_checkout_guard", new_callable=AsyncMock, return_value=None
@@ -699,7 +699,7 @@ async def test_pod_down_ok_when_unit_gone():
         patch.object(runtime_mod, "_POD_AVAILABLE", True),
         patch.object(runtime_mod.rt, "active_names", return_value=set()),
     ):
-        result = await mod._pod_down("kirocrew-wt-x")
+        result = await mod._pod_down("ajcrew-wt-x")
     assert result["ok"] is True
     assert result["error"] is None
 
@@ -712,7 +712,7 @@ async def test_pod_down_fails_closed_when_verify_raises():
             repository_mod,
             "_find_worktree",
             new_callable=AsyncMock,
-            return_value=({"path": "/worktrees/kirocrew-wt-x"}, None),
+            return_value=({"path": "/worktrees/ajcrew-wt-x"}, None),
         ),
         patch.object(
             worktree_ops_mod, "_pod_checkout_guard", new_callable=AsyncMock, return_value=None
@@ -722,7 +722,7 @@ async def test_pod_down_fails_closed_when_verify_raises():
         patch.object(runtime_mod, "_POD_AVAILABLE", True),
         patch.object(runtime_mod.rt, "active_names", side_effect=RuntimeError("boom")),
     ):
-        result = await mod._pod_down("kirocrew-wt-x")
+        result = await mod._pod_down("ajcrew-wt-x")
     assert result["ok"] is False
     assert "cannot verify pod shutdown" in result["error"]
 
@@ -735,7 +735,7 @@ async def test_pod_down_nonzero_rc_is_failure():
             repository_mod,
             "_find_worktree",
             new_callable=AsyncMock,
-            return_value=({"path": "/worktrees/kirocrew-wt-x"}, None),
+            return_value=({"path": "/worktrees/ajcrew-wt-x"}, None),
         ),
         patch.object(
             worktree_ops_mod, "_pod_checkout_guard", new_callable=AsyncMock, return_value=None
@@ -744,6 +744,6 @@ async def test_pod_down_nonzero_rc_is_failure():
             runtime_mod, "_run_cmd", new_callable=AsyncMock, return_value=(1, "", "stop failed")
         ),
     ):
-        result = await mod._pod_down("kirocrew-wt-x")
+        result = await mod._pod_down("ajcrew-wt-x")
     assert result["ok"] is False
     assert "stop failed" in result["error"]

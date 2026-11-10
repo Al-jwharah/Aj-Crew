@@ -15,9 +15,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.session import SessionManager
-from kiro_crew.testing.wait import await_until
+from aj_crew.config import AjCrewConfig
+from aj_crew.session import SessionManager
+from aj_crew.testing.wait import await_until
 
 # Far larger than any wall-clock this test spends, so every reap asserted below
 # is on the terminated-owner axis and never on the idle clock.
@@ -26,7 +26,7 @@ NEVER_IDLE = 9999
 
 @pytest.fixture
 def cfg():
-    c = KiroCrewConfig()
+    c = AjCrewConfig()
     c.session.timeout_secs = NEVER_IDLE
     return c
 
@@ -489,7 +489,7 @@ class TestPendingInjectionIsSpared:
         """
         from unittest.mock import MagicMock, patch
 
-        import kiro_crew.session as session_mod
+        import aj_crew.session as session_mod
 
         cfg.session.watchdog_rss_max_mb = 1000
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
@@ -510,9 +510,9 @@ class TestPendingInjectionIsSpared:
 
         with (
             patch.object(session_mod.platform_compat, "IS_WINDOWS", False),
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
-            caplog.at_level(logging.DEBUG, logger="kiro_crew.session"),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
+            caplog.at_level(logging.DEBUG, logger="aj_crew.session"),
         ):
             await mgr._rss_threshold_check()
 
@@ -531,7 +531,7 @@ class TestPendingInjectionIsSpared:
         """
         from unittest.mock import MagicMock, patch
 
-        import kiro_crew.session as session_mod
+        import aj_crew.session as session_mod
 
         cfg.session.watchdog_rss_max_mb = 1000
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
@@ -545,8 +545,8 @@ class TestPendingInjectionIsSpared:
 
         with (
             patch.object(session_mod.platform_compat, "IS_WINDOWS", False),
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
         ):
             await mgr._rss_threshold_check()
 
@@ -645,7 +645,7 @@ class TestPendingInjectionIsSpared:
         """
         from pathlib import Path
 
-        from kiro_crew.slack.gateway_runtime import service_boot
+        from aj_crew.slack.gateway_runtime import service_boot
 
         src = Path(service_boot.__file__).read_text(encoding="utf-8")
         assert (

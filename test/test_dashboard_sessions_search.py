@@ -6,8 +6,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import api_sessions_search
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard.handlers import api_sessions_search
+from aj_crew.history import ConversationLog
 
 
 def _make_app(log: ConversationLog) -> web.Application:
@@ -87,7 +87,7 @@ class TestSessionsSearchHandler:
         # Patched on the one composed pass that `security.redact` runs: it finds
         # credential and outbound-URL spans together, so this one fake standing in
         # for it is what proves the title goes through both.
-        monkeypatch.setattr("kiro_crew.security.pass_compose.compose", _fake_compose)
+        monkeypatch.setattr("aj_crew.security.pass_compose.compose", _fake_compose)
         async with TestClient(TestServer(_make_app(log))) as client:
             resp = await client.get("/api/sessions/search?q=matches")
             sessions = (await resp.json())["sessions"]

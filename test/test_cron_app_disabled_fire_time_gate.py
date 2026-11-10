@@ -39,8 +39,8 @@ def _app_owned_job(**overrides):
 def _allow_other_gates():
     """Neutralize the sibling fire-time gates so only the app gate decides."""
     return (
-        patch("kiro_crew.mcp_cron._vet_cron_capability_governance", return_value=None),
-        patch("kiro_crew.mcp_cron._vet_command_governance", return_value=None),
+        patch("aj_crew.mcp_cron._vet_cron_capability_governance", return_value=None),
+        patch("aj_crew.mcp_cron._vet_command_governance", return_value=None),
     )
 
 
@@ -51,10 +51,10 @@ class TestDisabledAppCronIsSkipped:
         job = _app_owned_job()
         cap, cmd = _allow_other_gates()
         with (
-            caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_cron"),
+            caplog.at_level(logging.WARNING, logger="aj_crew.mcp_cron"),
             cap,
             cmd,
-            patch("kiro_crew.apps.manager.app_enabled_state", return_value=False) as state,
+            patch("aj_crew.apps.manager.app_enabled_state", return_value=False) as state,
         ):
             result, mock_run = await _run_command_callback(gw, job, _OK)
 
@@ -84,7 +84,7 @@ class TestDisabledAppCronIsSkipped:
         with (
             cap,
             cmd,
-            patch("kiro_crew.apps.manager.app_enabled_state", return_value=True),
+            patch("aj_crew.apps.manager.app_enabled_state", return_value=True),
         ):
             result, mock_run = await _run_command_callback(gw, job, _OK)
 
@@ -103,7 +103,7 @@ class TestDisabledAppCronIsSkipped:
         with (
             cap,
             cmd,
-            patch("kiro_crew.apps.manager.app_enabled_state", return_value=None),
+            patch("aj_crew.apps.manager.app_enabled_state", return_value=None),
         ):
             result, mock_run = await _run_command_callback(gw, job, _OK)
 
@@ -125,7 +125,7 @@ class TestDisabledAppCronIsSkipped:
         with (
             cap,
             cmd,
-            patch("kiro_crew.apps.manager.app_enabled_state", return_value=False),
+            patch("aj_crew.apps.manager.app_enabled_state", return_value=False),
         ):
             for _ in range(6):
                 await _run_command_callback(gw, job, _OK)
@@ -146,7 +146,7 @@ class TestDisabledAppCronIsSkipped:
         with (
             cap,
             cmd,
-            patch("kiro_crew.apps.manager.app_enabled_state") as state,
+            patch("aj_crew.apps.manager.app_enabled_state") as state,
         ):
             result, mock_run = await _run_command_callback(gw, job, _OK)
 
@@ -165,7 +165,7 @@ class TestDisabledAppCronIsSkipped:
         with (
             cap,
             cmd,
-            patch("kiro_crew.apps.manager.app_enabled_state", return_value=False) as state,
+            patch("aj_crew.apps.manager.app_enabled_state", return_value=False) as state,
         ):
             result, mock_run = await _run_command_callback(gw, job, _OK)
 

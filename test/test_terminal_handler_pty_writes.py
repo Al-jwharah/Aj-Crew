@@ -18,8 +18,8 @@ from terminal_handler_helpers import (  # noqa: F401 -- the autouse fixture regi
     _make_session,
 )
 
-from kiro_crew.dashboard.handlers import terminal
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.handlers import terminal
+from aj_crew.testing.wait import await_until
 
 
 class TestWriteAll:

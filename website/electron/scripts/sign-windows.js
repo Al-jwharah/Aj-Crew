@@ -10,7 +10,7 @@
 // There is no certificate on this machine: the private key lives in the signing
 // service and never leaves it. Signing is an S3 round-trip -- upload the file,
 // a Signer-owned Lambda picks it up and calls StartSigningJob, we read the
-// signed bytes back. See docs/windows-signing.md in KiroCrewPublishCDK.
+// signed bytes back. See docs/windows-signing.md in AjCrewPublishCDK.
 //
 // Credentials come from the OIDC role the workflow assumes; nothing is stored
 // here. Like scripts/notarize.js, this SKIPS cleanly when the environment is
@@ -24,7 +24,7 @@
 // Env (all required to enable signing):
 //   WINDOWS_SIGNING_UNSIGNED_BUCKET  where we upload; a Lambda watches it
 //   WINDOWS_SIGNING_SIGNED_BUCKET    where Signer writes the signed artifact
-//   WINDOWS_SIGNING_PROFILE_ID       profile identifier, e.g. KiroCrewWindowsExe
+//   WINDOWS_SIGNING_PROFILE_ID       profile identifier, e.g. AjCrewWindowsExe
 //   WINDOWS_SIGNING_ARTIFACT_ROLE    ArtifactAccessRole to assume
 //   WINDOWS_SIGNING_EXTERNAL_ID      sts:ExternalId (equals the Signer app name)
 // Optional:
@@ -166,7 +166,7 @@ exports.default = async function signWindows(configuration) {
   const filePath = configuration.path
   const fileName = path.basename(filePath)
 
-  // Kiro Crew authenticates this exact pinned executable by pinned size and
+  // Aj Crew authenticates this exact pinned executable by pinned size and
   // SHA-256 immediately before every spawn. Authenticode appends bytes and
   // would make the signed desktop bundle reject its own decoder. Keep only
   // this one dependency byte-identical; the app, Python runtime, installer and
@@ -220,7 +220,7 @@ exports.default = async function signWindows(configuration) {
 
   // A colon is legal in a POSIX filename but not a Windows one, and Signer
   // rejects keys that are not valid Windows filenames. The nightly product name
-  // ("KiroCrew Nightly") also carries a space, which is legal but awkward in a
+  // ("AjCrew Nightly") also carries a space, which is legal but awkward in a
   // key, so collapse to a safe set.
   const safeName = fileName.replace(/[^A-Za-z0-9._-]/g, '-')
   // Unique per invocation: electron-builder signs several files per build and

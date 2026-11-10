@@ -738,7 +738,7 @@ function ResourceRow({ link }: { link: ExtractedLink }) {
  *          iterated on or reverted (the backend unions the create-time
  *          `session_key` with every event's `session_id`). Includes each
  *          `<mcwidget>` the agent emitted, which the backend auto-registers
- *          unpinned (kiro_crew/widget_artifacts.py). These have no filesystem
+ *          unpinned (aj_crew/widget_artifacts.py). These have no filesystem
  *          path — a widget's HTML lives inline in the message.
  *       2. The session's bound companion artifact, if any. A session started
  *          from an artifact's detail page carries `slot.artifact`, persisted in
@@ -1045,7 +1045,7 @@ function ArtifactListRow({ row, busy, onOpen, onSave }: {
           unpinned. That is the single case where the flag changes an outcome:
           the store sweeps auto-registered widgets oldest-first past
           MAX_AUTO_WIDGET_ARTIFACTS (200) unless they are pinned
-          (kiro_crew/artifacts.py — prune_auto_widgets). For an explicitly
+          (aj_crew/artifacts.py — prune_auto_widgets). For an explicitly
           created artifact nothing sweeps it, so the same control would promise
           safety it isn't providing. One-way by design: there is no un-save
           affordance here, because the only thing un-saving buys is

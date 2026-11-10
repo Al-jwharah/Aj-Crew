@@ -14,13 +14,13 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-import kiro_crew.dashboard.chat_handlers as ch
-from kiro_crew import members
-from kiro_crew.dashboard.chat_utils import effective_session_key
-from kiro_crew.dashboard.handlers import members as m
-from kiro_crew.eventlog import types as eventlog_types
-from kiro_crew.eventlog.service import get_service, set_service
-from kiro_crew.members import DM_SLOT_MODE, member_slot_key, write_dm_binding
+import aj_crew.dashboard.chat_handlers as ch
+from aj_crew import members
+from aj_crew.dashboard.chat_utils import effective_session_key
+from aj_crew.dashboard.handlers import members as m
+from aj_crew.eventlog import types as eventlog_types
+from aj_crew.eventlog.service import get_service, set_service
+from aj_crew.members import DM_SLOT_MODE, member_slot_key, write_dm_binding
 
 SLUG = "code-reviewer"
 MEMBER = "code-reviewer"
@@ -264,7 +264,7 @@ class TestResetPersists:
         _bound_slot(state)
         order: list[str] = []
         _record_discard(state, order)
-        with patch("kiro_crew.eventlog_hooks.emit", return_value=False):
+        with patch("aj_crew.eventlog_hooks.emit", return_value=False):
             with patch.object(ch, "stop_slot_turn", _Stops(order, settle_after=1)):
                 status, body = await _press(state)
         assert status == 200
@@ -301,7 +301,7 @@ class TestResetPersists:
         back into ChatPane's foldBefore on a reload."""
         from types import SimpleNamespace
 
-        from kiro_crew.config.loader import KiroCrewAgentConfig
+        from aj_crew.config.loader import AjCrewAgentConfig
 
         state = _make_state(tmp_path)
         _bound_slot(state)
@@ -322,13 +322,13 @@ class TestResetPersists:
         app["state"] = state
         app.router.add_get("/api/members", m.api_members)
         cfg = SimpleNamespace(
-            agents={MEMBER: KiroCrewAgentConfig(kiro_agent=MEMBER)},
+            agents={MEMBER: AjCrewAgentConfig(kiro_agent=MEMBER)},
             default_agent=MEMBER,
             memory_stores={},
             degraded_sections=frozenset(),
         )
         cfg._content_digest = "fresh-start-test-digest"
-        monkeypatch.setattr(m.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+        monkeypatch.setattr(m.AjCrewConfig, "load", staticmethod(lambda: cfg))
         async with TestClient(TestServer(app)) as client:
             data = await (await client.get("/api/members")).json()
         row = next(r for r in data["members"] if r["slug"] == SLUG)

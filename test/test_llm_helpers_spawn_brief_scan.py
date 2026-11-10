@@ -26,16 +26,16 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import kiro_crew.sel as sel_mod
-from kiro_crew.hooks import TOOL_DENY, HookManager
-from kiro_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission, stream_and_collect
-from kiro_crew.platform.tool_paths import mcp_document_body_keys, split_document_bodies
-from kiro_crew.providers.base import (
+import aj_crew.sel as sel_mod
+from aj_crew.hooks import TOOL_DENY, HookManager
+from aj_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission, stream_and_collect
+from aj_crew.platform.tool_paths import mcp_document_body_keys, split_document_bodies
+from aj_crew.providers.base import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     LLMEvent,
 )
-from kiro_crew.slack.gateway import _GateTally
+from aj_crew.slack.gateway import _GateTally
 
 # Built by concatenation so this file never carries the command line itself.
 _DENIED_STEP = "git " + "reset " + "--hard" + " origin/main"
@@ -43,7 +43,7 @@ _BRIEF = (
     "Rebase the feature branch onto main. If the tree is in a bad state, the "
     f"usual recovery is `{_DENIED_STEP}`, but ask first.\n"
 )
-_CORE = "kirocrew-core"
+_CORE = "ajcrew-core"
 
 
 class _RecordingProvider:
@@ -266,7 +266,7 @@ class TestTheRefusalNamesTheRule:
     def test_the_cron_summary_names_the_rule(self) -> None:
         tally = _GateTally()
         tally.note(
-            "@kirocrew-core/spawn_run",
+            "@ajcrew-core/spawn_run",
             False,
             True,
             "Blocked by security policy: git reset --hard.*\noperator note",
@@ -277,11 +277,11 @@ class TestTheRefusalNamesTheRule:
 
     def test_a_refusal_without_a_reason_reads_as_before(self) -> None:
         tally = _GateTally()
-        tally.note("@kirocrew-core/spawn_run", False, True)
+        tally.note("@ajcrew-core/spawn_run", False, True)
         assert tally.refusal_summary().endswith("spawn_run")
 
 
-_CRON = "kirocrew-cron"
+_CRON = "ajcrew-cron"
 
 # (server, tool, prose field, other params, a NON-prose field of the same tool)
 _PROSE_FIELDS = [

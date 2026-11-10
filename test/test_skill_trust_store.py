@@ -1,4 +1,4 @@
-"""Per-directory consent store for project skills (``kiro_crew.skill_trust``).
+"""Per-directory consent store for project skills (``aj_crew.skill_trust``).
 
 The gate must fail CLOSED on every unreadable/malformed/ambiguous input: a
 ``SKILL.md`` enters the agent's context and can instruct it to run anything, so
@@ -27,8 +27,8 @@ from skill_trust_store_helpers import (  # noqa: F401 -- fixtures register by im
     project_fixture,
 )
 
-from kiro_crew import platform_compat, skill_trust
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew import platform_compat, skill_trust
+from aj_crew.config.loader import AjCrewConfig
 
 pytestmark = pytest.mark.skipif(
     not skill_trust.project_skill_traversal_supported(),
@@ -278,7 +278,7 @@ class TestHardOffSwitch:
         skill_trust.grant_project_trust(project)
         self._write_config(malformed)
 
-        assert KiroCrewConfig.load().skills.project_skills_enabled is False
+        assert AjCrewConfig.load().skills.project_skills_enabled is False
         assert skill_trust.is_project_trusted(project) is False
 
     def test_a_malformed_skills_section_fails_closed(self, project):
@@ -288,7 +288,7 @@ class TestHardOffSwitch:
         (home / "config.json").write_text(json.dumps({"skills": "not-an-object"}), encoding="utf-8")
         skill_trust.reset_cache_for_tests()
 
-        assert KiroCrewConfig.load().skills.project_skills_enabled is False
+        assert AjCrewConfig.load().skills.project_skills_enabled is False
         assert skill_trust.is_project_trusted(project) is False
 
     @pytest.mark.parametrize("filename", ["config.json", "config.local.json"])
@@ -301,7 +301,7 @@ class TestHardOffSwitch:
         (home / filename).write_text('{"skills": {"project_skills_enabled":', encoding="utf-8")
         skill_trust.reset_cache_for_tests()
 
-        assert KiroCrewConfig.load().skills.project_skills_enabled is False
+        assert AjCrewConfig.load().skills.project_skills_enabled is False
         assert skill_trust.is_project_trusted(project) is False
 
 

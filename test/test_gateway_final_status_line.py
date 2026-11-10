@@ -9,7 +9,7 @@ import ast
 import inspect
 import textwrap
 
-from kiro_crew.slack.gateway_runtime import service_boot
+from aj_crew.slack.gateway_runtime import service_boot
 
 
 def _run_body() -> list[ast.stmt]:

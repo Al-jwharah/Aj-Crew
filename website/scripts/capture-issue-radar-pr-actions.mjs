@@ -62,7 +62,7 @@ const server = createServer((req, res) => {
   }
 })
 
-const REPO = { owner: 'kirodotdev', repo: 'KiroCrew' }
+const REPO = { owner: 'kirodotdev', repo: 'AjCrew' }
 const ISO = '2026-08-01T18:00:00Z'
 
 /** Two open PRs, so a bulk selection is genuinely two rows.
@@ -224,11 +224,11 @@ async function main() {
     if (path === '/api/themes') return json(route, { themes: [], installed: [] })
     if (path === '/api/agents') {
       return json(route, {
-        agents: [{ name: 'default', kiro_agent: 'kirocrew', description: 'Default crew agent' }],
+        agents: [{ name: 'default', kiro_agent: 'ajcrew', description: 'Default crew agent' }],
         default_agent: 'default',
       })
     }
-    if (path.startsWith('/api/agents/detail/')) return json(route, { name: 'kirocrew', model: 'claude-opus-5', skills: [] })
+    if (path.startsWith('/api/agents/detail/')) return json(route, { name: 'ajcrew', model: 'claude-opus-5', skills: [] })
     if (path === '/api/agents/installed') return json(route, [])
     // A bare LIST: the shell calls .filter() on it directly (useGlobalApprovalCount in src/shell/nav/railBadges.ts).
     if (path === '/api/approvals') return json(route, [])
@@ -267,7 +267,7 @@ async function main() {
       localStorage.setItem('mc-theme-mode', t)
       localStorage.setItem('mc-theme', t)
       localStorage.setItem('kc:issue-radar:active-repo', JSON.stringify({
-        owner: 'kirodotdev', repo: 'KiroCrew', provider: 'github', host: 'github.com',
+        owner: 'kirodotdev', repo: 'AjCrew', provider: 'github', host: 'github.com',
       }))
       localStorage.setItem('kc:issue-radar:ui-state', JSON.stringify({
         mainView: 'pulls', prStateFilter: 'open', prSelectedPull: 1111,

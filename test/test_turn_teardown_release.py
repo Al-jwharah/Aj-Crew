@@ -25,8 +25,8 @@ import pytest
 from chat_test_helpers import _make_state
 from real_session_manager import fake_provider, real_sessions
 
-from kiro_crew.acp.client import AcpAuthRequired
-from kiro_crew.dashboard.chat_runner import _run_chat
+from aj_crew.acp.client import AcpAuthRequired
+from aj_crew.dashboard.chat_runner import _run_chat
 
 
 def _real_state_and_slot(tmp_path: Path):

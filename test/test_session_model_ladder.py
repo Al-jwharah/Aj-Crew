@@ -27,15 +27,15 @@ from unittest.mock import AsyncMock
 import pytest
 from _hot_reload_helpers import write_config
 
-from kiro_crew.config import live
-from kiro_crew.config.live import ConfigWatch
-from kiro_crew.config.loader import (
-    KiroCrewAgentConfig,
-    KiroCrewConfig,
+from aj_crew.config import live
+from aj_crew.config.live import ConfigWatch
+from aj_crew.config.loader import (
+    AjCrewAgentConfig,
+    AjCrewConfig,
     app_model_pin,
     resolve_effective_model,
 )
-from kiro_crew.session import SessionManager, _session_model
+from aj_crew.session import SessionManager, _session_model
 
 GLOBAL = "claude-opus-5"
 CREW_PIN = "claude-sonnet-5"
@@ -55,20 +55,20 @@ def specs_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         json.dumps({"name": "pinned", "model": TEMPLATE_PIN}), encoding="utf-8"
     )
     (d / "unpinned.json").write_text(json.dumps({"name": "unpinned"}), encoding="utf-8")
-    monkeypatch.setattr("kiro_crew.config.loader.kiro_agents_dir", lambda: d)
+    monkeypatch.setattr("aj_crew.config.loader.kiro_agents_dir", lambda: d)
     return d
 
 
 @pytest.fixture
-def cfg(specs_dir: Path) -> KiroCrewConfig:
-    c = KiroCrewConfig()
+def cfg(specs_dir: Path) -> AjCrewConfig:
+    c = AjCrewConfig()
     c.agent.provider = "acp"
     c.agent.model = GLOBAL
     c.session.timeout_secs = 2
     c.agents = {
-        "default": KiroCrewAgentConfig(kiro_agent="kirocrew"),
-        "oncall": KiroCrewAgentConfig(kiro_agent="pinned", model=CREW_PIN),
-        "writer": KiroCrewAgentConfig(kiro_agent="pinned"),
+        "default": AjCrewAgentConfig(kiro_agent="ajcrew"),
+        "oncall": AjCrewAgentConfig(kiro_agent="pinned", model=CREW_PIN),
+        "writer": AjCrewAgentConfig(kiro_agent="pinned"),
     }
     return c
 
@@ -87,7 +87,7 @@ def _capturing_factory(captured: dict):
     return factory
 
 
-async def _started_on(cfg: KiroCrewConfig, key: str = "ladder", **kwargs) -> dict:
+async def _started_on(cfg: AjCrewConfig, key: str = "ladder", **kwargs) -> dict:
     """Cold-start *key* and return what the provider factory was handed."""
     captured: dict = {}
     mgr = SessionManager(cfg, provider_factory=_capturing_factory(captured))
@@ -128,7 +128,7 @@ class TestTheLadder:
         template answers the default template's tier instead of its own pin, while
         the factory still launches it and would have run its pin.
         """
-        monkeypatch.setattr("kiro_crew.config.loader._materialized_kiro_agent", lambda *a, **k: "")
+        monkeypatch.setattr("aj_crew.config.loader._materialized_kiro_agent", lambda *a, **k: "")
         assert _session_model(cfg, "pinned") == TEMPLATE_PIN
         assert resolve_effective_model(cfg, "pinned", selection_kind="template") == GLOBAL
 
@@ -170,7 +170,7 @@ class TestTheLadder:
         """Rung 5: what the factory itself would read, now resolved up front."""
         cfg.agent.model = "auto"
         with unittest.mock.patch.object(
-            KiroCrewConfig, "_resolve_agent_model", staticmethod(lambda: INSTALLED)
+            AjCrewConfig, "_resolve_agent_model", staticmethod(lambda: INSTALLED)
         ):
             got = await _started_on(cfg, agent="unpinned")
         assert got["model_override"] == INSTALLED
@@ -180,7 +180,7 @@ class TestTheLadder:
     async def test_every_tier_deferring_leaves_the_backend_to_choose(self, cfg):
         cfg.agent.model = "auto"
         with unittest.mock.patch.object(
-            KiroCrewConfig, "_resolve_agent_model", staticmethod(lambda: "")
+            AjCrewConfig, "_resolve_agent_model", staticmethod(lambda: "")
         ):
             got = await _started_on(cfg, agent="unpinned")
         assert got["model_override"] is None
@@ -196,14 +196,14 @@ class TestTheConfigSource:
         try:
             await mgr.get_or_create("before", agent="unpinned")
             assert captured["model_override"] == GLOBAL
-            changed = KiroCrewConfig()
+            changed = AjCrewConfig()
             changed.agent.provider = "acp"
             changed.agent.model = CREW_PIN
             changed.agents = dict(cfg.agents)
             # The refresh rebuilds the provider factory from the new config; keep
             # the recording one so the next cold start is still observable.
             with unittest.mock.patch(
-                "kiro_crew.session.build_provider_factory",
+                "aj_crew.session.build_provider_factory",
                 lambda _cfg: _capturing_factory(captured),
             ):
                 await mgr.refresh_defaults(cfg=changed)
@@ -219,14 +219,14 @@ class TestTheConfigSource:
         local = tmp_path / "config.local.json"
         write_config(cfg_file, {"session": {"pool_size": 0}, "apps": {APP: {"model": ""}}})
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
-            unittest.mock.patch("kiro_crew.config.loader.config_local_path", return_value=local),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_file),
+            unittest.mock.patch("aj_crew.config.loader.config_local_path", return_value=local),
             unittest.mock.patch(
-                "kiro_crew.config.live._WATCH", ConfigWatch(poll_interval_secs=0.05)
+                "aj_crew.config.live._WATCH", ConfigWatch(poll_interval_secs=0.05)
             ),
         ):
             watch = live.watch()
-            boot = KiroCrewConfig.load()
+            boot = AjCrewConfig.load()
             mgr = SessionManager(boot, provider_factory=unittest.mock.MagicMock())
             watch.prime(boot)
             write_config(cfg_file, {"session": {"pool_size": 0}, "apps": {APP: {"model": APP_PIN}}})
@@ -252,18 +252,18 @@ class TestTheConfigSource:
         local = tmp_path / "config.local.json"
         write_config(cfg_file, {"session": {"pool_size": 0}, "agent": {"model": GLOBAL}})
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
-            unittest.mock.patch("kiro_crew.config.loader.config_local_path", return_value=local),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_file),
+            unittest.mock.patch("aj_crew.config.loader.config_local_path", return_value=local),
             unittest.mock.patch(
-                "kiro_crew.config.live._WATCH", ConfigWatch(poll_interval_secs=0.05)
+                "aj_crew.config.live._WATCH", ConfigWatch(poll_interval_secs=0.05)
             ),
             unittest.mock.patch(
-                "kiro_crew.session.build_provider_factory",
+                "aj_crew.session.build_provider_factory",
                 lambda _cfg: unittest.mock.MagicMock(),
             ),
         ):
             watch = live.watch()
-            boot = KiroCrewConfig.load()
+            boot = AjCrewConfig.load()
             mgr = SessionManager(boot, provider_factory=unittest.mock.MagicMock())
             watch.prime(boot)
             write_config(
@@ -284,7 +284,7 @@ class TestTheConfigSource:
     async def test_a_resolver_error_never_fails_the_cold_start(self, cfg, error):
         """The factory's own fallback takes over; the session still starts."""
         with unittest.mock.patch(
-            "kiro_crew.config.loader.resolve_effective_model", side_effect=error
+            "aj_crew.config.loader.resolve_effective_model", side_effect=error
         ):
             got = await _started_on(cfg, agent="unpinned")
         assert got["model_override"] is None
@@ -295,16 +295,16 @@ class TestTheBackendScope:
         """Each tier is judged for the harness that will run the session."""
         cfg.agent.member_acp_backend = "codex"
         seen: list[object] = []
-        real = __import__("kiro_crew.config.loader", fromlist=["x"]).resolve_effective_model
+        real = __import__("aj_crew.config.loader", fromlist=["x"]).resolve_effective_model
 
         def spy(*args, **kwargs):
             seen.append(kwargs.get("backend"))
             return real(*args, **kwargs)
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.resolve_effective_model", spy),
+            unittest.mock.patch("aj_crew.config.loader.resolve_effective_model", spy),
             unittest.mock.patch(
-                "kiro_crew.acp_backends.resolve_selected_backend", side_effect=lambda b: b
+                "aj_crew.acp_backends.resolve_selected_backend", side_effect=lambda b: b
             ),
         ):
             _session_model(cfg, "oncall", session_key="dashboard:member-oncall")

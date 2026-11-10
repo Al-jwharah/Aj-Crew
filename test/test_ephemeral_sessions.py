@@ -24,8 +24,8 @@ from ephemeral_sessions_helpers import (
     _make_state,
 )
 
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.history import ConversationLog
 
 
 def _write_session(log, key, messages, *, memory_mode="persistent", mode=""):
@@ -97,7 +97,7 @@ class TestSlotCreation:
 
     @pytest.mark.asyncio
     async def test_restricted_key_cleaned_on_slot_delete(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("reuse", memory_mode="incognito")
         assert "dashboard:reuse" in state._restricted_keys
@@ -131,8 +131,8 @@ class TestHistoryPersistence:
         itself. Those readers gate on the ``memory_mode`` the metadata line
         carries, which is asserted alongside the body.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("e1", memory_mode=mode)
@@ -151,8 +151,8 @@ class TestHistoryPersistence:
 
     def test_new_restricted_session_metadata_carries_its_mode(self, tmp_path, monkeypatch):
         """The metadata line is the file's privacy contract, so it names the mode."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("e1", memory_mode="incognito")
@@ -176,8 +176,8 @@ class TestHistoryPersistence:
 
     def test_persistent_session_no_memory_mode_metadata(self, tmp_path, monkeypatch):
         """Persistent sessions don't have memory_mode in metadata."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("n1")
@@ -198,8 +198,8 @@ class TestHistoryPersistence:
         that same file, not a new disclosure. If this ever starts asserting
         False, `_maybe_auto_title` must be re-gated on memory_mode.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("t-disk", memory_mode="temporary")
@@ -225,8 +225,8 @@ class TestHistoryPersistence:
 class TestRestore:
     def test_restore_rebuilds_memory_mode(self, tmp_path, monkeypatch):
         """Gateway restart restores restricted sessions with memory_mode intact."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.chat import _save_slot_to_history, restore_recent_sessions
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.chat import _save_slot_to_history, restore_recent_sessions
 
         state1 = _make_state(tmp_path)
         slot = state1.get_or_create_slot("e1", memory_mode="incognito")
@@ -257,7 +257,7 @@ class TestResumeFromHistory:
 
     @pytest.mark.asyncio
     async def test_resume_restores_incognito(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         _write_session(state.conversation_log, "e1", [("user", "hi")], memory_mode="incognito")
 
@@ -272,7 +272,7 @@ class TestResumeFromHistory:
 
     @pytest.mark.asyncio
     async def test_resume_restores_temporary(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         _write_session(state.conversation_log, "t1", [("user", "hi")], memory_mode="temporary")
 
@@ -287,7 +287,7 @@ class TestResumeFromHistory:
 
     @pytest.mark.asyncio
     async def test_resume_persistent_leaves_restricted_keys_empty(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         _write_session(state.conversation_log, "p1", [("user", "hi")])
 
@@ -302,7 +302,7 @@ class TestResumeFromHistory:
     @pytest.mark.asyncio
     async def test_resume_missing_memory_mode_defaults_persistent(self, tmp_path, monkeypatch):
         """Legacy sessions (pre-) without memory_mode metadata default to persistent."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         _write_session(state.conversation_log, "legacy", [("user", "hi")])
 
@@ -321,7 +321,7 @@ class TestResumeFromHistory:
         response advertises ``surface: "crew"``, a surface the chat page does
         not render, so the resume silently fails to open.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         _write_session(state.conversation_log, "old-crew", [("user", "hi")], mode="crew")
 
@@ -336,7 +336,7 @@ class TestResumeFromHistory:
     @pytest.mark.asyncio
     async def test_learn_add_blocked_after_resume_incognito(self, tmp_path, monkeypatch):
         """Core regression: learn_add must be blocked on a resumed incognito session."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         _write_session(state.conversation_log, "e1", [("user", "hi")], memory_mode="incognito")
 
@@ -357,8 +357,8 @@ class TestResumeFromHistory:
 class TestConsolidation:
     def test_consolidation_not_triggered_for_restricted(self, tmp_path, monkeypatch):
         """maybe_consolidate must not be called for restricted sessions."""
-        from kiro_crew.dashboard.chat import _maybe_consolidate
-        from kiro_crew.sel import SecurityEventLog
+        from aj_crew.dashboard.chat import _maybe_consolidate
+        from aj_crew.sel import SecurityEventLog
 
         state = _make_state(tmp_path)
         state.consolidator = MagicMock()
@@ -368,7 +368,7 @@ class TestConsolidation:
         monkeypatch.setattr(SecurityEventLog, "_initialized", False)
         real_log = MagicMock(wraps=SecurityEventLog(base_dir=sel_dir, sync=True))
 
-        with patch("kiro_crew.dashboard.chat_utils.sel", return_value=real_log) as mock_sel:
+        with patch("aj_crew.dashboard.chat_utils.sel", return_value=real_log) as mock_sel:
             _maybe_consolidate(state, slot)
 
         rows = [
@@ -389,7 +389,7 @@ class TestConsolidation:
 
     def test_consolidation_triggered_for_persistent(self, tmp_path):
         """maybe_consolidate must be called for persistent sessions."""
-        from kiro_crew.dashboard.chat import _maybe_consolidate
+        from aj_crew.dashboard.chat import _maybe_consolidate
 
         state = _make_state(tmp_path)
         state.consolidator = MagicMock()
@@ -406,9 +406,9 @@ class TestConsolidation:
 class TestSlotAPI:
     @pytest.mark.asyncio
     async def test_create_incognito_slot_via_api(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_persistence.KiroCrewConfig.load",
+            "aj_crew.dashboard.chat_persistence.AjCrewConfig.load",
             MagicMock(return_value=MagicMock(agents={}, default_agent="")),
         )
         state = _make_state(tmp_path)
@@ -427,9 +427,9 @@ class TestSlotAPI:
 
     @pytest.mark.asyncio
     async def test_create_persistent_slot_via_api(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_persistence.KiroCrewConfig.load",
+            "aj_crew.dashboard.chat_persistence.AjCrewConfig.load",
             MagicMock(return_value=MagicMock(agents={}, default_agent="")),
         )
         state = _make_state(tmp_path)
@@ -442,9 +442,9 @@ class TestSlotAPI:
 
     @pytest.mark.asyncio
     async def test_create_slot_memory_mode_mismatch_returns_409(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_persistence.KiroCrewConfig.load",
+            "aj_crew.dashboard.chat_persistence.AjCrewConfig.load",
             MagicMock(return_value=MagicMock(agents={}, default_agent="")),
         )
         state = _make_state(tmp_path)
@@ -465,7 +465,7 @@ class TestLessonsGate:
     @pytest.mark.asyncio
     async def test_learn_add_blocked_for_restricted_session(self, tmp_path, monkeypatch):
         """POST /api/lessons returns 403 when X-Session-Key is restricted."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("e1", memory_mode="incognito")
 
@@ -482,7 +482,7 @@ class TestLessonsGate:
     @pytest.mark.asyncio
     async def test_learn_add_allowed_for_persistent_session(self, tmp_path, monkeypatch):
         """POST /api/lessons succeeds for persistent sessions."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         # ``api_lessons_create`` lives in handlers/cron_lessons.py, which did
         # ``from ._shared import _get_memory``, so the name it calls is cron_lessons.py's
         # OWN global. Patching the handlers package re-export (or _shared) leaves
@@ -492,7 +492,7 @@ class TestLessonsGate:
         # the day it isn't, turning the session-acceptance assertion below into a
         # 500 about something else entirely.
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.cron._get_memory",
+            "aj_crew.dashboard.handlers.cron._get_memory",
             MagicMock(return_value=MagicMock(vector_store=None)),
         )
         state = _make_state(tmp_path)
@@ -513,7 +513,7 @@ class TestLessonsGate:
         Telegram forum topic.
 
         Post-#232 the transport publishes ``session_pid`` so the gateway
-        resolves the ``X-Session-Key`` (e.g. ``telegram:kirocrew:forum:…``), but
+        resolves the ``X-Session-Key`` (e.g. ``telegram:ajcrew:forum:…``), but
         the acceptance gate recognised only the ``slack:`` namespace, so every
         OTHER channel fell through to the ``_session_has_persisted_history``
         fallback — which can never match a channel key (``sk.split(':',1)[-1]``
@@ -521,19 +521,19 @@ class TestLessonsGate:
         rejected with HTTP 400 ``unknown session``. The gate now recognises the
         whole channel-namespace family via ``is_channel_session_key``.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.cron._get_memory",
+            "aj_crew.dashboard.handlers.cron._get_memory",
             MagicMock(return_value=MagicMock(vector_store=None)),
         )
         state = _make_state(tmp_path)
         # Deliberately create NO slot and write NO JSONL: acceptance must come
         # purely from the channel namespace, exactly as it does for Slack.
         for channel_key in (
-            "telegram:kirocrew:forum:-1004326574849:18:gen3",
-            "discord:kirocrew:dm:123456789:gen1",
-            "webex:kirocrew:dm:user@example.com",
-            "wecom:kirocrew:dm:wuser",
+            "telegram:ajcrew:forum:-1004326574849:18:gen3",
+            "discord:ajcrew:dm:123456789:gen1",
+            "webex:ajcrew:dm:user@example.com",
+            "wecom:ajcrew:dm:wuser",
         ):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
@@ -545,7 +545,7 @@ class TestLessonsGate:
 
     @pytest.mark.asyncio
     async def test_learn_add_rejected_without_session_header(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         async with TestClient(TestServer(_make_app(state))) as client:
@@ -557,7 +557,7 @@ class TestLessonsGate:
 
     @pytest.mark.asyncio
     async def test_learn_add_rejected_for_unknown_session(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         async with TestClient(TestServer(_make_app(state))) as client:
@@ -573,7 +573,7 @@ class TestLessonsGate:
         self, tmp_path, monkeypatch
     ):
         """Defense-in-depth: even if _restricted_keys loses the key, the slot's own flag blocks writes."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("e1", memory_mode="incognito")
         state._restricted_keys.discard("dashboard:e1")
@@ -593,9 +593,9 @@ class TestLessonsGate:
         self, tmp_path, monkeypatch
     ):
         """Browser Memory page sends 'dashboard:ui' — allowed even when restricted slots exist."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.cron._get_memory",
+            "aj_crew.dashboard.handlers.cron._get_memory",
             MagicMock(return_value=MagicMock(vector_store=None)),
         )
         state = _make_state(tmp_path)
@@ -616,8 +616,8 @@ class TestLessonsGate:
 class TestMcpCoreSessionKeyPassthrough:
     def test_learn_add_sends_session_key_header(self):
         with (
-            patch("kiro_crew.mcp_core.loopback_urlopen") as mock_urlopen,
-            patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "dashboard:e1"}),
+            patch("aj_crew.mcp_core.loopback_urlopen") as mock_urlopen,
+            patch.dict("os.environ", {"AJCREW_SESSION_KEY": "dashboard:e1"}),
         ):
             mock_resp = MagicMock()
             mock_resp.read.return_value = b'{"error": "Incognito mode"}'
@@ -625,7 +625,7 @@ class TestMcpCoreSessionKeyPassthrough:
             mock_resp.__exit__ = MagicMock(return_value=False)
             mock_urlopen.return_value = mock_resp
 
-            from kiro_crew.mcp_core import _post
+            from aj_crew.mcp_core import _post
 
             _post("/api/lessons", {"rule": "test", "category": "knowledge"})
 
@@ -634,8 +634,8 @@ class TestMcpCoreSessionKeyPassthrough:
 
     def test_learn_add_no_session_key_header_when_unset(self):
         with (
-            patch("kiro_crew.mcp_core.loopback_urlopen") as mock_urlopen,
-            patch("kiro_crew.mcp_core._resolve_session_key", return_value=""),
+            patch("aj_crew.mcp_core.loopback_urlopen") as mock_urlopen,
+            patch("aj_crew.mcp_core._resolve_session_key", return_value=""),
         ):
             mock_resp = MagicMock()
             mock_resp.read.return_value = b'{"ok": true}'
@@ -643,7 +643,7 @@ class TestMcpCoreSessionKeyPassthrough:
             mock_resp.__exit__ = MagicMock(return_value=False)
             mock_urlopen.return_value = mock_resp
 
-            from kiro_crew.mcp_core import _post
+            from aj_crew.mcp_core import _post
 
             _post("/api/lessons", {"rule": "test", "category": "knowledge"})
 
@@ -661,8 +661,8 @@ class TestMcpCoreSessionKeyPassthrough:
         import urllib.error
 
         with (
-            patch("kiro_crew.mcp_core.loopback_urlopen") as mock_urlopen,
-            patch("kiro_crew.mcp_core._resolve_session_key", return_value="1781215864.487849"),
+            patch("aj_crew.mcp_core.loopback_urlopen") as mock_urlopen,
+            patch("aj_crew.mcp_core._resolve_session_key", return_value="1781215864.487849"),
         ):
             mock_urlopen.side_effect = urllib.error.HTTPError(
                 url="http://x/api/lessons",
@@ -671,7 +671,7 @@ class TestMcpCoreSessionKeyPassthrough:
                 hdrs=None,
                 fp=io.BytesIO(b'{"error": "unknown session"}'),
             )
-            from kiro_crew.mcp_core import _post
+            from aj_crew.mcp_core import _post
 
             result = _post("/api/lessons", {"rule": "x", "category": "knowledge"})
 
@@ -685,8 +685,8 @@ class TestMcpCoreSessionKeyPassthrough:
         import urllib.error
 
         with (
-            patch("kiro_crew.mcp_core.loopback_urlopen") as mock_urlopen,
-            patch("kiro_crew.mcp_core._resolve_session_key", return_value=""),
+            patch("aj_crew.mcp_core.loopback_urlopen") as mock_urlopen,
+            patch("aj_crew.mcp_core._resolve_session_key", return_value=""),
         ):
             mock_urlopen.side_effect = urllib.error.HTTPError(
                 url="http://x/api/lessons",
@@ -695,7 +695,7 @@ class TestMcpCoreSessionKeyPassthrough:
                 hdrs=None,
                 fp=io.BytesIO(b"upstream exploded"),
             )
-            from kiro_crew.mcp_core import _post
+            from aj_crew.mcp_core import _post
 
             result = _post("/api/lessons", {"rule": "x"})
 
@@ -711,8 +711,8 @@ class TestMcpCoreSessionKeyPassthrough:
         import urllib.error
 
         with (
-            patch("kiro_crew.mcp_core.loopback_urlopen") as mock_urlopen,
-            patch("kiro_crew.mcp_core._resolve_session_key", return_value=""),
+            patch("aj_crew.mcp_core.loopback_urlopen") as mock_urlopen,
+            patch("aj_crew.mcp_core._resolve_session_key", return_value=""),
         ):
             mock_urlopen.side_effect = urllib.error.HTTPError(
                 url="http://x/api/lessons",
@@ -721,7 +721,7 @@ class TestMcpCoreSessionKeyPassthrough:
                 hdrs=None,
                 fp=io.BytesIO(b'{"error": "upstream rejected key AKIAIOSFODNN7EXAMPLE"}'),
             )
-            from kiro_crew.mcp_core import _post
+            from aj_crew.mcp_core import _post
 
             result = _post("/api/lessons", {"rule": "x"})
 
@@ -737,8 +737,8 @@ class TestMcpCoreSessionKeyPassthrough:
         import urllib.error
 
         with (
-            patch("kiro_crew.mcp_core.loopback_urlopen") as mock_urlopen,
-            patch("kiro_crew.mcp_core._resolve_session_key", return_value="1781215864.487849"),
+            patch("aj_crew.mcp_core.loopback_urlopen") as mock_urlopen,
+            patch("aj_crew.mcp_core._resolve_session_key", return_value="1781215864.487849"),
         ):
             mock_urlopen.side_effect = urllib.error.HTTPError(
                 url="http://x/api/lessons",
@@ -747,7 +747,7 @@ class TestMcpCoreSessionKeyPassthrough:
                 hdrs=None,
                 fp=io.BytesIO(b'{"error": "unknown session"}'),
             )
-            from kiro_crew.mcp_core import _call_tool_inner
+            from aj_crew.mcp_core import _call_tool_inner
 
             out = _call_tool_inner("learn_add", {"rule": "use tool-b for auth", "category": "tool"})
 
@@ -836,7 +836,7 @@ class TestSuggestionsContext:
         ``chat_folder_suggest._folder_sample_titles``. The restricted key must
         not be READ at all, not merely dropped from the output.
         """
-        from kiro_crew import suggestions
+        from aj_crew import suggestions
 
         monkeypatch.setattr(
             suggestions.ContextBuilder,
@@ -875,7 +875,7 @@ class TestSuggestionsContext:
         was persistent when ``list_sessions()`` ran. The rows just read must not
         ground the prompt if the line now says restricted.
         """
-        from kiro_crew import suggestions
+        from aj_crew import suggestions
 
         monkeypatch.setattr(
             suggestions.ContextBuilder,
@@ -915,7 +915,7 @@ class TestSuggestionsContext:
 
 class TestSoftGatePrompt:
     def test_incognito_prefix_injected(self):
-        from kiro_crew.dashboard.chat import _apply_incognito_prefix
+        from aj_crew.dashboard.chat import _apply_incognito_prefix
 
         slot = _ChatSlot("e1", memory_mode="incognito")
         result = _apply_incognito_prefix(slot, "Hello world")
@@ -923,7 +923,7 @@ class TestSoftGatePrompt:
         assert "Hello world" in result
 
     def test_temporary_prefix_injected(self):
-        from kiro_crew.dashboard.chat import _apply_incognito_prefix
+        from aj_crew.dashboard.chat import _apply_incognito_prefix
 
         slot = _ChatSlot("t1", memory_mode="temporary")
         result = _apply_incognito_prefix(slot, "Hello world")
@@ -931,14 +931,14 @@ class TestSoftGatePrompt:
         assert "Hello world" in result
 
     def test_no_prefix_for_persistent_session(self):
-        from kiro_crew.dashboard.chat import _apply_incognito_prefix
+        from aj_crew.dashboard.chat import _apply_incognito_prefix
 
         slot = _ChatSlot("n1")
         result = _apply_incognito_prefix(slot, "Hello world")
         assert result == "Hello world"
 
     def test_prefix_injected_for_resumed_restricted(self):
-        from kiro_crew.dashboard.chat import _apply_incognito_prefix
+        from aj_crew.dashboard.chat import _apply_incognito_prefix
 
         slot = _ChatSlot("e1", memory_mode="incognito")
         result = _apply_incognito_prefix(slot, "Follow-up question")
@@ -991,8 +991,8 @@ class TestHistoryFileIntegrity:
 class TestBlocksReadsContext:
     def test_blocks_reads_skips_memory_and_lessons(self, tmp_path):
         """build_session_context(blocks_reads=True) must not inject memory or lessons."""
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.memory import MemoryStore
+        from aj_crew.context import ContextBuilder
+        from aj_crew.memory import MemoryStore
 
         ws_dir = tmp_path / "workspace"
         mem_dir = ws_dir / "memory"

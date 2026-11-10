@@ -20,7 +20,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.dashboard import server as srv
+from aj_crew.dashboard import server as srv
 
 
 @pytest.mark.asyncio

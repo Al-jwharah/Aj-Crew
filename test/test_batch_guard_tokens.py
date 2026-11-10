@@ -16,13 +16,13 @@ import json
 
 import pytest
 
-from kiro_crew.acp.types import EVENT_TOOL_CALL, AcpEvent
+from aj_crew.acp.types import EVENT_TOOL_CALL, AcpEvent
 
 _SHA = "1f69e7c13c1bb4c1b0bb1fa5b1e2f75c73a25ae0"
 
 
 def _guard():
-    return importlib.import_module("kiro_crew.acp.batch_guard")
+    return importlib.import_module("aj_crew.acp.batch_guard")
 
 
 def _report(summary: str) -> str:
@@ -110,7 +110,7 @@ def test_a_main_write_batched_with_a_read_and_no_unseen_token_passes(read, write
 
 
 def test_the_token_scanner_uses_no_regular_expressions():
-    module = importlib.import_module("kiro_crew.acp.batch_guard_tokens")
+    module = importlib.import_module("aj_crew.acp.batch_guard_tokens")
     assert not hasattr(module, "re")
 
 
@@ -258,7 +258,7 @@ def test_a_refused_guess_is_not_learned_and_is_refused_again():
     ids=["session-key", "ledger-id"],
 )
 def test_a_resumed_session_still_refuses_a_minted_id_it_never_saw(text):
-    # After a resume only proof refuses, except for the id families Kiro Crew
+    # After a resume only proof refuses, except for the id families Aj Crew
     # mints (session keys, ledger item ids): a create's new key or item id quoted
     # in its own batch is still refused when the resumed text never showed it.
     guard = _guard()
@@ -407,7 +407,7 @@ def _shell(command: str) -> AcpEvent:
         _shell("aws logs start-query --log-group-name g --query-string q"),
         _event(
             tool_name="work_ledger_record",
-            mcp_server_name="kirocrew-work",
+            mcp_server_name="ajcrew-work",
             mcp_identity_trusted=True,
             tool_input=json.dumps({"action": "create", "title": "t"}),
         ),
@@ -421,11 +421,11 @@ def test_a_call_that_mints_ids_is_a_creator(event):
     "envelope",
     [
         {
-            "server": "kirocrew-work",
+            "server": "ajcrew-work",
             "tool": "work_ledger_record",
             "arguments": {"action": "create"},
         },
-        {"tool_id": "kirocrew-work::work_ledger_record", "arguments": {"action": "create"}},
+        {"tool_id": "ajcrew-work::work_ledger_record", "arguments": {"action": "create"}},
     ],
     ids=["server-tool-arguments", "tool-id-arguments"],
 )
@@ -433,7 +433,7 @@ def test_a_wrapped_ledger_create_is_a_creator(envelope):
     # Harnesses that wrap MCP arguments in an envelope still mint the item id.
     event = _event(
         tool_name="work_ledger_record",
-        mcp_server_name="kirocrew-work",
+        mcp_server_name="ajcrew-work",
         mcp_identity_trusted=True,
         tool_input=json.dumps(envelope),
         raw_tool_params=envelope,
@@ -442,10 +442,10 @@ def test_a_wrapped_ledger_create_is_a_creator(envelope):
 
 
 def test_an_envelope_naming_another_tool_is_not_unwrapped():
-    envelope = {"server": "kirocrew-work", "tool": "work_report", "arguments": {"action": "create"}}
+    envelope = {"server": "ajcrew-work", "tool": "work_report", "arguments": {"action": "create"}}
     event = _event(
         tool_name="work_ledger_record",
-        mcp_server_name="kirocrew-work",
+        mcp_server_name="ajcrew-work",
         mcp_identity_trusted=True,
         tool_input=json.dumps(envelope),
         raw_tool_params=envelope,
@@ -459,18 +459,18 @@ def test_an_envelope_naming_another_tool_is_not_unwrapped():
         _shell("gh pr view 7"),
         _event(
             tool_name="work_ledger_record",
-            mcp_server_name="kirocrew-work",
+            mcp_server_name="ajcrew-work",
             mcp_identity_trusted=True,
             tool_input=json.dumps({"action": "bind", "item_id": "it_9fc6cc99"}),
         ),
-        _event(tool_name="work_report", mcp_server_name="kirocrew-work", mcp_identity_trusted=True),
+        _event(tool_name="work_report", mcp_server_name="ajcrew-work", mcp_identity_trusted=True),
         # Not write-class on main, so never a creator.
         _event(
             tool_name="session_create",
-            mcp_server_name="kirocrew-dashboard",
+            mcp_server_name="ajcrew-dashboard",
             mcp_identity_trusted=True,
         ),
-        _event(tool_name="spawn_run", mcp_server_name="kirocrew-core", mcp_identity_trusted=True),
+        _event(tool_name="spawn_run", mcp_server_name="ajcrew-core", mcp_identity_trusted=True),
     ],
 )
 def test_a_call_that_mints_nothing_is_not_a_creator(event):
@@ -480,19 +480,19 @@ def test_a_call_that_mints_nothing_is_not_a_creator(event):
 @pytest.mark.parametrize(
     ("server", "tool", "expected"),
     [
-        ("kirocrew-work", "work_ledger_record", "write"),
-        ("kirocrew-dashboard", "session_send", "write"),
-        ("kirocrew-core", "send_message", "write"),
+        ("ajcrew-work", "work_ledger_record", "write"),
+        ("ajcrew-dashboard", "session_send", "write"),
+        ("ajcrew-core", "send_message", "write"),
         # Main's write set only: these stay unclassified, so never judged.
-        ("kirocrew-dashboard", "session_create", ""),
-        ("kirocrew-core", "spawn_run", ""),
-        ("kirocrew-core", "learn_add", ""),
-        ("kirocrew-cron", "cron_add", ""),
-        ("kirocrew-cron", "cron_list", ""),
-        ("kirocrew-core", "wait", ""),
+        ("ajcrew-dashboard", "session_create", ""),
+        ("ajcrew-core", "spawn_run", ""),
+        ("ajcrew-core", "learn_add", ""),
+        ("ajcrew-cron", "cron_add", ""),
+        ("ajcrew-cron", "cron_list", ""),
+        ("ajcrew-core", "wait", ""),
     ],
 )
-def test_kiro_crew_tools_keep_mains_classes(server, tool, expected):
+def test_aj_crew_tools_keep_mains_classes(server, tool, expected):
     event = _event(tool_name=tool, mcp_server_name=server, mcp_identity_trusted=True)
     assert _guard().classify(event) == expected
 
@@ -511,11 +511,11 @@ def test_an_unshipped_servers_mcp_tool_is_never_classified():
 def test_only_mains_write_tools_are_withheld_from_auto_approval(monkeypatch):
     guard = _guard()
     monkeypatch.setattr(guard, "guard_settings", lambda: (True, ()))
-    policy = {"rules": [{"capability": "mcp", "match": ["kirocrew-core/*"], "effect": "allow"}]}
+    policy = {"rules": [{"capability": "mcp", "match": ["ajcrew-core/*"], "effect": "allow"}]}
     _policy, refs = guard.withhold_write_auto_approval(policy)
-    assert "@kirocrew-core/send_message" in refs
-    assert "@kirocrew-core/spawn_run" not in refs
-    assert "@kirocrew-core/memory_recall" not in refs
+    assert "@ajcrew-core/send_message" in refs
+    assert "@ajcrew-core/spawn_run" not in refs
+    assert "@ajcrew-core/memory_recall" not in refs
 
 
 # -- reading what the model saw --

@@ -16,11 +16,11 @@ def isolate_fixture(tmp_path: Path):
     """Isolate DB and research dir per test."""
     with (
         patch(
-            "kiro_crew.apps.builtins.auto_research.handlers.DB_PATH",
+            "aj_crew.apps.builtins.auto_research.handlers.DB_PATH",
             tmp_path / "test.db",
         ),
         patch(
-            "kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR",
+            "aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR",
             tmp_path / "research",
         ),
     ):

@@ -64,9 +64,9 @@ const STATUS = {
   lessons: 0, subagents: 0, no_crons: false, branch: '', commit: '',
   release_channel: 'stable', version: '0.4.6', version_display: '0.4.6',
   update_available: true, update_can_apply: false, update_can_arm: true,
-  update_check_status: 'succeeded', update_command: 'kirocrew update',
+  update_check_status: 'succeeded', update_command: 'ajcrew update',
   update_latest_version: OFFERED, update_latest_version_display: OFFERED,
-  update_channel: 'stable', update_managed_by: 'kirocrew',
+  update_channel: 'stable', update_managed_by: 'ajcrew',
   update_commits_ahead: 0, update_commits_behind: 0,
 }
 
@@ -124,15 +124,15 @@ async function scene(theme, opts = {}) {
       return json({
         ok: true, armed: true, request_id: 'r1',
         version: armAnswers, version_display: armAnswers,
-        expires_in: 600, approve_command: 'kirocrew update approve r1',
+        expires_in: 600, approve_command: 'ajcrew update approve r1',
       })
     }
     if (u.pathname.startsWith('/api/update/check')) {
       return json({
         check_status: 'succeeded', update_available: true, error_code: null,
         latest_version: OFFERED, latest_version_display: OFFERED,
-        channel: 'stable', managed_by: 'kirocrew', can_apply: false, can_arm: true,
-        update_command: 'kirocrew update', current_version: '0.4.6',
+        channel: 'stable', managed_by: 'ajcrew', can_apply: false, can_arm: true,
+        update_command: 'ajcrew update', current_version: '0.4.6',
         commits_ahead: 0, commits_behind: 0,
       })
     }

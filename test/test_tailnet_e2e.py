@@ -5,7 +5,7 @@ The unit suites (`test_tailnet_serve.py`, `test_tailnet_cli.py`) patch
 This file removes the mock: a **real executable** named `tailscale` is written to
 disk, discovered by the production `_cli_path`, spawned by the production
 `subprocess.run` with the production `scrub_env()`, and answers over real stdout
-with real exit codes. The command under test is the real `kirocrew tailnet`
+with real exit codes. The command under test is the real `ajcrew tailnet`
 entry point, and the config it writes is a real file on disk that the assertions
 read back.
 
@@ -48,7 +48,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.dashboard import tailnet, tailnet_serve
+from aj_crew.dashboard import tailnet, tailnet_serve
 
 _DASH_PORT = 5476
 _SUFFIX = "tail1a2b3c.ts.net"
@@ -160,7 +160,7 @@ def env(tmp_path, monkeypatch):
         )
     )
 
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.setattr(tailnet, "_CLI_CANDIDATE_PATHS", (str(cli),))
     # SECOND deliberate seam, and it disables a security guard, so it is stated
     # loudly rather than quietly worked around. `_cli_path` vets the executable's
@@ -177,15 +177,15 @@ def env(tmp_path, monkeypatch):
         monkeypatch.setattr(
             tailnet.github_runner, "validate_provider_executable", lambda candidate: candidate
         )
-    monkeypatch.setenv("KIROCREW_PORT", str(_DASH_PORT))
+    monkeypatch.setenv("AJCREW_PORT", str(_DASH_PORT))
     return {"cli": cli, "state": state, "home": home}
 
 
 def _run_cli(*argv: str) -> int:
-    """Invoke the real `kirocrew` entry point in-process; return its exit code."""
-    from kiro_crew.cli import main
+    """Invoke the real `ajcrew` entry point in-process; return its exit code."""
+    from aj_crew.cli import main
 
-    with patch.object(sys, "argv", ["kirocrew", *argv]):
+    with patch.object(sys, "argv", ["ajcrew", *argv]):
         try:
             main()
         except SystemExit as exc:

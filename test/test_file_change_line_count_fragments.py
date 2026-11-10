@@ -16,8 +16,8 @@ import pytest
 from file_change_snapshots_helpers import short_tmp_dir_fixture  # noqa: F401
 from file_change_snapshots_helpers import _make_slot_with_assistant_message
 
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_runner import (
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_runner import (
     _flush_file_changes,
     _record_turn_snapshot,
     _snapshot_write_target,

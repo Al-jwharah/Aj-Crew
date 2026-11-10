@@ -8,13 +8,13 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
-from kiro_crew.messaging import TurnDriver
-from kiro_crew.teams.approvals import TeamsApprovalDecider
-from kiro_crew.teams.client import TeamsSendError
-from kiro_crew.teams.commands import HELP_TEXT, parse_command
-from kiro_crew.teams.renderer import TeamsRenderer, _strip_options
-from kiro_crew.teams.transport import TEAMS_CAPABILITIES
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
+from aj_crew.messaging import TurnDriver
+from aj_crew.teams.approvals import TeamsApprovalDecider
+from aj_crew.teams.client import TeamsSendError
+from aj_crew.teams.commands import HELP_TEXT, parse_command
+from aj_crew.teams.renderer import TeamsRenderer, _strip_options
+from aj_crew.teams.transport import TEAMS_CAPABILITIES
 
 
 class _FakeClient:

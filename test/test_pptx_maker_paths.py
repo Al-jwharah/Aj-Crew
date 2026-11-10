@@ -2,7 +2,7 @@
 
 Lives in the repo-level ``test/`` tree (not the app's in-package ``tests/``)
 because ``setup.cfg`` sets ``testpaths = test transfer`` — a test under
-``src/kiro_crew/apps/builtins/...`` is never collected by CI.
+``src/aj_crew/apps/builtins/...`` is never collected by CI.
 
 Deck artifacts are SERVED to a browser from a directory the presentation engine
 writes into, so ``paths.resolve_*`` is the one place a crafted request path could
@@ -20,7 +20,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from kiro_crew.apps.builtins.pptx_maker.backend import paths
+from aj_crew.apps.builtins.pptx_maker.backend import paths
 
 
 class _DeckRootFixture(unittest.TestCase):

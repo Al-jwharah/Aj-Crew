@@ -35,7 +35,7 @@ async def _settled(state) -> None:  # type: ignore[no-untyped-def]
 
 @pytest.fixture(autouse=True)
 def _pinned_paths(tmp_path, _floor_monkeypatch):
-    for var, sub in (("KIROCREW_HOME", "home"), ("KIROCREW_WORKSPACE", "workspace")):
+    for var, sub in (("AJCREW_HOME", "home"), ("AJCREW_WORKSPACE", "workspace")):
         path = tmp_path / sub
         path.mkdir()
         _floor_monkeypatch.setenv(var, str(path))
@@ -47,8 +47,8 @@ def _managers(close_subagent_managers):
 
 
 def _finished_run(agent_id: str, parent: str = PARENT):  # type: ignore[no-untyped-def]
-    from kiro_crew import subagent_persistence as sp
-    from kiro_crew.subagent import SubagentInfo
+    from aj_crew import subagent_persistence as sp
+    from aj_crew.subagent import SubagentInfo
 
     sp.create_agent_folder(agent_id, task="summarise the logs", parent_session=parent)
     assert sp.write_finished_result(agent_id, "the whole answer", sp.update_state)
@@ -60,7 +60,7 @@ def _finished_run(agent_id: str, parent: str = PARENT):  # type: ignore[no-untyp
 
 
 def _manager(**kwargs):  # type: ignore[no-untyped-def]
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.subagent import SubagentManager
 
     kwargs.setdefault("on_done", AsyncMock())
     return SubagentManager(sessions=MagicMock(), ctx_builder=MagicMock(), **kwargs)
@@ -123,7 +123,7 @@ def _giving_up_manager(queued: list[str]):  # type: ignore[no-untyped-def]
 
 @pytest.mark.asyncio
 async def test_a_restart_before_the_drain_announces_a_given_up_report_again(monkeypatch):
-    from kiro_crew import subagent_persistence as sp
+    from aj_crew import subagent_persistence as sp
 
     info = _finished_run("injB001")
     queued: list[str] = []
@@ -139,10 +139,10 @@ async def test_a_restart_before_the_drain_announces_a_given_up_report_again(monk
 async def test_a_drained_notice_settles_the_tombstone_and_is_not_announced_again(
     monkeypatch,
 ):
-    from kiro_crew import subagent_persistence as sp
-    from kiro_crew.dashboard.chat_runner import settle_drained_subagent_notices
-    from kiro_crew.dashboard.state import _ChatSlot
-    from kiro_crew.subagent import SubagentDelivery
+    from aj_crew import subagent_persistence as sp
+    from aj_crew.dashboard.chat_runner import settle_drained_subagent_notices
+    from aj_crew.dashboard.state import _ChatSlot
+    from aj_crew.subagent import SubagentDelivery
 
     info = _finished_run("injC001")
     queued: list[str] = []
@@ -175,11 +175,11 @@ async def _parent_with_a_queued_notice(monkeypatch, tmp_path, agent_id: str, str
     """
     from chat_test_helpers import _make_state
 
-    from kiro_crew import subagent_persistence as sp
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.memory import MemoryStore
-    from kiro_crew.skills import SkillsLoader
-    from kiro_crew.subagent import SubagentDelivery
+    from aj_crew import subagent_persistence as sp
+    from aj_crew.context import ContextBuilder
+    from aj_crew.memory import MemoryStore
+    from aj_crew.skills import SkillsLoader
+    from aj_crew.subagent import SubagentDelivery
 
     info = _finished_run(agent_id)
     queued: list[str] = []
@@ -187,7 +187,7 @@ async def _parent_with_a_queued_notice(monkeypatch, tmp_path, agent_id: str, str
     await _report(manager, info)
     assert len(queued) == 1 and sp.read_tombstone(agent_id) is None
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     state.push_slots_update = MagicMock()
@@ -226,9 +226,9 @@ async def test_the_parent_turn_settles_the_notice_it_drains(monkeypatch, tmp_pat
     """
     from chat_test_helpers import drain_background_tasks
 
-    from kiro_crew import subagent_persistence as sp
-    from kiro_crew.dashboard.chat import _run_chat
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew import subagent_persistence as sp
+    from aj_crew.dashboard.chat import _run_chat
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
     handed: list[str] = []
 
@@ -269,10 +269,10 @@ async def test_a_turn_that_ends_before_the_model_reads_the_notice_leaves_it_owed
     """
     from chat_test_helpers import drain_background_tasks
 
-    from kiro_crew import subagent_persistence as sp
-    from kiro_crew.acp.client import AcpProcessDied
-    from kiro_crew.dashboard.chat import _run_chat
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew import subagent_persistence as sp
+    from aj_crew.acp.client import AcpProcessDied
+    from aj_crew.dashboard.chat import _run_chat
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
     handed: list[str] = []
     debt_at_second_prompt: list[tuple[bool, object]] = []
@@ -328,16 +328,16 @@ async def test_a_turn_started_in_the_channel_thread_takes_the_notice_its_tab_que
     from channel_turns_helpers import KEY, _asker, _turns
     from chat_test_helpers import _make_state, drain_background_tasks
 
-    from kiro_crew import session_surface
-    from kiro_crew import subagent_persistence as sp
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.dashboard.chat_utils_slots import _sync_dashboard_slots, dashboard_slot_key
-    from kiro_crew.memory import MemoryStore
-    from kiro_crew.messaging import dispatch as D
-    from kiro_crew.skills import SkillsLoader
-    from kiro_crew.subagent import SubagentDelivery
+    from aj_crew import session_surface
+    from aj_crew import subagent_persistence as sp
+    from aj_crew.context import ContextBuilder
+    from aj_crew.dashboard.chat_utils_slots import _sync_dashboard_slots, dashboard_slot_key
+    from aj_crew.memory import MemoryStore
+    from aj_crew.messaging import dispatch as D
+    from aj_crew.skills import SkillsLoader
+    from aj_crew.subagent import SubagentDelivery
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(D, "channel_inbound_permitted", AsyncMock(return_value=True))
     monkeypatch.setattr(D, "publish_turn_identity", AsyncMock())
     # The registry the dashboard publishes its tabs to, restored at teardown.
@@ -394,10 +394,10 @@ def test_a_channel_build_keeps_the_tab_notices_outside_the_typed_text(tmp_path):
     ``tab_notices`` (a turn in the tab, which drains its queue itself) leaves the
     channel turn's notices to that turn's own settle.
     """
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.memory import MemoryStore
-    from kiro_crew.messaging.turn_bracket import rollback_skill_bodies
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew.context import ContextBuilder
+    from aj_crew.memory import MemoryStore
+    from aj_crew.messaging.turn_bracket import rollback_skill_bodies
+    from aj_crew.skills import SkillsLoader
 
     builder = ContextBuilder(
         memory=MemoryStore(workspace=tmp_path / "ws"),
@@ -435,10 +435,10 @@ def test_a_turn_settles_only_the_tab_notices_its_own_build_read(tmp_path):
     one and settles after it built (a predecessor torn down by a reset): neither
     takes the settle this turn's build holds.
     """
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.memory import MemoryStore
-    from kiro_crew.messaging.turn_bracket import TurnBracket
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew.context import ContextBuilder
+    from aj_crew.memory import MemoryStore
+    from aj_crew.messaging.turn_bracket import TurnBracket
+    from aj_crew.skills import SkillsLoader
 
     builder = ContextBuilder(
         memory=MemoryStore(workspace=tmp_path / "ws"),
@@ -468,7 +468,7 @@ def test_a_turn_settles_only_the_tab_notices_its_own_build_read(tmp_path):
 
 @pytest.mark.asyncio
 async def test_a_delivered_report_is_still_tombstoned_by_the_run_loop(monkeypatch):
-    from kiro_crew import subagent_persistence as sp
+    from aj_crew import subagent_persistence as sp
 
     info = _finished_run("injD001")
     await _report(_manager(), info)
@@ -478,7 +478,7 @@ async def test_a_delivered_report_is_still_tombstoned_by_the_run_loop(monkeypatc
 
 
 def _orphaned_run(agent_id: str, *, whole: bool) -> None:
-    from kiro_crew import subagent_persistence as sp
+    from aj_crew import subagent_persistence as sp
 
     sp.create_agent_folder(agent_id, task="summarise the logs", parent_session=PARENT)
     if whole:
@@ -495,7 +495,7 @@ def _gateway_notify(slot, transcript: list[str]):  # type: ignore[no-untyped-def
             return True
         # Imported only on the path that takes a debt, so a manager that never
         # passes one drives this double unchanged.
-        from kiro_crew.subagent import ORPHAN_NOTICE_OWED
+        from aj_crew.subagent import ORPHAN_NOTICE_OWED
 
         slot.note_pending_subagent_delivery(msg, [delivery])
         return ORPHAN_NOTICE_OWED
@@ -517,8 +517,8 @@ async def _boot(monkeypatch, slot, transcript):  # type: ignore[no-untyped-def]
 
 @pytest.mark.asyncio
 async def test_an_owed_notice_is_reported_as_owed_not_as_delivered(monkeypatch):
-    from kiro_crew.dashboard.state import _ChatSlot
-    from kiro_crew.subagent import ORPHAN_NOTICE_OWED
+    from aj_crew.dashboard.state import _ChatSlot
+    from aj_crew.subagent import ORPHAN_NOTICE_OWED
 
     _orphaned_run("orpE001", whole=True)
     slot, transcript = _ChatSlot("chat-7"), []
@@ -531,8 +531,8 @@ async def test_an_owed_notice_is_reported_as_owed_not_as_delivered(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_a_restart_before_the_drain_announces_a_boot_orphan_again(monkeypatch):
-    from kiro_crew import subagent_persistence as sp
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew import subagent_persistence as sp
+    from aj_crew.dashboard.state import _ChatSlot
 
     _orphaned_run("orpB001", whole=True)
     slot, transcript = _ChatSlot("chat-7"), []
@@ -553,9 +553,9 @@ async def test_a_restart_before_the_drain_announces_a_boot_orphan_again(monkeypa
 async def test_a_drained_boot_orphan_notice_keeps_its_outcome_and_is_announced_once(
     monkeypatch, whole
 ):
-    from kiro_crew import subagent_persistence as sp
-    from kiro_crew.dashboard.chat_runner import settle_drained_subagent_notices
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew import subagent_persistence as sp
+    from aj_crew.dashboard.chat_runner import settle_drained_subagent_notices
+    from aj_crew.dashboard.state import _ChatSlot
 
     _orphaned_run("orpC001", whole=whole)
     slot, transcript = _ChatSlot("chat-7"), []
@@ -584,8 +584,8 @@ _HUGE_COMMAND = "echo " + "x" * 200_000
 
 @pytest.mark.asyncio
 async def test_the_record_a_queued_notice_owes_is_bounded_where_it_is_built(monkeypatch):
-    from kiro_crew import subagent_persistence as sp
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew import subagent_persistence as sp
+    from aj_crew.dashboard.state import _ChatSlot
 
     _orphaned_run("orpL001", whole=False)
     assert sp.update_state("orpL001", last_tool=_HUGE_COMMAND, turns=3)
@@ -608,7 +608,7 @@ async def test_the_record_a_queued_notice_owes_is_bounded_where_it_is_built(monk
 @pytest.mark.asyncio
 @pytest.mark.parametrize("injected", [True, False], ids=["injected", "digest"])
 async def test_a_tombstone_the_scan_writes_carries_the_bounded_title(monkeypatch, injected):
-    from kiro_crew import subagent_persistence as sp
+    from aj_crew import subagent_persistence as sp
 
     _orphaned_run("orpL002", whole=False)
     assert sp.update_state("orpL002", last_tool=_HUGE_COMMAND, turns=5)
@@ -647,6 +647,6 @@ async def test_a_tombstone_the_scan_writes_carries_the_bounded_title(monkeypatch
     ids=["as-stored", "strings-and-lists", "booleans-and-numbers", "absent"],
 )
 def test_the_carried_fields_keep_only_the_types_the_run_stores(stored, kept):
-    from kiro_crew.subagent_manager.monitoring import orphan_carried_fields
+    from aj_crew.subagent_manager.monitoring import orphan_carried_fields
 
     assert orphan_carried_fields(stored) == kept

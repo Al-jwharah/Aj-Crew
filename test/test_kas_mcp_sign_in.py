@@ -21,9 +21,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.session_handle import BUCKET_CAP, AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.session_handle import BUCKET_CAP, AcpSessionHandle
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     EVENT_MCP_OAUTH_REQUEST,
     EVENT_MCP_SERVER_INITIALIZED,
@@ -32,8 +32,8 @@ from kiro_crew.acp.types import (
     AcpEvent,
     JsonRpcMessage,
 )
-from kiro_crew.config.paths import kiro_agents_dir
-from kiro_crew.testing.wait import finished
+from aj_crew.config.paths import kiro_agents_dir
+from aj_crew.testing.wait import finished
 
 _DEAD_URL = "https://auth.example.com/authorize?state=passive"
 _LIVE_URL = "https://auth.example.com/authorize?state=explicit"
@@ -44,13 +44,13 @@ _LIVE_URL = "https://auth.example.com/authorize?state=explicit"
 #:
 #: Each capture is written before the reply it belongs to and swapped in whole,
 #: so the test, which the reset's answer unblocks, never reads a missing or
-#: half-written file. ``KIROCREW_TEST_SIGN_IN_STALL`` holds the stub inside its
+#: half-written file. ``AJCREW_TEST_SIGN_IN_STALL`` holds the stub inside its
 #: last capture write for that many seconds, standing in for a descheduled process.
 _STUB_AGENT = """
 import json, os, sys, time
 
-CAPTURE = os.environ["KIROCREW_TEST_SIGN_IN_CAPTURE"]
-STALL = float(os.environ.get("KIROCREW_TEST_SIGN_IN_STALL") or 0)
+CAPTURE = os.environ["AJCREW_TEST_SIGN_IN_CAPTURE"]
+STALL = float(os.environ.get("AJCREW_TEST_SIGN_IN_STALL") or 0)
 seen = {}
 
 def record(key, value, stall=0.0):
@@ -101,7 +101,7 @@ for line in sys.stdin:
 """ % {"dead": _DEAD_URL, "live": _LIVE_URL}
 
 _STUB_AGENT_SPEC = {
-    "name": "kirocrew",
+    "name": "ajcrew",
     "description": "sign-in stub",
     "prompt": "You are a test agent.",
     "tools": [],
@@ -121,11 +121,11 @@ def kas_sign_in_stub(tmp_path, monkeypatch):
     async def fake_bin(*, environ=None, home=None) -> str:
         return str(launcher)
 
-    monkeypatch.setattr("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", fake_bin)
+    monkeypatch.setattr("aj_crew.acp.client._resolve_kiro_bin_for_spawn", fake_bin)
     monkeypatch.setenv("KIRO_HOME", str(tmp_path / "kiro-home"))
     capture = tmp_path / "capture.json"
-    monkeypatch.setenv("KIROCREW_TEST_SIGN_IN_CAPTURE", str(capture))
-    from kiro_crew.agent import kiro_agents_dir_path
+    monkeypatch.setenv("AJCREW_TEST_SIGN_IN_CAPTURE", str(capture))
+    from aj_crew.agent import kiro_agents_dir_path
 
     for agents_dir in {kiro_agents_dir(), kiro_agents_dir_path()}:
         agents_dir.mkdir(parents=True, exist_ok=True)
@@ -148,7 +148,7 @@ async def test_the_capture_is_whole_however_long_the_stub_takes_to_write_it(
 ):
     # Longer than the drain's idle exit, so a capture written after the
     # reset's answer would still be empty when the test reads it.
-    monkeypatch.setenv("KIROCREW_TEST_SIGN_IN_STALL", "0.5")
+    monkeypatch.setenv("AJCREW_TEST_SIGN_IN_STALL", "0.5")
     await _sign_in_through_the_stub(kas_sign_in_stub, tmp_path)
 
 
@@ -388,7 +388,7 @@ def test_a_message_naming_a_connected_server_starts_nothing():
     ],
 )
 def test_a_server_is_named_by_its_name_or_an_obvious_alias(name, text):
-    from kiro_crew.acp.session_handle_mcp import text_names_mcp_server
+    from aj_crew.acp.session_handle_mcp import text_names_mcp_server
 
     assert text_names_mcp_server(text, name)
 
@@ -415,7 +415,7 @@ def test_a_server_is_named_by_its_name_or_an_obvious_alias(name, text):
     ],
 )
 def test_a_generic_word_or_a_longer_word_does_not_name_a_server(name, text):
-    from kiro_crew.acp.session_handle_mcp import text_names_mcp_server
+    from aj_crew.acp.session_handle_mcp import text_names_mcp_server
 
     assert not text_names_mcp_server(text, name)
 
@@ -435,7 +435,7 @@ def test_a_generic_word_or_a_longer_word_does_not_name_a_server(name, text):
     ],
 )
 def test_the_configured_name_is_kept_and_short_derived_aliases_are_dropped(name, aliases):
-    from kiro_crew.acp.session_handle_mcp import mcp_server_aliases
+    from aj_crew.acp.session_handle_mcp import mcp_server_aliases
 
     assert mcp_server_aliases(name) == aliases
 
@@ -507,7 +507,7 @@ def test_the_wanted_set_is_bounded_and_a_refusal_is_logged(caplog):
     handle = _handle([], accept=False)
     names = [f"srv{i:03d}" for i in range(BUCKET_CAP + 1)]
     handle._mcp_sign_in_needed = set(names)
-    with caplog.at_level("INFO", logger="kiro_crew.acp.session_handle"):
+    with caplog.at_level("INFO", logger="aj_crew.acp.session_handle"):
         handle.want_mcp_sign_in_named(" ".join(names))
     assert len(handle._mcp_sign_in_wanted) == BUCKET_CAP
     assert any("not asked for" in r.getMessage() for r in caplog.records)
@@ -556,7 +556,7 @@ def test_entries_past_the_cap_are_counted_and_logged_once(caplog):
     begun: list = []
     handle = _handle(begun, accept=False)
     servers = [{"name": f"s{i}", "status": "connected"} for i in range(66)]
-    with caplog.at_level("WARNING", logger="kiro_crew.acp.session_handle"):
+    with caplog.at_level("WARNING", logger="aj_crew.acp.session_handle"):
         handle._note_mcp_sign_in_status(_status(*servers), offer=True)
         handle._note_mcp_sign_in_status(_status(*servers), offer=True)
     warnings = [r for r in caplog.records if "skipped 2 status entries" in r.getMessage()]
@@ -569,7 +569,7 @@ def test_a_completion_past_the_cap_is_dropped_and_counted(caplog):
     handle = _handle(begun, accept=False)
     handle._mcp_sign_in_completed = {f"done{i}" for i in range(BUCKET_CAP)}
     handle._mcp_sign_in_needed = {"remote"}
-    with caplog.at_level("WARNING", logger="kiro_crew.acp.session_handle"):
+    with caplog.at_level("WARNING", logger="aj_crew.acp.session_handle"):
         handle._note_mcp_sign_in_status(
             _status({"name": "remote", "status": "connected"}), offer=True
         )
@@ -767,8 +767,8 @@ async def test_a_later_turn_does_not_match_an_earlier_turns_message():
 
 def _sign_in_provider(seen: list):
     """Real provider hand-off, recording both old field and new argument paths."""
-    from kiro_crew.acp.session_provider import AcpSessionProvider
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.providers.acp import AcpProvider
 
     async def prompt(_message, *, sign_in_ask=""):
         seen.append(sign_in_ask)
@@ -870,8 +870,8 @@ async def test_a_failed_command_discards_a_noted_ask_before_confirmation():
 
 
 def test_the_dashboards_provider_holds_the_users_message_only_for_shared_sessions():
-    from kiro_crew.acp.client import AcpClient
-    from kiro_crew.providers.base import LLMProvider
+    from aj_crew.acp.client import AcpClient
+    from aj_crew.providers.base import LLMProvider
 
     seen: list = []
     outer, inner = _sign_in_provider(seen)

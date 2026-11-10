@@ -21,8 +21,8 @@ from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 from body_stream_helpers import BodyStreamPayload
 
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-from kiro_crew.taskrunner import Step, TaskRun
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+from aj_crew.taskrunner import Step, TaskRun
 
 # A URL whose oversized query payload trips the (domain-agnostic) exfiltration
 # scanner — see test_security_exfil_urls.py::test_long_query_redacted_domain_agnostic.
@@ -34,7 +34,7 @@ _EXFIL_URL = "https://collector.example.com/ingest?data=" + "A" * 250
 @pytest.fixture(autouse=True)
 def _stub_sel():
     """No real security-event-log writes from any handler under test."""
-    with patch("kiro_crew.dashboard.handlers.taskrunner._sel") as sel:
+    with patch("aj_crew.dashboard.handlers.taskrunner._sel") as sel:
         sel.return_value = MagicMock()
         yield sel
 
@@ -53,7 +53,7 @@ def _runner(tmp_path: Path) -> MagicMock:
     runner._auto_name = MagicMock(side_effect=lambda text: text)
     runner._workflow_begin = AsyncMock()
     runner._capture_execution = MagicMock(
-        return_value=ExecutionContext(None, MemoryStoreRef("default"), "template", "kirocrew")
+        return_value=ExecutionContext(None, MemoryStoreRef("default"), "template", "ajcrew")
     )
     runner._bind_run_execution = AsyncMock()
 

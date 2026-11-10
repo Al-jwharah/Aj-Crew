@@ -16,14 +16,14 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import artifacts as art_mod
-from kiro_crew.artifacts import ArtifactStore
-from kiro_crew.dashboard.chat_folders import (
+from aj_crew import artifacts as art_mod
+from aj_crew.artifacts import ArtifactStore
+from aj_crew.dashboard.chat_folders import (
     archived_session_names_in_folders,
     chat_folder_subtree_ids,
     live_slot_names_in_folders,
 )
-from kiro_crew.dashboard.handlers.artifacts import api_artifacts_list
+from aj_crew.dashboard.handlers.artifacts import api_artifacts_list
 
 
 class _Log:

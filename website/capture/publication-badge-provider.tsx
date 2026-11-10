@@ -27,11 +27,11 @@ initI18n()
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 localStorage.setItem('mc-theme', theme)
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const pub = (last_error = '') => ({
   provider: 'acme_drive', visibility: 'PRIVATE', shared_with: [], auto_sync: true,
-  last_synced_kirocrew_version: 1, version_map: {}, published_at: '2026-11-07T00:00:00Z',
+  last_synced_ajcrew_version: 1, version_map: {}, published_at: '2026-11-07T00:00:00Z',
   published_by: 'me', last_error, notice: '',
 })
 const mk = (slug: string, name: string, last_error = '') => ({

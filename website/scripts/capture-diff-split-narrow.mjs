@@ -68,7 +68,7 @@ const slots = [{
   running: false,
   last_message: SURFACE.title,
   messages: SURFACE.messages.length,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

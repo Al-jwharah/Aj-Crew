@@ -22,11 +22,11 @@ from slack_gateway_cron_exec_coverage_helpers import (
     _mock_dashboard_state,
 )
 
-from kiro_crew.cli_commands import _cron
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, WorkspaceConfig
-from kiro_crew.cron import CronService, build_job
-from kiro_crew.cron_service.fields import cron_session_cwd, resolve_project_path
-from kiro_crew.testing.links import make_dir_link
+from aj_crew.cli_commands import _cron
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, WorkspaceConfig
+from aj_crew.cron import CronService, build_job
+from aj_crew.cron_service.fields import cron_session_cwd, resolve_project_path
+from aj_crew.testing.links import make_dir_link
 
 # A record exactly as a build before this field wrote it: no "project_path" key.
 _PRE_CHANGE_RECORD = {
@@ -56,11 +56,11 @@ def _repo(tmp_path: Path) -> str:
     return os.path.realpath(repo)
 
 
-def _alias_cfg(ws_dir: str) -> KiroCrewConfig:
-    return KiroCrewConfig(
+def _alias_cfg(ws_dir: str) -> AjCrewConfig:
+    return AjCrewConfig(
         agents={
-            "in-3d": KiroCrewAgentConfig(
-                kiro_agent="kirocrew", workspace="in-3d", memory_store="default"
+            "in-3d": AjCrewAgentConfig(
+                kiro_agent="ajcrew", workspace="in-3d", memory_store="default"
             )
         },
         workspaces={"in-3d": WorkspaceConfig(dir=ws_dir)},
@@ -126,7 +126,7 @@ def test_a_missing_directory_is_refused(tmp_path) -> None:
 def test_a_sensitive_directory_is_refused(tmp_path, monkeypatch) -> None:
     repo = _repo(tmp_path)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_folders.canonical_path_refusal",
+        "aj_crew.dashboard.chat_folders.canonical_path_refusal",
         lambda p: f"Blocked: access to sensitive path: {p}" if p == repo else None,
     )
     with pytest.raises(ValueError, match="sensitive"):
@@ -157,7 +157,7 @@ def test_update_sets_and_clears_it_and_a_refusal_leaves_the_job_untouched(tmp_pa
 @pytest.mark.asyncio
 async def test_a_fire_runs_the_session_in_the_project_directory(tmp_path, monkeypatch) -> None:
     """The project directory outranks the alias workspace as the session cwd."""
-    from kiro_crew.slack import gateway as _gw
+    from aj_crew.slack import gateway as _gw
 
     monkeypatch.setattr(_gw.live, "snapshot", lambda: None)
     repo = _repo(tmp_path)
@@ -173,7 +173,7 @@ async def test_a_fire_runs_the_session_in_the_project_directory(tmp_path, monkey
     kw = orch.sessions.get_or_create.await_args.kwargs
     assert kw.get("cwd") == repo
     # Only the cwd changes: the alias still picks the agent and crew identity.
-    assert kw.get("agent") == "kirocrew"
+    assert kw.get("agent") == "ajcrew"
     assert kw.get("crew_agent") == "in-3d"
 
 
@@ -181,7 +181,7 @@ async def test_a_fire_runs_the_session_in_the_project_directory(tmp_path, monkey
 async def test_a_fire_without_a_project_directory_keeps_the_alias_workspace(
     tmp_path, monkeypatch
 ) -> None:
-    from kiro_crew.slack import gateway as _gw
+    from aj_crew.slack import gateway as _gw
 
     monkeypatch.setattr(_gw.live, "snapshot", lambda: None)
     ws_dir = str(tmp_path / "in-3d-ws")
@@ -200,11 +200,11 @@ async def test_a_fire_without_a_project_directory_keeps_the_alias_workspace(
 @pytest.mark.asyncio
 async def test_a_project_directory_that_is_gone_fails_the_run(tmp_path, monkeypatch) -> None:
     """Never a silent fall back to a cwd without the project's rules."""
-    from kiro_crew.slack import gateway as _gw
+    from aj_crew.slack import gateway as _gw
 
     monkeypatch.setattr(_gw.live, "snapshot", lambda: None)
     orch = _make_orchestrator()
-    orch._cfg = KiroCrewConfig()
+    orch._cfg = AjCrewConfig()
     orch.sessions = _message_arm_sessions()
     orch.dashboard_state = _mock_dashboard_state()
     job = _job(id="jp3", name="gone probe", project_path=str(tmp_path / "deleted"))
@@ -229,9 +229,9 @@ def test_the_fire_time_refusal_is_not_transient(tmp_path) -> None:
 
 
 def test_cli_add_and_update_carry_project_path(tmp_path, monkeypatch, capsys) -> None:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     repo = _repo(tmp_path)
-    with patch("kiro_crew.cli_commands.sel"):
+    with patch("aj_crew.cli_commands.sel"):
         _cron(
             argparse.Namespace(
                 cron_action="add",
@@ -247,10 +247,10 @@ def test_cli_add_and_update_carry_project_path(tmp_path, monkeypatch, capsys) ->
         )
     (job,) = CronService(base_dir=tmp_path / "home").list_jobs(include_disabled=True)
     assert job.project_path == repo
-    with patch("kiro_crew.cli_commands.sel"):
+    with patch("aj_crew.cli_commands.sel"):
         _cron(argparse.Namespace(cron_action="list"))
     assert f"project: {repo}" in capsys.readouterr().out
-    with patch("kiro_crew.cli_commands.sel"):
+    with patch("aj_crew.cli_commands.sel"):
         _cron(argparse.Namespace(cron_action="update", job_id=job.id, project_path=""))
     (job,) = CronService(base_dir=tmp_path / "home").list_jobs(include_disabled=True)
     assert job.project_path == ""

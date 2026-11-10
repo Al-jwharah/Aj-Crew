@@ -20,17 +20,17 @@ import pytest
 from crew_log_core_helpers import _split_into_segments
 from crew_log_drain import assert_drained
 
-from kiro_crew import crew_log as lg
-from kiro_crew.config.paths import data_home
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import eager as crew_log_eager
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import projection_slot_memo as psm
-from kiro_crew.crew_log import projection_unit_mark_cache as mark_cache
-from kiro_crew.crew_log import store_handle, store_retention, store_units
-from kiro_crew.testing.links import make_dir_link
-from kiro_crew.testing.wait import wait_until
+from aj_crew import crew_log as lg
+from aj_crew.config.paths import data_home
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import eager as crew_log_eager
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import projection_slot_memo as psm
+from aj_crew.crew_log import projection_unit_mark_cache as mark_cache
+from aj_crew.crew_log import store_handle, store_retention, store_units
+from aj_crew.testing.links import make_dir_link
+from aj_crew.testing.wait import wait_until
 
 SLOT = "chat-unitmarks"
 FIRST = "acp-older"
@@ -41,8 +41,8 @@ RACY_NS = 50_000_000
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     _floor_monkeypatch.setattr(crew_log_eager, "note_commit", lambda *a, **k: None)
     _floor_monkeypatch.setattr(mark_cache, "_MARK_RACY_NS", RACY_NS)
     crew_log_emit.reset_caches()
@@ -55,7 +55,7 @@ def _isolated_home(tmp_path, _floor_monkeypatch):
 
 
 def _unit(unit_id: str) -> None:
-    CrewLog.create(lg.KIND_SESSION, unit_id, owner="owner", agent="kirocrew", slot=SLOT)
+    CrewLog.create(lg.KIND_SESSION, unit_id, owner="owner", agent="ajcrew", slot=SLOT)
 
 
 def _ledger(unit_id: str, **fields: Any) -> None:
@@ -257,7 +257,7 @@ def test_an_empty_warm_read_costs_at_most_two_calls_per_older_unit():
         units = tuple(f"acp-flat-{size}-{n:03d}" for n in range(size))
         for unit_id in units:
             CrewLog.create(
-                lg.KIND_SESSION, unit_id, owner="owner", agent="kirocrew", slot=f"s{size}"
+                lg.KIND_SESSION, unit_id, owner="owner", agent="ajcrew", slot=f"s{size}"
             )
             crew_log_emit.on_ledger_recorded(unit_id, {"slot": f"s{size}", "event": unit_id})
         assert_drained()

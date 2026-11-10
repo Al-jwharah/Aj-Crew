@@ -15,15 +15,15 @@ import asyncio
 
 import pytest
 
-from kiro_crew.dashboard import create_rate_limit
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard import stop_retry
-from kiro_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard import create_rate_limit
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard import stop_retry
+from aj_crew.dashboard.chat_utils import slot_history_key
 
 
 @pytest.fixture(autouse=True)
 # flake-ok: pre-existing autouse fixture moved verbatim; no importing module calls monkeypatch.undo()
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- no importing module calls monkeypatch.undo()
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- no importing module calls monkeypatch.undo()
 def _enabled(monkeypatch):
     monkeypatch.setattr(sc, "session_control_enabled", lambda: True)
 
@@ -39,7 +39,7 @@ def _fresh_windows():
 
 @pytest.fixture(autouse=True)
 # flake-ok: pre-existing autouse fixture moved verbatim; no importing module calls monkeypatch.undo()
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- no importing module calls monkeypatch.undo()
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- no importing module calls monkeypatch.undo()
 def _settle_metadata_rewrite_before_read(monkeypatch):
     """Await each metadata rewrite's file transition before the test reads it.
 
@@ -76,7 +76,7 @@ def _settle_metadata_rewrite_before_read(monkeypatch):
     """
     import time
 
-    from kiro_crew import atomic_write as _aw
+    from aj_crew import atomic_write as _aw
 
     real_replace = _aw.replace_with_retry
 

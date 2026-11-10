@@ -18,13 +18,13 @@ import pytest
 from discord_helpers import _drop_live_config_snapshot  # noqa: F401
 from discord_helpers import FakeProvider, _dispatcher, _inbound, _inbound_with_id, _live_discord
 
-import kiro_crew.discord.transport_dispatch as td_mod
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST, AcpEvent
-from kiro_crew.discord.client import DiscordInteraction
-from kiro_crew.discord.commands import COMMAND_SPEC, application_command_payload, parse_command
-from kiro_crew.discord.renderer import DiscordApprovalDecider, session_provenance_tag
-from kiro_crew.messaging.queue_receipt import receipt_text as _receipt_text
-from kiro_crew.messaging.transport import InboundMessage
+import aj_crew.discord.transport_dispatch as td_mod
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST, AcpEvent
+from aj_crew.discord.client import DiscordInteraction
+from aj_crew.discord.commands import COMMAND_SPEC, application_command_payload, parse_command
+from aj_crew.discord.renderer import DiscordApprovalDecider, session_provenance_tag
+from aj_crew.messaging.queue_receipt import receipt_text as _receipt_text
+from aj_crew.messaging.transport import InboundMessage
 
 
 class TestInteractions:
@@ -137,7 +137,7 @@ class TestInteractions:
             order.append("roster")
             return original_authorized(user_id)
 
-        import kiro_crew.discord.transport_dispatch as td
+        import aj_crew.discord.transport_dispatch as td
 
         with mock.patch.object(td, "channel_inbound_permitted", _ceiling):
             cli.ack_component_interaction = _ack  # type: ignore[method-assign]
@@ -205,7 +205,7 @@ class TestInteractions:
         """
         import json
 
-        from kiro_crew.platform import governance_profiles as gp
+        from aj_crew.platform import governance_profiles as gp
 
         pdir.mkdir(exist_ok=True)
         monkeypatch.setattr(gp, "_PROFILES_DIR", pdir)
@@ -229,7 +229,7 @@ class TestInteractions:
         Component edits are checked too, because a component-only edit would also
         change what the channel shows.
         """
-        from kiro_crew.platform import governance_profiles as gp
+        from aj_crew.platform import governance_profiles as gp
 
         d, cli, _ = _dispatcher({"u1"})
         card_id = await cli.send_message(
@@ -275,7 +275,7 @@ class TestInteractions:
         separates a late read from an early one; the reject arm is the only press that
         reaches the verdict without the pre-resolve gate having read the ceiling.
         """
-        from kiro_crew.platform import governance_profiles as gp
+        from aj_crew.platform import governance_profiles as gp
 
         d, cli, _ = _dispatcher({"u1"})
         pdir = tmp_path / "profiles"
@@ -436,7 +436,7 @@ class TestInteractions:
         # (removing the gate makes the pending future resolve → test fails).
         import json
 
-        from kiro_crew.platform import governance_profiles as gp
+        from aj_crew.platform import governance_profiles as gp
 
         pdir = tmp_path / "profiles"
         pdir.mkdir()
@@ -483,7 +483,7 @@ class TestInteractions:
         # stays exactly as it was posted while the channel was still allowed.
         import json
 
-        from kiro_crew.platform import governance_profiles as gp
+        from aj_crew.platform import governance_profiles as gp
 
         pdir = tmp_path / "profiles"
         pdir.mkdir()
@@ -521,7 +521,7 @@ class TestInteractions:
         # driving a turn. Regression-locks the dispatcher's inbound chokepoint.
         import json
 
-        from kiro_crew.platform import governance_profiles as gp
+        from aj_crew.platform import governance_profiles as gp
 
         pdir = tmp_path / "profiles"
         pdir.mkdir()
@@ -587,7 +587,7 @@ class TestInteractions:
     @pytest.mark.asyncio
     async def test_a_long_option_answers_with_its_full_text_not_the_cut_label(self) -> None:
         """A choice over 80 characters shows a cut label but answers in full."""
-        from kiro_crew.discord.renderer import build_option_components
+        from aj_crew.discord.renderer import build_option_components
 
         d, cli, _ = _dispatcher({"u1"})
         tag = session_provenance_tag(d.current_session_key("u1"))
@@ -614,8 +614,8 @@ class TestInteractions:
     @pytest.mark.asyncio
     async def test_the_choice_echo_goes_through_the_display_pass(self, monkeypatch) -> None:
         """The echo is display text: it is sent as the display pass returns it."""
-        import kiro_crew.discord.transport_dispatch_interactions as tdi
-        from kiro_crew.discord.renderer import build_option_components
+        import aj_crew.discord.transport_dispatch_interactions as tdi
+        from aj_crew.discord.renderer import build_option_components
 
         passed: list[str] = []
 
@@ -641,7 +641,7 @@ class TestInteractions:
 
     def test_the_full_choice_map_is_capped_oldest_first(self, monkeypatch) -> None:
         """A long-running bot keeps at most the cap of full choices; the oldest go first."""
-        from kiro_crew.discord import renderer_components as rc
+        from aj_crew.discord import renderer_components as rc
 
         monkeypatch.setattr(rc, "_FULL_CHOICES", rc.OrderedDict())
         monkeypatch.setattr(rc, "_FULL_CHOICES_MAX", 3)
@@ -660,7 +660,7 @@ class TestInteractions:
 
     def test_a_choice_past_the_length_ceiling_is_not_kept(self, monkeypatch) -> None:
         """The map is bounded in characters too: an oversized choice is never stored."""
-        from kiro_crew.discord import renderer_components as rc
+        from aj_crew.discord import renderer_components as rc
 
         monkeypatch.setattr(rc, "_FULL_CHOICES", rc.OrderedDict())
         huge = "y" * (rc._FULL_CHOICE_MAX_CHARS + 1)
@@ -678,8 +678,8 @@ class TestInteractions:
         self, monkeypatch
     ) -> None:
         """After a restart the map is empty: a cut button must not answer with its label."""
-        from kiro_crew.discord import renderer_components as rc
-        from kiro_crew.discord.renderer import build_option_components
+        from aj_crew.discord import renderer_components as rc
+        from aj_crew.discord.renderer import build_option_components
 
         d, cli, _ = _dispatcher({"u1"})
         tag = session_provenance_tag(d.current_session_key("u1"))
@@ -996,7 +996,7 @@ class TestCommandSurfaceParity:
     async def test_every_catalogued_command_is_answered_over_slash(self, name: str) -> None:
         d, cli, _sess = _dispatcher({"u1"})
         with (
-            mock.patch("kiro_crew.dashboard.token_auth.generate_token", return_value="TKN"),
+            mock.patch("aj_crew.dashboard.token_auth.generate_token", return_value="TKN"),
             mock.patch.object(td_mod, "safety_override") as so,
             mock.patch.object(td_mod, "describe_grant_lifetime", return_value="30m"),
         ):
@@ -1040,7 +1040,7 @@ class TestTheProcessGrantAnswersDiscordPermissions:
     async def test_an_interactive_permission_is_answered_by_the_grant_first(
         self, monkeypatch, granted: bool
     ) -> None:
-        from kiro_crew.safety_override import safety_override
+        from aj_crew.safety_override import safety_override
 
         answered: list[tuple[str, str]] = []
         asked: list[str] = []
@@ -1117,7 +1117,7 @@ class TestRenderTogglesAreWiredPerTurn:
         the turn: reactions stay on (the loud default) and reasoning stays off
         (the quiet one)."""
         d, _cli, _sess = _dispatcher({"u1"})
-        with mock.patch("kiro_crew.config.loader.KiroCrewConfig.load", side_effect=OSError):
+        with mock.patch("aj_crew.config.loader.AjCrewConfig.load", side_effect=OSError):
             assert d._render_config() == (True, False)
 
 
@@ -1285,7 +1285,7 @@ class TestReviewFindingRegressions:
     async def test_an_ambiguous_allowlist_gets_no_owner_dm(self) -> None:
         """With no owner field and several allow-listed users, picking the first
         would send private agent output to the wrong human."""
-        from kiro_crew.dashboard.handlers.messaging import _owner_dm_target
+        from aj_crew.dashboard.handlers.messaging import _owner_dm_target
 
         def _t(tid: str, available: bool = True) -> Any:
             return SimpleNamespace(target_id=tid, available=available)
@@ -1342,7 +1342,7 @@ class TestReviewFindingRegressions:
     def test_the_install_url_grants_thread_creation(self) -> None:
         """`auto_thread` promotes a channel message into a NEW public thread, so
         an install without this bit answers nothing in an allowed channel."""
-        from kiro_crew.discord.install_url import (
+        from aj_crew.discord.install_url import (
             PERM_CREATE_PUBLIC_THREADS,
             THREAD_PERMISSIONS,
         )
@@ -1373,16 +1373,16 @@ class TestPerTurnConfigReadIsOffLoop:
 
 
 def _agent_roster():
-    from kiro_crew.agent_discovery import AgentInfo
+    from aj_crew.agent_discovery import AgentInfo
 
     return [
         AgentInfo(name="beta", filename="beta.json", description="", model=""),
         AgentInfo(
-            name="kirocrew-worker",
-            filename="kirocrew-worker.json",
+            name="ajcrew-worker",
+            filename="ajcrew-worker.json",
             description="",
             model="",
-            kirocrew_owned=True,
+            ajcrew_owned=True,
         ),
     ]
 
@@ -1395,7 +1395,7 @@ class TestAgentCommand:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("command", ["!agent beta", "/agent beta"])
     async def test_agent_name_switches_the_next_turn(self, monkeypatch, command) -> None:
-        monkeypatch.setattr("kiro_crew.telegram.transport_dispatch.list_agents", _agent_roster)
+        monkeypatch.setattr("aj_crew.telegram.transport_dispatch.list_agents", _agent_roster)
         d, cli, sess = _dispatcher({"u1"})
         await d.handle_message(self._msg(command))
         assert any("Agent set to `beta`" in t for t, _ in cli.sent)
@@ -1404,7 +1404,7 @@ class TestAgentCommand:
 
     @pytest.mark.asyncio
     async def test_status_names_the_picked_agent(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.telegram.transport_dispatch.list_agents", _agent_roster)
+        monkeypatch.setattr("aj_crew.telegram.transport_dispatch.list_agents", _agent_roster)
         d, cli, _ = _dispatcher({"u1"})
         await d.handle_message(self._msg("!agent beta"))
         await d.handle_message(self._msg("!status"))
@@ -1412,9 +1412,9 @@ class TestAgentCommand:
 
     @pytest.mark.asyncio
     async def test_internal_agent_is_refused(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.telegram.transport_dispatch.list_agents", _agent_roster)
+        monkeypatch.setattr("aj_crew.telegram.transport_dispatch.list_agents", _agent_roster)
         d, cli, sess = _dispatcher({"u1"})
-        await d.handle_message(self._msg("!agent kirocrew-worker"))
+        await d.handle_message(self._msg("!agent ajcrew-worker"))
         assert any("No agent named" in t for t, _ in cli.sent)
         await d.handle_message(self._msg("hi"))
-        assert sess.last_agent == "kirocrew"
+        assert sess.last_agent == "ajcrew"

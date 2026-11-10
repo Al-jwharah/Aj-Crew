@@ -455,7 +455,7 @@ describe('LibraryPage — action dispatch', () => {
   })
 
   it('a remote gateway answer shows the run-locally banner with the command', async () => {
-    openApp.mockResolvedValue({ remote: true, command: 'kirocrew app open term-tool' })
+    openApp.mockResolvedValue({ remote: true, command: 'ajcrew app open term-tool' })
     listApps.mockResolvedValue([installedApp('term-tool', 'Term Tool', {
       manifest: {
         name: 'term-tool', version: '1.0.0', displayName: 'Term Tool',
@@ -466,7 +466,7 @@ describe('LibraryPage — action dispatch', () => {
     renderLibrary()
     fireEvent.click(within(await tile('term-tool')).getByRole('button', { name: 'Term Tool' }))
     expect(await screen.findByText('Remote environment detected')).toBeInTheDocument()
-    expect(screen.getByText('kirocrew app open term-tool')).toBeInTheDocument()
+    expect(screen.getByText('ajcrew app open term-tool')).toBeInTheDocument()
     // Dismissable.
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
     await waitFor(() => expect(screen.queryByText('Remote environment detected')).toBeNull())

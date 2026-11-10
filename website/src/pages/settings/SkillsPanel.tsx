@@ -60,11 +60,11 @@ export function SkillsPanel() {
   const reviewSlug = params.get('review')
 
   const cfgQ = useQuery<{ skills?: SkillsCfg }>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
   })
   const skills = cfgQ.data?.skills
-  // Both toggles PATCH the shared ['kirocrewConfig'] object. A whole-object
+  // Both toggles PATCH the shared ['ajcrewConfig'] object. A whole-object
   // onMutate snapshot here would capture ANOTHER PANEL's in-flight optimistic
   // value on the same query key and restore it on failure (the panel's own
   // two toggles are mutually disabled while a save is pending, so the
@@ -78,7 +78,7 @@ export function SkillsPanel() {
   const storedExtraPaths = overlay.shown(EXTRA_PATHS_KEY, skills?.extra_paths ?? EMPTY_PATHS)
 
   const patchMut = useMutation(overlay.mutationOpts<{ path: string; value: boolean | string[] }>({
-    queryKey: ['kirocrewConfig'],
+    queryKey: ['ajcrewConfig'],
     mutationFn: ({ path, value }) => api.patchConfig(path, value),
     path: v => v.path,
     displayValue: v => v.value,

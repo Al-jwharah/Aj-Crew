@@ -11,15 +11,15 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import skill_trust
+from aj_crew import skill_trust
 
 
 @pytest.fixture(autouse=True)
 # flake-ok: pre-existing autouse fixture moved verbatim; no importing module calls monkeypatch.undo()
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- no importing module calls monkeypatch.undo()
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- no importing module calls monkeypatch.undo()
 def _isolated_home(tmp_path, monkeypatch):
     """Point the data home at tmp_path and drop the memoized enforcement read."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     skill_trust.reset_cache_for_tests()
     yield
     skill_trust.reset_cache_for_tests()

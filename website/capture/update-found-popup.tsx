@@ -40,7 +40,7 @@ const scene = params.get('scene') || 'desktop'
 const theme = params.get('theme') || 'dark'
 const lang = params.get('lang') || 'en'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // Realistic length and shape: gateway notes are CHANGELOG.md markdown, so the
 // frame must prove headers/lists render and the box scrolls.
@@ -69,7 +69,7 @@ window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
   const url = String(typeof input === 'string' ? input : input instanceof URL ? input : (input as Request).url)
   const json = (body: unknown) =>
     Promise.resolve(new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } }))
-  if (url.includes('/api/config/kirocrew')) return json({ dashboard: { update_nudge: {} } })
+  if (url.includes('/api/config/ajcrew')) return json({ dashboard: { update_nudge: {} } })
   if (url.includes('/api/update/check')) return json({ changes: NOTES, latest_version: '0.5.0' })
   if (scene.endsWith('-refused') && (init?.method || 'GET').toUpperCase() === 'POST' && /\/api\/update$/.test(url.split('?')[0])) {
     // The gateway's own refusal shape and wording (dep_sync.incoming_python_floor_breach).
@@ -78,7 +78,7 @@ window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
       error: 'Update refused: the incoming revision requires Python >=3.12 but this install\u2019s venv '
         + '(/home/me/.kiro/crew-venv) runs 3.11.16, so it cannot be installed there. Rebuild that venv on a '
         + 'supported interpreter (e.g. `uv venv --python 3.12 --seed /home/me/.kiro/crew-venv` then '
-        + '`/home/me/.kiro/crew-venv/bin/python -m pip install -e /home/me/KiroCrew`), then update again.',
+        + '`/home/me/.kiro/crew-venv/bin/python -m pip install -e /home/me/AjCrew`), then update again.',
     }), { status: 409, headers: { 'Content-Type': 'application/json' } }))
   }
   return realFetch(input, init)

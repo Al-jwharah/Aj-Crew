@@ -98,7 +98,7 @@ describe('a muted app over the dashboard socket', () => {
 
   function mount(muteSessions: boolean) {
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    qc.setQueryData(['kirocrewConfig'], { apps: { 'code-reviewer': { model: '', mute_sessions: muteSessions } } })
+    qc.setQueryData(['ajcrewConfig'], { apps: { 'code-reviewer': { model: '', mute_sessions: muteSessions } } })
     const wrapper = ({ children }: { children: ReactNode }) =>
       createElement(Provider, { store: globalStore }, createElement(QueryClientProvider, { client: qc }, children))
     renderHook(() => useWebSocket(), { wrapper })

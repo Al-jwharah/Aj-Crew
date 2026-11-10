@@ -3,7 +3,7 @@
 ## Public provider boundary
 
 `AgentConfig.provider` admits only the ACP provider, and
-`KiroCrewConfig.create_provider_factory()` constructs `AcpProvider`. Harness
+`AjCrewConfig.create_provider_factory()` constructs `AcpProvider`. Harness
 choice is a separate field, `agent.acp_backend`. The public baseline currently
 selects kiro-cli (`ACP_BACKEND_KIRO`, the empty string), Claude, KAS, Codex,
 OpenCode, Pi, goose and DeepSeek -- every id in `ACP_BACKENDS_KNOWN`. DeepSeek is
@@ -73,7 +73,7 @@ half-install does not read as a total one. A probe that itself fails reads
 
 Both operator-facing surfaces read that one verdict:
 
-- `kirocrew doctor` prints Claude Code's row — present, absent with the missing
+- `ajcrew doctor` prints Claude Code's row — present, absent with the missing
   components named, or uncheckable. When `agent.acp_backend` or
   `agent.member_acp_backend` selects `claude`, a missing component is a ❌ row and
   an issue (doctor exits 1), because every session on that role fails to spawn.
@@ -94,9 +94,9 @@ Both operator-facing surfaces read that one verdict:
 
 A default-agent session on this harness gets the same `prompt.md` contract as a
 Kiro one (`ContextBuilder._resolve_agent_prompt`), with one respelling: `kiro-cli`
-reads `claude code`. Nothing else is renamed. "Kiro Crew" is the product on every
+reads `claude code`. Nothing else is renamed. "Aj Crew" is the product on every
 harness, and the `~/.kiro/crew/...` paths the prompt names are the real data home
-(`KIROCREW_HOME`), which no `~/.claude/...` path stands in for. Pinned by
+(`AJCREW_HOME`), which no `~/.claude/...` path stands in for. Pinned by
 `test/test_cc_prompt_branding.py`.
 
 ### Stale cloud credentials
@@ -173,7 +173,7 @@ settings file" below). What Crew does write is a session-scoped
 bytes it wrote; that seed carries deny rules translated from the spec's
 `disabledTools` and never merges into a foreign project settings file.
 
-A session can OPEN it further, and only on purpose. `KIROCREW_CC_PERMISSION_MODE=auto`
+A session can OPEN it further, and only on purpose. `AJCREW_CC_PERMISSION_MODE=auto`
 resolves through `agent_sdk.backends.resolve_cc_permission_mode` and is seeded as
 `permissions.defaultMode`, which puts Claude's own classifier in charge of approving
 tool calls: an approved call asks nothing, so it reaches no `hooks.on_tool_call`,
@@ -186,7 +186,7 @@ session reaches a terminal status without a `session/request_permission`,
 no opt-in no `defaultMode` is written at all. Such a session starts in the mode the
 user's own settings name (a resumed one in the mode its transcript was left in), and
 by default keeps it unless it takes the exclusion path or is a Side Chat.
-`KIROCREW_CC_PIN_INHERITED_MODE` (`resolve_cc_pin_inherited_mode`, off by default)
+`AJCREW_CC_PIN_INHERITED_MODE` (`resolve_cc_pin_inherited_mode`, off by default)
 turns on the broader pin: `_pin_claude_starting_mode` then moves a session that
 carries Crew's tools out of an `auto` or `bypassPermissions` start to `default` before
 the first prompt, on an adapter at or above `CLAUDE_ACP_SETTING_SOURCES_MIN_VERSION`
@@ -236,7 +236,7 @@ gating hook would be skipped on exactly the calls it most needs to see. A new se
 whose spec carries one gets a `notice` row saying it does not run, and the mirror rules
 the hooks concern `no-channel`. The backend card says only that much: its `hooks` line
 narrows to `hooks_pre_tool_use` ("the preToolUse hooks ... will not run",
-`backend_mcp_ability.HOOKS_PRE_TOOL_USE_CARD_ID`), while `kirocrew doctor` keeps the
+`backend_mcp_ability.HOOKS_PRE_TOOL_USE_CARD_ID`), while `ajcrew doctor` keeps the
 route-level `no channel yet: hooks`. Nothing gates on the spec here, so Claude stays out of
 `ACP_BACKENDS_CREW_FIRES_SPEC_HOOKS`: a spec that cannot be read leaves the turn with
 no spec hooks, never a blocked call.
@@ -246,13 +246,13 @@ no spec hooks, never a blocked call.
 The `claude-agent-acp` adapter reads **no** agent file: the `mcpServers` array on
 `session/new` / `session/load` is the only channel Crew has onto a Claude session's
 MCP surface (the harness mounts its own user- and project-scope `mcpServers` and
-plugins beside it), and an empty one means zero Crew tools — `kirocrew-core`, cron and every
+plugins beside it), and an empty one means zero Crew tools — `ajcrew-core`, cron and every
 user-configured server absent, while the harness itself (prompts, streaming, model
 and effort selection, the full `session/request_permission` flow) works. So
 `_session_mcp_servers()` fills it, from `acp/session_mcp.py`:
 
 - **The materialized kiro agent spec is the source.** `~/.kiro/agents/<name>.json`
-  is already the merge point for the dashboard's Kiro Crew scope
+  is already the merge point for the dashboard's Aj Crew scope
   (`~/.kiro/crew/mcp.json`) and kiro's global `mcp.json`, so a user-installed
   server needs nothing CC-specific. There is no second, CC-shaped registry to keep
   in sync, and the spec is read **per spawn** — installing or toggling a server
@@ -287,7 +287,7 @@ and effort selection, the full `session/request_permission` flow) works. So
   the session unable to report back to its channel — the exact defect this seam
   exists to fix, on precisely the installs that are most governed. The residual
   difference from kiro-cli is stated for what it is: an administrator who omits
-  `kirocrew-core` from the catalog has it dropped there and kept here (one
+  `ajcrew-core` from the catalog has it dropped there and kept here (one
   host-owned server wider), while every third-party server goes the other way.
 - **A server the MCP gateway brokers yields to its stub, and the MIRROR places
   the stubs.** The pooled broker emits a stub under the SAME name as the
@@ -319,8 +319,8 @@ and effort selection, the full `session/request_permission` flow) works. So
   for a spec-narrowed server stays mounted, unlike codex: the narrowing rides
   `permissions.deny` in `settings.local.json`, which matches the stub because it
   registers under the same server name.
-- **Crew's control plane is re-derived, not copied.** `kirocrew-core` and
-  `kirocrew-cron` come from `agent.managed_mcp_spec_entry`, so a stale hand-edited
+- **Crew's control plane is re-derived, not copied.** `ajcrew-core` and
+  `ajcrew-cron` come from `agent.managed_mcp_spec_entry`, so a stale hand-edited
   command in the spec cannot cost a session the tools it needs to report back at
   all. A missing or malformed spec degrades to the control plane alone; nothing in
   the path raises, because a bad element fails the whole `session/new`.
@@ -719,7 +719,7 @@ inherited"), which this path does not widen. The exclusion is never taken below
 pin moves the session to `default` like any other approving starting mode, and the
 session keeps Crew's tools in the asking mode instead of losing them all (#33829).
 
-With `KIROCREW_CC_PIN_INHERITED_MODE` on (`resolve_cc_pin_inherited_mode`; off by
+With `AJCREW_CC_PIN_INHERITED_MODE` on (`resolve_cc_pin_inherited_mode`; off by
 default, because it moves sessions out of a mode the user chose), the pin also runs on
 every other claude session that carries Crew's MCP array, after `session/new` and after
 `session/load`; a session without that array is left as it started. Which session
@@ -957,7 +957,7 @@ commands and skills are not listed: nothing records the adapter's
 ### A tool-less session
 
 A session whose agent spec declares `"tools": []` (the mirror's `zero_tools`, which
-covers the `kirocrew-lite` background helpers `_bg` and `_consolidate` and the
+covers the `ajcrew-lite` background helpers `_bg` and `_consolidate` and the
 knowledge pool's workers) mounts no tool at all, so the inherited-config gap below
 cannot reach it: an allow rule pre-approves only a tool that exists. It is started
 with `tools` empty, so none of Claude Code's built-ins (Bash, Write, WebFetch, ...)
@@ -1065,7 +1065,7 @@ user's real `~/.claude`. Project-scope `settings.local.json` outranks it for
 `defaultMode`, but Crew's seed names one only when the session requested a mode, so
 with no request a `defaultMode` there that approves on its own (`auto`,
 `bypassPermissions`) is the mode the session starts in and, by default, keeps.
-`KIROCREW_CC_PIN_INHERITED_MODE` closes that mode half of the gap: with it on, a
+`AJCREW_CC_PIN_INHERITED_MODE` closes that mode half of the gap: with it on, a
 session that carries Crew's tools and requested no mode is moved to `default` before
 its first prompt, on an adapter at or above `CLAUDE_ACP_SETTING_SOURCES_MIN_VERSION`
 (the pin above); below it, with no version reported, or on a session without Crew's
@@ -1132,7 +1132,7 @@ write puts them back. `test_claude_effort_live_clear.py` pins each outcome.
 
 ## Model registry
 
-`src/kiro_crew/model_registry.json` is the shared model data source for
+`src/aj_crew/model_registry.json` is the shared model data source for
 `model_registry.py` and `website/src/model_registry.json`.
 `test_frontend_registry_matches_python_source` compares their parsed JSON, and
 `website/src/providers/modelRegistry.ts` imports the frontend copy. The

@@ -8,10 +8,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.context import _neutralize_structural_markers
-from kiro_crew.dashboard import openai_compat
-from kiro_crew.dashboard.openai_compat import _flatten_messages, _make_id, api_completions
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
+from aj_crew.context import _neutralize_structural_markers
+from aj_crew.dashboard import openai_compat
+from aj_crew.dashboard.openai_compat import _flatten_messages, _make_id, api_completions
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService
 
 
 class _ReadyKiroPrerequisiteService(KiroPrerequisiteService):
@@ -253,7 +253,7 @@ async def test_named_slot_refuses_while_stage_controller_runs():
         slot.event.set()
 
     with patch(
-        "kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat
+        "aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat
     ) as run_chat:
         response = await api_completions(request)
 
@@ -340,7 +340,7 @@ class TestApiCompletionsBlocking:
             slot._pending.append({"cls": "done"})
             slot.event.set()
 
-        with patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat):
+        with patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat):
             resp = await api_completions(request)
 
         data = json.loads(resp.body)
@@ -389,7 +389,7 @@ class TestSlotTargeting:
             slot._pending.append({"cls": "done"})
             slot.event.set()
 
-        with patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat):
+        with patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat):
             await api_completions(request)
 
         # Should have called get_or_create_slot with the id value
@@ -414,8 +414,8 @@ class TestSlotTargeting:
             slot.event.set()
 
         with (
-            patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
-            patch("kiro_crew.dashboard.openai_compat._sync_dashboard_slots") as sync,
+            patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
+            patch("aj_crew.dashboard.openai_compat._sync_dashboard_slots") as sync,
         ):
             await api_completions(request)
 
@@ -443,7 +443,7 @@ class TestAgentMapping:
             slot._pending.append({"cls": "done"})
             slot.event.set()
 
-        with patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat):
+        with patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat):
             await api_completions(request)
 
         assert slot.agent == "oncall-triage"
@@ -486,8 +486,8 @@ class TestStreamingResponse:
             slot.event.set()
 
         with (
-            patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
-            patch("kiro_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
+            patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
+            patch("aj_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
         ):
             await api_completions(request)
 
@@ -524,8 +524,8 @@ class TestStreamingResponse:
             slot.event.set()
 
         with (
-            patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
-            patch("kiro_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
+            patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
+            patch("aj_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
         ):
             await api_completions(request)
 
@@ -556,9 +556,9 @@ class TestStreamingResponse:
             slot.event.set()
 
         with (
-            patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
-            patch("kiro_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
-            patch("kiro_crew.dashboard.openai_compat._sync_dashboard_slots") as sync,
+            patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
+            patch("aj_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
+            patch("aj_crew.dashboard.openai_compat._sync_dashboard_slots") as sync,
         ):
             await api_completions(request)
 
@@ -590,8 +590,8 @@ class TestStreamingResponse:
             slot.event.set()
 
         with (
-            patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
-            patch("kiro_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
+            patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
+            patch("aj_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
         ):
             await api_completions(request)
 
@@ -620,8 +620,8 @@ class TestStreamingResponse:
             slot.event.set()
 
         with (
-            patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
-            patch("kiro_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
+            patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
+            patch("aj_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
         ):
             await api_completions(request)
 
@@ -668,7 +668,7 @@ class TestBlockingEdgeCases:
             slot._pending.append({"cls": "done"})
             slot.event.set()
 
-        with patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat):
+        with patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat):
             resp = await api_completions(request)
 
         data = json.loads(resp.body)
@@ -682,7 +682,7 @@ class TestBlockingEdgeCases:
 
 _RUNTIME_ERROR_ROW = {
     "role": "error",
-    "content": "❌ the default agent spec kirocrew.json is missing",
+    "content": "❌ the default agent spec ajcrew.json is missing",
     "meta": None,
 }
 _RETRY_NOTICE_ROW = {
@@ -710,8 +710,8 @@ async def _complete(rows: list[dict], *, stream: bool):
         slot.event.set()
 
     with (
-        patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
-        patch("kiro_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
+        patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
+        patch("aj_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
     ):
         resp = await api_completions(request)
     return resp, "".join(w.decode() for w in written if isinstance(w, bytes))
@@ -735,7 +735,7 @@ class TestTurnErrorRow:
         assert data["code"] == "turn_failed"
         assert data["error"]["code"] == "turn_failed"
         assert data["error"]["type"] == "server_error"
-        assert "kirocrew.json is missing" in data["error"]["message"]
+        assert "ajcrew.json is missing" in data["error"]["message"]
         assert "choices" not in data
 
     async def test_stream_ends_on_the_error_frame_without_a_stop(self):
@@ -743,7 +743,7 @@ class TestTurnErrorRow:
 
         frames = _sse_frames(text)
         assert frames[-1]["error"]["code"] == "turn_failed"
-        assert "kirocrew.json is missing" in frames[-1]["error"]["message"]
+        assert "ajcrew.json is missing" in frames[-1]["error"]["message"]
         assert '"finish_reason": "stop"' not in text
         assert text.endswith("data: [DONE]\n\n")
 
@@ -846,7 +846,7 @@ class TestRemainingCoverage:
         }
         request = _make_request(body, state)
 
-        with patch("kiro_crew.dashboard.openai_compat._run_chat", new=AsyncMock()):
+        with patch("aj_crew.dashboard.openai_compat._run_chat", new=AsyncMock()):
             resp = await api_completions(request)
 
         assert resp.status == 400
@@ -899,10 +899,10 @@ class TestRemainingCoverage:
                 return await original_wait_for(coro, timeout=1)
 
         with (
-            patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
-            patch("kiro_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
+            patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
+            patch("aj_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
             patch(
-                "kiro_crew.dashboard.openai_compat.asyncio.wait_for", side_effect=patched_wait_for
+                "aj_crew.dashboard.openai_compat.asyncio.wait_for", side_effect=patched_wait_for
             ),
         ):
             await api_completions(request)
@@ -939,9 +939,9 @@ class TestRemainingCoverage:
                 return await original_wait_for(coro, timeout=1)
 
         with (
-            patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
+            patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
             patch(
-                "kiro_crew.dashboard.openai_compat.asyncio.wait_for", side_effect=patched_wait_for
+                "aj_crew.dashboard.openai_compat.asyncio.wait_for", side_effect=patched_wait_for
             ),
         ):
             resp = await api_completions(request)
@@ -973,8 +973,8 @@ class TestRemainingCoverage:
             slot.event.set()
 
         with (
-            patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
-            patch("kiro_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
+            patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
+            patch("aj_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
         ):
             await api_completions(request)
 
@@ -1049,7 +1049,7 @@ class TestAppKitOwnership:
             slot._pending.append({"cls": "done"})
             slot.event.set()
 
-        with patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat):
+        with patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat):
             resp = await api_completions(request)
 
         assert resp.status == 200
@@ -1073,7 +1073,7 @@ class TestAppKitOwnership:
             slot._pending.append({"cls": "done"})
             slot.event.set()
 
-        with patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat):
+        with patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat):
             resp = await api_completions(request)
 
         assert resp.status == 200
@@ -1168,7 +1168,7 @@ class TestUnsupportedRoles:
             slot._pending.append({"cls": "done"})
             slot.event.set()
 
-        with patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat):
+        with patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat):
             resp = await api_completions(request)
 
         assert resp.status == 200
@@ -1199,7 +1199,7 @@ class TestAgentMismatchFix:
             slot._pending.append({"cls": "done"})
             slot.event.set()
 
-        with patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat):
+        with patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat):
             resp = await api_completions(request)
 
         assert resp.status == 200
@@ -1212,7 +1212,7 @@ class TestAgentMismatchFix:
 
         body = {
             "id": "test-slot",
-            "model": "kirocrew",
+            "model": "ajcrew",
             "messages": [{"role": "user", "content": "hi"}],
             "stream": False,
         }
@@ -1295,11 +1295,11 @@ async def test_a_stream_write_the_client_never_drains_aborts_the_connection(monk
         slot.event.set()
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_handlers._SSE_WRITE_DEADLINE_SECS", 0.1, raising=False
+        "aj_crew.dashboard.chat_handlers._SSE_WRITE_DEADLINE_SECS", 0.1, raising=False
     )
     with (
-        patch("kiro_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
-        patch("kiro_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
+        patch("aj_crew.dashboard.openai_compat._run_chat", side_effect=fake_run_chat),
+        patch("aj_crew.dashboard.openai_compat.web.StreamResponse", return_value=mock_resp),
     ):
         task = asyncio.ensure_future(api_completions(request))
         finished, _ = await asyncio.wait({task}, timeout=10)

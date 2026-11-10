@@ -27,7 +27,7 @@ const EXPECTED = {
   before: [],
   after: [NOTICE],
   variants: [
-    '🔄 Switched to agent: kirocrew-worker',
+    '🔄 Switched to agent: ajcrew-worker',
     NOTICE,
     'Reasoning effort switched to high. Replies from here on use the new reasoning effort.',
     'Workspace switched to release-review. Replies from here on use the new workspace.',

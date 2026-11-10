@@ -19,7 +19,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import kiro_crew.subagent as sa
+import aj_crew.subagent as sa
 
 GIB = 1024**3
 ROOT = PurePosixPath("/sys/fs/cgroup")
@@ -91,7 +91,7 @@ def test_a_probe_on_another_thread_does_not_set_this_threads_cause(kernel) -> No
 
 
 def test_finite_ancestor_with_unreadable_usage(kernel, monkeypatch) -> None:
-    leaf = ROOT / "kirocrew.service"
+    leaf = ROOT / "ajcrew.service"
     monkeypatch.setattr(sa, "_cgroup_memory_roots", lambda: [(leaf, ROOT, True)])
     kernel[f"{ROOT}/memory.max"] = 8 * GIB  # ancestor limit, usage unreadable
     assert sa.check_memory_available(min_gb=4.0) == (False, 0.0)
@@ -109,11 +109,11 @@ def _mgr():
 def _spawn(mgr, *, min_gb: float = 4.0, memory=None):
     """Spawn with the memory guard on; ``memory`` mocks the check when given."""
     with ExitStack() as stack:
-        cfg = stack.enter_context(patch("kiro_crew.subagent.KiroCrewConfig"))
-        sel = stack.enter_context(patch("kiro_crew.subagent.sel"))
+        cfg = stack.enter_context(patch("aj_crew.subagent.AjCrewConfig"))
+        sel = stack.enter_context(patch("aj_crew.subagent.sel"))
         if memory is not None:
             stack.enter_context(
-                patch("kiro_crew.subagent.check_memory_available", return_value=memory)
+                patch("aj_crew.subagent.check_memory_available", return_value=memory)
             )
         cfg.load.return_value.agent.spawn_min_memory_gb = min_gb
         cfg.load.return_value.agent.subagent_cost_gb = 0.5
@@ -189,7 +189,7 @@ def test_measured_only_keeps_the_host_reading(kernel) -> None:
 
 
 def test_measured_only_keeps_a_readable_ancestor(kernel, monkeypatch) -> None:
-    leaf = ROOT / "kirocrew.service"
+    leaf = ROOT / "ajcrew.service"
     monkeypatch.setattr(sa, "_cgroup_memory_roots", lambda: [(leaf, ROOT, True)])
     kernel[f"{leaf}/memory.max"] = 8 * GIB  # leaf limit, usage unreadable
     kernel[f"{ROOT}/memory.max"] = 8 * GIB

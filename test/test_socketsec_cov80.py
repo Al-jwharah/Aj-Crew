@@ -29,8 +29,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.mcp_gateway import socketsec
+from aj_crew import platform_compat as pc
+from aj_crew.mcp_gateway import socketsec
 
 pytestmark = pytest.mark.skipif(pc.IS_WINDOWS, reason="exercises the POSIX build")
 

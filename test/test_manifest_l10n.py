@@ -13,13 +13,13 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps.manifest import (
+from aj_crew.apps.manifest import (
     MAX_L10N_LOCALES,
     AppManifest,
     L10nConfig,
     L10nEntry,
 )
-from kiro_crew.apps.manifest_sections import MAX_L10N_WARNINGS
+from aj_crew.apps.manifest_sections import MAX_L10N_WARNINGS
 
 _BASE: dict[str, Any] = {
     "name": "l10n-probe",
@@ -166,13 +166,13 @@ def test_l10n_is_not_in_the_signed_payload() -> None:
 def test_install_validation_warns_and_does_not_refuse(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
-    from kiro_crew.apps.manager_tree import _validate_source_path
+    from aj_crew.apps.manager_tree import _validate_source_path
 
     (tmp_path / "app.json").write_text(
         json.dumps({**_BASE, "l10n": {"de": {"displayName": 5}, "fr": {"displayName": "S"}}}),
         encoding="utf-8",
     )
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.manager"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.apps.manager"):
         errors = _validate_source_path(tmp_path)
     assert errors == []
     assert any("l10n.de: displayName must be a string" in r.getMessage() for r in caplog.records)

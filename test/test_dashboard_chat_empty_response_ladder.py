@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from test_dashboard_chat_empty_response import TestEmptyResponseRetry as _EmptyRetrySuite
 
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.state import _ChatSlot
 
 
 class TestEmptyResponseRetryLadder:
@@ -43,14 +43,14 @@ class TestEmptyResponseRetryLadder:
 
         with (
             patch.object(_ChatSlot, "queue_insert", spy),
-            patch("kiro_crew.dashboard.chat_runner.save_slot_off_loop") as mock_save,
-            patch("kiro_crew.dashboard.chat_runner._maybe_consolidate") as mock_consolidate,
+            patch("aj_crew.dashboard.chat_runner.save_slot_off_loop") as mock_save,
+            patch("aj_crew.dashboard.chat_runner._maybe_consolidate") as mock_consolidate,
             patch(
-                "kiro_crew.dashboard.chat_runner._flush_file_changes_off_loop",
+                "aj_crew.dashboard.chat_runner._flush_file_changes_off_loop",
                 new=AsyncMock(return_value=None),
             ) as mock_flush,
             patch(
-                "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+                "aj_crew.dashboard.chat_runner._start_next_queued_turn",
                 new=AsyncMock(return_value=False),
             ),
         ):
@@ -138,7 +138,7 @@ class TestEmptyResponseRetryLadder:
         the identical prompt reproduces the identical empty generation; a
         DIFFERENT message reliably recovers — this automates the user manually
         typing "continue"."""
-        from kiro_crew.dashboard.chat_runner import _EMPTY_AUTO_CONTINUE_MSG
+        from aj_crew.dashboard.chat_runner import _EMPTY_AUTO_CONTINUE_MSG
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         slot._empty_response_retries = 1  # already silently retried once
@@ -172,7 +172,7 @@ class TestEmptyResponseRetryLadder:
         instruction as user-authored history and mirror it to linked
         channels), and it MUST NOT cancel a pending synthesis (the user did
         not take over the conversation)."""
-        from kiro_crew.dashboard.chat_runner import _EMPTY_AUTO_CONTINUE_MSG
+        from aj_crew.dashboard.chat_runner import _EMPTY_AUTO_CONTINUE_MSG
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         slot._empty_response_retries = 1  # next empty triggers the nudge rung
@@ -223,8 +223,8 @@ class TestEmptyResponseRetryLadder:
         the card is read by the model via the transcript, and telling it the
         completed work produced no output invites a redo of side effects that
         already landed. Same distinction the continue rung draws one rung up."""
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import (
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TOOL_CALL,
             EVENT_TOOL_RESULT,
@@ -265,8 +265,8 @@ class TestEmptyResponseRetryLadder:
         ladders, so only episode state stops a "send your message again" invitation
         after a tool already ran.
         """
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import (
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TOOL_CALL,
             EVENT_TOOL_RESULT,
@@ -355,7 +355,7 @@ class TestEmptyResponseRetryLadder:
 
         User speech has no payload marker; that marker, not the body text, keys the episode.
         """
-        from kiro_crew.dashboard.chat_utils import _ACTIVITY_NO_REPLY_CONTINUE_MSG
+        from aj_crew.dashboard.chat_utils import _ACTIVITY_NO_REPLY_CONTINUE_MSG
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         slot._empty_response_retries = 2
@@ -384,7 +384,7 @@ class TestEmptyResponseRetryLadder:
         A Stop hook's `decision: block` dispatches ahead of the ladder's continuation in
         the same episode, which is why the episode is keyed on user origin, not bodies.
         """
-        from kiro_crew.dashboard.chat_utils import _PROMISE_ONLY_CONTINUE_MSG
+        from aj_crew.dashboard.chat_utils import _PROMISE_ONLY_CONTINUE_MSG
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         # Mid-episode: a productive turn has spent the budget and set the flag.
@@ -420,7 +420,7 @@ class TestEmptyResponseRetryLadder:
         With a budget of 2 the next empty turn passes rung 2 (`2 < 1 + 2`) and queues a
         real ladder continuation, so the evidence must be dropped when the episode ends.
         """
-        from kiro_crew.dashboard import chat_runner as cr
+        from aj_crew.dashboard import chat_runner as cr
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         monkeypatch.setattr(cr, "_empty_max_auto_continues", lambda: 2)
@@ -455,13 +455,13 @@ class TestEmptyResponseRetryLadder:
         Both carry `_ACTIVITY_NO_REPLY_CONTINUE_MSG`; the second follows an empty one, and
         `_EMPTY_AUTO_CONTINUE_MSG` there would invite a redo of tools that already ran.
         """
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.dashboard import chat_runner as cr
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.dashboard import chat_runner as cr
+        from aj_crew.dashboard.chat_utils import (
             _ACTIVITY_NO_REPLY_CONTINUE_MSG,
             _EMPTY_AUTO_CONTINUE_MSG,
         )
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TOOL_CALL,
             EVENT_TOOL_RESULT,
@@ -573,12 +573,12 @@ class TestEmptyResponseRetryLadder:
         self._make_empty_stream(client)
 
         # Exercise the REAL config path (loader wiring included): persist the
-        # flag as false in a config file and point KiroCrewConfig.load() at it,
+        # flag as false in a config file and point AjCrewConfig.load() at it,
         # rather than patching the gate function (which would pass even if the
         # loader dropped the field — the exact regression this test guards).
         cfg_file = tmp_path / "flag-off-config.json"
         cfg_file.write_text('{"session": {"empty_response_auto_continue": false}}')
-        with patch("kiro_crew.config.loader.config_path", return_value=cfg_file):
+        with patch("aj_crew.config.loader.config_path", return_value=cfg_file):
             await _run_chat(state, slot, "test message")
 
         notice_msgs = [m for m in slot.messages if m.get("role") == "notice"]
@@ -600,7 +600,7 @@ class TestEmptyResponseRetryLadder:
         reads as advancing, not looping — instead of giving up after one.
         Exercises the REAL config path like the flag-off test above, so a
         loader that drops the field fails this test too."""
-        from kiro_crew.dashboard.chat_runner import _EMPTY_AUTO_CONTINUE_MSG
+        from aj_crew.dashboard.chat_runner import _EMPTY_AUTO_CONTINUE_MSG
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         slot._empty_response_retries = 2  # replay + first continue spent
@@ -616,7 +616,7 @@ class TestEmptyResponseRetryLadder:
         cfg_file = tmp_path / "max-continues-config.json"
         cfg_file.write_text('{"session": {"empty_response_max_continues": 3}}')
         with (
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_file),
             patch.object(_ChatSlot, "queue_insert", spy),
         ):
             await _run_chat(state, slot, "test message")
@@ -638,7 +638,7 @@ class TestEmptyResponseRetryLadder:
 
         cfg_file = tmp_path / "max-continues-config.json"
         cfg_file.write_text('{"session": {"empty_response_max_continues": 3}}')
-        with patch("kiro_crew.config.loader.config_path", return_value=cfg_file):
+        with patch("aj_crew.config.loader.config_path", return_value=cfg_file):
             await _run_chat(state, slot, "test message")
 
         notice_msgs = [m for m in slot.messages if m.get("role") == "notice"]
@@ -648,7 +648,7 @@ class TestEmptyResponseRetryLadder:
     @pytest.mark.asyncio
     async def test_successful_response_resets_counter(self, tmp_path: Path) -> None:
         """A successful (non-empty) response resets the retry counter."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         slot._empty_response_retries = 1  # had a prior empty
@@ -667,7 +667,7 @@ class TestEmptyResponseRetryLadder:
     @pytest.mark.asyncio
     async def test_compaction_turn_no_empty_response_error(self, tmp_path: Path) -> None:
         """Compaction turns set assistant_text='' but should NOT trigger the empty-response notice."""
-        from kiro_crew.providers.base import EVENT_COMPACTION_STATUS, EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPACTION_STATUS, EVENT_COMPLETE, LLMEvent
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
 
@@ -689,7 +689,7 @@ class TestEmptyResponseRetryLadder:
         from chat_test_helpers import pin_kiro_cli_harness
 
         pin_kiro_cli_harness()
-        from kiro_crew.providers.base import EVENT_CLEAR_STATUS, EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_CLEAR_STATUS, EVENT_COMPLETE, LLMEvent
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         state.sessions.provider_switch_replay_pending = MagicMock(return_value=True)
@@ -721,11 +721,11 @@ class TestEmptyResponseRetryLadder:
         self, tmp_path: Path, monkeypatch
     ) -> None:
         """Agent switch turns set assistant_text='' but should NOT trigger the empty-response notice."""
-        from kiro_crew.providers.base import EVENT_AGENT_SWITCHED, EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_AGENT_SWITCHED, EVENT_COMPLETE, LLMEvent
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.config.loader._materialized_kiro_agent",
+            "aj_crew.config.loader._materialized_kiro_agent",
             lambda name, project_dir=None: name if name == "new-agent" else "",
         )
 

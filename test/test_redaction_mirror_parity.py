@@ -49,7 +49,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from kiro_crew.security import _CREDENTIAL_PATTERNS
+from aj_crew.security import _CREDENTIAL_PATTERNS
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -59,17 +59,17 @@ ROOT = Path(__file__).resolve().parents[1]
 # any of them — or in `__init__.py` — would be just as live. Scanning the whole
 # tree keeps the absence guard below correct across further splits, which is the
 # failure mode that already retired the single-file path this replaced.
-BACKEND_PKG = ROOT / "src" / "kiro_crew" / "security"
+BACKEND_PKG = ROOT / "src" / "aj_crew" / "security"
 # The module that owns the exfil URL classifier today. Named separately so a
 # guard can point at the enforcing site while the sweep stays package-wide.
 BACKEND_EXFIL = BACKEND_PKG / "exfil.py"
 # The owner beside it that declares the URL rule tables the classifier applies.
 BACKEND_EXFIL_RULES = BACKEND_PKG / "exfil_url_rules.py"
 PREPARE_PR = (
-    ROOT / "src" / "kiro_crew" / "builtin_skills" / "kirocrew-dev" / "kirocrew-prepare-pr" / "scripts" / "_review_contract.py"
+    ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "ajcrew-prepare-pr" / "scripts" / "_review_contract.py"
 )
 FRONTEND = ROOT / "website" / "src" / "utils" / "sanitize.ts"
-TOKEN_MINT = ROOT / "src" / "kiro_crew" / "instances" / "token_mint.py"
+TOKEN_MINT = ROOT / "src" / "aj_crew" / "instances" / "token_mint.py"
 
 
 def _jwt_alternatives() -> tuple[str, str]:
@@ -320,7 +320,7 @@ class TestPrefilledIssueCarveOutParity:
         If the structured path is removed or renamed, the pressure to re-add a
         redactor waiver returns and this test is the place that says so.
         """
-        diagnostics = (ROOT / "src" / "kiro_crew" / "diagnostics.py").read_text(encoding="utf-8")
+        diagnostics = (ROOT / "src" / "aj_crew" / "diagnostics.py").read_text(encoding="utf-8")
         assert "def _issue_url(" in diagnostics
         assert "github_issue_url" in diagnostics
         renderer = (
@@ -340,7 +340,7 @@ def test_blocked_link_card_offers_allow_only_for_hosts_the_server_accepts() -> N
     card offers an Allow the server always refuses, or hides one it would
     accept. The expectation is derived from the backend regex at run time.
     """
-    from kiro_crew.security import redaction_allow
+    from aj_crew.security import redaction_allow
 
     backend = redaction_allow._HOST_RE.pattern
     assert backend.startswith("\\A") and backend.endswith("\\Z")

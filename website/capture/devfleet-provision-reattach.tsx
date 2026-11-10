@@ -36,14 +36,14 @@ const params = new URLSearchParams(location.search)
 const scene = params.get('scene') || 'running'
 const theme = params.get('theme') || 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const NOW = Date.now() / 1000
 
 const RUNNING_LINES = [
   '[provision] creating venv \u2026',
   'Collecting build dependencies',
-  'Installing collected packages: kiro-crew',
+  'Installing collected packages: aj-crew',
   '[provision] building dist \u2026',
   'vite v5.4.20 building for production...',
   'transforming (412) src/apps/dev-fleet/DevFleetPage.tsx',
@@ -62,12 +62,12 @@ const STEPERR_LINES = [
   '[provision] creating venv for kc-wt-oauth-device-flow (one-time, ~1 min)\u2026',
   '  $ /usr/bin/python3.12 -m venv /w/kc-wt-oauth-device-flow/.venv  (cwd=/w/kc-wt-oauth-device-flow)',
   '  $ /w/kc-wt-oauth-device-flow/.venv/bin/pip install --editable /w/kc-wt-oauth-device-flow  (cwd=/w/kc-wt-oauth-device-flow)',
-  "ERROR: Could not install packages due to an OSError: [Errno 13] Permission denied: '/w/kc-wt-oauth-device-flow/.venv/lib/python3.12/site-packages/kiro_crew.pth'",
+  "ERROR: Could not install packages due to an OSError: [Errno 13] Permission denied: '/w/kc-wt-oauth-device-flow/.venv/lib/python3.12/site-packages/aj_crew.pth'",
   'Consider using the `--user` option or check the permissions.',
   'Obtaining file:///w/kc-wt-oauth-device-flow',
   '  Installing build dependencies: started',
   "  Installing build dependencies: finished with status 'done'",
-  "::steperr::2::ERROR: Could not install packages due to an OSError: [Errno 13] Permission denied: '/w/kc-wt-oauth-device-flow/.venv/lib/python3.12/site-packages/kiro_crew.pth'",
+  "::steperr::2::ERROR: Could not install packages due to an OSError: [Errno 13] Permission denied: '/w/kc-wt-oauth-device-flow/.venv/lib/python3.12/site-packages/aj_crew.pth'",
   '::steperr::2::Consider using the `--user` option or check the permissions.',
   "pod: provisioning 'kc-wt-oauth-device-flow' failed (see output above)",
 ]

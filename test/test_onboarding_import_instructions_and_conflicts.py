@@ -28,8 +28,8 @@ from onboarding_import_helpers import (  # noqa: F401 -- the autouse fixture reg
     _register_predecessor_source,
 )
 
-from kiro_crew import onboarding_apply, onboarding_plan
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import onboarding_apply, onboarding_plan
+from aj_crew.vector_memory import VectorMemoryStore
 
 # Keep apply_import's MCP sidecar lock off the real ~/.kiro/settings (see the
 # shared fixture in test/conftest.py).
@@ -38,9 +38,9 @@ pytestmark = pytest.mark.usefixtures("isolate_mcp_host_paths")
 
 def _api() -> ModuleType:
     try:
-        return importlib.import_module("kiro_crew.onboarding_import")
+        return importlib.import_module("aj_crew.onboarding_import")
     except ModuleNotFoundError:
-        pytest.fail("kiro_crew.onboarding_import is not implemented")
+        pytest.fail("aj_crew.onboarding_import is not implemented")
 
 
 class TestInstructionImport:
@@ -183,7 +183,7 @@ class TestConflictStrategies:
                 "resolvable": True,
             }
         ]
-        # Kiro Crew's copy is untouched.
+        # Aj Crew's copy is untouched.
         assert self._installed(destination) == {"codex/review": "# Original\n"}
 
     def test_rename_installs_alongside_and_reports_the_new_name(self, tmp_path: Path) -> None:
@@ -378,7 +378,7 @@ class TestReviewFindings:
         delete one, so the writer refuses past the store's REMAINING capacity.
         """
         api = _api()
-        from kiro_crew.learn import _MAX_LESSONS_TOTAL, Lesson, LessonStore
+        from aj_crew.learn import _MAX_LESSONS_TOTAL, Lesson, LessonStore
 
         home = tmp_path / "home"
         codex = home / ".codex"
@@ -758,7 +758,7 @@ class TestReviewFindings:
         and never falls back when it is non-empty).
         """
         api = _api()
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew.vector_memory import VectorMemoryStore
 
         home = tmp_path / "home"
         codex = home / ".codex"
@@ -794,7 +794,7 @@ class TestReviewFindings:
         directive delete a correction the USER taught the agent.
         """
         api = _api()
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew.vector_memory import VectorMemoryStore
 
         home = tmp_path / "home"
         codex = home / ".codex"
@@ -932,7 +932,7 @@ class TestReviewFindings:
                     assert category["count"] <= onboarding_plan._MAX_IMPORTED_LESSONS
         destination = tmp_path / "destination"
         result = api.apply_import(plan, data_home=destination)
-        from kiro_crew.learn import _MAX_LESSONS_TOTAL, LessonStore
+        from aj_crew.learn import _MAX_LESSONS_TOTAL, LessonStore
 
         assert len(LessonStore(base_dir=destination).load_all()) <= _MAX_LESSONS_TOTAL
         assert result["imported"]["instructions"] <= total
@@ -986,7 +986,7 @@ class TestReviewFindings:
         ledger preventing a re-import.
         """
         api = _api()
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew.vector_memory import VectorMemoryStore
 
         home = tmp_path / "home"
         codex = home / ".codex"

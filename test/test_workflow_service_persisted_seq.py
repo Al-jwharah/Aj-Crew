@@ -12,9 +12,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.workflow_memory import _RUN_ID_MAX
-from kiro_crew.workflows.registry import RunHandle, RunRegistry
-from kiro_crew.workflows.service import WorkflowService
+from aj_crew.workflow_memory import _RUN_ID_MAX
+from aj_crew.workflows.registry import RunHandle, RunRegistry
+from aj_crew.workflows.service import WorkflowService
 
 
 def _seq_over(*run_ids: str) -> int:

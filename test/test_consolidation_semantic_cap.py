@@ -26,10 +26,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from consolidation_lease_helpers import lease_aware_log
 
-from kiro_crew import executors
-from kiro_crew.history import HistoryConsolidator
-from kiro_crew.history_consolidation import _bounded_semantic_table
-from kiro_crew.vector_memory_constants import _SEMANTIC_PROMPT_CAP_PER_CONSOLIDATION
+from aj_crew import executors
+from aj_crew.history import HistoryConsolidator
+from aj_crew.history_consolidation import _bounded_semantic_table
+from aj_crew.vector_memory_constants import _SEMANTIC_PROMPT_CAP_PER_CONSOLIDATION
 
 _HEADING = "\n\n## Current Semantic Memory\n"
 _NEXT_HEADING = "\n\n## Conversation to Process\n"
@@ -269,7 +269,7 @@ def _write(
 ) -> MagicMock:
     vector_store = _writer_store(rows)
     c = _consolidator(vector_store)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
         c._write_structured_memory(
             {"semantic": items},
             "k",
@@ -330,8 +330,8 @@ async def test_the_member_store_is_handed_no_delete_of_a_key_below_the_cut(
     read is dropped; the correction for a row below the cut and the brand-new
     key travel through, and the one refusal is logged with the key.
     """
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew.context import ContextBuilder
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
     rows = _oversized_table()
     vector_store = _store_with(rows)
@@ -343,13 +343,13 @@ async def test_the_member_store_is_handed_no_delete_of_a_key_below_the_cut(
         "member-id",
         MemoryStoreRef("member-store", "member-id"),
         "member",
-        "kirocrew",
+        "ajcrew",
         "persistent",
     )
     monkeypatch.setattr(
-        "kiro_crew.execution_context.read_session_execution", lambda _key: execution
+        "aj_crew.execution_context.read_session_execution", lambda _key: execution
     )
-    monkeypatch.setattr("kiro_crew.memory_stores.memory_store_version", lambda _store: 2)
+    monkeypatch.setattr("aj_crew.memory_stores.memory_store_version", lambda _store: 2)
     monkeypatch.setattr(ContextBuilder, "ensure_store", AsyncMock(return_value=vector_store))
     c = _consolidator(vector_store)
     monkeypatch.setattr(ContextBuilder, "get_memory_for", lambda **_kwargs: c._memory)
@@ -374,7 +374,7 @@ async def test_the_member_store_is_handed_no_delete_of_a_key_below_the_cut(
 
     with (
         patch.object(c, "_call_llm", side_effect=fake_llm),
-        caplog.at_level(logging.WARNING, logger="kiro_crew.history"),
+        caplog.at_level(logging.WARNING, logger="aj_crew.history"),
     ):
         await c._consolidate("k", include_history=False)
 

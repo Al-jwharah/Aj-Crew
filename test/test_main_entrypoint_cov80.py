@@ -1,7 +1,7 @@
-"""``kiro_crew.__main__`` — the ordering contract of the ``python -m`` entry point.
+"""``aj_crew.__main__`` — the ordering contract of the ``python -m`` entry point.
 
 The module is tiny but load-bearing, and its own docstring states the invariant
-that makes it so: ``_ensure_ssl_certs()`` must run BEFORE ``kiro_crew.cli`` is
+that makes it so: ``_ensure_ssl_certs()`` must run BEFORE ``aj_crew.cli`` is
 imported, because that import pulls in ``aiohttp``, which caches its default SSL
 context at import time. Get the order wrong and every HTTPS call in the process
 fails with CERTIFICATE_VERIFY_FAILED on a host whose cafile is missing — a
@@ -32,15 +32,15 @@ import pytest
 # The entry point is imported at module scope so its body has run under a plain
 # ``__name__`` at least once in this process: that is the guard DECLINING, which
 # the exec-based tests below cannot show. Both of its side effects are idempotent
-# (``kiro_crew.cli`` applies the same SSL fix on import), so importing it here
+# (``aj_crew.cli`` applies the same SSL fix on import), so importing it here
 # costs nothing and starts no CLI.
-import kiro_crew.__main__  # noqa: F401
+import aj_crew.__main__  # noqa: F401
 
-# Imported eagerly for a different reason: ``kiro_crew.cli`` calls
+# Imported eagerly for a different reason: ``aj_crew.cli`` calls
 # ``_ensure_ssl_certs()`` at import time too, so importing it lazily from inside
 # the fixture would record a spurious first "ssl" and hide the ordering this
 # file exists to pin.
-from kiro_crew import cli as cli_mod
+from aj_crew import cli as cli_mod
 
 _ENTRYPOINT = Path(cli_mod.__file__).with_name("__main__.py")
 
@@ -62,11 +62,11 @@ def order(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     """Record the module's side effects in call order, executing none of them."""
     calls: list[str] = []
     monkeypatch.setattr(
-        "kiro_crew.platform_compat.ensure_utf8_console",
+        "aj_crew.platform_compat.ensure_utf8_console",
         lambda: calls.append("utf8"),
     )
     monkeypatch.setattr(
-        "kiro_crew._ssl_compat._ensure_ssl_certs",
+        "aj_crew._ssl_compat._ensure_ssl_certs",
         lambda: calls.append("ssl"),
     )
     monkeypatch.setattr(cli_mod, "main", lambda: calls.append("main"))
@@ -77,8 +77,8 @@ def test_importing_the_module_applies_both_fixes_in_order(
     order: list[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A plain import runs the console + SSL fixes and stops at the guard."""
-    monkeypatch.delitem(sys.modules, "kiro_crew.__main__", raising=False)
-    module = importlib.import_module("kiro_crew.__main__")
+    monkeypatch.delitem(sys.modules, "aj_crew.__main__", raising=False)
+    module = importlib.import_module("aj_crew.__main__")
     assert order == ["utf8", "ssl"]
     # The guard was evaluated and declined: no CLI entry point was bound.
     assert not hasattr(module, "main")
@@ -95,6 +95,6 @@ def test_run_as_main_fixes_the_console_and_ssl_before_starting_the_cli(
 
 def test_executed_as_a_plain_module_does_not_start_the_cli(order: list[str]) -> None:
     """Only the ``__main__`` guard may call into the CLI."""
-    namespace = _exec_entrypoint("kiro_crew.__main__")
+    namespace = _exec_entrypoint("aj_crew.__main__")
     assert order == ["utf8", "ssl"]
     assert "main" not in namespace

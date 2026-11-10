@@ -1,13 +1,13 @@
-"""Per-tool ``@kirocrew-core/<tool>`` refs as an include list, behind an opt-in.
+"""Per-tool ``@ajcrew-core/<tool>`` refs as an include list, behind an opt-in.
 
 A spec that sets ``managedToolPolicy.honourToolRefs: true`` and grants
-kirocrew-core only tool by tool gets an ``include`` in its tool-policy answer;
-kirocrew-core then lists only those tools and refuses any other call. Every
-other spec -- the opt-in absent or ``false``, a bare ``@kirocrew-core``, ``*``,
+ajcrew-core only tool by tool gets an ``include`` in its tool-policy answer;
+ajcrew-core then lists only those tools and refuses any other call. Every
+other spec -- the opt-in absent or ``false``, a bare ``@ajcrew-core``, ``*``,
 a glob tool part -- gets the answer and the tool list it gets without the key.
 
 Three layers, each tested on its own: the ``tools`` reader
-(:func:`kiro_crew.agent_sdk.mcp_refs.per_tool_grants`), the gateway's policy
+(:func:`aj_crew.agent_sdk.mcp_refs.per_tool_grants`), the gateway's policy
 read, and the managed server's ``tools/list`` / ``tools/call`` handling.
 """
 
@@ -26,14 +26,14 @@ from unittest.mock import MagicMock
 import pytest
 from named_cases_helpers import named_cases
 
-import kiro_crew.mcp_shared as mcp_shared
-from kiro_crew.agent_sdk.mcp_refs import per_tool_grants
-from kiro_crew.dashboard.handlers import sessions as sessions_mod
-from kiro_crew.testing.wait import wait_until
+import aj_crew.mcp_shared as mcp_shared
+from aj_crew.agent_sdk.mcp_refs import per_tool_grants
+from aj_crew.dashboard.handlers import sessions as sessions_mod
+from aj_crew.testing.wait import wait_until
 
 AGENT = "narrow-agent"
-CORE = "kirocrew-core"
-DASHBOARD = "kirocrew-dashboard"
+CORE = "ajcrew-core"
+DASHBOARD = "ajcrew-dashboard"
 
 
 # --------------------------------------------------------------------------- #
@@ -65,7 +65,7 @@ class TestPerToolGrants:
             *named_cases(
                 "test_no_ref_to_the_server_names_no_include",
                 "tools",
-                [[], ["fs_read"], ["@kirocrew-cron/cron_add"], [f"@{CORE}-extra/x"], None, "nope"],
+                [[], ["fs_read"], ["@ajcrew-cron/cron_add"], [f"@{CORE}-extra/x"], None, "nope"],
                 ids=[
                     "empty",
                     "builtin-only",
@@ -109,7 +109,7 @@ class TestGatewayPolicyAnswer:
     def test_per_tool_refs_to_an_opt_in_managed_server_answer_its_include(
         self, tmp_path: Path
     ) -> None:
-        """Every managed server is narrowed the same way, not only kirocrew-core: a
+        """Every managed server is narrowed the same way, not only ajcrew-core: a
         spec granting the dashboard server tool by tool lists only those tools."""
         policy = _policy_for(
             tmp_path,
@@ -125,7 +125,7 @@ class TestGatewayPolicyAnswer:
 
     def test_each_managed_server_is_read_on_its_own(self, tmp_path: Path) -> None:
         """A whole-server grant on one managed server does not stop another from
-        being narrowed, and a server Kiro Crew does not ship is never narrowed."""
+        being narrowed, and a server Aj Crew does not ship is never narrowed."""
         policy = _policy_for(
             tmp_path,
             {
@@ -140,9 +140,9 @@ class TestGatewayPolicyAnswer:
         assert policy == {"honourToolRefs": True, "include": {DASHBOARD: ["session_send"]}}
 
     def test_every_managed_server_is_eligible(self) -> None:
-        from kiro_crew.mcp_cleanup import KIROCREW_BIN_MCP_SERVERS
+        from aj_crew.mcp_cleanup import AJCREW_BIN_MCP_SERVERS
 
-        assert set(sessions_mod.INCLUDE_LIST_SERVERS) == set(KIROCREW_BIN_MCP_SERVERS)
+        assert set(sessions_mod.INCLUDE_LIST_SERVERS) == set(AJCREW_BIN_MCP_SERVERS)
         assert {CORE, DASHBOARD} <= set(sessions_mod.INCLUDE_LIST_SERVERS)
 
     @pytest.mark.parametrize(
@@ -229,7 +229,7 @@ class TestPolicyResolution:
         first = mcp_shared._resolve_tool_policy("dashboard:alice")
         assert first.unresolved == ""
         assert first.include_for(CORE) == frozenset({"skill_search"})
-        assert first.include_for("kirocrew-cron") is None
+        assert first.include_for("ajcrew-cron") is None
         gateway["body"] = b"{}"
         cached = mcp_shared._resolve_tool_policy("dashboard:alice")
         assert cached.include_for(CORE) == frozenset({"skill_search"})
@@ -358,7 +358,7 @@ class TestManagedServerHonoursInclude:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         ran: list[str] = []
-        loop = _Loop(monkeypatch, "kirocrew-cron", _narrowing(CORE), ran)
+        loop = _Loop(monkeypatch, "ajcrew-cron", _narrowing(CORE), ran)
         try:
             assert loop.listed(1) == ["skill_search", "spawn_run"]
             assert "ok" in loop.call(2, "spawn_run")
@@ -388,9 +388,9 @@ class TestExcludeServers:
     def test_each_named_server_is_answered_as_an_empty_include(self, tmp_path: Path) -> None:
         policy = _policy_for(
             tmp_path,
-            {"managedToolPolicy": {"exclude": ["x"], "excludeServers": ["kirocrew-cron"]}},
+            {"managedToolPolicy": {"exclude": ["x"], "excludeServers": ["ajcrew-cron"]}},
         )
-        assert policy == {"exclude": ["x"], "include": {"kirocrew-cron": []}}
+        assert policy == {"exclude": ["x"], "include": {"ajcrew-cron": []}}
 
     def test_it_overrides_an_opted_in_per_tool_include(self, tmp_path: Path) -> None:
         policy = _policy_for(
@@ -402,7 +402,7 @@ class TestExcludeServers:
         )
         assert policy == {"honourToolRefs": True, "include": {CORE: []}}
 
-    @pytest.mark.parametrize("value", ["kirocrew-cron", None, [3], [""], {"a": 1}])
+    @pytest.mark.parametrize("value", ["ajcrew-cron", None, [3], [""], {"a": 1}])
     def test_a_malformed_value_is_unreadable(self, tmp_path: Path, value: Any) -> None:
         with pytest.raises(sessions_mod.ManagedToolPolicyUnreadable, match="excludeServers"):
             _policy_for(tmp_path, {"managedToolPolicy": {"excludeServers": value}})
@@ -426,8 +426,8 @@ class TestExcludeServers:
             loop.close()
 
     def test_the_answer_round_trips_through_the_server_read(self, gateway) -> None:
-        gateway["body"] = json.dumps({"include": {"kirocrew-cron": []}}).encode()
+        gateway["body"] = json.dumps({"include": {"ajcrew-cron": []}}).encode()
         policy = mcp_shared._resolve_tool_policy("dashboard:dave")
         assert policy.unresolved == ""
-        assert policy.include_for("kirocrew-cron") == frozenset()
+        assert policy.include_for("ajcrew-cron") == frozenset()
         assert policy.include_for(CORE) is None

@@ -20,10 +20,10 @@ import pytest
 from member_memory_helpers import forget_declared_stores
 from test_member_memory_upgrade import LESSON_KEY, _write_legacy_database
 
-from kiro_crew import member_memory_backup as member_backup
-from kiro_crew import memory_backup, memory_schema, memory_stores
-from kiro_crew.config import loader
-from kiro_crew.vector_memory import (
+from aj_crew import member_memory_backup as member_backup
+from aj_crew import memory_backup, memory_schema, memory_stores
+from aj_crew.config import loader
+from aj_crew.vector_memory import (
     create_member_database,
     open_member_database,
     read_member_database_identity,
@@ -39,7 +39,7 @@ MEMBER_ID = "reviewer-7f3a"
 @pytest.fixture
 def live(tmp_path, monkeypatch):
     """A member store as the store upgrade leaves it: alias and identity both recorded."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     config = {
         "memory_stores": {
             "default": {},
@@ -237,7 +237,7 @@ def test_an_activation_stopped_after_the_database_completed_retries(live, monkey
     legacy_stage = out / journal["stage"]
     staged = (legacy_stage / "memory.db").read_bytes()
     before = live.read_bytes()
-    # A scoped patch: undo() would also drop the fixture's KIROCREW_HOME.
+    # A scoped patch: undo() would also drop the fixture's AJCREW_HOME.
     with monkeypatch.context() as patch:
         if stop == "completion":
             patch.setattr(
@@ -343,7 +343,7 @@ def test_the_legacy_completion_uses_the_fts5_capable_driver(live, monkeypatch):
     interpreters, so both legacy helpers must open the database through the
     driver every other memory path uses, never the bare standard library.
     """
-    from kiro_crew import _sqlite_compat
+    from aj_crew import _sqlite_compat
 
     real = _sqlite_compat.sqlite3
     opened: list[str] = []

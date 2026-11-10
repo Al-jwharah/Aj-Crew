@@ -9,8 +9,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import cli_doctor
-from kiro_crew import platform_compat as pc
+from aj_crew import cli_doctor
+from aj_crew import platform_compat as pc
 
 _MIB = 1024 * 1024
 
@@ -72,7 +72,7 @@ class TestDoctorGatewayRss:
 
         cfg = MagicMock()
         cfg.session.watchdog_rss_max_mb = 1536
-        monkeypatch.setattr(cli_doctor.KiroCrewConfig, "load", lambda: cfg)
+        monkeypatch.setattr(cli_doctor.AjCrewConfig, "load", lambda: cfg)
         monkeypatch.setattr(cli_doctor, "_read_gateway_pid", lambda: 4242)
         monkeypatch.setattr(pc, "IS_WINDOWS", False)
         monkeypatch.setattr(pc, "IS_MACOS", True)

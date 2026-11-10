@@ -1,4 +1,4 @@
-"""``kirocrew artifact show --version N`` reads version N, and N starts at 1.
+"""``ajcrew artifact show --version N`` reads version N, and N starts at 1.
 
 Versions start at 1, so the flag refuses anything below 1 at parse time with
 exit 2 and a message. The command asks for exactly the version it is given:
@@ -13,13 +13,13 @@ from unittest.mock import patch
 import pytest
 from cli_commands_coverage_helpers import _FakeResponse
 
-from kiro_crew import cli_commands as cc
-from kiro_crew.cli_parser_agent import register_artifact_parser
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew import cli_commands as cc
+from aj_crew.cli_parser_agent import register_artifact_parser
+from aj_crew.config.loader import AjCrewConfig
 
 
 def _parse(argv: list[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(prog="kirocrew")
+    parser = argparse.ArgumentParser(prog="ajcrew")
     register_artifact_parser(parser.add_subparsers(dest="command"))
     return parser.parse_args(argv)
 
@@ -27,11 +27,11 @@ def _parse(argv: list[str]) -> argparse.Namespace:
 def _show(args: argparse.Namespace) -> str:
     """Run ``artifact show`` against a fake gateway and return the URL it asked for."""
     with (
-        patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()),
-        patch("kiro_crew.cli_commands.parse_dashboard_url", return_value=("localhost", 5476)),
-        patch("kiro_crew.cli_commands._internal_secret", return_value="s"),
+        patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()),
+        patch("aj_crew.cli_commands.parse_dashboard_url", return_value=("localhost", 5476)),
+        patch("aj_crew.cli_commands._internal_secret", return_value="s"),
         patch(
-            "kiro_crew.cli_commands._gateway_send",
+            "aj_crew.cli_commands._gateway_send",
             side_effect=[_FakeResponse({"content": "body"})],
         ) as send,
     ):

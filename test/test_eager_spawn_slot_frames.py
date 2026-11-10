@@ -17,8 +17,8 @@ from eager_spawn_helpers import (  # noqa: F401 -- fixtures are used by name
     _prime,
 )
 
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 
 class TestResumableHint:
@@ -26,12 +26,12 @@ class TestResumableHint:
 
     @pytest.fixture
     def smap(self, tmp_path, monkeypatch):
-        from kiro_crew.session_map import SessionMap
+        from aj_crew.session_map import SessionMap
 
         sessions_dir = tmp_path / "kiro-sessions"
         sessions_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.session_map._kiro_sessions_dir", lambda: sessions_dir)
+        monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_map._kiro_sessions_dir", lambda: sessions_dir)
         return SessionMap(), sessions_dir
 
     def test_hint_true_for_entry_even_without_files(self, smap):
@@ -70,7 +70,7 @@ class TestSlotFocusedFrame:
 
     @pytest.mark.asyncio
     async def test_resumable_focus_schedules_resume_prefetch(self):
-        from kiro_crew.dashboard.ws import _handle_slot_focused
+        from aj_crew.dashboard.ws import _handle_slot_focused
 
         slot = _ChatSlot("t1")
         state = self._state(slot)
@@ -84,7 +84,7 @@ class TestSlotFocusedFrame:
 
     @pytest.mark.asyncio
     async def test_focus_change_cancels_previous_prefetch(self):
-        from kiro_crew.dashboard.ws import _handle_slot_focused
+        from aj_crew.dashboard.ws import _handle_slot_focused
 
         slots = {"t1": _ChatSlot("t1"), "t2": _ChatSlot("t2")}
         state = self._state(slots["t1"])
@@ -102,7 +102,7 @@ class TestSlotFocusedFrame:
     @pytest.mark.asyncio
     async def test_same_slot_reannounce_keeps_pending_prefetch(self):
         """A repeat frame (compose intent, window focus) must not restart the load."""
-        from kiro_crew.dashboard.ws import _handle_slot_focused
+        from aj_crew.dashboard.ws import _handle_slot_focused
 
         slot = _ChatSlot("t1")
         state = self._state(slot)
@@ -119,7 +119,7 @@ class TestSlotFocusedFrame:
     @pytest.mark.asyncio
     async def test_same_slot_reannounce_after_prefetch_done_rearms(self):
         """Reaped while focused: the earlier prefetch finished, a repeat frame re-arms."""
-        from kiro_crew.dashboard.ws import _handle_slot_focused
+        from aj_crew.dashboard.ws import _handle_slot_focused
 
         slot = _ChatSlot("t1")
         state = self._state(slot)
@@ -137,7 +137,7 @@ class TestSlotFocusedFrame:
 
     @pytest.mark.asyncio
     async def test_blur_cancels_and_schedules_nothing(self):
-        from kiro_crew.dashboard.ws import _handle_slot_focused
+        from aj_crew.dashboard.ws import _handle_slot_focused
 
         slot = _ChatSlot("t1")
         state = self._state(slot)
@@ -151,7 +151,7 @@ class TestSlotFocusedFrame:
 
     @pytest.mark.asyncio
     async def test_live_session_schedules_nothing(self):
-        from kiro_crew.dashboard.ws import _handle_slot_focused
+        from aj_crew.dashboard.ws import _handle_slot_focused
 
         slot = _ChatSlot("t1")
         state = self._state(slot, has_session=True)
@@ -169,7 +169,7 @@ class TestSlotFocusedFrame:
         slot = _ChatSlot("t1")
         state = _mock_state(slot)
         state.sessions.resumable_hint = MagicMock(return_value=False)
-        with patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)):
+        with patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)):
             await chat_runner._eager_spawn(state, slot, allow_resume=True)
         assert chat_runner._armed_prefetches == {}
         state.sessions.get_or_create.assert_not_awaited()
@@ -182,7 +182,7 @@ class TestSlotFocusedFrame:
         create-armed FRESH spawn and then no-op, silently gutting fresh eager
         spawn for every new slot. The handler must check the hint itself and
         leave the pending task untouched."""
-        from kiro_crew.dashboard.ws import _handle_slot_focused
+        from aj_crew.dashboard.ws import _handle_slot_focused
 
         slot = _ChatSlot("t1")
         state = self._state(slot, resumable=None)
@@ -207,8 +207,8 @@ class TestSlotFocusedFrame:
         types, which after a reload is the moment before they send. Re-arming
         would cancel the reload's respawn (mid-load, possibly) and restart it at
         the debounce as a BACKGROUND prefetch with no outcome row."""
-        from kiro_crew.dashboard.ws import _handle_slot_focused
-        from kiro_crew.start_priority import StartPriority
+        from aj_crew.dashboard.ws import _handle_slot_focused
+        from aj_crew.start_priority import StartPriority
 
         slot = _ChatSlot("t1")
         state = self._state(slot)
@@ -244,7 +244,7 @@ class TestSlotFocusedFrame:
         armed, so the slot B shows keeps one pending load. Keeping A's prefetch
         instead would leave B tracking nothing, and A's blur would cancel the
         slot's only load with none re-armed."""
-        from kiro_crew.dashboard.ws import _handle_slot_focused
+        from aj_crew.dashboard.ws import _handle_slot_focused
 
         slot = _ChatSlot("t1")
         state = self._state(slot)
@@ -270,7 +270,7 @@ class TestSlotFocusedFrame:
         """Only a pending RESUME start is kept: an agent switch arms a fresh
         start, which a resumable key refuses, so the focus still re-arms it as
         the resume prefetch."""
-        from kiro_crew.dashboard.ws import _handle_slot_focused
+        from aj_crew.dashboard.ws import _handle_slot_focused
 
         slot = _ChatSlot("t1")
         state = self._state(slot)
@@ -288,7 +288,7 @@ class TestSlotFocusedFrame:
 
     @pytest.mark.asyncio
     async def test_running_turn_schedules_nothing(self):
-        from kiro_crew.dashboard.ws import _handle_slot_focused
+        from aj_crew.dashboard.ws import _handle_slot_focused
 
         slot = _ChatSlot("t1")
         # slot.running derives from slot.task being a live task.
@@ -309,7 +309,7 @@ class TestSlotFocusedFrame:
     async def test_non_owner_socket_schedules_nothing_and_cancels_nothing(self):
         """An app-scoped socket must not start owner-session processes or
         cancel another arm's prefetch — the frame is ignored entirely."""
-        from kiro_crew.dashboard.ws import _handle_slot_focused
+        from aj_crew.dashboard.ws import _handle_slot_focused
 
         slot = _ChatSlot("t1")
         state = self._state(slot)
@@ -334,7 +334,7 @@ class TestSlotFocusedFrame:
         state.sessions.get_or_create = AsyncMock(
             side_effect=chat_runner.SpeculativeResumeRefused("dashboard:t1")
         )
-        with patch.object(chat_runner.KiroCrewConfig, "load", _native_resume_cfg()):
+        with patch.object(chat_runner.AjCrewConfig, "load", _native_resume_cfg()):
             await chat_runner._eager_spawn(state, slot, allow_resume=True)
         state.sessions.remove_if_unclaimed.assert_not_awaited()
         state.sessions.remove.assert_not_awaited()
@@ -355,14 +355,14 @@ class TestSlotReadFrame:
         return MagicMock(spec=DashboardState)
 
     def test_owner_read_broadcasts_to_owner_clients(self):
-        from kiro_crew.dashboard.ws import _handle_slot_read
+        from aj_crew.dashboard.ws import _handle_slot_read
 
         state = self._state()
         assert _handle_slot_read(state, "t1", owner=True) is True
         state.broadcast_ws_owners.assert_called_once_with("slot_read", {"slot": "t1"})
 
     def test_read_watermark_is_relayed_opaquely(self):
-        from kiro_crew.dashboard.ws import _handle_slot_read
+        from aj_crew.dashboard.ws import _handle_slot_read
 
         state = self._state()
         assert _handle_slot_read(state, "t1", "2026-09-10T00:00:00Z", owner=True) is True
@@ -373,7 +373,7 @@ class TestSlotReadFrame:
     def test_junk_read_watermark_is_dropped_but_frame_relays(self):
         """A bad watermark degrades to a watermark-less relay (receivers apply
         their conservative default) rather than dropping the read gesture."""
-        from kiro_crew.dashboard.ws import _handle_slot_read
+        from aj_crew.dashboard.ws import _handle_slot_read
 
         for junk in (42, "", "x" * 65, {"ts": "y"}):
             state = self._state()
@@ -382,14 +382,14 @@ class TestSlotReadFrame:
 
     def test_non_owner_frame_is_ignored(self):
         """An app-scoped socket must not clear the user's badges."""
-        from kiro_crew.dashboard.ws import _handle_slot_read
+        from aj_crew.dashboard.ws import _handle_slot_read
 
         state = self._state()
         assert _handle_slot_read(state, "t1", owner=False) is False
         state.broadcast_ws_owners.assert_not_called()
 
     def test_junk_slot_keys_are_ignored(self):
-        from kiro_crew.dashboard.ws import _handle_slot_read
+        from aj_crew.dashboard.ws import _handle_slot_read
 
         state = self._state()
         for junk in (None, "", 42, {"slot": "x"}, "k" * 513):
@@ -400,7 +400,7 @@ class TestSlotReadFrame:
         """No liveness check on purpose: a read of a just-deleted slot must
         still clear stale badges in other windows (their unread drain only
         prunes keys missing from a later slots snapshot)."""
-        from kiro_crew.dashboard.ws import _handle_slot_read
+        from aj_crew.dashboard.ws import _handle_slot_read
 
         state = self._state()
         state.get_slot = MagicMock(return_value=None)

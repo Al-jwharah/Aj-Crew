@@ -12,9 +12,9 @@ import sys
 
 import pytest
 
-import kiro_crew.sandbox as sandbox_mod
-from kiro_crew import sandbox_launcher_program as launcher_program
-from kiro_crew.sandbox import reset_backend
+import aj_crew.sandbox as sandbox_mod
+from aj_crew import sandbox_launcher_program as launcher_program
+from aj_crew.sandbox import reset_backend
 
 # ``_build_launcher_script`` calls POSIX-only ``os.getuid``/``os.getgid`` (the
 # namespace launcher is Linux-only), so any test that builds the launcher script
@@ -76,7 +76,7 @@ def systemd_run_resolvable(monkeypatch):
     themselves, inside their own ``with``) are unaffected -- an inner patch
     wins and reverts to this one.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     real = platform_compat.trusted_system_bin
 
@@ -96,12 +96,12 @@ def clean_backend(_floor_monkeypatch):
     dev box where ``~/.kiro/settings/amazon-internal.json`` has
     ``{"sandbox": true}``, the darwin kiro-delegation branch in ``wrap_argv``
     preempts the mocked ``detect_backend`` and these unit tests — which exercise
-    Kiro Crew's OWN backend selection / fail-closed path — never reach the code
+    Aj Crew's OWN backend selection / fail-closed path — never reach the code
     they assert on. Point the settings path at a non-existent file so delegation
     is off by default; the dedicated delegation tests set
     ``_KIRO_INTERNAL_SETTINGS_PATH`` explicitly and are unaffected.
 
-    Clears ``KIROCREW_SANDBOX_ACTIVE`` to prevent the "already inside sandbox"
+    Clears ``AJCREW_SANDBOX_ACTIVE`` to prevent the "already inside sandbox"
     passthrough from short-circuiting tests on hosts (like Cloud Desktops) where
     the gateway process itself runs sandboxed. Tests that exercise the
     passthrough set the env var explicitly.
@@ -114,10 +114,10 @@ def clean_backend(_floor_monkeypatch):
     exercises the real function through the name it imported, with
     ``subprocess.run`` patched.
     """
-    _floor_monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+    _floor_monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
     _floor_monkeypatch.setattr(
-        "kiro_crew.sandbox._KIRO_INTERNAL_SETTINGS_PATH",
-        "/nonexistent/kirocrew-test/amazon-internal.json",
+        "aj_crew.sandbox._KIRO_INTERNAL_SETTINGS_PATH",
+        "/nonexistent/ajcrew-test/amazon-internal.json",
     )
     _floor_monkeypatch.setattr(sandbox_mod, "_ssh_supports_accept_new", lambda: True)
     # Reset one-shot warning flags

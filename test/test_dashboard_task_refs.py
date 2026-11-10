@@ -16,23 +16,23 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard.handlers import weixin_qr
+from aj_crew.dashboard.handlers import weixin_qr
 
 REPO = Path(__file__).resolve().parent.parent
 
 #: Files that start fire-and-forget tasks. The guard below keeps a dropped
 #: ``create_task(...)`` out of them.
 GUARDED = (
-    "src/kiro_crew/dashboard/server.py",
-    "src/kiro_crew/dashboard/state_parts/dashboard_services.py",
-    "src/kiro_crew/dashboard/handlers/weixin_qr.py",
-    "src/kiro_crew/dashboard/handlers/crew_log.py",
-    "src/kiro_crew/knowledge/artifact_ingest.py",
-    "src/kiro_crew/remote_session/worker.py",
-    "src/kiro_crew/shared_crew/admission_entry.py",
-    "src/kiro_crew/sprites_session/terminal.py",
-    "src/kiro_crew/subagent_manager/admission/gate.py",
-    "src/kiro_crew/subagent_manager/terminal.py",
+    "src/aj_crew/dashboard/server.py",
+    "src/aj_crew/dashboard/state_parts/dashboard_services.py",
+    "src/aj_crew/dashboard/handlers/weixin_qr.py",
+    "src/aj_crew/dashboard/handlers/crew_log.py",
+    "src/aj_crew/knowledge/artifact_ingest.py",
+    "src/aj_crew/remote_session/worker.py",
+    "src/aj_crew/shared_crew/admission_entry.py",
+    "src/aj_crew/sprites_session/terminal.py",
+    "src/aj_crew/subagent_manager/admission/gate.py",
+    "src/aj_crew/subagent_manager/terminal.py",
 )
 
 _TASK_STARTERS = ("create_task", "ensure_future")

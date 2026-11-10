@@ -22,17 +22,17 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import dashboard_types as dt
-from kiro_crew.crew_log import projection
-from kiro_crew.dashboard.handlers.agent_panel import _folded_through
-from kiro_crew.mcp_panel import _call_tool_inner, _list_tools, _render_types
+from aj_crew import dashboard_types as dt
+from aj_crew.crew_log import projection
+from aj_crew.dashboard.handlers.agent_panel import _folded_through
+from aj_crew.mcp_panel import _call_tool_inner, _list_tools, _render_types
 
 GOOD_KEY = "dashboard:chat-types-1"
 
 
 @pytest.fixture()
 def _verified_caller() -> Any:
-    with patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value=GOOD_KEY):
+    with patch("aj_crew.mcp_core._resolve_session_key_strict", return_value=GOOD_KEY):
         yield
 
 
@@ -60,8 +60,8 @@ class TestTheToolSurface:
 class TestTheToolIsARead:
     def test_it_issues_a_get_and_no_write(self, _verified_caller: Any) -> None:
         with (
-            patch("kiro_crew.mcp_panel._get", return_value=dt.describe({})) as mock_get,
-            patch("kiro_crew.mcp_panel._post") as mock_post,
+            patch("aj_crew.mcp_panel._get", return_value=dt.describe({})) as mock_get,
+            patch("aj_crew.mcp_panel._post") as mock_post,
         ):
             out = _call_tool_inner("dashboard_types", {})
         assert mock_get.call_args[0][0] == "/api/agent-panel/dashboard/types"
@@ -69,13 +69,13 @@ class TestTheToolIsARead:
         assert "data types" in out
 
     def test_an_api_error_comes_back_whole(self, _verified_caller: Any) -> None:
-        with patch("kiro_crew.mcp_panel._get", return_value={"error": "forbidden"}):
+        with patch("aj_crew.mcp_panel._get", return_value={"error": "forbidden"}):
             out = _call_tool_inner("dashboard_types", {})
         assert out == "Error: forbidden"
 
     def test_a_subagent_is_refused_before_the_read(self) -> None:
         """No verified caller: the strict gate answers first, so no request is made."""
-        with patch("kiro_crew.mcp_panel._get") as mock_get:
+        with patch("aj_crew.mcp_panel._get") as mock_get:
             out = _call_tool_inner("dashboard_types", {})
         assert mock_get.call_count == 0
         assert out.startswith("Error:")

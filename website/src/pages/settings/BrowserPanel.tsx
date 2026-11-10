@@ -84,7 +84,7 @@ export function BrowserPanel() {
   const saveError = patch.isError
     ? failText(patch.error, i18nT('pages.settings.browserPanel.save_failed'))
     : null
-  // The last apply into Kiro's Chromium failed (hand-off on: a status read, next
+  // The last apply into Aj's Chromium failed (hand-off on: a status read, next
   // to no draft).
   const cred = status.data.credentials
   const credentialError = cred?.provider && cred.state === 'error'

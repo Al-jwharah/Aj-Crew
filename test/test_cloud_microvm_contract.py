@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.cloud.aws import AWSError
-from kiro_crew.cloud.microvm import api
+from aj_crew.cloud.aws import AWSError
+from aj_crew.cloud.microvm import api
 
 botocore = pytest.importorskip(
     "botocore", reason="botocore is not installed, so there is no service model to read"

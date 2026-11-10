@@ -8,7 +8,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers.files import api_reveal_path
+from aj_crew.dashboard.handlers.files import api_reveal_path
 
 
 def _make_app() -> web.Application:
@@ -19,7 +19,7 @@ def _make_app() -> web.Application:
 
 @pytest.fixture
 def mock_sel():
-    with patch("kiro_crew.sel.sel") as m:
+    with patch("aj_crew.sel.sel") as m:
         instance = MagicMock()
         m.return_value = instance
         yield instance
@@ -32,8 +32,8 @@ async def test_reveal_path_no_crash(mock_sel, tmp_path):
     f = tmp_path / "hello.txt"
     f.write_text("hi")
     with patch(
-        "kiro_crew.dashboard.handlers.files.is_direct_local_request", return_value=True
-    ), patch("kiro_crew.dashboard.handlers.files.platform_compat."
+        "aj_crew.dashboard.handlers.files.is_direct_local_request", return_value=True
+    ), patch("aj_crew.dashboard.handlers.files.platform_compat."
              "reveal_in_file_manager", return_value=True):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.post(
@@ -58,7 +58,7 @@ async def test_reveal_path_sensitive_denied(mock_sel):
     """Given a path containing ~/.ssh/id_rsa, when POST /api/reveal is called,
     then response is 403 with {"error": "access denied"} and SEL logs the denial."""
     with patch(
-        "kiro_crew.dashboard.handlers.files.is_sensitive_path", return_value=True
+        "aj_crew.dashboard.handlers.files.is_sensitive_path", return_value=True
     ):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.post(
@@ -101,7 +101,7 @@ async def test_reveal_remote_request_returns_copy_fallback(mock_sel, tmp_path):
     f = tmp_path / "readme.md"
     f.write_text("hello")
     with patch(
-        "kiro_crew.dashboard.handlers.files.is_direct_local_request", return_value=False
+        "aj_crew.dashboard.handlers.files.is_direct_local_request", return_value=False
     ), patch("subprocess.Popen") as mock_popen:
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.post(
@@ -131,7 +131,7 @@ async def test_reveal_remote_request_open_action_returns_copy(mock_sel, tmp_path
     f = tmp_path / "doc.txt"
     f.write_text("data")
     with patch(
-        "kiro_crew.dashboard.handlers.files.is_direct_local_request", return_value=False
+        "aj_crew.dashboard.handlers.files.is_direct_local_request", return_value=False
     ), patch("subprocess.Popen") as mock_popen:
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.post(
@@ -152,8 +152,8 @@ async def test_reveal_local_headless_returns_no_desktop_copy(mock_sel, tmp_path)
     f = tmp_path / "notes.md"
     f.write_text("local but headless")
     with patch(
-        "kiro_crew.dashboard.handlers.files.is_direct_local_request", return_value=True
-    ), patch("kiro_crew.dashboard.handlers.files.platform_compat."
+        "aj_crew.dashboard.handlers.files.is_direct_local_request", return_value=True
+    ), patch("aj_crew.dashboard.handlers.files.platform_compat."
              "reveal_in_file_manager", return_value=False):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.post(
@@ -181,8 +181,8 @@ async def test_open_action_spawns_opener_for_file(mock_sel, tmp_path):
     f = tmp_path / "image.png"
     f.write_bytes(b"\x89PNG")
     with patch(
-        "kiro_crew.dashboard.handlers.files.is_direct_local_request", return_value=True
-    ), patch("kiro_crew.dashboard.handlers.files.platform_compat."
+        "aj_crew.dashboard.handlers.files.is_direct_local_request", return_value=True
+    ), patch("aj_crew.dashboard.handlers.files.platform_compat."
              "open_with_default_app", return_value=True):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.post(
@@ -200,7 +200,7 @@ async def test_open_action_on_directory_returns_400(mock_sel, tmp_path):
     d = tmp_path / "subdir"
     d.mkdir()
     with patch(
-        "kiro_crew.dashboard.handlers.files.is_direct_local_request", return_value=True
+        "aj_crew.dashboard.handlers.files.is_direct_local_request", return_value=True
     ):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.post(

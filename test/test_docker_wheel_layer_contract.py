@@ -42,7 +42,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 
-_CREW_TREE = ROOT / "src" / "kiro_crew" / "apps" / "builtins" / "aws_control" / "crew"
+_CREW_TREE = ROOT / "src" / "aj_crew" / "apps" / "builtins" / "aws_control" / "crew"
 _CREW_RUNTIME = _CREW_TREE / "runtime"
 #: The crew image lane's build-plan module, in the crew tree's ``scripts/``.
 _BUILD_PLAN = _CREW_TREE / "scripts" / "crew_image_build_plan.py"

@@ -19,10 +19,10 @@ import urllib.request
 import pytest
 from aiohttp import web
 
-from kiro_crew.agent_ipc_wire import CAPABILITY_HEADER, REDEEM_PATH
-from kiro_crew.dashboard import agent_ipc
-from kiro_crew.loopback_http import build_loopback_opener, unix_socket_urlopen
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.agent_ipc_wire import CAPABILITY_HEADER, REDEEM_PATH
+from aj_crew.dashboard import agent_ipc
+from aj_crew.loopback_http import build_loopback_opener, unix_socket_urlopen
+from aj_crew.testing.wait import default_timeout
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="AF_UNIX transport")
 
@@ -44,16 +44,16 @@ class _Owner:
 
 def test_redeem_admits_a_descendant_of_the_runtime_and_binds_its_pid() -> None:
     store = _store()
-    pickup = store.issue(server="kirocrew-core", session_token="tok", runtime_pid=lambda: 500)
+    pickup = store.issue(server="ajcrew-core", session_token="tok", runtime_pid=lambda: 500)
     cap, code = store.redeem(pickup, 502)
     assert code == "" and len(cap) == 64
     binding, code = store.verify(cap, 502)
-    assert binding == agent_ipc.Binding("kirocrew-core", "tok", 502) and code == ""
+    assert binding == agent_ipc.Binding("ajcrew-core", "tok", 502) and code == ""
 
 
 def test_redeem_refuses_an_unknown_pickup_and_a_process_outside_the_session() -> None:
     store = _store()
-    pickup = store.issue(server="kirocrew-core", session_token="tok", runtime_pid=lambda: 500)
+    pickup = store.issue(server="ajcrew-core", session_token="tok", runtime_pid=lambda: 500)
     assert store.redeem("not-a-pickup", 502) == ("", agent_ipc.REFUSE_PICKUP_UNKNOWN)
     assert store.redeem(pickup, 600) == ("", agent_ipc.REFUSE_NOT_IN_SESSION)
     # The runtime root itself is not its own descendant.
@@ -62,13 +62,13 @@ def test_redeem_refuses_an_unknown_pickup_and_a_process_outside_the_session() ->
 
 def test_redeem_refuses_when_the_runtime_pid_is_unknown() -> None:
     store = _store()
-    pickup = store.issue(server="kirocrew-core", session_token="tok", runtime_pid=lambda: None)
+    pickup = store.issue(server="ajcrew-core", session_token="tok", runtime_pid=lambda: None)
     assert store.redeem(pickup, 502) == ("", agent_ipc.REFUSE_NOT_IN_SESSION)
 
 
 def test_a_second_redemption_is_refused_while_the_first_holder_lives() -> None:
     store = _store()
-    pickup = store.issue(server="kirocrew-core", session_token="tok", runtime_pid=lambda: 500)
+    pickup = store.issue(server="ajcrew-core", session_token="tok", runtime_pid=lambda: 500)
     cap, _ = store.redeem(pickup, 502)
     # 501 descends from the runtime too (the harness), but 502 still holds the pickup.
     assert store.redeem(pickup, 501) == ("", agent_ipc.REFUSE_PICKUP_HELD)
@@ -78,7 +78,7 @@ def test_a_second_redemption_is_refused_while_the_first_holder_lives() -> None:
 def test_a_restarted_server_may_redeem_once_the_previous_holder_is_gone() -> None:
     starts = {502: "s502", 501: "s501"}
     store = _store(starts)
-    pickup = store.issue(server="kirocrew-core", session_token="tok", runtime_pid=lambda: 500)
+    pickup = store.issue(server="ajcrew-core", session_token="tok", runtime_pid=lambda: 500)
     old_cap, _ = store.redeem(pickup, 502)
     del starts[502]  # the first server exited
     new_cap, code = store.redeem(pickup, 501)
@@ -90,7 +90,7 @@ def test_a_restarted_server_may_redeem_once_the_previous_holder_is_gone() -> Non
 def test_a_capability_is_refused_from_any_other_process_or_a_recycled_pid() -> None:
     starts = {502: "s502", 501: "s501", 600: "s600"}
     store = _store(starts)
-    pickup = store.issue(server="kirocrew-core", session_token="tok", runtime_pid=lambda: 500)
+    pickup = store.issue(server="ajcrew-core", session_token="tok", runtime_pid=lambda: 500)
     cap, _ = store.redeem(pickup, 502)
     assert store.verify(cap, 600) == (None, agent_ipc.REFUSE_CAPABILITY)
     assert store.verify(cap, 501) == (None, agent_ipc.REFUSE_CAPABILITY)
@@ -101,7 +101,7 @@ def test_a_capability_is_refused_from_any_other_process_or_a_recycled_pid() -> N
 
 def test_a_peer_with_no_start_token_cannot_redeem() -> None:
     store = _store({})
-    pickup = store.issue(server="kirocrew-core", session_token="tok", runtime_pid=lambda: 500)
+    pickup = store.issue(server="ajcrew-core", session_token="tok", runtime_pid=lambda: 500)
     assert store.redeem(pickup, 502) == ("", agent_ipc.REFUSE_PEER_UNVERIFIED)
 
 
@@ -109,7 +109,7 @@ def test_pickups_die_with_their_owner() -> None:
     store = _store()
     owner = _Owner()
     pickup = store.issue(
-        server="kirocrew-core", session_token="tok", runtime_pid=lambda: 500, owner=owner
+        server="ajcrew-core", session_token="tok", runtime_pid=lambda: 500, owner=owner
     )
     cap, _ = store.redeem(pickup, 502)
     del owner
@@ -128,7 +128,7 @@ def test_an_owner_collected_while_the_store_lock_is_held_does_not_hang() -> None
     def collect_under_the_lock() -> None:
         owner = _Owner()
         issued["pickup"] = store.issue(
-            server="kirocrew-core", session_token="tok", runtime_pid=lambda: 500, owner=owner
+            server="ajcrew-core", session_token="tok", runtime_pid=lambda: 500, owner=owner
         )
         issued["cap"] = store.redeem(issued["pickup"], 502)[0]
         with store._lock:
@@ -147,7 +147,7 @@ def test_an_owner_collected_while_the_store_lock_is_held_does_not_hang() -> None
 
 def test_the_store_keeps_digests_not_values() -> None:
     store = _store()
-    pickup = store.issue(server="kirocrew-core", session_token="tok", runtime_pid=lambda: 500)
+    pickup = store.issue(server="ajcrew-core", session_token="tok", runtime_pid=lambda: 500)
     cap, _ = store.redeem(pickup, 502)
     assert pickup.encode() not in repr(store._pickups).encode()
     assert cap not in repr(store._caps) and pickup not in repr(store._pickups)
@@ -157,7 +157,7 @@ def test_issue_requires_a_server_and_a_token() -> None:
     with pytest.raises(ValueError):
         _store().issue(server="", session_token="tok", runtime_pid=lambda: 500)
     with pytest.raises(ValueError):
-        _store().issue(server="kirocrew-core", session_token="", runtime_pid=lambda: 500)
+        _store().issue(server="ajcrew-core", session_token="", runtime_pid=lambda: 500)
 
 
 # --- the gate, over a real unix socket ------------------------------------------------
@@ -225,7 +225,7 @@ async def _serve(app, call):
 
 def _issue(runtime_pid: int) -> str:
     return agent_ipc.issue_pickup(
-        server="kirocrew-core", session_token="tok", runtime_pid=lambda: runtime_pid
+        server="ajcrew-core", session_token="tok", runtime_pid=lambda: runtime_pid
     )
 
 
@@ -257,7 +257,7 @@ async def test_gate_redeems_then_admits_the_capability_for_its_own_session(gate_
         return ok, other_session, no_route, no_cap, secret
 
     ok, other_session, no_route, no_cap, secret = await _serve(app, call)
-    assert ok == (200, {"server": "kirocrew-core"})
+    assert ok == (200, {"server": "ajcrew-core"})
     assert other_session[0] == 403 and other_session[1]["code"] == agent_ipc.REFUSE_SESSION_MISMATCH
     assert no_route[0] == 403 and no_route[1]["code"] == agent_ipc.REFUSE_ROUTE
     assert no_cap[0] == 403 and no_cap[1]["code"] == agent_ipc.REFUSE_CAPABILITY
@@ -267,7 +267,7 @@ async def test_gate_redeems_then_admits_the_capability_for_its_own_session(gate_
 @pytest.mark.asyncio
 async def test_a_connection_bridge_capability_serves_its_proxy_route_only(gate_app):
     """A bridge's capability is no key to the gateway's other internal routes."""
-    from kiro_crew.agent_ipc_wire import BRIDGE_PICKUP_PREFIX
+    from aj_crew.agent_ipc_wire import BRIDGE_PICKUP_PREFIX
 
     app, sock = gate_app
     pickup = agent_ipc.issue_pickup(
@@ -347,7 +347,7 @@ _SECRET = "s" * 32
 @pytest.fixture
 def token_auth_app(gate_app):
     """The same socket, with the gateway's real token_auth deciding every request."""
-    from kiro_crew.dashboard import token_auth as ta
+    from aj_crew.dashboard import token_auth as ta
 
     _app, sock = gate_app
 
@@ -399,7 +399,7 @@ async def test_token_auth_grants_the_internal_arm_to_a_verified_capability(token
         )
 
     ok, secret_only, both, other, mismatch = await _serve(app, call)
-    assert ok == (200, {"internal_auth": True, "server": "kirocrew-core"})
+    assert ok == (200, {"internal_auth": True, "server": "ajcrew-core"})
     assert secret_only[0] == 403 and secret_only[1]["code"] == agent_ipc.REFUSE_SECRET
     assert both[0] == 403 and both[1]["code"] == agent_ipc.REFUSE_SECRET
     assert other[0] == 403 and other[1]["code"] == agent_ipc.REFUSE_ROUTE
@@ -454,9 +454,9 @@ def test_an_enforced_harness_child_can_reach_the_agent_socket_but_not_the_secret
     The same mask keeps hiding ``run/`` and ``.local_secret``: this path is added
     beside the secret, never by exposing it.
     """
-    from kiro_crew.agent_ipc_wire import AGENT_IPC_LEAF
-    from kiro_crew.agent_sdk.tool_gate import adapter_hidden_credential_dirs
-    from kiro_crew.config.loader import config_dir
+    from aj_crew.agent_ipc_wire import AGENT_IPC_LEAF
+    from aj_crew.agent_sdk.tool_gate import adapter_hidden_credential_dirs
+    from aj_crew.config.loader import config_dir
 
     hidden = {os.path.normpath(p) for p in adapter_hidden_credential_dirs(backend)}
     home = config_dir()
@@ -470,7 +470,7 @@ def test_an_enforced_harness_child_can_reach_the_agent_socket_but_not_the_secret
 @pytest.mark.asyncio
 async def test_the_session_query_names_only_the_holders_own_session(gate_app):
     """A server under the mask asks which session it acts for; only a holder is told."""
-    from kiro_crew.agent_ipc_wire import SESSION_PATH
+    from aj_crew.agent_ipc_wire import SESSION_PATH
 
     app, sock = gate_app
     pickup = _issue(os.getppid())
@@ -495,7 +495,7 @@ async def test_the_session_query_names_only_the_holders_own_session(gate_app):
 @pytest.mark.asyncio
 async def test_a_granted_session_query_writes_one_granted_sel_row(gate_app, monkeypatch):
     """The session query is a capability grant, so the operator's SEL records it."""
-    from kiro_crew.agent_ipc_wire import SESSION_PATH
+    from aj_crew.agent_ipc_wire import SESSION_PATH
 
     app, sock = gate_app
     rows: list[tuple[str, str, str]] = []

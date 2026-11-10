@@ -21,11 +21,11 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew import execution_context as execution
-from kiro_crew.dashboard import chat_fork, create_rate_limit
-from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
-from kiro_crew.dashboard.chat_utils import effective_session_key, slot_history_key
-from kiro_crew.history import ConversationLog
+from aj_crew import execution_context as execution
+from aj_crew.dashboard import chat_fork, create_rate_limit
+from aj_crew.dashboard.chat_persistence import save_slot_off_loop
+from aj_crew.dashboard.chat_utils import effective_session_key, slot_history_key
+from aj_crew.history import ConversationLog
 
 PARENT_FOLDER = "fold0000par1"
 
@@ -33,7 +33,7 @@ PARENT_FOLDER = "fold0000par1"
 @pytest.fixture(autouse=True)
 def _isolate(tmp_path, _floor_monkeypatch):
     patch = _floor_monkeypatch
-    patch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    patch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     patch.setattr(chat_fork, "sel", lambda: MagicMock())
     create_rate_limit.reset_for_tests()
     yield

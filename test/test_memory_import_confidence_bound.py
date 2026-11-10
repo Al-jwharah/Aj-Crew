@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from vector_memory_coverage_helpers import _DIM
 
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew.vector_memory import VectorMemoryStore
 
 _KEY = "pref.editor"
 # The confidence import_memory stores for a row without a usable one, as on main.
@@ -89,7 +89,7 @@ def test_a_low_confidence_is_refused_by_the_store_threshold_as_before(
 def test_a_replaced_confidence_logs_a_warning_without_the_value(
     tmp_path: Path, raw: object, caplog: pytest.LogCaptureFixture
 ) -> None:
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.vector_memory"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.vector_memory"):
         _imported_confidence(tmp_path, {"confidence": raw})
     warnings = [
         r.getMessage() for r in caplog.records if "memory import: confidence" in r.getMessage()
@@ -101,7 +101,7 @@ def test_a_replaced_confidence_logs_a_warning_without_the_value(
 def test_an_in_range_confidence_logs_nothing(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.vector_memory"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.vector_memory"):
         _imported_confidence(tmp_path, {"confidence": 0.9})
     assert not [r for r in caplog.records if "memory import: confidence" in r.getMessage()]
 

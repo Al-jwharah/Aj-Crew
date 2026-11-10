@@ -14,8 +14,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
 
 
 @pytest.fixture(autouse=True)
@@ -47,7 +47,7 @@ def test_send_that_starts_a_turn_tags_the_session_with_its_project(tmp_path, mon
     async def _fake_run_chat(_state, _slot, _prompt):
         return None
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
 
     async def _drive():
         out = await sc.send_to_target(
@@ -77,7 +77,7 @@ def test_send_that_queues_does_not_start_auto_tagging(tmp_path, monkeypatch):
     target = _busy(state.get_or_create_slot("chat-2"))
     target.project = str(tmp_path / "workspace-vinod")
     tagger = AsyncMock()
-    monkeypatch.setattr("kiro_crew.dashboard.chat_auto_tag.maybe_auto_tag", tagger)
+    monkeypatch.setattr("aj_crew.dashboard.chat_auto_tag.maybe_auto_tag", tagger)
 
     out = asyncio.run(
         sc.send_to_target(state, caller_session_key=_key(caller), target="chat-2", message="later")

@@ -19,12 +19,12 @@ from pathlib import Path
 import pytest
 from windows_sim import replace_sharing_violation
 
-from kiro_crew import atomic_write as aw
-from kiro_crew import cron_script, platform_compat
-from kiro_crew.appearance_packs import store as ap
-from kiro_crew.security import redaction_allow
-from kiro_crew.workflows.library import WorkflowDefinitionLibrary
-from kiro_crew.workflows.store import WorkflowRunStore
+from aj_crew import atomic_write as aw
+from aj_crew import cron_script, platform_compat
+from aj_crew.appearance_packs import store as ap
+from aj_crew.security import redaction_allow
+from aj_crew.workflows.library import WorkflowDefinitionLibrary
+from aj_crew.workflows.store import WorkflowRunStore
 
 
 @pytest.fixture(autouse=True)

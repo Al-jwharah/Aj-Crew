@@ -28,11 +28,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import artifacts as art_mod
-from kiro_crew.apps.builtins.auto_research import handlers as research_handlers
-from kiro_crew.apps.builtins.auto_research.campaign import publication
-from kiro_crew.artifacts import ArtifactStore
-from kiro_crew.dashboard.handlers.artifacts import (
+from aj_crew import artifacts as art_mod
+from aj_crew.apps.builtins.auto_research import handlers as research_handlers
+from aj_crew.apps.builtins.auto_research.campaign import publication
+from aj_crew.artifacts import ArtifactStore
+from aj_crew.dashboard.handlers.artifacts import (
     api_artifact_version_detail,
     api_artifact_versions,
 )

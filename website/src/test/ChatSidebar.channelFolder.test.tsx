@@ -52,7 +52,7 @@ const folders: ChatFolder[] = [
 ]
 
 const slots = [
-  { key: 'discord_kirocrew_direct_U1', title: 'From Discord', messages: 1, running: false, mode: '', created: '', last_ts: '2026-01-01T00:00:00Z', folder_id: 'f-discord' },
+  { key: 'discord_ajcrew_direct_U1', title: 'From Discord', messages: 1, running: false, mode: '', created: '', last_ts: '2026-01-01T00:00:00Z', folder_id: 'f-discord' },
   { key: 'dashboard_chat-1-1', title: 'Plain dashboard', messages: 1, running: false, mode: '', created: '', last_ts: '2026-01-01T00:00:00Z', folder_id: 'f-plain' },
 ] as unknown as ChatSlot[]
 
@@ -68,7 +68,7 @@ function renderSidebar() {
       slotsLoaded: true,
     } as unknown as RootState['dashboard'],
     chat: {
-      activeSlot: 'discord_kirocrew_direct_U1',
+      activeSlot: 'discord_ajcrew_direct_U1',
       messages: [], slotRunning: false, slotStopping: false, slotState: 'idle',
       slotStatusDetail: {}, slotHasMore: false, slotOldestIndex: 0, loadingOlder: false,
       history: [], historyHasMore: false, historyOffset: 0,
@@ -85,7 +85,7 @@ function renderSidebar() {
         <ThemeProvider>
           <MemoryRouter>
             <ChatSidebar
-              slots={slots} activeSlot={'discord_kirocrew_direct_U1'} unreadSlots={[]}
+              slots={slots} activeSlot={'discord_ajcrew_direct_U1'} unreadSlots={[]}
               history={[]} historyHasMore={false} defaultAgent={'default'} installedAgents={[]}
             />
           </MemoryRouter>

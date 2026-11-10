@@ -26,7 +26,7 @@ export const DEFAULT_DIST = fileURLToPath(new URL('../../dist/', import.meta.url
  * capture script in this folder until it was noticed in a review.
  */
 const SERVER_ROUTED = {
-  '/logo.png': fileURLToPath(new URL('../../../src/kiro_crew/static/kirocrew-logo.png', import.meta.url)),
+  '/logo.png': fileURLToPath(new URL('../../../src/aj_crew/static/ajcrew-logo.png', import.meta.url)),
 }
 
 export const MIME = {

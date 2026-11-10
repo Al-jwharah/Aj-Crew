@@ -85,7 +85,7 @@ def _notice(app_dir: Path) -> tuple[str, str]:
     script = _helper_source() + 'source_checkout_ref; echo "---"; source_lane_notice\n'
     result = subprocess.run(
         ["bash", "-c", script],
-        env={**os.environ, "KIROCREW_APP_DIR": str(app_dir)},
+        env={**os.environ, "AJCREW_APP_DIR": str(app_dir)},
         capture_output=True,
         text=True,
         encoding="utf-8",

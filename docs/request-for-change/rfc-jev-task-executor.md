@@ -38,8 +38,8 @@ A ten-step errand such as "open the second search result and note its price and
 rating" costs ten full model turns. Most of those turns involve no reasoning.
 The model is picking one line out of a list the harness already wrote.
 
-Kiro Crew already has a cheap model for that kind of question. The decisions
-seam (`src/kiro_crew/decisions/`, spec
+Aj Crew already has a cheap model for that kind of question. The decisions
+seam (`src/aj_crew/decisions/`, spec
 [`decisions.md`](../system-specs/modules/decisions.md)) sends Jev a closed menu
 and gets back one pick with a calibrated probability. Seven points use it today
 (`skills.select`, `message.steer`, `model.route`, `memory.recall`, `tool.risk`,
@@ -118,11 +118,11 @@ executor is itself a trust-boundary component, not a surface:
   the existing Decisions card and the existing tool card in chat.
 
 The cost is release coupling: the loop's heuristics can no longer change
-without a Kiro Crew release. Core takes only the generic loop. Site-specific
+without a Aj Crew release. Core takes only the generic loop. Site-specific
 rules stay out, and JevOnly stays the place to experiment before a rule is
 generic enough to land.
 
-The module is `src/kiro_crew/jev_executor/`. It imports `decisions.gate`,
+The module is `src/aj_crew/jev_executor/`. It imports `decisions.gate`,
 `computer_use.tools` and the browser runtime, and nothing imports it on the
 gateway boot path (`no-new-work-on-gateway-boot-path`): the route handlers
 import it inside the handler, as `dashboard/handlers/decisions.py` already does
@@ -193,9 +193,9 @@ already listed checks every prerequisite again on each call.
 
 ### 3.4 Running a task
 
-`jev_computer_task` lives in the `kirocrew-computer` MCP server, not in
-`kirocrew-core`. `@kirocrew-core` is blanket-approved in `config/defaults.json`,
-while `kirocrew-computer` is registered only when Computer Use is enabled and
+`jev_computer_task` lives in the `ajcrew-computer` MCP server, not in
+`ajcrew-core`. `@ajcrew-core` is blanket-approved in `config/defaults.json`,
+while `ajcrew-computer` is registered only when Computer Use is enabled and
 is deliberately kept out of `allowedTools`, so a task call gets the same
 per-call approval prompt a single `computer_click` does rather than one silent
 approval for a whole budget of desktop actions. The browser tool's server is
@@ -418,8 +418,8 @@ Each property names where it is enforced. All of them are in core.
   export type, pinned by mutation-tested secure-field, label and redaction
   tests.
 - **Every task call is approved like a desktop action.** `jev_computer_task`
-  lives on `kirocrew-computer`, which is never blanket-approved, not on
-  `kirocrew-core`, which is.
+  lives on `ajcrew-computer`, which is never blanket-approved, not on
+  `ajcrew-core`, which is.
 - **Only the calling session can start a task.** The run route requires
   `internal_auth` and a declared session key the route attests with
   `member_memory_auth.session_key_is_attested` on every transport; the tool
@@ -460,7 +460,7 @@ Each property names where it is enforced. All of them are in core.
 
 1. Do maintainers accept the executor below the tenet 8 line, as a
    trust-boundary component? (`no-new-builtin-apps` covers only
-   `src/kiro_crew/apps/builtins/**`, which this module does not touch, so no
+   `src/aj_crew/apps/builtins/**`, which this module does not touch, so no
    exemption is requested.)
 
    **Decided 2026-09-29 by buluoray: accepted as proposed. The executor is a
@@ -499,14 +499,14 @@ Each property names where it is enforced. All of them are in core.
    adapters.
 5. **The executor and the desktop tool.** The per-task budget and ceilings
    wait on open question 3.
-   `src/kiro_crew/jev_executor/`, the run routes, `jev_computer_task`, the
+   `src/aj_crew/jev_executor/`, the run routes, `jev_computer_task`, the
    per-task budget and ceilings, with a new system spec
    under `docs/system-specs/modules/`. Tests cover each missing prerequisite
    returning `not_permitted`, `internal_auth` and caller identity on the run
    route, an undeclared or unverified session key being refused, both run paths being listed in `_STRICT_INTERNAL_API_PATHS`, the
    blocking legs running off the event loop, the tool being absent without the
    scope, one decisions-log row per scrub refusal, the tool being registered
-   on `kirocrew-computer` and never matched by
+   on `ajcrew-computer` and never matched by
    the default `allowedTools`, the budget stops, the wall-clock limit being
    below the MCP call timeout, and `caller_gone` stopping the task at the next
    dispatch once the run request's connection closes.

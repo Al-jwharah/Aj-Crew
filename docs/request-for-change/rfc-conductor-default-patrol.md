@@ -2,7 +2,7 @@
 title: Conductor default patrol -- a dispatch (bind or session_create) arms a work-ledger watch when the caller has no live loop
 status: partial
 revision: v2
-author: iamwhatever, with kirocrew-worker
+author: iamwhatever, with ajcrew-worker
 created: 2026-10-05
 last-audited: 2026-10-13
 audited-at: ac8a96a242
@@ -26,7 +26,7 @@ superseded-by: []
 
 A conductor hands an item to a worker with `work_ledger_record action=bind`. Its prompt then tells it to arm a loop on its own session with `monitor_start`. Nothing checks that it did.
 
-A conductor that skips the arm ends its turn with workers running and nobody reading their reports. `done`, `blocked` and `question` sit in the ledger until a person notices. On main, `api_work_ledger_record` in `src/kiro_crew/dashboard/handlers/work_ledger.py` writes the binding and returns; it arms nothing. `work_ledger_read` derives `orphaned` and `stale`, and neither says "nobody is patrolling this board".
+A conductor that skips the arm ends its turn with workers running and nobody reading their reports. `done`, `blocked` and `question` sit in the ledger until a person notices. On main, `api_work_ledger_record` in `src/aj_crew/dashboard/handlers/work_ledger.py` writes the binding and returns; it arms nothing. `work_ledger_read` derives `orphaned` and `stale`, and neither says "nobody is patrolling this board".
 
 ## 2. Goals and non-goals
 
@@ -104,20 +104,20 @@ One implementation PR, [#17069](https://github.com/kirodotdev/KiroCrew/pull/1706
 
 Phase 1 leaves three holes. Each lets a dispatch end with nobody reading the workers.
 
-**A finished round leaves the next round unwatched.** A conductor arms its own `monitor_start` loop with `watch="work-ledger"`. When every ledger item goes terminal, the system stops that loop with `stopped_reason=monitor_terminal`. The conductor then binds the next round. `ensure_patrol` re-arms a stopped row only when it is the gateway's own `default_patrol` (the `rearm` test in `ensure_patrol`, `src/kiro_crew/conductor_patrol.py`, at `ac8a96a242`). The conductor's own loop is not, so the bind answers `existing` and arms nothing. The tracking issue is [#19741](https://github.com/kirodotdev/KiroCrew/issues/19741).
+**A finished round leaves the next round unwatched.** A conductor arms its own `monitor_start` loop with `watch="work-ledger"`. When every ledger item goes terminal, the system stops that loop with `stopped_reason=monitor_terminal`. The conductor then binds the next round. `ensure_patrol` re-arms a stopped row only when it is the gateway's own `default_patrol` (the `rearm` test in `ensure_patrol`, `src/aj_crew/conductor_patrol.py`, at `ac8a96a242`). The conductor's own loop is not, so the bind answers `existing` and arms nothing. The tracking issue is [#19741](https://github.com/kirodotdev/KiroCrew/issues/19741).
 
 **The reply hides it.** `mcp_work` builds the bind reply from the item alone. The route's `patrol` and `patrol_note` never reach the agent, though the tool description promises them. The agent reads `Recorded bind. item=... state=open verdict=(none)` and ends its turn.
 
-**`session_create` is a dispatch with no arm at all.** A session that opens another session with `session_create` hands it work the same way a bind does. `api_session_control_create` in `src/kiro_crew/dashboard/handlers/session_control.py` writes the session and returns. Nothing arms or reports a patrol.
+**`session_create` is a dispatch with no arm at all.** A session that opens another session with `session_create` hands it work the same way a bind does. `api_session_control_create` in `src/aj_crew/dashboard/handlers/session_control.py` writes the session and returns. Nothing arms or reports a patrol.
 
 ### 9.2 Decisions (accepted)
 
 The maintainer accepted these five decisions on 2026-10-13. An implementation must match them.
 
-1. **Re-arm any loop the system stopped.** On bind, an INACTIVE loop the system stopped counts as no loop, whoever armed it: the default patrol, the conductor's own `monitor_start`, or a person's arm. It is replaced by a fresh default. The test is the same `_stopped_row_is_replaceable` allowlist a directive re-arm uses (in `src/kiro_crew/autonudge_service/model.py`): a terminal subject, a spent budget or cap, an approval stall, a crash retirement. A loop a PERSON stopped stays stopped. The reply says `refused (user-stopped)`. The path cannot revive a stop a directive could not.
+1. **Re-arm any loop the system stopped.** On bind, an INACTIVE loop the system stopped counts as no loop, whoever armed it: the default patrol, the conductor's own `monitor_start`, or a person's arm. It is replaced by a fresh default. The test is the same `_stopped_row_is_replaceable` allowlist a directive re-arm uses (in `src/aj_crew/autonudge_service/model.py`): a terminal subject, a spent budget or cap, an approval stall, a crash retirement. A loop a PERSON stopped stays stopped. The reply says `refused (user-stopped)`. The path cannot revive a stop a directive could not.
 2. **`session_create` arms like bind, when the caller holds a ledger.** A non-member caller that holds a work ledger gets the same default `work-ledger` patrol bind arms: same bounds, same message, same chokepoint, same rules for active and stopped rows. Reason: a create is the same dispatch act, reached by another route. A dry run arms nothing.
 3. **`session_create` from a caller with no ledger arms nothing.** A `work-ledger` watch would have nothing to read and would fire on its timer for a day. Instead the reply ends with one note: arm a `monitor_start` loop that reads the session you opened, or watches the one pull request you wait on. The note is skipped when the caller already holds an active loop. Cost: one extra instruction per create on a ledger-less caller with no live loop. That is every ordinary agent that opens a session and has no loop yet.
-4. **Member and crew slots get no outside arm, on either route.** The bind and create routes see only a session key. A cron injection, an app-driven turn or a sub-agent turn on a member slot sends the same key as the member's own turn. So the routes cannot tell a self-arm from an outside arm, and the authorizer refuses them all (`_EXTERNAL_ARM_REFUSED_MODES` in `src/kiro_crew/autonudge_authz.py`). The reply says `refused (outside-arm-refused)` and carries the note. Self-arm from these routes (option D) is out of scope. Section 9.6 names the seam it would need.
+4. **Member and crew slots get no outside arm, on either route.** The bind and create routes see only a session key. A cron injection, an app-driven turn or a sub-agent turn on a member slot sends the same key as the member's own turn. So the routes cannot tell a self-arm from an outside arm, and the authorizer refuses them all (`_EXTERNAL_ARM_REFUSED_MODES` in `src/aj_crew/autonudge_authz.py`). The reply says `refused (outside-arm-refused)` and carries the note. Self-arm from these routes (option D) is out of scope. Section 9.6 names the seam it would need.
 5. **The monitor gate is unchanged.** No authorizer rule, mode set or trust record changes. Loosening the member gate (option C) is rejected.
 
 ### 9.3 Design
@@ -174,7 +174,7 @@ The goal-conductor skill's Patrol section gains one short paragraph, "dispatch m
 
 Every arm still goes through `autonudge_authz.authorize_and_add_nudge` as an OUTSIDE arm, with no `initiator_slot_key`. Section 5 applies to the create route word for word. The message is fixed gateway text. No agent input reaches the loop. A person's stop is never replaced, because the replaceable test is the directive path's own allowlist, which fails closed on an unknown or empty reason.
 
-Self-arm on a member slot (option D) would need turn-level provenance on these routes. Today only the session-directive path proves a turn is the slot's own: `session_directive.DIRECTIVE_TOOLS` lists the tools it honours, and it honours them only from a call served by `CORE_MCP_SERVER` (both in `src/kiro_crew/session_directive.py`). Adding `work_ledger_record` or `session_create` there is not enough. `mcp_core.derive_directive` (in `src/kiro_crew/mcp_core.py`) derives a directive by re-running the tool, which would replay a bind or a create. A future self-arm would need both: those tools in `DIRECTIVE_TOOLS`, and a derive step that does not re-run a side-effecting call. That is a change to the directive provenance gate and needs its own RFC.
+Self-arm on a member slot (option D) would need turn-level provenance on these routes. Today only the session-directive path proves a turn is the slot's own: `session_directive.DIRECTIVE_TOOLS` lists the tools it honours, and it honours them only from a call served by `CORE_MCP_SERVER` (both in `src/aj_crew/session_directive.py`). Adding `work_ledger_record` or `session_create` there is not enough. `mcp_core.derive_directive` (in `src/aj_crew/mcp_core.py`) derives a directive by re-running the tool, which would replay a bind or a create. A future self-arm would need both: those tools in `DIRECTIVE_TOOLS`, and a derive step that does not re-run a side-effecting call. That is a change to the directive provenance gate and needs its own RFC.
 
 ### 9.7 Alternatives considered
 

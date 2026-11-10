@@ -105,7 +105,7 @@ async function newPage(theme, scene) {
   // ThemeProvider re-derives the root theme from its own preference store —
   // verify the REQUESTED mode actually survived provider mount, or the
   // "dark" frames are silently light duplicates. The resolved attribute is
-  // "<colorTheme>-<mode>" (e.g. kiro-dark), so match the mode suffix.
+  // "<colorTheme>-<mode>" (e.g. aj-dark), so match the mode suffix.
   const applied = await page.evaluate(() => document.documentElement.getAttribute('data-theme'))
   check(`theme-applied ${theme}/${scene}`, applied === theme || !!applied?.endsWith(`-${theme}`), `data-theme=${applied}`)
   // The entry's fixture and this script's route answer MUST be byte-equal

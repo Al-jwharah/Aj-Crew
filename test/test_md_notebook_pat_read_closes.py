@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps.builtins.md_notebook import server_store as store
+from aj_crew.apps.builtins.md_notebook import server_store as store
 
 
 def _read_recording_unclosed(path: Path) -> tuple[object, list[str]]:

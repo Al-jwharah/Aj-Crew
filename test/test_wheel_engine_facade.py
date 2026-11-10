@@ -1,12 +1,12 @@
 """The update-engine facade keeps the patch seams and the surface the one module had.
 
-``kiro_crew.platform.wheel_engine`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over
+``aj_crew.platform.wheel_engine`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over
 four sibling owners -- ``wheel_engine_contract``, ``wheel_engine_layout``,
 ``wheel_engine_build_child`` and ``wheel_engine_transfer`` -- and keeps the offline trust root,
 the manifest signature check that reads it, ``download_verified_wheel`` (whose transfer-owner
 download compares the wheel's SHA-256 to the signed digest), the shadow build and promotion,
 debris pruning, the update lock and the apply itself. Callers, tests and
-``cli.sh``'s drift test still reach every name as ``kiro_crew.platform.wheel_engine.<name>``,
+``cli.sh``'s drift test still reach every name as ``aj_crew.platform.wheel_engine.<name>``,
 and the moved code reads its names as plain module globals, so a patch through the facade
 reaches that code only because the mirror writes it into every module holding the name.
 
@@ -36,9 +36,9 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew.platform import wheel_engine
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import _facade_mirror
+from aj_crew.platform import wheel_engine
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_wheel_engine_facade")
 
@@ -46,13 +46,13 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_wheel_engine_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate", "owners_in_layer_order")
 
-FACADE = "kiro_crew.platform.wheel_engine"
+FACADE = "aj_crew.platform.wheel_engine"
 #: The owners, lowest layer first: each imports only the ones listed before it.
 OWNERS = (
-    "kiro_crew.platform.wheel_engine_contract",
-    "kiro_crew.platform.wheel_engine_layout",
-    "kiro_crew.platform.wheel_engine_build_child",
-    "kiro_crew.platform.wheel_engine_transfer",
+    "aj_crew.platform.wheel_engine_contract",
+    "aj_crew.platform.wheel_engine_layout",
+    "aj_crew.platform.wheel_engine_build_child",
+    "aj_crew.platform.wheel_engine_transfer",
 )
 _THIS_FILE = Path(__file__).resolve()
 
@@ -239,7 +239,7 @@ def _owner_project_imports() -> dict[str, str]:
     for owner in OWNERS:
         for node in ast.parse(_owner_path(owner).read_text(encoding="utf-8")).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if node.module.startswith("kiro_crew") and node.module not in OWNERS:
+                if node.module.startswith("aj_crew") and node.module not in OWNERS:
                     for alias in node.names:
                         found[alias.asname or alias.name] = node.module
     return found
@@ -247,7 +247,7 @@ def _owner_project_imports() -> dict[str, str]:
 
 def test_every_project_name_the_family_imports_stays_bound_on_the_facade() -> None:
     """At BASE ``wheel_engine.py`` bound each of these by import, so ``from
-    kiro_crew.platform.wheel_engine import data_home`` type-checked and resolved. The facade
+    aj_crew.platform.wheel_engine import data_home`` type-checked and resolved. The facade
     still binds every one of them by its own import, as the same object its home holds, so
     none is served from an owner and none needs a second manifest."""
     imported = _owner_project_imports()
@@ -264,10 +264,10 @@ def test_every_project_name_the_family_imports_stays_bound_on_the_facade() -> No
 
 def test_the_update_errors_name_the_facade_as_their_module() -> None:
     """A traceback and an error chain render a raised class as ``module.qualname``; the
-    update errors still say ``kiro_crew.platform.wheel_engine``, and each is the one class
+    update errors still say ``aj_crew.platform.wheel_engine``, and each is the one class
     object its owner defines. ``ApplyCancel`` is a flag, never raised, and nothing reads its
     module, so it reports the owner that defines it."""
-    contract = sys.modules["kiro_crew.platform.wheel_engine_contract"]
+    contract = sys.modules["aj_crew.platform.wheel_engine_contract"]
     for name in _NAMED_BY_THE_FACADE:
         cls = getattr(wheel_engine, name)
         assert cls is vars(contract)[name], name
@@ -298,7 +298,7 @@ def test_the_facade_declares_the_unsplit_modules_all() -> None:
 
 
 def test_the_facade_runs_as_a_module(tmp_path: Path) -> None:
-    """``python -m kiro_crew.platform.wheel_engine`` imported cleanly before the split; the
+    """``python -m aj_crew.platform.wheel_engine`` imported cleanly before the split; the
     mirror installs on ``__main__`` too."""
     env = dict(os.environ)
     src = str(Path(wheel_engine.__file__).resolve().parents[2])

@@ -12,13 +12,13 @@ import type { RootState } from '../store'
 import { updateInfoQuery } from '../api/updateInfoQuery'
 import WhatsNewAutoUpdateToggle from './WhatsNewAutoUpdateToggle'
 
-const { kirocrewConfig, setAutoUpdate } = vi.hoisted(() => ({
-  kirocrewConfig: vi.fn(),
+const { ajcrewConfig, setAutoUpdate } = vi.hoisted(() => ({
+  ajcrewConfig: vi.fn(),
   setAutoUpdate: vi.fn(),
 }))
 vi.mock('../api/client', async importOriginal => {
   const real = await importOriginal<typeof import('../api/client')>()
-  return { ...real, api: { ...real.api, kirocrewConfig, setAutoUpdate } }
+  return { ...real, api: { ...real.api, ajcrewConfig, setAutoUpdate } }
 })
 
 const GATEWAY = i18nT('pages.settings.aboutPanel.automatic_updates')
@@ -45,8 +45,8 @@ const show = (effect?: string, over: Record<string, unknown> = {}) =>
 const live = (name: string) => expect(screen.getByRole('switch', { name })).not.toHaveAttribute('aria-disabled')
 
 beforeEach(() => {
-  kirocrewConfig.mockReset()
-  kirocrewConfig.mockResolvedValue({ auto_update: true })
+  ajcrewConfig.mockReset()
+  ajcrewConfig.mockResolvedValue({ auto_update: true })
   setAutoUpdate.mockReset()
   setAutoUpdate.mockImplementation(async (enabled: boolean) => ({ ok: true, auto_update: enabled }))
 })
@@ -131,26 +131,26 @@ describe('reading and writing', () => {
     await waitFor(() => expect(toggle).toHaveAttribute('aria-checked', 'true'))
     expect(setAutoUpdate.mock.calls).toEqual([[false]])
 
-    kirocrewConfig.mockResolvedValue({ auto_update: false })
+    ajcrewConfig.mockResolvedValue({ auto_update: false })
     await act(async () => { answers[0]() })
     await waitFor(() => expect(setAutoUpdate.mock.calls).toEqual([[false], [true]]))
-    kirocrewConfig.mockResolvedValue({ auto_update: true })
+    ajcrewConfig.mockResolvedValue({ auto_update: true })
     await act(async () => { answers[1]() })
 
-    await waitFor(() => expect((queryClient.getQueryData(['kirocrewConfig']) as { auto_update?: boolean }).auto_update).toBe(true))
+    await waitFor(() => expect((queryClient.getQueryData(['ajcrewConfig']) as { auto_update?: boolean }).auto_update).toBe(true))
     expect(toggle).toHaveAttribute('aria-checked', 'true')
   })
 
   it('reads the saved value each time it opens', async () => {
     const { rerender } = show('install')
     await waitFor(() => live(GATEWAY))
-    expect(kirocrewConfig).toHaveBeenCalledTimes(1)
+    expect(ajcrewConfig).toHaveBeenCalledTimes(1)
     // Closed, then opened again on the same cache: the cached value is fresh,
     // and is read again anyway.
     rerender(<></>)
-    kirocrewConfig.mockResolvedValue({ auto_update: false })
+    ajcrewConfig.mockResolvedValue({ auto_update: false })
     rerender(<WhatsNewAutoUpdateToggle onHandoff={vi.fn()} />)
     await waitFor(() => expect(screen.getByRole('switch', { name: GATEWAY })).toHaveAttribute('aria-checked', 'false'))
-    expect(kirocrewConfig).toHaveBeenCalledTimes(2)
+    expect(ajcrewConfig).toHaveBeenCalledTimes(2)
   })
 })

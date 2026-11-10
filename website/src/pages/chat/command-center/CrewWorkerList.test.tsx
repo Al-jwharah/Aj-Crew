@@ -18,7 +18,7 @@ import { crewModePreviewOn } from '../../../test/crewModePreview'
 import { setCrewModeCatalog } from '../../../lib/crewMode'
 
 const W = (key: string, title: string, status: string, group: string) =>
-  ({ key, title, agent: 'kirocrew-worker', status, group, last_activity: '', ledger_item: '', created_by: 'root-1' })
+  ({ key, title, agent: 'ajcrew-worker', status, group, last_activity: '', ledger_item: '', created_by: 'root-1' })
 
 const WORKERS = {
   root: 'root-1',
@@ -250,7 +250,7 @@ describe('Ultra Mode Crew tab', () => {
   it('List: shows the open rows from the slot store when the gateway does not serve the list', async () => {
     api.crewWorkers.mockRejectedValue(new ApiError(404, 'not found', ''))
     renderWith(<UltraCrewPanel root="root-1" viewing="root-1" active />, [
-      { key: 'w-live', title: 'Live worker', agent: 'kirocrew-worker', messages: 2, running: true, crew_root: 'root-1', created_by: 'root-1' },
+      { key: 'w-live', title: 'Live worker', agent: 'ajcrew-worker', messages: 2, running: true, crew_root: 'root-1', created_by: 'root-1' },
     ])
     await toList()
     expect(await screen.findByRole('button', { name: /Live worker/ })).toBeInTheDocument()
@@ -297,10 +297,10 @@ describe('Ultra Mode Crew tab', () => {
   })
 
   it('shows the Ultra panel for a chat with messages that was just switched on, before its root stamp lands', async () => {
-    setCrewModeCatalog('kirocrew-conductor', ['kirocrew-conductor'])
+    setCrewModeCatalog('ajcrew-conductor', ['ajcrew-conductor'])
     try {
       api.crewWorkers.mockResolvedValue({ root: 'mid', workers: [] })
-      renderWith(<CrewWorkersTab slot="mid" active />, [{ key: 'mid', messages: 3, agent: 'kirocrew-conductor', agent_kind: 'template' }])
+      renderWith(<CrewWorkersTab slot="mid" active />, [{ key: 'mid', messages: 3, agent: 'ajcrew-conductor', agent_kind: 'template' }])
       expect(await screen.findByTestId('ultra-crew-panel')).toBeInTheDocument()
       expect(screen.queryByTestId('crew-workers-none')).toBeNull()
     } finally {

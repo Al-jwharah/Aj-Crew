@@ -19,8 +19,8 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_folder_app, _make_state
 from test_diagnostics import _CollectReq
 
-from kiro_crew.dashboard.handlers import diagnostics as dh
-from kiro_crew.diagnostics import BundleResult
+from aj_crew.dashboard.handlers import diagnostics as dh
+from aj_crew.diagnostics import BundleResult
 
 _CASES = [
     ("false", False),
@@ -40,7 +40,7 @@ _CASES = [
 
 def _collect_include_logs(tmp_path: Path, monkeypatch, body: dict) -> object:
     """Run the collect handler on *body*; return the include_logs it passed on."""
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.diagnostics.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.diagnostics.config_dir", lambda: tmp_path)
     seen: dict[str, Any] = {}
 
     def _collect(**kw: Any) -> BundleResult:
@@ -51,7 +51,7 @@ def _collect_include_logs(tmp_path: Path, monkeypatch, body: dict) -> object:
             included=[],
             skipped=[],
             redaction_summary={},
-            github_issue_url="https://github.com/kirodotdev/KiroCrew/issues/new",
+            github_issue_url="https://github.com/Al-jwharah/Aj-Crew/issues/new",
         )
 
     monkeypatch.setattr(dh.diagnostics, "collect_bundle", _collect)
@@ -76,7 +76,7 @@ def test_include_logs_still_defaults_on(tmp_path: Path, monkeypatch) -> None:
 async def test_a_folder_switch_saves_what_it_spells(
     tmp_path: Path, monkeypatch, field, sent, saved
 ) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     client = TestClient(TestServer(_make_folder_app(state)))
     await client.start_server()

@@ -24,9 +24,9 @@ from acp_session_mcp_helpers import agents_dir_fixture  # noqa: F401
 from acp_session_mcp_helpers import isolated_seed_provenance  # noqa: F401
 from acp_session_mcp_helpers import _write_spec
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
-from kiro_crew.config.loader import AgentConfig, KiroCrewConfig
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE
+from aj_crew.config.loader import AgentConfig, AjCrewConfig
 
 _OFF = {"CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"}
 _RESTRICTED = ["incognito", "temporary"]
@@ -112,7 +112,7 @@ def test_the_switch_composes_with_the_exclusion_path(tmp_path, mode):
 async def test_the_session_new_request_carries_the_switch(tmp_path, agents_dir, monkeypatch, mode):
     """What goes on the wire for ``session/new`` is the envelope built above."""
     _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-    client = _client(tmp_path, mode, agent="kirocrew")
+    client = _client(tmp_path, mode, agent="ajcrew")
     client._write_claude_local_settings()
     sent, killed = client_seam.TestClientSeam._adapter_transport(
         client, monkeypatch, started_mode="default"
@@ -134,7 +134,7 @@ async def test_the_provider_sets_the_mode_before_the_session_starts(tmp_path, mo
     Read at the moment the client starts its process and session, on the first
     start and on a restart of the same provider (a respawn, a model switch).
     """
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.providers.acp import AcpProvider
 
     provider = AcpProvider(work_dir=tmp_path, acp_backend=ACP_BACKEND_CLAUDE, memory_mode=mode)
     client = provider._client
@@ -162,13 +162,13 @@ async def test_the_provider_sets_the_mode_before_the_session_starts(tmp_path, mo
 
 def _claude_factory(tmp_path):
     """The real provider factory on the claude backend, its config in *tmp_path*."""
-    cfg_file = tmp_path / "kirocrew.json"
+    cfg_file = tmp_path / "ajcrew.json"
     cfg_file.write_text(
         json.dumps({"agent": {"provider": "acp", "acp_backend": ACP_BACKEND_CLAUDE}}),
         encoding="utf-8",
     )
-    with mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_file):
-        return KiroCrewConfig.load().create_provider_factory()
+    with mock.patch("aj_crew.config.loader.config_path", return_value=cfg_file):
+        return AjCrewConfig.load().create_provider_factory()
 
 
 def test_a_memory_withholding_subagent_turns_auto_memory_off(tmp_path):
@@ -182,9 +182,9 @@ def test_a_memory_withholding_subagent_turns_auto_memory_off(tmp_path):
 
 def _run_kwargs(include_memory: bool) -> dict:
     """The kwargs a dedicated sub-agent run hands ``get_or_create``."""
-    from kiro_crew.execution_context import execution_for_store
-    from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
-    from kiro_crew.subagent import SubagentInfo, SubagentManager
+    from aj_crew.execution_context import execution_for_store
+    from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
+    from aj_crew.subagent import SubagentInfo, SubagentManager
 
     sessions = mock.MagicMock()
     sessions.get_pid.return_value = None
@@ -216,10 +216,10 @@ def _run_kwargs(include_memory: bool) -> dict:
         include_memory=include_memory,
     )
     runner._log_spawned(info)
-    cfg = KiroCrewConfig(agent=AgentConfig())
+    cfg = AjCrewConfig(agent=AgentConfig())
     with (
         mock.patch.object(runner, "_should_use_session_sharing", return_value=False),
-        mock.patch("kiro_crew.config.loader.KiroCrewConfig.load", classmethod(lambda c: cfg)),
+        mock.patch("aj_crew.config.loader.AjCrewConfig.load", classmethod(lambda c: cfg)),
     ):
         asyncio.run(runner._run_inner(info, "subagent:sub1"))
     return captured
@@ -235,8 +235,8 @@ async def test_a_memory_withholding_session_keeps_the_flag_across_starts():
     """It never takes a warm-pool child, whose ``session/new`` went out without the
     switch, and the identity a reset successor or a compaction restart is rebuilt
     from carries the flag."""
-    from kiro_crew.session import SessionManager
-    from kiro_crew.session_lifecycle import allocation_identity
+    from aj_crew.session import SessionManager
+    from aj_crew.session_lifecycle import allocation_identity
 
     def _provider():
         p = mock.MagicMock()
@@ -249,18 +249,18 @@ async def test_a_memory_withholding_session_keeps_the_flag_across_starts():
 
     cfg = mock.MagicMock()
     cfg.session.pool_size = 2
-    cfg.session.pool_agent = "kirocrew"
+    cfg.session.pool_agent = "ajcrew"
     cfg.session.pool_ttl_secs = 1800
     cfg.session.timeout_secs = 3600
     cfg.agent.default_agent = ""
     cfg.agent.model = "auto"
     factory = mock.MagicMock(side_effect=lambda *_a, **_kw: _provider())
-    with mock.patch("kiro_crew.session.default_project_dir", return_value=""):
+    with mock.patch("aj_crew.session.default_project_dir", return_value=""):
         mgr = SessionManager(cfg, provider_factory=factory)
     mgr._drain_and_claim = mock.AsyncMock(return_value=_provider())
     mgr._schedule_replenish = mock.MagicMock()
     try:
-        await mgr.get_or_create("chat-1", agent="kirocrew", include_memory=False)
+        await mgr.get_or_create("chat-1", agent="ajcrew", include_memory=False)
         identity = allocation_identity(mgr, "chat-1", mgr._sessions["chat-1"])
     finally:
         await mgr.close_all()

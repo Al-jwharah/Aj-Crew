@@ -24,19 +24,19 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard import chat_handlers
+from aj_crew.testing.wait import async_wait_until
 
 
-def _member_config() -> KiroCrewConfig:
-    from kiro_crew.config.loader import KiroCrewAgentConfig
-    from kiro_crew.memory_stores import provision_member_memory
+def _member_config() -> AjCrewConfig:
+    from aj_crew.config.loader import AjCrewAgentConfig
+    from aj_crew.memory_stores import provision_member_memory
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        "default": KiroCrewAgentConfig(kiro_agent="kirocrew"),
-        "worker": KiroCrewAgentConfig(kiro_agent="kirocrew"),
+        "default": AjCrewAgentConfig(kiro_agent="ajcrew"),
+        "worker": AjCrewAgentConfig(kiro_agent="ajcrew"),
     }
     cfg.default_agent = "default"
     provision_member_memory(cfg, "worker")
@@ -71,11 +71,11 @@ async def _drain_trailing_push(state: Any) -> None:
 async def test_a_failed_create_neither_keeps_nor_announces_its_newborn(
     tmp_path, monkeypatch, failure, memory_mode
 ) -> None:
-    from kiro_crew.session_agent_selection import session_agent_selection_name
+    from aj_crew.session_agent_selection import session_agent_selection_name
 
     state = _make_state(tmp_path)
     cfg = _member_config()
-    monkeypatch.setattr(chat_handlers, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+    monkeypatch.setattr(chat_handlers, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
     monkeypatch.setattr(chat_handlers, "schedule_eager_spawn", lambda *args, **kwargs: None)
     loop = asyncio.get_running_loop()
     slots_before = set(state._slots)
@@ -159,7 +159,7 @@ async def _post_create(state: Any, body: dict) -> int | None:
 def _assert_nothing_left(
     state: Any, frames: list[list[dict]], before: tuple[set, set, set], key: str
 ) -> None:
-    from kiro_crew.session_agent_selection import session_agent_selection_name
+    from aj_crew.session_agent_selection import session_agent_selection_name
 
     slots_before, restricted_before, ephemeral_before = before
     announced = [row for frame in frames for row in frame if row["key"] == key]
@@ -174,10 +174,10 @@ def _newborn_key(state: Any, slots_before: set) -> str | None:
     return next((k for k in state._slots if k not in slots_before), None)
 
 
-def _member_state(tmp_path, monkeypatch) -> tuple[Any, KiroCrewConfig, tuple[set, set, set]]:
+def _member_state(tmp_path, monkeypatch) -> tuple[Any, AjCrewConfig, tuple[set, set, set]]:
     state = _make_state(tmp_path)
     cfg = _member_config()
-    monkeypatch.setattr(chat_handlers, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+    monkeypatch.setattr(chat_handlers, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
     monkeypatch.setattr(chat_handlers, "schedule_eager_spawn", lambda *args, **kwargs: None)
     before = (set(state._slots), set(state._restricted_keys), set(state._ephemeral_keys))
     return state, cfg, before
@@ -259,7 +259,7 @@ async def test_an_error_after_the_pick_is_recorded_undoes_the_pick(tmp_path, mon
         return ""
 
     async def save(state_arg, slot, **kwargs):
-        from kiro_crew.session_agent_selection import session_agent_selection_name
+        from aj_crew.session_agent_selection import session_agent_selection_name
 
         # Positive control: the pick is on disk when the failure lands.
         assert session_agent_selection_name(f"dashboard:{slot.key}") is not None

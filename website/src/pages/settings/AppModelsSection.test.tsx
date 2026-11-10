@@ -11,7 +11,7 @@ import React from 'react'
 
 vi.mock('../../api/client', () => ({
   api: {
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
     patchConfig: vi.fn(),
     listApps: vi.fn(),
   },
@@ -61,7 +61,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   serverCfg = {}
-  vi.mocked(api.kirocrewConfig).mockImplementation(async () => structuredClone(serverCfg))
+  vi.mocked(api.ajcrewConfig).mockImplementation(async () => structuredClone(serverCfg))
   vi.mocked(api.patchConfig).mockImplementation(async (path: string, value: unknown) => {
     const [, name] = path.split('.')
     serverCfg.apps = { ...serverCfg.apps, [name]: { model: value } }

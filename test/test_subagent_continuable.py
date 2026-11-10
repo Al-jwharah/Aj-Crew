@@ -35,9 +35,9 @@ import subagent_continuable_helpers
 from subagent_continuable_helpers import _stop_reason  # noqa: F401
 from subagent_continuable_helpers import _manager, _mock_ctx_builder, _mock_sessions
 
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.subagent_persistence import create_agent_folder, write_run_agent
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent_persistence import create_agent_folder, write_run_agent
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -56,13 +56,13 @@ continuation_runtime = subagent_continuable_helpers.continuation_runtime
 @pytest.mark.asyncio
 @pytest.mark.parametrize("continuation", [False, True])
 async def test_run_execution_publication_is_off_loop(monkeypatch, continuation):
-    from kiro_crew import execution_context, subagent_persistence
-    from kiro_crew.subagent import _RunCreditAccounting
+    from aj_crew import execution_context, subagent_persistence
+    from aj_crew.subagent import _RunCreditAccounting
 
     manager = _manager()
     manager.dependency_coordinator_async = AsyncMock(return_value=None)
     captured = execution_context.ExecutionContext(
-        None, execution_context.MemoryStoreRef("default"), "template", "kirocrew", "persistent"
+        None, execution_context.MemoryStoreRef("default"), "template", "ajcrew", "persistent"
     )
     info = SubagentInfo(id="thread-probe", task="synthetic", execution_context=captured)
     if continuation:
@@ -104,7 +104,7 @@ async def test_run_execution_publication_is_off_loop(monkeypatch, continuation):
 
 class TestSessionManagerContinuable:
     def _sessions(self):  # type: ignore[no-untyped-def]
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         with patch.object(SessionManager, "__init__", lambda self: None):
             mgr = SessionManager()  # type: ignore[call-arg]
@@ -128,7 +128,7 @@ class TestSessionManagerContinuable:
         mgr._sessions["subagent:abc"] = session
         mgr.mark_continuable("subagent:abc")
         mgr._safe_cleanup = MagicMock()  # type: ignore[method-assign]
-        with patch("kiro_crew.session.asyncio.ensure_future") as ensure:
+        with patch("aj_crew.session.asyncio.ensure_future") as ensure:
             mgr.release("subagent:abc", cleanup=True)
         ensure.assert_not_called()
         mgr._safe_cleanup.assert_not_called()
@@ -172,7 +172,7 @@ class TestKeepThreading:
     async def test_keep_marks_continuable_and_skips_sharing(self) -> None:
         sessions = _mock_sessions()
         manager = _manager(sessions)
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = manager.spawn("task", keep=True)
             assert info is not None and not info.error
             assert info.keep is True
@@ -188,7 +188,7 @@ class TestKeepThreading:
         """Retain-by-default: even non-keep runs keep session files."""
         sessions = _mock_sessions()
         manager = _manager(sessions)
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = manager.spawn("task")
             assert info is not None and not info.error
             await manager._tasks[info.id]
@@ -197,13 +197,13 @@ class TestKeepThreading:
 
     @pytest.mark.asyncio
     async def test_conversation_key_overrides_session_key(self) -> None:
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         await asyncio.to_thread(sp.create_agent_folder, "origrun1", memory_mode="persistent")
         await asyncio.to_thread(sp.write_run_agent, "origrun1", "")
         sessions = _mock_sessions(resumed=True)
         manager = _manager(sessions)
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = manager.spawn("follow-up", keep=True, conversation_key="subagent:origrun1")
             assert info is not None and not info.error
             await manager._tasks[info.id]
@@ -220,7 +220,7 @@ class TestContinueConversation:
         manager = _manager()
         live = SubagentInfo(id="orig1234", task="t")
         manager._agents["orig1234"] = live  # not done → busy
-        with patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.sel"):
             info = manager.continue_conversation("orig1234", "more work")
         assert info is not None and info.done
         assert info.error.startswith("conversation_busy")
@@ -230,8 +230,8 @@ class TestContinueConversation:
         sessions.resumable_sid = MagicMock(return_value=None)
         manager = _manager(sessions)
         with (
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent.read_state", return_value=None),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent.read_state", return_value=None),
         ):
             info = manager.continue_conversation("deadbeef", "more work")
         assert info is not None and info.done
@@ -243,7 +243,7 @@ class TestContinueConversation:
         manager = _manager(sessions)
         with (
             patch(
-                "kiro_crew.subagent_persistence.promote_retention", side_effect=OSError("disk busy")
+                "aj_crew.subagent_persistence.promote_retention", side_effect=OSError("disk busy")
             ),
             patch.object(manager, "spawn") as spawn,
         ):
@@ -259,7 +259,7 @@ class TestContinueConversation:
         sessions = _mock_sessions()
         manager = _manager(sessions)
         with (
-            patch("kiro_crew.subagent.update_state", return_value=False),
+            patch("aj_crew.subagent.update_state", return_value=False),
             patch.object(manager, "spawn") as spawn,
         ):
             info = manager.continue_conversation("skiprun", "follow-up")
@@ -269,7 +269,7 @@ class TestContinueConversation:
         spawn.assert_not_called()
 
     def test_retryable_promotion_preserves_existing_retention(self) -> None:
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         create_agent_folder("kept-run")
         sessions = _mock_sessions()
@@ -278,7 +278,7 @@ class TestContinueConversation:
         manager._conversations["subagent:kept-run"] = 123.0
         with (
             patch(
-                "kiro_crew.subagent_persistence.promote_retention",
+                "aj_crew.subagent_persistence.promote_retention",
                 return_value=sp.RetentionPromotionResult.RETRYABLE,
             ),
             patch.object(manager, "spawn") as spawn,
@@ -291,7 +291,7 @@ class TestContinueConversation:
         spawn.assert_not_called()
 
     def test_concurrent_promotions_use_direct_return_values(self) -> None:
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         manager = _manager(_mock_sessions())
         for agent_id in ("retry-thread", "promoted-thread"):
@@ -313,7 +313,7 @@ class TestContinueConversation:
             threading.Thread(target=promote, args=(agent_id,))
             for agent_id in ("retry-thread", "promoted-thread")
         ]
-        with patch("kiro_crew.subagent.update_state", side_effect=state_writer):
+        with patch("aj_crew.subagent.update_state", side_effect=state_writer):
             for thread in threads:
                 thread.start()
             for thread in threads:
@@ -337,9 +337,9 @@ class TestContinueConversation:
         manager = _manager(sessions)
         state = {"session_id": "sid-from-state", "provider": "acp", "cwd": "/tmp/x"}
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent.read_state", return_value=state),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent.read_state", return_value=state),
             patch.object(manager, "_promote_conversation", return_value=object()) as promote,
         ):
             info = manager.continue_conversation("origrun2", "follow-up")
@@ -358,8 +358,8 @@ class TestContinueConversation:
         manager = _manager(sessions)
         state = {"session_id": "sid-stale", "provider": "acp", "cwd": ""}
         with (
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent.read_state", return_value=state),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent.read_state", return_value=state),
         ):
             info = manager.continue_conversation("stalerun", "follow-up")
         assert info is not None and info.done
@@ -367,15 +367,15 @@ class TestContinueConversation:
 
     @pytest.mark.asyncio
     async def test_continue_dispatches_new_run_on_same_key(self) -> None:
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         await asyncio.to_thread(sp.create_agent_folder, "origrun1", memory_mode="persistent")
         await asyncio.to_thread(sp.write_run_agent, "origrun1", "")
         sessions = _mock_sessions(resumed=True)
         manager = _manager(sessions)
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(manager, "_promote_conversation", return_value=object()),
         ):
             info = manager.continue_conversation("origrun1", "follow-up work")
@@ -391,7 +391,7 @@ class TestContinueConversation:
     async def test_continuation_fails_closed_when_not_resumed(self) -> None:
         """session/load falling back to a fresh session must NOT execute the
         follow-up context-free — the run fails with a typed resume_failed."""
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         await asyncio.to_thread(sp.create_agent_folder, "origrun9", memory_mode="persistent")
         await asyncio.to_thread(sp.write_run_agent, "origrun9", "")
@@ -400,8 +400,8 @@ class TestContinueConversation:
         provider.session_id = "sid-resume-fresh"
         manager = _manager(sessions)
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(manager, "_promote_conversation", return_value=object()),
         ):
             info = manager.continue_conversation("origrun9", "follow-up work")
@@ -437,8 +437,8 @@ class TestContinueConversation:
         """A chat continuing a run another chat started, directly or through an earlier
         continuation's own id, asks the starting chat for its tools when it has Trust
         and no chat when it has none, so neither chat's tab Trust approves alone."""
-        import kiro_crew.subagent_persistence as sp
-        from kiro_crew.providers.base import LLMEvent
+        import aj_crew.subagent_persistence as sp
+        from aj_crew.providers.base import LLMEvent
 
         keys = {"chat": "dashboard:chat-1", "founder": "dashboard:chat-2", "": ""}
         chat, founder = keys["chat"], keys["founder"]
@@ -468,8 +468,8 @@ class TestContinueConversation:
             sessions=sessions, ctx_builder=_mock_ctx_builder(), on_tool_approval=approver
         )
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(manager, "_promote_conversation", return_value=object()),
         ):
             info = manager.continue_conversation(
@@ -492,7 +492,7 @@ class TestContinuationAgentInheritance:
         sessions = _mock_sessions()
         sessions.get_agent.return_value = None
         manager = _manager(sessions)
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = manager.spawn("initial task", parent_session_key="dashboard:owner")
             assert info is not None and info.done
         assert "effective agent template is invalid" in info.error
@@ -504,17 +504,17 @@ class TestContinuationAgentInheritance:
     async def test_chained_override_preserves_original_template(
         self, restart: bool, original_agent: str
     ) -> None:
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         sessions = _mock_sessions()
         sessions.get_agent.return_value = original_agent
         manager = _manager(sessions)
         manager._spawn_stagger_secs = 0
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch(
-                "kiro_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
+                "aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
             ),
         ):
             original = manager.spawn(
@@ -559,7 +559,7 @@ class TestContinuationAgentInheritance:
     async def test_override_cannot_establish_missing_lineage(self, authority: str) -> None:
         import json
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         directory = await asyncio.to_thread(sp.create_agent_folder, "original", agent="worker")
         path = directory / "state.json"
@@ -574,7 +574,7 @@ class TestContinuationAgentInheritance:
             path.mkdir()
         sessions = _mock_sessions(resumed=True)
         manager = _manager(sessions)
-        with patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.sel"):
             followup = manager.continue_conversation("original", "next turn", agent="other-worker")
         assert followup is not None and followup.error
         assert "memory_unavailable" in followup.error
@@ -587,7 +587,7 @@ class TestContinuationAgentInheritance:
     ) -> None:
         from types import SimpleNamespace
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         await asyncio.to_thread(
             sp.create_agent_folder, "original", agent="worker", app="example-app"
@@ -603,18 +603,18 @@ class TestContinuationAgentInheritance:
             return name, "", ""
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent._validate_agent", side_effect=validate),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent._validate_agent", side_effect=validate),
             patch(
-                "kiro_crew.subagent.list_agents",
+                "aj_crew.subagent.list_agents",
                 return_value=[
                     SimpleNamespace(name=name, filename=f"example-app--{name}.json")
                     for name in ("worker", "other-worker")
                 ],
             ),
             patch(
-                "kiro_crew.subagent._vet_spawn_governance",
+                "aj_crew.subagent._vet_spawn_governance",
                 side_effect=lambda parent, agent, app="": (
                     "worker denied" if agent == "worker" and refusal == "spawn-policy" else None
                 ),
@@ -652,22 +652,22 @@ class TestContinuationAgentInheritance:
     async def test_private_override_chain_retains_memory_authority(
         self, restart: bool, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.subagent_persistence as sp
-        from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-        from kiro_crew.history import ConversationLog
-        from kiro_crew.member_memory_auth import (
+        import aj_crew.subagent_persistence as sp
+        from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+        from aj_crew.history import ConversationLog
+        from aj_crew.member_memory_auth import (
             bind_private_session_store,
             private_memory_store_for_session,
         )
-        from kiro_crew.memory_stores import provision_member_memory
+        from aj_crew.memory_stores import provision_member_memory
 
         # No provider process is launched; only the OS capability probe is
         # modeled. Store provisioning, delegation and protected bindings are real.
 
         def provision() -> tuple[str, str]:
-            cfg = KiroCrewConfig.load()
-            cfg.agents["worker"] = KiroCrewAgentConfig(kiro_agent="worker")
-            cfg.agents["other-worker"] = KiroCrewAgentConfig(kiro_agent="other-worker")
+            cfg = AjCrewConfig.load()
+            cfg.agents["worker"] = AjCrewAgentConfig(kiro_agent="worker")
+            cfg.agents["other-worker"] = AjCrewAgentConfig(kiro_agent="other-worker")
             store = provision_member_memory(cfg, "worker")
             peer = provision_member_memory(cfg, "other-worker")
             cfg.save()
@@ -683,10 +683,10 @@ class TestContinuationAgentInheritance:
         manager._spawn_stagger_secs = 0
         manager._ctx_builder.conversation_log = history
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch(
-                "kiro_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
+                "aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
             ),
         ):
             original = manager.spawn(
@@ -751,7 +751,7 @@ class TestContinuationAgentInheritance:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("continuation", [False, True])
     async def test_inherited_template_obeys_spawn_scope(self, continuation: bool) -> None:
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         sessions = _mock_sessions(resumed=continuation)
         sessions.get_agent.return_value = "worker"
@@ -760,13 +760,13 @@ class TestContinuationAgentInheritance:
             await asyncio.to_thread(sp.create_agent_folder, "original", agent="worker")
             await asyncio.to_thread(sp.write_run_agent, "original", "worker")
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch(
-                "kiro_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
+                "aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
             ),
             patch(
-                "kiro_crew.subagent._vet_spawn_governance",
+                "aj_crew.subagent._vet_spawn_governance",
                 side_effect=lambda parent, agent, app="": (
                     "worker denied" if agent == "worker" else None
                 ),
@@ -789,7 +789,7 @@ class TestContinuationAgentInheritance:
     @pytest.mark.parametrize("live", [True, False])
     @pytest.mark.parametrize("override", ["", "other-worker"])
     async def test_resume_retains_worker_template(self, live: bool, override: str) -> None:
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         await asyncio.to_thread(sp.create_agent_folder, "original", agent="worker")
         await asyncio.to_thread(sp.write_run_agent, "original", "worker")
@@ -801,10 +801,10 @@ class TestContinuationAgentInheritance:
                 id="original", task="first task", agent="worker", done=True
             )
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch(
-                "kiro_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
+                "aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
             ),
             patch.object(manager, "_promote_conversation", return_value=object()),
         ):
@@ -823,12 +823,12 @@ class TestContinuationAgentInheritance:
     async def test_implicit_spawn_records_template_for_restart(
         self, state_agent: str | None
     ) -> None:
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         sessions = _mock_sessions()
         sessions.get_agent.return_value = "worker"
         manager = _manager(sessions)
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = manager.spawn("first task", parent_session_key="dashboard:worker", keep=True)
             assert info is not None and not info.error
             await await_until(manager._tasks[info.id], what="the run finishing")
@@ -843,10 +843,10 @@ class TestContinuationAgentInheritance:
         restored_sessions.get_agent.return_value = "conductor"
         restored = _manager(restored_sessions)
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch(
-                "kiro_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
+                "aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
             ),
             patch.object(restored, "_promote_conversation", return_value=object()),
         ):
@@ -860,7 +860,7 @@ class TestContinuationAgentInheritance:
 
     @pytest.mark.asyncio
     async def test_recorded_default_does_not_inherit_new_parent(self) -> None:
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         await asyncio.to_thread(sp.create_agent_folder, "original", agent="")
         await asyncio.to_thread(sp.write_run_agent, "original", "")
@@ -868,8 +868,8 @@ class TestContinuationAgentInheritance:
         sessions.get_agent.return_value = "conductor"
         manager = _manager(sessions)
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(manager, "_promote_conversation", return_value=object()),
         ):
             info = manager.continue_conversation(
@@ -882,7 +882,7 @@ class TestContinuationAgentInheritance:
 
     @pytest.mark.asyncio
     async def test_unavailable_recorded_template_refuses_allocation(self) -> None:
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         await asyncio.to_thread(sp.create_agent_folder, "original", agent="removed-worker")
         await asyncio.to_thread(sp.write_run_agent, "original", "removed-worker")
@@ -890,10 +890,10 @@ class TestContinuationAgentInheritance:
         sessions.get_agent.return_value = "conductor"
         manager = _manager(sessions)
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch(
-                "kiro_crew.subagent._validate_agent",
+                "aj_crew.subagent._validate_agent",
                 return_value=("", "agent 'removed-worker' not found", "agent_not_found"),
             ),
             patch.object(manager, "_promote_conversation", return_value=object()),
@@ -910,17 +910,17 @@ class TestContinuationAgentInheritance:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("override", ["", "worker"])
     async def test_legacy_template_requires_explicit_override(self, override: str) -> None:
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         await asyncio.to_thread(sp.create_agent_folder, "original", agent="conductor")
         sessions = _mock_sessions(resumed=True)
         sessions.get_agent.return_value = "conductor"
         manager = _manager(sessions)
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch(
-                "kiro_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
+                "aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
             ),
             patch.object(manager, "_promote_conversation", return_value=object()),
         ):
@@ -935,7 +935,7 @@ class TestContinuationAgentInheritance:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("lineage", ["initial", "known", "unknown"])
     async def test_template_publication_failure_refuses_allocation(self, lineage: str) -> None:
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         if lineage != "initial":
             await asyncio.to_thread(sp.create_agent_folder, "original", agent="worker")
@@ -944,10 +944,10 @@ class TestContinuationAgentInheritance:
         sessions = _mock_sessions()
         manager = _manager(sessions)
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch(
-                "kiro_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
+                "aj_crew.subagent._validate_agent", side_effect=lambda name, cwd: (name, "", "")
             ),
             patch.object(
                 type(manager._run_events),

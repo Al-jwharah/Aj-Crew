@@ -22,12 +22,12 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from guide_route_helpers import in_dashboard_turn
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew.dashboard import change_cards as cards
-from kiro_crew.dashboard.change_cards import CardStore
-from kiro_crew.dashboard.handlers import change_cards as routes
-from kiro_crew.dashboard.handlers.undo_identity_guard import REQ_CARD_UNDO_CREWMATE_EXPECT
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew import change_card_catalog as catalog
+from aj_crew.dashboard import change_cards as cards
+from aj_crew.dashboard.change_cards import CardStore
+from aj_crew.dashboard.handlers import change_cards as routes
+from aj_crew.dashboard.handlers.undo_identity_guard import REQ_CARD_UNDO_CREWMATE_EXPECT
+from aj_crew.dashboard.state import _ChatSlot
 
 SLOT = "chat-1"
 SK = f"dashboard:{SLOT}"
@@ -73,13 +73,13 @@ def test_create_undo_withheld_when_the_card_recorded_no_member_id():
 @pytest.fixture(autouse=True)
 def _owner_caller(_floor_monkeypatch):
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
 
 def _delete_request(name: str, expected_member_id: str | None):
-    """A real ``api_kirocrew_agent_delete`` request. ``request.get`` is a real
+    """A real ``api_ajcrew_agent_delete`` request. ``request.get`` is a real
     dict read so the guard sees the armed key, not a MagicMock."""
     attrs: dict[str, Any] = {"user": "dashboard"}
     if expected_member_id is not None:
@@ -99,14 +99,14 @@ def _write_template(agents_dir: Path, stem: str) -> None:
 
 
 def _seed_crew(member_id: str) -> None:
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        "kirocrew": KiroCrewAgentConfig(kiro_agent="kirocrew"),
-        "scout": KiroCrewAgentConfig(kiro_agent="kirocrew", member_id=member_id),
+        "ajcrew": AjCrewAgentConfig(kiro_agent="ajcrew"),
+        "scout": AjCrewAgentConfig(kiro_agent="ajcrew", member_id=member_id),
     }
-    cfg.default_agent = "kirocrew"
+    cfg.default_agent = "ajcrew"
     cfg.save()
 
 
@@ -117,18 +117,18 @@ async def test_delete_route_refuses_when_the_live_member_id_differs(tmp_path):
     with ``changed_since_apply`` and leave the replacement in place."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _write_template(agents_dir, "kirocrew")
+    _write_template(agents_dir, "ajcrew")
     _seed_crew(member_id="m-REPLACEMENT")
 
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await routes_delete(_delete_request("scout", expected_member_id="m-ORIGINAL"))
 
     assert resp.status == 409
     assert json.loads(resp.body)["code"] == "changed_since_apply"
     # The replacement crewmate the card never made is untouched.
-    assert "scout" in KiroCrewConfig.load().agents
+    assert "scout" in AjCrewConfig.load().agents
 
 
 @pytest.mark.asyncio
@@ -137,16 +137,16 @@ async def test_delete_route_removes_when_the_member_id_still_matches(tmp_path):
     deletes exactly the crewmate it made."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _write_template(agents_dir, "kirocrew")
+    _write_template(agents_dir, "ajcrew")
     _seed_crew(member_id="m-ORIGINAL")
 
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await routes_delete(_delete_request("scout", expected_member_id="m-ORIGINAL"))
 
     assert resp.status == 200
-    assert "scout" not in KiroCrewConfig.load().agents
+    assert "scout" not in AjCrewConfig.load().agents
 
 
 @pytest.mark.asyncio
@@ -155,16 +155,16 @@ async def test_delete_route_is_unconditional_without_the_guard(tmp_path):
     opt-in and adds no behaviour to a plain DELETE."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _write_template(agents_dir, "kirocrew")
+    _write_template(agents_dir, "ajcrew")
     _seed_crew(member_id="m-ORIGINAL")
 
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await routes_delete(_delete_request("scout", expected_member_id=None))
 
     assert resp.status == 200
-    assert "scout" not in KiroCrewConfig.load().agents
+    assert "scout" not in AjCrewConfig.load().agents
 
 
 # ── F1: the window the OLD guard left open — a replacement persisted AFTER the
@@ -176,9 +176,9 @@ def _repersist_scout_member_id(member_id: str) -> None:
     recreate in another process would leave it. Takes the config sidecar lock via
     ``save()``, exactly as a real recreate's write does, so it is a faithful stand
     -in for the cross-process write the ``update_config_locked`` read must catch."""
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents["scout"].member_id = member_id
     cfg.save()
 
@@ -188,11 +188,11 @@ async def test_delete_route_refuses_a_replacement_persisted_inside_the_lock_wind
     """Rewrite scout's member_id on disk, as a same-name recreate would."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _write_template(agents_dir, "kirocrew")
+    _write_template(agents_dir, "ajcrew")
     _seed_crew(member_id="m-ORIGINAL")
 
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.dashboard.handlers import agents as handlers
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.dashboard.handlers import agents as handlers
 
     real_update = handlers.update_config_locked
     fired = {"done": False}
@@ -209,7 +209,7 @@ async def test_delete_route_refuses_a_replacement_persisted_inside_the_lock_wind
     avatars = MagicMock()
     prune = MagicMock(return_value="")
     with (
-        patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir),
+        patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir),
         patch.object(handlers, "update_config_locked", _update_after_a_racing_recreate),
         patch.object(handlers, "_reclaim_deleted_member_crew_log", reclaim),
         patch.object(handlers, "_remove_avatar_files", avatars),
@@ -221,7 +221,7 @@ async def test_delete_route_refuses_a_replacement_persisted_inside_the_lock_wind
     assert resp.status == 409
     assert json.loads(resp.body)["code"] == "changed_since_apply"
     # The replacement the card never made survives, still wearing its own id.
-    live = KiroCrewConfig.load().agents
+    live = AjCrewConfig.load().agents
     assert "scout" in live and live["scout"].member_id == "m-REPLACEMENT"
     # No teardown keyed to the delete ran: the mutate aborted the write first.
     reclaim.assert_not_called()
@@ -234,11 +234,11 @@ async def test_delete_route_removes_when_a_window_write_keeps_the_same_member_id
     """An in-window rewrite that keeps the member_id still deletes."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _write_template(agents_dir, "kirocrew")
+    _write_template(agents_dir, "ajcrew")
     _seed_crew(member_id="m-ORIGINAL")
 
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.dashboard.handlers import agents as handlers
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.dashboard.handlers import agents as handlers
 
     real_update = handlers.update_config_locked
     fired = {"done": False}
@@ -251,7 +251,7 @@ async def test_delete_route_removes_when_a_window_write_keeps_the_same_member_id
 
     reclaim = MagicMock()
     with (
-        patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir),
+        patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir),
         patch.object(handlers, "update_config_locked", _update_after_a_same_id_rewrite),
         patch.object(handlers, "_reclaim_deleted_member_crew_log", reclaim),
     ):
@@ -259,15 +259,15 @@ async def test_delete_route_removes_when_a_window_write_keeps_the_same_member_id
 
     assert fired["done"]
     assert resp.status == 200
-    assert "scout" not in KiroCrewConfig.load().agents
+    assert "scout" not in AjCrewConfig.load().agents
     # The delete committed, so its crew-log reclaim ran as on any ordinary delete.
     reclaim.assert_called_once()
 
 
 async def routes_delete(request):
-    from kiro_crew.dashboard.handlers.agents import api_kirocrew_agent_delete
+    from aj_crew.dashboard.handlers.agents import api_ajcrew_agent_delete
 
-    return await api_kirocrew_agent_delete(request)
+    return await api_ajcrew_agent_delete(request)
 
 
 # ── F2: _arm_card_undo_cron_guard arms the right fingerprint per step ──
@@ -430,7 +430,7 @@ def _applied_crewmate_create_card(store: CardStore, service, job_id: str, member
 
 def test_crewmate_create_cron_undo_refuses_a_schedule_edited_in_the_window(tmp_path):
     """A schedule edited before the Undo's cron delete survives with its history."""
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     service = CronService(base_dir=tmp_path / "crons")
     job = service.add_job("scout schedule", "watch prod", cron_expr="0 9 * * *")
@@ -448,7 +448,7 @@ def test_crewmate_create_cron_undo_refuses_a_schedule_edited_in_the_window(tmp_p
         return dict(after)
 
     def _app() -> web.Application:
-        from kiro_crew.dashboard.handlers.cron import api_cron_delete
+        from aj_crew.dashboard.handlers.cron import api_cron_delete
 
         app = web.Application(middlewares=[_fake_auth, routes.change_card_middleware])
         app["state"] = state
@@ -499,7 +499,7 @@ def test_crewmate_create_cron_undo_refuses_a_schedule_edited_in_the_window(tmp_p
 def test_crewmate_create_cron_undo_removes_a_still_matching_schedule(tmp_path):
     """Matched success: nothing changed in the window, so the Undo's cron DELETE
     removes the schedule the create made exactly as a plain delete would."""
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     service = CronService(base_dir=tmp_path / "crons")
     job = service.add_job("scout schedule", "watch prod", cron_expr="0 9 * * *")
@@ -513,7 +513,7 @@ def test_crewmate_create_cron_undo_removes_a_still_matching_schedule(tmp_path):
         return dict(after)
 
     def _app() -> web.Application:
-        from kiro_crew.dashboard.handlers.cron import api_cron_delete
+        from aj_crew.dashboard.handlers.cron import api_cron_delete
 
         app = web.Application(middlewares=[_fake_auth, routes.change_card_middleware])
         app["state"] = state
@@ -620,14 +620,14 @@ def _update_request(name: str, body: dict[str, Any], expected_member_id: str | N
 
 
 async def _routes_update(request):
-    from kiro_crew.dashboard.handlers.agents import api_kirocrew_agent_update
+    from aj_crew.dashboard.handlers.agents import api_ajcrew_agent_update
 
-    return await api_kirocrew_agent_update(request)
+    return await api_ajcrew_agent_update(request)
 
 
 @pytest.mark.asyncio
 async def test_update_route_refuses_an_undo_onto_a_replacement_crewmate(tmp_path):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     _seed_crew(member_id="m-REPLACEMENT")
     resp = await _routes_update(
@@ -635,24 +635,24 @@ async def test_update_route_refuses_an_undo_onto_a_replacement_crewmate(tmp_path
     )
     assert resp.status == 409
     assert json.loads(resp.body)["code"] == "changed_since_apply"
-    assert KiroCrewConfig.load().agents["scout"].description != "old"
+    assert AjCrewConfig.load().agents["scout"].description != "old"
 
 
 @pytest.mark.asyncio
 async def test_update_route_writes_when_the_member_id_matches_or_is_unarmed(tmp_path):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     _seed_crew(member_id="m-ORIGINAL")
     resp = await _routes_update(
         _update_request("scout", {"description": "old"}, expected_member_id="m-ORIGINAL")
     )
     assert resp.status == 200
-    assert KiroCrewConfig.load().agents["scout"].description == "old"
+    assert AjCrewConfig.load().agents["scout"].description == "old"
     resp = await _routes_update(
         _update_request("scout", {"description": "plain"}, expected_member_id=None)
     )
     assert resp.status == 200
-    assert KiroCrewConfig.load().agents["scout"].description == "plain"
+    assert AjCrewConfig.load().agents["scout"].description == "plain"
 
 
 # ── an ordinary (no-card) save is never refused by the card hook ──

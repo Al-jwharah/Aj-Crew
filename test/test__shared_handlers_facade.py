@@ -1,9 +1,9 @@
 """The shared handler helpers' facade keeps the patch seams the one module had.
 
-``kiro_crew.dashboard.handlers._shared`` is a mirror facade (:mod:`kiro_crew._facade_mirror`)
-over the ``kiro_crew.dashboard.handlers._shared_<role>`` owners and keeps no code of its own.
+``aj_crew.dashboard.handlers._shared`` is a mirror facade (:mod:`aj_crew._facade_mirror`)
+over the ``aj_crew.dashboard.handlers._shared_<role>`` owners and keeps no code of its own.
 The handler modules, tests and documents still reach every name as
-``kiro_crew.dashboard.handlers._shared.<name>``, and the moved code reads its names as plain
+``aj_crew.dashboard.handlers._shared.<name>``, and the moved code reads its names as plain
 module globals, so a patch through the facade reaches that code only because the mirror writes
 it into every module holding the name.
 
@@ -32,9 +32,9 @@ import owner_import_scan
 import pytest
 import source_corpus
 
-import kiro_crew
-from kiro_crew import _facade_mirror
-from kiro_crew.dashboard.handlers import _shared
+import aj_crew
+from aj_crew import _facade_mirror
+from aj_crew.dashboard.handlers import _shared
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan__shared_handlers_facade")
 
@@ -42,10 +42,10 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan__shared_handlers_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.dashboard.handlers._shared"
-OWNER_PREFIX = "kiro_crew.dashboard.handlers._shared_"
+FACADE = "aj_crew.dashboard.handlers._shared"
+OWNER_PREFIX = "aj_crew.dashboard.handlers._shared_"
 HANDLERS_DIR = Path(_shared.__file__).resolve().parent
-_SRC = Path(kiro_crew.__file__).resolve().parent
+_SRC = Path(aj_crew.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
 
 #: Names the test trees are known to patch through the facade, one of each seam the helpers
@@ -198,7 +198,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for path in _owner_paths().values():
         for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     if f"{node.module}.{alias.name}" not in family:
@@ -221,7 +221,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
     """An owner binds these by import, so the facade names each one from its home module
-    under ``TYPE_CHECKING`` and ``from kiro_crew.dashboard.handlers._shared import
+    under ``TYPE_CHECKING`` and ``from aj_crew.dashboard.handlers._shared import
     redact_credentials`` type-checks."""
     served = set(_index().exports)
     expected = {name: home for name, home in _home_imports().items() if name in served}
@@ -259,13 +259,13 @@ def test_only_the_family_imports_an_owner() -> None:
 
 
 def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None:
-    root = tmp_path / "kiro_crew"
+    root = tmp_path / "aj_crew"
     sources = {
-        root / "pkg" / "caller.py": "from kiro_crew.dashboard.handlers._shared_scrub import x\n",
-        root / "other.py": "from kiro_crew.dashboard.handlers import _shared_access as acc\n",
+        root / "pkg" / "caller.py": "from aj_crew.dashboard.handlers._shared_scrub import x\n",
+        root / "other.py": "from aj_crew.dashboard.handlers import _shared_access as acc\n",
         root / "dashboard" / "handlers" / "rel.py": "from ._shared_workspace import a\n",
         root / "dashboard" / "handlers" / "deep" / "up.py": "from .. import _shared_scrub\n",
-        root / "facade_user.py": "from kiro_crew.dashboard.handlers._shared import x\n",
+        root / "facade_user.py": "from aj_crew.dashboard.handlers._shared import x\n",
     }
     assert _owner_importers(sources.items(), root) == {
         "pkg/caller.py",

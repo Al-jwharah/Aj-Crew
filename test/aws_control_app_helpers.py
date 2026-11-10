@@ -15,9 +15,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import aws_consent
-from kiro_crew.apps.builtins.aws_control.backend import accounts as accounts_mod
-from kiro_crew.apps.builtins.aws_control.backend import routes as routes_mod
+from aj_crew import aws_consent
+from aj_crew.apps.builtins.aws_control.backend import accounts as accounts_mod
+from aj_crew.apps.builtins.aws_control.backend import routes as routes_mod
 
 BASE = "/api/apps/aws-control"
 

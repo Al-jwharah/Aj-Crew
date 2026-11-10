@@ -25,22 +25,22 @@ from remove_slot_for_history_key_helpers import (
     _remove_slot_for_history_key,
 )
 
-from kiro_crew import cron as cron_module
-from kiro_crew.cron import (
+from aj_crew import cron as cron_module
+from aj_crew.cron import (
     CronService,
     CronStoreBusy,
     cron_job_id_from_session_key,
     cron_owner_matches,
     cron_session_key_is_stable,
 )
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard.handlers.sessions import (
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard.handlers.sessions import (
     _CRON_RELEASE_ATTEMPTS,
     _capture_history_delete_claim,
     _delete_history_session,
     _resolve_history_delete_claim,
 )
-from kiro_crew.history import ConversationLog, HistoryLockTimeout
+from aj_crew.history import ConversationLog, HistoryLockTimeout
 
 
 class TestRemoveSlotForHistoryKey:
@@ -897,7 +897,7 @@ class TestALiveCronPrincipalKeepsItsJobs:
         import importlib
         import pkgutil
 
-        from kiro_crew.cron_service import service
+        from aj_crew.cron_service import service
 
         source = "".join(
             inspect.getsource(module)
@@ -1422,14 +1422,14 @@ class TestAChildCannotBeBornUnderADeadParent:
         self, tmp_path, monkeypatch, append_path
     ):
         """A late child keeps its creator's captured memory after becoming ownerless."""
-        from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-        from kiro_crew.execution_context import bind_session_execution, execution_from_record
-        from kiro_crew.memory_stores import provision_member_memory
+        from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+        from aj_crew.execution_context import bind_session_execution, execution_from_record
+        from aj_crew.memory_stores import provision_member_memory
 
-        config = KiroCrewConfig()
-        config.agents["writer"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        config = AjCrewConfig()
+        config.agents["writer"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         store = provision_member_memory(config, "writer")
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: config))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: config))
 
         crons = CronService(base_dir=tmp_path)
         member_id = config.agents["writer"].member_id

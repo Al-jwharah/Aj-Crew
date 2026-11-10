@@ -20,11 +20,11 @@ vi.mock('../pages/ChatPage', () => ({ default: () => <div data-testid="chat-page
 vi.mock('../pages/SystemPage', () => ({ default: () => null }))
 vi.mock('../pages/ProjectsPage', () => ({ default: () => null }))
 vi.mock('../pages/LogsPage', () => ({ default: () => null }))
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => null }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => null }))
 vi.mock('../pages/NotificationsPage', () => ({ default: () => null }))
 vi.mock('../pages/SchedulePage', () => ({ default: () => null }))
 vi.mock('../hooks/useWebSocket', () => ({ useWebSocket: () => ({ subscribeLogs: () => {} }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'kirocrew' }], defaultAgent: 'kirocrew' })) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'ajcrew' }], defaultAgent: 'ajcrew' })) }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span>, Lightbox: () => null }))
 // isMacElectron is a module-level const (frozen at import) — force it true so
@@ -49,7 +49,7 @@ vi.mock('../api/client', () => ({
     listInstances: vi.fn().mockResolvedValue({ instances: [], warm_set_cap: 5 }),
     // Rejecting by default keeps every other test on its unloaded-config path;
     // the sign-in pill test below answers them.
-    kirocrewConfig: vi.fn(() => Promise.reject(new Error('not stubbed'))),
+    ajcrewConfig: vi.fn(() => Promise.reject(new Error('not stubbed'))),
     kasLoginStatus: vi.fn(() => Promise.reject(new Error('not stubbed'))),
   },
   isAuthBannerShown: vi.fn(() => false),
@@ -165,7 +165,7 @@ describe('App shell — Kiro sign-in notice', () => {
     // says "Sign-in expired" sits on Settings > Agent Harness, so an app-level
     // notice is the only place a user who never opens that page can learn it.
     // It is not a top-bar control: the bar's action groups are at their cap.
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ agent: { acp_backend: 'kas' } } as Awaited<ReturnType<typeof api.kirocrewConfig>>)
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ agent: { acp_backend: 'kas' } } as Awaited<ReturnType<typeof api.ajcrewConfig>>)
     vi.mocked(api.kasLoginStatus).mockResolvedValue({
       authenticated: true, provider: 'Google', identity: 'social', transport: 'device',
       expires_at: '2000-01-01T00:00:00Z', expired: true, has_refresh_token: false,

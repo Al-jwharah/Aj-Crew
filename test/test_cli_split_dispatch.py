@@ -1,4 +1,4 @@
-"""``kiro_crew.cli.main`` hands every command to its handler.
+"""``aj_crew.cli.main`` hands every command to its handler.
 
 The dispatch chain stays in ``cli.main``, where the lazy-import ratchet and the boot-order
 pins read it, while the arguments come from the ``cli_parser_*`` registrars. These tests run
@@ -21,8 +21,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import cli
-from kiro_crew.platform import PlatformCompositionError
+from aj_crew import cli
+from aj_crew.platform import PlatformCompositionError
 
 Call = tuple[tuple[Any, ...], dict[str, Any]]
 
@@ -39,12 +39,12 @@ class _Config:
 def booted(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> list[str]:
     """Replace every boot step ``main`` runs before dispatch; return the steps it took."""
     steps: list[str] = []
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-    for marker in ("KIROCREW_SANDBOX_ACTIVE", "KIROCREW_SANDBOX_LEVEL"):
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+    for marker in ("AJCREW_SANDBOX_ACTIVE", "AJCREW_SANDBOX_LEVEL"):
         monkeypatch.delenv(marker, raising=False)
     for var in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS"):
         monkeypatch.setenv(var, "1")  # an mcp-* command sets them; restored either way
-    monkeypatch.setattr(cli, "KiroCrewConfig", _Config)
+    monkeypatch.setattr(cli, "AjCrewConfig", _Config)
     monkeypatch.setattr(cli, "boot_platform", lambda cfg: steps.append("boot_platform"))
     monkeypatch.setattr(cli, "ensure_data_home", lambda: steps.append("ensure_data_home"))
     monkeypatch.setattr(cli, "_setup_cli_logging", lambda command, verbose: steps.append("logging"))
@@ -52,9 +52,9 @@ def booted(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> list[str]:
         cli, "_jail_reexec_gate", lambda command, no_jail: steps.append(f"jail:{command}")
     )
     lazy = {
-        "kiro_crew.platform.tree_liveness": "hold_running_tree_lock",
-        "kiro_crew.kiro_prerequisite": "register_process_start_override_attestation",
-        "kiro_crew.memory_stores": "repair_legacy_member_stores",
+        "aj_crew.platform.tree_liveness": "hold_running_tree_lock",
+        "aj_crew.kiro_prerequisite": "register_process_start_override_attestation",
+        "aj_crew.memory_stores": "repair_legacy_member_stores",
     }
     for module_name, attr in lazy.items():
         monkeypatch.setattr(
@@ -79,7 +79,7 @@ def _async_recorder(calls: list[Call]) -> Callable[..., Any]:
 
 
 def _run(monkeypatch: pytest.MonkeyPatch, *argv: str) -> None:
-    monkeypatch.setattr(cli.sys, "argv", ["kirocrew", *argv])
+    monkeypatch.setattr(cli.sys, "argv", ["ajcrew", *argv])
     cli.main()
 
 
@@ -91,23 +91,23 @@ def _command_of(call: Call) -> str:
 
 # Commands whose branch passes the parsed namespace to one handler of a sibling module.
 _NAMESPACE_HANDLERS = [
-    (("cron", "list"), "kiro_crew.cli_commands", "_cron"),
-    (("spawn", "list"), "kiro_crew.cli_commands", "_spawn"),
-    (("learn", "list"), "kiro_crew.cli_commands", "_learn"),
-    (("artifact", "list"), "kiro_crew.cli_commands", "_artifact"),
-    (("memory", "list"), "kiro_crew.cli_commands", "_memory_cmd"),
-    (("security", "audit"), "kiro_crew.cli_commands", "_security"),
-    (("tailnet", "status"), "kiro_crew.cli_commands", "_tailnet"),
-    (("telemetry", "status"), "kiro_crew.cli_commands", "_telemetry"),
-    (("policy", "show"), "kiro_crew.cli_commands", "_policy"),
-    (("secrets", "import"), "kiro_crew.cli_commands", "_handle_secrets"),
-    (("pod", "ls"), "kiro_crew.cli_commands", "_pod"),
-    (("agent", "list"), "kiro_crew.cli_commands", "_handle_agent"),
-    (("workspace", "list"), "kiro_crew.cli_commands", "_handle_workspace"),
-    (("app", "list"), "kiro_crew.cli_commands", "_handle_app"),
-    (("logs",), "kiro_crew.cli_server", "_logs_cmd"),
-    (("token",), "kiro_crew.cli_server", "_token"),
-    (("status",), "kiro_crew.cli_server", "_status"),
+    (("cron", "list"), "aj_crew.cli_commands", "_cron"),
+    (("spawn", "list"), "aj_crew.cli_commands", "_spawn"),
+    (("learn", "list"), "aj_crew.cli_commands", "_learn"),
+    (("artifact", "list"), "aj_crew.cli_commands", "_artifact"),
+    (("memory", "list"), "aj_crew.cli_commands", "_memory_cmd"),
+    (("security", "audit"), "aj_crew.cli_commands", "_security"),
+    (("tailnet", "status"), "aj_crew.cli_commands", "_tailnet"),
+    (("telemetry", "status"), "aj_crew.cli_commands", "_telemetry"),
+    (("policy", "show"), "aj_crew.cli_commands", "_policy"),
+    (("secrets", "import"), "aj_crew.cli_commands", "_handle_secrets"),
+    (("pod", "ls"), "aj_crew.cli_commands", "_pod"),
+    (("agent", "list"), "aj_crew.cli_commands", "_handle_agent"),
+    (("workspace", "list"), "aj_crew.cli_commands", "_handle_workspace"),
+    (("app", "list"), "aj_crew.cli_commands", "_handle_app"),
+    (("logs",), "aj_crew.cli_server", "_logs_cmd"),
+    (("token",), "aj_crew.cli_server", "_token"),
+    (("status",), "aj_crew.cli_server", "_status"),
 ]
 
 
@@ -161,8 +161,8 @@ _STATUS_HANDLERS = [
     (("perf", "sample"), None, "perf_cmd", set()),
     (("bench", "list"), None, "bench_cmd", set()),
     (("desktop", "metrics"), None, "desktop_cmd", set()),
-    (("snapshot",), "kiro_crew.snapshot", "snapshot_main", {"parsed"}),
-    (("restore",), "kiro_crew.snapshot", "restore_main", {"parsed"}),
+    (("snapshot",), "aj_crew.snapshot", "snapshot_main", {"parsed"}),
+    (("restore",), "aj_crew.snapshot", "restore_main", {"parsed"}),
 ]
 
 
@@ -194,9 +194,9 @@ def test_a_non_zero_status_from_the_handler_is_the_exit_status(
 
 # Commands whose branch exits with whatever status the handler returns, zero included.
 _EXIT_HANDLERS = [
-    (("service", "status"), "kiro_crew.cli_server", "_service_cmd"),
-    (("sandbox", "status"), "kiro_crew.cli_server", "_sandbox_cmd"),
-    (("kas", "status"), "kiro_crew.cli_kas", "kas_cmd"),
+    (("service", "status"), "aj_crew.cli_server", "_service_cmd"),
+    (("sandbox", "status"), "aj_crew.cli_server", "_sandbox_cmd"),
+    (("kas", "status"), "aj_crew.cli_kas", "kas_cmd"),
     (("cloud", "list"), None, "handle_cloud"),
     (("knowledge", "stats"), None, "_knowledge"),
 ]
@@ -226,8 +226,8 @@ def test_the_handler_status_is_the_exit_status(
 @pytest.mark.parametrize(
     ("argv", "module_name", "attr"),
     [
-        (("run", "TASK.md"), "kiro_crew.cli_server", "_run_task"),
-        (("eval",), "kiro_crew.cli_commands", "_run_eval"),
+        (("run", "TASK.md"), "aj_crew.cli_server", "_run_task"),
+        (("eval",), "aj_crew.cli_commands", "_run_eval"),
     ],
     ids=["run", "eval"],
 )
@@ -314,7 +314,7 @@ def test_ledger_sweep_passes_its_purge_options(
     booted: list[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     calls: list[Call] = []
-    sweep = importlib.import_module("kiro_crew.ledger_sweep")
+    sweep = importlib.import_module("aj_crew.ledger_sweep")
     monkeypatch.setattr(sweep, "run_command", _recorder(calls))
     _run(monkeypatch, "ledger-sweep", "--purge", "--older-than-days", "7")
     assert calls == [((), {"purge": True, "older_than_days": 7.0, "purge_unreadable": False})]
@@ -324,7 +324,7 @@ def test_computer_forwards_its_remaining_arguments(
     booted: list[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     calls: list[Call] = []
-    computer_cli = importlib.import_module("kiro_crew.computer_use.cli")
+    computer_cli = importlib.import_module("aj_crew.computer_use.cli")
     monkeypatch.setattr(computer_cli, "run_computer", _recorder(calls))
     _run(monkeypatch, "computer", "doctor", "--json")
     assert calls == [((["doctor", "--json"],), {})]
@@ -350,7 +350,7 @@ def test_a_gateway_control_command_reaches_its_server_handler(
     expected: Call,
 ) -> None:
     calls: list[Call] = []
-    monkeypatch.setattr(importlib.import_module("kiro_crew.cli_server"), attr, _recorder(calls))
+    monkeypatch.setattr(importlib.import_module("aj_crew.cli_server"), attr, _recorder(calls))
     _run(monkeypatch, *argv)
     assert calls == [expected]
 
@@ -358,7 +358,7 @@ def test_a_gateway_control_command_reaches_its_server_handler(
 def test_logout_revokes_on_the_resolved_client_port(
     booted: list[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    server = importlib.import_module("kiro_crew.cli_server")
+    server = importlib.import_module("aj_crew.cli_server")
     calls: list[Call] = []
     monkeypatch.setattr(server, "resolve_client_port", lambda port: 9000 + (port or 0))
     monkeypatch.setattr(server, "_logout", _recorder(calls))
@@ -367,16 +367,16 @@ def test_logout_revokes_on_the_resolved_client_port(
 
 
 _MCP_SERVERS = [
-    ("mcp-cron", "kiro_crew.mcp_cron", "run_mcp_server"),
-    ("mcp-core", "kiro_crew.mcp_core", "run_mcp_core_server"),
-    ("mcp-computer", "kiro_crew.mcp_computer", "run_mcp_server"),
-    ("mcp-dashboard", "kiro_crew.mcp_dashboard", "run_mcp_server"),
-    ("mcp-work", "kiro_crew.mcp_work", "run_mcp_server"),
-    ("mcp-crew-log", "kiro_crew.mcp_crew_log", "run_mcp_server"),
-    ("mcp-debug", "kiro_crew.mcp_debug", "run_mcp_server"),
-    ("mcp-panel", "kiro_crew.mcp_panel", "run_mcp_server"),
-    ("mcp-guide", "kiro_crew.mcp_guide", "run_mcp_server"),
-    ("mcp-mate", "kiro_crew.mcp_mate", "run_mcp_server"),
+    ("mcp-cron", "aj_crew.mcp_cron", "run_mcp_server"),
+    ("mcp-core", "aj_crew.mcp_core", "run_mcp_core_server"),
+    ("mcp-computer", "aj_crew.mcp_computer", "run_mcp_server"),
+    ("mcp-dashboard", "aj_crew.mcp_dashboard", "run_mcp_server"),
+    ("mcp-work", "aj_crew.mcp_work", "run_mcp_server"),
+    ("mcp-crew-log", "aj_crew.mcp_crew_log", "run_mcp_server"),
+    ("mcp-debug", "aj_crew.mcp_debug", "run_mcp_server"),
+    ("mcp-panel", "aj_crew.mcp_panel", "run_mcp_server"),
+    ("mcp-guide", "aj_crew.mcp_guide", "run_mcp_server"),
+    ("mcp-mate", "aj_crew.mcp_mate", "run_mcp_server"),
 ]
 
 
@@ -408,7 +408,7 @@ def test_a_builtin_app_mcp_command_runs_that_apps_server(
     name = cli._BUILTIN_NAMES[0]
     calls: list[Call] = []
     monkeypatch.setattr(cli, "_builtin_mcp_server_available", lambda candidate: True)
-    commands = importlib.import_module("kiro_crew.cli_commands")
+    commands = importlib.import_module("aj_crew.cli_commands")
     monkeypatch.setattr(commands, "_run_app_mcp_server", _recorder(calls))
     _run(monkeypatch, f"mcp-{name}")
     assert calls == [((name,), {})]
@@ -420,7 +420,7 @@ def test_no_command_prints_the_banner_and_the_help(
     _run(monkeypatch)
     out = capsys.readouterr().out
     assert out.startswith(cli.BANNER)
-    assert "usage: kirocrew" in out
+    assert "usage: ajcrew" in out
     assert "boot_platform" not in booted
 
 
@@ -429,18 +429,18 @@ def test_no_command_prints_the_banner_and_the_help(
     [("abc", "is not a valid integer"), ("70000", "is outside the valid port range 1-65535")],
     ids=["not-an-integer", "out-of-range"],
 )
-def test_an_unusable_kirocrew_port_stops_every_command_before_it_starts(
+def test_an_unusable_ajcrew_port_stops_every_command_before_it_starts(
     booted: list[str],
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
     raw: str,
     complaint: str,
 ) -> None:
-    monkeypatch.setenv("KIROCREW_PORT", raw)
+    monkeypatch.setenv("AJCREW_PORT", raw)
     with pytest.raises(SystemExit) as exited:
         _run(monkeypatch, "status")
     assert exited.value.code == 1
-    assert f"KIROCREW_PORT={raw!r} {complaint}" in capsys.readouterr().err
+    assert f"AJCREW_PORT={raw!r} {complaint}" in capsys.readouterr().err
     assert booted == []
 
 

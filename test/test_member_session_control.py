@@ -22,10 +22,10 @@ from member_session_control_helpers import (  # noqa: F401 -- the fixture is req
     _member_tab,
 )
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.members import DM_SLOT_KEY_PREFIX
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.members import DM_SLOT_KEY_PREFIX
 
 
 class TestMemberCallerPredicate:
@@ -51,7 +51,7 @@ class TestMemberCallerPredicate:
         # not the `member-` key prefix — so a plain `chat-` key still resolves
         # as a member caller.
         chat = _slot("chat-10-1789623359")
-        chat.memory_store = "member-kirocrew-conductor-deadbeef"
+        chat.memory_store = "member-ajcrew-conductor-deadbeef"
         state = _State({chat.key: chat})
         monkeypatch.setattr(sc, "_store_is_member_owned", lambda store: store.startswith("member-"))
         assert sc._member_caller(state, chat.key)
@@ -88,12 +88,12 @@ class TestStoreIsMemberOwned:
 
     def test_member_owned_v2_store_is_true(self):
         stores = {"member-radar-abc": SimpleNamespace(owner_member="radar", memory_version=2)}
-        with patch.object(sc.KiroCrewConfig, "load", return_value=self._cfg(stores)):
+        with patch.object(sc.AjCrewConfig, "load", return_value=self._cfg(stores)):
             assert sc._store_is_member_owned("member-radar-abc") is True
 
     def test_default_and_empty_are_false_without_reading_config(self):
         # Short-circuited before load(): the global store is never a member store.
-        with patch.object(sc.KiroCrewConfig, "load", side_effect=AssertionError("loaded")):
+        with patch.object(sc.AjCrewConfig, "load", side_effect=AssertionError("loaded")):
             assert sc._store_is_member_owned("") is False
             assert sc._store_is_member_owned("default") is False
 
@@ -103,24 +103,24 @@ class TestStoreIsMemberOwned:
             "ownerless-v2": SimpleNamespace(owner_member="", memory_version=2),
             "owned-v1": SimpleNamespace(owner_member="radar", memory_version=1),
         }
-        with patch.object(sc.KiroCrewConfig, "load", return_value=self._cfg(stores)):
+        with patch.object(sc.AjCrewConfig, "load", return_value=self._cfg(stores)):
             assert sc._store_is_member_owned("legacy") is False
             assert sc._store_is_member_owned("ownerless-v2") is False
             assert sc._store_is_member_owned("owned-v1") is False
 
     def test_unknown_store_is_false(self):
-        with patch.object(sc.KiroCrewConfig, "load", return_value=self._cfg({})):
+        with patch.object(sc.AjCrewConfig, "load", return_value=self._cfg({})):
             assert sc._store_is_member_owned("member-ghost-abc") is False
 
     def test_fails_closed_on_config_read_error(self):
-        with patch.object(sc.KiroCrewConfig, "load", side_effect=RuntimeError("boom")):
+        with patch.object(sc.AjCrewConfig, "load", side_effect=RuntimeError("boom")):
             assert sc._store_is_member_owned("member-radar-abc") is False
 
     def test_fails_closed_on_degraded_memory_stores_section(self):
         stores = {"member-radar-abc": SimpleNamespace(owner_member="radar", memory_version=2)}
         for degraded in ("memory_stores", sc.DEGRADED_WHOLE_CONFIG):
             cfg = self._cfg(stores, degraded=frozenset({degraded}))
-            with patch.object(sc.KiroCrewConfig, "load", return_value=cfg):
+            with patch.object(sc.AjCrewConfig, "load", return_value=cfg):
                 assert sc._store_is_member_owned("member-radar-abc") is False, degraded
 
     def test_retired_owner_is_not_a_member_store(self):
@@ -131,7 +131,7 @@ class TestStoreIsMemberOwned:
         # disabled `agent.session_control`.
         stores = {"member-radar-abc": SimpleNamespace(owner_member="radar", memory_version=2)}
         cfg = self._cfg(stores, agents={})  # owner agent deleted
-        with patch.object(sc.KiroCrewConfig, "load", return_value=cfg):
+        with patch.object(sc.AjCrewConfig, "load", return_value=cfg):
             assert sc._store_is_member_owned("member-radar-abc") is False
 
     def test_owner_rebound_to_a_different_store_is_not_a_member_store(self):
@@ -140,7 +140,7 @@ class TestStoreIsMemberOwned:
         stores = {"member-radar-abc": SimpleNamespace(owner_member="radar", memory_version=2)}
         agents = {"radar": SimpleNamespace(memory_store="some-other-store")}
         cfg = self._cfg(stores, agents=agents)
-        with patch.object(sc.KiroCrewConfig, "load", return_value=cfg):
+        with patch.object(sc.AjCrewConfig, "load", return_value=cfg):
             assert sc._store_is_member_owned("member-radar-abc") is False
 
 
@@ -254,17 +254,17 @@ class TestCreatedByRecentSessionRestore:
         import json as _json
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.dashboard.chat import restore_recent_sessions
-        from kiro_crew.dashboard.state import DashboardState
-        from kiro_crew.history import ConversationLog
+        from aj_crew.dashboard.chat import restore_recent_sessions
+        from aj_crew.dashboard.state import DashboardState
+        from aj_crew.history import ConversationLog
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         meta_line = {
             "_type": "metadata",
             "created_at": "2026-03-23T10:00:00",
             "last_consolidated": 0,
             "title": "Worker",
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "created_by": "member-autofix",
         }
         rows = [
@@ -300,17 +300,17 @@ class TestCreatedByRecentSessionRestore:
         import json as _json
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.dashboard.chat import restore_recent_sessions
-        from kiro_crew.dashboard.state import DashboardState
-        from kiro_crew.history import ConversationLog
+        from aj_crew.dashboard.chat import restore_recent_sessions
+        from aj_crew.dashboard.state import DashboardState
+        from aj_crew.history import ConversationLog
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         meta_line = {
             "_type": "metadata",
             "created_at": "2026-03-23T10:00:00",
             "last_consolidated": 0,
             "title": "Worker",
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "created_by": "member-autofix",
             "created_by_sid": "acp-sess-creator-at-mint",
         }
@@ -349,14 +349,14 @@ class TestCreatedByRecentSessionRestore:
         import json as _json
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard.chat_persistence import (
             _rehydrate_slot_from_history,
             _save_slot_to_history,
         )
-        from kiro_crew.dashboard.state import DashboardState
-        from kiro_crew.history import ConversationLog
+        from aj_crew.dashboard.state import DashboardState
+        from aj_crew.history import ConversationLog
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         sessions = MagicMock(count=0)
         sessions.get_pid = MagicMock(return_value=None)
         sessions.remove = AsyncMock()
@@ -400,9 +400,9 @@ class TestCreatedByRecentSessionRestore:
     def _restore_line(tmp_path, monkeypatch, slot_key: str, created_by: str):
         import json as _json
 
-        from kiro_crew.dashboard.chat import restore_recent_sessions
+        from aj_crew.dashboard.chat import restore_recent_sessions
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         meta_line = {"_type": "metadata", "title": "Tab", "created_by": created_by}
         (tmp_path / f"dashboard_{slot_key}.jsonl").write_text(
             _json.dumps(meta_line) + "\n" + _json.dumps({"role": "user", "content": "hi"}) + "\n",
@@ -420,7 +420,7 @@ class TestCreatedByRecentSessionRestore:
         # of the person's own session must not hand that member the session after
         # a restart: not through the fence, and not in its default broadcast
         # audience. The line keeps the claim, so a later restore judges it again.
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
         self._record_creator(monkeypatch, "chat-1-mine", recorded)
         state, restored = self._restore_line(tmp_path, monkeypatch, "chat-1-mine", "member-x")
@@ -452,14 +452,14 @@ class TestCreatedByProjection:
     """
 
     def test_to_dict_carries_the_creator_slot_key(self):
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         slot = _ChatSlot("chat-1-worker")
         slot._created_by = DM_SLOT_KEY_PREFIX + "autofix"
         assert slot.to_dict()["created_by"] == "member-autofix"
 
     def test_unattributed_slot_reports_empty_string_not_absent(self):
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         # "" rather than a missing key: the frontend must be able to tell "a
         # person's own tab" from "an older gateway that never sent the field".
@@ -487,16 +487,16 @@ class TestMemberDispatchCeiling:
         cfg = SimpleNamespace(
             agent=SimpleNamespace(member_dispatch=True), degraded_sections=frozenset()
         )
-        with patch.object(sc.KiroCrewConfig, "load", return_value=cfg):
+        with patch.object(sc.AjCrewConfig, "load", return_value=cfg):
             assert sc.member_dispatch_enabled() is True
         cfg_off = SimpleNamespace(
             agent=SimpleNamespace(member_dispatch=False), degraded_sections=frozenset()
         )
-        with patch.object(sc.KiroCrewConfig, "load", return_value=cfg_off):
+        with patch.object(sc.AjCrewConfig, "load", return_value=cfg_off):
             assert sc.member_dispatch_enabled() is False
 
     def test_member_dispatch_enabled_fails_closed_on_read_error(self):
-        with patch.object(sc.KiroCrewConfig, "load", side_effect=RuntimeError("boom")):
+        with patch.object(sc.AjCrewConfig, "load", side_effect=RuntimeError("boom")):
             # An unreadable config withdraws the bypass rather than granting it.
             assert sc.member_dispatch_enabled() is False
 
@@ -511,7 +511,7 @@ class TestMemberDispatchCeiling:
                 agent=SimpleNamespace(member_dispatch=True),
                 degraded_sections=frozenset({degraded}),
             )
-            with patch.object(sc.KiroCrewConfig, "load", return_value=cfg):
+            with patch.object(sc.AjCrewConfig, "load", return_value=cfg):
                 assert sc.member_dispatch_enabled() is False, degraded
 
     def test_member_dispatch_enabled_trusts_value_when_not_degraded(self):
@@ -521,7 +521,7 @@ class TestMemberDispatchCeiling:
             agent=SimpleNamespace(member_dispatch=True),
             degraded_sections=frozenset({"dashboard"}),
         )
-        with patch.object(sc.KiroCrewConfig, "load", return_value=cfg):
+        with patch.object(sc.AjCrewConfig, "load", return_value=cfg):
             assert sc.member_dispatch_enabled() is True
 
     def test_member_falls_back_under_switch_when_ceiling_off(self):
@@ -571,7 +571,7 @@ class TestMemberDispatchCeiling:
     def test_config_default_is_true(self):
         # The knob's default IS today's behaviour, so installing the change
         # alters nothing until an operator opts in.
-        from kiro_crew.config.sections import AgentConfig
+        from aj_crew.config.sections import AgentConfig
 
         assert AgentConfig().member_dispatch is True
 
@@ -679,18 +679,18 @@ class TestMemberChildExecutionContext:
 
         from member_memory_helpers import forget_declared_stores, write_member_home
 
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.config.sections import ResolvedBindings
-        from kiro_crew.execution_context import bind_session_execution, resolve_member_execution
-        from kiro_crew.history import ConversationLog
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.config.sections import ResolvedBindings
+        from aj_crew.execution_context import bind_session_execution, resolve_member_execution
+        from aj_crew.history import ConversationLog
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         write_member_home(tmp_path, "radar", "peer")
         forget_declared_stores(monkeypatch)
         state = _make_state(tmp_path)
         state.conversation_log = ConversationLog()
         caller = _member_tab(state) if member else state.get_or_create_slot("chat-owner")
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         execution = resolve_member_execution(cfg, "radar")
         if member:
             caller.agent = "radar"
@@ -723,8 +723,8 @@ class TestMemberChildExecutionContext:
 
         from member_memory_helpers import make_request
 
-        from kiro_crew.dashboard.handlers.session_control import api_session_control_create
-        from kiro_crew.execution_context import read_session_execution
+        from aj_crew.dashboard.handlers.session_control import api_session_control_create
+        from aj_crew.execution_context import read_session_execution
 
         state, caller, execution = self._prepare(tmp_path, monkeypatch)
 
@@ -755,8 +755,8 @@ class TestMemberChildExecutionContext:
     def test_inheritance_uses_canonical_caller_key(
         self, tmp_path, monkeypatch, _fresh_create_budget, caller_form
     ):
-        from kiro_crew.execution_context import read_session_execution
-        from kiro_crew.history import transcript_stem
+        from aj_crew.execution_context import read_session_execution
+        from aj_crew.history import transcript_stem
 
         state, caller, execution = self._prepare(tmp_path, monkeypatch)
         canonical = slot_history_key(caller)
@@ -770,7 +770,7 @@ class TestMemberChildExecutionContext:
     def test_inherited_route_survives_changed_alias_binding(
         self, tmp_path, monkeypatch, _fresh_create_budget
     ):
-        from kiro_crew.execution_context import read_session_execution
+        from aj_crew.execution_context import read_session_execution
 
         state, caller, execution = self._prepare(tmp_path, monkeypatch)
         real_resolve = sc.resolve_agent_bindings
@@ -791,7 +791,7 @@ class TestMemberChildExecutionContext:
         # PEER's store belongs with the refusals in
         # `TestPrivateStoreCallerIsolation`, not here. This case was parametrized
         # over both callers while nothing enforced the refusal half.
-        from kiro_crew.execution_context import read_session_execution
+        from aj_crew.execution_context import read_session_execution
 
         state, caller, _ = self._prepare(tmp_path, monkeypatch, member=False)
         before = read_session_execution(slot_history_key(caller))
@@ -806,7 +806,7 @@ class TestMemberChildExecutionContext:
         """Resolve *name* as a TEMPLATE on the global store; every other name as today."""
         from pathlib import Path
 
-        from kiro_crew.config.sections import ResolvedBindings
+        from aj_crew.config.sections import ResolvedBindings
 
         member_resolve = sc.resolve_agent_bindings
 
@@ -835,26 +835,26 @@ class TestMemberChildExecutionContext:
         # selection namespace becomes the template's, which is what
         # ContextBuilder reads to withhold the member operating protocol from a
         # delegate that was picked to do the work itself.
-        from kiro_crew.execution_context import read_session_execution
+        from aj_crew.execution_context import read_session_execution
 
         state, caller, execution = self._prepare(tmp_path, monkeypatch)
-        self._template_resolver(monkeypatch, "kirocrew-worker", "worker-template")
+        self._template_resolver(monkeypatch, "ajcrew-worker", "worker-template")
 
         result = asyncio.run(
             sc.create_session(
-                state, caller_session_key=slot_history_key(caller), agent="kirocrew-worker"
+                state, caller_session_key=slot_history_key(caller), agent="ajcrew-worker"
             )
         )
         child = state.get_slot(result["target"])
         actual = read_session_execution(slot_history_key(child), required=True)
         assert actual.selection_kind == "template"
         assert actual.template_id == "worker-template"
-        assert actual.selection_name == "kirocrew-worker"
+        assert actual.selection_name == "ajcrew-worker"
         assert actual.member_id == execution.member_id
         assert actual.store == execution.store
         assert actual.memory_mode == getattr(caller, "memory_mode", "persistent")
         assert state.conversation_log.get_metadata(slot_history_key(child))["agent"] == (
-            "kirocrew-worker"
+            "ajcrew-worker"
         )
 
     def test_explicit_template_child_of_an_unbound_caller_names_the_template_it_selected(
@@ -863,7 +863,7 @@ class TestMemberChildExecutionContext:
         # Same arm, member-less caller: the selection namespace names the template
         # the caller picked, not the caller's own template, and the store stays
         # global with no member identity minted.
-        from kiro_crew.execution_context import (
+        from aj_crew.execution_context import (
             ExecutionContext,
             MemoryStoreRef,
             bind_session_execution,
@@ -877,18 +877,18 @@ class TestMemberChildExecutionContext:
                 None, MemoryStoreRef("default"), "template", "conductor-template", "persistent"
             ),
         )
-        self._template_resolver(monkeypatch, "kirocrew-worker", "worker-template")
+        self._template_resolver(monkeypatch, "ajcrew-worker", "worker-template")
 
         result = asyncio.run(
             sc.create_session(
-                state, caller_session_key=slot_history_key(caller), agent="kirocrew-worker"
+                state, caller_session_key=slot_history_key(caller), agent="ajcrew-worker"
             )
         )
         child = state.get_slot(result["target"])
         actual = read_session_execution(slot_history_key(child), required=True)
         assert actual.selection_kind == "template"
         assert actual.template_id == "worker-template"
-        assert actual.selection_name == "kirocrew-worker"
+        assert actual.selection_name == "ajcrew-worker"
         assert actual.member_id is None
         assert actual.store == MemoryStoreRef("default")
 
@@ -901,7 +901,7 @@ class TestMemberChildExecutionContext:
         # exactly those two fields, leaving a record ContextBuilder attributes to
         # no member -- no identity, and no `[PERMANENT RULES]`. Such a caller's
         # child keeps the selection and takes only the template.
-        from kiro_crew.execution_context import (
+        from aj_crew.execution_context import (
             ExecutionContext,
             MemoryStoreRef,
             bind_session_execution,
@@ -913,11 +913,11 @@ class TestMemberChildExecutionContext:
             None, MemoryStoreRef("default"), "member", "radar-template", selection_name="radar"
         )
         bind_session_execution(slot_history_key(caller), legacy)
-        self._template_resolver(monkeypatch, "kirocrew-worker", "worker-template")
+        self._template_resolver(monkeypatch, "ajcrew-worker", "worker-template")
 
         result = asyncio.run(
             sc.create_session(
-                state, caller_session_key=slot_history_key(caller), agent="kirocrew-worker"
+                state, caller_session_key=slot_history_key(caller), agent="ajcrew-worker"
             )
         )
         child = state.get_slot(result["target"])
@@ -934,8 +934,8 @@ class TestMemberChildExecutionContext:
     ):
         # The record above keeps the creator's selection, so a restore that reads
         # the selection alone binds the worker to its CREATOR after a restart.
-        from kiro_crew.dashboard.slot_persistence.restore_inputs import _restored_agent_name
-        from kiro_crew.execution_context import (
+        from aj_crew.dashboard.slot_persistence.restore_inputs import _restored_agent_name
+        from aj_crew.execution_context import (
             ExecutionContext,
             MemoryStoreRef,
             bind_session_execution,
@@ -946,26 +946,26 @@ class TestMemberChildExecutionContext:
             None, MemoryStoreRef("default"), "member", "radar-template", selection_name="radar"
         )
         bind_session_execution(slot_history_key(caller), legacy)
-        self._template_resolver(monkeypatch, "kirocrew-worker", "worker-template")
+        self._template_resolver(monkeypatch, "ajcrew-worker", "worker-template")
 
         result = asyncio.run(
             sc.create_session(
-                state, caller_session_key=slot_history_key(caller), agent="kirocrew-worker"
+                state, caller_session_key=slot_history_key(caller), agent="ajcrew-worker"
             )
         )
         child = state.get_slot(result["target"])
         key = slot_history_key(child)
         meta = state.conversation_log.get_metadata(key)
         monkeypatch.setattr(
-            "kiro_crew.config.loader.resolve_agent_bindings", sc.resolve_agent_bindings
+            "aj_crew.config.loader.resolve_agent_bindings", sc.resolve_agent_bindings
         )
-        assert _restored_agent_name(key, meta) == "kirocrew-worker"
+        assert _restored_agent_name(key, meta) == "ajcrew-worker"
 
     def test_worker_with_no_persisted_member_id_rejects_a_provisional_transcript_agent(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.dashboard.slot_persistence.restore_inputs import _restored_agent_name
-        from kiro_crew.execution_context import (
+        from aj_crew.dashboard.slot_persistence.restore_inputs import _restored_agent_name
+        from aj_crew.execution_context import (
             ExecutionContext,
             MemoryStoreRef,
             bind_session_execution,
@@ -988,16 +988,16 @@ class TestMemberChildExecutionContext:
     ):
         # An interrupted switch can leave a provisional agent on the line while the
         # record still runs the member's own template: the record's choice wins.
-        from kiro_crew.config.loader import KiroCrewConfig, member_template_id
-        from kiro_crew.dashboard.slot_persistence.restore_inputs import _restored_agent_name
-        from kiro_crew.execution_context import (
+        from aj_crew.config.loader import AjCrewConfig, member_template_id
+        from aj_crew.dashboard.slot_persistence.restore_inputs import _restored_agent_name
+        from aj_crew.execution_context import (
             ExecutionContext,
             MemoryStoreRef,
             bind_session_execution,
         )
 
         state, caller, _execution = self._prepare(tmp_path, monkeypatch, member=False)
-        own = member_template_id(KiroCrewConfig.load().agents["radar"])
+        own = member_template_id(AjCrewConfig.load().agents["radar"])
         bind_session_execution(
             slot_history_key(caller),
             ExecutionContext(
@@ -1022,7 +1022,7 @@ class TestMemberChildExecutionContext:
     def test_canonical_restricted_mode_cannot_create_persistent_child(
         self, tmp_path, monkeypatch, _fresh_create_budget, mode
     ):
-        from kiro_crew.execution_context import bind_session_execution
+        from aj_crew.execution_context import bind_session_execution
 
         state, caller, execution = self._prepare(tmp_path, monkeypatch)
         bind_session_execution(
@@ -1036,7 +1036,7 @@ class TestMemberChildExecutionContext:
     def test_parent_privacy_change_during_resolution_retracts_child(
         self, tmp_path, monkeypatch, _fresh_create_budget
     ):
-        from kiro_crew.execution_context import bind_session_execution
+        from aj_crew.execution_context import bind_session_execution
 
         state, caller, execution = self._prepare(tmp_path, monkeypatch)
         resolve = sc.resolve_agent_bindings

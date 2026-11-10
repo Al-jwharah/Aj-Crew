@@ -28,8 +28,8 @@ from token_auth_helpers import (  # noqa: F401 -- the autouse fixture registers 
     clear_nonces,
 )
 
-from kiro_crew.dashboard.refresh_tokens import refresh_cookie_name, refresh_token_peer_key
-from kiro_crew.dashboard.token_auth import (
+from aj_crew.dashboard.refresh_tokens import refresh_cookie_name, refresh_token_peer_key
+from aj_crew.dashboard.token_auth import (
     bind_token_ip,
     generate_token,
     mark_consumed,
@@ -45,7 +45,7 @@ from kiro_crew.dashboard.token_auth import (
 
 
 def _tailnet_trust(**kw):
-    from kiro_crew.dashboard.tailnet import TailnetTrust
+    from aj_crew.dashboard.tailnet import TailnetTrust
 
     defaults = dict(trust_identity=True, allowed_logins=("you@example.com",), pin_scope="node")
     defaults.update(kw)
@@ -59,7 +59,7 @@ def _whois_payload(login: str = "you@example.com", node: str = "phone.tail.ts.ne
 @pytest.fixture()
 def _tailnet_env(monkeypatch):
     """Clear the whois cache and hand back a patch hook for its result."""
-    from kiro_crew.dashboard import tailnet
+    from aj_crew.dashboard import tailnet
 
     monkeypatch.setattr(tailnet, "IS_POSIX", True)
     tailnet._whois_cache.clear()
@@ -94,7 +94,7 @@ async def test_verified_peer_session_pins_to_identity_key(_tailnet_env) -> None:
     """A verified tailnet peer's session binds ts:node:<login>|<node>, not the
     tunnel's loopback address — and it is per-client, so posture must not
     report SHARED for it."""
-    from kiro_crew.dashboard import token_auth as _ta
+    from aj_crew.dashboard import token_auth as _ta
 
     _tailnet_env(_whois_payload())
     mw = token_auth_middleware(tailnet_trust=_tailnet_trust())
@@ -106,7 +106,7 @@ async def test_verified_peer_session_pins_to_identity_key(_tailnet_env) -> None:
     key, _exp, proxied = _ta._state._peer_bindings[_ta._token_pin_key(cookie.value)]
     assert key == "ts:node:you@example.com|phone.tail.ts.net"
     assert proxied is False
-    from kiro_crew.dashboard.token_auth import proxied_pin_observed
+    from aj_crew.dashboard.token_auth import proxied_pin_observed
 
     assert proxied_pin_observed() is False
 
@@ -118,7 +118,7 @@ async def test_node_scope_replay_from_another_node_denied_with_device_reason(
     """A node-pinned session replayed from a different node in the same tailnet
     is rejected, and the reason names DEVICE identity — a phone re-enrolling
     Tailscale must not surface as an unexplained 'IP mismatch'."""
-    from kiro_crew.dashboard.token_auth import bind_token_peer
+    from aj_crew.dashboard.token_auth import bind_token_peer
 
     _tailnet_env(_whois_payload(node="other-node.tail.ts.net"))
     mw = token_auth_middleware(tailnet_trust=_tailnet_trust())
@@ -135,7 +135,7 @@ async def test_node_scope_replay_from_another_node_denied_with_device_reason(
 async def test_login_scope_replay_from_another_node_is_accepted(_tailnet_env) -> None:
     """Under pin_scope login the same replay is accepted — the two scopes are
     separately pinned, so neither silently becomes the other."""
-    from kiro_crew.dashboard.token_auth import bind_token_peer
+    from aj_crew.dashboard.token_auth import bind_token_peer
 
     _tailnet_env(_whois_payload(node="other-node.tail.ts.net"))
     mw = token_auth_middleware(tailnet_trust=_tailnet_trust(pin_scope="login"))
@@ -148,7 +148,7 @@ async def test_login_scope_replay_from_another_node_is_accepted(_tailnet_env) ->
 
 @pytest.mark.asyncio
 async def test_login_scope_replay_with_different_login_is_denied(_tailnet_env) -> None:
-    from kiro_crew.dashboard.token_auth import bind_token_peer
+    from aj_crew.dashboard.token_auth import bind_token_peer
 
     _tailnet_env(_whois_payload(login="other@example.com"))
     mw = token_auth_middleware(
@@ -183,7 +183,7 @@ async def test_tagged_node_session_not_replayable_from_second_tagged_node(
     """allowed_logins containing 'tagged-devices' under pin_scope login must not
     let one tagged node replay another's session: the pin is forced to node
     scope for tagged nodes."""
-    from kiro_crew.dashboard.token_auth import bind_token_peer
+    from aj_crew.dashboard.token_auth import bind_token_peer
 
     _tailnet_env(_whois_payload(login="tagged-devices", node="ci-b.tail.ts.net"))
     mw = token_auth_middleware(
@@ -202,7 +202,7 @@ async def test_tagged_node_session_not_replayable_from_second_tagged_node(
 async def test_xff_injection_from_non_loopback_peer_gets_ip_pin(_tailnet_env) -> None:
     """A remote client spraying X-Forwarded-For never resolves a peer: the
     session pins to its real address and the daemon is never consulted."""
-    from kiro_crew.dashboard import token_auth as _ta
+    from aj_crew.dashboard import token_auth as _ta
 
     whois = _tailnet_env(_whois_payload())
     mw = token_auth_middleware(tailnet_trust=_tailnet_trust())
@@ -218,7 +218,7 @@ async def test_xff_injection_from_non_loopback_peer_gets_ip_pin(_tailnet_env) ->
 async def test_daemon_failure_degrades_to_token_ip_path(_tailnet_env) -> None:
     """Daemon absent/down/timeout → request proceeds on today's token+IP path:
     fail-closed on identity, fail-open on availability."""
-    from kiro_crew.dashboard import token_auth as _ta
+    from aj_crew.dashboard import token_auth as _ta
 
     _tailnet_env(None)  # every whois outcome collapses to None at this seam
     mw = token_auth_middleware(tailnet_trust=_tailnet_trust())
@@ -237,7 +237,7 @@ async def test_under_the_preview_daemon_failure_refuses_the_forwarded_request(
 ) -> None:
     """Shared Crew preview: the forwarded tailnet request names nobody, so the
     allowlist refuses it rather than admitting it on the token alone."""
-    monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
     _tailnet_env(None)  # every whois outcome collapses to None at this seam
     mw = token_auth_middleware(tailnet_trust=_tailnet_trust())
     token = generate_token("tsuser", ttl_seconds=300)
@@ -266,7 +266,7 @@ async def test_require_peer_link_refuses_daemon_failure_before_cookie_exchange(
 async def test_require_peer_link_exchanges_for_verified_allowed_peer(_tailnet_env) -> None:
     """The fail-closed claim still permits the intended verified peer and the
     exchanged access cookie keeps the identity-required claim."""
-    from kiro_crew.dashboard import token_auth as _ta
+    from aj_crew.dashboard import token_auth as _ta
 
     _tailnet_env(_whois_payload())
     mw = token_auth_middleware(tailnet_trust=_tailnet_trust())
@@ -288,8 +288,8 @@ async def test_require_peer_link_exchanges_for_verified_allowed_peer(_tailnet_en
 async def test_non_tailscale_tunnel_behaviour_is_unchanged(_tailnet_env) -> None:
     """Loopback peer + XFF with identity trust OFF: byte-for-byte today's
     behaviour — pin ip:127.0.0.1, posture SHARED, no daemon call."""
-    from kiro_crew.dashboard import token_auth as _ta
-    from kiro_crew.dashboard.token_auth import proxied_pin_observed
+    from aj_crew.dashboard import token_auth as _ta
+    from aj_crew.dashboard.token_auth import proxied_pin_observed
 
     whois = _tailnet_env(_whois_payload())
     mw = token_auth_middleware()  # tailnet_trust=None: every non-Tailscale setup
@@ -351,7 +351,7 @@ async def test_internal_mixed_path_enforces_the_peer_pin(_tailnet_env) -> None:
     """A node-pinned session replayed from another node against a mixed
     internal path (/api/spawn-style cookie auth) is denied — the internal
     branches must not skip the pin the main flow enforces."""
-    from kiro_crew.dashboard.token_auth import bind_token_peer
+    from aj_crew.dashboard.token_auth import bind_token_peer
 
     _tailnet_env(_whois_payload(node="other-node.tail.ts.net"))
     mw = token_auth_middleware(
@@ -370,7 +370,7 @@ async def test_internal_mixed_path_enforces_the_peer_pin(_tailnet_env) -> None:
 
 @pytest.mark.asyncio
 async def test_internal_mixed_path_accepts_the_matching_peer(_tailnet_env) -> None:
-    from kiro_crew.dashboard.token_auth import bind_token_peer
+    from aj_crew.dashboard.token_auth import bind_token_peer
 
     _tailnet_env(_whois_payload())
     mw = token_auth_middleware(
@@ -393,7 +393,7 @@ async def test_identity_pinned_session_with_daemon_down_names_unavailability(
     """A ts:-pinned session checked while NO peer resolves is denied with a
     reason naming the unverified identity — not 'device identity mismatch',
     which would tell the user their device changed when the daemon blipped."""
-    from kiro_crew.dashboard.token_auth import bind_token_peer
+    from aj_crew.dashboard.token_auth import bind_token_peer
 
     _tailnet_env(None)  # daemon unreachable
     mw = token_auth_middleware(tailnet_trust=_tailnet_trust())
@@ -411,7 +411,7 @@ async def test_restart_first_use_repins_verified_peer_cookie(_tailnet_env) -> No
     """After a gateway restart the in-memory binding map is empty, so a
     surviving cookie is unbound. The first request carrying a VERIFIED peer
     identity re-claims the pin; a replay from another node is denied again."""
-    from kiro_crew.dashboard import token_auth as _ta
+    from aj_crew.dashboard import token_auth as _ta
 
     set_whois = _tailnet_env
     set_whois(_whois_payload())
@@ -439,7 +439,7 @@ async def test_restart_require_peer_cookie_refuses_unverified_first_use(
 ) -> None:
     """After restart, an unbound persistent cookie waits for verified whois;
     it cannot claim the proxy's loopback identity during a daemon outage."""
-    from kiro_crew.dashboard import token_auth as _ta
+    from aj_crew.dashboard import token_auth as _ta
 
     _tailnet_env(None)
     mw = token_auth_middleware(tailnet_trust=_tailnet_trust())
@@ -457,7 +457,7 @@ async def test_restart_signed_require_peer_cookie_rehydrates_only_for_original_d
     _tailnet_env,
 ) -> None:
     """The signed original-device claim, not first arrival, rebuilds the hot pin."""
-    from kiro_crew.dashboard import token_auth as _ta
+    from aj_crew.dashboard import token_auth as _ta
 
     expected = "ts:node:you@example.com|phone.tail.ts.net"
     set_whois = _tailnet_env
@@ -495,7 +495,7 @@ async def test_restart_legacy_claimless_require_peer_cookie_cannot_claim_device(
     _tailnet_env,
 ) -> None:
     """Pre-fix cookies must re-scan instead of accepting the first allowed node."""
-    from kiro_crew.dashboard import token_auth as _ta
+    from aj_crew.dashboard import token_auth as _ta
 
     _tailnet_env(_whois_payload())
     mw = token_auth_middleware(tailnet_trust=_tailnet_trust())
@@ -517,7 +517,7 @@ async def test_claimless_require_peer_link_cannot_enroll_on_mixed_internal_path(
     _tailnet_env,
 ) -> None:
     """Only the main QR exchange path may turn a claimless link into a session."""
-    from kiro_crew.dashboard import token_auth as _ta
+    from aj_crew.dashboard import token_auth as _ta
 
     _tailnet_env(_whois_payload())
     mw = token_auth_middleware(
@@ -537,7 +537,7 @@ async def test_claimless_require_peer_link_cannot_enroll_on_mixed_internal_path(
 @pytest.mark.asyncio
 async def test_signed_login_scope_survives_operator_pin_scope_change(_tailnet_env) -> None:
     """An issued login-scoped session keeps its signed scope after config changes."""
-    from kiro_crew.dashboard import token_auth as _ta
+    from aj_crew.dashboard import token_auth as _ta
 
     expected = "ts:login:you@example.com"
     _tailnet_env(_whois_payload(node="replacement-phone.tail.ts.net"))
@@ -562,7 +562,7 @@ async def test_restart_repin_covers_internal_mixed_paths(_tailnet_env) -> None:
     """The first-use re-pin lives in the shared check, so an unbound cookie
     presented on a mixed internal route also claims the pin — a later replay
     from another node is denied there too."""
-    from kiro_crew.dashboard import token_auth as _ta
+    from aj_crew.dashboard import token_auth as _ta
 
     set_whois = _tailnet_env
     set_whois(_whois_payload())
@@ -593,7 +593,7 @@ async def test_restart_unbound_cookie_without_peer_keeps_todays_semantics(
 ) -> None:
     """No verified peer (trust off): an unbound cookie stays unbound — the
     pre-identity restart behaviour is byte-for-byte preserved."""
-    from kiro_crew.dashboard import token_auth as _ta
+    from aj_crew.dashboard import token_auth as _ta
 
     _tailnet_env(_whois_payload())
     mw = token_auth_middleware()  # trust off

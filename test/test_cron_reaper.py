@@ -21,10 +21,10 @@ import cron_reaper_helpers
 import pytest
 from test_update_provider import _UNALLOCATABLE_PID
 
-from kiro_crew import platform_compat
-from kiro_crew.cron import _JOB_TIMEOUT_SECS, CronJob, CronService, _RunClaim
-from kiro_crew.cron_history import CronHistoryStore
-from kiro_crew.process_identity import ProcessHandle, process_survived_async
+from aj_crew import platform_compat
+from aj_crew.cron import _JOB_TIMEOUT_SECS, CronJob, CronService, _RunClaim
+from aj_crew.cron_history import CronHistoryStore
+from aj_crew.process_identity import ProcessHandle, process_survived_async
 
 #: These tests fire cron jobs through the due-scan, which defers firings while
 #: the host's memory posture is critical (see ``ample_host_free_memory``).
@@ -69,7 +69,7 @@ class TestCronReaper:
             task=_live_task(),
         )
 
-        with patch("kiro_crew.sel.sel") as mock_sel, patch.object(svc, "_save"):
+        with patch("aj_crew.sel.sel") as mock_sel, patch.object(svc, "_save"):
             await svc._force_reap("expired1", _JOB_TIMEOUT_SECS + 120, claim=claim)
 
         assert job.last_status == "error"
@@ -105,7 +105,7 @@ class TestCronReaper:
         )  # 60s old
 
         with (
-            patch("kiro_crew.sel.sel"),
+            patch("aj_crew.sel.sel"),
             patch("asyncio.sleep", AsyncMock(side_effect=[None, asyncio.CancelledError])),
         ):
             with pytest.raises(asyncio.CancelledError):
@@ -127,7 +127,7 @@ class TestCronReaper:
         )
 
         with (
-            patch("kiro_crew.sel.sel"),
+            patch("aj_crew.sel.sel"),
             patch("asyncio.sleep", AsyncMock(side_effect=[None, asyncio.CancelledError])),
         ):
             with pytest.raises(asyncio.CancelledError):
@@ -157,8 +157,8 @@ class TestCronReaper:
         )
 
         with (
-            patch("kiro_crew.sel.sel"),
-            patch("kiro_crew.cron._REAPER_RESET_TIMEOUT", 0.05),
+            patch("aj_crew.sel.sel"),
+            patch("aj_crew.cron._REAPER_RESET_TIMEOUT", 0.05),
             patch.object(
                 svc, "_sigkill_session", new_callable=lambda: AsyncMock(return_value=None)
             ) as mock_kill,
@@ -189,7 +189,7 @@ class TestCronReaper:
         )
 
         with (
-            patch("kiro_crew.sel.sel"),
+            patch("aj_crew.sel.sel"),
             patch.object(
                 svc, "_sigkill_session", new_callable=lambda: AsyncMock(return_value=None)
             ) as mock_kill,
@@ -218,7 +218,7 @@ class TestCronReaper:
             trigger="scheduled", claimed_at=time.time() - _JOB_TIMEOUT_SECS - 10, task=mock_task
         )
 
-        with patch("kiro_crew.sel.sel"), patch.object(svc, "_save"):
+        with patch("aj_crew.sel.sel"), patch.object(svc, "_save"):
             await svc._force_reap("cancel1", _JOB_TIMEOUT_SECS + 10, claim=claim)
 
         mock_task.cancel.assert_called_once_with()
@@ -238,7 +238,7 @@ class TestCronReaper:
             trigger="scheduled", claimed_at=time.time() - _JOB_TIMEOUT_SECS - 10, task=_live_task()
         )
 
-        with patch("kiro_crew.sel.sel"), patch.object(svc, "_save") as mock_save:
+        with patch("aj_crew.sel.sel"), patch.object(svc, "_save") as mock_save:
             await svc._force_reap("persist1", _JOB_TIMEOUT_SECS + 10, claim=claim)
 
         mock_save.assert_called_once()
@@ -249,7 +249,7 @@ class TestCronReaper:
     @pytest.mark.asyncio
     async def test_reaped_runs_count_toward_auto_pause(self, tmp_path: object) -> None:
         """A started run the reaper kills is a failure: enough of them auto-pause the job."""
-        from kiro_crew.cron_service.model import _AUTO_PAUSE_THRESHOLD
+        from aj_crew.cron_service.model import _AUTO_PAUSE_THRESHOLD
 
         svc = CronService(base_dir=None, on_job=AsyncMock())
         svc._history = CronHistoryStore(base_dir=tmp_path)
@@ -265,7 +265,7 @@ class TestCronReaper:
                 task=_live_task(),
                 started_monotonic=time.monotonic() - _JOB_TIMEOUT_SECS - 10,
             )
-            with patch("kiro_crew.sel.sel"), patch.object(svc, "_save"):
+            with patch("aj_crew.sel.sel"), patch.object(svc, "_save"):
                 await svc._force_reap("hang1", _JOB_TIMEOUT_SECS + 10, claim=claim)
             assert job.consecutive_failures == n
 
@@ -282,7 +282,7 @@ class TestCronReaper:
         claim = svc._claims["nostart1"] = _RunClaim(
             trigger="scheduled", claimed_at=time.time() - _JOB_TIMEOUT_SECS - 10, task=_live_task()
         )
-        with patch("kiro_crew.sel.sel"), patch.object(svc, "_save"):
+        with patch("aj_crew.sel.sel"), patch.object(svc, "_save"):
             await svc._force_reap("nostart1", _JOB_TIMEOUT_SECS + 10, claim=claim)
 
         assert job.consecutive_failures == 0
@@ -304,7 +304,7 @@ class TestCronReaper:
             task=_live_task(),
             started_monotonic=time.monotonic() - _JOB_TIMEOUT_SECS - 10,
         )
-        with patch("kiro_crew.sel.sel"), patch.object(svc, "_save"):
+        with patch("aj_crew.sel.sel"), patch.object(svc, "_save"):
             await svc._force_reap("gated1", _JOB_TIMEOUT_SECS + 10, claim=claim)
 
         assert job.consecutive_failures == 0
@@ -312,8 +312,8 @@ class TestCronReaper:
     @pytest.mark.parametrize("raises", [False, True])
     def test_a_pause_the_store_did_not_take_is_rolled_back(self, raises: bool) -> None:
         """A failed save keeps the in-memory job scheduled as the disk says."""
-        from kiro_crew.cron_service.model import _AUTO_PAUSE_THRESHOLD
-        from kiro_crew.cron_service.store import CronStoreUnreadable
+        from aj_crew.cron_service.model import _AUTO_PAUSE_THRESHOLD
+        from aj_crew.cron_service.store import CronStoreUnreadable
 
         svc = CronService(base_dir=None, on_job=AsyncMock())
         job = _make_job("unread1")
@@ -321,7 +321,7 @@ class TestCronReaper:
         svc._jobs = [job]
         error = OSError(28, "No space left on device") if raises else CronStoreUnreadable("x")
         with (
-            patch("kiro_crew.sel.sel"),
+            patch("aj_crew.sel.sel"),
             patch.object(svc, "_save", side_effect=error),
             pytest.raises(OSError) if raises else nullcontext(),
         ):
@@ -440,7 +440,7 @@ class TestCronReaper:
             trigger="scheduled", claimed_at=time.time() - _JOB_TIMEOUT_SECS - 10
         )
 
-        with patch("kiro_crew.sel.sel"), patch.object(svc, "_save"):
+        with patch("aj_crew.sel.sel"), patch.object(svc, "_save"):
             await svc._force_reap("nosess1", _JOB_TIMEOUT_SECS + 10, claim=claim)
 
         assert job.last_status == "error"
@@ -500,7 +500,7 @@ class TestCronReaper:
             trigger="scheduled", claimed_at=time.time() - _JOB_TIMEOUT_SECS - 10, task=mock_task
         )
 
-        with patch("kiro_crew.sel.sel"), patch.object(svc, "_save"):
+        with patch("aj_crew.sel.sel"), patch.object(svc, "_save"):
             await svc._force_reap("cleanup1", _JOB_TIMEOUT_SECS + 10, claim=claim)
 
         assert "cleanup1" not in svc._claims
@@ -541,7 +541,7 @@ class TestCronReaper:
         )
 
         with (
-            patch("kiro_crew.sel.sel"),
+            patch("aj_crew.sel.sel"),
             patch.object(svc, "_save"),
             patch("asyncio.sleep", AsyncMock(side_effect=[None, asyncio.CancelledError])),
         ):
@@ -587,7 +587,7 @@ class TestCronReaper:
         )
 
         with (
-            patch("kiro_crew.sel.sel"),
+            patch("aj_crew.sel.sel"),
             patch.object(svc, "_save"),
             patch("asyncio.sleep", AsyncMock(side_effect=[None, asyncio.CancelledError])),
         ):
@@ -611,7 +611,7 @@ class TestCronReaper:
         )
 
         with (
-            patch("kiro_crew.sel.sel"),
+            patch("aj_crew.sel.sel"),
             patch.object(svc, "_save"),
             patch("asyncio.sleep", AsyncMock(side_effect=[None, asyncio.CancelledError])),
         ):
@@ -717,7 +717,7 @@ class TestReaperMonotonicDeadline:
             task=_live_task(),
         )
 
-        with patch("kiro_crew.sel.sel"), patch.object(svc, "_save"):
+        with patch("aj_crew.sel.sel"), patch.object(svc, "_save"):
             await svc._force_reap("reap1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
         assert "reap1" not in svc._claims
@@ -750,7 +750,7 @@ class TestReaperMonotonicDeadline:
             raise asyncio.CancelledError
 
         with (
-            patch("kiro_crew.sel.sel"),
+            patch("aj_crew.sel.sel"),
             patch.object(svc, "_save"),
             patch.object(svc, "_execute_with_timeout", side_effect=reap_mid_run),
             patch.object(svc, "_merge_job_result") as mock_merge,
@@ -778,7 +778,7 @@ class TestReaperMonotonicDeadline:
             task=MagicMock(done=MagicMock(return_value=True)),
         )
 
-        with patch("kiro_crew.sel.sel"), _one_sweep():
+        with patch("aj_crew.sel.sel"), _one_sweep():
             with pytest.raises(asyncio.CancelledError):
                 await svc._reaper_loop()
 
@@ -801,7 +801,7 @@ class TestReaperMonotonicDeadline:
         )
         assert claim.started_monotonic is None
 
-        with patch("kiro_crew.sel.sel"), patch.object(svc, "_save"), _one_sweep():
+        with patch("aj_crew.sel.sel"), patch.object(svc, "_save"), _one_sweep():
             with pytest.raises(asyncio.CancelledError):
                 await svc._reaper_loop()
 
@@ -857,7 +857,7 @@ class TestReaperReleasesFinishedTask:
             assert svc._claims[job.id].task is stale
             assert ran == []
 
-            with patch("kiro_crew.sel.sel"), _one_sweep():
+            with patch("aj_crew.sel.sel"), _one_sweep():
                 with pytest.raises(asyncio.CancelledError):
                     await svc._reaper_loop()
 
@@ -896,7 +896,7 @@ class TestTheScansLeaveTheLoop:
             return _START_ID
 
         return (
-            patch("kiro_crew.platform_compat.get_process_start_id", side_effect=_start_id),
+            patch("aj_crew.platform_compat.get_process_start_id", side_effect=_start_id),
             threads,
         )
 
@@ -911,8 +911,8 @@ class TestTheScansLeaveTheLoop:
         reads, threads = self._reads_off_the_loop()
         with (
             reads,
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.platform_compat.pid_is_zombie", return_value=False),
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.pid_is_zombie", return_value=False),
         ):
             assert await process_survived_async(handle) is True
 
@@ -922,13 +922,13 @@ class TestTheScansLeaveTheLoop:
 
     @pytest.mark.asyncio
     async def test_the_post_sweep_standing_read_runs_on_a_worker_thread(self) -> None:
-        from kiro_crew.process_identity import _sweep_children
+        from aj_crew.process_identity import _sweep_children
 
         child = _UNALLOCATABLE_PID + 2
         reads, threads = self._reads_off_the_loop()
         with (
             reads,
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
         ):
             failure = await _sweep_children(
                 {child: (_START_ID, "kiro-cli")},
@@ -944,17 +944,17 @@ class TestTheScansLeaveTheLoop:
 
     @pytest.mark.asyncio
     async def test_the_group_member_vouch_runs_on_a_worker_thread(self) -> None:
-        from kiro_crew.process_identity import _finish_gone_leader
+        from aj_crew.process_identity import _finish_gone_leader
 
         pid, pgid = _UNALLOCATABLE_PID, _UNALLOCATABLE_PID
         handle = ProcessHandle(pid=pid, start_id=_START_ID, pgid=pgid, child_pids={})
         reads, threads = self._reads_off_the_loop()
         with (
             reads,
-            patch("kiro_crew.platform_compat.IS_WINDOWS", False),
-            patch("kiro_crew.platform_compat.pgroup_exists", return_value=True),
-            patch("kiro_crew.platform_compat.pgroup_of", return_value=pgid),
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.IS_WINDOWS", False),
+            patch("aj_crew.platform_compat.pgroup_exists", return_value=True),
+            patch("aj_crew.platform_compat.pgroup_of", return_value=pgid),
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             failure = await _finish_gone_leader(handle, who="Reaper", key="cron:x")
 
@@ -1020,7 +1020,7 @@ class TestTheHandleOfAnOwnedPopen:
     def test_a_live_owned_popen_supplies_the_pid_and_a_fresh_identity(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.process_identity import process_handle_of
+        from aj_crew.process_identity import process_handle_of
 
         # POSIX seam: the group read runs, and is stubbed. ``os.getpgid`` does not
         # exist on win32, so the patch creates the attribute there.
@@ -1028,7 +1028,7 @@ class TestTheHandleOfAnOwnedPopen:
         pid = _UNALLOCATABLE_PID
         with (
             patch(
-                "kiro_crew.platform_compat.get_process_start_id", return_value="7770001"
+                "aj_crew.platform_compat.get_process_start_id", return_value="7770001"
             ) as reads,
             patch(
                 "os.getpgid",
@@ -1042,14 +1042,14 @@ class TestTheHandleOfAnOwnedPopen:
         assert reads.call_args_list[0] == call(pid)
 
     def test_an_exited_owned_popen_names_no_process(self) -> None:
-        from kiro_crew.process_identity import process_handle_of
+        from aj_crew.process_identity import process_handle_of
 
         handle = process_handle_of(self._session_with_proc(_UNALLOCATABLE_PID, 0))
 
         assert handle.pid is None and handle.start_id is None
 
     def test_the_acp_client_s_pid_takes_precedence(self) -> None:
-        from kiro_crew.process_identity import process_handle_of
+        from aj_crew.process_identity import process_handle_of
 
         client_pid = _UNALLOCATABLE_PID + 1
         session = self._session_with_proc(_UNALLOCATABLE_PID, None)
@@ -1058,7 +1058,7 @@ class TestTheHandleOfAnOwnedPopen:
         session.provider._proc = MagicMock(pid=_UNALLOCATABLE_PID, returncode=None)
         session.provider._active_proc = None
 
-        with patch("kiro_crew.platform_compat.get_process_start_id", return_value=None):
+        with patch("aj_crew.platform_compat.get_process_start_id", return_value=None):
             handle = process_handle_of(session)
 
         assert (handle.pid, handle.start_id) == (client_pid, _START_ID)
@@ -1093,18 +1093,18 @@ class TestCronReapRefreshesTheTreeBeforeTheHandle:
 
         with (
             patch.object(svc, "_sessions_under", side_effect=_capture),
-            patch("kiro_crew.sel.sel"),
+            patch("aj_crew.sel.sel"),
             patch.object(svc, "_save"),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=_start_id_reads({7979: [_START_ID, _START_ID, None]}),
             ),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
             patch("os.getpgid", return_value=7979, create=True),
             _group_gone(),
-            patch("kiro_crew.platform_compat.kill_process_group"),
+            patch("aj_crew.platform_compat.kill_process_group"),
         ):
             await svc._force_reap("late1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 

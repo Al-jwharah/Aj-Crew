@@ -5,7 +5,7 @@ The bug: from a crew-member session, `pod_up` failed with HTTP 403
 ``member_owner_token_refused`` even though the pod came up healthy. The pod
 route ``/api/token/local`` gates on ``local_owner_bootstrap_allowed``, which on
 Linux requires the CALLER to share the gateway's user + mount namespaces (or be
-a gateway-spawned app backend). The token was minted by the ``kirocrew pod up``
+a gateway-spawned app backend). The token was minted by the ``ajcrew pod up``
 child, and that child is spawned through the sandbox (``sandboxed_spawn_argv``),
 so on Linux it runs in its OWN user namespace -- a namespace the pod gateway (a
 host-namespace ``systemd --user`` unit) cannot certify as the local owner.
@@ -29,9 +29,9 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from kiro_crew import member_memory_auth as auth
-from kiro_crew import platform_compat as pc
-from kiro_crew.apps.builtins.dev_fleet import worktree_ops
+from aj_crew import member_memory_auth as auth
+from aj_crew import platform_compat as pc
+from aj_crew.apps.builtins.dev_fleet import worktree_ops
 
 
 # --------------------------------------------------------------------------- #
@@ -87,7 +87,7 @@ def test_a_sandboxed_member_child_is_refused_as_the_local_owner(linux_owner_gate
 def pod_up_stubs(monkeypatch):
     monkeypatch.setattr(worktree_ops, "_pod_checkout_guard", AsyncMock(return_value=None))
     monkeypatch.setattr(worktree_ops.runtime, "_warm_build_path", AsyncMock(return_value=None))
-    monkeypatch.setattr(worktree_ops.runtime, "_find_cli", lambda: ["kirocrew"])
+    monkeypatch.setattr(worktree_ops.runtime, "_find_cli", lambda: ["ajcrew"])
     monkeypatch.setattr(worktree_ops.runtime, "_load_cfg", lambda: object())
     monkeypatch.setattr(worktree_ops.runtime, "_POD_AVAILABLE", True)
     monkeypatch.setattr(worktree_ops, "_pod_env", lambda: {})
@@ -377,8 +377,8 @@ def test_pod_up_no_token_skips_the_mint_and_emits_empty_token(monkeypatch, capsy
     import json as _json
     from pathlib import Path
 
-    from kiro_crew.pod import cli as pod_cli
-    from kiro_crew.pod import runtime as rt
+    from aj_crew.pod import cli as pod_cli
+    from aj_crew.pod import runtime as rt
 
     class _Mutex:
         def __enter__(self):

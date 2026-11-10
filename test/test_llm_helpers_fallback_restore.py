@@ -14,15 +14,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.llm_helpers import (
+from aj_crew.acp.client import AcpError
+from aj_crew.llm_helpers import (
     FALLBACK_CANDIDATE_ATTEMPTS,
     TURN_FALLBACK_ATTR,
     FallbackState,
     probe_fallback_restore,
     stream_and_collect,
 )
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
 
 class TestProbeFallbackRestore:
@@ -128,7 +128,7 @@ class TestFallbackRetryBudgetSingleBody:
         exactly FALLBACK_CANDIDATE_ATTEMPTS - 1 further same-model passes —
         the same budget the unattended surfaces consume via
         should_retry_active."""
-        from kiro_crew.llm_helpers import (
+        from aj_crew.llm_helpers import (
             TRANSIENT_RETRIES,
             fallback_rewound_transient_budget,
         )
@@ -159,14 +159,14 @@ class TestFallbackStoryConsumer:
     """append_fallback_story is THE reader of the story attr."""
 
     def _exc_with_story(self, story: str = "primary-m throttled; fallbacks fb-1 also unavailable"):
-        from kiro_crew.llm_helpers import FALLBACK_STORY_ATTR
+        from aj_crew.llm_helpers import FALLBACK_STORY_ATTR
 
         exc = AcpError("Internal server error")
         setattr(exc, FALLBACK_STORY_ATTR, story)
         return exc
 
     def test_appends_story_to_terminal_error_text(self) -> None:
-        from kiro_crew.llm_helpers import append_fallback_story
+        from aj_crew.llm_helpers import append_fallback_story
 
         out = append_fallback_story("AcpError: Internal server error", self._exc_with_story())
         assert out == (
@@ -175,17 +175,17 @@ class TestFallbackStoryConsumer:
         )
 
     def test_no_story_returns_text_byte_for_byte(self) -> None:
-        from kiro_crew.llm_helpers import append_fallback_story
+        from aj_crew.llm_helpers import append_fallback_story
 
         assert append_fallback_story("AcpError: boom", AcpError("boom")) == "AcpError: boom"
 
     def test_empty_text_returns_bare_story(self) -> None:
-        from kiro_crew.llm_helpers import append_fallback_story
+        from aj_crew.llm_helpers import append_fallback_story
 
         assert append_fallback_story("", self._exc_with_story("s")) == "s"
 
     def test_non_string_story_attr_is_ignored(self) -> None:
-        from kiro_crew.llm_helpers import FALLBACK_STORY_ATTR, append_fallback_story
+        from aj_crew.llm_helpers import FALLBACK_STORY_ATTR, append_fallback_story
 
         exc = AcpError("boom")
         setattr(exc, FALLBACK_STORY_ATTR, ["not", "a", "string"])
@@ -194,7 +194,7 @@ class TestFallbackStoryConsumer:
     def test_stream_and_collect_sets_the_attr_this_reads(self) -> None:
         """DRIFT PIN: the producer (Case 2.75) and this consumer agree on the
         attribute — fallback_story_of reads back what the walk attached."""
-        from kiro_crew.llm_helpers import FALLBACK_STORY_ATTR, fallback_story_of
+        from aj_crew.llm_helpers import FALLBACK_STORY_ATTR, fallback_story_of
 
         exc = AcpError("boom")
         setattr(exc, FALLBACK_STORY_ATTR, "the story")
@@ -208,7 +208,7 @@ class TestAnnotateModelFallbackSharedBody:
     def test_prefixes_warning_from_marker(self) -> None:
         from types import SimpleNamespace
 
-        from kiro_crew.llm_helpers import annotate_model_fallback
+        from aj_crew.llm_helpers import annotate_model_fallback
 
         provider = SimpleNamespace()
         setattr(provider, TURN_FALLBACK_ATTR, ("primary-m", "fb-m"))
@@ -222,7 +222,7 @@ class TestAnnotateModelFallbackSharedBody:
         stands alone rather than trailing a blank separator."""
         from types import SimpleNamespace
 
-        from kiro_crew.llm_helpers import annotate_model_fallback
+        from aj_crew.llm_helpers import annotate_model_fallback
 
         provider = SimpleNamespace()
         setattr(provider, TURN_FALLBACK_ATTR, ("primary-m", "fb-m"))
@@ -233,7 +233,7 @@ class TestAnnotateModelFallbackSharedBody:
     def test_no_marker_and_malformed_marker_are_noops(self) -> None:
         from types import SimpleNamespace
 
-        from kiro_crew.llm_helpers import annotate_model_fallback
+        from aj_crew.llm_helpers import annotate_model_fallback
 
         assert annotate_model_fallback("text", SimpleNamespace()) == "text"
         provider = SimpleNamespace()
@@ -366,8 +366,8 @@ class TestCase275RoutesThroughSharedBudgetBody:
     async def test_forcing_the_shared_body_to_refuse_drops_candidate_retries(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.llm_helpers as lh
-        from kiro_crew.llm_helpers import _TRANSIENT_RETRIES
+        import aj_crew.llm_helpers as lh
+        from aj_crew.llm_helpers import _TRANSIENT_RETRIES
 
         call_count = 0
 
@@ -414,7 +414,7 @@ class TestFallbackStorySafety:
     def test_story_is_capped_centrally(self) -> None:
         """Walked ids originate in config (advertised check fails open), so an
         arbitrarily long story must be bounded before riding any surface."""
-        from kiro_crew.llm_helpers import (
+        from aj_crew.llm_helpers import (
             _FALLBACK_STORY_CAP,
             FALLBACK_STORY_ATTR,
             fallback_story_of,
@@ -427,7 +427,7 @@ class TestFallbackStorySafety:
     def test_story_is_redacted_centrally(self) -> None:
         """A credential-shaped token in the story never reaches a consumer —
         heartbeat logs the story with no redaction of its own."""
-        from kiro_crew.llm_helpers import FALLBACK_STORY_ATTR, fallback_story_of
+        from aj_crew.llm_helpers import FALLBACK_STORY_ATTR, fallback_story_of
 
         exc = AcpError("boom")
         setattr(
@@ -442,7 +442,7 @@ class TestFallbackStorySafety:
     def test_story_read_survives_hostile_exception_attr(self) -> None:
         """The attribute read itself is guarded — a raising property on an
         exotic exception type must not break the failure handler reading it."""
-        from kiro_crew.llm_helpers import append_fallback_story
+        from aj_crew.llm_helpers import append_fallback_story
 
         class _HostileExc(Exception):
             @property
@@ -457,7 +457,7 @@ class TestFallbackStorySafety:
         site relies on this; its old inline guard is gone)."""
         from types import SimpleNamespace
 
-        from kiro_crew.llm_helpers import annotate_model_fallback
+        from aj_crew.llm_helpers import annotate_model_fallback
 
         class _Boom:
             def __str__(self) -> str:  # str(primary) raises inside the helper
@@ -529,7 +529,7 @@ class TestFallbackStorySafety:
         """A future FALLBACK_CANDIDATE_ATTEMPTS above TRANSIENT_RETRIES + 1
         cannot be expressed by the counter encoding — it clamps to zero (the
         full same-model budget) instead of going negative."""
-        import kiro_crew.llm_helpers as lh
+        import aj_crew.llm_helpers as lh
 
         with patch.object(lh, "FALLBACK_CANDIDATE_ATTEMPTS", lh.TRANSIENT_RETRIES + 5):
             assert lh.fallback_rewound_transient_budget() == 0
@@ -538,7 +538,7 @@ class TestFallbackStorySafety:
         """With a budget, the ERROR text is trimmed to leave the story room —
         a verbose exception must never push the walk out of the composite —
         and the total stays within the budget."""
-        from kiro_crew.llm_helpers import FALLBACK_STORY_ATTR, append_fallback_story
+        from aj_crew.llm_helpers import FALLBACK_STORY_ATTR, append_fallback_story
 
         exc = AcpError("boom")
         setattr(exc, FALLBACK_STORY_ATTR, "primary-m throttled; fallbacks fb-1 also unavailable")
@@ -547,14 +547,14 @@ class TestFallbackStorySafety:
         assert out.endswith("[primary-m throttled; fallbacks fb-1 also unavailable]")
 
     def test_budgeted_append_without_story_just_caps(self) -> None:
-        from kiro_crew.llm_helpers import append_fallback_story
+        from aj_crew.llm_helpers import append_fallback_story
 
         assert append_fallback_story("E" * 5000, AcpError("x"), budget=2000) == "E" * 2000
 
     def test_negative_and_zero_budgets_mean_empty_not_unbounded(self) -> None:
         """A negative slice drops characters from the END — a negative budget
         must tighten the bound to nothing, never loosen it."""
-        from kiro_crew.llm_helpers import FALLBACK_STORY_ATTR, append_fallback_story
+        from aj_crew.llm_helpers import FALLBACK_STORY_ATTR, append_fallback_story
 
         exc = AcpError("boom")
         setattr(exc, FALLBACK_STORY_ATTR, "s" * 50)
@@ -567,7 +567,7 @@ class TestFallbackStorySafety:
         alone fills the whole budget (possible when a caller's cap equals
         _FALLBACK_STORY_CAP): past the floor the story tail truncates, the
         error never vanishes from the alert."""
-        from kiro_crew.llm_helpers import FALLBACK_STORY_ATTR, append_fallback_story
+        from aj_crew.llm_helpers import FALLBACK_STORY_ATTR, append_fallback_story
 
         exc = AcpError("boom")
         setattr(exc, FALLBACK_STORY_ATTR, "s" * 500)

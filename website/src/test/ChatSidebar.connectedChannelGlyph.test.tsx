@@ -71,10 +71,10 @@ const slots = [
   { key: 'dashboard_chat-1-1', title: 'Dashboard, connected to Slack', ...base, links: [link('slack', 'out', false)] },
   { key: 'dashboard_chat-1-2', title: 'Dashboard, disconnected from Slack', ...base, links: [link('slack', 'out', true)] },
   { key: 'dashboard_chat-1-3', title: 'Dashboard, driven from Discord', ...base, links: [link('discord', 'both', false)] },
-  { key: 'discord_kirocrew_direct_U1', title: 'Discord-born and mirrored to Discord', ...base, links: [link('discord', 'origin', false), link('discord', 'out', false)] },
-  { key: 'discord_kirocrew_direct_U2', title: 'Discord-born, origin muted, mirror live', ...base, links: [link('discord', 'origin', true), link('discord', 'out', false)] },
+  { key: 'discord_ajcrew_direct_U1', title: 'Discord-born and mirrored to Discord', ...base, links: [link('discord', 'origin', false), link('discord', 'out', false)] },
+  { key: 'discord_ajcrew_direct_U2', title: 'Discord-born, origin muted, mirror live', ...base, links: [link('discord', 'origin', true), link('discord', 'out', false)] },
   { key: 'slack_1785370133.111111', title: 'Slack key, no links', ...base },
-  { key: 'unified_kirocrew', title: 'From a DM', ...base },
+  { key: 'unified_ajcrew', title: 'From a DM', ...base },
   { key: 'dashboard_chat-1-4', title: 'Plain dashboard', ...base },
 ] as unknown as ChatSlot[]
 

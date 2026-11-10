@@ -24,13 +24,13 @@ from crew_log_core_helpers import (
 )
 
 from conftest import requires_symlinks
-from kiro_crew import crew_log as lg
-from kiro_crew import sandbox
-from kiro_crew.config import paths
-from kiro_crew.config.paths import data_home, ensure_data_home
-from kiro_crew.crew_log import CrewLog, lease, store
-from kiro_crew.security.paths import is_sensitive_path
-from kiro_crew.session_ledger import _store_name
+from aj_crew import crew_log as lg
+from aj_crew import sandbox
+from aj_crew.config import paths
+from aj_crew.config.paths import data_home, ensure_data_home
+from aj_crew.crew_log import CrewLog, lease, store
+from aj_crew.security.paths import is_sensitive_path
+from aj_crew.session_ledger import _store_name
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _isolated_home = crew_log_core_helpers._isolated_home
@@ -59,7 +59,7 @@ def test_the_root_is_established_owner_only_before_any_log_exists(monkeypatch, t
     # absent directory has no mode to inherit. Establishing the root with the home
     # makes the guarantee a property of the home rather than of the first write.
     home = tmp_path / "fresh-home"
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     paths._config_dir_memo = None
     ensure_data_home()
     root = home / "crew-log"
@@ -82,7 +82,7 @@ def test_an_existing_root_with_a_loose_mode_is_tightened(monkeypatch, tmp_path):
     (home / "crew-log").chmod(
         stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
     )
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     paths._config_dir_memo = None
     ensure_data_home()
     assert stat.S_IMODE((home / "crew-log").stat().st_mode) == 0o700
@@ -101,7 +101,7 @@ def test_every_log_is_refused_to_the_agents_own_file_tools():
     # writes.
     for kind in (lg.KIND_CREW, lg.KIND_SESSION):
         rel = lg.crew_log_path(kind, "anything").relative_to(data_home()).as_posix()
-        for home in (".kiro/crew", ".kirocrew"):
+        for home in (".kiro/crew", ".ajcrew"):
             target = f"~/{home}/{rel}"
             assert is_sensitive_path(target), target
 
@@ -405,7 +405,7 @@ def test_the_log_root_is_restricted_even_when_the_home_cannot_be(tmp_path, monke
     # mode is the ONLY boundary left, because an unreadable parent is not there to
     # do the work -- and every lazily created crew log directory below it would keep
     # the process umask.
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     home = tmp_path / "home"
     home.mkdir()

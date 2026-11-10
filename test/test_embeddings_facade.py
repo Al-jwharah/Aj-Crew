@@ -1,8 +1,8 @@
 """The embedding runtime's facade keeps the patch seams the one module had.
 
-``kiro_crew.embeddings`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over eight
+``aj_crew.embeddings`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over eight
 sibling owners and defines nothing itself. Callers, tests and documents still reach every
-name as ``kiro_crew.embeddings.<name>``, and the moved code reads its names as plain module
+name as ``aj_crew.embeddings.<name>``, and the moved code reads its names as plain module
 globals, so a patch through the facade reaches that code only because the mirror writes
 it into every module holding the name.
 
@@ -27,7 +27,7 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror, embeddings
+from aj_crew import _facade_mirror, embeddings
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_embeddings_facade")
 
@@ -35,18 +35,18 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_embeddings_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.embeddings"
+FACADE = "aj_crew.embeddings"
 SRC_DIR = Path(embeddings.__file__).resolve().parent
 #: The owners, lowest layer first.
 OWNERS = (
-    "kiro_crew.embeddings_settings",
-    "kiro_crew.embeddings_native",
-    "kiro_crew.embeddings_gguf",
-    "kiro_crew.embeddings_model",
-    "kiro_crew.embeddings_llama",
-    "kiro_crew.embeddings_ollama",
-    "kiro_crew.embeddings_shared",
-    "kiro_crew.embeddings_download",
+    "aj_crew.embeddings_settings",
+    "aj_crew.embeddings_native",
+    "aj_crew.embeddings_gguf",
+    "aj_crew.embeddings_model",
+    "aj_crew.embeddings_llama",
+    "aj_crew.embeddings_ollama",
+    "aj_crew.embeddings_shared",
+    "aj_crew.embeddings_download",
 )
 _THIS_FILE = Path(__file__).resolve()
 
@@ -71,13 +71,13 @@ _KNOWN_SEAMS = frozenset(
 
 #: The globals the family rebinds at run time with ``global``, and the owner holding each.
 _REBOUND_GLOBALS = {
-    "_model_verification_thread": "kiro_crew.embeddings_model",
-    "_last_custom_model_error": "kiro_crew.embeddings_model",
-    "_shared_embedder": "kiro_crew.embeddings_shared",
-    "_backend_factory": "kiro_crew.embeddings_shared",
-    "_sync_embed_cache_backend": "kiro_crew.embeddings_shared",
-    "_download_manager": "kiro_crew.embeddings_download",
-    "_download_task": "kiro_crew.embeddings_download",
+    "_model_verification_thread": "aj_crew.embeddings_model",
+    "_last_custom_model_error": "aj_crew.embeddings_model",
+    "_shared_embedder": "aj_crew.embeddings_shared",
+    "_backend_factory": "aj_crew.embeddings_shared",
+    "_sync_embed_cache_backend": "aj_crew.embeddings_shared",
+    "_download_manager": "aj_crew.embeddings_download",
+    "_download_task": "aj_crew.embeddings_download",
 }
 
 
@@ -196,7 +196,7 @@ def test_a_read_through_the_facade_follows_a_rebinding_in_its_owner() -> None:
     """The facade serves the owner's current binding, not a copy taken at import. The
     owner alone binds ``_backend_factory``, so writing it there is what a rebinding in
     ``register_embedding_backend`` does."""
-    shared = sys.modules["kiro_crew.embeddings_shared"]
+    shared = sys.modules["aj_crew.embeddings_shared"]
     sentinel = object()
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(shared, "_backend_factory", sentinel)
@@ -206,9 +206,9 @@ def test_a_read_through_the_facade_follows_a_rebinding_in_its_owner() -> None:
 
 def test_the_vendored_runtime_directory_still_resolves_beside_the_package() -> None:
     """``_VENDOR_DIR`` is computed from its module's own path, so its owner sits beside
-    ``embeddings.py`` in ``src/kiro_crew`` and the directory is the one it always was."""
+    ``embeddings.py`` in ``src/aj_crew`` and the directory is the one it always was."""
     assert embeddings._VENDOR_DIR == SRC_DIR / "_vendor"
-    assert Path(sys.modules["kiro_crew.embeddings_native"].__file__).resolve().parent == SRC_DIR
+    assert Path(sys.modules["aj_crew.embeddings_native"].__file__).resolve().parent == SRC_DIR
 
 
 def test_the_sync_embed_function_still_takes_a_priority() -> None:
@@ -225,7 +225,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for owner in _index().owners:
         for node in ast.parse(_owner_path(owner).read_text(encoding="utf-8")).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     if f"{node.module}.{alias.name}" not in family:
@@ -249,7 +249,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
     """An owner binds these by import, so the facade names each one from its home module
-    under ``TYPE_CHECKING`` and ``from kiro_crew.embeddings import operator_lib_path_override``
+    under ``TYPE_CHECKING`` and ``from aj_crew.embeddings import operator_lib_path_override``
     type-checks as it did before the split."""
     served = set(_index().exports)
     expected = {name: home for name, home in _home_imports().items() if name in served}
@@ -259,11 +259,11 @@ def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers()
 
 def test_the_family_logs_under_the_facade_name() -> None:
     """One logger, still named for the facade module, held by every owner that logs:
-    ``caplog`` filters keyed on ``kiro_crew.embeddings`` keep seeing the runtime's
+    ``caplog`` filters keyed on ``aj_crew.embeddings`` keep seeing the runtime's
     records."""
     assert embeddings.logger.name == FACADE
     loggers = {m.__name__: vars(m)["logger"] for m in _family() if "logger" in vars(m)}
-    assert {"kiro_crew.embeddings_native", "kiro_crew.embeddings_llama"} <= set(loggers)
+    assert {"aj_crew.embeddings_native", "aj_crew.embeddings_llama"} <= set(loggers)
     others = sorted(name for name, value in loggers.items() if value is not embeddings.logger)
     assert others == []
 

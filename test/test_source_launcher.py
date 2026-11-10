@@ -11,14 +11,14 @@ from pathlib import Path
 import pytest
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
-_SOURCE_LAUNCHER = _REPO_ROOT / "bin" / "kirocrew"
+_SOURCE_LAUNCHER = _REPO_ROOT / "bin" / "ajcrew"
 _POSIX_ONLY = pytest.mark.skipif(os.name != "posix", reason="POSIX shell launcher")
 
 
 def _copy_launcher(tmp_path: Path) -> tuple[Path, Path]:
     """Copy the real wrapper into an install root whose path contains spaces."""
-    install_root = tmp_path / "Kiro Crew checkout"
-    launcher = install_root / "bin" / "kirocrew"
+    install_root = tmp_path / "Aj Crew checkout"
+    launcher = install_root / "bin" / "ajcrew"
     launcher.parent.mkdir(parents=True)
     shutil.copy2(_SOURCE_LAUNCHER, launcher)
     launcher.chmod(launcher.stat().st_mode | stat.S_IXUSR)
@@ -30,25 +30,25 @@ def test_launcher_delegates_to_venv_without_rewriting_pythonpath(tmp_path: Path)
     """The editable venv owns imports while the wrapper preserves caller state."""
     install_root, launcher = _copy_launcher(tmp_path)
     capture_path = tmp_path / "launcher-environment.txt"
-    venv_entry = install_root / ".venv" / "bin" / "kirocrew"
+    venv_entry = install_root / ".venv" / "bin" / "ajcrew"
     venv_entry.parent.mkdir(parents=True)
     venv_entry.write_text(
         "#!/bin/sh\n"
         "{\n"
-        "  printf '%s\\n' \"$KIROCREW_PROJECT_DIR\"\n"
+        "  printf '%s\\n' \"$AJCREW_PROJECT_DIR\"\n"
         "  printf '%s\\n' \"${PYTHONPATH-}\"\n"
         "  printf '%s\\n' \"$@\"\n"
-        '} > "$KIROCREW_LAUNCH_CAPTURE"\n',
+        '} > "$AJCREW_LAUNCH_CAPTURE"\n',
         encoding="utf-8",
     )
     venv_entry.chmod(venv_entry.stat().st_mode | stat.S_IXUSR)
 
     existing_pythonpath = os.pathsep.join(("/existing/one", "/existing/two"))
     env = os.environ.copy()
-    env.pop("KIROCREW_PROJECT_DIR", None)
+    env.pop("AJCREW_PROJECT_DIR", None)
     env.update(
         {
-            "KIROCREW_LAUNCH_CAPTURE": str(capture_path),
+            "AJCREW_LAUNCH_CAPTURE": str(capture_path),
             "PYTHONPATH": existing_pythonpath,
         }
     )
@@ -87,6 +87,6 @@ def test_launcher_without_venv_explains_source_install(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 1
-    assert f"Kiro Crew virtual environment not found at {install_root}/.venv" in result.stderr
+    assert f"Aj Crew virtual environment not found at {install_root}/.venv" in result.stderr
     assert f'cd "{install_root}" && bash minimal_install.sh' in result.stderr
     assert "Source checkouts run from their own Python virtual environment." in result.stderr

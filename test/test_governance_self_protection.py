@@ -14,23 +14,23 @@ import os
 
 import pytest
 
-from kiro_crew import security
-from kiro_crew.hooks import TOOL_DENY, HookManager, validate_file_path
-from kiro_crew.platform.context import PlatformCompositionError
-from kiro_crew.platform.governance import assert_governance_paths_protected
+from aj_crew import security
+from aj_crew.hooks import TOOL_DENY, HookManager, validate_file_path
+from aj_crew.platform.context import PlatformCompositionError
+from aj_crew.platform.governance import assert_governance_paths_protected
 
-# The data home moved from the top-level ``~/.kirocrew`` to ``~/.kiro/crew``.
+# The data home moved from the top-level ``~/.ajcrew`` to ``~/.kiro/crew``.
 # The security floor gates the trust-root files under EVERY known crew-home
 # prefix (current ``~/.kiro/crew``, the archived rollback copy, and the pre-move
-# legacy ``~/.kirocrew``), so pin both the new default and the still-gated legacy
+# legacy ``~/.ajcrew``), so pin both the new default and the still-gated legacy
 # location.
 _GOV_FILES = (
     "~/.kiro/crew/security_policy.json",
     "~/.kiro/crew/profiles/app-deploy-web.json",
     "~/.kiro/crew/admission_policy.json",
-    "~/.kirocrew/security_policy.json",
-    "~/.kirocrew/profiles/app-deploy-web.json",
-    "~/.kirocrew/admission_policy.json",
+    "~/.ajcrew/security_policy.json",
+    "~/.ajcrew/profiles/app-deploy-web.json",
+    "~/.ajcrew/admission_policy.json",
 )
 
 
@@ -39,9 +39,9 @@ def test_profiles_dir_and_children_blocked():
     assert security.is_sensitive_path("~/.kiro/crew/profiles/anything.json")
     assert security.is_sensitive_path("~/.kiro/crew/profiles/nested/deep.json")
     # Legacy pre-move home is still gated.
-    assert security.is_sensitive_path("~/.kirocrew/profiles")
-    assert security.is_sensitive_path("~/.kirocrew/profiles/anything.json")
-    assert security.is_sensitive_path("~/.kirocrew/profiles/nested/deep.json")
+    assert security.is_sensitive_path("~/.ajcrew/profiles")
+    assert security.is_sensitive_path("~/.ajcrew/profiles/anything.json")
+    assert security.is_sensitive_path("~/.ajcrew/profiles/nested/deep.json")
 
 
 def test_non_governance_crew_paths_still_readable():
@@ -49,8 +49,8 @@ def test_non_governance_crew_paths_still_readable():
     # files are.  A normal state file under it must remain accessible.
     assert not security.is_sensitive_path("~/.kiro/crew/sessions.db")
     assert not security.is_sensitive_path("~/.kiro/crew/config.json")
-    assert not security.is_sensitive_path("~/.kirocrew/sessions.db")
-    assert not security.is_sensitive_path("~/.kirocrew/config.json")
+    assert not security.is_sensitive_path("~/.ajcrew/sessions.db")
+    assert not security.is_sensitive_path("~/.ajcrew/config.json")
 
 
 def test_agent_fs_write_to_policy_denied_at_gate():
@@ -67,9 +67,9 @@ def test_agent_fs_write_to_policy_denied_at_gate():
 # prompt-injected agent that could write there could plant an exec path — pin
 # that the whole dir is on the read+write sensitive floor.
 _RUN_EXEC_PATHS = (
-    "~/.kirocrew/run",
-    "~/.kirocrew/run/gateway-7781.bin",
-    "~/.kirocrew/run/kirocrew_sandbox_abc.py",
+    "~/.ajcrew/run",
+    "~/.ajcrew/run/gateway-7781.bin",
+    "~/.ajcrew/run/ajcrew_sandbox_abc.py",
 )
 
 
@@ -97,7 +97,7 @@ def test_validate_file_path_rejects_trust_root_path(origin, path):
 def test_agent_fs_write_to_run_marker_denied_at_gate():
     hooks = HookManager()
     home = os.path.expanduser("~")
-    result = hooks.on_tool_call(f"{home}/.kirocrew/run/gateway-7781.bin")
+    result = hooks.on_tool_call(f"{home}/.ajcrew/run/gateway-7781.bin")
     assert result.action == TOOL_DENY
 
 
@@ -112,7 +112,7 @@ def test_the_named_ceiling_and_secret_leaves_are_fenced_at_the_OS_LAYER():
     one more spelling never converges (``/./``, a glued redirect, ``pushd``, an
     assignment, a conditional assignment).
 
-    What binds a subprocess is the OS layer in :mod:`kiro_crew.sandbox`, so that is what
+    What binds a subprocess is the OS layer in :mod:`aj_crew.sandbox`, so that is what
     is pinned: every leaf named here carries a HIDDEN (bind-masked in every mode) or
     READONLY (readable in-sandbox, never writable) disposition.
 
@@ -130,7 +130,7 @@ def test_the_named_ceiling_and_secret_leaves_are_fenced_at_the_OS_LAYER():
 
     ``test_sandbox_governance_mask.py`` pins the dispositions themselves.
     """
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     fenced = sandbox._CREW_HIDDEN_LEAVES + sandbox._CREW_READONLY_LEAVES
 
@@ -153,7 +153,7 @@ def test_home_var_expansion_survives_windows_backslashes(monkeypatch):
     the expanded path are never reinterpreted as escape characters by shlex."""
     import os as _os
 
-    from kiro_crew.security import normalize_shell_command
+    from aj_crew.security import normalize_shell_command
 
     win_home = r"C:\Users\runneradmin"
     monkeypatch.setattr(_os.path, "expanduser", lambda _p: win_home)
@@ -172,7 +172,7 @@ def test_home_var_expansion_survives_windows_backslashes(monkeypatch):
 _BROWSER_KEYSTONE = (
     "~/.kiro/crew/browser-mode-enabled",
     "~/.kiro/crew/browser-engine",
-    "~/.kirocrew/browser-mode-enabled",
+    "~/.ajcrew/browser-mode-enabled",
 )
 
 
@@ -188,8 +188,8 @@ def test_case_variant_policy_path_is_sensitive():
     assert security.is_sensitive_path("~/.kiro/crew/Security_Policy.json")
     assert security.is_sensitive_path("~/.KIRO/CREW/profiles/x.json")
     # Legacy pre-move home is still gated.
-    assert security.is_sensitive_path("~/.kirocrew/Security_Policy.json")
-    assert security.is_sensitive_path("~/.KIROCREW/profiles/x.json")
+    assert security.is_sensitive_path("~/.ajcrew/Security_Policy.json")
+    assert security.is_sensitive_path("~/.AJCREW/profiles/x.json")
 
 
 def test_boot_assertion_passes_with_paths_present():

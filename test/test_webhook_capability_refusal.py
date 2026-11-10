@@ -16,10 +16,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import webhooks
-from kiro_crew.agent_capabilities import CapabilityError
-from kiro_crew.dashboard.handlers import hooks as H
-from kiro_crew.session_capabilities import CapabilityStartupError
+from aj_crew import webhooks
+from aj_crew.agent_capabilities import CapabilityError
+from aj_crew.dashboard.handlers import hooks as H
+from aj_crew.session_capabilities import CapabilityStartupError
 
 _SESSION_KEY = f"{H._HOOK_SESSION_PREFIX}capability-refusal"
 
@@ -43,7 +43,7 @@ def wired(tmp_path, monkeypatch):
     monkeypatch.setattr(webhooks, "config_dir", lambda: Path(tmp_path))
     monkeypatch.setattr(H, "_HOOK_STORE_PATH", Path(tmp_path) / "hooks.json")
     monkeypatch.setattr(H, "_sel", lambda: MagicMock())
-    from kiro_crew.dashboard.handlers import usage
+    from aj_crew.dashboard.handlers import usage
 
     monkeypatch.setattr(usage, "_write_token_record", lambda *_a, **_k: None)
     H._reset_hook_inflight()

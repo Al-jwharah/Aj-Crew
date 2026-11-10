@@ -14,17 +14,17 @@ import re
 import pytest
 from split_credential_boundary_helpers import HEAD, KEY, SRC, TAIL, _name_of, _on_screen
 
-from kiro_crew.messaging.display_safety import (
+from aj_crew.messaging.display_safety import (
     canonicalize_display,
     joins_to_a_credential,
     redact_for_display,
 )
-from kiro_crew.messaging.renderer import (
+from aj_crew.messaging.renderer import (
     _default_redactor,
     count_redaction_tags,
     repaired_after_a_sent_tail,
 )
-from kiro_crew.messaging.split import (
+from aj_crew.messaging.split import (
     _WHITESPACE_RUN,
     _made_collapse_clean,
     _redact_only_the_rejoined_span,
@@ -32,7 +32,7 @@ from kiro_crew.messaging.split import (
     offset_clear_of_a_sent_tail,
     split_markdown_safe,
 )
-from kiro_crew.telegram.renderer import _md_to_telegram_html, _split_markdown, _strip_md
+from aj_crew.telegram.renderer import _md_to_telegram_html, _split_markdown, _strip_md
 
 
 class TestASealedPrefixCannotBeCompletedLater:

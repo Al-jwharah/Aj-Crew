@@ -1,6 +1,6 @@
 /**
  * One line in a crewmate's chat for a change it made to itself: its name, its
- * description or its face (`update_self`, the `kirocrew-mate` server).
+ * description or its face (`update_self`, the `ajcrew-mate` server).
  *
  * The gateway writes the record the moment the crewmate asks, so there is no
  * card to press -- the row tells the user what just changed and offers one

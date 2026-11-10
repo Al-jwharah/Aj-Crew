@@ -13,8 +13,8 @@ import pytest
 from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F401 - fixture
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
-from kiro_crew.acp.client import AcpClient, AcpError, AcpProcessDied
-from kiro_crew.acp.types import ACP_BACKEND_OPENCODE, AcpPromptStats
+from aj_crew.acp.client import AcpClient, AcpError, AcpProcessDied
+from aj_crew.acp.types import ACP_BACKEND_OPENCODE, AcpPromptStats
 
 # ── Phase 1: stop_reason and turn_done tests ──
 
@@ -37,7 +37,7 @@ class TestStopReasonPopulated:
         ],
     )
     async def test_stop_reason_from_the_prompt_response(self, result, expected):
-        from kiro_crew.acp.types import EVENT_COMPLETE, JsonRpcMessage
+        from aj_crew.acp.types import EVENT_COMPLETE, JsonRpcMessage
 
         client = AcpClient()
         complete_msg = JsonRpcMessage(id=1, result=result)
@@ -64,7 +64,7 @@ class TestWaitTurnDone:
     @pytest.mark.asyncio
     async def test_wait_turn_done_returns_reason(self):
         """wait_turn_done returns the stop_reason after turn completes."""
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient()
         complete_msg = JsonRpcMessage(id=1, result={"stopReason": "cancelled"})
@@ -177,7 +177,7 @@ class TestPromptLoop:
     @pytest.mark.asyncio
     async def test_yields_actions(self, tmp_path):
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         msgs = [
             JsonRpcMessage(
@@ -224,7 +224,7 @@ class TestPromptLoop:
     async def test_opencode_permission_waits_for_matching_command_refinement(
         self, tmp_path, scenario, command_expected
     ):
-        from kiro_crew.acp.types import ACP_BACKEND_KIRO, EVENT_PERMISSION_REQUEST, JsonRpcMessage
+        from aj_crew.acp.types import ACP_BACKEND_KIRO, EVENT_PERMISSION_REQUEST, JsonRpcMessage
 
         client = AcpClient(
             work_dir=tmp_path,
@@ -313,7 +313,7 @@ class TestPromptLoop:
 
     @pytest.mark.asyncio
     async def test_process_death_raises(self, tmp_path):
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         client = AcpClient(work_dir=tmp_path)
         proc = MagicMock()
@@ -336,7 +336,7 @@ class TestPromptLoop:
 
         # With stale_eligible=True and no data, should exit after _STALE_TURN_TIMEOUT
         # We patch the timeout to be very short
-        with patch("kiro_crew.acp.client._STALE_TURN_TIMEOUT", 0.05):
+        with patch("aj_crew.acp.client._STALE_TURN_TIMEOUT", 0.05):
             actions = []
             async for action, msg in client._prompt_loop(req_id=1, timeout=2.0):
                 actions.append(action)
@@ -350,7 +350,7 @@ class TestDispatchEventsExtended:
 
     @pytest.mark.asyncio
     async def test_permission_event_yielded(self):
-        from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST, JsonRpcMessage
+        from aj_crew.acp.types import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST, JsonRpcMessage
 
         client = AcpClient()
         perm_msg = JsonRpcMessage(
@@ -384,7 +384,7 @@ class TestDispatchEventsExtended:
 
     @pytest.mark.asyncio
     async def test_tool_event_yielded(self):
-        from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TOOL_CALL, JsonRpcMessage
+        from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TOOL_CALL, JsonRpcMessage
 
         client = AcpClient()
         tool_msg = JsonRpcMessage(
@@ -424,7 +424,7 @@ class TestDispatchEventsExtended:
     @pytest.mark.asyncio
     async def test_extract_agent_from_result(self):
         """extract_agent_from_result=True yields agent_switched from result data."""
-        from kiro_crew.acp.types import EVENT_AGENT_SWITCHED, EVENT_COMPLETE, JsonRpcMessage
+        from aj_crew.acp.types import EVENT_AGENT_SWITCHED, EVENT_COMPLETE, JsonRpcMessage
 
         client = AcpClient()
         complete_msg = JsonRpcMessage(
@@ -454,7 +454,7 @@ class TestDispatchEventsExtended:
 
     @pytest.mark.asyncio
     async def test_error_action_raises(self):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient()
         error_msg = JsonRpcMessage(id=1, error={"code": -1, "message": "boom"})
@@ -479,7 +479,7 @@ class TestReadPromptResponse:
 
     @pytest.mark.asyncio
     async def test_accumulates_text(self):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient()
         text_msg = JsonRpcMessage(
@@ -508,7 +508,7 @@ class TestReadPromptResponse:
 
     @pytest.mark.asyncio
     async def test_timeout_raises(self):
-        from kiro_crew.acp.client import AcpTimeoutError
+        from aj_crew.acp.client import AcpTimeoutError
 
         client = AcpClient()
 
@@ -524,7 +524,7 @@ class TestReadPromptResponse:
 
     @pytest.mark.asyncio
     async def test_error_raises(self):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient()
         error_msg = JsonRpcMessage(id=1, error={"code": -1, "message": "fail"})
@@ -582,7 +582,7 @@ class TestPromptLoopReleasesTurnDone:
 
     @pytest.mark.asyncio
     async def test_permission_auto_approved(self):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient()
         perm_msg = JsonRpcMessage(
@@ -609,7 +609,7 @@ class TestSendMessageStreamBranches:
 
     @pytest.mark.asyncio
     async def test_metadata_tracked(self):
-        from kiro_crew.acp.types import METHOD_METADATA, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_METADATA, JsonRpcMessage
 
         client = AcpClient()
         meta_msg = JsonRpcMessage(method=METHOD_METADATA, params={"contextUsagePercentage": 75.0})
@@ -631,7 +631,7 @@ class TestSendMessageStreamBranches:
 
     @pytest.mark.asyncio
     async def test_compaction_logged(self):
-        from kiro_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
 
         client = AcpClient()
         compact_msg = JsonRpcMessage(
@@ -684,7 +684,7 @@ class TestDispatchSubagentEvents:
 
     @pytest.mark.asyncio
     async def test_dispatch_yields_subagent_list_and_activity(self):
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_SUBAGENT_ACTIVITY,
             EVENT_SUBAGENT_LIST,
             JsonRpcMessage,
@@ -754,7 +754,7 @@ class TestDispatchSubagentEvents:
         Parent and child updates share ``_kiro.dev/session/update``, so ``sessionId`` is
         the only separator (``test/fixtures/acp_frames/kiro/session.jsonl``).
         """
-        from kiro_crew.acp.types import EVENT_SUBAGENT_ACTIVITY, JsonRpcMessage
+        from aj_crew.acp.types import EVENT_SUBAGENT_ACTIVITY, JsonRpcMessage
 
         client = AcpClient()
         client._session_id = "own-1"
@@ -823,7 +823,7 @@ class TestDispatchSubagentEvents:
         ``NATIVE_CHILD_ROSTER_CAP`` binds every store that remembers child ids; a store
         here without the cap would make the cap decision partial.
         """
-        from kiro_crew.acp.types import EVENT_SUBAGENT_LIST, JsonRpcMessage
+        from aj_crew.acp.types import EVENT_SUBAGENT_LIST, JsonRpcMessage
 
         client = AcpClient()
         roster = [{"sessionId": f"c-{i}"} for i in range(5000)]
@@ -856,7 +856,7 @@ class TestDispatchSubagentEvents:
         must be scrubbed before they surface as EVENT_SUBAGENT_ACTIVITY. Also
         the streamed text must be read from the nested ``content.text`` shape
         kiro-cli 2.10.0 emits, not only the flat top-level ``text`` field."""
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_SUBAGENT_ACTIVITY,
             JsonRpcMessage,
         )
@@ -923,7 +923,7 @@ class TestDispatchSubagentEvents:
         top-level ``text`` (older payloads); (2) a reasoning/thinking content
         block must NOT surface as user-visible sub-agent output; (3) a non-dict
         ``content`` must not raise (the flat pre-port read tolerated it)."""
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_SUBAGENT_ACTIVITY,
             JsonRpcMessage,
         )

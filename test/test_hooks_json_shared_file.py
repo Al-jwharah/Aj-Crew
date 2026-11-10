@@ -17,8 +17,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.hooks import ScriptHookStore
-from kiro_crew.webhooks import WebhookStoreUnreadable
+from aj_crew.hooks import ScriptHookStore
+from aj_crew.webhooks import WebhookStoreUnreadable
 
 
 def _seed_context(tmp_path, hook_id: str = "review:pr-123") -> None:
@@ -219,7 +219,7 @@ class TestMergeIsSerialised:
 
     def test_write_holds_the_shared_lock(self, tmp_path, monkeypatch):
         """The merge must run inside webhooks.locked() for the same path."""
-        from kiro_crew import webhooks
+        from aj_crew import webhooks
 
         held: list[str] = []
         real_locked = webhooks.locked
@@ -250,7 +250,7 @@ class TestMergeIsSerialised:
         store.create({"name": "fmt", "event": "Stop", "command": "true"})
 
         # A second writer registers a new context the way mcp_core does.
-        from kiro_crew import webhooks
+        from aj_crew import webhooks
 
         path = tmp_path / "hooks.json"
         with webhooks.locked(path):
@@ -296,7 +296,7 @@ class TestConcurrentMutationsAreSerialised:
         writer between those two steps, which is the only place that ordering can
         be produced on demand.
         """
-        from kiro_crew import webhooks
+        from aj_crew import webhooks
 
         store = ScriptHookStore(tmp_path)
 
@@ -391,7 +391,7 @@ class TestAcquiringTheSharedLockDoesNotTruncateTheLockFile:
     SEED = b"lock-file-content-that-must-survive"
 
     def test_locked_preserves_the_lock_file(self, tmp_path):
-        from kiro_crew import webhooks
+        from aj_crew import webhooks
 
         path = tmp_path / "hooks.json"
         lock_path = tmp_path / "hooks.json.lock"
@@ -404,7 +404,7 @@ class TestAcquiringTheSharedLockDoesNotTruncateTheLockFile:
 
     def test_locked_works_when_the_lock_file_is_absent(self, tmp_path):
         """First acquisition must create the lock file rather than raise."""
-        from kiro_crew import webhooks
+        from aj_crew import webhooks
 
         path = tmp_path / "hooks.json"
         assert not (tmp_path / "hooks.json.lock").exists()

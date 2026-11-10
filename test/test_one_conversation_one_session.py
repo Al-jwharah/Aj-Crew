@@ -14,24 +14,24 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.channel_slots import (
+from aj_crew.dashboard.channel_slots import (
     channel_slot_name,
     refresh_channel_window,
     surface_channel_session,
 )
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard.chat_utils import (
     dashboard_slot_key,
     effective_session_key,
     slot_transcript_key,
     subagent_event_slot,
 )
-from kiro_crew.history import ConversationLog, _safe_key
-from kiro_crew.session_surface import has_dashboard_surface, set_dashboard_surfaced
+from aj_crew.history import ConversationLog, _safe_key
+from aj_crew.session_surface import has_dashboard_surface, set_dashboard_surfaced
 
 SLACK_KEY = "slack:1785370133.085469"
 SLACK_STEM = "slack_1785370133.085469"
-DISCORD_KEY = "discord:kirocrew:direct:123456"
-DISCORD_STEM = "discord_kirocrew_direct_123456"
+DISCORD_KEY = "discord:ajcrew:direct:123456"
+DISCORD_STEM = "discord_ajcrew_direct_123456"
 
 
 def _write_transcript(
@@ -59,14 +59,14 @@ def _turns(n: int, *, start: int = 0) -> list[dict]:
 
 @pytest.fixture
 def log(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.history.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.history.config_dir", lambda: tmp_path)
     return ConversationLog()
 
 
 @pytest.fixture
 def state(tmp_path, log):
     """A dashboard state real enough to hold slots and answer key questions."""
-    from kiro_crew.dashboard.state import DashboardState
+    from aj_crew.dashboard.state import DashboardState
 
     st = DashboardState.__new__(DashboardState)
     st._slots = {}
@@ -86,7 +86,7 @@ def state(tmp_path, log):
 
 def _real_get_or_create(st):
     """A slot factory with the real _ChatSlot, minus the broadcast plumbing."""
-    from kiro_crew.dashboard.state import _ChatSlot, _normalize_slot_key
+    from aj_crew.dashboard.state import _ChatSlot, _normalize_slot_key
 
     def make(name=None, agent="", linked_session_key="", **kw):
         name = _normalize_slot_key(name or "chat-1")
@@ -281,7 +281,7 @@ class TestA4TheTabStaysCurrent:
         """Every 'does this session have a tab?' gate reads that registry."""
         published: list[set[str]] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_utils.set_dashboard_surfaced",
+            "aj_crew.dashboard.chat_utils.set_dashboard_surfaced",
             lambda keys, _tabs=None: published.append(set(keys)),
         )
         state.sessions.set_active_dashboard_slots = MagicMock()
@@ -291,7 +291,7 @@ class TestA4TheTabStaysCurrent:
             session_key=SLACK_KEY,
         )
         assert slot is not None
-        from kiro_crew.dashboard.chat_utils import _sync_dashboard_slots
+        from aj_crew.dashboard.chat_utils import _sync_dashboard_slots
 
         _sync_dashboard_slots(state)
         assert published and SLACK_KEY in published[-1]
@@ -435,7 +435,7 @@ class TestA6NoLostOrOutOfOrderTurn:
         """
         import asyncio
 
-        from kiro_crew.session import SessionManager, _Session
+        from aj_crew.session import SessionManager, _Session
 
         async def _check():
             mgr = SessionManager.__new__(SessionManager)
@@ -451,7 +451,7 @@ class TestA6NoLostOrOutOfOrderTurn:
 
     def test_no_steer_primitive_is_exposed(self):
         """Withdrawn deliberately: an unaccounted steer can drop a message."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         assert not hasattr(SessionManager, "steer")
 
@@ -494,7 +494,7 @@ class TestForeignAppendsInterleaveChronologically:
         return _json.dumps({"role": role, "content": content, "ts": ts}) + "\n"
 
     def test_a_channel_line_from_between_two_window_turns_lands_between_them(self):
-        from kiro_crew.dashboard.chat_persistence import _interleave_foreign_lines
+        from aj_crew.dashboard.chat_persistence import _interleave_foreign_lines
 
         window_entries = [
             {"role": "user", "content": "first", "ts": "2026-08-01T10:00:00+00:00"},
@@ -511,7 +511,7 @@ class TestForeignAppendsInterleaveChronologically:
         ]
 
     def test_a_genuinely_newer_channel_line_still_lands_last(self):
-        from kiro_crew.dashboard.chat_persistence import _interleave_foreign_lines
+        from aj_crew.dashboard.chat_persistence import _interleave_foreign_lines
 
         window_entries = [
             {"role": "user", "content": "first", "ts": "2026-08-01T10:00:00+00:00"},
@@ -523,14 +523,14 @@ class TestForeignAppendsInterleaveChronologically:
         assert [__import__("json").loads(m)["content"] for m in merged] == ["first", "later"]
 
     def test_no_foreign_lines_returns_the_window_untouched(self):
-        from kiro_crew.dashboard.chat_persistence import _interleave_foreign_lines
+        from aj_crew.dashboard.chat_persistence import _interleave_foreign_lines
 
         window_lines = [self._line("user", "only", "2026-08-01T10:00:00+00:00")]
         entries = [{"role": "user", "content": "only", "ts": "2026-08-01T10:00:00+00:00"}]
         assert _interleave_foreign_lines(entries, window_lines, []) is window_lines
 
     def test_an_unparseable_timestamp_stays_beside_its_neighbour(self):
-        from kiro_crew.dashboard.chat_persistence import _interleave_foreign_lines
+        from aj_crew.dashboard.chat_persistence import _interleave_foreign_lines
 
         window_entries = [
             {"role": "user", "content": "first", "ts": "2026-08-01T10:00:00+00:00"},

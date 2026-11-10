@@ -1,6 +1,6 @@
 """Tests for the age-based agents-directory janitor.
 
-Covers the hard safety contract in :mod:`kiro_crew.agents_janitor`:
+Covers the hard safety contract in :mod:`aj_crew.agents_janitor`:
 
 * an aged orphaned atomic-write temp is removed (foreign shape and this
   project's own ``mkstemp`` residue);
@@ -9,7 +9,7 @@ Covers the hard safety contract in :mod:`kiro_crew.agents_janitor`:
 * an aged foreign file with an unrecognized name is never touched;
 * a symlink whose name matches a recognized shape is skipped (never followed);
 * an unreadable / vanished entry is tolerated (fail-open);
-* backups are aged on their own, longer retention window and are opt-in (Kiro
+* backups are aged on their own, longer retention window and are opt-in (Aj
   Crew authors none of them, so they belong to foreign writers).
 
 All filesystem work is under ``tmp_path`` — the sweep never runs against a real
@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.agents_janitor import (
+from aj_crew.agents_janitor import (
     DEFAULT_BACKUP_MAX_AGE_SECONDS,
     DEFAULT_TEMP_MAX_AGE_SECONDS,
     SweepResult,
@@ -114,7 +114,7 @@ def test_sweep_survives_zeroed_dirent_identity(tmp_path: Path, monkeypatch) -> N
     during teardown, and a globally patched scandir handed it a fake that broke
     on Windows while passing on Linux.
     """
-    import kiro_crew.agents_janitor as aj
+    import aj_crew.agents_janitor as aj
 
     orphan = _touch(tmp_path / "build-agent.json.98765.tmp", mtime=_OLD_TEMP)
 
@@ -154,7 +154,7 @@ def test_sweep_survives_zeroed_dirent_identity(tmp_path: Path, monkeypatch) -> N
 
 
 def test_removes_aged_own_mkstemp_residue(tmp_path: Path) -> None:
-    # Kiro Crew's own _atomic_json_write leaves tmp<random>.tmp on a crash.
+    # Aj Crew's own _atomic_json_write leaves tmp<random>.tmp on a crash.
     residue = _touch(tmp_path / "tmpA1b2C3d4.tmp", mtime=_OLD_TEMP)
 
     result = sweep_agents_dir(tmp_path, now=_NOW)
@@ -178,7 +178,7 @@ def test_removes_aged_backups_when_opted_in(tmp_path: Path) -> None:
 def test_backups_left_alone_when_gated_off(tmp_path: Path) -> None:
     # sweep_backups=False (what the wired-in callers pass by default from
     # agent.sweep_agents_backups): foreign backups are never touched, even when
-    # well past the backup window, because their retention is not Kiro Crew's to
+    # well past the backup window, because their retention is not Aj Crew's to
     # decide. This is the ownership-boundary guarantee.
     bak_epoch = _touch(tmp_path / "spec.bak-1700000000", mtime=_OLD_BACKUP)
     bak_json = _touch(tmp_path / "spec.json.bak.7", mtime=_OLD_BACKUP)

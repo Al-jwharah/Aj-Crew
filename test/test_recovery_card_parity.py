@@ -9,7 +9,7 @@ full-width bubble -- a regression with no test failure anywhere else.
 
 from pathlib import Path
 
-from kiro_crew.dashboard.state import (
+from aj_crew.dashboard.state import (
     REFUSAL_RECOVERY_PREFIX,
     STALE_RECOVERY_PREFIX,
     SUBAGENT_SYNTHESIS_PREFIX,
@@ -41,7 +41,7 @@ def test_refusal_body_shape_matches_card_parsing() -> None:
     pattern out of ``Blocked by security policy: <pattern>``. Both come from
     build_refusal_recovery_prompt plus the host gate's reason string, so pin the
     shape the card relies on."""
-    from kiro_crew.dashboard.state import build_refusal_recovery_prompt
+    from aj_crew.dashboard.state import build_refusal_recovery_prompt
 
     body = build_refusal_recovery_prompt(
         [("Running: mypy src/…", "Blocked by security policy: .*env.*grep.*AWS.*")]

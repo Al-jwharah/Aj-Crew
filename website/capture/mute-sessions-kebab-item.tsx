@@ -39,10 +39,10 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 const scene = params.get('scene') || 'unmuted'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 // ThemeProvider reads its initial theme from storage; seed it so the provider
 // resolves the requested theme instead of its default.
-try { localStorage.setItem('mc-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark') } catch { /* ignore */ }
+try { localStorage.setItem('mc-theme', theme === 'light' ? 'aj-light' : 'aj-dark') } catch { /* ignore */ }
 
 // Gateway-free: answer the one read the menu makes (`/api/chat/folders`, via
 // useFolderSortMode) with an empty success so its ErrorNotice row never renders
@@ -69,7 +69,7 @@ const slot = {
   title: 'Ship the release',
   running: false,
   messages: 4,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   mutes_opened: scene === 'muted',
 } as ChatSlot
 store.dispatch(sseSlots([slot]))

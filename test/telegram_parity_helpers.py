@@ -19,8 +19,8 @@ from typing import Any
 import pytest
 from test_telegram import FakeClient
 
-from kiro_crew.telegram.renderer import TelegramRenderer
-from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES, TelegramInboundMessage
+from aj_crew.telegram.renderer import TelegramRenderer
+from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES, TelegramInboundMessage
 
 # Split so the literal never appears whole in this file.
 _AWS_KEY = "AKIA" + "IOSFODNN7EXAMPLE"
@@ -35,7 +35,7 @@ def _drop_live_config_snapshot():
     set the live config for every test after it in the same worker.
     """
     yield
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     live.reset_for_tests()
 
@@ -97,7 +97,7 @@ def _forum_msg(
     list), so an existing case keeps exercising the token-matcher fallback. A case
     about what Telegram itself classified passes both.
     """
-    from kiro_crew.telegram.transport import TelegramInboundMessage
+    from aj_crew.telegram.transport import TelegramInboundMessage
 
     return TelegramInboundMessage(
         channel_type="telegram",

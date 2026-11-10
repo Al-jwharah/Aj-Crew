@@ -19,11 +19,11 @@ import pytest
 import subagent_continuable_helpers
 from subagent_continuable_helpers import _manager, _mock_sessions
 
-from kiro_crew.context_management import evict_completed_agents
-from kiro_crew.subagent import SUCCESSOR_UNKNOWN, SubagentInfo, SubagentManager
-from kiro_crew.subagent_manager.continuation import ContinuationCoordinator
-from kiro_crew.subagent_persistence import create_agent_folder, write_run_agent
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.context_management import evict_completed_agents
+from aj_crew.subagent import SUCCESSOR_UNKNOWN, SubagentInfo, SubagentManager
+from aj_crew.subagent_manager.continuation import ContinuationCoordinator
+from aj_crew.subagent_persistence import create_agent_folder, write_run_agent
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -41,7 +41,7 @@ class TestRestrictedRunStateLifetime:
     async def test_terminal_state_waits_for_report_then_only_keeps_original(
         self, mode, kept, followup
     ):
-        from kiro_crew import subagent_persistence as persistence
+        from aj_crew import subagent_persistence as persistence
 
         manager = _manager()
         entered, finish = asyncio.Event(), asyncio.Event()
@@ -87,7 +87,7 @@ class TestRestrictedRunStateLifetime:
             assert (persistence.read_state(run_id) is not None) == (kept and not followup)
             if kept:
                 assert persistence.read_state(original) is not None
-                with patch("kiro_crew.subagent._cleanup_session_files_sync"):
+                with patch("aj_crew.subagent._cleanup_session_files_sync"):
                     assert manager.release_conversation(original)[0]
                 assert persistence.read_state(original) is None
             assert not (persistence._subagents_dir() / run_id).exists()
@@ -99,7 +99,7 @@ class TestRestrictedRunStateLifetime:
     @pytest.mark.parametrize("mode", ["incognito", "temporary"])
     @pytest.mark.parametrize("sid", [None, "sid-123"])
     def test_release_removes_evicted_original_without_deleting_persistent_files(self, mode, sid):
-        from kiro_crew import subagent_persistence as persistence
+        from aj_crew import subagent_persistence as persistence
 
         manager = _manager()
         manager._sessions.forget_conversation.return_value = sid
@@ -108,13 +108,13 @@ class TestRestrictedRunStateLifetime:
         before = persistent.read_bytes()
         # flake-ok: live-clock registry stamp; this test never runs the TTL sweep
         manager._conversations["subagent:original"] = time.time()
-        with patch("kiro_crew.subagent._cleanup_session_files_sync"):
+        with patch("aj_crew.subagent._cleanup_session_files_sync"):
             manager.release_conversation("original")
         assert persistence.read_state("original") is None
         assert persistent.read_bytes() == before
 
     def test_busy_release_preserves_original_and_queued_child(self):
-        from kiro_crew import subagent_persistence as persistence
+        from aj_crew import subagent_persistence as persistence
 
         manager = _manager()
         persistence.create_agent_folder("original", task="private task", memory_mode="temporary")
@@ -124,7 +124,7 @@ class TestRestrictedRunStateLifetime:
 
     @pytest.mark.asyncio
     async def test_abandoned_writer_keeps_state_until_it_lands_after_eviction(self):
-        from kiro_crew import subagent_persistence as persistence
+        from aj_crew import subagent_persistence as persistence
 
         manager = _manager()
         info = SubagentInfo(id="late-writer", task="private", memory_mode="temporary")
@@ -139,8 +139,8 @@ class TestRestrictedRunStateLifetime:
             return real_update(*args, **kwargs)
 
         with (
-            patch("kiro_crew.subagent.update_state", side_effect=update),
-            patch("kiro_crew.subagent._STATE_DRAIN_TIMEOUT", 0),
+            patch("aj_crew.subagent.update_state", side_effect=update),
+            patch("aj_crew.subagent._STATE_DRAIN_TIMEOUT", 0),
         ):
             writer = asyncio.create_task(manager._write_state_off_loop(info, "late", turns=3))
             try:
@@ -167,7 +167,7 @@ class TestRestrictedRunStateLifetime:
 
     @pytest.mark.parametrize("tightened", [False, True])
     def test_late_delivery_does_not_persist_released_restricted_payload(self, tightened):
-        from kiro_crew import subagent_persistence as persistence
+        from aj_crew import subagent_persistence as persistence
 
         manager = _manager()
         folder = persistence.create_agent_folder(
@@ -176,7 +176,7 @@ class TestRestrictedRunStateLifetime:
         if tightened:
             persistence.tighten_run_memory_mode("released", "temporary")
             persistence.update_state("released", task="restricted follow-up")
-        with patch("kiro_crew.subagent._cleanup_session_files_sync"):
+        with patch("aj_crew.subagent._cleanup_session_files_sync"):
             manager.release_conversation("released")
         persistence.mark_delivered("released")
         assert not (folder / "tombstone.json").exists()
@@ -202,9 +202,9 @@ class TestSharedBindIdentityLabel:
         A real ``AcpSessionProvider``: ``provider_label`` resolves by ``isinstance``, and a bare
         ``MagicMock`` would answer the default label for every backend.
         """
-        from kiro_crew.acp.session_provider import AcpSessionProvider
-        from kiro_crew.subagent_manager.run import RunEventCoordinator
-        from kiro_crew.subagent_persistence import _live_cleanup_identities
+        from aj_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew.subagent_manager.run import RunEventCoordinator
+        from aj_crew.subagent_persistence import _live_cleanup_identities
 
         manager = _manager()
         info = SubagentInfo(id=f"bind{len(backend)}", task="t")
@@ -225,8 +225,8 @@ class TestSharedBindIdentityLabel:
         with (
             patch.object(RunEventCoordinator, "_remember_identity_off_loop", remembered),
             # ``run_start.py``'s ``*_impl`` bodies resolve their globals through
-            # ``kiro_crew.subagent``, so that is where the name has to be replaced.
-            patch("kiro_crew.subagent.AcpSessionProvider", lambda *a, **k: provider),
+            # ``aj_crew.subagent``, so that is where the name has to be replaced.
+            patch("aj_crew.subagent.AcpSessionProvider", lambda *a, **k: provider),
         ):
             await manager._run_events._bind_shared_handle_impl(
                 info, "subagent:bind", runtime, handle
@@ -240,7 +240,7 @@ class TestSharedBindIdentityLabel:
 
     @pytest.mark.asyncio
     async def test_a_codex_shared_session_is_labelled_codex(self) -> None:
-        from kiro_crew.acp.types import ACP_BACKEND_CODEX, PROVIDER_LABEL_CODEX
+        from aj_crew.acp.types import ACP_BACKEND_CODEX, PROVIDER_LABEL_CODEX
 
         info, live, remembered = await self._bound(ACP_BACKEND_CODEX)
         assert info._session_provider == PROVIDER_LABEL_CODEX
@@ -256,7 +256,7 @@ class TestSharedBindIdentityLabel:
         """Not a swap. ``ACP_BACKEND_KIRO`` IS the empty string, so a truthiness test
         on the backend would have sent kiro itself down the wrong branch -- the same
         trap this file's sibling PR fell into once."""
-        from kiro_crew.acp.types import ACP_BACKEND_KIRO, PROVIDER_LABEL_DEFAULT
+        from aj_crew.acp.types import ACP_BACKEND_KIRO, PROVIDER_LABEL_DEFAULT
 
         info, live, _ = await self._bound(ACP_BACKEND_KIRO)
         assert info._session_provider == PROVIDER_LABEL_DEFAULT

@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import snapshot as snap
-from kiro_crew import snapshot_redact
+from aj_crew import snapshot as snap
+from aj_crew import snapshot_redact
 
 
 def _real_db(path: Path, secret: str | None = None) -> bytes:
@@ -43,7 +43,7 @@ def opted_in(monkeypatch):
 @pytest.fixture
 def bundle(tmp_path):
     """A written archive carrying a bot token in config and a key inside memory."""
-    payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+    payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
     payload.mkdir(parents=True)
     (payload / "config.json").write_text(
         json.dumps({"telegram": {"bot_token": TOKEN}}), encoding="utf-8"
@@ -56,7 +56,7 @@ def bundle(tmp_path):
         json.dumps({"version": 3, "components": {"memory": "unresolved"}}),
         encoding="utf-8",
     )
-    out = tmp_path / "kirocrew-snapshot-20260101T000000Z.tar.gz"
+    out = tmp_path / "ajcrew-snapshot-20260101T000000Z.tar.gz"
     with tarfile.open(out, "w:gz") as tf:
         tf.add(str(payload), arcname=payload.name)
     return out
@@ -92,7 +92,7 @@ def _member_names(archive: Path) -> list[str]:
 
 def _bundle_with(tmp_path: Path, extra: dict[str, bytes]) -> Path:
     """A minimal valid bundle carrying *extra* entries alongside a real manifest."""
-    payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+    payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
     payload.mkdir(parents=True)
     (payload / "MANIFEST.json").write_text(
         json.dumps({"version": 3, "components": {"memory": "unresolved"}}), encoding="utf-8"
@@ -102,7 +102,7 @@ def _bundle_with(tmp_path: Path, extra: dict[str, bytes]) -> Path:
         target = payload / name
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
-    out = tmp_path / "kirocrew-snapshot-20260101T000000Z.tar.gz"
+    out = tmp_path / "ajcrew-snapshot-20260101T000000Z.tar.gz"
     with tarfile.open(out, "w:gz") as tf:
         tf.add(str(payload), arcname=payload.name)
     return out
@@ -175,7 +175,7 @@ class TestRedactionFailureRefusesRatherThanLeaking:
         Asserted as a refusal rather than a message, because which guard catches it is an
         ordering detail; that nothing usable is produced is the property.
         """
-        broken = tmp_path / "kirocrew-snapshot-20260101T000000Z.tar.gz"
+        broken = tmp_path / "ajcrew-snapshot-20260101T000000Z.tar.gz"
         broken.write_bytes(b"not a tarball")
         with pytest.raises(snap.RedactionFailed):
             _prepare(broken, workdir)
@@ -206,12 +206,12 @@ class TestTheOptOut:
         So a config that cannot be read says nothing about redaction either way: with the
         operator opted in, the pass still runs.
         """
-        from kiro_crew.config import loader as cfg_loader
+        from aj_crew.config import loader as cfg_loader
 
         def boom(*a, **k):
             raise OSError("config unreadable")
 
-        monkeypatch.setattr(cfg_loader.KiroCrewConfig, "load", staticmethod(boom))
+        monkeypatch.setattr(cfg_loader.AjCrewConfig, "load", staticmethod(boom))
         redacted = _prepare(bundle, workdir)
         assert redacted is not None, capsys.readouterr().out
         assert TOKEN not in _read_member(redacted, "config.json").decode("utf-8")
@@ -326,9 +326,9 @@ class TestNothingUnprovableLeavesTheHost:
     def test_a_redaction_failure_prepares_nothing(self, tmp_path, workdir):
         """Two roots is a state the pass refuses -- and a refusal must not produce a copy."""
         stage = tmp_path / "two"
-        for name in ("kirocrew-snapshot-20260101T000000Z", "kirocrew-snapshot-other"):
+        for name in ("ajcrew-snapshot-20260101T000000Z", "ajcrew-snapshot-other"):
             (stage / name).mkdir(parents=True)
-        out = tmp_path / "kirocrew-snapshot-20260101T000000Z.tar.gz"
+        out = tmp_path / "ajcrew-snapshot-20260101T000000Z.tar.gz"
         with tarfile.open(out, "w:gz") as tf:
             for child in sorted(stage.iterdir()):
                 tf.add(str(child), arcname=child.name)

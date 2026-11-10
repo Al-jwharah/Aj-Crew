@@ -13,8 +13,8 @@ import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-import kiro_crew.apps.app_storage as app_storage_mod
-from kiro_crew.apps.app_storage import AppStorage
+import aj_crew.apps.app_storage as app_storage_mod
+from aj_crew.apps.app_storage import AppStorage
 
 # Strategies
 
@@ -502,12 +502,12 @@ class TestAppStorageDeviceSetIsShared:
     """The reserved-name set must not restate the one shared definition."""
 
     def test_every_shared_stem_is_covered(self) -> None:
-        from kiro_crew.constants import WINDOWS_DEVICE_STEMS
+        from aj_crew.constants import WINDOWS_DEVICE_STEMS
 
         assert {s.upper() for s in WINDOWS_DEVICE_STEMS} <= app_storage_mod._RESERVED_DEVICE_NAMES
 
     def test_a_shared_stem_is_not_filename_safe(self) -> None:
-        from kiro_crew.constants import WINDOWS_DEVICE_STEMS
+        from aj_crew.constants import WINDOWS_DEVICE_STEMS
 
         for stem in sorted(WINDOWS_DEVICE_STEMS):
             assert not app_storage_mod._key_is_filename_safe(stem), stem

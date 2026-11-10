@@ -83,7 +83,7 @@ export const KIND_META: Record<string, { icon: ReactNode; color: string; label: 
   taskrunner: { icon: <ClipboardList className="lucide-inline" />, color: 'bg-accent/15 text-accent',  get label() { return i18nT('components.notifications.notifMeta.kind_task_runner') }, borderColor: 'border-l-accent' },
   skills:     { icon: <BookOpen className="lucide-inline" />, color: 'bg-warn/15 text-warn-text',      get label() { return i18nT('components.notifications.notifMeta.kind_skills') },       borderColor: 'border-l-warn' },
   terminal:   { icon: <Terminal className="lucide-inline" />, color: 'bg-warn/15 text-warn-text',      get label() { return i18nT('components.notifications.notifMeta.kind_terminal') },     borderColor: 'border-l-warn' },
-  // Both the gateway's own "a new Kiro Crew is out" notices and an installed
+  // Both the gateway's own "a new Aj Crew is out" notices and an installed
   // app's "a new version is published" ones carry this kind, so the label is
   // the generic noun rather than either source's wording. Informational tint:
   // nothing is blocked and whatever is running keeps working on the version it

@@ -78,7 +78,7 @@
 //     The agent is instructed to emit exactly those and to stay "self-contained
 //     — inline styles, no external assets, no network requests", so it has no
 //     documented need to ship JS. See
-//     `src/kiro_crew/apps/builtins/meetings/agents/meetings-sketch-artist.json`.
+//     `src/aj_crew/apps/builtins/meetings/agents/meetings-sketch-artist.json`.
 //   * The residual that is left is narrow and ours: `'unsafe-inline'` is still
 //     granted, and our own bootstrap could in principle append a speculative
 //     `<link>`. It is a fixed literal in this file, not attacker input.

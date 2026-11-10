@@ -446,7 +446,7 @@ const AGENT_TINT_EDITED = '#654321'
 const SESSION_TINT = '#abcdef'
 
 const painterAgents = (sessionColor?: string) => [
-  { name: 'painter', source: 'kirocrew', ...(sessionColor ? { session_color: sessionColor } : {}) },
+  { name: 'painter', source: 'ajcrew', ...(sessionColor ? { session_color: sessionColor } : {}) },
 ]
 
 function renderWithAgents(initial: ReturnType<typeof painterAgents>) {

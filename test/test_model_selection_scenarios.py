@@ -25,7 +25,7 @@ from __future__ import annotations
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.acp.client import (
+from aj_crew.acp.client import (
     AcpModelUnavailable,
     _rejected_model_from_error,
     advertised_model_ids,
@@ -34,7 +34,7 @@ from kiro_crew.acp.client import (
     resolve_pin_spelling_on,
     resolve_usable_model,
 )
-from kiro_crew.acp_backends import ACP_BACKEND_CODEX, ACP_BACKEND_KIRO
+from aj_crew.acp_backends import ACP_BACKEND_CODEX, ACP_BACKEND_KIRO
 
 # Representative advertised sets for the scenarios below.
 _ENTITLED = ["claude-opus-4.8", "claude-sonnet-4.6", "auto"]  # serves auto
@@ -332,7 +332,7 @@ class TestPinSpellingResolver:
         # effort half of the pin. `_push_model_via_effort_split` writes that
         # half as a config option, so an answer that changed it would change
         # the operator's reasoning effort.
-        from kiro_crew.model_registry import split_effort_suffix
+        from aj_crew.model_registry import split_effort_suffix
 
         pins = [
             "gpt-6-astra",

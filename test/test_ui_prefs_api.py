@@ -8,8 +8,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import ui_prefs as ui_prefs_store
-from kiro_crew.dashboard.handlers import ui_prefs as ui_prefs_handler
+from aj_crew import ui_prefs as ui_prefs_store
+from aj_crew.dashboard.handlers import ui_prefs as ui_prefs_handler
 
 
 @pytest.fixture(autouse=True)
@@ -27,7 +27,7 @@ def _owner_caller(monkeypatch):
     ``test_a_non_owner_cannot_write`` and by the registrar-wide invariant in
     test_agent_config_owner_gate_invariant.py."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
@@ -82,7 +82,7 @@ async def test_put_merges_and_null_deletes():
         {},  # no 'prefs'
         {"prefs": []},  # wrong type
         {"prefs": {"mc-zoom": 1}},  # non-string value
-        {"prefs": {"kiro_crew_token": "leak"}},  # credential-shaped key
+        {"prefs": {"aj_crew_token": "leak"}},  # credential-shaped key
     ],
 )
 @pytest.mark.asyncio
@@ -118,7 +118,7 @@ async def test_a_non_owner_cannot_read(monkeypatch):
     state, cloud launch defaults), so the READ is gated too, not just the write."""
     ui_prefs_store.merge_ui_prefs({"kc:file-explorer:state:v2": '{"cwd":"/home/user"}'})
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: False,
     )
     async with _client() as client:
@@ -131,7 +131,7 @@ async def test_a_non_owner_cannot_read(monkeypatch):
 async def test_a_non_owner_cannot_write(monkeypatch):
     """A shared dashboard's viewer must not overwrite the owner's settings."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: False,
     )
     async with _client() as client:
@@ -145,7 +145,7 @@ async def test_a_non_owner_cannot_write(monkeypatch):
 async def test_the_gate_runs_before_body_validation(monkeypatch):
     """A non-owner must not be able to probe the validator's error messages."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: False,
     )
     async with _client() as client:

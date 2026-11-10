@@ -1,9 +1,9 @@
-"""``kiro_crew.acp.skill_projection`` keeps the patch seams and the surface the one module had.
+"""``aj_crew.acp.skill_projection`` keeps the patch seams and the surface the one module had.
 
-``kiro_crew.acp.skill_projection`` is a mirror facade (:mod:`kiro_crew._facade_mirror`)
-over the owners in ``kiro_crew.acp.skill_projection_parts``. The ACP transports, the
+``aj_crew.acp.skill_projection`` is a mirror facade (:mod:`aj_crew._facade_mirror`)
+over the owners in ``aj_crew.acp.skill_projection_parts``. The ACP transports, the
 doctor, the tests and the documents still reach every name as
-``kiro_crew.acp.skill_projection.<name>``, and the moved code reads its names as plain
+``aj_crew.acp.skill_projection.<name>``, and the moved code reads its names as plain
 module globals, so a patch through the facade reaches that code only because the mirror
 writes it into every module holding the name.
 
@@ -30,8 +30,8 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew.acp import skill_projection
+from aj_crew import _facade_mirror
+from aj_crew.acp import skill_projection
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_skill_projection_facade")
 
@@ -39,7 +39,7 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_skill_projection_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams",)
 
-FACADE = "kiro_crew.acp.skill_projection"
+FACADE = "aj_crew.acp.skill_projection"
 PARTS_DIR = Path(skill_projection.__file__).resolve().parent / "skill_projection_parts"
 FACADE_MODULE = skill_projection
 INVENTORY = source_corpus.repo_root() / "test" / "campaign_facade_inventories" / f"{FACADE}.json"
@@ -86,7 +86,7 @@ def _test_tree_files() -> list[Path]:
         rel = path.relative_to(root).as_posix()
         if rel == "conftest.py" or rel.startswith("test/"):
             found.append(path)
-        elif rel.startswith("src/kiro_crew/apps/builtins/") and (
+        elif rel.startswith("src/aj_crew/apps/builtins/") and (
             "/tests/" in rel or path.name.startswith("test_") or path.name == "conftest.py"
         ):
             found.append(path)
@@ -155,7 +155,7 @@ def test_the_owners_are_the_parts_package_in_layer_order() -> None:
     owners listed before it: the order the facade loads them and a read resolves in."""
     owners = list(_index().owners)
     on_disk = {
-        f"kiro_crew.acp.skill_projection_parts.{p.stem}": p
+        f"aj_crew.acp.skill_projection_parts.{p.stem}": p
         for p in PARTS_DIR.glob("*.py")
         if p.name != "__init__.py"
     }
@@ -181,7 +181,7 @@ def test_the_facade_keeps_the_default_read_path_and_forwards_no_table() -> None:
 
 
 def test_the_family_logs_through_one_logger_named_for_the_facade() -> None:
-    """``caplog`` filters keyed on ``kiro_crew.acp.skill_projection`` keep seeing the moved
+    """``caplog`` filters keyed on ``aj_crew.acp.skill_projection`` keep seeing the moved
     code."""
     assert skill_projection.logger.name == FACADE
     loggers = [m for m in _family() if "logger" in vars(m)]
@@ -191,7 +191,7 @@ def test_the_family_logs_through_one_logger_named_for_the_facade() -> None:
 
 def test_an_exception_an_owner_defines_keeps_the_facade_module() -> None:
     """A traceback or a log line renders a raised class as ``module.qualname``, so an
-    exception class an owner defines reports ``kiro_crew.acp.skill_projection``, as it
+    exception class an owner defines reports ``aj_crew.acp.skill_projection``, as it
     did before it moved."""
     found = {
         name: value
@@ -238,9 +238,9 @@ def _home(value: object) -> str:
 
 
 def test_every_project_name_the_facade_imported_stays_bound_on_it() -> None:
-    """A name the facade imported from the rest of ``kiro_crew`` before its owners moved
+    """A name the facade imported from the rest of ``aj_crew`` before its owners moved
     out is bound on it still, statically and as its home module's object, so a reader that
-    spells it through ``kiro_crew.acp.skill_projection`` keeps type-checking."""
+    spells it through ``aj_crew.acp.skill_projection`` keeps type-checking."""
     rebound = json.loads(INVENTORY.read_text(encoding="utf-8"))["rebound"]
     assert "list_agents" in rebound, "the inventory went blind"
     bound = _static_bindings(Path(skill_projection.__file__))
@@ -276,7 +276,7 @@ def test_every_name_served_from_outside_the_family_is_visible_to_a_type_checker(
     served_from_outside = {
         name: _home(getattr(skill_projection, name))
         for name in imported_by_owners
-        if _home(getattr(skill_projection, name)).startswith("kiro_crew")
+        if _home(getattr(skill_projection, name)).startswith("aj_crew")
         and _home(getattr(skill_projection, name)) not in family
     }
     assert served_from_outside == {}

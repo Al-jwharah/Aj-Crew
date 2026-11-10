@@ -13,9 +13,9 @@ import { renderWithProviders } from './helpers'
  * wire value, not the translated label.
  */
 
-const { patchConfigMock, kirocrewConfigMock, setThemeMock, setUIModeMock } = vi.hoisted(() => ({
+const { patchConfigMock, ajcrewConfigMock, setThemeMock, setUIModeMock } = vi.hoisted(() => ({
   patchConfigMock: vi.fn((_path: string, _value: unknown) => Promise.resolve({})),
-  kirocrewConfigMock: vi.fn(() => Promise.resolve({})),
+  ajcrewConfigMock: vi.fn(() => Promise.resolve({})),
   setThemeMock: vi.fn(),
   setUIModeMock: vi.fn(),
 }))
@@ -33,7 +33,7 @@ vi.mock('../api/client', () => {
   }
   return {
     api: {
-      kirocrewConfig: kirocrewConfigMock,
+      ajcrewConfig: ajcrewConfigMock,
       patchConfig: patchConfigMock,
       installTheme: vi.fn(() => Promise.resolve({ ok: true })),
     },

@@ -23,14 +23,14 @@ from slack_gateway_helpers import (
 )
 from wheel_update_test_helpers import ARTIFACT_BASE, FEED_BASE, wire_wheel_apply
 
-from kiro_crew.slack import gateway as gw
+from aj_crew.slack import gateway as gw
 
 
 class TestWheelAutoApplyRefusals:
     """The unattended managed-venv apply runs the one preflight, in its one order.
 
     The policy source pin first (feed base, then artifact base), then the shape
-    of the operator-set KIROCREW_CDN_BASE. Either refusal stops the apply before
+    of the operator-set AJCREW_CDN_BASE. Either refusal stops the apply before
     anything is fetched or built, and so does a promotion that would detach the
     sandbox's AppArmor profile.
     """
@@ -117,7 +117,7 @@ class TestWheelAutoApplyRefusals:
 
         engine.assert_not_called()
         ds.notify.assert_called_once()
-        assert "kirocrew service install" in ds.notify.call_args.args[2]
+        assert "ajcrew service install" in ds.notify.call_args.args[2]
         ds.push_update_progress.assert_not_called()
 
 
@@ -132,7 +132,7 @@ class TestWheelAutoApplyUsesTheShadowEngine:
 
     @pytest.mark.asyncio
     async def test_applies_through_the_engine_with_admission_open_then_restarts(self, monkeypatch):
-        from kiro_crew.platform.wheel_engine import ApplyCancel, respawn_executable
+        from aj_crew.platform.wheel_engine import ApplyCancel, respawn_executable
 
         orch = _make_orchestrator()
         orch.dashboard_state = _mock_dashboard_state()
@@ -219,7 +219,7 @@ class TestWheelAutoApplyUsesTheShadowEngine:
         orch._pending_update_mandatory = True
         orch._pending_update_mandatory_key = "floor:9.9.9"
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.slack.gateway"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.slack.gateway"):
             await orch._retry_pending_update_restart()
             # Age the recorded deferral rather than freezing ``loop.time``: the
             # loop clock is the one every timer on this loop waits on, so a
@@ -246,11 +246,11 @@ class TestWheelAutoApplyUsesTheShadowEngine:
 
         wire_wheel_apply(monkeypatch, apply=MagicMock(side_effect=engine))
         monkeypatch.setattr(
-            "kiro_crew.platform.wheel_apply.snapshot_memory_before_update", lambda: (1, "")
+            "aj_crew.platform.wheel_apply.snapshot_memory_before_update", lambda: (1, "")
         )
-        monkeypatch.setattr("kiro_crew.memory_backup.newest_backup", lambda *a: None)
+        monkeypatch.setattr("aj_crew.memory_backup.newest_backup", lambda *a: None)
         monkeypatch.setattr(
-            "kiro_crew.platform.update_governance.unattended_apply_allowed", lambda: False
+            "aj_crew.platform.update_governance.unattended_apply_allowed", lambda: False
         )
         restart = AsyncMock()
         monkeypatch.setattr(orch, "_retry_pending_update_restart", restart)
@@ -268,7 +268,7 @@ class TestWheelAutoApplyUsesTheShadowEngine:
 
     @pytest.mark.asyncio
     async def test_a_held_lock_defers_quietly(self, monkeypatch):
-        from kiro_crew.platform.wheel_engine import WheelUpdateBusy
+        from aj_crew.platform.wheel_engine import WheelUpdateBusy
 
         orch = _make_orchestrator()
         ds = _mock_dashboard_state()
@@ -287,7 +287,7 @@ class TestWheelAutoApplyUsesTheShadowEngine:
 
     @pytest.mark.asyncio
     async def test_a_cancelled_apply_is_retried_on_the_short_cadence(self, monkeypatch):
-        from kiro_crew.platform.wheel_engine import WheelUpdateCancelled
+        from aj_crew.platform.wheel_engine import WheelUpdateCancelled
 
         orch = _make_orchestrator()
         ds = _mock_dashboard_state()
@@ -306,7 +306,7 @@ class TestWheelAutoApplyUsesTheShadowEngine:
     async def test_an_incompatible_release_is_noticed_once_and_decided_again_each_cycle(
         self, monkeypatch
     ):
-        from kiro_crew.platform.wheel_engine import WheelUpdateIncompatible
+        from aj_crew.platform.wheel_engine import WheelUpdateIncompatible
 
         orch = _make_orchestrator()
         ds = _mock_dashboard_state()
@@ -315,7 +315,7 @@ class TestWheelAutoApplyUsesTheShadowEngine:
             monkeypatch,
             apply=MagicMock(
                 side_effect=WheelUpdateIncompatible(
-                    "kirocrew 9.9.9 requires Python >= 3.99", version="9.9.9", sha256="a" * 64
+                    "ajcrew 9.9.9 requires Python >= 3.99", version="9.9.9", sha256="a" * 64
                 )
             ),
         )
@@ -332,7 +332,7 @@ class TestWheelAutoApplyUsesTheShadowEngine:
 
     @pytest.mark.asyncio
     async def test_a_failed_apply_reports_redacted_and_does_not_restart(self, monkeypatch):
-        from kiro_crew.platform.wheel_engine import WheelUpdateError
+        from aj_crew.platform.wheel_engine import WheelUpdateError
 
         orch = _make_orchestrator()
         ds = _mock_dashboard_state()
@@ -350,7 +350,7 @@ class TestWheelAutoApplyUsesTheShadowEngine:
         step, detail = ds.push_update_progress.call_args.args
         assert step == "failed"
         assert "hunter2" not in detail
-        assert "kirocrew update" in detail
+        assert "ajcrew update" in detail
 
     @pytest.mark.asyncio
     async def test_a_mandatory_floor_that_waits_for_the_operator_retries_soon(self, monkeypatch):
@@ -367,9 +367,9 @@ class TestWheelAutoApplyUsesTheShadowEngine:
 
     def test_a_stop_cancels_the_apply_in_flight_synchronously(self, monkeypatch):
         """The signal handler's path: the cancel is set synchronously, nothing is awaited."""
-        from kiro_crew import platform_compat
-        from kiro_crew.platform import wheel_apply
-        from kiro_crew.platform.wheel_engine import ApplyCancel
+        from aj_crew import platform_compat
+        from aj_crew.platform import wheel_apply
+        from aj_crew.platform.wheel_engine import ApplyCancel
 
         cancel = ApplyCancel()
         running = wheel_apply._Running(cancel, MagicMock())
@@ -385,8 +385,8 @@ class TestWheelAutoApplyUsesTheShadowEngine:
     ):
         """A deferred retry at an idle tick must not kill an approved apply of a newer
         release and exec the older promotion over it; it defers until that apply ends."""
-        from kiro_crew.platform import wheel_apply
-        from kiro_crew.platform.wheel_engine import ApplyCancel
+        from aj_crew.platform import wheel_apply
+        from aj_crew.platform.wheel_engine import ApplyCancel
 
         orch = _make_orchestrator()
         sessions = MagicMock()
@@ -413,12 +413,12 @@ class TestWheelAutoApplyUsesTheShadowEngine:
 
         class _RefuseApplyModule:
             def find_spec(self, name, path=None, target=None):
-                if name == "kiro_crew.platform.wheel_apply":
+                if name == "aj_crew.platform.wheel_apply":
                     raise ImportError("the install tree is gone")
                 return None
 
         # monkeypatch restores sys.modules at teardown; the refusing finder below fails any import.
-        monkeypatch.delitem(sys.modules, "kiro_crew.platform.wheel_apply", raising=False)
+        monkeypatch.delitem(sys.modules, "aj_crew.platform.wheel_apply", raising=False)
         monkeypatch.setattr(sys, "meta_path", [_RefuseApplyModule(), *sys.meta_path])
         orch = _make_orchestrator()
         # The stand-in parks on an event nothing sets, and the test cancels it below.
@@ -436,7 +436,7 @@ class TestWheelAutoApplyUsesTheShadowEngine:
         ds._gateway_restart_in_progress = True
         orch.dashboard_state = ds
         monkeypatch.setattr(gw, "resolve_restart_launcher", lambda: None)
-        monkeypatch.setattr("kiro_crew.platform_compat.execv_target_available", lambda _path: True)
+        monkeypatch.setattr("aj_crew.platform_compat.execv_target_available", lambda _path: True)
         claimed = AsyncMock()
         monkeypatch.setattr(orch, "_restart_after_update_claimed", claimed)
 

@@ -25,10 +25,10 @@ from apps_registry_helpers import _explicit_registry_execution_admission  # noqa
 from apps_registry_helpers import unsandboxed_spawn  # noqa: F401 - fixture
 from git_maintenance_helpers import GIT_MAINTENANCE_OFF_CONFIG
 
-from kiro_crew import platform_compat
-from kiro_crew.apps import registry
-from kiro_crew.config.paths import config_dir
-from kiro_crew.testing.wait import await_until
+from aj_crew import platform_compat
+from aj_crew.apps import registry
+from aj_crew.config.paths import config_dir
+from aj_crew.testing.wait import await_until
 
 
 def _command_git_config(env: dict[str, object]) -> list[tuple[object, object]]:
@@ -825,7 +825,7 @@ async def test_double_cancel_waits_for_fetch_cleanup_before_restoring_checkout(
 
     task.cancel()
     # flake-ok: pre-existing 50 ms negative window after the second cancel, moved verbatim; tracked for a de-flake pass
-    # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing negative window after the second cancel, moved verbatim; tracked for a de-flake pass
+    # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing negative window after the second cancel, moved verbatim; tracked for a de-flake pass
     await asyncio.sleep(0.05)
     assert not task.done(), "repeated cancellation escaped before cleanup settled"
 
@@ -837,7 +837,7 @@ async def test_double_cancel_waits_for_fetch_cleanup_before_restoring_checkout(
     assert cleanup_done.is_set()
     assert (dest / "local-edit.txt").read_text(encoding="utf-8") == "preserve me"
     # flake-ok: pre-existing 50 ms late-cleanup window before the last assertion, moved verbatim; tracked for a de-flake pass
-    # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing late-cleanup window before the last assertion, moved verbatim; tracked for a de-flake pass
+    # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing late-cleanup window before the last assertion, moved verbatim; tracked for a de-flake pass
     await asyncio.sleep(0.05)
     assert (dest / "local-edit.txt").is_file(), "late cleanup deleted restored checkout"
 

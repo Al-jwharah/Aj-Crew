@@ -39,7 +39,7 @@ const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 const site = params.get('site') || 'feature'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // The scene site drives the REAL send path, so the network layer is the one
 // thing stubbed: `/api/chat` answers a refused send the way a live gateway

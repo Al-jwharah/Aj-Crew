@@ -17,9 +17,9 @@ import embeddings_helpers
 import pytest
 from embeddings_helpers import _DIM, _make_fake_llama_class, _write_model_file
 
-import kiro_crew.embeddings as embeddings_mod
-from kiro_crew.embeddings import LlamaCppEmbedder
-from kiro_crew.testing.wait import wait_until
+import aj_crew.embeddings as embeddings_mod
+from aj_crew.embeddings import LlamaCppEmbedder
+from aj_crew.testing.wait import wait_until
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _reset_embedding_singletons = embeddings_helpers._reset_embedding_singletons
@@ -110,7 +110,7 @@ class TestEmbedThreads:
         """A whole-document config save materializes the declared default.
 
         ``MemoryConfig.embedding_threads`` is a dataclass field defaulting to 4
-        and ``KiroCrewConfig.save()`` publishes every field, so a fresh
+        and ``AjCrewConfig.save()`` publishes every field, so a fresh
         install's ``config.json`` carries a 4 nobody typed. Reading that as a
         choice hands the whole box to the very hosts the cap protects, so a raw
         value equal to the default takes the same ceiling as an absent one.
@@ -185,7 +185,7 @@ class TestEmbedThreads:
         """
         import dataclasses
 
-        from kiro_crew.config.memory_sections import MemoryConfig
+        from aj_crew.config.memory_sections import MemoryConfig
 
         monkeypatch.setattr(embeddings_mod, "_read_memory_config", lambda: {"embedding_threads": 4})
         _pin_cores(monkeypatch, 16)
@@ -235,7 +235,7 @@ class TestEmbedThreads:
     def test_threads_reach_the_llama_constructor(self, tmp_path: Path, monkeypatch) -> None:
         """BOTH pools are pinned, not only the batch pool that runs inference."""
         fake_cls = _make_fake_llama_class()
-        monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: fake_cls)
+        monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: fake_cls)
         monkeypatch.setattr(embeddings_mod, "_read_memory_config", lambda: {"embedding_threads": 3})
         _pin_cores(monkeypatch, 8)
         emb = LlamaCppEmbedder(model_path=_write_model_file(tmp_path / "model.gguf"))
@@ -251,7 +251,7 @@ class TestEmbedThreads:
         self, tmp_path: Path, monkeypatch
     ) -> None:
         fake_cls = _make_fake_llama_class()
-        monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: fake_cls)
+        monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: fake_cls)
         emb = LlamaCppEmbedder(model_path=_write_model_file(tmp_path / "model.gguf"))
         try:
             assert emb.wait_ready(timeout=5)
@@ -294,7 +294,7 @@ class TestEmbedQueueTiming:
         clock (Windows ticks at ~15.6 ms) rounds further still.
         """
         fake_cls = _make_fake_llama_class()
-        monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: fake_cls)
+        monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: fake_cls)
         emb = LlamaCppEmbedder(model_path=_write_model_file(tmp_path / "model.gguf"))
         assert emb.wait_ready(timeout=5)
 
@@ -404,7 +404,7 @@ class TestEmbedPriority:
         assertion would then measure scheduling rather than priority.
         """
         fake_cls = _make_fake_llama_class()
-        monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: fake_cls)
+        monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: fake_cls)
         emb = LlamaCppEmbedder(model_path=_write_model_file(tmp_path / "model.gguf"))
         self._built.append(emb)
         assert emb.wait_ready(timeout=5)
@@ -525,7 +525,7 @@ class TestEmbedPriority:
         then enqueued would wait on ``job.done`` forever.
         """
         fake_cls = _make_fake_llama_class()
-        monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: fake_cls)
+        monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: fake_cls)
         emb = LlamaCppEmbedder(model_path=_write_model_file(tmp_path / "model.gguf"))
         assert emb.wait_ready(timeout=5)
         llm = fake_cls.instances[0]
@@ -560,9 +560,9 @@ class TestTheRawKnobsReadTheLocalOverlay:
         (home / name).write_text(json.dumps({"memory": memory}), encoding="utf-8")
 
     def test_an_overlay_value_wins_over_the_base(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew import embeddings_settings
+        from aj_crew import embeddings_settings
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         self._write(tmp_path, "config.json", {"embedding_threads": 6, "embed_model_url": "base"})
         self._write(
             tmp_path,
@@ -577,9 +577,9 @@ class TestTheRawKnobsReadTheLocalOverlay:
         assert memory["embed_model_url"] == "base"  # a base key the overlay leaves alone
 
     def test_an_overlay_alone_is_read(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew import embeddings_settings
+        from aj_crew import embeddings_settings
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         self._write(tmp_path, "config.local.json", {"embedding_idle_evict_secs": 0})
 
         assert embeddings_settings.embedding_idle_evict_secs() == 0
@@ -590,18 +590,18 @@ class TestTheRawKnobsReadTheLocalOverlay:
         """The loader merges whole documents, so ``"memory": null`` in the overlay wins."""
         import json
 
-        from kiro_crew import embeddings_settings
+        from aj_crew import embeddings_settings
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         self._write(tmp_path, "config.json", {"embedding_threads": 8})
         (tmp_path / "config.local.json").write_text(json.dumps({"memory": None}), encoding="utf-8")
 
         assert embeddings_settings._read_memory_config() == {}
 
     def test_an_unreadable_overlay_leaves_the_base(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew import embeddings_settings
+        from aj_crew import embeddings_settings
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         self._write(tmp_path, "config.json", {"embedding_threads": 6})
         (tmp_path / "config.local.json").write_text("{not json", encoding="utf-8")
 

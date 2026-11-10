@@ -1,9 +1,9 @@
 """The governance facade keeps the patch seams and the surface the one module had.
 
-``kiro_crew.platform.governance`` is a mirror facade (:mod:`kiro_crew._facade_mirror`)
-over the ``kiro_crew.platform.governance_parts`` owners, and keeps the auto-approve
+``aj_crew.platform.governance`` is a mirror facade (:mod:`aj_crew._facade_mirror`)
+over the ``aj_crew.platform.governance_parts`` owners, and keeps the auto-approve
 surface and the two boot checks itself. Callers, tests and documents still reach every
-name as ``kiro_crew.platform.governance.<name>``, and the moved code reads its names as
+name as ``aj_crew.platform.governance.<name>``, and the moved code reads its names as
 plain module globals, so a patch through the facade reaches that code only because the
 mirror writes it into every module holding the name.
 
@@ -35,9 +35,9 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew.platform import governance, governance_parts
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import _facade_mirror
+from aj_crew.platform import governance, governance_parts
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_governance_parts_facade")
 
@@ -45,8 +45,8 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_governance_parts_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.platform.governance"
-PACKAGE = "kiro_crew.platform.governance_parts"
+FACADE = "aj_crew.platform.governance"
+PACKAGE = "aj_crew.platform.governance_parts"
 _THIS_FILE = Path(__file__).resolve()
 
 #: Names the test trees are known to patch through the facade, one of each seam the
@@ -225,7 +225,7 @@ def _base_project_imports() -> dict[str, str]:
     for path in _owner_paths().values():
         for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if node.module.startswith("kiro_crew") and node.module not in family:
+                if node.module.startswith("aj_crew") and node.module not in family:
                     for alias in node.names:
                         found[alias.asname or alias.name] = node.module
     return found
@@ -233,7 +233,7 @@ def _base_project_imports() -> dict[str, str]:
 
 def test_every_project_name_the_family_imports_stays_bound_on_the_facade() -> None:
     """At BASE ``governance.py`` bound each of these by import, so ``from
-    kiro_crew.platform.governance import config_dir`` type-checked and resolved. The facade
+    aj_crew.platform.governance import config_dir`` type-checked and resolved. The facade
     still binds every one of them by its own import, as the same object its home holds,
     so none is served from an owner and none needs a second manifest."""
     imported = _base_project_imports()
@@ -303,7 +303,7 @@ def test_the_trust_root_tuple_the_code_review_grep_reads_is_the_facades_boot_che
 
 
 def test_the_facade_runs_as_a_module(tmp_path: Path) -> None:
-    """``python -m kiro_crew.platform.governance`` imported cleanly before the split; the
+    """``python -m aj_crew.platform.governance`` imported cleanly before the split; the
     mirror installs on ``__main__`` too, because every member binds one logger by name."""
     env = dict(os.environ)
     src = str(Path(governance.__file__).resolve().parents[2])

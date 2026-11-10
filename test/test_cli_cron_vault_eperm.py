@@ -1,4 +1,4 @@
-"""``kirocrew cron`` when the OS refuses this process the ``.vault`` dir.
+"""``ajcrew cron`` when the OS refuses this process the ``.vault`` dir.
 
 macOS data protection can deny a terminal even a ``stat`` of
 ``<data home>/.vault`` while the gateway reads it fine. ``cron remove`` must
@@ -21,18 +21,18 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.cli_commands import _cron
-from kiro_crew.config.loader import config_dir
-from kiro_crew.cron import CronService
+from aj_crew.cli_commands import _cron
+from aj_crew.config.loader import config_dir
+from aj_crew.cron import CronService
 
 
 @pytest.fixture()
 def home(tmp_path, monkeypatch):
     root = tmp_path / "home"
-    monkeypatch.setenv("KIROCREW_HOME", str(root))
+    monkeypatch.setenv("AJCREW_HOME", str(root))
     (config_dir() / "crons").mkdir(parents=True)
     (config_dir() / ".vault").mkdir()
-    with patch("kiro_crew.cli_commands.sel"):
+    with patch("aj_crew.cli_commands.sel"):
         yield root
 
 
@@ -103,7 +103,7 @@ def test_a_policy_permission_error_is_not_relabelled_an_os_refusal(home, monkeyp
     def refuse(_args):
         raise PermissionError("Cron job ownership violation")
 
-    monkeypatch.setattr("kiro_crew.cli_commands_cron._cron_dispatch", refuse)
+    monkeypatch.setattr("aj_crew.cli_commands_cron._cron_dispatch", refuse)
 
     with pytest.raises(PermissionError, match="ownership violation"):
         _cron(argparse.Namespace(cron_action="list"))

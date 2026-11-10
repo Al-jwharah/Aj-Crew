@@ -1,9 +1,9 @@
 # Profiling (debug-only)
 
-Kiro Crew ships aggregate duration histograms (`kiro_crew.metrics`, off by
+Aj Crew ships aggregate duration histograms (`aj_crew.metrics`, off by
 default) and a stall detector that dumps thread stacks when the event loop wedges
-(`kiro_crew.dashboard.loop_watchdog`). Neither attributes time to call paths.
-`kirocrew perf sample` fills that gap: it turns a window of execution into
+(`aj_crew.dashboard.loop_watchdog`). Neither attributes time to call paths.
+`ajcrew perf sample` fills that gap: it turns a window of execution into
 **folded stacks**, the format speedscope, flamegraph.pl and Perfetto all import.
 
 ## It is off by default
@@ -14,11 +14,11 @@ background sampler at rest, and no HTTP endpoint — the CLI is the only entry
 point.
 
 ```bash
-export KIROCREW_DEBUG=1
+export AJCREW_DEBUG=1
 ```
 
 Without it every `perf` command refuses and explains how to enable it. A value of
-`0`, `false`, `no` or `off` also reads as disabled, so `KIROCREW_DEBUG=0` does
+`0`, `false`, `no` or `off` also reads as disabled, so `AJCREW_DEBUG=0` does
 not accidentally switch profiling on.
 
 ## Profiling a code path (no extra dependency)
@@ -28,8 +28,8 @@ thread while it runs. This works everywhere with no extra install and is the
 right tool for "why is this one operation slow".
 
 ```bash
-KIROCREW_DEBUG=1 kirocrew perf sample \
-  --call kiro_crew.cli_doctor:_doctor \
+AJCREW_DEBUG=1 ajcrew perf sample \
+  --call aj_crew.cli_doctor:_doctor \
   --interval 0.002 \
   --output /tmp/doctor.folded
 ```
@@ -46,11 +46,11 @@ no file.
 ## Profiling a running gateway (needs py-spy)
 
 With no `--call`, the sampler attaches to another process: `--pid`, or the
-running gateway's PID read from `$KIROCREW_HOME/gateway.lock`.
+running gateway's PID read from `$AJCREW_HOME/gateway.lock`.
 
 ```bash
 pip install 'py-spy>=0.3,<1'
-KIROCREW_DEBUG=1 kirocrew perf sample --seconds 30 --output /tmp/gateway.folded
+AJCREW_DEBUG=1 ajcrew perf sample --seconds 30 --output /tmp/gateway.folded
 ```
 
 A foreign process cannot be sampled from pure Python, so this path requires
@@ -83,17 +83,17 @@ tracer, or missing privileges) rather than assuming it is a permissions problem.
 macOS behaves differently — py-spy reads via `task_for_pid` there, where several
 readers can hold a task port — so a refusal on macOS points at privileges.
 
-## Profiling the desktop app (`kirocrew desktop metrics`)
+## Profiling the desktop app (`ajcrew desktop metrics`)
 
 The two commands above sample **Python**. They cannot tell you anything about the
 Electron shell itself -- if the desktop app is burning CPU in its renderer or
 growing a window's working set, a py-spy attach on the gateway shows nothing
 unusual.
 
-`kirocrew desktop metrics` covers that half:
+`ajcrew desktop metrics` covers that half:
 
 ```
-KIROCREW_DEBUG=1 kirocrew desktop metrics
+AJCREW_DEBUG=1 ajcrew desktop metrics
 ```
 
 ### It reads a recording; it does not query the running app
@@ -107,14 +107,14 @@ Electron instance does not let it read the first one's metrics. Getting a live
 sample on demand would therefore require the desktop app to listen for a request
 -- a new local network surface whose only purpose is debugging.
 
-Rather than add one, the app **records**: when it starts with `KIROCREW_DEBUG`
+Rather than add one, the app **records**: when it starts with `AJCREW_DEBUG`
 set, `website/electron/perf-metrics.js` samples its own per-process metrics every
 5 seconds into a bounded artifact next to the gateway log, and this command reads
 that file.
 
 Consequences to keep in mind:
 
-- The app must have been **started** with `KIROCREW_DEBUG` set. Setting the
+- The app must have been **started** with `AJCREW_DEBUG` set. Setting the
   variable in the shell you run the CLI from changes nothing about an app that is
   already running without it -- restart the app.
 - You see the retained window (the last 120 samples, about ten minutes), not the
@@ -135,13 +135,13 @@ Electron's own log directory, per platform:
 
 | Platform | Path |
 |---|---|
-| macOS | `~/Library/Logs/KiroCrew/desktop-metrics.json` |
-| Linux | `${XDG_CONFIG_HOME:-~/.config}/kirocrew-desktop/logs/desktop-metrics.json` |
-| Windows | `%APPDATA%\kirocrew-desktop\logs\desktop-metrics.json` |
+| macOS | `~/Library/Logs/AjCrew/desktop-metrics.json` |
+| Linux | `${XDG_CONFIG_HOME:-~/.config}/ajcrew-desktop/logs/desktop-metrics.json` |
+| Windows | `%APPDATA%\ajcrew-desktop\logs\desktop-metrics.json` |
 
-Nightly builds install under their own product name (`KiroCrew Nightly`), so they
-log to a sibling directory -- `~/Library/Logs/KiroCrew Nightly/` on macOS, and
-`kirocrew-desktop-nightly` in place of `kirocrew-desktop` on Linux and Windows,
+Nightly builds install under their own product name (`AjCrew Nightly`), so they
+log to a sibling directory -- `~/Library/Logs/AjCrew Nightly/` on macOS, and
+`ajcrew-desktop-nightly` in place of `ajcrew-desktop` on Linux and Windows,
 where the directory follows the npm package name rather than the product name.
 The CLI probes the release and nightly directory for the platform it runs on and
 selects the **newest** artifact found.
@@ -154,7 +154,7 @@ processes are listed.
 
 | Code | Meaning |
 |---|---|
-| 1 | `KIROCREW_DEBUG` not set |
+| 1 | `AJCREW_DEBUG` not set |
 | 3 | No artifact found (usually: the app was not started with the flag) |
 | 5 | Artifact unreadable, malformed, or a version this build does not understand |
 
@@ -163,7 +163,7 @@ processes are listed.
 Each line is `outermost;...;innermost <sample-count>`, hottest first:
 
 ```
-run (kiro_crew/cli.py:702);search (kiro_crew/history.py:412) 184
+run (aj_crew/cli.py:702);search (aj_crew/history.py:412) 184
 ```
 
 Open it at <https://speedscope.app> (local, nothing is uploaded) or pipe it to
@@ -197,7 +197,7 @@ before attaching it to a public issue.
 | `--pid PID` | Attach to this PID (default: the running gateway) |
 | `--seconds N` | Attach duration, 1–300 (default 10). Applies to the attach path |
 | `--interval S` | Seconds between samples, 0.001–1.0 (default 0.005) |
-| `--output PATH` | Where to write the profile (default `./kirocrew-profile.folded`) |
+| `--output PATH` | Where to write the profile (default `./ajcrew-profile.folded`) |
 
 Exit codes: `1` gate off or nothing sampled, `2` bad arguments or an
 unresolvable `--call`, `3` py-spy missing, `4` py-spy timed out, `5` py-spy

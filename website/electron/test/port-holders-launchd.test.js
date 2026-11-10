@@ -16,7 +16,7 @@ const LISTING = [
   "\tservices = {",
   "\t\t   14317      - \tapplication.com.example.editor.1.2",
   "\t\t       0      - \tcom.apple.unmountassistant.useragent",
-  "\t\t    8108     78 \tdev.kirocrew.gateway",
+  "\t\t    8108     78 \tdev.ajcrew.gateway",
   "\t}",
   "\tunmanaged processes = {",
   "\t\t   9999      - \tnot-a-service",
@@ -95,7 +95,7 @@ test("isLaunchdJob answers true for a job, false for any other pid, null when un
 });
 
 // The force-stop recovery runs: lsof names `pid` until it is signalled, ps
-// reports a Kiro Crew gateway with launchd (PID 1) as its parent, and launchctl
+// reports a Aj Crew gateway with launchd (PID 1) as its parent, and launchctl
 // lists `jobs`.
 function forceStopHolders({ platform = "darwin", jobs = [] } = {}) {
   const signals = [];
@@ -110,7 +110,7 @@ function forceStopHolders({ platform = "darwin", jobs = [] } = {}) {
         launchctl.push(args[1]);
         callback(null, listing(jobs), "");
       } else if (file === "/bin/ps") {
-        callback(null, args.includes("ppid=") ? "1\n" : "python -m kiro_crew gateway --port 5476\n", "");
+        callback(null, args.includes("ppid=") ? "1\n" : "python -m aj_crew gateway --port 5476\n", "");
       } else {
         callback(null, held ? "4242\n" : "", "");
       }

@@ -24,9 +24,9 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from apps_routes_coverage_helpers import APP, _install, _make_app, _make_app_source, _setup_env
 
-import kiro_crew.apps.routes as routes_mod
-from kiro_crew.apps.manager import install_app
-from kiro_crew.apps.manifest import AppManifest, SetupConfig
+import aj_crew.apps.routes as routes_mod
+from aj_crew.apps.manager import install_app
+from aj_crew.apps.manifest import AppManifest, SetupConfig
 
 # Literals, not the module's constants: the bounds are the contract under test, and a
 # test that imported them would pass on any value they were changed to.
@@ -117,7 +117,7 @@ def test_a_value_int_refused_fails_validation_by_name(field_name: str, value: An
 def test_a_bool_timeout_runs_as_the_int_its_signature_covers(value: bool, seconds: int) -> None:
     # The run sites read the record, which carries the same int() value the
     # signature covers, so an unsigned edit from 1 to true cannot change the budget.
-    from kiro_crew.apps.manifest import lifecycle_timeout_seconds
+    from aj_crew.apps.manifest import lifecycle_timeout_seconds
 
     manifest = _manifest(onEnableTimeout=value)
     record = manifest.to_dict()["setup"].get("onEnableTimeout")
@@ -135,7 +135,7 @@ def test_an_absent_timeout_is_the_default_and_valid() -> None:
 
 
 def test_the_module_bounds_match_the_documented_ones() -> None:
-    from kiro_crew.apps import manifest
+    from aj_crew.apps import manifest
 
     assert manifest.LIFECYCLE_SCRIPT_TIMEOUT_DEFAULT == LIFECYCLE_SCRIPT_TIMEOUT_DEFAULT
     assert manifest.LIFECYCLE_SCRIPT_TIMEOUT_MAX == LIFECYCLE_SCRIPT_TIMEOUT_MAX
@@ -166,7 +166,7 @@ def test_install_refuses_a_non_numeric_timeout_by_name(
 def test_self_registration_refuses_only_what_int_refused(
     value: Any, ok: bool, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.apps.manager import register_external_app
+    from aj_crew.apps.manager import register_external_app
 
     _setup_env(tmp_path, monkeypatch)
     result = register_external_app(
@@ -184,9 +184,9 @@ def test_self_registration_refuses_only_what_int_refused(
 def test_a_run_time_clamp_is_logged_every_run(
     raw: Any, expected: int, caplog: pytest.LogCaptureFixture
 ) -> None:
-    from kiro_crew.apps.manifest import lifecycle_timeout_seconds
+    from aj_crew.apps.manifest import lifecycle_timeout_seconds
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.manifest_sections"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.apps.manifest_sections"):
         got = lifecycle_timeout_seconds(raw, app_name="timeout-app", field_name="onEnableTimeout")
         lifecycle_timeout_seconds(raw, app_name="timeout-app", field_name="onEnableTimeout")
     assert got == expected and type(got) is int
@@ -201,9 +201,9 @@ def test_a_run_time_clamp_is_logged_every_run(
 def test_a_value_used_as_written_logs_nothing(
     raw: Any, expected: int, caplog: pytest.LogCaptureFixture
 ) -> None:
-    from kiro_crew.apps.manifest import lifecycle_timeout_seconds
+    from aj_crew.apps.manifest import lifecycle_timeout_seconds
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.manifest_sections"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.apps.manifest_sections"):
         got = lifecycle_timeout_seconds(raw, app_name="timeout-app", field_name="onEnableTimeout")
     assert got == expected
     assert caplog.records == []
@@ -293,7 +293,7 @@ async def test_an_installed_app_runs_onenable_clamped_and_logged(
 
     monkeypatch.setattr(routes_mod, "_run_lifecycle_script", _script)
     monkeypatch.setattr(routes_mod, "start_app_backend", lambda n: None)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.manifest_sections"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.apps.manifest_sections"):
         async with TestClient(TestServer(_make_app(dashboard_user="owner"))) as client:
             resp = await client.post(f"/api/apps/{APP}/enable")
             assert resp.status == 200, await resp.text()
@@ -323,7 +323,7 @@ async def _noop_hook(*args: Any, **kwargs: Any) -> None:
 async def test_teardown_clamps_a_stored_on_disable_timeout(
     raw: Any, expected: int, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    import kiro_crew.apps.teardown as appteardown
+    import aj_crew.apps.teardown as appteardown
 
     _setup_env(tmp_path, monkeypatch)
     _install(tmp_path, setup={"onDisable": "stop.sh"})
@@ -357,7 +357,7 @@ async def test_a_registry_install_refuses_a_non_numeric_timeout_before_the_clone
 ) -> None:
     # The pre-clone admission parse is where int() raised, so nothing was cloned and
     # no onInstall ran. The refusal stays there.
-    from kiro_crew.apps import registry
+    from aj_crew.apps import registry
 
     monkeypatch.setattr(
         registry,
@@ -388,7 +388,7 @@ async def test_the_cloned_manifest_is_refused_before_the_build(
     # manifest is checked too, before any build command or onInstall runs.
     from unittest.mock import MagicMock
 
-    from kiro_crew.apps import registry
+    from aj_crew.apps import registry
 
     src = tmp_path / "app-sources" / "demoapp"
     monkeypatch.setattr(registry, "app_source_dir", lambda n: src)

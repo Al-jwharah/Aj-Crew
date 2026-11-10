@@ -10,14 +10,14 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.mcp_gateway.abort import RuntimeAbortTarget
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.mcp_gateway.abort import RuntimeAbortTarget
+from aj_crew.providers.acp import AcpProvider
 
 
 def _started_provider(runtime: MagicMock) -> AcpProvider:
-    with patch("kiro_crew.providers.acp.AcpClient"):
+    with patch("aj_crew.providers.acp.AcpClient"):
         provider = AcpProvider(acp_backend="")
     provider._client = AcpSessionProvider(MagicMock(), runtime)  # type: ignore[assignment]
     return provider

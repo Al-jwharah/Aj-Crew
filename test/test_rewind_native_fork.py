@@ -16,15 +16,15 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.acp._dispatch import parse_message_id, parse_session_update
-from kiro_crew.acp.client import AcpClient, AcpError
-from kiro_crew.acp.types import EVENT_TEXT_CHUNK, PROVIDER_LABEL_CLAUDE
-from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_DEEPSEEK
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_rewind import _native_fork_point
-from kiro_crew.session import SessionManager
-from kiro_crew.session_map import SessionMap
+from aj_crew.acp._dispatch import parse_message_id, parse_session_update
+from aj_crew.acp.client import AcpClient, AcpError
+from aj_crew.acp.types import EVENT_TEXT_CHUNK, PROVIDER_LABEL_CLAUDE
+from aj_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_DEEPSEEK
+from aj_crew.config import AjCrewConfig
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_rewind import _native_fork_point
+from aj_crew.session import SessionManager
+from aj_crew.session_map import SessionMap
 
 # ── The message id reaches the transcript ────────────────────────────────────
 
@@ -66,12 +66,12 @@ def test_the_segment_row_records_the_message_id_once() -> None:
 
 @pytest.fixture()
 def session_map(tmp_path):
-    with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+    with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
         yield SessionMap()
 
 
 def test_a_pending_fork_round_trips_through_disk(tmp_path) -> None:
-    with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+    with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
         SessionMap().set_native_fork("dash:1", "source-sid", "msg_1")
         assert SessionMap().get_native_fork("dash:1") == ("source-sid", "msg_1")
 
@@ -227,7 +227,7 @@ async def test_only_claude_is_sent_the_fork_point(tmp_path) -> None:
 
 
 def _provider_factory(backend: str):
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.providers.acp import AcpProvider
 
     def factory(session_key=None, agent=None, channel_id=None, **kwargs):
         provider = object.__new__(AcpProvider)
@@ -249,7 +249,7 @@ def _provider_factory(backend: str):
 
 
 def _rewound_manager(factory) -> SessionManager:
-    mgr = SessionManager(KiroCrewConfig(), provider_factory=factory)
+    mgr = SessionManager(AjCrewConfig(), provider_factory=factory)
     mgr._session_map.set("thread1", "source-sid", provider=PROVIDER_LABEL_CLAUDE)
     mgr._session_map.clear_sid("thread1")
     mgr._session_map.set_native_fork("thread1", "source-sid", "msg_1")
@@ -274,7 +274,7 @@ async def test_a_cold_start_hands_the_fork_to_a_claude_client() -> None:
 async def test_a_restricted_session_drops_the_fork(monkeypatch) -> None:
     """A temporary or incognito session restores no native history, forked or loaded."""
     monkeypatch.setattr(
-        "kiro_crew.execution_context.read_session_execution",
+        "aj_crew.execution_context.read_session_execution",
         lambda key, **_: SimpleNamespace(member_id=None, memory_mode="temporary"),
     )
     factory = _provider_factory(ACP_BACKEND_CLAUDE)
@@ -356,7 +356,7 @@ def _slot_with_ids(state):
 async def test_a_rewind_arms_the_fork_only_after_an_assistant_message(
     tmp_path, monkeypatch, at_index, armed
 ) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.chat_rewind._run_chat", AsyncMock(return_value=None))
+    monkeypatch.setattr("aj_crew.dashboard.chat_rewind._run_chat", AsyncMock(return_value=None))
     state = _make_state(tmp_path)
     slot = _slot_with_ids(state)
     state.sessions._session_map.get = MagicMock(return_value="source-sid")

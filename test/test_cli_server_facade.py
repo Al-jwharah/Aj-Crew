@@ -1,16 +1,16 @@
-"""``kiro_crew.cli_server`` keeps the patch seams and the surface the one module had.
+"""``aj_crew.cli_server`` keeps the patch seams and the surface the one module had.
 
-``kiro_crew.cli_server`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the owners
+``aj_crew.cli_server`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the owners
 in its ``_OWNERS``, lowest layer first: ``cli_server_peer``, ``cli_server_requests``,
 ``cli_server_stop``, ``cli_server_restart`` and ``cli_server_update``. It keeps the
 status, gateway, run, service, sandbox and logs commands itself, and
-every name an owner defines still resolves as ``kiro_crew.cli_server.<name>``.
+every name an owner defines still resolves as ``aj_crew.cli_server.<name>``.
 
 ``test/test_facade_mirror_guards.py`` holds every mirrored facade to the shared rules. These
 tests pin what is particular to this one: every name the test trees patch through it reaches
 every module holding it; the owner list and its layering; that every public name the module
 held before the split still type-checks through it; that the owners log as
-``kiro_crew.cli_server``; that the peer proof's exception and enum keep the module name they
+``aj_crew.cli_server``; that the peer proof's exception and enum keep the module name they
 print with; the frozen import inventory that stands in for the F401 check ``setup.cfg``
 switches off for it; and that each owner's import path is a credential-mint surface to the
 inline-payload gate, as the one module's was.
@@ -30,8 +30,8 @@ import pytest
 import source_corpus
 import test_campaign_facades_base_public_names as base_names
 
-from kiro_crew import _facade_mirror, cli_server, security
-from kiro_crew.security import argv_floor, inline_payload
+from aj_crew import _facade_mirror, cli_server, security
+from aj_crew.security import argv_floor, inline_payload
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_cli_server_facade")
 
@@ -48,13 +48,13 @@ SHARED_FACADE_CHECKS = (
     "logger_scan_can_fail",
 )
 
-FACADE = "kiro_crew.cli_server"
+FACADE = "aj_crew.cli_server"
 OWNERS = (
-    "kiro_crew.cli_server_peer",
-    "kiro_crew.cli_server_requests",
-    "kiro_crew.cli_server_stop",
-    "kiro_crew.cli_server_restart",
-    "kiro_crew.cli_server_update",
+    "aj_crew.cli_server_peer",
+    "aj_crew.cli_server_requests",
+    "aj_crew.cli_server_stop",
+    "aj_crew.cli_server_restart",
+    "aj_crew.cli_server_update",
 )
 
 #: Names the test trees are known to patch through the facade, one or more per kind of
@@ -85,20 +85,20 @@ _KNOWN_SEAMS = frozenset(
 
 #: A test file worth parsing spells the facade itself, never only a ``cli_server_*`` owner.
 _SPELLS_THE_FACADE = re.compile(
-    r"kiro_crew\.cli_server(?![\w])"
-    r"|from\s+kiro_crew\s+import\s+(?:\([^)]*?\bcli_server\b(?!_)|[^\n]*?\bcli_server\b(?!_))"
+    r"aj_crew\.cli_server(?![\w])"
+    r"|from\s+aj_crew\s+import\s+(?:\([^)]*?\bcli_server\b(?!_)|[^\n]*?\bcli_server\b(?!_))"
 )
 
 #: Every name the facade's import statements bound before its owners moved out. They stay
 #: bound here because callers and tests read and patch them as attributes of this module.
 _BASE_IMPORTS = frozenset("""
     ContextBuilder ConversationLog DASHBOARD_HTML_NOT_FOUND_MARKER DivergenceUnreadable
-    EXTERNALLY_MANAGED_MESSAGES HistoryConsolidator HookManager KiroCrewConfig LessonStore
+    EXTERNALLY_MANAGED_MESSAGES HistoryConsolidator HookManager AjCrewConfig LessonStore
     LockProbeError MANAGED_BY_GIT MemoryStore NoReturn PATH_ONLY_INSTALL_NOTE Path
     PeerCredResult Platform RESTART_NOT_UP RESTART_REFUSED RESTART_UNCONFIRMED SERVICE_NAME
     SessionManager SkillsLoader TaskRunner UNREADABLE_UNPARSEABLE UTF8_TEXT VectorMemoryStore
-    _KIROCREW_SERVER_SUBCOMMANDS __version__ _args_look_like_kirocrew _basename_stem
-    _config_url_port _deadline_expired _gateway_owns_port _is_kirocrew_process _marker_port
+    _AJCREW_SERVER_SUBCOMMANDS __version__ _args_look_like_ajcrew _basename_stem
+    _config_url_port _deadline_expired _gateway_owns_port _is_ajcrew_process _marker_port
     _session_work_dir activate_mise argparse asyncio build_frontend_sync build_provider_factory
     check_peer_is_self codecs config_dir config_path count_divergence_sync current_platform
     dashboard_origin dashboard_socket_path dep_sync deque derive_capability distribution
@@ -151,34 +151,34 @@ def patched_names(source: str) -> set[str]:
 #: Each spelling the patch scan must read, and each it must skip, keyed by case id.
 _SPELLING_CASES = {
     "monkeypatch-from-import": (
-        "from kiro_crew import cli_server\n"
+        "from aj_crew import cli_server\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(cli_server, 'A', 1)\n",
         {"A"},
     ),
     "patch-object-import-as": (
-        "import kiro_crew.cli_server as cs\n"
+        "import aj_crew.cli_server as cs\n"
         "from unittest import mock\n"
         "def t():\n    with mock.patch.object(cs, 'B'):\n        pass\n",
         {"B"},
     ),
     "mock-patch-string": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.cli_server.C'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.cli_server.C'):\n        pass\n",
         {"C"},
     ),
     "dotted-setattr": (
-        "def t(monkeypatch):\n    monkeypatch.setattr('kiro_crew.cli_server.D', 1)\n",
+        "def t(monkeypatch):\n    monkeypatch.setattr('aj_crew.cli_server.D', 1)\n",
         {"D"},
     ),
     # An owner is not the facade, even bound under the facade's name.
     "owner-named-like-the-facade": (
-        "from kiro_crew import cli_server_stop as cli_server\n"
+        "from aj_crew import cli_server_stop as cli_server\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(cli_server, 'X', 1)\n",
         set(),
     ),
     "owner-string": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.cli_server_update.Y'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.cli_server_update.Y'):\n        pass\n",
         set(),
     ),
 }
@@ -248,8 +248,8 @@ def test_a_facade_write_of_the_time_module_reaches_every_reader() -> None:
     readers = [m for m in _family() if "time" in vars(m)]
     assert {m.__name__ for m in readers} >= {
         FACADE,
-        "kiro_crew.cli_server_stop",
-        "kiro_crew.cli_server_restart",
+        "aj_crew.cli_server_stop",
+        "aj_crew.cli_server_restart",
     }
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(cli_server, "time", sentinel)
@@ -275,7 +275,7 @@ def test_the_mirror_indexes_exactly_the_owners_with_no_exclusion_and_no_forward(
 def test_the_owners_are_every_cli_server_sibling() -> None:
     assert cli_server.__file__ is not None
     siblings = sorted(
-        f"kiro_crew.{path.stem}"
+        f"aj_crew.{path.stem}"
         for path in Path(cli_server.__file__).parent.glob("cli_server_*.py")
     )
     assert siblings == sorted(OWNERS)
@@ -307,8 +307,8 @@ def _layering_gaps(trees: dict[str, ast.Module]) -> dict[str, list[str]]:
 
 def test_the_layering_check_can_fail() -> None:
     trees = {name: _tree(sys.modules[name]) for name in OWNERS}
-    trees[OWNERS[0]] = ast.parse("from kiro_crew.cli_server_update import _update\n")
-    trees[OWNERS[1]] = ast.parse("import kiro_crew.cli_server\n")
+    trees[OWNERS[0]] = ast.parse("from aj_crew.cli_server_update import _update\n")
+    trees[OWNERS[1]] = ast.parse("import aj_crew.cli_server\n")
     assert _layering_gaps(trees) == {
         OWNERS[0]: [OWNERS[4]],
         OWNERS[1]: [FACADE],
@@ -327,7 +327,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for owner in OWNERS:
         for node in _tree(sys.modules[owner]).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     if f"{node.module}.{alias.name}" not in family:
@@ -392,7 +392,7 @@ def test_the_owners_log_under_the_facade_name() -> None:
 @pytest.mark.parametrize("name", ["_GatewayPeerRefused", "_ConnectedPeerVerdict"])
 def test_the_peer_proofs_exception_and_enum_keep_the_facade_module(name: str) -> None:
     """A refusal that escapes, and a verdict that is logged, name the one import path."""
-    peer = sys.modules["kiro_crew.cli_server_peer"]
+    peer = sys.modules["aj_crew.cli_server_peer"]
     value = vars(peer)[name]
     assert getattr(cli_server, name) is value
     assert value.__module__ == FACADE
@@ -436,11 +436,11 @@ def test_the_inventory_check_reports_a_planted_import() -> None:
     """The F401 stand-in must be able to fail: a stray import, and an owner import of a
     name that owner does not define, are both reported."""
     planted = (
-        _source(cli_server) + "\nimport pickle\nfrom kiro_crew.cli_server_stop import _update\n"
+        _source(cli_server) + "\nimport pickle\nfrom aj_crew.cli_server_stop import _update\n"
     )
     assert unexpected_imports(planted, _owner_names()) == [
         "pickle",
-        "kiro_crew.cli_server_stop._update",
+        "aj_crew.cli_server_stop._update",
     ]
 
 
@@ -454,8 +454,8 @@ def _mint_spellings(module: str) -> list[str]:
     return [
         f"python -c 'from {module} import x; x()'",
         f"python -c 'import {module} as m; m.x()'",
-        f"python -c 'from kiro_crew import {stem}; {stem}.x()'",
-        f"python3 < src/kiro_crew/{stem}.py",
+        f"python -c 'from aj_crew import {stem}; {stem}.x()'",
+        f"python3 < src/aj_crew/{stem}.py",
     ]
 
 
@@ -463,7 +463,7 @@ def _mint_spellings(module: str) -> list[str]:
 def test_every_owner_import_path_is_a_mint_surface(module: str) -> None:
     """The token command mints, the peer proof sends the local secret, and the stop, restart
     and update commands read it and print fresh token URLs; they were mint surfaces as
-    ``kiro_crew.cli_server``, and an inline payload that imports them from their owner is one
+    ``aj_crew.cli_server``, and an inline payload that imports them from their owner is one
     still."""
     for cmd in _mint_spellings(module):
         assert argv_floor._is_credential_mint(cmd.lower(), raw_text=cmd), cmd
@@ -471,11 +471,11 @@ def test_every_owner_import_path_is_a_mint_surface(module: str) -> None:
 
 
 def test_a_restart_through_its_owner_is_denied() -> None:
-    cmd = 'python -c "from kiro_crew.cli_server_restart import _restart; _restart()"'
+    cmd = 'python -c "from aj_crew.cli_server_restart import _restart; _restart()"'
     assert security.is_denied(cmd) is not None
 
 
-@pytest.mark.parametrize("module", ["kiro_crew.cli_setup", "kiro_crew.cli_serverless"])
+@pytest.mark.parametrize("module", ["aj_crew.cli_setup", "aj_crew.cli_serverless"])
 def test_a_neighbouring_module_is_not_a_mint_surface(module: str) -> None:
     """The fence names the facade and its ``cli_server_<role>`` owners, nothing else."""
     for cmd in _mint_spellings(module):

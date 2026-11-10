@@ -16,7 +16,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const SHELL = path.join(__dirname, "..");
-const BUILTINS = path.join(SHELL, "..", "..", "src", "kiro_crew", "apps", "builtins");
+const BUILTINS = path.join(SHELL, "..", "..", "src", "aj_crew", "apps", "builtins");
 const HOST_FILES = [
   "app-window-host.js",
   "app-window-host-rules.js",

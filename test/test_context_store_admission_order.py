@@ -22,13 +22,13 @@ import shutil
 import pytest
 from member_memory_helpers import forget_declared_stores, write_member_home
 
-from kiro_crew import context
-from kiro_crew.memory_stores import UnknownMemoryStore
+from aj_crew import context
+from aj_crew.memory_stores import UnknownMemoryStore
 
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     write_member_home(tmp_path, "alice")
     forget_declared_stores(monkeypatch)
     monkeypatch.setattr(context, "_vector_stores", {})
@@ -55,7 +55,7 @@ async def test_missing_store_directory_is_refused_and_not_recreated(home):
 @pytest.mark.asyncio
 async def test_intact_declared_store_still_builds(home):
     """The reorder must not refuse a healthy store."""
-    from kiro_crew.vector_memory import open_member_database
+    from aj_crew.vector_memory import open_member_database
 
     db = home / "memory_stores" / "member-alice" / "memory.db"
     # V2 databases are provisioned by the fixture; open the existing database
@@ -84,7 +84,7 @@ async def test_named_store_uses_configured_episodic_options(home):
     memory["episodic_max_results"] = 7
     config_path.write_text(json.dumps(config), encoding="utf-8")
 
-    from kiro_crew.vector_memory import open_member_database
+    from aj_crew.vector_memory import open_member_database
 
     db = home / "memory_stores" / "member-alice" / "memory.db"
     seed = open_member_database(db, member_id="alice", store_id="member-alice")
@@ -106,7 +106,7 @@ async def test_named_store_uses_configured_episodic_options(home):
 async def test_store_removed_during_init_is_refused_at_publication(home, monkeypatch):
     """The publication-edge admission rejects a store changed after ``init()``
     but before the cache hands it out."""
-    from kiro_crew import memory_stores
+    from aj_crew import memory_stores
 
     original_require = memory_stores.require_memory_store
     calls = 0

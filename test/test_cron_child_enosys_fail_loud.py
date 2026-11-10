@@ -19,14 +19,14 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import cron_script
-from kiro_crew.cron_script import (
+from aj_crew import cron_script
+from aj_crew.cron_script import (
     CHILD_PERSISTENCE_EXIT_CODE,
     CHILD_PERSISTENCE_PREFIX,
     child_persistence_preflight,
     run_script_sandboxed,
 )
-from kiro_crew.sandbox import CRON_SCRIPT_CHILD_ENV
+from aj_crew.sandbox import CRON_SCRIPT_CHILD_ENV
 
 #: What the probe returns on a torn-down sandbox, shortened. The seccomp clause
 #: is the operator-actionable half, so the tests assert it survives to stderr
@@ -43,11 +43,11 @@ def cron_home(tmp_path, monkeypatch):
     """Point ``config_dir()`` at a test-owned home with a ``crons/`` dir.
 
     ``resolve_script_path`` admits a script only under ``config_dir()/crons``,
-    and ``config_dir()`` resolves from ``KIROCREW_HOME``.
+    and ``config_dir()`` resolves from ``AJCREW_HOME``.
     """
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     crons = home / "crons"
     crons.mkdir()
     return crons
@@ -74,7 +74,7 @@ def _capture_launcher(script_path: str) -> str:
         captured["launcher"] = Path(argv[1]).read_text(encoding="utf-8")
         raise RuntimeError(_STOP)
 
-    with patch("kiro_crew.cron_script.wrap_argv", _capture):
+    with patch("aj_crew.cron_script.wrap_argv", _capture):
         with pytest.raises(RuntimeError, match=_STOP):
             run_script_sandboxed(script_path + ":run", "job-id")
 
@@ -95,12 +95,12 @@ class TestLauncherRunsThePreflight:
 
     def test_preamble_calls_the_preflight(self, cron_home):
         launcher = self._launcher(cron_home)
-        assert "from kiro_crew.cron_script import child_persistence_preflight" in launcher
+        assert "from aj_crew.cron_script import child_persistence_preflight" in launcher
         assert "child_persistence_preflight()" in launcher
 
     def test_preflight_runs_after_boot_and_before_the_script_body(self, cron_home):
         launcher = self._launcher(cron_home)
-        boot = launcher.index("boot_platform(KiroCrewConfig.load())")
+        boot = launcher.index("boot_platform(AjCrewConfig.load())")
         preflight = launcher.index("child_persistence_preflight()")
         body = launcher.index("exec(compile(")
         assert boot < preflight < body, (
@@ -117,14 +117,14 @@ class TestChildEnvCarriesTheMarker:
     """
 
     def test_marker_is_set_on_the_child_env(self, cron_home, monkeypatch):
-        monkeypatch.setattr("kiro_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
+        monkeypatch.setattr("aj_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
         captured: dict[str, dict[str, str]] = {}
 
         def _capture_popen(argv, **kwargs):
             captured["env"] = kwargs["env"]
             raise RuntimeError(_STOP)
 
-        monkeypatch.setattr("kiro_crew.cron_script.popen_limited", _capture_popen)
+        monkeypatch.setattr("aj_crew.cron_script.popen_limited", _capture_popen)
         script_path = _write_cron_script(cron_home, "def run(ctx):\n    pass\n")
         with pytest.raises(RuntimeError, match=_STOP):
             run_script_sandboxed(script_path + ":run", "job-id")
@@ -134,9 +134,9 @@ class TestChildEnvCarriesTheMarker:
     def test_the_parent_itself_is_never_marked(self, cron_home, monkeypatch):
         """The gateway must not inherit the marker from running a job."""
         monkeypatch.delenv(CRON_SCRIPT_CHILD_ENV, raising=False)
-        monkeypatch.setattr("kiro_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
+        monkeypatch.setattr("aj_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
         monkeypatch.setattr(
-            "kiro_crew.cron_script.popen_limited",
+            "aj_crew.cron_script.popen_limited",
             lambda argv, **k: (_ for _ in ()).throw(RuntimeError(_STOP)),
         )
         script_path = _write_cron_script(cron_home, "def run(ctx):\n    pass\n")
@@ -151,7 +151,7 @@ class TestPreflightVerdict:
 
     def test_failed_probe_exits_non_zero_with_the_message(self, monkeypatch, capsys):
         monkeypatch.setattr(
-            "kiro_crew.platform_compat.probe_file_persistence",
+            "aj_crew.platform_compat.probe_file_persistence",
             lambda directory: ENOSYS_PROBE_MESSAGE,
         )
         with pytest.raises(SystemExit) as exit_info:
@@ -168,7 +168,7 @@ class TestPreflightVerdict:
 
     def test_passing_probe_is_silent_and_returns(self, monkeypatch, capsys):
         monkeypatch.setattr(
-            "kiro_crew.platform_compat.probe_file_persistence", lambda directory: None
+            "aj_crew.platform_compat.probe_file_persistence", lambda directory: None
         )
         assert child_persistence_preflight() is None
         captured = capsys.readouterr()
@@ -179,11 +179,11 @@ class TestPreflightVerdict:
         """The probed directory must be the one the child persists into."""
         seen: list[Path] = []
         monkeypatch.setattr(
-            "kiro_crew.platform_compat.probe_file_persistence",
+            "aj_crew.platform_compat.probe_file_persistence",
             lambda directory: seen.append(directory) or None,
         )
         child_persistence_preflight()
-        from kiro_crew.config.paths import data_home
+        from aj_crew.config.paths import data_home
 
         assert seen == [data_home()]
 
@@ -203,7 +203,7 @@ class TestChildFailsLoudEndToEnd:
         src_dir = str(Path(__file__).resolve().parents[1] / "src")
         existing = os.environ.get("PYTHONPATH", "")
         monkeypatch.setenv("PYTHONPATH", src_dir + (os.pathsep + existing if existing else ""))
-        monkeypatch.setattr("kiro_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
+        monkeypatch.setattr("aj_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
         # The spawned children inherit this process's CWD, so move it out of the
         # checkout: anything one of them writes to a relative path lands in the
         # repository otherwise. Every path these tests pass is absolute.
@@ -211,7 +211,7 @@ class TestChildFailsLoudEndToEnd:
 
     @staticmethod
     def _child_home(monkeypatch, home: Path) -> None:
-        """Point the CHILD's ``KIROCREW_HOME`` at *home*, leaving the parent's.
+        """Point the CHILD's ``AJCREW_HOME`` at *home*, leaving the parent's.
 
         Setting it on the test process would move ``config_dir()`` for the parent
         too, and the script the parent admits lives under the parent's own home.
@@ -220,7 +220,7 @@ class TestChildFailsLoudEndToEnd:
 
         def _with_home() -> dict[str, str]:
             env = real()
-            env["KIROCREW_HOME"] = str(home)
+            env["AJCREW_HOME"] = str(home)
             return env
 
         monkeypatch.setattr(cron_script, "_clean_cron_env", _with_home)
@@ -263,7 +263,7 @@ class TestChildFailsLoudEndToEnd:
         """
         script_path = _write_cron_script(
             cron_home,
-            "from kiro_crew.sandbox import UnauditedSpawnRefused\n"
+            "from aj_crew.sandbox import UnauditedSpawnRefused\n"
             "def run(ctx):\n"
             "    try:\n"
             "        raise UnauditedSpawnRefused('audit write failed with ENOSYS')\n"

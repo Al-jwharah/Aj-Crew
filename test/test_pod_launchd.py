@@ -14,9 +14,9 @@ import subprocess
 
 import pytest
 
-from kiro_crew.pod import launchd
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod.config import PodConfig
+from aj_crew.pod import launchd
+from aj_crew.pod import runtime as rt
+from aj_crew.pod.config import PodConfig
 
 
 def _cp(stdout: str = "", returncode: int = 0, stderr: str = "") -> subprocess.CompletedProcess:
@@ -30,9 +30,9 @@ def cfg(tmp_path, monkeypatch) -> PodConfig:
     # dir resolved to the runner's REAL profile, and a plist left by one test
     # made another test's teardown sweep think the name had been reclaimed.
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-    monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods-env"))
-    monkeypatch.setenv("KIROCREW_POD_ARTIFACTS_DIR", str(tmp_path / "artifacts"))
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+    monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods-env"))
+    monkeypatch.setenv("AJCREW_POD_ARTIFACTS_DIR", str(tmp_path / "artifacts"))
     return PodConfig.load()
 
 
@@ -51,7 +51,7 @@ def test_up_user_bus_preflight_is_linux_only(
     monkeypatch, platform: str, is_macos: bool, is_windows: bool
 ):
     """A pod-up preflight must never drive launchd or Task Scheduler."""
-    from kiro_crew.pod import cli as pod_cli
+    from aj_crew.pod import cli as pod_cli
 
     monkeypatch.setattr(rt, "IS_LINUX", False)
     monkeypatch.setattr(rt, "IS_MACOS", is_macos)
@@ -92,7 +92,7 @@ def test_plist_boots_the_named_pod_through_python(cfg):
     body = launchd.render_plist(cfg, "smoke")
     argv = body["ProgramArguments"]
     assert argv[-3:] == ["pod", "_run", "smoke"]
-    assert body["Label"] == "dev.kirocrew.pod.kirocrew-pod.smoke"
+    assert body["Label"] == "dev.ajcrew.pod.ajcrew-pod.smoke"
     assert body["RunAtLoad"] is True
     # Restart on crash, but never fight a deliberate bootout.
     assert body["KeepAlive"] == {"SuccessfulExit": False}
@@ -107,7 +107,7 @@ def test_plist_routes_logs_to_files_since_launchd_has_no_journal(cfg):
 
 def test_plist_is_valid_and_written_per_pod(cfg):
     dst = launchd.write_plist(cfg, "smoke")
-    assert dst.name == "dev.kirocrew.pod.kirocrew-pod.smoke.plist"
+    assert dst.name == "dev.ajcrew.pod.ajcrew-pod.smoke.plist"
     # Deliberately NOT ~/Library/LaunchAgents: launchd loads that directory at
     # login, which would resurrect pods after a reboot — the systemd path is
     # transient (start, never enable) and macOS must match.
@@ -115,25 +115,25 @@ def test_plist_is_valid_and_written_per_pod(cfg):
     assert "LaunchAgents" not in str(dst)
     with dst.open("rb") as fh:
         parsed = plistlib.load(fh)
-    assert parsed["Label"] == "dev.kirocrew.pod.kirocrew-pod.smoke"
+    assert parsed["Label"] == "dev.ajcrew.pod.ajcrew-pod.smoke"
 
 
 def test_label_honours_a_hermetic_unit_prefix(cfg, monkeypatch):
     """A test plane must not be able to collide with a developer's real pods."""
-    monkeypatch.setenv("KIROCREW_POD_UNIT_PREFIX", "kirocrew-pod-test")
+    monkeypatch.setenv("AJCREW_POD_UNIT_PREFIX", "ajcrew-pod-test")
     hermetic = PodConfig.load()
-    assert launchd.pod_label(hermetic, "smoke") == "dev.kirocrew.pod.kirocrew-pod-test.smoke"
+    assert launchd.pod_label(hermetic, "smoke") == "dev.ajcrew.pod.ajcrew-pod-test.smoke"
     # The default plane carries its prefix segment too: without it, the default
     # prefix is a strict prefix of every custom plane's labels and a hermetic
     # plane's pods surface in the default plane's listing.
-    assert launchd.pod_label(cfg, "smoke") == "dev.kirocrew.pod.kirocrew-pod.smoke"
+    assert launchd.pod_label(cfg, "smoke") == "dev.ajcrew.pod.ajcrew-pod.smoke"
     assert not launchd.pod_label(cfg, "").startswith(launchd.pod_label(hermetic, ""))
     assert not launchd.pod_label(hermetic, "").startswith(launchd.pod_label(cfg, ""))
 
 
 def test_env_selection_is_shared_with_the_systemd_backend(cfg):
     """Both backends must pin the SAME plane, or a pod boots differently per OS."""
-    from kiro_crew.pod.config import environment_vars
+    from aj_crew.pod.config import environment_vars
 
     body = launchd.render_plist(cfg, "smoke")
     assert body.get("EnvironmentVariables") == environment_vars(cfg)
@@ -194,8 +194,8 @@ def test_unit_state_inactive_when_not_loaded(cfg, monkeypatch):
 
 def test_active_names_filters_to_our_prefix_and_liveness(cfg, monkeypatch):
     domain_dump = (
-        "dev.kirocrew.pod.kirocrew-pod.alpha\n"
-        "dev.kirocrew.pod.kirocrew-pod.beta\n"
+        "dev.ajcrew.pod.ajcrew-pod.alpha\n"
+        "dev.ajcrew.pod.ajcrew-pod.beta\n"
         "com.apple.something\n"
         "dev.other.pod.gamma\n"
     )
@@ -234,7 +234,7 @@ def _earlier_failed_start(cfg):
     """Log files as an earlier failed boot left them (launchd appends)."""
     out, err = launchd.log_paths(cfg, "smoke")
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_bytes(b"kirocrew-pod: name=smoke earlier boot\n")
+    out.write_bytes(b"ajcrew-pod: name=smoke earlier boot\n")
     err.write_bytes(b"FATAL: no built dist for smoke (build the worktree first)\n")
     return out, err
 
@@ -246,7 +246,7 @@ def test_journal_since_mark_leaves_out_an_earlier_starts_fatal(cfg):
     text = launchd.recent_journal(cfg, "smoke", since=mark)
     assert "FATAL" not in text and "earlier boot" not in text
     assert "no pod log from this start" in text
-    assert "kirocrew pod logs smoke" in text
+    assert "ajcrew pod logs smoke" in text
     # Negative control: without the mark the same files still yield the stale line.
     assert "FATAL: no built dist" in launchd.recent_journal(cfg, "smoke")
 
@@ -256,7 +256,7 @@ def test_journal_since_mark_keeps_this_starts_fatal(cfg):
     out, err = _earlier_failed_start(cfg)
     mark = launchd.journal_mark(cfg, "smoke")
     with out.open("ab") as fh:
-        fh.write(b"kirocrew-pod: name=smoke this boot\n")
+        fh.write(b"ajcrew-pod: name=smoke this boot\n")
     with err.open("ab") as fh:
         fh.write(b"FATAL: venv missing for smoke\n")
     text = launchd.recent_journal(cfg, "smoke", since=mark)
@@ -475,7 +475,7 @@ def test_down_preserves_the_new_pods_checkout_pin_when_reclaimed(cfg, monkeypatc
     it pins the NEW pod's checkout."""
     import argparse
 
-    from kiro_crew.pod import cli as pod_cli
+    from aj_crew.pod import cli as pod_cli
 
     monkeypatch.setattr(rt, "validate_name", lambda n: n)
     monkeypatch.setattr(rt, "is_active", lambda c, n: True)
@@ -566,7 +566,7 @@ def test_down_fails_on_macos_when_stop_cannot_confirm_even_if_not_active(cfg, mo
     while leaving service, plist and HOME behind."""
     import argparse
 
-    from kiro_crew.pod import cli as pod_cli
+    from aj_crew.pod import cli as pod_cli
 
     monkeypatch.setattr(rt, "IS_MACOS", True)
     monkeypatch.setattr(rt, "validate_name", lambda n: n)
@@ -589,7 +589,7 @@ def test_up_pins_the_checkout_inside_the_name_mutex(cfg, monkeypatch, tmp_path):
     import argparse
     import contextlib as _ctx
 
-    from kiro_crew.pod import cli as pod_cli
+    from aj_crew.pod import cli as pod_cli
 
     events: list[str] = []
 
@@ -652,7 +652,7 @@ def test_up_failure_cleanup_stops_the_pod_inside_the_mutex(cfg, monkeypatch, tmp
     import argparse
     import contextlib as _ctx
 
-    from kiro_crew.pod import cli as pod_cli
+    from aj_crew.pod import cli as pod_cli
 
     events: list[str] = []
 
@@ -704,7 +704,7 @@ def test_ls_translates_orphan_probe_failures_to_the_documented_error(cfg, monkey
     `pod: <msg>` refusal, not a traceback."""
     import argparse
 
-    from kiro_crew.pod import cli as pod_cli
+    from aj_crew.pod import cli as pod_cli
 
     monkeypatch.setattr(rt, "IS_MACOS", True)
     monkeypatch.setattr(launchd, "launchctl", lambda *a, **k: _cp(returncode=5, stderr="EIO"))

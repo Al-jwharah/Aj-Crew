@@ -166,7 +166,7 @@ describe('ru DNT (style/ru.md §3)', () => {
       ['Слэк', 'Slack'],
       ['Слак', 'Slack'],
       ['Дискорд', 'Discord'],
-      ['КироКрю', 'KiroCrew'],
+      ['КироКрю', 'AjCrew'],
       ['Докер', 'Docker'],
       ['Плейрайт', 'Playwright'],
     ]

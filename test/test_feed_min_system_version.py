@@ -16,7 +16,7 @@ floor = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(floor)
 
 
-def _app_zip(tmp_path: Path, plist: dict | None, *, fmt=plistlib.FMT_XML, name="Kiro Crew") -> Path:
+def _app_zip(tmp_path: Path, plist: dict | None, *, fmt=plistlib.FMT_XML, name="Aj Crew") -> Path:
     path = tmp_path / "app.zip"
     with zipfile.ZipFile(path, "w") as archive:
         archive.writestr(f"{name}.app/Contents/MacOS/{name}", b"\0")
@@ -57,14 +57,14 @@ def test_a_floor_with_no_exact_kernel_version_is_refused(marketing) -> None:
 @pytest.mark.parametrize("fmt", [plistlib.FMT_XML, plistlib.FMT_BINARY])
 def test_the_floor_is_read_from_the_apps_info_plist(tmp_path, fmt, capsys) -> None:
     path = _app_zip(
-        tmp_path, {"CFBundleName": "Kiro Crew", "LSMinimumSystemVersion": "13.0"}, fmt=fmt
+        tmp_path, {"CFBundleName": "Aj Crew", "LSMinimumSystemVersion": "13.0"}, fmt=fmt
     )
     assert floor.main(["x", str(path)]) == 0
     assert capsys.readouterr().out.strip() == "22.0.0"
 
 
 def test_a_nightly_bundle_name_is_read_the_same(tmp_path, capsys) -> None:
-    path = _app_zip(tmp_path, {"LSMinimumSystemVersion": "12.0"}, name="KiroCrew Nightly")
+    path = _app_zip(tmp_path, {"LSMinimumSystemVersion": "12.0"}, name="AjCrew Nightly")
     assert floor.main(["x", str(path)]) == 0
     assert capsys.readouterr().out.strip() == "21.0.0"
 

@@ -136,9 +136,9 @@ names only the shape a reviewer has to agree to.
 |---|---|
 | macOS, Linux desktop, Windows with Chrome | the person's own Chrome, after a one-time `chrome://inspect` switch and Chrome's "Allow" |
 | Windows without Chrome | Edge |
-| Linux with no display (a server, a remote Linux gateway), or Chrome's debugging policy off | Kiro's own Chromium, headless, with its own profile |
+| Linux with no display (a server, a remote Linux gateway), or Chrome's debugging policy off | Aj's own Chromium, headless, with its own profile |
 
-Kiro's Chromium speaks CDP over a pipe on macOS and Linux, so it opens no port.
+Aj's Chromium speaks CDP over a pipe on macOS and Linux, so it opens no port.
 On Windows it keeps a loopback port (decision D5). The person can pick a
 browser by hand in Settings.
 
@@ -217,7 +217,7 @@ asked for, and on the URL the page actually landed on.
 ### 7. Settings -> Browser
 
 The gateway installs Harness on its own at start, in the background, when it is
-missing or out of date. It adds Kiro's Chromium only when that browser would be
+missing or out of date. It adds Aj's Chromium only when that browser would be
 used. The page shows the browser in use, its connection, Install and
 Redownload, a locked "No usage data, no cloud browser" line, and the live view's
 quality and frame-rate caps. It replaces the `playwright-cli` installer.
@@ -233,8 +233,8 @@ up.
 | D2 | **The browser is on by default.** `capabilities.browse` defaults to allow, and the gateway installs Harness at start without a click. | A fresh install downloads a Python package (and, on a host with no Chrome, a Chromium build) the person did not ask for by name. |
 | D3 | **One governance row turns the whole browser off.** A deny on `capabilities.browse` is checked in the tool and again, fail-closed, at every browser route, the engine start and every helper call. It never falls back to another driver. The first refusal stops a running browser. | An organisation cannot allow the live view but forbid driving, or the reverse; it is one switch. |
 | D4 | **The decision model is optional and off by default.** A decision model is a small, fast model, separate from the chat model, that answers narrow questions. An owner may arm one to pick an element from a description, check a step, or run a fast `reflex` loop. Providers come from one closed registry; nothing is sent until the owner consents, and `capabilities.decisions` withdraws it with the rest of that feature. With it off, every op runs exactly as listed above. | Two paths per op (with and without the model) to test and keep equal. |
-| D5 | **Windows keeps a loopback debugging port for Kiro's Chromium.** Python cannot hand a Windows child the pipe file descriptors CDP's pipe mode needs. | Any local process on that Windows host can find the port and drive Kiro's Chromium. The person's own Chrome is not affected: Chrome asks "Allow" for every new connection. |
-| D6 | **Playwright-CLI is removed outright, with no flag.** The CLI path, its `show` relay, the native-panel command bus, and the `dashboard.use_builtin_browser` and `dashboard.browser_view_port` keys go in the same release that adds the new stack. | No fallback if Harness breaks on some host; the fix is a new release. An installed CLI is left on disk and reported by `kirocrew doctor`, not deleted. |
+| D5 | **Windows keeps a loopback debugging port for Aj's Chromium.** Python cannot hand a Windows child the pipe file descriptors CDP's pipe mode needs. | Any local process on that Windows host can find the port and drive Aj's Chromium. The person's own Chrome is not affected: Chrome asks "Allow" for every new connection. |
+| D6 | **Playwright-CLI is removed outright, with no flag.** The CLI path, its `show` relay, the native-panel command bus, and the `dashboard.use_builtin_browser` and `dashboard.browser_view_port` keys go in the same release that adds the new stack. | No fallback if Harness breaks on some host; the fix is a new release. An installed CLI is left on disk and reported by `ajcrew doctor`, not deleted. |
 
 ## Security model
 
@@ -242,9 +242,9 @@ What the gateway trusts, and what it does not:
 
 | Actor | Can | Cannot |
 |---|---|---|
-| The agent | call the `browser` tool's ops on tabs it created; read page text and the outline | claim input, answer an ask, reach the relay or the daemon socket, read Kiro's profile, read a value typed into an ask |
+| The agent | call the `browser` tool's ops on tabs it created; read page text and the outline | claim input, answer an ask, reach the relay or the daemon socket, read Aj's profile, read a value typed into an ask |
 | The page | run its own script; put text in front of the agent | fake the ask's checks (isolated world); send the agent past the navigate gate |
-| Other local processes | find the relay's port | open the relay without its secret; on macOS and Linux, reach Kiro's Chromium at all |
+| Other local processes | find the relay's port | open the relay without its secret; on macOS and Linux, reach Aj's Chromium at all |
 | The dashboard owner | watch, take over, answer asks, replay | -- |
 
 | Threat | Control |
@@ -310,7 +310,7 @@ address) is not seen, because names are not resolved. D1 and D5 above.
   existing `config.json` still load, log one warning naming them, and are
   dropped on the next save.
 - An installed `playwright-cli` prefix is left on disk and reported by
-  `kirocrew doctor`.
+  `ajcrew doctor`.
 - Skills and prompts that name `playwright-cli` are rewritten in the same stack;
   a user skill that shells out to it stops working (it is no longer installed).
 

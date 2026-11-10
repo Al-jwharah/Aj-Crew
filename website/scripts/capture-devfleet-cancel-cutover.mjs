@@ -29,12 +29,12 @@ const now = Math.floor(Date.now() / 1000)
 const FLEET_MAIN_LIVE = {
   base_branch: 'main',
   gateway_service_active: false,
-  manual_restart: 'kirocrew restart',
-  staged_target: '/w/kirocrew-wt-widgets',
+  manual_restart: 'ajcrew restart',
+  staged_target: '/w/ajcrew-wt-widgets',
   staged_cancel_available: true,
   worktrees: [
     { name: 'main', is_main: true, running: false, has_dist: true, behind: 0, branch: 'main', is_live: true, path: '/w/main', last_updated_at: now - 900 },
-    { name: 'kirocrew-wt-widgets', is_main: false, running: false, has_dist: true, behind: 2, branch: 'feat/widgets', is_live: false, is_staged: true, path: '/w/kirocrew-wt-widgets', last_updated_at: now - 3600 },
+    { name: 'ajcrew-wt-widgets', is_main: false, running: false, has_dist: true, behind: 2, branch: 'feat/widgets', is_live: false, is_staged: true, path: '/w/ajcrew-wt-widgets', last_updated_at: now - 3600 },
   ],
 }
 
@@ -42,12 +42,12 @@ const FLEET_MAIN_LIVE = {
 const FLEET_FEATURE_LIVE = {
   base_branch: 'main',
   gateway_service_active: false,
-  manual_restart: 'kirocrew restart',
+  manual_restart: 'ajcrew restart',
   staged_target: '/w/main',
   staged_cancel_available: true,
   worktrees: [
     { name: 'main', is_main: true, running: false, has_dist: true, behind: 0, branch: 'main', is_live: false, is_staged: true, path: '/w/main', last_updated_at: now - 900 },
-    { name: 'kirocrew-wt-widgets', is_main: false, running: false, has_dist: true, behind: 2, branch: 'feat/widgets', is_live: true, is_staged: false, path: '/w/kirocrew-wt-widgets', last_updated_at: now - 3600 },
+    { name: 'ajcrew-wt-widgets', is_main: false, running: false, has_dist: true, behind: 2, branch: 'feat/widgets', is_live: true, is_staged: false, path: '/w/ajcrew-wt-widgets', last_updated_at: now - 3600 },
   ],
 }
 
@@ -86,7 +86,7 @@ async function main() {
   // 3) Live feature row: "Cancel staged cutover" in the overflow menu.
   fleet = FLEET_FEATURE_LIVE
   await page.goto(base + '/dev-fleet', { waitUntil: 'domcontentloaded' })
-  await page.getByText('kirocrew-wt-widgets').first().waitFor({ state: 'visible', timeout: 15000 })
+  await page.getByText('ajcrew-wt-widgets').first().waitFor({ state: 'visible', timeout: 15000 })
   await page.getByLabel('More actions').click()
   await page.getByRole('menu').getByText('Cancel staged cutover').waitFor({ state: 'visible', timeout: 5000 })
   await page.screenshot({ path: `${OUT}/${PREFIX}-live-feature-row-menu.png`, fullPage: false })
@@ -96,7 +96,7 @@ async function main() {
   // the "Restart pending" badge that prompts it.
   fleet = FLEET_MAIN_LIVE
   await page.goto(base + '/dev-fleet', { waitUntil: 'domcontentloaded' })
-  await page.getByText('kirocrew-wt-widgets').first().waitFor({ state: 'visible', timeout: 15000 })
+  await page.getByText('ajcrew-wt-widgets').first().waitFor({ state: 'visible', timeout: 15000 })
   await page.getByLabel('More actions').first().click()
   await page.getByRole('menu').getByText('Cancel staged cutover').waitFor({ state: 'visible', timeout: 5000 })
   await page.screenshot({ path: `${OUT}/${PREFIX}-staged-row-menu.png`, fullPage: false })
@@ -107,7 +107,7 @@ async function main() {
   // keeping the main row under the two-button cap.
   fleet = { ...FLEET_MAIN_LIVE, gateway_service_active: true }
   await page.goto(base + '/dev-fleet', { waitUntil: 'domcontentloaded' })
-  await page.getByText('kirocrew-wt-widgets').first().waitFor({ state: 'visible', timeout: 15000 })
+  await page.getByText('ajcrew-wt-widgets').first().waitFor({ state: 'visible', timeout: 15000 })
   await page.getByLabel('More actions').first().click()
   await page.getByRole('menu').getByText('Cancel staged cutover').waitFor({ state: 'visible', timeout: 5000 })
   await page.screenshot({ path: `${OUT}/${PREFIX}-live-main-row-collapsed-menu.png`, fullPage: false })

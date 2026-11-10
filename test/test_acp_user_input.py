@@ -18,13 +18,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp import elicitation as el
-from kiro_crew.acp._dispatch import classify_notification
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.client_turn import _process_message
-from kiro_crew.acp.harness import harness_for
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp import elicitation as el
+from aj_crew.acp._dispatch import classify_notification
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.client_turn import _process_message
+from aj_crew.acp.harness import harness_for
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     EVENT_ELICITATION_REQUEST,

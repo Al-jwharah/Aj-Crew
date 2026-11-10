@@ -1,4 +1,4 @@
-"""Tests for `kirocrew gateway` composable CLI flags.
+"""Tests for `ajcrew gateway` composable CLI flags.
 
 Covers argparse parsing, --test-mode bundle expansion with override
 semantics, and the --approval yolo safety rail.
@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.cli import _resolve_gateway_args
+from aj_crew.cli import _resolve_gateway_args
 
 # ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -20,7 +20,7 @@ from kiro_crew.cli import _resolve_gateway_args
 def _ns(**kwargs) -> argparse.Namespace:
     """Build an argparse.Namespace with gateway-flag defaults filled in.
 
-    Mirrors what the CLI parser produces for `kirocrew gateway`. Tests
+    Mirrors what the CLI parser produces for `ajcrew gateway`. Tests
     override only the fields they exercise.
     """
     defaults = {
@@ -97,7 +97,7 @@ class TestTestModeBundle:
 
     def test_explicit_approval_overrides_bundle(self, tmp_path, monkeypatch):
         # yolo bundle override needs the safety rail to pass; isolate home.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         result = _resolve_gateway_args(_ns(test_mode=True, approval="yolo"))
         assert result["approval_mode"] == "yolo"
         # Other bundle defaults still apply.
@@ -206,25 +206,25 @@ class TestPortValidation:
 class TestApprovalYoloSafetyRail:
     """`--approval yolo` refuses to run against the default home."""
 
-    def test_yolo_refused_without_kirocrew_home(self, monkeypatch, capsys):
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+    def test_yolo_refused_without_ajcrew_home(self, monkeypatch, capsys):
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
         with pytest.raises(SystemExit) as exc:
             _resolve_gateway_args(_ns(approval="yolo"))
         assert exc.value.code == 2
         captured = capsys.readouterr()
-        assert "KIROCREW_HOME must be explicitly set" in captured.err
+        assert "AJCREW_HOME must be explicitly set" in captured.err
 
-    def test_yolo_refused_when_kirocrew_home_empty_string(self, monkeypatch, capsys):
-        monkeypatch.setenv("KIROCREW_HOME", "")
+    def test_yolo_refused_when_ajcrew_home_empty_string(self, monkeypatch, capsys):
+        monkeypatch.setenv("AJCREW_HOME", "")
         with pytest.raises(SystemExit) as exc:
             _resolve_gateway_args(_ns(approval="yolo"))
         assert exc.value.code == 2
         captured = capsys.readouterr()
-        assert "KIROCREW_HOME must be explicitly set" in captured.err
+        assert "AJCREW_HOME must be explicitly set" in captured.err
 
     def test_yolo_refused_when_resolves_to_default_home(self, monkeypatch, capsys):
-        # Point KIROCREW_HOME at the literal default; rail must catch it.
-        monkeypatch.setenv("KIROCREW_HOME", str(Path.home() / ".kiro" / "crew"))
+        # Point AJCREW_HOME at the literal default; rail must catch it.
+        monkeypatch.setenv("AJCREW_HOME", str(Path.home() / ".kiro" / "crew"))
         with pytest.raises(SystemExit) as exc:
             _resolve_gateway_args(_ns(approval="yolo"))
         assert exc.value.code == 2
@@ -234,7 +234,7 @@ class TestApprovalYoloSafetyRail:
     def test_yolo_refused_via_tilde_expansion(self, monkeypatch, capsys):
         # `~/.kiro/crew` expands then resolves to the same path as
         # Path.home() / .kiro / crew.
-        monkeypatch.setenv("KIROCREW_HOME", "~/.kiro/crew")
+        monkeypatch.setenv("AJCREW_HOME", "~/.kiro/crew")
         with pytest.raises(SystemExit) as exc:
             _resolve_gateway_args(_ns(approval="yolo"))
         assert exc.value.code == 2
@@ -244,10 +244,10 @@ class TestApprovalYoloSafetyRail:
 
     def test_yolo_refused_when_resolves_to_legacy_home(self, monkeypatch, capsys):
         # GPT 5.6 HIGH regression: after the data-home move, the rail must reject the
-        # LEGACY ~/.kirocrew too, not just ~/.kiro/crew. On an unmigrated/downgraded
+        # LEGACY ~/.ajcrew too, not just ~/.kiro/crew. On an unmigrated/downgraded
         # install the legacy home still holds the LIVE data, so yolo against it is
         # exactly as destructive as against the new home.
-        monkeypatch.setenv("KIROCREW_HOME", str(Path.home() / ".kirocrew"))
+        monkeypatch.setenv("AJCREW_HOME", str(Path.home() / ".ajcrew"))
         with pytest.raises(SystemExit) as exc:
             _resolve_gateway_args(_ns(approval="yolo"))
         assert exc.value.code == 2
@@ -255,12 +255,12 @@ class TestApprovalYoloSafetyRail:
         assert "main gateway home" in captured.err
 
     def test_yolo_accepted_with_isolated_home(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         result = _resolve_gateway_args(_ns(approval="yolo"))
         assert result["approval_mode"] == "yolo"
 
     def test_yolo_accepted_via_test_mode_bundle_with_isolated_home(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         result = _resolve_gateway_args(_ns(test_mode=True, approval="yolo"))
         assert result["approval_mode"] == "yolo"
         assert result["port_override"] == "auto"
@@ -275,10 +275,10 @@ class TestApprovalYoloSafetyRail:
         ],
     )
     def test_non_yolo_mode_passes_without_the_rail(self, approval, home_unset, monkeypatch):
-        # The rail only applies to yolo: with KIROCREW_HOME unset (the case the
+        # The rail only applies to yolo: with AJCREW_HOME unset (the case the
         # rail refuses for yolo) the other modes still pass through.
         if home_unset:
-            monkeypatch.delenv("KIROCREW_HOME", raising=False)
+            monkeypatch.delenv("AJCREW_HOME", raising=False)
         result = _resolve_gateway_args(_ns(approval=approval))
         assert result["approval_mode"] == approval
 
@@ -290,11 +290,11 @@ class TestApprovalHelp:
     """The `--approval` help states what each choice and an omitted flag do."""
 
     def test_help_names_the_configured_default_and_where_reads_applies(self, monkeypatch, capsys):
-        from kiro_crew.cli import main
-        from kiro_crew.config.fields import field_default
-        from kiro_crew.config.sections import AgentConfig
+        from aj_crew.cli import main
+        from aj_crew.config.fields import field_default
+        from aj_crew.config.sections import AgentConfig
 
-        monkeypatch.setattr(sys, "argv", ["kirocrew", "gateway", "--help"])
+        monkeypatch.setattr(sys, "argv", ["ajcrew", "gateway", "--help"])
         with pytest.raises(SystemExit) as exc_info:
             main()
         assert exc_info.value.code == 0
@@ -337,7 +337,7 @@ class TestIsReadOnlyTool:
         ],
     )
     def test_known_read_verbs_match(self, title):
-        from kiro_crew.slack.gateway import _is_read_only_tool
+        from aj_crew.slack.gateway import _is_read_only_tool
 
         assert _is_read_only_tool(title) is True
 
@@ -355,7 +355,7 @@ class TestIsReadOnlyTool:
         ],
     )
     def test_write_verbs_do_not_match(self, title):
-        from kiro_crew.slack.gateway import _is_read_only_tool
+        from aj_crew.slack.gateway import _is_read_only_tool
 
         assert _is_read_only_tool(title) is False
 
@@ -374,23 +374,23 @@ class TestIsReadOnlyTool:
     )
     def test_compound_read_write_verbs_rejected(self, title):
         """Denylist catches tools whose read-verb prefix masks a write capability."""
-        from kiro_crew.slack.gateway import _is_read_only_tool
+        from aj_crew.slack.gateway import _is_read_only_tool
 
         assert _is_read_only_tool(title) is False
 
     def test_empty_string_not_match(self):
-        from kiro_crew.slack.gateway import _is_read_only_tool
+        from aj_crew.slack.gateway import _is_read_only_tool
 
         assert _is_read_only_tool("") is False
 
     def test_whitespace_only_not_match(self):
-        from kiro_crew.slack.gateway import _is_read_only_tool
+        from aj_crew.slack.gateway import _is_read_only_tool
 
         assert _is_read_only_tool("   ") is False
         assert _is_read_only_tool("\t\n") is False
 
     def test_handles_punctuation_separators(self):
-        from kiro_crew.slack.gateway import _is_read_only_tool
+        from aj_crew.slack.gateway import _is_read_only_tool
 
         # First token before space/colon/underscore/dash/paren counts.
         assert _is_read_only_tool("read(file.txt)") is True
@@ -398,7 +398,7 @@ class TestIsReadOnlyTool:
 
     def test_substring_inside_token_does_not_match(self):
         """`set` token-equality check must not match the longer token `setter`."""
-        from kiro_crew.slack.gateway import _is_read_only_tool
+        from aj_crew.slack.gateway import _is_read_only_tool
 
         # `read_setter_field` has read prefix; tokens are
         # ["read", "setter", "field"]. None equal an entry in

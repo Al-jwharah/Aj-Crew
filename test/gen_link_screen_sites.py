@@ -28,7 +28,7 @@ from pathlib import Path
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 
 # Anchored to the repo root, never a bare relative "src". Run from any other
-# directory, a relative entry resolves to a nonexistent ./src, `kiro_crew` binds
+# directory, a relative entry resolves to a nonexistent ./src, `aj_crew` binds
 # to whatever copy is installed, and this would then enumerate THAT tree while
 # writing the baseline into this checkout -- with the sentinel reporting a count
 # and no hint of which tree produced it.
@@ -36,7 +36,7 @@ sys.path[:0] = [str(Path(__file__).resolve().parent), str(_REPO_ROOT / "src")]
 
 from test_link_screen_hold_pin import discovered_sites  # noqa: E402
 
-from kiro_crew.atomic_write import atomic_write  # noqa: E402
+from aj_crew.atomic_write import atomic_write  # noqa: E402
 
 #: The formatter's line length, which the emitted entries have to respect: a
 #: generated file that fails the formatting gate makes "regenerate rather than

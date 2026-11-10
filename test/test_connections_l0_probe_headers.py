@@ -9,7 +9,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestServer
 
-from kiro_crew.connections import l0_probe
+from aj_crew.connections import l0_probe
 
 # Mixpanel's issuer sends a ~12 KB Content-Security-Policy; aiohttp's default
 # header line limit is 8190 bytes.

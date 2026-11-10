@@ -18,13 +18,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.constants import SUBAGENT_COMPLETION_META_KEY
-from kiro_crew.dashboard.chat_runner import _start_next_queued_turn
-from kiro_crew.dashboard.state import (
+from aj_crew.constants import SUBAGENT_COMPLETION_META_KEY
+from aj_crew.dashboard.chat_runner import _start_next_queued_turn
+from aj_crew.dashboard.state import (
     SUBAGENT_BATCH_COMPLETION_PREFIX,
     SUBAGENT_COMPLETION_PREFIX,
 )
-from kiro_crew.subagent_completion_meta import (
+from aj_crew.subagent_completion_meta import (
     OUTCOME_FAILED,
     OUTCOME_INTERRUPTED,
     OUTCOME_OK,
@@ -36,7 +36,7 @@ from kiro_crew.subagent_completion_meta import (
 
 SINGLE = (
     f"{SUBAGENT_COMPLETION_PREFIX}\n"
-    "Agent `a1` (kirocrew) completed ✅\n"
+    "Agent `a1` (ajcrew) completed ✅\n"
     "Task: add a label\n"
     "\n"
     "done."
@@ -70,12 +70,12 @@ class TestMetaHelperShapes:
 
     def test_single_carries_outcome_agent_and_task(self) -> None:
         m = single_completion_meta(
-            agent_id="a1", outcome=OUTCOME_OK, agent_name="kirocrew", task="add a label"
+            agent_id="a1", outcome=OUTCOME_OK, agent_name="ajcrew", task="add a label"
         )
         assert m == {
             "kind": "single",
             "agentId": "a1",
-            "agentName": "kirocrew",
+            "agentName": "ajcrew",
             "outcome": "ok",
             "task": "add a label",
             "note": "",
@@ -89,7 +89,7 @@ class TestMetaHelperShapes:
         m = single_completion_meta(
             agent_id="a1",
             outcome=OUTCOME_OK,
-            agent_name="kirocrew",
+            agent_name="ajcrew",
             task="review the diff",
             requested_model="claude-opus-4.8",
             resolved_model="claude-opus-4.7",
@@ -142,11 +142,11 @@ class TestDrainStampsMetaOntoRow:
             SINGLE,
             meta={
                 SUBAGENT_COMPLETION_META_KEY: single_completion_meta(
-                    agent_id="a1", outcome=OUTCOME_OK, agent_name="kirocrew", task="add a label"
+                    agent_id="a1", outcome=OUTCOME_OK, agent_name="ajcrew", task="add a label"
                 )
             },
         )
-        with patch("kiro_crew.dashboard.chat_runner.spawn_guarded_turn", side_effect=_swallow_turn):
+        with patch("aj_crew.dashboard.chat_runner.spawn_guarded_turn", side_effect=_swallow_turn):
             started = await _start_next_queued_turn(state, slot)
 
         assert started is True
@@ -168,7 +168,7 @@ class TestDrainStampsMetaOntoRow:
                 )
             },
         )
-        with patch("kiro_crew.dashboard.chat_runner.spawn_guarded_turn", side_effect=_swallow_turn):
+        with patch("aj_crew.dashboard.chat_runner.spawn_guarded_turn", side_effect=_swallow_turn):
             await _start_next_queued_turn(state, slot)
 
         row = [m for m in slot.messages if m["role"] == "subagent"][0]
@@ -182,7 +182,7 @@ class TestDrainStampsMetaOntoRow:
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("meta-user")
         slot.queue_append("please fix the bug")
-        with patch("kiro_crew.dashboard.chat_runner.spawn_guarded_turn", side_effect=_swallow_turn):
+        with patch("aj_crew.dashboard.chat_runner.spawn_guarded_turn", side_effect=_swallow_turn):
             await _start_next_queued_turn(state, slot)
 
         row = [m for m in slot.messages if m["role"] == "user"][0]
@@ -211,7 +211,7 @@ class TestDrainStampsMetaOntoRow:
                 )
             },
         )
-        with patch("kiro_crew.dashboard.chat_runner.spawn_guarded_turn", side_effect=_swallow_turn):
+        with patch("aj_crew.dashboard.chat_runner.spawn_guarded_turn", side_effect=_swallow_turn):
             await _start_next_queued_turn(state, slot)
 
         drained = [m for m in slot.messages if m["role"] in ("user", "subagent")][0]

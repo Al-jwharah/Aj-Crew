@@ -33,7 +33,7 @@ from subagent_stop_reason_helpers import (
 )
 from test_taskrunner import _make_mock_sessions as _make_taskrunner_sessions
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     STOP_CLASS_CANCELLED,
     STOP_CLASS_FAILED,
     STOP_CLASS_RECOVERING,
@@ -48,11 +48,11 @@ from kiro_crew.acp.types import (
     STOP_RECOVERY_MAX_RETRIES,
     classify_stop_reason,
 )
-from kiro_crew.dashboard.state import TOOL_STALL_RECOVERY_PREFIX
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.taskrunner import Step, StepStatus, TaskRun, TaskRunner
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard.state import TOOL_STALL_RECOVERY_PREFIX
+from aj_crew.providers.base import LLMEvent
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.taskrunner import Step, StepStatus, TaskRun, TaskRunner
+from aj_crew.testing.wait import async_wait_until, await_until
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -295,7 +295,7 @@ async def test_exhausted_stream_without_complete_is_not_marked_result_complete()
     # no complete event ever arrived.
     assert not info._ending_claimed
     assert writes == [None]
-    from kiro_crew.subagent_persistence import read_state
+    from aj_crew.subagent_persistence import read_state
 
     assert (read_state(info.id) or {}).get("result_complete") is False
 
@@ -331,8 +331,8 @@ class _GatedResultWrite:
     def __init__(self, monkeypatch: pytest.MonkeyPatch, *, whole_only: bool = True) -> None:
         import threading
 
-        import kiro_crew.subagent as subagent
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent as subagent
+        import aj_crew.subagent_persistence as sp
 
         self._loop = asyncio.get_running_loop()
         self.entered = asyncio.Event()
@@ -362,7 +362,7 @@ class _HeldResultDrain:
     """
 
     def __init__(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.subagent_manager.run import RunEventCoordinator
+        from aj_crew.subagent_manager.run import RunEventCoordinator
 
         self.parked = asyncio.Event()
         self._go = asyncio.Event()
@@ -386,11 +386,11 @@ async def test_the_finished_result_is_written_after_post_processing_from_memory(
 ):
     """The result write follows the post-processing of the answer into
     ``info.result``; it rewrites result.txt from the raw streamed text, through
-    the ``kiro_crew.subagent.update_state`` seam, and the usage row lands on
+    the ``aj_crew.subagent.update_state`` seam, and the usage row lands on
     its own task."""
-    import kiro_crew.dashboard.handlers.usage as usage_mod
-    import kiro_crew.subagent as subagent
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.dashboard.handlers.usage as usage_mod
+    import aj_crew.subagent as subagent
+    import aj_crew.subagent_persistence as sp
 
     order: list[str] = []
     jobs: list[tuple] = []
@@ -434,9 +434,9 @@ async def test_the_finished_result_is_rewritten_whole_and_capped_from_memory(
     """result.txt ends as the whole answer the run holds in memory, capped:
     an append that failed mid-stream leaves no hole in what the flag vouches
     for."""
-    import kiro_crew.context_management as cm
-    import kiro_crew.subagent as subagent
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.context_management as cm
+    import aj_crew.subagent as subagent
+    import aj_crew.subagent_persistence as sp
 
     monkeypatch.setattr(cm, "RESULT_FILE_MAX_BYTES", 2_000)
     real_append = subagent.write_result_chunk
@@ -471,8 +471,8 @@ async def test_every_other_ending_caps_what_streamed(
 ):
     """The cap holds for every ending, not just a whole answer: a partial the
     stream left behind is capped in place and recorded as no whole answer."""
-    import kiro_crew.context_management as cm
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.context_management as cm
+    import aj_crew.subagent_persistence as sp
 
     monkeypatch.setattr(cm, "RESULT_FILE_MAX_BYTES", 2_000)
     factory, _calls = _single_turn(stop_reason, chunks=("z" * 9_000,))
@@ -493,8 +493,8 @@ async def test_an_ending_that_never_reaches_the_tail_caps_what_streamed_too(
     deadline, is stopped or is shut down before any complete event still
     leaves ``result.txt`` within the bound, recorded as no whole answer, from
     ``_run``'s ``finally``."""
-    import kiro_crew.context_management as cm
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.context_management as cm
+    import aj_crew.subagent_persistence as sp
 
     monkeypatch.setattr(cm, "RESULT_FILE_MAX_BYTES", 2_000)
     hold = asyncio.Event()
@@ -515,7 +515,7 @@ async def test_an_ending_that_never_reaches_the_tail_caps_what_streamed_too(
     mgr = _manager(_mock_sessions(factory))
     deadline = _DeadlineOnDemand(monkeypatch, mgr) if ending == "deadline" else None
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = mgr.spawn("do work")
             assert info is not None
             run = mgr._tasks[info.id]
@@ -549,7 +549,7 @@ async def test_an_error_stamped_before_the_complete_event_is_a_stop_that_got_the
     ``error`` and only SCHEDULES its cancel. A successful complete event handled
     before that cancel runs claims nothing: the run ends failed, counts no
     success and records no whole answer."""
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.subagent_persistence as sp
 
     holder: dict = {}
 
@@ -567,7 +567,7 @@ async def test_an_error_stamped_before_the_complete_event_is_a_stop_that_got_the
 
     mgr = _manager(_mock_sessions(factory))
     stats = MagicMock()
-    with patch("kiro_crew.subagent.Stats", return_value=stats), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats", return_value=stats), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("do work", parent_session_key="dashboard:p")
         assert info is not None
         holder["mgr"], holder["info"] = mgr, info
@@ -587,8 +587,8 @@ async def test_a_claimed_result_write_that_hangs_is_bounded(monkeypatch: pytest.
     slot and finishes its task, and the worker lands detached, holding the run's
     conversation until it does. Until ``done``, deleting the run is refused as
     pending rather than popping a run whose report does not exist yet."""
-    import kiro_crew.subagent as subagent
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.subagent as subagent
+    import aj_crew.subagent_persistence as sp
 
     # The write is held by the gate, so the bound always expires; shrinking it
     # only shortens the wait for that.
@@ -598,7 +598,7 @@ async def test_a_claimed_result_write_that_hangs_is_bounded(monkeypatch: pytest.
     factory, _calls = _answer_stream()
     mgr = _manager(_mock_sessions(factory))
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = mgr.spawn("do work", parent_session_key="dashboard:p")
             assert info is not None
             run = mgr._tasks[info.id]
@@ -634,13 +634,13 @@ async def test_the_final_cap_of_a_done_run_holds_its_conversation(
     worker ends in a whole-file ``update_state``, and a release landing
     mid-write writes ``keep=False`` on the loop for that rewrite to roll back.
     So the write holds the conversation until its worker lands."""
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.subagent_persistence as sp
 
     gate = _GatedResultWrite(monkeypatch, whole_only=False)
     factory, _calls = _single_turn(None)  # the stream dies: no complete event
     mgr = _manager(_mock_sessions(factory))
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = mgr.spawn("do work", parent_session_key="dashboard:p")
             assert info is not None
             await await_until(gate.entered, what="the result write being entered")
@@ -666,7 +666,7 @@ async def test_the_hold_lasts_until_the_last_writer_of_a_run_lands(caplog):
     whole-file rewrite to roll back. A worker registered twice (the cap's
     up-front hold plus its own bounded drain) is held once, so it settles
     once: a cap that fails is logged once, not once per registration."""
-    caplog.set_level(logging.DEBUG, logger="kiro_crew.subagent")
+    caplog.set_level(logging.DEBUG, logger="aj_crew.subagent")
     loop = asyncio.get_running_loop()
     mgr = _manager(_mock_sessions(lambda *a, **kw: None))
     info = SubagentInfo(id="sa-held", task="t", done=True)
@@ -706,7 +706,7 @@ async def test_a_failed_result_write_records_no_flag_and_the_run_completes(
     import errno
     import logging
 
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.subagent_persistence as sp
 
     real_write = sp.atomic_write
 
@@ -722,7 +722,7 @@ async def test_a_failed_result_write_records_no_flag_and_the_run_completes(
         monkeypatch.setattr(sp, "atomic_write", _eio_on_result)
     else:
         monkeypatch.setattr(sp, "fsync_dir", _eio)
-    caplog.set_level(logging.WARNING, logger="kiro_crew.subagent_persistence")
+    caplog.set_level(logging.WARNING, logger="aj_crew.subagent_persistence")
     factory, _calls = _answer_stream()
     info = await _spawn_and_wait(_manager(_mock_sessions(factory)))
 
@@ -795,8 +795,8 @@ async def test_whatever_lands_after_the_claim_the_run_is_completed_once(
     whole on disk."""
     import time as _time
 
-    import kiro_crew.subagent_persistence as sp
-    from kiro_crew.subagent_manager.run import RunEventCoordinator
+    import aj_crew.subagent_persistence as sp
+    from aj_crew.subagent_manager.run import RunEventCoordinator
 
     real_drain = RunEventCoordinator._drain_state_writer_impl
 
@@ -820,7 +820,7 @@ async def test_whatever_lands_after_the_claim_the_run_is_completed_once(
     mgr._on_done = _on_done
     stats = MagicMock()
     try:
-        with patch("kiro_crew.subagent.Stats", return_value=stats), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats", return_value=stats), patch("aj_crew.subagent.sel"):
             info = mgr.spawn("do work", parent_session_key="dashboard:p")
             assert info is not None
             run = mgr._tasks[info.id]
@@ -887,7 +887,7 @@ async def test_a_stop_that_got_there_first_owns_the_ending_and_no_flag_is_writte
     arrives next claims nothing. The run records the stop's neutral ending
     once, and state.json never says the result is whole, so nothing after a
     restart can announce the stopped run as completed."""
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.subagent_persistence as sp
 
     complete_go = asyncio.Event()
     reset_go = asyncio.Event()
@@ -917,7 +917,7 @@ async def test_a_stop_that_got_there_first_owns_the_ending_and_no_flag_is_writte
 
     mgr._on_done = _on_done
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = mgr.spawn("do work")
             assert info is not None
             run = mgr._tasks[info.id]
@@ -948,7 +948,7 @@ async def test_a_deadline_reap_that_got_there_first_owns_the_ending():
     failure, and nothing counts it a success. Recording a bare ``done`` from
     the run's tail let the reap's record guard skip, so a deadline-stopped run
     was reported completed and cleared its session's failure count."""
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.subagent_persistence as sp
 
     complete_go = asyncio.Event()
     reset_go = asyncio.Event()
@@ -978,7 +978,7 @@ async def test_a_deadline_reap_that_got_there_first_owns_the_ending():
 
     mgr._on_done = _on_done
     try:
-        with patch("kiro_crew.subagent.Stats") as stats, patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats") as stats, patch("aj_crew.subagent.sel"):
             info = mgr.spawn("do work")
             assert info is not None
             run = mgr._tasks[info.id]
@@ -1043,7 +1043,7 @@ async def test_a_reap_in_flight_names_whether_the_answer_had_finished(
     sessions.reset = AsyncMock(side_effect=_reset)
     mgr = _manager(sessions)
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = mgr.spawn("do work")
             assert info is not None
             run = mgr._tasks[info.id]
@@ -1090,7 +1090,7 @@ async def _race_a_reap_against_the_answer(reason: str, *, user_stop: bool = Fals
     sessions.reset = AsyncMock(side_effect=_reset)
     mgr = _manager(sessions)
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = mgr.spawn("do work")
             assert info is not None
             run = mgr._tasks[info.id]
@@ -1118,7 +1118,7 @@ async def test_a_finished_answer_a_reap_got_to_first_reaches_the_parent(user_sto
     """The reap owns the report of a run whose answer finished under it, and
     that report must still hand the parent the answer, named as finished --
     not drop it behind the stop's error, nor call it a partial."""
-    from kiro_crew.slack.gateway import _compose_subagent_completion
+    from aj_crew.slack.gateway import _compose_subagent_completion
 
     info = await _race_a_reap_against_the_answer("deadline", user_stop=user_stop)
     assert info._answer_finished and not info._ending_claimed
@@ -1135,7 +1135,7 @@ def test_a_truncated_finished_answer_under_a_reap_points_at_its_transcript(user_
     """A finished answer the completion copy cut short reaches the parent as
     any truncated result does -- a preview and the result.txt pointer -- so
     the tail of the answer is not silently lost behind 'Its answer:'."""
-    from kiro_crew.slack.gateway import _compose_subagent_completion
+    from aj_crew.slack.gateway import _compose_subagent_completion
 
     info = SubagentInfo(
         id="cut1",
@@ -1160,7 +1160,7 @@ async def test_a_user_stop_no_reap_has_reached_yet_records_the_neutral_stop():
     its reap, so a whole answer can arrive between the two: no reap is in
     flight yet, and the run still records the stop's neutral ending and counts
     no success."""
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.subagent_persistence as sp
 
     complete_go = asyncio.Event()
     reap_go = asyncio.Event()
@@ -1189,7 +1189,7 @@ async def test_a_user_stop_no_reap_has_reached_yet_records_the_neutral_stop():
 
     mgr._on_done = _on_done
     try:
-        with patch("kiro_crew.subagent.Stats") as stats, patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats") as stats, patch("aj_crew.subagent.sel"):
             info = mgr.spawn("do work")
             assert info is not None
             run = mgr._tasks[info.id]
@@ -1221,7 +1221,7 @@ async def test_a_run_another_path_already_ended_counts_no_success():
     ending (``done`` set first, standing in for any first-arrival recorder)
     claims nothing and leaves the success to that record: no success stat,
     and the session's failure count is not cleared."""
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.subagent_persistence as sp
 
     holder: dict = {}
 
@@ -1235,7 +1235,7 @@ async def test_a_run_another_path_already_ended_counts_no_success():
 
     sessions = _mock_sessions(factory)
     mgr = _manager(sessions)
-    with patch("kiro_crew.subagent.Stats") as stats, patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats") as stats, patch("aj_crew.subagent.sel"):
         info = mgr.spawn("do work")
         assert info is not None
         holder["info"] = info
@@ -1286,8 +1286,8 @@ async def test_the_usage_row_never_holds_an_ending(monkeypatch: pytest.MonkeyPat
     """The usage row is best-effort analytics on a task the manager holds: a
     wedged one holds neither the run's ending nor, past the report drain's
     bound, a shutdown."""
-    import kiro_crew.dashboard.handlers.usage as usage_mod
-    import kiro_crew.subagent as subagent
+    import aj_crew.dashboard.handlers.usage as usage_mod
+    import aj_crew.subagent as subagent
 
     monkeypatch.setattr(subagent, "_REPORT_DRAIN_TIMEOUT", 0.3)
     entered = asyncio.Event()
@@ -1301,7 +1301,7 @@ async def test_the_usage_row_never_holds_an_ending(monkeypatch: pytest.MonkeyPat
     factory, _calls = _answer_stream()
     mgr = _manager(_mock_sessions(factory))
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = mgr.spawn("do work")
             assert info is not None
             await await_until(entered, what="the run being entered")
@@ -1327,7 +1327,7 @@ async def test_a_cancel_during_a_non_whole_ending_cap_keeps_the_recorded_ending(
     caps the file after it. An unexpected cancel landing on that cap is drained
     and changes nothing: no respawn re-runs the finished stream, the recorded
     ending stands, and the parent still hears it."""
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.subagent_persistence as sp
 
     gate = _GatedResultWrite(monkeypatch, whole_only=False)
     factory, calls = _single_turn(None)
@@ -1339,7 +1339,7 @@ async def test_a_cancel_during_a_non_whole_ending_cap_keeps_the_recorded_ending(
 
     mgr._on_done = _on_done
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = mgr.spawn("do work")
             assert info is not None
             run = mgr._tasks[info.id]
@@ -1365,9 +1365,9 @@ async def test_a_cancel_requested_during_post_processing_still_writes_the_result
 ):
     """A cancel requested before the result write's first step is delivered INTO
     the drained job, so the whole answer and its flag still land."""
-    import kiro_crew.context_management as cm
-    import kiro_crew.subagent as subagent
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.context_management as cm
+    import aj_crew.subagent as subagent
+    import aj_crew.subagent_persistence as sp
 
     monkeypatch.setattr(cm, "RESULT_FILE_MAX_BYTES", 2_000)
     real_keep = subagent.apply_completion_keep
@@ -1379,7 +1379,7 @@ async def test_a_cancel_requested_during_post_processing_still_writes_the_result
     monkeypatch.setattr(subagent, "apply_completion_keep", _keep_then_cancel)
     factory, calls = _single_turn(STOP_REASON_END_TURN, chunks=("z" * 9_000,))
     mgr = _manager(_mock_sessions(factory))
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("do work")
         assert info is not None
         await _wait_settled(mgr, info)
@@ -1450,13 +1450,13 @@ async def test_a_respawn_keeps_the_partial_until_it_has_text_and_never_glues():
     partial stays in result.txt, so a restart then still finds it; from that
     chunk on result.txt and the live partial hold the new attempt alone, and
     its finished answer is the new attempt's text."""
-    import kiro_crew.subagent_persistence as sp
-    from kiro_crew.subagent_manager.monitoring import tombstone_recovery_action
+    import aj_crew.subagent_persistence as sp
+    from aj_crew.subagent_manager.monitoring import tombstone_recovery_action
 
     stream = _respawn_stream(("attempt-2 opening sentence that ", "ends."))
     mgr = _manager(_mock_sessions(stream.factory))
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info, respawn = await _respawned(mgr, stream)
             folder = sp._agent_dir(info.id)
             state = sp.read_state(info.id) or {}
@@ -1489,12 +1489,12 @@ async def test_a_respawn_keeps_the_partial_until_it_has_text_and_never_glues():
 async def test_a_cut_off_respawn_delivers_the_partial_it_left_on_disk():
     """When the respawned attempt is cut off too, the partial the parent is
     handed and the one result.txt holds are the same text: the new attempt's."""
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.subagent_persistence as sp
 
     stream = _respawn_stream(("attempt-2 partial ",), second_ends=False)
     mgr = _manager(_mock_sessions(stream.factory))
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info, respawn = await _respawned(mgr, stream)
             stream.goes[0].set()
             await await_until(stream.landed[0], what="the chunk landing")
@@ -1520,7 +1520,7 @@ async def test_a_partial_result_txt_cannot_hold_is_still_delivered_whole(
     """When no chunk reaches result.txt (a full disk, a removed folder), the
     live partial is the only copy of what streamed: it keeps every chunk, and
     a Stop delivers all of it, not just the last chunk."""
-    import kiro_crew.subagent as subagent
+    import aj_crew.subagent as subagent
 
     monkeypatch.setattr(subagent, "write_result_chunk", lambda *_a, **_kw: False)
     chunks = ("alpha ", "beta ", "gamma ")
@@ -1534,7 +1534,7 @@ async def test_a_partial_result_txt_cannot_hold_is_still_delivered_whole(
         return _gen()
 
     mgr = _manager(_mock_sessions(factory))
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("do work")
         assert info is not None
         await _wait_until(lambda: "gamma" in info.streaming_text, "the last chunk")
@@ -1555,7 +1555,7 @@ async def test_the_live_partial_takes_a_chunk_before_its_file_write_starts(
     partial by then, so that Stop still delivers it."""
     import threading
 
-    import kiro_crew.subagent as subagent
+    import aj_crew.subagent as subagent
 
     real_write = subagent.write_result_chunk
     run: dict = {}
@@ -1583,7 +1583,7 @@ async def test_the_live_partial_takes_a_chunk_before_its_file_write_starts(
 
     mgr = _manager(_mock_sessions(factory))
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = mgr.spawn("do work")
             assert info is not None
             run["info"] = info
@@ -1612,8 +1612,8 @@ async def test_a_refused_write_leaves_no_hole_in_result_txt(
     write grows with the answer, so it never runs on the event loop."""
     import threading
 
-    import kiro_crew.subagent as subagent
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.subagent as subagent
+    import aj_crew.subagent_persistence as sp
 
     real_write = subagent.write_result_chunk
     writes: list[str] = []
@@ -1639,7 +1639,7 @@ async def test_a_refused_write_leaves_no_hole_in_result_txt(
         return _gen()
 
     mgr = _manager(_mock_sessions(factory))
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("do work")
         assert info is not None
         await _wait_until(lambda: len(writes) == len(chunks), "the last chunk's write")
@@ -1656,11 +1656,11 @@ async def test_a_textless_whole_answer_leaves_no_result_file():
     """A whole answer with no text (a tool-only run) leaves no result.txt, the
     shape every reader expects of it, and a respawn that finishes so removes
     the interrupted attempt's partial rather than vouching for it."""
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.subagent_persistence as sp
 
     stream = _respawn_stream(())
     mgr = _manager(_mock_sessions(stream.factory))
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info, respawn = await _respawned(mgr, stream)
         await await_until(respawn, what="the respawn finishing")
         await _wait_settled(mgr, info)
@@ -1674,7 +1674,7 @@ async def test_a_textless_whole_answer_leaves_no_result_file():
 async def test_the_result_file_is_written_as_streamed_on_every_platform():
     """``result.txt`` is LF while it streams and after the whole rewrite alike:
     no platform newline translation (a Windows CRLF) in either."""
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.subagent_persistence as sp
 
     lines = ("one\n", "two\r\n", "three\n")
     for stop_reason in (None, STOP_REASON_END_TURN):
@@ -1693,14 +1693,14 @@ async def test_a_transient_run_completes_without_touching_disk(
     and logs no sync warning; its flag lives with its in-memory record."""
     import logging
 
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.subagent_persistence as sp
 
     monkeypatch.setattr(sp, "_SUBAGENTS_DIR", tmp_path / "subagents")
     (tmp_path / "subagents").mkdir()
-    caplog.set_level(logging.WARNING, logger="kiro_crew")
+    caplog.set_level(logging.WARNING, logger="aj_crew")
     factory, _calls = _answer_stream()
     mgr = _manager(_mock_sessions(factory))
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("do work", _memory_mode=mode)
         assert info is not None
         await asyncio.wait_for(mgr._tasks[info.id], _RUN_CEILING)
@@ -1710,7 +1710,7 @@ async def test_a_transient_run_completes_without_touching_disk(
     assert not [
         r
         for r in caplog.records
-        if r.name in ("kiro_crew.atomic_write", "kiro_crew.subagent_persistence")
+        if r.name in ("aj_crew.atomic_write", "aj_crew.subagent_persistence")
         and info.id in r.getMessage()
     ]
 
@@ -1793,7 +1793,7 @@ async def test_stalled_run_yields_its_slot_to_queued_work():
     mgr._spawn_stagger_secs = 0.0  # let the drain admit B the instant A yields
     # build_message echoes the task so the stream can tell A from B.
     mgr._ctx_builder.build_message = MagicMock(side_effect=lambda msg, *a, **k: (msg, None))
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         a = mgr.spawn("A-task")
         b = mgr.spawn("B-task")
         assert a is not None and b is not None
@@ -1826,7 +1826,7 @@ async def test_readmission_refused_surfaces_failed_without_double_release():
         mgr._running_count = mgr._max_concurrent
 
     mgr._drain_queue = MagicMock(side_effect=_hog_drain)
-    with patch("kiro_crew.subagent._RECOVERY_SLOT_WAIT_SECS", 0.0):
+    with patch("aj_crew.subagent._RECOVERY_SLOT_WAIT_SECS", 0.0):
         info = await _spawn_and_wait(mgr)
     assert info.outcome == "failed"
     assert info.stop_class == STOP_CLASS_STALLED
@@ -1858,7 +1858,7 @@ async def test_recovery_defers_to_shutdown_and_reap_markers():
 async def test_blocking_wait_expiry_does_not_fail_the_child():
     """SPEC-ADDENDUM §9: a blocking wait that expires ends the CALLER's wait; the
     child keeps running and is never marked failed / cancelled / collected."""
-    from kiro_crew.mcp_tools.spawn_parts import wave
+    from aj_crew.mcp_tools.spawn_parts import wave
 
     src = Path(wave.__file__).read_text(encoding="utf-8")
     assert '"still_running"' in src
@@ -1962,7 +1962,7 @@ async def test_taskrunner_end_turn_step_passes(tmp_path: Path):
 def test_chat_runner_has_no_private_stop_reason_mapping():
     """chat_runner must not re-derive the class with its own `startswith("error:")`
     or a literal retry budget; it reads the classifier and the shared constant."""
-    import kiro_crew.dashboard.chat_runner as cr
+    import aj_crew.dashboard.chat_runner as cr
 
     runner = Path(cr.__file__)
     turn_files = [*sorted(runner.with_name("chat_turn").glob("*.py")), runner]
@@ -1975,7 +1975,7 @@ def test_chat_runner_has_no_private_stop_reason_mapping():
 
 
 def test_subagent_run_has_no_private_stop_reason_mapping():
-    import kiro_crew.subagent_manager.run as run_mod
+    import aj_crew.subagent_manager.run as run_mod
 
     # run.py binds most of its members from sibling ``run_*`` owners: read the family.
     facade = Path(run_mod.__file__)

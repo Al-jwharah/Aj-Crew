@@ -16,14 +16,14 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from conftest import MockSlackClient
-from kiro_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
-from kiro_crew.shared_crew import admission_entry as entry
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import capabilities, people, turn_gate, wiring
-from kiro_crew.shared_crew.admission import Liveness
-from kiro_crew.shared_crew.attribution import author_meta
-from kiro_crew.shared_crew.containment import ContainmentReport, SliceManager
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
+from aj_crew.shared_crew import admission_entry as entry
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import capabilities, people, turn_gate, wiring
+from aj_crew.shared_crew.admission import Liveness
+from aj_crew.shared_crew.attribution import author_meta
+from aj_crew.shared_crew.containment import ContainmentReport, SliceManager
+from aj_crew.shared_crew.contracts import (
     ActorContext,
     CapabilityState,
     EnforcementLevel,
@@ -31,12 +31,12 @@ from kiro_crew.shared_crew.contracts import (
     Provenance,
     Transport,
 )
-from kiro_crew.shared_crew.identity import tailnet_principal
-from kiro_crew.shared_crew.work_store import WorkStore
-from kiro_crew.taskq import lanes
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.shared_crew.identity import tailnet_principal
+from aj_crew.shared_crew.work_store import WorkStore
+from aj_crew.taskq import lanes
+from aj_crew.taskq.store import TaskStore
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import async_wait_until, await_until
 
 ALICE = tailnet_principal("alice@example.com", "laptop.tail.ts.net", Provenance.TAILSCALE_SERVE)
 BOB = tailnet_principal("bob@example.com", "phone.tail.ts.net", Provenance.TAILSCALE_SERVE)
@@ -103,8 +103,8 @@ def service(tmp_path, monkeypatch):
     monkeypatch.setattr(ag, "current_service", _current)
     monkeypatch.setattr(ag, "_SERVICE", svc)
     monkeypatch.setattr(lanes, "_LANE_RESOLVER", svc.budget_for_session)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_slack.slot_is_live", lambda _s, _slot: True)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_utils.effective_session_key", lambda s: s.key)
+    monkeypatch.setattr("aj_crew.dashboard.chat_slack.slot_is_live", lambda _s, _slot: True)
+    monkeypatch.setattr("aj_crew.dashboard.chat_utils.effective_session_key", lambda s: s.key)
     yield svc
     entry._PENDING_SLOTS.clear()
 
@@ -323,9 +323,9 @@ async def test_slack_message_reenters_its_handler_once_inside_admission(service,
 
 @pytest.fixture
 def native_slack(monkeypatch):
-    from kiro_crew import safety_override as overrides
-    from kiro_crew import safety_override_grant
-    from kiro_crew.slack import handler
+    from aj_crew import safety_override as overrides
+    from aj_crew import safety_override_grant
+    from aj_crew.slack import handler
 
     grant = overrides.SafetyOverride()
     monkeypatch.setattr(overrides, "sel", Mock())
@@ -335,7 +335,7 @@ def native_slack(monkeypatch):
     monkeypatch.setattr(handler, "safety_override", lambda: grant)
     monkeypatch.setattr(handler, "_owner_id", "UOWNER")
     monkeypatch.setattr(handler, "_dashboard_state", None)
-    monkeypatch.setattr(handler, "_cached_default_agent", "kirocrew")
+    monkeypatch.setattr(handler, "_cached_default_agent", "ajcrew")
     monkeypatch.setattr(handler, "_thread_agents", {})
     monkeypatch.setattr(handler, "_hydrate_thread_overrides", AsyncMock())
     monkeypatch.setattr(handler, "_hydrate_conv_header", AsyncMock())

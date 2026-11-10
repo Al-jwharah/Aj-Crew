@@ -10,30 +10,30 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_runner_coverage_helpers import _slot, _state
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import (
+from aj_crew.dashboard import (
     chat_handlers,
     chat_runner,
     chat_utils_completion,
     responsive_chat,
 )
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard.chat_utils import (
     effective_session_key,
     teardown_hold_active,
 )
-from kiro_crew.dashboard.chat_utils_completion import SYNTHESIS_CLEAR, chat_done_payload
-from kiro_crew.dashboard.chat_utils_injected_rows import (
+from aj_crew.dashboard.chat_utils_completion import SYNTHESIS_CLEAR, chat_done_payload
+from aj_crew.dashboard.chat_utils_injected_rows import (
     COMPOSER_SEND_META,
     CRON_NOTIFICATION_KIND,
 )
-from kiro_crew.start_priority import StartPriority
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.start_priority import StartPriority
+from aj_crew.testing.wait import async_wait_until, await_until
 
 GAVE_UP = "Could not drop the previous conversation"
 
 
 @pytest.fixture
 def fresh(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     return state, state.get_or_create_slot("s1")
 
@@ -248,7 +248,7 @@ class TestSynthesisConsultsTheHold:
         self, tmp_path, monkeypatch
     ):
         """Pause all holds the session: its armed synthesis waits for Resume all."""
-        from kiro_crew import crew_pause
+        from aj_crew import crew_pause
 
         monkeypatch.setattr(crew_pause, "holds_slot", lambda sl: True)
         state, slot = self._setup(tmp_path)
@@ -264,7 +264,7 @@ class TestSynthesisConsultsTheHold:
         self, tmp_path, monkeypatch
     ):
         """The recheck timer reaches `_run_pending_synthesis` directly: it holds there too."""
-        from kiro_crew import crew_pause
+        from aj_crew import crew_pause
 
         monkeypatch.setattr(crew_pause, "holds_slot", lambda sl: True)
         state, slot = self._setup(tmp_path)
@@ -279,7 +279,7 @@ class TestSynthesisConsultsTheHold:
         self, tmp_path, monkeypatch
     ):
         """The drain awaits before it refuses: a pause published then holds synthesis too."""
-        from kiro_crew import crew_pause
+        from aj_crew import crew_pause
 
         paused = {"on": False}
         monkeypatch.setattr(crew_pause, "holds_slot", lambda sl: paused["on"])

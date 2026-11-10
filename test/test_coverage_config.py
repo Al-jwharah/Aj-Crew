@@ -1,7 +1,7 @@
 """The coverage omit globs must swallow phantom fixture paths, not real source.
 
 Several tests in ``test_agent_home_isolation.py`` monkeypatch
-``kiro_crew.agent.__file__`` to a fabricated checkout under pytest's tmp dir.
+``aj_crew.agent.__file__`` to a fabricated checkout under pytest's tmp dir.
 Nothing is ever written there, but the phantom path can land in the coverage
 data, and then ``coverage xml`` / ``coverage report`` in the Coverage Combine
 job aborts with ``No source for code: .../agent.py``. That step runs under
@@ -24,35 +24,35 @@ import pytest
 SETUP_CFG = Path(__file__).resolve().parents[1] / "setup.cfg"
 
 # Phantom paths: what the isolation fixtures fabricate. Both directory names
-# really occur -- kirocrew-wt-example/ via _make_linked_worktree() and a plain
-# KiroCrew/ clone dir in test_does_not_decline_from_an_ordinary_clone.
+# really occur -- ajcrew-wt-example/ via _make_linked_worktree() and a plain
+# AjCrew/ clone dir in test_does_not_decline_from_an_ordinary_clone.
 PHANTOM_PATHS = [
     pytest.param(
         "/tmp/pytest-of-runner/pytest-0/popen-gw0/"
-        "test_does_not_decline_from_an_0/KiroCrew/src/kiro_crew/agent.py",
+        "test_does_not_decline_from_an_0/AjCrew/src/aj_crew/agent.py",
         id="ci-ordinary-clone",
     ),
     pytest.param(
         "/tmp/pytest-of-runner/pytest-0/popen-gw0/"
-        "test_declines_0/kirocrew-wt-example/src/kiro_crew/agent.py",
+        "test_declines_0/ajcrew-wt-example/src/aj_crew/agent.py",
         id="ci-linked-worktree",
     ),
     pytest.param(
         "/private/var/folders/ab/xyz/T/pytest-of-dev/pytest-3/"
-        "test_does_not_decline_from_an_0/KiroCrew/src/kiro_crew/agent.py",
+        "test_does_not_decline_from_an_0/AjCrew/src/aj_crew/agent.py",
         id="macos-local-tmp",
     ),
 ]
 
 # Real source that must stay measured. The CI path is the trap: the repo is
-# checked out at /home/runner/work/KiroCrew/KiroCrew, so a "*/KiroCrew/*" glob
+# checked out at /home/runner/work/AjCrew/AjCrew, so a "*/AjCrew/*" glob
 # would omit the entire package and turn the coverage gate green on nothing.
 REAL_SOURCE_PATHS = [
     pytest.param(
-        "/home/runner/work/KiroCrew/KiroCrew/src/kiro_crew/agent.py",
+        "/home/runner/work/AjCrew/AjCrew/src/aj_crew/agent.py",
         id="ci-checkout",
     ),
-    pytest.param("/home/dev/src/KiroCrew/src/kiro_crew/agent.py", id="local-checkout"),
+    pytest.param("/home/dev/src/AjCrew/src/aj_crew/agent.py", id="local-checkout"),
 ]
 
 OMIT_SECTIONS = ["coverage:run", "coverage:report"]

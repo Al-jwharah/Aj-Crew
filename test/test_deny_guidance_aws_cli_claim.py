@@ -5,7 +5,7 @@ the agent that the credential-file block leaves `aws` alone. That holds for the
 rule that fired and nothing wider: the builtin catalog itself refuses some `aws`
 calls (an upload, a `delete-*`), and an enterprise overlay can deny `aws`
 outright, so an unscoped promise is false on a real host and walks the agent into
-the second wall :mod:`kiro_crew.deny_guidance` calls worse than silence.
+the second wall :mod:`aj_crew.deny_guidance` calls worse than silence.
 """
 
 from __future__ import annotations
@@ -13,9 +13,9 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from kiro_crew import deny_guidance as dg
+from aj_crew import deny_guidance as dg
 
-_ROOT = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+_ROOT = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 #: "AWS CLI calls/commands ... not blocked" with no rule named after it.
 _UNSCOPED = re.compile(r"aws cli (?:calls|commands)[^.]*not blocked(?! by th)", re.IGNORECASE)

@@ -32,7 +32,7 @@ const params = new URLSearchParams(location.search)
 // legible in a still. A dark page behind a dark scrim shows nothing.
 const theme = params.get('theme') || 'light'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 /** A stand-in "screenshot" with enough structure that a shrink or a translate is
  *  visible at a glance, and enough contrast to read against the dimmed backdrop. */

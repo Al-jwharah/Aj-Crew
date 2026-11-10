@@ -16,16 +16,16 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_continue
-from kiro_crew.dashboard.chat_runner import (
+from aj_crew.dashboard.chat_handlers import api_chat_slot_continue
+from aj_crew.dashboard.chat_runner import (
     MEMORY_PREPARATION_PARKED_TEXT,
     _run_chat,
     _start_next_queued_turn,
 )
-from kiro_crew.dashboard.chat_utils import CRON_NOTIFICATION_KIND
-from kiro_crew.dashboard.state import CRON_NOTIFY_PREFIX
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard.chat_utils import CRON_NOTIFICATION_KIND
+from aj_crew.dashboard.state import CRON_NOTIFY_PREFIX
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # Short enough to keep the suite fast, long enough that the "after the grace
 # period" checks below really are after it.
@@ -33,8 +33,8 @@ _GRACE = 0.2
 
 
 def _state_with_pending_memory(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.memory_startup.MEMORY_ADMISSION_WAIT_SECONDS", _GRACE)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.memory_startup.MEMORY_ADMISSION_WAIT_SECONDS", _GRACE)
     state = _make_state(tmp_path)
     state.context_builder = None
     state.consolidator = None
@@ -71,7 +71,7 @@ def _hold_first_admission(monkeypatch) -> tuple[asyncio.Event, asyncio.Event]:
     grace period when the test chooses, so a slow host cannot run it out. Returns
     ``(at_seam, release)``.
     """
-    import kiro_crew.memory_startup as memory_startup
+    import aj_crew.memory_startup as memory_startup
 
     real = memory_startup.wait_for_memory_preparation
     at_seam = asyncio.Event()
@@ -249,7 +249,7 @@ class _SetEvent:
 
 
 def _stopping() -> None:
-    from kiro_crew.memory_startup import MemoryStartupUnavailable
+    from aj_crew.memory_startup import MemoryStartupUnavailable
 
     raise MemoryStartupUnavailable("Memory startup is stopping. Retry after restart.")
 
@@ -268,9 +268,9 @@ async def test_preparation_ending_without_ready_memory_keeps_the_queue(
     try:
         await _start_next_queued_turn(state, slot)
         if ending == "shutdown":
-            monkeypatch.setattr("kiro_crew.dashboard.chat_runner.shutdown_event", _SetEvent())
+            monkeypatch.setattr("aj_crew.dashboard.chat_runner.shutdown_event", _SetEvent())
         else:
-            monkeypatch.setattr("kiro_crew.memory_startup.require_memory_prepared", _stopping)
+            monkeypatch.setattr("aj_crew.memory_startup.require_memory_prepared", _stopping)
         _finish_preparation(state)
         await _settle(state, slot)
     finally:

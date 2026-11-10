@@ -3,7 +3,7 @@
 ``age=<secs>s`` comes from ``/proc/<pid>/stat`` field 22 and ``os.sysconf``'s tick
 rate, so a small age under a re-appearing pid marks a recycled pid, with no state file.
 The field is never omitted: without ``/proc`` (Windows) it prints ``age=?s``. Tests run
-over a fake ``/proc`` via ``KIROCREW_PROBE_PROC_ROOT``.
+over a fake ``/proc`` via ``AJCREW_PROBE_PROC_ROOT``.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ _POSIX_PROC_ONLY = pytest.mark.skipif(
 SKILL_DIR = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
     / "pipeline-conductor"
 )
@@ -63,8 +63,8 @@ def _fake_proc_with_banned_pytest(
 
 
 def _run(tmp_path, monkeypatch, fleet_root: Path) -> str:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew"))
-    monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(tmp_path / "proc"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew"))
+    monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(tmp_path / "proc"))
     mod = load_skill_script(LOAD_NAME, SKILL_DIR / "scripts" / "fleet_probe.py")
     cfg_path = tmp_path / "probe-config.json"
     cfg_path.write_text(
@@ -201,8 +201,8 @@ class TestBannedLineCarriesAge:
             return base if calls["n"] == 1 else (None if base is None else base + 1)
 
         monkeypatch.setattr(mod, "_proc_starttime_ticks", flipping)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew"))
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(tmp_path / "proc"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew"))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(tmp_path / "proc"))
         cfg = tmp_path / "probe-config.json"
         cfg.write_text(
             json.dumps({"sessions": [], "fleet_worktrees": [str(fleet_root)]}), encoding="utf-8"

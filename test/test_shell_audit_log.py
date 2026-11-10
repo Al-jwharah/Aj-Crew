@@ -22,15 +22,15 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from kiro_crew import shell_audit_log
-from kiro_crew.shell_audit_log import (
+from aj_crew import shell_audit_log
+from aj_crew.shell_audit_log import (
     SHELL_AUDIT_LOG_MAX_BYTES,
     SHELL_AUDIT_LOG_NAME,
     SHELL_AUDIT_LOG_WARN_INTERVAL_SECS,
     rotate_shell_audit_log,
     shell_audit_log_path,
 )
-from kiro_crew.testing.wait import finished
+from aj_crew.testing.wait import finished
 
 # One record in the shape the bundled hook writes: a single line -- a UTC stamp,
 # then " BASH: ", then the hook-event payload kiro-cli hands the hook on stdin
@@ -135,7 +135,7 @@ class TestRotateShellAuditLog:
         body = _fill(live, SHELL_AUDIT_LOG_MAX_BYTES)
         (tmp_path / (SHELL_AUDIT_LOG_NAME + ".1")).mkdir()
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.shell_audit_log"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.shell_audit_log"):
             assert rotate_shell_audit_log(tmp_path) is False
 
         assert live.read_bytes() == body
@@ -168,7 +168,7 @@ class TestRotateShellAuditLog:
         def _warnings() -> list[logging.LogRecord]:
             return [r for r in caplog.records if r.levelno == logging.WARNING]
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.shell_audit_log"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.shell_audit_log"):
             assert rotate_shell_audit_log(tmp_path) is False
             clock[0] += 300.0  # the next tick, well inside the interval
             assert rotate_shell_audit_log(tmp_path) is False
@@ -186,7 +186,7 @@ class TestRotateShellAuditLog:
         self, tmp_path: Path, caplog: pytest.LogCaptureFixture
     ) -> None:
         _fill(tmp_path / SHELL_AUDIT_LOG_NAME, 256)
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.shell_audit_log"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.shell_audit_log"):
             assert rotate_shell_audit_log(tmp_path) is False
         assert not caplog.records, "a file under the cap is the quiet, ordinary case"
 
@@ -249,8 +249,8 @@ _OTHER_TICK_STEPS = (
 
 
 def _service(shutdown: _Shutdown, rotate: Any, pool: ThreadPoolExecutor) -> Any:
-    from kiro_crew.session_cleanup import CleanupDeps, CleanupState, SessionCleanup
-    from kiro_crew.watchdog import SessionWatchdog
+    from aj_crew.session_cleanup import CleanupDeps, CleanupState, SessionCleanup
+    from aj_crew.watchdog import SessionWatchdog
 
     deps = CleanupDeps(
         logger=logging.getLogger("test.shell_audit_log"),
@@ -302,7 +302,7 @@ async def test_every_cleanup_tick_rotates_the_audit_log_off_the_loop() -> None:
     the data home is agent-writable, so its stat and rename never run on the
     event loop.
     """
-    from kiro_crew.session_cleanup import SessionCleanup
+    from aj_crew.session_cleanup import SessionCleanup
 
     done = asyncio.Event()
     ran_on: list[int] = []
@@ -337,7 +337,7 @@ async def test_every_cleanup_tick_rotates_the_audit_log_off_the_loop() -> None:
 @pytest.mark.asyncio
 async def test_a_rotation_that_raises_does_not_end_the_tick() -> None:
     """The step is fail-open like its siblings: a raise is logged, the tick goes on."""
-    from kiro_crew.session_cleanup import SessionCleanup
+    from aj_crew.session_cleanup import SessionCleanup
 
     done = asyncio.Event()
     calls = 0
@@ -370,11 +370,11 @@ def test_the_real_wiring_rotates_the_data_homes_audit_log() -> None:
     """``SessionManager._cleanup_deps`` points the sweep at the resolved data home.
 
     Drives the forwarding callable the real deps carry against the isolated
-    ``KIROCREW_HOME`` the suite pins, so the path and the cap are the shipped
+    ``AJCREW_HOME`` the suite pins, so the path and the cap are the shipped
     ones end to end rather than a fake's.
     """
-    from kiro_crew.config.paths import config_dir
-    from kiro_crew.session import SessionManager
+    from aj_crew.config.paths import config_dir
+    from aj_crew.session import SessionManager
 
     home = config_dir()
     live = home / SHELL_AUDIT_LOG_NAME

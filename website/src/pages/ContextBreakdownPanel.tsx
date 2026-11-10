@@ -338,7 +338,7 @@ function StackedArea({
     count === 1 ? [pick(turns[0]), pick(turns[0])] : turns.map(pick)
 
   // Columns with no reported total break the rest band and the top line into runs,
-  // so a missing total reads as a gap, never as a drop to Kiro Crew's own blocks.
+  // so a missing total reads as a gap, never as a drop to Aj Crew's own blocks.
   const missingAt = count > 1 ? turns.map(t => !!t.missing) : [false, false]
   const runs: number[][] = []
   missingAt.forEach((gap, i) => {
@@ -371,7 +371,7 @@ function StackedArea({
     return { cat, polygons, crewTop }
   })
   const totalLines = hasGap ? runs.map(run => pts(runXs(run), runVals(run, bottom)).join(' ')) : [pts(polyXs, bottom).join(' ')]
-  // The hatched columns, from Kiro Crew's own blocks up to the top of the plot.
+  // The hatched columns, from Aj Crew's own blocks up to the top of the plot.
   const crewTops = bands.find(b => b.cat === 'loop')?.crewTop ?? bottom
   const hatches = missingAt
     .map((gap, i) => (gap ? i : -1))
@@ -616,7 +616,7 @@ function BlockList({ turn }: { turn: LatestTurn }) {
   // The heading counts every block sent, before the every-turn members are grouped
   // into one list row, and the ones past the list's cap too.
   const sent = Object.values(turn.blocks ?? {}).filter(chars => chars > 0).length + omitted
-  // The same disclosure glyph as the Kiro Crew group row: right while shut, down open.
+  // The same disclosure glyph as the Aj Crew group row: right while shut, down open.
   const Chevron = open ? ChevronDown : ChevronRight
   return (
     <div className="mt-3 border-t border-border pt-2" data-testid="turn-blocks">

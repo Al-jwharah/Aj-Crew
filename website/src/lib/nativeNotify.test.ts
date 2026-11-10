@@ -131,11 +131,11 @@ describe('nativeNotify', () => {
     it('embedded: relays the exact envelope to the parent and constructs nothing', () => {
       vi.mocked(isEmbeddedPane).mockReturnValue(true)
       stubNotification('denied')
-      postNativeNotification('Approval required', { body: 'Bash', tag: 'kirocrew-approval', silent: true })
+      postNativeNotification('Approval required', { body: 'Bash', tag: 'ajcrew-approval', silent: true })
       expect(CONSTRUCTED).toHaveLength(0)
       expect(postMessage).toHaveBeenCalledTimes(1)
       expect(postMessage).toHaveBeenCalledWith(
-        { type: 'mc-native-notify', v: 1, title: 'Approval required', body: 'Bash', tag: 'kirocrew-approval', silent: true },
+        { type: 'mc-native-notify', v: 1, title: 'Approval required', body: 'Bash', tag: 'ajcrew-approval', silent: true },
         HUB,
       )
     })
@@ -151,7 +151,7 @@ describe('nativeNotify', () => {
 
     it('embedded: relays silent: false verbatim (chat-done toast without a pending question)', () => {
       vi.mocked(isEmbeddedPane).mockReturnValue(true)
-      postNativeNotification('Done', { body: 'Response ready', tag: 'kirocrew-chat-done:s1', silent: false })
+      postNativeNotification('Done', { body: 'Response ready', tag: 'ajcrew-chat-done:s1', silent: false })
       expect(postMessage.mock.calls[0][0]).toMatchObject({ silent: false })
     })
 
@@ -189,10 +189,10 @@ describe('nativeNotify', () => {
 
     it('top-level: constructs a Notification with the given options and relays nothing', () => {
       stubNotification('granted')
-      postNativeNotification('Approval required', { body: 'Bash', tag: 'kirocrew-approval', silent: true })
+      postNativeNotification('Approval required', { body: 'Bash', tag: 'ajcrew-approval', silent: true })
       expect(postMessage).not.toHaveBeenCalled()
       expect(CONSTRUCTED).toEqual([
-        { title: 'Approval required', options: { body: 'Bash', tag: 'kirocrew-approval', silent: true } },
+        { title: 'Approval required', options: { body: 'Bash', tag: 'ajcrew-approval', silent: true } },
       ])
     })
 
@@ -242,13 +242,13 @@ describe('nativeNotify', () => {
       stubNotification('granted')
       const showNotification = vi.fn().mockResolvedValue(undefined)
       stubServiceWorker(Promise.resolve({ showNotification }))
-      postNativeNotification('Approval required', { body: 'Bash', tag: 'kirocrew-approval', silent: true })
+      postNativeNotification('Approval required', { body: 'Bash', tag: 'ajcrew-approval', silent: true })
       // ready is a microtask; let it resolve
       await Promise.resolve()
       await Promise.resolve()
       expect(showNotification).toHaveBeenCalledWith('Approval required', {
         body: 'Bash',
-        tag: 'kirocrew-approval',
+        tag: 'ajcrew-approval',
         silent: true,
       })
       expect(CONSTRUCTED).toHaveLength(0)
@@ -260,12 +260,12 @@ describe('nativeNotify', () => {
         stubNotification('granted')
         const showNotification = vi.fn().mockResolvedValue(undefined)
         stubServiceWorker(Promise.resolve({ showNotification }))
-        postNativeNotification('Approval required', { body: 'Bash', tag: 'kirocrew-approval', silent: true })
+        postNativeNotification('Approval required', { body: 'Bash', tag: 'ajcrew-approval', silent: true })
         await Promise.resolve()
         await Promise.resolve()
         expect(showNotification).not.toHaveBeenCalled()
         expect(CONSTRUCTED).toEqual([
-          { title: 'Approval required', options: { body: 'Bash', tag: 'kirocrew-approval', silent: true } },
+          { title: 'Approval required', options: { body: 'Bash', tag: 'ajcrew-approval', silent: true } },
         ])
       } finally {
         electron.isElectron = false
@@ -323,13 +323,13 @@ describe('nativeNotify', () => {
   })
 
   describe('postRelayedNativeNotification', () => {
-    const note = { type: 'mc-native-notify' as const, v: 1 as const, title: 'Approval required', body: 'Bash', tag: 'kirocrew-approval', silent: true }
+    const note = { type: 'mc-native-notify' as const, v: 1 as const, title: 'Approval required', body: 'Bash', tag: 'ajcrew-approval', silent: true }
 
     it('prefixes the title with the instance name and namespaces the tag per instance', () => {
       stubNotification('granted')
       expect(postRelayedNativeNotification('Zzq One', 'cd-1', note)).toBe(true)
       expect(CONSTRUCTED).toEqual([
-        { title: 'Zzq One: Approval required', options: { body: 'Bash', tag: 'cd-1:kirocrew-approval', silent: true } },
+        { title: 'Zzq One: Approval required', options: { body: 'Bash', tag: 'cd-1:ajcrew-approval', silent: true } },
       ])
     })
 

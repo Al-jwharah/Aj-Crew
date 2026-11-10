@@ -2,8 +2,8 @@
 
 ``claim_preflight.py`` and ``coverage_filter.py`` validate an ``owner/repo`` pair
 before handing it to ``gh``. Each spells GitHub's limits itself because the
-scripts run as bare files without ``kiro_crew`` on the import path, so these
-tests also pin the spellings to the constants ``kiro_crew.github_runner``
+scripts run as bare files without ``aj_crew`` on the import path, so these
+tests also pin the spellings to the constants ``aj_crew.github_runner``
 publishes.
 """
 
@@ -14,12 +14,12 @@ from pathlib import Path
 import pytest
 from skill_script_helpers import load_skill_script
 
-from kiro_crew import github_runner
+from aj_crew import github_runner
 
 SCRIPTS = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
     / "pipeline-conductor"
     / "scripts"

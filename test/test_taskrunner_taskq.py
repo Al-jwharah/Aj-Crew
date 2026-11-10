@@ -18,17 +18,17 @@ import pytest
 from overload_fakes import Clock, open_task_store, settle_dependency_park, settle_store_writes
 from test_taskrunner import _make_mock_sessions
 
-from kiro_crew.acp.types import STOP_REASON_END_TURN, STOP_REASON_TOOL_STALL
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.recovery.ladder import RecoveryLadder
-from kiro_crew.taskq import model as m
-from kiro_crew.taskq.adapters import runner as r
-from kiro_crew.taskq.dependency import KIND_RATE_LIMITED, SIGNAL_ATTR, DependencySignal
-from kiro_crew.taskq.reconcile import reconcile_on_boot
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.taskrunner import Step, StepStatus, TaskRun, TaskRunner
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.types import STOP_REASON_END_TURN, STOP_REASON_TOOL_STALL
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+from aj_crew.providers.base import LLMEvent
+from aj_crew.recovery.ladder import RecoveryLadder
+from aj_crew.taskq import model as m
+from aj_crew.taskq.adapters import runner as r
+from aj_crew.taskq.dependency import KIND_RATE_LIMITED, SIGNAL_ATTR, DependencySignal
+from aj_crew.taskq.reconcile import reconcile_on_boot
+from aj_crew.taskq.store import TaskStore
+from aj_crew.taskrunner import Step, StepStatus, TaskRun, TaskRunner
+from aj_crew.testing.wait import await_until
 
 _STALL_EVIDENCE = "verdict=unknown; idle_secs=5400; tool=execute_bash; evidence=no result frame"
 
@@ -100,7 +100,7 @@ def _stalled(text: str = "half") -> list[LLMEvent]:
 @pytest.fixture(autouse=True)
 def _no_self_review(monkeypatch):
     # The post-step self-review is its own turn; these tests count STEP turns.
-    monkeypatch.setattr("kiro_crew.task_executor.self_review", AsyncMock(return_value=True))
+    monkeypatch.setattr("aj_crew.task_executor.self_review", AsyncMock(return_value=True))
 
 
 def _runner(tmp_path: Path, provider: MagicMock, admission: r.RunnerAdmission) -> TaskRunner:
@@ -137,7 +137,7 @@ async def test_taskq_retains_only_persistent_run_and_step_bodies(
     run.name = "session task name sentinel"
     if mode is not None:
         run.execution_context = ExecutionContext(
-            None, MemoryStoreRef("default"), "template", "kirocrew", mode
+            None, MemoryStoreRef("default"), "template", "ajcrew", mode
         )
     runner._runs[run.task_id] = run
 
@@ -184,7 +184,7 @@ async def test_restricted_and_persistent_steps_share_the_live_lane(
     persistent = _run(tmp_path, persistent_step, task_id="persistent")
     restricted = _run(tmp_path, restricted_step, task_id="restricted")
     restricted.execution_context = ExecutionContext(
-        None, MemoryStoreRef("default"), "template", "kirocrew", mode
+        None, MemoryStoreRef("default"), "template", "ajcrew", mode
     )
     await runner._taskq_begin_run(persistent)
     await runner._taskq_begin_run(restricted)
@@ -216,7 +216,7 @@ async def test_restricted_step_cancelled_before_lane_admission_leaves_no_row(
     step = Step(index=1, title="restricted title", description="restricted instructions")
     run = _run(tmp_path, step)
     run.execution_context = ExecutionContext(
-        None, MemoryStoreRef("default"), "template", "kirocrew", mode
+        None, MemoryStoreRef("default"), "template", "ajcrew", mode
     )
     await runner._taskq_begin_run(run)
     await admission.lane.acquire("another-step")
@@ -496,10 +496,10 @@ async def test_restart_mid_step_resumes_from_checkpoint(
     s2 = Step(index=2, title="two", description="d2")
     run = _run(tmp_path, s1, s2)
     run.status = "paused"  # what _load_runs assigns to a run cut off by a crash
-    run.branch_name = "kirocrew/r1"  # git-coordinated: the checkpoint is real
+    run.branch_name = "ajcrew/r1"  # git-coordinated: the checkpoint is real
     runner._runs["r1"] = run
     monkeypatch.setattr(runner, "_ensure_resumable_workspace", AsyncMock(return_value=True))
-    monkeypatch.setattr("kiro_crew.taskrunner.git_coord.finalize", AsyncMock())
+    monkeypatch.setattr("aj_crew.taskrunner.git_coord.finalize", AsyncMock())
     monkeypatch.setattr(runner, "_apersist_runs", AsyncMock())
 
     report = await runner.adopt_task_rows()  # joins the sweep attach started
@@ -771,7 +771,7 @@ async def test_persistent_stall_recovers_through_the_ladder_then_fails_with_part
         clock.advance(secs)
         await asyncio.sleep(0)
 
-    monkeypatch.setattr("kiro_crew.task_executor._recovery_delay", _fake_delay)
+    monkeypatch.setattr("aj_crew.task_executor._recovery_delay", _fake_delay)
     adm = _admission(store, clock)
     provider = _provider(lambda n, msg: _stalled())
     runner = _runner(tmp_path, provider, adm)
@@ -803,7 +803,7 @@ async def test_persistent_stall_recovers_through_the_ladder_then_fails_with_part
 async def test_stall_then_success_passes_after_one_recovery(
     tmp_path: Path, store: TaskStore, clock: Clock, monkeypatch
 ) -> None:
-    monkeypatch.setattr("kiro_crew.task_executor._recovery_delay", AsyncMock())
+    monkeypatch.setattr("aj_crew.task_executor._recovery_delay", AsyncMock())
     adm = _admission(store, clock)
     provider = _provider(lambda n, msg: _stalled() if n == 1 else _done())
     runner = _runner(tmp_path, provider, adm)
@@ -907,7 +907,7 @@ async def test_run_and_step_admission_stay_off_the_loop(
     outside this pin -- what is pinned here is the admission boundary the runner
     owns.
     """
-    from kiro_crew.taskq import store as store_mod
+    from aj_crew.taskq import store as store_mod
 
     adm = _admission(store, clock, cap=1)
     provider = _provider(lambda n, msg: _done())
@@ -947,9 +947,9 @@ async def test_the_step_body_keeps_its_store_writes_off_the_loop(
     append once the step has durably passed. Armed, any one of them left on the
     loop raises instead of shipping.
     """
-    from kiro_crew.taskq import store as store_mod
+    from aj_crew.taskq import store as store_mod
 
-    monkeypatch.setattr("kiro_crew.task_executor._recovery_delay", AsyncMock())
+    monkeypatch.setattr("aj_crew.task_executor._recovery_delay", AsyncMock())
     adm = _admission(store, clock)
     # A persisted, not-yet-consumed operator answer on the row the step re-adopts.
     seeded = adm.accept(kind=m.KIND_TASKRUNNER_STEP, task_id="taskrunner:r1:task1")
@@ -999,7 +999,7 @@ async def test_a_dependency_wake_writes_running_off_the_loop(
     driven here by ``adm.tick()`` -- the test's own synchronous store I/O, which
     in production runs through the monitoring loop's off-loop tick.
     """
-    from kiro_crew.taskq import store as store_mod
+    from aj_crew.taskq import store as store_mod
 
     adm = _admission(store, clock)
     raised = asyncio.Event()
@@ -1180,7 +1180,7 @@ async def test_a_lost_run_row_mark_keeps_the_run_and_still_settles_the_row(
         step = Step(index=1, title="one", description="d1")
         run = _run(tmp_path, step)
 
-        with caplog.at_level("WARNING", logger="kiro_crew.taskrunner"):
+        with caplog.at_level("WARNING", logger="aj_crew.taskrunner"):
             await runner._taskq_begin_run(run)
 
         assert "r1" in runner._run_handles

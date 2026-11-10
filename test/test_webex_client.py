@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.webex.client (WebexClient, low-level layer)."""
+"""Tests for aj_crew.webex.client (WebexClient, low-level layer)."""
 
 from __future__ import annotations
 
@@ -12,9 +12,9 @@ from typing import Any
 import aiohttp
 import pytest
 
-from kiro_crew.messaging.split import chunk_utf8_bytes
-from kiro_crew.webex import client as webex_client
-from kiro_crew.webex.client import (
+from aj_crew.messaging.split import chunk_utf8_bytes
+from aj_crew.webex import client as webex_client
+from aj_crew.webex.client import (
     WEBEX_MAX_TEXT,
     WebexClient,
     WebexInbound,
@@ -637,7 +637,7 @@ class TestRedeliveryHandling:
     async def test_the_dedup_memory_is_bounded(self, monkeypatch: pytest.MonkeyPatch) -> None:
         # An unbounded set on a long-lived gateway is a leak; only the recent
         # window can plausibly be redelivered.
-        monkeypatch.setattr("kiro_crew.webex.client._DEDUP_WINDOW", 4)
+        monkeypatch.setattr("aj_crew.webex.client._DEDUP_WINDOW", 4)
         c = _client()
         self._wired(monkeypatch, c)
 
@@ -657,21 +657,21 @@ class TestClusterRouting:
     """
 
     def test_a_cluster_round_trips_through_the_id(self) -> None:
-        from kiro_crew.webex.client import cluster_of, hydra_id
+        from aj_crew.webex.client import cluster_of, hydra_id
 
         assert cluster_of(hydra_id("abc", "MESSAGE", "eu")) == "eu"
         assert cluster_of(hydra_id("abc", "MESSAGE")) == "us"
 
     @pytest.mark.parametrize("bad", ["", "not-base64!!", "aGVsbG8"])
     def test_a_non_hydra_value_yields_no_cluster(self, bad: str) -> None:
-        from kiro_crew.webex.client import cluster_of
+        from aj_crew.webex.client import cluster_of
 
         assert cluster_of(bad) == ""
 
     def test_the_cluster_is_learned_from_the_activity_target(self) -> None:
         # The target's globalId is issued by the org's own conversation service,
         # so it names the right cluster where a synthesised "us" would not.
-        from kiro_crew.webex.client import cluster_of, hydra_id
+        from aj_crew.webex.client import cluster_of, hydra_id
 
         c = _client()
         activity = {"target": {"globalId": hydra_id("room-1", "ROOM", "eu")}}
@@ -682,7 +682,7 @@ class TestClusterRouting:
         assert cluster_of(c._public_id({}, "msg-1", "MESSAGE")) == "eu"
 
     def test_a_frame_with_no_target_keeps_the_default(self) -> None:
-        from kiro_crew.webex.client import cluster_of
+        from aj_crew.webex.client import cluster_of
 
         c = _client()
         assert cluster_of(c._public_id({}, "msg-1", "MESSAGE")) == "us"
@@ -1293,7 +1293,7 @@ class TestCardActionHydration:
 
         async def _api(_method: str, path: str, _payload, **_kw):
             if path.startswith("/attachment/actions/"):
-                return {"inputs": {"kirocrew_kind": "options"}, "roomId": "R1", "personId": "P1"}
+                return {"inputs": {"ajcrew_kind": "options"}, "roomId": "R1", "personId": "P1"}
             if path.startswith("/people/"):
                 return {"emails": ["kyle@example.com"]}
             if path.startswith("/rooms/"):
@@ -1312,7 +1312,7 @@ class TestCardActionHydration:
         await asyncio.gather(*c._handler_tasks)
 
         assert len(received) == 1
-        assert received[0].card_inputs == {"kirocrew_kind": "options"}
+        assert received[0].card_inputs == {"ajcrew_kind": "options"}
         # The press envelope carries the room type and the card's thread, so no
         # reply path needs to special-case it.
         assert (received[0].room_type, received[0].parent_id) == ("direct", "T1")
@@ -1463,7 +1463,7 @@ class TestReadLoopFrameDispatch:
             + [aiohttp.WSMessage(aiohttp.WSMsgType.BINARY, json.dumps(good).encode("utf-8"), None)],
         )
 
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.webex.client"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.webex.client"):
             await c._connect_and_serve()
 
         # The loop survived the malformed frames and delivered the valid one.
@@ -1523,7 +1523,7 @@ class TestReadLoopFrameDispatch:
             aiohttp.WSMessage(aiohttp.WSMsgType.TEXT, f"€€€ {text_secret}", None),
         ]
 
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.webex.client"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.webex.client"):
             self._serve(monkeypatch, c, bad)
             await c._connect_and_serve()
             # Second connection lifecycle: the WARNING must re-arm.
@@ -1574,7 +1574,7 @@ class TestReadLoopFrameDispatch:
             ],
         )
 
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.webex.client"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.webex.client"):
             await c._connect_and_serve()
 
         levels = [
@@ -1614,7 +1614,7 @@ class TestReadLoopFrameDispatch:
 
         monkeypatch.setattr(c, "_handle_frame", boom_then_ok)
 
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.webex.client"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.webex.client"):
             await c._connect_and_serve()
 
         # The loop survived and delivered the second frame.

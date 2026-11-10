@@ -14,8 +14,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import api_sessions, api_sessions_search
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard.handlers import api_sessions, api_sessions_search
+from aj_crew.history import ConversationLog
 
 
 def _slot(key: str, linked: str = "", channel_origin: bool = False) -> SimpleNamespace:
@@ -97,7 +97,7 @@ async def test_an_app_caller_gets_no_open_flag(tmp_path):
 
 
 def test_a_state_without_slots_marks_nothing():
-    from kiro_crew.dashboard.handlers.sessions_parts.history_reads import _mark_open_sessions
+    from aj_crew.dashboard.handlers.sessions_parts.history_reads import _mark_open_sessions
 
     rows = [{"key": "dashboard_chat-1-1"}]
     _mark_open_sessions(rows, SimpleNamespace(conversation_log=None))

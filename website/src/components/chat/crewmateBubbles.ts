@@ -307,11 +307,11 @@ const CORNERS: Record<CrewmateRunPosition, string> = {
  *  colour tells the two speakers apart before alignment does. The fill and its
  *  token scope live under `.crewmate-bubble` in index.css: the fill is the
  *  theme's `--bg-hover` (`--bg-elevated` and `--card` equal the page background
- *  in kiro-light, highcontrast-light and everforest-light — contrast 1.00, the
+ *  in aj-light, highcontrast-light and everforest-light — contrast 1.00, the
  *  bubble vanishes — while `--bg-hover` sits at least 1.09 above the page in
  *  every shipped theme, the same step iMessage's gray takes), and inside the
  *  bubble the surface tokens its contents paint with (`--bg-hover` for the
- *  kiro-light code patch and every `hover:bg-bg-hover` control, `--bg-elevated`,
+ *  aj-light code patch and every `hover:bg-bg-hover` control, `--bg-elevated`,
  *  `--card`) are moved one step off that fill, or a patch painted in the fill's
  *  own colour would disappear. Text is the page's own `--text`, which every
  *  theme already keeps readable on `--bg-hover`. In forced-colors mode the fill

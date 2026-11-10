@@ -21,12 +21,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import model_registry
-from kiro_crew.config.sections import DECISION_PROVIDER_ENDPOINT_DEFAULT, DecisionsConfig
-from kiro_crew.decisions import log as log_mod
-from kiro_crew.decisions import outcomes
-from kiro_crew.decisions.points import model_route as mr
-from kiro_crew.decisions.types import Answer
+from aj_crew import model_registry
+from aj_crew.config.sections import DECISION_PROVIDER_ENDPOINT_DEFAULT, DecisionsConfig
+from aj_crew.decisions import log as log_mod
+from aj_crew.decisions import outcomes
+from aj_crew.decisions.points import model_route as mr
+from aj_crew.decisions.types import Answer
 
 #: A fake advertised list with prices: one cheap, two at the baseline, one dear.
 RATES = {
@@ -59,7 +59,7 @@ def _config(*, derive: bool, model_route: dict | None = None):
 @pytest.fixture(autouse=True)
 def consent(tmp_path, _floor_monkeypatch):
     path = tmp_path / "decisions_consent.json"
-    _floor_monkeypatch.setattr("kiro_crew.config.loader.decisions_consent_path", lambda: path)
+    _floor_monkeypatch.setattr("aj_crew.config.loader.decisions_consent_path", lambda: path)
     path.write_text(
         json.dumps(
             {
@@ -122,8 +122,8 @@ class _Oracle:
 @pytest.fixture
 def answers(monkeypatch):
     """Pin the config snapshot to *cfg* and answer every question with *tier*."""
-    import kiro_crew.decisions.gate as gate_mod
-    import kiro_crew.decisions.impl_systemone as impl_mod
+    import aj_crew.decisions.gate as gate_mod
+    import aj_crew.decisions.impl_systemone as impl_mod
 
     def _set(tier: str, cfg, p: float = 0.95) -> _Oracle:
         oracle = _Oracle(tier, p)
@@ -225,7 +225,7 @@ class TestTheLookupIsTheSessionsOwnBackend:
 
     def test_another_harness_never_reads_them(self, catalog_rates):
         """Its ids may fold onto the catalog's; its account does not pay those prices."""
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
 
         lookup = mr.rate_lookup(SimpleNamespace(backend=ACP_BACKEND_CLAUDE))
         assert lookup is not None and lookup("fake-frontier") is None
@@ -236,7 +236,7 @@ class TestTheLookupIsTheSessionsOwnBackend:
         assert mr.rate_lookup(None) is None
 
     def test_the_wrapped_sessions_backend_is_read(self, catalog_rates):
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
 
         wrapper = SimpleNamespace(client=SimpleNamespace(backend=ACP_BACKEND_CLAUDE))
         assert mr.rate_lookup(wrapper)("fake-frontier") is None
@@ -429,7 +429,7 @@ class TestEscalation:
 class TestHowATurnEnded:
     @pytest.fixture
     def turn_ok(self):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         return chat_runner._jev_route_turn_ok
 
@@ -480,7 +480,7 @@ class _Sessions:
 
 
 def _info(**overrides):
-    from kiro_crew.subagent import SubagentInfo
+    from aj_crew.subagent import SubagentInfo
 
     fields = {"id": "run-1", "task": "rename the variable", "parent_session_key": "chat-parent"}
     fields.update(overrides)
@@ -489,13 +489,13 @@ def _info(**overrides):
 
 @pytest.fixture
 def no_role_pin(monkeypatch):
-    import kiro_crew.subagent as subagent_mod
+    import aj_crew.subagent as subagent_mod
 
     monkeypatch.setattr(subagent_mod, "_subagent_default_model", lambda cfg=None: "")
 
 
 def _start(info, kind: str = "template", provider=None):
-    from kiro_crew.subagent import _route_unpinned_start
+    from aj_crew.subagent import _route_unpinned_start
 
     parent = _Provider() if provider is None else provider
     asyncio.run(_route_unpinned_start(info, kind, _Sessions(parent)))
@@ -504,7 +504,7 @@ def _start(info, kind: str = "template", provider=None):
 
 class TestSpawnRouting:
     def test_the_spawn_scope_is_one_the_gate_checks(self):
-        from kiro_crew.decisions import gate
+        from aj_crew.decisions import gate
 
         assert set(mr.SPAWN_SCOPES) <= set(gate.REQUEST_SCOPES)
 
@@ -512,8 +512,8 @@ class TestSpawnRouting:
         """One keystone read authorizes both the endpoint and the scope, so a
         consent change between a caller's check and the send cannot slip a wider
         category through."""
-        from kiro_crew import decisions as core
-        from kiro_crew.decisions import gate
+        from aj_crew import decisions as core
+        from aj_crew.decisions import gate
 
         oracle = answers("complex", _config(derive=True))
         asked = asyncio.run(
@@ -626,7 +626,7 @@ class TestSpawnRouting:
         assert oracle.asked == 0
 
     def test_a_role_pin_is_never_routed(self, answers, catalog_rates, monkeypatch):
-        import kiro_crew.subagent as subagent_mod
+        import aj_crew.subagent as subagent_mod
 
         monkeypatch.setattr(subagent_mod, "_subagent_default_model", lambda cfg=None: "fake-tiny")
         oracle = answers("complex", _config(derive=True))
@@ -676,8 +676,8 @@ class TestSpawnRouting:
 class TestTheSpawnBaseline:
     def test_the_runner_and_the_start_read_one_latch(self):
         """One spelling of the attribute, and the runner's latch is what a start reads."""
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.llm_helpers import ROUTE_BASELINE_ATTR, latch_route_baseline
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.llm_helpers import ROUTE_BASELINE_ATTR, latch_route_baseline
 
         assert chat_runner._JEV_ROUTE_BASELINE_ATTR is ROUTE_BASELINE_ATTR
         parent = _Provider(served="fake-mini")
@@ -689,7 +689,7 @@ class TestTheSpawnBaseline:
     ):
         """The parent's last routed turn moved it to the cheap model; the latch
         still names the model it runs with routing off."""
-        from kiro_crew.llm_helpers import latch_route_baseline
+        from aj_crew.llm_helpers import latch_route_baseline
 
         parent = _Provider(served="fake-mini")
         latch_route_baseline(parent, "fake-standard")
@@ -701,7 +701,7 @@ class TestTheSpawnBaseline:
         assert (info.routed_model, info.routed_tier) == ("", "medium")
 
     def test_a_latch_for_another_session_or_pick_is_not_read(self):
-        from kiro_crew.llm_helpers import ROUTE_BASELINE_ATTR
+        from aj_crew.llm_helpers import ROUTE_BASELINE_ATTR
 
         parent = _Provider(served="fake-tiny")
         setattr(parent, ROUTE_BASELINE_ATTR, ("sid-old", "fake-standard", 0))
@@ -710,7 +710,7 @@ class TestTheSpawnBaseline:
         assert mr.inherited_baseline(parent) == "fake-tiny"
 
     def test_a_substitute_is_never_the_baseline(self, answers, catalog_rates, no_role_pin):
-        from kiro_crew.llm_helpers import TURN_FALLBACK_ATTR
+        from aj_crew.llm_helpers import TURN_FALLBACK_ATTR
 
         parent = _Provider(served="fake-tiny")
         setattr(parent, TURN_FALLBACK_ATTR, ("fake-standard", "fake-tiny"))
@@ -725,7 +725,7 @@ class TestTheSpawnBaseline:
     def test_a_parent_with_no_live_provider_routes_nothing(
         self, answers, catalog_rates, no_role_pin
     ):
-        from kiro_crew.subagent import _route_unpinned_start
+        from aj_crew.subagent import _route_unpinned_start
 
         oracle = answers("complex", _config(derive=True))
         info = _info()
@@ -746,11 +746,11 @@ class TestTheUsageRowOfARoutedStart:
 
         from test_subagent import _mock_ctx_builder_auto_spawn, _mock_sessions
 
-        from kiro_crew.acp.types import AcpEvent, TurnUsage
-        from kiro_crew.dashboard.handlers import usage
-        from kiro_crew.execution_context import execution_for_store
-        from kiro_crew.providers.base import EVENT_COMPLETE
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.acp.types import AcpEvent, TurnUsage
+        from aj_crew.dashboard.handlers import usage
+        from aj_crew.execution_context import execution_for_store
+        from aj_crew.providers.base import EVENT_COMPLETE
+        from aj_crew.subagent import SubagentInfo, SubagentManager
 
         async def _complete_stream(*_a, **_k):
             yield AcpEvent(kind=EVENT_COMPLETE, usage=TurnUsage(credits=0.5))
@@ -774,10 +774,10 @@ class TestTheUsageRowOfARoutedStart:
         shard = tmp_path / "usage" / "tokens.jsonl"
         monkeypatch.setattr(usage, "_shard_path_for", lambda _now: shard)
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch(
-                "kiro_crew.dashboard.handlers.usage.read_context_tokens",
+                "aj_crew.dashboard.handlers.usage.read_context_tokens",
                 MagicMock(return_value=(1, 200000)),
                 create=True,
             ),

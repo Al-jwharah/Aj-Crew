@@ -22,16 +22,16 @@ from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 from handlers_messaging_coverage_helpers import _payload, _Req, _run, _state
 
-import kiro_crew.dashboard.handlers.messaging as messaging
-from kiro_crew.cron import CronService, CronStoreBusy
-from kiro_crew.dashboard.cron_note_ack import (
+import aj_crew.dashboard.handlers.messaging as messaging
+from aj_crew.cron import CronService, CronStoreBusy
+from aj_crew.dashboard.cron_note_ack import (
     CRON_ACK_ITEM_KEY,
     mark_cron_item_recorded,
     recorded_cron_item,
 )
-from kiro_crew.dashboard.handlers.cron import api_cron_ack
-from kiro_crew.notifications.bus import NotificationBus, NotificationPayload
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard.handlers.cron import api_cron_ack
+from aj_crew.notifications.bus import NotificationBus, NotificationPayload
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 def _cron_note(**extra: Any) -> dict[str, Any]:

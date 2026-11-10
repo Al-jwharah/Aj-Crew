@@ -1,7 +1,7 @@
 # Delayed gateway restart for Windows — run as a detached process via Start-Process.
 # The sleep gives the calling session time to finish responding.
 # Usage (from agent):
-#   Start-Process -WindowStyle Hidden powershell -ArgumentList "-ExecutionPolicy", "Bypass", "-File", "<path>\do-restart.ps1", "-KirocrewBin", "<resolved-path-to-kirocrew.exe>", "-StatusFile", "<crew home>\logs\restart-status.<attempt-id>"
+#   Start-Process -WindowStyle Hidden powershell -ArgumentList "-ExecutionPolicy", "Bypass", "-File", "<path>\do-restart.ps1", "-AjcrewBin", "<resolved-path-to-ajcrew.exe>", "-StatusFile", "<crew home>\logs\restart-status.<attempt-id>"
 #
 # The restart's exit status is recorded to the attempt-specific -StatusFile
 # (SKILL.md step 3 generates one per attempt) so the calling agent can verify
@@ -12,12 +12,12 @@
 # without it, or with a non-conforming path, the shared
 # <crew home>\logs\restart-status file (the POSIX do-restart.sh default) is used.
 param(
-    [string]$KirocrewBin = "kirocrew",
+    [string]$AjcrewBin = "ajcrew",
     [int]$DelaySec = 10,
     [string]$StatusFile = ""
 )
 
-$crewHome = if ($env:KIROCREW_HOME) { $env:KIROCREW_HOME } else { Join-Path $env:USERPROFILE ".kiro\crew" }
+$crewHome = if ($env:AJCREW_HOME) { $env:AJCREW_HOME } else { Join-Path $env:USERPROFILE ".kiro\crew" }
 $logDir = Join-Path $crewHome "logs"
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 # Attempt-specific when the scheduler passes one (SKILL.md step 3 generates a
@@ -69,11 +69,11 @@ $LogFile = if ($attemptSpecific) { "$StatusFile.log" } else { Join-Path $logDir 
 Start-Sleep -Seconds $DelaySec
 
 # Resolve the binary — if a path was provided, verify it exists; otherwise fall back to PATH.
-if ($KirocrewBin -ne "kirocrew" -and (Test-Path $KirocrewBin)) {
-    $bin = $KirocrewBin
+if ($AjcrewBin -ne "ajcrew" -and (Test-Path $AjcrewBin)) {
+    $bin = $AjcrewBin
 } else {
-    $found = Get-Command kirocrew -ErrorAction SilentlyContinue
-    if ($found) { $bin = $found.Source } else { $bin = $KirocrewBin }
+    $found = Get-Command ajcrew -ErrorAction SilentlyContinue
+    if ($found) { $bin = $found.Source } else { $bin = $AjcrewBin }
 }
 
 # Execute the restart, capturing any errors. $status must reflect what the
@@ -86,8 +86,8 @@ $logLine = ""
 try {
     $output = & $bin restart 2>&1
     $status = if ($null -ne $LASTEXITCODE) { $LASTEXITCODE } else { 0 }
-    # kirocrew restart prints a dashboard login link only to a terminal,
-    # and this capture is not one, so $output carries the kirocrew token
+    # ajcrew restart prints a dashboard login link only to a terminal,
+    # and this capture is not one, so $output carries the ajcrew token
     # hint instead. The skill tells the resumed agent to quote this log, so
     # the -replace redacts any ?token= value as a guard.
     $redacted = "$output" -replace '([?&]token=)\S+', '$1REDACTED'
@@ -98,7 +98,7 @@ try {
     # Last resort: try via python module
     $venvPython = Join-Path (Split-Path (Split-Path $bin)) "python.exe"
     if (Test-Path $venvPython) {
-        & $venvPython -m kiro_crew.cli restart 2>&1 | Out-Null
+        & $venvPython -m aj_crew.cli restart 2>&1 | Out-Null
         $status = if ($null -ne $LASTEXITCODE) { $LASTEXITCODE } else { 1 }
     }
 }

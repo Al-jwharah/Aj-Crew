@@ -14,8 +14,8 @@ from unittest import mock
 
 import member_memory_helpers as mmh
 
-from kiro_crew import memory_stores
-from kiro_crew.vector_memory import (
+from aj_crew import memory_stores
+from aj_crew.vector_memory import (
     create_member_database,
     open_member_database,
     read_member_database_identity,

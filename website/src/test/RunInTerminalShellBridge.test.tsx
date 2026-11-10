@@ -19,7 +19,7 @@ vi.mock('../api/client', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../api/client')>()
   return {
     ...actual,
-    api: { ...actual.api, kirocrewConfig: () => (cfg.fail ? Promise.reject(new Error('down')) : Promise.resolve({})) },
+    api: { ...actual.api, ajcrewConfig: () => (cfg.fail ? Promise.reject(new Error('down')) : Promise.resolve({})) },
   }
 })
 vi.mock('../utils/terminalRegistry', async (importOriginal) => ({
@@ -39,7 +39,7 @@ import { __resetBottomTerminal, addTab, MAX_TERMINALS, useBottomTerminal } from 
 function client() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   // A settled config read with reuse off: the run path, not the copy path.
-  qc.setQueryData(['kirocrewConfig'], {})
+  qc.setQueryData(['ajcrewConfig'], {})
   return qc
 }
 
@@ -149,7 +149,7 @@ describe('RunInTerminalShellBridge', () => {
     qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     const dock = renderHook(() => useBottomTerminal())
     render(wrap(<RunInTerminalShellBridge cwd="/proj" />))
-    await waitFor(() => expect(qc.getQueryState(['kirocrewConfig'])?.status).toBe('error'))
+    await waitFor(() => expect(qc.getQueryState(['ajcrewConfig'])?.status).toBe('error'))
     run({ code: 'ls', reqId: 'r1' })
     expect(dock.result.current.tabs).toHaveLength(1)
     expect(screen.getByTestId('run-in-terminal-error')).toBeInTheDocument()

@@ -10,8 +10,8 @@ from unittest.mock import patch
 import pytest
 from loopback_servers import LoopbackHTTPServer
 
-from kiro_crew.cron_trigger import trigger_cron_job
-from kiro_crew.mcp_cron import _call_tool_inner
+from aj_crew.cron_trigger import trigger_cron_job
+from aj_crew.mcp_cron import _call_tool_inner
 
 # ── Fixtures ──
 
@@ -111,7 +111,7 @@ class TestTriggerCronJob:
         secret_path = tmp_path / ".local_secret"
         secret_path.write_text("fake")
         with patch(
-            "kiro_crew.cron_trigger.loopback_urlopen",
+            "aj_crew.cron_trigger.loopback_urlopen",
             side_effect=TimeoutError("timed out"),
         ):
             ok, msg = trigger_cron_job("abc12345", 19999, secret_path)
@@ -157,7 +157,7 @@ class TestTriggerCronJob:
             return original_read_text(path, *args, **kwargs)
 
         monkeypatch.setattr(path_type, "read_text", remove_before_read)
-        with patch("kiro_crew.cron_trigger.run_marker.read_secret", return_value=None):
+        with patch("aj_crew.cron_trigger.run_marker.read_secret", return_value=None):
             ok, msg = trigger_cron_job("abc12345", port, secret_path)
 
         assert ok is False
@@ -220,7 +220,7 @@ class TestTriggerCronJob:
         refusal = urllib.error.HTTPError(
             "http://127.0.0.1:1/api/crons/abc12345/run", 409, "Conflict", None, _BrokenBody()
         )
-        with patch("kiro_crew.cron_trigger.loopback_urlopen", side_effect=refusal):
+        with patch("aj_crew.cron_trigger.loopback_urlopen", side_effect=refusal):
             ok, msg = trigger_cron_job("abc12345", 19999, secret_path)
         assert ok is False
         assert msg == "Error: HTTP 409"
@@ -345,9 +345,9 @@ class TestCronTriggerMCP:
 
     def test_trigger_success(self, mock_dashboard, monkeypatch):
         port, cfg_dir = mock_dashboard
-        monkeypatch.setenv("KIROCREW_HOME", str(cfg_dir))
-        from kiro_crew import mcp_cron
-        from kiro_crew.cron import CronService
+        monkeypatch.setenv("AJCREW_HOME", str(cfg_dir))
+        from aj_crew import mcp_cron
+        from aj_crew.cron import CronService
 
         # The ownership gate reads the stored row, so the job has to exist and be
         # owned by this caller. Without that gate it is reachable without either, because an
@@ -371,9 +371,9 @@ class TestCronTriggerMCP:
 
     def test_trigger_already_running_names_the_reason(self, mock_dashboard, monkeypatch):
         port, cfg_dir = mock_dashboard
-        monkeypatch.setenv("KIROCREW_HOME", str(cfg_dir))
-        from kiro_crew import mcp_cron
-        from kiro_crew.cron import CronService
+        monkeypatch.setenv("AJCREW_HOME", str(cfg_dir))
+        from aj_crew import mcp_cron
+        from aj_crew.cron import CronService
 
         svc = CronService(base_dir=cfg_dir)
         job = svc.add_job(
@@ -391,9 +391,9 @@ class TestCronTriggerMCP:
         assert result == "Error: HTTP 409: job is already running"
 
     def test_trigger_invalid_id(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew import mcp_cron
-        from kiro_crew.config import loader
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew import mcp_cron
+        from aj_crew.config import loader
 
         orig_port = loader.DASHBOARD_PORT
         loader.DASHBOARD_PORT = 19999
@@ -412,16 +412,16 @@ class TestCronTriggerCLI:
     """Tests for the CLI cron trigger subcommand."""
 
     def test_cli_subcommand_registered(self, tmp_path, capsys):
-        """kirocrew cron trigger is a recognized subcommand with job_id argument."""
+        """ajcrew cron trigger is a recognized subcommand with job_id argument."""
         import argparse
 
-        from kiro_crew.cli_commands import _cron
+        from aj_crew.cli_commands import _cron
 
         args = argparse.Namespace(cron_action="trigger", job_id="abc12345")
         from unittest.mock import patch as _patch
 
         with _patch(
-            "kiro_crew.cli_commands.trigger_cron_job",
+            "aj_crew.cli_commands.trigger_cron_job",
             return_value=(True, "Triggered job: test-job (abc12345)"),
         ) as mock_trigger:
             _cron(args)
@@ -432,7 +432,7 @@ class TestCronTriggerCLI:
         """CLI trigger prints success message."""
         import argparse
 
-        from kiro_crew.cli_commands import _cron
+        from aj_crew.cli_commands import _cron
 
         port, cfg_dir = mock_dashboard
         args = argparse.Namespace(cron_action="trigger", job_id="abc12345")
@@ -440,9 +440,9 @@ class TestCronTriggerCLI:
         from unittest.mock import patch as _patch
 
         with (
-            _patch("kiro_crew.cli_commands.config_dir", return_value=cfg_dir),
+            _patch("aj_crew.cli_commands.config_dir", return_value=cfg_dir),
             _patch(
-                "kiro_crew.cli_commands.resolve_client_port_ex",
+                "aj_crew.cli_commands.resolve_client_port_ex",
                 lambda _cli: (port, True),
             ),
         ):
@@ -456,15 +456,15 @@ class TestCronTriggerCLI:
         """A failed trigger exits 1 so scripts can tell it from success."""
         import argparse
 
-        from kiro_crew.cli_commands import _cron
+        from aj_crew.cli_commands import _cron
 
         port, cfg_dir = mock_dashboard
         args = argparse.Namespace(cron_action="trigger", job_id="aabbccddee")
 
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=cfg_dir),
+            patch("aj_crew.cli_commands.config_dir", return_value=cfg_dir),
             patch(
-                "kiro_crew.cli_commands.resolve_client_port_ex",
+                "aj_crew.cli_commands.resolve_client_port_ex",
                 lambda _cli: (port, True),
             ),
         ):
@@ -478,16 +478,16 @@ class TestCronTriggerCLI:
     def test_cli_trigger_already_running_names_reason_and_exits_1(self, mock_dashboard, capsys):
         import argparse
 
-        from kiro_crew.cli_commands import _cron
+        from aj_crew.cli_commands import _cron
 
         port, cfg_dir = mock_dashboard
         _MockDashboardHandler.forced_response = (409, b'{"error":"job is already running"}')
         args = argparse.Namespace(cron_action="trigger", job_id="abc12345")
 
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=cfg_dir),
+            patch("aj_crew.cli_commands.config_dir", return_value=cfg_dir),
             patch(
-                "kiro_crew.cli_commands.resolve_client_port_ex",
+                "aj_crew.cli_commands.resolve_client_port_ex",
                 lambda _cli: (port, True),
             ),
         ):
@@ -502,19 +502,19 @@ class TestCronTriggerCLI:
         """CLI rejects malformed job IDs."""
         import argparse
 
-        from kiro_crew.cli_commands import _cron
+        from aj_crew.cli_commands import _cron
 
         args = argparse.Namespace(cron_action="trigger", job_id="../evil")
 
         from unittest.mock import patch as _patch
 
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         orig_port = loader.DASHBOARD_PORT
         loader.DASHBOARD_PORT = 19999
         try:
             with (
-                _patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
+                _patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
                 pytest.raises(SystemExit) as exc,
             ):
                 _cron(args)
@@ -531,12 +531,12 @@ class TestCronTriggerCLI:
         """pause and resume exit 1 on an unknown job id, with the reason on stderr."""
         import argparse
 
-        from kiro_crew.cli_commands import _cron
+        from aj_crew.cli_commands import _cron
 
         args = argparse.Namespace(cron_action=action, job_id="abc12345")
 
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
             pytest.raises(SystemExit) as exc,
         ):
             _cron(args)
@@ -553,14 +553,14 @@ class TestCronTriggerToolDefinition:
     """Verify cron_trigger appears in tool list with correct schema."""
 
     def test_tool_listed(self):
-        from kiro_crew.mcp_cron import _list_tools
+        from aj_crew.mcp_cron import _list_tools
 
         tools = _list_tools()
         names = [t["name"] for t in tools]
         assert "cron_trigger" in names
 
     def test_tool_schema(self):
-        from kiro_crew.mcp_cron import _list_tools
+        from aj_crew.mcp_cron import _list_tools
 
         tools = _list_tools()
         trigger = next(t for t in tools if t["name"] == "cron_trigger")

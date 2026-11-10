@@ -18,7 +18,7 @@ set -euo pipefail
 
 PY="${PY:-python3}"
 R=scripts/render_dashboard_builtin.py
-T=src/kiro_crew/dashboard_templates/builtin/project-report
+T=src/aj_crew/dashboard_templates/builtin/project-report
 F=test/fixtures/dashboard_templates
 OUT=.github/screenshots/dyndash
 

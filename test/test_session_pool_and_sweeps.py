@@ -22,9 +22,9 @@ from session_helpers import (  # noqa: F401 -- the fixture is requested by name
     cfg_fixture,
 )
 
-from kiro_crew.session import BACKGROUND_KEY, SessionManager
-from kiro_crew.session_cleanup import SessionCleanup
-from kiro_crew.testing.wait import async_wait_until, await_until, finished
+from aj_crew.session import BACKGROUND_KEY, SessionManager
+from aj_crew.session_cleanup import SessionCleanup
+from aj_crew.testing.wait import async_wait_until, await_until, finished
 
 
 class TestOrphanedDashboardSessions:
@@ -120,16 +120,16 @@ class TestWarmPoolInternals:
     @pytest.mark.asyncio
     async def test_claim_from_pool_matching_agent(self, cfg):
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
-        mgr._pool_agent = "kirocrew"
+        mgr._pool_agent = "ajcrew"
         mock_p = AsyncMock()
         mgr._warm_pool.put_nowait((mock_p, 100.0))
-        result = mgr._claim_from_pool("kirocrew")
+        result = mgr._claim_from_pool("ajcrew")
         assert result == (mock_p, 100.0)
 
     @pytest.mark.asyncio
     async def test_claim_from_pool_mismatched_agent(self, cfg):
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
-        mgr._pool_agent = "kirocrew"
+        mgr._pool_agent = "ajcrew"
         mock_p = AsyncMock()
         mgr._warm_pool.put_nowait((mock_p, 100.0))
         result = mgr._claim_from_pool("different-agent")
@@ -286,7 +286,7 @@ class TestCleanupLoop:
     each sweep has its own tests in its own module. Leaving a sweep unstubbed
     (notably ``find_orphan_mcp_candidates``, a full process-table scan, and
     ``cleanup_orphaned_session_roots``, which reads the operator's real
-    ``~/.kirocrew`` PID file) made each test take ~10-20s of wall-clock and
+    ``~/.ajcrew`` PID file) made each test take ~10-20s of wall-clock and
     probe live system state — both banned by testing-conventions.md.
     """
 
@@ -297,14 +297,14 @@ class TestCleanupLoop:
 
         with (
             patch.object(mgr, "_expire_idle", new_callable=AsyncMock) as mock_expire,
-            patch("kiro_crew.session._cleanup_orphaned_mcp_servers", return_value=0),
-            patch("kiro_crew.session.cleanup_stale_sandbox_profiles", return_value=0),
-            patch("kiro_crew.session._collect_active_pids", return_value=({}, True)),
-            patch("kiro_crew.session._periodic_pid_sweep", return_value=([], [])),
-            patch("kiro_crew.session._kill_confirmed_and_writeback", return_value=0),
-            patch("kiro_crew.session.cleanup_orphaned_session_roots", return_value=0),
-            patch("kiro_crew.session.find_orphan_mcp_candidates", return_value=[]),
-            patch("kiro_crew.session.shutdown_event") as mock_event,
+            patch("aj_crew.session._cleanup_orphaned_mcp_servers", return_value=0),
+            patch("aj_crew.session.cleanup_stale_sandbox_profiles", return_value=0),
+            patch("aj_crew.session._collect_active_pids", return_value=({}, True)),
+            patch("aj_crew.session._periodic_pid_sweep", return_value=([], [])),
+            patch("aj_crew.session._kill_confirmed_and_writeback", return_value=0),
+            patch("aj_crew.session.cleanup_orphaned_session_roots", return_value=0),
+            patch("aj_crew.session.find_orphan_mcp_candidates", return_value=[]),
+            patch("aj_crew.session.shutdown_event") as mock_event,
         ):
             # First wait_for returns TimeoutError (normal wakeup), second signals shutdown
             mock_event.is_set = lambda: mock_expire.await_count >= 1
@@ -323,14 +323,14 @@ class TestCleanupLoop:
 
         with (
             patch.object(mgr, "_expire_idle", new_callable=AsyncMock) as mock_expire,
-            patch("kiro_crew.session._cleanup_orphaned_mcp_servers", return_value=0),
-            patch("kiro_crew.session.cleanup_stale_sandbox_profiles", return_value=0),
-            patch("kiro_crew.session._collect_active_pids", return_value=({}, True)),
-            patch("kiro_crew.session._periodic_pid_sweep", return_value=([], [])),
-            patch("kiro_crew.session._kill_confirmed_and_writeback", return_value=0),
-            patch("kiro_crew.session.cleanup_orphaned_session_roots", return_value=0),
-            patch("kiro_crew.session.find_orphan_mcp_candidates", return_value=[]),
-            patch("kiro_crew.session.shutdown_event") as mock_event,
+            patch("aj_crew.session._cleanup_orphaned_mcp_servers", return_value=0),
+            patch("aj_crew.session.cleanup_stale_sandbox_profiles", return_value=0),
+            patch("aj_crew.session._collect_active_pids", return_value=({}, True)),
+            patch("aj_crew.session._periodic_pid_sweep", return_value=([], [])),
+            patch("aj_crew.session._kill_confirmed_and_writeback", return_value=0),
+            patch("aj_crew.session.cleanup_orphaned_session_roots", return_value=0),
+            patch("aj_crew.session.find_orphan_mcp_candidates", return_value=[]),
+            patch("aj_crew.session.shutdown_event") as mock_event,
         ):
             call_count = [0]
 
@@ -340,7 +340,7 @@ class TestCleanupLoop:
 
             mock_event.is_set = lambda: call_count[0] >= 1
             mock_event.wait = AsyncMock(side_effect=one_pass)
-            with caplog.at_level(logging.INFO, logger="kiro_crew.session"):
+            with caplog.at_level(logging.INFO, logger="aj_crew.session"):
                 await mgr._cleanup_loop()
 
         assert call_count == [1], "the loop still ticked once"
@@ -356,18 +356,18 @@ class TestCleanupLoop:
 
         with (
             patch.object(mgr, "_expire_idle", new_callable=AsyncMock) as mock_expire,
-            patch("kiro_crew.session._cleanup_orphaned_mcp_servers", return_value=0),
-            patch("kiro_crew.session.cleanup_stale_sandbox_profiles", return_value=0),
-            patch("kiro_crew.session._collect_active_pids", return_value=({}, True)),
-            patch("kiro_crew.session._periodic_pid_sweep", return_value=([], [])),
-            patch("kiro_crew.session._kill_confirmed_and_writeback", return_value=0),
-            patch("kiro_crew.session.cleanup_orphaned_session_roots", return_value=0),
-            patch("kiro_crew.session.find_orphan_mcp_candidates", return_value=[]),
-            patch("kiro_crew.session.shutdown_event") as mock_event,
+            patch("aj_crew.session._cleanup_orphaned_mcp_servers", return_value=0),
+            patch("aj_crew.session.cleanup_stale_sandbox_profiles", return_value=0),
+            patch("aj_crew.session._collect_active_pids", return_value=({}, True)),
+            patch("aj_crew.session._periodic_pid_sweep", return_value=([], [])),
+            patch("aj_crew.session._kill_confirmed_and_writeback", return_value=0),
+            patch("aj_crew.session.cleanup_orphaned_session_roots", return_value=0),
+            patch("aj_crew.session.find_orphan_mcp_candidates", return_value=[]),
+            patch("aj_crew.session.shutdown_event") as mock_event,
         ):
             mock_event.is_set = lambda: mock_expire.await_count >= 1
             mock_event.wait = AsyncMock(side_effect=asyncio.TimeoutError)
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.session"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.session"):
                 await mgr._cleanup_loop()
 
         mock_expire.assert_awaited_once_with(60)
@@ -380,7 +380,7 @@ class TestCleanupLoop:
         cfg.session.timeout_secs = 120
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
 
-        with patch("kiro_crew.session.shutdown_event") as mock_event:
+        with patch("aj_crew.session.shutdown_event") as mock_event:
             mock_event.is_set = lambda: True
             mock_event.wait = AsyncMock(return_value=None)
             await mgr._cleanup_loop()
@@ -412,20 +412,20 @@ class TestCleanupLoop:
 
         with (
             patch.object(mgr, "_expire_idle", new_callable=AsyncMock),
-            patch("kiro_crew.session._cleanup_orphaned_mcp_servers", return_value=0),
+            patch("aj_crew.session._cleanup_orphaned_mcp_servers", return_value=0),
             patch(
-                "kiro_crew.session.cleanup_stale_sandbox_profiles", side_effect=_fake_sweep
+                "aj_crew.session.cleanup_stale_sandbox_profiles", side_effect=_fake_sweep
             ) as mock_sweep,
-            patch("kiro_crew.session._collect_active_pids", return_value=({}, True)),
-            patch("kiro_crew.session._periodic_pid_sweep", return_value=([], [])),
-            patch("kiro_crew.session._kill_confirmed_and_writeback", return_value=0),
-            patch("kiro_crew.session.cleanup_orphaned_session_roots", return_value=0),
-            patch("kiro_crew.session.find_orphan_mcp_candidates", return_value=[]),
-            patch("kiro_crew.session.shutdown_event") as mock_event,
+            patch("aj_crew.session._collect_active_pids", return_value=({}, True)),
+            patch("aj_crew.session._periodic_pid_sweep", return_value=([], [])),
+            patch("aj_crew.session._kill_confirmed_and_writeback", return_value=0),
+            patch("aj_crew.session.cleanup_orphaned_session_roots", return_value=0),
+            patch("aj_crew.session.find_orphan_mcp_candidates", return_value=[]),
+            patch("aj_crew.session.shutdown_event") as mock_event,
         ):
             mock_event.is_set = lambda: mock_sweep.call_count >= 1
             mock_event.wait = AsyncMock(side_effect=asyncio.TimeoutError)
-            with caplog.at_level(logging.INFO, logger="kiro_crew.session"):
+            with caplog.at_level(logging.INFO, logger="aj_crew.session"):
                 await mgr._cleanup_loop()
 
         # Verify: sweep was called (production wiring). At least once, not
@@ -443,7 +443,7 @@ class TestCleanupLoop:
         # resolved config_dir() for itself, after the queuing test's pin was gone,
         # walked the operator's real ~/.kiro/crew (third side-effect audit).
         assert sweep_homes and all(
-            h is not None and Path(h).resolve() == Path(os.environ["KIROCREW_HOME"]).resolve()
+            h is not None and Path(h).resolve() == Path(os.environ["AJCREW_HOME"]).resolve()
             for h in sweep_homes
         ), sweep_homes
         assert "removed 3 stale sandbox artifacts" in caplog.text
@@ -636,17 +636,17 @@ class TestCleanupLoopResilience:
             if call_count == 1:
                 raise RuntimeError("simulated crash")
             # Force loop exit on second call
-            from kiro_crew import shutdown_event
+            from aj_crew import shutdown_event
 
             shutdown_event.set()
 
-        import kiro_crew
+        import aj_crew
 
-        kiro_crew.shutdown_event.clear()
+        aj_crew.shutdown_event.clear()
         with (
             patch.object(SessionCleanup, "MAX_TICK_INTERVAL_SECS", 0),
             patch.object(mgr, "_expire_idle", side_effect=_expire_then_stop),
-            patch("kiro_crew.session.find_orphan_mcp_candidates", return_value=[]),
+            patch("aj_crew.session.find_orphan_mcp_candidates", return_value=[]),
         ):
             await await_until(
                 asyncio.ensure_future(mgr._cleanup_loop()),
@@ -654,7 +654,7 @@ class TestCleanupLoopResilience:
             )
 
         assert call_count >= 2
-        kiro_crew.shutdown_event.clear()
+        aj_crew.shutdown_event.clear()
         await mgr.close_all()
 
     @pytest.mark.asyncio
@@ -667,18 +667,18 @@ class TestCleanupLoopResilience:
         # as in test_cleanup_loop_continues_after_expire_idle_crash.
 
         async def _crash_and_stop(timeout):
-            from kiro_crew import shutdown_event
+            from aj_crew import shutdown_event
 
             shutdown_event.set()
             raise ValueError("boom")
 
-        import kiro_crew
+        import aj_crew
 
-        kiro_crew.shutdown_event.clear()
+        aj_crew.shutdown_event.clear()
         with (
             patch.object(SessionCleanup, "MAX_TICK_INTERVAL_SECS", 0),
             patch.object(mgr, "_expire_idle", side_effect=_crash_and_stop),
-            patch("kiro_crew.session.find_orphan_mcp_candidates", return_value=[]),
+            patch("aj_crew.session.find_orphan_mcp_candidates", return_value=[]),
         ):
             with caplog.at_level(logging.ERROR):
                 await await_until(
@@ -687,5 +687,5 @@ class TestCleanupLoopResilience:
                 )
 
         assert "_expire_idle crashed" in caplog.text
-        kiro_crew.shutdown_event.clear()
+        aj_crew.shutdown_event.clear()
         await mgr.close_all()

@@ -42,9 +42,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.config import loader as config_loader
-from kiro_crew.dashboard.handlers import telemetry as h
-from kiro_crew.dashboard.state import NEW_SESSION_TITLE
+from aj_crew.config import loader as config_loader
+from aj_crew.dashboard.handlers import telemetry as h
+from aj_crew.dashboard.state import NEW_SESSION_TITLE
 
 _BOUNDS: list[float] = [10.0, 20.0, 30.0, 40.0, 50.0]
 
@@ -81,7 +81,7 @@ def _cfg_stub(
 def _patch_config(monkeypatch: pytest.MonkeyPatch, cfg: Any) -> None:
     loader = MagicMock()
     loader.load = MagicMock(return_value=cfg)
-    monkeypatch.setattr(h, "KiroCrewConfig", loader)
+    monkeypatch.setattr(h, "AjCrewConfig", loader)
 
 
 def _shard(directory: Path, day: str, metrics: list[dict], pid: int = 4242) -> Path:
@@ -168,7 +168,7 @@ def test_telemetry_cfg_reports_disabled_when_the_config_cannot_be_read(
     """Fail toward off: never claim collection is on when it cannot be proven."""
     loader = MagicMock()
     loader.load = MagicMock(side_effect=RuntimeError("unreadable"))
-    monkeypatch.setattr(h, "KiroCrewConfig", loader)
+    monkeypatch.setattr(h, "AjCrewConfig", loader)
     monkeypatch.setattr(h, "env_pin", lambda: None)
     state = h._telemetry_cfg()
     assert state.enabled is False
@@ -430,7 +430,7 @@ async def test_startup_route_reports_posture_and_all_four_blocks(
         lambda _w, **_kw: {
             "startup": {"overall": {"count": 1}},
             "turn": {"count": 1},
-            "other": [{"name": "kirocrew.x", "kind": "counter"}],
+            "other": [{"name": "ajcrew.x", "kind": "counter"}],
             "shard_count": 3,
         },
     )
@@ -447,7 +447,7 @@ async def test_startup_route_reports_posture_and_all_four_blocks(
     assert payload["turn"] == {"count": 1}
     assert payload["context"] == {"turns": [1]}
     assert payload["cost"] is None
-    assert payload["other"][0]["name"] == "kirocrew.x"
+    assert payload["other"][0]["name"] == "ajcrew.x"
 
 
 @pytest.mark.asyncio
@@ -622,8 +622,8 @@ def _beacon_stub(monkeypatch: pytest.MonkeyPatch, info: dict, *, env_opted_out: 
     stub = MagicMock()
     stub.status = MagicMock(return_value=info)
     stub.is_env_opted_out = MagicMock(return_value=env_opted_out)
-    stub.DISABLE_ENV = "KIROCREW_TELEMETRY_DISABLED"
-    stub.opt_out_env_var = MagicMock(return_value="KIROCREW_TELEMETRY_DISABLED")
+    stub.DISABLE_ENV = "AJCREW_TELEMETRY_DISABLED"
+    stub.opt_out_env_var = MagicMock(return_value="AJCREW_TELEMETRY_DISABLED")
     monkeypatch.setattr(h, "beacon", stub)
     return stub
 
@@ -653,7 +653,7 @@ async def test_beacon_status_reports_stored_flag_and_effective_verdict(
     assert payload["reason_code"] == "ci"
     assert payload["endpoint_configured"] is True
     assert payload["env_override"] is True
-    assert payload["env_var"] == "KIROCREW_TELEMETRY_DISABLED"
+    assert payload["env_var"] == "AJCREW_TELEMETRY_DISABLED"
     assert payload["overlay_override"] is True
     assert payload["governance_override"] is True
     assert stub.status.call_args.args[0] == "https://beacon.invalid/x"
@@ -667,7 +667,7 @@ async def test_beacon_status_never_500s_on_an_unreadable_config(
     """A diagnostic must render exactly when the config is broken — failing to off."""
     loader = MagicMock()
     loader.load = MagicMock(side_effect=RuntimeError("unreadable"))
-    monkeypatch.setattr(h, "KiroCrewConfig", loader)
+    monkeypatch.setattr(h, "AjCrewConfig", loader)
     stub = _beacon_stub(
         monkeypatch, {"would_send": False, "reason_code": "no_endpoint"}, env_opted_out=False
     )

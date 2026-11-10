@@ -15,28 +15,28 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.config.loader as loader_module
-from kiro_crew.config.loader import (
+import aj_crew.config.loader as loader_module
+from aj_crew.config.loader import (
     STT_PROVIDER_LOCAL,
-    KiroCrewConfig,
+    AjCrewConfig,
     SttConfig,
     _validated_stt_model,
     _validated_stt_provider,
 )
-from kiro_crew.stt import limits as stt_limits
-from kiro_crew.stt import models as stt_models
+from aj_crew.stt import limits as stt_limits
+from aj_crew.stt import models as stt_models
 
 
 def _loaded_stt(tmp_path: Path, section: dict) -> SttConfig:
     """Load a config carrying *section* under ``stt`` and return the parsed block.
 
-    Uses ``KiroCrewConfig.load()``: every coercion under test lives on the load path,
+    Uses ``AjCrewConfig.load()``: every coercion under test lives on the load path,
     so a hand-built ``SttConfig`` would skip them all.
     """
     cfg_file = tmp_path / "config.json"
     cfg_file.write_text(json.dumps({"stt": section}))
-    with unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path):
-        return KiroCrewConfig.load().stt
+    with unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path):
+        return AjCrewConfig.load().stt
 
 
 #: Every superseded ``stt.model`` name, and the catalog entry it must select.
@@ -82,8 +82,8 @@ class TestSttStreamingDefaultsOn:
     def test_missing_stt_key_loads_streaming_true(self, tmp_path: Path) -> None:
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text(json.dumps({}))
-        with unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path):
-            cfg = KiroCrewConfig.load()
+        with unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path):
+            cfg = AjCrewConfig.load()
         assert cfg.stt.streaming is True
 
     def test_partial_stt_block_without_streaming_key_loads_true(self, tmp_path: Path) -> None:
@@ -138,7 +138,7 @@ class TestSttRetiredProviders:
 
     @pytest.mark.parametrize("retired", loader_module._RETIRED_STT_PROVIDERS)
     def test_retired_provider_degrades_to_local(self, retired: str, caplog) -> None:
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             assert _validated_stt_provider(retired) == STT_PROVIDER_LOCAL
         assert retired in caplog.text
         assert "retired" in caplog.text
@@ -155,7 +155,7 @@ class TestSttRetiredProviders:
         Retired names are absent from the schema enum, so plain validation would log
         a generic "enum violation". That line's absence shows the degrade ran first.
         """
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             caplog.clear()
             stt = _loaded_stt(tmp_path, {"provider": "parakeet"})
         assert stt.provider == STT_PROVIDER_LOCAL
@@ -175,7 +175,7 @@ class TestSttRetiredProviders:
         because "mlx is not one of local/apple/transcribe/off" answers the wrong
         question for someone who had it working yesterday. A typo also lands on
         ``off`` rather than ``local``: ``test_stt_provider_off`` carries why."""
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             assert _validated_stt_provider("whispr") == "off"
         assert "whispr" in caplog.text
         for selectable in loader_module._VALID_STT_PROVIDERS:
@@ -187,7 +187,7 @@ class TestSttRetiredProviders:
         The gateway loads config several times a second under dashboard traffic, so
         an undeduplicated warning would flood the log.
         """
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             for _ in range(25):
                 assert _validated_stt_provider("whisper") == STT_PROVIDER_LOCAL
         assert caplog.text.count("retired") == 1
@@ -195,7 +195,7 @@ class TestSttRetiredProviders:
     def test_each_distinct_unusable_provider_still_gets_its_own_line(self, caplog) -> None:
         """Deduplication is per VALUE, not a single global latch -- otherwise the
         first bad value would silence the explanation for every later one."""
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             assert _validated_stt_provider("whisper") == STT_PROVIDER_LOCAL
             assert _validated_stt_provider("parakeet") == STT_PROVIDER_LOCAL
             assert _validated_stt_provider("whispr") == "off"
@@ -237,8 +237,8 @@ class TestSttRemovedFieldsAreInert:
         """
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text(json.dumps({"stt": dict(self._LEGACY_SECTION)}))
-        with unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path):
-            cfg = KiroCrewConfig.load()
+        with unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path):
+            cfg = AjCrewConfig.load()
         assert cfg.degraded_sections == frozenset()
 
     def test_the_settings_that_still_exist_are_honoured(self, tmp_path: Path) -> None:
@@ -258,8 +258,8 @@ class TestSttRemovedFieldsAreInert:
         nothing behind it."""
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text(json.dumps({"stt": dict(self._LEGACY_SECTION)}))
-        with unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path):
-            written = KiroCrewConfig.load().to_dict()["stt"]
+        with unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path):
+            written = AjCrewConfig.load().to_dict()["stt"]
         assert set(written).isdisjoint(_REMOVED_STT_FIELDS)
         assert written["provider"] == STT_PROVIDER_LOCAL
 
@@ -318,17 +318,17 @@ class TestSttModelCatalog:
             )
             == stt_models.CUSTOM_MODEL
         )
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             assert _validated_stt_model(stt_models.CUSTOM_MODEL) == stt_models.DEFAULT_MODEL
         assert stt_models.CUSTOM_MODEL in caplog.text
 
     def test_an_unknown_name_degrades_to_the_default(self, caplog) -> None:
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.stt.models"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.stt.models"):
             assert _validated_stt_model("ggml-enormous") == stt_models.DEFAULT_MODEL
         assert "ggml-enormous" in caplog.text
 
     def test_a_non_string_or_empty_name_degrades_to_the_default(self, caplog) -> None:
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             assert _validated_stt_model(7) == stt_models.DEFAULT_MODEL
             assert _validated_stt_model("") == stt_models.DEFAULT_MODEL
             assert _validated_stt_model(None) == stt_models.DEFAULT_MODEL
@@ -349,7 +349,7 @@ class TestSttIntervalClamps:
 
     The recogniser raises ``silence_ms`` and ``partial_interval_ms`` to their floors,
     so a lower stored value would show a number nothing honours. Bounds come from
-    ``kiro_crew.stt.limits`` so the test cannot drift from them.
+    ``aj_crew.stt.limits`` so the test cannot drift from them.
     """
 
     def test_silence_ms_is_raised_to_the_floor_the_vad_enforces(self, tmp_path: Path) -> None:
@@ -367,13 +367,13 @@ class TestSttIntervalClamps:
         silence is the observable proof that the two floors are one number rather
         than two that happen to match today.
         """
-        from kiro_crew.stt.vad import Endpointer
+        from aj_crew.stt.vad import Endpointer
 
         stt = _loaded_stt(tmp_path, {"silence_ms": 1})
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.stt.vad"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.stt.vad"):
             caplog.clear()
             Endpointer(silence_ms=stt.silence_ms)
-        assert [r.message for r in caplog.records if r.name == "kiro_crew.stt.vad"] == []
+        assert [r.message for r in caplog.records if r.name == "aj_crew.stt.vad"] == []
 
     def test_a_numeric_string_is_coerced_and_then_clamped(self, tmp_path: Path) -> None:
         """Older writers stored these as strings, and the raw-dict bounds pass skips

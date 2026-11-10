@@ -22,12 +22,12 @@ from chat_agent_selection_helpers import (
 from chat_test_helpers import _make_app_with_agent_routes, _make_state, drain_background_tasks
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.dashboard import chat_handlers, chat_runner
-from kiro_crew.execution_context import read_session_execution
-from kiro_crew.member_memory_auth import read_private_session_store
-from kiro_crew.memory_stores import persist_member_config, provision_member_memory
-from kiro_crew.session_agent_selection import resolve_session_agent_bindings
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.dashboard import chat_handlers, chat_runner
+from aj_crew.execution_context import read_session_execution
+from aj_crew.member_memory_auth import read_private_session_store
+from aj_crew.memory_stores import persist_member_config, provision_member_memory
+from aj_crew.session_agent_selection import resolve_session_agent_bindings
 
 
 def _prewarmed_member_state(tmp_path, monkeypatch, *, sid: str | None):
@@ -37,8 +37,8 @@ def _prewarmed_member_state(tmp_path, monkeypatch, *, sid: str | None):
     and the switch handler's own reset preserves the persistence entry, so what
     survives into the pin is a resume pointer with no live provider.
     """
-    cfg = KiroCrewConfig.load()
-    cfg.agents["reviewer"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+    cfg = AjCrewConfig.load()
+    cfg.agents["reviewer"] = AjCrewAgentConfig(kiro_agent="ajcrew")
     store = provision_member_memory(cfg, "reviewer")
     persist_member_config(cfg, "reviewer", create=True)
     state = _make_state(tmp_path)
@@ -93,8 +93,8 @@ async def test_new_chat_v1_pick_keeps_its_prewarmed_session(tmp_path, monkeypatc
     state, _ = await asyncio.to_thread(
         _prewarmed_member_state, tmp_path, monkeypatch, sid="acp-prewarm-sid"
     )
-    cfg = KiroCrewConfig.load()
-    cfg.agents["plain"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+    cfg = AjCrewConfig.load()
+    cfg.agents["plain"] = AjCrewAgentConfig(kiro_agent="ajcrew")
     cfg.save()
     async with TestClient(TestServer(as_owner(_make_app_with_agent_routes(state)))) as client:
         response = await _finished(
@@ -117,7 +117,7 @@ async def test_prewarmed_session_is_kept_when_the_chat_is_not_provably_empty(
     tmp_path, monkeypatch, obstacle
 ):
     """Only a provably empty chat may lose its pre-warm; each check fails closed."""
-    from kiro_crew.dashboard.chat_persistence import release_prewarmed_session
+    from aj_crew.dashboard.chat_persistence import release_prewarmed_session
 
     state, _ = await asyncio.to_thread(
         _prewarmed_member_state, tmp_path, monkeypatch, sid="acp-prewarm-sid"
@@ -130,7 +130,7 @@ async def test_prewarmed_session_is_kept_when_the_chat_is_not_provably_empty(
     else:
         state.sessions.get_provider = MagicMock(return_value=MagicMock())
     released = await _finished(
-        release_prewarmed_session(state, key, "reviewer", KiroCrewConfig.load()),
+        release_prewarmed_session(state, key, "reviewer", AjCrewConfig.load()),
         "the pre-warm release",
     )
     assert released is False
@@ -147,12 +147,12 @@ async def test_restricted_member_session_persists_transcript_but_no_owner_record
     The line has NO memory store: without a carrier a store name reads back as a legacy
     owner claim and the restart refuses the chat. The next turn re-selects from ``agent``.
     """
-    from kiro_crew.dashboard.chat_persistence import restore_recent_sessions
-    from kiro_crew.execution_context import _LIVE_EXECUTIONS, _live_key
-    from kiro_crew.history import ConversationLog
+    from aj_crew.dashboard.chat_persistence import restore_recent_sessions
+    from aj_crew.execution_context import _LIVE_EXECUTIONS, _live_key
+    from aj_crew.history import ConversationLog
 
-    cfg = KiroCrewConfig.load()
-    cfg.agents["writer"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+    cfg = AjCrewConfig.load()
+    cfg.agents["writer"] = AjCrewAgentConfig(kiro_agent="ajcrew")
     member_store = provision_member_memory(cfg, "writer")
     cfg.save()
     state = _turn_state(tmp_path, monkeypatch)
@@ -211,20 +211,20 @@ def test_a_record_less_template_stamp_never_resolves_a_same_named_crewmate(monke
     crewmate's private store and pin are never bound to a chat that did not
     pick it. A ``member`` stamp picks the crewmate; no stamp keeps the
     name-first order the record-less read always had."""
-    from kiro_crew import session_agent_selection
-    from kiro_crew.config.loader import resolve_agent_bindings
-    from kiro_crew.memory_stores import provision_member_memory
+    from aj_crew import session_agent_selection
+    from aj_crew.config.loader import resolve_agent_bindings
+    from aj_crew.memory_stores import provision_member_memory
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        "default": KiroCrewAgentConfig(kiro_agent="kirocrew"),
-        "atlas": KiroCrewAgentConfig(kiro_agent="kirocrew", model="pinned"),
+        "default": AjCrewAgentConfig(kiro_agent="ajcrew"),
+        "atlas": AjCrewAgentConfig(kiro_agent="ajcrew", model="pinned"),
     }
     cfg.default_agent = "default"
     private = provision_member_memory(cfg, "atlas")
     monkeypatch.setattr(session_agent_selection, "read_session_execution", lambda _: None)
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name == "atlas" else "",
     )
 

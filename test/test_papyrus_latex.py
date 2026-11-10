@@ -2,7 +2,7 @@
 
 Lives in the repo-level ``test/`` tree (not the app's in-package ``tests/``)
 because ``setup.cfg`` sets ``testpaths = test transfer`` — a test under
-``src/kiro_crew/apps/builtins/...`` is never collected by CI.
+``src/aj_crew/apps/builtins/...`` is never collected by CI.
 
 Every subprocess is mocked — no ``pdflatex``, ``tectonic`` or ``bibtex`` is ever
 invoked, so this suite runs on a host with no TeX installation.
@@ -36,10 +36,10 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import sandbox, security
-from kiro_crew.apps.builtins.papyrus.backend import latex, procio, store
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
-from kiro_crew.testing.wait import await_until
+from aj_crew import sandbox, security
+from aj_crew.apps.builtins.papyrus.backend import latex, procio, store
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.wait import await_until
 
 
 def _spawn_mode(wrap: mock.Mock) -> str:
@@ -667,10 +667,10 @@ class TestRunHelper:
             "~/.aws and ~/.ssh readable to an untrusted .tex"
         )
 
-    async def test_hides_kirocrews_own_trust_root_from_the_compiler(
+    async def test_hides_ajcrews_own_trust_root_from_the_compiler(
         self, project: Path
     ) -> None:
-        """Strict mode alone is NOT enough — it misses KiroCrew's own secrets.
+        """Strict mode alone is NOT enough — it misses AjCrew's own secrets.
 
         ``_STRICT_DIRS`` covers third-party credential locations plus
         ``~/.kiro/crew/.env``, but the gateway's ``.local_secret``,
@@ -1144,7 +1144,7 @@ class TestSensitivePathsFollowTheLiveDataHome:
     """`sensitive_home_dirs()` names paths relative to `$HOME`, so its `.kiro/crew/*`
     entries describe the DEFAULT data home.
 
-    With `KIROCREW_HOME` pointed elsewhere — a dev instance, a pod, an operator who
+    With `AJCREW_HOME` pointed elsewhere — a dev instance, a pod, an operator who
     moved it — the real `sel_hmac.key`, `token_signing.key`, `.local_secret` and
     `security_policy.json` live somewhere that list never mentions. Nothing hid them, so
     a hostile `.tex` could `\\verbatiminput` any of them into the rendered PDF.
@@ -1153,8 +1153,8 @@ class TestSensitivePathsFollowTheLiveDataHome:
     def test_a_custom_data_home_is_covered(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "moved-home"))
-        from kiro_crew.config.loader import config_dir
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "moved-home"))
+        from aj_crew.config.loader import config_dir
 
         data_home = str(config_dir())
         hidden = latex._sensitive_hidden_dirs()
@@ -1176,7 +1176,7 @@ class TestSensitivePathsFollowTheLiveDataHome:
     ) -> None:
         """Both anchors, not one instead of the other: the default location may still
         hold files from before the move, and hiding an absent path is free."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "moved-home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "moved-home"))
         hidden = latex._sensitive_hidden_dirs()
         # Compared by BASENAME under the real home, not by a reconstructed path.
         # `sensitive_home_dirs()` returns POSIX-style relatives, so the default-anchored
@@ -1190,13 +1190,13 @@ class TestSensitivePathsFollowTheLiveDataHome:
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         """With no override the two anchors coincide, and the list must not double."""
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
         # The "default" home is exercised against a FAKE host home, so both anchors
         # (expanduser("~") and the resolver's default) coincide there instead of on the
         # operator's real ~/.kiro/crew, which the bare delenv resolved and created.
         monkeypatch.setenv("HOME", str(tmp_path))
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
-        monkeypatch.setattr("kiro_crew.config.paths._resolved_home", None)
+        monkeypatch.setattr("aj_crew.config.paths._resolved_home", None)
         hidden = latex._sensitive_hidden_dirs()
         assert len(hidden) == len(set(hidden))
         assert any(h.startswith(str(tmp_path)) for h in hidden), "the fake home was not the anchor"
@@ -1515,7 +1515,7 @@ class TestTheCompileLinkScanRefusesJunctionsToo:
     """The Compile guard must refuse a link through ``store.is_reparse_link``.
 
     That helper's own contract says it: "every place this module refuses a link at a
-    name Kiro Crew owns has to refuse a junction too, or the refusal is POSIX-only".
+    name Aj Crew owns has to refuse a junction too, or the refusal is POSIX-only".
     ``store.list_files`` honours it. ``_symlinked_artifacts`` asked ``is_symlink()``,
     which does NOT report a Windows directory junction — and a junction is precisely
     a DIRECTORY link, so it reached the ``is_dir()`` arm of the same loop and broke

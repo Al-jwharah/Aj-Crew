@@ -1,5 +1,5 @@
-"""Unit tests for kiro_crew.platform_compat — the cross-platform shim that lets
-KiroCrew run natively on Windows alongside macOS/Linux.
+"""Unit tests for aj_crew.platform_compat — the cross-platform shim that lets
+AjCrew run natively on Windows alongside macOS/Linux.
 
 These exercise the PURE / platform-dispatching surface, spawning a real process
 only where the contract IS an OS behavior (process-session semantics): the
@@ -34,8 +34,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.testing.wait import default_timeout
+from aj_crew import platform_compat as pc
+from aj_crew.testing.wait import default_timeout
 
 # Tests here read or build the macOS libc and libproc handles, so each one starts
 # with both caches unbuilt and puts them back after (see conftest.py).
@@ -371,8 +371,8 @@ class TestPlatformFlags:
 class TestReexecPythonModule:
     def test_windows_uses_space_free_argv0(self, monkeypatch, nonbundled_python_without_user_site):
         executable = (
-            r"C:\Users\alice\AppData\Local\Programs\KiroCrew Nightly"
-            r"\resources\backend-dist\kirocrew-backend\python.exe"
+            r"C:\Users\alice\AppData\Local\Programs\AjCrew Nightly"
+            r"\resources\backend-dist\ajcrew-backend\python.exe"
         )
         calls = []
         monkeypatch.setattr(pc, "IS_WINDOWS", True)
@@ -381,12 +381,12 @@ class TestReexecPythonModule:
         monkeypatch.setenv("PYTHONUTF8", "0")
         monkeypatch.setenv("PYTHONIOENCODING", "cp1252")
 
-        pc.reexec_python_module("kiro_crew", ["gateway", "--port", "5476"])
+        pc.reexec_python_module("aj_crew", ["gateway", "--port", "5476"])
 
         assert calls == [
             (
                 executable,
-                ["python.exe", "-s", "-P", "-m", "kiro_crew", "gateway", "--port", "5476"],
+                ["python.exe", "-s", "-P", "-m", "aj_crew", "gateway", "--port", "5476"],
             )
         ]
         assert os.environ["PYTHONUTF8"] == "1"
@@ -395,7 +395,7 @@ class TestReexecPythonModule:
     def test_posix_preserves_full_argv0_and_pins_utf8(
         self, monkeypatch, nonbundled_python_without_user_site
     ):
-        executable = "/opt/Kiro Crew/bin/python3"
+        executable = "/opt/Aj Crew/bin/python3"
         calls = []
         monkeypatch.setattr(pc, "IS_WINDOWS", False)
         monkeypatch.setattr(pc.sys, "executable", executable)
@@ -403,9 +403,9 @@ class TestReexecPythonModule:
         monkeypatch.setenv("PYTHONUTF8", "0")
         monkeypatch.setenv("PYTHONIOENCODING", "latin-1")
 
-        pc.reexec_python_module("kiro_crew", ["gateway"])
+        pc.reexec_python_module("aj_crew", ["gateway"])
 
-        assert calls == [(executable, [executable, "-s", "-P", "-m", "kiro_crew", "gateway"])]
+        assert calls == [(executable, [executable, "-s", "-P", "-m", "aj_crew", "gateway"])]
         assert os.environ["PYTHONUTF8"] == "1"
         assert os.environ["PYTHONIOENCODING"] == "utf-8:backslashreplace"
 
@@ -420,11 +420,11 @@ class TestReexecPythonModule:
         probe = tmp_path / "utf8_reexec_probe.py"
         probe.write_text(
             "import os\n"
-            "from kiro_crew.platform_compat import reexec_python_module\n"
-            "if os.environ.get('_KIROCREW_UTF8_REEXEC_PROBE') == '1':\n"
+            "from aj_crew.platform_compat import reexec_python_module\n"
+            "if os.environ.get('_AJCREW_UTF8_REEXEC_PROBE') == '1':\n"
             "    print('👻 restarted')\n"
             "else:\n"
-            "    os.environ['_KIROCREW_UTF8_REEXEC_PROBE'] = '1'\n"
+            "    os.environ['_AJCREW_UTF8_REEXEC_PROBE'] = '1'\n"
             "    reexec_python_module('utf8_reexec_probe', [])\n",
             encoding="utf-8",
         )
@@ -463,7 +463,7 @@ class TestCancelWheelAppliesInFlight:
     tree an update may have changed.
     """
 
-    _MODULE = "kiro_crew.platform.wheel_apply"
+    _MODULE = "aj_crew.platform.wheel_apply"
 
     def _stub_module(self, monkeypatch, cancel) -> None:
         stub = types.ModuleType(self._MODULE)
@@ -505,10 +505,10 @@ class TestCancelWheelAppliesInFlight:
             pc.hard_exit(3)
             assert order == ["cancel:exit", "_exit:3"]
         elif seam == "reexec_launcher":
-            pc.reexec_launcher(str(tmp_path / "kirocrew"), ["gateway"])
+            pc.reexec_launcher(str(tmp_path / "ajcrew"), ["gateway"])
             assert order == ["cancel:exec", "execv"]
         else:
-            pc.reexec_python_module("kiro_crew", ["gateway"], executable=str(tmp_path / "python"))
+            pc.reexec_python_module("aj_crew", ["gateway"], executable=str(tmp_path / "python"))
             assert order == ["cancel:exec", "execv"]
 
 
@@ -1265,13 +1265,13 @@ class TestUtf8Console:
         assert os.environ["PYTHONIOENCODING"] == "utf-8:backslashreplace"
 
     def test_emoji_print_does_not_raise_after_call(self, capsys):
-        # The bug this guards: KiroCrew prints non-ASCII glyphs everywhere, and on
+        # The bug this guards: AjCrew prints non-ASCII glyphs everywhere, and on
         # Windows cp1252 stdout that raised UnicodeEncodeError and killed the gateway.
         # After ensure_utf8_console(), a non-ASCII print must succeed on any platform.
         pc.ensure_utf8_console()
-        print("中文 KiroCrew 日本語")  # non-cp1252-encodable glyphs
+        print("中文 AjCrew 日本語")  # non-cp1252-encodable glyphs
         out = capsys.readouterr().out
-        assert "KiroCrew" in out
+        assert "AjCrew" in out
 
     def test_rewraps_cp1252_stream_so_emoji_log_record_survives(self, monkeypatch):
         # When the worker's stderr is a cp1252 TextIOWrapper that reconfigure()
@@ -1324,7 +1324,7 @@ class _TtyTextIOWrapper(io.TextIOWrapper):
 
 
 class TestLineBufferedStdout:
-    STATUS_LINE = "👻 Kiro Crew gateway running — press Ctrl+C to stop"
+    STATUS_LINE = "👻 Aj Crew gateway running — press Ctrl+C to stop"
 
     def test_status_line_reaches_a_non_tty_stdout_as_printed(self, monkeypatch):
         # A pipe or a file (the journal under systemd, the Desktop supervisor's
@@ -1490,12 +1490,12 @@ class TestResourceShims:
         mood. ``samples["wired"]`` records whether the lock took, so a failure
         here says which case it measured.
         """
-        import kiro_crew
+        import aj_crew
 
         root = Path(__file__).resolve().parents[1]
         source_root = root / "src"
-        assert Path(kiro_crew.__file__).resolve().parent == source_root / "kiro_crew"
-        assert Path(pc.__file__).resolve() == source_root / "kiro_crew" / "platform_compat.py"
+        assert Path(aj_crew.__file__).resolve().parent == source_root / "aj_crew"
+        assert Path(pc.__file__).resolve() == source_root / "aj_crew" / "platform_compat.py"
         result = subprocess.run(
             [
                 sys.executable,
@@ -1503,11 +1503,11 @@ class TestResourceShims:
                 "-c",
                 "import json, sys; from pathlib import Path; "
                 "sys.path[:0] = sys.argv[1:]; "
-                "import kiro_crew, test_platform_compat as probe; "
-                "assert Path(kiro_crew.__file__).resolve().parent "
-                "== Path(sys.argv[1]) / 'kiro_crew'; "
+                "import aj_crew, test_platform_compat as probe; "
+                "assert Path(aj_crew.__file__).resolve().parent "
+                "== Path(sys.argv[1]) / 'aj_crew'; "
                 "assert Path(probe.pc.__file__).resolve() "
-                "== Path(sys.argv[1]) / 'kiro_crew' / 'platform_compat.py'; "
+                "== Path(sys.argv[1]) / 'aj_crew' / 'platform_compat.py'; "
                 "assert Path(probe.__file__).resolve() "
                 "== Path(sys.argv[2]) / 'test_platform_compat.py'; "
                 "print(json.dumps(probe._measure_rss_release()))",

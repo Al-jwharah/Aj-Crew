@@ -25,16 +25,16 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.teams.attachments import TEAMS_FILE_DOWNLOAD_INFO
-from kiro_crew.teams.client import (
+from aj_crew.teams.attachments import TEAMS_FILE_DOWNLOAD_INFO
+from aj_crew.teams.client import (
     TEAMS_MAX_DOWNLOAD_BYTES,
     TeamsClient,
     TeamsInbound,
     TeamsSendError,
 )
-from kiro_crew.teams.client import resolve_addresses as _real_resolve_addresses
-from kiro_crew.teams.renderer import TeamsRenderer
-from kiro_crew.teams.transport import TEAMS_CAPABILITIES, TeamsTransport
+from aj_crew.teams.client import resolve_addresses as _real_resolve_addresses
+from aj_crew.teams.renderer import TeamsRenderer
+from aj_crew.teams.transport import TEAMS_CAPABILITIES, TeamsTransport
 
 #: A genuinely globally-routable address for the resolver stub. NOT a
 #: documentation range (192.0.2/198.51.100/203.0.113): Python classifies those as
@@ -118,7 +118,7 @@ def _no_real_dns(monkeypatch) -> None:
     async def _fake(host: str, port: int = 443) -> list[str]:
         return [_PUBLIC_ADDR]
 
-    monkeypatch.setattr("kiro_crew.teams.client.resolve_addresses", _fake)
+    monkeypatch.setattr("aj_crew.teams.client.resolve_addresses", _fake)
 
 
 class TestInboundDownloadAuth:
@@ -255,7 +255,7 @@ class TestInboundDownloadBounds:
             await client.download_inbound_file("https://a.example/start", str(tmp_path / "f"))
 
     def test_the_default_ceiling_matches_the_widest_neutral_class_cap(self) -> None:
-        from kiro_crew.messaging.attachments import IngestLimits
+        from aj_crew.messaging.attachments import IngestLimits
 
         assert TEAMS_MAX_DOWNLOAD_BYTES == IngestLimits().max_document_bytes
 
@@ -282,7 +282,7 @@ class TestResolvedAddressVetting:
         async def _resolves_inward(host: str, port: int = 443) -> list[str]:
             return [address]
 
-        monkeypatch.setattr("kiro_crew.teams.client.resolve_addresses", _resolves_inward)
+        monkeypatch.setattr("aj_crew.teams.client.resolve_addresses", _resolves_inward)
         client, session = _client([_FakeResponse(chunks=[PNG_BYTES])])
         with pytest.raises(ValueError):
             await client.download_inbound_file("https://harmless.example/dl", str(tmp_path / "f"))
@@ -315,7 +315,7 @@ class TestResolvedAddressVetting:
         async def _resolves_inward(host: str, port: int = 443) -> list[str]:
             return [address]
 
-        monkeypatch.setattr("kiro_crew.teams.client.resolve_addresses", _resolves_inward)
+        monkeypatch.setattr("aj_crew.teams.client.resolve_addresses", _resolves_inward)
         client, session = _client([_FakeResponse(chunks=[PNG_BYTES])])
         with pytest.raises(ValueError):
             await client.download_inbound_file("https://harmless.example/dl", str(tmp_path / "f"))
@@ -335,7 +335,7 @@ class TestResolvedAddressVetting:
         async def _garbage(host: str, port: int = 443) -> list[str]:
             return ["not-an-address"]
 
-        monkeypatch.setattr("kiro_crew.teams.client.resolve_addresses", _garbage)
+        monkeypatch.setattr("aj_crew.teams.client.resolve_addresses", _garbage)
         client, session = _client([_FakeResponse(chunks=[PNG_BYTES])])
         with pytest.raises(ValueError):
             await client.download_inbound_file("https://harmless.example/dl", str(tmp_path / "f"))
@@ -350,7 +350,7 @@ class TestResolvedAddressVetting:
         async def _mixed(host: str, port: int = 443) -> list[str]:
             return [_PUBLIC_ADDR, "127.0.0.1"]
 
-        monkeypatch.setattr("kiro_crew.teams.client.resolve_addresses", _mixed)
+        monkeypatch.setattr("aj_crew.teams.client.resolve_addresses", _mixed)
         client, session = _client([_FakeResponse(chunks=[PNG_BYTES])])
         with pytest.raises(ValueError):
             await client.download_inbound_file("https://mixed.example/dl", str(tmp_path / "f"))
@@ -363,7 +363,7 @@ class TestResolvedAddressVetting:
         async def _fails(host: str, port: int = 443) -> list[str]:
             raise OSError("nodename nor servname provided")
 
-        monkeypatch.setattr("kiro_crew.teams.client.resolve_addresses", _fails)
+        monkeypatch.setattr("aj_crew.teams.client.resolve_addresses", _fails)
         client, _session = _client([])
         with pytest.raises(ValueError, match="unresolvable"):
             await client.download_inbound_file("https://gone.example/dl", str(tmp_path / "f"))
@@ -377,7 +377,7 @@ class TestResolvedAddressVetting:
             seen.append(host)
             return ["127.0.0.1"] if host == "inside.example" else [_PUBLIC_ADDR]
 
-        monkeypatch.setattr("kiro_crew.teams.client.resolve_addresses", _second_hop_is_internal)
+        monkeypatch.setattr("aj_crew.teams.client.resolve_addresses", _second_hop_is_internal)
         client, session = _client(
             [_FakeResponse(status=302, headers={"Location": "https://inside.example/x"})]
         )
@@ -581,8 +581,8 @@ class TestOutboundSeal:
         Scanning only the finished name would ship most of the secret; the source is
         scanned first, while the token is still intact.
         """
-        from kiro_crew.messaging.outbound_files import OutboundFile
-        from kiro_crew.teams.attachments import _MAX_INLINE_NAME_CHARS, inline_image_name
+        from aj_crew.messaging.outbound_files import OutboundFile
+        from aj_crew.teams.attachments import _MAX_INLINE_NAME_CHARS, inline_image_name
 
         token = "ghp_" + "a1b2c3d4e5" * 4
         stem = "q" * 40 + token
@@ -598,7 +598,7 @@ class TestOutboundSeal:
         """A reply with no image markup must not pay for a root lookup or a scan."""
         called: list[str] = []
         monkeypatch.setattr(
-            "kiro_crew.teams.renderer._persisted_upload_root",
+            "aj_crew.teams.renderer._persisted_upload_root",
             lambda key: called.append(key) or "",
         )
         client = _RenderClient()
@@ -611,7 +611,7 @@ class TestOutboundSeal:
         self, tmp_path, monkeypatch
     ) -> None:
         fake = _FakeSel()
-        monkeypatch.setattr("kiro_crew.teams.renderer.sel", lambda: fake)
+        monkeypatch.setattr("aj_crew.teams.renderer.sel", lambda: fake)
         chart = tmp_path / "chart.png"
         chart.write_bytes(PNG_BYTES)
         missing = tmp_path / "gone.png"
@@ -733,7 +733,7 @@ class TestInboundGating:
     @pytest.mark.asyncio
     async def test_a_group_scope_is_denied_before_any_fetch(self, monkeypatch) -> None:
         fake = _FakeSel()
-        monkeypatch.setattr("kiro_crew.teams.transport.sel", lambda: fake)
+        monkeypatch.setattr("aj_crew.teams.transport.sel", lambda: fake)
         client = _IngestClient()
         dispatched: list[TeamsInbound] = []
 
@@ -754,7 +754,7 @@ class TestInboundGating:
     @pytest.mark.asyncio
     async def test_an_unauthorized_sender_is_denied_before_any_fetch(self, monkeypatch) -> None:
         fake = _FakeSel()
-        monkeypatch.setattr("kiro_crew.teams.transport.sel", lambda: fake)
+        monkeypatch.setattr("aj_crew.teams.transport.sel", lambda: fake)
         client = _IngestClient()
         dispatched: list[TeamsInbound] = []
 
@@ -783,7 +783,7 @@ class TestMidTurnFiles:
 
         monkeypatch.setattr("tempfile.tempdir", str(tmp_path))
         recorder = _TurnRecorder(str(tmp_path))
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.drive_turn", recorder)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.drive_turn", recorder)
         client = _IngestClient()
         dispatcher = _files_dispatcher(_Sessions(_Provider(), busy=False), client)
 
@@ -802,7 +802,7 @@ class TestMidTurnFiles:
 
         monkeypatch.setattr("tempfile.tempdir", str(tmp_path))
         recorder = _TurnRecorder(str(tmp_path))
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.drive_turn", recorder)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.drive_turn", recorder)
         sessions = _Sessions(_Provider(), busy=False)
         dispatcher = _files_dispatcher(sessions, _IngestClient())
 
@@ -825,7 +825,7 @@ class TestMidTurnFiles:
 
         monkeypatch.setattr("tempfile.tempdir", str(tmp_path))
         recorder = _TurnRecorder(str(tmp_path))
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.drive_turn", recorder)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.drive_turn", recorder)
         client = _IngestClient()
         sessions = _Sessions(_Provider(), busy=True)
         dispatcher = _files_dispatcher(sessions, client)
@@ -856,7 +856,7 @@ class TestMidTurnFiles:
         async def _drive(turn: Any, **_: Any) -> None:
             turns.append(turn)
 
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.drive_turn", _drive)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.drive_turn", _drive)
         dispatcher = _files_dispatcher(_Sessions(_Provider(), busy=False), _IngestClient())
 
         await dispatcher.handle_message(
@@ -879,7 +879,7 @@ class TestTheSocketDialsTheVettedAddress:
 
     @pytest.mark.asyncio
     async def test_the_resolver_serves_only_what_was_pinned(self) -> None:
-        from kiro_crew.teams.client import _VettedResolver
+        from aj_crew.teams.client import _VettedResolver
 
         resolver = _VettedResolver()
         resolver.pin("contoso.sharepoint.com", [_PUBLIC_ADDR])
@@ -895,7 +895,7 @@ class TestTheSocketDialsTheVettedAddress:
     @pytest.mark.asyncio
     async def test_an_unpinned_host_is_refused_not_resolved(self) -> None:
         """Fail CLOSED: a path that reaches this session without vetting cannot fetch."""
-        from kiro_crew.teams.client import _VettedResolver
+        from aj_crew.teams.client import _VettedResolver
 
         resolver = _VettedResolver()
 
@@ -905,7 +905,7 @@ class TestTheSocketDialsTheVettedAddress:
     @pytest.mark.asyncio
     async def test_a_trailing_dot_resolves_to_the_same_pin(self) -> None:
         """``host.`` and ``host`` are the same name; only one of them was vetted."""
-        from kiro_crew.teams.client import _VettedResolver
+        from aj_crew.teams.client import _VettedResolver
 
         resolver = _VettedResolver()
         resolver.pin("contoso.sharepoint.com.", [_PUBLIC_ADDR])
@@ -916,7 +916,7 @@ class TestTheSocketDialsTheVettedAddress:
     @pytest.mark.asyncio
     async def test_the_pin_map_is_bounded(self) -> None:
         """A long-lived gateway that fetched from many hosts must not grow it forever."""
-        from kiro_crew.teams.client import _PINNED_HOSTS_MAX, _VettedResolver
+        from aj_crew.teams.client import _PINNED_HOSTS_MAX, _VettedResolver
 
         resolver = _VettedResolver()
         for index in range(_PINNED_HOSTS_MAX + 5):
@@ -952,7 +952,7 @@ class TestTheSocketDialsTheVettedAddress:
         async def _inward(host: str, port: int = 443) -> list[str]:
             return ["169.254.169.254"]
 
-        monkeypatch.setattr("kiro_crew.teams.client.resolve_addresses", _inward)
+        monkeypatch.setattr("aj_crew.teams.client.resolve_addresses", _inward)
         client, _session = _client([_FakeResponse(chunks=[b"secrets"])])
 
         with pytest.raises(ValueError):

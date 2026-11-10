@@ -14,10 +14,10 @@ import pytest
 # admission rule (and its self-bot-id read) lives in ONE place now, shared by
 # this transport and the Socket Mode event gate, so the self-id stub belongs on
 # the module that owns the rule.
-import kiro_crew.slack.enterprise as enterprise_mod
-from kiro_crew.messaging.transport import InboundMessage, MessagingTransport
-from kiro_crew.slack.format import SLACK_MSG_LIMIT
-from kiro_crew.slack.transport import SlackTransport
+import aj_crew.slack.enterprise as enterprise_mod
+from aj_crew.messaging.transport import InboundMessage, MessagingTransport
+from aj_crew.slack.format import SLACK_MSG_LIMIT
+from aj_crew.slack.transport import SlackTransport
 
 
 class FakeClient:
@@ -87,7 +87,7 @@ class TestAuthorize:
         # including empty/missing user_id (caller falls back to "unknown").
         from unittest.mock import MagicMock
 
-        import kiro_crew.slack.transport as transport_mod
+        import aj_crew.slack.transport as transport_mod
 
         rec = MagicMock()
         monkeypatch.setattr(transport_mod, "sel", lambda: rec)
@@ -260,7 +260,7 @@ class TestReceiveTrustedBots:
     async def test_untrusted_bot_denial_is_audited(self, monkeypatch):
         from unittest.mock import MagicMock
 
-        import kiro_crew.slack.transport as transport_mod
+        import aj_crew.slack.transport as transport_mod
 
         monkeypatch.setattr(enterprise_mod, "validated_self_bot_id", lambda: "B_SELF")
         rec = MagicMock()
@@ -277,7 +277,7 @@ class TestReceiveTrustedBots:
     async def test_trusted_admission_is_audited(self, monkeypatch):
         from unittest.mock import MagicMock
 
-        import kiro_crew.slack.transport as transport_mod
+        import aj_crew.slack.transport as transport_mod
 
         monkeypatch.setattr(enterprise_mod, "validated_self_bot_id", lambda: "B_SELF")
         rec = MagicMock()

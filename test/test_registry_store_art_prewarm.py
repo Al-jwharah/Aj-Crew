@@ -49,8 +49,8 @@ from registry_store_art_prewarm_helpers import (
 )
 
 from conftest import requires_symlinks
-from kiro_crew.apps import registry as reg_mod
-from kiro_crew.apps.registry import (
+from aj_crew.apps import registry as reg_mod
+from aj_crew.apps.registry import (
     _TRUST_INDEX,
     _TRUST_OWNER,
     _blob_cache_dir,
@@ -63,8 +63,8 @@ from kiro_crew.apps.registry import (
     _servable_art_path,
     _store_art_cache_path,
 )
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
-from kiro_crew.testing.wait import finished
+from aj_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.testing.wait import finished
 
 # ---------------------------------------------------------------------------
 # What lands where
@@ -963,8 +963,8 @@ from pathlib import Path
 # real home: refuse to import anything unless the home is under the test's tmp_path.
 root = Path(sys.argv[1]).resolve()
 assert root in Path.home().resolve().parents, f"the probe's home {Path.home()} is not isolated"
-from kiro_crew.apps import routes
-from kiro_crew.apps.registry_pipeline import indexes, store_art
+from aj_crew.apps import routes
+from aj_crew.apps.registry_pipeline import indexes, store_art
 print(json.dumps({
     "path": routes._SAFE_PATH_RE is store_art._SAFE_PATH_RE,
     "branch": indexes._SAFE_BRANCH_RE is store_art._SAFE_BRANCH_RE,
@@ -993,8 +993,8 @@ def _grammar_identities_in_a_fresh_interpreter(tmp_path: Path) -> dict[str, bool
         **os.environ,
         "HOME": str(home),
         "USERPROFILE": str(home),
-        "KIROCREW_HOME": str(tmp_path / "data"),
-        "KIROCREW_WORKSPACE": str(tmp_path / "workspace"),
+        "AJCREW_HOME": str(tmp_path / "data"),
+        "AJCREW_WORKSPACE": str(tmp_path / "workspace"),
         "PYTHONPATH": os.pathsep.join([str(source), os.environ.get("PYTHONPATH", "")]),
     }
     try:
@@ -1151,7 +1151,7 @@ class TestWarmth:
             _entry(name="b", gitUrl=f"{SIBLING[:-4]}-b.git", repo=f"{SIBLING[:-4]}-b.git"),
         ]
 
-        with caplog.at_level("WARNING", logger="kiro_crew.apps.registry"):
+        with caplog.at_level("WARNING", logger="aj_crew.apps.registry"):
             fetched = await finished(
                 _prewarm_owner_tier_store_assets(reg, rows), "the prewarm returning at its budget"
             )
@@ -1303,7 +1303,7 @@ class TestLfsPointerIsUnobtainable:
         manifest = dict(MANIFEST, iconPath="ui/icon.svg", heroImage="ui/hero.png", screenshots=[])
         entry = _entry()
 
-        with caplog.at_level("INFO", logger="kiro_crew.apps.registry"):
+        with caplog.at_level("INFO", logger="aj_crew.apps.registry"):
             written, unobtainable = _copy_declared_art(entry, clone, manifest)
 
         # The real image landed; the LFS pointer did not and is recorded unobtainable.
@@ -1331,7 +1331,7 @@ class TestLfsPointerIsUnobtainable:
         )
         entry = _entry()
 
-        with caplog.at_level("INFO", logger="kiro_crew.apps.registry"):
+        with caplog.at_level("INFO", logger="aj_crew.apps.registry"):
             written, unobtainable = _copy_declared_art(entry, clone, manifest)
 
         assert written == 0

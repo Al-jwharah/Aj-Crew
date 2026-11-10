@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.metrics.local_exporter — JsonlMetricExporter."""
+"""Tests for aj_crew.metrics.local_exporter — JsonlMetricExporter."""
 
 import json
 from unittest.mock import MagicMock
@@ -7,9 +7,9 @@ import pytest
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 
-from kiro_crew import platform_compat
-from kiro_crew.metrics import local_exporter
-from kiro_crew.metrics.local_exporter import JsonlMetricExporter
+from aj_crew import platform_compat
+from aj_crew.metrics import local_exporter
+from aj_crew.metrics.local_exporter import JsonlMetricExporter
 
 
 def _provider(tmp_path):
@@ -24,7 +24,7 @@ def _provider(tmp_path):
 def test_export_writes_valid_jsonl(tmp_path):
     provider = _provider(tmp_path)
     try:
-        provider.get_meter("test").create_counter("kirocrew.test.count").add(
+        provider.get_meter("test").create_counter("ajcrew.test.count").add(
             5, attributes={"ok": "yes"}
         )
         provider.force_flush()
@@ -35,7 +35,7 @@ def test_export_writes_valid_jsonl(tmp_path):
         assert lines, "expected at least one JSON line"
         parsed = json.loads(lines[0])  # each line is one valid JSON object
         assert "resource_metrics" in parsed
-        assert "kirocrew.test.count" in lines[0]
+        assert "ajcrew.test.count" in lines[0]
     finally:
         provider.shutdown()
 
@@ -43,7 +43,7 @@ def test_export_writes_valid_jsonl(tmp_path):
 def test_export_appends_one_line_per_flush(tmp_path):
     provider = _provider(tmp_path)
     try:
-        counter = provider.get_meter("test").create_counter("kirocrew.test.count")
+        counter = provider.get_meter("test").create_counter("ajcrew.test.count")
         counter.add(1)
         provider.force_flush()
         counter.add(1)
@@ -259,7 +259,7 @@ def test_export_then_prune_never_raises(tmp_path):
     )
     provider = MeterProvider(metric_readers=[reader])
     try:
-        provider.get_meter("test").create_counter("kirocrew.test.count").add(1)
+        provider.get_meter("test").create_counter("ajcrew.test.count").add(1)
         provider.force_flush()
         assert list(tmp_path.glob("metrics-*.jsonl"))
     finally:
@@ -282,9 +282,9 @@ def test_export_stamps_process_identity_at_resource_level(tmp_path):
         pytest.skip("process start time unavailable on this platform")
     provider = _provider(tmp_path)
     try:
-        provider.get_meter("test").create_counter("kirocrew.test.count").add(1)
+        provider.get_meter("test").create_counter("ajcrew.test.count").add(1)
         provider.force_flush()
-        provider.get_meter("test").create_counter("kirocrew.test.count").add(1)
+        provider.get_meter("test").create_counter("ajcrew.test.count").add(1)
         provider.force_flush()
 
         (shard,) = tmp_path.glob("metrics-*.jsonl")
@@ -310,7 +310,7 @@ def test_export_omits_identity_when_platform_read_unavailable(tmp_path, monkeypa
     monkeypatch.setattr(platform_compat, "own_process_start_time", lambda: None)
     provider = _provider(tmp_path)
     try:
-        provider.get_meter("test").create_counter("kirocrew.test.count").add(1)
+        provider.get_meter("test").create_counter("ajcrew.test.count").add(1)
         provider.force_flush()
 
         (shard,) = tmp_path.glob("metrics-*.jsonl")

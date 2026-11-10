@@ -10,11 +10,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from kiro_crew.apps.app_storage import AppStorage
-from kiro_crew.apps.context import AppHealthStatus, build_app_context
-from kiro_crew.apps.cron_sdk import CronSDK
-from kiro_crew.apps.event_bus import EventBus
-from kiro_crew.apps.spawn_sdk import SpawnSDK
+from aj_crew.apps.app_storage import AppStorage
+from aj_crew.apps.context import AppHealthStatus, build_app_context
+from aj_crew.apps.cron_sdk import CronSDK
+from aj_crew.apps.event_bus import EventBus
+from aj_crew.apps.spawn_sdk import SpawnSDK
 
 
 class TestAppHealthStatus:
@@ -49,7 +49,7 @@ class TestBuildAppContext:
         assert ctx.name == "nulla"
         assert ctx.data_dir == tmp_path
         assert ctx.config == {}
-        assert ctx.logger.name == "kirocrew.app.nulla"
+        assert ctx.logger.name == "ajcrew.app.nulla"
         assert ctx.health.status == "healthy"
 
     def test_all_permissions_with_hosts_populate_every_service(self, tmp_path) -> None:

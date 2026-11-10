@@ -74,7 +74,7 @@ interface SttConfig {
   thread_options?: number[]
   /** The count Auto resolves to on this host, shown in the Auto option's label. */
   threads_auto?: number
-  /** `KIROCREW_STT_THREADS` as the gateway sees it, or null when unset. It wins over `threads`. */
+  /** `AJCREW_STT_THREADS` as the gateway sees it, or null when unset. It wins over `threads`. */
   threads_env?: string | null
   endpointing?: boolean
   submit_on_release?: boolean
@@ -1619,7 +1619,7 @@ export default function SttSettings({ cardIndex }: {
                     ? i18nT('pages.settings.sttSettings.decode_threads_auto_count', { n: fmtNumber(stt.threads_auto) })
                     : i18nT('pages.settings.sttSettings.decode_threads_auto')))}
                 onChange={v => set({ threads: Number(v) })}
-                // While KIROCREW_STT_THREADS overrides the stored value, a choice
+                // While AJCREW_STT_THREADS overrides the stored value, a choice
                 // here has no effect, so the picker is disabled and the note below
                 // says why.
                 disabled={saving || Boolean(stt.threads_env)}

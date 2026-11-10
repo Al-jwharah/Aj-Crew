@@ -11,17 +11,17 @@ from pathlib import Path
 import pytest
 from overload_fakes import Clock, open_task_store, settle_store_writes
 
-from kiro_crew.taskq import model as m
-from kiro_crew.taskq.adapters import runner as r
-from kiro_crew.taskq.dependency import (
+from aj_crew.taskq import model as m
+from aj_crew.taskq.adapters import runner as r
+from aj_crew.taskq.dependency import (
     KIND_AUTH_FAILED,
     KIND_RATE_LIMITED,
     DependencyCoordinator,
     DependencySignal,
 )
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.taskq.waits import WaitRecord
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.taskq.store import TaskStore
+from aj_crew.taskq.waits import WaitRecord
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 @pytest.fixture

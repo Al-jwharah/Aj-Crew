@@ -7,7 +7,7 @@ import pytest
 from _clock_isolation import assert_clock_is_private
 from e2e import test_memory_ui_evidence as evidence
 
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.testing.clock import ManualClock
 
 
 @pytest.mark.parametrize(
@@ -172,7 +172,7 @@ def test_checkpoint_evidence_fault_uses_only_an_empty_isolated_directory(
 ):
     from contextlib import nullcontext
 
-    from kiro_crew.testing import harness
+    from aj_crew.testing import harness
 
     home = tmp_path / "gateway"
     runs = home / "workflows" / "runs"

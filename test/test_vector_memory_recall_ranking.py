@@ -15,7 +15,7 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew.vector_memory import (
+from aj_crew.vector_memory import (
     _HAS_FAISS,
     _HAS_NUMPY,
     _MMR_MAX_POOL,
@@ -392,7 +392,7 @@ class TestSanitizeDecayRates:
         assert out == {"huge": 10.0, "neghuge": 0.0}
 
     def test_ignores_non_numeric_with_warning(self, caplog: pytest.LogCaptureFixture) -> None:
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.vector_memory"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.vector_memory"):
             out = _sanitize_decay_rates(
                 {"legal": "forever", "flag": True, "nan": float("nan"), "ok": 0.1}
             )
@@ -510,7 +510,7 @@ class TestEpisodicDecayRates:
     def test_invalid_values_fall_back_to_default(
         self, tmp_path: Path, caplog: pytest.LogCaptureFixture, opened
     ) -> None:
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.vector_memory"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.vector_memory"):
             store = self._store(
                 tmp_path, rates={"legal": "forever", "default": True}, opened=opened
             )
@@ -712,7 +712,7 @@ class TestFaissMmrPoolRecallContract:
         """
         import numpy as np
 
-        import kiro_crew.vector_memory as vm_mod
+        import aj_crew.vector_memory as vm_mod
 
         monkeypatch.setattr(vm_mod, "_HAS_FAISS", True)
         monkeypatch.setattr(vm_mod, "_HAS_NUMPY", True)

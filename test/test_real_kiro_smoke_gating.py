@@ -28,8 +28,8 @@ def _load_module():
 
 @pytest.fixture()
 def rk(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.delenv("KIROCREW_E2E_REAL_KIRO", raising=False)
-    monkeypatch.delenv("KIROCREW_E2E_REAL_KIRO_REQUIRE", raising=False)
+    monkeypatch.delenv("AJCREW_E2E_REAL_KIRO", raising=False)
+    monkeypatch.delenv("AJCREW_E2E_REAL_KIRO_REQUIRE", raising=False)
     return _load_module()
 
 
@@ -89,12 +89,12 @@ class TestGateAndIdentity:
     def test_default_is_skipped(self, rk) -> None:
         assert rk.pytestmark.args[0] is True
 
-    @pytest.mark.parametrize("name", ["KIROCREW_E2E_REAL_KIRO", "KIROCREW_E2E_REAL_KIRO_REQUIRE"])
+    @pytest.mark.parametrize("name", ["AJCREW_E2E_REAL_KIRO", "AJCREW_E2E_REAL_KIRO_REQUIRE"])
     def test_either_exact_marker_enables_module(
         self, monkeypatch: pytest.MonkeyPatch, name: str
     ) -> None:
-        monkeypatch.delenv("KIROCREW_E2E_REAL_KIRO", raising=False)
-        monkeypatch.delenv("KIROCREW_E2E_REAL_KIRO_REQUIRE", raising=False)
+        monkeypatch.delenv("AJCREW_E2E_REAL_KIRO", raising=False)
+        monkeypatch.delenv("AJCREW_E2E_REAL_KIRO_REQUIRE", raising=False)
         monkeypatch.setenv(name, "1")
         assert _load_module().pytestmark.args[0] is False
 
@@ -108,7 +108,7 @@ class TestGateAndIdentity:
     def test_resolution_ignores_inherited_binary_override(
         self, monkeypatch: pytest.MonkeyPatch, rk, tmp_path: Path
     ) -> None:
-        monkeypatch.setenv("KIROCREW_KIRO_BIN", "fake-backend")
+        monkeypatch.setenv("AJCREW_KIRO_BIN", "fake-backend")
         seen: dict = {}
 
         def _resolve(*, environ, home):
@@ -116,16 +116,16 @@ class TestGateAndIdentity:
             assert home == tmp_path
             return "C:/Program Files/Kiro-Cli/kiro-cli.exe"
 
-        with patch("kiro_crew.acp.client._resolve_kiro_bin", side_effect=_resolve):
+        with patch("aj_crew.acp.client._resolve_kiro_bin", side_effect=_resolve):
             result = rk._resolve_real_kiro_cli(tmp_path / ".kiro")
         assert result.endswith("kiro-cli.exe")
-        assert "KIROCREW_KIRO_BIN" not in seen
+        assert "AJCREW_KIRO_BIN" not in seen
 
     def test_probe_uses_exact_final_env_and_cwd(self, rk, tmp_path: Path) -> None:
         binary = "C:/Kiro/kiro-cli.exe"
         env = {
             "KIRO_HOME": str(tmp_path / "crew" / "kiro"),
-            "KIROCREW_KIRO_BIN": binary,
+            "AJCREW_KIRO_BIN": binary,
             "HOME": "unchanged-home",
             "USERPROFILE": "unchanged-profile",
             "LOCALAPPDATA": "unchanged-account-store",
@@ -140,8 +140,8 @@ class TestGateAndIdentity:
         assert env == before
 
     def test_auth_failure_never_falls_back(self, rk, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_E2E_REAL_KIRO_REQUIRE", "1")
-        env = {"KIRO_HOME": str(tmp_path / "kiro"), "KIROCREW_KIRO_BIN": "kiro-cli"}
+        monkeypatch.setenv("AJCREW_E2E_REAL_KIRO_REQUIRE", "1")
+        env = {"KIRO_HOME": str(tmp_path / "kiro"), "AJCREW_KIRO_BIN": "kiro-cli"}
         completed = type("CP", (), {"returncode": 1})()
         with patch.object(rk.subprocess, "run", return_value=completed) as run:
             with pytest.raises(pytest.fail.Exception, match="whoami"):
@@ -153,12 +153,12 @@ class TestGateAndIdentity:
 class TestFreshPrivatePreflight:
     @pytest.mark.parametrize("reachable", ["same", "missing", "different"])
     def test_requires_launcher_already_on_path(self, rk, tmp_path, monkeypatch, reachable):
-        from kiro_crew import agent
+        from aj_crew import agent
 
         home = tmp_path / "kiro"
-        launcher = tmp_path / "bin" / "kirocrew"
+        launcher = tmp_path / "bin" / "ajcrew"
         monkeypatch.setenv("KIRO_HOME", str(home))
-        monkeypatch.setattr(agent, "_resolve_kirocrew_bin", lambda: str(launcher))
+        monkeypatch.setattr(agent, "_resolve_ajcrew_bin", lambda: str(launcher))
         monkeypatch.setattr(agent, "_launcher_works", lambda _path: True)
         found = {"same": str(launcher), "missing": None, "different": str(tmp_path / "other")}
         monkeypatch.setattr(rk.shutil, "which", lambda _name: found[reachable])
@@ -209,7 +209,7 @@ class TestLoopbackClient:
                 return _Response()
 
         opener = _Opener()
-        with patch("kiro_crew.loopback_http.build_loopback_opener", return_value=opener):
+        with patch("aj_crew.loopback_http.build_loopback_opener", return_value=opener):
             rk._Client(51234, "secret")
         assert opener.requests == [("http://localhost:51234/api/status?token=secret", 30)]
         assert len(opener.handlers) == 1
@@ -331,10 +331,10 @@ class TestConfinedRealSmoke:
     def test_private_spec_and_real_hook_ceiling(self, rk, tmp_path, monkeypatch):
         import dataclasses
 
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.hooks import TOOL_AUTO_APPROVE, TOOL_DENY, HookManager
-        from kiro_crew.platform.bootstrap import build_default_context
-        from kiro_crew.platform.governance import parse_policy
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.hooks import TOOL_AUTO_APPROVE, TOOL_DENY, HookManager
+        from aj_crew.platform.bootstrap import build_default_context
+        from aj_crew.platform.governance import parse_policy
 
         nonce = tmp_path / "nonce.txt"
         other = tmp_path / "other.txt"
@@ -350,9 +350,9 @@ class TestConfinedRealSmoke:
         assert spec["resources"] == []
         assert "hooks" not in spec and "permissions" not in spec
         ceiling = parse_policy(json.loads(policy_path.read_text()))
-        base = build_default_context(KiroCrewConfig.load())
+        base = build_default_context(AjCrewConfig.load())
         monkeypatch.setattr(
-            "kiro_crew.hooks.current_context", lambda: dataclasses.replace(base, governance=ceiling)
+            "aj_crew.hooks.current_context", lambda: dataclasses.replace(base, governance=ceiling)
         )
         hooks = HookManager()
         effects = []
@@ -369,10 +369,10 @@ class TestConfinedRealSmoke:
                 assert path.read_text() == "allowed"
         assert effects == ["nonce.txt"]
         monkeypatch.setattr(
-            "kiro_crew.platform.context.current_context",
+            "aj_crew.platform.context.current_context",
             lambda: dataclasses.replace(base, governance=ceiling),
         )
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(policy_path))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(policy_path))
         original_read = Path.read_text
 
         def checked_read(path, *args, **kwargs):
@@ -434,13 +434,13 @@ class TestConfinedRealSmoke:
     def test_missing_read_ceiling_fails_before_open(self, rk, tmp_path, monkeypatch, empty_policy):
         from types import SimpleNamespace
 
-        from kiro_crew.platform.governance import parse_policy
+        from aj_crew.platform.governance import parse_policy
 
         ceiling = (
             parse_policy({"version": 1, "boot": {"fail_closed": True}}) if empty_policy else None
         )
         monkeypatch.setattr(
-            "kiro_crew.platform.context.current_context",
+            "aj_crew.platform.context.current_context",
             lambda: SimpleNamespace(governance=ceiling),
         )
         with patch.object(Path, "read_text") as read:
@@ -456,7 +456,7 @@ class TestPrivateWriterIsolation:
         import io
         from types import SimpleNamespace
 
-        from kiro_crew.testing import harness
+        from aj_crew.testing import harness
 
         home = tmp_path / "rig"
         home.mkdir()
@@ -485,7 +485,7 @@ class TestPrivateWriterIsolation:
 
         def preflight(env, cwd):
             assert env["KIRO_HOME"] == str(home / "kiro")
-            assert env["KIROCREW_KIRO_BIN"] == "native-cli"
+            assert env["AJCREW_KIRO_BIN"] == "native-cli"
             return {
                 "actual_home": str(home / "kiro"),
                 "target": str(home / "kiro" / "agents"),
@@ -506,7 +506,7 @@ class TestPrivateWriterIsolation:
             patch.object(harness.subprocess, "Popen", side_effect=spawn),
             patch.object(harness, "_wait_for_ready_line", side_effect=ready),
             patch.object(harness, "_terminate_process_group", side_effect=stop),
-            patch("kiro_crew.agent._resolve_kirocrew_bin", return_value=sys.executable),
+            patch("aj_crew.agent._resolve_ajcrew_bin", return_value=sys.executable),
             patch.object(harness.shutil, "which", return_value=sys.executable),
             patch.object(rk, "_run_private_probe", side_effect=preflight),
             patch.object(rk, "_probe_signed_in") as auth,
@@ -527,9 +527,9 @@ class TestPrivateWriterIsolation:
     def test_private_preflight_rejects_fallback_before_auth(
         self, rk, tmp_path, monkeypatch, location
     ):
-        monkeypatch.setenv("KIROCREW_E2E_REAL_KIRO_REQUIRE", "1")
+        monkeypatch.setenv("AJCREW_E2E_REAL_KIRO_REQUIRE", "1")
         home = tmp_path / "rig"
-        env = {"KIROCREW_HOME": str(home), "KIROCREW_KIRO_BIN": "native-cli"}
+        env = {"AJCREW_HOME": str(home), "AJCREW_KIRO_BIN": "native-cli"}
         if location != "missing":
             env["KIRO_HOME"] = str(tmp_path / location)
 
@@ -541,7 +541,7 @@ class TestPrivateWriterIsolation:
             yield
 
         with (
-            patch("kiro_crew.testing.harness.spawn_feature_gateway", side_effect=spawn),
+            patch("aj_crew.testing.harness.spawn_feature_gateway", side_effect=spawn),
             patch.object(rk, "_probe_signed_in") as auth,
             patch.object(rk, "_run_private_probe") as probe,
             pytest.raises(pytest.fail.Exception, match="private KIRO_HOME"),
@@ -552,7 +552,7 @@ class TestPrivateWriterIsolation:
         probe.assert_not_called()
 
     def test_native_proof_requires_real_files_not_reader_override(self, rk, tmp_path, monkeypatch):
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         other = tmp_path / "unrelated"
         other.mkdir()
@@ -570,9 +570,9 @@ class TestPrivateWriterIsolation:
 
     @pytest.mark.parametrize("bad", ["actual_home", "target", "launcher"])
     def test_fresh_probe_disagreement_blocks_before_auth(self, rk, tmp_path, monkeypatch, bad):
-        monkeypatch.setenv("KIROCREW_E2E_REAL_KIRO_REQUIRE", "1")
+        monkeypatch.setenv("AJCREW_E2E_REAL_KIRO_REQUIRE", "1")
         home = tmp_path / "not-created"
-        env = {"KIROCREW_HOME": str(home), "KIRO_HOME": str(home / "kiro")}
+        env = {"AJCREW_HOME": str(home), "KIRO_HOME": str(home / "kiro")}
         payload = {
             "actual_home": str(home / "kiro"),
             "target": str(home / "kiro" / "agents"),
@@ -590,7 +590,7 @@ class TestPrivateWriterIsolation:
             yield
 
         with (
-            patch("kiro_crew.testing.harness.spawn_feature_gateway", side_effect=spawn),
+            patch("aj_crew.testing.harness.spawn_feature_gateway", side_effect=spawn),
             patch.object(rk, "_run_private_probe", return_value=payload),
             patch.object(rk, "_probe_signed_in") as auth,
             pytest.raises(pytest.fail.Exception, match="before boot|private KIRO_HOME"),
@@ -605,9 +605,9 @@ class TestPrivateWriterIsolation:
         home = tmp_path / "rig"
         home.mkdir()
         env = {
-            "KIROCREW_HOME": str(home),
+            "AJCREW_HOME": str(home),
             "KIRO_HOME": str(home / "kiro"),
-            "KIROCREW_KIRO_BIN": "native-cli",
+            "AJCREW_KIRO_BIN": "native-cli",
         }
         payload = {
             "actual_home": str(home / "kiro"),
@@ -624,7 +624,7 @@ class TestPrivateWriterIsolation:
             yield handle  # Model a swallowed rmtree error after a confirmed stop.
 
         with (
-            patch("kiro_crew.testing.harness.spawn_feature_gateway", side_effect=spawn),
+            patch("aj_crew.testing.harness.spawn_feature_gateway", side_effect=spawn),
             patch.object(rk, "_run_private_probe", return_value=payload),
             patch.object(rk, "_probe_signed_in"),
             patch.object(rk, "_Client", lambda *_args: _ClientStub([{}])),

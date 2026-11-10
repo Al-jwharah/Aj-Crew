@@ -1,7 +1,7 @@
 ---
 title: A conductor sends to and closes its own children, and reports on its own item, without an approval prompt
 status: implemented
-author: kirocrew-worker, directed by iamwhatever
+author: ajcrew-worker, directed by iamwhatever
 created: 2026-11-08
 last-audited: 2026-11-08
 audited-at: e48fe0ec03
@@ -22,12 +22,12 @@ boundary, so it is RFC-first under
 [CONTRIBUTING.md](../../CONTRIBUTING.md#pull-request-workflow). **The security
 trade-off in section 6 is the repository owner's (iamwhatever) and the security
 reviewer's decision**, not the author's. Every code reference below was read at
-`43ac0cd051`. Paths are under `src/kiro_crew/` unless they start with `docs/`.
+`43ac0cd051`. Paths are under `src/aj_crew/` unless they start with `docs/`.
 
 ## 1. Summary
 
 Under the Normal approval mode, every `session_send` and `session_close` that
-`kirocrew-conductor` or `kirocrew-team-lead` makes prompts the person, including
+`ajcrew-conductor` or `ajcrew-team-lead` makes prompts the person, including
 when the target is a worker the conductor itself just created. An unattended
 Ultra Mode or Bot conductor therefore cannot answer a worker's question or close
 a finished one.
@@ -75,8 +75,8 @@ records, so it is decided here and not in a code PR.
   is off (`_conductor_fenced` in
   `dashboard/session_control_parts/caller_access.py`). With the switch on, it
   keeps the owner's reach. `CONDUCTOR_AGENTS` in the same file names
-  `kirocrew-conductor` and `kirocrew-ledger-conductor`; it does not name
-  `kirocrew-team-lead`, which is what Ultra Mode runs on
+  `ajcrew-conductor` and `ajcrew-ledger-conductor`; it does not name
+  `ajcrew-team-lead`, which is what Ultra Mode runs on
   (`DEFAULT_CREW_MODE_AGENT` in `crew_mode.py`).
 - An approval-time exemption for a conductor's own workers already exists for
   reads: `_CREW_ROOT_OWN_WORKER_VERBS` (`dashboard/chat_turn/tool_approval.py`)
@@ -89,7 +89,7 @@ records, so it is decided here and not in a code PR.
 
 - **A nested conductor's own report.** `_LEDGER_CONDUCTOR_WORK_GRANTS` in
   `agent_parts/spec_grants.py` is the goal conductor's work-ledger grant set;
-  `_conductor_spec` ships it to `kirocrew-conductor` and its alias, and the
+  `_conductor_spec` ships it to `ajcrew-conductor` and its alias, and the
   team lead mounts the same tuple (`agent_materialization/service_agents.py`).
   It grants `work_brief`, the worker verb that reads the caller's own bound
   item, and its comment keeps `work_report` gated: "it WRITES into the
@@ -131,8 +131,8 @@ wider than the problem and does not last:
 
 ## 3. Goals
 
-- G1. `session_send` and `session_close` from `kirocrew-conductor` or
-  `kirocrew-team-lead` to a session that caller created run without an
+- G1. `session_send` and `session_close` from `ajcrew-conductor` or
+  `ajcrew-team-lead` to a session that caller created run without an
   approval prompt under Normal and Reads, as a Bot's do today.
 - G2. The same verbs aimed at any other session prompt exactly as today.
 - G3. Nothing else is opened: no other tool, no other agent, and no change to
@@ -151,8 +151,8 @@ wider than the problem and does not last:
   decide it; `work_dispatch` keeps prompting. Section 10 Q2 records how this
   RFC touches the four-step fallback.
 - **Not in scope: worker shell and file-write prompts** (a worker's own
-  `execute_bash`, `fs_write`, `gh`, `git` under Normal, in `kirocrew-worker`
-  and `kirocrew-mate-worker`). They are a separate, larger trust question, for
+  `execute_bash`, `fs_write`, `gh`, `git` under Normal, in `ajcrew-worker`
+  and `ajcrew-mate-worker`). They are a separate, larger trust question, for
   a later RFC. Only Trust inheritance covers them today.
 - `session_broadcast`, `session_stop`, `session_retry`, `session_continue`.
   They stay withheld from the conductor; each can earn its own argument later.
@@ -185,11 +185,11 @@ can still approve by hand.
 A permission request is auto-approved when all of these hold, and prompts
 otherwise:
 
-1. The calling slot's agent is `kirocrew-conductor` or `kirocrew-team-lead`.
-   Other conductor agents (`kirocrew-ledger-conductor`, pipeline, security,
+1. The calling slot's agent is `ajcrew-conductor` or `ajcrew-team-lead`.
+   Other conductor agents (`ajcrew-ledger-conductor`, pipeline, security,
    folder) keep prompting until named.
-2. The tool is `session_send` or `session_close` on `kirocrew-dashboard`.
-3. The request carries a verified `kirocrew-dashboard` identity and verified
+2. The tool is `session_send` or `session_close` on `ajcrew-dashboard`.
+3. The request carries a verified `ajcrew-dashboard` identity and verified
    raw arguments, and is not a subagent's call (the same checks
    `_crew_root_own_worker_call` makes).
 4. The `target` argument is the exact key (not a title) of a live session
@@ -233,7 +233,7 @@ list after the fact what was sent without a prompt.
 
 ### 5.5 A nested conductor's own `work_report`
 
-Add `@kirocrew-work/work_report` to `_LEDGER_CONDUCTOR_WORK_GRANTS`, and the
+Add `@ajcrew-work/work_report` to `_LEDGER_CONDUCTOR_WORK_GRANTS`, and the
 same ref to the goal conductor's KAS permission rule in
 `agent_materialization/conductor_agents.py`. One tuple entry; the team lead
 picks it up through the shared tuple. The pipeline and security conductors
@@ -341,10 +341,10 @@ One code PR, after this RFC is accepted.
 
 Exit criteria (tests in that PR):
 
-1. Normal mode, `kirocrew-conductor` caller, `session_send` to a child it
+1. Normal mode, `ajcrew-conductor` caller, `session_send` to a child it
    created (vouched lineage): approved with no card, audit row
    `reason=conductor_own_child`.
-2. Same, `kirocrew-team-lead` caller: approved.
+2. Same, `ajcrew-team-lead` caller: approved.
 3. `session_send` to a session the caller did not create (a person's tab, a
    sibling conductor's worker): card shown.
 4. `session_send` by title instead of key: card shown.
@@ -353,7 +353,7 @@ Exit criteria (tests in that PR):
    settled crew-log lineage after restart: approved.
 6. `session_close` to own child: approved; to another session: card.
 7. `work_dispatch` from either agent: card, unchanged.
-8. Caller agent `kirocrew-ledger-conductor` or plain `kirocrew`: card for both
+8. Caller agent `ajcrew-ledger-conductor` or plain `ajcrew`: card for both
    verbs.
 9. A governance deny rule matching the call: deny card, not auto-approved.
    A PreToolUse hook blocking the call: blocked.
@@ -365,11 +365,11 @@ Exit criteria (tests in that PR):
 
 Exit criteria for the `work_report` grant (section 5.5):
 
-14. `kirocrew-conductor`, its alias and `kirocrew-team-lead` carry
-    `@kirocrew-work/work_report` in `allowedTools` and in the KAS rule.
+14. `ajcrew-conductor`, its alias and `ajcrew-team-lead` carry
+    `@ajcrew-work/work_report` in `allowedTools` and in the KAS rule.
 15. The pipeline and security conductors do not.
-16. No conductor spec grants the whole `@kirocrew-work` server or a
-    `kirocrew-work/*` wildcard.
+16. No conductor spec grants the whole `@ajcrew-work` server or a
+    `ajcrew-work/*` wildcard.
 
 The same PR updates the withholding comment in `agent_parts/spec_grants.py`,
 the `_CREW_ROOT_OWN_WORKER_VERBS` comment in `dashboard/chat_turn/tool_approval.py`,
@@ -394,7 +394,7 @@ behaviour exactly. A `git revert` of the code PR fully undoes it.
   first message does not bound injection in the rest. The alternative is to
   exempt only sends into a child that has already had a turn. Owner and
   security reviewer decide, alongside rfc-work-dispatch.md Q1.
-- Q3. Should `kirocrew-ledger-conductor` and the other conductor agents join
+- Q3. Should `ajcrew-ledger-conductor` and the other conductor agents join
   later? Not proposed here.
 - Q4. Should `session_stop` and `session_retry` follow under the same fence, as
   Bots have them? Not proposed here.

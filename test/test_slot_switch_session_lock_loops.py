@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import asyncio
 
-from kiro_crew import llm_helpers
-from kiro_crew.llm_helpers import slot_switch_session_lock
+from aj_crew import llm_helpers
+from aj_crew.llm_helpers import slot_switch_session_lock
 
 _KEY = "dash:test-cross-loop"
 

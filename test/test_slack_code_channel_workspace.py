@@ -17,19 +17,19 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import pinned_fs
-from kiro_crew.dashboard.handlers import worktree as wt
-from kiro_crew.slack import features
-from kiro_crew.slack.code_channels import binding as cc_binding
-from kiro_crew.slack.code_channels.models import CodeChannelApiError
-from kiro_crew.slack.code_channels.workspace import diff as diff_mod
-from kiro_crew.slack.code_channels.workspace import git_ops, service
-from kiro_crew.slack.code_channels.workspace.context_bar import ICONS, BarState, build_items
-from kiro_crew.slack.code_channels.workspace.diff import MAX_VIEW_BYTES, assemble, screen_tracked
-from kiro_crew.slack.code_channels.workspace.pr import PrLookup, PullRequest
-from kiro_crew.slack.code_channels.workspace.remote import RepoRef, parse_remote
-from kiro_crew.slack.code_channels.workspace.store import WorkspaceStore
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew import pinned_fs
+from aj_crew.dashboard.handlers import worktree as wt
+from aj_crew.slack import features
+from aj_crew.slack.code_channels import binding as cc_binding
+from aj_crew.slack.code_channels.models import CodeChannelApiError
+from aj_crew.slack.code_channels.workspace import diff as diff_mod
+from aj_crew.slack.code_channels.workspace import git_ops, service
+from aj_crew.slack.code_channels.workspace.context_bar import ICONS, BarState, build_items
+from aj_crew.slack.code_channels.workspace.diff import MAX_VIEW_BYTES, assemble, screen_tracked
+from aj_crew.slack.code_channels.workspace.pr import PrLookup, PullRequest
+from aj_crew.slack.code_channels.workspace.remote import RepoRef, parse_remote
+from aj_crew.slack.code_channels.workspace.store import WorkspaceStore
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 
 def _passthrough_spawn(argv, mode="standard", **kw):
@@ -556,9 +556,9 @@ def test_gh_signed_out_never_shows_another_checkouts_pr(tmp_path, repo, audits, 
 
 
 def test_find_pull_request_reads_through_the_provider_runner(monkeypatch):
-    from kiro_crew.dashboard.source_providers import chip_refresh, runner
-    from kiro_crew.dashboard.source_providers.contract import SourceProviderError
-    from kiro_crew.slack.code_channels.workspace import pr as pr_mod
+    from aj_crew.dashboard.source_providers import chip_refresh, runner
+    from aj_crew.dashboard.source_providers.contract import SourceProviderError
+    from aj_crew.slack.code_channels.workspace import pr as pr_mod
 
     calls = []
 
@@ -613,7 +613,7 @@ def test_find_pull_request_reads_through_the_provider_runner(monkeypatch):
     assert asyncio.run(pr_mod.find_pull_request(repo, "slack/x-1")).status == "none"
     # A branch git would read as a flag never reaches gh; neither does an unlisted host.
     assert asyncio.run(pr_mod.find_pull_request(repo, "-rf")).status == "unavailable"
-    from kiro_crew.dashboard.source_providers import hosts
+    from aj_crew.dashboard.source_providers import hosts
 
     loads: list[int] = []
     allowed: set[str] = set()
@@ -676,7 +676,7 @@ def test_a_transient_slack_error_is_retried_next_turn(tmp_path, repo, audits):
 
 def test_a_refusal_raised_before_sending_is_logged_and_retried(tmp_path, repo, audits):
     """A request the core's client refuses locally (bad id, oversized diff) changes nothing."""
-    from kiro_crew.slack.code_channels.models import CodeChannelRequestError
+    from aj_crew.slack.code_channels.models import CodeChannelRequestError
 
     h = Harness(tmp_path)
 
@@ -972,7 +972,7 @@ def test_a_malformed_stored_field_is_normalized_on_load_not_crashed_on(
 
 @pytest.mark.parametrize("sha", ["a" * 40, "0123456789abcdef" * 4, ""])
 def test_a_well_formed_base_sha_loads(sha):
-    from kiro_crew.slack.code_channels.workspace.store import _from_dict
+    from aj_crew.slack.code_channels.workspace.store import _from_dict
 
     rec = _from_dict({"team_id": "T", "channel_id": "C", "base_sha": sha, "bind_attempts": 2})
     assert rec is not None and rec.base_sha == sha
@@ -1088,8 +1088,8 @@ def test_a_git_timeout_finding_the_repo_is_counted_too(tmp_path, repo, audits, m
 
 def test_the_core_client_sends_the_workspace_writes_and_latches_refusals():
     """The three writes the workspace makes, end to end through the core's client."""
-    from kiro_crew.slack.code_channels.client import CodeChannelsClient
-    from kiro_crew.slack.code_channels.models import CodeChannelApiError, CodeChannelRequestError
+    from aj_crew.slack.code_channels.client import CodeChannelsClient
+    from aj_crew.slack.code_channels.models import CodeChannelApiError, CodeChannelRequestError
 
     sent: list[tuple[str, dict]] = []
 
@@ -1130,8 +1130,8 @@ def test_the_core_client_sends_the_workspace_writes_and_latches_refusals():
 
 
 def test_installing_the_core_subscribes_the_workspace_to_its_turn_hooks(monkeypatch):
-    from kiro_crew.slack.code_channels import hooks
-    from kiro_crew.slack.code_channels.workspace import core
+    from aj_crew.slack.code_channels import hooks
+    from aj_crew.slack.code_channels.workspace import core
 
     monkeypatch.setattr(core, "_SERVICE", None)
     svc = core.install(lambda: None)
@@ -1149,7 +1149,7 @@ def test_prepare_finishes_the_bind_and_points_the_session_before_returning(
     tmp_path, repo, audits, monkeypatch
 ):
     """The core awaits it ahead of the first turn, which captures the session's project."""
-    from kiro_crew.slack.code_channels.workspace import core
+    from aj_crew.slack.code_channels.workspace import core
 
     h = Harness(tmp_path)
     monkeypatch.setattr(core, "_SERVICE", h.svc)
@@ -1162,7 +1162,7 @@ def test_prepare_finishes_the_bind_and_points_the_session_before_returning(
 
 
 def test_prepare_never_raises_into_the_bind(tmp_path, repo, audits, monkeypatch):
-    from kiro_crew.slack.code_channels.workspace import core
+    from aj_crew.slack.code_channels.workspace import core
 
     h = Harness(tmp_path)
 
@@ -1256,9 +1256,9 @@ def test_a_conductor_led_channel_shows_its_workers_commit_in_the_diff_tab(
     assert made == [("F0", "fix-widget", rec.worktree)] and worktree == rec.worktree
     assert rec.folder_id == folder_id
     # The session the core then creates in that folder, and the conductor's
-    # worker it files under <folder>/kirocrew-worker (inheriting the project).
+    # worker it files under <folder>/ajcrew-worker (inheriting the project).
     dash.add_slot("chat-conductor", folder_id)
-    worker_folder = dash.add_folder("FW", "kirocrew-worker", folder_id)
+    worker_folder = dash.add_folder("FW", "ajcrew-worker", folder_id)
     worker = dash.add_slot("chat-worker", worker_folder, running=True)
     binding = FakeBinding("C1", project_dir=worktree, session_key="chat-conductor")
     h.run(h.svc.ensure(binding))  # the core's prepare() after creating the session
@@ -1317,7 +1317,7 @@ def test_a_suspended_channel_stays_suspended_while_its_workers_run(
 ):
     """The agent's ``suspended`` outlasts its turn end and the workers' turns: only
     the next bound turn (its start) hands the status back."""
-    from kiro_crew.slack.code_channels import status
+    from aj_crew.slack.code_channels import status
 
     h, dash, _made, statuses = _conductor_harness(tmp_path, monkeypatch)
     folder_id, _wt = h.run(
@@ -1509,11 +1509,11 @@ def test_no_git_project_or_a_refused_folder_leaves_the_spec_alone(
 def test_core_plan_session_rewrites_the_spec_into_the_channel_folder(
     tmp_path, repo, audits, monkeypatch
 ):
-    from kiro_crew.slack.code_channels.binding import SessionSpec
-    from kiro_crew.slack.code_channels.workspace import core
+    from aj_crew.slack.code_channels.binding import SessionSpec
+    from aj_crew.slack.code_channels.workspace import core
 
     h, dash, _made, _statuses = _conductor_harness(tmp_path, monkeypatch)
-    spec = SessionSpec(agent="kirocrew-conductor", folder_id="F0", project_dir=str(repo))
+    spec = SessionSpec(agent="ajcrew-conductor", folder_id="F0", project_dir=str(repo))
     monkeypatch.setattr(core, "_SERVICE", None)
     assert h.run(core.plan_session(dash, spec, channel_id="C1", team_id="T1", title="t")) is spec
     monkeypatch.setattr(core, "_SERVICE", h.svc)
@@ -1521,7 +1521,7 @@ def test_core_plan_session_rewrites_the_spec_into_the_channel_folder(
         core.plan_session(dash, spec, channel_id="C1", team_id="T1", title="t", channel_name="fix")
     )
     rec = h.store.get("T1", "C1")
-    assert planned.agent == "kirocrew-conductor"
+    assert planned.agent == "ajcrew-conductor"
     assert planned.project_dir == rec.worktree and planned.folder_id == rec.folder_id != "F0"
 
 
@@ -1529,8 +1529,8 @@ def test_core_plan_session_resolves_the_default_project_with_the_cores_own_helpe
     tmp_path, repo, audits, monkeypatch
 ):
     """No spec project: the configured default goes through binding._usable_project_dir."""
-    from kiro_crew.slack.code_channels.binding import SessionSpec
-    from kiro_crew.slack.code_channels.workspace import core
+    from aj_crew.slack.code_channels.binding import SessionSpec
+    from aj_crew.slack.code_channels.workspace import core
 
     h, dash, _made, _statuses = _conductor_harness(tmp_path, monkeypatch)
     monkeypatch.setattr(core, "_SERVICE", h.svc)
@@ -1542,7 +1542,7 @@ def test_core_plan_session_resolves_the_default_project_with_the_cores_own_helpe
     seen: list[str] = []
     real = cc_binding._usable_project_dir
     monkeypatch.setattr(cc_binding, "_usable_project_dir", lambda p: seen.append(p) or real(p))
-    spec = SessionSpec(agent="kirocrew-conductor", folder_id="F0", project_dir="")
+    spec = SessionSpec(agent="ajcrew-conductor", folder_id="F0", project_dir="")
     planned = h.run(core.plan_session(dash, spec, channel_id="C1", team_id="T1", title="t"))
     assert seen == [str(repo)]
     assert planned.project_dir == h.store.get("T1", "C1").worktree
@@ -1552,8 +1552,8 @@ def test_core_plan_session_resolves_the_default_project_with_the_cores_own_helpe
 
 
 def test_create_channel_folder_reuses_its_own_and_never_repoints_another(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import chat_folders
-    from kiro_crew.slack.code_channels.workspace import folders as folders_mod
+    from aj_crew.dashboard import chat_folders
+    from aj_crew.slack.code_channels.workspace import folders as folders_mod
 
     dash = FakeDashboard()
     tree = tmp_path / "wt"
@@ -1590,8 +1590,8 @@ def test_create_channel_folder_reuses_its_own_and_never_repoints_another(tmp_pat
 
 def test_a_reused_same_name_twin_with_another_project_is_not_rebound(tmp_path, monkeypatch):
     """The create path hands back a person-owned twin as ``reused``; its project decides."""
-    from kiro_crew.dashboard import chat_folders
-    from kiro_crew.slack.code_channels.workspace import folders as folders_mod
+    from aj_crew.dashboard import chat_folders
+    from aj_crew.slack.code_channels.workspace import folders as folders_mod
 
     dash = FakeDashboard()
     tree = tmp_path / "wt"
@@ -1620,8 +1620,8 @@ def test_a_reused_same_name_twin_with_another_project_is_not_rebound(tmp_path, m
 def test_the_folder_reuse_scan_resolves_paths_off_the_event_loop(tmp_path, monkeypatch):
     import threading
 
-    from kiro_crew.dashboard import chat_folders
-    from kiro_crew.slack.code_channels.workspace import folders as folders_mod
+    from aj_crew.dashboard import chat_folders
+    from aj_crew.slack.code_channels.workspace import folders as folders_mod
 
     dash = FakeDashboard()
     tree = tmp_path / "wt"
@@ -1855,8 +1855,8 @@ def test_the_installed_credential_policy_applies_to_every_slack_bound_string(
     tmp_path, repo, audits, monkeypatch
 ):
     """A companion's extra credential patterns reach the diff, its labels and the bar."""
-    from kiro_crew.platform import context as platform_context
-    from kiro_crew.slack.code_channels.workspace import context_bar
+    from aj_crew.platform import context as platform_context
+    from aj_crew.slack.code_channels.workspace import context_bar
 
     house = "HOUSE-TOKEN-1234"
     real = platform_context.redact_via_context

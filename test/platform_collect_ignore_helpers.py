@@ -25,7 +25,7 @@ import pathlib
 
 import pytest
 
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
 TEST_DIR = pathlib.Path(os.path.abspath(os.path.dirname(__file__)))
 

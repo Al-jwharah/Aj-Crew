@@ -1,7 +1,7 @@
 ---
 title: Federated App Platform — Dynamic ESM Loading with Import Maps
 status: partial
-author: KiroCrew contributors
+author: AjCrew contributors
 created: 2026-04-18
 last-audited: 2026-08-03
 audited-at: 0ab6ed48
@@ -15,39 +15,39 @@ superseded-by: []
 
 > **Current behaviour: see [`../system-specs/modules/app-kit-platform.md`](../system-specs/modules/app-kit-platform.md) §18.**
 > The shipped Phase 1 path dynamically imports an app's ESM module through
-> `AppHost` and the manifest's `ui.entry`, with `@kirocrew/app-sdk` provided by
+> `AppHost` and the manifest's `ui.entry`, with `@ajcrew/app-sdk` provided by
 > the host. The host-declared import map and vendored `/vendor/` ESM shims now
 > ship from `website/vite.config.ts` and `website/public/vendor/`; the CDN import
 > map inside MCP App `srcdoc` iframes is a separate mechanism. Read the remaining
 > phases below as proposals, not descriptions of current behaviour.
 
-**Author:** KiroCrew contributors  
+**Author:** AjCrew contributors  
 **Date:** 2026-04-18  
-**Status:** partial — Phase 1 is substantially on main (import map, vendored ESM shims, `AppHost.tsx`, `@kirocrew/app-sdk`, static app-UI serving); Phase 3 is half-built (`app init --ui` shipped, `app dev` reinterpreted as a dev-mode toggle, no `kirocrewApp()` Vite plugin, no `app publish`). Unstarted: Phase 2 (Agent Worlds extraction — contradicted by the compiled-in builtin-apps pattern that shipped instead), Phase 1's entire removal table (app backends are alive and load-bearing), Phase 4's bundle+hash+CDN lane, Phase 5's CSP/monitoring. §3.3 and §3.7 are superseded by `rfc-appstore-official-registry.md`; this RFC's loading model is not.
+**Status:** partial — Phase 1 is substantially on main (import map, vendored ESM shims, `AppHost.tsx`, `@ajcrew/app-sdk`, static app-UI serving); Phase 3 is half-built (`app init --ui` shipped, `app dev` reinterpreted as a dev-mode toggle, no `ajcrewApp()` Vite plugin, no `app publish`). Unstarted: Phase 2 (Agent Worlds extraction — contradicted by the compiled-in builtin-apps pattern that shipped instead), Phase 1's entire removal table (app backends are alive and load-bearing), Phase 4's bundle+hash+CDN lane, Phase 5's CSP/monitoring. §3.3 and §3.7 are superseded by `rfc-appstore-official-registry.md`; this RFC's loading model is not.
 
 ---
 
 ## 1. Problem Statement
 
-KiroCrew's app system today supports installing agent/skill/cron bundles from local directories. The UI side is limited: apps can either host their own HTTP backend (embedded via iframe) or have no visual presence at all. This creates three problems:
+AjCrew's app system today supports installing agent/skill/cron bundles from local directories. The UI side is limited: apps can either host their own HTTP backend (embedded via iframe) or have no visual presence at all. This creates three problems:
 
-1. **No federated UI loading** — apps cannot contribute React pages that feel native to the KiroCrew dashboard. The iframe approach has well-known UX limitations (scrolling, focus, accessibility, no shared theme/components, double scrollbars).
+1. **No federated UI loading** — apps cannot contribute React pages that feel native to the AjCrew dashboard. The iframe approach has well-known UX limitations (scrolling, focus, accessibility, no shared theme/components, double scrollbars).
 
-2. **No remote registry** — apps can only be installed from local file paths. There's no way for a developer to publish an app and have other users discover and install it from within KiroCrew.
+2. **No remote registry** — apps can only be installed from local file paths. There's no way for a developer to publish an app and have other users discover and install it from within AjCrew.
 
-3. **Built-in features that should be apps** — features like Agent Worlds (pixel art scenes), Channels (multi-agent chat), and Schedule (cron UI) are hardcoded into the KiroCrew frontend. They can't be independently versioned, disabled, or replaced. New features require modifying the core codebase.
+3. **Built-in features that should be apps** — features like Agent Worlds (pixel art scenes), Channels (multi-agent chat), and Schedule (cron UI) are hardcoded into the AjCrew frontend. They can't be independently versioned, disabled, or replaced. New features require modifying the core codebase.
 
 The goal is a platform where:
 - A developer creates a new package, writes a React component, publishes it
-- A user discovers it in KiroCrew's App Store, clicks Install, and gets a new sidebar page
+- A user discovers it in AjCrew's App Store, clicks Install, and gets a new sidebar page
 - The app looks and feels native — same theme, same components, same React tree
 - No iframes, no Web Components, no separate backend processes
 
 ## 2. Design Principles
 
-1. **Apps are React components.** The contract is: export a default React component. No framework abstraction, no custom rendering layer. App developers use the same React + Tailwind + Lucide stack as KiroCrew core.
+1. **Apps are React components.** The contract is: export a default React component. No framework abstraction, no custom rendering layer. App developers use the same React + Tailwind + Lucide stack as AjCrew core.
 
-2. **Import maps for shared dependencies.** React, ReactDOM, and KiroCrew's UI library are provided by the host via browser-native [import maps](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap). Apps externalize these dependencies at build time. Result: tiny app bundles, single React instance, hooks and context work across the boundary.
+2. **Import maps for shared dependencies.** React, ReactDOM, and AjCrew's UI library are provided by the host via browser-native [import maps](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap). Apps externalize these dependencies at build time. Result: tiny app bundles, single React instance, hooks and context work across the boundary.
 
 3. **Permission-scoped API surface.** Apps declare which API endpoints and real-time events they need. The SDK provides a fetch wrapper that enforces these permissions client-side. In a future hosted deployment, the server enforces them too.
 
@@ -61,15 +61,15 @@ The goal is a platform where:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│  KiroCrew Host                                               │
+│  AjCrew Host                                               │
 │                                                              │
 │  index.html                                                  │
 │  ┌────────────────────────────────────────────────────────┐  │
 │  │ <script type="importmap">                              │  │
 │  │   "react" → /vendor/react.mjs                          │  │
 │  │   "react-dom" → /vendor/react-dom.mjs                  │  │
-│  │   "@kirocrew/ui" → /vendor/kirocrew-ui.mjs             │  │
-│  │   "@kirocrew/app-sdk" → /vendor/kirocrew-app-sdk.mjs   │  │
+│  │   "@ajcrew/ui" → /vendor/ajcrew-ui.mjs             │  │
+│  │   "@ajcrew/app-sdk" → /vendor/ajcrew-app-sdk.mjs   │  │
 │  │ </script>                                              │  │
 │  └────────────────────────────────────────────────────────┘  │
 │                                                              │
@@ -98,7 +98,7 @@ The goal is a platform where:
 
 ### 3.2 Import Map Strategy
 
-The host's `index.html` declares an import map that maps bare specifiers to vendored ESM bundles served by the KiroCrew backend:
+The host's `index.html` declares an import map that maps bare specifiers to vendored ESM bundles served by the AjCrew backend:
 
 ```html
 <script type="importmap">
@@ -108,8 +108,8 @@ The host's `index.html` declares an import map that maps bare specifiers to vend
     "react-dom": "/vendor/react-dom.mjs",
     "react-dom/client": "/vendor/react-dom-client.mjs",
     "react/jsx-runtime": "/vendor/react-jsx-runtime.mjs",
-    "@kirocrew/ui": "/vendor/kirocrew-ui.mjs",
-    "@kirocrew/app-sdk": "/vendor/kirocrew-app-sdk.mjs",
+    "@ajcrew/ui": "/vendor/ajcrew-ui.mjs",
+    "@ajcrew/app-sdk": "/vendor/ajcrew-app-sdk.mjs",
     "lucide-react": "/vendor/lucide-react.mjs",
     "framer-motion": "/vendor/framer-motion.mjs"
   }
@@ -117,9 +117,9 @@ The host's `index.html` declares an import map that maps bare specifiers to vend
 </script>
 ```
 
-When an app bundle does `import { Card } from '@kirocrew/ui'`, the browser resolves it to the host's vendored copy. No duplicate React instances, no hook violations, no bundle bloat.
+When an app bundle does `import { Card } from '@ajcrew/ui'`, the browser resolves it to the host's vendored copy. No duplicate React instances, no hook violations, no bundle bloat.
 
-The vendored files are generated at KiroCrew build time by extracting ESM builds of each shared dependency. The Vite build already produces these — we just need to copy them to a `/vendor/` static directory.
+The vendored files are generated at AjCrew build time by extracting ESM builds of each shared dependency. The Vite build already produces these — we just need to copy them to a `/vendor/` static directory.
 
 ### 3.3 App Manifest Schema
 
@@ -131,7 +131,7 @@ The vendored files are generated at KiroCrew build time by extracting ESM builds
   "description": "Pixel art visualizations of your agents at work",
   "author": "priyag",
   "tags": ["visualization", "agents", "fun"],
-  "kirocrew": ">=1.3.0",
+  "ajcrew": ">=1.3.0",
 
   "ui": {
     "entry": "dist/index.mjs",
@@ -167,7 +167,7 @@ Fields:
 | `description` | string | no | One-line description |
 | `author` | string | no | Author alias |
 | `tags` | string[] | no | Searchable tags |
-| `kirocrew` | string | no | Minimum KiroCrew version (semver range) |
+| `ajcrew` | string | no | Minimum AjCrew version (semver range) |
 | `ui.entry` | string | no | Path to ESM bundle relative to app root |
 | `ui.pages` | Page[] | no | Routes to register in the sidebar |
 | `ui.pages[].route` | string | yes | URL path (e.g. `/worlds`) |
@@ -189,7 +189,7 @@ The `backend` field from the current manifest is **removed**. Apps do not host t
 // frontend/src/components/AppHost.tsx
 import { Suspense, lazy, useMemo } from 'react'
 import ErrorBoundary from './ErrorBoundary'
-import { AppApiProvider } from '@kirocrew/app-sdk'
+import { AppApiProvider } from '@ajcrew/app-sdk'
 import { ContentSkeleton } from './ui'
 
 interface AppHostProps {
@@ -249,12 +249,12 @@ function AppCrashFallback({ appName }: { appName: string }) {
 }
 ```
 
-### 3.5 App SDK (`@kirocrew/app-sdk`)
+### 3.5 App SDK (`@ajcrew/app-sdk`)
 
 The SDK is a lightweight package that apps import. It provides React hooks backed by a context that `AppHost` sets up.
 
 ```typescript
-// @kirocrew/app-sdk — public API
+// @ajcrew/app-sdk — public API
 
 // Hooks
 export function useAppApi(): AppApi
@@ -278,7 +278,7 @@ export interface Permissions {
 }
 
 // Vite plugin (for app build tooling)
-export function kirocrewApp(): VitePlugin
+export function ajcrewApp(): VitePlugin
 
 // Context provider (used by AppHost, not by apps directly)
 export function AppApiProvider(props: {
@@ -309,9 +309,9 @@ function createScopedApi(allowedPaths: string[]): AppApi {
 }
 ```
 
-### 3.6 UI Component Library (`@kirocrew/ui`)
+### 3.6 UI Component Library (`@ajcrew/ui`)
 
-The existing shared components in `frontend/src/components/ui.tsx` are extracted into a standalone package. App developers `import { Card, Btn, Badge, PageHeader } from '@kirocrew/ui'` and get themed components that match the host.
+The existing shared components in `frontend/src/components/ui.tsx` are extracted into a standalone package. App developers `import { Card, Btn, Badge, PageHeader } from '@ajcrew/ui'` and get themed components that match the host.
 
 The package exports:
 - `Card`, `CardTitle`
@@ -343,11 +343,11 @@ The registry is a JSON index file hosted on a CDN (or internal S3 bucket). The e
       "version": "0.1.0",
       "author": "priyag",
       "tags": ["visualization", "agents", "fun"],
-      "kirocrew": ">=1.3.0",
+      "ajcrew": ">=1.3.0",
       "icon": "Gamepad2",
-      "bundleUrl": "https://kirocrew-apps.example.com/agent-worlds/0.1.0/index.mjs",
+      "bundleUrl": "https://ajcrew-apps.example.com/agent-worlds/0.1.0/index.mjs",
       "bundleHash": "sha384-abc123...",
-      "manifestUrl": "https://kirocrew-apps.example.com/agent-worlds/0.1.0/app.json",
+      "manifestUrl": "https://ajcrew-apps.example.com/agent-worlds/0.1.0/app.json",
       "permissions": {
         "api": ["/api/agents", "/api/status"],
         "events": ["agent:status"]
@@ -358,18 +358,18 @@ The registry is a JSON index file hosted on a CDN (or internal S3 bucket). The e
 ```
 
 Install flow:
-1. User clicks "Install" in App Store UI (or runs `kirocrew app install agent-worlds`)
-2. KiroCrew downloads `app.json` from `manifestUrl`
-3. KiroCrew downloads `index.mjs` from `bundleUrl`
+1. User clicks "Install" in App Store UI (or runs `ajcrew app install agent-worlds`)
+2. AjCrew downloads `app.json` from `manifestUrl`
+3. AjCrew downloads `index.mjs` from `bundleUrl`
 4. Verifies `bundleHash` matches the downloaded file
-5. Stores both in `~/.kirocrew/apps/agent-worlds/`
+5. Stores both in `~/.ajcrew/apps/agent-worlds/`
 6. Registers agents, skills, crons via existing bridge system
 7. Adds route to sidebar — no restart needed
 
 ### 3.8 App File Layout (Installed)
 
 ```
-~/.kirocrew/apps/
+~/.ajcrew/apps/
   agent-worlds/
     app.json              ← manifest
     ui/
@@ -382,17 +382,17 @@ Install flow:
     installed.json         ← install metadata (version, date, source)
 ```
 
-The KiroCrew backend serves `~/.kirocrew/apps/{name}/ui/*` at `/apps/{name}/ui/*` as static files. The import in `AppHost` resolves to `/apps/agent-worlds/ui/index.mjs`.
+The AjCrew backend serves `~/.ajcrew/apps/{name}/ui/*` at `/apps/{name}/ui/*` as static files. The import in `AppHost` resolves to `/apps/agent-worlds/ui/index.mjs`.
 
 ## 4. Developer Experience
 
 ### 4.1 Scaffold
 
 ```bash
-kirocrew app init agent-worlds --with-ui
+ajcrew app init agent-worlds --with-ui
 ```
 
-Creates a package `KiroCrewApp-AgentWorlds` with:
+Creates a package `AjCrewApp-AgentWorlds` with:
 - `app.json` (manifest with sensible defaults)
 - `vite.config.ts` (pre-configured externals, library mode)
 - `src/index.tsx` (hello-world React component)
@@ -402,15 +402,15 @@ Creates a package `KiroCrewApp-AgentWorlds` with:
 ### 4.2 Local Development
 
 ```bash
-kirocrew app dev
+ajcrew app dev
 ```
 
 1. Starts Vite dev server on port 3001 with HMR
-2. Registers the app with the running KiroCrew instance in dev mode
-3. KiroCrew loads the app from `http://localhost:3001/src/index.tsx` (Vite's native ESM)
-4. Hot module replacement works — edit, save, see changes instantly in KiroCrew
+2. Registers the app with the running AjCrew instance in dev mode
+3. AjCrew loads the app from `http://localhost:3001/src/index.tsx` (Vite's native ESM)
+4. Hot module replacement works — edit, save, see changes instantly in AjCrew
 
-The dev server proxies API calls to the KiroCrew backend, so the app has access to real data.
+The dev server proxies API calls to the AjCrew backend, so the app has access to real data.
 
 ### 4.3 Build
 
@@ -418,7 +418,7 @@ The dev server proxies API calls to the KiroCrew backend, so the app has access 
 npm run build
 ```
 
-Runs Vite in library mode. Output: `build/dist/index.mjs` (~20-100KB depending on app complexity). The `kirocrewApp()` Vite plugin:
+Runs Vite in library mode. Output: `build/dist/index.mjs` (~20-100KB depending on app complexity). The `ajcrewApp()` Vite plugin:
 - Validates `app.json` against the manifest schema
 - Checks that declared API permissions reference valid endpoint prefixes
 - Generates `build/dist/manifest.json` with content hash
@@ -426,7 +426,7 @@ Runs Vite in library mode. Output: `build/dist/index.mjs` (~20-100KB depending o
 ### 4.4 Publish
 
 ```bash
-kirocrew app publish
+ajcrew app publish
 ```
 
 1. Builds the package
@@ -438,8 +438,8 @@ kirocrew app publish
 
 ```tsx
 // src/index.tsx — the entire app
-import { useAppApi, useAppEvents } from '@kirocrew/app-sdk'
-import { PageHeader, Card, Badge } from '@kirocrew/ui'
+import { useAppApi, useAppEvents } from '@ajcrew/app-sdk'
+import { PageHeader, Card, Badge } from '@ajcrew/ui'
 import { useState, useEffect } from 'react'
 import OfficeScene from './scenes/OfficeScene'
 
@@ -465,7 +465,7 @@ export default function AgentWorldsApp() {
 ```
 
 The app author doesn't think about:
-- Import maps (handled by KiroCrew host)
+- Import maps (handled by AjCrew host)
 - Theme integration (CSS custom properties just work)
 - Permission enforcement (SDK handles it)
 - Bundle optimization (React is externalized automatically)
@@ -480,7 +480,7 @@ The app author doesn't think about:
 | Malicious app steals user data | Registry review process + bundle hash pinning |
 | Supply chain tampering after review | Subresource Integrity (hash verification on install) |
 | App accesses unauthorized APIs | Permission-scoped API proxy (client-side now, server-side in hosted mode) |
-| App crashes takes down KiroCrew | ErrorBoundary per app |
+| App crashes takes down AjCrew | ErrorBoundary per app |
 | App causes memory leak / CPU abuse | Future: runtime monitoring + kill switch |
 | Code injection at network level | CSP headers in hosted mode |
 
@@ -488,10 +488,10 @@ The app author doesn't think about:
 
 | Tier | Trust Level | Example | Verification |
 |------|-------------|---------|--------------|
-| Built-in | Full | Chat, Overview, Settings | Part of KiroCrew core, no dynamic loading |
+| Built-in | Full | Chat, Overview, Settings | Part of AjCrew core, no dynamic loading |
 | Curated | High | Apps in official registry | Reviewed, signed, hash-pinned |
 | Community | Medium | Apps from community registry | Hash-pinned, permissions displayed at install |
-| Local | User-controlled | `kirocrew app install ./my-app` | No verification, user takes responsibility |
+| Local | User-controlled | `ajcrew app install ./my-app` | No verification, user takes responsibility |
 
 ### 5.3 Permission Enforcement
 
@@ -505,28 +505,28 @@ The app author doesn't think about:
 
 - Remove `backend.py`, `BackendConfig`, iframe `AppLoader`, process management
 - Keep existing app system for agent/skill/cron bundles
-- Extract `@kirocrew/ui` from `frontend/src/components/ui.tsx`
+- Extract `@ajcrew/ui` from `frontend/src/components/ui.tsx`
 - Add import map to `index.html`
 - Build `AppHost.tsx` with dynamic `import()` + ErrorBoundary
-- Build `@kirocrew/app-sdk` with `useAppApi`, `useAppEvents`, `useTheme`
+- Build `@ajcrew/app-sdk` with `useAppApi`, `useAppEvents`, `useTheme`
 - Serve installed app bundles from `/apps/{name}/ui/*`
 
 ### Phase 2: First App Extraction
 
 - Extract Agent Worlds as the proof-of-concept app
-  - Create `KiroCrewApp-AgentWorlds` package
+  - Create `AjCrewApp-AgentWorlds` package
   - Move scene components from `frontend/src/pages/scenes/` to the app
   - Move `WorldsPage.tsx` logic into the app's `index.tsx`
-  - Remove Worlds from KiroCrew core's router and sidebar
-  - Install the app via `kirocrew app install` — it appears in the sidebar as before
+  - Remove Worlds from AjCrew core's router and sidebar
+  - Install the app via `ajcrew app install` — it appears in the sidebar as before
 - Validate the full cycle: scaffold → develop → build → install → render
 
 ### Phase 3: Developer Tooling
 
-- `kirocrew app init` scaffold command
-- `kirocrew app dev` local development with HMR
-- `kirocrewApp()` Vite plugin for build validation
-- `kirocrew app publish` upload to registry
+- `ajcrew app init` scaffold command
+- `ajcrew app dev` local development with HMR
+- `ajcrewApp()` Vite plugin for build validation
+- `ajcrew app publish` upload to registry
 - Documentation and app developer guide
 
 ### Phase 4: Registry & Discovery
@@ -563,7 +563,7 @@ The following modules are **kept** and enhanced:
 | `apps/manager_install.py`, `manager_uninstall.py`, `manager_activation.py` | Install/uninstall/enable/disable | Add bundle download + hash verification |
 | `apps/registry_pipeline/indexes.py`, `caches.py` | Registry fetch + cache | Add `bundleUrl`, `bundleHash` fields |
 | `apps/bridges_agents.py`, `bridges_skills.py`, `bridges_crons.py` | Register agents/skills/crons | No change needed |
-| `apps/scaffold.py` | `kirocrew app init` | Add `--with-ui` flag, Vite config generation |
+| `apps/scaffold.py` | `ajcrew app init` | Add `--with-ui` flag, Vite config generation |
 | `apps/routes.py` | REST API for app management | Add bundle serving endpoint |
 | `frontend/src/pages/AppsPage.tsx` | App Store UI | Add Browse tab with registry integration |
 
@@ -575,17 +575,17 @@ The following modules are **kept** and enhanced:
 
 3. **Multi-page apps** — An app can declare multiple pages. Should each page be a separate lazy-loaded chunk, or one bundle for all pages? (Proposal: single bundle per app for simplicity. Apps can code-split internally with `React.lazy`.)
 
-4. **App-to-app communication** — Should apps be able to communicate with each other? (Proposal: not in scope. Apps communicate with KiroCrew core via the SDK. If needed later, a pub/sub event bus can be added.)
+4. **App-to-app communication** — Should apps be able to communicate with each other? (Proposal: not in scope. Apps communicate with AjCrew core via the SDK. If needed later, a pub/sub event bus can be added.)
 
-5. **Offline support** — Installed app bundles are cached locally. Should KiroCrew work fully offline with installed apps? (Proposal: yes — bundles are downloaded at install time, not fetched on every page load.)
+5. **Offline support** — Installed app bundles are cached locally. Should AjCrew work fully offline with installed apps? (Proposal: yes — bundles are downloaded at install time, not fetched on every page load.)
 
-6. **Version pinning** — When a new version of an app is published, should KiroCrew auto-update or require user action? (Proposal: show "update available" badge, user clicks to update. No auto-update for apps — different from KiroCrew core updates.)
+6. **Version pinning** — When a new version of an app is published, should AjCrew auto-update or require user action? (Proposal: show "update available" badge, user clicks to update. No auto-update for apps — different from AjCrew core updates.)
 
-7. **Shared state** — Some apps may want to read KiroCrew's Redux store (e.g. connection status, active slot). Should the SDK expose this? (Proposal: expose read-only selectors for common state like `useConnectionStatus()`, `useActiveSlot()`. Don't expose the full store.)
+7. **Shared state** — Some apps may want to read AjCrew's Redux store (e.g. connection status, active slot). Should the SDK expose this? (Proposal: expose read-only selectors for common state like `useConnectionStatus()`, `useActiveSlot()`. Don't expose the full store.)
 
 ## 9. Success Criteria
 
 - Phase 1: Agent Worlds renders as a dynamically loaded app with the same UX as the current built-in page. No visual regression. Import map resolves shared dependencies correctly. ErrorBoundary catches app crashes without affecting the host.
 - Phase 2: A developer can scaffold, develop, build, and install an app end-to-end using CLI commands. Hot reload works during development.
 - Phase 3: The App Store Browse tab shows apps from the registry. One-click install works. Bundle hash is verified.
-- Phase 4: At least 3 apps published by different developers. No iframe, no backend process, no build-time coupling to KiroCrew core.
+- Phase 4: At least 3 apps published by different developers. No iframe, no backend process, no build-time coupling to AjCrew core.

@@ -6,7 +6,7 @@
 // agents sidebar (state/listen badges, the listen-mode menu, dismiss, Add Agent),
 // the New Channel dialog and its preset picker, the close-channel flow, the
 // inline error notice fed by `apiError`, the two empty states, and the seven branches of
-// the `kirocrew-channel` window-event handler that stands in for the WebSocket.
+// the `ajcrew-channel` window-event handler that stands in for the WebSocket.
 //
 // Conventions follow ChannelPage.clearContext.test.tsx: the api client is the
 // single seam and is auto-mocked, `renderWithProviders` supplies Redux + Router +
@@ -40,7 +40,7 @@ type Raw = Record<string, unknown>
 
 /** A channel member as the backend sends it (snake_case), so `mapAgent` runs. */
 const member = (over: Raw = {}): Raw => ({
-  id: 'a1', role: 'Researcher', agent_name: 'kiro-crew-default',
+  id: 'a1', role: 'Researcher', agent_name: 'aj-crew-default',
   state: 'listening', listen_mode: 'mention', approval_policy: 'writes', ...over,
 })
 
@@ -77,7 +77,7 @@ function mockApi(channels: Raw[], presets?: Raw[]) {
   vi.mocked(api).channelApproveAgent = vi.fn().mockResolvedValue({ ok: true })
   vi.mocked(api).channelClearContext = vi.fn().mockResolvedValue({ ok: true, cleared: [] })
   // AddAgentForm mounts useAgents(), which syncs then lists the agent catalog.
-  vi.mocked(api).kirocrewAgents = vi.fn().mockResolvedValue({ agents: [], default_agent: 'legacy-default' })
+  vi.mocked(api).ajcrewAgents = vi.fn().mockResolvedValue({ agents: [], default_agent: 'legacy-default' })
   vi.mocked(api).agentCatalog = vi.fn().mockResolvedValue({ agents: [], default_agent: 'legacy-default' })
 }
 
@@ -88,10 +88,10 @@ async function renderPage() {
   return utils
 }
 
-/** Fire one `kirocrew-channel` window event, the page's stand-in for the socket. */
+/** Fire one `ajcrew-channel` window event, the page's stand-in for the socket. */
 function wsEvent(type: string, data: Raw) {
   act(() => {
-    window.dispatchEvent(new CustomEvent('kirocrew-channel', { detail: { type, data } }))
+    window.dispatchEvent(new CustomEvent('ajcrew-channel', { detail: { type, data } }))
   })
 }
 
@@ -436,7 +436,7 @@ describe('ChannelPage — agents sidebar', () => {
   it('renders the agent template name under the role', async () => {
     await renderPage()
     await openAgentsPanel()
-    expect(screen.getByText('kiro-crew-default')).toBeInTheDocument()
+    expect(screen.getByText('aj-crew-default')).toBeInTheDocument()
   })
 
   it('changes listen mode through the badge menu and patches the agent', async () => {

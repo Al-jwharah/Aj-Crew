@@ -25,7 +25,7 @@ import crew_log_drain
 import pytest
 from crew_log_drain import assert_drained, settle, unsync_appends
 
-from kiro_crew.crew_log import CrewLog, crew_log_path, emit
+from aj_crew.crew_log import CrewLog, crew_log_path, emit
 
 SESSION = "conc-edge-sess-0001"
 
@@ -37,7 +37,7 @@ def _isolated_home(tmp_path, monkeypatch):
     The writer is waited out BEFORE the home pin lifts (:func:`crew_log_drain.settle`):
     a batch it still holds would otherwise write into the next test's home.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     monkeypatch.setattr(emit, "_retry_delay", lambda _attempts: 0.0)
     emit.reset_caches()
@@ -52,7 +52,7 @@ def _unsynced_appends(monkeypatch):
 
 
 def _open(sid: str = SESSION) -> None:
-    emit.on_session_opened(sid, agent="kirocrew", slot="test", model="m", owner="default")
+    emit.on_session_opened(sid, agent="ajcrew", slot="test", model="m", owner="default")
     assert_drained()
 
 

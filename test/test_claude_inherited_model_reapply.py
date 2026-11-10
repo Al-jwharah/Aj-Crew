@@ -20,9 +20,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew import model_registry as mr
-from kiro_crew.acp.client import DEFAULT_MODEL, AcpClient, AcpError, AcpProcessDied
-from kiro_crew.acp.types import (
+from aj_crew import model_registry as mr
+from aj_crew.acp.client import DEFAULT_MODEL, AcpClient, AcpError, AcpProcessDied
+from aj_crew.acp.types import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_KIRO,
     METHOD_INITIALIZE,
@@ -109,7 +109,7 @@ class TestTheReportedSettingsModelIsReapplied:
         adapter = _FakeClaudeAdapter(current="gateway-model-a")
         client = _claude_client(tmp_path, adapter, model=model)
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.acp.client"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.acp.client"):
             await client._initialize_session()
 
         assert METHOD_SESSION_NEW in adapter.methods()
@@ -126,7 +126,7 @@ class TestTheReportedSettingsModelIsReapplied:
         adapter = _FakeClaudeAdapter(current="gateway-model-a")
         client = _claude_client(tmp_path, adapter, resume="sess-old")
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.acp.client"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.acp.client"):
             await client._initialize_session()
 
         assert client._resumed is True
@@ -233,7 +233,7 @@ class TestBestEffort:
             side_effect=AcpError("JSON-RPC error: internal")
         )
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.client"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp.client"):
             await client._apply_startup_model()
 
         assert "could not be re-applied" in caplog.text

@@ -12,10 +12,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import history as history_mod
-from kiro_crew import history_consolidation as history_consolidation_mod
-from kiro_crew import memory_stores
-from kiro_crew.history import (
+from aj_crew import history as history_mod
+from aj_crew import history_consolidation as history_consolidation_mod
+from aj_crew import memory_stores
+from aj_crew.history import (
     _CONSOLIDATION_MAX_ATTEMPTS,
     _CONSOLIDATION_PROMPT_BUDGET_CHARS,
     ConversationLog,
@@ -23,13 +23,13 @@ from kiro_crew.history import (
     _consolidation_chunk,
     _fmt_message,
 )
-from kiro_crew.history_consolidation import (
+from aj_crew.history_consolidation import (
     PrefsWindow,
     _head_exceeds_budget,
     _prompt_rows,
     _slice_head_for_budget,
 )
-from kiro_crew.image_refs import STRIPPED_IMAGE_MARKER
+from aj_crew.image_refs import STRIPPED_IMAGE_MARKER
 
 KEY = "dashboard:chat-bounds"
 
@@ -607,7 +607,7 @@ class TestABoundedAttemptIsNotReleasedByGrowth:
         # two slices because the envelope is charged against each, so the second
         # slice is not necessarily the last. Capture its prompt and compare it to
         # the slice the helper produces from the sub-offset.
-        from kiro_crew.history_consolidation import _slice_head_for_budget
+        from aj_crew.history_consolidation import _slice_head_for_budget
 
         captured: dict = {}
 
@@ -629,7 +629,7 @@ class TestABoundedAttemptIsNotReleasedByGrowth:
         assert (
             len(expected_slice["content"]) < _CONSOLIDATION_PROMPT_BUDGET_CHARS
         ), "a resumed slice's content is within one budget, not the whole head"
-        from kiro_crew.history import _fmt_message
+        from aj_crew.history import _fmt_message
 
         assert (
             len(_fmt_message(expected_slice)) <= _CONSOLIDATION_PROMPT_BUDGET_CHARS
@@ -732,7 +732,7 @@ class TestSubChunkingDrainsAnOversizedHead:
             await c._consolidate(KEY, include_history=True)
 
         head = log.snapshot_for_consolidation(KEY)[0][0]
-        from kiro_crew.history_consolidation import _slice_head_for_budget
+        from aj_crew.history_consolidation import _slice_head_for_budget
 
         first_slice_again, start, _end, _last = _slice_head_for_budget(head, 0)
         assert start == 0, "the head is re-sliced from its start, not resumed mid-way"
@@ -743,7 +743,7 @@ class TestConsolidateNowDrainsTheTail:
     """The CLI has no sweep behind it: its process exits when the call returns.
 
     Every in-gateway entry point can stop after one bounded pass because the next
-    turn, the idle sweep or a session-end hook fires the next one. ``kirocrew
+    turn, the idle sweep or a session-end hook fires the next one. ``ajcrew
     consolidate`` cannot, so a single pass would report a tail larger than the
     budget as consolidated while most of it was never read.
     """
@@ -837,7 +837,7 @@ class TestConsolidateNowDrainsTheTail:
         marked so the sweep does not repeat it -- but only up to what was read."""
         import contextlib
 
-        from kiro_crew.history import TranscriptWithheld
+        from aj_crew.history import TranscriptWithheld
 
         log = _log_with(tmp_path, ["x" * (_CONSOLIDATION_PROMPT_BUDGET_CHARS // 3)] * 9)
         c = _make_consolidator(log)
@@ -894,7 +894,7 @@ class TestTheReceiptDescribesThePromptedSpan:
         advances the durable marker past the tail the moment the marker write is
         retried after a transient failure.
         """
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         log = _log_with(
             tmp_path,
@@ -907,7 +907,7 @@ class TestTheReceiptDescribesThePromptedSpan:
         memory = MagicMock()
         memory.read_preferences.return_value = ""
         memory.read_projects.return_value = ""
-        monkeypatch.setattr("kiro_crew.context.store_of_session", lambda *_: "alice-store")
+        monkeypatch.setattr("aj_crew.context.store_of_session", lambda *_: "alice-store")
         monkeypatch.setattr(memory_stores, "memory_store_version", lambda *_: 2)
         monkeypatch.setattr(ContextBuilder, "ensure_store", AsyncMock(return_value=store))
         monkeypatch.setattr(ContextBuilder, "get_memory_for", lambda **_: memory)
@@ -1042,7 +1042,7 @@ class TestSlicingStripsImageRefsOnceOverTheWholeHead:
         A re-strip of a mid-fence slice would read the fence as prose and replace a
         path the whole-head pass kept.
         """
-        from kiro_crew.image_refs import strip_image_refs
+        from aj_crew.image_refs import strip_image_refs
 
         png = "/illustrative/diagram.png"
         # An open fence, filler long enough to force a boundary before the path,

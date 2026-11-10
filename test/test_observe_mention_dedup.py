@@ -17,9 +17,9 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from test_channel_activation import _make_orch
 
-from kiro_crew.channel_history import ChannelHistory
-from kiro_crew.config.loader import ACTIVATION_OBSERVE, ChannelConfig
-from kiro_crew.slack.events import SeenCache, _route_message
+from aj_crew.channel_history import ChannelHistory
+from aj_crew.config.loader import ACTIVATION_OBSERVE, ChannelConfig
+from aj_crew.slack.events import SeenCache, _route_message
 
 
 def _observe_orch(tmp_path: Path) -> tuple[object, ChannelHistory, SeenCache]:
@@ -38,8 +38,8 @@ async def test_observe_mention_pair_recorded_once(tmp_path: Path) -> None:
     event = {"user": "U1", "channel": "C1", "text": "<@UBOT> status?", "ts": "100.1", "team": "T1"}
 
     with (
-        patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_hm,
-        patch("kiro_crew.slack.events.is_allowed_user", return_value=True),
+        patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_hm,
+        patch("aj_crew.slack.events.is_allowed_user", return_value=True),
     ):
         await _route_message(orch, dict(event), seen, is_mention=False)  # `message` event
         await _route_message(orch, dict(event), seen, is_mention=True)  # `app_mention` event
@@ -59,8 +59,8 @@ async def test_observe_redelivered_message_recorded_once(tmp_path: Path) -> None
     event = {"user": "U1", "channel": "C1", "text": "deploy finished", "ts": "200.2", "team": "T1"}
 
     with (
-        patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock),
-        patch("kiro_crew.slack.events.is_allowed_user", return_value=True),
+        patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock),
+        patch("aj_crew.slack.events.is_allowed_user", return_value=True),
     ):
         await _route_message(orch, dict(event), seen, is_mention=False)
         await _route_message(orch, dict(event), seen, is_mention=False)  # redelivered envelope

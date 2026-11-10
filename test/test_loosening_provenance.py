@@ -8,7 +8,7 @@ the endorsed copy whenever the on-disk bytes differ -- covering every key with n
 list. These tests pin: the host-facts-only scope gate, record/serve, a file with
 no copy served as written, and the end-to-end substitution through the real load pipeline.
 
-The conftest pins ``KIROCREW_HOME`` per test, so ``config_dir()`` is a fresh temp
+The conftest pins ``AJCREW_HOME`` per test, so ``config_dir()`` is a fresh temp
 directory and every writer/reader below resolves to the same home with no patching.
 """
 
@@ -22,8 +22,8 @@ from pathlib import Path
 import pytest
 
 from conftest import requires_symlinks
-from kiro_crew.config import loosening_provenance as lp
-from kiro_crew.config.paths import config_dir
+from aj_crew.config import loosening_provenance as lp
+from aj_crew.config.paths import config_dir
 
 
 def _config(**agent: object) -> bytes:
@@ -114,11 +114,11 @@ def test_a_reader_inside_the_sandbox_serves_the_endorsed_deny_state(monkeypatch)
     sandbox here"; the gate must still enforce there, where the agent writes the file."""
     import sys
 
-    from kiro_crew.hook_runtime.denied_commands import load_denied_commands_state
+    from aj_crew.hook_runtime.denied_commands import load_denied_commands_state
 
     monkeypatch.setattr(lp, "enforcement_active", _REAL_ENFORCEMENT_ACTIVE)
     monkeypatch.setattr(sys, "platform", "linux")
-    monkeypatch.setenv("KIROCREW_SANDBOX_ACTIVE", "1")
+    monkeypatch.setenv("AJCREW_SANDBOX_ACTIVE", "1")
     endorsed = {"disable_all": False, "disabled_ids": [], "user_added": []}
     lp.record("denied_commands.json", json.dumps(endorsed).encode("utf-8"), strict=True)
     (config_dir() / "denied_commands.json").write_text(
@@ -139,7 +139,7 @@ def _special(kind: str, path: Path) -> None:
 @pytest.mark.parametrize("kind", ["fifo", "dev-zero"])
 def test_a_leaf_pointed_at_a_special_file_is_never_read(monkeypatch, kind) -> None:
     """A FIFO blocks a bare read and ``/dev/zero`` never ends: each reads as removed."""
-    from kiro_crew.hook_runtime.denied_commands import load_denied_commands_state
+    from aj_crew.hook_runtime.denied_commands import load_denied_commands_state
 
     monkeypatch.setattr(lp, "enforcement_active", lambda: True)
     endorsed = {"disable_all": False}
@@ -189,7 +189,7 @@ def test_a_scan_inside_the_endorsing_window_reports_pending(monkeypatch) -> None
 def _enforcing(monkeypatch):
     """Force the Linux-namespace scope gate on, so the substitution is deterministic."""
     monkeypatch.setattr(lp, "enforcement_active", lambda: True)
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     loader._invalidate_config_cache()
     yield loader
@@ -240,7 +240,7 @@ def test_tampered_file_loads_the_endorsed_copy_whole(_enforcing) -> None:
 def test_tampered_file_honored_when_not_enforcing(monkeypatch) -> None:
     """Off Linux / no namespace sandbox: the loader serves the on-disk file as written."""
     monkeypatch.setattr(lp, "enforcement_active", lambda: False)
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     loader._invalidate_config_cache()
     (config_dir() / "config.json").write_bytes(_config(sandbox="off"))
@@ -280,13 +280,13 @@ def test_unrelated_config_update_does_not_endorse_a_tampered_file(_enforcing) ->
 def test_denied_commands_save_does_not_endorse_a_tampered_file(_enforcing) -> None:
     import asyncio
 
-    from kiro_crew.dashboard.handlers import security
+    from aj_crew.dashboard.handlers import security
 
     path = config_dir() / "denied_commands.json"
     asyncio.run(security._write_denied_state(lambda d: d.update({"disable_all": False})))
     path.write_text(json.dumps({"disable_all": True}), encoding="utf-8")
 
-    from kiro_crew.config.loader import PendingEditBlocksSave
+    from aj_crew.config.loader import PendingEditBlocksSave
 
     with pytest.raises(PendingEditBlocksSave):
         asyncio.run(security._write_denied_state(lambda d: d.update({"disabled_ids": ["x"]})))
@@ -297,15 +297,15 @@ def test_denied_commands_save_does_not_endorse_a_tampered_file(_enforcing) -> No
 
 
 def test_computer_use_save_does_not_endorse_a_tampered_file(_enforcing) -> None:
-    from kiro_crew.computer_use import enable_state
-    from kiro_crew.dashboard.handlers import computer_use
+    from aj_crew.computer_use import enable_state
+    from aj_crew.dashboard.handlers import computer_use
 
     enable_state.save_state({"enabled": False})
     enable_state.computer_use_state_path().write_text(
         json.dumps({"enabled": True}), encoding="utf-8"
     )
 
-    from kiro_crew.config.loader import PendingEditBlocksSave
+    from aj_crew.config.loader import PendingEditBlocksSave
 
     with pytest.raises(PendingEditBlocksSave):
         computer_use._write_state({"allowed_apps": ["Calculator"]})
@@ -458,9 +458,9 @@ def test_every_endorsing_writer_publishes_the_bytes_it_endorses(_enforcing, monk
     gateway's own save as pending."""
     import asyncio
 
-    from kiro_crew import atomic_write as aw
-    from kiro_crew.computer_use import enable_state
-    from kiro_crew.dashboard.handlers import security
+    from aj_crew import atomic_write as aw
+    from aj_crew.computer_use import enable_state
+    from aj_crew.dashboard.handlers import security
 
     loader = _enforcing
     published: dict[str, object] = {}
@@ -487,7 +487,7 @@ def test_every_endorsing_writer_publishes_the_bytes_it_endorses(_enforcing, monk
 
 
 def test_text_bytes_is_what_text_mode_writes(tmp_path) -> None:
-    from kiro_crew.atomic_write import atomic_write, text_bytes
+    from aj_crew.atomic_write import atomic_write, text_bytes
 
     text = '{\n  "a": 1\n}\n'
     atomic_write(tmp_path / "as_text.json", text)
@@ -524,8 +524,8 @@ def test_an_undecodable_config_loads_the_endorsed_copy(_enforcing) -> None:
 def test_a_deleted_denied_commands_file_keeps_the_owner_rules(_enforcing) -> None:
     import asyncio
 
-    from kiro_crew.dashboard.handlers import security
-    from kiro_crew.hook_runtime.denied_commands import load_denied_commands_state
+    from aj_crew.dashboard.handlers import security
+    from aj_crew.hook_runtime.denied_commands import load_denied_commands_state
 
     rule = {"id": "user-1", "pattern": "^rm -rf", "enabled": True}
     asyncio.run(security._write_denied_state(lambda d: d.update({"user_added": [rule]})))
@@ -536,8 +536,8 @@ def test_a_deleted_denied_commands_file_keeps_the_owner_rules(_enforcing) -> Non
 
 
 def test_a_deleted_computer_use_file_keeps_the_owner_allow_list(_enforcing) -> None:
-    from kiro_crew.computer_use import enable_state
-    from kiro_crew.dashboard.handlers import computer_use
+    from aj_crew.computer_use import enable_state
+    from aj_crew.dashboard.handlers import computer_use
 
     enable_state.save_state({"enabled": True, "allowed_apps": ["calculator"]})
     _remove("computer_use.json")
@@ -556,7 +556,7 @@ def test_a_deleted_file_is_pending_as_removed(_enforcing) -> None:
 
 def test_a_deleted_file_reads_as_absent_when_not_enforcing(monkeypatch) -> None:
     monkeypatch.setattr(lp, "enforcement_active", lambda: False)
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     loader.write_config_atomically(config_dir() / "config.json", {"agent": {"sandbox": "strict"}})
     _remove("config.json")

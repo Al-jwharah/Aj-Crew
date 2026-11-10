@@ -27,17 +27,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from consolidation_lease_helpers import lease_aware_log
 
-from kiro_crew import history_consolidation, memory_stores
-from kiro_crew.context_assembly import budget
-from kiro_crew.history import HistoryConsolidator
-from kiro_crew.history_consolidation import (
+from aj_crew import history_consolidation, memory_stores
+from aj_crew.context_assembly import budget
+from aj_crew.history import HistoryConsolidator
+from aj_crew.history_consolidation import (
     _CONSOLIDATION_MAX_ATTEMPTS,
     _CONSOLIDATION_REFUSED,
     _OversizedItem,
     _refuse_oversized_semantic,
 )
-from kiro_crew.testing.wait import finished
-from kiro_crew.vector_memory import (
+from aj_crew.testing.wait import finished
+from aj_crew.vector_memory import (
     _MAX_KEY_LEN,
     _MAX_VALUE_BYTES,
     SemanticRejectCode,
@@ -45,11 +45,11 @@ from kiro_crew.vector_memory import (
     create_member_database,
     open_member_database,
 )
-from kiro_crew.vector_memory_constants import _MAX_CONSOLIDATION_SEMANTIC_VALUE_CHARS as _BOUND
-from kiro_crew.vector_memory_constants import _MAX_SEMANTIC_PER_CONSOLIDATION as _WINDOW
+from aj_crew.vector_memory_constants import _MAX_CONSOLIDATION_SEMANTIC_VALUE_CHARS as _BOUND
+from aj_crew.vector_memory_constants import _MAX_SEMANTIC_PER_CONSOLIDATION as _WINDOW
 
-_LOGGER = "kiro_crew.history"
-_VM_LOGGER = "kiro_crew.vector_memory"
+_LOGGER = "aj_crew.history"
+_VM_LOGGER = "aj_crew.vector_memory"
 _CODE = SemanticRejectCode.CONSOLIDATION_VALUE_SIZE.value
 
 # The reporter's two items, exactly: 2,000 and 3,000 ASCII characters.
@@ -120,20 +120,20 @@ def _member_double() -> MagicMock:
 
 def _member_consolidator(monkeypatch: pytest.MonkeyPatch, vector_store) -> HistoryConsolidator:
     """A consolidator whose session resolves to a private V2 member store."""
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew.context import ContextBuilder
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
     execution = ExecutionContext(
         "member-id",
         MemoryStoreRef("member-store", "member-id"),
         "member",
-        "kirocrew",
+        "ajcrew",
         "persistent",
     )
     monkeypatch.setattr(
-        "kiro_crew.execution_context.read_session_execution", lambda _key: execution
+        "aj_crew.execution_context.read_session_execution", lambda _key: execution
     )
-    monkeypatch.setattr("kiro_crew.memory_stores.memory_store_version", lambda _store: 2)
+    monkeypatch.setattr("aj_crew.memory_stores.memory_store_version", lambda _store: 2)
     monkeypatch.setattr(ContextBuilder, "ensure_store", AsyncMock(return_value=vector_store))
     c = _consolidator(vector_store)
     monkeypatch.setattr(ContextBuilder, "get_memory_for", lambda **_kwargs: c._memory)
@@ -474,7 +474,7 @@ def _left_behind(store: VectorMemoryStore, records: list[logging.LogRecord]) -> 
             ).fetchall()
     left = {name: [tuple(row) for row in rows] for name, rows in found.items()}
     left["lines"] = [
-        (r.name, r.levelname, r.getMessage()) for r in records if r.name.startswith("kiro_crew")
+        (r.name, r.levelname, r.getMessage()) for r in records if r.name.startswith("aj_crew")
     ]
     return left
 
@@ -713,7 +713,7 @@ def _store_for(path: str, tmp_path, monkeypatch: pytest.MonkeyPatch, opened):
         store = opened(VectorMemoryStore(db_path=tmp_path / "mem.db"))
         store.init()
         return store, _consolidator(store)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setattr(memory_stores, "memory_stores_root", lambda: tmp_path / "memory_stores")
     db_path = tmp_path / "memory_stores" / "alice-store" / "memory.db"
     create_member_database(db_path, member_id="alice-id", store_id="alice-store")
@@ -915,7 +915,7 @@ async def test_a_refused_value_takes_its_writes_turn(
     # (TranscriptBusy, a TranscriptWithheld), before or after that turn leave the pass,
     # its outcome and its span's marker as they are without the bound: only the long
     # value is missing. Without the bound the first hold is the long value's own write.
-    from kiro_crew.history_derivation import TranscriptBusy
+    from aj_crew.history_derivation import TranscriptBusy
 
     answer = [_item("project.big", "x" * (_BOUND + 1)), _item("project.small", "ok")]
     seen = {}
@@ -1140,7 +1140,7 @@ def _route_as(monkeypatch: pytest.MonkeyPatch, mode: str) -> None:
     """Run every pass under ``memory.kind_routing = mode``, on one pinned day."""
     from datetime import datetime, timezone
 
-    from kiro_crew import memory_kind_routing
+    from aj_crew import memory_kind_routing
 
     day = datetime(2026, 10, 1, 12, tzinfo=timezone.utc)
     monkeypatch.setattr(memory_kind_routing, "configured_kind_routing_mode", lambda: mode)
@@ -1208,7 +1208,7 @@ async def test_routing_counts_and_samples_every_item_the_bound_refuses(
     path: str,
     mode: str,
 ) -> None:
-    from kiro_crew.memory_kind_routing import route_semantic_by_kind
+    from aj_crew.memory_kind_routing import route_semantic_by_kind
 
     _route_as(monkeypatch, mode)
     store, c = _store_for(path, tmp_path, monkeypatch, opened)
@@ -1256,7 +1256,7 @@ async def test_routing_counts_and_samples_every_item_the_bound_refuses(
 async def test_the_bound_screens_the_answer_routing_returned(
     tmp_path, monkeypatch: pytest.MonkeyPatch, opened, caplog: pytest.LogCaptureFixture, path: str
 ) -> None:
-    from kiro_crew import memory_kind_routing
+    from aj_crew import memory_kind_routing
 
     _route_as(monkeypatch, "shadow")
     store, c = _store_for(path, tmp_path, monkeypatch, opened)
@@ -1506,8 +1506,8 @@ def _v1_summary(*, written: int = 0, deleted: int = 0, skipped: int = 0, refused
 def test_each_writer_reads_a_confidence_by_its_own_rule(
     confidence: object, v1: object, member: object
 ) -> None:
-    from kiro_crew.history_consolidation import _v1_consolidation_confidence
-    from kiro_crew.vector_memory_member import _member_consolidation_confidence
+    from aj_crew.history_consolidation import _v1_consolidation_confidence
+    from aj_crew.vector_memory_member import _member_consolidation_confidence
 
     item = _with_confidence(_item("project.fact", "a short fact"), confidence)
     readers = ((_v1_consolidation_confidence, v1), (_member_consolidation_confidence, member))
@@ -1592,7 +1592,7 @@ def test_each_writer_logs_and_counts_a_confidence_by_its_own_rule(
         low = f"Confidence 0.50 below threshold {store._confidence_threshold}"
         assert logged == [
             (
-                "kiro_crew.vector_memory",
+                "aj_crew.vector_memory",
                 "INFO",
                 f"Semantic write rejected for 'project.fact': {low}",
             ),
@@ -1628,16 +1628,16 @@ def test_the_member_writer_stores_a_confidence_over_one_at_one(
 def test_the_writer_and_the_screen_ask_one_reader(
     tmp_path, monkeypatch: pytest.MonkeyPatch, opened, path: str
 ) -> None:
-    from kiro_crew.history_consolidation import _v1_consolidation_confidence
-    from kiro_crew.vector_memory_member import _member_consolidation_confidence
+    from aj_crew.history_consolidation import _v1_consolidation_confidence
+    from aj_crew.vector_memory_member import _member_consolidation_confidence
 
     store, c = _store_for(path, tmp_path, monkeypatch, opened)
     # The V1 reader is patched through its mirrored facade, the member one on the module
     # that defines it, so each patch reaches every caller of the name.
     if path == "v1":
-        owner, real = "kiro_crew.history_consolidation", _v1_consolidation_confidence
+        owner, real = "aj_crew.history_consolidation", _v1_consolidation_confidence
     else:
-        owner, real = "kiro_crew.vector_memory_member", _member_consolidation_confidence
+        owner, real = "aj_crew.vector_memory_member", _member_consolidation_confidence
     # Not the confidence both items carry, so a caller that reads the item again instead
     # of taking the reader's answer validates at another one.
     answer = 0.85
@@ -1668,7 +1668,7 @@ def test_the_writer_and_the_screen_ask_one_reader(
 
 
 def test_the_store_facade_re_exports_the_member_readers() -> None:
-    from kiro_crew import vector_memory, vector_memory_member
+    from aj_crew import vector_memory, vector_memory_member
 
     # The facade re-exports both readers to importers; both callers read the member
     # module's own bindings, which are the ones to patch.
@@ -1723,7 +1723,7 @@ async def test_an_item_the_member_store_skips_for_its_metadata_is_not_refused_fo
     member_skips: bool,
     v1_refuses: bool,
 ) -> None:
-    from kiro_crew.vector_memory_member import _member_consolidation_metadata
+    from aj_crew.vector_memory_member import _member_consolidation_metadata
 
     store, c = _store_for("member", tmp_path, monkeypatch, opened)
     item = {**_item(_LARGE_KEY, _LARGE), "metadata": metadata}
@@ -1766,7 +1766,7 @@ def test_an_item_the_v1_writer_refuses_for_its_metadata_is_not_refused_for_size(
     member_skips: bool,
     v1_refuses: bool,
 ) -> None:
-    from kiro_crew.memory_record_metadata import normalize_metadata
+    from aj_crew.memory_record_metadata import normalize_metadata
 
     # The V1 writer hands model metadata to a member store only; a V1 store gets none,
     # so there the item is the store's to write and the bound refuses it.
@@ -1815,9 +1815,9 @@ def test_the_writer_and_the_screen_ask_one_metadata_check(
     # The V1 check is patched through its mirrored facade, the member one on the module
     # that defines it, so each patch reaches every caller of the name.
     if path == "v1":
-        owner, check = "kiro_crew.history_consolidation._v1_consolidation_metadata", v1_check
+        owner, check = "aj_crew.history_consolidation._v1_consolidation_metadata", v1_check
     else:
-        owner = "kiro_crew.vector_memory_member._member_consolidation_metadata"
+        owner = "aj_crew.vector_memory_member._member_consolidation_metadata"
         check = member_check
     monkeypatch.setattr(owner, check)
 
@@ -1833,7 +1833,7 @@ def test_the_writer_and_the_screen_ask_one_metadata_check(
 def test_a_v1_pass_whose_only_routed_item_is_over_the_bound_is_committed_as_without_it(
     tmp_path, monkeypatch: pytest.MonkeyPatch, opened, caplog: pytest.LogCaptureFixture
 ) -> None:
-    from kiro_crew.history_consolidation import _RunCommitState
+    from aj_crew.history_consolidation import _RunCommitState
 
     _route_as(monkeypatch, "shadow")
     store, c = _store_for("v1", tmp_path, monkeypatch, opened)

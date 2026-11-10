@@ -22,10 +22,10 @@ import pytest
 from loopback_servers import LoopbackHTTPServer
 
 from conftest import requires_symlinks
-from kiro_crew import sandbox, sandbox_plan
-from kiro_crew.decisions import local_models
-from kiro_crew.decisions import local_runtime as lr
-from kiro_crew.testing.wait import wait_until
+from aj_crew import sandbox, sandbox_plan
+from aj_crew.decisions import local_models
+from aj_crew.decisions import local_runtime as lr
+from aj_crew.testing.wait import wait_until
 
 _LAYA = local_models.get("laya")
 
@@ -129,7 +129,7 @@ class _Harness:
         self.downloads.append(url)
         self.download_hook(on_progress)
         if not self._download_ok:
-            return False, "kirocrew download: sha256 mismatch"
+            return False, "ajcrew download: sha256 mismatch"
         name = url.rsplit(f"/{_LAYA.revision}/", 1)[1]
         path.write_bytes(_CONTENT[name])
         on_progress(size, size)
@@ -188,7 +188,7 @@ def free_port(monkeypatch):
 @pytest.fixture
 def linux(monkeypatch):
     monkeypatch.setattr(lr.sys, "platform", "linux")
-    monkeypatch.setattr("kiro_crew.env.resolve_uv", lambda: "/opt/uv")
+    monkeypatch.setattr("aj_crew.env.resolve_uv", lambda: "/opt/uv")
 
 
 class TestHappyPath:
@@ -216,7 +216,7 @@ class TestHappyPath:
 
     def test_off_linux_torch_comes_from_pypi(self, tmp_path, free_port, monkeypatch):
         monkeypatch.setattr(lr.sys, "platform", "darwin")
-        monkeypatch.setattr("kiro_crew.env.resolve_uv", lambda: "/opt/uv")
+        monkeypatch.setattr("aj_crew.env.resolve_uv", lambda: "/opt/uv")
         h = _Harness(tmp_path)
         h.runtime.activate(_model(), 41002)
         _wait_for(h.runtime, "running")
@@ -290,7 +290,7 @@ class TestVerification:
         h.runtime.activate(m, 41013)
         _wait_for(h.runtime, "running")
         h.runtime.deactivate(wait=True)
-        (tmp_path / "laya" / "env" / ".kirocrew-ready").write_text(
+        (tmp_path / "laya" / "env" / ".ajcrew-ready").write_text(
             "an older lock", encoding="utf-8"
         )
         h.commands.clear()
@@ -300,7 +300,7 @@ class TestVerification:
         h.runtime.deactivate(wait=True)
 
     def test_without_uv_it_says_so(self, tmp_path, free_port, monkeypatch):
-        monkeypatch.setattr("kiro_crew.env.resolve_uv", lambda: None)
+        monkeypatch.setattr("aj_crew.env.resolve_uv", lambda: None)
         h = _Harness(tmp_path)
         h.runtime.activate(_model(), 41014)
         assert "uv" in _wait_for(h.runtime, "error")["error"]
@@ -312,7 +312,7 @@ class TestPlantedLinks:
     def test_a_linked_weights_directory_is_refused_and_its_target_untouched(
         self, tmp_path, free_port, linux
     ):
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         outside = tmp_path / "outside"
         outside.mkdir()
@@ -585,8 +585,8 @@ class TestResume:
         cfg = SimpleNamespace(
             decisions=SimpleNamespace(provider=SimpleNamespace(endpoint=endpoint, model=model))
         )
-        monkeypatch.setattr("kiro_crew.config.live.snapshot", lambda: cfg)
-        monkeypatch.setattr("kiro_crew.decisions.gate.configured_endpoint", lambda c=None: endpoint)
+        monkeypatch.setattr("aj_crew.config.live.snapshot", lambda: cfg)
+        monkeypatch.setattr("aj_crew.decisions.gate.configured_endpoint", lambda c=None: endpoint)
 
     def _fake(self, monkeypatch):
         calls: list[tuple] = []
@@ -601,14 +601,14 @@ class TestResume:
     def test_the_configured_preset_is_started_on_its_port(self, monkeypatch):
         self._config(monkeypatch, local_models.endpoint_for(40777), "english")
         monkeypatch.setattr(
-            "kiro_crew.decisions.capability.is_decisions_denied", lambda *a, **k: False
+            "aj_crew.decisions.capability.is_decisions_denied", lambda *a, **k: False
         )
         calls = self._fake(monkeypatch)
         assert lr.resume_configured() == "laya"
         assert calls == [("laya", 40777)]
 
     def test_hosted_jev_starts_nothing(self, monkeypatch):
-        from kiro_crew.config.sections import (
+        from aj_crew.config.sections import (
             DECISION_PROVIDER_ENDPOINT_DEFAULT,
             DECISION_PROVIDER_MODEL_DEFAULT,
         )
@@ -622,7 +622,7 @@ class TestResume:
     def test_a_fleet_that_withdrew_local_models_starts_nothing(self, monkeypatch):
         self._config(monkeypatch, local_models.endpoint_for(40777), "english")
         monkeypatch.setattr(
-            "kiro_crew.decisions.capability.is_decisions_denied", lambda *a, **k: True
+            "aj_crew.decisions.capability.is_decisions_denied", lambda *a, **k: True
         )
         calls = self._fake(monkeypatch)
         assert lr.resume_configured() == "" and calls == []

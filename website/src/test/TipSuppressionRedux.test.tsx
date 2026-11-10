@@ -75,7 +75,7 @@ describe('tip suppression via REAL subagent dispatch (QA v5 S4 adjudication)', (
 
     // REAL dispatch — the path actual WS subagent events take
     await act(async () => {
-      store.dispatch(sseSubagentSpawn({ slot: 'slot-a', id: 'sub-1', task: 't', agent: 'kirocrew' }))
+      store.dispatch(sseSubagentSpawn({ slot: 'slot-a', id: 'sub-1', task: 't', agent: 'ajcrew' }))
     })
     expect(store.getState().chat.subagents['sub-1']?.status).toBe('running')
     // Suppression must flow: selector -> re-render -> useTipTrigger effect

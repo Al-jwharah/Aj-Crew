@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.wecom.renderer (WeComRenderer, Layer 2b)."""
+"""Tests for aj_crew.wecom.renderer (WeComRenderer, Layer 2b)."""
 
 from __future__ import annotations
 
@@ -8,11 +8,11 @@ from types import SimpleNamespace
 import pytest
 
 from conftest import CREDENTIAL_STRADDLE_SHAPES, assert_rejected_without_backtracking
-from kiro_crew.messaging.display_safety import canonicalize_display
-from kiro_crew.messaging.renderer import _default_redactor
-from kiro_crew.wecom.client import WECOM_MAX_REPLY_BYTES, WECOM_SAFE_REPLY_CHARS
-from kiro_crew.wecom.renderer import WeComRenderer, _render_options_as_text
-from kiro_crew.wecom.transport import WECOM_CAPABILITIES, WeComTransport
+from aj_crew.messaging.display_safety import canonicalize_display
+from aj_crew.messaging.renderer import _default_redactor
+from aj_crew.wecom.client import WECOM_MAX_REPLY_BYTES, WECOM_SAFE_REPLY_CHARS
+from aj_crew.wecom.renderer import WeComRenderer, _render_options_as_text
+from aj_crew.wecom.transport import WECOM_CAPABILITIES, WeComTransport
 
 # The PEM markers are ASSEMBLED from fragments, never written as one literal, so
 # the internal content scan (rule ``credential-private-key``, which matches a
@@ -251,7 +251,7 @@ class TestThinkReasoningRedaction:
 
     @pytest.mark.asyncio
     async def test_think_reasoning_redacts_markup_split_credential(self) -> None:
-        from kiro_crew.messaging.display_safety import canonicalize_display
+        from aj_crew.messaging.display_safety import canonicalize_display
 
         c = FakeClient()
         r = _renderer(c)
@@ -291,7 +291,7 @@ class TestAnswerBodyRedaction:
 
     @pytest.mark.asyncio
     async def test_answer_body_redacts_markup_split_credential(self) -> None:
-        from kiro_crew.messaging.display_safety import canonicalize_display
+        from aj_crew.messaging.display_safety import canonicalize_display
 
         c = FakeClient()
         r = _renderer(c)
@@ -927,7 +927,7 @@ class TestACredentialCannotStraddleTheRotationSeam:
         # COUNT bound, not just the per-item byte bound. The bound is kept sound by
         # STOPPING reasoning sends once reached (not evicting), so retention is
         # finite AND no un-retained frame reaches the screen.
-        from kiro_crew.wecom.renderer import _MAX_REASONING_CANDIDATES
+        from aj_crew.wecom.renderer import _MAX_REASONING_CANDIDATES
 
         c = FakeClient()
         r = _capped_renderer(c, cap=200)
@@ -952,7 +952,7 @@ class TestACredentialCannotStraddleTheRotationSeam:
         # frame). The send-stop keeps the combined set within cap so the slice is
         # unreachable in normal operation; this exercises the union directly with an
         # at-cap state to prove the union logic itself never drops the newest.
-        from kiro_crew.wecom.renderer import _MAX_REASONING_CANDIDATES
+        from aj_crew.wecom.renderer import _MAX_REASONING_CANDIDATES
 
         c = FakeClient()
         r = _capped_renderer(c, cap=200)
@@ -1002,7 +1002,7 @@ class TestACredentialCannotStraddleTheRotationSeam:
         # GPT F2 (AUTOSDE a-bound-bounds): once the retention cap stops reasoning
         # updates, the suppression must be COUNTED and said out loud once, not
         # silently frozen.
-        from kiro_crew.wecom.renderer import _MAX_REASONING_CANDIDATES
+        from aj_crew.wecom.renderer import _MAX_REASONING_CANDIDATES
 
         c = FakeClient()
         r = _capped_renderer(c, cap=200)
@@ -1030,7 +1030,7 @@ class TestInlineImages:
     ) -> None:
         # Extraction already cut the reference out of the answer, so a refused
         # send must bring the path back rather than leave the reader with neither.
-        monkeypatch.setattr("kiro_crew.wecom.renderer._STREAM_THROTTLE_S", 0.0)
+        monkeypatch.setattr("aj_crew.wecom.renderer._STREAM_THROTTLE_S", 0.0)
         chart = tmp_path / "chart.png"
         chart.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 64)
         c = FakeClient()
@@ -1062,7 +1062,7 @@ class TestInlineImages:
     ) -> None:
         # The tail of a long answer is released from close(); a picture sent before
         # it would land between two chunks of one answer.
-        monkeypatch.setattr("kiro_crew.wecom.renderer._STREAM_THROTTLE_S", 0.0)
+        monkeypatch.setattr("aj_crew.wecom.renderer._STREAM_THROTTLE_S", 0.0)
         chart = tmp_path / "chart.png"
         chart.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 64)
         c = FakeClient()
@@ -1097,7 +1097,7 @@ class TestInlineImages:
         # The failure report goes through the transport's authorized push, so a
         # userid taken off the allow-list mid-upload gets neither the picture nor
         # a message naming its local path.
-        monkeypatch.setattr("kiro_crew.wecom.renderer._STREAM_THROTTLE_S", 0.0)
+        monkeypatch.setattr("aj_crew.wecom.renderer._STREAM_THROTTLE_S", 0.0)
         chart = tmp_path / "chart.png"
         chart.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 64)
         c = FakeClient()

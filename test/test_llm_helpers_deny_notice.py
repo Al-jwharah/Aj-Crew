@@ -34,29 +34,29 @@ from unittest.mock import MagicMock
 
 import pytest
 
-# Imported before any test here patches ``kiro_crew.sel.sel``. The gateway binds
+# Imported before any test here patches ``aj_crew.sel.sel``. The gateway binds
 # ``sel`` by name at import, and ``_resolve_permission`` reaches it lazily
 # (``hook_runtime.gate_tiers``); a first import under the broken-factory patch
 # would keep that factory for every later test in the same worker.
-import kiro_crew.slack.gateway  # noqa: F401
-from kiro_crew import llm_helpers
-from kiro_crew.hooks import ToolHookResult
-from kiro_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
-from kiro_crew.name_grant import Refusal
-from kiro_crew.providers.base import (
+import aj_crew.slack.gateway  # noqa: F401
+from aj_crew import llm_helpers
+from aj_crew.hooks import ToolHookResult
+from aj_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
+from aj_crew.name_grant import Refusal
+from aj_crew.providers.base import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
     LLMEvent,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).
 pytestmark = pytest.mark.usefixtures("ample_host_free_memory")
 
 _GENERIC = "User denied tool execution"
-_TAG = "[Kiro Crew host notice]"
+_TAG = "[Aj Crew host notice]"
 #: Only the POLICY cause appends class-specific remediation; its guidance line
 #: is the fingerprint that must be absent from every surface-policy notice.
 _POLICY_GUIDANCE = "allowed alternative"
@@ -315,7 +315,7 @@ async def test_interactive_rejection_still_audits_before_the_wire(monkeypatch):
     sel.log_tool_invocation = MagicMock(
         side_effect=lambda **kw: audited.append(kw.get("outcome", ""))
     )
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: sel)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: sel)
 
     class _StalledReject(_Provider):
         async def reject_tool(self, request_id) -> None:
@@ -391,7 +391,7 @@ async def test_unverifiable_path_stall_keeps_its_structural_class(monkeypatch):
     judged, retry shortly" from a credential match; the reason must reach the
     notice untrimmed so an agent path spelled with ``.aws`` is not answered with
     credential-read prose for a rule that never fired."""
-    from kiro_crew.security import UNVERIFIABLE_PATH_PREFIX
+    from aj_crew.security import UNVERIFIABLE_PATH_PREFIX
 
     stalled = f"{UNVERIFIABLE_PATH_PREFIX}: /work/aws-credentials-tool/.aws/notes.txt"
     monkeypatch.setattr(llm_helpers, "sensitive_path_refusal", lambda path, base_dir=None: stalled)
@@ -422,7 +422,7 @@ async def test_audit_lands_before_the_steer_and_survives_cancellation(monkeypatc
     sel.log_tool_invocation = MagicMock(
         side_effect=lambda **kw: audited.append(kw.get("outcome", ""))
     )
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: sel)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: sel)
 
     class _Stalled(_Provider):
         async def steer(self, message: str) -> bool:
@@ -481,7 +481,7 @@ async def test_cancelled_mid_steer_does_not_hang_on_a_stalled_reject(monkeypatch
     (orphan,) = [t for t in llm_helpers._orphan_rejects if not t.done()]
     # The abandoned task must retire itself AND retrieve its outcome when it
     # finally settles -- a bare set.discard would leave the exception unread.
-    with caplog.at_level("DEBUG", logger="kiro_crew.llm_helpers"):
+    with caplog.at_level("DEBUG", logger="aj_crew.llm_helpers"):
         orphan.cancel()
         with pytest.raises(asyncio.CancelledError):
             await orphan
@@ -533,7 +533,7 @@ async def test_an_audit_failure_on_a_deny_raises_before_the_wire(monkeypatch):
     def _broken_sel():
         raise OSError("audit root unavailable")
 
-    monkeypatch.setattr("kiro_crew.sel.sel", _broken_sel)
+    monkeypatch.setattr("aj_crew.sel.sel", _broken_sel)
     provider = _Provider()
     with pytest.raises(OSError):
         await _resolve_permission(provider, _event(), ToolApprovalPolicy.REJECT_ALL, None)
@@ -549,7 +549,7 @@ async def test_an_audit_failure_on_an_approval_still_raises(monkeypatch):
     def _broken_sel():
         raise OSError("audit root unavailable")
 
-    monkeypatch.setattr("kiro_crew.sel.sel", _broken_sel)
+    monkeypatch.setattr("aj_crew.sel.sel", _broken_sel)
     provider = _Provider()
     with pytest.raises(OSError):
         await _resolve_permission(provider, _event(), ToolApprovalPolicy.AUTO_APPROVE, None)
@@ -597,7 +597,7 @@ async def test_orphan_reject_failure_is_retrieved_and_logged(caplog):
     task = asyncio.ensure_future(_failing_reject())
     llm_helpers._orphan_rejects.add(task)
     task.add_done_callback(llm_helpers._orphan_reject_done)
-    with caplog.at_level("WARNING", logger="kiro_crew.llm_helpers"):
+    with caplog.at_level("WARNING", logger="aj_crew.llm_helpers"):
         with pytest.raises(ConnectionResetError):
             await task
         await asyncio.sleep(0)
@@ -644,7 +644,7 @@ class TestEveryHostDenyInLlmHelpersSteersFirst:
     cannot silently break.
     """
 
-    MODULE = pathlib.Path(__file__).resolve().parents[1] / "src/kiro_crew/llm_helpers.py"
+    MODULE = pathlib.Path(__file__).resolve().parents[1] / "src/aj_crew/llm_helpers.py"
     #: The facade and every owner module it is composed from, read as one text.
     MODULES = (MODULE, *sorted(MODULE.with_name("llm_helpers_parts").glob("*.py")))
     REJECT = re.compile(r"^\s*await \w+\.reject_tool\(")
@@ -809,10 +809,10 @@ class TestEveryHostDenyInLlmHelpersSteersFirst:
 
 
 def test_the_sel_patches_here_leave_the_gateway_on_the_real_factory():
-    """Runs after the audit-failure tests above, which patch ``kiro_crew.sel.sel``
+    """Runs after the audit-failure tests above, which patch ``aj_crew.sel.sel``
     with a factory that raises. The gateway must still hold the real factory, or a
     later grant decline in the same worker audits through the broken one."""
-    import kiro_crew.sel
-    from kiro_crew.slack import gateway
+    import aj_crew.sel
+    from aj_crew.slack import gateway
 
-    assert gateway.sel is kiro_crew.sel.sel
+    assert gateway.sel is aj_crew.sel.sel

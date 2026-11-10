@@ -6,16 +6,16 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import execution_context as execution
-from kiro_crew.config.sections import KiroCrewAgentConfig, MemoryStoreConfig
-from kiro_crew.memory_stores import UnknownMemoryStore
-from kiro_crew.vector_memory import create_member_database
+from aj_crew import execution_context as execution
+from aj_crew.config.sections import AjCrewAgentConfig, MemoryStoreConfig
+from aj_crew.memory_stores import UnknownMemoryStore
+from aj_crew.vector_memory import create_member_database
 
 
 @pytest.fixture
 def members(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    from kiro_crew.config import loader
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    from aj_crew.config import loader
 
     loader._invalidate_config_cache()
     execution._LIVE_EXECUTIONS.clear()
@@ -26,13 +26,13 @@ def members(tmp_path, monkeypatch):
         path = tmp_path / "memory_stores" / store / "memory.db"
         path.parent.mkdir(parents=True)
         create_member_database(path, member_id=f"id-{name}", store_id=store)
-        cfg.agents[name] = KiroCrewAgentConfig(
+        cfg.agents[name] = AjCrewAgentConfig(
             member_id=f"id-{name}", memory_store=store, kiro_agent="shared-template"
         )
         cfg.memory_stores[store] = MemoryStoreConfig(
             owner_member=name, owner_member_id=f"id-{name}", memory_version=2
         )
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(lambda cls: cfg))
     yield cfg
     execution._LIVE_EXECUTIONS.clear()
     execution._VOUCHED_EXECUTIONS.clear()
@@ -84,9 +84,9 @@ def test_template_selection_keeps_the_store_and_flips_only_the_namespace(members
     selection.
     """
     alice = execution.resolve_member_execution(members, "alice", memory_mode="incognito")
-    delegate = alice.with_template("worker-template", "kirocrew-worker")
+    delegate = alice.with_template("worker-template", "ajcrew-worker")
     assert delegate.selection_kind == "template"
-    assert delegate.selection_name == "kirocrew-worker"
+    assert delegate.selection_name == "ajcrew-worker"
     assert delegate.template_id == "worker-template"
     assert (delegate.member_id, delegate.store, delegate.memory_mode) == (
         alice.member_id,
@@ -98,19 +98,19 @@ def test_template_selection_keeps_the_store_and_flips_only_the_namespace(members
         None, execution.MemoryStoreRef("legacy-v1"), "member", "shared-template", "incognito"
     )
     legacy = replace(legacy, selection_name="scribe")
-    flipped = legacy.with_template("worker-template", "kirocrew-worker")
+    flipped = legacy.with_template("worker-template", "ajcrew-worker")
     assert flipped == replace(
         legacy,
         selection_kind="template",
         template_id="worker-template",
-        selection_name="kirocrew-worker",
+        selection_name="ajcrew-worker",
     )
     assert (flipped.store, flipped.memory_mode) == (legacy.store, "incognito")
 
     plain = execution.ExecutionContext(None, execution.MemoryStoreRef("default"), "template", "")
-    renamed = plain.with_template("worker-template", "kirocrew-worker")
+    renamed = plain.with_template("worker-template", "ajcrew-worker")
     assert renamed == replace(
-        plain, template_id="worker-template", selection_name="kirocrew-worker"
+        plain, template_id="worker-template", selection_name="ajcrew-worker"
     )
 
 
@@ -124,8 +124,8 @@ def test_corrupt_member_never_becomes_global(members, tmp_path):
 
 @pytest.mark.parametrize("admission", ["captured", "configured"])
 def test_member_admission_normalizes_selected_sqlite_driver_errors(members, monkeypatch, admission):
-    from kiro_crew import vector_memory
-    from kiro_crew.memory_stores import require_memory_store
+    from aj_crew import vector_memory
+    from aj_crew.memory_stores import require_memory_store
 
     admitted = execution.resolve_member_execution(members, "alice")
 
@@ -150,7 +150,7 @@ def test_member_admission_normalizes_selected_sqlite_driver_errors(members, monk
             require_memory_store("member-alice", config=members)
     assert refused.value.__cause__ is failure
     assert "Global was not used" in str(refused.value)
-    from kiro_crew.memory_stores import _named_store_dir
+    from aj_crew.memory_stores import _named_store_dir
 
     path = _named_store_dir("member-alice") / "memory.db"
     assert opened == [(path.resolve().as_uri() + "?mode=ro", True)]
@@ -165,14 +165,14 @@ def test_restricted_session_record_stays_live_and_monotonic(members, tmp_path):
         "dashboard_private", replace(admitted, memory_mode="persistent")
     )
     assert execution.read_session_execution("dashboard_private").memory_mode == "incognito"
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     assert not ConversationLog()._path("dashboard_private").exists()
 
 
 @pytest.mark.parametrize("line_mode", ["incognito", "Incognito"])
 def test_persistent_bind_honors_restricted_record_without_execution_context(members, line_mode):
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     key = "dashboard_restricted_recreate"
     log = ConversationLog()
@@ -204,7 +204,7 @@ def test_durable_record_reads_no_looser_than_its_tightened_line(members, line_mo
     the restricted branch and heals the record itself, so the file stops
     disagreeing with itself.
     """
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     key = "dashboard_member_line_tightened"
     log = ConversationLog()
@@ -244,7 +244,7 @@ def test_session_publication_compares_captured_record(members):
 
 
 def test_missing_canonical_member_record_is_an_error(members):
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     ConversationLog().update_metadata("dashboard_damaged", {"memory_store": "member-alice"})
     with pytest.raises(UnknownMemoryStore):
@@ -253,7 +253,7 @@ def test_missing_canonical_member_record_is_an_error(members):
 
 def test_a_chat_on_an_undeclared_store_names_the_store_and_the_remedy(members):
     """A reopened chat whose store left config names it and says how to recover."""
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     ConversationLog().update_metadata("slack:C1:123.456", {"memory_store": "work-crew"})
     with pytest.raises(UnknownMemoryStore) as refused:
@@ -280,7 +280,7 @@ def test_a_chat_on_an_undeclared_store_names_the_store_and_the_remedy(members):
 )
 def test_an_unreadable_config_is_named_instead_of_the_store_entry(members, flags, named, fix):
     """With a config file unreadable the stores it declares are gone; the file is the fix."""
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     for flag, value in flags.items():
         setattr(members, flag, value)
@@ -295,7 +295,7 @@ def test_an_unreadable_config_is_named_instead_of_the_store_entry(members, flags
 
 
 def test_a_declared_v1_store_still_reads_as_no_member_execution(members):
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     members.memory_stores["work-crew"] = MemoryStoreConfig(memory_version=1)
     ConversationLog().update_metadata("slack:C1:123.456", {"memory_store": "work-crew"})
@@ -303,7 +303,7 @@ def test_a_declared_v1_store_still_reads_as_no_member_execution(members):
 
 
 def test_an_entry_without_a_valid_version_names_that_entry(members):
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     members.memory_stores["work-crew"] = SimpleNamespace(memory_version="2")
     members._overlay_unreadable = True
@@ -319,14 +319,14 @@ def test_an_entry_without_a_valid_version_names_that_entry(members):
 
 @pytest.mark.parametrize("store", ["", "default"])
 def test_the_global_store_never_reaches_the_declaration_check(members, store):
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     ConversationLog().update_metadata("slack:C1:123.456", {"memory_store": store})
     assert execution.read_session_execution("slack:C1:123.456") is None
 
 
 def test_a_bad_store_name_keeps_its_own_refusal(members):
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     ConversationLog().update_metadata("slack:C1:123.456", {"memory_store": "Bad Name"})
     with pytest.raises(UnknownMemoryStore) as refused:
@@ -336,11 +336,11 @@ def test_a_bad_store_name_keeps_its_own_refusal(members):
 
 def test_the_real_loader_names_an_unreadable_config_json(tmp_path, monkeypatch):
     """The unreadable flag the refusal reads is the one the loader actually sets."""
-    from kiro_crew.config import loader
-    from kiro_crew.config.resolution import reset_degraded_observations
-    from kiro_crew.history import ConversationLog
+    from aj_crew.config import loader
+    from aj_crew.config.resolution import reset_degraded_observations
+    from aj_crew.history import ConversationLog
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setattr(loader, "config_path", lambda: tmp_path / "config.json")
     monkeypatch.setattr(loader, "config_local_path", lambda: tmp_path / "config.local.json")
     monkeypatch.setattr(loader, "config_dir", lambda: tmp_path)
@@ -358,7 +358,7 @@ def test_the_real_loader_names_an_unreadable_config_json(tmp_path, monkeypatch):
 
 
 def test_subagent_owns_context_after_parent_disappears(members):
-    from kiro_crew.subagent_persistence import create_agent_folder, read_run_execution
+    from aj_crew.subagent_persistence import create_agent_folder, read_run_execution
 
     parent = execution.resolve_member_execution(members, "alice")
     create_agent_folder("test-child", task="synthetic", execution_context=parent)
@@ -369,7 +369,7 @@ def test_subagent_owns_context_after_parent_disappears(members):
 
 
 def test_restricted_subagent_does_not_write_task_or_result(members):
-    from kiro_crew.subagent_persistence import (
+    from aj_crew.subagent_persistence import (
         create_agent_folder,
         read_run_execution,
         write_result_chunk,
@@ -388,7 +388,7 @@ def test_restricted_subagent_does_not_write_task_or_result(members):
 
 
 def test_cron_record_keeps_member_after_parent_and_config_change(members):
-    from kiro_crew.cron import CronJob, CronSchedule, bind_cron_memory, resolve_cron_memory
+    from aj_crew.cron import CronJob, CronSchedule, bind_cron_memory, resolve_cron_memory
 
     parent = execution.resolve_member_execution(members, "alice")
     execution.bind_session_execution("dashboard_cron", parent)
@@ -406,7 +406,7 @@ def test_cron_record_keeps_member_after_parent_and_config_change(members):
 
 @pytest.mark.asyncio
 async def test_workflow_carrier_survives_closed_parent_and_uses_single_record(members, tmp_path):
-    from kiro_crew.workflow_memory import WorkflowScope
+    from aj_crew.workflow_memory import WorkflowScope
 
     parent = execution.resolve_member_execution(members, "alice")
     execution.bind_session_execution("dashboard_workflow", parent)
@@ -420,7 +420,7 @@ async def test_workflow_carrier_survives_closed_parent_and_uses_single_record(me
 
 
 def test_repeated_retention_tightening_survives_restart_without_new_body(members):
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     admitted = execution.resolve_member_execution(members, "alice")
     key = "dashboard_restricted_restart"
@@ -787,7 +787,7 @@ def test_a_later_overflow_episode_reports_the_all_time_tally(members, monkeypatc
     # every episode after the first.
     monkeypatch.setattr(execution, "_MAX_VOUCHED_EXECUTIONS", 1)
     alice = execution.resolve_member_execution(members, "alice")
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.execution_context"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.execution_context"):
         execution.bind_session_execution("hook:ep:1", alice, vouch=True)
         execution.bind_session_execution("hook:ep:2", alice, vouch=True)
         # Drop the population under the cap so a second episode is heard.
@@ -884,9 +884,9 @@ def test_an_oversized_rebind_at_the_cap_leaves_a_later_eviction_audible(
     # log, which is the one failure the counted-and-said-out-loud rule forbids.
     monkeypatch.setattr(execution, "_MAX_VOUCHED_EXECUTIONS", 1)
     alice = execution.resolve_member_execution(members, "alice")
-    from kiro_crew.validation import MAX_SHORT_STRING
+    from aj_crew.validation import MAX_SHORT_STRING
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.execution_context"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.execution_context"):
         execution.bind_session_execution("hook:cap:x", alice, vouch=True)
         # Episode 1: evicts x and arms the throttle.
         execution.bind_session_execution("hook:cap:y", alice, vouch=True)
@@ -913,7 +913,7 @@ def test_an_execution_with_an_oversized_retained_field_is_not_vouched(members):
     # an execution from the session's OWN record with `dataclass_replace(prior,
     # ...)`, so a session that writes an oversized field into its transcript
     # reaches the retention point.
-    from kiro_crew.validation import MAX_SHORT_STRING
+    from aj_crew.validation import MAX_SHORT_STRING
 
     alice = execution.resolve_member_execution(members, "alice")
     key = "dashboard:oversized-template"
@@ -943,7 +943,7 @@ def test_an_execution_with_an_oversized_retained_field_is_not_vouched(members):
 def test_a_deeply_nested_durable_vouch_reads_as_not_recorded(members):
     # The reader is total: a file too deep for `json.loads` (RecursionError) must
     # read as "not recorded", the refusing answer, not raise out of the admission.
-    from kiro_crew._durable_vouch import durable_vouch_path, read_durable_vouch
+    from aj_crew._durable_vouch import durable_vouch_path, read_durable_vouch
 
     key = "dashboard:deep-vouch"
     path = durable_vouch_path(key)
@@ -961,7 +961,7 @@ def test_a_conditional_forget_racing_a_newer_vouch_keeps_the_newer_record(member
     # NOT be able to do until the forget has released the lock.
     import threading
 
-    from kiro_crew import _durable_vouch
+    from aj_crew import _durable_vouch
 
     key = "dashboard:racing-vouch"
     old_record = {"member_id": "alice", "generation": 1}
@@ -994,7 +994,7 @@ def test_a_conditional_forget_racing_a_newer_vouch_keeps_the_newer_record(member
 
 def _legacy_member_schedule(member_id, store="member-alice"):
     """The shape 0.7.0-insider.1 to .5 stored: alias selector, store, no capture."""
-    from kiro_crew.cron import CronJob, CronSchedule
+    from aj_crew.cron import CronJob, CronSchedule
 
     return CronJob(
         id="legacy-job",
@@ -1008,7 +1008,7 @@ def _legacy_member_schedule(member_id, store="member-alice"):
 
 @pytest.mark.parametrize("selector", ["alice", "id-alice"])
 def test_legacy_member_schedule_is_attributed_to_its_stores_owner(members, selector):
-    from kiro_crew.cron_service.identity import legacy_member_cron_execution
+    from aj_crew.cron_service.identity import legacy_member_cron_execution
 
     job = _legacy_member_schedule(selector)
     attributed = legacy_member_cron_execution(job)
@@ -1021,23 +1021,23 @@ def test_legacy_member_schedule_is_attributed_to_its_stores_owner(members, selec
 @pytest.mark.parametrize("selector", ["alice", "id-alice"])
 def test_an_uncaptured_legacy_member_schedule_never_dispatches(members, selector):
     """Only the start-of-process capture binds it; dispatch never re-derives one."""
-    from kiro_crew.cron import resolve_cron_memory
-    from kiro_crew.cron_service.identity import LegacyScheduleRefused
+    from aj_crew.cron import resolve_cron_memory
+    from aj_crew.cron_service.identity import LegacyScheduleRefused
 
     with pytest.raises(LegacyScheduleRefused, match="restart the gateway"):
         resolve_cron_memory(_legacy_member_schedule(selector))
 
 
 def test_legacy_member_schedule_naming_another_member_is_refused(members):
-    from kiro_crew.cron_service.identity import LegacyScheduleRefused, legacy_member_cron_execution
+    from aj_crew.cron_service.identity import LegacyScheduleRefused, legacy_member_cron_execution
 
     with pytest.raises(LegacyScheduleRefused, match="recreate it from the member's chat"):
         legacy_member_cron_execution(_legacy_member_schedule("bob"))
 
 
 def test_legacy_member_schedule_on_an_unattributed_store_names_the_repair(members):
-    from kiro_crew.cron_service.identity import LegacyScheduleRefused, legacy_member_cron_execution
-    from kiro_crew.memory_stores import LEGACY_MEMBER_STORE_REMEDY
+    from aj_crew.cron_service.identity import LegacyScheduleRefused, legacy_member_cron_execution
+    from aj_crew.memory_stores import LEGACY_MEMBER_STORE_REMEDY
 
     members.memory_stores["member-alice"].owner_member_id = ""
     with pytest.raises(LegacyScheduleRefused) as refused:
@@ -1048,7 +1048,7 @@ def test_legacy_member_schedule_on_an_unattributed_store_names_the_repair(member
 
 def test_legacy_member_schedule_of_a_deleted_member_says_to_delete_it(members):
     """The store and its reserved id outlive the member, so recreating is impossible."""
-    from kiro_crew.cron_service.identity import LegacyScheduleRefused, legacy_member_cron_execution
+    from aj_crew.cron_service.identity import LegacyScheduleRefused, legacy_member_cron_execution
 
     del members.agents["alice"]
     with pytest.raises(LegacyScheduleRefused) as refused:
@@ -1060,7 +1060,7 @@ def test_legacy_member_schedule_of_a_deleted_member_says_to_delete_it(members):
 
 def test_a_lost_store_declaration_names_the_restart_its_repair_needs(members):
     """Restoring the entry reloads live, but only a restart captures the schedule."""
-    from kiro_crew.cron_service.identity import LegacyScheduleRefused, legacy_member_cron_execution
+    from aj_crew.cron_service.identity import LegacyScheduleRefused, legacy_member_cron_execution
 
     del members.memory_stores["member-alice"]
     with pytest.raises(LegacyScheduleRefused) as refused:
@@ -1071,7 +1071,7 @@ def test_a_lost_store_declaration_names_the_restart_its_repair_needs(members):
 
 @pytest.mark.parametrize("damage", ["missing-store", "string-version", "bad-slug"])
 def test_every_legacy_attribution_failure_is_the_typed_refusal(members, damage):
-    from kiro_crew.cron_service.identity import LegacyScheduleRefused, legacy_member_cron_execution
+    from aj_crew.cron_service.identity import LegacyScheduleRefused, legacy_member_cron_execution
 
     selector = "alice"
     if damage == "missing-store":
@@ -1087,7 +1087,7 @@ def test_every_legacy_attribution_failure_is_the_typed_refusal(members, damage):
 
 @pytest.mark.parametrize("store", ["legacy-v1", "default"])
 def test_a_member_schedule_on_a_v1_store_is_not_a_legacy_member_schedule(members, store):
-    from kiro_crew.cron_service.identity import legacy_member_cron_execution
+    from aj_crew.cron_service.identity import legacy_member_cron_execution
 
     members.memory_stores["legacy-v1"] = MemoryStoreConfig(memory_version=1)
     assert legacy_member_cron_execution(_legacy_member_schedule("alice", store)) is None
@@ -1095,7 +1095,7 @@ def test_a_member_schedule_on_a_v1_store_is_not_a_legacy_member_schedule(members
 
 def test_the_schedule_capture_and_the_chat_backfill_share_one_attribution(members, monkeypatch):
     """Both callers run the five attribution steps through ``attribute_legacy_member``."""
-    from kiro_crew.cron_service.identity import legacy_member_cron_execution
+    from aj_crew.cron_service.identity import legacy_member_cron_execution
 
     calls = []
     real = execution.attribute_legacy_member
@@ -1105,7 +1105,7 @@ def test_the_schedule_capture_and_the_chat_backfill_share_one_attribution(member
         return real(config, store, named, **kwargs)
 
     monkeypatch.setattr(execution, "attribute_legacy_member", spy)
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     monkeypatch.setattr(ConversationLog, "update_metadata_if", lambda *a, **k: True)
     expected = execution.resolve_member_execution(members, "alice")
@@ -1175,10 +1175,10 @@ def test_pre_identity_member_schedules_are_captured_once(members, tmp_path, capl
     import json
     from types import SimpleNamespace
 
-    from kiro_crew.cron import resolve_cron_memory
-    from kiro_crew.cron_service.identity import migrate_legacy_member_schedules
-    from kiro_crew.cron_service.store import _job_from_record
-    from kiro_crew.dashboard.handlers._shared import _cron_execution_from_registry
+    from aj_crew.cron import resolve_cron_memory
+    from aj_crew.cron_service.identity import migrate_legacy_member_schedules
+    from aj_crew.cron_service.store import _job_from_record
+    from aj_crew.dashboard.handlers._shared import _cron_execution_from_registry
 
     store_dir = tmp_path / "cron-store"
     store_dir.mkdir()
@@ -1215,7 +1215,7 @@ def test_pre_identity_member_schedules_are_captured_once(members, tmp_path, capl
 
 
 def test_the_schedule_capture_never_raises(members, tmp_path):
-    from kiro_crew.cron_service.identity import migrate_legacy_member_schedules
+    from aj_crew.cron_service.identity import migrate_legacy_member_schedules
 
     assert migrate_legacy_member_schedules(tmp_path / "absent") == []
     (tmp_path / "crons.json").write_text("{", encoding="utf-8")
@@ -1230,7 +1230,7 @@ def _insider_cron_session(job_id, agent, store="member-alice", **extra):
     cron_memory_store, "agent": job.member_id})`` before ``get_or_create``, so the
     record's ``agent`` is the schedule's member selector, never the agent it named.
     """
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     key = f"cron:{job_id}"
     ConversationLog().update_metadata(key, {"memory_store": store, "agent": agent, **extra})
@@ -1245,8 +1245,8 @@ def _dispatch_bind(store_dir, job_id="legacy"):
     """
     import json
 
-    from kiro_crew.cron_service.identity import build_cron_session_context
-    from kiro_crew.cron_service.store import _job_from_record
+    from aj_crew.cron_service.identity import build_cron_session_context
+    from aj_crew.cron_service.store import _job_from_record
 
     records = json.loads((store_dir / "crons.json").read_text(encoding="utf-8"))["jobs"]
     job = _job_from_record(next(record for record in records if record["id"] == job_id))
@@ -1265,8 +1265,8 @@ def test_without_the_reconciliation_the_first_fire_is_refused(members, tmp_path,
     anything else is refused as identity-less. Either way every fire failed until
     the schedule auto-paused.
     """
-    from kiro_crew.cron_service import identity
-    from kiro_crew.cron_service.identity import migrate_legacy_member_schedules
+    from aj_crew.cron_service import identity
+    from aj_crew.cron_service.identity import migrate_legacy_member_schedules
 
     store_dir = tmp_path / "cron-store"
     store_dir.mkdir()
@@ -1286,7 +1286,7 @@ def test_a_captured_schedule_naming_an_agent_still_binds_its_old_session(
     members, tmp_path, legacy_agent
 ):
     """The record the old build left under ``cron:<id>`` agrees with the capture."""
-    from kiro_crew.cron_service.identity import migrate_legacy_member_schedules
+    from aj_crew.cron_service.identity import migrate_legacy_member_schedules
 
     store_dir = tmp_path / "cron-store"
     store_dir.mkdir()
@@ -1316,8 +1316,8 @@ def test_session_write_failure_leaves_the_schedule_uncaptured_for_retry(
     import json
     from unittest.mock import patch
 
-    from kiro_crew.cron_service.identity import migrate_legacy_member_schedules
-    from kiro_crew.history import ConversationLog
+    from aj_crew.cron_service.identity import migrate_legacy_member_schedules
+    from aj_crew.history import ConversationLog
 
     path = tmp_path / "crons.json"
     legacy = _insider_record("legacy", "alice", agent_id="named-template")
@@ -1336,7 +1336,7 @@ def test_session_write_failure_leaves_the_schedule_uncaptured_for_retry(
     assert saved[0] == legacy
     assert "execution_context" not in saved[0]
     assert any(
-        record.name == "kiro_crew.cron" and "left uncaptured" in record.getMessage()
+        record.name == "aj_crew.cron" and "left uncaptured" in record.getMessage()
         for record in caplog.records
     )
 
@@ -1351,8 +1351,8 @@ def test_session_read_failure_leaves_the_schedule_uncaptured_for_retry(members, 
     import json
     from unittest.mock import patch
 
-    from kiro_crew.cron_service.identity import migrate_legacy_member_schedules
-    from kiro_crew.history import ConversationLog
+    from aj_crew.cron_service.identity import migrate_legacy_member_schedules
+    from aj_crew.history import ConversationLog
 
     path = tmp_path / "crons.json"
     legacy = _insider_record("legacy", "alice", agent_id="named-template")
@@ -1375,14 +1375,14 @@ def test_session_read_failure_leaves_the_schedule_uncaptured_for_retry(members, 
 def test_schedule_write_failure_retries_an_already_reconciled_session(members, tmp_path):
     from unittest.mock import patch
 
-    from kiro_crew.cron_service.identity import migrate_legacy_member_schedules
-    from kiro_crew.history import ConversationLog
+    from aj_crew.cron_service.identity import migrate_legacy_member_schedules
+    from aj_crew.history import ConversationLog
 
     path = tmp_path / "crons.json"
     _write_crons(path, [_insider_record("legacy", "alice", agent_id="named-template")])
     before = path.read_bytes()
     key = _insider_cron_session("legacy", "alice")
-    with patch("kiro_crew.atomic_write.atomic_write", side_effect=OSError("schedule write failed")):
+    with patch("aj_crew.atomic_write.atomic_write", side_effect=OSError("schedule write failed")):
         assert migrate_legacy_member_schedules(tmp_path) == []
     assert path.read_bytes() == before
     named = replace(
@@ -1399,7 +1399,7 @@ def test_schedule_write_failure_retries_an_already_reconciled_session(members, t
 
 def test_a_session_already_backfilled_is_rebound_to_the_named_agent(members, tmp_path):
     """A read before the capture already turned the record into the member's own template."""
-    from kiro_crew.cron_service.identity import migrate_legacy_member_schedules
+    from aj_crew.cron_service.identity import migrate_legacy_member_schedules
 
     store_dir = tmp_path / "cron-store"
     store_dir.mkdir()
@@ -1419,8 +1419,8 @@ def test_a_session_already_backfilled_is_rebound_to_the_named_agent(members, tmp
 
 def test_a_schedule_naming_no_agent_leaves_its_session_to_the_backfill(members, tmp_path):
     """The reconciliation and the read-time backfill agree, so the record is written once."""
-    from kiro_crew.cron_service.identity import migrate_legacy_member_schedules
-    from kiro_crew.history import ConversationLog
+    from aj_crew.cron_service.identity import migrate_legacy_member_schedules
+    from aj_crew.history import ConversationLog
 
     store_dir = tmp_path / "cron-store"
     store_dir.mkdir()
@@ -1445,8 +1445,8 @@ def test_a_schedule_naming_no_agent_leaves_its_session_to_the_backfill(members, 
 )
 def test_a_session_the_capture_cannot_vouch_for_is_left_as_it_is(members, tmp_path, caplog, record):
     """Nothing is guessed: a record that does not plainly belong to the schedule is logged."""
-    from kiro_crew.cron_service.identity import migrate_legacy_member_schedules
-    from kiro_crew.history import ConversationLog
+    from aj_crew.cron_service.identity import migrate_legacy_member_schedules
+    from aj_crew.history import ConversationLog
 
     store_dir = tmp_path / "cron-store"
     store_dir.mkdir()
@@ -1455,7 +1455,7 @@ def test_a_session_the_capture_cannot_vouch_for_is_left_as_it_is(members, tmp_pa
     )
     key = _insider_cron_session("legacy", **record)
     before = ConversationLog().get_metadata_status(key)[0]
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.cron"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.cron"):
         assert migrate_legacy_member_schedules(store_dir) == ["legacy"]
     after = ConversationLog().get_metadata_status(key)[0]
     named = replace(
@@ -1467,7 +1467,7 @@ def test_a_session_the_capture_cannot_vouch_for_is_left_as_it_is(members, tmp_pa
 
 
 def test_a_session_bound_to_another_execution_is_not_rebound(members, tmp_path, caplog):
-    from kiro_crew.cron_service.identity import migrate_legacy_member_schedules
+    from aj_crew.cron_service.identity import migrate_legacy_member_schedules
 
     store_dir = tmp_path / "cron-store"
     store_dir.mkdir()
@@ -1476,7 +1476,7 @@ def test_a_session_bound_to_another_execution_is_not_rebound(members, tmp_path, 
     )
     bob = execution.resolve_member_execution(members, "bob")
     execution.bind_session_execution("cron:legacy", bob)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.cron"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.cron"):
         assert migrate_legacy_member_schedules(store_dir) == ["legacy"]
     assert execution.read_session_execution("cron:legacy") == bob
     assert "belongs to another execution" in caplog.text
@@ -1484,8 +1484,8 @@ def test_a_session_bound_to_another_execution_is_not_rebound(members, tmp_path, 
 
 def test_only_the_stable_single_agent_key_is_reconciled(members, tmp_path):
     """A per-run key is fresh on every fire; the sequential path replaces its own record."""
-    from kiro_crew.cron_service.identity import migrate_legacy_member_schedules
-    from kiro_crew.history import ConversationLog
+    from aj_crew.cron_service.identity import migrate_legacy_member_schedules
+    from aj_crew.history import ConversationLog
 
     store_dir = tmp_path / "cron-store"
     store_dir.mkdir()

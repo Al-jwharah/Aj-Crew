@@ -21,10 +21,10 @@ from kiro_prerequisite_helpers import _agents_dir_never_the_real_home  # noqa: F
 from kiro_prerequisite_helpers import _isolate_agent_specs  # noqa: F401
 from kiro_prerequisite_helpers import _FakeRuntime, _make_executable, _no_audit
 
-from kiro_crew import kiro_prerequisite as prerequisite_module
-from kiro_crew import platform_compat
-from kiro_crew.kiro_cli import BUNDLED_KIRO_CLI_ENTRY
-from kiro_crew.kiro_prerequisite import (
+from aj_crew import kiro_prerequisite as prerequisite_module
+from aj_crew import platform_compat
+from aj_crew.kiro_cli import BUNDLED_KIRO_CLI_ENTRY
+from aj_crew.kiro_prerequisite import (
     BUNDLED_CLI_UPDATE_REFUSAL,
     KIRO_CLI_UPDATE_COMMAND,
     KiroPrerequisiteService,
@@ -172,7 +172,7 @@ class TestKiroPrerequisiteWorkflowProbe:
     ) -> None:
         # The readiness whoami runs against the REAL home (like an ACP session),
         # not a credential-minimal rewritten home — so a CLI whose session or
-        # tool registry lives in the real home is detected. Only Kiro Crew's own
+        # tool registry lives in the real home is detected. Only Aj Crew's own
         # secret home is hidden.
         executable = tmp_path / ".local" / "bin" / "kiro-cli"
         _make_executable(executable)
@@ -190,7 +190,7 @@ class TestKiroPrerequisiteWorkflowProbe:
             assert home == str(tmp_path)
             assert kwargs["extra_hidden_dirs"] == (
                 str(tmp_path / ".kiro" / "crew"),
-                str(tmp_path / ".kirocrew"),
+                str(tmp_path / ".ajcrew"),
             )
             return ProcessResult(ok=False)
 
@@ -481,7 +481,7 @@ class TestKiroPrerequisiteWorkflowProbe:
                 "HOME": str(tmp_path),
                 "PATH": "",
                 "ProgramFiles": str(tmp_path / "Program Files"),
-                "KIROCREW_KIRO_BIN": str(planted),
+                "AJCREW_KIRO_BIN": str(planted),
             },
             home=tmp_path,
             process_runner=run,
@@ -522,7 +522,7 @@ class TestKiroPrerequisiteWorkflowProbe:
                 "HOME": str(tmp_path),
                 "PATH": "",
                 "ProgramFiles": str(tmp_path / "Program Files"),
-                "KIROCREW_KIRO_BIN": str(planted),
+                "AJCREW_KIRO_BIN": str(planted),
             },
             home=tmp_path,
             process_runner=run,
@@ -558,7 +558,7 @@ class TestKiroPrerequisiteWorkflowProbe:
                 "HOME": str(tmp_path),
                 "PATH": "",
                 "ProgramFiles": str(tmp_path / "Program Files"),
-                "KIROCREW_KIRO_BIN": str(missing),
+                "AJCREW_KIRO_BIN": str(missing),
             },
             home=tmp_path,
             process_runner=run,
@@ -1283,7 +1283,7 @@ class TestAcpSubcommandSupportNarrowsReadiness:
             environ={
                 "HOME": str(tmp_path),
                 "PATH": "",
-                "KIROCREW_BUNDLED_KIRO_DIR": str(bundled_dir),
+                "AJCREW_BUNDLED_KIRO_DIR": str(bundled_dir),
             },
             home=tmp_path,
             data_home=tmp_path / "data-home",

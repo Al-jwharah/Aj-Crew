@@ -32,7 +32,7 @@ from ai_review_workflows_helpers import (
     _workflow,
 )
 
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.testing.wait import default_timeout
 
 LANES = ("fork-gpt-review.yml", "fork-opus-review.yml", "fork-security-scope-review.yml")
 STEP = "Resolve and validate PR (authoritative from GitHub)"

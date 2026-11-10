@@ -17,13 +17,13 @@ from body_stream_helpers import BodyStreamPayload
 from dashboard_owner_helpers import NoConfiguredOwner
 
 from conftest import requires_symlinks
-from kiro_crew.config.loader import (
-    KiroCrewAgentConfig,
-    KiroCrewConfig,
+from aj_crew.config.loader import (
+    AjCrewAgentConfig,
+    AjCrewConfig,
     WorkspaceConfig,
 )
-from kiro_crew.dashboard import chat_utils
-from kiro_crew.dashboard.handlers import (
+from aj_crew.dashboard import chat_utils
+from aj_crew.dashboard.handlers import (
     api_workspaces_create,
     api_workspaces_delete,
     api_workspaces_update,
@@ -59,23 +59,23 @@ def _req(body: dict | None = None, match_info: dict | None = None) -> web.Reques
     return request
 
 
-def _cfg(**kw: object) -> KiroCrewConfig:
+def _cfg(**kw: object) -> AjCrewConfig:
     defaults: dict = {
         "workspaces": {"default": WorkspaceConfig(dir="workspace")},
         "default_workspace": "default",
         "agents": {},
     }
     defaults.update(kw)
-    return KiroCrewConfig(**defaults)
+    return AjCrewConfig(**defaults)
 
 
-_SEL = "kiro_crew.sel.sel"
-_LOAD = "kiro_crew.config.loader.KiroCrewConfig.load"
-_CFGDIR = "kiro_crew.config.loader.config_dir"
-_DATAHOME = "kiro_crew.dashboard.handlers.files.data_home"
+_SEL = "aj_crew.sel.sel"
+_LOAD = "aj_crew.config.loader.AjCrewConfig.load"
+_CFGDIR = "aj_crew.config.loader.config_dir"
+_DATAHOME = "aj_crew.dashboard.handlers.files.data_home"
 
 
-def _seed_file(directory: Path, cfg: KiroCrewConfig) -> Path:
+def _seed_file(directory: Path, cfg: AjCrewConfig) -> Path:
     """Write *cfg*'s document shape as the on-disk config.
 
     The handlers persist via a delta read-modify-write on the RAW document
@@ -204,7 +204,7 @@ class TestCreateHandler:
             patch(_DATAHOME, return_value=tmp_path),
             patch(_SEL),
             patch(
-                "kiro_crew.dashboard.handlers.files.run_config_write",
+                "aj_crew.dashboard.handlers.files.run_config_write",
                 new=_run_mutate_then_fail,
             ),
             pytest.raises(RuntimeError),
@@ -229,7 +229,7 @@ class TestCreateHandler:
         nothing is written to config. Mirrors the swap window with the real locked
         write: the parent is replaced right before the mutate runs.
         """
-        import kiro_crew.pinned_fs as pinned_fs
+        import aj_crew.pinned_fs as pinned_fs
 
         if not pinned_fs.supports_pinned_walk():
             pytest.skip("platform cannot pin a parent by descriptor")
@@ -251,7 +251,7 @@ class TestCreateHandler:
             patch(_DATAHOME, return_value=tmp_path),
             patch(_SEL),
             patch(
-                "kiro_crew.dashboard.handlers.files.run_config_write",
+                "aj_crew.dashboard.handlers.files.run_config_write",
                 new=_swap_parent_then_write,
             ),
         ):
@@ -271,7 +271,7 @@ class TestCreateHandler:
         self, tmp_path: Path
     ) -> None:
         """An existing directory behind a swapped parent is not adopted by name."""
-        import kiro_crew.pinned_fs as pinned_fs
+        import aj_crew.pinned_fs as pinned_fs
 
         if not pinned_fs.supports_pinned_walk():
             pytest.skip("platform cannot pin a parent by descriptor")
@@ -295,7 +295,7 @@ class TestCreateHandler:
             patch(_DATAHOME, return_value=tmp_path),
             patch(_SEL),
             patch(
-                "kiro_crew.dashboard.handlers.files.run_config_write",
+                "aj_crew.dashboard.handlers.files.run_config_write",
                 new=_swap_parent_then_write,
             ),
         ):
@@ -464,7 +464,7 @@ class TestUpdateHandler:
         parent swapped for a link points at now, not the directory that passed
         is_sensitive_path and containment. Only OTHER entries resolve fresh.
         """
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         cfg = _cfg()
         _seed_file(tmp_path, cfg)
@@ -568,7 +568,7 @@ class TestDeleteHandler:
                 "default": WorkspaceConfig(dir="workspace"),
                 "staging": WorkspaceConfig(dir="workspace-staging"),
             },
-            agents={"bot": KiroCrewAgentConfig(workspace="staging")},
+            agents={"bot": AjCrewAgentConfig(workspace="staging")},
         )
         with patch(_LOAD, return_value=cfg):
             resp = await api_workspaces_delete(_req(match_info={"name": "staging"}))
@@ -693,7 +693,7 @@ class TestInLockRecheck:
                 "default": WorkspaceConfig(dir="workspace"),
                 "staging": WorkspaceConfig(dir="workspace-staging"),
             },
-            agents={"bot": KiroCrewAgentConfig(kiro_agent="kirocrew", workspace="staging")},
+            agents={"bot": AjCrewAgentConfig(kiro_agent="ajcrew", workspace="staging")},
         )
         _seed_file(tmp_path, fresh)
         with (
@@ -810,11 +810,11 @@ class TestDeltaMutatorHardening:
             patch(_CFGDIR, return_value=tmp_path),
             patch(_DATAHOME, return_value=tmp_path),
             patch(
-                "kiro_crew.config.loader.write_config_atomically",
+                "aj_crew.config.loader.write_config_atomically",
                 side_effect=OSError("no space left on device"),
             ),
             patch(_SEL),
-            caplog.at_level("WARNING", logger="kiro_crew.dashboard.handlers.files"),
+            caplog.at_level("WARNING", logger="aj_crew.dashboard.handlers.files"),
         ):
             with pytest.raises(OSError):
                 await api_workspaces_create(_req({"name": "copied", "copy_from": "default"}))
@@ -909,7 +909,7 @@ class TestDeltaMutatorHardening:
             patch(_CFGDIR, return_value=tmp_path),
             patch(_DATAHOME, return_value=tmp_path),
             patch(
-                "kiro_crew.platform_compat.publish_dir_noreplace",
+                "aj_crew.platform_compat.publish_dir_noreplace",
                 side_effect=error,
             ),
             patch(_SEL),
@@ -931,7 +931,7 @@ class TestDeltaMutatorHardening:
         rolling back would leave config.json pointing at a deleted tree."""
         import asyncio as _asyncio
 
-        from kiro_crew.dashboard.handlers import files as files_module
+        from aj_crew.dashboard.handlers import files as files_module
 
         (tmp_path / "workspace").mkdir()
         (tmp_path / "workspace" / "notes.md").write_text("x", encoding="utf-8")
@@ -1039,7 +1039,7 @@ class TestCaseVariantOfAFolderInUse:
         monkeypatch.setattr(Path, "stat", _stat)
 
     @staticmethod
-    def _with_src() -> KiroCrewConfig:
+    def _with_src() -> AjCrewConfig:
         return _cfg(
             workspaces={
                 "default": WorkspaceConfig(dir="workspace"),

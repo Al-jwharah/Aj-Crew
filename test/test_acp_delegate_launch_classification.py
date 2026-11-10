@@ -25,7 +25,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.transport_errors import (
+from aj_crew.acp.transport_errors import (
     DELEGATE_LAUNCH_FAILURE_MESSAGE,
     AcpDelegateLaunchFailed,
     AcpError,
@@ -108,7 +108,7 @@ class _FakeProcess:
 
 
 def _runtime(lines):
-    from kiro_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.runtime import AcpRuntime
 
     runtime = AcpRuntime.__new__(AcpRuntime)
     runtime.recording_allowed = True
@@ -177,7 +177,7 @@ async def test_a_line_after_startup_does_not_latch():
 
 
 def test_the_translation_is_non_retryable_and_names_the_fix():
-    from kiro_crew.providers.acp_runtime_start import _delegate_launch_failure
+    from aj_crew.providers.acp_runtime_start import _delegate_launch_failure
 
     runtime = MagicMock()
     runtime.saw_delegate_launch_failure.return_value = True
@@ -200,7 +200,7 @@ def test_the_translation_is_non_retryable_and_names_the_fix():
 
 
 def test_an_unlatched_runtime_is_not_translated():
-    from kiro_crew.providers.acp_runtime_start import _delegate_launch_failure
+    from aj_crew.providers.acp_runtime_start import _delegate_launch_failure
 
     runtime = MagicMock()
     runtime.saw_delegate_launch_failure.return_value = False
@@ -213,7 +213,7 @@ def test_the_retry_deciders_all_refuse_it():
     ``acp_error_is_transient`` is what the dashboard turn, the cron tick, the
     subagent run and the workflow step all ask, so pinning it here pins them all.
     """
-    from kiro_crew.llm_helpers import acp_error_is_transient
+    from aj_crew.llm_helpers import acp_error_is_transient
 
     assert acp_error_is_transient(AcpDelegateLaunchFailed()) is False
 
@@ -226,7 +226,7 @@ def test_every_startup_site_consults_the_latch():
     failure as a generic death and let the pool respawn into the same wall --
     fails here.
     """
-    import kiro_crew.providers.acp as provider_mod
+    import aj_crew.providers.acp as provider_mod
 
     source = "\n".join(
         Path(sys.modules[name].__file__).read_text()
@@ -243,7 +243,7 @@ def test_every_startup_site_consults_the_latch():
 
 def test_the_client_transport_classifies_it_too():
     """The ``AcpClient`` startup arm consults the same signature beside the sandbox one."""
-    import kiro_crew.acp.client_start as client_start
+    import aj_crew.acp.client_start as client_start
 
     source = Path(client_start.__file__).read_text()
     assert source.count("self._classify_failed_start(self._sandbox_init_failure)") == 1
@@ -252,8 +252,8 @@ def test_the_client_transport_classifies_it_too():
 
 @pytest.mark.asyncio
 async def test_the_client_reads_it_off_the_ring():
-    from kiro_crew.acp.client import AcpClient
-    from kiro_crew.acp.client_lifecycle import _delegate_launch_failure
+    from aj_crew.acp.client import AcpClient
+    from aj_crew.acp.client_lifecycle import _delegate_launch_failure
 
     client = AcpClient.__new__(AcpClient)
     client._settle_stderr = AsyncMock()
@@ -311,6 +311,6 @@ def test_the_error_card_is_not_the_start_failure_card():
     Neither repairs an install, and both would contradict the message, so this
     error must render as a plain terminal error row, as a sandbox refusal does.
     """
-    from kiro_crew.dashboard.chat_turn.recovery import _terminal_error_meta
+    from aj_crew.dashboard.chat_turn.recovery import _terminal_error_meta
 
     assert _terminal_error_meta(AcpDelegateLaunchFailed()) is None

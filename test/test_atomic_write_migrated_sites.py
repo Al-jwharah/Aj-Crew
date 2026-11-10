@@ -32,9 +32,9 @@ import stat
 
 import pytest
 
-import kiro_crew.channel as channel_mod
-from kiro_crew import model_registry as mr
-from kiro_crew.channel import ChannelManager
+import aj_crew.channel as channel_mod
+from aj_crew import model_registry as mr
+from aj_crew.channel import ChannelManager
 
 
 def _umask_default_mode() -> int:
@@ -117,7 +117,7 @@ class TestChannelSaveUsesSharedHelper:
 class TestPersistKiroWindowsUsesSharedHelper:
     @pytest.fixture(autouse=True)
     def _isolated_cache(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         saved = dict(mr._KIRO_WINDOWS)
         mr._KIRO_WINDOWS.clear()
         mr._KIRO_WINDOWS["probe-model-zzz"] = 272_000
@@ -164,7 +164,7 @@ class TestPersistKiroWindowsUsesSharedHelper:
         """The helper owns the ``mkdir`` that creates the site's parent.
 
         The cache lives in the data home, where ``atomic_write``'s default mode
-        is owner-only (``kiro_crew.owner_only_files``) rather than the umask's.
+        is owner-only (``aj_crew.owner_only_files``) rather than the umask's.
         """
         path = mr._kiro_windows_cache_path()
 

@@ -20,12 +20,12 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import bus as crew_log_bus
-from kiro_crew.crew_log import eager, emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log.projection_otel_session_tree import (
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import bus as crew_log_bus
+from aj_crew.crew_log import eager, emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log.projection_otel_session_tree import (
     OTEL_SESSION_TREE_FOLD_NAME,
     SESSION_OPENED_TYPE,
     SESSION_SPAWNED_TYPE,
@@ -34,8 +34,8 @@ from kiro_crew.crew_log.projection_otel_session_tree import (
     _otel_session_tree_start,
     _otel_session_tree_step,
 )
-from kiro_crew.crew_log.schema import Entry
-from kiro_crew.metrics import crew_log_export as export
+from aj_crew.crew_log.schema import Entry
+from aj_crew.metrics import crew_log_export as export
 
 GATEWAY = "gateway"
 DEPTH = export.SESSION_TREE_DEPTH_METRIC
@@ -46,7 +46,7 @@ def _entry(seq: int, data: dict[str, Any], entry_type: str = SESSION_OPENED_TYPE
     return Entry(seq=seq, time=1_000 + seq, type=entry_type, src=GATEWAY, data=data)
 
 
-def _opened(depth: Any = "__absent__", agent: str = "kirocrew") -> dict[str, Any]:
+def _opened(depth: Any = "__absent__", agent: str = "ajcrew") -> dict[str, Any]:
     data: dict[str, Any] = {
         "agent": agent,
         "slot": "chat-7",
@@ -88,7 +88,7 @@ class TestTheFold:
 
     def test_a_depth_and_the_closed_kind_are_rendered(self) -> None:
         state = _otel_session_tree_start()
-        _otel_session_tree_step(state, _entry(1, _opened(depth=2, agent="kirocrew-worker")))
+        _otel_session_tree_step(state, _entry(1, _opened(depth=2, agent="ajcrew-worker")))
         assert _otel_session_tree_render(state) == {
             "depth": 2,
             "opened_ts": 1_001,
@@ -117,9 +117,9 @@ class TestTheFold:
 
     def test_a_reattach_does_not_overwrite_the_first_depth_or_kind(self) -> None:
         state = _otel_session_tree_start()
-        _otel_session_tree_step(state, _entry(1, _opened(depth=3, agent="kirocrew-conductor")))
+        _otel_session_tree_step(state, _entry(1, _opened(depth=3, agent="ajcrew-conductor")))
         # A second opened (resumed re-attach) with a different depth is ignored.
-        _otel_session_tree_step(state, _entry(2, _opened(depth=9, agent="kirocrew-worker")))
+        _otel_session_tree_step(state, _entry(2, _opened(depth=9, agent="ajcrew-worker")))
         rendered = _otel_session_tree_render(state)
         assert rendered["depth"] == 3
         assert rendered["agent_kind"] == "conductor"
@@ -269,7 +269,7 @@ class TestTheChildDiff:
         assert export._otel_session_tree_diff(_render(children=3), _render(children=3)) == []
         assert export._otel_session_tree_diff(_render(children=3), _render(children=2)) == []
 
-    @pytest.mark.parametrize("bad_kind", ["", "kirocrew-conductor", "raw-name", 7])
+    @pytest.mark.parametrize("bad_kind", ["", "ajcrew-conductor", "raw-name", 7])
     def test_parent_kind_outside_the_closed_set_is_other(
         self, monkeypatch: pytest.MonkeyPatch, bad_kind: Any
     ) -> None:
@@ -324,7 +324,7 @@ class TestTheSubscriber:
 
     def _install(self, monkeypatch: pytest.MonkeyPatch) -> _RecordingRecorder:
         rec = _RecordingRecorder()
-        monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: rec)
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: rec)
         assert export.install_otel_crew_log_subscriber() is True
         return rec
 
@@ -367,8 +367,8 @@ class TestTheSubscriber:
         assert row.diff is export._otel_session_tree_diff
 
     def test_metric_names_are_pinned(self) -> None:
-        assert DEPTH == "kirocrew.crew.session.tree.depth"
-        assert CHILD == "kirocrew.crew.session.tree.child"
+        assert DEPTH == "ajcrew.crew.session.tree.depth"
+        assert CHILD == "ajcrew.crew.session.tree.child"
 
 
 class TestTheRealAppendPath:
@@ -380,7 +380,7 @@ class TestTheRealAppendPath:
 
     @pytest.fixture(autouse=True)
     def _isolated_home(self, tmp_path: Any, _floor_monkeypatch: pytest.MonkeyPatch) -> Any:
-        _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         eager.stop_for_tests()
         crew_log.forget_slot_folds()
         crew_log.forget_session_folds()
@@ -403,18 +403,18 @@ class TestTheRealAppendPath:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         rec = _RecordingRecorder()
-        monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: rec)
+        monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: rec)
         assert export.install_otel_crew_log_subscriber() is True
         # Pin the anchors below any real timestamp the appends stamp.
         _anchor(monkeypatch, 1)
 
         handle = CrewLog.create(
-            lg.KIND_SESSION, self.UNIT, owner="raymond", agent="kirocrew-conductor"
+            lg.KIND_SESSION, self.UNIT, owner="raymond", agent="ajcrew-conductor"
         )
         opened = handle.append(
             "session/opened",
             {
-                "agent": "kirocrew-conductor",
+                "agent": "ajcrew-conductor",
                 "slot": "chat-creator",
                 "model": "",
                 "cwd": "",

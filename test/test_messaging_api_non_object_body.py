@@ -18,8 +18,8 @@ from unittest.mock import MagicMock
 import pytest
 from handlers_messaging_coverage_helpers import _BAD_JSON, _payload, _Req, _run, _state
 
-import kiro_crew.dashboard.handlers.messaging as mod
-from kiro_crew.dashboard.handlers._shared import body_not_object_error
+import aj_crew.dashboard.handlers.messaging as mod
+from aj_crew.dashboard.handlers._shared import body_not_object_error
 
 
 def _mgr() -> Any:

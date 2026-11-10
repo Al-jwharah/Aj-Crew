@@ -11,11 +11,11 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew.cloud import aws, ec2, login, ssm, ui, wizard
-from kiro_crew.cloud.aws import AWSError
-from kiro_crew.cloud.launch_state import LaunchState
-from kiro_crew.cloud.login import LoginPrompt
-from kiro_crew.cloud.login_target import KiroLoginTarget
+from aj_crew.cloud import aws, ec2, login, ssm, ui, wizard
+from aj_crew.cloud.aws import AWSError
+from aj_crew.cloud.launch_state import LaunchState
+from aj_crew.cloud.login import LoginPrompt
+from aj_crew.cloud.login_target import KiroLoginTarget
 
 ARGS = ("i-0abc", "dev", "us-east-1")
 
@@ -214,7 +214,7 @@ def test_the_bootstrap_log_tail_is_best_effort(monkeypatch, outcome, expected):
     assert wizard._fetch_bootstrap_log(*ARGS) == expected
     args, kwargs = run.call_args
     assert (args[0], args[2:]) == ("i-0abc", ("dev", "us-east-1"))
-    assert "tail -n 6 /var/log/kirocrew-setup.log" in args[1]
+    assert "tail -n 6 /var/log/ajcrew-setup.log" in args[1]
     assert kwargs == {"run_as": "root", "total_wait": 30}
 
 

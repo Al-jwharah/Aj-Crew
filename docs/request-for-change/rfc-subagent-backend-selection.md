@@ -19,8 +19,8 @@ superseded-by: []
 > ([#18150](https://github.com/kirodotdev/KiroCrew/pull/18150)) has merged;
 > Phase 2 is not on main. The baseline below was verified at
 > `33b67aced2`: `SPAWN_RUN_SCHEMA` and `SPAWN_RUN_TASK_ITEM_SCHEMA` in
-> `src/kiro_crew/validation.py` accept `model` and `agent`
-> but no backend, and `select_provider_backend` in `src/kiro_crew/members.py`
+> `src/aj_crew/validation.py` accept `model` and `agent`
+> but no backend, and `select_provider_backend` in `src/aj_crew/members.py`
 > has exactly two arms: a member DM thread runs on `agent.member_acp_backend`,
 > and every other session (every sub-agent included) runs on the configured
 > default. The implementation is
@@ -42,7 +42,7 @@ backend behaves exactly as today.
 
 ## Motivation
 
-Kiro Crew can already run a chat on several ACP harnesses, but only one per
+Aj Crew can already run a chat on several ACP harnesses, but only one per
 gateway: `agent.acp_backend` decides for every session except a member DM
 thread. An orchestrator that wants one task done by a different harness (a
 second opinion from another model family, a task one harness's tools handle

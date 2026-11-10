@@ -15,7 +15,7 @@ import { effortToCarry, filterInteractiveModels, legacyCodexEffort, modelWithout
 import { effortOffOnAuto, modelSupportsEffort, selectionCapabilitiesFailed } from '../lib/effort'
 import { JEV_ROUTE_MODEL, jevRouteOffered, withJevRoute } from '../lib/jevRoute'
 import { useListboxKeyboard } from '../hooks/useListboxKeyboard'
-import { useKirocrewConfigReader } from '../hooks/useKirocrewConfigReader'
+import { useAjcrewConfigReader } from '../hooks/useAjcrewConfigReader'
 import { useImeGuard } from '../hooks/useImeGuard'
 import { useScrollEdgesY } from '../hooks/useScrollEdges'
 import { useAppSelector, type AppDispatch, type RootState } from '../store'
@@ -168,10 +168,10 @@ export function useChatPanePickerModels({ slotKey, paneSlot, provider, dispatch,
     selectionCapabilitiesFailed(selectionCapabilitiesQ),
     shownModel,
   )
-  const readKirocrewConfig = useKirocrewConfigReader()
+  const readAjcrewConfig = useAjcrewConfigReader()
   const { data: defaultEffort = '' } = useQuery({
     queryKey: ['default-effort', provider.id],
-    queryFn: () => provider.resolveDefaultEffort(readKirocrewConfig),
+    queryFn: () => provider.resolveDefaultEffort(readAjcrewConfig),
     enabled: provider.capabilities.reasoningEffort,
   })
   const effectiveEffort = paneSlot?.reasoning_effort || legacyCodexEffort(

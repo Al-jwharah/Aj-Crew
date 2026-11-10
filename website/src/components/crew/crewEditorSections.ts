@@ -131,7 +131,7 @@ export function useCrewEditorSections(facts: CrewEditorFacts): CrewEditorSection
         key: 'model',
         group: t('components.crewEditor.group_what_it_can_do'),
         icon: Cpu,
-        label: t('pages.kiroCrewAgentsPage.model'),
+        label: t('pages.ajCrewAgentsPage.model'),
       },
       {
         key: 'place',
@@ -147,7 +147,7 @@ export function useCrewEditorSections(facts: CrewEditorFacts): CrewEditorSection
         key: 'routing',
         group: t('components.crewEditor.group_how_work_arrives'),
         icon: Waypoints,
-        label: t('pages.kiroCrewAgentsPage.triggers'),
+        label: t('pages.ajCrewAgentsPage.triggers'),
         ...(routingWords > 0 ? { count: String(routingWords) } : {}),
       },
       {
@@ -185,7 +185,7 @@ export function useCrewEditorSections(facts: CrewEditorFacts): CrewEditorSection
         // The pane's NAME, not its verb: the destructive button inside it is
         // already called "Delete crew", and two controls sharing one
         // accessible name is ambiguous to a screen reader and to a test.
-        label: t('pages.kiroCrewAgentsPage.danger_zone'),
+        label: t('pages.ajCrewAgentsPage.danger_zone'),
         foot: true,
       })
     }

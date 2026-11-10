@@ -10,7 +10,7 @@ is the failure this predicate exists to prevent.
 
 from __future__ import annotations
 
-from kiro_crew.dashboard.chat_fork import drop_persisted_tail_prefix
+from aj_crew.dashboard.chat_fork import drop_persisted_tail_prefix
 
 
 def _m(ts: str, role: str = "user") -> dict:

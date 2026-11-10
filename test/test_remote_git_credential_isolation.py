@@ -12,7 +12,7 @@ from types import SimpleNamespace
 import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from kiro_crew.remote_session import git_gateway
+from aj_crew.remote_session import git_gateway
 
 
 def _files_holding(root: Path, secret: bytes) -> set[Path]:
@@ -22,7 +22,7 @@ def _files_holding(root: Path, secret: bytes) -> set[Path]:
 
 @pytest.mark.asyncio
 async def test_host_git_ignores_repository_and_environment_helpers(tmp_path, monkeypatch):
-    from kiro_crew.platform_compat import trusted_git_bin
+    from aj_crew.platform_compat import trusted_git_bin
 
     git = trusted_git_bin()
     if git is None:
@@ -30,7 +30,7 @@ async def test_host_git_ignores_repository_and_environment_helpers(tmp_path, mon
     # The subprocess boundary is real; provenance has its own host-independent
     # tests below (CI may run as root or use a non-system Git installation).
     monkeypatch.setattr(
-        "kiro_crew.github_runner.validate_provider_executable",
+        "aj_crew.github_runner.validate_provider_executable",
         lambda path, *, require_protected: path,
     )
     home, repo = tmp_path / "home", tmp_path / "repo"
@@ -129,12 +129,12 @@ async def test_an_organisation_scoped_helper_fails_closed_and_says_what_to_set(
     """A helper set for one Azure organisation is not matched by the per-host
     lookup (a known limit): no login is lent, git is not left waiting on a
     prompt, and the refusal names the setting that does work."""
-    from kiro_crew.platform_compat import trusted_git_bin
+    from aj_crew.platform_compat import trusted_git_bin
 
     if trusted_git_bin() is None:
         pytest.skip("trusted Git is required")
     monkeypatch.setattr(
-        "kiro_crew.github_runner.validate_provider_executable",
+        "aj_crew.github_runner.validate_provider_executable",
         lambda path, *, require_protected: path,
     )
 
@@ -184,7 +184,7 @@ async def test_an_organisation_scoped_helper_fails_closed_and_says_what_to_set(
 async def test_agent_planted_provider_is_never_executed(
     tmp_path, monkeypatch, name, host, readiness
 ):
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     binary = tmp_path / (name + (".exe" if os.name == "nt" else ""))
     binary.write_text("not a provider", encoding="utf-8")
@@ -192,7 +192,7 @@ async def test_agent_planted_provider_is_never_executed(
     monkeypatch.setenv("PATH", str(tmp_path))
     monkeypatch.delenv(github_runner.PROVIDER_CLI_OVERRIDE_ENV[name], raising=False)
     monkeypatch.setattr(github_runner, "provider_executable_candidates", lambda _: (str(binary),))
-    monkeypatch.setattr("kiro_crew.platform_compat.trusted_git_bin", lambda: None)
+    monkeypatch.setattr("aj_crew.platform_compat.trusted_git_bin", lambda: None)
 
     async def spawn(*args, **kwargs):
         pytest.fail("an agent-planted provider reached the unsandboxed spawn")
@@ -209,7 +209,7 @@ async def test_agent_planted_provider_is_never_executed(
 
 @pytest.mark.parametrize("name", ["gh", "glab", "az"])
 def test_provider_override_requires_protected_provenance(monkeypatch, tmp_path, name):
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     candidate = str(tmp_path / name)
     monkeypatch.setenv(github_runner.PROVIDER_CLI_OVERRIDE_ENV[name], candidate)
@@ -251,7 +251,7 @@ def test_arbitrary_helper_programs_are_refused(value):
 
 @pytest.mark.parametrize("name", sorted(git_gateway._CREDENTIAL_HELPERS))
 def test_fixed_helpers_use_protected_absolute_programs(tmp_path, monkeypatch, name):
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     seen = []
 
@@ -269,7 +269,7 @@ def test_fixed_helpers_use_protected_absolute_programs(tmp_path, monkeypatch, na
 
 def test_a_helper_outside_the_exec_path_is_found_in_a_trusted_system_dir(tmp_path, monkeypatch):
     """Git Credential Manager installs to /usr/local/bin, not Git's exec-path."""
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     exec_path, system = tmp_path / "exec", tmp_path / "usr-local-bin"
     exec_path.mkdir()
@@ -285,14 +285,14 @@ def test_a_helper_outside_the_exec_path_is_found_in_a_trusted_system_dir(tmp_pat
         return path
 
     monkeypatch.setattr(github_runner, "validate_provider_executable", validate)
-    monkeypatch.setattr("kiro_crew.platform_compat.trusted_system_path", lambda: str(system))
+    monkeypatch.setattr("aj_crew.platform_compat.trusted_system_path", lambda: str(system))
     result = git_gateway._helper_value("manager", str(exec_path))
     assert result and shlex.split(result[1:]) == [str(system / name)]
     # Found but not protected: refused, as an exec-path helper would be.
     protected.clear()
     assert git_gateway._helper_value("manager", str(exec_path)) is None
     # A directory that is not a trusted system directory is never searched.
-    monkeypatch.setattr("kiro_crew.platform_compat.trusted_system_path", lambda: None)
+    monkeypatch.setattr("aj_crew.platform_compat.trusted_system_path", lambda: None)
     protected.add(str(system / name))
     assert git_gateway._helper_value("manager", str(exec_path)) is None
 
@@ -307,13 +307,13 @@ def test_gh_helper_discards_configured_path_and_quotes_the_protected_binary(tmp_
 
 @pytest.mark.asyncio
 async def test_credential_fill_uses_a_validated_snapshot_not_mutable_config(tmp_path, monkeypatch):
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     git = str(tmp_path / "git")
     # The `git credential fill` snapshot; the Windows direct path resolves its
     # argv once, before any helper runs (test_remote_git_windows_lending).
     monkeypatch.setattr(git_gateway, "_runs_helpers_directly", lambda: False)
-    monkeypatch.setattr("kiro_crew.platform_compat.trusted_git_bin", lambda: git)
+    monkeypatch.setattr("aj_crew.platform_compat.trusted_git_bin", lambda: git)
     monkeypatch.setattr(
         github_runner, "validate_provider_executable", lambda path, *, require_protected: path
     )
@@ -361,10 +361,10 @@ async def test_credential_fill_uses_a_validated_snapshot_not_mutable_config(tmp_
     ],
 )
 async def test_a_crafted_helper_key_is_never_passed_to_git(tmp_path, monkeypatch, key):
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     git = str(tmp_path / "git")
-    monkeypatch.setattr("kiro_crew.platform_compat.trusted_git_bin", lambda: git)
+    monkeypatch.setattr("aj_crew.platform_compat.trusted_git_bin", lambda: git)
     monkeypatch.setattr(
         github_runner, "validate_provider_executable", lambda path, *, require_protected: path
     )
@@ -388,13 +388,13 @@ async def test_a_crafted_helper_key_is_never_passed_to_git(tmp_path, monkeypatch
 async def test_a_crafted_helper_subsection_runs_nothing_with_real_git(tmp_path, monkeypatch):
     """``[credential "helper=!cmd #"] helper = store`` must not become ``-c`` text
     that git splits at the ``=`` and runs as a shell helper."""
-    from kiro_crew.platform_compat import trusted_git_bin
+    from aj_crew.platform_compat import trusted_git_bin
 
     git = trusted_git_bin()
     if git is None:
         pytest.skip("trusted Git is required")
     monkeypatch.setattr(
-        "kiro_crew.github_runner.validate_provider_executable",
+        "aj_crew.github_runner.validate_provider_executable",
         lambda path, *, require_protected: path,
     )
     home = tmp_path / "home"
@@ -421,7 +421,7 @@ async def test_a_crafted_helper_subsection_runs_nothing_with_real_git(tmp_path, 
 
 @pytest.mark.asyncio
 async def test_git_credentials_refuse_an_untrusted_binary(monkeypatch):
-    monkeypatch.setattr("kiro_crew.platform_compat.trusted_git_bin", lambda: None)
+    monkeypatch.setattr("aj_crew.platform_compat.trusted_git_bin", lambda: None)
     monkeypatch.setattr(git_gateway, "_binary", lambda _: "agent-controlled-git")
     with pytest.raises(git_gateway._NoCredential, match="trusted git"):
         await git_gateway._from_git_credential("bitbucket.org")
@@ -522,8 +522,8 @@ def test_textconv_setup_confines_children_at_spawn(tmp_path, monkeypatch):
 
 @pytest.fixture
 def git_workdir(tmp_path, monkeypatch):
-    from kiro_crew.platform_compat import trusted_git_bin
-    from kiro_crew.remote_session import workspace_tools
+    from aj_crew.platform_compat import trusted_git_bin
+    from aj_crew.remote_session import workspace_tools
 
     git = trusted_git_bin()
     if git is None:
@@ -554,7 +554,7 @@ def git_workdir(tmp_path, monkeypatch):
     "name", ["new.txt", "nested/new.txt", "space name.txt", "é.txt", "arrow -> name.txt", "[x].txt"]
 )
 def test_untracked_files_have_real_addition_diffs(git_workdir, name):
-    from kiro_crew.remote_session import workspace_tools
+    from aj_crew.remote_session import workspace_tools
 
     ws, _ = git_workdir
     if os.name == "nt" and ">" in name:
@@ -572,7 +572,7 @@ def test_untracked_files_have_real_addition_diffs(git_workdir, name):
 
 @pytest.mark.parametrize("name", ["space name.txt", "é.txt", "arrow -> name.txt", "[x].txt"])
 def test_status_literal_paths_reach_the_tracked_diff(git_workdir, name):
-    from kiro_crew.remote_session import workspace_tools
+    from aj_crew.remote_session import workspace_tools
 
     ws, git = git_workdir
     if os.name == "nt" and ">" in name:
@@ -596,7 +596,7 @@ def _commit_link(ws, git, target):
 
 @pytest.mark.skipif(os.name == "nt", reason="workspaces are Linux; symlinks need privileges")
 def test_a_modified_tracked_symlink_diffs_as_the_link(git_workdir):
-    from kiro_crew.remote_session import workspace_tools
+    from aj_crew.remote_session import workspace_tools
 
     ws, git = git_workdir
     for name in ("a.txt", "b.txt"):
@@ -614,7 +614,7 @@ def test_a_modified_tracked_symlink_diffs_as_the_link(git_workdir):
 
 @pytest.mark.skipif(os.name == "nt", reason="workspaces are Linux; symlinks need privileges")
 def test_a_symlink_to_outside_the_workspace_diffs_as_the_link(git_workdir, tmp_path_factory):
-    from kiro_crew.remote_session import workspace_tools
+    from aj_crew.remote_session import workspace_tools
 
     ws, git = git_workdir
     outside = tmp_path_factory.mktemp("outside")
@@ -637,7 +637,7 @@ def test_a_symlink_to_outside_the_workspace_diffs_as_the_link(git_workdir, tmp_p
 @pytest.mark.skipif(os.name == "nt", reason="workspaces are Linux; symlinks need privileges")
 @pytest.mark.parametrize("path", ["app/../../outside.txt", "..", "ext/file.txt"])
 def test_diff_paths_leaving_the_workspace_stay_refused(git_workdir, tmp_path_factory, path):
-    from kiro_crew.remote_session import workspace_tools
+    from aj_crew.remote_session import workspace_tools
 
     ws, _ = git_workdir
     outside = tmp_path_factory.mktemp("outside")
@@ -664,7 +664,7 @@ def test_diff_paths_leaving_the_workspace_stay_refused(git_workdir, tmp_path_fac
     ],
 )
 def test_unsaved_warning_understands_nul_status(status, expected):
-    from kiro_crew.coder.session_browse import summarize_unsaved
+    from aj_crew.coder.session_browse import summarize_unsaved
 
     assert summarize_unsaved(status) == expected
 
@@ -691,7 +691,7 @@ def test_guest_shell_case_declares_windows_prerequisite():
 
 @pytest.mark.parametrize("provider", ["gh", "glab", "az", "git"])
 def test_credential_children_scrub_injection_and_keep_their_login(tmp_path, monkeypatch, provider):
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     for key in (
         "PYTHONPATH",
@@ -731,7 +731,7 @@ def test_credential_children_scrub_injection_and_keep_their_login(tmp_path, monk
 async def test_a_cancelled_lookup_kills_and_reaps_its_credential_cli(tmp_path):
     import sys
 
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.testing.wait import async_wait_until
 
     # A session torn down mid-lookup cancels the lending task: the credential
     # child must not outlive it with its pipes open.

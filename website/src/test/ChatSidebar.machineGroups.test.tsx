@@ -43,7 +43,7 @@ vi.mock('../api/client', async (importOriginal) => {
       ),
       chatFolders: chatFoldersMock,
       tagColumns: vi.fn().mockResolvedValue([]),
-      kirocrewConfig: vi.fn().mockResolvedValue({}),
+      ajcrewConfig: vi.fn().mockResolvedValue({}),
       listInstances: listInstancesMock,
       instanceChatSlots: instanceChatSlotsMock,
       crewPeerGet: crewPeerGetMock,

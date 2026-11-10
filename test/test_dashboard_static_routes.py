@@ -1,4 +1,4 @@
-"""Tests for ``kiro_crew.dashboard.server._register_dist_static_routes``.
+"""Tests for ``aj_crew.dashboard.server._register_dist_static_routes``.
 
 Without a ``/fonts`` route, ``@font-face`` URLs fall through to ``index.html``
 ("invalid sfntVersion"). Routes resolve ``static/dist`` per request because staging
@@ -15,9 +15,9 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
 from conftest import make_dir_link, requires_symlinks
-from kiro_crew.dashboard import server as server_mod
-from kiro_crew.dashboard.server import _register_dist_static_routes
-from kiro_crew.platform_compat import unlink_link_or_junction
+from aj_crew.dashboard import server as server_mod
+from aj_crew.dashboard.server import _register_dist_static_routes
+from aj_crew.platform_compat import unlink_link_or_junction
 
 _PREFIXES = {"/assets", "/sprites", "/fonts", "/vendor", "/app-assets"}
 

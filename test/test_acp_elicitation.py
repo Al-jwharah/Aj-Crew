@@ -17,10 +17,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp import elicitation as el
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp import elicitation as el
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_ELICITATION_REQUEST,
     METHOD_CANCEL,
@@ -29,7 +29,7 @@ from kiro_crew.acp.types import (
     METHOD_PROMPT,
     JsonRpcMessage,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 _SID = "sess_elicit"
 
@@ -533,7 +533,7 @@ async def test_the_clients_audit_resolves_sel_off_the_event_loop(tmp_path, monke
     client resolves it inside an off-loop hop, as its permission audit does."""
     import threading
 
-    from kiro_crew import sel as sel_module
+    from aj_crew import sel as sel_module
 
     resolved_on: list[threading.Thread] = []
     recorder = MagicMock()

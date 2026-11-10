@@ -22,8 +22,8 @@ from work_ledger_projection_helpers import (
     _width,
 )
 
-from kiro_crew import work_ledger as wl
-from kiro_crew.crew_log import entry_types, projection, schema
+from aj_crew import work_ledger as wl
+from aj_crew.crew_log import entry_types, projection, schema
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _isolated = work_ledger_projection_helpers._isolated

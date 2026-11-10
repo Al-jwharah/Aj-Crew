@@ -28,9 +28,9 @@ import { act, render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 
-const { patchConfigMock, kirocrewConfigMock, modelsMock } = vi.hoisted(() => ({
+const { patchConfigMock, ajcrewConfigMock, modelsMock } = vi.hoisted(() => ({
   patchConfigMock: vi.fn(() => Promise.resolve({})),
-  kirocrewConfigMock: vi.fn(() =>
+  ajcrewConfigMock: vi.fn(() =>
     Promise.resolve({ agent: { model: 'auto', reasoning_effort: '' } })
   ),
   modelsMock: vi.fn(() =>
@@ -45,7 +45,7 @@ const { patchConfigMock, kirocrewConfigMock, modelsMock } = vi.hoisted(() => ({
 vi.mock('../api/client', () => ({
   api: {
     dashboardConfig: () => Promise.resolve({ restore_sessions: false, restore_window_minutes: 30, merge_queued_messages: false, widget_density: 'more' }),
-    kirocrewConfig: kirocrewConfigMock,
+    ajcrewConfig: ajcrewConfigMock,
     models: modelsMock,
     patchConfig: patchConfigMock,
     updateDashboardConfig: () => Promise.resolve({}),
@@ -82,7 +82,7 @@ function wrap(ui: React.ReactElement, sub = 'transcript') {
 let serverAgent: Record<string, unknown> = {}
 const seed = (agent: Record<string, unknown>) => {
   serverAgent = agent
-  kirocrewConfigMock.mockImplementation(() => Promise.resolve({ agent: serverAgent }) as never)
+  ajcrewConfigMock.mockImplementation(() => Promise.resolve({ agent: serverAgent }) as never)
 }
 
 /** A PATCH whose settle the test controls. While `resolve`/`reject` has not
@@ -128,7 +128,7 @@ async function pick(label: string, optionName: string) {
 beforeEach(() => {
   patchConfigMock.mockReset()
   patchConfigMock.mockImplementation(() => Promise.resolve({}) as never)
-  kirocrewConfigMock.mockClear()
+  ajcrewConfigMock.mockClear()
   modelsMock.mockClear()
   seed({ model: 'auto', reasoning_effort: '' })
 })
@@ -145,12 +145,12 @@ describe('ChatPanel — optimistic default model', () => {
     // display it this early is the optimistic pending value.
     await waitFor(() => expect(trigger).toHaveTextContent('claude-opus-4.8'))
     expect(patchConfigMock).toHaveBeenCalledWith('agent.model', 'claude-opus-4.8')
-    expect(kirocrewConfigMock).toHaveBeenCalledTimes(1)
+    expect(ajcrewConfigMock).toHaveBeenCalledTimes(1)
 
     // Settle: the refetch reports the same value; the display keeps it.
     serverAgent = { model: 'claude-opus-4.8', reasoning_effort: '' }
     resolve({})
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalledTimes(2))
     expect(trigger).toHaveTextContent('claude-opus-4.8')
   })
 
@@ -193,7 +193,7 @@ describe('ChatPanel — optimistic default model', () => {
     await pick('Default Model', 'claude-opus-4.8')
     await waitFor(() => expect(effortTrigger).not.toHaveAttribute('data-disabled'))
     await act(async () => { resolve({}) })
-    await waitFor(() => expect(kirocrewConfigMock.mock.calls.length).toBeGreaterThanOrEqual(2))
+    await waitFor(() => expect(ajcrewConfigMock.mock.calls.length).toBeGreaterThanOrEqual(2))
   })
 })
 
@@ -209,11 +209,11 @@ describe('ChatPanel — optimistic role effort (the empty-string value)', () => 
 
     await waitFor(() => expect(trigger).toHaveTextContent('Model default'))
     expect(patchConfigMock).toHaveBeenCalledWith('agent.role_efforts.background', '')
-    expect(kirocrewConfigMock).toHaveBeenCalledTimes(1)
+    expect(ajcrewConfigMock).toHaveBeenCalledTimes(1)
 
     serverAgent = { role_models: { background: 'claude-opus-4.8' }, role_efforts: { background: '' } }
     resolve({})
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalledTimes(2))
     expect(trigger).toHaveTextContent('Model default')
   })
 
@@ -241,11 +241,11 @@ describe('ChatPanel — optimistic fallback model', () => {
 
     await waitFor(() => expect(trigger).toHaveTextContent('claude-opus-4.8'))
     expect(patchConfigMock).toHaveBeenCalledWith('agent.fallback_model', 'claude-opus-4.8')
-    expect(kirocrewConfigMock).toHaveBeenCalledTimes(1)
+    expect(ajcrewConfigMock).toHaveBeenCalledTimes(1)
 
     serverAgent = { fallback_model: 'claude-opus-4.8' }
     resolve({})
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalledTimes(2))
     expect(trigger).toHaveTextContent('claude-opus-4.8')
   })
 
@@ -277,11 +277,11 @@ describe('ChatPanel — optimistic refusal fallback model', () => {
 
     await waitFor(() => expect(trigger).toHaveTextContent('claude-opus-4.8'))
     expect(patchConfigMock).toHaveBeenCalledWith('agent.refusal_fallback_model', 'claude-opus-4.8')
-    expect(kirocrewConfigMock).toHaveBeenCalledTimes(1)
+    expect(ajcrewConfigMock).toHaveBeenCalledTimes(1)
 
     serverAgent = { refusal_fallback_model: 'claude-opus-4.8' }
     resolve({})
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalledTimes(2))
     expect(trigger).toHaveTextContent('claude-opus-4.8')
   })
 
@@ -329,7 +329,7 @@ describe('ChatPanel — pending ownership and reconciliation edges', () => {
     // display keeps it, and nothing else on the panel moved.
     serverAgent = { model: 'claude-opus-4.8', reasoning_effort: '', fallback_model: 'auto' }
     ds[1].resolve({})
-    await waitFor(() => expect(kirocrewConfigMock.mock.calls.length).toBeGreaterThan(1))
+    await waitFor(() => expect(ajcrewConfigMock.mock.calls.length).toBeGreaterThan(1))
     expect(modelTrigger).toHaveTextContent('claude-opus-4.8')
     expect(fallbackTrigger).toHaveTextContent('Auto (recommended)')
   })
@@ -351,7 +351,7 @@ describe('ChatPanel — pending ownership and reconciliation edges', () => {
     // First A settles (serverAgent still 'auto'); B and the second A are in
     // flight, so the trigger must keep showing the latest pick.
     ds[0].resolve({})
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalledTimes(2))
     expect(trigger).toHaveTextContent('claude-opus-4.8')
 
     // The remaining mutations settle. The server reports a normalised value,
@@ -458,9 +458,9 @@ describe('ChatPanel — pending ownership and reconciliation edges', () => {
     const trigger = await pick('Default Model', 'claude-opus-4.8')
     await waitFor(() => expect(trigger).toHaveTextContent('claude-opus-4.8'))
 
-    kirocrewConfigMock.mockImplementationOnce(() => Promise.reject(new Error('offline')) as never)
+    ajcrewConfigMock.mockImplementationOnce(() => Promise.reject(new Error('offline')) as never)
     resolve({})
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalledTimes(2))
     // Overlay cleared, refetch failed — the cache write keeps the pick shown.
     await waitFor(() => expect(trigger).toHaveTextContent('claude-opus-4.8'))
   })
@@ -480,14 +480,14 @@ describe('ChatPanel — pending ownership and reconciliation edges', () => {
     // B (the newer pick) settles first; the server reports B.
     serverAgent = { model: 'claude-haiku-4.5', reasoning_effort: '' }
     ds[1].resolve({})
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalledTimes(2))
     await waitFor(() => expect(trigger).toHaveTextContent('claude-haiku-4.5'))
 
     // A settles late and its refetch fails: only a wrongful cache write
     // could change the display now.
-    kirocrewConfigMock.mockImplementationOnce(() => Promise.reject(new Error('offline')) as never)
+    ajcrewConfigMock.mockImplementationOnce(() => Promise.reject(new Error('offline')) as never)
     ds[0].resolve({})
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalledTimes(3))
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalledTimes(3))
     await waitFor(() => expect(trigger).toHaveTextContent('claude-haiku-4.5'))
   })
 
@@ -504,7 +504,7 @@ describe('ChatPanel — pending ownership and reconciliation edges', () => {
     serverAgent = { model: 'claude-opus-4.8', reasoning_effort: '' }
     reject(new Error('boom'))
     expect(await screen.findByText(/Failed to save default model/)).toBeInTheDocument()
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalledTimes(2))
     await waitFor(() => expect(trigger).toHaveTextContent('claude-opus-4.8'))
   })
 
@@ -524,6 +524,6 @@ describe('ChatPanel — pending ownership and reconciliation edges', () => {
     expect(labels).toContain('claude-opus-4.7-retired')
     expect(labels).toContain('claude-opus-4.8')
     await act(async () => { resolve({}) })
-    await waitFor(() => expect(kirocrewConfigMock.mock.calls.length).toBeGreaterThanOrEqual(2))
+    await waitFor(() => expect(ajcrewConfigMock.mock.calls.length).toBeGreaterThanOrEqual(2))
   })
 })

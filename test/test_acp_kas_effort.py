@@ -16,14 +16,14 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
 
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     ACP_BACKENDS_EFFORT_VIA_CONFIG_OPTION,
     JsonRpcMessage,
     effort_config_option_id,
 )
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.providers.acp import AcpProvider
 
 MODEL = "claude-opus-5.5"
 LEVELS = ["low", "medium", "high", "xhigh", "max"]
@@ -43,7 +43,7 @@ KAS_OPTIONS_WITH_MODEL = [
 
 
 def _kas_provider(*, override: str = "", defaults: dict[str, str] | None = None) -> AcpProvider:
-    with patch("kiro_crew.providers.acp.AcpClient"):
+    with patch("aj_crew.providers.acp.AcpClient"):
         provider = AcpProvider(acp_backend=ACP_BACKEND_KAS)
     client = MagicMock()
     client.backend = ACP_BACKEND_KAS
@@ -100,7 +100,7 @@ async def test_nothing_is_sent_when_no_effort_is_configured() -> None:
 async def test_a_live_change_uses_the_config_option_not_the_slash_command() -> None:
     provider = _kas_provider()
     with patch(
-        "kiro_crew.dashboard.chat_persistence.get_reasoning_effort_values",
+        "aj_crew.dashboard.chat_persistence.get_reasoning_effort_values",
         return_value=frozenset(LEVELS),
     ):
         assert await provider.change_effort("high") is True
@@ -213,7 +213,7 @@ async def test_a_refused_inherit_records_no_mark() -> None:
 async def test_an_unbound_effort_binds_to_the_inherited_model() -> None:
     """A level asked for with no pin binds to the model kiro-cli's setting put the
     session on, because the inherited model does not read as pinned."""
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     handle = _kas_handle()
     await handle.set_model(MODEL, inherit=True)
@@ -234,7 +234,7 @@ async def test_an_unbound_effort_binds_to_the_inherited_model() -> None:
 def test_an_engine_promotion_drops_the_inherited_mark() -> None:
     """The engine moved the session off the inherited model for good: a fresh
     conversation must not put it back."""
-    from kiro_crew.acp.engine_fallback import EngineFallbackTracker
+    from aj_crew.acp.engine_fallback import EngineFallbackTracker
 
     handle = _kas_handle()
     handle.inherited_model = MODEL

@@ -18,25 +18,25 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from change_cards_helpers import AGENT, _card_headers, _run
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew.apps import crewmate_sdk
-from kiro_crew.apps import hooks_integration as hooks_mod
-from kiro_crew.apps.context import build_app_context
-from kiro_crew.apps.crewmate_sdk import CrewmateProposalError, CrewmateSDK
-from kiro_crew.apps.lifecycle import LifecycleDispatcher
-from kiro_crew.apps.manifest import Permissions
-from kiro_crew.apps.route_registry import RouteRegistry
-from kiro_crew.crewmate_bundle import crewmate_import_params
-from kiro_crew.dashboard import change_cards as cards
-from kiro_crew.dashboard.change_cards import CardStore
-from kiro_crew.dashboard.handlers import change_cards as routes
-from kiro_crew.dashboard.handlers.undo_identity_guard import REQ_CARD_UNDO_CREWMATE_EXPECT
+from aj_crew import change_card_catalog as catalog
+from aj_crew.apps import crewmate_sdk
+from aj_crew.apps import hooks_integration as hooks_mod
+from aj_crew.apps.context import build_app_context
+from aj_crew.apps.crewmate_sdk import CrewmateProposalError, CrewmateSDK
+from aj_crew.apps.lifecycle import LifecycleDispatcher
+from aj_crew.apps.manifest import Permissions
+from aj_crew.apps.route_registry import RouteRegistry
+from aj_crew.crewmate_bundle import crewmate_import_params
+from aj_crew.dashboard import change_cards as cards
+from aj_crew.dashboard.change_cards import CardStore
+from aj_crew.dashboard.handlers import change_cards as routes
+from aj_crew.dashboard.handlers.undo_identity_guard import REQ_CARD_UNDO_CREWMATE_EXPECT
 
 world = change_cards_helpers.world
 
 BUNDLE = {
     "crewmate": {
-        "format": "kirocrew.crewmate",
+        "format": "ajcrew.crewmate",
         "formatVersion": 1,
         "name": "Release Captain",
         "description": "Watches release branches.",
@@ -151,7 +151,7 @@ def test_ctx_crewmate_stays_off_until_the_owner_view_ships(tmp_path):
 
 def test_both_context_builders_hand_ctx_crewmate_to_a_lifecycle_only_app(tmp_path, monkeypatch):
     monkeypatch.setattr(crewmate_sdk, "PREVIEW_ENABLED", True)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     gateway = web.Application()
     monkeypatch.setattr(hooks_mod, "_route_registry", RouteRegistry(gateway))
     info = {"name": "share", "enabled": True, "manifest": {"name": "share", "version": "1.0.0"}}

@@ -92,7 +92,7 @@ vi.mock('../pages/chat/ChatSettings', () => ({
 }))
 
 /** The gateway's config as the test's fake server holds it. `patchConfig` writes
- *  into it and `kirocrewConfig` reads it back, so the settle-time refetch the
+ *  into it and `ajcrewConfig` reads it back, so the settle-time refetch the
  *  optimistic overlay triggers after a save sees the value the save landed --
  *  exactly the round trip the real endpoint pair performs. */
 const serverConfig: { dashboard: Record<string, unknown> } = { dashboard: {} }
@@ -100,13 +100,13 @@ const patchConfig = vi.fn(async (path: string, value: unknown) => {
   if (path === 'dashboard.folder_sort') serverConfig.dashboard.folder_sort = value
   return { ok: true }
 })
-const kirocrewConfig = vi.fn(async () => ({ dashboard: { ...serverConfig.dashboard } }))
+const ajcrewConfig = vi.fn(async () => ({ dashboard: { ...serverConfig.dashboard } }))
 vi.mock('../api/client', () => ({
   SEARCH_MIN_CHARS: 2,
   api: new Proxy({} as Record<string, unknown>, {
     get: (_t, name: string) => {
       if (name === 'patchConfig') return patchConfig
-      if (name === 'kirocrewConfig') return kirocrewConfig
+      if (name === 'ajcrewConfig') return ajcrewConfig
       return vi.fn().mockResolvedValue([])
     },
   }),
@@ -160,13 +160,13 @@ function renderSidebar(folders: ChatFolder[], folderSort: unknown, opts: { confi
   if (opts.configReadFails) {
     // No seeded config: the mount fetch is the read, and it fails -- the query
     // settles in its error state (retry is off) with no data to fall back on.
-    kirocrewConfig.mockRejectedValueOnce(opts.configReadFails)
+    ajcrewConfig.mockRejectedValueOnce(opts.configReadFails)
   } else if (opts.configPending) {
     // No seeded config and a read that does not settle until the test says so:
     // the first-load window, with the folder list already on screen.
-    kirocrewConfig.mockImplementationOnce(() => new Promise(resolve => { settleConfig = resolve }))
+    ajcrewConfig.mockImplementationOnce(() => new Promise(resolve => { settleConfig = resolve }))
   } else {
-    qc.setQueryData(['kirocrewConfig'], { dashboard: { ...serverConfig.dashboard } })
+    qc.setQueryData(['ajcrewConfig'], { dashboard: { ...serverConfig.dashboard } })
   }
   const utils = render(
     <QueryClientProvider client={qc}>
@@ -192,7 +192,7 @@ function drawnFolderIds(container: HTMLElement): string[] {
   return [...container.querySelectorAll('[data-folder-row]')].map(el => el.getAttribute('data-folder-row') ?? '')
 }
 
-beforeEach(() => { localStorage.clear(); patchConfig.mockClear(); kirocrewConfig.mockClear(); dnd.sortables.clear() })
+beforeEach(() => { localStorage.clear(); patchConfig.mockClear(); ajcrewConfig.mockClear(); dnd.sortables.clear() })
 afterEach(() => vi.clearAllMocks())
 
 describe('chat sidebar — folder order follows dashboard.folder_sort', () => {
@@ -360,11 +360,11 @@ describe('chat sidebar — folder order follows dashboard.folder_sort', () => {
     expect(patchConfig).toHaveBeenCalledTimes(1)
     // In flight: still the stored order, and the shared cache still says Custom.
     expect(drawnFolderIds(container)).toEqual(['f10', 'f99', 'f98', 'f02', 'f03', 'f01'])
-    expect(qc.getQueryData<{ dashboard?: { folder_sort?: string } }>(['kirocrewConfig'])?.dashboard?.folder_sort).toBe('custom')
+    expect(qc.getQueryData<{ dashboard?: { folder_sort?: string } }>(['ajcrewConfig'])?.dashboard?.folder_sort).toBe('custom')
     await act(async () => { land() })
     await waitFor(() => expect(drawnFolderIds(container)).toEqual(['f01', 'f02', 'f03', 'f10', 'f98', 'f99']))
     // ...and it switched because the CACHE did, which is what every other reader sees.
-    expect(qc.getQueryData<{ dashboard?: { folder_sort?: string } }>(['kirocrewConfig'])?.dashboard?.folder_sort).toBe('name')
+    expect(qc.getQueryData<{ dashboard?: { folder_sort?: string } }>(['ajcrewConfig'])?.dashboard?.folder_sort).toBe('name')
     // A VIEW change: the folder rows themselves are untouched, so switching back to
     // Custom restores exactly the arrangement the person had.
     expect(qc.getQueryData<ChatFolder[]>(['chat-folders'])).toEqual(NUMBERED)
@@ -562,9 +562,9 @@ describe('chat sidebar — folder order follows dashboard.folder_sort', () => {
     // confidence nor withdraws the drag it was offering a moment ago.
     const { qc, container, queryByTestId } = renderSidebar(NUMBERED, 'custom')
     expect(dnd.sortables.get('f10')?.disabled).toBeUndefined()
-    kirocrewConfig.mockRejectedValueOnce(new Error('config store unavailable'))
-    await act(async () => { await qc.refetchQueries({ queryKey: ['kirocrewConfig'] }) })
-    expect(qc.getQueryState(['kirocrewConfig'])?.status).toBe('error')
+    ajcrewConfig.mockRejectedValueOnce(new Error('config store unavailable'))
+    await act(async () => { await qc.refetchQueries({ queryKey: ['ajcrewConfig'] }) })
+    expect(qc.getQueryState(['ajcrewConfig'])?.status).toBe('error')
     expect(queryByTestId('folder-order-unavailable')).toBeNull()
     expect(drawnFolderIds(container)).toEqual(['f10', 'f99', 'f98', 'f02', 'f03', 'f01'])
     expect(dnd.sortables.get('f10')?.disabled).toBeUndefined()
@@ -580,10 +580,10 @@ describe('chat sidebar — folder order follows dashboard.folder_sort', () => {
     expect(dnd.sortables.get('f10')?.disabled).toEqual({ droppable: true })
     // The retry: a read that never settles while we look.
     let settle: (v: { dashboard: Record<string, unknown> }) => void = () => {}
-    kirocrewConfig.mockImplementationOnce(() => new Promise(resolve => { settle = resolve }))
-    act(() => { void qc.refetchQueries({ queryKey: ['kirocrewConfig'] }) })
-    await waitFor(() => expect(qc.getQueryState(['kirocrewConfig'])?.fetchStatus).toBe('fetching'))
-    expect(qc.getQueryState(['kirocrewConfig'])?.status).toBe('pending')
+    ajcrewConfig.mockImplementationOnce(() => new Promise(resolve => { settle = resolve }))
+    act(() => { void qc.refetchQueries({ queryKey: ['ajcrewConfig'] }) })
+    await waitFor(() => expect(qc.getQueryState(['ajcrewConfig'])?.fetchStatus).toBe('fetching'))
+    expect(qc.getQueryState(['ajcrewConfig'])?.status).toBe('pending')
     // Mid-retry: banner still up, with the failure it latched; drag still off.
     expect(queryByTestId('folder-order-unavailable')?.textContent).toContain('gateway restarting')
     expect(dnd.sortables.get('f10')?.disabled).toEqual({ droppable: true })

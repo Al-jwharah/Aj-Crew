@@ -1,19 +1,19 @@
-"""Regression guard for the bundled ``kirocrew`` launcher's symlink resolution.
+"""Regression guard for the bundled ``ajcrew`` launcher's symlink resolution.
 
 Background
 ----------
 ``packaging/build-desktop.sh`` writes a small bash launcher into every backend
-bundle at ``<bundle>/bin/kirocrew``.  It derives its own directory in order to
+bundle at ``<bundle>/bin/ajcrew``.  It derives its own directory in order to
 exec the interpreter sitting next to it (``$DIR/python3.12``).  The naive form::
 
     DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 is wrong whenever the launcher is reached through a symlink, because
 ``${BASH_SOURCE[0]}`` is the *symlink* path, not its target.  The gateway plants
-exactly such a symlink at ``~/.local/bin/kirocrew`` on every start
-(``agent.ensure_kirocrew_on_path``), so on a packaged install a naive ``$DIR``
+exactly such a symlink at ``~/.local/bin/ajcrew`` on every start
+(``agent.ensure_ajcrew_on_path``), so on a packaged install a naive ``$DIR``
 becomes ``~/.local/bin`` and the launcher execs a non-existent
-``~/.local/bin/python3.12`` — every ``kirocrew ...`` invocation from a shell
+``~/.local/bin/python3.12`` — every ``ajcrew ...`` invocation from a shell
 fails.  The launcher walks the symlink chain first to prevent that.
 
 Why this test exists
@@ -41,7 +41,7 @@ import pytest
 
 pytestmark = pytest.mark.skipif(
     os.name == "nt",
-    reason="the POSIX launcher is a bash script; Windows ships kirocrew.cmd instead",
+    reason="the POSIX launcher is a bash script; Windows ships ajcrew.cmd instead",
 )
 
 SCRIPT = Path(__file__).parent.parent / "packaging" / "build-desktop.sh"
@@ -55,7 +55,7 @@ def _extract_launcher() -> str:
     """
     text = SCRIPT.read_text()
     m = re.search(
-        r"cat > \"\$out/bin/kirocrew\" <<'LAUNCH'\n(.*?)\nLAUNCH\n",
+        r"cat > \"\$out/bin/ajcrew\" <<'LAUNCH'\n(.*?)\nLAUNCH\n",
         text,
         re.DOTALL,
     )
@@ -74,7 +74,7 @@ def _make_bundle(root: Path) -> Path:
     bin_dir = root / "bin"
     bin_dir.mkdir(parents=True)
 
-    launcher = bin_dir / "kirocrew"
+    launcher = bin_dir / "ajcrew"
     launcher.write_text(_extract_launcher() + "\n")
     launcher.chmod(0o755)
 
@@ -99,7 +99,7 @@ def _invoke(path: Path, *args: str) -> subprocess.CompletedProcess:
 
 def test_resolves_when_invoked_directly(tmp_path):
     """Baseline: called by its real path, the launcher finds its sibling."""
-    bundle = tmp_path / "kirocrew-backend-arm64"
+    bundle = tmp_path / "ajcrew-backend-arm64"
     launcher = _make_bundle(bundle)
 
     proc = _invoke(launcher)
@@ -115,13 +115,13 @@ def test_resolves_through_absolute_symlink(tmp_path):
     ``dirname "${BASH_SOURCE[0]}"`` form, which would resolve ``$DIR`` to the
     symlink's own directory and exec a python3.12 that does not exist there.
     """
-    bundle = tmp_path / "app" / "backend-dist" / "kirocrew-backend-arm64"
+    bundle = tmp_path / "app" / "backend-dist" / "ajcrew-backend-arm64"
     launcher = _make_bundle(bundle)
 
-    # Mirrors ~/.local/bin/kirocrew -> .../backend-dist/.../bin/kirocrew.
+    # Mirrors ~/.local/bin/ajcrew -> .../backend-dist/.../bin/ajcrew.
     local_bin = tmp_path / "home" / ".local" / "bin"
     local_bin.mkdir(parents=True)
-    shim = local_bin / "kirocrew"
+    shim = local_bin / "ajcrew"
     shim.symlink_to(launcher)
 
     # Guard the premise: no interpreter next to the symlink, so a launcher that
@@ -152,9 +152,9 @@ def test_resolves_through_relative_symlink(tmp_path):
 
     shim_dir = tmp_path / "shims"
     shim_dir.mkdir()
-    shim = shim_dir / "kirocrew"
-    # Relative to shim_dir: ../bundle/bin/kirocrew
-    shim.symlink_to(Path("..") / "bundle" / "bin" / "kirocrew")
+    shim = shim_dir / "ajcrew"
+    # Relative to shim_dir: ../bundle/bin/ajcrew
+    shim.symlink_to(Path("..") / "bundle" / "bin" / "ajcrew")
 
     proc = _invoke(shim)
 
@@ -166,7 +166,7 @@ def test_resolves_through_symlink_chain(tmp_path):
     """Multi-hop chains must be walked to the end, not just one level.
 
     Two hops occur in practice — e.g. a package manager's bin shim pointing at
-    ``~/.local/bin/kirocrew``, which points at the bundle — so a single
+    ``~/.local/bin/ajcrew``, which points at the bundle — so a single
     ``readlink`` (rather than the ``while`` loop) is not enough.
     """
     bundle = tmp_path / "bundle"
@@ -174,12 +174,12 @@ def test_resolves_through_symlink_chain(tmp_path):
 
     hop1_dir = tmp_path / "hop1"
     hop1_dir.mkdir()
-    hop1 = hop1_dir / "kirocrew"
+    hop1 = hop1_dir / "ajcrew"
     hop1.symlink_to(launcher)
 
     hop2_dir = tmp_path / "hop2"
     hop2_dir.mkdir()
-    hop2 = hop2_dir / "kirocrew"
+    hop2 = hop2_dir / "ajcrew"
     hop2.symlink_to(hop1)
 
     proc = _invoke(hop2)
@@ -191,19 +191,19 @@ def test_resolves_through_symlink_chain(tmp_path):
 def test_forwards_arguments_through_symlink(tmp_path):
     """Resolution is worthless if the argv is mangled on the way through.
 
-    Asserts the module invocation contract (``-s -P -m kiro_crew``: no user
+    Asserts the module invocation contract (``-s -P -m aj_crew``: no user
     site, launch directory kept off ``sys.path``) and that a quoted argument
     containing a space survives as ONE argument.
     """
     bundle = tmp_path / "bundle"
     launcher = _make_bundle(bundle)
-    shim = tmp_path / "kirocrew"
+    shim = tmp_path / "ajcrew"
     shim.symlink_to(launcher)
 
     proc = _invoke(shim, "config", "set", "a b")
 
     assert proc.returncode == 0, proc.stderr
-    assert "ARGS=-s -P -m kiro_crew config set a b" in proc.stdout, proc.stdout
+    assert "ARGS=-s -P -m aj_crew config set a b" in proc.stdout, proc.stdout
 
     # And the word-splitting guard: "$@" (not $@) keeps "a b" a single argv entry.
     stub = bundle / "bin" / "python3.12"
@@ -211,7 +211,7 @@ def test_forwards_arguments_through_symlink(tmp_path):
     stub.chmod(0o755)
     proc = _invoke(shim, "config", "set", "a b")
     assert proc.returncode == 0, proc.stderr
-    # -s, -P, -m, kiro_crew, config, set, "a b" == 7
+    # -s, -P, -m, aj_crew, config, set, "a b" == 7
     assert "COUNT=7" in proc.stdout, proc.stdout
 
 
@@ -272,18 +272,18 @@ def test_strips_inherited_pythonpath_and_pythonhome_through_the_shim(tmp_path):
     """The launcher itself drops PYTHONPATH/PYTHONHOME.
 
     The desktop shell scrubs them for the gateway it spawns, but a user who
-    runs ``kirocrew token`` or ``kirocrew stop`` from a development shell
-    reaches the bundled interpreter through ``~/.local/bin/kirocrew`` and this
+    runs ``ajcrew token`` or ``ajcrew stop`` from a development shell
+    reaches the bundled interpreter through ``~/.local/bin/ajcrew`` and this
     launcher, with no shell in between.  Without a scrub here the packaged CLI
     imports ``PYTHONPATH=<checkout>/src`` mixed into the shipped backend.  This
     runs the real launcher through the same symlink shape with both variables
     poisoned and asserts the interpreter never sees them.
     """
-    bundle = tmp_path / "app" / "backend-dist" / "kirocrew-backend-x86_64"
+    bundle = tmp_path / "app" / "backend-dist" / "ajcrew-backend-x86_64"
     launcher = _make_env_reporting_bundle(bundle)
     local_bin = tmp_path / "home" / ".local" / "bin"
     local_bin.mkdir(parents=True)
-    shim = local_bin / "kirocrew"
+    shim = local_bin / "ajcrew"
     shim.symlink_to(launcher)
 
     poisoned = {

@@ -1,8 +1,8 @@
-"""``kiro_crew.agent_discovery`` keeps the patch seams and the surface the one module had.
+"""``aj_crew.agent_discovery`` keeps the patch seams and the surface the one module had.
 
-``kiro_crew.agent_discovery`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over
-the owners in ``kiro_crew.agent_discovery_parts``. Callers, the tests and the documents
-still reach every name as ``kiro_crew.agent_discovery.<name>``, and the moved code reads
+``aj_crew.agent_discovery`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over
+the owners in ``aj_crew.agent_discovery_parts``. Callers, the tests and the documents
+still reach every name as ``aj_crew.agent_discovery.<name>``, and the moved code reads
 its names as plain module globals, so a patch through the facade reaches that code only
 because the mirror writes it into every module holding the name.
 
@@ -32,8 +32,8 @@ import owner_import_scan
 import pytest
 import source_corpus
 
-import kiro_crew
-from kiro_crew import _facade_mirror, agent_discovery
+import aj_crew
+from aj_crew import _facade_mirror, agent_discovery
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_agent_discovery_parts_facade")
 
@@ -41,9 +41,9 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_agent_discovery_parts_facad
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.agent_discovery"
-_SRC = Path(kiro_crew.__file__).resolve().parent
-_OWNER_PREFIX = "kiro_crew.agent_discovery_parts"
+FACADE = "aj_crew.agent_discovery"
+_SRC = Path(aj_crew.__file__).resolve().parent
+_OWNER_PREFIX = "aj_crew.agent_discovery_parts"
 PARTS_DIR = Path(agent_discovery.__file__).resolve().parent / "agent_discovery_parts"
 INVENTORY = source_corpus.repo_root() / "test" / "campaign_facade_inventories" / f"{FACADE}.json"
 
@@ -90,7 +90,7 @@ def _test_tree_files() -> list[Path]:
         rel = path.relative_to(root).as_posix()
         if rel == "conftest.py" or rel.startswith("test/"):
             found.append(path)
-        elif rel.startswith("src/kiro_crew/apps/builtins/") and (
+        elif rel.startswith("src/aj_crew/apps/builtins/") and (
             "/tests/" in rel or path.name.startswith("test_") or path.name == "conftest.py"
         ):
             found.append(path)
@@ -160,7 +160,7 @@ def test_the_owners_are_the_parts_package_in_layer_order() -> None:
     owners listed before it: the order the facade loads them and a read resolves in."""
     owners = list(_index().owners)
     on_disk = {
-        f"kiro_crew.agent_discovery_parts.{p.stem}": p
+        f"aj_crew.agent_discovery_parts.{p.stem}": p
         for p in PARTS_DIR.glob("*.py")
         if p.name != "__init__.py"
     }
@@ -186,7 +186,7 @@ def test_the_facade_keeps_the_default_read_path_and_forwards_no_table() -> None:
 
 
 def test_the_family_logs_through_one_logger_named_for_the_facade() -> None:
-    """``caplog`` filters keyed on ``kiro_crew.agent_discovery`` keep seeing the moved code."""
+    """``caplog`` filters keyed on ``aj_crew.agent_discovery`` keep seeing the moved code."""
     assert agent_discovery.logger.name == FACADE
     loggers = [m for m in _family() if "logger" in vars(m)]
     assert len(loggers) >= 5
@@ -195,7 +195,7 @@ def test_the_family_logs_through_one_logger_named_for_the_facade() -> None:
 
 def test_an_exception_an_owner_defines_keeps_the_facade_module() -> None:
     """A traceback or a log line renders a raised class as ``module.qualname``, so an
-    exception class an owner defines reports ``kiro_crew.agent_discovery``, as it did
+    exception class an owner defines reports ``aj_crew.agent_discovery``, as it did
     before it moved."""
     found = {
         name: value
@@ -233,7 +233,7 @@ def _owner_importers(sources: Iterable[tuple[Path, str]], root: Path) -> set[str
 
 
 def test_only_the_family_imports_an_owner() -> None:
-    """Callers reach the moved code through ``kiro_crew.agent_discovery``: an import of an owner from
+    """Callers reach the moved code through ``aj_crew.agent_discovery``: an import of an owner from
     outside the family would hold bindings no facade patch reaches."""
     sources = source_corpus.iter_candidate_sources(require_any=("agent_discovery_parts",))
     importers = _owner_importers(
@@ -250,14 +250,14 @@ def test_only_the_family_imports_an_owner() -> None:
 
 
 def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None:
-    root = tmp_path / "kiro_crew"
+    root = tmp_path / "aj_crew"
     sources = {
-        root / "pkg" / "caller.py": "from kiro_crew.agent_discovery_parts.spec_reads import x\n",
-        root / "other.py": "from kiro_crew.agent_discovery_parts import spec_reads as low\n",
+        root / "pkg" / "caller.py": "from aj_crew.agent_discovery_parts.spec_reads import x\n",
+        root / "other.py": "from aj_crew.agent_discovery_parts import spec_reads as low\n",
         root / "relative.py": "from .agent_discovery_parts.spec_reads import x\n",
         root / "deep" / "up.py": "from .. import agent_discovery_parts\n",
-        root / "plain.py": "import kiro_crew.agent_discovery_parts.spec_reads\n",
-        root / "facade_user.py": "from kiro_crew.agent_discovery import x\n",
+        root / "plain.py": "import aj_crew.agent_discovery_parts.spec_reads\n",
+        root / "facade_user.py": "from aj_crew.agent_discovery import x\n",
     }
     assert _owner_importers(sources.items(), root) == {
         "pkg/caller.py",
@@ -301,9 +301,9 @@ def _home(value: object) -> str:
 
 
 def test_every_project_name_the_facade_imported_stays_bound_on_it() -> None:
-    """A name the facade imported from the rest of ``kiro_crew`` before its owners moved
+    """A name the facade imported from the rest of ``aj_crew`` before its owners moved
     out is bound on it still, statically and as its home module's object, so a reader that
-    spells it through ``kiro_crew.agent_discovery`` keeps type-checking."""
+    spells it through ``aj_crew.agent_discovery`` keeps type-checking."""
     rebound = json.loads(INVENTORY.read_text(encoding="utf-8"))["rebound"]
     assert "is_sensitive_canonical_path" in rebound, "the inventory went blind"
     bound = _static_bindings(Path(agent_discovery.__file__))
@@ -339,7 +339,7 @@ def test_every_name_served_from_outside_the_family_is_visible_to_a_type_checker(
     served_from_outside = {
         name: _home(getattr(agent_discovery, name))
         for name in imported_by_owners
-        if _home(getattr(agent_discovery, name)).startswith("kiro_crew")
+        if _home(getattr(agent_discovery, name)).startswith("aj_crew")
         and _home(getattr(agent_discovery, name)) not in family
     }
     assert served_from_outside == {}

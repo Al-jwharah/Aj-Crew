@@ -170,7 +170,7 @@ interface AppManifest {
   crons?: { name: string }[]
   mcpServers?: Record<string, McpServerConfig>
   permissions?: AppPermissions
-  minKiroCrewVersion?: string
+  minAjCrewVersion?: string
 }
 
 // `AppDetailPage.tsx` builds and renders these.

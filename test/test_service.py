@@ -12,8 +12,8 @@ systemctl fakes. The SELinux and launchd-domain ``test_service_*.py`` files are
 separate suites.
 
 Tests do not actually invoke ``systemctl`` or ``launchctl``. The
-subprocess calls in :mod:`kiro_crew.service.linux` and
-:mod:`kiro_crew.service.macos` are mocked.
+subprocess calls in :mod:`aj_crew.service.linux` and
+:mod:`aj_crew.service.macos` are mocked.
 """
 
 from __future__ import annotations
@@ -37,9 +37,9 @@ from service_helpers import (  # noqa: F401 -- fixtures are found by name
     _systemctl_stub,
 )
 
-from kiro_crew.service import common as svc_common
-from kiro_crew.service import controller
-from kiro_crew.service.common import (
+from aj_crew.service import common as svc_common
+from aj_crew.service import controller
+from aj_crew.service.common import (
     LAUNCHD_LABEL,
     RESTART_REFUSED,
     SERVICE_NAME,
@@ -50,31 +50,31 @@ from kiro_crew.service.common import (
 
 class TestPlatformDetection:
     def test_linux_with_systemctl_returns_systemd(self):
-        with patch("kiro_crew.service.common.sys") as mock_sys, patch(
-            "kiro_crew.service.common.shutil.which",
+        with patch("aj_crew.service.common.sys") as mock_sys, patch(
+            "aj_crew.service.common.shutil.which",
             return_value="/usr/bin/systemctl",
         ):
             mock_sys.platform = "linux"
             assert current_platform() == Platform.SYSTEMD
 
     def test_linux_without_systemctl_returns_unsupported(self):
-        with patch("kiro_crew.service.common.sys") as mock_sys, patch(
-            "kiro_crew.service.common.shutil.which", return_value=None
+        with patch("aj_crew.service.common.sys") as mock_sys, patch(
+            "aj_crew.service.common.shutil.which", return_value=None
         ):
             mock_sys.platform = "linux"
             assert current_platform() == Platform.UNSUPPORTED
 
     def test_darwin_with_launchctl_returns_launchd(self):
-        with patch("kiro_crew.service.common.sys") as mock_sys, patch(
-            "kiro_crew.service.common.shutil.which",
+        with patch("aj_crew.service.common.sys") as mock_sys, patch(
+            "aj_crew.service.common.shutil.which",
             return_value="/bin/launchctl",
         ):
             mock_sys.platform = "darwin"
             assert current_platform() == Platform.LAUNCHD
 
     def test_unknown_platform_returns_unsupported(self):
-        with patch("kiro_crew.service.common.sys") as mock_sys, patch(
-            "kiro_crew.service.common.shutil.which",
+        with patch("aj_crew.service.common.sys") as mock_sys, patch(
+            "aj_crew.service.common.shutil.which",
             return_value="/usr/bin/anything",
         ):
             mock_sys.platform = "win32"
@@ -88,20 +88,20 @@ class TestManagedServiceMarkerDetection:
         # No system unit file, and the account's own manager has no unit either:
         # the user scope is ASKED (never the host's real manager from a test).
         run = _fake_systemctl(system=None, user=None)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             assert controller.installed_service_has_managed_marker() is None
         assert ["systemctl", "--user", "show"] == run.calls[0][:3], run.calls
 
     def test_systemd_definition_requires_explicit_marker(self, monkeypatch, tmp_path):
-        path = tmp_path / "kirocrew.service"
+        path = tmp_path / "ajcrew.service"
         monkeypatch.setattr(controller, "current_platform", lambda: Platform.SYSTEMD)
         monkeypatch.setattr(controller.linux, "UNIT_PATH", path)
-        path.write_text("[Service]\nExecStart=kirocrew gateway\n", encoding="utf-8")
+        path.write_text("[Service]\nExecStart=ajcrew gateway\n", encoding="utf-8")
         run = _fake_systemctl(system=_RUNNING, user=None)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             assert controller.installed_service_has_managed_marker() is False
             path.write_text(
-                '[Service]\nEnvironment="KIROCREW_SERVICE_MANAGED=1"\n',
+                '[Service]\nEnvironment="AJCREW_SERVICE_MANAGED=1"\n',
                 encoding="utf-8",
             )
             assert controller.installed_service_has_managed_marker() is True
@@ -112,40 +112,40 @@ class TestManagedServiceMarkerDetection:
         # The SELinux remedy's per-user unit bakes the same Environment= line, so
         # doctor's managed-marker check must read it where the base read "no
         # service installed" — from the file the user manager reports as loaded.
-        fragment = tmp_path / ".config" / "systemd" / "user" / "kirocrew.service"
+        fragment = tmp_path / ".config" / "systemd" / "user" / "ajcrew.service"
         fragment.parent.mkdir(parents=True)
-        fragment.write_text("[Service]\nExecStart=kirocrew gateway\n", encoding="utf-8")
+        fragment.write_text("[Service]\nExecStart=ajcrew gateway\n", encoding="utf-8")
         monkeypatch.setattr(controller, "current_platform", lambda: Platform.SYSTEMD)
         monkeypatch.setattr(controller.linux, "UNIT_PATH", tmp_path / "missing.service")
         run = _fake_systemctl(system=None, user=_RUNNING, user_fragment=str(fragment))
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             assert controller.installed_service_has_managed_marker() is False
             fragment.write_text(
-                '[Service]\nEnvironment="KIROCREW_SERVICE_MANAGED=1"\n',
+                '[Service]\nEnvironment="AJCREW_SERVICE_MANAGED=1"\n',
                 encoding="utf-8",
             )
             assert controller.installed_service_has_managed_marker() is True
         assert all("sudo" not in c for c in run.calls), run.calls
 
     def test_launchd_definition_reads_environment_dictionary(self, monkeypatch, tmp_path):
-        path = tmp_path / "dev.kirocrew.gateway.plist"
+        path = tmp_path / "dev.ajcrew.gateway.plist"
         monkeypatch.setattr(controller, "current_platform", lambda: Platform.LAUNCHD)
         monkeypatch.setattr(controller.macos, "PLIST_PATH", path)
-        path.write_bytes(plistlib.dumps({"Label": "dev.kirocrew.gateway"}))
+        path.write_bytes(plistlib.dumps({"Label": "dev.ajcrew.gateway"}))
         assert controller.installed_service_has_managed_marker() is False
         path.write_bytes(
             plistlib.dumps(
-                {"EnvironmentVariables": {"KIROCREW_SERVICE_MANAGED": "1"}}
+                {"EnvironmentVariables": {"AJCREW_SERVICE_MANAGED": "1"}}
             )
         )
         assert controller.installed_service_has_managed_marker() is True
 
     def test_malformed_launchd_definition_is_reported_stale(self, monkeypatch, tmp_path):
-        path = tmp_path / "dev.kirocrew.gateway.plist"
+        path = tmp_path / "dev.ajcrew.gateway.plist"
         monkeypatch.setattr(controller, "current_platform", lambda: Platform.LAUNCHD)
         monkeypatch.setattr(controller.macos, "PLIST_PATH", path)
         path.write_text(
-            "<plist><dict><key>Label</key><string>Kiro & Crew</string></dict></plist>",
+            "<plist><dict><key>Label</key><string>Aj & Crew</string></dict></plist>",
             encoding="utf-8",
         )
 
@@ -154,7 +154,7 @@ class TestManagedServiceMarkerDetection:
 
 class TestShutdownBudget:
     def test_service_deadline_covers_gateway_grace(self):
-        from kiro_crew.gateway_shutdown_budget import (
+        from aj_crew.gateway_shutdown_budget import (
             GRACEFUL_SHUTDOWN_SECS,
             SIGNAL_MARGIN_SECS,
             TOTAL_SHUTDOWN_BUDGET_SECS,
@@ -167,10 +167,10 @@ class TestShutdownBudget:
 
 
 class TestLinuxUnitRendering:
-    """The rendered systemd unit should reference the resolved kirocrew bin."""
+    """The rendered systemd unit should reference the resolved ajcrew bin."""
 
     def test_render_unit_includes_exec_start(self, tmp_path, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "tester")
         # `id -gn tester` would return some real group; mock it to a known value
@@ -179,12 +179,12 @@ class TestLinuxUnitRendering:
         # The PATH branch of the resolver, not the running install's own script.
         monkeypatch.setattr(svc_common, "_running_install_bin", lambda: None)
         with patch(
-            "kiro_crew.service.common.shutil.which",
-            return_value="/home/u/.toolbox/bin/kirocrew",
+            "aj_crew.service.common.shutil.which",
+            return_value="/home/u/.toolbox/bin/ajcrew",
         ), patch(
-            "kiro_crew.service.linux.subprocess.run", return_value=gid_result
+            "aj_crew.service.linux.subprocess.run", return_value=gid_result
         ), patch(
-            "kiro_crew.service.linux.trusted_system_bin", return_value="/usr/bin/id"
+            "aj_crew.service.linux.trusted_system_bin", return_value="/usr/bin/id"
         ):
             unit = svc_linux.render_unit()
         # ExecStart executable is double-quoted (systemd tokenizes on
@@ -192,7 +192,7 @@ class TestLinuxUnitRendering:
         # is asserted as part of the SAME string rather than separately: a bare
         # `in unit` check for the prefix passes even if the flag is dropped,
         # because the prefix is still a substring of the shorter line.
-        assert 'ExecStart="/home/u/.toolbox/bin/kirocrew" gateway --no-open' in unit
+        assert 'ExecStart="/home/u/.toolbox/bin/ajcrew" gateway --no-open' in unit
         # `always`, not `on-failure`: the stale-asset watchdog exits the
         # gateway cleanly so the supervisor relaunches a fresh install, and
         # on-failure never restarts an exit 0 (gateway stranded for hours).
@@ -238,16 +238,16 @@ class TestLinuxUnitRendering:
         status so the unit stands down instead, and it names the constant the
         CLI exits with, so the exit and the exemption cannot drift apart.
         """
-        from kiro_crew.gateway_lock import LIVE_HOLDER_EXIT_CODE
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.gateway_lock import LIVE_HOLDER_EXIT_CODE
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "tester")
         gid_result = MagicMock(returncode=0, stdout="amazon\n", stderr="")
         with patch(
-            "kiro_crew.service.common.shutil.which",
-            return_value="/home/u/.toolbox/bin/kirocrew",
+            "aj_crew.service.common.shutil.which",
+            return_value="/home/u/.toolbox/bin/ajcrew",
         ), patch(
-            "kiro_crew.service.linux.subprocess.run", return_value=gid_result
+            "aj_crew.service.linux.subprocess.run", return_value=gid_result
         ):
             unit = svc_linux.render_unit(user_scope=user_scope)
 
@@ -282,15 +282,15 @@ class TestLinuxUnitRendering:
     def test_render_unit_turns_core_dumps_off(self, monkeypatch, user_scope):
         """A core streamed into systemd-coredump holds a crashed gateway's exit,
         and so its restart, for up to five minutes."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "tester")
         gid_result = MagicMock(returncode=0, stdout="amazon\n", stderr="")
         with patch(
-            "kiro_crew.service.common.shutil.which",
-            return_value="/home/u/.toolbox/bin/kirocrew",
+            "aj_crew.service.common.shutil.which",
+            return_value="/home/u/.toolbox/bin/ajcrew",
         ), patch(
-            "kiro_crew.service.linux.subprocess.run", return_value=gid_result
+            "aj_crew.service.linux.subprocess.run", return_value=gid_result
         ):
             unit = svc_linux.render_unit(user_scope=user_scope)
 
@@ -301,15 +301,15 @@ class TestLinuxUnitRendering:
         """A system unit inherits no login-session env, so pods (systemd --user
         units) were unreachable from the service-installed gateway. The unit must
         wire up the per-user systemd instance explicitly."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "tester")
         gid_result = MagicMock(returncode=0, stdout="staff\n", stderr="")
         with patch(
-            "kiro_crew.service.common.shutil.which",
-            return_value="/usr/local/bin/kirocrew",
+            "aj_crew.service.common.shutil.which",
+            return_value="/usr/local/bin/ajcrew",
         ), patch(
-            "kiro_crew.service.linux.subprocess.run", return_value=gid_result
+            "aj_crew.service.linux.subprocess.run", return_value=gid_result
         ), patch.object(
             svc_linux, "_current_uid", return_value=4242
         ):
@@ -324,14 +324,14 @@ class TestLinuxUnitRendering:
         assert 'Environment="USER=tester"\n' in unit
         assert 'Environment="HOME=' in unit
         assert 'Environment="PATH=' in unit
-        assert 'Environment="KIROCREW_SERVICE_MANAGED=1"\n' in unit
+        assert 'Environment="AJCREW_SERVICE_MANAGED=1"\n' in unit
         service = unit.index("[Service]")
         install = unit.index("[Install]")
         for key in (
             "HOME",
             "USER",
             "PATH",
-            "KIROCREW_SERVICE_MANAGED",
+            "AJCREW_SERVICE_MANAGED",
             "XDG_RUNTIME_DIR",
             "DBUS_SESSION_BUS_ADDRESS",
         ):
@@ -342,15 +342,15 @@ class TestLinuxUnitRendering:
     def test_render_unit_omits_session_bus_when_uid_unresolvable(self, monkeypatch):
         """Rather than bake in a guessed uid, omit the pair — the pod runtime
         backfills the same values at call time anyway."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "tester")
         gid_result = MagicMock(returncode=0, stdout="staff\n", stderr="")
         with patch(
-            "kiro_crew.service.common.shutil.which",
-            return_value="/usr/local/bin/kirocrew",
+            "aj_crew.service.common.shutil.which",
+            return_value="/usr/local/bin/ajcrew",
         ), patch(
-            "kiro_crew.service.linux.subprocess.run", return_value=gid_result
+            "aj_crew.service.linux.subprocess.run", return_value=gid_result
         ), patch.object(
             svc_linux, "_current_uid", return_value=None
         ):
@@ -365,34 +365,34 @@ class TestLinuxUnitRendering:
     def test_session_bus_is_systemd_only_not_in_the_shared_environment(self):
         """`/run/user/<uid>` is a Linux/systemd path with no launchd equivalent,
         so it must NOT leak into the env shared with the macOS plist."""
-        from kiro_crew.service.common import service_environment
+        from aj_crew.service.common import service_environment
 
         keys = set(service_environment("/home/tester"))
         assert "XDG_RUNTIME_DIR" not in keys
         assert "DBUS_SESSION_BUS_ADDRESS" not in keys
-        assert service_environment("/home/tester")["KIROCREW_SERVICE_MANAGED"] == "1"
+        assert service_environment("/home/tester")["AJCREW_SERVICE_MANAGED"] == "1"
 
     def test_current_uid_returns_none_for_an_unknown_user(self):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         assert svc_linux._current_uid("no-such-user-e2b9f1") is None
 
-    def test_render_unit_falls_back_to_argv0_when_kirocrew_not_on_path(self, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+    def test_render_unit_falls_back_to_argv0_when_ajcrew_not_on_path(self, monkeypatch):
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "tester")
-        with patch("kiro_crew.service.common.shutil.which", return_value=None), patch.object(
-            sys, "argv", ["/some/path/kirocrew"]
+        with patch("aj_crew.service.common.shutil.which", return_value=None), patch.object(
+            sys, "argv", ["/some/path/ajcrew"]
         ):
             unit = svc_linux.render_unit()
         # argv[0] is realpathed; just check the unit references *something*
-        # that ends in the (quoted) kirocrew executable followed by gateway.
-        assert 'kirocrew" gateway' in unit
+        # that ends in the (quoted) ajcrew executable followed by gateway.
+        assert 'ajcrew" gateway' in unit
 
     def test_install_writes_unit_via_sudo_install_and_invokes_systemctl(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "tester")
         # Every subprocess call below is captured, so nothing is written: this test
@@ -405,18 +405,18 @@ class TestLinuxUnitRendering:
         # Capture every subprocess.run call. All return success.
         ok = MagicMock(returncode=0, stdout="", stderr="")
         with patch(
-            "kiro_crew.service.common.shutil.which",
-            return_value="/usr/local/bin/kirocrew",
+            "aj_crew.service.common.shutil.which",
+            return_value="/usr/local/bin/ajcrew",
         ), patch(
-            "kiro_crew.service.linux.subprocess.run", return_value=ok
+            "aj_crew.service.linux.subprocess.run", return_value=ok
         ) as run:
             svc_linux.install()
 
         # Four things must happen:
-        # 1) `sudo install -m 0644 -o root -g root <tmp> /etc/systemd/system/kirocrew.service`
+        # 1) `sudo install -m 0644 -o root -g root <tmp> /etc/systemd/system/ajcrew.service`
         # 2) `sudo systemctl daemon-reload`
-        # 3) `sudo systemctl enable kirocrew.service`
-        # 4) `sudo systemctl restart kirocrew.service`
+        # 3) `sudo systemctl enable ajcrew.service`
+        # 4) `sudo systemctl restart ajcrew.service`
         called = [list(c.args[0]) for c in run.call_args_list]
         install_calls = [
             c
@@ -440,7 +440,7 @@ class TestLinuxUnitRendering:
         """If `sudo install` fails (user denies password, sudoers misconfigured),
         install MUST raise with a clear message rather than continuing on
         and silently leaving the system half-configured."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "tester")
         monkeypatch.setattr(svc_linux.os, "geteuid", lambda: 1000, raising=False)
@@ -449,10 +449,10 @@ class TestLinuxUnitRendering:
         )
 
         with patch(
-            "kiro_crew.service.common.shutil.which",
-            return_value="/usr/local/bin/kirocrew",
+            "aj_crew.service.common.shutil.which",
+            return_value="/usr/local/bin/ajcrew",
         ), patch(
-            "kiro_crew.service.linux.subprocess.run", return_value=install_failed
+            "aj_crew.service.linux.subprocess.run", return_value=install_failed
         ):
             with pytest.raises(svc_linux.ServiceInstallError) as exc_info:
                 svc_linux.install()
@@ -468,7 +468,7 @@ class TestLinuxUnitRendering:
         PID 1 is something else (or WSL without systemd) has no system manager,
         so a unit written there could never start. install() must refuse before
         sudo is asked for anything: no unit, no overrides file, no systemctl."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "tester")
         absent = tmp_path / "absent-run-systemd-system"
@@ -478,10 +478,10 @@ class TestLinuxUnitRendering:
 
         with (
             patch(
-                "kiro_crew.service.common.shutil.which",
-                return_value="/usr/local/bin/kirocrew",
+                "aj_crew.service.common.shutil.which",
+                return_value="/usr/local/bin/ajcrew",
             ),
-            patch("kiro_crew.service.linux.subprocess.run", return_value=ok) as run,
+            patch("aj_crew.service.linux.subprocess.run", return_value=ok) as run,
         ):
             with pytest.raises(svc_linux.ServiceInstallError) as exc_info:
                 svc_linux.install()
@@ -491,13 +491,13 @@ class TestLinuxUnitRendering:
         flat = " ".join(str(exc_info.value).split())
         assert f"no {absent}" in flat
         assert "Nothing was written" in flat
-        assert "`kirocrew gateway`" in flat
+        assert "`ajcrew gateway`" in flat
 
     def test_install_raises_when_user_env_unset(self, monkeypatch):
         """Defensive: render_unit needs the user's name to fill `User=`. If
         neither the env nor the uid's passwd entry names it, fail fast rather
         than render a unit with an empty User= line that systemd will reject."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.delenv("USER", raising=False)
         monkeypatch.delenv("LOGNAME", raising=False)
@@ -508,8 +508,8 @@ class TestLinuxUnitRendering:
         monkeypatch.setitem(sys.modules, "pwd", MagicMock(getpwuid=_no_entry))
 
         with patch(
-            "kiro_crew.service.common.shutil.which",
-            return_value="/usr/local/bin/kirocrew",
+            "aj_crew.service.common.shutil.which",
+            return_value="/usr/local/bin/ajcrew",
         ):
             with pytest.raises(svc_linux.ServiceInstallError) as exc_info:
                 svc_linux.install()
@@ -521,7 +521,7 @@ class TestLinuxUnitRendering:
         (the baked ``XDG_RUNTIME_DIR`` / ``DBUS_SESSION_BUS_ADDRESS``), so with
         ``Linger=no`` the account's manager stops at logout and takes the
         runtimes down with it. The install path must say so and name the fix."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "tester")
         monkeypatch.setattr(svc_linux, "trusted_system_bin", lambda _n: "/usr/bin/loginctl")
@@ -537,7 +537,7 @@ class TestLinuxUnitRendering:
         assert "loginctl enable-linger tester" in warning
 
     def test_linger_warning_silent_when_linger_is_on(self, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "tester")
         monkeypatch.setattr(svc_linux, "trusted_system_bin", lambda _n: "/usr/bin/loginctl")
@@ -551,14 +551,14 @@ class TestLinuxUnitRendering:
     def test_linger_warning_silent_when_undeterminable(self, monkeypatch):
         """No ``loginctl``, an unknown user, or an unrecognised value stays quiet
         rather than guessing — the install still succeeds unqualified."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "tester")
         monkeypatch.setattr(svc_linux, "trusted_system_bin", lambda _n: None)
         assert svc_linux.linger_warning_for_service_account() is None
 
     def test_uninstall_is_idempotent_when_unit_missing(self, tmp_path, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         # Point UNIT_PATH at a nonexistent file; both scopes are only QUERIED
         # (an unprivileged `show` each — the system manager is asked even with
@@ -569,7 +569,7 @@ class TestLinuxUnitRendering:
         monkeypatch.setattr(svc_linux, "UNIT_PATH", unit_path)
         monkeypatch.setattr(svc_linux.os, "geteuid", lambda: 1000, raising=False)
         run = _fake_systemctl(system=None, user=None)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.uninstall()
         assert report.system == "not installed"
         assert report.user == "not installed"
@@ -583,19 +583,19 @@ class TestLinuxPrivilegeResolution:
     nor lets a raw FileNotFoundError escape controller.install_service."""
 
     def test_privilege_prefix_is_empty_as_root(self, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setattr(svc_linux.os, "geteuid", lambda: 0, raising=False)
         assert svc_linux._privilege_prefix() == []
 
     def test_privilege_prefix_is_sudo_when_not_root(self, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setattr(svc_linux.os, "geteuid", lambda: 1000, raising=False)
         assert svc_linux._privilege_prefix() == ["sudo"]
 
     def test_require_privilege_ok_as_root_without_sudo(self, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setattr(svc_linux.os, "geteuid", lambda: 0, raising=False)
         monkeypatch.setattr(svc_linux.shutil, "which", lambda _n: None)
@@ -603,7 +603,7 @@ class TestLinuxPrivilegeResolution:
         svc_linux._require_privilege()
 
     def test_require_privilege_raises_when_not_root_and_no_sudo(self, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         # The guard is Linux-scoped (systemd module); pin the platform so the
         # test asserts the raising branch on any host it runs on.
@@ -615,7 +615,7 @@ class TestLinuxPrivilegeResolution:
         assert "sudo" in str(exc.value).lower()
 
     def test_require_privilege_is_noop_off_linux(self, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         # On a non-Linux host (macOS/Windows) the systemd path is never the real
         # dispatch target, and cross-platform unit tests call these functions
@@ -629,7 +629,7 @@ class TestLinuxPrivilegeResolution:
         """A bare-root install (root login, or sudo with no SUDO_USER) must NOT
         produce a User=root unit — the gateway runs untrusted tools and the
         module invariant is that it runs as a normal user."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "root")
         monkeypatch.delenv("SUDO_USER", raising=False)
@@ -640,19 +640,19 @@ class TestLinuxPrivilegeResolution:
         assert "root" in str(exc.value).lower()
 
     def test_current_user_prefers_sudo_user_over_root(self, monkeypatch):
-        """`sudo kirocrew service install` must target the human behind sudo,
+        """`sudo ajcrew service install` must target the human behind sudo,
         not the root sudo elevated to — so the unit gets User=<human>."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "root")
         monkeypatch.setenv("SUDO_USER", "alice")
         assert svc_linux._current_user() == "alice"
 
     def test_current_user_falls_back_to_the_uid_owner(self, monkeypatch):
-        """A non-interactive `ssh host kirocrew service install` sets neither
+        """A non-interactive `ssh host ajcrew service install` sets neither
         USER nor LOGNAME, but the process still runs as a uid whose passwd
         entry names the account, so `User=` resolves from that entry."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         for name in ("USER", "LOGNAME", "SUDO_USER"):
             monkeypatch.delenv(name, raising=False)
@@ -672,7 +672,7 @@ class TestLinuxPrivilegeResolution:
         HOME=/WorkingDirectory= in the unit must follow the resolved USER (from
         that user's passwd home), never the process's /root — otherwise the
         non-root service cannot enter its working dir and fails to start."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "root")
         monkeypatch.setenv("SUDO_USER", "alice")
@@ -684,8 +684,8 @@ class TestLinuxPrivilegeResolution:
         monkeypatch.setattr(svc_linux, "_home_for_user", lambda u: "/home/alice" if u == "alice" else "/root")
         gid = MagicMock(returncode=0, stdout="alice\n", stderr="")
         with patch(
-            "kiro_crew.service.common.shutil.which", return_value="/usr/local/bin/kirocrew"
-        ), patch("kiro_crew.service.linux.subprocess.run", return_value=gid):
+            "aj_crew.service.common.shutil.which", return_value="/usr/local/bin/ajcrew"
+        ), patch("aj_crew.service.linux.subprocess.run", return_value=gid):
             unit = svc_linux.render_unit()
         assert "User=alice" in unit
         assert "WorkingDirectory=/home/alice" in unit
@@ -696,7 +696,7 @@ class TestLinuxPrivilegeResolution:
         """The reported bug: on a root-only/minimal host without sudo, install
         must not crash with an uncaught FileNotFoundError; it must raise the
         friendly ServiceInstallError instead."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setattr(svc_linux.sys, "platform", "linux")
         monkeypatch.setenv("USER", "tester")
@@ -710,7 +710,7 @@ class TestLinuxPrivilegeResolution:
         """restart()/stop() are best-effort and reachable from the update path;
         a missing sudo must degrade to a failed result, never a raised
         FileNotFoundError."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setattr(svc_linux.os, "geteuid", lambda: 1000, raising=False)
         active = _fake_systemctl(system=_RUNNING, user=None)
@@ -723,7 +723,7 @@ class TestLinuxPrivilegeResolution:
             return active(argv, *a, **k)
 
         monkeypatch.setattr(svc_linux.subprocess, "run", _boom)
-        res = svc_linux._sudo_run("systemctl", "restart", "kirocrew.service")
+        res = svc_linux._sudo_run("systemctl", "restart", "ajcrew.service")
         assert res.returncode == 127
         # restart() surfaces the failure as a refused scope rather than crashing.
         report = svc_linux.restart()
@@ -733,15 +733,15 @@ class TestLinuxPrivilegeResolution:
 
 class TestLinuxEnvironmentFile:
     """The operator-editable overrides file — the honest fix to 'I set
-    KIROCREW_PORT on the service and it did not change the port'."""
+    AJCREW_PORT on the service and it did not change the port'."""
 
     def test_unit_references_the_env_file(self, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "tester")
         with patch(
-            "kiro_crew.service.common.shutil.which",
-            return_value="/usr/local/bin/kirocrew",
+            "aj_crew.service.common.shutil.which",
+            return_value="/usr/local/bin/ajcrew",
         ):
             unit = svc_linux.render_unit()
         assert f"EnvironmentFile=-{svc_linux.ENV_FILE_PATH}\n" in unit
@@ -752,9 +752,9 @@ class TestLinuxEnvironmentFile:
         assert service < unit.index("EnvironmentFile=") < install
 
     def test_seed_env_file_creates_when_absent(self, tmp_path, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
-        env_file = tmp_path / "kirocrew" / "kirocrew.env"
+        env_file = tmp_path / "ajcrew" / "ajcrew.env"
         monkeypatch.setattr(svc_linux, "ENV_DIR", env_file.parent)
         monkeypatch.setattr(svc_linux, "ENV_FILE_PATH", env_file)
 
@@ -779,14 +779,14 @@ class TestLinuxEnvironmentFile:
         svc_linux._seed_env_file()
         assert env_file.exists()
         # Seed is inert until an operator opts in: the port line is commented.
-        assert "#KIROCREW_PORT=" in written["contents"]
+        assert "#AJCREW_PORT=" in written["contents"]
 
     def test_seed_env_file_never_clobbers_operator_edits(self, tmp_path, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
-        env_file = tmp_path / "kirocrew" / "kirocrew.env"
+        env_file = tmp_path / "ajcrew" / "ajcrew.env"
         env_file.parent.mkdir(parents=True)
-        env_file.write_text("KIROCREW_PORT=5477\n")
+        env_file.write_text("AJCREW_PORT=5477\n")
         monkeypatch.setattr(svc_linux, "ENV_DIR", env_file.parent)
         monkeypatch.setattr(svc_linux, "ENV_FILE_PATH", env_file)
 
@@ -802,15 +802,15 @@ class TestLinuxEnvironmentFile:
         svc_linux._seed_env_file()
         # An existing file is left exactly as the operator wrote it.
         called.assert_not_called()
-        assert env_file.read_text() == "KIROCREW_PORT=5477\n"
+        assert env_file.read_text() == "AJCREW_PORT=5477\n"
 
     def test_seed_env_file_is_non_fatal_when_probe_denied(self, tmp_path, monkeypatch):
-        """A pre-existing root-only /etc/kirocrew must not abort install: the
+        """A pre-existing root-only /etc/ajcrew must not abort install: the
         existence probe goes through privileged `test -e`, and any error still
         degrades to a warning instead of propagating."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
-        env_file = tmp_path / "kirocrew" / "kirocrew.env"
+        env_file = tmp_path / "ajcrew" / "ajcrew.env"
         monkeypatch.setattr(svc_linux, "ENV_DIR", env_file.parent)
         monkeypatch.setattr(svc_linux, "ENV_FILE_PATH", env_file)
 
@@ -826,13 +826,13 @@ class TestLinuxEnvironmentFile:
         """Uninstall must delete ONLY our untouched seed — an operator-authored
         or -edited overrides file (including one pre-provisioned before install)
         is their config, not ours to remove."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
-        unit = tmp_path / "kirocrew.service"
+        unit = tmp_path / "ajcrew.service"
         unit.write_text("[Unit]\n")
-        env_file = tmp_path / "kirocrew" / "kirocrew.env"
+        env_file = tmp_path / "ajcrew" / "ajcrew.env"
         env_file.parent.mkdir(parents=True)
-        env_file.write_text("KIROCREW_PORT=5477\n")  # operator content, not our seed
+        env_file.write_text("AJCREW_PORT=5477\n")  # operator content, not our seed
         monkeypatch.setattr(svc_linux, "UNIT_PATH", unit)
         monkeypatch.setattr(svc_linux, "ENV_DIR", env_file.parent)
         monkeypatch.setattr(svc_linux, "ENV_FILE_PATH", env_file)
@@ -853,11 +853,11 @@ class TestLinuxEnvironmentFile:
         assert str(env_file) not in removed
 
     def test_uninstall_removes_our_untouched_seed(self, tmp_path, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
-        unit = tmp_path / "kirocrew.service"
+        unit = tmp_path / "ajcrew.service"
         unit.write_text("[Unit]\n")
-        env_file = tmp_path / "kirocrew" / "kirocrew.env"
+        env_file = tmp_path / "ajcrew" / "ajcrew.env"
         env_file.parent.mkdir(parents=True)
         env_file.write_text(svc_linux._ENV_FILE_TEMPLATE)  # our exact untouched seed
         monkeypatch.setattr(svc_linux, "UNIT_PATH", unit)
@@ -952,8 +952,8 @@ class TestLinuxServiceWritesUtf8:
             return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
 
         with (
-            patch("kiro_crew.service.linux.subprocess.run", side_effect=_fake_run),
-            patch("kiro_crew.service.linux._privilege_prefix", return_value=["sudo"]),
+            patch("aj_crew.service.linux.subprocess.run", side_effect=_fake_run),
+            patch("aj_crew.service.linux._privilege_prefix", return_value=["sudo"]),
         ):
             call(contents)
         return staged["raw"]
@@ -967,16 +967,16 @@ class TestLinuxServiceWritesUtf8:
         handed to the writer can legitimately carry non-ASCII, which is what
         makes the writer's encoding load-bearing rather than cosmetic.
         """
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "usuário")
         gid_result = MagicMock(returncode=0, stdout="usuário\n", stderr="")
         with (
             patch(
-                "kiro_crew.service.common.shutil.which", return_value="/home/usuario/bin/kirocrew"
+                "aj_crew.service.common.shutil.which", return_value="/home/usuario/bin/ajcrew"
             ),
-            patch("kiro_crew.service.linux.subprocess.run", return_value=gid_result),
-            patch("kiro_crew.service.linux._home_for_user", return_value="/home/usuario"),
+            patch("aj_crew.service.linux.subprocess.run", return_value=gid_result),
+            patch("aj_crew.service.linux._home_for_user", return_value="/home/usuario"),
         ):
             unit = svc_linux.render_unit()
 
@@ -985,7 +985,7 @@ class TestLinuxServiceWritesUtf8:
 
     def test_the_unit_write_stages_utf8_bytes(self):
         """``_write_unit_via_sudo`` must hand ``install`` UTF-8 bytes."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         contents = "[Service]\nWorkingDirectory=/home/usuario\nEnvironment=USER=usuário\n"
         raw = self._capture_staged_bytes(svc_linux._write_unit_via_sudo, contents)
@@ -1002,9 +1002,9 @@ class TestLinuxServiceWritesUtf8:
         contract pin rather than a live-harm test -- but the helper takes
         arbitrary ``contents`` and publishes to a root-owned path, so the
         encoding must not be left to the host."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
-        contents = "# Kiro Crew — überschrift\nKIROCREW_PORT=5477\n"
+        contents = "# Aj Crew — überschrift\nAJCREW_PORT=5477\n"
         raw = self._capture_staged_bytes(
             lambda c: svc_linux._install_file_via_sudo(c, tmp_path / "env"), contents
         )
@@ -1019,7 +1019,7 @@ class TestLinuxServiceWritesUtf8:
         import importlib
         from pathlib import Path
 
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         family = (svc_linux, *map(importlib.import_module, svc_linux._OWNERS))
         source = "".join(Path(module.__file__).read_text(encoding="utf-8") for module in family)
@@ -1059,14 +1059,14 @@ class TestMacOSPlistRendering:
         from both: on a headless Linux box the auto-open has nothing to reach, which
         is why the gap survived there unnoticed.
         """
-        from kiro_crew.service import linux as svc_linux
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import linux as svc_linux
+        from aj_crew.service import macos as svc_macos
 
         monkeypatch.setattr(svc_macos, "LIVE_PROGRAM", tmp_path / "live-gateway")
         # The PATH branch of the resolver, not the running install's own script.
         monkeypatch.setattr(svc_common, "_running_install_bin", lambda: None)
         with patch(
-            "kiro_crew.service.common.shutil.which", return_value="/opt/homebrew/bin/kirocrew"
+            "aj_crew.service.common.shutil.which", return_value="/opt/homebrew/bin/ajcrew"
         ):
             plist = svc_macos.render_plist()
         args = plist.split("<key>ProgramArguments</key>", 1)[1].split("</array>", 1)[0]
@@ -1077,10 +1077,10 @@ class TestMacOSPlistRendering:
         monkeypatch.setenv("USER", "tester")
         gid = MagicMock(returncode=0, stdout="staff\n", stderr="")
         with patch(
-            "kiro_crew.service.common.shutil.which", return_value="/usr/local/bin/kirocrew"
-        ), patch("kiro_crew.service.linux.subprocess.run", return_value=gid):
+            "aj_crew.service.common.shutil.which", return_value="/usr/local/bin/ajcrew"
+        ), patch("aj_crew.service.linux.subprocess.run", return_value=gid):
             unit = svc_linux.render_unit()
-        assert 'ExecStart="/usr/local/bin/kirocrew" gateway --no-open' in unit
+        assert 'ExecStart="/usr/local/bin/ajcrew" gateway --no-open' in unit
 
     def test_render_plist_runs_the_live_program_not_the_resolved_bin(self, monkeypatch, tmp_path):
         """ProgramArguments[0] is the live-gateway launcher.
@@ -1090,25 +1090,25 @@ class TestMacOSPlistRendering:
         PATH included - without rewriting and re-bootstrapping the plist (see
         service.common.launchd_live_program).
         """
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         link = tmp_path / "live-gateway"
         monkeypatch.setattr(svc_macos, "LIVE_PROGRAM", link)
         with patch(
-            "kiro_crew.service.common.shutil.which",
-            return_value="/opt/homebrew/bin/kirocrew",
+            "aj_crew.service.common.shutil.which",
+            return_value="/opt/homebrew/bin/ajcrew",
         ):
             plist = svc_macos.render_plist()
         assert f"<string>{LAUNCHD_LABEL}</string>" in plist
         assert f"<string>{link}</string>" in plist
-        assert "/opt/homebrew/bin/kirocrew" not in plist
+        assert "/opt/homebrew/bin/ajcrew" not in plist
         assert "<string>gateway</string>" in plist
         assert "<key>RunAtLoad</key>" in plist
         assert "<key>KeepAlive</key>" in plist
 
     def test_render_plist_pins_bounded_graceful_restart_contract(self, tmp_path):
-        from kiro_crew.gateway_shutdown_budget import TOTAL_SHUTDOWN_BUDGET_SECS
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.gateway_shutdown_budget import TOTAL_SHUTDOWN_BUDGET_SECS
+        from aj_crew.service import macos as svc_macos
 
         rendered = svc_macos.render_plist()
         payload = plistlib.loads(rendered.encode())
@@ -1119,8 +1119,8 @@ class TestMacOSPlistRendering:
         assert svc_macos.restart_contract_current(plist) is True
 
     def test_restart_contract_rejects_legacy_and_unbounded_definitions(self, tmp_path):
-        from kiro_crew.gateway_shutdown_budget import TOTAL_SHUTDOWN_BUDGET_SECS
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.gateway_shutdown_budget import TOTAL_SHUTDOWN_BUDGET_SECS
+        from aj_crew.service import macos as svc_macos
 
         plist = tmp_path / "agent.plist"
         for payload in (
@@ -1150,7 +1150,7 @@ class TestMacOSPlistRendering:
         containing ``&`` or ``<`` would otherwise emit invalid XML that
         ``launchctl load`` rejects.
         """
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         monkeypatch.setattr(
             svc_macos, "LIVE_PROGRAM", Path("/path/with/<bad>&chars/live-gateway")
@@ -1162,7 +1162,7 @@ class TestMacOSPlistRendering:
         assert "&amp;chars" in plist
 
     def test_install_writes_plist_and_loads(self, tmp_path, monkeypatch):
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         plist_dir = tmp_path / "LaunchAgents"
         log_dir = tmp_path / "Logs"
@@ -1175,9 +1175,9 @@ class TestMacOSPlistRendering:
 
         run = MagicMock(returncode=0, stdout="", stderr="")
         with patch(
-            "kiro_crew.service.common.shutil.which",
-            return_value="/opt/homebrew/bin/kirocrew",
-        ), patch("kiro_crew.service.macos.subprocess.run", return_value=run) as proc:
+            "aj_crew.service.common.shutil.which",
+            return_value="/opt/homebrew/bin/ajcrew",
+        ), patch("aj_crew.service.macos.subprocess.run", return_value=run) as proc:
             svc_macos.install()
 
         assert plist_path.exists()

@@ -1,4 +1,4 @@
-"""Additional coverage for :mod:`kiro_crew.acp.client`.
+"""Additional coverage for :mod:`aj_crew.acp.client`.
 
 Fakes sit at the boundary the product calls; no live subprocess, sandbox, git or network.
 POSIX-only tests use ``os.kill``, ``/proc``, ``ps`` or AF_UNIX sockets.
@@ -25,9 +25,9 @@ from acp_client_more_coverage_helpers import (  # noqa: F401 -- the autouse fixt
     _pinned_kiro_cli_version,
 )
 
-import kiro_crew.acp.client as acp_client
-import kiro_crew.acp.runtime_process_tree as runtime_process_tree
-from kiro_crew.acp.client import (
+import aj_crew.acp.client as acp_client
+import aj_crew.acp.runtime_process_tree as runtime_process_tree
+from aj_crew.acp.client import (
     AcpAuthRequired,
     AcpError,
     AcpProcessDied,
@@ -47,7 +47,7 @@ from kiro_crew.acp.client import (
     advertised_model_ids,
     resolve_usable_model,
 )
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE
 
 _POSIX_ONLY = pytest.mark.skipif(
     sys.platform == "win32", reason="POSIX-only APIs (os.kill, /proc, ps, AF_UNIX sockets)"
@@ -720,7 +720,7 @@ class TestEnsureReady:
         The leaf module's ``ToolGateUnroutable`` is a plain ``Exception``, invisible to
         both spawn handlers, so raw it would escape ``ensure_ready`` and skip cleanup.
         """
-        from kiro_crew import acp_tool_gate
+        from aj_crew import acp_tool_gate
 
         def _refuse(backend, mode):
             raise acp_tool_gate.ToolGateUnroutable("no sandbox backend on this host")

@@ -17,12 +17,12 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_utils import effective_session_key
-from kiro_crew.dashboard.slot_projection import live_trust_scope
-from kiro_crew.safety_override import safety_override
-from kiro_crew.slack import gateway as gw
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_utils import effective_session_key
+from aj_crew.dashboard.slot_projection import live_trust_scope
+from aj_crew.safety_override import safety_override
+from aj_crew.slack import gateway as gw
 
 _SCOPE = "app:test-app:grant:crew-slack-radar:autoapprove"
 _SO = type(safety_override())
@@ -34,7 +34,7 @@ def _slot(*, trust: bool = False, scope: str = "") -> SimpleNamespace:
 
 
 def _orchestrator(slot: SimpleNamespace) -> gw.GatewayOrchestrator:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     with patch.object(cfg, "load_credentials", return_value={}):
         orch = gw.GatewayOrchestrator(cfg)
     orch.slack = None
@@ -66,7 +66,7 @@ async def _decide(slot: SimpleNamespace, *, scope_live: bool, low_fidelity: bool
         patch.object(_SO, "is_scope_active", return_value=scope_live),
         patch.object(_SO, "is_active", return_value=False),
         patch.object(_SO, "renew_scoped") as renew,
-        patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False),
+        patch("aj_crew.slack.handler.is_yolo_mode", return_value=False),
         patch.object(gw, "sel") as sel_factory,
     ):
         sel_factory.return_value.log_api_access = log
@@ -172,7 +172,7 @@ class TestProjection:
     def test_policy_denied_scope_is_blank(self) -> None:
         with (
             patch.object(_SO, "scope_remaining_secs", return_value=120),
-            patch("kiro_crew.dashboard.slot_projection.yolo_policy_permits", return_value=False),
+            patch("aj_crew.dashboard.slot_projection.yolo_policy_permits", return_value=False),
         ):
             assert live_trust_scope(_slot(scope=_SCOPE)) == ""
 
@@ -190,7 +190,7 @@ class TestProjection:
         enforce.assert_not_called()
 
     def test_slot_dict_carries_the_field(self) -> None:
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         slot = _ChatSlot("s1")
         slot._trust_scope = _SCOPE
@@ -201,8 +201,8 @@ class TestProjection:
 
 
 def _dashboard_state(tmp_path):
-    from kiro_crew.dashboard.state import DashboardState
-    from kiro_crew.history import ConversationLog
+    from aj_crew.dashboard.state import DashboardState
+    from aj_crew.history import ConversationLog
 
     sessions = MagicMock(count=0)
     sessions.get_pid = MagicMock(return_value=None)
@@ -217,7 +217,7 @@ def _dashboard_state(tmp_path):
 
 
 async def _choose_mode(state, body: dict) -> web.Response:
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     app = web.Application()
     app["state"] = state
@@ -244,7 +244,7 @@ class TestNormalEndsTheScopedGrant:
         assert so.activate_scoped(_SCOPE, source="test", ttl=600).active
         slot._trust_scope = _SCOPE
         try:
-            with patch.object(gw, "sel"), patch("kiro_crew.dashboard.chat_handlers.sel") as hsel:
+            with patch.object(gw, "sel"), patch("aj_crew.dashboard.chat_handlers.sel") as hsel:
                 resp = await _choose_mode(state, {"mode": "normal", "slot": "crew-slot"})
             assert resp.status == 200
             assert so.scope_remaining_secs(_SCOPE) == 0
@@ -268,7 +268,7 @@ class TestNormalEndsTheScopedGrant:
     async def test_normal_without_a_scope_writes_no_scope_record(self, tmp_path) -> None:
         state = _dashboard_state(tmp_path)
         state.get_or_create_slot("plain-slot")
-        with patch("kiro_crew.dashboard.chat_handlers.sel") as hsel:
+        with patch("aj_crew.dashboard.chat_handlers.sel") as hsel:
             resp = await _choose_mode(state, {"mode": "normal", "slot": "plain-slot"})
         assert resp.status == 200
         ops = [c.kwargs.get("operation") for c in hsel.return_value.log_api_access.call_args_list]
@@ -285,7 +285,7 @@ class TestNormalEndsTheScopedGrant:
         assert so.activate_scoped(_SCOPE, source="test", ttl=600).active
         slot._trust_scope = _SCOPE
         try:
-            with patch("kiro_crew.dashboard.chat_handlers.sel") as hsel:
+            with patch("aj_crew.dashboard.chat_handlers.sel") as hsel:
                 resp = await _choose_mode(state, body)
             assert resp.status == 200
             assert so.scope_remaining_secs(_SCOPE) == 0
@@ -311,7 +311,7 @@ class TestNormalEndsTheScopedGrant:
         key = effective_session_key(slot)
         assert effective_session_key(sibling) == key
         sibling._trust = True
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             resp = await _choose_mode(state, {"mode": "trust_reads", "slot": "crew-slot"})
         assert resp.status == 200
         assert sibling._trust is False
@@ -329,7 +329,7 @@ class TestNormalEndsTheScopedGrant:
         assert so.activate_scoped(_SCOPE, source="test", ttl=600).active
         slot._trust_scope = _SCOPE
         try:
-            with patch("kiro_crew.dashboard.chat_handlers.sel"):
+            with patch("aj_crew.dashboard.chat_handlers.sel"):
                 resp = await _choose_mode(state, {"mode": "trust", "slot": "crew-slot"})
             assert resp.status == 200
             assert so.scope_remaining_secs(_SCOPE) > 0
@@ -356,7 +356,7 @@ class TestNormalEndsTheScopedGrant:
         try:
             with (
                 patch.object(so, "deactivate_scope", _deactivate_and_grow),
-                patch("kiro_crew.dashboard.chat_handlers.sel"),
+                patch("aj_crew.dashboard.chat_handlers.sel"),
             ):
                 resp = await _choose_mode(state, body)
             assert resp.status == 200
@@ -389,7 +389,7 @@ class TestNormalEndsTheScopedGrant:
         try:
             with (
                 patch.object(so, "deactivate_scope", _deactivate_and_recreate),
-                patch("kiro_crew.dashboard.chat_handlers.sel"),
+                patch("aj_crew.dashboard.chat_handlers.sel"),
             ):
                 resp = await _choose_mode(state, {"mode": mode, "slot": "crew-slot"})
             assert resp.status == 200
@@ -426,7 +426,7 @@ class TestNormalEndsTheScopedGrant:
         try:
             with (
                 patch.object(so, "deactivate_scope", _deactivate_and_recreate),
-                patch("kiro_crew.dashboard.chat_handlers.sel"),
+                patch("aj_crew.dashboard.chat_handlers.sel"),
             ):
                 resp = await _choose_mode(state, {"mode": "normal", "slot": "crew-slot"})
             assert resp.status == 200
@@ -455,7 +455,7 @@ class TestNormalEndsTheScopedGrant:
         try:
             with (
                 patch.object(so, "deactivate_scope", _deactivate_while_trust_lands),
-                patch("kiro_crew.dashboard.chat_handlers.sel"),
+                patch("aj_crew.dashboard.chat_handlers.sel"),
             ):
                 resp = await _choose_mode(state, body)
             assert resp.status == 200

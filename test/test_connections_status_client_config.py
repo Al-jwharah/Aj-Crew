@@ -17,15 +17,15 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew import mcp_grant
-from kiro_crew.connections import get_provider, mint, status
-from kiro_crew.dashboard.handlers import connections
-from kiro_crew.secrets import SecretVault
+from aj_crew import mcp_grant
+from aj_crew.connections import get_provider, mint, status
+from aj_crew.dashboard.handlers import connections
+from aj_crew.secrets import SecretVault
 
 GITHUB_MCP_URL = "https://api.githubcopilot.com/mcp/"
 NOTION_MCP_URL = "https://mcp.notion.com/mcp"
-ENV_ID = "KIROCREW_CONNECTIONS_GITHUB_CLIENT_ID"
-ENV_SECRET = "KIROCREW_CONNECTIONS_GITHUB_CLIENT_SECRET"
+ENV_ID = "AJCREW_CONNECTIONS_GITHUB_CLIENT_ID"
+ENV_SECRET = "AJCREW_CONNECTIONS_GITHUB_CLIENT_SECRET"
 VAULT_NAME = "CONNECTIONS_GITHUB_CLIENT_SECRET"
 
 _REGULAR_FILE_STAT = Path(__file__).stat()
@@ -64,7 +64,7 @@ def isolated(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     """Scratch home (config + vault), scratch sidecar, GitHub + Notion visible."""
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.delenv(ENV_ID, raising=False)
     monkeypatch.delenv(ENV_SECRET, raising=False)
     monkeypatch.setattr(status, "_CONNECTION_STATE_PATH", tmp_path / "connected-since.json")
@@ -262,7 +262,7 @@ async def test_an_indeterminate_grant_lookup_still_flags(isolated, monkeypatch):
 
 def test_client_config_map_is_empty_without_preregistered_providers(isolated, monkeypatch):
     """No vault or config read at all for a DCR-only page."""
-    import kiro_crew.secrets as secrets_module
+    import aj_crew.secrets as secrets_module
 
     def _never(*a, **kw):  # pragma: no cover - reaching this IS the failure
         raise AssertionError("the vault must not be opened for DCR-only providers")
@@ -284,7 +284,7 @@ def test_client_config_map_reads_config_and_vault(isolated):
 
 
 def test_an_unreadable_vault_reads_as_not_configured(isolated, monkeypatch):
-    import kiro_crew.secrets as secrets_module
+    import aj_crew.secrets as secrets_module
 
     class _Broken:
         def __init__(self, *a, **kw) -> None:

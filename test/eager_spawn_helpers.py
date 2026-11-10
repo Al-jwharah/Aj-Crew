@@ -12,12 +12,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KIRO
-from kiro_crew.config import live
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, ResolvedBindings
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KIRO
+from aj_crew.config import live
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, ResolvedBindings
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
 
 @pytest.fixture(autouse=True)
@@ -54,7 +54,7 @@ def _mock_state(slot: _ChatSlot) -> DashboardState:
 
 
 def _cfg(enabled: bool) -> MagicMock:
-    cfg = KiroCrewConfig(agents={"default": KiroCrewAgentConfig()})
+    cfg = AjCrewConfig(agents={"default": AjCrewAgentConfig()})
     cfg.session.eager_spawn = enabled
     # Pin the harness: the tool-search replay gate is kiro-cli only, and a
     # fresh config defaults to KAS.
@@ -88,14 +88,14 @@ def _prime(enabled: bool) -> None:
     The autouse ``_drop_live_config_snapshot`` fixture in ``test/conftest.py``
     resets the watcher around every test, so this leaves nothing behind.
     """
-    cfg = KiroCrewConfig(agents={"default": KiroCrewAgentConfig()})
+    cfg = AjCrewConfig(agents={"default": AjCrewAgentConfig()})
     cfg.session.eager_spawn = enabled
     live.watch().prime(cfg)
 
 
 def _bindings(
     *,
-    agent: str = "kirocrew",
+    agent: str = "ajcrew",
     alias: str = "default",
     memory_store: str = "default",
 ) -> ResolvedBindings:

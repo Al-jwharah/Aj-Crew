@@ -1,13 +1,13 @@
 """The app agent tool seam: an installed app's manifest ``agentTools``, end to end.
 
 An app declares MCP tools in its manifest and serves them from its own process; the core
-lists them in ``kirocrew-core``, validates each call against the declared schema and
+lists them in ``ajcrew-core``, validates each call against the declared schema and
 forwards it to the one gateway route that hands it to the app. These tests use
 synthetic apps written into the isolated test home, so they name no real app:
 
 - the manifest block: what parses, and every declaration outside the rules is refused;
 - the reader: first-party apps only (a third-party app's block lists nothing, since
-  ``kirocrew-core`` is auto-approved as a whole server), a broken block and a contested
+  ``ajcrew-core`` is auto-approved as a whole server), a broken block and a contested
   name drop out, and the cache follows a manifest edit;
 - the ``app_tools`` MCP domain: listing, the enablement gate, the core-name precedence,
   validation through the field engine, and the forwarded call;
@@ -31,14 +31,14 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import mcp_core
-from kiro_crew.apps import app_agent_tools
-from kiro_crew.apps import manager as apps_manager
-from kiro_crew.apps.discovery import _manifest_to_builtin_dict
-from kiro_crew.apps.manifest import AgentToolsConfig, AppManifest
-from kiro_crew.dashboard.handlers import app_agent_tools as handler_mod
-from kiro_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
-from kiro_crew.mcp_tools import app_tools, build_tool_list, build_tool_names, dispatch
+from aj_crew import mcp_core
+from aj_crew.apps import app_agent_tools
+from aj_crew.apps import manager as apps_manager
+from aj_crew.apps.discovery import _manifest_to_builtin_dict
+from aj_crew.apps.manifest import AgentToolsConfig, AppManifest
+from aj_crew.dashboard.handlers import app_agent_tools as handler_mod
+from aj_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
+from aj_crew.mcp_tools import app_tools, build_tool_list, build_tool_names, dispatch
 
 _APP = "fake-app"
 
@@ -261,7 +261,7 @@ def test_an_installed_declaration_is_read_and_follows_an_edit():
 
 
 def test_a_third_party_app_lists_nothing(first_party):
-    """``kirocrew-core`` is auto-approved as a whole server: a third-party tool never joins it."""
+    """``ajcrew-core`` is auto-approved as a whole server: a third-party tool never joins it."""
     first_party["all"] = False
     _install()
     assert (
@@ -313,13 +313,13 @@ def test_a_tool_is_in_the_deny_universe_before_its_app_is_installed(monkeypatch)
     first-party slot yet; otherwise installing that app later would hand the tool to
     every agent whose ``permissions.mcpTools`` left it out.
     """
-    from kiro_crew.mcp_discovery_managed import managed_tool_names_for_policy
+    from aj_crew.mcp_discovery_managed import managed_tool_names_for_policy
 
     _install()
     monkeypatch.setattr(app_agent_tools, "_first_party_apps", frozenset)
     assert app_agent_tools.declared_tools() == ()
     assert "fake_app_note" in build_tool_names()
-    assert "fake_app_note" in (managed_tool_names_for_policy("kirocrew-core") or [])
+    assert "fake_app_note" in (managed_tool_names_for_policy("ajcrew-core") or [])
     assert "fake_app_note" not in {t["name"] for t in build_tool_list()}
     post = _FakePost({"ok": True})
     monkeypatch.setattr(mcp_core, "_post", post)
@@ -548,7 +548,7 @@ class _Registry:
 
 @pytest.fixture
 def registry(monkeypatch) -> _Registry:
-    from kiro_crew.apps import hooks_integration
+    from aj_crew.apps import hooks_integration
 
     reg = _Registry()
     monkeypatch.setattr(hooks_integration, "get_route_registry", lambda: reg)
@@ -577,7 +577,7 @@ async def test_an_in_gateway_app_is_served_by_its_declared_route_only(registry):
 
 @pytest.mark.asyncio
 async def test_a_backend_app_is_served_through_the_signed_proxy(monkeypatch):
-    from kiro_crew.apps import routes as app_routes
+    from aj_crew.apps import routes as app_routes
 
     _install(backend={"entryPoint": "server.py", "port": "auto"})
     seen: list[tuple[str, str]] = []
@@ -595,7 +595,7 @@ async def test_a_backend_app_is_served_through_the_signed_proxy(monkeypatch):
 @pytest.mark.asyncio
 async def test_a_backend_app_with_its_own_gateway_route_is_served_there(monkeypatch, registry):
     """A tool that needs the gateway's host namespaces is served by the app's gateway route."""
-    from kiro_crew.apps import routes as app_routes
+    from aj_crew.apps import routes as app_routes
 
     _install(backend={"entryPoint": "server.py", "port": "auto"})
     registry.routes.add((_APP, "POST", "agent-tools"))
@@ -615,7 +615,7 @@ async def test_a_backend_app_with_its_own_gateway_route_is_served_there(monkeypa
 async def test_any_other_gateway_route_leaves_a_backend_app_on_its_proxy(
     monkeypatch, registry, route
 ):
-    from kiro_crew.apps import routes as app_routes
+    from aj_crew.apps import routes as app_routes
 
     _install(backend={"entryPoint": "server.py", "port": "auto"})
     registry.routes.add(route)
@@ -629,7 +629,7 @@ async def test_any_other_gateway_route_leaves_a_backend_app_on_its_proxy(
 
 
 def test_the_registry_reports_only_an_exact_registered_route():
-    from kiro_crew.apps.route_registry import RouteRegistry, _RegisteredRoute
+    from aj_crew.apps.route_registry import RouteRegistry, _RegisteredRoute
 
     reg = RouteRegistry(web.Application())
 
@@ -652,13 +652,13 @@ async def test_the_backend_receives_the_checked_body_through_the_real_proxy(monk
     """End to end over sockets: the handler reads the body, so the proxy must forward it."""
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.apps import routes_proxy
+    from aj_crew.apps import routes_proxy
 
     _install(backend={"entryPoint": "server.py", "port": "auto"})
     received: list[tuple[str, bool, bytes]] = []
 
     async def _backend(request: web.Request) -> web.Response:
-        signed = "X-KiroCrew-Proxy" in request.headers
+        signed = "X-AjCrew-Proxy" in request.headers
         received.append((request.path, signed, await request.read()))
         return web.json_response({"served": True})
 

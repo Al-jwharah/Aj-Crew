@@ -22,8 +22,8 @@ from zoneinfo import ZoneInfoNotFoundError
 
 import pytest
 
-from kiro_crew import cron, dep_sync
-from kiro_crew.cron_service import schedule
+from aj_crew import cron, dep_sync
+from aj_crew.cron_service import schedule
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -39,7 +39,7 @@ def no_tz_data(monkeypatch):
 
 @pytest.mark.parametrize("configured", ["", "UTC", "Asia/Tokyo"])
 def test_get_local_tz_degrades_to_fixed_utc(no_tz_data, monkeypatch, configured) -> None:
-    monkeypatch.setattr("kiro_crew.cron.published_config_timezone", lambda: configured)
+    monkeypatch.setattr("aj_crew.cron.published_config_timezone", lambda: configured)
 
     tz_name, tz = cron.get_local_tz()
 
@@ -49,7 +49,7 @@ def test_get_local_tz_degrades_to_fixed_utc(no_tz_data, monkeypatch, configured)
 
 def test_current_date_line_renders_without_tz_data(no_tz_data, monkeypatch) -> None:
     """The ``[CURRENT DATE]`` line formats ``datetime.now(tz)`` with ``%Z``."""
-    monkeypatch.setattr("kiro_crew.cron.published_config_timezone", lambda: "")
+    monkeypatch.setattr("aj_crew.cron.published_config_timezone", lambda: "")
     _, tz = cron.get_local_tz()
 
     stamp = datetime(2026, 10, 21, 9, 30, tzinfo=timezone.utc).astimezone(tz)
@@ -59,7 +59,7 @@ def test_current_date_line_renders_without_tz_data(no_tz_data, monkeypatch) -> N
 
 @pytest.mark.parametrize("job_zone", ["", "America/Toronto"])
 def test_job_tz_degrades_to_fixed_utc(no_tz_data, monkeypatch, job_zone) -> None:
-    monkeypatch.setattr("kiro_crew.cron.published_config_timezone", lambda: "")
+    monkeypatch.setattr("aj_crew.cron.published_config_timezone", lambda: "")
     job = cron.CronJob(id="j1", name="t", message="m", timezone=job_zone)
 
     assert schedule._job_tz(job) is timezone.utc
@@ -67,7 +67,7 @@ def test_job_tz_degrades_to_fixed_utc(no_tz_data, monkeypatch, job_zone) -> None
 
 def test_cron_job_next_run_resolves_without_tz_data(no_tz_data, monkeypatch) -> None:
     """``compute_next_run_ts`` reaches ``_job_tz``; a daily 09:00 job lands at 09:00 UTC."""
-    monkeypatch.setattr("kiro_crew.cron.published_config_timezone", lambda: "")
+    monkeypatch.setattr("aj_crew.cron.published_config_timezone", lambda: "")
     job = cron.CronJob(
         id="j1",
         name="t",

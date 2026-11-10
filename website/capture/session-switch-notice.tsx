@@ -26,14 +26,14 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 const scene = params.get('state') || 'after'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
 
 const SLOT = 'chat-1-switch-notice'
 const NOTICE = 'Model switched to claude-opus-4.8. Replies from here on use the new model.'
 const VARIANTS = [
-  '🔄 Switched to agent: kirocrew-worker',
+  '🔄 Switched to agent: ajcrew-worker',
   NOTICE,
   'Reasoning effort switched to high. Replies from here on use the new reasoning effort.',
   'Workspace switched to release-review. Replies from here on use the new workspace.',

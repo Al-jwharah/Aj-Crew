@@ -2,7 +2,7 @@
 
 Three providers reach this module: the resident local recogniser (the default),
 Apple's on-device speech, and AWS Transcribe. Everything a test here needs about
-the recogniser is stubbed at the ``kiro_crew.stt`` seam, because the point of the
+the recogniser is stubbed at the ``aj_crew.stt`` seam, because the point of the
 batch path is what it does with an availability answer and a PCM buffer, not how
 whisper.cpp decodes one.
 
@@ -32,9 +32,9 @@ from transcribe_helpers import (
     _write_wav,
 )
 
-from kiro_crew import stt, transcribe
-from kiro_crew.config.loader import SttConfig
-from kiro_crew.transcribe import availability_detail, find_brew, is_available, transcribe_audio
+from aj_crew import stt, transcribe
+from aj_crew.config.loader import SttConfig
+from aj_crew.transcribe import availability_detail, find_brew, is_available, transcribe_audio
 
 
 def _stub_recogniser_importable(monkeypatch) -> None:
@@ -59,7 +59,7 @@ def _stub_recogniser_absent(monkeypatch) -> None:
     reported an installed-but-unloadable wheel (missing system library, too-old
     glibc) as "install the voice extra" to someone who already had.
     """
-    from kiro_crew.stt import engine as engine_mod
+    from aj_crew.stt import engine as engine_mod
 
     monkeypatch.setattr(engine_mod.importlib.util, "find_spec", lambda name: None)
 
@@ -70,20 +70,20 @@ class TestFindBrew:
     ``find_brew`` falls back to the fixed install prefixes."""
 
     def test_found_on_path(self):
-        with patch("kiro_crew.transcribe.shutil.which", return_value="/opt/homebrew/bin/brew"):
+        with patch("aj_crew.transcribe.shutil.which", return_value="/opt/homebrew/bin/brew"):
             assert find_brew() == "/opt/homebrew/bin/brew"
 
     def test_found_off_path_via_prefix(self, tmp_path, monkeypatch):
         brew = tmp_path / "brew"
         brew.write_text("#!/bin/sh\n")
         brew.chmod(0o755)
-        with patch("kiro_crew.transcribe.shutil.which", return_value=None):
-            monkeypatch.setattr("kiro_crew.transcribe._BREW_CANDIDATE_PATHS", [str(brew)])
+        with patch("aj_crew.transcribe.shutil.which", return_value=None):
+            monkeypatch.setattr("aj_crew.transcribe._BREW_CANDIDATE_PATHS", [str(brew)])
             assert find_brew() == str(brew)
 
     def test_not_installed(self, monkeypatch):
-        with patch("kiro_crew.transcribe.shutil.which", return_value=None):
-            monkeypatch.setattr("kiro_crew.transcribe._BREW_CANDIDATE_PATHS", ["/nonexistent/brew"])
+        with patch("aj_crew.transcribe.shutil.which", return_value=None):
+            monkeypatch.setattr("aj_crew.transcribe._BREW_CANDIDATE_PATHS", ["/nonexistent/brew"])
             assert find_brew() is None
 
 
@@ -98,7 +98,7 @@ class TestIsAvailable:
     def test_loads_config_when_none(self):
         mock_cfg = MagicMock()
         mock_cfg.stt = SttConfig(enabled=False)
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=mock_cfg):
+        with patch("aj_crew.config.loader.AjCrewConfig.load", return_value=mock_cfg):
             assert is_available(None) is False
 
 
@@ -140,15 +140,15 @@ class TestAvailabilityDetail:
         detail = self._detail(SttConfig(enabled=True, provider="local"))
         assert detail.ok is False
         assert detail.code == stt.CODE_EXTRA_MISSING
-        # The recogniser distribution, not the extra name: `kirocrew[voice]` is
+        # The recogniser distribution, not the extra name: `ajcrew[voice]` is
         # not installable from any index.
         assert "pywhispercpp" in detail.detail
-        assert "kirocrew[" not in detail.detail
+        assert "ajcrew[" not in detail.detail
 
     def test_local_no_wheel_for_platform(self, monkeypatch):
         """A platform with no published wheel means "install a C++ toolchain",
         not "install the extra"."""
-        from kiro_crew.stt import engine as engine_mod
+        from aj_crew.stt import engine as engine_mod
 
         _stub_recogniser_absent(monkeypatch)
         monkeypatch.setattr(engine_mod, "_has_prebuilt_wheel", lambda: False)
@@ -183,7 +183,7 @@ class TestAvailabilityDetail:
         under the per-test data home and holds nothing, so the configured model is
         genuinely absent here.
         """
-        from kiro_crew.stt import models
+        from aj_crew.stt import models
 
         _stub_recogniser_importable(monkeypatch)
         cfg = SttConfig(enabled=True, provider="local", model="base")
@@ -199,7 +199,7 @@ class TestAvailabilityDetail:
         assert detail.code == stt.CODE_EXTRA_MISSING
         # The cloud half by name, and never the unresolvable extras form.
         assert "amazon-transcribe" in detail.detail
-        assert "kirocrew[" not in detail.detail
+        assert "ajcrew[" not in detail.detail
 
     def test_transcribe_without_the_streaming_client(self, monkeypatch):
         """boto3 alone is not enough: the streaming client is a separate package
@@ -217,7 +217,7 @@ class TestAvailabilityDetail:
         settings read) and a refusal writes an audit entry, so asking here would
         fill the audit log with refusals nobody requested.
         """
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         monkeypatch.setattr(transcribe, "boto3", object())
         monkeypatch.setitem(sys.modules, "amazon_transcribe", types.ModuleType("amazon_transcribe"))
@@ -232,7 +232,7 @@ class TestAvailabilityDetail:
 
     def test_apple_needs_toolchain(self, monkeypatch):
         """Separate from unsupported because this one has a one-line fix."""
-        from kiro_crew import apple_speech
+        from aj_crew import apple_speech
 
         monkeypatch.setattr(
             apple_speech,
@@ -249,7 +249,7 @@ class TestAvailabilityDetail:
     def test_apple_unsupported_host(self, monkeypatch):
         """Not macOS, or too old a macOS for the SpeechAnalyzer API. No install
         fixes it, so it must not be reported as something to install."""
-        from kiro_crew import apple_speech
+        from aj_crew import apple_speech
 
         monkeypatch.setattr(
             apple_speech,
@@ -264,7 +264,7 @@ class TestAvailabilityDetail:
         """Availability runs on the event loop (the settings read, the transcribe
         endpoint, the Slack voice path), and compiling the Swift helper there
         would freeze the gateway for as long as swiftc takes."""
-        from kiro_crew import apple_speech
+        from aj_crew import apple_speech
 
         monkeypatch.setattr(apple_speech, "availability", lambda: apple_speech.Availability(True))
 
@@ -489,7 +489,7 @@ class TestTranscribeFiles:
     @pytest.mark.xdist_group(name="serial")
     @pytest.mark.asyncio
     async def test_transcribe_audio_files(self):
-        from kiro_crew.slack.events import _transcribe_files
+        from aj_crew.slack.events import _transcribe_files
 
         mock_orch = MagicMock()
         mock_orch.slack = AsyncMock()
@@ -505,9 +505,9 @@ class TestTranscribeFiles:
         ]
 
         with (
-            patch("kiro_crew.slack.events.batch_duration_cap_secs", return_value=None),
+            patch("aj_crew.slack.events.batch_duration_cap_secs", return_value=None),
             patch(
-                "kiro_crew.slack.events.transcribe_audio",
+                "aj_crew.slack.events.transcribe_audio",
                 new_callable=AsyncMock,
                 return_value="Hello",
             ),
@@ -517,7 +517,7 @@ class TestTranscribeFiles:
 
     @pytest.mark.asyncio
     async def test_skips_non_audio(self):
-        from kiro_crew.slack.events import _transcribe_files
+        from aj_crew.slack.events import _transcribe_files
 
         mock_orch = MagicMock()
         mock_orch.slack = AsyncMock()
@@ -531,7 +531,7 @@ class TestTranscribeFiles:
 
     @pytest.mark.asyncio
     async def test_skips_no_url(self):
-        from kiro_crew.slack.events import _transcribe_files
+        from aj_crew.slack.events import _transcribe_files
 
         mock_orch = MagicMock()
         mock_orch.slack = AsyncMock()
@@ -543,7 +543,7 @@ class TestTranscribeFiles:
 
     @pytest.mark.asyncio
     async def test_handles_transcription_failure(self):
-        from kiro_crew.slack.events import _transcribe_files
+        from aj_crew.slack.events import _transcribe_files
 
         mock_orch = MagicMock()
         mock_orch.slack = AsyncMock()
@@ -559,14 +559,14 @@ class TestTranscribeFiles:
         ]
 
         # Patch where events.py BOUND the symbol, not where it is defined: events.py
-        # does `from kiro_crew.transcribe import transcribe_audio`, so it holds its own
+        # does `from aj_crew.transcribe import transcribe_audio`, so it holds its own
         # module global. Patching the definition left the REAL transcriber running --
         # the assertion passed for the wrong reason and the test was the 3rd slowest in
         # the suite. Matches the sibling test above.
         with (
-            patch("kiro_crew.slack.events.batch_duration_cap_secs", return_value=None),
+            patch("aj_crew.slack.events.batch_duration_cap_secs", return_value=None),
             patch(
-                "kiro_crew.slack.events.transcribe_audio",
+                "aj_crew.slack.events.transcribe_audio",
                 new_callable=AsyncMock,
                 return_value=None,
             ),
@@ -576,7 +576,7 @@ class TestTranscribeFiles:
 
     @pytest.mark.asyncio
     async def test_handles_exception(self):
-        from kiro_crew.slack.events import _transcribe_files
+        from aj_crew.slack.events import _transcribe_files
 
         mock_orch = MagicMock()
         mock_orch.slack = AsyncMock()
@@ -603,7 +603,7 @@ class TestTranscribeFiles:
 class TestSlackClientDownloadFile:
     @pytest.mark.asyncio
     async def test_base_class_raises(self):
-        from kiro_crew.slack.client import SlackClientOps
+        from aj_crew.slack.client import SlackClientOps
 
         class MinimalClient(SlackClientOps):
             async def post_message(self, *a, **kw):
@@ -679,7 +679,7 @@ class TestSttConfig:
         """The default names a model the downloader can actually fetch. The
         advertised menu offering a model with no sha256 pin is how a first
         dictation fails on a fresh install."""
-        from kiro_crew.stt import models
+        from aj_crew.stt import models
 
         assert SttConfig().model in {m.name for m in models.CATALOG}
 
@@ -747,7 +747,7 @@ class TestSensitivePathGuard:
 
         monkeypatch.setattr(stt, "availability", _never_probed)
         monkeypatch.setattr(transcribe, "_pcm_from_wav", _never_decoded)
-        with patch("kiro_crew.security.is_sensitive_path", return_value=True):
+        with patch("aj_crew.security.is_sensitive_path", return_value=True):
             result = await transcribe_audio(str(audio), cfg)
         assert result is None
 
@@ -756,7 +756,7 @@ class TestSensitivePathGuard:
         audio = tmp_path / "test.webm"
         audio.write_text("fake")
         cfg = SttConfig(enabled=True, provider="transcribe")
-        with patch("kiro_crew.security.is_sensitive_path", return_value=True):
+        with patch("aj_crew.security.is_sensitive_path", return_value=True):
             result = await transcribe_audio(str(audio), cfg)
         assert result is None
 
@@ -772,9 +772,9 @@ class TestSensitivePathGuard:
         snap.parent.mkdir()
         snap.write_bytes(b"bytes")
         monkeypatch.setattr(
-            "kiro_crew.sandbox.prime_voice_runtime_sandbox_paths", lambda: str(root)
+            "aj_crew.sandbox.prime_voice_runtime_sandbox_paths", lambda: str(root)
         )
-        with patch("kiro_crew.security.is_sensitive_path", return_value=True):
+        with patch("aj_crew.security.is_sensitive_path", return_value=True):
             assert transcribe._is_sensitive_audio_path(str(snap)) is False
 
     @pytest.mark.skipif(not hasattr(os, "symlink"), reason="platform has no symlinks")
@@ -788,9 +788,9 @@ class TestSensitivePathGuard:
         link = root / "recording.wav"
         link.symlink_to(outside)
         monkeypatch.setattr(
-            "kiro_crew.sandbox.prime_voice_runtime_sandbox_paths", lambda: str(root)
+            "aj_crew.sandbox.prime_voice_runtime_sandbox_paths", lambda: str(root)
         )
-        with patch("kiro_crew.security.is_sensitive_path", return_value=True):
+        with patch("aj_crew.security.is_sensitive_path", return_value=True):
             assert transcribe._is_sensitive_audio_path(str(link)) is True
 
 

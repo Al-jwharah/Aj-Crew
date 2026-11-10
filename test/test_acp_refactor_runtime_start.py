@@ -7,9 +7,9 @@ off-loop config read as the fallback), the gate/permit bookkeeping, the
 cold-start admission's cancel-while-queued path, the controller sample, the
 start-outcome tokens and the start-budget resolvers' defaults and clamps.
 
-The code is reached only through the ``kiro_crew.acp.runtime`` facade. Only names
-defined there, or attributes of shared modules (``kiro_crew.config.live``,
-``kiro_crew.adaptive.controller``, the config class), are patched, so these tests
+The code is reached only through the ``aj_crew.acp.runtime`` facade. Only names
+defined there, or attributes of shared modules (``aj_crew.config.live``,
+``aj_crew.adaptive.controller``, the config class), are patched, so these tests
 hold unchanged before and after the definitions move to their owner module.
 """
 
@@ -22,13 +22,13 @@ from typing import Any
 
 import pytest
 
-import kiro_crew.adaptive.controller as controller_mod
-import kiro_crew.config.live as live_mod
-from kiro_crew.acp import runtime as acp_runtime
-from kiro_crew.acp.session_handle import AcpRuntimeDead
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.start_priority import StartPriority
-from kiro_crew.testing.wait import async_wait_until, await_until
+import aj_crew.adaptive.controller as controller_mod
+import aj_crew.config.live as live_mod
+from aj_crew.acp import runtime as acp_runtime
+from aj_crew.acp.session_handle import AcpRuntimeDead
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.start_priority import StartPriority
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # Upper bound for an await the test itself must unblock. It exists so a hang fails
 # here by name rather than as pytest's --timeout; no passing run measures it.
@@ -326,7 +326,7 @@ def test_start_budget_resolvers(agent, expected):
         return SimpleNamespace(agent=agent)
 
     with pytest.MonkeyPatch.context() as patched:
-        patched.setattr(KiroCrewConfig, "load", classmethod(_load))
+        patched.setattr(AjCrewConfig, "load", classmethod(_load))
         resolved = (
             acp_runtime._resolve_start_collect_timeout(),
             acp_runtime._resolve_session_start_timeout(),

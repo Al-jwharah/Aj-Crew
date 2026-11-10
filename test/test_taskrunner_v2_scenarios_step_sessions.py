@@ -20,7 +20,7 @@ import pytest
 from taskrunner_v2_scenarios_helpers import _passthrough_sandbox  # noqa: F401
 from taskrunner_v2_scenarios_helpers import _llm_event, _make_provider, _mock_sessions
 
-from kiro_crew.taskrunner import Step, StepStatus, TaskRun, TaskRunner
+from aj_crew.taskrunner import Step, StepStatus, TaskRun, TaskRunner
 
 # ── Memory Integration: Per-Step Session Keys ──
 
@@ -125,7 +125,7 @@ class TestScenarioPerStepSessionIsNew:
         sessions.get_or_create = _get_or_create
 
         runner = TaskRunner(sessions=sessions, auto_test=False, work_dir=tmp_path)
-        with patch("kiro_crew.task_executor.self_review", return_value=True):
+        with patch("aj_crew.task_executor.self_review", return_value=True):
             result = await runner.run(spec)
 
         assert result.status == "completed"
@@ -213,8 +213,8 @@ class TestScenarioReviewRetrySuccessGetsReview:
         run.tasks = [Step(index=1, title="Code", description="d")]
 
         with (
-            patch("kiro_crew.task_executor.self_review", side_effect=_mock_review),
-            patch("kiro_crew.task_executor.git_coord") as mock_gc,
+            patch("aj_crew.task_executor.self_review", side_effect=_mock_review),
+            patch("aj_crew.task_executor.git_coord") as mock_gc,
         ):
             mock_gc.commit_step = AsyncMock(return_value="abc123")
             mock_gc.revert_step = AsyncMock()
@@ -337,7 +337,7 @@ class TestScenarioCycleDetectionTestPath:
 
         # Mock run_tests to always return same failure
         with patch(
-            "kiro_crew.task_executor.run_tests",
+            "aj_crew.task_executor.run_tests",
             return_value=(False, "FAIL: test_foo - AssertionError"),
         ):
             success = await runner._execute_single_task(run, step)
@@ -377,7 +377,7 @@ class TestScenarioGitCommitAfterReviewRetry:
             spec_content="spec",
             status="running",
         )
-        run.branch_name = "kirocrew/task/test"
+        run.branch_name = "ajcrew/task/test"
         run.tasks = [Step(index=1, title="Code", description="d")]
 
         commit_calls = 0
@@ -388,8 +388,8 @@ class TestScenarioGitCommitAfterReviewRetry:
             return f"sha{commit_calls}"
 
         with (
-            patch("kiro_crew.task_executor.self_review", side_effect=_review),
-            patch("kiro_crew.task_executor.git_coord") as mock_gc,
+            patch("aj_crew.task_executor.self_review", side_effect=_review),
+            patch("aj_crew.task_executor.git_coord") as mock_gc,
         ):
             mock_gc.commit_step = AsyncMock(side_effect=_mock_commit)
             mock_gc.revert_step = AsyncMock()
@@ -429,7 +429,7 @@ class TestScenarioParallelGroupAllPass:
             Step(index=3, title="C", description="d"),
         ]
 
-        with patch("kiro_crew.task_executor.self_review", return_value=True):
+        with patch("aj_crew.task_executor.self_review", return_value=True):
             await runner._execute_tasks(run, "taskrunner:run:test")
 
         assert all(s.status == StepStatus.PASSED for s in run.tasks)
@@ -484,7 +484,7 @@ class TestScenarioParallelGroupMiddleFails:
         ]
 
         with (
-            patch("kiro_crew.task_executor.self_review", return_value=True),
+            patch("aj_crew.task_executor.self_review", return_value=True),
             patch.object(runner, "_try_replan", return_value=False),
         ):
             await runner._execute_tasks(run, "taskrunner:run:test")
@@ -568,11 +568,11 @@ class TestScenarioBuildStepPromptFallback:
         runner = TaskRunner(sessions=sessions, auto_test=False)
 
         run = TaskRun(spec_path="/t.md", spec_content="spec")
-        run.branch_name = "kirocrew/task/test"
+        run.branch_name = "ajcrew/task/test"
         step = Step(index=1, title="Next", description="d")
         run.tasks = [step]
 
-        with patch("kiro_crew.task_executor.git_coord") as mock_gc:
+        with patch("aj_crew.task_executor.git_coord") as mock_gc:
             mock_gc.get_state_summary = AsyncMock(
                 return_value="## Git Log\n```\nabc1234 step 1: setup\n```"
             )
@@ -580,4 +580,4 @@ class TestScenarioBuildStepPromptFallback:
 
         assert "Git Log" in prompt
         assert "abc1234" in prompt
-        assert "kirocrew/task/test" in prompt
+        assert "ajcrew/task/test" in prompt

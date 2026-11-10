@@ -17,16 +17,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.autonudge import (
+from aj_crew.autonudge import (
     APPROVAL_STALL_REASON,
     CONSECUTIVE_FAILURE_REASON,
     STOP_SENTINEL_REASON,
     AutoNudgeService,
 )
-from kiro_crew.autonudge_authz import authorize_and_update_monitor
-from kiro_crew.dashboard import session_directive_apply as sda
-from kiro_crew.dashboard.session_directive_apply import apply_session_directive
-from kiro_crew.monitoring.models import (
+from aj_crew.autonudge_authz import authorize_and_update_monitor
+from aj_crew.dashboard import session_directive_apply as sda
+from aj_crew.dashboard.session_directive_apply import apply_session_directive
+from aj_crew.monitoring.models import (
     MonitorBudgets,
     MonitorCreationSurface,
     MonitorDispatchResult,
@@ -43,8 +43,8 @@ async def test_channel_origin_survives_a_linked_dashboard_monitor_binding(tmp_pa
         channel_transports={},
     )
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=service),
-        patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
+        patch("aj_crew.autonudge.get_instance", return_value=service),
+        patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
     ):
         result = await apply_session_directive(
             state,
@@ -92,8 +92,8 @@ async def test_channel_origin_retarget_downgrades_dashboard_monitor_credentials(
     )
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
         ):
             result = await apply_session_directive(
                 state,
@@ -118,8 +118,8 @@ async def test_channel_origin_retarget_downgrades_dashboard_monitor_credentials(
 async def test_disabled_structured_monitor_directives_are_audited_as_denied(kind):
     audit = MagicMock()
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=None),
-        patch("kiro_crew.sel.sel", return_value=audit),
+        patch("aj_crew.autonudge.get_instance", return_value=None),
+        patch("aj_crew.sel.sel", return_value=audit),
     ):
         result = await apply_session_directive(
             SimpleNamespace(),
@@ -143,8 +143,8 @@ async def test_unsupported_structured_monitor_stop_is_audited_as_denied(tmp_path
     service = AutoNudgeService(base_dir=tmp_path)
     audit = MagicMock()
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=service),
-        patch("kiro_crew.dashboard.session_directive_apply._audit", audit),
+        patch("aj_crew.autonudge.get_instance", return_value=service),
+        patch("aj_crew.dashboard.session_directive_apply._audit", audit),
     ):
         result = await apply_session_directive(
             SimpleNamespace(),
@@ -163,10 +163,10 @@ async def test_unsupported_structured_monitor_stop_is_audited_as_denied(tmp_path
 async def test_webex_structured_watch_is_refused_by_authoritative_consumer(tmp_path):
     service = AutoNudgeService(base_dir=tmp_path)
     audit = MagicMock()
-    session_key = "webex:kirocrew:direct:operator@example.com"
+    session_key = "webex:ajcrew:direct:operator@example.com"
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=service),
-        patch("kiro_crew.dashboard.session_directive_apply._audit", audit),
+        patch("aj_crew.autonudge.get_instance", return_value=service),
+        patch("aj_crew.dashboard.session_directive_apply._audit", audit),
     ):
         result = await apply_session_directive(
             SimpleNamespace(),
@@ -202,7 +202,7 @@ async def test_webex_legacy_loop_is_stopped_by_monitor_stop(tmp_path):
     """
     service = AutoNudgeService(base_dir=tmp_path)
     audit = MagicMock()
-    session_key = "webex:kirocrew:direct:operator@example.com"
+    session_key = "webex:ajcrew:direct:operator@example.com"
     loop = await service.add(
         slot_key=session_key,
         message="Watch the pull request.",
@@ -210,8 +210,8 @@ async def test_webex_legacy_loop_is_stopped_by_monitor_stop(tmp_path):
     )
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.dashboard.session_directive_apply._audit", audit),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.dashboard.session_directive_apply._audit", audit),
         ):
             result = await apply_session_directive(
                 SimpleNamespace(),
@@ -244,8 +244,8 @@ async def test_monitor_stop_removes_a_dashboard_legacy_loop(tmp_path):
     loop = await service.add(slot_key="chat-1", message="Watch it.", idle_secs=300)
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.dashboard.session_directive_apply._audit", MagicMock()),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.dashboard.session_directive_apply._audit", MagicMock()),
         ):
             result = await apply_session_directive(
                 SimpleNamespace(),
@@ -283,9 +283,9 @@ async def test_monitor_stop_and_autonudge_stop_route_a_structured_loop_identical
         )
         try:
             with (
-                patch("kiro_crew.autonudge.get_instance", return_value=service),
-                patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
-                patch("kiro_crew.dashboard.session_directive_apply._audit", MagicMock()),
+                patch("aj_crew.autonudge.get_instance", return_value=service),
+                patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
+                patch("aj_crew.dashboard.session_directive_apply._audit", MagicMock()),
             ):
                 result = await apply_session_directive(
                     SimpleNamespace(),
@@ -308,7 +308,7 @@ async def test_monitor_stop_and_autonudge_stop_route_a_structured_loop_identical
 @pytest.mark.asyncio
 async def test_webex_cannot_update_a_persisted_structured_monitor(tmp_path):
     service = AutoNudgeService(base_dir=tmp_path)
-    session_key = "webex:kirocrew:direct:operator@example.com"
+    session_key = "webex:ajcrew:direct:operator@example.com"
     loop = await service.add_monitor(
         slot_key=session_key,
         kind="github_pull_request",
@@ -319,8 +319,8 @@ async def test_webex_cannot_update_a_persisted_structured_monitor(tmp_path):
     )
     audit = MagicMock()
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=service),
-        patch("kiro_crew.dashboard.session_directive_apply._audit", audit),
+        patch("aj_crew.autonudge.get_instance", return_value=service),
+        patch("aj_crew.dashboard.session_directive_apply._audit", audit),
     ):
         result = await apply_session_directive(
             SimpleNamespace(),
@@ -349,12 +349,12 @@ async def test_refused_structured_monitor_stop_is_audited_as_denied(tmp_path):
     )
     audit = MagicMock()
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=service),
+        patch("aj_crew.autonudge.get_instance", return_value=service),
         patch(
-            "kiro_crew.autonudge_authz.authorize_and_stop_monitor",
+            "aj_crew.autonudge_authz.authorize_and_stop_monitor",
             new=AsyncMock(return_value=(None, "audit unavailable", 503)),
         ),
-        patch("kiro_crew.dashboard.session_directive_apply._audit", audit),
+        patch("aj_crew.dashboard.session_directive_apply._audit", audit),
     ):
         result = await apply_session_directive(
             SimpleNamespace(),
@@ -381,10 +381,10 @@ async def test_watch_update_and_stop_are_authoritative_and_owned(tmp_path):
     audit = MagicMock()
     load_hosts = AsyncMock(return_value=frozenset())
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=service),
-        patch("kiro_crew.autonudge_authz.sel", return_value=audit),
+        patch("aj_crew.autonudge.get_instance", return_value=service),
+        patch("aj_crew.autonudge_authz.sel", return_value=audit),
         patch(
-            "kiro_crew.dashboard.handlers.source_providers.ensure_gitlab_hosts_loaded",
+            "aj_crew.dashboard.handlers.source_providers.ensure_gitlab_hosts_loaded",
             load_hosts,
         ),
     ):
@@ -485,7 +485,7 @@ async def test_legacy_autonudge_stop_retains_only_structured_records(tmp_path):
     )
     state = SimpleNamespace(_slots={}, sessions=None, channel_transports={})
     slot = SimpleNamespace(key="chat-1", _app="")
-    with patch("kiro_crew.autonudge.get_instance", return_value=service):
+    with patch("aj_crew.autonudge.get_instance", return_value=service):
         result = await apply_session_directive(
             state, slot, "dashboard:chat-1", "autonudge_stop", {"reason": "legacy caller"}
         )
@@ -510,12 +510,12 @@ async def test_legacy_structured_stop_failure_is_audited_as_denied(tmp_path):
     )
     audit = MagicMock()
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=service),
+        patch("aj_crew.autonudge.get_instance", return_value=service),
         patch(
-            "kiro_crew.autonudge_authz.authorize_and_stop_monitor",
+            "aj_crew.autonudge_authz.authorize_and_stop_monitor",
             new=AsyncMock(return_value=(None, "audit unavailable", 503)),
         ),
-        patch("kiro_crew.dashboard.session_directive_apply._audit", audit),
+        patch("aj_crew.dashboard.session_directive_apply._audit", audit),
     ):
         result = await apply_session_directive(
             SimpleNamespace(),
@@ -595,7 +595,7 @@ async def test_failed_session_close_restores_dispatched_completion_evidence(tmp_
 async def test_structured_fields_cannot_silently_patch_a_legacy_loop(tmp_path):
     service = AutoNudgeService(base_dir=tmp_path)
     await service.add("chat-1", "legacy prompt", idle_secs=60)
-    with patch("kiro_crew.autonudge.get_instance", return_value=service):
+    with patch("aj_crew.autonudge.get_instance", return_value=service):
         result = await apply_session_directive(
             SimpleNamespace(),
             SimpleNamespace(key="chat-1", _app=""),
@@ -635,18 +635,18 @@ async def test_budget_raise_is_judged_on_the_timers_clock(tmp_path, monkeypatch,
     a 2 hour forward step makes it 2.5 hours old, and a raise to 2 hours is refused as
     spent while the timer would still fire.
     """
-    from kiro_crew.autonudge_service.model import runtime_budget_exceeded
+    from aj_crew.autonudge_service.model import runtime_budget_exceeded
 
     service = AutoNudgeService(base_dir=tmp_path)
     loop = await service.add("chat-1", "legacy prompt", idle_secs=600, max_runtime_secs=3600)
     try:
         loop.created_ts = time.time() - 1800
         runtime_budget_exceeded(loop)  # the timer's read in this process
-        from kiro_crew.autonudge_service import model, mutations
+        from aj_crew.autonudge_service import model, mutations
 
         for module in (sda, model, mutations):
             monkeypatch.setattr(module, "time", _SteppedTime(step))
-        with patch("kiro_crew.autonudge.get_instance", return_value=service):
+        with patch("aj_crew.autonudge.get_instance", return_value=service):
             result = await apply_session_directive(
                 SimpleNamespace(),
                 SimpleNamespace(key="chat-1", _app=""),
@@ -667,7 +667,7 @@ async def test_monitor_watch_does_not_replace_a_legacy_loop(tmp_path):
     legacy = await service.add("chat-1", "legacy prompt", idle_secs=60)
     slot = SimpleNamespace(key="chat-1", workspace="default", _app="", is_closing=False)
     state = SimpleNamespace(_slots={"chat-1": slot}, sessions=None, channel_transports={})
-    with patch("kiro_crew.autonudge.get_instance", return_value=service):
+    with patch("aj_crew.autonudge.get_instance", return_value=service):
         result = await apply_session_directive(
             state,
             slot,
@@ -704,7 +704,7 @@ async def test_monitor_start_does_not_replace_a_structured_monitor(tmp_path):
     )
     slot = SimpleNamespace(key="chat-1", workspace="default", _app="", is_closing=False)
     state = SimpleNamespace(_slots={"chat-1": slot}, sessions=None, channel_transports={})
-    with patch("kiro_crew.autonudge.get_instance", return_value=service):
+    with patch("aj_crew.autonudge.get_instance", return_value=service):
         result = await apply_session_directive(
             state,
             slot,
@@ -732,7 +732,7 @@ async def test_identity_update_conflict_is_a_controlled_authorizer_denial(tmp_pa
     )
     assert await service.mark_monitor_action_in_flight(loop.id, "failure-a", now=120.0)
 
-    with patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()):
+    with patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()):
         updated, error, status = await authorize_and_update_monitor(
             svc=service,
             state=SimpleNamespace(
@@ -780,8 +780,8 @@ async def test_banner_cannot_silently_patch_a_structured_monitor(tmp_path):
     )
     slot = SimpleNamespace(key="chat-1", _app="")
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=service),
-        patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
+        patch("aj_crew.autonudge.get_instance", return_value=service),
+        patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
     ):
         result = await apply_session_directive(
             state,
@@ -821,8 +821,8 @@ async def test_denied_monitor_update_is_surfaced_into_the_session(tmp_path):
     )
     slot = SimpleNamespace(key="chat-1", _app="", messages=[])
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=service),
-        patch("kiro_crew.dashboard.state.append_and_surface", surfaced),
+        patch("aj_crew.autonudge.get_instance", return_value=service),
+        patch("aj_crew.dashboard.state.append_and_surface", surfaced),
     ):
         result = await apply_session_directive(
             state,
@@ -854,9 +854,9 @@ async def test_denied_arm_in_a_crewmate_session_is_queued_for_the_agent(tmp_path
     # crewmate. There the refusal is ALSO queued for the crewmate's next turn
     # with a system-injection kind, so it drains as an inject row (never a user
     # bubble) and the crewmate can stop and re-arm the loop itself.
-    from kiro_crew.dashboard import session_directive_apply as _sda
-    from kiro_crew.dashboard.chat_turn.steer_queue import _QUEUE_KIND_ACTORS
-    from kiro_crew.dashboard.chat_utils import (
+    from aj_crew.dashboard import session_directive_apply as _sda
+    from aj_crew.dashboard.chat_turn.steer_queue import _QUEUE_KIND_ACTORS
+    from aj_crew.dashboard.chat_utils import (
         AUTOMATION_NOTICE_KIND,
         is_system_injection_item,
     )
@@ -882,8 +882,8 @@ async def test_denied_arm_in_a_crewmate_session_is_queued_for_the_agent(tmp_path
         queue_append=lambda content, *a, **k: queued.append({"content": content, **k}) or "qid-1",
     )
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=service),
-        patch("kiro_crew.dashboard.state.append_and_surface", surfaced),
+        patch("aj_crew.autonudge.get_instance", return_value=service),
+        patch("aj_crew.dashboard.state.append_and_surface", surfaced),
     ):
         result = await apply_session_directive(
             state,
@@ -942,8 +942,8 @@ async def test_denied_arm_in_a_plain_session_is_notice_only(tmp_path):
         queue_append=lambda content, *a, **k: queued.append(content) or "qid-1",
     )
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=service),
-        patch("kiro_crew.dashboard.state.append_and_surface", surfaced),
+        patch("aj_crew.autonudge.get_instance", return_value=service),
+        patch("aj_crew.dashboard.state.append_and_surface", surfaced),
     ):
         result = await apply_session_directive(
             state,
@@ -983,8 +983,8 @@ async def test_denied_monitor_update_names_the_consecutive_failure_bound(tmp_pat
     )
     slot = SimpleNamespace(key="chat-1", _app="", messages=[])
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=service),
-        patch("kiro_crew.dashboard.state.append_and_surface", surfaced),
+        patch("aj_crew.autonudge.get_instance", return_value=service),
+        patch("aj_crew.dashboard.state.append_and_surface", surfaced),
     ):
         result = await apply_session_directive(
             state,
@@ -1022,8 +1022,8 @@ async def test_monitor_update_names_a_stop_file_finish_and_revives_nothing(tmp_p
     )
     slot = SimpleNamespace(key="chat-1", _app="", messages=[])
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=service),
-        patch("kiro_crew.dashboard.state.append_and_surface", MagicMock()),
+        patch("aj_crew.autonudge.get_instance", return_value=service),
+        patch("aj_crew.dashboard.state.append_and_surface", MagicMock()),
     ):
         result = await apply_session_directive(
             state,
@@ -1055,7 +1055,7 @@ async def _monitor_update_through_the_tool(monkeypatch, service, judge_arg):
     produced, which is the path a live turn takes whether the directive travels in
     the tool result or out of band. Returns ``(tool reply, decoded payload, result)``.
     """
-    from kiro_crew import mcp_core, session_directive
+    from aj_crew import mcp_core, session_directive
 
     monkeypatch.setattr(mcp_core, "_resolve_session_key_strict", lambda: "dashboard:chat-1")
     # The tool's retained-stop preflight reads the gateway; none runs in this test,
@@ -1068,7 +1068,7 @@ async def _monitor_update_through_the_tool(monkeypatch, service, judge_arg):
     payload = session_directive.decode(reply, "monitor_update")
     if payload is None:
         return reply, None, ""
-    with patch("kiro_crew.autonudge.get_instance", return_value=service):
+    with patch("aj_crew.autonudge.get_instance", return_value=service):
         result = await apply_session_directive(
             SimpleNamespace(),
             SimpleNamespace(key="chat-1", _app=""),
@@ -1096,7 +1096,7 @@ async def test_blank_criteria_drop_the_owners_brief_as_an_empty_object_does(
     tick keys the default brief on), the judge's read state reset, and ``{}`` once
     the store is reloaded.
     """
-    from kiro_crew import autonudge_judge
+    from aj_crew import autonudge_judge
 
     service = AutoNudgeService(base_dir=tmp_path)
     try:

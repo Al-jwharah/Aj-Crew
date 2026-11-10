@@ -10,7 +10,7 @@ sandboxed process, so the racing writer is ordinary rather than exotic.
 
 The tests here LOSE that race deliberately and then ask what the mount actually
 received. They run the launcher program's own stages
-(``kiro_crew.sandbox_launcher_program``) in-process, against real files under
+(``aj_crew.sandbox_launcher_program``) in-process, against real files under
 ``tmp_path``, with :class:`_Libc` in place of libc. The swap is planted inside the
 ``mount`` call itself, before the kernel would resolve its target: every shape of
 a mask loop passes through that point after classifying the target, the pinned
@@ -42,7 +42,7 @@ from typing import Any, Callable, NamedTuple
 import pytest
 from test_sandbox_launcher_program import CoveringLibc, identity, launch, payload, refusal
 
-from kiro_crew import sandbox, sandbox_launcher_program, sandbox_plan
+from aj_crew import sandbox, sandbox_launcher_program, sandbox_plan
 
 program = sandbox_launcher_program
 
@@ -188,7 +188,7 @@ def _run(
     readonly_dirs: list[str] | None = None,
     hide_ssh: bool = True,
 ) -> _Ran:
-    """Place every mask (:func:`~kiro_crew.sandbox_launcher_program.place_masks`).
+    """Place every mask (:func:`~aj_crew.sandbox_launcher_program.place_masks`).
 
     The plan masks the bed's credential directory, its secret file and ``~/.ssh``,
     and seals its policy cache, unless a list is given. No mask root or window
@@ -1007,12 +1007,12 @@ def test_a_data_home_handed_to_the_launcher_under_two_spellings_is_refused(tmp_p
     (``test_sandbox_symlinked_home_launcher.py``).
     """
     real_home = tmp_path / "mnt" / "home" / "u"
-    crew = real_home / ".kirocrew"
+    crew = real_home / ".ajcrew"
     leaf = crew / "diag"
     leaf.mkdir(parents=True)
     (tmp_path / "home").mkdir()
     (tmp_path / "home" / "u").symlink_to(real_home)
-    linked_crew = tmp_path / "home" / "u" / ".kirocrew"
+    linked_crew = tmp_path / "home" / "u" / ".ajcrew"
     seen = os.lstat(leaf)
     bed = _Bed(tmp_path)
     # Duplicate lists in planner order: the leaf under both spellings, then the

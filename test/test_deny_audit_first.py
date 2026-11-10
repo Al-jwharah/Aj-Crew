@@ -39,9 +39,9 @@ from unittest import mock
 
 import pytest
 
-import kiro_crew.dashboard.chat_runner as chat_runner
-from kiro_crew.acp.client import AcpProcessDied
-from kiro_crew.dashboard.chat_runner import (
+import aj_crew.dashboard.chat_runner as chat_runner
+from aj_crew.acp.client import AcpProcessDied
+from aj_crew.dashboard.chat_runner import (
     _reject_hook_blocked,
     _reject_hook_error,
     _reject_invalid_tool,
@@ -113,7 +113,7 @@ class _HealthyClient(_StalledRejectClient):
 
 def _real_audit(tmp_path, monkeypatch) -> mock.MagicMock:
     """A real SecurityEventLog under *tmp_path*, wrapped so the mock checks still read."""
-    from kiro_crew.sel import SecurityEventLog
+    from aj_crew.sel import SecurityEventLog
 
     monkeypatch.setattr(SecurityEventLog, "_instance", None)
     monkeypatch.setattr(SecurityEventLog, "_initialized", False)
@@ -363,7 +363,7 @@ class TestEveryDenySiteAuditsBeforeTheWire:
     one site's audit cannot vouch for another's).
     """
 
-    RUNNER = pathlib.Path(__file__).resolve().parents[1] / "src/kiro_crew/dashboard/chat_runner.py"
+    RUNNER = pathlib.Path(__file__).resolve().parents[1] / "src/aj_crew/dashboard/chat_runner.py"
     WIRE = r"await (?:client\.reject_tool|_reject_attributed)\("
     REJECT = re.compile(r"^\s*" + WIRE)
     BOUNDARY = re.compile(r"^\s*(?:await client\.approve_tool\(|%s|async def )" % WIRE)

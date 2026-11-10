@@ -1,6 +1,6 @@
 """The channel turn pipeline, tested through its own interface.
 
-:class:`~kiro_crew.messaging.dispatch.ChannelTurns` owns the sequence every
+:class:`~aj_crew.messaging.dispatch.ChannelTurns` owns the sequence every
 channel dispatcher runs around the ``TurnDriver``: the governance backstop, the
 mute substitution, the hook short-circuit, the claim, the crew-log opener, the
 identity publish, the build, the driver, the compaction replay, the accounting,
@@ -8,7 +8,7 @@ the ledger, the refusal ladder and the finalize order. A bug in any of them is a
 bug in every channel at once, so each is pinned here by what a caller can
 observe: what the session manager was asked, in order (one ledger), what the
 provider was prompted with, what the renderer showed, what the ledger adapter was
-handed, and the :class:`~kiro_crew.messaging.dispatch.TurnOutcome`.
+handed, and the :class:`~aj_crew.messaging.dispatch.TurnOutcome`.
 
 The real ``TurnDriver`` runs behind every case, and the collaborators the
 pipeline is HANDED are the fakes in ``channel_turn_fakes``. A few process-wide
@@ -31,7 +31,7 @@ too, each because the real one would leave the test or make it unobservable:
 
 Behaviours a dispatcher still diverges on are parametrized over ``drift``: the
 default and Discord's declared
-:data:`~kiro_crew.messaging.dispatch.DISCORD_DRIFT`; ``TestTheDiscordLeg`` runs
+:data:`~aj_crew.messaging.dispatch.DISCORD_DRIFT`; ``TestTheDiscordLeg`` runs
 Discord's cases on its real renderer in ``test_channel_turns_discord_leg.py``.
 
 ``drive_turn`` and the exchange record adapter are in
@@ -69,19 +69,19 @@ from channel_turns_helpers import published_fixture  # noqa: F401
 from channel_turns_helpers import spooled_fixture  # noqa: F401
 from channel_turns_helpers import _ROOM, CONV, KEY, ROUTE, _answer, _asker, _bound_as_room, _turns
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     STOP_REASON_CANCELLED,
     STOP_REASON_COMPACTION_FAILED,
     STOP_REASON_STALE_RECOVER,
 )
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
-from kiro_crew.discord.renderer import DiscordRenderer
-from kiro_crew.discord.transport import DISCORD_CAPABILITIES
-from kiro_crew.hooks import TOOL_DENY
-from kiro_crew.memory_stores import UnknownMemoryStore
-from kiro_crew.messaging import dispatch as D
-from kiro_crew.messaging import turn_ceiling
-from kiro_crew.messaging.dispatch import (
+from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
+from aj_crew.discord.renderer import DiscordRenderer
+from aj_crew.discord.transport import DISCORD_CAPABILITIES
+from aj_crew.hooks import TOOL_DENY
+from aj_crew.memory_stores import UnknownMemoryStore
+from aj_crew.messaging import dispatch as D
+from aj_crew.messaging import turn_ceiling
+from aj_crew.messaging.dispatch import (
     DISCORD_DRIFT,
     TOOLLESS_TURN_AGENT,
     TOOLLESS_TURN_REFUSAL_NOTE,
@@ -93,12 +93,12 @@ from kiro_crew.messaging.dispatch import (
     TurnRecord,
     Verdict,
 )
-from kiro_crew.messaging.link import ChannelLink
-from kiro_crew.messaging.turn_ceiling import ConversationTurnCeiling
-from kiro_crew.monitoring.models import MonitorDispatchResult
-from kiro_crew.session_allocation import SessionClosingError
-from kiro_crew.start_priority import StartPriority
-from kiro_crew.testing.wait import await_until
+from aj_crew.messaging.link import ChannelLink
+from aj_crew.messaging.turn_ceiling import ConversationTurnCeiling
+from aj_crew.monitoring.models import MonitorDispatchResult
+from aj_crew.session_allocation import SessionClosingError
+from aj_crew.start_priority import StartPriority
+from aj_crew.testing.wait import await_until
 
 DRIFTS = [
     pytest.param(frozenset(), id="default"),
@@ -579,7 +579,7 @@ class TestAToolLessGuestTurn:
     def test_the_session_is_acquired_tool_less_in_its_own_directory(
         self, monkeypatch, tmp_path
     ) -> None:
-        monkeypatch.setenv("KIROCREW_WORKSPACE", str(tmp_path / "ws"))
+        monkeypatch.setenv("AJCREW_WORKSPACE", str(tmp_path / "ws"))
         ctx = RecordingCtxBuilder()
         sessions = FakeSessions()
 
@@ -1479,7 +1479,7 @@ class TestAMonitorWake:
         return MonitorWake(hook, lambda: current)  # type: ignore[arg-type]
 
     def test_only_a_wake_builds_an_unattended_tool_gate(self, monkeypatch) -> None:
-        from kiro_crew.messaging import dispatch
+        from aj_crew.messaging import dispatch
 
         built: list[bool] = []
         real = dispatch.build_tool_gate

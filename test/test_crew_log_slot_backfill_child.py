@@ -1,6 +1,6 @@
 """A slot fold's cold backfill in a child process, staged and admitted by the gateway.
 
-The child is a real ``python -m kiro_crew.crew_log.slot_backfill_child`` over real crew
+The child is a real ``python -m aj_crew.crew_log.slot_backfill_child`` over real crew
 logs in a temp home. The gateway side is this process: it admits the staged savepoint
 under the unit's lease and resumes from it, and every way the staged file can be wrong
 falls back to what the gateway did before.
@@ -19,16 +19,16 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import eager as crew_log_eager
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import projection_slot_memo as psm
-from kiro_crew.crew_log import slot_backfill_child as child
-from kiro_crew.crew_log import slot_prime
-from kiro_crew.crew_log.checkpoint import slot_checkpoint_path
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import eager as crew_log_eager
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import projection_slot_memo as psm
+from aj_crew.crew_log import slot_backfill_child as child
+from aj_crew.crew_log import slot_prime
+from aj_crew.crew_log.checkpoint import slot_checkpoint_path
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 SLOT = "chat-backfill"
 FOLD = "work"
@@ -37,8 +37,8 @@ UNITS = ("acp-backfill-1", "acp-backfill-2")
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     _floor_monkeypatch.delenv(child.SWITCH_ENV, raising=False)
     _floor_monkeypatch.setattr(crew_log_eager, "note_commit", lambda *a, **k: None)
     crew_log_emit.reset_caches()
@@ -69,7 +69,7 @@ def _append(handle: CrewLog, item: str) -> None:
 
 def _slot(entries: int = 200) -> None:
     for unit in UNITS:
-        handle = CrewLog.create(lg.KIND_SESSION, unit, owner="o", agent="kirocrew", slot=SLOT)
+        handle = CrewLog.create(lg.KIND_SESSION, unit, owner="o", agent="ajcrew", slot=SLOT)
         for nth in range(entries):
             _append(handle, f"{unit}-{nth}")
         del handle
@@ -179,7 +179,7 @@ def test_a_staged_file_for_another_unit_list_is_refused():
     _stage_with_a_real_child()
     # The slot gains a unit: the staged identity block names the old list.
     third = CrewLog.create(
-        lg.KIND_SESSION, "acp-backfill-3", owner="o", agent="kirocrew", slot=SLOT
+        lg.KIND_SESSION, "acp-backfill-3", owner="o", agent="ajcrew", slot=SLOT
     )
     _append(third, "new-unit")
     del third
@@ -205,7 +205,7 @@ def test_a_staged_file_of_another_state_version_is_refused():
 
 
 def test_a_cut_after_the_child_is_refused():
-    from kiro_crew.crew_log.store_cuts import _close_cut, _open_cut
+    from aj_crew.crew_log.store_cuts import _close_cut, _open_cut
 
     _slot()
     _stage_with_a_real_child()
@@ -221,7 +221,7 @@ def test_a_cut_after_the_child_is_refused():
 def test_a_staged_file_for_a_removed_unit_is_deleted_not_admitted():
     _slot()
     _stage_with_a_real_child()
-    from kiro_crew.crew_log.store import remove_unit
+    from aj_crew.crew_log.store import remove_unit
 
     crew_log_emit.reset_caches()
     gc.collect()
@@ -313,7 +313,7 @@ def test_off_by_default_and_by_switch(monkeypatch):
 
 
 def test_the_gateway_read_after_a_backfill_stays_within_the_read_budget():
-    from kiro_crew.crew_log import read_budget
+    from aj_crew.crew_log import read_budget
 
     _slot()
     _stage_with_a_real_child()
@@ -376,7 +376,7 @@ def _count_spawns(monkeypatch) -> "list[Any]":
 
 
 def test_a_slot_under_the_savepoint_threshold_spawns_no_child_and_folds_once(monkeypatch):
-    from kiro_crew.crew_log.checkpoint import MIN_ADVANCE_ENTRIES
+    from aj_crew.crew_log.checkpoint import MIN_ADVANCE_ENTRIES
 
     _slot(entries=(MIN_ADVANCE_ENTRIES - 10) // len(UNITS))
     child.enable()
@@ -427,11 +427,11 @@ def test_a_slot_at_the_threshold_still_spawns_and_resumes(monkeypatch):
 
 @pytest.fixture
 def _child_mode_restored(monkeypatch):
-    from kiro_crew.crew_log import checkpoint
+    from aj_crew.crew_log import checkpoint
 
     # _stage sets both; the monkeypatch puts them back after the test.
     monkeypatch.setattr(checkpoint, "slot_save_dir", None)
-    monkeypatch.setenv("KIROCREW_HOME", os.environ["KIROCREW_HOME"])
+    monkeypatch.setenv("AJCREW_HOME", os.environ["AJCREW_HOME"])
 
 
 @pytest.mark.parametrize(
@@ -456,7 +456,7 @@ def test_main_answers_usage_for_a_bad_call(monkeypatch, args, raw):
 
 def test_stage_in_this_process_stages_the_savepoint(_child_mode_restored):
     _slot()
-    assert child._stage(os.environ["KIROCREW_HOME"], SLOT, FOLD) is True
+    assert child._stage(os.environ["AJCREW_HOME"], SLOT, FOLD) is True
     assert os.path.isfile(_staged())
 
 
@@ -464,12 +464,12 @@ def test_stage_in_this_process_reports_nothing_for_a_slot_that_earns_no_savepoin
     _child_mode_restored,
 ):
     _slot(entries=10)
-    assert child._stage(os.environ["KIROCREW_HOME"], SLOT, FOLD) is False
+    assert child._stage(os.environ["AJCREW_HOME"], SLOT, FOLD) is False
     assert not os.path.exists(_staged())
 
 
 def test_a_staging_directory_that_cannot_be_made_stages_nothing(monkeypatch):
-    from kiro_crew import owner_only_files
+    from aj_crew import owner_only_files
 
     def refuse(_path):
         raise OSError("read-only")
@@ -491,7 +491,7 @@ def test_the_stamps_and_the_sweep_survive_a_missing_or_odd_staging_root():
 
 
 def test_admit_answers_false_when_the_unit_dir_or_the_move_fails(monkeypatch):
-    from kiro_crew.crew_log import checkpoint
+    from aj_crew.crew_log import checkpoint
 
     _slot()
     _stage_with_a_real_child()
@@ -507,7 +507,7 @@ def test_admit_answers_false_when_the_unit_dir_or_the_move_fails(monkeypatch):
 
 
 def test_admit_is_off_in_the_child(monkeypatch):
-    from kiro_crew.crew_log import checkpoint
+    from aj_crew.crew_log import checkpoint
 
     monkeypatch.setattr(checkpoint, "slot_save_dir", lambda _handle: None)
     assert child.admit(FOLD, UNITS[-1]) is False

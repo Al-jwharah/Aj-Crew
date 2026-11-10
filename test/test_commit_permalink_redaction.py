@@ -9,8 +9,8 @@ import string
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.security import redact, redact_credentials
-from kiro_crew.security import redaction as _redaction
+from aj_crew.security import redact, redact_credentials
+from aj_crew.security import redaction as _redaction
 
 # The canonical AWS documentation example secret key, never a live credential.
 KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
@@ -28,14 +28,14 @@ HEX_HEAD_KEY = "3f9c0a7b1d4e7c2b9a0f5d3e8c1b/RWG27KFEB2V"
 COMMIT = "cc504736836c7c1905f86f8cd4e0c9b46b37347c"
 TAG = "[REDACTED: credential]"
 GATEWAY_LINK = (
-    "https://github.com/kirodotdev/KiroCrew/blob/{}/src/kiro_crew/slack/gateway.py#L6257-L6274"
+    "https://github.com/Al-jwharah/Aj-Crew/blob/{}/src/aj_crew/slack/gateway.py#L6257-L6274"
 )
 
 # Each fires the bare-secret heuristic when the commit ceiling is absent: the window
 # straddling the repository name and the start of the commit reads as a key.
 FIRING_LINK_TEMPLATES = [
     GATEWAY_LINK,
-    "https://github.com/kirodotdev/KiroCrew/tree/{}/src/kiro_crew",
+    "https://github.com/Al-jwharah/Aj-Crew/tree/{}/src/aj_crew",
     "https://github.com/microsoft/TypeScript/blame/{}/src/compiler/checker.ts#L10",
     "https://github.com/microsoft/TypeScript/raw/{}/README.md",
     "https://bitbucket.org/atlassian/Docker-Builds/src/{}/README.md",
@@ -128,9 +128,9 @@ def test_no_seeded_commit_fires(template: str) -> None:
                 f"{COMMIT}{KEY}",
                 f"{KEY}{COMMIT}",
                 f"{COMMIT.upper()}{KEY}",
-                f"https://github.com/kirodotdev/KiroCrew/blob/{KEY}",
-                f"https://github.com/kirodotdev/KiroCrew/blob/{COMMIT}/{KEY}",
-                f"https://github.com/kirodotdev/KiroCrew/blob/{COMMIT}/src/{KEY}/gateway.py",
+                f"https://github.com/Al-jwharah/Aj-Crew/blob/{KEY}",
+                f"https://github.com/Al-jwharah/Aj-Crew/blob/{COMMIT}/{KEY}",
+                f"https://github.com/Al-jwharah/Aj-Crew/blob/{COMMIT}/src/{KEY}/gateway.py",
             ],
         ),
         *named_cases(
@@ -166,8 +166,8 @@ def test_seeded_keys_glued_to_a_commit_are_redacted() -> None:
             continue
         for text in (
             f"{COMMIT}{key}",
-            f"https://github.com/kirodotdev/KiroCrew/blob/{COMMIT}/{key}",
-            f"https://github.com/kirodotdev/KiroCrew/blob/{key}",
+            f"https://github.com/Al-jwharah/Aj-Crew/blob/{COMMIT}/{key}",
+            f"https://github.com/Al-jwharah/Aj-Crew/blob/{key}",
             f"{key}{COMMIT}",
         ):
             assert key not in redact_credentials(text)[0], text
@@ -190,18 +190,18 @@ def test_a_standalone_key_holding_hex_digits_is_still_redacted(text: str) -> Non
         (HEAD_HEX_KEY, f"https://evil.example/collect/{HEAD_HEX_KEY}"),
         (HEAD_HEX_KEY, f"{COMMIT}/{HEAD_HEX_KEY}"),
         (HEAD_HEX_KEY, f"{COMMIT}{HEAD_HEX_KEY}"),
-        (HEAD_HEX_KEY, f"https://github.com/kirodotdev/KiroCrew/blob/{HEAD_HEX_KEY}"),
+        (HEAD_HEX_KEY, f"https://github.com/Al-jwharah/Aj-Crew/blob/{HEAD_HEX_KEY}"),
         (TAIL_HEX_KEY, f"{TAIL_HEX_KEY}{COMMIT}"),
         (SLASH_HEX_KEY, f"{SLASH_HEX_KEY}{COMMIT}"),
         (SLASH_HEX_KEY, f"{SLASH_HEX_KEY}{COMMIT[:28]}/README.md"),
         (LEAD_SLASH_KEY, f"{COMMIT[:28]}{LEAD_SLASH_KEY}"),
         (
             LEAD_SLASH_KEY,
-            f"https://github.com/kirodotdev/KiroCrew/blob/{COMMIT[:28]}{LEAD_SLASH_KEY}",
+            f"https://github.com/Al-jwharah/Aj-Crew/blob/{COMMIT[:28]}{LEAD_SLASH_KEY}",
         ),
         (
             HEX_HEAD_KEY,
-            f"https://github.com/kirodotdev/KiroCrew/blob/{COMMIT[:12]}{HEX_HEAD_KEY}",
+            f"https://github.com/Al-jwharah/Aj-Crew/blob/{COMMIT[:12]}{HEX_HEAD_KEY}",
         ),
     ],
 )

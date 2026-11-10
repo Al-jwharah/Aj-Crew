@@ -31,8 +31,8 @@ from crew_log_routes_helpers import (
     _Slot,
 )
 
-from kiro_crew import crew_log as lg
-from kiro_crew.dashboard.handlers import crew_log as routes
+from aj_crew import crew_log as lg
+from aj_crew.dashboard.handlers import crew_log as routes
 
 
 class TestTheListingCarriesTheSameScope:
@@ -100,7 +100,7 @@ class TestTheListingBoundsWhatItRetains:
         reader orders by -- a real unit is a directory holding ``log.jsonl``, and a
         directory with no log is not a unit at all.
         """
-        from kiro_crew.crew_log import read as reader
+        from aj_crew.crew_log import read as reader
 
         root = lg.crew_log_root(lg.KIND_SESSION)
         root.mkdir(parents=True, exist_ok=True)
@@ -117,7 +117,7 @@ class TestTheListingBoundsWhatItRetains:
         return names if newest_first_names else list(reversed(names))
 
     def test_only_the_newest_candidates_are_retained(self, monkeypatch):
-        from kiro_crew.crew_log import read as reader
+        from aj_crew.crew_log import read as reader
 
         names = self._dirs(7)
         monkeypatch.setattr(reader, "MAX_LISTED_CANDIDATES", 3)
@@ -126,7 +126,7 @@ class TestTheListingBoundsWhatItRetains:
         assert cut is True
 
     def test_a_root_within_the_bound_is_not_reported_cut(self, monkeypatch):
-        from kiro_crew.crew_log import read as reader
+        from aj_crew.crew_log import read as reader
 
         self._dirs(3)
         monkeypatch.setattr(reader, "MAX_LISTED_CANDIDATES", 3)
@@ -136,7 +136,7 @@ class TestTheListingBoundsWhatItRetains:
 
     def test_a_cut_candidate_set_makes_the_listing_report_truncated(self, monkeypatch):
         """A caller must not read a bounded walk as the whole tree."""
-        from kiro_crew.crew_log import read as reader
+        from aj_crew.crew_log import read as reader
 
         self._dirs(5)
         monkeypatch.setattr(reader, "MAX_LISTED_CANDIDATES", 2)
@@ -146,7 +146,7 @@ class TestTheListingBoundsWhatItRetains:
     def test_the_walk_never_holds_more_than_the_bound(self, monkeypatch):
         """The bound is on RETENTION: the heap is capped during iteration, so the
         peak held size cannot grow with the directory count."""
-        from kiro_crew.crew_log import read as reader
+        from aj_crew.crew_log import read as reader
 
         self._dirs(9)
         monkeypatch.setattr(reader, "MAX_LISTED_CANDIDATES", 2)
@@ -162,7 +162,7 @@ class TestTheListingBoundsWhatItRetains:
         assert peaks and max(peaks) <= 2
 
     def test_a_root_that_was_never_created_is_empty_and_not_cut(self):
-        from kiro_crew.crew_log import read as reader
+        from aj_crew.crew_log import read as reader
 
         assert not lg.crew_log_root(lg.KIND_SESSION).exists()
         assert reader._candidate_dirs(lg.KIND_SESSION) == ([], False)
@@ -182,7 +182,7 @@ class TestTheRetentionListingStaysOffTheLoop:
         import importlib
         import inspect
 
-        from kiro_crew.dashboard.handlers import crew_log as mod
+        from aj_crew.dashboard.handlers import crew_log as mod
 
         # a mirror facade: its code is in the owners it lists
         tree = ast.parse(
@@ -240,7 +240,7 @@ class TestTheCallerTestAgreesWithTheSharedDerivation:
 
     def test_the_derivation_reports_exactly_the_members_the_refusal_tests(self):
         """A fourth member has to be considered here, not silently untested."""
-        from kiro_crew.dashboard.chat_runner import _crew_log_class
+        from aj_crew.dashboard.chat_runner import _crew_log_class
 
         assert len(_crew_log_class(None, _Slot())) == 3
 
@@ -260,7 +260,7 @@ class TestTheCallerTestAgreesWithTheSharedDerivation:
         for name, value in shape.items():
             setattr(slot, name, value)
         request = self._request_for(slot)
-        from kiro_crew.dashboard.chat_runner import _crew_log_class
+        from aj_crew.dashboard.chat_runner import _crew_log_class
 
         state = request.app.get("state")
         assert _crew_log_class(state, slot) != (
@@ -276,7 +276,7 @@ class TestTheCallerTestAgreesWithTheSharedDerivation:
         _dispatch_tree()
         slot = _Slot()
         request = self._request_for(slot)
-        from kiro_crew.dashboard.chat_runner import _crew_log_class
+        from aj_crew.dashboard.chat_runner import _crew_log_class
 
         assert _crew_log_class(request.app.get("state"), slot) == ("persistent", "", False)
         assert routes._caller_class_refusal(request, CONDUCTOR_SLOT) == ""
@@ -297,7 +297,7 @@ class TestRecencyComesFromTheLogNotItsDirectory:
         Through ``crew_log_dir``, never ``root / unit_id``: a unit directory is named
         with a readable-plus-digest fold of the id, not the id itself.
         """
-        from kiro_crew.crew_log import read as reader
+        from aj_crew.crew_log import read as reader
 
         _opened(_log(unit_id))
         directory = lg.crew_log_dir(lg.KIND_SESSION, unit_id)
@@ -306,7 +306,7 @@ class TestRecencyComesFromTheLogNotItsDirectory:
         os.utime(directory, (dir_at, dir_at))
 
     def test_the_busy_old_session_sorts_newer_than_the_idle_new_one(self):
-        from kiro_crew.crew_log import read as reader
+        from aj_crew.crew_log import read as reader
 
         now = time.time()
         self._unit("s-open-all-day", dir_at=now - 86_400, log_at=now)
@@ -318,7 +318,7 @@ class TestRecencyComesFromTheLogNotItsDirectory:
         ]
 
     def test_a_recency_window_keeps_the_busy_session_and_drops_the_idle_one(self):
-        from kiro_crew.crew_log import read as reader
+        from aj_crew.crew_log import read as reader
 
         now = time.time()
         self._unit("s-open-all-day", dir_at=now - 86_400, log_at=now)
@@ -332,7 +332,7 @@ class TestRecencyComesFromTheLogNotItsDirectory:
         It is refused a moment later for having no unit id, so the only question
         here is whether one bad directory can take the listing down with it.
         """
-        from kiro_crew.crew_log import read as reader
+        from aj_crew.crew_log import read as reader
 
         now = time.time()
         self._unit("s-real", dir_at=now, log_at=now)

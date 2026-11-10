@@ -1,12 +1,12 @@
-"""Tests for the session_color field on KiroCrewAgentConfig.
+"""Tests for the session_color field on AjCrewAgentConfig.
 
 Covers:
 - _safe_color validation (valid hex, malformed, non-string)
-- Round-trip through KiroCrewConfig.load() -> .save() -> .load()
+- Round-trip through AjCrewConfig.load() -> .save() -> .load()
 - Agent create/update handlers accept and normalize session_color
 """
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, _safe_color
+from aj_crew.config.loader import AjCrewAgentConfig, _safe_color
 
 
 class TestSafeColor:
@@ -53,27 +53,27 @@ class TestSafeColor:
         assert _safe_color("  #aabbcc  ") == "#aabbcc"
 
 
-class TestKiroCrewAgentConfigSessionColor:
-    """session_color field on KiroCrewAgentConfig."""
+class TestAjCrewAgentConfigSessionColor:
+    """session_color field on AjCrewAgentConfig."""
 
     def test_default_empty(self):
-        cfg = KiroCrewAgentConfig()
+        cfg = AjCrewAgentConfig()
         assert cfg.session_color == ""
 
     def test_explicit_value(self):
-        cfg = KiroCrewAgentConfig(session_color="#4a90d9")
+        cfg = AjCrewAgentConfig(session_color="#4a90d9")
         assert cfg.session_color == "#4a90d9"
 
     def test_serializes_in_asdict(self):
         import dataclasses
 
-        cfg = KiroCrewAgentConfig(session_color="#e64980")
+        cfg = AjCrewAgentConfig(session_color="#e64980")
         d = dataclasses.asdict(cfg)
         assert d["session_color"] == "#e64980"
 
     def test_empty_serializes(self):
         import dataclasses
 
-        cfg = KiroCrewAgentConfig()
+        cfg = AjCrewAgentConfig()
         d = dataclasses.asdict(cfg)
         assert d["session_color"] == ""

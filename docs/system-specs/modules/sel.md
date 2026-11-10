@@ -24,7 +24,7 @@ credential redaction and explicit logging failures retain their existing behavio
 
 ## Module layout
 
-`src/kiro_crew/sel.py` is the import path every caller uses. It owns the record and the
+`src/aj_crew/sel.py` is the import path every caller uses. It owns the record and the
 write pipeline: `SecurityEvent` and every place that builds one (the `log_*` helpers and
 `_rotation_event`), the `SecurityEventLog` singleton with its writer thread and queue,
 `flush`, `_flush_batch` (redaction, then the chain lock, the rotation window, the append
@@ -36,13 +36,13 @@ responsibility goes to its owner:
 
 | Module | Owns |
 |---|---|
-| `src/kiro_crew/sel_trust_root.py` | the HMAC key that signs the chain (where it lives, creation, validation, legacy migration) and the per-record MAC (`_compute_hash`, `_record_signature_matches`) |
-| `src/kiro_crew/sel_reader.py` | reading the log back: `verify_integrity`, `recent`, segment admission, the backward line reader, and the read-side segment pins (`_open_segment`, `_open_segment_dir`) |
-| `src/kiro_crew/sel_chain_lock.py` | the cross-process chain lock: the per-process hold registry, the loop-side single-shot acquire, the sidecar and its pinned directory (`_pin_lock_dir`) |
-| `src/kiro_crew/sel_append.py` | chaining a batch onto the live log: the descriptor-checked append, re-anchoring after another process rotates or appends, `SelChainContention`, and chain-tip recovery (`_read_last_hash`) |
-| `src/kiro_crew/sel_rotation.py` | keeping the log bounded: size rotation into `security_events.d`, segment naming and enumeration, count retention, and the age `prune` |
+| `src/aj_crew/sel_trust_root.py` | the HMAC key that signs the chain (where it lives, creation, validation, legacy migration) and the per-record MAC (`_compute_hash`, `_record_signature_matches`) |
+| `src/aj_crew/sel_reader.py` | reading the log back: `verify_integrity`, `recent`, segment admission, the backward line reader, and the read-side segment pins (`_open_segment`, `_open_segment_dir`) |
+| `src/aj_crew/sel_chain_lock.py` | the cross-process chain lock: the per-process hold registry, the loop-side single-shot acquire, the sidecar and its pinned directory (`_pin_lock_dir`) |
+| `src/aj_crew/sel_append.py` | chaining a batch onto the live log: the descriptor-checked append, re-anchoring after another process rotates or appends, `SelChainContention`, and chain-tip recovery (`_read_last_hash`) |
+| `src/aj_crew/sel_rotation.py` | keeping the log bounded: size rotation into `security_events.d`, segment naming and enumeration, count retention, and the age `prune` |
 
-`src/kiro_crew/sel_request_provenance.py` is not one of these owners: it holds the
+`src/aj_crew/sel_request_provenance.py` is not one of these owners: it holds the
 request-bound `forwarded` binding that the deny-audit boundary writes and
 `log_api_access` reads (see `metadata.forwarded` below), and the class binds nothing
 from it.
@@ -53,12 +53,12 @@ header per owner, so every member stays an attribute of the one class, and a pat
 method on the class or on an instance reaches every caller. A bound member's
 `__qualname__` and `__module__` name its owner (nothing reads them; a traceback and
 `%(funcName)s` show the same function name), and its `self: SecurityEventLog` annotation
-is there for type checkers only. Every class an owner defines keeps `kiro_crew.sel` as its
-`__module__`, so a traceback still names `kiro_crew.sel.SelChainContention`. Owners log
-under the `kiro_crew.sel` logger, import each other lowest layer first (the order of
+is there for type checkers only. Every class an owner defines keeps `aj_crew.sel` as its
+`__module__`, so a traceback still names `aj_crew.sel.SelChainContention`. Owners log
+under the `aj_crew.sel` logger, import each other lowest layer first (the order of
 `_OWNERS`), and never import `sel.py` at run time. `sel.py` keeps binding every name it
 bound, serves the module-level names that moved (`_SERVED_BY_OWNER`), and a write through
-it reaches every owner that binds the same object (`kiro_crew._facade_mirror`).
+it reaches every owner that binds the same object (`aj_crew._facade_mirror`).
 `test/test_sel_bindings.py` pins the member inventory, the binding and the reach.
 
 ## Event Schema
@@ -70,14 +70,14 @@ Each entry records:
 | `event_id` | Unique 16-char hex identifier |
 | `timestamp` | ISO 8601 UTC |
 | `event_type` | Stable event-family string chosen by the emitter. Common values include `tool_invocation`, `api_access`, `config_bounds_clamped`, `governance_decision`, `governance_degraded`, `output_anomaly`, `deny_event`, `push_allowed`, and `sel_rotation`; consumers must not treat this list as exhaustive. |
-| `caller_identity` | Session key (e.g. `dashboard:abc`, `cron:xyz`, `subagent:123`). API-access events from mixed-internal endpoints that validate `X-Internal-Caller` (the chat folder writes) carry the internal caller's declared **component name** here — e.g. `kirocrew-dashboard`, or `unknown-internal` for an authenticated internal caller that declared no recognized name (a defined, warned state, not log corruption); `source` stays in the interface vocabulary (`mcp`) for those events. Middleware `api_access` rows use the label from `security_middleware.audit_actor`: `dashboard_user` for the full dashboard, `mcp_tool` for the headless API server (or an identity a deny site derived, such as an app label), with a `_via_proxy` suffix when the request carries a forwarding header. The suffix is kept for existing readers; read provenance from `metadata.forwarded` instead |
-| `agent` | Agent name (`kirocrew`, custom agent name) |
+| `caller_identity` | Session key (e.g. `dashboard:abc`, `cron:xyz`, `subagent:123`). API-access events from mixed-internal endpoints that validate `X-Internal-Caller` (the chat folder writes) carry the internal caller's declared **component name** here — e.g. `ajcrew-dashboard`, or `unknown-internal` for an authenticated internal caller that declared no recognized name (a defined, warned state, not log corruption); `source` stays in the interface vocabulary (`mcp`) for those events. Middleware `api_access` rows use the label from `security_middleware.audit_actor`: `dashboard_user` for the full dashboard, `mcp_tool` for the headless API server (or an identity a deny site derived, such as an app label), with a `_via_proxy` suffix when the request carries a forwarding header. The suffix is kept for existing readers; read provenance from `metadata.forwarded` instead |
+| `agent` | Agent name (`ajcrew`, custom agent name) |
 | `source` | Emitting surface label. Session-key-derived values come from `_infer_source()` and the authoritative `audit_sources()` tuple (dashboard, cron, background, heartbeat, CLI, supported messaging channels, and so on). Specialized emitters also use fixed subsystem labels such as `mcp`, `acp`, `token_auth`, `refresh_tokens`, and `app`; the dataclass does not enforce one closed enum. |
 | `operation` | Tool name or `METHOD /api/path`; for `output_anomaly`, the repair that ran (`options_footer_glued_text`: text the model wrote on the line of its own `[OPTIONS:]` footer was moved to its own line and labelled as the assistant's) |
 | `tool_kind` | Tool category (`execute_bash`, `fs_write`, `mcp_core`, `mcp_cron`, etc.) |
 | `outcome` | Emitter-defined result vocabulary (for example `invoked`, `approved`, `rejected`, `denied`, `completed`, `failed`, `clamped`, `degraded`, `one_shot_completed`, or `labelled`). Callers that expose this field externally must document the values they emit; the core dataclass does not enforce a closed enum. |
 | `resources` | Affected resources summary (redacted, then truncated to 500 chars — see `metadata`) |
-| `downstream_service` | MCP server name if applicable (`kirocrew-core`, `kirocrew-cron`, `internal-mcp`) |
+| `downstream_service` | MCP server name if applicable (`ajcrew-core`, `ajcrew-cron`, `internal-mcp`) |
 | `request_id` | ACP permission request ID |
 | `error` | Error message if failed/denied |
 | `prev_hash` | HMAC of previous entry (chain link) |
@@ -94,7 +94,7 @@ like `_bg`; other unrecognized session keys retain the legacy `slack` fallback.
 - HMAC-SHA256 chain: each entry signs over the previous entry's hash
 - HMAC key: `~/.kiro/crew/trust/sel_hmac.key` (32 random bytes, `chmod 600`, inside an owner-only `trust/` dir, `chmod 700`). The key deliberately lives OUTSIDE the log's directory: an actor who can rewrite the log dir must not also be able to read the key and re-sign a clean-looking chain that `verify_integrity()` accepts. A legacy key at `~/.kiro/crew/sel_hmac.key` is migrated in atomically (`os.replace`) on the next `SecurityEventLog` init — same key bytes, so every existing chain still verifies without re-signing; if BOTH paths exist, the LEGACY key wins and overwrites the destination: `trust/` was not deny-listed before the migration release, so a file already at the destination on a legacy install is untrustworthy (agent-plantable), while the legacy leaf was deny-list-protected all along — with ONE shape excluded from that rule, which fails init closed instead of resolving either way: a legacy file too short to load as a key, sitting beside a destination that holds a usable one, is AMBIGUOUS and neither half may be acted on. Promoting the short legacy file would destroy the only copy of the key every existing record was signed with and then fail the length check on every later boot, so the loss is unrecoverable rather than merely wrong (a mixed-binary window can leave such a 0-byte file behind); ADOPTING the destination is no safer, because length is not trust — `trust/`, the legacy leaf, `security_events.jsonl` and `security_events.d` are ALL sandbox read-write leaves, so the audited agent can truncate the legacy key below the minimum, plant a long-enough destination whose bytes it knows, and forge whatever evidence a proof gate would consult, which would make every later SEL and session-identity MAC forgeable with no recovery path. With no operator-protected source to authenticate against, SEL does nothing and refuses: nothing is adopted, nothing is overwritten, both files survive for the operator, and the error names both paths and the remedy (restore from backup, or remove both to start a fresh chain). The refusal does not depend on what the log contains, so no branch of the decision can be unlocked by controlling the log. A short legacy file with no usable destination still reaches the length check exactly as it would without this carve-out; a linked `trust` dir or key file is likewise removed (link only, never its target) before use. `sel_hmac_key_path()` reports the RESOLVED path in use, so `session_pid_sig` follows automatically. A read-only config dir that blocks creating `trust/` keeps signing with the legacy file (chain continuity beats relocation). Rollback caveat: downgrading the binary after migration mints a fresh key at the legacy path; on re-upgrade that legacy key wins and replaces the trust-dir key, so chain entries signed BEFORE the downgrade will no longer verify — restore a consistent key from backup around a downgrade if chain continuity matters.
 - **Key + log are on the sensitive-path floor:** the `trust` directory (whole-dir entry), the legacy `sel_hmac.key` leaf, `security_events.jsonl` and `security_events.d` are in `security._SENSITIVE_HOME_DIRS` ([security](security.md) owns the full enumeration), so the audited agent's `fs_read`/file-edit tools (gated by `is_sensitive_path()`) cannot read the key to forge the chain or rewrite the log. The gateway's own writer/reader (`sel.py` and its owner modules, `dashboard/session_health.py`) opens the files directly and bypasses that gate. Residual: the key still lives in the agent's home namespace — a deeper out-of-process signer is future hardening.
-- **Read paths pin the segment directory:** the read-side readers (`recent`, `verify_integrity`) open `security_events.d` itself through `_open_segment_dir` before enumerating; a directory that refuses to pin — planted link, non-directory, or vanished — contributes NO segments to any read (fail closed; a missing dir was already "no segments"), instead of being walked by name. Enumeration stays the bounded `_SEGMENT_SCAN_CAP` walk on every platform, but where the pin carries a descriptor it goes through `os.scandir(pin.fd)` — a path swap can neither redirect nor empty the scan (immune to the swap-mid-read-then-restore shape) — and only the identity-pin platform revalidates the directory's identity after the walk, failing closed on a mismatch. Where directory descriptors exist, every per-file open (`_open_segment` with `dir_fd`) also resolves RELATIVE to the pinned descriptor, so a swap after enumeration still cannot redirect a read; Windows has no directory descriptors, so its pin revalidates the directory's `lstat` `(st_dev, st_ino)` identity before each child open instead, with the residual between revalidations bounded by the rotation-time repair (`_ensure_segment_dir` unlinks a linked segment dir at rotation/prune). The per-file funnel (`O_NOFOLLOW`/`O_NONBLOCK`, descriptor `fstat` regular-file check, name↔descriptor identity) is unchanged, and the LIVE log is never pinned: its writer follows an operator's symlink, so its readers must too. Because the swap is itself tampering, `verify_integrity(detailed=True)` reports a THIRD outcome — `history_verifiable=False` with a `reason` — when the directory refused to pin (planted link, not a directory, an actual directory the OS refused to open, or one that vanished between the pin's `lstat` and its open — every pin failure except ABSENCE confirmed at first sight) or was replaced mid-verification, and the CLI (`kirocrew security verify`) and `GET /api/sel/verify` surface it (`Audit history UNVERIFIABLE` / `integrity: "unverifiable"`) instead of reporting intact over the live log alone; the CLI derives its live-log clause from the same pass's counts, so a tampered live log is reported as such rather than "intact". A directory that simply does not exist yet (fresh install) stays verifiable.
+- **Read paths pin the segment directory:** the read-side readers (`recent`, `verify_integrity`) open `security_events.d` itself through `_open_segment_dir` before enumerating; a directory that refuses to pin — planted link, non-directory, or vanished — contributes NO segments to any read (fail closed; a missing dir was already "no segments"), instead of being walked by name. Enumeration stays the bounded `_SEGMENT_SCAN_CAP` walk on every platform, but where the pin carries a descriptor it goes through `os.scandir(pin.fd)` — a path swap can neither redirect nor empty the scan (immune to the swap-mid-read-then-restore shape) — and only the identity-pin platform revalidates the directory's identity after the walk, failing closed on a mismatch. Where directory descriptors exist, every per-file open (`_open_segment` with `dir_fd`) also resolves RELATIVE to the pinned descriptor, so a swap after enumeration still cannot redirect a read; Windows has no directory descriptors, so its pin revalidates the directory's `lstat` `(st_dev, st_ino)` identity before each child open instead, with the residual between revalidations bounded by the rotation-time repair (`_ensure_segment_dir` unlinks a linked segment dir at rotation/prune). The per-file funnel (`O_NOFOLLOW`/`O_NONBLOCK`, descriptor `fstat` regular-file check, name↔descriptor identity) is unchanged, and the LIVE log is never pinned: its writer follows an operator's symlink, so its readers must too. Because the swap is itself tampering, `verify_integrity(detailed=True)` reports a THIRD outcome — `history_verifiable=False` with a `reason` — when the directory refused to pin (planted link, not a directory, an actual directory the OS refused to open, or one that vanished between the pin's `lstat` and its open — every pin failure except ABSENCE confirmed at first sight) or was replaced mid-verification, and the CLI (`ajcrew security verify`) and `GET /api/sel/verify` surface it (`Audit history UNVERIFIABLE` / `integrity: "unverifiable"`) instead of reporting intact over the live log alone; the CLI derives its live-log clause from the same pass's counts, so a tampered live log is reported as such rather than "intact". A directory that simply does not exist yet (fresh install) stays verifiable.
 - Verification: `verify_integrity()` walks the chain and reports tampered entries
 - **A chain tip that cannot be read is unknown, never genesis.** Only an absent or empty log, or one with no parseable record, starts the chain at `""`. When the log is present but cannot be opened (held open without sharing, `EACCES`), `_read_last_hash` raises. Construction still succeeds: it logs a warning and marks the tip unknown, and the first append reads the tip again under its locks. A re-anchor whose read raises keeps the live-log identity it compared against, so the next append reads the tip again too. While the read keeps failing, the append fails like any unwritable audit: a `critical=True` audit is denied, and a best-effort batch is dropped and counted in `dropped_events` (the writer retries only a transient error, and `EACCES`, which a Windows sharing violation also raises, is not one).
 - Append-only: no in-place edits; pruning rewrites with chain rebuild
@@ -102,7 +102,7 @@ like `_bg`; other unrecognized session keys retain the legacy `slack` fallback.
   authenticates the `session_pid_<pid>.txt` -> session-key mapping consumed by
   strict MCP identity resolvers. It does **not** sign with the raw
   `sel_hmac.key`; it derives a purpose-specific subkey
-  (`HMAC(sel_hmac.key, "kirocrew.session_pid.sig.v1")`) so the sidecar MAC and
+  (`HMAC(sel_hmac.key, "ajcrew.session_pid.sig.v1")`) so the sidecar MAC and
   the SEL audit chain never share a signing key — a MAC minted under one
   protocol is valueless to the other (no cross-protocol confusion/replay). The
   key file remains a single on-disk trust root; only `SecurityEventLog` ever
@@ -212,8 +212,8 @@ Two bounds, and the tighter wins:
 ## CLI
 
 ```text
-kirocrew security events [-n LIMIT] [--since AGE_OR_TIME] [--until AGE_OR_TIME]
-kirocrew security verify
+ajcrew security events [-n LIMIT] [--since AGE_OR_TIME] [--until AGE_OR_TIME]
+ajcrew security verify
 ```
 
 `events` defaults to 20 rows. `--since` and `--until` accept relative ages such

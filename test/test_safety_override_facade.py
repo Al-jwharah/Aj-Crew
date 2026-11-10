@@ -1,9 +1,9 @@
-"""``kiro_crew.safety_override`` keeps the patch seams and the surface the one module had.
+"""``aj_crew.safety_override`` keeps the patch seams and the surface the one module had.
 
-``kiro_crew.safety_override`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over
+``aj_crew.safety_override`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over
 ``safety_override_records``, ``safety_override_permits``, ``safety_override_breadcrumb``
 and ``safety_override_grant``. Callers, tests and documents still reach every name as
-``kiro_crew.safety_override.<name>``, and the moved code reads its names as plain module
+``aj_crew.safety_override.<name>``, and the moved code reads its names as plain module
 globals, so a patch through the facade reaches that code only because the mirror writes
 it into every module holding the name.
 
@@ -29,8 +29,8 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror, safety_override
-from kiro_crew.platform import context as ctx_mod
+from aj_crew import _facade_mirror, safety_override
+from aj_crew.platform import context as ctx_mod
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_safety_override_facade")
 
@@ -38,14 +38,14 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_safety_override_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.safety_override"
+FACADE = "aj_crew.safety_override"
 SRC_DIR = Path(safety_override.__file__).resolve().parent
 #: The owners, lowest layer first.
 OWNERS = (
-    "kiro_crew.safety_override_records",
-    "kiro_crew.safety_override_permits",
-    "kiro_crew.safety_override_breadcrumb",
-    "kiro_crew.safety_override_grant",
+    "aj_crew.safety_override_records",
+    "aj_crew.safety_override_permits",
+    "aj_crew.safety_override_breadcrumb",
+    "aj_crew.safety_override_grant",
 )
 _THIS_FILE = Path(__file__).resolve()
 
@@ -70,12 +70,12 @@ _KNOWN_SEAMS = frozenset(
 
 #: The globals the family rebinds at run time with ``global``, and the owner holding each.
 _REBOUND_GLOBALS = {
-    "_breadcrumb_pending": "kiro_crew.safety_override_breadcrumb",
-    "_breadcrumb_worker": "kiro_crew.safety_override_breadcrumb",
-    "_singleton": "kiro_crew.safety_override_grant",
-    "_suspended_trust_restore": "kiro_crew.safety_override_grant",
-    "_yolo_policy_permitted": "kiro_crew.safety_override_grant",
-    "_yolo_policy_resolved": "kiro_crew.safety_override_grant",
+    "_breadcrumb_pending": "aj_crew.safety_override_breadcrumb",
+    "_breadcrumb_worker": "aj_crew.safety_override_breadcrumb",
+    "_singleton": "aj_crew.safety_override_grant",
+    "_suspended_trust_restore": "aj_crew.safety_override_grant",
+    "_yolo_policy_permitted": "aj_crew.safety_override_grant",
+    "_yolo_policy_resolved": "aj_crew.safety_override_grant",
 }
 
 
@@ -146,19 +146,19 @@ def test_a_patched_sel_reaches_the_class_and_the_breadcrumb_reader() -> None:
     sentinel = object()
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(safety_override, "sel", lambda: sentinel)
-        for owner in ("kiro_crew.safety_override_grant", "kiro_crew.safety_override_breadcrumb"):
+        for owner in ("aj_crew.safety_override_grant", "aj_crew.safety_override_breadcrumb"):
             assert vars(sys.modules[owner])["sel"]() is sentinel, owner
-    assert vars(sys.modules["kiro_crew.safety_override_grant"])["sel"] is safety_override.sel
+    assert vars(sys.modules["aj_crew.safety_override_grant"])["sel"] is safety_override.sel
 
 
 def test_the_clock_the_tests_patch_resolves_through_the_facade() -> None:
-    """``mock.patch("kiro_crew.safety_override.time.monotonic")`` patches the stdlib clock
+    """``mock.patch("aj_crew.safety_override.time.monotonic")`` patches the stdlib clock
     the facade names: ``safety_override.time`` is still that module, and it is the one the
     grant owner's ``SafetyOverride`` reads."""
     import time
 
     assert safety_override.time is time
-    assert vars(sys.modules["kiro_crew.safety_override_grant"])["time"] is time
+    assert vars(sys.modules["aj_crew.safety_override_grant"])["time"] is time
 
 
 def test_the_owners_load_lowest_layer_first() -> None:
@@ -166,7 +166,7 @@ def test_the_owners_load_lowest_layer_first() -> None:
     owners listed before it -- never the facade."""
     owners = list(_index().owners)
     assert owners == list(OWNERS)
-    on_disk = sorted(f"kiro_crew.{p.stem}" for p in SRC_DIR.glob("safety_override_*.py"))
+    on_disk = sorted(f"aj_crew.{p.stem}" for p in SRC_DIR.glob("safety_override_*.py"))
     assert on_disk == sorted(OWNERS)
     late: dict[str, list[str]] = {}
     for position, owner in enumerate(owners):
@@ -225,7 +225,7 @@ def test_a_read_through_the_facade_follows_the_singleton_its_owner_holds() -> No
     """``safety_override()`` creates the singleton in the grant owner; the facade serves
     that owner's current binding, so ``reset_singleton`` and a fresh ``safety_override()``
     are what a reader of ``safety_override._singleton`` sees."""
-    grant = sys.modules["kiro_crew.safety_override_grant"]
+    grant = sys.modules["aj_crew.safety_override_grant"]
     safety_override.reset_singleton()
     assert safety_override._singleton is None
     instance = safety_override.safety_override()
@@ -237,7 +237,7 @@ def test_a_read_through_the_facade_follows_the_singleton_its_owner_holds() -> No
 def test_the_ceiling_hooks_are_registered_once_and_reach_the_verdict() -> None:
     """The facade registers the invalidate and install hooks at import, once each; the
     invalidate hook is the grant owner's function, which rebinds the verdict state there."""
-    grant = sys.modules["kiro_crew.safety_override_grant"]
+    grant = sys.modules["aj_crew.safety_override_grant"]
     invalidate = [
         h for h in ctx_mod._CEILING_INVALIDATE_HOOKS if h is grant._on_ceiling_invalidating
     ]
@@ -256,7 +256,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for owner in _index().owners:
         for node in ast.parse(_owner_path(owner).read_text(encoding="utf-8")).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     if f"{node.module}.{alias.name}" not in family:
@@ -280,7 +280,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
     """An owner binds these by import, so the facade names each one from its home module
-    under ``TYPE_CHECKING``, and ``from kiro_crew.safety_override import config_dir``
+    under ``TYPE_CHECKING``, and ``from aj_crew.safety_override import config_dir``
     type-checks as it did before the split."""
     served = set(_index().exports)
     expected = {name: home for name, home in _home_imports().items() if name in served}
@@ -290,13 +290,13 @@ def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers()
 
 def test_the_family_logs_under_the_facade_name() -> None:
     """One logger, still named for the facade module, held by every owner that logs:
-    ``caplog`` filters keyed on ``kiro_crew.safety_override`` keep seeing the records."""
+    ``caplog`` filters keyed on ``aj_crew.safety_override`` keep seeing the records."""
     assert safety_override.logger.name == FACADE
     loggers = {m.__name__: vars(m)["logger"] for m in _family() if "logger" in vars(m)}
     expected = {
-        "kiro_crew.safety_override_permits",
-        "kiro_crew.safety_override_breadcrumb",
-        "kiro_crew.safety_override_grant",
+        "aj_crew.safety_override_permits",
+        "aj_crew.safety_override_breadcrumb",
+        "aj_crew.safety_override_grant",
     }
     assert expected <= set(loggers)
     others = sorted(name for name, value in loggers.items() if value is not safety_override.logger)

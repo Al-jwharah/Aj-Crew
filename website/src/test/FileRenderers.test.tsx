@@ -214,7 +214,7 @@ describe('OfficeViewer', () => {
       expect(screen.getByTestId('office-slide-outline')).toBeInTheDocument()
     })
     const degrade = screen.getByTestId('office-slides-degrade')
-    expect(degrade).toHaveTextContent(/need LibreOffice on the machine Kiro Crew runs on/)
+    expect(degrade).toHaveTextContent(/need LibreOffice on the machine Aj Crew runs on/)
     expect(degrade).toHaveTextContent('sudo apt install libreoffice')
     expect(screen.queryByTestId('office-slides')).toBeNull()
     // The remedy is a hand-off, not only a command to copy: the button stages a
@@ -503,7 +503,7 @@ describe('OfficeViewer', () => {
   })
 
   it('extracts the basename from a Windows path with backslash separators', async () => {
-    // Kiro Crew ships native on Windows where filePath arrives as
+    // Aj Crew ships native on Windows where filePath arrives as
     // C:\Users\...\report.docx. A `/`-only split would surface the whole
     // path — split on BOTH separators to match MarkdownRenderer/VectorMemoryCard.
     stubPreview({}, false, 415)  // force fallback so the download card is visible

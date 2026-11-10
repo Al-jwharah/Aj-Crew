@@ -14,26 +14,26 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import autonudge as _an
-from kiro_crew import validation
-from kiro_crew import work_ledger as wl
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
-from kiro_crew.autonudge_service import firing
-from kiro_crew.crew_log import projection
-from kiro_crew.dashboard.handlers import autonudge as autonudge_routes
-from kiro_crew.probes import work_ledger as probe
+from aj_crew import autonudge as _an
+from aj_crew import validation
+from aj_crew import work_ledger as wl
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew.autonudge_service import firing
+from aj_crew.crew_log import projection
+from aj_crew.dashboard.handlers import autonudge as autonudge_routes
+from aj_crew.probes import work_ledger as probe
 
 CONDUCTOR = "chat-7-777"
 
 
 @pytest.fixture(autouse=True)
 def _enable(_floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    _floor_monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
 
 
 @pytest.fixture(autouse=True)
@@ -257,7 +257,7 @@ async def test_a_malformed_hold_start_releases_without_crashing(svc, _nosleep, l
 def _pin_clock(monkeypatch, now: float) -> None:
     """Pin both holds' own clock -- the module-local ``time`` bindings in ``firing``
     and ``timers`` -- to *now*, leaving the shared ``time`` module alone."""
-    from kiro_crew.autonudge_service import timers
+    from aj_crew.autonudge_service import timers
 
     real = firing.time
     pinned = SimpleNamespace(**{n: getattr(real, n) for n in dir(real) if not n.startswith("__")})

@@ -39,12 +39,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.acp.session_provider import AcpSessionProvider
 
 
 def _handle_with_transcript(tmp_path, sid: str = "sid-provider"):
     """A real AcpSessionHandle carrying a real transcript, mid-turn."""
-    from kiro_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.acp.session_handle import AcpSessionHandle
 
     handle = AcpSessionHandle.__new__(AcpSessionHandle)
     handle._session_id = sid
@@ -79,7 +79,7 @@ async def test_shutdown_destroys_the_handle_when_cancelled_mid_cancel(tmp_path, 
     handle.cancel = _suspended_cancel
     provider = AcpSessionProvider(handle, runtime, owns_runtime=False)
 
-    monkeypatch.setattr("kiro_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions)
+    monkeypatch.setattr("aj_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions)
 
     task = asyncio.ensure_future(provider.shutdown())
     await entered.wait()
@@ -105,7 +105,7 @@ async def test_a_cancel_that_merely_times_out_still_destroys(tmp_path, monkeypat
 
     handle.cancel = _slow_cancel
     provider = AcpSessionProvider(handle, runtime, owns_runtime=False)
-    monkeypatch.setattr("kiro_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions)
+    monkeypatch.setattr("aj_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions)
 
     async def _timeout(awaitable: Coroutine[Any, Any, None], *, timeout: float) -> None:
         """Model ``wait_for`` taking ownership before its timeout fires."""
@@ -114,7 +114,7 @@ async def test_a_cancel_that_merely_times_out_still_destroys(tmp_path, monkeypat
         raise asyncio.TimeoutError
 
     monkeypatch.setattr(
-        "kiro_crew.acp.session_provider.asyncio.wait_for",
+        "aj_crew.acp.session_provider.asyncio.wait_for",
         _timeout,
     )
 
@@ -135,7 +135,7 @@ async def test_restricted_shutdown_cannot_keep_native_transcript(
     handle._turn_done.set()
     runtime.kill = AsyncMock()
     provider = AcpSessionProvider(handle, runtime, owns_runtime=owns_runtime)
-    monkeypatch.setattr("kiro_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions)
+    monkeypatch.setattr("aj_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions)
     provider.memory_mode = mode
     provider.set_keep_transcript(True)
 
@@ -155,7 +155,7 @@ async def test_an_idle_session_still_destroys(tmp_path, monkeypatch):
     handle._turn_done.set()  # no active turn
     handle.cancel = AsyncMock()
     provider = AcpSessionProvider(handle, runtime, owns_runtime=False)
-    monkeypatch.setattr("kiro_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions)
+    monkeypatch.setattr("aj_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions)
 
     await provider.shutdown()
 

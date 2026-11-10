@@ -14,8 +14,8 @@ import pytest
 from autonudge_helpers import _enable  # noqa: F401
 from autonudge_helpers import _structured_monitor
 
-from kiro_crew import autonudge as _an
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew import autonudge as _an
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
 
 #: Lost-run ceiling for synchronization the test itself must release. It is a
 #: hang guard whose expiry fails at the awaited line, never a performance
@@ -43,7 +43,7 @@ def _reading(state: str = "MERGED", *, status: str = "ok", head: str = "a" * 40)
     the kernel verdict would test a state the code cannot reach: the fetcher emits no
     terminal observation, so no kernel verdict is ever TERMINAL.
     """
-    from kiro_crew.probes import gh_pr
+    from aj_crew.probes import gh_pr
 
     return gh_pr.PrObservation(
         repo="acme/widgets",
@@ -101,7 +101,7 @@ async def test_only_a_merged_subject_is_recorded_as_a_success(
     needed" about the one case that needs them most. The reading distinguishes the
     two, so the core reads its typed facts rather than delivered prose.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -134,7 +134,7 @@ async def test_the_marker_writes_do_not_release_the_lock_mid_write(tmp_path, mon
     ``_persist_locked`` releases ``_lock`` on cancel while the executor write is in
     flight, so a stale marker snapshot could land on top of a newer update.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -182,7 +182,7 @@ async def test_the_revalidation_does_not_consume_the_ticks_dedupe_identity(tmp_p
     ``identity`` is the kernel's dedupe key. Sharing the tick's key would mark a fresh
     comment seen here as reported, and the next real tick would read it as unchanged.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     seen: list[str] = []
 
@@ -225,7 +225,7 @@ async def test_a_changed_terminal_classification_does_not_settle(tmp_path, monke
     Settling under the stale "blocked" marker would announce the merge as an unmerged
     close. A changed classification drops the debt and keeps the watch alive.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -267,7 +267,7 @@ async def test_a_settlement_revalidates_before_it_deactivates(
     A channel turn runs inline and can take minutes, long enough for a reopen, and the
     other reopen guards run only on the next tick.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -309,7 +309,7 @@ async def test_an_unobservable_subject_does_not_get_settled(tmp_path, monkeypatc
 
     A failed fetch or probe cannot CONFIRM the subject is finished.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -345,7 +345,7 @@ async def test_a_retarget_does_not_overwrite_a_future_version_monitor(tmp_path):
     The future-version monitor belongs to the newer gateway. The revival guard runs
     after the retarget, so the retarget needs the same rule.
     """
-    from kiro_crew.monitoring.models import MONITOR_STATE_VERSION
+    from aj_crew.monitoring.models import MONITOR_STATE_VERSION
 
     async def on_fire(loop):
         return True
@@ -449,7 +449,7 @@ async def test_a_failed_clear_write_leaves_the_debt_cleared(tmp_path, monkeypatc
     Restoring it would let the next turn settle a live subject. Memory saying "no debt"
     keeps the watch running; after a restart the forced re-observation clears it again.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -504,7 +504,7 @@ async def test_a_cancelled_settlement_still_counts_the_delivered_turn(tmp_path, 
     the settlement.
     """
 
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -557,7 +557,7 @@ async def test_terminal_debt_is_re_observed_rather_than_spending_a_free_tick(tmp
     A subject with terminal debt has no work in progress to protect, and the clearing
     for a reopen lives after the poll, so the debt is re-observed.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     polls: list[str] = []
 
@@ -611,7 +611,7 @@ async def test_a_reopened_subject_clears_the_owed_terminal_turn(
     Otherwise the next delivered turn would deactivate a live watch. A FALLBACK means
     nothing was observed, so it keeps the debt rather than lose the terminal news.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -702,7 +702,7 @@ async def test_a_retarget_during_lock_acquisition_does_not_crash_the_settlement(
     An instruction edited to name no subject clears ``loop.monitor``; dereferencing it
     would raise and leave the loop ACTIVE with no timer.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -751,7 +751,7 @@ async def test_a_failed_settlement_write_leaves_the_terminal_turn_owed(tmp_path,
     A failed write after the emit would report a finish the record lacks, and a restart
     would deliver the final turn twice.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     events: list[str] = []
 
@@ -810,7 +810,7 @@ async def test_the_owed_terminal_turn_settles_only_once_it_lands(tmp_path, monke
     watchable: the probe re-raises a terminal state on every tick (it is not
     deduped), which is what makes the retry converge instead of announcing forever.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return delivers
@@ -868,7 +868,7 @@ async def test_a_channel_loop_gets_a_final_turn_but_a_dashboard_loop_does_not(
     So a channel loop gets one final turn to report into its thread, and a dashboard
     loop does not pay for one.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -915,7 +915,7 @@ async def test_the_terminal_settlement_is_serialized_against_update(tmp_path, mo
     The settlement takes the MAINTENANCE lock ``update`` holds; ``_lock`` alone is not
     the lock ``update`` contends for.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -964,7 +964,7 @@ async def test_the_terminal_transition_is_on_disk_before_the_user_is_told(tmp_pa
     therefore follow the persist -- while still preceding the deactivation, whose
     cancel reaches this very task.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     order: list[str] = []
 
@@ -1052,7 +1052,7 @@ async def test_a_failed_terminal_write_keeps_the_watch_alive(tmp_path, monkeypat
     ``_timer`` awaits the gate unguarded, so an escape would leave a dead watch that
     looks calm. The marks are undone and the tick fires instead.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -1099,7 +1099,7 @@ async def test_a_retarget_under_a_terminal_verdict_is_not_settled(tmp_path, monk
     while the probe was in flight, the new subject has been observed by nothing,
     so settling the loop on that verdict would stop a live watch.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -1141,7 +1141,7 @@ async def test_a_terminal_watch_notifies_even_though_it_cancels_its_own_timer(
     after the await can be dropped. It follows two fsync'd writes, slow on Windows
     runners; ``slow-disk`` holds each write so a fixed wait would misread it.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     events: list[str] = []
     reasons: list[str] = []
@@ -1206,7 +1206,7 @@ async def test_a_verdict_is_discarded_when_the_loop_was_retargeted_mid_poll(tmp_
     A terminal verdict about the OLD pull request must not stop a watch that has
     just been pointed at a live one.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -1248,7 +1248,7 @@ async def test_a_terminal_verdict_leaves_no_timer_armed(tmp_path, monkeypatch):
     loop, so a re-arm on that path would poll a merged pull request forever and
     re-emit its expiry notification every tick.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):  # pragma: no cover - must not be reached
         raise AssertionError("a terminal verdict must not fire")
@@ -1326,7 +1326,7 @@ async def test_retargeting_the_instruction_retargets_the_probe(tmp_path):
 
 @pytest.mark.asyncio
 async def test_a_terminal_subject_stops_the_loop_without_a_turn(tmp_path, monkeypatch):
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     fired: list[NudgeLoop] = []
 

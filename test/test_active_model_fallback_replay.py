@@ -24,29 +24,29 @@ from subagent_turn_resilience_helpers import (  # noqa: F401 -- the autouse fixt
     _TransientError,
 )
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.acp.types import ACP_BACKEND_GOOSE, PROVIDER_LABEL_DEFAULT
-from kiro_crew.context import ContextBuilder
-from kiro_crew.context_assembly.sections import active_model_block, restate_active_model
-from kiro_crew.learn import LessonStore
-from kiro_crew.llm_helpers import (
+from aj_crew.acp.client import AcpError
+from aj_crew.acp.types import ACP_BACKEND_GOOSE, PROVIDER_LABEL_DEFAULT
+from aj_crew.context import ContextBuilder
+from aj_crew.context_assembly.sections import active_model_block, restate_active_model
+from aj_crew.learn import LessonStore
+from aj_crew.llm_helpers import (
     _TRANSIENT_RETRIES,
     TRANSIENT_RETRIES,
     TURN_FALLBACK_ATTR,
     ActiveModelLine,
     stream_and_collect,
 )
-from kiro_crew.memory import MemoryStore
-from kiro_crew.prompt_segments import (
+from aj_crew.memory import MemoryStore
+from aj_crew.prompt_segments import (
     SOURCE_INJECTED,
     SOURCE_USER,
     PromptSegment,
     SegmentedPrompt,
     segments_of,
 )
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-from kiro_crew.skills import SkillsLoader
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.skills import SkillsLoader
 
 PRIMARY = "primary-model"
 FALLBACK = "fb-1"
@@ -228,7 +228,7 @@ class TestStreamAndCollectReplay:
             yield LLMEvent(kind=EVENT_COMPLETE)
 
         provider = _switching_provider(_stream)
-        with patch("kiro_crew.llm_helpers.transient_retry_delay", return_value=0.0):
+        with patch("aj_crew.llm_helpers.transient_retry_delay", return_value=0.0):
             result = await stream_and_collect(
                 provider, _prompt(PRIMARY), fallback_models=[FALLBACK]
             )
@@ -271,7 +271,7 @@ class TestStreamAndCollectReplay:
             yield LLMEvent(kind=EVENT_COMPLETE)
 
         provider = _switching_provider(_stream)
-        with patch("kiro_crew.llm_helpers.transient_retry_delay", return_value=0.0):
+        with patch("aj_crew.llm_helpers.transient_retry_delay", return_value=0.0):
             await stream_and_collect(provider, text, fallback_models=[FALLBACK])
 
         assert sent == [text] * (_TRANSIENT_RETRIES + 2)
@@ -333,8 +333,8 @@ async def test_the_subagent_fallback_replay_names_the_fallback() -> None:
     mgr = _manager(sessions)
     mgr._ctx_builder.build_message = MagicMock(return_value=(_prompt(PRIMARY, "do work"), None))
     with (
-        patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0),
-        patch("kiro_crew.subagent.configured_fallback_chain", return_value=(FALLBACK,)),
+        patch("aj_crew.subagent.transient_retry_delay", return_value=0.0),
+        patch("aj_crew.subagent.configured_fallback_chain", return_value=(FALLBACK,)),
     ):
         info = await _spawn_and_wait(mgr)
 

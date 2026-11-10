@@ -1,7 +1,7 @@
 // Carry settings across the npm `name` rename by SEEDING the new store's file.
 //
 // Electron derives the userData directory from the npm package name, so renaming it
-// ("kirocrew-electron-mac" -> "kirocrew-desktop" / "kirocrew-desktop-nightly")
+// ("ajcrew-electron-mac" -> "ajcrew-desktop" / "ajcrew-desktop-nightly")
 // repoints electron-store at a brand-new directory and every setting in the old one
 // is silently orphaned. The rename itself is correct and load-bearing — a shared name
 // made both channels write ONE userData dir and ONE updater cache, so uninstalling
@@ -41,7 +41,7 @@ const path = require("path");
 // The pre-rename npm package name, and so the pre-rename userData directory. Pinned
 // rather than derived: the rename removed it from package.json, so there is nothing
 // left to compute it from.
-const LEGACY_STORE_NAME = "kirocrew-electron-mac";
+const LEGACY_STORE_NAME = "ajcrew-electron-mac";
 
 // electron-store's file name inside a userData directory.
 const STORE_FILE_NAME = "config.json";
@@ -104,7 +104,7 @@ const MIGRATED_KEYS = [
   // carries an empty map, and the host migration then finds nothing to convert.
   "remoteHosts",
   "remoteHost",
-  "kirocrewBinPath",
+  "ajcrewBinPath",
   "sshTimeoutMs",
   // Comfort, but immediately visible as "the app forgot me".
   "windowState",

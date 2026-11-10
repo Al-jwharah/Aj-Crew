@@ -22,12 +22,12 @@ vi.mock('../pages/SystemPage', () => ({ default: () => null }))
 vi.mock('../pages/ProjectsPage', () => ({ default: () => null }))
 vi.mock('../pages/LogsPage', () => ({ default: () => <div data-testid="logs-page">LogsPage</div> }))
 vi.mock('../pages/DeveloperPage', () => ({ default: () => <div data-testid="developer-page">DeveloperPage</div> }))
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => null }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => null }))
 vi.mock('../pages/CapabilitiesPage', () => ({ default: () => null }))
 vi.mock('../pages/NotificationsPage', () => ({ default: () => null }))
 vi.mock('../pages/SchedulePage', () => ({ default: () => null }))
 vi.mock('../hooks/useWebSocket', () => ({ useWebSocket: () => ({ subscribeLogs: () => {} }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'kirocrew' }], defaultAgent: 'kirocrew' })) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'ajcrew' }], defaultAgent: 'ajcrew' })) }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({
   default: ({ content }: { content: string }) => <span>{content}</span>,
@@ -57,7 +57,7 @@ vi.mock('../api/client', () => ({
     applyUpdate: vi.fn().mockResolvedValue({}),
     cancelUpdate: vi.fn().mockResolvedValue({}),
     setAutoUpdate: vi.fn().mockResolvedValue({}),
-    kirocrewConfig: vi.fn().mockResolvedValue({ auto_update: true }),
+    ajcrewConfig: vi.fn().mockResolvedValue({ auto_update: true }),
   },
   isAuthBannerShown: vi.fn(() => false),
   ApiError: class ApiError extends Error {},
@@ -121,7 +121,7 @@ beforeEach(() => {
   vi.mocked(api.applyUpdate).mockResolvedValue({} as never)
   vi.mocked(api.cancelUpdate).mockResolvedValue({} as never)
   vi.mocked(api.setAutoUpdate).mockResolvedValue({} as never)
-  vi.mocked(api.kirocrewConfig).mockResolvedValue({ auto_update: true } as never)
+  vi.mocked(api.ajcrewConfig).mockResolvedValue({ auto_update: true } as never)
   vi.mocked(api.system).mockResolvedValue({ mem_used_gb: 4, mem_total_gb: 16, cpu_pct: 25, disk_total_gb: 100, disk_free_gb: 60 } as never)
   vi.mocked(api.sessionsUsage).mockResolvedValue({ usage: { available: false } } as never)
 })
@@ -222,7 +222,7 @@ describe('App — changelog modal controls', () => {
     expect(toggle.getAttribute('aria-checked')).toBe('true')
 
     // The gateway now holds what it was sent, as the re-read after the save shows.
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ auto_update: false } as never)
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ auto_update: false } as never)
     fireEvent.click(toggle)
     await waitFor(() => expect(api.setAutoUpdate).toHaveBeenCalledWith(false))
     await waitFor(() => expect(toggle.getAttribute('aria-checked')).toBe('false'))
@@ -242,7 +242,7 @@ describe('App — applying an update', () => {
   it('replaces the changelog with the progress overlay', async () => {
     await startUpdate()
     await waitFor(() => expect(api.applyUpdate).toHaveBeenCalled())
-    expect(await screen.findByText('Updating Kiro Crew…')).toBeInTheDocument()
+    expect(await screen.findByText('Updating Aj Crew…')).toBeInTheDocument()
     expect(screen.queryByRole('dialog', { name: 'Changelog' })).toBeNull()
     // No step reported yet: the overlay shows its neutral waiting copy.
     expect(screen.getByText('Starting update…')).toBeInTheDocument()
@@ -257,7 +257,7 @@ describe('App — applying an update', () => {
     expect(within(dialog).getByText('Update Failed')).toBeInTheDocument()
     expect(within(dialog).getByText('gateway is mid-restart')).toBeInTheDocument()
     // The overlay is not mounted: the apply never started.
-    expect(screen.queryByText('Updating Kiro Crew…')).toBeNull()
+    expect(screen.queryByText('Updating Aj Crew…')).toBeNull()
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Dismiss' }))
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Update error' })).toBeNull())
@@ -304,7 +304,7 @@ describe('App — applying an update', () => {
 describe('App — update progress overlay', () => {
   it('marks earlier steps done and times the active one', async () => {
     const { store } = await startUpdate()
-    await screen.findByText('Updating Kiro Crew…')
+    await screen.findByText('Updating Aj Crew…')
 
     act(() => { store.dispatch(setUpdateProgress({ step: 'building', detail: 'compiling the wheel' })) })
 
@@ -323,7 +323,7 @@ describe('App — update progress overlay', () => {
     // from a hang. Disconnected-while-updating must say the gateway is
     // restarting and that reconnection is in progress.
     const { store } = await startUpdate()
-    await screen.findByText('Updating Kiro Crew…')
+    await screen.findByText('Updating Aj Crew…')
 
     await act(async () => { store.dispatch(setUpdateProgress({ step: 'restarting', detail: 'Restarting server…' })) })
     expect(screen.getByText('Page will reconnect when ready…')).toBeInTheDocument()
@@ -349,7 +349,7 @@ describe('App — update progress overlay', () => {
     // an unrecognised step rendered as a stall until the five-minute stuck
     // timer, with the spinner still pulsing above the reason.
     const { store } = await startUpdate()
-    await screen.findByText('Updating Kiro Crew…')
+    await screen.findByText('Updating Aj Crew…')
 
     act(() => { store.dispatch(setUpdateProgress({ step, detail: 'Fast-forward to 9f8202496fcf failed (git merge --ff-only)' })) })
 

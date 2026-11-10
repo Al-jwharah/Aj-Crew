@@ -3,7 +3,7 @@
 The Linux sandbox starts each agent child in its own user namespace, where a
 ``KEYRING:persistent`` cache is a different, empty keyring. With no
 ``/tmp/krb5cc_<uid>`` file for :func:`resolve_krb5_ccname` to redirect to, the
-spawn path logs one warning naming the remedy and ``kirocrew doctor`` prints an
+spawn path logs one warning naming the remedy and ``ajcrew doctor`` prints an
 advisory row in its Credentials section.
 """
 
@@ -16,11 +16,11 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.env as env_mod
-import kiro_crew.env_krb5_conf as conf_mod
-import kiro_crew.env_krb5_keyring as keyring_mod
-from kiro_crew import cli_doctor
-from kiro_crew.doctor_checks import access
+import aj_crew.env as env_mod
+import aj_crew.env_krb5_conf as conf_mod
+import aj_crew.env_krb5_keyring as keyring_mod
+from aj_crew import cli_doctor
+from aj_crew.doctor_checks import access
 
 # The reader splits KRB5_CONFIG on ':' as libkrb5 does on Linux, so a Windows
 # drive-letter temp path cannot stand in for a config file here.
@@ -199,7 +199,7 @@ class TestSpawnWarning:
     def test_warns_once_when_left_on_keyring(self, linux, monkeypatch, tmp_path, caplog) -> None:
         self._no_file_cache(monkeypatch)
         conf = _conf(tmp_path, "[libdefaults]\n default_ccache_name = KEYRING:persistent:%{uid}\n")
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.env_krb5_keyring"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.env_krb5_keyring"):
             for _ in range(3):
                 env = {"KRB5_CONFIG": str(conf)}
                 env_mod.resolve_krb5_ccname(env)
@@ -214,7 +214,7 @@ class TestSpawnWarning:
         monkeypatch.setattr(env_mod, "_reject_reason", lambda cache: None)
         conf = _conf(tmp_path, "[libdefaults]\n default_ccache_name = KEYRING:persistent:%{uid}\n")
         env = {"KRB5_CONFIG": str(conf)}
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.env_krb5_keyring"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.env_krb5_keyring"):
             env_mod.resolve_krb5_ccname(env)
         assert env["KRB5CCNAME"] == "FILE:/tmp/krb5cc_4242"
         assert not [r for r in caplog.records if r.levelno == logging.WARNING]
@@ -222,7 +222,7 @@ class TestSpawnWarning:
     def test_no_warning_without_keyring_default(self, linux, monkeypatch, tmp_path, caplog) -> None:
         self._no_file_cache(monkeypatch)
         conf = _conf(tmp_path, "[libdefaults]\n dns_lookup_kdc = true\n")
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.env_krb5_keyring"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.env_krb5_keyring"):
             env_mod.resolve_krb5_ccname({"KRB5_CONFIG": str(conf)})
         assert not [r for r in caplog.records if r.levelno == logging.WARNING]
 

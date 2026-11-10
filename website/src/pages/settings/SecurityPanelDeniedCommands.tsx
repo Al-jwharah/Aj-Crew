@@ -577,7 +577,7 @@ export function DeniedCommandsSection({ draft, onDraftChange, noteDraft, onNoteD
   }
 
   const confirmBody = !confirm ? '' : confirm.kind === 'disable-all'
-    ? i18nT('pages.settings.securityPanel.disabling_all_built_in_denies_removes_kirocrew_s')
+    ? i18nT('pages.settings.securityPanel.disabling_all_built_in_denies_removes_ajcrew_s')
     : i18nT('pages.settings.securityPanel.disabling_weakens_protection', { name: confirm.description })
 
   // The one askAgent decision for every notice in this section: the add-pattern
@@ -642,7 +642,7 @@ export function DeniedCommandsSection({ draft, onDraftChange, noteDraft, onNoteD
         * operator reading either the built-in list or their own patterns as a
         * fence over-trusts it. Card B is where a pattern is authored, so the note
         * cannot live inside Card A. Same disclosure as the "What this tier cannot
-        * see" section of `src/kiro_crew/docs/blocked-commands.md`, which is where
+        * see" section of `src/aj_crew/docs/blocked-commands.md`, which is where
         * the closure mechanism (the OS-level sandbox) is explained. */}
       <div className="text-[12px] text-muted mb-2 leading-relaxed" data-testid="denied-indirection-limit">
         {i18nT('pages.settings.securityPanel.rules_read_the_command_line_not_the_program_body')}
@@ -848,7 +848,7 @@ export function DeniedCommandsSection({ draft, onDraftChange, noteDraft, onNoteD
         </div>
         <label className="flex items-center gap-2.5 mt-4 cursor-pointer">
           <Checkbox checked={ack} onChange={e => setAck(e.target.checked)} />
-          <span className="text-[13px] text-text">{i18nT('pages.settings.securityPanel.i_understand_this_weakens_kirocrew_s_protection')}</span>
+          <span className="text-[13px] text-text">{i18nT('pages.settings.securityPanel.i_understand_this_weakens_ajcrew_s_protection')}</span>
         </label>
       </Modal>
     </SettingsSection>

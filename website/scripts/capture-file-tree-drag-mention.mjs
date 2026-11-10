@@ -38,7 +38,7 @@ const TREE_PATHS = ['README.md', 'package.json', 'docs/guide.md', 'docs/setup.md
 
 const slots = [{
   key: SLOT, title: 'Tree drag', running: false, last_message: 'hi', messages: 2,
-  agent: 'kirocrew', memory_mode: 'persistent', project: PROJECT,
+  agent: 'ajcrew', memory_mode: 'persistent', project: PROJECT,
   modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0,
 }]
 const t0 = Math.floor(Date.now() / 1000) - 600

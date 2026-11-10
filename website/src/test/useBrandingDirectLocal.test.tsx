@@ -82,7 +82,7 @@ describe('useBranding — directLocal mapping', () => {
 
     // Nothing resolved yet, so the provider keeps its defaults.
     expect(result.current.directLocal).toBe(false)
-    expect(result.current.botName).toBe('Kiro Crew')
+    expect(result.current.botName).toBe('Aj Crew')
   })
 
   it('recovers directLocal true when a failed first fetch is followed by a successful retry', async () => {
@@ -114,7 +114,7 @@ describe('useBranding — directLocal mapping', () => {
 
       await act(async () => { await vi.advanceTimersByTimeAsync(20_000) })
       expect(brandingMock).toHaveBeenCalledTimes(4)
-      expect(result.current.botName).toBe('Kiro Crew')
+      expect(result.current.botName).toBe('Aj Crew')
 
       await act(async () => { await vi.advanceTimersByTimeAsync(40_000) })
       await waitFor(() => expect(result.current.botName).toBe('Back'))

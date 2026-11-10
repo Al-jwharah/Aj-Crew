@@ -71,7 +71,7 @@ vi.mock('../api/client', async (importOriginal) => {
       get: (_t, p: string) => {
         if (p === 'chatFolders') return vi.fn().mockResolvedValue([])
         if (p === 'tagColumns') return vi.fn().mockResolvedValue(mocks.columns)
-        if (p === 'kirocrewConfig') return vi.fn(async () => structuredClone(mocks.config))
+        if (p === 'ajcrewConfig') return vi.fn(async () => structuredClone(mocks.config))
         if (p === 'setManualOrder') return mocks.setManualOrder
         return vi.fn().mockResolvedValue([])
       },
@@ -117,7 +117,7 @@ function renderBoard() {
   qc.setQueryData(['chat-folders'], [])
   qc.setQueryData(['tag-columns'], mocks.columns)
   qc.setQueryData(['chat-tags'], [])
-  qc.setQueryData(['kirocrewConfig'], structuredClone(mocks.config))
+  qc.setQueryData(['ajcrewConfig'], structuredClone(mocks.config))
   return render(
     <QueryClientProvider client={qc}>
       <Provider store={store}>

@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 from turn_harness import Raise, TurnScript, run_turn
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_SUBAGENT_LIST,
     STOP_REASON_CANCELLED,

@@ -76,7 +76,7 @@ const RUNNING_JOB = {
   steps: [
     { key: 'preflight', label: 'Checked your AWS setup', state: 'done' as const },
     { key: 'provision', label: 'Created the instance', state: 'done' as const },
-    { key: 'install', label: 'Installing Kiro Crew', state: 'active' as const },
+    { key: 'install', label: 'Installing Aj Crew', state: 'active' as const },
     { key: 'connect', label: 'Connect', state: 'pending' as const },
   ],
 }
@@ -171,7 +171,7 @@ describe('RemoteCrewPanel launch draft', () => {
     const launch = screen.getByRole('button', { name: /^Launch$/ })
     await waitFor(() => expect(launch).not.toBeDisabled())
     await u.click(launch)
-    expect(await screen.findByText('Installing Kiro Crew')).toBeInTheDocument()
+    expect(await screen.findByText('Installing Aj Crew')).toBeInTheDocument()
     first.unmount()
 
     renderWithProviders(<RemoteCrewPanel />, { store: first.store })
@@ -223,7 +223,7 @@ describe('RemoteCrewPanel launch draft', () => {
     await u.clear(subnet)
     await u.type(subnet, 'subnet-bbbb')
     finish(RUNNING_JOB)
-    expect(await screen.findByText('Installing Kiro Crew')).toBeInTheDocument()
+    expect(await screen.findByText('Installing Aj Crew')).toBeInTheDocument()
     first.unmount()
 
     renderWithProviders(<RemoteCrewPanel />, { store: first.store })
@@ -267,7 +267,7 @@ describe('RemoteCrewPanel launch draft', () => {
     const launch = screen.getByRole('button', { name: /^Launch$/ })
     await waitFor(() => expect(launch).not.toBeDisabled())
     await u.click(launch)
-    expect(await screen.findByText('Installing Kiro Crew')).toBeInTheDocument()
+    expect(await screen.findByText('Installing Aj Crew')).toBeInTheDocument()
     first.unmount()
 
     // A reload or gateway restart: a new store, the same browser storage.

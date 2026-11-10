@@ -13,12 +13,12 @@ import time
 
 import pytest
 
-from kiro_crew.autonudge import _OVERDUE_REARM_SECS, AutoNudgeService, NudgeLoop
+from aj_crew.autonudge import _OVERDUE_REARM_SECS, AutoNudgeService, NudgeLoop
 
 
 @pytest.fixture(autouse=True)
 def _enable(monkeypatch):
-    monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
 
 @pytest.fixture
@@ -91,7 +91,7 @@ async def test_delivered_fire_clears_deadline_then_turn_end_starts_fresh(svc, mo
         return True
 
     svc._on_fire = on_fire
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def _nosleep(_secs):
         return None
@@ -200,7 +200,7 @@ async def test_loops_overdue_at_boot_wake_one_stagger_apart(tmp_path):
     The n-th overdue loop is held n stagger gaps before its overdue beat; a loop
     whose deadline is still ahead keeps its own countdown and takes no hold.
     """
-    from kiro_crew.autonudge import _BOOT_WAKE_STAGGER_SECS
+    from aj_crew.autonudge import _BOOT_WAKE_STAGGER_SECS
 
     svc1 = AutoNudgeService(base_dir=tmp_path)
     await svc1.start()
@@ -246,7 +246,7 @@ async def test_a_boot_hold_naps_before_the_countdown(svc, monkeypatch):
     import asyncio as _asyncio
     from types import SimpleNamespace
 
-    from kiro_crew.autonudge_service import firing
+    from aj_crew.autonudge_service import firing
 
     await svc.start()
     loop = await svc.add(slot_key="chat-1-123", message="go", idle_secs=100)
@@ -447,7 +447,7 @@ async def test_update_during_nudge_turn_leaves_arm_to_turn_end(svc, monkeypatch)
         return True
 
     svc._on_fire = on_fire
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     real_sleep = _aio.sleep
 
@@ -484,7 +484,7 @@ async def test_turn_complete_fresh_deadline_is_persisted(svc, monkeypatch):
         return True
 
     svc._on_fire = on_fire
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     real_sleep = _aio.sleep
 

@@ -28,9 +28,9 @@ from test_acp_runtime import (
     _stop_reader,
 )
 
-from kiro_crew.acp._dispatch import classify_notification
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.engine_fallback import (
+from aj_crew.acp._dispatch import classify_notification
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.engine_fallback import (
     TRACKER_ATTR,
     EngineFallbackTracker,
     EngineFallbackWalk,
@@ -43,8 +43,8 @@ from kiro_crew.acp.engine_fallback import (
     tracker_of,
     walk_outcome,
 )
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     EVENT_MODEL_FALLBACK,
@@ -56,14 +56,14 @@ from kiro_crew.acp.types import (
     JsonRpcMessage,
     RefusalInfo,
 )
-from kiro_crew.dashboard import engine_fallback as dash
-from kiro_crew.llm_helpers import (
+from aj_crew.dashboard import engine_fallback as dash
+from aj_crew.llm_helpers import (
     TURN_FALLBACK_ATTR,
     annotate_model_fallback,
     engine_attributed_model,
     probe_fallback_restore,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 A, B, C = "model-a", "model-b", "model-c"
 
@@ -232,7 +232,7 @@ _WINDOWS = {A: 1_000_000, B: 200_000}
 
 @pytest.fixture
 def _known_windows(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew import model_registry
+    from aj_crew import model_registry
 
     monkeypatch.setattr(model_registry, "has_known_window", lambda m: m in _WINDOWS)
     monkeypatch.setattr(model_registry, "model_window", lambda m, **_: _WINDOWS.get(m))
@@ -894,7 +894,7 @@ def test_a_session_moved_off_a_hop_after_a_promotion_is_not_read() -> None:
     prefs = {"route": A}
     assert follow_engine_promotion(prefs, "route", provider, before=A) is False
     assert prefs == {"route": A}
-    from kiro_crew.llm_helpers import _annotate_engine_fallback
+    from aj_crew.llm_helpers import _annotate_engine_fallback
 
     provider = _provider_with(*_kas_promotion())
     setattr(provider, TURN_FALLBACK_ATTR, ("primary", A))
@@ -903,7 +903,7 @@ def test_a_session_moved_off_a_hop_after_a_promotion_is_not_read() -> None:
 
 
 def test_the_app_agent_launch_check_reads_a_real_provider_stack() -> None:
-    from kiro_crew.dashboard.chat_turn.app_agent_binding import _runs_app_agent_launch
+    from aj_crew.dashboard.chat_turn.app_agent_binding import _runs_app_agent_launch
 
     # The session-provider shape: provider._client._handle, beside a runtime.
     runtime = SimpleNamespace(_launch_agent="app-copy")
@@ -1125,7 +1125,7 @@ def _engine_promotes_f_to_g(slot: SimpleNamespace, client: object) -> EngineFall
 def test_a_promotion_during_crew_fallback_keeps_the_pin_and_moves_crews_record(
     kind: str,
 ) -> None:
-    from kiro_crew.llm_helpers import TURN_FALLBACK_ATTR
+    from aj_crew.llm_helpers import TURN_FALLBACK_ATTR
 
     slot = _crew_fallback_slot(kind)
     client = SimpleNamespace(served_model=G, _explicit_pick_epoch=0)
@@ -1148,7 +1148,7 @@ def test_a_promotion_during_crew_fallback_keeps_the_pin_and_moves_crews_record(
 
 @pytest.mark.parametrize("kind", ["throttle", "refusal"])
 def test_a_promotion_back_onto_the_primary_ends_crews_fallback(kind: str) -> None:
-    from kiro_crew.llm_helpers import TURN_FALLBACK_ATTR
+    from aj_crew.llm_helpers import TURN_FALLBACK_ATTR
 
     slot = _crew_fallback_slot(kind)
     client = SimpleNamespace(served_model=P, _explicit_pick_epoch=0)
@@ -1168,8 +1168,8 @@ def test_a_promotion_back_onto_the_primary_ends_crews_fallback(kind: str) -> Non
 
 @pytest.mark.asyncio
 async def test_crews_throttle_restore_still_returns_the_session_to_the_pin() -> None:
-    from kiro_crew.dashboard import chat_runner as crew
-    from kiro_crew.llm_helpers import TURN_FALLBACK_ATTR
+    from aj_crew.dashboard import chat_runner as crew
+    from aj_crew.llm_helpers import TURN_FALLBACK_ATTR
 
     class _Client:
         def __init__(self) -> None:
@@ -1191,8 +1191,8 @@ async def test_crews_throttle_restore_still_returns_the_session_to_the_pin() -> 
 async def test_without_the_retarget_the_restore_drops_the_record_instead() -> None:
     # Control for the test above: left on F, the probe reads the engine's move
     # as the session leaving the fallback and restores nothing.
-    from kiro_crew.dashboard import chat_runner as crew
-    from kiro_crew.llm_helpers import TURN_FALLBACK_ATTR
+    from aj_crew.dashboard import chat_runner as crew
+    from aj_crew.llm_helpers import TURN_FALLBACK_ATTR
 
     client = SimpleNamespace(_model=G, served_model=G, set_model=AsyncMock())
     setattr(client, TURN_FALLBACK_ATTR, (P, F))
@@ -1270,8 +1270,8 @@ def test_provider_passthrough_preserves_the_fallback_payload() -> None:
     # The ACP provider rebuilds every event field by field; a field it forgets
     # is silently zeroed, so the dashboard enters its branch with nothing to
     # record. This pins model_fallback across that boundary.
-    from kiro_crew.acp.types import AcpEvent
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.acp.types import AcpEvent
+    from aj_crew.providers.acp import AcpProvider
 
     notice = ModelFallbackNotice(A, B, "refused", promoted=True)
     out = AcpProvider._to_llm_event(AcpEvent(kind=EVENT_MODEL_FALLBACK, model_fallback=notice))

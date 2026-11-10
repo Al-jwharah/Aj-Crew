@@ -17,15 +17,15 @@ from cloud_microvm_engine_helpers import (  # noqa: F401 -- fixtures are request
     engine_fixture,
 )
 
-from kiro_crew.cloud.fargate.identity import DocumentRefused
-from kiro_crew.cloud.microvm import api, states
-from kiro_crew.cloud.microvm.engine import (
+from aj_crew.cloud.fargate.identity import DocumentRefused
+from aj_crew.cloud.microvm import api, states
+from aj_crew.cloud.microvm.engine import (
     Activation,
     MicroVmLaunchEngine,
     MicroVmSigninHandle,
     VmLauncher,
 )
-from kiro_crew.cloud.microvm.record import CrewRecord, CrewStore
+from aj_crew.cloud.microvm.record import CrewRecord, CrewStore
 
 
 class TestPreflight:
@@ -151,7 +151,7 @@ class TestTheLaunchRecordsTheCrewNameTheGuestWillServe:
         store = CrewStore(tmp_path / "crews.json")
         launcher = FakeLauncher()
         monkeypatch.setattr(
-            "kiro_crew.cloud.microvm.engine._delete_activation",
+            "aj_crew.cloud.microvm.engine._delete_activation",
             lambda activation_id, *, profile, region: None,
         )
         spec = dataclasses.replace(SPEC, bundle_dir=str(bundle_dir))
@@ -356,7 +356,7 @@ class TestTheReplayIsArmedAroundTheCreateAlone:
             store = CrewStore(tmp_path / "crews.json")
             launcher = SplitLauncher(resolutions=resolutions, create_outcomes=create_outcomes)
             monkeypatch.setattr(
-                "kiro_crew.cloud.microvm.engine._delete_activation",
+                "aj_crew.cloud.microvm.engine._delete_activation",
                 lambda activation_id, *, profile, region: launcher.calls.append(
                     "delete_activation"
                 ),
@@ -489,7 +489,7 @@ class TestRegister:
     def test_a_failed_registration_raises(self, engine, monkeypatch):
         """Swallowing it marks the launch done for a crew the owner cannot see."""
         built, _store, _launcher = engine
-        monkeypatch.setattr("kiro_crew.cloud.connect.register_instance", lambda *a, **k: None)
+        monkeypatch.setattr("aj_crew.cloud.connect.register_instance", lambda *a, **k: None)
         with pytest.raises(RuntimeError, match="billing"):
             built.register(instance_id="mi-1", tag="kc-a", profile="p", region="us-east-1")
 
@@ -503,7 +503,7 @@ class TestRegister:
             captured.update(kwargs)
             return "row"
 
-        monkeypatch.setattr("kiro_crew.cloud.connect.register_instance", fake)
+        monkeypatch.setattr("aj_crew.cloud.connect.register_instance", fake)
         built.register(instance_id="mi-1", tag="kc-a", profile="p", region="us-east-1")
         assert captured["instance_id"] == "mi-1"
         assert captured["connection_method"] == "ssm"
@@ -544,7 +544,7 @@ class TestATerminateThatAnswersNotFoundIsACrewAlreadyGone:
 
     @pytest.fixture()
     def walled(self, engine, monkeypatch):
-        from kiro_crew.cloud.microvm import engine as engine_mod
+        from aj_crew.cloud.microvm import engine as engine_mod
 
         built, store, launcher = engine
         released: list[tuple[str, str]] = []
@@ -570,7 +570,7 @@ class TestATerminateThatAnswersNotFoundIsACrewAlreadyGone:
                 microvm_id="mvm-walled",
                 mi_id="mi-walled",
                 activation_id="act-walled",
-                control_secret_ref="kirocrew/crew/kc-walled/CONTROL_SECRET",
+                control_secret_ref="ajcrew/crew/kc-walled/CONTROL_SECRET",
                 profile="p",
                 region="us-east-1",
                 wall_at=100.0,
@@ -580,7 +580,7 @@ class TestATerminateThatAnswersNotFoundIsACrewAlreadyGone:
 
     @staticmethod
     def _answer(message):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         def terminate(microvm_id, *, profile, region):
             raise AWSError(message, action="lambda:TerminateMicrovm")
@@ -596,7 +596,7 @@ class TestATerminateThatAnswersNotFoundIsACrewAlreadyGone:
         assert released == [
             ("activation", "act-walled"),
             ("node", "mi-walled"),
-            ("secret", "kirocrew/crew/kc-walled/CONTROL_SECRET"),
+            ("secret", "ajcrew/crew/kc-walled/CONTROL_SECRET"),
         ]
         assert store.get("kc-walled").state == states.TERMINATED
 
@@ -648,16 +648,16 @@ class TestActivationArguments:
             calls.append(list(args))
             return {"ActivationId": "act-1", "ActivationCode": "code-1"}
 
-        monkeypatch.setattr("kiro_crew.cloud.microvm.engine.checked_json", fake)
+        monkeypatch.setattr("aj_crew.cloud.microvm.engine.checked_json", fake)
         return calls
 
     def _launcher(self, **overrides):
         import dataclasses
 
-        from kiro_crew.cloud.microvm.engine import ApiVmLauncher
+        from aj_crew.cloud.microvm.engine import ApiVmLauncher
 
         fields = {
-            "activation_role_arn": "arn:aws:iam::123456789012:role/kirocrew-microvm-crew",
+            "activation_role_arn": "arn:aws:iam::123456789012:role/ajcrew-microvm-crew",
             **overrides,
         }
         return ApiVmLauncher(dataclasses.replace(SPEC, **fields), sleep=lambda _s: None)
@@ -671,15 +671,15 @@ class TestActivationArguments:
         """``iamRole``'s own pattern has no colon in it, so an ARN is refused."""
         self._launcher().create_activation(tag="kc-a", profile="p", region="us-east-1")
         value = captured[0][captured[0].index("--iam-role") + 1]
-        assert value == "kirocrew-microvm-crew"
+        assert value == "ajcrew-microvm-crew"
         assert ":" not in value
 
     def test_a_role_name_is_accepted_unchanged(self, captured):
         """The operator may write either form; the base template outputs an ARN."""
-        self._launcher(activation_role_arn="kirocrew-microvm-crew").create_activation(
+        self._launcher(activation_role_arn="ajcrew-microvm-crew").create_activation(
             tag="kc-a", profile="p", region="us-east-1"
         )
-        assert captured[0][captured[0].index("--iam-role") + 1] == "kirocrew-microvm-crew"
+        assert captured[0][captured[0].index("--iam-role") + 1] == "ajcrew-microvm-crew"
 
     def test_a_role_inside_a_path_is_named_by_its_last_segment(self, captured):
         self._launcher(
@@ -705,7 +705,7 @@ class TestActivationArguments:
             if item.startswith("--"):
                 break
             tags.append(item)
-        assert tags == ["Key=kirocrew:managed,Value=true", "Key=kirocrew:launch,Value=kc-a"]
+        assert tags == ["Key=ajcrew:managed,Value=true", "Key=ajcrew:launch,Value=kc-a"]
         for tag in tags:
             assert tag.count("Key=") == 1, tag
 
@@ -731,6 +731,6 @@ class TestRoleName:
         ],
     )
     def test_it_reduces_every_form_to_the_name(self, value, expected):
-        from kiro_crew.cloud.microvm.engine import _role_name
+        from aj_crew.cloud.microvm.engine import _role_name
 
         assert _role_name(value) == expected

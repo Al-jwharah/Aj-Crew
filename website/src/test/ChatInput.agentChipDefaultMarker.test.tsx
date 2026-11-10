@@ -63,17 +63,17 @@ describe('ChatInput — agent chip inherited-default marker', () => {
   afterEach(async () => { await act(async () => { await i18next.changeLanguage('en') }) })
 
   it('marks an inherited default so it differs from a pin to the same alias', async () => {
-    // agent-less slot resolving to `kirocrew` -> the call site composes this.
-    const inherited = agentOrDefaultLabel(undefined, 'kirocrew')
-    const pinned = agentOrDefaultLabel('kirocrew', 'kirocrew')
+    // agent-less slot resolving to `ajcrew` -> the call site composes this.
+    const inherited = agentOrDefaultLabel(undefined, 'ajcrew')
+    const pinned = agentOrDefaultLabel('ajcrew', 'ajcrew')
     // The two states MUST render differently on the chip; that is the whole bug.
     expect(inherited).not.toEqual(pinned)
 
     await mountComposer(
-      <ChatInput {...props({ agentName: 'kirocrew', agentLabel: inherited })} />,
+      <ChatInput {...props({ agentName: 'ajcrew', agentLabel: inherited })} />,
     )
     expect(agentChipText()).toBe(inherited)
-    expect(agentChipText()).toContain('kirocrew')
+    expect(agentChipText()).toContain('ajcrew')
     expect(agentChipText()).toContain('default')
   })
 
@@ -117,12 +117,12 @@ describe('ChatInput — agent chip inherited-default marker', () => {
     await mountComposer(
       <ChatInput
         {...props({
-          agentName: 'kirocrew',
-          agentLabel: agentOrDefaultLabel('kirocrew', 'kirocrew'),
+          agentName: 'ajcrew',
+          agentLabel: agentOrDefaultLabel('ajcrew', 'ajcrew'),
         })}
       />,
     )
-    expect(agentChipText()).toBe('kirocrew')
+    expect(agentChipText()).toBe('ajcrew')
   })
 
   it('falls back to the raw alias when no display label is supplied', async () => {
@@ -136,14 +136,14 @@ describe('ChatInput — agent chip inherited-default marker', () => {
     // Everything keyed on the agent (the skills query, the `agent` prop, the
     // switch title) must see the real alias, never the ` · default`-suffixed
     // label — otherwise the chip would try to switch to an agent named
-    // "kirocrew · default".
+    // "ajcrew · default".
     await mountComposer(
       <ChatInput
-        {...props({ agentName: 'kirocrew', agentLabel: agentOrDefaultLabel(undefined, 'kirocrew') })}
+        {...props({ agentName: 'ajcrew', agentLabel: agentOrDefaultLabel(undefined, 'ajcrew') })}
       />,
     )
     const title = agentChip().getAttribute('title') ?? ''
-    expect(title).toContain('kirocrew')
+    expect(title).toContain('ajcrew')
     expect(title).not.toContain('· default')
   })
 
@@ -154,8 +154,8 @@ describe('ChatInput — agent chip inherited-default marker', () => {
     await mountComposer(
       <ChatInput
         {...props({
-          agentName: 'kirocrew',
-          agentLabel: agentOrDefaultLabel(undefined, 'kirocrew'),
+          agentName: 'ajcrew',
+          agentLabel: agentOrDefaultLabel(undefined, 'ajcrew'),
           agentIsInheritedDefault: true,
         })}
       />,
@@ -163,7 +163,7 @@ describe('ChatInput — agent chip inherited-default marker', () => {
     const btn = agentChip()
     const title = btn.getAttribute('title') ?? ''
     const aria = btn.getAttribute('aria-label') ?? ''
-    // Explains WHAT the marker means, not just "Agent: kirocrew".
+    // Explains WHAT the marker means, not just "Agent: ajcrew".
     expect(title).toContain('follows the default')
     // Reachable without a mouse: the same explanation is the accessible name.
     // The tooltip may carry a second line teaching the agent-cycle chords,
@@ -177,8 +177,8 @@ describe('ChatInput — agent chip inherited-default marker', () => {
     await mountComposer(
       <ChatInput
         {...props({
-          agentName: 'kirocrew',
-          agentLabel: agentOrDefaultLabel('kirocrew', 'kirocrew'),
+          agentName: 'ajcrew',
+          agentLabel: agentOrDefaultLabel('ajcrew', 'ajcrew'),
           agentIsInheritedDefault: false,
         })}
       />,

@@ -18,8 +18,8 @@ import asyncio
 
 import pytest
 
-from kiro_crew.testing.wait import finished
-from kiro_crew.workflows.dsl import parallel, pipeline
+from aj_crew.testing.wait import finished
+from aj_crew.workflows.dsl import parallel, pipeline
 
 pytestmark = pytest.mark.asyncio
 

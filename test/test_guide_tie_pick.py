@@ -12,7 +12,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import mcp_guide
+from aj_crew import mcp_guide
 
 
 def _row(
@@ -90,7 +90,7 @@ def test_each_settling_branch_never_picks_a_caution_find_ref(build: Any) -> None
 def test_each_settling_branch_never_picks_a_trust_root(
     build: Any, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew import guide_catalog
+    from aj_crew import guide_catalog
 
     rows = build(False)
     root = rows[0]["id"]

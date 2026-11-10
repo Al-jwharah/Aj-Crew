@@ -22,11 +22,11 @@ from pathlib import Path, PurePosixPath
 
 import pytest
 
-from kiro_crew import identity_stores as ids
-from kiro_crew import kiro_prerequisite as kp
-from kiro_crew.dashboard.handlers import kiro_usage_api as usage_api
-from kiro_crew.identity_stores import Trust
-from kiro_crew.security import _SENSITIVE_HOME_DIRS
+from aj_crew import identity_stores as ids
+from aj_crew import kiro_prerequisite as kp
+from aj_crew.dashboard.handlers import kiro_usage_api as usage_api
+from aj_crew.identity_stores import Trust
+from aj_crew.security import _SENSITIVE_HOME_DIRS
 
 # The two roots the installed CLI is observed using, for each product whose store
 # holds a live SSO bearer token.
@@ -289,7 +289,7 @@ class TestReadersAgreeWithCanonicalTable:
             )
 
     def test_state_dbs_match_the_projection(self, tmp_path: Path) -> None:
-        from kiro_crew import kiro_cli
+        from aj_crew import kiro_cli
 
         for platform in ("darwin", "linux", "win32"):
             assert kiro_cli.kiro_cli_state_dbs(platform, tmp_path, {}) == (
@@ -298,7 +298,7 @@ class TestReadersAgreeWithCanonicalTable:
 
     def test_auth_sqlite_db_constant_is_the_alias(self) -> None:
         assert kp._AUTH_SQLITE_DB == ids.AUTH_SQLITE_DB
-        from kiro_crew import kiro_cli
+        from aj_crew import kiro_cli
 
         assert kiro_cli.KIRO_CLI_STATE_DB == ids.AUTH_SQLITE_DB
 

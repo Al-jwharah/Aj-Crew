@@ -24,8 +24,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import github_runner, platform_compat
-from kiro_crew.dashboard.handlers import source_providers as source
+from aj_crew import github_runner, platform_compat
+from aj_crew.dashboard.handlers import source_providers as source
 
 pytestmark = pytest.mark.skipif(os.name != "posix", reason="multicall links are a POSIX layout")
 
@@ -48,8 +48,8 @@ def _hermetic_resolution(_floor_monkeypatch):
         github_runner.GH_BIN_ENV,
         github_runner.GH_PREVALIDATED_ENV,
         github_runner.STRICT_PROVIDER_BIN_ENV,
-        "KIROCREW_GLAB_BIN",
-        "KIROCREW_ISSUE_RADAR_GLAB",
+        "AJCREW_GLAB_BIN",
+        "AJCREW_ISSUE_RADAR_GLAB",
     ):
         _floor_monkeypatch.delenv(name, raising=False)
     _floor_monkeypatch.setattr(github_runner, "_RESOLVE_CACHE", {})

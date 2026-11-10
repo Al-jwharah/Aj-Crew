@@ -1,4 +1,4 @@
-"""Crew Mode decision 1: the ``kirocrew.crew_mode.*`` counters.
+"""Crew Mode decision 1: the ``ajcrew.crew_mode.*`` counters.
 
 Each counter is pinned to its closed attribute set, and no attribute may carry a
 session key, title or message text.
@@ -12,8 +12,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_mode
-from kiro_crew.metrics import crew_mode as m
+from aj_crew import crew_mode
+from aj_crew.metrics import crew_mode as m
 
 
 @pytest.fixture
@@ -95,7 +95,7 @@ def test_a_crew_mode_board_is_a_known_or_live_root(monkeypatch):
     monkeypatch.setattr(crew_mode, "_known_roots", {"closed-root"})
     live = SimpleNamespace(
         key="live",
-        agent="kirocrew-team-lead",
+        agent="ajcrew-team-lead",
         agent_kind="template",
         crew_mode_agent="",
         mode="",
@@ -122,7 +122,7 @@ def test_every_counter_is_documented_and_wired():
         m.CREW_MODE_WORKER_WAITS,
     ):
         assert f"`{name}`" in doc
-    src = root / "src/kiro_crew/dashboard"
+    src = root / "src/aj_crew/dashboard"
     sites = {
         "chat_api/agent_switch.py": "record_turned_on(",
         "chat_api/slot_create.py": "record_new_chat(",

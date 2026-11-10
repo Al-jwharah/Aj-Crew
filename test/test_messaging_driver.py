@@ -12,8 +12,8 @@ import asyncio
 
 import pytest
 
-from kiro_crew import session_directive
-from kiro_crew.acp.types import (
+from aj_crew import session_directive
+from aj_crew.acp.types import (
     EVENT_COMPACTION_STATUS,
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
@@ -25,23 +25,23 @@ from kiro_crew.acp.types import (
     AcpEvent,
     TurnUsage,
 )
-from kiro_crew.constants import (
+from aj_crew.constants import (
     DENY_CAUSE_APPROVAL_TIMEOUT,
     DENY_CAUSE_APPROVAL_UNDELIVERABLE,
     STEER_NOTICE_BOUND_SECS,
     split_trailing_protocol_suffix,
 )
-from kiro_crew.messaging import (
+from aj_crew.messaging import (
     APPROVAL_AUTO,
     APPROVAL_INTERACTIVE,
     TransportCapabilities,
     TurnDriver,
     driver,
 )
-from kiro_crew.messaging.renderer import Renderer
-from kiro_crew.monitoring.completion import MonitorCompletionHook
-from kiro_crew.monitoring.models import MonitorActionCompletion, MonitorActionDisposition
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.messaging.renderer import Renderer
+from aj_crew.monitoring.completion import MonitorCompletionHook
+from aj_crew.monitoring.models import MonitorActionCompletion, MonitorActionDisposition
+from aj_crew.testing.wait import await_until, finished
 
 
 class _RecordingRenderer(Renderer):
@@ -836,8 +836,8 @@ class TestApprovalTimeoutInbandNotice:
     def test_the_bound_is_the_shared_constant(self):
         """One number for the dashboard runner, the native Slack arm and this
         driver, so the three surfaces cannot drift."""
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.slack import handler as slack_handler
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.slack import handler as slack_handler
 
         assert driver.STEER_NOTICE_BOUND_SECS == STEER_NOTICE_BOUND_SECS
         assert chat_runner._STEER_NOTICE_BOUND_SECS == STEER_NOTICE_BOUND_SECS
@@ -911,14 +911,14 @@ class TestAutoApproveTool:
         # Direction 1: a genuine spawn_run MCP call (canonical identity from
         # ``_meta.kiro``, provenance-flagged, served by the crew's own MCP
         # server) keeps unattended fan-out unblocked.
-        from kiro_crew.messaging.dispatch import build_auto_approve
+        from aj_crew.messaging.dispatch import build_auto_approve
 
         r = _RecordingRenderer()
         p = _ScriptedProvider(
             self._perm_script(
                 "spawn_run",
                 tool_name="spawn_run",
-                mcp_server_name="kirocrew-core",
+                mcp_server_name="ajcrew-core",
                 mcp_identity_trusted=True,
             )
         )
@@ -934,7 +934,7 @@ class TestAutoApproveTool:
     def test_shell_event_with_forged_spawn_title_is_not_auto_approved(self):
         # Direction 2 (the issue's attack): a SHELL event whose model-authored
         # title says spawn_run must fall to the ladder, not ride the rung.
-        from kiro_crew.messaging.dispatch import build_auto_approve
+        from aj_crew.messaging.dispatch import build_auto_approve
 
         r = _RecordingRenderer()
         p = _ScriptedProvider(self._perm_script("spawn_run", is_shell=True, shell_classified=True))
@@ -950,14 +950,14 @@ class TestAutoApproveTool:
     def test_canonical_name_mismatch_with_forged_title_is_not_auto_approved(self):
         # A non-shell tool whose canonical _meta.kiro name is NOT spawn_run
         # cannot borrow the rung by re-titling itself.
-        from kiro_crew.messaging.dispatch import build_auto_approve
+        from aj_crew.messaging.dispatch import build_auto_approve
 
         r = _RecordingRenderer()
         p = _ScriptedProvider(
             self._perm_script(
                 "spawn_run",
                 tool_name="artifact_delete",
-                mcp_server_name="kirocrew-core",
+                mcp_server_name="ajcrew-core",
                 mcp_identity_trusted=True,
             )
         )

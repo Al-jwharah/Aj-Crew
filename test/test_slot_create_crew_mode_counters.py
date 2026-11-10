@@ -18,23 +18,23 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew import crew_mode
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.metrics import crew_mode as crew_mode_metrics
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import crew_mode
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard import chat_handlers
+from aj_crew.metrics import crew_mode as crew_mode_metrics
+from aj_crew.testing.wait import async_wait_until
 
-CONDUCTOR = "kirocrew-conductor"
+CONDUCTOR = "ajcrew-conductor"
 
 
-def _member_config() -> KiroCrewConfig:
-    from kiro_crew.config.loader import KiroCrewAgentConfig
-    from kiro_crew.memory_stores import provision_member_memory
+def _member_config() -> AjCrewConfig:
+    from aj_crew.config.loader import AjCrewAgentConfig
+    from aj_crew.memory_stores import provision_member_memory
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        "default": KiroCrewAgentConfig(kiro_agent="kirocrew"),
-        "worker": KiroCrewAgentConfig(kiro_agent="kirocrew"),
+        "default": AjCrewAgentConfig(kiro_agent="ajcrew"),
+        "worker": AjCrewAgentConfig(kiro_agent="ajcrew"),
     }
     cfg.default_agent = "default"
     provision_member_memory(cfg, "worker")
@@ -55,7 +55,7 @@ def counters(_floor_monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
 def state(tmp_path, _floor_monkeypatch: pytest.MonkeyPatch) -> Any:
     state = _make_state(tmp_path)
     cfg = _member_config()
-    _floor_monkeypatch.setattr(chat_handlers, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+    _floor_monkeypatch.setattr(chat_handlers, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
     _floor_monkeypatch.setattr(chat_handlers, "schedule_eager_spawn", lambda *a, **k: None)
 
     async def pin(state_arg, session_key, agent, config, **kwargs):
@@ -117,12 +117,12 @@ async def test_a_same_name_member_pick_without_a_kind_is_not_a_crew_mode_new_cha
 ) -> None:
     import asyncio
 
-    from kiro_crew.config.loader import KiroCrewAgentConfig
-    from kiro_crew.memory_stores import provision_member_memory
+    from aj_crew.config.loader import AjCrewAgentConfig
+    from aj_crew.memory_stores import provision_member_memory
 
-    cfg = chat_handlers.KiroCrewConfig.load()
+    cfg = chat_handlers.AjCrewConfig.load()
     cfg.agent.crew_mode_agent = CONDUCTOR
-    cfg.agents[CONDUCTOR] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+    cfg.agents[CONDUCTOR] = AjCrewAgentConfig(kiro_agent="ajcrew")
     await asyncio.to_thread(provision_member_memory, cfg, CONDUCTOR)
     _floor_monkeypatch.setattr(crew_mode, "_live_cfg", lambda: cfg)
     before = set(state._slots)

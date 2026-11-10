@@ -13,8 +13,8 @@ import member_essential_context_helpers
 import pytest
 
 from conftest import make_dir_link
-from kiro_crew import member_essential_context as _mec
-from kiro_crew.member_essential_context import (
+from aj_crew import member_essential_context as _mec
+from aj_crew.member_essential_context import (
     MemberEssentialContextError,
     documents_for_member,
     projected_resource_documents,
@@ -86,7 +86,7 @@ def test_projected_reader_leaves_the_same_link_out(env, tmp_path):
 
 def test_a_link_out_of_home_into_the_data_home_still_refuses(env):
     """Leaving a link out must not turn another member's store into a quiet skip."""
-    from kiro_crew.config import config_dir
+    from aj_crew.config import config_dir
 
     peer_store = config_dir() / "memory_stores" / "peer-member"
     peer_store.mkdir(parents=True, exist_ok=True)

@@ -16,10 +16,10 @@ from acp_deepseek_backend_helpers import (  # noqa: F401 -- fixtures are used by
     _pinned_kiro_cli_version,
 )
 
-from kiro_crew.acp import launch as launch_mod
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.harness import deepseek as deepseek_mod
-from kiro_crew.acp_backends import ACP_BACKEND_DEEPSEEK
+from aj_crew.acp import launch as launch_mod
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.harness import deepseek as deepseek_mod
+from aj_crew.acp_backends import ACP_BACKEND_DEEPSEEK
 
 # ── The provider key: fed from Crew's vault, not carved out of the mask ───────
 
@@ -32,7 +32,7 @@ def test_the_override_anchored_credential_spellings_are_masked_too(tmp_path) -> 
     declaration's ``override_relative_leaves`` exists to prevent, asserted here
     against the resolved mask rather than against the declaration.
     """
-    from kiro_crew.agent_sdk import tool_gate
+    from aj_crew.agent_sdk import tool_gate
 
     home = tmp_path / "dsh-home"
     home.mkdir()
@@ -52,7 +52,7 @@ def test_the_remedy_names_the_vault_and_the_mapping_not_a_file() -> None:
     them to a file the child mask now hides. Both strings name the two steps that do
     work: store the secret, then map it.
     """
-    from kiro_crew.agent_sdk import host_auth
+    from aj_crew.agent_sdk import host_auth
 
     declaration = host_auth.declaration_for(ACP_BACKEND_DEEPSEEK)
     for text in (declaration.sign_in_remedy, declaration.signed_out_message):
@@ -96,18 +96,18 @@ def _vault_env_mapping(name: str = "DEEPSEEK_API_KEY", value: str = "secret://ds
             id="crew-owned-name",
         ),
         pytest.param(
-            {"KIROCREW_SESSION_KEY": "secret://dsh-proof"},
+            {"AJCREW_SESSION_KEY": "secret://dsh-proof"},
             "session credentials",
             id="session-key-identity-credential",
         ),
         pytest.param(
-            {"KIROCREW_STUB_SESSION_TOKEN": "secret://dsh-proof"},
+            {"AJCREW_STUB_SESSION_TOKEN": "secret://dsh-proof"},
             "session credentials",
             id="stub-token-identity-credential",
         ),
         pytest.param(
-            {"KIROCREW_FUTURE_TOKEN": "secret://dsh-proof"},
-            "KIROCREW_ namespaces",
+            {"AJCREW_FUTURE_TOKEN": "secret://dsh-proof"},
+            "AJCREW_ namespaces",
             id="crew-namespace-prefix",
         ),
         pytest.param(
@@ -126,7 +126,7 @@ def test_a_provider_key_mapping_the_harness_would_not_honour_is_refused(
     the model's shell, a collision with a Crew variable), so each refusal must name
     the rule the operator hit.
     """
-    from kiro_crew.acp import client as client_module
+    from aj_crew.acp import client as client_module
 
     with pytest.raises(ValueError) as refused:
         client_module._validate_deepseek_env_mapping(mapping)
@@ -145,14 +145,14 @@ def test_every_scrub_class_name_crew_writes_on_the_child_is_reserved() -> None:
     """Derived, so the reserved set cannot lag the spawn pipeline.
 
     The shared tail writes Crew's variables after the key injection and wins, so a
-    mapped name in the scrub class (e.g. ``KIROCREW_SESSION_KEY``) would hand the
+    mapped name in the scrub class (e.g. ``AJCREW_SESSION_KEY``) would hand the
     provider a Crew credential. Every such env-name literal in the env builders
     must be refused.
     """
     import re
 
-    from kiro_crew import agent_scratch, sandbox
-    from kiro_crew.acp import client as client_module
+    from aj_crew import agent_scratch, sandbox
+    from aj_crew.acp import client as client_module
 
     composers = (
         AcpClient._spawn,
@@ -173,7 +173,7 @@ def test_every_scrub_class_name_crew_writes_on_the_child_is_reserved() -> None:
                 names.add(literal)
     # The constants the identity writer spells by name rather than by literal.
     names.add(client_module.STUB_SESSION_TOKEN_ENV)
-    assert {"KIROCREW_SESSION_KEY", "KIROCREW_STUB_SESSION_TOKEN"} <= names, names
+    assert {"AJCREW_SESSION_KEY", "AJCREW_STUB_SESSION_TOKEN"} <= names, names
 
     for name in sorted(names):
         with pytest.raises(ValueError, match="sets on this child itself"):
@@ -182,7 +182,7 @@ def test_every_scrub_class_name_crew_writes_on_the_child_is_reserved() -> None:
 
 def test_a_provider_key_mapping_the_harness_honours_is_accepted() -> None:
     """The happy shape passes every rule, so the refusals are not vacuous."""
-    from kiro_crew.acp import client as client_module
+    from aj_crew.acp import client as client_module
 
     client_module._validate_deepseek_env_mapping(_vault_env_mapping())
     # Not DeepSeek-specific: a credential reference is any provider name the harness
@@ -197,7 +197,7 @@ def test_a_plaintext_value_never_reaches_disk_through_the_locked_write(tmp_path)
     ``write_config_atomically`` refuses the document, so a live key never sits in
     the agent-readable ``config.json`` and the file stays as it was.
     """
-    from kiro_crew.config.loader import ConfigWriteRefused, update_config_locked
+    from aj_crew.config.loader import ConfigWriteRefused, update_config_locked
 
     path = tmp_path / "config.json"
     path.write_text(json.dumps({"agent": {"yolo": True}}), encoding="utf-8")
@@ -231,7 +231,7 @@ def test_a_pre_existing_plaintext_value_does_not_refuse_an_unrelated_write(
     """
     import logging
 
-    from kiro_crew.config.loader import update_config_locked
+    from aj_crew.config.loader import update_config_locked
 
     path = tmp_path / "config.json"
     stale = {"DEEPSEEK_API_KEY": "sk-live-not-a-reference"}
@@ -241,7 +241,7 @@ def test_a_pre_existing_plaintext_value_does_not_refuse_an_unrelated_write(
         existing.setdefault("agent", {})["yolo"] = True
         return existing
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
         update_config_locked(path, mutate=unrelated)
 
     written = json.loads(path.read_text(encoding="utf-8"))
@@ -255,7 +255,7 @@ def test_a_pre_existing_plaintext_value_does_not_refuse_an_unrelated_write(
 
 def test_a_write_that_touches_the_mapping_while_keeping_plaintext_is_refused(tmp_path) -> None:
     """Keeping a plaintext entry while changing the mapping is the write's own doing."""
-    from kiro_crew.config.loader import ConfigWriteRefused, update_config_locked
+    from aj_crew.config.loader import ConfigWriteRefused, update_config_locked
 
     path = tmp_path / "config.json"
     path.write_text(
@@ -277,7 +277,7 @@ def test_a_write_that_touches_the_mapping_while_keeping_plaintext_is_refused(tmp
 
 def test_a_plaintext_with_no_readable_prior_document_is_refused(tmp_path) -> None:
     """Fail closed: a plaintext that cannot be shown pre-existing is treated as introduced."""
-    from kiro_crew.config.loader import ConfigWriteRefused, write_config_atomically
+    from aj_crew.config.loader import ConfigWriteRefused, write_config_atomically
 
     data = {"agent": {"deepseek_env": {"DEEPSEEK_API_KEY": "sk-live-not-a-reference"}}}
     # No file at all: the plaintext is being introduced.
@@ -296,10 +296,10 @@ def test_a_reference_passes_the_publish_floor_and_the_whole_document_save_is_gat
 ) -> None:
     """Both halves of the floor: a ``secret://`` value publishes; ``save()`` is gated.
 
-    :meth:`KiroCrewConfig.save` also publishes whole documents, so the rule sits in
+    :meth:`AjCrewConfig.save` also publishes whole documents, so the rule sits in
     the one function both writers reach.
     """
-    from kiro_crew.config.loader import ConfigWriteRefused, KiroCrewConfig, update_config_locked
+    from aj_crew.config.loader import ConfigWriteRefused, AjCrewConfig, update_config_locked
 
     path = tmp_path / "config.json"
 
@@ -312,8 +312,8 @@ def test_a_reference_passes_the_publish_floor_and_the_whole_document_save_is_gat
         _vault_env_mapping()
     )
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    cfg = KiroCrewConfig()
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    cfg = AjCrewConfig()
     cfg.agent.deepseek_env = {"ANTHROPIC_API_KEY": "sk-ant-not-a-reference"}
     with pytest.raises(ConfigWriteRefused) as refused:
         cfg.save()
@@ -326,7 +326,7 @@ def test_the_cli_reports_the_refusal_by_key_and_writes_nothing(tmp_path, capsys)
     import argparse
     from unittest.mock import patch
 
-    from kiro_crew.cli_config import _config_cmd
+    from aj_crew.cli_config import _config_cmd
 
     local = tmp_path / "config.local.json"
     args = argparse.Namespace(
@@ -336,8 +336,8 @@ def test_the_cli_reports_the_refusal_by_key_and_writes_nothing(tmp_path, capsys)
         file=None,
         local=True,
     )
-    with patch("kiro_crew.cli_config.config_local_path", return_value=local):
-        with patch("kiro_crew.cli_config.sel"):
+    with patch("aj_crew.cli_config.config_local_path", return_value=local):
+        with patch("aj_crew.cli_config.sel"):
             with pytest.raises(SystemExit) as exited:
                 _config_cmd(args)
 
@@ -359,7 +359,7 @@ def test_the_cli_file_import_reports_the_refusal_and_leaves_config_json_as_it_wa
     import argparse
     from unittest.mock import patch
 
-    from kiro_crew.cli_config import _config_cmd
+    from aj_crew.cli_config import _config_cmd
 
     config_dir = tmp_path / "kiro"
     config_dir.mkdir()
@@ -376,9 +376,9 @@ def test_the_cli_file_import_reports_the_refusal_and_leaves_config_json_as_it_wa
         config_action="set", key=None, value=None, file=str(imported), local=False
     )
     with (
-        patch("kiro_crew.cli_config.config_path", return_value=target),
-        patch("kiro_crew.config.loader.config_dir", return_value=config_dir),
-        patch("kiro_crew.cli_config.sel"),
+        patch("aj_crew.cli_config.config_path", return_value=target),
+        patch("aj_crew.config.loader.config_dir", return_value=config_dir),
+        patch("aj_crew.cli_config.sel"),
     ):
         with pytest.raises(SystemExit) as exited:
             _config_cmd(args)
@@ -401,7 +401,7 @@ def test_the_publish_floor_predicate_names_keys_only_and_leaves_shape_to_the_coe
     a non-dict shape is not this function's problem -- ``coerce_deepseek_env`` drops
     it -- so it returns empty rather than inventing an entry to refuse.
     """
-    from kiro_crew.config.sections import deepseek_env_plaintext_keys
+    from aj_crew.config.sections import deepseek_env_plaintext_keys
 
     assert deepseek_env_plaintext_keys(None) == ()
     assert deepseek_env_plaintext_keys("secret://not-a-mapping") == ()
@@ -419,7 +419,7 @@ def test_the_child_scrub_class_is_read_from_the_harness_not_guessed() -> None:
     ``/KEY|PASSWORD|SECRET|TOKEN/i`` before spawning any child. That is why an
     env-fed key is safe here, so a wider Crew-side copy would admit a leaked name.
     """
-    from kiro_crew.acp import client as client_module
+    from aj_crew.acp import client as client_module
 
     pattern = client_module._DEEPSEEK_ENV_CHILD_SCRUB_CLASS
     for name in ("DEEPSEEK_API_KEY", "MY_PASSWORD", "A_SECRET", "GH_TOKEN", "api_key"):
@@ -439,8 +439,8 @@ def test_a_missing_vault_secret_refuses_rather_than_starting_without_a_key() -> 
     the harness anyway would produce an opaque provider auth error on the first turn
     instead of a message the operator can act on.
     """
-    from kiro_crew.acp import client as client_module
-    from kiro_crew.config.paths import config_dir
+    from aj_crew.acp import client as client_module
+    from aj_crew.config.paths import config_dir
 
     with pytest.MonkeyPatch.context() as mp:
         mp.setattr(
@@ -469,12 +469,12 @@ def _dsh_vault_spawn(tmp_path, monkeypatch, *, mapping, secret=None):
     """
     import asyncio
 
-    from kiro_crew import agent_scratch
-    from kiro_crew.acp import client as client_module
-    from kiro_crew.config.paths import config_dir
-    from kiro_crew.secrets import SecretVault
+    from aj_crew import agent_scratch
+    from aj_crew.acp import client as client_module
+    from aj_crew.config.paths import config_dir
+    from aj_crew.secrets import SecretVault
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     root = agent_scratch.scratch_root()
     root.mkdir(mode=0o700, parents=True, exist_ok=True)
     (config_dir() / "config.json").write_text(
@@ -540,8 +540,8 @@ def _dsh_vault_spawn(tmp_path, monkeypatch, *, mapping, secret=None):
     monkeypatch.setattr(client_module, "_get_child_pids", lambda _pid: [])
     monkeypatch.setattr(client_module, "inject_xdist_auto_cap", lambda _env: None)
     monkeypatch.setattr(client_module.agent_scratch, "record_owner", lambda *a, **k: "recorded")
-    monkeypatch.setattr("kiro_crew.session._track_pid", lambda *a, **k: None)
-    monkeypatch.setattr("kiro_crew.session._track_session_pid", lambda *a, **k: None)
+    monkeypatch.setattr("aj_crew.session._track_pid", lambda *a, **k: None)
+    monkeypatch.setattr("aj_crew.session._track_session_pid", lambda *a, **k: None)
 
     return client, spawned, asyncio
 
@@ -594,7 +594,7 @@ def test_a_refused_mapping_stops_the_session_before_any_child_starts(tmp_path, m
     its key would take a turn, fail at the provider, and leave the operator reading a
     vendor error instead of the rule they broke.
     """
-    from kiro_crew.acp.client import AcpToolGateUnroutable
+    from aj_crew.acp.client import AcpToolGateUnroutable
 
     client, spawned, asyncio_mod = _dsh_vault_spawn(
         tmp_path, monkeypatch, mapping={"DEEPSEEK_API_KEY": "sk-live-not-a-reference"}
@@ -664,7 +664,7 @@ def test_the_injection_is_inside_the_arm_and_the_probe_is_never_handed_a_key(
     removed by it would leave a harness that cannot reach its model. The probe half
     of this claim is ``test_the_probe_is_never_handed_a_key``.
     """
-    from kiro_crew.acp import client as client_module
+    from aj_crew.acp import client as client_module
 
     client, spawned, asyncio_mod = _dsh_vault_spawn(
         tmp_path,
@@ -704,16 +704,16 @@ _DSH_NO_KEY_ERROR = {
 
 
 def test_a_missing_provider_key_gets_the_declared_message() -> None:
-    from kiro_crew.acp.client import _format_acp_error
-    from kiro_crew.agent_sdk import host_auth
+    from aj_crew.acp.client import _format_acp_error
+    from aj_crew.agent_sdk import host_auth
 
     formatted = _format_acp_error(_DSH_NO_KEY_ERROR, backend=ACP_BACKEND_DEEPSEEK)
     assert formatted == host_auth.signed_out_message(ACP_BACKEND_DEEPSEEK)
 
 
 def test_the_request_id_survives_the_rewrite() -> None:
-    from kiro_crew.acp.client import _format_acp_error
-    from kiro_crew.agent_sdk import host_auth
+    from aj_crew.acp.client import _format_acp_error
+    from aj_crew.agent_sdk import host_auth
 
     error = dict(_DSH_NO_KEY_ERROR, data="request_id: 0f1e2d3c-4b5a")
     formatted = _format_acp_error(error, backend=ACP_BACKEND_DEEPSEEK)
@@ -723,7 +723,7 @@ def test_the_request_id_survives_the_rewrite() -> None:
 
 
 def test_a_missing_provider_key_is_not_retried() -> None:
-    from kiro_crew.acp.client import AcpError, _raise_acp_error
+    from aj_crew.acp.client import AcpError, _raise_acp_error
 
     with pytest.raises(AcpError) as info:
         _raise_acp_error(_DSH_NO_KEY_ERROR, backend=ACP_BACKEND_DEEPSEEK)
@@ -731,8 +731,8 @@ def test_a_missing_provider_key_is_not_retried() -> None:
 
 
 def test_the_deepseek_phrase_does_not_classify_another_harness() -> None:
-    from kiro_crew.acp.client import _format_acp_error
-    from kiro_crew.agent_sdk import host_auth
+    from aj_crew.acp.client import _format_acp_error
+    from aj_crew.agent_sdk import host_auth
 
     formatted = _format_acp_error(_DSH_NO_KEY_ERROR, backend="goose")
     assert host_auth.signed_out_message(ACP_BACKEND_DEEPSEEK) not in formatted
@@ -742,7 +742,7 @@ def test_the_deepseek_phrase_does_not_classify_another_harness() -> None:
 def test_a_blank_signed_out_signature_is_refused() -> None:
     import dataclasses
 
-    from kiro_crew.agent_sdk import host_auth
+    from aj_crew.agent_sdk import host_auth
 
     declaration = host_auth.declaration_for(ACP_BACKEND_DEEPSEEK)
     with pytest.raises(ValueError, match="blank signed-out signature"):

@@ -4,7 +4,7 @@
  * app-window-host-rules.js — what an app may ask the desktop window host for.
  *
  * The shell's copy of the manifest `desktop` rules in
- * `src/kiro_crew/apps/desktop_manifest.py`. The gateway refuses an install that
+ * `src/aj_crew/apps/desktop_manifest.py`. The gateway refuses an install that
  * breaks them; the shell checks again because it must not trust a gateway of
  * another version, nor a manifest that reached `/api/apps` some other way. A
  * declaration that fails here is dropped whole: the shell hosts nothing for that

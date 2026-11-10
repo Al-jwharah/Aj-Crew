@@ -20,13 +20,13 @@ from chat_test_helpers import _make_app_with_agent_routes
 from dashboard_owner_helpers import as_owner
 from test_chat_agent_selection import _turn_state
 
-import kiro_crew.hooks as hooks_mod
-from kiro_crew.config import loader
-from kiro_crew.config.loader_snapshots import (
+import aj_crew.hooks as hooks_mod
+from aj_crew.config import loader
+from aj_crew.config.loader_snapshots import (
     _materialized_kiro_agent,
     materialized_snapshot_complete,
 )
-from kiro_crew.config.paths import kiro_agents_dir
+from aj_crew.config.paths import kiro_agents_dir
 
 
 @pytest.fixture

@@ -33,12 +33,12 @@ const slots = [
   {
     key: 'pane-a', title: 'Design notes', running: false,
     last_message: 'Working through phase one…', messages: 3,
-    agent: 'kirocrew', memory_mode: 'persistent', modified: Math.floor(now),
+    agent: 'ajcrew', memory_mode: 'persistent', modified: Math.floor(now),
   },
   {
     key: 'pane-b', title: 'Release checklist', running: true,
     last_message: 'Summarized the layout options.', messages: 2,
-    agent: 'kirocrew', memory_mode: 'persistent', modified: Math.floor(now) - 60,
+    agent: 'ajcrew', memory_mode: 'persistent', modified: Math.floor(now) - 60,
   },
 ]
 

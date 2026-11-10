@@ -1,7 +1,7 @@
 ---
 title: Rewrite a kept main-agent spec in place as soon as it reads again
 status: draft
-author: kirocrew agent session, directed by jeeshofone
+author: ajcrew agent session, directed by jeeshofone
 created: 2026-11-02
 last-audited: 2026-11-05
 audited-at: 664ae5bdae
@@ -20,7 +20,7 @@ Revised 2026-11-05 to the scope the maintainer signed on this PR after the decis
 
 ## Summary
 
-[#27535](https://github.com/kirodotdev/KiroCrew/pull/27535) (moved from #15546) stops a rebuild from overwriting an unreadable `kirocrew.json` with defaults. The rebuild keeps the file (`_skip_unreadable_main_spec` in `agent_parts/spec_unreadable.py`) and opens an episode. While the file stays unreadable, the heartbeat and worker specs mirrored from it are not re-derived. Their existing `allowedTools` and `autoApprove` are re-filtered in place through the current governance ceiling (`_refilter_kept_mirrors` in `agent_parts/spec_siblings.py`). #27535 refuses no start. A start while the file is unreadable behaves as it does on main today.
+[#27535](https://github.com/kirodotdev/KiroCrew/pull/27535) (moved from #15546) stops a rebuild from overwriting an unreadable `ajcrew.json` with defaults. The rebuild keeps the file (`_skip_unreadable_main_spec` in `agent_parts/spec_unreadable.py`) and opens an episode. While the file stays unreadable, the heartbeat and worker specs mirrored from it are not re-derived. Their existing `allowedTools` and `autoApprove` are re-filtered in place through the current governance ceiling (`_refilter_kept_mirrors` in `agent_parts/spec_siblings.py`). #27535 refuses no start. A start while the file is unreadable behaves as it does on main today.
 
 The episode closes when a later rebuild writes the spec again (`_note_main_spec_readable`). With #27535 alone, that rebuild comes from the hourly `retry_held_conductor_specs` (`agent_parts/spec_rebuild.py`), a config change the watcher applies, or a restart. Until then the kept spec is not rewritten, even after the file reads again.
 
@@ -30,7 +30,7 @@ This document proposes rewriting the kept spec in place as soon as it reads. A m
 
 ### The gap
 
-After a user restores read access to `kirocrew.json`, the kept spec stays as it was until the next rebuild writes it, which can be up to an hour. During that time the main agent loads a spec projected under an older ceiling and profile set. The heartbeat and worker mirrors are re-filtered, but the main spec itself is not re-derived, and holds that `_spec_hold_open` drives (the boot baseline, the pending ceiling memo, the default-model applier's "not landed" result) stay open.
+After a user restores read access to `ajcrew.json`, the kept spec stays as it was until the next rebuild writes it, which can be up to an hour. During that time the main agent loads a spec projected under an older ceiling and profile set. The heartbeat and worker mirrors are re-filtered, but the main spec itself is not re-derived, and holds that `_spec_hold_open` drives (the boot baseline, the pending ceiling memo, the default-model applier's "not landed" result) stay open.
 
 A main-agent start is the one caller that both needs the spec now and can tell cheaply that the file reads again. Rewriting the spec on that path closes the gap with no timer.
 
@@ -63,7 +63,7 @@ The other two rounds concerned admitting a start, which this document no longer 
 
 These are the pieces this design builds on, on the current revision of #27535:
 
-- `_AgentSpecUnreadable` is raised when a rebuild read of a present `kirocrew.json` fails with an `OSError` other than `FileNotFoundError`. `_skip_unreadable_main_spec` keeps the file, re-filters the kept heartbeat and worker mirrors through the current ceiling, runs the sibling steps, reports the rebuild as unwritten and held, and opens an episode (`_main_spec_unreadable`, `_main_spec_episode_revision`).
+- `_AgentSpecUnreadable` is raised when a rebuild read of a present `ajcrew.json` fails with an `OSError` other than `FileNotFoundError`. `_skip_unreadable_main_spec` keeps the file, re-filters the kept heartbeat and worker mirrors through the current ceiling, runs the sibling steps, reports the rebuild as unwritten and held, and opens an episode (`_main_spec_unreadable`, `_main_spec_episode_revision`).
 - `_note_main_spec_readable(path, episode_revision)` closes the episode when a rebuild writes the spec, unless a newer skip raced the write.
 - `_spec_hold_open()` keeps the rebuild held while the episode is open, and the hourly maintenance wake retries it.
 - Nothing refuses a start, and there is no early-retry timer.

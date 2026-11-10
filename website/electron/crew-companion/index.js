@@ -242,7 +242,7 @@ function probeEnabled(auth) {
  * carries a `?token=` and any in-app route: same origin is exactly the property
  * that decides whether the SPA — and therefore the listener — is loaded.
  *
- * The kirocrew:// deep-link handler in main.js shares this check and passes its
+ * The ajcrew:// deep-link handler in main.js shares this check and passes its
  * own *base*: a link can arrive before this module is initialised.
  *
  * @param {object} wc the view's webContents.

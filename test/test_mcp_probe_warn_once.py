@@ -14,7 +14,7 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import mcp_discovery
+from aj_crew import mcp_discovery
 
 
 @pytest.fixture(autouse=True)
@@ -88,7 +88,7 @@ async def test_malformed_command_does_not_abort_the_whole_probe_pass(caplog):
     """
     bad = mcp_discovery.McpServerInfo(name="malformed", command={"not": "a string"})  # type: ignore[arg-type]
     good = mcp_discovery.McpServerInfo(
-        name="ghost", command="kirocrew-no-such-binary-2f8a1c", args=[]
+        name="ghost", command="ajcrew-no-such-binary-2f8a1c", args=[]
     )
 
     with mock.patch.object(mcp_discovery, "list_servers", return_value=[bad, good]):
@@ -170,7 +170,7 @@ async def test_probe_server_warns_once_across_cycles(caplog):
     `shutil.which` pre-check and its early return.
     """
     server = mcp_discovery.McpServerInfo(
-        name="ghost", command="kirocrew-no-such-binary-2f8a1c", args=[]
+        name="ghost", command="ajcrew-no-such-binary-2f8a1c", args=[]
     )
     with caplog.at_level(logging.DEBUG, logger=mcp_discovery.logger.name):
         for _ in range(3):
@@ -179,7 +179,7 @@ async def test_probe_server_warns_once_across_cycles(caplog):
     # what doctor and the dashboard actually read.
     assert result.status == "error"
     assert "command not found" in (result.error or "")
-    levels = _levels_for(caplog, "kirocrew-no-such-binary-2f8a1c")
+    levels = _levels_for(caplog, "ajcrew-no-such-binary-2f8a1c")
     assert levels.count(logging.WARNING) == 1, f"expected exactly one WARNING, got {levels}"
 
 

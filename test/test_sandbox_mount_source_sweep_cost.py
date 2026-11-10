@@ -13,9 +13,9 @@ from pathlib import Path
 import pytest
 from test_sandbox_mount_source_sweep import _DEAD_PID, _LIVE_PID, _make_dir, _make_file, _pin
 
-from kiro_crew import sandbox_mount_sweep
-from kiro_crew.sandbox import _cleanup_stale_sandbox_mount_sources
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import sandbox_mount_sweep
+from aj_crew.sandbox import _cleanup_stale_sandbox_mount_sources
+from aj_crew.testing.clock import ManualClock
 
 
 class TestSweepCostIsBounded:
@@ -39,7 +39,7 @@ class TestSweepCostIsBounded:
             lambda pid: probed.append(pid) or False,
         )
         for index in range(6):
-            _make_file(tmp_path, f"kirocrew_sb_{_DEAD_PID}_file{index:02d}")
+            _make_file(tmp_path, f"ajcrew_sb_{_DEAD_PID}_file{index:02d}")
 
         assert _cleanup_stale_sandbox_mount_sources(roots=[str(tmp_path)]) == 6
         assert probed == [_DEAD_PID]
@@ -50,10 +50,10 @@ class TestSweepCostIsBounded:
         """Retained entries listed first must not starve the ones behind them."""
         _pin(monkeypatch, set())
         monkeypatch.setattr(sandbox_mount_sweep, "_SWEEP_MAX_ENTRIES_PER_PASS", 2)
-        retained = [f"kirocrew_sb_{_LIVE_PID}_live{index}" for index in range(2)]
+        retained = [f"ajcrew_sb_{_LIVE_PID}_live{index}" for index in range(2)]
         for name in retained:
             _make_dir(tmp_path, name)
-        stale = f"kirocrew_sb_{_DEAD_PID}_dead0"
+        stale = f"ajcrew_sb_{_DEAD_PID}_dead0"
         _make_file(tmp_path, stale)
         order = [*retained, stale]
         real_listdir = os.listdir
@@ -77,15 +77,15 @@ class TestSweepCostIsBounded:
         clock = ManualClock(start=time.time())
         clock.install(monkeypatch, sandbox_mount_sweep)
         monkeypatch.setattr(
-            "kiro_crew.sandbox._mount_source_candidate_roots", lambda: [str(tmp_path)]
+            "aj_crew.sandbox._mount_source_candidate_roots", lambda: [str(tmp_path)]
         )
-        _make_file(tmp_path, f"kirocrew_sb_{_DEAD_PID}_first")
+        _make_file(tmp_path, f"ajcrew_sb_{_DEAD_PID}_first")
         assert _cleanup_stale_sandbox_mount_sources() == 1
 
-        _make_file(tmp_path, f"kirocrew_sb_{_DEAD_PID}_second")
+        _make_file(tmp_path, f"ajcrew_sb_{_DEAD_PID}_second")
         clock.advance(sandbox_mount_sweep._SWEEP_MIN_INTERVAL_SECONDS / 2)
         assert _cleanup_stale_sandbox_mount_sources() == 0
-        assert (tmp_path / f"kirocrew_sb_{_DEAD_PID}_second").exists()
+        assert (tmp_path / f"ajcrew_sb_{_DEAD_PID}_second").exists()
 
         clock.advance(sandbox_mount_sweep._SWEEP_MIN_INTERVAL_SECONDS)
         assert _cleanup_stale_sandbox_mount_sources() == 1
@@ -99,8 +99,8 @@ class TestSweepCostIsBounded:
         first, second = tmp_path / "first", tmp_path / "second"
         first.mkdir()
         second.mkdir()
-        _make_file(first, f"kirocrew_sb_{_DEAD_PID}_orphan")
-        fresh = _make_dir(second, f"kirocrew_sb_{_DEAD_PID}_fresh")
+        _make_file(first, f"ajcrew_sb_{_DEAD_PID}_orphan")
+        fresh = _make_dir(second, f"ajcrew_sb_{_DEAD_PID}_fresh")
         answers = iter([False, True])  # dead for the first root, reused by the second
         monkeypatch.setattr(
             sandbox_mount_sweep.platform_compat, "pid_exists", lambda pid: next(answers)
@@ -121,8 +121,8 @@ class TestSweepCostIsBounded:
         for root in (a, b, c):
             root.mkdir()
         for index in range(2):
-            _make_dir(a, f"kirocrew_sb_{_LIVE_PID}_live{index}")
-        stale = b / f"kirocrew_sb_{_DEAD_PID}_dead0"
+            _make_dir(a, f"ajcrew_sb_{_LIVE_PID}_live{index}")
+        stale = b / f"ajcrew_sb_{_DEAD_PID}_dead0"
         _make_file(b, stale.name)
         roots = [str(a), str(b), str(c)]
 
@@ -142,8 +142,8 @@ class TestSweepCostIsBounded:
         busy.mkdir()
         fallback.mkdir()
         for index in range(6):
-            _make_dir(busy, f"kirocrew_sb_{_LIVE_PID}_live{index}")
-        stale = fallback / f"kirocrew_sb_{_DEAD_PID}_dead0"
+            _make_dir(busy, f"ajcrew_sb_{_LIVE_PID}_live{index}")
+        stale = fallback / f"ajcrew_sb_{_DEAD_PID}_dead0"
         _make_file(fallback, stale.name)
         roots = [str(busy), str(fallback)]
 

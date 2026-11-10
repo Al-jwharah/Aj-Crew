@@ -1,4 +1,4 @@
-"""``session_create`` on the kirocrew-dashboard server, and its advertised tool set.
+"""``session_create`` on the ajcrew-dashboard server, and its advertised tool set.
 
 The model id, the agent-kind selection and the folder a new session is filed in
 reach the create route as asked; the server advertises its whole tool set. Each
@@ -13,8 +13,8 @@ from typing import Any
 import pytest
 from mcp_dashboard_folders_helpers import _call, _minting_post, _reads, _writes
 
-from kiro_crew.mcp_dashboard import _list_tools
-from kiro_crew.mcp_tools.table import Caller
+from aj_crew.mcp_dashboard import _list_tools
+from aj_crew.mcp_tools.table import Caller
 
 
 class TestSessionCreateModel:
@@ -63,17 +63,17 @@ class TestSessionCreateAgentKind:
         created = {"target": "chat-9-900", "title": "worker"}
         _, dash = _call(
             "session_create",
-            {"title": "worker", "agent": "kirocrew-worker", "agent_kind": "template"},
+            {"title": "worker", "agent": "ajcrew-worker", "agent_kind": "template"},
             {"POST /api/session-control/create": created},
         )
         (post,) = dash.requests
-        assert post.body["agent"] == "kirocrew-worker"
+        assert post.body["agent"] == "ajcrew-worker"
         assert post.body["agent_kind"] == "template"
 
     def test_omitted_agent_kind_sends_no_key(self) -> None:
         _, dash = _call(
             "session_create",
-            {"title": "w", "agent": "kirocrew-worker"},
+            {"title": "w", "agent": "ajcrew-worker"},
             {"POST /api/session-control/create": {"target": "chat-9-900", "title": "w"}},
         )
         assert "agent_kind" not in dash.requests[-1].body
@@ -82,7 +82,7 @@ class TestSessionCreateAgentKind:
     def test_a_kind_outside_the_set_is_refused_before_any_call(self, kind: str) -> None:
         # The set is `template` alone: a bare name already selects a member.
         out, dash = _call(
-            "session_create", {"title": "w", "agent": "kirocrew-worker", "agent_kind": kind}, {}
+            "session_create", {"title": "w", "agent": "ajcrew-worker", "agent_kind": kind}, {}
         )
         assert out.startswith("Error:")
         assert "agent_kind" in out
@@ -91,7 +91,7 @@ class TestSessionCreateAgentKind:
     def test_a_delegation_refusal_names_the_template_dispatch_and_the_owner(self) -> None:
         out, _ = _call(
             "session_create",
-            {"title": "worker", "agent": "kirocrew-worker"},
+            {"title": "worker", "agent": "ajcrew-worker"},
             {"POST /api/session-control/create": self._DENIED},
         )
         assert out.startswith("Error: could not create a session:")
@@ -106,7 +106,7 @@ class TestSessionCreateAgentKind:
     def test_a_refused_template_dispatch_points_at_the_owner_not_at_itself(self) -> None:
         out, _ = _call(
             "session_create",
-            {"title": "worker", "agent": "kirocrew-worker", "agent_kind": "template"},
+            {"title": "worker", "agent": "ajcrew-worker", "agent_kind": "template"},
             {"POST /api/session-control/create": self._DENIED},
         )
         assert out.startswith("Error: could not create a session:")
@@ -123,7 +123,7 @@ class TestSessionCreateAgentKind:
         # remedy that sends the owner to the picker is one that cannot work.
         out, _ = _call(
             "session_create",
-            {"title": "worker", "agent": "kirocrew-worker", "agent_kind": "template"},
+            {"title": "worker", "agent": "ajcrew-worker", "agent_kind": "template"},
             {"POST /api/session-control/create": self._DENIED},
         )
         lowered = out.lower()
@@ -134,16 +134,16 @@ class TestSessionCreateAgentKind:
     def test_other_refusals_carry_no_remedy(self) -> None:
         out, _ = _call(
             "session_create",
-            {"title": "worker", "agent": "kirocrew-worker"},
+            {"title": "worker", "agent": "ajcrew-worker"},
             {
                 "POST /api/session-control/create": {
-                    "error": "'kirocrew-worker' does not resolve to a configured agent",
+                    "error": "'ajcrew-worker' does not resolve to a configured agent",
                     "code": "agent_unresolved",
                 }
             },
         )
         assert out == (
-            "Error: could not create a session: 'kirocrew-worker' does not resolve to a "
+            "Error: could not create a session: 'ajcrew-worker' does not resolve to a "
             "configured agent"
         )
 
@@ -152,7 +152,7 @@ class TestSessionCreateAgentKind:
         # text as the real create, remedy included, with nothing created.
         out, dash = _call(
             "session_create",
-            {"title": "worker", "agent": "kirocrew-worker", "folder": "Goal/kirocrew-worker"},
+            {"title": "worker", "agent": "ajcrew-worker", "folder": "Goal/ajcrew-worker"},
             {
                 **_reads(),
                 "POST /api/session-control/create": self._DENIED,
@@ -208,7 +208,7 @@ class TestSessionCreateAutocompact:
         made = {"id": "dddddddddddd", "name": "fresh", "parent_id": "aaaaaaaaaaaa"}
         _, dash = _call(
             "session_create",
-            {"title": "worker", "folder": "kirocrew/fresh", "autocompact_pct": 85},
+            {"title": "worker", "folder": "ajcrew/fresh", "autocompact_pct": 85},
             {
                 **_reads(),
                 "POST /api/session-control/create": lambda req: (
@@ -250,19 +250,19 @@ class TestSessionCreateFolder:
     def test_files_at_creation_with_the_resolved_id(self) -> None:
         """One create, already carrying the folder id — filing is not a second call."""
         out, dash = _call(
-            "session_create", {"title": "worker", "folder": "kirocrew/0811"}, self._routes()
+            "session_create", {"title": "worker", "folder": "ajcrew/0811"}, self._routes()
         )
         (create,) = _writes(dash)
         assert create.path == "/api/session-control/create"
         assert create.body["folder_id"] == "bbbbbbbbbbbb"
-        assert "kirocrew/0811" in out
+        assert "ajcrew/0811" in out
 
     def test_missing_segments_are_created_like_a_parent_ref(self) -> None:
         """mkdir -p over the reference, then the create rides the new leaf id."""
         made = {"id": "dddddddddddd", "name": "fresh", "parent_id": "aaaaaaaaaaaa"}
         out, dash = _call(
             "session_create",
-            {"title": "worker", "folder": "kirocrew/fresh"},
+            {"title": "worker", "folder": "ajcrew/fresh"},
             self._routes(**{"POST /api/chat/folders": made}),
         )
         create = _writes(dash)[-1]
@@ -277,10 +277,10 @@ class TestSessionCreateFolder:
         made a new top-level ``a`` > ``b`` pair for the workers instead.
         """
         tree = [{"id": "aaaaaaaaaaaa", "name": "a/b", "parent_id": ""}]
-        made = {"id": "dddddddddddd", "name": "kirocrew-worker", "parent_id": "aaaaaaaaaaaa"}
+        made = {"id": "dddddddddddd", "name": "ajcrew-worker", "parent_id": "aaaaaaaaaaaa"}
         out, dash = _call(
             "session_create",
-            {"title": "worker", "folder": "a/b/kirocrew-worker"},
+            {"title": "worker", "folder": "a/b/ajcrew-worker"},
             {
                 **self._routes(),
                 "GET /api/chat/folders": tree,
@@ -288,11 +288,11 @@ class TestSessionCreateFolder:
             },
         )
         folder_posts = [w.body for w in _writes(dash) if w.path == "/api/chat/folders"]
-        assert folder_posts == [{"name": "kirocrew-worker", "parent_id": "aaaaaaaaaaaa"}]
+        assert folder_posts == [{"name": "ajcrew-worker", "parent_id": "aaaaaaaaaaaa"}]
         create = _writes(dash)[-1]
         assert create.path == "/api/session-control/create"
         assert create.body["folder_id"] == "dddddddddddd"
-        assert "a/b/kirocrew-worker" in out
+        assert "a/b/ajcrew-worker" in out
 
     def test_an_unresolvable_folder_refuses_the_whole_create(self) -> None:
         """No session may exist when the filing half cannot be honored.
@@ -316,7 +316,7 @@ class TestSessionCreateFolder:
         """
         out, dash = _call(
             "session_create",
-            {"title": "worker", "folder": "kirocrew/0811"},
+            {"title": "worker", "folder": "ajcrew/0811"},
             self._routes(),
             Caller.strict("cron:job-1"),
         )
@@ -345,7 +345,7 @@ class TestSessionCreateFolder:
         """
         out, dash = _call(
             "session_create",
-            {"title": "worker", "folder": "kirocrew/fresh"},
+            {"title": "worker", "folder": "ajcrew/fresh"},
             self._routes(slots=[{"key": "chat-1-100", "title": "Caller", "app": "some-app"}]),
         )
         assert out.startswith("Error:")
@@ -357,7 +357,7 @@ class TestSessionCreateFolder:
         made = {"id": "dddddddddddd", "name": "fresh", "parent_id": "aaaaaaaaaaaa"}
         _, dash = _call(
             "session_create",
-            {"title": "worker", "folder": "kirocrew/fresh"},
+            {"title": "worker", "folder": "ajcrew/fresh"},
             self._routes(
                 slots=[{"key": "gate-key", "title": "Gate"}],
                 **{"POST /api/chat/folders": made},
@@ -383,7 +383,7 @@ class TestSessionCreateFolderInCrewMode:
         "key": "chat-1-100",
         "title": "Conductor",
         "crew_mode_root": True,
-        "crew_mode_agent": "kirocrew",
+        "crew_mode_agent": "ajcrew",
     }
 
     def _routes(self, folders: list[dict] | None = None) -> dict[str, Any]:
@@ -399,7 +399,7 @@ class TestSessionCreateFolderInCrewMode:
 
     def test_an_existing_folder_rides_as_the_id_only(self) -> None:
         out, dash = _call(
-            "session_create", {"title": "worker", "folder": "kirocrew/0811"}, self._routes()
+            "session_create", {"title": "worker", "folder": "ajcrew/0811"}, self._routes()
         )
         (create,) = _writes(dash)
         assert create.body["folder_id"] == "bbbbbbbbbbbb"
@@ -409,13 +409,13 @@ class TestSessionCreateFolderInCrewMode:
     def test_an_ambiguous_reference_is_still_refused(self) -> None:
         # Ignoring it would pick a project directory nobody chose.
         folders = [
-            {"id": "aaaaaaaaaaaa", "name": "kirocrew", "parent_id": None},
+            {"id": "aaaaaaaaaaaa", "name": "ajcrew", "parent_id": None},
             {"id": "bbbbbbbbbbbb", "name": "0811", "parent_id": "aaaaaaaaaaaa"},
             {"id": "cccccccccccc", "name": "0811", "parent_id": "aaaaaaaaaaaa"},
         ]
         out, dash = _call(
             "session_create",
-            {"title": "worker", "folder": "kirocrew/0811"},
+            {"title": "worker", "folder": "ajcrew/0811"},
             self._routes(folders=folders),
         )
         assert out.startswith("Error:")
@@ -427,7 +427,7 @@ class TestSessionCreateFolderInCrewMode:
         Mode caller files nothing, so a reference that resolves to no existing folder
         names no project directory and the dispatch goes ahead unfiled."""
         out, dash = _call(
-            "session_create", {"title": "worker", "folder": "kirocrew/missing"}, self._routes()
+            "session_create", {"title": "worker", "folder": "ajcrew/missing"}, self._routes()
         )
         assert not out.startswith("Error:")
         (create,) = _writes(dash)

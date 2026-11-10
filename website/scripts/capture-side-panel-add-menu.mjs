@@ -29,7 +29,7 @@ const slots = [{
   title: 'Side panel + menu on the shared dropdown',
   running: false,
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   modified: Math.floor(Date.now() / 1000),
   last_ts: '2026-08-05T22:00:00Z',
   folder_id: '',

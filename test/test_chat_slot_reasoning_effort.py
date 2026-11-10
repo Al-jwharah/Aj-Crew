@@ -11,11 +11,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import chat_handlers, chat_persistence
-from kiro_crew.dashboard.chat import api_chat_slot_reasoning_effort
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_selection_capabilities
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.dashboard import chat_handlers, chat_persistence
+from aj_crew.dashboard.chat import api_chat_slot_reasoning_effort
+from aj_crew.dashboard.chat_handlers import api_chat_slot_selection_capabilities
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.providers.acp import AcpProvider
 
 
 def _make_app(state: DashboardState) -> web.Application:
@@ -46,20 +46,20 @@ class TestSlotSelectionCapabilities:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("kind", ["template", "member"])
     async def test_cold_selection_preserves_template_member_namespace(self, monkeypatch, kind):
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
-        cfg = loader.KiroCrewConfig.load()
+        cfg = loader.AjCrewConfig.load()
         cfg.agent.acp_backend = "claude"
-        cfg.agents["shared-name"] = loader.KiroCrewAgentConfig(
-            kiro_agent="kirocrew",
+        cfg.agents["shared-name"] = loader.AjCrewAgentConfig(
+            kiro_agent="ajcrew",
             workspace="default",
             memory_store="default",
             model="claude-opus-5.5",
         )
-        monkeypatch.setattr(loader.KiroCrewConfig, "load", lambda: cfg)
+        monkeypatch.setattr(loader.AjCrewConfig, "load", lambda: cfg)
         monkeypatch.setattr(loader, "_materialized_kiro_agent", lambda name, _project: name)
         monkeypatch.setattr(
-            loader.KiroCrewConfig,
+            loader.AjCrewConfig,
             "_resolve_named_agent_model",
             lambda _self, name: "claude-haiku-4.5" if name == "shared-name" else "",
         )
@@ -137,7 +137,7 @@ class TestSlotSelectionCapabilities:
             )
 
         monkeypatch.setattr(
-            chat_handlers.KiroCrewConfig,
+            chat_handlers.AjCrewConfig,
             "load",
             load_config,
         )
@@ -159,7 +159,7 @@ class TestSlotSelectionCapabilities:
     @pytest.mark.asyncio
     async def test_cold_member_session_uses_member_backend_for_pair_ids(self, monkeypatch):
         monkeypatch.setattr(
-            chat_handlers.KiroCrewConfig,
+            chat_handlers.AjCrewConfig,
             "load",
             lambda: SimpleNamespace(
                 agent=SimpleNamespace(acp_backend="claude", member_acp_backend="codex"),
@@ -348,7 +348,7 @@ class TestChatSlotReasoningEffort:
         self, monkeypatch, global_backend, member_backend, expected_model
     ):
         monkeypatch.setattr(
-            chat_handlers.KiroCrewConfig,
+            chat_handlers.AjCrewConfig,
             "load",
             lambda: SimpleNamespace(
                 agent=SimpleNamespace(
@@ -429,7 +429,7 @@ class TestChatSlotReasoningEffort:
         # handler restores the prior effort first — the acting tab keeps its
         # old store value on a non-2xx, and the probe has proven the
         # surviving session still runs it.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         slot.reasoning_effort = "high"
@@ -456,7 +456,7 @@ class TestChatSlotReasoningEffort:
         # helper's probe compares instance IDENTITY, so a different registered
         # provider is NOT the unpopped old session — the switch is committed
         # and the answer is 200 + warning.
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         slot = _ChatSlot("test")
         slot.reasoning_effort = "high"
@@ -710,7 +710,7 @@ class TestChatSlotReasoningEffortLiveProvider:
 
     @pytest.mark.asyncio
     async def test_live_effort_capable_model_uses_change_effort_no_reset(self):
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         provider = MagicMock(spec=AcpProvider)
         provider.supports_effort = MagicMock(return_value=True)
@@ -739,7 +739,7 @@ class TestChatSlotReasoningEffortLiveProvider:
         # A harness that is the authority on its own vocabulary hides a Crew level
         # it has no value for. Refused up front: nothing persists, nothing is
         # pushed, and the session is not reset into re-reading it.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         provider = MagicMock(spec=AcpProvider)
         provider.supports_effort = MagicMock(return_value=True)
@@ -768,7 +768,7 @@ class TestChatSlotReasoningEffortLiveProvider:
         # its entry back. Committing the cleared slot value would show "default"
         # over that overlay, and resetting would re-read the same level, so the
         # handler commits neither and answers a retryable 409.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         provider = MagicMock(spec=AcpProvider)
         provider.supports_effort = MagicMock(return_value=True)
@@ -792,7 +792,7 @@ class TestChatSlotReasoningEffortLiveProvider:
         # clear_effort returns True only when a default was applied LIVE
         # (kiro with a workspace default, or claude's ``default`` value) → no
         # session reset needed.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         provider = MagicMock(spec=AcpProvider)
         provider.supports_effort = MagicMock(return_value=True)
@@ -819,7 +819,7 @@ class TestChatSlotReasoningEffortLiveProvider:
         # clear_effort returns False (no live clear value, or kiro with no workspace default)
         # → the running session can't be reset to default live, so the handler
         # MUST reset the session so a cold start re-resolves the true default.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         provider = MagicMock(spec=AcpProvider)
         provider.supports_effort = MagicMock(return_value=True)
@@ -840,7 +840,7 @@ class TestChatSlotReasoningEffortLiveProvider:
 
     @pytest.mark.asyncio
     async def test_non_effort_capable_model_persists_without_live_or_reset(self):
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         provider = MagicMock(spec=AcpProvider)
         provider.supports_effort = MagicMock(return_value=False)
@@ -861,7 +861,7 @@ class TestChatSlotReasoningEffortLiveProvider:
 
     @pytest.mark.asyncio
     async def test_live_change_failure_falls_back_to_reset(self):
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         provider = MagicMock(spec=AcpProvider)
         provider.supports_effort = MagicMock(return_value=True)
@@ -882,7 +882,7 @@ class TestChatSlotReasoningEffortLiveProvider:
     async def test_a_relaunch_refusal_keeps_the_old_level_and_does_not_reset(self):
         """A relaunching harness put the prior level back; saving the refused one would
         cold-start on it and fail the same way on every later message."""
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         provider = MagicMock(spec=AcpProvider)
         provider.supports_effort = MagicMock(return_value=True)
@@ -908,7 +908,7 @@ class TestChatSlotReasoningEffortLiveProvider:
         # (change_effort's response wait would race the in-flight prompt read
         # loop on the same process). The override is persisted on the slot and
         # applies on the next turn; no live push, no session reset.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         provider = MagicMock(spec=AcpProvider)
         provider.supports_effort = MagicMock(return_value=True)
@@ -936,7 +936,7 @@ class TestChatSlotReasoningEffortLiveProvider:
     @pytest.mark.asyncio
     async def test_active_turn_defers_clear_too(self):
         # Clearing to default while a turn is active is likewise deferred.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         provider = MagicMock(spec=AcpProvider)
         provider.supports_effort = MagicMock(return_value=True)
@@ -963,7 +963,7 @@ class TestChatSlotReasoningEffortLiveProvider:
     @pytest.mark.asyncio
     async def test_no_active_turn_pushes_live(self):
         # Contrast: with no active turn the handler pushes change_effort live.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         provider = MagicMock(spec=AcpProvider)
         provider.supports_effort = MagicMock(return_value=True)
@@ -989,7 +989,7 @@ class TestValidateReasoningEffortPersistence:
 
     @pytest.mark.parametrize("level", ["", "low", "medium", "high", "xhigh", "max"])
     def test_passes_through_allowlisted(self, level: str):
-        from kiro_crew.dashboard.chat_persistence import _validate_reasoning_effort
+        from aj_crew.dashboard.chat_persistence import _validate_reasoning_effort
 
         assert _validate_reasoning_effort(level) == level
 
@@ -998,12 +998,12 @@ class TestValidateReasoningEffortPersistence:
         ["LOW", "; rm -rf /", "max --evil-flag", "../../../etc", "extreme", " low"],
     )
     def test_discards_disallowed(self, tampered: str):
-        from kiro_crew.dashboard.chat_persistence import _validate_reasoning_effort
+        from aj_crew.dashboard.chat_persistence import _validate_reasoning_effort
 
         assert _validate_reasoning_effort(tampered) == ""
 
     def test_discards_non_string(self):
-        from kiro_crew.dashboard.chat_persistence import _validate_reasoning_effort
+        from aj_crew.dashboard.chat_persistence import _validate_reasoning_effort
 
         assert _validate_reasoning_effort(5) == ""
         assert _validate_reasoning_effort(None) == ""
@@ -1013,14 +1013,14 @@ class TestValidateReasoningEffortPersistence:
 @pytest.mark.asyncio
 @pytest.mark.parametrize("route", ["selection-capabilities", "reasoning-effort"])
 async def test_unknown_crewmate_pin_is_absent_from_slot_refusals(route, monkeypatch, caplog):
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
 
     secret = "sk-test-not-a-real-secret-0000"
-    cfg = KiroCrewConfig()
-    cfg.agents["atlas"] = KiroCrewAgentConfig(
+    cfg = AjCrewConfig()
+    cfg.agents["atlas"] = AjCrewAgentConfig(
         member_id="atlas-0123456789ab", kiro_agent="atlas", acp_backend=secret
     )
-    monkeypatch.setattr(chat_handlers.KiroCrewConfig, "load", lambda: cfg)
+    monkeypatch.setattr(chat_handlers.AjCrewConfig, "load", lambda: cfg)
     slot = _ChatSlot("member-atlas-0123456789ab", model="claude-opus-4.8[max]")
     state = _mock_state(slot)
     async with TestClient(TestServer(_make_app(state), host="127.0.0.1")) as client:

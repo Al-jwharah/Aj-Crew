@@ -21,8 +21,8 @@ import types
 
 import pytest
 
-from kiro_crew.cron_script import Done, Report, Skip
-from kiro_crew.irq import (
+from aj_crew.cron_script import Done, Report, Skip
+from aj_crew.irq import (
     Observation,
     Outcome,
     Probe,
@@ -30,12 +30,12 @@ from kiro_crew.irq import (
     Severity,
     Tick,
 )
-from kiro_crew.irq import _dedupe_key as dedupe_key
-from kiro_crew.irq import (
+from aj_crew.irq import _dedupe_key as dedupe_key
+from aj_crew.irq import (
     load_state,
 )
-from kiro_crew.irq import poll as irq_poll
-from kiro_crew.irq import (
+from aj_crew.irq import poll as irq_poll
+from aj_crew.irq import (
     run,
     sanitize_label,
     state_path,
@@ -49,7 +49,7 @@ _COALESCE = 0.01
 class _FakeClock:
     """A wall clock that moves only when a test advances it.
 
-    Installed over the ``time`` name that :mod:`kiro_crew.irq` reads (see
+    Installed over the ``time`` name that :mod:`aj_crew.irq` reads (see
     :func:`_deterministic_clock`), so every interval the kernel measures is
     exact by construction. The assertions this protects are the ones that
     need an interval to stay SHORT -- two back-to-back ``_verdict()`` calls
@@ -73,7 +73,7 @@ class _FakeClock:
 
     def __getattr__(self, name: str) -> object:
         raise AttributeError(
-            f"_FakeClock does not fake time.{name}; kiro_crew.irq grew a clock "
+            f"_FakeClock does not fake time.{name}; aj_crew.irq grew a clock "
             "read beyond time.time(). Cover it here (see _deterministic_clock)."
         )
 
@@ -97,15 +97,15 @@ def _settle() -> None:
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
     """Point the kernel's state directory at a private tmp home."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     return tmp_path
 
 
 @pytest.fixture(autouse=True)
 def _deterministic_clock(monkeypatch):
-    """Give ``kiro_crew.irq`` a clock that only this module can move.
+    """Give ``aj_crew.irq`` a clock that only this module can move.
 
-    The patch targets the module attribute ``kiro_crew.irq.time`` -- the name
+    The patch targets the module attribute ``aj_crew.irq.time`` -- the name
     the kernel's ``time.time()`` reads resolve -- never the stdlib module
     object, so the fake is scoped to the kernel and nothing else in the
     process sees it. Seeding from the real clock keeps the absolute values
@@ -113,7 +113,7 @@ def _deterministic_clock(monkeypatch):
     advances, not from the seed.
     """
     _clock.reset(time.time())
-    monkeypatch.setattr("kiro_crew.irq.time", _clock)
+    monkeypatch.setattr("aj_crew.irq.time", _clock)
     return _clock
 
 
@@ -639,7 +639,7 @@ def test_unwritable_state_delivers_instead_of_swallowing_the_window():
     carrying the warning. Without coalescing this hazard did not exist, so it
     arrived with the window."""
     probe = ScriptedProbe([Tick(epoch="e1", observations=[_wake("red:a", "A")], pending=9)])
-    import kiro_crew.irq as irq_mod
+    import aj_crew.irq as irq_mod
 
     original = irq_mod.save_state
     try:
@@ -667,7 +667,7 @@ def test_partially_persisted_streak_still_alerts():
     permanently silent: every later tick reloads 1, reaches 2, and is neither
     == 1 nor >= the threshold. Repeats are the right degradation, because dedupe
     needs the same storage that just failed."""
-    import kiro_crew.irq as irq_mod
+    import aj_crew.irq as irq_mod
 
     path = state_path("test-kind", "sub-1", "job-1")
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -1184,7 +1184,7 @@ def test_a_partial_fire_defers_to_the_unwritable_state_fallback():
             Tick(epoch="e1", observations=[conversation, checks], pending=4),
         ]
     )
-    import kiro_crew.irq as irq_mod
+    import aj_crew.irq as irq_mod
 
     # First tick writes normally so the window exists and can age.
     assert isinstance(_verdict(probe, coalesce_secs=_COALESCE), Skip)
@@ -1405,7 +1405,7 @@ def test_a_probe_defect_falls_back_instead_of_going_quiet():
 
 
 def test_a_kernel_that_returns_without_a_verdict_falls_back(monkeypatch):
-    monkeypatch.setattr("kiro_crew.irq.run", lambda *a, **k: None)
+    monkeypatch.setattr("aj_crew.irq.run", lambda *a, **k: None)
     verdict = irq_poll("loop-1", "{}", _ReturningKernelProbe())
     assert verdict.outcome is Outcome.FALLBACK
 

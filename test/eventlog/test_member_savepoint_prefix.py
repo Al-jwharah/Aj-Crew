@@ -19,14 +19,14 @@ import shutil
 
 import pytest
 
-from kiro_crew.crew_log.schema import KIND_MEMBER
-from kiro_crew.crew_log.store import crew_log_dir, crew_log_path
-from kiro_crew.eventlog import members_projections
-from kiro_crew.eventlog import service as service_mod
-from kiro_crew.eventlog import types
-from kiro_crew.eventlog.log import MemberLog
-from kiro_crew.eventlog.service import MemberEventLogService
-from kiro_crew.projection import EMPTY_WATERMARK, ProjectionRegistry
+from aj_crew.crew_log.schema import KIND_MEMBER
+from aj_crew.crew_log.store import crew_log_dir, crew_log_path
+from aj_crew.eventlog import members_projections
+from aj_crew.eventlog import service as service_mod
+from aj_crew.eventlog import types
+from aj_crew.eventlog.log import MemberLog
+from aj_crew.eventlog.service import MemberEventLogService
+from aj_crew.projection import EMPTY_WATERMARK, ProjectionRegistry
 
 SLUG = "alice"
 
@@ -39,7 +39,7 @@ SEEDED_CONFIG = ({"model": "m1"}, {"workspace": "w1"}, {"avatar": "a1"})
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
     """Every test writes into its own data home, never the live one."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     yield
 
 
@@ -72,7 +72,7 @@ def serializable_units(monkeypatch):
 
 
 def _service(tmp_path, monkeypatch) -> MemberEventLogService:
-    import kiro_crew.members as members
+    import aj_crew.members as members
 
     monkeypatch.setattr(members, "data_home", lambda: tmp_path)
     root = tmp_path / "members"

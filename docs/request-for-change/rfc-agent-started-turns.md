@@ -23,7 +23,7 @@ Code facts are measured at `1ad2d6d05f`.
 
 ## Summary
 
-On the `claude` backend, Claude Code can start a turn by itself after the dashboard turn ends: a `run_in_background` command exits, the model gets a task notification, and it answers. claude-agent-acp writes that turn to stdout. Kiro Crew has no turn open, so nobody reads it, and the next user message reads it as its own: the old reply and tool rows show under the new message, stamped late, with no notification.
+On the `claude` backend, Claude Code can start a turn by itself after the dashboard turn ends: a `run_in_background` command exits, the model gets a task notification, and it answers. claude-agent-acp writes that turn to stdout. Aj Crew has no turn open, so nobody reads it, and the next user message reads it as its own: the old reply and tool rows show under the new message, stamped late, with no notification.
 
 This RFC adds an **agent-started turn**: a reader that watches stdout between turns, and a turn with no prompt that runs through the same `_run_chat` and the same `_dispatch_events` read loop as a user turn. The agent's reply becomes its own assistant message, saved and redacted like any other, with the normal end-of-turn notification.
 
@@ -38,7 +38,7 @@ This RFC adds an **agent-started turn**: a reader that watches stdout between tu
 
 ### Current frame flow
 
-All readers below are `AcpClient` methods: `_prompt_loop` in `src/kiro_crew/acp/client_turn.py`, the command and init waits in `src/kiro_crew/acp/client_transport.py`, and the compaction readers in `src/kiro_crew/acp/client_usage.py`.
+All readers below are `AcpClient` methods: `_prompt_loop` in `src/aj_crew/acp/client_turn.py`, the command and init waits in `src/aj_crew/acp/client_transport.py`, and the compaction readers in `src/aj_crew/acp/client_usage.py`.
 
 | When | Who reads stdout | What happens to a frame |
 |---|---|---|
@@ -49,7 +49,7 @@ All readers below are `AcpClient` methods: `_prompt_loop` in `src/kiro_crew/acp/
 
 Those five sites are every caller of `_read_message` (`client_transport.py`) on `AcpClient`. `_process_message` classifies any `session/update` as `"update"` with no turn attribution, and nothing on main reads `_meta["_claude/origin"]`.
 
-`AcpSessionHandle` backends (kiro, KAS, codex; `ACP_BACKENDS_ACP_RUNTIME`, `src/kiro_crew/agent_sdk/backends.py`) do not misplace these frames: the pre-turn drain in `AcpSessionHandle.prompt()` (`src/kiro_crew/acp/session_handle_turn.py`) discards them, counted in one warning, never shown. `AcpClient` backends (`ACP_BACKENDS_ACP_CLIENT_SPAWNABLE`, `backends.py`) have no drain.
+`AcpSessionHandle` backends (kiro, KAS, codex; `ACP_BACKENDS_ACP_RUNTIME`, `src/aj_crew/agent_sdk/backends.py`) do not misplace these frames: the pre-turn drain in `AcpSessionHandle.prompt()` (`src/aj_crew/acp/session_handle_turn.py`) discards them, counted in one warning, never shown. `AcpClient` backends (`ACP_BACKENDS_ACP_CLIENT_SPAWNABLE`, `backends.py`) have no drain.
 
 ### Why dropping is not enough
 
@@ -90,7 +90,7 @@ The reader holds `_turn_lock` until the callback has marked the slot busy (step 
 
 ### 2. The agent-started turn in the dashboard
 
-`on_agent_turn` runs synchronously on the event loop. It claims the slot the way a dispatched user turn does (compare `_start_next_queued_turn`, `src/kiro_crew/dashboard/chat_turn/queue_drain.py`): it sets `slot.running` and schedules `_run_chat` with a new `agent_started=True` flag and no message. `_run_chat` then holds the per-session semaphore for the turn, as every turn does. Only after `slot.running` is set does the reader release `_turn_lock`.
+`on_agent_turn` runs synchronously on the event loop. It claims the slot the way a dispatched user turn does (compare `_start_next_queued_turn`, `src/aj_crew/dashboard/chat_turn/queue_drain.py`): it sets `slot.running` and schedules `_run_chat` with a new `agent_started=True` flag and no message. `_run_chat` then holds the per-session semaphore for the turn, as every turn does. Only after `slot.running` is set does the reader release `_turn_lock`.
 
 If `slot.running` is already set, the callback starts nothing and the frame stays in `_buffer`. Two kinds of turn can hold the slot at that moment, and the rule has to serve both:
 
@@ -117,7 +117,7 @@ A turn that ends on a timeout gets the same synthetic completion a user turn get
 
 ### 3. Persistence and redaction
 
-The assistant row and its tool rows are written by the same code a user turn uses, so `_redact_tool_field` (`src/kiro_crew/dashboard/chat_utils.py`) and assistant-text redaction apply unchanged. The assistant row carries `meta.origin = {"kind": "agent", "reason": <origin kind>}`; the reason is drawn from a closed set and any other value is stored as `other`, so adapter text never reaches the row. Only `kind` is read from the origin object: a `peer` origin carries a subagent's report as free text in `body` (Phase 0). The history replay on resume includes the row as an ordinary assistant turn, so the transcript and Claude's own session agree.
+The assistant row and its tool rows are written by the same code a user turn uses, so `_redact_tool_field` (`src/aj_crew/dashboard/chat_utils.py`) and assistant-text redaction apply unchanged. The assistant row carries `meta.origin = {"kind": "agent", "reason": <origin kind>}`; the reason is drawn from a closed set and any other value is stored as `other`, so adapter text never reaches the row. Only `kind` is read from the origin object: a `peer` origin carries a subagent's report as free text in `body` (Phase 0). The history replay on resume includes the row as an ordinary assistant turn, so the transcript and Claude's own session agree.
 
 ### 4. Notifications
 
@@ -125,7 +125,7 @@ The turn ends through the normal turn-end path, so the unread badge and the turn
 
 ### 5. Slot busy accounting
 
-The turn holds the session semaphore for its whole run, like any turn. RSS recycle (`_rss_threshold_check` in `src/kiro_crew/session_cleanup.py`) and the idle sweep (`_expire_idle`, same file) both skip a session whose semaphore is held, so neither can kill it mid-turn. The turn also refreshes `last_used`, so the idle timeout restarts after it.
+The turn holds the session semaphore for its whole run, like any turn. RSS recycle (`_rss_threshold_check` in `src/aj_crew/session_cleanup.py`) and the idle sweep (`_expire_idle`, same file) both skip a session whose semaphore is held, so neither can kill it mid-turn. The turn also refreshes `last_used`, so the idle timeout restarts after it.
 
 The gap before the agent-started turn begins is already covered on claude: the harness background hold in `_rss_threshold_check` (`HARNESS_BACKGROUND_WORK_HOLD_SECS`, one hour) keeps a session whose harness launched background work recently.
 
@@ -135,7 +135,7 @@ Per decision 3 (recommended: queue), a message sent while the agent-started turn
 
 ### 7. Cancel and interrupt
 
-Stop on an agent-started turn sends `session/cancel` for the session, as Stop on a user turn does, then runs the normal cancel grace window (`acp-client.md`, "Cancel Grace Window"). Phase 0 found that the adapter honours that cancel: the cycle stops and still ends with its origin `usage_update`, so the turn ends on its normal end condition. If a cancel is ignored, the grace window ends the Kiro Crew turn locally, and frames that arrive afterwards start a new agent-started turn instead of leaking into the next user turn.
+Stop on an agent-started turn sends `session/cancel` for the session, as Stop on a user turn does, then runs the normal cancel grace window (`acp-client.md`, "Cancel Grace Window"). Phase 0 found that the adapter honours that cancel: the cycle stops and still ends with its origin `usage_update`, so the turn ends on its normal end condition. If a cancel is ignored, the grace window ends the Aj Crew turn locally, and frames that arrive afterwards start a new agent-started turn instead of leaking into the next user turn.
 
 ### 8. What stays
 

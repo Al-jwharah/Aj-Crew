@@ -10,7 +10,7 @@ vi.mock('../api/client', async (importOriginal) => {
 })
 
 const mockSkills = [
-  { key: 'kirocrew-dev/prepare-pr', name: 'prepare-pr', description: 'PR workflow' },
+  { key: 'ajcrew-dev/prepare-pr', name: 'prepare-pr', description: 'PR workflow' },
   { key: 'dev-fleet/pod-e2e', name: 'pod-e2e', description: 'E2E tests' },
   { key: 'widgets/theme-pack', name: 'theme-pack', description: 'Theme authoring' },
   { key: 'artifacts/save', name: 'artifacts', description: 'Artifact management' },
@@ -29,7 +29,7 @@ describe('HookSkillsSelect', () => {
 
   it('renders selected skills as read-only chips with names from catalog', async () => {
     renderWithProviders(
-      <HookSkillsSelect selected={['kirocrew-dev/prepare-pr', 'dev-fleet/pod-e2e']} onChange={vi.fn()} />,
+      <HookSkillsSelect selected={['ajcrew-dev/prepare-pr', 'dev-fleet/pod-e2e']} onChange={vi.fn()} />,
     )
     await waitFor(() => {
       expect(screen.getByText('prepare-pr')).toBeInTheDocument()
@@ -39,7 +39,7 @@ describe('HookSkillsSelect', () => {
 
   it('renders chips without inline buttons — removal lives in the dropdown Selected section', async () => {
     renderWithProviders(
-      <HookSkillsSelect selected={['kirocrew-dev/prepare-pr']} onChange={vi.fn()} />,
+      <HookSkillsSelect selected={['ajcrew-dev/prepare-pr']} onChange={vi.fn()} />,
     )
     await waitFor(() => expect(screen.getByText('prepare-pr')).toBeInTheDocument())
     // Only the "Add skill" trigger is a button in the chip row; per-chip removal
@@ -82,7 +82,7 @@ describe('HookSkillsSelect', () => {
 
   it('shows chip title attribute with description', async () => {
     renderWithProviders(
-      <HookSkillsSelect selected={['kirocrew-dev/prepare-pr']} onChange={vi.fn()} />,
+      <HookSkillsSelect selected={['ajcrew-dev/prepare-pr']} onChange={vi.fn()} />,
     )
     await waitFor(() => {
       const chip = screen.getByText('prepare-pr').closest('span')
@@ -131,7 +131,7 @@ describe('HookSkillsSelect', () => {
   it('renders multiple selected chips maintaining order', async () => {
     renderWithProviders(
       <HookSkillsSelect
-        selected={['widgets/theme-pack', 'kirocrew-dev/prepare-pr', 'dev-fleet/pod-e2e']}
+        selected={['widgets/theme-pack', 'ajcrew-dev/prepare-pr', 'dev-fleet/pod-e2e']}
         onChange={vi.fn()}
       />,
     )

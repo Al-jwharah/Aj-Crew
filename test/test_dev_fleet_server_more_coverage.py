@@ -24,8 +24,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.apps.builtins.dev_fleet import (
+from aj_crew import platform_compat
+from aj_crew.apps.builtins.dev_fleet import (
     fleet_state,
     gateway_service,
     http_api,
@@ -181,7 +181,7 @@ async def test_run_cmd_spawns_a_windows_absolute_interpreter_as_given(monkeypatc
     calls = _spawn_returns(monkeypatch, _FakeProc(rc=0))
     exe = r"C:\Users\me\kc\.venv\Scripts\python.exe"
 
-    rc, _out, _err = await runtime._run_cmd([exe, "-m", "kiro_crew", "pod", "ls"])
+    rc, _out, _err = await runtime._run_cmd([exe, "-m", "aj_crew", "pod", "ls"])
 
     assert rc == 0
     assert calls[0][0][0] == exe
@@ -258,7 +258,7 @@ async def test_kill_tree_swallows_process_lookup_error(monkeypatch):
 async def test_start_run_records_spawn_failure(monkeypatch):
     _spawn_raises(monkeypatch, OSError("no fork"))
 
-    rid = await runtime._start_run("provision", ["kirocrew", "pod", "up"])
+    rid = await runtime._start_run("provision", ["ajcrew", "pod", "up"])
     rec = await _drain_run(rid)
 
     assert rec["exit_code"] == -1
@@ -277,7 +277,7 @@ async def test_start_run_parses_step_markers_and_caps_output(monkeypatch, tmp_pa
 
     rid = await runtime._start_run(
         "build",
-        ["kirocrew", "pod", "provision"],
+        ["ajcrew", "pod", "provision"],
         cleanup_paths=[str(done), str(tmp_path / "absent")],
     )
     rec = await _drain_run(rid)
@@ -300,7 +300,7 @@ async def test_start_run_deadline_marks_timeout(monkeypatch):
     killed: list[int] = []
     monkeypatch.setattr(runtime, "_kill_tree", AsyncMock(side_effect=killed.append))
 
-    rid = await runtime._start_run("sync", ["kirocrew", "sync"])
+    rid = await runtime._start_run("sync", ["ajcrew", "sync"])
     rec = await _drain_run(rid)
 
     assert rec["status"] == "timeout"
@@ -320,7 +320,7 @@ async def test_start_run_stream_error_reaps_live_child(monkeypatch):
     # pid never reaches a real killpg on the host.
     monkeypatch.setattr(platform_compat, "kill_process_tree_async", AsyncMock())
 
-    rid = await runtime._start_run("sync", ["kirocrew", "sync"])
+    rid = await runtime._start_run("sync", ["ajcrew", "sync"])
     rec = await _drain_run(rid)
 
     assert rec["status"] == "done"
@@ -340,7 +340,7 @@ async def test_start_run_stream_error_tolerates_already_reaped_child(monkeypatch
     # pid never reaches a real killpg on the host.
     monkeypatch.setattr(platform_compat, "kill_process_tree_async", AsyncMock())
 
-    rid = await runtime._start_run("sync", ["kirocrew", "sync"])
+    rid = await runtime._start_run("sync", ["ajcrew", "sync"])
     rec = await _drain_run(rid)
 
     assert rec["output"] == ["[error] boom"]
@@ -364,7 +364,7 @@ async def test_repo_owner_name_none_when_url_unparseable(monkeypatch):
 @pytest.mark.asyncio
 async def test_repo_owner_name_parses_ssh_url(monkeypatch):
     monkeypatch.setattr(repository, "_upstream_remote", AsyncMock(return_value="origin"))
-    _run_cmd_queue(monkeypatch, [(0, "git@github.com:kirodotdev/KiroCrew.git\n", "")])
+    _run_cmd_queue(monkeypatch, [(0, "git@github.com:Al-jwharah/Aj-Crew.git\n", "")])
     assert await fleet_state._repo_owner_name() == "kirodotdev/KiroCrew"
 
 
@@ -705,10 +705,10 @@ def test_same_path_false_on_oserror(monkeypatch):
 
 
 def test_launchd_live_worktree_none_when_exec_is_not_a_venv_binary(monkeypatch, tmp_path):
-    """A launcher pointed at a system kirocrew names no worktree."""
+    """A launcher pointed at a system ajcrew names no worktree."""
     script = tmp_path / "live-gateway"
     script.write_text(
-        "#!/bin/sh\nexec '/usr/bin/kirocrew' gateway\n", encoding="utf-8", newline="\n"
+        "#!/bin/sh\nexec '/usr/bin/ajcrew' gateway\n", encoding="utf-8", newline="\n"
     )
     monkeypatch.setattr(
         gateway_service.LaunchdBackend, "live_program", staticmethod(lambda: script)
@@ -727,7 +727,7 @@ def test_launchd_live_worktree_none_without_exec_line(monkeypatch, tmp_path):
 
 def test_launchd_live_worktree_resolves_venv_grandparent(monkeypatch, tmp_path):
     checkout = tmp_path / "wt-feat"
-    exe = checkout / ".venv" / "bin" / "kirocrew"
+    exe = checkout / ".venv" / "bin" / "ajcrew"
     script = tmp_path / "live-gateway"
     script.write_text(f"#!/bin/sh\nexec '{exe}' gateway\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(
@@ -764,8 +764,8 @@ async def test_live_worktree_path_falls_back_to_execstart(monkeypatch):
     # A fabricated, space-free path: the regex the product uses truncates at the
     # first space, so a tmp_path containing one would make this assert the wrong
     # thing on some runners.
-    checkout = Path("/opt/kirocrew-checkouts/co")
-    exe = checkout / ".venv" / "bin" / "kirocrew"
+    checkout = Path("/opt/ajcrew-checkouts/co")
+    exe = checkout / ".venv" / "bin" / "ajcrew"
     monkeypatch.setattr(live.live_target, "read_target", lambda: None)
     monkeypatch.setattr(live.sys, "platform", "linux")
     monkeypatch.setattr(live.shutil, "which", lambda name: "/bin/systemctl")
@@ -976,7 +976,7 @@ async def test_restart_gateway_refuses_confined_status(monkeypatch):
     # specific reason the gateway cannot be restarted, plus the manual remedy.
     assert "user service" in out["error"]
     assert "not running" in out["error"]
-    assert "kirocrew restart" in out["error"]
+    assert "ajcrew restart" in out["error"]
 
 
 class _NullSel:

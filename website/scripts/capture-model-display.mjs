@@ -24,7 +24,7 @@ import { fileURLToPath } from 'node:url'
 const OUT = process.argv[2] || '../temp-screenshots/model-display'
 const DIST = fileURLToPath(new URL('../dist/', import.meta.url))
 const SLOT = 'chat-fresh-session'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -54,7 +54,7 @@ const MODELS = [
   { model_name: 'claude-sonnet-4.6', description: 'Balanced' },
 ]
 
-// Flipped per scene. `agentFileModel` is what ~/.kiro/agents/kirocrew.json pins —
+// Flipped per scene. `agentFileModel` is what ~/.kiro/agents/ajcrew.json pins —
 // the value the composer used to show in place of the configured default.
 const scene = { model: 'claude-opus-5', effort: 'high', agentFileModel: 'claude-opus-4.8' }
 
@@ -99,7 +99,7 @@ async function main() {
   await page.route('**/api/**', async route => {
     const path = new URL(route.request().url()).pathname
 
-    if (path === '/api/config/kirocrew') {
+    if (path === '/api/config/ajcrew') {
       return json(route, {
         agent: { model: scene.model, reasoning_effort: scene.effort, provider: 'acp' },
         session: { autocompact_pct: 90 },
@@ -113,12 +113,12 @@ async function main() {
     // The builtin agent + its kiro template file, which pins a DIFFERENT model.
     if (path === '/api/agents') {
       return json(route, {
-        agents: [{ name: 'default', kiro_agent: 'kirocrew', description: 'Default crew agent' }],
+        agents: [{ name: 'default', kiro_agent: 'ajcrew', description: 'Default crew agent' }],
         default_agent: 'default',
       })
     }
     if (path.startsWith('/api/agents/detail/')) {
-      return json(route, { name: 'kirocrew', model: scene.agentFileModel, skills: [] })
+      return json(route, { name: 'ajcrew', model: scene.agentFileModel, skills: [] })
     }
     if (path === '/api/agents/installed') return json(route, [])
     if (path === '/api/kiro-prerequisite') {

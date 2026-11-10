@@ -1,8 +1,8 @@
 """Composition contract between ``TelegramDispatcher`` and ``telegram/dispatch``.
 
-``kiro_crew.telegram.transport_dispatch`` keeps the dispatcher's state, its front door
+``aj_crew.telegram.transport_dispatch`` keeps the dispatcher's state, its front door
 and the constructs repository guards read in that file, and binds the methods of the
-owners under ``kiro_crew/telegram/dispatch/`` (the turn engine and the queue drain
+owners under ``aj_crew/telegram/dispatch/`` (the turn engine and the queue drain
 among them) as class attributes. What
 this file pins is what a caller of the dispatcher observes independently of where each
 rule lives:
@@ -38,15 +38,15 @@ from unittest.mock import AsyncMock
 import pytest
 from test_telegram import _dispatcher, _dm, _press
 
-import kiro_crew.telegram.transport_dispatch as td
-from kiro_crew.telegram.renderer import TelegramApprovalDecider
+import aj_crew.telegram.transport_dispatch as td
+from aj_crew.telegram.renderer import TelegramApprovalDecider
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_telegram_dispatch")
 
 SHARED_FACADE_CHECKS = ("the_class_body_scan_can_fail",)
 
 
-FACADE = "kiro_crew.telegram.transport_dispatch"
+FACADE = "aj_crew.telegram.transport_dispatch"
 FACADE_PATH = Path(td.__file__).resolve()
 DISPATCH_DIR = FACADE_PATH.with_name("dispatch")
 REPO = FACADE_PATH.parents[3]
@@ -326,7 +326,7 @@ BASE_MEMBERS = {
     "__init__": (
         "function",
         "(self, *, sessions: \"'SessionManager'\", ctx_builder: \"'ContextBuilder'\", "
-        "cfg: \"'KiroCrewConfig'\", allowed_user_ids: 'set[int]', agent: 'str | None' = None, "
+        "cfg: \"'AjCrewConfig'\", allowed_user_ids: 'set[int]', agent: 'str | None' = None, "
         "conv_log: \"'ConversationLog | None'\" = None, approval_mode: 'str' = 'interactive', "
         "cron_service: \"'CronService | None'\" = None, "
         "subagent_manager: \"'SubagentManager | None'\" = None, "
@@ -445,7 +445,7 @@ BASE_MEMBERS = {
     ),
     "_installed_agent_names": ("staticmethod", "() -> 'list[str]'"),
     "_is_private_route": ("staticmethod", "(route: 'tuple[str, str]') -> 'bool'"),
-    "_live_cfg": ("function", "(self) -> \"'KiroCrewConfig'\""),
+    "_live_cfg": ("function", "(self) -> \"'AjCrewConfig'\""),
     "_maybe_notice": (
         "function",
         "(self, chat_id: 'int', route: 'tuple[str, str]', session_key: 'str', "
@@ -558,7 +558,7 @@ ADDED_MEMBERS = frozenset({"_run_turn", "_handle_resumed_busy"})
 
 
 def _owner(stem: str) -> ModuleType:
-    return importlib.import_module(f"kiro_crew.telegram.dispatch.{stem}")
+    return importlib.import_module(f"aj_crew.telegram.dispatch.{stem}")
 
 
 def _owner_sources() -> dict[str, str]:
@@ -594,8 +594,8 @@ def test_a_moved_name_is_its_owners_object() -> None:
 
 
 def test_a_moved_class_keeps_its_owner_module() -> None:
-    assert td._QueuedOrigin.__module__ == "kiro_crew.telegram.dispatch.origin"
-    assert td._Picker.__module__ == "kiro_crew.telegram.dispatch.pickers"
+    assert td._QueuedOrigin.__module__ == "aj_crew.telegram.dispatch.origin"
+    assert td._Picker.__module__ == "aj_crew.telegram.dispatch.pickers"
 
 
 def test_the_only_names_the_facade_added_are_its_owner_handles() -> None:
@@ -625,8 +625,8 @@ def test_the_facade_is_a_plain_module() -> None:
 
 def test_a_fresh_import_loads_every_owner() -> None:
     probe = (
-        "import sys, kiro_crew.telegram.transport_dispatch\n"
-        "print(sorted(m for m in sys.modules if m.startswith('kiro_crew.telegram.dispatch.')))\n"
+        "import sys, aj_crew.telegram.transport_dispatch\n"
+        "print(sorted(m for m in sys.modules if m.startswith('aj_crew.telegram.dispatch.')))\n"
     )
     result = subprocess.run(
         [sys.executable, "-c", probe],
@@ -636,7 +636,7 @@ def test_a_fresh_import_loads_every_owner() -> None:
         timeout=120,
         check=True,
     )
-    assert result.stdout.strip() == str(sorted(f"kiro_crew.telegram.dispatch.{s}" for s in OWNERS))
+    assert result.stdout.strip() == str(sorted(f"aj_crew.telegram.dispatch.{s}" for s in OWNERS))
 
 
 # ── the class surface ────────────────────────────────────────────────────────────
@@ -688,7 +688,7 @@ def _facade_aliases(tree: ast.Module) -> set[str]:
             for alias in node.names:
                 if alias.name == FACADE and alias.asname:
                     aliases.add(alias.asname)
-        elif isinstance(node, ast.ImportFrom) and node.module == "kiro_crew.telegram":
+        elif isinstance(node, ast.ImportFrom) and node.module == "aj_crew.telegram":
             for alias in node.names:
                 if alias.name == "transport_dispatch":
                     aliases.add(alias.asname or alias.name)
@@ -744,9 +744,9 @@ def _patched_names_in(source: str) -> set[str]:
 
 
 def _facade_patched_names() -> set[str]:
-    """Every name any test rebinds on ``kiro_crew.telegram.transport_dispatch``."""
+    """Every name any test rebinds on ``aj_crew.telegram.transport_dispatch``."""
     found: set[str] = set()
-    roots = [REPO / "test", REPO / "src" / "kiro_crew" / "apps" / "builtins"]
+    roots = [REPO / "test", REPO / "src" / "aj_crew" / "apps" / "builtins"]
     for root in roots:
         for path in root.rglob("test_*.py"):
             text = path.read_text(encoding="utf-8", errors="replace")
@@ -758,20 +758,20 @@ def _facade_patched_names() -> set[str]:
 
 def test_the_patch_scan_reads_every_spelling() -> None:
     planted = (
-        "import kiro_crew.telegram.transport_dispatch as tg\n"
-        "from kiro_crew.telegram import transport_dispatch as td\n"
+        "import aj_crew.telegram.transport_dispatch as tg\n"
+        "from aj_crew.telegram import transport_dispatch as td\n"
         "import importlib\n"
-        "mod = importlib.import_module('kiro_crew.telegram.transport_dispatch')\n"
+        "mod = importlib.import_module('aj_crew.telegram.transport_dispatch')\n"
         "from unittest.mock import patch\n"
         "def test_x(monkeypatch):\n"
         "    monkeypatch.setattr(tg, 'alpha', 1)\n"
         "    patch.object(td, 'beta')\n"
         "    setattr(mod, 'gamma', 2)\n"
         "    td.delta = 3\n"
-        "    patch('kiro_crew.telegram.transport_dispatch.epsilon')\n"
-        "    patch(target='kiro_crew.telegram.transport_dispatch.zeta.inner')\n"
+        "    patch('aj_crew.telegram.transport_dispatch.epsilon')\n"
+        "    patch(target='aj_crew.telegram.transport_dispatch.zeta.inner')\n"
         "    monkeypatch.setattr(other, 'not_this', 1)\n"
-        "    patch('kiro_crew.telegram.renderer.nor_this')\n"
+        "    patch('aj_crew.telegram.renderer.nor_this')\n"
     )
     assert _patched_names_in(planted) == {"alpha", "beta", "gamma", "delta", "epsilon", "zeta"}
 
@@ -843,7 +843,7 @@ def test_every_facade_read_has_its_call_time_import() -> None:
                 n
                 for n in node.body
                 if isinstance(n, ast.ImportFrom)
-                and n.module == "kiro_crew.telegram"
+                and n.module == "aj_crew.telegram"
                 and [(a.name, a.asname) for a in n.names] == [("transport_dispatch", "facade")]
             ]
             assert imports, f"{stem}.{node.name} reads facade.* without importing it"
@@ -914,12 +914,12 @@ async def test_a_facade_patch_reaches_each_moved_reader(monkeypatch: pytest.Monk
 
     monkeypatch.setattr(td, "TelegramApprovalDecider", TelegramApprovalDecider)
     monkeypatch.setattr(td, "unpressed_wait_answer", _answer)
-    import kiro_crew.telegram.renderer as renderer_mod
+    import aj_crew.telegram.renderer as renderer_mod
 
     monkeypatch.setattr(renderer_mod, "_APPROVAL_TIMEOUT_S", 0.05)
-    assert await d.deliver_spawn_approval("spawn:a", "d", "telegram:kirocrew:direct:7") is True
+    assert await d.deliver_spawn_approval("spawn:a", "d", "telegram:ajcrew:direct:7") is True
     TelegramApprovalDecider.retire(
-        TelegramApprovalDecider.key("telegram:kirocrew:direct:7", "spawn:a")
+        TelegramApprovalDecider.key("telegram:ajcrew:direct:7", "spawn:a")
     )
 
     assert reached == [
@@ -967,7 +967,7 @@ def test_an_owner_reaches_a_sibling_through_its_module() -> None:
     for stem, source in _owner_sources().items():
         for node in _module_level_imports(ast.parse(source)):
             if isinstance(node, ast.ImportFrom) and (node.module or "").startswith(
-                "kiro_crew.telegram.dispatch."
+                "aj_crew.telegram.dispatch."
             ):
                 pytest.fail(f"{stem} imports {node.module} names directly")
 
@@ -979,7 +979,7 @@ def test_the_owners_import_graph_is_acyclic() -> None:
         edges[stem] = {
             m.rsplit(".", 1)[-1]
             for m in loaded
-            if m.startswith("kiro_crew.telegram.dispatch.") and m.rsplit(".", 1)[-1] in OWNERS
+            if m.startswith("aj_crew.telegram.dispatch.") and m.rsplit(".", 1)[-1] in OWNERS
         }
     done: set[str] = set()
 
@@ -1032,7 +1032,7 @@ _FACADE_PINNED = {
     "the reservation sweep": "test_approval_early_press: discard_session",
     "a receipt flip": "test_queue_receipt: every flip call names its owner",
     "the queue drain": "test_queue_drain_wake: async def _drain_queue",
-    "an agent-SDK import": "check_agent_sdk_boundary: kiro_crew.acp / kiro_crew.providers",
+    "an agent-SDK import": "check_agent_sdk_boundary: aj_crew.acp / aj_crew.providers",
 }
 _FORBIDDEN_IN_THE_FACADE_TOO = frozenset(
     {"a name-grant check", "the forgeable spawn title", "an agent-SDK import"}
@@ -1092,7 +1092,7 @@ def _facade_pinned_shapes(source: str) -> list[str]:
         "the queue drain": "_drain_queue"
         in {n.name for n in ast.walk(tree) if isinstance(n, ast.AsyncFunctionDef)},
         "an agent-SDK import": any(
-            m.startswith(("kiro_crew.acp", "kiro_crew.providers")) for m in imported
+            m.startswith(("aj_crew.acp", "aj_crew.providers")) for m in imported
         ),
     }
     assert held.keys() == _FACADE_PINNED.keys()
@@ -1134,12 +1134,12 @@ _PLANTED = {
     "the breaker charge": "async def f(s, key):\n    await charge_turn_failure(s, key)\n",
     "the tool gate": "def f(self, call):\n    self.hooks.on_tool_call(call)\n",
     "the auto-title pin": ("def f(auto_title, log, key):\n    auto_title.pin_record(log, key)\n"),
-    "a name-grant check": "def f(cmd):\n    from kiro_crew import name_grant\n",
+    "a name-grant check": "def f(cmd):\n    from aj_crew import name_grant\n",
     "the forgeable spawn title": 'def f(title):\n    return title == "spawn_run"\n',
     "the reservation sweep": "def f(loop, seam, key):\n    loop.call_soon(seam.discard_session, key)\n",
     "a receipt flip": 'async def f(self, key):\n    await self._receipt_flip_locked(key, owner="")\n',
     "the queue drain": "async def _drain_queue(self, key):\n    pass\n",
-    "an agent-SDK import": "import kiro_crew.acp\n",
+    "an agent-SDK import": "import aj_crew.acp\n",
 }
 
 
@@ -1198,15 +1198,15 @@ def test_no_owner_needs_the_class_body() -> None:
 
 def test_dashboard_imports_stay_call_time() -> None:
     """The dashboard imports the channel packages on its boot path, so a channel
-    module reaches ``kiro_crew.dashboard`` only inside the function that needs it."""
+    module reaches ``aj_crew.dashboard`` only inside the function that needs it."""
     sources = {"transport_dispatch": FACADE_PATH.read_text(encoding="utf-8"), **_owner_sources()}
     for stem, source in sources.items():
         loaded = _imported_modules(_module_level_imports(ast.parse(source)))
-        assert not [m for m in loaded if m.startswith("kiro_crew.dashboard")], stem
+        assert not [m for m in loaded if m.startswith("aj_crew.dashboard")], stem
     lazy = re.findall(
-        r"^ +from kiro_crew\.dashboard\.[\w.]+ import", _owner_sources()["commands"], re.M
+        r"^ +from aj_crew\.dashboard\.[\w.]+ import", _owner_sources()["commands"], re.M
     )
-    assert len(lazy) == 2, "the /kirocrew dashboard handler's two call-time imports"
+    assert len(lazy) == 2, "the /ajcrew dashboard handler's two call-time imports"
 
 
 def test_the_seam_import_comment_tells_the_reader_why() -> None:
@@ -1227,4 +1227,4 @@ def test_a_turn_that_runs_reaches_the_turn_engine_once() -> None:
     asyncio.run(d.handle_message(_dm("hello")))
     asyncio.run(d.handle_message(_dm("/ping")))
     assert calls == ["hello"]
-    assert sess.successes == ["telegram:kirocrew:direct:7"]
+    assert sess.successes == ["telegram:ajcrew:direct:7"]

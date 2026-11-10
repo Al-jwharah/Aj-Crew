@@ -10,9 +10,9 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.acp import kas_agents
-from kiro_crew.acp.kas_agents import spec_keys_without_carrier, to_client_custom_agent
-from kiro_crew.acp.kas_permissions import _regex_to_glob, tools_settings_to_permissions
+from aj_crew.acp import kas_agents
+from aj_crew.acp.kas_agents import spec_keys_without_carrier, to_client_custom_agent
+from aj_crew.acp.kas_permissions import _regex_to_glob, tools_settings_to_permissions
 
 
 def _rules(tools_settings):
@@ -132,7 +132,7 @@ class TestTranslation:
 
     def test_star_twins_over_the_rule_bound_are_named_not_fatal(self):
         # The twins must never sink the denies that fit without them.
-        from kiro_crew.acp.kas_permissions import _MAX_PATTERNS_PER_RULE, _MAX_RULES
+        from aj_crew.acp.kas_permissions import _MAX_PATTERNS_PER_RULE, _MAX_RULES
 
         paths = [f"/d{i}/*" for i in range(_MAX_PATTERNS_PER_RULE * _MAX_RULES)]
         block, lost = tools_settings_to_permissions({"read": {"deniedPaths": paths}})
@@ -212,12 +212,12 @@ class TestTranslation:
         # The shape run live: a deny over "*" with the listed names in
         # `exclude` refuses any other sub-agent and leaves a listed one to its
         # own permission request.
-        settings = {"subagent": {"availableAgents": ["rev*", "kirocrew-worker", "rev*"]}}
+        settings = {"subagent": {"availableAgents": ["rev*", "ajcrew-worker", "rev*"]}}
         assert _rules(settings) == [
             {
                 "capability": "subagent",
                 "match": ["*"],
-                "exclude": ["rev*", "kirocrew-worker"],
+                "exclude": ["rev*", "ajcrew-worker"],
                 "effect": "deny",
             }
         ]
@@ -241,7 +241,7 @@ class TestTranslation:
                 {"capability": "subagent", "match": ["*"], "exclude": ["ok-*"], "effect": "deny"},
             ),
             (["r?v"], {"capability": "subagent", "effect": "deny"}),
-            ("kirocrew-*", {"capability": "subagent", "effect": "deny"}),
+            ("ajcrew-*", {"capability": "subagent", "effect": "deny"}),
             ([f"a{i}" for i in range(65)], {"capability": "subagent", "effect": "deny"}),
         ],
     )

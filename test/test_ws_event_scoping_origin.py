@@ -15,8 +15,8 @@ import pytest
 import ws_event_scoping_helpers
 from ws_event_scoping_helpers import _allowed, _make_state
 
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.dashboard.ws_event_scope import ws_event_allowed
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.dashboard.ws_event_scope import ws_event_allowed
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _clear_module_caches = ws_event_scoping_helpers._clear_module_caches
@@ -30,7 +30,7 @@ _clear_ws_scope_module_caches = ws_event_scoping_helpers._clear_ws_scope_module_
 
 def _chat_handler_source() -> str:
     """chat_handlers.py and the chat_api owners it composes, as one text."""
-    import kiro_crew.dashboard.chat_handlers as _ch
+    import aj_crew.dashboard.chat_handlers as _ch
 
     facade = Path(_ch.__file__)
     owners = sorted((facade.parent / "chat_api").glob("[!_]*.py"))
@@ -40,7 +40,7 @@ def _chat_handler_source() -> str:
 
 def _state_source() -> str:
     """state.py and the state_parts owners it composes, as one text."""
-    import kiro_crew.dashboard.state as _st
+    import aj_crew.dashboard.state as _st
 
     facade = Path(_st.__file__)
     owners = sorted((facade.parent / "state_parts").glob("[!_]*.py"))
@@ -73,8 +73,8 @@ class TestOriginPersistence:
 
         from chat_test_helpers import _make_ready_kiro_prerequisite
 
-        from kiro_crew.dashboard.state import DashboardState
-        from kiro_crew.history import ConversationLog
+        from aj_crew.dashboard.state import DashboardState
+        from aj_crew.history import ConversationLog
 
         sessions = MagicMock(count=0)
         sessions.remove = AsyncMock()
@@ -93,12 +93,12 @@ class TestOriginPersistence:
         return state
 
     def test_slot_has_origin_attribute(self):
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         assert hasattr(_ChatSlot("s1"), "_origin")
 
     def test_to_dict_includes_origin(self):
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         slot = _ChatSlot("s1")
         slot._origin = SlotOrigin.CRON
@@ -107,9 +107,9 @@ class TestOriginPersistence:
     def test_save_writes_origin_to_meta(self, tmp_path, monkeypatch):
         """The REAL save path must persist origin — this is the write side that
         was missing, letting every restored slot come back unattributed."""
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._state(tmp_path)
         slot = state.get_or_create_slot("cron-1")
         slot._origin = SlotOrigin.CRON
@@ -123,9 +123,9 @@ class TestOriginPersistence:
 
     def test_untagged_origin_not_persisted(self, tmp_path, monkeypatch):
         """The fail-closed empty sentinel must not be written as a real value."""
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot._origin = ""
@@ -139,12 +139,12 @@ class TestOriginPersistence:
     @pytest.mark.parametrize("origin", [SlotOrigin.CRON, SlotOrigin.USER, SlotOrigin.APP])
     def test_origin_round_trips_through_rehydrate(self, tmp_path, monkeypatch, origin):
         """save -> _rehydrate_slot_from_history must return the SAME origin."""
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard.chat_persistence import (
             _rehydrate_slot_from_history,
             _save_slot_to_history,
         )
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot._origin = origin
@@ -162,12 +162,12 @@ class TestOriginPersistence:
     def test_origin_round_trips_through_bulk_restore(self, tmp_path, monkeypatch):
         """The bulk restore path (gateway boot) must restore origin too — the
         two restore sites are separate code and both read ``meta["origin"]``."""
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard.chat_persistence import (
             _save_slot_to_history,
             restore_recent_sessions,
         )
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._state(tmp_path)
         slot = state.get_or_create_slot("cron-1")
         slot._origin = SlotOrigin.CRON
@@ -184,12 +184,12 @@ class TestOriginPersistence:
         """The security property the persistence exists for: a CRON slot that
         survived a restart must STILL be withheld from a ``slots:user`` app.
         Without the write side it rehydrated untagged and this gate flipped."""
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard.chat_persistence import (
             _rehydrate_slot_from_history,
             _save_slot_to_history,
         )
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = self._state(tmp_path)
         slot = state.get_or_create_slot("cron-1")
         slot._origin = SlotOrigin.CRON
@@ -224,7 +224,7 @@ class TestAuthMiddlewareIsDashboardUser:
     def test_dashboard_user_bypasses_scope_gate(self):
         # Behavioral: a ws with positive _is_dashboard_user flag must bypass
         # the scope gate entirely (that's the CWE-269 fix's whole point).
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.state import DashboardState
 
         state = MagicMock(spec=DashboardState)
         state._slots = {}
@@ -240,7 +240,7 @@ class TestAuthMiddlewareIsDashboardUser:
 
     def test_missing_flag_treats_as_app_token(self):
         # Behavioral: without the positive flag, gate applies (deny-by-default).
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.state import DashboardState
 
         state = MagicMock(spec=DashboardState)
         state._slots = {}
@@ -317,7 +317,7 @@ class TestUntaggedOriginIsNotUser:
     that private content."""
 
     def test_untagged_non_app_slot_is_not_user(self):
-        from kiro_crew.dashboard.state import SlotOrigin, request_slot_origin
+        from aj_crew.dashboard.state import SlotOrigin, request_slot_origin
 
         src = _state_source()
         # The fail-open derivation must be gone from the CREATION path. It
@@ -387,7 +387,7 @@ class TestUntaggedOriginIsNotUser:
         )
 
     def test_cron_injection_declares_cron(self):
-        import kiro_crew.dashboard.cron_inject as _ci
+        import aj_crew.dashboard.cron_inject as _ci
 
         assert "origin=SlotOrigin.CRON" in Path(_ci.__file__).read_text(
             encoding="utf-8"
@@ -402,10 +402,10 @@ class TestUntaggedOriginIsNotUser:
         a real user slot untagged (dropping a grant an app legitimately holds)."""
         from chat_test_helpers import _make_state
 
-        from kiro_crew.dashboard import chat_handlers as ch
-        from kiro_crew.dashboard import chat_persistence as cp
+        from aj_crew.dashboard import chat_handlers as ch
+        from aj_crew.dashboard import chat_persistence as cp
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         meta = {"created_at": "2026-01-01T00:00:00", "origin": stored}
         rows = [{"role": "user", "content": "hi", "ts": "2026-01-01T00:00:01"}]

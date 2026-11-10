@@ -19,10 +19,10 @@ from slot_close_recreation_race_helpers import (
     _event_fired,
 )
 
-from kiro_crew.dashboard import chat_handlers as handlers
-from kiro_crew.dashboard import chat_persistence
-from kiro_crew.dashboard.chat_utils import slot_transcript_key
-from kiro_crew.dashboard.slot_registry import SlotRegistry
+from aj_crew.dashboard import chat_handlers as handlers
+from aj_crew.dashboard import chat_persistence
+from aj_crew.dashboard.chat_utils import slot_transcript_key
+from aj_crew.dashboard.slot_registry import SlotRegistry
 
 
 async def _recreate_the_key_under_a_new_incarnation(state, key: str, monkeypatch) -> str:
@@ -33,14 +33,14 @@ async def _recreate_the_key_under_a_new_incarnation(state, key: str, monkeypatch
     """
     from datetime import datetime, timedelta
 
-    from kiro_crew import history
+    from aj_crew import history
 
     log = state.conversation_log
     old = str(log.get_metadata(key).get("created_at") or "")
     assert old, "the staged close must have observed an identified transcript"
     assert log.delete_session(key)
     later = (datetime.fromisoformat(old) + timedelta(seconds=1)).isoformat()
-    # Patched on the ``kiro_crew.history`` facade, whose mirror carries the
+    # Patched on the ``aj_crew.history`` facade, whose mirror carries the
     # rebind to every owner binding the name (``history_append`` reads it).
     with monkeypatch.context() as patched:
         patched.setattr(history, "metadata_now_iso", lambda: later)
@@ -248,7 +248,7 @@ async def test_a_plain_create_between_the_markers_guard_and_its_rename_is_unstam
     """
     import threading
 
-    from kiro_crew.dashboard.slot_persistence import takeover_ordering
+    from aj_crew.dashboard.slot_persistence import takeover_ordering
 
     state = _make_state(tmp_path)
     key, rehydrate, read_release, _unpark = await _close_handed_over_to_a_parked_taker(
@@ -296,7 +296,7 @@ async def test_a_plain_create_between_the_markers_guard_and_its_rename_is_unstam
 @pytest.mark.asyncio
 async def test_an_owed_marker_with_no_publication_in_the_window_is_written(tmp_path, monkeypatch):
     """The post-commit re-check leaves an unopposed write alone: ``written``, marker on disk."""
-    from kiro_crew.dashboard.slot_persistence import takeover_ordering
+    from aj_crew.dashboard.slot_persistence import takeover_ordering
 
     state = _make_state(tmp_path)
     key, rehydrate, read_release, _unpark = await _close_handed_over_to_a_parked_taker(
@@ -366,7 +366,7 @@ async def test_an_unstamp_that_fails_once_stays_owed_and_the_next_exit_clears_it
     The dismissal is already settled, so the failed clear is parked as an owed un-stamp
     on the key's watch; otherwise the live tab would be hidden at the next restart.
     """
-    from kiro_crew.dashboard.slot_persistence import takeover_ordering
+    from aj_crew.dashboard.slot_persistence import takeover_ordering
 
     state = _make_state(tmp_path)
     outcomes: list = []
@@ -422,8 +422,8 @@ async def test_an_unstamp_that_fails_once_stays_owed_and_the_next_exit_clears_it
 @pytest.mark.asyncio
 async def test_an_unstamp_never_removes_a_newer_close_of_the_created_tab(tmp_path, monkeypatch):
     """The un-stamp is a compare-and-clear on OUR ``closed_id``; any other close's stamp stays."""
-    from kiro_crew.dashboard.slot_persistence import takeover_ordering
-    from kiro_crew.dashboard.slot_registry import OwedUnstamp
+    from aj_crew.dashboard.slot_persistence import takeover_ordering
+    from aj_crew.dashboard.slot_registry import OwedUnstamp
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)
@@ -465,9 +465,9 @@ async def test_an_unstamp_keeps_a_newer_close_stamped_on_the_same_clock_tick(tmp
     """
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard import channel_slots
-    from kiro_crew.dashboard.slot_persistence import takeover_ordering
-    from kiro_crew.dashboard.slot_registry import OwedUnstamp, SlotRegistry
+    from aj_crew.dashboard import channel_slots
+    from aj_crew.dashboard.slot_persistence import takeover_ordering
+    from aj_crew.dashboard.slot_registry import OwedUnstamp, SlotRegistry
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)
@@ -520,7 +520,7 @@ def test_the_after_commit_hook_does_no_io() -> None:
     import ast
     import inspect
 
-    from kiro_crew.dashboard.slot_persistence import takeover_ordering
+    from aj_crew.dashboard.slot_persistence import takeover_ordering
 
     source = inspect.getsource(takeover_ordering.record_deferred_dismissal)
     tree = ast.parse(source)
@@ -562,7 +562,7 @@ async def test_a_rehydrate_whose_slot_is_deleted_during_its_exit_work_returns_no
     """
     import threading
 
-    from kiro_crew.dashboard.slot_persistence import takeover_ordering
+    from aj_crew.dashboard.slot_persistence import takeover_ordering
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)
@@ -611,7 +611,7 @@ async def test_a_resume_whose_slot_is_deleted_during_its_exit_work_is_refused(
     """
     import threading
 
-    from kiro_crew.dashboard.slot_persistence import takeover_ordering
+    from aj_crew.dashboard.slot_persistence import takeover_ordering
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)

@@ -24,20 +24,20 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.types import EVENT_COMPACTION_STATUS, AcpEvent
-from kiro_crew.acp_backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.config.loader import KiroCrewAgentConfig
-from kiro_crew.session import SessionManager
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.acp.types import EVENT_COMPACTION_STATUS, AcpEvent
+from aj_crew.acp_backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.config import AjCrewConfig
+from aj_crew.config.loader import AjCrewAgentConfig
+from aj_crew.session import SessionManager
+from aj_crew.testing.wait import await_until, finished
 
 KEY = "dashboard:kas-explicit-threshold"
 CREW = "orch"
 
 
 @pytest.fixture
-def cfg() -> KiroCrewConfig:
-    c = KiroCrewConfig()
+def cfg() -> AjCrewConfig:
+    c = AjCrewConfig()
     c.session.timeout_secs = 2
     c.session.autocompact_pct = 90.0
     return c
@@ -106,7 +106,7 @@ async def _drain_background(mgr: SessionManager) -> None:
 
 
 @contextlib.asynccontextmanager
-async def _managed(cfg: KiroCrewConfig, kas: _Kas):
+async def _managed(cfg: AjCrewConfig, kas: _Kas):
     """Manager on *kas*'s provider whose teardown always runs, even on a failed assert.
 
     Teardown releases a ``/compact`` stream parked on ``kas.hold`` and then closes
@@ -130,8 +130,8 @@ async def _live(mgr: SessionManager) -> Any:
     return provider
 
 
-def _declare_agent_pct(cfg: KiroCrewConfig, mgr: SessionManager, pct: float) -> None:
-    cfg.agents = {CREW: KiroCrewAgentConfig(kiro_agent="kirocrew", autocompact_pct=pct)}
+def _declare_agent_pct(cfg: AjCrewConfig, mgr: SessionManager, pct: float) -> None:
+    cfg.agents = {CREW: AjCrewAgentConfig(kiro_agent="ajcrew", autocompact_pct=pct)}
     mgr._sessions[KEY].capability_member = CREW
 
 
@@ -195,7 +195,7 @@ class TestGlobalThresholdUnchanged:
         async with _managed(cfg, kas) as mgr:
             provider = await _live(mgr)
             caplog.clear()
-            with caplog.at_level(logging.INFO, logger="kiro_crew.session"):
+            with caplog.at_level(logging.INFO, logger="aj_crew.session"):
                 assert await mgr.compact_if_needed(KEY) == "compact_unsupported"
 
             provider.stream_command.assert_not_called()
@@ -369,7 +369,7 @@ class TestProviderAnswersTheAdvertisement:
 
     @staticmethod
     def _session_provider(backend: str, advertised: Any) -> Any:
-        from kiro_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew.acp.session_provider import AcpSessionProvider
 
         provider = object.__new__(AcpSessionProvider)
         provider._runtime = SimpleNamespace(acp_backend=backend)
@@ -387,7 +387,7 @@ class TestProviderAnswersTheAdvertisement:
         assert not self._session_provider(ACP_BACKEND_KIRO, True).harness_compact_verb_advertised
 
     def test_wrapper_forwards_only_a_real_true(self) -> None:
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         provider = AcpProvider(acp_backend=ACP_BACKEND_KAS)
         assert provider.harness_compact_verb_advertised is False

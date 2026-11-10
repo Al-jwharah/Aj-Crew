@@ -13,11 +13,11 @@ import asyncio
 import numpy as np
 import pytest
 
-from kiro_crew.stt import engine as engine_mod
-from kiro_crew.stt import models
-from kiro_crew.stt import session as session_mod
-from kiro_crew.stt import telemetry, vad
-from kiro_crew.testing.wait import await_until
+from aj_crew.stt import engine as engine_mod
+from aj_crew.stt import models
+from aj_crew.stt import session as session_mod
+from aj_crew.stt import telemetry, vad
+from aj_crew.testing.wait import await_until
 
 SR = vad.SAMPLE_RATE_HZ
 

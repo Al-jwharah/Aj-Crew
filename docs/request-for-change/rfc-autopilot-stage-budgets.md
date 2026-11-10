@@ -2,7 +2,7 @@
 title: Autopilot stage budgets admit work; they do not kill productive turns
 status: superseded
 kind: decision
-author: junjiequ (incident owner; drafted with Kiro Crew)
+author: junjiequ (incident owner; drafted with Aj Crew)
 created: 2026-09-26
 last-audited: 2026-10-02
 audited-at: 6916ba17f
@@ -102,17 +102,17 @@ The visible signature was consistent across the incidents:
 At `7f1f4fb1d`:
 
 - `OrchestrationTracker.start_stage` in
-  `src/kiro_crew/context_management.py` starts an absolute stage clock.
-- `_stage_loop` in `src/kiro_crew/dashboard/chat_orchestrator.py` checks that
+  `src/aj_crew/context_management.py` starts an absolute stage clock.
+- `_stage_loop` in `src/aj_crew/dashboard/chat_orchestrator.py` checks that
   clock before entering a stage.
 - The same loop then passes `tracker.stage_timeout_seconds` to `_bounded_turn`
   around `_run_chat`. The 30-minute progression budget therefore also kills the
   running turn.
-- `_bounded_turn` in `src/kiro_crew/dashboard/turn_dispatch.py` deliberately
+- `_bounded_turn` in `src/aj_crew/dashboard/turn_dispatch.py` deliberately
   cancels the inner task and raises even when `_run_chat` absorbs
   `CancelledError`.
 - `_run_chat`'s `CancelledError` branch in
-  `src/kiro_crew/dashboard/chat_runner.py` currently persists the partial
+  `src/aj_crew/dashboard/chat_runner.py` currently persists the partial
   dashboard reply only. It does not send native `session/cancel`.
 - The native ACP turn can therefore continue after the dashboard controller
   reports that it stopped.
@@ -431,7 +431,7 @@ workloads vary by orders of magnitude.
 ### Reset the stage clock on every progress event
 
 Rejected. Text tokens, tool starts, file writes, and subagent completions are not
-equivalent progress, and an unhealthy loop can emit them forever. Kiro Crew
+equivalent progress, and an unhealthy loop can emit them forever. Aj Crew
 already has an evidence-based liveness oracle for this decision.
 
 ### Make the stage timeout an inactivity timer

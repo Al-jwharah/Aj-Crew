@@ -1,9 +1,9 @@
 import { useMutation, useQuery, type QueryClient } from '@tanstack/react-query'
 
 import { api } from '../../../api/client'
-import type { KiroCrewAgent } from '../../../components/AgentSelector'
+import type { AjCrewAgent } from '../../../components/AgentSelector'
 import { filterInteractiveModels, legacyCodexEffort, modelWithoutEffort } from '../../../hooks/useInteractiveModels'
-import { useKirocrewConfigReader } from '../../../hooks/useKirocrewConfigReader'
+import { useAjcrewConfigReader } from '../../../hooks/useAjcrewConfigReader'
 import { useSettingsDefaultModel } from '../../../hooks/useSettingsDefaultModel'
 import { i18nT } from '../../../i18n/t'
 import { effortOffOnAuto, modelSupportsEffort, selectionCapabilitiesFailed } from '../../../lib/effort'
@@ -22,7 +22,7 @@ interface ComposerChipsOptions {
   /** The configured default agent and the one a new session would open on. */
   defaultAgent: string | undefined
   pendingAgent: string
-  installedAgents: KiroCrewAgent[]
+  installedAgents: AjCrewAgent[]
   provider: ReturnType<typeof useProvider>
   /** The roster the picker offers. */
   availableModels: ModelInfo[]
@@ -72,7 +72,7 @@ export function useComposerChips({
   // agent, else whichever agent a new session would open on.
   //
   // The write goes to `agents.<name>` in config.json, which only a crew agent
-  // has. A template-bound session (a plain new chat runs the `kirocrew`
+  // has. A template-bound session (a plain new chat runs the `ajcrew`
   // template) has no such entry, and the server answers 404 (#25099). So the
   // pin target is '' -- the dropdown then offers no pin row -- unless the name
   // resolves to a non-template row. The roster folds a same-name pair member
@@ -88,7 +88,7 @@ export function useComposerChips({
   // reload; open sessions keep the model they already resolved.
   const pinModelToAgentMut = useMutation({
     mutationFn: ({ agent, model }: { agent: string; model: string }) =>
-      api.updateKirocrewAgent(agent, { model }),
+      api.updateAjcrewAgent(agent, { model }),
     onSuccess: () => {
       dispatch(triggerRefresh())
       queryClient.invalidateQueries({ queryKey: ['resolved-model'] })
@@ -191,10 +191,10 @@ export function useComposerChips({
   // default — the backend applies `slot.reasoning_effort or agent.reasoning_effort`
   // — so the composer must show the inherited value rather than a bare
   // "Default", which read as "the model decides" and hid the real setting.
-  const readKirocrewConfig = useKirocrewConfigReader()
+  const readAjcrewConfig = useAjcrewConfigReader()
   const { data: _defaultEffort } = useQuery({
     queryKey: ['default-effort', provider.id],
-    queryFn: () => provider.resolveDefaultEffort(readKirocrewConfig),
+    queryFn: () => provider.resolveDefaultEffort(readAjcrewConfig),
     enabled: provider.capabilities.reasoningEffort,
   })
   const defaultEffort = _defaultEffort || ''

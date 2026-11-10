@@ -94,7 +94,7 @@ is what lets an older build read a file a newer writer extended.
 ### Header example
 
 ```json
-{"type":"session","version":1,"id":"s-7f3a","owner":"default","task":null,"pack":null,"agent":"kirocrew","slot":"dashboard:3","thread":{"crew":"qa","seq":41},"cwd":"/home/u/proj","remote":null,"createdAt":1789000000000}
+{"type":"session","version":1,"id":"s-7f3a","owner":"default","task":null,"pack":null,"agent":"ajcrew","slot":"dashboard:3","thread":{"crew":"qa","seq":41},"cwd":"/home/u/proj","remote":null,"createdAt":1789000000000}
 ```
 
 ## Entry fields

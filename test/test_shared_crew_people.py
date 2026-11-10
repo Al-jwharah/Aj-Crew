@@ -7,9 +7,9 @@ from typing import Any
 import pytest
 from shared_crew_host_isolation import host_isolation  # noqa: F401
 
-from kiro_crew.shared_crew import people
-from kiro_crew.shared_crew.contracts import Principal, Provenance
-from kiro_crew.shared_crew.identity import local_operator_principal, tailnet_principal
+from aj_crew.shared_crew import people
+from aj_crew.shared_crew.contracts import Principal, Provenance
+from aj_crew.shared_crew.identity import local_operator_principal, tailnet_principal
 
 pytestmark = pytest.mark.usefixtures("host_isolation")
 

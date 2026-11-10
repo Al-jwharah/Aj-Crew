@@ -30,18 +30,18 @@ from dashboard_approval_helpers import (
 )
 from named_cases_helpers import named_cases
 
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat import _run_chat
-from kiro_crew.dashboard.state import (
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat import _run_chat
+from aj_crew.dashboard.state import (
     REFUSAL_RECOVERY_PREFIX,
     DashboardState,
     _ChatSlot,
     build_refusal_recovery_prompt,
 )
-from kiro_crew.dashboard.turn_dispatch import format_approval_no_budget_card
-from kiro_crew.hooks import HOOK_EVENT_PRE_TOOL_USE, ScriptHookResult, ToolHookResult
-from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, EVENT_TEXT_CHUNK, LLMEvent
-from kiro_crew.validation import MAX_TOOL_NAME_LEN
+from aj_crew.dashboard.turn_dispatch import format_approval_no_budget_card
+from aj_crew.hooks import HOOK_EVENT_PRE_TOOL_USE, ScriptHookResult, ToolHookResult
+from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.validation import MAX_TOOL_NAME_LEN
 
 #: The modules whose functions ``TestApprovalAnswerersDoNotRaceTheStream`` reads: this one,
 #: the ``_modes`` and ``_denials`` parts, and the helpers module that defines
@@ -167,7 +167,7 @@ def _assert_block_reason_recovered(slot, client, reason: str) -> None:
 
 class TestRefusalRecovery:
     """A recoverable refusal (host-gate policy deny / read-only bash gate) ends
-    the turn via kiro-cli's tool-interrupted marker. KiroCrew should hand the
+    the turn via kiro-cli's tool-interrupted marker. AjCrew should hand the
     reason back to the model as an auto-continuation so the agent can adapt
     instead of stalling — without the user having to poke it."""
 
@@ -738,7 +738,7 @@ class TestPreToolUseHookBlockRecovery:
         )
         slot = _make_slot()
 
-        with patch("kiro_crew.dashboard.chat_runner.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat_runner.sel") as mock_sel:
             audit = MagicMock()
             mock_sel.return_value = audit
             await _drive_hook_blocked_turn(state, client, slot, title=f"Deploy with {secret} now")
@@ -902,7 +902,7 @@ class TestDenyRowTitleRedaction:
             tmp_path, context_builder=_context_builder(ToolHookResult.auto_approve())
         )
         slot = _make_slot()
-        with patch("kiro_crew.dashboard.chat_runner.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat_runner.sel") as mock_sel:
             audit = MagicMock()
             mock_sel.return_value = audit
             await _drive_deny_turn(state, client, slot, title=self._invalid_title())
@@ -917,7 +917,7 @@ class TestDenyRowTitleRedaction:
             hook_store=_raising_hook_store("hook exploded"),
         )
         slot = _make_slot()
-        with patch("kiro_crew.dashboard.chat_runner.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat_runner.sel") as mock_sel:
             audit = MagicMock()
             mock_sel.return_value = audit
             await _drive_deny_turn(state, client, slot, title=self._valid_title())
@@ -928,7 +928,7 @@ class TestDenyRowTitleRedaction:
     async def test_gated_path_invalid_name_redacts(self, tmp_path):
         state, client = _make_state(tmp_path, context_builder=_context_builder())
         slot = _make_slot()
-        with patch("kiro_crew.dashboard.chat_runner.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat_runner.sel") as mock_sel:
             audit = MagicMock()
             mock_sel.return_value = audit
             await _drive_deny_turn(state, client, slot, title=self._invalid_title())
@@ -943,7 +943,7 @@ class TestDenyRowTitleRedaction:
             hook_store=_raising_hook_store("hook exploded"),
         )
         slot = _make_slot()
-        with patch("kiro_crew.dashboard.chat_runner.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat_runner.sel") as mock_sel:
             audit = MagicMock()
             mock_sel.return_value = audit
             await _drive_deny_turn(state, client, slot, title=self._valid_title())
@@ -962,7 +962,7 @@ class TestDenyRowTitleRedaction:
         _no_refusal = patch.object(
             chat_runner, "_name_grant_refusal_off_loop", new=AsyncMock(return_value=None)
         )
-        with patch("kiro_crew.dashboard.chat_runner.sel") as mock_sel, _no_refusal:
+        with patch("aj_crew.dashboard.chat_runner.sel") as mock_sel, _no_refusal:
             audit = MagicMock()
             mock_sel.return_value = audit
             await _drive_deny_turn(
@@ -985,7 +985,7 @@ class TestDenyRowTitleRedaction:
     async def test_trust_mode_invalid_name_redacts(self, tmp_path):
         state, client = _make_state(tmp_path)
         slot = _make_slot(trust=True)
-        with patch("kiro_crew.dashboard.chat_runner.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat_runner.sel") as mock_sel:
             audit = MagicMock()
             mock_sel.return_value = audit
             await _drive_deny_turn(state, client, slot, title=self._invalid_title())
@@ -996,7 +996,7 @@ class TestDenyRowTitleRedaction:
     async def test_trust_mode_hook_error_redacts(self, tmp_path):
         state, client = _make_state(tmp_path, hook_store=_raising_hook_store("hook exploded"))
         slot = _make_slot(trust=True)
-        with patch("kiro_crew.dashboard.chat_runner.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat_runner.sel") as mock_sel:
             audit = MagicMock()
             mock_sel.return_value = audit
             await _drive_deny_turn(state, client, slot, title=self._valid_title())
@@ -1007,7 +1007,7 @@ class TestDenyRowTitleRedaction:
     async def test_interactive_approved_invalid_name_redacts(self, tmp_path):
         state, client = _make_state(tmp_path)
         slot = _make_slot()
-        with patch("kiro_crew.dashboard.chat_runner.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat_runner.sel") as mock_sel:
             audit = MagicMock()
             mock_sel.return_value = audit
             await _drive_deny_turn(
@@ -1020,7 +1020,7 @@ class TestDenyRowTitleRedaction:
     async def test_interactive_approved_hook_error_redacts(self, tmp_path):
         state, client = _make_state(tmp_path, hook_store=_raising_hook_store("hook exploded"))
         slot = _make_slot()
-        with patch("kiro_crew.dashboard.chat_runner.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat_runner.sel") as mock_sel:
             audit = MagicMock()
             mock_sel.return_value = audit
             await _drive_deny_turn(
@@ -1195,7 +1195,7 @@ class TestHostPreDeclinedRowIsBornResolved:
     async def test_slack_linked_row_is_published_before_the_post_and_retired_when_it_fails(
         self, tmp_path, failure
     ):
-        from kiro_crew.dashboard.chat_handlers import _get_pattern_from_pending
+        from aj_crew.dashboard.chat_handlers import _get_pattern_from_pending
 
         state, client = _make_state(tmp_path, context_builder=_context_builder())
         # A linked slot whose thread the prompt cannot reach. The user-echo
@@ -1401,7 +1401,7 @@ class TestHostPreDeclinedRowIsBornResolved:
         """
         from types import SimpleNamespace
 
-        from kiro_crew.slack.code_channels import binding as cc_binding
+        from aj_crew.slack.code_channels import binding as cc_binding
 
         anchor = "1700000000.000100"
         state, client = _make_state(tmp_path, context_builder=_context_builder())

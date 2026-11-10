@@ -17,10 +17,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.teams.approvals import TeamsApprovalDecider
-from kiro_crew.teams.client import TEAMS_MAX_TEXT, TeamsSendError
-from kiro_crew.teams.renderer import TeamsRenderer
-from kiro_crew.teams.transport import TEAMS_CAPABILITIES
+from aj_crew.teams.approvals import TeamsApprovalDecider
+from aj_crew.teams.client import TEAMS_MAX_TEXT, TeamsSendError
+from aj_crew.teams.renderer import TeamsRenderer
+from aj_crew.teams.transport import TEAMS_CAPABILITIES
 
 _SVC = "https://smba.trafficmanager.net/"
 
@@ -83,7 +83,7 @@ class TestTypingKeepalive:
     @pytest.mark.asyncio
     async def test_the_indicator_is_refreshed_while_the_turn_runs(self, monkeypatch) -> None:
         """A turn that never calls a tool has no progress bubble to fall back on."""
-        monkeypatch.setattr("kiro_crew.teams.renderer._TYPING_REFRESH_S", 0.01)
+        monkeypatch.setattr("aj_crew.teams.renderer._TYPING_REFRESH_S", 0.01)
         client = _Client()
         renderer = _renderer(client)
 
@@ -97,7 +97,7 @@ class TestTypingKeepalive:
     @pytest.mark.asyncio
     async def test_the_refresh_stops_when_the_turn_ends(self, monkeypatch) -> None:
         """An orphaned loop would post into a finished chat for the process lifetime."""
-        monkeypatch.setattr("kiro_crew.teams.renderer._TYPING_REFRESH_S", 0.01)
+        monkeypatch.setattr("aj_crew.teams.renderer._TYPING_REFRESH_S", 0.01)
         client = _Client()
         renderer = _renderer(client)
 
@@ -111,7 +111,7 @@ class TestTypingKeepalive:
 
     @pytest.mark.asyncio
     async def test_close_stops_the_refresh_even_without_on_done(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.teams.renderer._TYPING_REFRESH_S", 0.01)
+        monkeypatch.setattr("aj_crew.teams.renderer._TYPING_REFRESH_S", 0.01)
         client = _Client()
         renderer = _renderer(client)
 
@@ -124,7 +124,7 @@ class TestTypingKeepalive:
 
     @pytest.mark.asyncio
     async def test_a_failed_refresh_costs_one_beat_not_the_turn(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.teams.renderer._TYPING_REFRESH_S", 0.01)
+        monkeypatch.setattr("aj_crew.teams.renderer._TYPING_REFRESH_S", 0.01)
         client = _Client(typing_fails_after=1)
         renderer = _renderer(client)
 
@@ -193,7 +193,7 @@ class TestApprovalCardLiveness:
     @pytest.mark.asyncio
     async def test_an_expired_prompts_card_is_replaced(self, monkeypatch) -> None:
         """A chat must never accumulate buttons that resolve to nothing."""
-        monkeypatch.setattr("kiro_crew.teams.approvals.APPROVAL_TIMEOUT_SECS", 0.01)
+        monkeypatch.setattr("aj_crew.teams.approvals.APPROVAL_TIMEOUT_SECS", 0.01)
         client = _Client()
         decider = TeamsApprovalDecider(session_key="teams:a:direct:u")
         renderer = _renderer(client, decider)
@@ -235,7 +235,7 @@ class TestApprovalCardLiveness:
                 self.cards.append(card)
                 return ""
 
-        monkeypatch.setattr("kiro_crew.teams.approvals.APPROVAL_TIMEOUT_SECS", 0.01)
+        monkeypatch.setattr("aj_crew.teams.approvals.APPROVAL_TIMEOUT_SECS", 0.01)
         client = _IdlessClient()
         decider = TeamsApprovalDecider(session_key="teams:a:direct:u")
         renderer = _renderer(client, decider)

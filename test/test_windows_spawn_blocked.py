@@ -12,9 +12,9 @@ import functools
 
 import pytest
 
-import kiro_crew.acp.runtime as runtime_mod
-from kiro_crew.acp.spawn_blocked import AcpSpawnBlocked, is_windows_spawn_blocked
-from kiro_crew.dashboard.chat_turn.recovery import _terminal_error_meta
+import aj_crew.acp.runtime as runtime_mod
+from aj_crew.acp.spawn_blocked import AcpSpawnBlocked, is_windows_spawn_blocked
+from aj_crew.dashboard.chat_turn.recovery import _terminal_error_meta
 
 _KAS = r"C:\Users\me\AppData\Local\Kiro\kas.exe"
 

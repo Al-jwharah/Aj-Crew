@@ -22,14 +22,14 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import skill_search_index as skill_search_index_module
-from kiro_crew.skill_search_index import (
+from aj_crew import skill_search_index as skill_search_index_module
+from aj_crew.skill_search_index import (
     SKILL_SEARCH_INDEX_FILENAME,
     SkillSearchIndex,
     body_fingerprint,
     prefix_upper_bound,
 )
-from kiro_crew.skills import SkillsLoader, _namespace_groups
+from aj_crew.skills import SkillsLoader, _namespace_groups
 
 pytestmark = pytest.mark.xdist_group("skill_search_index")
 
@@ -376,8 +376,8 @@ class TestFamilyLine:
     def test_groups_label_namespace_and_hyphen_prefix(self):
         groups = _namespace_groups(
             [
-                {"key": "kirocrew-dev/babysit"},
-                {"key": "kirocrew-dev/kirocrew-prepare-pr"},
+                {"key": "ajcrew-dev/babysit"},
+                {"key": "ajcrew-dev/ajcrew-prepare-pr"},
                 {"key": "web-verify"},
                 {"key": "web-browse"},
                 {"key": "web-preview"},
@@ -385,7 +385,7 @@ class TestFamilyLine:
                 {"key": "lonely-one"},
             ]
         )
-        assert groups == [("web-*", 3), ("kirocrew-dev/", 2)]
+        assert groups == [("web-*", 3), ("ajcrew-dev/", 2)]
 
     @staticmethod
     def _parse(text: str) -> tuple[set[str], list[tuple[str, int]]]:

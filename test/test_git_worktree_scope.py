@@ -1,4 +1,4 @@
-"""Tests for :mod:`kiro_crew.git_worktree_scope`.
+"""Tests for :mod:`aj_crew.git_worktree_scope`.
 
 The shared classification all four filter-driver guards consult AFTER a
 ``--worktree`` config probe fails — never to gate whether the probe runs.
@@ -14,7 +14,7 @@ import sys
 
 import pytest
 
-from kiro_crew.git_worktree_scope import worktree_probe_failure_is_empty_scope
+from aj_crew.git_worktree_scope import worktree_probe_failure_is_empty_scope
 
 
 def _gitdir(tmp_path):
@@ -79,7 +79,7 @@ def test_windows_crlf_terminator_is_removed(tmp_path, monkeypatch):
     classifier removes exactly that pair and inspects the real path. The
     branch reads ``platform_compat.IS_POSIX`` at call time, so this exercises
     the Windows terminator handling on every OS."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "IS_POSIX", False)
     d = _gitdir(tmp_path)
@@ -94,7 +94,7 @@ def test_windows_crlf_absent_file_is_the_empty_scope(tmp_path, monkeypatch):
     return True only by accident of the same FileNotFoundError — so this
     pins the pair with :func:`test_windows_crlf_terminator_is_removed`,
     where a surviving CR would flip the present-file verdict)."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "IS_POSIX", False)
     d = _gitdir(tmp_path)

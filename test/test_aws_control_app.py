@@ -28,9 +28,9 @@ from aws_control_app_helpers import (  # noqa: F401 -- fixtures are used by name
     _request,
 )
 
-from kiro_crew import aws_consent
-from kiro_crew.apps.builtins.aws_control.backend import accounts as accounts_mod
-from kiro_crew.apps.builtins.aws_control.backend import routes as routes_mod
+from aj_crew import aws_consent
+from aj_crew.apps.builtins.aws_control.backend import accounts as accounts_mod
+from aj_crew.apps.builtins.aws_control.backend import routes as routes_mod
 
 #: Every P0 route — a route added without a gate fails the inventory assertion
 #: rather than shipping open.
@@ -282,7 +282,7 @@ class TestRouteGates:
         listed.assert_awaited_once_with(refresh=False)
 
     def test_accounts_adds_fresh_no_key_skip_without_mutating_snapshot(self, tmp_path, monkeypatch):
-        from kiro_crew.apps.builtins.aws_control.backend import backup as backup_mod
+        from aj_crew.apps.builtins.aws_control.backend import backup as backup_mod
 
         monkeypatch.setattr(backup_mod, "_state_path", lambda: tmp_path / "backup.json")
         handlers = _registered()
@@ -403,8 +403,8 @@ class TestConsentExtension:
         assert aws_consent.SERVICE_TRANSCRIBE in aws_consent.GATED_SERVICES
 
     def test_effective_target_names_the_default_chain_when_registry_is_empty(self):
-        from kiro_crew.dashboard.handlers import aws_consent as consent_handlers
-        from kiro_crew.deploy import profiles as deploy_profiles
+        from aj_crew.dashboard.handlers import aws_consent as consent_handlers
+        from aj_crew.deploy import profiles as deploy_profiles
 
         with mock.patch.object(deploy_profiles, "resolve_profile", return_value=None):
             target = asyncio.run(consent_handlers._effective_target(aws_consent.SERVICE_S3))
@@ -441,7 +441,7 @@ class TestConsentTargetTracksTheOperation:
         )
 
     def test_a_broken_default_does_not_hide_the_accounts_healthy_key(self):
-        from kiro_crew.dashboard.handlers import aws_consent as consent_handlers
+        from aj_crew.dashboard.handlers import aws_consent as consent_handlers
 
         snapshot = self._broken_default_snapshot()
         with mock.patch.object(accounts_mod, "list_accounts", AsyncMock(return_value=snapshot)):
@@ -454,7 +454,7 @@ class TestConsentTargetTracksTheOperation:
         A change to the resolution policy has to move both sides or fail here —
         the drift this class exists to catch.
         """
-        from kiro_crew.dashboard.handlers import aws_consent as consent_handlers
+        from aj_crew.dashboard.handlers import aws_consent as consent_handlers
 
         snapshot = self._broken_default_snapshot()
         with mock.patch.object(accounts_mod, "list_accounts", AsyncMock(return_value=snapshot)):
@@ -464,7 +464,7 @@ class TestConsentTargetTracksTheOperation:
                 assert card == operation
 
     def test_a_healthy_default_still_wins_over_its_siblings(self):
-        from kiro_crew.dashboard.handlers import aws_consent as consent_handlers
+        from aj_crew.dashboard.handlers import aws_consent as consent_handlers
 
         snapshot = _snapshot_of(
             _registry([_entry("first"), _entry("chosen", region="ap-south-1")], default="chosen"),
@@ -483,8 +483,8 @@ class TestConsentTargetTracksTheOperation:
         Picking any healthy key in the registry would let the card offer a
         confirmation for someone else's account — a wrong bill, not a dead end.
         """
-        from kiro_crew.dashboard.handlers import aws_consent as consent_handlers
-        from kiro_crew.deploy import profiles as deploy_profiles
+        from aj_crew.dashboard.handlers import aws_consent as consent_handlers
+        from aj_crew.deploy import profiles as deploy_profiles
 
         snapshot = _snapshot_of(
             _registry(
@@ -511,8 +511,8 @@ class TestConsentTargetTracksTheOperation:
         surface is the default's own STS error — that is what tells the reader
         the account has to be reconnected.
         """
-        from kiro_crew.dashboard.handlers import aws_consent as consent_handlers
-        from kiro_crew.deploy import profiles as deploy_profiles
+        from aj_crew.dashboard.handlers import aws_consent as consent_handlers
+        from aj_crew.deploy import profiles as deploy_profiles
 
         snapshot = _snapshot_of(
             _registry([_entry("broken", account=self.ACCOUNT)], default="broken"),
@@ -530,8 +530,8 @@ class TestConsentTargetTracksTheOperation:
 
     def test_a_default_that_resolves_to_no_account_falls_back_too(self):
         """A default in the unresolved pseudo-row names no account to filter within."""
-        from kiro_crew.dashboard.handlers import aws_consent as consent_handlers
-        from kiro_crew.deploy import profiles as deploy_profiles
+        from aj_crew.dashboard.handlers import aws_consent as consent_handlers
+        from aj_crew.deploy import profiles as deploy_profiles
 
         snapshot = _snapshot_of(
             _registry([_entry("mystery"), _entry("good")], default="mystery"),
@@ -556,8 +556,8 @@ class TestConsentTargetTracksTheOperation:
         registry directly, so it has to be scrubbed on the same side of the
         return or a profile named after a secret reaches the card's JSON verbatim.
         """
-        from kiro_crew.dashboard.handlers import aws_consent as consent_handlers
-        from kiro_crew.deploy import profiles as deploy_profiles
+        from aj_crew.dashboard.handlers import aws_consent as consent_handlers
+        from aj_crew.deploy import profiles as deploy_profiles
 
         secret = "AKIAIOSFODNN7EXAMPLE"
         snapshot = _snapshot_of(
@@ -585,8 +585,8 @@ class TestConsentTargetTracksTheOperation:
         registry read to fall back on, and an unscrubbed one must not take its
         place.
         """
-        from kiro_crew.dashboard.handlers import aws_consent as consent_handlers
-        from kiro_crew.deploy import profiles as deploy_profiles
+        from aj_crew.dashboard.handlers import aws_consent as consent_handlers
+        from aj_crew.deploy import profiles as deploy_profiles
 
         with mock.patch.object(
             accounts_mod,
@@ -604,7 +604,7 @@ class TestConsentTargetTracksTheOperation:
         account's healthy sibling skips on every wake, forever, with only a log
         line to say so.
         """
-        from kiro_crew.apps.builtins.aws_control import hooks
+        from aj_crew.apps.builtins.aws_control import hooks
 
         snapshot = self._broken_default_snapshot()
         gated: list[tuple[str, str]] = []
@@ -631,7 +631,7 @@ class TestConsentTargetTracksTheOperation:
         assert gated[0] == operation
 
     def test_the_nightly_loop_skips_when_no_key_is_healthy(self, caplog):
-        from kiro_crew.apps.builtins.aws_control import hooks
+        from aj_crew.apps.builtins.aws_control import hooks
 
         caplog.set_level(logging.INFO, logger=hooks.logger.name)
         snapshot = _snapshot_of(
@@ -664,8 +664,8 @@ class TestConsentTargetTracksTheOperation:
         serves as ``nightlyNoKeySkip`` and warns once per streak, instead of
         one unread INFO per wake.
         """
-        from kiro_crew.apps.builtins.aws_control import hooks
-        from kiro_crew.apps.builtins.aws_control.backend import backup as backup_mod
+        from aj_crew.apps.builtins.aws_control import hooks
+        from aj_crew.apps.builtins.aws_control.backend import backup as backup_mod
 
         monkeypatch.setattr(backup_mod, "_state_path", lambda: tmp_path / "backup.json")
         # The owner turned a nightly on for some account.
@@ -694,8 +694,8 @@ class TestConsentTargetTracksTheOperation:
 
     def test_no_skip_is_recorded_when_no_nightly_is_scheduled(self, tmp_path, monkeypatch):
         """An install that never enabled a nightly must stay silent on a no-key wake."""
-        from kiro_crew.apps.builtins.aws_control import hooks
-        from kiro_crew.apps.builtins.aws_control.backend import backup as backup_mod
+        from aj_crew.apps.builtins.aws_control import hooks
+        from aj_crew.apps.builtins.aws_control.backend import backup as backup_mod
 
         monkeypatch.setattr(backup_mod, "_state_path", lambda: tmp_path / "backup.json")
         snapshot = _snapshot_of(
@@ -714,8 +714,8 @@ class TestConsentTargetTracksTheOperation:
         The accounts read stops serving ``nightlyNoKeySkip``, and a nightly turned on
         later starts a fresh streak whose first no-key wake warns.
         """
-        from kiro_crew.apps.builtins.aws_control import hooks
-        from kiro_crew.apps.builtins.aws_control.backend import backup as backup_mod
+        from aj_crew.apps.builtins.aws_control import hooks
+        from aj_crew.apps.builtins.aws_control.backend import backup as backup_mod
 
         monkeypatch.setattr(backup_mod, "_state_path", lambda: tmp_path / "backup.json")
         backup_mod.set_nightly(self.ACCOUNT, True)
@@ -751,8 +751,8 @@ class TestConsentTargetTracksTheOperation:
         The clear runs the moment the account resolves, before the consent gate,
         so even a wake that then stops at consent clears a stale skip.
         """
-        from kiro_crew.apps.builtins.aws_control import hooks
-        from kiro_crew.apps.builtins.aws_control.backend import backup as backup_mod
+        from aj_crew.apps.builtins.aws_control import hooks
+        from aj_crew.apps.builtins.aws_control.backend import backup as backup_mod
 
         monkeypatch.setattr(backup_mod, "_state_path", lambda: tmp_path / "backup.json")
         backup_mod.set_nightly(self.ACCOUNT, True)
@@ -784,8 +784,8 @@ class TestConsentTargetTracksTheOperation:
 
     def test_the_voice_services_do_not_touch_the_account_snapshot(self):
         """Polly and Transcribe read their own config; only s3/ce use the registry."""
-        from kiro_crew.dashboard.handlers import aws_consent as consent_handlers
-        from kiro_crew.slack.handler import _vc
+        from aj_crew.dashboard.handlers import aws_consent as consent_handlers
+        from aj_crew.slack.handler import _vc
 
         swept = AsyncMock(side_effect=AssertionError("voice must not sweep the registry"))
         with (
@@ -805,13 +805,13 @@ class TestConsentTargetTracksTheOperation:
 
 class TestStorageValidation:
     def test_good_keys_pass(self):
-        from kiro_crew.apps.builtins.aws_control.backend import storage
+        from aj_crew.apps.builtins.aws_control.backend import storage
 
         for key in ("a.txt", "photos 2026/img (1).png", "a/b/c.tar.gz", "x_y" * 3):
             assert storage.validate_key(key) is None, key
 
     def test_hostile_keys_are_refused(self):
-        from kiro_crew.apps.builtins.aws_control.backend import storage
+        from aj_crew.apps.builtins.aws_control.backend import storage
 
         for key in (
             "",
@@ -829,7 +829,7 @@ class TestStorageValidation:
             assert storage.validate_key(key) is not None, key
 
     def test_section_prefixes_cover_exactly_the_three_sections(self):
-        from kiro_crew.apps.builtins.aws_control.backend import storage
+        from aj_crew.apps.builtins.aws_control.backend import storage
 
         assert storage.SECTION_PREFIXES == {
             "library": "artifacts/",
@@ -838,7 +838,7 @@ class TestStorageValidation:
         }
 
     def test_presign_clamps_expiry_to_the_sigv4_ceiling(self):
-        from kiro_crew.apps.builtins.aws_control.backend import storage
+        from aj_crew.apps.builtins.aws_control.backend import storage
 
         seen: dict[str, str] = {}
 
@@ -853,14 +853,14 @@ class TestStorageValidation:
             assert seen["expires"] == "60"
 
     def test_find_drive_refuses_ambiguity(self):
-        from kiro_crew.apps.builtins.aws_control.backend import storage
-        from kiro_crew.deploy.engine import AWSError
+        from aj_crew.apps.builtins.aws_control.backend import storage
+        from aj_crew.deploy.engine import AWSError
 
         two = json.dumps(
             {
                 "ResourceTagMappingList": [
-                    {"ResourceARN": "arn:aws:s3:::kirocrew-drive-0123456789ab"},
-                    {"ResourceARN": "arn:aws:s3:::kirocrew-drive-ba9876543210"},
+                    {"ResourceARN": "arn:aws:s3:::ajcrew-drive-0123456789ab"},
+                    {"ResourceARN": "arn:aws:s3:::ajcrew-drive-ba9876543210"},
                 ]
             }
         )
@@ -869,17 +869,17 @@ class TestStorageValidation:
                 storage.find_drive("p", "us-east-1", account="111122223333")
 
     def test_find_drive_ignores_foreign_naming(self):
-        from kiro_crew.apps.builtins.aws_control.backend import storage
+        from aj_crew.apps.builtins.aws_control.backend import storage
 
         # Round-10 pin: neither an unrelated name NOR a bucket that merely
-        # STARTS with our prefix ("kirocrew-drive-company-data") is adopted --
+        # STARTS with our prefix ("ajcrew-drive-company-data") is adopted --
         # only the complete prefix+12-hex scheme new_bucket_name() produces.
         payload = json.dumps(
             {
                 "ResourceTagMappingList": [
                     {"ResourceARN": "arn:aws:s3:::stolen-tag-bucket"},
-                    {"ResourceARN": "arn:aws:s3:::kirocrew-drive-company-data"},
-                    {"ResourceARN": "arn:aws:s3:::kirocrew-drive-0123456789ab"},
+                    {"ResourceARN": "arn:aws:s3:::ajcrew-drive-company-data"},
+                    {"ResourceARN": "arn:aws:s3:::ajcrew-drive-0123456789ab"},
                 ]
             }
         )
@@ -892,7 +892,7 @@ class TestStorageValidation:
         ):
             assert (
                 storage.find_drive("p", "us-east-1", account="111122223333")
-                == "kirocrew-drive-0123456789ab"
+                == "ajcrew-drive-0123456789ab"
             )
 
 
@@ -971,7 +971,7 @@ class TestDriveGuards:
             ),
             mock.patch.object(routes_mod.storage_mod, "find_drive", return_value=None),
             mock.patch.object(
-                routes_mod.storage_mod, "create_drive", return_value="kirocrew-drive-abc"
+                routes_mod.storage_mod, "create_drive", return_value="ajcrew-drive-abc"
             ) as create,
         ):
             req = _request("POST", f"/drive/{ACCOUNT}/bootstrap", match_info={"account": ACCOUNT})
@@ -979,7 +979,7 @@ class TestDriveGuards:
             resp = asyncio.run(
                 handlers[("POST", "/drive/{account}/bootstrap")](req)  # type: ignore[operator]
             )
-        assert _payload(resp) == {"created": True, "bucket": "kirocrew-drive-abc"}
+        assert _payload(resp) == {"created": True, "bucket": "ajcrew-drive-abc"}
         create.assert_called_once()
 
     def test_every_mutation_refuses_a_restricted_session(self):
@@ -987,7 +987,7 @@ class TestDriveGuards:
         with (
             mock.patch.object(routes_mod, "is_app_enabled", return_value=True),
             mock.patch(
-                "kiro_crew.dashboard.handlers._shared._is_restricted_session",
+                "aj_crew.dashboard.handlers._shared._is_restricted_session",
                 return_value=True,
             ),
         ):
@@ -1015,7 +1015,7 @@ class TestDriveGuards:
                 routes_mod.aws_consent, "refuse_and_log", AsyncMock(return_value=True)
             ),
             mock.patch.object(
-                routes_mod.storage_mod, "find_drive", return_value="kirocrew-drive-abc"
+                routes_mod.storage_mod, "find_drive", return_value="ajcrew-drive-abc"
             ),
         ):
             req = _request(
@@ -1041,7 +1041,7 @@ class TestDriveGuards:
                 routes_mod.aws_consent, "refuse_and_log", AsyncMock(return_value=True)
             ),
             mock.patch.object(
-                routes_mod.storage_mod, "find_drive", return_value="kirocrew-drive-abc"
+                routes_mod.storage_mod, "find_drive", return_value="ajcrew-drive-abc"
             ),
             mock.patch.object(routes_mod.storage_mod, "head_object_meta", return_value={}),
             mock.patch.object(
@@ -1066,13 +1066,13 @@ class TestDriveGuards:
 class TestCosts:
     @pytest.fixture(autouse=True)
     def _isolated_cache(self, tmp_path, monkeypatch):
-        from kiro_crew.apps.builtins.aws_control.backend import costs
+        from aj_crew.apps.builtins.aws_control.backend import costs
 
         monkeypatch.setattr(costs, "_cache_path", lambda account: tmp_path / f"{account}.json")
         yield
 
     def test_fetch_parses_groups_and_caches(self):
-        from kiro_crew.apps.builtins.aws_control.backend import costs
+        from aj_crew.apps.builtins.aws_control.backend import costs
 
         ce_payload = json.dumps(
             {
@@ -1098,7 +1098,7 @@ class TestCosts:
         assert cached is not None and costs.is_fresh(cached)
 
     def test_stale_cache_is_not_fresh(self):
-        from kiro_crew.apps.builtins.aws_control.backend import costs
+        from aj_crew.apps.builtins.aws_control.backend import costs
 
         assert not costs.is_fresh(None)
         assert not costs.is_fresh({"fetchedAt": "2000-01-01T00:00:00+00:00"})
@@ -1132,7 +1132,7 @@ class TestCosts:
 class TestBackup:
     @pytest.fixture(autouse=True)
     def _isolated_state(self, tmp_path, monkeypatch):
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         monkeypatch.setattr(backup, "_state_path", lambda: tmp_path / "backup.json")
         yield
@@ -1148,7 +1148,7 @@ class TestBackup:
                 routes_mod.aws_consent, "refuse_and_log", AsyncMock(return_value=True)
             ),
             mock.patch.object(
-                routes_mod.storage_mod, "find_drive", return_value="kirocrew-drive-abc"
+                routes_mod.storage_mod, "find_drive", return_value="ajcrew-drive-abc"
             ),
         ):
             req = _request("POST", f"/backup/{ACCOUNT}/run", match_info={"account": ACCOUNT})
@@ -1170,7 +1170,7 @@ class TestBackup:
                 routes_mod.aws_consent, "refuse_and_log", AsyncMock(return_value=True)
             ),
             mock.patch.object(
-                routes_mod.storage_mod, "find_drive", return_value="kirocrew-drive-abc"
+                routes_mod.storage_mod, "find_drive", return_value="ajcrew-drive-abc"
             ),
         ):
             req = _request("POST", f"/backup/{ACCOUNT}/restore", match_info={"account": ACCOUNT})
@@ -1185,7 +1185,7 @@ class TestBackup:
     def test_nightly_due_logic(self, tmp_path):
         import datetime as dt
 
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         assert not backup.due_for_nightly(ACCOUNT)  # toggle off
         backup.set_nightly(ACCOUNT, True)
@@ -1199,7 +1199,7 @@ class TestBackup:
         # Two accounts must not share a nightly toggle or run records —
         # switching the default account cannot make one console report
         # the other account's backups.
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         other = "444455556666"
         backup.set_nightly(ACCOUNT, True)
@@ -1214,7 +1214,7 @@ class TestBackup:
 
 class TestDriveIamTier:
     def test_drive_tier_is_self_contained_and_scoped(self):
-        from kiro_crew.deploy import iam
+        from aj_crew.deploy import iam
 
         doc = iam.policy_document(tier="drive")
         sids = [s["Sid"] for s in doc["Statement"]]
@@ -1232,28 +1232,28 @@ class TestDriveIamTier:
                 for arn in statement["Resource"]:
                     # Partition-neutral: the scoping that matters is
                     # the bucket-name pattern, not the commercial partition.
-                    assert arn.startswith("arn:*:s3:::kirocrew-drive-"), arn
+                    assert arn.startswith("arn:*:s3:::ajcrew-drive-"), arn
         # Round-14 pin: the recommended tier can WRITE backups but never read
         # them back -- no GetObject grant may ever reach the backup prefix.
         by_sid = {s["Sid"]: s for s in doc["Statement"]}
         backup = by_sid["DriveBackupWriteOnly"]
-        assert backup["Resource"] == ["arn:*:s3:::kirocrew-drive-*/backup/*"]
+        assert backup["Resource"] == ["arn:*:s3:::ajcrew-drive-*/backup/*"]
         assert "s3:GetObject" not in backup["Action"]
         assert "s3:DeleteObject" not in backup["Action"]
         objects = by_sid["DriveObjectLevel"]
         assert objects["Resource"] == [
-            "arn:*:s3:::kirocrew-drive-*/drive/*",
-            "arn:*:s3:::kirocrew-drive-*/artifacts/*",
+            "arn:*:s3:::ajcrew-drive-*/drive/*",
+            "arn:*:s3:::ajcrew-drive-*/artifacts/*",
         ]
         # No bucket-policy write: with it, this principal could grant itself
         # backup reads and undo the write-only rule above.
         assert "s3:PutBucketPolicy" not in json.dumps(doc)
         # No deploy-web statements leak into the drive tier.
-        assert not any("kirocrew-web" in json.dumps(s) for s in doc["Statement"])
+        assert not any("ajcrew-web" in json.dumps(s) for s in doc["Statement"])
         assert not any("cloudfront" in json.dumps(s).lower() for s in doc["Statement"])
 
     def test_static_tier_is_unchanged_by_the_drive_tier(self):
-        from kiro_crew.deploy import iam
+        from aj_crew.deploy import iam
 
         doc = iam.policy_document(tier="static")
         assert not any(s["Sid"].startswith("Drive") for s in doc["Statement"])
@@ -1289,11 +1289,11 @@ class TestRound3Hardening:
 
         def create(profile, region, account):
             created.append(profile)
-            return f"kirocrew-drive-{len(created)}"
+            return f"ajcrew-drive-{len(created)}"
 
         # First discovery sees nothing; once created, discovery finds it.
         def find(profile, region, *, account):
-            return f"kirocrew-drive-{len(created)}" if created else None
+            return f"ajcrew-drive-{len(created)}" if created else None
 
         p1, p2, p3 = _enabled_owner_env()
         with (
@@ -1336,7 +1336,7 @@ class TestRound3Hardening:
                 routes_mod.aws_consent, "refuse_and_log", AsyncMock(return_value=True)
             ),
             mock.patch.object(
-                routes_mod.storage_mod, "find_drive", return_value="kirocrew-drive-abc"
+                routes_mod.storage_mod, "find_drive", return_value="ajcrew-drive-abc"
             ),
             mock.patch.object(routes_mod.storage_mod, "object_exists", return_value=False),
             mock.patch.object(routes_mod.storage_mod, "presign") as presign,
@@ -1370,7 +1370,7 @@ class TestPublishGovernance:
                 routes_mod.aws_consent, "refuse_and_log", AsyncMock(return_value=True)
             ),
             mock.patch.object(
-                routes_mod.storage_mod, "find_drive", return_value="kirocrew-drive-abc"
+                routes_mod.storage_mod, "find_drive", return_value="ajcrew-drive-abc"
             ),
             mock.patch.object(
                 routes_mod, "publish_denied_reason", return_value="capability denied"
@@ -1431,7 +1431,7 @@ class TestBackupNotShareable:
                 routes_mod.aws_consent, "refuse_and_log", AsyncMock(return_value=True)
             ),
             mock.patch.object(
-                routes_mod.storage_mod, "find_drive", return_value="kirocrew-drive-abc"
+                routes_mod.storage_mod, "find_drive", return_value="ajcrew-drive-abc"
             ),
             mock.patch.object(routes_mod, "publish_denied_reason", return_value=""),
             mock.patch.object(routes_mod.storage_mod, "presign") as presign,
@@ -1459,7 +1459,7 @@ class TestBackupNotShareable:
                 routes_mod.aws_consent, "refuse_and_log", AsyncMock(return_value=True)
             ),
             mock.patch.object(
-                routes_mod.storage_mod, "find_drive", return_value="kirocrew-drive-abc"
+                routes_mod.storage_mod, "find_drive", return_value="ajcrew-drive-abc"
             ),
             mock.patch.object(routes_mod, "publish_denied_reason", return_value=""),
             mock.patch.object(routes_mod.storage_mod, "presign") as presign,
@@ -1476,7 +1476,7 @@ class TestLibraryScan:
     def test_credential_bearing_artifact_is_refused(self, tmp_path, monkeypatch):
         from types import SimpleNamespace as NS
 
-        from kiro_crew.apps.builtins.aws_control.backend import library
+        from aj_crew.apps.builtins.aws_control.backend import library
 
         monkeypatch.setattr(library, "_ledger_path", lambda: tmp_path / "library.json")
         fake_artifact = NS(
@@ -1502,7 +1502,7 @@ class TestLibraryScan:
         # refused at push, before any byte reaches the bucket.
         from types import SimpleNamespace as NS
 
-        from kiro_crew.apps.builtins.aws_control.backend import library
+        from aj_crew.apps.builtins.aws_control.backend import library
 
         monkeypatch.setattr(library, "_ledger_path", lambda: tmp_path / "library.json")
         beacon = (

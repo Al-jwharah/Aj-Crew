@@ -93,7 +93,7 @@ jobs:
     # Use the larger-runner label upstream; forks cannot reach the org group.
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     # Room for both narrative calls to walk their model chain at the 240s
     # per-call read timeout (20 min), plus the 20 min the gh wrapper below
     # may spend in total waiting out a spent API rate limit.
@@ -343,14 +343,14 @@ jobs:
           echo "Narrative input: $(wc -c < pr-context.txt) bytes for $(jq length prs.json) PRs"
 
           cat > narrative-instructions.txt <<'PROMPT'
-          You write the daily ship report for the Kiro Crew engineering Slack
-          channel. You are given every pull request merged into the Kiro Crew
+          You write the daily ship report for the Aj Crew engineering Slack
+          channel. You are given every pull request merged into the Aj Crew
           repository in one reporting window: its number, change type and title,
           and where the author wrote them, the PR's Goal and why it matters.
 
           Write a narrative of what shipped for a teammate who did not follow the
           repository in this window and wants to know what changed for users and
-          for the people building Kiro Crew, and why it matters.
+          for the people building Aj Crew, and why it matters.
 
           Open with two or three sentences on the headline of the window: the
           changes that matter most and the overall direction of the work. Then
@@ -496,7 +496,7 @@ jobs:
 
           cat > issue-instructions.txt <<'PROMPT'
           You write the inbound half of a daily engineering update for the
-          Kiro Crew repository. You are given the bugs and the feature requests filed in
+          Aj Crew repository. You are given the bugs and the feature requests filed in
           one reporting window. Answer with a single JSON object and nothing else.
 
           Schema: {"must_fix": [{"number": number, "why": string}], "bugs": string, "features": string}
@@ -719,8 +719,8 @@ jobs:
           fi
           PLURAL="s"; [ "$COUNT" = "1" ] && PLURAL=""
           IPLURAL="s"; [ "$ICOUNT" = "1" ] && IPLURAL=""
-          TITLE="KiroCrew ship report"
-          [ "$LINK_STYLE" = "plain" ] || TITLE="*KiroCrew ship report*"
+          TITLE="AjCrew ship report"
+          [ "$LINK_STYLE" = "plain" ] || TITLE="*AjCrew ship report*"
           START_FMT="$(TZ=America/Los_Angeles date -d "$START" +'%b %d %I:%M %p')"
           if [ "$(TZ=America/Los_Angeles date -d "$START" +%Y%m%d)" = "$(TZ=America/Los_Angeles date -d "$END" +%Y%m%d)" ]; then
             END_FMT="$(TZ=America/Los_Angeles date -d "$END" +'%I:%M %p')"

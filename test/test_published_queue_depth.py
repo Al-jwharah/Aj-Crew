@@ -17,11 +17,11 @@ import pytest
 from chat_test_helpers import _make_state
 from overload_fakes import mock_ctx, mock_sessions, wait_taskq_open
 
-from kiro_crew.session_surface import set_dashboard_surfaced
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.subagent_manager import published_depth
-from kiro_crew.subagent_manager.published_depth import PublishedQueueDepths
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.session_surface import set_dashboard_surfaced
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent_manager import published_depth
+from aj_crew.subagent_manager.published_depth import PublishedQueueDepths
+from aj_crew.testing.wait import async_wait_until
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -229,7 +229,7 @@ class TestSerializeSlotsSubagentsQueued:
     """Each serialized slot row carries ``subagents_queued`` for its session."""
 
     async def test_the_row_carries_the_published_depth(self, tmp_path, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         subs = MagicMock()
         subs.running_agents_for = MagicMock(return_value=[])
         subs.published_queued_depths = MagicMock(return_value={PARENT: 2, "dashboard:s9": 4})
@@ -245,8 +245,8 @@ class TestSerializeSlotsSubagentsQueued:
         (``cron:<job>:<agent>``) publish under their own keys, and their frames
         reach the job's ``cron-<job>`` tab. The row must report what those frames
         told it, not the 0 its linked ``cron:<job>`` key holds."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.chat_utils import subagent_event_slot
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.chat_utils import subagent_event_slot
 
         mgr = SubagentManager(sessions=mock_sessions(), ctx_builder=mock_ctx())
         try:
@@ -269,7 +269,7 @@ class TestSerializeSlotsSubagentsQueued:
     ) -> None:
         """A reload gets only the slots frame, so the row must carry the label the
         last frame did, or the chip loses why its rows wait."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         mgr = SubagentManager(sessions=mock_sessions(), ctx_builder=mock_ctx())
         try:
             label = {"reason": "low_memory", "cause": "cgroup_usage_unreadable", "max_wait_secs": 0}
@@ -288,7 +288,7 @@ class TestSerializeSlotsSubagentsQueued:
             await mgr.cancel_all()
 
     async def test_no_manager_reads_as_zero(self, tmp_path, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path, subagents=None)
         state.get_or_create_slot("s1")
 

@@ -26,14 +26,14 @@ from file_change_snapshots_helpers import (
 )
 from turn_harness import Do, Raise, TurnRecord
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_TOOL_CALL,
     EVENT_TOOL_CALL_UPDATE,
     EVENT_TOOL_RESULT,
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.dashboard.chat_runner import (
+from aj_crew.dashboard.chat_runner import (
     _MAX_SNAPSHOT,
     _apply_turn_snapshot_budget,
     _flush_file_changes,
@@ -41,7 +41,7 @@ from kiro_crew.dashboard.chat_runner import (
     _snapshot_write_target,
     _turn_after_reads,
 )
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.state import _ChatSlot
 
 
 class TestPendingStrReplaceResolution:
@@ -603,7 +603,7 @@ class TestLargeFileEditPastTheCut:
         assert "lines not shown)" not in (entry["before"] + entry["after"])
 
     def test_held_whole_befores_stay_within_the_turn_bound(self, short_tmp_dir: Path, monkeypatch):
-        import kiro_crew.dashboard.chat_runner as cr
+        import aj_crew.dashboard.chat_runner as cr
 
         size = len(_large_source())
         monkeypatch.setattr(cr, "_MAX_TURN_FULL_CONTENT_CHARS", 2 * size)
@@ -770,7 +770,7 @@ class TestLargeFileEditOffTheLoop:
     """Whole-file reads and diffs run off the event loop, never inline."""
 
     def test_inline_flush_never_reads_the_whole_file(self, short_tmp_dir: Path, monkeypatch):
-        import kiro_crew.dashboard.chat_runner as cr
+        import aj_crew.dashboard.chat_runner as cr
 
         f = short_tmp_dir / "big.py"
         text = _large_source()
@@ -807,7 +807,7 @@ class TestLargeFileEditOffTheLoop:
     ):
         import threading
 
-        import kiro_crew.dashboard.chat_runner as cr
+        import aj_crew.dashboard.chat_runner as cr
 
         f = short_tmp_dir / "big.py"
         text = _large_source()
@@ -845,7 +845,7 @@ class TestLargeFileEditOffTheLoop:
         TestLargeFileEditPastTheCut()._assert_kept_diff(entry, old, new)
 
     def test_hidden_last_line_without_newline_is_counted(self):
-        from kiro_crew.dashboard.chat_runner import _excerpt_pair
+        from aj_crew.dashboard.chat_runner import _excerpt_pair
 
         tail = "".join(f"t{i}\n" for i in range(99)) + "last"
         pair = _excerpt_pair("head\nx\n" + tail, "head\ny\n" + tail)
@@ -896,7 +896,7 @@ class TestLargeFileEditRedaction:
         assert key[-1].strip() not in stored
 
     def test_flush_redaction_leaves_a_redacted_window_unchanged(self):
-        from kiro_crew.security import redact as redact_text
+        from aj_crew.security import redact as redact_text
 
         text = "".join(self._pem(5)) + "token = AKIAIOSFODNN7EXAMPLE\n"
         once = redact_text(text)
@@ -957,7 +957,7 @@ class TestExcerptDiffWork:
         ],
     )
     def test_a_small_edit_in_repeated_rows_diffs_only_the_changed_lines(self, monkeypatch, edit):
-        from kiro_crew.dashboard.chat_runner import _excerpt_pair
+        from aj_crew.dashboard.chat_runner import _excerpt_pair
 
         rows = _repeated_rows()
         before = "".join(rows)
@@ -970,7 +970,7 @@ class TestExcerptDiffWork:
         assert max(len(pair[0]), len(pair[1])) <= _MAX_SNAPSHOT
 
     def test_many_spread_edits_stop_at_the_budget(self, monkeypatch):
-        import kiro_crew.dashboard.chat_runner as cr
+        import aj_crew.dashboard.chat_runner as cr
 
         rows = _repeated_rows()
         before = "".join(rows)
@@ -983,7 +983,7 @@ class TestExcerptDiffWork:
         assert work.visits <= cr._EXCERPT_DIFF_BUDGET
 
     def test_two_far_edits_in_distinct_lines_still_window(self, monkeypatch):
-        from kiro_crew.dashboard.chat_runner import _excerpt_pair
+        from aj_crew.dashboard.chat_runner import _excerpt_pair
 
         lines = _large_source().splitlines(keepends=True)
         before = "".join(lines)
@@ -995,7 +995,7 @@ class TestExcerptDiffWork:
         assert work.visits < 100_000
 
     def test_a_length_gap_past_the_cap_skips_the_diff(self, monkeypatch):
-        from kiro_crew.dashboard.chat_runner import _excerpt_pair
+        from aj_crew.dashboard.chat_runner import _excerpt_pair
 
         work = _DiffWork(monkeypatch, ceiling=0)
         assert _excerpt_pair("a\n", "a\n" + "b" * (_MAX_SNAPSHOT + 1)) is None
@@ -1004,7 +1004,7 @@ class TestExcerptDiffWork:
     def test_over_budget_edit_keeps_the_top_cut_and_stays_protected(
         self, short_tmp_dir: Path, monkeypatch
     ):
-        import kiro_crew.dashboard.chat_runner as cr
+        import aj_crew.dashboard.chat_runner as cr
 
         monkeypatch.setattr(cr, "_EXCERPT_DIFF_BUDGET", 0)
         f = short_tmp_dir / "big.py"
@@ -1061,7 +1061,7 @@ class TestOneFileTurnKeepsItsEntry:
     def test_edit_in_a_file_past_the_whole_read_bound_is_protected(
         self, short_tmp_dir: Path, monkeypatch
     ):
-        import kiro_crew.dashboard.chat_runner as cr
+        import aj_crew.dashboard.chat_runner as cr
 
         f = short_tmp_dir / "big.py"
         text = _large_source()
@@ -1373,7 +1373,7 @@ class TestFailedWriteRecordsNoChange:
 
         import turn_harness
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         reached = []
 
@@ -1451,14 +1451,14 @@ class TestFailedWriteRecordsNoChange:
         assert other.read_text() == "old\n"
 
     def test_an_unknown_writer_selects_nothing(self) -> None:
-        from kiro_crew.dashboard.chat_runner import _failed_write_entries
+        from aj_crew.dashboard.chat_runner import _failed_write_entries
 
         slot = MagicMock()
         slot._file_changes = [{"path": "/a", "content": "x"}]
         assert _failed_write_entries(slot, "") == []
 
     def test_a_failed_write_counts_no_lines(self) -> None:
-        from kiro_crew.dashboard.chat_runner import _line_change_input, _Snapshot
+        from aj_crew.dashboard.chat_runner import _line_change_input, _Snapshot
 
         fc = {"path": "/a", "content": "x\n", "unverified_write": True}
         assert _line_change_input(fc, _Snapshot("y\n", False)) is None

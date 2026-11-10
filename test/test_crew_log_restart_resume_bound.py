@@ -17,10 +17,10 @@ from typing import Any, Iterator
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, bus, checkpoint, eager, emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import store as crew_log_store
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, bus, checkpoint, eager, emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import store as crew_log_store
 
 GATEWAY = "gateway"
 BOARD = "dashboard:guard-board"
@@ -41,8 +41,8 @@ _FILLER_TYPE = "turn/started"
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, _floor_monkeypatch):
     """Own data home, crew log on, no warm cell, subscriber or worker left over."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     _reset()
     yield
     _reset()
@@ -98,11 +98,11 @@ def _work_create(board: str, item_id: str) -> dict:
 
 
 def _unit(unit_id: str, *, filler: int, work_items: int) -> CrewLog:
-    handle = CrewLog.create(lg.KIND_SESSION, unit_id, owner="guard", agent="kirocrew", slot=BOARD)
+    handle = CrewLog.create(lg.KIND_SESSION, unit_id, owner="guard", agent="ajcrew", slot=BOARD)
     handle.append(
         "session/opened",
         {
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "slot": BOARD,
             "model": "m",
             "cwd": "/w",

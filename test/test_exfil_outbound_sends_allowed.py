@@ -18,7 +18,7 @@ is never blocked.
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.security.exfil import audit_bash_exfiltration as audit
+from aj_crew.security.exfil import audit_bash_exfiltration as audit
 
 _EXFIL_DENIAL = "Blocked: command matches data-exfiltration pattern"
 

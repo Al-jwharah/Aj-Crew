@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """PR Hygiene: a change to an adopted app's wheel copy names its app-repo twin.
 
-Once ``src/kiro_crew/apps/adoption-pins.json`` pins a former built-in, a host
+Once ``src/aj_crew/apps/adoption-pins.json`` pins a former built-in, a host
 that adopted it runs the app's own repository at the pinned commit, never the
 wheel copy. A change that lands only in the wheel copy
-(``src/kiro_crew/apps/builtins/<dir>/`` or ``website/src/apps/<name>/``) is
+(``src/aj_crew/apps/builtins/<dir>/`` or ``website/src/apps/<name>/``) is
 therefore lost for every adopted user. The change goes to the app repository
 first, and the PR body names that commit or pull request on its own line:
 
@@ -40,7 +40,7 @@ import os
 import re
 import sys
 
-BUILTINS_DIR = "src/kiro_crew/apps/builtins/"
+BUILTINS_DIR = "src/aj_crew/apps/builtins/"
 WEBSITE_APPS_DIR = "website/src/apps/"
 
 _REPOSITORY_RE = re.compile(r"https://github\.com/([A-Za-z0-9-]{1,39}/[A-Za-z0-9._-]{1,100})")

@@ -1,10 +1,10 @@
-"""Managed-MCP registration for ``kirocrew-dashboard``, and why it is its own server.
+"""Managed-MCP registration for ``ajcrew-dashboard``, and why it is its own server.
 
-The tools are NOT in ``kirocrew-core``, which every session carries, so an occasional
+The tools are NOT in ``ajcrew-core``, which every session carries, so an occasional
 grant does not spend context in every request. Pinned here:
 
 * **The default agent's spec does not carry the server** (no ``mcpServers`` entry, no
-  ``@kirocrew-dashboard`` ref); an unreferenced server costs zero context.
+  ``@ajcrew-dashboard`` ref); an unreferenced server costs zero context.
 * **A refresh never re-grants it**, so a gateway restart cannot bring it back.
 * **The managed spec carries NO ``autoApprove`` key**: an autoApproved tool never
   reaches ``hooks.on_tool_call``, bypassing the deny floor and governance ceiling.
@@ -19,16 +19,16 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import agent, mcp_cleanup, mcp_discovery, onboarding_import
+from aj_crew import agent, mcp_cleanup, mcp_discovery, onboarding_import
 
-DASH_SERVER = "kirocrew-dashboard"
+DASH_SERVER = "ajcrew-dashboard"
 DASH_SUBCOMMAND = "mcp-dashboard"
 
 
 class TestRegistryParity:
     def test_named_in_every_managed_registry(self) -> None:
         assert DASH_SERVER in agent._MANAGED_MCP_SERVERS
-        assert DASH_SERVER in mcp_cleanup.KIROCREW_BIN_MCP_SERVERS
+        assert DASH_SERVER in mcp_cleanup.AJCREW_BIN_MCP_SERVERS
         assert mcp_discovery._MANAGED_SERVER_SUBCOMMANDS.get(DASH_SERVER) == DASH_SUBCOMMAND
         assert DASH_SERVER in mcp_discovery._MANAGED_SERVER_NAMES
         assert DASH_SERVER in onboarding_import._managed_mcp_names()
@@ -36,7 +36,7 @@ class TestRegistryParity:
     def test_tool_module_is_mapped_for_in_process_listing(self) -> None:
         """Discovery reads tool names in-process; an unmapped server lists zero."""
         assert (
-            mcp_discovery._MANAGED_SERVER_TOOL_MODULES.get(DASH_SERVER) == "kiro_crew.mcp_dashboard"
+            mcp_discovery._MANAGED_SERVER_TOOL_MODULES.get(DASH_SERVER) == "aj_crew.mcp_dashboard"
         )
 
     def test_spec_carries_no_auto_approve(self) -> None:
@@ -63,11 +63,11 @@ class TestRegistryParity:
         assert (
             set(mcp_cleanup.ALWAYS_ON_BIN_MCP_SERVERS) == set(agent._MANAGED_MCP_SERVERS) - flagged
         )
-        assert set(mcp_cleanup.KIROCREW_BIN_MCP_SERVERS) == set(agent._MANAGED_MCP_SERVERS)
+        assert set(mcp_cleanup.AJCREW_BIN_MCP_SERVERS) == set(agent._MANAGED_MCP_SERVERS)
 
 
 class TestDoctorTreatsItAsAssignedNotMissing:
-    """`kirocrew doctor` must not undo the assignment, in either direction."""
+    """`ajcrew doctor` must not undo the assignment, in either direction."""
 
     def test_it_is_never_blanket_auto_approved(self) -> None:
         """``allowedTools`` skips the PreToolUse gate, so doctor may not mint one.
@@ -76,7 +76,7 @@ class TestDoctorTreatsItAsAssignedNotMissing:
         For tools that rewrite the user's session layout that would delete the
         deny floor and the governance ceiling in one step.
         """
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         assert DASH_SERVER in cli_doctor._NO_BLANKET_ALLOW_MCPS
 
@@ -90,13 +90,13 @@ class TestDoctorTreatsItAsAssignedNotMissing:
         """
         import json
 
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
-        spec_path = tmp_path / "kirocrew.json"
+        spec_path = tmp_path / "ajcrew.json"
         spec = {
             "mcpServers": {
-                n: {"command": "/usr/local/bin/kirocrew", "args": [f"mcp-{n.split('-', 1)[1]}"]}
-                for n in mcp_cleanup.KIROCREW_BIN_MCP_SERVERS
+                n: {"command": "/usr/local/bin/ajcrew", "args": [f"mcp-{n.split('-', 1)[1]}"]}
+                for n in mcp_cleanup.AJCREW_BIN_MCP_SERVERS
             },
             "tools": [f"@{n}" for n in mcp_cleanup.ALWAYS_ON_BIN_MCP_SERVERS],
             "allowedTools": [],
@@ -114,15 +114,15 @@ class TestDoctorTreatsItAsAssignedNotMissing:
         """The mirror half: a ref mounting a server the spec never defines."""
         import json
 
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
-        spec_path = tmp_path / "kirocrew.json"
+        spec_path = tmp_path / "ajcrew.json"
         spec = {
             "mcpServers": {
-                n: {"command": "/usr/local/bin/kirocrew", "args": [f"mcp-{n.split('-', 1)[1]}"]}
+                n: {"command": "/usr/local/bin/ajcrew", "args": [f"mcp-{n.split('-', 1)[1]}"]}
                 for n in mcp_cleanup.ALWAYS_ON_BIN_MCP_SERVERS
             },
-            "tools": [f"@{n}" for n in mcp_cleanup.KIROCREW_BIN_MCP_SERVERS],
+            "tools": [f"@{n}" for n in mcp_cleanup.AJCREW_BIN_MCP_SERVERS],
             "allowedTools": [],
         }
         spec_path.write_text(json.dumps(spec), encoding="utf-8")
@@ -135,15 +135,15 @@ class TestDoctorTreatsItAsAssignedNotMissing:
         """A default install has no grant, and that is the healthy state."""
         import json
 
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
-        spec = tmp_path / "kirocrew.json"
+        spec = tmp_path / "ajcrew.json"
         spec.write_text(
             json.dumps(
                 {
                     "mcpServers": {
                         n: {
-                            "command": "/usr/local/bin/kirocrew",
+                            "command": "/usr/local/bin/ajcrew",
                             "args": [f"mcp-{n.split('-', 1)[1]}"],
                         }
                         for n in mcp_cleanup.ALWAYS_ON_BIN_MCP_SERVERS
@@ -177,8 +177,8 @@ class TestTheDefaultAgentIsNotGrantedTheSet:
         """The skip is scoped to opt-in sets, not to managed servers at large."""
         config = agent.build_agent_config()
         mcp = config.get("mcpServers", {})
-        assert "kirocrew-core" in mcp
-        assert "kirocrew-cron" in mcp
+        assert "ajcrew-core" in mcp
+        assert "ajcrew-cron" in mcp
 
     def test_a_refresh_does_not_introduce_the_server(self) -> None:
         config: dict[str, Any] = {"mcpServers": {}}
@@ -224,16 +224,16 @@ class TestAHandWrittenGrantIsUserInput:
     ) -> None:
         import json
 
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
-        spec_path = tmp_path / "kirocrew.json"
+        spec_path = tmp_path / "ajcrew.json"
         spec_path.write_text(
             json.dumps(
                 {
                     "mcpServers": {
                         **{
                             n: {
-                                "command": "/usr/local/bin/kirocrew",
+                                "command": "/usr/local/bin/ajcrew",
                                 "args": [f"mcp-{n.split('-', 1)[1]}"],
                             }
                             for n in mcp_cleanup.ALWAYS_ON_BIN_MCP_SERVERS
@@ -256,9 +256,9 @@ class TestAHandWrittenGrantIsUserInput:
 
 
 class TestTheNameAloneIsNotOwnership:
-    """A global entry under an opt-in name is never Kiro Crew's to delete.
+    """A global entry under an opt-in name is never Aj Crew's to delete.
 
-    Kiro Crew never writes an opt-in server to the global ``mcp.json``, so an entry
+    Aj Crew never writes an opt-in server to the global ``mcp.json``, so an entry
     there is the user's hand-written grant, even one spelled exactly as we would.
     """
 
@@ -269,7 +269,7 @@ class TestTheNameAloneIsNotOwnership:
             # method that wrote the global file, so no residue of ours can carry
             # their names.
             assert (name in mcp_cleanup.STALE_MANAGED_MCP_SERVERS) is (
-                name not in ("kirocrew-guide", "kirocrew-mate")
+                name not in ("ajcrew-guide", "ajcrew-mate")
             )
 
     def test_a_hand_written_grant_survives_cleanup(self, tmp_path: Any, monkeypatch: Any) -> None:
@@ -283,12 +283,12 @@ class TestTheNameAloneIsNotOwnership:
                     "mcpServers": {
                         # The user's grant, spelled the only way that works.
                         DASH_SERVER: {
-                            "command": "/usr/local/bin/kirocrew",
+                            "command": "/usr/local/bin/ajcrew",
                             "args": ["mcp-dashboard"],
                         },
                         # A genuinely stale always-on entry, for contrast.
-                        "kirocrew-core": {
-                            "command": "/usr/local/bin/kirocrew",
+                        "ajcrew-core": {
+                            "command": "/usr/local/bin/ajcrew",
                             "args": ["mcp-core"],
                         },
                     }
@@ -300,7 +300,7 @@ class TestTheNameAloneIsNotOwnership:
 
         removed = mcp_cleanup.clean_stale_managed_mcp()
 
-        assert removed == ["kirocrew-core"]
+        assert removed == ["ajcrew-core"]
         left = json.loads(mcp_json.read_text(encoding="utf-8"))["mcpServers"]
         assert DASH_SERVER in left, "deleted a grant only a human could have written"
 
@@ -395,13 +395,13 @@ class TestWhatThisSetGrants:
     GRANTED_TOOLS = FOLDER_TOOLS | TAG_TOOLS | COLUMN_TOOLS | MOVE_TOOLS | PIN_TOOLS | SESSION_TOOLS
 
     def test_the_set_is_exactly_the_folder_tools(self) -> None:
-        from kiro_crew import mcp_dashboard
+        from aj_crew import mcp_dashboard
 
         assert {t["name"] for t in mcp_dashboard._tool_definitions()} == self.GRANTED_TOOLS
 
     def test_the_advertised_list_is_the_set(self) -> None:
         """Reaching the process means the set was assigned; nothing is hidden."""
-        from kiro_crew import mcp_dashboard
+        from aj_crew import mcp_dashboard
 
         assert {t["name"] for t in mcp_dashboard._list_tools()} == self.GRANTED_TOOLS
 
@@ -412,7 +412,7 @@ class TestWhatThisSetGrants:
         between them. If either class leaves the server, this fails, so dropping one
         stays a decision.
         """
-        from kiro_crew import mcp_dashboard
+        from aj_crew import mcp_dashboard
 
         names = {t["name"] for t in mcp_dashboard._tool_definitions()}
         folder = {n for n in names if n.startswith("chat_folder_")}

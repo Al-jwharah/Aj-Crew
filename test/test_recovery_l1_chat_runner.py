@@ -38,19 +38,19 @@ from recovery_l1_chat_runner_helpers import (
     _transient_error,
 )
 
-from kiro_crew.acp.client import AcpClient, AcpError
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, JsonRpcMessage
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard import session_health as sh
-from kiro_crew.dashboard.chat import _run_chat
-from kiro_crew.dashboard.chat_utils import TRANSIENT_NOTICE_GIVE_UP, TRANSIENT_NOTICE_META_KEY
-from kiro_crew.dashboard.session_control import containment_meta
-from kiro_crew.dashboard.state import REFUSAL_RECOVERY_PREFIX
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.base import LLMEvent, LLMProvider
-from kiro_crew.recovery import ladder as lad
+from aj_crew.acp.client import AcpClient, AcpError
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, JsonRpcMessage
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard import session_health as sh
+from aj_crew.dashboard.chat import _run_chat
+from aj_crew.dashboard.chat_utils import TRANSIENT_NOTICE_GIVE_UP, TRANSIENT_NOTICE_META_KEY
+from aj_crew.dashboard.session_control import containment_meta
+from aj_crew.dashboard.state import REFUSAL_RECOVERY_PREFIX
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.base import LLMEvent, LLMProvider
+from aj_crew.recovery import ladder as lad
 
 
 class _Runtime:
@@ -157,7 +157,7 @@ class TestHandleClassifies:
     @pytest.mark.parametrize(
         "text",
         [
-            "src/kiro_crew/mcp_gateway/pool.py:41:class BackendGone(RuntimeError):",
+            "src/aj_crew/mcp_gateway/pool.py:41:class BackendGone(RuntimeError):",
             "docs/x.md:12: if the backend is gone, the stub retries",
             "test.py:3: ERR = -32001",
         ],
@@ -520,7 +520,7 @@ async def _turn_interrupted_during_the_backoff(tmp_path, key, deliver):
     try:
         with patch.object(chat_runner, "_recovery_delay", _seam):
             with patch.object(lad, "emit_histogram", _histogram):
-                with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+                with patch("aj_crew.dashboard.chat.sel") as mock_sel:
                     mock_sel.return_value = MagicMock()
                     await _run_chat(state, slot, "hello")
                     if slot.task:
@@ -703,7 +703,7 @@ async def _transient_turn_interrupted_during_the_backoff(tmp_path, key, deliver,
         deliver(state, slot)
 
     with patch.object(chat_runner, "_recovery_delay", _seam):
-        with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             await _run_chat(state, slot, "hello")
             if slot.task:
@@ -940,7 +940,7 @@ class TestStructuralTerminalSlotFlag:
         state, _client = self._malformed_state(tmp_path)
         slot = _RecordingSlot("chat-1-malformed")
         assert slot._last_turn_structural_terminal is False
-        with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             # A self-driven nudge fire is the only producer that may set the
             # flag (the fire path passes _directive_self_wake=True); the loop id
@@ -978,7 +978,7 @@ class TestStructuralTerminalSlotFlag:
         plain terminal error and the loop re-fired the same doomed context every
         interval until ``max_cycles``.
         """
-        from kiro_crew.acp.transport_errors import _raise_acp_error
+        from aj_crew.acp.transport_errors import _raise_acp_error
 
         state, client = _l1_state(tmp_path)
         client.last_infra_error = None
@@ -997,7 +997,7 @@ class TestStructuralTerminalSlotFlag:
         client.stream = MagicMock(side_effect=_raise_oversized)
         slot = _RecordingSlot("chat-1-oversized")
         assert slot._last_turn_structural_terminal is False
-        with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             await _run_chat(
                 state,
@@ -1031,7 +1031,7 @@ class TestStructuralTerminalSlotFlag:
         """
         state, _client = self._malformed_state(tmp_path)
         slot = _RecordingSlot("chat-1-human-malformed")
-        with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             await _run_chat(state, slot, "a human message that trips the parser")
             if slot.task:
@@ -1061,7 +1061,7 @@ class TestStructuralTerminalSlotFlag:
         slot._last_turn_structural_terminal = True
         slot._last_turn_structural_terminal_loop_id = "loop-stale"
         slot._last_turn_structural_terminal_loop_gen = 5
-        with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             await _run_chat(state, slot, "a fresh human message")
             if slot.task:
@@ -1081,7 +1081,7 @@ class _RecordingNudgeSvc:
     """Records ``notify_cycle_failed`` calls so a runner-level test can assert
     the real call-site (not the helper) charged or did not charge.
 
-    Patched in as ``kiro_crew.autonudge.get_instance``'s return value, which is
+    Patched in as ``aj_crew.autonudge.get_instance``'s return value, which is
     exactly what ``_note_cycle_failure`` resolves at call time.
     """
 
@@ -1129,8 +1129,8 @@ class TestTheRunnerCallSitesChargeTheFailedCycle:
         svc = _RecordingNudgeSvc()
         slot = _RecordingSlot("chat-1-dispatched")
         with (
-            patch("kiro_crew.dashboard.chat.sel") as mock_sel,
-            patch("kiro_crew.autonudge.get_instance", return_value=svc),
+            patch("aj_crew.dashboard.chat.sel") as mock_sel,
+            patch("aj_crew.autonudge.get_instance", return_value=svc),
         ):
             mock_sel.return_value = MagicMock()
             await _run_chat(
@@ -1165,8 +1165,8 @@ class TestTheRunnerCallSitesChargeTheFailedCycle:
         svc2 = _RecordingNudgeSvc()
         slot2 = _RecordingSlot("chat-1-predispatch")
         with (
-            patch("kiro_crew.dashboard.chat.sel") as mock_sel,
-            patch("kiro_crew.autonudge.get_instance", return_value=svc2),
+            patch("aj_crew.dashboard.chat.sel") as mock_sel,
+            patch("aj_crew.autonudge.get_instance", return_value=svc2),
         ):
             mock_sel.return_value = MagicMock()
             await _run_chat(
@@ -1204,8 +1204,8 @@ class TestTheRunnerCallSitesChargeTheFailedCycle:
         svc = _RecordingNudgeSvc()
         slot = _RecordingSlot("chat-1-acp-arm")
         with (
-            patch("kiro_crew.dashboard.chat.sel") as mock_sel,
-            patch("kiro_crew.autonudge.get_instance", return_value=svc),
+            patch("aj_crew.dashboard.chat.sel") as mock_sel,
+            patch("aj_crew.autonudge.get_instance", return_value=svc),
         ):
             mock_sel.return_value = MagicMock()
             await _run_chat(
@@ -1259,8 +1259,8 @@ class TestTheRunnerCallSitesChargeTheFailedCycle:
         try:
             with (
                 patch.object(chat_runner, "_recovery_delay", new=AsyncMock()),
-                patch("kiro_crew.dashboard.chat.sel") as mock_sel,
-                patch("kiro_crew.autonudge.get_instance", return_value=svc),
+                patch("aj_crew.dashboard.chat.sel") as mock_sel,
+                patch("aj_crew.autonudge.get_instance", return_value=svc),
             ):
                 mock_sel.return_value = MagicMock()
                 await _run_chat(
@@ -1322,8 +1322,8 @@ class TestTheRunnerCallSitesChargeTheFailedCycle:
         slot = _RecordingSlot("chat-1-acp-transient")
         with (
             patch.object(chat_runner, "_recovery_delay", new=AsyncMock()),
-            patch("kiro_crew.dashboard.chat.sel") as mock_sel,
-            patch("kiro_crew.autonudge.get_instance", return_value=svc),
+            patch("aj_crew.dashboard.chat.sel") as mock_sel,
+            patch("aj_crew.autonudge.get_instance", return_value=svc),
         ):
             mock_sel.return_value = MagicMock()
             await _run_chat(
@@ -1381,8 +1381,8 @@ class TestTheRunnerCallSitesChargeTheFailedCycle:
         slot = _RecordingSlot("chat-1-wake-recovery")
         with (
             patch.object(chat_runner, "_recovery_delay", new=AsyncMock()),
-            patch("kiro_crew.dashboard.chat.sel") as mock_sel,
-            patch("kiro_crew.autonudge.get_instance", return_value=svc),
+            patch("aj_crew.dashboard.chat.sel") as mock_sel,
+            patch("aj_crew.autonudge.get_instance", return_value=svc),
         ):
             mock_sel.return_value = MagicMock()
             await _run_chat(

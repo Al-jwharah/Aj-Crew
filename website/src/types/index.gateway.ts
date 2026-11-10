@@ -143,7 +143,7 @@ export interface StatusData {
   version_display?: string
   /**
    * Which release lane these bytes came from. The gateway resolves it (see
-   * `src/kiro_crew/release_channel.py`) rather than leaving the dashboard to
+   * `src/aj_crew/release_channel.py`) rather than leaving the dashboard to
    * parse `version`: the same release is stamped as SemVer for the desktop app
    * and PEP 440 for wheels, and neither PEP 440 prerelease spelling
    * (`1.2.3rc4`, `1.2.3.dev<stamp>`) contains a `-`, so a mirror of the rule
@@ -511,8 +511,8 @@ export interface RemoteUpdateJob {
    *  commands exited 0 but it came back on the same version (its updater
    *  installed nothing). `unverified`: it did not answer with a version in time. */
   state: 'running' | 'succeeded' | 'unchanged' | 'unverified' | 'failed'
-  /** Where the job is, or where it failed: the remote `kirocrew update`, then
-   *  waiting for the crew's in-flight work to finish, then `kirocrew restart`,
+  /** Where the job is, or where it failed: the remote `ajcrew update`, then
+   *  waiting for the crew's in-flight work to finish, then `ajcrew restart`,
    *  then reading the crew's version back. */
   phase: 'updating' | 'waiting_for_idle' | 'restarting' | 'verifying' | 'done'
   started_at: number

@@ -48,7 +48,7 @@ superseded-by: []
   the "economy" is split into a mechanism and an experiment, because an
   incentive with no learning loop is not an incentive (Phase 3).
 - Author: zezhexu
-- Related: `src/kiro_crew/docs/cron-and-scheduling.md` (the surface this extends),
+- Related: `src/aj_crew/docs/cron-and-scheduling.md` (the surface this extends),
   `docs/request-for-change/rfc-orchestrator-chat-sessions.md` (same
   "sessions are the unit of continuity" organizing rule)
 
@@ -113,7 +113,7 @@ off, restart recovery, failed commit, failed read and pre-upgrade retirement.
 
 ## Summary
 
-Every scheduled thing in Kiro Crew today is a **task with an end**. A cron job
+Every scheduled thing in Aj Crew today is a **task with an end**. A cron job
 runs its prompt and stops. A monitor loop polls until its exit condition and
 calls `autonudge_stop`. A heartbeat entry is dispatched and removed. The system
 has no way to express an agent that is simply *alive* — one that holds a
@@ -400,7 +400,7 @@ Guards on `next_wake`:
 - Rejected if it would exceed `wake_budget_daily` over a rolling 24h window;
   the refusal names the earliest acceptable time, so the agent re-calls rather
   than guesses.
-- Authorization: the tool resolves the calling job from `KIROCREW_SESSION_KEY`
+- Authorization: the tool resolves the calling job from `AJCREW_SESSION_KEY`
   (`cron:{job.id}`) and may mutate **only that job**. It is refused outright
   from any non-`cron:` session, and from a subagent, using the strict env-only
   resolution `monitor_start` already uses for the same reason
@@ -912,7 +912,7 @@ believed everything was stopped.
 ## Security considerations
 
 - **Self-rescheduling is self-scoped.** `agent_sleep` resolves its target from
-  `KIROCREW_SESSION_KEY` and may write only that job. Strict env-only
+  `AJCREW_SESSION_KEY` and may write only that job. Strict env-only
   resolution (no PID walk) prevents a subagent from assuming its parent's
   identity, matching the reasoning already recorded at `mcp_core_parts/identity.py`
   (`_resolve_session_key_strict`).

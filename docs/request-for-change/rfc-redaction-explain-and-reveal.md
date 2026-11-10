@@ -54,7 +54,7 @@ chat. The user sees `[REDACTED: credential]`,
   this protection is working normally, so the explanation should look calm and
   follow the answer instead.
 
-Users repeatedly ask in Slack #kiro-crew-debug why text or links disappeared,
+Users repeatedly ask in Slack #aj-crew-debug why text or links disappeared,
 which shows that the current message is confusing even when the protection
 worked correctly.
 
@@ -664,7 +664,7 @@ What step 1 ships, and the invariants review should hold it to (shipped in
 
 - For two weeks, count false-positive reports by rule name without collecting
   the removed value, then use those counts to find rules that need changes.
-- Check whether #kiro-crew-debug receives fewer questions about missing links
+- Check whether #aj-crew-debug receives fewer questions about missing links
   and missing secrets.
 - Measure how quickly users dismiss the coach with *Got it* — very fast
   dismissal may mean the card is too long to read.

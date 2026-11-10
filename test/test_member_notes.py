@@ -2,7 +2,7 @@
 """``save_notes``: a crewmate keeps its briefing without a file tool.
 
 A crewmate's chat runs on the conductor, which mounts no file writer, so its
-``[CURRENT ASSIGNMENT]`` notes go through the ``kirocrew-mate`` tool and the
+``[CURRENT ASSIGNMENT]`` notes go through the ``ajcrew-mate`` tool and the
 gateway writes ``members/<slug>/briefing.md`` with the read side's open-time
 controls. Driven through the real writer, reader, MCP dispatch and handler.
 """
@@ -15,7 +15,7 @@ import os
 
 import pytest
 
-from kiro_crew import mcp_mate, member_goals, member_notes, members
+from aj_crew import mcp_mate, member_goals, member_notes, members
 
 _requires_nofollow = pytest.mark.skipif(
     not members.member_briefing_supported(),
@@ -96,12 +96,12 @@ def test_a_failed_write_keeps_the_previous_notes(monkeypatch):
 
 
 def test_the_tool_is_listed_validated_and_granted():
-    from kiro_crew import agent
-    from kiro_crew.validation import MCP_MATE_SCHEMAS
+    from aj_crew import agent
+    from aj_crew.validation import MCP_MATE_SCHEMAS
 
     names = {tool["name"] for tool in mcp_mate._tool_definitions()}
     assert "save_notes" in names and "save_notes" in MCP_MATE_SCHEMAS
-    assert "@kirocrew-mate/save_notes" in agent._MATE_AUTO_GRANTS
+    assert "@ajcrew-mate/save_notes" in agent._MATE_AUTO_GRANTS
 
 
 def test_the_tool_posts_the_text_to_the_callers_own_notes(monkeypatch):
@@ -122,7 +122,7 @@ def test_the_tool_posts_the_text_to_the_callers_own_notes(monkeypatch):
 def test_the_handler_writes_only_the_resolved_crewmates_notes(monkeypatch):
     from aiohttp.test_utils import make_mocked_request
 
-    from kiro_crew.dashboard.handlers import member_goals as handler
+    from aj_crew.dashboard.handlers import member_goals as handler
 
     async def caller(_request, _operation):
         return "dashboard_chat-1", "ada", "Ada"
@@ -132,7 +132,7 @@ def test_the_handler_writes_only_the_resolved_crewmates_notes(monkeypatch):
 
     monkeypatch.setattr(handler, "_agent_member", caller)
     monkeypatch.setattr(handler, "_agent_body", body)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.guide._audit", lambda *a, **k: None)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.guide._audit", lambda *a, **k: None)
     request = make_mocked_request("POST", "/api/member/self/notes")
     response = asyncio.run(handler.api_member_self_notes(request))
     assert response.status == 200

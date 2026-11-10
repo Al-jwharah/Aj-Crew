@@ -22,20 +22,20 @@ from acp_runtime_helpers import (
     _stop_reader,
 )
 
-from kiro_crew.acp.runtime import (
+from aj_crew.acp.runtime import (
     _REQUEST_TIMEOUT,
     _SESSION_NEW_TIMEOUT,
     AcpRuntime,
     AcpRuntimeError,
     AcpSessionHandle,
 )
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     METHOD_SESSION_LOAD,
     METHOD_SESSION_NEW,
     METHOD_SESSION_TERMINATE,
     METHOD_SET_MODE,
 )
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.testing.wait import default_timeout
 
 
 class TestServedDefaultAfterSetMode:
@@ -51,7 +51,7 @@ class TestServedDefaultAfterSetMode:
 
     def _rig(self, monkeypatch, *, current, switched):
         """*switched* is the ``params`` of the frame set_mode sends, or None for none."""
-        from kiro_crew.acp.types import ACP_BACKEND_KIRO
+        from aj_crew.acp.types import ACP_BACKEND_KIRO
 
         rt, _, _ = _make_runtime()
         rt._can_load_session = True
@@ -61,7 +61,7 @@ class TestServedDefaultAfterSetMode:
             if method in (METHOD_SESSION_NEW, METHOD_SESSION_LOAD):
                 return {
                     "sessionId": "sid-new",
-                    "modes": {"currentModeId": "kirocrew"},
+                    "modes": {"currentModeId": "ajcrew"},
                     "models": {"currentModelId": current, "availableModels": self.ADVERTISED},
                 }
             if method == METHOD_SET_MODE and switched is not None:
@@ -76,7 +76,7 @@ class TestServedDefaultAfterSetMode:
 
     @staticmethod
     def _set_models(routed) -> list[str]:
-        from kiro_crew.acp.types import METHOD_SET_MODEL
+        from aj_crew.acp.types import METHOD_SET_MODEL
 
         return [
             c.args[1]["modelId"] for c in routed.await_args_list if c.args[0] == METHOD_SET_MODEL
@@ -84,8 +84,8 @@ class TestServedDefaultAfterSetMode:
 
     async def _start(self, rt, path):
         if path == "create":
-            return await rt.create_session(cwd="/work", agent="kirocrew")
-        return await rt.load_session("/f.json", "sid-new", cwd="/work", agent="kirocrew")
+            return await rt.create_session(cwd="/work", agent="ajcrew")
+        return await rt.load_session("/f.json", "sid-new", cwd="/work", agent="ajcrew")
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("path", ["create", "load"])
@@ -93,7 +93,7 @@ class TestServedDefaultAfterSetMode:
         rt, routed = self._rig(
             monkeypatch,
             current="gpt-5.6-sol",
-            switched={"agentName": "kirocrew", "model": self.UNSERVED},
+            switched={"agentName": "ajcrew", "model": self.UNSERVED},
         )
 
         handle = await self._start(rt, path)
@@ -130,7 +130,7 @@ class TestServedDefaultAfterSetMode:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "switched",
-        [None, {"agentName": "kirocrew"}, {"model": "  "}, {"model": None}],
+        [None, {"agentName": "ajcrew"}, {"model": "  "}, {"model": None}],
         ids=["no-frame", "no-model", "blank", "null"],
     )
     async def test_no_reported_model_is_no_evidence(self, monkeypatch, switched):
@@ -164,7 +164,7 @@ class TestServedDefaultAfterSetMode:
                 "method": "_kiro.dev/agent/switched",
                 "params": {
                     "sessionId": "sA",
-                    "agentName": "kirocrew",
+                    "agentName": "ajcrew",
                     "previousAgentName": "kiro_default",
                     "welcomeMessage": None,
                     "model": self.UNSERVED,
@@ -197,7 +197,7 @@ async def test_create_session_sets_mode_when_agent_is_advertised():
     rt, _, _ = _make_runtime()
     rt._finish_session_init = MagicMock(return_value=[])  # type: ignore[method-assign]
     resp = _new_resp(
-        {"currentModeId": "kirocrew", "availableModes": [{"id": "kirocrew"}, {"id": "ops"}]}
+        {"currentModeId": "ajcrew", "availableModes": [{"id": "ajcrew"}, {"id": "ops"}]}
     )
     rt._send_and_await = AsyncMock(side_effect=[resp, {}])  # type: ignore[method-assign]
     with patch.object(AcpSessionHandle, "drain_init", AsyncMock()):
@@ -224,9 +224,9 @@ async def test_create_session_fails_closed_when_agent_not_advertised():
     rt._send_and_await = AsyncMock(side_effect=[resp, {}])  # type: ignore[method-assign]
     with patch.object(AcpSessionHandle, "drain_init", AsyncMock()):
         with pytest.raises(AcpRuntimeError, match="not available") as exc:
-            await rt.create_session(agent="kirocrew", mcp_servers=[])
+            await rt.create_session(agent="ajcrew", mcp_servers=[])
     # An ordinary agent keeps the materialize hint: setup does write that file.
-    assert "kirocrew setup --agent-only" in str(exc.value)
+    assert "ajcrew setup --agent-only" in str(exc.value)
     methods = [c.args[0] for c in rt._send_and_await.call_args_list]
     assert METHOD_SET_MODE not in methods  # never activated the wrong mode
     assert METHOD_SESSION_TERMINATE in methods  # created session cleaned up
@@ -236,12 +236,12 @@ async def test_create_session_fails_closed_when_agent_not_advertised():
 @pytest.mark.asyncio
 async def test_create_session_refusal_explains_a_derived_readonly_spec(tmp_path, monkeypatch):
     """The side turn's ``<agent>--readonly`` spec is written by the side turn,
-    never by ``kirocrew setup``, and kiro-cli lists agents only at process start.
+    never by ``ajcrew setup``, and kiro-cli lists agents only at process start.
     The refusal must say that and name the base agent -- the setup hint sent the
     user to a command that cannot create the file. The spec is published by the
     real publisher, because the owner marker on it is what the wording keys on."""
-    from kiro_crew import agent as agent_mod
-    from kiro_crew.dashboard import side_readonly_spec as srs
+    from aj_crew import agent as agent_mod
+    from aj_crew.dashboard import side_readonly_spec as srs
 
     monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", tmp_path)
     monkeypatch.setattr(srs, "_refresh_materialized_snapshot", lambda: None)
@@ -249,17 +249,17 @@ async def test_create_session_refusal_explains_a_derived_readonly_spec(tmp_path,
     assert srs.publish_readonly_spec("scout").name == "scout--readonly"
     rt, _, _ = _make_runtime()
     rt._finish_session_init = MagicMock(return_value=[])  # type: ignore[method-assign]
-    resp = _new_resp({"currentModeId": "kirocrew", "availableModes": [{"id": "kirocrew"}]})
+    resp = _new_resp({"currentModeId": "ajcrew", "availableModes": [{"id": "ajcrew"}]})
     rt._send_and_await = AsyncMock(side_effect=[resp, {}])  # type: ignore[method-assign]
     with patch.object(AcpSessionHandle, "drain_init", AsyncMock()):
         with pytest.raises(AcpRuntimeError, match="not available") as exc:
             await rt.create_session(agent="scout--readonly", mcp_servers=[])
     message = str(exc.value)
-    assert "kirocrew setup --agent-only" not in message
+    assert "ajcrew setup --agent-only" not in message
     assert "is likely missing" not in message
-    assert "read-only spec Kiro Crew derives from 'scout'" in message
+    assert "read-only spec Aj Crew derives from 'scout'" in message
     assert "name 'scout'" in message
-    assert "Refusing to run the backend default mode kirocrew in its place" in message
+    assert "Refusing to run the backend default mode ajcrew in its place" in message
 
 
 @pytest.mark.asyncio
@@ -269,11 +269,11 @@ async def test_create_session_fails_closed_when_available_modes_empty():
     "no modes → attempt" and then fault with "Mode not found"."""
     rt, _, _ = _make_runtime()
     rt._finish_session_init = MagicMock(return_value=[])  # type: ignore[method-assign]
-    resp = _new_resp({"currentModeId": "kirocrew", "availableModes": []})
+    resp = _new_resp({"currentModeId": "ajcrew", "availableModes": []})
     rt._send_and_await = AsyncMock(side_effect=[resp, {}])  # type: ignore[method-assign]
     with patch.object(AcpSessionHandle, "drain_init", AsyncMock()):
         with pytest.raises(AcpRuntimeError, match="not available"):
-            await rt.create_session(agent="kirocrew", mcp_servers=[])
+            await rt.create_session(agent="ajcrew", mcp_servers=[])
     methods = [c.args[0] for c in rt._send_and_await.call_args_list]
     assert METHOD_SET_MODE not in methods
     assert METHOD_SESSION_TERMINATE in methods
@@ -284,12 +284,12 @@ async def test_create_session_fails_closed_when_spawn_agent_not_advertised():
     """Guard (A2): the agent `--agent` selected is absent from the advertised
     modes, so its spec never loaded (missing, or rejected wholesale on an unknown
     field) and kiro-cli silently fell back to its own default agent. That default
-    mounts none of Kiro Crew's control plane while the global provider mcp.json
+    mounts none of Aj Crew's control plane while the global provider mcp.json
     stays merged, so third-party servers keep working and every Crew tool the
     injected prompt names -- learn_add among them -- answers "does not exist".
     No override is passed, which is exactly why Guard (A) cannot catch it."""
     rt, _, _ = _make_runtime()
-    rt._agent = "kirocrew"
+    rt._agent = "ajcrew"
     rt._finish_session_init = MagicMock(return_value=[])  # type: ignore[method-assign]
     resp = _new_resp({"currentModeId": "default", "availableModes": [{"id": "default"}]})
     # session/new response, then the terminate roundtrip from the fail-closed path
@@ -308,10 +308,10 @@ async def test_create_session_admits_spawn_agent_when_advertised():
     """Guard (A2) admits the ordinary case: the spawn agent IS advertised, so the
     session stands and no set_mode fires (nothing to switch to)."""
     rt, _, _ = _make_runtime()
-    rt._agent = "kirocrew"
+    rt._agent = "ajcrew"
     rt._finish_session_init = MagicMock(return_value=[])  # type: ignore[method-assign]
     resp = _new_resp(
-        {"currentModeId": "kirocrew", "availableModes": [{"id": "kirocrew"}, {"id": "ops"}]}
+        {"currentModeId": "ajcrew", "availableModes": [{"id": "ajcrew"}, {"id": "ops"}]}
     )
     rt._send_and_await = AsyncMock(side_effect=[resp, {}])  # type: ignore[method-assign]
     with patch.object(AcpSessionHandle, "drain_init", AsyncMock()):
@@ -329,7 +329,7 @@ async def test_create_session_fails_closed_when_current_mode_names_another_agent
     `_mode_available` is True with no list, so this is the only signal. Live kiro-cli
     reports a refused spec as the backend's own default."""
     rt, _, _ = _make_runtime()
-    rt._agent = "kirocrew"
+    rt._agent = "ajcrew"
     rt._finish_session_init = MagicMock(return_value=[])  # type: ignore[method-assign]
     # No availableModes at all -> parse_session_modes reports advertised=False.
     resp = _new_resp({"currentModeId": "kiro_default"})
@@ -349,7 +349,7 @@ async def test_create_session_spawn_agent_guard_admits_when_no_modes_advertised(
     advertises no `modes` list at all (older kiro-cli / offline fake backend) is
     no evidence of substitution, so the session is admitted."""
     rt, _, _ = _make_runtime()
-    rt._agent = "kirocrew"
+    rt._agent = "ajcrew"
     rt._finish_session_init = MagicMock(return_value=[])  # type: ignore[method-assign]
     rt._send_and_await = AsyncMock(side_effect=[_new_resp(None), {}])  # type: ignore[method-assign]
     with patch.object(AcpSessionHandle, "drain_init", AsyncMock()):
@@ -366,9 +366,9 @@ async def test_create_session_admits_spawn_agent_named_as_current_mode():
     advertised list complete", so a backend that reports the active mode without
     listing it must not have its session torn down over that gap."""
     rt, _, _ = _make_runtime()
-    rt._agent = "kirocrew"
+    rt._agent = "ajcrew"
     rt._finish_session_init = MagicMock(return_value=[])  # type: ignore[method-assign]
-    resp = _new_resp({"currentModeId": "kirocrew", "availableModes": [{"id": "other"}]})
+    resp = _new_resp({"currentModeId": "ajcrew", "availableModes": [{"id": "other"}]})
     rt._send_and_await = AsyncMock(side_effect=[resp, {}])  # type: ignore[method-assign]
     with patch.object(AcpSessionHandle, "drain_init", AsyncMock()):
         handle = await rt.create_session(mcp_servers=[])
@@ -384,10 +384,10 @@ async def test_activate_mode_bracketed_allows_the_launched_agent_every_start():
     ``spawn_agent_name`` (the shared runtime never sets one). A shared runtime
     starts many sessions as the same agent over its life, so the allowance holds
     on every start and nothing is consumed."""
-    from kiro_crew.acp.skill_projection import NativeSkillProjection
+    from aj_crew.acp.skill_projection import NativeSkillProjection
 
     rt, _, _ = _make_runtime()
-    rt._agent = "kirocrew"
+    rt._agent = "ajcrew"
     # No spawn_agent_name on the shared runtime: the allowance is keyed on
     # self._agent alone.
     rt._native_skill_projection = NativeSkillProjection(aliases={})
@@ -403,18 +403,18 @@ async def test_activate_mode_bracketed_allows_the_launched_agent_every_start():
     rt._send_and_await = AsyncMock(side_effect=_send)  # type: ignore[method-assign]
 
     with patch(
-        "kiro_crew.acp.skill_projection.prepare_native_skill_projection",
+        "aj_crew.acp.skill_projection.prepare_native_skill_projection",
         return_value=refreshed,
     ):
         await rt._activate_mode_bracketed(
-            "s1", "kirocrew", budget=30.0, payload_snapshot=None, wire_registered=True
+            "s1", "ajcrew", budget=30.0, payload_snapshot=None, wire_registered=True
         )
 
     # The launched agent's authored name goes on the wire (translate=False), with
     # no spawn_agent_name needed or set anywhere.
     assert rt._native_skill_projection is refreshed
     assert captured["method"] == METHOD_SET_MODE
-    assert captured["params"]["modeId"] == "kirocrew"
+    assert captured["params"]["modeId"] == "ajcrew"
     assert captured["kwargs"].get("translate") is False
     assert refreshed.spawn_agent_name == ""
 
@@ -424,18 +424,18 @@ async def test_activate_mode_bracketed_refresh_still_rejects_a_foreign_mode():
     """The launched-agent allowance is narrow: only ``self._agent`` passes with no
     view. A session start naming some OTHER unprepared mode still raises through the
     strict resolver -- an agent cannot escape its launch scope."""
-    from kiro_crew.acp.skill_projection import NativeSkillProjection
+    from aj_crew.acp.skill_projection import NativeSkillProjection
 
     rt, _, _ = _make_runtime()
-    rt._agent = "kirocrew"
-    rt._native_skill_projection = NativeSkillProjection(aliases={}, spawn_agent_name="kirocrew")
+    rt._agent = "ajcrew"
+    rt._native_skill_projection = NativeSkillProjection(aliases={}, spawn_agent_name="ajcrew")
     refreshed = NativeSkillProjection(aliases={})
     # The strict resolver rejects a foreign mode BEFORE any send, so this must not run.
     rt._send_and_await = AsyncMock()  # type: ignore[method-assign]
     rt.terminate_session = AsyncMock()  # type: ignore[method-assign]
 
     with patch(
-        "kiro_crew.acp.skill_projection.prepare_native_skill_projection",
+        "aj_crew.acp.skill_projection.prepare_native_skill_projection",
         return_value=refreshed,
     ):
         with pytest.raises(ValueError, match="no prepared skill discovery view"):
@@ -460,10 +460,10 @@ async def test_two_shared_sessions_both_start_as_the_launched_agent():
     exactly as for the first: the allowance is per-start, not consumed by the first
     start. Both back-to-back starts send set_mode for the launched agent, with no
     prepared view, and neither raises."""
-    from kiro_crew.acp.skill_projection import NativeSkillProjection
+    from aj_crew.acp.skill_projection import NativeSkillProjection
 
     rt, _, _ = _make_runtime()
-    rt._agent = "kirocrew"
+    rt._agent = "ajcrew"
     # The shared runtime does NOT set spawn_agent_name: the bracket allows the
     # launched agent purely via self._agent. Projections carry no launch name.
     rt._native_skill_projection = NativeSkillProjection(aliases={})
@@ -479,13 +479,13 @@ async def test_two_shared_sessions_both_start_as_the_launched_agent():
     rt._send_and_await = AsyncMock(side_effect=_send)  # type: ignore[method-assign]
 
     with patch(
-        "kiro_crew.acp.skill_projection.prepare_native_skill_projection",
+        "aj_crew.acp.skill_projection.prepare_native_skill_projection",
         return_value=refreshed,
     ):
         for session_id in ("s1", "s2"):
             await rt._activate_mode_bracketed(
                 session_id,
-                "kirocrew",
+                "ajcrew",
                 budget=30.0,
                 payload_snapshot=None,
                 wire_registered=True,
@@ -493,7 +493,7 @@ async def test_two_shared_sessions_both_start_as_the_launched_agent():
 
     # Both sessions sent set_mode for the launched agent; the second did NOT fail,
     # and no spawn_agent_name was ever needed on the shared runtime.
-    assert [p["modeId"] for p in sent] == ["kirocrew", "kirocrew"]
+    assert [p["modeId"] for p in sent] == ["ajcrew", "ajcrew"]
     assert refreshed.spawn_agent_name == ""
 
 
@@ -502,14 +502,14 @@ def test_resolve_start_alias_keeps_the_launch_agent_and_stays_strict_otherwise()
     the initial resolution AND both supersession re-checks. It keeps the launched
     agent's authored name with no prepared view, and takes the strict resolver for
     every other mode (which raises for an unprepared one)."""
-    from kiro_crew.acp.skill_projection import NativeSkillProjection
+    from aj_crew.acp.skill_projection import NativeSkillProjection
 
     rt, _, _ = _make_runtime()
-    rt._agent = "kirocrew"
+    rt._agent = "ajcrew"
     projection = NativeSkillProjection(aliases={})
 
     # The launched agent passes with no view, keeping its authored name.
-    assert rt._resolve_start_alias(projection, "kirocrew") == "kirocrew"
+    assert rt._resolve_start_alias(projection, "ajcrew") == "ajcrew"
     # A foreign unprepared mode is rejected by the strict resolver.
     with pytest.raises(ValueError, match="no prepared skill discovery view"):
         rt._resolve_start_alias(projection, "intruder")
@@ -520,10 +520,10 @@ def test_refuse_if_view_superseded_keeps_an_unchanged_launch_agent():
 
     After a newer empty projection, the strict resolver finds no entry for the launch
     agent and would raise. The launch-agent-aware resolver keeps its authored name."""
-    from kiro_crew.acp.skill_projection import NativeSkillProjection
+    from aj_crew.acp.skill_projection import NativeSkillProjection
 
     rt, _, _ = _make_runtime()
-    rt._agent = "kirocrew"
+    rt._agent = "ajcrew"
     # A newer (empty) projection is adopted at a higher generation than the start
     # used -- the concurrent-start condition under test.
     rt._native_skill_projection = NativeSkillProjection(aliases={})
@@ -532,8 +532,8 @@ def test_refuse_if_view_superseded_keeps_an_unchanged_launch_agent():
 
     # sent_alias is the launch agent's authored name; used_generation is older than
     # the adopted one, forcing the supersession branch. With the launch-agent-aware
-    # resolver, newest == sent_alias == "kirocrew", so this does NOT raise.
-    rt._refuse_if_view_superseded("kirocrew", "kirocrew", used_generation=3)
+    # resolver, newest == sent_alias == "ajcrew", so this does NOT raise.
+    rt._refuse_if_view_superseded("ajcrew", "ajcrew", used_generation=3)
 
     # A genuinely superseded FOREIGN agent (strict, no view in the newer projection)
     # still fails closed -- the fix is scoped to the launch agent.
@@ -547,10 +547,10 @@ async def test_create_session_spawn_agent_guard_skipped_on_kas_backend():
     the agent travels over the wire and is activated by set_mode, which Guard (A)
     covers, so an advertised list without the runtime agent must not fail closed
     here."""
-    from kiro_crew.acp.types import ACP_BACKEND_KAS
+    from aj_crew.acp.types import ACP_BACKEND_KAS
 
     rt, _, _ = _make_runtime()
-    rt._agent = "kirocrew"
+    rt._agent = "ajcrew"
     rt._acp_backend = ACP_BACKEND_KAS
     assert (
         await rt._verify_spawn_agent_active(
@@ -569,11 +569,11 @@ async def test_verify_spawn_agent_active_accepts_a_projected_agent_via_the_frame
     ``projection.frame`` maps ``currentModeId`` back to the declared name before the
     guard reads it, so plain ``current == spawn_agent`` suffices.
     """
-    from kiro_crew.acp.skill_projection import NativeSkillProjection
+    from aj_crew.acp.skill_projection import NativeSkillProjection
 
     rt, _, _ = _make_runtime()
-    rt._agent = "kirocrew"
-    projection = NativeSkillProjection(aliases={"kirocrew": "native-alias-abc"})
+    rt._agent = "ajcrew"
+    projection = NativeSkillProjection(aliases={"ajcrew": "native-alias-abc"})
     rt._native_skill_projection = projection
     # The backend reports the alias; framing maps it back to the declared name
     # before the guard, which is exactly what the guard then compares against.
@@ -590,7 +590,7 @@ async def test_verify_spawn_agent_active_accepts_a_no_view_launch_agent_under_it
     ``spawn_agent`` returns it unchanged, so the check must allow it without relying on
     ``spawn_agent_name``, which is empty on the shared runtime.
     """
-    from kiro_crew.acp.skill_projection import NativeSkillProjection
+    from aj_crew.acp.skill_projection import NativeSkillProjection
 
     rt, _, _ = _make_runtime()
     rt._agent = "kiro_default"
@@ -616,11 +616,11 @@ async def test_verify_spawn_agent_active_still_fails_closed_on_substitution_with
     reported current mode matches neither the declared name nor anything framing
     maps to it, so the guard still terminates and raises.
     """
-    from kiro_crew.acp.skill_projection import NativeSkillProjection
+    from aj_crew.acp.skill_projection import NativeSkillProjection
 
     rt, _, _ = _make_runtime()
-    rt._agent = "kirocrew"
-    rt._native_skill_projection = NativeSkillProjection(aliases={"kirocrew": "native-alias-abc"})
+    rt._agent = "ajcrew"
+    rt._native_skill_projection = NativeSkillProjection(aliases={"ajcrew": "native-alias-abc"})
     rt.terminate_session = AsyncMock()  # type: ignore[method-assign]
     with pytest.raises(AcpRuntimeError, match="spawned with --agent"):
         await rt._verify_spawn_agent_active(
@@ -641,7 +641,7 @@ async def test_verify_spawn_agent_active_still_fails_closed_when_declared_name_i
     guard still terminates and raises -- the plain comparison does not loosen the
     substitution check.
     """
-    from kiro_crew.acp.skill_projection import NativeSkillProjection
+    from aj_crew.acp.skill_projection import NativeSkillProjection
 
     rt, _, _ = _make_runtime()
     rt._agent = "custom"
@@ -663,7 +663,7 @@ async def test_load_session_fails_closed_when_spawn_agent_not_advertised():
     check at all — yet a fresh runtime re-reads the spec from disk, so the spawn
     agent can fail to load on resume exactly as on a cold start."""
     rt, _, _ = _make_runtime()
-    rt._agent = "kirocrew"
+    rt._agent = "ajcrew"
     rt._can_load_session = True
     rt._finish_session_init = MagicMock(return_value=[])  # type: ignore[method-assign]
     resp = {"modes": {"currentModeId": "default", "availableModes": [{"id": "default"}]}}
@@ -685,7 +685,7 @@ async def test_create_session_sets_mode_when_no_modes_advertised():
     resp = _new_resp(None)
     rt._send_and_await = AsyncMock(side_effect=[resp, {}])  # type: ignore[method-assign]
     with patch.object(AcpSessionHandle, "drain_init", AsyncMock()):
-        await rt.create_session(agent="kirocrew", mcp_servers=[])
+        await rt.create_session(agent="ajcrew", mcp_servers=[])
     methods = [c.args[0] for c in rt._send_and_await.call_args_list]
     assert METHOD_SET_MODE in methods
 
@@ -693,28 +693,28 @@ async def test_create_session_sets_mode_when_no_modes_advertised():
 def test_mode_available_helper():
     """Unit: the guard predicate. Empty modes ⇒ attempt (True); advertised ⇒
     membership test."""
-    from kiro_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.runtime import AcpRuntime
 
-    assert AcpRuntime._mode_available("kirocrew", _new_resp(None)) is True
+    assert AcpRuntime._mode_available("ajcrew", _new_resp(None)) is True
     assert (
-        AcpRuntime._mode_available("kirocrew", _new_resp({"availableModes": [{"id": "kirocrew"}]}))
+        AcpRuntime._mode_available("ajcrew", _new_resp({"availableModes": [{"id": "ajcrew"}]}))
         is True
     )
     assert (
-        AcpRuntime._mode_available("kirocrew", _new_resp({"availableModes": [{"id": "default"}]}))
+        AcpRuntime._mode_available("ajcrew", _new_resp({"availableModes": [{"id": "default"}]}))
         is False
     )
     # Present-but-empty availableModes → advertised, agent absent → fail closed.
-    assert AcpRuntime._mode_available("kirocrew", _new_resp({"availableModes": []})) is False
+    assert AcpRuntime._mode_available("ajcrew", _new_resp({"availableModes": []})) is False
     # A modes dict WITHOUT an availableModes list → not advertised → attempt.
-    assert AcpRuntime._mode_available("kirocrew", _new_resp({"currentModeId": "x"})) is True
+    assert AcpRuntime._mode_available("ajcrew", _new_resp({"currentModeId": "x"})) is True
 
 
 def test_advertised_mode_origin_reads_the_v3_stamp_and_nothing_else():
     """The v3 engine stamps ``_meta.kiro.resource.source.origin`` per mode;
     ``client`` is a definition Crew sent, ``bundled`` the engine's own. Any
     other shape -- no stamp, an older engine, an odd entry -- reads as ''."""
-    from kiro_crew.acp._dispatch import advertised_mode_origin
+    from aj_crew.acp._dispatch import advertised_mode_origin
 
     def stamped(mode_id, origin):
         return {
@@ -725,10 +725,10 @@ def test_advertised_mode_origin_reads_the_v3_stamp_and_nothing_else():
         }
 
     resp = _new_resp(
-        {"availableModes": [stamped("plan", "bundled"), stamped("kirocrew", "client")]}
+        {"availableModes": [stamped("plan", "bundled"), stamped("ajcrew", "client")]}
     )
     assert advertised_mode_origin(resp, "plan") == "bundled"
-    assert advertised_mode_origin(resp, "kirocrew") == "client"
+    assert advertised_mode_origin(resp, "ajcrew") == "client"
     assert advertised_mode_origin(resp, "absent") == ""
     assert advertised_mode_origin(_new_resp({"availableModes": [{"id": "plan"}]}), "plan") == ""
     assert advertised_mode_origin(_new_resp(None), "plan") == ""
@@ -745,8 +745,8 @@ def test_activation_refusal_is_a_harness_seam_kas_reads_the_stamp_kiro_answers_n
     so an unmeasured value must not deny every crewmate); the spawn-time
     hosts answer None for every response, so the Kiro path carries no
     branch."""
-    from kiro_crew.acp.harness.kas import KasHarness
-    from kiro_crew.acp.harness.kiro import KiroHarness
+    from aj_crew.acp.harness.kas import KasHarness
+    from aj_crew.acp.harness.kiro import KiroHarness
 
     def stamped(origin):
         return _new_resp(
@@ -758,7 +758,7 @@ def test_activation_refusal_is_a_harness_seam_kas_reads_the_stamp_kiro_answers_n
         )
 
     kas = KasHarness()
-    with caplog.at_level("WARNING", logger="kiro_crew.acp.harness.kas"):
+    with caplog.at_level("WARNING", logger="aj_crew.acp.harness.kas"):
         refusal = kas.activation_refusal("plan", stamped("bundled"))
     assert refusal and refusal.startswith("Rename this Bot's template: “plan” is reserved")
     assert " -- " not in refusal
@@ -770,7 +770,7 @@ def test_activation_refusal_is_a_harness_seam_kas_reads_the_stamp_kiro_answers_n
     )
     # An unmeasured positive stamp is NOT a refusal: logged once, activated.
     caplog.clear()
-    with caplog.at_level("WARNING", logger="kiro_crew.acp.harness.kas"):
+    with caplog.at_level("WARNING", logger="aj_crew.acp.harness.kas"):
         assert kas.activation_refusal("plan", stamped("custom")) is None
     assert any(
         "unmeasured" in r.getMessage() and "origin='custom'" in r.getMessage()
@@ -791,7 +791,7 @@ def test_parse_session_modes_shapes():
     """The shared parser: absent/odd `modes` ⇒ ([], '', False); a present
     availableModes list ⇒ advertised=True (even when empty); id read from
     id → modeId → value fallbacks."""
-    from kiro_crew.acp._dispatch import parse_session_modes
+    from aj_crew.acp._dispatch import parse_session_modes
 
     assert parse_session_modes({}) == ([], "", False)
     assert parse_session_modes({"modes": "nonsense"}) == ([], "", False)
@@ -802,9 +802,9 @@ def test_parse_session_modes_shapes():
     ids, current, advertised = parse_session_modes(
         {
             "modes": {
-                "currentModeId": "kirocrew",
+                "currentModeId": "ajcrew",
                 "availableModes": [
-                    {"id": "kirocrew"},
+                    {"id": "ajcrew"},
                     {"modeId": "ops"},
                     {"value": "code-reviewer"},
                     {"name": "no-id-dropped"},
@@ -813,8 +813,8 @@ def test_parse_session_modes_shapes():
             }
         }
     )
-    assert ids == ["kirocrew", "ops", "code-reviewer"]
-    assert current == "kirocrew"
+    assert ids == ["ajcrew", "ops", "code-reviewer"]
+    assert current == "ajcrew"
     assert advertised is True
 
 
@@ -865,7 +865,7 @@ async def test_session_load_call_site_passes_budget_above_request_timeout(monkey
     async def _fake_send(method, params, timeout=None):
         if method == METHOD_SESSION_LOAD:
             seen["timeout"] = timeout
-            return {"modes": {"currentModeId": "kirocrew"}}
+            return {"modes": {"currentModeId": "ajcrew"}}
         return {}
 
     monkeypatch.setattr(rt, "_send_and_await", _fake_send)
@@ -899,7 +899,7 @@ async def test_create_set_mode_call_site_passes_budget_above_request_timeout(
 
     monkeypatch.setattr(rt, "_send_and_await", _fake_send)
 
-    await rt.create_session(cwd="/w", agent="kirocrew")
+    await rt.create_session(cwd="/w", agent="ajcrew")
 
     assert seen["timeout"] == _SESSION_NEW_TIMEOUT
     assert isinstance(seen["timeout"], float)
@@ -924,7 +924,7 @@ async def test_load_set_mode_call_site_passes_budget_above_request_timeout(
             return {
                 "modes": {
                     "currentModeId": "kiro",
-                    "availableModes": [{"id": "kirocrew"}],
+                    "availableModes": [{"id": "ajcrew"}],
                 }
             }
         if method == METHOD_SET_MODE:
@@ -934,7 +934,7 @@ async def test_load_set_mode_call_site_passes_budget_above_request_timeout(
     monkeypatch.setattr(rt, "_send_and_await", _fake_send)
 
     await rt.load_session(
-        "/home/u/.kiro/sessions/cli/sid-9.json", "sid-9", agent="kirocrew", cwd="/w"
+        "/home/u/.kiro/sessions/cli/sid-9.json", "sid-9", agent="ajcrew", cwd="/w"
     )
 
     assert seen["timeout"] == _SESSION_NEW_TIMEOUT
@@ -953,10 +953,10 @@ async def test_session_start_budget_follows_config(monkeypatch):
     constant. Resolved once per runtime and cached thereafter."""
     from types import SimpleNamespace
 
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     fake_cfg = SimpleNamespace(agent=SimpleNamespace(session_start_timeout_secs=240))
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: fake_cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: fake_cfg))
 
     rt, _, _ = _make_runtime()
     rt._expect_mcp_reports = False
@@ -984,16 +984,16 @@ async def test_session_start_budget_follows_config(monkeypatch):
 
 
 def test_runtime_construction_never_touches_config(monkeypatch):
-    """AcpRuntime.__init__ runs on the event loop; KiroCrewConfig.load() is a
+    """AcpRuntime.__init__ runs on the event loop; AjCrewConfig.load() is a
     synchronous disk read + schema validation on a cache miss, so the budget
     must resolve lazily (off-loop) on first session start — never at
     construction."""
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     def _boom(cls):
         raise AssertionError("config must not be consulted at construction")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_boom))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_boom))
     rt = AcpRuntime(work_dir="/tmp")
     assert rt._session_start_timeout is None
 
@@ -1004,20 +1004,20 @@ def test_resolve_session_start_timeout_floors_and_falls_back(monkeypatch):
     failure degrades to the default instead of breaking runtime construction."""
     from types import SimpleNamespace
 
-    from kiro_crew.acp.runtime import _resolve_session_start_timeout
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.acp.runtime import _resolve_session_start_timeout
+    from aj_crew.config.loader import AjCrewConfig
 
     # Below-floor value (belt-and-braces: the loader clamp already prevents
     # this on disk, but a degraded load must not shrink the budget either).
     low_cfg = SimpleNamespace(agent=SimpleNamespace(session_start_timeout_secs=10))
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: low_cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: low_cfg))
     assert _resolve_session_start_timeout() == _SESSION_NEW_TIMEOUT
 
     # Config load blowing up falls back to the default.
     def _boom(cls):
         raise RuntimeError("config unavailable")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_boom))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_boom))
     assert _resolve_session_start_timeout() == _SESSION_NEW_TIMEOUT
 
 
@@ -1043,11 +1043,11 @@ async def test_activating_a_disk_spec_over_the_ceiling_ends_the_session_before_s
     """A shared runtime spawned as one agent and switched to another reads that
     agent's spec from disk at ``set_mode``. A crew-bound spec Crew does not own whose
     grants the ceiling denies is refused there, for the agent being activated."""
-    from kiro_crew import agent as agent_mod
-    from kiro_crew.acp.session_handle import AcpRuntimeError
+    from aj_crew import agent as agent_mod
+    from aj_crew.acp.session_handle import AcpRuntimeError
 
     rt, _, _ = _make_runtime()
-    rt._agent = "kirocrew"
+    rt._agent = "ajcrew"
     rt._send_and_await = AsyncMock()  # type: ignore[method-assign]
     rt.terminate_session = AsyncMock()  # type: ignore[method-assign]
     asked: list[tuple[str, str]] = []
@@ -1077,8 +1077,8 @@ async def test_a_warm_session_that_inherits_the_spawn_agent_is_checked_before_th
     """A session that names no agent runs the spawn agent, and its spec may have
     gained a grant since the spawn checked it. The over-ceiling refusal runs for
     that effective agent before ``session/new`` or ``session/load`` goes out."""
-    from kiro_crew import agent as agent_mod
-    from kiro_crew.acp.session_handle import AcpRuntimeError
+    from aj_crew import agent as agent_mod
+    from aj_crew.acp.session_handle import AcpRuntimeError
 
     rt, _, _ = _make_runtime()
     rt._agent = "pkg-reviewer"
@@ -1105,11 +1105,11 @@ async def test_a_warm_session_that_inherits_the_spawn_agent_is_checked_before_th
 @pytest.mark.asyncio
 async def test_a_kas_runtime_is_not_refused_at_session_start():
     """KAS filters the spec's grants in its own projection, so its start passes."""
-    from kiro_crew.acp_backends import ACP_BACKEND_KAS
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.acp_backends import ACP_BACKEND_KAS
+    from aj_crew.config.loader import AjCrewConfig
 
     rt, _, _ = _make_runtime()
     rt._acp_backend = ACP_BACKEND_KAS
     # A config read that fails would refuse the start, so reaching it fails the test.
-    with patch.object(KiroCrewConfig, "load", side_effect=OSError("unreadable")):
+    with patch.object(AjCrewConfig, "load", side_effect=OSError("unreadable")):
         await rt._refuse_over_ceiling_start("pkg-reviewer")

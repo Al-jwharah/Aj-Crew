@@ -1,4 +1,4 @@
-"""The data-home floor: ``KIROCREW_HOME`` from conftest import onwards, and the
+"""The data-home floor: ``AJCREW_HOME`` from conftest import onwards, and the
 per-test pins of the operator's data home, SEL directory and ``~/.kiro`` paths.
 
 Part of the rootdir ``conftest.py``'s host-mutation floor. That file loads this module by
@@ -62,7 +62,7 @@ def _tmp_root_prefix_for_run() -> str:
 
 # ── The data-home floor, installed at IMPORT time ────────────────────────────
 #
-# Every per-test redirect of ``KIROCREW_HOME`` is a value laid over whatever the
+# Every per-test redirect of ``AJCREW_HOME`` is a value laid over whatever the
 # process started with, so the danger is never a wrong value -- it is the ABSENCE
 # of one. ``config.paths._valid_override_home`` reads the variable and, finding it
 # unset, falls through to ``_default_home()``: the operator's real ``~/.kiro/crew``.
@@ -79,7 +79,7 @@ def _tmp_root_prefix_for_run() -> str:
 # fixture owns a redirect, whether that fixture used a private ``MonkeyPatch``, or
 # what a future test does to the shared one.
 #
-# An operator's own ``KIROCREW_HOME`` is honoured untouched: someone running the
+# An operator's own ``AJCREW_HOME`` is honoured untouched: someone running the
 # suite against a deliberately chosen home keeps it, and only the unset case --
 # the one that resolves to live data -- is given a floor.
 # ``mkdtemp``, never ``mkdir(exist_ok=True)`` on a pid-derived name -- the same rule
@@ -123,7 +123,7 @@ def _real_data_homes() -> "tuple[pathlib.Path, ...]":
     """The live data homes under ``Path.home()`` and, when ``HOME`` is faked, the real home.
 
     A faked ``HOME`` alone would otherwise aim every check in this file at the fake
-    home's ``.kiro/crew`` while an inherited ``KIROCREW_HOME`` still names the real one.
+    home's ``.kiro/crew`` while an inherited ``AJCREW_HOME`` still names the real one.
     """
     bases = [pathlib.Path.home()]
     if _home_is_faked():
@@ -131,7 +131,7 @@ def _real_data_homes() -> "tuple[pathlib.Path, ...]":
     return tuple(
         base / leaf
         for base in bases
-        for leaf in (pathlib.Path(".kiro", "crew"), pathlib.Path(".kirocrew"))
+        for leaf in (pathlib.Path(".kiro", "crew"), pathlib.Path(".ajcrew"))
     )
 
 
@@ -139,8 +139,8 @@ _REAL_DATA_HOMES = _real_data_homes()
 
 
 #: Names the floor the controller created, so an xdist worker, which inherits it as
-#: ``KIROCREW_HOME`` with ``TMPDIR`` already rewritten, can tell it is this run's own.
-_HOME_FLOOR_ENV = "KIROCREW_TEST_HOME_FLOOR"
+#: ``AJCREW_HOME`` with ``TMPDIR`` already rewritten, can tell it is this run's own.
+_HOME_FLOOR_ENV = "AJCREW_TEST_HOME_FLOOR"
 
 
 def _resolved_or_none(value: "str | None") -> "pathlib.Path | None":
@@ -153,13 +153,13 @@ def _resolved_or_none(value: "str | None") -> "pathlib.Path | None":
 
 
 def _own_scratch_dirs() -> "tuple[pathlib.Path, ...]":
-    """This process's own scratch: ``$KIROCREW_SCRATCH``, its ``TMPDIR`` and this run's floor.
+    """This process's own scratch: ``$AJCREW_SCRATCH``, its ``TMPDIR`` and this run's floor.
 
     Read once at import, before ``pytest_configure`` repoints ``TMPDIR``. The floor
     entry is honoured only when its name is a ``kc-pytest-<this user>-<pid>-home-*``
     directory, so the variable cannot widen the exemption to another session's tree.
     """
-    dirs = [_resolved_or_none(os.environ.get(n)) for n in ("KIROCREW_SCRATCH", "TMPDIR")]
+    dirs = [_resolved_or_none(os.environ.get(n)) for n in ("AJCREW_SCRATCH", "TMPDIR")]
     floor = _resolved_or_none(os.environ.get(_HOME_FLOOR_ENV))
     user_prefix = _tmp_root_prefix_for_run().rsplit("-", 2)[0] + "-"
     if floor is not None and floor.name.startswith(user_prefix) and "-home-" in floor.name:
@@ -200,14 +200,14 @@ def _overlaps_a_real_data_home(path: pathlib.Path) -> "pathlib.Path | None":
 
 
 def _an_agent_inherited_the_live_home(value: str) -> bool:
-    """Whether a Kiro Crew agent's shell handed this run the live ``KIROCREW_HOME``.
+    """Whether a Aj Crew agent's shell handed this run the live ``AJCREW_HOME``.
 
-    Every agent the gateway spawns inherits ``KIROCREW_HOME`` pointing at the live
-    home and gets ``KIROCREW_SCRATCH`` naming its own scratch tree. An agent did not
+    Every agent the gateway spawns inherits ``AJCREW_HOME`` pointing at the live
+    home and gets ``AJCREW_SCRATCH`` naming its own scratch tree. An agent did not
     choose that home, so the run is given its own floor instead of the refusal below,
     which stays for a person who exported the live home by hand.
     """
-    if not os.environ.get("KIROCREW_SCRATCH"):
+    if not os.environ.get("AJCREW_SCRATCH"):
         return False
     return _overlaps_a_real_data_home(pathlib.Path(value)) is not None
 
@@ -242,7 +242,7 @@ def _create_host_home_floor() -> pathlib.Path:
     run's kill) does not run, and ``_tmp_residue`` scans only under the run's OWN temp
     base -- so a surviving floor is invisible to the residue report and the account plus
     pid in its name is the only signal a human has for attributing it. The earlier
-    ``kirocrew-test-floor-`` name identified neither the account nor the run, so a stray
+    ``ajcrew-test-floor-`` name identified neither the account nor the run, so a stray
     one could not be told from another user's or from a run still in progress.
     """
     for candidate in _host_home_floor_bases():
@@ -257,14 +257,14 @@ def _create_host_home_floor() -> pathlib.Path:
             return pathlib.Path(tempfile.mkdtemp(dir=base, prefix=prefix))
         except OSError:
             continue
-    raise RuntimeError("no writable system temp directory exists outside live Kiro Crew homes")
+    raise RuntimeError("no writable system temp directory exists outside live Aj Crew homes")
 
 
 _HOST_HOME_FLOOR: "pathlib.Path | None" = None
-_INHERITED_HOME = os.environ.get("KIROCREW_HOME")
+_INHERITED_HOME = os.environ.get("AJCREW_HOME")
 if not _INHERITED_HOME or _an_agent_inherited_the_live_home(_INHERITED_HOME):
     _HOST_HOME_FLOOR = _create_host_home_floor()
-    os.environ["KIROCREW_HOME"] = str(_HOST_HOME_FLOOR)
+    os.environ["AJCREW_HOME"] = str(_HOST_HOME_FLOOR)
     os.environ[_HOME_FLOOR_ENV] = str(_HOST_HOME_FLOOR)  # flake-ok: run-wide, set once at import
 
     @atexit.register
@@ -276,7 +276,7 @@ if not _INHERITED_HOME or _an_agent_inherited_the_live_home(_INHERITED_HOME):
         hosts (one stray floor per aborted run), but no in-process hook does better: a
         session-fixture finalizer or ``pytest_unconfigure`` is skipped by the same signal,
         and under ``-n auto`` the process that OWNS the floor is the CONTROLLER -- it sets
-        ``KIROCREW_HOME`` at conftest import, every execnet worker inherits it and so takes
+        ``AJCREW_HOME`` at conftest import, every execnet worker inherits it and so takes
         the branch above as false, and the controller runs no session fixtures at all.
         Sweeping OTHER runs' floors is ruled out by the same unsoundness argument
         :func:`_isolate_tempfile_base` spells out for the temp root: the name is
@@ -288,7 +288,7 @@ if not _INHERITED_HOME or _an_agent_inherited_the_live_home(_INHERITED_HOME):
 
         Nothing reports it either: ``_tmp_residue`` scans only under the run's own temp
         base, and this floor is a SIBLING of that base in the platform temp root, so
-        neither the residue warning nor ``KIROCREW_TMP_RESIDUE_STRICT`` can see it or
+        neither the residue warning nor ``AJCREW_TMP_RESIDUE_STRICT`` can see it or
         anything a test wrote into it. That invisibility is why the directory carries
         ``_tmp_root_prefix_for_run()`` in its name.
         """
@@ -301,7 +301,7 @@ def _refuse_a_real_data_home() -> None:
 
     A second, independent barrier to the floor above, and the one that fails LOUD.
     The floor prevents the accident; this catches the case where someone exports
-    ``KIROCREW_HOME`` to their real home by hand -- copying a command out of a
+    ``AJCREW_HOME`` to their real home by hand -- copying a command out of a
     runbook, or reusing a shell that was pointed at live data -- which no amount of
     per-test isolation can distinguish from a deliberate choice.
 
@@ -309,12 +309,12 @@ def _refuse_a_real_data_home() -> None:
     a module defines one, and a duplicate silently replaces the earlier definition
     instead of running alongside it.
     """
-    real = _overlaps_a_real_data_home(pathlib.Path(os.environ["KIROCREW_HOME"]))
+    real = _overlaps_a_real_data_home(pathlib.Path(os.environ["AJCREW_HOME"]))
     if real is not None:
         raise pytest.UsageError(
-            f"KIROCREW_HOME points at the live data home {real}. The suite writes, "
+            f"AJCREW_HOME points at the live data home {real}. The suite writes, "
             f"truncates and deletes under it, so running here destroys real memory, "
-            f"sessions and config. Run `env -u KIROCREW_HOME pytest ...`: the suite then "
+            f"sessions and config. Run `env -u AJCREW_HOME pytest ...`: the suite then "
             f"makes its own home under $TMPDIR and removes it at exit. Leave HOME alone; "
             f"a fake HOME rebuilds the uv, npm and bytecode caches on every run."
         )
@@ -334,7 +334,7 @@ def _isolation_root(tmp_path_factory):
 
     Named ``i`` rather than something descriptive to keep the paths short: Windows
     still caps a path at 260 characters unless long paths are enabled, and
-    everything a test writes under ``KIROCREW_HOME`` nests inside here.
+    everything a test writes under ``AJCREW_HOME`` nests inside here.
     """
     return tmp_path_factory.mktemp("i")
 
@@ -380,7 +380,7 @@ def _isolation_dirs(_isolation_root):
 _isolation_dirs.seq = 0  # type: ignore[attr-defined]
 
 
-#: Set on an item by ``_isolate_kirocrew_home`` once its pins are in force. The
+#: Set on an item by ``_isolate_ajcrew_home`` once its pins are in force. The
 #: teardown check reads it: a test skipped at setup (a ``skipif`` marker) never ran
 #: the floor, so ``paths._resolved_home`` still holds whatever collection resolved
 #: (the operator's real home, legitimately) and must not be blamed for it.
@@ -388,8 +388,8 @@ _HOME_PIN_ARMED = pytest.StashKey[bool]()
 
 
 @pytest.fixture(autouse=True)
-def _isolate_kirocrew_home(request, _isolation_dirs, _floor_monkeypatch):
-    """Pin ``KIROCREW_HOME`` and ``KIROCREW_WORKSPACE`` to per-test tmp dirs, for EVERY testpath.
+def _isolate_ajcrew_home(request, _isolation_dirs, _floor_monkeypatch):
+    """Pin ``AJCREW_HOME`` and ``AJCREW_WORKSPACE`` to per-test tmp dirs, for EVERY testpath.
 
     The pin is applied through a PRIVATE ``pytest.MonkeyPatch`` instance, not the
     shared function-scoped ``monkeypatch`` fixture. The shared instance is one undo
@@ -405,16 +405,16 @@ def _isolate_kirocrew_home(request, _isolation_dirs, _floor_monkeypatch):
 
     This lives at the rootdir rather than in ``test/conftest.py`` because the leak it
     closes is worst in the testpaths that conftest does not reach. The ~108 test
-    modules under ``src/kiro_crew/apps/builtins/*/tests/`` ship inside the package and
+    modules under ``src/aj_crew/apps/builtins/*/tests/`` ship inside the package and
     see only the rootdir conftest, so before this fixture existed any of them that touched
     ``config_dir()`` resolved the operator's live data home -- and that resolution is
     not read-only: ``config_dir()`` CREATES the home and its marker on first use, and
-    can run the one-time ``~/.kirocrew`` -> ``~/.kiro/crew`` migration as a side
+    can run the one-time ``~/.ajcrew`` -> ``~/.kiro/crew`` migration as a side
     effect. Two of the eight app suites had grown their own redirect fixture; the
     other six had not, which is exactly the "remember to" contract this file exists to
     delete.
 
-    A test that sets its own ``KIROCREW_HOME`` still wins: ``monkeypatch.setenv``
+    A test that sets its own ``AJCREW_HOME`` still wins: ``monkeypatch.setenv``
     applied later in setup overrides this, and reverts independently.
 
     ``config.paths._resolved_home`` is reset with it. ``config_dir()`` memoises the
@@ -423,20 +423,20 @@ def _isolate_kirocrew_home(request, _isolation_dirs, _floor_monkeypatch):
     test would otherwise leak into a later one. Resetting it also invalidates
     ``_config_dir_memo``, which is keyed on that global by identity.
 
-    ``KIROCREW_PROJECT_DIR`` is cleared for a different reason -- to match CI on a dev
+    ``AJCREW_PROJECT_DIR`` is cleared for a different reason -- to match CI on a dev
     box. It is auto-set to the repo root when running from a checkout, so
     ``skills._project_skills_dir()`` resolves the repo's real ``skills/`` and a test
     driving ``_ensure_builtin_skills`` against a tmp dir sees live skills as a
     "source", flipping relocation behaviour: green in CI, red locally.
 
-    ``KIROCREW_BOUND_PORT`` is cleared because ``_export_bound_port`` writes it into
+    ``AJCREW_BOUND_PORT`` is cleared because ``_export_bound_port`` writes it into
     the real process environment when a test boots a server, so a port exported by one
     test would leak into every later test's port resolution on that worker.
-    ``KIROCREW_DEV_MODE`` / ``KIROCREW_STRICT_ON_LOOP_PERSIST`` are cleared so a
+    ``AJCREW_DEV_MODE`` / ``AJCREW_STRICT_ON_LOOP_PERSIST`` are cleared so a
     developer who exports them does not flip the off-loop-IO guards strict for the
     whole suite.
 
-    ``KIROCREW_SCRATCH_ROOT`` is cleared so a developer who relocates their own
+    ``AJCREW_SCRATCH_ROOT`` is cleared so a developer who relocates their own
     scratch tree (``agent_scratch.scratch_root()`` reads it) does not make
     every test resolve scratch to that drive instead of the per-test home -- which
     also flips the ``scratch_root() == config_dir()/"scratch"`` invariant a sandbox
@@ -451,50 +451,50 @@ def _isolate_kirocrew_home(request, _isolation_dirs, _floor_monkeypatch):
     reaches ``kiro_home()`` therefore isolates it itself, with whichever of the two
     levers it already uses.
 
-    ``KIROCREW_WORKSPACE`` is pinned alongside ``KIROCREW_HOME`` for the same
+    ``AJCREW_WORKSPACE`` is pinned alongside ``AJCREW_HOME`` for the same
     reason as the rest of this fixture: ``config.loader.workspace_root()`` is its
     own default, independent of ``config_dir()`` -- with no override and no saved
     ``<config_dir>/workspace_dir`` file it falls back to the platform's
-    ``_default_workspace_base()`` plus ``kirocrew-workspace``, which on Linux/macOS
+    ``_default_workspace_base()`` plus ``ajcrew-workspace``, which on Linux/macOS
     is the operator's real ``~/workplace``. Any test that reaches an agent working
     directory (``workspace_root()``, ``_session_work_dir()``, ``outbox_dir()``)
-    without setting its own ``KIROCREW_WORKSPACE`` therefore ``mkdir``s and writes
+    without setting its own ``AJCREW_WORKSPACE`` therefore ``mkdir``s and writes
     into that real tree. Unlike ``config_dir()``, ``workspace_root()`` reads the env
     var fresh on every call and caches nothing, so there is no module-global memo to
     reset here -- setting the variable is the whole fix.
 
-    ``KIROCREW_POD_ROOT`` and ``KIROCREW_POD_ENV_DIR`` are pinned for the same reason
-    again, and this one is BY DESIGN unreachable from ``KIROCREW_HOME``:
+    ``AJCREW_POD_ROOT`` and ``AJCREW_POD_ENV_DIR`` are pinned for the same reason
+    again, and this one is BY DESIGN unreachable from ``AJCREW_HOME``:
     ``pod.config.PodConfig.load()`` derives ``pods_dir`` from ``_default_home()`` --
     the operator's real ``~/.kiro/crew/pods`` -- precisely so a pod process running
-    with its own isolated ``KIROCREW_HOME`` cannot redirect the HOST's pod registry
-    into a throwaway home, and ``pod_root`` from ``Path.home()/.kirocrew-pods``. Both
+    with its own isolated ``AJCREW_HOME`` cannot redirect the HOST's pod registry
+    into a throwaway home, and ``pod_root`` from ``Path.home()/.ajcrew-pods``. Both
     are read fresh from the environment on every ``load()``. Without this pin a test
     that boots a pod, or records a refusal, writes ``<name>.env`` / ``<name>.refused``
     into the operator's real pod plane: five full-suite runs left
     ``~/.kiro/crew/pods/viability-*.refused`` behind on the developer's machine, from
     a fixture that was simply ``PodConfig.load()``. ``test_pod.py::TestConfig::
     test_defaults`` still asserts the unpinned defaults -- it clears every
-    ``KIROCREW_POD_*`` variable itself first, which is the documented way to test
+    ``AJCREW_POD_*`` variable itself first, which is the documented way to test
     the default resolution.
     """
     monkeypatch = _floor_monkeypatch
-    monkeypatch.setenv("KIROCREW_HOME", str(_isolation_dirs("kirocrew-home")))
-    monkeypatch.setenv("KIROCREW_WORKSPACE", str(_isolation_dirs("workspace")))
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(_isolation_dirs("pod-root")))
-    monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(_isolation_dirs("pods")))
+    monkeypatch.setenv("AJCREW_HOME", str(_isolation_dirs("ajcrew-home")))
+    monkeypatch.setenv("AJCREW_WORKSPACE", str(_isolation_dirs("workspace")))
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(_isolation_dirs("pod-root")))
+    monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(_isolation_dirs("pods")))
     # Cleared for the test AND removed again at teardown. ``monkeypatch.delenv`` on a
     # variable that is absent records no undo, so a value the code under test WRITES
-    # -- ``_export_bound_port`` publishing KIROCREW_BOUND_PORT when a server boots,
-    # ``cli.main`` pinning KIROCREW_PROJECT_DIR -- outlived its test and reached the
+    # -- ``_export_bound_port`` publishing AJCREW_BOUND_PORT when a server boots,
+    # ``cli.main`` pinning AJCREW_PROJECT_DIR -- outlived its test and reached the
     # next one on the worker (observed for both in a full run). Recording the
     # absence first makes teardown delete whatever landed.
     for _name in (
-        "KIROCREW_PROJECT_DIR",
-        "KIROCREW_BOUND_PORT",
-        "KIROCREW_DEV_MODE",
-        "KIROCREW_STRICT_ON_LOOP_PERSIST",
-        "KIROCREW_SCRATCH_ROOT",
+        "AJCREW_PROJECT_DIR",
+        "AJCREW_BOUND_PORT",
+        "AJCREW_DEV_MODE",
+        "AJCREW_STRICT_ON_LOOP_PERSIST",
+        "AJCREW_SCRATCH_ROOT",
     ):
         if _name in os.environ:
             monkeypatch.delenv(_name)
@@ -502,7 +502,7 @@ def _isolate_kirocrew_home(request, _isolation_dirs, _floor_monkeypatch):
             monkeypatch.setenv(_name, "")  # the undo for this entry is "was absent"
             monkeypatch.delenv(_name)
     _reset_path_resolver_degradation(monkeypatch)
-    paths = sys.modules.get("kiro_crew.config.paths")
+    paths = sys.modules.get("aj_crew.config.paths")
     if paths is not None:
         monkeypatch.setattr(paths, "_resolved_home", None, raising=False)
         monkeypatch.setattr(paths, "_override_home_pin", None, raising=False)
@@ -531,7 +531,7 @@ def _reset_path_resolver_degradation(monkeypatch) -> None:
     to export, so a test that provokes a stall on purpose still sees only its own.
 
     ``_path_resolve_degraded`` is re-exported by the
-    ``kiro_crew.security`` facade, so it is set THROUGH it: the facade mirrors a
+    ``aj_crew.security`` facade, so it is set THROUGH it: the facade mirrors a
     write onto the owning submodule, while patching the owner alone would leave the
     facade holding the original object and break the export-identity contract
     ``test_security_facade`` pins. ``_path_resolve_load_probes`` and
@@ -539,8 +539,8 @@ def _reset_path_resolver_degradation(monkeypatch) -> None:
     submodule -- a facade write for those names would mirror nowhere and silently
     do nothing.
     """
-    security = sys.modules.get("kiro_crew.security")
-    paths = sys.modules.get("kiro_crew.security.paths")
+    security = sys.modules.get("aj_crew.security")
+    paths = sys.modules.get("aj_crew.security.paths")
     if security is not None:
         monkeypatch.setattr(security, "_path_resolve_degraded", {}, raising=False)
     if paths is not None:
@@ -551,7 +551,7 @@ def _reset_path_resolver_degradation(monkeypatch) -> None:
 def _breadcrumb_guard(real):
     """Refuse the recovery breadcrumb while ``Path.home()`` is the operator's.
 
-    ``config_dir()`` on its DEFAULT path writes ``~/.kirocrew.breadcrumb`` (outside
+    ``config_dir()`` on its DEFAULT path writes ``~/.ajcrew.breadcrumb`` (outside
     ``~/.kiro`` on purpose) naming the home it resolved. A test that relocates the
     default with ``paths._resolve_default_home = lambda: tmp_path / ...`` and nothing
     else therefore rewrites the operator's real breadcrumb to point at a pytest tmp
@@ -570,7 +570,7 @@ def _breadcrumb_guard(real):
             home_is_real = False
         if home_is_real:
             raise AssertionError(
-                "this test would write the operator's real ~/.kirocrew.breadcrumb "
+                "this test would write the operator's real ~/.ajcrew.breadcrumb "
                 f"(pointing it at {data_home}): the default-home path was taken with "
                 "Path.home() still the real home. Relocate the WHOLE default, not just the "
                 "resolver: monkeypatch HOME and pathlib.Path.home to a dir under tmp_path, "
@@ -592,7 +592,7 @@ def _is_the_operators_default_home(path) -> bool:
 
 def _resolved_real_default_home():
     """The operator's real home if ``paths._resolved_home`` holds it right now, else None."""
-    paths = sys.modules.get("kiro_crew.config.paths")
+    paths = sys.modules.get("aj_crew.config.paths")
     resolved = getattr(paths, "_resolved_home", None) if paths is not None else None
     if resolved is not None and _is_the_operators_default_home(resolved):
         return resolved
@@ -605,7 +605,7 @@ def _refuse_a_resolved_real_default_home(resolved) -> None:
     ``paths._resolved_home`` is only ever written by ``_resolve_default_home()``, i.e.
     by a ``config_dir()`` / ``data_home()`` call made with NO override in force. So a
     value equal to the operator's real ``~/.kiro/crew`` at teardown means the test
-    dropped the pin (``monkeypatch.delenv("KIROCREW_HOME")``) to exercise the default
+    dropped the pin (``monkeypatch.delenv("AJCREW_HOME")``) to exercise the default
     path and let production resolve, and CREATE, the real data home, plus the
     recovery breadcrumb beside it. Five tests did in the third full-run audit; each
     passed. A test of the default path relocates the default too
@@ -622,10 +622,10 @@ def _refuse_a_resolved_real_default_home(resolved) -> None:
     """
     raise AssertionError(
         "this test resolved the operator's REAL default data home "
-        f"({resolved}): it dropped the KIROCREW_HOME pin and let config_dir() / "
+        f"({resolved}): it dropped the AJCREW_HOME pin and let config_dir() / "
         "data_home() fall through to ~/.kiro/crew, which CREATES that directory. "
         "A test of the default path pins the default too: "
-        "monkeypatch.setattr(kiro_crew.config.paths, '_resolve_default_home', "
+        "monkeypatch.setattr(aj_crew.config.paths, '_resolve_default_home', "
         "lambda: tmp_path / 'default'); see test_lazy_data_home_paths.py and "
         "conftest._refuse_a_resolved_real_default_home."
     )
@@ -659,13 +659,13 @@ def _isolate_sel_default_dir(tmp_path_factory):
     writer, and the thread is not churned per test.
 
     Patches the ``_default_dir()`` accessor rather than a captured constant, because
-    the module resolves its default lazily so that importing ``kiro_crew.sel`` never
+    the module resolves its default lazily so that importing ``aj_crew.sel`` never
     triggers the one-time data-home migration as an import side effect. Tests that
     manage their own ``SecurityEventLog`` (passing ``base_dir`` and resetting
     ``_instance``) are unaffected.
     """
     try:
-        from kiro_crew import sel as _sel
+        from aj_crew import sel as _sel
     except ImportError:  # pragma: no cover - partial checkout
         yield
         return
@@ -717,7 +717,7 @@ def sel_private_root(tmp_path_factory):
     directory.
     """
     try:
-        from kiro_crew.sel import SecurityEventLog
+        from aj_crew.sel import SecurityEventLog
     except ImportError:  # pragma: no cover - partial checkout
         yield None
         return
@@ -742,7 +742,7 @@ def sel_private_root(tmp_path_factory):
         SecurityEventLog._initialized = False
 
 
-#: ``~/.kiro`` paths production binds at IMPORT time, which ``KIROCREW_HOME`` cannot
+#: ``~/.kiro`` paths production binds at IMPORT time, which ``AJCREW_HOME`` cannot
 #: reach: the module captured an absolute path from ``Path.home()`` before any test
 #: set an environment variable, so the env override is read too late to matter.
 #:
@@ -757,21 +757,21 @@ def sel_private_root(tmp_path_factory):
 #: same-shaped tmp path keeps those assertions meaningful.
 #:
 #: ``test/test_host_isolation_floor.py`` ratchets this table against the
-#: ``Path.home()`` bindings ``src/kiro_crew`` actually has, so a new one cannot land
+#: ``Path.home()`` bindings ``src/aj_crew`` actually has, so a new one cannot land
 #: unpinned.
 _SHARED_KIRO_PATHS: tuple[tuple[str, str, str], ...] = (
-    ("kiro_crew.agent", "_KIRO_MCP_JSON", ".kiro/settings/mcp.json"),
-    ("kiro_crew.agent", "_CC_MCP_JSON", ".claude.json"),
-    ("kiro_crew.agent", "_DEFAULT_KIRO_HOOKS_DIR", ".kiro/hooks"),
-    ("kiro_crew.learn", "_DEFAULT_DIR", ".kiro/crew"),
-    ("kiro_crew.instances.run_marker", "_DEFAULT_RUN_DIR", ".kiro/crew/run"),
-    ("kiro_crew.apps.bridges_mcp", "_LEGACY_SHARED_MCP_PATH", ".kiro/settings/mcp.json"),
+    ("aj_crew.agent", "_KIRO_MCP_JSON", ".kiro/settings/mcp.json"),
+    ("aj_crew.agent", "_CC_MCP_JSON", ".claude.json"),
+    ("aj_crew.agent", "_DEFAULT_KIRO_HOOKS_DIR", ".kiro/hooks"),
+    ("aj_crew.learn", "_DEFAULT_DIR", ".kiro/crew"),
+    ("aj_crew.instances.run_marker", "_DEFAULT_RUN_DIR", ".kiro/crew/run"),
+    ("aj_crew.apps.bridges_mcp", "_LEGACY_SHARED_MCP_PATH", ".kiro/settings/mcp.json"),
     (
-        "kiro_crew.dashboard.handlers.mcp_config_files",
+        "aj_crew.dashboard.handlers.mcp_config_files",
         "_GLOBAL_MCP_JSON",
         ".kiro/settings/mcp.json",
     ),
-    ("kiro_crew.dashboard.handlers.mcp", "_GLOBAL_MCP_JSON", ".kiro/settings/mcp.json"),
+    ("aj_crew.dashboard.handlers.mcp", "_GLOBAL_MCP_JSON", ".kiro/settings/mcp.json"),
     # A DERIVED sibling (`_GLOBAL_MCP_JSON.with_suffix(".lock")`), and it has to move
     # WITH its json or the pair is worse than either alone: `_McpFileLockSync.__enter__`
     # creates `_GLOBAL_MCP_JSON.parent` and then touches `_MCP_LOCK_PATH`, so redirecting
@@ -781,16 +781,16 @@ _SHARED_KIRO_PATHS: tuple[tuple[str, str, str], ...] = (
     # because that directory was there, and on CI only because an earlier test had
     # leaked into it. This is the sibling-binding case the ratchet's own docstring says
     # it cannot see, which is why the set is enumerated here by hand.
-    ("kiro_crew.dashboard.handlers.mcp", "_MCP_LOCK_PATH", ".kiro/settings/mcp.lock"),
+    ("aj_crew.dashboard.handlers.mcp", "_MCP_LOCK_PATH", ".kiro/settings/mcp.lock"),
     # RELATIVE in production (``home / _AUTH_STAGING_RELATIVE``, home = ``Path.home()``),
     # and it must stay so: the sandbox hides ``~/.kiro/crew-auth-staging`` by that
     # HOME-relative spelling, so deriving it from the data home instead would leave a
-    # relocated ``KIROCREW_HOME``'s staging tree visible to the sandboxed CLI. Pinning
+    # relocated ``AJCREW_HOME``'s staging tree visible to the sandboxed CLI. Pinning
     # the constant to an ABSOLUTE tmp path still lands, because ``pathlib`` discards
     # the left operand when the right one is absolute -- so the mkdir+chmod that
     # ``KiroPrerequisiteService`` performs on construction stops reaching the
     # operator's real ``~/.kiro`` (fifteen dashboard-server tests did).
-    ("kiro_crew.kiro_prerequisite", "_AUTH_STAGING_RELATIVE", ".kiro/crew-auth-staging"),
+    ("aj_crew.kiro_prerequisite", "_AUTH_STAGING_RELATIVE", ".kiro/crew-auth-staging"),
 )
 
 
@@ -843,11 +843,11 @@ def _isolate_shared_kiro_paths(_isolation_dirs, _floor_monkeypatch):
 def _isolate_subagents_dir(_isolation_dirs, _floor_monkeypatch):
     """Pin the subagent registry dir to a tmp dir for the whole suite.
 
-    ``kiro_crew.subagent_persistence._SUBAGENTS_DIR`` is bound at import time to
-    ``config_dir() / "subagents"``, so the ``KIROCREW_HOME`` safety net above
+    ``aj_crew.subagent_persistence._SUBAGENTS_DIR`` is bound at import time to
+    ``config_dir() / "subagents"``, so the ``AJCREW_HOME`` safety net above
     cannot retroactively redirect it. Any test that calls ``SubagentManager.spawn``
     or ``create_agent_folder`` without isolating this global itself would write
-    stub agent folders into the operator's real ``~/.kirocrew/subagents/``. On the
+    stub agent folders into the operator's real ``~/.ajcrew/subagents/``. On the
     next gateway start, orphan reconciliation sweeps those stubs and floods the
     logs with "lost to gateway restart" warnings (e.g. tasks ``t`` / ``ls /tmp``).
     The registry lives beneath its own per-test home so sibling protected
@@ -856,7 +856,7 @@ def _isolate_subagents_dir(_isolation_dirs, _floor_monkeypatch):
 
     monkeypatch = _floor_monkeypatch
     monkeypatch.setattr(
-        "kiro_crew.subagent_persistence._SUBAGENTS_DIR",
+        "aj_crew.subagent_persistence._SUBAGENTS_DIR",
         _isolation_dirs("subagents") / "subagents",
     )
 
@@ -866,11 +866,11 @@ def _isolate_subagents_dir(_isolation_dirs, _floor_monkeypatch):
 #: directory, so the hook production already offers "a caller (test/tooling)" is set
 #: by default instead of per test.
 _AGENT_SPEC_HOOKS: tuple[tuple[str, str], ...] = (
-    ("kiro_crew.agent", "KIRO_AGENTS_DIR"),
-    ("kiro_crew.agent_discovery", "_KIRO_AGENTS_DIR"),
-    ("kiro_crew.apps.bridges", "KIRO_AGENTS_DIR"),
-    ("kiro_crew.cli_doctor", "KIRO_AGENTS_DIR"),
-    ("kiro_crew.doctor_deadpath", "KIRO_AGENTS_DIR"),
+    ("aj_crew.agent", "KIRO_AGENTS_DIR"),
+    ("aj_crew.agent_discovery", "_KIRO_AGENTS_DIR"),
+    ("aj_crew.apps.bridges", "KIRO_AGENTS_DIR"),
+    ("aj_crew.cli_doctor", "KIRO_AGENTS_DIR"),
+    ("aj_crew.doctor_deadpath", "KIRO_AGENTS_DIR"),
 )
 
 #: The real user home, captured at IMPORT -- before any test can patch
@@ -916,17 +916,17 @@ def _isolate_agent_spec_home(_agent_spec_seam_modules, _isolation_dirs, _floor_m
     ``~/.kiro`` bindings above. The agent specs are the file kiro-cli reads to learn
     which MCP servers exist, and ``kiro_agents_dir()`` is a LAZY resolver
     (``kiro_home()`` -> ``$KIRO_HOME`` or ``Path.home()/.kiro``), so neither
-    ``KIROCREW_HOME`` nor ``_SHARED_KIRO_PATHS`` reaches it -- the shared-path ratchet's
+    ``AJCREW_HOME`` nor ``_SHARED_KIRO_PATHS`` reaches it -- the shared-path ratchet's
     own docstring records that lazy resolvers are outside its scope.
 
     Without this, any test reaching the write path (``rebuild_agent_config`` and the
     per-agent writers around it, ``apps.bridges._register_agents``) rewrites the
-    operator's machine-wide ``<kiro home>/agents/kirocrew.json``. Confirmed live
+    operator's machine-wide ``<kiro home>/agents/ajcrew.json``. Confirmed live
     on a host: a suite run inside a throwaway clone left every managed server's
     ``command`` pointing into that clone's venv and pinned the per-test data home into
     their ``env``, because ``_managed_mcp_env`` stamps the WRITER's paths. Both stop
     existing when the run ends, so afterwards every new session on the machine spawned
-    ``kirocrew-core`` from a deleted venv against a data home recreated empty ->
+    ``ajcrew-core`` from a deleted venv against a data home recreated empty ->
     ``read_local_secret()`` returned "" -> every internal HTTP call failed
     ``internal_auth_mismatch`` (``received=absent``), killing ``spawn_run``,
     ``learn_add`` and ``cron_*`` while in-process tools kept working. A gateway restart
@@ -934,7 +934,7 @@ def _isolate_agent_spec_home(_agent_spec_seam_modules, _isolation_dirs, _floor_m
     intermittent and unfixable.
 
     ``KIRO_HOME`` is NOT the lever used here, deliberately -- see
-    ``_isolate_kirocrew_home`` for why pinning that variable is refused: ~35 tests
+    ``_isolate_ajcrew_home`` for why pinning that variable is refused: ~35 tests
     isolate ``kiro_home()`` the other way round with
     ``patch("pathlib.Path.home", ...)``, and an env pin overrides their own isolation
     so they read an empty directory instead of the tree they just built. Pinning the
@@ -974,7 +974,7 @@ def _isolate_agent_spec_home(_agent_spec_seam_modules, _isolation_dirs, _floor_m
     monkeypatch = _floor_monkeypatch
     monkeypatch.delenv("KIRO_HOME", raising=False)
     root = _isolation_dirs("kiro-agents")
-    paths = sys.modules.get("kiro_crew.config.paths")
+    paths = sys.modules.get("aj_crew.config.paths")
 
     def _pinned_agents_dir() -> pathlib.Path:
         """The per-test dir, unless this test redirected the home itself."""
@@ -1031,7 +1031,7 @@ def unpinned_agent_spec_home(_isolate_agent_spec_home, monkeypatch):
         mod = sys.modules.get(module)
         if mod is not None:
             monkeypatch.setattr(mod, attr, None, raising=False)
-    paths = sys.modules.get("kiro_crew.config.paths")
+    paths = sys.modules.get("aj_crew.config.paths")
     if paths is not None:
         monkeypatch.setattr(paths, "_agents_dir_override", None)
     return _isolate_agent_spec_home
@@ -1058,7 +1058,7 @@ def _is_under(path: pathlib.Path, root: pathlib.Path) -> bool:
 #: ``resolve()`` walks below were re-done once per test by the autouse
 #: :func:`_isolate_kiro_sessions_dir`, MEASURED at 26.9us and ~6 ``lstat`` calls each,
 #: for one answer that cannot change. Keyed on both inputs, so
-#: ``KIROCREW_TMP_PER_TEST`` -- the one mode that repoints ``tempfile``'s base per test
+#: ``AJCREW_TMP_PER_TEST`` -- the one mode that repoints ``tempfile``'s base per test
 #: -- simply misses and pays exactly what it pays today. ONE slot rather than a dict:
 #: in that mode an unbounded cache would grow an entry per test.
 _OWNED_ROOTS_MEMO: "tuple[tuple[str, str | None], tuple[pathlib.Path, ...]] | None" = None
@@ -1069,7 +1069,7 @@ def _test_owned_roots(tmp_path_factory) -> tuple[pathlib.Path, ...]:
 
     A path under either was created by a fixture or by the test itself, so it is never
     the operator's -- even when the tree sits INSIDE a guarded root. That happens
-    routinely: a Kiro Crew agent session sets ``TMPDIR`` to its scratch dir under
+    routinely: a Aj Crew agent session sets ``TMPDIR`` to its scratch dir under
     ``~/.kiro/crew/scratch/``, which puts both trees under the real ``~/.kiro``. A fence
     keyed on the real home alone would then redirect a test that relocated kiro-cli's
     home to its OWN ``tmp_path`` away from the tree it just built.
@@ -1107,7 +1107,7 @@ def _isolate_kiro_sessions_dir(_isolation_dirs, _floor_monkeypatch, tmp_path_fac
     A fourth ``~/.kiro`` isolation axis, distinct from the data home, the import-time
     ``_SHARED_KIRO_PATHS`` bindings, and the agent-spec home above. ``kiro_sessions_dir()``
     is a LAZY resolver (``kiro_home()`` -> ``$KIRO_HOME`` or ``Path.home()/.kiro``), so
-    neither ``KIROCREW_HOME`` nor an import-time path pin reaches it -- the same reason
+    neither ``AJCREW_HOME`` nor an import-time path pin reaches it -- the same reason
     the agent-spec home needed its own fixture instead of folding into one of those.
 
     Without this, a test that reaches session teardown (``AcpSessionHandle.destroy()`` ->
@@ -1147,7 +1147,7 @@ def _isolate_kiro_sessions_dir(_isolation_dirs, _floor_monkeypatch, tmp_path_fac
     # milliseconds once per worker; ``ImportError`` is tolerated so a partial
     # checkout cannot break collection (a module that cannot import has no seam).
     try:
-        paths = importlib.import_module("kiro_crew.config.paths")
+        paths = importlib.import_module("aj_crew.config.paths")
     except ImportError:  # pragma: no cover - partial checkout
         paths = None
     if paths is not None:
@@ -1174,7 +1174,7 @@ def _isolate_kiro_sessions_dir(_isolation_dirs, _floor_monkeypatch, tmp_path_fac
     # ``session_map`` defers to ``kiro_sessions_dir()`` when its own override is
     # unset, so the resolver pin above is the floor; this only keeps a module that IS
     # loaded reading the same tree through its own lever.
-    session_map = sys.modules.get("kiro_crew.session_map")
+    session_map = sys.modules.get("aj_crew.session_map")
     if session_map is not None:
         monkeypatch.setattr(session_map, "_KIRO_SESSIONS_DIR", root, raising=False)
 
@@ -1189,9 +1189,9 @@ def unpinned_kiro_sessions_dir(_isolate_kiro_sessions_dir, monkeypatch):
     the operator's real store, and a test that deletes through it is the harm the
     pin exists to prevent.
     """
-    paths = sys.modules.get("kiro_crew.config.paths")
+    paths = sys.modules.get("aj_crew.config.paths")
     if paths is not None:
         monkeypatch.setattr(paths, "_sessions_dir_override", None)
-    session_map = sys.modules.get("kiro_crew.session_map")
+    session_map = sys.modules.get("aj_crew.session_map")
     if session_map is not None:
         monkeypatch.setattr(session_map, "_KIRO_SESSIONS_DIR", None, raising=False)

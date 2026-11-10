@@ -25,14 +25,14 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, coerce_effort
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, coerce_effort
 
 
 @pytest.fixture(autouse=True)
 def _owner_caller(monkeypatch):
     """Exercise the agent handlers past their independent owner-auth boundary."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
@@ -59,10 +59,10 @@ class TestCoerceEffort:
 class TestCrewPinnedEffort:
     """The resolver the factory and the warm-pool probe share."""
 
-    def _cfg(self, **crews: str) -> KiroCrewConfig:
-        cfg = KiroCrewConfig()
+    def _cfg(self, **crews: str) -> AjCrewConfig:
+        cfg = AjCrewConfig()
         for name, effort in crews.items():
-            cfg.agents[name] = KiroCrewAgentConfig(kiro_agent="kirocrew", reasoning_effort=effort)
+            cfg.agents[name] = AjCrewAgentConfig(kiro_agent="ajcrew", reasoning_effort=effort)
         return cfg
 
     @pytest.mark.parametrize(
@@ -109,13 +109,13 @@ class TestResolveSessionEffort:
     actually runs at the role effort.
     """
 
-    def _cfg(self, *, chat: str = "", background: str = "", crew_pin: str = "") -> KiroCrewConfig:
-        cfg = KiroCrewConfig()
+    def _cfg(self, *, chat: str = "", background: str = "", crew_pin: str = "") -> AjCrewConfig:
+        cfg = AjCrewConfig()
         cfg.agent.reasoning_effort = chat
         if background:
             cfg.agent.role_efforts = {"background": background}
-        cfg.agents["worker"] = KiroCrewAgentConfig(
-            kiro_agent="kirocrew-lite", reasoning_effort=crew_pin
+        cfg.agents["worker"] = AjCrewAgentConfig(
+            kiro_agent="ajcrew-lite", reasoning_effort=crew_pin
         )
         return cfg
 
@@ -124,26 +124,26 @@ class TestResolveSessionEffort:
         [
             pytest.param(
                 {"chat": "low", "background": "high"},
-                "kirocrew-lite",
+                "ajcrew-lite",
                 "worker",
                 "high",
                 id="test_a_background_agent_takes_the_role_effort_not_the_chat_default",
             ),
             pytest.param(
                 {"chat": "low", "background": "high"},
-                "kirocrew",
+                "ajcrew",
                 "",
                 "low",
                 id="test_a_normal_agent_takes_the_chat_default",
             ),
             pytest.param(
                 {"chat": "low", "background": "high", "crew_pin": "max"},
-                "kirocrew-lite",
+                "ajcrew-lite",
                 "worker",
                 "max",
                 id="test_a_crew_pin_outranks_the_role_effort",
             ),
-            pytest.param({}, "kirocrew", "", "", id="test_empty_when_no_tier_pins_anything"),
+            pytest.param({}, "ajcrew", "", "", id="test_empty_when_no_tier_pins_anything"),
         ],
     )
     def test_tier_order(self, tiers, agent, crew_agent, expected):
@@ -161,17 +161,17 @@ class TestResolveSessionEffort:
 
     def test_a_crew_named_after_a_background_agent_follows_its_own_binding(self):
         """The name collision must not decide it either: a crew that happens to be
-        called kirocrew-lite while bound to a normal template runs that template,
+        called ajcrew-lite while bound to a normal template runs that template,
         so it takes the chat default."""
         cfg = self._cfg(chat="low", background="high")
-        cfg.agents["kirocrew-lite"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
-        assert cfg.resolve_session_effort("kirocrew-lite") == "low"
+        cfg.agents["ajcrew-lite"] = AjCrewAgentConfig(kiro_agent="ajcrew")
+        assert cfg.resolve_session_effort("ajcrew-lite") == "low"
 
     def test_the_bare_background_key_still_resolves_the_role_effort(self):
         """With no crew record to read, ``agent`` IS the agent name -- the
         background and heartbeat session keys pass it directly."""
         cfg = self._cfg(chat="low", background="high")
-        assert cfg.resolve_session_effort("kirocrew-heartbeat", "") == "high"
+        assert cfg.resolve_session_effort("ajcrew-heartbeat", "") == "high"
 
     def test_the_factory_and_the_resolver_cannot_disagree(self):
         """Pins the sharing itself: the factory must not re-derive the chain.
@@ -181,53 +181,53 @@ class TestResolveSessionEffort:
         """
         import inspect
 
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
-        src = inspect.getsource(loader.KiroCrewConfig.create_provider_factory)
+        src = inspect.getsource(loader.AjCrewConfig.create_provider_factory)
         assert "resolve_session_effort" in src
         # The background-agent pair is named in ONE place, outside the factory.
-        assert '"kirocrew-lite"' not in src
+        assert '"ajcrew-lite"' not in src
 
 
 class TestBackgroundWorkerAgents:
     def test_names_the_two_role_agents(self):
-        from kiro_crew.config.loader import BACKGROUND_WORKER_AGENTS
+        from aj_crew.config.loader import BACKGROUND_WORKER_AGENTS
 
-        assert BACKGROUND_WORKER_AGENTS == ("kirocrew-lite", "kirocrew-heartbeat")
+        assert BACKGROUND_WORKER_AGENTS == ("ajcrew-lite", "ajcrew-heartbeat")
 
 
 class TestConfigLoadCoercesTheCrewPin:
     def test_a_valid_level_round_trips_through_save_and_load(self):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["reviewer"] = KiroCrewAgentConfig(
-            kiro_agent="kirocrew", reasoning_effort="xhigh"
+        cfg = AjCrewConfig.load()
+        cfg.agents["reviewer"] = AjCrewAgentConfig(
+            kiro_agent="ajcrew", reasoning_effort="xhigh"
         )
         cfg.save()
 
-        assert KiroCrewConfig.load().agents["reviewer"].reasoning_effort == "xhigh"
+        assert AjCrewConfig.load().agents["reviewer"].reasoning_effort == "xhigh"
 
     def test_a_hand_edited_junk_level_loads_as_inherit(self):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["reviewer"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg = AjCrewConfig.load()
+        cfg.agents["reviewer"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         cfg.save()
         # Write the junk the way a human editing config.json would: past the API,
         # straight into the stored document.
         cfg.agents["reviewer"].reasoning_effort = "ultra"
         cfg.save()
 
-        assert KiroCrewConfig.load().agents["reviewer"].reasoning_effort == ""
+        assert AjCrewConfig.load().agents["reviewer"].reasoning_effort == ""
 
 
 class TestFactoryAppliesTheCrewPin:
     """The factory is the single authority, so ONE lookup covers every surface."""
 
     def _capture(self, *, crews: dict[str, str], config_effort: str = "", **factory_call):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.provider = "acp"
         cfg.agent.reasoning_effort = config_effort
         for name, effort in crews.items():
-            cfg.agents[name] = KiroCrewAgentConfig(kiro_agent="kirocrew", reasoning_effort=effort)
-        with patch("kiro_crew.providers.acp.AcpProvider") as mock_provider:
+            cfg.agents[name] = AjCrewAgentConfig(kiro_agent="ajcrew", reasoning_effort=effort)
+        with patch("aj_crew.providers.acp.AcpProvider") as mock_provider:
             mock_provider.return_value = MagicMock()
             factory = cfg.create_provider_factory()
             factory(**factory_call)
@@ -267,22 +267,22 @@ class TestFactoryAppliesTheCrewPin:
         assert kwargs.get("effort_per_model") == {"claude-opus-4.7": "max"}
 
     def test_a_pin_on_a_background_crew_beats_its_role_default(self):
-        """``kirocrew-lite`` resolves the "background" role effort by name. A pin
+        """``ajcrew-lite`` resolves the "background" role effort by name. A pin
         the operator typed on that crew is a choice; the role effort is a
         built-in, so the choice wins."""
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.provider = "acp"
         cfg.agent.role_efforts = {"background": "low"}
-        cfg.agents["kirocrew-lite"] = KiroCrewAgentConfig(
-            kiro_agent="kirocrew-lite", reasoning_effort="high"
+        cfg.agents["ajcrew-lite"] = AjCrewAgentConfig(
+            kiro_agent="ajcrew-lite", reasoning_effort="high"
         )
-        with patch("kiro_crew.providers.acp.AcpProvider") as mock_provider:
+        with patch("aj_crew.providers.acp.AcpProvider") as mock_provider:
             mock_provider.return_value = MagicMock()
             factory = cfg.create_provider_factory()
             factory(
                 session_key="background",
-                agent="kirocrew-lite",
-                crew_agent="kirocrew-lite",
+                agent="ajcrew-lite",
+                crew_agent="ajcrew-lite",
                 model_override="claude-opus-4.7",
             )
             kwargs = mock_provider.call_args.kwargs
@@ -305,17 +305,17 @@ class TestWarmPoolBypassesACrewPin:
     pool filled, and the claim path re-keys the model but never re-pushes
     effort -- so a warm hit would silently run the crew at the wrong depth."""
 
-    def _service(self, cfg: KiroCrewConfig):
-        from kiro_crew.session_allocation import SessionAllocationService
+    def _service(self, cfg: AjCrewConfig):
+        from aj_crew.session_allocation import SessionAllocationService
 
         service = SessionAllocationService.__new__(SessionAllocationService)
         service._deps = MagicMock()
         service._deps.load_config = lambda: cfg
         return service
 
-    def _cfg(self, effort: str) -> KiroCrewConfig:
-        cfg = KiroCrewConfig()
-        cfg.agents["reviewer"] = KiroCrewAgentConfig(kiro_agent="kirocrew", reasoning_effort=effort)
+    def _cfg(self, effort: str) -> AjCrewConfig:
+        cfg = AjCrewConfig()
+        cfg.agents["reviewer"] = AjCrewAgentConfig(kiro_agent="ajcrew", reasoning_effort=effort)
         return cfg
 
     @pytest.mark.asyncio
@@ -343,7 +343,7 @@ class TestWarmPoolBypassesACrewPin:
     @pytest.mark.asyncio
     async def test_an_unreadable_config_pools_as_before(self):
         """Failure must not stop a session from starting."""
-        from kiro_crew.session_allocation import SessionAllocationService
+        from aj_crew.session_allocation import SessionAllocationService
 
         service = SessionAllocationService.__new__(SessionAllocationService)
         service._deps = MagicMock()
@@ -360,7 +360,7 @@ class TestWarmPoolBypassesACrewPin:
         and its absence is exactly the silent-no-op this class exists to stop."""
         import inspect
 
-        from kiro_crew import session_allocation
+        from aj_crew import session_allocation
 
         src = inspect.getsource(session_allocation.SessionAllocationService._get_or_create_impl)
         assert "_crew_pins_effort" in src
@@ -384,9 +384,9 @@ class TestConcurrentRefreshesInstallInOrder:
         import time
         from unittest.mock import AsyncMock
 
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
-        base = KiroCrewConfig()
+        base = AjCrewConfig()
         base.session.timeout_secs = 2
         first = copy.deepcopy(base)
         first.agent.reasoning_effort = "low"
@@ -412,12 +412,12 @@ class TestConcurrentRefreshesInstallInOrder:
         with (
             patch.object(mgr, "start_pool", AsyncMock()),
             patch.object(mgr, "_retire_stale_backend_bg_runtime", AsyncMock()),
-            patch("kiro_crew.session.build_provider_factory", return_value=MagicMock()),
-            patch("kiro_crew.session.KiroCrewConfig.load", side_effect=_staggered_load),
+            patch("aj_crew.session.build_provider_factory", return_value=MagicMock()),
+            patch("aj_crew.session.AjCrewConfig.load", side_effect=_staggered_load),
             # The refresh also re-adopts the warm pool's cwd, which resolves through
             # the workspace table and reads config on its own; pinning it keeps the
             # count at the two refresh reads the inversion is staged on.
-            patch("kiro_crew.session.default_project_dir", return_value="/ws"),
+            patch("aj_crew.session.default_project_dir", return_value="/ws"),
         ):
             await asyncio.gather(mgr.refresh_defaults(), mgr.refresh_defaults())
 
@@ -429,23 +429,23 @@ class TestConcurrentRefreshesInstallInOrder:
 
 
 def _crud_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import (
-        api_kirocrew_agent_update,
-        api_kirocrew_agents_create,
+    from aj_crew.dashboard.handlers import (
+        api_ajcrew_agent_update,
+        api_ajcrew_agents_create,
     )
 
     app = web.Application()
-    app.router.add_post("/api/agents", api_kirocrew_agents_create)
-    app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+    app.router.add_post("/api/agents", api_ajcrew_agents_create)
+    app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
     return app
 
 
 @pytest.fixture()
 def seeded_agent():
     """One stored crew, written through the real config API."""
-    cfg = KiroCrewConfig.load()
-    cfg.agents["existing"] = KiroCrewAgentConfig(
-        kiro_agent="kirocrew", workspace="default", memory_store="default"
+    cfg = AjCrewConfig.load()
+    cfg.agents["existing"] = AjCrewAgentConfig(
+        kiro_agent="ajcrew", workspace="default", memory_store="default"
     )
     cfg.save()
     return "existing"
@@ -461,18 +461,18 @@ class TestApiValidatesTheCrewPin:
         async with TestClient(TestServer(_crud_app())) as client:
             resp = await client.post(
                 "/api/agents",
-                json={"name": "reviewer", "kiro_agent": "kirocrew", "reasoning_effort": "xhigh"},
+                json={"name": "reviewer", "kiro_agent": "ajcrew", "reasoning_effort": "xhigh"},
             )
             assert resp.status == 200
 
-        assert KiroCrewConfig.load().agents["reviewer"].reasoning_effort == "xhigh"
+        assert AjCrewConfig.load().agents["reviewer"].reasoning_effort == "xhigh"
 
     @pytest.mark.asyncio
     async def test_create_refuses_an_unknown_level_and_stores_nothing(self):
         async with TestClient(TestServer(_crud_app())) as client:
             resp = await client.post(
                 "/api/agents",
-                json={"name": "reviewer", "kiro_agent": "kirocrew", "reasoning_effort": "ultra"},
+                json={"name": "reviewer", "kiro_agent": "ajcrew", "reasoning_effort": "ultra"},
             )
             assert resp.status == 400
             body = await resp.json()
@@ -481,17 +481,17 @@ class TestApiValidatesTheCrewPin:
             # the author guessing at the vocabulary.
             assert "xhigh" in body["error"]
 
-        assert "reviewer" not in KiroCrewConfig.load().agents
+        assert "reviewer" not in AjCrewConfig.load().agents
 
     @pytest.mark.asyncio
     async def test_create_without_the_field_defaults_to_inherit(self):
         async with TestClient(TestServer(_crud_app())) as client:
             resp = await client.post(
-                "/api/agents", json={"name": "reviewer", "kiro_agent": "kirocrew"}
+                "/api/agents", json={"name": "reviewer", "kiro_agent": "ajcrew"}
             )
             assert resp.status == 200
 
-        assert KiroCrewConfig.load().agents["reviewer"].reasoning_effort == ""
+        assert AjCrewConfig.load().agents["reviewer"].reasoning_effort == ""
 
     @pytest.mark.asyncio
     async def test_update_stores_a_valid_level(self, seeded_agent):
@@ -501,7 +501,7 @@ class TestApiValidatesTheCrewPin:
             )
             assert resp.status == 200
 
-        assert KiroCrewConfig.load().agents[seeded_agent].reasoning_effort == "high"
+        assert AjCrewConfig.load().agents[seeded_agent].reasoning_effort == "high"
 
     @pytest.mark.asyncio
     async def test_update_clears_a_pin_with_the_empty_string(self, seeded_agent):
@@ -513,7 +513,7 @@ class TestApiValidatesTheCrewPin:
                 await client.put(f"/api/agents/{seeded_agent}", json={"reasoning_effort": ""})
             ).status == 200
 
-        assert KiroCrewConfig.load().agents[seeded_agent].reasoning_effort == ""
+        assert AjCrewConfig.load().agents[seeded_agent].reasoning_effort == ""
 
     @pytest.mark.asyncio
     async def test_update_refuses_an_unknown_level_and_writes_nothing(self, seeded_agent):
@@ -528,7 +528,7 @@ class TestApiValidatesTheCrewPin:
             assert resp.status == 400
             assert (await resp.json())["code"] == "invalid_reasoning_effort"
 
-        stored = KiroCrewConfig.load().agents[seeded_agent]
+        stored = AjCrewConfig.load().agents[seeded_agent]
         assert stored.reasoning_effort == ""
         assert stored.workspace == "default"
 
@@ -543,15 +543,15 @@ class TestApiValidatesTheCrewPin:
 class TestResolvedEndpointReportsEffort:
     @pytest.mark.asyncio
     async def test_reports_a_crew_pin_as_pinned(self, seeded_agent):
-        from kiro_crew.dashboard.handlers import api_kirocrew_agent_resolved_model
+        from aj_crew.dashboard.handlers import api_ajcrew_agent_resolved_model
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents[seeded_agent].reasoning_effort = "max"
         cfg.agent.reasoning_effort = "low"
         cfg.save()
 
         app = web.Application()
-        app.router.add_get("/api/agents/resolved-model", api_kirocrew_agent_resolved_model)
+        app.router.add_get("/api/agents/resolved-model", api_ajcrew_agent_resolved_model)
         async with TestClient(TestServer(app)) as client:
             body = await (
                 await client.get("/api/agents/resolved-model", params={"agent": seeded_agent})
@@ -562,14 +562,14 @@ class TestResolvedEndpointReportsEffort:
 
     @pytest.mark.asyncio
     async def test_reports_the_global_default_as_not_pinned(self, seeded_agent):
-        from kiro_crew.dashboard.handlers import api_kirocrew_agent_resolved_model
+        from aj_crew.dashboard.handlers import api_ajcrew_agent_resolved_model
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agent.reasoning_effort = "low"
         cfg.save()
 
         app = web.Application()
-        app.router.add_get("/api/agents/resolved-model", api_kirocrew_agent_resolved_model)
+        app.router.add_get("/api/agents/resolved-model", api_ajcrew_agent_resolved_model)
         async with TestClient(TestServer(app)) as client:
             body = await (
                 await client.get("/api/agents/resolved-model", params={"agent": seeded_agent})
@@ -583,16 +583,16 @@ class TestResolvedEndpointReportsEffort:
         """The readout must not report the chat default for a crew that runs at
         the background role effort -- that is the drift the shared resolver
         exists to prevent, and it is invisible to a crew on a normal agent."""
-        from kiro_crew.dashboard.handlers import api_kirocrew_agent_resolved_model
+        from aj_crew.dashboard.handlers import api_ajcrew_agent_resolved_model
 
-        cfg = KiroCrewConfig.load()
-        cfg.agents[seeded_agent].kiro_agent = "kirocrew-lite"
+        cfg = AjCrewConfig.load()
+        cfg.agents[seeded_agent].kiro_agent = "ajcrew-lite"
         cfg.agent.reasoning_effort = "low"
         cfg.agent.role_efforts = {"background": "high"}
         cfg.save()
 
         app = web.Application()
-        app.router.add_get("/api/agents/resolved-model", api_kirocrew_agent_resolved_model)
+        app.router.add_get("/api/agents/resolved-model", api_ajcrew_agent_resolved_model)
         async with TestClient(TestServer(app)) as client:
             body = await (
                 await client.get("/api/agents/resolved-model", params={"agent": seeded_agent})
@@ -613,10 +613,10 @@ class TestSavingAPinRefreshesSessionDefaults:
     """
 
     def _app(self, refreshed: list[str]) -> web.Application:
-        from kiro_crew.dashboard.handlers import (
-            api_kirocrew_agent_delete,
-            api_kirocrew_agent_update,
-            api_kirocrew_agents_create,
+        from aj_crew.dashboard.handlers import (
+            api_ajcrew_agent_delete,
+            api_ajcrew_agent_update,
+            api_ajcrew_agents_create,
         )
 
         class _Sessions:
@@ -624,9 +624,9 @@ class TestSavingAPinRefreshesSessionDefaults:
                 refreshed.append("yes")
 
         app = web.Application()
-        app.router.add_post("/api/agents", api_kirocrew_agents_create)
-        app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
-        app.router.add_delete("/api/agents/{name}", api_kirocrew_agent_delete)
+        app.router.add_post("/api/agents", api_ajcrew_agents_create)
+        app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
+        app.router.add_delete("/api/agents/{name}", api_ajcrew_agent_delete)
         app["state"] = SimpleNamespace(sessions=_Sessions())
         return app
 
@@ -647,7 +647,7 @@ class TestSavingAPinRefreshesSessionDefaults:
         refreshed: list[str] = []
         async with TestClient(TestServer(self._app(refreshed))) as client:
             resp = await client.put(
-                f"/api/agents/{seeded_agent}", json={"kiro_agent": "kirocrew-lite"}
+                f"/api/agents/{seeded_agent}", json={"kiro_agent": "ajcrew-lite"}
             )
             assert resp.status == 200
         assert refreshed == ["yes"]
@@ -658,7 +658,7 @@ class TestSavingAPinRefreshesSessionDefaults:
         reasoning_effort on EVERY save (that is what makes clearing possible), so
         refreshing on the field's presence would cost a cold start on every
         unrelated crew edit."""
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents[seeded_agent].reasoning_effort = "high"
         cfg.save()
 
@@ -673,7 +673,7 @@ class TestSavingAPinRefreshesSessionDefaults:
 
     @pytest.mark.asyncio
     async def test_clearing_a_pin_refreshes(self, seeded_agent):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents[seeded_agent].reasoning_effort = "high"
         cfg.save()
 
@@ -692,7 +692,7 @@ class TestSavingAPinRefreshesSessionDefaults:
         refreshed: list[str] = []
         async with TestClient(TestServer(self._app(refreshed))) as client:
             resp = await client.post(
-                "/api/agents", json={"name": "worker", "kiro_agent": "kirocrew"}
+                "/api/agents", json={"name": "worker", "kiro_agent": "ajcrew"}
             )
             assert resp.status == 200
         assert refreshed == ["yes"]
@@ -710,20 +710,20 @@ class TestSavingAPinRefreshesSessionDefaults:
     def test_the_trigger_is_derived_from_the_resolver_inputs(self):
         """Pins the shape, not the instances: `_effort_inputs` must read exactly
         the fields the chain reads, so a future field is added in one place."""
-        from kiro_crew.config.loader import KiroCrewAgentConfig as Crew
-        from kiro_crew.dashboard.handlers.agents import _effort_inputs
+        from aj_crew.config.loader import AjCrewAgentConfig as Crew
+        from aj_crew.dashboard.handlers.agents import _effort_inputs
 
         assert _effort_inputs(None) is None
-        base = Crew(kiro_agent="kirocrew", reasoning_effort="high")
-        assert _effort_inputs(base) == ("kirocrew", "high")
+        base = Crew(kiro_agent="ajcrew", reasoning_effort="high")
+        assert _effort_inputs(base) == ("ajcrew", "high")
         # A junk stored level normalizes, so a no-op save of junk is not a change.
-        assert _effort_inputs(Crew(kiro_agent="kirocrew", reasoning_effort="ultra")) == (
-            "kirocrew",
+        assert _effort_inputs(Crew(kiro_agent="ajcrew", reasoning_effort="ultra")) == (
+            "ajcrew",
             "",
         )
         # A field the chain does NOT read must not trigger a pool drain.
         assert _effort_inputs(
-            Crew(kiro_agent="kirocrew", reasoning_effort="high", description="x")
+            Crew(kiro_agent="ajcrew", reasoning_effort="high", description="x")
         ) == _effort_inputs(base)
 
     @pytest.mark.asyncio
@@ -731,14 +731,14 @@ class TestSavingAPinRefreshesSessionDefaults:
         """The write is already durable, so the save must not report failure --
         a failed refresh costs one gateway lifetime of staleness, which is what
         the behaviour was before the call existed."""
-        from kiro_crew.dashboard.handlers import api_kirocrew_agent_update
+        from aj_crew.dashboard.handlers import api_ajcrew_agent_update
 
         class _Sessions:
             async def refresh_defaults(self) -> None:
                 raise RuntimeError("pool wedged")
 
         app = web.Application()
-        app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+        app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
         app["state"] = SimpleNamespace(sessions=_Sessions())
         async with TestClient(TestServer(app)) as client:
             resp = await client.put(
@@ -746,16 +746,16 @@ class TestSavingAPinRefreshesSessionDefaults:
             )
             assert resp.status == 200
 
-        assert KiroCrewConfig.load().agents[seeded_agent].reasoning_effort == "high"
+        assert AjCrewConfig.load().agents[seeded_agent].reasoning_effort == "high"
 
     @pytest.mark.asyncio
     async def test_no_state_on_the_app_is_not_an_error(self, seeded_agent):
         """The handlers are mounted without dashboard state in tests and in the
         CLI-only paths; a missing session manager must be a no-op, not a 500."""
-        from kiro_crew.dashboard.handlers import api_kirocrew_agent_update
+        from aj_crew.dashboard.handlers import api_ajcrew_agent_update
 
         app = web.Application()
-        app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+        app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
         async with TestClient(TestServer(app)) as client:
             resp = await client.put(
                 f"/api/agents/{seeded_agent}", json={"reasoning_effort": "high"}

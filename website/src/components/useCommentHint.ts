@@ -3,9 +3,9 @@ import { safeSetItem } from '../utils/safeStorage'
 
 /** Set when a reader closes the tip. Every build before image comments wrote it
  *  for the text-only tip, so it also means "has seen the text-only wording". */
-export const HINT_KEY = 'kirocrew:comment-hint-dismissed'
+export const HINT_KEY = 'ajcrew:comment-hint-dismissed'
 /** Set when a reader closes the tip that names the image gesture. */
-export const IMAGE_HINT_KEY = 'kirocrew:comment-hint-image-dismissed'
+export const IMAGE_HINT_KEY = 'ajcrew:comment-hint-image-dismissed'
 
 /** Whether any input can drag a box (a mouse, trackpad or pen), read when the
  *  tip mounts. On touch a press scrolls and never draws a box. */

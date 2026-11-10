@@ -13,7 +13,7 @@ from typing import Any, Generator
 
 import pytest
 
-from kiro_crew.messaging.status_reactions import (
+from aj_crew.messaging.status_reactions import (
     LadderTimings,
     PhaseReactionLadder,
     StallEmojis,
@@ -21,10 +21,10 @@ from kiro_crew.messaging.status_reactions import (
     merge_phase_emojis,
     phase_for_tool_title,
 )
-from kiro_crew.messaging.status_reactions import tool_to_phase as shared_tool_to_phase
-from kiro_crew.slack import handler as handler_mod
-from kiro_crew.slack.handler import StatusReactionController
-from kiro_crew.testing.wait import await_until
+from aj_crew.messaging.status_reactions import tool_to_phase as shared_tool_to_phase
+from aj_crew.slack import handler as handler_mod
+from aj_crew.slack.handler import StatusReactionController
+from aj_crew.testing.wait import await_until
 
 # ── FakeSlack helper ────────────────────────────────────────────────────
 
@@ -842,8 +842,8 @@ class TestImportDoesNotCreateTheDataHome:
         "        sys.stderr.write(''.join(traceback.format_stack(limit=12)[:-1]))\n"
         "sys.addaudithook(hook)\n"
         "import json\n"
-        "import kiro_crew.slack.handler as h\n"
-        "from kiro_crew.config import paths\n"
+        "import aj_crew.slack.handler as h\n"
+        "from aj_crew.config import paths\n"
         "print(json.dumps(h._PHASE_EMOJIS))\n"
         "sys.exit(1 if paths._default_home().exists() != (sys.argv[2] == 'seeded') else 0)\n"
     )
@@ -862,7 +862,7 @@ class TestImportDoesNotCreateTheDataHome:
             (data / "config.json").write_text(
                 json.dumps({"slack": {"reactions": {"queued": "brain"}}}), encoding="utf-8"
             )
-        env = {k: v for k, v in os.environ.items() if k != "KIROCREW_HOME"}
+        env = {k: v for k, v in os.environ.items() if k != "AJCREW_HOME"}
         env["HOME"] = str(home)
         env["USERPROFILE"] = str(home)
         proc = subprocess.run(

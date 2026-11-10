@@ -13,20 +13,20 @@ import logging
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config.loader import AjCrewConfig
 
 CREDENTIAL = "not-a-reference-pasted-credential-0123456789"
 
 
-def _load(tmp_path, monkeypatch, tunnel: dict) -> KiroCrewConfig:
+def _load(tmp_path, monkeypatch, tunnel: dict) -> AjCrewConfig:
     config_file = tmp_path / "config.json"
     config_file.write_text(json.dumps({"tunnel": tunnel}), encoding="utf-8")
-    monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: config_file)
-    return KiroCrewConfig.load()
+    monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: config_file)
+    return AjCrewConfig.load()
 
 
 def test_the_viewer_is_off_and_empty_by_default() -> None:
-    tunnel = KiroCrewConfig().tunnel
+    tunnel = AjCrewConfig().tunnel
     assert tunnel.relay_viewer_enabled is False
     assert tunnel.relay_viewer_cps_url == ""
     assert tunnel.relay_viewer_credential == ""
@@ -136,7 +136,7 @@ def test_a_relay_domain_is_kept_as_written_with_no_format_check(
 
 
 def test_an_upper_case_relay_domain_still_matches_a_listed_crew(tmp_path, monkeypatch) -> None:
-    from kiro_crew.relay_viewer import cps
+    from aj_crew.relay_viewer import cps
 
     endpoint = "teamaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     cfg = _load(tmp_path, monkeypatch, {"relay_viewer_relay_domain": "Relay.Example.Test"})

@@ -23,12 +23,12 @@ from split_credential_boundary_helpers import (
     _rejoins,
 )
 
-from kiro_crew.discord.client import DISCORD_MAX_TEXT
-from kiro_crew.discord.renderer import _fit_platform_cap
-from kiro_crew.discord.renderer import _redact_all as _discord_redact_all
-from kiro_crew.messaging.split import bounded_for_delivery, split_markdown_safe
-from kiro_crew.telegram.renderer import _split_markdown_table_aware, _table_blocks
-from kiro_crew.whatsapp.renderer import render_chunks
+from aj_crew.discord.client import DISCORD_MAX_TEXT
+from aj_crew.discord.renderer import _fit_platform_cap
+from aj_crew.discord.renderer import _redact_all as _discord_redact_all
+from aj_crew.messaging.split import bounded_for_delivery, split_markdown_safe
+from aj_crew.telegram.renderer import _split_markdown_table_aware, _table_blocks
+from aj_crew.whatsapp.renderer import render_chunks
 
 
 def _discord_renderer_tree() -> ast.Module:

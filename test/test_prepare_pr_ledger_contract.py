@@ -1,4 +1,4 @@
-"""Pin the server-side facts kirocrew-prepare-pr's disposition guidance relies on.
+"""Pin the server-side facts ajcrew-prepare-pr's disposition guidance relies on.
 
 SKILL.md tells the agent to write a disposition's rationale in ``> `` lines,
 at class level, and to argue not-a-defect (never merely disproportional) for a
@@ -27,10 +27,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SKILL = (
     REPO_ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
+    / "ajcrew-dev"
+    / "ajcrew-prepare-pr"
     / "SKILL.md"
 )
 CODEX = REPO_ROOT / ".github" / "workflows" / "codex-review.yml"
@@ -87,10 +87,10 @@ def test_skill_states_the_dependency_and_the_three_line_shapes():
 CONTRACT = (
     REPO_ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
+    / "ajcrew-dev"
+    / "ajcrew-prepare-pr"
     / "scripts"
     / "_review_contract.py"
 )

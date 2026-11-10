@@ -1,7 +1,7 @@
 import type { MotionValue } from 'motion-dom'
 import type { Dispatch, SetStateAction, MutableRefObject, RefObject } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import type { KiroCrewAgent } from '../../../components/AgentSelector'
+import type { AjCrewAgent } from '../../../components/AgentSelector'
 import type { MobileNavRailRenderer } from '../../../components/MobileNavRailContext'
 import type { HoverIntent } from '../../../hooks/useHoverIntent'
 import type { VisualViewport } from '../../../hooks/useVisualViewport'
@@ -52,10 +52,10 @@ interface SessionsSidebarChromeProps {
   openEmbeddedCrewWindow: (instanceId: string, key: string) => void | Promise<void>
   splitMode: boolean
   defaultAgent: string
-  installedAgents: KiroCrewAgent[]
-  sidebarAgents: KiroCrewAgent[]
+  installedAgents: AjCrewAgent[]
+  sidebarAgents: AjCrewAgent[]
   /** The picker's unfolded rows, for the session list's same-name memory mark. */
-  sidebarChoices: KiroCrewAgent[]
+  sidebarChoices: AjCrewAgent[]
   setActionError: ReturnType<typeof useSteerDelivery>['setActionError']
   showActionError: (message: string, title?: string, report?: ErrorReport) => void
   canStageSessionRef: boolean

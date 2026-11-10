@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import json
 
-from kiro_crew.cron import CronService, _record_is_enabled
+from aj_crew.cron import CronService, _record_is_enabled
 
 
 def _write_store(path, jobs):

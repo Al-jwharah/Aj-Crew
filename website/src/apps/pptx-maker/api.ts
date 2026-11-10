@@ -61,7 +61,7 @@ export interface EngineStatus {
 export interface DepsStatus {
   labels: Record<string, string>
   present: Record<string, boolean>
-  /** True for a tool KiroCrew installed itself, rather than one found on PATH. */
+  /** True for a tool AjCrew installed itself, rather than one found on PATH. */
   managed: Record<string, boolean>
   missing: string[]
   /**

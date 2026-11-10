@@ -24,7 +24,7 @@ import { serveDist } from './lib/serve-dist.mjs'
 import { json, makeFixedApi, handleBootRoute } from './lib/boot-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/agent-backend-unmeasured'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -137,7 +137,7 @@ await page.route('**/api/**', route => {
       entries: [{ path: 'agent.acp_backend', type: 'enum', enumValues: SCENE.schemaEnum }],
     })
   }
-  if (path === '/api/config/kirocrew') return json(route, { agent: { acp_backend: '' } })
+  if (path === '/api/config/ajcrew') return json(route, { agent: { acp_backend: '' } })
   return handleBootRoute(route, path, { project: PROJECT, fixedApi })
 })
 

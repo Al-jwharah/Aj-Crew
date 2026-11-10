@@ -13,8 +13,8 @@ import pytest
 from external_logout_detection_helpers import _private_sel_root_per_test  # noqa: F401
 from external_logout_detection_helpers import _expire_identity_cache, _FakeProvider, _write_store
 
-from kiro_crew import kiro_prerequisite as kp
-from kiro_crew.testing.wait import finished
+from aj_crew import kiro_prerequisite as kp
+from aj_crew.testing.wait import finished
 
 
 class TestIdentityChangePredicate:
@@ -246,7 +246,7 @@ class TestLatchNarrowingPolicy:
         at "not signed in" until someone presses Check again.
         """
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         db = kp.kiro_identity_store_path("linux", tmp_path, {})
         _write_store(db)
@@ -267,7 +267,7 @@ class TestLatchNarrowingPolicy:
 
     @pytest.mark.asyncio
     async def test_an_actual_sign_out_does_narrow_readiness(self, tmp_path: Path) -> None:
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         db = kp.kiro_identity_store_path("linux", tmp_path, {})
         _write_store(db)
@@ -294,7 +294,7 @@ class TestLatchNarrowingPolicy:
     async def test_an_incomplete_sweep_leaves_the_change_pending(self, tmp_path: Path) -> None:
         """A skipped holder must not be recorded as reconciled."""
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         db = kp.kiro_identity_store_path("linux", tmp_path, {})
         _write_store(db)
@@ -318,7 +318,7 @@ class TestLatchNarrowingPolicy:
     ) -> None:
         """INFO sits below the default level, so the holdout was invisible."""
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         db = kp.kiro_identity_store_path("linux", tmp_path, {})
         _write_store(db)
@@ -330,7 +330,7 @@ class TestLatchNarrowingPolicy:
         sessions.identity_sweep_waiting_on = ("channel:c1:m1 (channel member)",)  # type: ignore[attr-defined]
         state = self._State(service, sessions)
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.dashboard.chat_runner"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.dashboard.chat_runner"):
             await chat_runner._retire_sessions_on_identity_change(state)
 
         warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
@@ -340,7 +340,7 @@ class TestLatchNarrowingPolicy:
 
     @pytest.mark.asyncio
     async def test_a_complete_sweep_reconciles_once(self, tmp_path: Path) -> None:
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         db = kp.kiro_identity_store_path("linux", tmp_path, {})
         _write_store(db)
@@ -365,7 +365,7 @@ class TestLatchNarrowingPolicy:
         account it loaded to one turn.
         """
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         # No store on disk at all: the fingerprint is absent.
         service = kp.KiroPrerequisiteService(home=tmp_path, environ={}, platform_name="linux")
@@ -417,7 +417,7 @@ class TestReturnToBaselineAfterIncompleteSweep:
 
     @pytest.mark.asyncio
     async def test_returning_to_the_baseline_account_still_sweeps(self, tmp_path: Path) -> None:
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         db = kp.kiro_identity_store_path("linux", tmp_path, {})
         _write_store(db)
@@ -476,7 +476,7 @@ class TestReturnToBaselineAfterIncompleteSweep:
         between two real accounts (non-empty live) defers.
         """
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         db = kp.kiro_identity_store_path("linux", tmp_path, {})
         _write_store(db)
@@ -560,7 +560,7 @@ class TestReturnToBaselineAfterIncompleteSweep:
         though ``live`` is nonempty, so an idle parent with live children is
         retired and its children cancelled, exactly as the sign-out path does.
         """
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         db = kp.kiro_identity_store_path("linux", tmp_path, {})
         _write_store(db)
@@ -598,7 +598,7 @@ class TestReturnToBaselineAfterIncompleteSweep:
         retire; only a sweep that COMPLETES clears the pending fingerprint.
         """
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         db = kp.kiro_identity_store_path("linux", tmp_path, {})
         _write_store(db)
@@ -780,15 +780,15 @@ class TestBootSeededSessionBaseline:
         equal, no sweep fires, the busy session is untouched.
         """
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager, _Session
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager, _Session
 
         db = kp.kiro_identity_store_path("linux", tmp_path, {})
         _write_store(db)
         service = kp.KiroPrerequisiteService(home=tmp_path, environ={}, platform_name="linux")
         await service.seed_sessions_baseline()
 
-        smap = SessionManager(KiroCrewConfig())
+        smap = SessionManager(AjCrewConfig())
         busy = _Session(provider=_FakeProvider(""))  # type: ignore[arg-type]
         busy.semaphore._value = 0  # type: ignore[attr-defined]
         smap._sessions["busy"] = busy
@@ -810,14 +810,14 @@ class TestBootSeededSessionBaseline:
         seed refuses: a store that cannot be fingerprinted.
         """
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager, _Session
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager, _Session
 
         db = kp.kiro_identity_store_path("linux", tmp_path, {})
         _write_store(db)
         service = kp.KiroPrerequisiteService(home=tmp_path, environ={}, platform_name="linux")
 
-        smap = SessionManager(KiroCrewConfig())
+        smap = SessionManager(AjCrewConfig())
         busy = _Session(provider=_FakeProvider(""))  # type: ignore[arg-type]
         busy.semaphore._value = 0  # type: ignore[attr-defined]
         smap._sessions["busy"] = busy
@@ -841,7 +841,7 @@ class TestBootSeededSessionBaseline:
         spelled identically at both sites.
         """
 
-        dashboard = Path(__file__).parents[1] / "src" / "kiro_crew" / "dashboard"
+        dashboard = Path(__file__).parents[1] / "src" / "aj_crew" / "dashboard"
         source = "".join(
             path.read_text(encoding="utf-8")
             for path in (
@@ -1244,7 +1244,7 @@ class TestGenerationScopedLatchClear:
 
         from pathlib import Path as _Path
 
-        import kiro_crew.dashboard.chat_runner as chat_runner_module
+        import aj_crew.dashboard.chat_runner as chat_runner_module
 
         runner = _Path(chat_runner_module.__file__)
         text = "\n".join(

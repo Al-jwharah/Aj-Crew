@@ -19,8 +19,8 @@ from aiohttp.test_utils import make_mocked_request
 # Loaded here, before any test patches chat_delivery / chat_runner: chat_handlers
 # copies those names in at import, so a first import under a patch would keep the
 # fake for every later test on this worker.
-import kiro_crew.dashboard.chat_handlers  # noqa: F401
-from kiro_crew import crew_mode
+import aj_crew.dashboard.chat_handlers  # noqa: F401
+from aj_crew import crew_mode
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -39,22 +39,22 @@ def _reset_crew_mode_agent(_floor_monkeypatch):
 
 
 def test_crew_mode_agent_defaults_to_the_team_lead():
-    from kiro_crew.config.loader_builders import _build_agent_config
+    from aj_crew.config.loader_builders import _build_agent_config
 
-    assert _build_agent_config({}).crew_mode_agent == "kirocrew-team-lead"
+    assert _build_agent_config({}).crew_mode_agent == "ajcrew-team-lead"
 
 
 def test_crew_mode_agent_is_read_from_its_one_key():
-    from kiro_crew.config.loader_builders import _build_agent_config
+    from aj_crew.config.loader_builders import _build_agent_config
 
     assert _build_agent_config({"crew_mode_agent": " better "}).crew_mode_agent == "better"
 
 
 @pytest.mark.parametrize("value", ["", "   ", 7, None])
 def test_an_unusable_crew_mode_agent_falls_back_to_the_conductor(value):
-    from kiro_crew.config.loader_builders import _build_agent_config
+    from aj_crew.config.loader_builders import _build_agent_config
 
-    assert _build_agent_config({"crew_mode_agent": value}).crew_mode_agent == "kirocrew-team-lead"
+    assert _build_agent_config({"crew_mode_agent": value}).crew_mode_agent == "ajcrew-team-lead"
 
 
 def test_swapping_the_key_swaps_the_conductor_and_joins_the_family():
@@ -72,11 +72,11 @@ def test_every_conductor_is_crew_mode(monkeypatch):
     monkeypatch.setattr(crew_mode, "_live_cfg", lambda: None)
     monkeypatch.setattr(crew_mode, "_configured", crew_mode.DEFAULT_CREW_MODE_AGENT)
     shipped = {
-        "kirocrew-conductor",
-        "kirocrew-ledger-conductor",
-        "kirocrew-pipeline-conductor",
-        "kirocrew-security-conductor",
-        "kirocrew-team-lead",
+        "ajcrew-conductor",
+        "ajcrew-ledger-conductor",
+        "ajcrew-pipeline-conductor",
+        "ajcrew-security-conductor",
+        "ajcrew-team-lead",
     }
     assert crew_mode.conductor_agents() == shipped
     for name in shipped:
@@ -98,14 +98,14 @@ def test_the_stamp_marks_a_chat_crew_mode_until_it_is_migrated():
     )
     assert rows["root"][crew_mode.ROOT_FIELD] is True
     assert rows["w"][crew_mode.WORKER_FIELD] == "root"
-    moved = _stamped(_row("root", agent="kirocrew", crew_mode_agent="old-one"))
+    moved = _stamped(_row("root", agent="ajcrew", crew_mode_agent="old-one"))
     assert moved["root"][crew_mode.ROOT_FIELD] is False
     assert crew_mode.stamp_for_switch("new-one", "template") == "new-one"
     assert crew_mode.stamp_for_switch("new-one", "member") == ""
-    assert crew_mode.stamp_for_switch("kirocrew-pipeline-conductor", "template") == (
-        "kirocrew-pipeline-conductor"
+    assert crew_mode.stamp_for_switch("ajcrew-pipeline-conductor", "template") == (
+        "ajcrew-pipeline-conductor"
     )
-    assert crew_mode.stamp_for_switch("kirocrew", "template") == ""
+    assert crew_mode.stamp_for_switch("ajcrew", "template") == ""
 
 
 def test_a_worker_whose_root_tab_closed_stays_out_of_the_list():
@@ -120,24 +120,24 @@ def test_a_worker_whose_root_tab_closed_stays_out_of_the_list():
 
 
 def test_saved_metadata_of_a_conductor_root_is_a_root():
-    assert crew_mode.saved_row_is_root({"agent": "kirocrew-team-lead"})
-    assert not crew_mode.saved_row_is_root({"agent": "kirocrew-team-lead", "created_by": "x"})
-    assert not crew_mode.saved_row_is_root({"agent": "kirocrew"})
-    assert not crew_mode.saved_row_is_root({"agent": "kirocrew-conductor", "agent_kind": "member"})
+    assert crew_mode.saved_row_is_root({"agent": "ajcrew-team-lead"})
+    assert not crew_mode.saved_row_is_root({"agent": "ajcrew-team-lead", "created_by": "x"})
+    assert not crew_mode.saved_row_is_root({"agent": "ajcrew"})
+    assert not crew_mode.saved_row_is_root({"agent": "ajcrew-conductor", "agent_kind": "member"})
 
 
 def test_a_crewmate_named_like_a_conductor_is_not_one():
-    assert crew_mode.runs_crew_mode("kirocrew-conductor", "template")
-    assert not crew_mode.runs_crew_mode("kirocrew-conductor", "member")
-    assert not crew_mode.runs_crew_mode("kirocrew-conductor", "", "member")
-    assert not crew_mode.runs_crew_mode("kirocrew", "template")
+    assert crew_mode.runs_crew_mode("ajcrew-conductor", "template")
+    assert not crew_mode.runs_crew_mode("ajcrew-conductor", "member")
+    assert not crew_mode.runs_crew_mode("ajcrew-conductor", "", "member")
+    assert not crew_mode.runs_crew_mode("ajcrew", "template")
 
 
 # ── row stamps ─────────────────────────────────────────────────────────────────
 
 
 def _row(key: str, **over: Any) -> dict[str, Any]:
-    return {"key": key, "agent": "kirocrew", "agent_kind": "template", "parent": None, **over}
+    return {"key": key, "agent": "ajcrew", "agent_kind": "template", "parent": None, **over}
 
 
 def _stamped(*rows: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -148,7 +148,7 @@ def _stamped(*rows: dict[str, Any]) -> dict[str, dict[str, Any]]:
 
 def test_a_root_conductor_is_a_crew_mode_root_and_its_tree_are_its_workers():
     rows = _stamped(
-        _row("root", agent="kirocrew-conductor"),
+        _row("root", agent="ajcrew-conductor"),
         _row("w1", created_by="root"),
         _row("w2", parent={"slot": "w1", "key": "w1"}),
         _row("plain"),
@@ -177,7 +177,7 @@ def test_a_root_conductor_is_a_crew_mode_root_and_its_tree_are_its_workers():
     ],
 )
 def test_only_a_plain_persistent_root_on_a_conductor_template_is_a_root(over):
-    rows = _stamped(_row("root", agent="kirocrew-conductor", **over), _row("w", created_by="root"))
+    rows = _stamped(_row("root", agent="ajcrew-conductor", **over), _row("w", created_by="root"))
     assert rows["root"][crew_mode.ROOT_FIELD] is False
     assert crew_mode.WORKER_FIELD not in rows["w"]
 
@@ -203,20 +203,20 @@ def test_a_worker_whose_own_creator_closed_stays_under_its_root():
     """R opened M, M opened W, then M closed. The frame resolves W's ``parent.key``
     to R (its nearest open ancestor), so W stays R's worker, not a loose session."""
     rows = _stamped(
-        _row("R", agent="kirocrew-conductor"),
+        _row("R", agent="ajcrew-conductor"),
         _row("W", created_by="M", parent={"slot": "M", "key": "R", "ancestor": True}),
     )
     assert rows["W"][crew_mode.WORKER_FIELD] == "R"
     # With no open ancestor resolved, the closed creator ends the walk.
     loose = _stamped(
-        _row("R", agent="kirocrew-conductor"),
+        _row("R", agent="ajcrew-conductor"),
         _row("W", created_by="M", parent={"slot": "M", "key": None}),
     )
     assert crew_mode.WORKER_FIELD not in loose["W"]
     # The live-slot test reads the same edges when it is given them.
     slots = {
-        "R": SimpleNamespace(key="R", agent="kirocrew-conductor", agent_kind="template"),
-        "W": SimpleNamespace(key="W", agent="kirocrew", agent_kind="template", _created_by="M"),
+        "R": SimpleNamespace(key="R", agent="ajcrew-conductor", agent_kind="template"),
+        "W": SimpleNamespace(key="W", agent="ajcrew", agent_kind="template", _created_by="M"),
     }
     assert not crew_mode.slot_in_crew_tree(slots, "W")
     assert crew_mode.slot_in_crew_tree(slots, "W", {"W": {"slot": "M", "key": "R"}})
@@ -232,8 +232,8 @@ _OLD_WORKER = "chat-10-1792000100"
 
 def _reopened(**saved: str) -> dict[str, dict[str, Any]]:
     out = [
-        _row(_OLD_ROOT, agent="kirocrew-security-conductor"),
-        _row(_OLD_WORKER, agent="kirocrew-worker", created_by=""),
+        _row(_OLD_ROOT, agent="ajcrew-security-conductor"),
+        _row(_OLD_WORKER, agent="ajcrew-worker", created_by=""),
     ]
     crew_mode.stamp_rows(out, settled=True, saved_creators=saved, tree_slots=())
     return {r["key"]: r for r in out}
@@ -260,8 +260,8 @@ def test_a_worker_agent_no_session_created_stays_a_normal_session():
 def test_a_released_worker_is_not_put_back_by_its_saved_creator():
     """A tree node with no parent is a release: the saved line does not undo it."""
     out = [
-        _row(_OLD_ROOT, agent="kirocrew-conductor"),
-        _row(_OLD_WORKER, agent="kirocrew-worker"),
+        _row(_OLD_ROOT, agent="ajcrew-conductor"),
+        _row(_OLD_WORKER, agent="ajcrew-worker"),
     ]
     crew_mode.stamp_rows(
         out, settled=True, saved_creators={_OLD_WORKER: _OLD_ROOT}, tree_slots=[_OLD_WORKER]
@@ -273,11 +273,11 @@ def test_a_live_reopened_worker_keeps_its_saved_root_in_slot_patches():
     """The ``slot_patch`` stamps (``live_stamps``) read the same saved creator."""
     slots = {
         _OLD_ROOT: SimpleNamespace(
-            key=_OLD_ROOT, agent="kirocrew-security-conductor", agent_kind="template"
+            key=_OLD_ROOT, agent="ajcrew-security-conductor", agent_kind="template"
         ),
         _OLD_WORKER: SimpleNamespace(
             key=_OLD_WORKER,
-            agent="kirocrew-worker",
+            agent="ajcrew-worker",
             agent_kind="template",
             _created_by="",
             _saved_created_by=_OLD_ROOT,
@@ -286,7 +286,7 @@ def test_a_live_reopened_worker_keeps_its_saved_root_in_slot_patches():
     assert crew_mode.live_stamps(slots)[_OLD_WORKER] == (_OLD_ROOT, False)
     plain = dict(slots)
     plain[_OLD_WORKER] = SimpleNamespace(
-        key=_OLD_WORKER, agent="kirocrew-worker", agent_kind="template", _created_by=""
+        key=_OLD_WORKER, agent="ajcrew-worker", agent_kind="template", _created_by=""
     )
     assert crew_mode.live_stamps(plain)[_OLD_WORKER] == ("", False)
 
@@ -294,7 +294,7 @@ def test_a_live_reopened_worker_keeps_its_saved_root_in_slot_patches():
 def test_every_hydration_keeps_the_saved_creator_for_display_only():
     """Resume carries the line's creator onto ``_saved_created_by`` and never onto
     ``_created_by``, which session-control ownership reads."""
-    from kiro_crew.dashboard.slot_persistence import metadata_codec
+    from aj_crew.dashboard.slot_persistence import metadata_codec
 
     slot = SimpleNamespace(autocompact_pct=None, _created_by="", _saved_created_by="")
     rows = [r for r in metadata_codec.FIELDS if r.key == "created_by"]
@@ -318,8 +318,8 @@ def test_every_hydration_keeps_the_saved_creator_for_display_only():
 
 
 async def _slots_get(monkeypatch, query: str = "", internal: bool = False) -> list[str]:
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.dashboard.handlers import source_providers
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.dashboard.handlers import source_providers
 
     payloads = [
         {"key": "root", crew_mode.ROOT_FIELD: True},
@@ -359,13 +359,13 @@ async def test_an_agents_read_keeps_the_workers_its_tools_resolve(monkeypatch):
 
 def test_serialize_slots_stamps_every_row():
     """The stamp rides the one serializer every slot list and broadcast reads."""
-    from kiro_crew.dashboard.state_parts import slots_frame
+    from aj_crew.dashboard.state_parts import slots_frame
 
     rows = {
-        "root": {"key": "root", "agent": "kirocrew-conductor", "agent_kind": "template"},
+        "root": {"key": "root", "agent": "ajcrew-conductor", "agent_kind": "template"},
         "w1": {
             "key": "w1",
-            "agent": "kirocrew-worker",
+            "agent": "ajcrew-worker",
             "agent_kind": "template",
             "created_by": "root",
         },
@@ -389,7 +389,7 @@ def test_a_custom_conductor_is_in_force_from_the_live_config_without_a_catalog_r
     monkeypatch,
 ):
     """F1: nothing has read the catalog; the live config watcher's snapshot decides."""
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     crew_mode.remember(SimpleNamespace(agent=SimpleNamespace(crew_mode_agent="")))
     monkeypatch.setattr(
@@ -399,14 +399,14 @@ def test_a_custom_conductor_is_in_force_from_the_live_config_without_a_catalog_r
     )
     slots = {
         "root": SimpleNamespace(key="root", agent="better-conductor", agent_kind="template"),
-        "w1": SimpleNamespace(key="w1", agent="kirocrew-worker", _created_by="root"),
+        "w1": SimpleNamespace(key="w1", agent="ajcrew-worker", _created_by="root"),
     }
     assert crew_mode.crew_mode_agent() == "better-conductor"
     assert crew_mode.slot_in_crew_tree(slots, "w1") is True
 
 
 def test_with_no_live_config_the_remembered_value_stands(monkeypatch):
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     monkeypatch.setattr(live, "snapshot", lambda: None)
     crew_mode.remember(SimpleNamespace(agent=SimpleNamespace(crew_mode_agent="other-one")))
@@ -414,8 +414,8 @@ def test_with_no_live_config_the_remembered_value_stands(monkeypatch):
 
 
 def test_the_config_default_is_the_one_constant():
-    from kiro_crew.config.loader_builders import _crew_mode_agent_or_default
-    from kiro_crew.config.sections_agent import AgentConfig
+    from aj_crew.config.loader_builders import _crew_mode_agent_or_default
+    from aj_crew.config.sections_agent import AgentConfig
 
     assert AgentConfig().crew_mode_agent == crew_mode.DEFAULT_CREW_MODE_AGENT
     assert _crew_mode_agent_or_default("  ") == crew_mode.DEFAULT_CREW_MODE_AGENT
@@ -432,7 +432,7 @@ def _crew_slots(**over: Any) -> list[dict[str, Any]]:
         "created": "2026-09-14T05:00:00.000001+00:00",
         crew_mode.ROOT_FIELD: True,
         # A chat that turned Crew Mode on: the folder rule keys on the stamp.
-        crew_mode.STAMP_FIELD: "kirocrew-conductor",
+        crew_mode.STAMP_FIELD: "ajcrew-conductor",
         **over,
     }
     return [caller]
@@ -507,7 +507,7 @@ def _state(rows: list[dict[str, Any]], live: dict[str, Any] | None = None) -> An
 
 
 _TREE = [
-    _row("root", agent="kirocrew-conductor"),
+    _row("root", agent="ajcrew-conductor"),
     _row("w1", created_by="root", title="Haiku one", running=True),
     _row(
         "w2",
@@ -522,7 +522,7 @@ _TREE = [
 
 @pytest.fixture
 def _open_gate(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     async def _allow(*_a: Any, **_k: Any) -> None:
         return None
@@ -578,7 +578,7 @@ async def test_each_row_says_where_its_worker_runs(_open_gate, monkeypatch):
     keyed by its item (never the peer's slot key), with the stored liveness. A
     stored pending approval outranks running, and a closed item is closed even
     when the last stored pull said running."""
-    from kiro_crew import work_ledger
+    from aj_crew import work_ledger
 
     crew_workers = _open_gate
 
@@ -635,7 +635,7 @@ async def test_each_row_says_where_its_worker_runs(_open_gate, monkeypatch):
 
 
 def test_a_remote_item_is_keyed_by_its_item_not_the_peer_slot(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_workers, work_ledger_board
+    from aj_crew.dashboard.handlers import crew_workers, work_ledger_board
 
     items = [
         SimpleNamespace(
@@ -664,7 +664,7 @@ def test_a_remote_item_is_keyed_by_its_item_not_the_peer_slot(monkeypatch):
 async def test_a_grandchild_is_grouped_by_the_ledger_its_sub_conductor_keeps(
     _open_gate, monkeypatch
 ):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     # w2 was dispatched by the sub-conductor w1, which bound it on w1's own ledger.
     ledgers = {
@@ -692,7 +692,7 @@ async def test_the_worker_list_refuses_a_session_that_is_not_a_crew_mode_root(_o
 async def test_Y3_a_closed_roots_list_is_read_from_saved_data(_open_gate, monkeypatch):
     """Edge review R2 Y3: a reload under a closed root keeps the saved root title
     and the worker's real state; the list is not a failed read."""
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     crew_mode.note_roots(["root"])
     monkeypatch.setattr(
@@ -721,7 +721,7 @@ async def test_Y3_a_closed_roots_list_is_read_from_saved_data(_open_gate, monkey
 
 @pytest.mark.asyncio
 async def test_the_routes_are_owner_only(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     async def _allow(*_a: Any, **_k: Any) -> None:
         return None
@@ -741,7 +741,7 @@ async def test_the_routes_are_owner_only(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_the_routes_deny_an_app_token(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     async def _deny(*_a: Any, **_k: Any) -> web.Response:
         return web.json_response({"code": "not_found"}, status=404)
@@ -770,7 +770,7 @@ async def test_steer_refuses_an_empty_message(_open_gate):
 
 @pytest.mark.asyncio
 async def test_steer_cuts_into_a_running_turn_as_the_person(_open_gate, monkeypatch):
-    from kiro_crew.dashboard import chat_delivery, session_control
+    from aj_crew.dashboard import chat_delivery, session_control
 
     calls: dict[str, Any] = {}
 
@@ -781,7 +781,7 @@ async def test_steer_cuts_into_a_running_turn_as_the_person(_open_gate, monkeypa
     monkeypatch.setattr(chat_delivery, "steer_into_running_turn", _steer)
     monkeypatch.setattr(session_control, "containment_meta", lambda state, slot: {"c": 1})
     worker = SimpleNamespace(key="w1", turn_running=True, running=True, _app="")
-    monkeypatch.setattr("kiro_crew.dashboard.relay_archive.is_relay_archive", lambda s: False)
+    monkeypatch.setattr("aj_crew.dashboard.relay_archive.is_relay_archive", lambda s: False)
     resp = await _open_gate.api_crew_worker_steer(
         _req(
             "POST",
@@ -800,7 +800,7 @@ async def test_steer_cuts_into_a_running_turn_as_the_person(_open_gate, monkeypa
 
 @pytest.mark.asyncio
 async def test_steer_queues_and_starts_an_idle_worker(_open_gate, monkeypatch):
-    from kiro_crew.dashboard import chat_delivery, chat_runner, session_control
+    from aj_crew.dashboard import chat_delivery, chat_runner, session_control
 
     calls: dict[str, Any] = {}
 
@@ -815,7 +815,7 @@ async def test_steer_queues_and_starts_an_idle_worker(_open_gate, monkeypatch):
     monkeypatch.setattr(chat_delivery, "queue_for_next_turn", _queue)
     monkeypatch.setattr(chat_runner, "_start_next_queued_turn", _start)
     monkeypatch.setattr(session_control, "containment_meta", lambda state, slot: {})
-    monkeypatch.setattr("kiro_crew.dashboard.relay_archive.is_relay_archive", lambda s: False)
+    monkeypatch.setattr("aj_crew.dashboard.relay_archive.is_relay_archive", lambda s: False)
     worker = SimpleNamespace(key="w1", turn_running=False, running=False, _app="")
     resp = await _open_gate.api_crew_worker_steer(
         _req(
@@ -836,8 +836,8 @@ async def test_steer_queues_and_starts_an_idle_worker(_open_gate, monkeypatch):
 @pytest.mark.asyncio
 async def test_a_held_steer_is_reported_queued_persisted_and_shown(_open_gate, monkeypatch):
     """F3/F4: sub-agents hold the drain, so the text waits: durable, and on screen."""
-    from kiro_crew.crew_log import emit as crew_log_emit
-    from kiro_crew.dashboard import chat_delivery, chat_runner, session_control
+    from aj_crew.crew_log import emit as crew_log_emit
+    from aj_crew.dashboard import chat_delivery, chat_runner, session_control
 
     persisted: list[str] = []
     frames: list[tuple[str, dict]] = []
@@ -852,7 +852,7 @@ async def test_a_held_steer_is_reported_queued_persisted_and_shown(_open_gate, m
     )
     monkeypatch.setattr(chat_delivery, "warn_if_not_durable", lambda *a: True)
     monkeypatch.setattr(crew_log_emit, "on_message_queued", lambda *a, **k: None)
-    monkeypatch.setattr("kiro_crew.dashboard.relay_archive.is_relay_archive", lambda s: False)
+    monkeypatch.setattr("aj_crew.dashboard.relay_archive.is_relay_archive", lambda s: False)
     queue: list[dict[str, Any]] = []
 
     def _append(message: str, *a: Any, **kw: Any) -> str:
@@ -883,7 +883,7 @@ async def test_a_held_steer_is_reported_queued_persisted_and_shown(_open_gate, m
 
 def test_the_routes_are_registered_under_the_slot():
     # Through the gateway's own registration (it binds the handler modules).
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     app = web.Application()
     server._register_mcp_routes(app)
@@ -915,7 +915,7 @@ async def test_a_closed_worker_keeps_its_saved_title(_open_gate, monkeypatch):
     )
     log = SimpleNamespace(
         get_metadata=lambda key: (
-            {"title": "Haiku three", "agent": "kirocrew-worker"}
+            {"title": "Haiku three", "agent": "ajcrew-worker"}
             if key == "dashboard:chat-8-1792540567"
             else None
         )
@@ -925,12 +925,12 @@ async def test_a_closed_worker_keeps_its_saved_title(_open_gate, monkeypatch):
     resp = await _open_gate.api_crew_workers(_req("GET", "/x", state, {"slot": "root"}))
     by_key = {w["key"]: w for w in json.loads(resp.text)["workers"]}
     assert by_key["chat-8-1792540567"]["title"] == "Haiku three"
-    assert by_key["chat-8-1792540567"]["agent"] == "kirocrew-worker"
+    assert by_key["chat-8-1792540567"]["agent"] == "ajcrew-worker"
     assert by_key["chat-9-1792540599"]["title"] == "chat-9"
 
 
 def test_a_worker_line_is_one_plain_line_cut_to_the_card():
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     assert crew_workers._one_line("\n\n## Done!\nmore") == "Done!"
     assert len(crew_workers._one_line("x" * 500)) == crew_workers.WORKER_LINE_MAX
@@ -938,7 +938,7 @@ def test_a_worker_line_is_one_plain_line_cut_to_the_card():
 
 
 def test_a_relayed_seed_is_not_a_worker_line_its_last_reply_is():
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     slot = SimpleNamespace(
         messages=[
@@ -962,8 +962,8 @@ def test_a_relayed_seed_is_not_a_worker_line_its_last_reply_is():
 
 @pytest.mark.asyncio
 async def test_the_board_is_adopted_for_a_swapped_in_conductor(monkeypatch):
-    from kiro_crew import dashboard_agentic
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew import dashboard_agentic
+    from aj_crew.dashboard import card_lifecycle
 
     crew_mode.remember(SimpleNamespace(agent=SimpleNamespace(crew_mode_agent="better-conductor")))
     adopted: list[str] = []
@@ -973,7 +973,7 @@ async def test_the_board_is_adopted_for_a_swapped_in_conductor(monkeypatch):
     )
     slot = SimpleNamespace(key="root", agent_kind="template", memory_mode="persistent")
     await dashboard_agentic.adopt_crew_mode_board_on_switch(slot, "better-conductor")
-    await dashboard_agentic.adopt_crew_mode_board_on_switch(slot, "kirocrew")
+    await dashboard_agentic.adopt_crew_mode_board_on_switch(slot, "ajcrew")
     assert adopted == ["root"]
 
 
@@ -982,7 +982,7 @@ _FAKE_KEY = "AKIA" + "ABCDEFGHIJKLMNOP"
 
 
 def test_a_long_last_reply_is_redacted_before_it_is_cut():
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     secret = "AKIA" + "Q" * 16
     text = "x" * 140 + " **AKIA**" + secret[4:] + " done"
@@ -993,7 +993,7 @@ def test_a_long_last_reply_is_redacted_before_it_is_cut():
 
 
 def test_a_last_reply_standing_in_for_a_seed_is_redacted():
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     secret = "AKIA" + "Z" * 16
     slot = SimpleNamespace(messages=[{"role": "assistant", "content": f"key {secret} saved"}])
@@ -1003,7 +1003,7 @@ def test_a_last_reply_standing_in_for_a_seed_is_redacted():
 
 
 def test_a_workers_item_comes_from_the_roots_own_ledger_through_the_board_seam(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_workers, work_ledger_board
+    from aj_crew.dashboard.handlers import crew_workers, work_ledger_board
 
     items = [
         SimpleNamespace(
@@ -1047,7 +1047,7 @@ def test_a_workers_item_comes_from_the_roots_own_ledger_through_the_board_seam(m
     ],
 )
 def test_the_side_panel_group_of_a_worker(status, progress, group):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     assert crew_workers._group(status, progress) == group
 
@@ -1063,7 +1063,7 @@ def test_the_side_panel_group_of_a_worker(status, progress, group):
     ],
 )
 def test_an_idle_worker_whose_loop_will_wake_it_is_working(progress, group):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     assert crew_workers._group("idle", progress, looping=True) == group
     assert crew_workers._group("needs_approval", progress, looping=True) == "approval"
@@ -1097,7 +1097,7 @@ async def test_the_worker_list_reads_a_looping_idle_worker_as_working(_open_gate
     ],
 )
 def test_a_ledger_item_says_done_or_with_conductor_only_from_its_own_fields(fields, progress):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     assert crew_workers._progress_of(SimpleNamespace(**fields)) == progress
 
@@ -1116,8 +1116,8 @@ def test_an_adopted_worker_belongs_to_the_root_that_adopted_it():
     """``session_adopt`` moves the crew log's parent edge; the birth stamp stays.
     Membership follows the current edge."""
     rows = _stamped(
-        _row("A", agent="kirocrew-conductor"),
-        _row("B", agent="kirocrew-conductor"),
+        _row("A", agent="ajcrew-conductor"),
+        _row("B", agent="ajcrew-conductor"),
         _row("w", created_by="A", parent={"slot": "B", "key": "B"}),
     )
     assert rows["w"][crew_mode.WORKER_FIELD] == "B"
@@ -1128,7 +1128,7 @@ def test_a_released_worker_stands_on_its_own_once_the_lineage_is_settled():
     lineage settled a ``None`` edge is the answer, and the worker leaves the tree;
     while the lineage is not known, the birth stamp still nests it."""
     rows = [
-        _row("A", agent="kirocrew-conductor"),
+        _row("A", agent="ajcrew-conductor"),
         _row("w", created_by="A", parent=None),
     ]
     settled = [dict(r) for r in rows]

@@ -3,7 +3,7 @@
 kiro-cli, and KAS through the flag ``acp.kas_agents`` forwards, mount the servers of
 the user's ``mcp.json`` files into an agent whose spec states ``includeMcpJson``.
 Crew's own readers of "the servers this agent has" ask
-:mod:`kiro_crew.agent_sdk.mcp_json_reach` for those names, so these tests pin what it
+:mod:`aj_crew.agent_sdk.mcp_json_reach` for those names, so these tests pin what it
 answers: the per-host reading of the flag, which files it reads, and that nothing in
 them can make it raise.
 """
@@ -18,16 +18,16 @@ import pytest
 from handlers_mcp_coverage_helpers import agents_dir_fixture  # noqa: F401
 from handlers_mcp_coverage_helpers import _payload, _request
 
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_CODEX, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.dashboard.handlers import mcp as mcp_mod
-from kiro_crew.testing.links import make_dir_link
+from aj_crew.agent_sdk.backends import ACP_BACKEND_CODEX, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.dashboard.handlers import mcp as mcp_mod
+from aj_crew.testing.links import make_dir_link
 
 # The reader is imported per call, so a tree without it fails each test that asks
 # it something rather than stopping the whole run at collection.
 
 
 def includes_mcp_json(spec: object, backend: str) -> bool:
-    from kiro_crew.agent_sdk import mcp_json_reach
+    from aj_crew.agent_sdk import mcp_json_reach
 
     return mcp_json_reach.includes_mcp_json(spec, backend)
 
@@ -35,7 +35,7 @@ def includes_mcp_json(spec: object, backend: str) -> bool:
 def mcp_json_server_names(
     spec: object, backend: str, work_dir: Path | None = None
 ) -> tuple[str, ...]:
-    from kiro_crew.agent_sdk import mcp_json_reach
+    from aj_crew.agent_sdk import mcp_json_reach
 
     return mcp_json_reach.mcp_json_server_names(spec, backend, work_dir)
 
@@ -48,7 +48,7 @@ def _write(path: Path, servers: object) -> None:
 @pytest.fixture
 def kiro_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """A kiro home of the test's own, so the machine's ``mcp.json`` is never read."""
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     home = tmp_path / "kiro-home"
     # The user-level file the session's settings reader reads.
@@ -74,7 +74,7 @@ def kiro_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     ],
 )
 def test_the_opt_in_is_a_stated_bool_read_per_host(spec, on_kiro, on_kas):
-    from kiro_crew.acp.kas_settings_mcp import include_mcp_json as kas_wire_opt_in
+    from aj_crew.acp.kas_settings_mcp import include_mcp_json as kas_wire_opt_in
 
     assert includes_mcp_json(spec, ACP_BACKEND_KIRO) is on_kiro
     assert includes_mcp_json(spec, ACP_BACKEND_KAS) is on_kas
@@ -195,7 +195,7 @@ def test_a_checkout_file_linked_into_a_protected_directory_is_never_read(
 
 
 def test_the_names_kept_are_bounded_in_count_and_length(kiro_home: Path):
-    from kiro_crew.agent_sdk.mcp_json_reach import MAX_MCP_JSON_NAME_LEN, MAX_MCP_JSON_NAMES
+    from aj_crew.agent_sdk.mcp_json_reach import MAX_MCP_JSON_NAME_LEN, MAX_MCP_JSON_NAMES
 
     servers: dict = {"x" * (MAX_MCP_JSON_NAME_LEN + 1): {"command": "a"}}
     servers.update({f"s{i}": {"command": "a"} for i in range(MAX_MCP_JSON_NAMES + 10)})
@@ -208,8 +208,8 @@ def test_the_names_kept_are_bounded_in_count_and_length(kiro_home: Path):
 
 
 def test_a_server_the_spec_refs_past_the_bound_is_kept_and_never_unresolved(kiro_home: Path):
-    from kiro_crew.agent_sdk.mcp_json_reach import MAX_MCP_JSON_NAMES
-    from kiro_crew.agent_sdk.mcp_refs import unresolved_server_refs
+    from aj_crew.agent_sdk.mcp_json_reach import MAX_MCP_JSON_NAMES
+    from aj_crew.agent_sdk.mcp_refs import unresolved_server_refs
 
     _write(
         kiro_home / "settings" / "mcp.json",
@@ -231,7 +231,7 @@ def test_a_server_the_spec_refs_past_the_bound_is_kept_and_never_unresolved(kiro
 
 
 def test_a_referenced_name_past_the_length_bound_is_kept(kiro_home: Path):
-    from kiro_crew.agent_sdk.mcp_json_reach import MAX_MCP_JSON_NAME_LEN
+    from aj_crew.agent_sdk.mcp_json_reach import MAX_MCP_JSON_NAME_LEN
 
     long_name = "x" * (MAX_MCP_JSON_NAME_LEN + 1)
     _write(kiro_home / "settings" / "mcp.json", {long_name: {"command": "a"}})
@@ -253,7 +253,7 @@ async def test_the_dashboard_lists_the_global_servers_an_agent_opts_in_to(
     expected: list[str],
 ):
     """``GET /api/mcp/active?agent=<name>`` names what kiro-cli mounts for that agent."""
-    import kiro_crew.config.loader as loader
+    import aj_crew.config.loader as loader
 
     # Bind the name to a same-named kiro agent, so the per-agent branch answers.
     monkeypatch.setattr(

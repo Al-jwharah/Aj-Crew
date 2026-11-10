@@ -1,7 +1,7 @@
-# Kiro Crew Desktop App
+# Aj Crew Desktop App
 
 The desktop app is an [Electron](https://www.electronjs.org/) shell that wraps
-the Kiro Crew web dashboard and embeds a **self-contained Python backend**. The
+the Aj Crew web dashboard and embeds a **self-contained Python backend**. The
 backend uses a [python-build-standalone](https://github.com/indygreg/python-build-standalone)
 (PBS) interpreter with all dependencies installed via `uv`/`pip` into the bundled
 interpreter — end users need **no** Python, pip, npm, or node. They just
@@ -22,19 +22,19 @@ Output lands in **`website/electron/dist/`**:
 
 | Command | Platform | Artifact |
 |---------|----------|----------|
-| `make desktop` | macOS | `KiroCrew-<version>-universal.dmg` plus `KiroCrew-<version>-universal-mac.zip` |
+| `make desktop` | macOS | `AjCrew-<version>-universal.dmg` plus `AjCrew-<version>-universal-mac.zip` |
 | `UNIVERSAL=0 make desktop` | macOS | Host-arch DMG plus the matching `*-mac.zip` update archive |
-| `UNIVERSAL=0 TARGET_ARCH=<arch> make desktop` | macOS | `KiroCrew-<version>-arm64.dmg` / `KiroCrew-<version>-x64.dmg` plus `KiroCrew-<version>-<arch>-mac.zip` — the arch is always spelled, x64 included |
-| `make desktop` | Linux | `KiroCrew-*.AppImage`, `*.deb`, `*.rpm` (host arch) |
+| `UNIVERSAL=0 TARGET_ARCH=<arch> make desktop` | macOS | `AjCrew-<version>-arm64.dmg` / `AjCrew-<version>-x64.dmg` plus `AjCrew-<version>-<arch>-mac.zip` — the arch is always spelled, x64 included |
+| `make desktop` | Linux | `AjCrew-*.AppImage`, `*.deb`, `*.rpm` (host arch) |
 
 The electron-builder configuration lives in
 [`website/electron/package.json`](../../website/electron/package.json):
 
-- **appId:** `com.amazon.kiro.crew`
-- **productName:** `KiroCrew`
-- macOS display name: `Kiro Crew` via `CFBundleDisplayName`; `CFBundleName`
+- **appId:** `io.github.al-jwharah.ajcrew`
+- **productName:** `AjCrew`
+- macOS display name: `Aj Crew` via `CFBundleDisplayName`; `CFBundleName`
   remains aligned with `productName` because Electron uses it to locate the
-  `KiroCrew Helper` app bundles during startup
+  `AjCrew Helper` app bundles during startup
 - mac targets: `dmg` and `zip` (category
   `public.app-category.developer-tools`). The DMG
   uses a 660×420 logical-size branded drag-to-Applications background, packaged
@@ -46,14 +46,14 @@ The electron-builder configuration lives in
   captions either — Finder draws them in dark text even under Dark Mode, so they
   read on the accent directly.
 - Windows target: assisted NSIS. A 164×314 welcome/finish sidebar and a 150×57
-  page header reuse the Kiro Crew logo while preserving native NSIS controls,
+  page header reuse the Aj Crew logo while preserving native NSIS controls,
   localization, the per-user default, and the no-UAC default path. The installer
   cross-fades the native top-level dialog at page boundaries with Win32's
   alpha-blended window animation, honoring the client-area animation preference.
   It performs no timer-driven bitmap work or `Sleep` on the NSIS UI thread;
   Windows CI installs the real artifact, records its duration, and enforces a
   5-minute ceiling. Auto-updates skip the assisted wizard's decision pages but
-  keep its native extraction progress visible, then relaunch Kiro Crew and close
+  keep its native extraction progress visible, then relaunch Aj Crew and close
   automatically. A legacy silent `/S --updated` invocation is converted to the
   same visible update path so the transition works from already-fielded clients.
 - linux targets: `AppImage`, `deb`, `rpm` (category `Development`). One backend
@@ -101,8 +101,8 @@ The electron-builder configuration lives in
 
 ### macOS default — one universal DMG for both arches
 
-On macOS, `make desktop` produces a `KiroCrew-<version>-universal.dmg` for
-first install and a matching `KiroCrew-<version>-universal-mac.zip` for the
+On macOS, `make desktop` produces a `AjCrew-<version>-universal.dmg` for
+first install and a matching `AjCrew-<version>-universal-mac.zip` for the
 update/signing handoff. Both run **natively** on Apple Silicon and Intel Macs.
 It needs only
 **one Apple-Silicon machine** — no Intel host, no second build. (It requires
@@ -116,7 +116,7 @@ The shipped app carries **no** kiro-cli. It detects the one the user installed
 sign-in commands until it finds one; the KAS bundle route (next section) needs
 no kiro-cli at all. Bundling was the default from #5130 / #13207 until #22018,
 and it was turned off for three reasons. The bundled copy ranked above every
-system install, so the gate read it as "installed" and users who installed Kiro
+system install, so the gate read it as "installed" and users who installed Aj
 Crew in that window never installed kiro-cli themselves. The copy they ran was
 frozen at `packaging/kiro-cli-version` instead of following upstream, so kiro-cli
 fixes reached them only when someone bumped the pin. And it was the largest
@@ -170,27 +170,27 @@ shipping a newer kiro-cli in such a build ([release](release.md), step 1). On ma
 extracted from the universal `Kiro CLI.dmg` (one Mach-O serves both arches; the
 DMG download is ~345 MB for kiro-cli 2.27); Linux uses the matching per-arch zip
 (~150 MB); Windows uses the x64 MSI (~250 MB). Downloads are cached per user
-under `~/.cache/kirocrew-build/kiro-cli`,
+under `~/.cache/ajcrew-build/kiro-cli`,
 so a rebuild against the same pin fetches nothing. A `BUNDLED-VERSION` file
 beside the payload records provenance; a clean-room smoke — empty `HOME`, minimal
 `PATH`, so no install on the build host can answer for the staged binary — runs
 three probes: `--version`, `login --help`, and one ACP `initialize` round trip
 over stdio, the call every
-Kiro Crew session opens with, so the lane log on each platform proves the staged
+Aj Crew session opens with, so the lane log on each platform proves the staged
 payload is self-contained there before it is sealed into the app; and a layout
 gate refuses a payload that carries a nested `.app`/`.framework` under
 `Resources/`, which the signing manifest cannot seal per file.
 
 At runtime the Electron shell (`gateway-env.js`, `bundledKiroCliEnvironment`)
-exports the directory as `KIROCREW_BUNDLED_KIRO_DIR` when it spawns the
+exports the directory as `AJCREW_BUNDLED_KIRO_DIR` when it spawns the
 gateway, and only when the directory shipped; the backend resolver
 (`kiro_cli.known_kiro_cli_dirs`) ranks it **above** any system install (the app
-was built against that exact version) but **below** the `KIROCREW_KIRO_BIN`
+was built against that exact version) but **below** the `AJCREW_KIRO_BIN`
 operator override. That override is the escape when the pinned release must be
 swapped without waiting for an app update, and a Finder- or Dock-launched app
 does not read the user's shell profile, so it is set the way
 [macos-troubleshooting](../guides/macos-troubleshooting.md) sets `PATH` for the
-app: `launchctl setenv KIROCREW_KIRO_BIN /absolute/path/to/kiro-cli`, then
+app: `launchctl setenv AJCREW_KIRO_BIN /absolute/path/to/kiro-cli`, then
 relaunch the app (the Electron shell spawns the gateway with its own
 environment, `main.js`, so a launchd-session variable reaches the resolver); on
 Linux the equivalent is `systemctl --user set-environment` for a
@@ -205,7 +205,7 @@ kiro-cli exactly as an unbundled build does instead of every session failing
 on a binary the user never chose. Beside the directory, the shell sets
 `KIRO_NO_AUTO_UPDATE=1` once for the whole gateway process tree, so every child
 that runs the bundled copy — ACP sessions, the model listing, `whoami`, the
-usage scrape, `kirocrew doctor`, the readiness probes — inherits kiro-cli's
+usage scrape, `ajcrew doctor`, the readiness probes — inherits kiro-cli's
 documented switch for its startup update check by construction, rather than
 each spawn site remembering to merge it. Upstream compiles that check for
 Windows (the upstream chat-cli crate's `cli/mod.rs` at v2.24.0 gates the
@@ -213,7 +213,7 @@ whole block on `target_os = "windows"`; upstream's auto-update guide documents
 the variable), so it stops the bundled Windows copy from self-updating. It also
 guards upstream's stated "FUTURE: re-enable for all platforms", which would
 otherwise write into the signed, sealed bundle. Accepted side effect: a system
-kiro-cli an operator forces through `KIROCREW_KIRO_BIN` also skips the check
+kiro-cli an operator forces through `AJCREW_KIRO_BIN` also skips the check
 while running as a child of the app (its own terminal use is unaffected), and
 the user's `app.disableAutoupdates` setting is never written. The setup gate
 serves the copy's quoted absolute path as the click-to-copy sign-in command (it
@@ -225,14 +225,14 @@ interpolate away if it were `$env:`): the user's terminal is outside the
 gateway tree, and it is the Windows copy that compiles the self-update. The
 gate refuses the
 in-place **Update** (and the gateway auto-update's `kiro-cli update`
-step, and `kirocrew update`'s) because the copy is replaced by the next app
+step, and `ajcrew update`'s) because the copy is replaced by the next app
 update. `kiro-cli login` is still the user's own step — bundling covers the
 binary, never the credential.
 
 The install smokes check the INSTALLED tree either way. By default (no bundle)
 both refuse a tree that carries `backend-dist/kiro-cli/`, so a payload the build
 was not asked for cannot ship unnoticed. With `BUNDLE_KIRO_CLI=1` set for the
-smoke as well, the Windows smoke (`scripts/smoke-windows-install.ps1`) checks that the staged `kiro-cli.exe` runs from where the installer put it and reports the pinned version, and that the installed `kirocrew doctor` resolves that copy when `KIROCREW_BUNDLED_KIRO_DIR` names its directory; the macOS smoke (`scripts/smoke-macos-install.sh`, job `smoke-install-macos` in `build-desktop.yml`) runs the installed `kiro-cli-chat`, then launches the REAL app and reads the gateway child's environment back: `KIROCREW_BUNDLED_KIRO_DIR` and `KIRO_NO_AUTO_UPDATE=1` present, no probe fall-through line in `gateway-launch.log`, and the installed doctor resolving the bundled copy. That launch is the only place the shell's hand-off runs against a shipped bundle. Without the flag both smokes still mount or install the artifact, run the installed launcher, launch the app and wait for `/api/health`.
+smoke as well, the Windows smoke (`scripts/smoke-windows-install.ps1`) checks that the staged `kiro-cli.exe` runs from where the installer put it and reports the pinned version, and that the installed `ajcrew doctor` resolves that copy when `AJCREW_BUNDLED_KIRO_DIR` names its directory; the macOS smoke (`scripts/smoke-macos-install.sh`, job `smoke-install-macos` in `build-desktop.yml`) runs the installed `kiro-cli-chat`, then launches the REAL app and reads the gateway child's environment back: `AJCREW_BUNDLED_KIRO_DIR` and `KIRO_NO_AUTO_UPDATE=1` present, no probe fall-through line in `gateway-launch.log`, and the installed doctor resolving the bundled copy. That launch is the only place the shell's hand-off runs against a shipped bundle. Without the flag both smokes still mount or install the artifact, run the installed launcher, launch the app and wait for `/api/health`.
 
 The payload adds one Mach-O of a few hundred MB to the macOS signing zip (about
 1 GB in total), which is what `packaging/signing/sign.sh`'s poll window was sized
@@ -243,7 +243,7 @@ compression.
 ### Bundled KAS engine — the `agent.kas_bundle` route with no download
 
 By default (`BUNDLE_KAS=1`), the build stages the KAS engine bundle this release
-PINS (`src/kiro_crew/acp/kas_pin.py`: `KAS_PIN_VERSION` and
+PINS (`src/aj_crew/acp/kas_pin.py`: `KAS_PIN_VERSION` and
 `KAS_PIN_MANIFEST_SHA256`) into the app's resources, so the built-in engine
 route runs with nothing to download and no kiro-cli at all. The staging IS the
 backend's own installer, `acp.kas_bundle.install_bundle`, run from the
@@ -251,7 +251,7 @@ just-built backend tree's interpreter: the manifest's bytes are checked against
 the pin before parsing, every artifact is sha256+size-pinned by that manifest,
 tar extraction uses `filter="data"`, the staged Node answers `--version` on the
 build host, and the tree is published with one rename. The result is
-byte-for-byte what `kirocrew kas install` lays down under the data home, read
+byte-for-byte what `ajcrew kas install` lays down under the data home, read
 back at build time through the same reader the gateway uses
 (`installed_bundle(root=…)`), so a tree the reader would reject is a build
 error, not a refusal on the user's first prompt.
@@ -267,13 +267,13 @@ the Node distribution keeps only its binary and `LICENSE` (the engine never
 spawns the distribution's npm, npx or corepack), and the engine loses its C/C++
 sources, headers, source maps and web-tree-sitter's debug build. No reader
 re-hashes the extracted tree, so the record stays valid. A single-arch build
-stages the tree untrimmed, exactly as `kirocrew kas install` lays it down. The
+stages the tree untrimmed, exactly as `ajcrew kas install` lays it down. The
 universal staged tree holds only regular files and directories; the universal
 macOS build fails on any symlink or hardlink in it, because the signing service
 refuses a universal bundle with shared trees.
 The Electron shell (`gateway-env.js`, `bundledKasEnvironment`) reads
 `BUNDLED-VERSION` and the install record beside it, and exports the root as
-`KIROCREW_BUNDLED_KAS_DIR` for either architecture. It runs nothing at boot: the route is off by default, the build
+`AJCREW_BUNDLED_KAS_DIR` for either architecture. It runs nothing at boot: the route is off by default, the build
 already probed the staged Node, and a copy that cannot run on this machine
 fails at session spawn, only for a user who turned the switch on. A build
 without the payload or a source checkout exports nothing, and the backend then
@@ -287,10 +287,10 @@ tree (`sandbox_tiers._resolved_install_root_targets`; the rules are in the
 [security spec](../system-specs/modules/security.md)).
 
 The backend (`acp.kas_bundle.installed_bundle`) reads the exported root as a
-SECOND root after the data home's `engines/kas`: an operator's own `kirocrew kas
+SECOND root after the data home's `engines/kas`: an operator's own `ajcrew kas
 install` (or a `--unpinned` test install) wins over the copy the app was built
-with, the same precedence `KIROCREW_KIRO_BIN` has over the bundled kiro-cli.
-`kirocrew kas status` and `kirocrew doctor` say which one answered (`built into
+with, the same precedence `AJCREW_KIRO_BIN` has over the bundled kiro-cli.
+`ajcrew kas status` and `ajcrew doctor` say which one answered (`built into
 the app`), the status payload carries `installed.bundled`, and the Settings card
 names where each copy came from: "KAS engine … (included with the app)" for the
 app's copy, "KAS engine … (installed by you)" for the data home's.
@@ -298,15 +298,15 @@ app's copy, "KAS engine … (installed by you)" for the data home's.
 The hand-off is asserted against a shipped app, not only the build's staging
 directory. The macOS smoke (`scripts/smoke-macos-install.sh`) checks the
 `backend-dist/kas/` root in the INSTALLED tree, launches the REAL app, and reads
-the gateway child's environment back: `KIROCREW_BUNDLED_KAS_DIR` must name that
-root, and the installed `kirocrew kas status`, run with that environment against
+the gateway child's environment back: `AJCREW_BUNDLED_KAS_DIR` must name that
+root, and the installed `ajcrew kas status`, run with that environment against
 the smoke's empty data home, must report `installed: KAS <version> … (built into
 the app)` with its `engine:` row inside the root. The Windows smoke
 (`scripts/smoke-windows-install.ps1`) boots the gateway from the installed
 interpreter rather than through the shell, so it checks the same layout under
 `resources\backend-dist\kas\` (`BUNDLED-VERSION` and the install record), then
-sets `KIROCREW_BUNDLED_KAS_DIR` itself the way the shell does and runs the
-installed `kirocrew kas status` with it, asserting the same two rows.
+sets `AJCREW_BUNDLED_KAS_DIR` itself the way the shell does and runs the
+installed `ajcrew kas status` with it, asserting the same two rows.
 `BUNDLE_KAS=0` in the smoke's environment skips these assertions with a logged
 line: an opted-out build stages no root for the shell to export. Only the macOS
 smoke reads the shell's export off a real gateway child, so a build whose root
@@ -318,7 +318,7 @@ default (off) on every platform while the route is in shadow testing, and the
 relay route runs on the kiro-cli the user installed. Nothing in the build,
 the installer or the shell flips the switch; that stays the user's own step. `BUNDLE_KAS=0 make desktop` opts a build out (the payload is ~55 MB
 compressed, ~370 MB extracted per architecture); the switch then needs
-`kirocrew kas install` first, exactly as a pip install does. `KAS_BUNDLE_URL`
+`ajcrew kas install` first, exactly as a pip install does. `KAS_BUNDLE_URL`
 names another manifest host (a mirror serving the same bytes; the pin refuses
 anything else).
 
@@ -358,8 +358,8 @@ macOS, or setting it while `UNIVERSAL=1` is in effect, is refused.
 `ubuntu-22.04` and `ubuntu-22.04-arm`, and `publish-linux.yml` runs once per
 arch — each writing its own immutable S3 key, its own electron-updater channel
 file (`latest-linux.yml` for x64, `latest-linux-arm64.yml` for arm64) and its own
-`latest` alias. Published basenames are `KiroCrew-<arch>.<ext>` for each of the
-six (arch, format) pairs -- `KiroCrew-x86_64.deb`, `KiroCrew-aarch64.rpm`, and so
+`latest` alias. Published basenames are `AjCrew-<arch>.<ext>` for each of the
+six (arch, format) pairs -- `AjCrew-x86_64.deb`, `AjCrew-aarch64.rpm`, and so
 on. A package format also gets its own feed DIRECTORY
 (`feed/<channel>/deb/latest-linux.yml`), because electron-updater derives the
 channel FILE name from platform and arch with no hook to change it, so two
@@ -369,8 +369,8 @@ Two properties are load-bearing and worth knowing before you touch that lane:
 
 - **Linux is built natively per arch, never cross-compiled.** `build-desktop.sh`
   provisions a python-build-standalone interpreter and then *runs* it (pip
-  install, plus the `python -m kiro_crew --version` self-containment gate and
-  its companion `import kiro_crew.cli` chain probe — bare `--version` answers
+  install, plus the `python -m aj_crew --version` self-containment gate and
+  its companion `import aj_crew.cli` chain probe — bare `--version` answers
   before the heavy imports, so the probe carries the gate's meaning), so a
   host that cannot execute the target architecture cannot build it. macOS gets
   away with one host only because Rosetta 2 executes the x86_64 slice.
@@ -393,14 +393,14 @@ Two properties are load-bearing and worth knowing before you touch that lane:
 **Building your own package locally.** `make desktop` needs no arch flags: it
 detects the host and emits an AppImage for it, so running it on an ARM box
 produces the aarch64 build with no CI involved. Filenames are arch-qualified
-(`KiroCrew-<version>-<arch>.AppImage`) so several arches can sit in one directory
+(`AjCrew-<version>-<arch>.AppImage`) so several arches can sit in one directory
 without overwriting each other. To validate a packaging change against every
 platform *without* publishing anything, dispatch `build-desktop.yml` manually —
 it builds the full matrix and uploads artifacts, with no publish lane attached.
 
 A **local** `UNIVERSAL=0` host-arch build is a local-machine artifact: distribute
 the universal DMG, or the CI-built signed single-arch DMGs below
-(`KiroCrew-arm64.dmg` / `KiroCrew-x64.dmg`), which nightly and both release
+(`AjCrew-arm64.dmg` / `AjCrew-x64.dmg`), which nightly and both release
 channels publish.
 
 **Single-arch macOS DMGs in CI (opt-in).** `build-desktop.yml` has a second
@@ -420,21 +420,21 @@ On nightly and on both release channels each single-arch artifact is then
 signed, notarized and published by its own call of `sign-and-notarize.yml`
 (`mac_variant: arm64 | x64` plus
 `mac_artifact`), which suffixes every shared name with the arch: signing-bucket
-keys, `desktop/<channel>/<version>/KiroCrew-<arch>.{zip,dmg}`, the alias
-`desktop/<channel>/latest/KiroCrew-<arch>.dmg`, and the channel file at
+keys, `desktop/<channel>/<version>/AjCrew-<arch>.{zip,dmg}`, the alias
+`desktop/<channel>/latest/AjCrew-<arch>.dmg`, and the channel file at
 `feed/<channel>/<arch>/latest-mac.yml`. The universal call passes neither input
 and still excludes the single-arch artifact names when it flattens the run, so
 its keys and `feed/<channel>/latest-mac.yml` are byte-identical to before. A
 single-arch app knows which feed to follow from `desktopDistArch` in its own
 `package.json` (`-c.extraMetadata.desktopDistArch=<arch>`, stamped by the
 script on `TARGET_ARCH` builds only): `auto-update.js` resolves that directory
-as the feed `variant` and offers `KiroCrew-<arch>.dmg` as the reinstall link;
+as the feed `variant` and offers `AjCrew-<arch>.dmg` as the reinstall link;
 the universal app carries no stamp and keeps the channel root. On `release.yml`
 the two single-arch callers are required lanes: the stable promotion bundle
 carries all three zip/DMG pairs (the single-arch zip travels as
 `notarized-<arch>.zip` so the flat bundle can hold it beside the universal
 `notarized.zip`), a byte promotion republishes all three, and the GitHub
-Release page lists `KiroCrew-<v>-{universal,arm64,x64}.dmg`. To get the two
+Release page lists `AjCrew-<v>-{universal,arm64,x64}.dmg`. To get the two
 DMGs unsigned from any ref, dispatch `build-desktop.yml` manually with the box
 ticked, or pick them up from the nightly run.
 
@@ -453,17 +453,17 @@ How it works — **universal shell + dual embedded backends**:
   ships **two complete backend trees** and picks one at launch:
 
 ```
-KiroCrew.app/Contents/
+AjCrew.app/Contents/
 ├── MacOS/ + Frameworks/…                 ← fat binaries (arm64 + x86_64)
 └── Resources/backend-dist/
-    ├── kirocrew-backend-arm64/           ← full PBS bundle, arm64
-    └── kirocrew-backend-x64/             ← full PBS bundle, x86_64
+    ├── ajcrew-backend-arm64/           ← full PBS bundle, arm64
+    └── ajcrew-backend-x64/             ← full PBS bundle, x86_64
 ```
 
 The build runs the normal backend steps twice: natively for
-`kirocrew-backend-arm64/`, then again with an x86_64 PBS interpreter
+`ajcrew-backend-arm64/`, then again with an x86_64 PBS interpreter
 (`uv python install cpython-3.12-macos-x86_64-none`, executed under Rosetta)
-for `kirocrew-backend-x64/`. The frontend is built once (arch-independent).
+for `ajcrew-backend-x64/`. The frontend is built once (arch-independent).
 Each backend passes the same self-containment gate as a per-arch build — the
 x64 gate doubles as proof the bundle runs under Rosetta. In
 `website/electron/package.json`, `build.mac.x64ArchFiles` allowlists
@@ -509,20 +509,20 @@ Verify a universal build:
 
 ```bash
 V=<version>
-hdiutil attach -nobrowse -readonly "website/electron/dist/KiroCrew-$V-universal.dmg"
-APP="/Volumes/KiroCrew $V-universal/KiroCrew.app"
+hdiutil attach -nobrowse -readonly "website/electron/dist/AjCrew-$V-universal.dmg"
+APP="/Volumes/AjCrew $V-universal/AjCrew.app"
 
 # 1. The shell binary is fat:
-lipo -archs "$APP/Contents/MacOS/KiroCrew"
+lipo -archs "$APP/Contents/MacOS/AjCrew"
 #   → x86_64 arm64
 
 # 2. EACH backend carries the matching interpreter:
-file "$APP/Contents/Resources/backend-dist/kirocrew-backend-arm64/bin/python3.12"
+file "$APP/Contents/Resources/backend-dist/ajcrew-backend-arm64/bin/python3.12"
 #   → …executable arm64
-file "$APP/Contents/Resources/backend-dist/kirocrew-backend-x64/bin/python3.12"
+file "$APP/Contents/Resources/backend-dist/ajcrew-backend-x64/bin/python3.12"
 #   → …executable x86_64
 
-hdiutil detach "/Volumes/KiroCrew $V-universal"
+hdiutil detach "/Volumes/AjCrew $V-universal"
 ```
 
 (The build script performs these `lipo -archs` / `file` checks itself as
@@ -551,13 +551,13 @@ instead — two single-arch trees, selected at launch by `process.arch`.
 ### Refreshing / cleaning the DMGs
 
 The `dist/` directory is **not** cleaned between builds, so old artifacts pile up
-(e.g. a `KiroCrew-1.0.0.dmg` from before a version bump, or a stale `mac/`
+(e.g. a `AjCrew-1.0.0.dmg` from before a version bump, or a stale `mac/`
 app-staging dir). After a version change or a re-build, remove the stale ones so
 only the current set remains:
 
 ```bash
 cd website/electron/dist
-rm -f KiroCrew-<old-version>*.dmg            # stale DMGs from a prior version
+rm -f AjCrew-<old-version>*.dmg            # stale DMGs from a prior version
 rm -rf mac mac-arm64 mac-universal* .backend-dist-x64  # app-staging dirs (regenerated each build)
 rm -f builder-debug.yml
 ```
@@ -584,23 +584,23 @@ pipeline end-to-end:
 ```
 1. Build the React dashboard (npm)                    → website/dist
 2. Provision a python-build-standalone interpreter    → via uv python install
-3. pip-install kiro_crew + deps into the bundled interpreter
+3. pip-install aj_crew + deps into the bundled interpreter
 4. Stage the dashboard into the package's static dir
 5. Prune caches/tests/unused stdlib to shrink bundle
 6. Package with electron-builder                      → website/electron/dist/ (DMG/ZIP, AppImage/deb/rpm, or NSIS)
 ```
 
 On macOS (universal by default) the pipeline repeats steps 2–5 once per
-architecture — natively into `kirocrew-backend-arm64/`, then with an x86_64
-PBS interpreter under Rosetta into `kirocrew-backend-x64/` — and step 6
+architecture — natively into `ajcrew-backend-arm64/`, then with an x86_64
+PBS interpreter under Rosetta into `ajcrew-backend-x64/` — and step 6
 packages with `electron-builder --mac --universal`. With `UNIVERSAL=0` (and
 always on Linux) steps 2–5 run once for the host arch into the unsuffixed
-`kirocrew-backend/`.
+`ajcrew-backend/`.
 
 Step by step:
 
 1. **Frontend** — in `website/`, runs `npm ci` (or `npm install`) + `npm run
-   build` into `website/dist`; it does not write `src/kiro_crew/static/dist`
+   build` into `website/dist`; it does not write `src/aj_crew/static/dist`
    (step 4 stages `website/dist` into the bundle). The script aborts if
    `website/dist/index.html` is missing.
 2. **PBS interpreter** — uses `uv python install cpython-3.12` to provision a
@@ -608,14 +608,14 @@ Step by step:
    `@executable_path`-relative dylib references, making the bundle portable
    across machines without needing the same system Python.
 3. **Install into bundle** — copies the PBS interpreter into
-   `website/electron/backend-dist/kirocrew-backend/`, removes the
+   `website/electron/backend-dist/ajcrew-backend/`, removes the
    `EXTERNALLY-MANAGED` marker, then runs `pip install` with
    `PYTHONNOUSERSITE=1` to force the full closure into the bundle. The local
    speech recogniser and its runtime dependencies are required on Windows,
    Linux x64/arm64, and macOS Apple Silicon; a missing binary wheel fails the
    release build. macOS Intel is the sole unsupported exception.
 4. **Stage dashboard** — copies the built SPA into the bundled
-   `kiro_crew/static/dist` inside site-packages.
+   `aj_crew/static/dist` inside site-packages.
 5. **Prune** — removes `__pycache__`, test dirs, and unused stdlib modules
    (tkinter, idlelib, etc.) to shrink the bundle.
 6. **Package** — in `website/electron/`, runs electron-builder to produce the
@@ -639,14 +639,14 @@ The script honors these environment flags:
 | `SKIP_ELECTRON=1` | Stop after the bundled backend (no electron-builder) |
 | `BUNDLE_KIRO_CLI=1` | Stage a pinned kiro-cli into the app (default `0`: the app detects the user's own install; see [Bundled kiro-cli](#bundled-kiro-cli--an-opt-in-off-by-default)) |
 | `KIRO_CLI_VERSION=<version>` / `latest` | With `BUNDLE_KIRO_CLI=1`: override the `packaging/kiro-cli-version` pin; `latest` resolves the upstream manifest instead (still sha256-verified) |
-| `KIROCREW_MANAGED_INSTALL_MARKER=<file>` | Bake that JSON file into the app as the externally-managed marker; a missing or malformed file fails the build (see [Baking the marker into the app](#baking-the-marker-into-the-app-editions)) |
-| `KIROCREW_AUTH_SERVER_ALLOWLIST=<list>` | Bake a comma-separated host list (`*.example.com,intranet.example.org`) into the app so its web contents, the Browser panel included, answer Kerberos/Negotiate challenges from those hosts; Electron gets it as its integrated-auth server switch before app ready. The switch is process-wide, so a page the agent drives in the Browser panel also signs in to those hosts as the user; list only hosts the agent may read as the user. Credential delegation is never enabled. A malformed list fails the build; unset, the app enables integrated auth for no host |
+| `AJCREW_MANAGED_INSTALL_MARKER=<file>` | Bake that JSON file into the app as the externally-managed marker; a missing or malformed file fails the build (see [Baking the marker into the app](#baking-the-marker-into-the-app-editions)) |
+| `AJCREW_AUTH_SERVER_ALLOWLIST=<list>` | Bake a comma-separated host list (`*.example.com,intranet.example.org`) into the app so its web contents, the Browser panel included, answer Kerberos/Negotiate challenges from those hosts; Electron gets it as its integrated-auth server switch before app ready. The switch is process-wide, so a page the agent drives in the Browser panel also signs in to those hosts as the user; list only hosts the agent may read as the user. Credential delegation is never enabled. A malformed list fails the build; unset, the app enables integrated auth for no host |
 
 ### The shell's version
 
 The packaged shell's version (`app.getVersion()` and the artifact names) is the
 `-c.extraMetadata.version` the script hands electron-builder, taken from
-`__version__` in `src/kiro_crew/__init__.py`. An edition that repackages one core
+`__version__` in `src/aj_crew/__init__.py`. An edition that repackages one core
 release as several builds of its own stamps its build into
 `website/electron/package.json` as semver before it runs the script (`0.13.0.11`
 as `0.13.0-11`), and the script carries that stamp instead, so the shell names the
@@ -681,19 +681,19 @@ update-info file after the prerelease (`11-linux.yml` rather than
 ## The bundled backend (python-build-standalone)
 
 The build produces a self-contained Python interpreter with all dependencies
-installed, located at `website/electron/backend-dist/kirocrew-backend/`
-(per-arch mode) or `…/backend-dist/kirocrew-backend-arm64/` +
-`…/kirocrew-backend-x64/` (universal mode — electron-builder ships the whole
+installed, located at `website/electron/backend-dist/ajcrew-backend/`
+(per-arch mode) or `…/backend-dist/ajcrew-backend-arm64/` +
+`…/ajcrew-backend-x64/` (universal mode — electron-builder ships the whole
 `backend-dist/` directory as `extraResources`, so both layouts package the
 same way). Key details:
 
 - **Interpreter** is a python-build-standalone CPython 3.12 with `@executable_path`-
   relative dylib references (genuinely portable, no system Python dependency).
-- **Entry point** is `bin/kirocrew` — a shell script that execs
-  `bin/python3.12 -s -P -m kiro_crew "$@"`. `-s` drops the user site; `-P`
+- **Entry point** is `bin/ajcrew` — a shell script that execs
+  `bin/python3.12 -s -P -m aj_crew "$@"`. `-s` drops the user site; `-P`
   keeps the caller's working directory off `sys.path`, so a stdlib-named
   directory there (`~/concurrent/`, `~/json/`) cannot shadow the bundled
-  standard library. The Windows `bin\kirocrew.cmd` shim, the Electron
+  standard library. The Windows `bin\ajcrew.cmd` shim, the Electron
   supervisor's direct `python.exe` spawn, and the CI replicas of both
   (`.github/workflows/build.yml`'s shim, the installer test's gateway spawn)
   pass the same two flags; `test/test_stdlib_shadow.py` pins every spelling.
@@ -702,7 +702,7 @@ same way). Key details:
   and `Scripts\` is on every agent's `PATH`. Both Windows bundle writers run
   `packaging/relocate_windows_scripts.py`, which replaces each one with
   `Scripts\<name>.cmd` running `<name>-script.py` under `%~dp0..\python.exe`
-  (`Scripts\kirocrew.cmd` is the `bin\` shim's copy). Native executables such as
+  (`Scripts\ajcrew.cmd` is the `bin\` shim's copy). Native executables such as
   `uv.exe` stay as they are; a frozen launcher with no script payload fails the
   build. `test/test_build_desktop_windows_launcher.py` pins both writers.
 - **Stdlib probes verified** — `stdlib_probe_gate` fails the build if any package
@@ -710,9 +710,9 @@ same way). Key details:
   drifted probe list breaks the build instead of every user's launch (see
   [How the app finds and launches the backend](#how-the-app-finds-and-launches-the-backend)).
 - **Self-containment verified** — the build script runs
-  `PYTHONNOUSERSITE=1 bin/python3.12 -s -P -m kiro_crew --version` (the
+  `PYTHONNOUSERSITE=1 bin/python3.12 -s -P -m aj_crew --version` (the
   launcher's exact argv) followed by
-  `PYTHONNOUSERSITE=1 bin/python3.12 -c 'import kiro_crew.cli'` to catch any
+  `PYTHONNOUSERSITE=1 bin/python3.12 -c 'import aj_crew.cli'` to catch any
   missing dependency before packaging. Bare `--version` is a pre-dispatch
   fast-path (see `docs/system-specs/modules/cli.md`), so the import probe is
   the half that resolves the chain.
@@ -741,24 +741,24 @@ same way). Key details:
   imports it on the gateway loop. macOS does not trace it (see below), so a
   macOS gateway with the Feishu channel on compiles it in memory at every start.
 - **Dashboard bundled** — the SPA is staged into
-  `lib/python3.12/site-packages/kiro_crew/static/dist/` inside the bundle.
+  `lib/python3.12/site-packages/aj_crew/static/dist/` inside the bundle.
 - **Pruned** — `__pycache__`, test dirs, and unused stdlib (tkinter, idlelib,
   turtledemo, ensurepip, lib2to3) are removed to shrink the bundle.
 - **Precompiled after the prune.** Checked-hash `.pyc` files beside their
   sources, never timestamp ones (extraction restamps sources, so a timestamp
   cache would be rewritten in place). Linux compiles the whole tree. macOS
   (`precompile_macos_backend` in `packaging/desktop-bytecode.sh`) compiles the
-  standard library, the `kiro_crew` package and the traced import closure of the
+  standard library, the `aj_crew` package and the traced import closure of the
   gateway, the CLI, the MCP gateway daemon and stub, and every stdio MCP server,
   and nothing else: the signing service reads the whole app on every request,
   and a cache for every module is 37% of the universal app's entries (on
   0.12.1-rc.3 this set is 9.5k of its 35.6k caches, leaving 69.7k of its 97.1k
   entries). The bundled interpreter refuses to write bytecode at all, through
-  `00-kirocrew-no-bytecode-writes.pth` in its site-packages, so a module outside
+  `00-ajcrew-no-bytecode-writes.pth` in its site-packages, so a module outside
   that set compiles in memory and nothing is written into the signed bundle,
   including by processes that never see the shell's `PYTHONDONTWRITEBYTECODE`.
   The build fails if a traced module lacks a valid cache, if the standard
-  library or `kiro_crew` is not covered, or if an interpreter started without
+  library or `aj_crew` is not covered, or if an interpreter started without
   that variable would still write.
 
 ## How the app finds and launches the backend
@@ -767,13 +767,13 @@ When the app starts, [`main.js`](../../website/electron/main.js) composes the
 desktop lifecycle and delegates gateway ownership to
 [`gateway-supervisor.js`](../../website/electron/gateway-supervisor.js). The
 supervisor first checks whether a gateway is already running. An existing
-gateway that this machine runs (a Kiro Crew process or its service) is reused.
+gateway that this machine runs (a Aj Crew process or its service) is reused.
 A gateway whose parent is init (PID 1) counts as service-managed, so the app
 reuses it and never force-stops it, except on macOS when launchd's job list
 (`launchctl print` of the user's `gui` and `user` domains and of `system`)
 shows that launchd runs no job for it. That gateway is an orphan: the app or
 shell that started it has exited and nothing restarts it, so the app treats it
-as a plain local Kiro Crew gateway, which the failure dialog's force-retry and
+as a plain local Aj Crew gateway, which the failure dialog's force-retry and
 wedge recovery may stop. A job list that cannot be read keeps the
 service-managed verdict.
 A port held by a process this app cannot attribute to itself, which is what a
@@ -787,7 +787,7 @@ source or pip venv's gateway listens from the venv's base interpreter (its
 `Scripts\python.exe` is a redirector), which every Python program can run, so
 that interpreter counts only when it is the one the venv's `pyvenv.cfg` names,
 its argv0 names that interpreter or the venv's redirector, its script is
-exactly that venv's `Scripts\kirocrew.exe`, and a server subcommand follows
+exactly that venv's `Scripts\ajcrew.exe`, and a server subcommand follows
 (`windowsVenvBaseInterpreterLaunches` in
 [`windows-port.js`](../../website/electron/windows-port.js)). Like every
 Windows rule here, this attributes by command line: it does not tell apart a
@@ -809,9 +809,9 @@ listener is service-classified. When the stale gateway is a macOS orphan (see
 above), the warning instead offers Stop and restart, Continue or Quit. Stop and
 restart first proves again that the same pid is still the orphan on the port
 (a port that emptied is started into, and a different holder goes back
-through this decision), then runs `kirocrew stop --port <port>`, the command
+through this decision), then runs `ajcrew stop --port <port>`, the command
 the other warning names. It has no `--expect-pid`, which needs a pidfd macOS
-does not have; the CLI still signals only a Kiro Crew listener on that port
+does not have; the CLI still signals only a Aj Crew listener on that port
 and refuses a gateway the desktop app runs. The shell then waits for the port
 to clear and for the old process to exit, and starts the bundled backend. A
 stop that leaves the orphan on the port surfaces the start-failure dialog,
@@ -821,16 +821,16 @@ behavior. The shell does not restart or force-stop a stale gateway without
 the user's choice.
 
 When nothing answers the first health check but the port is still held, the
-shell checks whether the sole listener is a local Kiro Crew gateway for this
+shell checks whether the sole listener is a local Aj Crew gateway for this
 app's data folder: `gateway.lock` must name its pid, and that pid must have
 `gateway.lock` open. If that gateway keeps failing its health check for 15
 seconds, the same dialog offers Stop and restart or Quit. Stop and restart runs
-`kirocrew stop --port <port> --expect-pid <pid>` with the pid it proved, never a
+`ajcrew stop --port <port> --expect-pid <pid>` with the pid it proved, never a
 raw kill. Right before the signal, the CLI re-reads the listener and this data
 folder's `gateway.lock`, and refuses (signalling nothing) unless that pid still
 holds both. The signal goes through a pidfd opened before the checks, so it
 cannot reach a recycled pid. Only Linux has a pidfd: on macOS the same dialog
-instead names the `kirocrew stop --port <port>` command and offers only Quit,
+instead names the `ajcrew stop --port <port>` command and offers only Quit,
 and `--expect-pid` itself refuses wherever no pidfd exists. The shell then waits for the port to clear and starts the bundled
 backend. When a service
 manager brings the gateway straight back, the shell re-checks the new holder
@@ -840,7 +840,7 @@ forwards, other data folders, unknown owners and Windows keep the existing spawn
 path, and a gateway that answers inside the window is reused as before.
 
 With no gateway to reuse, the shell locates the backend binary via
-[`find-bin.js`](../../website/electron/find-bin.js), spawns it as `kirocrew
+[`find-bin.js`](../../website/electron/find-bin.js), spawns it as `ajcrew
 gateway --no-open`, polls `/api/status`, and loads the dashboard once it is
 healthy.
 
@@ -849,9 +849,9 @@ passes the open log as the child's stdio. On Windows it cannot: Node adds
 `CREATE_NO_WINDOW` to a `windowsHide` spawn only when no stdio entry inherits a
 descriptor, and without that flag the gateway gets a console of its own, which can
 show and take the focus. So on Windows the child gets the log's path in
-`KIROCREW_DESKTOP_STDIO_LOG`, and both entry points (`kiro_crew/__main__.py` and
-the `kirocrew` console script) re-point descriptors 1 and 2 at that file early
-(`kiro_crew/desktop_stdio.py`). Until then its stdout is the null device and its
+`AJCREW_DESKTOP_STDIO_LOG`, and both entry points (`aj_crew/__main__.py` and
+the `ajcrew` console script) re-point descriptors 1 and 2 at that file early
+(`aj_crew/desktop_stdio.py`). Until then its stdout is the null device and its
 stderr is a pipe the shell copies into the log, so a traceback from an interpreter
 that dies first (a half-written bundle) still reaches the log the
 incomplete-bundle check reads. A pipe is not an inherited descriptor, so
@@ -883,11 +883,11 @@ a shell-exported `PYTHONPATH` or `PYTHONHOME` either; a child that relied on one
 to resolve its imports under the desktop app must set it for itself.
 
 The bundled launchers themselves drop the same two variables, so the scrub also
-covers every caller the shell is not: `kirocrew token` or `kirocrew stop` typed
-into a development shell, the `~/.local/bin/kirocrew` symlink the gateway
+covers every caller the shell is not: `ajcrew token` or `ajcrew stop` typed
+into a development shell, the `~/.local/bin/ajcrew` symlink the gateway
 plants, and the AppImage token page's bundled CLI path. The POSIX
-`bin/kirocrew` script runs `unset PYTHONPATH PYTHONHOME` before it execs the
-bundled `python3.12`; the Windows `bin\kirocrew.cmd` shim runs `set
+`bin/ajcrew` script runs `unset PYTHONPATH PYTHONHOME` before it execs the
+bundled `python3.12`; the Windows `bin\ajcrew.cmd` shim runs `set
 "PYTHONPATH="` and `set "PYTHONHOME="` under `setlocal`, so an interactive
 `cmd` window keeps its own variables after the command returns. Neither uses
 `-E`, which would also discard `PYTHONUTF8` and the bytecode settings above.
@@ -902,7 +902,7 @@ the sender has the fixed primary origin,
 [`window-lifecycle.js`](../../website/electron/window-lifecycle.js) proves that
 its window uses a local gateway rather than a configured tunnel, and
 [`gateway-supervisor.js`](../../website/electron/gateway-supervisor.js)
-positively identifies the primary listener as Kiro Crew or its service. A
+positively identifies the primary listener as Aj Crew or its service. A
 manual SSH tunnel, foreign listener, unbound port, or unavailable owner probe is
 therefore refused; only then may
 [`wsl-detection.js`](../../website/electron/wsl-detection.js) run the trusted
@@ -1012,7 +1012,7 @@ half-written package does not report the obvious one:
 Three conditions keep it from excusing anything else. Judgement is by the
 **top-level package name**, which must be in the stdlib set, so a missing
 third-party or first-party module (a genuine packaging defect) is never relabelled.
-Only a **bundled** backend qualifies — a user's own install or a `PATH` `kirocrew`
+Only a **bundled** backend qualifies — a user's own install or a `PATH` `ajcrew`
 failing on a stdlib import is a broken environment, and "wait for the installer"
 would be misleading advice there. And only the **current launch attempt** is read:
 the log is append-only across launches, so the text is sliced from the last spawn
@@ -1050,7 +1050,7 @@ The gateway-hosted dashboard then checks both prerequisites needed by the ACP
 provider:
 
 1. It discovers the app's own bundled copy — `kiro-cli-chat` in
-   `KIROCREW_BUNDLED_KIRO_DIR`, only for a `BUNDLE_KIRO_CLI=1` build — then `kiro-cli` on the inherited
+   `AJCREW_BUNDLED_KIRO_DIR`, only for a `BUNDLE_KIRO_CLI=1` build — then `kiro-cli` on the inherited
    `PATH`, `~/.local/bin`, `~/.cargo/bin`, Homebrew locations, or the macOS
    `Kiro CLI.app` bundle.
 2. It verifies the first candidate selected by the shared ACP resolver with
@@ -1059,7 +1059,7 @@ provider:
 3. It verifies authentication with `kiro-cli whoami`.
 
 If either check fails, the shared React setup gate appears in both the desktop
-shell and browser dashboard. Kiro Crew performs neither setup step: the gate
+shell and browser dashboard. Aj Crew performs neither setup step: the gate
 links out to <https://kiro.dev/cli/> to obtain the CLI, and names the commands
 the user runs to sign in — `kiro-cli login` for a personal account, or
 `kiro-cli login --use-device-flow --license pro` for organization SSO. Both
@@ -1080,7 +1080,7 @@ minimal allowlisted environment rather than the desktop shell's credentials;
 version probes use the strict OS sandbox and hide every known Kiro identity
 store. `whoami` and device-login run for any runnable candidate; they use a
 standard sandbox with a temporary home containing only Kiro identity token
-files, so unrelated AWS, SSH, GitHub, Kubernetes, and Kiro Crew state remain
+files, so unrelated AWS, SSH, GitHub, Kubernetes, and Aj Crew state remain
 unavailable, and POSIX auth still executes a private snapshot of the exact
 resolved bytes. Timed-out commands signal a POSIX process group only
 while its leader still anchors that identity; on Windows, exact retained process
@@ -1125,7 +1125,7 @@ The dialog also explains the refusals that start nothing:
 - **`crew-configured`**: the local gateway is on, but a recorded crew owns this
   port, so the shell does not bind it. Start Local Gateway re-execs on a free
   port when the app can relaunch itself; otherwise the dialog names the
-  terminal route (`KIROCREW_PORT` set to a port with no remote host).
+  terminal route (`AJCREW_PORT` set to a port with no remote host).
 - **`foreign-holder`**: a program this app did not start serves the port and no
   crew is recorded for it. The remedies are Add Remote Crew, or quitting that
   program and retrying; Start Local Gateway is not offered. The dialog names
@@ -1349,28 +1349,28 @@ Radix (`website/electron/package.json`, `@radix-ui/*` in `website/package.json`)
 
 ### `find-bin.js` — locating the binary
 
-`findKirocrewBin()` checks well-known paths in order and returns the first
-executable it finds, falling back to bare `kirocrew` on `PATH` (refused for a
+`findAjcrewBin()` checks well-known paths in order and returns the first
+executable it finds, falling back to bare `ajcrew` on `PATH` (refused for a
 packaged Windows app, step 5). The running
 process's CPU architecture (`process.arch`, injected as a parameter) selects
 the matching backend in a universal app:
 
-1. `<resourcesPath>/backend-dist/kirocrew-backend-<arch>/bin/kirocrew`, then
+1. `<resourcesPath>/backend-dist/ajcrew-backend-<arch>/bin/ajcrew`, then
    `<__dirname>/…` — the arch-suffixed PBS backend inside a **universal**
    packaged `.app` (or unpackaged in development), where `<arch>` is `arm64`
    or `x64` per `process.arch` (a fat Electron shell runs as exactly one
    slice, so `process.arch` is the native arch of the Mac — Apple Silicon
-   loads `kirocrew-backend-arm64/`, Intel loads `kirocrew-backend-x64/`).
+   loads `ajcrew-backend-arm64/`, Intel loads `ajcrew-backend-x64/`).
    Ranked above the unsuffixed layout so a universal bundle never falls back
    to a wrong-arch tree; per-arch bundles don't ship these dirs, so the
    probes miss and fall through.
-2. `<resourcesPath>/backend-dist/kirocrew-backend/bin/kirocrew`, then
+2. `<resourcesPath>/backend-dist/ajcrew-backend/bin/ajcrew`, then
    `<__dirname>/…` — the unsuffixed fallback: the bundled PBS backend inside
    a **per-arch** packaged `.app` (or unpackaged in development).
-3. `<__dirname>/../bin/kirocrew`
-4. Well-known install paths under `$HOME` (e.g. `~/.local/bin/kirocrew`,
-   `~/.kirocrew-app/.venv/bin/kirocrew`).
-5. Bare `"kirocrew"` (resolved via `PATH`). A **packaged Windows** app refuses
+3. `<__dirname>/../bin/ajcrew`
+4. Well-known install paths under `$HOME` (e.g. `~/.local/bin/ajcrew`,
+   `~/.ajcrew-app/.venv/bin/ajcrew`).
+5. Bare `"ajcrew"` (resolved via `PATH`). A **packaged Windows** app refuses
    to spawn this fallback (`isPathFallback`, checked in
    `gateway-supervisor.js`): it means the bundled backend tree is gone, as an
    install manager leaves it mid-update, and what `PATH` names is not this app's
@@ -1419,13 +1419,13 @@ graceful, pre-update and tree-kill stops), and `reconnect.js` (the liveness
 recoveries that reconnect to an external or adopted gateway instead of killing
 it).
 
-- Ensures `KIROCREW_HOME` (default `~/.kiro/crew`, overridable via the
-  `KIROCREW_HOME` env var) exists, then spawns the backend with
-  `["gateway", "--no-open"]`. If a real pre-move `~/.kirocrew` directory exists,
+- Ensures `AJCREW_HOME` (default `~/.kiro/crew`, overridable via the
+  `AJCREW_HOME` env var) exists, then spawns the backend with
+  `["gateway", "--no-open"]`. If a real pre-move `~/.ajcrew` directory exists,
   the shell reads its startup config first while the backend performs the
   one-time migration; token lookup then falls through to the canonical home.
   A clean install never creates the legacy directory.
-- Honors the **`KIROCREW_PORT`** env var for the dashboard port when it is a
+- Honors the **`AJCREW_PORT`** env var for the dashboard port when it is a
   selectable port (`1–65535` except `80`, whose URL drops its port); an invalid
   value is logged as a warning and treated as unset. Unset, the port comes from
   `selectLaunchPort` (`host-config.js`), run after the legacy `remoteHost`
@@ -1433,7 +1433,7 @@ it).
   `dashboard.url` port that names a recorded crew, else the recorded crew's
   port; otherwise the `dashboard.url` port, else `5476`. `BACKEND_URL` / health
   checks target that port.
-- Sets `KIROCREW_PROJECT_DIR` to the packaged tree that contains `agents/` and
+- Sets `AJCREW_PROJECT_DIR` to the packaged tree that contains `agents/` and
   `skills/`. POSIX builds use the Electron app's parent; Windows probes one and
   two levels above the Electron sources and takes the first tree carrying both
   directories.
@@ -1464,16 +1464,16 @@ it).
   [`gateway-stop.js`](../../website/electron/gateway-stop.js) lists the child's
   descendants before its SIGTERM, so a gateway a launcher shim forked is not
   orphaned: after the child exits, each listed pid that is still a
-  `kirocrew gateway` command gets SIGTERM, then SIGKILL after a grace window.
-  Identity is re-read before each signal, so a recycled pid or a `kirocrew mcp-*`
+  `ajcrew gateway` command gets SIGTERM, then SIGKILL after a grace window.
+  Identity is re-read before each signal, so a recycled pid or a `ajcrew mcp-*`
   child is never signalled.
-- When the other release family's app (Kiro Crew vs Kiro Crew Nightly) holds the
+- When the other release family's app (Aj Crew vs Aj Crew Nightly) holds the
   port, macOS
   offers **Quit <other> & Continue**. When the holder is that family's macOS
   orphan (a gateway that outlived its app, see
   [How the app finds and launches the backend](#how-the-app-finds-and-launches-the-backend)),
   quitting the app would free nothing, so the prompt offers **Stop and
-  continue** instead, which runs the same proven `kirocrew stop --port <port>`
+  continue** instead, which runs the same proven `ajcrew stop --port <port>`
   as the stale warning. Other platforms cannot quit that app for
   the user, so `runtime/gateway/family-takeover.js` asks the user to quit it and
   offers **I quit it — Retry** / **Cancel** for up to three rounds, then cancels
@@ -1537,12 +1537,12 @@ it).
 
 ## Code signing & notarization (macOS)
 
-An unsigned `.app`/DMG is quarantined by Gatekeeper and shows **"Kiro Crew is
+An unsigned `.app`/DMG is quarantined by Gatekeeper and shows **"Aj Crew is
 damaged and can't be opened"** when downloaded on another Mac. To distribute a
 DMG that opens cleanly you must sign it with a **Developer ID Application**
 certificate and **notarize** it with Apple. (Local builds without credentials
 still work — they produce an ad-hoc–signed DMG you can open on the build machine
-after right-click → Open or `xattr -dr com.apple.quarantine KiroCrew.app`.)
+after right-click → Open or `xattr -dr com.apple.quarantine AjCrew.app`.)
 
 The build is already wired for this — `website/electron/package.json` enables
 `hardenedRuntime` with `build/entitlements.mac.plist`, and the
@@ -1577,7 +1577,7 @@ export APPLE_TEAM_ID=XXXXXXXXXX
 make desktop
 ```
 
-Verify the result: `spctl -a -vv "KiroCrew.app"` should report
+Verify the result: `spctl -a -vv "AjCrew.app"` should report
 `source=Notarized Developer ID` and `codesign -dv` should show your Team ID
 (not `Signature=adhoc`).
 
@@ -1589,16 +1589,16 @@ clear the quarantine flag.
 
 macOS gates `~/Downloads`, `~/Documents`, `~/Desktop`, `~/Pictures`, `~/Movies`
 and `~/Music` behind **TCC** (Transparency, Consent and Control). The first time
-an app reads one of them, macOS shows a modal *"Kiro Crew would like to access
+an app reads one of them, macOS shows a modal *"Aj Crew would like to access
 files in your Downloads folder"*, and consent is recorded **per (app, folder)
 pair** — so an operation that incidentally touches three of those folders
 produces **three separate prompts**, one after another.
 
-Nothing Kiro Crew does at startup needs those folders, and its own file walks
+Nothing Aj Crew does at startup needs those folders, and its own file walks
 stay out of them:
 
 - **`/api/file-search` has no bare-`$HOME` fallback root.** With no project it
-  searches `KIROCREW_PROJECT_DIR`, then `<data_home>/workspace`. A request that
+  searches `AJCREW_PROJECT_DIR`, then `<data_home>/workspace`. A request that
   names a root, including `?project=$HOME`, is scoped and walked in full.
 - **Walks rooted at `$HOME` itself are pruned.** The `@`-mention file index
   (`dashboard/file_index.py`) and the unscoped `/api/file-search` walk call
@@ -1610,7 +1610,7 @@ stay out of them:
 
 Two consequences worth knowing:
 
-- **Explicit access is unaffected.** If you point Kiro Crew at a project inside
+- **Explicit access is unaffected.** If you point Aj Crew at a project inside
   `~/Documents` or browse to `~/Downloads` directly, that root is walked in full.
   macOS still shows its own one-time prompt for that deliberate access — that is
   the expected OS contract, and granting it once is enough.
@@ -1633,7 +1633,7 @@ entitlement, and the `Info.plist` usage string only supplies the prompt's
 wording. Get this wrong and the failure is deeply misleading:
 
 > **Symptom:** voice input reports *"Microphone permission denied"* instantly,
-> **no** system prompt ever appears, and there is no Kiro Crew row under System
+> **no** system prompt ever appears, and there is no Aj Crew row under System
 > Settings › Privacy & Security › Microphone to switch on. The same mic works in
 > Chrome at the same origin on the same machine.
 
@@ -1683,14 +1683,14 @@ a grant**. Auditing must never be able to change a permission verdict.
 TCC rows are pinned to the app's **code-signing identity (cdhash)**, not just its
 bundle id — and ad-hoc local builds share one collapsed `Identifier=Electron`
 identity. So a machine that ran a dev build can hold a Microphone row for
-`com.amazon.kiro.crew` whose `csreq` matches a cdhash the Developer-ID release
+`io.github.al-jwharah.ajcrew` whose `csreq` matches a cdhash the Developer-ID release
 can never satisfy. The row reads *granted* in the TCC database and is still never
 honored, which looks exactly like the entitlement bug and survives fixing it.
 
 If the mic still fails after a rebuild, clear the row and let the app re-prompt:
 
 ```bash
-tccutil reset Microphone com.amazon.kiro.crew
+tccutil reset Microphone io.github.al-jwharah.ajcrew
 ```
 
 This is also why distributing the signed + notarized DMG matters (above): a
@@ -1709,8 +1709,8 @@ declaration.
 > an IoT device, another dev box — fails **instantly** with errno 65
 > (`EHOSTUNREACH`, "No route to host") in ~0.000s rather than timing out. `ping`
 > and ARP to the same host succeed, so it reads as a routing fault. There is no
-> Kiro Crew row under System Settings › Privacy & Security › Local Network, and
-> `tccutil reset LocalNetwork com.amazon.kiro.crew` fails because no TCC record
+> Aj Crew row under System Settings › Privacy & Security › Local Network, and
+> `tccutil reset LocalNetwork io.github.al-jwharah.ajcrew` fails because no TCC record
 > exists to reset.
 
 The gateway-works / everything-else-fails split is the signature of the TCC gate,
@@ -1739,13 +1739,13 @@ signing lane.
 Apple exempts several launch contexts from local-network privacy: daemons started
 by `launchd`, anything running as root, and **command-line tools run from Terminal
 or over SSH, including every child process they spawn**. So a gateway started with
-`kirocrew gateway` from a terminal reaches the LAN normally, while the same agent
+`ajcrew gateway` from a terminal reaches the LAN normally, while the same agent
 command run under the desktop app is gated by the app bundle's TCC record. That
 asymmetry is a useful triage question ("how did you start the gateway?") and a
 usable workaround, not evidence that the app is fine.
 
 One caveat worth knowing before concluding the usage string alone fixed it: agent
-shell commands are wrapped by `sandbox_exec_argv` in `src/kiro_crew/sandbox_argv.py`,
+shell commands are wrapped by `sandbox_exec_argv` in `src/aj_crew/sandbox_argv.py`,
 which `exec`s the target through `/usr/bin/sandbox-exec` and replaces the process
 image. The Seatbelt profile itself is `(allow default)` plus filesystem denies and
 carries **no** network rules, so the sandbox does not block sockets — but whether
@@ -1762,7 +1762,7 @@ before the deferral (on Windows those commands never run; see
 [governance.md → Update pins](../system-specs/modules/governance.md#update-pins-updates--policy-only)). A gateway the app reuses defers the same
 way when it runs the app's own bundled backend. A separately installed one (from
 the CLI, as a service, or reached over an SSH tunnel) follows its own
-`auto_update` ([where to set it](../../src/kiro_crew/docs/configuration.md#turning-it-off-and-updating-by-hand)). A
+`auto_update` ([where to set it](../../src/aj_crew/docs/configuration.md#turning-it-off-and-updating-by-hand)). A
 container defers to its image. Both updaters running on one install is
 [#15797](https://github.com/kirodotdev/KiroCrew/issues/15797).
 
@@ -1779,7 +1779,7 @@ override is noticed. The app's switch, its default
 and install-on-quit are owned by
 [release.md → Client auto-update](release.md#client-auto-update); the policy
 floor by [governance.md → Update pins](../system-specs/modules/governance.md#update-pins-updates--policy-only). The user-facing summary is
-[configuration.md → Updates](../../src/kiro_crew/docs/configuration.md#updates).
+[configuration.md → Updates](../../src/aj_crew/docs/configuration.md#updates).
 
 ## Externally-managed installs (repackagers)
 
@@ -1825,7 +1825,7 @@ A marker without `updateCommand` turns the updater off, and About shows the
 About shows the "managed by …" notice and the copyable command above the regular
 update controls. An empty or unparsable body still counts as managed — an
 operator who dropped the file gets the safe behavior even when the metadata is
-wrong. The build script (`KIROCREW_MANAGED_INSTALL_MARKER`) rejects a marker
+wrong. The build script (`AJCREW_MANAGED_INSTALL_MARKER`) rejects a marker
 with `updateCommand` but no `checkCommand`: every managed-lane check would fail
 with "this managed install has no checkCommand" and no update would ever be
 offered or applied.
@@ -1844,7 +1844,7 @@ commands honored must install the resources directory root-owned.
 On the managed path the app treats a `checkCommand` that exits 0 and prints a
 version as an available update. With the app's update switch on, it then runs
 `updateCommand` on the next quit. Windows shutdown, restart and sign-out end the
-app without a quit, so on Windows the app shows a "Kiro Crew update ready"
+app without a quit, so on Windows the app shows a "Aj Crew update ready"
 notice at session end instead, telling the user to quit from the tray to
 install. It never runs `updateCommand` then: Windows gives the app a few seconds,
 and an apply cut short can leave a half-installed app. The notice appears only
@@ -1876,7 +1876,7 @@ package manager's owner — does not need to drop a file beside the app after th
 fact; it declares the marker at build time:
 
 ```bash
-KIROCREW_MANAGED_INSTALL_MARKER=/path/to/marker.json bash packaging/build-desktop.sh
+AJCREW_MANAGED_INSTALL_MARKER=/path/to/marker.json bash packaging/build-desktop.sh
 ```
 
 `build-desktop.sh` validates the file (a JSON object of string fields
@@ -1907,12 +1907,12 @@ Windows that failure is silent: `cmd.exe` leaves an undefined `%VAR%` in the
 command line **as the literal text `%VAR%`**, not as an empty string, so a
 wrapper argument such as `"%SOME_VAR%"` arrives as that string. The one value
 the constructed environment does derive for the command is
-`KIROCREW_MANAGED_ARGV0` — the running app executable's absolute path
+`AJCREW_MANAGED_ARGV0` — the running app executable's absolute path
 (`process.execPath`, taken from the process, never from the environment) — so a
 wrapper that verifies its relaunch target has a trustworthy answer without any
 inheritance.
 
-For local testing, the `KIROCREW_EXTERNALLY_MANAGED` env var points at a marker
+For local testing, the `AJCREW_EXTERNALLY_MANAGED` env var points at a marker
 file (any other non-empty value marks the install managed with no metadata).
 It is honored on unpackaged builds only — a packaged app ignores it, because
 its launch environment is user-writable.
@@ -1922,7 +1922,7 @@ The gateway has the matching seam for its own surfaces: an operator's
 routes the dashboard's update check, badge, and Update button through the
 declared commands, and the gateway then reports no release channel at all.
 The `check_command` runs on every gateway check
-([when](../../src/kiro_crew/docs/configuration.md#when-the-gateway-checks)) and
+([when](../../src/aj_crew/docs/configuration.md#when-the-gateway-checks)) and
 whenever the dashboard asks for one, so it must be side-effect-free, idempotent
 and quick: a check still running after 60 seconds is stopped and counts as
 failed. One `apply_command` run may take 600 s (`_APPLY_TIMEOUT_SECS`), its
@@ -1967,7 +1967,7 @@ install and let the retry finish, or to relaunch by hand.
 
 The desktop app can also connect to a gateway running on a **remote** host (e.g.
 an always-on server) over an SSH tunnel, fetching a fresh token via
-`ssh <host> kirocrew token` on each launch instead of starting a local backend.
+`ssh <host> ajcrew token` on each launch instead of starting a local backend.
 See [`website/electron/README.md`](../../website/electron/README.md) and
 [remote-and-mobile.md](../guides/remote-and-mobile.md) for setup.
 

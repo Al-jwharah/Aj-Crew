@@ -21,11 +21,11 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew
-from kiro_crew.service import macos
+import aj_crew
+from aj_crew.service import macos
 
 # A localized launchctl error naming a service label with a non-ASCII suffix.
-_NON_ASCII = "Échec du chargement : service « dev.kirocrew.gateway-café » introuvable"
+_NON_ASCII = "Échec du chargement : service « dev.ajcrew.gateway-café » introuvable"
 
 # The child the harness spawns in place of launchctl: raw UTF-8 bytes plus one
 # byte that is not valid UTF-8, written straight to the pipe.
@@ -39,7 +39,7 @@ _CHILD = (
 # ``_launchctl``; "locale" calls subprocess.run with a bare ``text=True``.
 _HARNESS = """
 import json, locale, subprocess, sys
-from kiro_crew.service import macos
+from aj_crew.service import macos
 
 child, mode = sys.argv[1], sys.argv[2]
 real_run = subprocess.run
@@ -64,7 +64,7 @@ print(json.dumps(out))
 
 
 def _run_under_ascii_locale(mode: str) -> dict:
-    src_root = str(Path(kiro_crew.__file__).resolve().parent.parent)
+    src_root = str(Path(aj_crew.__file__).resolve().parent.parent)
     env = {
         k: v
         for k, v in os.environ.items()

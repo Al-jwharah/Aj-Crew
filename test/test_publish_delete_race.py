@@ -26,21 +26,21 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import artifacts as art_mod
-from kiro_crew import publish_provider, publish_sync
-from kiro_crew.artifacts import (
+from aj_crew import artifacts as art_mod
+from aj_crew import publish_provider, publish_sync
+from aj_crew.artifacts import (
     ArtifactFolderStore,
     ArtifactNotFoundError,
     ArtifactPublication,
     ArtifactStore,
 )
-from kiro_crew.dashboard.handlers import artifacts as art_handlers
-from kiro_crew.dashboard.handlers.artifacts import (
+from aj_crew.dashboard.handlers import artifacts as art_handlers
+from aj_crew.dashboard.handlers.artifacts import (
     api_artifact_delete,
     api_artifact_folder_delete,
 )
-from kiro_crew.publish_provider import PublishProvider, PublishResult, PushResult
-from kiro_crew.testing.wait import await_until
+from aj_crew.publish_provider import PublishProvider, PublishResult, PushResult
+from aj_crew.testing.wait import await_until
 
 # ── Harness ─────────────────────────────────────────────────────────────────
 
@@ -291,7 +291,7 @@ async def test_a_cascade_leaves_alone_an_artifact_that_arrives_while_it_withdraw
         return publish_sync.DeleteWithdrawal.WITHDRAWN
 
     with pytest.MonkeyPatch.context() as mp:
-        mp.setattr("kiro_crew.publish_sync.delete_for_artifact", _withdraw_and_let_one_in)
+        mp.setattr("aj_crew.publish_sync.delete_for_artifact", _withdraw_and_let_one_in)
         resp = await api_artifact_folder_delete(
             _request(match={"id": folder["id"]}, query={"delete_contents": "true"})
         )
@@ -544,7 +544,7 @@ async def test_a_cascade_spares_a_replacement_that_took_a_named_slug(
         return publish_sync.DeleteWithdrawal.WITHDRAWN
 
     with pytest.MonkeyPatch.context() as mp:
-        mp.setattr("kiro_crew.publish_sync.delete_for_artifact", _withdraw_then_let_a_namesake_in)
+        mp.setattr("aj_crew.publish_sync.delete_for_artifact", _withdraw_then_let_a_namesake_in)
         resp = await api_artifact_folder_delete(
             _request(match={"id": folder["id"]}, query={"delete_contents": "true"})
         )

@@ -7,7 +7,7 @@
 import { afterEach, describe, it, expect, vi } from 'vitest'
 import { popoutLinkBridgeScript } from '../lib/widgetSrcdoc'
 
-const OPEN = 'kirocrew-dashboard:open'
+const OPEN = 'ajcrew-dashboard:open'
 const LINK = 'https://code.example.test/reviews/CR-1'
 
 type Listener = (e: { source?: unknown; data?: unknown; target?: unknown }) => void
@@ -93,7 +93,7 @@ describe('popped-out widget link bridge', () => {
     const { send, enter, open } = setup()
     enter()
     send({ type: OPEN, url: LINK }, {})
-    send({ type: 'kirocrew-dashboard:act', url: LINK })
+    send({ type: 'ajcrew-dashboard:act', url: LINK })
     expect(open).not.toHaveBeenCalled()
   })
 

@@ -19,14 +19,14 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.mcp_gateway.rewriter import _WRAPPER_MARKER
-from kiro_crew.mcp_gateway.session_servers import (
+from aj_crew.mcp_gateway.rewriter import _WRAPPER_MARKER
+from aj_crew.mcp_gateway.session_servers import (
     _acp_env,
     _acp_server_entry,
     injection_server_names,
     pooled_session_servers,
 )
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 
 def _stub(**over):
@@ -56,13 +56,13 @@ def _write_overlay(tmp_path: Path, agent: str, servers: dict) -> Path:
 def test_injects_only_wrapped_stub_entries(tmp_path):
     overlay = _write_overlay(
         tmp_path,
-        "kirocrew",
+        "ajcrew",
         {
             "pooled": _stub(),
             "unpooled": {"command": "npx", "args": ["-y", "srv"], "env": {"TOKEN": "s3cr3t"}},
         },
     )
-    out = pooled_session_servers(overlay, "kirocrew")
+    out = pooled_session_servers(overlay, "ajcrew")
     assert [e["name"] for e in out] == ["pooled"]
 
 
@@ -70,13 +70,13 @@ def test_unpooled_server_env_is_never_transmitted(tmp_path):
     """A non-poolable server's credentials must stay in the spec file."""
     overlay = _write_overlay(
         tmp_path,
-        "kirocrew",
+        "ajcrew",
         {
             "secretive": {"command": "npx", "env": {"API_KEY": "s3cr3t"}},
         },
     )
-    assert pooled_session_servers(overlay, "kirocrew") == []
-    assert "s3cr3t" not in json.dumps(pooled_session_servers(overlay, "kirocrew"))
+    assert pooled_session_servers(overlay, "ajcrew") == []
+    assert "s3cr3t" not in json.dumps(pooled_session_servers(overlay, "ajcrew"))
 
 
 @pytest.mark.parametrize("vendor", ["creds-agent", "local-creds-agent-mcp"])
@@ -87,30 +87,30 @@ def test_a_stale_overlay_never_injects_a_credential_vendor(tmp_path, vendor):
     it and the session resolves the vendor from its agent spec instead. The
     vendor is left out of ``injection_server_names`` too, or the spec's own copy
     would be withheld and the session would get no vendor at all."""
-    overlay = _write_overlay(tmp_path, "kirocrew", {vendor: _stub(), "pooled": _stub()})
-    assert [e["name"] for e in pooled_session_servers(overlay, "kirocrew")] == ["pooled"]
-    assert injection_server_names(overlay, "kirocrew") == frozenset({"pooled"})
+    overlay = _write_overlay(tmp_path, "ajcrew", {vendor: _stub(), "pooled": _stub()})
+    assert [e["name"] for e in pooled_session_servers(overlay, "ajcrew")] == ["pooled"]
+    assert injection_server_names(overlay, "ajcrew") == frozenset({"pooled"})
 
 
 def test_stub_name_is_preserved_so_it_shadows_the_spec_entry(tmp_path):
     """The injected name must equal the original server name — that identity is
     what suppresses the agent spec's own copy (and keeps tool ids stable)."""
-    overlay = _write_overlay(tmp_path, "kirocrew", {"builder-mcp": _stub()})
-    (entry,) = pooled_session_servers(overlay, "kirocrew")
+    overlay = _write_overlay(tmp_path, "ajcrew", {"builder-mcp": _stub()})
+    (entry,) = pooled_session_servers(overlay, "ajcrew")
     assert entry["name"] == "builder-mcp"
 
 
 def test_entries_are_name_sorted_for_deterministic_params(tmp_path):
     overlay = _write_overlay(
         tmp_path,
-        "kirocrew",
+        "ajcrew",
         {
             "zeta": _stub(),
             "alpha": _stub(),
             "mid": _stub(),
         },
     )
-    assert [e["name"] for e in pooled_session_servers(overlay, "kirocrew")] == [
+    assert [e["name"] for e in pooled_session_servers(overlay, "ajcrew")] == [
         "alpha",
         "mid",
         "zeta",
@@ -122,8 +122,8 @@ def test_entries_are_name_sorted_for_deterministic_params(tmp_path):
 
 def test_marker_is_stripped_from_the_injected_element(tmp_path):
     """kiro-cli tolerates unknown keys today; a future strict parser would not."""
-    overlay = _write_overlay(tmp_path, "kirocrew", {"pooled": _stub()})
-    (entry,) = pooled_session_servers(overlay, "kirocrew")
+    overlay = _write_overlay(tmp_path, "ajcrew", {"pooled": _stub()})
+    (entry,) = pooled_session_servers(overlay, "ajcrew")
     assert _WRAPPER_MARKER not in entry
 
 
@@ -131,12 +131,12 @@ def test_operator_passthrough_keys_survive(tmp_path):
     """Dropping autoApprove would re-prompt for already-approved tools."""
     overlay = _write_overlay(
         tmp_path,
-        "kirocrew",
+        "ajcrew",
         {
             "pooled": _stub(timeout=9000, type="stdio", disabledTools=["x"]),
         },
     )
-    (entry,) = pooled_session_servers(overlay, "kirocrew")
+    (entry,) = pooled_session_servers(overlay, "ajcrew")
     assert entry["autoApprove"] == ["fetch___fetch"]
     assert entry["timeout"] == 9000
     assert entry["type"] == "stdio"
@@ -153,14 +153,14 @@ def test_env_is_emitted_in_acp_array_form():
 
 def test_stub_entries_carry_no_env(tmp_path):
     """gatewayd spawns the pooled backend, so kiro-cli needs no env at all."""
-    overlay = _write_overlay(tmp_path, "kirocrew", {"pooled": _stub()})
-    (entry,) = pooled_session_servers(overlay, "kirocrew")
+    overlay = _write_overlay(tmp_path, "ajcrew", {"pooled": _stub()})
+    (entry,) = pooled_session_servers(overlay, "ajcrew")
     assert entry["env"] == []
 
 
 def test_non_string_args_are_coerced(tmp_path):
-    overlay = _write_overlay(tmp_path, "kirocrew", {"pooled": _stub(args=["ok", 7])})
-    (entry,) = pooled_session_servers(overlay, "kirocrew")
+    overlay = _write_overlay(tmp_path, "ajcrew", {"pooled": _stub(args=["ok", 7])})
+    (entry,) = pooled_session_servers(overlay, "ajcrew")
     assert entry["args"] == ["ok", "7"]
 
 
@@ -174,20 +174,20 @@ def test_entry_without_command_is_skipped():
 def test_commandless_stub_does_not_suppress_others(tmp_path):
     overlay = _write_overlay(
         tmp_path,
-        "kirocrew",
+        "ajcrew",
         {
             "broken": _stub(command=""),
             "fine": _stub(),
         },
     )
-    assert [e["name"] for e in pooled_session_servers(overlay, "kirocrew")] == ["fine"]
+    assert [e["name"] for e in pooled_session_servers(overlay, "ajcrew")] == ["fine"]
 
 
 # ── the off switch and fail-soft behaviour ──────────────────────────────────
 
 
 def test_disabled_gateway_injects_nothing():
-    assert pooled_session_servers(None, "kirocrew") == []
+    assert pooled_session_servers(None, "ajcrew") == []
 
 
 def test_missing_agent_name_injects_nothing(tmp_path):
@@ -195,14 +195,14 @@ def test_missing_agent_name_injects_nothing(tmp_path):
 
 
 def test_absent_overlay_spec_is_not_an_error(tmp_path):
-    assert pooled_session_servers(tmp_path / "nope", "kirocrew") == []
+    assert pooled_session_servers(tmp_path / "nope", "ajcrew") == []
 
 
 def test_corrupt_overlay_degrades_to_unpooled(tmp_path):
     overlay = tmp_path / "agents"
     overlay.mkdir()
-    (overlay / "kirocrew.json").write_text("{not json", encoding="utf-8")
-    assert pooled_session_servers(overlay, "kirocrew") == []
+    (overlay / "ajcrew.json").write_text("{not json", encoding="utf-8")
+    assert pooled_session_servers(overlay, "ajcrew") == []
 
 
 @pytest.mark.parametrize(
@@ -211,13 +211,13 @@ def test_corrupt_overlay_degrades_to_unpooled(tmp_path):
 def test_malformed_spec_shapes_degrade_to_unpooled(tmp_path, body):
     overlay = tmp_path / "agents"
     overlay.mkdir(exist_ok=True)
-    (overlay / "kirocrew.json").write_text(body, encoding="utf-8")
-    assert pooled_session_servers(overlay, "kirocrew") == []
+    (overlay / "ajcrew.json").write_text(body, encoding="utf-8")
+    assert pooled_session_servers(overlay, "ajcrew") == []
 
 
 def test_non_dict_server_entry_is_skipped(tmp_path):
-    overlay = _write_overlay(tmp_path, "kirocrew", {"bad": "x", "good": _stub()})
-    assert [e["name"] for e in pooled_session_servers(overlay, "kirocrew")] == ["good"]
+    overlay = _write_overlay(tmp_path, "ajcrew", {"bad": "x", "good": _stub()})
+    assert [e["name"] for e in pooled_session_servers(overlay, "ajcrew")] == ["good"]
 
 
 # ── project scope: the overlay is user-level, the session need not be ────────
@@ -241,7 +241,7 @@ def _write_project_markdown_agent(root: Path, name: str, filename: str | None = 
     Written through ``agent_spec_format``'s own suffix rather than a literal so
     this fixture and the guard read the same constant.
     """
-    from kiro_crew.agent_spec_format import MARKDOWN_SUFFIX
+    from aj_crew.agent_spec_format import MARKDOWN_SUFFIX
 
     agents = root / ".kiro" / "agents"
     agents.mkdir(parents=True, exist_ok=True)
@@ -261,10 +261,10 @@ def test_a_project_agent_takes_no_stub_from_the_user_level_overlay(tmp_path):
     the project's own declaration of that name unlaunched. Unpooled is this
     module's standing direction for a stub it cannot vouch for.
     """
-    overlay = _write_overlay(tmp_path / "gw", "kirocrew", {"pooled": _stub()})
+    overlay = _write_overlay(tmp_path / "gw", "ajcrew", {"pooled": _stub()})
     project = tmp_path / "checkout"
-    _write_project_agent(project, "kirocrew")
-    assert pooled_session_servers(overlay, "kirocrew", work_dir=project) == []
+    _write_project_agent(project, "ajcrew")
+    assert pooled_session_servers(overlay, "ajcrew", work_dir=project) == []
 
 
 def test_the_withheld_set_and_the_injected_set_agree_on_a_project_agent(tmp_path):
@@ -275,22 +275,22 @@ def test_the_withheld_set_and_the_injected_set_agree_on_a_project_agent(tmp_path
     only copy of it, so the session receives neither -- strictly worse than the
     bug this fixes. One guard answers both, and this pins that it does.
     """
-    overlay = _write_overlay(tmp_path / "gw", "kirocrew", {"pooled": _stub()})
+    overlay = _write_overlay(tmp_path / "gw", "ajcrew", {"pooled": _stub()})
     project = tmp_path / "checkout"
-    _write_project_agent(project, "kirocrew")
-    assert injection_server_names(overlay, "kirocrew", work_dir=project) == frozenset()
-    assert pooled_session_servers(overlay, "kirocrew", work_dir=project) == []
+    _write_project_agent(project, "ajcrew")
+    assert injection_server_names(overlay, "ajcrew", work_dir=project) == frozenset()
+    assert pooled_session_servers(overlay, "ajcrew", work_dir=project) == []
     # With no checkout in play both still report the same stub.
-    assert injection_server_names(overlay, "kirocrew") == frozenset({"pooled"})
-    assert [e["name"] for e in pooled_session_servers(overlay, "kirocrew")] == ["pooled"]
+    assert injection_server_names(overlay, "ajcrew") == frozenset({"pooled"})
+    assert [e["name"] for e in pooled_session_servers(overlay, "ajcrew")] == ["pooled"]
 
 
 def test_a_checkout_that_does_not_declare_the_agent_keeps_pooling(tmp_path):
     """Only a name the checkout actually declares leaves the overlay's scope."""
-    overlay = _write_overlay(tmp_path / "gw", "kirocrew", {"pooled": _stub()})
+    overlay = _write_overlay(tmp_path / "gw", "ajcrew", {"pooled": _stub()})
     project = tmp_path / "checkout"
     _write_project_agent(project, "something-else")
-    got = pooled_session_servers(overlay, "kirocrew", work_dir=project)
+    got = pooled_session_servers(overlay, "ajcrew", work_dir=project)
     assert [e["name"] for e in got] == ["pooled"]
 
 
@@ -302,22 +302,22 @@ def test_a_project_agents_declared_name_beats_its_filename(tmp_path):
     Reading the rule from one place is what keeps this module's answer and
     ``acp.session_mcp``'s spec resolution from drifting apart.
     """
-    overlay = _write_overlay(tmp_path / "gw", "kirocrew", {"pooled": _stub()})
+    overlay = _write_overlay(tmp_path / "gw", "ajcrew", {"pooled": _stub()})
     project = tmp_path / "checkout"
-    _write_project_agent(project, "kirocrew", filename="zzz-unrelated.json")
-    assert pooled_session_servers(overlay, "kirocrew", work_dir=project) == []
+    _write_project_agent(project, "ajcrew", filename="zzz-unrelated.json")
+    assert pooled_session_servers(overlay, "ajcrew", work_dir=project) == []
 
 
 @pytest.mark.parametrize("shape", ["absent", "a-file"])
 def test_an_unusable_checkout_leaves_the_overlay_in_effect(tmp_path, shape):
     """Fail-soft on the scope too: an unreadable checkout is not a failed spawn."""
-    overlay = _write_overlay(tmp_path / "gw", "kirocrew", {"pooled": _stub()})
+    overlay = _write_overlay(tmp_path / "gw", "ajcrew", {"pooled": _stub()})
     if shape == "a-file":
         target = tmp_path / "not-a-dir"
         target.write_text("x", encoding="utf-8")
     else:
         target = tmp_path / "nope"
-    got = pooled_session_servers(overlay, "kirocrew", work_dir=target)
+    got = pooled_session_servers(overlay, "ajcrew", work_dir=target)
     assert [e["name"] for e in got] == ["pooled"]
 
 
@@ -340,13 +340,13 @@ def test_a_project_markdown_spec_leaves_a_json_hosts_overlay_in_effect(tmp_path)
     kiro-cli discovers only ``*.json`` in a checkout, so counting a project ``foo.md``
     would drop the stubs of the user-level ``foo.json`` that kiro-cli still runs.
     """
-    overlay = _write_overlay(tmp_path / "gw", "kirocrew", {"pooled": _stub()})
+    overlay = _write_overlay(tmp_path / "gw", "ajcrew", {"pooled": _stub()})
     project = tmp_path / "checkout"
-    _write_project_markdown_agent(project, "kirocrew")
-    assert [e["name"] for e in pooled_session_servers(overlay, "kirocrew", work_dir=project)] == [
+    _write_project_markdown_agent(project, "ajcrew")
+    assert [e["name"] for e in pooled_session_servers(overlay, "ajcrew", work_dir=project)] == [
         "pooled"
     ]
-    assert injection_server_names(overlay, "kirocrew", work_dir=project) == frozenset({"pooled"})
+    assert injection_server_names(overlay, "ajcrew", work_dir=project) == frozenset({"pooled"})
 
 
 def test_a_mirrored_hosts_projection_does_suppress_on_a_project_markdown_spec(tmp_path):
@@ -355,12 +355,12 @@ def test_a_mirrored_hosts_projection_does_suppress_on_a_project_markdown_spec(tm
     ``acp.session_mcp._agent_spec_for`` resolves a project ``foo.md``, so keeping the
     user-level stub would mount its command and credentials under the checkout's agent.
     """
-    overlay = _write_overlay(tmp_path / "gw", "kirocrew", {"pooled": _stub()})
+    overlay = _write_overlay(tmp_path / "gw", "ajcrew", {"pooled": _stub()})
     project = tmp_path / "checkout"
-    _write_project_markdown_agent(project, "kirocrew")
-    assert pooled_session_servers(overlay, "kirocrew", work_dir=project, markdown_specs=True) == []
+    _write_project_markdown_agent(project, "ajcrew")
+    assert pooled_session_servers(overlay, "ajcrew", work_dir=project, markdown_specs=True) == []
     assert (
-        injection_server_names(overlay, "kirocrew", work_dir=project, markdown_specs=True)
+        injection_server_names(overlay, "ajcrew", work_dir=project, markdown_specs=True)
         == frozenset()
     )
 
@@ -371,22 +371,22 @@ def test_a_malformed_project_spec_is_not_a_shadow_for_the_overlay_lookup(tmp_pat
     kiro-cli 2.22.0 loads zero workspace agents from a malformed spec and runs the
     user-level one. The second half pins the strict default the governance caller needs.
     """
-    from kiro_crew.agent import _project_shadow_of
+    from aj_crew.agent import _project_shadow_of
 
-    overlay = _write_overlay(tmp_path / "gw", "kirocrew", {"pooled": _stub()})
+    overlay = _write_overlay(tmp_path / "gw", "ajcrew", {"pooled": _stub()})
     project = tmp_path / "checkout"
     agents = project / ".kiro" / "agents"
     agents.mkdir(parents=True)
-    (agents / "kirocrew.json").write_text('{"name": "kirocrew", ', encoding="utf-8")
+    (agents / "ajcrew.json").write_text('{"name": "ajcrew", ', encoding="utf-8")
 
-    assert [e["name"] for e in pooled_session_servers(overlay, "kirocrew", work_dir=project)] == [
+    assert [e["name"] for e in pooled_session_servers(overlay, "ajcrew", work_dir=project)] == [
         "pooled"
     ]
-    assert injection_server_names(overlay, "kirocrew", work_dir=project) == frozenset({"pooled"})
+    assert injection_server_names(overlay, "ajcrew", work_dir=project) == frozenset({"pooled"})
     # The governance caller still sees a claim on the name.
-    assert _project_shadow_of("kirocrew", project) is not None
+    assert _project_shadow_of("ajcrew", project) is not None
     # And the dispatch-minded caller does not.
-    assert _project_shadow_of("kirocrew", project, dispatchable_only=True) is None
+    assert _project_shadow_of("ajcrew", project, dispatchable_only=True) is None
 
 
 def test_a_mirrored_host_does_suppress_on_a_malformed_project_spec(tmp_path):
@@ -396,21 +396,21 @@ def test_a_mirrored_host_does_suppress_on_a_malformed_project_spec(tmp_path):
     user-level fallback, so user-level stubs would add servers nothing declares. Hence
     ``dispatchable_only=False`` here, while kiro wants ``True`` (sibling test above).
     """
-    overlay = _write_overlay(tmp_path / "gw", "kirocrew", {"pooled": _stub()})
+    overlay = _write_overlay(tmp_path / "gw", "ajcrew", {"pooled": _stub()})
     project = tmp_path / "checkout"
     agents = project / ".kiro" / "agents"
     agents.mkdir(parents=True)
-    (agents / "kirocrew.json").write_text('{"name": "kirocrew", ', encoding="utf-8")
+    (agents / "ajcrew.json").write_text('{"name": "ajcrew", ', encoding="utf-8")
 
     assert (
         pooled_session_servers(
-            overlay, "kirocrew", work_dir=project, markdown_specs=True, dispatchable_only=False
+            overlay, "ajcrew", work_dir=project, markdown_specs=True, dispatchable_only=False
         )
         == []
     )
     assert (
         injection_server_names(
-            overlay, "kirocrew", work_dir=project, markdown_specs=True, dispatchable_only=False
+            overlay, "ajcrew", work_dir=project, markdown_specs=True, dispatchable_only=False
         )
         == frozenset()
     )
@@ -424,11 +424,11 @@ def test_the_unbrokered_project_agent_state_is_reported_above_debug(tmp_path, ca
     """
     import logging
 
-    overlay = _write_overlay(tmp_path / "gw", "kirocrew", {"pooled": _stub()})
+    overlay = _write_overlay(tmp_path / "gw", "ajcrew", {"pooled": _stub()})
     project = tmp_path / "checkout"
-    _write_project_agent(project, "kirocrew")
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_gateway.session_servers"):
-        assert pooled_session_servers(overlay, "kirocrew", work_dir=project) == []
+    _write_project_agent(project, "ajcrew")
+    with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_gateway.session_servers"):
+        assert pooled_session_servers(overlay, "ajcrew", work_dir=project) == []
     records = [r for r in caplog.records if r.levelno >= logging.WARNING]
     assert records, "the unbrokered-project-agent state was reported below WARNING"
     assert any("UNBROKERED" in r.getMessage() for r in records), [r.getMessage() for r in records]
@@ -436,8 +436,8 @@ def test_the_unbrokered_project_agent_state_is_reported_above_debug(tmp_path, ca
     # A session with no project agent in play stays quiet: this must not become a
     # warning every ordinary session emits.
     caplog.clear()
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_gateway.session_servers"):
-        assert [e["name"] for e in pooled_session_servers(overlay, "kirocrew")] == ["pooled"]
+    with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_gateway.session_servers"):
+        assert [e["name"] for e in pooled_session_servers(overlay, "ajcrew")] == ["pooled"]
     assert [r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING] == []
 
 
@@ -448,25 +448,25 @@ def test_a_differing_stem_markdown_file_does_not_hide_a_json_project_agent(tmp_p
     filtering afterwards would answer "no shadow" with ``z.json`` unexamined.
     Both hosts suppress, so the assertion names the resolved FILE.
     """
-    from kiro_crew.mcp_gateway.session_servers import _project_spec_for_agent
+    from aj_crew.mcp_gateway.session_servers import _project_spec_for_agent
 
-    overlay = _write_overlay(tmp_path / "gw", "kirocrew", {"pooled": _stub()})
+    overlay = _write_overlay(tmp_path / "gw", "ajcrew", {"pooled": _stub()})
     project = tmp_path / "checkout"
-    _write_project_markdown_agent(project, "kirocrew", filename="a.md")
-    _write_project_agent(project, "kirocrew", filename="z.json")
+    _write_project_markdown_agent(project, "ajcrew", filename="a.md")
+    _write_project_agent(project, "ajcrew", filename="z.json")
 
     # A JSON-dispatching host resolves the JSON file, NOT "no project spec".
-    assert _project_spec_for_agent("kirocrew", project, False).name == "z.json"
+    assert _project_spec_for_agent("ajcrew", project, False).name == "z.json"
     # A host honouring both forms keeps the scan's own first match.
-    assert _project_spec_for_agent("kirocrew", project, True).name == "a.md"
+    assert _project_spec_for_agent("ajcrew", project, True).name == "a.md"
     # Either way the overlay is out of scope for this name, on both halves.
     for markdown in (False, True):
         assert (
-            pooled_session_servers(overlay, "kirocrew", work_dir=project, markdown_specs=markdown)
+            pooled_session_servers(overlay, "ajcrew", work_dir=project, markdown_specs=markdown)
             == []
         )
         assert (
-            injection_server_names(overlay, "kirocrew", work_dir=project, markdown_specs=markdown)
+            injection_server_names(overlay, "ajcrew", work_dir=project, markdown_specs=markdown)
             == frozenset()
         )
 
@@ -476,12 +476,12 @@ def test_a_project_json_twin_beside_the_markdown_still_suppresses(tmp_path):
 
     The rule ignores the markdown FILE, not every checkout that has one.
     """
-    overlay = _write_overlay(tmp_path / "gw", "kirocrew", {"pooled": _stub()})
+    overlay = _write_overlay(tmp_path / "gw", "ajcrew", {"pooled": _stub()})
     project = tmp_path / "checkout"
-    _write_project_markdown_agent(project, "kirocrew")
-    _write_project_agent(project, "kirocrew")
-    assert pooled_session_servers(overlay, "kirocrew", work_dir=project) == []
-    assert injection_server_names(overlay, "kirocrew", work_dir=project) == frozenset()
+    _write_project_markdown_agent(project, "ajcrew")
+    _write_project_agent(project, "ajcrew")
+    assert pooled_session_servers(overlay, "ajcrew", work_dir=project) == []
+    assert injection_server_names(overlay, "ajcrew", work_dir=project) == frozenset()
 
 
 def test_every_call_site_passes_the_session_checkout():
@@ -525,7 +525,7 @@ def test_every_call_site_passes_the_session_checkout():
                 name = None
         return name
 
-    src_root = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+    src_root = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
     missing: list[str] = []
     sites = 0
     for path in sorted(src_root.rglob("*.py")):
@@ -553,8 +553,8 @@ def test_every_call_site_passes_the_session_checkout():
 #: Opt-in only, checked BEFORE ``PATH``: this suite spawns the REAL kiro-cli, which
 #: testing-conventions.md otherwise forbids. The child reads the operator's real
 #: sign-in store and can pop a browser login (acp-client.md), so presence on ``PATH``
-#: is not consent; a human sets the lever, as ``KIROCREW_E2E_SCENARIOS_REAL_AGENT``.
-REAL_CLI = shutil.which("kiro-cli") if os.environ.get("KIROCREW_E2E_REAL_KIRO_CLI") == "1" else None
+#: is not consent; a human sets the lever, as ``AJCREW_E2E_SCENARIOS_REAL_AGENT``.
+REAL_CLI = shutil.which("kiro-cli") if os.environ.get("AJCREW_E2E_REAL_KIRO_CLI") == "1" else None
 
 #: A tiny, portable MCP server that records that it launched. kiro-cli keeps a
 #: server only after the initialize handshake, so the probe answers it. The marker
@@ -574,7 +574,7 @@ for line in sys.stdin:
         result = {
             "protocolVersion": params.get("protocolVersion", "2024-11-05"),
             "capabilities": {},
-            "serverInfo": {"name": "kirocrew-precedence-probe", "version": "1"},
+            "serverInfo": {"name": "ajcrew-precedence-probe", "version": "1"},
         }
     elif request.get("method") == "tools/list":
         result = {"tools": []}
@@ -585,7 +585,7 @@ for line in sys.stdin:
 
 _DRIVER = r"""
 import json, os, subprocess, sys, threading, time
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
 w = sys.argv[1]
 p = subprocess.Popen(["kiro-cli", "acp", "--agent", "pooltest"], cwd=w + "/proj",
@@ -652,7 +652,7 @@ teardown()
 
 @pytest.mark.skipif(
     not REAL_CLI,
-    reason="set KIROCREW_E2E_REAL_KIRO_CLI=1 with kiro-cli on PATH to pin "
+    reason="set AJCREW_E2E_REAL_KIRO_CLI=1 with kiro-cli on PATH to pin "
     "project agent-spec discovery against the real binary",
 )
 def test_real_kiro_cli_discovers_project_json_specs_and_not_project_markdown():
@@ -711,7 +711,7 @@ def test_real_kiro_cli_discovers_project_json_specs_and_not_project_markdown():
 
 @pytest.mark.skipif(
     not REAL_CLI,
-    reason="set KIROCREW_E2E_REAL_KIRO_CLI=1 with kiro-cli on PATH to pin "
+    reason="set AJCREW_E2E_REAL_KIRO_CLI=1 with kiro-cli on PATH to pin "
     "session/new precedence against the real binary",
 )
 def test_real_kiro_cli_prefers_session_injected_server():
@@ -794,9 +794,9 @@ def test_injection_writes_nothing_to_the_work_dir(tmp_path):
     """The whole point of this channel: no file lands in the user's project."""
     work = tmp_path / "project"
     (work / ".kiro").mkdir(parents=True)
-    overlay = _write_overlay(tmp_path, "kirocrew", {"pooled": _stub()})
+    overlay = _write_overlay(tmp_path, "ajcrew", {"pooled": _stub()})
     before = {p for p in work.rglob("*")}
-    assert pooled_session_servers(overlay, "kirocrew")
+    assert pooled_session_servers(overlay, "ajcrew")
     assert {p for p in work.rglob("*")} == before
 
 
@@ -806,17 +806,17 @@ def test_injection_writes_nothing_to_the_work_dir(tmp_path):
 def _registry_mode(monkeypatch, enabled):
     """Force the operator's registry-mode declaration for one test.
 
-    Patched on ``kiro_crew.agent``, which owns the flag, because
+    Patched on ``aj_crew.agent``, which owns the flag, because
     ``session_servers`` binds it per call rather than at import time.
     """
-    from kiro_crew import agent as agent_mod
+    from aj_crew import agent as agent_mod
 
     monkeypatch.setattr(agent_mod, "_mcp_registry_mode", lambda: enabled)
 
 
 def _control_plane_name():
     """One of Crew's own control-plane server names, read from its owner."""
-    from kiro_crew.mcp_cleanup import CONTROL_PLANE_SERVERS
+    from aj_crew.mcp_cleanup import CONTROL_PLANE_SERVERS
 
     return CONTROL_PLANE_SERVERS[0]
 
@@ -829,18 +829,18 @@ def test_registry_mode_withholds_a_third_party_stub(tmp_path, monkeypatch):
     overlay reads answer empty, which is what leaves the session resolving that
     server from the agent spec instead.
     """
-    overlay = _write_overlay(tmp_path, "kirocrew", {"fetch": _stub()})
+    overlay = _write_overlay(tmp_path, "ajcrew", {"fetch": _stub()})
     _registry_mode(monkeypatch, True)
-    assert pooled_session_servers(overlay, "kirocrew") == []
-    assert injection_server_names(overlay, "kirocrew") == frozenset()
+    assert pooled_session_servers(overlay, "ajcrew") == []
+    assert injection_server_names(overlay, "ajcrew") == frozenset()
 
 
 def test_registry_mode_off_injects_every_stub(tmp_path, monkeypatch):
     """The ceiling is scoped to registry mode and changes nothing outside it."""
-    overlay = _write_overlay(tmp_path, "kirocrew", {"fetch": _stub()})
+    overlay = _write_overlay(tmp_path, "ajcrew", {"fetch": _stub()})
     _registry_mode(monkeypatch, False)
-    assert [e["name"] for e in pooled_session_servers(overlay, "kirocrew")] == ["fetch"]
-    assert injection_server_names(overlay, "kirocrew") == frozenset({"fetch"})
+    assert [e["name"] for e in pooled_session_servers(overlay, "ajcrew")] == ["fetch"]
+    assert injection_server_names(overlay, "ajcrew") == frozenset({"fetch"})
 
 
 def test_registry_mode_keeps_the_control_plane_stub(tmp_path, monkeypatch):
@@ -851,10 +851,10 @@ def test_registry_mode_keeps_the_control_plane_stub(tmp_path, monkeypatch):
     its channel at all -- on precisely the installs that are most governed.
     """
     control = _control_plane_name()
-    overlay = _write_overlay(tmp_path, "kirocrew", {"fetch": _stub(), control: _stub()})
+    overlay = _write_overlay(tmp_path, "ajcrew", {"fetch": _stub(), control: _stub()})
     _registry_mode(monkeypatch, True)
-    assert [e["name"] for e in pooled_session_servers(overlay, "kirocrew")] == [control]
-    assert injection_server_names(overlay, "kirocrew") == frozenset({control})
+    assert [e["name"] for e in pooled_session_servers(overlay, "ajcrew")] == [control]
+    assert injection_server_names(overlay, "ajcrew") == frozenset({control})
 
 
 def test_a_registry_marked_entry_has_no_stub_to_withhold(tmp_path, monkeypatch):
@@ -865,11 +865,11 @@ def test_a_registry_marked_entry_has_no_stub_to_withhold(tmp_path, monkeypatch):
     to do here, and the entry stays the agent spec's to launch.
     """
     marked = {"command": "npx", "type": "registry", "env": {"TOKEN": "s3cr3t"}}
-    overlay = _write_overlay(tmp_path, "kirocrew", {"governed": marked})
+    overlay = _write_overlay(tmp_path, "ajcrew", {"governed": marked})
     for enabled in (False, True):
         _registry_mode(monkeypatch, enabled)
-        assert pooled_session_servers(overlay, "kirocrew") == []
-        assert injection_server_names(overlay, "kirocrew") == frozenset()
+        assert pooled_session_servers(overlay, "ajcrew") == []
+        assert injection_server_names(overlay, "ajcrew") == frozenset()
 
 
 def test_a_server_not_routed_through_the_gateway_is_unaffected(tmp_path, monkeypatch):
@@ -880,12 +880,12 @@ def test_a_server_not_routed_through_the_gateway_is_unaffected(tmp_path, monkeyp
     file they were declared in.
     """
     unrouted = {"command": "npx", "args": ["-y", "srv"], "env": {"API_KEY": "s3cr3t"}}
-    overlay = _write_overlay(tmp_path, "kirocrew", {"unrouted": unrouted})
+    overlay = _write_overlay(tmp_path, "ajcrew", {"unrouted": unrouted})
     for enabled in (False, True):
         _registry_mode(monkeypatch, enabled)
-        assert pooled_session_servers(overlay, "kirocrew") == []
-        assert injection_server_names(overlay, "kirocrew") == frozenset()
-        assert "s3cr3t" not in json.dumps(pooled_session_servers(overlay, "kirocrew"))
+        assert pooled_session_servers(overlay, "ajcrew") == []
+        assert injection_server_names(overlay, "ajcrew") == frozenset()
+        assert "s3cr3t" not in json.dumps(pooled_session_servers(overlay, "ajcrew"))
 
 
 def test_a_withheld_stub_is_one_kiro_cli_would_drop_anyway(tmp_path, monkeypatch):
@@ -895,12 +895,12 @@ def test_a_withheld_stub_is_one_kiro_cli_would_drop_anyway(tmp_path, monkeypatch
     ``type: "registry"``. A stub never carries one, so the element this ceiling
     withholds is exactly the element the client drops on arrival.
     """
-    overlay = _write_overlay(tmp_path, "kirocrew", {"fetch": _stub()})
+    overlay = _write_overlay(tmp_path, "ajcrew", {"fetch": _stub()})
     _registry_mode(monkeypatch, False)
-    (element,) = pooled_session_servers(overlay, "kirocrew")
+    (element,) = pooled_session_servers(overlay, "ajcrew")
     assert element.get("type") != "registry"
     _registry_mode(monkeypatch, True)
-    assert pooled_session_servers(overlay, "kirocrew") == []
+    assert pooled_session_servers(overlay, "ajcrew") == []
 
 
 def test_the_two_overlay_reads_agree_in_both_modes(tmp_path, monkeypatch):
@@ -911,11 +911,11 @@ def test_the_two_overlay_reads_agree_in_both_modes(tmp_path, monkeypatch):
     and the session would get nothing for it.
     """
     servers = {"fetch": _stub(), _control_plane_name(): _stub()}
-    overlay = _write_overlay(tmp_path, "kirocrew", servers)
+    overlay = _write_overlay(tmp_path, "ajcrew", servers)
     for enabled in (False, True):
         _registry_mode(monkeypatch, enabled)
-        elements = pooled_session_servers(overlay, "kirocrew")
-        assert injection_server_names(overlay, "kirocrew") == frozenset(
+        elements = pooled_session_servers(overlay, "ajcrew")
+        assert injection_server_names(overlay, "ajcrew") == frozenset(
             e["name"] for e in elements
         ), f"the two overlay reads disagree with registry mode {enabled}"
 
@@ -926,9 +926,9 @@ def test_both_ceilings_read_one_control_plane_tuple():
     The leaf holds the one tuple and the ACP module re-exports it. It is narrower than
     the always-on set, which answers whether a server must appear in an agent spec.
     """
-    from kiro_crew.acp.session_mcp import CONTROL_PLANE_SERVERS as via_acp
-    from kiro_crew.mcp_cleanup import ALWAYS_ON_BIN_MCP_SERVERS
-    from kiro_crew.mcp_cleanup import CONTROL_PLANE_SERVERS as via_leaf
+    from aj_crew.acp.session_mcp import CONTROL_PLANE_SERVERS as via_acp
+    from aj_crew.mcp_cleanup import ALWAYS_ON_BIN_MCP_SERVERS
+    from aj_crew.mcp_cleanup import CONTROL_PLANE_SERVERS as via_leaf
 
     assert via_acp is via_leaf, "the two ceilings read separate tuples"
     assert set(via_leaf) < set(

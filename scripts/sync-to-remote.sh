@@ -1,7 +1,7 @@
 #!/bin/bash
-# sync-to-remote.sh — push KiroCrew state from LOCAL → REMOTE Cloud Desktop
+# sync-to-remote.sh — push AjCrew state from LOCAL → REMOTE Cloud Desktop
 # Direction: one-way (local overwrites remote). Run from your laptop/Mac.
-# Improvements over sync-kirocrew.sh:
+# Improvements over sync-ajcrew.sh:
 #   - Custom port support (patches config.json after copy)
 #   - SQLite WAL sync (memory.db-wal + memory.db-shm)
 #   - Session sync for dashboard restore
@@ -23,7 +23,7 @@ usage() {
   cat <<EOF
 Usage: sync-to-remote.sh [OPTIONS] [HOST] [PORT]
 
-Push KiroCrew state from LOCAL → REMOTE (one-way, local overwrites remote).
+Push AjCrew state from LOCAL → REMOTE (one-way, local overwrites remote).
 Run this from your laptop/Mac. Patches remote config.json with the specified
 port and disables auto_open_browser.
 
@@ -87,7 +87,7 @@ rsync_dry() {
   fi
 }
 
-echo "=== Syncing KiroCrew to $HOST (port=$PORT) $(${DRY_RUN} && echo '[DRY RUN]') ==="
+echo "=== Syncing AjCrew to $HOST (port=$PORT) $(${DRY_RUN} && echo '[DRY RUN]') ==="
 
 # --- Create remote dirs ---
 if ! $DRY_RUN; then
@@ -215,6 +215,6 @@ if $DRY_RUN; then
   echo "    Remove --dry-run to sync for real."
 else
   echo "=== Done. Remote config: port=$PORT, auto_open_browser=false ==="
-  echo "    Next: restart gateway on $HOST ('kirocrew gateway &')"
+  echo "    Next: restart gateway on $HOST ('ajcrew gateway &')"
   echo "    Then: ssh -fN -L $PORT:localhost:$PORT $HOST"
 fi

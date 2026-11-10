@@ -25,10 +25,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from test_cron_acp_retry import gw_and_cb  # noqa: F401  (fixture)
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.llm_helpers import SESSION_NOT_FOUND_GIVE_UP_TEXT, SESSION_NOT_FOUND_RETRY_NOTICE
-from kiro_crew.providers.base import EVENT_TOOL_CALL, LLMEvent
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.acp.client import AcpError
+from aj_crew.llm_helpers import SESSION_NOT_FOUND_GIVE_UP_TEXT, SESSION_NOT_FOUND_RETRY_NOTICE
+from aj_crew.providers.base import EVENT_TOOL_CALL, LLMEvent
+from aj_crew.testing.wait import async_wait_until
 
 
 def _lost() -> AcpError:
@@ -41,7 +41,7 @@ def _credential_dead() -> AcpError:
     The process's cached AWS credentials fail to load, so only a fresh process helps.
     Built through ``_raise_acp_error``, the path ``AcpClient`` raises the real frame through.
     """
-    from kiro_crew.acp.transport_errors import _raise_acp_error
+    from aj_crew.acp.transport_errors import _raise_acp_error
 
     try:
         _raise_acp_error(
@@ -97,7 +97,7 @@ def _answer() -> list[Any]:
 async def test_slack_lost_session_resets_and_replays_once():
     from test_slack_handler import FakeSessionManager, MockSlackClient, _visible_texts
 
-    from kiro_crew.slack.handler import handle_message
+    from aj_crew.slack.handler import handle_message
 
     slack = MockSlackClient()
     provider = _ScriptedSlackProvider([[_lost()], _answer()])
@@ -119,7 +119,7 @@ async def test_slack_lost_session_ends_the_lost_attempt_before_its_reset():
     it received inline is revoked before the replay runs."""
     from test_slack_handler import FakeSessionManager, MockSlackClient
 
-    from kiro_crew.slack.handler import handle_message
+    from aj_crew.slack.handler import handle_message
 
     class _Settling(FakeSessionManager):
         def settle_turn(self, key):
@@ -139,7 +139,7 @@ async def test_slack_lost_session_ends_the_lost_attempt_before_its_reset():
 async def test_slack_second_loss_ends_on_a_clear_error():
     from test_slack_handler import FakeSessionManager, MockSlackClient, _visible_texts
 
-    from kiro_crew.slack.handler import handle_message
+    from aj_crew.slack.handler import handle_message
 
     slack = MockSlackClient()
     provider = _ScriptedSlackProvider([[_lost()]])
@@ -158,7 +158,7 @@ async def test_slack_second_loss_ends_on_a_clear_error():
 async def test_slack_lost_after_output_is_not_replayed():
     from test_slack_handler import FakeSessionManager, MockSlackClient
 
-    from kiro_crew.slack.handler import handle_message
+    from aj_crew.slack.handler import handle_message
 
     slack = MockSlackClient()
     provider = _ScriptedSlackProvider([[LLMEvent(kind="text_chunk", text="half"), _lost()]])
@@ -179,7 +179,7 @@ async def test_slack_stale_credential_error_recycles_and_replays_once():
     """
     from test_slack_handler import FakeSessionManager, MockSlackClient, _visible_texts
 
-    from kiro_crew.slack.handler import handle_message
+    from aj_crew.slack.handler import handle_message
 
     slack = MockSlackClient()
     provider = _ScriptedSlackProvider([[_credential_dead()], _answer()])
@@ -201,7 +201,7 @@ async def test_slack_stale_credential_error_second_failure_is_not_a_loop():
     the give-up carries the provider's remedy (a new thread would fail alike)."""
     from test_slack_handler import FakeSessionManager, MockSlackClient, _visible_texts
 
-    from kiro_crew.slack.handler import handle_message
+    from aj_crew.slack.handler import handle_message
 
     slack = MockSlackClient()
     provider = _ScriptedSlackProvider([[_credential_dead()]])
@@ -222,7 +222,7 @@ async def test_slack_stale_credential_error_second_failure_is_not_a_loop():
 async def test_channel_lost_session_is_replaced_and_replayed_once():
     from test_channel_prompt_busy import FakeSessions, _make_agent, _make_channel, _text_client
 
-    from kiro_crew import channel as channel_mod
+    from aj_crew import channel as channel_mod
 
     agent = _make_agent()
     ch = _make_channel()
@@ -244,7 +244,7 @@ async def test_channel_lost_session_is_replaced_and_replayed_once():
 async def test_channel_stream_task_classifies_a_lost_session():
     from test_channel_prompt_busy import _make_agent, _make_channel, _raising_client
 
-    from kiro_crew import channel as channel_mod
+    from aj_crew import channel as channel_mod
 
     verdict = await channel_mod._stream_task(
         _make_agent(), _make_channel(), _raising_client(_lost()), "hi"
@@ -256,7 +256,7 @@ async def test_channel_stream_task_classifies_a_lost_session():
 async def test_channel_lost_after_a_tool_is_replaced_without_replay():
     from test_channel_prompt_busy import FakeSessions, _make_agent, _make_channel, _text_client
 
-    from kiro_crew import channel as channel_mod
+    from aj_crew import channel as channel_mod
 
     agent = _make_agent()
     ch = _make_channel()
@@ -281,7 +281,7 @@ async def test_channel_lost_after_a_tool_is_replaced_without_replay():
 async def test_channel_second_loss_returns_none():
     from test_channel_prompt_busy import FakeSessions, _make_agent, _make_channel, _raising_client
 
-    from kiro_crew import channel as channel_mod
+    from aj_crew import channel as channel_mod
 
     sessions = FakeSessions([_raising_client(_lost())])
     assert (
@@ -298,8 +298,8 @@ async def test_channel_broken_credential_helper_ends_on_the_providers_remedy():
     recycles once, worded for credentials, then posts the provider's remedy."""
     from test_channel_prompt_busy import FakeSessions, _raising_client
 
-    from kiro_crew import channel as channel_mod
-    from kiro_crew.llm_helpers import CREDENTIAL_RELOAD_RETRY_NOTICE
+    from aj_crew import channel as channel_mod
+    from aj_crew.llm_helpers import CREDENTIAL_RELOAD_RETRY_NOTICE
 
     ch = channel_mod.Channel(id="c1", topic="review")
     agent = ch.add_agent(role="dev", agent_name="dev")
@@ -324,7 +324,7 @@ async def test_channel_broken_credential_helper_ends_on_the_providers_remedy():
 
 
 def _job(**kw):
-    from kiro_crew.cron import CronJob, CronSchedule
+    from aj_crew.cron import CronJob, CronSchedule
 
     return CronJob(
         id=kw.pop("id", "snf"),
@@ -338,9 +338,9 @@ def _job(**kw):
 def _run_cron(gw, get_cb, capture_cron, job, *, stream=None, resume=None):
     """Fire *job* once with either ``stream_and_collect`` or the cron resume seam faked."""
     target, fake = (
-        ("kiro_crew.slack.gateway.stream_and_collect", stream)
+        ("aj_crew.slack.gateway.stream_and_collect", stream)
         if stream is not None
-        else ("kiro_crew.slack.gateway._cron_stream_with_posttoken_resume", resume)
+        else ("aj_crew.slack.gateway._cron_stream_with_posttoken_resume", resume)
     )
 
     async def go():
@@ -350,7 +350,7 @@ def _run_cron(gw, get_cb, capture_cron, job, *, stream=None, resume=None):
     with (
         patch(target, side_effect=fake),
         patch(
-            "kiro_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)
+            "aj_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)
         ),
     ):
         return asyncio.run(go())
@@ -528,7 +528,7 @@ async def test_subagent_lost_session_respawns_once(healthy_host_memory):
         info.done = True
 
     mgr._run_inner = AsyncMock(side_effect=run_inner)
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("work")
         assert info is not None
         await _settle(mgr, info)
@@ -552,14 +552,14 @@ async def test_subagent_lost_session_after_a_tool_is_terminal(healthy_host_memor
         raise _lost()
 
     mgr._run_inner = AsyncMock(side_effect=run_inner)
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("work")
         assert info is not None
         await mgr._tasks[info.id]
 
     mgr._schedule_cancel_recovery.assert_not_called()
     assert info.done is True
-    from kiro_crew.llm_helpers import SESSION_NOT_FOUND_NOT_REPLAYED_TEXT
+    from aj_crew.llm_helpers import SESSION_NOT_FOUND_NOT_REPLAYED_TEXT
 
     assert SESSION_NOT_FOUND_NOT_REPLAYED_TEXT in info.error
 
@@ -578,7 +578,7 @@ async def test_subagent_second_loss_names_the_give_up(healthy_host_memory):
         raise _lost()
 
     mgr._run_inner = AsyncMock(side_effect=run_inner)
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("work")
         assert info is not None
         await _settle(mgr, info)
@@ -606,7 +606,7 @@ async def test_injection_reloads_the_parent_once():
             raise _lost()
         return "synthesized"
 
-    with patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream):
+    with patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream):
         await on_done(info)
 
     assert calls == 2
@@ -627,7 +627,7 @@ async def test_injection_second_loss_is_reported_not_looped():
         calls += 1
         raise _lost()
 
-    with patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream):
+    with patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream):
         await on_done(info)
 
     assert calls == 2, "one re-load, no retry ladder on a lost session"
@@ -641,7 +641,7 @@ async def test_injection_second_loss_is_reported_not_looped():
 
 
 def _lost_after_tool() -> AcpError:
-    from kiro_crew.llm_helpers import TOOL_ACTIVITY_ATTR
+    from aj_crew.llm_helpers import TOOL_ACTIVITY_ATTR
 
     exc = _lost()
     setattr(exc, TOOL_ACTIVITY_ATTR, True)
@@ -650,7 +650,7 @@ def _lost_after_tool() -> AcpError:
 
 @pytest.mark.asyncio
 async def test_stream_and_collect_tags_tool_activity_on_a_lost_session():
-    from kiro_crew.llm_helpers import acp_error_after_tool_activity, stream_and_collect
+    from aj_crew.llm_helpers import acp_error_after_tool_activity, stream_and_collect
 
     provider = SimpleNamespace()
 
@@ -679,7 +679,7 @@ def test_cron_lost_after_a_tool_is_not_retried(gw_and_cb):  # noqa: F811
 
 
 def test_cron_sequence_step_lost_after_a_tool_is_not_rerun(gw_and_cb):  # noqa: F811
-    from kiro_crew.llm_helpers import SESSION_NOT_FOUND_NOT_REPLAYED_TEXT
+    from aj_crew.llm_helpers import SESSION_NOT_FOUND_NOT_REPLAYED_TEXT
 
     gw, get_cb, capture_cron = gw_and_cb
     gw.cron_svc = None
@@ -710,7 +710,7 @@ async def test_injection_lost_after_a_tool_is_not_reloaded():
         calls += 1
         raise _lost_after_tool()
 
-    with patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream):
+    with patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream):
         await on_done(_finished_subagent())
 
     assert calls == 1
@@ -719,8 +719,8 @@ async def test_injection_lost_after_a_tool_is_not_reloaded():
 @pytest.mark.asyncio
 async def test_cron_continuation_loss_is_marked_as_activity():
     """A loss during the post-token CONTINUE must never let cron re-send the task."""
-    from kiro_crew.llm_helpers import acp_error_after_tool_activity
-    from kiro_crew.slack.gateway import _cron_stream_with_posttoken_resume
+    from aj_crew.llm_helpers import acp_error_after_tool_activity
+    from aj_crew.slack.gateway import _cron_stream_with_posttoken_resume
 
     calls = 0
 
@@ -733,9 +733,9 @@ async def test_cron_continuation_loss_is_marked_as_activity():
         raise _lost()
 
     with (
-        patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream),
-        patch("kiro_crew.slack.gateway.asyncio.sleep", new=AsyncMock()),
-        patch("kiro_crew.slack.gateway.provider_last_turn_usage") as usage,
+        patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream),
+        patch("aj_crew.slack.gateway.asyncio.sleep", new=AsyncMock()),
+        patch("aj_crew.slack.gateway.provider_last_turn_usage") as usage,
     ):
         usage.return_value = SimpleNamespace(credits=0.0)
         with pytest.raises(AcpError) as caught:
@@ -747,7 +747,7 @@ async def test_cron_continuation_loss_is_marked_as_activity():
 
 
 def test_cron_alert_names_the_skipped_rerun_after_a_tool(gw_and_cb):  # noqa: F811
-    from kiro_crew.llm_helpers import SESSION_NOT_FOUND_NOT_REPLAYED_TEXT
+    from aj_crew.llm_helpers import SESSION_NOT_FOUND_NOT_REPLAYED_TEXT
 
     gw, get_cb, capture_cron = gw_and_cb
     gw.dashboard_state = MagicMock()

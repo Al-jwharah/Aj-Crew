@@ -37,9 +37,9 @@ mkdirSync(OUT, { recursive: true })
 const SIDEBAR_WIDTH = 280
 
 const SLOTS = [
-  { key: 'chat-1', title: 'Refactor the auth middleware', messages: 12, running: false, agent: 'kirocrew', mode: '' },
-  { key: 'chat-2', title: 'Weekly report draft', messages: 4, running: false, agent: 'kirocrew', mode: '' },
-  { key: 'chat-3', title: 'Debug the flaky e2e suite', messages: 27, running: true, agent: 'kirocrew', mode: '' },
+  { key: 'chat-1', title: 'Refactor the auth middleware', messages: 12, running: false, agent: 'ajcrew', mode: '' },
+  { key: 'chat-2', title: 'Weekly report draft', messages: 4, running: false, agent: 'ajcrew', mode: '' },
+  { key: 'chat-3', title: 'Debug the flaky e2e suite', messages: 27, running: true, agent: 'ajcrew', mode: '' },
 ]
 
 /** Shape of a live `/api/models` row (`RawModel` in providers/adapters/acp.ts). */

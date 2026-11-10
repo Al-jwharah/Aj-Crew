@@ -32,15 +32,15 @@ snapshots are at:
 
 Patterns in `AUTOSDE.yaml` are repo-relative. Patterns in `website-AUTOSDE.yaml`
 are relative to `website/`: match them against a changed path with its leading
-`website/` removed (`src/**/*.tsx` means `website/src/**/*.tsx`, never `src/kiro_crew/`).
+`website/` removed (`src/**/*.tsx` means `website/src/**/*.tsx`, never `src/aj_crew/`).
 Both files use gitignore-style globs: `**` also matches zero directories, so
-`src/kiro_crew/**/*.py` covers `src/kiro_crew/hooks.py`.
+`src/aj_crew/**/*.py` covers `src/aj_crew/hooks.py`.
 
 They are base-branch snapshots, so a PR cannot weaken the rules that govern it.
 
 ## Repo context
 
-Kiro Crew is an open-source AI agent platform (Python backend, React/TS
+Aj Crew is an open-source AI agent platform (Python backend, React/TS
 dashboard). De-Amazoned public fork: the absence of Brazil/AUTOSDE tooling is not
 a defect.
 

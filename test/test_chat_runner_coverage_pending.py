@@ -1,4 +1,4 @@
-"""Coverage tests for ``kiro_crew.dashboard.chat_runner``: work armed between turns.
+"""Coverage tests for ``aj_crew.dashboard.chat_runner``: work armed between turns.
 
 Covers requeue suppression, ``_consume_pending_reset`` with its discard boundary and
 its wait for running subagents, the eager spawn, armed resume prefetches and their
@@ -15,9 +15,9 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 import pytest
 from chat_runner_coverage_helpers import _slot, _state
 
-from kiro_crew.config import live
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.testing.wait import await_until
+from aj_crew.config import live
+from aj_crew.dashboard import chat_runner
+from aj_crew.testing.wait import await_until
 
 # ── requeue suppression / pending reset ───────────────────────────────────
 
@@ -137,7 +137,7 @@ class TestConsumePendingReset:
 
         async def _sleep_forever() -> None:
             # flake-ok: pre-existing 30 s park: the stale retry task sleeps until the test cancels it, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing 30 s park: the stale retry task sleeps until the test cancels it, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing 30 s park: the stale retry task sleeps until the test cancels it, moved verbatim; tracked for a de-flake pass
             await asyncio.sleep(30)
 
         stale_task = asyncio.get_running_loop().create_task(_sleep_forever())
@@ -691,7 +691,7 @@ class TestScheduleEagerSpawn:
         plain attribute read, because it runs on the event loop. The autouse
         watcher reset in ``test/conftest.py`` clears this after every test.
         """
-        cfg = chat_runner.KiroCrewConfig()
+        cfg = chat_runner.AjCrewConfig()
         cfg.session.eager_spawn = enabled
         live.watch().prime(cfg)
 
@@ -904,7 +904,7 @@ class TestSteerLifecycle:
         """The turn ended while the steer's RPC was still writing: its frame may
         already be in the pipe and the RPC's own verdict lands after the entry
         may have drained, so the requeue marks it now."""
-        from kiro_crew.dashboard.chat_utils import STEER_POSSIBLY_DELIVERED_META
+        from aj_crew.dashboard.chat_utils import STEER_POSSIBLY_DELIVERED_META
 
         state, slot = _state(tmp_path), _slot()
         slot._pending_steers = ["in flight", "settled"]
@@ -921,7 +921,7 @@ class TestSteerLifecycle:
     def test_a_possibly_delivered_steer_drains_alone(self, tmp_path):
         """Its note speaks for one message, so a merge never folds the user's
         later messages under it."""
-        from kiro_crew.dashboard.chat_utils import _dequeue_next_message
+        from aj_crew.dashboard.chat_utils import _dequeue_next_message
 
         state, slot = _state(tmp_path), _slot()
         slot.queue_append("later one")

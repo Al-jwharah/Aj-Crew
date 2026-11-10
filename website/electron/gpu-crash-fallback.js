@@ -115,7 +115,7 @@ function softwareRenderingSwitches() {
 /**
  * The opt-in `disable-gpu.js` switch that contradicts software rendering.
  * `--disable-software-rasterizer` tells Chromium it may NOT fall back to
- * SwiftShader, so if an operator also set `KIROCREW_DISABLE_GPU=1` (env and
+ * SwiftShader, so if an operator also set `AJCREW_DISABLE_GPU=1` (env and
  * argv survive `app.relaunch()`), the software-mode boot would request
  * SwiftShader with `--use-angle=swiftshader` while forbidding it — the same
  * no-window exit this module exists to fix. It is removed before the software

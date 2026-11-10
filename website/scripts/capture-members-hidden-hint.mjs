@@ -23,15 +23,15 @@ import { json } from './lib/boot-api.mjs'
 import { serveDist, DEFAULT_DIST } from './lib/serve-dist.mjs'
 import { stubDashboardApi, logPageProblems } from './lib/stub-dashboard-api.mjs'
 
-const OUT = process.argv[2] || join(process.env.KIROCREW_SCRATCH || '/tmp', 'members-hidden-hint')
+const OUT = process.argv[2] || join(process.env.AJCREW_SCRATCH || '/tmp', 'members-hidden-hint')
 const DIST = process.argv[3] ? resolve(process.argv[3]) : DEFAULT_DIST
 mkdirSync(OUT, { recursive: true })
 
 const now = Math.floor(Date.now() / 1000)
 const member = (name, extra = {}) => ({
   name, slug: name, bound: true, slot_key: `member-${name}`, running: false,
-  kiro_agent: 'kirocrew', workspace: '/srv/repos/example', memory_store: `member-${name}`,
-  memory_version: 2, memory_owner: name, model: '', source: 'kirocrew', dashboard_created: true, ...extra,
+  kiro_agent: 'ajcrew', workspace: '/srv/repos/example', memory_store: `member-${name}`,
+  memory_version: 2, memory_owner: name, model: '', source: 'ajcrew', dashboard_created: true, ...extra,
 })
 const MEMBERS = [
   member('trip-planner', {

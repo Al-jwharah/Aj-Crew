@@ -275,7 +275,7 @@ def _root_accessors(root: _Scope) -> set[str]:
 def _unanchored_glob(call: ast.Call) -> bool:
     """True for a ``glob`` pattern that recurses from the receiver itself.
 
-    ``root.glob("src/kiro_crew/**/*.py")`` is anchored below the root and several
+    ``root.glob("src/aj_crew/**/*.py")`` is anchored below the root and several
     gates use exactly that shape on purpose, so only a LEADING ``**`` -- which is
     ``rglob`` written the long way -- counts.
     """
@@ -365,7 +365,7 @@ class TestCorpusHealth:
 
     def test_every_file_is_python_under_the_package(self):
         root = src_root()
-        assert (root / "security" / "__init__.py").is_file(), f"{root} is not the kiro_crew package"
+        assert (root / "security" / "__init__.py").is_file(), f"{root} is not the aj_crew package"
         for path, _text in iter_source_texts():
             assert path.suffix == ".py"
             assert path.is_relative_to(root)
@@ -744,7 +744,7 @@ class TestNoGateEnumeratesTheCheckoutByWalking:
     and three later gates re-derived the walk anyway -- two of them latent, one
     fail-OPEN. A convention nothing pins does not propagate, so it is pinned here:
     a recursive scan whose root is the REPO ROOT is the offence. A scan rooted at a
-    subdirectory is not, because ``src/kiro_crew`` and ``docs`` hold no second
+    subdirectory is not, because ``src/aj_crew`` and ``docs`` hold no second
     checkout and no ignored tree.
     """
 
@@ -810,7 +810,7 @@ class TestNoGateEnumeratesTheCheckoutByWalking:
             # Anchored below the root: no ignored tree and no nested checkout there.
             "anchored-glob": (
                 "REPO = Path(__file__).resolve().parents[1]\n"
-                "REPO.glob('src/kiro_crew/**/*.py')\n"
+                "REPO.glob('src/aj_crew/**/*.py')\n"
             ),
             "subtree-rglob": "REPO = Path(__file__).resolve().parents[1]\n(REPO / 'docs').rglob('*.md')\n",
             # The overwhelmingly common `walk` in this suite, and not a filesystem one.

@@ -2,7 +2,7 @@
 and the spec keys nothing carries named off the dashboard (P1-9).
 
 kiro-cli runs a spec's ``hooks`` on every session. On KAS Crew fires them in its
-place; a cron turn does through :class:`kiro_crew.cron_service.turn_hooks.CronTurnHooks`.
+place; a cron turn does through :class:`aj_crew.cron_service.turn_hooks.CronTurnHooks`.
 """
 
 from __future__ import annotations
@@ -12,14 +12,14 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.hooks as hooks_mod
-from kiro_crew import llm_helpers
-from kiro_crew.acp.types import AcpEvent
-from kiro_crew.agent_sdk import spec_hooks
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.cron_service.turn_hooks import CronTurnHooks
-from kiro_crew.hooks import (
+import aj_crew.hooks as hooks_mod
+from aj_crew import llm_helpers
+from aj_crew.acp.types import AcpEvent
+from aj_crew.agent_sdk import spec_hooks
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.cron_service.turn_hooks import CronTurnHooks
+from aj_crew.hooks import (
     HOOK_EVENT_AGENT_SPAWN,
     HOOK_EVENT_PRE_TOOL_USE,
     HOOK_EVENT_STOP,
@@ -27,8 +27,8 @@ from kiro_crew.hooks import (
     ScriptHook,
     ScriptHookResult,
 )
-from kiro_crew.messaging import script_hooks
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST
+from aj_crew.messaging import script_hooks
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST
 
 
 def _hook(event: str, command: str, matcher: str = "") -> ScriptHook:
@@ -202,7 +202,7 @@ def test_turn_spec_hooks_returns_the_keys_nothing_carries(monkeypatch):
 
 
 def test_a_cron_turn_names_the_lost_keys_as_the_dashboard_does(monkeypatch, ran):
-    from kiro_crew.dashboard.chat_turn.tool_approval import _spec_keys_notice
+    from aj_crew.dashboard.chat_turn.tool_approval import _spec_keys_notice
 
     _spec(monkeypatch, [], lost=("permissions",))
     hooks = _prepare(_Provider())
@@ -211,7 +211,7 @@ def test_a_cron_turn_names_the_lost_keys_as_the_dashboard_does(monkeypatch, ran)
 
 def test_a_hooks_page_pre_tool_hook_stays_informational_on_a_cron_turn(monkeypatch, ran):
     """Only the spec's PreToolUse hooks gate; a failing Hooks-page one does not refuse."""
-    from kiro_crew.hooks import ScriptHookStore
+    from aj_crew.hooks import ScriptHookStore
 
     page = ScriptHookStore(load=False)
     page._hooks = {"audit": ScriptHook(id="audit", event=HOOK_EVENT_PRE_TOOL_USE, command="audit")}

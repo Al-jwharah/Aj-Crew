@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.wecom.transport (WeComTransport, Layer 1)."""
+"""Tests for aj_crew.wecom.transport (WeComTransport, Layer 1)."""
 
 from __future__ import annotations
 
@@ -6,15 +6,15 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.messaging.outbound_files import OutboundFile
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.wecom.client import (
+from aj_crew.messaging.outbound_files import OutboundFile
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.wecom.client import (
     CHAT_TYPE_SINGLE,
     WECOM_MAX_REPLY_BYTES,
     WECOM_SAFE_REPLY_CHARS,
     WeComInbound,
 )
-from kiro_crew.wecom.transport import (
+from aj_crew.wecom.transport import (
     WECOM_CAPABILITIES,
     WeComSendError,
     WeComTransport,
@@ -366,18 +366,18 @@ class TestAuthorize:
 
     def test_unknown_denied(self) -> None:
         t = WeComTransport(FakeClient(), owner_id="Wei", allowed_users=["LiHaoYi"])
-        with patch("kiro_crew.wecom.transport.sel") as mock_sel:
+        with patch("aj_crew.wecom.transport.sel") as mock_sel:
             assert t.authorize(_msg("stranger")) is False
         mock_sel().log_api_access.assert_called_once()
 
     def test_empty_userid_denied(self) -> None:
         t = WeComTransport(FakeClient(), owner_id="Wei")
-        with patch("kiro_crew.wecom.transport.sel"):
+        with patch("aj_crew.wecom.transport.sel"):
             assert t.authorize(_msg("")) is False
 
     def test_empty_allowlist_and_no_owner_denies_everyone(self) -> None:
         t = WeComTransport(FakeClient())  # fail closed
-        with patch("kiro_crew.wecom.transport.sel"):
+        with patch("aj_crew.wecom.transport.sel"):
             assert t.authorize(_msg("anyone")) is False
 
     def test_allow_all_admits_any_userid(self) -> None:
@@ -388,14 +388,14 @@ class TestAuthorize:
     def test_allow_all_still_denies_empty_userid(self) -> None:
         # Even under allow-all, an anonymous/malformed frame never dispatches.
         t = WeComTransport(FakeClient(), allow_all=True)
-        with patch("kiro_crew.wecom.transport.sel"):
+        with patch("aj_crew.wecom.transport.sel"):
             assert t.authorize(_msg("")) is False
 
     def test_allow_all_off_is_not_inferred_from_empty_list(self) -> None:
         # The everybody grant is ONLY the explicit flag — an empty allow-list
         # plus allow_all=False stays fail-closed.
         t = WeComTransport(FakeClient(), allowed_users=[], allow_all=False)
-        with patch("kiro_crew.wecom.transport.sel"):
+        with patch("aj_crew.wecom.transport.sel"):
             assert t.authorize(_msg("anyone")) is False
 
 
@@ -421,7 +421,7 @@ class TestReceive:
             dispatched.append(inbound)
 
         t = WeComTransport(FakeClient(), owner_id="Wei", dispatch=dispatch)
-        with patch("kiro_crew.wecom.transport.sel"):
+        with patch("aj_crew.wecom.transport.sel"):
             await t.receive(_inbound("stranger", "hello"))
         assert dispatched == []
 
@@ -524,7 +524,7 @@ class TestWarmChatsAreBounded:
     def test_cap_constant_matches_expected(self) -> None:
         # The production constant is the single source of truth; pin it to the
         # literal these tests use.
-        from kiro_crew.wecom.transport import WECOM_WARM_CHATS_MAX
+        from aj_crew.wecom.transport import WECOM_WARM_CHATS_MAX
 
         assert WECOM_WARM_CHATS_MAX == self._EXPECTED_WARM_CAP
 
@@ -724,7 +724,7 @@ class TestWarmChatsAreBounded:
         # Operator clears the allow-list (allow_all stays on): every former roster
         # member becomes a learned peer. reconfigure itself does not trim.
         section = SimpleNamespace(allowed_users=[], allow_all_users=True)
-        with patch("kiro_crew.wecom.transport.sel"):
+        with patch("aj_crew.wecom.transport.sel"):
             transport.reconfigure(section)
 
         # One inbound converges the learned subset to the cap in a single pass.
@@ -773,7 +773,7 @@ class TestWarmChatsAreBounded:
         # The bound is on item SIZE as well as count: a non-roster userid longer
         # than WECOM_MAX_RETAINED_USERID_LEN is not stored as warm (so 512 keys
         # cannot hold arbitrary memory), but the message is still dispatched.
-        from kiro_crew.wecom.transport import WECOM_MAX_RETAINED_USERID_LEN
+        from aj_crew.wecom.transport import WECOM_MAX_RETAINED_USERID_LEN
 
         dispatched: list[WeComInbound] = []
 
@@ -798,13 +798,13 @@ class TestWarmChatsAreBounded:
         # allow-list under allow_all, must not stay resident as a learned peer.
         from types import SimpleNamespace
 
-        from kiro_crew.wecom.transport import WECOM_MAX_RETAINED_USERID_LEN
+        from aj_crew.wecom.transport import WECOM_MAX_RETAINED_USERID_LEN
 
         long_id = "r" * (WECOM_MAX_RETAINED_USERID_LEN + 50)
         transport = WeComTransport(FakeClient(), allowed_users=[long_id], allow_all=True)
         transport.note_warm_chat(long_id)
         assert long_id in transport._warm_chats
-        with patch("kiro_crew.wecom.transport.sel"):
+        with patch("aj_crew.wecom.transport.sel"):
             transport.reconfigure(SimpleNamespace(allowed_users=[], allow_all_users=True))
         transport.note_warm_chat("someone")
         assert long_id not in transport._warm_chats
@@ -813,7 +813,7 @@ class TestWarmChatsAreBounded:
     def test_an_oversized_roster_userid_is_still_retained(self) -> None:
         # Roster identities are config-authored and bounded, so the length cap
         # does not apply to them: an allow-listed id is always kept warm.
-        from kiro_crew.wecom.transport import WECOM_MAX_RETAINED_USERID_LEN
+        from aj_crew.wecom.transport import WECOM_MAX_RETAINED_USERID_LEN
 
         long_roster_id = "r" * (WECOM_MAX_RETAINED_USERID_LEN + 50)
         transport = WeComTransport(FakeClient(), allowed_users=[long_roster_id])

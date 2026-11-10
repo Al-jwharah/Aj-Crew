@@ -47,7 +47,7 @@ const PEER_DETAIL = {
 }
 const LOCAL_SLOTS = [{
   key: 'chat-local', title: 'Release notes draft', messages: 2, running: false,
-  agent: 'kirocrew', created: '2026-09-13T20:00:00Z', last_ts: new Date(Date.now() - 120_000).toISOString(), folder_id: '',
+  agent: 'ajcrew', created: '2026-09-13T20:00:00Z', last_ts: new Date(Date.now() - 120_000).toISOString(), folder_id: '',
 }]
 
 async function main() {

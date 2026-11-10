@@ -1,6 +1,6 @@
 """The Strands Decider launcher's ASGI wrappers: null rubrics and one decision at a time.
 
-Kiro Crew's wire format types each option's rubric as nullable and sends ``null``
+Aj Crew's wire format types each option's rubric as nullable and sends ``null``
 for an option with none; Strands Decider's server types every rubric as a string
 and answers 422 to a null one, so without the rewrite every decision would be
 skipped. Its endpoint also runs every request concurrently on a thread pool, so
@@ -18,14 +18,14 @@ import json
 from pathlib import Path
 from typing import Any
 
-from kiro_crew.decisions.impl_systemone import _to_wire
-from kiro_crew.decisions.types import Choice
-from kiro_crew.testing.wait import await_until
+from aj_crew.decisions.impl_systemone import _to_wire
+from aj_crew.decisions.types import Choice
+from aj_crew.testing.wait import await_until
 
 _LAUNCHER = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "decisions"
     / "local_servers"
     / "strands_decider_cpu.py"
@@ -131,7 +131,7 @@ def test_decision_requests_reach_the_app_rewritten_with_a_matching_length() -> N
 def test_other_routes_are_not_touched() -> None:
     raw = json.dumps(_request({"a": None})).encode()
 
-    body, _ = _drive("/kirocrew-attest", [raw])
+    body, _ = _drive("/ajcrew-attest", [raw])
 
     assert body == raw
 

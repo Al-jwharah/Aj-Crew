@@ -19,10 +19,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import subagent_persistence as sp
-from kiro_crew.subagent import SubagentManager
-from kiro_crew.subagent_manager import monitoring
-from kiro_crew.testing.wait import await_until, until_parked
+from aj_crew import subagent_persistence as sp
+from aj_crew.subagent import SubagentManager
+from aj_crew.subagent_manager import monitoring
+from aj_crew.testing.wait import await_until, until_parked
 
 PARENT = "dashboard:chat-7"
 
@@ -35,7 +35,7 @@ def _pinned_paths(tmp_path, _floor_monkeypatch):
     ``monkeypatch.undo()`` reverts every record on that instance, and would lift
     these pins with it.
     """
-    for var, sub in (("KIROCREW_HOME", "home"), ("KIROCREW_WORKSPACE", "workspace")):
+    for var, sub in (("AJCREW_HOME", "home"), ("AJCREW_WORKSPACE", "workspace")):
         path = tmp_path / sub
         path.mkdir()
         _floor_monkeypatch.setenv(var, str(path))
@@ -209,7 +209,7 @@ class _HeldBoot:
         )
         monkeypatch.setattr(self.manager, "_end_orphan_process", _end)
         monkeypatch.setattr(self.manager, "_is_pid_alive", lambda _pid: False)
-        monkeypatch.setattr("kiro_crew.subagent.sel", MagicMock())
+        monkeypatch.setattr("aj_crew.subagent.sel", MagicMock())
 
     async def parked_sweep(self) -> asyncio.Task[None]:
         """Start the boot sweep and return it once it waits for the release.
@@ -259,7 +259,7 @@ async def test_a_hold_never_released_still_sends_the_owner_dm_digest(monkeypatch
     _running_orphan("orp0010")
     monkeypatch.setattr(monitoring, "_ORPHAN_NOTICE_HOLD_SECS", 0.01)
     boot = _HeldBoot(monkeypatch, tab_open=False)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.subagent"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.subagent"):
         sweep = asyncio.create_task(boot.manager._reconcile_orphans())
         await await_until(sweep, what="the sweep whose hold runs out")
 

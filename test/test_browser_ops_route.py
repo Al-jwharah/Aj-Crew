@@ -20,10 +20,10 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.browser_harness import live_hub as hub_mod
-from kiro_crew.browser_harness import ops as harness_ops
-from kiro_crew.dashboard.handlers import browser_ops as mod
-from kiro_crew.testing.wait import await_until, until_parked
+from aj_crew.browser_harness import live_hub as hub_mod
+from aj_crew.browser_harness import ops as harness_ops
+from aj_crew.dashboard.handlers import browser_ops as mod
+from aj_crew.testing.wait import await_until, until_parked
 
 
 @pytest.fixture(autouse=True)
@@ -631,8 +631,8 @@ async def test_a_fast_op_behind_a_held_lock_answers_browser_busy(
 def test_the_shims_budget_outlasts_the_routes_worst_case() -> None:
     """The tool's HTTP timeout is derived from this route's waits (one module), and is
     strictly longer than their sum, so a "did not answer" can never precede a landing."""
-    from kiro_crew.browser_harness import budgets
-    from kiro_crew.mcp_tools import browser as shim
+    from aj_crew.browser_harness import budgets
+    from aj_crew.mcp_tools import browser as shim
 
     worst_fast = mod.ENSURE_TIMEOUT_S + mod.LOCK_WAIT_S + mod.OP_TIMEOUT_S + mod.OP_TIMEOUT_S
     worst_slow = mod.ENSURE_TIMEOUT_S + mod.LOCK_WAIT_S + mod.OP_TIMEOUT_S + mod.SLOW_OP_TIMEOUT_S

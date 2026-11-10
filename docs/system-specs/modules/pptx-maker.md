@@ -12,16 +12,16 @@ Slide composition and `.pptx` writing are NOT implemented here. They are done by
 [spec-driven-presentation-maker](https://github.com/aws-samples/sample-spec-driven-presentation-maker)
 (AWS Samples, MIT-0), a public open-source engine that is **fetched as a
 sha256-pinned tarball into the app's data dir on first use and never modified**.
-This app supplies the Kiro Crew integration: the agents that drive the engine over
+This app supplies the Aj Crew integration: the agents that drive the engine over
 MCP, the studio page, and the deck / style / template API.
 
-**Nothing has to be installed by hand.** `pip install kirocrew` is the only
+**Nothing has to be installed by hand.** `pip install ajcrew` is the only
 prerequisite: `uv` is a declared Python dependency resolved through the installed
 package, and the engine arrives over plain HTTPS, so `git` is not required. See
 Provisioning.
 
 Attribution: the app was originally written by **sktok** as a standalone app and
-ported here. See `src/kiro_crew/apps/builtins/pptx_maker/ATTRIBUTION.md`.
+ported here. See `src/aj_crew/apps/builtins/pptx_maker/ATTRIBUTION.md`.
 
 Platform: `macos`, `linux`, and `windows`. The manifest exposes all three, and
 provisioning resolves the engine interpreter through the platform-specific POSIX
@@ -126,7 +126,7 @@ honestly:
   would mean a partial, platform-asymmetric installer for a tool the user can get
   in one command. `/deps` therefore returns a per-OS `hints` command and the user
   runs it. The command, and where `soffice` is looked for (`PATH`, then the fixed
-  Windows install roots), come from the core's `kiro_crew.soffice_discovery`
+  Windows install roots), come from the core's `aj_crew.soffice_discovery`
   (`soffice_install_hint`, `windows_install_path`, `which_within`), which the
   file panel's slide previews also use; this app carries no copy of either. macOS
   and Windows each name their one conventional manager. On Linux the command is built
@@ -238,7 +238,7 @@ disagree about state.
 ~/.kiro/crew/apps/pptx-maker/
   app.json, installed.json          # platform-written
   data/vendor/sdpm/                 # the pinned engine tree + its uv venv
-    .kirocrew-engine.json           #   tag/commit/digest of the verified install
+    .ajcrew-engine.json           #   tag/commit/digest of the verified install
   data/vendor/preview-tools/bin/    # managed preview tools; appended to the
     pdftoppm (or pdftoppm.cmd)      #   engine child's PATH, never the gateway's
   agents/*.json                     # rendered from the shipped templates
@@ -256,7 +256,7 @@ disagree about state.
   preview/page<N>-*.png, output.pptx
 ```
 
-`deck_root()` resolves on every call — env override (`KIROCREW_PPTX_DECK_ROOT`,
+`deck_root()` resolves on every call — env override (`AJCREW_PPTX_DECK_ROOT`,
 dev/test only), then the engine config's `output_dir`, then the engine default.
 Not cached, because the user can change it from Settings and a cached value would
 keep serving the old tree until a gateway restart.
@@ -330,7 +330,7 @@ does not stage a BUILTIN app's non-manifest files into `~/.kiro/crew/apps/<name>
 user-triggered (it downloads a third-party tree and builds a venv) and idempotent.
 
 The **skill** is not part of provisioning: it lives in
-`src/kiro_crew/builtin_skills/pptx-maker/SKILL.md` (bundled, NOT the repo-only
+`src/aj_crew/builtin_skills/pptx-maker/SKILL.md` (bundled, NOT the repo-only
 top-level `skills/`), which the gateway copies into the user's skills dir on
 every start. So it reaches every `pip`/DMG install whether or not the engine has
 been provisioned, per the skill-bundling rule in `AGENTS.md`. The manifest
@@ -343,10 +343,10 @@ destination is the same `skills/pptx-maker/` directory) and the catalog hides it
 ### Resolving `uv` — never by name
 
 `uv` is a declared Python dependency (`setup.cfg` `install_requires`), so a stock
-`pip install kirocrew` always HAS the binary — but not necessarily on `PATH`: a
+`pip install ajcrew` always HAS the binary — but not necessarily on `PATH`: a
 wheel install puts it in the venv's scripts dir, and the gateway may run with a
 minimal `PATH` (an installed launchd/systemd service). The ladder lives in
-`kiro_crew.env.resolve_uv()`, shared with pod provisioning so the minimal-`PATH`
+`aj_crew.env.resolve_uv()`, shared with pod provisioning so the minimal-`PATH`
 case is handled in one place; `provision.resolve_uv()` caches its answer
 process-wide and hands the two `uv` call sites an **absolute path**, never the
 bare string `"uv"`. Order, widest-trust first:
@@ -378,7 +378,7 @@ verified the commit id the SERVER reported for the tree it had just handed over.
 
 **`git` is a system prerequisite.** There is no `git` on PyPI, and it is far less
 universal than it looks — a slim Docker image, a fresh Windows box or a
-locked-down host may have none. Requiring it contradicts "`pip install kirocrew`
+locked-down host may have none. Requiring it contradicts "`pip install ajcrew`
 and nothing else".
 
 So `engine_source.py` downloads
@@ -411,7 +411,7 @@ half-removed one:
   untouched. The new tree is only swapped into place after a verified extraction,
   so `engine_root` is never partially replaced.
 
-`ENGINE_URL_ENV` (`KIROCREW_PPTX_ENGINE_URL`) allows a mirrored/air-gapped
+`ENGINE_URL_ENV` (`AJCREW_PPTX_ENGINE_URL`) allows a mirrored/air-gapped
 source. It must be `https://` (so an operator value cannot read local files or
 fetch plaintext) and the digest still gates it, so an override changes only WHERE
 the bytes come from, never WHICH bytes are accepted. `SKIP_DOWNLOAD_ENV` makes a
@@ -433,7 +433,7 @@ are dropped, so an upstream setuid or group-writable bit cannot survive install.
 
 ### How readiness is probed without a `.git`
 
-`engine_source.write_source_marker()` writes `.kirocrew-engine.json` (tag, commit,
+`engine_source.write_source_marker()` writes `.ajcrew-engine.json` (tag, commit,
 digest, repo) into the tree as the **last** step of a verified install, so its
 presence is the "this is the vetted tree" signal; no `.git` directory is consulted. `is_installed()` requires BOTH the commit and the digest to match
 the current pin, so bumping either makes an existing install re-fetch instead of
@@ -483,7 +483,7 @@ agent `resource`. The upstream app patched the vendored engine prompt in place o
 every install, which meant an engine upgrade silently reverted the customization.
 Keeping it in a separate file is what lets the engine stay an unmodified,
 replaceable dependency. The file covers: reply in the user's language, how to open
-a session, Kiro Crew's `[OPTIONS: …]` question affordance in place of the engine's
+a session, Aj Crew's `[OPTIONS: …]` question affordance in place of the engine's
 web-only `hearing` tool, and writing each deliverable incrementally so the studio
 can show it.
 
@@ -914,10 +914,10 @@ state immediately.
 ## Tests
 
 Backend coverage spans the repo-level `test/test_pptx_maker_*.py` files and the
-package-local `src/kiro_crew/apps/builtins/pptx_maker/tests/` suite; the list below
+package-local `src/aj_crew/apps/builtins/pptx_maker/tests/` suite; the list below
 is not exhaustive (`test_pptx_maker_owner_gate.py` and `test_pptx_maker_agents.py`
 also cover the owner gate and the agent templates).
-`setup.cfg` sets `testpaths = test src/kiro_crew/apps/builtins`, so both locations
+`setup.cfg` sets `testpaths = test src/aj_crew/apps/builtins`, so both locations
 are collected by CI:
 `..._paths.py` (segment grammar, traversal, symlink escape, deck-root
 resolution), `..._decks.py` (in-progress decks listed, newest compose epoch wins,

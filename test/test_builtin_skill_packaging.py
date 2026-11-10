@@ -1,8 +1,8 @@
 """Guard: a skill another packaged skill points at must itself be packaged.
 
-`_ensure_builtin_skills` copies `src/kiro_crew/builtin_skills/` into a user's
+`_ensure_builtin_skills` copies `src/aj_crew/builtin_skills/` into a user's
 `~/.kiro/crew/skills/`, on every distribution. Top-level `skills/` is reachable
-only through `_project_skills_dir()`, which reads `KIROCREW_PROJECT_DIR` — a
+only through `_project_skills_dir()`, which reads `AJCREW_PROJECT_DIR` — a
 repo checkout and the desktop bundle set it, a `pip install` from the wheel or
 sdist does not. A skill that lives only there is therefore invisible to a pip
 user, so a packaged skill telling the agent to "see the X skill" resolves to
@@ -18,10 +18,10 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew
-from kiro_crew.skills import _RELOCATED_SKILLS
+import aj_crew
+from aj_crew.skills import _RELOCATED_SKILLS
 
-PKG = Path(kiro_crew.__file__).resolve().parent
+PKG = Path(aj_crew.__file__).resolve().parent
 BUILTIN = PKG / "builtin_skills"
 
 
@@ -58,7 +58,7 @@ class TestPackagedSkillsReferenceOnlyPackagedSkills:
 
     @pytest.mark.parametrize(
         "referenced",
-        sorted({"kirocrew-worktree-dev", "babysit"}),
+        sorted({"ajcrew-worktree-dev", "babysit"}),
     )
     def test_known_cross_references_resolve(self, referenced: str) -> None:
         """The two names packaged skills point at today.

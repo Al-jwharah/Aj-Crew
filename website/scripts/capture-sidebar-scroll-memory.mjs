@@ -5,7 +5,7 @@
 //
 // Usage:
 //   npm run build
-//   OUT_DIR="$KIROCREW_SCRATCH/sidebar-scroll-memory" node scripts/capture-sidebar-scroll-memory.mjs
+//   OUT_DIR="$AJCREW_SCRATCH/sidebar-scroll-memory" node scripts/capture-sidebar-scroll-memory.mjs
 import { chromium } from 'playwright'
 import { mkdirSync, writeFileSync } from 'fs'
 import { serveDist } from './lib/serve-dist.mjs'
@@ -20,7 +20,7 @@ const slots = Array.from({ length: SESSIONS }, (_, i) => ({
   title: `Session ${i} — demo work item`,
   running: false,
   messages: 3 + (i % 9),
-  agent: i % 3 === 0 ? 'kirocrew' : 'kirocrew-lite',
+  agent: i % 3 === 0 ? 'ajcrew' : 'ajcrew-lite',
   last_ts: new Date(Date.now() - (i + 1) * 60_000).toISOString(),
 }))
 

@@ -59,8 +59,8 @@ test("loading.html shows only the stored theme-splash file, and keeps the stock 
   const { themeSplashSrc } = context;
 
   for (const ok of [
-    "file:///home/u/.config/KiroCrew/theme-splash.png",
-    "file:///C:/Users/u/AppData/Roaming/KiroCrew/theme-splash.svg",
+    "file:///home/u/.config/AjCrew/theme-splash.png",
+    "file:///C:/Users/u/AppData/Roaming/AjCrew/theme-splash.svg",
   ]) assert.equal(themeSplashSrc(ok), ok);
   for (const bad of [
     "",

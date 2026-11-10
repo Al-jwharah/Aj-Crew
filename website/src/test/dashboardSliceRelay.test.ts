@@ -36,7 +36,7 @@ describe('dashboardSlice unread relay', () => {
 
     expect(postMessage).toHaveBeenCalled()
     const [payload] = postMessage.mock.calls[0]
-    expect(payload).toMatchObject({ source: 'kirocrew', type: 'mc-unread-slots', count: 1 })
+    expect(payload).toMatchObject({ source: 'ajcrew', type: 'mc-unread-slots', count: 1 })
     expect(postMessage.mock.calls[0][1]).toBe(HUB)
 
     // Reading clears it -> relays count 0.

@@ -44,9 +44,9 @@ from issue_radar_crew_store_helpers import (  # noqa: F401 -- the autouse fixtur
     _unit,
 )
 
-from kiro_crew.apps.builtins.issue_radar.backend import crew_store as cs
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log_projection
+from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log_projection
 
 # ── crews ───────────────────────────────────────────────────────────────────
 
@@ -70,7 +70,7 @@ def test_a_crew_id_in_use_anywhere_is_never_minted_again(tmp_path, monkeypatch):
     other's ledgers into one record. Creation checks every repository's crew records
     and the crew log's slot listing before an id is taken, so a clash cannot happen."""
     other = cs.create_crew("someone", "elsewhere", {"name": "Twin"}, root=tmp_path)
-    from kiro_crew.apps.builtins.issue_radar.backend import store as radar_store
+    from aj_crew.apps.builtins.issue_radar.backend import store as radar_store
 
     gitlab_root = radar_store.provider_root(
         root=tmp_path, provider="gitlab", host="gitlab.example.org"
@@ -752,7 +752,7 @@ def test_the_clearable_fields_are_one_list_everywhere():
     tool declaration names it to the model. Three spellings, one pin."""
     from issue_radar_agent_tools_helpers import RECORD_TOOL, descriptor
 
-    from kiro_crew.crew_log.entry_types import RADAR_CLEARABLE_FIELDS
+    from aj_crew.crew_log.entry_types import RADAR_CLEARABLE_FIELDS
 
     assert tuple(cs.CLEARABLE_FIELDS) == tuple(RADAR_CLEARABLE_FIELDS)
     clear = descriptor(RECORD_TOOL)["inputSchema"]["properties"]["clear"]["description"]
@@ -765,7 +765,7 @@ def test_an_append_the_writer_refused_raises_instead_of_answering(tmp_path, monk
     is not a commit -- the write raises, the caller is told, and the fold shows
     nothing. Synthesizing an answer is reserved for a writer still holding the
     entry past the flush budget."""
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import emit as crew_log_emit
 
     crew, sid = _live_crew(tmp_path)
     cid = crew["id"]
@@ -883,8 +883,8 @@ def test_two_updates_with_the_same_line_but_different_fields_both_fold(tmp_path)
     """The collapse of a repeated entry keys on the whole update, not on the line's
     display identity: two same-millisecond calls with equal event text but
     different patches must both apply, while an exact repeat applies once."""
-    from kiro_crew.crew_log import projection as crew_log
-    from kiro_crew.crew_log.schema import Entry
+    from aj_crew.crew_log import projection as crew_log
+    from aj_crew.crew_log.schema import Entry
 
     def entry(seq, data):
         return Entry(
@@ -918,8 +918,8 @@ def test_a_retried_update_stamped_later_is_still_applied_once():
     sent again; the retry is the same update stamped seconds later. Its line id
     carries the stamp, so the repeat check keys on the payload alone: the update and
     its event apply once, and a re-applied ``tried`` does not list twice."""
-    from kiro_crew.crew_log import projection as crew_log
-    from kiro_crew.crew_log.schema import Entry
+    from aj_crew.crew_log import projection as crew_log
+    from aj_crew.crew_log.schema import Entry
 
     data = {
         "crew_id": "c_0a1b2c3d",
@@ -947,8 +947,8 @@ def test_an_identical_update_after_an_intervening_one_is_a_new_update():
     is recording a new transition, and it applies -- a history-wide check would
     silently drop it. A retry is the next update for its item, so the narrow check
     still catches it."""
-    from kiro_crew.crew_log import projection as crew_log
-    from kiro_crew.crew_log.schema import Entry
+    from aj_crew.crew_log import projection as crew_log
+    from aj_crew.crew_log.schema import Entry
 
     base = {"crew_id": "c_0a1b2c3d", "owner": OWNER, "repo": REPO, "number": 7}
     blocked = {**base, "phase": "awaiting-ci", "event": "waiting on CI", "event_kind": "ci"}

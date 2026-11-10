@@ -20,9 +20,9 @@ from remove_slot_for_history_key_helpers import (
     _remove_slot_for_history_key,
 )
 
-from kiro_crew import session_ledger
-from kiro_crew.dashboard.handlers import sessions as sessions_module
-from kiro_crew.dashboard.handlers.sessions import (
+from aj_crew import session_ledger
+from aj_crew.dashboard.handlers import sessions as sessions_module
+from aj_crew.dashboard.handlers.sessions import (
     _capture_history_delete_claim,
     _exclude_slot_units,
     _HistoryDeleteClaim,
@@ -56,15 +56,15 @@ class TestSessionLedgerOnPermanentDelete:
         ledger tree. A fixture with no slot is a unit the funnel must refuse, which
         is what the two tests below use it for.
         """
-        from kiro_crew import crew_log as lg
+        from aj_crew import crew_log as lg
 
         return lg.CrewLog.create(
-            lg.KIND_SESSION, session_id, owner="default", agent="kirocrew", slot=slot
+            lg.KIND_SESSION, session_id, owner="default", agent="ajcrew", slot=slot
         )
 
     @staticmethod
     def _exists(session_id: str) -> bool:
-        from kiro_crew import crew_log as lg
+        from aj_crew import crew_log as lg
 
         return lg.CrewLog.exists(lg.KIND_SESSION, session_id)
 
@@ -125,17 +125,17 @@ class TestSessionLedgerOnPermanentDelete:
         exactly how the rest of this class was green while the funnel could not
         remove a real one.
         """
-        from kiro_crew import crew_log as lg
-        from kiro_crew.crew_log import emit
-        from kiro_crew.crew_log.store import REMOVE_OWNED, remove_unit
-        from kiro_crew.metrics.sessions import END_REASON_DESTROYED
+        from aj_crew import crew_log as lg
+        from aj_crew.crew_log import emit
+        from aj_crew.crew_log.store import REMOVE_OWNED, remove_unit
+        from aj_crew.metrics.sessions import END_REASON_DESTROYED
 
         _guard_work_ledger_cleanup(monkeypatch)
         monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
         emit.reset_caches()
         try:
             emit.on_session_opened(
-                "acp-emitted", agent="kirocrew", slot="dashboard_chat-1-100", cwd="/tmp"
+                "acp-emitted", agent="ajcrew", slot="dashboard_chat-1-100", cwd="/tmp"
             )
             assert_drained()
             assert self._exists("acp-emitted")
@@ -176,8 +176,8 @@ class TestSessionLedgerOnPermanentDelete:
         assertion would pass either way. Refusing the removal is the one reading
         where the two diverge.
         """
-        from kiro_crew.crew_log import emit
-        from kiro_crew.crew_log import store as crew_log_store
+        from aj_crew.crew_log import emit
+        from aj_crew.crew_log import store as crew_log_store
 
         _guard_work_ledger_cleanup(monkeypatch)
         monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
@@ -232,9 +232,9 @@ class TestSessionLedgerOnPermanentDelete:
         landed.
         """
         _guard_work_ledger_cleanup(monkeypatch)
-        from kiro_crew import crew_log as lg
+        from aj_crew import crew_log as lg
 
-        lg.CrewLog.create(lg.KIND_SESSION, "acp-slotless", owner="default", agent="kirocrew")
+        lg.CrewLog.create(lg.KIND_SESSION, "acp-slotless", owner="default", agent="ajcrew")
         slot = _make_slot("dashboard_chat-1-100")
         state = _make_state({"dashboard_chat-1-100": slot})
         state.sessions.resumable_sid = MagicMock(return_value="acp-slotless")
@@ -352,7 +352,7 @@ class TestSessionLedgerOnPermanentDelete:
         held.append(
             "session/opened",
             {
-                "agent": "kirocrew",
+                "agent": "ajcrew",
                 "slot": "dashboard_chat-1-100",
                 "model": "",
                 "cwd": "",
@@ -418,7 +418,7 @@ class TestSessionLedgerOnPermanentDelete:
         state = _make_state({"dashboard_chat-1-100": slot})
         state.sessions.resumable_sid = MagicMock(return_value="acp-explodes")
 
-        from kiro_crew.crew_log import store as crew_log_store
+        from aj_crew.crew_log import store as crew_log_store
 
         def _boom(*_args, **_kwargs):
             raise RuntimeError("ledger tree unreadable")
@@ -441,10 +441,10 @@ class TestEveryCrewLogOfTheConversationGoes:
     def _unit(session_id: str, slot: str, *, closed: bool = True) -> None:
         from crew_log_type_helpers import minimal_data
 
-        from kiro_crew import crew_log as lg
+        from aj_crew import crew_log as lg
 
         log = lg.CrewLog.create(
-            lg.KIND_SESSION, session_id, owner="default", agent="kirocrew", slot=slot
+            lg.KIND_SESSION, session_id, owner="default", agent="ajcrew", slot=slot
         )
         log.append("session/opened", minimal_data(lg.KIND_SESSION, "session/opened"), src="gateway")
         if closed:
@@ -506,7 +506,7 @@ class TestEveryCrewLogOfTheConversationGoes:
     def test_a_proved_unit_that_resumes_before_its_removal_is_kept(self, monkeypatch):
         """The map then names the deleted row's own key and the lease is free between
         turns, so only a fresh read of what is running tells it from a finished unit."""
-        from kiro_crew.crew_log import store as crew_log_store
+        from aj_crew.crew_log import store as crew_log_store
 
         _guard_work_ledger_cleanup(monkeypatch)
         self._unit("acp-resumed", "chat-7")
@@ -533,8 +533,8 @@ class TestEveryCrewLogOfTheConversationGoes:
 
     def test_a_proved_unit_the_trash_still_holds_is_kept(self, monkeypatch):
         """A unit a failed restore left live and held belongs to a session in the trash."""
-        from kiro_crew import crew_log as lg
-        from kiro_crew.crew_log.store import hold_unit
+        from aj_crew import crew_log as lg
+        from aj_crew.crew_log.store import hold_unit
 
         _guard_work_ledger_cleanup(monkeypatch)
         self._unit("acp-trashed", "chat-7")
@@ -588,7 +588,7 @@ class TestAKeptCrewLogIsNotLeftExcluded:
 
     @staticmethod
     def _run(monkeypatch, *, status=None, raises=False, mapped_after_exclusion=False, held=False):
-        from kiro_crew.crew_log import store as crew_log_store
+        from aj_crew.crew_log import store as crew_log_store
 
         excluded: list[tuple[str, tuple[str, ...]]] = []
         given_back: list[tuple[str, tuple[str, ...]]] = []
@@ -660,7 +660,7 @@ class TestAKeptCrewLogIsNotLeftExcluded:
 
     def test_a_later_slot_s_failed_exclusion_gives_back_the_earlier_one(self, monkeypatch):
         """Nothing is removed when any exclusion fails, so none of them may stand."""
-        from kiro_crew.crew_log import store as crew_log_store
+        from aj_crew.crew_log import store as crew_log_store
 
         given_back: list = []
 
@@ -733,7 +733,7 @@ class TestTheExclusionMustNotCatchASuccessorUnit:
             state.sessions.session_generation.return_value = 2
             return ("acp-being-deleted", "acp-successor")
 
-        monkeypatch.setattr("kiro_crew.crew_log.store.session_units_for_slot", listing_with_a_reset)
+        monkeypatch.setattr("aj_crew.crew_log.store.session_units_for_slot", listing_with_a_reset)
 
         with pytest.raises(_LedgerExclusionError):
             _exclude_slot_units(state, session_ledger, self._claim())
@@ -744,7 +744,7 @@ class TestTheExclusionMustNotCatchASuccessorUnit:
         """The control: no reset, so the same listing is excluded as before."""
         state = _make_state({})
         monkeypatch.setattr(
-            "kiro_crew.crew_log.store.session_units_for_slot",
+            "aj_crew.crew_log.store.session_units_for_slot",
             lambda slot_key, **_kwargs: ("acp-being-deleted", "acp-earlier"),
         )
 
@@ -755,8 +755,8 @@ class TestTheExclusionMustNotCatchASuccessorUnit:
 
     def test_an_established_unit_whose_header_will_not_read_refuses_the_delete(self, monkeypatch):
         """Left out of a short listing, the unit would stay foldable on the reused key."""
-        from kiro_crew import crew_log as lg
-        from kiro_crew.crew_log import store as crew_log_store
+        from aj_crew import crew_log as lg
+        from aj_crew.crew_log import store as crew_log_store
 
         TestEveryCrewLogOfTheConversationGoes._unit("acp-being-deleted", "chat-1")
         TestEveryCrewLogOfTheConversationGoes._unit("acp-unreadable", "chat-1")

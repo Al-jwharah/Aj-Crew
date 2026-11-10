@@ -1,7 +1,7 @@
 """A hardlinking installer's built-in app skills still load.
 
 uv (and other installers) hardlink package files out of a cache, so every file of
-an installed ``kiro_crew`` package can carry ``st_nlink > 1``. The no-link reader
+an installed ``aj_crew`` package can carry ``st_nlink > 1``. The no-link reader
 refuses that shape, which left a built-in app skill listed but never loadable,
 and made an ``always: true`` one fail every session start. The reader now admits
 such a file on CONTENT: it must be a ``SKILL.md`` the distribution RECORD lists
@@ -18,8 +18,8 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.skills as skills_mod
-from kiro_crew.testing.links import make_dir_link
+import aj_crew.skills as skills_mod
+from aj_crew.testing.links import make_dir_link
 
 
 def _write_skill(directory: Path, body: str) -> Path:
@@ -35,7 +35,7 @@ def _record_digest(data: bytes, algorithm: str = "sha256") -> str:
 
 
 class _FakeInstall:
-    """A site dir whose ``kiro_crew`` package came from a hardlinking installer.
+    """A site dir whose ``aj_crew`` package came from a hardlinking installer.
 
     The built-in app skill shares its inode with a second name (the installer's
     cache), and the distribution RECORD lists the digest the installer wrote.
@@ -45,7 +45,7 @@ class _FakeInstall:
 
     def __init__(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         site = tmp_path / "site"
-        self.package = site / "kiro_crew"
+        self.package = site / "aj_crew"
         self.package.mkdir(parents=True)
         (self.package / "__init__.py").write_text("", encoding="utf-8")
         self.skill_dir = self.package / "apps" / "builtins" / "demo" / "skills" / "pinned"
@@ -56,7 +56,7 @@ class _FakeInstall:
             os.link(self.skill, cache / "SKILL.md")
         except OSError as exc:  # pragma: no cover — a filesystem without hardlinks
             pytest.skip(f"hardlinks unavailable here: {exc}")
-        self.dist_info = site / "kirocrew-0.0.0.dist-info"
+        self.dist_info = site / "ajcrew-0.0.0.dist-info"
         self.dist_info.mkdir()
         self.write_record(self.skill.read_bytes())
         monkeypatch.setattr(skills_mod, "_INSTALLED_PACKAGE_DIR", self.package)
@@ -70,7 +70,7 @@ class _FakeInstall:
     def write_record(self, recorded: bytes) -> None:
         rel = self.skill.relative_to(self.package.parent).as_posix()
         lines = [
-            f"kiro_crew/__init__.py,{_record_digest(b'')},0",
+            f"aj_crew/__init__.py,{_record_digest(b'')},0",
             f"{rel},{_record_digest(recorded)},{len(recorded)}",
             f"{self.dist_info.name}/RECORD,,",
         ]
@@ -163,11 +163,11 @@ class TestTheRecordLookup:
     ):
         """An upgrade can leave the previous ``dist-info`` behind; both are read."""
         install = _FakeInstall(tmp_path, monkeypatch)
-        stale = install.package.parent / "kirocrew-0.0.0a0.dist-info"
+        stale = install.package.parent / "ajcrew-0.0.0a0.dist-info"
         stale.mkdir()
         rel = install.skill.relative_to(install.package.parent).as_posix()
         (stale / "RECORD").write_text(
-            f"kiro_crew/__init__.py,{_record_digest(b'')},0\n"
+            f"aj_crew/__init__.py,{_record_digest(b'')},0\n"
             f"{rel},{_record_digest(b'the previous release')},20\n",
             encoding="utf-8",
         )

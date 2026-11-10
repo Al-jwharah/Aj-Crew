@@ -244,7 +244,7 @@ export function DockMatesSection({ collapsed, isMobile, onNavigate }: { collapse
     // One write per moved row, in order: each is its own crew-record save
     // under the config lock, so running them in parallel would only queue.
     mutationFn: async (writes: { name: string; star_order: number }[]) => {
-      for (const w of writes) await api.updateKirocrewAgent(w.name, { star_order: w.star_order })
+      for (const w of writes) await api.updateAjcrewAgent(w.name, { star_order: w.star_order })
     },
     onMutate: async (writes) => {
       await queryClient.cancelQueries({ queryKey: MEMBERS_ROSTER_QUERY_KEY })

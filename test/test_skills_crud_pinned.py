@@ -6,8 +6,8 @@ ancestor swapped for a link after the by-name existence check cannot redirect th
 write; ``update_skill`` additionally routes through ``atomic_write`` with the ACL
 carry, closing the gap where a plain ``write_text`` dropped a named POSIX ACL.
 
-NOT EXECUTED IN THE INTEGRATIONS_ONLY SANDBOX. Importing ``kiro_crew.skills`` pulls
-``kiro_crew.cron`` -> ``croniter`` and ``kiro_crew.vector_memory`` ->
+NOT EXECUTED IN THE INTEGRATIONS_ONLY SANDBOX. Importing ``aj_crew.skills`` pulls
+``aj_crew.cron`` -> ``croniter`` and ``aj_crew.vector_memory`` ->
 ``snowballstemmer``, neither installable offline (pip 403), so these run in CI only.
 
 CI invocation:
@@ -24,8 +24,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import pinned_fs
-from kiro_crew.skills import SkillsLoader
+from aj_crew import pinned_fs
+from aj_crew.skills import SkillsLoader
 
 # Forcing ``_DIR_FD_SUPPORTED`` True takes the pinned branch, which reaches
 # ``pinned_fs.pin_parent`` and therefore ``os.O_DIRECTORY`` -- absent on Windows,
@@ -61,7 +61,7 @@ def test_create_lands_the_same_skill_md_mode_on_both_branches(loader, monkeypatc
     tightening (or loosening) that reaches one platform's branch and not the
     other's, so the same operator gets different skill permissions per platform.
     """
-    import kiro_crew.skills as skills_mod
+    import aj_crew.skills as skills_mod
 
     assert loader.create_skill("modeA", "x") is True
     pinned_mode = stat.S_IMODE((loader._dir / "modeA" / "SKILL.md").stat().st_mode)
@@ -104,7 +104,7 @@ def test_a_create_that_loses_the_race_refuses_instead_of_overwriting(loader, mon
     wrapped so that, for this skill's own directory name, it returns the real
     pre-race answer and only then lets the rival win.
     """
-    import kiro_crew.skills as skills_mod
+    import aj_crew.skills as skills_mod
 
     with monkeypatch.context() as mp:
         mp.setattr(skills_mod, "_DIR_FD_SUPPORTED", pinned)
@@ -145,7 +145,7 @@ def test_create_addresses_the_leaf_through_the_parent_it_already_pinned(loader, 
     The swap is injected inside the window by wrapping the caller's own pin so it
     returns the genuine descriptor and only then moves the directory aside.
     """
-    import kiro_crew.skills as skills_mod
+    import aj_crew.skills as skills_mod
 
     group = loader._dir / "group"
     group.mkdir(parents=True)
@@ -435,7 +435,7 @@ def test_update_rejects_the_target_when_the_acl_source_open_fails(loader, monkey
     dropping a named POSIX ACL -- on the path whose whole purpose is to keep it.
     Pinned and by-name floor both, so neither branch regains the swallow.
     """
-    import kiro_crew.skills as skills_mod
+    import aj_crew.skills as skills_mod
 
     assert loader.create_skill("acl-src", "before") is True
     monkeypatch.setattr(skills_mod, "_DIR_FD_SUPPORTED", pinned)
@@ -466,7 +466,7 @@ def test_delete_removes_the_skill(loader):
 
 def test_delete_refuses_a_symlinked_skill_dir(loader, tmp_path):
     """A skill directory that is a link is refused, not followed into an rmtree."""
-    from kiro_crew.platform_compat import symlink_or_junction
+    from aj_crew.platform_compat import symlink_or_junction
 
     victim = tmp_path / "victim"
     victim.mkdir()
@@ -495,7 +495,7 @@ def test_the_acl_source_is_opened_through_the_pinned_skill_directory(loader, mon
     which returns the genuine descriptor and only then renames the directories, so
     the production code is untouched and the race is deterministic.
     """
-    import kiro_crew.skills as skills_mod
+    import aj_crew.skills as skills_mod
 
     assert loader.create_skill("swap", "before") is True
     original = loader._dir / "swap"
@@ -553,7 +553,7 @@ def test_by_name_floor_when_capability_probe_is_false(loader, monkeypatch):
     Pins that the by-name floor still produces correct results, so the platform
     without openat (Windows) keeps working.
     """
-    import kiro_crew.skills as skills_mod
+    import aj_crew.skills as skills_mod
 
     monkeypatch.setattr(skills_mod, "_DIR_FD_SUPPORTED", False)
     assert loader.create_skill("floor", "one") is True

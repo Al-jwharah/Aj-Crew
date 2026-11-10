@@ -49,7 +49,7 @@ function managedShell(version: string) {
     channelSwitchable: false,
     channelPreference: '',
     managedBy: 'toolbox',
-    updateCommand: 'toolbox update kirocrew',
+    updateCommand: 'toolbox update ajcrew',
     laneVersion: '',
     runningAheadOfLane: null,
     platform: 'linux-x64',

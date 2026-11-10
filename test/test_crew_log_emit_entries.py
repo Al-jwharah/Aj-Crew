@@ -23,9 +23,9 @@ from crew_log_emit_helpers import (  # noqa: F401 -- the autouse fixture registe
     _typed,
 )
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import emit
-from kiro_crew.crew_log import projection as crew_log_projection
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import emit
+from aj_crew.crew_log import projection as crew_log_projection
 
 # a whole turn
 
@@ -293,7 +293,7 @@ def test_an_app_authored_send_is_not_dispatched_as_a_person():
     import ast
     import inspect
 
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     # ``api_chat`` wraps the send itself (``_api_chat_send``) to record a Crew Mode
     # worker steer after it; the actor is stamped where the request is read.
@@ -449,7 +449,7 @@ def test_chat_runner_records_the_input_and_refusal_on_a_blocked_expansion():
     # gate. Asserted structurally rather than by driving the whole runner.
     import ast
 
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     tree = ast.parse(
         "\n".join(
@@ -1087,8 +1087,8 @@ def test_settle_once_holds_for_a_terminal_frame_from_either_parser():
     # frame produced by _dispatch and a frame produced by the AcpClient parser
     # settle the same call identically: the first writes the closer, the second
     # (whichever parser it came from) writes nothing.
-    from kiro_crew.acp.client import AcpClient
-    from kiro_crew.acp.types import EVENT_TOOL_RESULT, JsonRpcMessage
+    from aj_crew.acp.client import AcpClient
+    from aj_crew.acp.types import EVENT_TOOL_RESULT, JsonRpcMessage
 
     # Parser A: the shared _dispatch terminal-frame builder.
     parser_a = _tool_result_event(None)
@@ -1218,7 +1218,7 @@ def test_a_nested_prompt_turn_keeps_the_author_of_the_turn_that_carried_it():
     """
     import ast
 
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     tree = ast.parse(
         "\n".join(
@@ -1256,12 +1256,12 @@ def test_a_typed_automation_banner_cannot_attribute_a_turn_to_automation():
     So the runner reads the enqueue-time ``kind`` tag -- stamped by the producer,
     absent from anything a user writes -- and never the message.
     """
-    from kiro_crew.dashboard.chat_runner import _actor_for_queue_items
-    from kiro_crew.dashboard.chat_utils import (
+    from aj_crew.dashboard.chat_runner import _actor_for_queue_items
+    from aj_crew.dashboard.chat_utils import (
         CRON_NOTIFICATION_KIND,
         SUBAGENT_COMPLETION_KIND,
     )
-    from kiro_crew.dashboard.state import (
+    from aj_crew.dashboard.state import (
         CRON_NOTIFY_PREFIX,
         SUBAGENT_COMPLETION_PREFIXES,
     )
@@ -1286,8 +1286,8 @@ def test_a_recovery_is_a_second_turn_of_the_same_actor():
     without the stamp its actor would fall back to the default and record an
     autonudge's retry as a user turn.
     """
-    from kiro_crew.dashboard.chat_runner import TURN_ACTOR_META_KEY, _actor_for_queue_items
-    from kiro_crew.dashboard.chat_utils import SYNTHETIC_RECOVERY_KIND
+    from aj_crew.dashboard.chat_runner import TURN_ACTOR_META_KEY, _actor_for_queue_items
+    from aj_crew.dashboard.chat_utils import SYNTHETIC_RECOVERY_KIND
 
     recovery = [
         {
@@ -1302,8 +1302,8 @@ def test_a_recovery_is_a_second_turn_of_the_same_actor():
 def test_a_stamped_actor_outside_the_vocabulary_is_ignored():
     # The stamp is gateway-authored, but a value the emitter does not recognise
     # would be recorded as `other`, which says less than the honest default.
-    from kiro_crew.dashboard.chat_runner import TURN_ACTOR_META_KEY, _actor_for_queue_items
-    from kiro_crew.dashboard.chat_utils import SYNTHETIC_RECOVERY_KIND
+    from aj_crew.dashboard.chat_runner import TURN_ACTOR_META_KEY, _actor_for_queue_items
+    from aj_crew.dashboard.chat_utils import SYNTHETIC_RECOVERY_KIND
 
     bogus = [{"content": "x", "kind": SYNTHETIC_RECOVERY_KIND, "meta": {TURN_ACTOR_META_KEY: "??"}}]
     assert _actor_for_queue_items(bogus) == ""
@@ -1312,8 +1312,8 @@ def test_a_stamped_actor_outside_the_vocabulary_is_ignored():
 def test_a_queue_kind_beats_a_stamped_actor():
     # A cron notification that also carries a stamp is still a cron turn: the kind
     # is set by the producer minting the entry, the stamp by whoever retried one.
-    from kiro_crew.dashboard.chat_runner import TURN_ACTOR_META_KEY, _actor_for_queue_items
-    from kiro_crew.dashboard.chat_utils import CRON_NOTIFICATION_KIND
+    from aj_crew.dashboard.chat_runner import TURN_ACTOR_META_KEY, _actor_for_queue_items
+    from aj_crew.dashboard.chat_utils import CRON_NOTIFICATION_KIND
 
     both = [
         {
@@ -1375,7 +1375,7 @@ def test_a_restart_between_two_retries_still_increments():
     assert_drained()
     # A new gateway process: caches gone, the file is all that is left.
     emit.reset_caches()
-    emit.on_session_opened(SESSION, agent="kirocrew", resumed=True)
+    emit.on_session_opened(SESSION, agent="ajcrew", resumed=True)
     assert_drained()
     emit.on_turn_started(SESSION, 4, "user")
     assert_drained()
@@ -1527,7 +1527,7 @@ def test_every_emitted_type_matches_the_documented_shape():
     emit.on_approval_requested(SESSION, 1, approval_id="r1", tool="shell", reason="ls")
     emit.on_approval_decided(SESSION, 1, approval_id="r1", decision="approved")
     emit.on_plan_updated(SESSION, 1, items=[{"id": "a", "text": "t", "completed": False}])
-    emit.on_subagent_spawned(SESSION, 1, agent_id="ab12", agent="kirocrew", scope={"memory": True})
+    emit.on_subagent_spawned(SESSION, 1, agent_id="ab12", agent="ajcrew", scope={"memory": True})
     emit.on_subagent_steered(SESSION, agent_id="ab12", mode="interrupt")
     emit.on_subagent_completed(SESSION, agent_id="ab12", duration_ms=7)
     emit.on_subagent_failed(SESSION, agent_id="cd34", reason="boom", outcome="failed")

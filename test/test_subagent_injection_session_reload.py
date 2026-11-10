@@ -36,7 +36,7 @@ async def test_the_reloaded_replay_does_not_confirm_what_the_lost_turn_received(
     the same task and replays X's announce, which lands. G's mark belongs to attempt
     1, which never landed, so the replay's landing must not confirm it: G is
     delivered as a turn of its own."""
-    from kiro_crew.acp.client import AcpError
+    from aj_crew.acp.client import AcpError
 
     sessions = _new_sessions()
     key = "slack:C1:1700000000.1"
@@ -57,7 +57,7 @@ async def test_the_reloaded_replay_does_not_confirm_what_the_lost_turn_received(
             on_complete(SimpleNamespace(stop_reason="end_turn"))
         return f"answered {message}"
 
-    with patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream):
+    with patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream):
         await asyncio.wait_for(_channel_route(gateway, x, key), _HANG_CEILING_S)
         await _settled(gateway)
 

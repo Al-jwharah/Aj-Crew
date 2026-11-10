@@ -18,7 +18,7 @@ from artifacts_helpers import (  # noqa: F401 -- the fixture is requested by nam
     store_fixture,
 )
 
-from kiro_crew.artifacts import ArtifactNotFoundError, ArtifactStore, ArtifactValidationError
+from aj_crew.artifacts import ArtifactNotFoundError, ArtifactStore, ArtifactValidationError
 
 # ── source_root barrier + visible dead pointer ────────────────────────────────
 
@@ -92,7 +92,7 @@ class TestSourceRootBarrier:
         src = proj / ".aws" / "credentials"
         src.parent.mkdir(parents=True)
         src.write_text("SECRET", encoding="utf-8")
-        from kiro_crew import artifacts as artifacts_mod
+        from aj_crew import artifacts as artifacts_mod
 
         monkeypatch.setattr(artifacts_mod, "is_sensitive_path", lambda p: p == str(src.resolve()))
         assert home_store._try_read_source_path(str(src), str(proj)) is None
@@ -154,7 +154,7 @@ class TestSourceRootBarrier:
             assert home_store._try_write_source_path(str(src), "new body", str(proj)) is True
         assert src.read_text(encoding="utf-8") == "new body"
         # No staging litter left behind on this path either.
-        assert not list(src.parent.glob(".*kirocrew-*"))
+        assert not list(src.parent.glob(".*ajcrew-*"))
 
     @pytest.mark.skipif(
         os.name == "nt",
@@ -370,12 +370,12 @@ class TestSourceRootBarrier:
 
         proj, src = project_file
         try:
-            os.setxattr(str(src), "user.kirocrew_test", b"keepme")
+            os.setxattr(str(src), "user.ajcrew_test", b"keepme")
         except (AttributeError, OSError):
             pytest.skip("filesystem or platform has no xattr support")
         assert home_store._try_write_source_path(str(src), "new body", str(proj)) is True
         assert src.read_text(encoding="utf-8") == "new body"
-        assert os.getxattr(str(src), "user.kirocrew_test") == b"keepme"
+        assert os.getxattr(str(src), "user.ajcrew_test") == b"keepme"
 
     def test_write_survives_a_platform_without_geteuid(
         self, home_store, project_file, monkeypatch
@@ -513,7 +513,7 @@ class TestSourceRootBarrier:
         O_EXCL, so an existing lookalike survives untouched.
         """
         proj, src = project_file
-        decoy = src.parent / f".{src.name}.kirocrew-tmp"
+        decoy = src.parent / f".{src.name}.ajcrew-tmp"
         decoy.write_text("someone else's data", encoding="utf-8")
         assert home_store._try_write_source_path(str(src), "new body", str(proj)) is True
         assert src.read_text(encoding="utf-8") == "new body"
@@ -529,7 +529,7 @@ class TestSourceRootBarrier:
         """
         proj, src = project_file
         original = src.read_text(encoding="utf-8")
-        from kiro_crew import hooks as hooks_mod
+        from aj_crew import hooks as hooks_mod
 
         real_write = hooks_mod.os.write
         calls = {"n": 0}
@@ -552,7 +552,7 @@ class TestSourceRootBarrier:
         monkeypatch.setattr(hooks_mod.os, "write", real_write)
         assert src.read_text(encoding="utf-8") == original
         # And no staging litter is left behind.
-        assert not list(src.parent.glob(".*kirocrew-tmp"))
+        assert not list(src.parent.glob(".*ajcrew-tmp"))
 
     def test_refused_mirror_keeps_the_edit_and_demotes_to_copy(
         self, home_store, project_file, monkeypatch
@@ -615,7 +615,7 @@ class TestSourceRootBarrier:
         src.write_text(full, encoding="utf-8")
         # Force the bounded read to return a PREFIX, exactly as an oversized
         # file would, and prove the original survives intact.
-        from kiro_crew import artifacts as artifacts_mod
+        from aj_crew import artifacts as artifacts_mod
 
         monkeypatch.setattr(artifacts_mod, "MAX_CONTENT_BYTES", 32)
         home_store.update("spec", snapshot=True)
@@ -808,7 +808,7 @@ class TestSourcePathLengthRejected:
             store.relocate("x", "/" + "a" * 600)
 
     def test_path_at_the_cap_is_accepted_unchanged(self, store: ArtifactStore) -> None:
-        from kiro_crew.artifacts import MAX_SOURCE_PATH_LEN
+        from aj_crew.artifacts import MAX_SOURCE_PATH_LEN
 
         at_cap = "/" + "a" * (MAX_SOURCE_PATH_LEN - 1)
         art = store.create(name="X", content="c", slug="x", source_path=at_cap)
@@ -826,13 +826,13 @@ class TestAllowedRootsSingleProducer:
     def test_set_contains_home_data_home_and_configured_roots(
         self, home_store, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.config.loader import KiroCrewConfig, PublishConfig
+        from aj_crew.config.loader import AjCrewConfig, PublishConfig
 
         extra = tmp_path / "shared"
         extra.mkdir()
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.publish = PublishConfig(relocate_roots=[str(extra)])
-        monkeypatch.setattr(KiroCrewConfig, "load", staticmethod(lambda: cfg))
+        monkeypatch.setattr(AjCrewConfig, "load", staticmethod(lambda: cfg))
         roots = home_store.allowed_source_roots()
         assert Path.home().resolve() in roots
         assert (Path.home() / ".kiro" / "crew").resolve() in roots  # data home
@@ -861,8 +861,8 @@ class TestAllowedRootsSingleProducer:
         once in the store (inside ``allowed_source_roots``) and never in the
         handler, which must call the store instead.
         """
-        import kiro_crew.artifacts as artifacts_mod
-        import kiro_crew.dashboard.handlers.artifacts as handlers_mod
+        import aj_crew.artifacts as artifacts_mod
+        import aj_crew.dashboard.handlers.artifacts as handlers_mod
 
         here = Path(artifacts_mod.__file__).parent
         store_src = "".join(p.read_text("utf-8") for p in here.glob("artifacts*.py"))

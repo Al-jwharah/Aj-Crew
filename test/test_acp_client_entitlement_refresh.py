@@ -18,9 +18,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient, AcpModelUnavailable
-from kiro_crew.acp.runtime import _ENTITLEMENT_PROBE_TTL_SECS
-from kiro_crew.acp.types import JsonRpcMessage
+from aj_crew.acp.client import AcpClient, AcpModelUnavailable
+from aj_crew.acp.runtime import _ENTITLEMENT_PROBE_TTL_SECS
+from aj_crew.acp.types import JsonRpcMessage
 
 
 def _rows(*ids: str) -> list[dict[str, str]]:
@@ -309,7 +309,7 @@ async def test_a_spec_revoked_during_probe_init_aborts_before_session_new(monkey
     between the probe's initialize and its session/new must abort, so no session
     (and none of that spec's MCP server commands) is ever created on an
     unverified spec. The stale-spec raise is absorbed as a failed probe."""
-    from kiro_crew.agent_materialization.worker_agent import DerivedSpecStale
+    from aj_crew.agent_materialization.worker_agent import DerivedSpecStale
 
     client = _kiro_client(["auto"])
     sent: list = []
@@ -319,7 +319,7 @@ async def test_a_spec_revoked_during_probe_init_aborts_before_session_new(monkey
     def _revoked(_snapshot: Any) -> None:
         raise DerivedSpecStale("worker spec revoked during probe init")
 
-    monkeypatch.setattr("kiro_crew.acp.client.require_unchanged_derived_spec", _revoked)
+    monkeypatch.setattr("aj_crew.acp.client.require_unchanged_derived_spec", _revoked)
 
     assert await client._probe_advertised_models() == ([], 0.0)
     # initialize happened; session/new never did.
@@ -398,7 +398,7 @@ async def test_probe_without_a_live_session_is_no_evidence():
 def _dedicated_provider(client: AcpClient):
     """An ``AcpProvider`` whose inner client is still a plain kiro ``AcpClient``
     (the dedicated transport never swaps it for the shared-runtime handle)."""
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.providers.acp import AcpProvider
 
     provider = AcpProvider(acp_backend="")
     provider._client = client
@@ -532,10 +532,10 @@ async def test_dedicated_transport_picker_read_deadline_raises_revalidating(monk
     running."""
     import asyncio
 
-    from kiro_crew.acp.session_handle import EntitlementRevalidating
+    from aj_crew.acp.session_handle import EntitlementRevalidating
 
     # Collapse the deadline so the test does not actually wait 3s.
-    monkeypatch.setattr("kiro_crew.providers.acp._READ_PATH_PROBE_DEADLINE_SECS", 0.01)
+    monkeypatch.setattr("aj_crew.providers.acp._READ_PATH_PROBE_DEADLINE_SECS", 0.01)
 
     client = _kiro_client(["auto"])
     started = asyncio.Event()

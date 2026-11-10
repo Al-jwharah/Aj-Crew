@@ -6,7 +6,7 @@ import { GHOST_POSE_ICONS, GHOST_POSE_URLS } from '../components/GhostPoses'
 import { registerThemeBranding } from '../themeBranding'
 import { THEME_LOADER_ICONS } from '../themeLoaderIcons'
 
-const base = { running: false, stopping: false, state: '', lastRole: '', avatar: '/logo.png', botName: 'KiroCrew' }
+const base = { running: false, stopping: false, state: '', lastRole: '', avatar: '/logo.png', botName: 'AjCrew' }
 
 afterEach(() => document.documentElement.removeAttribute('data-theme'))
 
@@ -183,7 +183,7 @@ describe('ChatFooter', () => {
   })
 
   it('uses the ghost poses on a Kiro theme', () => {
-    document.documentElement.setAttribute('data-theme', 'kiro-dark')
+    document.documentElement.setAttribute('data-theme', 'aj-dark')
     const { container } = render(<ChatFooter {...base} running={true} lastRole="user" />)
     // Brand art is an ASSET rendered as <img> (use-lucide-icons brand-mark rule),
     // never inline SVG paths.
@@ -194,7 +194,7 @@ describe('ChatFooter', () => {
   })
 
   it('renders no inline <svg> for the pose artwork', () => {
-    document.documentElement.setAttribute('data-theme', 'kiro-dark')
+    document.documentElement.setAttribute('data-theme', 'aj-dark')
     const { container } = render(<ChatFooter {...base} running={true} lastRole="user" />)
     expect(container.querySelectorAll('.csb4 svg').length).toBe(0)
   })

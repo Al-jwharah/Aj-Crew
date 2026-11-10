@@ -1,9 +1,9 @@
 """The agent panel handler facade keeps the patch seams and the import surface the one module had.
 
-``kiro_crew.dashboard.handlers.agent_panel`` is a mirror facade (:mod:`kiro_crew._facade_mirror`)
-over the ``kiro_crew.dashboard.handlers.agent_panel_<role>`` owners. The MCP route binder, the
+``aj_crew.dashboard.handlers.agent_panel`` is a mirror facade (:mod:`aj_crew._facade_mirror`)
+over the ``aj_crew.dashboard.handlers.agent_panel_<role>`` owners. The MCP route binder, the
 member dashboard handlers and tests still reach every name as
-``kiro_crew.dashboard.handlers.agent_panel.<name>``, and the moved code reads its names as plain
+``aj_crew.dashboard.handlers.agent_panel.<name>``, and the moved code reads its names as plain
 module globals, so a patch through the facade reaches that code only because the mirror writes it
 into every module holding the name.
 
@@ -25,20 +25,20 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import _facade_mirror
-from kiro_crew.dashboard.handlers import agent_panel
+from aj_crew import _facade_mirror
+from aj_crew.dashboard.handlers import agent_panel
 
-FACADE = "kiro_crew.dashboard.handlers.agent_panel"
+FACADE = "aj_crew.dashboard.handlers.agent_panel"
 HANDLERS_DIR = Path(agent_panel.__file__).resolve().parent
 
 #: The owners, lowest layer first: each imports only owners listed before it.
 _OWNERS = (
-    "kiro_crew.dashboard.handlers.agent_panel_read",
-    "kiro_crew.dashboard.handlers.agent_panel_publish",
-    "kiro_crew.dashboard.handlers.agent_panel_dashboard",
-    "kiro_crew.dashboard.handlers.agent_panel_snapshot",
-    "kiro_crew.dashboard.handlers.agent_panel_record",
-    "kiro_crew.dashboard.handlers.agent_panel_record_app",
+    "aj_crew.dashboard.handlers.agent_panel_read",
+    "aj_crew.dashboard.handlers.agent_panel_publish",
+    "aj_crew.dashboard.handlers.agent_panel_dashboard",
+    "aj_crew.dashboard.handlers.agent_panel_snapshot",
+    "aj_crew.dashboard.handlers.agent_panel_record",
+    "aj_crew.dashboard.handlers.agent_panel_record_app",
 )
 
 
@@ -59,7 +59,7 @@ def test_the_owners_are_every_agent_panel_sibling_in_layer_order() -> None:
     """An ``agent_panel_*.py`` module the facade does not list would hold names a patch
     through the facade never reaches, so the sibling set and the owner tuple agree."""
     siblings = {
-        f"kiro_crew.dashboard.handlers.{path.stem}"
+        f"aj_crew.dashboard.handlers.{path.stem}"
         for path in HANDLERS_DIR.glob("agent_panel_*.py")
     }
     assert set(_OWNERS) == siblings
@@ -76,7 +76,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
         tree = ast.parse(Path(sys.modules[owner].__file__).read_text(encoding="utf-8"))
         for node in tree.body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in _OWNERS:
+                if not node.module.startswith("aj_crew") or node.module in _OWNERS:
                     continue
                 for alias in node.names:
                     found.setdefault(alias.asname or alias.name, (node.module, alias.name))
@@ -98,7 +98,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
     """An owner holds these and the facade serves them, so ``from
-    kiro_crew.dashboard.handlers.agent_panel import _normalize_slot_key`` type-checks only
+    aj_crew.dashboard.handlers.agent_panel import _normalize_slot_key`` type-checks only
     because the facade names each one from its home under ``TYPE_CHECKING``; exactly those."""
     served = set(_index().exports)
     expected = {name: home for name, home in _home_imports().items() if name in served}
@@ -135,7 +135,7 @@ def test_a_facade_patch_of_the_panel_slot_reaches_every_owner_reading_it(
     # The snapshot route resolves its caller through the dashboard owner's gate and
     # holds no slot lookup of its own; the record door resolves its writer's slot through
     # the same ``_panel_slot`` and so holds the name.
-    assert set(holders) == set(_OWNERS) - {"kiro_crew.dashboard.handlers.agent_panel_snapshot"}
+    assert set(holders) == set(_OWNERS) - {"aj_crew.dashboard.handlers.agent_panel_snapshot"}
     assert all(vars(sys.modules[owner])["_panel_slot"] is _no_slot for owner in holders)
     cfg = SimpleNamespace(agents={})
     assert agent_panel._card_slot(cfg, "Oncall", "oncall") == ""
@@ -146,6 +146,6 @@ def test_a_name_the_family_only_imports_is_served_from_its_home_object() -> None
     """``member_dashboard_fields`` imports ``_normalize_slot_key`` through this facade inside a
     ``try``; a facade that stopped serving it would be swallowed there and leave every
     dashboard writer unresolved, so the served object is pinned to its home's."""
-    state = importlib.import_module("kiro_crew.dashboard.state")
+    state = importlib.import_module("aj_crew.dashboard.state")
     assert "_normalize_slot_key" in _index().exports
     assert agent_panel._normalize_slot_key is state._normalize_slot_key

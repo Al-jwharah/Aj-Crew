@@ -38,7 +38,7 @@ from issue_radar_crew_routes_helpers import (
 )
 from off_loop_helpers import off_loop
 
-from kiro_crew.apps.builtins.issue_radar.backend import (
+from aj_crew.apps.builtins.issue_radar.backend import (
     agent_tools,
     crew_routes,
     crew_store,
@@ -374,7 +374,7 @@ class TestCrewReadUpdateRetire(_CrewRouteCase):
         self.assertEqual(_payload(res)["crew"]["triage_model"], "")
 
     async def test_the_crew_page_names_a_triage_model_the_session_withheld(self):
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_model
+        from aj_crew.apps.builtins.issue_radar.backend import crew_model
 
         crew = self.crew("Andromeda", triage_model="claude-haiku-4.5")
         query = {"owner": OWNER, "repo": REPO, "id": crew["id"]}
@@ -386,7 +386,7 @@ class TestCrewReadUpdateRetire(_CrewRouteCase):
         self.assertEqual(page["triage_model_unavailable"], "claude-haiku-4.5")
 
     async def test_the_crew_page_names_a_hand_picked_model_and_resume_releases_it(self):
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_model
+        from aj_crew.apps.builtins.issue_radar.backend import crew_model
 
         crew = self.crew("Andromeda", model="claude-opus-4.5", triage_model="claude-haiku-4.5")
         query = {"owner": OWNER, "repo": REPO, "id": crew["id"]}
@@ -431,7 +431,7 @@ class TestCrewReadUpdateRetire(_CrewRouteCase):
         explicit ``model_held: false`` patch clears it from process memory even though
         the record never carried it (a false-to-false record update).
         """
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_model
+        from aj_crew.apps.builtins.issue_radar.backend import crew_model
 
         crew = self.crew("Andromeda", model="claude-opus-4.5", triage_model="claude-haiku-4.5")
         query = {"owner": OWNER, "repo": REPO, "id": crew["id"]}

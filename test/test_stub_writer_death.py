@@ -13,8 +13,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.mcp_gateway import stub
-from kiro_crew.testing.wait import finished
+from aj_crew.mcp_gateway import stub
+from aj_crew.testing.wait import finished
 
 
 class _RaisingBuffer:

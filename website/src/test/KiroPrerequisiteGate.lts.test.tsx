@@ -26,7 +26,7 @@ vi.mock('../api/client', async () => ({
   api: {
     kiroPrerequisite: vi.fn(),
     repairKiroPrerequisiteSpecs: vi.fn(),
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
     acpBackends: vi.fn(),
     acpBackendRecheck: vi.fn(),
     patchConfig: vi.fn(),
@@ -50,7 +50,7 @@ describe('KiroPrerequisiteGate LTS login gate', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.clear()
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ agent: { acp_backend: 'kiro' } })
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ agent: { acp_backend: 'kiro' } })
     vi.mocked(api.acpBackends).mockResolvedValue({ backends: [] })
   })
 
@@ -89,14 +89,14 @@ describe('KiroPrerequisiteGate LTS login gate', () => {
     expect(screen.queryByText('Dashboard loaded')).not.toBeInTheDocument()
   })
 
-  it('tells the user to start Kiro Crew again once the sign-in landed, even after it exits', async () => {
+  it('tells the user to start Aj Crew again once the sign-in landed, even after it exits', async () => {
     vi.mocked(api.kiroPrerequisite)
       .mockResolvedValueOnce(
         status({
           ...locked,
           lts_sign_in_only: true,
           lts_signed_in_restart: true,
-          lts_start_command: '/opt/kirocrew/bin/kirocrew gateway',
+          lts_start_command: '/opt/ajcrew/bin/ajcrew gateway',
         }),
       )
       .mockRejectedValue(new Error('Failed to fetch'))
@@ -108,13 +108,13 @@ describe('KiroPrerequisiteGate LTS login gate', () => {
     // Lost-run bound: the prerequisite query resolves before this renders.
     expect(
       await screen.findByTestId('lts-signed-in-restart', undefined, { timeout: 10_000 }),
-    ).toHaveTextContent('Signed in. Start Kiro Crew again.')
+    ).toHaveTextContent('Signed in. Start Aj Crew again.')
     // The way to do it is on the page, since the sign-in app has exited.
     expect(screen.getByTestId('lts-start-command')).toHaveTextContent(
-      '/opt/kirocrew/bin/kirocrew gateway',
+      '/opt/ajcrew/bin/ajcrew gateway',
     )
     expect(
-      screen.getByText('Run this in a terminal to start Kiro Crew, then open the link it prints.'),
+      screen.getByText('Run this in a terminal to start Aj Crew, then open the link it prints.'),
     ).toBeInTheDocument()
     expect(screen.queryByTestId('kas-login-sso-form')).not.toBeInTheDocument()
     // The sign-in app has exited: polls fail, and the message stays.
@@ -179,7 +179,7 @@ describe('KiroPrerequisiteGate LTS login gate', () => {
   })
 
   it('ignores a usable independent harness and skips the refused reads', async () => {
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ agent: { acp_backend: 'claude' } })
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ agent: { acp_backend: 'claude' } })
     vi.mocked(api.acpBackends).mockResolvedValue({ backends: [probe({ id: 'claude' })] })
     vi.mocked(api.kiroPrerequisite).mockResolvedValue(
       status({ ...locked, initial_setup_complete: true }),
@@ -187,7 +187,7 @@ describe('KiroPrerequisiteGate LTS login gate', () => {
     renderGate()
     expect(await screen.findByRole('button', { name: 'Check sign-in again' })).toBeEnabled()
     expect(screen.queryByText('Dashboard loaded')).not.toBeInTheDocument()
-    expect(api.kirocrewConfig).not.toHaveBeenCalled()
+    expect(api.ajcrewConfig).not.toHaveBeenCalled()
     expect(api.acpBackends).not.toHaveBeenCalled()
     // Choosing another agent writes config, which the closed gate refuses.
     expect(screen.queryByRole('button', { name: 'Use other coding agents' })).not.toBeInTheDocument()
@@ -303,8 +303,8 @@ describe('KiroPrerequisiteGate LTS login gate', () => {
   })
 
   it.each([
-    ['the bundled desktop CLI', { bundled_cli: true, login_command: "'/Applications/Kiro Crew.app/Contents/Resources/kiro-cli/kiro-cli' login" }],
-    ['a KIROCREW_KIRO_BIN override off PATH', { bundled_cli: false, login_command: "'/opt/custom/kiro-cli' login" }],
+    ['the bundled desktop CLI', { bundled_cli: true, login_command: "'/Applications/Aj Crew.app/Contents/Resources/kiro-cli/kiro-cli' login" }],
+    ['a AJCREW_KIRO_BIN override off PATH', { bundled_cli: false, login_command: "'/opt/custom/kiro-cli' login" }],
   ])('points %s to the sign-in screen for the exact command, still display only', async (_label, extra) => {
     await relock(<Draft />, status({ ...locked, initial_setup_complete: true, ...extra }))
     const notice = screen.getByTestId('lts-relock-notice')
@@ -340,7 +340,7 @@ describe('KiroPrerequisiteGate LTS login gate', () => {
 
   // The gate reads Crew's vault sign-in: the gateway serves its command, and no
   // LTS surface may name kiro-cli's login then.
-  const VAULT_COMMAND = 'kirocrew kas login --provider idc --start-url'
+  const VAULT_COMMAND = 'ajcrew kas login --provider idc --start-url'
   const FILLED_COMMAND = `${VAULT_COMMAND} https://acme.awsapps.com/start`
   const vaultLocked = {
     ...locked,

@@ -17,13 +17,13 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.handlers.ask_question import (
+from aj_crew.dashboard.handlers.ask_question import (
     api_ask_question_answer,
     api_ask_question_dismiss,
     api_ask_question_pending,
 )
-from kiro_crew.shared_crew import collaborators
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew import collaborators
+from aj_crew.shared_crew.contracts import (
     ACTOR_REQUEST_KEY,
     ActorContext,
     DisplaySnapshot,
@@ -33,8 +33,8 @@ from kiro_crew.shared_crew.contracts import (
     Transport,
     principal_id_for,
 )
-from kiro_crew.shared_crew.decisions import decisions_for, question_decision_id
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.shared_crew.decisions import decisions_for, question_decision_id
+from aj_crew.testing.wait import async_wait_until
 
 
 def _person(login: str, provenance: Provenance = Provenance.TAILSCALE_SERVE) -> Principal:
@@ -67,14 +67,14 @@ LOCAL = Principal(
 
 @pytest.fixture(autouse=True)
 def _hermetic_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     # These cases pin the preview-on audience (``shared_crew.preview``).
-    _floor_monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    _floor_monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
 
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.broadcast_ws_owners = MagicMock()
@@ -160,7 +160,7 @@ async def test_a_direct_listener_member_sees_and_answers(state):
 
 @pytest.mark.asyncio
 async def test_the_losing_answer_is_audited_as_a_conflict(state, monkeypatch):
-    from kiro_crew.shared_crew import audit
+    from aj_crew.shared_crew import audit
 
     events: list[Any] = []
     monkeypatch.setattr(audit, "_default_writer", events.append)
@@ -319,7 +319,7 @@ def test_only_membership_provenances_are_collaborators():
 
 def test_with_the_preview_off_only_the_owner_sees_question_cards(_floor_monkeypatch):
     """Gate off: no tailnet member is a collaborator and no collaborator socket is sent to."""
-    _floor_monkeypatch.delenv("KIROCREW_SHARED_CREW_PREVIEW", raising=False)
+    _floor_monkeypatch.delenv("AJCREW_SHARED_CREW_PREVIEW", raising=False)
     assert not collaborators.is_collaborator_actor(_ctx(BOB))
     assert not collaborators.is_collaborator_actor(_ctx(LISTENER))
     ws = MagicMock(closed=False)

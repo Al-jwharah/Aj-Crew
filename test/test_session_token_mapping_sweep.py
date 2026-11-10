@@ -22,18 +22,18 @@ from typing import Any, cast
 
 import pytest
 
-from kiro_crew.session_pid_mappings import _SESSION_TOKEN_TTL_SECS
+from aj_crew.session_pid_mappings import _SESSION_TOKEN_TTL_SECS
 
 
 def test_the_real_wiring_prunes_an_aged_mapping_and_keeps_a_fresh_one() -> None:
     """``SessionManager._cleanup_deps`` forwards to the shipped prune and TTL.
 
     Drives the callable the real deps carry against the isolated
-    ``KIROCREW_HOME`` the suite pins, so the directory, the name pattern and the
+    ``AJCREW_HOME`` the suite pins, so the directory, the name pattern and the
     TTL are the shipped ones end to end.
     """
-    from kiro_crew.config.paths import config_dir
-    from kiro_crew.session import SessionManager
+    from aj_crew.config.paths import config_dir
+    from aj_crew.session import SessionManager
 
     home = config_dir()
     aged = home / ("session_token_" + "a" * 64 + ".sig")
@@ -54,7 +54,7 @@ def test_the_real_wiring_prunes_an_aged_mapping_and_keeps_a_fresh_one() -> None:
 
 def test_a_failing_prune_does_not_break_the_tick(caplog: pytest.LogCaptureFixture) -> None:
     """The step is fail-open like its siblings: a raise is logged, not propagated."""
-    from kiro_crew.session_cleanup import SessionCleanup
+    from aj_crew.session_cleanup import SessionCleanup
 
     def boom() -> int:
         raise OSError("disk gone")
@@ -85,8 +85,8 @@ def test_the_prune_reads_age_and_unlinks_under_the_publication_lock(
     around its write. The aged file is republished before the lock is released,
     so a prune that read the age outside the lock would delete the new mapping.
     """
-    from kiro_crew import session_pid, session_token_sig
-    from kiro_crew.testing.wait import wait_until
+    from aj_crew import session_pid, session_token_sig
+    from aj_crew.testing.wait import wait_until
 
     real = threading.Lock()
     reached = threading.Event()
@@ -127,7 +127,7 @@ def test_the_prune_reads_age_and_unlinks_under_the_publication_lock(
 
 
 def test_publication_writes_under_the_lock(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew import session_token_sig
+    from aj_crew import session_token_sig
 
     held: list[bool] = []
 

@@ -18,10 +18,10 @@ from config_live_helpers import (  # noqa: F401 -- fixtures are used by name
     cfg_file_fixture,
 )
 
-from kiro_crew.config import live
-from kiro_crew.config.live import ConfigChange
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.testing.wait import await_until
+from aj_crew.config import live
+from aj_crew.config.live import ConfigChange
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.testing.wait import await_until
 
 # ── the dashboard server's own appliers ───────────────────────────────────
 
@@ -38,15 +38,15 @@ class TestServerAppliers:
     def _register(self, state) -> dict[str, Any]:
         from aiohttp import web
 
-        from kiro_crew.dashboard.server import _register_config_watch
+        from aj_crew.dashboard.server import _register_config_watch
 
         app = web.Application()
         state.set_dynamic_cards_enabled = MagicMock()
         _register_config_watch(app, state, None)
         return {s.name: s for s in app["config_watch_subscriptions"]}
 
-    def _cfg(self, **agent_kw) -> KiroCrewConfig:
-        cfg = KiroCrewConfig()
+    def _cfg(self, **agent_kw) -> AjCrewConfig:
+        cfg = AjCrewConfig()
         for key, value in agent_kw.items():
             setattr(cfg.agent, key, value)
         return cfg
@@ -68,7 +68,7 @@ class TestServerAppliers:
         subs = self._register(state)
         apply = subs["browser.settings"].callback()
         assert apply is not None
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         await apply(
             ConfigChange(old=cfg, new=cfg, changed=frozenset({"dashboard.browser_local_origins"}))
         )
@@ -81,7 +81,7 @@ class TestServerAppliers:
     def test_the_chat_default_model_has_an_applier(self) -> None:
         """``agent.model`` has an applier, like ``agent.role_models.background``.
 
-        Both are baked into ``~/.kiro/agents/kirocrew.json``, which kiro-cli reads at
+        Both are baked into ``~/.kiro/agents/ajcrew.json``, which kiro-cli reads at
         ``--agent`` startup, so both need the spec rebuild to reach new sessions.
         """
         subs = self._register(SimpleNamespace(workflow_service=None, channel_manager=None))
@@ -102,15 +102,15 @@ class TestServerAppliers:
         )
         apply = self._register(state)["agent.model"].callback()
         rebuilds: list[int] = []
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
 
         def _rebuild() -> tuple[Path, bool]:
             rebuilds.append(1)
-            return (Path("/tmp/kirocrew.json"), True)
+            return (Path("/tmp/ajcrew.json"), True)
 
-        with patch("kiro_crew.agent.rebuild_agent_config_reporting", _rebuild):
+        with patch("aj_crew.agent.rebuild_agent_config_reporting", _rebuild):
             await apply(
-                ConfigChange(old=KiroCrewConfig(), new=cfg, changed=frozenset({"agent.model"}))
+                ConfigChange(old=AjCrewConfig(), new=cfg, changed=frozenset({"agent.model"}))
             )
             assert rebuilds == [1], "a touched agent.model rebuilds the spec"
             state.push_refresh.assert_called_once_with("agents")
@@ -134,11 +134,11 @@ class TestServerAppliers:
             sessions=sessions,
         )
         apply = self._register(state)["agent.model"].callback()
-        new_cfg = KiroCrewConfig()
-        change = ConfigChange(old=KiroCrewConfig(), new=new_cfg, changed=frozenset({"agent.model"}))
+        new_cfg = AjCrewConfig()
+        change = ConfigChange(old=AjCrewConfig(), new=new_cfg, changed=frozenset({"agent.model"}))
         with patch(
-            "kiro_crew.agent.rebuild_agent_config_reporting",
-            lambda: (Path("/tmp/kirocrew.json"), True),
+            "aj_crew.agent.rebuild_agent_config_reporting",
+            lambda: (Path("/tmp/ajcrew.json"), True),
         ):
             await apply(change)
         sessions.refresh_defaults.assert_awaited_once_with(cfg=new_cfg)
@@ -164,13 +164,13 @@ class TestServerAppliers:
             raise OSError("spec directory is read-only")
 
         with (
-            patch("kiro_crew.agent.rebuild_agent_config_reporting", _boom),
+            patch("aj_crew.agent.rebuild_agent_config_reporting", _boom),
             pytest.raises(OSError, match="spec directory is read-only"),
         ):
             await apply(
                 ConfigChange(
-                    old=KiroCrewConfig(),
-                    new=KiroCrewConfig(),
+                    old=AjCrewConfig(),
+                    new=AjCrewConfig(),
                     changed=frozenset({"agent.model"}),
                 )
             )
@@ -182,7 +182,7 @@ class TestServerAppliers:
         )
         assert state.notify.call_args.args[2] == (
             "The setting was saved but new sessions will keep using the previous model. "
-            "Kiro Crew retries automatically; check the gateway logs if this persists."
+            "Aj Crew retries automatically; check the gateway logs if this persists."
         )
 
     @pytest.mark.asyncio
@@ -202,16 +202,16 @@ class TestServerAppliers:
         apply = self._register(state)["agent.model"].callback()
 
         def _refused() -> tuple[Path, bool]:
-            return (Path("/home/x/.kiro/agents/kirocrew.json"), False)
+            return (Path("/home/x/.kiro/agents/ajcrew.json"), False)
 
         with (
-            patch("kiro_crew.agent.rebuild_agent_config_reporting", _refused),
+            patch("aj_crew.agent.rebuild_agent_config_reporting", _refused),
             pytest.raises(RuntimeError, match="refused"),
         ):
             await apply(
                 ConfigChange(
-                    old=KiroCrewConfig(),
-                    new=KiroCrewConfig(),
+                    old=AjCrewConfig(),
+                    new=AjCrewConfig(),
                     changed=frozenset({"agent.model"}),
                 )
             )
@@ -239,14 +239,14 @@ class TestServerAppliers:
             attempts += 1
             if attempts == 1:
                 raise OSError("spec directory is read-only")
-            return (Path("/tmp/kirocrew.json"), True)
+            return (Path("/tmp/ajcrew.json"), True)
 
         change = ConfigChange(
-            old=KiroCrewConfig(),
-            new=KiroCrewConfig(),
+            old=AjCrewConfig(),
+            new=AjCrewConfig(),
             changed=frozenset({"agent.model"}),
         )
-        with patch("kiro_crew.agent.rebuild_agent_config_reporting", _rebuild):
+        with patch("aj_crew.agent.rebuild_agent_config_reporting", _rebuild):
             with pytest.raises(OSError, match="spec directory is read-only"):
                 await apply(change)
             await apply(change)
@@ -269,7 +269,7 @@ class TestServerAppliers:
     async def test_the_channel_manager_binds_its_caps_in_its_constructor(
         self, tmp_path: Path
     ) -> None:
-        from kiro_crew.channel import ChannelManager
+        from aj_crew.channel import ChannelManager
 
         live.reset_for_tests()
         mgr = ChannelManager(
@@ -299,7 +299,7 @@ class TestServerAppliers:
 
     @pytest.mark.asyncio
     async def test_the_workflow_service_binds_its_ceiling_in_its_constructor(self) -> None:
-        from kiro_crew.workflows.service import WorkflowService
+        from aj_crew.workflows.service import WorkflowService
 
         live.reset_for_tests()
         svc = WorkflowService(sessions=SimpleNamespace(), timeout_secs=600)
@@ -324,7 +324,7 @@ class TestServerAppliers:
         assert svc.timeout_secs == 1800, "an untouched leaf leaves the ceiling alone"
 
     def test_log_level_applier_is_registered_on_its_own_path(self) -> None:
-        from kiro_crew.dashboard.handlers.updates import apply_log_level_from_config
+        from aj_crew.dashboard.handlers.updates import apply_log_level_from_config
 
         subs = self._register(SimpleNamespace(workflow_service=None, channel_manager=None))
         sub = subs["agent.log_level"]
@@ -344,7 +344,7 @@ class TestServerAppliers:
         sub = self._register(state)["dashboard.feature_previews"]
         assert sub.prefixes == ("dashboard.feature_previews",)
         apply = sub.callback()
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         apply(ConfigChange(old=cfg, new=cfg, changed=frozenset({"agent.log_level"})))
         state.push_refresh.assert_not_called()
         apply(
@@ -366,9 +366,9 @@ class TestServerAppliers:
 
         state = SimpleNamespace(workflow_service=None, channel_manager=None, crons=_BrokenCrons())
         apply = self._register(state)["dashboard.stale_wake"].callback()
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         with (
-            patch("kiro_crew.dashboard.stale_wake.enabled", lambda: True),
+            patch("aj_crew.dashboard.stale_wake.enabled", lambda: True),
             pytest.raises(OSError, match="cron store is read-only"),
         ):
             await apply(
@@ -391,7 +391,7 @@ class TestServerAppliers:
         sub = self._register(state)["apps"]
         assert sub.prefixes == ("apps",)
         apply = sub.callback()
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         apply(ConfigChange(old=cfg, new=cfg, changed=frozenset({"agent.log_level"})))
         state.push_refresh.assert_not_called()
         apply(ConfigChange(old=cfg, new=cfg, changed=frozenset({"apps.notes.mute_sessions"})))
@@ -405,7 +405,7 @@ class TestServerAppliers:
         rather than leaving it to the orphan sweep, and closes its tab with the
         shell-exited code; a redial is refused at once despite the 30 s gate cache.
         Switching it back on ends nothing."""
-        from kiro_crew.dashboard.handlers import terminal
+        from aj_crew.dashboard.handlers import terminal
 
         ws = AsyncMock()
         ws.closed = False
@@ -425,10 +425,10 @@ class TestServerAppliers:
         monkeypatch.setattr(terminal, "_kill_session", kill)
         monkeypatch.setattr(terminal, "_enabled_cache", [True, float("inf")])
         monkeypatch.setattr(terminal, "_get_config", lambda request: {"enabled": False})
-        on, off = KiroCrewConfig(), KiroCrewConfig()
+        on, off = AjCrewConfig(), AjCrewConfig()
         off.dashboard.terminal = {"enabled": False}
 
-        async def dispatch(old: KiroCrewConfig, new: KiroCrewConfig) -> None:
+        async def dispatch(old: AjCrewConfig, new: AjCrewConfig) -> None:
             changed = frozenset({"dashboard.terminal.enabled"})
             await apply(ConfigChange(old=old, new=new, changed=changed))
             await asyncio.gather(*state._background_tasks)
@@ -472,13 +472,13 @@ class TestServerAppliers:
             _background_tasks=set(),
         )
         apply = self._register(state)["agent.provider"].callback()
-        cfg = KiroCrewConfig()
-        with patch("kiro_crew.agent.rebuild_agent_config", lambda: None):
+        cfg = AjCrewConfig()
+        with patch("aj_crew.agent.rebuild_agent_config", lambda: None):
             await await_until(
                 asyncio.ensure_future(
                     apply(
                         ConfigChange(
-                            old=KiroCrewConfig(), new=cfg, changed=frozenset({"agent.provider"})
+                            old=AjCrewConfig(), new=cfg, changed=frozenset({"agent.provider"})
                         )
                     )
                 )
@@ -523,17 +523,17 @@ class TestServerAppliers:
             _background_tasks=set(),
         )
         apply = self._register(state)["agent.provider"].callback()
-        scheduled = KiroCrewConfig()
-        newer = replace(KiroCrewConfig(), agent=replace(KiroCrewConfig().agent, model="newer"))
-        torn = replace(KiroCrewConfig(), _degraded_sections=frozenset({"agent"}))
+        scheduled = AjCrewConfig()
+        newer = replace(AjCrewConfig(), agent=replace(AjCrewConfig().agent, model="newer"))
+        torn = replace(AjCrewConfig(), _degraded_sections=frozenset({"agent"}))
         change = ConfigChange(
-            old=KiroCrewConfig(), new=scheduled, changed=frozenset({"agent.provider"})
+            old=AjCrewConfig(), new=scheduled, changed=frozenset({"agent.provider"})
         )
-        with patch("kiro_crew.agent.rebuild_agent_config", lambda: None):
-            with patch("kiro_crew.config.live.snapshot", return_value=newer):
+        with patch("aj_crew.agent.rebuild_agent_config", lambda: None):
+            with patch("aj_crew.config.live.snapshot", return_value=newer):
                 await apply(change)
                 await asyncio.gather(*state._background_tasks)
-            with patch("kiro_crew.config.live.snapshot", return_value=torn):
+            with patch("aj_crew.config.live.snapshot", return_value=torn):
                 await apply(change)
                 await asyncio.gather(*state._background_tasks)
         assert calls == [newer, scheduled]
@@ -563,7 +563,7 @@ class TestServerAppliers:
         cleanup hook is registered at build time."""
         from aiohttp import web
 
-        from kiro_crew.dashboard.server import _register_config_watch
+        from aj_crew.dashboard.server import _register_config_watch
 
         app = web.Application()
         _register_config_watch(
@@ -578,10 +578,10 @@ class TestServerAppliers:
     ) -> None:
         from aiohttp import web
 
-        from kiro_crew.dashboard.server import _kick_config_watch, _register_config_watch
+        from aj_crew.dashboard.server import _kick_config_watch, _register_config_watch
 
         app = web.Application()
-        initial = KiroCrewConfig.load()
+        initial = AjCrewConfig.load()
         state = SimpleNamespace(
             workflow_service=None, _background_tasks=set(), set_dynamic_cards_enabled=MagicMock()
         )
@@ -603,10 +603,10 @@ class TestServerAppliers:
         running gateway."""
         from aiohttp import web
 
-        from kiro_crew.dashboard.server import _kick_config_watch, _register_config_watch
+        from aj_crew.dashboard.server import _kick_config_watch, _register_config_watch
 
         app = web.Application()
-        initial = KiroCrewConfig.load()
+        initial = AjCrewConfig.load()
         state = SimpleNamespace(
             workflow_service=None, _background_tasks=set(), set_dynamic_cards_enabled=MagicMock()
         )
@@ -627,11 +627,11 @@ class TestServerAppliers:
     @pytest.mark.asyncio
     async def test_a_file_write_reaches_the_workflow_ceiling(self, cfg_file: Path) -> None:
         """End to end: config.json -> ConfigWatch -> the WorkflowService's own bind."""
-        from kiro_crew.workflows.service import WorkflowService
+        from aj_crew.workflows.service import WorkflowService
 
         svc = WorkflowService(sessions=SimpleNamespace(), timeout_secs=600)
         w = live.watch()  # the constructor bound on the singleton
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
         assert "bind[agent.workflow_run_timeout_secs]" in {s.name for s in w.subscriptions()}
         _write(cfg_file, {"agent": {"model": "model-a", "workflow_run_timeout_secs": 2400}})
         change = await w.refresh_now()

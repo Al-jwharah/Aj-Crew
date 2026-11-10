@@ -31,11 +31,11 @@ from issue_radar_crew_runtime_helpers import (  # noqa: F401 -- the autouse fixt
 )
 from off_loop_helpers import off_loop
 
-from kiro_crew.apps.builtins.issue_radar.backend import crew_runtime as cr
-from kiro_crew.apps.builtins.issue_radar.backend import crew_store as cs
-from kiro_crew.apps.builtins.issue_radar.backend import provider
-from kiro_crew.apps.builtins.issue_radar.backend import store as store_mod
-from kiro_crew.apps.builtins.issue_radar.backend import watch as watch_mod
+from aj_crew.apps.builtins.issue_radar.backend import crew_runtime as cr
+from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs
+from aj_crew.apps.builtins.issue_radar.backend import provider
+from aj_crew.apps.builtins.issue_radar.backend import store as store_mod
+from aj_crew.apps.builtins.issue_radar.backend import watch as watch_mod
 
 _KEY = provider.key_from_parts(OWNER, REPO)
 
@@ -178,7 +178,7 @@ class TestTriageModel(unittest.IsolatedAsyncioTestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._tmp.cleanup)
         self.root = Path(self._tmp.name)
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_model
+        from aj_crew.apps.builtins.issue_radar.backend import crew_model
 
         crew_model._withheld.clear()
         crew_model._written.clear()
@@ -338,7 +338,7 @@ class TestTriageModel(unittest.IsolatedAsyncioTestCase):
     async def test_every_watchdog_pass_retries_a_hold_not_yet_recorded(self):
         """A held slot reads no items, and the pass still writes the hold, so a write
         that failed once lands on the next pass rather than never."""
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_model
+        from aj_crew.apps.builtins.issue_radar.backend import crew_model
 
         crew = _crew(self.root, unattended=True, model=self.WORK, triage_model=self.TRIAGE)
         state = self._State()
@@ -361,7 +361,7 @@ class TestTriageModel(unittest.IsolatedAsyncioTestCase):
         model" lands before the queued write runs; the write then runs. The release
         must win: the record stays released, and so does the next pass.
         """
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_model
+        from aj_crew.apps.builtins.issue_radar.backend import crew_model
 
         crew = _crew(self.root, unattended=True, model=self.WORK, triage_model=self.TRIAGE)
         state = self._State()
@@ -405,7 +405,7 @@ class TestTriageModel(unittest.IsolatedAsyncioTestCase):
     def test_the_nudge_says_nothing_of_triage_while_it_is_not_in_effect(self):
         """A held or withheld triage model leaves every turn on the session's model,
         so a turn must not be told to stop short and leave the work for the idle gap."""
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_model
+        from aj_crew.apps.builtins.issue_radar.backend import crew_model
 
         crew = _crew(self.root, model=self.WORK, triage_model=self.TRIAGE)
         cs.set_crew_model_held(
@@ -756,7 +756,7 @@ class TestDismissal(unittest.IsolatedAsyncioTestCase):
         Otherwise a missing seam would fail every test in the class, including
         ``test_a_crew_with_no_loop_and_no_dismissal_IS_re_armed``, which must not depend on it.
         """
-        from kiro_crew.apps import teardown
+        from aj_crew.apps import teardown
 
         self.addCleanup(teardown.unregister_slot_close_hook, cr.APP_NAME)
         return teardown
@@ -884,7 +884,7 @@ class TestDismissal(unittest.IsolatedAsyncioTestCase):
         ``_watch_loop`` sleeps ``POLL_INTERVAL_SEC`` before its first sweep, so the
         loop must register on entry. ``_poll_once`` aborts the loop so no sweep runs.
         """
-        from kiro_crew.apps.builtins.issue_radar.backend import watch
+        from aj_crew.apps.builtins.issue_radar.backend import watch
 
         teardown = self._teardown_mod()
         teardown.unregister_slot_close_hook(cr.APP_NAME)
@@ -1062,7 +1062,7 @@ class TestForgeIdentityFresh(unittest.TestCase):
     caches the identity for the life of the process."""
 
     def test_azure_identity_is_read_past_its_cache(self):
-        from kiro_crew.apps.builtins.issue_radar.backend import azure_client as az
+        from aj_crew.apps.builtins.issue_radar.backend import azure_client as az
 
         guid = "11111111-2222-3333-4444-555555555555"
         fresh = {"authenticatedUser": {"id": guid, "uniqueName": "bob"}}
@@ -1076,7 +1076,7 @@ class TestForgeIdentityFresh(unittest.TestCase):
 
     def test_azure_identity_asks_the_repos_organization_not_the_cli_default(self):
         """A repo connected by URL needs no CLI default organization."""
-        from kiro_crew.apps.builtins.issue_radar.backend import azure_client as az
+        from aj_crew.apps.builtins.issue_radar.backend import azure_client as az
 
         guid = "11111111-2222-3333-4444-555555555555"
         fresh = {"authenticatedUser": {"id": guid, "uniqueName": "bob"}}
@@ -1111,7 +1111,7 @@ class TestHumanAnswer(unittest.IsolatedAsyncioTestCase):
         self.addCleanup(self._tmp.cleanup)
         self.root = Path(self._tmp.name)
         self.now = [_T0_MS]
-        from kiro_crew.crew_log import store as crew_log_store
+        from aj_crew.crew_log import store as crew_log_store
 
         clock = mock.patch.object(crew_log_store, "now_ms", side_effect=lambda: self.now[0])
         clock.start()
@@ -1245,7 +1245,7 @@ class TestHumanAnswer(unittest.IsolatedAsyncioTestCase):
     async def test_an_answer_evicted_as_it_is_written_wakes_no_one(self):
         """Past the store's answer bound an old removal is evicted the moment it is
         written: the pass still stands, so no wake, and it is not written again."""
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_answer_store as pr
+        from aj_crew.apps.builtins.issue_radar.backend import crew_answer_store as pr
 
         self._skip(7)
         self._skip(8)
@@ -1858,7 +1858,7 @@ class TestHumanAnswer(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn(7, self._skipped())
 
     async def test_a_reskip_whose_append_fails_still_leaves_the_issue_skipped(self):
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_store_ledger as ledger
+        from aj_crew.apps.builtins.issue_radar.backend import crew_store_ledger as ledger
 
         self._skip(7)
         self._issue(7, labels=[])
@@ -1873,8 +1873,8 @@ class TestHumanAnswer(unittest.IsolatedAsyncioTestCase):
         self.assertIn(7, self._skipped())
 
     async def test_a_refused_reskip_never_undoes_another_crews_mark(self):
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_answer_store as answers
-        from kiro_crew.apps.builtins.issue_radar.backend import crew_store_ledger as ledger
+        from aj_crew.apps.builtins.issue_radar.backend import crew_answer_store as answers
+        from aj_crew.apps.builtins.issue_radar.backend import crew_store_ledger as ledger
 
         self._skip(7)
         self._issue(7, labels=[])

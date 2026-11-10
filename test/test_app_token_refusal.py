@@ -10,8 +10,8 @@ from __future__ import annotations
 import json
 from unittest.mock import MagicMock
 
-from kiro_crew.dashboard.app_token_refusal import app_token_refusal
-from kiro_crew.dashboard.handlers import ask_question
+from aj_crew.dashboard.app_token_refusal import app_token_refusal
+from aj_crew.dashboard.handlers import ask_question
 
 
 def test_the_refusal_names_the_action_and_says_no_permission_allows_it():

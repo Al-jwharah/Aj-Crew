@@ -16,7 +16,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import agent_panel
+from aj_crew import agent_panel
 
 CREW = "fleet-crew"
 
@@ -394,7 +394,7 @@ def test_a_template_without_the_marker_is_refused():
 
 def test_only_the_first_marker_is_filled():
     out = agent_panel.compose(agent_panel.DATA_MARKER + "|" + agent_panel.DATA_MARKER, "{}")
-    assert out.count('id="kirocrew-panel-data"') == 1
+    assert out.count('id="ajcrew-panel-data"') == 1
 
 
 # the escaping boundary
@@ -562,12 +562,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def _declared_package_data() -> list[str]:
-    """The ``kiro_crew`` globs from setup.cfg's ``[options.package_data]``."""
+    """The ``aj_crew`` globs from setup.cfg's ``[options.package_data]``."""
     import configparser
 
     cfg = configparser.ConfigParser()
     cfg.read(REPO_ROOT / "setup.cfg", encoding="utf-8")
-    raw = cfg.get("options.package_data", "kiro_crew", fallback="")
+    raw = cfg.get("options.package_data", "aj_crew", fallback="")
     return [
         line.strip()
         for line in raw.splitlines()
@@ -584,7 +584,7 @@ def test_every_shipped_template_is_covered_by_the_declared_package_data():
     declared = _declared_package_data()
     shipped = sorted(agent_panel.shipped_templates_dir().glob("*.html"))
     assert shipped, "no shipped templates found -- this test would be vacuous"
-    pkg = REPO_ROOT / "src" / "kiro_crew"
+    pkg = REPO_ROOT / "src" / "aj_crew"
     for path in shipped:
         rel = path.relative_to(pkg).as_posix()
         assert any(fnmatch(rel, glob) for glob in declared), (
@@ -612,7 +612,7 @@ def test_the_template_directory_is_fenced_from_agent_file_tools():
     Layout is human-authored; only data comes from the crew. The read-plus-write floor
     would also block ``fs_read``, the file viewer and indexing, so both halves are pinned.
     """
-    from kiro_crew import security
+    from aj_crew import security
 
     assert agent_panel.TEMPLATES_DIRNAME not in security._CREW_SECRET_LEAVES
     protected = {
@@ -629,7 +629,7 @@ def test_the_record_is_fenced_from_agent_file_tools_too():
     ``members/`` is unfenced, so a record there could be written by another crew,
     past ownership checks and redactors.
     """
-    from kiro_crew import security
+    from aj_crew import security
 
     assert agent_panel._PANELS_DIRNAME in security._CREW_SECRET_LEAVES
     assert agent_panel._PANELS_DIRNAME in agent_panel.panel_path(CREW).parts
@@ -641,7 +641,7 @@ def test_the_record_is_masked_from_a_sandboxed_command():
     A sandboxed command builds its path at runtime, so only an OS-level mask closes it.
     Not under ``trust/``: that is a read-write exception for the sandbox.
     """
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     assert agent_panel._PANELS_DIRNAME in sandbox._CREW_HIDDEN_LEAVES
     assert agent_panel._PANELS_DIRNAME not in sandbox._CREW_SANDBOX_VISIBLE_LEAVES
@@ -665,7 +665,7 @@ def test_the_mask_is_materialised_so_it_applies_on_a_fresh_install():
     """
     from pathlib import PurePath
 
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     assert agent_panel._PANELS_DIRNAME in sandbox._CREW_PRECREATE_HIDDEN_DIR_LEAVES
     dir_targets, _files = sandbox._sealable_absent_ceilings()
@@ -698,7 +698,7 @@ def test_the_publishing_tool_never_writes_the_record_itself():
 
 def test_the_record_no_longer_lives_in_the_unfenced_member_space():
     """Pinned as a NEGATIVE so a future tidy-up cannot move it back."""
-    from kiro_crew import members as members_mod
+    from aj_crew import members as members_mod
 
     assert members_mod.MEMBERS_DIR_NAME not in agent_panel.panel_path(CREW).parts
 
@@ -887,7 +887,7 @@ def test_the_module_docstring_does_not_describe_the_abandoned_storage():
     # The live layout must be.
     assert f"{agent_panel._PANELS_DIRNAME}/<slug>.json" in doc
 
-    from kiro_crew import sandbox, security
+    from aj_crew import sandbox, security
 
     # And every disposition the docstring claims is actually declared.
     assert agent_panel._PANELS_DIRNAME in security._CREW_SECRET_LEAVES
@@ -903,7 +903,7 @@ def test_every_protected_leaf_this_store_uses_refuses_an_alias():
     the answer: whatever leaf this store depends on must be declared no-alias, so a
     fifth leaf cannot be added with the guard silently skipped.
     """
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     for leaf in (agent_panel._PANELS_DIRNAME, agent_panel.TEMPLATES_DIRNAME):
         assert leaf in sandbox._CREW_NO_ALIAS_LEAVES, f"{leaf} may be aliased"
@@ -915,7 +915,7 @@ def test_the_mirrored_member_layout_matches_members():
     Only the slug pattern is shared: both modules key per-crew state by it, so a
     widened pattern on one side would let through a name the other refuses.
     """
-    from kiro_crew import members as members_mod
+    from aj_crew import members as members_mod
 
     assert agent_panel._SLUG_RE.pattern == members_mod._SLUG_RE.pattern
 
@@ -935,13 +935,13 @@ def test_the_store_works_as_an_entry_point(tmp_path):
     # an import-only probe and still fail here, which is how the first attempt at
     # this fix read as green.
     probe = (
-        "from kiro_crew import agent_panel;"
+        "from aj_crew import agent_panel;"
         " print(agent_panel.panel_path('fleet-crew'));"
         " print(agent_panel.SCHEMA_VERSION)"
     )
     # The child gets a HOME OF ITS OWN, and the env is built by copying rather
     # than replacing. A bare ``env={"PYTHONPATH": ..., "PATH": ...}`` drops
-    # ``KIROCREW_HOME``, so ``panel_dir`` resolved ``data_home()`` to the
+    # ``AJCREW_HOME``, so ``panel_dir`` resolved ``data_home()`` to the
     # OPERATOR's real directory and the probe created it -- a test writing
     # outside its sandbox, on the machine of whoever ran the suite. ``cwd`` is
     # moved under ``tmp_path`` too, so anything the child resolves relatively
@@ -950,7 +950,7 @@ def test_the_store_works_as_an_entry_point(tmp_path):
     home.mkdir()
     env = dict(os.environ)
     env["PYTHONPATH"] = src
-    env["KIROCREW_HOME"] = str(home)
+    env["AJCREW_HOME"] = str(home)
     out = subprocess.run(
         [sys.executable, "-c", probe],
         capture_output=True,
@@ -968,7 +968,7 @@ def test_the_store_works_as_an_entry_point(tmp_path):
     assert schema == str(agent_panel.SCHEMA_VERSION)
     # The path the child resolved must sit under the sandbox home. This is the
     # assertion that keeps the env from silently re-escaping: it fails if a
-    # future edit drops ``KIROCREW_HOME`` again, instead of quietly creating a
+    # future edit drops ``AJCREW_HOME`` again, instead of quietly creating a
     # directory in the operator's home the way the first version did.
     assert Path(resolved).is_relative_to(home.resolve()), resolved
 
@@ -979,7 +979,7 @@ def test_a_multi_word_crew_name_reaches_its_own_template(tmp_path, monkeypatch):
     ``TEMPLATE_ID_RE`` rejects a space, so lowercasing alone would send such a crew to
     the generic template.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     d = agent_panel.override_templates_dir()
     d.mkdir(parents=True, exist_ok=True)
     (d / "pipeline-conductor.html").write_text("<p>bespoke</p>", encoding="utf-8")
@@ -997,7 +997,7 @@ def test_the_mirrored_slugify_matches_members(tmp_path):
     ``members.slug_for_name`` is the authority but sits on the import cycle this store
     stays off, so the mirror is pinned against it over a table of names.
     """
-    from kiro_crew import members as members_mod
+    from aj_crew import members as members_mod
 
     for name in [
         "Pipeline Conductor",
@@ -1092,7 +1092,7 @@ def test_a_lone_surrogate_does_not_become_a_500(tmp_path, monkeypatch):
     UTF-8 cannot encode a lone surrogate, so the size check would raise
     ``UnicodeEncodeError``.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     record = agent_panel.publish(
         CREW, template="default", data={"s": "\ud800bad"}, crew="Fleet Crew"
     )
@@ -1110,11 +1110,11 @@ def test_a_lone_surrogate_does_not_become_a_500(tmp_path, monkeypatch):
         (None, None),
         ("", None),
         ("<div>no opt-in here</div>", None),
-        ("<!--kirocrew:docked-->", agent_panel.DOCKED_DEFAULT_HEIGHT),
-        ("<!--kirocrew:docked height=180-->", 180),
-        ("<!--kirocrew:docked height=2-->", agent_panel.DOCKED_HEIGHT_RANGE[0]),
-        ("<!--kirocrew:docked height=9999-->", agent_panel.DOCKED_HEIGHT_RANGE[1]),
-        ("<!--kirocrew:docked height=abc-->", None),
+        ("<!--ajcrew:docked-->", agent_panel.DOCKED_DEFAULT_HEIGHT),
+        ("<!--ajcrew:docked height=180-->", 180),
+        ("<!--ajcrew:docked height=2-->", agent_panel.DOCKED_HEIGHT_RANGE[0]),
+        ("<!--ajcrew:docked height=9999-->", agent_panel.DOCKED_HEIGHT_RANGE[1]),
+        ("<!--ajcrew:docked height=abc-->", None),
     ],
 )
 def test_docked_height_reads_the_templates_opt_in(document, expected):
@@ -1124,7 +1124,7 @@ def test_docked_height_reads_the_templates_opt_in(document, expected):
 def test_a_crew_cannot_opt_its_panel_into_the_docked_frame():
     """The opt-in belongs to the template. Published data that spells the marker
     lands in the island escaped, so the composed document carries no opt-in."""
-    _publish(data={"line": "<!--kirocrew:docked height=320-->"})
+    _publish(data={"line": "<!--ajcrew:docked height=320-->"})
     document = agent_panel.render_record(agent_panel.read(CREW))
     assert document is not None
     assert agent_panel.docked_height(document) is None
@@ -1141,7 +1141,7 @@ def test_every_shipped_template_stays_off_the_docked_frame():
 
 
 def _board_fields() -> list[str]:
-    from kiro_crew.conductor_board_contract import ConductorBoardPanel
+    from aj_crew.conductor_board_contract import ConductorBoardPanel
 
     return list(ConductorBoardPanel.__annotations__)
 
@@ -1149,7 +1149,7 @@ def _board_fields() -> list[str]:
 def test_a_conductor_board_naming_none_of_its_fields_is_refused():
     """The board would render empty while the tool said "Published"."""
     with pytest.raises(agent_panel.PanelError) as err:
-        _publish(template="kirocrew-conductor", data={"cycle": 47, "fleet": 3})
+        _publish(template="ajcrew-conductor", data={"cycle": 47, "fleet": 3})
     assert err.value.code == "no_known_keys"
     for field in _board_fields():
         assert field in str(err.value), f"the refusal does not name {field!r}"
@@ -1160,7 +1160,7 @@ def test_a_conductor_board_naming_none_of_its_fields_is_refused():
     ("template", "data"),
     [
         pytest.param(
-            "kirocrew-conductor",
+            "ajcrew-conductor",
             {"done": "1 of 2", "cycle": 47},
             id="test_a_conductor_board_with_one_known_field_is_stored_whole",
         ),

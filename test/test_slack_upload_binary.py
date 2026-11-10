@@ -8,7 +8,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import api_slack_upload_file
+from aj_crew.dashboard.handlers import api_slack_upload_file
 
 
 def _make_app(slack_client=None) -> web.Application:
@@ -22,7 +22,7 @@ def _make_app(slack_client=None) -> web.Application:
 
 @pytest.fixture
 def mock_sel():
-    with patch("kiro_crew.dashboard.handlers.files._sel") as m:
+    with patch("aj_crew.dashboard.handlers.files._sel") as m:
         instance = MagicMock()
         m.return_value = instance
         yield instance
@@ -32,8 +32,8 @@ def mock_sel():
 def workspace(tmp_path):
     ws = tmp_path / "workspace"
     ws.mkdir()
-    with patch("kiro_crew.config.loader.workspace_root", return_value=ws), \
-         patch("kiro_crew.config.loader.outbox_dir", return_value=tmp_path / "outbox"):
+    with patch("aj_crew.config.loader.workspace_root", return_value=ws), \
+         patch("aj_crew.config.loader.outbox_dir", return_value=tmp_path / "outbox"):
         (tmp_path / "outbox").mkdir()
         yield ws
 
@@ -48,7 +48,7 @@ class TestSlackUploadBinary:
         slack = MagicMock()
         slack.upload_file = AsyncMock()
 
-        with patch("kiro_crew.dashboard.handlers.files.is_tracked_channel", return_value=True):
+        with patch("aj_crew.dashboard.handlers.files.is_tracked_channel", return_value=True):
             async with TestClient(TestServer(_make_app(slack_client=slack))) as client:
                 resp = await client.post("/api/slack/upload-file", json={
                     "file_path": str(pdf),
@@ -111,7 +111,7 @@ class TestSlackUploadBinary:
         slack = MagicMock()
         slack.upload_file = AsyncMock()
 
-        with patch("kiro_crew.dashboard.handlers.files.is_tracked_channel", return_value=True):
+        with patch("aj_crew.dashboard.handlers.files.is_tracked_channel", return_value=True):
             async with TestClient(TestServer(_make_app(slack_client=slack))) as client:
                 resp = await client.post("/api/slack/upload-file", json={
                     "file_path": str(pdf),
@@ -138,7 +138,7 @@ class TestFileSendErrorRedaction:
         slack = MagicMock()
         slack.upload_file = AsyncMock(side_effect=RuntimeError("upload failed: Bearer " + token))
 
-        with patch("kiro_crew.dashboard.handlers.files.is_tracked_channel", return_value=True):
+        with patch("aj_crew.dashboard.handlers.files.is_tracked_channel", return_value=True):
             async with TestClient(TestServer(_make_app(slack_client=slack))) as client:
                 resp = await client.post(
                     "/api/slack/upload-file",
@@ -161,7 +161,7 @@ class TestFileSendErrorRedaction:
         assert [a["error"] for a in audited] == [body_error]
 
     def test_helpers_are_imported(self):
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         token = "ghp_" + "a" * 36
         redacted, _count = files_mod.redact_credentials("Bearer " + token)

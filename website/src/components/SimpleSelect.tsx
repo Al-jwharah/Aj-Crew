@@ -9,7 +9,7 @@ import { forwardUiLocation } from '../uiLocations/uiLocation'
  * Thin Radix Select wrapper with the retired StyledSelect's props shape.
  *
  * Shared by SettingsSelect (settings pages) and the standalone dropdowns in
- * PublishHub / ArtifactDeployPage / KiroCrewAgentsPage. Holds the sentinel
+ * PublishHub / ArtifactDeployPage / AjCrewAgentsPage. Holds the sentinel
  * plumbing in one place:
  *
  * - Radix reserves value '' for "no selection", but callers legitimately use
@@ -211,7 +211,7 @@ const SimpleSelect = forwardRef(function SimpleSelect({ options, optionLabels, o
                     {opt}
                     {/* aria-hidden: the option's accessible name must stay the bare
                         template name — the badge text otherwise joins it and breaks
-                        exact-name lookups (locators, SR "select kirocrew"). */}
+                        exact-name lookups (locators, SR "select ajcrew"). */}
                     <span aria-hidden="true" className="contents">
                       <SourceBadge source={badge.source} tone="neutral" title={badge.hint}>{badge.label}</SourceBadge>
                     </span>

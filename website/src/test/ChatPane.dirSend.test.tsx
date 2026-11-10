@@ -836,7 +836,7 @@ describe('ChatPane terminal attachment and session boundaries', () => {
 
   it('refuses a dropped folder until its chip removes the token, then reviews the pane workspace', async () => {
     const user = userEvent.setup()
-    vi.stubGlobal('kirocrew', { getPathForFile: () => '/work/docs' })
+    vi.stubGlobal('ajcrew', { getPathForFile: () => '/work/docs' })
     renderPane('pane-terminal-folder', false, { project: '/work/pane-project' })
     const box = await screen.findByRole('textbox', { name: 'Message input' })
     const folder = new File([], 'docs')

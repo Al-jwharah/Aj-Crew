@@ -19,7 +19,7 @@ import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 const OUT = process.argv[2] || '../temp-screenshots/recovery-card'
 const FRAMES = process.argv[3] || ''
 const SLOT = 'chat-recovery'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 if (FRAMES) mkdirSync(FRAMES, { recursive: true })
@@ -35,10 +35,10 @@ const PROMISE_ONLY = '[Unfinished action — automatic recovery]'
 
 const refusalBody = [
   REFUSAL,
-  'One or more tool calls in your previous turn were blocked by a Kiro Crew safety policy, which ended the turn early. This was NOT a user action — do not treat it as a cancellation or interruption by the user.',
+  'One or more tool calls in your previous turn were blocked by a Aj Crew safety policy, which ended the turn early. This was NOT a user action — do not treat it as a cancellation or interruption by the user.',
   '',
   'Blocked:',
-  '  - Running: echo "== mypy =="; .venv/bin/mypy src/kiro_crew/config/loader.py src/kiro_crew/dashboard/handlers/core.py 2>&1 | tail -15; echo "== regenerate baseline =="; .venv/bin/python scripts/generate_config...: Blocked by security policy: .*env.*grep.*AWS.*',
+  '  - Running: echo "== mypy =="; .venv/bin/mypy src/aj_crew/config/loader.py src/aj_crew/dashboard/handlers/core.py 2>&1 | tail -15; echo "== regenerate baseline =="; .venv/bin/python scripts/generate_config...: Blocked by security policy: .*env.*grep.*AWS.*',
   '',
   'Decide how to proceed: use an allowed alternative (for a shell command, a read-only variant), a different tool, or — if the block is correct and you genuinely cannot proceed — say so and stop. Otherwise continue the task where you left off.',
 ].join('\n')
@@ -50,7 +50,7 @@ const slots = [{
   running: false,
   last_message: 'Continuing the remaining verification.',
   messages: 7,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

@@ -19,7 +19,7 @@ superseded-by: []
 - Related: `website/src/components/QuestionCard.tsx` (the card this reshapes),
   `website/src/components/PendingQuestionCard.tsx` (the submit path whose text format
   changes), `website/docs/i18n-catalog.md` (the authoring rule the six new keys follow),
-  `src/kiro_crew/mcp_tools/control.py` (the `ask_question` tool §3.6 makes blocking)
+  `src/aj_crew/mcp_tools/control.py` (the `ask_question` tool §3.6 makes blocking)
 
 ## 1. Problem statement
 
@@ -185,7 +185,7 @@ named test.
 > **Implemented.** This section landed in
 > [#15250](https://github.com/kirodotdev/KiroCrew/pull/15250). `ask_question` now
 > blocks and returns the answers as its tool result, the `/api/agent-ask/*` routes
-> live in `src/kiro_crew/dashboard/handlers/ask_question.py`, and the tests named
+> live in `src/aj_crew/dashboard/handlers/ask_question.py`, and the tests named
 > below ship with it in `test/test_ask_question_blocking.py`.
 
 This closes §1.2. The tool no longer returns at once. It opens the card on the calling

@@ -39,7 +39,7 @@ from pathlib import Path
 
 import pytest
 
-_SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+_SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 
 # One xdist worker for the whole module: every test here derives from ONE module-cached
 # scan of src/ (rglob + a text filter, ast.parse on the ~70 files that can match). Under
@@ -193,7 +193,7 @@ def test_app_backend_pid_alive_uses_the_shim() -> None:
     PID-reuse guard declined to reap before reaching the probe — an incidental
     mask that a Windows ``_proc_start_time`` would remove.
     """
-    from kiro_crew.apps import backend
+    from aj_crew.apps import backend
 
     src = Path(backend.__file__).read_text(encoding="utf-8")
     tree = ast.parse(src)

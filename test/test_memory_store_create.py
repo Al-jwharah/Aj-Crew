@@ -1,11 +1,11 @@
-"""``kirocrew memory create-store``: the explicit step that makes a declared store usable.
+"""``ajcrew memory create-store``: the explicit step that makes a declared store usable.
 
 A named V1 store declared in ``memory_stores`` has no directory until something
 creates it, and use never creates it: ``require_memory_store`` refuses a missing
 directory before ``ensure_memory_store_dir`` is reached, so a store whose directory
 was deleted stays a visible loss instead of coming back empty. That rule stays. What
 these tests pin is the one explicit verb that creates the directory, what it refuses,
-and that ``kirocrew doctor`` names it for a missing store.
+and that ``ajcrew doctor`` names it for a missing store.
 """
 
 from __future__ import annotations
@@ -17,11 +17,11 @@ import stat
 
 import pytest
 
-from kiro_crew import cli_commands as cc
-from kiro_crew import memory_stores as ms
-from kiro_crew.config import loader as loader_mod
-from kiro_crew.config.loader import KiroCrewConfig, config_dir
-from kiro_crew.memory_stores import (
+from aj_crew import cli_commands as cc
+from aj_crew import memory_stores as ms
+from aj_crew.config import loader as loader_mod
+from aj_crew.config.loader import AjCrewConfig, config_dir
+from aj_crew.memory_stores import (
     DEFAULT_MEMORY_STORE,
     UnknownMemoryStore,
     memory_stores_root,
@@ -117,9 +117,9 @@ def test_cli_refusal_exits_one_with_one_line(capsys) -> None:
 
 
 def test_parser_offers_the_verb(monkeypatch: pytest.MonkeyPatch, tmp_path, capsys) -> None:
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-    monkeypatch.setattr("sys.argv", ["kirocrew", "memory", "create-store", "--help"])
-    from kiro_crew.cli import main
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+    monkeypatch.setattr("sys.argv", ["ajcrew", "memory", "create-store", "--help"])
+    from aj_crew.cli import main
 
     with pytest.raises(SystemExit) as exit_info:
         main()
@@ -128,17 +128,17 @@ def test_parser_offers_the_verb(monkeypatch: pytest.MonkeyPatch, tmp_path, capsy
 
 
 def test_doctor_names_the_create_verb_for_a_missing_store(capsys) -> None:
-    from kiro_crew.doctor_checks.agents import _doctor_member_memory_bindings
+    from aj_crew.doctor_checks.agents import _doctor_member_memory_bindings
 
     _write_config(
         {"team": {"owner_member": "", "memory_version": 1}},
         agents={"team": {"memory_store": "team"}},
     )
     issues: list[str] = []
-    _doctor_member_memory_bindings(KiroCrewConfig.load(), issues)
+    _doctor_member_memory_bindings(AjCrewConfig.load(), issues)
     out = capsys.readouterr().out
     assert "unavailable" in out
-    assert "kirocrew memory create-store team" in out
+    assert "ajcrew memory create-store team" in out
     assert issues
 
 
@@ -166,13 +166,13 @@ def test_create_refuses_a_file_in_the_store_path(capsys) -> None:
 
 def test_doctor_names_no_create_verb_when_the_binding_has_another_defect(capsys) -> None:
     """A V1 store bound by a member that carries a member identity: creating fixes nothing."""
-    from kiro_crew.doctor_checks.agents import _doctor_member_memory_bindings
+    from aj_crew.doctor_checks.agents import _doctor_member_memory_bindings
 
     _write_config(
         {"team": {"owner_member": "", "memory_version": 1}},
         agents={"team": {"memory_store": "team", "member_id": "mid-9"}},
     )
-    _doctor_member_memory_bindings(KiroCrewConfig.load(), [])
+    _doctor_member_memory_bindings(AjCrewConfig.load(), [])
     out = capsys.readouterr().out
     assert "unavailable" in out
     assert "create-store" not in out

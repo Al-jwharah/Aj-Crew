@@ -16,8 +16,8 @@ from types import SimpleNamespace
 import native_skill_projection_helpers
 import pytest
 
-from kiro_crew import agent_discovery, context, skill_trust
-from kiro_crew.acp import skill_projection as projection
+from aj_crew import agent_discovery, context, skill_trust
+from aj_crew.acp import skill_projection as projection
 
 _end_projections_before_tmp_path_goes = (
     native_skill_projection_helpers._end_projections_before_tmp_path_goes
@@ -27,7 +27,7 @@ _end_projections_before_tmp_path_goes = (
 @pytest.fixture
 def kiro_tree(tmp_path, monkeypatch):
     """A kiro-cli home holding one global skill, an agents dir and a project."""
-    monkeypatch.delenv("KIROCREW_NATIVE_SKILL_PROJECTION", raising=False)
+    monkeypatch.delenv("AJCREW_NATIVE_SKILL_PROJECTION", raising=False)
     home = tmp_path / "kiro"
     agents = home / "agents"
     agents.mkdir(parents=True)
@@ -37,7 +37,7 @@ def kiro_tree(tmp_path, monkeypatch):
     project = tmp_path / "project"
     project.mkdir()
     monkeypatch.setattr(projection, "kiro_home", lambda: home)
-    monkeypatch.setattr("kiro_crew.config.paths.kiro_home", lambda: home)
+    monkeypatch.setattr("aj_crew.config.paths.kiro_home", lambda: home)
     return home, agents, project
 
 
@@ -87,7 +87,7 @@ def test_a_trusted_workspace_tree_is_inherited_too(kiro_tree, monkeypatch):
 
 def test_an_untrusted_workspace_tree_is_not_probed(kiro_tree, monkeypatch):
     """Trust is asked first, so a workspace-controlled path is never opened."""
-    from kiro_crew import skills
+    from aj_crew import skills
 
     home, _agents, project = kiro_tree
     (project / ".kiro" / "skills").mkdir(parents=True)
@@ -153,10 +153,10 @@ def test_mapped_custom_agent_keeps_only_its_own_mapping(kiro_tree):
     "spec",
     [
         {"tools": []},
-        {"excludedTools": ["@kirocrew-core/skill_search"]},
-        {"excludedTools": ["@kirocrew-core"]},
-        {"mcpServers": {"kirocrew-core": {"disabled": True}}},
-        {"mcpServers": {"kirocrew-core": {"disabledTools": ["skill_search"]}}},
+        {"excludedTools": ["@ajcrew-core/skill_search"]},
+        {"excludedTools": ["@ajcrew-core"]},
+        {"mcpServers": {"ajcrew-core": {"disabled": True}}},
+        {"mcpServers": {"ajcrew-core": {"disabledTools": ["skill_search"]}}},
         {},
         {"tools": ["*"]},
     ],
@@ -178,8 +178,8 @@ def test_agent_that_withholds_skill_search_inherits_nothing(kiro_tree, spec):
 
 def test_default_agent_is_unchanged(kiro_tree):
     _home, agents, _project = kiro_tree
-    _write_agent(agents, {"name": "kirocrew", "tools": ["*"]})
-    assert _globs("kirocrew", agents, inherit_defaults=True) == []
+    _write_agent(agents, {"name": "ajcrew", "tools": ["*"]})
+    assert _globs("ajcrew", agents, inherit_defaults=True) == []
 
 
 @pytest.mark.parametrize(
@@ -190,23 +190,23 @@ def test_the_worker_sees_what_the_default_agent_sees(kiro_tree, monkeypatch, res
     """The worker maps exactly the default's ``skill://`` entries, so mapping none means
     its dispatcher sees the whole catalog: so does the worker, not the inherited trees."""
     _home, agents, project = kiro_tree
-    _write_agent(agents, {"name": "kirocrew-worker", "tools": ["read"], "resources": resources})
-    assert _globs("kirocrew-worker", agents, inherit_defaults=True) == (scope or [])
+    _write_agent(agents, {"name": "ajcrew-worker", "tools": ["read"], "resources": resources})
+    assert _globs("ajcrew-worker", agents, inherit_defaults=True) == (scope or [])
     monkeypatch.setattr(agent_discovery, "_kiro_agents_dir", lambda: agents)
     monkeypatch.setattr(
         agent_discovery,
         "list_agents",
         lambda **kw: [
-            SimpleNamespace(name="kirocrew-worker", filename="kirocrew-worker.json", scope="global")
+            SimpleNamespace(name="ajcrew-worker", filename="ajcrew-worker.json", scope="global")
         ],
     )
     acp = context.PROVIDER_ACP
     search_scope = agent_discovery.session_skill_globs(
-        "", "kirocrew-worker", project_dir=project, provider_type=acp
+        "", "ajcrew-worker", project_dir=project, provider_type=acp
     )
     assert search_scope == scope
     assert context._skills_injection_plan(
-        "kirocrew-worker", is_cc=False, project_dir=project, provider_type=acp
+        "ajcrew-worker", is_cc=False, project_dir=project, provider_type=acp
     ) == (True, scope or [])
 
 
@@ -217,7 +217,7 @@ def test_a_worker_without_its_spec_reads_as_the_default_does(kiro_tree, monkeypa
     _home, agents, project = kiro_tree
     monkeypatch.setattr(agent_discovery, "list_agents", lambda **kw: [])
     acp = context.PROVIDER_ACP
-    for agent in ("kirocrew", "kirocrew-worker"):
+    for agent in ("ajcrew", "ajcrew-worker"):
         assert _globs(agent, agents, strict=True, inherit_defaults=True) == []
         assert (
             agent_discovery.session_skill_globs("", agent, project_dir=project, provider_type=acp)
@@ -286,7 +286,7 @@ def native_custom(kiro_tree, tmp_path, monkeypatch):
     monkeypatch.setattr(projection.platform_compat, "path_volume_is_remote", lambda path: False)
     monkeypatch.setattr(projection.platform_compat, "first_linked_ancestor", lambda path: None)
     monkeypatch.setattr(
-        "kiro_crew.agent.managed_mcp_spec_entry",
+        "aj_crew.agent.managed_mcp_spec_entry",
         lambda name, **_kw: {"command": "test-core", "args": []},
     )
     monkeypatch.setattr(
@@ -294,7 +294,7 @@ def native_custom(kiro_tree, tmp_path, monkeypatch):
         "list_agents",
         lambda **kw: [SimpleNamespace(name="custom", filename="custom.json", scope="global")],
     )
-    monkeypatch.setattr("kiro_crew.agent._KIRO_MCP_JSON", home / "settings" / "mcp.json")
+    monkeypatch.setattr("aj_crew.agent._KIRO_MCP_JSON", home / "settings" / "mcp.json")
     return agents, project
 
 
@@ -303,24 +303,24 @@ def test_native_view_of_an_inheriting_agent_gets_skill_search(native_custom):
     _write_agent(agents, {"name": "custom", "tools": ["read"]})
     view = projection.prepare_native_skill_projection(project).specs["custom"]
     # The whole-server grant a custom agent gets by default carries skill search.
-    assert view["tools"] == ["read", "@kirocrew-core", "@kirocrew-cron"]
-    assert "kirocrew-core" in view["mcpServers"]
+    assert view["tools"] == ["read", "@ajcrew-core", "@ajcrew-cron"]
+    assert "ajcrew-core" in view["mcpServers"]
 
 
 def test_native_view_of_an_opted_out_inheriting_agent_gets_only_skill_search(native_custom):
     agents, project = native_custom
     _write_agent(
         agents,
-        {"name": "custom", "tools": ["read"], "excludedTools": ["@kirocrew-cron"]},
+        {"name": "custom", "tools": ["read"], "excludedTools": ["@ajcrew-cron"]},
     )
     view = projection.prepare_native_skill_projection(project).specs["custom"]
-    assert view["tools"] == ["read", "@kirocrew-core"]
+    assert view["tools"] == ["read", "@ajcrew-core"]
     _write_agent(
         agents,
         {"name": "custom", "tools": ["read", projection._SEARCH_TOOL]},
     )
     view = projection.prepare_native_skill_projection(project).specs["custom"]
-    assert view["tools"] == ["read", projection._SEARCH_TOOL, "@kirocrew-cron"]
+    assert view["tools"] == ["read", projection._SEARCH_TOOL, "@ajcrew-cron"]
 
 
 def test_native_view_of_a_zero_tool_agent_stays_zero_tool(native_custom):
@@ -328,7 +328,7 @@ def test_native_view_of_a_zero_tool_agent_stays_zero_tool(native_custom):
     _write_agent(agents, {"name": "custom", "tools": []})
     view = projection.prepare_native_skill_projection(project).specs["custom"]
     assert view["tools"] == []
-    assert "kirocrew-core" not in view.get("mcpServers", {})
+    assert "ajcrew-core" not in view.get("mcpServers", {})
 
 
 def test_native_view_without_inheritance_gets_no_search(native_custom):
@@ -338,7 +338,7 @@ def test_native_view_without_inheritance_gets_no_search(native_custom):
     prepared = projection.prepare_native_skill_projection(project)
     view = prepared.specs["custom"]
     # Crew's default servers, but no skill-search agent: nothing relies on search.
-    assert view["tools"] == ["read", "@kirocrew-core", "@kirocrew-cron"]
+    assert view["tools"] == ["read", "@ajcrew-core", "@ajcrew-cron"]
     assert "custom" not in prepared.search_agents
 
 
@@ -383,27 +383,27 @@ def test_an_unmapped_worker_is_a_search_agent_like_the_default(native_custom, mo
         projection,
         "list_agents",
         lambda **kw: [
-            SimpleNamespace(name="kirocrew-worker", filename="kirocrew-worker.json", scope="global")
+            SimpleNamespace(name="ajcrew-worker", filename="ajcrew-worker.json", scope="global")
         ],
     )
-    _write_agent(agents, {"name": "kirocrew-worker", "tools": ["read"]})
+    _write_agent(agents, {"name": "ajcrew-worker", "tools": ["read"]})
     prepared = projection.prepare_native_skill_projection(project)
-    assert "kirocrew-worker" in prepared.search_agents
+    assert "ajcrew-worker" in prepared.search_agents
 
 
 def test_inheriting_agent_keeps_its_view_when_search_cannot_be_wired(native_custom, monkeypatch):
     agents, project = native_custom
-    monkeypatch.setattr("kiro_crew.agent.managed_mcp_spec_entry", lambda name, **_kw: None)
+    monkeypatch.setattr("aj_crew.agent.managed_mcp_spec_entry", lambda name, **_kw: None)
     _write_agent(agents, {"name": "custom", "tools": ["read"]})
     prepared = projection.prepare_native_skill_projection(project)
     view = prepared.specs["custom"]
     assert view["tools"] == ["read"]
-    assert "kirocrew-core" not in view.get("mcpServers", {})
+    assert "ajcrew-core" not in view.get("mcpServers", {})
 
 
 def test_mapped_agent_is_still_refused_when_search_cannot_be_wired(native_custom, monkeypatch):
     agents, project = native_custom
-    monkeypatch.setattr("kiro_crew.agent.managed_mcp_spec_entry", lambda name, **_kw: None)
+    monkeypatch.setattr("aj_crew.agent.managed_mcp_spec_entry", lambda name, **_kw: None)
     _write_agent(
         agents,
         {"name": "custom", "tools": ["read"], "resources": ["skill:///opt/s/one/SKILL.md"]},
@@ -415,10 +415,10 @@ def test_mapped_agent_is_still_refused_when_search_cannot_be_wired(native_custom
 def test_one_spelling_of_the_search_refusal():
     assert agent_discovery.skill_search_refusal({}) is None
     assert "excluded" in agent_discovery.skill_search_refusal(
-        {"excludedTools": ["@kirocrew-core/*"]}
+        {"excludedTools": ["@ajcrew-core/*"]}
     )
     assert "disabled" in agent_discovery.skill_search_refusal(
-        {"mcpServers": {"kirocrew-core": {"disabledTools": ["skill_search"]}}}
+        {"mcpServers": {"ajcrew-core": {"disabledTools": ["skill_search"]}}}
     )
 
 
@@ -443,14 +443,14 @@ def test_skill_search_scope_follows_the_same_provider_rule(
     assert scope == ([str(home / "skills" / "*" / "SKILL.md")] if inherits else [])
 
 
-def test_a_wildcard_agent_that_already_mounts_kirocrew_core_inherits(kiro_tree):
+def test_a_wildcard_agent_that_already_mounts_ajcrew_core_inherits(kiro_tree):
     home, agents, _project = kiro_tree
     _write_agent(
         agents,
         {
             "name": "custom",
             "tools": ["*"],
-            "mcpServers": {"kirocrew-core": {"command": "kirocrew"}},
+            "mcpServers": {"ajcrew-core": {"command": "ajcrew"}},
         },
     )
     assert _globs("custom", agents, inherit_defaults=True) == [
@@ -464,10 +464,10 @@ def test_native_view_of_a_wildcard_agent_gets_the_default_servers(native_custom)
     _write_agent(agents, {"name": "custom", "tools": ["*"]})
     view = projection.prepare_native_skill_projection(project).specs["custom"]
     assert view["tools"] == ["*"]
-    assert {"kirocrew-core", "kirocrew-cron"} <= set(view["mcpServers"])
+    assert {"ajcrew-core", "ajcrew-cron"} <= set(view["mcpServers"])
 
 
-def test_native_view_of_an_opted_out_wildcard_agent_gains_no_kirocrew_core(native_custom):
+def test_native_view_of_an_opted_out_wildcard_agent_gains_no_ajcrew_core(native_custom):
     """Skill search does not add the server to a "*" agent: it would grant every Crew tool."""
     agents, project = native_custom
     _write_agent(
@@ -475,11 +475,11 @@ def test_native_view_of_an_opted_out_wildcard_agent_gains_no_kirocrew_core(nativ
         {
             "name": "custom",
             "tools": ["*"],
-            "managedToolPolicy": {"excludeServers": ["kirocrew-core", "kirocrew-cron"]},
+            "managedToolPolicy": {"excludeServers": ["ajcrew-core", "ajcrew-cron"]},
         },
     )
     view = projection.prepare_native_skill_projection(project).specs["custom"]
-    assert "kirocrew-core" not in view.get("mcpServers", {})
+    assert "ajcrew-core" not in view.get("mcpServers", {})
 
 
 def test_no_live_session_names_no_harness():

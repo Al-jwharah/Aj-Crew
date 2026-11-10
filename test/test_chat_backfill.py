@@ -20,10 +20,10 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 from test_chat_slack import _make_slack_app
 
-from kiro_crew.dashboard import chat_slack
-from kiro_crew.dashboard.chat_backfill import select_backfill_messages
-from kiro_crew.dashboard.chat_slack import drain_slack_backfill
-from kiro_crew.slack.format import SLACK_MAX_TEXT, SLACK_MSG_LIMIT
+from aj_crew.dashboard import chat_slack
+from aj_crew.dashboard.chat_backfill import select_backfill_messages
+from aj_crew.dashboard.chat_slack import drain_slack_backfill
+from aj_crew.slack.format import SLACK_MAX_TEXT, SLACK_MSG_LIMIT
 
 
 def _state(tmp_path):
@@ -323,7 +323,7 @@ class TestBackfillFormatting:
         redaction, while the text is one piece. The preconditions are asserted: a cut
         in the filler instead of the credential would pass without the fix.
         """
-        from kiro_crew.slack.format import CONTINUATION
+        from aj_crew.slack.format import CONTINUATION
 
         state = _state(tmp_path)
         slot = state.get_or_create_slot("s1")
@@ -521,7 +521,7 @@ class TestBackfillHandlerWiring:
         Slack takes about one message per second, so a long drain would time out the
         fetch. The drain blocks on an event to prove the handler returned first.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _state(tmp_path)
         slot = state.get_or_create_slot("s1")
         _seed(slot, [("user", "seed me"), ("assistant", "seeded")])
@@ -563,7 +563,7 @@ class TestBackfillHandlerWiring:
     @pytest.mark.asyncio
     async def test_existing_thread_link_seeds_nothing(self, tmp_path, monkeypatch):
         """Challenge-and-redirect: the thread already holds this history."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _state(tmp_path)
         slot = state.get_or_create_slot("s1")
         _seed(slot, [("user", "hello"), ("assistant", "hi there")])

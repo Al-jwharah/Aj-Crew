@@ -31,10 +31,10 @@ from test_sandbox_launcher_program import (
     refusal,
 )
 
-from kiro_crew import sandbox
-from kiro_crew import sandbox_launcher_program as program
-from kiro_crew import sandbox_plan
-from kiro_crew.sandbox import SandboxCeilingUnsealable
+from aj_crew import sandbox
+from aj_crew import sandbox_launcher_program as program
+from aj_crew import sandbox_plan
+from aj_crew.sandbox import SandboxCeilingUnsealable
 
 _POSIX_ONLY = pytest.mark.skipif(os.name == "nt", reason="POSIX mode bits / bind-mount mask")
 #: The launcher program's stages pin through ``O_PATH`` and ``/proc/self/fd``, which only
@@ -127,10 +127,10 @@ class TestTheSeatbeltBackendVerifiesTheWindowItOpens:
 
     def test_an_unpinned_window_is_still_granted(self):
         """The three pre-existing producers pin nothing, and keep their windows."""
-        window = "/home/someone/.kirocrew/scratch/session/probe"
+        window = "/home/someone/.ajcrew/scratch/session/probe"
 
         seen = self._captured(
-            extra_hidden_dirs=("/home/someone/.kirocrew/scratch",),
+            extra_hidden_dirs=("/home/someone/.ajcrew/scratch",),
             extra_private_dirs=(window,),
         )
 
@@ -170,7 +170,7 @@ class TestTheMaskRootIdentityReachesBothBackends:
 
     def test_a_pinned_mask_root_that_still_matches_is_masked(self, tmp_path):
         """The approval is CONSUMED here, not discarded: a match proceeds as before."""
-        apps = tmp_path / ".kirocrew" / "apps"
+        apps = tmp_path / ".ajcrew" / "apps"
         apps.mkdir(parents=True)
         st = os.lstat(str(apps))
 
@@ -186,9 +186,9 @@ class TestTheMaskRootIdentityReachesBothBackends:
 
         Break-arm: ``drop_seatbelt_mask_identity``.
         """
-        apps = tmp_path / ".kirocrew" / "apps"
+        apps = tmp_path / ".ajcrew" / "apps"
         apps.mkdir(parents=True)
-        substitute = tmp_path / ".kirocrew" / "other"
+        substitute = tmp_path / ".ajcrew" / "other"
         substitute.mkdir()
         approved = os.lstat(str(substitute))
 
@@ -201,7 +201,7 @@ class TestTheMaskRootIdentityReachesBothBackends:
         assert "not the one this spawn approved" in str(exc.value)
 
     def test_an_unreadable_mask_root_refuses_the_spawn(self, tmp_path):
-        apps = tmp_path / ".kirocrew" / "apps"
+        apps = tmp_path / ".ajcrew" / "apps"
 
         with pytest.raises(SandboxCeilingUnsealable) as exc:
             self._captured(
@@ -221,7 +221,7 @@ class TestTheMaskRootIdentityReachesBothBackends:
 
         Break-arm: ``follow_the_seatbelt_mask_identity``.
         """
-        crew = tmp_path / ".kirocrew"
+        crew = tmp_path / ".ajcrew"
         crew.mkdir(parents=True)
         apps = crew / "apps"
         apps.mkdir()
@@ -359,7 +359,7 @@ class TestAWindowAtOrAboveAHiddenLeaf:
         producers' macOS behaviour unchanged.
         """
         home = os.path.expanduser("~")
-        apps = os.path.join(home, ".kirocrew", "apps")
+        apps = os.path.join(home, ".ajcrew", "apps")
         window = os.path.join(apps, "meetings", "data")
 
         plan = sandbox._spawn_plan(
@@ -383,7 +383,7 @@ class TestAWindowAtOrAboveAHiddenLeaf:
         over it, so the leaf is masked AGAIN after the window is bound.
         """
         home = tmp_path / "home"
-        apps = home / ".kirocrew" / "apps"
+        apps = home / ".ajcrew" / "apps"
         window = apps / "meetings" / "data"
         nested = window / "edits"
         nested.mkdir(parents=True)
@@ -394,7 +394,7 @@ class TestAWindowAtOrAboveAHiddenLeaf:
                 tier="cc", extra_hidden_dirs=(str(apps),), extra_private_dirs=(str(window),)
             ),
             sandbox_plan.PlanHost(
-                home=str(home), tier_dirs=(".kirocrew/apps/meetings/data/edits",)
+                home=str(home), tier_dirs=(".ajcrew/apps/meetings/data/edits",)
             ),
         )
         assert plan.sensitive_dirs == (str(nested), str(apps))
@@ -414,13 +414,13 @@ class TestAWindowAtOrAboveAHiddenLeaf:
     def test_a_window_equal_to_a_hidden_leaf_is_still_refused_everywhere(self):
         """The EQUALS case has no ordering that saves it: the window IS the masked tree."""
         home = os.path.expanduser("~")
-        leaf = os.path.join(home, ".kirocrew", "apps", "aws-control", "data")
+        leaf = os.path.join(home, ".ajcrew", "apps", "aws-control", "data")
 
         assert sandbox_plan.window_is_a_hidden_target(leaf, [leaf])
         for remasks in (False, True):
             windows, _refusals = sandbox_plan.private_windows(
                 (leaf,),
-                [os.path.join(home, ".kirocrew", "apps"), leaf],
+                [os.path.join(home, ".ajcrew", "apps"), leaf],
                 remasks_contained_targets=remasks,
             )
             assert windows == []
@@ -434,7 +434,7 @@ class TestAWindowAtOrAboveAHiddenLeaf:
         masked list, while an ordinary app's window on the same tree survives.
         """
         home = os.path.expanduser("~")
-        apps = os.path.join(home, ".kirocrew", "apps")
+        apps = os.path.join(home, ".ajcrew", "apps")
         leaf = os.path.join(apps, "aws-control", "data")
         ordinary = os.path.join(apps, "alpha", "data")
         plan = sandbox._spawn_plan(
@@ -448,7 +448,7 @@ class TestAWindowAtOrAboveAHiddenLeaf:
 
 def _window_tree(tmp_path: Path) -> tuple[Path, Path, Path]:
     """A masked ``apps`` tree holding the window ``alpha/data`` and a sibling's secret."""
-    apps = tmp_path / "home" / ".kirocrew" / "apps"
+    apps = tmp_path / "home" / ".ajcrew" / "apps"
     window = apps / "alpha" / "data"
     window.mkdir(parents=True)
     (window / "state.db").write_text("own state")
@@ -610,7 +610,7 @@ class TestNoSecondPathToAWindowOutlivesTheMask:
 
     def test_the_sweep_runs_outside_the_loop_that_may_skip_a_mask_root(self, tmp_path):
         """A stage whose mask root never materialized is still a second path to the tree."""
-        run_dir = tmp_path / "home" / ".kirocrew" / "run"
+        run_dir = tmp_path / "home" / ".ajcrew" / "run"
         run_dir.mkdir(parents=True)
         libc = _EventLibc()
         run, apps, _window, _nested = self._launch(tmp_path, libc, readonly_dirs=[str(run_dir)])

@@ -130,7 +130,7 @@ describe('ConnectionsPanel — one card per pre-registered provider', () => {
     await mount()
 
     const link = within(cardFor('github')).getByRole('link', { name: /Open the GitHub setup guide/ })
-    expect(link).toHaveAttribute('href', 'https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/oauth-app-registration/github.md')
+    expect(link).toHaveAttribute('href', 'https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/guides/oauth-app-registration/github.md')
     expect(link).toHaveAttribute('target', '_blank')
   })
 
@@ -250,7 +250,7 @@ describe('ConnectionsPanel — environment-sourced halves', () => {
     expect(idInput).toBeDisabled()
     expect(idInput).toHaveValue('from-env')
     expect(within(gh).getByText(
-      'Set by the environment variable KIROCREW_CONNECTIONS_GITHUB_CLIENT_ID, which overrides any value saved here.',
+      'Set by the environment variable AJCREW_CONNECTIONS_GITHUB_CLIENT_ID, which overrides any value saved here.',
     )).toBeInTheDocument()
     // The dashboard-stored help copy is replaced, not appended.
     expect(within(gh).queryByText(/Public identifier of the registered app/)).not.toBeInTheDocument()
@@ -260,7 +260,7 @@ describe('ConnectionsPanel — environment-sourced halves', () => {
     await mount([github({ client_secret_set: true, client_secret_source: 'env' })])
     const gh = cardFor('github')
     expect(within(gh).getByText(
-      'Set by the environment variable KIROCREW_CONNECTIONS_GITHUB_CLIENT_SECRET, which overrides any value saved here.',
+      'Set by the environment variable AJCREW_CONNECTIONS_GITHUB_CLIENT_SECRET, which overrides any value saved here.',
     )).toBeInTheDocument()
     // Not a SecretField (whose read-only mode talks about a remote session): a
     // disabled masked input, because the ENVIRONMENT owns this half.

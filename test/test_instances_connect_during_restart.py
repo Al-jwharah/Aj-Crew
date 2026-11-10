@@ -23,11 +23,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.dashboard import handlers_instances as handlers
-from kiro_crew.dashboard import server
-from kiro_crew.instances.registry import InstancesRegistry
-from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager, TunnelState, TunnelStatus
-from kiro_crew.pre_exec_stops import register_pre_exec_stop, run_pre_exec_stops
+from aj_crew.dashboard import handlers_instances as handlers
+from aj_crew.dashboard import server
+from aj_crew.instances.registry import InstancesRegistry
+from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager, TunnelState, TunnelStatus
+from aj_crew.pre_exec_stops import register_pre_exec_stop, run_pre_exec_stops
 
 #: Bound on reaping a test's own child after a signal. It only names a hang: a
 #: child that ignores SIGTERM is killed at it, and one that outlives the kill
@@ -97,14 +97,14 @@ async def _connect(state, **query):
 
 @pytest.fixture
 def env(tmp_path: Path, _floor_monkeypatch):
-    import kiro_crew.instances.port_allocator as pa
-    import kiro_crew.instances.ssh_tunnel_manager as stm
-    from kiro_crew.config import loader
+    import aj_crew.instances.port_allocator as pa
+    import aj_crew.instances.ssh_tunnel_manager as stm
+    from aj_crew.config import loader
 
     # Hermetic ports: both namespaces that probe must answer "free".
     _floor_monkeypatch.setattr(stm, "_is_port_free", lambda port, host="127.0.0.1": True)
     _floor_monkeypatch.setattr(pa, "_is_port_free", lambda port, host="127.0.0.1": True)
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     (tmp_path / "config.json").write_text(
         json.dumps({"instances": {"enabled": True}}), encoding="utf-8"
     )
@@ -249,8 +249,8 @@ def _child_tunnel(cwd):
 class TestNoForwarderStartsBetweenTheSeamAndTheExec:
     @pytest.fixture(autouse=True)
     def _free_ports(self, _floor_monkeypatch):
-        import kiro_crew.instances.port_allocator as pa
-        import kiro_crew.instances.ssh_tunnel_manager as stm
+        import aj_crew.instances.port_allocator as pa
+        import aj_crew.instances.ssh_tunnel_manager as stm
 
         _floor_monkeypatch.setattr(stm, "_is_port_free", lambda port, host="127.0.0.1": True)
         _floor_monkeypatch.setattr(pa, "_is_port_free", lambda port, host="127.0.0.1": True)

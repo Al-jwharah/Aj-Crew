@@ -10,21 +10,21 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.dashboard import channel_slots
-from kiro_crew.dashboard import server as srv
-from kiro_crew.dashboard import state as srv_state
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.history_projection import (
+from aj_crew.dashboard import channel_slots
+from aj_crew.dashboard import server as srv
+from aj_crew.dashboard import state as srv_state
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.history_projection import (
     METADATA_LINE_CORRUPT,
     METADATA_LINE_READABLE,
     METADATA_LINE_TRANSIENT,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 
 @pytest.fixture
 def state(_floor_monkeypatch, tmp_path) -> DashboardState:
-    _floor_monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    _floor_monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     return DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(),
@@ -143,8 +143,8 @@ class TestSlotsGet:
     async def test_get_remains_a_bare_immediate_array(self, state, _floor_monkeypatch) -> None:
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slots
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard.chat_handlers import api_chat_slots
+        from aj_crew.dashboard.handlers import source_providers
 
         async def _no_allowlist() -> None:
             return None
@@ -207,8 +207,8 @@ class TestConnectSnapshot:
     async def _connect(
         self, _floor_monkeypatch, *, rebuilding: bool, dashboard_user: bool = True
     ) -> tuple[list[dict], MagicMock]:
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard.handlers import source_providers
 
         state = MagicMock()
         state.owner_id = "U_OWNER"
@@ -402,17 +402,17 @@ class TestBootRestore:
     ) -> None:
         """The routine container boot: a remote-only reopen seed must not hold the label.
 
-        Under ``KIROCREW_CONTAINER_AUTHORITY_RESTORED=1`` a tab whose transcript is not on
+        Under ``AJCREW_CONTAINER_AUTHORITY_RESTORED=1`` a tab whose transcript is not on
         local disk stays in ``unrestored_slot_keys`` on every boot by design, so waiting
         on that set would keep ``slotsPartial`` forever. Seed and notice come from the
         real restore.
         """
         from chat_test_helpers import _make_state
 
-        from kiro_crew.dashboard import chat_persistence
-        from kiro_crew.dashboard.chat_utils import _history_key_for
+        from aj_crew.dashboard import chat_persistence
+        from aj_crew.dashboard.chat_utils import _history_key_for
 
-        _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         _floor_monkeypatch.setenv(chat_persistence.ENV_AUTHORITY_RESTORED, "1")
         seeded = _make_state(tmp_path / "sessions")
         seeded.conversation_log.append(_history_key_for("chat-1-local"), "user", "hello")
@@ -677,7 +677,7 @@ class TestPartialDeadline:
         hold.__func__(state)
         self._overdue(state)
 
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.state"):
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.state"):
             state.push_slots_update()
 
         frame = _slots_broadcasts(broadcast)[-1]
@@ -986,12 +986,12 @@ class TestDeferredCrewmateThreadHold:
         from chat_test_helpers import _make_state
         from members_dm_thread_helpers import CREW
 
-        from kiro_crew import execution_context
-        from kiro_crew.dashboard import chat_persistence, member_slot_retry
-        from kiro_crew.members import DM_SLOT_MODE, dm_binding_path, member_slot_key, slug_for_name
-        from kiro_crew.members_parts import dm_bindings
+        from aj_crew import execution_context
+        from aj_crew.dashboard import chat_persistence, member_slot_retry
+        from aj_crew.members import DM_SLOT_MODE, dm_binding_path, member_slot_key, slug_for_name
+        from aj_crew.members_parts import dm_bindings
 
-        _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         slug = slug_for_name(CREW)
         key = member_slot_key(slug)
         binding = dm_binding_path(slug)

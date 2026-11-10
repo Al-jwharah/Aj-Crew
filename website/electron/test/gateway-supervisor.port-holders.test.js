@@ -111,7 +111,7 @@ function conflictHarness({
   const { shown, dialog } = scriptedDialog(responses, onPrompt);
   const httpState = {
     status: 200,
-    body: JSON.stringify({ ok: true, app: "kirocrew", version: otherVersion, edition: otherEdition }),
+    body: JSON.stringify({ ok: true, app: "ajcrew", version: otherVersion, edition: otherEdition }),
   };
   const harnessResult = harness({
     dialog,
@@ -122,7 +122,7 @@ function conflictHarness({
     processRef: {
       platform,
       arch: "x64",
-      env: { KIROCREW_HOME: "/virtual/kirocrew-home" },
+      env: { AJCREW_HOME: "/virtual/ajcrew-home" },
       resourcesPath: "/virtual/resources",
       // launchdJobPids reads the user's launchd domains by uid.
       getuid: () => 501,
@@ -151,8 +151,8 @@ async function settleWithTimeoutMock(promise) {
 // otherDisplay is FAMILY_META.displayName; otherApp is its appName, the
 // technical Finder/AppleScript target, which is the joined identifier form.
 for (const [label, ownVersion, otherVersion, otherDisplay, otherApp] of [
-  ["production → Nightly", PROD_VERSION, NIGHTLY_VERSION, "Kiro Crew Nightly", "KiroCrew Nightly"],
-  ["Nightly → production", NIGHTLY_VERSION, PROD_VERSION, "Kiro Crew", "KiroCrew"], // brand-ok
+  ["production → Nightly", PROD_VERSION, NIGHTLY_VERSION, "Aj Crew Nightly", "AjCrew Nightly"],
+  ["Nightly → production", NIGHTLY_VERSION, PROD_VERSION, "Aj Crew", "AjCrew"], // brand-ok
 ]) {
   test(`win32 ${label}: Retry after a manual quit completes the pending launch`, async () => {
     const state = { held: true };
@@ -201,11 +201,11 @@ test("a service-managed gateway of the other edition is never adopted: the user 
   assert.strictEqual(await supervisor.start(), false);
   assert.strictEqual(shown.length, 1);
   assert.deepStrictEqual(shown[0].buttons, ["I stopped it — Retry", "Cancel"]);
-  assert.ok(shown[0].detail.startsWith("Stop the Kiro Crew LTS gateway, then choose “I stopped it — Retry”."));
-  assert.ok(shown[0].detail.includes("Run this command in Terminal:\nkirocrew stop --port 5476"));
+  assert.ok(shown[0].detail.startsWith("Stop the Aj Crew LTS gateway, then choose “I stopped it — Retry”."));
+  assert.ok(shown[0].detail.includes("Run this command in Terminal:\najcrew stop --port 5476"));
   assert.ok(shown[0].detail.includes("If it starts again by itself, stop the service that restarts it."));
   assert.ok(!shown[0].detail.includes("background service"), "one noun: the gateway");
-  assert.ok(logs.some((line) => line.includes("KiroCrew LTS's gateway with no app window (service)"))); // brand-ok -- app name
+  assert.ok(logs.some((line) => line.includes("AjCrew LTS's gateway with no app window (service)"))); // brand-ok -- app name
   assert.strictEqual(spawnCalls.length, 0);
 });
 
@@ -225,8 +225,8 @@ test("darwin: a launchd-job gateway of the other edition gets the stop-it prompt
 
   assert.strictEqual(await supervisor.start(), false);
   assert.strictEqual(shown.length, 1);
-  assert.ok(shown[0].detail.startsWith("Stop the Kiro Crew LTS gateway, then choose"), shown[0].detail);
-  assert.ok(shown[0].detail.includes("Run this command in Terminal:\nkirocrew stop --port 5476"));
+  assert.ok(shown[0].detail.startsWith("Stop the Aj Crew LTS gateway, then choose"), shown[0].detail);
+  assert.ok(shown[0].detail.includes("Run this command in Terminal:\najcrew stop --port 5476"));
   assert.ok(shown[0].detail.includes("stop the service that restarts it"));
   assert.deepStrictEqual(shown[0].buttons, ["I stopped it — Retry", "Cancel"]);
   assert.strictEqual(spawnCalls.length, 0);
@@ -246,7 +246,7 @@ test("darwin: an orphaned gateway of the other edition is offered the orphan sto
   assert.strictEqual(await supervisor.start(), false);
   assert.strictEqual(shown.length, 1);
   assert.deepStrictEqual(shown[0].buttons, ["Stop and continue", "Cancel"]);
-  assert.ok(shown[0].detail.includes("kirocrew stop --port 5476"));
+  assert.ok(shown[0].detail.includes("ajcrew stop --port 5476"));
   assert.strictEqual(spawnCalls.length, 0);
 });
 
@@ -273,7 +273,7 @@ test("win32 Retry while the port is still held re-prompts, then aborts", async (
   assert.strictEqual(shown.length, 4);
   assert.ok(shown[1].buttons.includes("I quit it — Retry"));
   // A re-prompt that is byte-identical to the first reads as a glitch.
-  assert.ok(shown[0].detail.endsWith(`Quit Kiro Crew Nightly, then choose “I quit it — Retry”.`));
+  assert.ok(shown[0].detail.endsWith(`Quit Aj Crew Nightly, then choose “I quit it — Retry”.`));
   assert.ok(shown[1].detail.includes("was still running a moment ago"));
   assert.ok(shown[1].detail.includes(shown[1].buttons[0]), "the re-prompt names the button too");
   assert.ok(!shown[1].detail.includes("5476"), "port numbers are not the user's task");
@@ -281,7 +281,7 @@ test("win32 Retry while the port is still held re-prompts, then aborts", async (
   assert.strictEqual(shown[2].detail, shown[1].detail);
   assert.strictEqual(shown[3].type, "error");
   assert.deepStrictEqual(shown[3].buttons, ["OK"]);
-  assert.ok(shown[3].message.includes("Kiro Crew Nightly is still running."));
+  assert.ok(shown[3].message.includes("Aj Crew Nightly is still running."));
   assert.ok(shown[3].detail.includes("This launch was cancelled."));
   assert.strictEqual(
     logs.filter((line) => line.includes("still holds :5476 after retry")).length,
@@ -367,10 +367,10 @@ test("darwin still offers the automatic quit and takes over itself", async () =>
 
   assert.strictEqual(await supervisor.start(), true);
   assert.strictEqual(shown.length, 1);
-  assert.deepStrictEqual(shown[0].buttons, ["Quit Kiro Crew Nightly & Continue", "Cancel"]);
-  assert.ok(shown[0].detail.endsWith("Quit Kiro Crew Nightly and continue here?"));
-  assert.deepStrictEqual(state.quitAttempts, ['-e quit app "KiroCrew Nightly"']);
-  assert.ok(logs.some((line) => line === "takeover: KiroCrew Nightly released :5476 — proceeding to spawn"));
+  assert.deepStrictEqual(shown[0].buttons, ["Quit Aj Crew Nightly & Continue", "Cancel"]);
+  assert.ok(shown[0].detail.endsWith("Quit Aj Crew Nightly and continue here?"));
+  assert.deepStrictEqual(state.quitAttempts, ['-e quit app "AjCrew Nightly"']);
+  assert.ok(logs.some((line) => line === "takeover: AjCrew Nightly released :5476 — proceeding to spawn"));
   assert.ok(!logs.some((line) => line.includes("canTakeover=false")));
   assert.ok(!logs.some((line) => line.includes("takeover (manual)")));
   assert.strictEqual(spawnCalls.length, 1);
@@ -450,7 +450,7 @@ test("linux refuses the respawn too, where unverifiedIncumbent is false by desig
 
 // A same-version gateway that answers /api/status but reports shutting-down on
 // /api/ready is waited out, never adopted. On Windows a socket lookup that names
-// no PID hands the decision to the `kirocrew gateway-pid` lock probe. The probe
+// no PID hands the decision to the `ajcrew gateway-pid` lock probe. The probe
 // answer is scripted per test; `quits` records a backoff cancellation, because
 // the harness reports the app quitting as soon as the probe has answered once
 // (so a transient miss stops at the first backoff check instead of sleeping).
@@ -473,7 +473,7 @@ function drainingGatewayHarness({ isPackaged = false, gatewayPid }) {
           callback(response);
           response.emit("data", ready
             ? JSON.stringify({ ready: false, shutting_down: true })
-            : JSON.stringify({ ok: true, app: "kirocrew", version: PROD_VERSION }));
+            : JSON.stringify({ ok: true, app: "ajcrew", version: PROD_VERSION }));
           response.emit("end");
         });
         return request;
@@ -492,7 +492,7 @@ function drainingGatewayHarness({ isPackaged = false, gatewayPid }) {
     processRef: {
       platform: "win32",
       arch: "x64",
-      env: { KIROCREW_HOME: "/virtual/kirocrew-home" },
+      env: { AJCREW_HOME: "/virtual/ajcrew-home" },
       resourcesPath: "/virtual/resources",
       kill() { /* the incumbent stays alive */ },
     },
@@ -503,7 +503,7 @@ function drainingGatewayHarness({ isPackaged = false, gatewayPid }) {
 test("win32 drain: an indeterminate lock ends the launch on the probe-failed error, without backing off", async () => {
   const { supervisor, logs, spawnCalls, state, quits } = drainingGatewayHarness({
     gatewayPid: (callback) => {
-      const error = new Error("Command failed: kirocrew gateway-pid");
+      const error = new Error("Command failed: ajcrew gateway-pid");
       error.code = 2;
       callback(error, `${JSON.stringify({ holder: "indeterminate", reason: "lock file unreadable" })}\n`, "");
     },
@@ -521,7 +521,7 @@ test("win32 drain: an indeterminate lock ends the launch on the probe-failed err
 test("win32 drain: a packaged app with no bundled backend ends on the probe-failed error, without backing off", async () => {
   const { supervisor, logs, spawnCalls, state, quits } = drainingGatewayHarness({
     isPackaged: true,
-    gatewayPid: () => { throw new Error("a packaged app must not run kirocrew from PATH"); },
+    gatewayPid: () => { throw new Error("a packaged app must not run ajcrew from PATH"); },
   });
 
   assert.strictEqual(await supervisor.start(), false);
@@ -536,7 +536,7 @@ test("win32 drain: a packaged app with no bundled backend ends on the probe-fail
 test("win32 drain: a lock probe that times out is backed off, not ended on the error", async () => {
   const { supervisor, logs, spawnCalls, state, quits } = drainingGatewayHarness({
     gatewayPid: (callback) => {
-      const error = new Error("Command failed: kirocrew gateway-pid");
+      const error = new Error("Command failed: ajcrew gateway-pid");
       error.killed = true;
       error.signal = "SIGTERM";
       callback(error, "", "");
@@ -554,7 +554,7 @@ test("win32 drain: a lock probe that times out is backed off, not ended on the e
 test("win32 drain: a lock probe reporting ETIMEDOUT is backed off as a timeout", async () => {
   const { supervisor, logs, spawnCalls, state, quits } = drainingGatewayHarness({
     gatewayPid: (callback) => {
-      const error = new Error("Command failed: kirocrew gateway-pid ETIMEDOUT");
+      const error = new Error("Command failed: ajcrew gateway-pid ETIMEDOUT");
       error.code = "ETIMEDOUT";
       callback(error, "", "");
     },
@@ -622,7 +622,7 @@ test("a windowless gateway's retry round and limit read differently from round 1
   assert.strictEqual(result, "abort");
   assert.strictEqual(shown.length, 4);
   assert.ok(shown[0].message.includes("is already running"));
-  assert.strictEqual(shown[1].message, "Kiro Crew LTS is still running.");
-  assert.ok(shown[3].detail.startsWith("Kiro Crew LTS kept running, so this launch stopped."));
+  assert.strictEqual(shown[1].message, "Aj Crew LTS is still running.");
+  assert.ok(shown[3].detail.startsWith("Aj Crew LTS kept running, so this launch stopped."));
   assert.ok(!shown[3].detail.includes("cancelled"));
 });

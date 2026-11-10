@@ -1,6 +1,6 @@
 """Every turn surface states who started the turn, and the exported pair records it.
 
-``kirocrew.turn.completed`` splits turns by ``trigger_source``. A surface that
+``ajcrew.turn.completed`` splits turns by ``trigger_source``. A surface that
 forgets to pass one records ``other``, which is safe but hides that surface's
 turns from every "who started it" reading. So this file holds the call sites to
 the rule structurally (an AST walk over ``src/``, the same style as
@@ -17,11 +17,11 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.metrics import turn_completed as tc
-from kiro_crew.metrics import turns
-from kiro_crew.metrics.usage_attrs import ORIGIN_VALUES, TRIGGER_SOURCE_VALUES
+from aj_crew.metrics import turn_completed as tc
+from aj_crew.metrics import turns
+from aj_crew.metrics.usage_attrs import ORIGIN_VALUES, TRIGGER_SOURCE_VALUES
 
-SRC = pathlib.Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+SRC = pathlib.Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 
 def _calls_named(tree: ast.AST, names: tuple[str, ...]) -> list[ast.Call]:
@@ -96,8 +96,8 @@ class _Rec:
 def _emit(**kw):
     rec = _Rec()
     with (
-        patch("kiro_crew.metrics.turns.get_recorder", return_value=rec),
-        patch("kiro_crew.metrics.turn_completed.get_recorder", return_value=rec),
+        patch("aj_crew.metrics.turns.get_recorder", return_value=rec),
+        patch("aj_crew.metrics.turn_completed.get_recorder", return_value=rec),
     ):
         turns.emit_turn_duration(kw.pop("duration_ms", 1500), **kw)
     return rec
@@ -172,8 +172,8 @@ def test_recorder_failure_never_raises():
         histogram = counter
 
     with (
-        patch("kiro_crew.metrics.turns.get_recorder", return_value=_Boom()),
-        patch("kiro_crew.metrics.turn_completed.get_recorder", return_value=_Boom()),
+        patch("aj_crew.metrics.turns.get_recorder", return_value=_Boom()),
+        patch("aj_crew.metrics.turn_completed.get_recorder", return_value=_Boom()),
     ):
         turns.emit_turn_duration(10, session_key="x", outcome="ok", trigger="cron")
 
@@ -212,7 +212,7 @@ def test_outcome_values_equal_turn_outcome_returns():
 
 
 def test_completed_duration_uses_the_turn_buckets():
-    from kiro_crew.metrics import provider
+    from aj_crew.metrics import provider
 
     bounds = provider.histogram_bounds()
     assert bounds[tc.TURN_COMPLETED_DURATION_METRIC] == bounds[turns.TURN_METRIC]
@@ -240,7 +240,7 @@ def test_completed_duration_uses_the_turn_buckets():
     ],
 )
 def test_dashboard_turn_trigger(fields, expected):
-    from kiro_crew.dashboard.chat_turn.turn_stats import _dashboard_turn_trigger
+    from aj_crew.dashboard.chat_turn.turn_stats import _dashboard_turn_trigger
 
     assert _dashboard_turn_trigger(SimpleNamespace(**fields)) == expected
 

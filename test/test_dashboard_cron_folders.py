@@ -13,21 +13,21 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from body_stream_helpers import BodyStreamPayload
 
-from kiro_crew.cron import CronService
-from kiro_crew.dashboard.handlers.cron import (
+from aj_crew.cron import CronService
+from aj_crew.dashboard.handlers.cron import (
     api_cron_folders,
     api_cron_folders_create,
     api_cron_folders_delete,
     api_cron_folders_update,
 )
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.validation import MAX_SHORT_STRING
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.validation import MAX_SHORT_STRING
 
 
 @pytest.fixture(autouse=True)
 def _isolate_cron_store(monkeypatch, tmp_path):
-    monkeypatch.setattr("kiro_crew.cron._DEFAULT_DIR", tmp_path)
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.cron._DEFAULT_DIR", tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     yield
 
 
@@ -98,7 +98,7 @@ class TestCronFoldersList:
             captured["payload"] = payload
             return MagicMock(status=200)
 
-        with patch("kiro_crew.dashboard.handlers.cron.web.json_response", side_effect=_capture):
+        with patch("aj_crew.dashboard.handlers.cron.web.json_response", side_effect=_capture):
             await api_cron_folders(request)
 
         payload = captured["payload"]
@@ -303,7 +303,7 @@ class TestCronFolderDeleteStateMethod:
     """DashboardState.delete_cron_folder atomically removes folder + clears jobs."""
 
     def test_delete_removes_folder_and_clears_jobs(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
         state = DashboardState.__new__(DashboardState)
         state._cron_folders = [
             {"id": "f1", "name": "Ops", "order": 0},
@@ -331,7 +331,7 @@ class TestCronFolderDeleteStateMethod:
         """A job clear failure does NOT abort deletion: the folder removal is
         the authoritative write; a leftover folder_id is benign (renders as
         ungrouped) so the delete still succeeds."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
         state = DashboardState.__new__(DashboardState)
         state._cron_folders = [{"id": "f1", "name": "Ops", "order": 0}]
         state.save_cron_folders()
@@ -352,7 +352,7 @@ class TestCronFolderDeleteStateMethod:
         """A persistence failure during delete rolls back the in-memory list.
         Job assignments are untouched — clears only happen after a
         successful save, so there is nothing to restore."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
         state = DashboardState.__new__(DashboardState)
         state._cron_folders = [{"id": "f1", "name": "Ops", "order": 0}]
 
@@ -373,7 +373,7 @@ class TestCronFolderDeleteStateMethod:
         state.crons.update_job.assert_not_called()
 
     def test_delete_nonexistent_returns_false(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
         state = DashboardState.__new__(DashboardState)
         state._cron_folders = [{"id": "f1", "name": "Ops", "order": 0}]
         state.crons = MagicMock()
@@ -388,7 +388,7 @@ class TestCronFolderCreateStateMethod:
         """A colliding folder_id is refused: rename/delete act on the first id
         match, so a duplicate would strand the shadowed folder as
         un-renameable/un-deletable. The guard keeps ids unique."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
         state = DashboardState.__new__(DashboardState)
         state._cron_folders = [{"id": "dup", "name": "Ops", "order": 0}]
         state.save_cron_folders()
@@ -402,7 +402,7 @@ class TestCronFolderCreateStateMethod:
         ]
 
     def test_create_appends_unique_id(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
         state = DashboardState.__new__(DashboardState)
         state._cron_folders = [{"id": "f1", "name": "Ops", "order": 0}]
 
@@ -420,7 +420,7 @@ class TestCronFoldersAsyncPersistence:
         state = _make_state(tmp_path)
         request = _request(state, body={"name": "ThreadTest"})
         with patch(
-            "kiro_crew.dashboard.handlers.cron.asyncio.to_thread", new_callable=AsyncMock
+            "aj_crew.dashboard.handlers.cron.asyncio.to_thread", new_callable=AsyncMock
         ) as mock_to_thread:
             mock_to_thread.return_value = {"id": "x", "name": "ThreadTest", "order": 0}
             resp = await api_cron_folders_create(request)
@@ -436,7 +436,7 @@ class TestCronFoldersAsyncPersistence:
         state._cron_folders = [{"id": "f1", "name": "Old", "order": 0}]
         request = _request(state, body={"name": "New"}, match_info={"folder_id": "f1"})
         with patch(
-            "kiro_crew.dashboard.handlers.cron.asyncio.to_thread", new_callable=AsyncMock
+            "aj_crew.dashboard.handlers.cron.asyncio.to_thread", new_callable=AsyncMock
         ) as mock_to_thread:
             mock_to_thread.return_value = {"id": "f1", "name": "New", "order": 0}
             resp = await api_cron_folders_update(request)
@@ -451,7 +451,7 @@ class TestCronFoldersAsyncPersistence:
         state = _make_state(tmp_path)
         request = _request(state, match_info={"folder_id": "f1"})
         with patch(
-            "kiro_crew.dashboard.handlers.cron.asyncio.to_thread", new_callable=AsyncMock
+            "aj_crew.dashboard.handlers.cron.asyncio.to_thread", new_callable=AsyncMock
         ) as mock_to_thread:
             mock_to_thread.return_value = True
             resp = await api_cron_folders_delete(request)
@@ -467,7 +467,7 @@ class TestCronFoldersPersistence:
     restarts even though the file exists on disk."""
 
     def test_save_then_load_round_trip(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
         state = DashboardState.__new__(DashboardState)
         state._cron_folders = [
             {"id": "abc123", "name": "Monitoring", "order": 0},
@@ -483,7 +483,7 @@ class TestCronFoldersPersistence:
     def test_load_ignores_non_array_json(self, tmp_path, monkeypatch):
         """A hand-edited/corrupt `{}` (valid JSON, wrong shape) must not be
         assigned — it would flow to the frontend and crash grouping."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
         for bad in ("{}", '"folders"', "42", "null"):
             (tmp_path / "cron_folders.json").write_text(bad, encoding="utf-8")
             fresh = DashboardState.__new__(DashboardState)
@@ -497,7 +497,7 @@ class TestCronFoldersPersistence:
         would render as a React child and crash the Schedule page) but are
         preserved verbatim in ``_unparsed_cron_folder_entries`` so a later save
         does not erase them."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
         (tmp_path / "cron_folders.json").write_text(
             json.dumps(
                 [
@@ -532,7 +532,7 @@ class TestCronFoldersPersistence:
         unrelated folder operation triggers a save. The malformed entry is
         preserved in-memory so a later save does not erase its bytes.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
         path = tmp_path / "cron_folders.json"
         # User hand-edits the file and typos "order" as "oder" on one folder.
         path.write_text(
@@ -568,7 +568,7 @@ class TestCronFoldersPersistence:
     def test_no_unparsed_entries_leaves_payload_clean(self, tmp_path, monkeypatch):
         """When nothing was malformed, the persisted file is exactly the active
         folder list — no empty/sentinel padding leaks in."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
         path = tmp_path / "cron_folders.json"
         path.write_text(
             json.dumps([{"id": "aaa", "name": "Backups", "order": 0}]), encoding="utf-8"
@@ -584,7 +584,7 @@ class TestCronFoldersPersistence:
 
     def test_save_raises_on_write_failure(self, tmp_path, monkeypatch):
         """save_cron_folders propagates I/O errors (not swallowed)."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
         state = DashboardState.__new__(DashboardState)
         state._cron_folders = [{"id": "x", "name": "Y", "order": 0}]
         # Inject a write failure at the persistence primitive. (A chmod-based
@@ -603,7 +603,7 @@ class TestCronFoldersPersistence:
 
         A candidate is persisted first, so a concurrent GET never sees a ghost folder.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
         state = DashboardState.__new__(DashboardState)
         state._cron_folders = [{"id": "existing", "name": "Keep", "order": 0}]
         live_at_persist: list[bool] = []
@@ -623,7 +623,7 @@ class TestCronFoldersPersistence:
     def test_create_leaves_live_list_unchanged_on_save_failure(self, tmp_path, monkeypatch):
         """A failed create must leave ``_cron_folders`` exactly as it was — the
         new folder is never exposed."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
         state = DashboardState.__new__(DashboardState)
         state._cron_folders = [{"id": "existing", "name": "Keep", "order": 0}]
         before = list(state._cron_folders)
@@ -642,7 +642,7 @@ class TestCronFoldersPersistence:
         import inspect
         from pathlib import Path
 
-        import kiro_crew.dashboard.server as server_mod
+        import aj_crew.dashboard.server as server_mod
 
         src = inspect.getsource(server_mod) + (
             Path(server_mod.__file__).parent / "server_runtime" / "api_entrypoint.py"
@@ -659,7 +659,7 @@ class TestCronFoldersConcurrency:
 
         Both folders must be present in-memory and on disk after both complete.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
         # Use a real DashboardState with real persistence
         state = DashboardState.__new__(DashboardState)
         state._cron_folders = []
@@ -690,7 +690,7 @@ class TestCronFoldersConcurrency:
     @pytest.mark.asyncio
     async def test_concurrent_create_and_delete_serialize(self, tmp_path, monkeypatch):
         """A create and delete running concurrently don't corrupt state."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
         state = DashboardState.__new__(DashboardState)
         state._cron_folders = [{"id": "existing", "name": "Existing", "order": 0}]
         state.push_refresh = MagicMock()
@@ -725,7 +725,7 @@ class TestCronFolderDeleteOrdering:
         A crash between them leaves only benign dangling folder_ids; the reverse order
         could ungroup jobs for a delete that then fails.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
         state = DashboardState.__new__(DashboardState)
         state._cron_folders = [{"id": "f1", "name": "Doomed", "order": 0}]
 

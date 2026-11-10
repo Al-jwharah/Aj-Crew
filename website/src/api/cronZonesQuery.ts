@@ -2,7 +2,7 @@ import { api } from './client'
 
 /** Where a job with no zone of its own runs, as GET /api/crons reports it. */
 export interface CronZones {
-  /** The IANA zone 'local' stands for now (the computer Kiro Crew runs on), or
+  /** The IANA zone 'local' stands for now (the computer Aj Crew runs on), or
    *  null while the server has not detected it. */
   hostTz: string | null
   /** What a job with no zone of its own follows: the configured zone, or 'local'. */

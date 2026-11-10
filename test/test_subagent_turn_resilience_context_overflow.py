@@ -26,8 +26,8 @@ from subagent_turn_resilience_helpers import (  # noqa: F401 -- the autouse fixt
     _text_event,
 )
 
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.testing.wait import await_until
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.testing.wait import await_until
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -45,7 +45,7 @@ def test_context_overflow_marker_forces_a_dedicated_runtime():
     )
     cfg = SimpleNamespace(agent=SimpleNamespace(session_sharing=True))
 
-    with patch("kiro_crew.subagent.KiroCrewConfig.load", return_value=cfg):
+    with patch("aj_crew.subagent.AjCrewConfig.load", return_value=cfg):
         assert mgr._should_use_session_sharing(info) is True
         info._force_dedicated = True
         assert mgr._should_use_session_sharing(info) is False
@@ -146,10 +146,10 @@ async def test_first_turn_context_overflow_retries_once_on_a_dedicated_runtime()
     mgr._run_inner = AsyncMock(side_effect=run_inner)
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
         # flake-ok: pre-existing asyncio.sleep stub scoped to this block, moved verbatim
-        patch("kiro_crew.subagent.asyncio.sleep", side_effect=capacity_wait_sleep),
+        patch("aj_crew.subagent.asyncio.sleep", side_effect=capacity_wait_sleep),
     ):
         info = mgr.spawn("evaluate bounded evidence")
         assert info is not None
@@ -231,7 +231,7 @@ async def test_dedicated_first_attempt_context_overflow_is_terminal():
 
     mgr._run_inner = AsyncMock(side_effect=run_inner)
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("evaluate bounded evidence")
         assert info is not None
         # flake-ok: pre-existing unbounded await of a run's task, moved verbatim
@@ -341,7 +341,7 @@ async def test_first_turn_context_overflow_forgets_rejected_sid_before_fresh_rec
     sessions.aflush = AsyncMock(side_effect=flush_sessions)
     provider.stream = MagicMock(side_effect=stream_factory)
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("evaluate bounded evidence")
         assert info is not None
         session_key = f"subagent:{info.id}"
@@ -400,7 +400,7 @@ async def test_context_overflow_recovery_preserves_a_successor_sid_and_fails_clo
     mgr._run_inner = AsyncMock(side_effect=run_inner)
     sessions.forget_conversation_if_sid = MagicMock(return_value=(False, "successor-sid"))
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("evaluate bounded evidence")
         assert info is not None
         first = mgr._tasks[info.id]
@@ -460,7 +460,7 @@ async def test_context_overflow_recovery_flush_failure_is_terminal_before_replac
     sessions.forget_conversation_if_sid = MagicMock(return_value=(True, "rejected-sid"))
     sessions.aflush = AsyncMock(side_effect=OSError("session map fsync failed"))
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("evaluate bounded evidence")
         assert info is not None
         first = mgr._tasks[info.id]
@@ -547,10 +547,10 @@ async def test_context_overflow_recovery_without_a_rejected_sid_fails_closed():
     sessions.forget_conversation_if_sid = MagicMock(side_effect=forget_conversation_if_sid)
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
         # flake-ok: pre-existing asyncio.sleep stub scoped to this block, moved verbatim
-        patch("kiro_crew.subagent.asyncio.sleep", side_effect=capacity_wait_sleep),
+        patch("aj_crew.subagent.asyncio.sleep", side_effect=capacity_wait_sleep),
     ):
         info = mgr.spawn("evaluate bounded evidence")
         assert info is not None
@@ -590,7 +590,7 @@ async def test_context_overflow_recovery_without_a_rejected_sid_fails_closed():
 
 @pytest.mark.asyncio
 async def test_continuation_context_overflow_before_activity_is_terminal():
-    import kiro_crew.subagent_persistence as sp
+    import aj_crew.subagent_persistence as sp
 
     await asyncio.to_thread(
         sp.create_agent_folder,
@@ -613,7 +613,7 @@ async def test_continuation_context_overflow_before_activity_is_terminal():
 
     mgr._run_inner = AsyncMock(side_effect=run_inner)
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn(
             "continue established conversation",
             keep=True,
@@ -658,7 +658,7 @@ async def test_dedicated_context_overflow_is_terminal_without_a_retry_loop():
 
     mgr._run_inner = AsyncMock(side_effect=run_inner)
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("evaluate bounded evidence")
         assert info is not None
         first = mgr._tasks[info.id]
@@ -711,7 +711,7 @@ async def test_context_overflow_after_activity_is_not_replayed(
 
     mgr._run_inner = AsyncMock(side_effect=run_inner)
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("evaluate bounded evidence")
         assert info is not None
         # flake-ok: pre-existing unbounded await of a run's task, moved verbatim

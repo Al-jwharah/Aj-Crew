@@ -2,7 +2,7 @@
 
 The refusal is deterministic, so respawning hits the same wall; like ``AcpAuthRequired``
 it is non-retryable. Asserted: one spawn attempt, a classified type, and the layer taken
-from the argv Kiro Crew built (a nested harness sandbox fails with the harness's wording
+from the argv Aj Crew built (a nested harness sandbox fails with the harness's wording
 while the layer to change is Crew's).
 
 The switch that turns a layer off is shown only on a verdict from a trusted launcher run:
@@ -16,20 +16,20 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
 
-from kiro_crew.acp.client import (
+from aj_crew.acp.client import (
     AcpClient,
     AcpError,
     AcpSandboxInitFailed,
     is_sandbox_init_failure_output,
     sandbox_init_failure,
 )
-from kiro_crew.sandbox import (
+from aj_crew.sandbox import (
     SANDBOX_LAYER_CREW,
     SANDBOX_LAYER_HARNESS,
     kiro_internal_sandbox_switch,
     wrapped_by_crew_sandbox,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 # The reported three-line burst, verbatim. Only the first line is sandbox-specific.
 HARNESS_SANDBOX_STDERR = [
@@ -130,7 +130,7 @@ async def test_an_uncorroborated_refusal_never_hands_out_the_disable_switch():
         exc = await sandbox_init_failure("\n".join(HARNESS_SANDBOX_STDERR), crew_wrap=crew_wrap)
         assert "config set agent.sandbox off" not in str(exc)
         assert '"sandbox": false' not in str(exc)
-        # Still actionable: the layer is named, from Kiro Crew's own argv rather
+        # Still actionable: the layer is named, from Aj Crew's own argv rather
         # than from the child.
         expected = SANDBOX_LAYER_CREW if crew_wrap else SANDBOX_LAYER_HARNESS
         assert expected in str(exc)
@@ -151,7 +151,7 @@ async def test_a_corroborated_crew_refusal_does_hand_out_the_switch():
     function's own behaviour is pinned by the sandbox suite.
     """
     with patch(
-        "kiro_crew.acp.client.corroborate_launcher_refusal",
+        "aj_crew.acp.client.corroborate_launcher_refusal",
         return_value=("no_backend", "sandbox: BLOCKED", "install the profile"),
     ):
         exc = await sandbox_init_failure("\n".join(LAUNCHER_STDERR), crew_wrap=True)
@@ -167,7 +167,7 @@ async def test_a_corroborated_crew_refusal_does_hand_out_the_switch():
 @pytest.mark.asyncio
 async def test_a_trusted_run_that_clears_the_host_withholds_the_switch():
     """``None`` from corroboration means the child's line was not a host verdict."""
-    with patch("kiro_crew.acp.client.corroborate_launcher_refusal", return_value=None):
+    with patch("aj_crew.acp.client.corroborate_launcher_refusal", return_value=None):
         exc = await sandbox_init_failure("\n".join(LAUNCHER_STDERR), crew_wrap=True)
     assert "config set agent.sandbox off" not in str(exc)
 
@@ -182,7 +182,7 @@ async def test_a_transient_trusted_verdict_withholds_the_switch():
     switch for that would remove isolation over a condition that fixes itself.
     """
     with patch(
-        "kiro_crew.acp.client.corroborate_launcher_refusal",
+        "aj_crew.acp.client.corroborate_launcher_refusal",
         return_value=("transient", "sandbox: FATAL launcher child did not publish", ""),
     ):
         exc = await sandbox_init_failure("\n".join(LAUNCHER_STDERR), crew_wrap=True)
@@ -197,7 +197,7 @@ async def test_corroboration_is_not_attempted_without_a_launcher_line():
     never prints it, so running its corroboration would spend a subprocess on a
     question it cannot answer.
     """
-    with patch("kiro_crew.acp.client.corroborate_launcher_refusal") as corroborate:
+    with patch("aj_crew.acp.client.corroborate_launcher_refusal") as corroborate:
         exc = await sandbox_init_failure("\n".join(HARNESS_SANDBOX_STDERR), crew_wrap=True)
     corroborate.assert_not_called()
     # With no corroboration there is no host verdict, so no disable switch.
@@ -230,7 +230,7 @@ async def test_a_crew_launcher_verdict_cannot_unlock_the_harness_switch():
     """
     path, key = kiro_internal_sandbox_switch()
     with patch(
-        "kiro_crew.acp.client.corroborate_launcher_refusal",
+        "aj_crew.acp.client.corroborate_launcher_refusal",
         return_value=("no_backend", "sandbox: BLOCKED", ""),
     ):
         exc = await sandbox_init_failure("\n".join(LAUNCHER_STDERR), crew_wrap=False)
@@ -249,7 +249,7 @@ async def test_the_crew_switch_states_that_governance_can_refuse_it():
     is gone when it is not.
     """
     with patch(
-        "kiro_crew.acp.client.corroborate_launcher_refusal",
+        "aj_crew.acp.client.corroborate_launcher_refusal",
         return_value=("no_backend", "sandbox: BLOCKED", ""),
     ):
         exc = await sandbox_init_failure("\n".join(LAUNCHER_STDERR), crew_wrap=True)
@@ -295,14 +295,14 @@ def test_crew_wrappers_are_recognised_in_a_wrapped_argv():
     rename of either wrapper artifact breaks here instead of silently reporting
     every macOS spawn as unwrapped and handing out the wrong switch.
     """
-    from kiro_crew.sandbox import _IN_SANDBOX_MARKER, _SANDBOX_ARTIFACT_PREFIX
+    from aj_crew.sandbox import _IN_SANDBOX_MARKER, _SANDBOX_ARTIFACT_PREFIX
 
     seatbelt = [
         "/usr/bin/env",
         "-u",
         "AWS_PROFILE",
         f"{_IN_SANDBOX_MARKER}=1",
-        "KIROCREW_SANDBOX_LEVEL=strict",
+        "AJCREW_SANDBOX_LEVEL=strict",
         "/usr/bin/sandbox-exec",
         "-f",
         "/tmp/profile.sb",
@@ -312,7 +312,7 @@ def test_crew_wrappers_are_recognised_in_a_wrapped_argv():
         "/usr/bin/python3",
         "-I",
         "-S",
-        f"/run/user/1000/kirocrew/{_SANDBOX_ARTIFACT_PREFIX}4242_ab12.py",
+        f"/run/user/1000/ajcrew/{_SANDBOX_ARTIFACT_PREFIX}4242_ab12.py",
         "kiro-cli",
     ]
     assert wrapped_by_crew_sandbox(seatbelt) is True
@@ -459,7 +459,7 @@ class _FakeProcess:
 
 
 def _runtime(lines):
-    from kiro_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.runtime import AcpRuntime
 
     runtime = AcpRuntime.__new__(AcpRuntime)
     runtime.recording_allowed = True
@@ -547,9 +547,9 @@ async def test_a_live_sessions_death_is_never_a_sandbox_verdict():
     problem, and answering it with a permanent "your sandbox is broken" would be a
     stale verdict that never expires.
     """
-    from kiro_crew.acp.client import AcpProcessDied
-    from kiro_crew.acp.runtime import AcpRuntimeDead
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.client import AcpProcessDied
+    from aj_crew.acp.runtime import AcpRuntimeDead
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     provider = AcpSessionProvider.__new__(AcpSessionProvider)
     runtime = _startup_runtime(latched=True, crew_wrap=True)
@@ -571,7 +571,7 @@ def test_the_first_session_clears_the_latch_in_the_source():
     import sys
     from pathlib import Path
 
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     # runtime.py's owner modules (runtime_*.py) hold code that was its own.
     source = "".join(
@@ -601,7 +601,7 @@ def test_the_retry_deciders_all_refuse_it():
     subagent run and the workflow step all ask, so pinning it here pins them
     without naming each.
     """
-    from kiro_crew.llm_helpers import acp_error_is_transient
+    from aj_crew.llm_helpers import acp_error_is_transient
 
     exc = AcpSandboxInitFailed(layer=SANDBOX_LAYER_CREW, detail="sandbox_apply")
     assert acp_error_is_transient(exc) is False
@@ -677,7 +677,7 @@ async def test_a_startup_refusal_survives_a_later_handshake():
 @pytest.mark.asyncio
 async def test_the_shared_translation_is_what_every_startup_site_reads():
     """One verdict for every startup site, so none of them can disagree."""
-    from kiro_crew.acp.client import sandbox_init_failure_for_runtime
+    from aj_crew.acp.client import sandbox_init_failure_for_runtime
 
     runtime = _startup_runtime(latched=True, crew_wrap=False)
     classified = await sandbox_init_failure_for_runtime(runtime)
@@ -702,7 +702,7 @@ async def test_the_shared_runtimes_cold_start_is_classified(crew_wrap, layer):
     arrived as a generic runtime error and the worker was replaced, which
     reproduces it.
     """
-    from kiro_crew.acp.client import sandbox_init_failure_for_runtime
+    from aj_crew.acp.client import sandbox_init_failure_for_runtime
 
     runtime = _startup_runtime(latched=True, crew_wrap=crew_wrap)
     classified = await sandbox_init_failure_for_runtime(runtime)
@@ -722,7 +722,7 @@ def test_every_shared_runtime_startup_site_consults_the_latch():
     import sys
     from pathlib import Path
 
-    import kiro_crew.providers.acp as provider_mod
+    import aj_crew.providers.acp as provider_mod
 
     # The facade and the owner modules its members live in.
     source = "\n".join(
@@ -944,7 +944,7 @@ async def test_the_failed_start_cleanup_still_kills_when_it_is_cancelled_in_the_
 @pytest.mark.asyncio
 async def test_a_cancel_during_the_shared_translation_is_not_a_generic_death():
     """The runtime's startup sites ask this first: a swallowed cancel became a crash error."""
-    from kiro_crew.acp.client import sandbox_init_failure_for_runtime
+    from aj_crew.acp.client import sandbox_init_failure_for_runtime
 
     runtime = _runtime([])
     runtime._stderr_task = asyncio.ensure_future(_wedged())
@@ -966,7 +966,7 @@ async def test_a_cancel_during_the_startup_settle_spawns_no_second_child():
     0.5 s, and the session is stopped 0.1 s into that wait. Swallowing the cancel
     let the retry arm clean up and spawn a fresh kiro-cli nobody wanted any more.
     """
-    from kiro_crew.acp.client import AcpTimeoutError
+    from aj_crew.acp.client import AcpTimeoutError
 
     client = _client([], crew_wrap=True)
     attempts: list[int] = []
@@ -1014,7 +1014,7 @@ async def test_a_cancel_during_the_startup_settle_spawns_no_second_child():
 @pytest.mark.asyncio
 async def test_a_cancel_during_the_last_attempts_settle_also_cleans_up():
     """The second classifier on the failure arm, read after the retry is spent."""
-    from kiro_crew.acp.client import AcpTimeoutError
+    from aj_crew.acp.client import AcpTimeoutError
 
     client = _client([], crew_wrap=True)
     attempts: list[int] = []
@@ -1123,7 +1123,7 @@ async def test_a_cancel_during_the_eof_settle_is_not_reported_as_a_death():
 @pytest.mark.asyncio
 async def test_the_shared_translation_settles_before_it_reads():
     """Wiring: the helper waits, rather than each of its three callers remembering to."""
-    from kiro_crew.acp.client import sandbox_init_failure_for_runtime
+    from aj_crew.acp.client import sandbox_init_failure_for_runtime
 
     runtime = _startup_runtime(latched=False, crew_wrap=True)
 
@@ -1149,7 +1149,7 @@ def test_the_failed_handshake_settles_the_drain_before_teardown():
     import sys
     from pathlib import Path
 
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     # The spawn and its failed-start cleanup live in the owner that binds _spawn_admitted.
     owner = sys.modules[runtime_mod.AcpRuntime._spawn_admitted.__module__]
@@ -1206,7 +1206,7 @@ async def test_the_summary_shape_does_not_hide_the_launcher_line():
     lines = "\n".join(LAUNCHER_STDERR)
 
     with patch(
-        "kiro_crew.acp.client.corroborate_launcher_refusal",
+        "aj_crew.acp.client.corroborate_launcher_refusal",
         return_value=("no_backend", "sandbox: BLOCKED", ""),
     ) as corroborate:
         folded = await sandbox_init_failure(summary, crew_wrap=True)
@@ -1214,7 +1214,7 @@ async def test_the_summary_shape_does_not_hide_the_launcher_line():
     assert "config set agent.sandbox off" not in str(folded)
 
     with patch(
-        "kiro_crew.acp.client.corroborate_launcher_refusal",
+        "aj_crew.acp.client.corroborate_launcher_refusal",
         return_value=("no_backend", "sandbox: BLOCKED", ""),
     ) as corroborate:
         split = await sandbox_init_failure(summary, crew_wrap=True, corroboration_output=lines)
@@ -1227,13 +1227,13 @@ async def test_the_summary_shape_does_not_hide_the_launcher_line():
 @pytest.mark.asyncio
 async def test_the_shared_translation_passes_the_lines_for_classification():
     """Wiring: the runtime's per-line reader is what reaches corroboration."""
-    from kiro_crew.acp.client import sandbox_init_failure_for_runtime
+    from aj_crew.acp.client import sandbox_init_failure_for_runtime
 
     runtime = _startup_runtime(latched=True, crew_wrap=True)
     runtime.redacted_stderr_tail.return_value = "\n".join(LAUNCHER_STDERR)
 
     with patch(
-        "kiro_crew.acp.client.corroborate_launcher_refusal",
+        "aj_crew.acp.client.corroborate_launcher_refusal",
         return_value=("no_backend", "sandbox: BLOCKED", ""),
     ) as corroborate:
         classified = await sandbox_init_failure_for_runtime(runtime)

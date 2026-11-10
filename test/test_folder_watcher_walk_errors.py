@@ -14,9 +14,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.knowledge import folder_watcher
-from kiro_crew.knowledge.folder_watcher import FolderWatcher
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge import folder_watcher
+from aj_crew.knowledge.folder_watcher import FolderWatcher
+from aj_crew.knowledge.store import KnowledgeStore
 
 
 @pytest.fixture()

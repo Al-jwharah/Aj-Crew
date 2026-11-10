@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.artifacts import ArtifactComment, ArtifactStore
+from aj_crew.artifacts import ArtifactComment, ArtifactStore
 
 _PROVIDER = "prov-a"
 
@@ -112,8 +112,8 @@ class TestRemoteCommentAnchorRedaction:
     on the local POST path (backend-security-controls)."""
 
     def test_serialize_remote_comment_redacts_anchor_fields(self):
-        from kiro_crew.dashboard.handlers.artifacts import _serialize_remote_comment
-        from kiro_crew.publish_provider import CommentAnchor, RemoteComment
+        from aj_crew.dashboard.handlers.artifacts import _serialize_remote_comment
+        from aj_crew.publish_provider import CommentAnchor, RemoteComment
 
         rc = RemoteComment(
             remote_id="c1",
@@ -133,8 +133,8 @@ class TestRemoteCommentAnchorRedaction:
         assert _AKIA not in entry["anchor"]["suffix"]
 
     def test_serialize_remote_comment_preserves_none_anchor_parts(self):
-        from kiro_crew.dashboard.handlers.artifacts import _serialize_remote_comment
-        from kiro_crew.publish_provider import CommentAnchor, RemoteComment
+        from aj_crew.dashboard.handlers.artifacts import _serialize_remote_comment
+        from aj_crew.publish_provider import CommentAnchor, RemoteComment
 
         rc = RemoteComment(
             remote_id="c2",

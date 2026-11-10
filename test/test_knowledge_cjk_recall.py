@@ -13,9 +13,9 @@ import threading
 import pytest
 from knowledge_helpers import store_fixture  # noqa: F401
 
-from kiro_crew.knowledge.retrieval import HybridRetriever
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.knowledge.retrieval import HybridRetriever
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.testing.wait import default_timeout
 
 
 class TestCjkKeywordRecall:
@@ -113,9 +113,9 @@ class TestCjkKeywordRecall:
         assert "keyword" in results[0]["match_type"]
 
     def test_retriever_mixed_script_query_matches_both_halves(self, store):
-        store.add_item("mixed", "kirocrew \u7684\u90e8\u7f72\u6d41\u7a0b\u8bb0\u5f55", "note")
+        store.add_item("mixed", "ajcrew \u7684\u90e8\u7f72\u6d41\u7a0b\u8bb0\u5f55", "note")
         store.add_item("cjk_only", "\u90e8\u7f72\u6d41\u7a0b\u8bb0\u5f55", "note")
-        results = HybridRetriever(store).search("kirocrew\u90e8\u7f72")
+        results = HybridRetriever(store).search("ajcrew\u90e8\u7f72")
         assert self._titles(results) == ["mixed"]
 
     def test_update_item_leaves_no_stale_cjk_hit(self, store):
@@ -271,9 +271,9 @@ class TestCjkKeywordRecall:
         """
         import inspect
 
-        from kiro_crew.dashboard.handlers import knowledge as handler_mod
-        from kiro_crew.knowledge import retrieval as retrieval_mod
-        from kiro_crew.knowledge import store as store_mod
+        from aj_crew.dashboard.handlers import knowledge as handler_mod
+        from aj_crew.knowledge import retrieval as retrieval_mod
+        from aj_crew.knowledge import store as store_mod
 
         readers = {
             "search_items_fts": store_mod.KnowledgeStore.search_items_fts,
@@ -302,7 +302,7 @@ class TestCjkKeywordRecall:
         """
         import inspect
 
-        from kiro_crew.knowledge import store as store_mod
+        from aj_crew.knowledge import store as store_mod
 
         family = (store_mod, *map(importlib.import_module, store_mod._STORE_OWNERS))
         source = "\n".join(inspect.getsource(module) for module in family)
@@ -332,7 +332,7 @@ class TestCjkKeywordRecall:
         """
         import inspect
 
-        from kiro_crew.knowledge import store as store_mod
+        from aj_crew.knowledge import store as store_mod
 
         family = (store_mod, *map(importlib.import_module, store_mod._STORE_OWNERS))
         source = "\n".join(inspect.getsource(module) for module in family)
@@ -347,7 +347,7 @@ class TestCjkKeywordRecall:
         character-segmented index, so a CJK entity name would silently return no
         items on this endpoint.
         """
-        from kiro_crew.dashboard.handlers.knowledge import _entity_items_rows
+        from aj_crew.dashboard.handlers.knowledge import _entity_items_rows
 
         store = KnowledgeStore(str(tmp_path / "entity.db"))
         try:
@@ -369,7 +369,7 @@ class TestCjkKeywordRecall:
         to "both words present anywhere", which is a different (and wrong) answer
         for an entity name.
         """
-        from kiro_crew.dashboard.handlers.knowledge import _entity_items_rows
+        from aj_crew.dashboard.handlers.knowledge import _entity_items_rows
 
         store = KnowledgeStore(str(tmp_path / "phrase.db"))
         try:
@@ -381,13 +381,13 @@ class TestCjkKeywordRecall:
             store.close()
 
     def test_entity_items_lookup_mixed_script_name(self, tmp_path):
-        from kiro_crew.dashboard.handlers.knowledge import _entity_items_rows
+        from aj_crew.dashboard.handlers.knowledge import _entity_items_rows
 
         store = KnowledgeStore(str(tmp_path / "mixed_entity.db"))
         try:
-            store.add_item("mixed", "kirocrew \u90e8\u7f72\u6d41\u7a0b\u8bb0\u5f55", "note")
-            store.add_item("apart", "\u90e8\u7f72 then separately kirocrew", "note")
-            rows = _entity_items_rows(store, "kirocrew \u90e8\u7f72")
+            store.add_item("mixed", "ajcrew \u90e8\u7f72\u6d41\u7a0b\u8bb0\u5f55", "note")
+            store.add_item("apart", "\u90e8\u7f72 then separately ajcrew", "note")
+            rows = _entity_items_rows(store, "ajcrew \u90e8\u7f72")
             assert [r["title"] for r in rows] == ["mixed"]
         finally:
             store.close()
@@ -494,7 +494,7 @@ class TestCjkKeywordRecall:
             # The first reader migrates, on the reader's thread.
             assert self._titles(reopened.search_items_fts(self.LEAK)) == ["run"]
             assert reopened._fts_index_current is True
-            from kiro_crew.knowledge.store import FTS_INDEX_VERSION
+            from aj_crew.knowledge.store import FTS_INDEX_VERSION
 
             assert reopened.db.execute("PRAGMA user_version").fetchone()[0] == FTS_INDEX_VERSION
         finally:
@@ -558,7 +558,7 @@ class TestCjkKeywordRecall:
         Its CREATE statement is byte-identical to the new one, so the rebuild is
         gated on PRAGMA user_version rather than a schema probe.
         """
-        from kiro_crew.knowledge.store import FTS_INDEX_VERSION
+        from aj_crew.knowledge.store import FTS_INDEX_VERSION
 
         path = str(tmp_path / "legacy.db")
         first = KnowledgeStore(path)
@@ -600,22 +600,22 @@ class TestCjkKeywordRecall:
 
 
 class TestCjkFts5Primitives:
-    """The shared FTS5 dialect helpers (src/kiro_crew/_sqlite_compat.py)."""
+    """The shared FTS5 dialect helpers (src/aj_crew/_sqlite_compat.py)."""
 
     def test_non_cjk_expression_is_unchanged(self):
-        from kiro_crew._sqlite_compat import fts5_cjk_match_groups, fts5_quote_tokens
+        from aj_crew._sqlite_compat import fts5_cjk_match_groups, fts5_quote_tokens
 
         for query in ["JWT", "PROJ-123 hooks.py", 'say "hi" now', "", "   "]:
             assert fts5_cjk_match_groups(query) == fts5_quote_tokens(query), query
 
     def test_non_cjk_text_is_not_segmented(self):
-        from kiro_crew._sqlite_compat import fts5_segment_for_index
+        from aj_crew._sqlite_compat import fts5_segment_for_index
 
         for text in ["JWT tokens with refresh flow", "PROJ-123", ""]:
             assert fts5_segment_for_index(text) == text
 
     def test_cjk_run_becomes_adjacent_pair_alternatives(self):
-        from kiro_crew._sqlite_compat import fts5_cjk_match_groups
+        from aj_crew._sqlite_compat import fts5_cjk_match_groups
 
         # The 4-char "memory leak" run -> its three overlapping pairs, each a
         # phrase over the segmented characters.
@@ -624,23 +624,23 @@ class TestCjkFts5Primitives:
         ]
 
     def test_single_cjk_character_has_no_pair(self):
-        from kiro_crew._sqlite_compat import fts5_cjk_match_groups
+        from aj_crew._sqlite_compat import fts5_cjk_match_groups
 
         assert fts5_cjk_match_groups("\u5185") == ['"\u5185"']
 
     def test_mixed_script_token_ands_its_runs(self):
-        from kiro_crew._sqlite_compat import fts5_cjk_match_groups
+        from aj_crew._sqlite_compat import fts5_cjk_match_groups
 
-        assert fts5_cjk_match_groups("kirocrew\u90e8\u7f72") == ['("kirocrew" AND "\u90e8 \u7f72")']
+        assert fts5_cjk_match_groups("ajcrew\u90e8\u7f72") == ['("ajcrew" AND "\u90e8 \u7f72")']
 
     def test_quotes_in_input_cannot_escape_the_literal(self):
-        from kiro_crew._sqlite_compat import fts5_cjk_match_groups
+        from aj_crew._sqlite_compat import fts5_cjk_match_groups
 
         assert fts5_cjk_match_groups('a" OR body:*') == ['"a"""', '"OR"', '"body:*"']
 
     def test_hangul_is_not_segmented(self):
         """Modern Korean is space-separated, so it needs no character gate."""
-        from kiro_crew._sqlite_compat import fts5_cjk_match_groups, is_cjk_char
+        from aj_crew._sqlite_compat import fts5_cjk_match_groups, is_cjk_char
 
         assert not is_cjk_char("\ud68c")  # first syllable of "meeting"
         # "meeting" (2 syllables) stays one token, not a character pair.

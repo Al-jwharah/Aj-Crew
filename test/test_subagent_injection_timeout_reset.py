@@ -21,9 +21,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from test_subagent_injection_live_turn import _gateway, _provider_factory
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.session import SessionManager
-from kiro_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.config import AjCrewConfig
+from aj_crew.session import SessionManager
+from aj_crew.subagent import SubagentInfo, SubagentManager
 
 _KEY = "cron:job-1:run-1"
 _TIMEOUT_S = 0.2
@@ -53,7 +53,7 @@ async def _report(sessions: SessionManager, on_done: Any) -> bool:
     manager = SubagentManager(sessions=sessions, ctx_builder=MagicMock(), on_done=on_done)
     info = SubagentInfo(id="child-1", task="work", parent_session_key=_KEY)
     info.result, info.done = "done", True
-    with patch("kiro_crew.subagent._ON_DONE_TIMEOUT", _TIMEOUT_S):
+    with patch("aj_crew.subagent._ON_DONE_TIMEOUT", _TIMEOUT_S):
         return await asyncio.wait_for(
             manager._terminal._report_terminal_guarded_impl(
                 info,
@@ -90,7 +90,7 @@ async def _report_with_hanging_injection(sessions: SessionManager) -> bool:
 
 @pytest.mark.asyncio
 async def test_a_stuck_injection_prompt_is_still_reset() -> None:
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_provider_factory())
     try:
         provider, _is_new, _resumed = await sessions.get_or_create(_KEY)
         sessions.release(_KEY)
@@ -109,7 +109,7 @@ async def test_a_parent_busy_with_its_own_turn_is_left_running(lifecycle_lease: 
     The injection then never acquires it, so no injection prompt can be stuck on
     that provider, and the reset must not tear down the provider the member holds.
     """
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_provider_factory())
     parent = _ParentTurn(sessions)
     try:
         await asyncio.wait_for(parent.owns_lease.wait(), _CEILING_S)
@@ -136,7 +136,7 @@ async def test_a_stuck_injection_is_reset_while_a_sibling_waits_for_the_parent()
     must not read it as the parent's turn: it pops the stuck provider, and the
     sibling validates onto a fresh one instead of prompting the stuck one.
     """
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_provider_factory())
     try:
         # The stuck delivery's claim, taken in this task: the report runs here too,
         # as the route runs in the report's task in production.

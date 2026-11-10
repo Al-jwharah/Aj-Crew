@@ -14,11 +14,11 @@ import json
 import unittest.mock
 from pathlib import Path
 
-from kiro_crew.config.loader import KiroCrewConfig, _resolve_stub_servers
+from aj_crew.config.loader import AjCrewConfig, _resolve_stub_servers
 
 
-def _load_from_dict(data: object, tmp_path: Path) -> KiroCrewConfig:
-    """Write *data* into the test's own tmp_path and load via KiroCrewConfig.load().
+def _load_from_dict(data: object, tmp_path: Path) -> AjCrewConfig:
+    """Write *data* into the test's own tmp_path and load via AjCrewConfig.load().
 
     The file stays under ``tmp_path`` rather than the shared system temp dir, so
     concurrent workers cannot see each other's config.
@@ -26,10 +26,10 @@ def _load_from_dict(data: object, tmp_path: Path) -> KiroCrewConfig:
     cfg = tmp_path / "config.json"
     cfg.write_text(json.dumps(data), encoding="utf-8")
     with unittest.mock.patch(
-        "kiro_crew.config.loader.config_path",
+        "aj_crew.config.loader.config_path",
         return_value=cfg,
     ):
-        return KiroCrewConfig.load()
+        return AjCrewConfig.load()
 
 
 class TestResolver:
@@ -101,7 +101,7 @@ class TestResolver:
 
 
 class TestThroughTheLoader:
-    """The resolver wired into ``KiroCrewConfig.load``, which is what ships."""
+    """The resolver wired into ``AjCrewConfig.load``, which is what ships."""
 
     def test_a_legacy_config_arrives_as_stub_servers(self, tmp_path) -> None:
         cfg = _load_from_dict(

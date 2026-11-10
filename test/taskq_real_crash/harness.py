@@ -15,7 +15,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 CHILD = Path(__file__).resolve().parents[1] / "fixtures" / "crash_child.py"
 SRC = Path(__file__).resolve().parents[2] / "src"
@@ -56,7 +56,7 @@ def declared_env(tmp_path: Path, extra: dict[str, str] | None = None) -> dict[st
     need it; nothing else is.
     """
     env = {
-        "KIROCREW_HOME": str(tmp_path / "home"),
+        "AJCREW_HOME": str(tmp_path / "home"),
         "PYTHONPATH": str(SRC),
         "PATH": os.environ.get("PATH", ""),
         "TMPDIR": str(tmp_path),

@@ -20,8 +20,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from test_gateway_subagent_wiring import _Done, harness, make_info
 
-from kiro_crew.dashboard.state import SUBAGENT_FINAL_COMPLETION_NOTE
-from kiro_crew.slack import gateway as gw_mod
+from aj_crew.dashboard.state import SUBAGENT_FINAL_COMPLETION_NOTE
+from aj_crew.slack import gateway as gw_mod
 
 
 @pytest.fixture

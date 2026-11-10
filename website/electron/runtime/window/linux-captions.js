@@ -4,7 +4,7 @@
  * Caption controls for frameless Linux, where no window manager draws them.
  * The minimize / maximize / close buttons are CSS-drawn so distro fonts cannot
  * shift their glyphs, and their actions cross the allowlisted preload IPC
- * (window.kirocrew.windowControl). The maximize button tracks the window's
+ * (window.ajcrew.windowControl). The maximize button tracks the window's
  * real state, since a double-click or a WM shortcut can change it too.
  *
  * The injected CSS and script literals are whitespace-normalized: their
@@ -124,7 +124,7 @@ function injectLinuxCaptionControls(win, view) {
         button.tabIndex = -1;
         button.addEventListener(
           'click',
-          () => window.kirocrew?.windowControl?.(action),
+          () => window.ajcrew?.windowControl?.(action),
         );
         return button;
       };

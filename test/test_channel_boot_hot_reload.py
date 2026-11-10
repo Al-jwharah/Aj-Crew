@@ -26,23 +26,23 @@ import pytest
 from _hot_reload_helpers import cfg_with as _cfg_with
 from _hot_reload_helpers import change as _change
 
-from kiro_crew.channels import builtin_channel_descriptors
-from kiro_crew.config import live
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.channel_folders import channel_restart_required
-from kiro_crew.messaging import registry
-from kiro_crew.slack import gateway as gw
-from kiro_crew.slack import handler as slack_handler
-from kiro_crew.slack.gateway import GatewayOrchestrator
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.channels import builtin_channel_descriptors
+from aj_crew.config import live
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.channel_folders import channel_restart_required
+from aj_crew.messaging import registry
+from aj_crew.slack import gateway as gw
+from aj_crew.slack import handler as slack_handler
+from aj_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.testing.wait import await_until, finished
 
 # Fixtures + helpers
 
 
 def _make_orchestrator() -> GatewayOrchestrator:
     """A Slack-less orchestrator: the hoists and appliers need nothing more."""
-    cfg = KiroCrewConfig()
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U_OWNER"}):
+    cfg = AjCrewConfig()
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U_OWNER"}):
         return GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
 
 
@@ -827,7 +827,7 @@ class TestBootKeyVsLiveKey:
         orch.restart_channel = fake_restart  # type: ignore[method-assign]
         asyncio.run(
             orch._on_channel_config_change(
-                _change(KiroCrewConfig(), "whatsapp.enabled", "discord.enabled")
+                _change(AjCrewConfig(), "whatsapp.enabled", "discord.enabled")
             )
         )
         assert seen == ["whatsapp", "discord"]
@@ -955,7 +955,7 @@ class TestSlackApplierReconciles:
         assert orch._channel_handles["whatsapp"].closed is False
 
     def test_observe_registration_follows_the_new_activations(self):
-        from kiro_crew.config.loader import ACTIVATION_OBSERVE
+        from aj_crew.config.loader import ACTIVATION_OBSERVE
 
         class FakeHistory:
             def __init__(self) -> None:
@@ -988,7 +988,7 @@ class TestSlackApplierReconciles:
         orch = self._orch()
         history = FakeHistory()
         orch.channel_history = history
-        cfg = replace(KiroCrewConfig(), observe_max_messages=250, observe_ttl_hours=3.0)
+        cfg = replace(AjCrewConfig(), observe_max_messages=250, observe_ttl_hours=3.0)
         asyncio.run(
             orch._on_slack_config_change(
                 _change(cfg, "slack.observe_max_messages", "slack.observe_ttl_hours")
@@ -1008,12 +1008,12 @@ class TestSlackApplierReconciles:
         orch = self._orch()
         history = FakeHistory()
         orch.channel_history = history
-        cfg = replace(KiroCrewConfig(), observe_max_messages=99, observe_ttl_hours=1.0)
+        cfg = replace(AjCrewConfig(), observe_max_messages=99, observe_ttl_hours=1.0)
         asyncio.run(orch._on_slack_config_change(_change(cfg, "slack.observe_ttl_hours")))
         assert history.calls == [(99, 3600)]
 
     def test_allowed_enterprise_ids_change_reloads_the_validated_allowlist(self, monkeypatch):
-        from kiro_crew.slack import enterprise as slack_enterprise
+        from aj_crew.slack import enterprise as slack_enterprise
 
         called: list[bool] = []
         monkeypatch.setattr(
@@ -1078,7 +1078,7 @@ class TestPhaseEmojisFollowConfig:
 class TestReloadAllowedTeamIds:
     @pytest.fixture(autouse=True)
     def _isolate(self, monkeypatch):
-        from kiro_crew.slack import enterprise as ent
+        from aj_crew.slack import enterprise as ent
 
         monkeypatch.setattr(ent, "_validated_team_id", "", raising=False)
         monkeypatch.setattr(ent, "_validated_enterprise_id", "", raising=False)
@@ -1159,7 +1159,7 @@ class TestReloadAllowedTeamIds:
 
 class TestChannelRestartRequired:
     def test_a_restart_marked_field_requires_a_restart(self):
-        from kiro_crew.config.schema import requires_restart
+        from aj_crew.config.schema import requires_restart
 
         assert requires_restart("slack.command") is True
         assert channel_restart_required("slack", ["command"]) is True
@@ -1182,7 +1182,7 @@ class TestChannelRestartRequired:
     def test_a_store_that_holds_a_credential_is_marked_boot_only(self):
         """``whatsapp.db_path`` is the device store: opened once at connect, and it
         holds the account key, so no in-process apply can move it."""
-        from kiro_crew.config.schema import requires_restart
+        from aj_crew.config.schema import requires_restart
 
         assert requires_restart("whatsapp.db_path") is True
         assert channel_restart_required("whatsapp", ["db_path"]) is True
@@ -1198,7 +1198,7 @@ class TestChannelRestartRequired:
         assert channel_restart_required("whatsapp", []) is False
 
     def test_the_answer_comes_from_the_schema_not_a_hand_list(self, monkeypatch):
-        import kiro_crew.config.schema as schema
+        import aj_crew.config.schema as schema
 
         monkeypatch.setattr(
             schema, "_RESTART_PATHS", frozenset({"whatsapp.dm_policy"}), raising=False
@@ -1213,8 +1213,8 @@ class TestChannelRestartRequired:
         the module carries no ``LIVE_RELOAD_FIELDS`` / ``_FALLBACK_*`` tables and the
         import is unconditional rather than guarded.
         """
-        from kiro_crew.config.schema import requires_restart
-        from kiro_crew.dashboard import channel_folders
+        from aj_crew.config.schema import requires_restart
+        from aj_crew.dashboard import channel_folders
 
         for name in ("LIVE_RELOAD_FIELDS", "_FALLBACK_LIVE_FIELDS", "_FALLBACK_BOOT_FIELDS"):
             assert not hasattr(channel_folders, name), name
@@ -1226,7 +1226,7 @@ class TestWhatsappSaverFlagIsPerField:
         """The bug this replaced: an unconditional ``restart_required: True``."""
         src = inspect.getsource(
             __import__(
-                "kiro_crew.dashboard.handlers.whatsapp_setup", fromlist=["whatsapp_config_save"]
+                "aj_crew.dashboard.handlers.whatsapp_setup", fromlist=["whatsapp_config_save"]
             ).whatsapp_config_save
         )
         assert 'channel_restart_required("whatsapp", body.keys())' in src
@@ -1236,7 +1236,7 @@ class TestWhatsappSaverFlagIsPerField:
         assert channel_restart_required("whatsapp", ["session_folder"]) is False
 
     def test_the_flag_varies_with_the_saved_fields(self, monkeypatch):
-        import kiro_crew.config.schema as schema
+        import aj_crew.config.schema as schema
 
         monkeypatch.setattr(
             schema, "_RESTART_PATHS", frozenset({"whatsapp.enabled"}), raising=False
@@ -1305,7 +1305,7 @@ class TestChangedCredentialKeys:
         token; the matcher must canonicalize both sides or a rotation dispatched
         under the other case would restart nothing. The returned key stays the
         declared constant. (Fixes the GPT Windows credential-match finding.)"""
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         tele = next(d for d in builtin_channel_descriptors() if d.channel_type == "telegram")
         # POSIX (case-sensitive): a lowercase path does NOT match.
@@ -1467,7 +1467,7 @@ class TestCredentialChangeRestartsChannel:
 
     def test_a_credential_change_restarts_the_owning_channel(self, monkeypatch):
         orch, calls = self._orch_with_recorder(monkeypatch)
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         asyncio.run(_apply(orch, _change(cfg, "credentials.TELEGRAM_BOT_TOKEN")))
         assert [c[0] for c in calls] == ["telegram"]
         # Rebuilt from the watcher snapshot, which re-reads load_credentials.
@@ -1475,7 +1475,7 @@ class TestCredentialChangeRestartsChannel:
 
     def test_an_unrelated_credential_restarts_nothing(self, monkeypatch):
         orch, calls = self._orch_with_recorder(monkeypatch)
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         # No bootable channel in this fixture declares KIRO_API_KEY.
         asyncio.run(_apply(orch, _change(cfg, "credentials.KIRO_API_KEY")))
         assert calls == []
@@ -1484,7 +1484,7 @@ class TestCredentialChangeRestartsChannel:
         """Slack is host-managed (start=None): a Slack token change must not try to
         restart Slack through the bootable loop (it has no restart path)."""
         orch, calls = self._orch_with_recorder(monkeypatch)
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         asyncio.run(_apply(orch, _change(cfg, "credentials.SLACK_BOT_TOKEN")))
         assert calls == []
 
@@ -1498,7 +1498,7 @@ class TestCredentialChangeRestartsChannel:
         from dataclasses import replace
 
         orch, calls = self._orch_with_recorder(monkeypatch)
-        degraded = replace(KiroCrewConfig(), _degraded_sections=frozenset({"telegram"}))
+        degraded = replace(AjCrewConfig(), _degraded_sections=frozenset({"telegram"}))
         with pytest.raises(live.ConfigDeferred) as deferred:
             asyncio.run(_apply(orch, _change(degraded, "credentials.TELEGRAM_BOT_TOKEN")))
         assert calls == [], "a degraded channel is not restarted"
@@ -1515,7 +1515,7 @@ class TestSlackCredentialChangeWarns:
         import logging
 
         orch = _make_orchestrator()
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         with caplog.at_level(logging.WARNING):
             asyncio.run(orch._on_slack_config_change(_change(cfg, "credentials.SLACK_BOT_TOKEN")))
         assert any(
@@ -1528,7 +1528,7 @@ class TestSlackCredentialChangeWarns:
         import logging
 
         orch = _make_orchestrator()
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         with caplog.at_level(logging.WARNING):
             asyncio.run(
                 orch._on_slack_config_change(_change(cfg, "credentials.TELEGRAM_BOT_TOKEN"))
@@ -1543,10 +1543,10 @@ class TestSlackCredentialChangeWarns:
         and stays silent. (Fixes the GPT lowercase-Slack-rotation finding.)"""
         import logging
 
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         orch = _make_orchestrator()
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", False, raising=False)
         with caplog.at_level(logging.WARNING):
@@ -1567,10 +1567,10 @@ class TestSlackCredentialChangeWarns:
         the restart-needed notice, the same as a token edit."""
         import logging
 
-        from kiro_crew.config.loader_credentials import CRED_OWNER_ID
+        from aj_crew.config.loader_credentials import CRED_OWNER_ID
 
         orch = _make_orchestrator()
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         with caplog.at_level(logging.WARNING):
             asyncio.run(orch._on_slack_config_change(_change(cfg, f"credentials.{CRED_OWNER_ID}")))
         notices = [r.getMessage() for r in caplog.records if "Slack credential" in r.message]

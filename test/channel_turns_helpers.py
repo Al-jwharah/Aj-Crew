@@ -25,11 +25,11 @@ from channel_turn_fakes import (
     RecordingRenderer,
 )
 
-from kiro_crew.messaging import dispatch as D
-from kiro_crew.messaging.dispatch import Approvals, Asker, ChannelTurns, Drift
-from kiro_crew.messaging.inbound_spool import InboundRoute
-from kiro_crew.messaging.link import ChannelLink
-from kiro_crew.start_priority import StartPriority
+from aj_crew.messaging import dispatch as D
+from aj_crew.messaging.dispatch import Approvals, Asker, ChannelTurns, Drift
+from aj_crew.messaging.inbound_spool import InboundRoute
+from aj_crew.messaging.link import ChannelLink
+from aj_crew.start_priority import StartPriority
 
 KEY = "weixin:agentA:direct:userA"
 CONV = "weixin:userA"
@@ -141,6 +141,6 @@ _ROOM = ChannelLink("weixin", channel_id="ROOM", thread_id=None)
 
 def _bound_as_room(stored: Any) -> bool:
     """The origin bind stores this location, signed for the session's key."""
-    from kiro_crew.mirror_admission import verify_mirror_admission
+    from aj_crew.mirror_admission import verify_mirror_admission
 
     return stored == _ROOM and verify_mirror_admission(KEY, stored)

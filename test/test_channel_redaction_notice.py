@@ -15,10 +15,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import channel as channel_mod
-from kiro_crew.channel import Channel, _stream_task
-from kiro_crew.messaging.renderer import count_redaction_tags, redaction_notice
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew import channel as channel_mod
+from aj_crew.channel import Channel, _stream_task
+from aj_crew.messaging.renderer import count_redaction_tags, redaction_notice
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
 
 _SECRET = "SuperSecret123"
 _SECRET_URI = f"postgresql://user:{_SECRET}@db.example.com:5432/prod"

@@ -25,17 +25,17 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, emit
-from kiro_crew.crew_log import session_tree_projection as stp
-from kiro_crew.crew_log import store as crew_store
-from kiro_crew.crew_log.session_tree import TREE_UNIT_CAP, OpenedRecord
-from kiro_crew.crew_log.session_tree_projection import (
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, emit
+from aj_crew.crew_log import session_tree_projection as stp
+from aj_crew.crew_log import store as crew_store
+from aj_crew.crew_log.session_tree import TREE_UNIT_CAP, OpenedRecord
+from aj_crew.crew_log.session_tree_projection import (
     CHECKPOINT_NAME,
     CHECKPOINT_VERSION,
     SessionTreeProjection,
 )
-from kiro_crew.session_ledger import _store_name
+from aj_crew.session_ledger import _store_name
 
 GATEWAY = "gateway"
 
@@ -48,12 +48,12 @@ def _isolated_home(tmp_path, monkeypatch):
     armed on the maintenance pool: ``_debounced_write`` saves outside the lock, so a worker
     could write after teardown. Tests call ``flush_checkpoint`` synchronously instead.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     # The emitter is inert without the flag, and the hook tests below exercise the
     # emitter's real path rather than a hand-written entry.
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     monkeypatch.setattr(
-        "kiro_crew.executors.maintenance_executor",
+        "aj_crew.executors.maintenance_executor",
         lambda: type("_NoPool", (), {"submit": staticmethod(lambda *a, **k: None)}),
     )
     stp.reset_for_tests()
@@ -74,12 +74,12 @@ def _rec(sid: str, slot: str, created: int = 1, parent: str | None = None) -> Op
 
 
 def _log(sid: str, slot: str) -> CrewLog:
-    return CrewLog.create(lg.KIND_SESSION, sid, owner="raymond", agent="kirocrew", slot=slot)
+    return CrewLog.create(lg.KIND_SESSION, sid, owner="raymond", agent="ajcrew", slot=slot)
 
 
 def _opened(handle: CrewLog, slot: str, *, parent: dict[str, str] | None = None) -> None:
     data = {
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         "slot": slot,
         "model": "opus",
         "cwd": "/w",
@@ -100,7 +100,7 @@ def _write_unit(sid: str, slot: str, *, parent: str | None = None) -> None:
     """
     emit.on_session_opened(
         sid,
-        agent="kirocrew",
+        agent="ajcrew",
         slot=slot,
         model="claude-opus-5",
         cwd="/w",
@@ -110,7 +110,7 @@ def _write_unit(sid: str, slot: str, *, parent: str | None = None) -> None:
 
 
 def _checkpoint_path() -> Path:
-    from kiro_crew.crew_log.store import crew_log_root
+    from aj_crew.crew_log.store import crew_log_root
 
     return crew_log_root(lg.KIND_SESSION) / "projections" / CHECKPOINT_NAME
 
@@ -350,7 +350,7 @@ def test_a_second_seed_waits_instead_of_clearing_the_first_ones_removal_record(m
     resurrect a removed unit. The second caller enters from inside the first scan, the one
     moment the first seed holds its removal record and not ``_lock``.
     """
-    from kiro_crew.crew_log.session_tree import SessionTree, TreeReading, fold_tree
+    from aj_crew.crew_log.session_tree import SessionTree, TreeReading, fold_tree
 
     _write_unit_unheld("s-parent", "slot-a")
     _write_unit_unheld("s-child", "slot-b", parent="slot-a")
@@ -402,7 +402,7 @@ def test_an_oversized_checkpoint_field_is_refused_not_retained():
     the one path that admits a value the scanner would refuse. Each row below is
     well-typed and would have been accepted on types alone.
     """
-    from kiro_crew.validation import MAX_ACP_SESSION_ID_LEN, MAX_SHORT_STRING
+    from aj_crew.validation import MAX_ACP_SESSION_ID_LEN, MAX_SHORT_STRING
 
     _write_unit("good", "slot-a")
     path = _checkpoint_path()
@@ -468,7 +468,7 @@ def test_a_root_change_abandons_a_write_armed_for_the_previous_store(tmp_path, m
     # The home moves, and the projection re-seeds against the new store.
     moved = tmp_path / "other-home"
     moved.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(moved))
+    monkeypatch.setenv("AJCREW_HOME", str(moved))
     proj.ensure_seeded()
 
     # The worker armed before the move now wakes.
@@ -484,7 +484,7 @@ def test_a_debounced_write_resolves_no_path_when_it_wakes(tmp_path, monkeypatch)
     """
     armed: list[tuple] = []
     monkeypatch.setattr(
-        "kiro_crew.executors.maintenance_executor",
+        "aj_crew.executors.maintenance_executor",
         lambda: type("_Pool", (), {"submit": staticmethod(lambda fn, *a: armed.append(a))}),
     )
     proj = SessionTreeProjection()  # never seeded: ``_root`` stays None
@@ -543,7 +543,7 @@ def test_the_live_path_refuses_an_over_long_record_but_accepts_one_at_the_limit(
     Refused, not truncated (a truncated id is a different id), and the at-limit value must
     still pass.
     """
-    from kiro_crew.validation import MAX_ACP_SESSION_ID_LEN, MAX_SHORT_STRING
+    from aj_crew.validation import MAX_ACP_SESSION_ID_LEN, MAX_SHORT_STRING
 
     proj = SessionTreeProjection()
     proj.ensure_seeded()
@@ -567,7 +567,7 @@ def test_a_resume_during_the_scan_does_not_erase_the_scanned_creator_edge(monkey
     A resume's ``session/opened`` need not repeat the creator; merged over the scan, that
     parentless record would persist the child as a root.
     """
-    from kiro_crew.crew_log.session_tree import SessionTree, TreeReading, fold_tree
+    from aj_crew.crew_log.session_tree import SessionTree, TreeReading, fold_tree
 
     _write_unit_unheld("s-parent", "slot-a")
     _write_unit_unheld("s-child", "slot-b", parent="slot-a")
@@ -680,7 +680,7 @@ def test_a_removal_during_the_scan_is_not_resurrected_by_the_seed(monkeypatch):
     again: the emitter fires once per opening, and the ``forget`` that accompanied the
     deletion ran against a state that was still empty, so it had nothing to pop.
     """
-    from kiro_crew.crew_log.session_tree import SessionTree, TreeReading, fold_tree
+    from aj_crew.crew_log.session_tree import SessionTree, TreeReading, fold_tree
 
     _write_unit_unheld("s-parent", "slot-a")
     _write_unit_unheld("s-child", "slot-b", parent="slot-a")
@@ -721,7 +721,7 @@ def test_tail_replay_drops_a_removed_unit(monkeypatch):
 
     import shutil
 
-    from kiro_crew.crew_log.store import crew_log_root
+    from aj_crew.crew_log.store import crew_log_root
 
     shutil.rmtree(crew_log_root(lg.KIND_SESSION) / _store_name("s-gone"))
 
@@ -757,7 +757,7 @@ def test_a_moved_data_home_re_seeds_instead_of_serving_the_old_store(tmp_path, m
     proj.ensure_seeded()
     assert "slot-a" in proj.nodes()
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "other-home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "other-home"))
     _write_unit("s-other", "slot-z")
     proj.ensure_seeded()
 
@@ -1019,7 +1019,7 @@ def test_the_record_is_applied_only_after_the_append_landed(monkeypatch):
     real_apply = SessionTreeProjection.apply
 
     def spy_apply(self, record):
-        from kiro_crew.crew_log.store import crew_log_root
+        from aj_crew.crew_log.store import crew_log_root
 
         directory = crew_log_root(lg.KIND_SESSION) / _store_name(record.sid)
         segment = crew_store.oldest_segment(directory)
@@ -1045,7 +1045,7 @@ def test_a_projection_failure_does_not_fail_the_session_open(monkeypatch):
 
     _write_unit("s-a", "slot-a")  # must not raise
 
-    from kiro_crew.crew_log.store import crew_log_root
+    from aj_crew.crew_log.store import crew_log_root
 
     assert (crew_log_root(lg.KIND_SESSION) / _store_name("s-a")).is_dir()
 
@@ -1145,7 +1145,7 @@ def _record_edge_then_drop(handle: CrewLog, retained: list[logging.LogRecord]) -
         (
             "_schedule_checkpoint",
             lambda mp: mp.setattr(
-                "kiro_crew.executors.maintenance_executor",
+                "aj_crew.executors.maintenance_executor",
                 lambda: (_ for _ in ()).throw(RuntimeError("pool is shut down")),
             ),
         ),

@@ -3,7 +3,7 @@ name = "kc_native"
 version = "0.1.0"
 edition = "2021"
 publish = false
-description = "Optional native fast paths for Kiro Crew."
+description = "Optional native fast paths for Aj Crew."
 
 [lib]
 name = "kc_native"

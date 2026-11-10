@@ -15,13 +15,13 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import eager as crew_log_eager
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import work_relay
-from kiro_crew.crew_log.emit_runtime import _write as emit_write
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import eager as crew_log_eager
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import work_relay
+from aj_crew.crew_log.emit_runtime import _write as emit_write
 
 LEAD = "chat-own-units-lead"
 WORKER = "chat-own-units-worker"
@@ -35,8 +35,8 @@ SUB_WORKER_UNIT = "u-sub-worker"
 def _live_crew_log(tmp_path):
     """A real crew log on its own data home, the eager folder and the relay reset."""
     with pytest.MonkeyPatch.context() as patch:
-        patch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-        patch.setenv("KIROCREW_CREW_LOG", "1")
+        patch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+        patch.setenv("AJCREW_CREW_LOG", "1")
         crew_log_emit.reset_caches()
         crew_log_eager.stop_for_tests()
         crew_log.forget_slot_folds()
@@ -97,7 +97,7 @@ def _report(unit: str, *, summary: str, status: str = "progress") -> dict[str, A
 
 def _state(name: str) -> dict[str, Any]:
     """*name*'s raw fold state for the lead's board, through the warm cell."""
-    from kiro_crew.crew_log.projection_readers import _slot_units_for_fold
+    from aj_crew.crew_log.projection_readers import _slot_units_for_fold
 
     units = _slot_units_for_fold(LEAD, name)
     return crew_log.fold_slot_warm(name, units, slot=LEAD).state
@@ -436,7 +436,7 @@ def test_a_sub_boards_relayed_records_are_never_read_twice(_live_crew_log):
     """The parent's log holds copies of the sub-board's records. The tree, which walks
     both boards, and the sub-board's rebuild, which joins slots naming it, read the
     originals only."""
-    from kiro_crew.crew_log.projection_work import work_slots_naming_board
+    from aj_crew.crew_log.projection_work import work_slots_naming_board
 
     _lead_board()
     _unit(WORKER_UNIT, WORKER)
@@ -490,7 +490,7 @@ def test_a_long_report_history_rebuilds_to_the_boards_own_tail():
 def test_a_relay_into_a_restarted_boards_new_unit_moves_that_unit_last(_live_crew_log):
     """A relayed copy is the first work entry of the board's new unit; the unit order
     must put that unit after its predecessor, as a local record would."""
-    from kiro_crew import session_ledger
+    from aj_crew import session_ledger
 
     _lead_board()
     _unit(WORKER_UNIT, WORKER)
@@ -503,7 +503,7 @@ def test_a_relay_into_a_restarted_boards_new_unit_moves_that_unit_last(_live_cre
 
 
 def test_the_rebuild_never_stores_the_folds_waiting_text_as_a_summary():
-    from kiro_crew import work_ledger as wl
+    from aj_crew import work_ledger as wl
 
     waiting = {"item_id": "it_a", "status": None, "summary": crew_log.WORK_AWAITING_REPORT}
     assert wl._stored_view(waiting)["summary"] == ""
@@ -533,8 +533,8 @@ def _size(unit: str) -> int:
     Not ``slot-projections/``: a savepoint written beside a unit that stopped being newest
     is a read cache, not an entry landing in that unit.
     """
-    from kiro_crew.crew_log.store_cuts import _CUTS_FILE
-    from kiro_crew.crew_log.store_paths import crew_log_dir, segment_paths
+    from aj_crew.crew_log.store_cuts import _CUTS_FILE
+    from aj_crew.crew_log.store_paths import crew_log_dir, segment_paths
 
     cuts = crew_log_dir(lg.KIND_SESSION, unit) / _CUTS_FILE
     files = [*segment_paths(lg.KIND_SESSION, unit), *([cuts] if cuts.is_file() else [])]
@@ -546,7 +546,7 @@ def test_after_a_restart_reports_and_relays_land_in_the_new_unit(_live_crew_log)
     next report and the next relayed charge, and the old unit does not grow."""
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.handlers.work_ledger_recording import _conductor_unit
+    from aj_crew.dashboard.handlers.work_ledger_recording import _conductor_unit
 
     _lead_board()
     _unit(WORKER_UNIT, WORKER)
@@ -573,8 +573,8 @@ def test_after_a_restart_reports_and_relays_land_in_the_new_unit(_live_crew_log)
 def test_a_unit_whose_header_lands_after_a_lookup_becomes_the_newest(tmp_path):
     """A create makes the directory first and publishes the header second. A lookup in
     between must not pin the older unit once the header lands inside the directory."""
-    from kiro_crew import session_ledger
-    from kiro_crew.crew_log.store_paths import _store_name, crew_log_root
+    from aj_crew import session_ledger
+    from aj_crew.crew_log.store_paths import _store_name, crew_log_root
 
     _lead_board()
     _unit("u-lead-2", LEAD)
@@ -594,8 +594,8 @@ def test_a_lookup_before_the_replacements_opener_lands_is_not_kept(_live_crew_lo
     """A replacement whose header is older on the clock (a backward step) and whose
     ``session/opened`` has not landed yet sorts first; once the opener names its
     predecessor, the next lookup returns the replacement."""
-    from kiro_crew import session_ledger
-    from kiro_crew.crew_log import store
+    from aj_crew import session_ledger
+    from aj_crew.crew_log import store
 
     _lead_board()
     with pytest.MonkeyPatch.context() as clock:
@@ -634,7 +634,7 @@ def test_a_charge_in_a_binding_cycle_is_billed_once(_live_crew_log):
 
 def test_a_changed_binding_is_read_on_the_next_closer(_live_crew_log):
     """The binding is cached against its file; rewriting the file is seen."""
-    from kiro_crew import work_ledger
+    from aj_crew import work_ledger
 
     path = work_ledger.binding_path(WORKER)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -656,7 +656,7 @@ def test_a_changed_binding_is_read_on_the_next_closer(_live_crew_log):
 
 def test_a_binding_read_that_fails_is_retried_on_the_next_closer(_live_crew_log):
     """A read error is not cached as "unbound": once reads recover the charge relays."""
-    from kiro_crew import work_ledger
+    from aj_crew import work_ledger
 
     _lead_board()
     _unit(WORKER_UNIT, WORKER)

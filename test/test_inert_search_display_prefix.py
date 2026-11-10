@@ -18,9 +18,9 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.hooks import TOOL_DENY, HookManager, HooksConfig, UserDeniedPattern
-from kiro_crew.llm_helpers import _title_denial
-from kiro_crew.security import is_denied
+from aj_crew.hooks import TOOL_DENY, HookManager, HooksConfig, UserDeniedPattern
+from aj_crew.llm_helpers import _title_denial
+from aj_crew.security import is_denied
 
 # Assembled at runtime so this module stays searchable by the rules it exercises.
 ROOT_WIPE = "rm -" + "rf /"
@@ -101,8 +101,8 @@ class TestTheCarveOutReadsThroughThePrefix:
     def test_the_prefix_read_is_the_shell_prefix_the_hook_gate_strips(self) -> None:
         # The security package sits below the hook gate in the import graph, so it
         # holds its own copy of the prefix; this pins the two to one spelling.
-        from kiro_crew.hooks import _TOOL_TITLE_PREFIXES
-        from kiro_crew.security.denied_rules import _SHELL_TITLE_PREFIX
+        from aj_crew.hooks import _TOOL_TITLE_PREFIXES
+        from aj_crew.security.denied_rules import _SHELL_TITLE_PREFIX
 
         assert PREFIX in _TOOL_TITLE_PREFIXES
         assert _SHELL_TITLE_PREFIX == PREFIX.lower()

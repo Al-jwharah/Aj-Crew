@@ -18,10 +18,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import undelivered_call_watch as ucw
-from kiro_crew import work_ledger
-from kiro_crew.acp._dispatch_parts.session_update_parser import parse_session_update
-from kiro_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew import undelivered_call_watch as ucw
+from aj_crew import work_ledger
+from aj_crew.acp._dispatch_parts.session_update_parser import parse_session_update
+from aj_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
 
 CONDUCTOR = "chat-conductor-kas"
 WORKER = "chat-worker-kas"
@@ -51,13 +51,13 @@ KAS_UNRESOLVED_RESULT = {
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
 
 
 @pytest.fixture(autouse=True)
 def _fresh_order():
     """No test inherits a note another test left in flight."""
-    from kiro_crew import work_ledger_undelivered as wlu
+    from aj_crew import work_ledger_undelivered as wlu
 
     wlu._pending.clear()
     wlu._cleared_at.clear()
@@ -140,8 +140,8 @@ class TestWhichFailuresCount:
         [
             ("work_report", "work_report"),
             ("work_brief", "work_brief"),
-            ("@kirocrew-work/work_report", "work_report"),
-            ("mcp__kirocrew-work__work_brief", "work_brief"),
+            ("@ajcrew-work/work_report", "work_report"),
+            ("mcp__ajcrew-work__work_brief", "work_brief"),
         ],
     )
     def test_an_unresolved_worker_tool(self, called, expected):
@@ -253,7 +253,7 @@ class TestTheRecord:
 
     def test_the_order_holds_only_notes_in_flight(self):
         """Once every seen failure is settled, nothing about the worker stays in memory."""
-        from kiro_crew import work_ledger_undelivered as wlu
+        from aj_crew import work_ledger_undelivered as wlu
 
         _bound_item()
         work_ledger.note_undelivered(WORKER, "work_report")
@@ -346,7 +346,7 @@ class TestTheRecord:
         reports any root directory it cannot name as a damaged store."""
         from datetime import datetime, timezone
 
-        from kiro_crew import ledger_sweep
+        from aj_crew import ledger_sweep
 
         _bound_item()
         work_ledger.note_undelivered(WORKER, "work_report")
@@ -432,7 +432,7 @@ class TestTheWatch:
         ("backend", "expected"), [(ACP_BACKEND_KAS, True), (ACP_BACKEND_KIRO, False)]
     )
     def test_kas_is_read_off_the_provider_label(self, backend, expected):
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         class _Provider(AcpProvider):
             def __init__(self) -> None:
@@ -444,7 +444,7 @@ class TestTheWatch:
 
 class TestTheConductorHearsOfIt:
     def test_the_patrol_probe_wakes_once_with_a_structural_brief(self):
-        from kiro_crew.probes.work_ledger import WorkLedgerProbe
+        from aj_crew.probes.work_ledger import WorkLedgerProbe
 
         item_id = _bound_item()
         work_ledger.note_undelivered(WORKER, "work_report")
@@ -467,7 +467,7 @@ class TestTheConductorHearsOfIt:
 
     def test_a_note_stopped_before_its_thread_starts_is_settled(self, monkeypatch):
         """A turn cancelled while the note waits for a thread leaves nothing pending."""
-        from kiro_crew import work_ledger_undelivered as wlu
+        from aj_crew import work_ledger_undelivered as wlu
 
         _bound_item()
 
@@ -484,7 +484,7 @@ class TestTheConductorHearsOfIt:
         note must stay in flight: a clear that lands meanwhile still fences it."""
         import threading
 
-        from kiro_crew import work_ledger_undelivered as wlu
+        from aj_crew import work_ledger_undelivered as wlu
 
         item_id = _bound_item()
         real = wlu.note_undelivered
@@ -516,7 +516,7 @@ class TestTheConductorHearsOfIt:
         assert WORKER not in wlu._pending
 
     def test_recording_pulls_the_conductor_forward(self, monkeypatch):
-        from kiro_crew import conductor_wake
+        from aj_crew import conductor_wake
 
         _bound_item()
         pushed: list[tuple[str, str]] = []
@@ -529,7 +529,7 @@ class TestTheConductorHearsOfIt:
         assert pushed == [(CONDUCTOR, noted["item_id"])]
 
     def test_the_pull_forward_schedules_the_conductors_fire(self, monkeypatch):
-        from kiro_crew import autonudge, conductor_wake
+        from aj_crew import autonudge, conductor_wake
 
         fired: list[tuple[str, str]] = []
 
@@ -553,8 +553,8 @@ class TestTheConductorHearsOfIt:
 def test_a_channel_turn_records_it_too(monkeypatch):
     """A dispatched worker resumed on a channel runs through the messaging
     ``TurnDriver``, not the dashboard turn; its undelivered report is heard there."""
-    from kiro_crew.messaging import TransportCapabilities, TurnDriver
-    from kiro_crew.messaging.renderer import Renderer
+    from aj_crew.messaging import TransportCapabilities, TurnDriver
+    from aj_crew.messaging.renderer import Renderer
 
     item_id = _bound_item()
     monkeypatch.setattr(ucw, "_serves_kas", lambda _provider: True)
@@ -586,7 +586,7 @@ def test_a_channel_turn_records_it_too(monkeypatch):
 
 def test_an_unattended_turn_records_it_too(monkeypatch):
     """Unattended turns (a Slack nudge, a cron) stream through ``stream_and_collect``."""
-    from kiro_crew.llm_helpers_parts.turn_stream import stream_and_collect
+    from aj_crew.llm_helpers_parts.turn_stream import stream_and_collect
 
     item_id = _bound_item()
     monkeypatch.setattr(ucw, "_serves_kas", lambda _provider: True)
@@ -608,8 +608,8 @@ async def test_the_dashboard_turn_records_it_from_the_live_frames(tmp_path: Path
     of KAS's frames for a bare ``work_report``."""
     from chat_test_helpers import _make_state
 
-    from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
-    from kiro_crew.dashboard.chat_runner import _run_chat
+    from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
+    from aj_crew.dashboard.chat_runner import _run_chat
 
     item_id = _bound_item()
     # The mocked client is no provider class, so the KAS label is read through

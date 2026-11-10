@@ -20,9 +20,9 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew import platform_compat
-from kiro_crew.dashboard.file_index import FileIndex
-from kiro_crew.dashboard.handlers import api_file_search
+from aj_crew import platform_compat
+from aj_crew.dashboard.file_index import FileIndex
+from aj_crew.dashboard.handlers import api_file_search
 
 # Folders that must never be walked incidentally from a bare $HOME root.
 _TCC_DIRS = ("Downloads", "Documents", "Desktop")
@@ -276,7 +276,7 @@ def _make_app() -> web.Application:
 
 @pytest.fixture()
 def mock_sel():
-    with patch("kiro_crew.dashboard.handlers.sel") as m:
+    with patch("aj_crew.dashboard.handlers.sel") as m:
         m.return_value = MagicMock()
         yield m.return_value
 
@@ -296,7 +296,7 @@ class TestFileSearchPruning:
         with (
             patch.object(platform_compat, "IS_MACOS", True),
             patch.dict(
-                os.environ, {**_home_env(tmp_path), "KIROCREW_PROJECT_DIR": ""}, clear=False
+                os.environ, {**_home_env(tmp_path), "AJCREW_PROJECT_DIR": ""}, clear=False
             ),
         ):
             async with TestClient(TestServer(_make_app())) as client:
@@ -314,7 +314,7 @@ class TestFileSearchPruning:
             patch.object(platform_compat, "IS_MACOS", True),
             patch.dict(
                 os.environ,
-                {**_home_env(tmp_path), "KIROCREW_PROJECT_DIR": str(proj)},
+                {**_home_env(tmp_path), "AJCREW_PROJECT_DIR": str(proj)},
                 clear=False,
             ),
         ):
@@ -334,7 +334,7 @@ class TestFileSearchPruning:
         walk, which keeps them. The second request runs after the background
         build has finished.
         """
-        from kiro_crew.dashboard.file_index import FileIndexRegistry
+        from aj_crew.dashboard.file_index import FileIndexRegistry
 
         _make_home(tmp_path)
         app = _make_app()

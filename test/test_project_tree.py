@@ -18,10 +18,10 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from kiro_crew import pinned_fs
-from kiro_crew.dashboard.handlers import api_project_tree
-from kiro_crew.security.redaction import _PATH_SEGMENT_DISCRIMINATOR_SEP, _path_segment_label
-from kiro_crew.testing.links import make_dir_link
+from aj_crew import pinned_fs
+from aj_crew.dashboard.handlers import api_project_tree
+from aj_crew.security.redaction import _PATH_SEGMENT_DISCRIMINATOR_SEP, _path_segment_label
+from aj_crew.testing.links import make_dir_link
 
 
 @contextlib.contextmanager
@@ -52,7 +52,7 @@ def _fence_targets(*paths: Path):
         prefix = os.path.normcase(directory).rstrip(os.sep) + os.sep
         return any(target.startswith(prefix) for target in targets)
 
-    handlers = "kiro_crew.dashboard.handlers.files"
+    handlers = "aj_crew.dashboard.handlers.files"
     with (
         patch(f"{handlers}.is_sensitive_resolved_path", side_effect=inside),
         patch(f"{handlers}.path_contains_sensitive", side_effect=holds),
@@ -141,7 +141,7 @@ def _pretend_directory_symlink(monkeypatch, link: os.PathLike[str] | str) -> Non
     this folder's identity gives the symlink-to-a-directory shape: listed among
     the subdirectories, never walked into.
     """
-    from kiro_crew.dashboard.handlers import files as files_mod
+    from aj_crew.dashboard.handlers import files as files_mod
 
     real_is_link = files_mod._project_tree_is_link
     target = _identity(os.fspath(link))
@@ -239,7 +239,7 @@ def passthrough_sandbox(monkeypatch):
     fail CLOSED without one. The chokepoint's own behavior is covered by
     test_sandbox*/test_spawn_audit; these tests exercise the listing logic.
     """
-    from kiro_crew.dashboard.handlers import files as files_mod
+    from aj_crew.dashboard.handlers import files as files_mod
 
     monkeypatch.setattr(
         files_mod,
@@ -250,7 +250,7 @@ def passthrough_sandbox(monkeypatch):
 
 @pytest.fixture()
 def mock_sel():
-    with patch("kiro_crew.dashboard.handlers.sel") as m:
+    with patch("aj_crew.dashboard.handlers.sel") as m:
         m.return_value = MagicMock()
         yield m.return_value
 
@@ -347,7 +347,7 @@ class TestProjectTree:
         redaction as the listing below it -- a project directory can carry a
         credential-shaped segment, and this arm is reachable, not defensive.
         """
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         known = tmp_path / "AKIAIOSFODNN7EXAMPLE"
         known.mkdir()
@@ -370,7 +370,7 @@ class TestProjectTree:
         real non-directory rather than by patching `os.path.isdir`, which is
         process-global and breaks unrelated lazy imports.
         """
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         known = tmp_path / "project.txt"
         known.write_text("not a directory")
@@ -394,7 +394,7 @@ class TestProjectTree:
         """`root` is absolute and takes the path-aware redactor; `paths` are
         project-relative, carry no OS temp prefix, and stay on the canonical
         one. Pinned on the call because the two agree off-Darwin."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         seen: list[str] = []
         real = files_mod._redact_project_path
@@ -458,7 +458,7 @@ class TestProjectTree:
     async def test_hidden_param_keeps_the_sensitive_fence(self, repo, mock_sel):
         """An ignored dot-file the sensitive-path gate fences stays out with the toggle on."""
         self._ignored_dotfiles_layout(repo)
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         fenced = os.path.realpath(repo / ".env")
         real = files_mod.is_sensitive_resolved_path
@@ -467,7 +467,7 @@ class TestProjectTree:
             return p == fenced or real(p)
 
         with patch(
-            "kiro_crew.dashboard.handlers.files.is_sensitive_resolved_path", side_effect=gate
+            "aj_crew.dashboard.handlers.files.is_sensitive_resolved_path", side_effect=gate
         ):
             async with TestClient(TestServer(_make_app(str(repo)))) as client:
                 on = await (await client.get(f"/api/project/tree?path={repo}&hidden=1")).json()
@@ -483,7 +483,7 @@ class TestProjectTree:
         # must not let it run. Pinned on the argv because the flag is invisible
         # in the response: a listing with the hook enabled looks identical.
         seen: list[list[str]] = []
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         real = files_mod._run_git_bounded
 
@@ -575,7 +575,7 @@ class TestProjectTree:
     ):
         # No double: the gates that ship decide, so a shortcut that read one of
         # them wrongly shows up here as a leaked credential rather than as a
-        # passing test against a stand-in. ``KIROCREW_HOME`` re-anchors the crew
+        # passing test against a stand-in. ``AJCREW_HOME`` re-anchors the crew
         # leaves (``.env``, ``.vault``) under the project root, which is itself
         # under a dot-name -- the shape the Files tab reported, where every entry
         # is a fence candidate because the ROOT's real path carries the dot.
@@ -586,7 +586,7 @@ class TestProjectTree:
         (project / ".vault").mkdir()
         (project / ".vault" / "key").write_text("x")
         (project / "app.toml").write_text("x")
-        monkeypatch.setenv("KIROCREW_HOME", str(project))
+        monkeypatch.setenv("AJCREW_HOME", str(project))
         async with TestClient(TestServer(_make_app(str(project)))) as client:
             resp = await client.get(f"/api/project/tree?path={project}")
             data = await resp.json()
@@ -609,7 +609,7 @@ class TestProjectTree:
         home = plain_project.parent / "home"
         (home / ".vault").mkdir(parents=True)
         (home / ".vault" / "key").write_text("x")
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         project = plain_project.parent / ".proj"
         (project / "sub").mkdir(parents=True)
         (project / "sub" / "note.md").write_text("x")
@@ -632,8 +632,8 @@ class TestProjectTree:
         # project pays it ~11,700 times for one listing and the Files tab misses
         # its timeout. Counted rather than timed: a wall-clock bound would be
         # the host's number, not this walk's.
-        from kiro_crew.dashboard.handlers import files as files_mod
-        from kiro_crew.security import paths as paths_mod
+        from aj_crew.dashboard.handlers import files as files_mod
+        from aj_crew.security import paths as paths_mod
 
         project = plain_project.parent / ".counted"
         (project / "sub").mkdir(parents=True)
@@ -785,7 +785,7 @@ class TestProjectTree:
         """When the path helper (``redact_path_segments``) hands back the same
         string for two paths, the de-dup keeps first occurrence so
         @pierre/trees never sees adjacent identical entries."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(
             files_mod,
@@ -808,7 +808,7 @@ class TestProjectTree:
     async def test_walk_caps_entries_and_flags_truncation(
         self, plain_project, mock_sel, monkeypatch
     ):
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_MAX_ENTRIES", 2)
         plain = plain_project
@@ -832,7 +832,7 @@ class TestProjectTree:
         show; the files share the rest round-robin by direct parent, so no one
         folder takes it all, and every shown folder that lost something is
         named -- ``late`` lost its ``nested`` row."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_MAX_ENTRIES", 8)
         plain = plain_project
@@ -860,7 +860,7 @@ class TestProjectTree:
         the top-level folders keep their rows ahead of anything nested, and
         every shown folder that lost a child row is named as truncated -- the
         root included, which lost ``d3`` and ``d4``."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_MAX_ENTRIES", 3)
         plain = plain_project
@@ -883,7 +883,7 @@ class TestProjectTree:
         """More folders than the cap must not hide every file: the root's
         ``README.md`` is the first file a workspace is opened for, and in tree
         mode the rail's name filter searches only the listed rows."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_MAX_ENTRIES", 4)
         plain = plain_project
@@ -906,7 +906,7 @@ class TestProjectTree:
         """Files counted in folders past the row budget leave file rows unused,
         and those go back to folder rows -- but the folders gaining a row do not
         then share the file rows, which would evict the root's README.md."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_MAX_ENTRIES", 6)
         plain = plain_project
@@ -932,7 +932,7 @@ class TestProjectTree:
         """A large non-git project is listed every 10 s while its tree is open,
         so the rows per listing are what the gateway pays for each poll: files
         and folder rows together stop at the cap, and the cut is flagged."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_MAX_ENTRIES", 50)
         plain = plain_project
@@ -966,7 +966,7 @@ class TestProjectTree:
         most an even split of what is left, with the depths below counted as
         one more claimant, so ``src/`` and ``src/lib/`` are read in full and
         only the large folder is cut."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_SCAN_LIMIT", 100)
         plain = plain_project
@@ -997,7 +997,7 @@ class TestProjectTree:
         past an even split, because the small siblings after it need only their
         floor. An even split alone cut it here -- 200 files against a 45-entry
         share -- and reported a whole tree as truncated."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_SCAN_LIMIT", 500)
         plain = plain_project
@@ -1024,7 +1024,7 @@ class TestProjectTree:
         """Reading past an even split never takes what the folders after it are
         owed: with several folders larger than the whole budget, each small
         sibling sorted after them is still read in full."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_SCAN_LIMIT", 400)
         plain = plain_project
@@ -1052,7 +1052,7 @@ class TestProjectTree:
         called empty, and the walk does not open it. The root is flagged too:
         the look-ahead that would prove it held nothing more is drawn from the
         same budget, which that one read spent."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         plain = plain_project
         (plain / "later").mkdir(parents=True)
@@ -1148,7 +1148,7 @@ class TestProjectTree:
         """A root whose first entries are all hidden folders, cut by the scan
         limit, has not been read in full: what follows is unknown, so it is
         truncated -- never judged hidden-only or empty on what it did read."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_SCAN_LIMIT", 3)
         plain = plain_project
@@ -1170,7 +1170,7 @@ class TestProjectTree:
         because the walk reads ``a`` before ``a-b`` -- a whole-string sort would
         put ``a-b/c`` first (``-`` sorts before ``/``) and the row cap would
         keep a different folder on each branch."""
-        from kiro_crew.dashboard.handlers.files import _project_tree_git_layout
+        from aj_crew.dashboard.handlers.files import _project_tree_git_layout
 
         rows, files = _project_tree_git_layout(sorted(["a-b/c/x.txt", "a/z/y.txt", "top.txt"]))
 
@@ -1194,7 +1194,7 @@ class TestProjectTree:
         The symlink swap renames the outside folder into place and makes the
         name answer as a link -- ``ELOOP`` on the descriptor open, a link
         ``lstat`` by name -- so it needs no symlink privilege."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_SCANDIR_TAKES_FD", by_descriptor)
         plain = plain_project
@@ -1253,7 +1253,7 @@ class TestProjectTree:
         for any root the walk cannot read, never truncated. The descriptor
         branch is forced and the ``ELOOP`` comes from a seam, so the case runs
         on every host."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_SCANDIR_TAKES_FD", True)
         monkeypatch.setattr(pinned_fs, "supports_pinned_walk", lambda: True)
@@ -1282,7 +1282,7 @@ class TestProjectTree:
         import stat
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.handlers.files import _project_tree_is_link
+        from aj_crew.dashboard.handlers.files import _project_tree_is_link
 
         st = SimpleNamespace(st_mode=stat.S_IFDIR | 0o755, st_reparse_tag=tag)
         assert _project_tree_is_link(st) is is_link
@@ -1294,7 +1294,7 @@ class TestProjectTree:
         """Telling a full folder from a cut one pulls one entry past its share;
         that entry is counted against the same budget, so however many folders
         are cut, the walk pulls no more than ``_PROJECT_TREE_SCAN_LIMIT``."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         plain = plain_project
         for top in range(6):
@@ -1330,7 +1330,7 @@ class TestProjectTree:
         """A repository whose ``ls-files`` overflows the output cap or the
         timeout (or a host with no sandbox backend) gets a nonzero return code
         and falls into the walk, so the walk's bound is what protects it."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         real = files_mod._run_git_bounded
 
@@ -1359,7 +1359,7 @@ class TestProjectTree:
         """Redacting every row and serializing the body are linear in the size
         of the listing, and the tree refetches every 10 s: on the event loop
         they stall every other request the gateway serves."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         if layout == "walk":
             project = plain_project
@@ -1396,7 +1396,7 @@ class TestProjectTree:
     async def test_walk_under_cap_keeps_all_files_and_directory_rows(
         self, plain_project, mock_sel, monkeypatch
     ):
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_MAX_ENTRIES", 4)
         plain = plain_project
@@ -1562,7 +1562,7 @@ class TestProjectTree:
         -- and never reported as cut by the item limit: a three-entry tree is
         not truncated. The refusal is a seam on the identity read, so this runs
         as root and on Windows too."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         plain = plain_project
         for child in ("child", "child2"):
@@ -1756,7 +1756,7 @@ class TestProjectTree:
         (``10,000`` / ``10.000`` / ``10 000``), so the comparison drops the
         separators between digits and looks for the bare number.
         """
-        from kiro_crew.dashboard.handlers.files import _PROJECT_TREE_MAX_ENTRIES
+        from aj_crew.dashboard.handlers.files import _PROJECT_TREE_MAX_ENTRIES
 
         locales = Path(__file__).resolve().parents[1] / "website" / "src" / "i18n" / "locales"
         # ``en.json`` is the extracted catalog and carries none of the manual keys.
@@ -1814,7 +1814,7 @@ class TestProjectTree:
         the cut so the budget is spent by path, not by which block git happened
         to emit first.
         """
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_MAX_ENTRIES", 20)
         repo = tmp_path / "repo"
@@ -1856,7 +1856,7 @@ class TestProjectTree:
         shallowest first, but never past half the cap while files remain, the
         root's files first among those -- and a file whose folder lost its row
         is not listed either. Every shown folder that lost something is named."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_MAX_ENTRIES", 3)
         for top in ("p", "q"):

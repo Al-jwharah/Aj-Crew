@@ -24,8 +24,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import github_runner
-from kiro_crew.apps.builtins.issue_radar.backend import gitlab_client as gl
+from aj_crew import github_runner
+from aj_crew.apps.builtins.issue_radar.backend import gitlab_client as gl
 
 # The autouse isolation fixture stubs ``allowed_hosts``, so the two tests that
 # cover the real reader hold onto it here, before any patching.
@@ -98,8 +98,8 @@ def route(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def _isolate(monkeypatch, tmp_path):
-    """No inherited state: KIROCREW_HOME under tmp_path, no cached binary, no SEL."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    """No inherited state: AJCREW_HOME under tmp_path, no cached binary, no SEL."""
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setattr(gl, "_glab_bin_cache", None)
     monkeypatch.setattr(gl, "sel", lambda: SimpleNamespace(log_api_access=lambda **kw: None))
     monkeypatch.setattr(gl, "allowed_hosts", lambda: frozenset({"gitlab.acme.example"}))
@@ -237,7 +237,7 @@ def test_resolve_host_refuses_an_unlisted_host():
 def test_allowed_hosts_reads_the_config(monkeypatch):
     monkeypatch.setattr(
         gl,
-        "KiroCrewConfig",
+        "AjCrewConfig",
         SimpleNamespace(
             load=lambda: SimpleNamespace(dashboard=SimpleNamespace(gitlab_hosts=["a.example"]))
         ),
@@ -249,7 +249,7 @@ def test_allowed_hosts_fails_closed_on_a_broken_config(monkeypatch):
     def _boom():
         raise RuntimeError("unreadable")
 
-    monkeypatch.setattr(gl, "KiroCrewConfig", SimpleNamespace(load=_boom))
+    monkeypatch.setattr(gl, "AjCrewConfig", SimpleNamespace(load=_boom))
     assert _REAL_ALLOWED_HOSTS() == frozenset()
 
 
@@ -339,9 +339,9 @@ def test_glab_run_maps_undecodable_output_to_a_cli_error(monkeypatch):
 
 
 def test_glab_bin_override_is_validated_and_cached(monkeypatch):
-    from kiro_crew.dashboard.handlers import source_providers
+    from aj_crew.dashboard.handlers import source_providers
 
-    monkeypatch.setenv("KIROCREW_ISSUE_RADAR_GLAB", "/opt/glab")
+    monkeypatch.setenv("AJCREW_ISSUE_RADAR_GLAB", "/opt/glab")
     monkeypatch.setattr(source_providers, "_validate_provider_executable", lambda p: "/opt/glab")
     assert gl._glab_bin() == "/opt/glab"
     # Cached: a second call must not re-validate.
@@ -354,9 +354,9 @@ def test_glab_bin_override_is_validated_and_cached(monkeypatch):
 
 
 def test_glab_bin_override_failure_is_a_setup_error(monkeypatch):
-    from kiro_crew.dashboard.handlers import source_providers
+    from aj_crew.dashboard.handlers import source_providers
 
-    monkeypatch.setenv("KIROCREW_ISSUE_RADAR_GLAB", "/opt/glab")
+    monkeypatch.setenv("AJCREW_ISSUE_RADAR_GLAB", "/opt/glab")
 
     def _reject(path):
         raise ValueError("not trusted")
@@ -365,13 +365,13 @@ def test_glab_bin_override_failure_is_a_setup_error(monkeypatch):
     with pytest.raises(gl.ProviderSetupError) as excinfo:
         gl._glab_bin()
     assert excinfo.value.reason == "not_installed"
-    assert "KIROCREW_ISSUE_RADAR_GLAB" in str(excinfo.value)
+    assert "AJCREW_ISSUE_RADAR_GLAB" in str(excinfo.value)
 
 
 def test_glab_bin_skips_untrusted_candidates_and_reports_the_last_check(monkeypatch, tmp_path):
-    from kiro_crew.dashboard.handlers import source_providers
+    from aj_crew.dashboard.handlers import source_providers
 
-    monkeypatch.delenv("KIROCREW_ISSUE_RADAR_GLAB", raising=False)
+    monkeypatch.delenv("AJCREW_ISSUE_RADAR_GLAB", raising=False)
     present = tmp_path / "glab"
     present.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(
@@ -403,9 +403,9 @@ def test_glab_bin_not_installed_hint_matches_the_platform(
     monkeypatch, platform, wanted, unwanted
 ):
     """Windows is told the winget id from the shared map, never brew."""
-    from kiro_crew.dashboard.handlers import source_providers
+    from aj_crew.dashboard.handlers import source_providers
 
-    monkeypatch.delenv("KIROCREW_ISSUE_RADAR_GLAB", raising=False)
+    monkeypatch.delenv("AJCREW_ISSUE_RADAR_GLAB", raising=False)
     monkeypatch.setattr(source_providers, "provider_executable_candidates", lambda name: ())
     monkeypatch.setattr(sys, "platform", platform)
     with pytest.raises(gl.ProviderSetupError) as excinfo:
@@ -415,13 +415,13 @@ def test_glab_bin_not_installed_hint_matches_the_platform(
     assert wanted in message
     assert unwanted not in message
     assert "glab auth login" in message
-    assert "KIROCREW_ISSUE_RADAR_GLAB" in message
+    assert "AJCREW_ISSUE_RADAR_GLAB" in message
 
 
 def test_glab_bin_accepts_the_first_trusted_candidate(monkeypatch, tmp_path):
-    from kiro_crew.dashboard.handlers import source_providers
+    from aj_crew.dashboard.handlers import source_providers
 
-    monkeypatch.delenv("KIROCREW_ISSUE_RADAR_GLAB", raising=False)
+    monkeypatch.delenv("AJCREW_ISSUE_RADAR_GLAB", raising=False)
     present = tmp_path / "glab"
     present.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(
@@ -441,10 +441,10 @@ def test_glab_bin_no_longer_short_circuits_on_windows(monkeypatch):
     must fail for the ordinary reason (nothing trustworthy found) rather than
     for being Windows.
     """
-    from kiro_crew.dashboard.handlers import source_providers
+    from aj_crew.dashboard.handlers import source_providers
 
     monkeypatch.setattr(gl, "_glab_bin_cache", "")
-    monkeypatch.delenv("KIROCREW_ISSUE_RADAR_GLAB", raising=False)
+    monkeypatch.delenv("AJCREW_ISSUE_RADAR_GLAB", raising=False)
     monkeypatch.setattr(source_providers, "provider_executable_candidates", lambda name: ())
 
     with pytest.raises(gl.ProviderSetupError) as excinfo:
@@ -778,9 +778,9 @@ def test_get_current_login_returns_none_on_a_cli_failure(route):
 
 
 def test_get_current_login_surfaces_a_host_setup_failure(monkeypatch):
-    # A stale KIROCREW_ISSUE_RADAR_GLAB path must reach the route as a setup
+    # A stale AJCREW_ISSUE_RADAR_GLAB path must reach the route as a setup
     # error (setup_required), not collapse into "no login" -> empty picker.
-    monkeypatch.setenv("KIROCREW_ISSUE_RADAR_GLAB", "/nonexistent/glab")
+    monkeypatch.setenv("AJCREW_ISSUE_RADAR_GLAB", "/nonexistent/glab")
     with pytest.raises(gl.ProviderSetupError):
         gl.get_current_login(host="gitlab.com")
 

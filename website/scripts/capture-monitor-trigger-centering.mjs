@@ -56,7 +56,7 @@ const slots = [{
   running: false,
   last_message: 'Armed a bounded monitor on the pull request.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   folder_id: '',

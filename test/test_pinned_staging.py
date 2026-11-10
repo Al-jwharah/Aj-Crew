@@ -34,7 +34,7 @@ from pinned_staging_helpers import (
     pinned_only,
 )
 
-from kiro_crew import pinned_fs, snapshot
+from aj_crew import pinned_fs, snapshot
 
 
 def _tree_with_victim(tmp_path: Path) -> tuple[Path, Path, Path]:
@@ -512,7 +512,7 @@ def test_the_snapshot_cli_reports_a_refusal_instead_of_a_traceback(
     mc = tmp_path / "home"
     (mc / "workspace").mkdir(parents=True)
     (mc / "workspace" / "note.md").write_text("hi\n", encoding="utf-8")
-    monkeypatch.setenv("KIROCREW_HOME", str(mc))
+    monkeypatch.setenv("AJCREW_HOME", str(mc))
     monkeypatch.setattr(pinned_fs, "supports_pinned_tree_walk", lambda: False)
 
     rc = snapshot.snapshot_main([str(tmp_path / "out")])
@@ -645,10 +645,10 @@ def test_the_shipped_cli_accepts_the_opt_in_flag(monkeypatch: pytest.MonkeyPatch
     Asserted against the real `cli.main` with a control, because a test that only
     checked the flag parses could pass on a parser nobody runs.
     """
-    from kiro_crew import cli
+    from aj_crew import cli
 
     def _run(argv: list[str]) -> object:
-        monkeypatch.setattr("sys.argv", ["kirocrew"] + argv)
+        monkeypatch.setattr("sys.argv", ["ajcrew"] + argv)
         try:
             cli.main()
             return "accepted"
@@ -681,11 +681,11 @@ def test_the_import_path_records_unpinned_staging_instead_of_removing_the_featur
     """
     import zipfile
 
-    from kiro_crew import portability
+    from aj_crew import portability
 
     mc = tmp_path / "home"
     mc.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(mc))
+    monkeypatch.setenv("AJCREW_HOME", str(mc))
     monkeypatch.setattr(pinned_fs, "supports_pinned_tree_walk", lambda: False)
 
     payload = tmp_path / "import.zip"
@@ -693,8 +693,8 @@ def test_the_import_path_records_unpinned_staging_instead_of_removing_the_featur
         # One top-level directory is the format's requirement -- a flat zip is rejected
         # before staging is reached, which made an earlier version of this test fail for a
         # reason that had nothing to do with what it was asserting.
-        zf.writestr("kirocrew-export/crons.json", "[]\n")
-        zf.writestr("kirocrew-export/workspace/note.md", "hi\n")
+        zf.writestr("ajcrew-export/crons.json", "[]\n")
+        zf.writestr("ajcrew-export/workspace/note.md", "hi\n")
 
     summary = portability.apply_import_zip(payload, mode="merge")
 
@@ -719,18 +719,18 @@ def test_a_pinnable_import_records_that_it_was_pinned(
     """
     import zipfile
 
-    from kiro_crew import portability
+    from aj_crew import portability
 
     if not pinned_fs.supports_pinned_tree_walk():
         pytest.skip("host cannot pin, so there is no pinned case to assert")
 
     mc = tmp_path / "home"
     mc.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(mc))
+    monkeypatch.setenv("AJCREW_HOME", str(mc))
 
     payload = tmp_path / "import.zip"
     with zipfile.ZipFile(payload, "w") as zf:
-        zf.writestr("kirocrew-export/crons.json", "[]\n")
+        zf.writestr("ajcrew-export/crons.json", "[]\n")
 
     summary = portability.apply_import_zip(payload, mode="merge")
     assert summary["staging"] == "mixed", (
@@ -753,7 +753,7 @@ def test_the_import_path_passes_its_staging_decision_to_both_branches() -> None:
     """
     import inspect
 
-    from kiro_crew import portability
+    from aj_crew import portability
 
     source = inspect.getsource(portability.apply_import_zip)
     assert (

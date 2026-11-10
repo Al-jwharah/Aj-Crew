@@ -62,7 +62,7 @@ _MARKER_PREFIX_MAX = 32
 #: domains they look for. Each maps to (why, the digests it may contain); any
 #: other denied host in the same file is still reported.
 EXCLUSIONS = {
-    "kiro_crew/deploy/scan.py": (
+    "aj_crew/deploy/scan.py": (
         "the deploy scanner's internal-host heuristic, which warns before a site "
         "that names an internal domain is published",
         frozenset(
@@ -73,7 +73,7 @@ EXCLUSIONS = {
             }
         ),
     ),
-    "kiro_crew/deploy/skills/artifact-deploy/scripts/deploy.sh": (
+    "aj_crew/deploy/skills/artifact-deploy/scripts/deploy.sh": (
         "the artifact-deploy skill's grep fallback for the same heuristic",
         frozenset({"ed73cb5c8e0e77e93095d5ad55b7b9e532d0ae38f5ff1006978d56a26adcf41b"}),
     ),

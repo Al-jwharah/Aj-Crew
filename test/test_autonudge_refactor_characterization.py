@@ -4,7 +4,7 @@ The first five cases were found by mutating the pre-split ``autonudge.py`` and r
 the owned AutoNudge tests: the mutation survived, so nothing held the rule. The last two
 pin the maintenance transaction's explicit lock checks and the view's release of a loop it
 could not quiesce. Each rule now lives in an owner module under
-``kiro_crew/autonudge_service/``, and each test below fails when its rule is broken there.
+``aj_crew/autonudge_service/``, and each test below fails when its rule is broken there.
 """
 
 from __future__ import annotations
@@ -14,9 +14,9 @@ import time
 
 import pytest
 
-import kiro_crew.autonudge as autonudge
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
-from kiro_crew.monitoring.models import (
+import aj_crew.autonudge as autonudge
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew.monitoring.models import (
     MonitorActionCompletion,
     MonitorActionDisposition,
     MonitorBudgets,

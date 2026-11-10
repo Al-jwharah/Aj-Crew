@@ -6,10 +6,10 @@ from types import SimpleNamespace
 import pytest
 from test_workflows_private_execution import world as _world
 
-from kiro_crew.acp.types import EVENT_COMPACTION_STATUS, EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.dashboard.workflow_inject import inject_bound_workflow_result
-from kiro_crew.providers.base import LLMEvent, LLMProvider
-from kiro_crew.workflow_memory import WorkflowScope, authorize_run
+from aj_crew.acp.types import EVENT_COMPACTION_STATUS, EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.dashboard.workflow_inject import inject_bound_workflow_result
+from aj_crew.providers.base import LLMEvent, LLMProvider
+from aj_crew.workflow_memory import WorkflowScope, authorize_run
 
 world = _world
 
@@ -77,7 +77,7 @@ async def test_workflow_receipt_requires_productive_raw_success(world, mode):
     provider = ReceiptModel()
     key = scope.worker_key("worker")
     full = await scope.prompt(
-        world.builder, key, "first", is_new=True, agent="kirocrew", cwd=None, provider=provider
+        world.builder, key, "first", is_new=True, agent="ajcrew", cwd=None, provider=provider
     )
     assert provider.essential_delivery._pending is not None
     envelope = provider.essential_delivery._pending.envelope
@@ -92,7 +92,7 @@ async def test_workflow_receipt_requires_productive_raw_success(world, mode):
     await consume(provider, full)
     assert (envelope in provider.sent[1]) == (mode != "success")
     next_prompt = await scope.prompt(
-        world.builder, key, "next", is_new=False, agent="kirocrew", cwd=None, provider=provider
+        world.builder, key, "next", is_new=False, agent="ajcrew", cwd=None, provider=provider
     )
     await consume(provider, next_prompt)
     assert envelope not in provider.sent[-1]
@@ -103,7 +103,7 @@ async def test_workflow_receipt_requires_productive_raw_success(world, mode):
         "resume",
         is_new=True,
         resumed=True,
-        agent="kirocrew",
+        agent="ajcrew",
         cwd=None,
         provider=provider,
     )
@@ -115,7 +115,7 @@ async def test_workflow_receipt_requires_productive_raw_success(world, mode):
         scope.worker_key("other"),
         "other",
         is_new=True,
-        agent="kirocrew",
+        agent="ajcrew",
         cwd=None,
         provider=other,
     )
@@ -142,16 +142,16 @@ async def test_malformed_member_snapshot_cannot_deliver_without_canonical_identi
 async def test_owner_can_cancel_unavailable_store_without_reading_it(world, monkeypatch):
     from member_memory_helpers import make_request
 
-    from kiro_crew.context import release_cached_memory_store
-    from kiro_crew.dashboard.handlers.workflows import api_workflow_run_cancel
-    from kiro_crew.memory_stores import resolve_store_path
+    from aj_crew.context import release_cached_memory_store
+    from aj_crew.dashboard.handlers.workflows import api_workflow_run_cancel
+    from aj_crew.memory_stores import resolve_store_path
 
     scope = await WorkflowScope.admit("wf_owner_cancel", world.builder, "dashboard:alice")
     path = resolve_store_path(world.stores["alice"])
     await asyncio.to_thread(release_cached_memory_store, world.stores["alice"])
     path.unlink()
     assert not path.exists()
-    from kiro_crew.workflows.registry import RunHandle
+    from aj_crew.workflows.registry import RunHandle
 
     handle = RunHandle(
         run_id=scope.run_id,

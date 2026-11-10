@@ -22,7 +22,7 @@ from meetings_helpers import (  # noqa: F401
 )
 from meetings_routes_helpers import BASE
 
-from kiro_crew.apps.builtins.meetings.backend import store
+from aj_crew.apps.builtins.meetings.backend import store
 
 _MEETING = "standup"
 _BAD = b'{"tasks": [{"id": "t1", "description": "keep me"}'  # truncated mid-write

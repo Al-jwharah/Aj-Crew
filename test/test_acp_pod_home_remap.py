@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.acp.client import _apply_pod_home_remap
+from aj_crew.acp.client import _apply_pod_home_remap
 
 
 def _remap_calls(module, backend: str, tmp_path: Path, *extra_patches) -> list[bool]:
@@ -45,12 +45,12 @@ def _remap_calls(module, backend: str, tmp_path: Path, *extra_patches) -> list[b
 
 
 def _base_pod_env(tmp_path: Path) -> dict[str, str]:
-    """A KIROCREW_POD=1 env with KIROCREW_OS_HOME set, as build_pod_env emits."""
+    """A AJCREW_POD=1 env with AJCREW_OS_HOME set, as build_pod_env emits."""
     return {
         "HOME": str(tmp_path / "real-home"),
         "PATH": "/usr/bin",
-        "KIROCREW_POD": "1",
-        "KIROCREW_OS_HOME": str(tmp_path / "pod-os-home"),
+        "AJCREW_POD": "1",
+        "AJCREW_OS_HOME": str(tmp_path / "pod-os-home"),
     }
 
 
@@ -68,10 +68,10 @@ class TestAppliesOnlyInsideAPodForKiroCli:
         assert out["USERPROFILE"] == out["HOME"] == str(tmp_path / "pod-os-home")
 
     def test_noop_outside_a_pod(self, tmp_path: Path) -> None:
-        """No KIROCREW_POD marker -- an ordinary, non-pod ACP spawn on the
+        """No AJCREW_POD marker -- an ordinary, non-pod ACP spawn on the
         operator's own machine must never have its HOME touched."""
         env = _base_pod_env(tmp_path)
-        del env["KIROCREW_POD"]
+        del env["AJCREW_POD"]
         real_home = env["HOME"]
         out = _apply_pod_home_remap(env, pod_home_remap=True)
         assert out["HOME"] == real_home
@@ -92,7 +92,7 @@ class TestAppliesOnlyInsideAPodForKiroCli:
         every filesystem-dependent tool in the spawned child would be strictly
         worse than the status quo it degrades to."""
         env = _base_pod_env(tmp_path)
-        del env["KIROCREW_OS_HOME"]
+        del env["AJCREW_OS_HOME"]
         real_home = env["HOME"]
         out = _apply_pod_home_remap(env, pod_home_remap=True)
         assert out["HOME"] == real_home
@@ -100,11 +100,11 @@ class TestAppliesOnlyInsideAPodForKiroCli:
     @pytest.mark.parametrize("marker", ["false", "0", "no", "off", "", "true", "2", " 1"])
     def test_only_the_exact_marker_value_one_remaps(self, tmp_path: Path, marker: str) -> None:
         """Every non-empty string is truthy in Python, so a truthiness test on
-        KIROCREW_POD remapped HOME for a child whose marker explicitly said it
+        AJCREW_POD remapped HOME for a child whose marker explicitly said it
         was NOT in a pod. Only the value build_pod_env actually writes ("1")
         may move a credential store."""
         env = _base_pod_env(tmp_path)
-        env["KIROCREW_POD"] = marker
+        env["AJCREW_POD"] = marker
         real_home = env["HOME"]
         out = _apply_pod_home_remap(env, pod_home_remap=True)
         assert out["HOME"] == real_home, f"marker {marker!r} must not remap HOME"
@@ -119,7 +119,7 @@ class TestTheCapabilitySetIsItsOwnDecision:
     semantics it never opted into (harness-parity H6)."""
 
     def test_the_set_exists_and_is_a_subset_of_known_backends(self) -> None:
-        from kiro_crew.acp_backends import (
+        from aj_crew.acp_backends import (
             ACP_BACKENDS_KNOWN,
             ACP_BACKENDS_POD_HOME_REMAP,
         )
@@ -127,7 +127,7 @@ class TestTheCapabilitySetIsItsOwnDecision:
         assert ACP_BACKENDS_POD_HOME_REMAP <= ACP_BACKENDS_KNOWN
 
     def test_membership_is_positive_and_kiro_only(self) -> None:
-        from kiro_crew.acp_backends import (
+        from aj_crew.acp_backends import (
             ACP_BACKEND_CLAUDE,
             ACP_BACKEND_KAS,
             ACP_BACKEND_KIRO,
@@ -148,8 +148,8 @@ class TestTheCapabilitySetIsItsOwnDecision:
         """
         from unittest.mock import patch
 
-        from kiro_crew.acp import client as client_mod
-        from kiro_crew.acp_backends import ACP_BACKEND_KIRO, ACP_BACKENDS_INTERNAL_SANDBOX
+        from aj_crew.acp import client as client_mod
+        from aj_crew.acp_backends import ACP_BACKEND_KIRO, ACP_BACKENDS_INTERNAL_SANDBOX
 
         assert ACP_BACKEND_KIRO in ACP_BACKENDS_INTERNAL_SANDBOX
         assert _remap_calls(client_mod, ACP_BACKEND_KIRO, tmp_path / "member") == [True]
@@ -165,10 +165,10 @@ class TestTheCapabilitySetIsItsOwnDecision:
         import inspect
         from unittest.mock import PropertyMock, patch
 
-        from kiro_crew.acp import runtime as runtime_mod
-        from kiro_crew.acp.harness import CodexHarness
-        from kiro_crew.acp.harness._common import MembershipHarness
-        from kiro_crew.acp_backends import ACP_BACKEND_CODEX
+        from aj_crew.acp import runtime as runtime_mod
+        from aj_crew.acp.harness import CodexHarness
+        from aj_crew.acp.harness._common import MembershipHarness
+        from aj_crew.acp_backends import ACP_BACKEND_CODEX
 
         # The runtime hands the tail its harness's own answer, whatever the sandbox
         # answer is.
@@ -267,7 +267,7 @@ class TestAwsCredentialPointersAreNotExportedIntoThePod:
         The SDK documents four variables in two pairs (relative/full URL, token/token
         file). A per-variable test only checks names someone thought to list.
         """
-        from kiro_crew.acp.client import CREDENTIAL_POINTER_ENV_VARS
+        from aj_crew.acp.client import CREDENTIAL_POINTER_ENV_VARS
 
         family = {
             "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI",
@@ -312,7 +312,7 @@ class TestAwsCredentialPointersAreNotExportedIntoThePod:
         appears in both, one of the two rationales has stopped being true and the
         scrub needs re-deriving rather than a third list.
         """
-        from kiro_crew.acp.client import (
+        from aj_crew.acp.client import (
             CREDENTIAL_POINTER_ENV_VARS,
             IDENTITY_STORE_ROOT_ENV_VARS,
         )
@@ -326,8 +326,8 @@ class TestAwsCredentialPointersAreNotExportedIntoThePod:
         pointers only where the tree moved. Pointers in the global scrub would break
         non-pod AWS CLI and ``credential_process`` use of the real ``~/.aws``.
         """
-        from kiro_crew.acp.client import CREDENTIAL_POINTER_ENV_VARS
-        from kiro_crew.sandbox import scrub_agent_subprocess_env
+        from aj_crew.acp.client import CREDENTIAL_POINTER_ENV_VARS
+        from aj_crew.sandbox import scrub_agent_subprocess_env
 
         probe = {name: "/host/pointer" for name in CREDENTIAL_POINTER_ENV_VARS}
         probe["AWS_SECRET_ACCESS_KEY"] = "shhh"
@@ -350,7 +350,7 @@ class TestAwsCredentialPointersAreNotExportedIntoThePod:
         unchanged, not merely that a couple of keys survive.
         """
         env = _base_pod_env(tmp_path)
-        del env["KIROCREW_POD"]
+        del env["AJCREW_POD"]
         for pointer in (
             "AWS_CONFIG_FILE",
             "AWS_SHARED_CREDENTIALS_FILE",
@@ -379,8 +379,8 @@ class TestBothSpawnTransportsApplyItIdentically:
 
     def test_acp_client_spawn_calls_the_shared_helper(self, tmp_path) -> None:
         """Once per spawn, with the remap set's answer for the host it launches."""
-        from kiro_crew.acp import client as client_mod
-        from kiro_crew.acp_backends import (
+        from aj_crew.acp import client as client_mod
+        from aj_crew.acp_backends import (
             ACP_BACKEND_CLAUDE,
             ACP_BACKEND_KIRO,
             ACP_BACKENDS_POD_HOME_REMAP,
@@ -393,9 +393,9 @@ class TestBothSpawnTransportsApplyItIdentically:
 
     def test_acp_runtime_spawn_calls_the_same_shared_helper(self, tmp_path) -> None:
         """The runtime's spawn reaches the same helper once, with its host's answer."""
-        from kiro_crew.acp import runtime as runtime_mod
-        from kiro_crew.acp.harness import harness_for
-        from kiro_crew.acp_backends import ACP_BACKEND_CODEX
+        from aj_crew.acp import runtime as runtime_mod
+        from aj_crew.acp.harness import harness_for
+        from aj_crew.acp_backends import ACP_BACKEND_CODEX
 
         assert _remap_calls(runtime_mod, ACP_BACKEND_CODEX, tmp_path) == [
             harness_for(ACP_BACKEND_CODEX).pod_home_remap
@@ -404,8 +404,8 @@ class TestBothSpawnTransportsApplyItIdentically:
     def test_runtime_imports_the_client_defined_function_rather_than_a_copy(self) -> None:
         """Import identity, not merely name equality — a copy-pasted function
         of the same name would pass a naive check while drifting silently."""
-        from kiro_crew.acp import client as client_mod
-        from kiro_crew.acp import runtime as runtime_mod
+        from aj_crew.acp import client as client_mod
+        from aj_crew.acp import runtime as runtime_mod
 
         assert runtime_mod._apply_pod_home_remap is client_mod._apply_pod_home_remap
 
@@ -419,9 +419,9 @@ class TestIdentityStoreRootOverridesAreScrubbed:
 
     def test_a_hostile_data_root_override_is_removed(self) -> None:
         """Red-first: the override must be GONE, so the default resolves in-pod."""
-        from kiro_crew.acp.client import IDENTITY_STORE_ROOT_ENV_VARS, _apply_pod_home_remap
+        from aj_crew.acp.client import IDENTITY_STORE_ROOT_ENV_VARS, _apply_pod_home_remap
 
-        env = {"KIROCREW_POD": "1", "KIROCREW_OS_HOME": "/pods/p1/os-home"}
+        env = {"AJCREW_POD": "1", "AJCREW_OS_HOME": "/pods/p1/os-home"}
         for var in IDENTITY_STORE_ROOT_ENV_VARS:
             env[var] = "/home/user/.local/share"
 
@@ -433,8 +433,8 @@ class TestIdentityStoreRootOverridesAreScrubbed:
 
     def test_the_scrubbed_set_is_derived_from_the_store_table(self) -> None:
         """Pinned to its source so a new platform/product row cannot be missed."""
-        from kiro_crew.acp.client import IDENTITY_STORE_ROOT_ENV_VARS
-        from kiro_crew.identity_stores import IDENTITY_STORE_ROOTS
+        from aj_crew.acp.client import IDENTITY_STORE_ROOT_ENV_VARS
+        from aj_crew.identity_stores import IDENTITY_STORE_ROOTS
 
         assert IDENTITY_STORE_ROOT_ENV_VARS == {
             root.env_var for root in IDENTITY_STORE_ROOTS if root.env_var
@@ -443,11 +443,11 @@ class TestIdentityStoreRootOverridesAreScrubbed:
 
     def test_a_non_pod_spawn_env_is_byte_identical(self) -> None:
         """Outside a pod nothing is scrubbed -- the override is the operator's own."""
-        from kiro_crew.acp.client import IDENTITY_STORE_ROOT_ENV_VARS, _apply_pod_home_remap
+        from aj_crew.acp.client import IDENTITY_STORE_ROOT_ENV_VARS, _apply_pod_home_remap
 
         env = {"HOME": "/home/user", "XDG_DATA_HOME": "/home/user/.local/share"}
         assert _apply_pod_home_remap(dict(env), pod_home_remap=True) == env
         assert _apply_pod_home_remap(dict(env), pod_home_remap=False) == env
-        env_marked = {**env, "KIROCREW_POD": "1"}  # marker but no os-home: no remap
+        env_marked = {**env, "AJCREW_POD": "1"}  # marker but no os-home: no remap
         assert _apply_pod_home_remap(dict(env_marked), pod_home_remap=True) == env_marked
         assert IDENTITY_STORE_ROOT_ENV_VARS  # the scrub set is non-empty on every platform

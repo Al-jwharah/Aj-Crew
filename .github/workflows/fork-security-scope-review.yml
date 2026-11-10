@@ -105,11 +105,11 @@ jobs:
   # ==========================================================================
   generate:
     name: Security Scope Review (generate)
-    # `kirocrew-runners` larger-runner group, targeted by GROUP not label; see
+    # `ajcrew-runners` larger-runner group, targeted by GROUP not label; see
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     timeout-minutes: 30
     # No `checks:` scope and no WRITE anywhere: this job holds the Bedrock
     # credential and prompt-injection is its live risk, so it must not be able to
@@ -812,7 +812,7 @@ jobs:
 
             The committed golden-path corpus you must read before writing rows,
             and must not re-propose from, is
-                src/kiro_crew/builtin_skills/security-conductor/golden-paths.json
+                src/aj_crew/builtin_skills/security-conductor/golden-paths.json
             at this base checkout. You never edit it.
 
             Write your candidate rows to `candidates.json` in the current working
@@ -913,11 +913,11 @@ jobs:
   validate:
     name: Security Scope Review (validate)
     needs: generate
-    # `kirocrew-runners` larger-runner group, targeted by GROUP not label; see
+    # `ajcrew-runners` larger-runner group, targeted by GROUP not label; see
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     # A full-history checkout on the runner fleet can take most of fifteen
     # minutes even with the blobless filter below; 20 leaves headroom.
     timeout-minutes: 20
@@ -1106,7 +1106,7 @@ jobs:
               exit 1
             fi
           done
-          git show "$BASE_SHA:src/kiro_crew/builtin_skills/security-conductor/golden-paths.json" \
+          git show "$BASE_SHA:src/aj_crew/builtin_skills/security-conductor/golden-paths.json" \
             > "$CORPUS" 2>/dev/null || true
           if [ ! -s "$CORPUS" ]; then
             echo "::error::no golden-paths corpus on the base commit ($BASE_SHA); there is no contract to dedupe against."
@@ -1290,7 +1290,7 @@ jobs:
     # Keep matrix.os stable: the job name uses it and so do the per-leg artifact
     # names, so neither the rendered check names nor the fold's report lookup
     # change. In THIS repository the Linux and Windows legs take the
-    # `kirocrew-linux-4-core` / `kirocrew-windows-4-core` larger-runner groups
+    # `ajcrew-linux-4-core` / `ajcrew-windows-4-core` larger-runner groups
     # instead of the shared standard pool, whose concurrency is shared
     # enterprise-wide. Targeted by LABEL, not `group:` as the three credentialed
     # jobs here do: a group belongs to the kirodotdev organization, so a fork
@@ -1303,7 +1303,7 @@ jobs:
     # docs/ci/ci-and-reviews.md for why its definition is not a like-for-like
     # swap. A larger runner changes nothing about this job's posture: still a
     # GitHub-hosted ephemeral VM, still `contents: read` and nothing else.
-    runs-on: ${{ matrix.os == 'ubuntu-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest') || matrix.os == 'windows-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-windows-4-core' || 'windows-latest') || matrix.os }}
+    runs-on: ${{ matrix.os == 'ubuntu-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest') || matrix.os == 'windows-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-windows-4-core' || 'windows-latest') || matrix.os }}
     timeout-minutes: 20
     # `contents: read` and NOTHING else. This is the job that materializes and
     # executes the fork's own matcher, so it must have nothing worth reaching:
@@ -1372,7 +1372,7 @@ jobs:
       # package's own modules, and the child reaches them through PYTHONPATH at a
       # materialized checkout. Installing the package would add three
       # platform-dependent minutes and a resolution failure mode, and an editable
-      # install would put a SECOND copy of `kiro_crew` on the path -- which the
+      # install would put a SECOND copy of `aj_crew` on the path -- which the
       # script's own tree check would then refuse.
       - name: Fetch the two commits as git objects
         shell: bash
@@ -1539,11 +1539,11 @@ jobs:
     # scores blanks and the check-run is posted with no PR in its external id --
     # an id readiness can never match, on a lane that is supposed to block.
     needs: [generate, validate, adjudicate]
-    # `kirocrew-runners` larger-runner group, targeted by GROUP not label; see
+    # `ajcrew-runners` larger-runner group, targeted by GROUP not label; see
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     timeout-minutes: 15
     # The only job with write scope, and the only one that never materializes or
     # runs code from either PR tree: it downloads artifacts and posts. The one
@@ -2140,7 +2140,7 @@ jobs:
           #
           # A marker comment is the ONLY thing a freshness verifier reads. A
           # write that does not land therefore leaves the PR indistinguishable
-          # from one no lane ever reviewed: kirocrew-prepare-pr's pr_status.py refuses a
+          # from one no lane ever reviewed: ajcrew-prepare-pr's pr_status.py refuses a
           # PR whose check-runs, readiness status and mergeable state all pass,
           # and the only way out is manufacturing a new head -- which re-rolls
           # the non-deterministic review lanes and discards the verdicts they
@@ -2396,7 +2396,7 @@ jobs:
             # would invent a BLOCK nobody judged out of an infrastructure fault.
             # The annotation is what says so: the required readiness status reads
             # check-run CONCLUSIONS and has no stamp-freshness read, so the reader
-            # that catches a head with no verdict is kirocrew-prepare-pr's own marker
+            # that catches a head with no verdict is ajcrew-prepare-pr's own marker
             # evaluation, run before a PR is called ready.
             if [ -n "$slot" ]; then
               occupied=""

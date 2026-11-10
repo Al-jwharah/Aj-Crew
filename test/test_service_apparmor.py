@@ -42,7 +42,7 @@ class TestAppArmorGate:
         parser="/usr/sbin/apparmor_parser",
         version=(5, 0),
     ):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         monkeypatch.setattr(aa, "apparmor_is_active", lambda: "apparmor" in lsm)
         monkeypatch.setattr(aa, "userns_restricted", lambda: sysctl == "1")
@@ -84,13 +84,13 @@ class TestAppArmorGate:
 
     def test_sysctl_absent_reads_as_unrestricted(self, monkeypatch, tmp_path):
         """An absent knob (Debian, older kernels) must not look like `1`."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         monkeypatch.setattr(aa, "_SYSCTL_PATH", tmp_path / "nope")
         assert aa.userns_restricted() is False
 
     def test_lsm_read_failure_reads_as_inactive(self, monkeypatch, tmp_path):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         monkeypatch.setattr(aa, "_LSM_PATH", tmp_path / "nope")
         assert aa.apparmor_is_active() is False
@@ -99,7 +99,7 @@ class TestAppArmorGate:
 class TestAppArmorProfileRendering:
     """The rendered profile's shape is load-bearing for security."""
 
-    _EXEC = Path("/opt/kirocrew-venv/bin/kirocrew")
+    _EXEC = Path("/opt/ajcrew-venv/bin/ajcrew")
 
     def test_attaches_to_the_given_path_and_nothing_else(self):
         """The attachment is the whole point, and it must be exactly the
@@ -107,7 +107,7 @@ class TestAppArmorProfileRendering:
         which is a symlink to the system python: attaching there would grant
         unprivileged userns to EVERY Python process on the host.
         """
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         text = aa.render_profile("4.0", self._EXEC)
 
@@ -119,7 +119,7 @@ class TestAppArmorProfileRendering:
         assert "crew-venv" not in body
 
     def test_grants_only_userns(self):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         body = aa.render_profile("4.0", self._EXEC).split("{", 1)[1]
 
@@ -129,20 +129,20 @@ class TestAppArmorProfileRendering:
         assert " mr," not in body
 
     def test_abi_line_matches_the_detected_abi(self):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         assert "abi <abi/4.0>," in aa.render_profile("4.0", self._EXEC)
         assert "abi <abi/5.0>," in aa.render_profile("5.0", self._EXEC)
 
     def test_abi_line_is_omitted_when_none_is_available(self):
         """Declaring an abi file the host lacks makes the profile fail to load."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         assert "abi <" not in aa.render_profile(None, self._EXEC)
 
     def test_detect_abi_picks_the_highest_numeric_file(self, monkeypatch, tmp_path):
         """Ubuntu 25.10 ships parser 5.x but only abi/3.0 and abi/4.0 on disk."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         for name in ("3.0", "4.0", "4.0-ip", "kernel-5.4-vanilla"):
             (tmp_path / name).write_text("", encoding="utf-8")
@@ -151,17 +151,17 @@ class TestAppArmorProfileRendering:
         assert aa.detect_abi() == "4.0"
 
     def test_detect_abi_returns_none_without_any_numeric_file(self, monkeypatch, tmp_path):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         monkeypatch.setattr(aa, "_ABI_DIR", tmp_path / "missing")
         assert aa.detect_abi() is None
 
     def test_documents_that_removal_rebreaks_the_sandbox(self):
         """The file is the only record a future reader has — it must say why."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         text = aa.render_profile("4.0", self._EXEC)
-        assert "Managed by Kiro Crew" in text
+        assert "Managed by Aj Crew" in text
         assert "Removing this file" in text
 
 
@@ -170,7 +170,7 @@ class TestAppArmorInstall:
 
     # A stand-in launcher path for tests that exercise branches past exec-path
     # validation; tests that reach validation stub validate_exec_path to accept it.
-    _EXEC = "/opt/kirocrew-venv/bin/kirocrew"
+    _EXEC = "/opt/ajcrew-venv/bin/ajcrew"
 
     @staticmethod
     def _writers():
@@ -192,7 +192,7 @@ class TestAppArmorInstall:
         Validation itself has its own tests (TestValidateExecPath); here it
         would otherwise refuse the stand-in path for not existing on disk.
         """
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         monkeypatch.setattr(
             aa,
@@ -201,7 +201,7 @@ class TestAppArmorInstall:
         )
 
     def test_skips_cleanly_when_the_host_does_not_need_it(self, monkeypatch):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         writes, runs, write, run = self._writers()
         monkeypatch.setattr(aa, "should_install", lambda: (False, "no restriction here"))
@@ -214,7 +214,7 @@ class TestAppArmorInstall:
 
     def test_refuses_to_install_a_profile_that_does_not_compile(self, monkeypatch):
         """Loading a broken profile is how you get a service that will not start."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         writes, runs, write, run = self._writers()
         monkeypatch.setattr(aa, "should_install", lambda: (True, "restricted"))
@@ -233,7 +233,7 @@ class TestAppArmorInstall:
 
     def test_a_sudo_failure_warns_and_never_raises(self, monkeypatch):
         """An install must never die because a hardening step failed."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         monkeypatch.setattr(aa, "should_install", lambda: (True, "restricted"))
         monkeypatch.setattr(aa, "parser_path", lambda: "/usr/sbin/apparmor_parser")
@@ -254,7 +254,7 @@ class TestAppArmorInstall:
 
     def test_does_not_claim_success_when_enforcement_cannot_be_verified(self, monkeypatch):
         """A profile that loads but does not take effect is worse than none."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         writes, runs, write, run = self._writers()
         monkeypatch.setattr(aa, "should_install", lambda: (True, "restricted"))
@@ -274,7 +274,7 @@ class TestAppArmorInstall:
         assert "Not claiming success" in outcome.message
 
     def test_happy_path_validates_loads_then_verifies(self, monkeypatch):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         writes, runs, write, run = self._writers()
         order: list[str] = []
@@ -328,9 +328,9 @@ class TestAppArmorInstall:
         refuse — correctly, and each refusal has its own test. This test is
         about the RENDERED attachment, so those rules are neutralised.
         """
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        launcher = durable_dir / "kirocrew"
+        launcher = durable_dir / "ajcrew"
         launcher.write_text("#!/bin/sh\n")
         os.chmod(launcher, 0o755)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions -- a launcher fixture must carry the exec bit a real venv launcher has; the file lives in a test-owned tmp dir.  # noqa: E501  # fmt: skip
         writes, runs, write, run = self._writers()
@@ -361,7 +361,7 @@ class TestAppArmorInstall:
         """A launcher path that fails validation must not write anything, and
         must not be confused with a compile failure or a sudo failure — it is
         its own named case with its own message."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         writes, runs, write, run = self._writers()
         monkeypatch.setattr(aa, "should_install", lambda: (True, "restricted"))
@@ -374,7 +374,7 @@ class TestAppArmorInstall:
             lambda *_a: (0, ""),
             1000,
             1000,
-            exec_path="/nonexistent/path/kirocrew",
+            exec_path="/nonexistent/path/ajcrew",
         )
 
         assert outcome.ok is False
@@ -383,7 +383,7 @@ class TestAppArmorInstall:
         assert writes == [] and runs == []
 
     def test_uninstall_is_a_noop_when_no_profile_is_present(self, monkeypatch, tmp_path):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         _w, runs, _write, run = self._writers()
         monkeypatch.setattr(aa, "PROFILE_PATH", tmp_path / "absent")
@@ -395,7 +395,7 @@ class TestAppArmorInstall:
 
     def test_uninstall_unloads_then_removes(self, monkeypatch, tmp_path):
         """Whatever removes the service removes the grant — no orphaned profile."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         profile = tmp_path / aa.PROFILE_NAME
         profile.write_text("profile", encoding="utf-8")
@@ -418,13 +418,13 @@ class TestAppArmorUnitDirective:
     """
 
     def test_no_directive_by_default(self, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "tester")
         gid = MagicMock(returncode=0, stdout="tester\n", stderr="")
         with (
-            patch("kiro_crew.service.common.shutil.which", return_value="/usr/bin/kirocrew"),
-            patch("kiro_crew.service.linux.subprocess.run", return_value=gid),
+            patch("aj_crew.service.common.shutil.which", return_value="/usr/bin/ajcrew"),
+            patch("aj_crew.service.linux.subprocess.run", return_value=gid),
         ):
             unit = svc_linux.render_unit()
 
@@ -439,8 +439,8 @@ class TestAppArmorUnitDirective:
         automatic path attachment). Asserted end-to-end through ``install()``,
         not just on ``render_unit`` in isolation, so a regression that starts
         threading a profile name back into the written unit is caught."""
-        from kiro_crew.service import apparmor as aa
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import apparmor as aa
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "tester")
         monkeypatch.setattr(svc_linux, "_current_user", lambda: "tester")
@@ -474,11 +474,11 @@ class TestInstallApparmorProfileAttachesToTheLauncher:
     """The service caller must hand ``apparmor.install`` the launcher
     path and the SERVICE account's uid, not the installer process's own uid."""
 
-    def test_passes_kirocrew_bin_as_exec_path_and_threads_expected_uid(self, monkeypatch):
-        from kiro_crew.service import apparmor as aa
-        from kiro_crew.service import linux as svc_linux
+    def test_passes_ajcrew_bin_as_exec_path_and_threads_expected_uid(self, monkeypatch):
+        from aj_crew.service import apparmor as aa
+        from aj_crew.service import linux as svc_linux
 
-        monkeypatch.setattr(svc_linux, "kirocrew_bin", lambda: "/opt/kirocrew-venv/bin/kirocrew")
+        monkeypatch.setattr(svc_linux, "ajcrew_bin", lambda: "/opt/ajcrew-venv/bin/ajcrew")
         calls = []
 
         def fake_install(*args, **kwargs):
@@ -492,7 +492,7 @@ class TestInstallApparmorProfileAttachesToTheLauncher:
         assert outcome.ok is True
         assert len(calls) == 1
         _args, kwargs = calls[0]
-        assert kwargs["exec_path"] == "/opt/kirocrew-venv/bin/kirocrew"
+        assert kwargs["exec_path"] == "/opt/ajcrew-venv/bin/ajcrew"
         assert kwargs["expected_uid"] == 4242
 
     def test_an_unresolved_service_account_skips_the_install(self, monkeypatch):
@@ -501,10 +501,10 @@ class TestInstallApparmorProfileAttachesToTheLauncher:
         as "check against the calling process's uid", which under ``sudo`` is
         root — a root-owned shared launcher would then pass the ownership
         check and the userns grant would extend to every account on the host."""
-        from kiro_crew.service import apparmor as aa
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import apparmor as aa
+        from aj_crew.service import linux as svc_linux
 
-        monkeypatch.setattr(svc_linux, "kirocrew_bin", lambda: "/opt/kirocrew-venv/bin/kirocrew")
+        monkeypatch.setattr(svc_linux, "ajcrew_bin", lambda: "/opt/ajcrew-venv/bin/ajcrew")
         calls = []
         monkeypatch.setattr(
             aa, "install", lambda *a, **kw: (calls.append(kw), aa.ProfileOutcome(True, "ok"))[1]
@@ -530,8 +530,8 @@ class TestAppArmorNeverFailsTheInstall:
 
     @staticmethod
     def _patched(monkeypatch, outcome):
-        from kiro_crew.service import controller
-        from kiro_crew.service.common import Platform
+        from aj_crew.service import controller
+        from aj_crew.service.common import Platform
 
         monkeypatch.setattr(controller, "current_platform", lambda: Platform.SYSTEMD)
         monkeypatch.setattr(controller.linux, "install", lambda: outcome)
@@ -542,7 +542,7 @@ class TestAppArmorNeverFailsTheInstall:
         return controller
 
     def test_install_still_succeeds_when_the_profile_fails(self, monkeypatch, capsys):
-        from kiro_crew.service.apparmor import ProfileOutcome
+        from aj_crew.service.apparmor import ProfileOutcome
 
         controller = self._patched(
             monkeypatch,
@@ -553,12 +553,12 @@ class TestAppArmorNeverFailsTheInstall:
 
         assert rc == 0, "a failed hardening step must not fail the service install"
         out = capsys.readouterr().out
-        assert "kirocrew service installed and started" in out
+        assert "ajcrew service installed and started" in out
         assert "⚠️" in out, "the failure must still be surfaced, not swallowed"
         assert "could not be installed" in out
 
     def test_install_reports_the_profile_on_success(self, monkeypatch, capsys):
-        from kiro_crew.service.apparmor import ProfileOutcome
+        from aj_crew.service.apparmor import ProfileOutcome
 
         controller = self._patched(
             monkeypatch, ProfileOutcome(True, "AppArmor profile installed at /etc/apparmor.d/x")
@@ -573,7 +573,7 @@ class TestAppArmorNeverFailsTheInstall:
 
     def test_a_silent_skip_prints_nothing_extra(self, monkeypatch, capsys):
         """On Debian/Arch/RHEL the step must be invisible, not chatty."""
-        from kiro_crew.service.apparmor import ProfileOutcome
+        from aj_crew.service.apparmor import ProfileOutcome
 
         controller = self._patched(monkeypatch, ProfileOutcome(False, ""))
 
@@ -585,9 +585,9 @@ class TestAppArmorNeverFailsTheInstall:
         assert "⚠️" not in out
 
     def test_uninstall_removes_the_profile_and_still_reports_success(self, monkeypatch, capsys):
-        from kiro_crew.service import controller
-        from kiro_crew.service.apparmor import ProfileOutcome
-        from kiro_crew.service.common import Platform
+        from aj_crew.service import controller
+        from aj_crew.service.apparmor import ProfileOutcome
+        from aj_crew.service.common import Platform
 
         removed: list[bool] = []
 
@@ -623,7 +623,7 @@ class TestEnforcementVerificationIsSafeAndFaithful:
     """
 
     def test_never_spawns_unprivileged_and_drops_back_to_the_caller(self, monkeypatch):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         calls: list[tuple[str, ...]] = []
         monkeypatch.setattr(
@@ -651,7 +651,7 @@ class TestEnforcementVerificationIsSafeAndFaithful:
         """sys.executable is user-writable; running it under sudo would be an LPE."""
         import sys as _sys
 
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         calls: list[tuple[str, ...]] = []
         monkeypatch.setattr(aa, "_resolve_trusted", lambda name: f"/usr/bin/{name}")
@@ -661,11 +661,11 @@ class TestEnforcementVerificationIsSafeAndFaithful:
         assert "/usr/bin/python3" in argv
         assert _sys.executable not in argv
         # And the payload must not import our own (user-writable) package.
-        assert "kiro_crew" not in " ".join(argv)
+        assert "aj_crew" not in " ".join(argv)
 
     def test_runs_the_trusted_python_in_isolated_mode(self, monkeypatch):
-        """Under `sudo kirocrew service install` this python is root."""
-        from kiro_crew.service import apparmor as aa
+        """Under `sudo ajcrew service install` this python is root."""
+        from aj_crew.service import apparmor as aa
 
         calls: list[tuple[str, ...]] = []
         monkeypatch.setattr(aa, "_resolve_trusted", lambda name: f"/usr/bin/{name}")
@@ -677,7 +677,7 @@ class TestEnforcementVerificationIsSafeAndFaithful:
 
     def test_privileged_capture_starts_in_root_without_python_env(self, monkeypatch):
         """Never the operator's cwd, never an inherited PYTHON* variable."""
-        from kiro_crew.service import linux
+        from aj_crew.service import linux
 
         seen: dict = {}
 
@@ -701,7 +701,7 @@ class TestEnforcementVerificationIsSafeAndFaithful:
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX service install path")
     @pytest.mark.parametrize("via", ["bare-runner", "service-capture"])
     def test_code_planted_in_cwd_or_pythonpath_never_runs(self, monkeypatch, tmp_path, via):
-        """End to end: `cd /tmp && sudo kirocrew service install` with a
+        """End to end: `cd /tmp && sudo ajcrew service install` with a
         planted ctypes.py / sitecustomize.py. The probe's own first import must
         resolve to the stdlib, and no planted file may run.
 
@@ -709,8 +709,8 @@ class TestEnforcementVerificationIsSafeAndFaithful:
         set, so only `-I` stands between it and the plant. `service-capture`
         goes through the real privileged-capture helper (sudo stubbed out).
         """
-        from kiro_crew.service import apparmor as aa
-        from kiro_crew.service import linux
+        from aj_crew.service import apparmor as aa
+        from aj_crew.service import linux
 
         planted = tmp_path / "planted"
         planted.mkdir()
@@ -767,7 +767,7 @@ class TestEnforcementVerificationIsSafeAndFaithful:
         assert not marker.exists(), marker.read_text(encoding="utf-8")
 
     def test_a_missing_trusted_tool_is_inconclusive_not_a_failure_claim(self, monkeypatch):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         monkeypatch.setattr(
             aa, "_resolve_trusted", lambda name: None if name == "setpriv" else "/usr/bin/x"
@@ -780,7 +780,7 @@ class TestEnforcementVerificationIsSafeAndFaithful:
         assert "setpriv" in problem
 
     def test_a_failing_probe_inside_the_profile_is_surfaced(self, monkeypatch):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         monkeypatch.setattr(aa, "_resolve_trusted", lambda name: f"/usr/bin/{name}")
 
@@ -796,7 +796,7 @@ class TestTrustedToolResolution:
     """Anything handed to sudo must not be resolvable through the user's $PATH."""
 
     def test_rejects_a_binary_outside_the_trusted_dirs(self, monkeypatch, tmp_path):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         fake = tmp_path / "apparmor_parser"
         fake.write_text("#!/bin/sh\n", encoding="utf-8")
@@ -809,7 +809,7 @@ class TestTrustedToolResolution:
         assert aa._resolve_trusted("apparmor_parser") is None
 
     def test_rejects_a_group_or_world_writable_binary(self, monkeypatch, tmp_path):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         target = tmp_path / "aa-exec"
         target.write_text("#!/bin/sh\n", encoding="utf-8")
@@ -819,7 +819,7 @@ class TestTrustedToolResolution:
         assert aa._resolve_trusted("aa-exec") is None
 
     def test_missing_binary_returns_none(self, monkeypatch, tmp_path):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         monkeypatch.setattr(aa, "_TRUSTED_BIN_DIRS", (str(tmp_path),))
         assert aa._resolve_trusted("nope") is None
@@ -835,7 +835,7 @@ class TestTrustedToolResolution:
     )
     def test_resolves_a_real_root_owned_system_binary(self):
         """Against the real filesystem, not a fixture: /bin/sh must resolve."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         resolved = aa._resolve_trusted("sh")
         assert resolved is not None and resolved.startswith("/")
@@ -850,8 +850,8 @@ class TestProfileLoadsBeforeTheServiceStarts:
     """
 
     def test_profile_is_installed_before_daemon_reload_and_restart(self, monkeypatch):
-        from kiro_crew.service import apparmor as aa
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import apparmor as aa
+        from aj_crew.service import linux as svc_linux
 
         order: list[str] = []
         monkeypatch.setenv("USER", "tester")
@@ -897,7 +897,7 @@ class TestAppArmorProfileValidation:
 
     @staticmethod
     def _fake_run(monkeypatch, *, returncode=0, stdout="", stderr="", raises=None):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         seen: dict = {}
 
@@ -912,7 +912,7 @@ class TestAppArmorProfileValidation:
         return seen
 
     def test_a_clean_parse_reports_ok(self, monkeypatch):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         seen = self._fake_run(monkeypatch)
         ok, detail = aa.validate("/usr/sbin/apparmor_parser", "profile x {}")
@@ -921,7 +921,7 @@ class TestAppArmorProfileValidation:
         assert seen["argv"][:3] == ["/usr/sbin/apparmor_parser", "-Q", "--skip-cache"]
 
     def test_the_profile_text_reaches_the_parser_and_the_temp_file_is_removed(self, monkeypatch):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         seen = self._fake_run(monkeypatch)
         written: dict = {}
@@ -941,7 +941,7 @@ class TestAppArmorProfileValidation:
         assert seen == {}
 
     def test_a_parse_failure_returns_the_parsers_own_words(self, monkeypatch):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         self._fake_run(monkeypatch, returncode=1, stderr="  syntax error at line 3  ")
         assert aa.validate("/usr/sbin/apparmor_parser", "bad") == (
@@ -950,13 +950,13 @@ class TestAppArmorProfileValidation:
         )
 
     def test_stdout_is_used_when_stderr_is_empty(self, monkeypatch):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         self._fake_run(monkeypatch, returncode=1, stdout="told you so")
         assert aa.validate("/usr/sbin/apparmor_parser", "bad") == (False, "told you so")
 
     def test_a_missing_parser_is_a_failure_not_a_crash(self, monkeypatch):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         self._fake_run(monkeypatch, raises=OSError("no such file"))
         ok, detail = aa.validate("/usr/sbin/apparmor_parser", "profile x {}")
@@ -967,7 +967,7 @@ class TestAppArmorProfileValidation:
     def test_a_parser_timeout_is_a_failure_not_a_crash(self, monkeypatch):
         import subprocess
 
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         self._fake_run(monkeypatch, raises=subprocess.TimeoutExpired("p", 30))
         assert aa.validate("/usr/sbin/apparmor_parser", "profile x {}")[0] is False
@@ -990,7 +990,7 @@ class TestServiceAttachmentFollowsUpdates:
 
     @staticmethod
     def _host(monkeypatch):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         monkeypatch.setattr(aa, "should_install", lambda: (True, "restricted"))
         monkeypatch.setattr(aa, "parser_path", lambda: "/usr/sbin/apparmor_parser")
@@ -1002,7 +1002,7 @@ class TestServiceAttachmentFollowsUpdates:
 
     @staticmethod
     def _layout(monkeypatch, root: Path):
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         layout = wheel_engine.ManagedVenvLayout(
             legacy=root / "crew-venv", stable_link=root / "crew-venv-current"
@@ -1039,25 +1039,25 @@ class TestServiceAttachmentFollowsUpdates:
     ):
         aa = self._host(monkeypatch)
         layout = self._layout(monkeypatch, durable_dir)
-        self._launcher(layout.versioned_tree("0.13.0") / "bin" / "kirocrew")
+        self._launcher(layout.versioned_tree("0.13.0") / "bin" / "ajcrew")
         layout.stable_link.symlink_to(layout.versioned_tree("0.13.0"))
 
-        attached = self._attachment(aa, layout.stable_link / "bin" / "kirocrew")
+        attached = self._attachment(aa, layout.stable_link / "bin" / "ajcrew")
 
-        assert attached == f"{durable_dir.resolve()}/crew-venv-*/bin/kirocrew"
-        promoted = durable_dir.resolve() / "crew-venv-0.14.0" / "bin" / "kirocrew"
+        assert attached == f"{durable_dir.resolve()}/crew-venv-*/bin/ajcrew"
+        promoted = durable_dir.resolve() / "crew-venv-0.14.0" / "bin" / "ajcrew"
         assert aa.attachment_covers(attached, str(promoted))
 
     def test_a_parent_another_account_can_write_keeps_the_exact_path(
         self, monkeypatch, durable_dir
     ):
-        """``KIROCREW_VENV=/srv/crew`` beside another account's ``/srv/crew-dev``:
+        """``AJCREW_VENV=/srv/crew`` beside another account's ``/srv/crew-dev``:
         a glob under a parent this account does not own alone would grant the
         other account's launcher too, so the parent must pass the launcher's
         own takeover check."""
         aa = self._host(monkeypatch)
         layout = self._layout(monkeypatch, durable_dir)
-        launcher = self._launcher(layout.versioned_tree("0.13.0") / "bin" / "kirocrew")
+        launcher = self._launcher(layout.versioned_tree("0.13.0") / "bin" / "ajcrew")
         parent = durable_dir.resolve()
         checked: list[Path] = []
 
@@ -1075,10 +1075,10 @@ class TestServiceAttachmentFollowsUpdates:
     @pytest.mark.parametrize(
         "relative",
         [
-            "crew-venv/bin/kirocrew",
-            "crew-dev-1.0/bin/kirocrew",
-            "crew-venv-1.0/bin/kirocrew-dev",
-            "elsewhere/bin/kirocrew",
+            "crew-venv/bin/ajcrew",
+            "crew-dev-1.0/bin/ajcrew",
+            "crew-venv-1.0/bin/ajcrew-dev",
+            "elsewhere/bin/ajcrew",
         ],
     )
     def test_a_launcher_outside_the_versioned_trees_keeps_the_exact_path(
@@ -1096,37 +1096,37 @@ class TestServiceAttachmentFollowsUpdates:
 class TestAttachmentCovers:
     """The kernel's attachment-glob semantics, which doctor and the update hold share."""
 
-    _GLOB = "/home/u/.kiro/crew-venv-*/bin/kirocrew"
+    _GLOB = "/home/u/.kiro/crew-venv-*/bin/ajcrew"
 
     def test_a_star_matches_each_sibling_tree_and_never_crosses_a_slash(self):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        assert aa.attachment_covers(self._GLOB, "/home/u/.kiro/crew-venv-0.13.0/bin/kirocrew")
-        assert aa.attachment_covers(self._GLOB, "/home/u/.kiro/crew-venv-0.14.0/bin/kirocrew")
-        assert not aa.attachment_covers(self._GLOB, "/home/u/.kiro/crew-venv-0/x/bin/kirocrew")
-        assert not aa.attachment_covers(self._GLOB, "/home/u/.kiro/crew-venv/bin/kirocrew")
-        assert not aa.attachment_covers(self._GLOB, "/home/u/.kiro/other/bin/kirocrew")
-        assert not aa.attachment_covers(self._GLOB, "/home/u/.kiro/crew-venv-1/bin/kirocrew-x")
+        assert aa.attachment_covers(self._GLOB, "/home/u/.kiro/crew-venv-0.13.0/bin/ajcrew")
+        assert aa.attachment_covers(self._GLOB, "/home/u/.kiro/crew-venv-0.14.0/bin/ajcrew")
+        assert not aa.attachment_covers(self._GLOB, "/home/u/.kiro/crew-venv-0/x/bin/ajcrew")
+        assert not aa.attachment_covers(self._GLOB, "/home/u/.kiro/crew-venv/bin/ajcrew")
+        assert not aa.attachment_covers(self._GLOB, "/home/u/.kiro/other/bin/ajcrew")
+        assert not aa.attachment_covers(self._GLOB, "/home/u/.kiro/crew-venv-1/bin/ajcrew-x")
 
     def test_an_exact_attachment_covers_only_its_own_file(self):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        exact = "/home/u/.kiro/crew-venv-0.13.0/bin/kirocrew"
+        exact = "/home/u/.kiro/crew-venv-0.13.0/bin/ajcrew"
         assert aa.attachment_covers(exact, exact)
-        assert not aa.attachment_covers(exact, "/home/u/.kiro/crew-venv-0.14.0/bin/kirocrew")
+        assert not aa.attachment_covers(exact, "/home/u/.kiro/crew-venv-0.14.0/bin/ajcrew")
         # A dot is literal, not a regex wildcard.
-        assert not aa.attachment_covers(exact, "/home/u/.kiro/crew-venv-0x13.0/bin/kirocrew")
+        assert not aa.attachment_covers(exact, "/home/u/.kiro/crew-venv-0x13.0/bin/ajcrew")
 
     def test_a_question_mark_is_one_character_and_a_double_star_crosses_slashes(self):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        assert aa.attachment_covers("/a/crew-?/kirocrew", "/a/crew-1/kirocrew")
-        assert not aa.attachment_covers("/a/crew-?/kirocrew", "/a/crew-10/kirocrew")
-        assert aa.attachment_covers("/a/**/kirocrew", "/a/b/c/kirocrew")
+        assert aa.attachment_covers("/a/crew-?/ajcrew", "/a/crew-1/ajcrew")
+        assert not aa.attachment_covers("/a/crew-?/ajcrew", "/a/crew-10/ajcrew")
+        assert aa.attachment_covers("/a/**/ajcrew", "/a/b/c/ajcrew")
 
     def test_glob_syntax_it_never_renders_is_compared_literally(self):
         """A hand-written ``{a,b}`` or ``[...]`` attachment is not guessed at."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        assert not aa.attachment_covers("/a/{b,c}/kirocrew", "/a/b/kirocrew")
-        assert not aa.attachment_covers("/a/[bc]/kirocrew", "/a/b/kirocrew")
+        assert not aa.attachment_covers("/a/{b,c}/ajcrew", "/a/b/ajcrew")
+        assert not aa.attachment_covers("/a/[bc]/ajcrew", "/a/b/ajcrew")

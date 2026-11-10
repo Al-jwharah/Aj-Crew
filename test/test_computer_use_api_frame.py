@@ -31,16 +31,16 @@ from computer_use_api_helpers import (  # noqa: F401 -- fixtures are requested b
 )
 from loopback_servers import LoopbackHTTPServer
 
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.governance import parse_policy
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.governance import parse_policy
 
 
 def _install_ceiling(policy_body) -> None:
     """Compose a context carrying *policy_body* as the ceiling and install it."""
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    base = build_default_context(KiroCrewConfig.load())
+    base = build_default_context(AjCrewConfig.load())
     ceiling = parse_policy(policy_body) if policy_body is not None else None
     ctx_mod.set_context(dataclasses.replace(base, governance=ceiling))
 
@@ -58,7 +58,7 @@ class TestFrameIngress:
         app = _frame_app()
         delivered: list = []
         app["state"].deliver_ws_owners = lambda *a: delivered.append(a)
-        with patch("kiro_crew.dashboard.origin.is_loopback", return_value=False):
+        with patch("aj_crew.dashboard.origin.is_loopback", return_value=False):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post("/api/computer-use/frame", json=_VALID_FRAME)
         assert resp.status == 403
@@ -78,7 +78,7 @@ class TestFrameIngress:
         app = _frame_app(grant_internal_auth=False)
         delivered: list = []
         app["state"].deliver_ws_owners = lambda *a: delivered.append(a)
-        with patch("kiro_crew.dashboard.origin.is_loopback", return_value=True):
+        with patch("aj_crew.dashboard.origin.is_loopback", return_value=True):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post("/api/computer-use/frame", json=_VALID_FRAME)
         assert resp.status == 403
@@ -100,7 +100,7 @@ class TestFrameIngress:
             return 3
 
         app["state"].deliver_ws_owners = _deliver
-        with patch("kiro_crew.dashboard.origin.is_loopback", return_value=True):
+        with patch("aj_crew.dashboard.origin.is_loopback", return_value=True):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post("/api/computer-use/frame", json=_VALID_FRAME)
                 body = await resp.json()
@@ -115,7 +115,7 @@ class TestFrameIngress:
     @pytest.mark.asyncio
     async def test_invalid_json_is_400(self, home, mock_sel):
         app = _frame_app()
-        with patch("kiro_crew.dashboard.origin.is_loopback", return_value=True):
+        with patch("aj_crew.dashboard.origin.is_loopback", return_value=True):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
                     "/api/computer-use/frame",
@@ -149,7 +149,7 @@ class TestFrameIngress:
         app = _frame_app()
         delivered: list = []
         app["state"].deliver_ws_owners = lambda *a: delivered.append(a)
-        with patch("kiro_crew.dashboard.origin.is_loopback", return_value=True):
+        with patch("aj_crew.dashboard.origin.is_loopback", return_value=True):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post("/api/computer-use/frame", json=body)
         assert resp.status == 400
@@ -160,7 +160,7 @@ class TestFramePayload:
     """``build_frame_payload`` — every field bounded at the boundary."""
 
     def test_a_minimal_valid_frame(self):
-        from kiro_crew.computer_use.screencast import build_frame_payload
+        from aj_crew.computer_use.screencast import build_frame_payload
 
         assert build_frame_payload({"data": "QUJD", "format": "jpeg"}) == {
             "data": "QUJD",
@@ -168,14 +168,14 @@ class TestFramePayload:
         }
 
     def test_padded_base64_is_accepted(self):
-        from kiro_crew.computer_use.screencast import build_frame_payload
+        from aj_crew.computer_use.screencast import build_frame_payload
 
         out = build_frame_payload({"data": "QUJDRA==", "format": "jpeg"})
         assert out is not None and out["data"] == "QUJDRA=="
 
     def test_an_oversized_frame_is_rejected(self):
         """One frame must not become a multi-megabyte websocket write."""
-        from kiro_crew.computer_use.screencast import (
+        from aj_crew.computer_use.screencast import (
             MAX_FRAME_B64_CHARS,
             build_frame_payload,
         )
@@ -184,8 +184,8 @@ class TestFramePayload:
         assert build_frame_payload({"data": big, "format": "jpeg"}) is None
 
     def test_dimensions_are_integers_within_the_encoder_ceiling(self):
-        from kiro_crew.computer_use.screencast import build_frame_payload
-        from kiro_crew.computer_use.types import MAX_SCREENSHOT_MAX_PX
+        from aj_crew.computer_use.screencast import build_frame_payload
+        from aj_crew.computer_use.types import MAX_SCREENSHOT_MAX_PX
 
         out = build_frame_payload(
             {"data": "QUJD", "format": "jpeg", "width": 1280, "height": "tall"}
@@ -202,7 +202,7 @@ class TestFramePayload:
             assert out["height"] == 800  # a valid sibling still passes
 
     def test_the_session_key_is_bounded_to_a_lookup_charset(self):
-        from kiro_crew.computer_use.screencast import build_frame_payload
+        from aj_crew.computer_use.screencast import build_frame_payload
 
         out = build_frame_payload(
             {"data": "QUJD", "format": "jpeg", "session_key": "dashboard:slot1"}
@@ -213,7 +213,7 @@ class TestFramePayload:
             assert out is not None and "session_key" not in out
 
     def test_the_app_label_is_bounded(self):
-        from kiro_crew.computer_use.screencast import build_frame_payload
+        from aj_crew.computer_use.screencast import build_frame_payload
 
         out = build_frame_payload({"data": "QUJD", "format": "jpeg", "app": "Google Chrome"})
         assert out is not None and out["app"] == "Google Chrome"
@@ -233,7 +233,7 @@ class TestLiveViewSuppression:
     @pytest.fixture(autouse=True)
     def no_real_post(self, _floor_monkeypatch):
         """Record POST attempts instead of making them."""
-        from kiro_crew.computer_use import screencast
+        from aj_crew.computer_use import screencast
 
         posted: list[dict] = []
         _floor_monkeypatch.setattr(
@@ -249,7 +249,7 @@ class TestLiveViewSuppression:
         return posted
 
     def _snapshot(self, *, secure: bool = False):
-        from kiro_crew.computer_use.types import AppRef, Snapshot
+        from aj_crew.computer_use.types import AppRef, Snapshot
 
         return Snapshot(
             app=AppRef(name="Finder", pid=41, bundle_id="com.apple.finder", window_id=9),
@@ -268,7 +268,7 @@ class TestLiveViewSuppression:
         one ``capture_snapshot_image`` refuses on — rather than re-derived here, so
         there is exactly one definition of "this window holds a secure field".
         """
-        from kiro_crew.computer_use import screencast
+        from aj_crew.computer_use import screencast
 
         _install_ceiling(None)
         with screencast.frame_scope(session_key="dashboard:slot1"):
@@ -285,7 +285,7 @@ class TestLiveViewSuppression:
         way (a CLI probe, a future caller that skipped the handler) cannot be
         governed for a surface, so it emits nothing rather than guessing.
         """
-        from kiro_crew.computer_use import screencast
+        from aj_crew.computer_use import screencast
 
         _install_ceiling(None)
         assert screencast.active_scope() is None
@@ -295,8 +295,8 @@ class TestLiveViewSuppression:
     def test_a_snapshot_with_no_encoded_bytes_emits_no_frame(
         self, home, profiles_dir, no_real_post
     ):
-        from kiro_crew.computer_use import screencast
-        from kiro_crew.computer_use.types import AppRef, Snapshot
+        from aj_crew.computer_use import screencast
+        from aj_crew.computer_use.types import AppRef, Snapshot
 
         _install_ceiling(None)
         empty = Snapshot(app=AppRef(name="Finder", pid=41, window_id=9))
@@ -306,10 +306,10 @@ class TestLiveViewSuppression:
 
     def test_the_frame_scope_is_restored_and_never_leaks_across_dispatches(self, home):
         """A pooled worker thread must not carry one surface's identity forward."""
-        from kiro_crew.computer_use import screencast
+        from aj_crew.computer_use import screencast
 
         assert screencast.active_scope() is None
-        with screencast.frame_scope(session_key="dashboard:slot1", agent="kirocrew"):
+        with screencast.frame_scope(session_key="dashboard:slot1", agent="ajcrew"):
             outer = screencast.active_scope()
             assert outer is not None and outer.session_key == "dashboard:slot1"
             with screencast.frame_scope(session_key="cron:nightly"):
@@ -327,7 +327,7 @@ class TestLiveViewSuppression:
         failure anywhere inside it (here: the scope lookup) has to become a dropped
         frame rather than a failed screenshot.
         """
-        from kiro_crew.computer_use import screencast
+        from aj_crew.computer_use import screencast
 
         _install_ceiling(None)
 
@@ -404,7 +404,7 @@ class TestTheFrameRelayIsNeverProxied:
         return server, server.server_address[1]
 
     def test_the_secret_reaches_the_gateway_and_never_the_proxy(self, home, monkeypatch):
-        from kiro_crew.computer_use import screencast
+        from aj_crew.computer_use import screencast
 
         gateway_hits: list[dict] = []
         proxy_hits: list[dict] = []
@@ -446,7 +446,7 @@ class TestInvokePublishesTheFrameScope:
     async def test_the_dispatch_runs_inside_the_calling_surfaces_frame_scope(
         self, home, monkeypatch
     ):
-        from kiro_crew.computer_use import screencast
+        from aj_crew.computer_use import screencast
 
         seen: dict = {}
 
@@ -455,7 +455,7 @@ class TestInvokePublishesTheFrameScope:
             seen["scope"] = scope
             return "ok"
 
-        monkeypatch.setattr("kiro_crew.computer_use.tools.dispatch_tool", _fake_dispatch)
+        monkeypatch.setattr("aj_crew.computer_use.tools.dispatch_tool", _fake_dispatch)
         async with _client() as client:
             await client.post(
                 "/api/computer-use/invoke",
@@ -463,7 +463,7 @@ class TestInvokePublishesTheFrameScope:
                     "tool": "computer_get_state",
                     "args": {"app": "Finder"},
                     "session_key": "dashboard:slot1",
-                    "agent": "kirocrew",
+                    "agent": "ajcrew",
                     "app": "notes",
                 },
             )
@@ -471,7 +471,7 @@ class TestInvokePublishesTheFrameScope:
         assert scope is not None
         assert (scope.session_key, scope.agent, scope.app) == (
             "dashboard:slot1",
-            "kirocrew",
+            "ajcrew",
             "notes",
         )
         # Restored once the dispatch returns, so the pooled worker is clean.

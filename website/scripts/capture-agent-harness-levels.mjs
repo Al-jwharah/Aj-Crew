@@ -8,8 +8,8 @@
  * `payloads.json` maps a policy id to the server's probe row for that harness,
  * built from `backend_cards.card_payload()` plus `host_auth.sign_in_remedy()`:
  *
- *   PYTHONPATH=src python3 -c "import json; from kiro_crew.agent_sdk import backend_cards as b; \
- *     from kiro_crew.agent_sdk.host_auth import sign_in_remedy as r, signs_in_separately as s; \
+ *   PYTHONPATH=src python3 -c "import json; from aj_crew.agent_sdk import backend_cards as b; \
+ *     from aj_crew.agent_sdk.host_auth import sign_in_remedy as r, signs_in_separately as s; \
  *     print(json.dumps({p: {**b.card_payload(i), 'id': i, 'policy_id': p, \
  *     'auth': {'sign_in_remedy': r(i), 'signs_in_separately': s(i)}} \
  *     for i, p in [('', 'kiro'), ('kas', 'kas'), ('claude', 'claude'), ('codex', 'codex')]}))" > payloads.json
@@ -18,7 +18,7 @@
  */
 import { chromium } from 'playwright'
 import { mkdirSync, readFileSync } from 'node:fs'
-import { KIROCREW_CONFIG_FIXTURE } from './lib/stub-dashboard-api.mjs'
+import { AJCREW_CONFIG_FIXTURE } from './lib/stub-dashboard-api.mjs'
 
 const PAYLOADS = JSON.parse(readFileSync(process.argv[2], 'utf-8'))
 const base = process.argv[3] || 'http://127.0.0.1:5199'
@@ -73,8 +73,8 @@ try {
         page.on('pageerror', error => errors.push(String(error)))
         await page.route(url => new URL(url).pathname.startsWith('/api/'), route => {
           const p = new URL(route.request().url()).pathname
-          if (p === '/api/config/kirocrew') {
-            return json(route, { ...KIROCREW_CONFIG_FIXTURE, agent: { ...KIROCREW_CONFIG_FIXTURE.agent, acp_backend: 'kas' } })
+          if (p === '/api/config/ajcrew') {
+            return json(route, { ...AJCREW_CONFIG_FIXTURE, agent: { ...AJCREW_CONFIG_FIXTURE.agent, acp_backend: 'kas' } })
           }
           if (p === '/api/config/schema') {
             return json(route, { entries: [{ path: 'agent.acp_backend', type: 'enum', enumValues: backends.map(b => b.id) }] })

@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 
-const HARNESS_GATEWAY = !!process.env.KIROCREW_E2E_EPHEMERAL
+const HARNESS_GATEWAY = !!process.env.AJCREW_E2E_EPHEMERAL
 
 /**
  * Wait for at least one rendered log line.
@@ -30,7 +30,7 @@ test.describe('Logs Page', () => {
   test.beforeEach(async ({ page, request }) => {
     test.skip(
       !HARNESS_GATEWAY,
-      'persisting a DEBUG log level requires the ephemeral harness gateway (KIROCREW_E2E_EPHEMERAL)',
+      'persisting a DEBUG log level requires the ephemeral harness gateway (AJCREW_E2E_EPHEMERAL)',
     )
     // Ensure log level is set to DEBUG so all gateway lines are visible.
     // The minimal fixture defaults to WARNING which may show zero lines.
@@ -87,10 +87,10 @@ test.describe('Logs Page', () => {
   test('search filter shows match count when term matches log lines', async ({ page }) => {
     await waitForLogLines(page)
 
-    // Every log line contains "kiro_crew" in the logger name field.
+    // Every log line contains "aj_crew" in the logger name field.
     // Type the search term
     const filterInput = page.getByLabel('Filter logs')
-    await filterInput.fill('kiro_crew')
+    await filterInput.fill('aj_crew')
 
     // The match count indicator should appear (format: "N matches")
     await expect(page.getByText(/\d+ matches/)).toBeVisible({ timeout: 5000 })
@@ -101,7 +101,7 @@ test.describe('Logs Page', () => {
 
     // Search for a term that matches SOME lines (the logger name appears in all lines)
     const filterInput = page.getByLabel('Filter logs')
-    await filterInput.fill('kiro_crew')
+    await filterInput.fill('aj_crew')
 
     // Wait for the match count to appear (proves search works)
     const matchCountEl = page.getByText(/\d+ matches/)

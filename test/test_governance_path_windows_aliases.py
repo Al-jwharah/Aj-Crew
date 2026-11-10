@@ -22,10 +22,10 @@ import posixpath
 import pytest
 from governance_policy_helpers import _policy_body
 
-from kiro_crew.platform import governance
-from kiro_crew.platform.governance import parse_policy, resolve
-from kiro_crew.platform.governance_parts import matching
-from kiro_crew.security import paths_resolver
+from aj_crew.platform import governance
+from aj_crew.platform.governance import parse_policy, resolve
+from aj_crew.platform.governance_parts import matching
+from aj_crew.security import paths_resolver
 
 SECRET = r"C:\data\secret\k"
 PREFIXES = ("\\\\?\\", "\\\\.\\", "\\??\\")

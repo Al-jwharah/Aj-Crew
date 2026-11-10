@@ -109,7 +109,7 @@ function renderSidebar(foldersOverride: ChatFolder[] = folders) {
   // The settings body the shell holds from boot: with it on hand the folder
   // sort mode is known (Custom), and the rows offer their drag -- before the
   // first read the sidebar offers no folder drag at all, by design.
-  qc.setQueryData(['kirocrewConfig'], { dashboard: {} })
+  qc.setQueryData(['ajcrewConfig'], { dashboard: {} })
   return render(
     <QueryClientProvider client={qc}>
       <Provider store={store}>

@@ -47,7 +47,7 @@ def _scope(tmp_path: Path, cfg_dir: Path, spec: dict) -> dict:
 
 def _grant(tmp_path: Path, tools: list[str]) -> None:
     """Add an ``autoApprove`` to the GENERATED spec, as a user hand-edit would."""
-    spec_path = tmp_path / "kiro_agents" / "kirocrew.json"
+    spec_path = tmp_path / "kiro_agents" / "ajcrew.json"
     cfg = json.loads(spec_path.read_text(encoding="utf-8"))
     cfg["mcpServers"][SERVER]["autoApprove"] = tools
     spec_path.write_text(json.dumps(cfg), encoding="utf-8")
@@ -88,7 +88,7 @@ class TestAChangedSourceReachesTheGeneratedSpec:
                 cfg_dir,
                 cc_servers={},
                 kiro_servers=kiro_servers,
-                kirocrew_servers={SERVER: {"command": store}},
+                ajcrew_servers={SERVER: {"command": store}},
             )["mcpServers"][SERVER]
 
         _emit({})
@@ -225,8 +225,8 @@ class TestTheCommandsUnitFollowsAnUnchangedCommand:
 
     def test_a_user_grant_survives_the_env_reconcile(self, tmp_path: Path, monkeypatch) -> None:
         """Adopting the unit touches ``args``/``env`` only; the user's keys stay."""
-        from kiro_crew.config import live as _live
-        from kiro_crew.config.loader import KiroCrewConfig as _Cfg
+        from aj_crew.config import live as _live
+        from aj_crew.config.loader import AjCrewConfig as _Cfg
 
         _cfg = _Cfg()
         _cfg.mcp.honour_auto_approve = True
@@ -249,8 +249,8 @@ class TestAUserFieldOnTheEntrySurvives:
         """``mcp.honour_auto_approve`` is pinned on: the subject is preservation by
         omission, and the undeclared-grant floor would otherwise drop the key before
         the owned-key list is exercised at all."""
-        from kiro_crew.config import live as _live
-        from kiro_crew.config.loader import KiroCrewConfig as _Cfg
+        from aj_crew.config import live as _live
+        from aj_crew.config.loader import AjCrewConfig as _Cfg
 
         _cfg = _Cfg()
         _cfg.mcp.honour_auto_approve = True
@@ -276,7 +276,7 @@ class TestAUserFieldOnTheEntrySurvives:
         cmd = _exe(tmp_path, "srv")
 
         _kiro(tmp_path, cfg_dir, {"command": cmd})
-        spec_path = tmp_path / "kiro_agents" / "kirocrew.json"
+        spec_path = tmp_path / "kiro_agents" / "ajcrew.json"
         cfg = json.loads(spec_path.read_text(encoding="utf-8"))
         cfg["mcpServers"][SERVER]["someFutureUserField"] = {"kept": True}
         spec_path.write_text(json.dumps(cfg), encoding="utf-8")
@@ -302,7 +302,7 @@ class TestAnAppAssignedNameStillOutranksAGlobal:
 
         def _emit() -> dict:
             with patch(
-                "kiro_crew.agent._collect_app_mcp_servers",
+                "aj_crew.agent._collect_app_mcp_servers",
                 lambda **kw: {SERVER: dict(app_spec)},
             ):
                 return _kiro(tmp_path, cfg_dir, leftover)

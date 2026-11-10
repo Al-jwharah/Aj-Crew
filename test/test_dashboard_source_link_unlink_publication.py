@@ -20,9 +20,9 @@ from dashboard_source_link_unlink_helpers import (
     _slot,
 )
 
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_source_link_unlink
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.chat_handlers import api_chat_slot_source_link_unlink
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.testing.wait import await_until
 
 
 class TestAwaitBindingRegressions:
@@ -53,7 +53,7 @@ class TestAwaitBindingRegressions:
             return result
 
         monkeypatch.setattr(asyncio, "to_thread", held_read)
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             task = asyncio.create_task(api_chat_slot_source_link_unlink(req))
             await await_until(entered)
             if change == "rebind":
@@ -97,7 +97,7 @@ class TestAwaitBindingRegressions:
             return result
 
         monkeypatch.setattr(asyncio, "to_thread", rebind_on_fold)
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             response = await api_chat_slot_source_link_unlink(req)
         assert response.status == 200
         assert other in primary._dismissed_source_links
@@ -137,7 +137,7 @@ class TestAwaitBindingRegressions:
             return result
 
         monkeypatch.setattr(asyncio, "to_thread", rebind_during_reads)
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             response = await api_chat_slot_source_link_unlink(req)
         assert response.status == 200
         assert key not in sibling._dismissed_source_links
@@ -158,7 +158,7 @@ class TestAwaitBindingRegressions:
         )
         state.conversation_log.update_metadata_if.side_effect = lambda _h, _f, _g: True
         state.push_slots_update.side_effect = RuntimeError("sensitive diagnostic")
-        with patch("kiro_crew.dashboard.chat_handlers.sel") as audit:
+        with patch("aj_crew.dashboard.chat_handlers.sel") as audit:
             resp = await api_chat_slot_source_link_unlink(req)
         assert resp.status == 200
         events = audit.return_value.log_tool_invocation.call_args_list
@@ -178,7 +178,7 @@ class TestAwaitBindingRegressions:
     async def test_cron_retries_only_the_same_unhydrated_binding(self, monkeypatch, change):
         import asyncio
 
-        from kiro_crew.dashboard.cron_inject import _DISMISSED_UNREAD, prefetch_cron_dismissed
+        from aj_crew.dashboard.cron_inject import _DISMISSED_UNREAD, prefetch_cron_dismissed
 
         slot = _ChatSlot("cron-job")
         slot.linked_session_key = "cron:job"
@@ -267,7 +267,7 @@ class TestAwaitBindingRegressions:
             return result
 
         monkeypatch.setattr(asyncio, "to_thread", move_on_later_await)
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             response = await api_chat_slot_source_link_unlink(req)
         assert response.status == 200
         assert sibling.linked_session_key == "dashboard:C"
@@ -297,7 +297,7 @@ class TestAwaitBindingRegressions:
             return result
 
         monkeypatch.setattr(asyncio, "to_thread", move_during_second_read)
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             response = await api_chat_slot_source_link_unlink(req)
         assert response.status == 200
         assert key not in first._dismissed_source_links
@@ -305,7 +305,7 @@ class TestAwaitBindingRegressions:
 
     @pytest.mark.asyncio
     async def test_cron_run_start_recovers_after_transient_metadata_failure(self):
-        from kiro_crew.dashboard.cron_inject import ensure_cron_slot
+        from aj_crew.dashboard.cron_inject import ensure_cron_slot
 
         slot = _ChatSlot("cron-job")
         slot.linked_session_key = "cron:job"
@@ -331,7 +331,7 @@ class TestAwaitBindingRegressions:
 
     @pytest.mark.asyncio
     async def test_success_is_durable_on_the_authorized_transcript(self, tmp_path):
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         primary = _slot()
         key = _identity_key(PR_A)
@@ -339,7 +339,7 @@ class TestAwaitBindingRegressions:
         state = req.app["state"]
         state.conversation_log = ConversationLog(tmp_path / "sessions")
         state.conversation_log.update_metadata("dashboard:s1", {"title": "keep me"})
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             response = await api_chat_slot_source_link_unlink(req)
         assert response.status == 200
         meta, readable = state.conversation_log.get_metadata_status("dashboard:s1")
@@ -380,7 +380,7 @@ class TestAwaitBindingRegressions:
             return result
 
         monkeypatch.setattr(asyncio, "to_thread", move_back)
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             response = await api_chat_slot_source_link_unlink(req)
         assert response.status == 200  # committed first write accepted as terminal
         assert writes == 2  # first write + failed confirm only; NO compensation write
@@ -397,7 +397,7 @@ class TestUnlinkPublicationOutcome:
     ):
         import asyncio
 
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         key = _identity_key(PR_A)
         primary, sibling, joiner = _slot(), _slot(), _slot()
@@ -447,7 +447,7 @@ class TestUnlinkPublicationOutcome:
 
         monkeypatch.setattr(asyncio, "to_thread", drive)
         state.push_slots_update.side_effect = broadcast
-        with patch("kiro_crew.dashboard.chat_handlers.sel") as audit:
+        with patch("aj_crew.dashboard.chat_handlers.sel") as audit:
             # No publication is optimistic anymore: a post-persist broadcast is
             # non-aborting, so the handler always returns a response (never a
             # propagated RuntimeError).
@@ -473,7 +473,7 @@ class TestUnlinkPublicationOutcome:
     async def test_cancel_waits_for_transaction_settlement(self, tmp_path, monkeypatch, boundary):
         import asyncio
 
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         key = _identity_key(PR_A)
         primary, sibling, joiner = _slot(), _slot(), _slot()
@@ -514,7 +514,7 @@ class TestUnlinkPublicationOutcome:
             return result
 
         monkeypatch.setattr(asyncio, "to_thread", held)
-        with patch("kiro_crew.dashboard.chat_handlers.sel") as audit:
+        with patch("aj_crew.dashboard.chat_handlers.sel") as audit:
             task = asyncio.create_task(api_chat_slot_source_link_unlink(req))
             await await_until(entered)
             task.cancel()
@@ -545,7 +545,7 @@ class TestUnlinkPublicationOutcome:
         # projection keep the chip VISIBLE until the write commits.
         import asyncio
 
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         key = _identity_key(PR_A)
         primary = _slot()
@@ -576,7 +576,7 @@ class TestUnlinkPublicationOutcome:
             pushes_show_chip.append(any(link["url"] == PR_A for link in primary._pr_source_links()))
 
         state.push_slots_update.side_effect = broadcast
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             task = asyncio.create_task(api_chat_slot_source_link_unlink(req))
             await await_until(entered)
             # Mid-write: a concurrent projection MUST still show the chip, even
@@ -609,7 +609,7 @@ class TestUnlinkPublicationOutcome:
         # the whole time -- a client never saw it removed.
         import asyncio
 
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         key = _identity_key(PR_A)
         primary = _slot()
@@ -633,7 +633,7 @@ class TestUnlinkPublicationOutcome:
             return await original(func, *args, **kwargs)
 
         monkeypatch.setattr(asyncio, "to_thread", failing)
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             resp = await api_chat_slot_source_link_unlink(req)
         assert resp.status == 409
         assert key not in primary._dismissed_source_links  # rolled back
@@ -655,7 +655,7 @@ class TestUnlinkPublicationOutcome:
         # and resurfaces until a later disk re-read.
         import asyncio
 
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         key_a, key_b = _identity_key(PR_A), _identity_key(PR_B)
         primary = _slot(PR_A, PR_B)
@@ -679,7 +679,7 @@ class TestUnlinkPublicationOutcome:
             return await original(func, *args, **kwargs)
 
         monkeypatch.setattr(asyncio, "to_thread", concurrent)
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             resp = await api_chat_slot_source_link_unlink(req)
         assert resp.status == 200
         # The persisted line holds A∪B, and this request folded B back in, so the
@@ -699,8 +699,8 @@ class TestUnlinkPublicationOutcome:
     ):
         import asyncio
 
-        from kiro_crew.dashboard import chat_handlers
-        from kiro_crew.history import ConversationLog
+        from aj_crew.dashboard import chat_handlers
+        from aj_crew.history import ConversationLog
 
         primary = _slot()
         key = _identity_key(PR_A)
@@ -721,7 +721,7 @@ class TestUnlinkPublicationOutcome:
             return result
 
         monkeypatch.setattr(asyncio, "to_thread", hold_write)
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             caller = asyncio.create_task(api_chat_slot_source_link_unlink(req))
             await await_until(entered)
             caller.cancel()
@@ -744,7 +744,7 @@ class TestUnlinkPublicationOutcome:
     async def test_terminal_audit_failure_cannot_overturn_a_commit(self, tmp_path):
         import asyncio
 
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         primary = _slot()
         key = _identity_key(PR_A)
@@ -753,7 +753,7 @@ class TestUnlinkPublicationOutcome:
         req.app["state"].conversation_log = log
         await asyncio.to_thread(log.update_metadata, "dashboard:s1", {})
         with patch(
-            "kiro_crew.dashboard.chat_handlers.sel", side_effect=OSError("private audit path")
+            "aj_crew.dashboard.chat_handlers.sel", side_effect=OSError("private audit path")
         ):
             response = await api_chat_slot_source_link_unlink(req)
         meta, _ = await asyncio.to_thread(log.get_metadata_status, "dashboard:s1")
@@ -764,7 +764,7 @@ class TestUnlinkPublicationOutcome:
         import ast
         import inspect
 
-        from kiro_crew.dashboard.chat_handlers import _apply_source_link_unlink
+        from aj_crew.dashboard.chat_handlers import _apply_source_link_unlink
 
         tree = ast.parse(inspect.getsource(_apply_source_link_unlink))
         raw = [

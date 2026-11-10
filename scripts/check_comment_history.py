@@ -23,7 +23,7 @@ collapse to the widest one, so a single ``(#4211)`` that two patterns both
 recognise is reported once.
 
 Pragma comments (``# type: ignore``, ``# noqa``, ``# pragma``, ``# fmt:``) are
-exempt, as code-style.md says, and ``src/kiro_crew/_vendor/`` is excluded because
+exempt, as code-style.md says, and ``src/aj_crew/_vendor/`` is excluded because
 vendored third-party code is not ours to rewrite.
 
 ## Diff-scoped, like the brand-name gate
@@ -63,9 +63,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE_ENV = "COMMENT_HISTORY_BASE_REF"
-DEFAULT_TARGETS = ("src/kiro_crew", "test")
+DEFAULT_TARGETS = ("src/aj_crew", "test")
 # Vendored third-party code is not ours to rewrite, and code-style.md exempts it.
-EXCLUDED_DIRS = ("src/kiro_crew/_vendor/",)
+EXCLUDED_DIRS = ("src/aj_crew/_vendor/",)
 # code-style.md exempts pragmas: they are tool directives, not prose.
 PRAGMA_PREFIXES = ("type:", "noqa", "pragma", "fmt:")
 

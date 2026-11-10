@@ -16,8 +16,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from cron_gateway_integration_helpers import _make_gw_for_llm, _make_llm_job, _run_llm_callback
 
-from kiro_crew.llm_helpers import LLMEvent
-from kiro_crew.slack.handler import _build_approval_blocks, _PendingApproval
+from aj_crew.llm_helpers import LLMEvent
+from aj_crew.slack.handler import _build_approval_blocks, _PendingApproval
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -25,7 +25,7 @@ REQUESTER = "cron job de322632, agent doc-writer: backfill-weekly-doc"
 
 
 def _gateway():
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     gw = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gw.sessions = MagicMock()
@@ -62,8 +62,8 @@ def _answered(outcome: str) -> _PendingApproval:
 
 async def _ask(gw, outcome: str = "approved", requester: str = REQUESTER) -> bool:
     with (
-        patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False),
-        patch("kiro_crew.slack.handler._PendingApproval", return_value=_answered(outcome)),
+        patch("aj_crew.slack.handler.is_yolo_mode", return_value=False),
+        patch("aj_crew.slack.handler._PendingApproval", return_value=_answered(outcome)),
     ):
         approve = gw._interactive_approval("cron", requester=requester)
         return await approve(_event(), "")

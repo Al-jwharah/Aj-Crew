@@ -19,8 +19,8 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 
-from kiro_crew import cli as kc_cli
-from kiro_crew import cli_setup
+from aj_crew import cli as kc_cli
+from aj_crew import cli_setup
 
 # The real spawn primitive, captured before any test patches
 # ``subprocess.run`` (the stubs patch the shared module attribute).

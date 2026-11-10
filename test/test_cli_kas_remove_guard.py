@@ -1,4 +1,4 @@
-"""``kirocrew kas remove`` refuses a blank ``--version`` and fails cleanly.
+"""``ajcrew kas remove`` refuses a blank ``--version`` and fails cleanly.
 
 An empty ``--version`` (an unset ``"$VAR"``) read as "no version" would widen
 ``kas remove --version "" --yes`` to EVERY installed engine. Removing every
@@ -20,8 +20,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_kas
-from kiro_crew.agent_sdk import kas_bundle
+from aj_crew import cli_kas
+from aj_crew.agent_sdk import kas_bundle
 
 _VERSIONS = ("0.60.0", "0.61.0")
 

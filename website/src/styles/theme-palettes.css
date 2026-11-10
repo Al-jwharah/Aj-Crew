@@ -102,7 +102,7 @@
   color-scheme:light;
 }
 
-/* ── Amber (original Kiro Crew) ── */
+/* ── Amber (original Aj Crew) ── */
 /* amber-dark inherits from :root (default dark) — only accent overrides */
 [data-theme="amber-dark"]{
   --accent:#ffd230;--accent-fg:#000;--accent-hover:#fbb860;--accent-subtle:rgba(245,158,50,.15);
@@ -548,7 +548,7 @@
   color-scheme:light;
 }
 
-[data-theme="kiro-dark"]{
+[data-theme="aj-dark"]{
   --bg:#19161d;--bg-accent:#1c1922;--bg-elevated:#211d25;--bg-hover:#28242e;
   --card:#211d25;--card-fg:#f2f1f4;--card-hl:rgba(255,255,255,.04);
   --panel:#211d25;--panel-strong:#28242e;
@@ -573,7 +573,7 @@
   --json-key:#b07fff;--json-str:#7ee787;--json-num:#c19aff;--json-bool:#f94359;
   color-scheme:dark;
 }
-[data-theme="kiro-light"]{
+[data-theme="aj-light"]{
   --bg:#ffffff;--bg-accent:#f5f5f5;--bg-elevated:#ffffff;--bg-hover:#f0f0f0;
   --card:#ffffff;--card-fg:#19161d;--card-hl:rgba(0,0,0,.03);
   --panel:#fafafa;--panel-strong:#f5f5f5;

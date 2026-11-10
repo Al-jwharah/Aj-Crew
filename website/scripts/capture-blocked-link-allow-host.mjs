@@ -15,7 +15,7 @@ import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/blocked-link-allow-host'
 const SLOT = 'chat-blocked-link'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -38,7 +38,7 @@ const slots = [
     running: false,
     last_message: 'Both review links are below.',
     messages: 2,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     memory_mode: 'persistent',
     project: PROJECT,
     modified: Math.floor(Date.now() / 1000),

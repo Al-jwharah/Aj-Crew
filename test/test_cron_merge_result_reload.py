@@ -25,8 +25,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.cron import CronJob, CronService, CronStoreBusy
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.cron import CronJob, CronService, CronStoreBusy
+from aj_crew.testing.wait import async_wait_until, await_until
 
 _ADMITTED = SimpleNamespace(admitted=True, reason="")
 _LONG_AGO = 7200.0
@@ -148,7 +148,7 @@ async def test_busy_merge_then_reload_runs_the_job_once(tmp_path, make_job):
     job = await make_job(service)
     store = _BusyStore(service)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             store.scope = "merge"
             await _tick(service, job.id)  # runs; its merge cannot lock the store
             record = _held_record(service, job.id)
@@ -174,7 +174,7 @@ async def test_reload_by_a_reader_keeps_the_record_while_the_tick_is_busy(tmp_pa
     job = await make_job(service)
     store = _BusyStore(service)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             store.scope = "merge"
             await _tick(service, job.id)
             store.scope = "off"
@@ -206,7 +206,7 @@ async def test_reload_during_the_run_keeps_the_record(tmp_path, make_job):
     job = await make_job(service)
     store = _BusyStore(service)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             store.scope = "merge"
             await _tick(service, job.id)
             record = _held_record(service, job.id)
@@ -229,7 +229,7 @@ async def test_stop_persists_a_record_its_merge_could_not_save(tmp_path, make_jo
     job = await make_job(service)
     store = _BusyStore(service)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             store.scope = "merge"
             await _tick(service, job.id)
             record = _held_record(service, job.id)
@@ -260,7 +260,7 @@ async def test_a_failed_result_save_then_a_forced_reload_runs_the_job_once(
     # fsync-ed write), and a reload then reads the disk copy that never got the
     # run while the store is still full. The held record must ride that reload,
     # so the job is not due again and lands once the store recovers.
-    import kiro_crew.atomic_write as atomic_write_module
+    import aj_crew.atomic_write as atomic_write_module
 
     runs: list[str] = []
     service = await _service(tmp_path, runs)
@@ -271,7 +271,7 @@ async def test_a_failed_result_save_then_a_forced_reload_runs_the_job_once(
         raise OSError(28, "No space left on device")
 
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             monkeypatch.setattr(atomic_write_module, "atomic_write", disk_full)
             await _tick(service, job.id)  # runs; its result save fails
             record = _held_record(service, job.id)
@@ -297,7 +297,7 @@ async def test_a_newer_stored_run_wins_over_a_held_record(tmp_path):
     job = await _every_job(service)
     store = _BusyStore(service)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             store.scope = "merge"
             await _tick(service, job.id)
             store.scope = "off"
@@ -351,7 +351,7 @@ async def test_a_manual_run_after_a_busy_merge_leaves_the_record_on_disk(tmp_pat
     store = _BusyStore(service)
     manual = None
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             store.scope = "merge"
             await _tick(service, job.id)  # runs; its merge cannot lock the store
             record = _held_record(service, job.id)
@@ -384,7 +384,7 @@ async def test_a_user_re_enable_after_a_busy_merge_reaches_disk(tmp_path):
     job = await _one_shot(service)
     store = _BusyStore(service)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             store.scope = "merge"
             await _tick(service, job.id)  # fires; its merge cannot lock the store
             record = _held_record(service, job.id)
@@ -428,7 +428,7 @@ async def test_a_user_resume_after_a_busy_merge_reaches_disk(tmp_path):
     job = await _every_job(service)
     store = _BusyStore(service)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             store.scope = "merge"
             await _tick(service, job.id)  # fails and auto-pauses; its merge cannot lock
             record = _held_record(service, job.id)
@@ -468,7 +468,7 @@ async def test_reload_during_the_run_then_a_busy_tick_runs_the_job_once(tmp_path
     job = await make_job(service)
     store = _BusyStore(service)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             store.scope = "merge"
             await _tick(service, job.id)
             record = _held_record(service, job.id)
@@ -500,7 +500,7 @@ async def test_a_one_shot_made_recurring_after_a_busy_merge_keeps_running(tmp_pa
     job = await _one_shot(service)
     store = _BusyStore(service)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             store.scope = "merge"
             await _tick(service, job.id)
             record = _held_record(service, job.id)
@@ -579,7 +579,7 @@ async def test_a_reload_as_the_record_is_held_then_a_busy_tick_runs_the_job_once
 
     service._hold_run_record = hold  # type: ignore[method-assign]
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             store.scope = "merge"
             await _tick(service, job.id)
             record = _held_record(service, job.id)
@@ -626,7 +626,7 @@ async def test_a_reload_after_the_claim_release_finds_the_job_carrying_its_run(t
 
     service._push_refresh = refresh  # type: ignore[assignment]
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             await _tick(service, job.id)
     finally:
         await service.stop()
@@ -645,7 +645,7 @@ async def test_a_reload_never_publishes_copies_without_the_held_record(tmp_path,
     # the list while the reload is still running (the timer's due check on the
     # loop, while a worker thread reloads) must see copies that already carry the
     # held record of a run whose merge the lock refused.
-    import kiro_crew.cron as cron_module
+    import aj_crew.cron as cron_module
 
     runs: list[str] = []
     service = await _service(tmp_path, runs)
@@ -659,7 +659,7 @@ async def test_a_reload_never_publishes_copies_without_the_held_record(tmp_path,
         return real_digest(raw)
 
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             store.scope = "merge"
             await _tick(service, job.id)
             _held_record(service, job.id)

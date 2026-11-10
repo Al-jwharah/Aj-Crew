@@ -29,19 +29,19 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.platform_compat import IS_WINDOWS, SIGKILL, pid_exists, process_start_time
-from kiro_crew.pod import windows as win
-from kiro_crew.pod.config import PodConfig
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
-from kiro_crew.testing.harness import fake_acp_backend_launcher
-from kiro_crew.testing.wait import wait_until
+from aj_crew import platform_compat as pc
+from aj_crew.platform_compat import IS_WINDOWS, SIGKILL, pid_exists, process_start_time
+from aj_crew.pod import windows as win
+from aj_crew.pod.config import PodConfig
+from aj_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.testing.harness import fake_acp_backend_launcher
+from aj_crew.testing.wait import wait_until
 
 # The whole module is win32-only (there is no Task Scheduler to drive elsewhere)
 # AND opt-in: it registers a real scheduled task and boots a real gateway, which
 # no developer should get from a bare `pytest` on a Windows box. The canary job
-# sets KIROCREW_E2E_POD_WINDOWS=1 and asserts the test ran rather than skipped,
-# mirroring KIROCREW_E2E_SCENARIOS for the pod scenario suite. The module is
+# sets AJCREW_E2E_POD_WINDOWS=1 and asserts the test ran rather than skipped,
+# mirroring AJCREW_E2E_SCENARIOS for the pod scenario suite. The module is
 # also on the root conftest's _HOST_SERVICE_EXEC_ALLOWED_MODULES for the same
 # reason, with the rationale recorded there.
 pytestmark = [
@@ -49,8 +49,8 @@ pytestmark = [
         not IS_WINDOWS, reason="drives the real schtasks.exe and boots a real pod on win32"
     ),
     pytest.mark.skipif(
-        os.environ.get("KIROCREW_E2E_POD_WINDOWS") != "1",
-        reason="set KIROCREW_E2E_POD_WINDOWS=1 to register a real Task Scheduler task and boot a pod",
+        os.environ.get("AJCREW_E2E_POD_WINDOWS") != "1",
+        reason="set AJCREW_E2E_POD_WINDOWS=1 to register a real Task Scheduler task and boot a pod",
     ),
 ]
 
@@ -63,13 +63,13 @@ HEALTH_TIMEOUT_SECS = 180.0
 CHECKOUT = Path(__file__).resolve().parent.parent
 
 
-def _venv_kirocrew() -> Path:
-    """The checkout's own ``kirocrew`` entry point -- what a pod actually boots.
+def _venv_ajcrew() -> Path:
+    """The checkout's own ``ajcrew`` entry point -- what a pod actually boots.
 
     A pod is deliberately the WORKTREE's binary, not the control plane's, so an
     absent venv is a missing precondition rather than something to work around.
     """
-    return CHECKOUT / ".venv" / "Scripts" / "kirocrew.exe"
+    return CHECKOUT / ".venv" / "Scripts" / "ajcrew.exe"
 
 
 def _short_plane_root() -> Path:
@@ -97,24 +97,24 @@ def plane(tmp_path_factory) -> dict[str, str]:
     """A hermetic pod plane the developer's real pods cannot collide with.
 
     A per-run unit prefix and a base port above the default band keep it apart.
-    ``KIROCREW_POD_KIRO_BIN`` points at a fake launcher (passed on as
-    ``KIROCREW_KIRO_BIN``), or the session dies with "kiro-cli not found" on a runner.
+    ``AJCREW_POD_KIRO_BIN`` points at a fake launcher (passed on as
+    ``AJCREW_KIRO_BIN``), or the session dies with "kiro-cli not found" on a runner.
     """
     root = _short_plane_root()
     (root / "pods").mkdir(parents=True, exist_ok=True)
     env = {
         **os.environ,
         # The control plane's own data home, pinned under the plane root so the
-        # `kirocrew pod` verbs' `ensure_data_home()` never touches the real one.
-        "KIROCREW_HOME": str(root / "kh"),
-        "KIROCREW_WORKSPACE": str(root / "kw"),
-        "KIROCREW_POD_ROOT": str(root / "pods"),
-        "KIROCREW_POD_ENV_DIR": str(root / "env"),
-        "KIROCREW_POD_ARTIFACTS_DIR": str(root / "artifacts"),
-        "KIROCREW_POD_UNIT_PREFIX": f"kcboot{uuid.uuid4().hex[:6]}",
-        "KIROCREW_POD_BASE_PORT": "8610",
-        "KIROCREW_POD_REPO": str(CHECKOUT),
-        "KIROCREW_POD_KIRO_BIN": str(fake_acp_backend_launcher(root)),
+        # `ajcrew pod` verbs' `ensure_data_home()` never touches the real one.
+        "AJCREW_HOME": str(root / "kh"),
+        "AJCREW_WORKSPACE": str(root / "kw"),
+        "AJCREW_POD_ROOT": str(root / "pods"),
+        "AJCREW_POD_ENV_DIR": str(root / "env"),
+        "AJCREW_POD_ARTIFACTS_DIR": str(root / "artifacts"),
+        "AJCREW_POD_UNIT_PREFIX": f"kcboot{uuid.uuid4().hex[:6]}",
+        "AJCREW_POD_BASE_PORT": "8610",
+        "AJCREW_POD_REPO": str(CHECKOUT),
+        "AJCREW_POD_KIRO_BIN": str(fake_acp_backend_launcher(root)),
     }
     try:
         yield env
@@ -128,7 +128,7 @@ def plane(tmp_path_factory) -> dict[str, str]:
         #
         # The unit prefix is unique to this fixture, so anything Task Scheduler
         # reports under it belongs here and nothing else can be caught by the sweep.
-        prefix = env["KIROCREW_POD_UNIT_PREFIX"]
+        prefix = env["AJCREW_POD_UNIT_PREFIX"]
         for pod_name in _plane_pod_names(env):
             with contextlib.suppress(subprocess.TimeoutExpired, OSError):
                 _pod(env, "down", pod_name, timeout=120)
@@ -151,7 +151,7 @@ def served_dist():
     CI places a one-file ``static/dist`` stand-in before pytest. The test writes
     nothing under ``src/``: a hard timeout would skip any cleanup it promised.
     """
-    index = CHECKOUT / "src" / "kiro_crew" / "static" / "dist" / "index.html"
+    index = CHECKOUT / "src" / "aj_crew" / "static" / "dist" / "index.html"
     if not index.exists():
         pytest.fail(
             f"no served SPA bundle at {index}; build the SPA or place a one-file "
@@ -199,7 +199,7 @@ def _tasks_matching(env: dict[str, str], prefix: str) -> list[str]:
         return [f"<schtasks /Query failed, residue unverified for {prefix}>"]
     cfg = _load_cfg(env)
     names = set(_plane_pod_names(env))
-    pod_root = Path(env["KIROCREW_POD_ROOT"])
+    pod_root = Path(env["AJCREW_POD_ROOT"])
     if pod_root.is_dir():
         names |= {child.name for child in pod_root.iterdir() if child.is_dir()}
     return [win.task_name(cfg, pod) for pod in sorted(names) if win.task_exists(cfg, pod)]
@@ -252,7 +252,7 @@ def _force_clean_plane(
     pinned = _processes_executing_under(root)
     cfg = _load_cfg(env)
     names = set(_plane_pod_names(env))
-    pod_root = Path(env["KIROCREW_POD_ROOT"])
+    pod_root = Path(env["AJCREW_POD_ROOT"])
     if pod_root.is_dir():
         names |= {child.name for child in pod_root.iterdir() if child.is_dir()}
     tasks = sorted(
@@ -274,23 +274,23 @@ def _force_clean_plane(
 
 
 def _pod(env: dict[str, str], *args: str, timeout: int = 300) -> subprocess.CompletedProcess:
-    """Run one ``kirocrew pod`` verb through the CONTROL plane interpreter.
+    """Run one ``ajcrew pod`` verb through the CONTROL plane interpreter.
 
     The control plane is deliberately this test's own interpreter rather than the
-    worktree's venv: that is the real split (a stable global ``kirocrew`` drives
+    worktree's venv: that is the real split (a stable global ``ajcrew`` drives
     pods whose payload is the worktree's build), and it keeps a broken worktree
     from breaking the verbs that would diagnose it.
     """
     return subprocess.run(
-        [sys.executable, "-m", "kiro_crew", "pod", *args],
+        [sys.executable, "-m", "aj_crew", "pod", *args],
         capture_output=True,
         timeout=timeout,
         check=False,
         env=env,
         # The plane root, not the checkout: the CLI resolves the worktree through
-        # KIROCREW_POD_REPO, and any cwd-relative write then lands under the root
+        # AJCREW_POD_REPO, and any cwd-relative write then lands under the root
         # the `plane` fixture reclaims rather than in the repository.
-        cwd=str(Path(env["KIROCREW_POD_ROOT"]).parent),
+        cwd=str(Path(env["AJCREW_POD_ROOT"]).parent),
         **UTF8_TEXT,
     )
 
@@ -317,22 +317,22 @@ def test_a_real_pod_boots_under_task_scheduler_and_leaves_nothing_behind(plane, 
 
     # Precondition 2: a pod boots the WORKTREE's own binary, so the checkout has
     # to have been built. The CI step builds it explicitly before this runs.
-    if not _venv_kirocrew().exists():
+    if not _venv_ajcrew().exists():
         pytest.fail(
-            f"no {_venv_kirocrew()} -- a pod boots the worktree's own kirocrew, so "
+            f"no {_venv_ajcrew()} -- a pod boots the worktree's own ajcrew, so "
             "the checkout must have a built venv. Create it with "
             "`python -m venv .venv` plus an editable install before this test."
         )
 
     # A pod is named after a git WORKTREE: `pod up <name>` resolves the checkout
-    # through `git worktree list` on KIROCREW_POD_REPO and matches the basename
+    # through `git worktree list` on AJCREW_POD_REPO and matches the basename
     # (pod/runtime.py resolve_checkout). The checkout itself is the main
     # worktree, so its own basename is the one name guaranteed to resolve on a
     # fresh runner. A made-up name failed here on the first Windows run with
     # "no git worktree 'boot6e85ff'". The plane env above keeps the task name,
     # root and ports unique, so the fixed pod name collides with nothing.
     name = CHECKOUT.name
-    cfg_env = {**plane, "KIROCREW_POD_BIN": str(_venv_kirocrew())}
+    cfg_env = {**plane, "AJCREW_POD_BIN": str(_venv_ajcrew())}
     cfg = _load_cfg(cfg_env)
 
     # `up` sits INSIDE the teardown guard: the task is registered and the
@@ -440,8 +440,8 @@ def test_a_real_pod_boots_under_task_scheduler_and_leaves_nothing_behind(plane, 
 
 def _load_cfg(env: dict[str, str]) -> PodConfig:
     """A PodConfig for the plane *env* describes, without mutating this process."""
-    saved = {k: os.environ.get(k) for k in env if k.startswith("KIROCREW_POD_")}
-    os.environ.update({k: v for k, v in env.items() if k.startswith("KIROCREW_POD_")})
+    saved = {k: os.environ.get(k) for k in env if k.startswith("AJCREW_POD_")}
+    os.environ.update({k: v for k, v in env.items() if k.startswith("AJCREW_POD_")})
     try:
         return PodConfig.load()
     finally:
@@ -457,9 +457,9 @@ def cfg(tmp_path, monkeypatch) -> PodConfig:
     """A throwaway pod plane under tmp_path for the direct Task Scheduler tests."""
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-    monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods-env"))
-    monkeypatch.setenv("KIROCREW_POD_ARTIFACTS_DIR", str(tmp_path / "artifacts"))
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+    monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods-env"))
+    monkeypatch.setenv("AJCREW_POD_ARTIFACTS_DIR", str(tmp_path / "artifacts"))
     c = PodConfig.load()
     c.pods_dir.mkdir(parents=True, exist_ok=True)
     return c

@@ -67,7 +67,7 @@ stays where it is and gains one fact: the run-as account of the runtime.
 ### What Shared Crew already gives
 
 Shared Crew is on main (`docs/system-specs/modules/shared-crew.md`, checked at
-`cc669a83a5`, 2026-11-01), behind `KIROCREW_SHARED_CREW_PREVIEW=1`. This RFC
+`cc669a83a5`, 2026-11-01), behind `AJCREW_SHARED_CREW_PREVIEW=1`. This RFC
 builds on it and does not redo any of it.
 
 | Need | Shared Crew today | This RFC |
@@ -390,7 +390,7 @@ agent.
 
 The service-account deployment needs, beyond the file: the gateway as a system
 unit with `User=<service account>`, one sudoers rule (or a root socket-activated
-helper) for the run-as step, and a guest account. `kirocrew doctor` checks each.
+helper) for the run-as step, and a guest account. `ajcrew doctor` checks each.
 
 ## 10. Phases
 

@@ -10,7 +10,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_app_with_agent_routes, _make_state
 
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 # ── Default view uses in-memory (not stale disk) ──
 
@@ -19,7 +19,7 @@ class TestInMemoryAuthority:
     @pytest.mark.asyncio
     async def test_default_view_shows_current_messages(self, tmp_path, monkeypatch):
         """Default slot detail should return in-memory messages, not stale disk."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         # Stale disk data
@@ -43,7 +43,7 @@ class TestInMemoryAuthority:
     @pytest.mark.asyncio
     async def test_full_load_prepends_older_disk_messages(self, tmp_path, monkeypatch):
         """No-limit path prepends older disk messages when restore truncated."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         # Simulate: 8 messages on disk total (5 older + 3 recent)
@@ -70,7 +70,7 @@ class TestInMemoryAuthority:
     @pytest.mark.asyncio
     async def test_legacy_pagination_with_limit(self, tmp_path, monkeypatch):
         """Legacy limit-based pagination reads from chained disk."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         for i in range(10):
@@ -106,8 +106,8 @@ class TestInMemoryAuthority:
         the full history. Saving a new turn must preserve the frozen prefix
         byte-for-byte — no overwrite, no truncation, no archive.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
         state = _make_state(tmp_path)
         log = state.conversation_log
@@ -148,12 +148,12 @@ class TestInMemoryAuthority:
         Windows' ~15ms clock tick can give a burst of appends one identical ts; the save
         must still match window lines one-for-one, not as phantom foreign appends.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         # Freeze history.py's clock so every on-disk append shares ONE ts,
         # reproducing the coarse-clock collision deterministically on any OS.
         import datetime as _dt
 
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
         _FROZEN = _dt.datetime(2026, 7, 25, 0, 0, 0, tzinfo=_dt.timezone.utc)
 
@@ -162,7 +162,7 @@ class TestInMemoryAuthority:
             def now(cls, tz=None):
                 return _FROZEN
 
-        monkeypatch.setattr("kiro_crew.history.datetime", _FrozenDateTime)
+        monkeypatch.setattr("aj_crew.history.datetime", _FrozenDateTime)
 
         state = _make_state(tmp_path)
         log = state.conversation_log
@@ -199,10 +199,10 @@ class TestInMemoryAuthority:
         A ts-only match would take ``X`` as ``B``'s edit, so the guard keeps ``X`` and
         accepts a rare stale duplicate over data loss.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         import json as _json
 
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
         state = _make_state(tmp_path)
         log = state.conversation_log
@@ -242,8 +242,8 @@ class TestInMemoryAuthority:
 
     def test_append_only_no_duplicate_on_resave(self, tmp_path, monkeypatch):
         """Re-saving without new messages must not duplicate the tail on disk."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
         state = _make_state(tmp_path)
         log = state.conversation_log
@@ -268,8 +268,8 @@ class TestInMemoryAuthority:
 
     def test_save_steady_state_does_not_archive(self, tmp_path, monkeypatch):
         """A normal append (slot is a superset of disk) archives nothing."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s5")
@@ -289,8 +289,8 @@ class TestInMemoryAuthority:
         must not get merged into this slot's history. Append-only touches a
         single session file, so a sibling file is left completely untouched.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
         state = _make_state(tmp_path)
         log = state.conversation_log
@@ -323,8 +323,8 @@ class TestInMemoryAuthority:
 
     def test_rewrite_path_archives_dropped_tail(self, tmp_path, monkeypatch):
         """An explicit snapshot save (rewrite, e.g. rewind) archives dropped msgs."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
         state = _make_state(tmp_path)
         log = state.conversation_log
@@ -355,8 +355,8 @@ class TestInMemoryAuthority:
         that truncates the window must leave the frozen prefix byte-for-byte and
         archive only the dropped window tail — never the older history.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
         state = _make_state(tmp_path)
         log = state.conversation_log
@@ -392,10 +392,10 @@ class TestInMemoryAuthority:
         The 5s flush persists a window ending in the stop_event, then _flush_segment
         moves the stop_event after the finalized reply; that reply must reach disk.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         import json
 
-        from kiro_crew.dashboard.chat import _flush_segment, _save_slot_to_history
+        from aj_crew.dashboard.chat import _flush_segment, _save_slot_to_history
 
         state = _make_state(tmp_path)
         log = state.conversation_log
@@ -433,10 +433,10 @@ class TestInMemoryAuthority:
         window must carry the resolution to disk — the old append-only model
         only wrote new tail messages and dropped the in-place edit.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         import json
 
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
         state = _make_state(tmp_path)
         log = state.conversation_log
@@ -475,9 +475,9 @@ class TestInMemoryAuthority:
         takes the archive-safe rewrite path — the dropped tail is archived, not
         silently overwritten, and the kept prefix is correct on disk.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard import chat_persistence
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard import chat_persistence
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
         state = _make_state(tmp_path)
         log = state.conversation_log
@@ -538,7 +538,7 @@ class TestSessionReload:
 
     @pytest.mark.asyncio
     async def test_reload_unknown_slot_404(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         async with TestClient(TestServer(_make_app_with_agent_routes(state))) as client:
             resp = await client.post("/api/chat/slots/nope/reload")
@@ -547,7 +547,7 @@ class TestSessionReload:
     @pytest.mark.asyncio
     async def test_reload_resets_notices_and_respawns(self, tmp_path, monkeypatch):
         """Happy path: atomic reset, feed notice tagged session_reload, eager resume."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         state.sessions.get_provider = MagicMock(return_value=self._idle_provider())
@@ -555,7 +555,7 @@ class TestSessionReload:
         state.sessions.has_session = MagicMock(return_value=False)
         # Eager spawn off: nothing is scheduled.
         eager = MagicMock(return_value=None)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
 
         async with TestClient(TestServer(_make_app_with_agent_routes(state))) as client:
             resp = await client.post("/api/chat/slots/s1/reload")
@@ -598,14 +598,14 @@ class TestSessionReload:
     async def test_the_respawn_ending_closes_the_reload_with_one_row(
         self, tmp_path, monkeypatch, live, running, failure, expected
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         state.sessions.get_provider = MagicMock(return_value=self._idle_provider())
         state.sessions.reset = AsyncMock(return_value=True)
         state.sessions.has_session = MagicMock(return_value=False)
         eager = MagicMock(return_value=MagicMock(name="respawn"))
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
 
         async with TestClient(TestServer(_make_app_with_agent_routes(state))) as client:
             resp = await client.post("/api/chat/slots/s1/reload")
@@ -641,13 +641,13 @@ class TestSessionReload:
 
     @pytest.mark.asyncio
     async def test_a_replaced_slot_gets_no_outcome_row(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         state.sessions.get_provider = MagicMock(return_value=self._idle_provider())
         state.sessions.reset = AsyncMock(return_value=True)
         eager = MagicMock(return_value=MagicMock(name="respawn"))
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
 
         async with TestClient(TestServer(_make_app_with_agent_routes(state))) as client:
             resp = await client.post("/api/chat/slots/s1/reload")
@@ -681,14 +681,14 @@ class TestSessionReload:
     async def test_the_closing_row_never_lands_after_a_later_message(
         self, tmp_path, monkeypatch, written, failure, expected
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         state.sessions.get_provider = MagicMock(return_value=self._idle_provider())
         state.sessions.reset = AsyncMock(return_value=True)
         state.sessions.has_session = MagicMock(return_value=False)
         eager = MagicMock(return_value=MagicMock(name="respawn"))
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
 
         async with TestClient(TestServer(_make_app_with_agent_routes(state))) as client:
             resp = await client.post("/api/chat/slots/s1/reload")
@@ -719,7 +719,7 @@ class TestSessionReload:
     @pytest.mark.asyncio
     async def test_reload_refused_while_turn_in_flight(self, tmp_path, monkeypatch):
         """409 with no teardown, no notice, no eager spawn while a turn runs."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         busy = MagicMock()
@@ -727,7 +727,7 @@ class TestSessionReload:
         state.sessions.get_provider = MagicMock(return_value=busy)
         state.sessions.reset = AsyncMock()
         eager = MagicMock(return_value=None)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
         before = len(slot.messages)
 
         async with TestClient(TestServer(_make_app_with_agent_routes(state))) as client:
@@ -746,7 +746,7 @@ class TestSessionReload:
         busy); the re-check of has_active_turn is what disambiguates. Nothing
         may be appended or respawned for the busy case.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         idle = self._idle_provider()
@@ -757,7 +757,7 @@ class TestSessionReload:
         state.sessions.get_provider = MagicMock(side_effect=[idle, idle, busy])
         state.sessions.reset = AsyncMock(return_value=False)
         eager = MagicMock(return_value=None)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
         before = len(slot.messages)
 
         async with TestClient(TestServer(_make_app_with_agent_routes(state))) as client:
@@ -776,13 +776,13 @@ class TestSessionReload:
         prevent. The retry succeeds here; a second decline is the 409 case
         (covered below).
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         state.sessions.get_provider = MagicMock(return_value=self._idle_provider())
         state.sessions.reset = AsyncMock(side_effect=[False, True])
         eager = MagicMock(return_value=None)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
 
         async with TestClient(TestServer(_make_app_with_agent_routes(state))) as client:
             resp = await client.post("/api/chat/slots/s1/reload")
@@ -798,13 +798,13 @@ class TestSessionReload:
     async def test_reload_double_decline_is_turn_in_flight(self, tmp_path, monkeypatch):
         """Two consecutive declines with a live session mean a genuinely racing
         turn: 409, no notice, no respawn -- never a false success."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         state.sessions.get_provider = MagicMock(return_value=self._idle_provider())
         state.sessions.reset = AsyncMock(return_value=False)
         eager = MagicMock(return_value=None)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
         before = len(slot.messages)
 
         async with TestClient(TestServer(_make_app_with_agent_routes(state))) as client:
@@ -828,7 +828,7 @@ class TestSessionReload:
         import re
         from pathlib import Path
 
-        from kiro_crew.dashboard.system_notices import SYSTEM_NOTICE_KINDS
+        from aj_crew.dashboard.system_notices import SYSTEM_NOTICE_KINDS
 
         ts_path = Path(__file__).resolve().parents[1] / "website/src/lib/systemNotice.ts"
         ts_src = ts_path.read_text(encoding="utf-8")
@@ -845,13 +845,13 @@ class TestSessionReload:
         this must not be an error; reloaded=False tells the caller no process
         was actually torn down.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         state.sessions.get_provider = MagicMock(return_value=None)
         state.sessions.reset = AsyncMock(return_value=False)
         eager = MagicMock(return_value=None)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
 
         async with TestClient(TestServer(_make_app_with_agent_routes(state))) as client:
             resp = await client.post("/api/chat/slots/s1/reload")
@@ -870,13 +870,13 @@ class TestSessionReload:
         unblock it would survive the reset and hold its MCP worker until
         timeout with no agent left to receive the answer.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("s1")
         state.sessions.get_provider = MagicMock(return_value=self._idle_provider())
         state.sessions.reset = AsyncMock(return_value=True)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.schedule_eager_spawn",
+            "aj_crew.dashboard.chat_handlers.schedule_eager_spawn",
             MagicMock(return_value=None),
         )
         cancelled = MagicMock(return_value=1)
@@ -896,7 +896,7 @@ class TestSessionReload:
         allowed /api/chat/* could reset a foreign slot's process and cancel its
         pending waits.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot._app = "other-app"
@@ -922,14 +922,14 @@ class TestSessionReload:
         dashboard-prefixed key — otherwise reload reports success while the
         live process keeps its stale config.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.linked_session_key = "slack:123.456"
         state.sessions.get_provider = MagicMock(return_value=None)
         state.sessions.reset = AsyncMock(return_value=True)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.schedule_eager_spawn",
+            "aj_crew.dashboard.chat_handlers.schedule_eager_spawn",
             MagicMock(return_value=None),
         )
 
@@ -944,7 +944,7 @@ class TestSessionReload:
         """409 while children are running/queued/delivering — the reset would
         tear down the shared subagent runtime and discard their work.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         state.sessions.get_provider = MagicMock(return_value=self._idle_provider())
@@ -953,7 +953,7 @@ class TestSessionReload:
         state.subagents.running_agents_for = MagicMock(return_value=["child-1"])
         state.subagents._queued_depth = MagicMock(return_value=0)
         eager = MagicMock(return_value=None)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.schedule_eager_spawn", eager)
         before = len(slot.messages)
 
         async with TestClient(TestServer(_make_app_with_agent_routes(state))) as client:
@@ -969,7 +969,7 @@ class TestSessionReload:
     @pytest.mark.asyncio
     async def test_reload_fails_closed_on_unreadable_children_probe(self, tmp_path, monkeypatch):
         """A None running-probe is the probe FAILING, not zero children."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("s1")
         state.sessions.get_provider = MagicMock(return_value=None)
@@ -995,7 +995,7 @@ class TestCloseBroadcastDurability:
     @staticmethod
     def _instrument(state, slot, monkeypatch, frames=None):
         """Record close steps in call order; append each frame's slot keys."""
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         calls: list[str] = []
 
@@ -1064,8 +1064,8 @@ class TestCloseBroadcastDurability:
         backend re-offers a folder suggestion at most once per slot, so a prune
         on a close that then rolls back loses them permanently.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard import chat_handlers
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard import chat_handlers
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
@@ -1095,7 +1095,7 @@ class TestCloseBroadcastDurability:
     @pytest.mark.asyncio
     async def test_broadcast_precedes_the_session_teardown(self, tmp_path, monkeypatch):
         """On success, broadcast after the save but before the slow teardown."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hello")
@@ -1118,7 +1118,7 @@ class TestCloseBroadcastDurability:
     @pytest.mark.asyncio
     async def test_broadcast_beats_a_slow_session_teardown(self, tmp_path, monkeypatch):
         """A session teardown that never returns must not hold the broadcast."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hello")
@@ -1165,7 +1165,7 @@ class TestCloseBroadcastDurability:
         shared subagent runtime which outlives the turn — the turn semaphore, the
         sweep's only busy guard, is free while subagents run.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hello")

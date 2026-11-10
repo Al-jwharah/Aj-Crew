@@ -157,7 +157,7 @@ fails on connection refused.
 `python setup.py test_e2e` boots a real gateway wired to a packaged fake ACP
 backend and shells this suite against it, entirely offline. That is the harness to
 match when you are debugging a CI-only failure. Offline includes the app store:
-the harness gateway runs with `KIROCREW_SKIP_APP_STORE_FETCH=1`, so Discover
+the harness gateway runs with `AJCREW_SKIP_APP_STORE_FETCH=1`, so Discover
 renders the bundled seed, not the live catalog, and a spec's verdict never waits
 on the CDN. A gateway you start by hand for a local run does not set it.
 
@@ -187,14 +187,14 @@ that counts dispatches) and `window.__kcSelWrap` (a wrapper around every
 build defines `VITE_KC_PERF`, so other builds drop both seams.
 
 CI runs the same command in the `bench-render` job when a diff touches
-`website/src/**` or the benchmark's own files, on the `kirocrew-linux-4-core`
+`website/src/**` or the benchmark's own files, on the `ajcrew-linux-4-core`
 runner the budgets were measured on, and uploads the JSON report as the
 `bench-render-report` artifact. The job is report-only for now
 (`continue-on-error`): an overrun reddens its own check but blocks no merge.
 Take new budgets from that report's per-run
 counts, not from a local run. Commits and renders depend on the host: a slower
 one batches more frames per commit and counts fewer, a faster one counts more.
-So the kirocrew-prepare-pr gate floor, which runs the benchmark when the diff
+So the ajcrew-prepare-pr gate floor, which runs the benchmark when the diff
 touches the same inputs, passes `--fail-on dispatches,selectorCalls`. Those two
 follow the frames sent, so they mean the same on any host; commits and renders
 are printed as report only. A counter listed in a scenario's
@@ -426,7 +426,7 @@ says why): run `python -m pytest -n0 test/test_flake_pattern_ratchet.py` before 
   the log, and a run of all its tests that emits none prints an
   `[act-warnings] ... emitted none` line so you can remove it from the list. Any other
   file prints its warnings as usual plus an `[act-warnings] <file>: N act() warning(s)`
-  line on stderr at its end. `KIROCREW_ACT_STRICT=1` also fails the test that emitted
+  line on stderr at its end. `AJCREW_ACT_STRICT=1` also fails the test that emitted
   it. The list only shrinks: never add a file to quiet a new warning.
 - **Each test undoes the fake timers and storage writes it leaves.** `integration/setup.ts`
   undoes them when the test finishes: fake timers the test installed go back to real

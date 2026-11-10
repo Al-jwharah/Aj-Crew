@@ -1,5 +1,5 @@
 /**
- * Dev Fleet — worktree management page ported to the Kiro Crew SPA.
+ * Dev Fleet — worktree management page ported to the Aj Crew SPA.
  * Manages git worktrees, pod instances, syncing, pruning, and rebasing.
  *
  * This file is the page's import path. It keeps the page's state, effects and
@@ -989,12 +989,12 @@ export default function DevFleetPage() {
       undoing
         ? canRestart
           ? i18nT('pages.devFleetPage.switches_the_live_dashboard_back_to_name_and_restarts', { name: w.name })
-          : i18nT('pages.devFleetPage.stages_name_as_the_live_target_to_finish_the_undo', { name: w.name, cmd: fleet?.manual_restart || 'kirocrew restart' })
+          : i18nT('pages.devFleetPage.stages_name_as_the_live_target_to_finish_the_undo', { name: w.name, cmd: fleet?.manual_restart || 'ajcrew restart' })
         : cancellingStage
           ? i18nT('pages.devFleetPage.keeps_name_the_live_target_and_discards_the_stag', { name: w.name, staged: stagedWorktree?.name ?? '' })
           : canRestart
             ? i18nT('pages.devFleetPage.swaps_the_code_behind_the_live_dashboard_to_this')
-            : i18nT('pages.devFleetPage.stages_the_code_behind_the_live_dashboard_manual', { cmd: fleet?.manual_restart || 'kirocrew restart' }),
+            : i18nT('pages.devFleetPage.stages_the_code_behind_the_live_dashboard_manual', { cmd: fleet?.manual_restart || 'ajcrew restart' }),
       undoing
         ? { confirmLabel: i18nT('pages.devFleetPage.undo_to_name', { name: w.name }) }
         : cancellingStage
@@ -1115,7 +1115,7 @@ export default function DevFleetPage() {
   // bundle wrong, so reading those first sends you down the wrong trail.
   const servingReason = fleet?.serving_install_reason || null
   const isDiscoveryError = !fleetError && !!fleet?.error
-  // Its own state, not an error: the backend found no Kiro Crew checkout to
+  // Its own state, not an error: the backend found no Aj Crew checkout to
   // manage, which on a first run is simply a question nobody has answered yet.
   const needsSetup = !fleetError && !!fleet?.needs_setup
   // Either way the fleet is UNKNOWN, so the same chrome is wrong: counts would
@@ -1243,8 +1243,8 @@ export default function DevFleetPage() {
                 persistent marker an operator who dismissed or missed the toast
                 reads the old running image as the new one. */}
             {w.is_staged ? <Badge variant="warn" className="text-[10px] px-1.5 py-0" title={stagedWorktree?.name === w.name
-              ? i18nT('pages.devFleetPage.cutover_staged_run_cmd_to_finish_or_cancel', { cmd: fleet?.manual_restart || 'kirocrew restart' })
-              : i18nT('pages.devFleetPage.cutover_staged_run_the_restart_command_to_finish', { cmd: fleet?.manual_restart || 'kirocrew restart' })}>{i18nT('pages.devFleetPage.restart_pending')}</Badge> : null}
+              ? i18nT('pages.devFleetPage.cutover_staged_run_cmd_to_finish_or_cancel', { cmd: fleet?.manual_restart || 'ajcrew restart' })
+              : i18nT('pages.devFleetPage.cutover_staged_run_the_restart_command_to_finish', { cmd: fleet?.manual_restart || 'ajcrew restart' })}>{i18nT('pages.devFleetPage.restart_pending')}</Badge> : null}
             {w.summary ? <span title={w.summary} style={{ fontSize: 11.5, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: '0 1 auto' } as CSSProperties}>{w.summary}</span> : null}
             {/* Inline system readout for a running pod: memory vs ceiling
                 (colour-shifting near MemoryMax), CPU%, task count. Absent

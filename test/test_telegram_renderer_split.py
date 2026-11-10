@@ -17,13 +17,13 @@ from telegram_helpers import _drop_live_config_snapshot  # noqa: F401
 from telegram_helpers import FakeClient
 
 from conftest import CREDENTIAL_STRADDLE_SHAPES
-from kiro_crew.messaging.display_safety import (
+from aj_crew.messaging.display_safety import (
     canonicalize_display,
     joins_to_a_credential,
     severs_a_credential,
 )
-from kiro_crew.telegram.client import TELEGRAM_MAX_TEXT
-from kiro_crew.telegram.renderer import (
+from aj_crew.telegram.client import TELEGRAM_MAX_TEXT
+from aj_crew.telegram.renderer import (
     TelegramRenderer,
     _default_redactor,
     _delivered_form,
@@ -35,7 +35,7 @@ from kiro_crew.telegram.renderer import (
     _split_table_rows,
     safe_split_offset,
 )
-from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES
+from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
 
 
 class TestTableAwareSplitting:

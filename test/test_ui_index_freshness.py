@@ -37,11 +37,11 @@ def _load():
 mod = _load()
 
 OLD_STALE = (
-    "gen-ui-index: src/kiro_crew/docs/ui-index.generated.json is stale. "
+    "gen-ui-index: src/aj_crew/docs/ui-index.generated.json is stale. "
     "Run `npm run gen:ui` in website/ and commit the result.\n"
 )
 NEW_STALE = (
-    "gen-ui-index: src/kiro_crew/docs/ui-index.generated.json is stale; "
+    "gen-ui-index: src/aj_crew/docs/ui-index.generated.json is stale; "
     "website/src/uiLocations/guidePlans.gen.ts is stale. Run `npm run gen:ui` in website/ and commit the result.\n"
 )
 PROBLEM = "gen-ui-index: 2 problem(s); the index was not written:\n  a\n  b\n"

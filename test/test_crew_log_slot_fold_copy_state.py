@@ -24,20 +24,20 @@ from typing import Any, Callable
 
 import pytest
 
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import (
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import (
     projection_dashboard,
     projection_ledger,
     projection_radar,
     projection_work,
 )
-from kiro_crew.crew_log.entry_types_ledgers import (
+from aj_crew.crew_log.entry_types_ledgers import (
     RADAR_EVENT_KINDS,
     RADAR_PHASES,
     RADAR_SKIP_SCOPES,
 )
-from kiro_crew.crew_log.projection_slot_memo import _Ordinal, _SlotFold
-from kiro_crew.crew_log.schema import Entry
+from aj_crew.crew_log.projection_slot_memo import _Ordinal, _SlotFold
+from aj_crew.crew_log.schema import Entry
 
 SLOT = "dashboard:3"
 
@@ -324,12 +324,12 @@ def test_the_work_sequences_reach_every_container_the_step_edits(monkeypatch):
 @pytest.fixture
 def _home(tmp_path, _floor_monkeypatch):
     """Own data home, crew log on, no eager folder and no warm fold carried over."""
-    from kiro_crew.crew_log import eager as crew_log_eager
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import eager as crew_log_eager
+    from aj_crew.crew_log import emit as crew_log_emit
 
     monkeypatch = _floor_monkeypatch
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     monkeypatch.setattr(crew_log_eager, "note_commit", lambda *a, **k: None)
     crew_log_emit.reset_caches()
     crew_log_eager.stop_for_tests()
@@ -376,13 +376,13 @@ def _whole_state_copies(monkeypatch, call: Callable[[], Any]) -> int:
 
 def test_a_warm_read_after_one_append_copies_no_whole_state_at_any_size(_home):
     """Row 2: one entry onto a warm cell. Before: one whole-state deep copy per read."""
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     counts = []
     for size in (50, 200, 400):
         unit = f"acp-copy-cost-{size}"
-        handle = CrewLog.create(lg.KIND_SESSION, unit, owner="o", agent="kirocrew", slot=SLOT)
+        handle = CrewLog.create(lg.KIND_SESSION, unit, owner="o", agent="ajcrew", slot=SLOT)
         _append_creates(handle, unit, size)
         crew_log.read_slot_projection(SLOT, "work")
         _append_creates(handle, f"{unit}-more", 1)
@@ -398,13 +398,13 @@ def test_a_restart_tail_copies_no_whole_state_per_entry(_home):
 
     Before: one whole-state deep copy per tail entry ([30, 100, 200] here).
     """
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     counts = []
     for tail in (30, 100, 200):
         unit = f"acp-copy-tail-{tail}"
-        handle = CrewLog.create(lg.KIND_SESSION, unit, owner="o", agent="kirocrew", slot=SLOT)
+        handle = CrewLog.create(lg.KIND_SESSION, unit, owner="o", agent="ajcrew", slot=SLOT)
         # Enough for the first read to write a savepoint; the tail stays under the
         # rewrite threshold, so the restart resumes it (repro row 4's shape).
         _append_creates(handle, unit, 300)

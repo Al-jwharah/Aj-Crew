@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.imessage.transport_dispatch (IMessageDispatcher)."""
+"""Tests for aj_crew.imessage.transport_dispatch (IMessageDispatcher)."""
 
 from __future__ import annotations
 
@@ -7,10 +7,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.imessage.client import IMessageInbound
-from kiro_crew.imessage.transport_dispatch import IMessageDispatcher
-from kiro_crew.messaging.commands import COMPACT_ACCOUNT_CHANGED_TEXT
-from kiro_crew.session_allocation import SessionClosingError
+from aj_crew.imessage.client import IMessageInbound
+from aj_crew.imessage.transport_dispatch import IMessageDispatcher
+from aj_crew.messaging.commands import COMPACT_ACCOUNT_CHANGED_TEXT
+from aj_crew.session_allocation import SessionClosingError
 
 HANDLE = "+15551234567"
 
@@ -129,9 +129,9 @@ class FakeSessions:
 
 
 def _cfg() -> Any:
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    return KiroCrewConfig()
+    return AjCrewConfig()
 
 
 def _dispatcher(
@@ -168,7 +168,7 @@ def _permit(monkeypatch: pytest.MonkeyPatch) -> None:
     async def _yes(_channel: str, **_kw: Any) -> bool:
         return True
 
-    monkeypatch.setattr("kiro_crew.imessage.transport_dispatch.inbound_permitted", _yes)
+    monkeypatch.setattr("aj_crew.imessage.transport_dispatch.inbound_permitted", _yes)
 
 
 class TestCommandIntercept:
@@ -212,7 +212,7 @@ class TestCommandIntercept:
         async def _no(_channel: str, **_kw: Any) -> bool:
             return False
 
-        monkeypatch.setattr("kiro_crew.imessage.transport_dispatch.inbound_permitted", _no)
+        monkeypatch.setattr("aj_crew.imessage.transport_dispatch.inbound_permitted", _no)
         dispatcher, client, _ = _dispatcher()
         await dispatcher.handle_message(_inbound("/help"))
         assert client.sent == []
@@ -240,14 +240,14 @@ class TestStop:
 
     def test_only_the_whole_message_is_a_stop(self) -> None:
         # "/cancel my 3pm meeting" is an instruction for the agent, not a stop.
-        from kiro_crew.imessage.commands import parse_command
+        from aj_crew.imessage.commands import parse_command
 
         assert parse_command("  /STOP ") == "stop"
         assert parse_command("/cancel my 3pm meeting") is None
 
     @pytest.mark.asyncio
     async def test_stop_during_automatic_compaction_is_declined_and_armed(self) -> None:
-        from kiro_crew.session_lifecycle import STOP_DECLINED_COMPACTING_TEXT, consume_stop_declined
+        from aj_crew.session_lifecycle import STOP_DECLINED_COMPACTING_TEXT, consume_stop_declined
 
         dispatcher, client, sessions = _dispatcher()
         key = dispatcher._session_key(HANDLE)
@@ -269,13 +269,13 @@ class TestStop:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """iMessage has no buttons: a typed /stop is its only off-switch."""
-        from kiro_crew.messaging import dispatch
+        from aj_crew.messaging import dispatch
 
         async def _denied(_channel: str) -> bool:
             return False
 
         monkeypatch.setattr(
-            "kiro_crew.imessage.transport_dispatch.inbound_permitted", dispatch.inbound_permitted
+            "aj_crew.imessage.transport_dispatch.inbound_permitted", dispatch.inbound_permitted
         )
         monkeypatch.setattr(dispatch, "channel_inbound_permitted", _denied)
         dispatcher, client, _ = _dispatcher()
@@ -536,11 +536,11 @@ class TestSessionIdentity:
         dispatcher, _, _ = _dispatcher()
         assert dispatcher._session_key(HANDLE).startswith("imessage:")
 
-    def test_the_agent_falls_back_to_the_canonical_kirocrew_agent(self) -> None:
+    def test_the_agent_falls_back_to_the_canonical_ajcrew_agent(self) -> None:
         # Otherwise the session loads kiro-cli's bare default and has no
         # spawn_run / cron tools.
         dispatcher, _, _ = _dispatcher()
-        assert dispatcher._resolve_agent() == "kirocrew"
+        assert dispatcher._resolve_agent() == "ajcrew"
 
 
 class TestSenderRecheck:
@@ -548,14 +548,14 @@ class TestSenderRecheck:
     async def test_the_turn_rechecks_the_live_handle_roster(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.imessage.transport import IMessageTransport
+        from aj_crew.imessage.transport import IMessageTransport
 
         turns: list[Any] = []
 
         async def _capture(turn: Any, **_kw: Any) -> None:
             turns.append(turn)
 
-        monkeypatch.setattr("kiro_crew.imessage.transport_dispatch.drive_turn", _capture)
+        monkeypatch.setattr("aj_crew.imessage.transport_dispatch.drive_turn", _capture)
         dispatcher, client, _ = _dispatcher()
         transport = IMessageTransport(client, allowed_handles=[HANDLE])  # type: ignore[arg-type]
         dispatcher.transport = transport

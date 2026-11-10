@@ -80,7 +80,7 @@ for (const theme of ['dark', 'light']) {
     check(`[${theme}/${TAG}] user bubble is the theme accent`, colours.userBg === colours.accent && colours.userFg === colours.accentFg)
     check(`[${theme}/${TAG}] inline code and link inside it sit on --accent-fg`, colours.codeFg === colours.accentFg && colours.linkFg === colours.accentFg)
     check(`[${theme}/${TAG}] mate bubble is the --bg-hover gray with no border`, colours.aiBg === colours.hover && colours.aiBorder === '0px')
-    // kiro-light paints inline code with var(--bg-hover), the fill's own colour: the bubble must move
+    // aj-light paints inline code with var(--bg-hover), the fill's own colour: the bubble must move
     // that one step off the fill or the patch disappears (Design review R3 on #17918).
     check(`[${theme}/${TAG}] inline code in a mate reply sits on a patch distinct from the fill`, !!colours.aiCodeBg && colours.aiCodeBg !== colours.aiBg && colours.aiCodeBg !== 'rgba(0, 0, 0, 0)')
     // The quote card inside the accent bubble reads the REDEFINED tokens: its bar is the text

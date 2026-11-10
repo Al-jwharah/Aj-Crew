@@ -14,7 +14,7 @@ import sys
 
 import pytest
 
-from kiro_crew.acp.harness import claude as claude_mod
+from aj_crew.acp.harness import claude as claude_mod
 
 _ARCH = {"x86_64": "x64", "amd64": "x64", "aarch64": "arm64", "arm64": "arm64"}.get(
     platform.machine().lower()
@@ -46,7 +46,7 @@ def _spawn_env(monkeypatch, resolved) -> dict[str, str]:
 
 def test_no_warning_when_the_sdk_ships_its_binary(tmp_path, monkeypatch, caplog):
     resolved = _adapter(tmp_path, bundled=True)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.client"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.client"):
         env = _spawn_env(monkeypatch, resolved)
     assert "CLAUDE_CODE_EXECUTABLE" not in env
     assert not [r for r in caplog.records if "not found on PATH" in r.getMessage()]
@@ -54,14 +54,14 @@ def test_no_warning_when_the_sdk_ships_its_binary(tmp_path, monkeypatch, caplog)
 
 def test_still_warns_when_no_binary_is_anywhere(tmp_path, monkeypatch, caplog):
     resolved = _adapter(tmp_path, bundled=False)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.client"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.client"):
         _spawn_env(monkeypatch, resolved)
     assert [r for r in caplog.records if "not found on PATH" in r.getMessage()]
 
 
 def test_an_unresolved_adapter_still_warns(monkeypatch, caplog):
-    from kiro_crew.acp import launch as launch_mod
+    from aj_crew.acp import launch as launch_mod
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.client"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.client"):
         _spawn_env(monkeypatch, launch_mod._UNRESOLVED)
     assert [r for r in caplog.records if "not found on PATH" in r.getMessage()]

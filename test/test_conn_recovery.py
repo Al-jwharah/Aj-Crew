@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard.chat_utils import (
     _BUSY_RECOVER_MSG,
     _CONN_RECOVER_MSG,
     CRON_NOTIFICATION_KIND,
@@ -19,7 +19,7 @@ from kiro_crew.dashboard.chat_utils import (
     is_system_injection_item,
     payload_for_replay,
 )
-from kiro_crew.dashboard.state import (
+from aj_crew.dashboard.state import (
     BUSY_RECOVERY_PREFIX,
     CONN_RECOVERY_PREFIX,
     CRON_NOTIFY_PREFIX,
@@ -119,7 +119,7 @@ def test_connection_recovery_uses_structural_system_injection_provenance() -> No
 async def test_queue_dispatch_preserves_recovery_provenance(
     tmp_path, monkeypatch, kind: str, expected_recovery: bool, expected_role: str
 ) -> None:
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     state = _make_state(tmp_path)
     state.subagents = None
@@ -156,7 +156,7 @@ async def test_queue_dispatch_preserves_recovery_provenance(
 @pytest.mark.asyncio
 async def test_queue_dispatch_preserves_consumption_callback(tmp_path, monkeypatch) -> None:
     """A retry entry keeps the callback that settles its durable producer."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     state = _make_state(tmp_path)
     state.subagents = None
@@ -189,7 +189,7 @@ async def test_queue_dispatch_preserves_consumption_callback(tmp_path, monkeypat
 
 @pytest.mark.asyncio
 async def test_cron_injection_preserves_pending_session_reset_notice(tmp_path, monkeypatch) -> None:
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     state = _make_state(tmp_path)
     state.subagents = None
@@ -234,7 +234,7 @@ async def test_dispatch_classifies_the_payload_not_the_recovery(
     Both cases carry the SAME text on purpose: classification must come from the
     entry's tag, so identical content classifying two ways is the point.
     """
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     state = _make_state(tmp_path)
     state.subagents = None

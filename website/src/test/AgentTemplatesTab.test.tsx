@@ -23,8 +23,8 @@ const mockApi = vi.hoisted(() => ({
   agentPatch: vi.fn(),
   agentTemplateCreate: vi.fn(),
   agentTemplateDelete: vi.fn(),
-  createKirocrewAgent: vi.fn(),
-  kirocrewAgents: vi.fn(),
+  createAjcrewAgent: vi.fn(),
+  ajcrewAgents: vi.fn(),
   defaultAgent: vi.fn(),
   setDefaultAgent: vi.fn(),
   skillsCatalog: vi.fn(),
@@ -81,14 +81,14 @@ import { MORE_BELOW_MASK } from '../components/ModelEffortDropdown'
 
 const row = (over: Partial<TemplateRow>): TemplateRow => ({
   name: 'x', filename: 'x.json', description: '', model: '', skills: [], mcp_servers: [],
-  source: 'builtin', package: '', scope: 'global', kirocrew_owned: false, forked_from: '', private_to: '',
+  source: 'builtin', package: '', scope: 'global', ajcrew_owned: false, forked_from: '', private_to: '',
   read_only: null, default_eligible: true, used_by: [], ...over,
 })
 const MINE = row({ name: 'reviewer', filename: 'reviewer.json', description: 'Careful reviewer', model: 'claude-x', used_by: [{ kind: 'crew', id: 'pr-bot', label: 'pr-bot' }, { kind: 'private_copy', id: 'pr-bot', label: 'pr-bot' }] })
 // The same template with nothing pointing at it: the row a delete can go through for.
 const FREE = { ...MINE, used_by: [] }
 const PKG = row({ name: 'atlas', filename: 'Pkg-atlas.json', source: 'package', package: 'Pkg', read_only: 'package' })
-const RUNTIME = row({ name: 'kirocrew-worker', filename: 'kirocrew-worker.json', kirocrew_owned: true, read_only: 'runtime' })
+const RUNTIME = row({ name: 'ajcrew-worker', filename: 'ajcrew-worker.json', ajcrew_owned: true, read_only: 'runtime' })
 const COPY = row({ name: 'pr-bot', filename: 'pr-bot.json', forked_from: 'reviewer', private_to: 'pr-bot', read_only: 'private_copy', default_eligible: false })
 
 function renderTab() {
@@ -108,7 +108,7 @@ const EDITOR_CHAIN_TIMEOUT_MS = 5000
 const EDITOR_CHAIN = { timeout: EDITOR_CHAIN_TIMEOUT_MS }
 
 /** The six background-subagent refs the one-click button adds, in order. */
-const SPAWN_FAMILY = ['spawn_run', 'spawn_list', 'spawn_status', 'spawn_steer', 'spawn_continue', 'spawn_release'].map(t => `@kirocrew-core/${t}`)
+const SPAWN_FAMILY = ['spawn_run', 'spawn_list', 'spawn_status', 'spawn_steer', 'spawn_continue', 'spawn_release'].map(t => `@ajcrew-core/${t}`)
 
 const option = (name: string) => screen.getByRole('option', { name: new RegExp(`^${name}\\b`) })
 
@@ -131,9 +131,9 @@ beforeEach(() => {
   mockApi.agentPatch.mockResolvedValue({ ok: true })
   mockApi.agentTemplateCreate.mockResolvedValue({ ok: true, name: 'pr-summarizer', filename: 'pr-summarizer.json' })
   mockApi.agentTemplateDelete.mockResolvedValue({ ok: true })
-  mockApi.createKirocrewAgent.mockResolvedValue({ ok: true })
-  mockApi.kirocrewAgents.mockResolvedValue({ agents: [], default_agent: 'kirocrew' })
-  mockApi.defaultAgent.mockResolvedValue({ default_agent: 'default', default_template: 'kirocrew', overridden: false })
+  mockApi.createAjcrewAgent.mockResolvedValue({ ok: true })
+  mockApi.ajcrewAgents.mockResolvedValue({ agents: [], default_agent: 'ajcrew' })
+  mockApi.defaultAgent.mockResolvedValue({ default_agent: 'default', default_template: 'ajcrew', overridden: false })
   mockApi.setDefaultAgent.mockResolvedValue({ ok: true, default_agent: 'default' })
   mockDispatch.mockImplementation(() => ({ unwrap: () => Promise.resolve({ key: 'chat-1' }) }))
 })
@@ -453,8 +453,8 @@ describe('AgentTemplatesTab detail robustness', () => {
     }))
     renderTab()
     await waitFor(() => expect(mockApi.agentDetail).toHaveBeenCalledWith('reviewer'))
-    fireEvent.click(option('kirocrew-worker'))
-    await waitFor(() => expect(mockApi.agentDetail).toHaveBeenCalledWith('kirocrew-worker'))
+    fireEvent.click(option('ajcrew-worker'))
+    await waitFor(() => expect(mockApi.agentDetail).toHaveBeenCalledWith('ajcrew-worker'))
     await screen.findByText(/prompt is not stored in its file/)
     expect(screen.queryByRole('textbox', { name: 'Prompt' })).toBeNull()
     // No "0 characters" beside a note saying the prompt exists elsewhere.
@@ -544,20 +544,20 @@ describe('AgentTemplatesTab actions', () => {
   })
 
   it('does not blame the engine for a runtime-owned reserved name', async () => {
-    // `kirocrew` and the Windows device names answer the plain
+    // `ajcrew` and the Windows device names answer the plain
     // template_name_reserved code; that refusal keeps the server's own text
     // rather than the engine sentence, which would name the wrong owner.
     mockApi.agentTemplateCreate.mockRejectedValue(
-      new StubApiError(400, "'kirocrew' is reserved", { error: "'kirocrew' is reserved", code: 'template_name_reserved' }),
+      new StubApiError(400, "'ajcrew' is reserved", { error: "'ajcrew' is reserved", code: 'template_name_reserved' }),
     )
     renderTab()
     await waitFor(() => expect(mockApi.agentDetail).toHaveBeenCalledWith('reviewer'))
     fireEvent.click(screen.getByRole('button', { name: /New custom agent/ }))
     const dialog = await screen.findByRole('dialog', { name: 'New custom agent' })
-    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Name' }), { target: { value: 'kirocrew' } })
+    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Name' }), { target: { value: 'ajcrew' } })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Create and edit' }))
     const alert = await within(dialog).findByRole('alert')
-    expect(alert).toHaveTextContent("'kirocrew' is reserved")
+    expect(alert).toHaveTextContent("'ajcrew' is reserved")
     expect(alert).not.toHaveTextContent('built-in agent')
   })
 
@@ -651,12 +651,12 @@ describe('AgentTemplatesTab actions', () => {
     const listId = input.getAttribute('list')
     expect(listId).toBeTruthy()
     const values = Array.from(document.getElementById(listId!)!.querySelectorAll('option')).map(o => o.getAttribute('value'))
-    expect(values).toEqual(expect.arrayContaining(['fs_read', '@kirocrew-core/spawn_run', '@kirocrew-core/spawn_list']))
+    expect(values).toEqual(expect.arrayContaining(['fs_read', '@ajcrew-core/spawn_run', '@ajcrew-core/spawn_list']))
     // One click on the hint's button grants the whole spawn family, so the
     // agent can also check on and release what it started; the hint then goes.
     // The refs are the tooltip, not part of the label.
     const add = screen.getByRole('button', { name: 'Allow background agents' })
-    expect(add).toHaveAttribute('title', '@kirocrew-core/spawn_*')
+    expect(add).toHaveAttribute('title', '@ajcrew-core/spawn_*')
     fireEvent.click(add)
     for (const ref of SPAWN_FAMILY) {
       expect(screen.getByRole('button', { name: `${ref}: asks first`, pressed: false })).toBeInTheDocument()
@@ -671,8 +671,8 @@ describe('AgentTemplatesTab actions', () => {
 
   it('adds only the spawn refs a template still lacks', async () => {
     mockApi.agentDetail.mockImplementation(async (name: string) => ({
-      name, description: '', model: '', prompt: '', tools: ['fs_read', '@kirocrew-core/spawn_run'], allowedTools: [],
-      resources: [], mcpServers: { 'kirocrew-core': { command: 'kirocrew' } }, skills: [],
+      name, description: '', model: '', prompt: '', tools: ['fs_read', '@ajcrew-core/spawn_run'], allowedTools: [],
+      resources: [], mcpServers: { 'ajcrew-core': { command: 'ajcrew' } }, skills: [],
     }))
     renderTab()
     // roster -> detail -> draft: the editor is seeded only at the end of the chain.
@@ -680,13 +680,13 @@ describe('AgentTemplatesTab actions', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Allow background agents/ }, EDITOR_CHAIN))
     fireEvent.click(screen.getByRole('button', { name: 'Save custom agent' }))
     await waitFor(() => expect(mockApi.agentPatch).toHaveBeenCalledWith('reviewer', {
-      tools: ['fs_read', '@kirocrew-core/spawn_run', ...SPAWN_FAMILY.slice(1)],
+      tools: ['fs_read', '@ajcrew-core/spawn_run', ...SPAWN_FAMILY.slice(1)],
       allowedTools: [],
     }), EDITOR_CHAIN)
   })
 
   it('offers the spawn family under * only while the spec does not declare the server', async () => {
-    // `*` grants every DECLARED server: with kirocrew-core undeclared it mounts
+    // `*` grants every DECLARED server: with ajcrew-core undeclared it mounts
     // nothing, so the button stays and its explicit refs make the save declare it.
     mockApi.agentDetail.mockImplementation(async (name: string) => ({
       name, description: '', model: '', prompt: '', tools: ['*'], allowedTools: [],
@@ -705,7 +705,7 @@ describe('AgentTemplatesTab actions', () => {
     // Declared, `*` already mounts the whole server: nothing to offer.
     mockApi.agentDetail.mockImplementation(async (name: string) => ({
       name, description: '', model: '', prompt: '', tools: ['*'], allowedTools: [],
-      resources: [], mcpServers: { 'kirocrew-core': { command: 'kirocrew' } }, skills: [],
+      resources: [], mcpServers: { 'ajcrew-core': { command: 'ajcrew' } }, skills: [],
     }))
     renderTab()
     await screen.findByRole('button', { name: 'Add tool' }, EDITOR_CHAIN)
@@ -713,7 +713,7 @@ describe('AgentTemplatesTab actions', () => {
   })
 
   it('reports a spawn grant the server cannot declare in the save bar', async () => {
-    const reason = "Could not add kirocrew-core: the MCP servers section of this agent's file is malformed, so the tool would never load. Fix that section in the file, then save again."
+    const reason = "Could not add ajcrew-core: the MCP servers section of this agent's file is malformed, so the tool would never load. Fix that section in the file, then save again."
     mockApi.agentPatch.mockRejectedValue(new StubApiError(409, reason, { error: reason, code: 'control_plane_not_declarable' }))
     renderTab()
     // roster -> detail -> draft: the editor is seeded only at the end of the chain.
@@ -726,7 +726,7 @@ describe('AgentTemplatesTab actions', () => {
     const alert = await screen.findByRole('alert', {}, EDITOR_CHAIN)
     expect(alert).toHaveTextContent(reason)
     expect(alert.closest('div')).toBe(saveBtn.closest('div'))
-    expect(screen.getByRole('button', { name: '@kirocrew-core/spawn_run: asks first', pressed: false })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '@ajcrew-core/spawn_run: asks first', pressed: false })).toBeInTheDocument()
   })
 
   it('names the deleted template in the closure line over the next row', async () => {
@@ -827,7 +827,7 @@ describe('AgentTemplatesTab actions', () => {
 
 describe('AgentTemplatesTab — enrolling reaches the crew registry', () => {
   /* Enrolling POSTs /api/agents: the same config.json write the Crews tab's own
-     create makes, which #12740 paired with `['kirocrewConfig']` because both
+     create makes, which #12740 paired with `['ajcrewConfig']` because both
      records land together. This tab is the Crews tab's SIBLING under
      Agent Capabilities (CapabilitiesPage.tsx renders `crews` and `templates`
      off one rail), and the dashboard's QueryClient sets `staleTime: Infinity`
@@ -840,9 +840,9 @@ describe('AgentTemplatesTab — enrolling reaches the crew registry', () => {
      and a remount serves the cached roster rather than asking again.
 
      The consumer mounted beside the tab is the Crews tab's own query, spelled
-     exactly as KiroCrewAgentsPage.tsx:810-813 spells it. */
+     exactly as AjCrewAgentsPage.tsx:810-813 spells it. */
   const CrewsRosterProbe = () => {
-    const { data } = useQuery({ queryKey: ['kirocrew-agents'], queryFn: () => mockApi.kirocrewAgents() })
+    const { data } = useQuery({ queryKey: ['ajcrew-agents'], queryFn: () => mockApi.ajcrewAgents() })
     return <ul data-testid="crews-roster">{(data?.agents ?? []).map((a: { name: string }) => <li key={a.name}>{a.name}</li>)}</ul>
   }
 
@@ -860,9 +860,9 @@ describe('AgentTemplatesTab — enrolling reaches the crew registry', () => {
   it('shows the enrolled mate on the Crews roster', async () => {
     // Pre-write world first, post-write world after: only a second registry
     // read can reach the crewmate the enroll just created (#12740's idiom).
-    mockApi.kirocrewAgents
-      .mockResolvedValueOnce({ agents: [{ name: 'pr-bot' }], default_agent: 'kirocrew' })
-      .mockResolvedValue({ agents: [{ name: 'pr-bot' }, { name: 'reviewer' }], default_agent: 'kirocrew' })
+    mockApi.ajcrewAgents
+      .mockResolvedValueOnce({ agents: [{ name: 'pr-bot' }], default_agent: 'ajcrew' })
+      .mockResolvedValue({ agents: [{ name: 'pr-bot' }, { name: 'reviewer' }], default_agent: 'ajcrew' })
     mockApi.agentTemplates.mockResolvedValue({ templates: [FREE, PKG, RUNTIME, COPY] })
 
     renderWithCrews()
@@ -871,12 +871,12 @@ describe('AgentTemplatesTab — enrolling reaches the crew registry', () => {
 
     const items = await openMore()
     fireEvent.click(items[0])
-    await waitFor(() => expect(mockApi.createKirocrewAgent).toHaveBeenCalled())
+    await waitFor(() => expect(mockApi.createAjcrewAgent).toHaveBeenCalled())
     // Enrolling defaults the crewmate to a name-seeded ICON, the same default
     // the New-crewmate dialog applies — never the trait ghost a missing avatar
     // falls back to on render (#18616). Headless create paths (CLI, raw API)
     // are tracked separately for backend seeding.
-    expect(mockApi.createKirocrewAgent).toHaveBeenCalledWith(
+    expect(mockApi.createAjcrewAgent).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'reviewer', avatar: expect.objectContaining({ kind: 'icon' }) }),
     )
 
@@ -893,12 +893,12 @@ describe('AgentTemplatesTab — the default custom agent bar (#18411)', () => {
     renderTab()
     await waitFor(() => expect(mockApi.defaultAgent).toHaveBeenCalled())
     // The route answers the effective name; the bar shows it as is.
-    await waitFor(() => expect(trigger()).toHaveTextContent('kirocrew'))
+    await waitFor(() => expect(trigger()).toHaveTextContent('ajcrew'))
   })
 
   it('offers only rows the server would accept, and writes the pick', async () => {
     renderTab()
-    await waitFor(() => expect(trigger()).toHaveTextContent('kirocrew'))
+    await waitFor(() => expect(trigger()).toHaveTextContent('ajcrew'))
     fireEvent.click(trigger())
     // The open Radix list is the one listbox that is not the roster.
     const list = await waitFor(() => screen.getAllByRole('listbox').find(l => l.getAttribute('aria-label') !== 'Custom agents')!)
@@ -921,33 +921,33 @@ describe('AgentTemplatesTab — the default custom agent bar (#18411)', () => {
   }
 
   it("sends every pick by its own name as a template, the runtime's own included", async () => {
-    const MAIN = row({ name: 'kirocrew', filename: 'kirocrew.json', kirocrew_owned: true, read_only: 'runtime' })
+    const MAIN = row({ name: 'ajcrew', filename: 'ajcrew.json', ajcrew_owned: true, read_only: 'runtime' })
     mockApi.agentTemplates.mockResolvedValue({ templates: [MINE, PKG, RUNTIME, MAIN] })
     mockApi.defaultAgent.mockResolvedValue({ default_agent: 'default', default_template: 'reviewer', overridden: false })
     renderTab()
     await waitFor(() => expect(trigger()).toHaveTextContent('reviewer'))
     // The re-read after each write answers what the server now holds.
-    mockApi.defaultAgent.mockResolvedValue({ default_agent: 'default', default_template: 'kirocrew', overridden: false })
+    mockApi.defaultAgent.mockResolvedValue({ default_agent: 'default', default_template: 'ajcrew', overridden: false })
     // Never "": on this route an empty name would write the default crewmate.
-    await pick('kirocrew')
-    await waitFor(() => expect(mockApi.setDefaultAgent).toHaveBeenLastCalledWith('kirocrew', 'template'))
-    await waitFor(() => expect(trigger()).toHaveTextContent('kirocrew'))
+    await pick('ajcrew')
+    await waitFor(() => expect(mockApi.setDefaultAgent).toHaveBeenLastCalledWith('ajcrew', 'template'))
+    await waitFor(() => expect(trigger()).toHaveTextContent('ajcrew'))
     await waitFor(() => expect(trigger()).not.toBeDisabled())
     mockApi.defaultAgent.mockResolvedValue({ default_agent: 'default', default_template: 'atlas', overridden: false })
     await pick('atlas')
     await waitFor(() => expect(mockApi.setDefaultAgent).toHaveBeenLastCalledWith('atlas', 'template'))
     await waitFor(() => expect(trigger()).not.toBeDisabled())
-    await pick('kirocrew-worker')
-    await waitFor(() => expect(mockApi.setDefaultAgent).toHaveBeenLastCalledWith('kirocrew-worker', 'template'))
+    await pick('ajcrew-worker')
+    await waitFor(() => expect(mockApi.setDefaultAgent).toHaveBeenLastCalledWith('ajcrew-worker', 'template'))
     expect(mockApi.setDefaultAgent).not.toHaveBeenCalledWith('', expect.anything())
   })
 
   it('shows the saved pick before the re-read lands', async () => {
     mockApi.defaultAgent
-      .mockResolvedValueOnce({ default_agent: 'default', default_template: 'kirocrew', overridden: false })
+      .mockResolvedValueOnce({ default_agent: 'default', default_template: 'ajcrew', overridden: false })
       .mockImplementation(() => new Promise(() => {}))
     renderTab()
-    await waitFor(() => expect(trigger()).toHaveTextContent('kirocrew'))
+    await waitFor(() => expect(trigger()).toHaveTextContent('ajcrew'))
     await pick('reviewer')
     await waitFor(() => expect(screen.getByTestId('default-template-saved')).toBeInTheDocument())
     // The refetch never answers here, and the write's answer carries no
@@ -982,7 +982,7 @@ describe('AgentTemplatesTab — the default custom agent bar (#18411)', () => {
     let land: (v: unknown) => void = () => {}
     mockApi.setDefaultAgent.mockImplementation(() => new Promise(resolve => { land = resolve }))
     renderTab()
-    await waitFor(() => expect(trigger()).toHaveTextContent('kirocrew'))
+    await waitFor(() => expect(trigger()).toHaveTextContent('ajcrew'))
     fireEvent.click(trigger())
     const list = await waitFor(() => screen.getAllByRole('listbox').find(l => l.getAttribute('aria-label') !== 'Custom agents')!)
     fireEvent.click(within(list).getByRole('option', { name: 'reviewer' }))
@@ -1005,7 +1005,7 @@ describe('AgentTemplatesTab — the default custom agent bar (#18411)', () => {
   it('shows no confirmation when a pick is refused', async () => {
     mockApi.setDefaultAgent.mockRejectedValue(new StubApiError(409, 'refused', { code: 'foreign_private_copy' }))
     renderTab()
-    await waitFor(() => expect(trigger()).toHaveTextContent('kirocrew'))
+    await waitFor(() => expect(trigger()).toHaveTextContent('ajcrew'))
     fireEvent.click(trigger())
     const list = await waitFor(() => screen.getAllByRole('listbox').find(l => l.getAttribute('aria-label') !== 'Custom agents')!)
     fireEvent.click(within(list).getByRole('option', { name: 'reviewer' }))
@@ -1016,7 +1016,7 @@ describe('AgentTemplatesTab — the default custom agent bar (#18411)', () => {
   it('reports a refusal in the bar, in plain words', async () => {
     mockApi.setDefaultAgent.mockRejectedValue(new StubApiError(409, 'refused', { code: 'foreign_private_copy' }))
     renderTab()
-    await waitFor(() => expect(trigger()).toHaveTextContent('kirocrew'))
+    await waitFor(() => expect(trigger()).toHaveTextContent('ajcrew'))
     fireEvent.click(trigger())
     // The open Radix list is the one listbox that is not the roster.
     const list = await waitFor(() => screen.getAllByRole('listbox').find(l => l.getAttribute('aria-label') !== 'Custom agents')!)
@@ -1025,13 +1025,13 @@ describe('AgentTemplatesTab — the default custom agent bar (#18411)', () => {
     // Opens with the failed action, then names what still starts: the select
     // snaps back to it, so the sentence must not read as if reviewer had been
     // the default.
-    expect(err).toHaveTextContent(/^Couldn’t switch to reviewer: it’s a bot’s private copy\. New sessions still use kirocrew\.$/)
+    expect(err).toHaveTextContent(/^Couldn’t switch to reviewer: it’s a bot’s private copy\. New sessions still use ajcrew\.$/)
   })
 
   it('lets the reader put a refusal away, and keeps the read failure without a dismiss', async () => {
     mockApi.setDefaultAgent.mockRejectedValue(new StubApiError(409, 'refused', { code: 'foreign_private_copy' }))
     renderTab()
-    await waitFor(() => expect(trigger()).toHaveTextContent('kirocrew'))
+    await waitFor(() => expect(trigger()).toHaveTextContent('ajcrew'))
     fireEvent.click(trigger())
     const list = await waitFor(() => screen.getAllByRole('listbox').find(l => l.getAttribute('aria-label') !== 'Custom agents')!)
     fireEvent.click(within(list).getByRole('option', { name: 'reviewer' }))
@@ -1044,7 +1044,7 @@ describe('AgentTemplatesTab — the default custom agent bar (#18411)', () => {
   it('re-reads the roster after a refusal so the refused agent drops out of the picker', async () => {
     mockApi.setDefaultAgent.mockRejectedValue(new StubApiError(409, 'refused', { code: 'foreign_private_copy' }))
     renderTab()
-    await waitFor(() => expect(trigger()).toHaveTextContent('kirocrew'))
+    await waitFor(() => expect(trigger()).toHaveTextContent('ajcrew'))
     const before = mockApi.agentTemplates.mock.calls.length
     fireEvent.click(trigger())
     const list = await waitFor(() => screen.getAllByRole('listbox').find(l => l.getAttribute('aria-label') !== 'Custom agents')!)
@@ -1080,7 +1080,7 @@ describe('AgentTemplatesTab — the default custom agent bar (#18411)', () => {
     fireEvent.click(within(screen.getByTestId('default-template-bar')).getByRole('button', { name: 'Retry' }))
     await waitFor(() => expect(mockApi.defaultAgent).toHaveBeenCalledTimes(3))
     // The second read lands: the notice and the Retry go, the picker opens up.
-    await waitFor(() => expect(trigger()).toHaveTextContent('kirocrew'))
+    await waitFor(() => expect(trigger()).toHaveTextContent('ajcrew'))
     await waitFor(() => expect(trigger()).not.toBeDisabled())
     expect(screen.queryByTestId('default-template-error')).toBeNull()
     expect(within(screen.getByTestId('default-template-bar')).queryByRole('button', { name: 'Retry' })).toBeNull()
@@ -1110,23 +1110,23 @@ describe('AgentTemplatesTab — the default custom agent bar (#18411)', () => {
     // carries the path the server reported.
     mockApi.setDefaultAgent.mockRejectedValue(new StubApiError(409, 'pinned', { code: 'default_template_overlaid', override_path: '/home/u/.kiro/crew/config.local.json' }))
     renderTab()
-    await waitFor(() => expect(trigger()).toHaveTextContent('kirocrew'))
+    await waitFor(() => expect(trigger()).toHaveTextContent('ajcrew'))
     fireEvent.click(trigger())
     const list = await waitFor(() => screen.getAllByRole('listbox').find(l => l.getAttribute('aria-label') !== 'Custom agents')!)
     fireEvent.click(within(list).getByRole('option', { name: 'reviewer' }))
     const err = await screen.findByTestId('default-template-error')
-    expect(err).toHaveTextContent(/^Couldn’t switch to reviewer: a local config file sets this\. New sessions still use kirocrew\. File: \/home\/u\/\.kiro\/crew\/config\.local\.json$/)
+    expect(err).toHaveTextContent(/^Couldn’t switch to reviewer: a local config file sets this\. New sessions still use ajcrew\. File: \/home\/u\/\.kiro\/crew\/config\.local\.json$/)
   })
 
   it('names the pick in a refusal it has no specific words for', async () => {
     mockApi.setDefaultAgent.mockRejectedValue(new StubApiError(500, 'boom', { code: 'config_write_failed' }))
     renderTab()
-    await waitFor(() => expect(trigger()).toHaveTextContent('kirocrew'))
+    await waitFor(() => expect(trigger()).toHaveTextContent('ajcrew'))
     fireEvent.click(trigger())
     const list = await waitFor(() => screen.getAllByRole('listbox').find(l => l.getAttribute('aria-label') !== 'Custom agents')!)
     fireEvent.click(within(list).getByRole('option', { name: 'reviewer' }))
     const err = await screen.findByTestId('default-template-error')
-    expect(err).toHaveTextContent(/^Couldn’t switch to reviewer\. New sessions still use kirocrew\.$/)
+    expect(err).toHaveTextContent(/^Couldn’t switch to reviewer\. New sessions still use ajcrew\.$/)
   })
 
   it.each([
@@ -1135,44 +1135,44 @@ describe('AgentTemplatesTab — the default custom agent bar (#18411)', () => {
   ])('names a deleted pick and what still runs (%s)', async (code, status) => {
     mockApi.setDefaultAgent.mockRejectedValue(new StubApiError(status, 'gone', { code }))
     renderTab()
-    await waitFor(() => expect(trigger()).toHaveTextContent('kirocrew'))
+    await waitFor(() => expect(trigger()).toHaveTextContent('ajcrew'))
     await pick('reviewer')
     const err = await screen.findByTestId('default-template-error')
-    expect(err).toHaveTextContent(/^Couldn’t switch to reviewer: it was deleted\. New sessions still use kirocrew\.$/)
+    expect(err).toHaveTextContent(/^Couldn’t switch to reviewer: it was deleted\. New sessions still use ajcrew\.$/)
   })
 
   it('names an app-installed pick and what still runs', async () => {
     mockApi.setDefaultAgent.mockRejectedValue(new StubApiError(409, 'refused', { code: 'app_registered_template' }))
     renderTab()
-    await waitFor(() => expect(trigger()).toHaveTextContent('kirocrew'))
+    await waitFor(() => expect(trigger()).toHaveTextContent('ajcrew'))
     await pick('reviewer')
     const err = await screen.findByTestId('default-template-error')
-    expect(err).toHaveTextContent(/^Couldn’t switch to reviewer: it was installed by an app\. New sessions still use kirocrew\.$/)
+    expect(err).toHaveTextContent(/^Couldn’t switch to reviewer: it was installed by an app\. New sessions still use ajcrew\.$/)
   })
 
   it('names a scheduled-job-only pick and what still runs', async () => {
     mockApi.setDefaultAgent.mockRejectedValue(new StubApiError(409, 'refused', { code: 'default_template_background_only' }))
     renderTab()
-    await waitFor(() => expect(trigger()).toHaveTextContent('kirocrew'))
+    await waitFor(() => expect(trigger()).toHaveTextContent('ajcrew'))
     await pick('reviewer')
     const err = await screen.findByTestId('default-template-error')
-    expect(err).toHaveTextContent(/^Couldn’t switch to reviewer: it only runs scheduled jobs\. New sessions still use kirocrew\.$/)
+    expect(err).toHaveTextContent(/^Couldn’t switch to reviewer: it only runs scheduled jobs\. New sessions still use ajcrew\.$/)
   })
 
   it.each(['lineage_unverifiable', 'config_unreadable', 'invalid_agent_type', 'invalid_agent_kind'])(
     'gives the generic sentence for a refusal with no specific words (%s)', async code => {
       mockApi.setDefaultAgent.mockRejectedValue(new StubApiError(409, 'refused', { code }))
       renderTab()
-      await waitFor(() => expect(trigger()).toHaveTextContent('kirocrew'))
+      await waitFor(() => expect(trigger()).toHaveTextContent('ajcrew'))
       await pick('reviewer')
       const err = await screen.findByTestId('default-template-error')
-      expect(err).toHaveTextContent(/^Couldn’t switch to reviewer\. New sessions still use kirocrew\.$/)
+      expect(err).toHaveTextContent(/^Couldn’t switch to reviewer\. New sessions still use ajcrew\.$/)
     },
   )
 
   it('explains hidden picker rows only when the roster has some', async () => {
     renderTab()
-    await waitFor(() => expect(trigger()).toHaveTextContent('kirocrew'))
+    await waitFor(() => expect(trigger()).toHaveTextContent('ajcrew'))
     // The fixture roster carries a private copy, so the note shows.
     expect(screen.getByText('Not offered here: bots’ own copies, scheduled-job-only agents, agents an app installed. Agents under “From packages” can be picked.')).toBeInTheDocument()
   })

@@ -14,10 +14,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import autonudge_judge as judge
-from kiro_crew import history
-from kiro_crew.autonudge_service import subject
-from kiro_crew.probes import GH_PR
+from aj_crew import autonudge_judge as judge
+from aj_crew import history
+from aj_crew.autonudge_service import subject
+from aj_crew.probes import GH_PR
 
 _URL = "https://github.com/kirodotdev/KiroCrew/pull/14361"
 _MESSAGE = "Babysit PR 14361 until it is green and approved"
@@ -107,7 +107,7 @@ def test_a_work_ledger_watch_never_reads_a_log(fake_log):
 
 @pytest.mark.asyncio
 async def test_the_service_arm_reads_the_log_off_the_event_loop(fake_log, tmp_path):
-    from kiro_crew.autonudge import AutoNudgeService
+    from aj_crew.autonudge import AutoNudgeService
 
     svc = AutoNudgeService(base_dir=tmp_path)
     loop = await svc.add(slot_key="chat-7-1", message=_MESSAGE, idle_secs=60, gate=True)
@@ -118,7 +118,7 @@ async def test_the_service_arm_reads_the_log_off_the_event_loop(fake_log, tmp_pa
 
 @pytest.mark.asyncio
 async def test_the_service_retarget_reads_the_log_off_the_event_loop(fake_log, tmp_path):
-    from kiro_crew.autonudge import AutoNudgeService
+    from aj_crew.autonudge import AutoNudgeService
 
     svc = AutoNudgeService(base_dir=tmp_path)
     loop = await svc.add(slot_key="chat-7-1", message="Babysit PR 1", idle_secs=60, gate=True)
@@ -197,7 +197,7 @@ def test_watched_pr_subject_ignores_a_non_pull_request_monitor():
 def test_the_real_conversation_log_is_read_under_the_dashboard_key(tmp_path, monkeypatch):
     # The key mapping against the real store, not the fake: a wrong prefix reads an
     # empty log and silently leaves every dashboard loop ungated.
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     history.ConversationLog().append("dashboard:chat-9-1700000001", "user", f"drive {_URL}")
     monitor = _arm(slot_key="chat-9-1700000001")
     assert monitor is not None and monitor.target == "kirodotdev/KiroCrew#14361"
@@ -206,9 +206,9 @@ def test_the_real_conversation_log_is_read_under_the_dashboard_key(tmp_path, mon
 @pytest.fixture
 def tool_session(monkeypatch):
     """A session the monitor tools accept, with no retained stop on its binding."""
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
-    monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
     monkeypatch.setattr(mcp_core, "_autonudge_binding_key", lambda sk: "chat-7-1")
     monkeypatch.setattr(mcp_core, "_structured_monitor_binding_key", lambda sk: "chat-7-1")
     monkeypatch.setattr(mcp_core, "_get", lambda *a, **k: {"enabled": True, "monitor": None})
@@ -216,8 +216,8 @@ def tool_session(monkeypatch):
 
 
 def test_the_tool_run_reads_the_log_to_shape_its_ack(fake_log, tool_session, monkeypatch):
-    from kiro_crew import mcp_core
-    from kiro_crew.mcp_tools import control
+    from aj_crew import mcp_core
+    from aj_crew.mcp_tools import control
 
     monkeypatch.setattr(mcp_core, "_resolve_session_key_strict", lambda *a, **k: tool_session)
     out = control.monitor_start("monitor_start", {"message": _MESSAGE, "interval_secs": 317})
@@ -226,7 +226,7 @@ def test_the_tool_run_reads_the_log_to_shape_its_ack(fake_log, tool_session, mon
 
 
 def test_the_gateway_replay_never_reads_the_log_on_its_event_loop(fake_log, tool_session):
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     derived = mcp_core.derive_directive(
         "monitor_start", {"message": _MESSAGE, "interval_secs": 317}, tool_session

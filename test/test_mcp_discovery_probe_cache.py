@@ -20,7 +20,7 @@ from mcp_discovery_helpers import (  # noqa: F401 -- the autouse fixture registe
     _stub_remote_probe_ssrf_vet,
 )
 
-from kiro_crew.mcp_discovery import (
+from aj_crew.mcp_discovery import (
     McpServerInfo,
     _cache_probe,
     _get_cached,
@@ -314,9 +314,9 @@ class TestProbeCache:
         agent_dir.mkdir()
         cfg = {"mcpServers": {"my-srv": {"command": "cmd"}}}
         (agent_dir / "defaults.json").write_text(json.dumps(cfg))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (tmp_path / "x",))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (tmp_path / "x",))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
 
         # Before probe: unknown
         servers = list_servers()
@@ -350,9 +350,9 @@ class TestProbeIdentityWiring:
         agent_dir = tmp_path / "agents"
         agent_dir.mkdir(exist_ok=True)
         (agent_dir / "defaults.json").write_text(json.dumps({"mcpServers": {"srv": spec}}))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (tmp_path / "absent",))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (tmp_path / "absent",))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
 
     def test_edited_command_is_not_served_by_list_servers(self, tmp_path, monkeypatch) -> None:
         """The user-visible bug, end to end.
@@ -397,7 +397,7 @@ class TestProbeIdentityWiring:
         self, tmp_path, monkeypatch, still_crew
     ) -> None:
         """Flag off or backend off KAS: Crew's grant must not keep reading as signed in."""
-        from kiro_crew.connections import crew_oauth
+        from aj_crew.connections import crew_oauth
 
         self._configure(tmp_path, monkeypatch, {"url": "https://a.example/mcp"})
         _cache_probe(
@@ -518,10 +518,10 @@ class TestQuarantinedServersAreNotSpawned:
     LIMIT = 3
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse quarantine store pin moved verbatim; no test of the class calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse quarantine store pin moved verbatim; no test of the class calls monkeypatch.undo()
     def _store(self, tmp_path, monkeypatch):
-        from kiro_crew import mcp_quarantine
-        from kiro_crew.mcp_discovery import _quarantine_warned
+        from aj_crew import mcp_quarantine
+        from aj_crew.mcp_discovery import _quarantine_warned
 
         monkeypatch.setattr(mcp_quarantine, "_STORE_PATH", tmp_path / "quarantine.json")
         monkeypatch.setattr(mcp_quarantine, "threshold", lambda: self.LIMIT)
@@ -534,11 +534,11 @@ class TestQuarantinedServersAreNotSpawned:
     @staticmethod
     def _wedged_config(tmp_path: Path, monkeypatch) -> None:
         """Point discovery at one enabled server and nothing else."""
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         mcp_json = tmp_path / "mcp.json"
         mcp_json.write_text(json.dumps({"mcpServers": {"wedged": {"command": "hangs-forever"}}}))
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
 
     @staticmethod
     def _always_times_out(spawned: list[str]):
@@ -561,8 +561,8 @@ class TestQuarantinedServersAreNotSpawned:
         ones were spawned. This helper must do the same, or it tests a caller that
         does not exist and hides what the real one does with an unprobed row.
         """
-        from kiro_crew import mcp_quarantine
-        from kiro_crew.mcp_discovery import probe_all
+        from aj_crew import mcp_quarantine
+        from aj_crew.mcp_discovery import probe_all
 
         probed = await probe_all()
         mcp_quarantine.record_verdicts([(s.name, s.status, s.error) for s in probed])
@@ -580,7 +580,7 @@ class TestQuarantinedServersAreNotSpawned:
         """
         self._wedged_config(tmp_path, monkeypatch)
         spawned: list[str] = []
-        monkeypatch.setattr("kiro_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
+        monkeypatch.setattr("aj_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
 
         results = [await self._pass(monkeypatch, spawned) for _ in range(self.LIMIT + 2)]
 
@@ -606,11 +606,11 @@ class TestQuarantinedServersAreNotSpawned:
         count would climb with no handshake behind it, and raising the threshold
         afterwards could never release the server.
         """
-        from kiro_crew import mcp_quarantine
+        from aj_crew import mcp_quarantine
 
         self._wedged_config(tmp_path, monkeypatch)
         spawned: list[str] = []
-        monkeypatch.setattr("kiro_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
+        monkeypatch.setattr("aj_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
 
         for _ in range(self.LIMIT + 3):
             probed = await self._pass(monkeypatch, spawned)
@@ -634,12 +634,12 @@ class TestQuarantinedServersAreNotSpawned:
         A ledger keyed by server name alone would stay silent here for the life of
         the process, which is the failure mode warn-once must not become.
         """
-        from kiro_crew import mcp_quarantine
-        from kiro_crew.mcp_discovery import _quarantine_warned
+        from aj_crew import mcp_quarantine
+        from aj_crew.mcp_discovery import _quarantine_warned
 
         self._wedged_config(tmp_path, monkeypatch)
         spawned: list[str] = []
-        monkeypatch.setattr("kiro_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
+        monkeypatch.setattr("aj_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
 
         with caplog.at_level(logging.WARNING):
             for _ in range(self.LIMIT + 1):
@@ -664,7 +664,7 @@ class TestQuarantinedServersAreNotSpawned:
         """One warning for the whole wedge, naming both ways back out."""
         self._wedged_config(tmp_path, monkeypatch)
         spawned: list[str] = []
-        monkeypatch.setattr("kiro_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
+        monkeypatch.setattr("aj_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
 
         with caplog.at_level(logging.WARNING):
             for _ in range(self.LIMIT + 3):
@@ -683,11 +683,11 @@ class TestQuarantinedServersAreNotSpawned:
     @pytest.mark.asyncio
     async def test_clearing_the_quarantine_restores_spawning(self, tmp_path, monkeypatch) -> None:
         """The operator reset that already ships is the reopen path."""
-        from kiro_crew import mcp_quarantine
+        from aj_crew import mcp_quarantine
 
         self._wedged_config(tmp_path, monkeypatch)
         spawned: list[str] = []
-        monkeypatch.setattr("kiro_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
+        monkeypatch.setattr("aj_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
         for _ in range(self.LIMIT + 1):
             await self._pass(monkeypatch, spawned)
         assert spawned == ["wedged"] * self.LIMIT
@@ -707,7 +707,7 @@ class TestQuarantinedServersAreNotSpawned:
         """
         self._wedged_config(tmp_path, monkeypatch)
         spawned: list[str] = []
-        monkeypatch.setattr("kiro_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
+        monkeypatch.setattr("aj_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
         for _ in range(self.LIMIT - 1):
             await self._pass(monkeypatch, spawned)
 
@@ -718,10 +718,10 @@ class TestQuarantinedServersAreNotSpawned:
             _cache_probe(server)
             return server
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.probe_server", healthy)
+        monkeypatch.setattr("aj_crew.mcp_discovery.probe_server", healthy)
         await self._pass(monkeypatch, spawned)
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
+        monkeypatch.setattr("aj_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
         spawned.clear()
         for _ in range(self.LIMIT - 1):
             await self._pass(monkeypatch, spawned)
@@ -734,12 +734,12 @@ class TestQuarantinedServersAreNotSpawned:
         An operator who turns the feature off has to get the pre-change behaviour
         back, not a silent exclusion whose badge has been hidden.
         """
-        from kiro_crew import mcp_quarantine
+        from aj_crew import mcp_quarantine
 
         monkeypatch.setattr(mcp_quarantine, "threshold", lambda: 0)
         self._wedged_config(tmp_path, monkeypatch)
         spawned: list[str] = []
-        monkeypatch.setattr("kiro_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
+        monkeypatch.setattr("aj_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
 
         for _ in range(self.LIMIT + 2):
             await self._pass(monkeypatch, spawned)
@@ -756,7 +756,7 @@ class TestQuarantinedServersAreNotSpawned:
         discovery. ``_as_time`` passes large finite values, so none may reach a
         platform-range API.
         """
-        from kiro_crew import mcp_quarantine
+        from aj_crew import mcp_quarantine
 
         store = tmp_path / "quarantine.json"
         store.write_text(
@@ -772,7 +772,7 @@ class TestQuarantinedServersAreNotSpawned:
         monkeypatch.setattr(mcp_quarantine, "_STORE_PATH", store)
         self._wedged_config(tmp_path, monkeypatch)
         spawned: list[str] = []
-        monkeypatch.setattr("kiro_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
+        monkeypatch.setattr("aj_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
 
         probed = await self._pass(monkeypatch, spawned)
 
@@ -781,7 +781,7 @@ class TestQuarantinedServersAreNotSpawned:
     @pytest.mark.asyncio
     async def test_unreadable_store_still_probes(self, tmp_path, monkeypatch) -> None:
         """Fail OPEN: one bad file must not become a fleet-wide probe outage."""
-        from kiro_crew import mcp_quarantine
+        from aj_crew import mcp_quarantine
 
         def boom():
             raise OSError("store unreadable")
@@ -789,7 +789,7 @@ class TestQuarantinedServersAreNotSpawned:
         monkeypatch.setattr(mcp_quarantine, "snapshot", boom)
         self._wedged_config(tmp_path, monkeypatch)
         spawned: list[str] = []
-        monkeypatch.setattr("kiro_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
+        monkeypatch.setattr("aj_crew.mcp_discovery.probe_server", self._always_times_out(spawned))
 
         for _ in range(self.LIMIT + 2):
             await self._pass(monkeypatch, spawned)

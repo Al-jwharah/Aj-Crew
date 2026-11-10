@@ -15,7 +15,7 @@ import time
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from kiro_crew.apps.builtins.design_tweak.backend import server
+from aj_crew.apps.builtins.design_tweak.backend import server
 
 # ---------------------------------------------------------------------------
 # Probe class: drives _DevProxyHandler without a real socket.
@@ -202,7 +202,7 @@ class TestRelayHttpCredentialStripping:
 
         p = _make_probe(
             headers={
-                "Cookie": "kirocrew_session=secret123",
+                "Cookie": "ajcrew_session=secret123",
                 "Authorization": "Bearer token",
                 "X-Custom": "safe",
             },
@@ -226,7 +226,7 @@ class TestRelayHttpCredentialStripping:
             200,
             [
                 ("Content-Type", "text/plain"),
-                ("Set-Cookie", "kirocrew_session=evil"),
+                ("Set-Cookie", "ajcrew_session=evil"),
                 ("X-Safe", "keep"),
             ],
             b"body",
@@ -601,7 +601,7 @@ class TestRelayWsCredentialStripping:
         p = _make_probe(
             headers={
                 "Upgrade": "websocket",
-                "Cookie": "kirocrew_session=secret",
+                "Cookie": "ajcrew_session=secret",
                 "Authorization": "Bearer tok",
                 "Sec-WebSocket-Key": "dGhlIHNh",
             },
@@ -616,7 +616,7 @@ class TestRelayWsCredentialStripping:
 
         handshake = sent_data[0].decode("latin-1")
         assert "Cookie" not in handshake
-        assert "kirocrew_session" not in handshake
+        assert "ajcrew_session" not in handshake
         assert "Authorization" not in handshake
         assert "Bearer" not in handshake
 
@@ -630,7 +630,7 @@ class TestRelayWsHandshakeSanitization:
         handshake_response = (
             b"HTTP/1.1 101 Switching Protocols\r\n"
             b"Upgrade: websocket\r\n"
-            b"Set-Cookie: kirocrew_session=evil\r\n"
+            b"Set-Cookie: ajcrew_session=evil\r\n"
             b"Connection: Upgrade\r\n"
             b"\r\n"
         )
@@ -675,7 +675,7 @@ class TestRelayWsHandshakeSanitization:
 
         decoded = sanitized.decode("latin-1")
         assert "Set-Cookie" not in decoded
-        assert "kirocrew_session" not in decoded
+        assert "ajcrew_session" not in decoded
         assert "101 Switching Protocols" in decoded
         assert "Upgrade: websocket" in decoded
 

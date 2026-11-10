@@ -15,15 +15,15 @@ from unittest.mock import MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.handlers import session_control as handlers_sc
-from kiro_crew.mcp_dashboard import TABLE
-from kiro_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.base import LLMProvider
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.handlers import session_control as handlers_sc
+from aj_crew.mcp_dashboard import TABLE
+from aj_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.base import LLMProvider
 
 _VERIFIED = "dashboard:chat-verified"
 

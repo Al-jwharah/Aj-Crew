@@ -1,6 +1,6 @@
 name: Build Wheel (reusable)
 
-# Reusable workflow: build the kirocrew pip wheel + sdist with the frontend
+# Reusable workflow: build the ajcrew pip wheel + sdist with the frontend
 # staged in, stamped to an exact PEP 440 version. Called by nightly.yml and
 # release.yml so the build recipe exists exactly once -- the callers differ
 # only in how they derive the version (date stamp vs tag).
@@ -26,7 +26,7 @@ on:
       build_channel:
         description: >-
           Release lane baked into the wheel's _build_info.BUILD_CHANNEL
-          (scripts/stamp-distribution.sh, read by kiro_crew.build_channel).
+          (scripts/stamp-distribution.sh, read by aj_crew.build_channel).
           nightly.yml passes nightly, which makes a nightly build default
           agent.kas_bundle on. Empty (the default) stamps no lane.
         required: false
@@ -35,7 +35,7 @@ on:
       ui_index_strict:
         description: >-
           Fail the frontend build when the committed find_ui index
-          (src/kiro_crew/docs/ui-index.generated.json, guidePlans.gen.ts) is
+          (src/aj_crew/docs/ui-index.generated.json, guidePlans.gen.ts) is
           stale, instead of warning. Sets KC_UI_INDEX_STRICT=1 for
           `npm run build`. release.yml passes true so a stale release branch
           fails before any lane publishes; nightly.yml leaves it false, so a
@@ -53,7 +53,7 @@ env:
   KC_UI_INDEX_STRICT: ${{ inputs.ui_index_strict && '1' || '' }}
   # The edition stamp (setup.py build_py, packaging/build-desktop.sh). Empty for
   # every caller but release-lts.yml, which both readers take as oss.
-  KIROCREW_BUILD_EDITION: ${{ inputs.edition == 'lts' && 'lts' || '' }}
+  AJCREW_BUILD_EDITION: ${{ inputs.edition == 'lts' && 'lts' || '' }}
   # Read by scripts/stamp-distribution.sh: the lane baked into _build_info.py.
   KC_BUILD_CHANNEL: ${{ inputs.build_channel }}
 
@@ -62,10 +62,10 @@ jobs:
     name: Build Wheel (CLI)
     # Reusable workflows inherit the caller's event and actor. Only admitted
     # same-repository pushes use the fleet. A scheduled or manual caller in THIS
-    # repository takes the `kirocrew-runners` group instead of the shared
+    # repository takes the `ajcrew-runners` group instead of the shared
     # standard pool; a fork running its own copy cannot reach an organization
     # group, so it stays on the hosted image.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && github.event_name == 'push' && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && github.event_name == 'push' && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -93,11 +93,11 @@ jobs:
           WHEEL_VERSION: ${{ inputs.wheel_version }}
         run: |
           # The wheel version is sourced from pyproject.toml [project].version
-          # (static), NOT src/kiro_crew/__init__.py -- so stamp pyproject to make
+          # (static), NOT src/aj_crew/__init__.py -- so stamp pyproject to make
           # the built wheel carry the exact version. Keep __init__.py in sync for
           # the runtime --version string.
           sed -i -E "s/^version = \".*\"/version = \"${WHEEL_VERSION}\"/" pyproject.toml
-          sed -i "s/__version__ = \".*\"/__version__ = \"${WHEEL_VERSION}\"/" src/kiro_crew/__init__.py
+          sed -i "s/__version__ = \".*\"/__version__ = \"${WHEEL_VERSION}\"/" src/aj_crew/__init__.py
           echo "Building wheel: ${WHEEL_VERSION}"
 
       - name: Stamp distribution channel
@@ -115,24 +115,24 @@ jobs:
 
       - name: Stage frontend into package
         run: |
-          rm -rf src/kiro_crew/static/dist
-          mkdir -p src/kiro_crew/static
-          cp -R website/dist src/kiro_crew/static/dist
+          rm -rf src/aj_crew/static/dist
+          mkdir -p src/aj_crew/static
+          cp -R website/dist src/aj_crew/static/dist
 
-      # The LTS edition ships as its own distribution, kirocrew-lts, so its wheel
-      # file name (kirocrew_lts-<v>-py3-none-any.whl) and pip identity never
+      # The LTS edition ships as its own distribution, ajcrew-lts, so its wheel
+      # file name (ajcrew_lts-<v>-py3-none-any.whl) and pip identity never
       # collide with oss. publish-cli.yml and the installers pair that stem
       # with the lts channel. The voice extra names its own distribution, so it
-      # is renamed too, or kirocrew-lts[voice] would pull in the oss kirocrew.
+      # is renamed too, or ajcrew-lts[voice] would pull in the oss ajcrew.
       - name: Name the LTS distribution
         if: inputs.edition == 'lts'
         run: |
-          sed -i -E 's/^name = "kirocrew"$/name = "kirocrew-lts"/' pyproject.toml
-          grep -qx 'name = "kirocrew-lts"' pyproject.toml
-          sed -i -E 's/^    kirocrew\[voice-aws\]$/    kirocrew-lts[voice-aws]/' setup.cfg
-          grep -qx '    kirocrew-lts\[voice-aws\]' setup.cfg
-          if grep -nE '^\s+kirocrew\[' setup.cfg; then
-            echo "::error::setup.cfg still names the oss kirocrew distribution in an extra"; exit 1
+          sed -i -E 's/^name = "ajcrew"$/name = "ajcrew-lts"/' pyproject.toml
+          grep -qx 'name = "ajcrew-lts"' pyproject.toml
+          sed -i -E 's/^    ajcrew\[voice-aws\]$/    ajcrew-lts[voice-aws]/' setup.cfg
+          grep -qx '    ajcrew-lts\[voice-aws\]' setup.cfg
+          if grep -nE '^\s+ajcrew\[' setup.cfg; then
+            echo "::error::setup.cfg still names the oss ajcrew distribution in an extra"; exit 1
           fi
 
       - name: Build wheel + sdist
@@ -152,7 +152,7 @@ jobs:
       - name: Verify the build ships no internal host
         run: python scripts/verify_no_internal_host.py dist website/dist
 
-      # `local` is the default speech-to-text provider, so `kirocrew[voice]` has to
+      # `local` is the default speech-to-text provider, so `ajcrew[voice]` has to
       # resolve to a PREBUILT wheel wherever we claim one: a platform that silently
       # falls back to a source build needs CMake and a C++ toolchain, which a desktop
       # bundle does not have. Checked against the index rather than asserted in the
@@ -185,7 +185,7 @@ jobs:
               --python-version 3.12 --platform macosx_11_0_x86_64 \
               -d "$RUNNER_TEMP/pwc-intel" >/dev/null 2>&1; then
             echo "::error::An Intel macOS pywhispercpp wheel now exists for $SPEC. Add" \
-                 "x86_64 to _WHEEL_ARCHS['Darwin'] in src/kiro_crew/stt/engine.py and" \
+                 "x86_64 to _WHEEL_ARCHS['Darwin'] in src/aj_crew/stt/engine.py and" \
                  "revisit the wheel-only skip in packaging/build-desktop.sh."
             exit 1
           fi

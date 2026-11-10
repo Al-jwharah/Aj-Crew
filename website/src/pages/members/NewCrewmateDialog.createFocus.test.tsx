@@ -20,11 +20,11 @@ vi.mock('../../api/client', async importOriginal => {
     ...mod,
     api: {
       ...mod.api,
-      agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'kirocrew' })),
+      agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'ajcrew' })),
       workspaces: vi.fn(() => Promise.resolve({ workspaces: [{ name: 'default' }] })),
       availableModels: vi.fn(() => Promise.resolve({ models: [] })),
       members: vi.fn(() => Promise.resolve({ members: [] })),
-      createKirocrewAgent: vi.fn(),
+      createAjcrewAgent: vi.fn(),
     },
   }
 })
@@ -36,7 +36,7 @@ function deferredCreate() {
   let settle!: (v: unknown) => void
   let reject!: (e: unknown) => void
   const p = new Promise((res, rej) => { settle = res; reject = rej })
-  vi.mocked(api.createKirocrewAgent).mockReturnValue(p as ReturnType<typeof api.createKirocrewAgent>)
+  vi.mocked(api.createAjcrewAgent).mockReturnValue(p as ReturnType<typeof api.createAjcrewAgent>)
   return { settle, reject }
 }
 
@@ -48,7 +48,7 @@ describe('NewCrewmateDialog keeps focus on the control that started the create',
   beforeEach(() => {
     props.onClose = vi.fn()
     props.onCreated = vi.fn()
-    vi.mocked(api.createKirocrewAgent).mockReset()
+    vi.mocked(api.createAjcrewAgent).mockReset()
   })
   afterEach(() => { vi.restoreAllMocks() })
 
@@ -62,7 +62,7 @@ describe('NewCrewmateDialog keeps focus on the control that started the create',
     await user.click(name)
     await user.keyboard('Scout{Enter}')
 
-    await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
     // The field that submitted keeps focus, inside the dialog, held as
     // unavailable but never blurred to <body>.
     expect(document.activeElement).toBe(name)
@@ -82,7 +82,7 @@ describe('NewCrewmateDialog keeps focus on the control that started the create',
     create.focus()
     await user.keyboard('{Enter}')
 
-    await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
     expect(document.activeElement).toBe(create)
     expect(dialog()).toContainElement(document.activeElement as HTMLElement)
     expect(create.getAttribute('aria-disabled')).toBe('true')
@@ -102,7 +102,7 @@ describe('NewCrewmateDialog keeps focus on the control that started the create',
     await user.click(job)
     await user.keyboard('watch CI{Enter}')
 
-    await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
     // Enter in Job implicitly submitted the form; the field it submitted from
     // keeps focus inside the dialog, held rather than blurred to <body>.
     expect(document.activeElement).toBe(job)
@@ -122,7 +122,7 @@ describe('NewCrewmateDialog keeps focus on the control that started the create',
     await user.type(name, 'Scout')
     submitBtn().focus()
     await user.keyboard('{Enter}')
-    await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
 
     // Typing more while the request is out changes nothing.
     await user.click(name)
@@ -131,7 +131,7 @@ describe('NewCrewmateDialog keeps focus on the control that started the create',
     // A second submit is refused while the first is still out.
     submitBtn().focus()
     await user.keyboard('{Enter}')
-    expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1)
+    expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1)
   })
 
   it('on a failure the error notice shows and focus stays on the control inside the dialog', async () => {
@@ -144,7 +144,7 @@ describe('NewCrewmateDialog keeps focus on the control that started the create',
     const create = submitBtn()
     create.focus()
     await user.keyboard('{Enter}')
-    await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
 
     reject(new Error('network down'))
 

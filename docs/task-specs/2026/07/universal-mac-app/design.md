@@ -26,16 +26,16 @@ explicitly deferred).
 ## Bundle layout
 
 ```
-KiroCrew.app/Contents/
+AjCrew.app/Contents/
 ├── MacOS/ + Frameworks/…                 ← fat binaries (arm64 + x86_64)
 └── Resources/backend-dist/
-    ├── kirocrew-backend-arm64/           ← full PBS bundle, arm64
-    └── kirocrew-backend-x64/             ← full PBS bundle, x86_64
+    ├── ajcrew-backend-arm64/           ← full PBS bundle, arm64
+    └── ajcrew-backend-x64/             ← full PBS bundle, x86_64
 ```
 
-DMG name: `KiroCrew-<version>-universal.dmg` (~350–400MB). On macOS,
+DMG name: `AjCrew-<version>-universal.dmg` (~350–400MB). On macOS,
 universal is the **default** for `make desktop`; `UNIVERSAL=0` opts out into
-the host-arch-only build, whose unsuffixed `kirocrew-backend/` layout remains
+the host-arch-only build, whose unsuffixed `ajcrew-backend/` layout remains
 valid (and is what Linux and `make backend-bin` always use).
 
 ## Components
@@ -45,10 +45,10 @@ valid (and is what Linux and `make backend-bin` always use).
    macOS build out for faster host-arch-only local iteration — final decision,
    superseding the earlier separate-target plan; macOS-only mode, fail fast
    elsewhere). Frontend built once. arm64 backend = today's steps →
-   `backend-dist/kirocrew-backend-arm64/`. x86_64 backend = same steps with an
+   `backend-dist/ajcrew-backend-arm64/`. x86_64 backend = same steps with an
    x86_64 PBS interpreter (`uv python install cpython-3.12-macos-x86_64-none`;
    the x86_64 python binary executes under Rosetta) →
-   `backend-dist/kirocrew-backend-x64/`. Preflight: Rosetta present
+   `backend-dist/ajcrew-backend-x64/`. Preflight: Rosetta present
    (`arch -x86_64 /usr/bin/true`) else fail with the `softwareupdate` hint.
    Per-backend self-containment gate as today (the x64 gate also proves the
    bundle runs under Rosetta). Then `electron-builder --mac --universal`.
@@ -59,7 +59,7 @@ valid (and is what Linux and `make backend-bin` always use).
    separate target; `backend-bin` pins `UNIVERSAL=0` since the standalone
    backend is a local-machine artifact).
 3. **`website/electron/find-bin.js`** — arch-suffixed candidates ranked above
-   the existing ones: `backend-dist/kirocrew-backend-<arch>/bin/kirocrew` for
+   the existing ones: `backend-dist/ajcrew-backend-<arch>/bin/ajcrew` for
    `<arch>` = `process.arch` (`arm64`|`x64`), then the unsuffixed fallback.
    Arch injected as a parameter (pure function, both branches unit-testable).
 4. **`website/electron/package.json`** — `build.mac.x64ArchFiles` covering
@@ -71,7 +71,7 @@ valid (and is what Linux and `make backend-bin` always use).
    arm64-only for macOS). Build the 0.3.34 sdist from source for x86_64
    (pinned version; `CMAKE_OSX_ARCHITECTURES=x86_64`, Metal OFF, CPU-only),
    extract the same lib closure (`libllama` + `libggml*`) into
-   `src/kiro_crew/_vendor/llama_cpp_libs/macos_x86_64/`, record provenance +
+   `src/aj_crew/_vendor/llama_cpp_libs/macos_x86_64/`, record provenance +
    sha256s in `_vendor/README.md`. Map `darwin`/`x86_64` →
    `"macos_x86_64"` in `embeddings.py:_platform_libs_dirname()`. Add the dir
    to `setup.cfg [options.package_data]` (and `MANIFEST.in` if patterned).
@@ -97,7 +97,7 @@ valid (and is what Linux and `make backend-bin` always use).
 - `test/test_embeddings.py`: `darwin`/`x86_64` mapping.
 - Build gates in-script (self-containment ×2, resolver-agreement, lipo, file).
 - Manual: build on Apple Silicon; launch natively; run
-  `arch -x86_64 …/kirocrew-backend-x64/bin/kirocrew --version`.
+  `arch -x86_64 …/ajcrew-backend-x64/bin/ajcrew --version`.
 
 ## Out of scope
 

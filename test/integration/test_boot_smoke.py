@@ -20,11 +20,11 @@ from typing import Any, Awaitable
 import pytest
 from integration import conftest as harness
 
-from kiro_crew import identity_stores, onboarding_sources, safety_override
-from kiro_crew.agent_sdk import host_auth
-from kiro_crew.dashboard.handlers import kiro_usage_api
-from kiro_crew.platform import governance
-from kiro_crew.slack.gateway import GatewayOrchestrator
+from aj_crew import identity_stores, onboarding_sources, safety_override
+from aj_crew.agent_sdk import host_auth
+from aj_crew.dashboard.handlers import kiro_usage_api
+from aj_crew.platform import governance
+from aj_crew.slack.gateway import GatewayOrchestrator
 
 try:
     import resource as _resource
@@ -139,7 +139,7 @@ async def test_restart_reboots_on_the_same_home(gateway_boot) -> None:
 
 @pytest.mark.asyncio
 async def test_a_boot_leaves_the_process_as_it_found_it(gateway_boot) -> None:
-    """Startup writes ``KIROCREW_BOUND_PORT``/``_HOST``, installs signal
+    """Startup writes ``AJCREW_BOUND_PORT``/``_HOST``, installs signal
     handlers and a loop exception handler, raises the open-file limit, takes
     the memory-preparation fence and fills the home-bound auth globals; a
     finished boot must have undone all of it, or the next test inherits
@@ -151,7 +151,7 @@ async def test_a_boot_leaves_the_process_as_it_found_it(gateway_boot) -> None:
     assert _process_is_clean()
 
     async with gateway_boot() as gw:
-        assert os.environ.get("KIROCREW_BOUND_PORT") == str(gw.port)
+        assert os.environ.get("AJCREW_BOUND_PORT") == str(gw.port)
 
     # The real exit path ran: it clears the run marker the boot published.
     assert not (gw.home / "run" / f"gateway-{gw.port}.bin").exists()
@@ -165,11 +165,11 @@ async def test_a_boot_leaves_the_process_as_it_found_it(gateway_boot) -> None:
 
 @pytest.mark.asyncio
 async def test_a_boot_does_not_inherit_the_previous_homes_unreadable_spec(gateway_boot) -> None:
-    """The unreadable-spec episode describes ONE home's ``kirocrew.json``.
+    """The unreadable-spec episode describes ONE home's ``ajcrew.json``.
     Left over from a home whose spec could not be read, it would hold the next
     home's rebuild on the previous file's verdict, so the harness resets it
     before every boot, as a fresh process starts with it clear."""
-    from kiro_crew import agent as agent_mod
+    from aj_crew import agent as agent_mod
 
     agent_mod._main_spec_unreadable = True
     agent_mod._main_spec_episode_revision = 5
@@ -189,7 +189,7 @@ async def test_a_second_home_gets_its_own_signing_key(tmp_path: Path, monkeypatc
     """Two boots on two homes in one process: the token minted for the first
     must not validate against the second, which is only true when the cached
     signing key and revoked-nonce store are dropped between them."""
-    from kiro_crew.dashboard import token_secret
+    from aj_crew.dashboard import token_secret
 
     homes = []
     keys = []
@@ -200,13 +200,13 @@ async def test_a_second_home_gets_its_own_signing_key(tmp_path: Path, monkeypatc
         user_home = tmp_path / f"{name}-user-home"
         user_home.mkdir()
         with monkeypatch.context() as patched:
-            patched.setenv("KIROCREW_HOME", str(home))
+            patched.setenv("AJCREW_HOME", str(home))
             patched.setenv("KIRO_HOME", str(home / "kiro"))
             # What integration_home does for its one home: the developer's
             # home, channel credentials, and the AWS and GitHub identity.
             harness.isolate_user_home(patched, user_home)
             harness.isolate_credentials(patched, home)
-            patched.setenv("KIROCREW_KIRO_BIN", str(harness.fake_acp_backend.__file__))
+            patched.setenv("AJCREW_KIRO_BIN", str(harness.fake_acp_backend.__file__))
             async with harness.booted_gateway(home) as gw:
                 await gw.get_json("/api/sessions")
                 keys.append(token_secret._get_secret())
@@ -450,141 +450,141 @@ async def test_a_boot_reads_nothing_from_the_outer_home(
 #: (``conftest._reset_home_bound_globals``) or, with a reason, here.
 _KNOWN_SECOND_BOOT_CHANGES: dict[tuple[str, str], str] = {
     # Monotonic counters and clocks: carry no home state.
-    ("kiro_crew.config.loader_snapshots", "_CONFIG_AUTOCOMPACT_ISSUED"): "counter",
-    ("kiro_crew.config.loader_snapshots", "_CONFIG_AUTOCOMPACT_TICKET"): "counter",
-    ("kiro_crew.config.loader_snapshots", "_CONFIG_TIMEZONE_TICKET"): "counter",
-    ("kiro_crew.config.loader_snapshots", "_MATERIALIZED_REFRESH_APPLIED"): "counter",
-    ("kiro_crew.config.loader_snapshots", "_MATERIALIZED_REFRESH_ISSUED"): "counter",
-    ("kiro_crew.context", "_store_cache_generation"): "counter",
-    ("kiro_crew.dashboard.handlers.updates_check", "_last_update_check"): "clock",
+    ("aj_crew.config.loader_snapshots", "_CONFIG_AUTOCOMPACT_ISSUED"): "counter",
+    ("aj_crew.config.loader_snapshots", "_CONFIG_AUTOCOMPACT_TICKET"): "counter",
+    ("aj_crew.config.loader_snapshots", "_CONFIG_TIMEZONE_TICKET"): "counter",
+    ("aj_crew.config.loader_snapshots", "_MATERIALIZED_REFRESH_APPLIED"): "counter",
+    ("aj_crew.config.loader_snapshots", "_MATERIALIZED_REFRESH_ISSUED"): "counter",
+    ("aj_crew.context", "_store_cache_generation"): "counter",
+    ("aj_crew.dashboard.handlers.updates_check", "_last_update_check"): "clock",
     # When the shared-crew admission service last read its config: a monotonic
     # stamp the harness zeroes and each boot sets again when it builds its service.
-    ("kiro_crew.shared_crew.admission_gate", "_last_config_at"): "clock",
+    ("aj_crew.shared_crew.admission_gate", "_last_config_at"): "clock",
     # The SSM listener's last answer: every boot replaces it with a new value from its
     # own config (off, or the port it bound), so no earlier boot's answer carries over.
-    ("kiro_crew.shared_crew.ssm", "_listener"): "rebuilt by each boot",
+    ("aj_crew.shared_crew.ssm", "_listener"): "rebuilt by each boot",
     # When telemetry consent was last re-read, and whether a re-read is in
     # flight: a boot that outlasts the recheck window starts one. The consent
     # itself (``_built_consent``) does not change here.
-    ("kiro_crew.metrics.provider", "_check_in_flight"): "clock-driven recheck",
-    ("kiro_crew.metrics.provider", "_consent_checked_at"): "clock",
+    ("aj_crew.metrics.provider", "_check_in_flight"): "clock-driven recheck",
+    ("aj_crew.metrics.provider", "_consent_checked_at"): "clock",
     # The governance answer generation the last agent-config rebuild read: a value of
     # the two counters around it, not home state.
-    ("kiro_crew.agent", "_rebuild_answer_generation"): "counter",
-    ("kiro_crew.platform.context", "_GOVERNANCE_GENERATION"): "counter",
+    ("aj_crew.agent", "_rebuild_answer_generation"): "counter",
+    ("aj_crew.platform.context", "_GOVERNANCE_GENERATION"): "counter",
     # The trust verdict's install counter: monotonic, no home state.
-    ("kiro_crew.approval_mode_policy", "_ceiling_gen"): "counter",
-    ("kiro_crew.platform.governance_profiles", "_PROFILE_GENERATION"): "counter",
+    ("aj_crew.approval_mode_policy", "_ceiling_gen"): "counter",
+    ("aj_crew.platform.governance_profiles", "_PROFILE_GENERATION"): "counter",
     # Host facts re-probed on their own TTL or backoff: the user login session
     # behind cgroup scopes and the machine's own host names. A boot that
     # outlasts the window probes again, or a lookup started in one boot lands
     # in the next; neither is derived from the home.
-    ("kiro_crew.sandbox_cgroup", "_CGROUP_SCOPE_PROBE_AT"): "host probe clock",
-    ("kiro_crew.sandbox_cgroup", "_CPU_DELEGATED"): "host probe, re-read after a re-probe",
-    ("kiro_crew.security.argv_floor_hosts", "_OWN_HOST_NAMES_CACHE"): "host names",
-    ("kiro_crew.security.argv_floor_hosts", "_OWN_HOST_RESOLVE_DONE"): "host names",
-    ("kiro_crew.security.argv_floor_hosts", "_OWN_HOST_RESOLVE_IN_FLIGHT"): "host names",
-    ("kiro_crew.security.argv_floor_hosts", "_OWN_HOST_RESOLVE_NEXT_TRY"): "host probe clock",
-    ("kiro_crew.security.argv_floor_hosts", "_OWN_HOST_RESOLVE_STAMP"): "host probe clock",
+    ("aj_crew.sandbox_cgroup", "_CGROUP_SCOPE_PROBE_AT"): "host probe clock",
+    ("aj_crew.sandbox_cgroup", "_CPU_DELEGATED"): "host probe, re-read after a re-probe",
+    ("aj_crew.security.argv_floor_hosts", "_OWN_HOST_NAMES_CACHE"): "host names",
+    ("aj_crew.security.argv_floor_hosts", "_OWN_HOST_RESOLVE_DONE"): "host names",
+    ("aj_crew.security.argv_floor_hosts", "_OWN_HOST_RESOLVE_IN_FLIGHT"): "host names",
+    ("aj_crew.security.argv_floor_hosts", "_OWN_HOST_RESOLVE_NEXT_TRY"): "host probe clock",
+    ("aj_crew.security.argv_floor_hosts", "_OWN_HOST_RESOLVE_STAMP"): "host probe clock",
     # Per-boot objects the next boot replaces wholesale before any read; they
     # hold references, not home-derived decisions a later request would act on.
-    ("kiro_crew.apps.builtins.auto_improvement.backend.crew", "_runtime"): "replaced per boot",
-    ("kiro_crew.apps.hook_reconcile", "_cron_service"): "replaced per boot",
-    ("kiro_crew.apps.hooks_integration", "_lifecycle_dispatcher"): "replaced per boot",
-    ("kiro_crew.apps.hooks_integration", "_route_registry"): "replaced per boot",
-    ("kiro_crew.dashboard.cautious_boot", "_decision"): "replaced per boot",
-    ("kiro_crew.dashboard.crash_dump_store", "_active_dump_file"): "replaced per boot",
-    ("kiro_crew.dashboard.members_roster_goals", "_state_ref"): "replaced per boot",
-    ("kiro_crew.diag.recorder", "_recorder"): "replaced per boot",
-    ("kiro_crew.hooks", "_BUILTIN_APP_AGENTS"): "replaced per boot",
-    ("kiro_crew.hooks", "_global_script_hook_store"): "replaced per boot",
+    ("aj_crew.apps.builtins.auto_improvement.backend.crew", "_runtime"): "replaced per boot",
+    ("aj_crew.apps.hook_reconcile", "_cron_service"): "replaced per boot",
+    ("aj_crew.apps.hooks_integration", "_lifecycle_dispatcher"): "replaced per boot",
+    ("aj_crew.apps.hooks_integration", "_route_registry"): "replaced per boot",
+    ("aj_crew.dashboard.cautious_boot", "_decision"): "replaced per boot",
+    ("aj_crew.dashboard.crash_dump_store", "_active_dump_file"): "replaced per boot",
+    ("aj_crew.dashboard.members_roster_goals", "_state_ref"): "replaced per boot",
+    ("aj_crew.diag.recorder", "_recorder"): "replaced per boot",
+    ("aj_crew.hooks", "_BUILTIN_APP_AGENTS"): "replaced per boot",
+    ("aj_crew.hooks", "_global_script_hook_store"): "replaced per boot",
     # Shared crew: the boot's host hooks and what its tailnet setup resolved to.
     # The harness resets each to a fresh default, a new object every boot.
-    ("kiro_crew.shared_crew.access", "_direct_tailnet"): "replaced per boot",
-    ("kiro_crew.shared_crew.access", "_forwarded_attribution"): "replaced per boot",
-    ("kiro_crew.shared_crew.admission_gate", "_HOOKS"): "replaced per boot",
+    ("aj_crew.shared_crew.access", "_direct_tailnet"): "replaced per boot",
+    ("aj_crew.shared_crew.access", "_forwarded_attribution"): "replaced per boot",
+    ("aj_crew.shared_crew.admission_gate", "_HOOKS"): "replaced per boot",
     # The lock that serializes building the admission service; the harness drops
     # the service and gives each boot a fresh lock for the one it builds.
-    ("kiro_crew.shared_crew.admission_gate", "_SERVICE_LOCK"): "replaced per boot",
-    ("kiro_crew.skill_usage", "_global_skill_read_observer"): "replaced per boot",
-    ("kiro_crew.slack.interactions", "_orch"): "replaced per boot",
-    ("kiro_crew.slack.interactions_approvals", "_orch"): "replaced per boot",
-    ("kiro_crew.slack.interactions_context", "_orch"): "replaced per boot",
-    ("kiro_crew.slack.interactions_modals", "_orch"): "replaced per boot",
-    ("kiro_crew.slack.interactions_options", "_orch"): "replaced per boot",
-    ("kiro_crew.slack.interactions_sessions", "_orch"): "replaced per boot",
-    ("kiro_crew.slack.interactions_settings", "_orch"): "replaced per boot",
-    ("kiro_crew.taskq.dependency", "_current"): "cleared by _shutdown()",
+    ("aj_crew.shared_crew.admission_gate", "_SERVICE_LOCK"): "replaced per boot",
+    ("aj_crew.skill_usage", "_global_skill_read_observer"): "replaced per boot",
+    ("aj_crew.slack.interactions", "_orch"): "replaced per boot",
+    ("aj_crew.slack.interactions_approvals", "_orch"): "replaced per boot",
+    ("aj_crew.slack.interactions_context", "_orch"): "replaced per boot",
+    ("aj_crew.slack.interactions_modals", "_orch"): "replaced per boot",
+    ("aj_crew.slack.interactions_options", "_orch"): "replaced per boot",
+    ("aj_crew.slack.interactions_sessions", "_orch"): "replaced per boot",
+    ("aj_crew.slack.interactions_settings", "_orch"): "replaced per boot",
+    ("aj_crew.taskq.dependency", "_current"): "cleared by _shutdown()",
     # The operator-declared model windows (``agent.model_context_tokens``): each boot's
     # config apply rebinds the global to a fresh dict built from that boot's own config,
     # replacing and never merging, so the second boot holds the same content and nothing
     # of the first one carries over.
-    ("kiro_crew.model_registry", "_OPERATOR_WINDOWS"): "rebound by every config apply",
+    ("aj_crew.model_registry", "_OPERATOR_WINDOWS"): "rebound by every config apply",
     # Caches keyed by the thing they cache (a path, a server name), so a stale
     # entry is never returned for a different home.
-    ("kiro_crew.agent_discovery_parts.agent_roster", "_LIST_AGENTS_CACHE"): "keyed cache",
-    ("kiro_crew.agent_discovery_parts.spec_snapshot", "_LIST_AGENTS_CACHE"): "keyed cache",
-    ("kiro_crew.apps.dev_mode", "_dev_apps_cache"): "keyed cache",
-    ("kiro_crew.apps.manager_builtins", "_orphaned_builtins_cache"): "keyed cache",
-    ("kiro_crew.autonudge", "_MAINTENANCE_LOCKS"): "keyed cache",
-    ("kiro_crew.dashboard.handlers.mcp_probe", "_mcp_probe_cache"): "keyed cache",
-    ("kiro_crew.dashboard.handlers.mcp_probe", "_mcp_probe_ts"): "keyed cache",
-    ("kiro_crew.mcp_discovery_probe_state", "_probe_cache"): "keyed cache",
-    ("kiro_crew.mcp_discovery_probe", "_probe_cache"): "keyed cache",
-    ("kiro_crew.agent_discovery_parts.spec_snapshot", "_PARSED_SPECS_CACHE"): "keyed cache",
+    ("aj_crew.agent_discovery_parts.agent_roster", "_LIST_AGENTS_CACHE"): "keyed cache",
+    ("aj_crew.agent_discovery_parts.spec_snapshot", "_LIST_AGENTS_CACHE"): "keyed cache",
+    ("aj_crew.apps.dev_mode", "_dev_apps_cache"): "keyed cache",
+    ("aj_crew.apps.manager_builtins", "_orphaned_builtins_cache"): "keyed cache",
+    ("aj_crew.autonudge", "_MAINTENANCE_LOCKS"): "keyed cache",
+    ("aj_crew.dashboard.handlers.mcp_probe", "_mcp_probe_cache"): "keyed cache",
+    ("aj_crew.dashboard.handlers.mcp_probe", "_mcp_probe_ts"): "keyed cache",
+    ("aj_crew.mcp_discovery_probe_state", "_probe_cache"): "keyed cache",
+    ("aj_crew.mcp_discovery_probe", "_probe_cache"): "keyed cache",
+    ("aj_crew.agent_discovery_parts.spec_snapshot", "_PARSED_SPECS_CACHE"): "keyed cache",
     # Process-wide values resolved on first use, home-independent: the thread
     # pools, and the umask-derived default file mode (``0o666 & ~umask``) that
     # the first atomic write OUTSIDE the data home resolves -- inside the home
     # the default is owner-only and never consults it. A boot's background
     # session writes the workspace ``.kiro/cli.json`` overlay from a task that
     # races shutdown, so either boot may be the one that fills it.
-    ("kiro_crew.atomic_write", "_default_mode"): "lazy umask cache",
+    ("aj_crew.atomic_write", "_default_mode"): "lazy umask cache",
     # Each calling thread's path-resolver wait allowance. The harness clears it
     # before every boot, but a boot records an entry only when one resolve's wait
     # clears ``_PATH_RESOLVE_WAIT_FLOOR_SECS``, so whether the second boot leaves
     # one depends on how loaded the host is, not on the home. Listed under both
     # the owning module and the ``security.paths`` facade that re-exports it.
-    ("kiro_crew.security.paths", "_path_resolve_thread_waits"): "wait timing",
-    ("kiro_crew.security.paths_resolver", "_path_resolve_thread_waits"): "wait timing",
+    ("aj_crew.security.paths", "_path_resolve_thread_waits"): "wait timing",
+    ("aj_crew.security.paths_resolver", "_path_resolve_thread_waits"): "wait timing",
     # The dotted names of the facades imported so far in this process. A
     # facade imported lazily by a boot's background work (the update check
     # imports ``platform.wheel_engine``) is added by whichever boot first
     # gets that far, so it may land in either; the names are modules, not
     # home state.
-    ("kiro_crew._facade_mirror", "_INSTALLED"): "lazy import registry",
-    ("kiro_crew.executors", "_pool"): "lazy thread pool",
-    ("kiro_crew.executors", "_subprocess_pool"): "lazy thread pool",
-    ("kiro_crew.executors", "_kiro_spawn_pool"): "lazy thread pool",
-    ("kiro_crew.executors", "_cron_pool"): "lazy thread pool",
-    ("kiro_crew.executors", "_discovery_pool"): "lazy thread pool",
-    ("kiro_crew.executors", "_embed_pool"): "lazy thread pool",
-    ("kiro_crew.executors", "_memory_background_pool"): "lazy thread pool",
-    ("kiro_crew.executors", "_recall_pool"): "lazy thread pool",
-    ("kiro_crew.executors", "_image_pool"): "lazy thread pool",
-    ("kiro_crew.executors", "_stt_pool"): "lazy thread pool",
-    ("kiro_crew.executors", "_governance_pool"): "lazy thread pool",
-    ("kiro_crew.executors", "_cron_gate_pool"): "lazy thread pool",
-    ("kiro_crew.executors", "_tool_gate_pool"): "lazy thread pool",
-    ("kiro_crew.executors", "_path_resolve_pool"): "lazy thread pool",
-    ("kiro_crew.executors", "_path_probe_pool"): "lazy thread pool",
-    ("kiro_crew.executors", "_path_transfer_pool"): "lazy thread pool",
-    ("kiro_crew.executors", "_crew_log_pool"): "lazy thread pool",
+    ("aj_crew._facade_mirror", "_INSTALLED"): "lazy import registry",
+    ("aj_crew.executors", "_pool"): "lazy thread pool",
+    ("aj_crew.executors", "_subprocess_pool"): "lazy thread pool",
+    ("aj_crew.executors", "_kiro_spawn_pool"): "lazy thread pool",
+    ("aj_crew.executors", "_cron_pool"): "lazy thread pool",
+    ("aj_crew.executors", "_discovery_pool"): "lazy thread pool",
+    ("aj_crew.executors", "_embed_pool"): "lazy thread pool",
+    ("aj_crew.executors", "_memory_background_pool"): "lazy thread pool",
+    ("aj_crew.executors", "_recall_pool"): "lazy thread pool",
+    ("aj_crew.executors", "_image_pool"): "lazy thread pool",
+    ("aj_crew.executors", "_stt_pool"): "lazy thread pool",
+    ("aj_crew.executors", "_governance_pool"): "lazy thread pool",
+    ("aj_crew.executors", "_cron_gate_pool"): "lazy thread pool",
+    ("aj_crew.executors", "_tool_gate_pool"): "lazy thread pool",
+    ("aj_crew.executors", "_path_resolve_pool"): "lazy thread pool",
+    ("aj_crew.executors", "_path_probe_pool"): "lazy thread pool",
+    ("aj_crew.executors", "_path_transfer_pool"): "lazy thread pool",
+    ("aj_crew.executors", "_crew_log_pool"): "lazy thread pool",
     # Log-once dedup of the loop-thread lock warning: it holds source
     # locations already warned about, not home state.
-    ("kiro_crew.vector_memory_lifecycle", "_loop_lock_sites"): "log-once warning dedup",
+    ("aj_crew.vector_memory_lifecycle", "_loop_lock_sites"): "log-once warning dedup",
     # Task handles of loops the harness reaps at teardown (docstring, item 4);
     # only the dead handle remains.
-    ("kiro_crew.apps.builtins.auto_research.handlers", "_watchdog_task"): "reaped task handle",
-    ("kiro_crew.apps.builtins.code_review_sage.backend.routes", "_TASKS"): "reaped task handles",
-    ("kiro_crew.dashboard.handlers.mcp_probe", "_mcp_probe_task"): "reaped task handle",
-    ("kiro_crew.sandbox_wrap", "_warm_thread"): "finished probe thread handle",
+    ("aj_crew.apps.builtins.auto_research.handlers", "_watchdog_task"): "reaped task handle",
+    ("aj_crew.apps.builtins.code_review_sage.backend.routes", "_TASKS"): "reaped task handles",
+    ("aj_crew.dashboard.handlers.mcp_probe", "_mcp_probe_task"): "reaped task handle",
+    ("aj_crew.sandbox_wrap", "_warm_thread"): "finished probe thread handle",
 }
 
 _SCALAR_TYPES = (int, float, str, bool, bytes, type(None), tuple, frozenset)
 
 
 def _module_globals() -> dict[tuple[str, str], tuple[int, str]]:
-    """One comparable value per module-level name of every loaded ``kiro_crew`` module.
+    """One comparable value per module-level name of every loaded ``aj_crew`` module.
 
     Scalars compare by value; containers by identity plus size; anything else
     by identity. Classes, functions and modules are skipped: a boot does not
@@ -592,7 +592,7 @@ def _module_globals() -> dict[tuple[str, str], tuple[int, str]]:
     """
     out: dict[tuple[str, str], tuple[int, str]] = {}
     for module_name, module in list(sys.modules.items()):
-        if not module_name.startswith("kiro_crew") or module is None:
+        if not module_name.startswith("aj_crew") or module is None:
             continue
         for attr, value in list(vars(module).items()):
             if attr.startswith("__") or isinstance(
@@ -611,11 +611,11 @@ def _module_globals() -> dict[tuple[str, str], tuple[int, str]]:
 @pytest.mark.asyncio
 async def test_a_second_boot_touches_only_known_module_globals(gateway_boot, monkeypatch) -> None:
     """The generic witness behind the reset list: diff every loaded
-    ``kiro_crew`` module's globals across a SECOND boot (the first warms the
+    ``aj_crew`` module's globals across a SECOND boot (the first warms the
     imports) and require each changed name to be either restored by the
     harness or listed in ``_KNOWN_SECOND_BOOT_CHANGES`` with its reason. A
     home-derived global that startup grows fails here by name."""
-    from kiro_crew.config import paths as config_paths
+    from aj_crew.config import paths as config_paths
 
     # The scratch-root override is validated once and pinned for the process by the first
     # ``scratch_root()`` call, which a session spawn makes on an executor thread. Whether
@@ -648,9 +648,9 @@ async def test_a_boot_inherits_no_cooldown_or_cached_count(gateway_boot) -> None
     cannot see most of that: an inherited dict entry changes no identity and,
     once the boot adds its own, no size. So one of each is seeded under a key
     no boot uses, and both reset points must drop it."""
-    from kiro_crew import recall_pool
-    from kiro_crew.dashboard import status_counts
-    from kiro_crew.security import paths
+    from aj_crew import recall_pool
+    from aj_crew.dashboard import status_counts
+    from aj_crew.security import paths
 
     prefix = paths._stall_prefix(os.path.join(os.sep, "kc-integration-unresolved", "leaf"))
     synthetic_tid = -1  # thread idents are positive, so no real caller collides

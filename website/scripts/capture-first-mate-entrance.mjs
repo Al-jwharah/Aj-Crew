@@ -33,12 +33,12 @@ mkdirSync(OUT, { recursive: true })
 // A fresh install's roster: Mate alone, never written to, its welcome owed and
 // the once-only marker not yet claimed -- the row the page lands on first.
 const MATE = {
-  name: 'mate', slug: 'mate', bound: true, slot_key: 'member-mate', running: false, kiro_agent: 'kirocrew',
+  name: 'mate', slug: 'mate', bound: true, slot_key: 'member-mate', running: false, kiro_agent: 'ajcrew',
   workspace: 'default', memory_store: 'default', model: '', source: 'builtin', has_dm_message: false,
   welcome_owed: true, welcome_claimed: false, last_active_ts: null, last_message: '',
 }
 const EMPTY_THREAD = { messages: [], running: false, has_more: false, total: 0 }
-const GREETING = "Hi, I'm Mate. I'm the teammate that came with Kiro Crew: I keep an eye on your work, pick up what you hand me and report back here. What are you working on?"
+const GREETING = "Hi, I'm Mate. I'm the teammate that came with Aj Crew: I keep an eye on your work, pick up what you hand me and report back here. What are you working on?"
 const LINE = "Hi! I'm your first Mate."
 
 const browser = await chromium.launch()

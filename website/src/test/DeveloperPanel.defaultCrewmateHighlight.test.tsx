@@ -16,12 +16,12 @@ beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn()
 })
 
-// The Config page renders the real KiroCrewCfgTab + AgentCfgTab. Only the Default
+// The Config page renders the real AjCrewCfgTab + AgentCfgTab. Only the Default
 // crewmate ROW matters here, and the real tab needs config/roster queries this
 // test does not mock — so stub the tab to render just that row, carrying the
 // same `data-setting-key` anchor the real row does.
 vi.mock('../pages/overview', () => ({
-  KiroCrewCfgTab: () => (
+  AjCrewCfgTab: () => (
     <div data-testid="default-crewmate-row" data-setting-key="default-crewmate" data-setting-label="Default bot" />
   ),
   AgentCfgTab: () => <div />,

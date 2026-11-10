@@ -22,11 +22,11 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew import history_projection, name_grant, pinned_fs, platform_compat
-from kiro_crew.acp_backends import ACP_BACKEND_KIRO
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard import chat_threads, ws
-from kiro_crew.dashboard.chat_threads import (
+from aj_crew import history_projection, name_grant, pinned_fs, platform_compat
+from aj_crew.acp_backends import ACP_BACKEND_KIRO
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard import chat_threads, ws
+from aj_crew.dashboard.chat_threads import (
     THREAD_BOUNDARY_PROMPT,
     THREAD_BOUNDARY_PROMPT_NO_TOOLS,
     THREAD_INSTRUCTIONS,
@@ -38,12 +38,12 @@ from kiro_crew.dashboard.chat_threads import (
     summarize,
     thread_session_key,
 )
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.side_readonly_spec import PublishedSpec, ReadOnlySpecError
-from kiro_crew.dashboard.ws import broadcast_thread_reply
-from kiro_crew.history import ThreadStoreUnreadable
-from kiro_crew.members import DM_SLOT_MODE
-from kiro_crew.name_grant_refusals import Refusal
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.side_readonly_spec import PublishedSpec, ReadOnlySpecError
+from aj_crew.dashboard.ws import broadcast_thread_reply
+from aj_crew.history import ThreadStoreUnreadable
+from aj_crew.members import DM_SLOT_MODE
+from aj_crew.name_grant_refusals import Refusal
 
 _MEMBER_SLOT = "member-radar"
 _ANSWER = "Five are covered by open PRs, three are queued."
@@ -153,9 +153,9 @@ def _no_carry_over():
 def _prime_threads_flag(enabled: bool) -> None:
     """Publish ``dashboard.crewmate_threads`` as the live snapshot the routes and
     the WS frame read; the process watcher is reset around every test."""
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.dashboard.crewmate_threads = enabled
     live.reset_for_tests()
     live.watch().prime(cfg)
@@ -213,10 +213,10 @@ async def test_threads_off_hides_the_routes_and_sends_no_frame(tmp_path, monkeyp
 
 
 def test_the_flag_is_off_by_default_and_editable_from_the_dashboard():
-    from kiro_crew.config import loader
-    from kiro_crew.dashboard.handlers import core
+    from aj_crew.config import loader
+    from aj_crew.dashboard.handlers import core
 
-    assert KiroCrewConfig().dashboard.crewmate_threads is False
+    assert AjCrewConfig().dashboard.crewmate_threads is False
     # Only a real bool turns it on: the string "false" (a hand edit) stays off.
     assert (
         loader._build_dashboard_config(set(), {"crewmate_threads": "false"}).crewmate_threads
@@ -286,7 +286,7 @@ def _arm_turn(state, monkeypatch, *, answer: str, backend: str = ACP_BACKEND_KIR
         lambda base, project=None: PublishedSpec(name=f"{base}--readonly", digest="d" * 64),
     )
     monkeypatch.setattr(
-        chat_threads.KiroCrewConfig,
+        chat_threads.AjCrewConfig,
         "load",
         classmethod(lambda cls: MagicMock(agent=MagicMock(acp_backend=backend))),
     )
@@ -296,7 +296,7 @@ def _arm_turn(state, monkeypatch, *, answer: str, backend: str = ACP_BACKEND_KIR
         # Recorded so a test can pin that the turn never asks the resolver to
         # validate memory files (a synchronous SQLite open on the loop).
         calls.append({"resolve": agent, **kwargs})
-        return MagicMock(kiro_agent="kirocrew", requested_resolved=True)
+        return MagicMock(kiro_agent="ajcrew", requested_resolved=True)
 
     monkeypatch.setattr(chat_threads, "resolve_agent_bindings", _resolve)
     return calls
@@ -441,14 +441,14 @@ def test_a_sidecar_that_cannot_be_looked_at_stops_the_reclaim_scan(tmp_path, mon
     """Session Storage lists a session's files through one scan; a sidecar
     that is absent is fine, one that cannot be stat'ed RAISES rather than being
     left out, or the transcript would move and the replies stay behind."""
-    from kiro_crew import session_storage
+    from aj_crew import session_storage
 
     state = _make_state(tmp_path)
     slot, mid = _member_slot(state)
     assert _seed_reply(state, slot, mid, "user", "kept") == "ok"
     sidecar = _store_path(state, slot)
     monkeypatch.setattr(session_storage, "_crew_sessions_dir", lambda: sidecar.parent.parent)
-    from kiro_crew.history import transcript_stem
+    from aj_crew.history import transcript_stem
 
     stem = transcript_stem(slot_history_key(slot))
     listed = session_storage._unit_paths("", (stem,), archives={}, cli_files={})
@@ -547,7 +547,7 @@ def test_read_threads_bounds_every_retained_field_and_count(tmp_path):
     """The reader cuts a sidecar to the writer's own shape: a string longer than
     the writer ever stores is clipped, a thread keeps its newest rows only, the
     map stops at the whole-file cap, and an oversize mid is not a thread."""
-    from kiro_crew.history import (
+    from aj_crew.history import (
         THREAD_MID_RE,
         THREAD_REPLY_CONTENT_MAX_CHARS,
         THREADS_MAX_REPLIES_PER_SIDECAR,
@@ -608,7 +608,7 @@ def test_an_oversized_or_irregular_sidecar_is_refused_before_it_is_read(tmp_path
     a parse that already blew the memory they exist to protect. The writer
     holds the same line: a document that would pass the ceiling is refused as
     ``sidecar_full`` and the file is left as it was."""
-    from kiro_crew import history
+    from aj_crew import history
 
     state = _make_state(tmp_path)
     slot, mid = _member_slot(state)
@@ -1390,9 +1390,9 @@ def test_a_credential_straddling_the_line_cap_is_scrubbed_before_the_cut():
 
 
 def test_thread_session_key_is_its_own_stateless_dashboard_surface():
-    from kiro_crew import session as session_module
-    from kiro_crew.messaging.link import telemetry_channel_of
-    from kiro_crew.sel import _infer_source
+    from aj_crew import session as session_module
+    from aj_crew.messaging.link import telemetry_channel_of
+    from aj_crew.sel import _infer_source
 
     key = thread_session_key("member-radar", M("1"))
     assert key == f"thread:member-radar:{M('1')}"
@@ -1433,7 +1433,7 @@ async def test_turn_runs_read_only_in_its_own_session_and_lands_in_the_thread(
     assert resolved["validate_memory_files"] is False
     acquired = next(c for c in calls if "key" in c)
     assert acquired["key"] == thread_session_key(_MEMBER_SLOT, mid)
-    assert acquired["agent"] == "kirocrew--readonly"
+    assert acquired["agent"] == "ajcrew--readonly"
     streamed = next(c for c in calls if "message" in c)
     assert streamed["approval_policy"] == chat_threads.ToolApprovalPolicy.READ_ONLY
     assert streamed["session_key"] == thread_session_key(_MEMBER_SLOT, mid)
@@ -1466,7 +1466,7 @@ async def test_turn_without_tools_uses_reject_all_and_the_no_tools_boundary(tmp_
     )
     acquired = next(c for c in calls if "key" in c)
     streamed = next(c for c in calls if "message" in c)
-    assert acquired["agent"] == "kirocrew"
+    assert acquired["agent"] == "ajcrew"
     assert streamed["approval_policy"] == chat_threads.ToolApprovalPolicy.REJECT_ALL
     assert THREAD_BOUNDARY_PROMPT_NO_TOOLS in streamed["message"]
 
@@ -1486,7 +1486,7 @@ async def test_a_claude_turn_runs_read_only_on_a_confined_session(tmp_path, monk
     )
     acquired = next(c for c in calls if "key" in c)
     streamed = next(c for c in calls if "message" in c)
-    assert acquired["agent"] == "kirocrew"
+    assert acquired["agent"] == "ajcrew"
     assert acquired["side_read_only"] is True
     assert streamed["approval_policy"] == chat_threads.ToolApprovalPolicy.READ_ONLY
     assert chat_threads.THREAD_BOUNDARY_PROMPT_NO_SHELL in streamed["message"]
@@ -1507,7 +1507,7 @@ async def test_a_goose_turn_runs_read_only_on_its_own_goose_home(tmp_path, monke
     )
     acquired = next(c for c in calls if "key" in c)
     streamed = next(c for c in calls if "message" in c)
-    assert acquired["agent"] == "kirocrew"
+    assert acquired["agent"] == "ajcrew"
     assert acquired["side_read_only"] is True
     assert streamed["approval_policy"] == chat_threads.ToolApprovalPolicy.READ_ONLY
     assert chat_threads.THREAD_BOUNDARY_PROMPT_LISTING in streamed["message"]
@@ -1571,7 +1571,7 @@ async def test_a_strands_turn_runs_read_only_with_file_reads_alone(tmp_path, mon
     )
     acquired = next(c for c in calls if "key" in c)
     streamed = next(c for c in calls if "message" in c)
-    assert acquired["agent"] == "kirocrew"
+    assert acquired["agent"] == "ajcrew"
     assert acquired["side_read_only"] is True
     assert streamed["approval_policy"] == chat_threads.ToolApprovalPolicy.READ_ONLY
     assert chat_threads.THREAD_BOUNDARY_PROMPT_FILE_READS in streamed["message"]
@@ -1841,7 +1841,7 @@ async def test_a_crewmate_that_no_longer_resolves_gets_no_substitute_answer(tmp_
         chat_threads,
         "resolve_agent_bindings",
         lambda cfg, agent, project, **kw: MagicMock(
-            kiro_agent="kirocrew", requested_resolved=False
+            kiro_agent="ajcrew", requested_resolved=False
         ),
     )
     await _run_thread_turn(
@@ -1868,7 +1868,7 @@ async def test_a_signed_out_harness_says_so(tmp_path, monkeypatch):
         raise AcpAuthRequired("signed out")
 
     monkeypatch.setattr(chat_threads, "stream_and_collect", _signed_out)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner._mark_kiro_signed_out", lambda state: None)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner._mark_kiro_signed_out", lambda state: None)
     await _run_thread_turn(
         state, slot, mid, "run-1", "hi", _parent(), [], f"{slot.key}:{mid}", _identity(state, slot)
     )

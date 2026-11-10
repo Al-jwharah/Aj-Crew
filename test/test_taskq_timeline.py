@@ -23,16 +23,16 @@ from aiohttp.test_utils import make_mocked_request
 from overload_fakes import Clock, open_task_store
 from overload_fakes import task_record as _rec
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import store as crew_store
-from kiro_crew.dashboard import handlers as handlers_pkg
-from kiro_crew.dashboard import session_health
-from kiro_crew.dashboard.handlers import tasks as tasks_mod
-from kiro_crew.taskq import model
-from kiro_crew.taskq import timeline as tl
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.workflows import WorkflowEvent
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import store as crew_store
+from aj_crew.dashboard import handlers as handlers_pkg
+from aj_crew.dashboard import session_health
+from aj_crew.dashboard.handlers import tasks as tasks_mod
+from aj_crew.taskq import model
+from aj_crew.taskq import timeline as tl
+from aj_crew.taskq.store import TaskStore
+from aj_crew.workflows import WorkflowEvent
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_test_taskq_timeline")
 
@@ -60,7 +60,7 @@ def store(tmp_path: Path, clock: Clock):
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path: Path, _floor_monkeypatch: pytest.MonkeyPatch) -> None:
     """Every test writes into its own data home, never the live one."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
 
 
 _PATCH: pytest.MonkeyPatch | None = None
@@ -776,11 +776,11 @@ def test_the_renderer_uses_the_scrubber_it_is_given() -> None:
 
 
 def _log(unit_id: str, *, slot: str = "chat-1") -> CrewLog:
-    handle = CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="kirocrew", slot=slot)
+    handle = CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="ajcrew", slot=slot)
     handle.append(
         "session/opened",
         {
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "slot": slot,
             "model": "opus",
             "cwd": "/w",
@@ -919,7 +919,7 @@ def test_a_dismissed_childs_entries_are_still_served_in_order(
     store: TaskStore, clock: Clock, ticks: dict[str, int]
 ) -> None:
     """A cleared card leaves the panel's render, not the log or the fold's state."""
-    from kiro_crew.crew_log import resolve
+    from aj_crew.crew_log import resolve
 
     _run_row(store, clock, "s1")
     handle = _log("acp-1")
@@ -945,7 +945,7 @@ def test_a_dismissed_childs_entries_are_still_served_in_order(
 def test_a_dispatch_the_fold_did_not_retain_is_reported_as_not_retained(
     store: TaskStore, clock: Clock, ticks: dict[str, int], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.crew_log import projection
+    from aj_crew.crew_log import projection
 
     # Through the facade, which rebinds the limit on every owner that holds it.
     monkeypatch.setattr(projection, "OPEN_RETAIN_LIMIT", 1)
@@ -965,8 +965,8 @@ def test_a_dispatch_the_fold_did_not_retain_is_reported_as_not_retained(
 def test_a_child_in_a_permanently_deleted_conversation_is_still_not_found(
     ticks: dict[str, int],
 ) -> None:
-    from kiro_crew import session_ledger
-    from kiro_crew.crew_log import resolve
+    from aj_crew import session_ledger
+    from aj_crew.crew_log import resolve
 
     deleted = _log("acp-deleted")
     _note(deleted, "spawned", "s1")
@@ -981,7 +981,7 @@ def test_a_child_in_a_permanently_deleted_conversation_is_still_not_found(
 def test_a_session_log_that_cannot_be_searched_is_unavailable(
     store: TaskStore, clock: Clock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.crew_log import resolve
+    from aj_crew.crew_log import resolve
 
     def _fail(_slot: str, _agent: str) -> Any:
         raise resolve.UnitSearchFailed("units could not be listed")
@@ -1010,8 +1010,8 @@ def _boom(*_args: Any, **_kwargs: Any) -> Any:
 def test_a_slot_whose_units_cannot_be_listed_raises_instead_of_answering_empty(
     ticks: dict[str, int], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    import kiro_crew.session_ledger as ledger
-    from kiro_crew.crew_log import resolve
+    import aj_crew.session_ledger as ledger
+    from aj_crew.crew_log import resolve
 
     handle = _log("acp-1")
     _note(handle, "spawned", "s1")
@@ -1027,7 +1027,7 @@ def test_a_slot_whose_units_cannot_be_listed_raises_instead_of_answering_empty(
 def test_a_unit_whose_fold_will_not_read_raises_instead_of_being_skipped(
     ticks: dict[str, int], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.crew_log import projection, resolve
+    from aj_crew.crew_log import projection, resolve
 
     handle = _log("acp-1")
     _note(handle, "spawned", "s1")
@@ -1047,8 +1047,8 @@ def test_an_unreadable_stream_is_unavailable_not_an_empty_ok_stream(
     monkeypatch: pytest.MonkeyPatch,
     failing: str,
 ) -> None:
-    import kiro_crew.session_ledger as ledger
-    from kiro_crew.crew_log import projection
+    import aj_crew.session_ledger as ledger
+    from aj_crew.crew_log import projection
 
     _run_row(store, clock, "s1")
     handle = _log("acp-1")
@@ -1089,7 +1089,7 @@ SLACK_STEM = "slack_1785370133.085469"
 @pytest.fixture
 def no_tab() -> Any:
     """No dashboard surface is registered, as for a channel or cron parent nobody has open."""
-    from kiro_crew.session_surface import set_dashboard_surfaced
+    from aj_crew.session_surface import set_dashboard_surfaced
 
     set_dashboard_surfaced(())
     yield
@@ -1108,7 +1108,7 @@ def no_tab() -> Any:
 def test_the_slot_names_a_writer_may_use_do_not_depend_on_an_open_tab(
     no_tab: None, session_key: str, expected: str
 ) -> None:
-    from kiro_crew.dashboard.chat_utils import crew_log_slots_for
+    from aj_crew.dashboard.chat_utils import crew_log_slots_for
 
     slots = crew_log_slots_for(session_key)
     assert expected in slots
@@ -1116,14 +1116,14 @@ def test_the_slot_names_a_writer_may_use_do_not_depend_on_an_open_tab(
 
 
 def test_a_dashboard_parent_has_the_one_slot_its_tab_has(no_tab: None) -> None:
-    from kiro_crew.dashboard.chat_utils import crew_log_slots_for
+    from aj_crew.dashboard.chat_utils import crew_log_slots_for
 
     assert crew_log_slots_for("dashboard:chat-x") == ("chat-x",)
 
 
 def test_the_live_tab_name_comes_first_when_a_tab_is_open() -> None:
-    from kiro_crew.dashboard.chat_utils import crew_log_slots_for, subagent_event_slot
-    from kiro_crew.session_surface import set_dashboard_surfaced
+    from aj_crew.dashboard.chat_utils import crew_log_slots_for, subagent_event_slot
+    from aj_crew.session_surface import set_dashboard_surfaced
 
     set_dashboard_surfaced({SLACK_KEY})
     try:
@@ -1148,7 +1148,7 @@ def test_the_reader_tries_each_slot_in_order_and_reads_the_first_that_has_the_ch
 def test_omitted_is_reported_when_any_slot_did_not_retain_every_dispatch(
     ticks: dict[str, int], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.crew_log import projection
+    from aj_crew.crew_log import projection
 
     monkeypatch.setattr(projection, "OPEN_RETAIN_LIMIT", 1)
     handle = _log("acp-1", slot="second")
@@ -1509,7 +1509,7 @@ async def test_the_lazy_wrapper_calls_the_real_handler(monkeypatch: pytest.Monke
 
 
 def _tasks_routes() -> set[tuple[str, str]]:
-    from kiro_crew.dashboard.routes import system
+    from aj_crew.dashboard.routes import system
 
     app = web.Application()
     system.register(app)
@@ -1528,7 +1528,7 @@ def test_the_timeline_get_route_is_registered() -> None:
 
 @pytest.mark.asyncio
 async def test_the_timeline_path_resolves_to_its_own_handler_not_the_detail_route() -> None:
-    from kiro_crew.dashboard.routes import system
+    from aj_crew.dashboard.routes import system
 
     app = web.Application()
     system.register(app)

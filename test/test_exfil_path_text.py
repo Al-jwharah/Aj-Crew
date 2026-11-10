@@ -12,7 +12,7 @@ from urllib.parse import quote
 
 import pytest
 
-from kiro_crew.security import oauth_url_contains_credential, redact_exfiltration_urls
+from aj_crew.security import oauth_url_contains_credential, redact_exfiltration_urls
 
 _HEADLINE = "港股-恒指低開196點-科技股承壓-聯想集團低開逾6-翰森逆市走高-015534459"
 

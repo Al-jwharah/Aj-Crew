@@ -12,8 +12,8 @@ import errno
 
 import pytest
 
-import kiro_crew.agent as agent_mod
-from kiro_crew import platform_compat
+import aj_crew.agent as agent_mod
+from aj_crew import platform_compat
 
 
 @pytest.fixture

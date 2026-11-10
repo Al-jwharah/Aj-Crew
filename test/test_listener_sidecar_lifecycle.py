@@ -32,16 +32,16 @@ from typing import Any
 import pytest
 from aiohttp import web
 
-from kiro_crew import _LazyShutdownEvent
-from kiro_crew.dashboard import server as dashboard_server
-from kiro_crew.dashboard.listener_guard import LISTENER_LOST_EXIT_CODE, ListenerGuard
-from kiro_crew.instances import run_marker
+from aj_crew import _LazyShutdownEvent
+from aj_crew.dashboard import server as dashboard_server
+from aj_crew.dashboard.listener_guard import LISTENER_LOST_EXIT_CODE, ListenerGuard
+from aj_crew.instances import run_marker
 
 
 @pytest.fixture()
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    from kiro_crew.config import paths
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    from aj_crew.config import paths
 
     monkeypatch.setattr(paths, "_config_dir_memo", None, raising=False)
     monkeypatch.setattr(run_marker, "_PUBLISHED_LISTENERS", {}, raising=True)

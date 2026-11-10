@@ -14,8 +14,8 @@ vi.mock('../utils/shareUrl', () => ({ copySessionLink: vi.fn().mockResolvedValue
 import UserMessage from '../pages/chat/UserMessage'
 
 const SKILLS = [
-  { key: 'WorkforceEmploymentKnowledgeBase/oncall-handover', name: 'oncall-handover', description: 'Handover report', source: 'kirocrew' },
-  { key: 'ticket-pull', name: 'ticket-pull', description: 'Pull tickets', source: 'kirocrew' },
+  { key: 'WorkforceEmploymentKnowledgeBase/oncall-handover', name: 'oncall-handover', description: 'Handover report', source: 'ajcrew' },
+  { key: 'ticket-pull', name: 'ticket-pull', description: 'Pull tickets', source: 'ajcrew' },
 ]
 
 const renderContent = (content: string) => <span data-testid="content">{content}</span>

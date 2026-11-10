@@ -26,10 +26,10 @@ from terminal_handler_helpers import (  # noqa: F401 -- the autouse fixture regi
     _make_session,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.dashboard.handlers import terminal, terminal_lifecycle
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import platform_compat
+from aj_crew.dashboard.handlers import terminal, terminal_lifecycle
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 class TestTerminalOwnerAuthorization:
@@ -470,8 +470,8 @@ class TestResolveCwd:
         """The cwd is the probe's SECOND argument, so it is keyed by ``stall_path``:
         with two probes stuck under it the open is refused before ``_resolve_cwd``
         runs, while a third worker is still free."""
-        from kiro_crew import executors
-        from kiro_crew.dashboard.handlers import files
+        from aj_crew import executors
+        from aj_crew.dashboard.handlers import files
 
         request, registry, ws = invalid_workspace
         request.query = {"cwd": str(tmp_path)}
@@ -535,7 +535,7 @@ class TestResolveCwd:
         monkeypatch,
         tmp_path,
     ):
-        from kiro_crew import executors
+        from aj_crew import executors
 
         request, registry, ws = invalid_workspace
         entered = asyncio.Event()
@@ -670,7 +670,7 @@ class TestKillSession:
         task = asyncio.ensure_future(asyncio.Event().wait())
         sess = _make_session()
         sess.reader_task = task
-        with patch("os.close"), patch("kiro_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree"):
+        with patch("os.close"), patch("aj_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree"):
             await terminal._kill_session(sess)
         assert task.cancelled()
         assert sess.master_fd == -1  # wokeignore:rule=master
@@ -679,7 +679,7 @@ class TestKillSession:
     async def test_closes_master_fd(self):
         sess = _make_session()
         sess.master_fd = 42
-        with _teardown_close() as mock_close, patch("kiro_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree"):
+        with _teardown_close() as mock_close, patch("aj_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree"):
             await terminal._kill_session(sess)
         mock_close.assert_called_with(42)
         assert sess.master_fd == -1
@@ -688,7 +688,7 @@ class TestKillSession:
     async def test_skips_close_when_fd_negative(self):
         sess = _make_session()
         sess.master_fd = -1
-        with _teardown_close() as mock_close, patch("kiro_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree"):
+        with _teardown_close() as mock_close, patch("aj_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree"):
             await terminal._kill_session(sess)
         mock_close.assert_not_called()
 
@@ -699,7 +699,7 @@ class TestKillSession:
         # shim rather than os.killpg directly.
         sess = _make_session(alive=True)
         with patch("os.close"), \
-                patch("kiro_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree") as mock_kill:
+                patch("aj_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree") as mock_kill:
             await terminal._kill_session(sess)
         mock_kill.assert_any_call(UNALLOCATABLE_PID, platform_compat.SIGTERM)
         assert sess.master_fd == -1  # wokeignore:rule=master
@@ -725,7 +725,7 @@ class TestKillSession:
             return True
 
         with _teardown_close(side_effect=lambda fd: order.append("close")), patch(
-            "kiro_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree",
+            "aj_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree",
             side_effect=_kill,
         ):
             await terminal._kill_session(sess)
@@ -738,7 +738,7 @@ class TestKillSession:
     async def test_skips_kill_when_process_already_exited(self):
         sess = _make_session(alive=False)
         with patch("os.close"), \
-                patch("kiro_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree") as mock_kill:
+                patch("aj_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree") as mock_kill:
             await terminal._kill_session(sess)
         mock_kill.assert_not_called()
         # An exited child still leaves a PTY descriptor to close.
@@ -748,7 +748,7 @@ class TestKillSession:
     async def test_handles_process_lookup_error_on_sigterm(self):
         sess = _make_session(alive=True)
         with patch("os.close"), \
-                patch("kiro_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree",
+                patch("aj_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree",
                       side_effect=ProcessLookupError):
             await terminal._kill_session(sess)
         # A child that vanished between the liveness check and the signal must not
@@ -760,7 +760,7 @@ class TestKillSession:
         sess = _make_session(alive=True)
         sess.proc.wait = AsyncMock(side_effect=[asyncio.TimeoutError, None])
         with patch("os.close"), \
-                patch("kiro_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree") as mock_kill:
+                patch("aj_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree") as mock_kill:
             await terminal._kill_session(sess)
         calls = [c.args for c in mock_kill.call_args_list]
         assert (UNALLOCATABLE_PID, platform_compat.SIGTERM) in calls
@@ -786,7 +786,7 @@ class TestKillSession:
             order.append(("kill", sig))
 
         with _teardown_close(side_effect=lambda fd: order.append(("close", fd))), patch(
-            "kiro_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree_async",
+            "aj_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree_async",
             AsyncMock(side_effect=_kill),
         ):
             await terminal._kill_session(sess)
@@ -812,7 +812,7 @@ class TestKillSession:
             order.append("kill")
 
         with patch("os.close"), patch(
-            "kiro_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree_async",
+            "aj_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree_async",
             AsyncMock(side_effect=_kill),
         ):
             await terminal._kill_session(sess)
@@ -917,7 +917,7 @@ class TestKillSession:
         monkeypatch.setattr(terminal.platform_compat, "REAP_TIMEOUT_SECS", 0.05)
 
         with _teardown_close() as mock_close, patch(
-            "kiro_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree_async",
+            "aj_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree_async",
             AsyncMock(),
         ):
             await await_until(
@@ -934,7 +934,7 @@ class TestKillSession:
     async def test_handles_os_error_on_close(self):
         sess = _make_session()
         sess.master_fd = 42
-        with _teardown_close(side_effect=OSError), patch("kiro_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree"):
+        with _teardown_close(side_effect=OSError), patch("aj_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree"):
             await terminal._kill_session(sess)
         assert sess.master_fd == -1
 
@@ -953,7 +953,7 @@ class TestKillSession:
         sess = _make_session()
         sess.master_fd = 42
         with _teardown_close(side_effect=_record_close), patch(
-            "kiro_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree"
+            "aj_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree"
         ):
             await terminal._kill_session(sess)
         assert close_threads, "os.close must have run"
@@ -984,7 +984,7 @@ class TestKillSession:
         sess = _make_session()
         sess.master_fd = 42
         with patch.object(loop, "run_in_executor", side_effect=submit), patch(
-            "kiro_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree_async",
+            "aj_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree_async",
             AsyncMock(),
         ):
             task = asyncio.create_task(terminal._kill_session(sess))
@@ -1019,7 +1019,7 @@ class TestKillSession:
             "run_in_executor",
             side_effect=RuntimeError("cannot schedule new futures after shutdown"),
         ), patch(
-            "kiro_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree"
+            "aj_crew.dashboard.handlers.terminal.platform_compat.kill_process_tree"
         ) as mock_kill:
             await terminal._kill_session(sess)
         # The close error was swallowed and teardown continued to the tree-kill.

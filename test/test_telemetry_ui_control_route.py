@@ -16,8 +16,8 @@ from aiohttp.test_utils import make_mocked_request
 from body_stream_helpers import BodyStreamPayload
 from multidict import CIMultiDict
 
-from kiro_crew.dashboard.handlers import telemetry_ui_control as mod
-from kiro_crew.metrics import feature_usage as fu
+from aj_crew.dashboard.handlers import telemetry_ui_control as mod
+from aj_crew.metrics import feature_usage as fu
 
 
 class _FragmentedPayload(BodyStreamPayload):
@@ -56,7 +56,7 @@ def _call(raw: bytes, *, owner: bool = True, **request_kwargs):
     refusal = None if owner else web.json_response({"code": "owner_only"}, status=403)
     with (
         patch.object(mod, "require_owner_dashboard_request", AsyncMock(return_value=refusal)),
-        patch("kiro_crew.metrics.provider.get_recorder", return_value=rec),
+        patch("aj_crew.metrics.provider.get_recorder", return_value=rec),
     ):
         resp = asyncio.run(mod.api_ui_control_clicked(_request(raw, **request_kwargs)))
     clicks = [c["attrs"] for c in rec.counters if c["name"] == fu.UI_CONTROL_CLICKED]
@@ -124,7 +124,7 @@ def test_an_oversized_body_is_refused():
 
 
 def test_the_route_is_registered_as_a_post_on_the_dashboard_server():
-    from kiro_crew.dashboard.routes import system
+    from aj_crew.dashboard.routes import system
 
     src = system.__file__
     with open(src, encoding="utf-8") as fh:

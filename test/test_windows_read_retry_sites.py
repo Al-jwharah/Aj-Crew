@@ -28,14 +28,14 @@ from unittest import mock
 import pytest
 from windows_sim import read_sharing_violation, read_text_sharing_violation
 
-from kiro_crew import atomic_write as aw
-from kiro_crew import platform_compat, webhooks
-from kiro_crew.apps.manifest import AppManifest
-from kiro_crew.cloud import connect
-from kiro_crew.dashboard_templates import catalog, instance
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-from kiro_crew.workflow_memory import WorkflowMemoryError, read_binding
-from kiro_crew.workflows.store import WorkflowRunStore
+from aj_crew import atomic_write as aw
+from aj_crew import platform_compat, webhooks
+from aj_crew.apps.manifest import AppManifest
+from aj_crew.cloud import connect
+from aj_crew.dashboard_templates import catalog, instance
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+from aj_crew.workflow_memory import WorkflowMemoryError, read_binding
+from aj_crew.workflows.store import WorkflowRunStore
 
 #: Two faulted reads, then the real one: inside the retry budget.
 RIDDEN_OUT = 2
@@ -112,7 +112,7 @@ def test_manifest_read_surfaces_a_hold_that_outlasts_the_budget(tmp_path):
 
 
 def _launch_job(monkeypatch, tmp_path: Path) -> Path:
-    import kiro_crew.cloud.launch_job as ljmod
+    import aj_crew.cloud.launch_job as ljmod
 
     store = ljmod.LaunchJobStore(root=tmp_path / "launch-jobs")
     monkeypatch.setattr(ljmod, "LaunchJobStore", lambda *a, **k: store)
@@ -265,7 +265,7 @@ RUN_ID = "wf_000001"
 
 
 def _run_record() -> Path:
-    context = ExecutionContext(None, MemoryStoreRef("default"), "template", "kirocrew")
+    context = ExecutionContext(None, MemoryStoreRef("default"), "template", "ajcrew")
     path = WorkflowRunStore()._path_for(RUN_ID)
     return _write_json(
         path, {"session_key": "dashboard:probe", "execution_context": context.to_record()}

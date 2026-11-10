@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.taskrunner import _RESULT_MEM_CAP, Step, StepStatus, TaskRun, TaskRunner
+from aj_crew.taskrunner import _RESULT_MEM_CAP, Step, StepStatus, TaskRun, TaskRunner
 
 # The indices of the first group's steps; a second group of one step depends on all of them.
 _FIRST_GROUP = {"one-step": (1,), "parallel": (1, 2)}

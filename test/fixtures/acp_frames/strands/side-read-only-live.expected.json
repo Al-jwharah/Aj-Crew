@@ -153,7 +153,7 @@
       {
         "kind": "tool_result",
         "tool_call_id": "tooluse_k6_shell",
-        "tool_output": "DENIED: Kiro Crew did not approve 'shell'",
+        "tool_output": "DENIED: Aj Crew did not approve 'shell'",
         "tool_output_bytes": 41,
         "tool_output_digest": "3d1c8d5d39e74088b49b4170f429dd5691af419e37faf13706359d67970982f6",
         "tool_status": "failed"
@@ -167,13 +167,13 @@
     "events": [
       {
         "kind": "text_chunk",
-        "text": "RESULT: error: DENIED: Kiro Crew did not approve 'shell'"
+        "text": "RESULT: error: DENIED: Aj Crew did not approve 'shell'"
       }
     ],
     "frame": "session/update",
     "session_update": "agent_message_chunk",
     "text_chunk": {
-      "text": "RESULT: error: DENIED: Kiro Crew did not approve 'shell'",
+      "text": "RESULT: error: DENIED: Aj Crew did not approve 'shell'",
       "thinking": false
     }
   },
@@ -234,7 +234,7 @@
       {
         "kind": "tool_result",
         "tool_call_id": "tooluse_k6_write",
-        "tool_output": "DENIED: Kiro Crew did not approve 'write'",
+        "tool_output": "DENIED: Aj Crew did not approve 'write'",
         "tool_output_bytes": 41,
         "tool_output_digest": "83789a60ed93d359cd2e7b5f7f6d49ef38daebf8a08a7d27e42f137c44f2c95e",
         "tool_status": "failed"
@@ -248,13 +248,13 @@
     "events": [
       {
         "kind": "text_chunk",
-        "text": "RESULT: error: DENIED: Kiro Crew did not approve 'write'"
+        "text": "RESULT: error: DENIED: Aj Crew did not approve 'write'"
       }
     ],
     "frame": "session/update",
     "session_update": "agent_message_chunk",
     "text_chunk": {
-      "text": "RESULT: error: DENIED: Kiro Crew did not approve 'write'",
+      "text": "RESULT: error: DENIED: Aj Crew did not approve 'write'",
       "thinking": false
     }
   },

@@ -11,7 +11,7 @@
   "comment": 6339041532,
   "form": "`Disposition: fixed` line, marker without target/head",
   "expected": "fixed",
-  "body": "<!-- ai-review-disposition -->\nissue (blocking): An armed slots timer bypasses the fork suspension\n\nDisposition: fixed, span=src/kiro_crew/dashboard/chat_fork.py:1196, in the next push.\n\n> Legitimate. `_trailing_slots_flush` published without checking `_slots_push_suspend`, so a timer armed before the fork could fire while the bind runs on a worker thread\n> Fixed at the coalescer, not in the fork. `_trailing_slots_flush` in `state_parts/slots_push.py` now clears its timer and sets `_slots_push_pending` when a suspension is"
+  "body": "<!-- ai-review-disposition -->\nissue (blocking): An armed slots timer bypasses the fork suspension\n\nDisposition: fixed, span=src/aj_crew/dashboard/chat_fork.py:1196, in the next push.\n\n> Legitimate. `_trailing_slots_flush` published without checking `_slots_push_suspend`, so a timer armed before the fork could fire while the bind runs on a worker thread\n> Fixed at the coalescer, not in the fork. `_trailing_slots_flush` in `state_parts/slots_push.py` now clears its timer and sets `_slots_push_pending` when a suspension is"
  },
  {
   "pr": 23023,
@@ -81,21 +81,21 @@
   "comment": 6325077747,
   "form": "none of the forms: an operator record",
   "expected": "",
-  "body": "<!-- ai-review-disposition target=first-principles head=5242ab2427207b231fe9cd6334fadc73425503e3 -->\n🤖 Kiro Crew Auto-Pipeline [operator: buluoray#ce473fca]: disposition for First Principles PASS note item 8 on 5242ab2427.\n\n**`_BUSY_TIMEOUT_MS` is kept.** It has a second user: `test_a_populated_up_to_date_store_opens_while_another_connection_holds_the_write_lock` patches it to 200 ms. That k\n"
+  "body": "<!-- ai-review-disposition target=first-principles head=5242ab2427207b231fe9cd6334fadc73425503e3 -->\n🤖 Aj Crew Auto-Pipeline [operator: buluoray#ce473fca]: disposition for First Principles PASS note item 8 on 5242ab2427.\n\n**`_BUSY_TIMEOUT_MS` is kept.** It has a second user: `test_a_populated_up_to_date_store_opens_while_another_connection_holds_the_write_lock` patches it to 200 ms. That k\n"
  },
  {
   "pr": 22866,
   "comment": 6327611513,
   "form": "undeclared (title, prose or metadata only): title colon `...: agreed, ...`",
   "expected": "",
-  "body": "<!-- ai-review-disposition target=design head=5242ab2427207b231fe9cd6334fadc73425503e3 -->\n🤖 Kiro Crew Auto-Pipeline [operator: buluoray#ce473fca]: disposition for Design PASS note 2 of 2 on 5242ab2427 (split out of comment 6325077369, one finding per record).\n\n- **Nothing enforces \"no `executescript` in a step\": agreed, and nothing is lost meanwhile.** A step that commits fails the open loudly at the closing `COMMIT`, and `test\n"
+  "body": "<!-- ai-review-disposition target=design head=5242ab2427207b231fe9cd6334fadc73425503e3 -->\n🤖 Aj Crew Auto-Pipeline [operator: buluoray#ce473fca]: disposition for Design PASS note 2 of 2 on 5242ab2427 (split out of comment 6325077369, one finding per record).\n\n- **Nothing enforces \"no `executescript` in a step\": agreed, and nothing is lost meanwhile.** A step that commits fails the open loudly at the closing `COMMIT`, and `test\n"
  },
  {
   "pr": 22866,
   "comment": 6327613705,
   "form": "undeclared (title, prose or metadata only): title colon `...: checked.`",
   "expected": "",
-  "body": "<!-- ai-review-disposition target=design head=5242ab2427207b231fe9cd6334fadc73425503e3 -->\n🤖 Kiro Crew Auto-Pipeline [operator: buluoray#ce473fca]: disposition for Design PASS note 1 of 2 on 5242ab2427.\n\n- **Windows shards are the evidence: checked.** On this head `Backend Tests (Windows) (1)` through `(8)` all passed, and so did `Windows Fail-Closed Sandbox Contract`, `P\n"
+  "body": "<!-- ai-review-disposition target=design head=5242ab2427207b231fe9cd6334fadc73425503e3 -->\n🤖 Aj Crew Auto-Pipeline [operator: buluoray#ce473fca]: disposition for Design PASS note 1 of 2 on 5242ab2427.\n\n- **Windows shards are the evidence: checked.** On this head `Backend Tests (Windows) (1)` through `(8)` all passed, and so did `Windows Fail-Closed Sandbox Contract`, `P\n"
  },
  {
   "pr": 22844,
@@ -151,7 +151,7 @@
   "comment": 6322696057,
   "form": "quoted lead `> accepted: ...`",
   "expected": "accepted",
-  "body": "<!-- ai-review-disposition target=design head=8c7ff1e8717af51db0227a6975bdc0f271f8f9c7 -->\n- **Design Review PASS: one mechanism, test-only, every assertion kept**\n> accepted: the PR stays within that shape. 38 sites wait through `kiro_crew.testing.wait` (`await_until`, `finished`, `async_wait_until`, `wait_until`); 12 sleeps that a"
+  "body": "<!-- ai-review-disposition target=design head=8c7ff1e8717af51db0227a6975bdc0f271f8f9c7 -->\n- **Design Review PASS: one mechanism, test-only, every assertion kept**\n> accepted: the PR stays within that shape. 38 sites wait through `aj_crew.testing.wait` (`await_until`, `finished`, `async_wait_until`, `wait_until`); 12 sleeps that a"
  },
  {
   "pr": 22744,

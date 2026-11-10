@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Kiro Crew</title>
+  <title>Aj Crew</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -10,7 +10,7 @@
       --backdrop: #0f1117;               /* neutral shown during the final hand-off fade */
       /* Foreground "ink". Two variables because the two texts have different WCAG
          bars and sit on different parts of the backdrop (see the contrast block):
-           --ink        → large "Kiro Crew" wordmark (AA large = 3:1) at the gradient centre
+           --ink        → large "Aj Crew" wordmark (AA large = 3:1) at the gradient centre
            --ink-status → 14px status text + dot (AA normal = 4.5:1) at the bottom edge
          Both default to white (dark accents) and flip to dark when the accent is light. */
       --ink: #ffffff;
@@ -76,7 +76,7 @@
     }
     #art[hidden], #artStill[hidden] { display: none; }
 
-    /* ---- "Kiro Crew" wordmark — appears briefly in the centre on ready ---- */
+    /* ---- "Aj Crew" wordmark — appears briefly in the centre on ready ---- */
     #title {
       position: absolute; left: 50%; top: 50%;
       transform: translate(-50%, -50%) translateY(10px) scale(0.96);
@@ -164,14 +164,14 @@
     <div id="ghosts"></div>
     <img id="art" alt="" hidden>
     <canvas id="artStill" aria-hidden="true" hidden></canvas>
-    <div id="title">Kiro Crew</div>
+    <div id="title">Aj Crew</div>
     <div id="status"><span class="dot"></span><span id="statusText">Starting gateway&hellip;</span></div>
     <div id="exit" hidden>
       <!-- The static copy is the connection-window wording; the script below
            rewrites the label, the hint and the aria-label once it knows which
            window it is in (see closeLabelFor / closeHintFor). -->
-      <button id="closeWin" type="button" aria-describedby="closeHint" aria-label="Close window and stop reconnecting. This connection window closes and stops trying to connect. Kiro Crew itself keeps running; to connect again, pick New Connection Window… from the Kiro Crew icon's menu.">Close window and stop reconnecting</button>
-      <p id="closeHint">This connection window closes and stops trying to connect. Kiro Crew itself keeps running; to connect again, pick New Connection Window… from the Kiro Crew icon's menu.</p>
+      <button id="closeWin" type="button" aria-describedby="closeHint" aria-label="Close window and stop reconnecting. This connection window closes and stops trying to connect. Aj Crew itself keeps running; to connect again, pick New Connection Window… from the Aj Crew icon's menu.">Close window and stop reconnecting</button>
+      <p id="closeHint">This connection window closes and stops trying to connect. Aj Crew itself keeps running; to connect again, pick New Connection Window… from the Aj Crew icon's menu.</p>
     </div>
   </div>
 
@@ -396,7 +396,7 @@
       resolve();
     }
 
-    // Hold the composition; "Kiro Crew" appears briefly; then hand off (fade → bootComplete).
+    // Hold the composition; "Aj Crew" appears briefly; then hand off (fade → bootComplete).
     function resolve() {
       resolved = true;
       ghosts.forEach(function (g) { if (!g.visible && Math.random() < 0.5) showGhost(g); });
@@ -467,13 +467,13 @@
     // label, which follows app.name.
     var COLD_BOOT_STALL_MS = 15000;
     var TRAY_LOCATION = {
-      darwin: "the Kiro Crew icon in the menu bar, at the top-right of the screen",
-      win32: "the Kiro Crew icon in the notification area next to the clock (it may sit behind the ^ chevron)"
+      darwin: "the Aj Crew icon in the menu bar, at the top-right of the screen",
+      win32: "the Aj Crew icon in the notification area next to the clock (it may sit behind the ^ chevron)"
     };
     function closeHintFor(primary, platform) {
-      if (!primary) return "This connection window closes and stops trying to connect. Kiro Crew itself keeps running; to connect again, pick New Connection Window… from the Kiro Crew icon's menu.";
-      var where = TRAY_LOCATION[platform] || "the Kiro Crew icon in the system tray";
-      return "This window closes; Kiro Crew keeps running and keeps trying to connect in the background. Bring the window back from " + where + ".";
+      if (!primary) return "This connection window closes and stops trying to connect. Aj Crew itself keeps running; to connect again, pick New Connection Window… from the Aj Crew icon's menu.";
+      var where = TRAY_LOCATION[platform] || "the Aj Crew icon in the system tray";
+      return "This window closes; Aj Crew keeps running and keeps trying to connect in the background. Bring the window back from " + where + ".";
     }
     function closeLabelFor(primary) {
       return primary ? "Close window" : "Close window and stop reconnecting";
@@ -481,7 +481,7 @@
     var exit = document.getElementById("exit");
     var closeWin = document.getElementById("closeWin");
     var closeHint = document.getElementById("closeHint");
-    var bridge = window.kirocrew;
+    var bridge = window.ajcrew;
     var reconnect = false;
     var primary = false;
     try {

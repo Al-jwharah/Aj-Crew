@@ -9,14 +9,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from kiro_crew.mcp_dashboard import TABLE
-from kiro_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew.mcp_dashboard import TABLE
+from aj_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
 
 # Representative GET /api/chat/folders body — a bare JSON array (no envelope),
 # each row carrying only parent_id (the human path is derived client-side).
 _FOLDERS = [
-    {"id": "aaaaaaaaaaaa", "name": "kirocrew", "parent_id": "", "history_count": 3},
+    {"id": "aaaaaaaaaaaa", "name": "ajcrew", "parent_id": "", "history_count": 3},
     {"id": "bbbbbbbbbbbb", "name": "0811", "parent_id": "aaaaaaaaaaaa", "history_count": 0},
     {"id": "cccccccccccc", "name": "Travel", "parent_id": "", "history_count": 0},
 ]

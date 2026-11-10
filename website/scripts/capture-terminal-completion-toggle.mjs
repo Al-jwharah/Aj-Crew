@@ -17,7 +17,7 @@ import { chromium } from 'playwright'
 import { mkdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { serveDist } from './lib/serve-dist.mjs'
-import { logPageProblems, stubDashboardApi, json, KIROCREW_CONFIG_FIXTURE } from './lib/stub-dashboard-api.mjs'
+import { logPageProblems, stubDashboardApi, json, AJCREW_CONFIG_FIXTURE } from './lib/stub-dashboard-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/terminal-completion-toggle'
 mkdirSync(OUT, { recursive: true })
@@ -29,7 +29,7 @@ const LABEL = dp.terminal_completion // "Command completion"
 const SHELL = dp.terminal_shell // "Default shell"
 if (!LABEL || !SHELL) throw new Error('displayPanel terminal keys missing — renamed?')
 
-// Mutable per-state fixture for GET /api/config/kirocrew.
+// Mutable per-state fixture for GET /api/config/ajcrew.
 let completion = undefined
 
 async function main() {
@@ -41,9 +41,9 @@ async function main() {
 
   await stubDashboardApi(page, {
     extra: async (path, route) => {
-      if (path === '/api/config/kirocrew') {
+      if (path === '/api/config/ajcrew') {
         const terminal = completion === undefined ? { shell: '' } : { shell: '', completion }
-        await json(route, { ...KIROCREW_CONFIG_FIXTURE, dashboard: { terminal } })
+        await json(route, { ...AJCREW_CONFIG_FIXTURE, dashboard: { terminal } })
         return true
       }
       return false

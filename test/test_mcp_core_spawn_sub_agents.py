@@ -7,10 +7,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew import mcp_core
-from kiro_crew.mcp_core import _call_tool, _call_tool_deferrable
-from kiro_crew.mcp_shared import DeferredTool, _DeferredEntry, drive_deferred
-from kiro_crew.mcp_tools.spawn import _SubAgentsStep, spawn_sub_agents
+from aj_crew import mcp_core
+from aj_crew.mcp_core import _call_tool, _call_tool_deferrable
+from aj_crew.mcp_shared import DeferredTool, _DeferredEntry, drive_deferred
+from aj_crew.mcp_tools.spawn import _SubAgentsStep, spawn_sub_agents
 
 
 def _call_after_submission(args, clock, poll_at):
@@ -114,7 +114,7 @@ class TestDeferredSubmission:
         assert all("batch_id" not in body for body in bodies)
 
     def test_large_batch_keeps_progress_past_the_gateway_ceiling(self, monkeypatch, manual_clock):
-        from kiro_crew.mcp_gateway.backend import PROGRESS_WEDGE_CEILING_SECS
+        from aj_crew.mcp_gateway.backend import PROGRESS_WEDGE_CEILING_SECS
 
         members = 128
         manual_clock.install(monkeypatch, mcp_core)
@@ -149,13 +149,13 @@ class TestDeferredSubmission:
         handler copies only ``prompt`` and ``agent_or_mode`` (clamped) into the
         step; any other key the caller sent is dropped, not retained and not
         refused -- the advertised schema never promised to refuse it."""
-        from kiro_crew.validation import MAX_MEDIUM_STRING, MAX_SHORT_STRING
+        from aj_crew.validation import MAX_MEDIUM_STRING, MAX_SHORT_STRING
 
         post = MagicMock(return_value={"id": "a1"})
         monkeypatch.setattr(mcp_core, "_post", post)
         monkeypatch.setattr(mcp_core, "sel", lambda: MagicMock())
         monkeypatch.setattr(mcp_core, "_resolve_session_key", lambda: "dashboard:owner")
-        from kiro_crew.validation import SPAWN_SUB_AGENTS_SCHEMA, validate_tool_args
+        from aj_crew.validation import SPAWN_SUB_AGENTS_SCHEMA, validate_tool_args
 
         agents = [
             {"prompt": "p" * 50_000, "agent_or_mode": "m" * 5_000, "extra": {"payload": "x" * 1024}},
@@ -185,7 +185,7 @@ class TestDeferredSubmission:
         monkeypatch.setattr(mcp_core, "_get", get)
         monkeypatch.setattr(mcp_core, "sel", lambda: audit)
         monkeypatch.setattr(mcp_core, "_resolve_session_key", lambda: "dashboard:owner")
-        with patch("kiro_crew.mcp_shared.sel", return_value=audit):
+        with patch("aj_crew.mcp_shared.sel", return_value=audit):
             step = _call_tool_deferrable("spawn_sub_agents", {"agents": agents})
             assert isinstance(step, DeferredTool)
             post.assert_not_called()
@@ -240,10 +240,10 @@ class TestDeferredSubmission:
 
 class TestSpawnSubAgents:
     def test_spawns_agents_and_collects_results(self):
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "sess1"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "sess1"}):
             mock_post.return_value = {"id": "a1"}
             mock_get.return_value = {"done": True, "agent": "worker", "result": "ok"}
 
@@ -255,14 +255,14 @@ class TestSpawnSubAgents:
             assert '"worker"' in result
 
     def test_returns_error_for_empty_agents(self):
-        with patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             result = _call_tool("spawn_sub_agents", {"agents": []})
             assert "Error" in result
 
     def test_rejects_non_dict_entries_via_schema(self):
-        with patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             result = _call_tool("spawn_sub_agents", {
                 "agents": ["invalid", {"prompt": "real task"}],
             })
@@ -270,17 +270,17 @@ class TestSpawnSubAgents:
             assert "expected dict" in result
 
     def test_skips_empty_prompt(self):
-        with patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             result = _call_tool("spawn_sub_agents", {
                 "agents": [{"prompt": ""}],
             })
             assert "no valid agent entries" in result
 
     def test_reports_spawn_errors(self):
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {"error": "capacity reached"}
 
             result = _call_tool("spawn_sub_agents", {
@@ -294,10 +294,10 @@ class TestSpawnSubAgents:
     def test_mixed_success_and_spawn_error(self):
         # One agent spawns OK, another fails to spawn: results must include the
         # completed agent AND a spawn_errors entry.
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.side_effect = [{"id": "a1"}, {"error": "capacity reached"}]
             mock_get.return_value = {"done": True, "agent": "w", "result": "ok"}
 
@@ -312,10 +312,10 @@ class TestSpawnSubAgents:
     def test_reports_spawn_with_no_agent_id(self):
         # /api/spawn returns neither error nor id — must not append an empty
         # id (which would poll /api/spawn/), but record an error instead.
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {}  # no "error", no "id"
 
             result = _call_tool("spawn_sub_agents", {
@@ -334,12 +334,12 @@ class TestSpawnSubAgents:
         never marked timed out or failed, and never cancelled."""
         import json
 
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.time") as mock_time, \
-             patch("kiro_crew.mcp_core.sel") as mock_sel, \
-             patch("kiro_crew.mcp_shared.sel", side_effect=lambda: mock_sel.return_value), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.time") as mock_time, \
+             patch("aj_crew.mcp_core.sel") as mock_sel, \
+             patch("aj_crew.mcp_shared.sel", side_effect=lambda: mock_sel.return_value), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {"id": "a1"}
             mock_get.return_value = {"done": False, "agent": "slow"}
             mock_time.sleep = lambda _: None
@@ -375,11 +375,11 @@ class TestSpawnSubAgents:
     def test_wait_expiry_reports_queued_and_permission_states(self):
         import json
 
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.time") as mock_time, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.time") as mock_time, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.side_effect = [{"id": "q1"}, {"id": "p1"}]
             by_id = {
                 "/api/spawn/q1": {"done": False, "queued": True},
@@ -402,11 +402,11 @@ class TestSpawnSubAgents:
     def test_pings_session_keepalive_during_long_poll(self):
         """Finding 1: the poll loop must ping /api/session-keepalive so the
         gateway does not SIGTERM the ACP subprocess mid-poll."""
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.time") as mock_time, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.time") as mock_time, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {"id": "a1"}
             mock_get.return_value = {"done": True, "agent": "w", "result": "ok"}
             mock_time.sleep = lambda _: None
@@ -424,11 +424,11 @@ class TestSpawnSubAgents:
         """A read that answers error without done (the gateway did not answer)
         settles the poll loop instead of spinning until max_wait, and the child
         is reported unread with the real wait, never as an error."""
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.time") as mock_time, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.time") as mock_time, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {"id": "a1"}
             mock_get.return_value = {"done": False, "error": "HTTP 503", "agent": "bad"}
             mock_time.sleep = lambda _: None
@@ -444,12 +444,12 @@ class TestSpawnSubAgents:
 
     def test_max_wait_configurable_via_env(self):
         """Finding 1: max_wait is configurable and clamped."""
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.time") as mock_time, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s",
-                                       "KIROCREW_SPAWN_SUB_AGENTS_MAX_WAIT": "120"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.time") as mock_time, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s",
+                                       "AJCREW_SPAWN_SUB_AGENTS_MAX_WAIT": "120"}):
             mock_post.return_value = {"id": "a1"}
             mock_get.return_value = {"done": False, "agent": "slow"}
             mock_time.sleep = lambda _: None
@@ -462,10 +462,10 @@ class TestSpawnSubAgents:
             assert '"waited_secs": 120' in result
 
     def test_reports_errored_agents(self):
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {"id": "a1"}
             mock_get.return_value = {"done": True, "error": "crashed", "agent": "bad"}
 
@@ -478,10 +478,10 @@ class TestSpawnSubAgents:
             assert "crashed" in result
 
     def test_redacts_agent_name_in_output(self):
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {"id": "a1"}
             mock_get.return_value = {
                 "done": True,
@@ -497,10 +497,10 @@ class TestSpawnSubAgents:
             assert "AKIAIOSFODNN7EXAMPLE" not in result
 
     def test_redacts_result_text(self):
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {"id": "a1"}
             mock_get.return_value = {
                 "done": True,
@@ -516,10 +516,10 @@ class TestSpawnSubAgents:
             assert "AKIAIOSFODNN7EXAMPLE" not in result
 
     def test_passes_cwd_to_spawn(self):
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {"id": "a1"}
             mock_get.return_value = {"done": True, "agent": "", "result": ""}
 
@@ -535,10 +535,10 @@ class TestSpawnSubAgents:
             assert body["cwd"] == "/workspace/project"
 
     def test_multiple_agents_spawned_in_parallel(self):
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.side_effect = [{"id": "a1"}, {"id": "a2"}, {}]
             mock_get.return_value = {"done": True, "agent": "w", "result": "done"}
 
@@ -554,10 +554,10 @@ class TestSpawnSubAgents:
             assert result.count('"completed"') == 2
 
     def test_truncates_oversized_prompt(self):
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {"id": "a1"}
             mock_get.return_value = {"done": True, "agent": "", "result": ""}
 
@@ -573,10 +573,10 @@ class TestSpawnSubAgents:
             assert len(body["task"]) <= 5000
 
     def test_truncates_oversized_agent_or_mode(self):
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {"id": "a1"}
             mock_get.return_value = {"done": True, "agent": "w", "result": "ok"}
 
@@ -595,10 +595,10 @@ class TestSpawnSubAgentsSummarization:
 
     def test_short_result_inlined_verbatim(self):
         """Results under the threshold are returned as-is without summarization."""
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {"id": "a1"}
             short_result = "This is a short result under 3K chars."
             mock_get.return_value = {"done": True, "agent": "w", "result": short_result}
@@ -610,17 +610,17 @@ class TestSpawnSubAgentsSummarization:
 
     def test_large_result_summarized_with_path(self):
         """Results exceeding the threshold are summarized with first+last words and a disk path."""
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch("kiro_crew.mcp_core.summarize_result") as mock_summarize, \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch("aj_crew.mcp_core.summarize_result") as mock_summarize, \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {"id": "agent123"}
             # Generate a result that exceeds 3000 chars
             large_result = "word " * 1000  # ~5000 chars, well over 3K
             mock_get.return_value = {"done": True, "agent": "w", "result": large_result}
             mock_summarize.return_value = (
-                "Full transcript: /home/user/.kirocrew/subagents/agent123/result.txt\n"
+                "Full transcript: /home/user/.ajcrew/subagents/agent123/result.txt\n"
                 "Preview (first+last 100 words):\nword word word...\n\n"
                 "The full result is on disk."
             )
@@ -634,13 +634,13 @@ class TestSpawnSubAgentsSummarization:
 
     def test_large_result_uses_summarize_result_with_correct_path(self):
         """Verify summarize_result is called with the agent's result.txt path."""
-        from kiro_crew.context_management import COMPLETION_KEEP_DEFAULT_CHARS
+        from aj_crew.context_management import COMPLETION_KEEP_DEFAULT_CHARS
 
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch("kiro_crew.mcp_core.summarize_result") as mock_summarize, \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch("aj_crew.mcp_core.summarize_result") as mock_summarize, \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {"id": "abc123"}
             large_result = "x " * 2000  # ~4000 chars, over 3K threshold
             mock_get.return_value = {"done": True, "agent": "w", "result": large_result}
@@ -658,10 +658,10 @@ class TestSpawnSubAgentsSummarization:
 
     def test_agent_dir_failure_falls_back_to_full_result(self):
         """If _agent_dir raises, the full result is inlined (graceful fallback)."""
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {"id": "../bad-id"}
             large_result = "fallback " * 600  # over 3K
             mock_get.return_value = {"done": True, "agent": "w", "result": large_result}
@@ -677,11 +677,11 @@ class TestSpawnSubAgentsSummarization:
 
     def test_mixed_short_and_large_results(self):
         """When multiple agents return, only large results get summarized."""
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch("kiro_crew.mcp_core.summarize_result") as mock_summarize, \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch("aj_crew.mcp_core.summarize_result") as mock_summarize, \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.side_effect = [{"id": "short1"}, {"id": "long1"}]
             short_result = "brief answer"
             large_result = "detailed " * 600  # over 3K
@@ -706,13 +706,13 @@ class TestSpawnSubAgentsSummarization:
 
     def test_result_exactly_at_threshold_not_summarized(self):
         """A result exactly at COMPLETION_KEEP_DEFAULT_CHARS is NOT summarized."""
-        from kiro_crew.context_management import COMPLETION_KEEP_DEFAULT_CHARS
+        from aj_crew.context_management import COMPLETION_KEEP_DEFAULT_CHARS
 
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch("kiro_crew.mcp_core.summarize_result") as mock_summarize, \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch("aj_crew.mcp_core.summarize_result") as mock_summarize, \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {"id": "a1"}
             # Exactly at the threshold (not over)
             exact_result = "x" * COMPLETION_KEEP_DEFAULT_CHARS
@@ -725,12 +725,12 @@ class TestSpawnSubAgentsSummarization:
             assert '"completed"' in result
 
     def test_invalid_max_wait_env_falls_back(self):
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
              patch.dict("os.environ", {
-                 "KIROCREW_SESSION_KEY": "s",
-                 "KIROCREW_SPAWN_SUB_AGENTS_MAX_WAIT": "not-a-number",
+                 "AJCREW_SESSION_KEY": "s",
+                 "AJCREW_SPAWN_SUB_AGENTS_MAX_WAIT": "not-a-number",
              }):
             mock_post.return_value = {"id": "a1"}
             mock_get.return_value = {"done": True, "agent": "w", "result": "ok"}
@@ -741,11 +741,11 @@ class TestSpawnSubAgentsSummarization:
             assert '"completed"' in result
 
     def test_keepalive_ping_failure_is_swallowed(self):
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.time") as mock_time, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.time") as mock_time, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             # spawn returns an id; the keepalive ping raises and must be swallowed.
             def _post_side(url, body=None):
                 if url == "/api/session-keepalive":
@@ -764,11 +764,11 @@ class TestSpawnSubAgentsSummarization:
 
     def test_poll_waits_then_completes(self):
         import itertools
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.time") as mock_time, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.time") as mock_time, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {"id": "a1"}
             # First poll: not done -> loop sleeps and re-polls; then done.
             states = [{"done": False, "agent": "w"}]
@@ -803,10 +803,10 @@ class TestSpawnSubAgentsFailedChildTranscript:
         return [json.loads(block) for block in reply.split("\n\n")]
 
     def _run(self, payload: dict, agent_id: str = "a1") -> list[dict]:
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {"id": agent_id}
             mock_get.return_value = payload
             reply = _call_tool("spawn_sub_agents", {
@@ -843,11 +843,11 @@ class TestSpawnSubAgentsFailedChildTranscript:
         assert "AKIAIOSFODNN7EXAMPLE" not in blocks[0]["text"]
 
     def test_large_transcript_of_a_failed_child_is_summarized_with_its_path(self):
-        from kiro_crew.context_management import COMPLETION_KEEP_DEFAULT_CHARS
+        from aj_crew.context_management import COMPLETION_KEEP_DEFAULT_CHARS
 
         large = "word " * 1000
         assert len(large) > COMPLETION_KEEP_DEFAULT_CHARS
-        with patch("kiro_crew.mcp_core.summarize_result") as mock_summarize:
+        with patch("aj_crew.mcp_core.summarize_result") as mock_summarize:
             mock_summarize.return_value = "summary with path"
             blocks = self._run(
                 {"done": True, "agent": "w", "error": "crashed", "result": large},
@@ -870,11 +870,11 @@ class TestSpawnSubAgentsFailedChildTranscript:
     def test_finished_child_that_ended_in_error_is_still_counted_as_errored(self):
         """The tool's own SEL row keeps the per-child tallies and the ``partial``
         outcome; the generic ``call_tool_with_logging`` row stays ``completed``."""
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel") as mock_sel, \
-             patch("kiro_crew.mcp_shared.sel", side_effect=lambda: mock_sel.return_value), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel") as mock_sel, \
+             patch("aj_crew.mcp_shared.sel", side_effect=lambda: mock_sel.return_value), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_post.return_value = {"id": "a1"}
             mock_get.return_value = {
                 "done": True, "agent": "w", "error": "crashed", "result": "partial",
@@ -901,10 +901,10 @@ class TestSpawnSubAgentsFailedChildTranscript:
 
 class TestSpawnList:
     def test_spawn_list_renders_running_and_done_agents(self):
-        with patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.list_agents", return_value=[]), \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.list_agents", return_value=[]), \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_get.return_value = {"agents": [
                 {"id": "a1", "done": False, "task": "explore",
                  "turns": 3, "last_tool": "shell", "elapsed": 12},
@@ -918,10 +918,10 @@ class TestSpawnList:
             assert "shell" in result  # progress detail rendered
 
     def test_spawn_list_empty(self):
-        with patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.list_agents", return_value=[]), \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}):
+        with patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.list_agents", return_value=[]), \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}):
             mock_get.return_value = {"agents": []}
 
             result = _call_tool("spawn_list", {})
@@ -948,10 +948,10 @@ class TestSpawnSubAgentsAuditOwner:
         ]
 
     def test_unresolved_owner_is_marked_in_audit_records(self):
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core._resolve_session_key", return_value=""), \
-             patch("kiro_crew.mcp_core.sel") as mock_sel:
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core._resolve_session_key", return_value=""), \
+             patch("aj_crew.mcp_core.sel") as mock_sel:
             mock_post.return_value = {"id": "a1"}
             mock_get.return_value = {"done": True, "agent": "w", "result": "ok"}
 
@@ -971,10 +971,10 @@ class TestSpawnSubAgentsAuditOwner:
     def test_resolved_owner_is_recorded_verbatim(self):
         # The marker must not displace a real owner: attribution that resolves
         # is still recorded exactly as resolved.
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core._resolve_session_key", return_value="dashboard:tab7"), \
-             patch("kiro_crew.mcp_core.sel") as mock_sel:
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core._resolve_session_key", return_value="dashboard:tab7"), \
+             patch("aj_crew.mcp_core.sel") as mock_sel:
             mock_post.return_value = {"id": "a1"}
             mock_get.return_value = {"done": True, "agent": "w", "result": "ok"}
 
@@ -987,10 +987,10 @@ class TestSpawnSubAgentsAuditOwner:
         # parent_session_key still carries the empty owner, because it feeds
         # per-slot frame routing and a synthetic key there would address a
         # slot that does not exist.
-        with patch("kiro_crew.mcp_core._post") as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core._resolve_session_key", return_value=""), \
-             patch("kiro_crew.mcp_core.sel"):
+        with patch("aj_crew.mcp_core._post") as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core._resolve_session_key", return_value=""), \
+             patch("aj_crew.mcp_core.sel"):
             mock_post.return_value = {"id": "a1"}
             mock_get.return_value = {"done": True, "agent": "w", "result": "ok"}
 
@@ -1050,7 +1050,7 @@ class TestSpawnSubAgentsAbandon:
     def test_abandon_names_every_spawned_child_and_forbids_a_respawn(self):
         import json
 
-        from kiro_crew.mcp_tools.spawn import _SubAgentsStep, spawn_sub_agents
+        from aj_crew.mcp_tools.spawn import _SubAgentsStep, spawn_sub_agents
 
         ids = iter(["a1", "a2"])
 
@@ -1061,10 +1061,10 @@ class TestSpawnSubAgentsAbandon:
                 return {"id": next(ids)}
             return {}
 
-        with patch("kiro_crew.mcp_core._post", side_effect=_post) as mock_post, \
-             patch("kiro_crew.mcp_core._get") as mock_get, \
-             patch("kiro_crew.mcp_core.sel"), \
-             patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "sess1"}):
+        with patch("aj_crew.mcp_core._post", side_effect=_post) as mock_post, \
+             patch("aj_crew.mcp_core._get") as mock_get, \
+             patch("aj_crew.mcp_core.sel"), \
+             patch.dict("os.environ", {"AJCREW_SESSION_KEY": "sess1"}):
             step = spawn_sub_agents("spawn_sub_agents", {
                 "agents": [{"prompt": "one"}, {"prompt": "two"}, {"prompt": "broken"}],
             })
@@ -1094,8 +1094,8 @@ class TestDeferredCollectionCommit:
     def test_collect_only_builds_text_and_settlement_marks_once(self, monkeypatch):
         from unittest.mock import MagicMock
 
-        from kiro_crew import mcp_core
-        from kiro_crew.mcp_tools.spawn import _SubAgentsStep
+        from aj_crew import mcp_core
+        from aj_crew.mcp_tools.spawn import _SubAgentsStep
 
         post = MagicMock(return_value={"status": "ok", "marked": 1})
         audit = MagicMock()
@@ -1128,8 +1128,8 @@ class TestDeferredCollectionCommit:
     def test_an_unwritten_answer_marks_nothing(self, monkeypatch):
         from unittest.mock import MagicMock
 
-        from kiro_crew import mcp_core
-        from kiro_crew.mcp_tools.spawn import _SubAgentsStep
+        from aj_crew import mcp_core
+        from aj_crew.mcp_tools.spawn import _SubAgentsStep
 
         post = MagicMock()
         monkeypatch.setattr(mcp_core, "_post", post)
@@ -1149,8 +1149,8 @@ class TestDeferredCollectionCommit:
     def test_abandon_never_commits_a_collect_result(self, monkeypatch):
         from unittest.mock import MagicMock
 
-        from kiro_crew import mcp_core
-        from kiro_crew.mcp_tools.spawn import _SubAgentsStep
+        from aj_crew import mcp_core
+        from aj_crew.mcp_tools.spawn import _SubAgentsStep
 
         post = MagicMock()
         monkeypatch.setattr(mcp_core, "_post", post)
@@ -1179,7 +1179,7 @@ class TestDeferredCollectionCommit:
         deferred state exists and nothing is spawned."""
         from unittest.mock import MagicMock
 
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         post = MagicMock(return_value={"id": "a1"})
         monkeypatch.setattr(mcp_core, "_post", post)
@@ -1195,8 +1195,8 @@ class TestDeferredCollectionCommit:
         where it is retained and an oversized batch spawns nothing."""
         from unittest.mock import MagicMock
 
-        from kiro_crew import mcp_core
-        from kiro_crew.validation import (
+        from aj_crew import mcp_core
+        from aj_crew.validation import (
             SPAWN_BATCH_MEMBERS_MAX,
             SPAWN_SUB_AGENTS_SCHEMA,
             validate_tool_args,
@@ -1214,8 +1214,8 @@ class TestDeferredCollectionCommit:
     def test_a_parked_batch_bounds_each_refusal_line(self, monkeypatch):
         from unittest.mock import MagicMock
 
-        from kiro_crew import mcp_core
-        from kiro_crew.mcp_tools.spawn import _SA_ERROR_MAX_CHARS, _SubAgentsStep, spawn_sub_agents
+        from aj_crew import mcp_core
+        from aj_crew.mcp_tools.spawn import _SA_ERROR_MAX_CHARS, _SubAgentsStep, spawn_sub_agents
 
         monkeypatch.setattr(mcp_core, "sel", lambda: MagicMock())
         monkeypatch.setattr(mcp_core, "_resolve_session_key", lambda: "dashboard:owner")

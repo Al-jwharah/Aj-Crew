@@ -1,4 +1,4 @@
-"""Tests for the shared untrusted-archive inventory vet (kiro_crew.zip_vet).
+"""Tests for the shared untrusted-archive inventory vet (aj_crew.zip_vet).
 
 The crafted-archive cases here live at the shared module, which all three
 untrusted-archive parse sites route through.
@@ -16,7 +16,7 @@ import zipfile
 
 import pytest
 
-from kiro_crew.zip_vet import (
+from aj_crew.zip_vet import (
     TAIL_WINDOW,
     ZipInventoryRejected,
     vet_zip_inventory,
@@ -185,7 +185,7 @@ def test_only_the_tail_is_read(tmp_path, monkeypatch):
     def _fake_open(*a, **kw):
         return _Recorder(real_open(*a, **kw))
 
-    monkeypatch.setattr("kiro_crew.zip_vet.open", _fake_open, raising=False)
+    monkeypatch.setattr("aj_crew.zip_vet.open", _fake_open, raising=False)
     vet_zip_inventory(path, max_members=4096)
     assert sizes, "the vet did not read the archive"
     assert max(sizes) <= TAIL_WINDOW

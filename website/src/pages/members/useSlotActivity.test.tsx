@@ -44,7 +44,7 @@ describe('useSlotActivity (the header pill and the chat status line share this r
 
   it('a nothing_to_do call reads as thinking even while in flight, on every surface (identity, not words)', () => {
     const store = makeStore()
-    call(store, 'tc-q', '@kirocrew-core/nothing_to_do', 'Nothing to report', { tool_name: 'nothing_to_do', mcp_server: 'kirocrew-core' })
+    call(store, 'tc-q', '@ajcrew-core/nothing_to_do', 'Nothing to report', { tool_name: 'nothing_to_do', mcp_server: 'ajcrew-core' })
     expect(run(store, { running: true }).kind).toBe('thinking')
     // A shell whose TITLE says nothing_to_do is an ordinary step.
     const other = makeStore()

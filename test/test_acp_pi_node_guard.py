@@ -16,14 +16,14 @@ from pathlib import Path
 import pytest
 from acp_pi_backend_helpers import _no_ambient_pi_env, _PiLaunchRig  # noqa: F401
 
-from kiro_crew.acp.harness import pi as pi_mod
-from kiro_crew.acp.harness import pi_node
-from kiro_crew.acp.harness.pi_node import (
+from aj_crew.acp.harness import pi as pi_mod
+from aj_crew.acp.harness import pi_node
+from aj_crew.acp.harness.pi_node import (
     PiNodeChoice,
     choose_pi_node,
     node_engine_floor,
 )
-from kiro_crew.acp.transport_errors import AcpError
+from aj_crew.acp.transport_errors import AcpError
 
 pytestmark = pytest.mark.skipif(
     os.name == "nt", reason="POSIX shebang launch; Windows is unmanaged"
@@ -200,11 +200,11 @@ def test_without_a_declared_floor_pi_is_left_to_the_read_back(tmp_path) -> None:
 
 def test_the_version_probe_gets_no_gateway_environment(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("NODE_OPTIONS", "--require /nonexistent.js")
-    monkeypatch.setenv("KIROCREW_PROBE_SECRET", "s3cret")
+    monkeypatch.setenv("AJCREW_PROBE_SECRET", "s3cret")
     node = tmp_path / "bin" / "node"
     node.parent.mkdir()
     node.write_text(
-        '#!/bin/sh\n[ -z "$NODE_OPTIONS$KIROCREW_PROBE_SECRET" ] && echo v22.19.0\n',
+        '#!/bin/sh\n[ -z "$NODE_OPTIONS$AJCREW_PROBE_SECRET" ] && echo v22.19.0\n',
         encoding="utf-8",
     )
     node.chmod(0o755)

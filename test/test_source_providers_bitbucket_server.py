@@ -18,10 +18,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config import loader as config_loader
-from kiro_crew.config import sections as config_sections
-from kiro_crew.dashboard.handlers import source_providers as source
-from kiro_crew.dashboard.source_providers import (
+from aj_crew.config import loader as config_loader
+from aj_crew.config import sections as config_sections
+from aj_crew.dashboard.handlers import source_providers as source
+from aj_crew.dashboard.source_providers import (
     bitbucket_server,
     chip_refresh,
     chip_status,
@@ -29,7 +29,7 @@ from kiro_crew.dashboard.source_providers import (
     links,
     plugins,
 )
-from kiro_crew.dashboard.source_providers.contract import SourceProviderError
+from aj_crew.dashboard.source_providers.contract import SourceProviderError
 
 HOST = "bitbucket.acme.example:7990"
 PR_URL = f"https://{HOST}/bitbucket/projects/PROJ/repos/widgets/pull-requests/42"
@@ -74,7 +74,7 @@ def config_file(tmp_path, monkeypatch):
     path = tmp_path / "config.json"
     path.write_text(json.dumps({"dashboard": {"bitbucket_server_hosts": [HOST]}}), encoding="utf-8")
     monkeypatch.setattr(hosts, "_gitlab_hosts_loaded_at", 0.0)
-    with patch("kiro_crew.config.loader.config_path", return_value=path):
+    with patch("aj_crew.config.loader.config_path", return_value=path):
         yield path
 
 
@@ -518,7 +518,7 @@ def two_hosts_config(tmp_path, monkeypatch):
         encoding="utf-8",
     )
     monkeypatch.setattr(hosts, "_gitlab_hosts_loaded_at", 0.0)
-    with patch("kiro_crew.config.loader.config_path", return_value=path):
+    with patch("aj_crew.config.loader.config_path", return_value=path):
         yield path
 
 

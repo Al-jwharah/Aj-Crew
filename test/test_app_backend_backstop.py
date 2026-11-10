@@ -17,10 +17,10 @@ import pytest
 from apps_backend_coverage_helpers import _isolated_module_state  # noqa: F401
 from apps_backend_coverage_helpers import _fake_proc, _manifest
 
-import kiro_crew.apps.backend as bmod
-from kiro_crew.apps.backend import AppProcess
-from kiro_crew.dashboard import server
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+import aj_crew.apps.backend as bmod
+from aj_crew.apps.backend import AppProcess
+from aj_crew.dashboard import server
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 _APP = "app"
 _REAL_START = bmod._start_app_backend

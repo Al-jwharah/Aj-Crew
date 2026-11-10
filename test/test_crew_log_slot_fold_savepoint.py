@@ -30,15 +30,15 @@ from typing import Any
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import checkpoint as savepoints
-from kiro_crew.crew_log import eager as crew_log_eager
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import store as crew_log_store
-from kiro_crew.projection import DirectoryCheckpointStore
-from kiro_crew.session_ledger import _MAX_ARTIFACTS
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import checkpoint as savepoints
+from aj_crew.crew_log import eager as crew_log_eager
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import store as crew_log_store
+from aj_crew.projection import DirectoryCheckpointStore
+from aj_crew.session_ledger import _MAX_ARTIFACTS
 
 SLOT = "chat-savepoint"
 OTHER_SLOT = "chat-elsewhere"
@@ -54,10 +54,10 @@ def _isolated_home(tmp_path, _floor_monkeypatch):
     CLASS, and a background fold would add its reads to the count.
 
     Uses ``_floor_monkeypatch``, not ``monkeypatch``, so a test calling
-    ``monkeypatch.undo()`` cannot drop the ``KIROCREW_HOME`` pin and hit the real home.
+    ``monkeypatch.undo()`` cannot drop the ``AJCREW_HOME`` pin and hit the real home.
     """
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     _floor_monkeypatch.setattr(crew_log_eager, "note_commit", lambda *a, **k: None)
     crew_log_emit.reset_caches()
     crew_log_eager.stop_for_tests()
@@ -81,7 +81,7 @@ def _cheap_writes(monkeypatch):
 
 def _unit(unit_id: str, *, slot: str = SLOT) -> None:
     """Create one session crew log, then drop the handle so it holds no lease."""
-    CrewLog.create(lg.KIND_SESSION, unit_id, owner="owner", agent="kirocrew", slot=slot)
+    CrewLog.create(lg.KIND_SESSION, unit_id, owner="owner", agent="ajcrew", slot=slot)
 
 
 def _ledger(unit_id: str, *, slot: str = SLOT, **fields: Any) -> None:

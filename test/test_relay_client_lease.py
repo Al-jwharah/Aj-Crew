@@ -38,11 +38,11 @@ from relay_client_helpers import (
     valid_message,
 )
 
-from kiro_crew.atomic_write import read_bytes_with_retry
-from kiro_crew.platform_compat import IS_POSIX
-from kiro_crew.relay_client import lease as lease_module
-from kiro_crew.relay_client.client import RelayClient
-from kiro_crew.relay_client.lease import (
+from aj_crew.atomic_write import read_bytes_with_retry
+from aj_crew.platform_compat import IS_POSIX
+from aj_crew.relay_client import lease as lease_module
+from aj_crew.relay_client.client import RelayClient
+from aj_crew.relay_client.lease import (
     AWS_JSON_CONTENT_TYPE,
     DEFAULT_DISPLAY_NAME,
     INSTANCE_ID_FILE,
@@ -63,20 +63,20 @@ from kiro_crew.relay_client.lease import (
     refusal_of,
     takeover_wait,
 )
-from kiro_crew.relay_client.provider import (
+from aj_crew.relay_client.provider import (
     RelaySettings,
     RelaySettingsError,
     lease_token_source,
     public_tunnel_provider,
 )
-from kiro_crew.relay_client.token_source import (
+from aj_crew.relay_client.token_source import (
     HostCredential,
     HostTokenRetryLater,
     HostTokenUnavailable,
     UnavailableHostTokenSource,
     token_claims,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 pytestmark = pytest.mark.asyncio
 
@@ -762,7 +762,7 @@ class _NoClock:
 async def test_the_takeover_wait_never_reads_this_machines_clock(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.relay_client import lease as lease_module
+    from aj_crew.relay_client import lease as lease_module
 
     # Only the lease module's own binding is replaced, never the stdlib clock.
     monkeypatch.setattr(lease_module, "time", _NoClock(lease_module.time))
@@ -1252,7 +1252,7 @@ async def test_the_credential_setting_names_a_place_never_the_credential(tmp_pat
 
 
 async def test_the_credential_is_read_from_a_file_or_the_vault(tmp_path: Path) -> None:
-    from kiro_crew.secrets import SecretVault
+    from aj_crew.secrets import SecretVault
 
     assert read_lease_credential(str(credential_file(tmp_path)), home=tmp_path) == CREDENTIAL
     SecretVault(tmp_path).set_sync("relay-lease", ROTATED)
@@ -1704,7 +1704,7 @@ async def test_the_token_type_setting_names_the_lease_calls_header(
     monkeypatch: pytest.MonkeyPatch,
     token_type: str,
 ) -> None:
-    monkeypatch.setattr("kiro_crew.relay_client.lease._data_home", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.relay_client.lease._data_home", lambda: tmp_path)
     lease.queue(200, answer(0))
     settings = RelaySettings.from_config(
         _cfg(

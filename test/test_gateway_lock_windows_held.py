@@ -7,7 +7,7 @@ byte ``platform_lock_compat`` locks for the real gateway -- then holds it while
 this process probes. Under that mandatory lock the stamped pid cannot be read
 from another handle, so :func:`gateway_lock.lock_holder` must answer
 "positively held, holder unnameable" (``LockProbeError.held is True``) and
-``kirocrew gateway-pid`` must print ``holder=held``: the verdict the desktop
+``ajcrew gateway-pid`` must print ``holder=held``: the verdict the desktop
 waits out before respawning. Reporting nobody here would let it spawn a second
 writer into a live lock; reporting indeterminate would leave it with no gateway.
 """
@@ -22,8 +22,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_server
-from kiro_crew.gateway_lock import LOCK_FILENAME, LockProbeError, lock_holder
+from aj_crew import cli_server
+from aj_crew.gateway_lock import LOCK_FILENAME, LockProbeError, lock_holder
 
 pytestmark = pytest.mark.skipif(sys.platform != "win32", reason="real msvcrt mandatory lock")
 

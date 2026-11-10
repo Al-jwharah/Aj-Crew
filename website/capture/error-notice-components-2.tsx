@@ -35,13 +35,13 @@ import '../src/index.css'
 
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const FOLDER_SAVE_ERROR = 'HTTP 400: project_dir must be an existing directory'
 const WORKTREE_ERROR = 'Branch already exists: feat/upload-rate-limit'
 const GIT_STATUS_ERROR = 'HTTP 500: git is not installed on the gateway host'
 const ISSUE_ERROR = 'glab: 404 project not found'
-const REPAIR_ERROR = 'FileNotFoundError: no shipped defaults.json for kirocrew.json'
+const REPAIR_ERROR = 'FileNotFoundError: no shipped defaults.json for ajcrew.json'
 const MCP_INSTALL_ERROR = 'HTTP 503: provider unavailable'
 const MOBILE_ERROR = 'Could not create a link. Try again.'
 const REVEAL_BLOCKED = 'This path is protected and can’t be opened.'

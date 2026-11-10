@@ -25,9 +25,9 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard.default_session_folder import (
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard.default_session_folder import (
     nearest_default_agent,
     resolve_default_session_folder,
 )
@@ -76,7 +76,7 @@ def test_a_cyclic_parent_chain_ends_the_walk():
 def cfg_file(tmp_path):
     p = tmp_path / "config.json"
     p.write_text("{}", encoding="utf-8")
-    with patch("kiro_crew.config.loader.config_path", return_value=p):
+    with patch("aj_crew.config.loader.config_path", return_value=p):
         yield p
 
 
@@ -86,11 +86,11 @@ def cfg_file(tmp_path):
 )
 def test_config_reads_a_non_string_as_unset(cfg_file, raw, expected):
     cfg_file.write_text(json.dumps({"dashboard": {"default_session_folder": raw}}), "utf-8")
-    assert KiroCrewConfig.load().dashboard.default_session_folder == expected
+    assert AjCrewConfig.load().dashboard.default_session_folder == expected
 
 
 def test_config_default_is_unset():
-    assert KiroCrewConfig().dashboard.default_session_folder == ""
+    assert AjCrewConfig().dashboard.default_session_folder == ""
 
 
 # ── POST /api/chat/slots ──
@@ -98,10 +98,10 @@ def test_config_default_is_unset():
 
 @pytest.fixture
 def owner_cfg(tmp_path, monkeypatch):
-    cfg = KiroCrewConfig()
-    cfg.agents = {"default": KiroCrewAgentConfig(kiro_agent="kirocrew")}
+    cfg = AjCrewConfig()
+    cfg.agents = {"default": AjCrewAgentConfig(kiro_agent="ajcrew")}
     cfg.default_agent = "default"
-    monkeypatch.setattr(chat_handlers, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+    monkeypatch.setattr(chat_handlers, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
     monkeypatch.setattr(chat_handlers, "schedule_eager_spawn", lambda *a, **k: None)
     default_dir = tmp_path / "default-project"
     default_dir.mkdir()
@@ -189,12 +189,12 @@ async def test_a_deleted_default_leaves_the_chat_unfiled(filed_state):
 async def test_the_folder_project_and_agent_pin_apply(tmp_path, filed_state):
     linked = tmp_path / "linked"
     linked.mkdir()
-    filed_state._folders = [_folder("inbox", project_dir=str(linked), default_agent="kirocrew")]
+    filed_state._folders = [_folder("inbox", project_dir=str(linked), default_agent="ajcrew")]
     status, data = await _create(filed_state, {"default_folder": True})
     assert status == 200, data
     assert data["folder_id"] == "inbox"
     assert data["project"] == os.path.realpath(linked)
-    assert filed_state._slots[data["key"]].agent == "kirocrew"
+    assert filed_state._slots[data["key"]].agent == "ajcrew"
 
 
 @pytest.mark.asyncio
@@ -213,11 +213,11 @@ async def test_a_default_with_a_missing_project_leaves_the_chat_unfiled(
 
 @pytest.fixture()
 def config_client_app(cfg_file, tmp_path):
-    from kiro_crew.dashboard.handlers.files import api_dashboard_config
+    from aj_crew.dashboard.handlers.files import api_dashboard_config
 
     state = _make_state(tmp_path)
     state._folders = [_folder("inbox"), _folder("appfolder", owner_app="some-app")]
-    with patch("kiro_crew.dashboard.handlers.sel", return_value=MagicMock()):
+    with patch("aj_crew.dashboard.handlers.sel", return_value=MagicMock()):
         app = web.Application()
         app["state"] = state
         app.router.add_put("/api/dashboard/config", api_dashboard_config)
@@ -234,7 +234,7 @@ async def test_put_sets_and_clears_the_default(config_client_app):
         assert body["default_session_folder"] == "inbox"
         resp = await client.put("/api/dashboard/config", json={"default_session_folder": ""})
         assert resp.status == 200, await resp.text()
-    assert KiroCrewConfig.load().dashboard.default_session_folder == ""
+    assert AjCrewConfig.load().dashboard.default_session_folder == ""
 
 
 @pytest.mark.parametrize("value", ["missing", "appfolder", 7])
@@ -244,7 +244,7 @@ async def test_put_refuses_anything_but_a_person_folder(config_client_app, value
         resp = await client.put("/api/dashboard/config", json={"default_session_folder": value})
         assert resp.status == 400
         assert (await resp.json())["code"] == "invalid_default_session_folder"
-    assert KiroCrewConfig.load().dashboard.default_session_folder == ""
+    assert AjCrewConfig.load().dashboard.default_session_folder == ""
 
 
 @pytest.mark.asyncio
@@ -258,6 +258,6 @@ async def test_an_unchanged_deleted_default_does_not_block_other_saves(config_cl
             json={"default_session_folder": "deletedsince", "auto_open_git_panel": True},
         )
         assert resp.status == 200, await resp.text()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg.dashboard.auto_open_git_panel is True
     assert cfg.dashboard.default_session_folder == "deletedsince"

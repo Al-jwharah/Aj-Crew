@@ -1,8 +1,8 @@
 """The Crew Members routes' facade keeps the patch seams the one module had.
 
-``kiro_crew.dashboard.handlers.members`` is a mirror facade (:mod:`kiro_crew._facade_mirror`)
-over the ``kiro_crew.dashboard.handlers.members_<role>`` owners. Callers, tests and documents
-still reach every name as ``kiro_crew.dashboard.handlers.members.<name>``, and the moved code
+``aj_crew.dashboard.handlers.members`` is a mirror facade (:mod:`aj_crew._facade_mirror`)
+over the ``aj_crew.dashboard.handlers.members_<role>`` owners. Callers, tests and documents
+still reach every name as ``aj_crew.dashboard.handlers.members.<name>``, and the moved code
 reads its names as plain module globals, so a patch through the facade reaches that code
 only because the mirror writes it into every module holding the name.
 
@@ -12,7 +12,7 @@ global rebound). These tests pin what is particular to this facade: every name t
 trees patch through it reaches every module holding it; the owners are exactly the
 ``members_*.py`` siblings, loaded lowest layer first, and only the family imports them;
 the facade keeps no code of its own and serves every route the handlers package
-re-exports; the names it serves from the rest of ``kiro_crew`` stay visible to type
+re-exports; the names it serves from the rest of ``aj_crew`` stay visible to type
 checkers; the family logs under the facade's name; and the facade still runs as
 ``python -m``.
 """
@@ -35,10 +35,10 @@ import owner_import_scan
 import pytest
 import source_corpus
 
-import kiro_crew
-from kiro_crew import _facade_mirror
-from kiro_crew.dashboard.handlers import members
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew
+from aj_crew import _facade_mirror
+from aj_crew.dashboard.handlers import members
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_members_handler_facade")
 
@@ -46,10 +46,10 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_members_handler_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.dashboard.handlers.members"
-OWNER_PREFIX = "kiro_crew.dashboard.handlers.members_"
+FACADE = "aj_crew.dashboard.handlers.members"
+OWNER_PREFIX = "aj_crew.dashboard.handlers.members_"
 HANDLERS_DIR = Path(members.__file__).resolve().parent
-_SRC = Path(kiro_crew.__file__).resolve().parent
+_SRC = Path(aj_crew.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
 
 #: Names the test trees are known to patch through the facade, one of each seam the
@@ -207,7 +207,7 @@ def test_every_route_is_the_one_the_handlers_package_re_exports() -> None:
         if name.startswith("api_") and inspect.iscoroutinefunction(getattr(members, name))
     }
     assert set(routes) == _ROUTES
-    package = importlib.import_module("kiro_crew.dashboard.handlers")
+    package = importlib.import_module("aj_crew.dashboard.handlers")
     assert {name: getattr(package, name) for name in routes} == routes
     assert sorted(fn.__module__ for fn in routes.values() if fn.__module__ == FACADE) == []
 
@@ -222,13 +222,13 @@ def _home_imports() -> dict[str, tuple[str, str]]:
         for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.Import):
                 for alias in node.names:
-                    if alias.asname and alias.name.startswith("kiro_crew"):
+                    if alias.asname and alias.name.startswith("aj_crew"):
                         found.setdefault(alias.asname, (alias.name, ""))
                 continue
             if not isinstance(node, ast.ImportFrom) or not node.module:
                 continue
             home = f"{package}.{node.module}" if node.level == 1 else node.module
-            if not home.startswith("kiro_crew") or home in family:
+            if not home.startswith("aj_crew") or home in family:
                 continue
             for alias in node.names:
                 if f"{home}.{alias.name}" not in family:
@@ -255,8 +255,8 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
-    """At BASE the module bound these by import, so ``from kiro_crew.dashboard.handlers.members
-    import KiroCrewConfig`` type-checked. Now an owner holds them, so the facade names each
+    """At BASE the module bound these by import, so ``from aj_crew.dashboard.handlers.members
+    import AjCrewConfig`` type-checked. Now an owner holds them, so the facade names each
     one from its home module under ``TYPE_CHECKING``, and nothing else."""
     served = set(_index().exports)
     expected = {name: home for name, home in _home_imports().items() if name in served}
@@ -276,7 +276,7 @@ def test_the_family_logs_under_the_facade_name() -> None:
 
 
 def test_the_facade_runs_as_a_module(tmp_path: Path) -> None:
-    """``python -m kiro_crew.dashboard.handlers.members`` imported cleanly before the split;
+    """``python -m aj_crew.dashboard.handlers.members`` imported cleanly before the split;
     the mirror installs on ``__main__`` too, because every member binds one logger by name."""
     env = dict(os.environ)
     src = str(Path(members.__file__).resolve().parents[3])
@@ -315,18 +315,18 @@ def test_only_the_family_imports_an_owner() -> None:
 
 
 def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None:
-    root = tmp_path / "kiro_crew"
+    root = tmp_path / "aj_crew"
     sources = {
         root
         / "pkg"
         / "caller.py": (
-            "from kiro_crew.dashboard.handlers.members_access import _deny_app_caller\n"
+            "from aj_crew.dashboard.handlers.members_access import _deny_app_caller\n"
         ),
-        root / "other.py": "from kiro_crew.dashboard.handlers import members_roster as low\n",
+        root / "other.py": "from aj_crew.dashboard.handlers import members_roster as low\n",
         root / "dashboard" / "handlers" / "relative.py": "from .members_thread import x\n",
         root / "dashboard" / "deep" / "up.py": "from ..handlers import members_rules\n",
         root
-        / "facade_user.py": ("from kiro_crew.dashboard.handlers.members import _deny_app_caller\n"),
+        / "facade_user.py": ("from aj_crew.dashboard.handlers.members import _deny_app_caller\n"),
     }
     assert _owner_importers(sources.items(), root) == {
         "pkg/caller.py",

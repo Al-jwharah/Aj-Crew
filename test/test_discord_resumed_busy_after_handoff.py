@@ -41,14 +41,14 @@ from discord_resumed_busy_helpers import (
 )
 from test_discord_sessions import _message
 
-from kiro_crew.dashboard import channel_handoff as ch
-from kiro_crew.dashboard import chat_runner as cr
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.session_directive_apply import DirectiveOutcome
-from kiro_crew.discord import client_rest
-from kiro_crew.discord.client import DiscordClient
-from kiro_crew.discord.transport import DiscordTransport
-from kiro_crew.history import HUMAN_TURN_META_KEY
+from aj_crew.dashboard import channel_handoff as ch
+from aj_crew.dashboard import chat_runner as cr
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.session_directive_apply import DirectiveOutcome
+from aj_crew.discord import client_rest
+from aj_crew.discord.client import DiscordClient
+from aj_crew.discord.transport import DiscordTransport
+from aj_crew.history import HUMAN_TURN_META_KEY
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _isolated_home = discord_resumed_busy_helpers._isolated_home
@@ -189,7 +189,7 @@ async def test_a_requeued_channel_steer_carries_the_drop_notice_address(tmp_path
 
 def _dying_turn(state, monkeypatch) -> None:
     """The slot's next turn dies before any output, and nothing drains after it."""
-    from kiro_crew.acp.client import AcpError
+    from aj_crew.acp.client import AcpError
 
     state.broadcast_ws = MagicMock()
     state.push_slots_update = MagicMock()
@@ -229,7 +229,7 @@ async def _replay_queued_dm_through_recovery(
     context or failure notes before streaming. Returns the state, slot,
     transport, text and the recovery's requeued entry.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     dispatcher, client, sessions, state, slot, _ = await _bound_to_busy_dashboard(
         tmp_path, steer_client=None
     )
@@ -332,9 +332,9 @@ async def test_an_auth_retry_of_changed_text_takes_no_address_from_the_row_meta(
     """An auth-retry requeue hands the row's whole meta to the recovery as
     extra meta. When the turn's text differs from the row's, the addresses in
     that meta are not carried: only the row comparison may write them."""
-    from kiro_crew.acp.client import AcpAuthRequired
+    from aj_crew.acp.client import AcpAuthRequired
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("chat-1")
     dm = sc.channel_recipient_meta("discord", "c1", "u1")
@@ -364,7 +364,7 @@ async def test_a_recovery_replayed_cross_session_delivery_keeps_its_sender(
 ) -> None:
     """The sending-session stamp is the other drop-notice address on a queued
     entry, and a verbatim recovery requeue keeps it the same way."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     sender = state.get_or_create_slot("sender-1")
     slot = state.get_or_create_slot("target-1")
@@ -390,9 +390,9 @@ async def test_a_merged_row_keeps_an_address_only_its_every_entry_shares(
     """A merged row's text is every entry's, and a drop notice quotes that text
     to the row's address. So a DM entry merged with a dashboard entry leaves the
     row with no address, while two entries from the same DM keep it."""
-    from kiro_crew.dashboard.chat_delivery import queue_for_next_turn
+    from aj_crew.dashboard.chat_delivery import queue_for_next_turn
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     state.subagents = None
@@ -409,7 +409,7 @@ async def test_a_merged_row_keeps_an_address_only_its_every_entry_shares(
 
     cfg = MagicMock()
     cfg.load.return_value.dashboard.merge_queued_messages = True
-    monkeypatch.setattr(cr, "KiroCrewConfig", cfg)
+    monkeypatch.setattr(cr, "AjCrewConfig", cfg)
     with (
         patch.object(cr, "spawn_guarded_turn", return_value=MagicMock()),
         patch.object(cr, "_run_chat", return_value=MagicMock()),
@@ -429,9 +429,9 @@ async def test_a_dm_entry_queued_beside_a_dashboard_entry_is_told_of_its_own_dro
     """With merging on, a DM entry queued next to a dashboard entry is still told
     when the drain drops it: the drop is decided per entry, before any merge, and
     the notice quotes only the DM's own words."""
-    from kiro_crew.dashboard.chat_delivery import queue_for_next_turn
+    from aj_crew.dashboard.chat_delivery import queue_for_next_turn
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     dispatcher, client, sessions, state, slot, _ = await _bound_to_busy_dashboard(
         tmp_path, steer_client=None
     )
@@ -443,7 +443,7 @@ async def test_a_dm_entry_queued_beside_a_dashboard_entry_is_told_of_its_own_dro
 
     cfg = MagicMock()
     cfg.load.return_value.dashboard.merge_queued_messages = True
-    monkeypatch.setattr(cr, "KiroCrewConfig", cfg)
+    monkeypatch.setattr(cr, "AjCrewConfig", cfg)
     state.sessions.set_mirror_link("dashboard:chat-1", "C0FFEE", "1758.0004")
     with (
         patch.object(cr, "spawn_guarded_turn", return_value=MagicMock()),
@@ -559,7 +559,7 @@ async def test_an_allowed_thread_still_gets_its_drop_notice(tmp_path, monkeypatc
 def test_the_channel_recipient_stamp_does_not_survive_a_restore(tmp_path) -> None:
     """It names a write target on a network surface, so an edited line cannot
     make the drain post the entry's text into a conversation of its choosing."""
-    from kiro_crew.dashboard.slot_queue_repository import sanitize_restored_queue
+    from aj_crew.dashboard.slot_queue_repository import sanitize_restored_queue
 
     raw = [
         {
@@ -670,7 +670,7 @@ async def test_a_full_fence_set_queues_the_handoff_and_keeps_every_fence(tmp_pat
     dispatcher, client, sessions, state, slot, enqueued = await _bound_to_busy_dashboard(
         tmp_path, steer_client=steer_client
     )
-    from kiro_crew.dashboard.chat_delivery import MAX_PENDING_STEERS
+    from aj_crew.dashboard.chat_delivery import MAX_PENDING_STEERS
 
     # MAX_PENDING_STEERS distinct audiences already recorded this turn; the live
     # audience is none of them, so this message names a new one.
@@ -897,15 +897,15 @@ async def _turn_emits_monitor_watch_after_a_steer(tmp_path, monkeypatch, *, chan
     """
     from test_acp_tool_identity import _stub_state
 
-    from kiro_crew import session_directive
-    from kiro_crew.acp.types import (
+    from aj_crew import session_directive
+    from aj_crew.acp.types import (
         EVENT_COMPLETE,
         EVENT_TEXT_CHUNK,
         EVENT_TOOL_CALL,
         EVENT_TOOL_RESULT,
         AcpEvent,
     )
-    from kiro_crew.dashboard.chat_delivery import steer_into_running_turn
+    from aj_crew.dashboard.chat_delivery import steer_into_running_turn
 
     state = _stub_state(tmp_path)
     slot = state.get_or_create_slot("chat-1")
@@ -932,7 +932,7 @@ async def _turn_emits_monitor_watch_after_a_steer(tmp_path, monkeypatch, *, chan
             tool_call_id="tc-watch",
             title="Watching the pull request",
             tool_name="monitor_watch",
-            mcp_server_name="kirocrew-core",
+            mcp_server_name="ajcrew-core",
         )
         # The turn is running (its task is live) while the steer is admitted; the
         # harness awaits ``_run_chat`` directly, so the liveness the gate reads is
@@ -1045,15 +1045,15 @@ async def test_an_accepted_steer_requeued_before_its_echo_keeps_its_producer_mar
     """
     from test_acp_tool_identity import _stub_state
 
-    from kiro_crew import session_directive
-    from kiro_crew.acp.types import (
+    from aj_crew import session_directive
+    from aj_crew.acp.types import (
         EVENT_COMPLETE,
         EVENT_TEXT_CHUNK,
         EVENT_TOOL_CALL,
         EVENT_TOOL_RESULT,
         AcpEvent,
     )
-    from kiro_crew.dashboard.chat_delivery import steer_into_running_turn
+    from aj_crew.dashboard.chat_delivery import steer_into_running_turn
 
     state = _stub_state(tmp_path)
     slot = state.get_or_create_slot("chat-1")
@@ -1077,7 +1077,7 @@ async def test_an_accepted_steer_requeued_before_its_echo_keeps_its_producer_mar
                 tool_call_id="tc-watch",
                 title="Watching the pull request",
                 tool_name="monitor_watch",
-                mcp_server_name="kirocrew-core",
+                mcp_server_name="ajcrew-core",
             )
             yield AcpEvent(
                 kind=EVENT_TOOL_RESULT,
@@ -1177,7 +1177,7 @@ async def test_a_close_during_the_steer_reports_the_text_queued_for_the_next_res
         tmp_path, steer_client=steer_client
     )
 
-    from kiro_crew.dashboard.slot_queue_repository import queue_persist_signature
+    from aj_crew.dashboard.slot_queue_repository import queue_persist_signature
 
     async def _close_then_accept(_msg):
         state._slots.pop("chat-1")
@@ -1426,7 +1426,7 @@ async def test_a_full_live_queue_refuses_the_enqueue(tmp_path) -> None:
     other copy), are both wrong; the channel human still holds the text and is
     told why it was not added.
     """
-    from kiro_crew.dashboard.slot_queue_repository import MAX_LIVE_QUEUE_ENTRIES
+    from aj_crew.dashboard.slot_queue_repository import MAX_LIVE_QUEUE_ENTRIES
 
     dispatcher, client, sessions, state, slot, enqueued = await _bound_to_busy_dashboard(
         tmp_path, steer_client=None
@@ -1447,8 +1447,8 @@ async def test_a_full_live_queue_refuses_the_enqueue(tmp_path) -> None:
 @pytest.mark.asyncio
 async def test_the_fence_cap_fallthrough_still_meets_the_queue_bound(tmp_path) -> None:
     """At the fence cap the queue arm is the fallback, and its bound is the one refusal left."""
-    from kiro_crew.dashboard.chat_delivery import MAX_PENDING_STEERS
-    from kiro_crew.dashboard.slot_queue_repository import MAX_LIVE_QUEUE_ENTRIES
+    from aj_crew.dashboard.chat_delivery import MAX_PENDING_STEERS
+    from aj_crew.dashboard.slot_queue_repository import MAX_LIVE_QUEUE_ENTRIES
 
     steer_client = _steerable()
     dispatcher, client, sessions, state, slot, _ = await _bound_to_busy_dashboard(

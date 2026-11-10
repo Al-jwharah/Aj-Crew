@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.discord import commands as dc
-from kiro_crew.discord.client import _APP_COMMAND_DESC_LIMIT, _APP_COMMAND_NAME_RE
-from kiro_crew.discord.commands import (
+from aj_crew.discord import commands as dc
+from aj_crew.discord.client import _APP_COMMAND_DESC_LIMIT, _APP_COMMAND_NAME_RE
+from aj_crew.discord.commands import (
     COMMAND_SPEC,
     application_command_payload,
     build_help_text,
@@ -266,7 +266,7 @@ class TestBuildHelpText:
         card = build_help_text()
         head = card.split("\n")[0]
         assert head == dc._HELP_HEADER
-        assert "Kiro Crew" in head and "Discord" in head
+        assert "Aj Crew" in head and "Discord" in head
         assert "\n\nWhile a reply is running" in card
         closing = "Just send a message to chat. Replies stream in real-time."
         assert card.rstrip().endswith(closing)

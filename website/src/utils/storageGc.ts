@@ -28,7 +28,7 @@ const SESSION_PREFIXES = [
   // uncollectable for exactly the sessions that are already gone.
   'vc_anchor2_',
   'vc_anchor_',
-  'kirocrew:touched-files:',
+  'ajcrew:touched-files:',
   'mc-panel-tabs:',
   // Per-chat side panel width and bottom-dock height. Writer: `sidePanelDimKey`
   // over `SIDE_PANEL_WIDTH_KEY` / `SIDE_PANEL_HEIGHT_KEY` in

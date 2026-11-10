@@ -117,7 +117,7 @@
       {
         "kind": "tool_result",
         "tool_call_id": "tooluse_strands01",
-        "tool_output": "DENIED: Kiro Crew did not approve 'shell'",
+        "tool_output": "DENIED: Aj Crew did not approve 'shell'",
         "tool_output_bytes": 41,
         "tool_output_digest": "3d1c8d5d39e74088b49b4170f429dd5691af419e37faf13706359d67970982f6",
         "tool_status": "failed"

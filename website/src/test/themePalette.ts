@@ -7,7 +7,7 @@
  *
  * One copy on purpose: this stylesheet has documented wrong-measurement traps
  * (a naive one-block-per-name `matchAll` reads partial per-component override
- * blocks — kiro-dark alone appears in 11 top-level selectors — and an
+ * blocks — aj-dark alone appears in 11 top-level selectors — and an
  * exact-single-selector parser misses compound lists like
  * `[data-theme="light"],[data-theme="amber-light"]{…}`, silently measuring
  * those themes against the `:root` dark palette). Two divergent copies of the
@@ -22,7 +22,7 @@
  * no exact comparison can match, so that theme resolves to `:root` while the
  * block is sitting right there parsed. It hit 14 of the 36 themes -- every dark
  * palette whose block follows a banner -- and left them measured against the
- * `:root` dark defaults. Blocks preceded by a blank line (kiro-dark) were
+ * `:root` dark defaults. Blocks preceded by a blank line (aj-dark) were
  * unaffected, which is what made it survive spot checks.
  * themeFillForeground.test.ts anchors the fix with a banner-prefixed theme,
  * alongside the compound-list case.

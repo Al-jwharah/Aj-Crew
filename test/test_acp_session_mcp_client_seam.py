@@ -31,13 +31,13 @@ from acp_session_mcp_helpers import (
     _write_spec,
 )
 
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp import session_mcp
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
-from kiro_crew.providers.mirrors import claude_code as claude_mirror
-from kiro_crew.providers.mirrors import registry as mirrors_registry
-from kiro_crew.providers.mirrors.claude_code import ClaudeCodeMirror
+from aj_crew.acp import client as client_mod
+from aj_crew.acp import session_mcp
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE
+from aj_crew.providers.mirrors import claude_code as claude_mirror
+from aj_crew.providers.mirrors import registry as mirrors_registry
+from aj_crew.providers.mirrors.claude_code import ClaudeCodeMirror
 
 
 class TestClientSeam:
@@ -60,7 +60,7 @@ class TestClientSeam:
 
     def test_claude_backend_translates_the_spec(self, tmp_path, agents_dir):
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-        client = self._seeded(tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         assert "foo" in _by_name(client._session_mcp_servers())
 
     @pytest.mark.parametrize("pooled", [False, True])
@@ -70,7 +70,7 @@ class TestClientSeam:
         agents_dir,
         pooled,
     ):
-        from kiro_crew.mcp_gateway.rewriter import _WRAPPER_MARKER
+        from aj_crew.mcp_gateway.rewriter import _WRAPPER_MARKER
 
         _write_spec(
             agents_dir,
@@ -79,10 +79,10 @@ class TestClientSeam:
         )
         overlay = tmp_path / "broker-overlay"
         overlay.mkdir()
-        (overlay / "kirocrew.json").write_text(
+        (overlay / "ajcrew.json").write_text(
             json.dumps(
                 {
-                    "name": "kirocrew",
+                    "name": "ajcrew",
                     "mcpServers": {
                         "foo": {
                             _WRAPPER_MARKER: True,
@@ -97,7 +97,7 @@ class TestClientSeam:
         )
         client = self._seeded(
             tmp_path,
-            agent="kirocrew",
+            agent="ajcrew",
             acp_backend=ACP_BACKEND_CLAUDE,
             mcp_gateway_overlay=overlay if pooled else None,
         )
@@ -120,7 +120,7 @@ class TestClientSeam:
         The set alone fails closed; both together work with no call-site edit.
         """
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-        client = self._seeded(tmp_path, agent="kirocrew")
+        client = self._seeded(tmp_path, agent="ajcrew")
         assert client._session_mcp_servers() == []
 
         # Set widened, no mirror registered -> still nothing. Fail-closed.
@@ -153,7 +153,7 @@ class TestClientSeam:
             "injection_server_names",
             lambda _o, _a, **_kw: frozenset({"pooled"}),
         )
-        client = self._seeded(tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         names = _by_name(client._session_mcp_servers())
         assert "pooled" not in names
         assert "direct" in names
@@ -170,7 +170,7 @@ class TestClientSeam:
             raise RuntimeError("overlay unreadable")
 
         monkeypatch.setattr(client_mod, "injection_server_names", _boom)
-        client = self._seeded(tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         assert "foo" in _by_name(client._session_mcp_servers())
 
     def test_the_shared_call_site_reads_no_disk_for_kiro(self, tmp_path, agents_dir, monkeypatch):
@@ -187,7 +187,7 @@ class TestClientSeam:
 
         monkeypatch.setattr(claude_mirror, "session_mcp_projection", _never)
         monkeypatch.setattr(client_mod, "injection_server_names", _never)
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew")
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew")
         result = client._session_mcp_servers()
         assert result == []
         # A coroutine here would force the shared call site to await.
@@ -212,7 +212,7 @@ class TestClientSeam:
             return real(*a, **kw)
 
         monkeypatch.setattr(claude_mirror, "session_mcp_projection", _counted)
-        client = self._seeded(tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         assert "foo" in _by_name(client._session_mcp_servers())
         assert "foo" in _by_name(client._session_mcp_servers())
         assert len(calls) == 1
@@ -273,7 +273,7 @@ class TestClientSeam:
             json.dumps({"permissions": {"allow": ["mcp__foo__read"]}}), encoding="utf-8"
         )
 
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._write_claude_local_settings()
         assert client._claude_settings_authored is False
         assert json.loads(path.read_text()) == original
@@ -323,7 +323,7 @@ class TestClientSeam:
         self._project_owned_settings(tmp_path, {"permissions": {}})
         client = AcpClient(
             work_dir=tmp_path,
-            agent="kirocrew",
+            agent="ajcrew",
             acp_backend=ACP_BACKEND_CLAUDE,
             permission_mode=requested,
         )
@@ -354,7 +354,7 @@ class TestClientSeam:
             json.dumps({"permissions": {"deny": ["Bash(rm:*)", "Bash(git push:*)"]}}),
             encoding="utf-8",
         )
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._write_claude_local_settings()
         assert "foo" in _by_name(client._session_mcp_servers())
         options = client._claude_session_meta()["claudeCode"]["options"]
@@ -395,7 +395,7 @@ class TestClientSeam:
             )
         else:
             checked_in.write_bytes(b" " * (client_mod._CLAUDE_PROJECT_SETTINGS_MAX_BYTES + 1))
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._write_claude_local_settings()
         assert client._claude_local_settings_excluded is False
         assert client._session_mcp_servers() == []
@@ -408,7 +408,7 @@ class TestClientSeam:
             json.dumps({"permissions": {"ask": ["mcp__foo__write", "Bash(git push:*)"]}}),
             encoding="utf-8",
         )
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._write_claude_local_settings()
         assert "foo" in _by_name(client._session_mcp_servers())
         ask = client._claude_session_meta()["claudeCode"]["options"]["settings"]["permissions"][
@@ -477,7 +477,7 @@ class TestClientSeam:
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
         self._project_owned_settings(tmp_path, {"permissions": {}})
         (tmp_path / ".claude" / "settings.json").write_text(checked_in, encoding="utf-8")
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._write_claude_local_settings()
         assert "foo" in _by_name(client._session_mcp_servers())
         assert "Bash(rm:*)" not in json.dumps(client._claude_session_meta())
@@ -493,7 +493,7 @@ class TestClientSeam:
             (tmp_path / ".claude" / "settings.json").symlink_to(target)
         except OSError:
             pytest.skip("symlink creation not permitted")
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._write_claude_local_settings()
         assert client._session_mcp_servers() == []
 
@@ -501,7 +501,7 @@ class TestClientSeam:
         """A later run where Crew authors the file drops the earlier exclusion."""
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
         path = self._project_owned_settings(tmp_path, {"permissions": {}})
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._write_claude_local_settings()
         assert client._claude_local_settings_excluded is True
         path.unlink()
@@ -520,7 +520,7 @@ class TestClientSeam:
             tools=["@foo"],
         )
         self._project_owned_settings(tmp_path, {"permissions": {}})
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._write_claude_local_settings()
         assert "foo" in _by_name(client._session_mcp_servers())
         client._claude_local_settings_excluded = False
@@ -541,10 +541,10 @@ class TestClientSeam:
         """
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
-        from kiro_crew import model_registry
+        from aj_crew import model_registry
 
         substitute = "global.anthropic.claude-sonnet-4-6[1m]"
         monkeypatch.setattr(
@@ -555,7 +555,7 @@ class TestClientSeam:
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
         client = AcpClient(
             work_dir=tmp_path,
-            agent="kirocrew",
+            agent="ajcrew",
             acp_backend=ACP_BACKEND_CLAUDE,
             model="global.anthropic.claude-opus-5[1m]",
         )
@@ -605,7 +605,7 @@ class TestClientSeam:
     ):
         """The normal case is unchanged: Crew's own file IS the local tier."""
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-        client = self._seeded(tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         params = await self._session_new_params(client, tmp_path, monkeypatch)
         assert "foo" in _by_name(params["mcpServers"])
         assert params["_meta"] == {"claudeCode": {"options": {}}}
@@ -617,7 +617,7 @@ class TestClientSeam:
     def _excluded_client(self, tmp_path, agents_dir, payload):
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
         self._project_owned_settings(tmp_path, payload)
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._write_claude_local_settings()
         assert "foo" in _by_name(client._session_mcp_servers())
         return client
@@ -656,7 +656,7 @@ class TestClientSeam:
         self._project_owned_settings(tmp_path, {"permissions": {}})
         client = AcpClient(
             work_dir=tmp_path,
-            agent="kirocrew",
+            agent="ajcrew",
             acp_backend=ACP_BACKEND_CLAUDE,
             permission_mode="auto",
         )
@@ -781,7 +781,7 @@ class TestClientSeam:
         """
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
         self._project_owned_settings(tmp_path, {"permissions": {}})
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._claude_adapter_disk_version = version
         client._write_claude_local_settings()
         assert client._claude_local_settings_excluded is False
@@ -794,7 +794,7 @@ class TestClientSeam:
     ):
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
         self._project_owned_settings(tmp_path, {"permissions": {}})
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._claude_adapter_disk_version = version
         client._write_claude_local_settings()
         assert "foo" in _by_name(client._session_mcp_servers())
@@ -825,10 +825,10 @@ class TestClientSeam:
         it), and the session's MCP array is resolved once, after the writer decided
         whether Crew authored the settings file.
         """
-        from kiro_crew.acp.harness import SpawnContext
-        from kiro_crew.acp.harness import claude as claude_mod
-        from kiro_crew.acp.harness import process_adapter_for
-        from kiro_crew.agent_sdk.drivers.acp import forget_cached_resolution
+        from aj_crew.acp.harness import SpawnContext
+        from aj_crew.acp.harness import claude as claude_mod
+        from aj_crew.acp.harness import process_adapter_for
+        from aj_crew.agent_sdk.drivers.acp import forget_cached_resolution
 
         steps: list[tuple[str, str]] = []
         client = AcpClient(work_dir=tmp_path, acp_backend=ACP_BACKEND_CLAUDE)
@@ -855,7 +855,7 @@ class TestClientSeam:
             asyncio.run(
                 process_adapter_for(ACP_BACKEND_CLAUDE).resolve_spawn(
                     SpawnContext(
-                        agent="kirocrew",
+                        agent="ajcrew",
                         work_dir=tmp_path,
                         model=None,
                         environ={},
@@ -944,12 +944,12 @@ class TestClientSeam:
     ):
         """The pin is verified on 0.84.0 only, so an older adapter keeps today's behaviour.
 
-        Run with ``KIROCREW_CC_PIN_INHERITED_MODE`` on, the one state that would
+        Run with ``AJCREW_CC_PIN_INHERITED_MODE`` on, the one state that would
         pin this session on a verified adapter.
         """
         monkeypatch.setenv(_PIN_SETTING_ENV, "1")
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-        client = self._seeded(tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         if path == "load":
             client._resume_session_id = "s-old"
         sent, killed = self._adapter_transport(
@@ -966,7 +966,7 @@ class TestClientSeam:
         """A re-seed after the handshake reads the version it already has."""
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
         self._project_owned_settings(tmp_path, {"permissions": {}})
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._agent_version = "0.83.0"
         client._agent_version_read = True
         client._write_claude_local_settings()
@@ -1036,7 +1036,7 @@ class TestClientSeam:
 
         A user ``~/.claude`` mode reaching a session whose file Crew wrote is the
         inherited-config gap the spec names (W2-1), so with
-        ``KIROCREW_CC_PIN_INHERITED_MODE`` unset no ``session/set_mode`` is sent there.
+        ``AJCREW_CC_PIN_INHERITED_MODE`` unset no ``session/set_mode`` is sent there.
         """
         home = tmp_path / "home"
         (home / ".claude").mkdir(parents=True)
@@ -1047,7 +1047,7 @@ class TestClientSeam:
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
         work = tmp_path / "work"
         work.mkdir()
-        client = self._seeded(work, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(work, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         assert "permissions" not in json.loads(
             (work / ".claude" / "settings.local.json").read_text()
         )
@@ -1069,7 +1069,7 @@ class TestClientSeam:
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
         client = self._seeded(
             tmp_path,
-            agent="kirocrew",
+            agent="ajcrew",
             acp_backend=ACP_BACKEND_CLAUDE,
             side_read_only=True,
             permission_mode="auto",
@@ -1123,7 +1123,7 @@ class TestClientSeam:
         """
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
         client = self._seeded(
-            tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE, side_read_only=True
+            tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE, side_read_only=True
         )
         # As the launch does (ClaudeLaunch.resolve_spawn), before session/new.
         await client._prepare_claude_side_read_denies()
@@ -1165,14 +1165,14 @@ class TestClientSeam:
     ):
         """A spec with ``"tools": []`` keeps the harness's own MCP servers out.
 
-        The background ``kirocrew-lite`` helpers run on such a spec, and without
+        The background ``ajcrew-lite`` helpers run on such a spec, and without
         ``strictMcpConfig`` the adapter mounts the user's, the project's and
         plugins' servers beside the empty wire array. A spec that names
         tools keeps the adapter's default.
         """
         servers = {"foo": {"command": "/bin/foo"}} if tools else {}
-        _write_spec(agents_dir, servers=servers, tools=tools, name="kirocrew-lite")
-        client = self._seeded(tmp_path, agent="kirocrew-lite", acp_backend=ACP_BACKEND_CLAUDE)
+        _write_spec(agents_dir, servers=servers, tools=tools, name="ajcrew-lite")
+        client = self._seeded(tmp_path, agent="ajcrew-lite", acp_backend=ACP_BACKEND_CLAUDE)
         if path == "load":
             client._resume_session_id = "s-old"
         sent, killed = self._adapter_transport(client, monkeypatch, started_mode="default")
@@ -1197,7 +1197,7 @@ class TestClientSeam:
         worker also starts each server in the user's own Claude config. An
         ordinary chat on the same spec keeps the adapter's default.
         """
-        from kiro_crew import members
+        from aj_crew import members
 
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
         key = "dashboard_chat-worker-1"
@@ -1205,7 +1205,7 @@ class TestClientSeam:
             members.note_crewmate_worker_session(key, "m-1")
         try:
             client = self._seeded(
-                tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE, session_key=key
+                tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE, session_key=key
             )
             if path == "load":
                 client._resume_session_id = "s-old"
@@ -1233,7 +1233,7 @@ class TestClientSeam:
             encoding="utf-8",
         )
         client = AcpClient(
-            work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE, side_read_only=True
+            work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE, side_read_only=True
         )
         client._claude_adapter_disk_version = "0.84.0"
         client._write_claude_local_settings()
@@ -1255,7 +1255,7 @@ class TestClientSeam:
         """The mapped name is how the READ_ONLY gate proves a claude read on a
         Side Chat session; on any other session it would bind kiro-cli-named deny
         rules to claude's own tools."""
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient(
             work_dir=tmp_path, acp_backend=ACP_BACKEND_CLAUDE, side_read_only=side_read_only
@@ -1303,7 +1303,7 @@ class TestClientSeam:
         """The read-only shape rides session options an unverified adapter may
         ignore, so the session never reaches its first prompt."""
         client = self._seeded(
-            tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE, side_read_only=True
+            tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE, side_read_only=True
         )
         await client._prepare_claude_side_read_denies()
         _sent, killed = self._adapter_transport(
@@ -1349,9 +1349,9 @@ class TestClientSeam:
         A user-tier ``Read`` allow skips the READ_ONLY gate, so only the session's deny
         rules, checked first, refuse it. A work-dir file still reads natively.
         """
-        from kiro_crew.acp.harness import claude as harness_claude
-        from kiro_crew.acp.harness.base import SpawnContext
-        from kiro_crew.security import sandbox_credential_targets
+        from aj_crew.acp.harness import claude as harness_claude
+        from aj_crew.acp.harness.base import SpawnContext
+        from aj_crew.security import sandbox_credential_targets
 
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
         home = tmp_path / "home"
@@ -1367,13 +1367,13 @@ class TestClientSeam:
             harness_claude, "_claude_adapter_installed_version", lambda _argv: "0.84.0"
         )
         client = AcpClient(
-            work_dir=work, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE, side_read_only=True
+            work_dir=work, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE, side_read_only=True
         )
         if path == "load":
             client._resume_session_id = "s-old"
         await harness_claude.ClaudeLaunch().resolve_spawn(
             SpawnContext(
-                agent="kirocrew", work_dir=work, model=None, environ={}, home=home, session=client
+                agent="ajcrew", work_dir=work, model=None, environ={}, home=home, session=client
             )
         )
         sent, _killed = self._adapter_transport(client, monkeypatch, started_mode="default")
@@ -1432,14 +1432,14 @@ class TestClientSeam:
     )
     def test_side_chat_asks_the_installed_adapters_version(self, monkeypatch, version, expected):
         """Side Chat grants tools on claude only from an adapter at the floor."""
-        from kiro_crew.agent_sdk.drivers.acp import claude_adapter_honours_session_options
+        from aj_crew.agent_sdk.drivers.acp import claude_adapter_honours_session_options
 
         monkeypatch.setattr(client_mod, "_claude_acp_argv_cache", (["/x/claude-agent-acp"], ""))
         monkeypatch.setattr(client_mod, "_claude_adapter_installed_version", lambda argv: version)
         assert claude_adapter_honours_session_options() is expected
 
     def test_side_chat_sees_no_adapter_as_unverified(self, monkeypatch):
-        from kiro_crew.agent_sdk.drivers.acp import claude_adapter_honours_session_options
+        from aj_crew.agent_sdk.drivers.acp import claude_adapter_honours_session_options
 
         monkeypatch.setattr(client_mod, "_claude_acp_argv_cache", (None, "PATH"))
         assert claude_adapter_honours_session_options() is False
@@ -1458,7 +1458,7 @@ class TestClientSeam:
         path = tmp_path / ".claude" / "settings.local.json"
         path.parent.mkdir(parents=True)
         path.write_text(raw, encoding="utf-8")
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._write_claude_local_settings()
         assert "foo" in _by_name(client._session_mcp_servers())
         assert client._claude_session_meta()["claudeCode"]["options"]["settingSources"] == ["user"]
@@ -1471,7 +1471,7 @@ class TestClientSeam:
         self._project_owned_settings(tmp_path, {"permissions": {"allow": ["mcp__foo__write"]}})
         client = AcpClient(
             work_dir=tmp_path,
-            agent="kirocrew",
+            agent="ajcrew",
             acp_backend=ACP_BACKEND_CLAUDE,
             permission_mode="plan",
         )
@@ -1486,7 +1486,7 @@ class TestClientSeam:
         path = tmp_path / ".claude" / "settings.local.json"
         path.parent.mkdir(parents=True)
         path.symlink_to(target)
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._write_claude_local_settings()
         assert client._session_mcp_servers() == []
         assert client._claude_session_meta() == {"claudeCode": {"options": {}}}
@@ -1495,7 +1495,7 @@ class TestClientSeam:
         # The two call sites splat this list into their params; handing out the
         # cache itself would let one session/load mutation reach the next.
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-        client = self._seeded(tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         first = client._session_mcp_servers()
         first.clear()
         assert "foo" in _by_name(client._session_mcp_servers())
@@ -1507,7 +1507,7 @@ class TestClientSeam:
         never names. Kiro-cli and codex would not mount it, so claude must not either.
         """
         _write_spec(agents_dir, servers={"direct": {"command": "/bin/direct"}}, tools=["@direct"])
-        client = self._seeded(tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._pooled_broker_stubs = lambda: [  # type: ignore[method-assign]
             {"name": "unreferenced", "command": "/stub", "args": [], "env": [], "type": "stdio"},
         ]
@@ -1525,21 +1525,21 @@ class TestClientSeam:
         outranking the same-named spec entry is what pools them. Making the
         append inert for every MIRRORED backend must not take kiro's away.
         """
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew")
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew")
         stub = {"name": "pooled", "command": "/stub", "args": [], "env": [], "type": "stdio"}
         client._pooled_broker_stubs = lambda: [dict(stub)]  # type: ignore[method-assign]
         assert client._pooled_mcp_servers() == [stub]
 
     def _overlay_with_a_stub(self, root: Path) -> Path:
-        """A user-level overlay holding one broker stub for ``kirocrew``."""
-        from kiro_crew.mcp_gateway.rewriter import _WRAPPER_MARKER
+        """A user-level overlay holding one broker stub for ``ajcrew``."""
+        from aj_crew.mcp_gateway.rewriter import _WRAPPER_MARKER
 
         overlay = root / "mcp-gateway" / "agents"
         overlay.mkdir(parents=True)
-        (overlay / "kirocrew.json").write_text(
+        (overlay / "ajcrew.json").write_text(
             json.dumps(
                 {
-                    "name": "kirocrew",
+                    "name": "ajcrew",
                     "mcpServers": {
                         "pooled": {
                             _WRAPPER_MARKER: True,
@@ -1565,12 +1565,12 @@ class TestClientSeam:
         checkout = tmp_path / "checkout"
         _write_project_spec(checkout, servers={"proj": {"command": "/bin/proj"}}, tools=None)
 
-        running_the_project_agent = AcpClient(work_dir=checkout, agent="kirocrew")
+        running_the_project_agent = AcpClient(work_dir=checkout, agent="ajcrew")
         running_the_project_agent._mcp_gateway_overlay = overlay
         assert running_the_project_agent._pooled_broker_stubs() == []
 
         # Control: the same overlay and agent name, a checkout that declares
         # neither, so the user-level stub is still this session's.
-        elsewhere = AcpClient(work_dir=tmp_path / "plain", agent="kirocrew")
+        elsewhere = AcpClient(work_dir=tmp_path / "plain", agent="ajcrew")
         elsewhere._mcp_gateway_overlay = overlay
         assert [e["name"] for e in elsewhere._pooled_broker_stubs()] == ["pooled"]

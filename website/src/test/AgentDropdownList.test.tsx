@@ -11,14 +11,14 @@ beforeAll(() => {
 })
 
 const agents: AgentItem[] = [
-  { name: 'kirocrew', source: 'kirocrew', description: 'Main agent' },
+  { name: 'ajcrew', source: 'ajcrew', description: 'Main agent' },
   { name: 'builtin', source: 'builtin' },
 ]
 
 describe('AgentDropdownList', () => {
   it('renders all agents', () => {
-    render(<AgentDropdownList agents={agents} activeAgent="kirocrew" defaultAgent="kirocrew" onSelect={() => {}} />)
-    expect(screen.getAllByText('kirocrew').length).toBeGreaterThan(0)
+    render(<AgentDropdownList agents={agents} activeAgent="ajcrew" defaultAgent="ajcrew" onSelect={() => {}} />)
+    expect(screen.getAllByText('ajcrew').length).toBeGreaterThan(0)
     expect(screen.getAllByText('builtin').length).toBeGreaterThan(0)
   })
 
@@ -31,10 +31,10 @@ describe('AgentDropdownList', () => {
     const onSelect = vi.fn()
     render(<AgentDropdownList agents={agents} activeAgent="" defaultAgent="" onSelect={onSelect} />)
     const btn = Array.from(document.querySelectorAll('button')).find(
-      b => b.querySelector('.font-mono')?.textContent === 'kirocrew'
+      b => b.querySelector('.font-mono')?.textContent === 'ajcrew'
     )
     fireEvent.click(btn!)
-    expect(onSelect).toHaveBeenCalledWith('kirocrew')
+    expect(onSelect).toHaveBeenCalledWith('ajcrew')
   })
 
   it('shows description when present', () => {
@@ -69,7 +69,7 @@ describe('AgentDropdownList', () => {
     // Rows sit flush with the host's `overflow-y-auto` edge. The global
     // `:focus-visible` outline is offset 2px OUTSIDE the box, so on the first
     // row the scroller cut its top edge off. The inset utility opts out of it.
-    render(<AgentDropdownList agents={agents} activeAgent="kirocrew" defaultAgent="" onSelect={() => {}} />)
+    render(<AgentDropdownList agents={agents} activeAgent="ajcrew" defaultAgent="" onSelect={() => {}} />)
     for (const option of screen.getAllByRole('option')) {
       expect(option).toHaveClass('focus-ring-accent-inset')
     }
@@ -80,7 +80,7 @@ describe('AgentDropdownList namespaces (member vs template)', () => {
   it('names a mate by its label alone; a template by its name', () => {
     const rows: AgentItem[] = [
       { name: 'mate', source: 'builtin', selection_kind: 'member', display_name: 'Pebble' },
-      { name: 'mate', source: 'kirocrew', selection_kind: 'template', display_name: 'Ignored' },
+      { name: 'mate', source: 'ajcrew', selection_kind: 'template', display_name: 'Ignored' },
     ]
     render(<AgentDropdownList agents={rows} activeAgent="" defaultAgent="" onSelect={() => {}} />)
     expect(screen.getByText('Pebble')).toBeInTheDocument()
@@ -90,7 +90,7 @@ describe('AgentDropdownList namespaces (member vs template)', () => {
   })
 
   const both: AgentItem[] = [
-    { name: 'reviewer', source: 'kirocrew', selection_kind: 'member', description: 'My reviewer' },
+    { name: 'reviewer', source: 'ajcrew', selection_kind: 'member', description: 'My reviewer' },
     { name: 'reviewer', source: 'builtin', selection_kind: 'template', description: 'Shared template' },
     { name: 'test-writer', source: 'package', selection_kind: 'template' },
   ]
@@ -104,13 +104,13 @@ describe('AgentDropdownList namespaces (member vs template)', () => {
   })
 
   it('drops the origin badge inside the grouped view and explains what a template pick is', () => {
-    // The header already says what each row IS; a grey "package" / "kirocrew"
+    // The header already says what each row IS; a grey "package" / "ajcrew"
     // tag beside it only asks the reader to decode a second vocabulary. The
     // templates group instead carries the one fact a first-time picker needs:
     // a custom agent is a reusable agent setup.
     render(<AgentDropdownList agents={both} activeAgent="" defaultAgent="" onSelect={() => {}} />)
     expect(screen.queryByText('package')).toBeNull()
-    expect(screen.queryByText('kirocrew')).toBeNull()
+    expect(screen.queryByText('ajcrew')).toBeNull()
     expect(screen.getByText(/a reusable agent setup/i)).toBeInTheDocument()
   })
 
@@ -172,7 +172,7 @@ describe('AgentDropdownList namespaces (member vs template)', () => {
 
   it('lights the template row when the slot recorded no namespace and no member holds the name', () => {
     const templateOnly: AgentItem[] = [
-      { name: 'reviewer', source: 'kirocrew', selection_kind: 'member' },
+      { name: 'reviewer', source: 'ajcrew', selection_kind: 'member' },
       { name: 'planner', source: 'builtin', selection_kind: 'template' },
     ]
     render(<AgentDropdownList agents={templateOnly} activeAgent="planner" defaultAgent="" onSelect={() => {}} />)
@@ -233,7 +233,7 @@ describe('AgentDropdownList hosts own the scroll (#6375)', () => {
 
 describe('AgentDropdownList default-agent affordance', () => {
   it('labels the default agent with a Default pill instead of its source badge', () => {
-    render(<AgentDropdownList agents={agents} activeAgent="" defaultAgent="kirocrew" onSelect={() => {}} />)
+    render(<AgentDropdownList agents={agents} activeAgent="" defaultAgent="ajcrew" onSelect={() => {}} />)
     expect(screen.getByText('Default')).toBeInTheDocument()
   })
 
@@ -241,14 +241,14 @@ describe('AgentDropdownList default-agent affordance', () => {
     // A row's one job is picking the agent for this session. A nested control had to
     // stopPropagation to keep the two apart, and its scope ("for new sessions") could
     // only live in a tooltip — the footer row states it on screen instead.
-    render(<AgentDropdownList agents={agents} activeAgent="" defaultAgent="kirocrew" onSelect={() => {}} />)
+    render(<AgentDropdownList agents={agents} activeAgent="" defaultAgent="ajcrew" onSelect={() => {}} />)
     for (const option of screen.getAllByRole('option')) {
       expect(option.querySelector('[role="button"]')).toBeNull()
     }
   })
 
   it('explains the two same-row markers rather than relying on colour alone', () => {
-    render(<AgentDropdownList agents={agents} activeAgent="kirocrew" defaultAgent="kirocrew" onSelect={() => {}} />)
+    render(<AgentDropdownList agents={agents} activeAgent="ajcrew" defaultAgent="ajcrew" onSelect={() => {}} />)
     expect(screen.getByTitle('New sessions start with this custom agent')).toBeInTheDocument()
     expect(screen.getByTitle('Active in this session')).toBeInTheDocument()
   })

@@ -62,7 +62,7 @@ export function prepareSidebarPreferences(params: URLSearchParams): void {
   const theme = params.get('theme') || 'dark'
   localStorage.setItem('mc-theme', theme === 'light' ? 'light' : 'dark')
   localStorage.setItem('mc-color-theme', 'kiro')
-  document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+  document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
   localStorage.setItem('mc-sidebar-lane', 'conductor')
   localStorage.setItem('mc-session-stale-collapse-ms', '0')
   localStorage.removeItem('mc-sidebar-conductor-expanded')
@@ -83,7 +83,7 @@ export function installPeerFetch(peer: string, reply: PeerRow[]): void {
         active: true, warm_set_cap: 4, sso: { state: 'none' },
         instances: [{
           id: peer, name: peer, ssh_host: `${peer}.internal`, remote_port: 5488, local_port: 6301, ttl: '8h',
-          remote_bin: 'kirocrew', connection_method: 'ssh', ssm_target: '', aws_profile: '', aws_region: '', ssm_run_as: '',
+          remote_bin: 'ajcrew', connection_method: 'ssh', ssm_target: '', aws_profile: '', aws_region: '', ssm_run_as: '',
           was_connected: true, status: { instance_id: peer, state: 'connected', local_port: 6301, remote_port: 5488 },
         }],
       }))
@@ -106,11 +106,11 @@ function Harness({ local }: { local: LocalRow[] }) {
         unreadSlots={[]}
         history={[]}
         historyHasMore={false}
-        defaultAgent="kirocrew"
+        defaultAgent="ajcrew"
         installedAgents={[
-          { name: 'kirocrew', source: 'builtin' },
-          { name: 'kirocrew-worker', source: 'builtin' },
-          { name: 'kirocrew-lead', source: 'builtin' },
+          { name: 'ajcrew', source: 'builtin' },
+          { name: 'ajcrew-worker', source: 'builtin' },
+          { name: 'ajcrew-lead', source: 'builtin' },
         ]}
       />
     </div>

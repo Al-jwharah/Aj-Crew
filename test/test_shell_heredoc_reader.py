@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.security import rm_floor
-from kiro_crew.security.deny_gate import is_denied
-from kiro_crew.security.shell_commands import read_commands
+from aj_crew.security import rm_floor
+from aj_crew.security.deny_gate import is_denied
+from aj_crew.security.shell_commands import read_commands
 
 RM = "r" + "m"
 ROOT = f"{RM} -r --force /"
@@ -143,7 +143,7 @@ def _nested_shell_heredocs(depth: int, body: str) -> str:
 def test_deep_heredoc_nesting_at_the_cap_stops_at_the_walk_budget(monkeypatch):
     # Each level's body is the whole rest of the text, so an unbounded walk re-reads it
     # once per level. Count the characters the walk reads, not the time it takes.
-    from kiro_crew.security.paths import MAX_SCANNABLE_COMMAND_CHARS
+    from aj_crew.security.paths import MAX_SCANNABLE_COMMAND_CHARS
 
     cmd = _nested_shell_heredocs(1180, RM)
     assert len(cmd) <= MAX_SCANNABLE_COMMAND_CHARS

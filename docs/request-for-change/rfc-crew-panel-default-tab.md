@@ -1,7 +1,7 @@
 ---
 title: A Crew Mode chat's side panel opens on the Crew tab
 status: accepted
-author: iamwhatever, with kirocrew-worker
+author: iamwhatever, with ajcrew-worker
 created: 2026-10-30
 last-audited: 2026-10-30
 audited-at: e106845756

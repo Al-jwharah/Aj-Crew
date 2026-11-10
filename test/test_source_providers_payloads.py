@@ -10,14 +10,14 @@ from source_providers_helpers import _mock_source_sel_fixture  # noqa: F401
 from source_providers_helpers import _no_visibility_refresh_side_task  # noqa: F401
 from source_providers_helpers import _rollup_reply
 
-from kiro_crew.dashboard.handlers import source_providers as source
+from aj_crew.dashboard.handlers import source_providers as source
 
 
 def test_parse_github_pull_request() -> None:
     ref = source.parse_source_url("https://github.com/kirodotdev/KiroCrew/pull/58?tab=checks")
     assert ref.provider == "github"
     assert ref.owner == "kirodotdev"
-    assert ref.repo == "KiroCrew"  # brand-ok: the kirodotdev/KiroCrew repository name
+    assert ref.repo == "AjCrew"  # brand-ok: the kirodotdev/KiroCrew repository name
     assert ref.number == 58
     assert ref.url == "https://github.com/kirodotdev/KiroCrew/pull/58"
 

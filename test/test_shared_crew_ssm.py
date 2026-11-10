@@ -20,23 +20,23 @@ import pytest
 import pytest_asyncio
 from aiohttp import web
 
-from kiro_crew.config.sections_shared_crew import SharedCrewConfig, shared_crew_config_from
-from kiro_crew.dashboard import ssm_gate, tailnet_live_allowlist
-from kiro_crew.dashboard.handlers.source_providers import is_owner_dashboard_request
-from kiro_crew.dashboard.token_auth import generate_token, token_auth_middleware
-from kiro_crew.shared_crew import access, access_set, routes_ssm, ssm, ssm_invites
-from kiro_crew.shared_crew.contracts import CapabilityState, Provenance
-from kiro_crew.shared_crew.identity import actor_of, ssm_principal
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS, finished
+from aj_crew.config.sections_shared_crew import SharedCrewConfig, shared_crew_config_from
+from aj_crew.dashboard import ssm_gate, tailnet_live_allowlist
+from aj_crew.dashboard.handlers.source_providers import is_owner_dashboard_request
+from aj_crew.dashboard.token_auth import generate_token, token_auth_middleware
+from aj_crew.shared_crew import access, access_set, routes_ssm, ssm, ssm_invites
+from aj_crew.shared_crew.contracts import CapabilityState, Provenance
+from aj_crew.shared_crew.identity import actor_of, ssm_principal
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS, finished
 
 
 @pytest.fixture(autouse=True)
 def _isolated(_floor_monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> AsyncIterator[None]:
-    import kiro_crew.dashboard.revocation_gen as rg
-    import kiro_crew.dashboard.token_auth as ta
+    import aj_crew.dashboard.revocation_gen as rg
+    import aj_crew.dashboard.token_auth as ta
 
-    _floor_monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
-    _floor_monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    _floor_monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
+    _floor_monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     _floor_monkeypatch.setattr(ssm_invites, "root", lambda: tmp_path / "ssm")
     _floor_monkeypatch.setattr(rg, "_gen", 0)
     _floor_monkeypatch.setattr(ta, "_revoked_store_singleton", None)
@@ -77,11 +77,11 @@ INSTANCE = "i-0123456789abcdef0"
 
 
 def test_detect_target_prefers_the_operator_override_and_validates_it() -> None:
-    env = {"KIROCREW_SSM_TARGET": "mi-0123456789abcdef0", "AWS_REGION": "eu-west-1"}
+    env = {"AJCREW_SSM_TARGET": "mi-0123456789abcdef0", "AWS_REGION": "eu-west-1"}
     found = ssm.detect_target(env, imds=lambda: pytest.fail("override must skip metadata"))
     assert found == ssm.Target("mi-0123456789abcdef0", "eu-west-1")
     for bad in ("i-xyz", "i-0123456789abcdef0; rm -rf /", "$(id)", "i-0123456789abcdef0 extra"):
-        assert ssm.detect_target({"KIROCREW_SSM_TARGET": bad}, imds=lambda: None) is None
+        assert ssm.detect_target({"AJCREW_SSM_TARGET": bad}, imds=lambda: None) is None
 
 
 def test_detect_target_reads_instance_metadata_and_fills_a_missing_region() -> None:
@@ -177,7 +177,7 @@ def test_read_imds_is_none_off_ec2_or_for_an_id_that_is_not_a_node(
 
 
 def test_a_bad_region_is_dropped_not_passed_to_the_command() -> None:
-    found = ssm.detect_target({"KIROCREW_SSM_TARGET": INSTANCE, "AWS_REGION": "x; id"})
+    found = ssm.detect_target({"AJCREW_SSM_TARGET": INSTANCE, "AWS_REGION": "x; id"})
     assert found == ssm.Target(INSTANCE, "")
 
 
@@ -190,7 +190,7 @@ def test_the_start_session_command_is_an_argument_list_naming_the_fixed_port_doc
         "--target",
         INSTANCE,
         "--document-name",
-        "Kiro-Crew-Shared-Crew-5477",
+        "Aj-Crew-Shared-Crew-5477",
         "--parameters",
         "localPortNumber=5477",
         "--region",
@@ -333,7 +333,7 @@ async def _whoami(request: web.Request) -> web.Response:
 
 
 async def _identity_gate(request: web.Request) -> web.Response:
-    from kiro_crew.shared_crew import routes_identity
+    from aj_crew.shared_crew import routes_identity
 
     refused = await routes_identity._refusal(request)
     return web.json_response({"admitted": refused is None})
@@ -527,7 +527,7 @@ async def test_the_redirect_after_an_invite_never_leaves_this_host(servers: Serv
 def test_an_origin_policy_that_refuses_the_ssm_origins_keeps_the_listener_off(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.dashboard import urls
+    from aj_crew.dashboard import urls
 
     asked: list[str] = []
 
@@ -536,7 +536,7 @@ def test_an_origin_policy_that_refuses_the_ssm_origins_keeps_the_listener_off(
         return False
 
     monkeypatch.setattr(urls, "origin_permitted", refuse)
-    monkeypatch.setenv("KIROCREW_SSM_TARGET", INSTANCE)
+    monkeypatch.setenv("AJCREW_SSM_TARGET", INSTANCE)
     cfg = shared_crew_config_from({"ssm": True})
     answer, gate = ssm_gate.resolve(cfg, 5470)
     assert gate is None
@@ -604,7 +604,7 @@ async def _start_listener(
 async def test_the_listener_binds_loopback_sets_its_gate_and_adds_its_origins(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("KIROCREW_SSM_TARGET", INSTANCE)
+    monkeypatch.setenv("AJCREW_SSM_TARGET", INSTANCE)
     cfg = shared_crew_config_from({"ssm": True, "ssm_port": 5481})
     app, ref, sites = await _start_listener(monkeypatch, cfg)
     assert len(sites) == 1 and _FakeSite.bound == [("127.0.0.1", 5481)]
@@ -618,7 +618,7 @@ async def test_the_listener_binds_loopback_sets_its_gate_and_adds_its_origins(
 async def test_a_port_that_is_taken_leaves_no_gate_and_says_so(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("KIROCREW_SSM_TARGET", INSTANCE)
+    monkeypatch.setenv("AJCREW_SSM_TARGET", INSTANCE)
     cfg = shared_crew_config_from({"ssm": True, "ssm_port": 5481})
     app, ref, sites = await _start_listener(monkeypatch, cfg, refuse=True)
     assert sites == [] and ref.gate is None
@@ -692,7 +692,7 @@ def _checked_request(*, local_port: int, host: str, origin: str) -> Any:
 
 
 def test_the_ssm_origins_pass_only_for_a_request_that_arrived_on_the_ssm_port() -> None:
-    from kiro_crew.dashboard.origin import check_origin
+    from aj_crew.dashboard.origin import check_origin
 
     on_ssm = _checked_request(
         local_port=5481, host="localhost:5481", origin="http://localhost:5481"
@@ -793,13 +793,13 @@ async def test_the_loopback_host_redirect_never_carries_an_invite_off_the_ssm_po
     """
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.server import build_host_canonical_redirect
+    from aj_crew.dashboard.server import build_host_canonical_redirect
 
     async def ok(_request: web.Request) -> web.Response:
         return web.Response(text="served here")
 
     ref = ssm_gate.GateRef()
-    app = web.Application(middlewares=[build_host_canonical_redirect("kirocrew.localhost")])
+    app = web.Application(middlewares=[build_host_canonical_redirect("ajcrew.localhost")])
     app["ssm_gate_ref"] = ref
     app.router.add_get("/", ok)
     headers = {"Host": "localhost:5477", "Sec-Fetch-Dest": "document"}
@@ -928,9 +928,9 @@ async def test_no_invite_is_made_while_the_listener_is_not_active(servers: Serve
 async def test_the_routes_answer_404_without_the_preview(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.dashboard.routes import shared_crew as slice_
+    from aj_crew.dashboard.routes import shared_crew as slice_
 
-    monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "0")
+    monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "0")
     app = web.Application()
     slice_.register(app)
     handler = next(
@@ -951,8 +951,8 @@ async def test_an_ssm_guest_is_listed_no_apps(monkeypatch: pytest.MonkeyPatch) -
     """
     from aiohttp.test_utils import make_mocked_request
 
-    import kiro_crew.apps.routes as routes_mod
-    from kiro_crew.shared_crew.contracts import SSM_GUEST_REQUEST_KEY, SsmGuest
+    import aj_crew.apps.routes as routes_mod
+    from aj_crew.shared_crew.contracts import SSM_GUEST_REQUEST_KEY, SsmGuest
 
     # Patched through the facade: these names are bound by more than one routes module.
     monkeypatch.setattr(routes_mod, "list_apps", lambda: [{"name": "demo", "enabled": True}])

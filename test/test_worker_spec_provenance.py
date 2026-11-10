@@ -1,8 +1,8 @@
-"""The derivation refuses to overwrite a ``kirocrew-worker.json`` it did not write.
+"""The derivation refuses to overwrite a ``ajcrew-worker.json`` it did not write.
 
 The mirror path is a NAME, and a name can be claimed. A crew shared through the
 Fargate runtime installs its own spec into ``~/.kiro/agents``, and the crew the first
-deployment ships is called ``kirocrew-worker``. A freshness gate that reasoned from
+deployment ships is called ``ajcrew-worker``. A freshness gate that reasoned from
 existence alone would find a file not matching the default spec's generation, judge it
 a stale mirror, re-derive it, and leave the shared crew's prompt and tool surface gone
 with nothing raised and nothing logging the crew's name.
@@ -26,16 +26,16 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import agent
-from kiro_crew.agent_files import AGENT_FILENAME, WORKER_AGENT_FILENAME
-from kiro_crew.agent_materialization import worker_agent
+from aj_crew import agent
+from aj_crew.agent_files import AGENT_FILENAME, WORKER_AGENT_FILENAME
+from aj_crew.agent_materialization import worker_agent
 
 CREW_PROMPT = "I am the shared crew's own prompt, and no derivation may replace it."
 
 
 def _default_spec() -> dict[str, Any]:
     return {
-        "name": "kirocrew",
+        "name": "ajcrew",
         "description": "the default agent",
         "prompt": "the default prompt",
         "tools": ["fs_read"],
@@ -44,7 +44,7 @@ def _default_spec() -> dict[str, Any]:
     }
 
 
-def _crew_spec(name: str = "kirocrew-worker") -> dict[str, Any]:
+def _crew_spec(name: str = "ajcrew-worker") -> dict[str, Any]:
     """A shared crew's spec, as the container installs one: its own prompt and servers."""
     return {
         "name": name,
@@ -80,7 +80,7 @@ class TestForeignSpecIsNotOverwritten:
         before = victim.read_text(encoding="utf-8")
 
         with pytest.raises(agent.ForeignAgentSpec) as caught:
-            agent.require_fresh_derived_spec("kirocrew-worker", None)
+            agent.require_fresh_derived_spec("ajcrew-worker", None)
 
         assert victim.read_text(encoding="utf-8") == before
         assert CREW_PROMPT in victim.read_text(encoding="utf-8")
@@ -120,12 +120,12 @@ class TestForeignSpecIsNotOverwritten:
         the whole failure this guard exists to end.
         """
         _write(agents_dir / WORKER_AGENT_FILENAME, _crew_spec())
-        with caplog.at_level("ERROR", logger="kiro_crew.agent"):
+        with caplog.at_level("ERROR", logger="aj_crew.agent"):
             with pytest.raises(agent.ForeignAgentSpec):
                 agent._install_worker_agent()
         logged = "\n".join(record.getMessage() for record in caplog.records)
         assert WORKER_AGENT_FILENAME in logged
-        assert "crew-kirocrew-worker.json" in logged
+        assert "crew-ajcrew-worker.json" in logged
 
     @pytest.mark.parametrize("bad", [1, True, {"a": 1}, "fs_read"])
     def test_a_malformed_list_field_refuses_rather_than_raising(self, agents_dir, bad) -> None:
@@ -152,7 +152,7 @@ class TestForeignSpecIsNotOverwritten:
     def test_a_mirror_whose_work_reference_is_only_a_grant_is_still_ours(self, agents_dir) -> None:
         """The mark is a REFERENCE, wherever a release put it.
 
-        A mirror left by an older build carries ``@kirocrew-work`` in ``tools`` and a
+        A mirror left by an older build carries ``@ajcrew-work`` in ``tools`` and a
         per-tool grant in ``allowedTools`` without mounting the server in
         ``mcpServers``. Requiring the mount would refuse those files instead of healing
         them, which is the upgrade path ``test_worker_agent.py`` pins.
@@ -161,11 +161,11 @@ class TestForeignSpecIsNotOverwritten:
         _write(
             mirror,
             {
-                "name": "kirocrew-worker",
+                "name": "ajcrew-worker",
                 "description": "an older build's description",
                 "prompt": "an older build's prompt",
-                "tools": ["fs_read", "@kirocrew-work"],
-                "allowedTools": ["@kirocrew-work/work_brief"],
+                "tools": ["fs_read", "@ajcrew-work"],
+                "allowedTools": ["@ajcrew-work/work_brief"],
                 "mcpServers": {},
             },
         )
@@ -196,7 +196,7 @@ class TestOrdinaryDerivationStillWorks:
         mirror = agents_dir / WORKER_AGENT_FILENAME
         assert mirror.is_file()
         first = json.loads(mirror.read_text(encoding="utf-8"))
-        assert first["name"] == "kirocrew-worker"
+        assert first["name"] == "ajcrew-worker"
 
         # The default spec changes out of band, the way a writer other than the rebuild
         # changes it. ``tools`` is the surface read here because the mirror copies a
@@ -216,10 +216,10 @@ class TestOrdinaryDerivationStillWorks:
 
     def test_the_spawn_gate_still_passes_on_a_fresh_mirror(self, agents_dir) -> None:
         agent._install_worker_agent()
-        snapshot = agent.require_fresh_derived_spec("kirocrew-worker", None)
+        snapshot = agent.require_fresh_derived_spec("ajcrew-worker", None)
         assert snapshot is not None
         assert snapshot.spec is not None
-        assert snapshot.spec["name"] == "kirocrew-worker"
+        assert snapshot.spec["name"] == "ajcrew-worker"
 
     def test_an_unparseable_file_at_the_mirror_path_is_replaced(self, agents_dir) -> None:
         """A broken file is nobody's work, and refusing it would be permanent.
@@ -230,11 +230,11 @@ class TestOrdinaryDerivationStillWorks:
         parses, so this case cannot be a crew.
         """
         mirror = agents_dir / WORKER_AGENT_FILENAME
-        mirror.write_text('{"name": "kirocrew-worker", "prompt": ', encoding="utf-8")
+        mirror.write_text('{"name": "ajcrew-worker", "prompt": ', encoding="utf-8")
 
         agent._install_worker_agent()
 
-        assert json.loads(mirror.read_text(encoding="utf-8"))["name"] == "kirocrew-worker"
+        assert json.loads(mirror.read_text(encoding="utf-8"))["name"] == "ajcrew-worker"
 
     def test_an_absent_mirror_is_written(self, agents_dir) -> None:
         assert not (agents_dir / WORKER_AGENT_FILENAME).exists()

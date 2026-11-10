@@ -26,9 +26,9 @@ from typing import Any, NamedTuple
 
 import pytest
 
-from kiro_crew import hooks
-from kiro_crew import security as security_mod
-from kiro_crew.hooks import (
+from aj_crew import hooks
+from aj_crew import security as security_mod
+from aj_crew.hooks import (
     GATE_TIERS,
     SHELL_DENY_TIERS,
     TOOL_ALLOW,
@@ -43,11 +43,11 @@ from kiro_crew.hooks import (
     gate_tier_problems,
     shell_rules,
 )
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.governance import parse_policy
-from kiro_crew.platform.spec_denied_grant import SpecDeniedGrant
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.governance import parse_policy
+from aj_crew.platform.spec_denied_grant import SpecDeniedGrant
 
 _HOME = Path.home()
 
@@ -111,7 +111,7 @@ TIER_SCENARIOS: tuple[Scenario, ...] = (
         ToolCall(
             title="Editing settings",
             kind="edit",
-            raw_params={"path": "~/.kirocrew/config.json"},
+            raw_params={"path": "~/.ajcrew/config.json"},
         ),
     ),
     Scenario(
@@ -223,11 +223,11 @@ TIER_SCENARIOS: tuple[Scenario, ...] = (
         "batch-guard-grant",
         TOOL_AUTO_APPROVE,
         ToolCall(
-            title="Running: @kirocrew-dashboard/session_send",
-            mcp_server="kirocrew-dashboard",
+            title="Running: @ajcrew-dashboard/session_send",
+            mcp_server="ajcrew-dashboard",
             mcp_tool="session_send",
             identity_trusted=True,
-            spec_granted_builtins=frozenset({"@kirocrew-dashboard/session_send"}),
+            spec_granted_builtins=frozenset({"@ajcrew-dashboard/session_send"}),
         ),
     ),
     Scenario(
@@ -379,14 +379,14 @@ pytestmark = pytest.mark.usefixtures("gate_world")
 
 
 def _install_governance(body: dict[str, Any] | None) -> None:
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     if body is None:
         # A scenario with no policy runs on the default context, never on a
         # ceiling an earlier scenario judged in the same test installed.
         ctx_mod.reset_context()
         return
-    base = build_default_context(KiroCrewConfig.load())
+    base = build_default_context(AjCrewConfig.load())
     ctx_mod.set_context(dataclasses.replace(base, governance=parse_policy(body)))
 
 

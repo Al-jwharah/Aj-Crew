@@ -40,22 +40,22 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp_backends import (
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_KAS,
     ACP_BACKENDS_COMPACT,
 )
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.session import SessionManager
-from kiro_crew.session_compaction import _compact_unsupported_backend, _harness_managed_backend
+from aj_crew.config import AjCrewConfig
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.session import SessionManager
+from aj_crew.session_compaction import _compact_unsupported_backend, _harness_managed_backend
 
 KEY = "dashboard:auto-compact-gate"
 
 
 @pytest.fixture
-def cfg() -> KiroCrewConfig:
-    c = KiroCrewConfig()
+def cfg() -> AjCrewConfig:
+    c = AjCrewConfig()
     c.session.timeout_secs = 2
     return c
 
@@ -67,7 +67,7 @@ async def _drain_background(mgr: SessionManager) -> None:
 
 
 @contextlib.asynccontextmanager
-async def _managed(cfg: KiroCrewConfig, provider_factory: Any):
+async def _managed(cfg: AjCrewConfig, provider_factory: Any):
     """Manager whose teardown always runs, even on a failed assert.
 
     An async CONTEXT MANAGER rather than an async fixture: the suite's convention for teardown that must await on the test's own loop
@@ -300,7 +300,7 @@ class TestDeclineIsObservable:
         async with _managed(cfg, _provider_factory(pct=92.0)) as mgr:
             provider, _, _ = await _live_session(mgr)
             caplog.clear()
-            with caplog.at_level(logging.INFO, logger="kiro_crew.session"):
+            with caplog.at_level(logging.INFO, logger="aj_crew.session"):
                 assert await mgr.compact_if_needed(KEY) == "compact_unsupported"
 
         lines = [r.getMessage() for r in caplog.records]
@@ -323,7 +323,7 @@ class TestDeclineIsObservable:
         async with _managed(cfg, _provider_factory(pct=92.0)) as mgr:
             provider, _, _ = await _live_session(mgr)
             caplog.clear()
-            with caplog.at_level(logging.INFO, logger="kiro_crew.session"):
+            with caplog.at_level(logging.INFO, logger="aj_crew.session"):
                 assert await mgr.compact_if_needed(KEY) == "compact_unsupported"
 
         loud = [
@@ -355,7 +355,7 @@ class TestMemberBackendsUnchanged:
         rather than streaming a prompt, and the gate must not intercept it."""
         async with _managed(cfg, _provider_factory(unsupported=None)) as mgr:
             provider, _, spy = await _live_session(mgr)
-            monkeypatch.setattr("kiro_crew.session._is_claude_backend", lambda p: True)
+            monkeypatch.setattr("aj_crew.session._is_claude_backend", lambda p: True)
 
             assert await mgr.compact_if_needed(KEY) in ("ok", "reset")
 
